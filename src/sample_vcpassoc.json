@@ -1,0 +1,13 @@
+{
+   "profileid" : "hhhhhhhh";
+   "monitor" : {
+      "edid" : "hhhhhhhhh....hhh";
+      "mfg_id"  : "ACR";
+      "model" : "Syncmaster";
+       "sn"     : "abce"
+   }
+   "vcp" : {
+      "10"  :   100;
+      "1a"  :     85;
+   }
+}

@@ -1,0 +1,3 @@
+# allow all users access to /dev/i2c* 
+# KERNEL="i2c-[0-9]*",  NAME="/dev/i2c-%n".  MODE="066"
+SUBSYSTEM=="i2c-dev", MODE="666"

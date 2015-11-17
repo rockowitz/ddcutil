@@ -1,0 +1,49 @@
+subdirectories
+
+util
+- definitions and functions that are application independent 
+- no includes on other subidrectories
+
+base 
+- core definitions and functions specific to this application
+- only include directory: util
+
+i2c
+- wraps I2C access
+- only included directories:  util, base 
+
+adl
+- wraps ADL api for access to ADL devices
+- only included directories: util, base 
+
+ddc
+- DDC functionality 
+- only indluded directories: util, base, i2c, adl
+
+test
+- sample test code
+- included directories: util, base, i2c, adl, ddc 
+
+main 
+- top level modules
+- included directories: any
+
+
+As with most real applications, 80% of the code is bookeeping. 
+Key components: 
+
+i2c/i2c_base: open, close, interrogate /dev/i2c devices
+i2c/i2c_io: read and write to /dev/i2c devices, using multiple methods
+
+adl/adl_intf:  wraps the ADL device driver API
+
+ddc/packet_io:  read and write DDC packets 
+base/ddc_packets:  understands the structure of DDC packets
+ddc/ddc_vcp: sets and gets VCP feature values 
+ddc/vcp_feature_record:  understands DDC VCP feature packets
+ddc/ddc_capabilities: read device capabilities, which requires multiple exchanges 
+
+
+
+
+

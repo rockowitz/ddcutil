@@ -1,0 +1,4 @@
+sed -i 's/<base\/coredefs.h/<util\/coredefs.h/g' *
+sed -i 's/<base\/stringutil.h/<util\/string_util.h/g' *
+sed -i 's/<base\/report_util.h/<util\/report_util.h/g' *
+sed -i 's/<base\/data_structures.h/<util\/data_structures.h/g' *

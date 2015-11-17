@@ -1,0 +1,39 @@
+{
+  "Schema" : "http://json-schema.org/draft-03/schema$",
+  "name"   : "VcpAssoc",
+  "type"   : "object",
+  "properties" : {
+     "profileid" : {
+        "type"  : "string",
+        "description" :  "profile id",
+        "required":   :  true
+     },
+     "monitor" : {
+        "type"  : "object", 
+        "properties" { 
+           "edid"  : {
+              "type" : "string"
+           }
+           "mfg_id" {
+              "type" : "string"
+           }
+           "model"  : {
+              "type" : "string"
+           }
+           "sn" {
+              "type" : "string"
+           }
+          
+        }
+     "vcp" : { 
+        "type" : "object", 
+        "properties":  {
+           "code"  : { 
+              "type"  :  "string",
+           }
+           "value"   {
+              "type"  : "number", 
+           }
+        }
+     }
+  }
