@@ -29,8 +29,7 @@
 #include <base/linux_errno.h>
 
 #include <i2c/i2c_bus_core.h>
-// #include <i2c/i2c_io.h>
-#include <i2c/i2c_shim.h>
+#include <i2c/i2c_do_io.h>
 
 #include <adl/adl_intf.h>
 #include <adl/adl_errors.h>

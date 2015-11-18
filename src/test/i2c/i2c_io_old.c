@@ -41,7 +41,7 @@
 #include <base/linux_errno.h>
 
 #include <i2c/i2c_base_io.h>
-#include <test/i2c/i2c_io.h>
+#include <test/i2c/i2c_io_old.h>
 
 
 

@@ -28,8 +28,7 @@
 #include <base/util.h>
 
 #include <i2c/i2c_bus_core.h>
-// #include <i2c/i2c_io.h>
-#include <i2c/i2c_shim.h>
+#include <i2c/i2c_do_io.h>
 
 #include <adl/adl_intf.h>
 
@@ -310,7 +309,7 @@ Global_Status_Code ddc_i2c_write_read_raw(
 #ifdef OLD
    Global_Status_Code rc = perform_i2c_write2(
 #endif
-   Global_Status_Code rc = shim_i2c_writer(
+   Global_Status_Code rc = invoke_i2c_writer(
                               dh->fh,
                               get_packet_len(request_packet_ptr)-1,
                               get_packet_start(request_packet_ptr)+1,
@@ -320,7 +319,7 @@ Global_Status_Code ddc_i2c_write_read_raw(
 #ifdef OLD
       rc = perform_i2c_read2(dh->fh, max_read_bytes, readbuf, DDC_TIMEOUT_USE_DEFAULT);
 #endif
-      rc = shim_i2c_reader(dh->fh, max_read_bytes, readbuf, DDC_TIMEOUT_USE_DEFAULT);
+      rc = invoke_i2c_reader(dh->fh, max_read_bytes, readbuf, DDC_TIMEOUT_USE_DEFAULT);
       if (rc == 0 && all_zero(readbuf, max_read_bytes)) {
          rc = DDCRC_READ_ALL_ZERO;
          // printf("(%s) All zero response.", __func__ );
@@ -624,7 +623,7 @@ Global_Status_Code ddc_i2c_write_only(
 #ifdef OLD
    rc = perform_i2c_write2(fh,
 #endif
-   rc = shim_i2c_writer(fh,
+   rc = invoke_i2c_writer(fh,
                            get_packet_len(request_packet_ptr)-1,
                            get_packet_start(request_packet_ptr)+1,
                            DDC_TIMEOUT_USE_DEFAULT);

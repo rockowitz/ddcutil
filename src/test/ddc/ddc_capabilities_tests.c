@@ -28,7 +28,7 @@
 #include <base/parms.h>
 #include <util/string_util.h>
 
-#include <test/i2c/i2c_io.h>
+#include <test/i2c/i2c_io_old.h>
 #include <i2c/i2c_bus_core.h>
 
 #include <test/ddc/ddc_capabilities_tests.h>

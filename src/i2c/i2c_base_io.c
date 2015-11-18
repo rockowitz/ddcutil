@@ -1,22 +1,21 @@
-/*
- * i2c_base_io.c
+/*  i2c_base_io.c
  *
  *  Created on: Nov 17, 2015
  *      Author: rock
+ *
+ *  Basic functions for writing to and reading from the I2C bus,
+ *  using alternative mechanisms.
  */
 
 #include <assert.h>
 #include <errno.h>
-#include <execinfo.h>
 #include <fcntl.h>
 #include <i2c-dev.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/ioctl.h>
-#include <sys/stat.h>
-#include <sys/types.h>
-#include <unistd.h>        // usleep
+#include <unistd.h>
 
 #include <util/string_util.h>
 
@@ -24,10 +23,6 @@
 #include <base/ddc_errno.h>
 #include <base/call_stats.h>
 #include <base/common.h>
-#include <base/ddc_packets.h>
-#include <base/msg_control.h>
-#include <base/parms.h>
-#include <base/util.h>
 #include <base/status_code_mgt.h>
 #include <base/linux_errno.h>
 
@@ -59,6 +54,9 @@ void init_i2c_io_stats(I2C_Call_Stats * pstats) {
 }
 
 
+//
+// Basic functions for reading and writing to I2C bus.
+//
 
 /* Write to i2c bus using write()
  *
@@ -70,7 +68,7 @@ void init_i2c_io_stats(I2C_Call_Stats * pstats) {
  * Returns:
  *   0 if success
  *   if error:
- *      modulated(-errno)
+ *      -errno
  *      DDCRC_BAD_BYTECT
  */
 Base_Status_Errno_DDC  write_writer(int fh, int bytect, Byte * pbytes) {
@@ -106,7 +104,7 @@ Base_Status_Errno_DDC  write_writer(int fh, int bytect, Byte * pbytes) {
  * Returns:
  *   0 if success
  *   if error:
- *      modulated(-errno)
+ *      -errno
  *      DDCRC_BAD_BYTECT
  */
 Base_Status_Errno_DDC read_reader(int fh, int bytect, Byte * readbuf) {
@@ -162,7 +160,7 @@ Base_Status_Errno_DDC read_reader(int fh, int bytect, Byte * readbuf) {
  * Returns:
  *   0 if success
  *   if error:
- *      -errno (modulated)
+ *      -errno
  */
 Base_Status_Errno_DDC ioctl_writer(int fh, int bytect, Byte * pbytes) {
    bool debug = false;
@@ -280,9 +278,12 @@ Base_Status_Errno_DDC ioctl_reader(int fh, int bytect, Byte * readbuf) {
 }
 
 
+// i2c_sumbus_write_i2c_block_data_writer, and _reader are retained only for
+// possible further exploration.   They do not work.
 
 // Write to I2C bus using i2c_smbus_write_i2c_block_data()
 
+// 11/2015:    fails:
 Base_Status_Errno_DDC i2c_smbus_write_i2c_block_data_writer(int fh, int bytect, Byte * bytes_to_write) {
    bool debug = true;
    int rc = i2c_smbus_write_i2c_block_data(fh,
@@ -309,6 +310,8 @@ Base_Status_Errno_DDC i2c_smbus_write_i2c_block_data_writer(int fh, int bytect, 
 
 // Read from I2C bus using i2c_smbus_read_i2c_block_data()
 
+// i2c_smbus_read_i2c_block_data can't handle capabilities fragments 32 bytes in size, since with
+// "envelope" the packet exceeds the i2c_smbus_read_i2c_block_data 32 byte limit
 Base_Status_Errno_DDC i2c_smbus_read_i2c_block_data_reader(int fh, int bytect, Byte * readbuf) {
    bool debug = true;
    const int MAX_BYTECT = 256;
@@ -354,9 +357,5 @@ Base_Status_Errno_DDC i2c_smbus_read_i2c_block_data_reader(int fh, int bytect, B
 
    return rc;
 }
-
-
-
-
 
 
