@@ -28,7 +28,8 @@
 #include <base/util.h>
 
 #include <i2c/i2c_bus_core.h>
-#include <i2c/i2c_io.h>
+// #include <i2c/i2c_io.h>
+#include <i2c/i2c_shim.h>
 
 #include <adl/adl_intf.h>
 
@@ -153,13 +154,13 @@ Display_Ref* ddc_find_display_by_edid(const Byte * pEdidBytes) {
 }
 
 
-Parsed_Edid* ddc_get_parsed_edid_by_display_ref(Display_Ref * pDref) {
+Parsed_Edid* ddc_get_parsed_edid_by_display_ref(Display_Ref * dref) {
    Parsed_Edid* pEdid = NULL;
 
-   if (pDref->ddc_io_mode == DDC_IO_DEVI2C)
-      pEdid = get_parsed_edid_by_busno(pDref->busno);
+   if (dref->ddc_io_mode == DDC_IO_DEVI2C)
+      pEdid = get_parsed_edid_by_busno(dref->busno);
    else
-      pEdid = get_parsed_edid_for_adlno(pDref->iAdapterIndex, pDref->iDisplayIndex);
+      pEdid = get_parsed_edid_for_adlno(dref->iAdapterIndex, dref->iDisplayIndex);
 
    // printf("(%s) Returning %p\n", __func__, pEdid);
    TRCMSG("Returning %p", __func__, pEdid);
@@ -306,14 +307,20 @@ Global_Status_Code ddc_i2c_write_read_raw(
    // dump_packet(request_packet_ptr);
    ASSERT_VALID_DISPLAY_REF(dh, DDC_IO_DEVI2C);
 
+#ifdef OLD
    Global_Status_Code rc = perform_i2c_write2(
+#endif
+   Global_Status_Code rc = shim_i2c_writer(
                               dh->fh,
                               get_packet_len(request_packet_ptr)-1,
                               get_packet_start(request_packet_ptr)+1,
                               DDC_TIMEOUT_USE_DEFAULT);
    TRCMSGTG(tg, "perform_i2c_write2() returned %d\n", rc);
    if (rc == 0) {
+#ifdef OLD
       rc = perform_i2c_read2(dh->fh, max_read_bytes, readbuf, DDC_TIMEOUT_USE_DEFAULT);
+#endif
+      rc = shim_i2c_reader(dh->fh, max_read_bytes, readbuf, DDC_TIMEOUT_USE_DEFAULT);
       if (rc == 0 && all_zero(readbuf, max_read_bytes)) {
          rc = DDCRC_READ_ALL_ZERO;
          // printf("(%s) All zero response.", __func__ );
@@ -614,7 +621,10 @@ Global_Status_Code ddc_i2c_write_only(
    TRCMSGTF(tf, "Starting.");
 
    Global_Status_Code rc;
+#ifdef OLD
    rc = perform_i2c_write2(fh,
+#endif
+   rc = shim_i2c_writer(fh,
                            get_packet_len(request_packet_ptr)-1,
                            get_packet_start(request_packet_ptr)+1,
                            DDC_TIMEOUT_USE_DEFAULT);

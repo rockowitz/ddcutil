@@ -10,6 +10,7 @@
 
 #include <util/string_util.h>
 
+#include <base/ddc_base_defs.h>
 #include <base/ddc_packets.h>
 #include <base/util.h>
 

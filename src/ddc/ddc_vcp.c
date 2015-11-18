@@ -27,7 +27,7 @@
 #include <base/status_code_mgt.h>
 
 #include <i2c/i2c_bus_core.h>
-#include <i2c/i2c_io.h>
+// #include <i2c/i2c_io.h>
 
 #include <adl/adl_intf.h>
 

@@ -17,7 +17,7 @@
 #include <base/parms.h>
 #include <base/linux_errno.h>
 
-#include <i2c/i2c_io.h>
+#include <test/i2c/i2c_io.h>
 #include <i2c/i2c_bus_core.h>
 
 #include <adl/adl_intf.h>

@@ -10,6 +10,7 @@
 #include <string.h>
 
 #include <base/ddc_errno.h>
+#include <base/ddc_packets.h>
 #include <base/displays.h>
 #include <base/linux_errno.h>
 
@@ -19,6 +20,7 @@
 #include <ddc/ddc_multi_part_io.h>
 #include <ddc/ddc_packet_io.h>
 #include <ddc/ddc_vcp.h>
+#include <ddc/vcp_feature_code_data.h>
 
 #include <ddc/ddc_services.h>
 

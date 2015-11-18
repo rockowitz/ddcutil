@@ -31,7 +31,8 @@
 #include <base/status_code_mgt.h>
 #include <base/util.h>
 
-#include <i2c/i2c_io.h>
+// #include <i2c/i2c_io.h>
+#include <i2c/i2c_shim.h>
 
 #include <i2c/i2c_bus_core.h>
 
@@ -63,7 +64,7 @@ static I2C_Call_Stats dummystats = {
         .stats_active      = false
  };
 
-static I2C_Call_Stats*  ptiming_stats = &dummystats;
+I2C_Call_Stats*  ptiming_stats = &dummystats;
 static bool gather_timing_stats = false;
 
 /* Enable and initialize call statistics gathering,
@@ -277,7 +278,8 @@ bool * detect_all_addrs_by_fd(int fd) {
       int rc;
       set_addr(fd, addr);
       // rc = call_write(file, 1, &byte_to_write, false);
-      rc = do_i2c_file_read(fd, 1, &byte_to_write, DDC_TIMEOUT_USE_DEFAULT);
+      // rc = do_i2c_file_read(fd, 1, &byte_to_write, DDC_TIMEOUT_USE_DEFAULT);
+      rc = shim_i2c_reader(fd, 1, &byte_to_write, DDC_TIMEOUT_USE_DEFAULT);
       if (rc >= 0)
          addrmap[addr] = true;
    }
@@ -341,12 +343,14 @@ Byte detect_ddc_addrs_by_fd(int file) {
    int rc;
 
    set_addr(file, 0x50);
-   rc = do_i2c_file_read(file, 1, &readbuf, DDC_TIMEOUT_USE_DEFAULT);
+// rc = do_i2c_file_read(file, 1, &readbuf, DDC_TIMEOUT_USE_DEFAULT);
+   rc = shim_i2c_reader(file, 1, &readbuf, DDC_TIMEOUT_USE_DEFAULT);
    if (rc >= 0)
       result |= I2C_BUS_ADDR_0X50;
 
    set_addr(file, 0x37);
-   rc = do_i2c_file_read(file, 1, &readbuf, DDC_TIMEOUT_USE_DEFAULT);
+   // rc = do_i2c_file_read(file, 1, &readbuf, DDC_TIMEOUT_USE_DEFAULT);
+   rc = shim_i2c_reader(file, 1, &readbuf, DDC_TIMEOUT_USE_DEFAULT);
    // printf("(%s) call_read() returned %d\n", __func__, rc);
    if (rc >= 0 || rc == DDCRC_READ_ALL_ZERO)
       result |= I2C_BUS_ADDR_0X37;
@@ -1214,9 +1218,11 @@ Global_Status_Code get_raw_edid_by_fd(int fd, Buffer * rawedid, bool debug) {
 
    Byte byte_to_write = 0x00;
 
-   gsc = do_i2c_file_write(fd, 1, &byte_to_write, DDC_TIMEOUT_USE_DEFAULT);
+// gsc = do_i2c_file_write(fd, 1, &byte_to_write, DDC_TIMEOUT_USE_DEFAULT);
+   gsc = shim_i2c_writer(fd, 1, &byte_to_write, DDC_TIMEOUT_USE_DEFAULT);
    if (gsc == 0) {
-      gsc = do_i2c_file_read(fd, 128, rawedid->bytes, DDC_TIMEOUT_USE_DEFAULT);
+      // gsc = do_i2c_file_read(fd, 128, rawedid->bytes, DDC_TIMEOUT_USE_DEFAULT);
+      gsc = shim_i2c_reader(fd, 128, rawedid->bytes, DDC_TIMEOUT_USE_DEFAULT);
       assert(gsc <= 0);
       if (gsc == 0) {
          rawedid->len = 128;

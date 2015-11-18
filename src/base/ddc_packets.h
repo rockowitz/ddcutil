@@ -195,13 +195,5 @@ Byte * get_data_start(  DDC_Packet * packet);
 int    get_data_len(    DDC_Packet * packet);
 
 
-// Not logically a part of packet definitions, but it needs to be in directory base, not ddc
-// to avoid circular includes
-typedef struct {
-    Byte  major;
-    Byte  minor;
-} Version_Spec;
-
-
 
 #endif /* DDC_PACKETS_H_ */

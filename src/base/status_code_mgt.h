@@ -44,6 +44,9 @@ typedef int Base_Status_ADL;
 typedef int Base_Status_Errno;
 // would make it simpler for low level I2C functions to be incorporated into sample code
 typedef int Base_Status_Errno_DDC;   // union(Base_Status_Errno, Global_Status_DDC)
+typedef int Base_Status_ADL_DDC;     // union(Base_Status_ADL, Global_Status_DDC)
+
+Global_Status_Code modulate_base_errno_ddc_to_global(Base_Status_Errno_DDC rc);
 
 
 

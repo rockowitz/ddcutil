@@ -281,42 +281,82 @@ Base_Status_Errno_DDC ioctl_reader(int fh, int bytect, Byte * readbuf) {
 
 
 
+// Write to I2C bus using i2c_smbus_write_i2c_block_data()
 
-
-#define NAME(id) #id
-
-I2C_IO_Strategy  i2c_file_io_strategy = {
-      write_writer,
-      read_reader,
-      NAME(read_writer),
-      NAME(read_reader)
-};
-
-I2C_IO_Strategy i2c_ioctl_io_strategy = {
-      ioctl_writer,
-      ioctl_reader,
-      NAME(ioctl_writer),
-      NAME(ioctl_reader)
-};
-
-#undef NAME
-
-I2C_IO_Strategy * i2c_io_strategy = &i2c_file_io_strategy;
-
-void init_i2c_io() {
-
+Base_Status_Errno_DDC i2c_smbus_write_i2c_block_data_writer(int fh, int bytect, Byte * bytes_to_write) {
+   bool debug = true;
+   int rc = i2c_smbus_write_i2c_block_data(fh,
+                                           bytes_to_write[0],   // cmd
+                                           bytect-1,            // len of values
+                                           bytes_to_write+1);   // values
+   if (rc < 0) {
+      int errsv = errno;
+      if (debug)
+         printf("(%s) i2c_smbus_write_i2c_block_data() returned %d, errno=%s\n",
+                __func__, rc, linux_errno_desc(errsv));
+      // set rc to -errno?
+      // rc = modulate_rc(-errsv, RR_ERRNO);
+      rc = -errsv;
+   }
+   return rc;
 }
 
-void set_i2c_io_strategy(I2C_IO_Strategy_Id strategy_id) {
-   switch (strategy_id) {
-   case (I2C_IO_STRATEGY_FILEIO):
-         i2c_io_strategy = &i2c_file_io_strategy;
-         break;
-   case (I2C_IO_STRATEGY_IOCTL):
-         i2c_io_strategy= &i2c_ioctl_io_strategy;
-         break;
+
+//
+// smbus versions here for testing. have errors
+//
+
+
+// Read from I2C bus using i2c_smbus_read_i2c_block_data()
+
+Base_Status_Errno_DDC i2c_smbus_read_i2c_block_data_reader(int fh, int bytect, Byte * readbuf) {
+   bool debug = true;
+   const int MAX_BYTECT = 256;
+   assert(bytect <= MAX_BYTECT);
+   Byte workbuf[MAX_BYTECT+1];
+   Byte zeroByte = 0x00;
+   // can't handle 32 byte fragments from capabilities reply
+   int rc = i2c_smbus_read_i2c_block_data(fh,
+                                           zeroByte,   // cmd byte
+                                           bytect,
+                                           workbuf);
+#ifdef WRONG
+   if (rc > 0) {
+      int errsv = errno;
+      // always see rc=32, bytect=39
+      // but leading byte of response is not 0
+      printf("(%s) i2c_smbus_read_i2c_block_data() returned %d, bytect=%d\n",__func__, rc, bytect);
+      hex_dump(workbuf, bytect);
+      errno = errsv;
+      rc = 0;
+      int ndx = 0;
+      // n no leading 0 byte
+      for (ndx=0; ndx < bytect; ndx++)
+         readbuf[ndx] = workbuf[ndx+0];
    }
-};
+   else
+#endif
+   if (rc == 0) {
+      assert(workbuf[0] == zeroByte);    // whatever in cmd byte returned as first byte of buffer
+      int ndx = 0;
+      for (ndx=0; ndx < bytect; ndx++)
+         readbuf[ndx] = workbuf[ndx+1];
+   }
+   else if (rc < 0) {
+      int errsv = errno;
+      if (debug)
+         printf("(%s) i2c_smbus_read_i2c_block_data() returned %d, errno=%s\n",
+                __func__, rc, linux_errno_desc(errsv));
+      // set rc to -errno?
+      // rc = modulate_rc(-errsv, RR_ERRNO);
+      rc = -errno;
+   }
+
+   return rc;
+}
+
+
+
 
 
 

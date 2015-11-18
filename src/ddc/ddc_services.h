@@ -11,7 +11,7 @@
 #include <stdio.h>
 
 #include <base/common.h>
-#include <base/ddc_packets.h>     // for Version_Spec
+#include <base/ddc_base_defs.h>     // for Version_Spec
 #include <base/displays.h>
 #include <base/status_code_mgt.h>
 

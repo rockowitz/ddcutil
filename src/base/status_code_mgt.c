@@ -142,7 +142,13 @@ Retcode_Range_Id get_modulation(int rc) {
    return range_id;
 }
 
-
+Global_Status_Code modulate_base_errno_ddc_to_global(Base_Status_Errno_DDC rc) {
+   Global_Status_Code gsc =
+         (get_modulation(rc) == RR_BASE)
+             ? gsc = modulate_rc(rc, RR_ERRNO)
+             : rc;
+   return gsc;
+}
 
 
 static Status_Code_Info ok_status_code_info = {0, "OK", "success"};

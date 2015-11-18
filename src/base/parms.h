@@ -33,6 +33,10 @@
 #define DDC_TIMEOUT_NONE                            0
 
 
+// TODO: move comments re smbus problems to low level smbus functions (currently in i2c_base_io.c)
+
+// DEFAULT_I2C_WRITE_MODE, DEFAULT_I2C_READ_MODE currently used only within tests
+
 // Default settings in i2c_io.c
 // valid write modes: "write", "ioctl_write", "i2c_smbus_write_i2c_block_data"
 // valid read modes:  "read",  "ioctl_read",  "i2c_smbus_read_i2c_block_data"
@@ -47,6 +51,13 @@
 // #define DEFAULT_I2C_READ_MODE  "ioctl_read"
 // i2c_smbus_read_i2c_block_data can't handle capabilities fragments 32 bytes in size, since with
 // "envelope" the packet exceeds the i2c_smbus_read_i2c_block_data 32 byte limit
+
+// New way:
+#define DEFAULT_I2C_IO_STRATEGY  I2C_IO_STRATEGY_FILEIO
+//#define DEFAULT_I2C_IO_STRATEGY  I2C_IO_STRATEGY_IOCTL
+
+
+
 
 // Affects memory allocation in try_stats:
 #define MAX_MAX_TRIES         15

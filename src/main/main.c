@@ -23,12 +23,14 @@
 #include <base/ddc_packets.h>
 #include <base/displays.h>
 #include <base/msg_control.h>
+#include <base/parms.h>
 #include <base/util.h>
 #include <base/status_code_mgt.h>
 #include <base/linux_errno.h>
 
 #include <i2c/i2c_bus_core.h>
-#include <i2c/i2c_io.h>
+// #include <i2c/i2c_io.h>
+#include <i2c/i2c_shim.h>
 
 #include <adl/adl_intf.h>
 #include <adl/adl_errors.h>
@@ -179,6 +181,12 @@ int main(int argc, char *argv[]) {
    init_linux_errno();
    init_adl_errors();
    init_vcp_feature_codes();
+   // init_i2c_io();   // currently does nothing
+
+   set_i2c_io_strategy(DEFAULT_I2C_IO_STRATEGY);
+
+
+
 
    int main_rc = EXIT_FAILURE;
 
