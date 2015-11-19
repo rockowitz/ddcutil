@@ -8,7 +8,7 @@
 #include <stdio.h>
 
 #include <util/string_util.h>
-#include <base/call_stats.h>
+#include <base/execution_stats.h>
 #include <base/ddc_base_defs.h>
 #include <base/parms.h>
 #include <i2c/i2c_base_io.h>

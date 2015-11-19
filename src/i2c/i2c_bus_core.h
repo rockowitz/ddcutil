@@ -12,7 +12,7 @@
 
 #include <util/data_structures.h>
 
-#include <base/call_stats.h>
+#include <base/execution_stats.h>
 #include <base/common.h>
 #include <base/displays.h>
 #include <base/edid.h>

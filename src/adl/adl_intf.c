@@ -18,7 +18,7 @@
 
 #include <util/report_util.h>
 
-#include <base/call_stats.h>
+#include <base/execution_stats.h>
 #include <base/common.h>
 #include <base/ddc_packets.h>
 #include <base/edid.h>
