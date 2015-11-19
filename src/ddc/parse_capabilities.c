@@ -94,7 +94,7 @@ void report_parsed_capabilities(Parsed_Capabilities* pcaps) {
  *    Parsed_Capaibilities record
  */
 Parsed_Capabilities * new_parsed_capabilities(
-                         char * raw_value,
+                         char *            raw_value,
                          char *            mccs_ver,
                          Byte_Value_Array  commands,         // each stored byte is command id
                          GArray *          vcp_features
@@ -107,18 +107,19 @@ Parsed_Capabilities * new_parsed_capabilities(
    pcaps->commands     = commands;
    pcaps->vcp_features = vcp_features;
 
-
    Version_Spec parsed_vcp_version = {0.0};
-   int vmajor;
-   int vminor;
-   int rc = sscanf(mccs_ver, "%d.%d", &vmajor, &vminor);
-   if (rc != 2) {
-      printf("(%s) Unable to parse mccs_ver, rc=%d\n", __func__, rc);
-   }
-   else {
-      parsed_vcp_version.major = vmajor;
-      parsed_vcp_version.minor = vminor;
-      printf("(%s) Parsed mccs_ver: %d.%d\n", __func__, parsed_vcp_version.major, parsed_vcp_version.minor);
+   if (mccs_ver) {
+      int vmajor;
+      int vminor;
+      int rc = sscanf(mccs_ver, "%d.%d", &vmajor, &vminor);
+      if (rc != 2) {
+         printf("(%s) Unable to parse mccs_ver, rc=%d\n", __func__, rc);
+      }
+      else {
+         parsed_vcp_version.major = vmajor;
+         parsed_vcp_version.minor = vminor;
+         printf("(%s) Parsed mccs_ver: %d.%d\n", __func__, parsed_vcp_version.major, parsed_vcp_version.minor);
+      }
    }
    pcaps->parsed_mccs_version = parsed_vcp_version;
 

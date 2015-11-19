@@ -52,8 +52,8 @@
 //
 
 static long start_time_nanos;
-static I2C_Call_Stats* pi2c_call_stats;
-static ADL_Call_Stats* padl_call_stats;
+// static I2C_Call_Stats* pi2c_call_stats;
+// static ADL_Call_Stats* padl_call_stats;
 
 void reset_stats() {
    ddc_reset_write_only_stats();
@@ -64,12 +64,15 @@ void reset_stats() {
    start_time_nanos = cur_realtime_nanosec();
    init_sleep_stats();  // debug.c
 
+#ifdef OLD
    pi2c_call_stats = new_i2c_call_stats();
    // printf("(%s) Calling init_i2c_bus_stats(%p)\n", __func__, pi2c_call_stats);
    init_i2c_bus_stats(pi2c_call_stats);     // i2c_io.h
 
    padl_call_stats = new_adl_call_stats();
    init_adl_call_stats(padl_call_stats);     // adl_intf.c
+#endif
+   init_call_stats();
 
 #ifdef FUTURE
    reset_status_code_counts();   // currently does nothing
@@ -90,12 +93,20 @@ void report_stats(int cmdId) {
    // error code counts
    show_status_counts();
 
+
+   report_sleep_strategy_stats(0);
+
    // os and ADL driver call stats
+#ifdef OLD
    if (pi2c_call_stats)
       report_i2c_call_stats(pi2c_call_stats, 0);
    if (padl_call_stats)
       report_adl_call_stats(padl_call_stats, 0);
+#endif
+   puts("");
+   report_call_stats(0);
    report_sleep_stats(0);
+
 
    long elapsed_nanos = cur_realtime_nanosec() - start_time_nanos;
    printf("Elapsed milliseconds (nanoseconds):            %10ld  (%10ld)\n",

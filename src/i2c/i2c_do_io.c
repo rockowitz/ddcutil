@@ -8,6 +8,7 @@
 #include <stdio.h>
 
 #include <util/string_util.h>
+#include <base/call_stats.h>
 #include <base/ddc_base_defs.h>
 #include <base/parms.h>
 #include <i2c/i2c_base_io.h>
@@ -67,19 +68,25 @@ Global_Status_Code invoke_i2c_writer(
 
    Base_Status_Errno_DDC rc;
 
-   RECORD_TIMING_STATS_NOERRNO(
-      timing_stats->pread_write_stats,
+
+   RECORD_IO_EVENT(
+      IE_WRITE,
       ( rc = i2c_io_strategy->i2c_writer(fh, bytect, bytes_to_write ) )
      );
+
+
+   // rc = i2c_io_strategy->i2c_writer(fh, bytect, bytes_to_write );
    if (debug)
       printf("(%s) writer() function returned %d\n", __func__, rc);
 
    assert (rc <= 0);
    if (rc == 0) {
+#ifdef OLD
       if (sleep_millisec == DDC_TIMEOUT_USE_DEFAULT)
          sleep_millisec = DDC_TIMEOUT_MILLIS_DEFAULT;
       if (sleep_millisec != DDC_TIMEOUT_NONE)
          sleep_millis_with_trace(sleep_millisec, __func__, "after write");
+#endif
    }
 
    Global_Status_Code gsc = modulate_base_errno_ddc_to_global(rc);
@@ -111,22 +118,24 @@ Global_Status_Code invoke_i2c_reader(
 
      Base_Status_Errno_DDC rc;
 
-     RECORD_TIMING_STATS_NOERRNO(
-        timing_stats->pread_write_stats,
+
+     RECORD_IO_EVENT(
+        IE_READ,
         ( rc = i2c_io_strategy->i2c_reader(fh, bytect, readbuf) )
        );
+     // rc = i2c_io_strategy->i2c_reader(fh, bytect, readbuf);
      if (debug)
         printf("(%s) reader() function returned %d\n", __func__, rc);
 
      assert (rc <= 0);
-
+#ifdef OLD
      if (rc == 0) {
         if (sleep_millisec == DDC_TIMEOUT_USE_DEFAULT)
            sleep_millisec = DDC_TIMEOUT_MILLIS_DEFAULT;
         if (sleep_millisec != DDC_TIMEOUT_NONE)
            sleep_millis_with_trace(sleep_millisec, __func__, "after read");
      }
-
+#endif
      Global_Status_Code gsc = modulate_base_errno_ddc_to_global(rc);
      if (debug )
         printf("(%s) Returning gsc=%s\n", __func__, global_status_code_description(gsc));

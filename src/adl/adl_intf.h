@@ -37,8 +37,9 @@ struct {
 
 // Timing stats
 
+#ifdef OLD
 void init_adl_call_stats(ADL_Call_Stats * pstats);
-
+#endif
 
 // Initialization
 

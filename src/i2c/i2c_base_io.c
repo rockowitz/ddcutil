@@ -32,6 +32,7 @@
 // Dummy value for timing_stats in case init_adl_call_stats() is never called.
 // Without it, macro RECORD_TIMING_STATS would have to test that
 // both timing_stats and pTimingStat->p<stat> are not null.
+#ifdef OLD
 static I2C_Call_Stats dummystats = {
         .pread_write_stats = NULL,
         .popen_stats  = NULL,
@@ -52,6 +53,7 @@ void init_i2c_io_stats(I2C_Call_Stats * pstats) {
 
 //   pstats->stat_name = "I2C IO calls";
 }
+#endif
 
 
 //

@@ -53,6 +53,7 @@ static Trace_Group TRACE_GROUP = TRC_I2C;
 // DDC IO statistics gathering and reporting
 //
 
+#ifdef OLD
 // Dummy value for pTimingStats in case init_adl_call_stats() is never called.
 // Without it, macro RECORD_TIMING_STATS would have to test that
 // both pTimingStats and pTimingStat->p<stat> are not null.
@@ -77,6 +78,7 @@ void init_i2c_bus_stats(I2C_Call_Stats * pstats) {
    // printf("(%s) Calling init_i2c_io_stats(%p)\n", __func__, pstats);
    init_i2c_io_stats(pstats);
 }
+#endif
 
 #ifdef UNUSED
 // Returns the statistics data structure
@@ -930,7 +932,10 @@ int open_i2c_bus(int busno, Failure_Action failure_action) {
    int  file;
 
    snprintf(filename, 19, "/dev/i2c-%d", busno);
-   RECORD_TIMING_STATS(ptiming_stats->popen_stats, ( file = open(filename, O_RDWR) )  );
+   RECORD_IO_EVENT(
+         IE_OPEN,
+         ( file = open(filename, O_RDWR) )
+         );
    // per man open:
    // returns file descriptor if successful
    // -1 if error, and errno is set
@@ -964,7 +969,7 @@ int close_i2c_bus(int fd, int busno, Failure_Action failure_action) {
       printf("(%s) Starting. fd=%d\n", __func__, fd);
    errno = 0;
    int rc = 0;
-   RECORD_TIMING_STATS(ptiming_stats->pclose_stats, ( rc = close(fd) ) );
+   RECORD_IO_EVENT(IE_CLOSE, ( rc = close(fd) ) );
    int errsv = errno;
    if (rc < 0) {
       // EBADF  fd isn't a valid open file descriptor
@@ -993,7 +998,10 @@ int close_i2c_bus(int fd, int busno, Failure_Action failure_action) {
 
 void set_addr(int file, int addr) {
    int rc = 0;
-   RECORD_TIMING_STATS( ptiming_stats->pread_write_stats, ( rc = ioctl(file, I2C_SLAVE, addr) ) );
+   RECORD_IO_EVENT(
+         IE_OTHER,
+         ( rc = ioctl(file, I2C_SLAVE, addr) )
+        );
    if (rc < 0){
       report_ioctl_error(errno, __func__, __LINE__-2, __FILE__, true /*fatal*/);
    }
@@ -1111,7 +1119,7 @@ unsigned long get_i2c_functionality_flags_by_fd(int fd) {
    //    pTimingStats->total_call_nanosecs += (cur_realtime_nanosec()-start_time);
    //    pTimingStats->total_call_ct++;
    // }
-   RECORD_TIMING_STATS(ptiming_stats->pread_write_stats, ( rc = ioctl(fd, I2C_FUNCS, &funcs) ) )
+   RECORD_IO_EVENT(IE_OTHER, ( rc = ioctl(fd, I2C_FUNCS, &funcs) ) );
    int errsv = errno;
    if (rc < 0)
       report_ioctl_error( errsv, __func__, (__LINE__-3), __FILE__, true /*fatal*/);

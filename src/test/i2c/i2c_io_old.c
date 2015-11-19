@@ -127,8 +127,7 @@ Global_Status_Code call_i2c_writer(
 
    Global_Status_Code rc;
 
-   RECORD_TIMING_STATS_NOERRNO(
-      timing_stats->pread_write_stats,
+   RECORD_IO_EVENT(IE_WRITE,
       ( rc = writer(fh, bytect, bytes_to_write ) )
      );
    if (debug)
@@ -165,8 +164,8 @@ Global_Status_Code call_i2c_reader(
 
    Global_Status_Code rc;
 
-   RECORD_TIMING_STATS_NOERRNO(
-      timing_stats->pread_write_stats,
+   RECORD_IO_EVENT(
+      IE_READ,
       ( rc = reader(fh, bytect, readbuf) )
      );
    if (debug)

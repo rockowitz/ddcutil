@@ -24,10 +24,10 @@
 
 // DDC IO statistics gathering and reporting
 
-void init_i2c_bus_stats(I2C_Call_Stats * pstats);
-#ifdef UNUSED
-I2C_Call_Stats * get_i2c_bus_stats();
-#endif
+// void init_i2c_bus_stats(I2C_Call_Stats * pstats);
+// #ifdef UNUSED
+// I2C_Call_Stats * get_i2c_bus_stats();
+// #endif
 
 
 // Retrieve and inspect bus information

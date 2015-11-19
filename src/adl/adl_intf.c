@@ -84,6 +84,7 @@ int             active_display_ct = 0;
 // Call stats
 //
 
+#ifdef OLD
 // dummy value for timing_stats in case init_adl_call_stats() is never called.
 // Without it, macro RECORD_TIMING_STATS_NOERROR would have to test that
 // both timing_stats and pTimingStat->p<stat> are not null.
@@ -104,18 +105,7 @@ void init_adl_call_stats(ADL_Call_Stats * pstats) {
 
    // pstats->stat_group_name = "ADL call";
 }
-
-
-
-#ifdef TEMPLATE_FOR_COPYING
-RECORD_TIMING_STATS_NOERRNO(
-   timing_stats->pother_stats,
-   (
-
-   )
-);
 #endif
-
 
 
 //
@@ -231,12 +221,14 @@ static bool init_framework() {
       printf("(%s) adl=%p\n", __func__, adl );
       printf("(%s) adl->ADL_Main_Control_Create=%p   \n", __func__, adl->ADL_Main_Control_Create );
    }
-   RECORD_TIMING_STATS_NOERRNO(
-      timing_stats->pother_stats,
+
+   RECORD_IO_EVENT(
+      IE_OTHER,
       (
          rc = adl->ADL_Main_Control_Create(ADL_Main_Memory_Alloc, 1)
       )
    );
+
    // rc = adl->ADL_Main_Control_Create(ADL_Main_Memory_Alloc, 1) ;
    if (rc != ADL_OK) {
       if (rc == ADL_ERR_NO_XDISPLAY) {
@@ -314,12 +306,14 @@ static bool scan_for_displays() {
    bool           ok = true;
 
    // Obtain the number of adapters for the system
-   RECORD_TIMING_STATS_NOERRNO(
-      timing_stats->pother_stats,
+
+   RECORD_IO_EVENT(
+      IE_OTHER,
       (
          rc = adl->ADL_Adapter_NumberOfAdapters_Get ( &iNumberAdapters )
       )
    );
+
    // rc = adl->ADL_Adapter_NumberOfAdapters_Get ( &iNumberAdapters );
    if (rc != ADL_OK) {
       printf("Cannot get the number of adapters!  ADL_Adapter_NumberOfAdapaters_Get() returned %d\n", rc);
@@ -332,8 +326,8 @@ static bool scan_for_displays() {
       memset( pAdapterInfo,'\0', sizeof (AdapterInfo) * iNumberAdapters );
 
       // Get the AdapterInfo structure for all adapters in the system
-      RECORD_TIMING_STATS_NOERRNO(
-         timing_stats->pother_stats,
+      RECORD_IO_EVENT(
+         IE_OTHER,
          (
             adl->ADL_Adapter_AdapterInfo_Get(pAdapterInfo, sizeof (AdapterInfo) * iNumberAdapters)
          )
@@ -356,8 +350,8 @@ static bool scan_for_displays() {
          assert(iAdapterIndex == adapterNdx);    // just an observation
          pAdlDisplayInfo = NULL;    // set to NULL before calling ADL_Display_DisplayInfo_Get()
          // printf("(%s) pAdlDisplayInfo=%p\n", __func__, pAdlDisplayInfo );
-         RECORD_TIMING_STATS_NOERRNO(
-            timing_stats->pother_stats,
+         RECORD_IO_EVENT(
+            IE_OTHER,
             (
                rc = adl->ADL_Display_DisplayInfo_Get (
                             iAdapterIndex,
@@ -387,8 +381,8 @@ static bool scan_for_displays() {
                report_adl_ADLDisplayInfo(pCurDisplayInfo, 2);
             }
             char xrandrname[100] = {0};
-            RECORD_TIMING_STATS_NOERRNO(
-               timing_stats->pother_stats,
+            RECORD_IO_EVENT(
+               IE_OTHER,
                (
                   rc = adl->ADL_Display_XrandrDisplayName_Get(
                                iAdapterIndex, iDisplayIndex, xrandrname, 100)
@@ -414,8 +408,8 @@ static bool scan_for_displays() {
                pEdidData->iFlag = 0;
                pEdidData->iBlockIndex = 0;   // critical
 
-               RECORD_TIMING_STATS_NOERRNO(
-                  timing_stats->pother_stats,
+               RECORD_IO_EVENT(
+                  IE_OTHER,
                   (
                      rc = adl->ADL_Display_EdidData_Get(iAdapterIndex, iDisplayIndex, pEdidData)
                   )
@@ -441,8 +435,8 @@ static bool scan_for_displays() {
                }
 
                ADLDDCInfo2 * pDDCInfo2 = calloc(1, sizeof(ADLDDCInfo2));
-               RECORD_TIMING_STATS_NOERRNO(
-                  timing_stats->pother_stats,
+               RECORD_IO_EVENT(
+                  IE_OTHER,
                   (
                      rc = adl->ADL_Display_DDCInfo2_Get(iAdapterIndex, iDisplayIndex, pDDCInfo2)
                   )
@@ -476,6 +470,7 @@ static bool scan_for_displays() {
       printf("(%s) Returning %d\n", __func__, ok );
    return ok;
 }
+
 
 
 /* This is the main function for initializing the ADL environment.
@@ -512,16 +507,19 @@ bool adl_initialize() {
    }
    if (ok) {
       module_initialized = true;
+#ifdef OLD
       if (timing_stats)
         timing_stats->stats_active = true;
+#endif
    }
+
    return ok;
 }
 
 
 void adl_release() {
-   RECORD_TIMING_STATS_NOERRNO(
-      timing_stats->pother_stats,
+   RECORD_IO_EVENT(
+      IE_OTHER,
       (
          adl->ADL_Main_Control_Destroy()
       )
@@ -531,6 +529,7 @@ void adl_release() {
    free(adl);
    module_initialized = false;
 }
+
 
 
 //
@@ -786,13 +785,15 @@ Base_Status_ADL call_ADL_Display_DDCBlockAccess_Get(
          free(hs);
       }
    }
-   RECORD_TIMING_STATS_NOERRNO(
-      timing_stats->pread_write_stats,
+
+   RECORD_IO_EVENT(
+      IE_WRITE_READ,
       (
          rc = adl->ADL_Display_DDCBlockAccess_Get( iAdapterIndex, iDisplayIndex, iOption, xxx,
                              iSendMsgLen, lpucSendMsgBuf, iRecvMsgLen, lpucRcvMsgBuf)
       )
    );
+
    // rc = adl->ADL_Display_DDCBlockAccess_Get( iAdapterIndex, iDisplayIndex, iOption, xxx,
    //       iSendMsgLen, lpucSendMsgBuf, iRecvMsgLen, lpucRcvMsgBuf);
    return rc;
@@ -816,6 +817,7 @@ Base_Status_ADL adl_ddc_write_only(
    int iRev = 0;
 
    int rc = call_ADL_Display_DDCBlockAccess_Get( iAdapterIndex, iDisplayIndex, 0, 0, sendMsgLen, pSendMsgBuf, &iRev, NULL);
+   // note_io_event(IE_WRITE_ONLY, __func__);
 
    // printf("(%s) Returning %d. \n", __func__, rc);
    return rc;
@@ -896,7 +898,7 @@ Base_Status_ADL adl_ddc_write_read(
 }
 
 
-// 10/2015: only called in adl_services.c
+// 10/2015: only called in adl_aux_intf.c
 Base_Status_ADL adl_ddc_write_read_onecall(
       int     iAdapterIndex,
       int     iDisplayIndex,
@@ -933,4 +935,5 @@ Base_Status_ADL adl_ddc_write_read_onecall(
    }
    return rc;
 }
+
 

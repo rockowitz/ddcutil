@@ -79,6 +79,7 @@ static void record_failed_fatally(void * stats_rec) {
 
 
 void record_tries(void * stats_rec, int rc, int tryct) {
+   // printf("(%s) stats_rec=%p, rc=%d, tryct=%d\n", __func__, stats_rec, rc, tryct);
    Try_Data * try_data = unopaque(stats_rec);
    // TODO: eliminate function calls
    if (rc == 0) {

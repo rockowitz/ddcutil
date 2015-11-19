@@ -19,9 +19,9 @@
 #include <base/status_code_mgt.h>
 #include <base/util.h>
 
-void init_i2c_io_stats(I2C_Call_Stats* pStats);
+// void init_i2c_io_stats(I2C_Call_Stats* pStats);
 
-extern I2C_Call_Stats * timing_stats;   // product of refactoring
+// extern I2C_Call_Stats * timing_stats;   // product of refactoring
 
 typedef Base_Status_Errno_DDC (*I2C_Writer)(int fh, int bytect, Byte * bytes_to_write);
 typedef Base_Status_Errno_DDC (*I2C_Reader)(int fh, int bytect, Byte * readbuf);
