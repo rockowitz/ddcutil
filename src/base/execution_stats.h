@@ -55,6 +55,22 @@ void report_call_stats(int depth);
 void report_sleep_strategy_stats(int depth);
 
 
+// moved from status_code_mgt:
+
+
+// Maintain counts of DDC data errors
+
+void init_status_counts();
+Global_Status_Code record_status_code_occurrence(Global_Status_Code rc, const char * caller_name);
+#define COUNT_STATUS_CODE(rc) record_status_code_occurrence(rc,__func__)
+void show_status_counts();
+#ifdef FUTURE
+int get_status_code_count(int rc);
+#endif
+
+
+
+
 #ifdef OLD
 #define RECORD_TIMING_STATS(pstats, event_type, cmd_to_time)  { \
    int  _errsv = 0; \

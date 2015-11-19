@@ -203,114 +203,6 @@ char * global_status_code_description(Global_Status_Code status_code) { // must 
 
 
 //
-// Record status code occurrence counts
-//
-
-static GHashTable * error_counts_hash = NULL;
-static int total_counts = 0;
-
-
-int record_status_code_occurrence(int rc, const char * caller_name) {
-   bool debug = false;
-   if (debug)
-      printf("(%s) caller=%s, rc=%d\n", __func__, caller_name, rc);
-   assert(error_counts_hash);
-   total_counts++;
-
-   // n. if key rc not found, returns NULL, which is 0
-   int ct = GPOINTER_TO_INT(g_hash_table_lookup(error_counts_hash,  GINT_TO_POINTER(rc)) );
-   g_hash_table_insert(error_counts_hash, GINT_TO_POINTER(rc), GINT_TO_POINTER(ct+1));
-   // printf("(%s) Old count=%d\n", __func__, ct);
-
-   // check the new value
-   int newct = GPOINTER_TO_INT(g_hash_table_lookup(error_counts_hash,  GINT_TO_POINTER(rc)) );
-   // printf("(%s) new count for key %d = %d\n", __func__, rc, newct);
-   assert(newct == ct+1);
-
-   return ct+1;
-}
-
-
-// Used by qsort in show_status_counts()
-int compare( const void* a, const void* b)
-{
-     int int_a = * ( (int*) (a) );
-     int int_b = * ( (int*) (b) );
-
-     if ( int_a == int_b ) return 0;
-     else if ( int_a < int_b ) return 1;
-     else return -1;
-}
-
-
-void show_status_counts() {
-   assert(error_counts_hash);
-   unsigned int keyct;
-   gpointer * keysp = g_hash_table_get_keys_as_array(error_counts_hash, &keyct);
-   int summed_ct = 0;
-   fprintf(stdout, "DDC packet error status codes with non-zero counts:  %s\n",
-           (keyct == 0) ? "None" : "");
-   if (keyct > 0) {
-      qsort(keysp, keyct, sizeof(gpointer), compare);    // sort keys
-      fprintf(stdout, "Count   Status Code                       Description\n");
-      Status_Code_Info default_description;
-      int ndx;
-      for (ndx=0; ndx<keyct; ndx++) {
-         gpointer keyp = keysp[ndx];
-         int key = GPOINTER_TO_INT(keyp);
-         int ct  = GPOINTER_TO_INT(g_hash_table_lookup(error_counts_hash,GINT_TO_POINTER(key)));
-         summed_ct += ct;
-         // fprintf(stdout, "%4d    %6d\n", ct, key);
-         Retcode_Range_Id rc_range = get_modulation(key);
-         Retcode_Description_Finder desc_finder = retcode_range_table[rc_range].desc_finder;
-         Status_Code_Info * desc = NULL;
-         if (desc_finder) {
-            int search_key = key;
-            bool value_is_modulated = retcode_range_table[rc_range].finder_arg_is_modulated;
-            if (!value_is_modulated) {
-               search_key = demodulate_rc(key, rc_range);
-            }
-            desc = desc_finder(search_key);
-            if (!desc) {
-               desc = &default_description;
-               desc->code = key;
-               desc->name = "";
-               desc->description = "unrecognized status code";
-            }
-         }
-         else {     // no finder
-            desc = &default_description;
-            desc->code = key;
-            desc->name = "";
-            desc->description = "(status code not in interpretable range)";
-         }
-         fprintf(stdout, "%5d   %-25s (%5d) %s\n",
-              ct,
-              desc->name,
-              key,
-              desc->description
-             );
-      }
-   }
-   printf("Total errors: %d\n", total_counts);
-   assert(summed_ct == total_counts);
-   g_free(keysp);
-   fprintf(stdout,"\n");
-}
-
-#ifdef FUTURE
-int get_status_code_count(int rc) {
-   // *** TODO ***
-   return 0;
-}
-
-void reset_status_code_counts() {
-   // *** TODO ***
-}
-#endif
-
-
-//
 // Initialization and debugging
 //
 
@@ -318,7 +210,7 @@ void reset_status_code_counts() {
 void init_status_code_mgt() {
    // printf("(%s) Starting\n", __func__);
    validate_retcode_range_table();                         // uses asserts to check consistency
-   error_counts_hash = g_hash_table_new(NULL,NULL);
+   // error_counts_hash = g_hash_table_new(NULL,NULL);
 
    // initialize_ddcrc_desc();
 }

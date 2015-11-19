@@ -92,17 +92,6 @@ Retcode_Range_Id get_modulation(int rc);
 // int demodulate_any_rc(int modulated_rc);   // unimplemented
 
 
-// Maintain counts of DDC data errors
-
-void init_status_counts();
-Global_Status_Code record_status_code_occurrence(Global_Status_Code rc, const char * caller_name);
-#define COUNT_STATUS_CODE(rc) record_status_code_occurrence(rc,__func__)
-void show_status_counts();
-#ifdef FUTURE
-int get_status_code_count(int rc);
-#endif
-
-
 
 Status_Code_Info * find_global_status_code_description(Global_Status_Code rc);
 

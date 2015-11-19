@@ -6,6 +6,8 @@
  *  For recording and reporting the count and elapsed time of system calls.
  */
 
+#include <assert.h>
+#include <glib.h>
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -17,6 +19,7 @@
 
 // Forward References
 void note_io_event_time(IO_Event_Type event_type, const char * location, long when_nanos);
+void    init_status_counts();
 
 // There are 2 collections of data structures:
 //    - for recording the total number of calls and elapsed time
@@ -102,6 +105,7 @@ void init_ddc_call_stats() {
 void init_call_stats() {
    init_ddc_call_stats();
    program_start_timestamp = cur_realtime_nanosec();
+   init_status_counts();
 }
 
 
@@ -331,6 +335,130 @@ void report_sleep_strategy_stats(int depth) {
    for (id=0; id < SLEEP_EVENT_ID_CT; id++) {
       printf("   %-20s  %3d\n", sleep_event_names[id], sleep_event_cts_by_id[id]);
    }
+}
+
+
+// moved from status_code_mgt.c
+
+
+//
+// Record status code occurrence counts
+//
+
+static GHashTable * error_counts_hash = NULL;
+static int total_counts = 0;
+
+
+int record_status_code_occurrence(int rc, const char * caller_name) {
+   bool debug = false;
+   if (debug)
+      printf("(%s) caller=%s, rc=%d\n", __func__, caller_name, rc);
+   assert(error_counts_hash);
+   total_counts++;
+
+   // n. if key rc not found, returns NULL, which is 0
+   int ct = GPOINTER_TO_INT(g_hash_table_lookup(error_counts_hash,  GINT_TO_POINTER(rc)) );
+   g_hash_table_insert(error_counts_hash, GINT_TO_POINTER(rc), GINT_TO_POINTER(ct+1));
+   // printf("(%s) Old count=%d\n", __func__, ct);
+
+   // check the new value
+   int newct = GPOINTER_TO_INT(g_hash_table_lookup(error_counts_hash,  GINT_TO_POINTER(rc)) );
+   // printf("(%s) new count for key %d = %d\n", __func__, rc, newct);
+   assert(newct == ct+1);
+
+   return ct+1;
+}
+
+
+// Used by qsort in show_status_counts()
+int compare( const void* a, const void* b)
+{
+     int int_a = * ( (int*) (a) );
+     int int_b = * ( (int*) (b) );
+
+     if ( int_a == int_b ) return 0;
+     else if ( int_a < int_b ) return 1;
+     else return -1;
+}
+
+
+void show_status_counts() {
+   assert(error_counts_hash);
+   unsigned int keyct;
+   gpointer * keysp = g_hash_table_get_keys_as_array(error_counts_hash, &keyct);
+   int summed_ct = 0;
+   fprintf(stdout, "DDC packet error status codes with non-zero counts:  %s\n",
+           (keyct == 0) ? "None" : "");
+   if (keyct > 0) {
+      qsort(keysp, keyct, sizeof(gpointer), compare);    // sort keys
+      fprintf(stdout, "Count   Status Code                       Description\n");
+#ifdef OLD
+      Status_Code_Info default_description;
+#endif
+      int ndx;
+      for (ndx=0; ndx<keyct; ndx++) {
+         gpointer keyp = keysp[ndx];
+         int key = GPOINTER_TO_INT(keyp);
+         int ct  = GPOINTER_TO_INT(g_hash_table_lookup(error_counts_hash,GINT_TO_POINTER(key)));
+         summed_ct += ct;
+         // fprintf(stdout, "%4d    %6d\n", ct, key);
+
+         Status_Code_Info * desc = find_global_status_code_description(key);
+
+
+#ifdef OLD
+         Retcode_Range_Id rc_range = get_modulation(key);
+         Retcode_Description_Finder desc_finder = retcode_range_table[rc_range].desc_finder;
+         Status_Code_Info * desc = NULL;
+         if (desc_finder) {
+            int search_key = key;
+            bool value_is_modulated = retcode_range_table[rc_range].finder_arg_is_modulated;
+            if (!value_is_modulated) {
+               search_key = demodulate_rc(key, rc_range);
+            }
+            desc = desc_finder(search_key);
+            if (!desc) {
+               desc = &default_description;
+               desc->code = key;
+               desc->name = "";
+               desc->description = "unrecognized status code";
+            }
+         }
+         else {     // no finder
+            desc = &default_description;
+            desc->code = key;
+            desc->name = "";
+            desc->description = "(status code not in interpretable range)";
+         }
+#endif
+         fprintf(stdout, "%5d   %-25s (%5d) %s\n",
+              ct,
+              desc->name,
+              key,
+              desc->description
+             );
+      }
+   }
+   printf("Total errors: %d\n", total_counts);
+   assert(summed_ct == total_counts);
+   g_free(keysp);
+   fprintf(stdout,"\n");
+}
+
+#ifdef FUTURE
+int get_status_code_count(int rc) {
+   // *** TODO ***
+   return 0;
+}
+
+void reset_status_code_counts() {
+   // *** TODO ***
+}
+#endif
+
+void init_status_counts() {
+   error_counts_hash = g_hash_table_new(NULL,NULL);
+
 }
 
 
