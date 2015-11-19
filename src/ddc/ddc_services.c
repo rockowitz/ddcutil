@@ -558,33 +558,40 @@ Display_Info_List * get_valid_ddc_displays() {
 
 
 Version_Spec get_vcp_version_by_display_handle(Display_Handle * dh) {
-   Version_Spec vspec = {0,0};
+   // printf("(%s) Starting. dh=%p, dh->vcp_version =  %d.%d\n",
+   //        __func__, dh, dh->vcp_version.major, dh->vcp_version.minor);
+   if (is_version_unqueried(dh->vcp_version)) {
+      dh->vcp_version.major = 0;
+      dh->vcp_version.minor = 0;
+      Interpreted_Vcp_Code * pinterpreted_code;
 
-   Interpreted_Vcp_Code * pinterpreted_code;
-
-   Global_Status_Code  gsc = get_vcp_by_display_handle(dh, 0xdf, &pinterpreted_code);
-   if (gsc == 0) {
-      vspec.major = pinterpreted_code->sh;
-      vspec.minor = pinterpreted_code->sl;
+      Global_Status_Code  gsc = get_vcp_by_display_handle(dh, 0xdf, &pinterpreted_code);
+      if (gsc == 0) {
+         dh->vcp_version.major = pinterpreted_code->sh;
+         dh->vcp_version.minor = pinterpreted_code->sl;
+      }
+      else {
+         printf("(%s) Error detecting VCP version. gsc=%s\n",
+                __func__, global_status_code_description(gsc) );
+      }
    }
-   else {
-      printf("(%s) Error detecting VCP version. gsc=%s\n",
-             __func__, global_status_code_description(gsc) );
-   }
-
-   return vspec;
+   // printf("(%s) Returning: %d.%d\n", __func__, dh->vcp_version.major, dh->vcp_version.minor);
+   return dh->vcp_version;
 }
 
 
 Version_Spec get_vcp_version_by_display_ref(Display_Ref * dref) {
-   TRCMSG("Starting");
+   // printf("(%s) Starting. dref=%p, dref->vcp_version =  %d.%d\n",
+   //        __func__, dref, dref->vcp_version.major, dref->vcp_version.minor);
 
-   Display_Handle * dh = ddc_open_display(dref, EXIT_IF_FAILURE);
-   Version_Spec vspec = get_vcp_version_by_display_handle(dh);
-   ddc_close_display(dh);
+   if (is_version_unqueried(dref->vcp_version)) {
+      Display_Handle * dh = ddc_open_display(dref, EXIT_IF_FAILURE);
+      dref->vcp_version = get_vcp_version_by_display_handle(dh);
+      ddc_close_display(dh);
+   }
 
-   TRCMSG("Done. Returning vspec=%d.%d", vspec.major, vspec.minor);
-   return vspec;
+   // printf("(%s) Returning: %d.%d\n", __func__, dref->vcp_version.major, vspec.minor);
+   return dref->vcp_version;
 }
 
 

@@ -13,6 +13,7 @@
 
 #include <util/coredefs.h>
 
+#include <base/ddc_base_defs.h>
 #include <base/edid.h>
 #include <base/util.h>
 
@@ -64,18 +65,24 @@ Display_Identifier* create_mon_ser_display_identifier(char* model_name, char* se
 void                report_display_identifier(Display_Identifier * pdid, int depth);
 void                free_display_identifier(Display_Identifier * pdid);
 
+//  Display_Ref, potentially also Display_Handle:
+bool is_version_unqueried(Version_Spec vspec);
+
 
 // *** Display_Ref ***
 
 typedef enum {DDC_IO_DEVI2C, DDC_IO_ADL} DDC_IO_Mode;
 char * ddc_io_mode_name(DDC_IO_Mode val);
 
+#define DISPLAY_REF_MARKER "DREF"
 typedef
 struct {
-   DDC_IO_Mode ddc_io_mode;
-   int         busno;
-   int         iAdapterIndex;
-   int         iDisplayIndex;
+   char         marker[4];
+   DDC_IO_Mode  ddc_io_mode;
+   int          busno;
+   int          iAdapterIndex;
+   int          iDisplayIndex;
+   Version_Spec vcp_version;
 } Display_Ref;
 
 #define ASSERT_VALID_DISPLAY_REF(dref, io_mode) assert(dref && dref->ddc_io_mode == io_mode)
@@ -104,6 +111,7 @@ struct {
    int  fh;     // file handle if ddc_io_mode == DDC_IO_DEVI2C
    int  iAdapterIndex;
    int  iDisplayIndex;
+   Version_Spec vcp_version;
 } Display_Handle;
 
 Display_Handle * create_bus_display_handle(int fh, int busno);

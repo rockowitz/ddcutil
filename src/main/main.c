@@ -80,11 +80,11 @@ void reset_stats() {
 }
 
 
-void report_stats(int cmdId) {
+void report_stats(int cmd_id) {
    // retry related stats
    ddc_report_write_only_stats();
    ddc_report_write_read_stats();
-   if (cmdId == CMDID_CAPABILITIES)
+   if (cmd_id == CMDID_CAPABILITIES)
       report_multi_part_read_stats();
    puts("");
 
@@ -134,32 +134,38 @@ void report_stats(int cmdId) {
  *    or an ADL adapter.display number, NULL if display not found
  */
 Display_Ref* get_display_ref_for_display_identifier(Display_Identifier* pdid, bool validate) {
-   Display_Ref* pdref = NULL;
+   Display_Ref* dref = NULL;
    bool validated = true;
 
    switch (pdid->id_type) {
    case DISP_ID_BUSNO:
-      pdref = calloc(1,sizeof(Display_Ref));
-      pdref->ddc_io_mode = DDC_IO_DEVI2C;
-      pdref->busno = pdid->busno;
+      dref = create_bus_display_ref(pdid->busno);
+#ifdef OLD
+      dref = calloc(1,sizeof(Display_Ref));
+      dref->ddc_io_mode = DDC_IO_DEVI2C;
+      dref->busno = pdid->busno;
+#endif
       validated = false;
       break;
    case DISP_ID_ADL:
-      pdref = calloc(1,sizeof(Display_Ref));
-      pdref->ddc_io_mode = DDC_IO_ADL;
-      pdref->iAdapterIndex = pdid->iAdapterIndex;
-      pdref->iDisplayIndex = pdid->iDisplayIndex;
+      dref = create_adl_display_ref(pdid->iAdapterIndex, pdid->iDisplayIndex);
+#ifdef OLD
+      dref = calloc(1,sizeof(Display_Ref));
+      dref->ddc_io_mode = DDC_IO_ADL;
+      dref->iAdapterIndex = pdid->iAdapterIndex;
+      dref->iDisplayIndex = pdid->iDisplayIndex;
+#endif
       validated = false;
       break;
    case DISP_ID_MONSER:
-      pdref = ddc_find_display_by_model_and_sn(pdid->model_name, pdid->serial_ascii);  // in ddc_packet_io
-      if (!pdref) {
+      dref = ddc_find_display_by_model_and_sn(pdid->model_name, pdid->serial_ascii);  // in ddc_packet_io
+      if (!dref) {
          fprintf(stderr, "Unable to find monitor with the specified model and serial number\n");
       }
       break;
    case DISP_ID_EDID:
-      pdref = ddc_find_display_by_edid(pdid->edidbytes);
-      if (!pdref) {
+      dref = ddc_find_display_by_edid(pdid->edidbytes);
+      if (!dref) {
          fprintf(stderr, "Unable to find monitor with the specified EDID\n" );
       }
       break;
@@ -167,17 +173,17 @@ Display_Ref* get_display_ref_for_display_identifier(Display_Identifier* pdid, bo
       PROGRAM_LOGIC_ERROR("Invalid DisplayIdType value: %d\n", pdid->id_type);
    }  // switch
 
-   if (pdref) {
+   if (dref) {
       if (!validated)      // DISP_ID_BUSNO or DISP_ID_ADL
-        validated = ddc_is_valid_display_ref(pdref);
+        validated = ddc_is_valid_display_ref(dref);
       if (!validated) {
-         free(pdref);
-         pdref = NULL;
+         free(dref);
+         dref = NULL;
       }
    }
 
    // printf("(%s) Returning: %s\n", __func__, (pdref)?"non-null": "NULL" );
-   return pdref;
+   return dref;
 }
 
 
@@ -194,9 +200,6 @@ int main(int argc, char *argv[]) {
    // init_i2c_io();   // currently does nothing
 
    set_i2c_io_strategy(DEFAULT_I2C_IO_STRATEGY);
-
-
-
 
    int main_rc = EXIT_FAILURE;
 
@@ -290,6 +293,10 @@ int main(int argc, char *argv[]) {
       // returns NULL if not a valid display:
       Display_Ref * dref = get_display_ref_for_display_identifier(parsed_cmd->pdid, !parsed_cmd->force);
       if (dref) {
+         Version_Spec vspec = get_vcp_version_by_display_ref(dref);
+         if (vspec.major < 2) {
+            printf("VCP version for display < 2.0. Output may not be accurate.\n");
+         }
          switch(parsed_cmd->cmd_id) {
 
          case CMDID_CAPABILITIES:

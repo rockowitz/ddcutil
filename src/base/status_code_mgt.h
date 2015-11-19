@@ -95,7 +95,7 @@ Retcode_Range_Id get_modulation(int rc);
 // Maintain counts of DDC data errors
 
 void init_status_counts();
-int record_status_code_occurrence(int rc, const char * caller_name);
+Global_Status_Code record_status_code_occurrence(Global_Status_Code rc, const char * caller_name);
 #define COUNT_STATUS_CODE(rc) record_status_code_occurrence(rc,__func__)
 void show_status_counts();
 #ifdef FUTURE

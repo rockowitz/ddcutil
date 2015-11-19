@@ -98,7 +98,8 @@ Display_Handle* ddc_open_display(Display_Ref * dref,  Failure_Action failure_act
       pDispHandle = create_adl_display_handle_from_display_ref(dref);
    }
    // needed?  for both or just I2C?
-   sleep_millis_with_trace(DDC_TIMEOUT_MILLIS_DEFAULT, __func__, NULL);
+   // sleep_millis_with_trace(DDC_TIMEOUT_MILLIS_DEFAULT, __func__, NULL);
+   call_tuned_sleep_i2c(SE_POST_OPEN);
    // report_display_handle(pDispHandle, __func__);
    return pDispHandle;
 }
@@ -266,8 +267,6 @@ Global_Status_Code (*Write_Read_Raw_Function)(
         );
 
 
-
-
 //
 // write and read operations that take DDC_Packets
 //
@@ -306,61 +305,26 @@ Global_Status_Code ddc_i2c_write_read_raw(
    // dump_packet(request_packet_ptr);
    ASSERT_VALID_DISPLAY_REF(dh, DDC_IO_DEVI2C);
 
-#ifdef OLD
-   Global_Status_Code rc = perform_i2c_write2(
-#endif
-
-
-#ifdef OLD
-   RECORD_TIMING_STATS_NOERRNO(
-      timing_stats->pread_write_stats,
-      ( rc = i2c_io_strategy->i2c_writer(fh, bytect, bytes_to_write ) )
-     );
-#endif
-
-   Global_Status_Code rc;
-
-#ifdef OLD
-   RECORD_TIMING_STATS_NOERRNO(
-      timing_stats->pread_write_stats, IE_WRITE_BEFORE_READ,
-      ( rc = invoke_i2c_writer(
-                              dh->fh,
-                              get_packet_len(request_packet_ptr)-1,
-                              get_packet_start(request_packet_ptr)+1,
-                              DDC_TIMEOUT_USE_DEFAULT) )
-     );
-#endif
-#ifdef NO
-   RECORD_IO_EVENT(
-      IE_WRITE_BEFORE_READ,
-      ( rc = invoke_i2c_writer(
-                              dh->fh,
-                              get_packet_len(request_packet_ptr)-1,
-                              get_packet_start(request_packet_ptr)+1,
-                              DDC_TIMEOUT_USE_DEFAULT) )
-     );
-#endif
-   ( rc = invoke_i2c_writer(
+   Global_Status_Code rc =
+         invoke_i2c_writer(
                            dh->fh,
                            get_packet_len(request_packet_ptr)-1,
                            get_packet_start(request_packet_ptr)+1,
-                           DDC_TIMEOUT_USE_DEFAULT) );
+                           DDC_TIMEOUT_USE_DEFAULT) ;
    TRCMSGTG(tg, "perform_i2c_write2() returned %d\n", rc);
    if (rc == 0) {
-#ifdef OLD
-      rc = perform_i2c_read2(dh->fh, max_read_bytes, readbuf, DDC_TIMEOUT_USE_DEFAULT);
-#endif
-      sleep_i2c(SE_WRITE_TO_READ);
+      call_tuned_sleep_i2c(SE_WRITE_TO_READ);
       rc = invoke_i2c_reader(dh->fh, max_read_bytes, readbuf, DDC_TIMEOUT_USE_DEFAULT);
       // note_io_event(IE_READ_AFTER_WRITE, __func__);
       if (rc == 0 && all_zero(readbuf, max_read_bytes)) {
          rc = DDCRC_READ_ALL_ZERO;
          // printf("(%s) All zero response.", __func__ );
+         COUNT_STATUS_CODE(rc);
          DDCMSG("All zero response detected in %s", __func__);
       }
    }
-   if (rc < 0)
-      note_io_error(rc, __func__);
+   // if (rc < 0)
+   //    note_io_error(rc, __func__);
 
    TRCMSGTG(tg, "Done. gsc=%d", rc);
    return rc;
@@ -412,7 +376,7 @@ Global_Status_Code ddc_adl_write_read_raw(
    if (adlrc < 0)
       gsc = modulate_rc(adlrc, RR_ADL);
    else {
-      sleep_adl(SE_WRITE_TO_READ);
+      call_tuned_sleep_adl(SE_WRITE_TO_READ);
       adlrc = adl_ddc_read_only(
             dh->iAdapterIndex,
             dh->iDisplayIndex,
@@ -426,19 +390,19 @@ Global_Status_Code ddc_adl_write_read_raw(
                  gsc = DDCRC_READ_ALL_ZERO;
                  // printf("(%s) All zero response.\n", __func__ );
                  DDCMSG("All zero response.");
+                 COUNT_STATUS_CODE(gsc);
          }
          else if (memcmp(get_packet_start(request_packet_ptr), readbuf, get_packet_len(request_packet_ptr)) == 0) {
             // printf("(%s) Bytes read same as bytes written.\n", __func__ );
             // is this a DDC error or a programming bug?
             DDCMSG("Bytes read same as bytes written.", __func__ );
             gsc = DDCRC_READ_EQUALS_WRITE;
+            COUNT_STATUS_CODE(gsc);
          }
          else {
             gsc = 0;
          }
-
       }
-
    }
 
 
@@ -709,7 +673,7 @@ Global_Status_Code ddc_i2c_write_only(
    // note_io_event(IE_WRITE_ONLY, __func__);
    if (rc < 0)
       note_io_error(rc, __func__);
-   sleep_i2c(SE_POST_WRITE);
+   call_tuned_sleep_i2c(SE_POST_WRITE);
    TRCMSGTF(tf, "Done. rc=%d\n", rc);
    return rc;
 }

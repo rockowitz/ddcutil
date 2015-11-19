@@ -16,6 +16,7 @@
 
 #include <util/report_util.h>
 
+#include <base/ddc_base_defs.h>
 #include <base/edid.h>
 #include <base/displays.h>
 
@@ -151,18 +152,32 @@ char * ddc_io_mode_name(DDC_IO_Mode val) {
    return DDC_IO_Mode_Names[val];
 }
 
+static const Version_Spec version_spec_unqueried = {0xff, 0xff};
+
+bool is_version_unqueried(Version_Spec vspec) {
+   return (vspec.major == 0xff && vspec.minor == 0xff);
+}
+
+
+// PROBLEM: bus display ref getting created some other way
 Display_Ref * create_bus_display_ref(int busno) {
    Display_Ref * dref = calloc(1, sizeof(Display_Ref));
+   memcpy(dref->marker, DISPLAY_REF_MARKER, 4);
    dref->ddc_io_mode = DDC_IO_DEVI2C;
-   dref->busno = busno;
+   dref->busno       = busno;
+   dref->vcp_version = version_spec_unqueried;
+   // printf("(%s) Done.  Constructed bus display ref: \n", __func__);
+   // report_display_ref(dref,0);
    return dref;
 }
 
 Display_Ref * create_adl_display_ref(int iAdapterIndex, int iDisplayIndex) {
    Display_Ref * dref = calloc(1, sizeof(Display_Ref));
-   dref->ddc_io_mode = DDC_IO_ADL;
+   memcpy(dref->marker, DISPLAY_REF_MARKER, 4);
+   dref->ddc_io_mode   = DDC_IO_ADL;
    dref->iAdapterIndex = iAdapterIndex;
    dref->iDisplayIndex = iDisplayIndex;
+   dref->vcp_version   = version_spec_unqueried;
    return dref;
 }
 
@@ -206,6 +221,8 @@ void report_display_ref(Display_Ref * dref, int depth) {
       rpt_int("iAdapterIndex", NULL, dref->iAdapterIndex, d1);
       rpt_int("iDisplayIndex", NULL, dref->iDisplayIndex, d1);
    }
+   // TODO: fix to use report function:
+   printf("   vcp_version:  %d.%d\n", dref->vcp_version.major, dref->vcp_version.minor );
 }
 
 char * display_ref_short_name_r(Display_Ref * dref, char * buf, int bufsize) {
@@ -234,6 +251,8 @@ Display_Handle * create_bus_display_handle(int fh, int busno) {
    dh->ddc_io_mode = DDC_IO_DEVI2C;
    dh->fh = fh;
    dh->busno = busno;
+   dh->vcp_version = version_spec_unqueried;
+
    // report_display_handle(dh,__func__);
    return dh;
 }
@@ -244,6 +263,7 @@ Display_Handle * create_adl_display_handle(int iAdapterIndex, int iDisplayIndex)
    dh->ddc_io_mode = DDC_IO_ADL;
    dh->iAdapterIndex = iAdapterIndex;
    dh->iDisplayIndex = iDisplayIndex;
+   dh->vcp_version = version_spec_unqueried;
    return dh;
 }
 
@@ -275,6 +295,7 @@ void report_display_handle(Display_Handle * dh, const char * msg) {
             PROGRAM_LOGIC_ERROR("Invalid ddc_io_mode: %d\n", dh->ddc_io_mode);
          }
       }
+      printf("   vcp_version:     %d.%d\n", dh->vcp_version.major, dh->vcp_version.minor);
    }
 
 }
