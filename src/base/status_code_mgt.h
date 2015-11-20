@@ -21,6 +21,7 @@ struct {
    int    code;
    char * name;
    char * description;
+   // idea: add flags for NOT_AN_ERROR, DERIVED ?
 } Status_Code_Info;
 
 // debugging function:
@@ -96,7 +97,7 @@ Retcode_Range_Id get_modulation(int rc);
 Status_Code_Info * find_global_status_code_description(Global_Status_Code rc);
 
 // Returns status code description:
-char * global_status_code_description(Global_Status_Code rc);   // must be freed after use
+char * gsc_desc(Global_Status_Code rc);   // must be freed after use
 
 
 #endif /* STATUS_CODE_MGT_H_ */

@@ -76,7 +76,7 @@ Retcode_Range_Table_Entry retcode_range_table[] = {
       {RR_BASE,   RCRANGE_BASE_START,   RCRANGE_BASE_MAX,  NULL,  false },     // should this be entry in table?
       {RR_ERRNO,  RCRANGE_ERRNO_START,  RCRANGE_ERRNO_MAX, NULL,  false },
       {RR_ADL,    RCRANGE_ADL_START,    RCRANGE_ADL_MAX,   NULL,  false },
-      {RR_DDC,    RCRANGE_DDC_START,    RCRANGE_DDC_MAX,   find_ddcrc_status_code_description,  true },
+      {RR_DDC,    RCRANGE_DDC_START,    RCRANGE_DDC_MAX,   ddcrc_find_status_code_info,  true },
 };
 int retcode_range_ct = sizeof(retcode_range_table)/sizeof(Retcode_Range_Table_Entry);
 
@@ -186,7 +186,7 @@ static char workbuf[WORKBUF_SIZE];
 
 
 // Returns status code description:
-char * global_status_code_description(Global_Status_Code status_code) { // must be freed after use
+char * gsc_desc(Global_Status_Code status_code) { // must be freed after use
    Status_Code_Info * pdesc = find_global_status_code_description(status_code);
    if (pdesc) {
       snprintf(workbuf, WORKBUF_SIZE, "%s(%d): %s",

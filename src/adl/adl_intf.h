@@ -53,24 +53,24 @@ void adl_release();
 
 // Report on active displays
 
-Parsed_Edid* get_parsed_edid_for_adlno(int iAdapterIndex, int iDisplayIndex);
+Parsed_Edid* adl_get_parsed_edid_by_adlno(int iAdapterIndex, int iDisplayIndex);
 
-int show_active_adl_displays();   // returns number of active displays
+int adl_show_active_displays();   // returns number of active displays
 
 void report_adl_display_rec(ADL_Display_Rec * pRec, bool verbose, int depth);
 
 
 // Find and validate display
 
-bool              is_valid_adl_adlno(int iAdapterIndex, int iDisplayIndex, bool emit_error_msg);
+bool              adl_is_valid_adlno(int iAdapterIndex, int iDisplayIndex, bool emit_error_msg);
 
-ADL_Display_Rec * find_display_by_adlno(int iAdapterIndex, int iDisplayIndex, bool emit_error_msg);
+ADL_Display_Rec * adl_find_display_by_adlno(int iAdapterIndex, int iDisplayIndex, bool emit_error_msg);
 
-ADL_Display_Rec * find_adl_display_for_monitor(const char * model, const char * sn);
+ADL_Display_Rec * adl_find_display_by_model_sn(const char * model, const char * sn);
 
-ADL_Display_Rec * find_adl_display_by_edid(const Byte * pEdidBytes);
+ADL_Display_Rec * adl_find_display_by_edid(const Byte * pEdidBytes);
 
-Display_Info_List get_valid_adl_displays();
+Display_Info_List adl_get_valid_displays();
 
 
 // Read from and write to the display

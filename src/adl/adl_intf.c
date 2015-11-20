@@ -134,7 +134,7 @@ bool is_adl_available() {
  *   1 Library not found
  *  -1 error loading function
  */
-int link_adl(Adl_Procs** pLocAdl_Procs, bool verbose) {
+static int link_adl(Adl_Procs** pLocAdl_Procs, bool verbose) {
    // printf("(%s) Staring.\n", __func__ );
    Adl_Procs* adl =  calloc(1, sizeof(Adl_Procs));
    int result = 0;
@@ -263,7 +263,7 @@ bool isConnectedAndMapped(ADLDisplayInfo * pDisplayInfo) {
 #endif
 
 
-bool is_active_display(int iAdapterIndex, ADLDisplayInfo * pDisplayInfo) {
+static bool is_active_display(int iAdapterIndex, ADLDisplayInfo * pDisplayInfo) {
    // printf("(%s) Startimg.  \n", __func__ );
    bool result = true;
 
@@ -537,10 +537,10 @@ void adl_release() {
 //
 
 
-Parsed_Edid*    get_parsed_edid_for_adlno(int iAdapterIndex, int iDisplayIndex) {
+Parsed_Edid*    adl_get_parsed_edid_by_adlno(int iAdapterIndex, int iDisplayIndex) {
    Parsed_Edid* parsedEdid = NULL;
 
-   ADL_Display_Rec * pAdlRec = find_display_by_adlno(iAdapterIndex, iDisplayIndex, false);
+   ADL_Display_Rec * pAdlRec = adl_find_display_by_adlno(iAdapterIndex, iDisplayIndex, false);
    if (pAdlRec) {
       parsedEdid = pAdlRec->pEdid;
    }
@@ -552,7 +552,7 @@ Parsed_Edid*    get_parsed_edid_for_adlno(int iAdapterIndex, int iDisplayIndex) 
 DisplayIdInfo* get_adl_display_id_info(int iAdapterIndex, int iDisplayIndex) {
    DisplayIdInfo * pIdInfo = NULL;
 
-   Parsed_Edid * pEdid = get_parsed_edid_for_adlno(iAdapterIndex, iDisplayIndex);
+   Parsed_Edid * pEdid = adl_get_parsed_edid_by_adlno(iAdapterIndex, iDisplayIndex);
    if (pEdid) {
       pIdInfo = calloc(1, sizeof(DisplayIdInfo));
       memcpy(pIdInfo->mfg_id,       pEdid->mfg_id,       sizeof(pIdInfo->mfg_id));
@@ -571,7 +571,7 @@ DisplayIdInfo* get_adl_display_id_info(int iAdapterIndex, int iDisplayIndex) {
  * Returns:
  *   number of active displays
  */
-int show_active_adl_displays() {
+int adl_show_active_displays() {
    if (adl_linked) {
       printf("\nDisplays connected to AMD proprietary driver: %s\n", (active_display_ct == 0) ? "None" : "");
       puts("");
@@ -592,7 +592,7 @@ int show_active_adl_displays() {
 }
 
 
-Display_Info_List get_valid_adl_displays() {
+Display_Info_List adl_get_valid_displays() {
    Display_Info_List info_list = {0,NULL};
    Display_Info * info_recs = calloc(active_display_ct, sizeof(Display_Info));
 
@@ -664,7 +664,7 @@ void report_adl_display_rec(ADL_Display_Rec * pRec, bool verbose, int depth) {
 /* Find display by adapter number/display number
  *
  */
-ADL_Display_Rec * find_display_by_adlno(int iAdapterIndex, int iDisplayIndex, bool emit_error_msg) {
+ADL_Display_Rec * adl_find_display_by_adlno(int iAdapterIndex, int iDisplayIndex, bool emit_error_msg) {
    ADL_Display_Rec * result = NULL;
 
    if (active_display_ct == 0) {
@@ -693,7 +693,7 @@ ADL_Display_Rec * find_display_by_adlno(int iAdapterIndex, int iDisplayIndex, bo
 /* Find display by model name and serial number
  *
  */
-ADL_Display_Rec * find_adl_display_for_monitor(const char * model, const char * sn) {
+ADL_Display_Rec * adl_find_display_by_model_sn(const char * model, const char * sn) {
    // printf("(%s) Starting. mode=%s, sn=%s   \n", __func__, model, sn );
    ADL_Display_Rec * result = NULL;
    int ndx;
@@ -714,7 +714,7 @@ ADL_Display_Rec * find_adl_display_for_monitor(const char * model, const char * 
 /* Find display by EDID
  *
  */
-ADL_Display_Rec * find_adl_display_by_edid(const Byte * pEdidBytes) {
+ADL_Display_Rec * adl_find_display_by_edid(const Byte * pEdidBytes) {
    // printf("(%s) Starting. mode=%s, sn=%s   \n", __func__, model, sn );
    ADL_Display_Rec * result = NULL;
    int ndx;
@@ -741,8 +741,8 @@ ADL_Display_Rec * find_adl_display_by_edid(const Byte * pEdidBytes) {
  * Returns:
  *   true if an active display, false if not
  */
-bool is_valid_adl_adlno(int iAdapterIndex, int iDisplayIndex, bool emit_error_msg) {
-   return (find_display_by_adlno(iAdapterIndex, iDisplayIndex, emit_error_msg) != NULL);
+bool adl_is_valid_adlno(int iAdapterIndex, int iDisplayIndex, bool emit_error_msg) {
+   return (adl_find_display_by_adlno(iAdapterIndex, iDisplayIndex, emit_error_msg) != NULL);
 }
 
 

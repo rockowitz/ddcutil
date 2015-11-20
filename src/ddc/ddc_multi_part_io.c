@@ -91,14 +91,14 @@ void report_multi_part_read_stats() {
 
 Global_Status_Code try_multi_part_read(
                       Display_Handle * dh,
-                      Byte request_type,
-                      Byte request_subtype,
-                      Buffer * accumulator) {
+                      Byte             request_type,
+                      Byte             request_subtype,
+                      Buffer *         accumulator) {
    bool force_debug = false;
    Trace_Group tg = TRACE_GROUP;
    if (force_debug)
       tg = 0xFF;  // force tracing
-   TRCMSGTG(tg, "Starting. request_type=%d, request_subtype=%d, accumulator=%p",
+   TRCMSGTG(tg, "Starting. request_type=0x%02x, request_subtype=x%02x, accumulator=%p",
             request_type, request_subtype, accumulator);
 
    Global_Status_Code rc = 0;
@@ -114,8 +114,8 @@ Global_Status_Code try_multi_part_read(
    int  cur_offset = 0;
    bool complete   = false;
    while (!complete && rc == 0) {         // loop over fragments
-      if ( IS_TRACING() || force_debug )
-         puts("");
+      // if ( IS_TRACING() || force_debug )
+      //    puts("");
       TRCMSGTG(tg, "Top of fragment loop");
 
       int fragment_size;
@@ -133,7 +133,8 @@ Global_Status_Code try_multi_part_read(
            expected_subtype,
            &response_packet_ptr
         );
-      TRCMSGTG(tg, "ddc_write_read_with_retry() returned %d", rc);
+      TRCMSGTG(tg, "ddc_write_read_with_retry() request_type=0x%02x, request_subtype=0x%02x, returned %s",
+               request_type, request_subtype, gsc_desc( rc));
 
       if (rc != 0) {
          if (response_packet_ptr)
@@ -188,7 +189,7 @@ Global_Status_Code try_multi_part_read(
         // TRCMSGTG(tg, "Returning capabilities: %s",accumulator->bytes);
    }
 
-   TRCMSGTG(tg, "Returning %s", global_status_code_description(rc));
+   TRCMSGTG(tg, "Returning %s", gsc_desc(rc));
    return rc;
 }
 
@@ -236,9 +237,18 @@ Global_Status_Code multi_part_read_with_retry(
 
       rc = try_multi_part_read(dh, request_type, request_subtype, accumulator);
       if (rc == DDCRC_NULL_RESPONSE) {
-         rc = DDCRC_UNSUPPORTED;
+         // generally means this, but could conceivably indicate a protocol error.
+         // try multiple times to ensure it's really unsupported?
+         rc = DDCRC_DETERMINED_UNSUPPORTED;
          COUNT_STATUS_CODE(rc);   // double counting?
          can_retry = false;
+      }
+      else if (rc == DDCRC_ALL_TRIES_ZERO) {
+         can_retry = false;
+         COUNT_STATUS_CODE(rc);   // double counting?
+         printf("(%s) DDCRC_ALL_TRIES_ZERO\n", __func__);
+         rc = DDCRC_DETERMINED_UNSUPPORTED;    // ??
+         COUNT_STATUS_CODE(rc);   // double counting?
       }
       try_ctr++;
    }
@@ -250,6 +260,7 @@ Global_Status_Code multi_part_read_with_retry(
       }
    }
 
+   // if counts for DDCRC_ALL_TRIES_ZERO?
    record_tries(multi_part_read_stats_rec, rc, try_ctr);
    *ppbuffer = accumulator;
    return rc;

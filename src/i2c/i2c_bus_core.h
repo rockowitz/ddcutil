@@ -96,7 +96,7 @@ Global_Status_Code get_raw_edid_by_fd( int fd,      Buffer * rawedidbuf, bool de
 Global_Status_Code get_raw_edid_by_busno(int busno, Buffer * rawedidbuf, bool debug);
 #endif
 Parsed_Edid * get_parsed_edid_by_fd(int fd, bool debug);
-Parsed_Edid * get_parsed_edid_by_busno(int busno);
+Parsed_Edid * i2c_get_parsed_edid_by_busno(int busno);
 
 #endif /* I2C_BUS_CORE_H_ */
 

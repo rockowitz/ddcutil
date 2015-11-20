@@ -72,7 +72,7 @@ void reset_stats() {
    padl_call_stats = new_adl_call_stats();
    init_adl_call_stats(padl_call_stats);     // adl_intf.c
 #endif
-   init_call_stats();
+   init_execution_stats();
 
 #ifdef FUTURE
    reset_status_code_counts();   // currently does nothing
@@ -91,7 +91,7 @@ void report_stats(int cmd_id) {
    // Msg_Level msg_lvl = get_global_msg_level();
 
    // error code counts
-   show_status_counts();
+   show_all_status_counts();
 
 
    report_sleep_strategy_stats(0);
@@ -104,7 +104,7 @@ void report_stats(int cmd_id) {
       report_adl_call_stats(padl_call_stats, 0);
 #endif
    puts("");
-   report_call_stats(0);
+   report_io_call_stats(0);
    report_sleep_stats(0);
 
 
@@ -240,7 +240,7 @@ int main(int argc, char *argv[]) {
          set_output_format(OUTPUT_PROG_BUSINFO);
 #endif
       int ct = report_i2c_buses(false /* report_all */);
-      ct += show_active_adl_displays();
+      ct += adl_show_active_displays();
       if (ct > 0)
          main_rc = EXIT_SUCCESS;
 
@@ -308,7 +308,8 @@ int main(int argc, char *argv[]) {
                if (rc < 0) {
                   char buf[100];
                   switch(rc) {
-                  case DDCRC_UNSUPPORTED:
+                  case DDCRC_REPORTED_UNSUPPORTED:       // should not happen
+                  case DDCRC_DETERMINED_UNSUPPORTED:
                        printf("Unsupported request\n");
                        break;
                   case DDCRC_RETRIES:
@@ -318,7 +319,7 @@ int main(int argc, char *argv[]) {
                   default:
                        printf("(%s) !!! Unable to get capabilities for monitor on %s\n",
                                  __func__, display_ref_short_name_r(dref, buf, 100));
-                       printf("(%s) Unexpected status code: %s\n", __func__, global_status_code_description(rc));
+                       printf("(%s) Unexpected status code: %s\n", __func__, gsc_desc(rc));
                   }
                   main_rc = EXIT_FAILURE;
                }

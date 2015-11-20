@@ -614,7 +614,7 @@ Global_Status_DDC create_ddc_base_response_packet(
    //           __func__, ddcrc_description(result), *packet_ptr_addr);
    // }
    TRCMSG("returning %s, *packet_ptr_addr=%p\n",
-          ddcrc_description(result), *packet_ptr_addr);
+          ddcrc_desc(result), *packet_ptr_addr);
 
    assert( (result==DDCRC_OK && *packet_ptr_addr) || (result != DDCRC_OK && !*packet_ptr_addr));
    return result;
@@ -653,9 +653,17 @@ Global_Status_DDC create_ddc_response_packet(
       *packet_ptr_addr = 0;
    }
 
+   if (result < 0) {
+
+      // if (result == DDCRC_NULL_RESPONSE)
+      //    log_secondary_status_code(result, __func__);
+      // else
+      //    log_status_code(result, __func__);
+      log_status_code(result, __func__);
+   }
    // if (debug)
    //    printf("(%s) returning %s, *packet_ptr_addr=%p\n", __func__, ddcrc_description(result), *packet_ptr_addr);
-   TRCMSG("returning %s, *packet_ptr_addr=%p", ddcrc_description(result), *packet_ptr_addr);
+   TRCMSG("returning %s, *packet_ptr_addr=%p", ddcrc_desc(result), *packet_ptr_addr);
    assert( (result==DDCRC_OK && *packet_ptr_addr) || (result != DDCRC_OK && !*packet_ptr_addr));
    return result;
 }
@@ -747,7 +755,7 @@ Global_Status_DDC interpret_multi_part_read_response(
       // aux_data->text[text_length] = '\0';     // CHANGED
    }
    if (debug)
-      printf("(%s) returning %s\n", __func__, ddcrc_description(result));
+      printf("(%s) returning %s\n", __func__, ddcrc_desc(result));
    return result;
 }
 
@@ -893,7 +901,7 @@ Global_Status_DDC interpret_vcp_feature_response_std(
 
    // if (debug)
    //    printf("(%s) returning %s\n", __func__, ddcrc_description(result));
-   TRCMSG("returning %s\n", __func__, ddcrc_description(result));
+   TRCMSG("returning %s\n", __func__, ddcrc_desc(result));
    return result;
 }
 
@@ -1076,7 +1084,7 @@ Global_Status_DDC create_ddc_typed_response_packet(
    //    if (rc >= 0)
    //       dump_packet(*packet_ptr_addr);
    // }
-   TRCMSG("returning %s, *packet_ptr=%p", ddcrc_description(rc), *packet_ptr_addr);
+   TRCMSG("returning %s, *packet_ptr=%p", ddcrc_desc(rc), *packet_ptr_addr);
    if ( IS_TRACING() ) {
       if (rc >= 0)
          dump_packet(*packet_ptr_addr);
@@ -1098,7 +1106,7 @@ Global_Status_DDC create_ddc_capabilities_response_packet(
                                                      &packet);
    if (rc != 0) {
       // printf("(%s) create_ddc_response_packet() returned %s, packet=%p\n", __func__, ddcrc_description(rc), packet);
-      TRCMSG("create_ddc_response_packet() returned %s, packet=%p", ddcrc_description(rc), packet);
+      TRCMSG("create_ddc_response_packet() returned %s, packet=%p", ddcrc_desc(rc), packet);
    }
    if (rc == 0) {
       // dump_packet(packet);
@@ -1147,7 +1155,7 @@ Global_Status_DDC create_ddc_multi_part_read_response_packet(
                                                      &packet);
    if (rc != 0) {
       // printf("(%s) create_ddc_response_packet() returned %s, packet=%p\n", __func__, ddcrc_description(rc), packet);
-      TRCMSG("create_ddc_response_packet() returned %s, packet=%p", ddcrc_description(rc), packet);
+      TRCMSG("create_ddc_response_packet() returned %s, packet=%p", ddcrc_desc(rc), packet);
    }
    if (rc == 0) {
       // dump_packet(packet);
@@ -1202,7 +1210,7 @@ Global_Status_DDC create_ddc_getvcp_response_packet(
                &packet);
    if (rc != 0) {
       // printf("(%s) create_ddc_response_packet() returned %s, packet=%p\n", __func__, ddcrc_description(rc), packet);
-      TRCMSG("create_ddc_response_packet() returned %s, packet=%p", ddcrc_description(rc), packet);
+      TRCMSG("create_ddc_response_packet() returned %s, packet=%p", ddcrc_desc(rc), packet);
    }
    if (rc == 0) {
       // dump_packet(packet);
@@ -1362,7 +1370,7 @@ Global_Status_DDC get_interpreted_vcp_code(
       }
    }
    if (debug)
-      printf( "(%s) Returning %d: %s\n", __func__, rc, global_status_code_description(rc) );
+      printf( "(%s) Returning %d: %s\n", __func__, rc, gsc_desc(rc) );
    return rc;
 }
 

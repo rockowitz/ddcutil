@@ -91,7 +91,7 @@ Global_Status_Code invoke_i2c_writer(
 
    Global_Status_Code gsc = modulate_base_errno_ddc_to_global(rc);
    if (debug)
-      printf("(%s) Returning gsc=%s\n", __func__, global_status_code_description(gsc));
+      printf("(%s) Returning gsc=%s\n", __func__, gsc_desc(gsc));
    return gsc;
 }
 
@@ -138,7 +138,7 @@ Global_Status_Code invoke_i2c_reader(
 #endif
      Global_Status_Code gsc = modulate_base_errno_ddc_to_global(rc);
      if (debug )
-        printf("(%s) Returning gsc=%s\n", __func__, global_status_code_description(gsc));
+        printf("(%s) Returning gsc=%s\n", __func__, gsc_desc(gsc));
      return gsc;
 }
 

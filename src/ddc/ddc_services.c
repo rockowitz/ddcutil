@@ -235,7 +235,7 @@ void show_vcp_for_table_vcp_code_table_entry_by_display_handle(
          printf("VCP code 0x%02x (%-30s): Maximum retries exceeded\n", vcp_code, feature_name);
       // printf("Error retrieving VCP info.  Failed to interpret returned data.\n");
    }
-   else if (rc == DDCRC_UNSUPPORTED) {
+   else if (rc == DDCRC_REPORTED_UNSUPPORTED || rc == DDCRC_DETERMINED_UNSUPPORTED ) {
       if (!suppress_unsupported)
          printf("VCP code 0x%02x (%-30s): Unsupported feature code\n", vcp_code, feature_name);
    }
@@ -246,7 +246,7 @@ void show_vcp_for_table_vcp_code_table_entry_by_display_handle(
       if (output_level >= OL_NORMAL)
       // TODO: status code name
       printf("VCP code 0x%02x (%-30s): Invalid response. status code=%s\n",
-             vcp_code, feature_name, global_status_code_description(rc));
+             vcp_code, feature_name, gsc_desc(rc));
    }
 
    else {
@@ -533,7 +533,7 @@ void show_vcp_values_by_display_ref(Display_Ref * dref, VCP_Feature_Subset subse
 Display_Info_List * get_valid_ddc_displays() {
 
       Display_Info_List i2c_displays = get_valid_i2c_displays();
-      Display_Info_List adl_displays = get_valid_adl_displays();
+      Display_Info_List adl_displays = adl_get_valid_displays();
 
       // merge the lists
       int displayct = i2c_displays.ct + adl_displays.ct;
@@ -575,7 +575,7 @@ Version_Spec get_vcp_version_by_display_handle(Display_Handle * dh) {
          // may happen for pre MCCS v2 monitors
          if (debug)
             printf("(%s) Error detecting VCP version. gsc=%s\n",
-                    __func__, global_status_code_description(gsc) );
+                    __func__, gsc_desc(gsc) );
       }
    }
    // printf("(%s) Returning: %d.%d\n", __func__, dh->vcp_version.major, dh->vcp_version.minor);

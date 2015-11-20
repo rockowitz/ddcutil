@@ -122,7 +122,7 @@ Global_Status_Code put_vcp_by_display_ref(Display_Ref * pdisp, VCP_Feature_Table
    Global_Status_Code rc = set_vcp_by_display_ref(pdisp, vcp_code, new_value);
 
    if (rc != 0) {
-      printf("Setting value failed. rc=%d: %s\n", rc , global_status_code_description(rc));
+      printf("Setting value failed. rc=%d: %s\n", rc , gsc_desc(rc));
    }
 
    return rc;
@@ -191,7 +191,7 @@ Global_Status_Code get_vcp_by_display_handle(
         );
    // if (debug)
    //    printf("(%s) perform_ddc_write_read_with_retry() returned %d\n", __func__, rc);
-   TRCMSGTG(tg, "perform_ddc_write_read_with_retry() returned %s\n", global_status_code_description(rc));
+   TRCMSGTG(tg, "perform_ddc_write_read_with_retry() returned %s\n", gsc_desc(rc));
 
    if (rc == 0) {
       interpretation_ptr = (Interpreted_Vcp_Code *) call_calloc(1, sizeof(Interpreted_Vcp_Code), "get_vcp_by_DisplayRef");
@@ -234,7 +234,7 @@ Global_Status_Code get_table_vcp_by_display_handle(
             DDC_PACKET_TYPE_TABLE_READ_REQUEST,
             feature_code,
             &paccumulator);
-   TRCMSGTG(tg, "perform_ddc_write_read_with_retry() returned %s", global_status_code_description(gsc));
+   TRCMSGTG(tg, "perform_ddc_write_read_with_retry() returned %s", gsc_desc(gsc));
 
    if (gsc == 0) {
       *pp_table_bytes = paccumulator;
@@ -244,7 +244,7 @@ Global_Status_Code get_table_vcp_by_display_handle(
       }
    }
 
-   TRCMSGTG(tg, "Done. Returning rc=%s, *pp_table_bytes=%p", global_status_code_description(gsc), *pp_table_bytes);
+   TRCMSGTG(tg, "Done. Returning rc=%s, *pp_table_bytes=%p", gsc_desc(gsc), *pp_table_bytes);
    return gsc;
 }
 

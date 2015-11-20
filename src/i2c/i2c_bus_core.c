@@ -353,7 +353,7 @@ Byte detect_ddc_addrs_by_fd(int file) {
    // rc = do_i2c_file_read(file, 1, &readbuf, DDC_TIMEOUT_USE_DEFAULT);
    rc = invoke_i2c_reader(file, 1, &readbuf, DDC_TIMEOUT_USE_DEFAULT);
    // printf("(%s) call_read() returned %d\n", __func__, rc);
-   if (rc >= 0 || rc == DDCRC_READ_ALL_ZERO)
+   if (rc >= 0 || rc == DDCRC_READ_ALL_ZERO)   // 11/2015: DDCRC_READ_ALL_ZERO currently set only in ddc_packet_io.c
       result |= I2C_BUS_ADDR_0X37;
 
    // result |= I2C_BUS_ADDRS_CHECKED;
@@ -584,7 +584,7 @@ bool is_valid_bus(int busno, bool emit_error_msg) {
 DisplayIdInfo* get_bus_display_id_info(int busno) {
    DisplayIdInfo * pIdInfo = NULL;
 
-      Parsed_Edid* edid = get_parsed_edid_by_busno(busno);
+      Parsed_Edid* edid = i2c_get_parsed_edid_by_busno(busno);
       if (edid) {
          pIdInfo = calloc(1, sizeof(DisplayIdInfo));
          memcpy(pIdInfo->mfg_id,       edid->mfg_id,       sizeof(pIdInfo->mfg_id)      );
@@ -597,7 +597,7 @@ DisplayIdInfo* get_bus_display_id_info(int busno) {
 }
 #endif
 
-Parsed_Edid * get_parsed_edid_by_busno(int busno) {
+Parsed_Edid * i2c_get_parsed_edid_by_busno(int busno) {
    Parsed_Edid * edid = NULL;
 
    Bus_Info * pbus_info = get_bus_info(busno);

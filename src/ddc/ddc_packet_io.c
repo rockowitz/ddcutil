@@ -19,6 +19,8 @@
 #include <sys/ioctl.h>
 #include <unistd.h>
 
+#include <util/string_util.h>
+
 #include <base/ddc_errno.h>
 #include <base/ddc_packets.h>
 #include <base/displays.h>
@@ -93,6 +95,9 @@ Display_Handle* ddc_open_display(Display_Ref * dref,  Failure_Action failure_act
 
          pDispHandle = create_bus_display_handle(fd, dref->busno);
       }
+      else {
+         log_status_code(modulate_rc(fd, RR_ERRNO), __func__);
+      }
    }
    else {
       pDispHandle = create_adl_display_handle_from_display_ref(dref);
@@ -112,8 +117,10 @@ void ddc_close_display(Display_Handle * dh) {
       bool failure_action = EXIT_IF_FAILURE;
       // bool  failure_action = RETURN_ERROR_IF_FAILURE;
       int rc = close_i2c_bus(dh->fh, dh->busno,  failure_action);
-      if (rc != 0)
+      if (rc != 0) {
          printf("(%s) close_i2c_bus returned %d\n", __func__, rc);
+         log_status_code(modulate_rc(rc, RR_ERRNO), __func__);
+      }
    }
 }
 
@@ -126,7 +133,7 @@ Display_Ref* ddc_find_display_by_model_and_sn(const char * model, const char * s
       result = create_bus_display_ref(businfo->busno);
    }
    else {
-      ADL_Display_Rec * adlrec = find_adl_display_for_monitor(model, sn);
+      ADL_Display_Rec * adlrec = adl_find_display_by_model_sn(model, sn);
       if (adlrec) {
          result = create_adl_display_ref(adlrec->iAdapterIndex, adlrec->iDisplayIndex);
       }
@@ -144,7 +151,7 @@ Display_Ref* ddc_find_display_by_edid(const Byte * pEdidBytes) {
       result = create_bus_display_ref(businfo->busno);
    }
    else {
-      ADL_Display_Rec * adlrec = find_adl_display_by_edid(pEdidBytes);
+      ADL_Display_Rec * adlrec = adl_find_display_by_edid(pEdidBytes);
       if (adlrec) {
          result = create_adl_display_ref(adlrec->iAdapterIndex, adlrec->iDisplayIndex);
       }
@@ -158,9 +165,9 @@ Parsed_Edid* ddc_get_parsed_edid_by_display_ref(Display_Ref * dref) {
    Parsed_Edid* pEdid = NULL;
 
    if (dref->ddc_io_mode == DDC_IO_DEVI2C)
-      pEdid = get_parsed_edid_by_busno(dref->busno);
+      pEdid = i2c_get_parsed_edid_by_busno(dref->busno);
    else
-      pEdid = get_parsed_edid_for_adlno(dref->iAdapterIndex, dref->iDisplayIndex);
+      pEdid = adl_get_parsed_edid_by_adlno(dref->iAdapterIndex, dref->iDisplayIndex);
 
    // printf("(%s) Returning %p\n", __func__, pEdid);
    TRCMSG("Returning %p", __func__, pEdid);
@@ -179,7 +186,7 @@ bool ddc_is_valid_display_ref(Display_Ref * dref) {
       result = is_valid_bus(dref->busno, true /* emit_error_msg */);
    }
    else {
-      result = is_valid_adl_adlno(dref->iAdapterIndex, dref->iDisplayIndex, true /* emit_error_msg */);
+      result = adl_is_valid_adlno(dref->iAdapterIndex, dref->iDisplayIndex, true /* emit_error_msg */);
    }
    // printf("(%s) Returning %d\n", __func__, result);
    return result;
@@ -290,10 +297,10 @@ Global_Status_Code (*Write_Read_Raw_Function)(
  */
 Global_Status_Code ddc_i2c_write_read_raw(
          Display_Handle * dh,
-         DDC_Packet *  request_packet_ptr,
-         int           max_read_bytes,
-         Byte *        readbuf,
-         int *         pbytes_received
+         DDC_Packet *     request_packet_ptr,
+         int              max_read_bytes,
+         Byte *           readbuf,
+         int *            pbytes_received
         )
 {
    bool debug = false;
@@ -319,12 +326,15 @@ Global_Status_Code ddc_i2c_write_read_raw(
       if (rc == 0 && all_zero(readbuf, max_read_bytes)) {
          rc = DDCRC_READ_ALL_ZERO;
          // printf("(%s) All zero response.", __func__ );
-         COUNT_STATUS_CODE(rc);
+         // printf("(%s) Request was: %s\n", __func__,
+         //        hexstring(get_packet_start(request_packet_ptr)+1, get_packet_len(request_packet_ptr)-1));
+         // COUNT_STATUS_CODE(rc);
          DDCMSG("All zero response detected in %s", __func__);
       }
    }
-   // if (rc < 0)
-   //    note_io_error(rc, __func__);
+   if (rc < 0) {
+      COUNT_STATUS_CODE(rc);
+   }
 
    TRCMSGTG(tg, "Done. gsc=%d", rc);
    return rc;
@@ -359,11 +369,12 @@ Global_Status_Code ddc_adl_write_read_raw(
       int *            pbytes_received
      )
 {
-   bool debug = true;
+   bool debug = false;
    bool tf = IS_TRACING();
    if (debug)
       tf = true;
-   TRCMSGTF(tf, "Starting. Using adl_ddc_write_only() and adl_ddc_read_only() dh=%s", display_handle_repr_r(dh, NULL, 0));
+   TRCMSGTF(tf, "Starting. Using adl_ddc_write_only() and adl_ddc_read_only() dh=%s",
+            display_handle_repr_r(dh, NULL, 0));
    ASSERT_VALID_DISPLAY_REF(dh, DDC_IO_ADL);
 
    Global_Status_Code gsc = 0;
@@ -394,7 +405,7 @@ Global_Status_Code ddc_adl_write_read_raw(
       else {
          if ( all_zero(readbuf+1, max_read_bytes-1)) {
                  gsc = DDCRC_READ_ALL_ZERO;
-                 // printf("(%s) All zero response.\n", __func__ );
+                 printf("(%s) All zero response.\n", __func__ );
                  DDCMSG("All zero response.");
                  COUNT_STATUS_CODE(gsc);
          }
@@ -411,9 +422,9 @@ Global_Status_Code ddc_adl_write_read_raw(
       }
    }
 
-
-
-   TRCMSGTF(tf, "Done. rc=%s\n", global_status_code_description(gsc));
+   if (gsc < 0)
+      log_status_code(gsc, __func__);
+   TRCMSGTF(tf, "Done. rc=%s\n", gsc_desc(gsc));
    return gsc;
 }
 // #endif
@@ -472,7 +483,7 @@ Global_Status_Code ddc_adl_write_read_raw(
 
 
 
-   TRCMSGTF(tf, "Done. rc=%s\n", global_status_code_description(gsc));
+   TRCMSGTF(tf, "Done. rc=%s\n", gsc_desc(gsc));
    return gsc;
 }
 #endif
@@ -511,7 +522,7 @@ Global_Status_Code ddc_write_read_raw(
    }
 
    if (debug)
-      printf("(%s) Done, returning: %d\n", __func__, rc);
+      printf("(%s) Done, returning: %s\n", __func__, gsc_desc(rc));
    return rc;
 }
 
@@ -574,7 +585,7 @@ Global_Status_Code ddc_write_read(
               __func__,
               response_packet_ptr_loc);
        TRCMSGTF(tf, "create_ddc_typed_response_packet() returned %s, *response_packet_ptr_loc=%p",
-                ddcrc_description(rc), *response_packet_ptr_loc );
+                ddcrc_desc(rc), *response_packet_ptr_loc );
 
        if (rc != 0 && *response_packet_ptr_loc) {  // paranoid,  should never occur
           free(*response_packet_ptr_loc);
@@ -583,10 +594,11 @@ Global_Status_Code ddc_write_read(
 
    free(readbuf);    // or does response_packet_ptr_loc point into here?
 
-   if (rc != 0) {
-      COUNT_STATUS_CODE(rc);
-   }
-   TRCMSGTF(tf, "Done. rc=%d: %s\n", rc, global_status_code_description(rc) );
+   // already done
+   // if (rc != 0) {
+   //    COUNT_STATUS_CODE(rc);
+   // }
+   TRCMSGTF(tf, "Done. rc=%d: %s\n", rc, gsc_desc(rc) );
    if (rc == 0 && tf)
       dump_packet(*response_packet_ptr_loc);
 
@@ -628,6 +640,7 @@ Global_Status_Code ddc_write_read_with_retry(
    int  rc;
    int  tryctr;
    bool retryable;
+   int  ddcrc_read_all_zero_ct = 0;
 
    for (tryctr=0, rc=-999, retryable=true;
         tryctr < max_write_read_exchange_tries && rc < 0 && retryable;
@@ -648,31 +661,40 @@ Global_Status_Code ddc_write_read_with_retry(
       if (rc < 0) {     // n. ADL status codes have been modulated
          TRCMSGTF(tf, "perform_ddc_write_read() returned %d", rc );
          if (dh->ddc_io_mode == DDC_IO_DEVI2C) {
-               if (rc == DDCRC_NULL_RESPONSE)
-                   retryable = false;
-               else if (rc == modulate_rc(-EIO, RR_ERRNO) || rc == DDCRC_READ_ALL_ZERO)
-                    retryable = true;
-               else
-                    retryable = true;     // for now
-
-           }
-           else {
-              // TODO more detailed tests
-              if (rc == DDCRC_NULL_RESPONSE)
-                 retryable = false;
-              else if (rc == DDCRC_READ_ALL_ZERO)
-                 retryable = true;
-              else
-                 retryable = false;
-           }
-      }
+            if (rc == DDCRC_NULL_RESPONSE)
+               retryable = false;
+            // when is DDCRC_READ_ALL_ZERO actually an error vs the response of the monitor instead of NULL response?
+            else if (rc == modulate_rc(-EIO, RR_ERRNO) || rc == DDCRC_READ_ALL_ZERO)
+                retryable = true;
+            else
+               retryable = true;     // for now
+         }   // DDC_IO_ADL
+         else {
+            // TODO more detailed tests
+            if (rc == DDCRC_NULL_RESPONSE)
+               retryable = false;
+            else if (rc == DDCRC_READ_ALL_ZERO)
+               retryable = true;
+            else
+               retryable = false;
+         }
+         if (rc == DDCRC_READ_ALL_ZERO)
+            ddcrc_read_all_zero_ct++;
+      }    // rc < 0
    }
    // n. rc is now the value from the last pass through the loop
    // set it to a DDC status code indicating max tries exceeded
-   if ( rc < 0 && retryable )
+   if ( rc < 0 && retryable ) {
       rc = DDCRC_RETRIES;
+      if (ddcrc_read_all_zero_ct == max_write_read_exchange_tries) {
+         rc = DDCRC_ALL_TRIES_ZERO;
+         // printf("(%s) All tries zero ddcrc_read_all_zero_ct=%d, max_write_read_exchange_tries=%d, tryctr=%d\n",
+         //        __func__, ddcrc_read_all_zero_ct, max_write_read_exchange_tries, tryctr);
+      }
+
+   }
    record_tries(write_read_stats_rec, rc, tryctr);
-   TRCMSGTF(tf, "Done. rc=%s\n", global_status_code_description(rc));
+   TRCMSGTF(tf, "Done. rc=%s\n", gsc_desc(rc));
    return rc;
 }
 
@@ -706,7 +728,7 @@ Global_Status_Code ddc_i2c_write_only(
                            DDC_TIMEOUT_USE_DEFAULT);
    // note_io_event(IE_WRITE_ONLY, __func__);
    if (rc < 0)
-      note_io_error(rc, __func__);
+      log_status_code(rc, __func__);
    call_tuned_sleep_i2c(SE_POST_WRITE);
    TRCMSGTF(tf, "Done. rc=%d\n", rc);
    return rc;
