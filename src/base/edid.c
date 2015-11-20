@@ -181,6 +181,8 @@ Parsed_Edid * create_parsed_edid(Byte* edidbytes) {
 
    parsed_edid->year = edidbytes[17] + 1990;
    parsed_edid->is_model_year = edidbytes[16] == 0xff;
+   parsed_edid->edid_version_major = edidbytes[18];
+   parsed_edid->edid_version_minor = edidbytes[19];
 
    if (!ok) {
       free(parsed_edid);
@@ -200,6 +202,7 @@ void report_parsed_edid(Parsed_Edid * edid, bool verbose) {
       printf("   Serial number:    %s\n",          edid->serial_ascii);
       char * title = (edid->is_model_year) ? "Model year" : "Manufacture year";
       printf("   %-16s: %d\n", title, edid->year);
+      printf("   EDID version:     %d.%d\n", edid->edid_version_major, edid->edid_version_minor);
 
       if (verbose) {
          printf("EDID hex dump:\n");

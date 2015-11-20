@@ -60,6 +60,8 @@ struct {
    char         serial_ascii[EDID_SERIAL_ASCII_FIELD_SIZE];
    int          year;    // can be year of manufacture or model
    bool         is_model_year;   // if true, year is model year, if false, is manufacture year
+   Byte         edid_version_major;
+   Byte         edid_version_minor;
 } Parsed_Edid;
 
 
