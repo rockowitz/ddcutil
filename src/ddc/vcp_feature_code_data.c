@@ -109,16 +109,17 @@ Feature_Value_Entry * find_feature_values_new(Byte feature_code, Version_Spec vc
       printf("(%s) Starting. feature_code=0x%02x\n", __func__, feature_code);
    Feature_Value_Entry * result = NULL;
    VCP_Feature_Table_Entry * pentry = find_feature_by_hexid(feature_code);
-   assert(pentry);
+   // may not be found if called for capabilities and it's a mfg specific code
+   if (pentry) {
+      // TODO:
+      // if VCP_V2NC_V3T, check version id, if V3 return NULL
+      //
+      // could add a VCP feature table entry for v3 version values a distinguished from V2
 
-   // TODO:
-   // if VCP_V2NC_V3T, check version id, if V3 return NULL
-   //
-   // could add a VCP feature table entry for v3 version values a distinguished from V2
-
-   if (pentry->flags & VCP_NCSL) {
-      assert(pentry->nc_sl_values);
-      result = pentry->nc_sl_values;
+      if (pentry->flags & VCP_NCSL) {
+         assert(pentry->nc_sl_values);
+         result = pentry->nc_sl_values;
+      }
    }
    if (debug)
       printf("(%s) Starting. feature_code=0x%02x. Returning: %p\n", __func__, feature_code, result);
@@ -143,6 +144,8 @@ Feature_Value_Entry * find_feature_values_for_capabilities(Byte feature_code, Ve
       }
    }
    else {
+      // returns NULL if feature_code not found, which would be the case, e.g., for a
+      // manufacturer specific code
       result = find_feature_values_new(feature_code, vcp_version);
    }
 

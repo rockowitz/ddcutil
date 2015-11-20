@@ -84,7 +84,7 @@ void report_stats(int cmd_id) {
    // retry related stats
    ddc_report_write_only_stats();
    ddc_report_write_read_stats();
-   if (cmd_id == CMDID_CAPABILITIES)
+   // if (cmd_id == CMDID_CAPABILITIES)
       report_multi_part_read_stats();
    puts("");
 
@@ -295,7 +295,7 @@ int main(int argc, char *argv[]) {
       if (dref) {
          Version_Spec vspec = get_vcp_version_by_display_ref(dref);
          if (vspec.major < 2) {
-            printf("VCP version for display < 2.0. Output may not be accurate.\n");
+            printf("VCP version for display is less than MCCS 2.0. Output may not be accurate.\n");
          }
          switch(parsed_cmd->cmd_id) {
 

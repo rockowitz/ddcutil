@@ -69,7 +69,7 @@ void reset_multi_part_read_stats() {
    if (multi_part_read_stats_rec)
       reset_try_data(multi_part_read_stats_rec);
    else
-      multi_part_read_stats_rec = create_try_data("capabilities exchange", max_multi_part_read_tries);
+      multi_part_read_stats_rec = create_try_data("multi-part exchange", max_multi_part_read_tries);
 }
 
 void report_multi_part_read_stats() {

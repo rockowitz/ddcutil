@@ -18,6 +18,8 @@ void reset_try_data(void * stats_rec);
 
 void record_tries(void * stats_rec, int rc, int tryct);
 
+int get_total_tries(void * stats_rec);
+
 void report_try_data(void * stats_rec);
 
 #endif /* TRY_STATS_H_ */

@@ -760,7 +760,7 @@ Base_Status_ADL call_ADL_Display_DDCBlockAccess_Get(
       int    iAdapterIndex,
       int    iDisplayIndex,
       int    iOption,
-      int    xxx,
+      int    iCommandIndex,
       int    iSendMsgLen,
       char * lpucSendMsgBuf,
       int *  iRecvMsgLen,
@@ -773,7 +773,7 @@ Base_Status_ADL call_ADL_Display_DDCBlockAccess_Get(
       printf("(%s) iAdapterIndex=%d, iDisplayIndex=%d, iOption=%d, xxx=%d, iSendMsgLen=%d lpucSemdMsgBuf=%p,"
              " *piRecvMsgLen=%d, lpucRcvMsgBuf=%p\n",
          __func__,
-         iAdapterIndex, iDisplayIndex, iOption, xxx, iSendMsgLen, lpucSendMsgBuf, *iRecvMsgLen, lpucRcvMsgBuf);
+         iAdapterIndex, iDisplayIndex, iOption, iCommandIndex, iSendMsgLen, lpucSendMsgBuf, *iRecvMsgLen, lpucRcvMsgBuf);
       if (lpucSendMsgBuf) {
          char * hs = hexstring(lpucSendMsgBuf, iSendMsgLen);
          printf("(%s) lpucSendMsgBuf -> %s  \n", __func__, hs );
@@ -789,7 +789,7 @@ Base_Status_ADL call_ADL_Display_DDCBlockAccess_Get(
    RECORD_IO_EVENT(
       IE_WRITE_READ,
       (
-         rc = adl->ADL_Display_DDCBlockAccess_Get( iAdapterIndex, iDisplayIndex, iOption, xxx,
+         rc = adl->ADL_Display_DDCBlockAccess_Get( iAdapterIndex, iDisplayIndex, iOption, iCommandIndex,
                              iSendMsgLen, lpucSendMsgBuf, iRecvMsgLen, lpucRcvMsgBuf)
       )
    );
@@ -899,6 +899,7 @@ Base_Status_ADL adl_ddc_write_read(
 
 
 // 10/2015: only called in adl_aux_intf.c
+// appears to simply return the bytes written
 Base_Status_ADL adl_ddc_write_read_onecall(
       int     iAdapterIndex,
       int     iDisplayIndex,

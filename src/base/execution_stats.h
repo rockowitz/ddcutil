@@ -39,22 +39,6 @@ void note_io_error(Global_Status_Code gsc, const char * location);
 }
 
 
-// Functions for sleeping.  The actual sleep time is determined
-// by the strategy in place given the situation in which sleep is invoked.
-
-// Convenience methods that call sleep_io_mode():
-void call_tuned_sleep_i2c(Sleep_Event_Type event_type);
-void call_tuned_sleep_adl(Sleep_Event_Type event_type);
-void call_tuned_sleep_dh(Display_Handle* dh, Sleep_Event_Type event_type);
-
-// The workhorse
-void call_tuned_sleep(DDC_IO_Mode io_mode, Sleep_Event_Type event_type);
-
-// Reporting functions
-void report_call_stats(int depth);
-void report_sleep_strategy_stats(int depth);
-
-
 // moved from status_code_mgt:
 
 
@@ -67,6 +51,23 @@ void show_status_counts();
 #ifdef FUTURE
 int get_status_code_count(int rc);
 #endif
+
+
+
+// Functions for sleeping.  The actual sleep time is determined
+// by the strategy in place given the situation in which sleep is invoked.
+
+// Convenience methods that call call_tuned_sleep():
+void call_tuned_sleep_i2c(Sleep_Event_Type event_type);
+void call_tuned_sleep_adl(Sleep_Event_Type event_type);
+void call_tuned_sleep_dh(Display_Handle* dh, Sleep_Event_Type event_type);
+
+// The workhorse
+void call_tuned_sleep(DDC_IO_Mode io_mode, Sleep_Event_Type event_type);
+
+// Reporting functions
+void report_call_stats(int depth);
+void report_sleep_strategy_stats(int depth);
 
 
 

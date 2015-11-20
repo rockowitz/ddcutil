@@ -93,17 +93,36 @@ void record_tries(void * stats_rec, int rc, int tryct) {
    }
 }
 
+// used to test whether there's anything to report
+int get_total_tries(void * stats_rec) {
+   Try_Data * try_data = unopaque(stats_rec);
+   int total_tries = 0;
+   int ndx;
+   for (ndx=1; ndx <= try_data->max_tries; ndx++) {
+      total_tries += try_data->counters[ndx];
+   }
+   total_tries += try_data->counters[try_data->max_tries+1];
+   total_tries += try_data->counters[0];
+
+   return total_tries;
+}
 
 void report_try_data(void * stats_rec) {
    Try_Data * try_data = unopaque(stats_rec);
    printf("\nRetry statistics for %s\n", try_data->stat_name);
-   printf("   Max tries allowed: %d\n", try_data->max_tries);
-   printf("   Successful attempts by number of tries required:\n");
-   int ndx;
-   for (ndx=1; ndx <= try_data->max_tries; ndx++) {
-      printf("     %2d:  %3d\n", ndx, try_data->counters[ndx]);
+   if (get_total_tries(stats_rec) == 0) {
+      printf("   No tries attempted\n");
    }
-   printf("   Failed due to max tries exceeded: %3d\n", try_data->counters[try_data->max_tries+1]);
-   printf("   Failed due to fatal error:        %3d\n", try_data->counters[0]);
+   else {
+      printf("   Max tries allowed: %d\n", try_data->max_tries);
+      printf("   Successful attempts by number of tries required:\n");
+      int ndx;
+      for (ndx=1; ndx <= try_data->max_tries; ndx++) {
+         printf("     %2d:  %3d\n", ndx, try_data->counters[ndx]);
+      }
+      printf("   Failed due to max tries exceeded: %3d\n", try_data->counters[try_data->max_tries+1]);
+      printf("   Failed due to fatal error:        %3d\n", try_data->counters[0]);
+      printf("   Total tries:                      %3d\n", get_total_tries(stats_rec));
+   }
 
 }

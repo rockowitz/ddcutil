@@ -349,6 +349,8 @@ Global_Status_Code ddc_i2c_write_read_raw(
  *   Positive values indicate success but with
  *   additional information.  Never seen.  How to handle?
  */
+
+// #ifdef NEW
 Global_Status_Code ddc_adl_write_read_raw(
       Display_Handle * dh,
       DDC_Packet *     request_packet_ptr,
@@ -357,11 +359,11 @@ Global_Status_Code ddc_adl_write_read_raw(
       int *            pbytes_received
      )
 {
-   bool debug = false;
+   bool debug = true;
    bool tf = IS_TRACING();
    if (debug)
       tf = true;
-   TRCMSGTF(tf, "Starting. dh=%s", display_handle_repr_r(dh, NULL, 0));
+   TRCMSGTF(tf, "Starting. Using adl_ddc_write_only() and adl_ddc_read_only() dh=%s", display_handle_repr_r(dh, NULL, 0));
    ASSERT_VALID_DISPLAY_REF(dh, DDC_IO_ADL);
 
    Global_Status_Code gsc = 0;
@@ -369,12 +371,14 @@ Global_Status_Code ddc_adl_write_read_raw(
    Base_Status_ADL adlrc = adl_ddc_write_only(
                               dh->iAdapterIndex,
                               dh->iDisplayIndex,
-                              get_packet_start(request_packet_ptr)+1,
-                              get_packet_len(request_packet_ptr)-1
+                              get_packet_start(request_packet_ptr),   // n. no adjustment, unlike i2c version
+                              get_packet_len(request_packet_ptr)
                              );
    // note_io_event(IE_WRITE_BEFORE_READ, __func__);
-   if (adlrc < 0)
+   if (adlrc < 0) {
+      TRCMSGTF(tf, "adl_ddc_write_only() returned adlrc=%d\n", adlrc);
       gsc = modulate_rc(adlrc, RR_ADL);
+   }
    else {
       call_tuned_sleep_adl(SE_WRITE_TO_READ);
       adlrc = adl_ddc_read_only(
@@ -383,8 +387,10 @@ Global_Status_Code ddc_adl_write_read_raw(
             readbuf,
             pbytes_received);
       // note_io_event(IE_READ_AFTER_WRITE, __func__);
-      if (adlrc < 0)
+      if (adlrc < 0) {
+         TRCMSGTF(tf, "adl_ddc_read_only() returned adlrc=%d\n", adlrc);
          gsc = modulate_rc(adlrc, RR_ADL);
+      }
       else {
          if ( all_zero(readbuf+1, max_read_bytes-1)) {
                  gsc = DDCRC_READ_ALL_ZERO;
@@ -406,9 +412,35 @@ Global_Status_Code ddc_adl_write_read_raw(
    }
 
 
+
+   TRCMSGTF(tf, "Done. rc=%s\n", global_status_code_description(gsc));
+   return gsc;
+}
+// #endif
+
 #ifdef OLD
+Global_Status_Code ddc_adl_write_read_raw(
+      Display_Handle * dh,
+      DDC_Packet *     request_packet_ptr,
+      int              max_read_bytes,
+      Byte *           readbuf,
+      int *            pbytes_received
+     )
+{
+   bool debug = true;
+   bool tf = IS_TRACING();
+   if (debug)
+      tf = true;
+   TRCMSGTF(tf, "Starting. Using adl_ddc_write_read(), dh=%s", display_handle_repr_r(dh, NULL, 0));
+   ASSERT_VALID_DISPLAY_REF(dh, DDC_IO_ADL);
+
+   Global_Status_Code gsc = 0;
+
+
+
    int bytes_received = max_read_bytes;
 
+   //   Base_Status_ADL adlrc = adl_ddc_write_read_onecall(  // just returns the bytes written
    Base_Status_ADL adlrc = adl_ddc_write_read(
                          dh->iAdapterIndex,
                          dh->iDisplayIndex,
@@ -438,10 +470,12 @@ Global_Status_Code ddc_adl_write_read_raw(
          *pbytes_received = bytes_received;
    }
 
-#endif
+
+
    TRCMSGTF(tf, "Done. rc=%s\n", global_status_code_description(gsc));
    return gsc;
 }
+#endif
 
 
 Global_Status_Code ddc_write_read_raw(

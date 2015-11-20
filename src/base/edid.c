@@ -163,27 +163,30 @@ struct {
 Parsed_Edid * create_parsed_edid(Byte* edidbytes) {
    assert(edidbytes);
    bool        ok;
-   Parsed_Edid* parsedEdid = NULL;
+   Parsed_Edid* parsed_edid = NULL;
 
-   parsedEdid = calloc(1,sizeof(Parsed_Edid));
-   assert(sizeof(parsedEdid->bytes) == 128);
-   memcpy(parsedEdid->marker, EDID_MARKER_NAME, 4);
-   memcpy(parsedEdid->bytes,  edidbytes, 128);
+   parsed_edid = calloc(1,sizeof(Parsed_Edid));
+   assert(sizeof(parsed_edid->bytes) == 128);
+   memcpy(parsed_edid->marker, EDID_MARKER_NAME, 4);
+   memcpy(parsed_edid->bytes,  edidbytes, 128);
 
    get_edid_mfg_id_in_buffer(
            edidbytes,
-           parsedEdid->mfg_id,       sizeof(parsedEdid->mfg_id) );
+           parsed_edid->mfg_id,       sizeof(parsed_edid->mfg_id) );
 
    ok = get_edid_modelname_and_sn(
            edidbytes,
-           parsedEdid->model_name,   sizeof(parsedEdid->model_name),
-           parsedEdid->serial_ascii, sizeof(parsedEdid->serial_ascii) );
+           parsed_edid->model_name,   sizeof(parsed_edid->model_name),
+           parsed_edid->serial_ascii, sizeof(parsed_edid->serial_ascii) );
+
+   parsed_edid->year = edidbytes[17] + 1990;
+   parsed_edid->is_model_year = edidbytes[16] == 0xff;
 
    if (!ok) {
-      free(parsedEdid);
-      parsedEdid = NULL;
+      free(parsed_edid);
+      parsed_edid = NULL;
    }
-   return parsedEdid;
+   return parsed_edid;
 }
 
 
@@ -192,9 +195,11 @@ void report_parsed_edid(Parsed_Edid * edid, bool verbose) {
    if (edid) {
       printf("EDID synopsis:\n");
 
-      printf("   Mfg id:        %s\n",          edid->mfg_id);
-      printf("   Model:         %s\n",          edid->model_name);
-      printf("   Serial number: %s\n",          edid->serial_ascii);
+      printf("   Mfg id:           %s\n",          edid->mfg_id);
+      printf("   Model:            %s\n",          edid->model_name);
+      printf("   Serial number:    %s\n",          edid->serial_ascii);
+      char * title = (edid->is_model_year) ? "Model year" : "Manufacture year";
+      printf("   %-16s: %d\n", title, edid->year);
 
       if (verbose) {
          printf("EDID hex dump:\n");

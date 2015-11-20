@@ -10,6 +10,7 @@
 #include <glib.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include <util/report_util.h>
 #include <base/common.h>   // for sleep functions
@@ -20,6 +21,7 @@
 // Forward References
 void note_io_event_time(IO_Event_Type event_type, const char * location, long when_nanos);
 void    init_status_counts();
+int get_true_io_error_count();
 
 // There are 2 collections of data structures:
 //    - for recording the total number of calls and elapsed time
@@ -27,6 +29,7 @@ void    init_status_counts();
 //
 // TODO: remove redundancy of these 2 sets of data structures that had different origins
 
+#ifdef OLD
 // names for IO_Event_Type enum values
 static const char * io_event_names[] = {
       "IE_WRITE" ,
@@ -35,7 +38,63 @@ static const char * io_event_names[] = {
       "IE_OPEN",
       "IE_CLOSE",
       "IE_OTHER"};
-#define IO_EVENT_ID_CT (sizeof(io_event_names)/sizeof(char *))
+// #define IO_EVENT_ID_CT (sizeof(io_event_names) / sizeof(char *))
+#endif
+
+
+
+typedef struct {
+   IO_Event_Type  id;
+   const char *   name;
+   const char *   desc;
+   int            call_count;
+   long           call_nanosec;
+} IO_Event_Type_Stats;
+
+IO_Event_Type_Stats io_event_stats[] = {
+      {IE_WRITE,      "IE_WRITE",      "write calls",       0, 0},
+      {IE_READ,       "IE_READ",       "read calls",        0, 0},
+      {IE_WRITE_READ, "IE_WRITE_READ", "write/read calls",  0, 0},
+      {IE_OPEN,       "IE_OPEN",       "open file calls",   0, 0},
+      {IE_CLOSE,      "IE_CLOSE",      "close file calls",  0, 0},
+      {IE_OTHER,      "IE_OTHER",      "other I/O calls",   0, 0},
+};
+#define IO_EVENT_TYPE_CT (sizeof(io_event_stats)/sizeof(IO_Event_Type_Stats))
+// assert( IO_EVENT_ID_CT == IO_EVENT_TYPE_CT );   // TEMP, transitional
+
+const char * io_event_name(IO_Event_Type event_type) {
+   // return io_event_names[event_type];
+   return io_event_stats[event_type].name;
+}
+
+int max_event_name_length() {
+   int result = 0;
+   int ndx = 0;
+   for (;ndx < IO_EVENT_TYPE_CT; ndx++) {
+      int curval = strlen(io_event_stats[ndx].name);
+      if (curval > result)
+         result = curval;
+   }
+   return result;
+}
+
+int total_io_event_count() {
+   int total = 0;
+   int ndx = 0;
+   for (;ndx < IO_EVENT_TYPE_CT; ndx++)
+      total += io_event_stats[ndx].call_count;
+   return total;
+}
+
+long total_io_event_nanosec() {
+   long total = 0;
+   int ndx = 0;
+   for (;ndx < IO_EVENT_TYPE_CT; ndx++)
+      total += io_event_stats[ndx].call_nanosec;
+   return total;
+}
+
+
 
 // names for Sleep_Event enum values
 static const char * sleep_event_names[] = {
@@ -45,19 +104,18 @@ static const char * sleep_event_names[] = {
 #define SLEEP_EVENT_ID_CT (sizeof(sleep_event_names)/sizeof(char *))
 
 // TODO: information overlap with DDC_Call_Stats, combine
-static int io_event_cts_by_id[IO_EVENT_ID_CT];
+// static int io_event_cts_by_id[IO_EVENT_ID_CT];
 static int sleep_event_cts_by_id[SLEEP_EVENT_ID_CT];
 
-const char * io_event_name(IO_Event_Type event_type) {
-   return io_event_names[event_type];
-}
 
 const char * sleep_event_name(Sleep_Event_Type event_type) {
    return sleep_event_names[event_type];
 }
 
 
-static int            total_io_event_ct = 0;
+// static int            total_io_event_ct = 0;  // unused
+
+
 static int            total_io_error_ct = 0;
 static int            total_sleep_event_ct = 0;
 static IO_Event_Type  last_io_event;
@@ -109,6 +167,15 @@ void init_call_stats() {
 }
 
 
+
+// No effect on program logic, but makes debug messages easier to scan
+long normalize_timestamp(long timestamp) {
+   return timestamp - program_start_timestamp;
+}
+
+
+
+
 /* Called immediately after an I2C IO call, this function updates
  * two sets of data:
  *
@@ -157,23 +224,71 @@ void log_io_event(
    which_stat->total_call_nanosecs += (end_time_nanos-start_time_nanos);
 
    note_io_event_time(event_type, location, end_time_nanos);
+
+
+   // new way:
+   long elapsed_nanos = (end_time_nanos-start_time_nanos);
+   io_event_stats[event_type].call_count++;
+   io_event_stats[event_type].call_nanosec += elapsed_nanos;
+
+   last_io_event = event_type;
+   last_io_timestamp = normalize_timestamp(end_time_nanos);
 }
 
+void report_call_stats_old(int depth);
+
+void report_call_stats(int depth) {
+   // report_call_stats_old(depth);    // for comparing
+   int d1 = depth+1;
+   rpt_title("Call Stats (new):", depth);
+   int total_ct = 0;
+   long total_nanos = 0;
+   int ndx = 0;
+   // int max_name_length = max_event_name_length();
+   // not working as variable length string specifier
+   // printf("(%s) max_name_length=%d\n", __func__, max_name_length);
+   rpt_vstring(d1, "%-40s Count Millisec (   Nanosec)", "Type");
+   for (;ndx < IO_EVENT_TYPE_CT; ndx++) {
+      if (io_event_stats[ndx].call_count > 0) {
+         IO_Event_Type_Stats* curstat = &io_event_stats[ndx];
+         char buf[100];
+         snprintf(buf, 100, "%-17s (%s)", curstat->desc, curstat->name);
+         rpt_vstring(d1, "%-40s  %4d  %7ld (%10ld)",
+                     buf,
+                     curstat->call_count,
+                     curstat->call_nanosec / (1000*1000),
+                     curstat->call_nanosec
+                    );
+         total_ct += curstat->call_count;
+         total_nanos += curstat->call_nanosec;
+      }
+   }
+   rpt_vstring(d1, "%-40s  %4d  %7ld (%10ld)",
+               "Totals:",
+               total_ct,
+               total_nanos / (1000*1000),
+               total_nanos
+              );
+
+}
 
 
 void report_one_call_stat(Single_Call_Stat * pstats, int depth) {
    if (pstats) {
-     rpt_vstring(depth, "Total %-10s calls:                        %7d",
-            pstats->stat_name, pstats->total_call_ct);
-     rpt_vstring(depth, "Total %-10s call milliseconds (nanosec):  %7ld  (%10ld)",
-         pstats->stat_name,
-         pstats->total_call_nanosecs / (1000*1000),
-         pstats->total_call_nanosecs);
+
+      rpt_vstring(depth, "Total %-10s calls:                        %7d",
+                  pstats->stat_name, pstats->total_call_ct);
+      rpt_vstring(depth, "Total %-10s call milliseconds (nanosec):  %7ld  (%10ld)",
+                  pstats->stat_name,
+                  pstats->total_call_nanosecs / (1000*1000),
+                  pstats->total_call_nanosecs);
    }
+
 }
 
 
-void report_call_stats(int depth) {
+void report_call_stats_old(int depth) {
+
    int d1 = depth+1;
    if (ddc_call_stats.stats_active) {
       rpt_title("Call Stats:", depth);
@@ -184,12 +299,6 @@ void report_call_stats(int depth) {
    }
 }
 
-
-
-// No effect on program logic, but makes debug messages easier to scan
-long normalize_timestamp(long timestamp) {
-   return timestamp - program_start_timestamp;
-}
 
 
 
@@ -203,10 +312,10 @@ long normalize_timestamp(long timestamp) {
 void note_io_event_time(const IO_Event_Type event_type, const char * location, long when_nanos) {
    bool debug = false;
 
-   total_io_event_ct++;
+   // total_io_event_ct++;
    last_io_event = event_type;
    last_io_timestamp = normalize_timestamp(when_nanos);
-   io_event_cts_by_id[event_type]++;
+   // io_event_cts_by_id[event_type]++;
 
    if (debug)
       printf("(%s) timestamp=%11ld, event_type=%s, location=%s\n",
@@ -318,17 +427,21 @@ void call_tuned_sleep(DDC_IO_Mode io_mode, Sleep_Event_Type event_type) {
 void report_sleep_strategy_stats(int depth) {
    // TODO: implement depth
    printf("Sleep Strategy Stats:\n");
-   printf("   Total IO events:    %5d\n", total_io_event_ct);
-   printf("   IO error count:     %5d\n", total_io_error_ct);
+
+   printf("   Total IO events:    %5d\n", total_io_event_count());
+   printf("   IO error count:     %5d\n", get_true_io_error_count());
    printf("   Total sleep events: %5d\n", total_sleep_event_ct);
 
+
    int id;
+#ifdef OLD
    puts("");
    // printf("   IO Events by type:\n");
    printf("   IO Event type       Count\n");
-   for (id=0; id < IO_EVENT_ID_CT; id++) {
-      printf("   %-20s  %3d\n", io_event_names[id], io_event_cts_by_id[id]);
+   for (id=0; id < IO_EVENT_TYPE_CT; id++) {
+      printf("   %-20s  %3d\n", io_event_stats[id].name, io_event_stats[id].call_count);
    }
+#endif
 
    puts("");
    printf("   Sleep Event type    Count\n");
@@ -443,6 +556,26 @@ void show_status_counts() {
    assert(summed_ct == total_counts);
    g_free(keysp);
    fprintf(stdout,"\n");
+}
+
+int get_true_io_error_count() {
+   assert(error_counts_hash);
+     unsigned int keyct;
+     gpointer * keysp = g_hash_table_get_keys_as_array(error_counts_hash, &keyct);
+     int summed_ct = 0;
+
+     int ndx;
+     for (ndx=0; ndx<keyct; ndx++) {
+        gpointer keyp = keysp[ndx];
+        int key = GPOINTER_TO_INT(keyp);
+        // TODO: filter out DDCRC_NULL_RESPONSE, perhaps others DDCRC_UNSUPPORTED
+        int ct  = GPOINTER_TO_INT(g_hash_table_lookup(error_counts_hash,GINT_TO_POINTER(key)));
+        summed_ct += ct;
+     }
+     // printf("(%s) Total errors: %d\n", __func__, total_counts);
+     assert(summed_ct == total_counts);
+     g_free(keysp);
+     return summed_ct;
 }
 
 #ifdef FUTURE

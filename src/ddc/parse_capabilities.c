@@ -64,7 +64,7 @@ void report_parsed_capabilities(Parsed_Capabilities* pcaps) {
       printf("Unparsed capabilities string: %s\n", pcaps->raw_value);
    }
    bool damaged = false;
-   printf("MCCS version: %s\n", pcaps->mccs_ver);
+   printf("MCCS version: %s\n", (pcaps->mccs_ver) ? pcaps->mccs_ver : "not present");
    if (pcaps->commands)
       report_commands(pcaps->commands);
    else

@@ -558,6 +558,7 @@ Display_Info_List * get_valid_ddc_displays() {
 
 
 Version_Spec get_vcp_version_by_display_handle(Display_Handle * dh) {
+   bool debug = false;
    // printf("(%s) Starting. dh=%p, dh->vcp_version =  %d.%d\n",
    //        __func__, dh, dh->vcp_version.major, dh->vcp_version.minor);
    if (is_version_unqueried(dh->vcp_version)) {
@@ -571,8 +572,10 @@ Version_Spec get_vcp_version_by_display_handle(Display_Handle * dh) {
          dh->vcp_version.minor = pinterpreted_code->sl;
       }
       else {
-         printf("(%s) Error detecting VCP version. gsc=%s\n",
-                __func__, global_status_code_description(gsc) );
+         // may happen for pre MCCS v2 monitors
+         if (debug)
+            printf("(%s) Error detecting VCP version. gsc=%s\n",
+                    __func__, global_status_code_description(gsc) );
       }
    }
    // printf("(%s) Returning: %d.%d\n", __func__, dh->vcp_version.major, dh->vcp_version.minor);
