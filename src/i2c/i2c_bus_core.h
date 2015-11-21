@@ -21,15 +21,6 @@
 #include <base/util.h>
 
 
-
-// DDC IO statistics gathering and reporting
-
-// void init_i2c_bus_stats(I2C_Call_Stats * pstats);
-// #ifdef UNUSED
-// I2C_Call_Stats * get_i2c_bus_stats();
-// #endif
-
-
 // Retrieve and inspect bus information
 
 #define I2C_BUS_EXISTS        0x80
@@ -41,61 +32,55 @@
 // #define I2C_BUS_EDID_CHECKED  0x04
 #define I2C_BUS_PROBED        0x01      // has bus been checked?
 
-
-
 typedef
 struct {
    char             marker[4];          // always "BINF"
-   int              busno;
+   int              busno;              // n for /dev/i2c-n
    unsigned long    functionality;      // i2c bus functionality flags
    Parsed_Edid *    edid;
    Byte             flags;              // I2C_BUS_ flags
 } Bus_Info;
 
-int get_i2c_busct();
+int  i2c_get_busct();
+void i2c_report_bus(int busno);
+int  i2c_report_buses(bool report_all);
 
-#ifdef DEPRECATED
-DisplayIdInfo* get_bus_display_id_info(int busno);
-#endif
-void report_i2c_bus(int busno);
-int  report_i2c_buses(bool report_all);
+Display_Info_List i2c_get_valid_displays();
 
-Display_Info_List get_valid_i2c_displays();
-
-Bus_Info * get_bus_info(int busno);
-Bus_Info * check_i2c_bus(Bus_Info * bus_info);
-Bus_Info * find_bus_info_for_monitor(const char * model, const char * sn);
-Bus_Info * find_bus_info_by_edid(const Byte * pEdidBytes);
-void report_businfo(Bus_Info * bus_info);
-bool is_valid_bus(int busno, bool emit_error_msg);
+Bus_Info * i2c_get_bus_info(int busno);
+Bus_Info * i2c_check_bus(Bus_Info * bus_info);
+Bus_Info * i2c_find_bus_info_by_model_sn(const char * model, const char * sn);
+Bus_Info * i2c_find_bus_info_by_edid(const Byte * pEdidBytes);
+// void report_businfo(Bus_Info * bus_info);
+bool i2c_is_valid_bus(int busno, bool emit_error_msg);
 
 
 // Basic bus operations
 
-int open_i2c_bus(int busno, Failure_Action failure_action);
-int close_i2c_bus(int fd, int busno, Failure_Action failure_action);
-void set_addr(int file, int addr);
+int  i2c_open_bus(int busno, Failure_Action failure_action);
+int  i2c_close_bus(int fd, int busno, Failure_Action failure_action);
+void i2c_set_addr(int fd, int addr);
 
 
 // Bus functionality
 
-unsigned long get_i2c_functionality_flags_by_fd(int fd);
-unsigned long get_i2c_functionality_flags_by_busno(int busno);
+unsigned long i2c_get_functionality_flags_by_fd(int fd);
+unsigned long i2c_get_functionality_flags_by_busno(int busno);
 #ifdef OLD
 char * interpret_functionality(unsigned long functionality);  // must free returned string
 #endif
-char * interpret_functionality_into_buffer(unsigned long functionality, Buffer * buf);
-void show_functionality(int busno);
-bool verify_functions_supported(int busno, char * write_func_name, char * read_func_name);
+char * i2c_interpret_functionality_into_buffer(unsigned long functionality, Buffer * buf);
+// void i2c_show_functionality(int busno);  // no longer exists
+bool i2c_verify_functions_supported(int busno, char * write_func_name, char * read_func_name);
 
 
 // Retrieve EDID
 
-Global_Status_Code get_raw_edid_by_fd( int fd,      Buffer * rawedidbuf, bool debug);
+Global_Status_Code i2c_get_raw_edid_by_fd( int fd,      Buffer * rawedidbuf, bool debug);
 #ifdef UNUSED
 Global_Status_Code get_raw_edid_by_busno(int busno, Buffer * rawedidbuf, bool debug);
 #endif
-Parsed_Edid * get_parsed_edid_by_fd(int fd, bool debug);
+Parsed_Edid * i2c_get_parsed_edid_by_fd(int fd, bool debug);
 Parsed_Edid * i2c_get_parsed_edid_by_busno(int busno);
 
 #endif /* I2C_BUS_CORE_H_ */

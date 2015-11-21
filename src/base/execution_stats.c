@@ -55,7 +55,7 @@ static long                 program_start_timestamp;
 // static int               total_io_event_ct = 0;  // unused
 // static int               total_io_error_ct = 0;
 static Status_Code_Counts * primary_error_code_counts;
-static Status_Code_Counts * secondary_status_code_counts;
+// static Status_Code_Counts * secondary_status_code_counts;
 
 
 //
@@ -185,7 +185,6 @@ void report_io_call_stats(int depth) {
                total_nanos / (1000*1000),
                total_nanos
               );
-
 }
 
 
@@ -235,7 +234,8 @@ Status_Code_Counts * new_status_code_counts(char * name) {
    memcpy(pcounts->marker, STATUS_CODE_COUNTS_MARKER, 4);
    pcounts->error_counts_hash =  g_hash_table_new(NULL,NULL);
    pcounts->total_status_counts = 0;
-   pcounts->name = strdup(name);
+   if (name)
+      pcounts->name = strdup(name);
    return pcounts;
 }
 
@@ -259,7 +259,6 @@ int log_any_status_code(Status_Code_Counts * pcounts, int rc, const char * calle
 
    return ct+1;
 }
-
 
 
 int log_status_code(int rc, const char * caller_name) {
@@ -292,12 +291,13 @@ int compare( const void* a, const void* b)
 
 void show_specific_status_counts(Status_Code_Counts * pcounts) {
    if (pcounts->name)
-      printf("\n%s:\n", pcounts->name);
+      printf("%s:\n", pcounts->name);
    assert(pcounts->error_counts_hash);
    unsigned int keyct;
    gpointer * keysp = g_hash_table_get_keys_as_array(pcounts->error_counts_hash, &keyct);
    int summed_ct = 0;
-   fprintf(stdout, "DDC packet error status codes with non-zero counts:  %s\n",
+   // fprintf(stdout, "DDC packet error status codes with non-zero counts:  %s\n",
+   fprintf(stdout, "DDC Related Errors:  %s\n",
            (keyct == 0) ? "None" : "");
    if (keyct > 0) {
       qsort(keysp, keyct, sizeof(gpointer), compare);    // sort keys
@@ -366,7 +366,7 @@ void show_specific_status_counts(Status_Code_Counts * pcounts) {
 
 void show_all_status_counts() {
    show_specific_status_counts(primary_error_code_counts);
-   show_specific_status_counts(secondary_status_code_counts);
+   // show_specific_status_counts(secondary_status_code_counts);    // not used
 }
 
 
@@ -389,21 +389,6 @@ int get_true_io_error_count(Status_Code_Counts * pcounts) {
      g_free(keysp);
      return summed_ct;
 }
-
-
-
-
-
-
-
-
-// TODO:
-// maintain count of sleep events by type
-// report them
-
-// Eventually: adjust timeout based on error event frequency
-
-
 
 
 //
@@ -518,8 +503,8 @@ void report_sleep_strategy_stats(int depth) {
 //
 
 void init_execution_stats() {
-   primary_error_code_counts = new_status_code_counts("Primary Errors");
-   secondary_status_code_counts = new_status_code_counts("Derived and Other Errors");
+   primary_error_code_counts = new_status_code_counts(NULL);
+   // secondary_status_code_counts = new_status_code_counts("Derived and Other Errors");
    program_start_timestamp = cur_realtime_nanosec();
 }
 

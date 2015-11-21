@@ -45,7 +45,7 @@ void probe_get_capabilities(int busno, char* write_mode, char* read_mode, Byte a
    int rc;
    unsigned char * readbuf;
 
-   if (!verify_functions_supported(busno, write_mode, read_mode))
+   if (!i2c_verify_functions_supported(busno, write_mode, read_mode))
       return;
 
    // For testing, just read first 32 bytes of capabilities
@@ -54,9 +54,9 @@ void probe_get_capabilities(int busno, char* write_mode, char* read_mode, Byte a
 
    int len_packet_bytes = sizeof(packet_bytes);
 
-   file = open_i2c_bus(busno,EXIT_IF_FAILURE);
+   file = i2c_open_bus(busno,EXIT_IF_FAILURE);
    printf("Setting addr to %02x\n", addr);
-   set_addr(file, addr);
+   i2c_set_addr(file, addr);
    // usleep(TIMEOUT);
    sleep_millis_with_trace(DDC_TIMEOUT_MILLIS_DEFAULT, __func__, NULL);
 

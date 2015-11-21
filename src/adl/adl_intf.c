@@ -118,7 +118,7 @@ void init_adl_call_stats(ADL_Call_Stats * pstats) {
  *   true  if initialied
  *   false if not
  */
-bool is_adl_available() {
+bool adl_is_available() {
    return (module_initialized);
 }
 
@@ -507,10 +507,6 @@ bool adl_initialize() {
    }
    if (ok) {
       module_initialized = true;
-#ifdef OLD
-      if (timing_stats)
-        timing_stats->stats_active = true;
-#endif
    }
 
    return ok;
@@ -537,15 +533,15 @@ void adl_release() {
 //
 
 
-Parsed_Edid*    adl_get_parsed_edid_by_adlno(int iAdapterIndex, int iDisplayIndex) {
+Parsed_Edid* adl_get_parsed_edid_by_adlno(int iAdapterIndex, int iDisplayIndex) {
    Parsed_Edid* parsedEdid = NULL;
-
-   ADL_Display_Rec * pAdlRec = adl_find_display_by_adlno(iAdapterIndex, iDisplayIndex, false);
+   ADL_Display_Rec * pAdlRec = adl_get_display_by_adlno(iAdapterIndex, iDisplayIndex, false);
    if (pAdlRec) {
       parsedEdid = pAdlRec->pEdid;
    }
    return parsedEdid;
 }
+
 
 #ifdef DEPRECATED
 // use get_ParsedEdid_for_adlno
@@ -584,6 +580,7 @@ int adl_show_active_displays() {
             printf("Supports DDC:         %s\n", (pdisp->supports_ddc) ?  "true" : "false");
             printf("Monitor:              %s:%s:%s\n", pdisp->mfg_id, pdisp->model_name, pdisp->serial_ascii);
             printf("Xrandr name:          %s\n", pdisp->xrandr_name);
+            report_parsed_edid(pdisp->pEdid, false /* verbose */);
             puts("");
          }
       }
@@ -624,11 +621,6 @@ typedef struct {
 #endif
 
 
-
-
-
-
-
 /* Report on a single active display
  *
  * Arguments:
@@ -664,7 +656,7 @@ void report_adl_display_rec(ADL_Display_Rec * pRec, bool verbose, int depth) {
 /* Find display by adapter number/display number
  *
  */
-ADL_Display_Rec * adl_find_display_by_adlno(int iAdapterIndex, int iDisplayIndex, bool emit_error_msg) {
+ADL_Display_Rec * adl_get_display_by_adlno(int iAdapterIndex, int iDisplayIndex, bool emit_error_msg) {
    ADL_Display_Rec * result = NULL;
 
    if (active_display_ct == 0) {
@@ -742,7 +734,7 @@ ADL_Display_Rec * adl_find_display_by_edid(const Byte * pEdidBytes) {
  *   true if an active display, false if not
  */
 bool adl_is_valid_adlno(int iAdapterIndex, int iDisplayIndex, bool emit_error_msg) {
-   return (adl_find_display_by_adlno(iAdapterIndex, iDisplayIndex, emit_error_msg) != NULL);
+   return (adl_get_display_by_adlno(iAdapterIndex, iDisplayIndex, emit_error_msg) != NULL);
 }
 
 

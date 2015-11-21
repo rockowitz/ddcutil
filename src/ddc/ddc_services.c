@@ -510,7 +510,7 @@ void show_vcp_values_by_display_ref(Display_Ref * dref, VCP_Feature_Subset subse
    bool validDisp = true;
    if (dref->ddc_io_mode == DDC_IO_DEVI2C) {
       // Is this needed?  or checked by openDisplay?
-      Bus_Info * bus_info = get_bus_info(dref->busno);
+      Bus_Info * bus_info = i2c_get_bus_info(dref->busno);
       if (!bus_info ||  !(bus_info->flags & I2C_BUS_ADDR_0X37) ) {
          printf("(%s) Address 0x37 not detected on bus %d. I2C communication not available.\n",
                 __func__, dref->busno );
@@ -530,9 +530,9 @@ void show_vcp_values_by_display_ref(Display_Ref * dref, VCP_Feature_Subset subse
 
 
 
-Display_Info_List * get_valid_ddc_displays() {
+Display_Info_List * ddc_get_valid_displays() {
 
-      Display_Info_List i2c_displays = get_valid_i2c_displays();
+      Display_Info_List i2c_displays = i2c_get_valid_displays();
       Display_Info_List adl_displays = adl_get_valid_displays();
 
       // merge the lists

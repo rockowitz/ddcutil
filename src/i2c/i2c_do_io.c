@@ -55,8 +55,7 @@ void set_i2c_io_strategy(I2C_IO_Strategy_Id strategy_id) {
 Global_Status_Code invoke_i2c_writer(
       int    fh,
       int    bytect,
-      Byte * bytes_to_write,
-      int    sleep_millisec)
+      Byte * bytes_to_write)
 {
    bool debug = false;
    if (debug) {
@@ -67,27 +66,13 @@ Global_Status_Code invoke_i2c_writer(
    }
 
    Base_Status_Errno_DDC rc;
-
-
    RECORD_IO_EVENT(
       IE_WRITE,
       ( rc = i2c_io_strategy->i2c_writer(fh, bytect, bytes_to_write ) )
      );
-
-
-   // rc = i2c_io_strategy->i2c_writer(fh, bytect, bytes_to_write );
    if (debug)
       printf("(%s) writer() function returned %d\n", __func__, rc);
-
    assert (rc <= 0);
-   if (rc == 0) {
-#ifdef OLD
-      if (sleep_millisec == DDC_TIMEOUT_USE_DEFAULT)
-         sleep_millisec = DDC_TIMEOUT_MILLIS_DEFAULT;
-      if (sleep_millisec != DDC_TIMEOUT_NONE)
-         sleep_millis_with_trace(sleep_millisec, __func__, "after write");
-#endif
-   }
 
    Global_Status_Code gsc = modulate_base_errno_ddc_to_global(rc);
    if (debug)
@@ -108,8 +93,7 @@ Global_Status_Code invoke_i2c_writer(
 Global_Status_Code invoke_i2c_reader(
        int        fh,
        int        bytect,
-       Byte *     readbuf,
-       int        sleep_millisec)
+       Byte *     readbuf)
 {
      bool debug = false;
      if (debug)
@@ -117,25 +101,14 @@ Global_Status_Code invoke_i2c_reader(
                __func__, i2c_io_strategy->i2c_reader_name, bytect);
 
      Base_Status_Errno_DDC rc;
-
-
      RECORD_IO_EVENT(
         IE_READ,
         ( rc = i2c_io_strategy->i2c_reader(fh, bytect, readbuf) )
        );
-     // rc = i2c_io_strategy->i2c_reader(fh, bytect, readbuf);
      if (debug)
         printf("(%s) reader() function returned %d\n", __func__, rc);
-
      assert (rc <= 0);
-#ifdef OLD
-     if (rc == 0) {
-        if (sleep_millisec == DDC_TIMEOUT_USE_DEFAULT)
-           sleep_millisec = DDC_TIMEOUT_MILLIS_DEFAULT;
-        if (sleep_millisec != DDC_TIMEOUT_NONE)
-           sleep_millis_with_trace(sleep_millisec, __func__, "after read");
-     }
-#endif
+
      Global_Status_Code gsc = modulate_base_errno_ddc_to_global(rc);
      if (debug )
         printf("(%s) Returning gsc=%s\n", __func__, gsc_desc(gsc));

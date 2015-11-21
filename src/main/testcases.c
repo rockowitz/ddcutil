@@ -96,7 +96,7 @@ bool execute_testcase(int testnum, Display_Identifier* pdid) {
       }
 
       if (ok) {
-         if (pdid->id_type == DISP_ID_ADL && !is_adl_available()) {
+         if (pdid->id_type == DISP_ID_ADL && !adl_is_available()) {
             printf("ADL adapter.display numbers specified, but ADL is not available.\n");
             ok = false;
          }

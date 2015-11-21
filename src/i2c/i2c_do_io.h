@@ -24,13 +24,11 @@ void set_i2c_io_strategy(I2C_IO_Strategy_Id strategy_id);
 Global_Status_Code invoke_i2c_writer(
       int    fh,
       int    bytect,
-      Byte * bytes_to_write,
-      int    sleep_millisec);
+      Byte * bytes_to_write);
 
 Global_Status_Code invoke_i2c_reader(
        int        fh,
        int        bytect,
-       Byte *     readbuf,
-       int        sleep_millisec);
+       Byte *     readbuf);
 
 #endif /* I2C_DO_IO_H_ */

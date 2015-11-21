@@ -35,15 +35,10 @@ struct {
 } ADL_Display_Rec;
 
 
-// Timing stats
-
-#ifdef OLD
-void init_adl_call_stats(ADL_Call_Stats * pstats);
-#endif
 
 // Initialization
 
-bool is_adl_available();
+bool adl_is_available();
 
 // must be called before any other function (except is_adl_available())
 bool adl_initialize();
@@ -64,7 +59,7 @@ void report_adl_display_rec(ADL_Display_Rec * pRec, bool verbose, int depth);
 
 bool              adl_is_valid_adlno(int iAdapterIndex, int iDisplayIndex, bool emit_error_msg);
 
-ADL_Display_Rec * adl_find_display_by_adlno(int iAdapterIndex, int iDisplayIndex, bool emit_error_msg);
+ADL_Display_Rec * adl_get_display_by_adlno(int iAdapterIndex, int iDisplayIndex, bool emit_error_msg);
 
 ADL_Display_Rec * adl_find_display_by_model_sn(const char * model, const char * sn);
 

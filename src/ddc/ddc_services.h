@@ -31,7 +31,7 @@ Global_Status_Code set_vcp_by_display_handle(Display_Handle * pDispHandle, Byte 
 Global_Status_Code set_vcp_value_top(Display_Ref * dref, char * feature, char * new_value);
 
 
-Display_Info_List * get_valid_ddc_displays();
+Display_Info_List * ddc_get_valid_displays();
 
 
 Version_Spec get_vcp_version_by_display_handle(Display_Handle * dh);

@@ -204,7 +204,7 @@ void probe_get_luminosity(int busno, char * write_mode, char * read_mode) {
    int  file;
    Byte luminosity_op_code = 0x10;
 
-   if (!verify_functions_supported(busno, write_mode, read_mode))
+   if (!i2c_verify_functions_supported(busno, write_mode, read_mode))
       return;
 
    DDC_Packet * request_packet_ptr = NULL;
@@ -213,8 +213,8 @@ void probe_get_luminosity(int busno, char * write_mode, char * read_mode) {
    // printf("(%s) create_ddc_getvcp_request_packet returned rc=%d, packet_ptr=%p\n", __func__, rc, request_packet_ptr);
    // dump_packet(request_packet_ptr);
 
-   file = open_i2c_bus(busno, EXIT_IF_FAILURE);
-   set_addr(file, 0x37);
+   file = i2c_open_bus(busno, EXIT_IF_FAILURE);
+   i2c_set_addr(file, 0x37);
    // usleep(DEFAULT_TIMEOUT);
    sleep_millis_with_trace(DDC_TIMEOUT_MILLIS_DEFAULT, __func__, NULL);
 

@@ -109,7 +109,7 @@ void report_stats(int cmd_id) {
 
 
    long elapsed_nanos = cur_realtime_nanosec() - start_time_nanos;
-   printf("Elapsed milliseconds (nanoseconds):            %10ld  (%10ld)\n",
+   printf("Elapsed milliseconds (nanoseconds):             %10ld  (%10ld)\n",
          elapsed_nanos / (1000*1000),
          elapsed_nanos);
 }
@@ -239,13 +239,13 @@ int main(int argc, char *argv[]) {
       if (parsed_cmd->programmatic_output)
          set_output_format(OUTPUT_PROG_BUSINFO);
 #endif
-      int ct = report_i2c_buses(false /* report_all */);
+      int ct = i2c_report_buses(false /* report_all */);
       ct += adl_show_active_displays();
       if (ct > 0)
          main_rc = EXIT_SUCCESS;
 
       if (parsed_cmd->output_level >= OL_NORMAL) {
-         Display_Info_List *  all_displays = get_valid_ddc_displays();
+         Display_Info_List *  all_displays = ddc_get_valid_displays();
          int displayct = all_displays->ct;
          printf("\nVCP version implemented:\n");
          int ndx;
@@ -365,7 +365,7 @@ int main(int argc, char *argv[]) {
                      set_output_format(OUTPUT_PROG_VCP);
 #endif
                   if (dref->ddc_io_mode == DDC_IO_DEVI2C)
-                     report_i2c_bus(dref->busno);
+                     i2c_report_bus(dref->busno);
                   // returns void
                   show_vcp_values_by_display_ref(dref, SUBSET_PROFILE, stdout);
                }

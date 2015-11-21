@@ -83,11 +83,11 @@ bool is_ddc_null_message(Byte * packet) {
 Display_Handle* ddc_open_display(Display_Ref * dref,  Failure_Action failure_action) {
    Display_Handle * pDispHandle = NULL;
    if (dref->ddc_io_mode == DDC_IO_DEVI2C) {
-      int fd = open_i2c_bus(dref->busno, failure_action);
+      int fd = i2c_open_bus(dref->busno, failure_action);
       // TODO: handle open failure, when failure_action = return error
       // all callers currently EXIT_IF_FAILURE
       if (fd >= 0) {    // will be < 0 if open_i2c_bus failed and failure_action = RETURN_ERROR_IF_FAILURE
-         set_addr(fd, 0x37);
+         i2c_set_addr(fd, 0x37);
 
          // Is this needed?
          // 10/24/15, try disabling:
@@ -116,7 +116,7 @@ void ddc_close_display(Display_Handle * dh) {
    if (dh->ddc_io_mode == DDC_IO_DEVI2C) {
       bool failure_action = EXIT_IF_FAILURE;
       // bool  failure_action = RETURN_ERROR_IF_FAILURE;
-      int rc = close_i2c_bus(dh->fh, dh->busno,  failure_action);
+      int rc = i2c_close_bus(dh->fh, dh->busno,  failure_action);
       if (rc != 0) {
          printf("(%s) close_i2c_bus returned %d\n", __func__, rc);
          log_status_code(modulate_rc(rc, RR_ERRNO), __func__);
@@ -128,7 +128,7 @@ void ddc_close_display(Display_Handle * dh) {
 Display_Ref* ddc_find_display_by_model_and_sn(const char * model, const char * sn) {
    // printf("(%s) Starting.  model=%s, sn=%s   \n", __func__, model, sn );
    Display_Ref * result = NULL;
-   Bus_Info * businfo = find_bus_info_for_monitor(model, sn);
+   Bus_Info * businfo = i2c_find_bus_info_by_model_sn(model, sn);
    if (businfo) {
       result = create_bus_display_ref(businfo->busno);
    }
@@ -146,7 +146,7 @@ Display_Ref* ddc_find_display_by_model_and_sn(const char * model, const char * s
 Display_Ref* ddc_find_display_by_edid(const Byte * pEdidBytes) {
    // printf("(%s) Starting.  model=%s, sn=%s   \n", __func__, model, sn );
    Display_Ref * result = NULL;
-   Bus_Info * businfo = find_bus_info_by_edid((pEdidBytes));
+   Bus_Info * businfo = i2c_find_bus_info_by_edid((pEdidBytes));
    if (businfo) {
       result = create_bus_display_ref(businfo->busno);
    }
@@ -183,7 +183,7 @@ bool ddc_is_valid_display_ref(Display_Ref * dref) {
    // printf("(%s) Starting.  %s   \n", __func__, displayRefShortName(pdisp, buf, 100) );
    bool result;
    if (dref->ddc_io_mode == DDC_IO_DEVI2C) {
-      result = is_valid_bus(dref->busno, true /* emit_error_msg */);
+      result = i2c_is_valid_bus(dref->busno, true /* emit_error_msg */);
    }
    else {
       result = adl_is_valid_adlno(dref->iAdapterIndex, dref->iDisplayIndex, true /* emit_error_msg */);
@@ -316,12 +316,11 @@ Global_Status_Code ddc_i2c_write_read_raw(
          invoke_i2c_writer(
                            dh->fh,
                            get_packet_len(request_packet_ptr)-1,
-                           get_packet_start(request_packet_ptr)+1,
-                           DDC_TIMEOUT_USE_DEFAULT) ;
+                           get_packet_start(request_packet_ptr)+1 );
    TRCMSGTG(tg, "perform_i2c_write2() returned %d\n", rc);
    if (rc == 0) {
       call_tuned_sleep_i2c(SE_WRITE_TO_READ);
-      rc = invoke_i2c_reader(dh->fh, max_read_bytes, readbuf, DDC_TIMEOUT_USE_DEFAULT);
+      rc = invoke_i2c_reader(dh->fh, max_read_bytes, readbuf);
       // note_io_event(IE_READ_AFTER_WRITE, __func__);
       if (rc == 0 && all_zero(readbuf, max_read_bytes)) {
          rc = DDCRC_READ_ALL_ZERO;
@@ -724,9 +723,7 @@ Global_Status_Code ddc_i2c_write_only(
 #endif
    rc = invoke_i2c_writer(fh,
                            get_packet_len(request_packet_ptr)-1,
-                           get_packet_start(request_packet_ptr)+1,
-                           DDC_TIMEOUT_USE_DEFAULT);
-   // note_io_event(IE_WRITE_ONLY, __func__);
+                           get_packet_start(request_packet_ptr)+1 );;
    if (rc < 0)
       log_status_code(rc, __func__);
    call_tuned_sleep_i2c(SE_POST_WRITE);
