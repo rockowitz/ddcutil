@@ -225,7 +225,7 @@ int main(int argc, char *argv[]) {
       show_reporting();
 
    if (parsed_cmd->cmd_id == CMDID_LISTVCP) {
-      list_feature_codes();
+      vcp_list_feature_codes();
       main_rc = EXIT_SUCCESS;
    }
 

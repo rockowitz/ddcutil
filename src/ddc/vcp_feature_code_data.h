@@ -102,9 +102,12 @@ struct {
 } VCP_Feature_Table_Entry;
 
 
+VCP_Feature_Table_Entry * vcp_get_feature_table_entry(int ndx);
+VCP_Feature_Table_Entry * vcp_create_dummy_feature_for_charid(char * id);
+VCP_Feature_Table_Entry * vcp_find_feature_by_hexid(Byte id);
+VCP_Feature_Table_Entry * vcp_find_feature_by_hexid_w_default(Byte id);
+VCP_Feature_Table_Entry * vcp_find_feature_by_charid(char * id);
 
-VCP_Feature_Table_Entry * find_feature_by_hexid(Byte id);
-VCP_Feature_Table_Entry * find_feature_by_hexid_w_default(Byte id);
 
 bool format_feature_detail_debug_continuous(
         Interpreted_Vcp_Code * code_info,  Version_Spec vcp_version, char * buffer, int bufsz);
@@ -112,11 +115,40 @@ bool format_feature_detail_debug_continuous(
 extern VCP_Feature_Table_Entry vcp_code_table[];
 
 
-VCP_Feature_Table_Entry * create_dummy_feature_for_hexid(Byte id);
+
+
 Feature_Value_Entry * find_feature_values_new(Byte feature_code, Version_Spec vcp_version);
 Feature_Value_Entry * find_feature_values_for_capabilities(Byte feature_code, Version_Spec vcp_version);
 char * find_value_name_new(Feature_Value_Entry * value_entries, Byte value_id);
 
+
+Format_Feature_Detail_Function get_nontable_feature_detail_function( VCP_Feature_Table_Entry * pvft_entry);
+
+Format_Table_Feature_Detail_Function get_table_feature_detail_function(VCP_Feature_Table_Entry * pvft_entry);
+
+bool vcp_format_nontable_feature_detail(
+        VCP_Feature_Table_Entry * vcp_entry,
+        Version_Spec              vcp_version,
+        Interpreted_Vcp_Code *    code_info,
+        char *                    buffer,
+        int                       bufsz) ;
+
+bool vcp_format_table_feature_detail(
+       VCP_Feature_Table_Entry * vcp_entry,
+       Version_Spec              vcp_version,
+       Buffer *                  accumulated_value,
+       Buffer * *                aformatted_data   // address at which to return newly allocated buffer
+     );
+
+// #define NULL_VCP_CODE (0x00)     /* used for unrecognized codes */
+
+
+char * get_feature_name(Byte feature_id);
+int vcp_get_feature_code_count();
+
+
+
+void vcp_list_feature_codes();
 
 void init_vcp_feature_codes();
 

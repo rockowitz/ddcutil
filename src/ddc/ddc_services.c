@@ -86,7 +86,7 @@ Global_Status_Code set_vcp_value_top(Display_Ref * pdisp, char * feature, char *
    Global_Status_Code my_errno = 0;
    long               longtemp;
 
-   VCP_Feature_Table_Entry * entry = find_feature_by_charid(feature);
+   VCP_Feature_Table_Entry * entry = vcp_find_feature_by_charid(feature);
    if (entry) {
       if ( !( (entry->flags) & VCP_WRITABLE ) ){
          printf("Feature %s (%s) is not writable\n", feature, entry->name);
@@ -175,24 +175,15 @@ void show_vcp_for_nontable_vcp_code_table_entry_by_display_handle(
       if ( (vcp_entry->flags & VCP_FUNC_VER) && (vcp_version.major == 0) )
          vcp_version = get_vcp_version_by_display_handle(dh);
 
-      Format_Feature_Detail_Function ffd_func = NULL;
-
       if (output_level != OL_PROGRAM) {
-         // TODO: This is point at which need to know if response is version dependent, pass it to ffd_func
-
-            ffd_func = get_feature_detail_function(vcp_entry);
-
-            char buf[100];
-            ffd_func(code_info, vcp_version,  buf, 100);
-            printf("VCP code 0x%02x (%-30s): %s\n", vcp_code, feature_name, buf);
-
+         char buf[100];
+         vcp_format_nontable_feature_detail(vcp_entry, vcp_version, code_info, buf, 100);
+         printf("VCP code 0x%02x (%-30s): %s\n", vcp_code, feature_name, buf);
       }   // OUTPUT_NORNAL
       else {    // OUTPUT_PROG_VCP
-
-            int cv = code_info->cur_value;
-            // int mv = code_info->max_value;
-            fprintf(fp, "VCP %02X %5d\n", vcp_code, cv);
-
+         int cv = code_info->cur_value;
+         // int mv = code_info->max_value;
+         fprintf(fp, "VCP %02X %5d\n", vcp_code, cv);
       }
    }
    // if (code_info)
@@ -254,12 +245,15 @@ void show_vcp_for_table_vcp_code_table_entry_by_display_handle(
          vcp_version = get_vcp_version_by_display_handle(dh);
 
       if (output_level != OL_PROGRAM) {
-         Format_Table_Feature_Detail_Function ffd_func =
-             get_table_feature_detail_function(vcp_entry);
+
          Buffer * formatted_data = NULL;
-         bool ok = ffd_func(vcp_version, accumulator, &formatted_data);
-         if (ok)
-            printf("VCP code 0x%02x (%-30s): %.*s\n", vcp_code, feature_name, formatted_data->len, formatted_data->bytes);
+         bool ok = vcp_format_table_feature_detail(vcp_entry, vcp_version, accumulator, &formatted_data);
+
+         if (ok) {
+            printf("VCP code 0x%02x (%-30s): %.*s\n",
+                   vcp_code, feature_name, formatted_data->len, formatted_data->bytes);
+            buffer_free(formatted_data, "table formatted data");
+         }
          else
             printf("VCP code 0x%02x (%-30s): !!! UNABLE TO FORMAT OUTPUT", vcp_code, feature_name);
       }   // OUTPUT_NORNAL
@@ -339,7 +333,7 @@ void show_single_vcp_value_by_display_handle(Display_Handle * phandle, char * fe
    // char buf[100];
    // printf("(%s) Starting. Getting feature %s for %s\n", __func__, feature,
    //        shortBasicDisplayRef(pdisp, buf, 100) );
-   VCP_Feature_Table_Entry * entry = find_feature_by_charid(feature);
+   VCP_Feature_Table_Entry * entry = vcp_find_feature_by_charid(feature);
    if (entry) {
       if ( !( (entry->flags) & VCP_READABLE ) ){
          printf("Feature %s (%s) is not readable\n", feature, entry->name);
@@ -365,7 +359,7 @@ void show_single_vcp_value_by_display_ref(Display_Ref * dref, char * feature, bo
    if (debug)
       printf("(%s) Starting. Getting feature %s for %s\n", __func__, feature,
            display_ref_short_name(dref) );
-   VCP_Feature_Table_Entry * entry = find_feature_by_charid(feature);
+   VCP_Feature_Table_Entry * entry = vcp_find_feature_by_charid(feature);
    bool showit = true;
    if (entry) {
       if ( !( (entry->flags) & VCP_READABLE ) ){
@@ -375,7 +369,7 @@ void show_single_vcp_value_by_display_ref(Display_Ref * dref, char * feature, bo
    }
    else if (force) {
       // printf("(%s) force specified.  UNIMPLEMENTED\n", __func__ );
-      entry = create_dummy_feature_for_charid(feature);    // issues error message if invalid hex
+      entry = vcp_create_dummy_feature_for_charid(feature);    // issues error message if invalid hex
       if (!entry) {
          showit = false;
          printf("Invalid feature code: %s\n", feature);  // i.e. invalid hex value
@@ -425,7 +419,7 @@ void show_vcp_values_by_display_handle(
       for (ndx=0; ndx <= 255; ndx++) {
          Byte id = ndx;
          // printf("(%s) ndx=%d, id=0x%02x\n", __func__, ndx, id);
-         VCP_Feature_Table_Entry * entry = find_feature_by_hexid_w_default(id);
+         VCP_Feature_Table_Entry * entry = vcp_find_feature_by_hexid_w_default(id);
          if ( !( (entry->flags) & VCP_READABLE ) ){
             // confuses the output, since we're suppressing unsupported
             // printf("Feature 0x%02x (%s) is not readable\n", ndx, entry->name);
@@ -452,8 +446,9 @@ void show_vcp_values_by_display_handle(
    }
    else {
       int ndx = 0;
+      int vcp_feature_code_count = vcp_get_feature_code_count();
       for (ndx=0; ndx < vcp_feature_code_count; ndx++) {
-         VCP_Feature_Table_Entry * vcp_entry = get_vcp_feature_table_entry(ndx);
+         VCP_Feature_Table_Entry * vcp_entry = vcp_get_feature_table_entry(ndx);
          assert(vcp_entry != NULL);
          if (vcp_entry->flags & VCP_READABLE) {
             bool showIt = true;      //

@@ -29,6 +29,6 @@ Global_Status_Code get_vcp_by_display_ref(
                       Interpreted_Vcp_Code** ppInterpretedCode);
 
 
-void list_feature_codes();
+void vcp_list_feature_codes();
 
 #endif /* DDC_VCP_H_ */

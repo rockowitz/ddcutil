@@ -22,6 +22,9 @@ Global_Status_Code get_vcp_by_display_handle(
        Byte feature_code,
        Interpreted_Vcp_Code** ppInterpretedCode);
 
+
+typedef enum {SUBSET_SCAN, SUBSET_ALL, SUBSET_SUPPORTED, SUBSET_COLORMGT, SUBSET_PROFILE} VCP_Feature_Subset;
+
 void show_vcp_values_by_display_ref(Display_Ref * dref, VCP_Feature_Subset subset, FILE * fp);
 
 void show_single_vcp_value_by_display_ref(Display_Ref * dref, char * feature, bool force);

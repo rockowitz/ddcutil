@@ -17,14 +17,176 @@
 
 #include <ddc/vcp_feature_code_data.h>
 
-// forward references
+// Forward references
 int vcp_feature_code_count;
-static Feature_Value_Entry x14_color_preset_absolute_values[];    // forward reference
+static Feature_Value_Entry x14_color_preset_absolute_values[];
+static Feature_Value_Entry xc8_display_controller_type_values[];
+bool default_table_feature_detail_function(Version_Spec vcp_version, Buffer * data, Buffer** presult);
+
+
 
 
 //
-// Find VCP Feature Table entry
+// Functions applicable to VCP_Feature_Table as a whole
 //
+
+// Creates humanly readable interpretation of VCP feature flags.
+//
+// The result is returned in a buffer supplied by the caller.
+static char * vcp_interpret_feature_flags(VCP_Feature_Flags flags, char* buf, int buflen) {
+   // printf("(%s) flags: 0x%04x\n", __func__, flags);
+   char * rwmsg = "";
+   if (flags & VCP_RO)
+      rwmsg = "ReadOnly ";
+   else if (flags & VCP_WO)
+      rwmsg = "WriteOnly";
+   else if (flags & VCP_RW)
+      rwmsg = "ReadWrite";
+
+   char * typemsg = "";
+   // NEED TO ALSO HANDLE TABLE TYPE
+   if (flags & VCP_CONTINUOUS)
+      typemsg = "Continuous";
+   else if (flags & VCP_NON_CONT)
+      typemsg = "Non-continuous";
+   else if (flags & VCP_TABLE)
+      typemsg = "Table";
+   else if (flags & VCP_TYPE_V2NC_V3T)
+      typemsg = "V2:NC, V3:Table";
+   else
+      typemsg = "Type not set";
+
+   char * vermsg = "";
+   if (flags & VCP_FUNC_VER)
+      vermsg = " (Version specific interpretation)";
+
+   snprintf(buf, buflen, "%s  %s%s", rwmsg, typemsg, vermsg);
+   return buf;
+}
+
+
+void vcp_list_feature_codes() {
+   printf("Recognized VCP feature codes:\n");
+   char buf[200];
+   int ndx = 0;
+   for (;ndx < vcp_feature_code_count; ndx++) {
+      VCP_Feature_Table_Entry entry = vcp_code_table[ndx];
+      // printf("(%s) code=0x%02x, flags: 0x%04x\n", __func__, entry.code, entry.flags);
+      printf("  %02x - %-40s  %s\n",
+             entry.code,
+             entry.name,
+             vcp_interpret_feature_flags(entry.flags, buf, 200)
+            );
+   }
+}
+
+
+
+//
+// Miscellaneous VCP_Feature_Table lookup functions
+//
+
+char * get_feature_name(Byte feature_id) {
+   char * result = NULL;
+   VCP_Feature_Table_Entry * vcp_entry = vcp_find_feature_by_hexid(feature_id);
+   if (vcp_entry)
+      result = vcp_entry->name;
+   else if (0xe0 <= feature_id && feature_id <= 0xff)
+      result = "manufacturer specific feature";
+   else
+      result = "unrecognized feature";
+   return result;
+}
+
+int vcp_get_feature_code_count() {
+   return vcp_feature_code_count;
+}
+
+
+//
+// Functions that return a function for formatting a feature value
+//
+
+
+// Functions that lookup a value contained in a VCP_Feature_Table_Entry,
+// returning a default if the value is not set for that entry.
+
+Format_Feature_Detail_Function get_nontable_feature_detail_function( VCP_Feature_Table_Entry * pvft_entry) {
+   assert(pvft_entry != NULL);
+
+   // TODO:
+   // if VCP_V2NC_V3T, then get version id
+   // based on version id, choose .formatter or .formatter_v3
+   // NO - test needs to be set in caller, this must return a Format_Feature_Detail_Function, which is not for Table
+
+   Format_Feature_Detail_Function func = pvft_entry->formatter;
+   if (!func)
+      func = format_feature_detail_debug_continuous;
+   return func;
+}
+
+
+
+Format_Table_Feature_Detail_Function get_table_feature_detail_function( VCP_Feature_Table_Entry * pvft_entry) {
+   assert(pvft_entry != NULL);
+
+   // TODO:
+   // if VCP_V2NC_V3T, then get version id
+   // based on version id, choose .formatter or .formatter_v3
+   // NO - test needs to be set in caller, this must return a Format_Feature_Detail_Function, which is not for Table
+
+   Format_Table_Feature_Detail_Function func = pvft_entry->table_formatter;
+   if (!func)
+      func = default_table_feature_detail_function;
+   return func;
+}
+
+
+// Functions that apply formatting
+
+bool vcp_format_nontable_feature_detail(
+        VCP_Feature_Table_Entry * vcp_entry,
+        Version_Spec              vcp_version,
+        Interpreted_Vcp_Code *    code_info,
+        char *                    buffer,
+        int                       bufsz)
+{
+   Format_Feature_Detail_Function ffd_func = get_nontable_feature_detail_function(vcp_entry);
+   ffd_func(code_info, vcp_version,  buffer, bufsz);
+   return true;
+}
+
+bool vcp_format_table_feature_detail(
+       VCP_Feature_Table_Entry * vcp_entry,
+       Version_Spec              vcp_version,
+       Buffer *                  accumulated_value,
+       Buffer * *                aformatted_data
+     )
+{
+   Format_Table_Feature_Detail_Function ffd_func = get_table_feature_detail_function(vcp_entry);
+   bool ok = ffd_func(vcp_version, accumulated_value, aformatted_data);
+   return ok;
+}
+
+
+//
+// Functions that return a VCP_Feature_Table_Entry
+//
+
+/* Returns an entry in the VCP feature table based on its index in the table.
+ *
+ * Arguments:
+ *    ndx     table index
+ *
+ * Returns:
+ *    VCP_Feature_Table_Entry
+ */
+VCP_Feature_Table_Entry * vcp_get_feature_table_entry(int ndx) {
+   // printf("(%s) ndx=%d, vcp_code_count=%d  \n", __func__, ndx, vcp_code_count );
+   assert( 0 <= ndx && ndx < vcp_feature_code_count);
+   return &vcp_code_table[ndx];
+}
+
 
 /* Creates a dummy VCP feature table entry for a feature code.
  * It is the responsibility of the caller to free this memory.
@@ -35,7 +197,7 @@ static Feature_Value_Entry x14_color_preset_absolute_values[];    // forward ref
  * Returns:
  *   created VCP_Feature_Table_Entry
  */
-VCP_Feature_Table_Entry * create_dummy_feature_for_hexid(Byte id) {
+static VCP_Feature_Table_Entry * vcp_create_dummy_feature_for_hexid(Byte id) {
    // memory leak
    VCP_Feature_Table_Entry* pentry = calloc(1, sizeof(VCP_Feature_Table_Entry) );
    pentry->code = id;
@@ -51,6 +213,32 @@ VCP_Feature_Table_Entry * create_dummy_feature_for_hexid(Byte id) {
 }
 
 
+/* Creates a dummy VCP feature table entry for a feature code,
+ * based on a a character string representation of the code.
+ * It is the responsibility of the caller to free this memory.
+ *
+ * Arguments:
+ *    id     feature id, as character string
+ *
+ * Returns:
+ *   created VCP_Feature_Table_Entry
+ *   NULL if id does not consist of 2 hex characters
+ */
+VCP_Feature_Table_Entry * vcp_create_dummy_feature_for_charid(char * id) {
+   VCP_Feature_Table_Entry * result = NULL;
+   Byte hexId;
+   bool ok = hhs_to_byte_in_buf(id, &hexId);
+   if (!ok) {
+      printf("(%s) Invalid feature code: %s\n", __func__, id);
+   }
+   else {
+      result = vcp_create_dummy_feature_for_hexid(hexId);
+   }
+   // printf("(%s) Returning %p\n", __func__, result);
+   return result;
+}
+
+
 /* Returns an entry in the VCP feature table based on the hex value
  * of its feature code.
  *
@@ -60,7 +248,7 @@ VCP_Feature_Table_Entry * create_dummy_feature_for_hexid(Byte id) {
  * Returns:
  *    VCP_Feature_Table_Entry, NULL if not found
  */
-VCP_Feature_Table_Entry * find_feature_by_hexid(Byte id) {
+VCP_Feature_Table_Entry * vcp_find_feature_by_hexid(Byte id) {
    // printf("(%s) Starting. id=0x%02x \n", __func__, id );
    int ndx = 0;
    VCP_Feature_Table_Entry * result = NULL;
@@ -76,6 +264,37 @@ VCP_Feature_Table_Entry * find_feature_by_hexid(Byte id) {
 }
 
 
+/* Returns an entry in the VCP feature table based on the character
+ * string representation of its feature code.
+ *
+ * Arguments:
+ *    id    feature id
+ *
+ * Returns:
+ *    VCP_Feature_Table_Entry
+ *    NULL if id does not consist of 2 hex characters, or feature code not found
+ */
+VCP_Feature_Table_Entry * vcp_find_feature_by_charid(char * id) {
+   bool debug = false;
+   if (debug)
+      printf("(%s) Starting id=|%s|  \n", __func__, id );
+   VCP_Feature_Table_Entry * result = NULL;
+
+   Byte hexId;
+   bool ok = hhs_to_byte_in_buf(id, &hexId);
+   if (!ok) {
+      if (debug)
+         printf("(%s) Invalid feature code: %s\n", __func__, id);
+   }
+   else {
+      result = vcp_find_feature_by_hexid(hexId);
+   }
+   if (debug)
+      printf("(%s) Returning %p\n", __func__, result);
+   return result;
+}
+
+
 /* Returns an entry in the VCP feature table based on the hex value
  * of its feature code. If the entry is not found, a synthetic entry
  * is generated.  It is the responsibility of the caller to free this
@@ -87,14 +306,47 @@ VCP_Feature_Table_Entry * find_feature_by_hexid(Byte id) {
  * Returns:
  *    VCP_Feature_Table_Entry
  */
-VCP_Feature_Table_Entry * find_feature_by_hexid_w_default(Byte id) {
+VCP_Feature_Table_Entry * vcp_find_feature_by_hexid_w_default(Byte id) {
    // printf("(%s) Starting. id=0x%02x \n", __func__, id );
-   VCP_Feature_Table_Entry * result = find_feature_by_hexid(id);
+   VCP_Feature_Table_Entry * result = vcp_find_feature_by_hexid(id);
    if (!result)
-      result = create_dummy_feature_for_hexid(id);
+      result = vcp_create_dummy_feature_for_hexid(id);
    // printf("(%s) Done.  ndx=%d. returning %p\n", __func__, ndx, result);
    return result;
 }
+
+
+
+
+
+
+//
+// Value formatting functions for use with table features when we don't
+// understand how to interpret the values for a feature.
+//
+
+bool default_table_feature_detail_function(Version_Spec vcp_version, Buffer * data, Buffer** presult) {
+         printf("(%s) vcp_version=%d.%d\n", __func__, vcp_version.major, vcp_version.minor);
+         int hexbufsize = buffer_length(data) * 3;
+         Buffer * outbuf = buffer_new(hexbufsize, "default_table_feature_detail_function");
+
+         char space = ' ';
+         hexstring2(data->bytes, data->len, &space, false /* upper case */, (char *) outbuf->bytes, hexbufsize);
+         return outbuf;
+}
+
+//
+// Functions applicable to multiple table feature codes
+//
+
+// none so far
+
+
+//
+// Functions for specific table VCP Feature Codes
+//
+
+// none so far
 
 
 //
@@ -108,7 +360,7 @@ Feature_Value_Entry * find_feature_values_new(Byte feature_code, Version_Spec vc
    if (debug)
       printf("(%s) Starting. feature_code=0x%02x\n", __func__, feature_code);
    Feature_Value_Entry * result = NULL;
-   VCP_Feature_Table_Entry * pentry = find_feature_by_hexid(feature_code);
+   VCP_Feature_Table_Entry * pentry = vcp_find_feature_by_hexid(feature_code);
    // may not be found if called for capabilities and it's a mfg specific code
    if (pentry) {
       // TODO:
@@ -155,7 +407,17 @@ Feature_Value_Entry * find_feature_values_for_capabilities(Byte feature_code, Ve
 }
 
 
-
+/* Given a hex value to be interpreted and an array of value table entries,
+ * return the explanation string for value.
+ *
+ * Arguments:
+ *    value_entries   array of Feature_Value_Entry
+ *    value_id        value to look up
+ *
+ * Returns:
+ *    explanation string from the Feature_Value_Entry found,
+ *    NULL if not found
+ */
 char * find_value_name_new(Feature_Value_Entry * value_entries, Byte value_id) {
    // printf("(%s) Starting. pvalues_for_feature=%p, value_id=0x%02x\n", __func__, pvalues_for_feature, value_id);
    char * result = NULL;
@@ -173,7 +435,21 @@ char * find_value_name_new(Feature_Value_Entry * value_entries, Byte value_id) {
 }
 
 
-
+/* Given the ids for a feature code and a SL byte value,
+ * return the explanation string for value.
+ *
+ * The VCP version is also passed, given that for a few
+ * features the version 3 values are not a strict superset
+ * of the version 2 values.
+ *
+ * Arguments:
+ *    feature_code    VCP feature code
+ *    vcp_version     VCP version
+ *    value_id        value to look up
+ *
+ * Returns:
+ *    explanation string, or "Invalid value" if value_id not found
+ */
 char * lookup_value_name_new(
           Byte          feature_code,
           Version_Spec  vcp_version,
@@ -184,6 +460,64 @@ char * lookup_value_name_new(
    if (!name)
       name = "Invalid value";
    return name;
+}
+
+
+//
+// Value formatting functions for use with non-table features when we don't
+// understand how to interpret the values for a feature.
+//
+
+// used when the value is calculated using the SL and SH bytes, but we haven't
+// written a full interpretation function
+bool format_feature_detail_debug_sl_sh(
+        Interpreted_Vcp_Code * code_info,  Version_Spec vcp_version, char * buffer, int bufsz)
+{
+    snprintf(buffer, bufsz,
+             "SL: 0x%02x ,  SH: 0x%02x",
+             code_info->sl,
+             code_info->sh);
+   return true;
+}
+
+
+// For debugging features marked as Continuous
+// Outputs both the byte fields and calculated cur and max values
+bool format_feature_detail_debug_continuous(
+        Interpreted_Vcp_Code * code_info,  Version_Spec vcp_version, char * buffer, int bufsz)
+{
+   snprintf(buffer, bufsz,
+            "mh=0x%02x, ml=0x%02x, sh=0x%02x, sl=0x%02x, max value = %5d, cur value = %5d",
+            code_info->mh,        code_info->ml,
+            code_info->sh,        code_info->sl,
+            code_info->max_value, code_info->cur_value);
+   return true;
+}
+
+
+bool format_feature_detail_debug_bytes(
+        Interpreted_Vcp_Code * code_info, Version_Spec vcp_version, char * buffer, int bufsz)
+{
+   snprintf(buffer, bufsz,
+            "mh=0x%02x, ml=0x%02x, sh=0x%02x, sl=0x%02x",
+            code_info->mh, code_info->ml, code_info->sh, code_info->sl);
+   return true;
+}
+
+
+//
+// Functions applicable to multiple non-table feature codes
+//
+
+// used when the value is just the SL byte, but we haven't
+// written a full interpretation function
+bool format_feature_detail_sl_byte(
+        Interpreted_Vcp_Code * code_info, Version_Spec vcp_version, char * buffer, int bufsz)
+{
+    snprintf(buffer, bufsz,
+             "Value: 0x%02x" ,
+             code_info->sl);
+   return true;
 }
 
 
@@ -212,57 +546,18 @@ bool format_feature_detail_sl_lookup_new(
 }
 
 
-// Functions applicable to multiple feature codes
-
-
-// used when the value is just the SL byte, but we haven't
-// written a full interpretation function
-bool format_feature_detail_sl_byte(
-        Interpreted_Vcp_Code * code_info, Version_Spec vcp_version, char * buffer, int bufsz)
-{
-    snprintf(buffer, bufsz,
-             "Value: 0x%02x" ,
-             code_info->sl);
-   return true;
-}
-
-
-// used when the value is calculated using the SL and SH bytes, but we haven't
-// written a full interpretation function
-bool format_feature_detail_sl_sh(
-        Interpreted_Vcp_Code * code_info,  Version_Spec vcp_version, char * buffer, int bufsz)
-{
-    snprintf(buffer, bufsz,
-             "SL: 0x%02x ,  SH: 0x%02x",
-             code_info->sl,
-             code_info->sh);
-   return true;
-}
-
-
-// For debugging features marked as Continuous
-// Outputs both the byte fields and calculated cur and max values
-bool format_feature_detail_debug_continuous(
-        Interpreted_Vcp_Code * code_info,  Version_Spec vcp_version, char * buffer, int bufsz)
-{
-   snprintf(buffer, bufsz,
-            "mh=0x%02x, ml=0x%02x, sh=0x%02x, sl=0x%02x, max value = %5d, cur value = %5d",
-            code_info->mh,        code_info->ml,
-            code_info->sh,        code_info->sl,
-            code_info->max_value, code_info->cur_value);
-   return true;
-}
-
-bool format_feature_detail_bytes(
-        Interpreted_Vcp_Code * code_info, Version_Spec vcp_version, char * buffer, int bufsz)
-{
-   snprintf(buffer, bufsz,
-            "mh=0x%02x, ml=0x%02x, sh=0x%02x, sl=0x%02x",
-            code_info->mh, code_info->ml, code_info->sh, code_info->sl);
-   return true;
-}
-
-
+/* Standard feature detail formatting function for a feature marked
+ * as Continuous.
+ *
+ * Arguments:
+ *    code_info
+ *    vcp_version
+ *    buffer        location where to return formatted value
+ *    bufsz         size of buffer
+ *
+ * Returns:
+ *    true
+ */
 bool format_feature_detail_standard_continuous(
         Interpreted_Vcp_Code * code_info, Version_Spec vcp_version, char * buffer, int bufsz)
 {
@@ -279,18 +574,9 @@ bool format_feature_detail_standard_continuous(
 }
 
 
-bool format_feature_detail_version(
-        Interpreted_Vcp_Code * code_info, Version_Spec vcp_version, char * buffer, int bufsz)
-{
-   int version_number  = code_info->sh;
-   int revision_number = code_info->sl;
-   snprintf(buffer, bufsz, "%d.%d", version_number, revision_number);
-   return true;
-}
-
-
-
-// Functions specific to single VCP Feature Codes
+//
+// Functions for specific non-table VCP Feature Codes
+//
 
 // 0x02
 bool format_feature_detail_new_control_value(    // 0x02
@@ -310,8 +596,6 @@ bool format_feature_detail_new_control_value(    // 0x02
    return true;
 }
 
-
-// static Feature_Value_Entry x14_color_preset_absolute_values[];    // forward reference
 
 // 0x14
 bool format_feature_detail_select_color_preset(
@@ -428,6 +712,40 @@ bool format_feature_detail_display_usage_time(
 }
 
 
+// 0xc8
+bool format_feature_detail_display_controller_type(
+        Interpreted_Vcp_Code * info,  Version_Spec vcp_version, char * buffer, int bufsz)
+{
+   assert(info->vcp_code == 0xc8);
+   bool ok = true;
+   Byte mfg_id = info->sl;
+   char *sl_msg = NULL;
+   sl_msg = find_value_name_new(xc8_display_controller_type_values, info->sl);
+   if (!sl_msg) {
+      sl_msg = "Invalid SL value";
+      ok = false;
+   }
+
+   // ushort controller_number = info->ml << 8 | info->sh;
+   // spec is inconsistent, controller number can either be ML/SH or MH/ML
+   // observation suggests it's ml and sh
+   snprintf(buffer, bufsz,
+            "Mfg: %s (sl=0x%02x), controller number: mh=0x%02x, ml=0x%02x, sh=0x%02x",
+            sl_msg, mfg_id, info->mh, info->ml, info->sh);
+   return ok;
+}
+
+// xc9, xdf
+bool format_feature_detail_version(
+        Interpreted_Vcp_Code * code_info, Version_Spec vcp_version, char * buffer, int bufsz)
+{
+   int version_number  = code_info->sh;
+   int revision_number = code_info->sl;
+   snprintf(buffer, bufsz, "%d.%d", version_number, revision_number);
+   return true;
+}
+
+
 //
 // SL byte value lookup tables
 //
@@ -437,6 +755,7 @@ static Feature_Value_Entry x1e_x1f_auto_setup_values[] = {
       {0x00, "Auto setup not active"},
       {0x01, "Performing auto setup"},
       {0x02, "Enable continuous/periodic auto setup"},
+      {0x00,  NULL}       // end of list marker, 0x00 might be a valid value, but NULL never is
 };
 
 // 0x14
@@ -454,6 +773,7 @@ static Feature_Value_Entry x14_color_preset_absolute_values[] = {
      {0x0b, "User 1"},
      {0x0c, "User 2"},
      {0x0d, "User 3"},
+     {0x00,  NULL}       // end of list marker, 0x00 might be a valid value, but NULL never is
 };
 
 // 0x60: These are MCCS V2 values.   In V3, x60 is type table.
@@ -590,6 +910,7 @@ static Feature_Value_Entry xcc_osd_language_values[] = {
           {0x23, "Thai"},
           {0x24, "Ukranian"},
           {0x25, "Vietnamese"},
+          {0x00,  NULL}       // end of list marker, 0x00 might be a valid value, but NULL never is
 };
 
 // 0xd6
@@ -617,7 +938,6 @@ static Feature_Value_Entry xdc_display_application_values[] = {
    {0xf0, "Dynamic contrast"},
    {0xff, NULL}     // terminator
 };
-
 
 
 //
@@ -674,7 +994,7 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
    { .code=0x11,
      .name="Flesh tone enhancement",
      .flags=VCP_RW | VCP_NON_CONT   | VCP_COLORMGT,
-      .formatter=format_feature_detail_bytes,
+      .formatter=format_feature_detail_debug_bytes,
    },
    { .code=0x12,
      .name="Contrast",
@@ -684,7 +1004,7 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
    { .code=0x13,
      .name="Backlight",
      .flags=VCP_RW | VCP_CONTINUOUS,
-      .formatter=format_feature_detail_bytes,
+      .formatter=format_feature_detail_debug_bytes,
    },
    { .code=0x14,
      .name="Select color preset",
@@ -749,7 +1069,7 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
    { .code=0x2e,
      .name="Gray scale expansion",
      .flags=VCP_RW | VCP_NON_CONT   | VCP_COLORMGT,
-      .formatter=format_feature_detail_bytes,
+      .formatter=format_feature_detail_debug_bytes,
    },
    { .code=0x30,
      .name="Vertical Position",
@@ -809,7 +1129,7 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
    { .code=0x52,
      .name="Active control",
      .flags=VCP_RO | VCP_NON_CONT,
-      .formatter=format_feature_detail_bytes,
+      .formatter=format_feature_detail_debug_bytes,
    },
    { .code=0x56,
      .name="Horizontal Moire",
@@ -854,13 +1174,13 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
      // should VCP_NCSL be set here?  yes: applies to NC values
      .flags= VCP_RW | VCP_TYPE_V2NC_V3T | VCP_NCSL,   // MCCS 2.0: NC, MCCS 3.0: T
      .formatter=format_feature_detail_sl_lookup_new,    // used only for V2
-     //  .formatter=format_feature_detail_bytes,
+     //  .formatter=format_feature_detail_debug_bytes,
      .nc_sl_values = x60_v2_input_source_values     // used only for V2
    },
    { .code=0x66,
      .name="Ambient light sensor",
      .flags=VCP_RW | VCP_NON_CONT,
-      .formatter=format_feature_detail_bytes,
+      .formatter=format_feature_detail_debug_bytes,
    },
    { .code=0x6c,
      .name="Video black level: Red",
@@ -880,7 +1200,7 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
    { .code=0x72,
      .name="Gamma",
      .flags=VCP_RW | VCP_NON_CONT   | VCP_COLORMGT,
-      .formatter=format_feature_detail_sl_sh
+      .formatter=format_feature_detail_debug_sl_sh
    },
    { .code=0x73,
      .name="LUT size",
@@ -952,7 +1272,7 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
    { .code=0xb0,
      .name="(Re)Store user saved values for cur mode",
      .flags=VCP_RO | VCP_NON_CONT,
-      .formatter=format_feature_detail_bytes,
+      .formatter=format_feature_detail_debug_bytes,
    },
    { .code=0xb2,
      .name="Flat panel sub-pixel layout",
@@ -976,13 +1296,13 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
    { .code=0xc6,
      .name="Application enable key",
      .flags=VCP_RO | VCP_NON_CONT                 ,
-      .formatter=format_feature_detail_bytes,
+      .formatter=format_feature_detail_debug_bytes,
    },
    { .code=0xc8,
      .name="Display controller type",
-     .flags=VCP_RW | VCP_NON_CONT | VCP_NCSL,
-     .formatter=format_feature_detail_sl_lookup_new,
-      // .formatter=format_feature_detail_display_controller_type,
+     .flags=VCP_RW | VCP_NON_CONT  /* |  VCP_NCSL */ ,
+     // .formatter=format_feature_detail_sl_lookup_new,    // works, but only interprets mfg id in sl
+     .formatter=format_feature_detail_display_controller_type,
      .nc_sl_values=xc8_display_controller_type_values,
    },
    { .code=0xc9,
@@ -1036,7 +1356,7 @@ void init_vcp_feature_table() {
    for (;ndx < vcp_feature_code_count;ndx++) {
       vcp_code_table[ndx].nc_sl_values = NULL;
    }
-   VCP_Feature_Table_Entry * pentry = find_feature_by_hexid(0xd6);
+   VCP_Feature_Table_Entry * pentry = vcp_find_feature_by_hexid(0xd6);
    assert(pentry);
    pentry->nc_sl_values = xd6_power_mode_values;
 
@@ -1314,6 +1634,7 @@ bool format_feature_detail_display_controller_type(
    return true;
 }
 #endif
+
 
 #ifdef OLD
 // 0xca

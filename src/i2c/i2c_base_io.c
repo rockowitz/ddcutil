@@ -29,33 +29,6 @@
 #include <i2c/i2c_base_io.h>
 
 
-// Dummy value for timing_stats in case init_adl_call_stats() is never called.
-// Without it, macro RECORD_TIMING_STATS would have to test that
-// both timing_stats and pTimingStat->p<stat> are not null.
-#ifdef OLD
-static I2C_Call_Stats dummystats = {
-        .pread_write_stats = NULL,
-        .popen_stats  = NULL,
-        .pclose_stats = NULL,
-        .stats_active = false
- };
-
-I2C_Call_Stats*  timing_stats = &dummystats;
-static bool gather_timing_stats = false;
-
-
-
-void init_i2c_io_stats(I2C_Call_Stats * pstats) {
-   // printf("(%s) Starting. pstats = %p\n", __func__, timing_stats);
-   assert(pstats);
-   timing_stats = pstats;
-   gather_timing_stats = true;
-
-//   pstats->stat_name = "I2C IO calls";
-}
-#endif
-
-
 //
 // Basic functions for reading and writing to I2C bus.
 //
@@ -90,7 +63,8 @@ Base_Status_Errno_DDC  write_writer(int fh, int bytect, Byte * pbytes) {
       if (debug)
          printf("(%s) write() returned %d, errno=%s\n",
                 __func__, rc, linux_errno_desc(errsv));
-      rc = modulate_rc(-errsv, RR_ERRNO);
+      // rc = modulate_rc(-errsv, RR_ERRNO);
+      rc = -errsv;
    }
    return rc;
 }
@@ -303,11 +277,6 @@ Base_Status_Errno_DDC i2c_smbus_write_i2c_block_data_writer(int fh, int bytect, 
    }
    return rc;
 }
-
-
-//
-// smbus versions here for testing. have errors
-//
 
 
 // Read from I2C bus using i2c_smbus_read_i2c_block_data()
