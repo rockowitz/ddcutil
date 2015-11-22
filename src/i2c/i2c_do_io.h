@@ -19,7 +19,7 @@ typedef struct {
    char *     i2c_reader_name;
 } I2C_IO_Strategy;
 
-void set_i2c_io_strategy(I2C_IO_Strategy_Id strategy_id);
+void i2c_set_io_strategy(I2C_IO_Strategy_Id strategy_id);
 
 Global_Status_Code invoke_i2c_writer(
       int    fh,

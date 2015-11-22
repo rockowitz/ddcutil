@@ -31,7 +31,7 @@ I2C_IO_Strategy i2c_ioctl_io_strategy = {
 
 static I2C_IO_Strategy * i2c_io_strategy = &i2c_file_io_strategy;
 
-void set_i2c_io_strategy(I2C_IO_Strategy_Id strategy_id) {
+void i2c_set_io_strategy(I2C_IO_Strategy_Id strategy_id) {
    switch (strategy_id) {
    case (I2C_IO_STRATEGY_FILEIO):
          i2c_io_strategy = &i2c_file_io_strategy;

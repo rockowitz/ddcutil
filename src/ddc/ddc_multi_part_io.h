@@ -15,8 +15,8 @@
 
 
 // Statistics
-void reset_multi_part_read_stats();
-void report_multi_part_read_stats();
+void ddc_reset_multi_part_read_stats();
+void ddc_report_multi_part_read_stats();
 
 Global_Status_Code multi_part_read_with_retry(
                       Display_Handle * dh,

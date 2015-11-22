@@ -65,14 +65,14 @@ int get_max_multi_part_read_tries() {
 
 static void * multi_part_read_stats_rec = NULL;
 
-void reset_multi_part_read_stats() {
+void ddc_reset_multi_part_read_stats() {
    if (multi_part_read_stats_rec)
       reset_try_data(multi_part_read_stats_rec);
    else
       multi_part_read_stats_rec = create_try_data("multi-part exchange", max_multi_part_read_tries);
 }
 
-void report_multi_part_read_stats() {
+void ddc_report_multi_part_read_stats() {
    assert(multi_part_read_stats_rec);
    report_try_data(multi_part_read_stats_rec);
 }

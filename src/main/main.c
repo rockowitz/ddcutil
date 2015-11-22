@@ -48,65 +48,39 @@
 
 
 //
-// Statistics
+// Initialization and Statistics
 //
 
 static long start_time_nanos;
-// static I2C_Call_Stats* pi2c_call_stats;
-// static ADL_Call_Stats* padl_call_stats;
 
-void reset_stats() {
+void initialize() {
+   start_time_nanos = cur_realtime_nanosec();
+
    ddc_reset_write_only_stats();
    ddc_reset_write_read_stats();
-   reset_multi_part_read_stats();
-   // init_status_counts();
-
-   start_time_nanos = cur_realtime_nanosec();
-   init_sleep_stats();  // debug.c
-
-#ifdef OLD
-   pi2c_call_stats = new_i2c_call_stats();
-   // printf("(%s) Calling init_i2c_bus_stats(%p)\n", __func__, pi2c_call_stats);
-   init_i2c_bus_stats(pi2c_call_stats);     // i2c_io.h
-
-   padl_call_stats = new_adl_call_stats();
-   init_adl_call_stats(padl_call_stats);     // adl_intf.c
-#endif
+   ddc_reset_multi_part_read_stats();
+   init_sleep_stats();
    init_execution_stats();
 
-#ifdef FUTURE
-   reset_status_code_counts();   // currently does nothing
-#endif
+   init_status_code_mgt();
+   init_linux_errno();
+   init_adl_errors();
+   init_vcp_feature_codes();
+
+   i2c_set_io_strategy(DEFAULT_I2C_IO_STRATEGY);
 }
 
-
-void report_stats(int cmd_id) {
+void report_stats() {
    // retry related stats
    ddc_report_write_only_stats();
    ddc_report_write_read_stats();
-   // if (cmd_id == CMDID_CAPABILITIES)
-      report_multi_part_read_stats();
+   ddc_report_multi_part_read_stats();
    puts("");
-
-   // Msg_Level msg_lvl = get_global_msg_level();
-
-   // error code counts
-   show_all_status_counts();
-
-
+   show_all_status_counts();   // error code counts
    report_sleep_strategy_stats(0);
-
-   // os and ADL driver call stats
-#ifdef OLD
-   if (pi2c_call_stats)
-      report_i2c_call_stats(pi2c_call_stats, 0);
-   if (padl_call_stats)
-      report_adl_call_stats(padl_call_stats, 0);
-#endif
    puts("");
    report_io_call_stats(0);
    report_sleep_stats(0);
-
 
    long elapsed_nanos = cur_realtime_nanosec() - start_time_nanos;
    printf("Elapsed milliseconds (nanoseconds):             %10ld  (%10ld)\n",
@@ -120,7 +94,7 @@ void report_stats(int cmd_id) {
 //
 
 /* Converts the display identifiers passed on the command line to a logical
- * identifier for an I2C or ADL display.  If a bus number of ADL adapter.display
+ * identifier for an I2C or ADL display.  If a bus number or ADL adapter.display
  * number is specified, the translation is direct.  If a model name/serial number
  * pair or an EDID is specified, the attached displays are searched.
  *
@@ -140,21 +114,10 @@ Display_Ref* get_display_ref_for_display_identifier(Display_Identifier* pdid, bo
    switch (pdid->id_type) {
    case DISP_ID_BUSNO:
       dref = create_bus_display_ref(pdid->busno);
-#ifdef OLD
-      dref = calloc(1,sizeof(Display_Ref));
-      dref->ddc_io_mode = DDC_IO_DEVI2C;
-      dref->busno = pdid->busno;
-#endif
       validated = false;
       break;
    case DISP_ID_ADL:
       dref = create_adl_display_ref(pdid->iAdapterIndex, pdid->iDisplayIndex);
-#ifdef OLD
-      dref = calloc(1,sizeof(Display_Ref));
-      dref->ddc_io_mode = DDC_IO_ADL;
-      dref->iAdapterIndex = pdid->iAdapterIndex;
-      dref->iDisplayIndex = pdid->iDisplayIndex;
-#endif
       validated = false;
       break;
    case DISP_ID_MONSER:
@@ -169,8 +132,7 @@ Display_Ref* get_display_ref_for_display_identifier(Display_Identifier* pdid, bo
          fprintf(stderr, "Unable to find monitor with the specified EDID\n" );
       }
       break;
-   default:
-      PROGRAM_LOGIC_ERROR("Invalid DisplayIdType value: %d\n", pdid->id_type);
+   // no default case because switch is exhaustive, compiler warns if case missing
    }  // switch
 
    if (dref) {
@@ -192,15 +154,7 @@ Display_Ref* get_display_ref_for_display_identifier(Display_Identifier* pdid, bo
 //
 
 int main(int argc, char *argv[]) {
-   reset_stats();
-   init_status_code_mgt();
-   init_linux_errno();
-   init_adl_errors();
-   init_vcp_feature_codes();
-   // init_i2c_io();   // currently does nothing
-
-   set_i2c_io_strategy(DEFAULT_I2C_IO_STRATEGY);
-
+   initialize();
    int main_rc = EXIT_FAILURE;
 
    Parsed_Cmd * parsed_cmd = parse_command(argc, argv);
@@ -408,9 +362,9 @@ int main(int argc, char *argv[]) {
    }
 
    if (parsed_cmd->stats) {
-      report_stats(parsed_cmd->cmd_id);
+      report_stats();
       // report_timestamp_history();  // debugging function
    }
 
-   return main_rc;;
+   return main_rc;
 }
