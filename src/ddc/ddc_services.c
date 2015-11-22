@@ -20,7 +20,7 @@
 #include <ddc/ddc_multi_part_io.h>
 #include <ddc/ddc_packet_io.h>
 #include <ddc/ddc_vcp.h>
-#include <ddc/vcp_feature_code_data.h>
+#include <ddc/vcp_feature_codes.h>
 
 #include <ddc/ddc_services.h>
 
