@@ -4,8 +4,8 @@
  *      Author: rock
  */
 
-#ifndef VCP_FEATURE_CODE_DATA_H_
-#define VCP_FEATURE_CODE_DATA_H_
+#ifndef VCP_FEATURE_CODES_H_
+#define VCP_FEATURE_CODES_H_
 
 #include <util/string_util.h>
 
@@ -89,15 +89,15 @@ typedef  struct {
 
 typedef
 struct {
-   Byte                   code;
-   char *                 name;
-//   Byte                 flags;
-   VCP_Feature_Flags      flags;
-   Format_Feature_Detail_Function formatter;
+   Byte                                 code;
+   char *                               name;
+   VCP_Feature_Flags                    flags;
+   Format_Feature_Detail_Function       formatter;
    Format_Table_Feature_Detail_Function table_formatter;
-   Feature_Value_Entry *  nc_sl_values;  // for NC feature where value is in SL byte
-// VCP_Feature_Parser   data_parser;
-// VCP_Feature_Reporter data_reporter;
+   Feature_Value_Entry *                nc_sl_values;  // for NC feature where value is in SL byte
+
+   // VCP_Feature_Parser   data_parser;
+   // VCP_Feature_Reporter data_reporter;
 } VCP_Feature_Table_Entry;
 
 
@@ -108,21 +108,11 @@ VCP_Feature_Table_Entry * vcp_find_feature_by_hexid_w_default(Byte id);
 VCP_Feature_Table_Entry * vcp_find_feature_by_charid(char * id);
 
 
-bool format_feature_detail_debug_continuous(
-        Interpreted_Vcp_Code * code_info,  Version_Spec vcp_version, char * buffer, int bufsz);
-
-extern VCP_Feature_Table_Entry vcp_code_table[];
-
-
-
-
 Feature_Value_Entry * find_feature_values_new(Byte feature_code, Version_Spec vcp_version);
 Feature_Value_Entry * find_feature_values_for_capabilities(Byte feature_code, Version_Spec vcp_version);
 char * find_value_name_new(Feature_Value_Entry * value_entries, Byte value_id);
 
-
 Format_Feature_Detail_Function get_nontable_feature_detail_function( VCP_Feature_Table_Entry * pvft_entry);
-
 Format_Table_Feature_Detail_Function get_table_feature_detail_function(VCP_Feature_Table_Entry * pvft_entry);
 
 bool vcp_format_nontable_feature_detail(
@@ -145,12 +135,8 @@ bool vcp_format_table_feature_detail(
 char * get_feature_name(Byte feature_id);
 int vcp_get_feature_code_count();
 
-
-
 void vcp_list_feature_codes();
 
 void init_vcp_feature_codes();
 
-
-
-#endif /* VCP_FEATURE_CODE_DATA_H_ */
+#endif /* VCP_FEATURE_CODES_H_ */

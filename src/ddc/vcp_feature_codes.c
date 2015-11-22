@@ -19,11 +19,12 @@
 
 // Forward references
 int vcp_feature_code_count;
+VCP_Feature_Table_Entry vcp_code_table[];
 static Feature_Value_Entry x14_color_preset_absolute_values[];
 static Feature_Value_Entry xc8_display_controller_type_values[];
 bool default_table_feature_detail_function(Version_Spec vcp_version, Buffer * data, Buffer** presult);
-
-
+bool format_feature_detail_debug_continuous(
+         Interpreted_Vcp_Code * code_info,  Version_Spec vcp_version, char * buffer, int bufsz);
 
 
 //
@@ -208,7 +209,6 @@ static VCP_Feature_Table_Entry * vcp_create_dummy_feature_for_hexid(Byte id) {
    // VCP_SYNTHETIC => caller should free
    pentry->flags = VCP_READABLE;    // so readability tests pass
    pentry->formatter = format_feature_detail_debug_continuous;
-
    return pentry;
 }
 
@@ -314,10 +314,6 @@ VCP_Feature_Table_Entry * vcp_find_feature_by_hexid_w_default(Byte id) {
    // printf("(%s) Done.  ndx=%d. returning %p\n", __func__, ndx, result);
    return result;
 }
-
-
-
-
 
 
 //
