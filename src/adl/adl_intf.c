@@ -563,14 +563,17 @@ DisplayIdInfo* get_adl_display_id_info(int iAdapterIndex, int iDisplayIndex) {
 
 void adl_show_active_display(ADL_Display_Rec * pdisp, int depth) {
    Output_Level output_level = get_output_level();
-   rpt_vstring(depth, "ADL Adapter number:   %d\n", pdisp->iAdapterIndex);
-   rpt_vstring(depth, "ADL Display number:   %d\n", pdisp->iDisplayIndex);
+   rpt_vstring(depth, "ADL Adapter number:   %d", pdisp->iAdapterIndex);
+   rpt_vstring(depth, "ADL Display number:   %d", pdisp->iDisplayIndex);
    if (output_level >= OL_VERBOSE)
-      rpt_vstring(depth, "Supports DDC:         %s\n", (pdisp->supports_ddc) ?  "true" : "false");
-   rpt_vstring(depth, "Monitor:              %s:%s:%s\n", pdisp->mfg_id, pdisp->model_name, pdisp->serial_ascii);
-   rpt_vstring(depth, "Xrandr name:          %s\n", pdisp->xrandr_name);
-   bool dump_edid = (output_level >= OL_VERBOSE);
-   report_parsed_edid(pdisp->pEdid, dump_edid /* verbose */, depth);
+      rpt_vstring(depth, "Supports DDC:         %s", (pdisp->supports_ddc) ?  "true" : "false");
+   if (output_level == OL_TERSE || output_level == OL_PROGRAM)
+   rpt_vstring(depth, "Monitor:              %s:%s:%s", pdisp->mfg_id, pdisp->model_name, pdisp->serial_ascii);
+   rpt_vstring(depth, "Xrandr name:          %s", pdisp->xrandr_name);
+   if (output_level >= OL_NORMAL) {
+      bool dump_edid = (output_level >= OL_VERBOSE);
+      report_parsed_edid(pdisp->pEdid, dump_edid /* verbose */, depth);
+   }
 }
 
 void adl_show_active_display_by_index(int ndx, int depth) {

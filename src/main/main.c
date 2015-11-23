@@ -200,6 +200,7 @@ int main(int argc, char *argv[]) {
       if (parsed_cmd->programmatic_output)
          set_output_format(OUTPUT_PROG_BUSINFO);
 #endif
+#ifdef OLD
       int ct = i2c_report_buses(false /* report_all */);
       ct += adl_show_active_displays();
       if (ct > 0)
@@ -225,7 +226,7 @@ int main(int argc, char *argv[]) {
                printf("   %s:  VCP version: %d.%d\n", short_name, vspec.major, vspec.minor);
          }
       }
-
+#endif
       // new way:
       ddc_show_active_displays(0);
    }

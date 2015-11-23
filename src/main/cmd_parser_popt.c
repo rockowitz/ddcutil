@@ -281,37 +281,38 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
 
    // n. val is an integer value
    struct poptOption po[] =  {
-       //             arginfo              &arg                 val  --help description             argument-description
-         {"display", 'd', POPT_ARG_INT,    &dispwork,           'D', "Display number",              "number"},
-         {"bus",     'b', POPT_ARG_INT,    &buswork,            'B', "I2C bus number",              "busNum" },
-         {"adl",     'a', POPT_ARG_STRING, &adlwork,            'A', "ADL adapter and display indexes",  "adapterNum.displayNum"},
-//       {"stats",   's', POPT_ARG_NONE,   &parsedCmd->stats,   'S', "Show retry statistics",       NULL},
-         {"stats",   's', POPT_ARG_NONE,   NULL,                'S', "Show retry statistics",       NULL},
-         {"ddc",     'c', POPT_ARG_NONE,   NULL               , 'C', "Report recoverable DDC errors", NULL},
-         {"ddcdata", '\0',POPT_ARG_NONE,   NULL               , 'C', "Report recoverable DDC errors", NULL},
- //      {"ddc",     'c', POPT_ARG_NONE,   &parsedCmd->ddcdata, 'C', "Show recoverable DDC errors", NULL},
- //      {"ddcdata", 'c', POPT_ARG_NONE,   &parsedCmd->ddcdata, 'C', "Show recoverable DDC errors", NULL},
-         {"verbose", 'v', POPT_ARG_NONE,   NULL,                'V', "Show extended detail",        NULL},
-         {"terse",   't', POPT_ARG_NONE,   NULL,                'T', "Show brief detail",           NULL},
-         {"program", 'p', POPT_ARG_NONE,   NULL,                'P', "Machine readable output",     NULL},
- //      {"verbose", 'v', POPT_ARG_VAL,    &parsed_cmd->msg_level, VERBOSE, "Show extended detail",   NULL},
- //      {"terse",   't', POPT_ARG_VAL,    &parsed_cmd->msg_level, TERSE,   "Show brief detail",      NULL},
- //      {"program", 'p', POPT_ARG_NONE,   NULL,                'P', "Machine readable output",     NULL},
- //      {"verbose", 'v', POPT_ARG_VAL,    &parsed_cmd->output_level, OL_VERBOSE, "Show extended detail",   NULL},
- //      {"terse",   't', POPT_ARG_VAL,    &parsed_cmd->output_level, OL_TERSE,   "Show brief detail",      NULL},
+       //                  arginfo          &arg                 val  --help description             argument-description
+         {"display", 'd',  POPT_ARG_INT,    &dispwork,           'D', "Display number",              "number"},
+         {"bus",     'b',  POPT_ARG_INT,    &buswork,            'B', "I2C bus number",              "busNum" },
+         {"adl",     'a',  POPT_ARG_STRING, &adlwork,            'A', "ADL adapter and display indexes",  "adapterNum.displayNum"},
+//       {"stats",   's',  POPT_ARG_NONE,   &parsedCmd->stats,   'S', "Show retry statistics",       NULL},
+         {"stats",   's',  POPT_ARG_NONE,   NULL,                'S', "Show retry statistics",       NULL},
+         {"ddc",     '\0', POPT_ARG_NONE,   NULL               , 'C', "Report DDC protocol and data errors", NULL},
+ //      {"ddcdata", '\0', POPT_ARG_NONE,   NULL               , 'C', "Report recoverable DDC errors", NULL},
+ //      {"ddc",     'c',  POPT_ARG_NONE,   &parsedCmd->ddcdata, 'C', "Show recoverable DDC errors", NULL},
+ //      {"ddcdata", 'c',  POPT_ARG_NONE,   &parsedCmd->ddcdata, 'C', "Show recoverable DDC errors", NULL},
+         {"verbose", 'v',  POPT_ARG_NONE,   NULL,                'V', "Show extended detail",        NULL},
+         {"terse",   't',  POPT_ARG_NONE,   NULL,                'T', "Show brief detail",           NULL},
+         {"program", 'p',  POPT_ARG_NONE,   NULL,                'P', "Machine readable output",     NULL},
+ //      {"verbose", 'v',  POPT_ARG_VAL,    &parsed_cmd->msg_level, VERBOSE, "Show extended detail",   NULL},
+ //      {"terse",   't',  POPT_ARG_VAL,    &parsed_cmd->msg_level, TERSE,   "Show brief detail",      NULL},
+ //      {"program", 'p',  POPT_ARG_NONE,   NULL,                'P', "Machine readable output",     NULL},
+ //      {"verbose", 'v',  POPT_ARG_VAL,    &parsed_cmd->output_level, OL_VERBOSE, "Show extended detail",   NULL},
+ //      {"terse",   't',  POPT_ARG_VAL,    &parsed_cmd->output_level, OL_TERSE,   "Show brief detail",      NULL},
  //       {"program", 'p', POPT_ARG_NONE,   &parsed_cmd->output_level, OL_PROGRAM, "Machine readable output",     NULL},
-         {"force",   'f', POPT_ARG_NONE,   NULL,                'F', "Do not check certain parms",  NULL},
-//       {"force",   'f', POPT_ARG_NONE,   &parsedCmd->force,   'F', "Do not check certain parms",  NULL},
-         {"model",   'l', POPT_ARG_STRING, &modelwork,          'L', "Select monitor by model and serial number",  "model name"},
-         {"sn",      'n', POPT_ARG_STRING, &snwork,             'N', "Select monitor by model and serial number",  "string serial number"},
-         {"edidstr", 'e', POPT_ARG_STRING, &edidwork,           'E', "Select monitor by EDID", "EDID as 256 char hex string"},
-         {"edid",    '\0',POPT_ARG_STRING, &edidwork,           'E', "Select monitor by EDID", "EDID as 256 char hex string"},
-//         {"trace",   'r', POPT_ARG_STRING, &tracework,          'R', "trace classes",   "comma separated list of trace classes, or all" },
-         {"trace",   'r', POPT_ARG_STRING, &tracework,          'R', "trace classes",   "comma separated list" },
-         {"version", '\0',POPT_ARG_NONE,   NULL,                'Z', "Show version information"},
-         {"myhelp",   '\0', POPT_ARG_NONE,   NULL,                'H', "Show (custom) help"},
-         {"myusage",  '\0', POPT_ARG_NONE, NULL,                'Y', "Show (custom) usage"},
-         POPT_AUTOHELP
+         {"force",   'f',  POPT_ARG_NONE,   NULL,                'F', "Do not check certain parms",  NULL},
+//       {"force",   'f',  POPT_ARG_NONE,   &parsedCmd->force,   'F', "Do not check certain parms",  NULL},
+         {"model",   'l',  POPT_ARG_STRING, &modelwork,          'L', "Select monitor by model and serial number",  "model name"},
+         {"sn",      'n',  POPT_ARG_STRING, &snwork,             'N', "Select monitor by model and serial number",  "string serial number"},
+//       {"edidstr", 'e',  POPT_ARG_STRING, &edidwork,           'E', "Select monitor by EDID", "EDID as 256 char hex string"},
+         {"edid",    'e',  POPT_ARG_STRING, &edidwork,           'E', "Select monitor by EDID", "EDID as 256 char hex string"},
+//       {"trace",   'r',  POPT_ARG_STRING, &tracework,          'R', "trace classes",   "comma separated list of trace classes, or all" },
+         {"trace",   '\0', POPT_ARG_STRING, &tracework,          'R', "trace classes",   "comma separated list" },
+         {"version", '\0', POPT_ARG_NONE,   NULL,                'Z', "Show version information"},
+         {"help",    'h',  POPT_ARG_NONE,   NULL,                'H', "Show help"},
+         {NULL,      '?',  POPT_ARG_NONE,   NULL,                'H', "Show help"},
+         {"usage",   'u',  POPT_ARG_NONE,   NULL,                'Y', "Show usage"},
+//       POPT_AUTOHELP
          POPT_TABLEEND
       // { NULL, 0, 0, NULL, 0}
       // {NULL}
@@ -653,15 +654,11 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
       }
       case 'Y':
       {
-         printf("(%s) Custom usage option implemented here\n", __func__);
-
          printf("(%s) Output of poptPrintUsage():\n", __func__);
          poptPrintUsage(pc, /*FILE * fp*/ stdout, /*@unused@*/ /* int flags */ 0);
-         fprintf(stdout, "        command [command-arguments]\n\n");
+         fprintf(stdout, "        command [command-arguments]\n");
          fprintf(stdout, "%s", commands_list);
          exit(0);
-
-
          break;
       }
       default:
