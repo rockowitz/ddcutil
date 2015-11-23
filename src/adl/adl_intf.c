@@ -561,6 +561,30 @@ DisplayIdInfo* get_adl_display_id_info(int iAdapterIndex, int iDisplayIndex) {
 #endif
 
 
+void adl_show_active_display(ADL_Display_Rec * pdisp, int depth) {
+   Output_Level output_level = get_output_level();
+   rpt_vstring(depth, "ADL Adapter number:   %d\n", pdisp->iAdapterIndex);
+   rpt_vstring(depth, "ADL Display number:   %d\n", pdisp->iDisplayIndex);
+   if (output_level >= OL_VERBOSE)
+      rpt_vstring(depth, "Supports DDC:         %s\n", (pdisp->supports_ddc) ?  "true" : "false");
+   rpt_vstring(depth, "Monitor:              %s:%s:%s\n", pdisp->mfg_id, pdisp->model_name, pdisp->serial_ascii);
+   rpt_vstring(depth, "Xrandr name:          %s\n", pdisp->xrandr_name);
+   bool dump_edid = (output_level >= OL_VERBOSE);
+   report_parsed_edid(pdisp->pEdid, dump_edid /* verbose */, depth);
+}
+
+void adl_show_active_display_by_index(int ndx, int depth) {
+   assert(ndx >= 0 && ndx < active_display_ct);
+   ADL_Display_Rec * pdisp = &active_displays[ndx];
+   adl_show_active_display(pdisp, depth);
+}
+
+
+void adl_show_active_display_by_adlno(int iAdapterIndex, int iDisplayIndex, int depth) {
+   ADL_Display_Rec * pdisp = adl_get_display_by_adlno(iAdapterIndex, iDisplayIndex, true /* emit_error_msg */);
+   assert(pdisp);
+   adl_show_active_display(pdisp, depth);
+}
 
 /* Show information about attached displays.
  *
@@ -575,18 +599,15 @@ int adl_show_active_displays() {
          int ndx;
          for (ndx=0; ndx < active_display_ct; ndx++) {
             ADL_Display_Rec * pdisp = &active_displays[ndx];
-            printf("ADL Adapter number:   %d\n", pdisp->iAdapterIndex);
-            printf("ADL Display number:   %d\n", pdisp->iDisplayIndex);
-            printf("Supports DDC:         %s\n", (pdisp->supports_ddc) ?  "true" : "false");
-            printf("Monitor:              %s:%s:%s\n", pdisp->mfg_id, pdisp->model_name, pdisp->serial_ascii);
-            printf("Xrandr name:          %s\n", pdisp->xrandr_name);
-            report_parsed_edid(pdisp->pEdid, false /* verbose */);
+            adl_show_active_display(pdisp, 0);
             puts("");
          }
       }
    }
    return active_display_ct;
 }
+
+
 
 
 Display_Info_List adl_get_valid_displays() {

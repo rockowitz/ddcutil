@@ -66,7 +66,7 @@ struct {
 
 
 Parsed_Edid * create_parsed_edid(Byte* edidbytes);
-void          report_parsed_edid(Parsed_Edid * edid, bool verbose);
+void          report_parsed_edid(Parsed_Edid * edid, bool verbose, int depth);
 
 
 

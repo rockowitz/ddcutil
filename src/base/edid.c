@@ -16,6 +16,7 @@
 #include <stdio.h>
 #include <string.h>
 
+#include <util/report_util.h>
 #include <util/string_util.h>
 #include <base/util.h>       // used only by debugging code
 
@@ -161,6 +162,7 @@ struct {
 
 
 Parsed_Edid * create_parsed_edid(Byte* edidbytes) {
+   // TODO: implement depth
    assert(edidbytes);
    bool        ok;
    Parsed_Edid* parsed_edid = NULL;
@@ -192,26 +194,27 @@ Parsed_Edid * create_parsed_edid(Byte* edidbytes) {
 }
 
 
-void report_parsed_edid(Parsed_Edid * edid, bool verbose) {
+void report_parsed_edid(Parsed_Edid * edid, bool verbose, int depth) {
+   int d1 = depth+1;
    // verbose = true;
    if (edid) {
-      printf("EDID synopsis:\n");
+      rpt_vstring(depth,"EDID synopsis:");
 
-      printf("   Mfg id:           %s\n",          edid->mfg_id);
-      printf("   Model:            %s\n",          edid->model_name);
-      printf("   Serial number:    %s\n",          edid->serial_ascii);
+      rpt_vstring(d1,"Mfg id:           %s",          edid->mfg_id);
+      rpt_vstring(d1,"Model:            %s",          edid->model_name);
+      rpt_vstring(d1,"Serial number:    %s",          edid->serial_ascii);
       char * title = (edid->is_model_year) ? "Model year" : "Manufacture year";
-      printf("   %-16s: %d\n", title, edid->year);
-      printf("   EDID version:     %d.%d\n", edid->edid_version_major, edid->edid_version_minor);
+      rpt_vstring(d1,"%-16s: %d", title, edid->year);
+      rpt_vstring(d1,"EDID version:     %d.%d", edid->edid_version_major, edid->edid_version_minor);
 
       if (verbose) {
-         printf("EDID hex dump:\n");
+         rpt_vstring(d1,"EDID hex dump:");
          hex_dump(edid->bytes, 128);
       }
    }
    else {
       if (verbose)
-         printf("(%s) edid == NULL  \n", __func__ );
+         rpt_vstring(d1,"(%s) edid == NULL", __func__ );
    }
 }
 

@@ -233,6 +233,7 @@ bool loadvcp(const char * fn) {
       return ok;
 }
 
+// TODO: generalize, get default dir following XDG settings
 #define USER_VCP_DATA_DIR ".local/share/icc"
 
 char * format_timestamp(time_t time_millis, char * buf, int bufsz) {
@@ -268,7 +269,7 @@ char * create_simple_vcp_fn(Display_Ref * dref, time_t time_millis, char * buf, 
    Parsed_Edid* edid = ddc_get_parsed_edid_by_display_ref(dref);
 
    // DisplayIdInfo* pIdInfo = get_display_id_info(dref);
-   char buf2[63];
+   char buf2[64];
    if (!edid) {
       fprintf(stderr, "Display not found: %s\n", display_ref_short_name_r(dref, buf2, 64));
    }

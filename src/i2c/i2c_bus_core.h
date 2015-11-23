@@ -32,6 +32,7 @@
 // #define I2C_BUS_EDID_CHECKED  0x04
 #define I2C_BUS_PROBED        0x01      // has bus been checked?
 
+#define BUS_INFO_MARKER "BINF"
 typedef
 struct {
    char             marker[4];          // always "BINF"
@@ -53,6 +54,9 @@ Bus_Info * i2c_find_bus_info_by_model_sn(const char * model, const char * sn);
 Bus_Info * i2c_find_bus_info_by_edid(const Byte * pEdidBytes);
 // void report_businfo(Bus_Info * bus_info);
 bool i2c_is_valid_bus(int busno, bool emit_error_msg);
+
+void i2c_show_active_display(Bus_Info * businfo, int depth);
+void i2c_show_active_display_by_busno(int busno, int depth);
 
 
 // Basic bus operations

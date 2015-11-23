@@ -1,19 +1,16 @@
-/*
- * cmd_parser_popt.h
+/* cmd_parser_popt.h
  *
  *  Created on: Jun 16, 2014
  *      Author: rock
  */
 
+#ifndef CMD_PARSER_POPT_H_
+#define CMD_PARSER_POPT_H_
 
 #include <base/common.h>
 #include <base/displays.h>
 #include <base/msg_control.h>
 #include <base/util.h>
-
-#ifndef CMD_PARSER_POPT_H_
-#define CMD_PARSER_POPT_H_
-
 
 // #define MAX_ARGS (MAX_SETVCP_VALUES*2)   // causes CMDID_* undefined
 #define MAX_ARGS 100        // hack
@@ -53,9 +50,7 @@ struct {
 
 
 Parsed_Cmd * parse_command(int argc, char * argv[]);
-
 void free_parsed_cmd(Parsed_Cmd * parsed_cmd);
-
-void show_parsed_cmd(Parsed_Cmd * parsedCmd);
+void show_parsed_cmd(Parsed_Cmd * parsedCmd);   // debugging function
 
 #endif /* CMD_PARSER_POPT_H_ */

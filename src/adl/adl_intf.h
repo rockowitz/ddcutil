@@ -35,14 +35,11 @@ struct {
 } ADL_Display_Rec;
 
 
-
 // Initialization
 
 bool adl_is_available();
-
-// must be called before any other function (except is_adl_available())
+// must be called before any other function (except is_adl_available()):
 bool adl_initialize();
-
 void adl_release();
 
 
@@ -50,7 +47,10 @@ void adl_release();
 
 Parsed_Edid* adl_get_parsed_edid_by_adlno(int iAdapterIndex, int iDisplayIndex);
 
-int adl_show_active_displays();   // returns number of active displays
+void adl_show_active_display(ADL_Display_Rec * pdisp, int depth);
+void adl_show_active_display_by_index(int ndx, int depth);
+void adl_show_active_display_by_adlno(int iAdapterIndex, int iDisplayIndex, int depth);
+int  adl_show_active_displays();   // returns number of active displays
 
 void report_adl_display_rec(ADL_Display_Rec * pRec, bool verbose, int depth);
 
@@ -58,11 +58,8 @@ void report_adl_display_rec(ADL_Display_Rec * pRec, bool verbose, int depth);
 // Find and validate display
 
 bool              adl_is_valid_adlno(int iAdapterIndex, int iDisplayIndex, bool emit_error_msg);
-
 ADL_Display_Rec * adl_get_display_by_adlno(int iAdapterIndex, int iDisplayIndex, bool emit_error_msg);
-
 ADL_Display_Rec * adl_find_display_by_model_sn(const char * model, const char * sn);
-
 ADL_Display_Rec * adl_find_display_by_edid(const Byte * pEdidBytes);
 
 Display_Info_List adl_get_valid_displays();

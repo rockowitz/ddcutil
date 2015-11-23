@@ -112,6 +112,13 @@ Display_Ref* get_display_ref_for_display_identifier(Display_Identifier* pdid, bo
    bool validated = true;
 
    switch (pdid->id_type) {
+   case DISP_ID_DISPNO:
+      dref = ddc_find_display_by_dispno(pdid->dispno);
+      if (!dref) {
+         fprintf(stderr, "Invalid display number\n");
+      }
+      validated = false;
+      break;
    case DISP_ID_BUSNO:
       dref = create_bus_display_ref(pdid->busno);
       validated = false;
@@ -218,6 +225,9 @@ int main(int argc, char *argv[]) {
                printf("   %s:  VCP version: %d.%d\n", short_name, vspec.major, vspec.minor);
          }
       }
+
+      // new way:
+      ddc_show_active_displays(0);
    }
 
    else if (parsed_cmd->cmd_id == CMDID_TESTCASE) {

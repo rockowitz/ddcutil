@@ -35,7 +35,9 @@ Global_Status_Code set_vcp_value_top(Display_Ref * dref, char * feature, char * 
 
 
 Display_Info_List * ddc_get_valid_displays();
+int ddc_show_active_displays(int depth);
 
+Display_Ref* ddc_find_display_by_dispno(int dispno);
 
 Version_Spec get_vcp_version_by_display_handle(Display_Handle * dh);
 Version_Spec get_vcp_version_by_display_ref(Display_Ref * dref);

@@ -11,9 +11,7 @@
 
 #include <base/displays.h>
 
-
 bool loadvcp(const char * fn);
-
 bool dumpvcp(Display_Ref * dref, char * optional_filename);
 
 #endif /* LOADVCP_H_ */

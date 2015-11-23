@@ -27,7 +27,8 @@ static char * Display_Id_Type_Names[] = {
       "DISP_ID_BUSNO",
       "DISP_ID_ADL",
       "DISP_ID_MONSER",
-      "DISP_ID_EDID"
+      "DISP_ID_EDID",
+      "DISP_ID_DISPNO"
 };
 
 
@@ -63,6 +64,12 @@ Display_Identifier* common_create_display_identifier(Display_Id_Type id_type) {
    memset(pIdent->edidbytes, '\0', 128);
    *pIdent->model_name = '\0';
    *pIdent->serial_ascii = '\0';
+   return pIdent;
+}
+
+Display_Identifier* create_dispno_display_identifier(int dispno) {
+   Display_Identifier* pIdent = common_create_display_identifier(DISP_ID_DISPNO);
+   pIdent->dispno = dispno;
    return pIdent;
 }
 
@@ -112,6 +119,7 @@ void report_display_identifier(Display_Identifier * pdid, int depth) {
    rpt_structure_loc("BasicStructureRef", pdid, depth );
    int d1 = depth+1;
    rpt_mapped_int("ddc_io_mode",   NULL, pdid->id_type, (Value_To_Name_Function) display_id_type_name, d1);
+   rpt_int( "dispno",        NULL, pdid->dispno,        d1);
    rpt_int( "busno",         NULL, pdid->busno,         d1);
    rpt_int( "iAdapterIndex", NULL, pdid->iAdapterIndex, d1);
    rpt_int( "iDisplayIndex", NULL, pdid->iDisplayIndex, d1);
@@ -335,7 +343,7 @@ void report_display_info(Display_Info * dinfo, int depth) {
       }
       printf("   edid=%p\n", dinfo->edid);
       if (dinfo->edid) {
-         report_parsed_edid(dinfo->edid, false /* !verbose */ );
+         report_parsed_edid(dinfo->edid, false /* !verbose */, depth);
       }
    }
 }

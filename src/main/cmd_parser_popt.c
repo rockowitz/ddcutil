@@ -7,11 +7,15 @@
 
 #include <assert.h>
 #include <ctype.h>
-#include <popt.h>
+// #include <popt.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <termios.h>
+#include <sys/ioctl.h>
+
+#include <popt/popt.h>
 
 #include <base/common.h>
 #include <base/displays.h>
@@ -205,6 +209,34 @@ bool parse_int_arg(char * val, int * pIval) {
 }
 
 
+#ifdef NO
+typedef struct columns_s {
+    size_t cur;
+    size_t max;
+} * columns_t;
+
+
+void myPoptPrintHelp(poptContext con, FILE * fp, /*@unused@*/ int flags)
+{
+    columns_t columns = calloc((size_t)1, sizeof(*columns));
+    int xx;
+
+    //  (void) showHelpIntro(con, fp);
+    // if (con->otherHelp)
+   // xx = POPT_fprintf(fp, " %s\n", con->otherHelp);
+   //  else
+   // xx = POPT_fprintf(fp, " %s\n", POPT_("[OPTION...]"));
+
+    if (columns) {
+   columns->cur = maxArgWidth(con->options, NULL);
+   columns->max = maxColumnWidth(fp);   // TO BE RESET
+   singleTableHelp(con, fp, con->options, columns, NULL);
+   free(columns);
+    }
+}
+#endif
+
+
 /* Primary parsing function
  *
  * Arguments:
@@ -222,11 +254,13 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
    validate_cmdinfo();   // assertions
 
    Parsed_Cmd * parsed_cmd = new_parsed_cmd();
-   parsed_cmd->pdid = create_busno_display_identifier(0);    // default monitor
+   // parsed_cmd->pdid = create_busno_display_identifier(0);    // default monitor
+   parsed_cmd->pdid = create_dispno_display_identifier(1);   // default monitor
 
    char * adlwork  = "default adlwork";
    char * edidwork = "default edidwork";
-   int    buswork = 0;
+   int    buswork   = 0;
+   int    dispwork  = 0;
    char * modelwork = NULL;
    char * snwork    = NULL;
    char * tracework = "";
@@ -248,12 +282,13 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
    // n. val is an integer value
    struct poptOption po[] =  {
        //             arginfo              &arg                 val  --help description             argument-description
+         {"display", 'd', POPT_ARG_INT,    &dispwork,           'D', "Display number",              "number"},
          {"bus",     'b', POPT_ARG_INT,    &buswork,            'B', "I2C bus number",              "busNum" },
          {"adl",     'a', POPT_ARG_STRING, &adlwork,            'A', "ADL adapter and display indexes",  "adapterNum.displayNum"},
 //       {"stats",   's', POPT_ARG_NONE,   &parsedCmd->stats,   'S', "Show retry statistics",       NULL},
          {"stats",   's', POPT_ARG_NONE,   NULL,                'S', "Show retry statistics",       NULL},
-         {"ddc",     'c', POPT_ARG_NONE,   NULL               , 'C', "Show recoverable DDC errors", NULL},
-         {"ddcdata", '\0',POPT_ARG_NONE,   NULL               , 'C', "Show recoverable DDC errors", NULL},
+         {"ddc",     'c', POPT_ARG_NONE,   NULL               , 'C', "Report recoverable DDC errors", NULL},
+         {"ddcdata", '\0',POPT_ARG_NONE,   NULL               , 'C', "Report recoverable DDC errors", NULL},
  //      {"ddc",     'c', POPT_ARG_NONE,   &parsedCmd->ddcdata, 'C', "Show recoverable DDC errors", NULL},
  //      {"ddcdata", 'c', POPT_ARG_NONE,   &parsedCmd->ddcdata, 'C', "Show recoverable DDC errors", NULL},
          {"verbose", 'v', POPT_ARG_NONE,   NULL,                'V', "Show extended detail",        NULL},
@@ -269,10 +304,13 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
 //       {"force",   'f', POPT_ARG_NONE,   &parsedCmd->force,   'F', "Do not check certain parms",  NULL},
          {"model",   'l', POPT_ARG_STRING, &modelwork,          'L', "Select monitor by model and serial number",  "model name"},
          {"sn",      'n', POPT_ARG_STRING, &snwork,             'N', "Select monitor by model and serial number",  "string serial number"},
-         {"edidstr", 'e', POPT_ARG_STRING, &edidwork,           'E', "Select monitor by EDID", "128 byte EDID as 256 character hex string"},
-         {"edid",    '\0',POPT_ARG_STRING, &edidwork,           'E', "Select monitor by EDID", "128 byte EDID as 256 character hex string"},
-         {"trace",   'r', POPT_ARG_STRING, &tracework,          'R', "trace classes",   "comma separated list of trace classes, or all" },
+         {"edidstr", 'e', POPT_ARG_STRING, &edidwork,           'E', "Select monitor by EDID", "EDID as 256 char hex string"},
+         {"edid",    '\0',POPT_ARG_STRING, &edidwork,           'E', "Select monitor by EDID", "EDID as 256 char hex string"},
+//         {"trace",   'r', POPT_ARG_STRING, &tracework,          'R', "trace classes",   "comma separated list of trace classes, or all" },
+         {"trace",   'r', POPT_ARG_STRING, &tracework,          'R', "trace classes",   "comma separated list" },
          {"version", '\0',POPT_ARG_NONE,   NULL,                'Z', "Show version information"},
+         {"myhelp",   '\0', POPT_ARG_NONE,   NULL,                'H', "Show (custom) help"},
+         {"myusage",  '\0', POPT_ARG_NONE, NULL,                'Y', "Show (custom) usage"},
          POPT_AUTOHELP
          POPT_TABLEEND
       // { NULL, 0, 0, NULL, 0}
@@ -293,8 +331,61 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
    char * trace_group_string = strjoin(trace_group_names, trace_group_ct, ", ");
    // printf("(%s) traceGroupString = %s\n", __func__, traceGroupString);
 
+   char * commands_list =
+                        "\n"
+                        "Commands:\n"
+                        "   detect\n"
+                        "   capabilities\n"
+          //            "   info\n"
+                        "   listvcp\n"
+                        "   getvcp <feature-code>\n"
+                        "   setvcp <feature-code> <new-value>\n"
+                        "   dumpvcp (filename)\n"
+                        "   loadvcp <filename>\n"
+                        "   testcase <testcase-number>\n"
+                        "   listtests\n"
+                        "\n";
+   char * command_argument_help =
+              "getvcp arguments:\n"
+              "  <feature-code> can be any of the following:\n"
+              "     - the hex feature code for a specific feature, with or without a leading 0x, e.g. 10 or 0x10\n"
+              "     - ALL - all known feature codes\n"
+              "     - COLORMGT - color related feature codes\n"
+              "     - PROFILE - color related codes for profile management\n"
+              "  Keywords ALL, COLORMGT, and PROFILE can be abbreviated to the first 3 characters.\n"
+              "  Case is ignored.  e.g. \"COL\", \"pro\"\n"
+              "\n"
+              "setvcp arguments:\n"
+              "  <feature-code>: hexadecimal feature code, with or without a leading 0x, e.g. 10 or 0x10\n"
+              "  <new-value>: a decimal number in the range 0..255, or a single byte hex value, e.g. 0x80\n"
+              "\n"
+      //        "Specifying the monitor:\n"
+      //        "  The monitor to be processed can be specified using any of the options:\n"
+      //        "     --bus, --adl, --model and --sn, --edid\n"
+         "The monitor to be processed can be specified using any of the options:\n"
+         "   --display, --bus, --adl, --model and --sn, --edid\n"
+         "   --display <display_number>, where <display_number> ranges from 1 to the number of displays detected\n"
+         "   --bus <bus number>, for /dev/i2c-<bus number>\n"
+         "   --adl <adapter_number.display_number>, for monitors connected to an AMD video card running\n"
+         "           AMD's proprietary video driver (ADL is an acronym for AMD Display Library\n"
+         "   --edid <hex string>, where <hex string> is a 256 hex character representation of the\n"
+         "           128 byte first block of the EDID\n"
+         "   --model <model_name>, where <model name> is as reported by the EDID\n"
+         "   --sn <serial_number>, where <serial_number> is the string form of the serial number\n"
+         "   --     reported by the EDID\n"
+         "Options --model and --sn must be specfied together.\n"
+              "\n"
+              "Tracing:\n"
+              "  The argument to --trace is a comma separated list of trace classes, surrounded by \n"
+              "  quotation marks if necessary."
+              "  e.g. --trace all, --trace \"I2C,ADL\"\n"
+              "  Valid trace classes are:  BASE, I2C, ADL, DDC, ALL.\n"
+              "  (Some trace classes are more useful than others.)\n"
+              "\n"
+              ;
 
-   char * other_option_help = "command [command args]\n\n"
+
+   char * custom_help = "command [command args]\n\n"
                "  Commands:\n"
                "     detect\n"
                "     capabilities\n"
@@ -316,16 +407,30 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
                "  Case is ignored.  e.g. \"COL\", \"pro\"\n"
                "\n"
                "  The monitor to be processed can be specified using any of the options:\n"
-               "     --bus, --adl, --model and --sn, --edidstr\n"
+               "     --display, --bus, --adl, --model and --sn, --edid\n"
+               "     --display <display_number>, where <display_number> is 1 .. number of displays detected\n"
+               "     --bus <bus number>, for /dev/i2c-<bus number>\n"
+               "     --adl <adapter_number.display_number>, for monitors connected to an AMD video card running\n"
+               "             AMD's proprietary video driver (ADL is an acronym for AMD Display Library\n"
+               "     --edid <hex string>, where <hex string> is a 256 hex character representation of the\n"
+               "             128 byte first block of the EDID\n"
+               "     --model <model_name>, where <model name> is as reported by the EDID\n"
+               "     --sn <serial_number>, where <serial_number is the string form of the serial number\n"
+               "     --     reported by the EDID\n"
+               "  Options --model and --sn must be specfied together.\n"
                "\n"
                "  The argument to --trace is a comma separated list of trace classes,\n"
                "  or the keyword \"ALL\"\n"
                "\n"
                ;
 
-   const char * pieces[] = {other_option_help, "  Recognized trace classes: ", trace_group_string, "\n\n"};
-   other_option_help = strjoin(pieces, 4, NULL);
-   poptSetOtherOptionHelp(pc,  other_option_help);
+   const char * pieces[] = {custom_help, "  Recognized trace classes: ", trace_group_string, "\n\n"};
+   custom_help = strjoin(pieces, 4, NULL);
+   // appears at end of poptPrintUsage(), start of poptPrintHelp()
+   poptSetOtherOptionHelp(pc, "");      // suppresses [OPTION...]
+   // poptSetOtherOptionHelp(pc, "SOMETHING");      // a marker string
+   poptSetOtherOptionHelp(pc, "command [command-arguments]");
+   // poptSetOtherOptionHelp(pc,  custom_help);    // try disabling
    // poptSetOtherOptionHelp(pc, "[ARG...]");
 
    if (argc < 2) {
@@ -374,6 +479,13 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
       case 'C':
          // printf("(%s) case C\n", __func__);
          parsed_cmd->ddcdata = true;
+         break;
+      case 'D':
+         // printf("(%s) case B\n", __func__);
+         // parsedCmd->dref = createBusDisplayRef(buswork);
+         free(parsed_cmd->pdid);
+         parsed_cmd->pdid = create_dispno_display_identifier(dispwork);
+         explicit_display_spec_ct++;
          break;
       case 'E':
          {
@@ -482,6 +594,76 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
             printf("Compiled %s at %s\n", __DATE__, __TIME__ );
             exit(0);
          }
+      case 'H':
+      {
+         // printf("(%s) Customize help option implemented here\n", __func__);
+         fprintf(stdout, "Usage: ddctool [options] command [command arguments]\n");
+         fprintf(stdout, "%s", commands_list);
+         fprintf(stdout, "%s", command_argument_help);
+         // printf("(%s) Output of poptPrintHelp():\n", __func__);
+         printf("Options:\n");
+         // problem: poptPrintHelp begins with "ddctool [OPTIONS]:" line
+         // poptPrintOptions  - my added function
+         poptPrintOptions(pc, /*FILE * fp*/ stdout, /*@unused@*/ /* int flags */ 0);
+
+#ifdef PLAY
+         printf("(%s) stdout=%p\n", __func__, stdout);
+         struct winsize ws;
+         memset(&ws, 0, sizeof(ws));
+         int rc = ioctl(1, TIOCGWINSZ, &ws);
+         printf("(%s) TIOCGWIZS get windows size for stdout rc = %d\n", __func__, rc);
+         printf("(%s) ws.ws_col=%d\n", __func__, ws.ws_col);
+         ushort window_cols = ws.ws_col;
+
+
+         char * stream_start;
+         size_t    stream_size;
+         // printf("(%s) stream_start=%p, stream_size=%ld\n", __func__, stream_start, stream_size);
+         FILE * memstream = open_memstream(&stream_start, &stream_size);
+         int memstreamno = fileno(memstream);
+         printf("(%s) memstreamno = %d\n", __func__, memstreamno);
+         rc = ioctl(memstreamno, TIOCGWINSZ, &ws);
+         printf("(%s) TIOCGWIZS get window size for memstream rc = %d\n", __func__, rc);
+         printf("(%s) ws.ws_col=%d\n", __func__, ws.ws_col);
+         ws.ws_col = window_cols;
+         rc = ioctl(memstreamno, TIOCSWINSZ, &ws);
+         printf("(%s)  TIOSGWIZS  set window size for memstream rc = %d\n", __func__, rc);
+         rc = ioctl(memstreamno, TIOCGWINSZ, &ws);
+         printf("(%s) TIOCGWIZS  get window size for memstream rc = %d\n", __func__, rc);
+         printf("(%s) ws.ws_col=%d\n", __func__, ws.ws_col);
+
+
+
+
+
+         poptPrintHelp(pc, memstream, 0);
+         fflush(memstream);
+         fclose(memstream);
+         printf("(%s) stream_start=%p, stream_size=%lud\n", __func__, stream_start, stream_size);
+         printf("memstream: %s\n", stream_start);
+         printf("end of memstream\n");
+
+
+         // printf("(%s) Output of poptPrintUsage():\n", __func__);
+         // poptPrintUsage(pc, /*FILE * fp*/ stdout, /*@unused@*/ /* int flags */ 0);
+#endif
+
+         exit(0);
+         break;
+      }
+      case 'Y':
+      {
+         printf("(%s) Custom usage option implemented here\n", __func__);
+
+         printf("(%s) Output of poptPrintUsage():\n", __func__);
+         poptPrintUsage(pc, /*FILE * fp*/ stdout, /*@unused@*/ /* int flags */ 0);
+         fprintf(stdout, "        command [command-arguments]\n\n");
+         fprintf(stdout, "%s", commands_list);
+         exit(0);
+
+
+         break;
+      }
       default:
          printf("(%s) Unexpected poptGetNextOpt() value: %c(%d)\n", __func__, val, val);
          ok = false;

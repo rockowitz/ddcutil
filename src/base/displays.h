@@ -38,7 +38,7 @@ For I2C displays, the device must be opened.  Display_Handle then contains the o
 
 // *** DisplayIdentifier ***
 
-typedef enum {DISP_ID_BUSNO, DISP_ID_ADL, DISP_ID_MONSER, DISP_ID_EDID} Display_Id_Type;
+typedef enum {DISP_ID_BUSNO, DISP_ID_ADL, DISP_ID_MONSER, DISP_ID_EDID, DISP_ID_DISPNO} Display_Id_Type;
 char * display_id_type_name(Display_Id_Type val);
 
 #define DISPLAY_IDENTIFIER_MARKER "DPID"
@@ -48,6 +48,7 @@ struct {
    char            marker[4];         // always "DPID"
 // int             ui_display_number; // is this appropriate here?
    Display_Id_Type id_type;
+   int             dispno;
    int             busno;
    int             iAdapterIndex;
    int             iDisplayIndex;
@@ -58,6 +59,7 @@ struct {
 } Display_Identifier;
 
 
+Display_Identifier* create_dispno_display_identifier(int dispno);
 Display_Identifier* create_busno_display_identifier(int busno);
 Display_Identifier* create_adlno_display_identifier(int iAdapterIndex, int iDisplayIndex);
 Display_Identifier* create_ddid_display_identifier(Byte* edidbytes);
@@ -122,9 +124,10 @@ char * display_handle_repr_r(Display_Handle * dh, char * buf, int bufsize);
 char * display_handle_repr(Display_Handle * dh);
 
 
-// for surfacing display information at higher levels than i2c, adl without creating
+// for surfacing display information at higher levels than i2c and adl, without creating
 // circular dependencies
 typedef struct {
+   int           dispno;
    Display_Ref * dref;
    Parsed_Edid * edid;
 } Display_Info;

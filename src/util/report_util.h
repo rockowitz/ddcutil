@@ -8,7 +8,9 @@
 #ifndef REPORT_UTIL_H_
 #define REPORT_UTIL_H_
 
+#include <stdio.h>
 #include <stdbool.h>
+
 #include <util/string_util.h>
 
 
@@ -26,6 +28,8 @@ void rpt_structure_loc(char * name, void * ptr, int depth);
 void rpt_str(char * name, char * info, char * val, int depth);
 
 void rpt_int(char * name, char * info, int val, int depth);
+
+void rpt_2col(char * s1,  char * s2,  int col2offset, bool offset_absolute, int depth);
 
 
 typedef char * (*Value_To_Name_Function)(int val);

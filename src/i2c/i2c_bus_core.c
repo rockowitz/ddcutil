@@ -19,6 +19,7 @@
 #include <unistd.h>
 
 #include <util/debug_util.h>
+#include <util/report_util.h>
 #include <util/string_util.h>
 
 #include <base/ddc_errno.h>
@@ -577,7 +578,8 @@ Parsed_Edid * i2c_get_parsed_edid_by_busno(int busno) {
  * The extent of information reported (as opposed to its format) is affected
  * by getGlobalMessageLevel().
  */
-static void report_businfo(Bus_Info * bus_info) {
+static void report_businfo(Bus_Info * bus_info, int depth) {
+   // TODO: implement depth
    // bool debug = adjust_debug_level(false, bus_core_trace_level);
    bool debug = false;
    Output_Level output_level = get_output_level();
@@ -613,7 +615,7 @@ static void report_businfo(Bus_Info * bus_info) {
             printf("Bus functionality:    %.*s\n",  buf0->len, buf0->bytes /* buf */);
             if ( bus_info->flags & I2C_BUS_ADDR_0X50) {
                if (bus_info->edid) {
-                  report_parsed_edid(bus_info->edid, true /* verbose */);
+                  report_parsed_edid(bus_info->edid, true /* verbose */, depth);
                }
             }
          }
@@ -623,7 +625,7 @@ static void report_businfo(Bus_Info * bus_info) {
          printf("\nBus:              /dev/i2c-%d\n", bus_info->busno);
          printf(  "Supports DDC:     %s\n", bool_repr(bus_info->flags & I2C_BUS_ADDR_0X37));
          if ( (bus_info->flags & I2C_BUS_ADDR_0X50) && bus_info->edid) {
-            report_parsed_edid(bus_info->edid, false /* verbose */);
+            report_parsed_edid(bus_info->edid, false /* verbose */, depth);
          }
          break;
 
@@ -650,6 +652,29 @@ static void report_businfo(Bus_Info * bus_info) {
 }
 
 
+void i2c_show_active_display(Bus_Info * businfo, int depth) {
+   Output_Level output_level = get_output_level();
+   rpt_vstring(depth, "Bus:                  /dev/i2c-%d", businfo->busno);
+
+   if (output_level >= OL_VERBOSE)
+   rpt_vstring(depth, "Supports DDC:         %s", bool_repr(businfo->flags & I2C_BUS_ADDR_0X37));
+
+   if (output_level == OL_TERSE || output_level == OL_PROGRAM)
+   rpt_vstring(depth, "Monitor:              %s:%s:%s",  businfo->edid->mfg_id,
+                                               businfo->edid->model_name,
+                                               businfo->edid->serial_ascii);
+   if (output_level >= OL_NORMAL) {
+      bool dump_edid = (output_level >= OL_VERBOSE);
+      report_parsed_edid(businfo->edid, dump_edid /* verbose */, depth);
+   }
+}
+
+void i2c_show_active_display_by_busno(int busno, int depth) {
+   Bus_Info * curinfo = i2c_get_bus_info(busno);
+   assert(curinfo);
+   i2c_show_active_display(curinfo, depth);
+}
+
 
 /* Reports on a single I2C bus.
  *
@@ -673,7 +698,7 @@ void i2c_report_bus(int busno) {
      fprintf(stderr, "Invalid I2C bus number: %d\n", busno);
   else {
      Bus_Info * busInfo = i2c_get_bus_info(busno);
-     report_businfo(busInfo);
+     report_businfo(busInfo, 0);
   }
 
   if (debug)
@@ -711,7 +736,7 @@ int i2c_report_buses(bool report_all) {
    for (busno=0; busno < busct; busno++) {
       Bus_Info * busInfo = i2c_get_bus_info(busno);
       if ( (busInfo->flags & I2C_BUS_ADDR_0X50) || report_all) {
-         report_businfo(busInfo);
+         report_businfo(busInfo, 0);
          reported_ct++;
       }
    }
@@ -1106,7 +1131,7 @@ Parsed_Edid * i2c_get_parsed_edid_by_fd(int fd, bool debug) {
    if (rc == 0) {
       edid = create_parsed_edid(rawedidbuf->bytes);
       if (debug) {
-         report_parsed_edid(edid, false /* dump hex */);
+         report_parsed_edid(edid, false /* dump hex */, 0);
       }
    }
    buffer_free(rawedidbuf, NULL);

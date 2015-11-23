@@ -9,6 +9,8 @@
 #include <errno.h>
 #include <string.h>
 
+#include <util/report_util.h>
+
 #include <base/ddc_errno.h>
 #include <base/ddc_packets.h>
 #include <base/displays.h>
@@ -545,10 +547,71 @@ Display_Info_List * ddc_get_valid_displays() {
          free(i2c_displays.info_recs);
       if (adl_displays.info_recs)
          free(adl_displays.info_recs);
+      for (int ndx = 0; ndx < displayct; ndx++) {
+         all_displays->info_recs[ndx].dispno = ndx+1;      // displays are numbered from 0, not 1
+      }
       // printf("(%s) all_displays in main.c:\n", __func__);
       // report_display_info_list(all_displays, 0);
       return all_displays;
 }
+
+
+int ddc_show_active_displays(int depth) {
+   Display_Info_List * display_list = ddc_get_valid_displays();
+   int ndx;
+   for (ndx=0; ndx<display_list->ct; ndx++) {
+      rpt_vstring(depth, "Display %d", ndx+1);
+      Display_Info * curinfo = &display_list->info_recs[ndx];
+      if (curinfo->dref->ddc_io_mode == DDC_IO_DEVI2C)
+         i2c_show_active_display_by_busno(curinfo->dref->busno, depth+1);
+      else
+        adl_show_active_display_by_adlno(curinfo->dref->iAdapterIndex, curinfo->dref->iDisplayIndex, depth+1);
+
+      Output_Level output_level = get_output_level();
+      if (output_level >= OL_NORMAL) {
+         // char * short_name = display_ref_short_name(curinfo->dref);
+             // printf("Display:       %s\n", short_name);
+             // works, but TMI
+             // printf("Mfg:           %s\n", cur_info->edid->mfg_id);
+         // don't want debugging  output if OL_VERBOSE
+         if (output_level >= OL_VERBOSE)
+            set_output_level(OL_NORMAL);
+
+         Version_Spec vspec = get_vcp_version_by_display_ref(curinfo->dref);
+         if (output_level >= OL_VERBOSE)
+            set_output_level(output_level);
+         // printf("VCP version:   %d.%d\n", vspec.major, vspec.minor);
+         if (vspec.major == 0)
+            rpt_vstring(depth+1, "VCP version: detection failed");
+         else
+            rpt_vstring(depth+1, "VCP version: %d.%d", vspec.major, vspec.minor);
+      }
+      puts("");
+   }
+   return display_list->ct;
+}
+
+
+
+Display_Ref* ddc_find_display_by_dispno(int dispno) {
+   bool debug = false;
+   if (debug)
+      printf("(%s) Starting.  dispno=%d\n", __func__, dispno);
+   Display_Ref * result = NULL;
+   Display_Info_List * all_displays = ddc_get_valid_displays();
+   if (dispno >= 1 && dispno <= all_displays->ct) {
+      Display_Info chosen = all_displays->info_recs[dispno-1];
+      result = chosen.dref;
+   }
+
+   if (debug) {
+      printf("(%s) Returning: %p  \n", __func__, result );
+      if (result)
+         report_display_ref(result, 0);
+   }
+   return result;
+}
+
 
 
 

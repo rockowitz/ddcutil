@@ -150,6 +150,17 @@ void rpt_str(char * name, char * info, char * val, int depth) {
 }
 
 
+void rpt_2col(char * s1,  char * s2,  int col2offset, bool offset_absolute, int depth) {
+   int col1sz = col2offset;
+   int indentct = rpt_indent(depth);
+   if (offset_absolute)
+      col1sz = col1sz - indentct;
+   fprintf(cur_output_dest(), "%*s%-*s%s", indentct, "", col1sz, s1, s2 );
+}
+
+
+
+
 /* Writes a string to the current output destination, describing a named integer value.
  *
  * The output is indented per the specified indentation depth.
