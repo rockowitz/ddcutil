@@ -23,10 +23,16 @@ Global_Status_Code get_table_vcp_by_display_handle(
        Byte                   feature_code,
        Buffer**               pp_table_bytes);
 
+
+Global_Status_Code get_vcp_by_display_handle(
+       Display_Handle * pDispHandle,
+       Byte feature_code,
+       Interpreted_Vcp_Code** ppInterpretedCode);
+
 Global_Status_Code get_vcp_by_display_ref(
-                      Display_Ref *          pDisp,
-                      Byte                   feature_code,
-                      Interpreted_Vcp_Code** ppInterpretedCode);
+       Display_Ref *          pDisp,
+       Byte                   feature_code,
+       Interpreted_Vcp_Code** ppInterpretedCode);
 
 
 void vcp_list_feature_codes();

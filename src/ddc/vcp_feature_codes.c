@@ -21,7 +21,7 @@
 int vcp_feature_code_count;
 VCP_Feature_Table_Entry vcp_code_table[];
 static Feature_Value_Entry x14_color_preset_absolute_values[];
-static Feature_Value_Entry xc8_display_controller_type_values[];
+       Feature_Value_Entry xc8_display_controller_type_values[];
 bool default_table_feature_detail_function(Version_Spec vcp_version, Buffer * data, Buffer** presult);
 bool format_feature_detail_debug_continuous(
          Interpreted_Vcp_Code * code_info,  Version_Spec vcp_version, char * buffer, int bufsz);
@@ -834,7 +834,7 @@ static Feature_Value_Entry xb6_display_technology_type_values[] = {
 };
 
 // 0xc8
-static Feature_Value_Entry xc8_display_controller_type_values[] = {
+Feature_Value_Entry xc8_display_controller_type_values[] = {
    {0x01,  "Conexant"},
    {0x02,  "Genesis"},
    {0x03,  "Macronix"},
@@ -857,6 +857,7 @@ static Feature_Value_Entry xc8_display_controller_type_values[] = {
    {0xff,  "Not defined - a manufacturer designed controller"},
    {0xff, NULL}     // terminator
 };
+Feature_Value_Entry * pxc8_display_controller_type_values = xc8_display_controller_type_values;
 
 // 0xca
 static Feature_Value_Entry xca_osd_values[] = {

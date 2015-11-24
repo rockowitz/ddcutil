@@ -154,7 +154,7 @@ Global_Status_Code modulate_base_errno_ddc_to_global(Base_Status_Errno_DDC rc) {
 static Status_Code_Info ok_status_code_info = {0, "OK", "success"};
 
 
-Status_Code_Info * find_global_status_code_description(Global_Status_Code rc) {
+Status_Code_Info * find_global_status_code_info(Global_Status_Code rc) {
    bool debug = false;
    if (debug)
       printf("(%s) Starting.  rc = %d\n", __func__, rc);
@@ -187,7 +187,7 @@ static char workbuf[WORKBUF_SIZE];
 
 // Returns status code description:
 char * gsc_desc(Global_Status_Code status_code) { // must be freed after use
-   Status_Code_Info * pdesc = find_global_status_code_description(status_code);
+   Status_Code_Info * pdesc = find_global_status_code_info(status_code);
    if (pdesc) {
       snprintf(workbuf, WORKBUF_SIZE, "%s(%d): %s",
                pdesc->name, status_code, pdesc->description);

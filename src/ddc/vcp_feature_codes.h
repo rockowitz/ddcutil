@@ -87,6 +87,8 @@ typedef  struct {
 } Feature_Value_Entry;
 
 
+extern Feature_Value_Entry * pxc8_display_controller_type_values;
+
 typedef
 struct {
    Byte                                 code;

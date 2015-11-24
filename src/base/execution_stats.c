@@ -313,7 +313,7 @@ void show_specific_status_counts(Status_Code_Counts * pcounts) {
          summed_ct += ct;
          // fprintf(stdout, "%4d    %6d\n", ct, key);
 
-         Status_Code_Info * desc = find_global_status_code_description(key);
+         Status_Code_Info * desc = find_global_status_code_info(key);
 
          // or consider flags in Status_Code_Info with this information
          char * aux_msg = "";

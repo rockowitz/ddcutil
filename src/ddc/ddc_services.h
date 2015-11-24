@@ -17,11 +17,6 @@
 
 #include <ddc/vcp_feature_codes.h>
 
-Global_Status_Code get_vcp_by_display_handle(
-       Display_Handle * pDispHandle,
-       Byte feature_code,
-       Interpreted_Vcp_Code** ppInterpretedCode);
-
 
 typedef enum {SUBSET_SCAN, SUBSET_ALL, SUBSET_SUPPORTED, SUBSET_COLORMGT, SUBSET_PROFILE} VCP_Feature_Subset;
 

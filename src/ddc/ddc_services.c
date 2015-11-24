@@ -556,36 +556,73 @@ Display_Info_List * ddc_get_valid_displays() {
 }
 
 
+void ddc_show_active_display(Display_Info * curinfo, int depth) {
+   if (curinfo->dref->ddc_io_mode == DDC_IO_DEVI2C)
+      i2c_show_active_display_by_busno(curinfo->dref->busno, depth);
+   else
+     adl_show_active_display_by_adlno(curinfo->dref->iAdapterIndex, curinfo->dref->iDisplayIndex, depth);
+
+   Output_Level output_level = get_output_level();
+   if (output_level >= OL_NORMAL) {
+      // char * short_name = display_ref_short_name(curinfo->dref);
+          // printf("Display:       %s\n", short_name);
+          // works, but TMI
+          // printf("Mfg:           %s\n", cur_info->edid->mfg_id);
+      // don't want debugging  output if OL_VERBOSE
+      if (output_level >= OL_VERBOSE)
+         set_output_level(OL_NORMAL);
+
+      Version_Spec vspec = get_vcp_version_by_display_ref(curinfo->dref);
+
+      // printf("VCP version:   %d.%d\n", vspec.major, vspec.minor);
+      if (vspec.major == 0)
+         rpt_vstring(depth, "VCP version: detection failed");
+      else
+         rpt_vstring(depth, "VCP version:         %d.%d", vspec.major, vspec.minor);
+
+      if (output_level >= OL_VERBOSE) {
+         // display controller mfg, firmware version
+         Interpreted_Vcp_Code* code_info;
+
+         Global_Status_Code gsc = get_vcp_by_display_ref(
+                curinfo->dref,
+                0xc8,         // controller manufacturer
+                &code_info);
+         if (gsc != 0) {
+            printf("(%s) get_vcp_by_display_ref() returned %s\n", __func__, gsc_desc(gsc));
+         }
+         else {
+            Feature_Value_Entry * vals = pxc8_display_controller_type_values;
+            char * mfg_name =  find_value_name_new(
+                  vals,
+                  code_info->sl);
+            rpt_vstring(depth, "Controller mfg:      %s", mfg_name);
+
+            Global_Status_Code gsc = get_vcp_by_display_ref(
+                     curinfo->dref,
+                     0xc9,         // firmware version
+                     &code_info);
+            if (gsc != 0) {
+                printf("(%s) get_vcp_by_display_ref() returned %s\n", __func__, gsc_desc(gsc));
+            }
+            else {
+               rpt_vstring(depth, "Firmware version:    %d.%d", code_info->sh, code_info->sl);
+            }
+         }
+      }
+      if (output_level >= OL_VERBOSE)
+         set_output_level(output_level);
+   }
+}
+
+
 int ddc_show_active_displays(int depth) {
    Display_Info_List * display_list = ddc_get_valid_displays();
    int ndx;
    for (ndx=0; ndx<display_list->ct; ndx++) {
       rpt_vstring(depth, "Display %d", ndx+1);
       Display_Info * curinfo = &display_list->info_recs[ndx];
-      if (curinfo->dref->ddc_io_mode == DDC_IO_DEVI2C)
-         i2c_show_active_display_by_busno(curinfo->dref->busno, depth+1);
-      else
-        adl_show_active_display_by_adlno(curinfo->dref->iAdapterIndex, curinfo->dref->iDisplayIndex, depth+1);
-
-      Output_Level output_level = get_output_level();
-      if (output_level >= OL_NORMAL) {
-         // char * short_name = display_ref_short_name(curinfo->dref);
-             // printf("Display:       %s\n", short_name);
-             // works, but TMI
-             // printf("Mfg:           %s\n", cur_info->edid->mfg_id);
-         // don't want debugging  output if OL_VERBOSE
-         if (output_level >= OL_VERBOSE)
-            set_output_level(OL_NORMAL);
-
-         Version_Spec vspec = get_vcp_version_by_display_ref(curinfo->dref);
-         if (output_level >= OL_VERBOSE)
-            set_output_level(output_level);
-         // printf("VCP version:   %d.%d\n", vspec.major, vspec.minor);
-         if (vspec.major == 0)
-            rpt_vstring(depth+1, "VCP version: detection failed");
-         else
-            rpt_vstring(depth+1, "VCP version: %d.%d", vspec.major, vspec.minor);
-      }
+      ddc_show_active_display(curinfo, depth+1);
       puts("");
    }
    return display_list->ct;

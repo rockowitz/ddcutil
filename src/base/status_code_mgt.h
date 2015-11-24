@@ -10,7 +10,7 @@
 
 #include <stdbool.h>
 
-#include <base/util.h>
+// #include <base/util.h>
 
 
 // Called from the mainline to perform initialization
@@ -49,8 +49,6 @@ typedef int Base_Status_ADL_DDC;     // union(Base_Status_ADL, Global_Status_DDC
 
 Global_Status_Code modulate_base_errno_ddc_to_global(Base_Status_Errno_DDC rc);
 
-
-
 //
 // Status codes ranges
 //
@@ -63,38 +61,23 @@ Global_Status_Code modulate_base_errno_ddc_to_global(Base_Status_Errno_DDC rc);
 #define RCRANGE_DDC_START    3000
 #define RCRANGE_DDC_MAX      3999
 
-
-
-// DDCRC_DOUBLE_BYTE probably not worth keeping, can only reliably check for
-// small subset of DDCRC_PACKET_SIZE, DDCRC_RESPONSE_ENVELOPE, DDCRC_CHECKSUM
-
-
-
 // must be kept consistent with table in status_code_mgt.c
 // should RR_BASE be in this enum?
 typedef enum {RR_BASE, RR_ERRNO, RR_ADL, RR_DDC} Retcode_Range_Id;
 
 // for modules to register the explanation routine for their
 // status codes, to avoid circular dependencies of includes
-
-//deprecated
-// typedef char * (*Retcode_Explainer)(int rc);
-
-
 void register_retcode_desc_finder(
         Retcode_Range_Id           id,
         Retcode_Description_Finder finder_func,
         bool                       finder_arg_is_modulated);
-
 
 int modulate_rc(int unmodulated_rc, Retcode_Range_Id range_id);
 int demodulate_rc(int modulated_rc, Retcode_Range_Id range_id);
 Retcode_Range_Id get_modulation(int rc);
 // int demodulate_any_rc(int modulated_rc);   // unimplemented
 
-
-
-Status_Code_Info * find_global_status_code_description(Global_Status_Code rc);
+Status_Code_Info * find_global_status_code_info(Global_Status_Code rc);
 
 // Returns status code description:
 char * gsc_desc(Global_Status_Code rc);   // must be freed after use

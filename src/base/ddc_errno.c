@@ -11,12 +11,14 @@
 
 #include <base/ddc_errno.h>
 
-
 //
 // DDCRC status code descriptions
 //
 
 #define EDENTRY(id,desc) {id, #id, desc}
+
+// DDCRC_DOUBLE_BYTE probably not worth keeping, can only reliably check for
+// small subset of DDCRC_PACKET_SIZE, DDCRC_RESPONSE_ENVELOPE, DDCRC_CHECKSUM
 
 static Status_Code_Info ddcrc_info[] = {
       EDENTRY(DDCRC_OK                    , "success"                       ),
