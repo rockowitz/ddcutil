@@ -16,35 +16,36 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include <util/data_structures.h>
+#include "util/data_structures.h"
 
-#include <base/common.h>
-#include <base/ddc_errno.h>
-#include <base/ddc_packets.h>
-#include <base/displays.h>
-#include <base/msg_control.h>
-#include <base/parms.h>
-#include <base/util.h>
-#include <base/status_code_mgt.h>
-#include <base/linux_errno.h>
+#include "base/common.h"
+#include "base/ddc_errno.h"
+#include "base/ddc_packets.h"
+#include "base/displays.h"
+#include "base/msg_control.h"
+#include "base/parms.h"
+#include "base/util.h"
+#include "base/status_code_mgt.h"
+#include "base/linux_errno.h"
 
-#include <i2c/i2c_bus_core.h>
-#include <i2c/i2c_do_io.h>
+#include "i2c/i2c_bus_core.h"
+#include "i2c/i2c_do_io.h"
 
-#include <adl/adl_intf.h>
-#include <adl/adl_errors.h>
+#include "adl/adl_intf.h"
+#include "adl/adl_errors.h"
 
-#include <ddc/ddc_multi_part_io.h>
-#include <ddc/ddc_packet_io.h>
-#include <ddc/ddc_vcp.h>
-#include <ddc/parse_capabilities.h>
-#include <ddc/ddc_services.h>
-#include <ddc/try_stats.h>
-#include <ddc/vcp_feature_codes.h>
+#include "ddc/ddc_multi_part_io.h"
+#include "ddc/ddc_packet_io.h"
+#include "ddc/ddc_vcp.h"
+#include "ddc/parse_capabilities.h"
+#include "ddc/ddc_services.h"
+#include "ddc/try_stats.h"
+#include "ddc/vcp_feature_codes.h"
 
-#include <main/cmd_parser_popt.h>
-#include <main/loadvcp.h>
-#include <main/testcases.h>
+// #include "main/cmd_parser_aux.h"
+#include "main/cmd_parser.h"
+#include "main/loadvcp.h"
+#include "main/testcases.h"
 
 
 //
@@ -165,6 +166,7 @@ int main(int argc, char *argv[]) {
    int main_rc = EXIT_FAILURE;
 
    Parsed_Cmd * parsed_cmd = parse_command(argc, argv);
+   //Parsed_Cmd * parsed_cmd = parse_command(argc, argv);
    if (!parsed_cmd) {
       puts("Terminating execution");
       exit(EXIT_FAILURE);
@@ -179,8 +181,9 @@ int main(int argc, char *argv[]) {
 
    set_output_level(parsed_cmd->output_level);
    show_recoverable_errors = parsed_cmd->ddcdata;
-   if (show_recoverable_errors)
-      parsed_cmd->stats = true;
+   // TMI:
+   // if (show_recoverable_errors)
+   //    parsed_cmd->stats = true;
 
    if (parsed_cmd->output_level >= OL_VERBOSE)
       show_reporting();

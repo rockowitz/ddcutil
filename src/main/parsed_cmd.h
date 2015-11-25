@@ -1,19 +1,17 @@
-/* cmd_parser_popt.h
+/*
+ * parsed_cmd.h
  *
- *  Created on: Jun 16, 2014
+ *  Created on: Nov 24, 2015
  *      Author: rock
  */
 
-#ifndef CMD_PARSER_POPT_H_
-#define CMD_PARSER_POPT_H_
+#ifndef PARSED_CMD_H_
+#define PARSED_CMD_H_
 
-#include <base/common.h>
-#include <base/displays.h>
-#include <base/msg_control.h>
-#include <base/util.h>
+#include <stdbool.h>
 
-// #define MAX_ARGS (MAX_SETVCP_VALUES*2)   // causes CMDID_* undefined
-#define MAX_ARGS 100        // hack
+#include "base/parms.h"
+
 
 #define CMDID_NONE         0
 #define CMDID_DETECT       1
@@ -48,9 +46,8 @@ struct {
    Output_Level        output_level;   // new, to replace msg_level and programmatic_output
 } Parsed_Cmd;
 
-
-Parsed_Cmd * parse_command(int argc, char * argv[]);
+Parsed_Cmd *  new_parsed_cmd();
 void free_parsed_cmd(Parsed_Cmd * parsed_cmd);
 void show_parsed_cmd(Parsed_Cmd * parsedCmd);   // debugging function
 
-#endif /* CMD_PARSER_POPT_H_ */
+#endif /* PARSED_CMD_H_ */

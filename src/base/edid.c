@@ -16,11 +16,11 @@
 #include <stdio.h>
 #include <string.h>
 
-#include <util/report_util.h>
-#include <util/string_util.h>
-#include <base/util.h>       // used only by debugging code
+#include "util/report_util.h"
+#include "util/string_util.h"
+#include "base/util.h"       // used only by debugging code
 
-#include <base/edid.h>
+#include "base/edid.h"
 
 
 /* Calculates checksum for a 128 byte EDID

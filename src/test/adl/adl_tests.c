@@ -7,26 +7,26 @@
 
 #include <assert.h>
 #include <stdlib.h>              // for wchar_t in adl_structures.h
-// #include <unistd.h>              // usleep
 #include <stdio.h>
 #include <stdbool.h>
 
-#include <base/msg_control.h>
-#include <util/report_util.h>
-#include <base/util.h>
-#include <base/common.h>
-#include <base/ddc_packets.h>
-#include <base/parms.h>
+#include "util/string_util.h"
+#include "util/report_util.h"
 
-#include <adl/adl_sdk_includes.h>
-#include <adl/adl_intf.h>
-#include <adl/adl_friendly.h>
-#include <adl/adl_report.h>
-#include <adl/adl_aux_intf.h>
+#include "base/msg_control.h"
+#include "base/util.h"
+#include "base/common.h"
+#include "base/ddc_packets.h"
+#include "base/parms.h"
 
+#include "adl/adl_sdk_includes.h"
+#include "adl/adl_intf.h"
+#include "adl/adl_friendly.h"
+#include "adl/adl_report.h"
+#include "adl/adl_aux_intf.h"
 
-#include <test/adl/adl_from_sample.h>
-#include <test/adl/adl_tests.h>
+#include "test/adl/adl_from_sample.h"
+#include "test/adl/adl_tests.h"
 
 
 #pragma GCC diagnostic ignored "-Wpointer-sign"

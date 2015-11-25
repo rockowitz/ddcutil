@@ -8,10 +8,8 @@
 #ifndef DDC_BASE_DEFS_H_
 #define DDC_BASE_DEFS_H_
 
-#include <util/coredefs.h>
+#include "util/coredefs.h"
 
-// Not logically a part of packet definitions, but it needs to be in directory base, not ddc
-// to avoid circular includes
 typedef struct {
     Byte  major;
     Byte  minor;

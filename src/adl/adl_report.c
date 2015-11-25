@@ -8,14 +8,16 @@
 #include <stdio.h>
 #include <string.h>
 
-#include <base/edid.h>
-#include <util/report_util.h>
-#include <base/util.h>
-#include <base/common.h>
+#include "util/report_util.h"
+#include "util/string_util.h"
 
-#include <adl/adl_sdk_includes.h>
+#include "base/common.h"
+#include "base/edid.h"
+#include "base/util.h"
 
-#include <adl/adl_report.h>
+#include "adl/adl_sdk_includes.h"
+
+#include "adl/adl_report.h"
 
 
 

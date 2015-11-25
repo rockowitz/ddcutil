@@ -8,7 +8,7 @@
 #ifndef LINUX_ERRNO_H_
 #define LINUX_ERRNO_H_
 
-#include <base/status_code_mgt.h>
+#include "base/status_code_mgt.h"
 
 void init_linux_errno();
 
@@ -24,8 +24,8 @@ char * errno_name(int error_number);
 // still used?
 char * errno_name_negative(int negative_error_number);
 
-Status_Code_Info * get_errno_description(int errnum);
+Status_Code_Info * get_errno_info(int errnum);
 
-Status_Code_Info * get_negative_errno_description(int errnum);
+Status_Code_Info * get_negative_errno_info(int errnum);
 
 #endif /* LINUX_ERRNO_H_ */

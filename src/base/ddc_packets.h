@@ -12,10 +12,10 @@
 
 #include <stdbool.h>
 
-#include <util/data_structures.h>
+#include "util/data_structures.h"
 
-#include <base/status_code_mgt.h>
-#include <base/util.h>
+#include "base/status_code_mgt.h"
+#include "base/util.h"
 
 // was in common.h
 #define MAX_DDCCI_PACKET_SIZE   37    //  32 + 5;

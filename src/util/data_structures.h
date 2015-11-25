@@ -9,7 +9,7 @@
 #ifndef DATA_STRUCTURES_H
 #define DATA_STRUCTURES_H
 
-#include <util/coredefs.h>   // for Byte
+#include "util/coredefs.h"   // for Byte
 
 // An opaque structure containing an array of bytes that
 // can grow dynamically.  Note that the same byte can

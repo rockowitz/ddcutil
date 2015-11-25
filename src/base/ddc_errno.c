@@ -7,9 +7,9 @@
 
 #include <stdio.h>
 
-#include <base/status_code_mgt.h>
+#include "base/status_code_mgt.h"
 
-#include <base/ddc_errno.h>
+#include "base/ddc_errno.h"
 
 //
 // DDCRC status code descriptions

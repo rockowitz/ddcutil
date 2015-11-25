@@ -1,5 +1,4 @@
-/*
- * common.h
+/*  common.h
  *
  *  Created on: Jun 5, 2014
  *      Author: rock
@@ -11,9 +10,9 @@
 #ifndef DDC_COMMON_H_
 #define DDC_COMMON_H_
 
-#include <base/util.h>
-#include <base/displays.h>
-#include <base/msg_control.h>
+#include "base/util.h"
+#include "base/displays.h"
+#include "base/msg_control.h"
 
 //
 // Miscellaneous

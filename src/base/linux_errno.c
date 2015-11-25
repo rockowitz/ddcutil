@@ -7,6 +7,7 @@
 
 #include <errno.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 #include <base/status_code_mgt.h>
@@ -23,7 +24,7 @@ Status_Code_Info * find_errno_description(int errnum);
 void init_linux_errno() {
    register_retcode_desc_finder(
               RR_ERRNO,
-              get_negative_errno_description,
+              get_negative_errno_info,
               false);                // finder_arg_is_modulated
 }
 
@@ -144,7 +145,7 @@ Status_Code_Info * find_errno_description(int errnum) {
 
 
 // n. returned value is valid only until next call
-Status_Code_Info * create_dynamic_errno_description(int errnum) {
+Status_Code_Info * create_dynamic_errno_info(int errnum) {
    Status_Code_Info * result = &dummy_errno_desc;
    result->code = errnum;
    result->name = NULL;
@@ -162,13 +163,13 @@ Status_Code_Info * create_dynamic_errno_description(int errnum) {
 
 
 
-Status_Code_Info * get_errno_description(int errnum) {
+Status_Code_Info * get_errno_info(int errnum) {
    Status_Code_Info * result = find_errno_description(errnum);
    return result;
 }
 
 
-Status_Code_Info * get_negative_errno_description(int errnum) {
-   return get_errno_description(-errnum);
+Status_Code_Info * get_negative_errno_info(int errnum) {
+   return get_errno_info(-errnum);
 }
 

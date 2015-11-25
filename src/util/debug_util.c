@@ -7,10 +7,11 @@
  */
 
 #include <stdbool.h>
+#include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
 
-#include <util/debug_util.h>
+#include "util/debug_util.h"
 
 
 //

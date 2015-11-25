@@ -11,7 +11,8 @@
 #include <stdio.h>
 #include <stdbool.h>
 
-#include <util/string_util.h>
+#include "util/coredefs.h"
+// #include "util/string_util.h"
 
 
 void rpt_push_output_dest(FILE* new_dest);

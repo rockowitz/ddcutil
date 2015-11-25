@@ -9,6 +9,7 @@
 #ifndef UTIL_DEBUG_UTIL_H_
 #define UTIL_DEBUG_UTIL_H_
 
+#include <stdlib.h>
 
 //
 // Traceable memory management

@@ -16,21 +16,22 @@
 #include <string.h>
 #include <unistd.h>
 
-#include <util/report_util.h>
+#include "util/report_util.h"
+#include "util/string_util.h"
 
-#include <base/execution_stats.h>
-#include <base/common.h>
-#include <base/ddc_packets.h>
-#include <base/edid.h>
-#include <base/parms.h>
-#include <base/status_code_mgt.h>
-#include <base/util.h>
+#include "base/execution_stats.h"
+#include "base/common.h"
+#include "base/ddc_packets.h"
+#include "base/edid.h"
+#include "base/parms.h"
+#include "base/status_code_mgt.h"
+#include "base/util.h"
 
-#include <adl/adl_friendly.h>
-#include <adl/adl_report.h>
-#include <adl/adl_sdk_includes.h>
+#include "adl/adl_friendly.h"
+#include "adl/adl_report.h"
+#include "adl/adl_sdk_includes.h"
 
-#include <adl/adl_intf.h>
+#include "adl/adl_intf.h"
 
 
 #pragma GCC diagnostic ignored "-Wpointer-sign"

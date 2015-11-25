@@ -526,9 +526,18 @@ void show_vcp_values_by_display_ref(Display_Ref * dref, VCP_Feature_Subset subse
 }
 
 
-
+/* Creates a list of all displays found.  The list first contains any displays
+ * on /dev/i2c-n busses, then any ADL displays.
+ *
+ * The displays are assigned a display number (starting from 1) based on the
+ * above order.
+ *
+ * Arguments: none
+ *
+ * Returns:
+ *    Display_Info_list struct
+ */
 Display_Info_List * ddc_get_valid_displays() {
-
       Display_Info_List i2c_displays = i2c_get_valid_displays();
       Display_Info_List adl_displays = adl_get_valid_displays();
 
@@ -556,6 +565,12 @@ Display_Info_List * ddc_get_valid_displays() {
 }
 
 
+/* Show information about a display.
+ *
+ * Arguments:
+ *    curinfo   pointer to display information
+ *    depth     logical indentation depth
+ */
 void ddc_show_active_display(Display_Info * curinfo, int depth) {
    if (curinfo->dref->ddc_io_mode == DDC_IO_DEVI2C)
       i2c_show_active_display_by_busno(curinfo->dref->busno, depth);
@@ -594,19 +609,20 @@ void ddc_show_active_display(Display_Info * curinfo, int depth) {
          else {
             Feature_Value_Entry * vals = pxc8_display_controller_type_values;
             char * mfg_name =  find_value_name_new(
-                  vals,
-                  code_info->sl);
-            rpt_vstring(depth, "Controller mfg:      %s", mfg_name);
-
-            Global_Status_Code gsc = get_vcp_by_display_ref(
-                     curinfo->dref,
-                     0xc9,         // firmware version
-                     &code_info);
-            if (gsc != 0) {
-                printf("(%s) get_vcp_by_display_ref() returned %s\n", __func__, gsc_desc(gsc));
-            }
-            else {
-               rpt_vstring(depth, "Firmware version:    %d.%d", code_info->sh, code_info->sl);
+                                  vals,
+                                  code_info->sl);
+            rpt_vstring(depth, "Controller mfg:      %s", (mfg_name) ? mfg_name : "not set");
+            if (mfg_name) {
+               Global_Status_Code gsc = get_vcp_by_display_ref(
+                        curinfo->dref,
+                        0xc9,         // firmware version
+                        &code_info);
+               if (gsc != 0) {
+                  printf("(%s) get_vcp_by_display_ref() returned %s\n", __func__, gsc_desc(gsc));
+               }
+               else {
+                  rpt_vstring(depth, "Firmware version:    %d.%d", code_info->sh, code_info->sl);
+               }
             }
          }
       }
@@ -616,6 +632,14 @@ void ddc_show_active_display(Display_Info * curinfo, int depth) {
 }
 
 
+/* Reports all displays found.
+ *
+ * Arguments:
+ *    depth       logical indentation depth
+ *
+ * Returns:
+ *    number of displays
+ */
 int ddc_show_active_displays(int depth) {
    Display_Info_List * display_list = ddc_get_valid_displays();
    int ndx;
@@ -629,7 +653,15 @@ int ddc_show_active_displays(int depth) {
 }
 
 
-
+/* Returns a Display_Ref for the nth display.
+ *
+ * Arguments:
+ *    dispno     display number
+ *
+ * Returns:
+ *    Display_Ref for the dispno'th display, NULL if
+ *    dispno < 1 or dispno > number of displays
+ */
 Display_Ref* ddc_find_display_by_dispno(int dispno) {
    bool debug = false;
    if (debug)
@@ -650,8 +682,18 @@ Display_Ref* ddc_find_display_by_dispno(int dispno) {
 }
 
 
-
-
+/* Gets the VCP version.
+ *
+ * Because the VCP version is used repeatedly for interpreting other
+ * VCP feature values, it is cached.
+ *
+ * Arguments:
+ *    dh     display handle
+ *
+ * Returns:
+ *    Version_Spec struct containing version, contains 0.0 if version
+ *    could not be retrieved (pre MCCS v2)
+ */
 Version_Spec get_vcp_version_by_display_handle(Display_Handle * dh) {
    bool debug = false;
    // printf("(%s) Starting. dh=%p, dh->vcp_version =  %d.%d\n",
@@ -678,6 +720,18 @@ Version_Spec get_vcp_version_by_display_handle(Display_Handle * dh) {
 }
 
 
+/* Gets the VCP version.
+ *
+ * Because the VCP version is used repeatedly for interpreting other
+ * VCP feature values, it is cached.
+ *
+ * Arguments:
+ *    dref     display reference
+ *
+ * Returns:
+ *    Version_Spec struct containing version, contains 0.0 if version
+ *    could not be retrieved (pre MCCS v2)
+ */
 Version_Spec get_vcp_version_by_display_ref(Display_Ref * dref) {
    // printf("(%s) Starting. dref=%p, dref->vcp_version =  %d.%d\n",
    //        __func__, dref, dref->vcp_version.major, dref->vcp_version.minor);
@@ -734,4 +788,3 @@ Global_Status_Code get_capabilities(Display_Ref * dref, Buffer** ppCapabilitiesB
    ddc_close_display(dh);
    return rc;
 }
-

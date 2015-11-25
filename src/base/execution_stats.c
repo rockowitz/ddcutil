@@ -12,12 +12,13 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include <util/report_util.h>
-#include <base/common.h>   // for sleep functions
-#include <base/parms.h>
-#include <base/ddc_errno.h>
+#include "util/report_util.h"
 
-#include <base/execution_stats.h>
+#include "base/common.h"   // for sleep functions
+#include "base/parms.h"
+#include "base/ddc_errno.h"
+
+#include "base/execution_stats.h"
 
 
 // Forward References

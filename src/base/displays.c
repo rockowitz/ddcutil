@@ -14,11 +14,13 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include <util/report_util.h>
+#include "util/string_util.h"
+#include "util/report_util.h"
 
-#include <base/ddc_base_defs.h>
-#include <base/edid.h>
-#include <base/displays.h>
+#include "base/ddc_base_defs.h"
+#include "base/edid.h"
+
+#include "base/displays.h"
 
 
 // *** DisplayIdentifier ***
@@ -91,7 +93,7 @@ Display_Identifier* create_adlno_display_identifier(
    return pIdent;
 }
 
-Display_Identifier* create_ddid_display_identifier(
+Display_Identifier* create_edid_display_identifier(
       Byte* edidbytes
       )
 {

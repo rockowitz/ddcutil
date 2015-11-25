@@ -12,8 +12,8 @@
 
 #include <stdbool.h>
 
-#include <util/coredefs.h>
-#include <base/util.h>
+#include "util/coredefs.h"
+#include "base/util.h"
 
 
 // Field sizes for holding strings extracted from an EDID

@@ -12,9 +12,9 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include <util/string_util.h>
+#include "util/string_util.h"
 
-#include <util/data_structures.h>
+#include "util/data_structures.h"
 
 
 Byte_Value_Array bva_create() {

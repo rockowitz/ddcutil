@@ -67,5 +67,10 @@
 #define MAX_WRITE_READ_EXCHANGE_TRIES    10
 #define MAX_MULTI_EXCHANGE_TRIES          8
 
+// Maximum command arguments
+// #define MAX_ARGS (MAX_SETVCP_VALUES*2)   // causes CMDID_* undefined
+#define MAX_ARGS 100        // hack
+
+
 
 #endif /* PARMS_H_ */
