@@ -107,6 +107,68 @@ char * strjoin(const char ** pieces, const int ct, const char * sepstr) {
    return result;
 }
 
+#ifdef FUTURE
+// YAGNI: String_Array
+
+typedef struct {
+   int  max_ct;
+   int  cur_ct;
+   char** s;
+} String_Array;
+
+
+String_Array* new_string_array(int size) {
+   String_Array * result = calloc(1, sizeof(String_Array));
+   result->max_ct = size;
+   result->cur_ct = 0;
+   result->s = calloc(sizeof(char*), size);
+   return result;
+}
+#endif
+
+
+Null_Terminated_String_Array strsplit(char * str_to_split, char sepchar) {
+   int max_pieces = (strlen(str_to_split)+1)/2;
+   char** workstruct = calloc(sizeof(char *), max_pieces);
+   int piecect = 0;
+
+   char * rest = str_to_split;
+   char * token;
+   char delim = sepchar;
+   // originally token assignment was in while() clause, but valgrind
+   // complaining about uninitialized variable, trying to figure out why
+   token = strsep(&rest, &delim);
+   while (token) {
+      // printf("(%s) token: |%s|\n", __func__, token);
+      workstruct[piecect++] = strdup(token);
+      token = strsep(&rest, &delim);
+   }
+   char ** result = calloc(sizeof(char *), piecect+1);
+   // n. workstruct[piecect] == NULL because we used calloc()
+   memcpy(result, workstruct, 4*(piecect+1));
+   free(workstruct);
+   return result;
+}
+
+
+void null_terminated_string_array_free(Null_Terminated_String_Array string_array) {
+   int ndx = 0;
+   while (string_array[ndx] != NULL)
+      free(string_array[ndx++]);
+   free(string_array);
+}
+
+int null_terminated_string_array_length(Null_Terminated_String_Array string_array) {
+   int ndx = 0;
+   while (string_array[ndx] != NULL) {ndx++;}
+   return ndx;
+}
+
+
+
+
+
+
 
 /* Converts string to upper case.  The original string is converted in place.
  *

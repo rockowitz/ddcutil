@@ -112,9 +112,9 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
    char *   modelwork      = NULL;
    char *   snwork         = NULL;
    char *   edidwork       = NULL;
-   char *   tracework      = NULL;
+// char *   tracework      = NULL;
    char**   cmd_and_args   = NULL;
-   char**   trace_classes  = NULL;
+   gchar**   trace_classes  = NULL;
    gint     buswork        = -1;
    gint     dispwork       = -1;
 
@@ -136,8 +136,8 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
       {"model",   'l',  0, G_OPTION_ARG_STRING,   &modelwork,        "Monitor model",                "model name"},
       {"sn",      'n',  0, G_OPTION_ARG_STRING,   &snwork,           "Monitor serial number",           "serial number"},
       {"edid",    'e',  0, G_OPTION_ARG_STRING,   &edidwork,         "Monitor EDID",  "256 char hex string" },
-//    {"trace",   '\0', 0, G_OPTION_ARG_STRING_ARRAY, &trace_classes, "Trace classes",  "comma separated list" },
-      {"trace",   '\0', 0, G_OPTION_ARG_STRING,   &tracework,        "Trace classes",  "comma separated list" },
+      {"trace",   '\0', 0, G_OPTION_ARG_STRING_ARRAY, &trace_classes, "Trace classes",  "comma separated list" },
+//    {"trace",   '\0', 0, G_OPTION_ARG_STRING,   &tracework,        "Trace classes",  "comma separated list" },
       {"version", 'V',  0, G_OPTION_ARG_NONE,     &version_flag,     "Show version information", NULL},
 //    {"myusage", '\0', 0, G_OPTION_ARG_NONE,     &myusage_flag,     "Show usage", NULL},
 //    {"myhelp", '\0', 0,  G_OPTION_ARG_NONE,     &myhelp_flag,      "Show usage", NULL},
@@ -163,7 +163,7 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
    const char * pieces3[] = {commands_list_help, command_argument_help};
    char * help_summary = strjoin(pieces3, 2, NULL);
 
-   const char * pieces4[] = {monitor_selection_option_help    , tracing_option_help};
+   const char * pieces4[] = {monitor_selection_option_help    , tracing_multiple_call_option_help};
    char * help_description = strjoin(pieces4,2, NULL);
 
    // on --help, comes after usage line, before option detail
@@ -184,11 +184,6 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
    // printf("(%s) dispwork=%d\n", __func__, dispwork);
    // printf("(%s) stats_flag=%d\n", __func__, stats_flag);
    // printf("(%s) output_level=%d\n", __func__, output_level);
-   if (trace_classes) {
-      int ndx;
-      for (; trace_classes[ndx] != NULL; ndx++)
-         printf("(%s) trace class: %s\n", __func__, trace_classes[ndx]);
-   }
 
    int explicit_display_spec_ct = 0;  // number of ways the display is explicitly specified
 
@@ -264,25 +259,59 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
       ok = false;
    }
 
-   if (tracework) {
-      if (debug)
-         printf("(%s) case 'R', argument = |%s|\n", __func__, tracework );
-      strupper(tracework);
 
+#ifdef COMMA_DELIMITED_TRACE
+   if (tracework) {
+       bool saved_debug = debug;
+       debug = true;
+       if (debug)
+          printf("(%s) tracework, argument = |%s|\n", __func__, tracework );
+       strupper(tracework);
+       Trace_Group traceClasses = 0x00;
+
+       Null_Terminated_String_Array pieces = strsplit(tracework, ',');
+       int ndx = 0;
+       for (; pieces[ndx] != NULL; ndx++) {
+          char * token = pieces[ndx];
+          // TODO: deal with leading or trailing whitespace
+          printf("(%s) token=|%s|\n", __func__, token);
+          if (streq(token, "ALL") || streq(token, "*"))
+             traceClasses = 0xff;
+          else {
+             // printf("(%s) token: |%s|\n", __func__, token);
+             Trace_Group tg = trace_class_name_to_value(token);
+             // printf("(%s) tg=0x%02x\n", __func__, tg);
+             if (tg) {
+                traceClasses |= tg;
+             }
+             else {
+                printf("Invalid trace group: %s\n", token);
+                ok = false;
+             }
+          }
+       }
+       printf("(%s) ndx=%d\n", __func__, ndx);
+       printf("(%s) ntsal=%d\n", __func__, null_terminated_string_array_length(pieces) );
+       assert(ndx == null_terminated_string_array_length(pieces));
+       null_terminated_string_array_free(pieces);
+
+       printf("(%s) traceClasses = 0x%02x\n", __func__, traceClasses);
+       parsed_cmd->trace = traceClasses;
+       debug = saved_debug;
+    }
+#endif
+
+// #ifdef MULTIPLE_TRACE
+   if (trace_classes) {
       Trace_Group traceClasses = 0x00;
-      if (strcmp(tracework, "ALL") == 0 ||
-          strcmp(tracework, "*")   == 0) {
-         // printf("(%s) Process ALL\n", __func__);
-         traceClasses = 0xFF;
-      }
-      else {
-         char * rest = tracework;
-         char * token;
-         char delim = ',';
-         // originally token assignment was in while() clause, but valgrind
-         // complaining about uninitialized variable, trying to figure out why
-         token = strsep(&rest, &delim);
-         while (token) {
+      int ndx = 0;
+      for (;trace_classes[ndx] != NULL; ndx++) {
+         char * token = trace_classes[ndx];
+         strupper(token);
+         // printf("(%s) token=|%s|\n", __func__, token);
+         if (streq(token, "ALL") || streq(token, "*"))
+            traceClasses = 0xff;
+         else {
             // printf("(%s) token: |%s|\n", __func__, token);
             Trace_Group tg = trace_class_name_to_value(token);
             // printf("(%s) tg=0x%02x\n", __func__, tg);
@@ -293,12 +322,12 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
                printf("Invalid trace group: %s\n", token);
                ok = false;
             }
-            token = strsep(&rest, &delim);
-         }
+        }
       }
       // printf("(%s) traceClasses = 0x%02x\n", __func__, traceClasses);
       parsed_cmd->trace = traceClasses;
    }
+// #endif
 
    if (version_flag) {
       printf("Compiled %s at %s\n", __DATE__, __TIME__ );

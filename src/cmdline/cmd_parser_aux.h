@@ -37,6 +37,7 @@ bool validate_output_level(Parsed_Cmd* parsed_cmd);
 extern char * commands_list_help;
 extern char * command_argument_help;
 extern char * monitor_selection_option_help;
-extern char * tracing_option_help;
+extern char * tracing_comma_separated_option_help;
+extern char * tracing_multiple_call_option_help;
 
 #endif /* CMD_PARSER_BASE_H_ */

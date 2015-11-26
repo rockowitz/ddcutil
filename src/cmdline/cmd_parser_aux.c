@@ -178,28 +178,32 @@ char * command_argument_help =
        "Command Arguments\n"
        "  getvcp:\n"
        "    <feature-code> can be any of the following:\n"
-       "      - the hex feature code for a specific feature, with or without a leading 0x, e.g. 10 or 0x10\n"
+       "      - the hex feature code for a specific feature, with or without a leading 0x,\n"
+       "        e.g. 10 or 0x10\n"
        "      - ALL       - all known feature codes\n"
        "      - COLORMGT  - color related feature codes\n"
        "      - PROFILE   - color related codes for profile management\n"
-       "      - SUPPORTED - scan all know features codes, but only show supported codes"
+       "      - SUPPORTED - scan all know features codes, but only show supported codes\n"
        "      - SCAN      - scan all feature codes 0x00..0xff\n"
        "    Keywords can be abbreviated to the first 3 characters.\n"
        "    Case is ignored.  e.g. \"COL\", \"pro\"\n"
        "\n"
        "  setvcp:\n"
-       "    <feature-code>: hexadecimal feature code, with or without a leading 0x, e.g. 10 or 0x10\n"
-       "    <new-value>: a decimal number in the range 0..255, or a single byte hex value, e.g. 0x80\n"
+       "    <feature-code>: hexadecimal feature code, with or without a leading 0x,\n"
+       "       e.g. 10 or 0x10\n"
+       "    <new-value>: a decimal number in the range 0..255, or a single byte hex value,\n"
+       "       e.g. 0x80\n"
       ;
 
 char * monitor_selection_option_help =
        "Monitor Selection\n"
        "  The monitor to be processed can be specified using any of the options:\n"
        "  --display, --bus, --adl, --model and --sn, --edid\n"
-       "  --display <display_number>, where <display_number> ranges from 1 to the number of displays detected\n"
+       "  --display <display_number>, where <display_number> ranges from 1 to the number of\n"
+       "    displays detected\n"
        "  --bus <bus number>, for /dev/i2c-<bus number>\n"
-       "  --adl <adapter_number.display_number>, for monitors connected to an AMD video card running\n"
-       "          AMD's proprietary video driver (ADL is an acronym for AMD Display Library\n"
+       "  --adl <adapter_number.display_number>, for monitors connected to an AMD video card\n"
+       "          running AMD's proprietary video driver (ADL is an acronym for AMD Display Library)\n"
        "  --edid <hex string>, where <hex string> is a 256 hex character representation of the\n"
        "          128 byte first block of the EDID\n"
        "  --model <model_name>, where <model name> is as reported by the EDID\n"
@@ -209,12 +213,23 @@ char * monitor_selection_option_help =
        "\n"
       ;
 
-char * tracing_option_help =
+char * tracing_comma_separated_option_help =
        "Tracing:\n"
        "  The argument to --trace is a comma separated list of trace classes, surrounded by \n"
        "  quotation marks if necessary."
        "  e.g. --trace all, --trace \"I2C,ADL\"\n"
        "  Valid trace classes are:  BASE, I2C, ADL, DDC, TOP, ALL.\n"
+       "  Trace class names are not case sensitive.\n"
+       "  (Some trace classes are more useful than others.)\n"
+  //   "\n"
+      ;
+
+char * tracing_multiple_call_option_help =
+       "Tracing:\n"
+       "  The argument to --trace is a trace class.  Specify the --trace option multiple\n"
+       "  times to activate multiple trace classes, e.g. \"--trace i2c --trace ddc\"\n"
+       "  Valid trace classes are:  BASE, I2C, ADL, DDC, TOP, ALL.\n"
+       "  Trace class names are not case sensitive.\n"
        "  (Some trace classes are more useful than others.)\n"
   //   "\n"
       ;
