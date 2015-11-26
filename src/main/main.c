@@ -42,8 +42,9 @@
 #include "ddc/try_stats.h"
 #include "ddc/vcp_feature_codes.h"
 
-// #include "main/cmd_parser_aux.h"
-#include "main/cmd_parser.h"
+#include "cmdline/parsed_cmd.h"
+#include "cmdline/cmd_parser.h"
+
 #include "main/loadvcp.h"
 #include "main/testcases.h"
 

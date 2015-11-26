@@ -1,8 +1,10 @@
-/*
- * cmd_parser_base.c
+/* cmd_parser_aux.c
  *
  *  Created on: Nov 24, 2015
  *      Author: rock
+ *
+ *  Functions and strings that are independent of the parser
+ *  package used.
  */
 
 #include <assert.h>
@@ -15,13 +17,12 @@
 
 #include "base/common.h"
 
-#include "main/parsed_cmd.h"
-#include "main/cmd_parser_aux.h"
+#include "cmdline/parsed_cmd.h"
+#include "cmdline/cmd_parser_aux.h"
 
 //
 // Command Description data structure
 //
-
 
 static Cmd_Desc cmdinfo[] = {
  // cmd_id              cmd_name  minchars min_arg_ct max_arg_ct
@@ -157,4 +158,65 @@ bool validate_output_level(Parsed_Cmd* parsed_cmd) {
    }
    return ok;
 }
+
+
+char * commands_list_help =
+       "Commands:\n"
+       "   detect\n"
+       "   capabilities\n"
+//     "   info\n"
+       "   listvcp\n"
+       "   getvcp <feature-code>\n"
+       "   setvcp <feature-code> <new-value>\n"
+       "   dumpvcp (filename)\n"
+       "   loadvcp <filename>\n"
+       "   testcase <testcase-number>\n"
+       "   listtests\n"
+       "\n";
+
+char * command_argument_help =
+       "Command Arguments\n"
+       "  getvcp:\n"
+       "    <feature-code> can be any of the following:\n"
+       "      - the hex feature code for a specific feature, with or without a leading 0x, e.g. 10 or 0x10\n"
+       "      - ALL       - all known feature codes\n"
+       "      - COLORMGT  - color related feature codes\n"
+       "      - PROFILE   - color related codes for profile management\n"
+       "      - SUPPORTED - scan all know features codes, but only show supported codes"
+       "      - SCAN      - scan all feature codes 0x00..0xff\n"
+       "    Keywords can be abbreviated to the first 3 characters.\n"
+       "    Case is ignored.  e.g. \"COL\", \"pro\"\n"
+       "\n"
+       "  setvcp:\n"
+       "    <feature-code>: hexadecimal feature code, with or without a leading 0x, e.g. 10 or 0x10\n"
+       "    <new-value>: a decimal number in the range 0..255, or a single byte hex value, e.g. 0x80\n"
+      ;
+
+char * monitor_selection_option_help =
+       "Monitor Selection\n"
+       "  The monitor to be processed can be specified using any of the options:\n"
+       "  --display, --bus, --adl, --model and --sn, --edid\n"
+       "  --display <display_number>, where <display_number> ranges from 1 to the number of displays detected\n"
+       "  --bus <bus number>, for /dev/i2c-<bus number>\n"
+       "  --adl <adapter_number.display_number>, for monitors connected to an AMD video card running\n"
+       "          AMD's proprietary video driver (ADL is an acronym for AMD Display Library\n"
+       "  --edid <hex string>, where <hex string> is a 256 hex character representation of the\n"
+       "          128 byte first block of the EDID\n"
+       "  --model <model_name>, where <model name> is as reported by the EDID\n"
+       "  --sn <serial_number>, where <serial_number> is the string form of the serial number\n"
+       "          reported by the EDID\n"
+       "  Options --model and --sn must be specfied together.\n"
+       "\n"
+      ;
+
+char * tracing_option_help =
+       "Tracing:\n"
+       "  The argument to --trace is a comma separated list of trace classes, surrounded by \n"
+       "  quotation marks if necessary."
+       "  e.g. --trace all, --trace \"I2C,ADL\"\n"
+       "  Valid trace classes are:  BASE, I2C, ADL, DDC, TOP, ALL.\n"
+       "  (Some trace classes are more useful than others.)\n"
+  //   "\n"
+      ;
+
 

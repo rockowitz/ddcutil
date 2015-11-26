@@ -7,12 +7,12 @@
 #ifndef CMD_PARSER_POPT_H_
 #define CMD_PARSER_POPT_H_
 
-#include <base/common.h>
-#include <base/displays.h>
-#include <base/msg_control.h>
-#include <base/util.h>
+#include "base/common.h"
+#include "base/displays.h"
+#include "base/msg_control.h"
+#include "base/util.h"
 
-#include "main/parsed_cmd.h"
+#include "cmdline/parsed_cmd.h"
 
 
 Parsed_Cmd * parse_command(int argc, char * argv[]);

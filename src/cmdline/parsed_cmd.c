@@ -14,7 +14,7 @@
 #include "base/displays.h"
 #include "base/msg_control.h"
 
-#include "main/parsed_cmd.h"
+#include "cmdline/parsed_cmd.h"
 
 //
 // Parsed_Cmd data structure
