@@ -318,7 +318,7 @@ bool store_bytehex_list(char * start, int len, void * data_struct, Byte_Appender
 
    char * curpos = buf;
    char * nexttok;
-   Byte   byteVal;
+   Byte   byteVal = 0x00;    // logically not needed, bug makes compiler happy
    while ( (nexttok = strtok(curpos, " ")) != NULL) {
       if (curpos)
          curpos = NULL;     // for all calls after first
@@ -340,7 +340,8 @@ bool store_bytehex_list(char * start, int len, void * data_struct, Byte_Appender
          ok = false;
       }
       // printf("(%s) byteVal=0x%02x  \n", __func__, byteVal );
-      appender(data_struct, byteVal);
+      if (ok)
+         appender(data_struct, byteVal);
    }
 
    // printf("(%s) Returning %s\n", __func__, bool_repr(ok));
