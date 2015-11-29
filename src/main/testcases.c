@@ -9,17 +9,21 @@
 
 #include <stdio.h>
 
-#include <base/displays.h>
-#include <base/util.h>
+#include <config.h>
 
-#include <adl/adl_intf.h>
+#include "base/displays.h"
+#include "base/util.h"
 
-#include <test/adl/adl_tests.h>
-#include <test/ddc/ddc_capabilities_tests.h>
-#include <test/ddc/ddc_vcp_tests.h>
-#include <test/i2c/i2c_edid_tests.h>
+#ifdef HAVE_ADL
+#include "adl/adl_impl/adl_intf.h"
+#include "test/adl/adl_tests.h"
+#endif
 
-#include <main/testcases.h>
+#include "test/ddc/ddc_capabilities_tests.h"
+#include "test/ddc/ddc_vcp_tests.h"
+#include "test/i2c/i2c_edid_tests.h"
+
+#include "main/testcases.h"
 
 
 //
@@ -53,10 +57,12 @@ struct {
 
 static TestcaseDescriptor testCatalog[] = {
       {"get_luminosity_sample_code",        DisplayRefBus,  NULL, get_luminosity_sample_code, NULL, NULL},
+#ifdef HAVE_ADL
       {"adl_testmain",                      DisplayRefNone, adl_testmain, NULL, NULL, NULL},
       {"diddleBrightness",                  DisplayRefAdl,  NULL, NULL, diddle_adl_brightness,  NULL},
       {"exercise_ad_calls",                 DisplayRefAdl,  NULL, NULL, exercise_ad_calls, NULL},
       {"run_adapter_display_tests",         DisplayRefNone, run_adapter_display_tests, NULL, NULL, NULL},
+#endif
       {"get_luminosity_using_single_ioctl", DisplayRefBus,  NULL, get_luminosity_using_single_ioctl, NULL, NULL},
       {"demo_nvidia_bug_sample_code",       DisplayRefBus,  NULL, demo_nvidia_bug_sample_code, NULL, NULL},
       {"demo_p2411_problem",                DisplayRefBus,  NULL, demo_p2411_problem, NULL, NULL}
@@ -96,10 +102,14 @@ bool execute_testcase(int testnum, Display_Identifier* pdid) {
       }
 
       if (ok) {
+#ifdef HAVE_ADL
          if (pdid->id_type == DISP_ID_ADL && !adl_is_available()) {
             printf("ADL adapter.display numbers specified, but ADL is not available.\n");
             ok = false;
          }
+#else
+         ok = false;
+#endif
       }
 
       if (ok) {

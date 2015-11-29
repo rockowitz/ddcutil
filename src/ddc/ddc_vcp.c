@@ -29,7 +29,7 @@
 #include <i2c/i2c_bus_core.h>
 // #include <i2c/i2c_io.h>
 
-#include <adl/adl_intf.h>
+#include <adl/adl_shim.h>
 
 #include <ddc/ddc_multi_part_io.h>
 #include <ddc/ddc_packet_io.h>

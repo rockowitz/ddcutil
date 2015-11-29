@@ -12,10 +12,10 @@
 
 #include <stdlib.h>     // wchar_t, needed by adl_structures.h
 
-#include <adl_sdk/adl_defines.h>
+#include <adl_defines.h>
 #define LINUX
-#include <adl_sdk/adl_structures.h>
-#include <adl_sdk/adl_sdk.h>
-#include <adl/adl_wrapmccs.h>
+#include <adl_structures.h>
+#include <adl_sdk.h>
+#include "adl/adl_impl/adl_wrapmccs.h"
 
 #endif /* ADL_SDK_INCLUDES_H_ */

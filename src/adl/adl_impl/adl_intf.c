@@ -27,15 +27,14 @@
 #include "base/status_code_mgt.h"
 #include "base/util.h"
 
-#include "adl/adl_friendly.h"
-#include "adl/adl_report.h"
-#include "adl/adl_sdk_includes.h"
+#include "adl/adl_impl/adl_friendly.h"
+#include "adl/adl_impl/adl_report.h"
+#include "adl/adl_impl/adl_sdk_includes.h"
 
-#include "adl/adl_intf.h"
+#include "adl/adl_impl/adl_intf.h"
 
 
 #pragma GCC diagnostic ignored "-Wpointer-sign"
-
 
 //
 // ADL framework shim functions

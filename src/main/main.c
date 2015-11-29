@@ -31,7 +31,7 @@
 #include "i2c/i2c_bus_core.h"
 #include "i2c/i2c_do_io.h"
 
-#include "adl/adl_intf.h"
+#include "adl/adl_shim.h"
 #include "adl/adl_errors.h"
 
 #include "ddc/ddc_multi_part_io.h"
@@ -177,7 +177,7 @@ int main(int argc, char *argv[]) {
    set_trace_levels(parsed_cmd->trace);
    // delay initializing ADL until after trace levels are set so
    // that tracing during ADL initialization can be controlled.
-   adl_initialize();
+   adlshim_initialize();
    init_ddc_packets();   // 11/2015: does nothing
 
    set_output_level(parsed_cmd->output_level);

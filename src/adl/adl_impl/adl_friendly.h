@@ -13,8 +13,8 @@
 
 #include <base/util.h>
 
-#include <adl/adl_sdk_includes.h>
-#include <adl/adl_intf.h>
+#include "adl/adl_impl/adl_sdk_includes.h"
+#include "adl/adl_impl/adl_intf.h"
 
 
 #define MAX_ACTIVE_DISPLAYS 16

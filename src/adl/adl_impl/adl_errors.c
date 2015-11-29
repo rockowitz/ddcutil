@@ -14,7 +14,7 @@
 
 #include <base/status_code_mgt.h>
 
-#include <adl_sdk/adl_defines.h>
+#include <adl_defines.h>
 
 
 #define EDENTRY(id,desc) {id, #id, desc}

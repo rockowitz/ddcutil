@@ -20,7 +20,7 @@
 #include <test/i2c/i2c_io_old.h>
 #include <i2c/i2c_bus_core.h>
 
-#include <adl/adl_intf.h>
+#include <adl/adl_shim.h>
 
 #include <ddc/ddc_packet_io.h>
 #include <ddc/vcp_feature_codes.h>

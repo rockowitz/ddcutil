@@ -8,8 +8,8 @@
  *  but with code refactoring are now only called from tests.
  */
 
-#ifndef ADL_SERVICES_H_
-#define ADL_SERVICES_H_
+#ifndef ADL_AUX_INTF_H_
+#define ADL_AUX_INTF_H_
 
 #include <base/status_code_mgt.h>
 #include <base/util.h>
@@ -32,4 +32,4 @@ Base_Status_ADL adl_ddc_write_read_with_retry(
 Base_Status_ADL adl_ddc_get_vcp(int iAdapterIndex, int iDisplayIndex, Byte vcp_feature_code, bool onecall);
 Base_Status_ADL adl_ddc_set_vcp(int iAdapterIndex, int iDisplayIndex, Byte vcp_feature_code, int newval);
 
-#endif /* ADL_SERVICES_H_ */
+#endif /* ADL_AUX_INTF_H_ */

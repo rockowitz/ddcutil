@@ -15,7 +15,7 @@
 #include <stdio.h>
 
 #define LINUX
-#include <adl_sdk/adl_sdk.h>
+#include <adl_sdk.h>
 
 
 void adl_testmain();

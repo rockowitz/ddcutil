@@ -19,11 +19,11 @@
 #include "base/ddc_packets.h"
 #include "base/parms.h"
 
-#include "adl/adl_sdk_includes.h"
-#include "adl/adl_intf.h"
-#include "adl/adl_friendly.h"
-#include "adl/adl_report.h"
-#include "adl/adl_aux_intf.h"
+#include "adl/adl_impl/adl_sdk_includes.h"
+#include "adl/adl_impl/adl_intf.h"
+#include "adl/adl_impl/adl_friendly.h"
+#include "adl/adl_impl/adl_report.h"
+#include "adl/adl_impl/adl_aux_intf.h"
 
 #include "test/adl/adl_from_sample.h"
 #include "test/adl/adl_tests.h"

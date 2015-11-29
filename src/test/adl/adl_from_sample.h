@@ -8,8 +8,8 @@
 #ifndef ADL_FROM_SAMPLE_H_
 #define ADL_FROM_SAMPLE_H_
 
-#include <adl/adl_intf.h>
-#include <adl/adl_friendly.h>
+#include "adl/adl_impl/adl_intf.h"
+#include "adl/adl_impl/adl_friendly.h"
 
 typedef unsigned int UINT;
 typedef unsigned char UCHAR;

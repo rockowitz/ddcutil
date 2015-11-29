@@ -11,9 +11,9 @@
 
 #include <stdbool.h>
 
-#include <util/report_util.h>
+#include "util/report_util.h"
 
-#include <adl/adl_sdk_includes.h>
+#include "adl/adl_impl/adl_sdk_includes.h"
 
 
 void report_adl_AdapterInfo(AdapterInfo * pAdapterInfo, int depth);

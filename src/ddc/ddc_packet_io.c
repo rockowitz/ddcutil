@@ -32,7 +32,8 @@
 #include <i2c/i2c_bus_core.h>
 #include <i2c/i2c_do_io.h>
 
-#include <adl/adl_intf.h>
+// #include <adl/adl_intf.h>
+#include <adl/adl_shim.h>
 
 #include <ddc/try_stats.h>
 
@@ -133,10 +134,11 @@ Display_Ref* ddc_find_display_by_model_and_sn(const char * model, const char * s
       result = create_bus_display_ref(businfo->busno);
    }
    else {
-      ADL_Display_Rec * adlrec = adl_find_display_by_model_sn(model, sn);
-      if (adlrec) {
-         result = create_adl_display_ref(adlrec->iAdapterIndex, adlrec->iDisplayIndex);
-      }
+      // ADL_Display_Rec * adlrec = adl_find_display_by_model_sn(model, sn);
+      // if (adlrec) {
+      //    result = create_adl_display_ref(adlrec->iAdapterIndex, adlrec->iDisplayIndex);
+      // }
+      result = adlshim_find_display_by_model_sn(model, sn);
    }
    // printf("(%s) Returning: %p  \n", __func__, result );
    return result;
@@ -151,10 +153,11 @@ Display_Ref* ddc_find_display_by_edid(const Byte * pEdidBytes) {
       result = create_bus_display_ref(businfo->busno);
    }
    else {
-      ADL_Display_Rec * adlrec = adl_find_display_by_edid(pEdidBytes);
-      if (adlrec) {
-         result = create_adl_display_ref(adlrec->iAdapterIndex, adlrec->iDisplayIndex);
-      }
+      // ADL_Display_Rec * adlrec = adl_find_display_by_edid(pEdidBytes);
+      // if (adlrec) {
+      //    result = create_adl_display_ref(adlrec->iAdapterIndex, adlrec->iDisplayIndex);
+      // }
+      result = adlshim_find_display_by_edid(pEdidBytes);
    }
    // printf("(%s) Returning: %p  \n", __func__, result );
    return result;
@@ -166,9 +169,10 @@ Parsed_Edid* ddc_get_parsed_edid_by_display_ref(Display_Ref * dref) {
 
    if (dref->ddc_io_mode == DDC_IO_DEVI2C)
       pEdid = i2c_get_parsed_edid_by_busno(dref->busno);
-   else
-      pEdid = adl_get_parsed_edid_by_adlno(dref->iAdapterIndex, dref->iDisplayIndex);
-
+   else {
+      // pEdid = adl_get_parsed_edid_by_adlno(dref->iAdapterIndex, dref->iDisplayIndex);
+      pEdid = adlshim_get_parsed_edid_by_display_ref(dref);
+   }
    // printf("(%s) Returning %p\n", __func__, pEdid);
    TRCMSG("Returning %p", __func__, pEdid);
    return pEdid;
@@ -186,7 +190,8 @@ bool ddc_is_valid_display_ref(Display_Ref * dref) {
       result = i2c_is_valid_bus(dref->busno, true /* emit_error_msg */);
    }
    else {
-      result = adl_is_valid_adlno(dref->iAdapterIndex, dref->iDisplayIndex, true /* emit_error_msg */);
+      // result = adl_is_valid_adlno(dref->iAdapterIndex, dref->iDisplayIndex, true /* emit_error_msg */);
+      result = adlshim_is_valid_display_ref(dref, true /* emit_error_msg */);
    }
    // printf("(%s) Returning %d\n", __func__, result);
    return result;
@@ -378,6 +383,15 @@ Global_Status_Code ddc_adl_write_read_raw(
 
    Global_Status_Code gsc = 0;
 
+   gsc = adlshim_ddc_write_only(
+                              dh,
+                              get_packet_start(request_packet_ptr),   // n. no adjustment, unlike i2c version
+                              get_packet_len(request_packet_ptr)
+                             );
+   if (gsc < 0) {
+      TRCMSGTF(tf, "adl_ddc_write_only() returned gsc=%d\n", gsc);
+   }
+#ifdef OLD
    Base_Status_ADL adlrc = adl_ddc_write_only(
                               dh->iAdapterIndex,
                               dh->iDisplayIndex,
@@ -389,8 +403,18 @@ Global_Status_Code ddc_adl_write_read_raw(
       TRCMSGTF(tf, "adl_ddc_write_only() returned adlrc=%d\n", adlrc);
       gsc = modulate_rc(adlrc, RR_ADL);
    }
+#endif
    else {
       call_tuned_sleep_adl(SE_WRITE_TO_READ);
+      gsc = adlshim_ddc_read_only(
+            dh,
+            readbuf,
+            pbytes_received);
+      // note_io_event(IE_READ_AFTER_WRITE, __func__);
+      if (gsc < 0) {
+         TRCMSGTF(tf, "adl_ddc_read_only() returned adlrc=%d\n", gsc);
+      }
+#ifdef OLD
       adlrc = adl_ddc_read_only(
             dh->iAdapterIndex,
             dh->iDisplayIndex,
@@ -401,6 +425,7 @@ Global_Status_Code ddc_adl_write_read_raw(
          TRCMSGTF(tf, "adl_ddc_read_only() returned adlrc=%d\n", adlrc);
          gsc = modulate_rc(adlrc, RR_ADL);
       }
+#endif
       else {
          if ( all_zero(readbuf+1, max_read_bytes-1)) {
                  gsc = DDCRC_READ_ALL_ZERO;
@@ -731,7 +756,7 @@ Global_Status_Code ddc_i2c_write_only(
    return rc;
 }
 
-
+#ifdef OLD
 /* Writes a DDC request packet to an ADL display
  *
  * Arguments:
@@ -763,6 +788,7 @@ Global_Status_Code ddc_adl_write_only(
    TRCMSGTF(tf, "Done. rc=%d, adlrc=%d", rc, adlrc);
    return rc;
 }
+#endif
 
 
 /* Writes a DDC request packet to a monitor
@@ -786,7 +812,13 @@ Global_Status_Code ddc_write_only( Display_Handle * dh, DDC_Packet *   request_p
       rc = ddc_i2c_write_only(dh->fh, request_packet_ptr);
    }
    else {
-      rc = ddc_adl_write_only(dh->iAdapterIndex, dh->iDisplayIndex, request_packet_ptr);
+      rc = adlshim_ddc_write_only(
+              dh,
+              get_packet_start(request_packet_ptr)+1,
+              get_packet_len(request_packet_ptr)-1
+             );
+
+      // rc = ddc_adl_write_only(dh->iAdapterIndex, dh->iDisplayIndex, request_packet_ptr);
    }
 
    TRCMSGTF(tf, "Done. rc=%d\n", rc);

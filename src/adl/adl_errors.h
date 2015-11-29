@@ -8,7 +8,9 @@
 #ifndef ADL_ERRORS_H_
 #define ADL_ERRORS_H_
 
-#include <base/util.h>
+// #include <base/util.h>
+
+#include "base/status_code_mgt.h"
 
 void init_adl_errors() ;
 

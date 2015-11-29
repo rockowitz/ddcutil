@@ -17,7 +17,7 @@
 #include <base/linux_errno.h>
 
 #include <i2c/i2c_bus_core.h>
-#include <adl/adl_intf.h>
+#include <adl/adl_shim.h>
 
 #include <ddc/ddc_multi_part_io.h>
 #include <ddc/ddc_packet_io.h>
@@ -539,7 +539,7 @@ void show_vcp_values_by_display_ref(Display_Ref * dref, VCP_Feature_Subset subse
  */
 Display_Info_List * ddc_get_valid_displays() {
       Display_Info_List i2c_displays = i2c_get_valid_displays();
-      Display_Info_List adl_displays = adl_get_valid_displays();
+      Display_Info_List adl_displays = adlshim_get_valid_displays();
 
       // merge the lists
       int displayct = i2c_displays.ct + adl_displays.ct;
@@ -574,8 +574,10 @@ Display_Info_List * ddc_get_valid_displays() {
 void ddc_show_active_display(Display_Info * curinfo, int depth) {
    if (curinfo->dref->ddc_io_mode == DDC_IO_DEVI2C)
       i2c_show_active_display_by_busno(curinfo->dref->busno, depth);
-   else
-     adl_show_active_display_by_adlno(curinfo->dref->iAdapterIndex, curinfo->dref->iDisplayIndex, depth);
+   else {
+      adlshim_show_active_display_by_display_ref(curinfo->dref, depth);
+     // adl_show_active_display_by_adlno(curinfo->dref->iAdapterIndex, curinfo->dref->iDisplayIndex, depth);
+   }
 
    Output_Level output_level = get_output_level();
    if (output_level >= OL_NORMAL) {

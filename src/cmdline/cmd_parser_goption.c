@@ -7,6 +7,7 @@
  */
 
 #include <assert.h>
+#include <config.h>
 #include <glib.h>
 #include <stdbool.h>
 #include <stdio.h>
@@ -331,6 +332,11 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
 
    if (version_flag) {
       printf("Compiled %s at %s\n", __DATE__, __TIME__ );
+#ifdef HAVE_ADL
+      printf("Built with support for AMD Display Library (AMD proprietary driver)\n");
+#else
+      printf("Built without support for AMD Display Library (AMD proprietary driver)\n");
+#endif
       exit(0);
    }
 

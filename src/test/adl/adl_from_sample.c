@@ -16,11 +16,11 @@
 #include <base/msg_control.h>
 #include <util/string_util.h>
 
-#include <adl/adl_sdk_includes.h>
-#include <adl/adl_intf.h>
-#include <adl/adl_friendly.h>
+#include "adl/adl_impl/adl_sdk_includes.h"
+#include "adl/adl_impl/adl_intf.h"
+#include "adl/adl_impl/adl_friendly.h"
 
-#include <test/adl/adl_from_sample.h>
+#include "test/adl/adl_from_sample.h"
 
 
 

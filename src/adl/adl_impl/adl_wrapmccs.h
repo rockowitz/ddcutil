@@ -13,6 +13,6 @@
 #define ADL_WRAPMCCS_H_
 
 typedef void * HMODULE;    // needed by mccs.h
-#include <adl_sdk/mccs.h>
+#include <mccs.h>
 
 #endif /* ADL_WRAPMCCS_H_ */

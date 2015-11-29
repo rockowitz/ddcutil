@@ -15,9 +15,9 @@
 #include "base/edid.h"
 #include "base/util.h"
 
-#include "adl/adl_sdk_includes.h"
+#include "adl/adl_impl/adl_sdk_includes.h"
 
-#include "adl/adl_report.h"
+#include "adl/adl_impl/adl_report.h"
 
 
 
