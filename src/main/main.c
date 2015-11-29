@@ -45,8 +45,9 @@
 #include "cmdline/parsed_cmd.h"
 #include "cmdline/cmd_parser.h"
 
-#include "main/loadvcp.h"
 #include "main/testcases.h"
+#include "main/loadvcp.h"
+
 
 
 //
@@ -195,7 +196,7 @@ int main(int argc, char *argv[]) {
    }
 
    else if (parsed_cmd->cmd_id == CMDID_LISTTESTS) {
-      showTestCases();
+      show_test_cases();
       main_rc = EXIT_SUCCESS;
    }
 

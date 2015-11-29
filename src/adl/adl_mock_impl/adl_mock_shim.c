@@ -9,12 +9,12 @@
 #include <stdlib.h>     // wchar_t, needed by adl_structures.h
 #include <stdbool.h>
 
-#include <base/execution_stats.h>
-#include <base/common.h>
-#include <base/displays.h>
-#include <base/edid.h>
-#include <base/status_code_mgt.h>
-#include <base/util.h>
+#include "base/execution_stats.h"
+#include "base/common.h"
+#include "base/displays.h"
+#include "base/edid.h"
+#include "base/status_code_mgt.h"
+#include "base/util.h"
 
 #include "adl/adl_shim.h"
 
@@ -23,12 +23,12 @@
 bool adlshim_is_available() {
    return false;
 }
+
 // must be called before any other function (except is_adl_available()):
 bool adlshim_initialize() {
    return false;
 }
-void adlshim_release() {
-}
+
 
 
 // Report on active displays
@@ -38,8 +38,6 @@ Parsed_Edid* adlshim_get_parsed_edid_by_display_ref(Display_Ref * dref) {
 }
 
 
-void adlshim_show_active_display_by_adlno(int iAdapterIndex, int iDisplayIndex, int depth) {
-}
 void adlshim_show_active_display_by_display_ref(Display_Ref * dref, int depth) {
 }
 

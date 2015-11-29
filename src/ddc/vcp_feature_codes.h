@@ -7,11 +7,11 @@
 #ifndef VCP_FEATURE_CODES_H_
 #define VCP_FEATURE_CODES_H_
 
-#include <util/string_util.h>
+#include "util/string_util.h"
 
-#include <base/ddc_base_defs.h>
-#include <base/ddc_packets.h>
-#include <base/util.h>
+#include "base/ddc_base_defs.h"
+#include "base/ddc_packets.h"
+#include "base/util.h"
 
 //
 // VCP Feature Interpretation

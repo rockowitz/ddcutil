@@ -194,9 +194,9 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
    parsed_cmd->stats        = stats_flag;
 
    if (adlwork) {
-      // printf("(%s) case 'A', debug=%d\n", __func__, ok);
+#ifdef HAVE_ADL
       if (debug)
-         printf("(%s) case 'A', adlwork = |%s|\n", __func__, adlwork);
+         printf("(%s) adlwork = |%s|\n", __func__, adlwork);
       int iAdapterIndex;
       int iDisplayIndex;
       bool adlok = parse_adl_arg(adlwork, &iAdapterIndex, &iDisplayIndex);
@@ -211,6 +211,9 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
          parsed_cmd->pdid = create_adlno_display_identifier(iAdapterIndex, iDisplayIndex);  // new way
       }
       explicit_display_spec_ct++;
+#else
+      fprintf(stderr, "ddctool not built with support for AMD proprietary driver.  --adl option invalid.\n");
+#endif
    }
 
    if (buswork >= 0) {

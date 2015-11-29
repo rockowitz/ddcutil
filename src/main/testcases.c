@@ -3,98 +3,53 @@
  *  Created on: Oct 27, 2015
  *      Author: rock
  *
- *  Manages test cases
+ *  Dispatch test cases
  */
 
-
-#include <stdio.h>
-
 #include <config.h>
+#include <stdio.h>
 
 #include "base/displays.h"
 #include "base/util.h"
 
+#include "adl/adl_shim.h"
 #ifdef HAVE_ADL
 #include "adl/adl_impl/adl_intf.h"
-#include "test/adl/adl_tests.h"
 #endif
 
-#include "test/ddc/ddc_capabilities_tests.h"
-#include "test/ddc/ddc_vcp_tests.h"
-#include "test/i2c/i2c_edid_tests.h"
+#include "test/testcase_table.h"
 
 #include "main/testcases.h"
 
 
-//
-// Testcase dispatching
-//
-
-// type of display reference required/supported by the command
-typedef enum {DisplayRefNone, DisplayRefAny, DisplayRefBus, DisplayRefAdl} DisplayRefType;
-
-typedef void (*NoArgFunction)();
-typedef void (*BusArgFunction)(int busno);
-typedef void (*AdlArgFunction)(int iAdapterIndex, int iDisplayIndex);
-typedef void (*DisplayRefArgFunction)(Display_Ref * dref);
-
-
-typedef
-struct {
-   char *                name;      // testcase description
-   DisplayRefType        drefType;
-   // should really be a union
-   NoArgFunction         fp_noarg;
-   BusArgFunction        fp_bus;
-   AdlArgFunction        fp_adl;
-   DisplayRefArgFunction fp_dr;
-} TestcaseDescriptor;
-
-
-// void adl_testmain();
-
-// void diddleBrightness(int iAdapterIndex, int iDisplayIndex);
-
-static TestcaseDescriptor testCatalog[] = {
-      {"get_luminosity_sample_code",        DisplayRefBus,  NULL, get_luminosity_sample_code, NULL, NULL},
-#ifdef HAVE_ADL
-      {"adl_testmain",                      DisplayRefNone, adl_testmain, NULL, NULL, NULL},
-      {"diddleBrightness",                  DisplayRefAdl,  NULL, NULL, diddle_adl_brightness,  NULL},
-      {"exercise_ad_calls",                 DisplayRefAdl,  NULL, NULL, exercise_ad_calls, NULL},
-      {"run_adapter_display_tests",         DisplayRefNone, run_adapter_display_tests, NULL, NULL, NULL},
-#endif
-      {"get_luminosity_using_single_ioctl", DisplayRefBus,  NULL, get_luminosity_using_single_ioctl, NULL, NULL},
-      {"demo_nvidia_bug_sample_code",       DisplayRefBus,  NULL, demo_nvidia_bug_sample_code, NULL, NULL},
-      {"demo_p2411_problem",                DisplayRefBus,  NULL, demo_p2411_problem, NULL, NULL}
-
-};
-static int testCatalogCt = sizeof(testCatalog)/sizeof(TestcaseDescriptor);
-
-
-void showTestCases() {
+void show_test_cases() {
    printf("\n Test Cases:\n");
    int ndx = 0;
-   for (;ndx < testCatalogCt; ndx++) {
-      printf("  %d - %s\n", ndx+1, testCatalog[ndx].name);
+   // int testcase_catalog_ct = get_testcase_catalog_ct();
+   // Testcase_Descriptor ** testcase_catalog = get_testcase_catalog();
+   for (;ndx < testcase_catalog_ct; ndx++) {
+      printf("  %d - %s\n", ndx+1, testcase_catalog[ndx].name);
    }
    puts("");
 }
 
 
-TestcaseDescriptor * getTestcaseDescriptor(int testnum) {
-   TestcaseDescriptor * result = NULL;
-   if (testnum > 0 && testnum <= testCatalogCt) {
-      result = &testCatalog[testnum-1];
+Testcase_Descriptor * get_testcase_descriptor(int testnum) {
+   Testcase_Descriptor * result = NULL;
+   // int testcase_catalog_ct = get_testcase_catalog_ct();
+   // Testcase_Descriptor ** testcase_catalog = get_testcase_catalog();
+   if (testnum > 0 && testnum <= testcase_catalog_ct) {
+      result = &testcase_catalog[testnum-1];
    }
    return result;
 }
 
 bool execute_testcase(int testnum, Display_Identifier* pdid) {
       bool ok = true;
-      TestcaseDescriptor * pDesc = NULL;
+      Testcase_Descriptor * pDesc = NULL;
 
       if (ok) {
-         pDesc = getTestcaseDescriptor(testnum);
+         pDesc = get_testcase_descriptor(testnum);
          if (!pDesc) {
             printf("Invalid test number: %d\n", testnum);
             ok = false;
@@ -102,14 +57,10 @@ bool execute_testcase(int testnum, Display_Identifier* pdid) {
       }
 
       if (ok) {
-#ifdef HAVE_ADL
-         if (pdid->id_type == DISP_ID_ADL && !adl_is_available()) {
+         if (pdid->id_type == DISP_ID_ADL && !adlshim_is_available()) {
             printf("ADL adapter.display numbers specified, but ADL is not available.\n");
             ok = false;
          }
-#else
-         ok = false;
-#endif
       }
 
       if (ok) {
@@ -164,4 +115,3 @@ bool execute_testcase(int testnum, Display_Identifier* pdid) {
 
      return ok;
 }
-

@@ -1,5 +1,4 @@
-/*
- * ddc_vcp.c
+/*  ddc_vcp.c
  *
  *  Virtual COntrol Panel access
  *
@@ -17,25 +16,25 @@
 #include <string.h>
 #include <sys/ioctl.h>
 
-#include <util/debug_util.h>
+#include "util/debug_util.h"
 
-#include <base/ddc_errno.h>
-#include <base/common.h>
-#include <base/ddc_packets.h>
-#include <base/msg_control.h>
-#include <base/util.h>
-#include <base/status_code_mgt.h>
+#include "base/common.h"
+#include "base/ddc_errno.h"
+#include "base/ddc_packets.h"
+#include "base/msg_control.h"
+#include "base/status_code_mgt.h"
+#include "base/util.h"
 
-#include <i2c/i2c_bus_core.h>
-// #include <i2c/i2c_io.h>
+#include "i2c/i2c_bus_core.h"
+// #include "i2c/i2c_io.h"
 
-#include <adl/adl_shim.h>
+#include "adl/adl_shim.h"
 
-#include <ddc/ddc_multi_part_io.h>
-#include <ddc/ddc_packet_io.h>
-#include <ddc/vcp_feature_codes.h>
+#include "ddc/ddc_multi_part_io.h"
+#include "ddc/ddc_packet_io.h"
+#include "ddc/vcp_feature_codes.h"
 
-#include <ddc/ddc_vcp.h>
+#include "ddc/ddc_vcp.h"
 
 
 // Trace class for this file

@@ -1,5 +1,4 @@
-/*
- * ddc_strategy.c
+/*  ddc_strategy.c
  *
  *  Created on: Nov 21, 2015
  *      Author: rock
@@ -7,7 +6,7 @@
 
 #include <assert.h>
 
-#include <ddc/ddc_strategy.h>
+#include "ddc/ddc_strategy.h"
 
 
 

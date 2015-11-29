@@ -7,9 +7,9 @@
 #ifndef VCP_FEATURE_RECORD_H_
 #define VCP_FEATURE_RECORD_H_
 
-#include <util/data_structures.h>
+#include "util/data_structures.h"
 
-#include <base/util.h>
+#include "base/util.h"
 
 
 #define VCP_FEATURE_MARKER "VCPF"

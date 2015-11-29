@@ -1,5 +1,4 @@
-/*
- * vcp_feature_code_data.c
+/*  vcp_feature_code_data.c
  *
  *  Created on: Nov 17, 2015
  *      Author: rock
@@ -7,15 +6,14 @@
  *  VCP Feature Code Table and the functions it references
  */
 
-
-
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
 
-#include <util/string_util.h>
+#include "util/string_util.h"
 
-#include <ddc/vcp_feature_codes.h>
+#include "ddc/vcp_feature_codes.h"
+
 
 // Forward references
 int vcp_feature_code_count;

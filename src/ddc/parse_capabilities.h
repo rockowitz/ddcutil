@@ -11,10 +11,10 @@
 
 #include <glib.h>
 
-#include <util/data_structures.h>
+#include "util/data_structures.h"
 
-#include <base/ddc_base_defs.h>
-#include <base/util.h>
+#include "base/ddc_base_defs.h"
+#include "base/util.h"
 
 
 #define PARSED_CAPABILITIES_MARKER "CAPA"

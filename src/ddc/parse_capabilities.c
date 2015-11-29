@@ -1,5 +1,4 @@
-/*
- * ddc_capabilities.c
+/*  ddc_capabilities.c
  *
  *  Created on: Jun 11, 2014
  *      Author: rock
@@ -8,22 +7,22 @@
  */
 
 #include <assert.h>
+#include <glib.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <string.h>
-#include <glib.h>
 
-#include <util/debug_util.h>
-#include <util/data_structures.h>
+#include "util/data_structures.h"
+#include "util/debug_util.h"
 
-#include <base/msg_control.h>
-#include <base/util.h>
+#include "base/msg_control.h"
+#include "base/util.h"
 
-#include <ddc/ddc_command_codes.h>
-#include <ddc/vcp_feature_codes.h>
-#include <ddc/vcp_feature_record.h>
+#include "ddc/ddc_command_codes.h"
+#include "ddc/vcp_feature_codes.h"
+#include "ddc/vcp_feature_record.h"
 
-#include <ddc/parse_capabilities.h>
+#include "ddc/parse_capabilities.h"
 
 
 //

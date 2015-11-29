@@ -1,5 +1,4 @@
-/*
- * ddc_capabilities.h
+/*  ddc_capabilities.h
  *
  *  Created on: Jun 11, 2014
  *      Author: rock
@@ -10,8 +9,8 @@
 
 #include <stdbool.h>
 
-#include <base/status_code_mgt.h>
-#include <base/util.h>
+#include "base/status_code_mgt.h"
+#include "base/util.h"
 
 
 // Statistics
@@ -23,7 +22,5 @@ Global_Status_Code multi_part_read_with_retry(
                       Byte          request_type,
                       Byte          request_subtype,   // VCP feature code for table read, ignore for capabilities
                       Buffer**      ppbuffer);
-
-
 
 #endif /* DDC_CAPABILITIES_H_ */

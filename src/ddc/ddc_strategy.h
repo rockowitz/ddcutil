@@ -8,10 +8,10 @@
 #ifndef DDC_STRATEGY_H_
 #define DDC_STRATEGY_H_
 
-#include <util/coredefs.h>
+#include "util/coredefs.h"
 
-#include <base/displays.h>
-#include <base/status_code_mgt.h>
+#include "base/displays.h"
+#include "base/status_code_mgt.h"
 
 
 // For future use

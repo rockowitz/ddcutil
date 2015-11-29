@@ -1,34 +1,28 @@
-/*
- * vcp_feature_record.c
+/*  vcp_feature_record.c
  *
  *  Created on: Nov 1, 2015
  *      Author: rock
  */
 
-
-
 #include <assert.h>
+#include <glib.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <string.h>
-#include <glib.h>
 
-#include <util/data_structures.h>
-#include <util/debug_util.h>
+#include "util/data_structures.h"
+#include "util/debug_util.h"
 
-#include <base/msg_control.h>
-#include <base/util.h>
+#include "base/msg_control.h"
+#include "base/util.h"
 
-#include <ddc/vcp_feature_codes.h>
+#include "ddc/vcp_feature_codes.h"
 
-#include <ddc/vcp_feature_record.h>
-
+#include "ddc/vcp_feature_record.h"
 
 
 // Trace class for this file
 // static TraceGroup TRACE_GROUP = TRC_DDC;   // currently unused, commented out to avoid warning
-
-
 
 
 VCP_Feature_Record * new_VCP_Feature_Record(Byte feature_id, char * value_string_start, int value_string_len) {

@@ -9,10 +9,10 @@
 
 #include <stdio.h>
 
-#include <base/common.h>
-#include <base/status_code_mgt.h>
+#include "base/common.h"
+#include "base/status_code_mgt.h"
 
-#include <ddc/vcp_feature_codes.h>
+#include "ddc/vcp_feature_codes.h"
 
 Global_Status_Code put_vcp_by_display_ref(Display_Ref * pdisp, VCP_Feature_Table_Entry * vcp_entry, int new_value);
 

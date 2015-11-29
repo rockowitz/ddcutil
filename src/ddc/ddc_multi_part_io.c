@@ -1,5 +1,4 @@
-/*
- * ddc_capabilities.c
+/*  ddc_capabilities.c
  *
  *  Created on: Jun 11, 2014
  *      Author: rock
@@ -13,25 +12,25 @@
 #include <string.h>
 #include <unistd.h>
 
-#include <util/data_structures.h>
+#include "util/data_structures.h"
 
-#include <base/ddc_errno.h>
-#include <base/common.h>
-#include <base/ddc_packets.h>
-#include <base/msg_control.h>
-#include <base/parms.h>
-#include <base/util.h>
-#include <base/status_code_mgt.h>
+#include "base/common.h"
+#include "base/ddc_errno.h"
+#include "base/ddc_packets.h"
+#include "base/msg_control.h"
+#include "base/parms.h"
+#include "base/status_code_mgt.h"
+#include "base/util.h"
 
-#include <i2c/i2c_bus_core.h>
-// #include <i2c/i2c_io.h>
+#include "i2c/i2c_bus_core.h"
+// #include "i2c/i2c_io.h"
 
-#include <ddc/ddc_packet_io.h>
-#include <ddc/parse_capabilities.h>
-#include <ddc/try_stats.h>
-#include <ddc/vcp_feature_codes.h>
+#include "ddc/ddc_packet_io.h"
+#include "ddc/parse_capabilities.h"
+#include "ddc/try_stats.h"
+#include "ddc/vcp_feature_codes.h"
 
-#include <ddc/ddc_multi_part_io.h>
+#include "ddc/ddc_multi_part_io.h"
 
 
 // Trace management

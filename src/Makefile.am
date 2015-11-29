@@ -39,6 +39,7 @@ test/ddc/ddc_capabilities_tests.c \
 test/ddc/ddc_vcp_tests.c \
 test/i2c/i2c_edid_tests.c \
 test/i2c/i2c_io_old.c \
+test/testcase_table.c \
 util/data_structures.c \
 util/debug_util.c \
 util/report_util.c \

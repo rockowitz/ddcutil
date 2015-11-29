@@ -1,5 +1,4 @@
-/*
- * ddc_command_codes.h
+/*  ddc_command_codes.h
  *
  *  Created on: Nov 17, 2015
  *      Author: rock
@@ -9,10 +8,10 @@
 #define DDC_COMMAND_CODES_H_
 
 
-#include <util/string_util.h>
+#include "util/string_util.h"
 
-#include <base/ddc_packets.h>
-#include <base/util.h>
+#include "base/ddc_packets.h"
+#include "base/util.h"
 
 //
 // MCCS Command and Response Codes

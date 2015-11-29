@@ -10,12 +10,12 @@
 
 #include <stdio.h>
 
-#include <base/common.h>
-#include <base/ddc_base_defs.h>     // for Version_Spec
-#include <base/displays.h>
-#include <base/status_code_mgt.h>
+#include "base/common.h"
+#include "base/ddc_base_defs.h"     // for Version_Spec
+#include "base/displays.h"
+#include "base/status_code_mgt.h"
 
-#include <ddc/vcp_feature_codes.h>
+#include "ddc/vcp_feature_codes.h"
 
 
 typedef enum {SUBSET_SCAN, SUBSET_ALL, SUBSET_SUPPORTED, SUBSET_COLORMGT, SUBSET_PROFILE} VCP_Feature_Subset;

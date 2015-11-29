@@ -1,5 +1,4 @@
-/*
- * ddc_packet_io.h
+/*  ddc_packet_io.h
  *
  *  Created on: Jun 13, 2014
  *      Author: rock
@@ -13,10 +12,10 @@
 
 #include <stdbool.h>
 
-#include <base/util.h>
-#include <base/common.h>
-#include <base/displays.h>
-#include <base/ddc_packets.h>
+#include "base/common.h"
+#include "base/ddc_packets.h"
+#include "base/displays.h"
+#include "base/util.h"
 
 
 bool is_ddc_null_message(Byte * packet);

@@ -1,5 +1,4 @@
-/*
- * ddc_packet_io.c
+/*  ddc_packet_io.c
  *
  *  Created on: Jun 13, 2014
  *      Author: rock
@@ -19,25 +18,25 @@
 #include <sys/ioctl.h>
 #include <unistd.h>
 
-#include <util/string_util.h>
+#include "util/string_util.h"
 
-#include <base/ddc_errno.h>
-#include <base/ddc_packets.h>
-#include <base/displays.h>
-#include <base/msg_control.h>
-#include <base/parms.h>
-#include <base/status_code_mgt.h>
-#include <base/util.h>
+#include "base/ddc_errno.h"
+#include "base/ddc_packets.h"
+#include "base/displays.h"
+#include "base/msg_control.h"
+#include "base/parms.h"
+#include "base/status_code_mgt.h"
+#include "base/util.h"
 
-#include <i2c/i2c_bus_core.h>
-#include <i2c/i2c_do_io.h>
+#include "i2c/i2c_bus_core.h"
+#include "i2c/i2c_do_io.h"
 
-// #include <adl/adl_intf.h>
-#include <adl/adl_shim.h>
+// #include "adl/adl_intf.h"
+#include "adl/adl_shim.h"
 
-#include <ddc/try_stats.h>
+#include "ddc/try_stats.h"
 
-#include <ddc/ddc_packet_io.h>
+#include "ddc/ddc_packet_io.h"
 
 
 // Trace class for this file

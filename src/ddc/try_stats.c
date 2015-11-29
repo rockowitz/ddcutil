@@ -1,5 +1,4 @@
-/*
- * try_stats.c
+/*  try_stats.c
  *
  *  Created on: Jul 15, 2014
  *      Author: rock
@@ -12,9 +11,9 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include <base/parms.h>
+#include "base/parms.h"
 
-#include <ddc/try_stats.h>
+#include "ddc/try_stats.h"
 
 #define MAX_STAT_NAME_LENGTH  31
 

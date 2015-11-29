@@ -1,5 +1,4 @@
-/*
- * ddc_command_codes.c
+/*  ddc_command_codes.c
  *
  *  Created on: Nov 17, 2015
  *      Author: rock
@@ -9,9 +8,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include <util/string_util.h>
+#include "util/string_util.h"
 
-#include <ddc/ddc_command_codes.h>
+#include "ddc/ddc_command_codes.h"
 
 
 //
@@ -83,4 +82,3 @@ char * get_command_name(Byte command_id) {
       result ="unrecognized command";
    return result;
 }
-
