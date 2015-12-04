@@ -106,13 +106,13 @@ bool dreq(Display_Ref* this, Display_Ref* that);
 #define DISPLAY_HANDLE_MARKER "DSPH"
 typedef
 struct {
-   char marker[4];
-   DDC_IO_Mode ddc_io_mode;
+   char         marker[4];
+   DDC_IO_Mode  ddc_io_mode;
    // include pointer to Display_Ref?
-   int  busno;  // used for messages
-   int  fh;     // file handle if ddc_io_mode == DDC_IO_DEVI2C
-   int  iAdapterIndex;
-   int  iDisplayIndex;
+   int          busno;  // used for messages
+   int          fh;     // file handle if ddc_io_mode == DDC_IO_DEVI2C
+   int          iAdapterIndex;
+   int          iDisplayIndex;
    Version_Spec vcp_version;
 } Display_Handle;
 
@@ -139,8 +139,5 @@ typedef struct {
 
 void report_display_info(Display_Info * dinfo, int depth);
 void report_display_info_list(Display_Info_List * pinfo_list, int depth);
-
-
-
 
 #endif /* DISPLAYS_H_ */

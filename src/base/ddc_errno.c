@@ -39,6 +39,11 @@ static Status_Code_Info ddcrc_info[] = {
       EDENTRY(DDCRC_RETRIES               , "maximum retries exceeded"              ),
       EDENTRY(DDCRC_EDID                  , "invalid EDID"                          ),
       EDENTRY(DDCRC_DETERMINED_UNSUPPORTED , "ddctool determined that facility unsupported" ),
+
+      // library errors
+      EDENTRY(DDCL_ARG                    , "illegal argument"),
+      EDENTRY(DDCL_UNIMPLEMENTED          , "unimplemeneted"),
+      EDENTRY(DDCL_UNINITIALIZED          , "library uninitialized"),
     };
 #undef EDENTRY
 static int ddcrc_desc_ct = sizeof(ddcrc_info)/sizeof(Status_Code_Info);

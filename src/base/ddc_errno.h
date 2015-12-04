@@ -51,6 +51,10 @@
 #define DDCRC_RETRIES                (-(RCRANGE_DDC_START+15) ) // too many retries
 #define DDCRC_EDID                   (-(RCRANGE_DDC_START+16) )  // invalid EDID
 #define DDCRC_DETERMINED_UNSUPPORTED (-(RCRANGE_DDC_START+17) ) // facility determined to be unsupported
+
+#define DDCL_ARG                     (-(RCRANGE_DDC_START+18) ) // illegal argument
+#define DDCL_UNIMPLEMENTED           (-(RCRANGE_DDC_START+19) ) // unimplemented service
+#define DDCL_UNINITIALIZED           (-(RCRANGE_DDC_START+20) ) // library not initialized
 // never used
 // #define DDCRC_PACKET_ERROR_END      (-RCRANGE_DDC_START-16)   // special end value
 

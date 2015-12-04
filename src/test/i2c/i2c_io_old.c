@@ -18,7 +18,7 @@
 #include <errno.h>
 #include <execinfo.h>
 #include <fcntl.h>
-#include <i2c-dev.h>
+// #include <i2c-dev.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -192,7 +192,7 @@ Global_Status_Code do_i2c_file_write(int fh, int bytect, Byte * bytes_to_write, 
    return call_i2c_writer(write_writer, "write_writer", fh, bytect, bytes_to_write, sleep_millisec);
 }
 
-
+#ifdef WONT_COMPILE_ON_FEDORA
 Global_Status_Code do_i2c_smbus_write_i2c_block_data(int fh, int bytect, Byte * bytes_to_write, int sleep_millisec) {
    return call_i2c_writer(
               i2c_smbus_write_i2c_block_data_writer,
@@ -202,6 +202,7 @@ Global_Status_Code do_i2c_smbus_write_i2c_block_data(int fh, int bytect, Byte * 
               bytes_to_write,
               sleep_millisec);
 }
+#endif
 
 
 Global_Status_Code do_i2c_ioctl_write(int fh, int bytect, Byte * bytes_to_write, int sleep_millisec) {
@@ -213,7 +214,7 @@ Global_Status_Code do_i2c_file_read(int fh, int bytect, Byte * readbuf, int slee
    return call_i2c_reader(read_reader, "read_reader", fh, bytect, readbuf, sleep_millisec);
 }
 
-
+#ifdef WONT_COMPILE_ON_FEDORA
 Global_Status_Code do_i2c_smbus_read_i2c_block_data(int fh, int bytect, Byte * readbuf, int sleep_millisec) {
    return call_i2c_reader(
              i2c_smbus_read_i2c_block_data_reader,
@@ -223,6 +224,7 @@ Global_Status_Code do_i2c_smbus_read_i2c_block_data(int fh, int bytect, Byte * r
              readbuf,
              sleep_millisec);
 }
+#endif
 
 
 Global_Status_Code do_i2c_ioctl_read(int fh, int bytect, Byte * readbuf, int sleep_millisec) {
@@ -241,7 +243,9 @@ Global_Status_Code perform_i2c_write(int fh, char * write_mode, int bytect, Byte
    I2C_Writer writer = NULL;
 
    if      ( streq(write_mode, "write") )                         writer = write_writer;
+#ifdef WONT_COMPILE_ON_FEDORA
    else if ( streq(write_mode, "i2c_smbus_write_i2c_block_data")) writer = i2c_smbus_write_i2c_block_data_writer;
+#endif
    else if ( streq(write_mode, "ioctl_write"))                    writer = ioctl_writer;
 
    if (writer) {
@@ -273,7 +277,9 @@ Global_Status_Code perform_i2c_read(int    fh, char * read_mode, int bytect, Byt
    I2C_Reader reader = NULL;
 
    if      ( streq(read_mode, "read") )                         reader = read_reader;
+#ifdef WONT_COMPILE_ON_FEDORA
    else if ( streq(read_mode, "i2c_smbus_read_i2c_block_data")) reader = i2c_smbus_read_i2c_block_data_reader;
+#endif
    else if ( streq(read_mode, "ioctl_read"))                    reader = ioctl_reader;
    // assert(reader);
 

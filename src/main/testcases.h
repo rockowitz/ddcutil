@@ -13,7 +13,7 @@
 
 #include <base/displays.h>
 
-void showTestCases();
+void show_test_cases();
 bool execute_testcase(int testnum, Display_Identifier* pdid);
 
 #endif /* TESTCASES_H_ */

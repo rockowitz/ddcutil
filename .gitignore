@@ -1,10 +1,13 @@
 *~
 Debug/
 oldsrc/
+build-debug/
 .tmp
 temp*
 perf.data
 *.o
+*.lo
+*.la
 .deps
 .dirstamp
 aclocal.m4
@@ -35,3 +38,5 @@ Makefile
 Makefile.in
 /src/ddctool
 stamp-h1
+m4/
+src/.libs

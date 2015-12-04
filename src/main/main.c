@@ -58,18 +58,9 @@ static long start_time_nanos;
 
 void initialize() {
    start_time_nanos = cur_realtime_nanosec();
+   init_ddc_services();
 
-   ddc_reset_write_only_stats();
-   ddc_reset_write_read_stats();
-   ddc_reset_multi_part_read_stats();
-   init_sleep_stats();
-   init_execution_stats();
-
-   init_status_code_mgt();
-   init_linux_errno();
-   init_adl_errors();
-   init_vcp_feature_codes();
-
+   // overrides setting in init_ddc_services():
    i2c_set_io_strategy(DEFAULT_I2C_IO_STRATEGY);
 }
 
@@ -93,73 +84,6 @@ void report_stats() {
 
 
 //
-//  Display specification
-//
-
-/* Converts the display identifiers passed on the command line to a logical
- * identifier for an I2C or ADL display.  If a bus number or ADL adapter.display
- * number is specified, the translation is direct.  If a model name/serial number
- * pair or an EDID is specified, the attached displays are searched.
- *
- * Arguments:
- *    pdid      display identifiers
- *    validate  if searching was not necessary, validate that that bus number or
- *              ADL number does in fact reference an attached display
- *
- * Returns:
- *    DisplayRef instance specifying the display using either an I2C bus number
- *    or an ADL adapter.display number, NULL if display not found
- */
-Display_Ref* get_display_ref_for_display_identifier(Display_Identifier* pdid, bool validate) {
-   Display_Ref* dref = NULL;
-   bool validated = true;
-
-   switch (pdid->id_type) {
-   case DISP_ID_DISPNO:
-      dref = ddc_find_display_by_dispno(pdid->dispno);
-      if (!dref) {
-         fprintf(stderr, "Invalid display number\n");
-      }
-      validated = false;
-      break;
-   case DISP_ID_BUSNO:
-      dref = create_bus_display_ref(pdid->busno);
-      validated = false;
-      break;
-   case DISP_ID_ADL:
-      dref = create_adl_display_ref(pdid->iAdapterIndex, pdid->iDisplayIndex);
-      validated = false;
-      break;
-   case DISP_ID_MONSER:
-      dref = ddc_find_display_by_model_and_sn(pdid->model_name, pdid->serial_ascii);  // in ddc_packet_io
-      if (!dref) {
-         fprintf(stderr, "Unable to find monitor with the specified model and serial number\n");
-      }
-      break;
-   case DISP_ID_EDID:
-      dref = ddc_find_display_by_edid(pdid->edidbytes);
-      if (!dref) {
-         fprintf(stderr, "Unable to find monitor with the specified EDID\n" );
-      }
-      break;
-   // no default case because switch is exhaustive, compiler warns if case missing
-   }  // switch
-
-   if (dref) {
-      if (!validated)      // DISP_ID_BUSNO or DISP_ID_ADL
-        validated = ddc_is_valid_display_ref(dref);
-      if (!validated) {
-         free(dref);
-         dref = NULL;
-      }
-   }
-
-   // printf("(%s) Returning: %s\n", __func__, (pdref)?"non-null": "NULL" );
-   return dref;
-}
-
-
-//
 // Mainline
 //
 
@@ -176,10 +100,6 @@ int main(int argc, char *argv[]) {
    // showParsedCmd(parsedCmd);
 
    set_trace_levels(parsed_cmd->trace);
-   // delay initializing ADL until after trace levels are set so
-   // that tracing during ADL initialization can be controlled.
-   adlshim_initialize();
-   init_ddc_packets();   // 11/2015: does nothing
 
    set_output_level(parsed_cmd->output_level);
    show_recoverable_errors = parsed_cmd->ddcdata;
@@ -261,7 +181,7 @@ int main(int argc, char *argv[]) {
    else {     // commands that require display identifier
       assert(parsed_cmd->pdid);
       // returns NULL if not a valid display:
-      Display_Ref * dref = get_display_ref_for_display_identifier(parsed_cmd->pdid, !parsed_cmd->force);
+      Display_Ref * dref = get_display_ref_for_display_identifier(parsed_cmd->pdid, true /* emit_error_msg */);
       if (dref) {
          Version_Spec vspec = get_vcp_version_by_display_ref(dref);
          if (vspec.major < 2) {

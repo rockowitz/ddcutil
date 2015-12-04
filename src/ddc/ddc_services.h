@@ -17,6 +17,9 @@
 
 #include "ddc/vcp_feature_codes.h"
 
+void init_ddc_services();
+
+Display_Ref* get_display_ref_for_display_identifier(Display_Identifier* pdid, bool emit_error_msg);
 
 typedef enum {SUBSET_SCAN, SUBSET_ALL, SUBSET_SUPPORTED, SUBSET_COLORMGT, SUBSET_PROFILE} VCP_Feature_Subset;
 

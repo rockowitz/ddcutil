@@ -10,7 +10,7 @@
 #include <assert.h>
 #include <errno.h>
 #include <fcntl.h>
-#include <i2c-dev.h>
+// #include <i2c-dev.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -180,17 +180,17 @@ Parsed_Edid* ddc_get_parsed_edid_by_display_ref(Display_Ref * dref) {
 
 /** Tests if a DisplayRef identifies an attached display.
  */
-bool ddc_is_valid_display_ref(Display_Ref * dref) {
+bool ddc_is_valid_display_ref(Display_Ref * dref, bool emit_error_msg) {
    assert( dref );
    // char buf[100];
    // printf("(%s) Starting.  %s   \n", __func__, displayRefShortName(pdisp, buf, 100) );
    bool result;
    if (dref->ddc_io_mode == DDC_IO_DEVI2C) {
-      result = i2c_is_valid_bus(dref->busno, true /* emit_error_msg */);
+      result = i2c_is_valid_bus(dref->busno, emit_error_msg );
    }
    else {
       // result = adl_is_valid_adlno(dref->iAdapterIndex, dref->iDisplayIndex, true /* emit_error_msg */);
-      result = adlshim_is_valid_display_ref(dref, true /* emit_error_msg */);
+      result = adlshim_is_valid_display_ref(dref, emit_error_msg);
    }
    // printf("(%s) Returning %d\n", __func__, result);
    return result;

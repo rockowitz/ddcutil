@@ -33,11 +33,3 @@ Testcase_Descriptor testcase_catalog[] = {
 };
 int testcase_catalog_ct = sizeof(testcase_catalog)/sizeof(Testcase_Descriptor);
 
-// for some reason externing testcase_catalog and testcase_catalog_ct not working
-Testcase_Descriptor ** get_testcase_catalog() {
-   return testcase_catalog;
-}
-
-int get_testcase_catalog_ct() {
-   return testcase_catalog_ct;
-}

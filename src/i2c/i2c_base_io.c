@@ -10,7 +10,14 @@
 #include <assert.h>
 #include <errno.h>
 #include <fcntl.h>
-#include <i2c-dev.h>
+// On Fedora, i2c-dev.h is miniminal.  i2c.h is required for struct i2c_msg and
+// other stuff.  On Ubuntu and SuSE, including both causes redefiition errors.
+// I2C_FUNC_I2C is none definition present in the full version of i2c-dev.h but not
+// in the abbreviated version
+#include <linux/i2c-dev.h>
+#ifndef I2C_FUNC_I2C
+#include <linux/i2c.h>
+#endif
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -148,7 +155,12 @@ Base_Status_Errno_DDC ioctl_writer(int fh, int bytect, Byte * pbytes) {
    messages[0].addr  = 0x37;
    messages[0].flags = 0;
    messages[0].len   = bytect;
+   // On Ubuntu and SuSE?, i2c_msg is defined in i2c-dev.h, with char *buf
+   // On Fedora, i2c_msg is defined in i2c.h, and it's --u8 * buf
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wpointer-sign"
    messages[0].buf   = (char *) pbytes;
+#pragma GCC diagnostic pop
 
    msgset.msgs  = messages;
    msgset.nmsgs = 1;
@@ -218,7 +230,12 @@ Base_Status_Errno_DDC ioctl_reader(int fh, int bytect, Byte * readbuf) {
    messages[0].addr  = 0x37;
    messages[0].flags = I2C_M_RD;
    messages[0].len   = bytect;
+   // On Ubuntu and SuSE?, i2c_msg is defined in i2c-dev.h, with char *buf
+   // On Fedora, i2c_msg is defined in i2c.h, and it's --u8 * buf
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wpointer-sign"
    messages[0].buf   = (char *) readbuf;
+#pragma GCC diagnostic pop
 
    msgset.msgs  = messages;
    msgset.nmsgs = 1;
@@ -254,8 +271,11 @@ Base_Status_Errno_DDC ioctl_reader(int fh, int bytect, Byte * readbuf) {
 }
 
 
+#ifdef WONT_COMPILE
 // i2c_sumbus_write_i2c_block_data_writer, and _reader are retained only for
 // possible further exploration.   They do not work.
+// Worse: 12/3/15: i2c_smbus_write_i2c_block_data, i2c_smbus_read_i2c_block_data not defined on
+// Fedora if using system /usr/include/linux/i2c-dev.h, i2c.h
 
 // Write to I2C bus using i2c_smbus_write_i2c_block_data()
 
@@ -329,4 +349,4 @@ Base_Status_Errno_DDC i2c_smbus_read_i2c_block_data_reader(int fh, int bytect, B
    return rc;
 }
 
-
+#endif

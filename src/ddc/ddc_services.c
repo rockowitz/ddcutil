@@ -14,9 +14,12 @@
 #include "base/ddc_packets.h"
 #include "base/displays.h"
 #include "base/linux_errno.h"
+#include "base/parms.h"
 
 #include "i2c/i2c_bus_core.h"
- 
+#include "i2c/i2c_do_io.h"
+
+#include "adl/adl_errors.h"
 #include "adl/adl_shim.h"
 
 #include "ddc/ddc_multi_part_io.h"
@@ -28,6 +31,98 @@
 
 // Trace class for this file
 static Trace_Group TRACE_GROUP = TRC_DDC;
+
+// push initialization down from main.c in anticipation of creating a library
+
+void init_ddc_services() {
+
+   ddc_reset_write_only_stats();
+   ddc_reset_write_read_stats();
+   ddc_reset_multi_part_read_stats();
+   init_sleep_stats();
+   init_execution_stats();
+
+   init_status_code_mgt();
+   init_linux_errno();
+   init_adl_errors();
+   init_vcp_feature_codes();
+   adlshim_initialize();
+   init_ddc_packets();   // 11/2015: does nothing
+
+   i2c_set_io_strategy(DEFAULT_I2C_IO_STRATEGY);
+}
+
+
+
+//
+//  Display specification
+//
+
+/* Converts the display identifiers passed on the command line to a logical
+ * identifier for an I2C or ADL display.  If a bus number or ADL adapter.display
+ * number is specified, the translation is direct.  If a model name/serial number
+ * pair or an EDID is specified, the attached displays are searched.
+ *
+ * Arguments:
+ *    pdid      display identifiers
+ *    emit_error_msg
+ * OLD   validate  if searching was not necessary, validate that that bus number or
+ * OLD             ADL number does in fact reference an attached display
+ *
+ * Returns:
+ *    DisplayRef instance specifying the display using either an I2C bus number
+ *    or an ADL adapter.display number, NULL if display not found
+ */
+Display_Ref* get_display_ref_for_display_identifier(Display_Identifier* pdid, bool emit_error_msg) {
+   Display_Ref* dref = NULL;
+   bool validated = true;
+
+   switch (pdid->id_type) {
+   case DISP_ID_DISPNO:
+      dref = ddc_find_display_by_dispno(pdid->dispno);
+      if (!dref && emit_error_msg) {
+         fprintf(stderr, "Invalid display number\n");
+      }
+      validated = false;
+      break;
+   case DISP_ID_BUSNO:
+      dref = create_bus_display_ref(pdid->busno);
+      validated = false;
+      break;
+   case DISP_ID_ADL:
+      dref = create_adl_display_ref(pdid->iAdapterIndex, pdid->iDisplayIndex);
+      validated = false;
+      break;
+   case DISP_ID_MONSER:
+      dref = ddc_find_display_by_model_and_sn(pdid->model_name, pdid->serial_ascii);  // in ddc_packet_io
+      if (!dref && emit_error_msg) {
+         fprintf(stderr, "Unable to find monitor with the specified model and serial number\n");
+      }
+      break;
+   case DISP_ID_EDID:
+      dref = ddc_find_display_by_edid(pdid->edidbytes);
+      if (!dref && emit_error_msg) {
+         fprintf(stderr, "Unable to find monitor with the specified EDID\n" );
+      }
+      break;
+   // no default case because switch is exhaustive, compiler warns if case missing
+   }  // switch
+
+   if (dref) {
+      if (!validated)      // DISP_ID_BUSNO or DISP_ID_ADL
+        validated = ddc_is_valid_display_ref(dref, emit_error_msg);
+      if (!validated) {
+         free(dref);
+         dref = NULL;
+      }
+   }
+
+   // printf("(%s) Returning: %s\n", __func__, (pdref)?"non-null": "NULL" );
+   return dref;
+}
+
+
+
 
 //
 //  Set VCP value
@@ -538,6 +633,8 @@ void show_vcp_values_by_display_ref(Display_Ref * dref, VCP_Feature_Subset subse
  *    Display_Info_list struct
  */
 Display_Info_List * ddc_get_valid_displays() {
+   int ndx;
+
       Display_Info_List i2c_displays = i2c_get_valid_displays();
       Display_Info_List adl_displays = adlshim_get_valid_displays();
 
@@ -556,7 +653,7 @@ Display_Info_List * ddc_get_valid_displays() {
          free(i2c_displays.info_recs);
       if (adl_displays.info_recs)
          free(adl_displays.info_recs);
-      for (int ndx = 0; ndx < displayct; ndx++) {
+      for (ndx = 0; ndx < displayct; ndx++) {
          all_displays->info_recs[ndx].dispno = ndx+1;      // displays are numbered from 0, not 1
       }
       // printf("(%s) all_displays in main.c:\n", __func__);

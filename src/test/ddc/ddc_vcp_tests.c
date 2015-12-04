@@ -8,7 +8,14 @@
 #include <string.h>
 #include <sys/ioctl.h>
 #include <unistd.h>        // usleep
-#include <i2c-dev.h>
+// On Fedora, i2c-dev.h is miniminal.  i2c.h is required for struct i2c_msg and
+// other stuff.  On Ubuntu and SuSE, including both causes redefiition errors.
+// I2C_FUNC_I2C is none definition present in the full version of i2c-dev.h but not
+// in the abbreviated version
+#include <linux/i2c-dev.h>
+#ifndef I2C_FUNC_I2C
+#include <linux/i2c.h>
+#endif
 #include <fcntl.h>
 
 #include <base/util.h>
@@ -302,7 +309,10 @@ void get_luminosity_sample_code(int busno) {
    if (streq(writefunc,"write"))
       rc = write(fh, ddc_cmd_bytes+1, sizeof(ddc_cmd_bytes)-1);
    else
+#ifdef WONT_COMPILE_ON_FEDORA
       rc = i2c_smbus_write_i2c_block_data(fh, ddc_cmd_bytes[1], sizeof(ddc_cmd_bytes)-2, ddc_cmd_bytes+2);
+#endif
+      rc = -1;
 
    if (rc < 0) {
       printf("(%s) Error %s(), returned %d, errno=%s. Terminating execution.\n",
@@ -347,8 +357,11 @@ void get_luminosity_sample_code(int busno) {
         if (streq(readfunc, "read"))
            rc = read(fh, readbuf+1, 11);
         else {
+#ifdef OLD
            unsigned char cmd_byte = 0x00;   // apparently ignored, can be anything
            rc = i2c_smbus_read_i2c_block_data(fh, cmd_byte, 11, readbuf+1);
+#endif
+           rc = -1;
         }
 
         if (rc < 0) {
@@ -441,6 +454,9 @@ void get_luminosity_using_single_ioctl(int busno) {
    struct i2c_msg              messages[3];
    struct i2c_rdwr_ioctl_data  msgset;
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wpointer-sign"
+
    messages[0].addr  = 0x37;
    messages[0].flags = 0;
    messages[0].len   = 1;
@@ -455,6 +471,7 @@ void get_luminosity_using_single_ioctl(int busno) {
    messages[2].flags = I2C_M_RD;
    messages[2].len   = 12;
    messages[2].buf   = (char *) readbuf+1;
+#pragma GCC diagnostic pop
 
    msgset.msgs  = messages;
    msgset.nmsgs = 3;

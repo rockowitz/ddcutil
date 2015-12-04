@@ -4,29 +4,58 @@
 dnl CPPFLAGS="$CPPFLAGS -I/usr/include/glib2.0"
 
 AC_PREREQ([2.69])
-AC_INIT([dcctool], [0.1], [rockowitz@minsoft.com])
+
+m4_define([ddctool_major_version], [0])
+m4_define([ddctool_minor_version], [1])
+m4_define([ddctool_micro_version], [0])
+m4_define([ddctool_version],
+          [ddctool_major_version.ddctool_minor_version.ddctool_micro_version])
+
+AC_INIT([dcctool], [ddctool_version], [rockowitz@minsoft.com])
 AC_CONFIG_AUX_DIR(config)
-AM_INIT_AUTOMAKE([-Wall -Werror foreign subdir-objects])
+dnl removed -Werror 
+AM_INIT_AUTOMAKE([-Wall -Wno-extra-portability foreign subdir-objects])
+dnl adds support for --enable/disable -static/shared, -with/without-pic configure flags
+LT_INIT
+
+dnl to automatically update libtool script if it becomes out of date:
+AC_SUBST([LIBTOOL_DEPS])
 
 AC_CONFIG_SRCDIR([src/util/coredefs.h])
 AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_MACRO_DIR([m4])
-AC_PROG_LIBTOOL
+
+dnl AC_PROG_LIBTOOL, AM_PROG_LIBTOOL are deprecated names for older versions of LT_INIT
+dnl AC_PROG_LIBTOOL
 
 dnl GLIB_GSETTINGS
 
+dnl for future: 
+dml GOBJECT_INTROSPECTION_CHECK([0.9.8])
 
-
-
+dnl appends to GLIB_CFLAGS and GLIB_LIBS the output of pkgconfig --cflags|--lib glib-2.0
 PKG_CHECK_MODULES(GLIB,  glib-2.0 >= 2.36) 
 
 # Checks for programs.
 AC_PROG_CC
 
+dnl This is an obsolescent macro that checks that the C compiler supports the -c and -o options together. 
+dnl Note that, since Automake 1.14, the AC_PROG_CC is rewritten to implement such checks itself, and thus 
+dnl the explicit use of AM_PROG_CC_C_O should no longer be required.
+dnl included in case running Automake 1.13, which is the case for SuSE 13.2
+dnl but causes warning: macro 'AM_PROG_CC_C_0' not found in library on SUSE if included:
+dnl AM_PROG_CC_C_0
+
+dnl but on Suse 13.2 w automake 1.13.4, get msg that 
+dnl warning: warning: compiling 'base/common.c' in subdir requires 'AM_PROG_CC_C_O' in 'configure.ac'
+dnl rmoved -Werror from AM_INIT_AUTOMAKE to allow compilation to proceed
+
 # Checks for libraries.
 
 # Checks for header files.
 AC_CHECK_HEADERS([fcntl.h langinfo.h libintl.h limits.h stdint.h stdlib.h string.h sys/ioctl.h termios.h unistd.h wchar.h  dlfcn.h])
+dnl i2c-dev.h not found:
+dnl AC_CHECK_HEADERS([i2c-dev.h])
 
 # Checks for typedefs, structures, and compiler characteristics.
 AC_CHECK_HEADER_STDBOOL

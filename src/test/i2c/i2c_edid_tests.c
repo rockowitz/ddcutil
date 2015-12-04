@@ -13,7 +13,7 @@
 #include <sys/ioctl.h>
 #include <unistd.h>        // usleep
 #include <stdbool.h>
-#include <i2c-dev.h>
+#include <linux/i2c-dev.h>
 #include <fcntl.h>
 
 #include <util/debug_util.h>
@@ -98,7 +98,10 @@ void probe_read_edid(int busno, char * write_mode, char * read_mode) {
       else if ( streq(read_mode, "i2c_smbus_read_block_data") ) {
          printf("Reading edid using i2c_smbus_read_block_data\n");
          errno = 0;
+#ifdef OLD
          rc = i2c_smbus_read_block_data(fd, (unsigned char) 0x00, edidbuf);
+#endif
+         rc = -1;
          errsv = errno;
          printf("i2c_smbus_read_block_data returned %d, errno=%d\n", rc, errsv);
       }
@@ -110,7 +113,11 @@ void probe_read_edid(int busno, char * write_mode, char * read_mode) {
          printf("Reading edid using i2c_smbus_read_byte()\n");
          for(ndx=0; ndx<128;ndx++){
             errno = 0;
+#ifdef OLD
+            // not defined on Fedora
             rc = i2c_smbus_read_byte(fd);
+#endif
+            rc = -1;
             errsv = errno;
             if (errno != 0 || rc == -1)
                printf("i2c_smbus_read_byte returned %d (%x), errno=%d\n", rc, rc, errsv);
@@ -129,7 +136,10 @@ void probe_read_edid(int busno, char * write_mode, char * read_mode) {
          printf("Reading edid using i2c_smbus_read_byte_data(), cmd=0x%02x\n", cmd_byte);
          for (ndx=0; ndx<128;ndx++){
             errno = 0;
+#ifdef OLD
             rc = i2c_smbus_read_byte_data(fd, cmd_byte);
+#endif
+            rc = -1;  // hack
             errsv = errno;
             if (errno != 0 || rc == -1)
                printf("i2c_smbus_read_byte_data returned %d (0x%x), errno=%d\n", rc, rc, errsv);
@@ -142,7 +152,10 @@ void probe_read_edid(int busno, char * write_mode, char * read_mode) {
          }
 
       else if ( streq(read_mode, "i2c_smbus_read_i2c_block_data") ) {
+#ifdef WONT_COMPILE_ON_FEDORA
          rc = do_i2c_smbus_read_i2c_block_data(fd, 32, edidbuf, DDC_TIMEOUT_USE_DEFAULT);
+#endif
+         rc = -1;  // hack
       }
 
       else {

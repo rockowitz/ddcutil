@@ -39,11 +39,11 @@
 <option id="autogen" value="autogen.sh"/>
 <option id="autogenOpts" value=""/>
 </configuration>
-<configuration id="org.eclipse.linuxtools.cdt.autotools.core.configuration.build.1724079400.1554929614">
+<configuration id="org.eclipse.linuxtools.cdt.autotools.core.configuration.build.1724079400.671655291">
 <option id="configure" value="configure"/>
 <option id="configdir" value=""/>
 <option id="cache-file" value=""/>
-<option id="help" value="true"/>
+<option id="help" value="false"/>
 <option id="no-create" value="false"/>
 <option id="quiet" value="false"/>
 <option id="version" value="false"/>

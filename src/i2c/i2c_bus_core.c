@@ -8,7 +8,14 @@
 #include <assert.h>
 #include <errno.h>
 #include <fcntl.h>
-#include <i2c-dev.h>
+// On Fedora, i2c-dev.h is miniminal.  i2c.h is required for struct i2c_msg and
+// other stuff.  On Ubuntu and SuSE, including both causes redefiition errors.
+// I2C_FUNC_I2C is none definition present in the full version of i2c-dev.h but not
+// in the abbreviated version
+#include <linux/i2c-dev.h>
+#ifndef I2C_FUNC_I2C
+#include <linux/i2c.h>
+#endif
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
