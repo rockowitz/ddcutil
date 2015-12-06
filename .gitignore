@@ -37,6 +37,7 @@ config.cache
 Makefile
 Makefile.in
 /src/ddctool
+/src/fixit
 stamp-h1
 m4/
 src/.libs
