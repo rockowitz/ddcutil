@@ -174,13 +174,17 @@ Parsed_Edid * create_parsed_edid(Byte* edidbytes) {
 
    get_edid_mfg_id_in_buffer(
            edidbytes,
-           parsed_edid->mfg_id,       sizeof(parsed_edid->mfg_id) );
+           parsed_edid->mfg_id,
+           sizeof(parsed_edid->mfg_id) );
 
    ok = get_edid_modelname_and_sn(
            edidbytes,
            parsed_edid->model_name,   sizeof(parsed_edid->model_name),
            parsed_edid->serial_ascii, sizeof(parsed_edid->serial_ascii) );
 
+   // printf("(%s) mfg_id=|%s|\n", __func__, parsed_edid->mfg_id);
+   // printf("(%s) model_name=|%s|\n", __func__, parsed_edid->model_name);
+   // printf("(%s) serial_ascii=|%s|\n", __func__, parsed_edid->serial_ascii);
    parsed_edid->year = edidbytes[17] + 1990;
    parsed_edid->is_model_year = edidbytes[16] == 0xff;
    parsed_edid->edid_version_major = edidbytes[18];

@@ -128,6 +128,9 @@ bool parse_int_arg(char * val, int * pIval) {
 }
 
 bool validate_output_level(Parsed_Cmd* parsed_cmd) {
+   // printf("(%s) parsed_cmd->cmdid = %d, parsed_cmd->output_level = %s\n",
+   //        __func__, parsed_cmd->cmd_id,
+   //        output_level_name(parsed_cmd->output_level));
    bool ok = true;
    // check that output_level consistent with cmd_id
    Byte valid_output_levels;
@@ -148,8 +151,9 @@ bool validate_output_level(Parsed_Cmd* parsed_cmd) {
          valid_output_levels = OL_TERSE | OL_NORMAL | OL_VERBOSE;
    }
 
-   if (parsed_cmd->output_level == OL_DEFAULT)
-         parsed_cmd->output_level = default_output_level;
+   if (parsed_cmd->output_level == OL_DEFAULT) {
+      parsed_cmd->output_level = default_output_level;
+   }
    if (!(parsed_cmd->output_level & valid_output_levels)) {
       printf("Output level invalid for command %s: %s\n",
              get_command(parsed_cmd->cmd_id)->cmd_name,

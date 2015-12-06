@@ -8,7 +8,9 @@
 #ifndef DDC_SERVICES_H_
 #define DDC_SERVICES_H_
 
+#include <glib.h>
 #include <stdio.h>
+#include <time.h>
 
 #include "base/common.h"
 #include "base/ddc_base_defs.h"     // for Version_Spec
@@ -23,7 +25,7 @@ Display_Ref* get_display_ref_for_display_identifier(Display_Identifier* pdid, bo
 
 typedef enum {SUBSET_SCAN, SUBSET_ALL, SUBSET_SUPPORTED, SUBSET_COLORMGT, SUBSET_PROFILE} VCP_Feature_Subset;
 
-void show_vcp_values_by_display_ref(Display_Ref * dref, VCP_Feature_Subset subset, FILE * fp);
+void show_vcp_values_by_display_ref(Display_Ref * dref, VCP_Feature_Subset subset, GPtrArray * collector);
 
 void show_single_vcp_value_by_display_ref(Display_Ref * dref, char * feature, bool force);
 
@@ -46,5 +48,9 @@ Global_Status_Code get_capabilities_string_by_display_handle(Display_Handle * dh
 Global_Status_Code get_capabilities_buffer_by_display_ref(Display_Ref * pdisp, Buffer** ppCapabilitiesBuffer);
 Global_Status_Code get_capabilities_string_by_display_ref(Display_Ref * pdisp, char** pcaps);
 
+char * format_timestamp(time_t time_millis, char * buf, int bufsz);
+
+GPtrArray * get_profile_related_values_by_display_handle(Display_Handle * dh);
+GPtrArray * get_profile_related_values_by_display_ref(Display_Ref * dref);
 
 #endif /* DDC_SERVICES_H_ */

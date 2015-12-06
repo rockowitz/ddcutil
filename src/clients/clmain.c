@@ -8,6 +8,7 @@
 #include <assert.h>
 #include <stdio.h>
 
+#include "main/loadvcp.h"         // loadvcp.h should be elsewhere, should not be including in main
 #include "libmain/ddct_public.h"
 
 #define FUNCTION_ERRMSG(function_name,status_code) \
@@ -17,11 +18,87 @@
           ddct_status_code_desc(status_code))
 
 
+char * interpret_feature_flags_readwrite(unsigned long feature_flags) {
+   char * result = NULL;
+   if (feature_flags & DDCT_RW)
+      result = "read write";
+   else if (feature_flags & DDCT_RO)
+      result = "read only";
+   else if (feature_flags & DDCT_WO)
+      result = "write only";
+   else
+      result = "unknown readwritability";
+   return result;
+}
+
+char * interpret_feature_flags_type(unsigned long feature_flags) {
+   char * result = NULL;
+   if (feature_flags & DDCT_CONTINUOUS)
+      result = "continuous";
+   else if (feature_flags & DDCT_TABLE)
+      result = "table";
+   else if (feature_flags & DDCT_SIMPLE_NC)
+      result = "simple non-continuous";
+   else if (feature_flags & DDCT_COMPLEX_NC)
+      result = "complex non-continuous";
+   else
+      result = "unknown type";
+   return result;
+}
+
+void report_feature_flags(Byte feature_code, unsigned long feature_flags) {
+   if ( !(feature_flags & DDCT_KNOWN) )
+      printf("Feature: %02x: unknown\n", feature_code);
+   else
+      printf("Feature: %02x: %s, %s\n",
+            feature_code,
+             interpret_feature_flags_readwrite(feature_flags),
+             interpret_feature_flags_type(feature_flags)
+            );
+}
+
+
+void test_get_single_feature_info(DDCT_Display_Handle dh, Byte feature_code) {
+   printf("Getting metadata for feature 0x%02x\n", feature_code);
+   printf("Feature name: %s\n", ddct_get_feature_name(feature_code));
+   unsigned long feature_flags;
+     DDCT_Status rc = ddct_get_feature_info(
+             dh,    // needed because in rare cases feature info is MCCS version dependent
+             feature_code,
+             &feature_flags);
+     if (rc != 0)
+        FUNCTION_ERRMSG("ddct_get_feature_info", rc);
+     else {
+        report_feature_flags(feature_code, feature_flags);
+     }
+}
+
+void test_get_feature_info(DDCT_Display_Handle dh) {
+   Byte feature_codes[] = {0x02, 0x03, 0x10, 0x43, 0x60};
+   int feature_code_ct = sizeof(feature_codes)/sizeof(Byte);
+   int ndx = 0;
+   for (; ndx < feature_code_ct; ndx++)
+      test_get_single_feature_info(dh, feature_codes[ndx]);
+}
+
+
 bool test_cont_value(DDCT_Display_Handle dh, Byte feature_code) {
 
-   int rc;
+   DDCT_Status rc;
    bool ok;
    char * feature_name = ddct_get_feature_name(feature_code);
+
+   unsigned long feature_flags;
+   rc = ddct_get_feature_info(
+           dh,    // needed because in rare cases feature info is MCCS version dependent
+           feature_code,
+           &feature_flags);
+   if (rc != 0)
+      FUNCTION_ERRMSG("ddct_get_feature_info", rc);
+   else {
+      report_feature_flags(feature_code, feature_flags);
+   }
+
    DDCT_Non_Table_Value_Response non_table_response;
    rc = ddct_get_nontable_vcp_value(dh, feature_code, &non_table_response);
 
@@ -35,7 +112,7 @@ bool test_cont_value(DDCT_Display_Handle dh, Byte feature_code) {
              non_table_response.max_value);
       int cur_value = non_table_response.cur_value;
       int new_value = cur_value/2;
-      rc = ddct_set_nontable_vcp_value(dh, feature_code, new_value);
+      rc = ddct_set_continuous_vcp_value(dh, feature_code, new_value);
       if (rc != 0) {
          FUNCTION_ERRMSG("ddct_set_continuous_vcp_value", rc);
       }
@@ -52,7 +129,7 @@ bool test_cont_value(DDCT_Display_Handle dh, Byte feature_code) {
             }
          }
          // reset original value
-         rc = ddct_set_nontable_vcp_value(dh, feature_code, cur_value);
+         rc = ddct_set_continuous_vcp_value(dh, feature_code, cur_value);
          if (rc != 0) {
             FUNCTION_ERRMSG("ddct_set_continuous_vcp_value", rc);
          }
@@ -166,11 +243,25 @@ int main(int argc, char** argv) {
             printf("(%s) VCP version: %d.%d\n", __func__, vspec.major, vspec.minor);
          }
 
+         test_get_feature_info(dh);
          test_cont_value(dh, 0x10);
          test_get_capabilities_string(dh);
 
       }
    }
+
+   if (dh) {
+      char * pprofile_values_string;
+      rc = ddct_get_profile_related_values(dh, &pprofile_values_string);
+      if (rc != 0) {
+         FUNCTION_ERRMSG("ddct_open_display", rc);
+      }
+      else {
+         printf("(%s) profile values string = %s\n", __func__, pprofile_values_string);
+      }
+
+   }
+
 
    if (dh) {
       rc = ddct_close_display(dh);

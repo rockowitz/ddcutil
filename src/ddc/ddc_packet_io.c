@@ -162,6 +162,21 @@ Display_Ref* ddc_find_display_by_edid(const Byte * pEdidBytes) {
    return result;
 }
 
+Parsed_Edid* ddc_get_parsed_edid_by_display_handle(Display_Handle * dh) {
+   Parsed_Edid* pEdid = NULL;
+
+   if (dh->ddc_io_mode == DDC_IO_DEVI2C)
+      pEdid = i2c_get_parsed_edid_by_busno(dh->busno);
+   else {
+      // pEdid = adl_get_parsed_edid_by_adlno(dref->iAdapterIndex, dref->iDisplayIndex);
+      pEdid = adlshim_get_parsed_edid_by_display_handle(dh);
+   }
+   // printf("(%s) Returning %p\n", __func__, pEdid);
+   TRCMSG("Returning %p", __func__, pEdid);
+   return pEdid;
+}
+
+
 
 Parsed_Edid* ddc_get_parsed_edid_by_display_ref(Display_Ref * dref) {
    Parsed_Edid* pEdid = NULL;

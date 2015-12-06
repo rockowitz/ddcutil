@@ -13,5 +13,7 @@
 
 bool loadvcp(const char * fn);
 bool dumpvcp(Display_Ref * dref, char * optional_filename);
+char * dumpvcp_to_string_by_display_handle(Display_Handle * dh);
+char * dumpvcp_to_string_by_display_ref(Display_Ref * dref);
 
 #endif /* LOADVCP_H_ */

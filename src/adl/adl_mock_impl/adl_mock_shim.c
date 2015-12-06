@@ -33,6 +33,11 @@ bool adlshim_initialize() {
 
 // Report on active displays
 
+Parsed_Edid* adlshim_get_parsed_edid_by_display_handle(Display_Handle * dh) {
+   return NULL;
+}
+
+
 Parsed_Edid* adlshim_get_parsed_edid_by_display_ref(Display_Ref * dref) {
    return NULL;
 }

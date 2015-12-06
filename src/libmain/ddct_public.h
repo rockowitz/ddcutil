@@ -136,13 +136,8 @@ DDCT_Status ddct_get_nontable_vcp_value(
                VCP_Feature_Code                feature_code,
                DDCT_Non_Table_Value_Response * response);
 
-DDCT_Status ddct_get_table_vcp_value(
-               DDCT_Display_Handle ddct_dh,
-               VCP_Feature_Code    feature_code,
-               int *               value_len,
-               Byte**              value_bytes);
 
-// flags for
+// flags for ddct_get_feature_info():
 #define DDCT_CONTINUOUS   0x4000
 #define DDCT_SIMPLE_NC    0x2000
 #define DDCT_COMPLEX_NC   0x1000
@@ -155,9 +150,12 @@ DDCT_Status ddct_get_table_vcp_value(
 #define DDCT_READABLE     (DDCT_RO | DDCT_RW)
 #define DDCT_WRITABLE     (DDCT_WO | DDCT_RW)
 
-
 // or return a struct?
-DDCT_Status ddct_get_feature_info(VCP_Feature_Code feature_code, unsigned long * flags);
+DDCT_Status ddct_get_feature_info(
+               DDCT_Display_Handle ddct_dh,
+               VCP_Feature_Code    feature_code,
+               unsigned long *     flags);
+
 char *      ddct_get_feature_name(VCP_Feature_Code feature_code);
 
 typedef void * Feature_Value_Table;   // temp
@@ -180,23 +178,50 @@ DDCT_Status ddct_is_feature_supported(
 
 
 
-DDCT_Status ddct_set_nontable_vcp_value(
+DDCT_Status ddct_set_continuous_vcp_value(
                DDCT_Display_Handle  ddct_dh,
                VCP_Feature_Code     feature_code,
                int                  new_value);
 
+
+DDCT_Status ddct_set_simple_nc_vcp_value(
+               DDCT_Display_Handle  ddct_dh,
+               VCP_Feature_Code     feature_code,
+               Byte                 new_value);
+
+
+DDCT_Status ddct_set_raw_vcp_value(
+               DDCT_Display_Handle  ddct_dh,
+               VCP_Feature_Code     feature_code,
+               Byte                 hi_byte,
+               Byte                 lo_byte);
+
+
+// Unimplemented
+DDCT_Status ddct_get_table_vcp_value(
+               DDCT_Display_Handle ddct_dh,
+               VCP_Feature_Code    feature_code,
+               int *               value_len,
+               Byte**              value_bytes);
+
+// Unimplemented
 DDCT_Status ddct_set_table_vcp_value(
                DDCT_Display_Handle  ddct_dh,
                VCP_Feature_Code     feature_code,
                int                  value_len,
                Byte *               value_bytes);
 
-// caller allocate buffer, or should function?
 DDCT_Status ddct_get_capabilities_string(DDCT_Display_Handle ddct_dh, char** buffer);
 
-typedef void Parsed_Capabilities;    // TEMP
+// Unimplemented.  Parsed capabilities has a complex data structure.  How to make visible?
+typedef void DDCT_Parsed_Capabilities;    // TEMP
+DDCT_Status ddct_parse_capabilities_string(char * capabilities_string, DDCT_Parsed_Capabilities ** parsed_capabilities);
 
-DDCT_Status ddct_parse_capabilities_string(char * capabilities_string, Parsed_Capabilities ** parsed_capabilities);
+
+DDCT_Status ddct_get_profile_related_values(DDCT_Display_Handle ddct_dh, char** pprofile_values_string);
+
+// Unimplemented
+DDCT_Status ddct_set_profile_related_values(char * profile_values_string);
 
 
 #endif /* DDCT_PUBLIC_H_ */

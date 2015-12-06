@@ -30,7 +30,7 @@ char * bool_repr(int value);
 bool   streq(const char * s1, const char * s2);
 bool   is_abbrev(char * value, const char * longname, int minchars);
 char * strupper(char * s);
-char * strjoin(const char ** pieces, const int ct, const char * sepstr);
+char * strjoin( const char ** pieces, const int ct, const char * sepstr);
 char * chars_to_string(char * start, int len);
 char * strtrim(const char * s);
 char * strtrim_r(const char * s, char * buffer, int bufsz);

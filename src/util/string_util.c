@@ -144,7 +144,7 @@ char * strtrim(const char * s) {
  * The returned string has been malloc'd.  It is the responsibility of
  * the caller to free it.
  */
-char * strjoin(const char ** pieces, const int ct, const char * sepstr) {
+char * strjoin( const char ** pieces, const int ct, const char * sepstr) {
    // printf("(%s) ct=%d\n", __func__, ct);
    int total_length = 0;
    int ndx;

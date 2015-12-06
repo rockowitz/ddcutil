@@ -27,6 +27,7 @@ Display_Ref* ddc_find_display_by_model_and_sn(const char * model, const char * s
 
 Display_Ref* ddc_find_display_by_edid(const Byte * pEdidBytes);
 
+Parsed_Edid* ddc_get_parsed_edid_by_display_handle(Display_Handle * dh);
 Parsed_Edid* ddc_get_parsed_edid_by_display_ref(Display_Ref * dref);
 
 bool         ddc_is_valid_display_ref(Display_Ref * dref, bool emit_error_msg);

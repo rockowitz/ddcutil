@@ -29,6 +29,8 @@ bool adlshim_initialize();
 
 // Report on active displays
 
+Parsed_Edid* adlshim_get_parsed_edid_by_display_handle(Display_Handle * dh);
+
 Parsed_Edid* adlshim_get_parsed_edid_by_display_ref(Display_Ref * dref);
 
 // void adl_show_active_display(ADL_Display_Rec * pdisp, int depth);

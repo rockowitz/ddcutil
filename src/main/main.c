@@ -250,19 +250,19 @@ int main(int argc, char *argv[]) {
 
                if ( streq(us,"ALL" )) {
                   // returns void
-                  show_vcp_values_by_display_ref(dref, SUBSET_ALL, stdout);
+                  show_vcp_values_by_display_ref(dref, SUBSET_ALL, NULL);
                }
                else if ( is_abbrev(us,"SUPPORTED",3 )) {
                    // returns void
-                   show_vcp_values_by_display_ref(dref, SUBSET_SUPPORTED, stdout);
+                   show_vcp_values_by_display_ref(dref, SUBSET_SUPPORTED, NULL);
                 }
                else if ( is_abbrev(us,"SCAN",3 )) {
                          // returns void
-                         show_vcp_values_by_display_ref(dref, SUBSET_SCAN, stdout);
+                         show_vcp_values_by_display_ref(dref, SUBSET_SCAN, NULL);
                       }
                else if ( is_abbrev(us, "COLORMGT",3) ) {
                   // returns void
-                  show_vcp_values_by_display_ref(dref, SUBSET_COLORMGT, stdout);
+                  show_vcp_values_by_display_ref(dref, SUBSET_COLORMGT, NULL);
                }
                else if ( is_abbrev(us, "PROFILE",3) ) {
                   // printf("(%s) calling setGlobalMsgLevel(%d), new value: %s   \n", __func__, TERSE, msgLevelName(TERSE) );
@@ -273,7 +273,7 @@ int main(int argc, char *argv[]) {
                   if (dref->ddc_io_mode == DDC_IO_DEVI2C)
                      i2c_report_bus(dref->busno);
                   // returns void
-                  show_vcp_values_by_display_ref(dref, SUBSET_PROFILE, stdout);
+                  show_vcp_values_by_display_ref(dref, SUBSET_PROFILE, NULL);
                }
                else {
                   // returns void

@@ -13,6 +13,7 @@
 #include "base/displays.h"
 #include "base/ddc_packets.h"
 #include "base/parms.h"
+#include "base/msg_control.h"
 
 #include "adl/adl_shim.h"
 
@@ -21,6 +22,8 @@
 #include "ddc/ddc_services.h"
 #include "ddc/ddc_vcp.h"
 #include "ddc/vcp_feature_codes.h"
+
+#include "main/loadvcp.h"
 
 #include "libmain/ddct_public.h"
 
@@ -388,15 +391,58 @@ DDCT_Status ddct_get_edid_by_display_ref(DDCT_Display_Ref ddct_dref, Byte** pbyt
 
 }
 
-// static char  default_feature_name_buffer[40];
 
 // or return a struct?
-DDCT_Status ddct_get_feature_info(VCP_Feature_Code feature_code, unsigned long * flags) {
-   return DDCL_UNIMPLEMENTED;
+DDCT_Status ddct_get_feature_info(
+      DDCT_Display_Handle ddct_dh,    // needed because in rare cases feature info is MCCS version dependent
+      VCP_Feature_Code feature_code,
+      unsigned long * flags)
+{
+   WITH_DH(
+      ddct_dh,
+      {
+         VCP_Feature_Table_Entry * pentry = vcp_find_feature_by_hexid(feature_code);
+         if (!pentry)
+            *flags = 0;
+         else {
+            Version_Spec vspec = get_vcp_version_by_display_handle(dh);
+            *flags = 0;
+            if (pentry->flags & VCP_RO)
+               *flags |= DDCT_RO;
+            if (pentry->flags & VCP_WO)
+               *flags |= DDCT_WO;
+            if (pentry->flags & VCP_RW)
+               *flags |= DDCT_RW;
+            if (pentry->flags & VCP_CONTINUOUS)
+               *flags |= DDCT_CONTINUOUS;
+            if (pentry->flags & VCP_TYPE_V2NC_V3T) {
+               if (vspec.major < 3)
+                  *flags |= DDCT_SIMPLE_NC;
+               else
+                  *flags |= DDCT_TABLE;
+            }
+            else if (pentry->flags & VCP_TABLE)
+               *flags |= DDCT_TABLE;
+            else if (pentry->flags & VCP_NON_CONT) {
+               if (vspec.major < 3)
+                  *flags |= DDCT_SIMPLE_NC;
+               else {
+                  // TODO: In V3, some features use combination of high and low bytes
+                  // for now, mark all as simple
+                  *flags |= DDCT_SIMPLE_NC;
+                  // alt: DDCT_COMPLEX_NC
+               }
+            }
+         }
+      }
+   );
 }
 
-char *      ddct_get_feature_name(VCP_Feature_Code feature_code) {
-   // do we want get_feature_name()'s handling of mfg specific and unrecognzied codes?
+
+
+// static char  default_feature_name_buffer[40];
+char * ddct_get_feature_name(VCP_Feature_Code feature_code) {
+   // do we want get_feature_name()'s handling of mfg specific and unrecognized codes?
    char * result = get_feature_name(feature_code);
    // snprintf(default_feature_name_buffer, sizeof(default_feature_name_buffer), "VCP Feature 0x%02x", feature_code);
    // return default_feature_name_buffer;
@@ -461,7 +507,7 @@ DDCT_Status ddct_get_nontable_vcp_value(
 }
 
 
-DDCT_Status ddct_set_nontable_vcp_value(
+DDCT_Status ddct_set_continuous_vcp_value(
                DDCT_Display_Handle ddct_dh,
                VCP_Feature_Code feature_code,
                int              new_value)
@@ -472,9 +518,38 @@ DDCT_Status ddct_set_nontable_vcp_value(
       } );
 }
 
-// caller allocate buffer, or should function?
-// for now function allocates buffer, caller needs to free
-// todo: lower level functions should cache capabilities string;
+
+DDCT_Status ddct_set_simple_nc_vcp_value(
+               DDCT_Display_Handle  ddct_dh,
+               VCP_Feature_Code     feature_code,
+               Byte                 new_value)
+{
+   return ddct_set_continuous_vcp_value(ddct_dh, feature_code, new_value);
+}
+
+
+DDCT_Status ddct_set_raw_vcp_value(
+               DDCT_Display_Handle  ddct_dh,
+               VCP_Feature_Code     feature_code,
+               Byte                 hi_byte,
+               Byte                 lo_byte)
+{
+   return ddct_set_continuous_vcp_value(ddct_dh, feature_code, hi_byte << 8 | lo_byte);
+}
+
+
+
+/* Retrieves the capabilities string for the monitor.
+ *
+ * Arguments:
+ *   ddct_dh     display handle
+ *   pcaps       address at which to return pointer to capabilities string.
+ *               This string is in an internal DDC data structure and should
+ *               not be freed by the caller.
+ *
+ * Returns:
+ *   status code
+ */
 DDCT_Status ddct_get_capabilities_string(DDCT_Display_Handle ddct_dh, char** pcaps)
 {
    WITH_DH(ddct_dh,
@@ -484,3 +559,22 @@ DDCT_Status ddct_get_capabilities_string(DDCT_Display_Handle ddct_dh, char** pca
       }
    );
 }
+
+DDCT_Status ddct_get_profile_related_values(DDCT_Display_Handle ddct_dh, char** pprofile_values_string)
+{
+   WITH_DH(ddct_dh,
+      {
+         set_output_level(OL_PROGRAM);
+         // printf("(%s) Before dumpvcp_to_string_by_display_handle()\n", __func__);
+         char * catenated = dumpvcp_to_string_by_display_handle(dh);
+         // printf("(%s) After dumpvcp_to_string_by_display_handle(), catenated=%p\n", __func__, catenated);
+         // printf("(%s) strlen(catenated)=%ld, catenated=|%s|\n",
+         //       __func__,
+         //       strlen(catenated),
+         //       catenated);
+         *pprofile_values_string = catenated;
+         rc = 0;
+      }
+   );
+}
+

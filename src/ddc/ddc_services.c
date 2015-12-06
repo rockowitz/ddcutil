@@ -6,7 +6,9 @@
 
 #include <assert.h>
 #include <errno.h>
+#include <glib.h>
 #include <string.h>
+#include <time.h>
 
 #include "util/report_util.h"
 
@@ -14,6 +16,7 @@
 #include "base/ddc_packets.h"
 #include "base/displays.h"
 #include "base/linux_errno.h"
+#include "base/msg_control.h"
 #include "base/parms.h"
 
 #include "i2c/i2c_bus_core.h"
@@ -213,11 +216,123 @@ Global_Status_Code set_vcp_value_top(Display_Ref * pdisp, char * feature, char *
 // Show VCP value
 //
 
+#ifdef NOT_USED
+// What I really need are curried functions.
+
+typedef int (*VCP_Emitter)(const char * format, ...);
+
+static FILE * vcp_file_emitter_fp = NULL;
+
+int vcp_file_emitter(const char * format, ...) {
+   assert(vcp_file_emitter_fp);
+   va_list(args);
+   va_start(args, format);
+   int rc = vfprintf(vcp_file_emitter_fp, format, args);
+   return rc;
+}
+
+static GPtrArray* vcp_garray_emitter_array = NULL;
+
+int vcp_garray_emitter(const char * format, ...) {
+   assert(vcp_garray_emitter_array);
+   va_list(args);
+   va_start(args, format);
+   char buf[400];
+   vsnprintf(buf, 400, format, args);
+   g_ptr_array_add(vcp_garray_emitter_array, strdup(buf));
+}
+#endif
+
+// performs 3 functions:
+// - gets vcp value
+// - filters out values that should not be shown
+// - if not OUTPUT_PROG, writes value, including error messages, to terminal
+// returns Interpreted_Vcp_Code for use when OUTPUT_PROG
+Interpreted_Vcp_Code * get_and_filter_vcp_value(
+      Display_Handle *          dh,
+      VCP_Feature_Table_Entry * vcp_entry,
+      bool                      suppress_unsupported
+     )
+{
+   Output_Level output_level = get_output_level();
+   Byte vcp_code = vcp_entry->code;
+   char * feature_name = vcp_entry->name;
+   if (output_level >= OL_VERBOSE)
+      printf("\nGetting data for VCP code 0x%02x - %s:\n", vcp_code, feature_name);
+   Interpreted_Vcp_Code * code_info = NULL;
+   Global_Status_Code rc = get_vcp_by_display_handle(dh, vcp_code, &code_info);
+   // printf("(%s) get_vcp_by_DisplayRef() returned %p\n", __func__, code_info);
+
+   // if (code_info)
+   //    printf("(%s) code_info->valid_response=%d\n", __func__, code_info->valid_response);
+   // for unsupported features, some monitors return null response rather than a valid response
+   // with unsupported feature indicator set
+   if (rc == DDCRC_NULL_RESPONSE) {
+      if (output_level >= OL_NORMAL && !suppress_unsupported)
+         printf("VCP code 0x%02x (%-30s): Unsupported feature code (Null response)\n", vcp_code, feature_name);
+   }
+   else if (!code_info) {
+      if (output_level >= OL_NORMAL)
+         printf("VCP code 0x%02x (%-30s): Unparsable response\n", vcp_code, feature_name);
+   }
+   else if (!code_info->valid_response) {
+      if (output_level >= OL_NORMAL)
+         printf("VCP code 0x%02x (%-30s): Invalid response\n", vcp_code, feature_name);
+      code_info = NULL;
+   }
+   else if (!code_info->supported_opcode) {
+      if (output_level >= OL_NORMAL && !suppress_unsupported)
+         printf("VCP code 0x%02x (%-30s): Unsupported feature code\n", vcp_code, feature_name);
+      code_info = NULL;
+   }
+   else {
+      // if interpretation is version dependent and version not already set, get it
+      // printf("(%s) vcp_entry->flags=0x%04x\n", __func__, vcp_entry->flags);
+      Version_Spec vcp_version = {0,0};
+      if ( (vcp_entry->flags & VCP_FUNC_VER) )
+           vcp_version = get_vcp_version_by_display_handle(dh);
+
+      if (output_level != OL_PROGRAM) {
+         char buf[100];
+         vcp_format_nontable_feature_detail(vcp_entry, vcp_version, code_info, buf, 100);
+         printf("VCP code 0x%02x (%-30s): %s\n", vcp_code, feature_name, buf);
+      }   // OUTPUT_NORMAL
+   }
+   return code_info;
+}
+
+
+void dump_nontable_vcp(
+      Display_Handle *          dh,
+      VCP_Feature_Table_Entry * vcp_entry,
+      GPtrArray * collector)
+{
+   bool debug = false;
+   Version_Spec vspec = get_vcp_version_by_display_handle(dh);
+   if (debug)
+      printf("(%s) Starting. Getting value for feature 0x%02x, dh=%s, vspec=%d.%d\n",
+             __func__, vcp_entry->code, display_handle_repr(dh), vspec.major, vspec.minor);
+
+   Interpreted_Vcp_Code * code_info = get_and_filter_vcp_value(dh, vcp_entry, true /* suppress_unsupported */ );
+   if (code_info) {
+
+         char buf[200];
+         snprintf(buf, 200, "VCP %02X %5d", vcp_entry->code, code_info->cur_value);
+         char * s = strdup(buf);
+         g_ptr_array_add(collector, s);
+
+      //   free(code_info);   // sometimes causes free failure, crash
+   }
+
+}
+
+
+
 void show_vcp_for_nontable_vcp_code_table_entry_by_display_handle(
         Display_Handle *          dh,
         VCP_Feature_Table_Entry * vcp_entry,
         Version_Spec              vcp_version,   // will be set for scan operations, not set for single
-        FILE *                    fp,   // where to write output
+        GPtrArray *                  collector,   // where to write output
         bool                      suppress_unsupported)    // if set, do not output unsupported features
 {
    bool debug = false;
@@ -225,80 +340,32 @@ void show_vcp_for_nontable_vcp_code_table_entry_by_display_handle(
       printf("(%s) Starting. Getting value for feature 0x%02x, dh=%s, vcp_version=%d.%d\n",
              __func__, vcp_entry->code, display_handle_repr(dh), vcp_version.major, vcp_version.minor);
 
-
-   Byte vcp_code = vcp_entry->code;
-   char * feature_name = vcp_entry->name;
-   // Msg_Level msgLevel = get_global_msg_level();
    Output_Level output_level = get_output_level();
-   // if (msgLevel >= VERBOSE)
-   if (output_level >= OL_VERBOSE)
-      printf("\nGetting data for VCP code 0x%02x - %s:\n", vcp_code, feature_name);
-
-   // Output_Format outputFormat = get_output_format();
-
-   Interpreted_Vcp_Code * code_info = NULL;
-   Global_Status_Code rc = get_vcp_by_display_handle(dh, vcp_code, &code_info);
-   // printf("(%s) get_vcp_by_DisplayRef() returned %p\n", __func__, code_info);
-   // if (code_info)
-   //    printf("(%s) code_info->valid_response=%d\n", __func__, code_info->valid_response);
-   // for unsupported features, some monitors return null response rather than a valid response
-   // with unsupported feature indicator set
-   if (rc == DDCRC_NULL_RESPONSE) {
-      // if (msgLevel >= NORMAL && outputFormat == OUTPUT_NORMAL)
-      if (output_level >= OL_NORMAL && !suppress_unsupported)
-         printf("VCP code 0x%02x (%-30s): Unsupported feature code (Null response)\n", vcp_code, feature_name);
-   }
-   else if (!code_info) {
-      // if (msgLevel >= NORMAL && outputFormat == OUTPUT_NORMAL)
-      if (output_level >= OL_NORMAL)
-         printf("VCP code 0x%02x (%-30s): Unparsable response\n", vcp_code, feature_name);
-      // printf("Error retrieving VCP info.  Failed to interpret returned data.\n");
-   }
-   else if (!code_info->valid_response) {
-      //if (msgLevel >= NORMAL && outputFormat == OUTPUT_NORMAL)
-      if (output_level >= OL_NORMAL)
-      printf("VCP code 0x%02x (%-30s): Invalid response\n", vcp_code, feature_name);
-      // printf("Error retrieving VCP info\n");
-   }
-   else if (!code_info->supported_opcode) {
-      // if (msgLevel >= NORMAL && outputFormat == OUTPUT_NORMAL)
-      if (output_level >= OL_NORMAL && !suppress_unsupported)
-      // printf("Invalid VCP code 0x%02x (%s)\n", vcp_code, feature_name);
-      printf("VCP code 0x%02x (%-30s): Unsupported feature code\n", vcp_code, feature_name);
+   // hack for now:
+   if (output_level == OL_PROGRAM) {
+      dump_nontable_vcp(dh, vcp_entry, collector);
    }
    else {
-      // if interpretation is version dependent and version not already set, get it
-      // printf("(%s) vcp_entry->flags=0x%04x\n", __func__, vcp_entry->flags);
-      if ( (vcp_entry->flags & VCP_FUNC_VER) && (vcp_version.major == 0) )
-         vcp_version = get_vcp_version_by_display_handle(dh);
+      // no longer using vcp_version parm, picking it up from display_handle
 
-      if (output_level != OL_PROGRAM) {
-         char buf[100];
-         vcp_format_nontable_feature_detail(vcp_entry, vcp_version, code_info, buf, 100);
-         printf("VCP code 0x%02x (%-30s): %s\n", vcp_code, feature_name, buf);
-      }   // OUTPUT_NORNAL
-      else {    // OUTPUT_PROG_VCP
-         int cv = code_info->cur_value;
-         // int mv = code_info->max_value;
-         fprintf(fp, "VCP %02X %5d\n", vcp_code, cv);
-      }
+    /*  Interpreted_Vcp_Code * code_info = */ get_and_filter_vcp_value(dh, vcp_entry, suppress_unsupported);
+
+
+      // if (code_info)
+      //   free(code_info);   // sometimes causes free failure, crash
    }
-   // if (code_info)
-   //   free(code_info);   // sometimes causes free failure, crash
    if (debug)
       printf("(%s) Done\n", __func__);
    // TRCMSG("Done");
 }
 
-
-
-
+// TODO split this out ala get_and_filter_vcp_value()
 
 void show_vcp_for_table_vcp_code_table_entry_by_display_handle(
         Display_Handle *          dh,
         VCP_Feature_Table_Entry * vcp_entry,
         Version_Spec              vcp_version,
-        FILE *                    fp,   // where to write output
+        GPtrArray *                  collector,   // where to write output
         bool                      suppress_unsupported)    // if set, do not output unsupported features
 {
    bool debug = false;
@@ -357,7 +424,7 @@ void show_vcp_for_table_vcp_code_table_entry_by_display_handle(
       else {    // OUTPUT_PROG_VCP
          // output VCP code  hex values of bytes
          int hexbufsize = buffer_length(accumulator) * 3;
-         char * hexbuf = calloc(1,hexbufsize);
+         char * hexbuf = calloc(hexbufsize, sizeof(char));
          char space = ' ';
          hexstring2(accumulator->bytes, accumulator->len, &space, false /* upper case */, hexbuf, hexbufsize);
 #ifdef REFERENCE
@@ -372,9 +439,17 @@ void show_vcp_for_table_vcp_code_table_entry_by_display_handle(
 
          // int cv = code_info->cur_value;
          // int mv = code_info->max_value;
-         fprintf(fp, "VCP %02X %s\n", vcp_code, hexbuf);
+         char * workbuf = calloc(hexbufsize + 20, sizeof(char));
+         snprintf(workbuf, hexbufsize+20, "VCP %02X %s\n", vcp_code, hexbuf);
+         char * s = strdup(workbuf);
+         g_ptr_array_add(collector, s);
+         free(workbuf);
+         free(hexbuf);
+
       }
    }
+   if (accumulator)
+      buffer_free(accumulator, __func__);
    // if (code_info)
    //   free(code_info);   // sometimes causes free failure, crash
 
@@ -384,13 +459,10 @@ void show_vcp_for_table_vcp_code_table_entry_by_display_handle(
 }
 
 
-
-
-
 void show_vcp_for_vcp_code_table_entry_by_display_ref(
         Display_Ref *              dref,
         VCP_Feature_Table_Entry *  vcp_entry,
-        FILE *                     fp)   // where to write output
+        GPtrArray *                   collector)   // where to write output
 {
    bool debug = false;
    Trace_Group tg = TRACE_GROUP;
@@ -412,10 +484,10 @@ void show_vcp_for_vcp_code_table_entry_by_display_ref(
 
 
    if (use_table_function) {
-      show_vcp_for_table_vcp_code_table_entry_by_display_handle(dh, vcp_entry, vcp_version, fp, false);
+      show_vcp_for_table_vcp_code_table_entry_by_display_handle(dh, vcp_entry, vcp_version, collector, false);
    }
    else {
-      show_vcp_for_nontable_vcp_code_table_entry_by_display_handle(dh, vcp_entry, vcp_version, fp, false);
+      show_vcp_for_nontable_vcp_code_table_entry_by_display_handle(dh, vcp_entry, vcp_version, collector, false);
    }
    ddc_close_display(dh);
 
@@ -453,11 +525,14 @@ void show_single_vcp_value_by_display_handle(Display_Handle * phandle, char * fe
 
 void show_single_vcp_value_by_display_ref(Display_Ref * dref, char * feature, bool force) {
    bool debug = false;
-   if (debug)
-      printf("(%s) Starting. Getting feature %s for %s\n", __func__, feature,
-           display_ref_short_name(dref) );
+   if (debug) {
+      printf("(%s) Starting. Getting feature %s for %s\n",
+             __func__, feature,
+             display_ref_short_name(dref) );
+   }
    VCP_Feature_Table_Entry * entry = vcp_find_feature_by_charid(feature);
    bool showit = true;
+
    if (entry) {
       if ( !( (entry->flags) & VCP_READABLE ) ){
          printf("Feature %s (%s) is not readable\n", feature, entry->name);
@@ -480,8 +555,9 @@ void show_single_vcp_value_by_display_ref(Display_Ref * dref, char * feature, bo
    // printf("(%s) showit=%d\n", __func__, showit);
    if (showit) {
       // printf("(%s) calling show_vcp_for_vcp_code_table_entry_by_display_ref()\n", __func__);
-      show_vcp_for_vcp_code_table_entry_by_display_ref(dref, entry, stdout);
+      show_vcp_for_vcp_code_table_entry_by_display_ref(dref, entry, NULL);
    }
+
    if (debug)
       printf("(%s) Done\n", __func__);
 }
@@ -500,7 +576,7 @@ void show_single_vcp_value_by_display_ref(Display_Ref * dref, char * feature, bo
 void show_vcp_values_by_display_handle(
         Display_Handle *    dh,
         VCP_Feature_Subset  subset,
-        FILE *              fp)
+        GPtrArray *         collector)
 {
    bool debug = false;
    if (debug)
@@ -527,7 +603,7 @@ void show_vcp_values_by_display_handle(
                   dh,
                   entry,
                   vcp_version,
-                  stdout,
+                  collector,
                   true);              // suppress unsupported features
             }
             else {
@@ -535,7 +611,7 @@ void show_vcp_values_by_display_handle(
                   dh,
                   entry,
                   vcp_version,
-                  stdout,
+                  collector,
                   true);   //  suppress unsupported features
             }
          }
@@ -564,7 +640,7 @@ void show_vcp_values_by_display_handle(
                     dh,
                     vcp_entry,
                     vcp_version,
-                    fp,
+                    collector,
                     (subset==SUBSET_SUPPORTED) );    // suppress unsupported features
 
               }
@@ -573,7 +649,7 @@ void show_vcp_values_by_display_handle(
                      dh,
                      vcp_entry,
                      vcp_version,
-                     fp,
+                     collector,
                      (subset==SUBSET_SUPPORTED));    // suppress_unsupported
               }
            }
@@ -596,7 +672,7 @@ void show_vcp_values_by_display_handle(
  * Returns:
  *    nothing
  */
-void show_vcp_values_by_display_ref(Display_Ref * dref, VCP_Feature_Subset subset, FILE * fp) {
+void show_vcp_values_by_display_ref(Display_Ref * dref, VCP_Feature_Subset subset, GPtrArray * collector) {
    // printf("(%s) Starting.  subset=%d   \n", __func__, subset );
    // need to ensure that bus info initialized
    bool validDisp = true;
@@ -604,7 +680,7 @@ void show_vcp_values_by_display_ref(Display_Ref * dref, VCP_Feature_Subset subse
       // Is this needed?  or checked by openDisplay?
       Bus_Info * bus_info = i2c_get_bus_info(dref->busno);
       if (!bus_info ||  !(bus_info->flags & I2C_BUS_ADDR_0X37) ) {
-         printf("(%s) Address 0x37 not detected on bus %d. I2C communication not available.\n",
+         fprintf(stderr, "(%s) Address 0x37 not detected on bus %d. I2C communication not available.\n",
                 __func__, dref->busno );
          validDisp = false;
       }
@@ -615,7 +691,7 @@ void show_vcp_values_by_display_ref(Display_Ref * dref, VCP_Feature_Subset subse
 
    if (validDisp) {
       Display_Handle * pDispHandle = ddc_open_display(dref, EXIT_IF_FAILURE);
-      show_vcp_values_by_display_handle(pDispHandle, subset, fp);
+      show_vcp_values_by_display_handle(pDispHandle, subset, collector);
       ddc_close_display(pDispHandle);
    }
 }
@@ -928,3 +1004,80 @@ Global_Status_Code get_capabilities_string_by_display_ref(Display_Ref * dref, ch
    return rc;
 }
 
+char * format_timestamp(time_t time_millis, char * buf, int bufsz) {
+   if (bufsz == 0 || buf == NULL) {
+      bufsz = 128;
+      buf = calloc(1, bufsz);
+   }
+
+   struct tm tm = *localtime(&time_millis);
+
+   snprintf(buf, bufsz, "%4d%02d%02d-%02d%02d%02d",
+                  tm.tm_year+1900,
+                  tm.tm_mon+1,
+                  tm.tm_mday,
+                  tm.tm_hour,
+                  tm.tm_min,
+                  tm.tm_sec
+                 );
+   return buf;
+}
+
+
+GPtrArray * get_profile_related_values_by_display_handle(Display_Handle* dh) {
+   assert( get_output_level() == OL_PROGRAM);
+   GPtrArray * vals = g_ptr_array_sized_new(50);
+
+   // bool dumpvcp(Display_Ref * dref, char * filename) {
+
+   char timestamp_buf[30];
+   time_t time_millis = time(NULL);
+   // temporarily use same output format as filename, but format the date separately here
+   // for flexibility
+   format_timestamp(time_millis, timestamp_buf, sizeof(timestamp_buf));
+
+   char buf[400];
+   int bufsz = sizeof(buf)/sizeof(char);
+   char * s;
+   snprintf(buf, bufsz, "TIMESTAMP_TEXT %s", timestamp_buf );
+   s = strdup(buf);
+   g_ptr_array_add(vals, s);
+   snprintf(buf, bufsz, "TIMESTAMP_MILLIS %ld", time_millis);
+   s = strdup(buf);
+   g_ptr_array_add(vals, s);
+
+   Parsed_Edid * edid = ddc_get_parsed_edid_by_display_handle(dh);
+   // printf("(%s) strlen(mfg_id)=%ld\n", __func__, strlen(edid->mfg_id));
+   snprintf(buf, bufsz, "MFG_ID  %s",  edid->mfg_id);
+   // printf("(%s) strlen(buf)=%ld\n", __func__, strlen(buf));
+   s = strdup(buf);
+   // printf("(%s) strlen(s)=%ld\n", __func__, strlen(s));
+   g_ptr_array_add(vals, s);
+   snprintf(buf, bufsz, "MODEL   %s",  edid->model_name);
+   s = strdup(buf);
+   g_ptr_array_add(vals, s);
+   snprintf(buf, bufsz, "SN      %s",  edid->serial_ascii);
+   s = strdup(buf);
+   g_ptr_array_add(vals, s);
+
+   char hexbuf[257];
+   hexstring2(edid->bytes, 128,
+              NULL /* no separator */,
+              true /* uppercase */,
+              hexbuf, 257);
+   snprintf(buf, bufsz, "EDID    %s", hexbuf);
+   s = strdup(buf);
+   g_ptr_array_add(vals, s);
+
+   show_vcp_values_by_display_handle(dh, SUBSET_PROFILE, vals);
+
+   return vals;
+}
+
+GPtrArray * get_profile_related_values_by_display_ref(Display_Ref * dref) {
+   Display_Handle* dh = ddc_open_display(dref, EXIT_IF_FAILURE);
+   GPtrArray * vals = get_profile_related_values_by_display_handle(dh);
+   ddc_close_display(dh);
+   return vals;
+
+}

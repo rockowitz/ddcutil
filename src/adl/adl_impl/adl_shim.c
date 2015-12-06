@@ -35,6 +35,12 @@ void adlshim_release() {
 
 // Report on active displays
 
+Parsed_Edid* adlshim_get_parsed_edid_by_display_handle(Display_Handle * dh) {
+   assert(dh->ddc_io_mode == DDC_IO_ADL);
+   return adl_get_parsed_edid_by_adlno(dh->iAdapterIndex, dh->iDisplayIndex);
+}
+
+
 Parsed_Edid* adlshim_get_parsed_edid_by_display_ref(Display_Ref * dref) {
    assert(dref->ddc_io_mode == DDC_IO_ADL);
    return adl_get_parsed_edid_by_adlno(dref->iAdapterIndex, dref->iDisplayIndex);

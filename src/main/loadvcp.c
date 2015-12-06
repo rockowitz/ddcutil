@@ -236,24 +236,6 @@ bool loadvcp(const char * fn) {
 // TODO: generalize, get default dir following XDG settings
 #define USER_VCP_DATA_DIR ".local/share/icc"
 
-char * format_timestamp(time_t time_millis, char * buf, int bufsz) {
-   if (bufsz == 0 || buf == NULL) {
-      bufsz = 128;
-      buf = calloc(1, bufsz);
-   }
-
-   struct tm tm = *localtime(&time_millis);
-
-   snprintf(buf, bufsz, "%4d%02d%02d-%02d%02d%02d",
-                  tm.tm_year+1900,
-                  tm.tm_mon+1,
-                  tm.tm_mday,
-                  tm.tm_hour,
-                  tm.tm_min,
-                  tm.tm_sec
-                 );
-   return buf;
-}
 
 
 char * create_simple_vcp_fn(Display_Ref * dref, time_t time_millis, char * buf, int bufsz) {
@@ -295,6 +277,8 @@ char * create_simple_vcp_fn(Display_Ref * dref, time_t time_millis, char * buf, 
 
 
 
+
+
 bool dumpvcp(Display_Ref * dref, char * filename) {
    bool ok = true;
    char fqfn[PATH_MAX] = {0};
@@ -324,9 +308,10 @@ bool dumpvcp(Display_Ref * dref, char * filename) {
       ok = false;
    }
    else {
+#ifdef X
       fprintf(output_fp, "TIMESTAMP_TEXT %s\n", timestamp_buf );
       fprintf(output_fp, "TIMESTAMP_MILLIS %ld\n", time_millis);
-
+#endif
 #ifdef OLD
       set_output_format(OUTPUT_PROG_VCP);
       if (dref->ddc_io_mode == DDC_IO_DEVI2C)
@@ -336,6 +321,7 @@ bool dumpvcp(Display_Ref * dref, char * filename) {
          // ADAPTER_INDEX, DISPLAY_INDEX, MFG_ID, MODEL, SN
       }
 #endif
+#ifdef X
       Parsed_Edid * edid = ddc_get_parsed_edid_by_display_ref(dref);
       fprintf(output_fp, "MFG_ID  %s\n",  edid->mfg_id);
       fprintf(output_fp, "MODEL   %s\n",  edid->model_name);
@@ -347,13 +333,65 @@ bool dumpvcp(Display_Ref * dref, char * filename) {
                  true /* uppercase */,
                  hexbuf, 257);
       fprintf(output_fp, "EDID    %s\n", hexbuf);
-
+#endif
 #ifdef OLD
       set_output_format(OUTPUT_PROG_VCP);
 #endif
-      show_vcp_values_by_display_ref(dref, SUBSET_PROFILE, output_fp);
+      GPtrArray * vals = get_profile_related_values_by_display_ref(dref);
+      printf("(%s) vals->len = %d\n", __func__, vals->len);
+#ifdef FAILS
+      int ndx = 0;
+      char * nextval = NULL;
+      nextval = g_ptr_array_index(vals, ndx);
+      while (nextval != NULL) {
+         fprintf(output_fp, "%s\n", nextval);
+         ndx++;
+         printf("(%s) ndx = %d\n", __func__, ndx);
+         nextval = g_ptr_array_index(vals, ndx);
+         printf("(%s) nextval = %p\n", __func__, nextval);
+         printf("(%s) nextval = |%s|\n", __func__, nextval);
+      }
+#endif
+      int ct = vals->len;
+      int ndx;
+      for (ndx=0; ndx<ct; ndx++){
+         // printf("(%s) ndx = %d\n", __func__, ndx);
+         char * nextval = g_ptr_array_index(vals, ndx);
+         // printf("(%s) nextval = %p\n", __func__, nextval);
+         // printf("(%s) strlen(nextval)=%ld, nextval = |%s|\n", __func__, strlen(nextval), nextval);
+         fprintf(output_fp, "%s\n", nextval);
+
+      }
+      g_ptr_array_free(vals, true);
       fclose(output_fp);
+
    }
    return ok;
-
 }
+
+char * dumpvcp_to_string_by_display_handle(Display_Handle * dh) {
+   GPtrArray * vals = get_profile_related_values_by_display_handle(dh);
+   int ct = vals->len;
+   // printf("(%s) ct = %d\n", __func__, ct);
+   char ** pieces = calloc(ct, sizeof(char*));
+   int ndx;
+   for (ndx=0; ndx < ct; ndx++) {
+      pieces[ndx] = g_ptr_array_index(vals,ndx);
+      // printf("(%s) pieces[%d] = %s\n", __func__, ndx, pieces[ndx]);
+   }
+   char * catenated = strjoin((const char**) pieces, ct, ";");
+   // printf("(%s) strlen(catenated)=%ld, catenated=%p, catenated=|%s|\n", __func__, strlen(catenated), catenated, catenated);
+   // printf("(%s) returning %p\n", __func__, catenated);
+   return catenated;
+}
+
+
+
+char * dumpvcp_to_string_by_display_ref(Display_Ref * dref) {
+   Display_Handle* dh = ddc_open_display(dref, EXIT_IF_FAILURE);
+   char * result = dumpvcp_to_string_by_display_ref(dref);
+   ddc_close_display(dh);
+   return result;
+}
+
+

@@ -29,7 +29,7 @@
 
 // Variables used by callback functions
 static char * adlwork = NULL;
-static Output_Level output_level = OL_NORMAL;
+static Output_Level output_level = OL_DEFAULT;
 static int     iAdapterIndex = -1;
 static int     iDisplayIndex = -1;
 
@@ -104,12 +104,13 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
 
    Parsed_Cmd * parsed_cmd = new_parsed_cmd();
    // parsed_cmd->pdid = create_dispno_display_identifier(1);   // default monitor
+   // printf("(%s) After new_parsed_cmd(), parsed_cmd->output_level_name = %s\n", __func__, output_level_name(parsed_cmd->output_level));
 
    gboolean stats_flag     = false;
    gboolean ddc_flag       = false;
    gboolean force_flag     = false;
    gboolean version_flag   = false;
-// gboolean myhelp_flag    = false;
+// gboolean myhelp_flag    = false;PARSED_CMD_MARKERoutput
 // gboolean myusage_flag   = false;
    char *   modelwork      = NULL;
    char *   snwork         = NULL;
