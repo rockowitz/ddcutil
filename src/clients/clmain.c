@@ -131,7 +131,6 @@ int main(int argc, char** argv) {
 
    rc = ddct_create_dispno_display_identifier(2, &did);
    assert(rc == 0);
-
    char * did_repr = NULL;
    rc = ddct_repr_display_identifier(did, &did_repr);
    assert(rc == 0);

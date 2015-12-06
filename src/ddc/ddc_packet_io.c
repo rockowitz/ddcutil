@@ -719,7 +719,6 @@ Global_Status_Code ddc_write_read_with_retry(
          // printf("(%s) All tries zero ddcrc_read_all_zero_ct=%d, max_write_read_exchange_tries=%d, tryctr=%d\n",
          //        __func__, ddcrc_read_all_zero_ct, max_write_read_exchange_tries, tryctr);
       }
-
    }
    try_data_record_tries(write_read_stats_rec, rc, tryctr);
    TRCMSGTF(tf, "Done. rc=%s\n", gsc_desc(rc));

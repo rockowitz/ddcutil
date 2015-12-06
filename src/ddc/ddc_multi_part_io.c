@@ -79,7 +79,6 @@ int ddc_get_max_multi_part_read_tries() {
 }
 
 
-
 // Makes one attempt to read the entire capabilities string
 //
 // Arguments:
@@ -194,8 +193,6 @@ Global_Status_Code try_multi_part_read(
 }
 
 
-
-
 /* Gets the DDC capabilities string for a monitor, performing retries if necessary.
 *
 * Arguments:
@@ -265,5 +262,3 @@ Global_Status_Code multi_part_read_with_retry(
    *ppbuffer = accumulator;
    return rc;
 }
-
-
