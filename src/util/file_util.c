@@ -11,7 +11,7 @@
 
 #include "util/file_util.h"
 
-int file_getlines(char * fn, GPtrArray* line_array) {
+int file_getlines(const char * fn,  GPtrArray* line_array) {
    int rc = 0;
    printf("(%s) Starting. fn=%s  \n", __func__, fn );
    FILE * fp = fopen(fn, "r");

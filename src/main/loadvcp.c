@@ -8,12 +8,15 @@
 
 #include <errno.h>
 #include <fcntl.h>
+#include <glib.h>
 #include <linux/limits.h>    // PATH_MAX, NAME_MAX
 #include <stdbool.h>
 #include <stdio.h>
 #include <string.h>
 #include <time.h>
 #include <unistd.h>
+
+#include <util/file_util.h>
 
 #include <base/ddc_errno.h>
 #include <base/common.h>
@@ -67,121 +70,241 @@ void report_loadvcp_data(Loadvcp_Data * data, int depth) {
    }
 }
 
+#ifdef USING_ITERATOR
+typedef void   (*Func_Iter_Init)(void* object);
+typedef char * (*Func_Next_Line)();
+typedef bool   (*Func_Has_Next)();
+typedef struct {
+           Func_Iter_Init  func_init;
+           Func_Next_Line  func_next;
+           Func_Has_Next   func_has_next;
+} Line_Iterator;
+
+GPtrArray * iter_garray = NULL;
+int         iter_garray_pos = 0;
+
+void   iter_garray_init(void * pobj) {
+   bool debug = true;
+   GPtrArray * garray = (GPtrArray*) pobj;
+   if (debug)
+      printf("(%s) garray=%p\n", __func__, garray);
+   iter_garray = garray;
+   iter_garray_pos = 0;
+}
+
+char * iter_garray_next_line() {
+   bool debug = true;
+   if (debug)
+      printf("(%s) Starting\n", __func__);
+
+   char * result = g_ptr_array_index(iter_garray, iter_garray_pos++);
+
+   if (debug) {
+      printf("(%s) Returning %p\n", __func__, result);
+      printf("(%s) Returning |%s|\n", __func__, result);
+   }
+   return result;
+}
+
+bool   iter_garray_has_next() {
+   bool debug = true;
+   if (debug)
+      printf("(%s) Starting\n", __func__);
+
+   bool result = (iter_garray_pos < iter_garray->len);
+
+   return result;
+}
+
+Line_Iterator g_ptr_iter = {
+        iter_garray_init,
+        iter_garray_next_line,
+        iter_garray_has_next
+    };
+
+Null_Terminated_String_Array  iter_ntsa     = NULL;
+int                            iter_ntsa_pos = 0;
+int                            iter_ntsa_len = 0;
+
+void iter_ntsa_init(void* pobj) {
+   bool debug = true;
+   Null_Terminated_String_Array  ntsa = (Null_Terminated_String_Array) pobj;
+   if (debug)
+      printf("(%s) ntsa=%p\n", __func__, ntsa);
+   iter_ntsa = ntsa;
+   iter_ntsa_pos = 0;
+   iter_ntsa_len = null_terminated_string_array_length(ntsa);
+}
+
+char * iter_ntsa_next_line() {
+   bool debug = true;
+   if (debug)
+      printf("(%s) Starting\n", __func__);
+
+   char * result = iter_ntsa[iter_ntsa_pos++];
+   if (debug) {
+      printf("(%s) Returning %p\n", __func__, result);
+      printf("(%s) Returning |%s|\n", __func__, result);
+   }
+   return result;
+}
+
+bool   iter_ntsa_has_next() {
+   bool debug = true;
+   if (debug)
+      printf("(%s) Starting\n", __func__);
+
+   bool result = (iter_ntsa_pos < iter_ntsa_len);
+
+   if (debug)
+      printf("(%s) Returning %d\n", __func__, result);
+   return result;
+}
+
+Line_Iterator ntsa_iter = {
+      iter_ntsa_init,
+      iter_ntsa_next_line,
+      iter_ntsa_has_next
+};
+#endif
+
+#ifdef USING_ITERATOR
+Loadvcp_Data* loadvcp_data_from_iterator(Line_Iterator iter) {
+#else
+Loadvcp_Data* loadvcp_data_from_g_ptr_array(GPtrArray * garray) {
+#endif
+   bool debug = true;
+   if (debug)
+      printf("(%s) Starting.\n", __func__);
+   Loadvcp_Data * data = calloc(1, sizeof(Loadvcp_Data));
+
+   bool validData = true;
+   data = calloc(1, sizeof(Loadvcp_Data));
+
+   // size_t len = 0;
+   // ssize_t read;
+   int     ct;
+
+   int     linectr = 0;
+
+#ifdef USING_ITERATOR
+   while ( (*iter.func_has_next)() ) {       // <---
+#else
+   while ( linectr < garray->len ) {
+#endif
+      char *  line = NULL;
+      char    s0[32], s1[257], s2[16];
+      char *  head;
+      char *  rest;
+
+#ifdef USING_ITERATOR
+      line = (*iter.func_next)();           // <---
+#else
+      line = g_ptr_array_index(garray,linectr);
+#endif
+      linectr++;
+
+      *s0 = '\0'; *s1 = '\0'; *s2 = '\0';
+      head = line;
+      while (*head == ' ') head++;
+      ct = sscanf(head, "%31s %256s %15s", s0, s1, s2);
+      if (ct > 0 && *s0 != '*' && *s0 != '#') {
+         if (ct == 1) {
+            printf("Invalid data at line %d: %s\n", linectr, line);
+            validData = false;
+         }
+         else {
+            rest = head + strlen(s0);;
+            while (*rest == ' ') rest++;
+            char * last = rest + strlen(rest) - 1;
+            // we already parsed a second token, so don't need to worry that last becomes < head
+            while (*last == ' ' || *last == '\n') {
+               *last-- = '\0';
+            }
+            // printf("(%s) rest=|%s|\n", __func__, rest );
+
+            if (streq(s0, "BUS")) {
+               ct = sscanf(s1, "%d", &data->busno);
+               if (ct == 0) {
+                  fprintf(stderr, "Invalid bus number at line %d: %s\n", linectr, line);
+                  validData = false;
+               }
+            }
+            else if (streq(s0, "EDID") || streq(s0, "EDIDSTR")) {
+               strncpy(data->edidstr, s1, sizeof(data->edidstr));
+            }
+            else if (streq(s0, "MFG_ID")) {
+               strncpy(data->mfg_id, s1, sizeof(data->mfg_id));
+            }
+            else if (streq(s0, "MODEL")) {
+               strncpy(data->model, rest, sizeof(data->model));
+            }
+            else if (streq(s0, "SN")) {
+               strncpy(data->serial_ascii, rest, sizeof(data->serial_ascii));
+            }
+            else if (streq(s0, "TIMESTAMP_TEXT")   ||
+                     streq(s0, "TIMESTAMP_MILLIS")
+
+                    ) {
+               // do nothing, just recognize valid field
+            }
+            else if (streq(s0, "VCP")) {
+               if (ct != 3) {
+                  fprintf(stderr, "Invalid VCP data at line %d: %s\n", linectr, line);
+                  validData = false;
+               }
+               else {
+                  int ndx = data->vcp_value_ct;
+                  Single_Vcp_Value * pval = &data->vcp_value[ndx];
+                  bool ok = hhs_to_byte_in_buf(s1, &pval->opcode);
+                  if (!ok) {
+                     printf("Invalid opcode at line %d: %s", linectr, s1);
+                     validData = false;
+                  }
+                  else {
+                     ct = sscanf(s2, "%hd", &pval->value);
+                     if (ct == 0) {
+                        fprintf(stderr, "Invalid value for opcode at line %d: %s\n", linectr, line);
+                        validData = false;
+                     }
+                     else {
+                        data->vcp_value_ct++;
+                     }
+                  }
+               }  // VCP
+
+            }
+            else {
+               fprintf(stderr, "Unexpected field \"%s\" at line %d: %s\n", s0, linectr, line );
+               validData = false;
+            }
+         }    // more than 1 field on line
+      }       // non-comment line
+   }          // one line of file
+
+   if (!validData)
+      data = NULL;
+   return data;
+}
+
 
 Loadvcp_Data * read_vcp_file(const char * fn) {
    // printf("(%s) Starting. fn=%s  \n", __func__, fn );
    Loadvcp_Data * data = NULL;
-   bool validData = false;
-   FILE * fp = fopen(fn, "r");
-   if (!fp) {
-      int errsv = errno;
-      fprintf(stderr, "%s: %s\n", strerror(errsv), fn);
+   GPtrArray * g_line_array = g_ptr_array_sized_new(100);
+   // issues message if error:
+   int rc = file_getlines(fn, g_line_array);
+   if (rc < 0) {
+      fprintf(stderr, "%s: %s\n", strerror(-rc), fn);
    }
    else {
-      validData = true;
-      data = calloc(1, sizeof(Loadvcp_Data));
-      char * line = NULL;
-      size_t len = 0;
-      ssize_t read;
-      int     ct;
-      char    s0[32], s1[257], s2[16];
-      char *  head;
-      char *  rest;
-      int     linectr = 0;
-
-      while ((read = getline(&line, &len, fp)) != -1) {
-         linectr++;
-         // printf("Retrieved line of length %zu :\n", read);
-         // printf("%s", line);
-         *s0 = '\0'; *s1 = '\0'; *s2 = '\0';
-         head = line;
-         while (*head == ' ') head++;
-         ct = sscanf(head, "%31s %256s %15s", s0, s1, s2);
-         if (ct > 0 && *s0 != '*' && *s0 != '#') {
-            if (ct == 1) {
-               printf("Invalid data at line %d: %s\n", linectr, line);
-               validData = false;
-            }
-            else {
-               rest = head + strlen(s0);;
-               while (*rest == ' ') rest++;
-               char * last = rest + strlen(rest) - 1;
-               // we already parsed a second token, so don't need to worry that last becomes < head
-               while (*last == ' ' || *last == '\n') {
-                  *last-- = '\0';
-               }
-               // printf("(%s) rest=|%s|\n", __func__, rest );
-
-               if (streq(s0, "BUS")) {
-                  ct = sscanf(s1, "%d", &data->busno);
-                  if (ct == 0) {
-                     fprintf(stderr, "Invalid bus number at line %d: %s\n", linectr, line);
-                     validData = false;
-                  }
-               }
-               else if (streq(s0, "EDID") || streq(s0, "EDIDSTR")) {
-                  strncpy(data->edidstr, s1, sizeof(data->edidstr));
-               }
-               else if (streq(s0, "MFG_ID")) {
-                  strncpy(data->mfg_id, s1, sizeof(data->mfg_id));
-               }
-               else if (streq(s0, "MODEL")) {
-                  strncpy(data->model, rest, sizeof(data->model));
-               }
-               else if (streq(s0, "SN")) {
-                  strncpy(data->serial_ascii, rest, sizeof(data->serial_ascii));
-               }
-               else if (streq(s0, "TIMESTAMP_TEXT")   ||
-                        streq(s0, "TIMESTAMP_MILLIS")
-
-                       ) {
-                  // do nothing, just recognize valid field
-               }
-               else if (streq(s0, "VCP")) {
-                  if (ct != 3) {
-                     fprintf(stderr, "Invalid VCP data at line %d: %s\n", linectr, line);
-                     validData = false;
-                  }
-                  else {
-                     int ndx = data->vcp_value_ct;
-                     Single_Vcp_Value * pval = &data->vcp_value[ndx];
-                     bool ok = hhs_to_byte_in_buf(s1, &pval->opcode);
-                     if (!ok) {
-                        printf("Invalid opcode at line %d: %s", linectr, s1);
-                        validData = false;
-                     }
-                     else {
-                        ct = sscanf(s2, "%hd", &pval->value);
-                        if (ct == 0) {
-                           fprintf(stderr, "Invalid value for opcode at line %d: %s\n", linectr, line);
-                           validData = false;
-                        }
-                        else {
-                           data->vcp_value_ct++;
-                        }
-                     }
-                  }  // VCP
-
-               }
-               else {
-                  fprintf(stderr, "Unexpected field \"%s\" at line %d: %s\n", s0, linectr, line );
-                  validData = false;
-               }
-            }    // more than 1 field on line
-         }       // non-comment line
-      }          // one line of file
-
-      if (line)
-         free(line);
+#ifdef USING_ITERATOR
+      (g_ptr_iter.func_init)(g_line_array);
+      data = loadvcp_data_from_iterator(g_ptr_iter);
+#else
+      data = loadvcp_data_from_g_ptr_array(g_line_array);
+#endif
    }
-
-   // report_Loadvcp_Data(data, 0);
-
-   if (!validData) {
-      free(data);
-      data = NULL;
-   }
-
    // printf("(%s) Returning: %p  \n", __func__, data );
    return data;
 }
@@ -249,6 +372,68 @@ bool loadvcp_from_file(const char * fn) {
    }
    return ok;
 }
+
+
+GPtrArray * g_ptr_array_from_ntsa(Null_Terminated_String_Array ntsa) {
+   int len = null_terminated_string_array_length(ntsa);
+   GPtrArray * garray = g_ptr_array_sized_new(len);
+   int ndx;
+   for (ndx=0; ndx<len; ndx++) {
+      g_ptr_array_add(garray, ntsa[ndx]);
+   }
+   return garray;
+}
+
+
+
+
+bool loadvcp_from_ntsa(Null_Terminated_String_Array ntsa) {
+   bool debug = true;
+
+   Output_Level output_level = get_output_level();
+   bool verbose = (output_level >= OL_VERBOSE);
+   // printf("(%s) output_level=%d, verbose=%d\n", __func__, output_level, verbose);
+   if (debug) {
+      printf("(%s) Starting.  ntsa=%p\n", __func__, ntsa);
+      verbose = true;
+   }
+   bool ok = false;
+
+   GPtrArray * garray = g_ptr_array_from_ntsa(ntsa);
+
+#ifdef USING_ITERATOR
+   (*ntsa_iter.func_init)(ntsa);
+   (g_ptr_iter.func_init)(garray);
+   if (debug)
+      printf("(%s) after func_init\n", __func__);
+// Both ways work.   Using loadvcp_from_ntsa is simpler, can change
+// loadvcp_data_from_iteractor to not take iterator object
+#ifdef WORKS
+   Loadvcp_Data * pdata = loadvcp_data_from_iterator(ntsa_iter);
+#endif
+   Loadvcp_Data * pdata = loadvcp_data_from_iterator(g_ptr_iter);
+#endif
+
+   Loadvcp_Data * pdata = loadvcp_data_from_g_ptr_array(garray);
+
+   if (debug)
+      printf("(%s) loadvcp_data_from_iterator() returned %p\n", __func__, pdata);
+   if (!pdata) {
+      fprintf(stderr, "Unable to load VCP data from string\n");
+   }
+   else {
+      if (verbose) {
+           printf("Loading VCP settings for monitor \"%s\", sn \"%s\" \n",
+                  pdata->model, pdata->serial_ascii);
+           report_loadvcp_data(pdata, 0);
+      }
+      ok = loadvcp_from_loadvcp_data(pdata);
+   }
+   return ok;
+}
+
+
+
 
 // TODO: generalize, get default dir following XDG settings
 #define USER_VCP_DATA_DIR ".local/share/icc"
@@ -411,14 +596,17 @@ char * dumpvcp_to_string_by_display_ref(Display_Ref * dref) {
 }
 
 
+
+
 Global_Status_Code loadvcp_from_string(char * catenated) {
    Null_Terminated_String_Array nta = strsplit(catenated, ";");
    int ct = null_terminated_string_array_length(nta);
-   printf("(%s) splint into %d lines\n", __func__, ct);
+   printf("(%s) split into %d lines\n", __func__, ct);
    int ndx = 0;
    for (; ndx < ct; ndx++) {
       printf("(%s) nta[ndx]=|%s|\n", __func__, nta[ndx]);
    }
 
-   return DDCL_UNIMPLEMENTED;    // TEMP
+   loadvcp_from_ntsa(nta);
+   return 0;      // temp
 }

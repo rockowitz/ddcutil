@@ -12,7 +12,7 @@
 
 
 
-int file_getlines(char * fn, GPtrArray* line_array);
+int file_getlines(const char * fn, GPtrArray* line_array);
 
 
 #endif /* FILE_UTIL_H_ */
