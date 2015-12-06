@@ -95,7 +95,8 @@ Display_Ref * create_adl_display_ref(int iAdapterIndex, int iDisplayIndex);
 void          report_display_ref(Display_Ref * dref, int depth);
 char *        display_ref_short_name_r(Display_Ref * dref, char * buf, int bufsize);
 char *        display_ref_short_name(Display_Ref * dref);  // value valid until next call
-Display_Ref * cloneDisplayRef(Display_Ref * old);
+Display_Ref * clone_display_ref(Display_Ref * old);
+void          free_display_ref(Display_Ref * dref);
 
 // are two Display_Ref's equal?
 bool dreq(Display_Ref* this, Display_Ref* that);
@@ -114,6 +115,7 @@ struct {
    int          iAdapterIndex;
    int          iDisplayIndex;
    Version_Spec vcp_version;
+   char *       capabilities_string;
 } Display_Handle;
 
 Display_Handle * create_bus_display_handle(int fh, int busno);

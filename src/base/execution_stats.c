@@ -400,7 +400,9 @@ int get_true_io_error_count(Status_Code_Counts * pcounts) {
 static const char * sleep_event_names[] = {
       "SE_WRITE_TO_READ",
       "SE_POST_OPEN",
-      "SE_POST_WRITE"};
+      "SE_POST_WRITE",
+      "SE_POST_READ"
+     };
 #define SLEEP_EVENT_ID_CT (sizeof(sleep_event_names)/sizeof(char *))
 
 
@@ -438,6 +440,9 @@ void call_tuned_sleep(DDC_IO_Mode io_mode, Sleep_Event_Type event_type) {
             sleep_time_millis = DDC_TIMEOUT_MILLIS_DEFAULT;
             break;
       case (SE_POST_OPEN):
+            sleep_time_millis = DDC_TIMEOUT_MILLIS_DEFAULT;
+            break;
+      case (SE_POST_READ):
             sleep_time_millis = DDC_TIMEOUT_MILLIS_DEFAULT;
             break;
       default:

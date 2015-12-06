@@ -234,4 +234,12 @@ char * tracing_multiple_call_option_help =
   //   "\n"
       ;
 
-
+char * retries_option_help =
+      "Retries:\n"
+      "  The argument to --retries is a comma separated list of 3 values:\n"
+      "    maximum write-only exchange count\n"
+      "    maximum write-read exchange count\n"
+      "    maximum multi-part-read exchange count\n"
+      "  A value of \"\" or \".\" leaves the default value unchanged\n"
+      "  e.g. --retries \",.,15\" changes only the maximum multi-part-read exchange count"
+      ;

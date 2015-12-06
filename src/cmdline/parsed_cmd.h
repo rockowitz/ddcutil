@@ -44,10 +44,11 @@ struct {
    Display_Identifier* pdid;
    Trace_Group         trace;
    Output_Level        output_level;   // new, to replace msg_level and programmatic_output
+   int                 max_tries[3];
 } Parsed_Cmd;
 
 Parsed_Cmd *  new_parsed_cmd();
 void free_parsed_cmd(Parsed_Cmd * parsed_cmd);
-void show_parsed_cmd(Parsed_Cmd * parsedCmd);   // debugging function
+void show_parsed_cmd(Parsed_Cmd * parsed_cmd);   // debugging function
 
 #endif /* PARSED_CMD_H_ */

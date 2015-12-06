@@ -69,6 +69,67 @@ bool is_abbrev(char * value, const char * longname, int minchars) {
    return result;
 }
 
+/* Trims leading and trailing whitespace from a string and
+ * returns the result in a buffer provided by the caller.
+ * If the buffer is insufficiently large, the result string
+ * is truncated.
+ *
+ * The result is always null terminated.
+ *
+ * Arguments:
+ *   s      string to trim (not modified)
+ *   buffer where to return result
+ *   bufsz  buffer size
+ *
+ * Returns:
+ *   pointer to truncated string (i.e. buffer)
+ */
+char * strtrim_r(const char * s, char * buffer, int bufsz) {
+   bool debug = false;
+   if (debug)
+      printf("(%s) s=|%s|\n", __func__, s);
+   int slen = strlen(s);
+   int startpos = 0;
+   int lastpos  = slen-1;   // n. -1 for 1 length string
+   while ( startpos < slen && isspace(s[startpos]) )
+      startpos++;
+   if (startpos < slen) {
+      while ( lastpos >= startpos && isspace(s[lastpos]))
+         lastpos--;
+   }
+   int tlen = 1 + lastpos - startpos;
+   if (debug)
+      printf("(%s) startpos=%d, lastpos=%d, tlen=%d\n", __func__, startpos, lastpos, tlen);
+   if (tlen > (bufsz-1))
+      tlen = bufsz-1;
+   memcpy(buffer, s+startpos, tlen);
+   buffer[tlen] = '\0';
+   if (debug)
+      printf("(%s) returning |%s|\n", __func__, buffer);
+   return buffer;
+}
+
+
+/* Trims leading and trailing whitespace from a string and
+ * returns the result in newly allocated memory.
+ * It is the caller's responsibility to free this memory.
+ * The result string is null terminated.
+ *
+ * Arguments:
+ *   s      string to trim (not modified)
+ *
+ * Returns:
+ *   truncated string
+ */
+char * strtrim(const char * s) {
+   int bufsz = strlen(s)+1;
+   char * buffer = calloc(1,bufsz);
+   strtrim_r(s, buffer, bufsz);
+   return buffer;
+}
+
+
+
 
 /* Joins an array of strings into a single string, using a separator string.
  *
@@ -127,25 +188,41 @@ String_Array* new_string_array(int size) {
 #endif
 
 
-Null_Terminated_String_Array strsplit(char * str_to_split, char sepchar) {
-   int max_pieces = (strlen(str_to_split)+1)/2;
-   char** workstruct = calloc(sizeof(char *), max_pieces);
+Null_Terminated_String_Array strsplit(char * str_to_split, char * delims) {
+   bool debug = false;
+   int max_pieces = (strlen(str_to_split)+1);
+   if (debug)
+      printf("(%s) str_to_split=|%s|, delims=|%s|, max_pieces=%d\n", __func__, str_to_split, delims, max_pieces);
+
+   char** workstruct = calloc(sizeof(char *), max_pieces+1);
    int piecect = 0;
 
    char * rest = str_to_split;
    char * token;
-   char delim = sepchar;
    // originally token assignment was in while() clause, but valgrind
    // complaining about uninitialized variable, trying to figure out why
-   token = strsep(&rest, &delim);
+   token = strsep(&rest, delims);
    while (token) {
       // printf("(%s) token: |%s|\n", __func__, token);
       workstruct[piecect++] = strdup(token);
-      token = strsep(&rest, &delim);
+      token = strsep(&rest, delims);
    }
+   if (debug)
+      printf("(%s) piecect=%d\n", __func__, piecect);
    char ** result = calloc(sizeof(char *), piecect+1);
    // n. workstruct[piecect] == NULL because we used calloc()
-   memcpy(result, workstruct, 4*(piecect+1));
+   memcpy(result, workstruct, (piecect+1)*sizeof(char*) );
+   if (debug) {
+      int ndx = 0;
+      char * curpiece = result[ndx];
+      while (curpiece != NULL) {
+         printf("(%s) curpiece=%p |%s|\n", __func__, curpiece, curpiece);
+         ndx++;
+         curpiece = result[ndx];
+
+      }
+
+   }
    free(workstruct);
    return result;
 }
@@ -160,14 +237,13 @@ void null_terminated_string_array_free(Null_Terminated_String_Array string_array
 
 int null_terminated_string_array_length(Null_Terminated_String_Array string_array) {
    int ndx = 0;
-   while (string_array[ndx] != NULL) {ndx++;}
+   while (string_array[ndx] != NULL) {
+      // printf("(%s) string_array[ndx] = %p\n", __func__, string_array[ndx]);
+      // printf("(%s) string_array[ndx] = |%s|\n", __func__, string_array[ndx]);
+      ndx++;
+   }
    return ndx;
 }
-
-
-
-
-
 
 
 /* Converts string to upper case.  The original string is converted in place.

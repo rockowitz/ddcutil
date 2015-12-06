@@ -110,6 +110,17 @@ int main(int argc, char *argv[]) {
    if (parsed_cmd->output_level >= OL_VERBOSE)
       show_reporting();
 
+   // where to check MAX_MAX_TRIES not exceeded?
+   if (parsed_cmd->max_tries[0] > 0) {
+      ddc_set_max_write_only_exchange_tries(parsed_cmd->max_tries[0]);
+   }
+   if (parsed_cmd->max_tries[1] > 0) {
+      ddc_set_max_write_read_exchange_tries(parsed_cmd->max_tries[1]);
+   }
+   if (parsed_cmd->max_tries[2] > 0) {
+      ddc_set_max_multi_part_read_tries(parsed_cmd->max_tries[2]);
+   }
+
    if (parsed_cmd->cmd_id == CMDID_LISTVCP) {
       vcp_list_feature_codes();
       main_rc = EXIT_SUCCESS;
@@ -191,9 +202,11 @@ int main(int argc, char *argv[]) {
 
          case CMDID_CAPABILITIES:
             {                   // needed for declared variables
-               Buffer * capabilities = NULL;
+               // Buffer * capabilities = NULL;
+               char * capabilities_string;
                // returns Global_Status_Code, but testing capabilities == NULL also checks for success
-               int rc = get_capabilities(dref, &capabilities);
+               // int rc = get_capabilities_buffer_by_display_ref(dref, &capabilities);
+               int rc = get_capabilities_string_by_display_ref(dref, &capabilities_string);
 
                if (rc < 0) {
                   char buf[100];
@@ -214,10 +227,13 @@ int main(int argc, char *argv[]) {
                   main_rc = EXIT_FAILURE;
                }
                else {
-                  assert(capabilities);
+                  // assert(capabilities);
+                  assert(capabilities_string);
                   // pcap is always set, but may be damaged if there was a parsing error
-                  Parsed_Capabilities * pcap = parse_capabilities_buffer(capabilities);
-                  buffer_free(capabilities, "capabilities");
+                  // Parsed_Capabilities * pcap = parse_capabilities_buffer(capabilities);
+                  // Parsed_Capabilities * pcap = parse_capabilities_string(capabilities->bytes);
+                  Parsed_Capabilities * pcap = parse_capabilities_string(capabilities_string);
+                  // buffer_free(capabilities, "capabilities");
                   report_parsed_capabilities(pcap);
                   free_parsed_capabilities(pcap);
                   main_rc = EXIT_SUCCESS;

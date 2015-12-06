@@ -197,7 +197,7 @@ bool ddc_is_valid_display_ref(Display_Ref * dref, bool emit_error_msg) {
 }
 
 
-// Retry Management
+// Retry Management and Statistics
 
 // 11/2015: do these MAX_MAX_ constants serve any purpose?
 // #define MAX_MAX_WRITE_ONLY_EXCHANGE_TRIES  15
@@ -208,9 +208,43 @@ static int max_write_only_exchange_tries =  MAX_WRITE_ONLY_EXCHANGE_TRIES;
 static int max_write_read_exchange_tries =  MAX_WRITE_READ_EXCHANGE_TRIES;
 
 
+static void * write_read_stats_rec = NULL;
+static void * write_only_stats_rec = NULL;
+
+
+void ddc_reset_write_read_stats() {
+   if (write_read_stats_rec)
+      try_data_reset(write_read_stats_rec);
+   else
+      write_read_stats_rec = try_data_create("ddc write/read", max_write_read_exchange_tries);
+}
+
+
+void ddc_report_write_read_stats() {
+   assert(write_read_stats_rec);
+   try_data_report(write_read_stats_rec);
+}
+
+
+void ddc_reset_write_only_stats() {
+   if (write_only_stats_rec)
+      try_data_reset(write_only_stats_rec);
+   else
+      write_only_stats_rec = try_data_create("ddc write only", max_write_only_exchange_tries);
+}
+
+
+void ddc_report_write_only_stats() {
+   assert(write_only_stats_rec);
+   try_data_report(write_only_stats_rec);
+}
+
+
 void ddc_set_max_write_only_exchange_tries(int ct) {
    assert(ct > 0 && ct <= MAX_MAX_TRIES);
    max_write_only_exchange_tries = ct;
+   if (write_only_stats_rec)
+      try_data_set_max_tries(write_only_stats_rec, ct);
 }
 
 
@@ -222,45 +256,14 @@ int ddc_get_max_write_only_exchange_tries() {
 void ddc_set_max_write_read_exchange_tries(int ct) {
    assert(ct > 0 && ct <= MAX_MAX_TRIES);
    max_write_read_exchange_tries = ct;
+   if (write_read_stats_rec)
+      try_data_set_max_tries(write_read_stats_rec, ct);
 }
 
 int ddc_get_max_write_read_exchange_tries() {
    return max_write_read_exchange_tries;
 }
 
-
-// Retry Statistics
-
-static void * write_read_stats_rec = NULL;
-static void * write_only_stats_rec = NULL;
-
-
-void ddc_reset_write_read_stats() {
-   if (write_read_stats_rec)
-      reset_try_data(write_read_stats_rec);
-   else
-      write_read_stats_rec = create_try_data("ddc write/read", max_write_read_exchange_tries);
-}
-
-
-void ddc_report_write_read_stats() {
-   assert(write_read_stats_rec);
-   report_try_data(write_read_stats_rec);
-}
-
-
-void ddc_reset_write_only_stats() {
-   if (write_only_stats_rec)
-      reset_try_data(write_only_stats_rec);
-   else
-      write_only_stats_rec = create_try_data("ddc write only", max_write_only_exchange_tries);
-}
-
-
-void ddc_report_write_only_stats() {
-   assert(write_only_stats_rec);
-   report_try_data(write_only_stats_rec);
-}
 
 
 // work in progress
@@ -325,6 +328,8 @@ Global_Status_Code ddc_i2c_write_read_raw(
    if (rc == 0) {
       call_tuned_sleep_i2c(SE_WRITE_TO_READ);
       rc = invoke_i2c_reader(dh->fh, max_read_bytes, readbuf);
+      // try adding to see if improves capabilities read for P2411H
+      call_tuned_sleep_i2c(SE_POST_READ);
       // note_io_event(IE_READ_AFTER_WRITE, __func__);
       if (rc == 0 && all_zero(readbuf, max_read_bytes)) {
          rc = DDCRC_READ_ALL_ZERO;
@@ -716,7 +721,7 @@ Global_Status_Code ddc_write_read_with_retry(
       }
 
    }
-   record_tries(write_read_stats_rec, rc, tryctr);
+   try_data_record_tries(write_read_stats_rec, rc, tryctr);
    TRCMSGTF(tf, "Done. rc=%s\n", gsc_desc(rc));
    return rc;
 }
@@ -874,7 +879,7 @@ Global_Status_Code ddc_write_only_with_retry( Display_Handle * dh, DDC_Packet * 
    }
    if (rc < 0 && retryable)
       rc = DDCRC_RETRIES;
-   record_tries(write_only_stats_rec, rc, tryctr);
+   try_data_record_tries(write_only_stats_rec, rc, tryctr);
 
    TRCMSGTF(tf, "Done. rc=%d", rc);
    return rc;

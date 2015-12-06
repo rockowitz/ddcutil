@@ -376,7 +376,7 @@ bool trace_buffer = false;    // controls buffer tracing
 // Returns:
 //   pointer to newly allocated Buffer instance
 
-Buffer * buffer_new(int size, char * trace_msg) {
+Buffer * buffer_new(int size, const char * trace_msg) {
    int hacked_size = size+16;     // try allocating extra space see if free failures go away - overruns?
    // printf("(%s) sizeof(Buffer)=%ld\n", __func__, sizeof(Buffer));    // is 16
    Buffer * buffer = (Buffer *) malloc(sizeof(Buffer));
@@ -399,7 +399,7 @@ Buffer * buffer_new(int size, char * trace_msg) {
 // Returns:
 //   nothing
 
-void buffer_free(Buffer * buffer, char * trace_msg) {
+void buffer_free(Buffer * buffer, const char * trace_msg) {
    if (trace_buffer_malloc_free)
       printf("(%s) Starting. buffer = %p\n", __func__, buffer);
    assert(buffer);

@@ -20,6 +20,7 @@
 #include "base/common.h"
 #include "base/displays.h"
 #include "base/msg_control.h"
+#include "base/parms.h"
 #include "base/util.h"
 
 #include "cmdline/parsed_cmd.h"
@@ -118,6 +119,7 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
    gchar**   trace_classes  = NULL;
    gint     buswork        = -1;
    gint     dispwork       = -1;
+   char *   maxtrywork      = NULL;
 
    GOptionEntry option_entries[] = {
    //  long_name short flags option-type          gpointer             description                    arg description
@@ -139,6 +141,7 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
       {"edid",    'e',  0, G_OPTION_ARG_STRING,   &edidwork,         "Monitor EDID",  "256 char hex string" },
       {"trace",   '\0', 0, G_OPTION_ARG_STRING_ARRAY, &trace_classes, "Trace classes",  "comma separated list" },
 //    {"trace",   '\0', 0, G_OPTION_ARG_STRING,   &tracework,        "Trace classes",  "comma separated list" },
+      {"maxtries",'\0', 0, G_OPTION_ARG_STRING,   &maxtrywork,        "Max try adjustment",  "comma separated list" },
       {"version", 'V',  0, G_OPTION_ARG_NONE,     &version_flag,     "Show version information", NULL},
 //    {"myusage", '\0', 0, G_OPTION_ARG_NONE,     &myusage_flag,     "Show usage", NULL},
 //    {"myhelp", '\0', 0,  G_OPTION_ARG_NONE,     &myhelp_flag,      "Show usage", NULL},
@@ -164,8 +167,11 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
    const char * pieces3[] = {commands_list_help, command_argument_help};
    char * help_summary = strjoin(pieces3, 2, NULL);
 
-   const char * pieces4[] = {monitor_selection_option_help    , tracing_multiple_call_option_help};
-   char * help_description = strjoin(pieces4,2, NULL);
+   const char * pieces4[] = {monitor_selection_option_help,
+                             tracing_multiple_call_option_help,
+                             "\n",
+                             retries_option_help};
+   char * help_description = strjoin(pieces4, 4, NULL);
 
    // on --help, comes after usage line, before option detail
    g_option_context_set_summary(context, help_summary);
@@ -262,6 +268,52 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
       fprintf(stderr, "--model and --sn must be specified together\n");
       ok = false;
    }
+
+   if (maxtrywork) {
+       bool saved_debug = debug;
+       debug = false;
+       if (debug)
+          printf("(%s) retrywork, argument = |%s|\n", __func__, maxtrywork );
+
+       Null_Terminated_String_Array pieces = strsplit(maxtrywork, ",");
+       int ntsal = null_terminated_string_array_length(pieces);
+       if (debug)
+          printf("(%s) ntsal=%d\n", __func__, ntsal );
+       if (null_terminated_string_array_length(pieces) != 3) {
+          fprintf(stderr, "--retries requires 3 values\n");
+          ok = false;
+       }
+       else {
+          int ndx = 0;
+          char trimmed_piece[10];
+          for (; pieces[ndx] != NULL; ndx++) {
+             char * token = strtrim_r(pieces[ndx], trimmed_piece, 10);
+             // printf("(%s) token=|%s|\n", __func__, token);
+             if (strlen(token) > 0 && !streq(token,".")) {
+                int ival;
+                int ct = sscanf(token, "%d", &ival);
+                if (ct != 1) {
+                   fprintf(stderr, "Invalid --maxtries value: %s\n", token);
+                   ok = false;
+                }
+                else if (ival > MAX_MAX_TRIES) {
+                   fprintf(stderr, "--maxtries value %d exceeds %d\n", ival, MAX_MAX_TRIES);
+                   ok = false;
+                }
+                else {
+                   parsed_cmd->max_tries[ndx] = ival;
+                }
+             }
+          }
+          assert(ndx == ntsal);
+       }
+       null_terminated_string_array_free(pieces);
+
+       if (debug)
+          printf("(%s) retries = %d,%d,%d\n", __func__, parsed_cmd->max_tries[0], parsed_cmd->max_tries[1], parsed_cmd->max_tries[2]);
+       debug = saved_debug;
+    }
+
 
 
 #ifdef COMMA_DELIMITED_TRACE

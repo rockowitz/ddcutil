@@ -32,10 +32,13 @@ bool   is_abbrev(char * value, const char * longname, int minchars);
 char * strupper(char * s);
 char * strjoin(const char ** pieces, const int ct, const char * sepstr);
 char * chars_to_string(char * start, int len);
+char * strtrim(const char * s);
+char * strtrim_r(const char * s, char * buffer, int bufsz);
+
 
 typedef char** Null_Terminated_String_Array;
 
-Null_Terminated_String_Array strsplit(char * str_to_split, char sepchar);
+Null_Terminated_String_Array strsplit(char * str_to_split, char* delims);
 void null_terminated_string_array_free(Null_Terminated_String_Array string_array);
 int null_terminated_string_array_length(Null_Terminated_String_Array string_array);
 

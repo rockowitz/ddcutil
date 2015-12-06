@@ -65,6 +65,9 @@ void show_parsed_cmd(Parsed_Cmd * parsed_cmd) {
    for (ndx = 0; ndx < parsed_cmd->argct; ndx++) {
       printf("  argument %d:  %s\n", ndx, parsed_cmd->args[ndx]);
    }
+   char buf[20];
+   snprintf(buf,20, "%d,%d,%d", parsed_cmd->max_tries[0], parsed_cmd->max_tries[1], parsed_cmd->max_tries[2] );
+   rpt_str("max_retries",  NULL, buf, d1);
 }
 
 

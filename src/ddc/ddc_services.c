@@ -845,23 +845,20 @@ Version_Spec get_vcp_version_by_display_ref(Display_Ref * dref) {
    return dref->vcp_version;
 }
 
-
 /* Executes the VCP Get Capabilities command to obtain the
  * capabilities string.  The string is returned in null terminated
  * form in a Buffer struct.  It is the responsibility of the caller to
  * free this struct.
  *
  * Arguments:
- *    dref                  pointer to display reference
+ *    dh                    pointer to display handle
  *    ppCapabilitiesBuffer  address at which to return pointer to allocated Buffer
  *
  * Returns:
  *   status code
  */
-Global_Status_Code get_capabilities(Display_Ref * dref, Buffer** ppCapabilitiesBuffer) {
+Global_Status_Code get_capabilities_buffer_by_display_handle(Display_Handle * dh, Buffer** ppCapabilitiesBuffer) {
    int rc;
-
-   Display_Handle* dh = ddc_open_display(dref, EXIT_IF_FAILURE);
 
    rc = multi_part_read_with_retry(
            dh,
@@ -884,6 +881,50 @@ Global_Status_Code get_capabilities(Display_Ref * dref, Buffer** ppCapabilitiesB
       buffer_set_byte(cap_buffer, len, '\0');
       buffer_set_length(cap_buffer, len+1);
    }
+   return rc;
+}
+
+Global_Status_Code get_capabilities_string_by_display_handle(Display_Handle * dh, char** pcaps) {
+   Global_Status_Code gsc = 0;
+   if (!dh->capabilities_string) {
+      Buffer * pcaps_buffer;
+      gsc = get_capabilities_buffer_by_display_handle(dh, &pcaps_buffer);
+      if (gsc == 0) {
+         dh->capabilities_string = strdup((char *) pcaps_buffer->bytes);
+         buffer_free(pcaps_buffer,__func__);
+      }
+   }
+   *pcaps = dh->capabilities_string;
+   return gsc;
+}
+
+
+/* Executes the VCP Get Capabilities command to obtain the
+ * capabilities string.  The string is returned in null terminated
+ * form in a Buffer struct.  It is the responsibility of the caller to
+ * free this struct.
+ *
+ * Arguments:
+ *    dref                  pointer to display reference
+ *    ppCapabilitiesBuffer  address at which to return pointer to allocated Buffer
+ *
+ * Returns:
+ *   status code
+ */
+Global_Status_Code get_capabilities_buffer_by_display_ref(Display_Ref * dref, Buffer** ppCapabilitiesBuffer) {
+   int rc;
+   Display_Handle* dh = ddc_open_display(dref, EXIT_IF_FAILURE);
+   rc = get_capabilities_buffer_by_display_handle(dh, ppCapabilitiesBuffer);
    ddc_close_display(dh);
    return rc;
 }
+
+
+Global_Status_Code get_capabilities_string_by_display_ref(Display_Ref * dref, char** pcaps) {
+   int rc;
+   Display_Handle* dh = ddc_open_display(dref, EXIT_IF_FAILURE);
+   rc = get_capabilities_string_by_display_handle(dh, pcaps);
+   ddc_close_display(dh);
+   return rc;
+}
+

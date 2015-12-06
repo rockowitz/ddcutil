@@ -203,6 +203,14 @@ Display_Ref * clone_display_ref(Display_Ref * old) {
    return dref;
 }
 
+void free_display_ref(Display_Ref * dref) {
+   if (dref) {
+      assert(memcmp(dref->marker, DISPLAY_REF_MARKER,4) == 0);
+      dref->marker[3] = 'x';
+      free(dref);
+   }
+}
+
 bool dreq(Display_Ref* this, Display_Ref* that) {
    bool result = false;
    if (!this && !that)

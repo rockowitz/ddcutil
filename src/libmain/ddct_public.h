@@ -9,9 +9,12 @@
 #ifndef DDCT_PUBLIC_H_
 #define DDCT_PUBLIC_H_
 
+#include <stdbool.h>
 
-#include "base/ddc_base_defs.h"
-#include "base/displays.h"
+#include "util/coredefs.h"
+
+// #include "base/ddc_base_defs.h"
+// #include "base/displays.h"
 // #include "base/ddc_packets.h"      // temp, for Interpreted_Vcp_Code
 
 typedef struct {
@@ -19,6 +22,12 @@ typedef struct {
    int    minor;
    int    build;
 } DDCT_Version_Spec;
+
+typedef struct {
+   int    major;
+   int    minor;
+} DDCT_MCCS_Version_Spec;
+
 
 
 typedef struct {
@@ -40,6 +49,8 @@ typedef void * DDCT_Display_Identifier;
 
 void ddct_free_table_value_response(DDCT_Table_Value_Response * table_value_response);
 
+void ddct_init();
+
 
 typedef int DDCT_Status;    // for now
 
@@ -52,24 +63,24 @@ DDCT_Version_Spec ddct_get_version();       // ddctool version
 
 bool ddct_built_with_adl();
 #define  DDCT_BUILT_WITH_ADL  0x01
-unsigned long get_ddct_global_flags();
+unsigned long ddct_get_global_flags();
 // or: more generalizable: return a byte of flags, one of which is DDCT_SUPPORTS_ADL
 
 
 // Get and set max retries
 // Get and set timeouts
 
-typedef enum{DDCT_WRITE_ONLY_TRIES, DDCT_WRITE_READ_TRIES, DDCT_MULTIPART_TRIES} DDCT_Retry_Type;
+typedef enum{DDCT_WRITE_ONLY_TRIES, DDCT_WRITE_READ_TRIES, DDCT_MULTI_PART_TRIES} DDCT_Retry_Type;
 
 int  ddct_get_max_tries(DDCT_Retry_Type retry_type);
-void ddct_set_max_tries(DDCT_Retry_Type retry_type, int max_tries);
+DDCT_Status ddct_set_max_tries(DDCT_Retry_Type retry_type, int max_tries);
 
 typedef enum{DDCT_TIMEOUT_STANDARD, DDCT_TIMEOUT_TABLE_RETRY} DDCT_Timeout_Type;
-int ddct_get_timeout_millis(DDCT_Timeout_Type timeout_type);
+int  ddct_get_timeout_millis(DDCT_Timeout_Type timeout_type);
 void ddct_set_timeout_millis(DDCT_Timeout_Type timeout_type, int millisec);
 
 
-Display_Info_List ddct_get_displays();
+// Display_Info_List ddct_get_displays();
 
 
 // if want Display_Identifier to be opaque, need to return pointer
@@ -96,22 +107,28 @@ DDCT_Status ddct_create_model_sn_display_identifier(
                DDCT_Display_Identifier* pdid);
 DDCT_Status ddct_create_edid_display_identifier(
                Byte * edid,
-               Display_Identifier * pdid);      // 128 byte edid
+               DDCT_Display_Identifier * pdid);      // 128 byte edid
 DDCT_Status ddct_free_display_identifier(DDCT_Display_Identifier ddct_did);
+
+DDCT_Status ddct_repr_display_identifier(DDCT_Display_Identifier ddct_did, char** repr);
 
 
 typedef void * DDCT_Display_Ref;
 typedef void * DDCT_Display_Handle;
 
 DDCT_Status ddct_get_display_ref(DDCT_Display_Identifier did, DDCT_Display_Ref* ddct_dref);
+DDCT_Status ddct_free_display_ref(DDCT_Display_Ref ddct_ref);
+DDCT_Status ddct_repr_display_ref(DDCT_Display_Ref ddct_dref, char** repr);
 
 DDCT_Status ddct_open_display(DDCT_Display_Ref dref, DDCT_Display_Handle * pdh);
 
 DDCT_Status ddct_close_display(DDCT_Display_Handle ddct_dh);
 
-DDCT_Status ddct_get_mccs_version(DDCT_Display_Handle ddct_dh, Version_Spec* pspec);
+DDCT_Status ddct_repr_display_handle(DDCT_Display_Handle ddct_dh, char** repr);
 
-DDCT_Status ddct_get_edid(Display_Handle * dh, Byte * edid_buffer);    // edid_buffer must be >= 128 bytes
+DDCT_Status ddct_get_mccs_version(DDCT_Display_Handle ddct_dh, DDCT_MCCS_Version_Spec* pspec);
+
+DDCT_Status ddct_get_edid(DDCT_Display_Handle * dh, Byte * edid_buffer);    // edid_buffer must be >= 128 bytes
 DDCT_Status ddct_get_edid_by_display_ref(DDCT_Display_Ref ddct_dref, Byte ** pbytes);   // pointer into ddctool data structures, do not free
 
 DDCT_Status ddct_get_nontable_vcp_value(
@@ -126,10 +143,18 @@ DDCT_Status ddct_get_table_vcp_value(
                Byte**              value_bytes);
 
 // flags for
-// DDCT_VCP_CONTINUOUS
-// DDCT_VCP_NONCONT
-// DDCT_VCP_NONCONT_SL
-// DDCT_VCP_TABLE
+#define DDCT_CONTINUOUS   0x4000
+#define DDCT_SIMPLE_NC    0x2000
+#define DDCT_COMPLEX_NC   0x1000
+#define DDCT_NC           (DDCT_SIMPLE_NC | DDCT_COMPLEX_NC)
+#define DDCT_TABLE        0x0800
+#define DDCT_KNOWN        (DDCT_CONTINUOUS | DDCT_NC | DDCT_TABLE)
+#define DDCT_RO           0x0400
+#define DDCT_WO           0x0200
+#define DDCT_RW           0x0100
+#define DDCT_READABLE     (DDCT_RO | DDCT_RW)
+#define DDCT_WRITABLE     (DDCT_WO | DDCT_RW)
+
 
 // or return a struct?
 DDCT_Status ddct_get_feature_info(VCP_Feature_Code feature_code, unsigned long * flags);
@@ -141,6 +166,19 @@ DDCT_Status ddct_get_feature_sl_value_table(
                DDCT_Display_Handle   ddct_dh,
                VCP_Feature_Code      feature_code,
                Feature_Value_Table * value_table);
+
+DDCT_Status ddct_get_supported_feature_sl_value_table(
+               DDCT_Display_Handle   ddct_dh,
+               VCP_Feature_Code      feature_code,
+               Feature_Value_Table * value_table);
+
+DDCT_Status ddct_is_feature_supported(
+      DDCT_Display_Handle   ddct_dh,
+      VCP_Feature_Code      feature_code,
+      bool *                answer);
+
+
+
 
 DDCT_Status ddct_set_nontable_vcp_value(
                DDCT_Display_Handle  ddct_dh,
@@ -154,7 +192,7 @@ DDCT_Status ddct_set_table_vcp_value(
                Byte *               value_bytes);
 
 // caller allocate buffer, or should function?
-DDCT_Status ddct_get_capabilities_string(DDCT_Display_Ref ddct_dref, char** buffer);
+DDCT_Status ddct_get_capabilities_string(DDCT_Display_Handle ddct_dh, char** buffer);
 
 typedef void Parsed_Capabilities;    // TEMP
 

@@ -3,10 +3,32 @@
 # AM_CFLAGS = -Wall -Werror
 AM_CFLAGS = -Wall 
 
-bin_PROGRAMS = ddctool
+# Is this really necessary?   Don't want to push these files to github.
+# there ought to be a cleaner way
+# MOSTLYCLEANFILES =    \
+# base/.deps/*          \
+# cmdline/.deps/*       \
+# ddc/.deps/*.Po        \
+# i2c/.deps/*           \
+# main/.deps/*          \
+# test/ddc/.deps/*      \
+# test/i2c/.deps/*      \
+# test/.deps/*          \
+# util/.deps/*          \
+# adl/.deps/*           \
+# adl/adl_impl/.deps/*  \
+# adl/adl_mock_impl/.deps/*  
+
+
+
+bin_PROGRAMS = ddctool laclient
 lib_LTLIBRARIES = libddctool.la
 
 ddctool_CFLAGS = $(AM_FLAGS)
+laclient_CFLAGS = $(AM_FLAGS)
+
+laclient_SOURCES = \
+clients/clmain.c
 
 ddctool_SOURCES = \
 base/common.c \
@@ -172,3 +194,5 @@ endif
 ddctool_LDADD =                  \
    $(GLIB_LIBS)
 
+laclient_LDADD = \
+   libddctool.la

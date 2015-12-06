@@ -71,10 +71,10 @@ struct {
    int        len;
 } Buffer;
 
-Buffer * buffer_new(int size, char * trace_msg);
+Buffer * buffer_new(int size, const char * trace_msg);
 int      buffer_length(Buffer * buffer);
 void     buffer_set_length(Buffer * buffer, int bytect);
-void     buffer_free(Buffer * buffer, char * trace_msg);
+void     buffer_free(Buffer * buffer, const char * trace_msg);
 void     buffer_put(Buffer * buffer, Byte * bytes, int bytect);
 void     buffer_set_byte(Buffer * buffer, int offset, Byte byte);
 void     buffer_set_bytes(Buffer * buffer, int offset, Byte * bytes, int bytect);

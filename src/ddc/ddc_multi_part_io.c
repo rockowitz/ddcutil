@@ -50,32 +50,33 @@ static Trace_Group TRACE_GROUP = TRC_DDC;
 // Maximum number of capabilities exchange tries allowed. Can be adjusted.
 static int max_multi_part_read_tries = MAX_MULTI_EXCHANGE_TRIES;
 
-// Resets the maximum number of capabilities exchange tries allowed
-void set_max_multi_part_read_tries(int ct) {
-   assert(ct > 0 && ct <= MAX_MAX_MULTI_EXCHANGE_TRIES);
-   max_multi_part_read_tries = ct;
-}
-
-// Gets the maximum number of capabilities exchange tries allowed
-int get_max_multi_part_read_tries() {
-   return max_multi_part_read_tries;
-}
-
-
 static void * multi_part_read_stats_rec = NULL;
 
 void ddc_reset_multi_part_read_stats() {
    if (multi_part_read_stats_rec)
-      reset_try_data(multi_part_read_stats_rec);
+      try_data_reset(multi_part_read_stats_rec);
    else
-      multi_part_read_stats_rec = create_try_data("multi-part exchange", max_multi_part_read_tries);
+      multi_part_read_stats_rec = try_data_create("multi-part exchange", max_multi_part_read_tries);
 }
 
 void ddc_report_multi_part_read_stats() {
    assert(multi_part_read_stats_rec);
-   report_try_data(multi_part_read_stats_rec);
+   try_data_report(multi_part_read_stats_rec);
 }
 
+
+// Resets the maximum number of capabilities exchange tries allowed
+void ddc_set_max_multi_part_read_tries(int ct) {
+   assert(ct > 0 && ct <= MAX_MAX_MULTI_EXCHANGE_TRIES);
+   max_multi_part_read_tries = ct;
+   if (multi_part_read_stats_rec)
+         try_data_set_max_tries(multi_part_read_stats_rec, ct);
+}
+
+// Gets the maximum number of capabilities exchange tries allowed
+int ddc_get_max_multi_part_read_tries() {
+   return max_multi_part_read_tries;
+}
 
 
 
@@ -260,7 +261,7 @@ Global_Status_Code multi_part_read_with_retry(
    }
 
    // if counts for DDCRC_ALL_TRIES_ZERO?
-   record_tries(multi_part_read_stats_rec, rc, try_ctr);
+   try_data_record_tries(multi_part_read_stats_rec, rc, try_ctr);
    *ppbuffer = accumulator;
    return rc;
 }

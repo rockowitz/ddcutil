@@ -41,7 +41,10 @@ Version_Spec get_vcp_version_by_display_handle(Display_Handle * dh);
 Version_Spec get_vcp_version_by_display_ref(Display_Ref * dref);
 
 // Get capability string for monitor.
-Global_Status_Code get_capabilities(Display_Ref * pdisp, Buffer** ppCapabilitiesBuffer);
+Global_Status_Code get_capabilities_buffer_by_display_handle(Display_Handle * dh, Buffer** ppCapabilitiesBuffer);
+Global_Status_Code get_capabilities_string_by_display_handle(Display_Handle * dh, char** pcaps);
+Global_Status_Code get_capabilities_buffer_by_display_ref(Display_Ref * pdisp, Buffer** ppCapabilitiesBuffer);
+Global_Status_Code get_capabilities_string_by_display_ref(Display_Ref * pdisp, char** pcaps);
 
 
 #endif /* DDC_SERVICES_H_ */
