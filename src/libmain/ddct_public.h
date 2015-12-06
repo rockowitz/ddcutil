@@ -76,6 +76,7 @@ int  ddct_get_max_tries(DDCT_Retry_Type retry_type);
 DDCT_Status ddct_set_max_tries(DDCT_Retry_Type retry_type, int max_tries);
 
 typedef enum{DDCT_TIMEOUT_STANDARD, DDCT_TIMEOUT_TABLE_RETRY} DDCT_Timeout_Type;
+// Unimplemented:
 int  ddct_get_timeout_millis(DDCT_Timeout_Type timeout_type);
 void ddct_set_timeout_millis(DDCT_Timeout_Type timeout_type, int millisec);
 
@@ -128,7 +129,7 @@ DDCT_Status ddct_repr_display_handle(DDCT_Display_Handle ddct_dh, char** repr);
 
 DDCT_Status ddct_get_mccs_version(DDCT_Display_Handle ddct_dh, DDCT_MCCS_Version_Spec* pspec);
 
-DDCT_Status ddct_get_edid(DDCT_Display_Handle * dh, Byte * edid_buffer);    // edid_buffer must be >= 128 bytes
+// DDCT_Status ddct_get_edid(DDCT_Display_Handle * dh, Byte * edid_buffer);    // edid_buffer must be >= 128 bytes
 DDCT_Status ddct_get_edid_by_display_ref(DDCT_Display_Ref ddct_dref, Byte ** pbytes);   // pointer into ddctool data structures, do not free
 
 DDCT_Status ddct_get_nontable_vcp_value(
@@ -160,16 +161,19 @@ char *      ddct_get_feature_name(VCP_Feature_Code feature_code);
 
 typedef void * Feature_Value_Table;   // temp
 
+// Unimplemented
 DDCT_Status ddct_get_feature_sl_value_table(
                DDCT_Display_Handle   ddct_dh,
                VCP_Feature_Code      feature_code,
                Feature_Value_Table * value_table);
 
+// Unimplemented
 DDCT_Status ddct_get_supported_feature_sl_value_table(
                DDCT_Display_Handle   ddct_dh,
                VCP_Feature_Code      feature_code,
                Feature_Value_Table * value_table);
 
+// Unimplemented
 DDCT_Status ddct_is_feature_supported(
       DDCT_Display_Handle   ddct_dh,
       VCP_Feature_Code      feature_code,
@@ -197,7 +201,7 @@ DDCT_Status ddct_set_raw_vcp_value(
                Byte                 lo_byte);
 
 
-// Unimplemented
+// Implemented, but untested
 DDCT_Status ddct_get_table_vcp_value(
                DDCT_Display_Handle ddct_dh,
                VCP_Feature_Code    feature_code,
@@ -220,8 +224,6 @@ DDCT_Status ddct_parse_capabilities_string(char * capabilities_string, DDCT_Pars
 
 DDCT_Status ddct_get_profile_related_values(DDCT_Display_Handle ddct_dh, char** pprofile_values_string);
 
-// Unimplemented
 DDCT_Status ddct_set_profile_related_values(char * profile_values_string);
-
 
 #endif /* DDCT_PUBLIC_H_ */

@@ -175,6 +175,22 @@ DDCT_Status ddct_create_mon_ser_display_identifier(
    return rc;
 }
 
+DDCT_Status ddct_create_edid_display_identifier(
+               Byte * edid,
+               DDCT_Display_Identifier * pdid)    // 128 byte EDID
+{
+   *pdid = NULL;
+   DDCT_Status rc = 0;
+   if (edid == NULL) {
+      rc = DDCL_ARG;
+      *pdid = NULL;
+   }
+   else {
+      *pdid = create_edid_display_identifier(edid);
+   }
+   return rc;
+}
+
 DDCT_Status ddct_free_display_identifier(DDCT_Display_Identifier did) {
    DDCT_Status rc = 0;
    Display_Identifier * pdid = (Display_Identifier *) did;
@@ -505,6 +521,30 @@ DDCT_Status ddct_get_nontable_vcp_value(
        else rc = gsc;    // ??
     } );
 }
+
+// untested
+DDCT_Status ddct_get_table_vcp_value(
+               DDCT_Display_Handle ddct_dh,
+               VCP_Feature_Code    feature_code,
+               int *               value_len,
+               Byte**              value_bytes)
+{
+   WITH_DH(ddct_dh,
+      {
+         Buffer * p_table_bytes;
+         rc =  get_table_vcp_by_display_handle(dh, feature_code, &p_table_bytes);
+         if (rc == 0) {
+            int len = p_table_bytes->len;
+            *value_len = len;
+            *value_bytes = malloc(len);
+            memcpy(*value_bytes, p_table_bytes->bytes, len);
+            buffer_free(p_table_bytes, __func__);
+         }
+      }
+     );
+}
+
+
 
 
 DDCT_Status ddct_set_continuous_vcp_value(

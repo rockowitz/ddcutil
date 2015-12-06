@@ -214,8 +214,19 @@ Global_Status_Code get_vcp_by_display_handle(
 }
 
 
+/* Gets the value of a table feature in a newly allocated Buffer struct.
+ * It is the responsibility of the caller to free the Buffer.
+ *
+ * Arguments:
+ *    dh         display handle
+ *    feature_code   VCP feature code
+ *    pp_table_bytes save address of newly allocated Buffer struct here
+ *
+ * Returns:
+ *    status code
+ */
 Global_Status_Code get_table_vcp_by_display_handle(
-       Display_Handle *       pDispHandle,
+       Display_Handle *       dh,
        Byte                   feature_code,
        Buffer**               pp_table_bytes)
 {
@@ -229,7 +240,7 @@ Global_Status_Code get_table_vcp_by_display_handle(
    Buffer * paccumulator =  NULL;
 
    gsc = multi_part_read_with_retry(
-            pDispHandle,
+            dh,
             DDC_PACKET_TYPE_TABLE_READ_REQUEST,
             feature_code,
             &paccumulator);
