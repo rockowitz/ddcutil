@@ -251,14 +251,21 @@ int main(int argc, char** argv) {
    }
 
    if (dh) {
-      char * pprofile_values_string;
-      rc = ddct_get_profile_related_values(dh, &pprofile_values_string);
+      char * profile_values_string;
+      rc = ddct_get_profile_related_values(dh, &profile_values_string);
       if (rc != 0) {
-         FUNCTION_ERRMSG("ddct_open_display", rc);
+         FUNCTION_ERRMSG("ddct_get_profile_related_values", rc);
       }
       else {
-         printf("(%s) profile values string = %s\n", __func__, pprofile_values_string);
+         printf("(%s) profile values string = %s\n", __func__, profile_values_string);
       }
+
+      printf("(%s) Calling ddct_set_profile_related_values()\n", __func__);
+      rc = ddct_set_profile_related_values( profile_values_string);
+      if (rc != 0) {
+         FUNCTION_ERRMSG("ddct_set_profile_related_values", rc);
+      }
+
 
    }
 

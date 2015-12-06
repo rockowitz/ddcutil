@@ -185,7 +185,7 @@ int main(int argc, char *argv[]) {
    else if (parsed_cmd->cmd_id == CMDID_LOADVCP) {
       char * fn = strdup( parsed_cmd->args[0] );
       // printf("(%s) Processing command loadvcp.  fn=%s\n", __func__, fn );
-      bool ok = loadvcp(fn);
+      bool ok = loadvcp_from_file(fn);
       main_rc = (ok) ? EXIT_SUCCESS : EXIT_FAILURE;
    }
 

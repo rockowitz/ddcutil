@@ -578,3 +578,6 @@ DDCT_Status ddct_get_profile_related_values(DDCT_Display_Handle ddct_dh, char** 
    );
 }
 
+DDCT_Status ddct_set_profile_related_values(char * profile_values_string) {
+   Global_Status_Code gsc = loadvcp_from_string(profile_values_string);
+}

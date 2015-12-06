@@ -15,6 +15,7 @@
 #include <time.h>
 #include <unistd.h>
 
+#include <base/ddc_errno.h>
 #include <base/common.h>
 #include <base/displays.h>
 #include <util/report_util.h>
@@ -186,7 +187,45 @@ Loadvcp_Data * read_vcp_file(const char * fn) {
 }
 
 
-bool loadvcp(const char * fn) {
+bool loadvcp_from_loadvcp_data(Loadvcp_Data* pdata) {
+   bool debug = true;
+   bool ok = false;
+   // printf("(%s) Searching for monitor  \n", __func__ );
+   if (debug) {
+        printf("(%s) Loading VCP settings for monitor \"%s\", sn \"%s\" \n",
+               __func__,
+               pdata->model, pdata->serial_ascii);
+        report_loadvcp_data(pdata, 0);
+   }
+   Display_Ref * dref = ddc_find_display_by_model_and_sn(pdata->model, pdata->serial_ascii);
+   if (!dref) {
+      fprintf(stderr, "Monitor not connected: %s - %s   \n", pdata->model, pdata->serial_ascii );
+   }
+   else {
+      // reportDisplayRef(dref, 1);
+      Display_Handle * dh = ddc_open_display(dref, EXIT_IF_FAILURE);
+      int ndx;
+      for (ndx=0; ndx < pdata->vcp_value_ct; ndx++) {
+         Byte feature_code = pdata->vcp_value[ndx].opcode;
+         int  new_value    = pdata->vcp_value[ndx].value;
+         // printf("(%s) feature_code=0x%02x, new_value=%d\n", __func__, feature_code, new_value );
+
+         int rc =set_vcp_by_display_handle(dh, feature_code, new_value);
+         if (rc != 0) {
+            printf("(%s) set_vcp_for_DisplayHandle() returned %d   \n", __func__, rc );
+            printf("(%s) Terminating.  \n", __func__ );
+            break;
+         }
+      }
+      ok = true;
+   }
+   return ok;
+}
+
+
+
+
+bool loadvcp_from_file(const char * fn) {
    // Msg_Level msg_level = get_global_msg_level();
    Output_Level output_level = get_output_level();
    // printf("(%s) msgLevel=%d\n", __func__, msgLevel);
@@ -201,41 +240,18 @@ bool loadvcp(const char * fn) {
       fprintf(stderr, "Unable to load VCP data from file: %s\n", fn);
    }
    else {
-      // printf("(%s) Searching for monitor  \n", __func__ );
       if (verbose) {
            printf("Loading VCP settings for monitor \"%s\", sn \"%s\" from file: %s\n",
                   pdata->model, pdata->serial_ascii, fn);
            report_loadvcp_data(pdata, 0);
       }
-      Display_Ref * dref = ddc_find_display_by_model_and_sn(pdata->model, pdata->serial_ascii);
-      if (!dref) {
-         fprintf(stderr, "Monitor not connected: %s - %s   \n", pdata->model, pdata->serial_ascii );
-      }
-         else {
-            // reportDisplayRef(dref, 1);
-            Display_Handle * dh = ddc_open_display(dref, EXIT_IF_FAILURE);
-            int ndx;
-            for (ndx=0; ndx < pdata->vcp_value_ct; ndx++) {
-               Byte feature_code = pdata->vcp_value[ndx].opcode;
-               int  new_value    = pdata->vcp_value[ndx].value;
-               // printf("(%s) feature_code=0x%02x, new_value=%d\n", __func__, feature_code, new_value );
-
-               int rc =set_vcp_by_display_handle(dh, feature_code, new_value);
-               if (rc != 0) {
-                  printf("(%s) set_vcp_for_DisplayHandle() returned %d   \n", __func__, rc );
-                  printf("(%s) Terminating.  \n", __func__ );
-                  break;
-               }
-            }
-            ok = true;
-         }
-      }
-      return ok;
+      ok = loadvcp_from_loadvcp_data(pdata);
+   }
+   return ok;
 }
 
 // TODO: generalize, get default dir following XDG settings
 #define USER_VCP_DATA_DIR ".local/share/icc"
-
 
 
 char * create_simple_vcp_fn(Display_Ref * dref, time_t time_millis, char * buf, int bufsz) {
@@ -395,3 +411,14 @@ char * dumpvcp_to_string_by_display_ref(Display_Ref * dref) {
 }
 
 
+Global_Status_Code loadvcp_from_string(char * catenated) {
+   Null_Terminated_String_Array nta = strsplit(catenated, ";");
+   int ct = null_terminated_string_array_length(nta);
+   printf("(%s) splint into %d lines\n", __func__, ct);
+   int ndx = 0;
+   for (; ndx < ct; ndx++) {
+      printf("(%s) nta[ndx]=|%s|\n", __func__, nta[ndx]);
+   }
+
+   return DDCL_UNIMPLEMENTED;    // TEMP
+}
