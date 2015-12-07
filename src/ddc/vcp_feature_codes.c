@@ -1172,6 +1172,13 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
      //  .formatter=format_feature_detail_debug_bytes,
      .nc_sl_values = x60_v2_input_source_values     // used only for V2
    },
+   {
+     .code=0x62,
+     .name="Audio speaker volume",
+     .flags=VCP_RW | VCP_CONTINUOUS,         // actually v2: C, v3: NC
+     .formatter=format_feature_detail_standard_continuous,
+     // requires special handling for V3, mix of C and NC, SL byte only
+   },
    { .code=0x66,
      .name="Ambient light sensor",
      .flags=VCP_RW | VCP_NON_CONT,

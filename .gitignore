@@ -43,3 +43,4 @@ m4/
 src/.libs
 /fedora_gcc_paths.txt
 /ubuntu_gcc_paths.txt
+monitors/

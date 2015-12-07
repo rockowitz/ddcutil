@@ -35,6 +35,21 @@
 // need to find a copy of the v2.2 MCCS spec to confirm
 #define  VCP_TYPE_V2NC_V3T 0x01
 
+// 12/2015:
+// new way, defines beginning with VCP_V3_..., if set override VCP_CONTINUOUS, VCP_NON_CONT, VCP_TABLE if V3
+// so VCP_TYPE_V2NC_V3T becomes VCP_NON_CONT | VCP_V3_TABLE
+// for example of VCP_NON_CONT | VCP_V3_NC_COMPLEX, see 0x62 audio volume
+// for example of NC using both sl and sh bytes, see 0xdf vcp version
+// should also have have e.g. VCP_NC_SIMPLE, VC_NC_COMPLEX
+// ..SIMPLE.. means it's just the sl byte
+// ..COMPLEX.. can mean: use of multiple bytes,
+//                       SL byte with some fixed values, remaining range continuous (see audio settings)
+// #define  VCP_V3_CONT
+// #define  VCP_V3_NC_SIMPLE_SL
+// #define  VCP_V3_NC_COMPLEX
+// #define  VCP_V3_TABLE
+
+
 // 0 or more of the following group bits may be set:
 #define  VCP_PROFILE    0x8000     // emit when -profile option selected
 #define  VCP_COLORMGT   0x4000     // my designation, indicates related to color mgt
