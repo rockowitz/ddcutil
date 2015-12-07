@@ -61,7 +61,7 @@ gboolean adl_arg_func(const gchar* option_name, const gchar* value, gpointer dat
 
 // Callback function for processing --terse, --verbose, --program
 gboolean output_arg_func(const gchar* option_name, const gchar* value, gpointer data, GError** error) {
-   bool debug = true;
+   bool debug = false;
    if (debug)
       printf("(%s) option_name=|%s|, value|%s|, data=%p\n", __func__, option_name, value, data);
 
@@ -123,7 +123,7 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
    char *   maxtrywork      = NULL;
 
    GOptionEntry option_entries[] = {
-   //  long_name short flags option-type          gpointer             description                    arg description
+   //  long_name short flags option-type          gpointer           description                    arg description
       {"display", 'd',  0, G_OPTION_ARG_INT,      &dispwork,         "Display number",              "number"},
       {"bus",     'b',  0, G_OPTION_ARG_INT,      &buswork,          "I2C bus number",              "busNum" },
 //    {"adl",     'a',  0, G_OPTION_ARG_CALLBACK, adl_arg_func,      "ADL adapter and display indexes", "adapterIndex.displayIndex"},
@@ -137,12 +137,12 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
       {"program", 'p',  G_OPTION_FLAG_NO_ARG,
                            G_OPTION_ARG_CALLBACK, output_arg_func,   "Machine readable output",        NULL},
       {"force",   'f',  0, G_OPTION_ARG_NONE,     &force_flag,       "Do not check certain parms",     NULL},
-      {"model",   'l',  0, G_OPTION_ARG_STRING,   &modelwork,        "Monitor model",                "model name"},
-      {"sn",      'n',  0, G_OPTION_ARG_STRING,   &snwork,           "Monitor serial number",           "serial number"},
-      {"edid",    'e',  0, G_OPTION_ARG_STRING,   &edidwork,         "Monitor EDID",  "256 char hex string" },
-      {"trace",   '\0', 0, G_OPTION_ARG_STRING_ARRAY, &trace_classes, "Trace classes",  "comma separated list" },
-//    {"trace",   '\0', 0, G_OPTION_ARG_STRING,   &tracework,        "Trace classes",  "comma separated list" },
-      {"maxtries",'\0', 0, G_OPTION_ARG_STRING,   &maxtrywork,        "Max try adjustment",  "comma separated list" },
+      {"model",   'l',  0, G_OPTION_ARG_STRING,   &modelwork,        "Monitor model",                     "model name"},
+      {"sn",      'n',  0, G_OPTION_ARG_STRING,   &snwork,           "Monitor serial number",          "serial number"},
+      {"edid",    'e',  0, G_OPTION_ARG_STRING,   &edidwork,         "Monitor EDID",            "256 char hex string" },
+      {"trace",   '\0', 0, G_OPTION_ARG_STRING_ARRAY, &trace_classes, "Trace classes",         "comma separated list" },
+//    {"trace",   '\0', 0, G_OPTION_ARG_STRING,   &tracework,        "Trace classes",          "comma separated list" },
+      {"maxtries",'\0', 0, G_OPTION_ARG_STRING,   &maxtrywork,       "Max try adjustment",  "comma separated list" },
       {"version", 'V',  0, G_OPTION_ARG_NONE,     &version_flag,     "Show version information", NULL},
 //    {"myusage", '\0', 0, G_OPTION_ARG_NONE,     &myusage_flag,     "Show usage", NULL},
 //    {"myhelp", '\0', 0,  G_OPTION_ARG_NONE,     &myhelp_flag,      "Show usage", NULL},

@@ -49,7 +49,6 @@
 #include "main/loadvcp.h"
 
 
-
 //
 // Initialization and Statistics
 //
@@ -176,9 +175,7 @@ int main(int argc, char *argv[]) {
          ok = false;
          main_rc = EXIT_FAILURE;     // ?? What should value be?
       }
-
       ok = execute_testcase(testnum, parsed_cmd->pdid);
-
       main_rc = (ok) ? EXIT_SUCCESS : EXIT_FAILURE;
    }
 
@@ -187,6 +184,11 @@ int main(int argc, char *argv[]) {
       // printf("(%s) Processing command loadvcp.  fn=%s\n", __func__, fn );
       bool ok = loadvcp_from_file(fn);
       main_rc = (ok) ? EXIT_SUCCESS : EXIT_FAILURE;
+   }
+
+   else if (parsed_cmd->cmd_id == CMDID_INTERROGATE) {
+      printf("interrogate command unimplemented\n");
+      main_rc = EXIT_SUCCESS;
    }
 
    else {     // commands that require display identifier
@@ -198,6 +200,7 @@ int main(int argc, char *argv[]) {
          if (vspec.major < 2) {
             printf("VCP version for display is less than MCCS 2.0. Output may not be accurate.\n");
          }
+
          switch(parsed_cmd->cmd_id) {
 
          case CMDID_CAPABILITIES:

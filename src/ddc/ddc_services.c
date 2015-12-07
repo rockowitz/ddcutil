@@ -35,10 +35,10 @@
 // Trace class for this file
 static Trace_Group TRACE_GROUP = TRC_DDC;
 
-// push initialization down from main.c in anticipation of creating a library
 
+/* Master initialization function
+ */
 void init_ddc_services() {
-
    ddc_reset_write_only_stats();
    ddc_reset_write_read_stats();
    ddc_reset_multi_part_read_stats();
@@ -56,9 +56,8 @@ void init_ddc_services() {
 }
 
 
-
 //
-//  Display specification
+//  Display Specification
 //
 
 /* Converts the display identifiers passed on the command line to a logical
@@ -125,12 +124,9 @@ Display_Ref* get_display_ref_for_display_identifier(Display_Identifier* pdid, bo
 }
 
 
-
-
 //
 //  Set VCP value
 //
-
 
 /* Converts a VCP feature value from string form to internal form.
  *
@@ -180,8 +176,7 @@ bool parse_vcp_value(char * string_value, long* parsed_value) {
  *   from put_vcp_by_display_ref()
  */
 
-
-// TODO: consider moving value parsing to cmd_parser_popt
+// TODO: consider moving value parsing to command parser
 Global_Status_Code set_vcp_value_top(Display_Ref * pdisp, char * feature, char * new_value) {
    Global_Status_Code my_errno = 0;
    long               longtemp;
@@ -315,24 +310,20 @@ void dump_nontable_vcp(
 
    Interpreted_Vcp_Code * code_info = get_and_filter_vcp_value(dh, vcp_entry, true /* suppress_unsupported */ );
    if (code_info) {
-
-         char buf[200];
-         snprintf(buf, 200, "VCP %02X %5d", vcp_entry->code, code_info->cur_value);
-         char * s = strdup(buf);
-         g_ptr_array_add(collector, s);
-
+      char buf[200];
+      snprintf(buf, 200, "VCP %02X %5d", vcp_entry->code, code_info->cur_value);
+      char * s = strdup(buf);
+      g_ptr_array_add(collector, s);
       //   free(code_info);   // sometimes causes free failure, crash
    }
-
 }
-
 
 
 void show_vcp_for_nontable_vcp_code_table_entry_by_display_handle(
         Display_Handle *          dh,
         VCP_Feature_Table_Entry * vcp_entry,
         Version_Spec              vcp_version,   // will be set for scan operations, not set for single
-        GPtrArray *                  collector,   // where to write output
+        GPtrArray *               collector,   // where to write output
         bool                      suppress_unsupported)    // if set, do not output unsupported features
 {
    bool debug = false;
@@ -350,7 +341,6 @@ void show_vcp_for_nontable_vcp_code_table_entry_by_display_handle(
 
     /*  Interpreted_Vcp_Code * code_info = */ get_and_filter_vcp_value(dh, vcp_entry, suppress_unsupported);
 
-
       // if (code_info)
       //   free(code_info);   // sometimes causes free failure, crash
    }
@@ -358,6 +348,7 @@ void show_vcp_for_nontable_vcp_code_table_entry_by_display_handle(
       printf("(%s) Done\n", __func__);
    // TRCMSG("Done");
 }
+
 
 // TODO split this out ala get_and_filter_vcp_value()
 
@@ -519,7 +510,6 @@ void show_single_vcp_value_by_display_handle(Display_Handle * phandle, char * fe
    }
 }
 #endif
-
 
 
 
@@ -878,13 +868,20 @@ Version_Spec get_vcp_version_by_display_handle(Display_Handle * dh) {
       dh->vcp_version.minor = 0;
       Interpreted_Vcp_Code * pinterpreted_code;
 
+      // verbose output is distracting since this function is called when
+      // querying for other things
+      Output_Level olev = get_output_level();
+      if (olev == OL_VERBOSE)
+         set_output_level(OL_NORMAL);
       Global_Status_Code  gsc = get_vcp_by_display_handle(dh, 0xdf, &pinterpreted_code);
+      if (olev == OL_VERBOSE)
+         set_output_level(olev);
       if (gsc == 0) {
          dh->vcp_version.major = pinterpreted_code->sh;
          dh->vcp_version.minor = pinterpreted_code->sl;
       }
       else {
-         // may happen for pre MCCS v2 monitors
+         // happens for pre MCCS v2 monitors
          if (debug)
             printf("(%s) Error detecting VCP version. gsc=%s\n",
                     __func__, gsc_desc(gsc) );
@@ -921,6 +918,7 @@ Version_Spec get_vcp_version_by_display_ref(Display_Ref * dref) {
    return dref->vcp_version;
 }
 
+
 /* Executes the VCP Get Capabilities command to obtain the
  * capabilities string.  The string is returned in null terminated
  * form in a Buffer struct.  It is the responsibility of the caller to
@@ -933,7 +931,9 @@ Version_Spec get_vcp_version_by_display_ref(Display_Ref * dref) {
  * Returns:
  *   status code
  */
-Global_Status_Code get_capabilities_buffer_by_display_handle(Display_Handle * dh, Buffer** ppCapabilitiesBuffer) {
+Global_Status_Code get_capabilities_buffer_by_display_handle(
+                      Display_Handle * dh,
+                      Buffer**         ppCapabilitiesBuffer) {
    int rc;
 
    rc = multi_part_read_with_retry(
@@ -959,6 +959,7 @@ Global_Status_Code get_capabilities_buffer_by_display_handle(Display_Handle * dh
    }
    return rc;
 }
+
 
 Global_Status_Code get_capabilities_string_by_display_handle(Display_Handle * dh, char** pcaps) {
    Global_Status_Code gsc = 0;
@@ -1003,6 +1004,7 @@ Global_Status_Code get_capabilities_string_by_display_ref(Display_Ref * dref, ch
    ddc_close_display(dh);
    return rc;
 }
+
 
 char * format_timestamp(time_t time_millis, char * buf, int bufsz) {
    if (bufsz == 0 || buf == NULL) {
@@ -1073,6 +1075,7 @@ GPtrArray * get_profile_related_values_by_display_handle(Display_Handle* dh) {
 
    return vals;
 }
+
 
 GPtrArray * get_profile_related_values_by_display_ref(Display_Ref * dref) {
    Display_Handle* dh = ddc_open_display(dref, EXIT_IF_FAILURE);

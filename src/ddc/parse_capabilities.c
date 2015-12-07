@@ -112,12 +112,12 @@ Parsed_Capabilities * new_parsed_capabilities(
       int vminor;
       int rc = sscanf(mccs_ver, "%d.%d", &vmajor, &vminor);
       if (rc != 2) {
-         printf("(%s) Unable to parse mccs_ver, rc=%d\n", __func__, rc);
+         printf("(%s) Unable to parse mccs_ver, value=\"%s\", rc=%d\n", __func__, mccs_ver, rc);
       }
       else {
          parsed_vcp_version.major = vmajor;
          parsed_vcp_version.minor = vminor;
-         printf("(%s) Parsed mccs_ver: %d.%d\n", __func__, parsed_vcp_version.major, parsed_vcp_version.minor);
+         // printf("(%s) Parsed mccs_ver: %d.%d\n", __func__, parsed_vcp_version.major, parsed_vcp_version.minor);
       }
    }
    pcaps->parsed_mccs_version = parsed_vcp_version;

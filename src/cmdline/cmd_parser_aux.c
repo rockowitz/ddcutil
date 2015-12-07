@@ -36,6 +36,7 @@ static Cmd_Desc cmdinfo[] = {
    {CMDID_LISTTESTS,    "listtests",     5,  0,       0},
    {CMDID_LOADVCP,      "loadvcp",       3,  1,       1},
    {CMDID_DUMPVCP,      "dumpvcp",       3,  0,       1},
+   {CMDID_INTERROGATE,  "interrogate",   3,  0,       0},
 };
 static int cmdct = sizeof(cmdinfo)/sizeof(Cmd_Desc);
 
@@ -95,7 +96,6 @@ void init_cmd_parser_base() {
 }
 
 
-
 bool all_digits(char * val, int ct) {
    bool debug = false;
    if (debug)
@@ -126,6 +126,7 @@ bool parse_int_arg(char * val, int * pIval) {
    int ct = sscanf(val, "%d", pIval);
    return (ct == 1);
 }
+
 
 bool validate_output_level(Parsed_Cmd* parsed_cmd) {
    // printf("(%s) parsed_cmd->cmdid = %d, parsed_cmd->output_level = %s\n",
@@ -176,6 +177,7 @@ char * commands_list_help =
        "   loadvcp <filename>\n"
        "   testcase <testcase-number>\n"
        "   listtests\n"
+       "   interrogate\n"
        "\n";
 
 char * command_argument_help =

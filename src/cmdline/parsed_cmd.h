@@ -24,7 +24,8 @@
 #define CMDID_LISTTESTS    8
 #define CMDID_LOADVCP      9
 #define CMDID_DUMPVCP     10
-#define CMDID_END         11    // 1 past last valid CMDID value
+#define CMDID_INTERROGATE 11
+#define CMDID_END         12    // 1 past last valid CMDID value
 
 
 #define PARSED_CMD_MARKER  "PCMD"
