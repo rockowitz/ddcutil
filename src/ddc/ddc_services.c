@@ -574,6 +574,7 @@ void show_vcp_values_by_display_handle(
 
    // For collections of feature codes, just assume that at least one of them
    // will need the version number for proper interpretation.
+   // TODO: verify lookup always occurs in called functions and eliminate parm
    Version_Spec vcp_version = get_vcp_version_by_display_handle(dh);
    // printf("(%s) VCP version = %d.%d\n", __func__, vcp_version.major, vcp_version.minor);
 
@@ -583,9 +584,11 @@ void show_vcp_values_by_display_handle(
          Byte id = ndx;
          // printf("(%s) ndx=%d, id=0x%02x\n", __func__, ndx, id);
          VCP_Feature_Table_Entry * entry = vcp_find_feature_by_hexid_w_default(id);
+         bool suppress_unsupported = (get_output_level() < OL_VERBOSE);
          if ( !( (entry->flags) & VCP_READABLE ) ){
-            // confuses the output, since we're suppressing unsupported
-            // printf("Feature 0x%02x (%s) is not readable\n", ndx, entry->name);
+            // confuses the output if suppressing unsupported
+            if (!suppress_unsupported)
+               printf("Feature 0x%02x (%s) is not readable\n", ndx, entry->name);
          }
          else {
             if (entry->flags & VCP_TABLE) {
@@ -594,7 +597,7 @@ void show_vcp_values_by_display_handle(
                   entry,
                   vcp_version,
                   collector,
-                  true);              // suppress unsupported features
+                  suppress_unsupported);              // suppress unsupported features
             }
             else {
                show_vcp_for_nontable_vcp_code_table_entry_by_display_handle(
@@ -602,7 +605,7 @@ void show_vcp_values_by_display_handle(
                   entry,
                   vcp_version,
                   collector,
-                  true);   //  suppress unsupported features
+                  suppress_unsupported);   //  suppress unsupported features
             }
          }
       }

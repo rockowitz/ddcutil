@@ -910,7 +910,7 @@ static Feature_Value_Entry xcc_osd_language_values[] = {
 
 // 0xd6
 static  Feature_Value_Entry xd6_power_mode_values[] =
-   { {0x01, "DPM: On, DPMS: Off"},
+   { {0x01, "DPM: On,  DPMS: Off"},
      {0x02, "CPM: Off, DPMS: Standby"},
      {0x03, "DPM: Off, DPMS: Suspend"},
      {0x04, "DPM: Off, DPMS: Off" },

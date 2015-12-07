@@ -85,9 +85,9 @@ void try_data_reset(void * stats_rec) {
 static void record_successful_tries(void * stats_rec, int tryct){
    Try_Data * try_data = unopaque(stats_rec);
    assert(0 < tryct && tryct <= try_data->max_tries);
-   if ( (tryct+1) == MAX_MAX_TRIES) {
-      printf("(%s) tryct+1 == MAX_MAX_TRIES (%d)\n", __func__, MAX_MAX_TRIES);
-   }
+   // if ( (tryct+1) == MAX_MAX_TRIES) {
+   //    printf("(%s) tryct+1 == MAX_MAX_TRIES (%d)\n", __func__, MAX_MAX_TRIES);
+   // }
    try_data->counters[tryct+1] += 1;
 }
 
@@ -146,9 +146,9 @@ void try_data_report(void * stats_rec) {
       for (ndx=2; ndx <= try_data->max_tries+1; ndx++) {
          total_successful_attempts += try_data->counters[ndx];
          // printf("(%s) ndx=%d\n", __func__, ndx);
-         printf("     %2d:  %3d\n", ndx-1, try_data->counters[ndx]);
+         printf("      %2d:  %3d\n", ndx-1, try_data->counters[ndx]);
       }
-      printf("   Total successful attempts:        %3d\n", total_successful_attempts);
+      printf("   Total:                            %3d\n", total_successful_attempts);
       printf("   Failed due to max tries exceeded: %3d\n", try_data->counters[1]);
       printf("   Failed due to fatal error:        %3d\n", try_data->counters[0]);
       printf("   Total attempts:                   %3d\n", try_data_get_total_attempts(stats_rec));

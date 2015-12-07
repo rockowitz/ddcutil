@@ -82,6 +82,49 @@ void report_stats() {
 }
 
 
+bool perform_get_capabilities(Display_Ref * dref) {
+   bool ok = true;
+   // Buffer * capabilities = NULL;
+   char * capabilities_string;
+   // returns Global_Status_Code, but testing capabilities == NULL also checks for success
+   // int rc = get_capabilities_buffer_by_display_ref(dref, &capabilities);
+   int rc = get_capabilities_string_by_display_ref(dref, &capabilities_string);
+
+   if (rc < 0) {
+      char buf[100];
+      switch(rc) {
+      case DDCRC_REPORTED_UNSUPPORTED:       // should not happen
+      case DDCRC_DETERMINED_UNSUPPORTED:
+         printf("Unsupported request\n");
+         break;
+      case DDCRC_RETRIES:
+         printf("Unable to get capabilities for monitor on %s.  Maximum DDC retries exceeded.\n",
+                 display_ref_short_name_r(dref, buf, 100));
+          break;
+      default:
+         printf("(%s) !!! Unable to get capabilities for monitor on %s\n",
+                __func__, display_ref_short_name_r(dref, buf, 100));
+         printf("(%s) Unexpected status code: %s\n", __func__, gsc_desc(rc));
+      }
+      ok = false;
+   }
+   else {
+      // assert(capabilities);
+      assert(capabilities_string);
+      // pcap is always set, but may be damaged if there was a parsing error
+      // Parsed_Capabilities * pcap = parse_capabilities_buffer(capabilities);
+      // Parsed_Capabilities * pcap = parse_capabilities_string(capabilities->bytes);
+      Parsed_Capabilities * pcap = parse_capabilities_string(capabilities_string);
+      // buffer_free(capabilities, "capabilities");
+      report_parsed_capabilities(pcap);
+      free_parsed_capabilities(pcap);
+      ok = true;
+   }
+
+   return ok;
+}
+
+
 //
 // Mainline
 //
@@ -187,7 +230,35 @@ int main(int argc, char *argv[]) {
    }
 
    else if (parsed_cmd->cmd_id == CMDID_INTERROGATE) {
-      printf("interrogate command unimplemented\n");
+      printf("Setting output level verbose...\n");
+      set_output_level(OL_VERBOSE);
+      printf("Setting maximum retries...\n");
+      printf("Forcing --stats...\n");
+      parsed_cmd->stats = true;
+      printf("This command will take a while to run...\n\n");
+      ddc_set_max_write_read_exchange_tries(MAX_MAX_TRIES);
+      ddc_set_max_multi_part_read_tries(MAX_MAX_TRIES);
+      printf("Detected displays:\n");
+      int display_ct = ddc_show_active_displays(1 /* logical depth */);
+      int dispno;
+      for (dispno=1; dispno <= display_ct; dispno++) {
+         printf("\nCapabilities for display %d\n", dispno);
+         Display_Identifier * did = create_dispno_display_identifier(dispno);
+         Display_Ref * dref = get_display_ref_for_display_identifier(did, true /* emit_error_msg */);
+         if (!dref) {
+            PROGRAM_LOGIC_ERROR("get_display_ref_for_display_identifier() failed for display %d", dispno);
+         }
+         Version_Spec vspec = get_vcp_version_by_display_ref(dref);
+         if (vspec.major < 2) {
+            printf("VCP (aka MCCS) version for display is less than 2.0. Output may not be accurate.\n");
+         }
+         perform_get_capabilities(dref);
+
+         printf("\n\nScanning all VCP feature codes for display %d\n", dispno);
+         show_vcp_values_by_display_ref(dref, SUBSET_SCAN, NULL);
+      }
+      printf("\nDisplay scanning complete.\n");
+
       main_rc = EXIT_SUCCESS;
    }
 
@@ -198,51 +269,17 @@ int main(int argc, char *argv[]) {
       if (dref) {
          Version_Spec vspec = get_vcp_version_by_display_ref(dref);
          if (vspec.major < 2) {
-            printf("VCP version for display is less than MCCS 2.0. Output may not be accurate.\n");
+            printf("VCP (aka MCCS) version for display is less than 2.0. Output may not be accurate.\n");
          }
 
          switch(parsed_cmd->cmd_id) {
 
          case CMDID_CAPABILITIES:
-            {                   // needed for declared variables
-               // Buffer * capabilities = NULL;
-               char * capabilities_string;
-               // returns Global_Status_Code, but testing capabilities == NULL also checks for success
-               // int rc = get_capabilities_buffer_by_display_ref(dref, &capabilities);
-               int rc = get_capabilities_string_by_display_ref(dref, &capabilities_string);
-
-               if (rc < 0) {
-                  char buf[100];
-                  switch(rc) {
-                  case DDCRC_REPORTED_UNSUPPORTED:       // should not happen
-                  case DDCRC_DETERMINED_UNSUPPORTED:
-                       printf("Unsupported request\n");
-                       break;
-                  case DDCRC_RETRIES:
-                       printf("Unable to get capabilities for monitor on %s.  Maximum DDC retries exceeded.\n",
-                               display_ref_short_name_r(dref, buf, 100));
-                       break;
-                  default:
-                       printf("(%s) !!! Unable to get capabilities for monitor on %s\n",
-                                 __func__, display_ref_short_name_r(dref, buf, 100));
-                       printf("(%s) Unexpected status code: %s\n", __func__, gsc_desc(rc));
-                  }
-                  main_rc = EXIT_FAILURE;
-               }
-               else {
-                  // assert(capabilities);
-                  assert(capabilities_string);
-                  // pcap is always set, but may be damaged if there was a parsing error
-                  // Parsed_Capabilities * pcap = parse_capabilities_buffer(capabilities);
-                  // Parsed_Capabilities * pcap = parse_capabilities_string(capabilities->bytes);
-                  Parsed_Capabilities * pcap = parse_capabilities_string(capabilities_string);
-                  // buffer_free(capabilities, "capabilities");
-                  report_parsed_capabilities(pcap);
-                  free_parsed_capabilities(pcap);
-                  main_rc = EXIT_SUCCESS;
-               }
+            {
+               bool ok = perform_get_capabilities(dref);
+               main_rc = (ok) ? EXIT_SUCCESS : EXIT_FAILURE;
+               break;
             }
-            break;
 
          case CMDID_GETVCP:
             {
@@ -251,20 +288,17 @@ int main(int argc, char *argv[]) {
                char * p = us;
                while (*p) {*p=toupper(*p); p++; }
 
+               // n. show_vcp_values_by_display_ref() returns void
                if ( streq(us,"ALL" )) {
-                  // returns void
                   show_vcp_values_by_display_ref(dref, SUBSET_ALL, NULL);
                }
                else if ( is_abbrev(us,"SUPPORTED",3 )) {
-                   // returns void
-                   show_vcp_values_by_display_ref(dref, SUBSET_SUPPORTED, NULL);
+                  show_vcp_values_by_display_ref(dref, SUBSET_SUPPORTED, NULL);
                 }
                else if ( is_abbrev(us,"SCAN",3 )) {
-                         // returns void
-                         show_vcp_values_by_display_ref(dref, SUBSET_SCAN, NULL);
-                      }
+                  show_vcp_values_by_display_ref(dref, SUBSET_SCAN, NULL);
+               }
                else if ( is_abbrev(us, "COLORMGT",3) ) {
-                  // returns void
                   show_vcp_values_by_display_ref(dref, SUBSET_COLORMGT, NULL);
                }
                else if ( is_abbrev(us, "PROFILE",3) ) {
@@ -274,12 +308,10 @@ int main(int argc, char *argv[]) {
                      set_output_format(OUTPUT_PROG_VCP);
 #endif
                   if (dref->ddc_io_mode == DDC_IO_DEVI2C)
-                     i2c_report_bus(dref->busno);
-                  // returns void
+                  i2c_report_bus(dref->busno);
                   show_vcp_values_by_display_ref(dref, SUBSET_PROFILE, NULL);
                }
                else {
-                  // returns void
                   show_single_vcp_value_by_display_ref(dref, parsed_cmd->args[0], parsed_cmd->force);
                }
                free(us);

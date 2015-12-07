@@ -157,20 +157,20 @@ void log_io_call(
 void report_io_call_stats(int depth) {
    // report_call_stats_old(depth);    // for comparing
    int d1 = depth+1;
-   rpt_title("Call Stats (new):", depth);
+   rpt_title("Call Stats:", depth);
    int total_ct = 0;
    long total_nanos = 0;
    int ndx = 0;
    // int max_name_length = max_event_name_length();
    // not working as variable length string specifier
    // printf("(%s) max_name_length=%d\n", __func__, max_name_length);
-   rpt_vstring(d1, "%-40s Count Millisec (   Nanosec)", "Type");
+   rpt_vstring(d1, "%-40s Count Millisec  (   Nanosec)", "Type");
    for (;ndx < IO_EVENT_TYPE_CT; ndx++) {
       if (io_event_stats[ndx].call_count > 0) {
          IO_Event_Type_Stats* curstat = &io_event_stats[ndx];
          char buf[100];
          snprintf(buf, 100, "%-17s (%s)", curstat->desc, curstat->name);
-         rpt_vstring(d1, "%-40s  %4d  %7ld (%10ld)",
+         rpt_vstring(d1, "%-40s  %4d  %7ld  (%10ld)",
                      buf,
                      curstat->call_count,
                      curstat->call_nanosec / (1000*1000),
@@ -180,7 +180,7 @@ void report_io_call_stats(int depth) {
          total_nanos += curstat->call_nanosec;
       }
    }
-   rpt_vstring(d1, "%-40s  %4d  %7ld (%10ld)",
+   rpt_vstring(d1, "%-40s  %4d  %7ld  (%10ld)",
                "Totals:",
                total_ct,
                total_nanos / (1000*1000),
@@ -481,9 +481,9 @@ void report_sleep_strategy_stats(int depth) {
    // TODO: implement depth
    printf("Sleep Strategy Stats:\n");
 
-   printf("   Total IO events:    %5d\n", total_io_event_count());
-   printf("   IO error count:     %5d\n", get_true_io_error_count(primary_error_code_counts));
-   printf("   Total sleep events: %5d\n", total_sleep_event_ct);
+   printf("   Total IO events:     %5d\n", total_io_event_count());
+   printf("   IO error count:      %5d\n", get_true_io_error_count(primary_error_code_counts));
+   printf("   Total sleep events:  %5d\n", total_sleep_event_ct);
 
 
    int id;
@@ -497,9 +497,9 @@ void report_sleep_strategy_stats(int depth) {
 #endif
 
    puts("");
-   printf("   Sleep Event type    Count\n");
+   printf("   Sleep Event type     Count\n");
    for (id=0; id < SLEEP_EVENT_ID_CT; id++) {
-      printf("   %-20s  %3d\n", sleep_event_names[id], sleep_event_cts_by_id[id]);
+      printf("   %-20s  %4d\n", sleep_event_names[id], sleep_event_cts_by_id[id]);
    }
 }
 
