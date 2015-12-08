@@ -162,6 +162,8 @@ static int link_adl(Adl_Procs** pLocAdl_Procs, bool verbose) {
 
        LOADFUNC(ADL_Adapter_NumberOfAdapters_Get);
        LOADFUNC(ADL_Adapter_AdapterInfo_Get);
+       LOADFUNC( ADL_Adapter_VideoBiosInfo_Get );
+       LOADFUNC(ADL2_Adapter_VideoBiosInfo_Get );
        LOADFUNC(ADL_Display_NumberOfDisplays_Get);
        LOADFUNC(ADL_Display_DisplayInfo_Get);
 
@@ -171,7 +173,6 @@ static int link_adl(Adl_Procs** pLocAdl_Procs, bool verbose) {
        LOADFUNC(ADL2_Display_ColorCaps_Get   );
        LOADFUNC(ADL2_Display_Color_Get );
        LOADFUNC(ADL2_Display_Color_Set );
-
 
        // I2C, DDC, and EDID APIs
        LOADFUNC(ADL2_Display_WriteAndReadI2CRev_Get );
@@ -348,6 +349,38 @@ static bool scan_for_displays() {
             report_adl_AdapterInfo(pAdapter, 1);
          iAdapterIndex = pAdapter->iAdapterIndex;
          assert(iAdapterIndex == adapterNdx);    // just an observation
+
+#ifdef REFERENCE
+         typedef struct ADLBiosInfo
+         {
+            char strPartNumber[ADL_MAX_PATH];   ///< Part number.
+            char strVersion[ADL_MAX_PATH];      ///< Version number.
+            char strDate[ADL_MAX_PATH];      ///< BIOS date in yyyy/mm/dd hh:mm format.
+         } ADLBiosInfo, *LPADLBiosInfo;
+#endif
+         ADLBiosInfo adlBiosInfo;
+
+         RECORD_IO_EVENT(
+         IE_OTHER,
+         (
+            rc = adl->ADL_Adapter_VideoBiosInfo_Get (
+                         iAdapterIndex,
+                         &adlBiosInfo)       // fill in the struct
+         )
+        );
+         if (rc != ADL_OK) {
+             printf("ADL_Adapter_VideoBiosInfo_Get() returned %d\n", rc);
+             continue;
+          }
+         else {    // TEMP
+            printf("VideoBiosInfo\n");
+            printf("   PartNumber: %s\n", adlBiosInfo.strPartNumber);
+            printf("   Version:    %s\n", adlBiosInfo.strVersion);
+            printf("   Date:       %s\n", adlBiosInfo.strDate);
+
+         }
+
+
          pAdlDisplayInfo = NULL;    // set to NULL before calling ADL_Display_DisplayInfo_Get()
          // printf("(%s) pAdlDisplayInfo=%p\n", __func__, pAdlDisplayInfo );
          RECORD_IO_EVENT(
@@ -401,6 +434,10 @@ static bool scan_for_displays() {
                ADL_Display_Rec * pCurActiveDisplay = &active_displays[active_display_ct];
                pCurActiveDisplay->iAdapterIndex = iAdapterIndex;
                pCurActiveDisplay->iDisplayIndex = iDisplayIndex;
+
+               pCurActiveDisplay->iVendorID = pAdapter->iVendorID;
+               pCurActiveDisplay->pstrAdapterName = strdup(pAdapter->strAdapterName);
+               pCurActiveDisplay->pstrDisplayName = strdup(pAdapter->strDisplayName);
 
                ADLDisplayEDIDData * pEdidData = calloc(1, sizeof(ADLDisplayEDIDData));
 
@@ -486,10 +523,8 @@ bool adl_initialize() {
    if (module_initialized) {
       return true;
    }
-   // A hack, to reuse all the if (debug) ... tracing code without converting
-   // it to use TRCMSG.  The debug flag is made global to the module.
    adl_debug = IS_TRACING();
-   // printf("(%s) adl_debug=%d\n", __func__, adl_debug);
+   printf("(%s) adl_debug=%d\n", __func__, adl_debug);
 
    int rc;
    bool ok = false;
@@ -660,17 +695,46 @@ void report_adl_display_rec(ADL_Display_Rec * pRec, bool verbose, int depth) {
 
    rpt_structure_loc("AdlDisplayRec", pRec, depth);
    int d = depth+1;
-   rpt_int( "iAdapterIndex",  NULL,                       pRec->iAdapterIndex, d);
-   rpt_int( "iDisplayIndex",  NULL,                       pRec->iDisplayIndex, d);
-   rpt_int( "supportsDDC",    "does display support DDC", pRec->supports_ddc,   d);
-   rpt_str( "mfg_id",         "manufacturer id",          pRec->mfg_id,        d);
-   rpt_str( "model_name",     NULL,                       pRec->model_name,    d);
-   rpt_str( "serial_ascii",   NULL,                       pRec->serial_ascii,  d);
+   rpt_int( "iAdapterIndex",  NULL,                       pRec->iAdapterIndex,   d);
+   rpt_int( "iDisplayIndex",  NULL,                       pRec->iDisplayIndex,   d);
+   rpt_int( "supportsDDC",    "does display support DDC", pRec->supports_ddc,    d);
+   rpt_str( "mfg_id",         "manufacturer id",          pRec->mfg_id,          d);
+   rpt_str( "model_name",     NULL,                       pRec->model_name,      d);
+   rpt_str( "serial_ascii",   NULL,                       pRec->serial_ascii,    d);
+   rpt_int( "iVendorID",      "vendor id (as decimal)",   pRec->iVendorID,       d);
+   rpt_str( "strAdapterName", "video card name",          pRec->pstrAdapterName, d);
+   rpt_str( "pstrDisplayName", NULL,                      pRec->pstrDisplayName, d);
+
    if (verbose) {
       report_adl_ADLDisplayEDIDData(pRec->pAdlEdidData, d+1);
       report_adl_ADLDDCInfo2(pRec->pAdlDDCInfo2, false /* verbose */, d+1);
    }
 }
+
+#ifdef REF
+int                   iVendorID;                       // e.g. 4098
+// waste of space to reserve full ADL_MAX_PATH for each field
+char *                pstrAdapterName;
+char *                pstrDisplayName;
+#endif
+
+
+Base_Status_ADL adl_get_video_card_info(
+                      Display_Handle * dh,
+                      Video_Card_Info * card_info) {
+   assert( card_info != NULL && memcmp(card_info->marker, VIDEO_CARD_INFO_MARKER, 4) == 0);
+   int rc = 0;
+   ADL_Display_Rec * pAdlRec = adl_get_display_by_adlno(dh->iAdapterIndex, dh->iDisplayIndex, true /* emit_error_msg */);
+   if (!pAdlRec) {
+      PROGRAM_LOGIC_ERROR("%s called with invalid Display_Handle");
+   }
+   card_info->vendor_id = pAdlRec->iVendorID;
+   card_info->adapter_name = strdup(pAdlRec->pstrAdapterName);
+   card_info->driver_name  = "AMD proprietary driver";
+   return rc;
+}
+
+
 
 
 //

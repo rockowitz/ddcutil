@@ -18,14 +18,11 @@
 #include <util/string_util.h>
 #include <base/util.h>
 
+#include "adl/adl_shim.h"
 #include "adl/adl_impl/adl_friendly.h"
 #include "adl/adl_impl/adl_intf.h"
 
 #include "adl/adl_impl/adl_aux_intf.h"
-
-
-// bool adl_debug;  // extern - defined in adl_intf.c
-
 
 
 // 10/2015: only used in adl_tests.c

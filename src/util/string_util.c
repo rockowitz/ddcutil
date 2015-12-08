@@ -56,7 +56,7 @@ bool streq(const char * s1, const char * s2) {
  * Returns:
  *   true/false
  */
-bool is_abbrev(char * value, const char * longname, int minchars) {
+bool is_abbrev(const char * value, const char * longname, int minchars) {
    bool result = false;
    int vlen = strlen(value);
    if ( vlen >= minchars &&
@@ -68,6 +68,36 @@ bool is_abbrev(char * value, const char * longname, int minchars) {
    // printf("(%s) value=|%s|, longname=|%s| returning %d\n", __func__, value, longname, result);
    return result;
 }
+
+bool str_starts_with(const char * value_to_test, const char * start_part) {
+   return is_abbrev(start_part, value_to_test, strlen(start_part));
+}
+
+
+
+int matches_by_func(char * word, char ** null_terminated_list, String_Comp_Func comp_func) {
+   int result = -1;
+   int ndx = 0;
+   for (ndx=0; null_terminated_list[ndx] != NULL; ndx++) {
+      if ( (*comp_func)(word, null_terminated_list[ndx])) {
+         result = ndx;
+         break;
+      }
+   }
+   return result;
+}
+
+
+int exactly_matches_any(char * word, char ** null_terminated_list) {
+   return matches_by_func(word, null_terminated_list, streq);
+}
+
+int starts_with_any(char * word, char ** list) {
+   return matches_by_func(word, list, str_starts_with);
+}
+
+
+
 
 /* Trims leading and trailing whitespace from a string and
  * returns the result in a buffer provided by the caller.

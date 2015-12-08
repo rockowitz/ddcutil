@@ -28,12 +28,24 @@ char * bool_repr(int value);
 //
 
 bool   streq(const char * s1, const char * s2);
-bool   is_abbrev(char * value, const char * longname, int minchars);
+bool   is_abbrev(const char * value, const char * longname, int minchars);
+bool   str_starts_with(const char * value_to_test, const char * start_part);
 char * strupper(char * s);
 char * strjoin( const char ** pieces, const int ct, const char * sepstr);
 char * chars_to_string(char * start, int len);
 char * strtrim(const char * s);
 char * strtrim_r(const char * s, char * buffer, int bufsz);
+
+
+typedef bool (*String_Comp_Func)(const char * a, const char * b);
+
+int matches_by_func(char * word, char ** null_terminated_string_array, String_Comp_Func  comp_func);
+
+int exactly_matches_any(char * word, char ** null_terminated_string_array);
+
+int starts_with_any(char * word, char ** null_terminated_string_array);
+
+
 
 
 typedef char** Null_Terminated_String_Array;

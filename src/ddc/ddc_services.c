@@ -49,6 +49,7 @@ void init_ddc_services() {
    init_linux_errno();
    init_adl_errors();
    init_vcp_feature_codes();
+   // adl_debug = true;      // turn on adl initialization tracing
    adlshim_initialize();
    init_ddc_packets();   // 11/2015: does nothing
 

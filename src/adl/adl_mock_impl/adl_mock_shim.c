@@ -20,6 +20,8 @@
 
 // Initialization
 
+bool            adl_debug;
+
 bool adlshim_is_available() {
    return false;
 }
@@ -64,6 +66,12 @@ Display_Ref * adlshim_find_display_by_edid(const Byte * pEdidBytes) {
 Display_Info_List adlshim_get_valid_displays() {
    Display_Info_List info_list = {0,NULL};
    return info_list;
+}
+
+Global_Status_Code adlshim_get_video_card_info(
+                      Display_Handle * dh,
+                      Video_Card_Info * card_info) {
+   return 0;
 }
 
 

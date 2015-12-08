@@ -371,3 +371,11 @@ void report_display_info_list(Display_Info_List * pinfo_list, int depth) {
    }
 }
 
+
+Video_Card_Info * create_video_card_info() {
+   Video_Card_Info * card_info = calloc(1, sizeof(Video_Card_Info));
+   memcpy(card_info->marker, VIDEO_CARD_INFO_MARKER, 4);
+   return card_info;
+}
+
+

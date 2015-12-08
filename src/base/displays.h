@@ -126,6 +126,17 @@ char * display_handle_repr_r(Display_Handle * dh, char * buf, int bufsize);
 char * display_handle_repr(Display_Handle * dh);
 
 
+#define VIDEO_CARD_INFO_MARKER "VIDC"
+typedef struct {
+   char     marker[4];
+   int      vendor_id;
+   char *   adapter_name;
+   char *   driver_name;
+} Video_Card_Info;
+
+Video_Card_Info * create_video_card_info();
+
+
 // for surfacing display information at higher levels than i2c and adl, without creating
 // circular dependencies
 typedef struct {

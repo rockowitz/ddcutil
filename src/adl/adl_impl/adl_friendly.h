@@ -28,10 +28,12 @@ struct {
     int ( *ADL_Main_Control_Create )   (ADL_MAIN_MALLOC_CALLBACK, int iEnumConnectedAdapters );
     int ( *ADL_Main_Control_Destroy )  ();
 
-    int (*ADL_Adapter_NumberOfAdapters_Get)(int *lpNumAdapters);
-    int (*ADL_Adapter_AdapterInfo_Get)(LPAdapterInfo lpInfo, int iInputSize);
-    int (*ADL_Display_NumberOfDisplays_Get)(int iAdapterIndex, int *lpNumDisplays);
-    int (*ADL_Display_DisplayInfo_Get)(int  iAdapterIndex, int *lpNumDisplays, ADLDisplayInfo **lppInfo, int iForceDetect);
+    int (  *ADL_Adapter_NumberOfAdapters_Get)(int *lpNumAdapters);
+    int (  *ADL_Adapter_AdapterInfo_Get)(LPAdapterInfo lpInfo, int iInputSize);
+    int (  *ADL_Adapter_VideoBiosInfo_Get)(int iAdapterIndex, ADLBiosInfo* lpBiosInfo);
+    int ( *ADL2_Adapter_VideoBiosInfo_Get)(ADL_CONTEXT_HANDLE context,  int iAdapterIndex, ADLBiosInfo* lpBiosInfo);
+    int (  *ADL_Display_NumberOfDisplays_Get)(int iAdapterIndex, int *lpNumDisplays);
+    int (  *ADL_Display_DisplayInfo_Get)(int  iAdapterIndex, int *lpNumDisplays, ADLDisplayInfo **lppInfo, int iForceDetect);
 
     int (  *ADL_Display_ColorCaps_Get   )  (int, int, int *, int *);
     int (  *ADL_Display_Color_Get ) ( int, int, int, int *, int *, int *, int *, int * );
@@ -93,7 +95,6 @@ struct {
 
 
 // defined in adl_intf.c:
-extern bool            adl_debug;
 extern Adl_Procs*      adl;
 extern int             active_display_ct;
 extern ADL_Display_Rec active_displays[MAX_ACTIVE_DISPLAYS];

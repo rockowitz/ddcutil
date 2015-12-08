@@ -8,6 +8,7 @@
 #include <assert.h>
 #include <stdlib.h>     // wchar_t, needed by adl_structures.h
 #include <stdbool.h>
+#include <string.h>
 
 #include <base/execution_stats.h>
 #include <base/common.h>
@@ -85,6 +86,13 @@ Display_Info_List adlshim_get_valid_displays() {
 }
 
 
+
+Global_Status_Code adlshim_get_video_card_info(
+                      Display_Handle * dh,
+                      Video_Card_Info * card_info) {
+   Base_Status_ADL adlrc = adl_get_video_card_info(dh->iAdapterIndex, card_info);
+   return modulate_rc(adlrc, RR_ADL);
+}
 
 // Read from and write to the display
 

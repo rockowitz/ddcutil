@@ -130,6 +130,7 @@ bool perform_get_capabilities(Display_Ref * dref) {
 //
 
 int main(int argc, char *argv[]) {
+   // set_trace_levels(TRC_ADL);   // uncomment to enable tracing during initialization
    initialize();
    int main_rc = EXIT_FAILURE;
 
@@ -207,6 +208,7 @@ int main(int argc, char *argv[]) {
 #endif
       // new way:
       ddc_show_active_displays(0);
+      query_proc_modules_for_video();
    }
 
    else if (parsed_cmd->cmd_id == CMDID_TESTCASE) {
@@ -238,7 +240,8 @@ int main(int argc, char *argv[]) {
       printf("This command will take a while to run...\n\n");
       ddc_set_max_write_read_exchange_tries(MAX_MAX_TRIES);
       ddc_set_max_multi_part_read_tries(MAX_MAX_TRIES);
-      printf("Detected displays:\n");
+      query_proc_modules_for_video();  // temp location for testing
+      printf("\nDetected displays:\n");
       int display_ct = ddc_show_active_displays(1 /* logical depth */);
       int dispno;
       for (dispno=1; dispno <= display_ct; dispno++) {

@@ -12,6 +12,9 @@
 #include <stdbool.h>
 #include <stdlib.h>
 
+// really belongs in some other module
+int query_proc_modules_for_video();
+
 
 //
 // General

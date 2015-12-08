@@ -20,7 +20,7 @@
 
 
 // Initialization
-
+extern bool            adl_debug;
 bool adlshim_is_available();
 
 // must be called before any other function (except is_adl_available()):
@@ -51,6 +51,10 @@ Display_Ref * adlshim_find_display_by_model_sn(const char * model, const char * 
 Display_Ref * adlshim_find_display_by_edid(const Byte * pEdidBytes);
 
 Display_Info_List adlshim_get_valid_displays();
+
+Global_Status_Code adlshim_get_video_card_info(
+                      Display_Handle * dh,
+                      Video_Card_Info * card_info);
 
 
 // Read from and write to the display

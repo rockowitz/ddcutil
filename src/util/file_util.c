@@ -6,19 +6,22 @@
 
 #include <errno.h>
 #include <glib.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <string.h>
 
 #include "util/file_util.h"
 
 int file_getlines(const char * fn,  GPtrArray* line_array) {
+   bool debug = false;
    int rc = 0;
-   printf("(%s) Starting. fn=%s  \n", __func__, fn );
+   if (debug)
+      printf("(%s) Starting. fn=%s  \n", __func__, fn );
    FILE * fp = fopen(fn, "r");
    if (!fp) {
       int errsv = errno;
       rc = -errno;
-      fprintf(stderr, "%s: %s\n", strerror(errsv), fn);
+      fprintf(stderr, "Error opening file %s: %s\n", fn, strerror(errsv));
    }
    else {
       char * line = NULL;
@@ -39,7 +42,8 @@ int file_getlines(const char * fn,  GPtrArray* line_array) {
       }
       rc = linectr;
    }
-   printf("(%s) Done. returning: %d\n", __func__, rc);
+   if (debug)
+      printf("(%s) Done. returning: %d\n", __func__, rc);
    return rc;
 }
 
