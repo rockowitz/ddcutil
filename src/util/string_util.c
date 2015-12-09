@@ -139,6 +139,15 @@ char * strtrim_r(const char * s, char * buffer, int bufsz) {
    return buffer;
 }
 
+char * rtrim_in_place(char * s) {
+   int len = strlen(s);
+   while(len > 0 && isspace(s[len-1])) {
+      len--;
+      s[len] = '\0';
+   }
+   return s;
+}
+
 
 /* Trims leading and trailing whitespace from a string and
  * returns the result in newly allocated memory.
@@ -159,6 +168,19 @@ char * strtrim(const char * s) {
 }
 
 
+char * substr(char * s, int startpos, int ct) {
+   assert(ct>=0);
+   if (startpos + ct > strlen(s))
+      ct = strlen(s) - startpos;
+   char * result = calloc(ct+1, sizeof(char));
+   strncpy(result, s+startpos, ct);
+   result[ct] = '\0';
+   return result;
+}
+
+char * lsub(char * s, int ct) {
+   return substr(s, 0, ct);
+}
 
 
 /* Joins an array of strings into a single string, using a separator string.
@@ -251,7 +273,6 @@ Null_Terminated_String_Array strsplit(char * str_to_split, char * delims) {
          curpiece = result[ndx];
 
       }
-
    }
    free(workstruct);
    return result;

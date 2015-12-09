@@ -90,7 +90,7 @@ Display_Info_List adlshim_get_valid_displays() {
 Global_Status_Code adlshim_get_video_card_info(
                       Display_Handle * dh,
                       Video_Card_Info * card_info) {
-   Base_Status_ADL adlrc = adl_get_video_card_info(dh->iAdapterIndex, card_info);
+   Base_Status_ADL adlrc = adl_get_video_card_info_by_adlno(dh->iAdapterIndex, dh->iDisplayIndex, card_info);
    return modulate_rc(adlrc, RR_ADL);
 }
 

@@ -21,8 +21,8 @@ int  try_data_get_total_attempts(void * stats_rec);
 
 void try_data_report(void * stats_rec);
 
-int  try_data_get_max_tries();
+int  try_data_get_max_tries(void * stats_rec);
 
-void try_data_set_max_tries();
+void try_data_set_max_tries(void* stats_rec,int new_max_tries);
 
 #endif /* TRY_STATS_H_ */

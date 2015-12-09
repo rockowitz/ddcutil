@@ -523,8 +523,10 @@ bool adl_initialize() {
    if (module_initialized) {
       return true;
    }
+   // A hack, to reuse all the if (debug) ... tracing code without converting
+   // it to use TRCMSG.  The debug flag is made global to the module.
    adl_debug = IS_TRACING();
-   printf("(%s) adl_debug=%d\n", __func__, adl_debug);
+   // printf("(%s) adl_debug=%d\n", __func__, adl_debug);
 
    int rc;
    bool ok = false;
@@ -719,12 +721,13 @@ char *                pstrDisplayName;
 #endif
 
 
-Base_Status_ADL adl_get_video_card_info(
-                      Display_Handle * dh,
+Base_Status_ADL adl_get_video_card_info_by_adlno(
+                      int  iAdapterIndex,
+                      int  iDisplayIndex,
                       Video_Card_Info * card_info) {
    assert( card_info != NULL && memcmp(card_info->marker, VIDEO_CARD_INFO_MARKER, 4) == 0);
    int rc = 0;
-   ADL_Display_Rec * pAdlRec = adl_get_display_by_adlno(dh->iAdapterIndex, dh->iDisplayIndex, true /* emit_error_msg */);
+   ADL_Display_Rec * pAdlRec = adl_get_display_by_adlno(iAdapterIndex, iDisplayIndex, true /* emit_error_msg */);
    if (!pAdlRec) {
       PROGRAM_LOGIC_ERROR("%s called with invalid Display_Handle");
    }

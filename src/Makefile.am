@@ -39,6 +39,7 @@ base/edid.c \
 base/execution_stats.c \
 base/linux_errno.c \
 base/msg_control.c \
+base/query_sysenv.c \
 base/status_code_mgt.c \
 base/util.c \
 cmdline/cmd_parser_aux.c \
@@ -68,6 +69,7 @@ test/testcase_table.c \
 util/data_structures.c \
 util/debug_util.c \
 util/file_util.c  \
+util/pci_id_util.c \
 util/report_util.c \
 util/string_util.c 
 
@@ -97,6 +99,7 @@ base/edid.c \
 base/execution_stats.c \
 base/linux_errno.c \
 base/msg_control.c \
+base/query_sysenv.c \
 base/status_code_mgt.c \
 base/util.c \
 cmdline/cmd_parser_aux.c \
@@ -126,6 +129,7 @@ test/testcase_table.c \
 util/data_structures.c \
 util/debug_util.c \
 util/file_util.c  \
+util/pci_id_util.c \
 util/report_util.c \
 util/string_util.c 
 
@@ -148,7 +152,7 @@ endif
 
 libddctool_la_LIBADD = -lz
 libddctool_la_LIBADD +=                  \
-   $(GLIB_LIBS)
+   $(GLIB_LIBS) $(OSINFO_LIBS)
 
 libddctool_la_LDFLAGS = -export_symbols-regex '^ddct_[^_]'
 # libddctool_la_LDFLAGS += -version-info '0:1:1'
@@ -166,6 +170,7 @@ libddctool_la_LDFLAGS = -export_symbols-regex '^ddct_[^_]'
 
 # GLIB_CFLAGS contains output of pkgconfig --cflags glib-2.0
 AM_CPPFLAGS=$(GLIB_CFLAGS) \
+$(OSINFO_CFLAGS) \
 -I$(top_srcdir) 
 
 
@@ -194,7 +199,7 @@ endif
 
 # $(GLIB_LIBS) contains output of pkgconfig --libs glib-2.0
 ddctool_LDADD =                  \
-   $(GLIB_LIBS)
+   $(GLIB_LIBS) $(OSINFO_LIBS)
 
 laclient_LDADD = \
    libddctool.la

@@ -306,8 +306,8 @@ GArray * parse_vcp_segment(char * start, int len) {
    char * end = start + len;
    Byte   cur_feature_id;
    bool   valid_feature;
-   char * value_start;
-   int    value_len;
+   int    value_len = 0;      // initialization logically unnecessary, but o.w. get warning
+   char * value_start = NULL; // ditto
    while (pos < end) {
       valid_feature = false;
       while(*pos == ' ' && pos < end) pos++;

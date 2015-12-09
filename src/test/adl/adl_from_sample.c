@@ -42,9 +42,10 @@ LPAdapterInfo        lpAdapterInfo = NULL;
 LPADLDisplayInfo  lpAdlDisplayInfo = NULL;
 char                    MonitorNames[MAX_NUM_DISPLAY_DEVICES] [128];    // Array of Monitor names
 
+#ifndef TRUE
 bool TRUE = true;
 bool FALSE = false;
-
+#endif
 
 
 

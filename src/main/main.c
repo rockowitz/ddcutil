@@ -179,36 +179,11 @@ int main(int argc, char *argv[]) {
       if (parsed_cmd->programmatic_output)
          set_output_format(OUTPUT_PROG_BUSINFO);
 #endif
-#ifdef OLD
-      int ct = i2c_report_buses(false /* report_all */);
-      ct += adl_show_active_displays();
-      if (ct > 0)
-         main_rc = EXIT_SUCCESS;
-
-      if (parsed_cmd->output_level >= OL_NORMAL) {
-         Display_Info_List *  all_displays = ddc_get_valid_displays();
-         int displayct = all_displays->ct;
-         printf("\nVCP version implemented:\n");
-         int ndx;
-         for (ndx=0; ndx< displayct; ndx++) {
-            Display_Info * cur_info = &all_displays->info_recs[ndx];
-            // temp
-            char * short_name = display_ref_short_name(cur_info->dref);
-            // printf("Display:       %s\n", short_name);
-            // works, but TMI
-            // printf("Mfg:           %s\n", cur_info->edid->mfg_id);
-            Version_Spec vspec = get_vcp_version_by_display_ref(all_displays->info_recs[ndx].dref);
-            // printf("VCP version:   %d.%d\n", vspec.major, vspec.minor);
-            if (vspec.major == 0)
-               printf("   %s:  VCP version: detection failed\n", short_name);
-            else
-               printf("   %s:  VCP version: %d.%d\n", short_name, vspec.major, vspec.minor);
-         }
-      }
-#endif
       // new way:
       ddc_show_active_displays(0);
-      query_proc_modules_for_video();
+      if (parsed_cmd->output_level >= OL_VERBOSE) {
+         query_card_and_driver();
+      }
    }
 
    else if (parsed_cmd->cmd_id == CMDID_TESTCASE) {
@@ -240,7 +215,7 @@ int main(int argc, char *argv[]) {
       printf("This command will take a while to run...\n\n");
       ddc_set_max_write_read_exchange_tries(MAX_MAX_TRIES);
       ddc_set_max_multi_part_read_tries(MAX_MAX_TRIES);
-      query_proc_modules_for_video();  // temp location for testing
+      query_card_and_driver();
       printf("\nDetected displays:\n");
       int display_ct = ddc_show_active_displays(1 /* logical depth */);
       int dispno;

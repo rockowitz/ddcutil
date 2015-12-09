@@ -47,3 +47,28 @@ int file_getlines(const char * fn,  GPtrArray* line_array) {
    return rc;
 }
 
+
+char * read_one_line_file(char * fn, bool verbose) {
+   FILE * fp = fopen(fn, "r");
+   char * single_line = NULL;
+   if (!fp) {
+      if (verbose)
+         fprintf(stderr, "Error opening %s: %s\n", fn, strerror(errno));
+   }
+   else {
+      size_t len = 0;
+      ssize_t read;
+      // just one line:
+      read = getline(&single_line, &len, fp);
+      if (read == -1) {
+         if (verbose)
+           printf("Nothing to read from %s\n", fn);
+      }
+      else {
+         if (strlen(single_line) > 0)
+            single_line[strlen(single_line)-1] = '\0';
+         // printf("\n%s", single_line);     // single_line has trailing \n
+      }
+   }
+   return single_line;
+}

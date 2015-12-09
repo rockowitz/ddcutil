@@ -9,6 +9,7 @@
 
 #include <assert.h>
 #include <ctype.h>
+#include <dirent.h>
 #include <errno.h>
 #include <glib.h>
 #ifdef USE_LIBEXPLAIN
@@ -20,6 +21,10 @@
 #include <string.h>
 #include <time.h>
 #include <unistd.h>
+#include <linux/limits.h>
+#include <limits.h>
+#include <sys/stat.h>
+// #include <libosinfo-1.0/osinfo/osinfo.h>
 
 #include "util/file_util.h"
 #include "util/string_util.h"
@@ -27,86 +32,6 @@
 #include "base/linux_errno.h"
 
 #include "base/util.h"
-
-
-char * known_video_driver_modules[] = {
-      "fglrx",
-      "nvidia",
-      "nouveau",
-      "radeon",
-      "vboxvideo",
-      NULL
-};
-
-char * prefix_matches[] = {
-      "i2c",
-      "video",
-      NULL
-};
-
-
-
-int query_proc_modules_for_video() {
-   int rc = 0;
-
-   GPtrArray * garray = g_ptr_array_sized_new(300);
-
-   printf("Scanning /proc/modules for driver environment...\n");
-   int ct = file_getlines("/proc/modules", garray);
-   if (ct < 0)
-      rc = ct;
-   else {
-      int ndx = 0;
-      for (ndx=0; ndx<garray->len; ndx++) {
-         char * curline = g_ptr_array_index(garray, ndx);
-         char mod_name[32];
-         int  mod_size;
-         int  mod_instance_ct;
-         char mod_dependencies[500];
-         char mod_load_state[10];     // one of: Live Loading Unloading
-         char mod_addr[30];
-         int piece_ct = sscanf(curline, "%s %d %d %s %s %s",
-                               mod_name,
-                               &mod_size,
-                               &mod_instance_ct,
-                               mod_dependencies,
-                               mod_load_state,
-                               mod_addr);
-         if (piece_ct != 6) {
-            printf("(%s) Unexpected error parsing /proc/modules.  sscanf returned %d\n", __func__, piece_ct);
-         }
-         if (streq(mod_name, "drm") ) {
-            printf("   Loaded drm module depends on: %s\n", mod_dependencies);
-         }
-         else if (exactly_matches_any(mod_name, known_video_driver_modules) >= 0 ) {
-            printf("   Found video driver module: %s\n", mod_name);
-         }
-         else if ( starts_with_any(mod_name, prefix_matches) >= 0 ) {
-            printf("   Found other loaded module: %s\n", mod_name);
-         }
-      }
-   }
-
-   FILE * fp = fopen("/proc/version", "r");
-   if (!fp) {
-      fprintf(stderr, "Error opening /proc/version: %s", strerror(errno));
-   }
-   else {
-      char * version_line = NULL;
-      size_t len = 0;
-      ssize_t read;
-      // just one line:
-      read = getline(&version_line, &len, fp);
-      if (read == -1) {
-         printf("Nothing to read from /proc/version\n");
-      }
-      else {
-         printf("\n%s\n", version_line);
-      }
-   }
-
-   return rc;
-}
 
 
 

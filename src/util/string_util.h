@@ -35,7 +35,9 @@ char * strjoin( const char ** pieces, const int ct, const char * sepstr);
 char * chars_to_string(char * start, int len);
 char * strtrim(const char * s);
 char * strtrim_r(const char * s, char * buffer, int bufsz);
-
+char * rtrim_in_place(char * s);
+char * substr(char * s, int startpos, int ct);
+char * lsub(char * s, int ct);
 
 typedef bool (*String_Comp_Func)(const char * a, const char * b);
 

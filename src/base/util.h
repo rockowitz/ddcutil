@@ -9,11 +9,9 @@
 #ifndef I2CPROBE_UTIL
 #define I2CPROBE_UTIL
 
+// #include <glib.h>
 #include <stdbool.h>
 #include <stdlib.h>
-
-// really belongs in some other module
-int query_proc_modules_for_video();
 
 
 //

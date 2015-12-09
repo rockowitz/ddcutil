@@ -68,8 +68,9 @@ int  adl_show_active_displays();   // returns number of active displays
 
 void report_adl_display_rec(ADL_Display_Rec * pRec, bool verbose, int depth);
 
-Base_Status_ADL adl_get_video_card_info(
-                      Display_Handle * dh,
+Base_Status_ADL adl_get_video_card_info_by_adlno(
+                      int               iAdapterIndex,
+                      int               iDisplayIndex,
                       Video_Card_Info * card_info);
 
 
