@@ -217,7 +217,8 @@ void report_pci_devices() {
 
 bool init_pci_ids() {
    bool debug = false;
-   pci_vendors = load_pci_ids();
+   if (!pci_vendors)
+      pci_vendors = load_pci_ids();
    bool ok = (pci_vendors);
    if (ok && debug)
       report_pci_devices();

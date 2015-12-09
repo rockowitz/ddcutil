@@ -36,9 +36,7 @@ dml GOBJECT_INTROSPECTION_CHECK([0.9.8])
 dnl appends to GLIB_CFLAGS and GLIB_LIBS the output of pkg-config --cflags|--lib glib-2.0
 PKG_CHECK_MODULES(GLIB,  glib-2.0 >= 2.36) 
 
-# PKG_CHECK_MODULES(OSINFO, osinfo-1.0 >= 0.1)
-# should add test that sets flag 
-PKG_CHECK_MODULES(OSINFO, libosinfo-1.0 >= 0.1, [OSINFO_FOUND=yes], [OSINFO_FOUND=no])
+dnl PKG_CHECK_MODULES(OSINFO, libosinfo-1.0 >= 0.1, [OSINFO_FOUND=yes], [OSINFO_FOUND=no])
 
 # Checks for programs.
 AC_PROG_CC

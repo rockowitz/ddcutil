@@ -16,6 +16,7 @@
 #include <string.h>
 #include <unistd.h>
 
+#include "util/pci_id_util.h"
 #include "util/report_util.h"
 #include "util/string_util.h"
 
@@ -358,6 +359,7 @@ static bool scan_for_displays() {
             char strDate[ADL_MAX_PATH];      ///< BIOS date in yyyy/mm/dd hh:mm format.
          } ADLBiosInfo, *LPADLBiosInfo;
 #endif
+#ifdef WORKS_BUT_NOT_VERY_USEFUL_INFO
          ADLBiosInfo adlBiosInfo;
 
          RECORD_IO_EVENT(
@@ -373,13 +375,14 @@ static bool scan_for_displays() {
              continue;
           }
          else {    // TEMP
-            printf("VideoBiosInfo\n");
-            printf("   PartNumber: %s\n", adlBiosInfo.strPartNumber);
-            printf("   Version:    %s\n", adlBiosInfo.strVersion);
-            printf("   Date:       %s\n", adlBiosInfo.strDate);
+            // not very useful info, is it even worth saving in ADL_Display_Rec?
+            // printf("VideoBiosInfo\n");
+            // printf("   PartNumber: %s\n", adlBiosInfo.strPartNumber);
+            // printf("   Version:    %s\n", adlBiosInfo.strVersion);
+            // printf("   Date:       %s\n", adlBiosInfo.strDate);
 
          }
-
+#endif
 
          pAdlDisplayInfo = NULL;    // set to NULL before calling ADL_Display_DisplayInfo_Get()
          // printf("(%s) pAdlDisplayInfo=%p\n", __func__, pAdlDisplayInfo );
@@ -610,6 +613,17 @@ void adl_show_active_display(ADL_Display_Rec * pdisp, int depth) {
    if (output_level >= OL_NORMAL) {
       bool dump_edid = (output_level >= OL_VERBOSE);
       report_parsed_edid(pdisp->pEdid, dump_edid /* verbose */, depth);
+   }
+   if (output_level >= OL_VERBOSE) {
+      init_pci_ids();
+      Pci_Id_Names pci_id_names = pci_id_get_names((ushort) pdisp->iVendorID, 0, 0, 0, 1);
+      char * vendor_name = (pci_id_names.vendor_name) ? pci_id_names.vendor_name : "unknown vendor";
+      rpt_vstring(depth, "Vendor id:            0x%04x  %s", pdisp->iVendorID, vendor_name);
+      // waste of space to reserve full ADL_MAX_PATH for each field
+      if (pdisp->pstrAdapterName)
+      rpt_vstring(depth, "Adapter name:         %s", pdisp->pstrAdapterName);
+      if (pdisp->pstrDisplayName)
+      rpt_vstring(depth, "Display name:         %s", pdisp->pstrDisplayName);
    }
 }
 
