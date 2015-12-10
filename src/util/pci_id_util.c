@@ -66,6 +66,7 @@ char * find_pci_ids() {
 
 
 // Poor choice of data structures.   Replace with linked list or hash
+// and yet, performance not a problem
 
 static GPtrArray * pci_vendors;
 
@@ -175,7 +176,7 @@ GPtrArray * load_pci_ids(){
       g_ptr_array_set_free_func(all_lines, free);
       g_ptr_array_free(all_lines, true);
    }          // if (pci_id_dir)
-   if (debug) {
+   if (debug || true) {
       printf("(%s) Total vendors: %d, total devices: %d, total subsystems: %d\n",
              __func__, total_vendors, total_devices, total_subsys);
    }
@@ -227,11 +228,11 @@ bool init_pci_ids() {
 
 
 
-Pci_Id_Vendor * pci_id_find_vendor(GPtrArray * all_vendors, ushort vendor_id) {
+Pci_Id_Vendor * pci_id_find_vendor(ushort vendor_id) {
    int ndx = 0;
    Pci_Id_Vendor * result = NULL;
-   for (ndx=0; ndx<all_vendors->len; ndx++) {
-      Pci_Id_Vendor * cur_vendor = g_ptr_array_index(all_vendors, ndx);
+   for (ndx=0; ndx<pci_vendors->len; ndx++) {
+      Pci_Id_Vendor * cur_vendor = g_ptr_array_index(pci_vendors, ndx);
       if (cur_vendor->vendor_id == vendor_id) {
          result = cur_vendor;
          break;
@@ -288,7 +289,7 @@ Pci_Id_Names pci_id_get_names(
    }
    assert( argct==1 || argct==2 || argct==4);
    Pci_Id_Names names = {NULL, NULL, NULL};
-   Pci_Id_Vendor * vendor = pci_id_find_vendor(pci_vendors, vendor_id);
+   Pci_Id_Vendor * vendor = pci_id_find_vendor(vendor_id);
    if (vendor) {
       names.vendor_name = vendor->vendor_name;
       if (argct > 1) {
@@ -300,7 +301,7 @@ Pci_Id_Names pci_id_get_names(
                if (subsys)
                   names.subsys_name = subsys->subsystem_name;
                else {
-                  Pci_Id_Vendor * subsys_vendor = pci_id_find_vendor(pci_vendors, subvendor_id);
+                  Pci_Id_Vendor * subsys_vendor = pci_id_find_vendor(subvendor_id);
                   if (subsys_vendor)
                      names.subsys_name = subsys_vendor->vendor_name;
                }

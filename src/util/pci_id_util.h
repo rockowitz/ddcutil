@@ -42,7 +42,7 @@ typedef struct {
 
 
 bool init_pci_ids();
-Pci_Id_Vendor * pci_id_find_vendor(GPtrArray * all_vendors, ushort vendor_id);
+Pci_Id_Vendor * pci_id_find_vendor(ushort vendor_id);
 Pci_Id_Device * pci_id_find_device(Pci_Id_Vendor * cur_vendor, ushort device_id);
 Pci_Id_Subsys * pci_id_find_subsys(Pci_Id_Device * cur_device, ushort subvendor_id, ushort subdevice_id);
 Pci_Id_Names pci_id_get_names(

@@ -7,9 +7,12 @@
  */
 
 #include <assert.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
+#include "util/data_structures.h"
 #include "util/string_util.h"
 
 #include "ddc/vcp_feature_codes.h"
@@ -20,7 +23,7 @@ int vcp_feature_code_count;
 VCP_Feature_Table_Entry vcp_code_table[];
 static Feature_Value_Entry x14_color_preset_absolute_values[];
        Feature_Value_Entry xc8_display_controller_type_values[];
-bool default_table_feature_detail_function(Version_Spec vcp_version, Buffer * data, Buffer** presult);
+bool default_table_feature_detail_function(Buffer * data, Version_Spec vcp_version, char** presult);
 bool format_feature_detail_debug_continuous(
          Interpreted_Vcp_Code * code_info,  Version_Spec vcp_version, char * buffer, int bufsz);
 
@@ -159,11 +162,11 @@ bool vcp_format_table_feature_detail(
        VCP_Feature_Table_Entry * vcp_entry,
        Version_Spec              vcp_version,
        Buffer *                  accumulated_value,
-       Buffer * *                aformatted_data
+       char * *                  aformatted_data
      )
 {
    Format_Table_Feature_Detail_Function ffd_func = get_table_feature_detail_function(vcp_entry);
-   bool ok = ffd_func(vcp_version, accumulated_value, aformatted_data);
+   bool ok = ffd_func(accumulated_value, vcp_version, aformatted_data);
    return ok;
 }
 
@@ -319,14 +322,15 @@ VCP_Feature_Table_Entry * vcp_find_feature_by_hexid_w_default(Byte id) {
 // understand how to interpret the values for a feature.
 //
 
-bool default_table_feature_detail_function(Version_Spec vcp_version, Buffer * data, Buffer** presult) {
-         printf("(%s) vcp_version=%d.%d\n", __func__, vcp_version.major, vcp_version.minor);
-         int hexbufsize = buffer_length(data) * 3;
-         Buffer * outbuf = buffer_new(hexbufsize, "default_table_feature_detail_function");
+bool default_table_feature_detail_function(Buffer * data, Version_Spec vcp_version, char ** presult) {
+   printf("(%s) vcp_version=%d.%d\n", __func__, vcp_version.major, vcp_version.minor);
+   int hexbufsize = buffer_length(data) * 3;
+   char * result_buf = calloc(hexbufsize,1);
 
-         char space = ' ';
-         hexstring2(data->bytes, data->len, &space, false /* upper case */, (char *) outbuf->bytes, hexbufsize);
-         return outbuf;
+   char space = ' ';
+   hexstring2(data->bytes, data->len, &space, false /* upper case */, result_buf, hexbufsize);
+   *presult = result_buf;
+   return true;
 }
 
 //
@@ -340,7 +344,36 @@ bool default_table_feature_detail_function(Version_Spec vcp_version, Buffer * da
 // Functions for specific table VCP Feature Codes
 //
 
-// none so far
+// x73
+bool format_feature_detail_x73_lut_size(
+        Buffer *      data_bytes,
+        Version_Spec  vcp_version,
+        char **       pformatted_result)
+{
+   bool ok = true;
+   if (data_bytes->len != 9) {
+      printf("(%s) Expected 9 byte response.  Actual response:\n", __func__);
+      hex_dump(data_bytes->bytes, data_bytes->len);
+      ok = default_table_feature_detail_function(data_bytes, vcp_version, pformatted_result);
+   }
+   else {
+      Byte * bytes = data_bytes->bytes;
+      ushort red_entry_ct   = bytes[0] << 8 | bytes[1];
+      ushort green_entry_ct = bytes[2] << 8 | bytes[3];
+      ushort blue_entry_ct  = bytes[4] << 8 | bytes[5];
+      int    red_bits_per_entry   = bytes[6];
+      int    green_bits_per_entry = bytes[7];
+      int    blue_bits_per_entry  = bytes[8];
+      char buf[200];
+      snprintf(buf, sizeof(buf),
+               "Number of entries: %d red, %d green, %d blue,  Bits per entry: %d red, %d green, %d blue",
+               red_entry_ct,       green_entry_ct,       blue_entry_ct,
+               red_bits_per_entry, green_bits_per_entry, blue_bits_per_entry);
+      *pformatted_result = strdup(buf);
+   }
+   return ok;
+}
+
 
 
 //
@@ -1207,7 +1240,7 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
    { .code=0x73,
      .name="LUT size",
      .flags=VCP_RO | VCP_TABLE      | VCP_COLORMGT,
-      .formatter=format_feature_detail_standard_continuous,
+      .table_formatter=format_feature_detail_x73_lut_size,
    },
    { .code=0x87,
      .name="Sharpness",

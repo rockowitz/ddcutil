@@ -91,8 +91,14 @@ void                                   // returns nothing
 typedef bool (*Format_Feature_Detail_Function) (
                  Interpreted_Vcp_Code* code_info, Version_Spec vcp_version, char * buffer,  int     bufsz);
 
+#ifdef OLD
 typedef bool (*Format_Table_Feature_Detail_Function) (
                  Version_Spec vcp_version,  Buffer * data_bytes, Buffer** presult_buffer);
+#endif
+
+typedef bool (*Format_Table_Feature_Detail_Function) (
+                 Buffer * data_bytes, Version_Spec vcp_version, char ** presult_buffer);
+
 
 typedef ushort VCP_Feature_Flags;
 
@@ -143,7 +149,7 @@ bool vcp_format_table_feature_detail(
        VCP_Feature_Table_Entry * vcp_entry,
        Version_Spec              vcp_version,
        Buffer *                  accumulated_value,
-       Buffer * *                aformatted_data   // address at which to return newly allocated buffer
+       char * *                  aformatted_data   // address at which to return newly allocated buffer
      );
 
 // #define NULL_VCP_CODE (0x00)     /* used for unrecognized codes */

@@ -402,13 +402,13 @@ void show_vcp_for_table_vcp_code_table_entry_by_display_handle(
 
       if (output_level != OL_PROGRAM) {
 
-         Buffer * formatted_data = NULL;
+         char * formatted_data = NULL;
          bool ok = vcp_format_table_feature_detail(vcp_entry, vcp_version, accumulator, &formatted_data);
 
          if (ok) {
-            printf("VCP code 0x%02x (%-30s): %.*s\n",
-                   vcp_code, feature_name, formatted_data->len, formatted_data->bytes);
-            buffer_free(formatted_data, "table formatted data");
+            printf("VCP code 0x%02x (%-30s): %s\n",
+                   vcp_code, feature_name, formatted_data);
+            free(formatted_data);
          }
          else
             printf("VCP code 0x%02x (%-30s): !!! UNABLE TO FORMAT OUTPUT", vcp_code, feature_name);
