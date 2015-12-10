@@ -8,6 +8,8 @@
  ============================================================================
  */
 
+#include <config.h>
+
 #include <assert.h>
 #include <ctype.h>
 #include <errno.h>
@@ -23,10 +25,11 @@
 #include "base/ddc_packets.h"
 #include "base/displays.h"
 #include "base/msg_control.h"
+#include "base/linux_errno.h"
 #include "base/parms.h"
+#include "base/query_sysenv.h"
 #include "base/util.h"
 #include "base/status_code_mgt.h"
-#include "base/linux_errno.h"
 
 #include "i2c/i2c_bus_core.h"
 #include "i2c/i2c_do_io.h"
@@ -130,6 +133,11 @@ bool perform_get_capabilities(Display_Ref * dref) {
 //
 
 int main(int argc, char *argv[]) {
+// #ifdef INCLUDE_TESTCASES
+//    printf("(%s) INCLUDE_TESTCASES is set\n", __func__);
+// #else
+//    printf("(%s) INCLUDE_TESTCASES is NOT set\n", __func__);
+// #endif
    // set_trace_levels(TRC_ADL);   // uncomment to enable tracing during initialization
    initialize();
    int main_rc = EXIT_FAILURE;

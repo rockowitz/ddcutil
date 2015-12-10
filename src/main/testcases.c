@@ -23,12 +23,17 @@
 
 
 void show_test_cases() {
-   printf("\n Test Cases:\n");
-   int ndx = 0;
-   // int testcase_catalog_ct = get_testcase_catalog_ct();
-   // Testcase_Descriptor ** testcase_catalog = get_testcase_catalog();
-   for (;ndx < testcase_catalog_ct; ndx++) {
-      printf("  %d - %s\n", ndx+1, testcase_catalog[ndx].name);
+   if (testcase_catalog_ct == 0) {
+      printf("\nNo test cases\n");
+   }
+   else {
+      printf("\n Test Cases:\n");
+      int ndx = 0;
+      // int testcase_catalog_ct = get_testcase_catalog_ct();
+      // Testcase_Descriptor ** testcase_catalog = get_testcase_catalog();
+      for (;ndx < testcase_catalog_ct; ndx++) {
+         printf("  %d - %s\n", ndx+1, testcase_catalog[ndx].name);
+      }
    }
    puts("");
 }

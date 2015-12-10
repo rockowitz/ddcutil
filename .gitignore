@@ -14,14 +14,9 @@ aclocal.m4
 autom4te.cache
 autoscan.log
 build-config2
+configure
 config.cache
-/config/compile
-/config/config.guess
-/config/config.sub
-/config/depcomp
-/config/install-sh
-/config/ltmain.sh
-/config/missing
+/config/
 /config.h
 /config.h.in
 /config.log

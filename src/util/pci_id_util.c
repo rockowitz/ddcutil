@@ -70,6 +70,12 @@ char * find_pci_ids() {
 
 static GPtrArray * pci_vendors;
 
+// stats 12/2015:
+//   lines in pci.ids:  25,339
+//   vendors:        2.066
+//   total devices: 11,745
+//   subsystem:     10,974
+
 
 GPtrArray * load_pci_ids(){
    bool debug = false;
@@ -85,7 +91,7 @@ GPtrArray * load_pci_ids(){
       GPtrArray * all_lines = g_ptr_array_sized_new(30000);
       int linect = file_getlines(pci_id_fn, all_lines);
       if (all_lines) {
-         all_vendors = g_ptr_array_sized_new(15000);
+         all_vendors = g_ptr_array_sized_new(2800);
          Pci_Id_Vendor * cur_vendor = NULL;
          Pci_Id_Device * cur_device = NULL;
          Pci_Id_Subsys * cur_subsys = NULL;
@@ -176,7 +182,7 @@ GPtrArray * load_pci_ids(){
       g_ptr_array_set_free_func(all_lines, free);
       g_ptr_array_free(all_lines, true);
    }          // if (pci_id_dir)
-   if (debug || true) {
+   if (debug) {
       printf("(%s) Total vendors: %d, total devices: %d, total subsystems: %d\n",
              __func__, total_vendors, total_devices, total_subsys);
    }

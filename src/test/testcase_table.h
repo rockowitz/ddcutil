@@ -7,6 +7,8 @@
 #ifndef TESTCASE_TABLE_H_
 #define TESTCASE_TABLE_H_
 
+#include <base/displays.h>
+
 // type of display reference required/supported by the command
 typedef enum {DisplayRefNone, DisplayRefAny, DisplayRefBus, DisplayRefAdl} DisplayRefType;
 

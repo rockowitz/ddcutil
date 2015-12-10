@@ -68,6 +68,9 @@
 							<tool id="org.eclipse.linuxtools.cdt.autotools.core.toolchain.tool.gpp.396598770" name="GCC C++ Compiler" superClass="org.eclipse.linuxtools.cdt.autotools.core.toolchain.tool.gpp"/>
 						</toolChain>
 					</folderInfo>
+					<sourceEntries>
+						<entry excluding="oldsrc/" flags="VALUE_WORKSPACE_PATH" kind="sourcePath" name=""/>
+					</sourceEntries>
 				</configuration>
 			</storageModule>
 			<storageModule moduleId="org.eclipse.cdt.core.externalSettings"/>

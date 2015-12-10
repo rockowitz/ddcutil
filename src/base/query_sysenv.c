@@ -205,6 +205,18 @@ bool query_card_and_driver_using_lspci() {
 bool query_card_and_driver_using_sysfs() {
    bool ok = true;
 
+   // also of possible interest:
+   // /sys/class/i2c-dev/i2c-*/name
+   //    refers to video driver or piix4_smbus
+   // also accessed at:
+   // /sys/bus/i2c/devices/i2c-*/name
+   // /sys/bus/pci/drivers/nouveau
+   // /sys/bus/pci/drivers/piix4_smbus
+   // /sys/bus/pci/drivers/nouveau/0000:01:00.0
+   //                                           /name
+   //                                           i2c-dev
+
+
    printf("Obtaining card and driver information from /sys...\n");
 
    struct dirent *dent;

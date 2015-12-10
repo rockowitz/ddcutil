@@ -15,6 +15,7 @@ AC_INIT([dcctool], [ddctool_version], [rockowitz@minsoft.com])
 AC_CONFIG_AUX_DIR(config)
 dnl removed -Werror 
 AM_INIT_AUTOMAKE([-Wall -Wno-extra-portability foreign subdir-objects])
+AM_PROG_AR
 dnl adds support for --enable/disable -static/shared, -with/without-pic configure flags
 LT_INIT
 
@@ -86,7 +87,6 @@ AC_ARG_WITH([adl-headers],
             [ AS_HELP_STRING([--with-adl-headers=DIR], [Directory containing ADL header files]) ],
             [adl_header_dir=$withval],
             [adl_header_dir=[]])
-
 AC_MSG_NOTICE([adl_header_dir = $adl_header_dir])
 
 AS_IF([test "x$adl_header_dir" != "x"],
@@ -112,6 +112,28 @@ dnl AC_DEFINE_UNQUOTED([HAVE_ADL3], [$HAVE_ADL])
 
 dnl AC_DEFINE( [HAVE_ADL2], [1])
 
+
+
+AC_ARG_ENABLE([testcases],
+              [ AS_HELP_STRING( [--enable-testcases=@<:@no/yes@:>@], [Include test cases @<:@default=no@:>@] )],
+              [include_testcases=${enableval}],
+              [include_testcases=no] )
+dnl disable after testing:
+dnl AC_MSG_NOTICE([include_testcases = $include_testcases])
+dnl Set flag for automake.am:
+AM_CONDITIONAL([INCLUDE_TESTCASES_COND], [test "x$include_testcases" == "xyes"] )
+dnl Define INCLUDE_TESTCASES in config.h:
+AS_IF([test "x$include_testcases" == "xyes"],
+      AC_DEFINE_UNQUOTED( [INCLUDE_TESTCASES], [1], [If defined, build with test cases.]),
+      [])
+AS_IF([test "x$include_testcases" == "xyes"],
+      AC_MSG_NOTICE( [testcases... enabled]  ),
+      AC_MSG_NOTICE( [testcases... disabled] )
+     )
+
+
+
+AC_PROG_RANLIB
 
 
 # AC_CONFIG_FILES([Makefile, src/Makefile, src/util/Makefile])
