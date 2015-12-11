@@ -670,7 +670,7 @@ void i2c_show_active_display(Bus_Info * businfo, int depth) {
                                                businfo->edid->model_name,
                                                businfo->edid->serial_ascii);
    if (output_level >= OL_NORMAL) {
-      bool dump_edid = (output_level >= OL_VERBOSE);
+      bool dump_edid = (output_level >= OL_VERBOSE && businfo->edid);
       report_parsed_edid(businfo->edid, dump_edid /* verbose */, depth);
    }
 }

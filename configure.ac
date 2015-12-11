@@ -19,6 +19,16 @@ AM_PROG_AR
 dnl adds support for --enable/disable -static/shared, -with/without-pic configure flags
 LT_INIT
 
+dnl from online research
+dnl For creating both 32 and 64 bit: 
+dnl AM_ENABLE_MULTILIB
+dnl also write config-ml.in script 
+dnl needs system w both 32 and 64 bit libraries
+dnl ./configure --build=i686=pc-linux-gnu --prefix=/arch/x86-linux/gnu \
+dnl     CC=gcc -m32 -march-i586 \
+dnl     CXX="g++ -m32 -march=i585 LDFlags="-m32"
+
+
 dnl to automatically update libtool script if it becomes out of date:
 AC_SUBST([LIBTOOL_DEPS])
 

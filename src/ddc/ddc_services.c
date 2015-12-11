@@ -705,30 +705,39 @@ void show_vcp_values_by_display_ref(Display_Ref * dref, VCP_Feature_Subset subse
 Display_Info_List * ddc_get_valid_displays() {
    int ndx;
 
-      Display_Info_List i2c_displays = i2c_get_valid_displays();
-      Display_Info_List adl_displays = adlshim_get_valid_displays();
+   Display_Info_List i2c_displays = i2c_get_valid_displays();
+   Display_Info_List adl_displays = adlshim_get_valid_displays();
 
-      // merge the lists
-      int displayct = i2c_displays.ct + adl_displays.ct;
-      Display_Info_List * all_displays = calloc(1, sizeof(Display_Info_List));
-      all_displays->info_recs = calloc(displayct, sizeof(Display_Info));
-      all_displays->ct = displayct;
-      memcpy(all_displays->info_recs,
-             i2c_displays.info_recs,
-             i2c_displays.ct * sizeof(Display_Info));
-      memcpy(all_displays->info_recs + i2c_displays.ct*sizeof(Display_Info),
-             adl_displays.info_recs,
-             adl_displays.ct * sizeof(Display_Info));
-      if (i2c_displays.info_recs)
-         free(i2c_displays.info_recs);
-      if (adl_displays.info_recs)
-         free(adl_displays.info_recs);
-      for (ndx = 0; ndx < displayct; ndx++) {
-         all_displays->info_recs[ndx].dispno = ndx+1;      // displays are numbered from 0, not 1
+   // merge the lists
+   int displayct = i2c_displays.ct + adl_displays.ct;
+   Display_Info_List * all_displays = calloc(1, sizeof(Display_Info_List));
+   all_displays->info_recs = calloc(displayct, sizeof(Display_Info));
+   all_displays->ct = displayct;
+   memcpy(all_displays->info_recs,
+          i2c_displays.info_recs,
+          i2c_displays.ct * sizeof(Display_Info));
+   memcpy(all_displays->info_recs + i2c_displays.ct*sizeof(Display_Info),
+          adl_displays.info_recs,
+          adl_displays.ct * sizeof(Display_Info));
+   if (i2c_displays.info_recs)
+      free(i2c_displays.info_recs);
+   if (adl_displays.info_recs)
+      free(adl_displays.info_recs);
+   // TODO: do not assign display number in case of I2C bus entry that isn't in fact
+   // a display
+   int displayctr = 0;
+   for (ndx = 0; ndx < displayct; ndx++) {
+      if (ddc_is_valid_display_ref(all_displays->info_recs[ndx].dref, false /* emit msgs */)) {
+         displayctr++;
+         all_displays->info_recs[ndx].dispno = displayctr;      // displays are numbered from 0, not 1
       }
-      // printf("(%s) all_displays in main.c:\n", __func__);
-      // report_display_info_list(all_displays, 0);
-      return all_displays;
+      else
+         all_displays->info_recs[ndx].dispno = -1;
+   }
+
+   // printf("(%s) all_displays in main.c:\n", __func__);
+   // report_display_info_list(all_displays, 0);
+   return all_displays;
 }
 
 
@@ -747,7 +756,7 @@ void ddc_show_active_display(Display_Info * curinfo, int depth) {
    }
 
    Output_Level output_level = get_output_level();
-   if (output_level >= OL_NORMAL) {
+   if (output_level >= OL_NORMAL  && ddc_is_valid_display_ref(curinfo->dref, false)) {
       // char * short_name = display_ref_short_name(curinfo->dref);
           // printf("Display:       %s\n", short_name);
           // works, but TMI
@@ -813,8 +822,11 @@ int ddc_show_active_displays(int depth) {
    Display_Info_List * display_list = ddc_get_valid_displays();
    int ndx;
    for (ndx=0; ndx<display_list->ct; ndx++) {
-      rpt_vstring(depth, "Display %d", ndx+1);
       Display_Info * curinfo = &display_list->info_recs[ndx];
+      if (curinfo->dispno == -1)
+         rpt_vstring(depth, "Invalid display");
+      else
+         rpt_vstring(depth, "Display %d", curinfo->dispno);
       ddc_show_active_display(curinfo, depth+1);
       puts("");
    }
@@ -837,9 +849,16 @@ Display_Ref* ddc_find_display_by_dispno(int dispno) {
       printf("(%s) Starting.  dispno=%d\n", __func__, dispno);
    Display_Ref * result = NULL;
    Display_Info_List * all_displays = ddc_get_valid_displays();
+
    if (dispno >= 1 && dispno <= all_displays->ct) {
-      Display_Info chosen = all_displays->info_recs[dispno-1];
-      result = chosen.dref;
+      // we're not done yet.   There may be an invalid display in the list.
+      int ndx;
+      for (ndx=0; ndx<all_displays->ct; ndx++) {
+         if (all_displays->info_recs[ndx].dispno == dispno) {
+            result = all_displays->info_recs[ndx].dref;
+            break;
+         }
+      }
    }
 
    if (debug) {

@@ -294,6 +294,7 @@ void show_reporting() {
    show_output_level();
    show_ddcmsg();
    show_trace_groups();
+   puts("");
 }
 
 
