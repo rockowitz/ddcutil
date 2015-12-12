@@ -43,15 +43,15 @@
 
 // Memory allocation function
 void* __stdcall ADL_Main_Memory_Alloc ( int iSize ) {
-   // printf("(%s) iSize=%d\n", __func__, iSize );
+   // DBGMSG("iSize=%d", iSize );
    void* lpBuffer = malloc ( iSize );
-   // printf("(%s) Returning: %p\n", __func__ , lpBuffer);
+   // DBGMSG("Returning: %p" , lpBuffer);
    return lpBuffer;
 }
 
 // Optional Memory de-allocation function
 void __stdcall ADL_Main_Memory_Free ( void** pBuffer ) {
-   // printf("(%s) pBuffer=%p, *pBuffer=%p  \n", __func__, pBuffer, *pBuffer );
+   // DBGMSG("pBuffer=%p, *pBuffer=%p  ", pBuffer, *pBuffer );
    if ( NULL != *pBuffer ) {
       free ( *pBuffer );
       *pBuffer = NULL;
@@ -99,7 +99,7 @@ static ADL_Call_Stats*  timing_stats = &dummystats;
 static bool gather_timing_stats = false;
 
 void init_adl_call_stats(ADL_Call_Stats * pstats) {
-   // printf("(%s) Starting. pstats = %p\n", __func__, timing_stats);
+   // DBGMSG("Starting. pstats = %p", timing_stats);
    assert(pstats);
    timing_stats = pstats;
    gather_timing_stats = true;;
@@ -136,16 +136,16 @@ bool adl_is_available() {
  *  -1 error loading function
  */
 static int link_adl(Adl_Procs** pLocAdl_Procs, bool verbose) {
-   // printf("(%s) Staring.\n", __func__ );
+   // DBGMSG("Staring." );
    Adl_Procs* adl =  calloc(1, sizeof(Adl_Procs));
    int result = 0;
 
 #define LOADFUNC(_n_) \
    do { \
-   /* printf("(%s) Loading function %s\n", __func__, #_n_);  */  \
+   /* DBGMSG("Loading function %s", #_n_);  */  \
    adl->_n_ = dlsym(adl->hDLL, #_n_); \
    if (!adl->_n_) { \
-       fprintf(stderr, "(%s) ADL error: loading symbol %s\n", __func__, #_n_); \
+       SEVEREMSG("ADL error: loading symbol %s\n", #_n_); \
        result = -1; \
    }   \
    } while (0)
@@ -154,7 +154,7 @@ static int link_adl(Adl_Procs** pLocAdl_Procs, bool verbose) {
    adl->hDLL = dlopen("libatiadlxx.so", RTLD_LAZY|RTLD_GLOBAL);
    if (!adl->hDLL) {
       if (verbose)
-         printf("(%s) ADL library libatiadlxx.so not found.\n", __func__ );
+         printf("ADL library libatiadlxx.so not found." );   // this is a user error msg
       result = 1;
    }
    else {
@@ -196,11 +196,11 @@ static int link_adl(Adl_Procs** pLocAdl_Procs, bool verbose) {
        LOADFUNC( ADL_Display_XrandrDisplayName_Get );
 
    }
-   // printf("(%s) adl->ADL_Main_Control_Create = %p   \n", __func__, adl->ADL_Main_Control_Create );
+   // DBGMSG("adl->ADL_Main_Control_Create = %p   ", adl->ADL_Main_Control_Create );
    if (result == 0) {
       *pLocAdl_Procs = adl;
    }
-   // printf("(%s) Returning %d, *pLocAdl_Procs=%p   \n", __func__, result, *pLocAdl_Procs ) ;
+   // DBGMSG("Returning %d, *pLocAdl_Procs=%p   ", result, *pLocAdl_Procs ) ;
    return result;
 
 #undef LOADFUNC
@@ -220,8 +220,8 @@ static bool init_framework() {
    // Initialize ADL. The second parameter is 1, which means:
    // retrieve adapter information only for adapters that are physically present and enabled in the system
    if (adl_debug) {
-      printf("(%s) adl=%p\n", __func__, adl );
-      printf("(%s) adl->ADL_Main_Control_Create=%p   \n", __func__, adl->ADL_Main_Control_Create );
+      DBGMSG("adl=%p", adl );
+      DBGMSG("adl->ADL_Main_Control_Create=%p   ", adl->ADL_Main_Control_Create );
    }
 
    RECORD_IO_EVENT(
@@ -246,7 +246,7 @@ static bool init_framework() {
 
 #ifdef UNUSED
 bool isConnectedAndMapped(ADLDisplayInfo * pDisplayInfo) {
-   // printf("(%s) Startimg.  \n", __func__ );
+   // DBGMSG("Startimg.  " );
    bool result = true;
 
    // Use the display only if it's connected AND mapped (iDisplayInfoValue: bit 0 and 1 )
@@ -255,18 +255,18 @@ bool isConnectedAndMapped(ADLDisplayInfo * pDisplayInfo) {
            pDisplayInfo->iDisplayInfoValue )
       )
    {
-      // printf("(%s) Display not connected or not mapped\n", __func__ );
+      // DBGMSG("Display not connected or not mapped" );
       result = false;  // Skip the not connected or not mapped displays
    }
 
-   // printf("(%s) Returning %d   \n", __func__, result );
+   // DBGMSG("Returning %d   ", result );
    return result;
 }
 #endif
 
 
 static bool is_active_display(int iAdapterIndex, ADLDisplayInfo * pDisplayInfo) {
-   // printf("(%s) Startimg.  \n", __func__ );
+   // DBGMSG("Startimg.  " );
    bool result = true;
 
    // Use the display only if it's connected AND mapped (iDisplayInfoValue: bit 0 and 1 )
@@ -275,18 +275,18 @@ static bool is_active_display(int iAdapterIndex, ADLDisplayInfo * pDisplayInfo) 
            pDisplayInfo->iDisplayInfoValue )
       )
    {
-      // printf("(%s) Display not connected or not mapped\n", __func__ );
+      // DBGMSG("Display not connected or not mapped" );
       result = false;  // Skip the not connected or not mapped displays
    }
 
    // Is the display mapped to this adapter? This test is too restrictive and may not be needed.
    // Appears necessary (SAR) - otherwise get additional displays
    else if ( iAdapterIndex != pDisplayInfo->displayID.iDisplayLogicalAdapterIndex ) {
-      // printf("(%s) Display not mapped to this adapter   \n", __func__ );
+      // DBGMSG("Display not mapped to this adapter   " );
       result = false;
    }
 
-   // printf("(%s) Returning %d   \n", __func__, result );
+   // DBGMSG("Returning %d   ", result );
    return result;
 }
 
@@ -301,7 +301,7 @@ static bool is_active_display(int iAdapterIndex, ADLDisplayInfo * pDisplayInfo) 
  */
 static bool scan_for_displays() {
    if (adl_debug)
-      printf("(%s) Starting.\n", __func__ );
+      DBGMSG("Starting." );
    int            rc;
    int            iNumberAdapters;
    AdapterInfo *  pAdapterInfo;
@@ -318,10 +318,10 @@ static bool scan_for_displays() {
 
    // rc = adl->ADL_Adapter_NumberOfAdapters_Get ( &iNumberAdapters );
    if (rc != ADL_OK) {
-      printf("Cannot get the number of adapters!  ADL_Adapter_NumberOfAdapaters_Get() returned %d\n", rc);
+      DBGMSG("Cannot get the number of adapters!  ADL_Adapter_NumberOfAdapaters_Get() returned %d", rc);
       ok = false;
    }
-   // printf("(%s) Found %d adapters\n", __func__, iNumberAdapters );
+   // DBGMSG("Found %d adapters", iNumberAdapters );
 
    if ( 0 < iNumberAdapters ) {
       pAdapterInfo = malloc ( sizeof (AdapterInfo) * iNumberAdapters );
@@ -371,7 +371,7 @@ static bool scan_for_displays() {
          )
         );
          if (rc != ADL_OK) {
-             printf("ADL_Adapter_VideoBiosInfo_Get() returned %d\n", rc);
+             DBGMSG("ADL_Adapter_VideoBiosInfo_Get() returned %d", rc);
              continue;
           }
          else {    // TEMP
@@ -385,7 +385,7 @@ static bool scan_for_displays() {
 #endif
 
          pAdlDisplayInfo = NULL;    // set to NULL before calling ADL_Display_DisplayInfo_Get()
-         // printf("(%s) pAdlDisplayInfo=%p\n", __func__, pAdlDisplayInfo );
+         // DBGMSG("pAdlDisplayInfo=%p", pAdlDisplayInfo );
          RECORD_IO_EVENT(
             IE_OTHER,
             (
@@ -402,18 +402,18 @@ static bool scan_for_displays() {
          //         &pAdlDisplayInfo,       // return pointer to retrieved displayinfo array here
          //         0);                     // do not force detection
          if (rc != ADL_OK) {
-            printf("ADL_Display_DisplayInfo_Get() returned %d\n", rc);
+            DBGMSG("ADL_Display_DisplayInfo_Get() returned %d", rc);
             continue;
          }
-         // printf("(%s) ADL_Display_DisplayInfo_Get() succeeded, displayCtForAdapter=%d\n", __func__, displayCtForAdapter );
+         // DBGMSG("ADL_Display_DisplayInfo_Get() succeeded, displayCtForAdapter=%d", displayCtForAdapter );
 
          for ( displayNdx = 0; displayNdx < displayCtForAdapter; displayNdx++ ) {
-            // printf("(%s) adapter loop index = %d,   display loop index = %d  \n", __func__, adapterNdx, displayNdx);
+            // DBGMSG("adapter loop index = %d,   display loop index = %d  ", adapterNdx, displayNdx);
             ADLDisplayInfo * pCurDisplayInfo = &pAdlDisplayInfo[displayNdx];
             iDisplayIndex = pCurDisplayInfo->displayID.iDisplayLogicalIndex;
-            // printf("(%s) iAdapterIndex=%d, iDisplayIndex=%d\n", __func__, iAdapterIndex, iDisplayIndex );
+            // DBGMSG("iAdapterIndex=%d, iDisplayIndex=%d", iAdapterIndex, iDisplayIndex );
             if (adl_debug) {
-               printf("(%s) iAdapterIndex=%d, iDisplayIndex=%d\n", __func__, iAdapterIndex, iDisplayIndex );
+               DBGMSG("iAdapterIndex=%d, iDisplayIndex=%d", iAdapterIndex, iDisplayIndex );
                report_adl_ADLDisplayInfo(pCurDisplayInfo, 2);
             }
             char xrandrname[100] = {0};
@@ -426,13 +426,13 @@ static bool scan_for_displays() {
             );
             //rc = adl->ADL_Display_XrandrDisplayName_Get(iAdapterIndex, iDisplayIndex, xrandrname, 100);
             if (rc != 0)
-               printf("(%s) ADL_Display_XrandrDisplayName_Get() returned %d\n   \n", __func__, rc );
+               DBGMSG("ADL_Display_XrandrDisplayName_Get() returned %d\n   ", rc );
             // if (rc == 0)
-            //    printf("(%s) ADL_Display_XrandrDisplayName returned xrandrname=|%s|\n", __func__, xrandrname );
+            //    DBGMSG("ADL_Display_XrandrDisplayName returned xrandrname=|%s|", xrandrname );
 
             if (is_active_display(iAdapterIndex, pCurDisplayInfo)) {
             // if (isConnectedAndMapped(pCurDisplayInfo) ) {
-               // printf("(%s) Found active display.  iAdapterIndex=%d, iDisplayIndex=%d\n", __func__, iAdapterIndex, iDisplayIndex );
+               // DBGMSG("Found active display.  iAdapterIndex=%d, iDisplayIndex=%d", iAdapterIndex, iDisplayIndex );
                assert(active_display_ct < MAX_ACTIVE_DISPLAYS);
                ADL_Display_Rec * pCurActiveDisplay = &active_displays[active_display_ct];
                pCurActiveDisplay->iAdapterIndex = iAdapterIndex;
@@ -456,7 +456,7 @@ static bool scan_for_displays() {
                );
                // rc = adl->ADL_Display_EdidData_Get(iAdapterIndex, iDisplayIndex, pEdidData);
                if (rc != ADL_OK) {
-                  printf("(%s) ADL_Display_EdidData_Get() returned %d\n", __func__, rc );
+                  DBGMSG("ADL_Display_EdidData_Get() returned %d", rc );
                   pCurActiveDisplay->pAdlEdidData = NULL;
                   free(pEdidData);
                }
@@ -483,7 +483,7 @@ static bool scan_for_displays() {
                );
                // rc = adl->ADL_Display_DDCInfo2_Get(iAdapterIndex, iDisplayIndex, pDDCInfo2 );
                if (rc != ADL_OK) {
-                     printf("(%s) ADL_Display_DDCInfo2_Get() returned %d\n", __func__, rc );
+                     DBGMSG("ADL_Display_DDCInfo2_Get() returned %d", rc );
                      pCurActiveDisplay->pAdlDDCInfo2 = NULL;
                      free(pDDCInfo2);
                      pCurActiveDisplay->supports_ddc = false;
@@ -507,7 +507,7 @@ static bool scan_for_displays() {
    }  // iNumberAdapters > 0
 
    if (adl_debug)
-      printf("(%s) Returning %d\n", __func__, ok );
+      DBGMSG("Returning %d", ok );
    return ok;
 }
 
@@ -529,20 +529,20 @@ bool adl_initialize() {
    // A hack, to reuse all the if (debug) ... tracing code without converting
    // it to use TRCMSG.  The debug flag is made global to the module.
    adl_debug = IS_TRACING();
-   // printf("(%s) adl_debug=%d\n", __func__, adl_debug);
+   // DBGMSG("adl_debug=%d", adl_debug);
 
    int rc;
    bool ok = false;
 
    rc = link_adl(&adl, false /* verbose */);
    if (rc != 0 && adl_debug)
-      printf("(%s) link_adl() failed   \n", __func__ );
+      DBGMSG("link_adl() failed   " );
    if (rc == 0) {
       adl_linked = true;
       ok = init_framework();
       if (ok) {
          ok = scan_for_displays();
-         // printf("(%s) init_adl_new() returned %d\n", __func__, ok );
+         // DBGMSG("init_adl_new() returned %d", ok );
       }
    }
    if (ok) {
@@ -676,7 +676,7 @@ Display_Info_List adl_get_valid_displays() {
    }
    info_list.info_recs = info_recs;
    info_list.ct = active_display_ct;
-   // printf("(%s) Done. Returning:\n", __func__);
+   // DBGMSG("Done. Returning:");
    // report_display_info_list(&info_list, 0);
    return info_list;
 }
@@ -791,7 +791,7 @@ ADL_Display_Rec * adl_get_display_by_adlno(int iAdapterIndex, int iDisplayIndex,
  *
  */
 ADL_Display_Rec * adl_find_display_by_model_sn(const char * model, const char * sn) {
-   // printf("(%s) Starting. mode=%s, sn=%s   \n", __func__, model, sn );
+   // DBGMSG("Starting. mode=%s, sn=%s   ", model, sn );
    ADL_Display_Rec * result = NULL;
    int ndx;
    for (ndx = 0; ndx < active_display_ct; ndx++) {
@@ -803,7 +803,7 @@ ADL_Display_Rec * adl_find_display_by_model_sn(const char * model, const char * 
          break;
       }
    }
-   // printf("(%s) Returning: %p   \n", __func__, result );
+   // DBGMSG("Returning: %p   ", result );
    return result;
 }
 
@@ -812,7 +812,7 @@ ADL_Display_Rec * adl_find_display_by_model_sn(const char * model, const char * 
  *
  */
 ADL_Display_Rec * adl_find_display_by_edid(const Byte * pEdidBytes) {
-   // printf("(%s) Starting. mode=%s, sn=%s   \n", __func__, model, sn );
+   // DBGMSG("Starting. mode=%s, sn=%s   ", model, sn );
    ADL_Display_Rec * result = NULL;
    int ndx;
    for (ndx = 0; ndx < active_display_ct; ndx++) {
@@ -824,7 +824,7 @@ ADL_Display_Rec * adl_find_display_by_edid(const Byte * pEdidBytes) {
          break;
       }
    }
-   // printf("(%s) Returning: %p   \n", __func__, result );
+   // DBGMSG("Returning: %p   ", result );
    return result;
 }
 
@@ -867,18 +867,17 @@ Base_Status_ADL call_ADL_Display_DDCBlockAccess_Get(
    int rc;
 
    if (adl_debug) {
-      printf("(%s) iAdapterIndex=%d, iDisplayIndex=%d, iOption=%d, xxx=%d, iSendMsgLen=%d lpucSemdMsgBuf=%p,"
-             " *piRecvMsgLen=%d, lpucRcvMsgBuf=%p\n",
-         __func__,
-         iAdapterIndex, iDisplayIndex, iOption, iCommandIndex, iSendMsgLen, lpucSendMsgBuf, *iRecvMsgLen, lpucRcvMsgBuf);
+      DBGMSG("iAdapterIndex=%d, iDisplayIndex=%d, iOption=%d, xxx=%d, iSendMsgLen=%d lpucSemdMsgBuf=%p,"             
+             " *piRecvMsgLen=%d, lpucRcvMsgBuf=%p\n",       
+             iAdapterIndex, iDisplayIndex, iOption, iCommandIndex, iSendMsgLen, lpucSendMsgBuf, *iRecvMsgLen, lpucRcvMsgBuf);
       if (lpucSendMsgBuf) {
          char * hs = hexstring(lpucSendMsgBuf, iSendMsgLen);
-         printf("(%s) lpucSendMsgBuf -> %s  \n", __func__, hs );
+         DBGMSG("lpucSendMsgBuf -> %s  ", hs );
          free(hs);
       }
       if (lpucRcvMsgBuf) {
          char * hs = hexstring(lpucRcvMsgBuf, *iRecvMsgLen);
-         printf("(%s) lpucRecvMsgBuf -> %s  \n", __func__, hs  );
+         DBGMSG("lpucRecvMsgBuf -> %s  ", hs  );
          free(hs);
       }
    }
@@ -916,7 +915,7 @@ Base_Status_ADL adl_ddc_write_only(
    int rc = call_ADL_Display_DDCBlockAccess_Get( iAdapterIndex, iDisplayIndex, 0, 0, sendMsgLen, pSendMsgBuf, &iRev, NULL);
    // note_io_event(IE_WRITE_ONLY, __func__);
 
-   // printf("(%s) Returning %d. \n", __func__, rc);
+   // DBGMSG("Returning %d. ", rc);
    return rc;
 }
 
@@ -930,8 +929,8 @@ Base_Status_ADL adl_ddc_read_only(
 {
    assert(module_initialized);
    if (adl_debug) {
-      printf("(%s) Starting. iAdapterIndex=%d, iDisplayIndex=%d, pRcvButect=%d\n",
-             __func__, iAdapterIndex, iDisplayIndex, *pRcvBytect);
+      DBGMSG("Starting. iAdapterIndex=%d, iDisplayIndex=%d, pRcvButect=%d", 
+        iAdapterIndex, iDisplayIndex, *pRcvBytect);
    }
 
    Byte sendMsgBuf[] = {0x6f};
@@ -947,10 +946,10 @@ Base_Status_ADL adl_ddc_read_only(
                     pRcvMsgBuf);
 
    if (adl_debug) {
-      printf("(%s) Returning %d. \n", __func__, rc);
+      DBGMSG("Returning %d. ", rc);
       if (rc == 0) {
          char * s = hexstring(pRcvMsgBuf, *pRcvBytect);
-         printf("(%s) *pRcvBytect=%d, pRevMsgBuf->%s   \n", __func__,*pRcvBytect, s );
+         DBGMSG("*pRcvBytect=%d, pRevMsgBuf->%s   ",*pRcvBytect, s );
          free(s);
       }
    }
@@ -970,8 +969,8 @@ Base_Status_ADL adl_ddc_write_read(
    assert(module_initialized);
    if (adl_debug) {
       char * s = hexstring(pSendMsgBuf, sendMsgLen);
-      printf("(%s) Starting. iAdapterIndex=%d, iDisplayIndex=%d, sendMsgLen=%d, pSendMsgBuf->%s, *pRcvBytect=%d\n",
-             __func__, iAdapterIndex, iDisplayIndex, sendMsgLen, s, *pRcvBytect);
+      DBGMSG("Starting. iAdapterIndex=%d, iDisplayIndex=%d, sendMsgLen=%d, pSendMsgBuf->%s, *pRcvBytect=%d", 
+        iAdapterIndex, iDisplayIndex, sendMsgLen, s, *pRcvBytect);
       free(s);
    }
 
@@ -984,10 +983,10 @@ Base_Status_ADL adl_ddc_write_read(
    }
 
    if (adl_debug) {
-      printf("(%s) Returning %d. \n", __func__, rc);
+      DBGMSG("Returning %d. ", rc);
       if (rc == 0) {
          char * s = hexstring(pRcvMsgBuf, *pRcvBytect);
-         printf("(%s) pRevMsgBuf->%s   \n", __func__,s );
+         DBGMSG("pRevMsgBuf->%s   ",s );
          free(s);
       }
    }
@@ -1008,8 +1007,8 @@ Base_Status_ADL adl_ddc_write_read_onecall(
    assert(module_initialized);
    if (adl_debug) {
       char * s = hexstring(pSendMsgBuf, sendMsgLen);
-      printf("(%s) Starting. iAdapterIndex=%d, iDisplayIndex=%d, sendMsgLen=%d, pSendMsgBuf->%s, *pRcvBytect=%d\n",
-          __func__, iAdapterIndex, iDisplayIndex, sendMsgLen, s, *pRcvBytect);
+      DBGMSG("Starting. iAdapterIndex=%d, iDisplayIndex=%d, sendMsgLen=%d, pSendMsgBuf->%s, *pRcvBytect=%d", 
+        iAdapterIndex, iDisplayIndex, sendMsgLen, s, *pRcvBytect);
       free(s);
    }
 
@@ -1024,10 +1023,10 @@ Base_Status_ADL adl_ddc_write_read_onecall(
                      pRcvBytect,
                      pRcvMsgBuf);
    if (adl_debug) {
-      printf("(%s) Returning %d. \n", __func__, rc);
+      DBGMSG("Returning %d. ", rc);
       if (rc == 0) {
          char * s = hexstring(pRcvMsgBuf, *pRcvBytect);
-         printf("(%s) pRevMsgBuf->%s   \n", __func__,s );
+         DBGMSG("pRevMsgBuf->%s   ",s );
          free(s);
       }
    }

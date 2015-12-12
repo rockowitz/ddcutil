@@ -137,12 +137,12 @@ bool get_edid_modelname_and_sn(
          // printf("String in descriptor: %s\n", hexstring(textstart, 14));
          int    textlen = 0;
          while (*(textstart+textlen) != 0x0a && textlen < 14) {
-            // printf("(%s) textlen=%d, char=0x%02x\n", __func__, textlen, *(textstart+textlen));
+            // DBGMSG("textlen=%d, char=0x%02x", textlen, *(textstart+textlen));
             textlen++;
          }
          memcpy(nameslot, textstart, textlen);
          nameslot[textlen] = '\0';
-         // printf("(%s) name = %s\n", __func__, nameslot);
+         // DBGMSG("name = %s", nameslot);
          fields_found++;
       }
    }
@@ -182,9 +182,9 @@ Parsed_Edid * create_parsed_edid(Byte* edidbytes) {
            parsed_edid->model_name,   sizeof(parsed_edid->model_name),
            parsed_edid->serial_ascii, sizeof(parsed_edid->serial_ascii) );
 
-   // printf("(%s) mfg_id=|%s|\n", __func__, parsed_edid->mfg_id);
-   // printf("(%s) model_name=|%s|\n", __func__, parsed_edid->model_name);
-   // printf("(%s) serial_ascii=|%s|\n", __func__, parsed_edid->serial_ascii);
+   // DBGMSG("mfg_id=|%s|", parsed_edid->mfg_id);
+   // DBGMSG("model_name=|%s|", parsed_edid->model_name);
+   // DBGMSG("serial_ascii=|%s|", parsed_edid->serial_ascii);
    parsed_edid->year = edidbytes[17] + 1990;
    parsed_edid->is_model_year = edidbytes[16] == 0xff;
    parsed_edid->edid_version_major = edidbytes[18];
@@ -218,7 +218,7 @@ void report_parsed_edid(Parsed_Edid * edid, bool verbose, int depth) {
    }
    else {
       if (verbose)
-         rpt_vstring(d1,"(%s) edid == NULL", __func__ );
+         rpt_vstring(d1,"No edid");
    }
 }
 

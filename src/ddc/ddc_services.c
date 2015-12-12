@@ -120,7 +120,7 @@ Display_Ref* get_display_ref_for_display_identifier(Display_Identifier* pdid, bo
       }
    }
 
-   // printf("(%s) Returning: %s\n", __func__, (pdref)?"non-null": "NULL" );
+   // DBGMSG("Returning: %s", (pdref)?"non-null": "NULL" );
    return dref;
 }
 
@@ -257,10 +257,10 @@ Interpreted_Vcp_Code * get_and_filter_vcp_value(
       printf("\nGetting data for VCP code 0x%02x - %s:\n", vcp_code, feature_name);
    Interpreted_Vcp_Code * code_info = NULL;
    Global_Status_Code rc = get_vcp_by_display_handle(dh, vcp_code, &code_info);
-   // printf("(%s) get_vcp_by_DisplayRef() returned %p\n", __func__, code_info);
+   // DBGMSG("get_vcp_by_DisplayRef() returned %p", code_info);
 
    // if (code_info)
-   //    printf("(%s) code_info->valid_response=%d\n", __func__, code_info->valid_response);
+   //    DBGMSG("code_info->valid_response=%d", code_info->valid_response);
    // for unsupported features, some monitors return null response rather than a valid response
    // with unsupported feature indicator set
    if (rc == DDCRC_NULL_RESPONSE) {
@@ -283,7 +283,7 @@ Interpreted_Vcp_Code * get_and_filter_vcp_value(
    }
    else {
       // if interpretation is version dependent and version not already set, get it
-      // printf("(%s) vcp_entry->flags=0x%04x\n", __func__, vcp_entry->flags);
+      // DBGMSG("vcp_entry->flags=0x%04x", vcp_entry->flags);
       Version_Spec vcp_version = {0,0};
       if ( (vcp_entry->flags & VCP_FUNC_VER) )
            vcp_version = get_vcp_version_by_display_handle(dh);
@@ -346,7 +346,7 @@ void show_vcp_for_nontable_vcp_code_table_entry_by_display_handle(
       //   free(code_info);   // sometimes causes free failure, crash
    }
    if (debug)
-      printf("(%s) Done\n", __func__);
+      DBGMSG("Done");
    // TRCMSG("Done");
 }
 
@@ -447,7 +447,7 @@ void show_vcp_for_table_vcp_code_table_entry_by_display_handle(
 
    // TRCMSG("Done");
    if (debug)
-      printf("(%s) Done.\n", __func__);
+      DBGMSG("Done.");
 }
 
 
@@ -492,7 +492,7 @@ void show_vcp_for_vcp_code_table_entry_by_display_ref(
 #ifdef UNUSED
 void show_single_vcp_value_by_display_handle(Display_Handle * phandle, char * feature, bool force) {
    // char buf[100];
-   // printf("(%s) Starting. Getting feature %s for %s\n", __func__, feature,
+   // DBGMSG("Starting. Getting feature %s for %s", feature,
    //        shortBasicDisplayRef(pdisp, buf, 100) );
    VCP_Feature_Table_Entry * entry = vcp_find_feature_by_charid(feature);
    if (entry) {
@@ -504,7 +504,7 @@ void show_single_vcp_value_by_display_handle(Display_Handle * phandle, char * fe
       }
    }
    else if (force) {
-      printf("(%s) force specified.  UNIMPLEMENTED\n", __func__ );
+      DBGMSG("force specified.  UNIMPLEMENTED" );
    }
    else {
       printf("Unrecognized VCP feature code: %s\n", feature);
@@ -531,7 +531,7 @@ void show_single_vcp_value_by_display_ref(Display_Ref * dref, char * feature, bo
       }
    }
    else if (force) {
-      // printf("(%s) force specified.  UNIMPLEMENTED\n", __func__ );
+      // DBGMSG("force specified.  UNIMPLEMENTED" );
       entry = vcp_create_dummy_feature_for_charid(feature);    // issues error message if invalid hex
       if (!entry) {
          showit = false;
@@ -543,14 +543,14 @@ void show_single_vcp_value_by_display_ref(Display_Ref * dref, char * feature, bo
       showit = false;
    }
 
-   // printf("(%s) showit=%d\n", __func__, showit);
+   // DBGMSG("showit=%d", showit);
    if (showit) {
-      // printf("(%s) calling show_vcp_for_vcp_code_table_entry_by_display_ref()\n", __func__);
+      // DBGMSG("calling show_vcp_for_vcp_code_table_entry_by_display_ref()");
       show_vcp_for_vcp_code_table_entry_by_display_ref(dref, entry, NULL);
    }
 
    if (debug)
-      printf("(%s) Done\n", __func__);
+      DBGMSG("Done");
 }
 
 
@@ -571,19 +571,19 @@ void show_vcp_values_by_display_handle(
 {
    bool debug = false;
    if (debug)
-      printf("(%s) Starting.  subset=%d  dh=%s\n", __func__, subset, display_handle_repr(dh) );
+      DBGMSG("Starting.  subset=%d  dh=%s", subset, display_handle_repr(dh) );
 
    // For collections of feature codes, just assume that at least one of them
    // will need the version number for proper interpretation.
    // TODO: verify lookup always occurs in called functions and eliminate parm
    Version_Spec vcp_version = get_vcp_version_by_display_handle(dh);
-   // printf("(%s) VCP version = %d.%d\n", __func__, vcp_version.major, vcp_version.minor);
+   // DBGMSG("VCP version = %d.%d", vcp_version.major, vcp_version.minor);
 
    if (subset == SUBSET_SCAN) {
       int ndx = 0;
       for (ndx=0; ndx <= 255; ndx++) {
          Byte id = ndx;
-         // printf("(%s) ndx=%d, id=0x%02x\n", __func__, ndx, id);
+         // DBGMSG("ndx=%d, id=0x%02x", ndx, id);
          VCP_Feature_Table_Entry * entry = vcp_find_feature_by_hexid_w_default(id);
          bool suppress_unsupported = (get_output_level() < OL_VERBOSE);
          if ( !( (entry->flags) & VCP_READABLE ) ){
@@ -652,7 +652,7 @@ void show_vcp_values_by_display_handle(
    }
 
    if (debug)
-      printf("(%s) Done\n", __func__);
+      DBGMSG("Done");
 }
 
 
@@ -667,15 +667,14 @@ void show_vcp_values_by_display_handle(
  *    nothing
  */
 void show_vcp_values_by_display_ref(Display_Ref * dref, VCP_Feature_Subset subset, GPtrArray * collector) {
-   // printf("(%s) Starting.  subset=%d   \n", __func__, subset );
+   // DBGMSG("Starting.  subset=%d   ", subset );
    // need to ensure that bus info initialized
    bool validDisp = true;
    if (dref->ddc_io_mode == DDC_IO_DEVI2C) {
       // Is this needed?  or checked by openDisplay?
       Bus_Info * bus_info = i2c_get_bus_info(dref->busno);
       if (!bus_info ||  !(bus_info->flags & I2C_BUS_ADDR_0X37) ) {
-         fprintf(stderr, "(%s) Address 0x37 not detected on bus %d. I2C communication not available.\n",
-                __func__, dref->busno );
+         printf("Address 0x37 not detected on bus %d. I2C communication not available.\n", dref->busno );
          validDisp = false;
       }
    }
@@ -735,7 +734,7 @@ Display_Info_List * ddc_get_valid_displays() {
          all_displays->info_recs[ndx].dispno = -1;
    }
 
-   // printf("(%s) all_displays in main.c:\n", __func__);
+   // DBGMSG("all_displays in main.c:");
    // report_display_info_list(all_displays, 0);
    return all_displays;
 }
@@ -782,7 +781,7 @@ void ddc_show_active_display(Display_Info * curinfo, int depth) {
                 0xc8,         // controller manufacturer
                 &code_info);
          if (gsc != 0) {
-            printf("(%s) get_vcp_by_display_ref() returned %s\n", __func__, gsc_desc(gsc));
+            DBGMSG("get_vcp_by_display_ref() returned %s", gsc_desc(gsc));
          }
          else {
             Feature_Value_Entry * vals = pxc8_display_controller_type_values;
@@ -796,7 +795,7 @@ void ddc_show_active_display(Display_Info * curinfo, int depth) {
                         0xc9,         // firmware version
                         &code_info);
                if (gsc != 0) {
-                  printf("(%s) get_vcp_by_display_ref() returned %s\n", __func__, gsc_desc(gsc));
+                  DBGMSG("get_vcp_by_display_ref() returned %s", gsc_desc(gsc));
                }
                else {
                   rpt_vstring(depth, "Firmware version:    %d.%d", code_info->sh, code_info->sl);
@@ -846,7 +845,7 @@ int ddc_show_active_displays(int depth) {
 Display_Ref* ddc_find_display_by_dispno(int dispno) {
    bool debug = false;
    if (debug)
-      printf("(%s) Starting.  dispno=%d\n", __func__, dispno);
+      DBGMSG("Starting.  dispno=%d", dispno);
    Display_Ref * result = NULL;
    Display_Info_List * all_displays = ddc_get_valid_displays();
 
@@ -862,7 +861,7 @@ Display_Ref* ddc_find_display_by_dispno(int dispno) {
    }
 
    if (debug) {
-      printf("(%s) Returning: %p  \n", __func__, result );
+      DBGMSG("Returning: %p  ", result );
       if (result)
          report_display_ref(result, 0);
    }
@@ -905,12 +904,10 @@ Version_Spec get_vcp_version_by_display_handle(Display_Handle * dh) {
       }
       else {
          // happens for pre MCCS v2 monitors
-         if (debug)
-            printf("(%s) Error detecting VCP version. gsc=%s\n",
-                    __func__, gsc_desc(gsc) );
+         DBGMSF(debug, "Error detecting VCP version. gsc=%s\n", gsc_desc(gsc) );
       }
    }
-   // printf("(%s) Returning: %d.%d\n", __func__, dh->vcp_version.major, dh->vcp_version.minor);
+   // DBGMSG("Returning: %d.%d", dh->vcp_version.major, dh->vcp_version.minor);
    return dh->vcp_version;
 }
 
@@ -937,7 +934,7 @@ Version_Spec get_vcp_version_by_display_ref(Display_Ref * dref) {
       ddc_close_display(dh);
    }
 
-   // printf("(%s) Returning: %d.%d\n", __func__, dref->vcp_version.major, vspec.minor);
+   // DBGMSG("Returning: %d.%d", dref->vcp_version.major, vspec.minor);
    return dref->vcp_version;
 }
 
@@ -1072,11 +1069,11 @@ GPtrArray * get_profile_related_values_by_display_handle(Display_Handle* dh) {
    g_ptr_array_add(vals, s);
 
    Parsed_Edid * edid = ddc_get_parsed_edid_by_display_handle(dh);
-   // printf("(%s) strlen(mfg_id)=%ld\n", __func__, strlen(edid->mfg_id));
+   // DBGMSG("strlen(mfg_id)=%ld", strlen(edid->mfg_id));
    snprintf(buf, bufsz, "MFG_ID  %s",  edid->mfg_id);
-   // printf("(%s) strlen(buf)=%ld\n", __func__, strlen(buf));
+   // DBGMSG("strlen(buf)=%ld", strlen(buf));
    s = strdup(buf);
-   // printf("(%s) strlen(s)=%ld\n", __func__, strlen(s));
+   // DBGMSG("strlen(s)=%ld", strlen(s));
    g_ptr_array_add(vals, s);
    snprintf(buf, bufsz, "MODEL   %s",  edid->model_name);
    s = strdup(buf);

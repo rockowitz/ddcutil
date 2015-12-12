@@ -87,7 +87,7 @@ void   iter_garray_init(void * pobj) {
    bool debug = true;
    GPtrArray * garray = (GPtrArray*) pobj;
    if (debug)
-      printf("(%s) garray=%p\n", __func__, garray);
+      DBGMSG("garray=%p", garray);
    iter_garray = garray;
    iter_garray_pos = 0;
 }
@@ -95,13 +95,13 @@ void   iter_garray_init(void * pobj) {
 char * iter_garray_next_line() {
    bool debug = true;
    if (debug)
-      printf("(%s) Starting\n", __func__);
+      DBGMSG("Starting");
 
    char * result = g_ptr_array_index(iter_garray, iter_garray_pos++);
 
    if (debug) {
-      printf("(%s) Returning %p\n", __func__, result);
-      printf("(%s) Returning |%s|\n", __func__, result);
+      DBGMSG("Returning %p", result);
+      DBGMSG("Returning |%s|", result);
    }
    return result;
 }
@@ -109,7 +109,7 @@ char * iter_garray_next_line() {
 bool   iter_garray_has_next() {
    bool debug = true;
    if (debug)
-      printf("(%s) Starting\n", __func__);
+      DBGMSG("Starting");
 
    bool result = (iter_garray_pos < iter_garray->len);
 
@@ -130,7 +130,7 @@ void iter_ntsa_init(void* pobj) {
    bool debug = true;
    Null_Terminated_String_Array  ntsa = (Null_Terminated_String_Array) pobj;
    if (debug)
-      printf("(%s) ntsa=%p\n", __func__, ntsa);
+      DBGMSG("ntsa=%p", ntsa);
    iter_ntsa = ntsa;
    iter_ntsa_pos = 0;
    iter_ntsa_len = null_terminated_string_array_length(ntsa);
@@ -139,12 +139,12 @@ void iter_ntsa_init(void* pobj) {
 char * iter_ntsa_next_line() {
    bool debug = true;
    if (debug)
-      printf("(%s) Starting\n", __func__);
+      DBGMSG("Starting");
 
    char * result = iter_ntsa[iter_ntsa_pos++];
    if (debug) {
-      printf("(%s) Returning %p\n", __func__, result);
-      printf("(%s) Returning |%s|\n", __func__, result);
+      DBGMSG("Returning %p", result);
+      DBGMSG("Returning |%s|", result);
    }
    return result;
 }
@@ -152,12 +152,12 @@ char * iter_ntsa_next_line() {
 bool   iter_ntsa_has_next() {
    bool debug = true;
    if (debug)
-      printf("(%s) Starting\n", __func__);
+      DBGMSG("Starting");
 
    bool result = (iter_ntsa_pos < iter_ntsa_len);
 
    if (debug)
-      printf("(%s) Returning %d\n", __func__, result);
+      DBGMSG("Returning %d", result);
    return result;
 }
 
@@ -175,7 +175,7 @@ Loadvcp_Data* loadvcp_data_from_g_ptr_array(GPtrArray * garray) {
 #endif
    bool debug = true;
    if (debug)
-      printf("(%s) Starting.\n", __func__);
+      DBGMSG("Starting.");
    Loadvcp_Data * data = calloc(1, sizeof(Loadvcp_Data));
 
    bool validData = true;
@@ -221,7 +221,7 @@ Loadvcp_Data* loadvcp_data_from_g_ptr_array(GPtrArray * garray) {
             while (*last == ' ' || *last == '\n') {
                *last-- = '\0';
             }
-            // printf("(%s) rest=|%s|\n", __func__, rest );
+            // DBGMSG("rest=|%s|", rest );
 
             if (streq(s0, "BUS")) {
                ct = sscanf(s1, "%d", &data->busno);
@@ -289,7 +289,7 @@ Loadvcp_Data* loadvcp_data_from_g_ptr_array(GPtrArray * garray) {
 
 
 Loadvcp_Data * read_vcp_file(const char * fn) {
-   // printf("(%s) Starting. fn=%s  \n", __func__, fn );
+   // DBGMSG("Starting. fn=%s  ", fn );
    Loadvcp_Data * data = NULL;
    GPtrArray * g_line_array = g_ptr_array_sized_new(100);
    // issues message if error:
@@ -305,7 +305,7 @@ Loadvcp_Data * read_vcp_file(const char * fn) {
       data = loadvcp_data_from_g_ptr_array(g_line_array);
 #endif
    }
-   // printf("(%s) Returning: %p  \n", __func__, data );
+   // DBGMSG("Returning: %p  ", data );
    return data;
 }
 
@@ -313,7 +313,7 @@ Loadvcp_Data * read_vcp_file(const char * fn) {
 bool loadvcp_from_loadvcp_data(Loadvcp_Data* pdata) {
    bool debug = true;
    bool ok = false;
-   // printf("(%s) Searching for monitor  \n", __func__ );
+   // DBGMSG("Searching for monitor  " );
    if (debug) {
         printf("(%s) Loading VCP settings for monitor \"%s\", sn \"%s\" \n",
                __func__,
@@ -331,12 +331,12 @@ bool loadvcp_from_loadvcp_data(Loadvcp_Data* pdata) {
       for (ndx=0; ndx < pdata->vcp_value_ct; ndx++) {
          Byte feature_code = pdata->vcp_value[ndx].opcode;
          int  new_value    = pdata->vcp_value[ndx].value;
-         // printf("(%s) feature_code=0x%02x, new_value=%d\n", __func__, feature_code, new_value );
+         // DBGMSG("feature_code=0x%02x, new_value=%d", feature_code, new_value );
 
          int rc =set_vcp_by_display_handle(dh, feature_code, new_value);
          if (rc != 0) {
-            printf("(%s) set_vcp_for_DisplayHandle() returned %d   \n", __func__, rc );
-            printf("(%s) Terminating.  \n", __func__ );
+            DBGMSG("set_vcp_for_DisplayHandle() returned %d   ", rc );
+            DBGMSG("Terminating.  " );
             break;
          }
       }
@@ -351,12 +351,12 @@ bool loadvcp_from_loadvcp_data(Loadvcp_Data* pdata) {
 bool loadvcp_from_file(const char * fn) {
    // Msg_Level msg_level = get_global_msg_level();
    Output_Level output_level = get_output_level();
-   // printf("(%s) msgLevel=%d\n", __func__, msgLevel);
+   // DBGMSG("msgLevel=%d", msgLevel);
    // bool verbose = (msg_level >= VERBOSE);
    bool verbose = (output_level >= OL_VERBOSE);
-   // printf("(%s) verbose=%d\n", __func__, verbose);
+   // DBGMSG("verbose=%d", verbose);
    bool ok = false;
-   // printf("(%s) Starting. fn=%s  \n", __func__, fn );
+   // DBGMSG("Starting. fn=%s  ", fn );
 
    Loadvcp_Data * pdata = read_vcp_file(fn);
    if (!pdata) {
@@ -392,9 +392,9 @@ bool loadvcp_from_ntsa(Null_Terminated_String_Array ntsa) {
 
    Output_Level output_level = get_output_level();
    bool verbose = (output_level >= OL_VERBOSE);
-   // printf("(%s) output_level=%d, verbose=%d\n", __func__, output_level, verbose);
+   // DBGMSG("output_level=%d, verbose=%d", output_level, verbose);
    if (debug) {
-      printf("(%s) Starting.  ntsa=%p\n", __func__, ntsa);
+      DBGMSG("Starting.  ntsa=%p", ntsa);
       verbose = true;
    }
    bool ok = false;
@@ -405,7 +405,7 @@ bool loadvcp_from_ntsa(Null_Terminated_String_Array ntsa) {
    (*ntsa_iter.func_init)(ntsa);
    (g_ptr_iter.func_init)(garray);
    if (debug)
-      printf("(%s) after func_init\n", __func__);
+      DBGMSG("after func_init");
 // Both ways work.   Using loadvcp_from_ntsa is simpler, can change
 // loadvcp_data_from_iteractor to not take iterator object
 #ifdef WORKS
@@ -417,7 +417,7 @@ bool loadvcp_from_ntsa(Null_Terminated_String_Array ntsa) {
    Loadvcp_Data * pdata = loadvcp_data_from_g_ptr_array(garray);
 
    if (debug)
-      printf("(%s) loadvcp_data_from_iterator() returned %p\n", __func__, pdata);
+      DBGMSG("loadvcp_data_from_iterator() returned %p", pdata);
    if (!pdata) {
       fprintf(stderr, "Unable to load VCP data from string\n");
    }
@@ -472,7 +472,7 @@ char * create_simple_vcp_fn(Display_Ref * dref, time_t time_millis, char * buf, 
       }
    }
 
-   // printf("(%s) Returning %s\n", __func__, buf );
+   // DBGMSG("Returning %s", buf );
    return buf;
 }
 
@@ -492,10 +492,10 @@ bool dumpvcp(Display_Ref * dref, char * filename) {
    if (!filename) {
       char simple_fn_buf[NAME_MAX+1];
       char * simple_fn = create_simple_vcp_fn(dref, time_millis, simple_fn_buf, sizeof(simple_fn_buf));
-      // printf("(%s) simple_fn=%s\n", __func__, simple_fn );
+      // DBGMSG("simple_fn=%s", simple_fn );
 
       snprintf(fqfn, PATH_MAX, "/home/%s/%s/%s", getlogin(), USER_VCP_DATA_DIR, simple_fn);
-      // printf("(%s) fqfn=%s   \n", __func__, fqfn );
+      // DBGMSG("fqfn=%s   ", fqfn );
       filename = fqfn;
       // control with MsgLevel?
       printf("Writing file: %s\n", filename);
@@ -503,7 +503,7 @@ bool dumpvcp(Display_Ref * dref, char * filename) {
 
 
    FILE * output_fp = fopen(filename, "w+");
-   // printf("(%s) output_fp=%p  \n", __func__, output_fp );
+   // DBGMSG("output_fp=%p  ", output_fp );
    if (!output_fp) {
       fprintf(stderr, "(%s) Unable to open %s for writing: %s\n", __func__, fqfn, strerror(errno)  );
       ok = false;
@@ -539,7 +539,7 @@ bool dumpvcp(Display_Ref * dref, char * filename) {
       set_output_format(OUTPUT_PROG_VCP);
 #endif
       GPtrArray * vals = get_profile_related_values_by_display_ref(dref);
-      printf("(%s) vals->len = %d\n", __func__, vals->len);
+      DBGMSG("vals->len = %d", vals->len);
 #ifdef FAILS
       int ndx = 0;
       char * nextval = NULL;
@@ -547,19 +547,19 @@ bool dumpvcp(Display_Ref * dref, char * filename) {
       while (nextval != NULL) {
          fprintf(output_fp, "%s\n", nextval);
          ndx++;
-         printf("(%s) ndx = %d\n", __func__, ndx);
+         DBGMSG("ndx = %d", ndx);
          nextval = g_ptr_array_index(vals, ndx);
-         printf("(%s) nextval = %p\n", __func__, nextval);
-         printf("(%s) nextval = |%s|\n", __func__, nextval);
+         DBGMSG("nextval = %p", nextval);
+         DBGMSG("nextval = |%s|", nextval);
       }
 #endif
       int ct = vals->len;
       int ndx;
       for (ndx=0; ndx<ct; ndx++){
-         // printf("(%s) ndx = %d\n", __func__, ndx);
+         // DBGMSG("ndx = %d", ndx);
          char * nextval = g_ptr_array_index(vals, ndx);
-         // printf("(%s) nextval = %p\n", __func__, nextval);
-         // printf("(%s) strlen(nextval)=%ld, nextval = |%s|\n", __func__, strlen(nextval), nextval);
+         // DBGMSG("nextval = %p", nextval);
+         // DBGMSG("strlen(nextval)=%ld, nextval = |%s|", strlen(nextval), nextval);
          fprintf(output_fp, "%s\n", nextval);
 
       }
@@ -573,16 +573,16 @@ bool dumpvcp(Display_Ref * dref, char * filename) {
 char * dumpvcp_to_string_by_display_handle(Display_Handle * dh) {
    GPtrArray * vals = get_profile_related_values_by_display_handle(dh);
    int ct = vals->len;
-   // printf("(%s) ct = %d\n", __func__, ct);
+   // DBGMSG("ct = %d", ct);
    char ** pieces = calloc(ct, sizeof(char*));
    int ndx;
    for (ndx=0; ndx < ct; ndx++) {
       pieces[ndx] = g_ptr_array_index(vals,ndx);
-      // printf("(%s) pieces[%d] = %s\n", __func__, ndx, pieces[ndx]);
+      // DBGMSG("pieces[%d] = %s", ndx, pieces[ndx]);
    }
    char * catenated = strjoin((const char**) pieces, ct, ";");
-   // printf("(%s) strlen(catenated)=%ld, catenated=%p, catenated=|%s|\n", __func__, strlen(catenated), catenated, catenated);
-   // printf("(%s) returning %p\n", __func__, catenated);
+   // DBGMSG("strlen(catenated)=%ld, catenated=%p, catenated=|%s|", strlen(catenated), catenated, catenated);
+   // DBGMSG("returning %p", catenated);
    return catenated;
 }
 
@@ -601,10 +601,10 @@ char * dumpvcp_to_string_by_display_ref(Display_Ref * dref) {
 Global_Status_Code loadvcp_from_string(char * catenated) {
    Null_Terminated_String_Array nta = strsplit(catenated, ";");
    int ct = null_terminated_string_array_length(nta);
-   printf("(%s) split into %d lines\n", __func__, ct);
+   DBGMSG("split into %d lines", ct);
    int ndx = 0;
    for (; ndx < ct; ndx++) {
-      printf("(%s) nta[ndx]=|%s|\n", __func__, nta[ndx]);
+      DBGMSG("nta[ndx]=|%s|", nta[ndx]);
    }
 
    loadvcp_from_ntsa(nta);

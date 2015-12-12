@@ -58,7 +58,7 @@ static Trace_Group TRACE_GROUP = TRC_DDC;
 Global_Status_Code set_vcp_by_display_handle(Display_Handle * pDispHandle, Byte feature_code, int new_value) {
    // bool debug = false;
    // if (debug) {
-   //    printf("(%s) Writing feature 0x%02x , new value = %d\n", __func__, feature_code, new_value);
+   //    DBGMSG("Writing feature 0x%02x , new value = %d", feature_code, new_value);
    // }
    TRCMSG("Writing feature 0x%02x , new value = %d\n", feature_code, new_value);
 
@@ -68,7 +68,7 @@ Global_Status_Code set_vcp_by_display_handle(Display_Handle * pDispHandle, Byte 
    DDC_Packet * request_packet_ptr = NULL;
 
    request_packet_ptr = create_ddc_setvcp_request_packet(feature_code, new_value, "set_vcp:request packet");
-   // printf("(%s) create_ddc_getvcp_request_packet returned packet_ptr=%p\n", __func__, request_packet_ptr);
+   // DBGMSG("create_ddc_getvcp_request_packet returned packet_ptr=%p", request_packet_ptr);
    // dump_packet(request_packet_ptr);
 
    rc = ddc_write_only_with_retry(pDispHandle, request_packet_ptr);
@@ -76,7 +76,7 @@ Global_Status_Code set_vcp_by_display_handle(Display_Handle * pDispHandle, Byte 
    if (request_packet_ptr)
       free_ddc_packet(request_packet_ptr);
 
-   // printf("(%s) Returning %p\n", __func__, interpretation_ptr);
+   // DBGMSG("Returning %p", interpretation_ptr);
    return rc;
 }
 
@@ -96,7 +96,7 @@ Global_Status_Code set_vcp_by_display_ref(Display_Ref * pdisp, Byte feature_code
    // if (debug) {
    //    char buf[100];
 
-   //    printf("(%s) Writing feature 0x%02x for %s, new value = %d\n", __func__, feature_code,
+   //    DBGMSG("Writing feature 0x%02x for %s, new value = %d", feature_code,
    //           displayRefShortName(pdisp, buf, 100 ), new_value);
    // }
    char buf[100];
@@ -125,7 +125,7 @@ Global_Status_Code put_vcp_by_display_ref(Display_Ref * pdisp, VCP_Feature_Table
    }
 
    return rc;
-   // printf("(%s) Done\n", __func__);
+   // DBGMSG("Done");
 }
 
 
@@ -162,7 +162,7 @@ Global_Status_Code get_vcp_by_display_handle(
    bool debug = false;
    Trace_Group tg = TRACE_GROUP;
    if (debug) tg = 0xFF;
-   // printf("(%s) Reading feature 0x%02x\n", __func__, feature_code);
+   // DBGMSG("Reading feature 0x%02x", feature_code);
    TRCMSGTG(tg, "Reading feature 0x%02x", feature_code);
 
    Global_Status_Code rc = 0;
@@ -189,7 +189,7 @@ Global_Status_Code get_vcp_by_display_handle(
            &response_packet_ptr
         );
    // if (debug)
-   //    printf("(%s) perform_ddc_write_read_with_retry() returned %d\n", __func__, rc);
+   //    DBGMSG("perform_ddc_write_read_with_retry() returned %d", rc);
    TRCMSGTG(tg, "perform_ddc_write_read_with_retry() returned %s\n", gsc_desc(rc));
 
    if (rc == 0) {
@@ -207,7 +207,7 @@ Global_Status_Code get_vcp_by_display_handle(
       free_ddc_packet(response_packet_ptr);
 
    // if (debug)
-   //    printf("(%s) Returning %p\n", __func__, interpretation_ptr);
+   //    DBGMSG("Returning %p", interpretation_ptr);
    TRCMSGTG(tg, "Returning %p\n", __func__, interpretation_ptr);
    *ppInterpretedCode = interpretation_ptr;
    return rc;

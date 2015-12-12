@@ -34,8 +34,8 @@ Base_Status_ADL adl_ddc_write_only_with_retry(
 {
    if (adl_debug) {
       char * s = hexstring(pSendMsgBuf, sendMsgLen);
-      printf("(%s) Starting. iAdapterIndex=%d, iDisplayIndex=%d, sendMsgLen=%d, pSendMsgBuf->%s\n",
-             __func__, iAdapterIndex, iDisplayIndex, sendMsgLen, s);
+      DBGMSG("Starting. iAdapterIndex=%d, iDisplayIndex=%d, sendMsgLen=%d, pSendMsgBuf->%s", 
+             iAdapterIndex, iDisplayIndex, sendMsgLen, s);
       free(s);
    }
 
@@ -54,7 +54,7 @@ Base_Status_ADL adl_ddc_write_only_with_retry(
    }
 
    if (adl_debug)
-      printf("(%s) Returning %d.  tryctr=%d\n", __func__, rc, tryctr);
+      DBGMSG("Returning %d.  tryctr=%d", rc, tryctr);
    return rc;
 }
 
@@ -71,8 +71,8 @@ Base_Status_ADL adl_ddc_write_read_with_retry(
    bool debug = true;
    if (debug) {
       char * s = hexstring(pSendMsgBuf, sendMsgLen);
-      printf("(%s) Starting. iAdapterIndex=%d, iDisplayIndex=%d, sendMsgLen=%d, pSendMsgBuf->%s, *pRcvBytect=%d\n",
-             __func__, iAdapterIndex, iDisplayIndex, sendMsgLen, s, *pRcvBytect);
+      DBGMSG("Starting. iAdapterIndex=%d, iDisplayIndex=%d, sendMsgLen=%d, pSendMsgBuf->%s, *pRcvBytect=%d", 
+             iAdapterIndex, iDisplayIndex, sendMsgLen, s, *pRcvBytect);
       free(s);
    }
 
@@ -91,7 +91,7 @@ Base_Status_ADL adl_ddc_write_read_with_retry(
    }
 
    if (debug)
-      printf("(%s) Returning %d.  tryctr=%d\n", __func__, rc, tryctr);
+      DBGMSG("Returning %d.  tryctr=%d", rc, tryctr);
    return rc;
 }
 
@@ -106,8 +106,8 @@ Base_Status_ADL adl_ddc_write_read_with_retry_onecall(
 {
    if (adl_debug) {
       char * s = hexstring(pSendMsgBuf, sendMsgLen);
-      printf("(%s) Starting. iAdapterIndex=%d, iDisplayIndex=%d, sendMsgLen=%d, pSendMsgBuf->%s, *pRcvBytect=%d\n",
-             __func__, iAdapterIndex, iDisplayIndex, sendMsgLen, s, *pRcvBytect);
+      DBGMSG("Starting. iAdapterIndex=%d, iDisplayIndex=%d, sendMsgLen=%d, pSendMsgBuf->%s, *pRcvBytect=%d", 
+             iAdapterIndex, iDisplayIndex, sendMsgLen, s, *pRcvBytect);
       free(s);
    }
 
@@ -126,7 +126,7 @@ Base_Status_ADL adl_ddc_write_read_with_retry_onecall(
    }
 
    if (adl_debug)
-      printf("(%s) Returning %d.  tryctr=%d\n", __func__, rc, tryctr);
+      DBGMSG("Returning %d.  tryctr=%d", rc, tryctr);
    return rc;
 }
 
@@ -147,8 +147,8 @@ struct {
 // 10/2015 unused
 Base_Status_ADL adl_ddc_get_vcp(int iAdapterIndex, int iDisplayIndex, Byte vcp_feature_code, bool onecall) {
    if (adl_debug) {
-      printf("(%s) Starting adapterNdx=%d, displayNdx=%d, vcp_feature_code=0x%02x\n",
-             __func__, iAdapterIndex, iDisplayIndex, vcp_feature_code );
+      DBGMSG("Starting adapterNdx=%d, displayNdx=%d, vcp_feature_code=0x%02x", 
+        iAdapterIndex, iDisplayIndex, vcp_feature_code );
    }
 
    unsigned char ddc_cmd_bytes[] = {
@@ -171,7 +171,7 @@ Base_Status_ADL adl_ddc_get_vcp(int iAdapterIndex, int iDisplayIndex, Byte vcp_f
 
    if (adl_debug) {
       char * s = hexstring(ddc_cmd_bytes, sendCt);
-      printf("(%s) Writing: %s   \n", __func__, s );
+      DBGMSG("Writing: %s   ", s );
       free(s);
    }
 
@@ -195,7 +195,7 @@ Base_Status_ADL adl_ddc_get_vcp(int iAdapterIndex, int iDisplayIndex, Byte vcp_f
 
    if (rc == 0) {
       if (adl_debug) {
-         printf("(%s) Data returned:  \n", __func__ );
+         DBGMSG("Data returned:  " );
          hex_dump(rcvBuf, rcvCt);
       }
 
@@ -210,8 +210,8 @@ Base_Status_ADL adl_ddc_get_vcp(int iAdapterIndex, int iDisplayIndex, Byte vcp_f
 // 10/2015: only used in tests
 Base_Status_ADL adl_ddc_set_vcp(int iAdapterIndex, int iDisplayIndex, Byte vcp_feature_code, int newval) {
    if (adl_debug)
-      printf("(%s) Starting adapterNdx=%d, displayNdx=%d, vcp_feature_code=0x%02x\n",
-             __func__, iAdapterIndex, iDisplayIndex, vcp_feature_code );
+      DBGMSG("Starting adapterNdx=%d, displayNdx=%d, vcp_feature_code=0x%02x", 
+        iAdapterIndex, iDisplayIndex, vcp_feature_code );
 
    unsigned char ddc_cmd_bytes[] = {
       0x6e,              // address 0x37, shifted left 1 bit
@@ -233,6 +233,6 @@ Base_Status_ADL adl_ddc_set_vcp(int iAdapterIndex, int iDisplayIndex, Byte vcp_f
    sleep_millis_with_trace(DDC_TIMEOUT_MILLIS_POST_SETVCP_WRITE, __func__, "after adl_DDC_write_only");
 
    if (adl_debug)
-      printf("(%s) Returning %d  \n", __func__, rc );
+      DBGMSG("Returning %d  ", rc );
    return rc;
 }

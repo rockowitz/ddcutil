@@ -15,6 +15,8 @@
 #include "util/data_structures.h"
 #include "util/string_util.h"
 
+#include "base/msg_control.h"
+
 #include "ddc/vcp_feature_codes.h"
 
 
@@ -36,7 +38,7 @@ bool format_feature_detail_debug_continuous(
 //
 // The result is returned in a buffer supplied by the caller.
 static char * vcp_interpret_feature_flags(VCP_Feature_Flags flags, char* buf, int buflen) {
-   // printf("(%s) flags: 0x%04x\n", __func__, flags);
+   // DBGMSG("flags: 0x%04x", flags);
    char * rwmsg = "";
    if (flags & VCP_RO)
       rwmsg = "ReadOnly ";
@@ -73,7 +75,7 @@ void vcp_list_feature_codes() {
    int ndx = 0;
    for (;ndx < vcp_feature_code_count; ndx++) {
       VCP_Feature_Table_Entry entry = vcp_code_table[ndx];
-      // printf("(%s) code=0x%02x, flags: 0x%04x\n", __func__, entry.code, entry.flags);
+      // DBGMSG("code=0x%02x, flags: 0x%04x", entry.code, entry.flags);
       printf("  %02x - %-40s  %s\n",
              entry.code,
              entry.name,
@@ -184,7 +186,7 @@ bool vcp_format_table_feature_detail(
  *    VCP_Feature_Table_Entry
  */
 VCP_Feature_Table_Entry * vcp_get_feature_table_entry(int ndx) {
-   // printf("(%s) ndx=%d, vcp_code_count=%d  \n", __func__, ndx, vcp_code_count );
+   // DBGMSG("ndx=%d, vcp_code_count=%d  ", ndx, vcp_code_count );
    assert( 0 <= ndx && ndx < vcp_feature_code_count);
    return &vcp_code_table[ndx];
 }
@@ -230,12 +232,12 @@ VCP_Feature_Table_Entry * vcp_create_dummy_feature_for_charid(char * id) {
    Byte hexId;
    bool ok = hhs_to_byte_in_buf(id, &hexId);
    if (!ok) {
-      printf("(%s) Invalid feature code: %s\n", __func__, id);
+      DBGMSG("Invalid feature code: %s", id);
    }
    else {
       result = vcp_create_dummy_feature_for_hexid(hexId);
    }
-   // printf("(%s) Returning %p\n", __func__, result);
+   // DBGMSG("Returning %p", result);
    return result;
 }
 
@@ -250,7 +252,7 @@ VCP_Feature_Table_Entry * vcp_create_dummy_feature_for_charid(char * id) {
  *    VCP_Feature_Table_Entry, NULL if not found
  */
 VCP_Feature_Table_Entry * vcp_find_feature_by_hexid(Byte id) {
-   // printf("(%s) Starting. id=0x%02x \n", __func__, id );
+   // DBGMSG("Starting. id=0x%02x ", id );
    int ndx = 0;
    VCP_Feature_Table_Entry * result = NULL;
 
@@ -260,7 +262,7 @@ VCP_Feature_Table_Entry * vcp_find_feature_by_hexid(Byte id) {
          break;
       }
    }
-   // printf("(%s) Done.  ndx=%d. returning %p\n", __func__, ndx, result);
+   // DBGMSG("Done.  ndx=%d. returning %p", ndx, result);
    return result;
 }
 
@@ -278,20 +280,20 @@ VCP_Feature_Table_Entry * vcp_find_feature_by_hexid(Byte id) {
 VCP_Feature_Table_Entry * vcp_find_feature_by_charid(char * id) {
    bool debug = false;
    if (debug)
-      printf("(%s) Starting id=|%s|  \n", __func__, id );
+      DBGMSG("Starting id=|%s|  ", id );
    VCP_Feature_Table_Entry * result = NULL;
 
    Byte hexId;
    bool ok = hhs_to_byte_in_buf(id, &hexId);
    if (!ok) {
       if (debug)
-         printf("(%s) Invalid feature code: %s\n", __func__, id);
+         DBGMSG("Invalid feature code: %s", id);
    }
    else {
       result = vcp_find_feature_by_hexid(hexId);
    }
    if (debug)
-      printf("(%s) Returning %p\n", __func__, result);
+      DBGMSG("Returning %p", result);
    return result;
 }
 
@@ -308,11 +310,11 @@ VCP_Feature_Table_Entry * vcp_find_feature_by_charid(char * id) {
  *    VCP_Feature_Table_Entry
  */
 VCP_Feature_Table_Entry * vcp_find_feature_by_hexid_w_default(Byte id) {
-   // printf("(%s) Starting. id=0x%02x \n", __func__, id );
+   // DBGMSG("Starting. id=0x%02x ", id );
    VCP_Feature_Table_Entry * result = vcp_find_feature_by_hexid(id);
    if (!result)
       result = vcp_create_dummy_feature_for_hexid(id);
-   // printf("(%s) Done.  ndx=%d. returning %p\n", __func__, ndx, result);
+   // DBGMSG("Done.  ndx=%d. returning %p", ndx, result);
    return result;
 }
 
@@ -323,7 +325,7 @@ VCP_Feature_Table_Entry * vcp_find_feature_by_hexid_w_default(Byte id) {
 //
 
 bool default_table_feature_detail_function(Buffer * data, Version_Spec vcp_version, char ** presult) {
-   printf("(%s) vcp_version=%d.%d\n", __func__, vcp_version.major, vcp_version.minor);
+   DBGMSG("vcp_version=%d.%d", vcp_version.major, vcp_version.minor);
    int hexbufsize = buffer_length(data) * 3;
    char * result_buf = calloc(hexbufsize,1);
 
@@ -352,7 +354,7 @@ bool format_feature_detail_x73_lut_size(
 {
    bool ok = true;
    if (data_bytes->len != 9) {
-      printf("(%s) Expected 9 byte response.  Actual response:\n", __func__);
+      DBGMSG("Expected 9 byte response.  Actual response:");
       hex_dump(data_bytes->bytes, data_bytes->len);
       ok = default_table_feature_detail_function(data_bytes, vcp_version, pformatted_result);
    }
@@ -385,7 +387,7 @@ bool format_feature_detail_x73_lut_size(
 Feature_Value_Entry * find_feature_values_new(Byte feature_code, Version_Spec vcp_version) {
    bool debug = false;
    if (debug)
-      printf("(%s) Starting. feature_code=0x%02x\n", __func__, feature_code);
+      DBGMSG("Starting. feature_code=0x%02x", feature_code);
    Feature_Value_Entry * result = NULL;
    VCP_Feature_Table_Entry * pentry = vcp_find_feature_by_hexid(feature_code);
    // may not be found if called for capabilities and it's a mfg specific code
@@ -401,7 +403,7 @@ Feature_Value_Entry * find_feature_values_new(Byte feature_code, Version_Spec vc
       }
    }
    if (debug)
-      printf("(%s) Starting. feature_code=0x%02x. Returning: %p\n", __func__, feature_code, result);
+      DBGMSG("Starting. feature_code=0x%02x. Returning: %p", feature_code, result);
    return result;
 }
 
@@ -410,7 +412,7 @@ Feature_Value_Entry * find_feature_values_new(Byte feature_code, Version_Spec vc
 Feature_Value_Entry * find_feature_values_for_capabilities(Byte feature_code, Version_Spec vcp_version) {
    bool debug = false;
    if (debug)
-      printf("(%s) Starting. feature_code=0x%02x\n", __func__, feature_code);
+      DBGMSG("Starting. feature_code=0x%02x", feature_code);
    // ugh .. need to know the version number here
    // for now just assume vcp version < 3, return the table for v2
 
@@ -419,7 +421,7 @@ Feature_Value_Entry * find_feature_values_for_capabilities(Byte feature_code, Ve
       if (vcp_version.major < 3)
          result = x14_color_preset_absolute_values;
       else {
-         fprintf(stderr, "(%s) Unimplemented: x14 lookup when vcp version >= 3\n", __func__);
+         SEVEREMSG("Unimplemented: x14 lookup when vcp version >= 3");
       }
    }
    else {
@@ -429,7 +431,7 @@ Feature_Value_Entry * find_feature_values_for_capabilities(Byte feature_code, Ve
    }
 
    if (debug)
-      printf("(%s) Starting. feature_code=0x%02x. Returning: %p\n", __func__, feature_code, result);
+      DBGMSG("Starting. feature_code=0x%02x. Returning: %p", feature_code, result);
    return result;
 }
 
@@ -446,14 +448,14 @@ Feature_Value_Entry * find_feature_values_for_capabilities(Byte feature_code, Ve
  *    NULL if not found
  */
 char * find_value_name_new(Feature_Value_Entry * value_entries, Byte value_id) {
-   // printf("(%s) Starting. pvalues_for_feature=%p, value_id=0x%02x\n", __func__, pvalues_for_feature, value_id);
+   // DBGMSG("Starting. pvalues_for_feature=%p, value_id=0x%02x", pvalues_for_feature, value_id);
    char * result = NULL;
    Feature_Value_Entry *  cur_value = value_entries;
    while (cur_value->value_name != NULL) {
-      // printf("(%s) value_code=0x%02x, value_name = %s\n", __func__, cur_value->value_code, cur_value->value_name);
+      // DBGMSG("value_code=0x%02x, value_name = %s", cur_value->value_code, cur_value->value_name);
       if (cur_value->value_code == value_id) {
          result = cur_value->value_name;
-         // printf("(%s) Found\n", __func__);
+         // DBGMSG("Found");
          break;
       }
       cur_value++;
@@ -630,7 +632,7 @@ bool format_feature_detail_select_color_preset(
 {
    bool debug = false;
    if (debug)
-      printf("(%s) vcp_version=%d.%d\n", __func__, vcp_version.major, vcp_version.minor);
+      DBGMSG("vcp_version=%d.%d", vcp_version.major, vcp_version.minor);
 
    char buf0[100];
    bool ok = true;
@@ -719,7 +721,7 @@ bool format_feature_detail_display_usage_time(
 {
    assert (code_info->vcp_code == 0xc0);
    uint usage_time;
-   // printf("(%s) vcp_version=%d.%d\n", __func__, vcp_version.major, vcp_version.minor);
+   // DBGMSG("vcp_version=%d.%d", vcp_version.major, vcp_version.minor);
 
    // TODO: Control with Output_Level
    // v2 spec says this is a 2 byte value, says nothing about mh, ml
@@ -1401,7 +1403,7 @@ void init_vcp_feature_table() {
 
 
 void validate_vcp_feature_table() {
-   // printf("(%s) Starting\n", __func__);
+   // DBGMSG("Starting");
    bool ok = true;
    int ndx = 0;
    for (;ndx < vcp_feature_code_count;ndx++) {
@@ -1476,15 +1478,15 @@ VCP_Values_For_Feature * find_feature_values(Byte feature_code) {
 
 
 char * find_value_name(VCP_Values_For_Feature * pvalues_for_feature, Byte value_id) {
-   // printf("(%s) Starting. pvalues_for_feature=%p, value_id=0x%02x\n", __func__, pvalues_for_feature, value_id);
+   // DBGMSG("Starting. pvalues_for_feature=%p, value_id=0x%02x", pvalues_for_feature, value_id);
    Feature_Value_Entry * value_entries = pvalues_for_feature->value_entries;
    char * result = NULL;
    Feature_Value_Entry *  cur_value = value_entries;
    while (cur_value->value_name != NULL) {
-      // printf("(%s) value_code=0x%02x, value_name = %s\n", __func__, cur_value->value_code, cur_value->value_name);
+      // DBGMSG("value_code=0x%02x, value_name = %s", cur_value->value_code, cur_value->value_name);
       if (cur_value->value_code == value_id) {
          result = cur_value->value_name;
-         // printf("(%s) Found\n", __func__);
+         // DBGMSG("Found");
          break;
       }
       cur_value++;
@@ -1864,7 +1866,7 @@ VCP_Feature_Table_Entry0 null_vcp_code_table_entry0 = { 0x00, "Unknown Feature",
 
 
 VCP_Feature_Table_Entry0 * get_vcp_feature_code_table_entry0(int ndx) {
-   // printf("(%s) ndx=%d, vcp_code_count=%d  \n", __func__, ndx, vcp_code_count );
+   // DBGMSG("ndx=%d, vcp_code_count=%d  ", ndx, vcp_code_count );
    assert( 0 <= ndx && ndx < vcp_feature_code_count);
    return &vcp_code_table0[ndx];
 }

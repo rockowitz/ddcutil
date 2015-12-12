@@ -111,14 +111,14 @@ Display_Handle* ddc_open_display(Display_Ref * dref,  Failure_Action failure_act
 
 
 void ddc_close_display(Display_Handle * dh) {
-   // printf("(%s) Starting.\n", __func__);
+   // DBGMSG("Starting.");
    // report_display_handle(dh, __func__);
    if (dh->ddc_io_mode == DDC_IO_DEVI2C) {
       bool failure_action = EXIT_IF_FAILURE;
       // bool  failure_action = RETURN_ERROR_IF_FAILURE;
       int rc = i2c_close_bus(dh->fh, dh->busno,  failure_action);
       if (rc != 0) {
-         printf("(%s) close_i2c_bus returned %d\n", __func__, rc);
+         DBGMSG("close_i2c_bus returned %d", rc);
          log_status_code(modulate_rc(rc, RR_ERRNO), __func__);
       }
    }
@@ -126,7 +126,7 @@ void ddc_close_display(Display_Handle * dh) {
 
 
 Display_Ref* ddc_find_display_by_model_and_sn(const char * model, const char * sn) {
-   // printf("(%s) Starting.  model=%s, sn=%s   \n", __func__, model, sn );
+   // DBGMSG("Starting.  model=%s, sn=%s   ", model, sn );
    Display_Ref * result = NULL;
    Bus_Info * businfo = i2c_find_bus_info_by_model_sn(model, sn);
    if (businfo) {
@@ -139,13 +139,13 @@ Display_Ref* ddc_find_display_by_model_and_sn(const char * model, const char * s
       // }
       result = adlshim_find_display_by_model_sn(model, sn);
    }
-   // printf("(%s) Returning: %p  \n", __func__, result );
+   // DBGMSG("Returning: %p  ", result );
    return result;
 }
 
 
 Display_Ref* ddc_find_display_by_edid(const Byte * pEdidBytes) {
-   // printf("(%s) Starting.  model=%s, sn=%s   \n", __func__, model, sn );
+   // DBGMSG("Starting.  model=%s, sn=%s   ", model, sn );
    Display_Ref * result = NULL;
    Bus_Info * businfo = i2c_find_bus_info_by_edid((pEdidBytes));
    if (businfo) {
@@ -158,7 +158,7 @@ Display_Ref* ddc_find_display_by_edid(const Byte * pEdidBytes) {
       // }
       result = adlshim_find_display_by_edid(pEdidBytes);
    }
-   // printf("(%s) Returning: %p  \n", __func__, result );
+   // DBGMSG("Returning: %p  ", result );
    return result;
 }
 
@@ -171,7 +171,7 @@ Parsed_Edid* ddc_get_parsed_edid_by_display_handle(Display_Handle * dh) {
       // pEdid = adl_get_parsed_edid_by_adlno(dref->iAdapterIndex, dref->iDisplayIndex);
       pEdid = adlshim_get_parsed_edid_by_display_handle(dh);
    }
-   // printf("(%s) Returning %p\n", __func__, pEdid);
+   // DBGMSG("Returning %p", pEdid);
    TRCMSG("Returning %p", __func__, pEdid);
    return pEdid;
 }
@@ -187,7 +187,7 @@ Parsed_Edid* ddc_get_parsed_edid_by_display_ref(Display_Ref * dref) {
       // pEdid = adl_get_parsed_edid_by_adlno(dref->iAdapterIndex, dref->iDisplayIndex);
       pEdid = adlshim_get_parsed_edid_by_display_ref(dref);
    }
-   // printf("(%s) Returning %p\n", __func__, pEdid);
+   // DBGMSG("Returning %p", pEdid);
    TRCMSG("Returning %p", __func__, pEdid);
    return pEdid;
 }
@@ -198,7 +198,7 @@ Parsed_Edid* ddc_get_parsed_edid_by_display_ref(Display_Ref * dref) {
 bool ddc_is_valid_display_ref(Display_Ref * dref, bool emit_error_msg) {
    assert( dref );
    // char buf[100];
-   // printf("(%s) Starting.  %s   \n", __func__, displayRefShortName(pdisp, buf, 100) );
+   // DBGMSG("Starting.  %s   ", displayRefShortName(pdisp, buf, 100) );
    bool result;
    if (dref->ddc_io_mode == DDC_IO_DEVI2C) {
       result = i2c_is_valid_bus(dref->busno, emit_error_msg );
@@ -207,7 +207,7 @@ bool ddc_is_valid_display_ref(Display_Ref * dref, bool emit_error_msg) {
       // result = adl_is_valid_adlno(dref->iAdapterIndex, dref->iDisplayIndex, true /* emit_error_msg */);
       result = adlshim_is_valid_display_ref(dref, emit_error_msg);
    }
-   // printf("(%s) Returning %d\n", __func__, result);
+   // DBGMSG("Returning %d", result);
    return result;
 }
 
@@ -330,7 +330,7 @@ Global_Status_Code ddc_i2c_write_read_raw(
    if (debug)
       tg = 0xff;
    TRCMSGTG(tg, "Starting. dh=%s, readbuf=%p", display_handle_repr_r(dh, NULL, 0), readbuf);
-   // printf("(%s) request_packet_ptr=%p\n", __func__, request_packet_ptr);
+   // DBGMSG("request_packet_ptr=%p", request_packet_ptr);
    // dump_packet(request_packet_ptr);
    ASSERT_VALID_DISPLAY_REF(dh, DDC_IO_DEVI2C);
 
@@ -349,7 +349,7 @@ Global_Status_Code ddc_i2c_write_read_raw(
       if (rc == 0 && all_zero(readbuf, max_read_bytes)) {
          rc = DDCRC_READ_ALL_ZERO;
          // printf("(%s) All zero response.", __func__ );
-         // printf("(%s) Request was: %s\n", __func__,
+         // DBGMSG("Request was: %s",
          //        hexstring(get_packet_start(request_packet_ptr)+1, get_packet_len(request_packet_ptr)-1));
          // COUNT_STATUS_CODE(rc);
          DDCMSG("All zero response detected in %s", __func__);
@@ -448,12 +448,12 @@ Global_Status_Code ddc_adl_write_read_raw(
       else {
          if ( all_zero(readbuf+1, max_read_bytes-1)) {
                  gsc = DDCRC_READ_ALL_ZERO;
-                 printf("(%s) All zero response.\n", __func__ );
+                 DBGMSG("All zero response." );
                  DDCMSG("All zero response.");
                  COUNT_STATUS_CODE(gsc);
          }
          else if (memcmp(get_packet_start(request_packet_ptr), readbuf, get_packet_len(request_packet_ptr)) == 0) {
-            // printf("(%s) Bytes read same as bytes written.\n", __func__ );
+            // DBGMSG("Bytes read same as bytes written." );
             // is this a DDC error or a programming bug?
             DDCMSG("Bytes read same as bytes written.", __func__ );
             gsc = DDCRC_READ_EQUALS_WRITE;
@@ -509,12 +509,12 @@ Global_Status_Code ddc_adl_write_read_raw(
    if (rc >= 0) {
       if ( all_zero(readbuf+1, max_read_bytes-1)) {
          rc = DDCRC_READ_ALL_ZERO;
-         // printf("(%s) All zero response.\n", __func__ );
+         // DBGMSG("All zero response." );
          DDCMSG("All zero response.");
          assert(rc < 0);
       }
       else if (memcmp(get_packet_start(request_packet_ptr), readbuf, get_packet_len(request_packet_ptr)) == 0) {
-         // printf("(%s) Bytes read same as bytes written.\n", __func__ );
+         // DBGMSG("Bytes read same as bytes written." );
          // is this a DDC error or a programming bug?
          DDCMSG("Bytes read same as bytes written.", __func__ );
          rc = DDCRC_READ_EQUALS_WRITE;
@@ -542,7 +542,7 @@ Global_Status_Code ddc_write_read_raw(
 {
    bool debug = false;  // override
    if (debug)
-      printf("(%s) Starting.\n", __func__);
+      DBGMSG("Starting.");
    Global_Status_Code rc;
 
    if (dh->ddc_io_mode == DDC_IO_DEVI2C) {
@@ -565,7 +565,7 @@ Global_Status_Code ddc_write_read_raw(
    }
 
    if (debug)
-      printf("(%s) Done, returning: %s\n", __func__, gsc_desc(rc));
+      DBGMSG("Done, returning: %s", gsc_desc(rc));
    return rc;
 }
 

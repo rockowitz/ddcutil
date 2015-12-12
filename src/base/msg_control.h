@@ -60,6 +60,15 @@ void show_trace_groups();
 bool is_tracing(Trace_Group trace_group, const char * filename);
 #define IS_TRACING() is_tracing(TRACE_GROUP, __FILE__)
 
+
+void severemsg(
+        const char * funcname,
+        const int    lineno,
+        const char * fn,
+        char *       format,
+        ...);
+
+
 void dbgmsg(
         const char * funcname,
         const int    lineno,
@@ -74,8 +83,11 @@ void trcmsg(
         const char * fn,
         char *       format,
         ...);
+#define SEVEREMSG(            format, ...) dbgmsg(             __func__, __LINE__, __FILE__, format, ##__VA_ARGS__)
 #define DBGMSG(               format, ...) dbgmsg(             __func__, __LINE__, __FILE__, format, ##__VA_ARGS__)
 #define DBGMSGF( debug_flag,     format, ...) \
+   do { if (debug_flag) dbgmsg(  __func__, __LINE__, __FILE__, format, ##__VA_ARGS__); }  while(0)
+#define DBGMSF( debug_flag,     format, ...) \
    do { if (debug_flag) dbgmsg(  __func__, __LINE__, __FILE__, format, ##__VA_ARGS__); }  while(0)
 #define TRCMSG(               format, ...) trcmsg(TRACE_GROUP, __func__, __LINE__, __FILE__, format, ##__VA_ARGS__)
 // which of these are really useful?

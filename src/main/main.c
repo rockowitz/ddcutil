@@ -107,7 +107,7 @@ bool perform_get_capabilities(Display_Ref * dref) {
       default:
          printf("(%s) !!! Unable to get capabilities for monitor on %s\n",
                 __func__, display_ref_short_name_r(dref, buf, 100));
-         printf("(%s) Unexpected status code: %s\n", __func__, gsc_desc(rc));
+         DBGMSG("Unexpected status code: %s", gsc_desc(rc));
       }
       ok = false;
    }
@@ -134,9 +134,9 @@ bool perform_get_capabilities(Display_Ref * dref) {
 
 int main(int argc, char *argv[]) {
 // #ifdef INCLUDE_TESTCASES
-//    printf("(%s) INCLUDE_TESTCASES is set\n", __func__);
+//    DBGMSG("INCLUDE_TESTCASES is set");
 // #else
-//    printf("(%s) INCLUDE_TESTCASES is NOT set\n", __func__);
+//    DBGMSG("INCLUDE_TESTCASES is NOT set");
 // #endif
    // set_trace_levels(TRC_ADL);   // uncomment to enable tracing during initialization
    initialize();
@@ -209,7 +209,7 @@ int main(int argc, char *argv[]) {
 
    else if (parsed_cmd->cmd_id == CMDID_LOADVCP) {
       char * fn = strdup( parsed_cmd->args[0] );
-      // printf("(%s) Processing command loadvcp.  fn=%s\n", __func__, fn );
+      // DBGMSG("Processing command loadvcp.  fn=%s", fn );
       bool ok = loadvcp_from_file(fn);
       main_rc = (ok) ? EXIT_SUCCESS : EXIT_FAILURE;
    }
@@ -269,7 +269,7 @@ int main(int argc, char *argv[]) {
 
          case CMDID_GETVCP:
             {
-               // printf("(%s) CMD)D_GETVCP  \n", __func__ );
+               // DBGMSG("CMD_GETVCP  " );
                char * us = strdup( parsed_cmd->args[0] );
                char * p = us;
                while (*p) {*p=toupper(*p); p++; }
@@ -288,7 +288,7 @@ int main(int argc, char *argv[]) {
                   show_vcp_values_by_display_ref(dref, SUBSET_COLORMGT, NULL);
                }
                else if ( is_abbrev(us, "PROFILE",3) ) {
-                  // printf("(%s) calling setGlobalMsgLevel(%d), new value: %s   \n", __func__, TERSE, msgLevelName(TERSE) );
+                  // DBGMSG("calling setGlobalMsgLevel(%d), new value: %s   ", TERSE, msgLevelName(TERSE) );
 #ifdef OLD
                   if (parsed_cmd->programmatic_output)
                      set_output_format(OUTPUT_PROG_VCP);

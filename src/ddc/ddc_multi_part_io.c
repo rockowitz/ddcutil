@@ -157,7 +157,7 @@ Global_Status_Code try_multi_part_read(
          free_ddc_packet(response_packet_ptr);
          break;
       }
-      // printf("(%s) display_current_offset = %d matches cur_offset\n", __func__, display_current_offset);
+      // DBGMSG("display_current_offset = %d matches cur_offset", display_current_offset);
 
       fragment_size = aux_data_ptr->fragment_length;         // ***
       TRCMSGTG(tg, "fragment_size = %d", fragment_size);
@@ -243,7 +243,7 @@ Global_Status_Code multi_part_read_with_retry(
       else if (rc == DDCRC_ALL_TRIES_ZERO) {
          can_retry = false;
          COUNT_STATUS_CODE(rc);   // double counting?
-         printf("(%s) DDCRC_ALL_TRIES_ZERO\n", __func__);
+         DBGMSG("DDCRC_ALL_TRIES_ZERO");
          rc = DDCRC_DETERMINED_UNSUPPORTED;    // ??
          COUNT_STATUS_CODE(rc);   // double counting?
       }

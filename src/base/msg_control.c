@@ -165,7 +165,7 @@ static Byte trace_levels = 0x00;
 void set_trace_levels(Trace_Group trace_flags) {
    bool debug = false;
    if (debug)
-      printf("(%s) trace_flags=0x%02x\n", __func__, trace_flags);
+      DBGMSG("trace_flags=0x%02x\n", trace_flags);
    trace_levels = trace_flags;
 }
 
@@ -195,6 +195,26 @@ void show_trace_groups() {
                               buf);
 
 }
+
+
+
+void severemsg(
+        const char * funcname,
+        const int    lineno,
+        const char * fn,
+        char *       format,
+        ...)
+{
+      char buffer[200];
+      char buf2[250];
+      va_list(args);
+      va_start(args, format);
+      vsnprintf(buffer, 200, format, args);
+      snprintf(buf2, 250, "(%s) %s\n", funcname, buffer);
+      fputs(buf2, stderr);
+      va_end(args);
+}
+
 
 
 void dbgmsg(

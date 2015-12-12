@@ -53,7 +53,7 @@ void * try_data_create(char * stat_name, int max_tries) {
    memcpy(try_data->tag, TAG_VALUE,4);
    strcpy(try_data->stat_name, stat_name);
    try_data->max_tries = max_tries;
-   // printf("(%s) try_data->counters[MAX_MAX_TRIES+1]=%d, MAX_MAX_TRIES=%d\n", __func__, try_data->counters[MAX_MAX_TRIES+1], MAX_MAX_TRIES);
+   // DBGMSG("try_data->counters[MAX_MAX_TRIES+1]=%d, MAX_MAX_TRIES=%d", try_data->counters[MAX_MAX_TRIES+1], MAX_MAX_TRIES);
    return try_data;
 }
 
@@ -86,7 +86,7 @@ static void record_successful_tries(void * stats_rec, int tryct){
    Try_Data * try_data = unopaque(stats_rec);
    assert(0 < tryct && tryct <= try_data->max_tries);
    // if ( (tryct+1) == MAX_MAX_TRIES) {
-   //    printf("(%s) tryct+1 == MAX_MAX_TRIES (%d)\n", __func__, MAX_MAX_TRIES);
+   //    DBGMSG("tryct+1 == MAX_MAX_TRIES (%d)", MAX_MAX_TRIES);
    // }
    try_data->counters[tryct+1] += 1;
 }
@@ -103,7 +103,7 @@ static void record_failed_fatally(void * stats_rec) {
 
 
 void try_data_record_tries(void * stats_rec, int rc, int tryct) {
-   // printf("(%s) stats_rec=%p, rc=%d, tryct=%d\n", __func__, stats_rec, rc, tryct);
+   // DBGMSG("stats_rec=%p, rc=%d, tryct=%d", stats_rec, rc, tryct);
    Try_Data * try_data = unopaque(stats_rec);
    // TODO: eliminate function calls
    if (rc == 0) {
@@ -145,7 +145,7 @@ void try_data_report(void * stats_rec) {
       int ndx;
       for (ndx=2; ndx <= try_data->max_tries+1; ndx++) {
          total_successful_attempts += try_data->counters[ndx];
-         // printf("(%s) ndx=%d\n", __func__, ndx);
+         // DBGMSG("ndx=%d", ndx);
          printf("      %2d:  %3d\n", ndx-1, try_data->counters[ndx]);
       }
       printf("   Total:                            %3d\n", total_successful_attempts);

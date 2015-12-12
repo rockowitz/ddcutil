@@ -52,7 +52,7 @@ void report_features(GArray* features, Version_Spec vcp_version) {
 
 
 void report_parsed_capabilities(Parsed_Capabilities* pcaps) {
-   // printf("(%s) Starting.\n",__func__);
+   // DBGMSG("Starting.");
    assert(pcaps && memcmp(pcaps->marker, PARSED_CAPABILITIES_MARKER, 4) == 0);
    // typedef enum {TERSE, NORMAL, VERBOSE } MsgLevel;
    // MsgLevel msgLevel = get_global_msg_level();
@@ -112,12 +112,12 @@ Parsed_Capabilities * new_parsed_capabilities(
       int vminor;
       int rc = sscanf(mccs_ver, "%d.%d", &vmajor, &vminor);
       if (rc != 2) {
-         printf("(%s) Unable to parse mccs_ver, value=\"%s\", rc=%d\n", __func__, mccs_ver, rc);
+         DBGMSG("Unable to parse mccs_ver, value=\"%s\", rc=%d\n", mccs_ver, rc);
       }
       else {
          parsed_vcp_version.major = vmajor;
          parsed_vcp_version.minor = vminor;
-         // printf("(%s) Parsed mccs_ver: %d.%d\n", __func__, parsed_vcp_version.major, parsed_vcp_version.minor);
+         // DBGMSG("Parsed mccs_ver: %d.%d", parsed_vcp_version.major, parsed_vcp_version.minor);
       }
    }
    pcaps->parsed_mccs_version = parsed_vcp_version;
@@ -148,7 +148,7 @@ void free_parsed_capabilities(Parsed_Capabilities * pcaps) {
       bva_free(pcaps->commands);
 
    if (pcaps->vcp_features) {
-      // printf("(%s) vcp_features->len = %d\n", __func__, pcaps->vcp_features->len);
+      // DBGMSG("vcp_features->len = %d", pcaps->vcp_features->len);
       int ndx;
       for (ndx=pcaps->vcp_features->len-1; ndx >=0; ndx--) {
          VCP_Feature_Record * vfr = g_array_index(pcaps->vcp_features, VCP_Feature_Record *, ndx);
@@ -234,7 +234,7 @@ Capabilities_Segment * next_capabilities_segment(char * start, int len) {
 Byte_Value_Array parse_cmds_segment(char * start, int len) {
    bool debug = false;
    if (debug)
-      printf("(%s) Starting. start=%p, len=%d\n", __func__, start, len);
+      DBGMSG("Starting. start=%p, len=%d", start, len);
 
    Byte_Value_Array cmd_ids2 = bva_create();
    bool ok = store_bytehex_list(start, len, cmd_ids2, bva_appender);
@@ -244,12 +244,12 @@ Byte_Value_Array parse_cmds_segment(char * start, int len) {
    // report_id_array(cmd_ids, "Command ids found:");
    if (debug) {
       // report_cmd_array(cmd_ids);
-      printf("(%s) store_bytehex_list returned %d\n", __func__, ok);
+      DBGMSG("store_bytehex_list returned %d", ok);
       report_commands(cmd_ids2);
    }
    Byte_Value_Array result = (ok) ? cmd_ids2 : NULL;
    if (debug)
-      printf("(%s) returning %p\n", __func__, result);
+      DBGMSG("returning %p", result);
    return result;
 }
 
@@ -331,7 +331,7 @@ GArray * parse_vcp_segment(char * start, int len) {
          // find matching )
          char * value_end = find_closing_paren(pos, end);
          if (value_end == end) {
-            printf("(%s) Value parse terminated without closing paren   \n", __func__ );
+            DBGMSG("Value parse terminated without closing paren   " );
             // bad data, what to do?
             exit(1);
          }
@@ -366,9 +366,9 @@ GArray * parse_vcp_segment(char * start, int len) {
 Parsed_Capabilities * parse_capabilities(char * buf_start, int buf_len) {
    bool debug = false;
    if (debug) {
-      printf("(%s) Starting. len=%d\n", __func__, buf_len);
+      DBGMSG("Starting. len=%d", buf_len);
       hex_dump((Byte*)buf_start, buf_len);
-      printf("(%s) Starting. buf_start -> |%.*s|\n", __func__, buf_len, buf_start);
+      DBGMSG("Starting. buf_start -> |%.*s|", buf_len, buf_start);
    }
    assert(buf_start[0] == '(');
    assert(buf_start[buf_len-1] == ')' );
@@ -403,13 +403,13 @@ Parsed_Capabilities * parse_capabilities(char * buf_start, int buf_len) {
       }
       else if (memcmp(seg->name_start, "mccs_ver", seg->name_len) == 0) {
          if (debug)
-            printf("(%s) MCCS version: %.*s\n", __func__, seg->value_len, seg->value_start);
+            DBGMSG("MCCS version: %.*s", seg->value_len, seg->value_start);
          mccs_ver = chars_to_string(seg->value_start, seg->value_len);
       }
       else {
          // additional segment names seen: asset_eep, mpu, mswhql
          if (debug)
-            printf("(%s) Ignoring segment: %.*s\n", __func__, seg->name_len, seg->name_start);
+            DBGMSG("Ignoring segment: %.*s", seg->name_len, seg->name_start);
       }
    }
 
@@ -422,7 +422,7 @@ Parsed_Capabilities * parse_capabilities(char * buf_start, int buf_len) {
               vcp_features);
 
    if (debug)
-      printf("(%s) Returning %p\n", __func__, pcaps);
+      DBGMSG("Returning %p", pcaps);
    return pcaps;
 }
 

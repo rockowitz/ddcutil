@@ -38,7 +38,7 @@ static int     iDisplayIndex = -1;
 gboolean adl_arg_func(const gchar* option_name, const gchar* value, gpointer data, GError** error) {
    bool debug = true;
    if (debug)
-      printf("(%s) option_name=|%s|, value|%s|, data=%p\n", __func__, option_name, value, data);
+      DBGMSG("option_name=|%s|, value|%s|, data=%p", option_name, value, data);
 
    // int iAdapterIndex;
    // int iDisplayIndex;
@@ -47,7 +47,7 @@ gboolean adl_arg_func(const gchar* option_name, const gchar* value, gpointer dat
    bool ok = parse_adl_arg(value, &iAdapterIndex, &iDisplayIndex);
 
    if (ok) {
-      printf("(%s) parsed adl = %d.%d\n", __func__, iAdapterIndex, iDisplayIndex);
+      DBGMSG("parsed adl = %d.%d", iAdapterIndex, iDisplayIndex);
    }
    if (!ok) {
       // *error = G_OPTION_ERROR_FAILED;
@@ -63,7 +63,7 @@ gboolean adl_arg_func(const gchar* option_name, const gchar* value, gpointer dat
 gboolean output_arg_func(const gchar* option_name, const gchar* value, gpointer data, GError** error) {
    bool debug = false;
    if (debug)
-      printf("(%s) option_name=|%s|, value|%s|, data=%p\n", __func__, option_name, value, data);
+      DBGMSG("option_name=|%s|, value|%s|, data=%p", option_name, value, data);
 
    if (streq(option_name, "-v") || streq(option_name, "--verbose") )
       output_level = OL_VERBOSE;
@@ -91,20 +91,20 @@ gboolean output_arg_func(const gchar* option_name, const gchar* value, gpointer 
 Parsed_Cmd * parse_command(int argc, char * argv[]) {
    bool debug = false;
    if (debug)
-      printf("(%s) Starting\n", __func__ );
+      DBGMSG("Starting" );
    validate_cmdinfo();   // assertions
 
    if (debug) {
-      printf("(%s) argc=%d\n", __func__, argc);
+      DBGMSG("argc=%d", argc);
       int ndx = 0;
       for (; ndx < argc; ndx++) {
-         printf("(%s) argv[%d] = |%s|\n", __func__, ndx, argv[ndx]);
+         DBGMSG("argv[%d] = |%s|", ndx, argv[ndx]);
       }
    }
 
    Parsed_Cmd * parsed_cmd = new_parsed_cmd();
    // parsed_cmd->pdid = create_dispno_display_identifier(1);   // default monitor
-   // printf("(%s) After new_parsed_cmd(), parsed_cmd->output_level_name = %s\n", __func__, output_level_name(parsed_cmd->output_level));
+   // DBGMSG("After new_parsed_cmd(), parsed_cmd->output_level_name = %s", output_level_name(parsed_cmd->output_level));
 
    gboolean stats_flag     = false;
    gboolean ddc_flag       = false;
@@ -158,7 +158,7 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
 
    // comma delimited list of trace identifiers:
    // char * trace_group_string = strjoin(trace_group_names, trace_group_ct, ", ");
-   // printf("(%s) traceGroupString = %s\n", __func__, traceGroupString);
+   // DBGMSG("traceGroupString = %s", traceGroupString);
    // const char * pieces[] = {tracing_option_help, "  Recognized trace classes: ", trace_group_string, "\n\n"};
    // tracing_option_help = strjoin(pieces, 4, NULL);
 
@@ -188,10 +188,10 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
       fprintf(stderr, "Option parsing failed: %s\n", error->message);
    }
 
-   // printf("(%s) buswork=%d\n", __func__, buswork);
-   // printf("(%s) dispwork=%d\n", __func__, dispwork);
-   // printf("(%s) stats_flag=%d\n", __func__, stats_flag);
-   // printf("(%s) output_level=%d\n", __func__, output_level);
+   // DBGMSG("buswork=%d", buswork);
+   // DBGMSG("dispwork=%d", dispwork);
+   // DBGMSG("stats_flag=%d", stats_flag);
+   // DBGMSG("output_level=%d", output_level);
 
    int explicit_display_spec_ct = 0;  // number of ways the display is explicitly specified
 
@@ -203,14 +203,14 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
    if (adlwork) {
 #ifdef HAVE_ADL
       if (debug)
-         printf("(%s) adlwork = |%s|\n", __func__, adlwork);
+         DBGMSG("adlwork = |%s|", adlwork);
       int iAdapterIndex;
       int iDisplayIndex;
       bool adlok = parse_adl_arg(adlwork, &iAdapterIndex, &iDisplayIndex);
       if (!adlok) {
           printf("Invalid ADL argument: %s\n", adlwork );
           ok = false;
-          // printf("(%s) After ADL parse, ok=%d\n", __func__, ok);
+          // DBGMSG("After ADL parse, ok=%d", ok);
       }
       else {
          // parsedCmd->dref = createAdlDisplayRef(iAdapterIndex, iDisplayIndex);
@@ -224,7 +224,7 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
    }
 
    if (buswork >= 0) {
-      // printf("(%s) case B\n", __func__);
+      // DBGMSG("case B");
       free(parsed_cmd->pdid);
       parsed_cmd->pdid = create_busno_display_identifier(buswork);
       explicit_display_spec_ct++;
@@ -232,7 +232,7 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
 
    if (dispwork >= 0) {
       // need to handle 0?
-      // printf("(%s) case B\n", __func__);
+      // DBGMSG("case B");
       // free(parsed_cmd->pdid);
       parsed_cmd->pdid = create_dispno_display_identifier(dispwork);
       explicit_display_spec_ct++;
@@ -274,12 +274,12 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
        bool saved_debug = debug;
        debug = false;
        if (debug)
-          printf("(%s) retrywork, argument = |%s|\n", __func__, maxtrywork );
+          DBGMSG("retrywork, argument = |%s|", maxtrywork );
 
        Null_Terminated_String_Array pieces = strsplit(maxtrywork, ",");
        int ntsal = null_terminated_string_array_length(pieces);
        if (debug)
-          printf("(%s) ntsal=%d\n", __func__, ntsal );
+          DBGMSG("ntsal=%d", ntsal );
        if (null_terminated_string_array_length(pieces) != 3) {
           fprintf(stderr, "--retries requires 3 values\n");
           ok = false;
@@ -289,7 +289,7 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
           char trimmed_piece[10];
           for (; pieces[ndx] != NULL; ndx++) {
              char * token = strtrim_r(pieces[ndx], trimmed_piece, 10);
-             // printf("(%s) token=|%s|\n", __func__, token);
+             // DBGMSG("token=|%s|", token);
              if (strlen(token) > 0 && !streq(token,".")) {
                 int ival;
                 int ct = sscanf(token, "%d", &ival);
@@ -311,7 +311,7 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
        null_terminated_string_array_free(pieces);
 
        if (debug)
-          printf("(%s) retries = %d,%d,%d\n", __func__, parsed_cmd->max_tries[0], parsed_cmd->max_tries[1], parsed_cmd->max_tries[2]);
+          DBGMSG("retries = %d,%d,%d", parsed_cmd->max_tries[0], parsed_cmd->max_tries[1], parsed_cmd->max_tries[2]);
        debug = saved_debug;
     }
 
@@ -322,7 +322,7 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
        bool saved_debug = debug;
        debug = true;
        if (debug)
-          printf("(%s) tracework, argument = |%s|\n", __func__, tracework );
+          DBGMSG("tracework, argument = |%s|", tracework );
        strupper(tracework);
        Trace_Group traceClasses = 0x00;
 
@@ -331,13 +331,13 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
        for (; pieces[ndx] != NULL; ndx++) {
           char * token = pieces[ndx];
           // TODO: deal with leading or trailing whitespace
-          printf("(%s) token=|%s|\n", __func__, token);
+          DBGMSG("token=|%s|", token);
           if (streq(token, "ALL") || streq(token, "*"))
              traceClasses = 0xff;
           else {
-             // printf("(%s) token: |%s|\n", __func__, token);
+             // DBGMSG("token: |%s|", token);
              Trace_Group tg = trace_class_name_to_value(token);
-             // printf("(%s) tg=0x%02x\n", __func__, tg);
+             // DBGMSG("tg=0x%02x", tg);
              if (tg) {
                 traceClasses |= tg;
              }
@@ -347,12 +347,12 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
              }
           }
        }
-       printf("(%s) ndx=%d\n", __func__, ndx);
-       printf("(%s) ntsal=%d\n", __func__, null_terminated_string_array_length(pieces) );
+       DBGMSG("ndx=%d", ndx);
+       DBGMSG("ntsal=%d", null_terminated_string_array_length(pieces) );
        assert(ndx == null_terminated_string_array_length(pieces));
        null_terminated_string_array_free(pieces);
 
-       printf("(%s) traceClasses = 0x%02x\n", __func__, traceClasses);
+       DBGMSG("traceClasses = 0x%02x", traceClasses);
        parsed_cmd->trace = traceClasses;
        debug = saved_debug;
     }
@@ -365,13 +365,13 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
       for (;trace_classes[ndx] != NULL; ndx++) {
          char * token = trace_classes[ndx];
          strupper(token);
-         // printf("(%s) token=|%s|\n", __func__, token);
+         // DBGMSG("token=|%s|", token);
          if (streq(token, "ALL") || streq(token, "*"))
             traceClasses = 0xff;
          else {
-            // printf("(%s) token: |%s|\n", __func__, token);
+            // DBGMSG("token: |%s|", token);
             Trace_Group tg = trace_class_name_to_value(token);
-            // printf("(%s) tg=0x%02x\n", __func__, tg);
+            // DBGMSG("tg=0x%02x", tg);
             if (tg) {
                traceClasses |= tg;
             }
@@ -381,7 +381,7 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
             }
         }
       }
-      // printf("(%s) traceClasses = 0x%02x\n", __func__, traceClasses);
+      // DBGMSG("traceClasses = 0x%02x", traceClasses);
       parsed_cmd->trace = traceClasses;
    }
 // #endif
@@ -408,11 +408,11 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
 #ifdef NO
    if (myhelp_flag)
    {
-      // printf("(%s) Customize help option implemented here\n", __func__);
+      // DBGMSG("Customize help option implemented here");
       fprintf(stdout, "Usage: ddctool [options] command [command arguments]\n");
       fprintf(stdout, "%s", commands_list_help);
       fprintf(stdout, "%s", command_argument_help);
-      // printf("(%s) Output of poptPrintHelp():\n", __func__);
+      // DBGMSG("Output of poptPrintHelp():");
       printf("Options:\n");
       // problem: poptPrintHelp begins with "ddctool [OPTIONS]:" line
       // poptPrintOptions  - my added function
@@ -422,7 +422,7 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
    }
    if (myusage_flag)
    {
-      printf("(%s) Output of poptPrintUsage():\n", __func__);
+      DBGMSG("Output of poptPrintUsage():");
       // poptPrintUsage(pc, /*FILE * fp*/ stdout, /*@unused@*/ /* int flags */ 0);
       fprintf(stdout, "        command [command-arguments]\n");
       fprintf(stdout, "%s", commands_list_help);
@@ -439,8 +439,8 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
    if (cmd_and_args) {
       for (; cmd_and_args[rest_ct] != NULL; rest_ct++) {
          if (debug) {
-            printf("(%s) rest_ct=%d\n", __func__, rest_ct);
-            printf("(%s) cmd_and_args: %s\n", __func__, cmd_and_args[rest_ct]);
+            DBGMSG("rest_ct=%d", rest_ct);
+            DBGMSG("cmd_and_args: %s", cmd_and_args[rest_ct]);
          }
       }
    }
@@ -505,6 +505,6 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
    }
 
    if (debug)
-       printf("(%s) Returning: %p\n", __func__, parsed_cmd);
+       DBGMSG("Returning: %p", parsed_cmd);
    return parsed_cmd;
 }

@@ -75,14 +75,16 @@ static Bus_Info_Array *  _bus_infos;   // pointer to array of Bus_Info
  */
 static Bus_Info * _get_allocated_Bus_Info(int busno) {
    bool debug = false;
-   if (debug) printf("(%s) busno=%d, _busct=%d\n", __func__, busno, _busct );
+   if (debug)
+      DBGMSG("busno=%d, _busct=%d", busno, _busct );
    assert(_bus_infos != NULL && _busct >= 0);   // Check initialized
    assert(busno >= 0 && busno < _busct);
 
    Bus_Info_Array * bia = _bus_infos;
    Bus_Info * bus_info  = (void *)bia + busno*sizeof(Bus_Info);
 
-   if (debug) printf("(%s) Returning %p\n", __func__, bus_info );
+   if (debug)
+       DBGMSG("Returning %p", bus_info );
    return bus_info;
 }
 
@@ -110,17 +112,16 @@ static int _get_i2c_busct() {
       errsv = errno;
       if (debug) {
          if (rc == 0) {
-            printf("(%s) Found %s\n", __func__, namebuf);
+            DBGMSG("Found %s", namebuf);
          }
          else {
-            printf("(%s) stat(%s) returned %d, errno=%s\n",
-                   __func__, namebuf, rc, linux_errno_desc(errsv) );
+            DBGMSG("stat(%s) returned %d, errno=%s", namebuf, rc, linux_errno_desc(errsv) );
          }
       }
    }
    int result = busno-1;
    if (debug)
-      printf("(%s) Returning %d\n", __func__, result );
+      DBGMSG("Returning %d", result );
    return result;
 }
 
@@ -138,21 +139,23 @@ static int _get_i2c_busct() {
  */
 static Bus_Info_Array * _allocate_Bus_Info_Array(int ct) {
    bool debug = false;
-   if (debug) printf("(%s) Starting. ct=%d\n", __func__, ct );
+   if (debug) 
+      DBGMSG("Starting. ct=%d", ct );
    Bus_Info_Array * bia = (Bus_Info_Array*) call_calloc(ct, sizeof(Bus_Info), "_allocate_Bus_Info_Array");
-   if (debug) printf("(%s) &bia=%p, bia=%p \n", __func__, &bia, bia);
+   if (debug) DBGMSG("&bia=%p, bia=%p ", &bia, bia);
    _bus_infos = bia;
    int busno = 0;
    for (; busno < ct; busno++) {
       Bus_Info * bus_info = _get_allocated_Bus_Info(busno);
-      // if (debug) printf("(%s) Putting marker in Bus_Info at %p\n", __func__, bus_info );
+      // if (debug) DBGMSG("Putting marker in Bus_Info at %p", bus_info );
       memcpy(bus_info->marker, "BINF", 4);
       bus_info->busno = busno;
       // I2C_BUS_PRESENT currently always set.  Might not be set if it turns out that
       // I2C bus numbers can be non-consecutive, and the same Bus_Info_Array is used
       bus_info->flags = I2C_BUS_EXISTS;
    }
-   if (debug) printf("(%s) Returning %p\n", __func__, bia);
+   if (debug) 
+      DBGMSG("Returning %p", bia);
    return bia;
 }
 
@@ -170,11 +173,11 @@ static Bus_Info_Array * _allocate_Bus_Info_Array(int ct) {
  *   _bus_infos = address of allocated Bus_Info array
  */
 static void _init_bus_infos_and_busct() {
-   // printf("(%s) Starting\n", __func__ );
+   // DBGMSG("Starting" );
    assert( _busct < 0 && _bus_infos == NULL);  // check not yet initialized
    _busct = _get_i2c_busct();
    _allocate_Bus_Info_Array(_busct);
-   // printf("(%s) Done\n", __func__ );
+   // DBGMSG("Done" );
 }
 
 
@@ -183,12 +186,12 @@ static void _init_bus_infos_and_busct() {
 // Allows for lazy initialization.
 // Useless optimization, should eliminate.
 static void _ensure_bus_infos_and_busct_initialized() {
-   // printf("(%s) Starting\n", __func__ );
+   // DBGMSG("Starting" );
    assert( (_busct < 0 && _bus_infos == NULL) || (_busct >= 0 && _bus_infos != NULL));
    if (_busct < 0)
       _init_bus_infos_and_busct();
    assert( _busct >= 0 && _bus_infos);
-   // printf("(%s) Done\n", __func__ );
+   // DBGMSG("Done" );
 }
 
 
@@ -204,7 +207,7 @@ int i2c_get_busct() {
    _ensure_bus_infos_and_busct_initialized();
 
    if (debug)
-      printf("(%s) Returning %d\n", __func__, _busct);
+      DBGMSG("Returning %d", _busct);
    assert(_busct >= 0 && _bus_infos != NULL);
    return _busct;
 }
@@ -231,7 +234,7 @@ int i2c_get_busct() {
 bool * detect_all_addrs_by_fd(int fd) {
    bool debug = false;
    if (debug)
-      printf("(%s) Starting. fd=%d\n", __func__, fd);
+      DBGMSG("Starting. fd=%d", fd);
    assert (fd >= 0);
    bool * addrmap = NULL;
 
@@ -249,7 +252,7 @@ bool * detect_all_addrs_by_fd(int fd) {
    }
 
    if (debug)
-      printf("(%s) Returning %p\n", __func__, addrmap);
+      DBGMSG("Returning %p", addrmap);
    return addrmap;
 }
 
@@ -268,7 +271,7 @@ bool * detect_all_addrs_by_fd(int fd) {
 bool * detect_all_addrs(int busno) {
    bool debug = false;
    if (debug)
-      printf("(%s) Starting. busno=%d\n", __func__, busno);
+      DBGMSG("Starting. busno=%d", busno);
    int file = i2c_open_bus(busno, RETURN_ERROR_IF_FAILURE);
    bool * addrmap = NULL;
 
@@ -278,7 +281,7 @@ bool * detect_all_addrs(int busno) {
    }
 
    if (debug)
-      printf("(%s) Returning %p\n", __func__, addrmap);
+      DBGMSG("Returning %p", addrmap);
    return addrmap;
 }
 
@@ -297,7 +300,7 @@ bool * detect_all_addrs(int busno) {
 Byte detect_ddc_addrs_by_fd(int file) {
    bool debug = false;
    if (debug)
-      printf("(%s) Starting.  busno=%d\n", __func__, file);
+      DBGMSG("Starting.  busno=%d", file);
    assert(file >= 0);
    unsigned char result = 0x00;
 
@@ -313,14 +316,14 @@ Byte detect_ddc_addrs_by_fd(int file) {
 
    i2c_set_addr(file, 0x37);
    rc = invoke_i2c_reader(file, 1, &readbuf);
-   // printf("(%s) call_read() returned %d\n", __func__, rc);
+   // DBGMSG("call_read() returned %d", rc);
    if (rc >= 0 || rc == DDCRC_READ_ALL_ZERO)   // 11/2015: DDCRC_READ_ALL_ZERO currently set only in ddc_packet_io.c
       result |= I2C_BUS_ADDR_0X37;
 
    // result |= I2C_BUS_ADDRS_CHECKED;
 
    if (debug)
-      printf("(%s) Done.  \n", __func__);
+      DBGMSG("Done.  ");
    return result;
 }
 
@@ -337,7 +340,7 @@ Byte detect_ddc_addrs_by_fd(int file) {
 Byte detect_ddc_addrs_by_busno(int busno) {
    bool debug = false;
    if (debug)
-      printf("(%s) Starting.  busno=%d\n", __func__, busno);
+      DBGMSG("Starting.  busno=%d", busno);
 
    unsigned char result = 0x00;
    int file = i2c_open_bus(busno, RETURN_ERROR_IF_FAILURE);
@@ -347,7 +350,7 @@ Byte detect_ddc_addrs_by_busno(int busno) {
    }
 
    if (debug)
-      printf("(%s) Done.  \n", __func__);
+      DBGMSG("Done.  ");
    return result;
 }
 
@@ -363,7 +366,7 @@ Byte detect_ddc_addrs_by_busno(int busno) {
 Bus_Info * i2c_check_bus(Bus_Info * bus_info) {
    bool debug = false;
    if (debug)
-      printf("(%s) Starting. busno=%d, buf_info=%p\n", __func__, bus_info->busno, bus_info );
+      DBGMSG("Starting. busno=%d, buf_info=%p", bus_info->busno, bus_info );
 
    assert(bus_info != NULL);
    char * marker = bus_info->marker;  // mcmcmp(bus_info->marker... causes compile error
@@ -386,7 +389,7 @@ Bus_Info * i2c_check_bus(Bus_Info * bus_info) {
    }
 
    if (debug)
-      printf("(%s) Returning %p, flags=0x%02x\n", __func__, bus_info, bus_info->flags );
+      DBGMSG("Returning %p, flags=0x%02x", bus_info, bus_info->flags );
    return bus_info;
 }
 
@@ -408,7 +411,7 @@ Bus_Info * i2c_get_bus_info(int busno) {
    // bool debug = adjust_debug_level(false, bus_core_trace_level);
    bool debug = false;
    if (debug)
-      printf("(%s) Starting.  busno=%d\n", __func__, busno );
+      DBGMSG("Starting.  busno=%d", busno );
 
    Bus_Info * bus_info = NULL;
 
@@ -417,16 +420,16 @@ Bus_Info * i2c_get_bus_info(int busno) {
       bus_info = _get_allocated_Bus_Info(busno);
       // report_businfo(busInfo);
       if (debug) {
-         printf("(%s) flags=0x%02x\n", __func__, bus_info->flags);
-         printf("(%s) flags & I2C_BUS_PROBED = 0x%02x\n", __func__, (bus_info->flags & I2C_BUS_PROBED) );
+         DBGMSG("flags=0x%02x", bus_info->flags);
+         DBGMSG("flags & I2C_BUS_PROBED = 0x%02x", (bus_info->flags & I2C_BUS_PROBED) );
       }
       if (!(bus_info->flags & I2C_BUS_PROBED)) {
-         // printf("(%s) Calling check_i2c_bus()\n", __func__);
+         // DBGMSG("Calling check_i2c_bus()");
          i2c_check_bus(bus_info);
       }
    }
    if (debug)
-      printf("(%s) Returning %p\n", __func__, bus_info );
+      DBGMSG("Returning %p", bus_info );
    return bus_info;
 }
 
@@ -443,7 +446,7 @@ Bus_Info * i2c_get_bus_info(int busno) {
  *    NULL if not found
  */
 Bus_Info * i2c_find_bus_info_by_model_sn(const char * model, const char * sn) {
-   // printf("(%s) Starting. mode=%s, sn=%s\n", __func__, model, sn );
+   // DBGMSG("Starting. mode=%s, sn=%s", model, sn );
    Bus_Info * result = NULL;
    int busct = i2c_get_busct();
    int busno;
@@ -460,7 +463,7 @@ Bus_Info * i2c_find_bus_info_by_model_sn(const char * model, const char * sn) {
          }
       }
    }
-   // printf("(%s) Returning: %p\n", __func__, result );
+   // DBGMSG("Returning: %p", result );
    return result;
 }
 
@@ -475,7 +478,7 @@ Bus_Info * i2c_find_bus_info_by_model_sn(const char * model, const char * sn) {
  *    NULL if not found
  */
 Bus_Info * i2c_find_bus_info_by_edid(const Byte * pEdidBytes) {
-   // printf("(%s) Starting. mode=%s, sn=%s\n", __func__, model, sn );
+   // DBGMSG("Starting. mode=%s, sn=%s", model, sn );
   Bus_Info * result = NULL;
   int busct = i2c_get_busct();
   int busno;
@@ -493,7 +496,7 @@ Bus_Info * i2c_find_bus_info_by_edid(const Byte * pEdidBytes) {
      }
   }
 
-  // printf("(%s) Returning: %p\n", __func__, result );
+  // DBGMSG("Returning: %p", result );
   return result;
 
 }
@@ -532,7 +535,7 @@ bool i2c_is_valid_bus(int busno, bool emit_error_msg) {
    if (complaint && emit_error_msg) {
       fprintf(stderr, "%s /dev/i2c-%d\n", complaint, busno);
    }
-   // printf("(%s) returning %d\n", __func__, result);
+   // DBGMSG("returning %d", result);
    return result;
 }
 
@@ -590,7 +593,7 @@ static void report_businfo(Bus_Info * bus_info, int depth) {
    bool debug = false;
    Output_Level output_level = get_output_level();
    if (debug)
-      printf("(%s) bus_info=%p, output_level=%s\n", __func__, bus_info, output_level_name(output_level));
+      DBGMSG("bus_info=%p, output_level=%s", bus_info, output_level_name(output_level));
    assert(bus_info);
 
    Buffer * buf0 = buffer_new(1000, "report_businfo");
@@ -654,7 +657,7 @@ static void report_businfo(Bus_Info * bus_info, int depth) {
 
    buffer_free(buf0, "report_businfo");
    if (debug)
-      printf("(%s) Done\n", __func__);
+      DBGMSG("Done");
 }
 
 
@@ -696,7 +699,7 @@ void i2c_report_bus(int busno) {
    // bool debug = adjust_debug_level(false, bus_core_trace_level);
    bool debug = false;
    if (debug)
-      printf("(%s) Starting. busno=%d\n", __func__, busno );
+      DBGMSG("Starting. busno=%d", busno );
    assert(busno >= 0);
 
   int busct = i2c_get_busct();
@@ -708,7 +711,7 @@ void i2c_report_bus(int busno) {
   }
 
   if (debug)
-     printf("(%s) Done\n", __func__);
+     DBGMSG("Done");
 }
 
 
@@ -771,7 +774,7 @@ Display_Info_List i2c_get_valid_displays() {
    info_list.info_recs = calloc(cur_display,sizeof(Display_Info));
    memcpy(info_list.info_recs, info_recs, cur_display*sizeof(Display_Info));
    info_list.ct = cur_display;
-   // printf("(%s) Done. Returning:\n", __func__);
+   // DBGMSG("Done. Returning:");
    // report_display_info_list(&info_list, 0);
    return info_list;
 }
@@ -809,7 +812,7 @@ typedef struct {
 int i2c_open_bus(int busno, Failure_Action failure_action) {
    bool debug = false;
    if (debug)
-      printf("(%s) busno=%d\n", __func__, busno);
+      DBGMSG("busno=%d", busno);
    char filename[20];
    int  file;
 
@@ -848,7 +851,7 @@ int i2c_open_bus(int busno, Failure_Action failure_action) {
 int i2c_close_bus(int fd, int busno, Failure_Action failure_action) {
    bool debug = false;
    if (debug)
-      printf("(%s) Starting. fd=%d\n", __func__, fd);
+      DBGMSG("Starting. fd=%d", fd);
    errno = 0;
    int rc = 0;
    RECORD_IO_EVENT(IE_CLOSE, ( rc = close(fd) ) );
@@ -927,7 +930,7 @@ int bit_name_ct = sizeof(functionality_table) / sizeof(I2C_Func_Table_Entry);
 
 
 static I2C_Func_Table_Entry * find_func_table_entry_by_funcname(char * funcname) {
-   // printf("(%s) Starting.  funcname=%s\n", __func__, funcname);
+   // DBGMSG("Starting.  funcname=%s", funcname);
    int ndx = 0;
    I2C_Func_Table_Entry * result = NULL;
    for (ndx = 0; ndx < bit_name_ct; ndx++) {
@@ -939,13 +942,13 @@ static I2C_Func_Table_Entry * find_func_table_entry_by_funcname(char * funcname)
          break;
       }
    }
-   // printf("(%s) funcname=%s, returning %s\n", __func__, funcname, (result) ? result->name : "NULL");
+   // DBGMSG("funcname=%s, returning %s", funcname, (result) ? result->name : "NULL");
    return result;
 }
 
 
 static bool is_function_supported(int busno, char * funcname) {
-   // printf("(%s) Starting. busno=%d, funcname=%s\n", __func__, busno, funcname);
+   // DBGMSG("Starting. busno=%d, funcname=%s", busno, funcname);
    bool result = true;
    if ( !streq(funcname, "read") &&  !streq(funcname, "write") ) {
       I2C_Func_Table_Entry * func_table_entry = find_func_table_entry_by_funcname(funcname);
@@ -960,11 +963,11 @@ static bool is_function_supported(int busno, char * funcname) {
          // exit(1);
       }
 
-      // printf("(%s) functionality=0x%lx, func_table_entry->bit=-0x%lx\n", __func__, bus_infos[busno].functionality, func_table_entry->bit);
+      // DBGMSG("functionality=0x%lx, func_table_entry->bit=-0x%lx", bus_infos[busno].functionality, func_table_entry->bit);
       Bus_Info * bus_info = i2c_get_bus_info(busno);
       result = (bus_info->functionality & func_table_entry->bit) != 0;
    }
-   // printf("(%s) busno=%d, funcname=%s, returning %d\n", __func__, busno, funcname, result);
+   // DBGMSG("busno=%d, funcname=%s, returning %d", busno, funcname, result);
    return result;
 }
 
@@ -981,7 +984,7 @@ bool i2c_verify_functions_supported(int busno, char * write_func_name, char * re
       printf("Unsupported read function: %s\n", read_func_name );
 
    bool result =write_supported && read_supported;
-   // printf("(%s) returning %d\n", __func__, result);
+   // DBGMSG("returning %d", result);
    return result;
 }
 
@@ -1004,7 +1007,7 @@ unsigned long i2c_get_functionality_flags_by_fd(int fd) {
    if (rc < 0)
       report_ioctl_error( errsv, __func__, (__LINE__-3), __FILE__, true /*fatal*/);
 
-   // printf("(%s) Functionality for file %d: %lu, 0x%lx\n", __func__, file, funcs, funcs);
+   // DBGMSG("Functionality for file %d: %lu, 0x%lx", file, funcs, funcs);
    return funcs;
 }
 
@@ -1017,7 +1020,7 @@ unsigned long get_i2c_functionality_flags_by_busno(int busno) {
    funcs = i2c_get_functionality_flags_by_fd(file);
    i2c_close_bus(file, busno, EXIT_IF_FAILURE);
 
-   // printf("(%s) Functionality for bus %d: %lu, 0x%lx\n", __func__, busno, funcs, funcs);
+   // DBGMSG("Functionality for bus %d: %lu, 0x%lx", busno, funcs, funcs);
    return funcs;
 }
 #endif
@@ -1031,7 +1034,7 @@ char * i2c_interpret_functionality_into_buffer(unsigned long functionality, Buff
    int ndx = 0;
    for (ndx =0; ndx < bit_name_ct; ndx++) {
      if (functionality_table[ndx].bit & functionality) {
-        // printf("(%s) found bit, ndx=%d\n", __func__, ndx);
+        // DBGMSG("found bit, ndx=%d", ndx);
         if (buf->len > 0)
            buffer_append(buf, (Byte *) ", ", 2);
         buffer_append(buf, (Byte *) functionality_table[ndx].name, strlen(functionality_table[ndx].name));
@@ -1073,7 +1076,7 @@ Global_Status_Code i2c_get_raw_edid_by_fd(int fd, Buffer * rawedid, bool debug) 
    bool conservative = false;
 
    if (debug)
-      printf("\n(%s) Getting EDID for file %d\n", __func__, fd);
+      DBGMSG("Getting EDID for file %d", fd);
 
    assert(rawedid->buffer_size >= 128);
    Global_Status_Code gsc;
@@ -1093,9 +1096,9 @@ Global_Status_Code i2c_get_raw_edid_by_fd(int fd, Buffer * rawedid, bool debug) 
       if (gsc == 0) {
          rawedid->len = 128;
          if (debug) {
-            printf("(%s) call_read returned:\n", __func__);
+            DBGMSG("call_read returned:");
             buffer_dump(rawedid);
-            printf("\n(%s) edid checksum = %d\n", __func__, edid_checksum(rawedid->bytes) );
+            DBGMSG("edid checksum = %d", edid_checksum(rawedid->bytes) );
          }
          Byte checksum = edid_checksum(rawedid->bytes);
          if (checksum != 0) {
@@ -1110,7 +1113,7 @@ Global_Status_Code i2c_get_raw_edid_by_fd(int fd, Buffer * rawedid, bool debug) 
       rawedid->len = 0;
 
    if (debug) {
-      printf("(%s) Returning %d.  edidbuf contents:\n", __func__, gsc);
+      DBGMSG("Returning %d.  edidbuf contents:", gsc);
       buffer_dump(rawedid);
    }
    return gsc;

@@ -60,8 +60,7 @@ Global_Status_Code invoke_i2c_writer(
    bool debug = false;
    if (debug) {
       char * hs = hexstring(bytes_to_write, bytect);
-      printf("(%s) writer=|%s|, bytes_to_write=%s\n",
-             __func__, i2c_io_strategy->i2c_writer_name, hs);
+      DBGMSG("writer=|%s|, bytes_to_write=%s", i2c_io_strategy->i2c_writer_name, hs);
       free(hs);
    }
 
@@ -71,12 +70,12 @@ Global_Status_Code invoke_i2c_writer(
       ( rc = i2c_io_strategy->i2c_writer(fh, bytect, bytes_to_write ) )
      );
    if (debug)
-      printf("(%s) writer() function returned %d\n", __func__, rc);
+      DBGMSG("writer() function returned %d", rc);
    assert (rc <= 0);
 
    Global_Status_Code gsc = modulate_base_errno_ddc_to_global(rc);
    if (debug)
-      printf("(%s) Returning gsc=%s\n", __func__, gsc_desc(gsc));
+      DBGMSG("Returning gsc=%s", gsc_desc(gsc));
    return gsc;
 }
 
@@ -97,8 +96,7 @@ Global_Status_Code invoke_i2c_reader(
 {
      bool debug = false;
      if (debug)
-        printf("(%s) reader=%s, bytect=%d\n",
-               __func__, i2c_io_strategy->i2c_reader_name, bytect);
+        DBGMSG("reader=%s, bytect=%d", i2c_io_strategy->i2c_reader_name, bytect);
 
      Base_Status_Errno_DDC rc;
      RECORD_IO_EVENT(
@@ -106,12 +104,12 @@ Global_Status_Code invoke_i2c_reader(
         ( rc = i2c_io_strategy->i2c_reader(fh, bytect, readbuf) )
        );
      if (debug)
-        printf("(%s) reader() function returned %d\n", __func__, rc);
+        DBGMSG("reader() function returned %d", rc);
      assert (rc <= 0);
 
      Global_Status_Code gsc = modulate_base_errno_ddc_to_global(rc);
      if (debug )
-        printf("(%s) Returning gsc=%s\n", __func__, gsc_desc(gsc));
+        DBGMSG("Returning gsc=%s", gsc_desc(gsc));
      return gsc;
 }
 

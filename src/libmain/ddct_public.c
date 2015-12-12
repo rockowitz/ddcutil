@@ -258,7 +258,7 @@ DDCT_Status ddct_get_display_ref(DDCT_Display_Identifier did, DDCT_Display_Ref* 
    else {
       Display_Ref* dref = get_display_ref_for_display_identifier(pdid, true /* emit_error_msg */);
       if (debug)
-         printf("(%s) get_display_ref_for_display_identifier() returned %p\n", __func__, dref);
+         DBGMSG("get_display_ref_for_display_identifier() returned %p", dref);
       if (dref)
          *ddct_dref = dref;
       else
@@ -605,9 +605,9 @@ DDCT_Status ddct_get_profile_related_values(DDCT_Display_Handle ddct_dh, char** 
    WITH_DH(ddct_dh,
       {
          set_output_level(OL_PROGRAM);
-         // printf("(%s) Before dumpvcp_to_string_by_display_handle()\n", __func__);
+         // DBGMSG("Before dumpvcp_to_string_by_display_handle()");
          char * catenated = dumpvcp_to_string_by_display_handle(dh);
-         // printf("(%s) After dumpvcp_to_string_by_display_handle(), catenated=%p\n", __func__, catenated);
+         // DBGMSG("After dumpvcp_to_string_by_display_handle(), catenated=%p", catenated);
          // printf("(%s) strlen(catenated)=%ld, catenated=|%s|\n",
          //       __func__,
          //       strlen(catenated),

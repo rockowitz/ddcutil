@@ -29,6 +29,7 @@
 #include "util/string_util.h"
 
 // #include "base/linux_errno.h"
+#include "base/msg_control.h"
 #include "base/util.h"
 
 #include "base/query_sysenv.h"
@@ -69,7 +70,7 @@ ushort h2ushort(char * hval) {
    ct = sscanf(hval, "%hx", &ival);
    assert(ct == 1);
    if (debug)
-      printf("(%s) hhhh = |%s|, returning 0x%04x\n", __func__, hval, ival);
+      DBGMSG("hhhh = |%s|, returning 0x%04x", hval, ival);
    return ival;
 }
 
@@ -101,7 +102,7 @@ int query_proc_modules_for_video() {
                                mod_load_state,
                                mod_addr);
          if (piece_ct != 6) {
-            printf("(%s) Unexpected error parsing /proc/modules.  sscanf returned %d\n", __func__, piece_ct);
+            DBGMSG("Unexpected error parsing /proc/modules.  sscanf returned %d", piece_ct);
          }
          if (streq(mod_name, "drm") ) {
             printf("   Loaded drm module depends on: %s\n", mod_dependencies);
@@ -144,7 +145,7 @@ int query_proc_modules_for_video() {
 
 
 bool query_card_and_driver_using_lspci() {
-   // printf("(%s) Starting\n", __func__);
+   // DBGMSG("Starting");
    bool ok = true;
    FILE * fp;
 
@@ -169,14 +170,14 @@ bool query_card_and_driver_using_lspci() {
          if (strlen(a_line) > 0)
             a_line[strlen(a_line)-1] = '\0';
          // UGLY UGLY - WHY DOESN'T SCANF WORK ???
-         // printf("(%s) lspci line: |%s|\n", __func__, a_line);
+         // DBGMSG("lspci line: |%s|", a_line);
 #ifdef SCAN_FAILS
          // doesn't find ':'
          // char * pattern = "%s %s:%s";
          char * pattern = "%[^' '],%[^':'], %s";
          int ct = sscanf(a_line, pattern, pci_addr, device_title, device_name);
 
-         printf("(%s) ct=%d, t_read=%ld, pci_addr=%s, device_title=%s\n", __func__, ct, len, pci_addr, device_title);
+         DBGMSG("ct=%d, t_read=%ld, pci_addr=%s, device_title=%s", ct, len, pci_addr, device_title);
          if (ct == 3) {
             if ( str_starts_with("VGA", device_title) ) {
                printf("Video controller: %s\n", device_name);
@@ -184,7 +185,7 @@ bool query_card_and_driver_using_lspci() {
          }
 #endif
          int ct = sscanf(a_line, "%s %s", pci_addr, device_name);
-         // printf("(%s) ct=%d, t_read=%ld, pci_addr=%s, device_name=%s\n", __func__, ct, len, pci_addr, device_name);
+         // DBGMSG("ct=%d, t_read=%ld, pci_addr=%s, device_name=%s", ct, len, pci_addr, device_name);
          if (ct == 2) {
             if ( str_starts_with("VGA", device_name) ) {
                // printf("Video controller 0: %s\n", device_name);
@@ -229,7 +230,7 @@ bool query_card_and_driver_using_sysfs() {
    }
    else {
       while ((dent = readdir(d)) != NULL) {
-         // printf("(%s) %s\n", __func__, dent->d_name);
+         // DBGMSG("%s", dent->d_name);
 
          char cur_fn[100];
          char cur_dir_name[100];
@@ -359,7 +360,7 @@ bool query_card_and_driver_using_osinfo() {
    for (ndx=0; ndx < ct; ndx++) {
       OsinfoEntity * entity = osinfo_list_get_nth(device_list, ndx);
       char * entity_id = osinfo_entity_get_id(entity);
-      printf("(%s) osinfo entity id = %s\n", __func__, entity_id );
+      DBGMSG("osinfo entity id = %s", entity_id );
 
    }
 #endif

@@ -41,7 +41,7 @@ int cmd_code_count = sizeof(cmd_code_table)/sizeof(Cmd_Code_Table_Entry);
 
 
 Cmd_Code_Table_Entry * get_cmd_code_table_entry(int ndx) {
-   // printf("(%s) ndx=%d, cmd_code_count=%d  \n", __func__, ndx, cmd_code_count );
+   // DBGMSG("ndx=%d, cmd_code_count=%d  ", ndx, cmd_code_count );
    assert( 0 <= ndx && ndx < cmd_code_count);
    return &cmd_code_table[ndx];
 }
@@ -58,7 +58,7 @@ void list_cmd_codes() {
 
 
 Cmd_Code_Table_Entry * find_cmd_entry_by_hexid(Byte id) {
-   // printf("(%s) Starting. id=0x%02x \n", __func__, id );
+   // DBGMSG("Starting. id=0x%02x ", id );
    int ndx = 0;
    Cmd_Code_Table_Entry * result = NULL;
    for (;ndx < cmd_code_count; ndx++) {
@@ -67,7 +67,7 @@ Cmd_Code_Table_Entry * find_cmd_entry_by_hexid(Byte id) {
          break;
       }
    }
-   // printf("(%s) Done.  ndx=%d. returning %p\n", __func__, ndx, result);
+   // DBGMSG("Done.  ndx=%d. returning %p", ndx, result);
    return result;
 }
 

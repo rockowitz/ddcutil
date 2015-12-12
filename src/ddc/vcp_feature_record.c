@@ -28,11 +28,11 @@
 VCP_Feature_Record * new_VCP_Feature_Record(Byte feature_id, char * value_string_start, int value_string_len) {
    bool debug = false;
    if (debug) {
-      printf("(%s) Starting. Feature: 0x%02x (%s)\n", __func__, feature_id, get_feature_name(feature_id));
+      DBGMSG("Starting. Feature: 0x%02x (%s)", feature_id, get_feature_name(feature_id));
       if (value_string_start)
-         printf("(%s)  value string: |%.*s|\n", __func__, value_string_len, value_string_start);
+         DBGMSG("value string: |%.*s|", value_string_len, value_string_start);
       else
-         printf("(%s)  value_string_start = NULL\n", __func__);
+         DBGMSG("value_string_start = NULL");
    }
    VCP_Feature_Record * vfr =
          (VCP_Feature_Record *) call_calloc(1,sizeof(VCP_Feature_Record), "new_VCP_Feature_Record");
@@ -63,33 +63,33 @@ VCP_Feature_Record * new_VCP_Feature_Record(Byte feature_id, char * value_string
           fprintf(stderr, "Error processing VCP feature value list into bbf_values: %.*s\n", value_string_len, value_string_start);
        }
       if (debug) {
-          printf("(%s) store_bytehex_list for bva returned %d\n", __func__, ok1);
-          printf("(%s) store_bytehex_list for bbf returned %d\n", __func__, ok2);
-          //printf("(%s) Comparing Byte_value_Array vs ByteBitFlags\n", __func__);
+          DBGMSG("store_bytehex_list for bva returned %d", ok1);
+          DBGMSG("store_bytehex_list for bbf returned %d", ok2);
+          //DBGMSG("Comparing Byte_value_Array vs ByteBitFlags");
       }
 
 #ifdef OLD
       bool compok =  bva_bbf_same_values(vfr->values, bbf_values);
       if (compok) {
-         printf("(%s) Byte_Value_Array and ByteBitFlags equivalent\n", __func__);
+         DBGMSG("Byte_Value_Array and ByteBitFlags equivalent");
       }
       else {
-         printf("(%s) Byte_Value_Array and ByteBitFlags DO NOT MATCH\n", __func__);
+         DBGMSG("Byte_Value_Array and ByteBitFlags DO NOT MATCH");
          report_bva_array(vfr->values, "Byte_Value_Array contents:");
-         printf("(%s) ByteBitFlags as list: %s\n", __func__, bbf_to_string(bbf_values));
+         DBGMSG("ByteBitFlags as list: %s", bbf_to_string(bbf_values));
       }
 #endif
 
       bool compok =  bva_bbf_same_values(bva_values, bbf_values);
       if (compok) {
          if (debug)
-            printf("(%s) Byte_Value_Array and ByteBitFlags equivalent\n", __func__);
+            DBGMSG("Byte_Value_Array and ByteBitFlags equivalent");
       }
       else {
-         printf("(%s) Byte_Value_Array and ByteBitFlags DO NOT MATCH\n", __func__);
+         DBGMSG("Byte_Value_Array and ByteBitFlags DO NOT MATCH");
          bva_report(bva_values, "Byte_Value_Array contents:");
          char buf[768];
-         printf("(%s) ByteBitFlags as list: %s\n", __func__, bbf_to_string(bbf_values, buf, 768));
+         DBGMSG("ByteBitFlags as list: %s", bbf_to_string(bbf_values, buf, 768));
       }
       vfr->values = bva_values;
       if (debug)
@@ -97,7 +97,7 @@ VCP_Feature_Record * new_VCP_Feature_Record(Byte feature_id, char * value_string
       vfr->bbflags = bbf_values;
       if (debug) {
          char buf[768];
-         printf("(%s) ByteBitFlags as list: %s\n", __func__, bbf_to_string(bbf_values,buf,768));
+         DBGMSG("ByteBitFlags as list: %s", bbf_to_string(bbf_values,buf,768));
       }
    }
 
@@ -106,7 +106,7 @@ VCP_Feature_Record * new_VCP_Feature_Record(Byte feature_id, char * value_string
 
 
 void free_vcp_feature(VCP_Feature_Record * pfeat) {
-   // printf("(%s) Starting. pfeat=%p\n", __func__, pfeat);
+   // DBGMSG("Starting. pfeat=%p", pfeat);
    assert(pfeat);
    assert(memcmp(pfeat->marker, VCP_FEATURE_MARKER, 4) == 0);
 
@@ -122,13 +122,13 @@ void free_vcp_feature(VCP_Feature_Record * pfeat) {
    pfeat->marker[3] = 'x';
 
    call_free(pfeat, "free_vcp_feature");
-   // printf("(%s) Done.\n", __func__);
+   // DBGMSG("Done.");
 }
 
 
 
 void report_feature(VCP_Feature_Record * vfr, Version_Spec vcp_version) {
-   // printf("(%s) Starting. vfr=%p\n", __func__, vfr);
+   // DBGMSG("Starting. vfr=%p", vfr);
    printf("  Feature: %02X (%s)\n", vfr->feature_id, get_feature_name(vfr->feature_id));
    // hex_dump((Byte*) vfr, sizeof(VCP_Feature_Record));
    // if (vfr->values)
@@ -143,9 +143,9 @@ void report_feature(VCP_Feature_Record * vfr, Version_Spec vcp_version) {
 
       Feature_Value_Entry * feature_values = find_feature_values_for_capabilities(vfr->feature_id, vcp_version);
       // if (feature_values)
-      //    printf("(%s) Feature values found for feature 0x%02x\n", __func__, vfr->feature_id);
+      //    DBGMSG("Feature values found for feature 0x%02x", vfr->feature_id);
       // else
-      //    printf("(%s) Feature values NOT found for feature 0x%02x\n", __func__, vfr->feature_id);
+      //    DBGMSG("Feature values NOT found for feature 0x%02x", vfr->feature_id);
 
       int ct = bva_length(vfr->values);
       if (feature_values) {

@@ -143,7 +143,7 @@ void log_io_call(
 {
    bool debug = false;
    if (debug)
-      printf("(%s) event_type=%d %s\n", __func__, event_type, io_event_name(event_type));
+      DBGMSG("event_type=%d %s", event_type, io_event_name(event_type));
 
    long elapsed_nanos = (end_time_nanos-start_time_nanos);
    io_event_stats[event_type].call_count++;
@@ -163,7 +163,7 @@ void report_io_call_stats(int depth) {
    int ndx = 0;
    // int max_name_length = max_event_name_length();
    // not working as variable length string specifier
-   // printf("(%s) max_name_length=%d\n", __func__, max_name_length);
+   // DBGMSG("max_name_length=%d", max_name_length);
    rpt_vstring(d1, "%-40s Count Millisec  (   Nanosec)", "Type");
    for (;ndx < IO_EVENT_TYPE_CT; ndx++) {
       if (io_event_stats[ndx].call_count > 0) {
@@ -244,18 +244,18 @@ Status_Code_Counts * new_status_code_counts(char * name) {
 int log_any_status_code(Status_Code_Counts * pcounts, int rc, const char * caller_name) {
    bool debug = false;
    if (debug)
-      printf("(%s) caller=%s, rc=%d\n", __func__, caller_name, rc);
+      DBGMSG("caller=%s, rc=%d", caller_name, rc);
    assert(pcounts->error_counts_hash);
    pcounts->total_status_counts++;
 
    // n. if key rc not found, returns NULL, which is 0
    int ct = GPOINTER_TO_INT(g_hash_table_lookup(pcounts->error_counts_hash,  GINT_TO_POINTER(rc)) );
    g_hash_table_insert(pcounts->error_counts_hash, GINT_TO_POINTER(rc), GINT_TO_POINTER(ct+1));
-   // printf("(%s) Old count=%d\n", __func__, ct);
+   // DBGMSG("Old count=%d", ct);
 
    // check the new value
    int newct = GPOINTER_TO_INT(g_hash_table_lookup(pcounts->error_counts_hash,  GINT_TO_POINTER(rc)) );
-   // printf("(%s) new count for key %d = %d\n", __func__, rc, newct);
+   // DBGMSG("new count for key %d = %d", rc, newct);
    assert(newct == ct+1);
 
    return ct+1;
@@ -385,7 +385,7 @@ int get_true_io_error_count(Status_Code_Counts * pcounts) {
         int ct  = GPOINTER_TO_INT(g_hash_table_lookup(pcounts->error_counts_hash,GINT_TO_POINTER(key)));
         summed_ct += ct;
      }
-     // printf("(%s) Total errors: %d\n", __func__, total_counts);
+     // DBGMSG("Total errors: %d", total_counts);
      assert(summed_ct == pcounts->total_status_counts);
      g_free(keysp);
      return summed_ct;

@@ -68,8 +68,7 @@ Base_Status_Errno_DDC  write_writer(int fh, int bytect, Byte * pbytes) {
    else  {       // rc < 0
       int errsv = errno;
       if (debug)
-         printf("(%s) write() returned %d, errno=%s\n",
-                __func__, rc, linux_errno_desc(errsv));
+         DBGMSG("write() returned %d, errno=%s", rc, linux_errno_desc(errsv));
       // rc = modulate_rc(-errsv, RR_ERRNO);
       rc = -errsv;
    }
@@ -105,8 +104,7 @@ Base_Status_Errno_DDC read_reader(int fh, int bytect, Byte * readbuf) {
    else {    // rc < 0
       int errsv = errno;
       if (debug)
-         printf("(%s) read() returned %d, errno=%s\n",
-                __func__, rc, linux_errno_desc(errsv));
+         DBGMSG("read() returned %d, errno=%s", rc, linux_errno_desc(errsv));
       // rc = modulate_rc(-errsv, RR_ERRNO);
       rc = -errsv;
    }
@@ -148,7 +146,7 @@ Base_Status_Errno_DDC read_reader(int fh, int bytect, Byte * readbuf) {
 Base_Status_Errno_DDC ioctl_writer(int fh, int bytect, Byte * pbytes) {
    bool debug = false;
    if (debug)
-      printf("(%s) Starting. fh=%d, bytect=%d, pbytes=%p\n", __func__, fh, bytect, pbytes);
+      DBGMSG("Starting. fh=%d, bytect=%d, pbytes=%p", fh, bytect, pbytes);
    struct i2c_msg              messages[1];
    struct i2c_rdwr_ioctl_data  msgset;
 
@@ -190,13 +188,13 @@ Base_Status_Errno_DDC ioctl_writer(int fh, int bytect, Byte * pbytes) {
          // fprintf(stderr, "%s\n", explain_ioctl(fh, I2C_RDWR, &msgset));
       }
    }
-   // printf("(%s) ioctl(..I2C_RDWR..) returned %d\n", __func__, rc);
+   // DBGMSG("ioctl(..I2C_RDWR..) returned %d", rc);
 
    if (rc > 0) {
       // what should a positive value be equal to?  not bytect
       // if (debug)
       if (rc != 1)
-         printf("(%s) ioctl() write returned %d\n", __func__, rc);
+         DBGMSG("ioctl() write returned %d", rc);
       rc = 0;
    }
    else if (rc < 0) {
@@ -204,7 +202,7 @@ Base_Status_Errno_DDC ioctl_writer(int fh, int bytect, Byte * pbytes) {
       rc = -errno;
    }
    // if (debug)
-   //    printf("(%s) Returning %d\n", __func__, rc);
+   //    DBGMSG("Returning %d", rc);
    return rc;
 }
 
@@ -223,7 +221,7 @@ Base_Status_Errno_DDC ioctl_writer(int fh, int bytect, Byte * pbytes) {
  */
 Base_Status_Errno_DDC ioctl_reader(int fh, int bytect, Byte * readbuf) {
    bool debug = true;
-   // printf("(%s) Starting\n", __func__);
+   // DBGMSG("Starting");
    struct i2c_msg              messages[1];
    struct i2c_rdwr_ioctl_data  msgset;
 
@@ -257,11 +255,11 @@ Base_Status_Errno_DDC ioctl_reader(int fh, int bytect, Byte * readbuf) {
 #endif
       }
    }
-   // printf("(%s) ioctl(..I2C_RDWR..) returned %d\n", __func__, rc);
+   // DBGMSG("ioctl(..I2C_RDWR..) returned %d", rc);
    if (rc > 0) {
       // always see rc == 1
       if (rc != 1)
-         printf("(%s) ioctl rc = %d, bytect =%d\n", __func__, rc, bytect);
+         DBGMSG("ioctl rc = %d, bytect =%d", rc, bytect);
       rc = 0;
    }
    else if (rc < 0)
@@ -289,8 +287,7 @@ Base_Status_Errno_DDC i2c_smbus_write_i2c_block_data_writer(int fh, int bytect, 
    if (rc < 0) {
       int errsv = errno;
       if (debug)
-         printf("(%s) i2c_smbus_write_i2c_block_data() returned %d, errno=%s\n",
-                __func__, rc, linux_errno_desc(errsv));
+         DBGMSG("i2c_smbus_write_i2c_block_data() returned %d, errno=%s", rc, linux_errno_desc(errsv));
       // set rc to -errno?
       // rc = modulate_rc(-errsv, RR_ERRNO);
       rc = -errsv;
@@ -319,7 +316,7 @@ Base_Status_Errno_DDC i2c_smbus_read_i2c_block_data_reader(int fh, int bytect, B
       int errsv = errno;
       // always see rc=32, bytect=39
       // but leading byte of response is not 0
-      printf("(%s) i2c_smbus_read_i2c_block_data() returned %d, bytect=%d\n",__func__, rc, bytect);
+      DBGMSG("i2c_smbus_read_i2c_block_data() returned %d, bytect=%d", rc, bytect);
       hex_dump(workbuf, bytect);
       errno = errsv;
       rc = 0;
@@ -339,8 +336,7 @@ Base_Status_Errno_DDC i2c_smbus_read_i2c_block_data_reader(int fh, int bytect, B
    else if (rc < 0) {
       int errsv = errno;
       if (debug)
-         printf("(%s) i2c_smbus_read_i2c_block_data() returned %d, errno=%s\n",
-                __func__, rc, linux_errno_desc(errsv));
+         DBGMSG("i2c_smbus_read_i2c_block_data() returned %d, errno=%s", rc, linux_errno_desc(errsv));
       // set rc to -errno?
       // rc = modulate_rc(-errsv, RR_ERRNO);
       rc = -errno;

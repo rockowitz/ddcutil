@@ -176,7 +176,7 @@ Display_Ref * create_bus_display_ref(int busno) {
    dref->ddc_io_mode = DDC_IO_DEVI2C;
    dref->busno       = busno;
    dref->vcp_version = version_spec_unqueried;
-   // printf("(%s) Done.  Constructed bus display ref: \n", __func__);
+   // DBGMSG("Done.  Constructed bus display ref: ");
    // report_display_ref(dref,0);
    return dref;
 }
@@ -198,7 +198,7 @@ Display_Ref * clone_display_ref(Display_Ref * old) {
    // dref->busno         = old->busno;
    // dref->iAdapterIndex = old->iAdapterIndex;
    // dref->iDisplayIndex = old->iDisplayIndex;
-   // printf("(%s) dref=%p, old=%p, len=%d  \n", __func__, dref, old, (int) sizeof(BasicDisplayRef) );
+   // DBGMSG("dref=%p, old=%p, len=%d  ", dref, old, (int) sizeof(BasicDisplayRef) );
    memcpy(dref, old, sizeof(Display_Ref));
    return dref;
 }

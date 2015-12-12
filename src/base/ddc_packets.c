@@ -62,9 +62,9 @@ Trace_Group TRACE_GROUP = TRC_DDC;
  */
 bool is_double_byte(Byte * pb) {
    Byte * pb0 = pb-1;
-   // printf("(%s) pb=%p, pb0=%p, *pb=0x%02x *pb0=0x%02x \n", __func__, pb, pb0, *pb, *pb0 );
+   // DBGMSG("pb=%p, pb0=%p, *pb=0x%02x *pb0=0x%02x ", pb, pb0, *pb, *pb0 );
    bool result = (*pb == *pb0);
-   // printf("(%s) Returning: %d  \n", __func__, result );
+   // DBGMSG("Returning: %d  ", result );
    return result;
 }
 
@@ -85,7 +85,7 @@ Byte xor_bytes(Byte * bytes, int len) {
 
 
 Byte ddc_checksum(Byte * bytes, int len, bool altmode) {
-   // printf("(%s) bytes=%p, len=%d, altmode=%d\n", __func__, bytes, len, altmode);
+   // DBGMSG("bytes=%p, len=%d, altmode=%d", bytes, len, altmode);
    // largest packet is capabilities fragment, which can have up to 32 bytes of text,
    // plus 4 bytes of offset data.  Adding this to the dest, src, and len bytes is 39
    assert(len <= MAX_DDC_PACKET_WO_CHECKSUM);
@@ -103,7 +103,7 @@ Byte ddc_checksum(Byte * bytes, int len, bool altmode) {
    result = xor_bytes(bytes2, len);
 
    char * hs = hexstring(bytes2, len);
-   // printf("(%s) checksum for %s is 0x%02x\n", __func__, hs, result);
+   // DBGMSG("checksum for %s is 0x%02x", hs, result);
    free(hs);
 
    // if (altmode)
@@ -142,9 +142,9 @@ bool valid_ddc_packet_checksum(Byte * readbuf) {
    bool result;
 
    int data_size = (readbuf[2] & 0x7f);
-   // printf("(%s) data_size = %d\n", __func__, data_size);
+   // DBGMSG("data_size = %d", data_size);
    if (data_size > MAX_DDCCI_PACKET_SIZE) {    // correct constant?
-      // printf("(%s) Invalid data_size = %d\n", __func__, data_size);
+      // DBGMSG("Invalid data_size = %d", data_size);
       DDCMSG("Invalid data_size = %d", data_size);
       result = false;
    }
@@ -160,7 +160,7 @@ bool valid_ddc_packet_checksum(Byte * readbuf) {
       result = (expected_checksum == actual_checksum);
    }
 
-   // printf("(%s) Returning: %d\n", __func__, result);
+   // DBGMSG("Returning: %d", result);
    return result;
 }
 
@@ -221,7 +221,7 @@ void report_interpreted_aux_data(Byte response_type, void * aux_data) {
       break;
 
    default:
-      printf("(%s) Don't know how to interpret aux data for response type: 0x%02x\n", __func__, response_type);
+      DBGMSG("Don't know how to interpret aux data for response type: 0x%02x", response_type);
    }
 
 
@@ -246,16 +246,16 @@ void free_ddc_packet(DDC_Packet * packet) {
    if (packet) {
       if (packet->aux_data) {
          if (debug)
-            printf("(%s) freeing packet->aux_data=%p\n", __func__, packet->aux_data);
+            DBGMSG("freeing packet->aux_data=%p", packet->aux_data);
          call_free(packet->aux_data, "free_ddc_packet:aux_data");
       }
 
       if (debug)
-         printf("(%s) calling free_buffer() for packet->buf=%p\n", __func__, packet->buf);
+         DBGMSG("calling free_buffer() for packet->buf=%p", packet->buf);
       buffer_free(packet->buf, "free DDC packet");
 
       if (debug)
-         printf("(%s) freeing packet=%p\n", __func__, packet);
+         DBGMSG("freeing packet=%p", packet);
       call_free(packet, "free_ddc_packet:packet");
    }
    TRCMSGTF(tf, "Done" );
@@ -283,7 +283,7 @@ DDC_Packet * create_empty_ddc_packet(int max_size, const char * tag) {
    }
    else
       packet->tag[0] = '\0';
-   // printf("(%s) packet->tag=%s\n", __func__, packet->tag);
+   // DBGMSG("packet->tag=%s", packet->tag);
    packet->type = DDC_PACKET_TYPE_NONE;
    packet->aux_data = NULL;
 
@@ -361,7 +361,7 @@ DDC_Packet * create_ddc_capabilities_request_packet(int offset, const char * tag
                        };
    packet_ptr = create_ddc_base_request_packet(data_bytes, 3, tag);
 
-   // printf("(%s) Done. packet_ptr=%p\n", __func__, packet_ptr);
+   // DBGMSG("Done. packet_ptr=%p", packet_ptr);
    // dump_packet(packet_ptr);
    return packet_ptr;
 }
@@ -405,7 +405,7 @@ DDC_Packet * create_ddc_multi_part_read_request_packet(
       packet_ptr = create_ddc_base_request_packet(data_bytes, 4, tag);
    }
 
-   // printf("(%s) Done. packet_ptr=%p\n", __func__, packet_ptr);
+   // DBGMSG("Done. packet_ptr=%p", packet_ptr);
    // dump_packet(packet_ptr);
    return packet_ptr;
 }
@@ -428,14 +428,14 @@ void update_ddc_capabilities_request_packet_offset(DDC_Packet * packet, int offs
    Byte ofs_lo_byte = offset & 0xff;
    data_bytes[1] = ofs_hi_byte;
    data_bytes[2] = ofs_lo_byte;
-   // printf("(%s) offset=%d, ofs_hi_byte=0x%02x, ofs_lo_byte=0x%02x\n", __func__, offset, ofs_hi_byte, ofs_lo_byte );
+   // DBGMSG("offset=%d, ofs_hi_byte=0x%02x, ofs_lo_byte=0x%02x", offset, ofs_hi_byte, ofs_lo_byte );
 
    // update checksum
    Byte * bytes = get_packet_start(packet);
    int packet_size_wo_checksum = get_packet_len(packet)-1;
    bytes[packet_size_wo_checksum] = ddc_checksum(bytes, packet_size_wo_checksum, false);
 
-   // printf("(%s) Done.\n", __func__);
+   // DBGMSG("Done.");
    // dump_packet(packet);
 }
 #endif
@@ -465,14 +465,14 @@ void update_ddc_multi_part_read_request_packet_offset(DDC_Packet * packet, int n
       data_bytes[2] = ofs_hi_byte;   // changed from update_ddc_capabilities_request_offset
       data_bytes[3] = ofs_lo_byte;   // changed ...
    }
-   // printf("(%s) offset=%d, ofs_hi_byte=0x%02x, ofs_lo_byte=0x%02x\n", __func__, new_offset, ofs_hi_byte, ofs_lo_byte );
+   // DBGMSG("offset=%d, ofs_hi_byte=0x%02x, ofs_lo_byte=0x%02x", new_offset, ofs_hi_byte, ofs_lo_byte );
 
    // update checksum
    Byte * bytes = get_packet_start(packet);
    int packet_size_wo_checksum = get_packet_len(packet)-1;
    bytes[packet_size_wo_checksum] = ddc_checksum(bytes, packet_size_wo_checksum, false);
 
-   // printf("(%s) Done.\n", __func__);
+   // DBGMSG("Done.");
    // dump_packet(packet);
 }
 
@@ -494,7 +494,7 @@ DDC_Packet * create_ddc_getvcp_request_packet(Byte vcp_code, const char * tag) {
                        };
    DDC_Packet * pkt = create_ddc_base_request_packet(data_bytes, 2, tag);
 
-   // printf("(%s) Done. rc=%d, packet_ptr%p, *packet_ptr=%p\n", __func__, rc, packet_ptr, *packet_ptr);
+   // DBGMSG("Done. rc=%d, packet_ptr%p, *packet_ptr=%p", rc, packet_ptr, *packet_ptr);
    return pkt;
 }
 
@@ -517,7 +517,7 @@ DDC_Packet * create_ddc_setvcp_request_packet(Byte vcp_code, int new_value, cons
                        };
    DDC_Packet * pkt = create_ddc_base_request_packet(data_bytes, 4, tag);
 
-   // printf("(%s) Done. rc=%d, packet_ptr%p, *packet_ptr=%p\n", __func__, rc, packet_ptr, *packet_ptr);
+   // DBGMSG("Done. rc=%d, packet_ptr%p, *packet_ptr=%p", rc, packet_ptr, *packet_ptr);
    return pkt;
 }
 
@@ -534,7 +534,7 @@ Global_Status_DDC create_ddc_base_response_packet(
 {
    // bool debug = adjust_debug_level(true, ddc_packets_trace_level);
    // if (debug)
-   //    printf("(%s) Starting. i2c_response_bytes=%s\n", __func__, hexstring(i2c_response_bytes,20));
+   //    DBGMSG("Starting. i2c_response_bytes=%s", hexstring(i2c_response_bytes,20));
    char * hs = hexstring(i2c_response_bytes,20);
    TRCMSG("Starting. i2c_response_bytes=%s", hs );
    free(hs);
@@ -542,18 +542,18 @@ Global_Status_DDC create_ddc_base_response_packet(
    int result = DDCRC_OK;
    DDC_Packet * packet = NULL;
    if (i2c_response_bytes[0] != 0x6e ) {
-      // printf("(%s) Unexpected source address 0x%02x, should be 0x6e\n", __func__, i2c_response_bytes[0]);
+      // DBGMSG("Unexpected source address 0x%02x, should be 0x6e", i2c_response_bytes[0]);
       DDCMSG("Unexpected source address 0x%02x, should be 0x6e", i2c_response_bytes[0]);
       result = DDCRC_RESPONSE_ENVELOPE;
    }
    else {
       int data_ct = i2c_response_bytes[1] & 0x7f;
-      // printf("(%s) data_ct=%d\n", __func__, data_ct);
+      // DBGMSG("data_ct=%d", data_ct);
       if (data_ct > MAX_DDC_DATA_SIZE) {
          if ( is_double_byte(&i2c_response_bytes[1])) {
             result = DDCRC_DOUBLE_BYTE;
             // if (showRecoverableErrors || debug)
-            //    printf("(%s) Double byte in packet.\n", __func__);
+            //    DBGMSG("Double byte in packet.");
             DDCMSG("Double byte in packet.");
          }
          else {
@@ -566,11 +566,11 @@ Global_Status_DDC create_ddc_base_response_packet(
       }
       else {
          packet = create_empty_ddc_packet(3 + data_ct + 1, tag);
-         // printf("(%s) create_empty_ddc_packet() returned %p\n", __func__, packet);
+         // DBGMSG("create_empty_ddc_packet() returned %p", packet);
          if (data_ct > 0)
             packet->type = i2c_response_bytes[2];
          Byte * packet_bytes = packet->buf->bytes;
-         // printf("(%s) packet_bytes=%p\n", __func__, packet_bytes);
+         // DBGMSG("packet_bytes=%p", packet_bytes);
          // packet_bytes[0] = 0x6f;    // implicit, would be 0x50 on access bus
          // packet_bytes[1] = 0x6e;       // i2c_response_bytes[0[
          // memcpy(packet_bytes+2, i2c_response_bytes+1, 1 + data_ct + 1);
@@ -587,9 +587,9 @@ Global_Status_DDC create_ddc_base_response_packet(
             //           __func__, actual_checksum, calculated_checksum);
             DDCMSG("Actual checksum 0x%02x, expected 0x%02x",
                    actual_checksum, calculated_checksum);
-            // printf("(%s) !!! SUPPRESSING CHECKSUM ERROR\n", __func__);
+            // DBGMSG("!!! SUPPRESSING CHECKSUM ERROR");
             result = DDCRC_CHECKSUM;
-            // printf("(%s) Freeing packet=%p\n", __func__, packet);
+            // DBGMSG("Freeing packet=%p", packet);
             free_ddc_packet(packet);
          }
       }
@@ -629,12 +629,12 @@ Global_Status_DDC create_ddc_response_packet(
        DDC_Packet **  packet_ptr_addr) {
    // bool debug = adjust_debug_level(true, ddc_packets_trace_level);
    // if (debug)
-   //    printf("(%s) Starting. i2c_response_bytes=%s\n", __func__, hexstring(i2c_response_bytes,20));
+   //    DBGMSG("Starting. i2c_response_bytes=%s", hexstring(i2c_response_bytes,20));
    char * hs = hexstring(i2c_response_bytes,20);
    TRCMSG("Starting. i2c_response_bytes=%s", hs);
    free(hs);
    int result = create_ddc_base_response_packet(i2c_response_bytes, response_bytes_buffer_size, tag,  packet_ptr_addr);
-   // printf("(%s) create_ddc_base_response_packet() returned %d, *packet_ptr_addr=%p\n", __func__, result, *packet_ptr_addr);
+   // DBGMSG("create_ddc_base_response_packet() returned %d, *packet_ptr_addr=%p", result, *packet_ptr_addr);
    if (result == 0) {
       if (isNullPacket(*packet_ptr_addr)) {
          result = DDCRC_NULL_RESPONSE;
@@ -646,7 +646,7 @@ Global_Status_DDC create_ddc_response_packet(
 
    if (result != DDCRC_OK && *packet_ptr_addr) {
       // if (debug)
-      //    printf("(%s) failure, freeing response packet at %p\n", __func__, *packet_ptr_addr);
+      //    DBGMSG("failure, freeing response packet at %p", *packet_ptr_addr);
       TRCMSG("failure, freeing response packet at %p", *packet_ptr_addr);
       // does this cause the free(readbuf) failure in try_read?
       free_ddc_packet(*packet_ptr_addr);
@@ -662,7 +662,7 @@ Global_Status_DDC create_ddc_response_packet(
       log_status_code(result, __func__);
    }
    // if (debug)
-   //    printf("(%s) returning %s, *packet_ptr_addr=%p\n", __func__, ddcrc_description(result), *packet_ptr_addr);
+   //    DBGMSG("returning %s, *packet_ptr_addr=%p", ddcrc_description(result), *packet_ptr_addr);
    TRCMSG("returning %s, *packet_ptr_addr=%p", ddcrc_desc(result), *packet_ptr_addr);
    assert( (result==DDCRC_OK && *packet_ptr_addr) || (result != DDCRC_OK && !*packet_ptr_addr));
    return result;
@@ -690,7 +690,7 @@ Global_Status_DDC interpret_capabilities_response(
    // not needed, already checked
    if (bytect < 3 || bytect > 35) {
       // if (debug)
-      // printf("(%s) Invalid response data length: %d\n", __func__, bytect);
+      // DBGMSG("Invalid response data length: %d", bytect);
       DDCMSG("(DDCMSG) Invalid response data length: %d", bytect);
       result = COUNT_STATUS_CODE(DDCRC_INVALID_DATA);
    }
@@ -701,14 +701,14 @@ Global_Status_DDC interpret_capabilities_response(
       int    text_length = bytect-3;    // max 32
       char * text_start = (char *) data_bytes+3;
 
-      // printf("(%s) offset_hi_byte = 0x%02x, offset_lo_byte = 0x%02x\n", __func__, offset_hi_byte, offset_lo_byte );
+      // DBGMSG("offset_hi_byte = 0x%02x, offset_lo_byte = 0x%02x", offset_hi_byte, offset_lo_byte );
       aux_data->fragment_offset = offset_hi_byte << 8 | offset_lo_byte;
       aux_data->fragment_length_wo_null = text_length;
       assert(text_length <= MAX_DDC_CAPABILITIES_FRAGMENT_SIZE);
       memcpy(aux_data->text, text_start, text_length);
       aux_data->text[text_length] = '\0';
    }
-   // printf("(%s) returning %s\n", __func__, ddcrc_description(result));
+   // DBGMSG("returning %s", ddcrc_description(result));
    return result;
 }
 #endif
@@ -735,7 +735,7 @@ Global_Status_DDC interpret_multi_part_read_response(
    // not needed, already checked
    if (bytect < 3 || bytect > 35) {
       // if (debug)
-      // printf("(%s) Invalid response data length: %d\n", __func__, bytect);
+      // DBGMSG("Invalid response data length: %d", bytect);
       DDCMSG("(DDCMSG) Invalid response data length: %d", bytect);
       result = COUNT_STATUS_CODE(DDCRC_INVALID_DATA);
    }
@@ -746,7 +746,7 @@ Global_Status_DDC interpret_multi_part_read_response(
       int    read_data_length = bytect-3;    // max 32  // CHANGED
       Byte * read_data_start = data_bytes+3;    // CHANGED
 
-      // printf("(%s) offset_hi_byte = 0x%02x, offset_lo_byte = 0x%02x\n", __func__, offset_hi_byte, offset_lo_byte );
+      // DBGMSG("offset_hi_byte = 0x%02x, offset_lo_byte = 0x%02x", offset_hi_byte, offset_lo_byte );
       aux_data->fragment_type = response_type;    // set in caller?  would make response_type parm unnecessary
       aux_data->fragment_offset = offset_hi_byte << 8 | offset_lo_byte;
       aux_data->fragment_length = read_data_length;      // changed
@@ -755,7 +755,7 @@ Global_Status_DDC interpret_multi_part_read_response(
       // aux_data->text[text_length] = '\0';     // CHANGED
    }
    if (debug)
-      printf("(%s) returning %s\n", __func__, ddcrc_desc(result));
+      DBGMSG("returning %s", ddcrc_desc(result));
    return result;
 }
 
@@ -805,7 +805,7 @@ Global_Status_DDC interpret_vcp_feature_response_std(
 {
    // debug = false;
    // if (debug)
-   //    printf("(%s) Starting\n", __func__);
+   //    DBGMSG("Starting");
    TRCMSG("Starting.");
 
    int result = DDCRC_OK;
@@ -826,7 +826,7 @@ Global_Status_DDC interpret_vcp_feature_response_std(
 
    if (bytect != 8) {
       // if (debug)
-      // printf("(%s) Invalid response data length: %d, should be 8\n", __func__, bytect);
+      // DBGMSG("Invalid response data length: %d, should be 8", bytect);
       DDCMSG("(DDCMSG) Invalid response data length: %d, should be 8", bytect);
       result = COUNT_STATUS_CODE(DDCRC_INVALID_DATA);
    }
@@ -857,12 +857,12 @@ Global_Status_DDC interpret_vcp_feature_response_std(
       if (vcpresp->result_code != 0) {
          if (vcpresp->result_code == 0x01) {
             // if (debug)
-            //    printf("(%s) Unsupported VCP Code\n", __func__);
+            //    DBGMSG("Unsupported VCP Code");
             DDCMSG("Unsupported VCP Code", __func__);
             aux_data->valid_response = true;
          }
          else {
-            // if (debug) printf("(%s) Unexpected result code: 0x%02x\n", __func__, vcpresp->result_code);
+            // if (debug) DBGMSG("Unexpected result code: 0x%02x", vcpresp->result_code);
             DDCMSG("Unexpected result code: 0x%02x\n", vcpresp->result_code);
             result = COUNT_STATUS_CODE(DDCRC_INVALID_DATA);
          }
@@ -881,7 +881,7 @@ Global_Status_DDC interpret_vcp_feature_response_std(
          // if (debug) {
          //    printf("(%s) vcp_opcode = 0x%02x, vcp_type_code=0x%02x, max_val=%d (0x%04x), cur_val=%d (0x%04x)\n",
          //               __func__, vcpresp->vcp_opcode, vcpresp->vcp_typecode, max_val, max_val, cur_val, cur_val);
-         //    printf("(%s) valid_response=%d\n", __func__, valid_response);
+         //    DBGMSG("valid_response=%d", valid_response);
          // }
          TRCMSG("vcp_opcode = 0x%02x, vcp_type_code=0x%02x, max_val=%d (0x%04x), cur_val=%d (0x%04x)",
                 vcpresp->vcp_opcode, vcpresp->vcp_typecode, max_val, max_val, cur_val, cur_val);
@@ -900,7 +900,7 @@ Global_Status_DDC interpret_vcp_feature_response_std(
    }
 
    // if (debug)
-   //    printf("(%s) returning %s\n", __func__, ddcrc_description(result));
+   //    DBGMSG("returning %s", ddcrc_description(result));
    TRCMSG("returning %s\n", __func__, ddcrc_desc(result));
    return result;
 }
@@ -917,7 +917,7 @@ Global_Status_DDC interpret_vcp_feature_response(Byte * vcp_data_bytes,
 #ifdef IN_PROGRESS
    debug = false;
    if (debug)
-      printf("(%s) Starting\n", __func__);
+      DBGMSG("Starting");
 
    int result = DDCRC_OK;
 
@@ -937,7 +937,7 @@ Global_Status_DDC interpret_vcp_feature_response(Byte * vcp_data_bytes,
 
       if (bytect != 8) {
          // if (debug)
-         printf("(%s) Invalid response data length: %d, should be 8\n", __func__, bytect);
+         DBGMSG("Invalid response data length: %d, should be 8", bytect);
          result = COUNT_STATUS_CODE(DDCRC_INVALID_DATA);
       }
       else {
@@ -956,16 +956,16 @@ Global_Status_DDC interpret_vcp_feature_response(Byte * vcp_data_bytes,
          if (result_code != 0) {
             if (result_code == 0x01) {
                if (debug)
-                  printf("(%s) Unsupported VCP Code\n", __func__);
+                  DBGMSG("Unsupported VCP Code");
                aux_data->valid_response = true;
             }
             else {
-               if (debug) printf("(%s) Unexpected result code: 0x%02x\n", __func__, result_code);
+               if (debug) DBGMSG("Unexpected result code: 0x%02x", result_code);
                result = COUNT_STATUS_CODE(DDCRC_INVALID_DATA);
             }
          }
          else if (vcp_opcode != requested_vcp_code){
-            if (debug) printf("(%s) Unexpected VCP opcode 0x%02x, should be 0x%02x\n", __func__, vcp_opcode, requested_vcp_code);
+            if (debug) DBGMSG("Unexpected VCP opcode 0x%02x, should be 0x%02x", vcp_opcode, requested_vcp_code);
             result = COUNT_STATUS_CODE(DDCRC_INVALID_DATA);
          }
          else {
@@ -1012,14 +1012,14 @@ Global_Status_DDC create_ddc_typed_response_packet(
    // bool debug = adjust_debug_level(true, ddc_packets_trace_level);
 
    // if (debug)
-   //    printf("(%s) Starting. i2c_response_bytes=%s\n", __func__, hexstring(i2c_response_bytes,20));
+   //    DBGMSG("Starting. i2c_response_bytes=%s", hexstring(i2c_response_bytes,20));
    char * hs =  hexstring(i2c_response_bytes,20);
    TRCMSG("Starting. i2c_response_bytes=%s", hs );
    free(hs);
 
    void * aux_data;
 
-   // printf("(%s) before create_ddc_response_packet(), *packet_ptr_addr=%p\n", __func__, *packet_ptr_addr);
+   // DBGMSG("before create_ddc_response_packet(), *packet_ptr_addr=%p", *packet_ptr_addr);
    // n. may return DDC_NULL_RESPONSE??   (old note)
    Global_Status_DDC rc = create_ddc_response_packet(
                i2c_response_bytes,
@@ -1080,7 +1080,7 @@ Global_Status_DDC create_ddc_typed_response_packet(
    }
 
    // if (debug) {
-   //    printf("(%s) returning %s, *packet_ptr=%p\n", __func__, ddcrc_description(rc), *packet_ptr_addr);
+   //    DBGMSG("returning %s, *packet_ptr=%p", ddcrc_description(rc), *packet_ptr_addr);
    //    if (rc >= 0)
    //       dump_packet(*packet_ptr_addr);
    // }
@@ -1105,7 +1105,7 @@ Global_Status_DDC create_ddc_capabilities_response_packet(
                                                      tag,
                                                      &packet);
    if (rc != 0) {
-      // printf("(%s) create_ddc_response_packet() returned %s, packet=%p\n", __func__, ddcrc_description(rc), packet);
+      // DBGMSG("create_ddc_response_packet() returned %s, packet=%p", ddcrc_description(rc), packet);
       TRCMSG("create_ddc_response_packet() returned %s, packet=%p", ddcrc_desc(rc), packet);
    }
    if (rc == 0) {
@@ -1154,7 +1154,7 @@ Global_Status_DDC create_ddc_multi_part_read_response_packet(
                                                      tag,
                                                      &packet);
    if (rc != 0) {
-      // printf("(%s) create_ddc_response_packet() returned %s, packet=%p\n", __func__, ddcrc_description(rc), packet);
+      // DBGMSG("create_ddc_response_packet() returned %s, packet=%p", ddcrc_description(rc), packet);
       TRCMSG("create_ddc_response_packet() returned %s, packet=%p", ddcrc_desc(rc), packet);
    }
    if (rc == 0) {
@@ -1209,14 +1209,14 @@ Global_Status_DDC create_ddc_getvcp_response_packet(
                tag,
                &packet);
    if (rc != 0) {
-      // printf("(%s) create_ddc_response_packet() returned %s, packet=%p\n", __func__, ddcrc_description(rc), packet);
+      // DBGMSG("create_ddc_response_packet() returned %s, packet=%p", ddcrc_description(rc), packet);
       TRCMSG("create_ddc_response_packet() returned %s, packet=%p", ddcrc_desc(rc), packet);
    }
    if (rc == 0) {
       // dump_packet(packet);
       int data_len = get_data_len(packet);
       if (data_len != 8) {
-         // printf("(%s) Invalid data length: %d, should be 8\n", __func__, data_len);
+         // DBGMSG("Invalid data length: %d, should be 8", data_len);
          // dump_packet(packet);
          DDCMSG("Invalid data length: %d, should be 8", data_len);
          if ( IS_REPORTING_DDC() )
@@ -1256,7 +1256,7 @@ Global_Status_DDC get_interpreted_capabilities_fragment(
                      bool          make_copy,
                      Interpreted_Capabilities_Fragment ** interpreted_ptr)
 {
-   // printf("(%s) Starting\n", __func__);
+   // DBGMSG("Starting");
    Global_Status_DDC rc = DDCRC_OK;
    if (packet->type != DDC_PACKET_TYPE_CAPABILITIES_RESPONSE)
       rc = COUNT_STATUS_CODE(DDCRC_RESPONSE_TYPE);
@@ -1312,7 +1312,7 @@ Global_Status_DDC get_interpreted_table_read_fragment(
                      bool          make_copy,
                      Interpreted_Table_Read_Fragment ** interpreted_ptr)
 {
-   // printf("(%s) Starting\n", __func__);
+   // DBGMSG("Starting");
    Global_Status_DDC rc = DDCRC_OK;
    if (packet->type != DDC_PACKET_TYPE_TABLE_READ_RESPONSE)
       rc = COUNT_STATUS_CODE(DDCRC_RESPONSE_TYPE);
@@ -1354,7 +1354,7 @@ Global_Status_DDC get_interpreted_vcp_code(
 {
    bool debug = false;
    if (debug)
-      printf("(%s) Starting\n", __func__);
+      DBGMSG("Starting");
    Global_Status_DDC rc = DDCRC_OK;
    if (packet->type != DDC_PACKET_TYPE_QUERY_VCP_RESPONSE)
       rc = COUNT_STATUS_CODE(DDCRC_RESPONSE_TYPE);
@@ -1370,7 +1370,7 @@ Global_Status_DDC get_interpreted_vcp_code(
       }
    }
    if (debug)
-      printf( "(%s) Returning %d: %s\n", __func__, rc, gsc_desc(rc) );
+      DBGMSG("Returning %d: %s\n", rc, gsc_desc(rc) );
    return rc;
 }
 

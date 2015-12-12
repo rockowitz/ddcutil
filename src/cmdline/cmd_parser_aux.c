@@ -68,7 +68,7 @@ Cmd_Desc * find_command(char * cmd) {
          result = &cmdinfo[ndx];
       }
    }
-   // printf("(%s) cmd=|%s|, returning %p\n", __func__, cmd, result);
+   // DBGMSG("cmd=|%s|, returning %p", cmd, result);
    return result;
 }
 
@@ -84,7 +84,7 @@ Cmd_Desc * get_command(int cmdid) {
       }
    }
    if (debug) {
-      printf("(%s) cmdid=|%d|, returning %p\n", __func__, cmdid, result);
+      DBGMSG("cmdid=|%d|, returning %p", cmdid, result);
       show_cmd_desc(result);
    }
    return result;
@@ -99,7 +99,7 @@ void init_cmd_parser_base() {
 bool all_digits(char * val, int ct) {
    bool debug = false;
    if (debug)
-      printf("(%s) ct-%d, val -> |%.*s|\n", __func__, ct, ct, val );
+      DBGMSG("ct-%d, val -> |%.*s|", ct, ct, val );
    bool ok = true;
    int ndx;
    for (ndx = 0; ndx < ct; ndx++) {
@@ -109,14 +109,14 @@ bool all_digits(char * val, int ct) {
       }
    }
    if (debug)
-      printf("(%s) Returning: %d  \n", __func__, ok );
+      DBGMSG("Returning: %d  ", ok );
    return ok;
 }
 
 
 bool parse_adl_arg(const char * val, int * piAdapterIndex, int * piDisplayIndex) {
    int rc = sscanf(val, "%d.%d", piAdapterIndex, piDisplayIndex);
-   // printf("(%s) val=|%s| sscanf() returned %d  \n", __func__, val, rc );
+   // DBGMSG("val=|%s| sscanf() returned %d  ", val, rc );
    bool ok = (rc == 2);
    return ok;
 }

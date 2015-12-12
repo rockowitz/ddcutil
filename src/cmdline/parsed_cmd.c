@@ -26,7 +26,7 @@
  *    initialized ParsedCmd
  */
 Parsed_Cmd *  new_parsed_cmd() {
-   // printf("(%s) Starting. file=%s\n", __func__, __FILE__);
+   // DBGMSG("Starting. file=%s", __FILE__);
    Parsed_Cmd * parsed_cmd = calloc(1, sizeof(Parsed_Cmd));
    memcpy(parsed_cmd->marker, PARSED_CMD_MARKER, 4);
    // n. all flags are false, byte values 0, integers 0, pointers NULL because of calloc

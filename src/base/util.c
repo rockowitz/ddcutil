@@ -30,6 +30,7 @@
 #include "util/string_util.h"
 
 #include "base/linux_errno.h"
+#include "base/msg_control.h"
 
 #include "base/util.h"
 
@@ -62,7 +63,7 @@ long cur_realtime_nanosec() {
 
 void report_timestamp_history() {
    if (tracking_timestamps) {
-      printf("(%s) total timestamps: %d\n", __func__, timestamp_ct);
+      DBGMSG("total timestamps: %d", timestamp_ct);
       bool monotonic = true;
       int ctr = 0;
       for (; ctr < timestamp_ct; ctr++) {
@@ -75,7 +76,7 @@ void report_timestamp_history() {
       printf("Timestamps are%s strictly monotonic\n", (monotonic) ? "" : " NOT");
    }
    else
-      printf("(%s) Not tracking timestamps\n", __func__);
+      DBGMSG("Not tracking timestamps");
 }
 
 
