@@ -1,19 +1,39 @@
-/*  i2c_base_io.c
+/* i2c_base_io.c
  *
- *  Created on: Nov 17, 2015
- *      Author: rock
+ * Created on: Nov 17, 2015
+ *     Author: rock
  *
  *  Basic functions for writing to and reading from the I2C bus,
  *  using alternative mechanisms.
+ *
+ * <copyright>
+ * Copyright (C) 2014-2015 Sanford Rockowitz <rockowitz@minsoft.com>
+ *
+ * Licensed under the GNU General Public License Version 2
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+ * </endcopyright>
  */
 
 #include <assert.h>
 #include <errno.h>
 #include <fcntl.h>
-// On Fedora, i2c-dev.h is miniminal.  i2c.h is required for struct i2c_msg and
-// other stuff.  On Ubuntu and SuSE, including both causes redefiition errors.
-// I2C_FUNC_I2C is none definition present in the full version of i2c-dev.h but not
-// in the abbreviated version
+// On Fedora, i2c-dev.h is minimal.  i2c.h is required for struct i2c_msg and
+// other stuff.  On Ubuntu and SuSE, including both causes redefinition errors.
+// If I2C_FUNC_I2C is not defined, the definition is present in the full version
+// of i2c-dev.h but not in the abbreviated version, so i2c.h must be included.
 #include <linux/i2c-dev.h>
 #ifndef I2C_FUNC_I2C
 #include <linux/i2c.h>

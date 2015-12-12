@@ -1,20 +1,32 @@
 /* util.c
  *
- * Utility functions not specific to the current application.
+ * <copyright>
+ * Copyright (C) 2014-2015 Sanford Rockowitz <rockowitz@minsoft.com>
  *
- * This file has no dependencies on any application specific code.
+ * Licensed under the GNU General Public License Version 2
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+ * </endcopyright>
  */
 
-#include <base/parms.h>    // put first for USE_LIBEXPLAIN
 
 #include <assert.h>
 #include <ctype.h>
 #include <dirent.h>
 #include <errno.h>
 #include <glib.h>
-#ifdef USE_LIBEXPLAIN
-#include <libexplain/ioctl.h>
-#endif
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -24,16 +36,15 @@
 #include <linux/limits.h>
 #include <limits.h>
 #include <sys/stat.h>
-// #include <libosinfo-1.0/osinfo/osinfo.h>
 
 #include "util/file_util.h"
 #include "util/string_util.h"
 
 #include "base/linux_errno.h"
 #include "base/msg_control.h"
+#include <base/parms.h>
 
 #include "base/util.h"
-
 
 
 //
