@@ -15,11 +15,14 @@ ddctool uses DDC/CI to communicate with monitors implementing MCCS (Monitor Cont
 | setvcp feature-code new-value | set a single VCP feature value
 | dumpvcp filename                     | save color related VCP feature values in a file
 | loadvcp filename                       | set color related VCP feature values from a file 
+|environment                               | explore the `ddctool` installation environment
+|interrogate                                 | collect maximal information for problem diagnosis
 
 There is an extensive set of options for tailoring *ddctool* operation.   Some are described in this readme.   For a full list, issue the command: 
 
 ~~~
 ddctool --help
+man 1 ddctool
 ~~~
 
 ## Feedback Needed
@@ -175,6 +178,17 @@ Note: This file works if there is no xorg.conf file.  If you do have an xorg.con
 
 Requirements:
 package i2c-tools is required
+
+## To Do
+
+The following tasks are planned before initial release
+- downloadable tarball
+- test 32 bit version
+- provide for cross-compiling 32 bit executables on 64 bit systems
+- Ubuntu ppa 
+- Fedora Copr?
+- OpenSUSE build service?
+
 
 
 ## Future Development

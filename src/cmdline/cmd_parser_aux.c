@@ -57,6 +57,7 @@ static Cmd_Desc cmdinfo[] = {
    {CMDID_LOADVCP,      "loadvcp",       3,  1,       1},
    {CMDID_DUMPVCP,      "dumpvcp",       3,  0,       1},
    {CMDID_INTERROGATE,  "interrogate",   3,  0,       0},
+   {CMDID_ENVIRONMENT,  "environment",   3,  0,       0},
 };
 static int cmdct = sizeof(cmdinfo)/sizeof(Cmd_Desc);
 
@@ -197,6 +198,7 @@ char * commands_list_help =
        "   loadvcp <filename>\n"
        "   testcase <testcase-number>\n"
        "   listtests\n"
+       "   environment\n"
        "   interrogate\n"
        "\n";
 

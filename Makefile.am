@@ -7,4 +7,4 @@ LIBTOOL_DEPS = @LIBTOOL_DEPS@
 
 
 
-SUBDIRS = src
+SUBDIRS = src man

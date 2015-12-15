@@ -1,6 +1,0 @@
-#!/bin/sh
-# Assume configure and this script are in same directory:
-dn=`dirname $0`
-echo "dn: $dn"
-$dn/configure --with-adl-headers=/shared/playproj/i2c/adl_sdk_headers
- 

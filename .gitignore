@@ -41,3 +41,8 @@ src/.libs
 /ubuntu_gcc_paths.txt
 monitors/
 aux/
+man/config.log
+man/ddcdraft.1.man
+man/*.ronn
+/mintvm.notes
+/doconf

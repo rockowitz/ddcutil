@@ -98,5 +98,3 @@ void free_parsed_cmd(Parsed_Cmd * parsed_cmd) {
    parsed_cmd->marker[3] = 'x';
    free(parsed_cmd);
 }
-
-

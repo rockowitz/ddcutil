@@ -92,6 +92,21 @@ bool str_starts_with(const char * value_to_test, const char * start_part) {
    return is_abbrev(start_part, value_to_test, strlen(start_part));
 }
 
+bool str_ends_with(const char * value_to_test, const char * end_part) {
+   bool debug = false;
+   if (debug)
+      printf("(%s) value_to_test=|%s|, end_part=|%s|\n", __func__, value_to_test, end_part);
+   int value_len = strlen(value_to_test);
+   int end_part_len = strlen(end_part);
+   bool result = false;
+   if (end_part_len <=value_len) {
+      int startpos = value_len-end_part_len;
+      result = streq(value_to_test+startpos, end_part);
+   }
+   if (debug)
+      printf("(%s) returning: %d\n", __func__, result);
+   return result;
+}
 
 
 int matches_by_func(char * word, char ** null_terminated_list, String_Comp_Func comp_func) {

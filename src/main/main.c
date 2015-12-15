@@ -85,6 +85,7 @@ void initialize() {
 
 void report_stats() {
    // retry related stats
+   ddc_show_max_tries();
    ddc_report_write_only_stats();
    ddc_report_write_read_stats();
    ddc_report_multi_part_read_stats();
@@ -206,9 +207,6 @@ int main(int argc, char *argv[]) {
 #endif
       // new way:
       ddc_show_active_displays(0);
-      if (parsed_cmd->output_level >= OL_VERBOSE) {
-         query_card_and_driver();
-      }
    }
 
    else if (parsed_cmd->cmd_id == CMDID_TESTCASE) {
@@ -231,6 +229,13 @@ int main(int argc, char *argv[]) {
       main_rc = (ok) ? EXIT_SUCCESS : EXIT_FAILURE;
    }
 
+   else if (parsed_cmd->cmd_id == CMDID_ENVIRONMENT) {
+      printf("Exploring runtime environment...\n");
+      query_env();
+      query_card_and_driver();
+      main_rc = true;
+   }
+
    else if (parsed_cmd->cmd_id == CMDID_INTERROGATE) {
       printf("Setting output level verbose...\n");
       set_output_level(OL_VERBOSE);
@@ -241,6 +246,7 @@ int main(int argc, char *argv[]) {
       ddc_set_max_write_read_exchange_tries(MAX_MAX_TRIES);
       ddc_set_max_multi_part_read_tries(MAX_MAX_TRIES);
       query_card_and_driver();
+      query_env();
       printf("\nDetected displays:\n");
       int display_ct = ddc_show_active_displays(1 /* logical depth */);
       int dispno;

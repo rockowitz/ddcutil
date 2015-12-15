@@ -1122,5 +1122,20 @@ GPtrArray * get_profile_related_values_by_display_ref(Display_Ref * dref) {
    GPtrArray * vals = get_profile_related_values_by_display_handle(dh);
    ddc_close_display(dh);
    return vals;
+}
 
+
+void ddc_show_max_tries() {
+   printf("Maximum Try Settings:\n");
+   printf("Operation Type             Current  Default\n");
+   printf("Write only exchange tries: %8d %8d\n",
+          ddc_get_max_write_only_exchange_tries(),
+          MAX_WRITE_ONLY_EXCHANGE_TRIES);
+   printf("Write read exchange tries: %8d %8d\n",
+          ddc_get_max_write_read_exchange_tries(),
+          MAX_WRITE_READ_EXCHANGE_TRIES);
+   printf("Multi-part exchange tries: %8d %8d\n",
+          ddc_get_max_multi_part_read_tries(),
+          MAX_MULTI_EXCHANGE_TRIES);
+   printf("\nMaximum value allowed for any setting: %d\n", MAX_MAX_TRIES);
 }

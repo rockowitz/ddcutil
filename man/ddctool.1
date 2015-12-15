@@ -1,33 +1,328 @@
-.SH ddctool(1) \-\- query and change monitor settings
-.SS SYNOPSIS
+.\"                                      Hey, EMACS: -*- nroff -*-
+.\" First parameter, NAME, should be all caps
+.\" Second parameter, SECTION, should be 1-8, maybe w/ subsection
+.\" other parameters are allowed: see man(7), man(1)
+.TH DDCTOOL 1 "15 December 2015"
+.\" Please adjust this date whenever revising the manpage.
+.\"
+.\" Some roff macros, for reference:
+.\" .nh        disable hyphenation
+.\" .hy        enable hyphenation
+.\" .ad l      left justify
+.\" .ad b      justify to both left and right margins
+.\" .nf        disable filling
+.\" .fi        enable filling
+.\" .br        insert line break
+.\" .sp <n>    insert n+1 empty lines
+.\" for manpage-specific macros, see man(7)
+.SH NAME
+ddctool \- Query and change monitor settings
+.SH SYNOPSIS
+.B ddctool
+.RB [ "--display|-d"
+.IR dispno ]
+.RB [ "--bus|-b"
+.IR busno ]
+.RB [ "--adl" | "-a " 
+.IR "adapter-index.display-index" ]
+.RB [ "--edid" 
+.IR "256 hex character EDID" ]
+.RB [ "--model" | "-l"
+.IR "model name" ]
+.RB [ "--sn" | "-n" 
+.IR "serial number" ]
+.RB [ "-v|--verbose" ]
+.RB [ -t | --terse ]
+.RB [ "-p" | "--program" ]
+.RB [ --ddc ]
+.RB [ "-s" | "--stats" ]
+.RB [ --trace 
+.IR  trace-class ]
+.RB [ "-V" | "--version" ]
+.RB [ "h"  | "--help" ]
+.RB [ detect | listvcp | capabilities | getvcp 
+.RI [ "feature-code" | "feature-group" ]
+.RB | setvcp 
+.I  feature-code new-value
+] |
+.B dumpvcp 
+.RI [ filename ]
+|
+.BI "loadvcp " filename
+]
+
+
+.\" ALT USING .SY .OP
+.\" .SY
+.\" .OP \-abcde
+.\" .OP \-b busno
+.\" .OP \-d|--display dispno
+.\" command command-arguments
+.\" .YS
+
+
+.SH DESCRIPTION
+\fBddctool\fP is used to query and change monitor settings.  
+
+\fBddctool\fP communicates with monitors implementing MCCS (Monitor Control Command Set) using the DDC/CI protocol on the I2C bus.  Normally, the video driver for the monitor exposes the I2C bus as devices named /dev/i2c-n.  
+
+
+Discussion of I2C, MCCS goes here.  Define VCP.
+
+
+A particular use case for \fBddctool\fP is as part of color profile management.  
+Monitor calibration is relative to the monitor color settings currently in effect, e.g. red gain.  
+\fBddctool\fP allows color related settings to be saved at the time a monitor is calibrated, 
+and then restored when the calibration is applied.
+
+
 .PP
-\f[C]ddctool\f[] command [] []
-.SS DESCRIPTION
+.\" TeX users may be more comfortable with the \fB<whatever>\fP and
+.\" \fI<whatever>\fP escape sequences to invode bold face and italics, 
+.\" respectively.
+
+
+.\" .B ddctool
+.\" .I command 
+.\" .R [
+.\" .I command-arguments
+.\" .R ] [
+.\" .I options
+.\" .R ]
+
+.SH COMMANDS
+.TP
+.BR "detect " "Report attached monitors"
+.TP
+.B  "listvcp "
+List VCP feature codes that \fBddctool\fP knows how to interpret
+.TP 
+.B "capabilities "
+Query the monitor's capabilities string 
+.TP
+\fBgetvcp\fP [ \fIfeature-code\fP | \fIfeature-group\fP ]
+Report a single VCP feature value, or a group of feature values
+.TP
+.BI "setvcp " "feature-code new-value"
+Set a single VCP feature value
+.TP
+.BI "dumpvcp " filename
+Save color related VCP feature values in a file.
+If no file name is specified, one is generated and the file is saved <describe location>
+.TP 
+.BI "loadvcp " filename
+Set VCP feature values from a file.  The monitor to which the values will be applied is determined by the monitor identification stored in the file. 
+If the monitor is not attached, nothing happens.
 .PP
-Full bloody description goes here
-.SS EXAMPLES
+
+.SH COMMAND ARGUMENTS
+
+.I feature-code
+.sp
+A feature-code is specified by its 2 character hex feature number, with or without a leading "0x", e.g.
+0x10, 10 
+.sp 2
+.I feature-group
+.sp 2
+The following feature groups are recognized:
+.TP
+.B ALL
+All feature codes understood by \fBddctool\fP
+.TQ 
+.B SUPPORTED 
+Scan all understood feature codes, but show only codes supported by the monitor
+.TQ 
+.B COLORMGT
+Scan color related feature codes
+.TQ
+.B PROFILE 
+Subset of color related feature codes that are saved and restored by \fBdumpvcp\FP and \fBloadvcp\fB
+.TQ
+.B SCAN
+Scan all possible feature codes 0x00..0xff
 .PP
-To identify monitors:
+Feature group names can be abbreviated to the first 3 characters.  Case is ignored.  e.g. COL, pro
+
+
+.I new-value
+.sp
+A number in the range 0..255
+
+
+
+./" .TP inserts a line before its output, .TQ does not 
+
+
+.SH OPTIONS
+Options for monitor selection.  If none are of these options are specified, the default is the first detected monitor.
+Options \fB--model\fP and \fB--sn\fP must be specified together.
+.TQ
+.BR -d , "--display "
+.I display-number 
+logical display number (starting from 1)
+.TQ
+.BR "-b,--bus "
+.I bus-number
+I2C bus number
+.TQ
+.BI "-a,--adl " "adapterIndex.displayIndex"
+ADL adapter and display indexes
+.TQ
+.B -l,--model
+model name
+.TQ
+.B -n,--sn
+serial number.  (This is the "serial ascii" field from the EDID, not the binary serial number.)
+.TQ 
+\fB-e,--edid\fP
+256 hex character representation of the 128 byte EDID.  Needless to say, this is intended for program use.
+
 .PP
-ddctool detect
+
+Options to control the amount and form of output.
+.TQ
+.B "-t, --terse"
+Show brief detail
+.TQ
+.B -v, --verbose
+Show extended detail
+.TQ
+.BR "-p" , "--program"
+Machine readable output format.  Not normally used.
 .PP
-To show all settings that the monitor supports and that \f[C]ddctool\f[]
-understands:
+Options for diagnostic output.
+.TQ
+.B --stats
+Report execution statistics. 
+.br
+I2C bus communication is an inherently unreliable.  It is the responsibility of the program using the bus 
+to manage retries in case of failure.  This option reports retry counts and various performance statistics.
+.TQ
+.B --ddc
+Reports DDC protocol errors.  These may reflect I2C bus errors, or deviations by monitors from the MCCS specification.
+.TQ
+.BI "--trace " "trace-class"
+Enable debug tracing for a trace class.  Valid values are: \fIbase\fP, i2c, adl, ddc, main, and the special value \fIall\fP. 
+Some trace classes are more useful than others.
+.br
+Specify this option multiple times to enable multiple trace classes.
 .PP
-ddctool getvcp supported
+Options for program information.
+.TQ
+.BR -h , --help 
+Show program help.
+.TQ
+.B "-V, --version"
+Show program version.
 .PP
-To set the luminosity value of the second monitor:
-.PP
-ddctool setvcp 10 30 \-\-display 2
-.PP
-To list all VCP features that \f[C]ddctool\f[] understands:
-.PP
-ddctool listvcp
-.SS DIAGNOSTICS
-.PP
-Returns 0 on success, 1 on failure.
-.PP
+Options to tune execution:
+.TQ
+.BI "--maxtries " "(max-read-tries, max-write-read-tries, max-multi-part-read-tries)"
+Adjust the number of retries
+.TQ
+.B "-f, --force"
+Do not check certain parameters. 
+
+.SH EXECUTION ENVIRONMENT 
+
+
+requires package i2c-dev
+
+i2c permissions
+
+.SH NVIDIA PROPRIETARY DRIVER
+
+Some newer Nvidia cards (e.g. GTX660Ti) require special settings to properly enable I2C support.   If you are using this driver and \fBddcctool\fP does not 
+work with your Nvidia card (TODO: Describe symptoms), you can try the following:
+
+Copy file /???/90-nvidia-i2c.conf to directory /etc/X11/xorg.conf.d 
+
+.B sudo cp /???/90-nvidia-i2c.conf /etc/X11/xorg.conf.d 
+
+This file will work "out of the box" if you do not have an /etc/X11/xorg.conf file.   If you do, 
+adjust the \fBIdentifier\fP value in the file to correspond to the value in the master xorg.conf file.
+
+
+.SH AMD PRORIETARY DRIVER
+
+AMD's proprietary video driver \fBfglrx\fP does not expose the I2C bus.  Instead, it provides access to the bus through the
+AMD Display Library, aka \fBADL\fP. 
+Owing to copyright restrictions, the \fBADL\fP header files are not distributed with the ddctool source.  Additional steps are 
+required to build \fBddctool\fP with \fBfglrx\fP support.
+
+To see if your copy of \fBddctool\fP was built with \fBfglrx\fP support, issue the command:
+.br
+.B ddctool --version
+
+\fBADL\fP identifies monitors using an adapter-number/display-number pair.  To select a monitor using these numbers, specify the 
+\fB--adl\fP option with a period separating the adapter-number and display-number, e.g.
+.br
+.B --adl 0.1
+
+
+.SH VIRTUAL MACHINES
+
+VirtualBox does not provide i2c emulation
+
+VMware? 
+
+qemu?
+
+.SH EXAMPLES
+
+.B ddctool detect
+
+Identify all attached monitors.
+.sp 4
+.EX
+.B ddctool getvcp supported
+.EE
+
+Show all settings that the default monitor supports and that \fBddctool\fP understands.
+.SP 2
+.EX
+.B ddctpp getvcp 10 --display 2
+.EE
+.br
+Query the luminosity value of the second monitor. 
+
+.B   ddctool setvcp 10 30 --bus 4
+
+Set the luminosity value for the monitor on bus /dev/i2c-4. 
+
+.B ddctool listvcp
+
+List all VCP features that `ddctool` understands. 
+
+
+.SH DIAGNOSTICS
+
+Returns 0 on success, 1 on failure. 
+
 Requesting help is regarded as success.
-.SS AUTHOR
-.PP
-Sanford Rockowitz 
+
+.SH FILES
+
+
+
+.SH SEE ALSO
+./" The program is documented fully in
+./" .br
+./" /usr/share/doc/ddccontrol/html/index.html
+./" .PP
+./" The project homepage: http://ddccontrol.sourceforge.net
+
+
+
+.SH NOTES
+
+
+.SH BUGS
+
+
+.SH AUTHOR
+Sanford Rockowitz (rockowitz at minsoft dot com)
+.br
+Copyright 2014\-2015 Sanford Rockowitz
+
+

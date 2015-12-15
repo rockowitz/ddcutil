@@ -226,8 +226,7 @@ int i2c_get_busct() {
 
    _ensure_bus_infos_and_busct_initialized();
 
-   if (debug)
-      DBGMSG("Returning %d", _busct);
+   DBGMSF(debug, "Returning %d", _busct);
    assert(_busct >= 0 && _bus_infos != NULL);
    return _busct;
 }
@@ -319,8 +318,7 @@ bool * detect_all_addrs(int busno) {
  */
 Byte detect_ddc_addrs_by_fd(int file) {
    bool debug = false;
-   if (debug)
-      DBGMSG("Starting.  busno=%d", file);
+   DBGMSF(debug, "Starting.  busno=%d", file);
    assert(file >= 0);
    unsigned char result = 0x00;
 
@@ -342,12 +340,11 @@ Byte detect_ddc_addrs_by_fd(int file) {
 
    // result |= I2C_BUS_ADDRS_CHECKED;
 
-   if (debug)
-      DBGMSG("Done.  ");
+   DBGMSGF(debug, "Done.  Returning 0x%02x", result);
    return result;
 }
 
-
+#ifdef UNUSED
 /* Checks DDC related addresses on an I2C bus.
  *
  * Arguments:
@@ -370,10 +367,10 @@ Byte detect_ddc_addrs_by_busno(int busno) {
    }
 
    if (debug)
-      DBGMSG("Done.  ");
+      DBGMSG("Done.  Returning 0x%02x", result);
    return result;
 }
-
+#endif
 
 /* Calculates bus information for an I2C bus.
  *
@@ -385,8 +382,7 @@ Byte detect_ddc_addrs_by_busno(int busno) {
  */
 Bus_Info * i2c_check_bus(Bus_Info * bus_info) {
    bool debug = false;
-   if (debug)
-      DBGMSG("Starting. busno=%d, buf_info=%p", bus_info->busno, bus_info );
+   DBGMSF(debug, "Starting. busno=%d, buf_info=%p", bus_info->busno, bus_info );
 
    assert(bus_info != NULL);
    char * marker = bus_info->marker;  // mcmcmp(bus_info->marker... causes compile error
@@ -401,15 +397,18 @@ Bus_Info * i2c_check_bus(Bus_Info * bus_info) {
          bus_info->flags |= detect_ddc_addrs_by_fd(file);
          bus_info->functionality = i2c_get_functionality_flags_by_fd(file);
          if (bus_info->flags & I2C_BUS_ADDR_0X50) {
-            bus_info->edid = i2c_get_parsed_edid_by_fd(file, false);
+            // Have seen case of nouveau driver with Quadro card where
+            // there's a bus that has no monitor but responds to the X50 probe
+            // of detect_ddc_addrs_by_fd() and then returns a garbage EDID
+            // when the bytes are read in i2c_get_parsed_edid_by_fd()
+            bus_info->edid = i2c_get_parsed_edid_by_fd(file);
             // bus_info->flags |= I2C_BUS_EDID_CHECKED;
          }
          i2c_close_bus(file, bus_info->busno,  EXIT_IF_FAILURE);
       }
    }
 
-   if (debug)
-      DBGMSG("Returning %p, flags=0x%02x", bus_info, bus_info->flags );
+   DBGMSF(debug, "Returning %p, flags=0x%02x", bus_info, bus_info->flags );
    return bus_info;
 }
 
@@ -430,8 +429,7 @@ Bus_Info * i2c_get_bus_info(int busno) {
    assert(busno >= 0);
    // bool debug = adjust_debug_level(false, bus_core_trace_level);
    bool debug = false;
-   if (debug)
-      DBGMSG("Starting.  busno=%d", busno );
+   DBGMSF(debug, "Starting.  busno=%d", busno );
 
    Bus_Info * bus_info = NULL;
 
@@ -448,8 +446,7 @@ Bus_Info * i2c_get_bus_info(int busno) {
          i2c_check_bus(bus_info);
       }
    }
-   if (debug)
-      DBGMSG("Returning %p", bus_info );
+   DBGMSF(debug, "Returning %p", bus_info );
    return bus_info;
 }
 
@@ -1086,21 +1083,19 @@ void show_functionality(int busno) {
  * Arguments:
  *   fd       file descriptor for open bus
  *   rawedid  buffer in which to return 128 byte edid
- *   debug    controls debug messages
  *
  * Returns:
  *   0        success
  *   <0       error
  */
-Global_Status_Code i2c_get_raw_edid_by_fd(int fd, Buffer * rawedid, bool debug) {
-   bool conservative = false;
+Global_Status_Code i2c_get_raw_edid_by_fd(int fd, Buffer * rawedid) {
+   bool debug = false;
+   DBGMSF(debug, "Getting EDID for file %d", fd);
 
-   if (debug)
-      DBGMSG("Getting EDID for file %d", fd);
+   bool conservative = false;
 
    assert(rawedid->buffer_size >= 128);
    Global_Status_Code gsc;
-   // debug = true;
 
    i2c_set_addr(fd, 0x50);
    // 10/23/15, try disabling sleep before write
@@ -1122,7 +1117,10 @@ Global_Status_Code i2c_get_raw_edid_by_fd(int fd, Buffer * rawedid, bool debug) 
          }
          Byte checksum = edid_checksum(rawedid->bytes);
          if (checksum != 0) {
-            printf("Invalid EDID checksum %d, expected 0.\n", checksum);
+            // possible if successfully read bytes from i2c bus with no monitor
+            // attached - the bytes will be junk.
+            // e.g. nouveau driver, Quadro card, on blackrock
+            DBGMSF(debug, "Invalid EDID checksum %d, expected 0.\n", checksum);
             rawedid->len = 0;
             gsc = DDCRC_EDID;
          }
@@ -1143,27 +1141,35 @@ Global_Status_Code i2c_get_raw_edid_by_fd(int fd, Buffer * rawedid, bool debug) 
 /* Returns the EDID bytes for the monitor on an I2C bus.
  *
  * Arguments:
- *   busno  bus  number
+ *   fd          file descriptor for open /dev/i2c-n
  *   rawedidbuf  pointer to Buffer in which bytes are returned
- *   debug       controls debugging messages
  *
  * Returns:
  *   Parsed_Edid, NULL if get_raw_edid_by_fd() fails
  *
  * Terminates execution if open or close of bus fails
  */
-Parsed_Edid * i2c_get_parsed_edid_by_fd(int fd, bool debug) {
+Parsed_Edid * i2c_get_parsed_edid_by_fd(int fd) {
+   bool debug = false;
+   DBGMSF(debug, "Starting. fd=%d\n", fd);
    Parsed_Edid * edid = NULL;
    Buffer * rawedidbuf = buffer_new(128, NULL);
 
-   int rc = i2c_get_raw_edid_by_fd(fd, rawedidbuf, debug);
+   int rc = i2c_get_raw_edid_by_fd(fd, rawedidbuf);
    if (rc == 0) {
       edid = create_parsed_edid(rawedidbuf->bytes);
       if (debug) {
-         report_parsed_edid(edid, false /* dump hex */, 0);
+         if (edid)
+            report_parsed_edid(edid, false /* dump hex */, 0);
+         else
+            DBGMSG("create_parsed_edid() returned NULL");
       }
    }
-   buffer_free(rawedidbuf, NULL);
+   else if (rc == DDCRC_EDID) {
+      DBGMSF(debug, "i2c_get_raw_edid_by_fd() returned %s", gsc_desc(rc));
 
+   }
+   buffer_free(rawedidbuf, NULL);
+   DBGMSF(debug, "Returning %p", edid);
    return edid;
 }

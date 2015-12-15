@@ -47,8 +47,8 @@
 #include "util/pci_id_util.h"
 #include "util/string_util.h"
 
-// #include "base/linux_errno.h"
 #include "base/msg_control.h"
+#include "base/linux_errno.h"
 #include "base/util.h"
 
 #include "base/query_sysenv.h"
@@ -163,6 +163,102 @@ int query_proc_modules_for_video() {
 }
 
 
+/* Executes a shell command and writes the output to the terminal
+ *
+ */
+bool execute_shell_cmd(char * shell_cmd) {
+   bool debug = false;
+   DBGMSF(debug, "Starting. shell_cmd = |%s|", shell_cmd);
+   bool ok = true;
+   FILE * fp;
+   char cmdbuf[200];
+   snprintf(cmdbuf, sizeof(cmdbuf), "(%s) 2>&1", shell_cmd);
+   // printf("(%s) cmdbuf=|%s|\n", __func__, cmdbuf);
+   fp = popen(cmdbuf, "r");
+   // printf("(%s) open. errno=%d\n", __func__, errno);
+    if (!fp) {
+       // int errsv = errno;
+       printf("Unable to execute command \"%s\": %s\n", shell_cmd, strerror(errno));
+       ok = false;
+    }
+    else {
+       char * a_line = NULL;
+       size_t len = 0;
+       ssize_t read;
+       bool first_line = true;
+       while ( (read=getline(&a_line, &len, fp)) != -1) {
+          if (strlen(a_line) > 0)
+             a_line[strlen(a_line)-1] = '\0';
+             if (first_line) {
+                if (str_ends_with(a_line, "not found")) {
+                   // printf("(%s) found \"not found\"\n", __func__);
+                   ok = false;
+                   break;
+                }
+                first_line = false;
+             }
+          printf("%s\n", a_line);
+          // fputs(a_line, stdout);
+          // free(a_line);
+       }
+       int pclose_rc = pclose(fp);
+       // printf("(%s) plose() rc = %d\n", __func__, pclose_rc);
+    }
+    return ok;
+ }
+
+
+void query_env() {
+   char username[32+1];       // per man useradd, max username length is 32
+
+   printf("Checking for /dev/i2c-* devices...\n");
+   execute_shell_cmd("ls -l /dev/i2c-*");
+   getlogin_r(username, sizeof(username));
+   printf("\nLogged on user:  %s\n", username);
+   // execute_shell_cmd("whoami");
+   printf("Checking for group i2c...\n");
+   execute_shell_cmd("grep i2c /etc/group");
+
+   printf("\nLooking for udev rules files that reference i2c:\n");
+   execute_shell_cmd("grep i2c /lib/udev/rules.d/*rules /lib/udev/rules.d/*rules /etc/udev/rules.d/*rules" );
+
+#ifdef OLD
+   printf("\nudev rules files in /lib/udev/rules.d referencing i2c:\n");
+   execute_shell_cmd("grep i2c /lib/udev/rules.d/*rules");
+   printf("\nudev rules files in /run/udev/rules.d referencing i2c:\n");
+   execute_shell_cmd("grep i2c /run/udev/rules.d/*rules");
+   printf("\nudev rules files in /etc/udev/rules.d referencing i2c:\n");
+   execute_shell_cmd("grep i2c /etc/udev/rules.d/*rules");
+#endif
+
+#ifdef NO
+   // Produces lots of ugly output.   Really should be parsed.  Not worth it.
+
+   bool ok;
+   // apt list doesn't exist on some systems, and apt show presents TMI
+   printf("\nUsing apt to look for package i2c-tools...\n");
+   // execute_shell_cmd("apt list i2c-tools");  // list command unavailable on Mint 17.3
+   ok = execute_shell_cmd("apt show i2c-tools");
+   if (!ok)
+      printf("apt command not found\n");
+
+   ok = printf("\nUsing dpkg to look for package i2c-tools...\n");
+   execute_shell_cmd("dpkg --list i2c-tools");
+   if (!ok)
+      printf("apt command not found\n");
+
+   printf("\nUsing rpm to look for package i2c-tools...\n");
+   ok = execute_shell_cmd("rpm -q i2c-tools");
+   if (!ok)
+      printf("rpm command not found\n");
+#endif
+
+   printf("\nCheck that kernel module i2c_dev is being loaded...\n");
+   execute_shell_cmd("grep i2c[-_]dev /etc/modules /etc/modules-load.d/*conf" );
+
+}
+
+
 bool query_card_and_driver_using_lspci() {
    // DBGMSG("Starting");
    bool ok = true;
@@ -239,6 +335,8 @@ bool query_card_and_driver_using_sysfs() {
 
    printf("Obtaining card and driver information from /sys...\n");
 
+   char * driver_name = NULL;
+
    struct dirent *dent;
    DIR           *d;
 
@@ -273,23 +371,37 @@ bool query_card_and_driver_using_sysfs() {
                // printf("modalias: %s\n", modalias);
 
                printf("\nDetermining driver name and possibly version...\n");
+               // DBGMSG("cur_dir_name: %s", cur_dir_name);
                char workfn[PATH_MAX];
                sprintf(workfn, "%s/%s", cur_dir_name, "driver");
                char resolved_path[PATH_MAX];
                char * rpath = realpath(workfn, resolved_path);
-               // printf("realpath returned %s\n", rpath);
-               // printf("%s --> %s\n",workfn, resolved_path);
-               char * final_slash_ptr = strrchr(rpath, '/');
-               char * driver_name = final_slash_ptr+1;
-               printf("driver name: %s\n", driver_name);
-               char driver_module_dir[PATH_MAX];
-               sprintf(driver_module_dir, "%s/driver/module", cur_dir_name);
-               // printf("driver_module_dir: %s\n", driver_module_dir);
-               char * driver_version = read_sysfs_attr(driver_module_dir, "version", false);
-               if (driver_version)
-                  printf("driver_version: %s\n", driver_version);
-               else
-                  printf("Unable to determine driver version\n");
+               if (!rpath) {
+                  int errsv = errno;
+                  if (errsv == ENOENT) {
+                     printf("Cannot determine driver name\n");
+                  }
+                  else {
+                     DBGMSG("realpath(%s) returned NULL, errno=%d (%s)", workfn, errsv, linux_errno_name(errsv));
+                  }
+               }
+               else {
+                  // printf("realpath returned %s\n", rpath);
+                  // printf("%s --> %s\n",workfn, resolved_path);
+                  char * final_slash_ptr = strrchr(rpath, '/');
+                  driver_name = final_slash_ptr+1;
+                  printf("   Driver name:    %s\n", driver_name);
+
+                  char driver_module_dir[PATH_MAX];
+                  sprintf(driver_module_dir, "%s/driver/module", cur_dir_name);
+                  // printf("driver_module_dir: %s\n", driver_module_dir);
+                  char * driver_version = read_sysfs_attr(driver_module_dir, "version", false);
+                  if (driver_version)
+                      printf("   Driver version: %s\n", driver_version);
+                  else
+                     printf("    Unable to determine driver version\n");
+               }
+
 
                // printf("\nParsing modalias for values...\n");
                char * colonpos = strchr(modalias, ':');
@@ -361,6 +473,13 @@ bool query_card_and_driver_using_sysfs() {
       }
       closedir(d);
    }
+
+   if (driver_name && streq(driver_name, "nvidia")) {
+      printf("\nChecking for special settings for proprietary Nvidia driver \n");
+      printf("(needed for some newer Nvidia cards).\n");
+      execute_shell_cmd("grep -i i2c /etc/X11/xorg.conf /etc/X11/xorg.conf.d/*");
+   }
+
    return ok;
 }
 

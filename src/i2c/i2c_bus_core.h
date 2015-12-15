@@ -100,11 +100,11 @@ bool i2c_verify_functions_supported(int busno, char * write_func_name, char * re
 
 // Retrieve EDID
 
-Global_Status_Code i2c_get_raw_edid_by_fd( int fd,      Buffer * rawedidbuf, bool debug);
+Global_Status_Code i2c_get_raw_edid_by_fd( int fd,      Buffer * rawedidbuf);
 #ifdef UNUSED
 Global_Status_Code get_raw_edid_by_busno(int busno, Buffer * rawedidbuf, bool debug);
 #endif
-Parsed_Edid * i2c_get_parsed_edid_by_fd(int fd, bool debug);
+Parsed_Edid * i2c_get_parsed_edid_by_fd(int fd);
 Parsed_Edid * i2c_get_parsed_edid_by_busno(int busno);
 
 #endif /* I2C_BUS_CORE_H_ */

@@ -49,6 +49,7 @@ char * bool_repr(int value);
 bool   streq(const char * s1, const char * s2);
 bool   is_abbrev(const char * value, const char * longname, int minchars);
 bool   str_starts_with(const char * value_to_test, const char * start_part);
+bool   str_ends_with(const char * value_to_test, const char * end_part);
 char * strupper(char * s);
 char * strjoin( const char ** pieces, const int ct, const char * sepstr);
 char * chars_to_string(char * start, int len);

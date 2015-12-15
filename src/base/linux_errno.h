@@ -38,7 +38,7 @@ void init_linux_errno();
 char * linux_errno_name(int error_number);
 char * linux_errno_desc(int error_number);
 
-char * errno_name(int error_number);
+// char * errno_name(int error_number);
 
 // still used?
 char * errno_name_negative(int negative_error_number);

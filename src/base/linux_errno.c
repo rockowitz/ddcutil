@@ -134,6 +134,13 @@ char * linux_errno_desc(int error_number) {
 }
 
 
+char * linux_errno_name(int error_number) {
+   Status_Code_Info * pdesc = find_errno_description(error_number);
+   return pdesc->name;
+}
+
+
+
 /* Returns the Status_Code_Info record for the specified error number
  *
  * Arguments:
