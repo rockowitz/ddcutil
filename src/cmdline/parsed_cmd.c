@@ -50,6 +50,7 @@ Parsed_Cmd *  new_parsed_cmd() {
    memcpy(parsed_cmd->marker, PARSED_CMD_MARKER, 4);
    // n. all flags are false, byte values 0, integers 0, pointers NULL because of calloc
    parsed_cmd->output_level = OL_DEFAULT;
+   parsed_cmd->sleep_strategy = -1;    // use default
    return parsed_cmd;
 }
 
@@ -85,6 +86,7 @@ void show_parsed_cmd(Parsed_Cmd * parsed_cmd) {
    char buf[20];
    snprintf(buf,20, "%d,%d,%d", parsed_cmd->max_tries[0], parsed_cmd->max_tries[1], parsed_cmd->max_tries[2] );
    rpt_str("max_retries",  NULL, buf, d1);
+   rpt_int("sleep_stragegy", NULL, parsed_cmd->sleep_strategy,       d1);
 }
 
 

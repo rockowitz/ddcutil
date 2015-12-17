@@ -141,6 +141,7 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
    gint     buswork        = -1;
    gint     dispwork       = -1;
    char *   maxtrywork      = NULL;
+   gint     sleep_strategy_work = -1;
 
    GOptionEntry option_entries[] = {
    //  long_name short flags option-type          gpointer           description                    arg description
@@ -166,6 +167,8 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
       {"version", 'V',  0, G_OPTION_ARG_NONE,     &version_flag,     "Show version information", NULL},
 //    {"myusage", '\0', 0, G_OPTION_ARG_NONE,     &myusage_flag,     "Show usage", NULL},
 //    {"myhelp", '\0', 0,  G_OPTION_ARG_NONE,     &myhelp_flag,      "Show usage", NULL},
+      {"sleep-strategy",
+                  'y', 0,  G_OPTION_ARG_INT,      &sleep_strategy_work, "Set sleep strategy", "strategy number" },
       {G_OPTION_REMAINING,
                  '\0', 0,  G_OPTION_ARG_STRING_ARRAY, &cmd_and_args, "ARGUMENTS description",   "command [arguments...]"},
       { NULL }
@@ -219,6 +222,7 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
    parsed_cmd->force        = force_flag;
    parsed_cmd->output_level = output_level;
    parsed_cmd->stats        = stats_flag;
+   parsed_cmd->sleep_strategy = sleep_strategy_work;
 
    if (adlwork) {
 #ifdef HAVE_ADL

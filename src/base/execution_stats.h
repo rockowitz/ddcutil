@@ -70,6 +70,7 @@ void show_all_status_counts();
 
 // Sleep Strategy
 
+bool set_sleep_strategy(int strategy);
 typedef enum {SE_WRITE_TO_READ, SE_POST_OPEN, SE_POST_WRITE, SE_POST_READ } Sleep_Event_Type;
 const char * sleep_event_name(Sleep_Event_Type event_type);
 

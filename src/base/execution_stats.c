@@ -432,6 +432,18 @@ const char * sleep_event_name(Sleep_Event_Type event_type) {
 
 static int sleep_event_cts_by_id[SLEEP_EVENT_ID_CT];
 static int total_sleep_event_ct = 0;
+static int sleep_strategy = 0;
+
+bool set_sleep_strategy(int strategy) {
+   if (strategy == -1)    // if unset
+      strategy = 0;       // use default strategy
+   bool result = false;
+   if (strategy >= 0 && strategy <= 2) {
+      sleep_strategy = strategy;
+      result = true;
+   }
+   return result;
+}
 
 
 // Convenience functions
@@ -455,9 +467,29 @@ void call_tuned_sleep(DDC_IO_Mode io_mode, Sleep_Event_Type event_type) {
       switch(event_type) {
       case (SE_WRITE_TO_READ):
             sleep_time_millis = DDC_TIMEOUT_MILLIS_DEFAULT;
+            switch(sleep_strategy) {
+            case (1):
+               sleep_time_millis = sleep_time_millis/2;
+               break;
+            case (2):
+               sleep_time_millis = sleep_time_millis*2;
+               break;
+            default:
+               break;
+            }
             break;
       case (SE_POST_WRITE):
             sleep_time_millis = DDC_TIMEOUT_MILLIS_DEFAULT;
+            switch(sleep_strategy) {
+            case (1):
+               sleep_time_millis = sleep_time_millis/2;
+               break;
+            case (2):
+               sleep_time_millis = sleep_time_millis*2;
+               break;
+            default:
+               break;
+            }
             break;
       case (SE_POST_OPEN):
             sleep_time_millis = DDC_TIMEOUT_MILLIS_DEFAULT;

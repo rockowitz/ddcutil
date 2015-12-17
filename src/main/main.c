@@ -189,6 +189,8 @@ int main(int argc, char *argv[]) {
    if (parsed_cmd->max_tries[2] > 0) {
       ddc_set_max_multi_part_read_tries(parsed_cmd->max_tries[2]);
    }
+   if (parsed_cmd->sleep_strategy >= 0)
+      set_sleep_strategy(parsed_cmd->sleep_strategy);
 
    if (parsed_cmd->cmd_id == CMDID_LISTVCP) {
       vcp_list_feature_codes();
