@@ -44,7 +44,6 @@
 #include "base/msg_control.h"
 #include "base/linux_errno.h"
 #include "base/parms.h"
-#include "base/query_sysenv.h"
 #include "base/util.h"
 #include "base/status_code_mgt.h"
 
@@ -67,6 +66,7 @@
 
 #include "main/testcases.h"
 #include "main/loadvcp.h"
+#include "main/query_sysenv.h"
 
 
 //
@@ -230,7 +230,8 @@ int main(int argc, char *argv[]) {
    }
 
    else if (parsed_cmd->cmd_id == CMDID_ENVIRONMENT) {
-      printf("Exploring runtime environment...\n");
+      printf("The following tests use multiple redundant methods to probe the runtime environment.\n");
+      // printf("Exploring runtime environment...\n");
       query_env();
       query_card_and_driver();
       main_rc = true;

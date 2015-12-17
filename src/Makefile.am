@@ -40,6 +40,7 @@ cmdline/cmd_parser_aux.c \
 cmdline/cmd_parser_goption.c \
 cmdline/parsed_cmd.c \
 main/main.c \
+main/query_sysenv.c \
 main/testcases.c 
 
 if INCLUDE_TESTCASES_COND
@@ -73,7 +74,6 @@ base/edid.c \
 base/execution_stats.c \
 base/linux_errno.c \
 base/msg_control.c \
-base/query_sysenv.c \
 base/status_code_mgt.c \
 base/util.c \
 ddc/ddc_command_codes.c \

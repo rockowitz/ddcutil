@@ -27,15 +27,22 @@
 
 // #include <base/parms.h>    // put first for USE_LIBEXPLAIN
 
+#include <config.h>
+
+#define _GNU_SOURCE 1       // for function group_member
+
 #include <assert.h>
 #include <ctype.h>
 #include <dirent.h>
 #include <errno.h>
 #include <glib.h>
+#include <grp.h>
+#include <pwd.h>
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/types.h>
 #include <time.h>
 #include <unistd.h>
 #include <linux/limits.h>
@@ -45,13 +52,19 @@
 
 #include "util/file_util.h"
 #include "util/pci_id_util.h"
+#include "util/report_util.h"
 #include "util/string_util.h"
 
 #include "base/msg_control.h"
 #include "base/linux_errno.h"
 #include "base/util.h"
 
-#include "base/query_sysenv.h"
+#include "i2c/i2c_bus_core.h"
+#include "adl/adl_shim.h"
+
+#include "main/query_sysenv.h"
+
+
 
 #ifndef MAX_PATH
 #define MAX_PATH 256
@@ -135,30 +148,8 @@ int query_proc_modules_for_video() {
       }
    }
 
-   // uname response:
-   char * version_line = read_one_line_file("/proc/version", true /* verbose */);
-   if (version_line)
-      printf("\n%s\n", version_line);
 
-#ifdef OLD
-   FILE * fp = fopen("/proc/version", "r");
-   if (!fp) {
-      fprintf(stderr, "Error opening /proc/version: %s", strerror(errno));
-   }
-   else {
-      char * version_line = NULL;
-      size_t len = 0;
-      ssize_t read;
-      // just one line:
-      read = getline(&version_line, &len, fp);
-      if (read == -1) {
-         printf("Nothing to read from /proc/version\n");
-      }
-      else {
-         printf("\n%s", version_line);     // version_line has trailing \n
-      }
-   }
-#endif
+
    return rc;
 }
 
@@ -166,7 +157,7 @@ int query_proc_modules_for_video() {
 /* Executes a shell command and writes the output to the terminal
  *
  */
-bool execute_shell_cmd(char * shell_cmd) {
+bool execute_shell_cmd(char * shell_cmd, int depth) {
    bool debug = false;
    DBGMSF(debug, "Starting. shell_cmd = |%s|", shell_cmd);
    bool ok = true;
@@ -197,7 +188,7 @@ bool execute_shell_cmd(char * shell_cmd) {
                 }
                 first_line = false;
              }
-          printf("%s\n", a_line);
+          rpt_title(a_line, depth);
           // fputs(a_line, stdout);
           // free(a_line);
        }
@@ -209,18 +200,179 @@ bool execute_shell_cmd(char * shell_cmd) {
 
 
 void query_env() {
+   bool debug = true;
    char username[32+1];       // per man useradd, max username length is 32
 
-   printf("Checking for /dev/i2c-* devices...\n");
-   execute_shell_cmd("ls -l /dev/i2c-*");
+   printf("\nSystem information (uname):\n");
+   // uname response:
+   char * version_line = read_one_line_file("/proc/version", true /* verbose */);
+   if (version_line)
+      printf("   %s\n", version_line);
+   else
+      printf("   System information unavailable\n");
+
+   printf("\nUnless the system is using AMD proprietary driver fglrx, devices /dev/i2c-*\n"
+          "must exist and the logged on user must have read/write permission for those\n"
+          "devices (or at least those devices associated with monitors).\n"
+          "Typically, this access is enabled by:\n"
+          "  - setting the group for /dev/i2c-* to i2c\n"
+          "  - setting group RW permissions for /dev/i2c-*\n"
+          "  - making the current user a member of group i2c\n"
+          "Alternatively, this could be enabled by just giving everyone RW permission\n"
+          "The following tests probe for these conditions.\n"
+         );
+
+
+
+   printf("\nChecking for /dev/i2c-* devices...\n");
+   execute_shell_cmd("ls -l /dev/i2c-*", 1);
+
    getlogin_r(username, sizeof(username));
-   printf("\nLogged on user:  %s\n", username);
-   // execute_shell_cmd("whoami");
-   printf("Checking for group i2c...\n");
-   execute_shell_cmd("grep i2c /etc/group");
+   // printf("\nLogged on user:  %s\n", username);
+
+
+   // TODO: replace with actual code, eliminate call that violates inclusion ordering
+   int busct = i2c_get_busct();
+   int busno;
+   char fnbuf[20];
+   bool all_i2c_rw = true;
+   for (busno=0; busno < busct; busno++) {
+      snprintf(fnbuf, sizeof(fnbuf), "/dev/i2c-%d", busno);
+      int rc;
+      int errsv;
+      rc = access(fnbuf, R_OK|W_OK);
+      if (rc < 0) {
+         errsv = errno;
+         DBGMSF(debug, "Calling access() for %s", fnbuf);
+         printf("Device %s is not readable and writable.  Error = %s\n",
+                fnbuf, linux_errno_desc(errsv) );
+         all_i2c_rw = false;
+      }
+   }
+
+   if (!all_i2c_rw) {
+      printf("\nWARNING: Current user (%s) does not have RW access to all /dev/i2c-* devices.\n", username);
+   }
+   else
+      printf("\nCurrent user (%s) has RW access to all /dev/i2c-* devices.\n", username);
+
+
+
+
+   printf("\nChecking for group i2c...\n");
+   // replaced by C code
+   // execute_shell_cmd("grep i2c /etc/group", 1);
+
+   bool group_i2c_exists = false;   // avoid special value in gid_i2c
+   gid_t gid_i2c;
+   struct group * pgi2c = getgrnam("i2c");
+   if (pgi2c) {
+      printf("   Group i2c exists\n");
+      group_i2c_exists = true;
+      gid_i2c = pgi2c->gr_gid;
+      // DBGMSG("getgrnam returned gid=%d for group i2c", gid_i2c);
+      // DBGMSG("getgrnam() reports members for group i2c: %s", *pgi2c->gr_mem);
+      int ndx=0;
+      char * curname;
+      bool found_curuser = false;
+      while ( (curname = pgi2c->gr_mem[ndx]) ) {
+         rtrim_in_place(curname);
+         // DBGMSG("member_names[%d] = |%s|", ndx, curname);
+         if (streq(curname, username)) {
+            found_curuser = true;
+         }
+         ndx++;
+
+      }
+      if (found_curuser) {
+         printf("   Current user %s is a member of group i2c\n", username);
+      }
+      else {
+         printf("   WARNING: Current user %s is NOT a member of group i2c\n", username);
+
+      }
+
+#ifdef NO
+      Null_Terminated_String_Array  member_names = strsplit(*pgi2c->gr_mem, ",");
+      int ndx;
+      for (ndx=0; ndx<null_terminated_string_array_length(member_names);ndx++){
+         DBGMSG("member_names[%d] = |%s|", ndx, member_names[ndx]);
+      }
+      null_terminated_string_array_free(member_names);
+#endif
+
+
+
+   }
+   if (!group_i2c_exists) {
+      printf("   Group i2c does not exist\n");
+   }
+#ifdef BAD
+   // getgroups, getgrouplist returning nonsense
+   else {
+      uid_t uid = geteuid();
+      gid_t gid = getegid();
+      struct passwd * pw = getpwuid(uid);
+      printf("Effective uid %d: %s\n", uid, pw->pw_name);
+      char * uname = strdup(pw->pw_name);
+      struct group * pguser = getgrgid(gid);
+      printf("Effective gid %d: %s\n", gid, pguser->gr_name);
+      if (group_member(gid_i2c)) {
+         printf("User %s (%d) is a member of group i2c (%d)\n", uname, uid, gid_i2c);
+      }
+      else {
+         printf("WARNING: User %s (%d) is a not member of group i2c (%d)\n", uname, uid, gid_i2c);
+      }
+
+      size_t supp_group_ct = getgroups(0,NULL);
+      gid_t * glist = calloc(supp_group_ct, sizeof(gid_t));
+      int rc = getgroups(supp_group_ct, glist);
+      int errsv = errno;
+      DBGMSF(debug, "getgroups() returned %d", rc);
+      if (rc < 0) {
+         DBGMSF(debug, "getgroups() returned %d", rc);
+
+      }
+      else {
+         DBGMSG("Found %d supplementary group ids", rc);
+         int ndx;
+         for (ndx=0; ndx<rc; ndx++) {
+            DBGMSG("Supplementary group id: %d", *glist+ndx);
+         }
+
+      }
+
+      int supp_group_ct2 = 100;
+      glist = calloc(supp_group_ct2, sizeof(gid_t));
+      DBGMSG("Calling getgrouplist for user %s", uname);
+      rc = getgrouplist(uname, gid, glist, &supp_group_ct2);
+      errsv = errno;
+      DBGMSG("getgrouplist returned %d, supp_group_ct=%d", rc, supp_group_ct2);
+      if (rc < 0) {
+         DBGMSF(debug, "getgrouplist() returned %d", rc);
+      }
+      else {
+         DBGMSG("getgrouplist found %d supplementary group ids", rc);
+         int ndx;
+         for (ndx=0; ndx<rc; ndx++) {
+            DBGMSG("Supplementary group id: %d", *glist+ndx);
+         }
+
+      }
+
+
+
+
+   }
+#endif
+
 
    printf("\nLooking for udev rules files that reference i2c:\n");
-   execute_shell_cmd("grep i2c /lib/udev/rules.d/*rules /lib/udev/rules.d/*rules /etc/udev/rules.d/*rules" );
+   execute_shell_cmd("grep i2c /etc/udev/makedev.d/*", 1);
+   execute_shell_cmd("grep i2c "
+                     "/lib/udev/rules.d/*rules "
+                     "/lib/udev/rules.d/*rules "
+                     "/etc/udev/rules.d/*rules", 1 );
 
 #ifdef OLD
    printf("\nudev rules files in /lib/udev/rules.d referencing i2c:\n");
@@ -231,30 +383,50 @@ void query_env() {
    execute_shell_cmd("grep i2c /etc/udev/rules.d/*rules");
 #endif
 
+
+
+
+   bool ok;
 #ifdef NO
    // Produces lots of ugly output.   Really should be parsed.  Not worth it.
 
-   bool ok;
+
    // apt list doesn't exist on some systems, and apt show presents TMI
    printf("\nUsing apt to look for package i2c-tools...\n");
    // execute_shell_cmd("apt list i2c-tools");  // list command unavailable on Mint 17.3
    ok = execute_shell_cmd("apt show i2c-tools");
    if (!ok)
       printf("apt command not found\n");
-
-   ok = printf("\nUsing dpkg to look for package i2c-tools...\n");
-   execute_shell_cmd("dpkg --list i2c-tools");
-   if (!ok)
-      printf("apt command not found\n");
-
-   printf("\nUsing rpm to look for package i2c-tools...\n");
-   ok = execute_shell_cmd("rpm -q i2c-tools");
-   if (!ok)
-      printf("rpm command not found\n");
 #endif
 
-   printf("\nCheck that kernel module i2c_dev is being loaded...\n");
-   execute_shell_cmd("grep i2c[-_]dev /etc/modules /etc/modules-load.d/*conf" );
+   ok = printf("\nUsing dpkg to look for package i2c-tools...\n");
+   execute_shell_cmd("dpkg --status i2c-tools", 1);
+   if (!ok)
+      printf("dpkg command not found\n");
+   else {
+      execute_shell_cmd("dpkg --listfiles i2c-tools", 1);
+   }
+
+   ok = printf("\nUsing dpkg to look for package libi2c-dev...\n");
+   execute_shell_cmd("dpkg --status libi2c-dev", 1);
+   if (!ok)
+      printf("dpkg command not found\n");
+   else {
+      execute_shell_cmd("dpkg --listfiles libi2c-dev", 1);
+   }
+
+   printf("\nUsing rpm to look for package i2c-tools...\n");
+   ok = execute_shell_cmd("rpm -q -l --scripts i2c-tools", 1);
+   if (!ok)
+      printf("rpm command not found\n");
+
+
+   printf("\nCheck that kernel module i2c_dev is being loaded by examining files where this would be specified...\n");
+   execute_shell_cmd("grep i2c[-_]dev "
+                     "/etc/modules "
+                     "/etc/modules-load.d/*conf "
+                     "/etc/modprobe.d/*conf "
+                     "/usr/lib/modules-load.d/*conf", 1);
 
 }
 
@@ -319,7 +491,9 @@ bool query_card_and_driver_using_lspci() {
 
 
 bool query_card_and_driver_using_sysfs() {
-   bool ok = true;
+   bool debug = true;
+   // DBGMSF(debug, "Starting");
+   printf("Obtaining card and driver information from /sys...\n");
 
    // also of possible interest:
    // /sys/class/i2c-dev/i2c-*/name
@@ -332,9 +506,7 @@ bool query_card_and_driver_using_sysfs() {
    //                                           /name
    //                                           i2c-dev
 
-
-   printf("Obtaining card and driver information from /sys...\n");
-
+   bool ok = true;
    char * driver_name = NULL;
 
    struct dirent *dent;
@@ -389,8 +561,10 @@ bool query_card_and_driver_using_sysfs() {
                   // printf("realpath returned %s\n", rpath);
                   // printf("%s --> %s\n",workfn, resolved_path);
                   char * final_slash_ptr = strrchr(rpath, '/');
+                  // TODO: handle case where there are more than 1 video drivers loaded,
+                  // say if the system contains both an AMD and Nvidia card
                   driver_name = final_slash_ptr+1;
-                  printf("   Driver name:    %s\n", driver_name);
+                  printf(    "   Driver name:    %s\n", driver_name);
 
                   char driver_module_dir[PATH_MAX];
                   sprintf(driver_module_dir, "%s/driver/module", cur_dir_name);
@@ -399,7 +573,7 @@ bool query_card_and_driver_using_sysfs() {
                   if (driver_version)
                       printf("   Driver version: %s\n", driver_version);
                   else
-                     printf("    Unable to determine driver version\n");
+                     printf( "   Unable to determine driver version\n");
                }
 
 
@@ -477,8 +651,53 @@ bool query_card_and_driver_using_sysfs() {
    if (driver_name && streq(driver_name, "nvidia")) {
       printf("\nChecking for special settings for proprietary Nvidia driver \n");
       printf("(needed for some newer Nvidia cards).\n");
-      execute_shell_cmd("grep -i i2c /etc/X11/xorg.conf /etc/X11/xorg.conf.d/*");
+      execute_shell_cmd("grep -i i2c /etc/X11/xorg.conf /etc/X11/xorg.conf.d/*", 1);
    }
+
+   if (str_starts_with(driver_name, "fglrx")) {
+#ifdef HAVE_ADL
+      if (!adlshim_is_available()) {
+         set_output_level(OL_VERBOSE);  // force error msg that names missing dll
+         ok = adlshim_initialize();
+         if (!ok)
+            printf("WARNING: Using AMD proprietary video driver fglrx but unable to ADL library");
+      }
+#else
+      printf("WARNING: Using AMD proprietary video driver fglrx but ddctool built without ADL support");
+#endif
+   }
+
+   printf("\nExamining /sys/bus/i2c/devices...\n");
+   d0 = "/sys/bus/i2c";
+   d = opendir(d0);
+   if (!d) {
+      rpt_vstring(1, "i2c bus not defined in sysfs. Unable to open directory %s: %s\n", d0, strerror(errno));
+   }
+   else {
+      d0 = "/sys/bus/i2c/devices";
+      d = opendir(d0);
+      if (!d) {
+         rpt_vstring(1, "Unable to open sysfs directory %s: %s\n", d0, strerror(errno));
+      }
+      else {
+         bool i2c_seen = false;
+         while ((dent = readdir(d)) != NULL) {
+            // DBGMSF("%s", dent->d_name);
+            char cur_fn[100];
+            char cur_dir_name[100];
+            if (!streq(dent->d_name, ".") && !streq(dent->d_name, "..") ) {
+               // DBGMSF(debug, "dent->dname: %s", dent->d_name);
+               sprintf(cur_dir_name, "%s/%s", d0, dent->d_name);
+               char * dev_name = read_sysfs_attr(cur_dir_name, "name", true);
+               rpt_vstring(1, "%s/name: %s", cur_dir_name, dev_name);
+               i2c_seen = true;
+            }
+         }
+         if (!i2c_seen)
+            rpt_vstring(1, "No i2c devices found in %s", d0);
+      }
+   }
+
 
    return ok;
 }

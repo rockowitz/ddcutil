@@ -55,19 +55,19 @@ Report I2C communication and DDC protocol errors.
     --stats
 ddctool maintains extensive statistics on protocol errors, retry counts, and performance.   This option causes those statistics to be reported.
 
-### Monitor specification
+### Monitor Selection
 
 If more than one monitor is attached, the desired monitor can be specified using any of the following options:
 ~~~
 --display <display number>
---busno <i2c bus number>
---adlno <iAdapterNumber>.<iDisplayNumber>
+--bus <i2c bus number>
+--adl <iAdapterNumber>.<iDisplayNumber>
 --edid <256 character hex string>
 --model <model name> and --sn <serial number>
 ~~~
 
 Notes:
-- Monitors under control of AMD's proprietary driver (fglrx) by adapter number and display number.  These numbers are specified on the --adlno option separated by a period, e.g. "--adlno 1.0"
+- Monitors under control of AMD's proprietary driver (fglrx) are selected by adapter number and display number.  These numbers are specified on the --adl option separated by a period, e.g. "--adlno 1.0"
 - If model and serial number are used to identify the monitor, both options must be specified.
 
 To see a list of all attached monitors and their associated identifiers:
@@ -83,6 +83,8 @@ ddctools requires the i2c-tools package.  i2c-tools appears to be packaged in di
 - i2c-tools
 - libi2c-dev 
 
+On Ubuntu, the i2c.h header file is not part of i2c-tools.   Install libi2c-dev.
+
 If using an open source driver, ensure that kernel module i2c-dev is loaded.
 
 ### /dev/i2c permissions
@@ -91,15 +93,19 @@ In order to use ddctool, you must be able to write to /dev/i2c-*.  Again, becaus
 
 Some versions of i2c-tools create group i2c, and make that the group for /dev/i2c-* devices.  In that case all that is necessary is to add your user name to group i2c: 
 
-    sudo adduser your-user-name i2c
+    sudo usermod your-user-name -G i2c
 
-To give everyone permission to write to /dev/i2c-* for the current boot:
+For testing, it may be simpler to give everyone permission to write to /dev/i2c-* for the current boot:
     sudo chmod a+rw /dev/i2c-*
 
 See resources/etc/udev/rules.d
 
 
+From the udev documentation: 
 
+https://www.kernel.org/pub/linux/utils/kernel/hotplug/udev/udev.html
+
+The udev rules are read from the files located in the system rules directory /usr/lib/udev/rules.d, the volatile runtime directory /run/udev/rules.d and the local administration directory /etc/udev/rules.d. All rules files are collectively sorted and processed in lexical order, regardless of the directories in which they live. However, files with identical file names replace each other. Files in /etc have the highest priority, files in /run take precedence over files with the same name in /lib. This can be used to override a system-supplied rules file with a local file if needed; a symlink in /etc with the same name as a rules file in /lib, pointing to /dev/null, disables the rules file entirely.
 
 
 
