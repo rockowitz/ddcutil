@@ -29,6 +29,4 @@
 
 void query_card_and_driver();
 
-void query_env();
-
 #endif /* QUERY_SYSENV_H_ */

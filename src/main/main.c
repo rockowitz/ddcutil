@@ -232,9 +232,8 @@ int main(int argc, char *argv[]) {
    }
 
    else if (parsed_cmd->cmd_id == CMDID_ENVIRONMENT) {
-      printf("The following tests use multiple redundant methods to probe the runtime environment.\n");
+      printf("The following tests probe the runtime environment using multiple overlapping methods.\n");
       // printf("Exploring runtime environment...\n");
-      query_env();
       query_card_and_driver();
       main_rc = true;
    }
@@ -249,7 +248,6 @@ int main(int argc, char *argv[]) {
       ddc_set_max_write_read_exchange_tries(MAX_MAX_TRIES);
       ddc_set_max_multi_part_read_tries(MAX_MAX_TRIES);
       query_card_and_driver();
-      query_env();
       printf("\nDetected displays:\n");
       int display_ct = ddc_show_active_displays(1 /* logical depth */);
       int dispno;

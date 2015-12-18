@@ -1,9 +1,24 @@
 ddctool
 =======
 
-ddctool is a program for querying and changing monitor settings, such as brightness and color levels.   
+`ddctool` is a program for querying and changing monitor settings, such as brightness and color levels.   
 
-ddctool uses DDC/CI to communicate with monitors implementing MCCS (Monitor Control Command Set) over I2C.  Normally, the video driver for the monitor exposes the I2C channel as devices named /dev/i2c-n.  
+`ddctool` uses DDC/CI to communicate with monitors implementing MCCS (Monitor Control Command Set) over I2C.  Normally, the video driver for the monitor exposes the I2C channel as devices named /dev/i2c-n.  
+
+A particular use case for `ddctool` is as part of profile management.  Monitor calibration is relative to the monitor color settings currently in effect, e.g. red gain.  ddctool allows color related settings to be saved at the time a monitor is calibrated, and then restored when the calibration is applied.
+
+## Feedback Needed
+This is a preliminary release, and feedback would be very helpful.   The build environment can vary from system to system.   I2C implementation can vary with card, monitor, and driver.    There is variation in MCCS interpretation.  Furthermore, I2C is an inherently unreliable protocol, requiring retry management.  
+
+In particular: 
+
+- Were you able to build `ddctool`?  What changes were required to the Autoconf files?   
+- Does it work with given card, driver, and monitor?  I'm not particularly concerned with older monitors whose MCCS version is unspecified (i.e. is less than 2.0).  On the other hand, the I'm very interested in how `ddctool` handles monitors implementing MCCS V3.0, as the V3.0 specific code has not been tested.  In particular, does `ddctool` property read Table type features. 
+- And of course, is the program useful?   Does it merit further development?  What features does it need?
+
+Command `ddctool interrogate` collects maximal information about the installation environment, video card and driver, and monitor capabilities.   I'd appreciate it if you could redirect its output to a file and send the file to me. This will help diagnose problems and identify features that should be implemented.
+
+Finally, I am looking for for additional MCCS documentation.   I have copies of MCCS specification versions 2.0 (10/17/2003) and 3.0 (6/27/2006) .  I would appreciate pointers to other versions of the specification, i.e. versions 1.0 (9/11/1998),  2.1 (5/28/2005), and 2.2 (1/19/2009). 
 
 ##ddctool Commands
 | Command | Function
@@ -18,42 +33,11 @@ ddctool uses DDC/CI to communicate with monitors implementing MCCS (Monitor Cont
 |environment                               | explore the `ddctool` installation environment
 |interrogate                                 | collect maximal information for problem diagnosis
 
-There is an extensive set of options for tailoring *ddctool* operation.   Some are described in this readme.   For a full list, issue the command: 
-
+There is an extensive set of options for tailoring *ddctool* operation.   Some are described in this readme.   For a full list, use the --help option or see the man page:
 ~~~
 ddctool --help
 man 1 ddctool
 ~~~
-
-## Feedback Needed
-This is a preliminary release.
-
-Does it work with given device, monitor
-- not very concerned with MCCS < 2
-- experience with MCCS 3
-- does it properly read tables
-
-I2C is an inherently unreliable protocol, requiring retry management.    There is variation in MCCS interpretation.   I2C implementation can vary with card, monitor, and driver.   
-
-
-
-Documentation:  I have copies of MCCS specification versions 2.0 (10/17/2003) and 3.0 (6/27/2006) .  I would appreciate pointers to other versions of the specification, i.e. versions 1.0 (9/11/1998) and 2.1 (5/28/2005).
-
-### ddctool as part of profile management
-A particular use case for ddctool is as part of profile management.  Monitor calibration is relative to the monitor color settings currently in effect, e.g. red gain.  ddctool allows color related settings to be saved at the time a monitor is calibrated, and then restored when the calibration is applied.
-
-~~~
-ddctool dumpvcp
-ddctool loadvcp
-~~~
-### Instrumentation and Tuning
-
-   --ddc
-
-Report I2C communication and DDC protocol errors.
-
-    --stats
-ddctool maintains extensive statistics on protocol errors, retry counts, and performance.   This option causes those statistics to be reported.
 
 ### Monitor Selection
 
@@ -75,21 +59,59 @@ To see a list of all attached monitors and their associated identifiers:
 ddctool detect
 ~~~
 
+### Instrumentation and Tuning
 
-## Building ddctool
+I2C is an inherently unreliable protocol, requiring retry management.  90% of its elapsed time is spent in timeouts mandated by the DDC specification.    `ddctool` has extensive facilities for reporting protocol errors, retry counts, and peformance statistics, and some ability to tweak execution parameters from the command line.
 
-ddctools requires the i2c-tools package.  i2c-tools appears to be packaged in different ways in different distributions, so only general guidelines can be given.  If any of the following packages exist for your distribution, they should be installed: 
+The relevant options are:
+
+| Option | Function
+|----------------------------------| ----------------------------------------------------------------------|
+| --stats                               | report execution statistics |
+| --ddc                                 | report DDC protocol errors |
+|--maxtries()                       | sets maximum tries | 
+
+
+There are 3 kinds of exchanges in which retry is possible: 
+
+- write-only exchange.  Bytes are written with no subsequent read.  Used only to set a VCP feature value.  
+- write-read exchange.  A write to the monitor, followed by a read.  Most DDC protocol exchanges are of this form.
+- multi-part exchange.  This is a "meta" exchange, consisting multiple write-read exchanges.  Use to query monitor capabilities, and for querying and setting Table type VCP features. 
+
+By default, the maximum number of tries for each exchange is:
+
+- write-only exchange:    4
+- write-read exchange: 10
+- multi-part exchange:   8
+
+Option --maxtries allows you to play with the maximum try count.  Its argument consists of 3 comma-separated values.  The following example sets the maximum try counts to 3 for write-only exchanges, 6 for write-read exchanges, and 9 for multi-part exchanges.
+
+--maxtries(3,6,9) 
+
+A blank value leaves the corresponding try count unchanged.   The following example changes only the maximum write-read try count:
+
+--maxtries(,7,) 
+
+The maximum maximum value is 15.
+
+## Building and Running ddctool
+
+Because of the variation among distributions, only general guidelines can be given for some `ddctool` prerequisites.
+
+### Packages
+
+`ddctool` requires the following package for both building and execution:
 
 - i2c-tools
+
+At least on Ubuntu, the i2c.h header file is found in a separate package.   If the following package exists, it
+is needed to build `ddctool`
+
 - libi2c-dev 
-
-On Ubuntu, the i2c.h header file is not part of i2c-tools.   Install libi2c-dev.
-
-If using an open source driver, ensure that kernel module i2c-dev is loaded.
 
 ### /dev/i2c permissions
 
-In order to use ddctool, you must be able to write to /dev/i2c-*.  Again, because of the variation among distributions, only general guidelines can be given.
+Except when using AMD's proprietary driver (see below) `ddctool` requires write access to /dev/i2c-*.  
 
 Some versions of i2c-tools create group i2c, and make that the group for /dev/i2c-* devices.  In that case all that is necessary is to add your user name to group i2c: 
 
@@ -100,22 +122,16 @@ For testing, it may be simpler to give everyone permission to write to /dev/i2c-
 
 See resources/etc/udev/rules.d
 
+The following section from the udev documentation 
+(<https://www.kernel.org/pub/linux/utils/kernel/hotplug/udev/udev.html>) may be helpful:
 
-From the udev documentation: 
+> The udev rules are read from the files located in the system rules directory /usr/lib/udev/rules.d, the volatile runtime directory /run/udev/rules.d and the local administration directory /etc/udev/rules.d. All rules files are collectively sorted and processed in lexical order, regardless of the directories in which they live. However, files with identical file names replace each other. Files in /etc have the highest priority, files in /run take precedence over files with the same name in /lib. This can be used to override a system-supplied rules file with a local file if needed; a symlink in /etc with the same name as a rules file in /lib, pointing to /dev/null, disables the rules file entirely.
 
-https://www.kernel.org/pub/linux/utils/kernel/hotplug/udev/udev.html
+### Kernel Modules
 
-The udev rules are read from the files located in the system rules directory /usr/lib/udev/rules.d, the volatile runtime directory /run/udev/rules.d and the local administration directory /etc/udev/rules.d. All rules files are collectively sorted and processed in lexical order, regardless of the directories in which they live. However, files with identical file names replace each other. Files in /etc have the highest priority, files in /run take precedence over files with the same name in /lib. This can be used to override a system-supplied rules file with a local file if needed; a symlink in /etc with the same name as a rules file in /lib, pointing to /dev/null, disables the rules file entirely.
+If using an open source driver, kernel module i2c-dev must be loaded.
 
-
-
-### Comparison with ddccontrol
-
-The program ddccontrol  
-
-- Uses i2c-dev userspace interface to i2c.  Should be less fragile
-- Probably reflecting the time it was written, ddccontrol relies on a monitor attribute database to interpret VCP code.
-
+TODO: discuss modprobe
 
 ### Building with ADL support
 
@@ -143,26 +159,9 @@ configure --with-adl-headlers=DIR
 where DIR is the name of the directory when you saved the ADL header files.
 
 
-### Installing ddctool
-
-ddctool requires:
-
-- 
-installing,
-making /dev/i2c-n accessible
-
-To run ddctool you need write access for /dev/i2c-tools:
-
-For testing, a simple way to do this is:
-```
-sudo chmod a+rw /dev/i2c-*
-
-
-
-
 ### Special Nvidia driver settings
 
-When using Nvidia's proprietary driver, I2C communication fails on some cards.   It worked on several older Nvidia cards I have, but failed with my newer GTX660Ti.  Others have reported similar problems.   (Specfically, I2C reads/writes? of 1 or 2 bytes succeeded, but reads/writes of 3 or my bytes failed.)   Adding the following to the "Device" section for the Nvidia driver:
+When using Nvidia's proprietary driver, I2C communication fails on some cards.   It worked on several older Nvidia cards I have, but failed with my newer GTX660Ti.   (Specfically, I2C reads of 1 or 2 bytes succeeded, but reads of 3 or more bytes failed.)  Others have reported similar problems.   Adding the following to the "Device" section for the Nvidia driver:
 ~~~
  Option     "RegistryDwords"  "RMUseSwI2c=0x01; RMI2cSpeed=100"
 ~~~
@@ -180,28 +179,32 @@ Copy this file to /etc/X11/xorg.conf.d
 
 Note: This file works if there is no xorg.conf file.  If you do have an xorg.conf file and Identifier field will likely require modification.
 
+### Installation Diagnostics
+
+If `ddctool` is successfully built but execution fails, command `ddctool environment` probes the I2C environment and may provide clues as to the problem.
 
 
-Requirements:
-package i2c-tools is required
+## Comparison with ddccontrol
+
+The program `ddccontrol` appears to no longer be maintained.    It has a fragility reflecting the environment at the time it was written.   In particular:
+
+- `ddcctontrol`, at least some of the time, uses its own I2C driver code.  `ddctool`, on the other hand, relies exclusively on the the i2c-dev userspace interface to i2c. (And also, ADL for fglrx).   This should make it less fragile.
+- `ddccontrol` relies on a monitor attribute database to interpret VCP code.  With MCCS 2.0 and greater, VCP feature code definitions are largely standardized.  `ddctool` uses the MCCS specification to interpret VCP feature values.  It makes no attempt to interpret values for feature codes designated as manufacturer specific (E0..FF). 
 
 ## To Do
 
-The following tasks are planned before initial release
-- downloadable tarball
-- test 32 bit version
-- provide for cross-compiling 32 bit executables on 64 bit systems
-- Ubuntu ppa 
-- Fedora Copr?
-- OpenSUSE build service?
+This is a preliminary release.  There's an extensive TODO list
 
-
-
-## Future Development
-Possible further extensions:
-
+- installation without local build:
+-- downloadable tarball
+-- Ubuntu ppa, Fedora Copr, OpenSUSE build service
+- cross-compile 32 bit executables on 64 bit systems
+- write VCP Table type fields
+- document the format of .VCP files (i.e. files read by `ddctool loadvcp`)
 - UI
-- package as library for use by other C programs
-- Python API
+- package as library for use by other C programs, probably with gobject introsepection
+-- Python API
 
+## Author
 
+Sanford Rockowitz  <rockowitz@minsoft.com>

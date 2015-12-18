@@ -46,3 +46,4 @@ man/ddcdraft.1.man
 man/*.ronn
 /mintvm.notes
 /doconf
+misc/
