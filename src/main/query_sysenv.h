@@ -27,6 +27,6 @@
 #ifndef QUERY_SYSENV_H_
 #define QUERY_SYSENV_H_
 
-void query_card_and_driver();
+void query_sysenv();
 
 #endif /* QUERY_SYSENV_H_ */

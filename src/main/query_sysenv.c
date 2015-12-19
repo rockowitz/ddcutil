@@ -489,23 +489,21 @@ void check_i2c_dev_module(struct driver_name_node * driver_list) {
       execute_shell_cmd("grep -H i2c[-_]dev "
                         "/etc/modules "
                         "/etc/modules-load.d/*conf "
-                        "/etc/modprobe.d/*conf "
-                        "/run/modprobe.d/*conf "
-                        "/usr/lib/modules-load.d/*conf",
-                        1);
+                        "/run/modules-load.d/*conf "
+                        "/usr/lib/modules-load.d/*conf "
+                        , 1);
 
       printf("\nCheck for any references to i2c_dev in /etc/modprobe.d ...\n");
       execute_shell_cmd("grep -H i2c[-_]dev "
-                        "/etc/modprobe.d/* ",
-                        1);
+                        "/etc/modprobe.d/*conf "
+                        "/run/modprobe.d/*conf "
+                        , 1);
 
    }
 }
 
 
-void query_packages_and_modules() {
-
-
+void query_packages() {
    printf("\nddctool requiries package i2c-tools.  Use both dpkg and rpm to look for it.\n"
           "While we're at it, check for package libi2c-dev which is used for building\n"
           "ddctool.\n"
@@ -791,7 +789,6 @@ void driver_specific_tests(struct driver_name_node * driver_list) {
 #endif
 
    }
-
 }
 
 
@@ -816,11 +813,9 @@ void query_loaded_modules_using_sysfs() {
 }
 
 void query_i2c_bus_using_sysfs() {
-
    struct dirent *dent;
    DIR           *d;
-
-   char * d0;
+   char          *d0;
 
    printf("\nExamining /sys/bus/i2c/devices...\n");
    d0 = "/sys/bus/i2c";
@@ -852,7 +847,6 @@ void query_i2c_bus_using_sysfs() {
             rpt_vstring(1, "No i2c devices found in %s", d0);
       }
    }
-
 }
 
 
@@ -879,23 +873,28 @@ bool query_card_and_driver_using_osinfo() {
 }
 
 
-void query_card_and_driver() {
+void query_sysenv() {
    query_base_env();
+   printf("\n*** Primary Check 1: Identify video card and driver ***\n");
    struct driver_name_node * driver_list = query_card_and_driver_using_sysfs();
 
+   printf("\n*** Primary Check 2: Check that /dev/i2c-* exist and writable ***\n");
    check_i2c_devices(driver_list);
+   printf("\n*** Primary Check 3: Check that module i2c_dev is loaded ***\n");
    check_i2c_dev_module(driver_list);
+   printf("\n*** Primary Check 4: Driver specific checks ***\n");
    driver_specific_tests(driver_list);
 
-   query_packages_and_modules();
+   printf("\n*** Primary Check 5: Installed packages ***\n");
+   query_packages();
    puts("");
-   printf("Gathering card and driver information...\n");
+   printf("\n*** Additional probes ***\n");
+   // printf("Gathering card and driver information...\n");
    puts("");
    query_proc_modules_for_video();
    puts("");
    query_card_and_driver_using_lspci();
    puts("");
-
    query_loaded_modules_using_sysfs();
    query_i2c_bus_using_sysfs();
 
@@ -905,8 +904,6 @@ void query_card_and_driver() {
       free(cur_node);
       cur_node = next_node;
    }
-
-
 }
 
 

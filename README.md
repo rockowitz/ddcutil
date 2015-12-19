@@ -120,7 +120,7 @@ Some versions of i2c-tools create group i2c, and make that the group for /dev/i2
 For testing, it may be simpler to give everyone permission to write to /dev/i2c-* for the current boot:
     sudo chmod a+rw /dev/i2c-*
 
-See resources/etc/udev/rules.d
+If needed, a udev rule for giving group i2c rw permission on the /i2c-dev-* devices can be found in distribution file resources/etc/udev/rules.d/45-i2c-tools.rules.   You can copy this file to /etc/udev/rules.c. 
 
 The following section from the udev documentation 
 (<https://www.kernel.org/pub/linux/utils/kernel/hotplug/udev/udev.html>) may be helpful:
@@ -129,9 +129,31 @@ The following section from the udev documentation
 
 ### Kernel Modules
 
-If using an open source driver, kernel module i2c-dev must be loaded.
+If using an open source driver, kernel module i2c-dev must be loaded.  Add the line "i2c_dev" to /etc/modules or a file containing the single line:
+~~~
+i2c_dev
+~~~
+to directory /etc/modules-load.d
 
-TODO: discuss modprobe
+SysV init vs systemd?
+
+From the freedesktop.org systemd doc: 
+
+>systemd-modules-load.service(8) reads files from the [following]directories which contain kernel modules to load during boot in a static list. 
+
+>/etc/modules-load.d/*.conf
+>/run/modules-load.d/*.conf
+>/usr.lib.modules-load.d/*.conf
+
+>Each configuration file is named in the style of /etc/modules-load.d/program.conf. Note that it is usually a better idea to rely on the automatic module loading by PCI IDs, USB IDs, DMI IDs or similar triggers encoded in the kernel modules themselves instead of static configuration like this. In fact, most modern kernel modules are prepared for automatic loading already.
+
+
+
+
+
+
+
+TODO: initrd?
 
 ### Building with ADL support
 
@@ -165,7 +187,7 @@ When using Nvidia's proprietary driver, I2C communication fails on some cards.  
 ~~~
  Option     "RegistryDwords"  "RMUseSwI2c=0x01; RMI2cSpeed=100"
 ~~~
- A file for making this change is 50-nvidia_i2c.conf found in the /resources directory.  
+ A file for making this change is 50-nvidia_i2c.conf found in distribution directory resources/etc/X11/xorg.conf.d  
 ~~~
 Section "Device"
    Driver "nvidia"
