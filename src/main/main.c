@@ -83,19 +83,29 @@ void initialize() {
    i2c_set_io_strategy(DEFAULT_I2C_IO_STRATEGY);
 }
 
-void report_stats() {
-   // retry related stats
-   ddc_show_max_tries();
-   ddc_report_write_only_stats();
-   ddc_report_write_read_stats();
-   ddc_report_multi_part_read_stats();
-   puts("");
-   show_all_status_counts();   // error code counts
-   report_sleep_strategy_stats(0);
-   puts("");
-   report_io_call_stats(0);
-   report_sleep_stats(0);
+void report_stats(Stats_Type stats) {
+   if (stats & STATS_TRIES) {
+      puts("");
+      // retry related stats
+      ddc_show_max_tries();
+      ddc_report_write_only_stats();
+      ddc_report_write_read_stats();
+      ddc_report_multi_part_read_stats();
+   }
+   if (stats & STATS_ERRORS) {
+      puts("");
+      show_all_status_counts();   // error code counts
+   }
+   if (stats & STATS_CALLS) {
+      puts("");
+      report_sleep_strategy_stats(0);
+      puts("");
+      report_io_call_stats(0);
+      puts("");
+      report_sleep_stats(0);
+   }
 
+   puts("");
    long elapsed_nanos = cur_realtime_nanosec() - start_time_nanos;
    printf("Elapsed milliseconds (nanoseconds):             %10ld  (%10ld)\n",
          elapsed_nanos / (1000*1000),
@@ -243,7 +253,7 @@ int main(int argc, char *argv[]) {
       set_output_level(OL_VERBOSE);
       printf("Setting maximum retries...\n");
       printf("Forcing --stats...\n");
-      parsed_cmd->stats = true;
+      parsed_cmd->stats_types = STATS_ALL;
       printf("This command will take a while to run...\n\n");
       ddc_set_max_write_read_exchange_tries(MAX_MAX_TRIES);
       ddc_set_max_multi_part_read_tries(MAX_MAX_TRIES);
@@ -358,8 +368,8 @@ int main(int argc, char *argv[]) {
       }
    }
 
-   if (parsed_cmd->stats) {
-      report_stats();
+   if (parsed_cmd->stats_types != STATS_NONE) {
+      report_stats(parsed_cmd->stats_types);
       // report_timestamp_history();  // debugging function
    }
 

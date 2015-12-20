@@ -68,7 +68,8 @@ void show_parsed_cmd(Parsed_Cmd * parsed_cmd) {
    rpt_structure_loc("pdid", parsed_cmd->pdid,                        d1);
    if (parsed_cmd->pdid)
        report_display_identifier(parsed_cmd->pdid,                    d2);
-   rpt_bool("stats",       NULL,  parsed_cmd->stats,                  d1);
+   rpt_int_as_hex(
+            "stats",       NULL,  parsed_cmd->stats_types,                  d1);
    rpt_bool("ddcdata",     NULL,  parsed_cmd->ddcdata,                d1);
 #ifdef OLD
    rpt_str( "msg_level",   NULL,  msg_level_name(parsed_cmd->msg_level), d1);

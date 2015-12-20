@@ -381,7 +381,7 @@ void show_specific_status_counts(Status_Code_Counts * pcounts) {
    printf("Total errors: %d\n", pcounts->total_status_counts);
    assert(summed_ct == pcounts->total_status_counts);
    g_free(keysp);
-   fprintf(stdout,"\n");
+   // fprintf(stdout,"\n");
 }
 
 

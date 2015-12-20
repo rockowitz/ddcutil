@@ -52,13 +52,17 @@ static char * adlwork = NULL;
 static Output_Level output_level = OL_DEFAULT;
 static int     iAdapterIndex = -1;
 static int     iDisplayIndex = -1;
+static Stats_Type stats_work = STATS_NONE;
 
 
 // Callback function for processing an --adl argument
-gboolean adl_arg_func(const gchar* option_name, const gchar* value, gpointer data, GError** error) {
+gboolean adl_arg_func(const gchar* option_name,
+                      const gchar* value,
+                      gpointer     data,
+                      GError**     error)
+{
    bool debug = true;
-   if (debug)
-      DBGMSG("option_name=|%s|, value|%s|, data=%p", option_name, value, data);
+   DBGMSF(debug, "option_name=|%s|, value|%s|, data=%p", option_name, value, data);
 
    // int iAdapterIndex;
    // int iDisplayIndex;
@@ -80,10 +84,13 @@ gboolean adl_arg_func(const gchar* option_name, const gchar* value, gpointer dat
 
 
 // Callback function for processing --terse, --verbose, --program
-gboolean output_arg_func(const gchar* option_name, const gchar* value, gpointer data, GError** error) {
+gboolean output_arg_func(const gchar* option_name,
+                         const gchar* value,
+                         gpointer     data,
+                         GError**     error)
+{
    bool debug = false;
-   if (debug)
-      DBGMSG("option_name=|%s|, value|%s|, data=%p", option_name, value, data);
+   DBGMSF(debug, "option_name=|%s|, value|%s|, data=%p", option_name, value, data);
 
    if (streq(option_name, "-v") || streq(option_name, "--verbose") )
       output_level = OL_VERBOSE;
@@ -97,6 +104,42 @@ gboolean output_arg_func(const gchar* option_name, const gchar* value, gpointer 
    return true;
 }
 
+// Callback function for processing --stats
+gboolean stats_arg_func(const    gchar* option_name,
+                        const    gchar* value,
+                        gpointer data,
+                        GError** error)
+{
+   bool debug = false;
+   DBGMSF(debug,"option_name=|%s|, value|%s|, data=%p", option_name, value, data);
+   bool ok = true;
+
+   if (value) {
+      char * v2 = strupper(strdup(value));
+      if ( streq(v2,"ALL") ) {
+         stats_work |= STATS_ALL;
+      }
+      else if (streq(v2,"TRY") || is_abbrev(v2, "TRIES",3)) {
+         stats_work |= STATS_TRIES;
+      }
+      else if ( is_abbrev(v2, "CALLS",3)) {
+         stats_work |= STATS_CALLS;
+      }
+      else if (streq(v2,"ERRS") || is_abbrev(v2, "ERRORS",3)) {
+         stats_work |= STATS_ERRORS;
+      }
+      else
+         ok = false;
+   }
+   else {
+      stats_work = STATS_ALL;
+   }
+
+   if (!ok) {
+      g_set_error(error, G_OPTION_ERROR, G_OPTION_ERROR_FAILED, "invalid stats type: %s", value );
+   }
+   return ok;
+}
 
 /* Primary parsing function
  *
@@ -149,7 +192,8 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
       {"bus",     'b',  0, G_OPTION_ARG_INT,      &buswork,          "I2C bus number",              "busNum" },
 //    {"adl",     'a',  0, G_OPTION_ARG_CALLBACK, adl_arg_func,      "ADL adapter and display indexes", "adapterIndex.displayIndex"},
       {"adl",     'a',  0, G_OPTION_ARG_STRING,   &adlwork,          "ADL adapter and display indexes", "adapterIndex.displayIndex"},
-      {"stats",   's',  0, G_OPTION_ARG_NONE,     &stats_flag,       "Show retry statistics", NULL},
+      {"stats",   's',  G_OPTION_FLAG_OPTIONAL_ARG,
+                           G_OPTION_ARG_CALLBACK, stats_arg_func,    "Show retry statistics",    "stats type"},
       {"ddc",     '\0', 0, G_OPTION_ARG_NONE,     &ddc_flag,         "Report DDC protocol and data errors", NULL},
       {"verbose", 'v',  G_OPTION_FLAG_NO_ARG,
                            G_OPTION_ARG_CALLBACK, output_arg_func,   "Show extended detail",           NULL},
@@ -194,8 +238,10 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
    const char * pieces4[] = {monitor_selection_option_help,
                              tracing_multiple_call_option_help,
                              "\n",
+                             stats_multiple_call_option_help,
+                             "\n",
                              retries_option_help};
-   char * help_description = strjoin(pieces4, 4, NULL);
+   char * help_description = strjoin(pieces4, 6, NULL);
 
    // on --help, comes after usage line, before option detail
    g_option_context_set_summary(context, help_summary);
@@ -215,13 +261,14 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
    // DBGMSG("dispwork=%d", dispwork);
    // DBGMSG("stats_flag=%d", stats_flag);
    // DBGMSG("output_level=%d", output_level);
+   // DBGMSG("stats3=0x%02x",stats_work);
 
    int explicit_display_spec_ct = 0;  // number of ways the display is explicitly specified
 
    parsed_cmd->ddcdata      = ddc_flag;
    parsed_cmd->force        = force_flag;
    parsed_cmd->output_level = output_level;
-   parsed_cmd->stats        = stats_flag;
+   parsed_cmd->stats_types       = stats_work;
    parsed_cmd->sleep_strategy = sleep_strategy_work;
 
    if (adlwork) {

@@ -47,6 +47,8 @@
 #define CMDID_ENVIRONMENT 12
 #define CMDID_END         13    // 1 past last valid CMDID value
 
+typedef enum {STATS_NONE=0x00, STATS_TRIES=0x01, STATS_ERRORS=0x02, STATS_CALLS=0x04, STATS_ALL=0xFF} Stats_Type;
+
 
 #define PARSED_CMD_MARKER  "PCMD"
 typedef
@@ -55,7 +57,7 @@ struct {
    int                 cmd_id;
    int                 argct;
    char *              args[MAX_ARGS];
-   bool                stats;
+   Stats_Type          stats_types;
    bool                ddcdata;
 #ifdef OLD
    Msg_Level           msg_level;
