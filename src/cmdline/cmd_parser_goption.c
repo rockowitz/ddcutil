@@ -54,7 +54,7 @@ static int     iAdapterIndex = -1;
 static int     iDisplayIndex = -1;
 static Stats_Type stats_work = STATS_NONE;
 
-
+// not currently used
 // Callback function for processing an --adl argument
 gboolean adl_arg_func(const gchar* option_name,
                       const gchar* value,
@@ -76,7 +76,7 @@ gboolean adl_arg_func(const gchar* option_name,
    if (!ok) {
       // *error = G_OPTION_ERROR_FAILED;
       // alt?
-      g_set_error(error, 0, G_OPTION_ERROR_FAILED, "bad adl" );
+      g_set_error(error, G_OPTION_ERROR, G_OPTION_ERROR_FAILED, "bad adl" );
    }
 
    return ok;
