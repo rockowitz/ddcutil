@@ -4,6 +4,7 @@ oldsrc/
 build-debug/
 .tmp
 temp*
+*.tmp
 perf.data
 *.o
 *.lo

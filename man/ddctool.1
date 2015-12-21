@@ -40,7 +40,7 @@ ddctool \- Query and change monitor settings
 .IR  trace-class ]
 .RB [ "-V" | "--version" ]
 .RB [ "h"  | "--help" ]
-.RB [ detect | listvcp | capabilities | getvcp 
+.BR detect " |  " listvcp  " | " capabilities " | " getvcp 
 .RI [ "feature-code" | "feature-group" ]
 .RB | setvcp 
 .I  feature-code new-value
@@ -49,7 +49,9 @@ ddctool \- Query and change monitor settings
 .RI [ filename ]
 |
 .BI "loadvcp " filename
-]
+] |
+.BR environment " | " interrogate 
+
 
 
 .\" ALT USING .SY .OP
@@ -113,6 +115,12 @@ If no file name is specified, one is generated and the file is saved <describe l
 .BI "loadvcp " filename
 Set VCP feature values from a file.  The monitor to which the values will be applied is determined by the monitor identification stored in the file. 
 If the monitor is not attached, nothing happens.
+.TP
+.B "environment "
+Probe the \fBddctool\fP installation environment.
+.TP
+.B "interrogate "
+Collect maximum information for problem diagnosis.
 .PP
 
 .SH COMMAND ARGUMENTS
@@ -192,8 +200,10 @@ Machine readable output format.  Not normally used.
 .PP
 Options for diagnostic output.
 .TQ
-.B --stats
-Report execution statistics. 
+.BR --stats " [" all | errors | tries | calls ]
+Report execution statistics.  If no argument is specified, or ALL is specified, then all statistics are 
+output.  
+.br Specify this option multiple times to report multiple statistics groups.
 .br
 I2C bus communication is an inherently unreliable.  It is the responsibility of the program using the bus 
 to manage retries in case of failure.  This option reports retry counts and various performance statistics.
@@ -269,30 +279,34 @@ VMware?
 qemu?
 
 .SH EXAMPLES
+.\" What do .EX and .EE do?
 
 .B ddctool detect
-
+.sp 0
 Identify all attached monitors.
 .sp 4
-.EX
 .B ddctool getvcp supported
-.EE
-
+..sp 1
+.br
 Show all settings that the default monitor supports and that \fBddctool\fP understands.
-.SP 2
-.EX
+.PP
+.sp 0
 .B ddctpp getvcp 10 --display 2
-.EE
 .br
 Query the luminosity value of the second monitor. 
 
 .B   ddctool setvcp 10 30 --bus 4
-
+.sp 0
 Set the luminosity value for the monitor on bus /dev/i2c-4. 
 
 .B ddctool listvcp
-
+.sp 0
 List all VCP features that `ddctool` understands. 
+
+.B interrrogate > ~/ddctool.out 
+.sp 0
+Collect maximum information about monitor capabilities and the execution environment, and 
+direct the output to a file.
 
 
 .SH DIAGNOSTICS
