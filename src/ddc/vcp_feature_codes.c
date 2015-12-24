@@ -47,7 +47,7 @@ static Feature_Value_Entry x14_color_preset_absolute_values[];
        Feature_Value_Entry xc8_display_controller_type_values[];
 bool default_table_feature_detail_function(Buffer * data, Version_Spec vcp_version, char** presult);
 bool format_feature_detail_debug_continuous(
-         Interpreted_Vcp_Code * code_info,  Version_Spec vcp_version, char * buffer, int bufsz);
+         Interpreted_Nontable_Vcp_Response * code_info,  Version_Spec vcp_version, char * buffer, int bufsz);
 
 
 //
@@ -171,7 +171,7 @@ Format_Table_Feature_Detail_Function get_table_feature_detail_function( VCP_Feat
 bool vcp_format_nontable_feature_detail(
         VCP_Feature_Table_Entry * vcp_entry,
         Version_Spec              vcp_version,
-        Interpreted_Vcp_Code *    code_info,
+        Interpreted_Nontable_Vcp_Response *    code_info,
         char *                    buffer,
         int                       bufsz)
 {
@@ -520,7 +520,7 @@ char * lookup_value_name_new(
 // used when the value is calculated using the SL and SH bytes, but we haven't
 // written a full interpretation function
 bool format_feature_detail_debug_sl_sh(
-        Interpreted_Vcp_Code * code_info,  Version_Spec vcp_version, char * buffer, int bufsz)
+        Interpreted_Nontable_Vcp_Response * code_info,  Version_Spec vcp_version, char * buffer, int bufsz)
 {
     snprintf(buffer, bufsz,
              "SL: 0x%02x ,  SH: 0x%02x",
@@ -533,7 +533,7 @@ bool format_feature_detail_debug_sl_sh(
 // For debugging features marked as Continuous
 // Outputs both the byte fields and calculated cur and max values
 bool format_feature_detail_debug_continuous(
-        Interpreted_Vcp_Code * code_info,  Version_Spec vcp_version, char * buffer, int bufsz)
+        Interpreted_Nontable_Vcp_Response * code_info,  Version_Spec vcp_version, char * buffer, int bufsz)
 {
    snprintf(buffer, bufsz,
             "mh=0x%02x, ml=0x%02x, sh=0x%02x, sl=0x%02x, max value = %5d, cur value = %5d",
@@ -545,7 +545,7 @@ bool format_feature_detail_debug_continuous(
 
 
 bool format_feature_detail_debug_bytes(
-        Interpreted_Vcp_Code * code_info, Version_Spec vcp_version, char * buffer, int bufsz)
+        Interpreted_Nontable_Vcp_Response * code_info, Version_Spec vcp_version, char * buffer, int bufsz)
 {
    snprintf(buffer, bufsz,
             "mh=0x%02x, ml=0x%02x, sh=0x%02x, sl=0x%02x",
@@ -561,7 +561,7 @@ bool format_feature_detail_debug_bytes(
 // used when the value is just the SL byte, but we haven't
 // written a full interpretation function
 bool format_feature_detail_sl_byte(
-        Interpreted_Vcp_Code * code_info, Version_Spec vcp_version, char * buffer, int bufsz)
+        Interpreted_Nontable_Vcp_Response * code_info, Version_Spec vcp_version, char * buffer, int bufsz)
 {
     snprintf(buffer, bufsz,
              "Value: 0x%02x" ,
@@ -584,7 +584,7 @@ bool format_feature_detail_sl_byte(
  *    true if formatting successful, false if not
  */
 bool format_feature_detail_sl_lookup_new(
-        Interpreted_Vcp_Code *  code_info,
+        Interpreted_Nontable_Vcp_Response *  code_info,
         Version_Spec            vcp_version,
         char *                  buffer,
         int                     bufsz)
@@ -608,7 +608,7 @@ bool format_feature_detail_sl_lookup_new(
  *    true
  */
 bool format_feature_detail_standard_continuous(
-        Interpreted_Vcp_Code * code_info, Version_Spec vcp_version, char * buffer, int bufsz)
+        Interpreted_Nontable_Vcp_Response * code_info, Version_Spec vcp_version, char * buffer, int bufsz)
 {
    // TODO: calculate cv, mv here from bytes
    int cv = code_info->cur_value;
@@ -629,7 +629,7 @@ bool format_feature_detail_standard_continuous(
 
 // 0x02
 bool format_feature_detail_new_control_value(    // 0x02
-        Interpreted_Vcp_Code * code_info, Version_Spec vcp_version, char * buffer, int bufsz)
+        Interpreted_Nontable_Vcp_Response * code_info, Version_Spec vcp_version, char * buffer, int bufsz)
 {
    char * name = NULL;
    switch(code_info->sl) {
@@ -648,7 +648,7 @@ bool format_feature_detail_new_control_value(    // 0x02
 
 // 0x14
 bool format_feature_detail_select_color_preset(
-      Interpreted_Vcp_Code * code_info, Version_Spec vcp_version, char * buffer, int bufsz)
+      Interpreted_Nontable_Vcp_Response * code_info, Version_Spec vcp_version, char * buffer, int bufsz)
 {
    bool debug = false;
    if (debug)
@@ -737,7 +737,7 @@ bool format_feature_detail_select_color_preset(
 
 // 0xc0
 bool format_feature_detail_display_usage_time(
-        Interpreted_Vcp_Code * code_info, Version_Spec vcp_version, char * buffer, int bufsz)
+        Interpreted_Nontable_Vcp_Response * code_info, Version_Spec vcp_version, char * buffer, int bufsz)
 {
    assert (code_info->vcp_code == 0xc0);
    uint usage_time;
@@ -763,7 +763,7 @@ bool format_feature_detail_display_usage_time(
 
 // 0xc8
 bool format_feature_detail_display_controller_type(
-        Interpreted_Vcp_Code * info,  Version_Spec vcp_version, char * buffer, int bufsz)
+        Interpreted_Nontable_Vcp_Response * info,  Version_Spec vcp_version, char * buffer, int bufsz)
 {
    assert(info->vcp_code == 0xc8);
    bool ok = true;
@@ -786,7 +786,7 @@ bool format_feature_detail_display_controller_type(
 
 // xc9, xdf
 bool format_feature_detail_version(
-        Interpreted_Vcp_Code * code_info, Version_Spec vcp_version, char * buffer, int bufsz)
+        Interpreted_Nontable_Vcp_Response * code_info, Version_Spec vcp_version, char * buffer, int bufsz)
 {
    int version_number  = code_info->sh;
    int revision_number = code_info->sl;
@@ -1091,30 +1091,95 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
       .formatter=format_feature_detail_sl_lookup_new,
        .nc_sl_values = x1e_x1f_auto_setup_values,
    },
+
    { .code=0x20,
+     .vcp_spec_groups = VCP_SPEC_GEOMETRY,
+     // Group 8.4 Geometry, identical in 2.0, 3.0, 2.2 except for name
+     // When did name change to include "(phase)"?  Assuming 2.1
      .name="Horizontal Position",
      .flags=VCP_RW | VCP_CONTINUOUS,
       .formatter=format_feature_detail_standard_continuous,
+
+     .global_flags=VCP_RW,
+     .v20_flags = VCP2_STD_CONT,
+     .v20_name="Horizontal Position",
+     .v21_name="Horizontal Position (Phase)",
    },
    { .code=0x22,
-     .name="Width",
+     .vcp_spec_groups = VCP_SPEC_GEOMETRY,
+     // Group 8.4 Geometry, identical in 2.0, 3.0, 2.2
+     .name="Horizontal Size",
      .flags=VCP_RW | VCP_CONTINUOUS,
-      .formatter=format_feature_detail_standard_continuous,
+     .formatter=format_feature_detail_standard_continuous,
+
+     .global_flags=VCP_RW,
+     .v20_name="Horizontal Size",
+     .v20_flags = VCP2_STD_CONT,
    },
-   { .code=0x24,
+   { // Group 8.4 Geometry, identical in 2.0, 3.0, 2.2
+     .code=0x24,
+     .vcp_spec_groups = VCP_SPEC_GEOMETRY,
      .name="Horizontal Pincushion",
      .flags=VCP_RW | VCP_CONTINUOUS,
       .formatter=format_feature_detail_standard_continuous,
+
+     .global_flags=VCP_RW,
+     .v20_flags = VCP2_STD_CONT,
+     .v20_name="Horizontal Pincushion",
    },
-   { .code=0x26,
+   { // Group 8.4 Geometry, identical in 2.0, 3.0, 2.2
+     .code=0x26,
+     .vcp_spec_groups = VCP_SPEC_GEOMETRY,
      .name="Horizontal Pincushion Balance",
      .flags=VCP_RW | VCP_CONTINUOUS,
       .formatter=format_feature_detail_standard_continuous,
+
+     .global_flags=VCP_RW,
+     .v20_flags = VCP2_STD_CONT,
+     .v20_name="Horizontal Pincushion Balance",
    },
-   { .code=0x28,
+   { // Group 8.4 Geometry, name changed in 3.0 & 2.2 vs 2.0  what should it be for 2.1?
+     // assume it changed in 2.1
+     .code=0x28,
+     .vcp_spec_groups = VCP_SPEC_GEOMETRY,
+     .name="Horizontal Convergence",
+     .flags=VCP_RW | VCP_CONTINUOUS,
+      .formatter=format_feature_detail_standard_continuous,
+
+     .v20_flags = VCP2_STD_CONT,
+     .v20_name="Horizontal Convergence",
+     .v21_name="Horizontal Convergence R/B",
+   },
+   { .code=0x29,
+     .vcp_spec_groups = VCP_SPEC_GEOMETRY,
+     // when was this added?  2.1 or 3.0?   assuming 2.1
      .name="Horizontal Convergence M/G",
      .flags=VCP_RW | VCP_CONTINUOUS,
       .formatter=format_feature_detail_standard_continuous,
+
+     .global_flags=VCP_RW,
+     .v21_name="Horizontal Convergence M/G",
+     .v21_flags=VCP2_STD_CONT,
+   },
+   { .code = 0x2a,
+     .vcp_spec_groups = VCP_SPEC_GEOMETRY,
+     // Group 8.4 Geometry, identical in 3.0, 2.2
+     .name = "Horizontal Linearity",
+     .flags = VCP_RW | VCP_CONTINUOUS,
+
+     .global_flags=VCP_RW,
+     .v20_flags = VCP2_STD_CONT,
+     .v20_name="Horizontal Linearity",
+   },
+   { // Group 8.4 Geometry
+     .code = 0x2c,
+     .vcp_spec_groups = VCP_SPEC_GEOMETRY,
+     .name = "Horizontal Linearity Balance",
+     .flags = VCP_RW | VCP_CONTINUOUS,
+
+     .global_flags=VCP_RW,
+     .v20_flags = VCP2_STD_CONT,
+     .v20_name = "Horizontal Linearity Balance",
    },
    { .code=0x2e,
      .name="Gray scale expansion",
@@ -1122,24 +1187,92 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
       .formatter=format_feature_detail_debug_bytes,
    },
    { .code=0x30,
+     .vcp_spec_groups = VCP_SPEC_GEOMETRY,
+     // Group 8.4 Geometry
+     // When did name change from 2.0? assuming 2.1
      .name="Vertical Position",
      .flags=VCP_RW | VCP_CONTINUOUS,
       .formatter=format_feature_detail_standard_continuous,
+
+     .global_flags=VCP_RW,
+     .v20_flags = VCP2_STD_CONT,
+     .v20_name="Vertical Position",
+     .v21_name="Vertical Position (Phase)",
    },
    { .code=0x32,
-     .name="Height",
+     .vcp_spec_groups = VCP_SPEC_GEOMETRY,
+     // Group 8.4 Geometry.  Did name change with 2.1 or 3.0/2.2? - assuming 2.1
+     .name="Vertical Size",
      .flags=VCP_RW | VCP_CONTINUOUS,
       .formatter=format_feature_detail_standard_continuous,
+
+     .global_flags=VCP_RW,
+     .v20_flags=VCP2_STD_CONT,
+     .v20_name="Vertical Size",
+     .v21_name="Height",
    },
-   { .code=0x28,
-     .name="Vertical Convergence M/G",
+   { .code=0x34,
+     // Group 8.4 Geometry.  Identical in 2.0, 3.0, 2.2
+     .name = "Vertical Pincushion",
      .flags=VCP_RW | VCP_CONTINUOUS,
-      .formatter=format_feature_detail_standard_continuous,
+
+     .global_flags=VCP_RW,
+     .v20_flags = VCP2_STD_CONT,
+     .v20_name = "Vertical Pincushion",
+   },
+   { .code=0x36,
+     .vcp_spec_groups = VCP_SPEC_GEOMETRY,
+     // Group 8.4 Geometry.
+     .name = "Vertical Pincushion Balance",
+     .flags=VCP_RW | VCP_CONTINUOUS,
+
+     .global_flags=VCP_RW,
+     .v20_flags = VCP2_STD_CONT,
+     .v20_name = "Vertical Pincushion Balance",
    },
    { .code=0x38,
-     .name="Vertical Convergence R/B",
+     .vcp_spec_groups = VCP_SPEC_GEOMETRY,
+     // Group 8.4 Geometry.  Assume name changed with 2.1
+     .name="Vertical Convergence",
      .flags=VCP_RW | VCP_CONTINUOUS,
-      .formatter=format_feature_detail_standard_continuous,
+     .formatter=format_feature_detail_standard_continuous,
+
+     .global_flags=VCP_RW,
+     .v20_flags=VCP2_STD_CONT,
+     .v20_name="Vertical Convergence",
+     .v21_name="Vertical Convergence R/B",
+   },
+   { .code=0x39,
+     .vcp_spec_groups = VCP_SPEC_GEOMETRY,
+     // Group 8.4 Geometry.  Not in 2.0.  Assume added in 2.1
+     .flags=VCP_RW | VCP_CONTINUOUS,
+     .formatter=format_feature_detail_standard_continuous,
+
+     .global_flags=VCP_RW,
+     .v21_name="Vertical Convergence M/G",
+     .v21_flags=VCP2_STD_CONT,
+   },
+   { .code=0x3a,
+     .vcp_spec_groups = VCP_SPEC_GEOMETRY,
+     // Group 8.4 Geometry
+     .name = "Vertical Linearity",
+     .flags = VCP_RW | VCP_CONTINUOUS,
+     .formatter=format_feature_detail_standard_continuous,
+
+     .global_flags=VCP_RW,
+     .v20_flags=VCP2_STD_CONT,
+     .v20_name = "Vertical Linearity",
+   },
+   { .code=0x3c,
+     .vcp_spec_groups = VCP_SPEC_GEOMETRY,
+     // Group 8.4 Geometry
+     .name = "Vertical Linearity Balance",
+     .flags = VCP_RW | VCP_CONTINUOUS,
+     .formatter=format_feature_detail_standard_continuous,
+
+     .global_flags=VCP_RW,
+     .v20_flags=VCP2_STD_CONT,
+     .v20_name = "Vertical Linearity Balance",
    },
    { .code=0x3e,
      .name="Clock phase",
@@ -1147,35 +1280,108 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
       .formatter=format_feature_detail_standard_continuous,
    },
    { .code=0x40,
+     .vcp_spec_groups = VCP_SPEC_GEOMETRY,
+     // Group 8.4 Geometry
+     // When did name change from 2.0?   assume 2.1
      .name="Horizontal Parallelogram",
      .flags=VCP_RW | VCP_CONTINUOUS,
       .formatter=format_feature_detail_standard_continuous,
+
+      .global_flags=VCP_RW,
+      .v20_flags=VCP2_STD_CONT,
+     .v20_name="Key Balance",  // 2.0
+     .v21_name="Horizontal Parallelogram",
    },
    { .code=0x42,
+     .vcp_spec_groups = VCP_SPEC_GEOMETRY,
+     // Group 8.4 Geometry
+     // When did name change from 2.0?   assume 2.1
      .name="Horizontal Keystone",
      .flags=VCP_RW | VCP_CONTINUOUS,
       .formatter=format_feature_detail_standard_continuous,
+
+     .global_flags=VCP_RW,
+     .v20_flags=VCP2_STD_CONT,
+     .v20_name="Horizontal Trapezoid",
+     .v21_name="Horizontal Keystone",   // ??
    },
    { .code=0x43,
+     .vcp_spec_groups = VCP_SPEC_GEOMETRY,
+     // Group 8.4 Geometry
+     // When did name change from 2.0?   assume 2.1
      .name="Vertical Keystone",
      .flags=VCP_RW | VCP_CONTINUOUS,
       .formatter=format_feature_detail_standard_continuous,
+
+     .global_flags=VCP_RW,
+     .v20_flags=VCP2_STD_CONT,
+     .v20_name="Vertical Trapezoid",
+     .v21_name="Vertical Keystone",   // ??
    },
    { .code=0x44,
+     .vcp_spec_groups = VCP_SPEC_GEOMETRY,
+     // Group 8.4 Geometry
+     // When did name change from 2.0?   assume 2.1
      .name="Rotation",
      .flags=VCP_RW | VCP_CONTINUOUS,
       .formatter=format_feature_detail_standard_continuous,
+
+     .global_flags=VCP_RW,
+     .v20_flags=VCP2_STD_CONT,
+     .v20_name="Tilt (rotation)",
+     .v21_name="Rotation",   // ??
    },
    { .code=0x46,
+     .vcp_spec_groups = VCP_SPEC_GEOMETRY,
+     // Group 8.4 Geometry
+     // When did name change from 2.0?   assume 2.1
      .name="Top Corner Flare",
      .flags=VCP_RW | VCP_CONTINUOUS,
       .formatter=format_feature_detail_standard_continuous,
+
+     .global_flags=VCP_RW,
+     .v20_flags=VCP2_STD_CONT,
+     .v20_name="Top Corner",
+     .v21_name="Top Corner Flare",   // ??
    },
-   { .code=0x4a,
-     .name="Bottom Corner Flare",
+   { .code=0x48,
+     .vcp_spec_groups = VCP_SPEC_GEOMETRY,
+     // Group 8.4 Geometry
+     // Data from 2.0 spec only, need to check others
+     .name="Placeholder",
      .flags=VCP_RW | VCP_CONTINUOUS,
       .formatter=format_feature_detail_standard_continuous,
+
+     .global_flags=VCP_RW,
+     .v20_flags=VCP2_STD_CONT,
+     .v20_name="Top Corner Balance",
    },
+   { .code=0x4a,
+     .vcp_spec_groups = VCP_SPEC_GEOMETRY,
+     // Group 8.4 Geometry
+     // When did name change from 2.0?   assume 2.1
+     .name="Bottom Corner Flare",
+     .flags=VCP_RW | VCP_CONTINUOUS,
+     .formatter=format_feature_detail_standard_continuous,
+
+     .global_flags=VCP_RW,
+     .v20_flags=VCP2_STD_CONT,
+     .v20_name="Bottom Corner",
+     .v21_name="Bottom Corner Flare",   // ??
+   },
+   { .code=0x4c,
+     .vcp_spec_groups = VCP_SPEC_GEOMETRY,
+     // Group 8.4 Geometry
+     // Data from 2.0 spec only, need to check others
+     .name="Placeholder",
+     .flags=VCP_RW | VCP_CONTINUOUS,
+     .formatter=format_feature_detail_standard_continuous,
+
+     .global_flags=VCP_RW,
+     .v20_flags=VCP2_STD_CONT,
+     .v20_name="Bottom Corner Balance",
+   },
+
    { .code=0x52,
      .name="Active control",
      .flags=VCP_RO | VCP_NON_CONT,
@@ -1264,6 +1470,32 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
      .flags=VCP_RO | VCP_TABLE      | VCP_COLORMGT,
       .table_formatter=format_feature_detail_x73_lut_size,
    },
+   { .code=0x7e,
+     .vcp_spec_groups = VCP_SPEC_GEOMETRY,
+     // Section 8.4 Geometry
+     // data from v2.0 spec
+     // not in v3.0 spec
+     // when was it deleted?  v3.0 or v2.1?   For safety assume 3.0
+     .name="Placeholder",
+     .flags=VCP_RW | VCP_CONTINUOUS,
+
+     .global_flags=VCP_RW,
+     .v20_flags=VCP2_STD_CONT,
+     .v30_flags=VCP2_DEPRECATED,
+     .v22_flags=VCP2_DEPRECATED,
+     .v20_name="Trapezoid",
+   },
+   { .code=0x80,
+     .vcp_spec_groups = VCP_SPEC_GEOMETRY,
+     // Section 8.4 Geometry
+     // data from v2.0 spec, need to check others
+     .name="Placeholder",
+     .flags=VCP_RW | VCP_CONTINUOUS,
+
+     .global_flags=VCP_RW,
+     .v20_flags=VCP2_STD_CONT,
+     .v20_name="Keystone",
+   },
    { .code=0x87,
      .name="Sharpness",
      .flags=VCP_RW | VCP_CONTINUOUS               ,
@@ -1277,7 +1509,7 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
    { .code=0x90,
      .name="Hue",
      .flags=VCP_RW | VCP_CONTINUOUS | VCP_COLORMGT,
-      .formatter=format_feature_detail_standard_continuous,
+     .formatter=format_feature_detail_standard_continuous,
    },
    { .code=0x9b,
      .name="6 axis hue: Red",
@@ -1531,7 +1763,7 @@ char * lookup_value_name(Byte feature_code, Byte sl_value) {
 // data seen does not correspond to the MCCS spec
 // values taken from EloView Remote Mgt Local Cmd Set document
 bool format_feature_detail_sl_lookup(
-      Interpreted_Vcp_Code * code_info,  Version_Spec vcp_version, char * buffer, int bufsz)
+      Interpreted_Nontable_Vcp_Response * code_info,  Version_Spec vcp_version, char * buffer, int bufsz)
 {
    assert(code_info->vcp_code == 0x60);
    char * s = lookup_value_name(code_info->vcp_code, code_info->sl);
@@ -1546,7 +1778,7 @@ bool format_feature_detail_sl_lookup(
 // .formatter_v3 = table
 
 bool format_feature_detail_input_source(
-         Interpreted_Vcp_Code * code_info,  Version_Spec vcp_version, char * buffer, int bufsz)
+         Interpreted_Nontable_Vcp_Response * code_info,  Version_Spec vcp_version, char * buffer, int bufsz)
 {
    assert(code_info->vcp_code == 0x60);
 
@@ -1565,7 +1797,7 @@ bool format_feature_detail_input_source(
 #ifdef OLD
 // 0x1e, 0x1f
 bool format_feature_detail_auto_setup(
-      Interpreted_Vcp_Code * code_info, Version_Spec vcp_version, char * buffer, int bufsz)
+      Interpreted_Nontable_Vcp_Response * code_info, Version_Spec vcp_version, char * buffer, int bufsz)
 {
    assert(code_info->vcp_code == 0x1e || code_info->vcp_code == 0x1f);
    char * s = NULL;
@@ -1585,7 +1817,7 @@ bool format_feature_detail_auto_setup(
 #ifdef OLD
 // 0xaa
 bool format_feature_detail_screen_orientation(
-      Interpreted_Vcp_Code * code_info, Version_Spec vcp_version, char * buffer, int bufsz)
+      Interpreted_Nontable_Vcp_Response * code_info, Version_Spec vcp_version, char * buffer, int bufsz)
 {
    assert(code_info->vcp_code == 0xaa);
    char * s = NULL;
@@ -1603,7 +1835,7 @@ bool format_feature_detail_screen_orientation(
 
 // 0xb2
 bool format_feature_flat_panel_subpixel_layout(
-      Interpreted_Vcp_Code * code_info, Version_Spec vcp_version, char * buffer, int bufsz)
+      Interpreted_Nontable_Vcp_Response * code_info, Version_Spec vcp_version, char * buffer, int bufsz)
 {
    assert(code_info->vcp_code == 0xb2);
    char * s = NULL;
@@ -1627,7 +1859,7 @@ bool format_feature_flat_panel_subpixel_layout(
 #ifdef OLD
 // 0xb6
 bool format_feature_detail_display_technology_type(
-        Interpreted_Vcp_Code * code_info, Version_Spec vcp_version, char * buffer, int bufsz)
+        Interpreted_Nontable_Vcp_Response * code_info, Version_Spec vcp_version, char * buffer, int bufsz)
 {
    assert(code_info->vcp_code == 0xb6);
    Byte techtype = code_info->sl;
@@ -1654,7 +1886,7 @@ bool format_feature_detail_display_technology_type(
 #ifdef OLD
 // 0xc8
 bool format_feature_detail_display_controller_type(
-        Interpreted_Vcp_Code * info,  Version_Spec vcp_version, char * buffer, int bufsz)
+        Interpreted_Nontable_Vcp_Response * info,  Version_Spec vcp_version, char * buffer, int bufsz)
 {
    assert(info->vcp_code == 0xc8);
    Byte mfg_id = info->sl;
@@ -1696,7 +1928,7 @@ bool format_feature_detail_display_controller_type(
 #ifdef OLD
 // 0xca
 bool format_feature_detail_osd(
-        Interpreted_Vcp_Code * code_info, Version_Spec vcp_version, char * buffer, int bufsz)
+        Interpreted_Nontable_Vcp_Response * code_info, Version_Spec vcp_version, char * buffer, int bufsz)
 {
    assert(code_info->vcp_code == 0xca);
    char * s = NULL;
@@ -1715,7 +1947,7 @@ bool format_feature_detail_osd(
 #ifdef OLD
 // 0xcc
 bool format_feature_detail_osd_language(
-        Interpreted_Vcp_Code * code_info, Version_Spec vcp_version, char * buffer, int bufsz)
+        Interpreted_Nontable_Vcp_Response * code_info, Version_Spec vcp_version, char * buffer, int bufsz)
 {
    assert(code_info->vcp_code == 0xcc);
    char * s = NULL;
@@ -1771,7 +2003,7 @@ bool format_feature_detail_osd_language(
 #ifdef OLD
 // 0xd6
 bool format_feature_detail_power_mode(
-        Interpreted_Vcp_Code * code_info, Version_Spec vcp_version, char * buffer, int bufsz)
+        Interpreted_Nontable_Vcp_Response * code_info, Version_Spec vcp_version, char * buffer, int bufsz)
 {
    assert(code_info->vcp_code == 0xd6);
    Byte techtype = code_info->sl;
@@ -1794,7 +2026,7 @@ bool format_feature_detail_power_mode(
 #ifdef OLD
 // 0xdc
 bool format_feature_detail_display_application(
-        Interpreted_Vcp_Code * code_info, Version_Spec vcp_version, char * buffer, int bufsz)
+        Interpreted_Nontable_Vcp_Response * code_info, Version_Spec vcp_version, char * buffer, int bufsz)
 {
    assert(code_info->vcp_code == 0xdc);
    char * s = NULL;

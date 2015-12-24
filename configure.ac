@@ -11,10 +11,11 @@ m4_define([ddctool_micro_version], [0])
 m4_define([ddctool_version],
           [ddctool_major_version.ddctool_minor_version.ddctool_micro_version])
 
-AC_INIT([dcctool], [ddctool_version], [rockowitz@minsoft.com])
+AC_INIT([ddctool], [ddctool_version], [rockowitz@minsoft.com])
 AC_CONFIG_AUX_DIR(config)
 dnl removed -Werror 
-AM_INIT_AUTOMAKE([-Wall -Wno-extra-portability foreign subdir-objects])
+AM_INIT_AUTOMAKE([1.11 -Wall -Wno-extra-portability foreign subdir-objects])
+AM_SILENT_RULES([yes])
 AM_PROG_AR
 dnl adds support for --enable/disable -static/shared, -with/without-pic configure flags
 LT_INIT
@@ -42,7 +43,7 @@ dnl AC_PROG_LIBTOOL
 dnl GLIB_GSETTINGS
 
 dnl for future: 
-dml GOBJECT_INTROSPECTION_CHECK([0.9.8])
+dnl GOBJECT_INTROSPECTION_CHECK([0.9.8])
 
 dnl appends to GLIB_CFLAGS and GLIB_LIBS the output of pkg-config --cflags|--lib glib-2.0
 PKG_CHECK_MODULES(GLIB,  glib-2.0 >= 2.36) 

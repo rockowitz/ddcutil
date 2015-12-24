@@ -264,7 +264,7 @@ int vcp_garray_emitter(const char * format, ...) {
 // - filters out values that should not be shown
 // - if not OUTPUT_PROG, writes value, including error messages, to terminal
 // returns Interpreted_Vcp_Code for use when OUTPUT_PROG
-Interpreted_Vcp_Code * get_and_filter_vcp_value(
+Interpreted_Nontable_Vcp_Response * get_and_filter_vcp_value(
       Display_Handle *          dh,
       VCP_Feature_Table_Entry * vcp_entry,
       bool                      suppress_unsupported
@@ -275,8 +275,8 @@ Interpreted_Vcp_Code * get_and_filter_vcp_value(
    char * feature_name = vcp_entry->name;
    if (output_level >= OL_VERBOSE)
       printf("\nGetting data for VCP code 0x%02x - %s:\n", vcp_code, feature_name);
-   Interpreted_Vcp_Code * code_info = NULL;
-   Global_Status_Code rc = get_vcp_by_display_handle(dh, vcp_code, &code_info);
+   Interpreted_Nontable_Vcp_Response * code_info = NULL;
+   Global_Status_Code rc = get_nontable_vcp_by_display_handle(dh, vcp_code, &code_info);
    // DBGMSG("get_vcp_by_DisplayRef() returned %p", code_info);
 
    // if (code_info)
@@ -329,7 +329,7 @@ void dump_nontable_vcp(
       printf("(%s) Starting. Getting value for feature 0x%02x, dh=%s, vspec=%d.%d\n",
              __func__, vcp_entry->code, display_handle_repr(dh), vspec.major, vspec.minor);
 
-   Interpreted_Vcp_Code * code_info = get_and_filter_vcp_value(dh, vcp_entry, true /* suppress_unsupported */ );
+   Interpreted_Nontable_Vcp_Response * code_info = get_and_filter_vcp_value(dh, vcp_entry, true /* suppress_unsupported */ );
    if (code_info) {
       char buf[200];
       snprintf(buf, 200, "VCP %02X %5d", vcp_entry->code, code_info->cur_value);
@@ -348,9 +348,8 @@ void show_vcp_for_nontable_vcp_code_table_entry_by_display_handle(
         bool                      suppress_unsupported)    // if set, do not output unsupported features
 {
    bool debug = false;
-   if (debug)
-      printf("(%s) Starting. Getting value for feature 0x%02x, dh=%s, vcp_version=%d.%d\n",
-             __func__, vcp_entry->code, display_handle_repr(dh), vcp_version.major, vcp_version.minor);
+   DBGMSF(debug, "Starting. Getting value for feature 0x%02x, dh=%s, vcp_version=%d.%d\n",
+                 vcp_entry->code, display_handle_repr(dh), vcp_version.major, vcp_version.minor);
 
    Output_Level output_level = get_output_level();
    // hack for now:
@@ -365,8 +364,7 @@ void show_vcp_for_nontable_vcp_code_table_entry_by_display_handle(
       // if (code_info)
       //   free(code_info);   // sometimes causes free failure, crash
    }
-   if (debug)
-      DBGMSG("Done");
+   DBGMSF(debug, "Done");
    // TRCMSG("Done");
 }
 
@@ -474,7 +472,7 @@ void show_vcp_for_table_vcp_code_table_entry_by_display_handle(
 void show_vcp_for_vcp_code_table_entry_by_display_ref(
         Display_Ref *              dref,
         VCP_Feature_Table_Entry *  vcp_entry,
-        GPtrArray *                   collector)   // where to write output
+        GPtrArray *                collector)   // where to write output
 {
    bool debug = false;
    Trace_Group tg = TRACE_GROUP;
@@ -742,16 +740,17 @@ Display_Info_List * ddc_get_valid_displays() {
       free(i2c_displays.info_recs);
    if (adl_displays.info_recs)
       free(adl_displays.info_recs);
-   // TODO: do not assign display number in case of I2C bus entry that isn't in fact
-   // a display
    int displayctr = 0;
    for (ndx = 0; ndx < displayct; ndx++) {
       if (ddc_is_valid_display_ref(all_displays->info_recs[ndx].dref, false /* emit msgs */)) {
          displayctr++;
-         all_displays->info_recs[ndx].dispno = displayctr;      // displays are numbered from 0, not 1
+         all_displays->info_recs[ndx].dispno = displayctr;  // displays are numbered from 1, not 0
       }
-      else
+      else {
+         // Do not assign display number in case of I2C bus entry that isn't in fact a display
+         // that supports DDC
          all_displays->info_recs[ndx].dispno = -1;
+      }
    }
 
    // DBGMSG("all_displays in main.c:");
@@ -794,7 +793,7 @@ void ddc_show_active_display(Display_Info * curinfo, int depth) {
 
       if (output_level >= OL_VERBOSE) {
          // display controller mfg, firmware version
-         Interpreted_Vcp_Code* code_info;
+         Interpreted_Nontable_Vcp_Response* code_info;
 
          Global_Status_Code gsc = get_vcp_by_display_ref(
                 curinfo->dref,
@@ -840,16 +839,21 @@ void ddc_show_active_display(Display_Info * curinfo, int depth) {
 int ddc_show_active_displays(int depth) {
    Display_Info_List * display_list = ddc_get_valid_displays();
    int ndx;
+   int valid_display_ct = 0;
    for (ndx=0; ndx<display_list->ct; ndx++) {
       Display_Info * curinfo = &display_list->info_recs[ndx];
       if (curinfo->dispno == -1)
          rpt_vstring(depth, "Invalid display");
-      else
+      else {
          rpt_vstring(depth, "Display %d", curinfo->dispno);
+         valid_display_ct++;
+      }
       ddc_show_active_display(curinfo, depth+1);
       puts("");
    }
-   return display_list->ct;
+   if (valid_display_ct == 0)
+      rpt_vstring(depth, "No active displays found");
+   return valid_display_ct;
 }
 
 
@@ -860,7 +864,7 @@ int ddc_show_active_displays(int depth) {
  *
  * Returns:
  *    Display_Ref for the dispno'th display, NULL if
- *    dispno < 1 or dispno > number of displays
+ *    dispno < 1 or dispno > number of actual displays
  */
 Display_Ref* ddc_find_display_by_dispno(int dispno) {
    bool debug = false;
@@ -908,14 +912,14 @@ Version_Spec get_vcp_version_by_display_handle(Display_Handle * dh) {
    if (is_version_unqueried(dh->vcp_version)) {
       dh->vcp_version.major = 0;
       dh->vcp_version.minor = 0;
-      Interpreted_Vcp_Code * pinterpreted_code;
+      Interpreted_Nontable_Vcp_Response * pinterpreted_code;
 
       // verbose output is distracting since this function is called when
       // querying for other things
       Output_Level olev = get_output_level();
       if (olev == OL_VERBOSE)
          set_output_level(OL_NORMAL);
-      Global_Status_Code  gsc = get_vcp_by_display_handle(dh, 0xdf, &pinterpreted_code);
+      Global_Status_Code  gsc = get_nontable_vcp_by_display_handle(dh, 0xdf, &pinterpreted_code);
       if (olev == OL_VERBOSE)
          set_output_level(olev);
       if (gsc == 0) {

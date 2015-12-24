@@ -269,10 +269,10 @@ void probe_get_luminosity(int busno, char * write_mode, char * read_mode) {
                       readbuf, 20, luminosity_op_code, "probe_get_luminosity result", &response_packet_ptr);
          printf("(%s) create_ddc_getvcp_response_packet() returned %d\n", __func__, rc2);
          if (rc2 == 0) {
-            Interpreted_Vcp_Code * interpretation_ptr = NULL;
+            Interpreted_Nontable_Vcp_Response * interpretation_ptr = NULL;
             rc2 = get_interpreted_vcp_code(response_packet_ptr, false, &interpretation_ptr);
             if (rc2 == 0)
-               report_interpreted_vcp_code(interpretation_ptr);
+               report_interpreted_nontable_vcp_response(interpretation_ptr);
          }
       } // read_ok
    } // write_ok
@@ -362,11 +362,11 @@ void get_luminosity_sample_code(int busno) {
                            readbuf, 32, luminosity_op_code, "get_vcp:response packet", &response_packet_ptr);
            printf("(%s) create_ddc_getvcp_response_packet() returned %d\n", __func__, rc2);
            if (rc2 == 0) {
-              Interpreted_Vcp_Code * interpretation_ptr = NULL;
+              Interpreted_Nontable_Vcp_Response * interpretation_ptr = NULL;
               rc2 = get_interpreted_vcp_code(response_packet_ptr, false, &interpretation_ptr);
               if (rc2 == 0) {
                  printf("(%s) interpretation_ptr=%p\n", __func__, interpretation_ptr);
-                 report_interpreted_vcp_code(interpretation_ptr);
+                 report_interpreted_nontable_vcp_response(interpretation_ptr);
               }
               // read_ok = true;
            }

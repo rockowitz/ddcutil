@@ -434,6 +434,8 @@ static int sleep_event_cts_by_id[SLEEP_EVENT_ID_CT];
 static int total_sleep_event_ct = 0;
 static int sleep_strategy = 0;
 
+// TODO: create table of sleep strategy number, description
+
 bool set_sleep_strategy(int strategy) {
    if (strategy == -1)    // if unset
       strategy = 0;       // use default strategy
@@ -441,6 +443,28 @@ bool set_sleep_strategy(int strategy) {
    if (strategy >= 0 && strategy <= 2) {
       sleep_strategy = strategy;
       result = true;
+   }
+   return result;
+}
+
+int get_sleep_strategy() {
+   return sleep_strategy;
+}
+
+char * sleep_strategy_desc(int sleep_strategy) {
+   char * result = NULL;
+   switch(sleep_strategy) {
+   case (0):
+      result = "Default";
+      break;
+   case (1):
+      result = "Half sleep time";
+      break;
+   case (2):
+      result = "Double sleep time";
+      break;
+   default:
+      result = NULL;
    }
    return result;
 }

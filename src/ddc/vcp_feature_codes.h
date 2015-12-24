@@ -69,6 +69,32 @@
 // #define  VCP_V3_NC_COMPLEX
 // #define  VCP_V3_TABLE
 
+// 12/2015
+// new new way
+// Separate bytes for each VCP version
+typedef Byte Version_Feature_Flags;
+typedef Byte Global_Feature_Flags;
+
+#define VCP2_PROFILE         0x01
+#define VCP2_COLORMGT        0x02
+
+#define VCP2_STD_CONT        0x80
+#define VCP2_SPECIAL_CONT    0x40
+#define VCP2_CONT  (VCP2_STD_CONT|VCP2_SPECIAL_CONT)
+#define VCP2_SIMPLE_NC       0x20
+#define VCP2_COMPLEX_NC      0x10
+#define VCP2_NC (VCP2_SIMPLE_NC|VCP2_COMPLEX_NC)
+#define VCP2_TABLE           0x08
+#define VCP2_DEPRECATED      0x01
+
+// typedef Byte Global_Feature_Flags
+// Global_Feature_Flags global_flags;
+// RO/RW/WO same
+// VCPV_PROFILE
+// VCPV_COLORMGT
+
+// n. VCP_FUNC_VER no longer needed
+
 
 // 0 or more of the following group bits may be set:
 #define  VCP_PROFILE    0x8000     // emit when -profile option selected
@@ -86,6 +112,20 @@
 // #define  VCP_TYPE_VER 0x1000    // type (C, NC, T) varies by version
 
 // #define  VCP_SYNTHETIC  0x0100
+
+// MCCS specification group to which code belongs
+// note a function can appear in multiple groups, e.g. in different spec versions
+#define VCP_SPEC_PRESET   0x80     // Section 8.1 Preset Operations
+#define VCP_SPEC_IMAGE    0x40     // Section 8.2 Image Adjustment
+#define VCP_SPEC_CONTROL  0x20     // Section 8.3 Display Control
+#define VCP_SPEC_GEOMETRY 0x10     // Section 8.4 Geometry
+#define VCP_SPEC_MISC     0x08     // Section 8.5 Miscellaneous Functions
+#define VCP_SPEC_AUDIO    0x04     // Section 8.6 Audio Functions
+#define VCP_SPEC_DPVL     0x02     // Section 8.7 DPVL Functions
+#define VCP_SPEC_MFG      0x01     // Section 8.8 Manufacturer Specific
+
+
+
 
 
 #ifdef ALTERNATIVE
@@ -109,7 +149,7 @@ void                                   // returns nothing
 #endif
 
 typedef bool (*Format_Feature_Detail_Function) (
-                 Interpreted_Vcp_Code* code_info, Version_Spec vcp_version, char * buffer,  int     bufsz);
+                 Interpreted_Nontable_Vcp_Response* code_info, Version_Spec vcp_version, char * buffer,  int     bufsz);
 
 #ifdef OLD
 typedef bool (*Format_Table_Feature_Detail_Function) (
@@ -141,6 +181,18 @@ struct {
 
    // VCP_Feature_Parser   data_parser;
    // VCP_Feature_Reporter data_reporter;
+
+   // new way
+   Byte                                 vcp_spec_groups;
+   char *                               v20_name;
+   char *                               v21_name;
+   char *                               v30_name;
+   char *                               v22_name;
+   Global_Feature_Flags                 global_flags;
+   Version_Feature_Flags                v20_flags;
+   Version_Feature_Flags                v21_flags;
+   Version_Feature_Flags                v30_flags;
+   Version_Feature_Flags                v22_flags;
 } VCP_Feature_Table_Entry;
 
 
@@ -161,7 +213,7 @@ Format_Table_Feature_Detail_Function get_table_feature_detail_function(VCP_Featu
 bool vcp_format_nontable_feature_detail(
         VCP_Feature_Table_Entry * vcp_entry,
         Version_Spec              vcp_version,
-        Interpreted_Vcp_Code *    code_info,
+        Interpreted_Nontable_Vcp_Response *    code_info,
         char *                    buffer,
         int                       bufsz) ;
 

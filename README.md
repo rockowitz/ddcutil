@@ -14,8 +14,9 @@ e.g. red gain.  ddctool allows color related settings to be saved at the time
 a monitor is calibrated, and then restored when the calibration is applied.
 
 ## Feedback Needed
+
 This is a preliminary release, and feedback would be very helpful.   
-There are a lot of "moving parts that can var from system to system: 
+There are a lot of "moving parts that can vary from system to system: 
 
 - The build environment can vary. 
 - I2C implementation can vary with card, monitor, and driver.  
@@ -28,7 +29,7 @@ In particular:
   What changes were required to the Autoconf files?   
 - Does it work with given card, driver, and monitor?  I'm not particularly 
   concerned with older monitors whose MCCS version is unspecified (i.e. is 
-  less than 2.0).  On the other hand, the I'm very interested in how ddctool
+  less than 2.0).  On the other hand, I'm very interested in how ddctool
   handles monitors implementing MCCS V3.0, as the V3.0 specific code has not 
   been tested. In particular, does ddctool properly read Table type features? 
 - And of course, is the program useful?   Does it merit further development?  
@@ -66,16 +67,16 @@ Factory Defaults (02) are write-only.
 ##ddctool Commands
 
 | Command | Function
-|-------------------------------| --------------------------------------------------------------|
-| detect                        | report monitors detected                                      |
-| capabilities                  | report a monitor's capabilities string                        |
-| listvcp                       | list VCP features codes that ddctool knows how to interpret
-| getvcp feature-code-or-group  | report a single VCP feature value, or a group of values  
-| setvcp feature-code new-value | set a single VCP feature value
-| dumpvcp filename              | save color related VCP feature values in a file
-| loadvcp filename              | set color related VCP feature values from a file 
-|environment                    | explore the ddctool installation environment
-|interrogate                    | collect maximal information for problem diagnosis
+|-------------------------------| -------------------------------------------------------------|
+| detect                        | report monitors detected                                     |
+| capabilities                  | report a monitor's capabilities string                       |
+| listvcp                       | list VCP features codes that ddctool knows how to interpret  | 
+| getvcp feature-code-or-group  | report a single VCP feature value, or a group of values      |
+| setvcp feature-code new-value | set a single VCP feature value                               |
+| dumpvcp filename              | save color related VCP feature values in a file              |
+| loadvcp filename              | set color related VCP feature values from a file             |
+| environment                   | explore the ddctool installation environment                 |
+| interrogate                   | collect maximal information for problem diagnosis            |
 
 There is an extensive set of options for tailoring ddctool operation. 
 Some are described in this readme.   For a full list, use the --help option or 
@@ -164,14 +165,29 @@ given for some ddctool prerequisites.
 
 ### Packages
 
-ddctool requires the following package for both building and execution:
+ddctool requires the following packages for both building and execution:
 
 - i2c-tools
+- glib-2.0  (Problem: glib-2.0 can be packaged with different names.)
 
 At least on Ubuntu, the i2c.h header file is found in a separate package.   
-If the following package exists, it is needed to build ddctool.
+If the following package exists, it is required to build ddctool.
 
 - libi2c-dev 
+
+### Notes on building from git
+
+Notes on building from git:
+
+- If you see a message "required file './ltmain.sh.' not found", run \fIlibtoolize\fP
+  (See https://www.gnu.org/software/automake/manual/html_node/Error-required-file-ltmain_002esh-not-found.html)
+- Execute file \fIautogen.sh\fP.   
+- (need notes on warnings that can be ignored) 
+
+- May get the following warning when running automake
+src/Makefile.am:38: warning: compiling 'cmdline/cmd_parser_aux.c' in subdir requires 'AM_PROG_CC_C_O' in 'configure.ac'
+
+This is an autotools versioning issue.  It appears that this warning can be ignored.
 
 ### /dev/i2c permissions
 
@@ -233,7 +249,6 @@ From the freedesktop.org systemd doc:
 > themselves instead of static configuration like this. In fact, most modern 
 > kernel modules are prepared for automatic loading already.
 
-
 ### Building with ADL support
 
 Special consideration is required if using AMD's proprietary driver (fglrx).
@@ -268,7 +283,6 @@ configure --with-adl-headlers=DIR
 ~~~
 where DIR is the name of the directory where you saved the ADL header files.
 
-
 ### Special Nvidia driver settings
 
 When using Nvidia's proprietary driver, I2C communication fails on some cards.
@@ -295,11 +309,17 @@ Copy this file to /etc/X11/xorg.conf.d
 Note: This file works if there is no /etc/X11/xorg.conf file.  If you do have an 
 xorg.conf file the Identifier field will likely require modification.
 
+### Virtual Machines
+
+ddctool can be built in a virtual machine.  However, loading i2_dev does 
+not create /dev/i2c-* devices, either on VirtualBox or VMware.  It's not 
+clear whether this is because of lack of underlying emulation or if it's 
+a configuration issue.
+
 ### Installation Diagnostics
 
 If ddctool is successfully built but execution fails, command `ddctool environment` 
 probes the I2C environment and may provide clues as to the problem.
-
 
 ## Comparison with ddccontrol
 

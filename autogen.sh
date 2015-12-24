@@ -1,2 +1,2 @@
 #!/bin/sh
-autoreconf --force -I config -I m4
+autoreconf --force -I config -I m4 

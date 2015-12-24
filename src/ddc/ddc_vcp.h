@@ -44,15 +44,15 @@ Global_Status_Code get_table_vcp_by_display_handle(
        Buffer**               pp_table_bytes);
 
 
-Global_Status_Code get_vcp_by_display_handle(
+Global_Status_Code get_nontable_vcp_by_display_handle(
        Display_Handle * pDispHandle,
        Byte feature_code,
-       Interpreted_Vcp_Code** ppInterpretedCode);
+       Interpreted_Nontable_Vcp_Response** ppInterpretedCode);
 
 Global_Status_Code get_vcp_by_display_ref(
        Display_Ref *          pDisp,
        Byte                   feature_code,
-       Interpreted_Vcp_Code** ppInterpretedCode);
+       Interpreted_Nontable_Vcp_Response** ppInterpretedCode);
 
 
 void vcp_list_feature_codes();
