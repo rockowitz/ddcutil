@@ -83,8 +83,11 @@ typedef Byte Global_Feature_Flags;
 #define VCP2_CONT  (VCP2_STD_CONT|VCP2_SPECIAL_CONT)
 #define VCP2_SIMPLE_NC       0x20
 #define VCP2_COMPLEX_NC      0x10
-#define VCP2_NC (VCP2_SIMPLE_NC|VCP2_COMPLEX_NC)
-#define VCP2_TABLE           0x08
+// For WO NC features.  There's no interpretation function or lookup table
+// Used to mark that the feature is defined for a version
+#define VCP2_WO_NC           0x08
+#define VCP2_NC (VCP2_SIMPLE_NC|VCP2_COMPLEX_NC|VCP2_WO_NC)
+#define VCP2_TABLE           0x04
 #define VCP2_DEPRECATED      0x01
 
 // typedef Byte Global_Feature_Flags

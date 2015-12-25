@@ -1001,32 +1001,63 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
       .formatter = format_feature_detail_new_control_value
    },
    { .code=0x04,
+     // Section 8.1 Preset operation
+     // Defined in 2.0, identical in 3.0
+     .vcp_spec_groups = VCP_SPEC_PRESET,
      .name="Restore factory defaults",
      .flags=VCP_WO | VCP_NON_CONT,
 
+     .global_flags = VCP_WO,
+     .v20_flags = VCP2_WO_NC,
+     .v20_name = "Restore factory defaults",
    },
    { .code=0x05,
+     // Section 8.1 Preset operation
+     // Defined in 2.0, identical in 3.0
+     .vcp_spec_groups = VCP_SPEC_PRESET,
      .name="Restore factory lum/contrast",
      .flags=VCP_WO | VCP_NON_CONT,
 
+     .v20_flags = VCP2_WO_NC,
+     .v20_name = "Restore factory brightness/contrast defaults",
    },
    { .code=0x06,
+     // Section 8.1 Preset operation
+     // Defined in 2.0, identical in 3.0
+     .vcp_spec_groups = VCP_SPEC_PRESET,
      .name="Restore factory geometry defaults",
      .flags=VCP_WO | VCP_NON_CONT,
 
+     .v20_flags = VCP2_WO_NC,
+     .v20_name = "Restore factory geometry defaults",
    },
    { .code=0x08,
+     // Section 8.1 Preset operation
+     // Defined in 2.0, identical in 3.0
+     .vcp_spec_groups = VCP_SPEC_PRESET,
      .name="Restore factory color defaults",
      .flags=VCP_WO | VCP_NON_CONT,
 
+     .v20_flags = VCP2_WO_NC,
+     .v20_name = "Restore color defaults",
+   },
+   { .code=0x0A,
+     // Section 8.1 Preset operation
+     // Defined in 2.0, identical in 3.0
+     .vcp_spec_groups = VCP_SPEC_PRESET,
+     .name="Restore factory TV defaults",
+     .flags=VCP_WO | VCP_NON_CONT,
+
+     .v20_flags = VCP2_WO_NC,
+     .v20_name = "Restore factory TV defaults",
    },
    { .code=0x0b,
      .name="Color temperature increment",
      .flags=VCP_RO | VCP_NON_CONT   | VCP_COLORMGT,
-
      .formatter=format_feature_detail_debug_continuous
    },
    { .code=0x0c,
+     .vcp_spec_groups = VCP_SPEC_PRESET,
      .name="Color temperature request",
      .flags=VCP_RW | VCP_CONTINUOUS | VCP_COLORMGT,
       .formatter=format_feature_detail_debug_continuous
@@ -1554,14 +1585,21 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
       .formatter=format_feature_detail_debug_continuous,
    },
    { .code=0xae,
+
      .name="Vertical frequency",
      .flags=VCP_RO | VCP_CONTINUOUS,
       .formatter=format_feature_detail_debug_continuous,
    },
    { .code=0xb0,
-     .name="(Re)Store user saved values for cur mode",
-     .flags=VCP_RO | VCP_NON_CONT,
-      .formatter=format_feature_detail_debug_bytes,
+     .vcp_spec_groups = VCP_SPEC_PRESET,
+     // Section 8.1 Preset operation
+     // Defined in 2.0, v3.0 spec clarifies that value to be set is in SL byte
+     .name="(Re)Store user saved values for cur mode",   // this was my name from the explanation
+     .flags=VCP_WO | VCP_NON_CONT,
+     // .formatter=format_feature_detail_debug_bytes,
+
+      .v20_flags = VCP2_WO_NC,
+      .v20_name = "Settings",
    },
    { .code=0xb2,
      .name="Flat panel sub-pixel layout",
