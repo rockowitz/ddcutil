@@ -45,10 +45,14 @@
 // static TraceGroup TRACE_GROUP = TRC_DDC;   // currently unused, commented out to avoid warning
 
 
-VCP_Feature_Record * new_VCP_Feature_Record(Byte feature_id, char * value_string_start, int value_string_len) {
+VCP_Feature_Record * new_VCP_Feature_Record(
+                        Byte   feature_id,
+                        char * value_string_start,
+                        int    value_string_len)
+{
    bool debug = false;
    if (debug) {
-      DBGMSG("Starting. Feature: 0x%02x (%s)", feature_id, get_feature_name(feature_id));
+      DBGMSG("Starting. Feature: 0x%02x", feature_id);
       if (value_string_start)
          DBGMSG("value string: |%.*s|", value_string_len, value_string_start);
       else
@@ -149,7 +153,9 @@ void free_vcp_feature(VCP_Feature_Record * pfeat) {
 
 void report_feature(VCP_Feature_Record * vfr, Version_Spec vcp_version) {
    // DBGMSG("Starting. vfr=%p", vfr);
-   printf("  Feature: %02X (%s)\n", vfr->feature_id, get_feature_name(vfr->feature_id));
+   printf("  Feature: %02X (%s)\n", vfr->feature_id,
+          get_feature_name_by_id_and_vcp_version(vfr->feature_id, vcp_version));
+
    // hex_dump((Byte*) vfr, sizeof(VCP_Feature_Record));
    // if (vfr->values)
    //    report_id_array(vfr->values, "Feature values:");

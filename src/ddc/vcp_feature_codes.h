@@ -72,22 +72,34 @@
 // 12/2015
 // new new way
 // Separate bytes for each VCP version
-typedef Byte Version_Feature_Flags;
+typedef ushort Version_Feature_Flags;
 typedef Byte Global_Feature_Flags;
 
-#define VCP2_PROFILE         0x01
-#define VCP2_COLORMGT        0x02
+
+
+#define VCP2_PROFILE         0x8000
+#define VCP2_COLORMGT        0x4000
+
+// Exactly 1 of the following 3 bits must be set
+#define  VCP2_RO         0x0400
+#define  VCP2_WO         0x0200
+#define  VCP2_RW         0x0100
+#define  VCP2_READABLE   (VCP2_RO | VCP2_RW)
+#define  VCP2_WRITABLE   (VCP2_WO | VCP2_RW)
+
 
 #define VCP2_STD_CONT        0x80
-#define VCP2_SPECIAL_CONT    0x40
-#define VCP2_CONT  (VCP2_STD_CONT|VCP2_SPECIAL_CONT)
+#define VCP2_COMPLEX_CONT    0x40
+#define VCP2_CONT            (VCP2_STD_CONT|VCP2_COMPLEX_CONT)
 #define VCP2_SIMPLE_NC       0x20
 #define VCP2_COMPLEX_NC      0x10
 // For WO NC features.  There's no interpretation function or lookup table
 // Used to mark that the feature is defined for a version
 #define VCP2_WO_NC           0x08
-#define VCP2_NC (VCP2_SIMPLE_NC|VCP2_COMPLEX_NC|VCP2_WO_NC)
+#define VCP2_NC              (VCP2_SIMPLE_NC|VCP2_COMPLEX_NC|VCP2_WO_NC)
 #define VCP2_TABLE           0x04
+#define VCP2_WO_TABLE        0x02
+#define VCP2_ANY_TABLE       (VCP2_TABLE | VCP2_WO_TABLE)
 #define VCP2_DEPRECATED      0x01
 
 // typedef Byte Global_Feature_Flags
@@ -127,7 +139,17 @@ typedef Byte Global_Feature_Flags;
 #define VCP_SPEC_DPVL     0x02     // Section 8.7 DPVL Functions
 #define VCP_SPEC_MFG      0x01     // Section 8.8 Manufacturer Specific
 
+// my groupings, not in spec
+#define VCP_CLASS_ANALOG  0x80     // setting that only applies to analog, e.g. CRT, devices
+#define VCP_CLASS_TV      0x40     // TV related setting
+#define VCP_CLASS_WINDOW  0x20
 
+// redundant but might make table more self-documenting
+#define MCCS_V10          0x80
+#define MCCS_V20          0x40
+#define MCCS_V21          0x20
+#define MCCS_V30          0x01
+#define MCCS_V22          0x80
 
 
 
@@ -151,7 +173,7 @@ void                                   // returns nothing
       void *  interpreted_vcp_data);   // data returned by a VCP_Parser
 #endif
 
-typedef bool (*Format_Feature_Detail_Function) (
+typedef bool (*Format_Normal_Feature_Detail_Function) (
                  Interpreted_Nontable_Vcp_Response* code_info, Version_Spec vcp_version, char * buffer,  int     bufsz);
 
 #ifdef OLD
@@ -176,9 +198,9 @@ extern Feature_Value_Entry * pxc8_display_controller_type_values;
 typedef
 struct {
    Byte                                 code;
-   char *                               name;
-   VCP_Feature_Flags                    flags;
-   Format_Feature_Detail_Function       formatter;
+   // char *                               name;
+   // VCP_Feature_Flags                    flags;
+   Format_Normal_Feature_Detail_Function nontable_formatter;
    Format_Table_Feature_Detail_Function table_formatter;
    Feature_Value_Entry *                nc_sl_values;  // for NC feature where value is in SL byte
 
@@ -187,15 +209,20 @@ struct {
 
    // new way
    Byte                                 vcp_spec_groups;
+   Byte                                 vcp_classes;
+   char *                               desc;
    char *                               v20_name;
    char *                               v21_name;
    char *                               v30_name;
    char *                               v22_name;
-   Global_Feature_Flags                 global_flags;
+   // ushort                               global_flags;
    Version_Feature_Flags                v20_flags;
    Version_Feature_Flags                v21_flags;
    Version_Feature_Flags                v30_flags;
    Version_Feature_Flags                v22_flags;
+   Feature_Value_Entry *                v21_sl_values;
+   Feature_Value_Entry *                v30_sl_values;
+   Feature_Value_Entry *                v22_sl_values;
 } VCP_Feature_Table_Entry;
 
 
@@ -210,7 +237,34 @@ Feature_Value_Entry * find_feature_values_new(Byte feature_code, Version_Spec vc
 Feature_Value_Entry * find_feature_values_for_capabilities(Byte feature_code, Version_Spec vcp_version);
 char * find_value_name_new(Feature_Value_Entry * value_entries, Byte value_id);
 
-Format_Feature_Detail_Function get_nontable_feature_detail_function( VCP_Feature_Table_Entry * pvft_entry);
+bool has_version_specific_features(
+      VCP_Feature_Table_Entry * pvft_entry);
+Version_Spec get_highest_non_deprecated_version(
+      VCP_Feature_Table_Entry * pvft_entry);
+
+Version_Feature_Flags get_version_specific_feature_flags(
+       VCP_Feature_Table_Entry * pvft_entry,
+       Version_Spec              vcp_version);
+bool is_feature_readable_by_vcp_version(
+      VCP_Feature_Table_Entry * pvft_entry,
+      Version_Spec              vcp_version);
+bool is_feature_writable_by_vcp_version(
+      VCP_Feature_Table_Entry * pvft_entry,
+      Version_Spec              vcp_version);
+bool is_version_conditional_vcp_type(VCP_Feature_Table_Entry * pvft_entry);
+Feature_Value_Entry * get_version_specific_sl_values(
+       VCP_Feature_Table_Entry * pvft_entry,
+       Version_Spec              vcp_version);
+
+char * get_version_specific_feature_name(
+       VCP_Feature_Table_Entry * pvft_entry,
+       Version_Spec              vcp_version);
+char * get_non_version_specific_feature_name(
+       VCP_Feature_Table_Entry * pvft_entry);
+
+
+
+Format_Normal_Feature_Detail_Function get_nontable_feature_detail_function( VCP_Feature_Table_Entry * pvft_entry);
 Format_Table_Feature_Detail_Function get_table_feature_detail_function(VCP_Feature_Table_Entry * pvft_entry);
 
 bool vcp_format_nontable_feature_detail(
@@ -231,6 +285,7 @@ bool vcp_format_table_feature_detail(
 
 
 char * get_feature_name(Byte feature_id);
+char * get_feature_name_by_id_and_vcp_version(Byte feature_id, Version_Spec vspec);
 int vcp_get_feature_code_count();
 
 void vcp_list_feature_codes();

@@ -255,7 +255,8 @@ bool isNullPacket(DDC_Packet * packet) {
 
 void free_ddc_packet(DDC_Packet * packet) {
    bool debug = false;
-   bool tf = IS_TRACING();
+   // bool tf = IS_TRACING();    // TMI
+   bool tf = false;
    if (debug)
       tf = true;
    TRCMSGTF(tf, "packet=%p", packet);

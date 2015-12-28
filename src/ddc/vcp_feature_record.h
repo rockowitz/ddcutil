@@ -32,6 +32,8 @@
 #include "base/util.h"
 
 
+// Used when parsing capabilities string
+
 #define VCP_FEATURE_MARKER "VCPF"
 typedef struct {
      char              marker[4];     // always "VCPF"

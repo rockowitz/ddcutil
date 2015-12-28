@@ -202,10 +202,16 @@ Global_Status_Code set_vcp_value_top(Display_Ref * pdisp, char * feature, char *
    Global_Status_Code my_errno = 0;
    long               longtemp;
 
+   Version_Spec vspec = get_vcp_version_by_display_ref(pdisp);
    VCP_Feature_Table_Entry * entry = vcp_find_feature_by_charid(feature);
    if (entry) {
-      if ( !( (entry->flags) & VCP_WRITABLE ) ){
-         printf("Feature %s (%s) is not writable\n", feature, entry->name);
+
+      // if ( !( (entry->flags) & VCP_WRITABLE ) ){
+      if (!is_feature_writable_by_vcp_version(entry, vspec)) {
+         // just go with non version specific name to avoid VCP version lookup
+         // since we just have Display_Ref here
+         char * feature_name =  get_version_specific_feature_name(entry, vspec);
+         printf("Feature %s (%s) is not writable\n", feature, feature_name);
          my_errno = modulate_rc(-EINVAL, RR_ERRNO);    // TEMP - what is appropriate?
       }
       else {
@@ -270,9 +276,13 @@ Interpreted_Nontable_Vcp_Response * get_and_filter_vcp_value(
       bool                      suppress_unsupported
      )
 {
+   bool debug = false;
+   DBGMSF(debug, "Starting.  feature code = 0x%02x", vcp_entry->code);
    Output_Level output_level = get_output_level();
    Byte vcp_code = vcp_entry->code;
-   char * feature_name = vcp_entry->name;
+   // char * feature_name = vcp_entry->name;
+   Version_Spec vspec = get_vcp_version_by_display_handle(dh);
+   char * feature_name = get_version_specific_feature_name(vcp_entry, vspec);
    if (output_level >= OL_VERBOSE)
       printf("\nGetting data for VCP code 0x%02x - %s:\n", vcp_code, feature_name);
    Interpreted_Nontable_Vcp_Response * code_info = NULL;
@@ -304,9 +314,9 @@ Interpreted_Nontable_Vcp_Response * get_and_filter_vcp_value(
    else {
       // if interpretation is version dependent and version not already set, get it
       // DBGMSG("vcp_entry->flags=0x%04x", vcp_entry->flags);
-      Version_Spec vcp_version = {0,0};
-      if ( (vcp_entry->flags & VCP_FUNC_VER) )
-           vcp_version = get_vcp_version_by_display_handle(dh);
+      // Version_Spec vcp_version = {0,0};
+      // if ( (vcp_entry->flags & VCP_FUNC_VER) )
+      Version_Spec vcp_version = get_vcp_version_by_display_handle(dh);
 
       if (output_level != OL_PROGRAM) {
          char buf[100];
@@ -375,7 +385,7 @@ void show_vcp_for_table_vcp_code_table_entry_by_display_handle(
         Display_Handle *          dh,
         VCP_Feature_Table_Entry * vcp_entry,
         Version_Spec              vcp_version,
-        GPtrArray *                  collector,   // where to write output
+        GPtrArray *               collector,   // where to write output
         bool                      suppress_unsupported)    // if set, do not output unsupported features
 {
    bool debug = false;
@@ -383,7 +393,9 @@ void show_vcp_for_table_vcp_code_table_entry_by_display_handle(
       printf("(%s) Starting. Getting value for feature 0x%02x, dh=%s\n",
              __func__, vcp_entry->code, display_handle_repr(dh));
    Byte vcp_code = vcp_entry->code;
-   char * feature_name = vcp_entry->name;
+   // char * feature_name = vcp_entry->name;
+   Version_Spec vspec = get_vcp_version_by_display_handle(dh);
+   char * feature_name = get_version_specific_feature_name(vcp_entry, vspec);
    Output_Level output_level = get_output_level();
    if (output_level >= OL_VERBOSE)
       printf("\nGetting data for VCP code 0x%02x - %s:\n", vcp_code, feature_name);
@@ -415,7 +427,8 @@ void show_vcp_for_table_vcp_code_table_entry_by_display_handle(
    }
 
    else {
-      if ( (vcp_entry->flags & VCP_FUNC_VER) && (vcp_version.major == 0) )
+      // if ( (vcp_entry->flags & VCP_FUNC_VER) && (vcp_version.major == 0) )
+      if ( is_version_unqueried(vcp_version) )
          vcp_version = get_vcp_version_by_display_handle(dh);
 
       if (output_level != OL_PROGRAM) {
@@ -469,8 +482,50 @@ void show_vcp_for_table_vcp_code_table_entry_by_display_handle(
 }
 
 
-void show_vcp_for_vcp_code_table_entry_by_display_ref(
-        Display_Ref *              dref,
+
+bool is_table_feature_by_display_handle(
+        VCP_Feature_Table_Entry *  vcp_entry,
+        Display_Handle *           dh)
+{
+   bool debug = false;
+
+   bool result = false;
+
+   // for now, just get the vcp_version even though its probably not
+   // needed to test for table
+   Version_Spec vcp_version = get_vcp_version_by_display_handle(dh);
+
+   Version_Feature_Flags feature_flags = get_version_specific_feature_flags(vcp_entry, vcp_version);
+   assert(feature_flags);
+#ifdef OLD
+   if (feature_flags) {
+      // DBGMSF(debug, "using result of get_feature_flags() to test for table");
+      result = (feature_flags & VCP2_TABLE);
+   }
+   else {
+      // fallback to old way
+      DBGMSF(debug, "using old flags byte to test for table");
+      if (vcp_entry->flags & VCP_TYPE_V2NC_V3T) {
+         vcp_version = get_vcp_version_by_display_handle(dh);
+         if (vcp_version.major >= 3)
+            result = true;
+      }
+      else if (vcp_entry->flags & VCP_TABLE)
+         result = true;
+   }
+#endif
+   result = (feature_flags & VCP2_TABLE);
+   // DBGMSF(debug, "returning: %d", result);
+   return result;
+
+}
+
+
+
+
+
+void show_vcp_for_vcp_code_table_entry_by_display_handle(
+        Display_Handle *           dh,
         VCP_Feature_Table_Entry *  vcp_entry,
         GPtrArray *                collector)   // where to write output
 {
@@ -481,27 +536,35 @@ void show_vcp_for_vcp_code_table_entry_by_display_ref(
    TRCMSGTG(tg, "Starting");
    Version_Spec vcp_version = {0,0};
 
-   Display_Handle * dh = ddc_open_display(dref, EXIT_IF_FAILURE);
-
-   bool use_table_function = false;
-   if (vcp_entry->flags & VCP_TYPE_V2NC_V3T) {
-      vcp_version = get_vcp_version_by_display_handle(dh);
-      if (vcp_version.major >= 3)
-         use_table_function = true;
-   }
-   else if (vcp_entry->flags & VCP_TABLE)
-      use_table_function = true;
-
+   bool use_table_function = is_table_feature_by_display_handle(vcp_entry, dh);
 
    if (use_table_function) {
-      show_vcp_for_table_vcp_code_table_entry_by_display_handle(dh, vcp_entry, vcp_version, collector, false);
+      show_vcp_for_table_vcp_code_table_entry_by_display_handle(
+         dh, vcp_entry, vcp_version, collector, false);
    }
    else {
-      show_vcp_for_nontable_vcp_code_table_entry_by_display_handle(dh, vcp_entry, vcp_version, collector, false);
+      show_vcp_for_nontable_vcp_code_table_entry_by_display_handle(
+         dh, vcp_entry, vcp_version, collector, false);
    }
-   ddc_close_display(dh);
 
    TRCMSGTG(tg, "Done");
+}
+
+
+
+void show_vcp_for_vcp_code_table_entry_by_display_ref(
+        Display_Ref *              dref,
+        VCP_Feature_Table_Entry *  vcp_entry,
+        GPtrArray *                collector)   // where to write output
+{
+   bool debug = false;
+   DBGMSF(debug, "Starting");
+
+   Display_Handle * dh = ddc_open_display(dref, EXIT_IF_FAILURE);
+   show_vcp_for_vcp_code_table_entry_by_display_handle(dh, vcp_entry, collector);
+   ddc_close_display(dh);
+
+   DBGMSF(debug, "Done");
 }
 
 
@@ -542,9 +605,12 @@ void show_single_vcp_value_by_display_ref(Display_Ref * dref, char * feature, bo
    VCP_Feature_Table_Entry * entry = vcp_find_feature_by_charid(feature);
    bool showit = true;
 
+   Version_Spec vspec = get_vcp_version_by_display_ref(dref);
    if (entry) {
-      if ( !( (entry->flags) & VCP_READABLE ) ){
-         printf("Feature %s (%s) is not readable\n", feature, entry->name);
+      // if ( !( (entry->flags) & VCP_READABLE ) ){
+      if (!is_feature_readable_by_vcp_version(entry, vspec)) {
+         char * feature_name =  get_version_specific_feature_name(entry, vspec);
+         printf("Feature %s (%s) is not readable\n", feature, feature_name);
          showit = false;
       }
    }
@@ -575,9 +641,9 @@ void show_single_vcp_value_by_display_ref(Display_Ref * dref, char * feature, bo
 /* Shows the VCP values for all features in a VCP feature subset.
  *
  * Arguments:
- *    dh      display handle for open display
- *    subset  feature subset
- *    fp      where to write output
+ *    dh         display handle for open display
+ *    subset     feature subset
+ *    collector  accumulates output
  *
  * Returns:
  *    nothing
@@ -604,13 +670,17 @@ void show_vcp_values_by_display_handle(
          // DBGMSG("ndx=%d, id=0x%02x", ndx, id);
          VCP_Feature_Table_Entry * entry = vcp_find_feature_by_hexid_w_default(id);
          bool suppress_unsupported = (get_output_level() < OL_VERBOSE);
-         if ( !( (entry->flags) & VCP_READABLE ) ){
+         // if ( !( (entry->flags) & VCP_READABLE ) ){
+         if (!is_feature_readable_by_vcp_version(entry, vcp_version)) {
             // confuses the output if suppressing unsupported
-            if (!suppress_unsupported)
-               printf("Feature 0x%02x (%s) is not readable\n", ndx, entry->name);
+            if (!suppress_unsupported) {
+               char * feature_name =  get_version_specific_feature_name(entry, vcp_version);
+               printf("Feature 0x%02x (%s) is not readable\n", ndx, feature_name);
+            }
          }
          else {
-            if (entry->flags & VCP_TABLE) {
+            bool use_table_function = is_table_feature_by_display_handle(entry, dh);
+            if (use_table_function) {
                show_vcp_for_table_vcp_code_table_entry_by_display_handle(
                   dh,
                   entry,
@@ -635,19 +705,24 @@ void show_vcp_values_by_display_handle(
       for (ndx=0; ndx < vcp_feature_code_count; ndx++) {
          VCP_Feature_Table_Entry * vcp_entry = vcp_get_feature_table_entry(ndx);
          assert(vcp_entry != NULL);
-         if (vcp_entry->flags & VCP_READABLE) {
+         Version_Feature_Flags vflags = get_version_specific_feature_flags(vcp_entry, vcp_version);
+         // if (vcp_entry->flags & VCP_READABLE) {
+         if (vflags & VCP2_READABLE) {
             bool showIt = true;      //
             switch (subset) {
             case SUBSET_ALL:       showIt = true;                              break;
             case SUBSET_SUPPORTED: showIt = true;                              break;
-            case SUBSET_COLORMGT:  showIt = vcp_entry->flags & VCP_COLORMGT;   break;
-            case SUBSET_PROFILE:   showIt = vcp_entry->flags & VCP_PROFILE;    break;
+            // case SUBSET_COLORMGT:  showIt = vcp_entry->flags & VCP_COLORMGT;   break;
+            // case SUBSET_PROFILE:   showIt = vcp_entry->flags & VCP_PROFILE;    break;
+            case SUBSET_COLORMGT:  showIt = vflags & VCP2_COLORMGT;   break;
+            case SUBSET_PROFILE:   showIt = vflags & VCP2_PROFILE;    break;
             case SUBSET_SCAN:  // will never happen, inserted to avoid compiler warning
             default: PROGRAM_LOGIC_ERROR("subset=%d", subset);
             };
 
            if (showIt) {
-              if (vcp_entry->flags & VCP_TABLE) {
+              bool is_table_feature = is_table_feature_by_display_handle(vcp_entry, dh);
+              if (is_table_feature) {
                  show_vcp_for_table_vcp_code_table_entry_by_display_handle(
                     dh,
                     vcp_entry,
@@ -677,9 +752,9 @@ void show_vcp_values_by_display_handle(
 /* Shows the VCP values for all features in a VCP feature subset.
  *
  * Arguments:
- *    pdisp   display reference
- *    subset  feature subset
- *    fp      where to write output
+ *    pdisp      display reference
+ *    subset     feature subset
+ *    collector  accumulates output
  *
  * Returns:
  *    nothing
@@ -707,6 +782,10 @@ void show_vcp_values_by_display_ref(Display_Ref * dref, VCP_Feature_Subset subse
    }
 }
 
+
+//
+// Functions to get display information
+//
 
 /* Creates a list of all displays found.  The list first contains any displays
  * on /dev/i2c-n busses, then any ADL displays.
@@ -893,6 +972,10 @@ Display_Ref* ddc_find_display_by_dispno(int dispno) {
 }
 
 
+//
+// Functions for VCP (MCCS) version
+//
+
 /* Gets the VCP version.
  *
  * Because the VCP version is used repeatedly for interpreting other
@@ -962,6 +1045,10 @@ Version_Spec get_vcp_version_by_display_ref(Display_Ref * dref) {
    return dref->vcp_version;
 }
 
+
+//
+// Capabilities Related Functions
+//
 
 /* Executes the VCP Get Capabilities command to obtain the
  * capabilities string.  The string is returned in null terminated
@@ -1048,6 +1135,10 @@ Global_Status_Code get_capabilities_string_by_display_ref(Display_Ref * dref, ch
    ddc_close_display(dh);
    return rc;
 }
+
+//
+//
+//
 
 
 char * format_timestamp(time_t time_millis, char * buf, int bufsz) {

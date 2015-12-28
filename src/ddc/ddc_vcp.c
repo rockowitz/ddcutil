@@ -165,7 +165,7 @@ Global_Status_Code put_vcp_by_display_ref(Display_Ref * pdisp, VCP_Feature_Table
  *   status code
  */
 Global_Status_Code get_nontable_vcp_by_display_handle(
-       Display_Handle *       pDispHandle,
+       Display_Handle *       dh,
        Byte                   feature_code,
        Interpreted_Nontable_Vcp_Response** ppInterpretedCode)
 {
@@ -201,7 +201,7 @@ Global_Status_Code get_nontable_vcp_by_display_handle(
    int max_read_bytes  = 20;    // actually 3 + 8 + 1, or is it 2 + 8 + 1?
 
    rc = ddc_write_read_with_retry(
-           pDispHandle,
+           dh,
            request_packet_ptr,
            max_read_bytes,
            expected_response_type,

@@ -441,24 +441,28 @@ DDCT_Status ddct_get_feature_info(
             *flags = 0;
          else {
             Version_Spec vspec = get_vcp_version_by_display_handle(dh);
+            Version_Feature_Flags vflags = get_version_specific_feature_flags(pentry, vspec);
             *flags = 0;
-            if (pentry->flags & VCP_RO)
+            // TODO handle subvariants REWORK
+            if (vflags & VCP2_RO)
                *flags |= DDCT_RO;
-            if (pentry->flags & VCP_WO)
+            if (vflags & VCP2_WO)
                *flags |= DDCT_WO;
-            if (pentry->flags & VCP_RW)
+            if (vflags & VCP2_RW)
                *flags |= DDCT_RW;
-            if (pentry->flags & VCP_CONTINUOUS)
+            if (vflags & VCP2_CONT)
                *flags |= DDCT_CONTINUOUS;
+#ifdef OLD
             if (pentry->flags & VCP_TYPE_V2NC_V3T) {
                if (vspec.major < 3)
                   *flags |= DDCT_SIMPLE_NC;
                else
                   *flags |= DDCT_TABLE;
             }
-            else if (pentry->flags & VCP_TABLE)
+#endif
+            else if (vflags & VCP2_TABLE)
                *flags |= DDCT_TABLE;
-            else if (pentry->flags & VCP_NON_CONT) {
+            else if (vflags & VCP2_NC) {
                if (vspec.major < 3)
                   *flags |= DDCT_SIMPLE_NC;
                else {

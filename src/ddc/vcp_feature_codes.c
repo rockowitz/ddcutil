@@ -88,18 +88,69 @@ static char * vcp_interpret_feature_flags(VCP_Feature_Flags flags, char* buf, in
    return buf;
 }
 
+// Creates humanly readable interpretation of VCP feature flags.
+//
+// The result is returned in a buffer supplied by the caller.
+static char * vcp_interpret_version_feature_flags(Version_Feature_Flags flags, char* buf, int buflen) {
+   // DBGMSG("flags: 0x%04x", flags);
+   char * rwmsg = "";
+   if (flags & VCP2_RO)
+      rwmsg = "ReadOnly ";
+   else if (flags & VCP2_WO)
+      rwmsg = "WriteOnly";
+   else if (flags & VCP2_RW)
+      rwmsg = "ReadWrite";
+
+   char * typemsg = "";
+   // NEED TO ALSO HANDLE TABLE TYPE
+   if (flags & VCP2_CONT)
+      typemsg = "Continuous";
+   else if (flags & VCP2_NC)
+      typemsg = "Non-continuous";
+   else if (flags & VCP2_TABLE)
+      typemsg = "Table";
+   // else if (flags & VCP_TYPE_V2NC_V3T)
+   //    typemsg = "V2:NC, V3:Table";
+   else if (flags & VCP2_DEPRECATED)
+      typemsg = "Deprecated";
+   else
+      typemsg = "Type not set";
+
+   // TODO: determine if varying interpretation by analyzing entry
+   // need function has_version_specific_features(entry)
+   char * vermsg = "";
+   // if (flags & VCP_FUNC_VER)
+   // if (has_version_specific_features(entry))
+   //       vermsg = " (Version specific interpretation)";
+
+   snprintf(buf, buflen, "%s  %s%s", rwmsg, typemsg, vermsg);
+   return buf;
+}
+
+
 
 void vcp_list_feature_codes() {
    printf("Recognized VCP feature codes:\n");
    char buf[200];
+   char buf2[200];
+   //  TODO make listvcp respect display to get version?
    int ndx = 0;
    for (;ndx < vcp_feature_code_count; ndx++) {
       VCP_Feature_Table_Entry entry = vcp_code_table[ndx];
       // DBGMSG("code=0x%02x, flags: 0x%04x", entry.code, entry.flags);
+      Version_Spec vspec = get_highest_non_deprecated_version(&entry);
+      Version_Feature_Flags vflags = get_version_specific_feature_flags(&entry, vspec);
+      vcp_interpret_version_feature_flags(vflags, buf, sizeof(buf));
+      char * vermsg = "";
+      if (has_version_specific_features(&entry))
+         vermsg = " (Version specific interpretation)";
+      snprintf(buf2, sizeof(buf2), "%s%s", buf, vermsg);
+
       printf("  %02x - %-40s  %s\n",
              entry.code,
-             entry.name,
-             vcp_interpret_feature_flags(entry.flags, buf, 200)
+             get_non_version_specific_feature_name(&entry),
+             // vcp_interpret_feature_flags(entry.flags, buf, 200)   // *** TODO: HOW TO HANDLE THIS w/o version?
+             buf2
             );
    }
 }
@@ -114,7 +165,7 @@ char * get_feature_name(Byte feature_id) {
    char * result = NULL;
    VCP_Feature_Table_Entry * vcp_entry = vcp_find_feature_by_hexid(feature_id);
    if (vcp_entry)
-      result = vcp_entry->name;
+      result = get_non_version_specific_feature_name(vcp_entry);
    else if (0xe0 <= feature_id && feature_id <= 0xff)
       result = "manufacturer specific feature";
    else
@@ -122,8 +173,196 @@ char * get_feature_name(Byte feature_id) {
    return result;
 }
 
+
+char * get_feature_name_by_id_and_vcp_version(Byte feature_id, Version_Spec vspec) {
+   char * result = NULL;
+   VCP_Feature_Table_Entry * vcp_entry = vcp_find_feature_by_hexid(feature_id);
+   if (vcp_entry) {
+      result = get_version_specific_feature_name(vcp_entry, vspec);
+      if (!result)
+         result = get_non_version_specific_feature_name(vcp_entry);    // fallback
+   }
+   else if (0xe0 <= feature_id && feature_id <= 0xff)
+      result = "manufacturer specific feature";
+   else
+      result = "unrecognized feature";
+   return result;
+}
+
+
 int vcp_get_feature_code_count() {
    return vcp_feature_code_count;
+}
+
+
+/* Gets the appropriate VCP flags value for a feature, given
+ * the VCP version for the monitor.
+ *
+ * Arguments:
+ *   pvft_entry  vcp_feature_table entry
+ *   vcp_version VCP version for monitor
+ *
+ * Returns:
+ *   flags
+ */
+Version_Feature_Flags
+get_version_specific_feature_flags(
+       VCP_Feature_Table_Entry * pvft_entry,
+       Version_Spec              vcp_version)
+{
+   bool debug = false;
+   Version_Feature_Flags result = 0;
+   if (vcp_version.major >= 3)
+      result = pvft_entry->v30_flags;
+   else if (vcp_version.major == 2 && vcp_version.minor >= 2)
+      result = pvft_entry->v22_flags;
+
+   if (!result &&
+       (vcp_version.major >= 3 || (vcp_version.major == 2 && vcp_version.minor == 1))
+      )
+         result = pvft_entry->v21_flags;
+
+   if (!result)
+      result = pvft_entry->v20_flags;
+
+   DBGMSF(debug, "Feature = 0x%02x, vcp version=%d.%d, returning 0x%02x",
+          pvft_entry->code, vcp_version.major, vcp_version.minor, result);
+   return result;
+}
+
+bool has_version_specific_features(VCP_Feature_Table_Entry * pentry) {
+   int ct = 0;
+   if (pentry->v20_flags)  ct++;
+   if (pentry->v21_flags)  ct++;
+   if (pentry->v30_flags)  ct++;
+   if (pentry->v22_flags)  ct++;
+
+   return (ct > 1);
+}
+
+Version_Spec get_highest_non_deprecated_version(VCP_Feature_Table_Entry * pentry) {
+   Version_Spec vspec = {0,0};
+   if ( pentry->v22_flags && !(pentry->v22_flags & VCP2_DEPRECATED) ) {
+      vspec.major = 2;
+      vspec.minor = 2;
+   }
+   else if ( pentry->v30_flags && !(pentry->v30_flags & VCP2_DEPRECATED) ) {
+       vspec.major = 3;
+       vspec.minor = 0;
+    }
+   else if ( pentry->v21_flags && !(pentry->v21_flags & VCP2_DEPRECATED) ) {
+       vspec.major = 2;
+       vspec.minor = 1;
+    }
+   else if ( pentry->v20_flags && !(pentry->v20_flags & VCP2_DEPRECATED) ) {
+       vspec.major = 2;
+       vspec.minor = 0;
+    }
+
+
+   return vspec;
+}
+
+// convenience function
+bool is_feature_readable_by_vcp_version(
+       VCP_Feature_Table_Entry * pvft_entry,
+       Version_Spec vcp_version)
+{
+   bool result = (get_version_specific_feature_flags(pvft_entry, vcp_version) & VCP2_READABLE );
+   // DBGMSG("code=0x%02x, vcp_version=%d.%d, returning %d",
+   //        pvft_entry->code, vcp_version.major, vcp_version.minor, result);
+   return result;
+}
+
+// convenience function
+bool is_feature_writable_by_vcp_version(
+       VCP_Feature_Table_Entry * pvft_entry,
+       Version_Spec vcp_version)
+{
+   return (get_version_specific_feature_flags(pvft_entry, vcp_version) & VCP2_WRITABLE );
+}
+
+// Checks if the table/non-table choice for a feature is version sensitive
+
+bool is_version_conditional_vcp_type(VCP_Feature_Table_Entry * pvft_entry) {
+   bool result = false;
+
+   Byte allflags = pvft_entry->v30_flags |
+                   pvft_entry->v22_flags |
+                   pvft_entry->v21_flags |
+                   pvft_entry->v20_flags;
+
+   bool some_nontable = allflags & (VCP2_CONT | VCP2_NC);
+   bool some_table    = allflags & VCP2_TABLE;
+   result = some_nontable && some_table;
+
+   return result;
+}
+
+
+Feature_Value_Entry * get_version_specific_sl_values(
+       VCP_Feature_Table_Entry * pvft_entry,
+       Version_Spec              vcp_version)
+{
+   bool debug = false;
+   Feature_Value_Entry * result = NULL;
+   if (vcp_version.major >= 3)
+      result = pvft_entry->v30_sl_values;
+   else if (vcp_version.major == 2 && vcp_version.minor >= 2)
+      result = pvft_entry->v22_sl_values;
+
+   if (!result &&
+       (vcp_version.major >= 3 || (vcp_version.major == 2 && vcp_version.minor == 1))
+      )
+         result = pvft_entry->v21_sl_values;
+
+   if (!result)
+      result = pvft_entry->nc_sl_values;
+
+   DBGMSF(debug, "Feature = 0x%02x, vcp version=%d.%d, returning %p",
+          pvft_entry->code, vcp_version.major, vcp_version.minor, result);
+   return result;
+}
+
+
+
+char * get_version_specific_feature_name(
+       VCP_Feature_Table_Entry * pvft_entry,
+       Version_Spec              vcp_version)
+{
+   bool debug = false;
+   char * result = NULL;
+   if (vcp_version.major >= 3)
+      result = pvft_entry->v30_name;
+   else if (vcp_version.major == 2 && vcp_version.minor >= 2)
+      result = pvft_entry->v22_name;
+
+   if (!result &&
+       (vcp_version.major >= 3 || (vcp_version.major == 2 && vcp_version.minor >= 1))
+      )
+         result = pvft_entry->v21_name;
+
+   if (!result)
+      result = pvft_entry->v20_name;
+
+   if (!result) {
+   //    DBGMSG("Using original name field");
+   //    result = pvft_entry->name;
+
+      DBGMSG("Feature = 0x%02x, Version=%d.%d: No version specific feature name found",
+             pvft_entry->code, vcp_version.major, vcp_version.minor);
+   }
+
+
+   DBGMSF(debug, "Feature = 0x%02x, vcp version=%d.%d, returning %s",
+          pvft_entry->code, vcp_version.major, vcp_version.minor, result);
+   return result;
+}
+
+// for use when we don't know the version
+char * get_non_version_specific_feature_name(VCP_Feature_Table_Entry * pvft_entry) {
+   Version_Spec vspec = {2,2};
+   return get_version_specific_feature_name(pvft_entry, vspec);
 }
 
 
@@ -131,11 +370,10 @@ int vcp_get_feature_code_count() {
 // Functions that return a function for formatting a feature value
 //
 
-
 // Functions that lookup a value contained in a VCP_Feature_Table_Entry,
 // returning a default if the value is not set for that entry.
 
-Format_Feature_Detail_Function get_nontable_feature_detail_function( VCP_Feature_Table_Entry * pvft_entry) {
+Format_Normal_Feature_Detail_Function get_nontable_feature_detail_function( VCP_Feature_Table_Entry * pvft_entry) {
    assert(pvft_entry != NULL);
 
    // TODO:
@@ -143,7 +381,7 @@ Format_Feature_Detail_Function get_nontable_feature_detail_function( VCP_Feature
    // based on version id, choose .formatter or .formatter_v3
    // NO - test needs to be set in caller, this must return a Format_Feature_Detail_Function, which is not for Table
 
-   Format_Feature_Detail_Function func = pvft_entry->formatter;
+   Format_Normal_Feature_Detail_Function func = pvft_entry->nontable_formatter;
    if (!func)
       func = format_feature_detail_debug_continuous;
    return func;
@@ -175,8 +413,17 @@ bool vcp_format_nontable_feature_detail(
         char *                    buffer,
         int                       bufsz)
 {
-   Format_Feature_Detail_Function ffd_func = get_nontable_feature_detail_function(vcp_entry);
+   // new way, requires that vcp_version be set
+
+   Version_Feature_Flags version_specific_flags = get_version_specific_feature_flags(vcp_entry, vcp_version);
+   version_specific_flags = 0x00;   // TEMP ***
+   if (version_specific_flags) {
+
+   }
+   else {
+   Format_Normal_Feature_Detail_Function ffd_func = get_nontable_feature_detail_function(vcp_entry);
    ffd_func(code_info, vcp_version,  buffer, bufsz);
+   }
    return true;
 }
 
@@ -225,13 +472,18 @@ static VCP_Feature_Table_Entry * vcp_create_dummy_feature_for_hexid(Byte id) {
    // memory leak
    VCP_Feature_Table_Entry* pentry = calloc(1, sizeof(VCP_Feature_Table_Entry) );
    pentry->code = id;
-   if (id >= 0xe0)
-      pentry->name = "Manufacturer Specific";
-   else
-      pentry->name = "Unknown feature";
+   if (id >= 0xe0) {
+      // pentry->name = "Manufacturer Specific";
+      pentry->v20_name = "Manufacturer Specific";
+   }
+   else {
+      // pentry->name = "Unknown feature";
+      pentry->v20_name = "Unknown feature";
+   }
    // VCP_SYNTHETIC => caller should free
-   pentry->flags = VCP_READABLE;    // so readability tests pass
-   pentry->formatter = format_feature_detail_debug_continuous;
+   // pentry->flags = VCP_READABLE;    // so readability tests pass
+   pentry->nontable_formatter = format_feature_detail_debug_continuous;
+   pentry->v20_flags = VCP2_RO | VCP2_STD_CONT;
    return pentry;
 }
 
@@ -398,6 +650,8 @@ bool format_feature_detail_x73_lut_size(
 
 
 
+
+
 //
 // Functions for interpreting non-continuous features whose values are
 // stored in the SL byte
@@ -417,10 +671,21 @@ Feature_Value_Entry * find_feature_values_new(Byte feature_code, Version_Spec vc
       //
       // could add a VCP feature table entry for v3 version values a distinguished from V2
 
-      if (pentry->flags & VCP_NCSL) {
-         assert(pentry->nc_sl_values);
-         result = pentry->nc_sl_values;
-      }
+      Version_Feature_Flags feature_flags = get_version_specific_feature_flags(pentry, vcp_version);
+      assert(feature_flags);
+      // if (feature_flags) {
+         // DBGMSG("new way");
+         if (feature_flags & VCP2_SIMPLE_NC) {
+            result = get_version_specific_sl_values(pentry, vcp_version);
+         }
+//      }
+//      else {
+//         // DBGMSG("old way");
+//         if (pentry->flags & VCP_NCSL) {
+//            assert(pentry->nc_sl_values);
+//            result = pentry->nc_sl_values;
+//         }
+//      }
    }
    if (debug)
       DBGMSG("Starting. feature_code=0x%02x. Returning: %p", feature_code, result);
@@ -645,6 +910,39 @@ bool format_feature_detail_new_control_value(    // 0x02
    return true;
 }
 
+// 0x0b
+bool x0b_format_feature_detail_color_temperature_increment(
+      Interpreted_Nontable_Vcp_Response * code_info,
+      Version_Spec                        vcp_version,
+      char *                              buffer,
+      int                                 bufsz)
+{
+   if (code_info->cur_value == 0 ||
+       code_info->cur_value > 5000
+      )
+      snprintf(buffer, bufsz, "Invalid value: %d", code_info->cur_value);
+   else
+      snprintf(buffer, bufsz, "%d degree(s) Kelvin", code_info->cur_value);
+
+   return true;   // or should it be false if invalid value?
+}
+
+
+// 0x0c
+bool x0c_format_feature_detail_color_temperature_request(
+      Interpreted_Nontable_Vcp_Response * code_info,
+      Version_Spec                        vcp_version,
+      char *                              buffer,
+      int                                 bufsz)
+{
+   // int increments = code_info->cur_value;
+   snprintf(buffer, bufsz,
+            "3000 + %d * (feature 0B color temp increment) degree(s) Kelvin",
+            code_info->cur_value);
+
+   return true;
+}
+
 
 // 0x14
 bool format_feature_detail_select_color_preset(
@@ -735,6 +1033,55 @@ bool format_feature_detail_select_color_preset(
 }
 
 
+// 0xac
+bool format_feature_detail_horizontal_frequency(
+      Interpreted_Nontable_Vcp_Response * code_info, Version_Spec vcp_version, char * buffer, int bufsz)
+{
+  assert (code_info->vcp_code == 0xac);
+  // this is R/O field, so max value is irrelevant
+  if (code_info->mh == 0xff &&
+      code_info->ml == 0xff &&
+      code_info->sh == 0xff &&
+      code_info->sl == 0xff)
+  {
+     snprintf(buffer, bufsz, "Cannot determine frequency or out of range");
+  }
+  else {
+     // this is R/O field, so max value is irrelevant
+     // int khz = code_info->cur_value/1000;
+     // int dec = code_info->cur_value % 1000;
+
+     // snprintf(buffer, bufsz, "%d.%03d Khz", khz, dec);
+     snprintf(buffer, bufsz, "%d hz", code_info->cur_value);
+  }
+  return true;
+}
+
+
+// 0xae
+bool format_feature_detail_vertical_frequency(
+      Interpreted_Nontable_Vcp_Response * code_info, Version_Spec vcp_version, char * buffer, int bufsz)
+{
+  assert (code_info->vcp_code == 0xae);
+  if (code_info->mh == 0xff &&
+      code_info->ml == 0xff &&
+      code_info->sh == 0xff &&
+      code_info->sl == 0xff)
+  {
+     snprintf(buffer, bufsz, "Cannot determine frequency or out of range");
+  }
+  else {
+     // this is R/O field, so max value is irrelevant
+     // code_info->cur_value;   // vert frequency, in .01 hz
+     int hz = code_info->cur_value/100;
+     int dec = code_info->cur_value % 100;
+
+     snprintf(buffer, bufsz, "%d.%02d hz", hz, dec);
+  }
+  return true;
+}
+
+
 // 0xc0
 bool format_feature_detail_display_usage_time(
         Interpreted_Nontable_Vcp_Response * code_info, Version_Spec vcp_version, char * buffer, int bufsz)
@@ -760,6 +1107,18 @@ bool format_feature_detail_display_usage_time(
    return true;
 }
 
+// 0xc6
+bool format_feature_detail_application_enable_key(
+        Interpreted_Nontable_Vcp_Response * code_info,
+        Version_Spec vcp_version,
+        char * buffer,
+        int bufsz)
+{
+   assert (code_info->vcp_code == 0xc6);
+
+   snprintf(buffer, bufsz, "0x%02x%02x", code_info->sh, code_info->sl);
+   return true;
+ }
 
 // 0xc8
 bool format_feature_detail_display_controller_type(
@@ -799,12 +1158,29 @@ bool format_feature_detail_version(
 // SL byte value lookup tables
 //
 
-// 0x1e, 0x1f
-static Feature_Value_Entry x1e_x1f_auto_setup_values[] = {
-      {0x00, "Auto setup not active"},
-      {0x01, "Performing auto setup"},
-      {0x02, "Enable continuous/periodic auto setup"},
-      {0x00,  NULL}       // end of list marker, 0x00 might be a valid value, but NULL never is
+// {0x00,NULL} is used as end of list marker. 0x00 might be a valid value, but NULL never is
+
+// 0x02
+static Feature_Value_Entry x02_new_control_values[] = {
+      // values identical in 2.0, 3.0, 2.2 specs
+      {0x01, "No new control values"},
+      {0x02, "One or more new control values have been saved"},
+      {0xff, "No user controls are present"},
+      {0x00, NULL}
+};
+
+static Feature_Value_Entry x03_soft_controls_values[] = {
+      // values identical in 2.0, 3.0, 2.2 specs
+      {0x00, "No button active"},
+      {0x01, "Button 1 active"},
+      {0x02, "Button 2 active"},
+      {0x03, "Button 3 active"},
+      {0x04, "Button 4 active"},
+      {0x05, "Button 5 active"},
+      {0x06, "Button 6 active"},
+      {0x07, "Button 7 active"},
+      {0xff, "No user controls are present"},
+      {0x00, NULL}
 };
 
 // 0x14
@@ -822,7 +1198,16 @@ static Feature_Value_Entry x14_color_preset_absolute_values[] = {
      {0x0b, "User 1"},
      {0x0c, "User 2"},
      {0x0d, "User 3"},
-     {0x00,  NULL}       // end of list marker, 0x00 might be a valid value, but NULL never is
+     {0x00, NULL}       // end of list marker
+};
+
+// 0x1e, 0x1f
+static Feature_Value_Entry x1e_x1f_auto_setup_values[] = {
+      {0x00, "Auto setup not active"},
+      {0x01, "Performing auto setup"},
+      // end of values for 0x1e, v2.0
+      {0x02, "Enable continuous/periodic auto setup"},
+      {0x00, NULL}       // end of list marker
 };
 
 // 0x60: These are MCCS V2 values.   In V3, x60 is type table.
@@ -841,12 +1226,89 @@ Feature_Value_Entry x60_v2_input_source_values[] = {
       {0x0c,  "Component video (YPrPb/YCrCb) 1"},
       {0x0d,  "Component video (YPrPb/YCrCb) 2"},
       {0x0e,  "Component video (YPrPb/YCrCb) 3"},
+      // end of v2.0 values
+      // remaining values in v2.2 spec, assume also valid for v2.1
       {0x0f,  "DisplayPort-1"},
       {0x10,  "DisplayPort-2"},
       {0x11,  "HDMI-1"},
       {0x12,  "HDMI-2"},
-      {0x00,  NULL}       // end of list marker, 0x00 might be a valid value, but NULL never is
+      {0x00,  NULL}
 };
+
+// 0x63
+Feature_Value_Entry x63_speaker_select_values[] = {
+      {0x00,  "Front L/R"},
+      {0x01,  "Side L/R"},
+      {0x02,  "Rear L/R"},
+      {0x03,  "Center/Subwoofer"},
+      {0x00,  NULL}
+};
+
+// 0x66
+Feature_Value_Entry x66_ambient_light_sensor_values[] = {
+      {0x01,  "Disabled"},
+      {0x02,  "Enabled"},
+      {0x00,  NULL}
+};
+
+
+
+// 0x82: Horizontal Mirror
+Feature_Value_Entry x82_horizontal_flip_values[] = {
+      {0x00, "Normal mode"},
+      {0x01, "Mirrored horizontally mode"},
+      {0x00,  NULL}
+};
+
+// 0x84: Horizontal Mirror
+Feature_Value_Entry x84_vertical_flip_values[] = {
+      {0x00, "Normal mode"},
+      {0x01, "Mirrored vertically mode"},
+      {0x00,  NULL}
+};
+
+
+// 0x8d: Audio Mute
+Feature_Value_Entry x8d_tv_audio_mute_source_values[] = {
+      {0x01, "Mute the audio"},
+      {0x02, "Unmute the audio"},
+      {0x00,  NULL}
+};
+
+// 0x86: Display Scaling
+Feature_Value_Entry x86_display_scaling_values[] = {
+      {0x01, "No scaling"},
+      {0x02, "Max image, no aspect ration distortion"},
+      {0x03, "Max vertical image, no aspect ratio distortion"},
+      {0x04, "Max horizontal image, no aspect ratio distortion"},
+      // v 2.0 spec values end here
+      {0x05, "Max vertical image with aspect ratio distortion"},
+      {0x06, "Max horizontal image with aspect ratio distortion"},
+      {0x07, "Linear expansion (compression) on horizontal axis"},   // Full mode
+      {0x08, "Linear expansion (compression) on h and v axes"},      // Zoom mode
+      {0x09, "Squeeze mode"},
+      {0x0a, "Non-linear expansion"},                                // Variable
+      {0x00,  NULL}
+};
+
+// 0x87: Sharpness algorithm  - used only for v2.0
+Feature_Value_Entry x87_sharpness_values[] = {
+      {0x01,  "Filter function 1"},
+      {0x02,  "Filter function 2"},
+      {0x03,  "Filter function 3"},
+      {0x04,  "Filter function 4"},
+      {0x00,  NULL}
+};
+
+
+// 0x99
+Feature_Value_Entry x99_window_control_values[] = {
+      {0x00,  "No effect"},
+      {0x01,  "Off"},
+      {0x02,  "On"},
+      {0x00,  NULL}
+};
+
 
 // 0xaa
 static Feature_Value_Entry xaa_screen_orientation_values[] = {
@@ -856,6 +1318,19 @@ static Feature_Value_Entry xaa_screen_orientation_values[] = {
       {0x04, "270 degrees"},
       {0xff, "Display cannot supply orientation"},
       {0xff, NULL}     // terminator
+};
+
+static Feature_Value_Entry xa5_window_select_values[] = {
+      {0x00, "Full display image area selected except active windows"},
+      {0x01, "Window 1 selected"},
+      {0x02, "Window 2 selected"},
+      {0x03, "Window 3 selected"},
+      {0x04, "Window 4 selected"},
+      {0x05, "Window 5 selected"},
+      {0x06, "Window 6 selected"},
+      {0x07, "Window 7 selected"},
+      {0xff, NULL}     // terminator
+
 };
 
 // 0xb2
@@ -869,22 +1344,37 @@ static Feature_Value_Entry xb2_flat_panel_subpixel_layout_values[] = {
       {0x06, "Quad pixel, red at bottom left"},
       {0x07, "Delta (triad)"},
       {0x08, "Mosaic"},
+      // end of v2.0 values
       {0xff, NULL}     // terminator
+};
+
+// 0xb6
+static Feature_Value_Entry xb6_v20_display_technology_type_values[] = {
+          { 0x01, "CRT (shadow mask)"},
+          { 0x02, "CRT (aperture grill)"},
+          { 0x03, "LCD (active matrix)"},   // TFT in 2.0
+          { 0x04, "LCos"},
+          { 0x05, "Plasma"},
+          { 0x06, "OLED"},
+          { 0x07, "EL"},
+          { 0x08, "MEM"},     // MEM in 2.0
+          {0xff, NULL}     // terminator
 };
 
 // 0xb6
 static Feature_Value_Entry xb6_display_technology_type_values[] = {
           { 0x01, "CRT (shadow mask)"},
           { 0x02, "CRT (aperture grill)"},
-          { 0x03, "LCD (active matrix)"},
+          { 0x03, "LCD (active matrix)"},   // TFT in 2.0
           { 0x04, "LCos"},
           { 0x05, "Plasma"},
           { 0x06, "OLED"},
           { 0x07, "EL"},
-          { 0x08, "Dynamic MEM"},
-          { 0x09, "Static MEM"},
+          { 0x08, "Dynamic MEM"},     // MEM in 2.0
+          { 0x09, "Static MEM"},      // not in 2.0
           {0xff, NULL}     // terminator
 };
+
 
 // 0xc8
 Feature_Value_Entry xc8_display_controller_type_values[] = {
@@ -933,6 +1423,7 @@ static Feature_Value_Entry xcc_osd_language_values[] = {
           {0x08, "Portuguese (Portugal)"},
           {0x09, "Russian"},
           {0x0a, "Spanish"},
+          // end of MCCS v2.0 values
           {0x0b, "Swedish"},
           {0x0c, "Turkish"},
           {0x0d, "Chinese (simplified / Kantai)"},
@@ -963,6 +1454,34 @@ static Feature_Value_Entry xcc_osd_language_values[] = {
           {0x00,  NULL}       // end of list marker, 0x00 might be a valid value, but NULL never is
 };
 
+
+// 0xd0: These are MCCS V2 values.   need to check V3
+Feature_Value_Entry xd0_v2_output_select_values[] = {
+      {0x01,  "Analog video (R/G/B) 1"},
+      {0x02,  "Analog video (R/G/B) 2"},
+      {0x03,  "Digital video (TDMS) 1"},
+      {0x04,  "Digital video (TDMS) 22"},
+      {0x05,  "Composite video 1"},
+      {0x06,  "Composite video 2"},
+      {0x07,  "S-Video-1"},
+      {0x08,  "S-Video-2"},
+      {0x09,  "Tuner-1"},
+      {0x0a,  "Tuner-2"},
+      {0x0b,  "Tuner-3"},
+      {0x0c,  "Component video (YPrPb/YCrCb) 1"},
+      {0x0d,  "Component video (YPrPb/YCrCb) 2"},
+      {0x0e,  "Component video (YPrPb/YCrCb) 3"},
+      // end of v2.0 values
+      // remaining values in v2.2 spec, assume also valid for v2.1   // TODO: CHECK
+      // {0x0f,  "DisplayPort-1"},
+      // {0x10,  "DisplayPort-2"},
+      // {0x11,  "HDMI-1"},
+      // {0x12,  "HDMI-2"},
+      {0x00,  NULL}
+};
+
+
+
 // 0xd6
 static  Feature_Value_Entry xd6_power_mode_values[] =
    { {0x01, "DPM: On,  DPMS: Off"},
@@ -972,6 +1491,28 @@ static  Feature_Value_Entry xd6_power_mode_values[] =
      {0x05, "Write only value to turn off display"},
      {0x00, NULL}    // termination entry
 };
+
+
+// 0xd7
+static  Feature_Value_Entry xd7_aux_power_output_values[] =
+   { {0x01, "Disable auxilliary power"},
+     {0x02, "Enable Auxilliar power"},
+     {0x00, NULL}    // termination entry
+};
+
+
+
+
+// 0xda
+static  Feature_Value_Entry xda_scan_mode_values[] =
+   { {0x00, "Normal operation"},
+     {0x01, "Underscan"},
+     {0x02, "Overscan"},
+     {0x03, "Widescreen" },                        // in 2.0 spec, not in 3.0
+     {0x00, NULL}    // termination entry
+};
+
+
 
 static Feature_Value_Entry xdc_display_application_values[] = {
    {0x00, "Standard/Default mode"},
@@ -990,691 +1531,1688 @@ static Feature_Value_Entry xdc_display_application_values[] = {
 };
 
 
+// 0xde         // write-only feature
+static  Feature_Value_Entry xde_wo_operation_mode_values[] =
+   { {0x01, "Stand alone"},
+     {0x02, "Slave (full PC control)"},
+     {0x00, NULL}    // termination entry
+};
+
+
 //
 // DDC Virtual Control Panel (VCP) Feature Code Table
 //
 
 VCP_Feature_Table_Entry vcp_code_table[] = {
+   { .code=0x01,
+     .vcp_spec_groups = VCP_SPEC_MISC,
+     .vcp_classes = VCP_CLASS_ANALOG,
+     // defined in 2.0, identical in 3.0
+     //,name="Degauss",
+     //.flags=VCP_WO | VCP_NON_CONT,
+
+     .desc = "Causes a CRT to perform a degauss cycle",
+     //.global_flags = VCP_WO,
+     .v20_flags = VCP2_WO |VCP2_WO_NC,
+     .v20_name = "Degauss",
+   },
    { .code=0x02,
-     .name="New Control Value",
-     .flags=VCP_RW | VCP_NON_CONT,
-      .formatter = format_feature_detail_new_control_value
+     .vcp_spec_groups = VCP_SPEC_MISC,
+     // defined in 2.0, identical in 3.0, 2.2
+     //,name="New Control Value",
+     //.flags=VCP_RW | VCP_NON_CONT,
+     .nontable_formatter = format_feature_detail_new_control_value,   // ??
+     .nc_sl_values = x02_new_control_values,
+
+     .desc = "Indicates that a display user control (other than power) has been"
+             "used to change and save (or autosave) a new value.",
+     //.global_flags = VCP_RW,
+     .v20_flags = VCP2_RW | VCP2_COMPLEX_NC,
+     .v20_name = "New control value",
+   },
+   { .code=0x03,
+     .vcp_spec_groups = VCP_SPEC_MISC,
+     // defined in 2.0, identical in 3.0
+     //,name="Soft controls",
+     //.flags=VCP_RW | VCP_NON_CONT,
+     //.formatter = ?
+     .nc_sl_values = x03_soft_controls_values,
+
+     .desc = "Allows display controls to be used as soft keys",
+     //.global_flags = VCP_RW,
+     .v20_flags =  VCP2_RW | VCP2_SIMPLE_NC,
+     .v20_name = "Soft controls",
    },
    { .code=0x04,
      // Section 8.1 Preset operation
      // Defined in 2.0, identical in 3.0
      .vcp_spec_groups = VCP_SPEC_PRESET,
-     .name="Restore factory defaults",
-     .flags=VCP_WO | VCP_NON_CONT,
+     //,name="Restore factory defaults",
+     //.flags=VCP_WO | VCP_NON_CONT,
 
-     .global_flags = VCP_WO,
-     .v20_flags = VCP2_WO_NC,
+     .desc = "Restore all factor presets including brightness/contrast, "
+             "geometry, color, and TV defaults.",
+     //.global_flags = VCP_WO,
+     .v20_flags =  VCP2_WO | VCP2_WO_NC,
      .v20_name = "Restore factory defaults",
    },
    { .code=0x05,
      // Section 8.1 Preset operation
      // Defined in 2.0, identical in 3.0
      .vcp_spec_groups = VCP_SPEC_PRESET,
-     .name="Restore factory lum/contrast",
-     .flags=VCP_WO | VCP_NON_CONT,
+     //.name="Restore factory lum/contrast",
+     //.flags=VCP_WO | VCP_NON_CONT,
 
-     .v20_flags = VCP2_WO_NC,
+     .desc = "Restore factory defaults for brightness and contrast",
+     //.global_flags = VCP_WO,
+     .v20_flags =  VCP2_WO | VCP2_WO_NC,
      .v20_name = "Restore factory brightness/contrast defaults",
    },
    { .code=0x06,
      // Section 8.1 Preset operation
      // Defined in 2.0, identical in 3.0
      .vcp_spec_groups = VCP_SPEC_PRESET,
-     .name="Restore factory geometry defaults",
-     .flags=VCP_WO | VCP_NON_CONT,
+     //.name="Restore factory geometry defaults",
+     //.flags=VCP_WO | VCP_NON_CONT,
 
-     .v20_flags = VCP2_WO_NC,
+     //.global_flags = VCP_WO,
+     .desc = "Restore factory defaults for geometry adjustments",
+     .v20_flags =  VCP2_WO | VCP2_WO_NC,
      .v20_name = "Restore factory geometry defaults",
    },
    { .code=0x08,
      // Section 8.1 Preset operation
      // Defined in 2.0, identical in 3.0
      .vcp_spec_groups = VCP_SPEC_PRESET,
-     .name="Restore factory color defaults",
-     .flags=VCP_WO | VCP_NON_CONT,
+     //.name="Restore factory color defaults",
+     //.flags=VCP_WO | VCP_NON_CONT,
 
-     .v20_flags = VCP2_WO_NC,
+     .desc = "Restore factory defaults for color settings.",
+     //.global_flags = VCP_WO,
+     .v20_flags =  VCP2_WO | VCP2_WO_NC,
      .v20_name = "Restore color defaults",
    },
    { .code=0x0A,
      // Section 8.1 Preset operation
      // Defined in 2.0, identical in 3.0
      .vcp_spec_groups = VCP_SPEC_PRESET,
-     .name="Restore factory TV defaults",
-     .flags=VCP_WO | VCP_NON_CONT,
+     //.name="Restore factory TV defaults",
+     //.flags=VCP_WO | VCP_NON_CONT,
 
-     .v20_flags = VCP2_WO_NC,
+     .desc = "Restore factory defaults for TV functions.",
+     //.global_flags = VCP_WO,
+     .v20_flags =  VCP2_WO | VCP2_WO_NC,
      .v20_name = "Restore factory TV defaults",
    },
    { .code=0x0b,
-     .name="Color temperature increment",
-     .flags=VCP_RO | VCP_NON_CONT   | VCP_COLORMGT,
-     .formatter=format_feature_detail_debug_continuous
+     //.name="Color temperature increment",
+     .vcp_spec_groups = VCP_SPEC_IMAGE,
+     // Section 8.2 Image Adjustment
+     // Defined in 2.0
+     //.flags=VCP_RO | VCP_NON_CONT   | VCP_COLORMGT,
+     .nontable_formatter=x0b_format_feature_detail_color_temperature_increment,
+
+     // from 2.0 spec:
+     .desc="Allows the display to specify the minimum increment in which it can "
+           "adjust the color temperature.",
+     // simpler:
+     .desc="Color temperature increment used by feature 0Ch Color Temperature Request",
+     //.global_flags=VCP_RO | VCP2_COLORMGT,
+     .v20_flags =  VCP2_RO | VCP2_COLORMGT | VCP2_COMPLEX_NC,
+     .v20_name="Color temperature increment",
    },
    { .code=0x0c,
-     .vcp_spec_groups = VCP_SPEC_PRESET,
-     .name="Color temperature request",
-     .flags=VCP_RW | VCP_CONTINUOUS | VCP_COLORMGT,
-      .formatter=format_feature_detail_debug_continuous
+     //.name="Color temperature request",
+     .vcp_spec_groups = VCP_SPEC_IMAGE,
+     // Section 8.2 Image Adjustment
+     // Defined in 2.0
+     //.flags=VCP_RW | VCP_CONTINUOUS | VCP_COLORMGT,
+      .nontable_formatter=x0c_format_feature_detail_color_temperature_request,
+
+      .desc="Specifies a color temperature (degrees Kelvin)",   // my desc
+      //.global_flags=VCP_RW | VCP2_COLORMGT,
+      .v20_flags = VCP2_RW | VCP2_COLORMGT | VCP2_COMPLEX_CONT,
+      .v20_name="Color temperature request",
+
    },
    { .code=0x0e,
-     .name="Clock",
-     .flags=VCP_RW | VCP_CONTINUOUS,
-      .formatter=format_feature_detail_debug_continuous,
+     .vcp_spec_groups = VCP_SPEC_IMAGE,
+     // Section 8.2 Image Adjustment
+     // Defined in 2.0
+     //.name="Clock",
+     //.flags=VCP_RW | VCP_CONTINUOUS,
+      .nontable_formatter=format_feature_detail_standard_continuous,
+
+      // from the spec:
+      // .desc="Increasing (descreasing) this value will increase (descrease) the "
+      //       "sampling clock frequency.",
+      // simpler:
+      .desc="Increase/decrease the sampling clock frequency.",
+      //.global_flags=VCP_RW,
+      .v20_flags =  VCP2_RW | VCP2_STD_CONT,
+      .v20_name="Clock",
+
    },
    { .code=0x10,
-     .name="Luminosity",
-     .flags=VCP_RW | VCP_CONTINUOUS | VCP_COLORMGT | VCP_PROFILE,
-      .formatter=format_feature_detail_standard_continuous,
+     .vcp_spec_groups = VCP_SPEC_IMAGE,
+     // Section 8.2 Image Adjustment
+     // Defined in 2.0, name changed in 3.0, what is it in 2.1?
+     //.name="Luminosity",
+     //.flags=VCP_RW | VCP_CONTINUOUS | VCP_COLORMGT | VCP_PROFILE,
+      .nontable_formatter=format_feature_detail_standard_continuous,
+
+     .desc="Increasing (decreasing) this value will increase (decrease) the "
+           "brightness of the image.",
+     //.global_flags=VCP_RW | VCP2_COLORMGT | VCP2_PROFILE,
+     .v20_flags =  VCP2_RW | VCP2_COLORMGT | VCP2_PROFILE | VCP2_STD_CONT,
+     .v20_name = "Brightness",
+     .v30_name = "Luminosity",
    },
    { .code=0x11,
-     .name="Flesh tone enhancement",
-     .flags=VCP_RW | VCP_NON_CONT   | VCP_COLORMGT,
-      .formatter=format_feature_detail_debug_bytes,
+      // not in 2.0, is in 3.0, assume introduced in 2.1
+     .vcp_spec_groups = VCP_SPEC_IMAGE,
+     //.name="Flesh tone enhancement",
+     //.flags=VCP_RW | VCP_NON_CONT   | VCP_COLORMGT,
+      .nontable_formatter=format_feature_detail_debug_bytes,
+
+     .desc = "Select contrast enhancement algorithm respecting flesh tone region",
+     //.global_flags = VCP_RW  | VCP2_COLORMGT,
+     .v21_flags = VCP2_RW | VCP2_COLORMGT | VCP2_COMPLEX_NC,
+     .v21_name = "Flesh tone enhancement",
    },
    { .code=0x12,
-     .name="Contrast",
-     .flags=VCP_RW | VCP_CONTINUOUS | VCP_COLORMGT | VCP_PROFILE,
-      .formatter=format_feature_detail_standard_continuous,
+     .vcp_spec_groups = VCP_SPEC_IMAGE,
+     // Section 8.2 Image Adjustment
+     // Defined in 2.0, identical in 3.0
+     //.name="Contrast",
+     //.flags=VCP_RW | VCP_CONTINUOUS | VCP_COLORMGT | VCP_PROFILE,
+     .nontable_formatter=format_feature_detail_standard_continuous,
+
+     .desc="Increasing (decreasing) this value will increase (decrease) the "
+           "contrast of the image.",
+     //.global_flags=VCP_RW | VCP2_COLORMGT | VCP2_PROFILE,
+     .v20_flags = VCP2_RW | VCP2_COLORMGT | VCP2_PROFILE | VCP2_STD_CONT,
+     .v20_name = "Contrast",
    },
    { .code=0x13,
-     .name="Backlight",
-     .flags=VCP_RW | VCP_CONTINUOUS,
-      .formatter=format_feature_detail_debug_bytes,
+     // not in 2.0, is in 3.0
+     // assume first defined in 2.1
+     //.name="Backlight",
+     //.flags=VCP_RW | VCP_CONTINUOUS,
+      .nontable_formatter=format_feature_detail_debug_bytes,
+
+      .desc = "Increase/decrease the specified backlight control value",
+      //.global_flags = VCP_RW | VCP2_COLORMGT | VCP2_PROFILE,
+      .v21_flags = VCP2_RW | VCP2_COLORMGT | VCP2_PROFILE | VCP2_COMPLEX_CONT,
+      .v21_name  = "Backlight control",
+      .v22_flags = VCP2_DEPRECATED,
    },
    { .code=0x14,
-     .name="Select color preset",
-     .flags=VCP_RW | VCP_NON_CONT | VCP_FUNC_VER,
-     // .flags2=VCP_FUNC_VER,       // interpretation varies depending on VCP version
-     .formatter=format_feature_detail_select_color_preset,
+     .vcp_spec_groups = VCP_SPEC_IMAGE,
+     // Defined in 2.0, different in 3.0, 2.2
+     // what is appropriate choice for 2.1 ?
+     //.name="Select color preset",
+     //.flags=VCP_RW | VCP_NON_CONT | VCP_FUNC_VER,
+     // //.flags2=VCP_FUNC_VER,       // interpretation varies depending on VCP version
+     .nontable_formatter=format_feature_detail_select_color_preset,
+     .nc_sl_values= x14_color_preset_absolute_values,
+
+     .desc="Select a specified color temperature",
+     //.global_flags = VCP_RW,
+     .v20_flags = VCP2_RW | VCP2_SIMPLE_NC,
+     .v20_name  = "Select color preset",
+     .v30_flags = VCP2_RW | VCP2_COMPLEX_NC,
+     .v22_flags = VCP2_RW | VCP2_COMPLEX_NC,
    },
    { .code=0x16,
-     .name="Red",
-     .flags=VCP_RW | VCP_CONTINUOUS | VCP_COLORMGT | VCP_PROFILE,
-      .formatter=format_feature_detail_standard_continuous,
+     .vcp_spec_groups = VCP_SPEC_IMAGE,
+     // Defined in 2.0
+     //.name="Red",
+     //.flags=VCP_RW | VCP_CONTINUOUS | VCP_COLORMGT | VCP_PROFILE,
+      .nontable_formatter=format_feature_detail_standard_continuous,
+
+      .desc="Increase/decrease the luminesence of red pixels",   // my simplification
+      //.global_flags = VCP_RW | VCP2_COLORMGT | VCP2_PROFILE,
+      .v20_flags = VCP2_RW | VCP2_COLORMGT | VCP2_PROFILE | VCP2_STD_CONT,
+      .v20_name = "Red video gain",
    },
    { .code=0x18,
-     .name="Green",
-     .flags=VCP_RW | VCP_CONTINUOUS | VCP_COLORMGT | VCP_PROFILE,
-      .formatter=format_feature_detail_standard_continuous,
+         .vcp_spec_groups = VCP_SPEC_IMAGE,
+         // Defined in 2.0
+     //.name="Green",
+     //.flags=VCP_RW | VCP_CONTINUOUS | VCP_COLORMGT | VCP_PROFILE,
+      .nontable_formatter=format_feature_detail_standard_continuous,
+
+      .desc="Increase/decrease the luminesence of green pixels",   // my simplification
+      //.global_flags = VCP_RW | VCP2_COLORMGT | VCP2_PROFILE,
+      .v20_flags = VCP2_RW | VCP2_COLORMGT | VCP2_PROFILE | VCP2_STD_CONT,
+      .v20_name = "Green video gain",
    },
    { .code=0x1a,
-     .name="Blue",
-     .flags=VCP_RW | VCP_CONTINUOUS | VCP_COLORMGT | VCP_PROFILE,
-      .formatter=format_feature_detail_standard_continuous,
+     .vcp_spec_groups = VCP_SPEC_IMAGE,
+     // Defined in 2.0
+     //.name="Blue",
+     //.flags=VCP_RW | VCP_CONTINUOUS | VCP_COLORMGT | VCP_PROFILE,
+      .nontable_formatter=format_feature_detail_standard_continuous,
+
+      .desc="Increase/decrease the luminesence of blue pixels",   // my simplification
+      //.global_flags = VCP_RW | VCP2_COLORMGT | VCP2_PROFILE,
+      .v20_flags = VCP2_RW | VCP2_COLORMGT | VCP2_PROFILE | VCP2_STD_CONT,
+      .v20_name = "Blue video gain",
+   },
+   { .code=0x1c,
+     .vcp_spec_groups = VCP_SPEC_IMAGE,
+     //.flags = VCP_RW | VCP_CONTINUOUS,
+     // defined in 2.0, identical in 3.0
+
+     .desc="Increase/decrease the focus of the image",  // my simplification
+     //.global_flags = VCP_RW,
+     .v20_flags = VCP2_RW | VCP2_STD_CONT,
+     .v20_name = "Focus",
    },
    { .code=0x1e,
-     .name="Auto Setup",
-     .flags=VCP_RW | VCP_NON_CONT | VCP_NCSL,
+     .vcp_spec_groups = VCP_SPEC_IMAGE,    // 2.0, 3.0
+     // Section 8.2 Image Adjustment
+     // Defined in 2.0, values differ in 3.0
+     //.name="Auto Setup",
+     //.flags=VCP_RW | VCP_NON_CONT | VCP_NCSL,
      // .formatter=format_feature_detail_auto_setup,
-     .formatter=format_feature_detail_sl_lookup_new,
+     .nontable_formatter=format_feature_detail_sl_lookup_new,
       .nc_sl_values = x1e_x1f_auto_setup_values,
+
+      // from 2.0:
+      .desc="Perform autosetup function (H/V position, clock, clock phase, "
+            "A/D converter, etc.",
+      //.global_flags = VCP_RW,
+      .v20_flags = VCP2_RW | VCP2_SIMPLE_NC,
+      .v20_name = "Autosetup",
    },
    { .code=0x1f,
-     .name="Auto Color Setup",
-     .flags=VCP_RW | VCP_NON_CONT | VCP_COLORMGT | VCP_NCSL,
+     .vcp_spec_groups = VCP_SPEC_IMAGE,   // 3.0
+     // not in 2.0, defined in 3.0
+     // assume firt introduced in 2.1
+     //.name="Auto Color Setup",
+     //.flags=VCP_RW | VCP_NON_CONT | VCP_COLORMGT | VCP_NCSL,
       // .formatter=format_feature_detail_auto_setup,
-      .formatter=format_feature_detail_sl_lookup_new,
+      .nontable_formatter=format_feature_detail_sl_lookup_new,
        .nc_sl_values = x1e_x1f_auto_setup_values,
+
+       .desc="Perform color autosetup function (R/G/B gain and offset, A/D setup, etc. ",
+       //.global_flags = VCP_RW,
+       .v21_flags = VCP2_RW | VCP2_SIMPLE_NC,
+       .v21_name = "Auto color setup",
    },
 
-   { .code=0x20,
+   { .code=0x20,        // Done
      .vcp_spec_groups = VCP_SPEC_GEOMETRY,
+     .vcp_classes = VCP_CLASS_ANALOG,
+     .desc = "Increasing (decreasing) this value moves the image toward the right (left) of the display.",
      // Group 8.4 Geometry, identical in 2.0, 3.0, 2.2 except for name
      // When did name change to include "(phase)"?  Assuming 2.1
-     .name="Horizontal Position",
-     .flags=VCP_RW | VCP_CONTINUOUS,
-      .formatter=format_feature_detail_standard_continuous,
+     //.name="Horizontal Position",
+     //.flags=VCP_RW | VCP_CONTINUOUS,
+      .nontable_formatter=format_feature_detail_standard_continuous,
 
-     .global_flags=VCP_RW,
-     .v20_flags = VCP2_STD_CONT,
+     //.global_flags=VCP_RW,
+     .v20_flags = VCP2_RW | VCP2_STD_CONT,
      .v20_name="Horizontal Position",
      .v21_name="Horizontal Position (Phase)",
+     .v30_name="Horizontal Position (Phase)",
    },
-   { .code=0x22,
+   { .code=0x22,         // Done
      .vcp_spec_groups = VCP_SPEC_GEOMETRY,
+     .vcp_classes = VCP_CLASS_ANALOG,
+     .desc = "Increase/decrease the width of the image.",
      // Group 8.4 Geometry, identical in 2.0, 3.0, 2.2
-     .name="Horizontal Size",
-     .flags=VCP_RW | VCP_CONTINUOUS,
-     .formatter=format_feature_detail_standard_continuous,
+     //.name="Horizontal Size",
+     //.flags=VCP_RW | VCP_CONTINUOUS,
+     .nontable_formatter=format_feature_detail_standard_continuous,
 
-     .global_flags=VCP_RW,
+     //.global_flags=VCP_RW,
      .v20_name="Horizontal Size",
-     .v20_flags = VCP2_STD_CONT,
+     .v20_flags = VCP2_RW | VCP2_STD_CONT,
    },
    { // Group 8.4 Geometry, identical in 2.0, 3.0, 2.2
-     .code=0x24,
+     .code=0x24,       // Done
      .vcp_spec_groups = VCP_SPEC_GEOMETRY,
-     .name="Horizontal Pincushion",
-     .flags=VCP_RW | VCP_CONTINUOUS,
-      .formatter=format_feature_detail_standard_continuous,
+     .vcp_classes = VCP_CLASS_ANALOG,
+     .desc = "Increaseing (decreasing) this value will cause the right and left "
+             "sides of the image to become more (less) convex.",
+     //.name="Horizontal Pincushion",
+     //.flags=VCP_RW | VCP_CONTINUOUS,
+      .nontable_formatter=format_feature_detail_standard_continuous,
 
-     .global_flags=VCP_RW,
-     .v20_flags = VCP2_STD_CONT,
+     //.global_flags=VCP_RW,
+     .v20_flags = VCP2_RW | VCP2_STD_CONT,
      .v20_name="Horizontal Pincushion",
    },
    { // Group 8.4 Geometry, identical in 2.0, 3.0, 2.2
-     .code=0x26,
+     .code=0x26,              // Done
      .vcp_spec_groups = VCP_SPEC_GEOMETRY,
-     .name="Horizontal Pincushion Balance",
-     .flags=VCP_RW | VCP_CONTINUOUS,
-      .formatter=format_feature_detail_standard_continuous,
+     .vcp_classes = VCP_CLASS_ANALOG,
+     .desc = "Increasing (descrasing) this value moves the center section "
+             "of the image toward the right (left) side of the display.",
+     //.name="Horizontal Pincushion Balance",
+     //.flags=VCP_RW | VCP_CONTINUOUS,
+      .nontable_formatter=format_feature_detail_standard_continuous,
 
-     .global_flags=VCP_RW,
-     .v20_flags = VCP2_STD_CONT,
+     //.global_flags=VCP_RW,
+     .v20_flags = VCP2_RW | VCP2_STD_CONT,
      .v20_name="Horizontal Pincushion Balance",
    },
    { // Group 8.4 Geometry, name changed in 3.0 & 2.2 vs 2.0  what should it be for 2.1?
      // assume it changed in 2.1
-     .code=0x28,
+     .code=0x28,            // Done
      .vcp_spec_groups = VCP_SPEC_GEOMETRY,
-     .name="Horizontal Convergence",
-     .flags=VCP_RW | VCP_CONTINUOUS,
-      .formatter=format_feature_detail_standard_continuous,
+     .vcp_classes = VCP_CLASS_ANALOG,
+     // description identical in 3.0, 2.0 even though name changed
+     .desc = "Increasing (descrasing) this value will shift the red pixels to "
+             "the right (left) and the blue pixels left (right) across the "
+             "image with respect to the green pixels.",
+     //.name="Horizontal Convergence",
+     //.flags=VCP_RW | VCP_CONTINUOUS,
+     .nontable_formatter=format_feature_detail_standard_continuous,
 
-     .v20_flags = VCP2_STD_CONT,
+     //.global_flags = VCP_RW,
+     .v20_flags = VCP2_RW | VCP2_STD_CONT,
      .v20_name="Horizontal Convergence",
      .v21_name="Horizontal Convergence R/B",
    },
-   { .code=0x29,
+   { .code=0x29,              // Done
      .vcp_spec_groups = VCP_SPEC_GEOMETRY,
+     .vcp_classes = VCP_CLASS_ANALOG,
      // when was this added?  2.1 or 3.0?   assuming 2.1
-     .name="Horizontal Convergence M/G",
-     .flags=VCP_RW | VCP_CONTINUOUS,
-      .formatter=format_feature_detail_standard_continuous,
+     //.name="Horizontal Convergence M/G",
+     //.flags=VCP_RW | VCP_CONTINUOUS,
+      .nontable_formatter=format_feature_detail_standard_continuous,
 
-     .global_flags=VCP_RW,
+      .desc = "Increasing (descrasing) this value will shift the magenta pixels to "
+              "the right (left) and the green pixels left (right) across the "
+              "image with respect to the magenta (sic) pixels.",
+     //.global_flags=VCP_RW,
      .v21_name="Horizontal Convergence M/G",
-     .v21_flags=VCP2_STD_CONT,
+     .v21_flags=VCP2_RW | VCP2_STD_CONT,
    },
-   { .code = 0x2a,
+   { .code = 0x2a,           // Done
      .vcp_spec_groups = VCP_SPEC_GEOMETRY,
+     .vcp_classes = VCP_CLASS_ANALOG,
      // Group 8.4 Geometry, identical in 3.0, 2.2
-     .name = "Horizontal Linearity",
-     .flags = VCP_RW | VCP_CONTINUOUS,
+     //.name = "Horizontal Linearity",
+     //.flags = VCP_RW | VCP_CONTINUOUS,
 
-     .global_flags=VCP_RW,
-     .v20_flags = VCP2_STD_CONT,
+     .desc = "Increase/decrease the density of pixels in the image center.",
+     //.global_flags=VCP_RW,
+     .v20_flags = VCP2_RW | VCP2_STD_CONT,
      .v20_name="Horizontal Linearity",
    },
    { // Group 8.4 Geometry
-     .code = 0x2c,
+     .code = 0x2c,               // Done
      .vcp_spec_groups = VCP_SPEC_GEOMETRY,
-     .name = "Horizontal Linearity Balance",
-     .flags = VCP_RW | VCP_CONTINUOUS,
+     .vcp_classes = VCP_CLASS_ANALOG,
+     //.name = "Horizontal Linearity Balance",
+     //.flags = VCP_RW | VCP_CONTINUOUS,
 
-     .global_flags=VCP_RW,
-     .v20_flags = VCP2_STD_CONT,
+     .desc = "Increasing (decreasing) this value shifts the density of pixels "
+             "from the left (right) side to the right (left) side of the image.",
+     //.global_flags=VCP_RW,
+     .v20_flags = VCP2_RW | VCP2_STD_CONT,
      .v20_name = "Horizontal Linearity Balance",
    },
    { .code=0x2e,
-     .name="Gray scale expansion",
-     .flags=VCP_RW | VCP_NON_CONT   | VCP_COLORMGT,
-      .formatter=format_feature_detail_debug_bytes,
+     .vcp_spec_groups = VCP_SPEC_IMAGE,
+     // not defined in 2.0, is defined in 3.0
+     // assume new in 2.1
+     //.name="Gray scale expansion",
+     //.flags=VCP_RW | VCP_NON_CONT   | VCP_COLORMGT,
+      .nontable_formatter=format_feature_detail_debug_bytes,
+
+     .desc = "Gray Scale Expansion",
+     //.global_flags = VCP_RW | VCP2_COLORMGT,
+     .v21_flags = VCP2_RW | VCP2_COLORMGT | VCP2_COMPLEX_NC,
+     .v21_name = "Gray scale expansion",
    },
-   { .code=0x30,
+   { .code=0x30,                // Done
      .vcp_spec_groups = VCP_SPEC_GEOMETRY,
+     .vcp_classes = VCP_CLASS_ANALOG,
      // Group 8.4 Geometry
      // When did name change from 2.0? assuming 2.1
-     .name="Vertical Position",
-     .flags=VCP_RW | VCP_CONTINUOUS,
-      .formatter=format_feature_detail_standard_continuous,
+     //.name="Vertical Position",
+     //.flags=VCP_RW | VCP_CONTINUOUS,
+      .nontable_formatter=format_feature_detail_standard_continuous,
 
-     .global_flags=VCP_RW,
-     .v20_flags = VCP2_STD_CONT,
+      .desc = "Increasing (decreasing) this value moves the image toward "
+              "the top (bottom) edge of the display.",
+     //.global_flags=VCP_RW,
+     .v20_flags = VCP2_RW | VCP2_STD_CONT,
      .v20_name="Vertical Position",
      .v21_name="Vertical Position (Phase)",
    },
-   { .code=0x32,
+   { .code=0x32,                // Done
      .vcp_spec_groups = VCP_SPEC_GEOMETRY,
+     .vcp_classes = VCP_CLASS_ANALOG,
      // Group 8.4 Geometry.  Did name change with 2.1 or 3.0/2.2? - assuming 2.1
-     .name="Vertical Size",
-     .flags=VCP_RW | VCP_CONTINUOUS,
-      .formatter=format_feature_detail_standard_continuous,
+     //.name="Vertical Size",
+     //.flags=VCP_RW | VCP_CONTINUOUS,
+      .nontable_formatter=format_feature_detail_standard_continuous,
 
-     .global_flags=VCP_RW,
-     .v20_flags=VCP2_STD_CONT,
+      .desc = "Increase/decreasing the height of the image.",
+     //.global_flags=VCP_RW,
+     .v20_flags=VCP2_RW |  VCP2_STD_CONT,
      .v20_name="Vertical Size",
-     .v21_name="Height",
    },
-   { .code=0x34,
+   { .code=0x34,                                  // Done
+     .vcp_spec_groups = VCP_SPEC_GEOMETRY,
+     .vcp_classes = VCP_CLASS_ANALOG,
      // Group 8.4 Geometry.  Identical in 2.0, 3.0, 2.2
-     .name = "Vertical Pincushion",
-     .flags=VCP_RW | VCP_CONTINUOUS,
+     //.name = "Vertical Pincushion",
+     //.flags=VCP_RW | VCP_CONTINUOUS,
 
-     .global_flags=VCP_RW,
-     .v20_flags = VCP2_STD_CONT,
+     .desc = "Increasing (decreasing) this value will cause the top and "
+             "bottom edges of the image to become more (less) convex.",
+     //.global_flags=VCP_RW,
+     .v20_flags =  VCP2_RW | VCP2_STD_CONT,
      .v20_name = "Vertical Pincushion",
    },
-   { .code=0x36,
+   { .code=0x36,                                 // Done
      .vcp_spec_groups = VCP_SPEC_GEOMETRY,
+     .vcp_classes = VCP_CLASS_ANALOG,
      // Group 8.4 Geometry.
-     .name = "Vertical Pincushion Balance",
-     .flags=VCP_RW | VCP_CONTINUOUS,
+     //.name = "Vertical Pincushion Balance",
+     //.flags=VCP_RW | VCP_CONTINUOUS,
 
-     .global_flags=VCP_RW,
-     .v20_flags = VCP2_STD_CONT,
+     .desc = "Increasing (decreasing) this value will move the center "
+             "section of the image toward the top (bottom) edge of the display.",
+     //.global_flags=VCP_RW,
+     .v20_flags =  VCP2_RW | VCP2_STD_CONT,
      .v20_name = "Vertical Pincushion Balance",
    },
-   { .code=0x38,
+   { .code=0x38,                                 // Done
      .vcp_spec_groups = VCP_SPEC_GEOMETRY,
+     .vcp_classes = VCP_CLASS_ANALOG,
      // Group 8.4 Geometry.  Assume name changed with 2.1
-     .name="Vertical Convergence",
-     .flags=VCP_RW | VCP_CONTINUOUS,
-     .formatter=format_feature_detail_standard_continuous,
+     //.name="Vertical Convergence",
+     //.flags=VCP_RW | VCP_CONTINUOUS,
+     .nontable_formatter=format_feature_detail_standard_continuous,
 
-     .global_flags=VCP_RW,
-     .v20_flags=VCP2_STD_CONT,
+     .desc = "Increasing (decreasing) this value shifts the red pixels up (down) "
+             "across the image and the blue pixels down (up) across the image "
+             "with respect to the green pixels.",
+     //.global_flags=VCP_RW,
+     .v20_flags= VCP2_RW | VCP2_STD_CONT,
      .v20_name="Vertical Convergence",
      .v21_name="Vertical Convergence R/B",
    },
-   { .code=0x39,
+   { .code=0x39,                                 // Done
      .vcp_spec_groups = VCP_SPEC_GEOMETRY,
+     .vcp_classes = VCP_CLASS_ANALOG,
      // Group 8.4 Geometry.  Not in 2.0.  Assume added in 2.1
-     .flags=VCP_RW | VCP_CONTINUOUS,
-     .formatter=format_feature_detail_standard_continuous,
+     //.flags=VCP_RW | VCP_CONTINUOUS,
+     .nontable_formatter=format_feature_detail_standard_continuous,
 
-     .global_flags=VCP_RW,
+     .desc = "Increasing (decreasing) this value shifts the magenta pixels up (down) "
+             "across the image and the green pixels down (up) across the image "
+             "with respect to the magenta (sic) pixels.",
+     //.global_flags=VCP_RW,
      .v21_name="Vertical Convergence M/G",
-     .v21_flags=VCP2_STD_CONT,
+     .v21_flags= VCP2_RW | VCP2_STD_CONT,
    },
-   { .code=0x3a,
+   { .code=0x3a,                                  // Done
      .vcp_spec_groups = VCP_SPEC_GEOMETRY,
+     .vcp_classes = VCP_CLASS_ANALOG,
      // Group 8.4 Geometry
-     .name = "Vertical Linearity",
-     .flags = VCP_RW | VCP_CONTINUOUS,
-     .formatter=format_feature_detail_standard_continuous,
+     //.name = "Vertical Linearity",
+     //.flags = VCP_RW | VCP_CONTINUOUS,
+     .nontable_formatter=format_feature_detail_standard_continuous,
 
-     .global_flags=VCP_RW,
-     .v20_flags=VCP2_STD_CONT,
+     .desc = "Increase/descrase the density of scan lines in the image center.",
+     //.global_flags=VCP_RW,
+     .v20_flags= VCP2_RW | VCP2_STD_CONT,
      .v20_name = "Vertical Linearity",
    },
-   { .code=0x3c,
+   { .code=0x3c,                                       // Done
      .vcp_spec_groups = VCP_SPEC_GEOMETRY,
+     .vcp_classes = VCP_CLASS_ANALOG,
      // Group 8.4 Geometry
-     .name = "Vertical Linearity Balance",
-     .flags = VCP_RW | VCP_CONTINUOUS,
-     .formatter=format_feature_detail_standard_continuous,
+     //.name = "Vertical Linearity Balance",
+     //.flags = VCP_RW | VCP_CONTINUOUS,
+     .nontable_formatter=format_feature_detail_standard_continuous,
 
-     .global_flags=VCP_RW,
-     .v20_flags=VCP2_STD_CONT,
+     .desc = "Increasing/decrease the density of scan lines in the image center.",
+     //.global_flags=VCP_RW,
+     .v20_flags= VCP2_RW | VCP2_STD_CONT,
      .v20_name = "Vertical Linearity Balance",
    },
    { .code=0x3e,
-     .name="Clock phase",
-     .flags=VCP_RW | VCP_CONTINUOUS,
-      .formatter=format_feature_detail_standard_continuous,
+     .vcp_spec_groups = VCP_SPEC_IMAGE,
+     // Define in 2.0, identical in 3.0
+     //.name="Clock phase",
+     //.flags=VCP_RW | VCP_CONTINUOUS,
+      .nontable_formatter=format_feature_detail_standard_continuous,
+
+      // from 2.0 spec:
+      // .desc="Increasing (decreasing) this value will increase (decrease) the "
+      //       "phase shift of the sampling clock.",
+     // simpler:
+     .desc="Increase/decrease the sampling clock phase shift",
+     //.global_flags = VCP_RW,
+     .v20_flags =  VCP2_RW | VCP2_STD_CONT,
+     .v20_name = "Clock phase",
    },
-   { .code=0x40,
+   { .code=0x40,                                   // Done
      .vcp_spec_groups = VCP_SPEC_GEOMETRY,
+     .vcp_classes = VCP_CLASS_ANALOG,
      // Group 8.4 Geometry
      // When did name change from 2.0?   assume 2.1
-     .name="Horizontal Parallelogram",
-     .flags=VCP_RW | VCP_CONTINUOUS,
-      .formatter=format_feature_detail_standard_continuous,
+     //.name="Horizontal Parallelogram",
+     //.flags=VCP_RW | VCP_CONTINUOUS,
+      .nontable_formatter=format_feature_detail_standard_continuous,
 
-      .global_flags=VCP_RW,
-      .v20_flags=VCP2_STD_CONT,
+      .desc = "Increasing (decreasing) this value shifts the top section of "
+              "the image to the right (left) with respect to the bottom section "
+              "of the image.",
+      //.global_flags=VCP_RW,
+      .v20_flags= VCP2_RW | VCP2_STD_CONT,
      .v20_name="Key Balance",  // 2.0
      .v21_name="Horizontal Parallelogram",
    },
-   { .code=0x42,
+   { .code=0x41,
      .vcp_spec_groups = VCP_SPEC_GEOMETRY,
+     .vcp_classes = VCP_CLASS_ANALOG,
+     // Group 8.4 Geometry
+     // not defined in 2.0, assume defined in 2.1
+     //.flags=VCP_RW | VCP_CONTINUOUS,
+      .nontable_formatter=format_feature_detail_standard_continuous,
+
+      // 3.0 doc has same description for x41 as x40, is this right?
+      // TODO: check the 2.2 spec
+      .desc = "Increasing (decreasing) this value shifts the top section of "
+              "the image to the right (left) with respect to the bottom section "
+              "of the image.",
+     //.global_flags=VCP_RW,
+     .v21_flags= VCP2_RW | VCP2_STD_CONT,
+     .v21_name="Vertical Parallelogram",
+   },
+   { .code=0x42,                                  // Done
+     .vcp_spec_groups = VCP_SPEC_GEOMETRY,
+     .vcp_classes = VCP_CLASS_ANALOG,
      // Group 8.4 Geometry
      // When did name change from 2.0?   assume 2.1
-     .name="Horizontal Keystone",
-     .flags=VCP_RW | VCP_CONTINUOUS,
-      .formatter=format_feature_detail_standard_continuous,
+     //.name="Horizontal Keystone",
+     //.flags= VCP2_RW | VCP_RW | VCP_CONTINUOUS,
+      .nontable_formatter=format_feature_detail_standard_continuous,
 
-     .global_flags=VCP_RW,
-     .v20_flags=VCP2_STD_CONT,
+     .desc = "Increasing (decreasing) this value will increase (decrease) the "
+           "ratio between the horizontal size at the top of the image and the "
+           "horizontal size at the bottom of the image.",
+     //.global_flags=VCP_RW,
+     .v20_flags= VCP2_RW | VCP2_STD_CONT,
      .v20_name="Horizontal Trapezoid",
      .v21_name="Horizontal Keystone",   // ??
    },
-   { .code=0x43,
+   { .code=0x43,                             // Done
      .vcp_spec_groups = VCP_SPEC_GEOMETRY,
+     .vcp_classes = VCP_CLASS_ANALOG,
      // Group 8.4 Geometry
      // When did name change from 2.0?   assume 2.1
-     .name="Vertical Keystone",
-     .flags=VCP_RW | VCP_CONTINUOUS,
-      .formatter=format_feature_detail_standard_continuous,
+     //.name="Vertical Keystone",
+     //.flags=VCP_RW | VCP_CONTINUOUS,
+      .nontable_formatter=format_feature_detail_standard_continuous,
 
-     .global_flags=VCP_RW,
-     .v20_flags=VCP2_STD_CONT,
+      .desc = "Increasing (decreasing) this value will increase (decrease) the "
+            "ratio between the vertical size at the left of the image and the "
+            "vertical size at the right of the image.",
+     //.global_flags=VCP_RW,
+     .v20_flags= VCP2_RW | VCP2_STD_CONT,
      .v20_name="Vertical Trapezoid",
      .v21_name="Vertical Keystone",   // ??
    },
-   { .code=0x44,
+   { .code=0x44,                                // Done
      .vcp_spec_groups = VCP_SPEC_GEOMETRY,
+     .vcp_classes = VCP_CLASS_ANALOG,
      // Group 8.4 Geometry
      // When did name change from 2.0?   assume 2.1
-     .name="Rotation",
-     .flags=VCP_RW | VCP_CONTINUOUS,
-      .formatter=format_feature_detail_standard_continuous,
+     //.name="Rotation",
+     //.flags=VCP_RW | VCP_CONTINUOUS,
+      .nontable_formatter=format_feature_detail_standard_continuous,
 
-     .global_flags=VCP_RW,
-     .v20_flags=VCP2_STD_CONT,
+      .desc = "Increasing (decreasing) this value rotates the image (counter) "
+            "clockwise around the center point of the screen.",
+     //.global_flags=VCP_RW,
+     .v20_flags= VCP2_RW | VCP2_STD_CONT,
      .v20_name="Tilt (rotation)",
      .v21_name="Rotation",   // ??
    },
-   { .code=0x46,
+   { .code=0x46,                          // Done
      .vcp_spec_groups = VCP_SPEC_GEOMETRY,
+     .vcp_classes = VCP_CLASS_ANALOG,
      // Group 8.4 Geometry
      // When did name change from 2.0?   assume 2.1
-     .name="Top Corner Flare",
-     .flags=VCP_RW | VCP_CONTINUOUS,
-      .formatter=format_feature_detail_standard_continuous,
+     //.name="Top Corner Flare",
+     //.flags=VCP_RW | VCP_CONTINUOUS,
+      .nontable_formatter=format_feature_detail_standard_continuous,
 
-     .global_flags=VCP_RW,
-     .v20_flags=VCP2_STD_CONT,
+      .desc = "Increase/decrease the distance between the left and right sides "
+              "at the top of the image.",
+     //.global_flags=VCP_RW,
+     .v20_flags= VCP2_RW | VCP2_STD_CONT,
      .v20_name="Top Corner",
      .v21_name="Top Corner Flare",   // ??
    },
-   { .code=0x48,
+   { .code=0x48,                              // Done
      .vcp_spec_groups = VCP_SPEC_GEOMETRY,
+     .vcp_classes = VCP_CLASS_ANALOG,
      // Group 8.4 Geometry
-     // Data from 2.0 spec only, need to check others
-     .name="Placeholder",
-     .flags=VCP_RW | VCP_CONTINUOUS,
-      .formatter=format_feature_detail_standard_continuous,
+     // name is different in 3.0, assume changed in 2.1
+     //.name="Placeholder",
+     //.flags=VCP_RW | VCP_CONTINUOUS,
+      .nontable_formatter=format_feature_detail_standard_continuous,
 
-     .global_flags=VCP_RW,
-     .v20_flags=VCP2_STD_CONT,
+      .desc = "Increasing (decreasing) this value moves the top of the "
+            "image to the right (left).",
+     //.global_flags=VCP_RW,
+     .v20_flags= VCP2_RW | VCP2_STD_CONT,
      .v20_name="Top Corner Balance",
+     .v21_name="Top Corner Hook",
    },
-   { .code=0x4a,
+   { .code=0x4a,                                             //Done
      .vcp_spec_groups = VCP_SPEC_GEOMETRY,
+     .vcp_classes = VCP_CLASS_ANALOG,
      // Group 8.4 Geometry
      // When did name change from 2.0?   assume 2.1
-     .name="Bottom Corner Flare",
-     .flags=VCP_RW | VCP_CONTINUOUS,
-     .formatter=format_feature_detail_standard_continuous,
+     //.name="Bottom Corner Flare",
+     //.flags=VCP_RW | VCP_CONTINUOUS,
+     .nontable_formatter=format_feature_detail_standard_continuous,
 
-     .global_flags=VCP_RW,
-     .v20_flags=VCP2_STD_CONT,
+     .desc = "Increasing (decreasing) this value will increase (decrease) the"
+             "distance between the left and right sides at the bottom of the image.",
+     //.global_flags=VCP_RW,
+     .v20_flags= VCP2_RW | VCP2_STD_CONT,
      .v20_name="Bottom Corner",
      .v21_name="Bottom Corner Flare",   // ??
    },
-   { .code=0x4c,
+   { .code=0x4c,                                          // Done
      .vcp_spec_groups = VCP_SPEC_GEOMETRY,
+     .vcp_classes = VCP_CLASS_ANALOG,
      // Group 8.4 Geometry
-     // Data from 2.0 spec only, need to check others
-     .name="Placeholder",
-     .flags=VCP_RW | VCP_CONTINUOUS,
-     .formatter=format_feature_detail_standard_continuous,
+     // name is different in 3.0, assume changed in 2.1
+     //.name="Placeholder",
+     //.flags=VCP_RW | VCP_CONTINUOUS,
+     .nontable_formatter=format_feature_detail_standard_continuous,
 
-     .global_flags=VCP_RW,
-     .v20_flags=VCP2_STD_CONT,
+     .desc = "Increasing (decreasing) this value moves the bottom end of the "
+           "image to the right (left).",
+     //.global_flags=VCP_RW,
+     .v20_flags= VCP2_RW | VCP2_STD_CONT,
      .v20_name="Bottom Corner Balance",
+     .v21_name="Bottom Corner Hook",
    },
 
    { .code=0x52,
-     .name="Active control",
-     .flags=VCP_RO | VCP_NON_CONT,
-      .formatter=format_feature_detail_debug_bytes,
+     .vcp_spec_groups = VCP_SPEC_MISC,
+     // defined in 2.0, 3.0 has extended consistent explanation
+     //.name="Active control",
+     //.flags=VCP_RO | VCP_NON_CONT,
+      .nontable_formatter=format_feature_detail_debug_bytes,
+
+     .desc= "Read id of one feature that has changed, 0x00 indicates no more",  // my desc
+     //.global_flags = VCP_RO,
+     .v20_flags = VCP2_RO |  VCP2_COMPLEX_NC,
+     .v20_name  = "Active control",
+   },
+   { .code= 0x54,
+     .vcp_spec_groups = VCP_SPEC_MISC,
+     //.flags = VCP_RW | VCP_NON_CONT,
+     // not defined in 2.0, defined in 3.0, 2.2 identical to 3.0, assume new in 2.1
+     .nontable_formatter=format_feature_detail_debug_bytes,    // TODO: write formatter
+
+     .desc = "Controls features aimed at preserving display performance",
+     //.global_flags = VCP_RW,
+     .v21_flags =  VCP2_RW | VCP2_COMPLEX_NC,
+     .v21_name = "Performance Preservation",
+
    },
    { .code=0x56,
-     .name="Horizontal Moire",
-     .flags=VCP_RW | VCP_CONTINUOUS,
-      .formatter=format_feature_detail_standard_continuous,
+     .vcp_spec_groups = VCP_SPEC_IMAGE,
+     // defined in 2.0
+     //.name="Horizontal Moire",
+     //.flags=VCP_RW | VCP_CONTINUOUS,
+      .nontable_formatter=format_feature_detail_standard_continuous,
+
+      .desc="Increase/decrease horizontal moire cancellation.",  // my simplification
+      //.global_flags = VCP_RW,
+      .v20_flags = VCP2_RW |  VCP2_STD_CONT,
+      .v20_name="Horizontal Moire",
+   },
+   { .code=0x58,
+     .vcp_spec_groups = VCP_SPEC_IMAGE,
+     // defined in 2.0
+     //.name="Vertical Moire",
+     //.flags=VCP_RW | VCP_CONTINUOUS,
+      .nontable_formatter=format_feature_detail_standard_continuous,
+
+      .desc="Increase/decrease vertical moire cancellation.",  // my simplification
+      //.global_flags = VCP_RW,
+      .v20_flags = VCP2_RW |  VCP2_STD_CONT,
+      .v20_name="Vertical Moire",
    },
    { .code=0x59,
-     .name="6 axis saturation: Red",
-     .flags=VCP_RW | VCP_CONTINUOUS | VCP_COLORMGT,
-      .formatter=format_feature_detail_sl_byte,
+     .vcp_spec_groups = VCP_SPEC_IMAGE,
+     // not in 2.0, defined in 3.0, assume new as of 2.1
+     //.name="6 axis saturation: Red",
+     //.flags=VCP_RW | VCP_CONTINUOUS | VCP_COLORMGT,
+      .nontable_formatter=format_feature_detail_sl_byte,
+
+      .desc = "Value < 127 decreases red saturation, 127 nominal (default) value, "
+                "> 127 increases red saturation",
+        //.global_flags = VCP_RW | VCP2_COLORMGT,
+        .v21_flags = VCP2_RW | VCP2_STD_CONT,              // use special function?
+        .v21_name = "6 axis saturation: Red",
    },
    { .code=0x5a,
-     .name="6 axis saturation: Yellow",
-     .flags=VCP_RW | VCP_CONTINUOUS | VCP_COLORMGT,
-      .formatter=format_feature_detail_sl_byte,
+         .vcp_spec_groups = VCP_SPEC_IMAGE,
+         // not in 2.0, defined in 3.0, assume new as of 2.1
+     //.name="6 axis saturation: Yellow",
+     //.flags=VCP_RW | VCP_CONTINUOUS | VCP_COLORMGT,
+      .nontable_formatter=format_feature_detail_sl_byte,
+
+      .desc = "Value < 127 decreases yellow saturation, 127 nominal (default) value, "
+                 "> 127 increases yellow saturation",
+         //.global_flags = VCP_RW | VCP2_COLORMGT,
+         .v21_flags = VCP2_RW | VCP2_STD_CONT,              // use special function?
+         .v21_name = "6 axis saturation: Yellow",
    },
    { .code=0x5b,
-     .name="6 axis saturation: Green",
-     .flags=VCP_RW | VCP_CONTINUOUS | VCP_COLORMGT,
+         .vcp_spec_groups = VCP_SPEC_IMAGE,
+         // not in 2.0, defined in 3.0, assume new as of 2.1
+     //.name="6 axis saturation: Green",
+     //.flags=VCP_RW | VCP_CONTINUOUS | VCP_COLORMGT,
 
-     .formatter=format_feature_detail_sl_byte,
+     .nontable_formatter=format_feature_detail_sl_byte,
+     .desc = "Value < 127 decreases green saturation, 127 nominal (default) value, "
+                "> 127 increases green saturation",
+        //.global_flags = VCP_RW | VCP2_COLORMGT,
+        .v21_flags = VCP2_RW | VCP2_STD_CONT,              // use special function?
+        .v21_name = "6 axis saturation: Green",
    },
    { .code=0x5c,
-     .name="6 axis saturation: Cyan",
-     .flags=VCP_RW | VCP_CONTINUOUS | VCP_COLORMGT,
+         .vcp_spec_groups = VCP_SPEC_IMAGE,
+         // not in 2.0, defined in 3.0, assume new as of 2.1
+     //.name="6 axis saturation: Cyan",
+     //.flags=VCP_RW | VCP_CONTINUOUS | VCP_COLORMGT,
 
-     .formatter=format_feature_detail_sl_byte,
+     .nontable_formatter=format_feature_detail_sl_byte,
+
+     .desc = "Value < 127 decreases cyan saturation, 127 nominal (default) value, "
+                "> 127 increases cyan saturation",
+        //.global_flags = VCP_RW | VCP2_COLORMGT,
+        .v21_flags = VCP2_RW | VCP2_STD_CONT,              // use special function?
+        .v21_name = "6 axis saturation: Cyan",
    },
    { .code=0x5d,
-     .name="6 axis saturation: Blue",
-     .flags=VCP_RW | VCP_CONTINUOUS | VCP_COLORMGT,
+         .vcp_spec_groups = VCP_SPEC_IMAGE,
+         // not in 2.0, defined in 3.0, assume new as of 2.1
+     //.name="6 axis saturation: Blue",
+     //.flags=VCP_RW | VCP_CONTINUOUS | VCP_COLORMGT,
 
-     .formatter=format_feature_detail_sl_byte,
+     .nontable_formatter=format_feature_detail_sl_byte,
+
+     .desc = "Value < 127 decreases blue saturation, 127 nominal (default) value, "
+                "> 127 increases blue saturation",
+        //.global_flags = VCP_RW | VCP2_COLORMGT,
+        .v21_flags = VCP2_RW | VCP2_STD_CONT,              // use special function?
+        .v21_name = "6 axis saturation: Blue",
    },
    { .code=0x5e,
-     .name="6 axis saturation: Magenta",
-     .flags=VCP_RW | VCP_CONTINUOUS | VCP_COLORMGT,
-      .formatter=format_feature_detail_sl_byte,
+         .vcp_spec_groups = VCP_SPEC_IMAGE,
+         // not in 2.0, defined in 3.0, assume new as of 2.1
+     //.name="6 axis saturation: Magenta",
+     //.flags=VCP_RW | VCP_CONTINUOUS | VCP_COLORMGT,
+      .nontable_formatter=format_feature_detail_sl_byte,
+      .desc = "Value < 127 decreases magenta saturation, 127 nominal (default) value, "
+                 "> 127 increases magenta saturation",
+         //.global_flags = VCP_RW | VCP2_COLORMGT,
+         .v21_flags = VCP2_RW | VCP2_STD_CONT,              // use special function?
+         .v21_name = "6 axis saturation: Magenta",
    },
    { .code=0x60,
-     .name="Input source",
+
+     .vcp_spec_groups = VCP_SPEC_MISC,
+     //.name="Input source",
      // should VCP_NCSL be set here?  yes: applies to NC values
-     .flags= VCP_RW | VCP_TYPE_V2NC_V3T | VCP_NCSL,   // MCCS 2.0: NC, MCCS 3.0: T
-     .formatter=format_feature_detail_sl_lookup_new,    // used only for V2
+     //.flags= VCP_RW | VCP_TYPE_V2NC_V3T | VCP_NCSL,   // MCCS 2.0: NC, MCCS 3.0: T
+     .nontable_formatter=format_feature_detail_sl_lookup_new,    // used only for V2
      //  .formatter=format_feature_detail_debug_bytes,
-     .nc_sl_values = x60_v2_input_source_values     // used only for V2
+     .nc_sl_values = x60_v2_input_source_values,     // used only for V2
+
+     .desc = "Selects active video source",
+     //.global_flags = VCP_RW,
+     .v20_flags =  VCP2_RW | VCP2_SIMPLE_NC,
+     .v20_name = "Input Source",
+     .v30_flags = VCP2_RW | VCP2_TABLE,
+
    },
    {
-     .code=0x62,
-     .name="Audio speaker volume",
-     .flags=VCP_RW | VCP_CONTINUOUS,         // actually v2: C, v3: NC
-     .formatter=format_feature_detail_standard_continuous,
+     .code=0x62,                                       // how to handle?
+     .vcp_spec_groups = VCP_SPEC_AUDIO,
+     // is in 2.0, special coding as of 3.0 assume changed as of 3.0
+     //.name="Audio speaker volume",
+     //.flags=VCP_RW | VCP_CONTINUOUS,         // actually v2: C, v3: NC
+     .nontable_formatter=format_feature_detail_standard_continuous,
      // requires special handling for V3, mix of C and NC, SL byte only
+
+     .desc = "Adjusts speaker volume",
+     //.global_flags = VCP_RW,
+     .v20_flags = VCP2_RW | VCP2_STD_CONT,
+     .v30_flags = VCP2_RW | VCP2_COMPLEX_CONT,    // TODO
+     .v20_name = "Audio speaker volume",
+   },
+   { .code=0x63,
+     .vcp_spec_groups = VCP_SPEC_AUDIO,
+     // not in 2.0, is in 3.0, assume new as of 2.1
+     //.name = "Speaker Select",
+     //.flags = VCP_RW | VCP_NON_CONT,
+
+     .desc="Selects a group of speakers",
+     //.global_flags = VCP_RW,
+     .v21_flags = VCP2_RW | VCP2_SIMPLE_NC,
+     .v21_sl_values = x63_speaker_select_values,
+     .v21_name = "Speaker Select",
+   },
+   {
+     .code=0x64,
+     .vcp_spec_groups = VCP_SPEC_AUDIO,
+     // is in 2.0
+     //.name="Audio microphone volume",
+     //.flags=VCP_RW | VCP_CONTINUOUS,         // actually v2: C, v3: NC
+     .nontable_formatter=format_feature_detail_standard_continuous,
+
+     .desc = "Increase/decrease microphone gain",
+        //.global_flags = VCP_RW,
+        .v20_flags = VCP2_RW | VCP2_STD_CONT,
+        .v20_name = "Audio: Microphone Volume",
    },
    { .code=0x66,
-     .name="Ambient light sensor",
-     .flags=VCP_RW | VCP_NON_CONT,
-      .formatter=format_feature_detail_debug_bytes,
+     .vcp_spec_groups = VCP_SPEC_MISC,
+     // not in 2.0, assume new in 2.1
+     //.name="Ambient light sensor",
+     //.flags=VCP_RW | VCP_NON_CONT,
+      .nontable_formatter=format_feature_detail_debug_bytes,
+
+      .desc = "Enable/Disable ambient light sensor",
+      //.global_flags = VCP_RW,
+      .v21_flags = VCP2_RW | VCP2_SIMPLE_NC,
+      .v21_name = "Ambient light sensor",
+      .v21_sl_values = x66_ambient_light_sensor_values,
+
    },
    { .code=0x6c,
-     .name="Video black level: Red",
-     .flags=VCP_RW | VCP_CONTINUOUS | VCP_COLORMGT | VCP_PROFILE,
-      .formatter=format_feature_detail_standard_continuous,
+     .vcp_spec_groups = VCP_SPEC_IMAGE,
+     // Defined in 2.0, name change in ?
+     //.name="Video black level: Red",
+     //.flags=VCP_RW | VCP_CONTINUOUS | VCP_COLORMGT | VCP_PROFILE,
+     .nontable_formatter=format_feature_detail_standard_continuous,
+
+     .desc="Increase/decrease the black level of red pixels",  // my simplification
+     //.global_flags = VCP_RW | VCP2_COLORMGT | VCP2_PROFILE,
+     .v20_flags =  VCP2_RW |VCP2_STD_CONT,
+     .v20_name = "Red video black level",
    },
    { .code=0x6e,
-     .name="Video black level: Green",
-     .flags=VCP_RW | VCP_CONTINUOUS | VCP_COLORMGT | VCP_PROFILE,
-      .formatter=format_feature_detail_standard_continuous,
+      .vcp_spec_groups = VCP_SPEC_IMAGE,
+      // Defined in 2.0, name change in ?
+     //.name="Video black level: Green",
+     //.flags=VCP_RW | VCP_CONTINUOUS | VCP_COLORMGT | VCP_PROFILE,
+     .nontable_formatter=format_feature_detail_standard_continuous,
+
+     .desc="Increase/decrease the black level of green pixels",  // my simplification
+     //.global_flags = VCP_RW | VCP2_COLORMGT | VCP2_PROFILE,
+     .v20_flags =  VCP2_RW |VCP2_STD_CONT,
+     .v20_name = "Green video black level",
    },
    { .code=0x70,
-     .name="Video black level: Blue",
-     .flags=VCP_RW | VCP_CONTINUOUS | VCP_COLORMGT | VCP_PROFILE,
-      .formatter=format_feature_detail_standard_continuous,
+     .vcp_spec_groups = VCP_SPEC_IMAGE,
+     // Defined in 2.0, name change in ?
+     //.name="Video black level: Blue",
+     //.flags=VCP_RW | VCP_CONTINUOUS | VCP_COLORMGT | VCP_PROFILE,
+     .nontable_formatter=format_feature_detail_standard_continuous,
+
+     .desc="Increase/decrease the black level of blue pixels",  // my simplification
+     //.global_flags = VCP_RW | VCP2_COLORMGT | VCP2_PROFILE,
+     .v20_flags =  VCP2_RW |VCP2_STD_CONT,
+     .v20_name = "Blue video black level",
    },
    { .code=0x72,
-     .name="Gamma",
-     .flags=VCP_RW | VCP_NON_CONT   | VCP_COLORMGT,
-      .formatter=format_feature_detail_debug_sl_sh
+     .vcp_spec_groups = VCP_SPEC_IMAGE,
+     // 2.0: undefined, 3.0 & 2.2: defined
+     // assume defined in 2.1
+     //.name="Gamma",
+     //.flags=VCP_RW | VCP_NON_CONT   | VCP_COLORMGT,
+      .nontable_formatter=format_feature_detail_debug_sl_sh,
+
+     .desc="Select relative or absolute gamma",
+     //.global_flags = VCP_RW | VCP2_COLORMGT,
+     .v21_flags = VCP2_RW | VCP2_COMPLEX_NC | VCP2_COLORMGT,    // TODO implement function
+     .v21_name = "Gamma",
    },
    { .code=0x73,
-     .name="LUT size",
-     .flags=VCP_RO | VCP_TABLE      | VCP_COLORMGT,
+     .vcp_spec_groups = VCP_SPEC_MISC | VCP_SPEC_IMAGE,
+     // VCP_SPEC_MISC in 2.0, VCP_SPEC_IMAGE in 3.0, 2.1? 2.2?
+     //.name="LUT size",
+     //.flags=VCP_RO | VCP_TABLE      | VCP_COLORMGT,
       .table_formatter=format_feature_detail_x73_lut_size,
+
+     .desc = "Provides the size (number of entries and number of bits/entry) "
+           "for the Red, Green, and Blue LUT in the display.",
+     //.global_flags = VCP_RO,
+     .v20_flags = VCP2_RO| VCP2_TABLE,
+     .v20_name  = "LUT Size",
    },
-   { .code=0x7e,
+   { .code=0x74,
+     // VCP_SPEC_MISC in 2.0, VCP_SPEC_?? in 3.0, 2.2
+     .vcp_spec_groups = VCP_SPEC_MISC,
+     //.name = "Single point LUT operation",
+     //.flags = VCP_RW | VCP_TABLE | VCP_COLORMGT,
+     .table_formatter = default_table_feature_detail_function,
+
+     .desc = "Writes a single point within the display's LUT, reads a single point from the LUT",
+     //.global_flags = VCP_RW,
+     .v20_flags = VCP2_RW | VCP2_TABLE,
+     .v20_name = "Single point LUT operation",
+   },
+   { .code=0x75,
+     // VCP_SPEC_MISC in 2.0, VCP_SPEC_?? in 3.0, 2.2
+     .vcp_spec_groups = VCP_SPEC_MISC,
+     //.name = "Block LUT operation",
+     //.flags = VCP_RW | VCP_TABLE | VCP_COLORMGT,
+     .table_formatter = default_table_feature_detail_function,
+
+     .desc = "Load (read) multiple values into (from) the display's LUT",
+     //.global_flags = VCP_RW,
+     .v20_flags = VCP2_RW | VCP2_TABLE,
+     .v20_name = "Block LUT operation",
+   },
+   { .code=0x76,
+     // defined in 2.0, 3.0
+     .vcp_spec_groups = VCP_SPEC_MISC,
+     //.flags = VCP_WO | VCP_TABLE,
+     //.name = "Remote Procedure Call",
+
+     .desc = "Initiates a routine resident in the display",
+     //.global_flags = VCP_WO,
+     .v20_flags = VCP2_WO | VCP2_WO_TABLE,
+     .v20_name = "Remote Procedure Call",
+   },
+
+   { .code=0x78,
+     .vcp_spec_groups = VCP_SPEC_MISC,
+     // apparently not in 2.0
+     // defined in 3.0, 2.2 - name and description vary, but content identical
+     // what to do about 2.1?  assume it's defined in 2.1 and identical to 3.0
+     //.name = "EDID operation",
+     //.flags = VCP_RO | VCP_TABLE,
+
+     .desc = "Reads a selected 128 byte block of Display Identification Data "
+           "(EDID or Display ID) to be read",
+     //.global_flags = VCP_RO,
+     .v21_flags =  VCP2_RO | VCP2_TABLE,
+     .v21_name  = "EDID operation",
+     .v30_flags = VCP2_RO | VCP2_TABLE,
+     .v30_name  = "EDID operation",
+     .v22_flags = VCP2_RO | VCP2_TABLE,
+     .v22_name = "Display Identification Operation",
+   },
+   { .code=0x7a,
+     .vcp_spec_groups = VCP_SPEC_IMAGE,
+     // defined in 2.0, not in 3.0
+     //.name="Adjust Focal Plane",
+     //.flags=VCP_RW | VCP_CONTINUOUS,
+
+     .desc="Increase/decrease the distance to the focal plane of the image",  // my simplification
+     //.global_flags=VCP_RW,
+     .v20_flags = VCP2_RW | VCP2_STD_CONT,
+     .v20_name = "Adjust Focal Plane",
+   },
+   { .code=0x7c,
+      .vcp_spec_groups = VCP_SPEC_IMAGE,
+      // defined in 2.0, not in 3.0
+      //.name="Adjust Zoom",
+      //.flags=VCP_RW | VCP_CONTINUOUS,
+
+      .desc="Increase/decrease the distance to the zoom function of the optics",  // my simplification
+      //.global_flags=VCP_RW,
+      .v20_flags =  VCP2_RW | VCP2_STD_CONT,
+      .v20_name = "Adjust Zoom",
+    },
+   { .code=0x7e,                                    // TODO: CHECK 2.2 SPEC
      .vcp_spec_groups = VCP_SPEC_GEOMETRY,
+     .vcp_classes = VCP_CLASS_ANALOG,
      // Section 8.4 Geometry
      // data from v2.0 spec
      // not in v3.0 spec
      // when was it deleted?  v3.0 or v2.1?   For safety assume 3.0
-     .name="Placeholder",
-     .flags=VCP_RW | VCP_CONTINUOUS,
+     //.name="Placeholder",
+     //.flags=VCP_RW | VCP_CONTINUOUS,
 
-     .global_flags=VCP_RW,
-     .v20_flags=VCP2_STD_CONT,
+     .desc = "Increase/decrease the trapezoid distortion in the image",
+     //.global_flags=VCP_RW,
+     .v20_flags= VCP2_RW | VCP2_STD_CONT,
      .v30_flags=VCP2_DEPRECATED,
      .v22_flags=VCP2_DEPRECATED,
      .v20_name="Trapezoid",
    },
-   { .code=0x80,
+   { .code=0x80,                                    // TODO: CHECK 2.2 SPEC
      .vcp_spec_groups = VCP_SPEC_GEOMETRY,
+     .vcp_classes = VCP_CLASS_ANALOG,
      // Section 8.4 Geometry
-     // data from v2.0 spec, need to check others
-     .name="Placeholder",
-     .flags=VCP_RW | VCP_CONTINUOUS,
+     // in 2.0 spec, not in 3.0
+     // assume not in 2.1
+     // TODO: CHECK 2.2
+     //.name="Placeholder",
+     //.flags=VCP_RW | VCP_CONTINUOUS,
 
-     .global_flags=VCP_RW,
-     .v20_flags=VCP2_STD_CONT,
+     // from spec:
+     // .desc = "Increasing (decreasing) this value will increase (decrease) "
+     //         "the degree of keystone distortion in the image.",
+     // my simplification:
+     .desc="Increase/decrease the keystone distortion in the image.",
+     //.global_flags=VCP_RW,
+     .v20_flags= VCP2_RW | VCP2_STD_CONT,
      .v20_name="Keystone",
    },
-   { .code=0x87,
-     .name="Sharpness",
-     .flags=VCP_RW | VCP_CONTINUOUS               ,
-      .formatter=format_feature_detail_standard_continuous,
+   { .code=0x82,
+     .vcp_spec_groups = VCP_SPEC_IMAGE | VCP_SPEC_GEOMETRY,         // 2.0: Image, 3.0: Geometry
+
+     //.name="Placeholder",
+     //.flags=VCP_WO | VCP_NON_CONT,
+     .nc_sl_values = x82_horizontal_flip_values,
+
+     .desc="Flip picture horizontally",
+     // DESIGN ISSUE!!!
+     // This feature is WO in 2.0 spec, RW in 3.0, what is it in 2.2
+     // implies cannot use global_flags to store RO/RW/WO
+     //.global_flags=VCP_RW,
+     .v20_flags =  VCP2_WO | VCP2_WO_NC,
+     .v20_name = "HorFlip",
+     .v21_name = "Horizontal Mirror (Flip)",
+     .v21_flags =  VCP2_RW | VCP2_SIMPLE_NC,
+     .v21_sl_values = x82_horizontal_flip_values,
+
+   },
+   { .code=0x84,
+       .vcp_spec_groups = VCP_SPEC_IMAGE | VCP_SPEC_GEOMETRY,         // 2.0: Image, 3.0: Geometry
+       // defined in 2.0, not in 3.0?
+       //.name="Placeholder",
+       //.flags=VCP_RW | VCP_NON_CONT,
+       .nc_sl_values = x84_vertical_flip_values,
+
+       // DESIGN ISSUE!!!
+       // This feature is WO in 2.0 spec, RW in 3.0, what is it in 2.2
+       // implies cannot use global_flags to store RO/RW/WO
+       .desc="Flip picture vertically",
+       //.global_flags=VCP_RW,
+       .v20_flags =  VCP2_WO | VCP2_WO_NC,
+       .v20_name = "VertFlip",
+       .v21_name = "Vertical Mirror (Flip)",
+       .v21_flags =  VCP2_RW | VCP2_SIMPLE_NC,
+       .v21_sl_values = x84_vertical_flip_values,
+     },
+   { .code=0x86,                                              // Done
+     .vcp_spec_groups = VCP_SPEC_GEOMETRY,
+     //.name="DisplayScaling",
+     //.flags = VCP_RW | VCP_NON_CONT,
+     .nc_sl_values = x86_display_scaling_values,
+
+     .desc = "Control the scaling (input vs output) of the display",
+     //.global_flags=VCP_RW,
+     .v20_flags = VCP2_RW | VCP2_SIMPLE_NC,
+     .v20_name = "Display Scaling",
+   },
+   { .code=0x87,                                                 // Done
+     .vcp_spec_groups = VCP_SPEC_IMAGE | VCP_SPEC_GEOMETRY,    // 2.0 geometry, 3.0 Image
+     .vcp_classes = VCP_CLASS_ANALOG,     // ???
+     //.name="Sharpness",
+     // defined in 2.0, is C in 3.0, assume 2.1 is C as well
+     //.flags=VCP_RW | VCP_CONTINUOUS               ,
+      .nontable_formatter=format_feature_detail_standard_continuous,
+      .nc_sl_values = x87_sharpness_values,
+
+      .desc = "Specifies one of a range of algorithms",
+      //.global_flags=VCP_RW,
+      .v20_flags=VCP2_RW | VCP2_SIMPLE_NC,        // need a lookup table
+      .v20_name="Sharpness",
+      .v21_flags=VCP2_RW | VCP2_STD_CONT,
+   },
+   { .code=0x88,
+     // defined in 2.0,
+     .vcp_spec_groups = VCP_SPEC_MISC,
+     .vcp_classes = VCP_CLASS_ANALOG,    // ???
+     //.flags = VCP_RW | VCP_CONTINUOUS,
+
+     .desc = "Increase (decrease) the velocity modulation of the horizontal "
+           "scan as a function of the change in luminescence level",
+     //.global_flags = VCP_RW,
+     .v20_flags = VCP2_RW | VCP2_STD_CONT,
+     .v20_name = "Velocity Scan Modulation",
+   },
+   { .code = 0x89,
+     .vcp_spec_groups = VCP_SPEC_MISC,    // 2.0
+     //.flags = VCP_WO | VCP_NON_CONT,
+     .vcp_classes = VCP_CLASS_TV,
+     //.global_flags = VCP_WO,
+     .v20_flags = VCP2_WO| VCP2_WO_NC,
+     .desc = "Increment (1) or decrement (2) television channel",
+     .v20_name = "TV-channel up/down",
+
    },
    { .code=0x8a,
-     .name="Color saturation",
-     .flags=VCP_RW | VCP_CONTINUOUS | VCP_COLORMGT,
-      .formatter=format_feature_detail_standard_continuous,
+     //.name="Color saturation",
+     .vcp_spec_groups = VCP_SPEC_MISC,     // 2.0
+     .vcp_classes = VCP_CLASS_TV,
+     //.flags=VCP_RW | VCP_CONTINUOUS | VCP_COLORMGT,
+      .nontable_formatter=format_feature_detail_standard_continuous,
+
+     .desc = "Increase (decrease) the amplitude of the color difference "
+           "components of the video signal",
+     //.global_flags = VCP_RW,
+     .v20_flags =VCP2_RW |  VCP2_STD_CONT,     // ??
+     .v20_name  = "TV Color Saturation",
+   },
+
+   { .code = 0x8c,
+     .vcp_spec_groups = VCP_SPEC_MISC, // 2.0
+     .vcp_classes = VCP_CLASS_TV,
+     //.flags = VCP_RW | VCP_CONTINUOUS,
+     .desc = "Increase/decrease the amplitude of the high frequency components  "
+           "of the video signal",
+     //.global_flags = VCP_RW,
+     .v20_flags = VCP2_RW | VCP2_STD_CONT,
+     .v20_name = "TV-sharpness",
+   },
+   { .code=0x8d,
+     .vcp_spec_groups = VCP_SPEC_MISC,   // 2.0
+     .vcp_classes = VCP_CLASS_TV,
+     //.flags = VCP_RW | VCP_NON_CONT,
+     .desc = "Mute (1) or unmute (2) the TV audio",
+     .nc_sl_values = x8d_tv_audio_mute_source_values,
+     //.global_flags = VCP_RW,
+     .v20_flags = VCP2_RW | VCP2_SIMPLE_NC,
+     .v20_name = "TV-Audio Mute",
+   },
+   { .code=0x8e,
+     .vcp_spec_groups = VCP_SPEC_MISC,   // 2.0
+     //.flags = VCP_RW | VCP_CONTINUOUS,
+     .vcp_classes = VCP_CLASS_TV,
+     .desc = "Increase/decrease the ratio between blacks and whites in the image",
+     //.global_flags = VCP_RW,
+     .v20_flags = VCP2_RW | VCP2_STD_CONT,
+     .v20_name = "TV-Contrast",
    },
    { .code=0x90,
-     .name="Hue",
-     .flags=VCP_RW | VCP_CONTINUOUS | VCP_COLORMGT,
-     .formatter=format_feature_detail_standard_continuous,
+     .vcp_spec_groups = VCP_SPEC_MISC,     // 2.0
+     .vcp_classes = VCP_CLASS_TV,
+     //.name="Hue",
+     //.flags=VCP_RW | VCP_CONTINUOUS | VCP_COLORMGT,
+     .nontable_formatter=format_feature_detail_standard_continuous,
+
+     .desc = "Increase/decrease the wavelength of the color component of the video signal. "
+           "AKA tint",
+     //.global_flags = VCP_RW,
+     .v20_flags = VCP2_RW | VCP2_STD_CONT,
+     .v20_name = "TV-Hue",
+   },
+   { .code=0x92,
+     .vcp_spec_groups = VCP_SPEC_MISC,   // 2.0
+     .vcp_classes = VCP_CLASS_TV,
+     .desc = "Increase/decrease the black level of the video",
+     //.flags = VCP_RW | VCP_CONTINUOUS,
+     //.global_flags = VCP_RW,
+     .v20_flags = VCP2_RW | VCP2_STD_CONT,
+     .v20_name = "TV Black level/Brightness",
+   },
+
+   { .code=0x95,                               // Done
+     .vcp_spec_groups = VCP_SPEC_IMAGE | VCP_SPEC_GEOMETRY,  // 2.0: IMAGE, 3.0: GEOMETRY
+     //.name="Placeholder",
+     //.flags = VCP_RW |VCP_CONTINUOUS,    // something
+
+     .desc="Top left X pixel of an area of the image",
+     //.global_flags=VCP_RW,
+     .v20_flags= VCP2_RW | VCP2_STD_CONT,
+     .v20_name="Window Position(TL_X)",
+   },
+   { .code=0x96,                                             // Done
+         .vcp_spec_groups = VCP_SPEC_IMAGE | VCP_SPEC_GEOMETRY,  // 2.0: IMAGE, 3.0: GEOMETRY
+     //.name="Placeholder",
+     //.flags = VCP_RW |VCP_CONTINUOUS,    // something
+
+     .desc="Top left Y pixel of an area of the image",
+     //.global_flags=VCP_RW,
+     .v20_flags= VCP2_RW | VCP2_STD_CONT,
+     .v20_name="Window Position(TL_Y)",
+   },
+   { .code=0x97,                                            // Done
+     .vcp_spec_groups = VCP_SPEC_IMAGE | VCP_SPEC_GEOMETRY,  // 2.0: IMAGE, 3.0: GEOMETRY
+     //.name="Placeholder",
+     //.flags = VCP_RW |VCP_CONTINUOUS,    // something
+
+     .desc="Bottom right X pixel of an area of the image",
+     //.global_flags=VCP_RW,
+     .v20_flags= VCP2_RW | VCP2_STD_CONT,
+     .v20_name="Window Position(BR_X)",
+   },
+   { .code=0x98,                                                    // Done
+         .vcp_spec_groups = VCP_SPEC_IMAGE | VCP_SPEC_GEOMETRY,  // 2.0: IMAGE, 3.0: GEOMETRY
+     //.name="Placeholder",
+     //.flags = VCP_RW |VCP_CONTINUOUS,    // something
+
+     .desc="Bottom right Y pixel of an area of the image",
+     //.global_flags=VCP_RW,
+     .v20_flags= VCP2_RW | VCP2_STD_CONT,
+     .v20_name="Window Position(BR_Y)",
+   },
+   { .code=0x99,
+     .vcp_spec_groups = VCP_SPEC_IMAGE,
+     .vcp_classes = VCP_CLASS_WINDOW,
+     // in 2.0,  not in 3.0 or 2.2, what is correct choice for 2.1?
+     //.name="Placeholder",
+     //.flags = VCP_RW |VCP_NON_CONT,    // something
+     .nc_sl_values = x99_window_control_values,
+
+     .desc="Enables the brightness and color within a window to be different "
+           "from the desktop.",
+     //.global_flags=VCP_RW,
+     .v20_flags= VCP2_RW | VCP2_SIMPLE_NC,
+     .v20_name="Window control on/off",
+     .v30_flags = VCP2_DEPRECATED,
+     .v30_flags = VCP2_DEPRECATED,
+   },
+   { .code=0x9a,
+     .vcp_spec_groups = VCP_SPEC_IMAGE,
+     // in 2.0, same in 3.0
+     //.name="Window Background",
+     //.flags = VCP_RW |VCP_CONTINUOUS,    // temp
+
+     .desc="Changes the contrast ratio between the area of the window and the "
+           "rest of the desktop",
+     //.global_flags=VCP_RW,
+     .v20_flags= VCP2_RW | VCP2_STD_CONT,
+     .v20_name="Window control on/off",
    },
    { .code=0x9b,
-     .name="6 axis hue: Red",
-     .flags=VCP_RW | VCP_CONTINUOUS | VCP_COLORMGT,
-      .formatter=format_feature_detail_sl_byte
+         .vcp_spec_groups = VCP_SPEC_IMAGE,
+         // in 2.0, same in 3.0
+     //.name="6 axis hue: Red",
+     //.flags=VCP_RW | VCP_CONTINUOUS | VCP_COLORMGT,
+      .nontable_formatter=format_feature_detail_sl_byte,
+
+      .desc = "Value < 127 shifts toward magenta, 127 no effect, "
+              "> 127 shifts toward yellow",
+      //.global_flags = VCP_RW | VCP2_COLORMGT,           // VCP_COLORMGT?
+      .v20_flags =VCP2_RW |  VCP2_COMPLEX_CONT,
+      .v20_name = "6 axis color control: Red",
    },
    { .code=0x9c,
-     .name="6 axis hue: Yellow",
-     .flags=VCP_RW | VCP_CONTINUOUS | VCP_COLORMGT,
-      .formatter=format_feature_detail_sl_byte
+         .vcp_spec_groups = VCP_SPEC_IMAGE,
+         // in 2.0, same in 3.0
+     //.name="6 axis hue: Yellow",
+     //.flags=VCP_RW | VCP_CONTINUOUS | VCP_COLORMGT,
+      .nontable_formatter=format_feature_detail_sl_byte,
+
+
+      .desc = "Value < 127 shifts toward green, 127 no effect, "
+              "> 127 shifts toward red",
+      //.global_flags = VCP_RW | VCP2_COLORMGT,           // VCP_COLORMGT?
+      .v20_flags = VCP2_RW | VCP2_COMPLEX_CONT,
+      .v20_name = "6 axis color control: Yellow",
    },
    { .code=0x9d,
-     .name="6 axis hue: Green",
-     .flags=VCP_RW | VCP_CONTINUOUS | VCP_COLORMGT,
-      .formatter=format_feature_detail_sl_byte
+         .vcp_spec_groups = VCP_SPEC_IMAGE,
+         // in 2.0, same in 3.0
+     //.name="6 axis hue: Green",
+     //.flags=VCP_RW | VCP_CONTINUOUS | VCP_COLORMGT,
+      .nontable_formatter=format_feature_detail_sl_byte,
+
+      .desc = "Value < 127 shifts toward yellow, 127 no effect, "
+              "> 127 shifts toward cyan",
+      //.global_flags = VCP_RW | VCP2_COLORMGT,           // VCP_COLORMGT?
+      .v20_flags =VCP2_RW |  VCP2_COMPLEX_CONT,
+      .v20_name = "6 axis color control: Green",
    },
    { .code=0x9e,
-     .name="6 axis hue: Cyan",
-     .flags=VCP_RW | VCP_CONTINUOUS | VCP_COLORMGT,
-      .formatter=format_feature_detail_sl_byte
+         .vcp_spec_groups = VCP_SPEC_IMAGE,
+         // in 2.0, same in 3.0
+     //.name="6 axis hue: Cyan",
+     //.flags=VCP_RW | VCP_CONTINUOUS | VCP2_COLORMGT,
+      .nontable_formatter=format_feature_detail_sl_byte,
+
+      .desc = "Value < 127 shifts toward green, 127 no effect, "
+              "> 127 shifts toward blue",
+      //.global_flags = VCP_RW | VCP2_COLORMGT,           // VCP_COLORMGT?
+      .v20_flags = VCP2_RW | VCP2_COMPLEX_CONT,
+      .v20_name = "6 axis color control: Cyan",
    },
    { .code=0x9f,
-     .name="6 axis hue: Blue",
-     .flags=VCP_RW | VCP_CONTINUOUS | VCP_COLORMGT,
-      .formatter=format_feature_detail_sl_byte
+         .vcp_spec_groups = VCP_SPEC_IMAGE,
+         // in 2.0, same in 3.0
+     //.name="6 axis hue: Blue",
+     //.flags=VCP_RW | VCP_CONTINUOUS | VCP2_COLORMGT,
+      .nontable_formatter=format_feature_detail_sl_byte,
+
+      .desc = "Value < 127 shifts toward cyan, 127 no effect, "
+              "> 127 shifts toward magenta",
+      //.global_flags = VCP_RW | VCP2_COLORMGT,    // VCP_COLORMGT
+      .v20_flags =VCP2_RW |  VCP2_COMPLEX_CONT,
+      .v20_name = "6 axis color control: Blue",
    },
    { .code=0xa0,
-     .name="6 axis hue: Magenta",
-     .flags=VCP_RW | VCP_CONTINUOUS | VCP_COLORMGT,
-      .formatter=format_feature_detail_sl_byte
+     //.name="6 axis hue: Magenta",
+     .vcp_spec_groups = VCP_SPEC_IMAGE,
+     // in 2.0, same in 3.0
+     //.flags=VCP_RW | VCP_CONTINUOUS | VCP2_COLORMGT,
+     .nontable_formatter=format_feature_detail_sl_byte,
+
+      .desc = "Value < 127 shifts toward blue, 127 no effect, "
+              "> 127 shifts toward red",
+      //.global_flags = VCP_RW | VCP2_COLORMGT,    // VCP_COLORMGT?
+      .v20_flags = VCP2_RW | VCP2_COMPLEX_CONT,
+      .v20_name = "6 axis color control: Magenta",
    },
-   { .code=0xaa,
-     .name="Screen orientation",
-     .flags=VCP_RO  | VCP_NON_CONT | VCP_NCSL,
+   { .code=0xa2,
+     .vcp_spec_groups = VCP_SPEC_IMAGE,
+     // Spec section 8.2 Image Adjustment
+     // Defined in 2.0, values differ in 3.0
+     //.flags = VCP_WO | VCP_NON_CONT,
+
+     // .desc from 2.0
+     .desc="Turn on/off an auto setup function",
+     //.global_flags = VCP_WO,
+     .v20_flags = VCP2_WO | VCP2_WO_NC,
+     .v20_name = "Auto setup on/off",
+   },
+   { .code=0xa4,
+     .vcp_spec_groups = VCP_SPEC_IMAGE,
+     // 2.0 spec says: "This command structure is recommended, in conjunction with VCP A5h
+     // for all new designs
+     // type NC in 2.0, type T in 3.0, 2.2
+     // what is correct choice for 2.1?
+     //.name="Window control on/off",
+     //.flags = VCP_RW | VCP_NON_CONT,
+     .nontable_formatter = format_feature_detail_sl_byte, // TODO: write proper function
+     .table_formatter = default_table_feature_detail_function,  // TODO: write proper function
+
+     .desc = "Turn selected window operation on/off",
+     //.global_flags = VCP_RW,
+     .v20_flags = VCP2_RW | VCP2_COMPLEX_NC,
+     .v20_name = "Turn the selected window operation on/off",
+     .v30_flags = VCP2_RW | VCP2_TABLE,
+     .v22_flags = VCP2_RW | VCP2_TABLE,
+   },
+   { .code=0xa5,
+     .vcp_spec_groups = VCP_SPEC_IMAGE,
+     // 2.0 spec says: "This command structure is recommended, in conjunction with VCP A4h
+     // for all new designs
+     // designated as C, but only takes specific values
+     // v3.0 appears to be identical
+     //.name="Window Select",
+     //.flags = VCP_RW | VCP_CONTINUOUS,
+     .nc_sl_values = xa5_window_select_values,
+
+     .desc = "Change selected window (as defined by 95h..98h)",
+     //.global_flags = VCP_RW,
+     .v20_flags = VCP2_RW | VCP2_SIMPLE_NC,         // need lookup table
+     .v20_name = "Change the selected window",
+
+   },
+   { .code=0xaa,                                          // Done
+     //.name="Screen orientation",
+     .vcp_spec_groups = VCP_SPEC_IMAGE | VCP_SPEC_GEOMETRY,    // 3.0: IMAGE, 2.0: GEOMETRY
+     //.flags=VCP_RO  | VCP_NON_CONT | VCP_NCSL,
       // .formatter=format_feature_detail_screen_orientation,
-     .formatter=format_feature_detail_sl_lookup_new,
+     .nontable_formatter=format_feature_detail_sl_lookup_new,
       .nc_sl_values=xaa_screen_orientation_values,
+
+      .desc="Indicates screen orientation",
+      //.global_flags=VCP_RO,
+      .v20_flags=VCP2_RO | VCP2_SIMPLE_NC,
+      .v20_name="Screen Orientation",
    },
    { .code=0xac,
-     .name="Horizontal frequency",
-     .flags=VCP_RO | VCP_CONTINUOUS,
-      .formatter=format_feature_detail_debug_continuous,
+     //.name="Horizontal frequency",
+     .vcp_spec_groups = VCP_SPEC_MISC,   // 2.0
+     //.flags=VCP_RO | VCP_CONTINUOUS,
+      .nontable_formatter=format_feature_detail_horizontal_frequency,
+
+      .desc = "Horizontal sync signal frequency as determined by the display",
+      // 2.0: 0xff 0xff 0xff indicates the display cannot supply this info
+      //.global_flags = VCP_RO,
+      .v20_flags = VCP2_RO | VCP2_COMPLEX_CONT,
+      .v20_name  = "Horizontal frequency",
    },
    { .code=0xae,
+         .vcp_spec_groups = VCP_SPEC_MISC,   // 2.0
+     //.name="Vertical frequency",
+     //.flags=VCP_RO | VCP_CONTINUOUS,
+      .nontable_formatter=format_feature_detail_vertical_frequency,
 
-     .name="Vertical frequency",
-     .flags=VCP_RO | VCP_CONTINUOUS,
-      .formatter=format_feature_detail_debug_continuous,
+
+      .desc = "Vertical sync signal frequency as determined by the display, "
+            "in .01 hz",
+      // 2.0: 0xff 0xff indicates the display cannot supply this info
+      //.global_flags = VCP_RO,
+      .v20_flags =VCP2_RO |  VCP2_COMPLEX_CONT,
+      .v20_name  = "Vertical frequency",
    },
    { .code=0xb0,
      .vcp_spec_groups = VCP_SPEC_PRESET,
      // Section 8.1 Preset operation
      // Defined in 2.0, v3.0 spec clarifies that value to be set is in SL byte
-     .name="(Re)Store user saved values for cur mode",   // this was my name from the explanation
-     .flags=VCP_WO | VCP_NON_CONT,
+     //.name="(Re)Store user saved values for cur mode",   // this was my name from the explanation
+     //.flags=VCP_WO | VCP_NON_CONT,
      // .formatter=format_feature_detail_debug_bytes,
 
-      .v20_flags = VCP2_WO_NC,
+     .desc = "Store/restore the user saved values for the current mode.",
+     //.global_flags = VCP_WO,
+      .v20_flags = VCP2_WO | VCP2_WO_NC,
       .v20_name = "Settings",
    },
    { .code=0xb2,
-     .name="Flat panel sub-pixel layout",
-     .flags=VCP_RO | VCP_NON_CONT | VCP_NCSL,
+         .vcp_spec_groups = VCP_SPEC_MISC,   // 2.0
+     //.name="Flat panel sub-pixel layout",
+     //.flags=VCP_RO | VCP_NON_CONT | VCP_NCSL,
       // .formatter=format_feature_flat_panel_subpixel_layout,
-     .formatter=format_feature_detail_sl_lookup_new,
+     .nontable_formatter=format_feature_detail_sl_lookup_new,
       .nc_sl_values=xb2_flat_panel_subpixel_layout_values,
+
+      .desc = "LCD sub-pixel structure",
+      //.global_flags = VCP_RO,
+       .v20_flags = VCP2_RO | VCP2_SIMPLE_NC,
+       .v20_name = "Flat panel sub-pixel layout",
    },
-   { .code=0xb6,
-     .name="Display technology type",
-     .flags=VCP_RO | VCP_NON_CONT | VCP_NCSL,
+   { .code=0xb6,                                               // DONE
+     .vcp_spec_groups = VCP_SPEC_MISC,     // 2.0, 3.0
+     //.name="Display technology type",
+     //.flags=VCP_RO | VCP_NON_CONT | VCP_NCSL,
       // .formatter=format_feature_detail_display_technology_type,
-     .formatter=format_feature_detail_sl_lookup_new,
-      .nc_sl_values=xb6_display_technology_type_values,
+     .nontable_formatter=format_feature_detail_sl_lookup_new,
+      .nc_sl_values=xb6_v20_display_technology_type_values,
+
+      //.global_flags = VCP_RO,
+      .v20_flags = VCP2_RO | VCP2_SIMPLE_NC,       // but v3.0 table not upward compatible w 2.0
+      .v20_name = "Display technology type",
+      .v21_sl_values = xb6_display_technology_type_values,
    },
    { .code=0xc0,
-     .name="Display usage time",
-     .flags=VCP_RO | VCP_CONTINUOUS | VCP_FUNC_VER,
-      .formatter=format_feature_detail_display_usage_time,
+     .vcp_spec_groups = VCP_SPEC_MISC,
+     //.name="Display usage time",
+     //.flags=VCP_RO | VCP_CONTINUOUS | VCP_FUNC_VER,
+      .nontable_formatter=format_feature_detail_display_usage_time,
+
+     .desc = "Active power on time in hours",
+     //.global_flags = VCP_RO,
+     .v20_flags =VCP2_RO |  VCP2_COMPLEX_CONT,
+     .v20_name = "Display usage time",
+   },
+   { .code=0xc2,
+     .vcp_spec_groups = VCP_SPEC_MISC,    // 2.0
+     //.name = "Display descriptor length",
+     //.flags = VCP_RO | VCP_CONTINUOUS,
+
+     .desc = "Length in bytes of non-volatile storage in the display available "
+           "for writing a display descriptor, max 256",
+     //.global_flags = VCP_RO,
+     .v20_flags = VCP2_RO | VCP2_STD_CONT,    // should there be a different flag when we know value uses only SL?
+     .v20_name = "Display descriptor length",
+   },
+   {.code=0xc3,
+    .vcp_spec_groups = VCP_SPEC_MISC, // 2.0
+    //.flags = VCP_RW | VCP_TABLE,
+    .table_formatter = default_table_feature_detail_function,
+
+    .desc="Reads (writes) a display descriptor from (to) non-volatile storage "
+          "in the display.",
+    //.global_flags = VCP_RW,
+    .v20_flags = VCP2_RW | VCP2_TABLE,
+    .v20_name = "Transmit display descriptor",
+   },
+   { .code = 0xc4,
+     .vcp_spec_groups = VCP_SPEC_MISC,  // 2.0
+     //.flags = VCP_RW | VCP_NON_CONT,
+     .nontable_formatter=format_feature_detail_debug_bytes,
+
+     .desc = "If enabled, the display descriptor shall be displayed when no video "
+           "is being received.",
+     //.global_flags = VCP_RW,
+     .v20_flags = VCP2_RW | VCP2_COMPLEX_NC,   // need to handle "All other values.  The display descriptor shall not be displayed"
+     .v20_name = "Enable display of \'display descriptor\'",
    },
    { .code=0xc6,
-     .name="Application enable key",
-     .flags=VCP_RO | VCP_NON_CONT                 ,
-      .formatter=format_feature_detail_debug_bytes,
+     .vcp_spec_groups = VCP_SPEC_MISC, // 2.0
+     //.name="Application enable key",
+     //.flags=VCP_RO | VCP_NON_CONT                 ,
+      // .nontable_formatter=format_feature_detail_debug_bytes,
+     .nontable_formatter=format_feature_detail_application_enable_key,
+
+      .desc = "A 2 byte value used to allow an application to only operate with known products.",
+      //.global_flags =  VCP_RO,
+      .v20_flags = VCP2_RO | VCP2_COMPLEX_NC,
+      .v20_name = "Application enable key",
    },
    { .code=0xc8,
-     .name="Display controller type",
-     .flags=VCP_RW | VCP_NON_CONT  /* |  VCP_NCSL */ ,
+     .vcp_spec_groups = VCP_SPEC_MISC,    // 2.0
+     //.name="Display controller type",
+     //.flags=VCP_RW | VCP_NON_CONT  /* |  VCP_NCSL */ ,
      // .formatter=format_feature_detail_sl_lookup_new,    // works, but only interprets mfg id in sl
-     .formatter=format_feature_detail_display_controller_type,
+     .nontable_formatter=format_feature_detail_display_controller_type,
      .nc_sl_values=xc8_display_controller_type_values,
+
+     .desc = "Mfg id of controller and 2 byte manufacturer-specific controller type",
+     //.global_flags = VCP_RW,
+     .v20_flags = VCP2_RW | VCP2_COMPLEX_NC,
+     .v20_name = "Display controller type",
    },
    { .code=0xc9,
-     .name="Display firmware level",
-     .flags=VCP_RO | VCP_CONTINUOUS,
-      .formatter=format_feature_detail_version,
+     .vcp_spec_groups = VCP_SPEC_MISC,    // 2.0
+     //.name="Display firmware level",
+     //.flags=VCP_RO | VCP_NON_CONT,
+      .nontable_formatter=format_feature_detail_version,
+
+      .desc = "2 byte firmware level",
+      //.global_flags = VCP_RO,
+      .v20_flags = VCP2_RO | VCP2_COMPLEX_NC,
+      .v20_name = "Display firmware level",
    },
    { .code=0xca,
-       .name="On Screen Display",
-       .flags=VCP_RW | VCP_NON_CONT  | VCP_NCSL                ,
+       //.name="On Screen Display",
+       .vcp_spec_groups = VCP_SPEC_MISC | VCP_SPEC_CONTROL,   // 2.0: MISC, 3.0: CONTROL
+       //.flags=VCP_RW | VCP_NON_CONT  | VCP_NCSL                ,
         // .formatter=format_feature_detail_osd,
-       .formatter=format_feature_detail_sl_lookup_new,
+       .nontable_formatter=format_feature_detail_sl_lookup_new,
         .nc_sl_values=xca_osd_values,
+
+        .desc = "Is On Screen Display enabled?",
+        //.global_flags = VCP_RW,
+        .v20_flags = VCP2_RW | VCP2_SIMPLE_NC,
+        .v20_name = "OSD",
      },
    { .code=0xcc,
-     .name="OSD Language",
-     .flags=VCP_RW | VCP_NON_CONT | VCP_NCSL,
+     //.name="OSD Language",
+     .vcp_spec_groups = VCP_SPEC_MISC,   // 2.0
+     //.flags=VCP_RW | VCP_NON_CONT | VCP_NCSL,
      // .formatter=format_feature_detail_osd_language,
-     .formatter=format_feature_detail_sl_lookup_new,
+     .nontable_formatter=format_feature_detail_sl_lookup_new,
       .nc_sl_values=xcc_osd_language_values,
+
+      .desc = "On Screen Display languge",
+      //.global_flags = VCP_RW,
+      .v20_flags  = VCP2_RW | VCP2_SIMPLE_NC,
+      .v20_name = "OSD Language",
    },
-   { .code=0xd6,
-     .name="Power mode",
-     .flags=VCP_RW | VCP_NON_CONT | VCP_NCSL,
+   { .code=0xda,                                                   // DONE
+     .vcp_spec_groups = VCP_SPEC_GEOMETRY | VCP_SPEC_IMAGE,         // 2.0: IMAGE, 3.0: GEOMETRY
+     .vcp_classes = VCP_CLASS_TV,
+     //.flags = VCP_RW | VCP_NON_CONT,
+     .desc = "Controls scan characteristics (aka format)",
+     .nc_sl_values = xda_scan_mode_values,
+     //.global_flags = VCP_RW,
+
+     .v20_flags = VCP2_RW | VCP2_SIMPLE_NC,
+     .v20_name  = "Scan format",
+     // name differs in 3.0, assume changed as of 2.1
+     .v21_name  = "Scan characteristics",
+   },
+   { .code=0xd6,                           // DONE
+     .vcp_spec_groups = VCP_SPEC_MISC | VCP_SPEC_CONTROL,   // 2.0: MISC, 3.0: CONTROL
+     //.name="Power mode",
+     //.flags=VCP_RW | VCP_NON_CONT | VCP_NCSL,
      // .formatter=format_feature_detail_power_mode,
-     .formatter=format_feature_detail_sl_lookup_new,
-     .nc_sl_values = xd6_power_mode_values
+     .nontable_formatter=format_feature_detail_sl_lookup_new,
+     .nc_sl_values = xd6_power_mode_values,
+
+     .desc = "DPM and DPMS status",
+     //.global_flags = VCP_RW,
+     .v20_flags = VCP2_RW | VCP2_SIMPLE_NC,
+     .v20_name = "Power mode",
+
    },
+
    { .code=0xdc,
-     .name="Display application",
-     .flags=VCP_RW | VCP_NON_CONT | VCP_NCSL,
+     .vcp_spec_groups = VCP_SPEC_IMAGE,
+     // defined in 2.0, 3.0 has different name, more values
+     //.name="Display application",
+     //.flags=VCP_RW | VCP_NON_CONT | VCP_NCSL,
       // .formatter=format_feature_detail_display_application,
-     .formatter=format_feature_detail_sl_lookup_new,
+     .nontable_formatter=format_feature_detail_sl_lookup_new,
       .nc_sl_values=xdc_display_application_values,
+
+      .desc="Type of application used on display",  // my desc
+      //.global_flags = VCP_RW,
+      .v20_flags = VCP2_RW | VCP2_SIMPLE_NC,
+      .v20_name = "Display Mode",
    },
+   // need to look at v2.0 spec
+   // { .code=0xde,
+   //   .vcp_spec_groups = VCP_SPEC_MISC,   // 2.0
+   //
+   //   .desc = "operation mode",
+   // },
    { .code=0xdf,
-     .name="VCP Version",
-     .flags=VCP_RO | VCP_NON_CONT,
-      .formatter=format_feature_detail_version,
+     .vcp_spec_groups = VCP_SPEC_MISC,   // 2.0
+     //.name="VCP Version",
+     //.flags=VCP_RO | VCP_NON_CONT,
+     .nontable_formatter=format_feature_detail_version,
+
+     .desc = "MCCS version",
+     //.global_flags = VCP_RO,
+     .v20_flags = VCP2_RO | VCP2_COMPLEX_NC,
+     .v20_name  = "VCP Version",
+
    }
 };
 // #pragma GCC diagnostic pop
 int vcp_feature_code_count = sizeof(vcp_code_table)/sizeof(VCP_Feature_Table_Entry);
 
-VCP_Feature_Table_Entry null_vcp_code_table_entry = { 0x00, "Unknown Feature", 0x00, NULL};
+// not used, no longer well defined
+// VCP_Feature_Table_Entry null_vcp_code_table_entry = { 0x00, "Unknown Feature", 0x00, NULL};
 
 
 #ifdef NO
@@ -1691,22 +3229,202 @@ void init_vcp_feature_table() {
 #endif
 
 
+bool compare_rw_flags(VCP_Feature_Flags f1, Version_Feature_Flags f2) {
+    bool ok = true;
+    if ( ( (f1 & VCP_RO) && !(f2 & VCP2_RO) ) || ( !(f1 & VCP_RO) && (f2 & VCP2_RO) )  ||
+         ( (f1 & VCP_RW) && !(f2 & VCP2_RW) ) || ( !(f1 & VCP_RW) && (f2 & VCP2_RW) )  ||
+         ( (f1 & VCP_WO) && !(f2 & VCP2_WO) ) || ( !(f1 & VCP_WO) && (f2 & VCP2_WO) )
+       ) ok = false;
+
+    return ok;
+}
+
+int check_one_version_flags(Version_Feature_Flags vflags, char * which_flags, VCP_Feature_Table_Entry entry) {
+   int ct = 0;
+   if (vflags && !(vflags & VCP2_DEPRECATED))  {
+      if (vflags & VCP2_STD_CONT)     ct++;
+      if (vflags & VCP2_COMPLEX_CONT) ct++;
+      if (vflags & VCP2_SIMPLE_NC)    ct++;
+      if (vflags & VCP2_COMPLEX_NC)   ct++;
+      if (vflags & VCP2_WO_NC)        ct++;
+      if (vflags & VCP2_TABLE)        ct++;
+      if (vflags & VCP2_WO_TABLE)     ct++;
+      if (ct != 1) {
+          fprintf(
+             stderr,
+             "code: 0x%02x, exactly 1 of VCP2_STD_CONT, VCP2_COMPLEX_CONT, VCP2_SIMPLE_NC, "
+             "VCP2_COMPLEX_NC, VCP2_TABLE, VCP2_WO_TABLE must be set in %s\n",
+             entry.code, which_flags);
+          ct = -1;
+       }
+
+#ifdef OLD
+      if ( ( (entry.flags & VCP_CONTINUOUS) && !(vflags & VCP2_CONT   ) ) ||
+           ( (entry.flags & VCP_NON_CONT  ) && !(vflags & VCP2_NC     ) ) ||
+           ( (entry.flags//.flags_TABLE     ) && !(vflags & VCP2_ANY_TABLE  ) )
+         )
+      {
+         if ( (entry.code != 0xa5) && (entry.code != 0x87) ) {
+            // printf("entry.flags = 0x%04x, vflags = 0x%04x\n", entry.flags, vflags);
+            // printf("(entry.flags & VCP_NON_CONT) = %x%04x, (vflags & VCP2_NC) = 0x%04x\n",
+            //        (entry.flags & VCP_NON_CONT),  (vflags & VCP2_NC) );
+            fprintf(
+                stderr,
+                "code: 0x%02x, types do not match between .flags and %s\n",
+                entry.code, which_flags);
+            ct = -2;
+         }
+      }
+#endif
+      if (vflags & VCP2_SIMPLE_NC) {
+         if (!entry.nc_sl_values) {
+            fprintf(
+               stderr,
+               "code: 0x%02x, .flags: %s, VCP2_SIMPLE_NC set but .nc_sl_values == NULL\n",
+               entry.code, which_flags);
+            ct = -2;
+         }
+      }
+      else if (vflags & VCP2_COMPLEX_NC) {
+         if (!entry.nontable_formatter) {
+            fprintf(
+               stderr,
+               "code: 0x%02x, .flags: %s, VCP2_COMPLEX_NC set but .nontable_formatter == NULL\n",
+               entry.code, which_flags);
+            ct = -2;
+         }
+      }
+      else if (vflags & VCP2_COMPLEX_CONT) {
+         if (!entry.nontable_formatter) {
+            fprintf(
+               stderr,
+               "code: 0x%02x, .flags: %s, VCP2_COMPLEX_CONT set but .nontable_formatter == NULL\n",
+               entry.code, which_flags);
+            ct = -2;
+         }
+      }
+      else if (vflags & VCP2_TABLE) {
+         if (!entry.table_formatter) {
+            fprintf(
+               stderr,
+               "code: 0x%02x, .flags: %s, VCP2_TABLE set but .table_formatter == NULL\n",
+               entry.code, which_flags);
+            ct = -2;
+         }
+      }
+   }
+
+   return ct;
+}
 
 void validate_vcp_feature_table() {
    // DBGMSG("Starting");
    bool ok = true;
    int ndx = 0;
+   // return;       // *** TEMP ***
+
    for (;ndx < vcp_feature_code_count;ndx++) {
       VCP_Feature_Table_Entry entry = vcp_code_table[ndx];
+#ifdef OLD
       int ct = 0;
       if (entry.flags & VCP_RO) ct++;
       if (entry.flags & VCP_WO) ct++;
       if (entry.flags & VCP_RW) ct++;
       if (ct != 1) {
-         fprintf(stderr, "code: 0x%02x, exactly 1 of VCP_RO, VCP_WO, VCP_RW must be set\n", entry.code);
+         fprintf(stderr, "code: 0x%02x, exactly 1 of VCP_RO, VCP_WO, VCP_RW must be set in .flags\n", entry.code);
          ok = false;
       }
+#endif
 
+#ifdef OLD
+      if (entry//.global_flags) {
+         int ct = 0;
+         if (entry.global_flags & VCP_RO) ct++;
+         if (entry.global_flags & VCP_WO) ct++;
+         if (entry.global_flags & VCP_RW) ct++;
+         if (ct != 1) {
+            fprintf(stderr, "code: 0x%02x, exactly 1 of VCP_RO, VCP_WO, VCP_RW must be set in //.global_flags\n", entry.code);
+            ok = false;
+         }
+         // else
+         //    printf("code: 0x%02x global flags RW checked\n", entry.code);
+      }
+#endif
+      if (entry.v20_flags && !(entry.v20_flags & VCP2_DEPRECATED))  {
+           int ct = 0;
+           if (entry.v20_flags & VCP2_RO) ct++;
+           if (entry.v20_flags & VCP2_WO) ct++;
+           if (entry.v20_flags & VCP2_RW) ct++;
+           if (ct != 1) {
+              fprintf(stderr, "code: 0x%02x, exactly 1 of VCP2_RO, VCP2_WO, VCP2_RW must be set in non-zero .v20_flags\n", entry.code);
+              ok = false;
+           }
+#ifdef OLD
+           if ( !compare_rw_flags(entry.flags, entry.v20_flags) ) {
+              if (entry.code != 0x82 && entry.code!= 0x84) {
+              fprintf(stderr, "code: 0x%02x, RW flags in .flags vs .v20_flags do not match\n", entry.code);
+              ok = false;
+              }
+           }
+#endif
+
+      }
+      if (entry.v21_flags && !(entry.v21_flags & VCP2_DEPRECATED)) {
+           int ct = 0;
+           if (entry.v21_flags & VCP2_RO) ct++;
+           if (entry.v21_flags & VCP2_WO) ct++;
+           if (entry.v21_flags & VCP2_RW) ct++;
+           if (ct != 1) {
+              fprintf(stderr, "code: 0x%02x, exactly 1 of VCP2_RO, VCP2_WO, VCP2_RW must be set in non-zero .v21_flags\n", entry.code);
+              ok = false;
+           }
+#ifdef OLD
+           if ( !compare_rw_flags(entry.flags, entry.v21_flags) ) {
+              if (entry.code != 0x82 && entry.code!= 0x84) {
+              fprintf(stderr, "code: 0x%02x, RW flags in .flags vs .v21_flags do not match\n", entry.code);
+              ok = false;
+              }
+           }
+#endif
+      }
+      if (entry.v30_flags && !(entry.v30_flags & VCP2_DEPRECATED)) {
+            int ct = 0;
+            if (entry.v30_flags & VCP2_RO) ct++;
+            if (entry.v30_flags & VCP2_WO) ct++;
+            if (entry.v30_flags & VCP2_RW) ct++;
+            if (ct != 1) {
+               fprintf(stderr, "code: 0x%02x, exactly 1 of VCP2_RO, VCP2_WO, VCP2_RW must be set in non-zero .v30_flags\n", entry.code);
+               ok = false;
+            }
+#ifdef OLD
+            if ( !compare_rw_flags(entry.flags, entry.v30_flags) ) {
+               if (entry.code != 0x82 && entry.code!= 0x84) {
+               fprintf(stderr, "code: 0x%02x, RW flags in .flags vs .v30_flags do not match\n", entry.code);
+               ok = false;
+               }
+            }
+#endif
+       }
+       if (entry.v22_flags && !(entry.v22_flags & VCP2_DEPRECATED)) {
+            int ct = 0;
+            if (entry.v22_flags & VCP2_RO) ct++;
+            if (entry.v22_flags & VCP2_WO) ct++;
+            if (entry.v22_flags & VCP2_RW) ct++;
+            if (ct != 1) {
+               fprintf(stderr, "code: 0x%02x, exactly 1 of VCP2_RO, VCP2_WO, VCP2_RW must be set in non-zero .v22_flags\n", entry.code);
+               ok = false;
+            }
+#ifdef OLD
+            if ( !compare_rw_flags(entry.flags, entry.v22_flags) ) {
+               if (entry.code != 0x82 && entry.code!= 0x84) {
+                  fprintf(stderr, "code: 0x%02x, RW flags in .flags vs .v22_flags do not match\n", entry.code);
+                  ok = false;
+               }
+            }
+#endif
+       }
+
+#ifdef OLD
       ct = 0;
       if (entry.flags & VCP_CONTINUOUS) ct++;
       if (entry.flags & VCP_NON_CONT)   ct++;
@@ -1715,15 +3433,32 @@ void validate_vcp_feature_table() {
       if (ct != 1) {
           fprintf(
              stderr,
-             "code: 0x%02x, exactly 1 of VCP_CONTINUOUS, VCP_NON_CONT, VCP_TABLE, VCP_TYPE_V2NC_V3T must be set\n",
+             "code: 0x%02x, exactly 1 of VCP_CONTINUOUS, VCP_NON_CONT, VCP_TABLE, VCP_TYPE_V2NC_V3T must be set in .flags\n",
              entry.code);
           ok = false;
        }
 
-      if ( (entry.flags & VCP_NCSL) && (entry.formatter != format_feature_detail_sl_lookup_new)) {
+
+      if ( (entry.flags & VCP_NCSL) && (entry.nontable_formatter != format_feature_detail_sl_lookup_new)) {
          fprintf(stderr, "code: 0x%02x, VCP_NCSL set but formatter != feature_detail_sl_lookup_new\n", entry.code);
          ok = false;
       }
+#endif
+      int total_ct = 0;
+      bool really_bad = false;
+      int cur_ct = check_one_version_flags(entry.v20_flags, ".v20_flags", entry);
+      if (cur_ct < 0) {
+         ok = false;
+         if (cur_ct < -1)
+            really_bad = true;
+      }
+      else
+         total_ct += 1;
+      if (total_ct == 0 && !really_bad) {
+         fprintf(stderr, "code: 0x%02x, Type not specified in any vnn_flags\n", entry.code);
+         ok = false;
+      }
+
    }
    if (!ok)
       PROGRAM_LOGIC_ERROR(NULL);

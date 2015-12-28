@@ -263,7 +263,7 @@ Global_Status_Code multi_part_read_with_retry(
       else if (rc == DDCRC_ALL_TRIES_ZERO) {
          can_retry = false;
          COUNT_STATUS_CODE(rc);   // double counting?
-         DBGMSG("DDCRC_ALL_TRIES_ZERO");
+         // DBGMSG("DDCRC_ALL_TRIES_ZERO");
          rc = DDCRC_DETERMINED_UNSUPPORTED;    // ??
          COUNT_STATUS_CODE(rc);   // double counting?
       }
