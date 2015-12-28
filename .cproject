@@ -21,7 +21,12 @@
 					<folderInfo id="org.eclipse.linuxtools.cdt.autotools.core.configuration.build.1724079400." name="/" resourcePath="">
 						<toolChain id="org.eclipse.linuxtools.cdt.autotools.core.toolChain.1134322511" name="GNU Autotools Toolchain" superClass="org.eclipse.linuxtools.cdt.autotools.core.toolChain">
 							<targetPlatform id="org.eclipse.linuxtools.cdt.autotools.core.toolchain.targetPlatform.436019256" isAbstract="false" name="GNU Autotools Target Platform" superClass="org.eclipse.linuxtools.cdt.autotools.core.toolchain.targetPlatform"/>
-							<builder id="org.eclipse.linuxtools.cdt.autotools.core.toolchain.builder.2000586453" keepEnvironmentInBuildfile="false" superClass="org.eclipse.linuxtools.cdt.autotools.core.toolchain.builder"/>
+							<builder id="org.eclipse.linuxtools.cdt.autotools.core.toolchain.builder.2000586453" keepEnvironmentInBuildfile="false" superClass="org.eclipse.linuxtools.cdt.autotools.core.toolchain.builder">
+								<outputEntries>
+									<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="outputPath" name=""/>
+									<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="outputPath" name="build-debug"/>
+								</outputEntries>
+							</builder>
 							<tool id="org.eclipse.linuxtools.cdt.autotools.core.gnu.toolchain.tool.configure.776089034" name="configure" superClass="org.eclipse.linuxtools.cdt.autotools.core.gnu.toolchain.tool.configure">
 								<option id="org.eclipse.linuxtools.cdt.autotools.core.option.configure.name.95699624" name="Name" superClass="org.eclipse.linuxtools.cdt.autotools.core.option.configure.name" value="org.eclipse.linuxtools.cdt.autotools.core.configuration.build.1724079400" valueType="string"/>
 							</tool>
@@ -32,6 +37,9 @@
 							<tool id="org.eclipse.linuxtools.cdt.autotools.core.toolchain.tool.gpp.426157820" name="GCC C++ Compiler" superClass="org.eclipse.linuxtools.cdt.autotools.core.toolchain.tool.gpp"/>
 						</toolChain>
 					</folderInfo>
+					<sourceEntries>
+						<entry excluding="ddc_read_capabilities.c" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
+					</sourceEntries>
 				</configuration>
 			</storageModule>
 			<storageModule moduleId="org.eclipse.cdt.core.externalSettings"/>
@@ -69,7 +77,7 @@
 						</toolChain>
 					</folderInfo>
 					<sourceEntries>
-						<entry excluding="oldsrc/" flags="VALUE_WORKSPACE_PATH" kind="sourcePath" name=""/>
+						<entry excluding="ddc_read_capabilities.c|oldsrc/" flags="VALUE_WORKSPACE_PATH" kind="sourcePath" name=""/>
 					</sourceEntries>
 				</configuration>
 			</storageModule>
@@ -89,18 +97,6 @@
 		<configuration configurationName="Debug">
 			<resource resourceType="PROJECT" workspacePath="/i2c"/>
 		</configuration>
-	</storageModule>
-	<storageModule moduleId="scannerConfiguration">
-		<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
-		<scannerConfigBuildInfo instanceId="cdt.managedbuild.config.gnu.exe.release.2082565428;cdt.managedbuild.config.gnu.exe.release.2082565428.;cdt.managedbuild.tool.gnu.c.compiler.exe.release.1743308246;cdt.managedbuild.tool.gnu.c.compiler.input.1322447520">
-			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
-		</scannerConfigBuildInfo>
-		<scannerConfigBuildInfo instanceId="org.eclipse.linuxtools.cdt.autotools.core.configuration.build.1724079400.671655291;org.eclipse.linuxtools.cdt.autotools.core.configuration.build.1724079400.671655291.;org.eclipse.linuxtools.cdt.autotools.core.toolchain.tool.gcc.641596029;cdt.managedbuild.tool.gnu.c.compiler.input.315469143">
-			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
-		</scannerConfigBuildInfo>
-		<scannerConfigBuildInfo instanceId="cdt.managedbuild.config.gnu.exe.debug.364222619;cdt.managedbuild.config.gnu.exe.debug.364222619.;cdt.managedbuild.tool.gnu.c.compiler.exe.debug.1531802934;cdt.managedbuild.tool.gnu.c.compiler.input.140787007">
-			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
-		</scannerConfigBuildInfo>
 	</storageModule>
 	<storageModule moduleId="org.eclipse.cdt.internal.ui.text.commentOwnerProjectMappings"/>
 	<storageModule moduleId="org.eclipse.cdt.make.core.buildtargets">
@@ -522,5 +518,20 @@
 				<runAllBuilders>false</runAllBuilders>
 			</target>
 		</buildTargets>
+	</storageModule>
+	<storageModule moduleId="scannerConfiguration">
+		<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
+		<scannerConfigBuildInfo instanceId="cdt.managedbuild.config.gnu.exe.release.2082565428;cdt.managedbuild.config.gnu.exe.release.2082565428.;cdt.managedbuild.tool.gnu.c.compiler.exe.release.1743308246;cdt.managedbuild.tool.gnu.c.compiler.input.1322447520">
+			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
+		</scannerConfigBuildInfo>
+		<scannerConfigBuildInfo instanceId="org.eclipse.linuxtools.cdt.autotools.core.configuration.build.1724079400.671655291;org.eclipse.linuxtools.cdt.autotools.core.configuration.build.1724079400.671655291.;org.eclipse.linuxtools.cdt.autotools.core.toolchain.tool.gcc.641596029;cdt.managedbuild.tool.gnu.c.compiler.input.315469143">
+			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
+		</scannerConfigBuildInfo>
+		<scannerConfigBuildInfo instanceId="org.eclipse.linuxtools.cdt.autotools.core.configuration.build.1724079400;org.eclipse.linuxtools.cdt.autotools.core.configuration.build.1724079400.;org.eclipse.linuxtools.cdt.autotools.core.toolchain.tool.gcc.361544438;cdt.managedbuild.tool.gnu.c.compiler.input.955893591">
+			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
+		</scannerConfigBuildInfo>
+		<scannerConfigBuildInfo instanceId="cdt.managedbuild.config.gnu.exe.debug.364222619;cdt.managedbuild.config.gnu.exe.debug.364222619.;cdt.managedbuild.tool.gnu.c.compiler.exe.debug.1531802934;cdt.managedbuild.tool.gnu.c.compiler.input.140787007">
+			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
+		</scannerConfigBuildInfo>
 	</storageModule>
 </cproject>

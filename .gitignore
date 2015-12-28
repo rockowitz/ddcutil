@@ -9,6 +9,7 @@ perf.data
 *.o
 *.lo
 *.la
+*.expand
 .deps
 .dirstamp
 aclocal.m4
@@ -48,3 +49,5 @@ man/*.ronn
 /mintvm.notes
 /doconf
 misc/
+/Doxyfile
+doxy_output/

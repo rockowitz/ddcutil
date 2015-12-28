@@ -41,6 +41,8 @@
 #include "ddc/ddc_services.h"
 #include "ddc/ddc_vcp.h"
 #include "ddc/vcp_feature_codes.h"
+#include "ddc/ddc_read_capabilities.h"
+#include "ddc/ddc_displays.h"
 
 #include "main/loadvcp.h"
 

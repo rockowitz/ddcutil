@@ -1,7 +1,7 @@
-
+## Process this file with automake to produce Makefile.in
 
 # AM_CFLAGS = -Wall -Werror
-AM_CFLAGS = -Wall 
+AM_CFLAGS = -Wall -fdump-rtl-expand
 
 # Is this really necessary?   Don't want to push these files to github.
 # there ought to be a cleaner way
@@ -77,8 +77,10 @@ base/msg_control.c \
 base/status_code_mgt.c \
 base/util.c \
 ddc/ddc_command_codes.c \
+ddc/ddc_displays.c      \
 ddc/ddc_multi_part_io.c \
 ddc/ddc_packet_io.c \
+ddc/ddc_read_capabilities.c \
 ddc/ddc_services.c \
 ddc/ddc_strategy.c \
 ddc/ddc_vcp.c \
@@ -128,10 +130,10 @@ AM_CPPFLAGS=$(GLIB_CFLAGS) \
 
 
 # Compiler flags
-ddctool_CFLAGS        = $(AM_FLAGS)
-laclient_CFLAGS       = $(AM_FLAGS)
-libcommon_la_CFLAGS   = $(AM_FLAGS) 
-libddctool_la_CFLAGS  = $(AM_FLAGS)
+ddctool_CFLAGS        = $(AM_CFLAGS)
+laclient_CFLAGS       = $(AM_CFLAGS)
+libcommon_la_CFLAGS   = $(AM_CFLAGS) 
+libddctool_la_CFLAGS  = $(AM_CFLAGS)
 
   
 if HAVE_ADL_COND

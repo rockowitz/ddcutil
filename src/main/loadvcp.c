@@ -49,6 +49,8 @@
 #include <ddc/ddc_services.h>
 #include <ddc/ddc_packet_io.h>
 #include <ddc/ddc_vcp.h>
+#include "ddc/ddc_read_capabilities.h"
+#include "ddc/ddc_displays.h"
 
 #include <main/loadvcp.h>
 
