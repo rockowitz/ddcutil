@@ -39,6 +39,7 @@
 
 // Bits in VCP_Feature_Table_Entry.flags:
 
+#ifdef OLD
 // Exactly 1 of the following 3 bits must be set
 #define  VCP_RO         0x80
 #define  VCP_WO         0x40
@@ -54,6 +55,7 @@
 // for now, assume that is the only time type changed
 // need to find a copy of the v2.2 MCCS spec to confirm
 #define  VCP_TYPE_V2NC_V3T 0x01
+#endif
 
 // 12/2015:
 // new way, defines beginning with VCP_V3_..., if set override VCP_CONTINUOUS, VCP_NON_CONT, VCP_TABLE if V3
@@ -73,8 +75,9 @@
 // new new way
 // Separate bytes for each VCP version
 typedef ushort Version_Feature_Flags;
+#ifdef OLD
 typedef Byte Global_Feature_Flags;
-
+#endif
 
 
 #define VCP2_PROFILE         0x8000
@@ -110,7 +113,7 @@ typedef Byte Global_Feature_Flags;
 
 // n. VCP_FUNC_VER no longer needed
 
-
+#ifdef OLD
 // 0 or more of the following group bits may be set:
 #define  VCP_PROFILE    0x8000     // emit when -profile option selected
 #define  VCP_COLORMGT   0x4000     // my designation, indicates related to color mgt
@@ -121,7 +124,7 @@ typedef Byte Global_Feature_Flags;
 
 // optional bit
 #define  VCP_FUNC_VER   0x0100   // interpretation function needs to know version
-
+#endif
 
 // more generic, deprecated:
 // #define  VCP_TYPE_VER 0x1000    // type (C, NC, T) varies by version
@@ -264,8 +267,11 @@ char * get_non_version_specific_feature_name(
 
 
 
-Format_Normal_Feature_Detail_Function get_nontable_feature_detail_function( VCP_Feature_Table_Entry * pvft_entry);
-Format_Table_Feature_Detail_Function get_table_feature_detail_function(VCP_Feature_Table_Entry * pvft_entry);
+Format_Normal_Feature_Detail_Function
+get_nontable_feature_detail_function( VCP_Feature_Table_Entry * pvft_entry);
+
+Format_Table_Feature_Detail_Function
+get_table_feature_detail_function(VCP_Feature_Table_Entry * pvft_entry);
 
 bool vcp_format_nontable_feature_detail(
         VCP_Feature_Table_Entry * vcp_entry,
@@ -284,9 +290,9 @@ bool vcp_format_table_feature_detail(
 // #define NULL_VCP_CODE (0x00)     /* used for unrecognized codes */
 
 
-char * get_feature_name(Byte feature_id);
-char * get_feature_name_by_id_and_vcp_version(Byte feature_id, Version_Spec vspec);
-int vcp_get_feature_code_count();
+char* get_feature_name(Byte feature_id);
+char* get_feature_name_by_id_and_vcp_version(Byte feature_id, Version_Spec vspec);
+int   vcp_get_feature_code_count();
 
 void vcp_list_feature_codes();
 

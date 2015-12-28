@@ -57,6 +57,7 @@ bool format_feature_detail_debug_continuous(
 // Creates humanly readable interpretation of VCP feature flags.
 //
 // The result is returned in a buffer supplied by the caller.
+#ifdef OLD
 static char * vcp_interpret_feature_flags(VCP_Feature_Flags flags, char* buf, int buflen) {
    // DBGMSG("flags: 0x%04x", flags);
    char * rwmsg = "";
@@ -87,6 +88,7 @@ static char * vcp_interpret_feature_flags(VCP_Feature_Flags flags, char* buf, in
    snprintf(buf, buflen, "%s  %s%s", rwmsg, typemsg, vermsg);
    return buf;
 }
+#endif
 
 // Creates humanly readable interpretation of VCP feature flags.
 //
@@ -3228,7 +3230,7 @@ void init_vcp_feature_table() {
 }
 #endif
 
-
+#ifdef OLD
 bool compare_rw_flags(VCP_Feature_Flags f1, Version_Feature_Flags f2) {
     bool ok = true;
     if ( ( (f1 & VCP_RO) && !(f2 & VCP2_RO) ) || ( !(f1 & VCP_RO) && (f2 & VCP2_RO) )  ||
@@ -3238,6 +3240,7 @@ bool compare_rw_flags(VCP_Feature_Flags f1, Version_Feature_Flags f2) {
 
     return ok;
 }
+#endif
 
 int check_one_version_flags(Version_Feature_Flags vflags, char * which_flags, VCP_Feature_Table_Entry entry) {
    int ct = 0;
