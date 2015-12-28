@@ -47,7 +47,7 @@ static Feature_Value_Entry x14_color_preset_absolute_values[];
        Feature_Value_Entry xc8_display_controller_type_values[];
 bool default_table_feature_detail_function(Buffer * data, Version_Spec vcp_version, char** presult);
 bool format_feature_detail_debug_continuous(
-         Interpreted_Nontable_Vcp_Response * code_info,  Version_Spec vcp_version, char * buffer, int bufsz);
+         Preparsed_Nontable_Vcp_Response * code_info,  Version_Spec vcp_version, char * buffer, int bufsz);
 
 
 //
@@ -411,7 +411,7 @@ Format_Table_Feature_Detail_Function get_table_feature_detail_function( VCP_Feat
 bool vcp_format_nontable_feature_detail(
         VCP_Feature_Table_Entry * vcp_entry,
         Version_Spec              vcp_version,
-        Interpreted_Nontable_Vcp_Response *    code_info,
+        Preparsed_Nontable_Vcp_Response *    code_info,
         char *                    buffer,
         int                       bufsz)
 {
@@ -787,7 +787,7 @@ char * lookup_value_name_new(
 // used when the value is calculated using the SL and SH bytes, but we haven't
 // written a full interpretation function
 bool format_feature_detail_debug_sl_sh(
-        Interpreted_Nontable_Vcp_Response * code_info,  Version_Spec vcp_version, char * buffer, int bufsz)
+        Preparsed_Nontable_Vcp_Response * code_info,  Version_Spec vcp_version, char * buffer, int bufsz)
 {
     snprintf(buffer, bufsz,
              "SL: 0x%02x ,  SH: 0x%02x",
@@ -800,7 +800,7 @@ bool format_feature_detail_debug_sl_sh(
 // For debugging features marked as Continuous
 // Outputs both the byte fields and calculated cur and max values
 bool format_feature_detail_debug_continuous(
-        Interpreted_Nontable_Vcp_Response * code_info,  Version_Spec vcp_version, char * buffer, int bufsz)
+        Preparsed_Nontable_Vcp_Response * code_info,  Version_Spec vcp_version, char * buffer, int bufsz)
 {
    snprintf(buffer, bufsz,
             "mh=0x%02x, ml=0x%02x, sh=0x%02x, sl=0x%02x, max value = %5d, cur value = %5d",
@@ -812,7 +812,7 @@ bool format_feature_detail_debug_continuous(
 
 
 bool format_feature_detail_debug_bytes(
-        Interpreted_Nontable_Vcp_Response * code_info, Version_Spec vcp_version, char * buffer, int bufsz)
+        Preparsed_Nontable_Vcp_Response * code_info, Version_Spec vcp_version, char * buffer, int bufsz)
 {
    snprintf(buffer, bufsz,
             "mh=0x%02x, ml=0x%02x, sh=0x%02x, sl=0x%02x",
@@ -828,7 +828,7 @@ bool format_feature_detail_debug_bytes(
 // used when the value is just the SL byte, but we haven't
 // written a full interpretation function
 bool format_feature_detail_sl_byte(
-        Interpreted_Nontable_Vcp_Response * code_info, Version_Spec vcp_version, char * buffer, int bufsz)
+        Preparsed_Nontable_Vcp_Response * code_info, Version_Spec vcp_version, char * buffer, int bufsz)
 {
     snprintf(buffer, bufsz,
              "Value: 0x%02x" ,
@@ -851,7 +851,7 @@ bool format_feature_detail_sl_byte(
  *    true if formatting successful, false if not
  */
 bool format_feature_detail_sl_lookup_new(
-        Interpreted_Nontable_Vcp_Response *  code_info,
+        Preparsed_Nontable_Vcp_Response *  code_info,
         Version_Spec            vcp_version,
         char *                  buffer,
         int                     bufsz)
@@ -875,7 +875,7 @@ bool format_feature_detail_sl_lookup_new(
  *    true
  */
 bool format_feature_detail_standard_continuous(
-        Interpreted_Nontable_Vcp_Response * code_info, Version_Spec vcp_version, char * buffer, int bufsz)
+        Preparsed_Nontable_Vcp_Response * code_info, Version_Spec vcp_version, char * buffer, int bufsz)
 {
    // TODO: calculate cv, mv here from bytes
    int cv = code_info->cur_value;
@@ -896,7 +896,7 @@ bool format_feature_detail_standard_continuous(
 
 // 0x02
 bool format_feature_detail_new_control_value(    // 0x02
-        Interpreted_Nontable_Vcp_Response * code_info, Version_Spec vcp_version, char * buffer, int bufsz)
+        Preparsed_Nontable_Vcp_Response * code_info, Version_Spec vcp_version, char * buffer, int bufsz)
 {
    char * name = NULL;
    switch(code_info->sl) {
@@ -914,7 +914,7 @@ bool format_feature_detail_new_control_value(    // 0x02
 
 // 0x0b
 bool x0b_format_feature_detail_color_temperature_increment(
-      Interpreted_Nontable_Vcp_Response * code_info,
+      Preparsed_Nontable_Vcp_Response * code_info,
       Version_Spec                        vcp_version,
       char *                              buffer,
       int                                 bufsz)
@@ -932,7 +932,7 @@ bool x0b_format_feature_detail_color_temperature_increment(
 
 // 0x0c
 bool x0c_format_feature_detail_color_temperature_request(
-      Interpreted_Nontable_Vcp_Response * code_info,
+      Preparsed_Nontable_Vcp_Response * code_info,
       Version_Spec                        vcp_version,
       char *                              buffer,
       int                                 bufsz)
@@ -948,7 +948,7 @@ bool x0c_format_feature_detail_color_temperature_request(
 
 // 0x14
 bool format_feature_detail_select_color_preset(
-      Interpreted_Nontable_Vcp_Response * code_info, Version_Spec vcp_version, char * buffer, int bufsz)
+      Preparsed_Nontable_Vcp_Response * code_info, Version_Spec vcp_version, char * buffer, int bufsz)
 {
    bool debug = false;
    if (debug)
@@ -1037,7 +1037,7 @@ bool format_feature_detail_select_color_preset(
 
 // 0xac
 bool format_feature_detail_horizontal_frequency(
-      Interpreted_Nontable_Vcp_Response * code_info, Version_Spec vcp_version, char * buffer, int bufsz)
+      Preparsed_Nontable_Vcp_Response * code_info, Version_Spec vcp_version, char * buffer, int bufsz)
 {
   assert (code_info->vcp_code == 0xac);
   // this is R/O field, so max value is irrelevant
@@ -1062,7 +1062,7 @@ bool format_feature_detail_horizontal_frequency(
 
 // 0xae
 bool format_feature_detail_vertical_frequency(
-      Interpreted_Nontable_Vcp_Response * code_info, Version_Spec vcp_version, char * buffer, int bufsz)
+      Preparsed_Nontable_Vcp_Response * code_info, Version_Spec vcp_version, char * buffer, int bufsz)
 {
   assert (code_info->vcp_code == 0xae);
   if (code_info->mh == 0xff &&
@@ -1086,7 +1086,7 @@ bool format_feature_detail_vertical_frequency(
 
 // 0xc0
 bool format_feature_detail_display_usage_time(
-        Interpreted_Nontable_Vcp_Response * code_info, Version_Spec vcp_version, char * buffer, int bufsz)
+        Preparsed_Nontable_Vcp_Response * code_info, Version_Spec vcp_version, char * buffer, int bufsz)
 {
    assert (code_info->vcp_code == 0xc0);
    uint usage_time;
@@ -1111,7 +1111,7 @@ bool format_feature_detail_display_usage_time(
 
 // 0xc6
 bool format_feature_detail_application_enable_key(
-        Interpreted_Nontable_Vcp_Response * code_info,
+        Preparsed_Nontable_Vcp_Response * code_info,
         Version_Spec vcp_version,
         char * buffer,
         int bufsz)
@@ -1124,7 +1124,7 @@ bool format_feature_detail_application_enable_key(
 
 // 0xc8
 bool format_feature_detail_display_controller_type(
-        Interpreted_Nontable_Vcp_Response * info,  Version_Spec vcp_version, char * buffer, int bufsz)
+        Preparsed_Nontable_Vcp_Response * info,  Version_Spec vcp_version, char * buffer, int bufsz)
 {
    assert(info->vcp_code == 0xc8);
    bool ok = true;
@@ -1147,7 +1147,7 @@ bool format_feature_detail_display_controller_type(
 
 // xc9, xdf
 bool format_feature_detail_version(
-        Interpreted_Nontable_Vcp_Response * code_info, Version_Spec vcp_version, char * buffer, int bufsz)
+        Preparsed_Nontable_Vcp_Response * code_info, Version_Spec vcp_version, char * buffer, int bufsz)
 {
    int version_number  = code_info->sh;
    int revision_number = code_info->sl;
@@ -3539,7 +3539,7 @@ char * lookup_value_name(Byte feature_code, Byte sl_value) {
 // data seen does not correspond to the MCCS spec
 // values taken from EloView Remote Mgt Local Cmd Set document
 bool format_feature_detail_sl_lookup(
-      Interpreted_Nontable_Vcp_Response * code_info,  Version_Spec vcp_version, char * buffer, int bufsz)
+      Preparsed_Nontable_Vcp_Response * code_info,  Version_Spec vcp_version, char * buffer, int bufsz)
 {
    assert(code_info->vcp_code == 0x60);
    char * s = lookup_value_name(code_info->vcp_code, code_info->sl);
@@ -3554,7 +3554,7 @@ bool format_feature_detail_sl_lookup(
 // .formatter_v3 = table
 
 bool format_feature_detail_input_source(
-         Interpreted_Nontable_Vcp_Response * code_info,  Version_Spec vcp_version, char * buffer, int bufsz)
+         Preparsed_Nontable_Vcp_Response * code_info,  Version_Spec vcp_version, char * buffer, int bufsz)
 {
    assert(code_info->vcp_code == 0x60);
 
@@ -3573,7 +3573,7 @@ bool format_feature_detail_input_source(
 #ifdef OLD
 // 0x1e, 0x1f
 bool format_feature_detail_auto_setup(
-      Interpreted_Nontable_Vcp_Response * code_info, Version_Spec vcp_version, char * buffer, int bufsz)
+      Preparsed_Nontable_Vcp_Response * code_info, Version_Spec vcp_version, char * buffer, int bufsz)
 {
    assert(code_info->vcp_code == 0x1e || code_info->vcp_code == 0x1f);
    char * s = NULL;
@@ -3593,7 +3593,7 @@ bool format_feature_detail_auto_setup(
 #ifdef OLD
 // 0xaa
 bool format_feature_detail_screen_orientation(
-      Interpreted_Nontable_Vcp_Response * code_info, Version_Spec vcp_version, char * buffer, int bufsz)
+      Preparsed_Nontable_Vcp_Response * code_info, Version_Spec vcp_version, char * buffer, int bufsz)
 {
    assert(code_info->vcp_code == 0xaa);
    char * s = NULL;
@@ -3611,7 +3611,7 @@ bool format_feature_detail_screen_orientation(
 
 // 0xb2
 bool format_feature_flat_panel_subpixel_layout(
-      Interpreted_Nontable_Vcp_Response * code_info, Version_Spec vcp_version, char * buffer, int bufsz)
+      Preparsed_Nontable_Vcp_Response * code_info, Version_Spec vcp_version, char * buffer, int bufsz)
 {
    assert(code_info->vcp_code == 0xb2);
    char * s = NULL;
@@ -3635,7 +3635,7 @@ bool format_feature_flat_panel_subpixel_layout(
 #ifdef OLD
 // 0xb6
 bool format_feature_detail_display_technology_type(
-        Interpreted_Nontable_Vcp_Response * code_info, Version_Spec vcp_version, char * buffer, int bufsz)
+        Preparsed_Nontable_Vcp_Response * code_info, Version_Spec vcp_version, char * buffer, int bufsz)
 {
    assert(code_info->vcp_code == 0xb6);
    Byte techtype = code_info->sl;
@@ -3662,7 +3662,7 @@ bool format_feature_detail_display_technology_type(
 #ifdef OLD
 // 0xc8
 bool format_feature_detail_display_controller_type(
-        Interpreted_Nontable_Vcp_Response * info,  Version_Spec vcp_version, char * buffer, int bufsz)
+        Preparsed_Nontable_Vcp_Response * info,  Version_Spec vcp_version, char * buffer, int bufsz)
 {
    assert(info->vcp_code == 0xc8);
    Byte mfg_id = info->sl;
@@ -3704,7 +3704,7 @@ bool format_feature_detail_display_controller_type(
 #ifdef OLD
 // 0xca
 bool format_feature_detail_osd(
-        Interpreted_Nontable_Vcp_Response * code_info, Version_Spec vcp_version, char * buffer, int bufsz)
+        Preparsed_Nontable_Vcp_Response * code_info, Version_Spec vcp_version, char * buffer, int bufsz)
 {
    assert(code_info->vcp_code == 0xca);
    char * s = NULL;
@@ -3723,7 +3723,7 @@ bool format_feature_detail_osd(
 #ifdef OLD
 // 0xcc
 bool format_feature_detail_osd_language(
-        Interpreted_Nontable_Vcp_Response * code_info, Version_Spec vcp_version, char * buffer, int bufsz)
+        Preparsed_Nontable_Vcp_Response * code_info, Version_Spec vcp_version, char * buffer, int bufsz)
 {
    assert(code_info->vcp_code == 0xcc);
    char * s = NULL;
@@ -3779,7 +3779,7 @@ bool format_feature_detail_osd_language(
 #ifdef OLD
 // 0xd6
 bool format_feature_detail_power_mode(
-        Interpreted_Nontable_Vcp_Response * code_info, Version_Spec vcp_version, char * buffer, int bufsz)
+        Preparsed_Nontable_Vcp_Response * code_info, Version_Spec vcp_version, char * buffer, int bufsz)
 {
    assert(code_info->vcp_code == 0xd6);
    Byte techtype = code_info->sl;
@@ -3802,7 +3802,7 @@ bool format_feature_detail_power_mode(
 #ifdef OLD
 // 0xdc
 bool format_feature_detail_display_application(
-        Interpreted_Nontable_Vcp_Response * code_info, Version_Spec vcp_version, char * buffer, int bufsz)
+        Preparsed_Nontable_Vcp_Response * code_info, Version_Spec vcp_version, char * buffer, int bufsz)
 {
    assert(code_info->vcp_code == 0xdc);
    char * s = NULL;

@@ -48,7 +48,7 @@
 int interpret_vcp_feature_response(Byte * vcp_data_bytes,
                                    int bytect,
                                    Byte requested_vcp_code,
-                                   Interpreted_Nontable_Vcp_Response * aux_data,
+                                   Preparsed_Nontable_Vcp_Response * aux_data,
                                    bool debug);
 
 //
@@ -749,7 +749,7 @@ interpret_vcp_feature_response_std(
        Byte*                 vcp_data_bytes,
        int                   bytect,
        Byte                  requested_vcp_code,
-       Interpreted_Nontable_Vcp_Response* aux_data)   // record in which interpreted feature response will be stored
+       Preparsed_Nontable_Vcp_Response* aux_data)   // record in which interpreted feature response will be stored
 {
    // debug = false;
    // DBGMSG(debug, "Starting");
@@ -832,7 +832,7 @@ interpret_vcp_feature_response(
    Byte *                              vcp_data_bytes,
    int                                 bytect,
    Byte                                requested_vcp_code,
-   Interpreted_Nontable_Vcp_Response * aux_data,
+   Preparsed_Nontable_Vcp_Response * aux_data,
    bool                                debug)
 {
 
@@ -906,7 +906,7 @@ interpret_vcp_feature_response(
 
 
 void report_interpreted_nontable_vcp_response(
-        Interpreted_Nontable_Vcp_Response * interpreted)
+        Preparsed_Nontable_Vcp_Response * interpreted)
 {
    printf("VCP code:         0x%02x\n", interpreted->vcp_code);
    printf("valid_response:   %d\n",     interpreted->valid_response);
@@ -981,14 +981,14 @@ Global_Status_DDC create_ddc_typed_response_packet(
                 true);
          break;
       case DDC_PACKET_TYPE_QUERY_VCP_RESPONSE:
-         aux_data = call_calloc(1, sizeof(Interpreted_Nontable_Vcp_Response),
+         aux_data = call_calloc(1, sizeof(Preparsed_Nontable_Vcp_Response),
                                 "create_ddc_getvcp_response_packet:aux_data");
          packet->aux_data = aux_data;
 
          rc =  interpret_vcp_feature_response_std(get_data_start(packet),
                                             get_data_len(packet),
                                             expected_subtype,
-                                            (Interpreted_Nontable_Vcp_Response *) aux_data);
+                                            (Preparsed_Nontable_Vcp_Response *) aux_data);
          break;
 
       default:
@@ -1099,7 +1099,7 @@ create_ddc_getvcp_response_packet(
          rc = COUNT_STATUS_CODE(DDCRC_INVALID_DATA);
       }
       else {
-         void * aux_data = call_calloc(1, sizeof(Interpreted_Nontable_Vcp_Response),
+         void * aux_data = call_calloc(1, sizeof(Preparsed_Nontable_Vcp_Response),
                                        "create_ddc_getvcp_response_packet:aux_data");
          packet->aux_data = aux_data;
 
@@ -1107,7 +1107,7 @@ create_ddc_getvcp_response_packet(
                   get_data_start(packet),
                   get_data_len(packet),
                   expected_vcp_opcode,
-                  (Interpreted_Nontable_Vcp_Response *) aux_data);
+                  (Preparsed_Nontable_Vcp_Response *) aux_data);
       }
    }
    if (rc != 0 && packet) {
@@ -1225,7 +1225,7 @@ int get_table_read_offset(DDC_Packet * packet, int * offset_ptr) {
 Global_Status_DDC get_interpreted_vcp_code(
        DDC_Packet *            packet,
        bool                    make_copy,
-       Interpreted_Nontable_Vcp_Response ** interpreted_ptr)
+       Preparsed_Nontable_Vcp_Response ** interpreted_ptr)
 {
    bool debug = false;
    if (debug)
@@ -1237,9 +1237,9 @@ Global_Status_DDC get_interpreted_vcp_code(
    }
    else {
       if (make_copy) {
-         Interpreted_Nontable_Vcp_Response * copy =
-            call_malloc(sizeof(Interpreted_Nontable_Vcp_Response), "get_interpreted_vcp_code:make_copy");
-         memcpy(copy, packet->aux_data, sizeof(Interpreted_Nontable_Vcp_Response));
+         Preparsed_Nontable_Vcp_Response * copy =
+            call_malloc(sizeof(Preparsed_Nontable_Vcp_Response), "get_interpreted_vcp_code:make_copy");
+         memcpy(copy, packet->aux_data, sizeof(Preparsed_Nontable_Vcp_Response));
          *interpreted_ptr = copy;
       }
       else {
@@ -1253,7 +1253,7 @@ Global_Status_DDC get_interpreted_vcp_code(
 
 // 12/23/2015: not currently used
 Global_Status_DDC get_vcp_cur_value(DDC_Packet * packet, int * value_ptr) {
-   Interpreted_Nontable_Vcp_Response * aux_ptr;
+   Preparsed_Nontable_Vcp_Response * aux_ptr;
    Global_Status_DDC rc = get_interpreted_vcp_code(packet, false, &aux_ptr);
    if (rc == 0) {
       *value_ptr = aux_ptr->cur_value;

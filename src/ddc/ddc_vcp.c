@@ -129,6 +129,7 @@ Global_Status_Code set_vcp_by_display_ref(Display_Ref * pdisp, Byte feature_code
 }
 
 
+#ifdef OLD
 /* Similar to set_vcp_by_display_ref(), but specifies the feature using
  * a VCP feature table entry.
  */
@@ -147,7 +148,7 @@ Global_Status_Code put_vcp_by_display_ref(Display_Ref * pdisp, VCP_Feature_Table
    return rc;
    // DBGMSG("Done");
 }
-
+#endif
 
 
 //
@@ -167,7 +168,7 @@ Global_Status_Code put_vcp_by_display_ref(Display_Ref * pdisp, VCP_Feature_Table
 Global_Status_Code get_nontable_vcp_by_display_handle(
        Display_Handle *       dh,
        Byte                   feature_code,
-       Interpreted_Nontable_Vcp_Response** ppInterpretedCode)
+       Preparsed_Nontable_Vcp_Response** ppInterpretedCode)
 {
    // char buf0[100];
    // bool debug = false;
@@ -189,7 +190,7 @@ Global_Status_Code get_nontable_vcp_by_display_handle(
    // Msg_Level msgLevel = get_global_msg_level();
    Output_Level output_level = get_output_level();
    // int file;
-   Interpreted_Nontable_Vcp_Response * interpretation_ptr = NULL;
+   Preparsed_Nontable_Vcp_Response * interpretation_ptr = NULL;
 
    DDC_Packet * request_packet_ptr  = NULL;
    DDC_Packet * response_packet_ptr = NULL;
@@ -213,7 +214,7 @@ Global_Status_Code get_nontable_vcp_by_display_handle(
    TRCMSGTG(tg, "perform_ddc_write_read_with_retry() returned %s\n", gsc_desc(rc));
 
    if (rc == 0) {
-      interpretation_ptr = (Interpreted_Nontable_Vcp_Response *) call_calloc(1, sizeof(Interpreted_Nontable_Vcp_Response), "get_vcp_by_DisplayRef");
+      interpretation_ptr = (Preparsed_Nontable_Vcp_Response *) call_calloc(1, sizeof(Preparsed_Nontable_Vcp_Response), "get_vcp_by_DisplayRef");
 
       rc = get_interpreted_vcp_code(response_packet_ptr, true /* make_copy */, &interpretation_ptr);
       //if (msgLevel >= VERBOSE)
@@ -279,10 +280,10 @@ Global_Status_Code get_table_vcp_by_display_handle(
 }
 
 
-Global_Status_Code get_vcp_by_display_ref(
+Global_Status_Code get_nontable_vcp_by_display_ref(
                       Display_Ref *          pDisp,
                       Byte                   feature_code,
-                      Interpreted_Nontable_Vcp_Response** ppInterpretedCode) {
+                      Preparsed_Nontable_Vcp_Response** ppInterpretedCode) {
    char buf0[100];
 
    // bool debug = false;

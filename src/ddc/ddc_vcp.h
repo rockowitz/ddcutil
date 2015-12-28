@@ -34,25 +34,37 @@
 
 #include "ddc/vcp_feature_codes.h"
 
-Global_Status_Code put_vcp_by_display_ref(Display_Ref * pdisp, VCP_Feature_Table_Entry * vcp_entry, int new_value);
+#ifdef OLD
+Global_Status_Code put_vcp_by_display_ref(
+       Display_Ref *             dref,
+       VCP_Feature_Table_Entry * vcp_entry,
+       int                       new_value);
+#endif
 
-Global_Status_Code set_vcp_by_display_handle(Display_Handle * pDispHandle, Byte feature_code, int new_value);
+Global_Status_Code set_vcp_by_display_ref(
+       Display_Ref *             dref,
+       Byte                      feature_code,
+       int                       new_value);
+
+Global_Status_Code set_vcp_by_display_handle(
+       Display_Handle *          dh,
+       Byte                      feature_code,
+       int                       new_value);
 
 Global_Status_Code get_table_vcp_by_display_handle(
-       Display_Handle *       pDispHandle,
-       Byte                   feature_code,
-       Buffer**               pp_table_bytes);
-
+       Display_Handle *          dh,
+       Byte                      feature_code,
+       Buffer**                  pp_table_bytes);
 
 Global_Status_Code get_nontable_vcp_by_display_handle(
-       Display_Handle * pDispHandle,
-       Byte feature_code,
-       Interpreted_Nontable_Vcp_Response** ppInterpretedCode);
+       Display_Handle *          dh,
+       Byte                      feature_code,
+       Preparsed_Nontable_Vcp_Response** ppInterpretedCode);
 
-Global_Status_Code get_vcp_by_display_ref(
-       Display_Ref *          pDisp,
-       Byte                   feature_code,
-       Interpreted_Nontable_Vcp_Response** ppInterpretedCode);
+Global_Status_Code get_nontable_vcp_by_display_ref(
+       Display_Ref *             dref,
+       Byte                      feature_code,
+       Preparsed_Nontable_Vcp_Response** ppInterpretedCode);
 
 
 void vcp_list_feature_codes();

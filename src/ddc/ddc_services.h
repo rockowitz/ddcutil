@@ -38,28 +38,39 @@
 
 #include "ddc/vcp_feature_codes.h"
 
+
 void init_ddc_services();
 
+typedef enum {SUBSET_SCAN,
+              SUBSET_ALL,
+              SUBSET_SUPPORTED,
+              SUBSET_COLORMGT,
+              SUBSET_PROFILE
+             } VCP_Feature_Subset;
 
-typedef enum {SUBSET_SCAN, SUBSET_ALL, SUBSET_SUPPORTED, SUBSET_COLORMGT, SUBSET_PROFILE} VCP_Feature_Subset;
+void show_vcp_values_by_display_ref(
+        Display_Ref *      dref,
+        VCP_Feature_Subset subset,
+        GPtrArray *        collector);
 
-void show_vcp_values_by_display_ref(Display_Ref * dref, VCP_Feature_Subset subset, GPtrArray * collector);
+void show_single_vcp_value_by_display_ref(
+        Display_Ref * dref,
+        char *        feature,
+        bool          force);
 
-void show_single_vcp_value_by_display_ref(Display_Ref * dref, char * feature, bool force);
-
-Global_Status_Code set_vcp_by_display_handle(Display_Handle * pDispHandle, Byte feature_code, int new_value);
-
-Global_Status_Code set_vcp_value_top(Display_Ref * dref, char * feature, char * new_value);
-
+Global_Status_Code set_vcp_value_top(
+        Display_Ref* dref,
+        char *       feature,
+        char *       new_value);
 
 Version_Spec get_vcp_version_by_display_handle(Display_Handle * dh);
-Version_Spec get_vcp_version_by_display_ref(Display_Ref * dref);
+Version_Spec get_vcp_version_by_display_ref(   Display_Ref *    dref);
 
 
 char * format_timestamp(time_t time_millis, char * buf, int bufsz);
 
 GPtrArray * get_profile_related_values_by_display_handle(Display_Handle * dh);
-GPtrArray * get_profile_related_values_by_display_ref(Display_Ref * dref);
+GPtrArray * get_profile_related_values_by_display_ref(   Display_Ref *    dref);
 
 void ddc_show_max_tries();
 

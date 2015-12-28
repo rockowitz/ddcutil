@@ -177,7 +177,7 @@ void                                   // returns nothing
 #endif
 
 typedef bool (*Format_Normal_Feature_Detail_Function) (
-                 Interpreted_Nontable_Vcp_Response* code_info, Version_Spec vcp_version, char * buffer,  int     bufsz);
+                 Preparsed_Nontable_Vcp_Response* code_info, Version_Spec vcp_version, char * buffer,  int     bufsz);
 
 #ifdef OLD
 typedef bool (*Format_Table_Feature_Detail_Function) (
@@ -276,7 +276,7 @@ get_table_feature_detail_function(VCP_Feature_Table_Entry * pvft_entry);
 bool vcp_format_nontable_feature_detail(
         VCP_Feature_Table_Entry * vcp_entry,
         Version_Spec              vcp_version,
-        Interpreted_Nontable_Vcp_Response *    code_info,
+        Preparsed_Nontable_Vcp_Response *    code_info,
         char *                    buffer,
         int                       bufsz) ;
 

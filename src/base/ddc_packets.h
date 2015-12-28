@@ -113,7 +113,7 @@ struct {
    Byte   ml;
    Byte   sh;
    Byte   sl;
-} Interpreted_Nontable_Vcp_Response;
+} Preparsed_Nontable_Vcp_Response;
 
 typedef
 struct {
@@ -201,11 +201,11 @@ DDC_Packet * create_ddc_setvcp_request_packet(
 Global_Status_DDC get_interpreted_vcp_code(
           DDC_Packet *  packet,
           bool          make_copy,
-          Interpreted_Nontable_Vcp_Response ** interpreted_ptr);
+          Preparsed_Nontable_Vcp_Response ** interpreted_ptr);
 
 void   report_interpreted_capabilities(Interpreted_Capabilities_Fragment * interpreted);
 void   report_interpreted_multi_read_fragment(Interpreted_Multi_Part_Read_Fragment * interpreted);
-void   report_interpreted_nontable_vcp_response(Interpreted_Nontable_Vcp_Response * interpreted);
+void   report_interpreted_nontable_vcp_response(Preparsed_Nontable_Vcp_Response * interpreted);
 void   report_interpreted_aux_data(Byte response_type, void * interpreted);
 
 Byte * get_packet_start(DDC_Packet * packet);

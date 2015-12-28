@@ -160,7 +160,13 @@ Global_Status_Code set_vcp_value_top(Display_Ref * pdisp, char * feature, char *
    }
 
    if (my_errno == 0) {
-      my_errno = put_vcp_by_display_ref(pdisp, entry, (int) longtemp);
+      // my_errno = put_vcp_by_display_ref(pdisp, entry, (int) longtemp);
+      my_errno = set_vcp_by_display_ref(pdisp, entry->code, (int) longtemp);
+
+        if (my_errno != 0) {
+           printf("Setting value failed. rc=%d: %s\n", my_errno , gsc_desc(my_errno));
+        }
+
    }
 
    return my_errno;
@@ -203,7 +209,7 @@ int vcp_garray_emitter(const char * format, ...) {
 // - filters out values that should not be shown
 // - if not OUTPUT_PROG, writes value, including error messages, to terminal
 // returns Interpreted_Vcp_Code for use when OUTPUT_PROG
-Interpreted_Nontable_Vcp_Response * get_and_filter_vcp_value(
+Preparsed_Nontable_Vcp_Response * get_and_filter_vcp_value(
       Display_Handle *          dh,
       VCP_Feature_Table_Entry * vcp_entry,
       bool                      suppress_unsupported
@@ -218,7 +224,7 @@ Interpreted_Nontable_Vcp_Response * get_and_filter_vcp_value(
    char * feature_name = get_version_specific_feature_name(vcp_entry, vspec);
    if (output_level >= OL_VERBOSE)
       printf("\nGetting data for VCP code 0x%02x - %s:\n", vcp_code, feature_name);
-   Interpreted_Nontable_Vcp_Response * code_info = NULL;
+   Preparsed_Nontable_Vcp_Response * code_info = NULL;
    Global_Status_Code rc = get_nontable_vcp_by_display_handle(dh, vcp_code, &code_info);
    // DBGMSG("get_vcp_by_DisplayRef() returned %p", code_info);
 
@@ -274,7 +280,7 @@ void dump_nontable_vcp(
    DBGMSF(debug, "Starting. Getting value for feature 0x%02x, dh=%s",
                  vcp_entry->code, display_handle_repr(dh));
 
-   Interpreted_Nontable_Vcp_Response * code_info = get_and_filter_vcp_value(dh, vcp_entry, true /* suppress_unsupported */ );
+   Preparsed_Nontable_Vcp_Response * code_info = get_and_filter_vcp_value(dh, vcp_entry, true /* suppress_unsupported */ );
    if (code_info) {
       char buf[200];
       snprintf(buf, 200, "VCP %02X %5d", vcp_entry->code, code_info->cur_value);
@@ -743,7 +749,7 @@ Version_Spec get_vcp_version_by_display_handle(Display_Handle * dh) {
    if (is_version_unqueried(dh->vcp_version)) {
       dh->vcp_version.major = 0;
       dh->vcp_version.minor = 0;
-      Interpreted_Nontable_Vcp_Response * pinterpreted_code;
+      Preparsed_Nontable_Vcp_Response * pinterpreted_code;
 
       // verbose output is distracting since this function is called when
       // querying for other things
