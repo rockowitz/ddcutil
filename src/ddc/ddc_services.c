@@ -334,10 +334,12 @@ void dump_nontable_vcp(
       GPtrArray * collector)
 {
    bool debug = false;
-   Version_Spec vspec = get_vcp_version_by_display_handle(dh);
-   if (debug)
-      printf("(%s) Starting. Getting value for feature 0x%02x, dh=%s, vspec=%d.%d\n",
-             __func__, vcp_entry->code, display_handle_repr(dh), vspec.major, vspec.minor);
+   // Version_Spec vspec = get_vcp_version_by_display_handle(dh);
+   //  if (debug)
+   //    printf("(%s) Starting. Getting value for feature 0x%02x, dh=%s, vspec=%d.%d\n",
+   //           __func__, vcp_entry->code, display_handle_repr(dh), vspec.major, vspec.minor);
+   DBGMSF(debug, "Starting. Getting value for feature 0x%02x, dh=%s",
+                 vcp_entry->code, display_handle_repr(dh));
 
    Interpreted_Nontable_Vcp_Response * code_info = get_and_filter_vcp_value(dh, vcp_entry, true /* suppress_unsupported */ );
    if (code_info) {
@@ -353,13 +355,16 @@ void dump_nontable_vcp(
 void show_vcp_for_nontable_vcp_code_table_entry_by_display_handle(
         Display_Handle *          dh,
         VCP_Feature_Table_Entry * vcp_entry,
-        Version_Spec              vcp_version,   // will be set for scan operations, not set for single
+        // Version_Spec              vcp_version,   // will be set for scan operations, not set for single
         GPtrArray *               collector,   // where to write output
         bool                      suppress_unsupported)    // if set, do not output unsupported features
 {
    bool debug = false;
-   DBGMSF(debug, "Starting. Getting value for feature 0x%02x, dh=%s, vcp_version=%d.%d\n",
-                 vcp_entry->code, display_handle_repr(dh), vcp_version.major, vcp_version.minor);
+   // DBGMSF(debug, "Starting. Getting value for feature 0x%02x, dh=%s, vcp_version=%d.%d\n",
+   //               vcp_entry->code, display_handle_repr(dh), vcp_version.major, vcp_version.minor);
+   DBGMSF(debug, "Starting. Getting value for feature 0x%02x, dh=%s",
+                 vcp_entry->code, display_handle_repr(dh));
+
 
    Output_Level output_level = get_output_level();
    // hack for now:
@@ -384,14 +389,13 @@ void show_vcp_for_nontable_vcp_code_table_entry_by_display_handle(
 void show_vcp_for_table_vcp_code_table_entry_by_display_handle(
         Display_Handle *          dh,
         VCP_Feature_Table_Entry * vcp_entry,
-        Version_Spec              vcp_version,
+        // Version_Spec              vcp_version,
         GPtrArray *               collector,   // where to write output
         bool                      suppress_unsupported)    // if set, do not output unsupported features
 {
    bool debug = false;
-   if (debug)
-      printf("(%s) Starting. Getting value for feature 0x%02x, dh=%s\n",
-             __func__, vcp_entry->code, display_handle_repr(dh));
+   DBGMSF(debug, "Starting. Getting value for feature 0x%02x, dh=%s\n",
+                 vcp_entry->code, display_handle_repr(dh));
    Byte vcp_code = vcp_entry->code;
    // char * feature_name = vcp_entry->name;
    Version_Spec vspec = get_vcp_version_by_display_handle(dh);
@@ -428,13 +432,13 @@ void show_vcp_for_table_vcp_code_table_entry_by_display_handle(
 
    else {
       // if ( (vcp_entry->flags & VCP_FUNC_VER) && (vcp_version.major == 0) )
-      if ( is_version_unqueried(vcp_version) )
-         vcp_version = get_vcp_version_by_display_handle(dh);
+      // if ( is_version_unqueried(vcp_version) )
+      //   vcp_version = get_vcp_version_by_display_handle(dh);
 
       if (output_level != OL_PROGRAM) {
 
          char * formatted_data = NULL;
-         bool ok = vcp_format_table_feature_detail(vcp_entry, vcp_version, accumulator, &formatted_data);
+         bool ok = vcp_format_table_feature_detail(vcp_entry, vspec, accumulator, &formatted_data);
 
          if (ok) {
             printf("VCP code 0x%02x (%-30s): %s\n",
@@ -534,17 +538,17 @@ void show_vcp_for_vcp_code_table_entry_by_display_handle(
    if (debug)
       tg = 0xff;
    TRCMSGTG(tg, "Starting");
-   Version_Spec vcp_version = {0,0};
+   // Version_Spec vcp_version = {0,0};
 
    bool use_table_function = is_table_feature_by_display_handle(vcp_entry, dh);
 
    if (use_table_function) {
       show_vcp_for_table_vcp_code_table_entry_by_display_handle(
-         dh, vcp_entry, vcp_version, collector, false);
+         dh, vcp_entry, collector, false);
    }
    else {
       show_vcp_for_nontable_vcp_code_table_entry_by_display_handle(
-         dh, vcp_entry, vcp_version, collector, false);
+         dh, vcp_entry,  collector, false);
    }
 
    TRCMSGTG(tg, "Done");
@@ -654,8 +658,7 @@ void show_vcp_values_by_display_handle(
         GPtrArray *         collector)
 {
    bool debug = false;
-   if (debug)
-      DBGMSG("Starting.  subset=%d  dh=%s", subset, display_handle_repr(dh) );
+   DBGMSF(debug, "Starting.  subset=%d  dh=%s", subset, display_handle_repr(dh) );
 
    // For collections of feature codes, just assume that at least one of them
    // will need the version number for proper interpretation.
@@ -684,7 +687,7 @@ void show_vcp_values_by_display_handle(
                show_vcp_for_table_vcp_code_table_entry_by_display_handle(
                   dh,
                   entry,
-                  vcp_version,
+                  // vcp_version,
                   collector,
                   suppress_unsupported);              // suppress unsupported features
             }
@@ -692,7 +695,7 @@ void show_vcp_values_by_display_handle(
                show_vcp_for_nontable_vcp_code_table_entry_by_display_handle(
                   dh,
                   entry,
-                  vcp_version,
+                  // vcp_version,
                   collector,
                   suppress_unsupported);   //  suppress unsupported features
             }
@@ -726,7 +729,7 @@ void show_vcp_values_by_display_handle(
                  show_vcp_for_table_vcp_code_table_entry_by_display_handle(
                     dh,
                     vcp_entry,
-                    vcp_version,
+                    // vcp_version,
                     collector,
                     (subset==SUBSET_SUPPORTED) );    // suppress unsupported features
 
@@ -735,7 +738,7 @@ void show_vcp_values_by_display_handle(
                  show_vcp_for_nontable_vcp_code_table_entry_by_display_handle(
                      dh,
                      vcp_entry,
-                     vcp_version,
+                     // vcp_version,
                      collector,
                      (subset==SUBSET_SUPPORTED));    // suppress_unsupported
               }
