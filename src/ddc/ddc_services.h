@@ -37,6 +37,7 @@
 #include "base/status_code_mgt.h"
 
 #include "ddc/vcp_feature_codes.h"
+#include "ddc/vcp_feature_set.h"
 
 
 void init_ddc_services();
@@ -56,13 +57,7 @@ check_valid_operation_by_feature_id_and_dh(
       Display_Handle *      dh,
       Version_Feature_Flags operation_flags);
 
-typedef enum {SUBSET_SCAN,
-              SUBSET_ALL,
-              SUBSET_SUPPORTED,
-              SUBSET_COLORMGT,
-              SUBSET_PROFILE,
-              SUBSET_SINGLE_FEATURE
-             } VCP_Feature_Subset;
+
 
 void show_vcp_values_by_display_ref(
         Display_Ref *      dref,

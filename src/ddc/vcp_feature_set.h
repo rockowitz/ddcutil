@@ -27,9 +27,24 @@
 #ifndef SRC_DDC_VCP_FEATURE_SET_H_
 #define SRC_DDC_VCP_FEATURE_SET_H_
 
-#include "glib.h"
+#include <glib.h>
+#include <stdbool.h>
 
-#include "ddc/ddc_services.h"      // TEMP, circular,  VCP_Feature_Subset defined here
+#include "util/coredefs.h"
+
+#include "base/ddc_base_defs.h"
+
+#include "ddc/vcp_feature_codes.h"
+
+// #include "ddc/ddc_services.h"      // TEMP, circular,  VCP_Feature_Subset defined here
+
+typedef enum {SUBSET_SCAN,
+              SUBSET_ALL,
+              SUBSET_SUPPORTED,
+              SUBSET_COLORMGT,
+              SUBSET_PROFILE,
+              SUBSET_SINGLE_FEATURE
+             } VCP_Feature_Subset;
 
 
 typedef void * VCP_Feature_Set;

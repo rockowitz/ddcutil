@@ -26,12 +26,13 @@
 
 #include <assert.h>
 #include <glib.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-#include "ddc/ddc_services.h"      // TEMP, circular, while VCP_Feature_Subset defined here
-#include "vcp_feature_set.h"
-
+// #include "ddc/ddc_services.h"      // TEMP, circular, while VCP_Feature_Subset defined here
+#include "ddc/vcp_feature_codes.h"
+#include "ddc/vcp_feature_set.h"
 
 
 
