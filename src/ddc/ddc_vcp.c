@@ -68,14 +68,17 @@ static Trace_Group TRACE_GROUP = TRC_DDC;
 /* The workhorse for setting a new VCP feature value.
  *
  * Arguments:
- *    pDispHandle   display handle for open display
+ *    dh            display handle for open display
  *    feature_code  VCP feature code
  *    new_value     new value
  *
  *  Returns:
  *     status code from perform_ddc_write_only()
  */
-Global_Status_Code set_vcp_by_display_handle(Display_Handle * pDispHandle, Byte feature_code, int new_value) {
+Global_Status_Code set_nontable_vcp_value_by_display_handle(
+                      Display_Handle * dh,
+                      Byte             feature_code,
+                      int              new_value) {
    // bool debug = false;
    // if (debug) {
    //    DBGMSG("Writing feature 0x%02x , new value = %d", feature_code, new_value);
@@ -91,7 +94,7 @@ Global_Status_Code set_vcp_by_display_handle(Display_Handle * pDispHandle, Byte 
    // DBGMSG("create_ddc_getvcp_request_packet returned packet_ptr=%p", request_packet_ptr);
    // dump_packet(request_packet_ptr);
 
-   rc = ddc_write_only_with_retry(pDispHandle, request_packet_ptr);
+   rc = ddc_write_only_with_retry(dh, request_packet_ptr);
 
    if (request_packet_ptr)
       free_ddc_packet(request_packet_ptr);
@@ -111,7 +114,10 @@ Global_Status_Code set_vcp_by_display_handle(Display_Handle * pDispHandle, Byte 
  *  Returns:
  *     status code from perform_ddc_write_only()
  */
-Global_Status_Code set_vcp_by_display_ref(Display_Ref * pdisp, Byte feature_code, int new_value) {
+Global_Status_Code set_nontable_vcp_value_by_display_ref(
+                      Display_Ref * dref,
+                      Byte          feature_code,
+                      int           new_value) {
    // bool debug = false;
    // if (debug) {
    //    char buf[100];
@@ -121,9 +127,9 @@ Global_Status_Code set_vcp_by_display_ref(Display_Ref * pdisp, Byte feature_code
    // }
    char buf[100];
    TRCMSG("Writing feature 0x%02x for %s, new value = %d\n", feature_code,
-             display_ref_short_name_r(pdisp, buf, 100 ), new_value);
-   Display_Handle * pDispHandle = ddc_open_display(pdisp, EXIT_IF_FAILURE);
-   Global_Status_Code rc = set_vcp_by_display_handle( pDispHandle, feature_code, new_value);
+             display_ref_short_name_r(dref, buf, 100 ), new_value);
+   Display_Handle * pDispHandle = ddc_open_display(dref, EXIT_IF_FAILURE);
+   Global_Status_Code rc = set_nontable_vcp_value_by_display_handle( pDispHandle, feature_code, new_value);
    ddc_close_display(pDispHandle);
    return rc;
 }
@@ -139,7 +145,7 @@ Global_Status_Code put_vcp_by_display_ref(Display_Ref * pdisp, VCP_Feature_Table
    // char * feature_name = vcp_entry->name;
    // printf("\nSetting new value for VCP code 0x%02x - %s:\n", vcp_code, feature_name);
 
-   Global_Status_Code rc = set_vcp_by_display_ref(pdisp, vcp_code, new_value);
+   Global_Status_Code rc = set_nontable_vcp_value_by_display_ref(pdisp, vcp_code, new_value);
 
    if (rc != 0) {
       printf("Setting value failed. rc=%d: %s\n", rc , gsc_desc(rc));
@@ -158,14 +164,14 @@ Global_Status_Code put_vcp_by_display_ref(Display_Ref * pdisp, VCP_Feature_Table
 /* Gets the value for a non-table feature.
  *
  * Arguments:
- *   pDispHandle        handle for open display
+ *   dh                 handle for open display
  *   feature_code
  *   ppInterpretedCode  where to return result
  *
  * Returns:
  *   status code
  */
-Global_Status_Code get_nontable_vcp_by_display_handle(
+Global_Status_Code get_nontable_vcp_value_by_display_handle(
        Display_Handle *       dh,
        Byte                   feature_code,
        Preparsed_Nontable_Vcp_Response** ppInterpretedCode)
@@ -246,7 +252,7 @@ Global_Status_Code get_nontable_vcp_by_display_handle(
  * Returns:
  *    status code
  */
-Global_Status_Code get_table_vcp_by_display_handle(
+Global_Status_Code get_table_vcp_value_by_display_handle(
        Display_Handle *       dh,
        Byte                   feature_code,
        Buffer**               pp_table_bytes)
@@ -280,7 +286,7 @@ Global_Status_Code get_table_vcp_by_display_handle(
 }
 
 
-Global_Status_Code get_nontable_vcp_by_display_ref(
+Global_Status_Code get_nontable_vcp_value_by_display_ref(
                       Display_Ref *          pDisp,
                       Byte                   feature_code,
                       Preparsed_Nontable_Vcp_Response** ppInterpretedCode) {
@@ -294,7 +300,7 @@ Global_Status_Code get_nontable_vcp_by_display_ref(
          );
 
    Display_Handle * pDispHandle = ddc_open_display(pDisp, EXIT_IF_FAILURE);
-   Global_Status_Code rc = get_nontable_vcp_by_display_handle(pDispHandle, feature_code, ppInterpretedCode);
+   Global_Status_Code rc = get_nontable_vcp_value_by_display_handle(pDispHandle, feature_code, ppInterpretedCode);
    ddc_close_display(pDispHandle);
 
    TRCMSG("Returning %d\n", __func__, rc);

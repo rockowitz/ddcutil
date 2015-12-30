@@ -486,6 +486,7 @@ static VCP_Feature_Table_Entry * vcp_create_dummy_feature_for_hexid(Byte id) {
    // pentry->flags = VCP_READABLE;    // so readability tests pass
    pentry->nontable_formatter = format_feature_detail_debug_continuous;
    pentry->v20_flags = VCP2_RO | VCP2_STD_CONT;
+   pentry->vcp_global_flags = VCP2_SYNTHETIC;
    return pentry;
 }
 

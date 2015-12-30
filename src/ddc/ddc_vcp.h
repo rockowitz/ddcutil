@@ -41,27 +41,27 @@ Global_Status_Code put_vcp_by_display_ref(
        int                       new_value);
 #endif
 
-Global_Status_Code set_vcp_by_display_ref(
+Global_Status_Code set_nontable_vcp_value_by_display_ref(
        Display_Ref *             dref,
        Byte                      feature_code,
        int                       new_value);
 
-Global_Status_Code set_vcp_by_display_handle(
+Global_Status_Code set_nontable_vcp_value_by_display_handle(
        Display_Handle *          dh,
        Byte                      feature_code,
        int                       new_value);
 
-Global_Status_Code get_table_vcp_by_display_handle(
+Global_Status_Code get_table_vcp_value_by_display_handle(
        Display_Handle *          dh,
        Byte                      feature_code,
        Buffer**                  pp_table_bytes);
 
-Global_Status_Code get_nontable_vcp_by_display_handle(
+Global_Status_Code get_nontable_vcp_value_by_display_handle(
        Display_Handle *          dh,
        Byte                      feature_code,
        Preparsed_Nontable_Vcp_Response** ppInterpretedCode);
 
-Global_Status_Code get_nontable_vcp_by_display_ref(
+Global_Status_Code get_nontable_vcp_value_by_display_ref(
        Display_Ref *             dref,
        Byte                      feature_code,
        Preparsed_Nontable_Vcp_Response** ppInterpretedCode);

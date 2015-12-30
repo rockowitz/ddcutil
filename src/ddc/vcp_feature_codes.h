@@ -105,6 +105,8 @@ typedef Byte Global_Feature_Flags;
 #define VCP2_ANY_TABLE       (VCP2_TABLE | VCP2_WO_TABLE)
 #define VCP2_DEPRECATED      0x01
 
+#define VCP2_SYNTHETIC       0x80
+
 // typedef Byte Global_Feature_Flags
 // Global_Feature_Flags global_flags;
 // RO/RW/WO same
@@ -211,6 +213,7 @@ struct {
    // VCP_Feature_Reporter data_reporter;
 
    // new way
+   Byte                                 vcp_global_flags;
    Byte                                 vcp_spec_groups;
    Byte                                 vcp_classes;
    char *                               desc;

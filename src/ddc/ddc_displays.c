@@ -260,7 +260,7 @@ void ddc_show_active_display(Display_Info * curinfo, int depth) {
          // display controller mfg, firmware version
          Preparsed_Nontable_Vcp_Response* code_info;
 
-         Global_Status_Code gsc = get_nontable_vcp_by_display_ref(
+         Global_Status_Code gsc = get_nontable_vcp_value_by_display_ref(
                 curinfo->dref,
                 0xc8,         // controller manufacturer
                 &code_info);
@@ -274,7 +274,7 @@ void ddc_show_active_display(Display_Info * curinfo, int depth) {
                                   code_info->sl);
             rpt_vstring(depth, "Controller mfg:      %s", (mfg_name) ? mfg_name : "not set");
             if (mfg_name) {
-               Global_Status_Code gsc = get_nontable_vcp_by_display_ref(
+               Global_Status_Code gsc = get_nontable_vcp_value_by_display_ref(
                         curinfo->dref,
                         0xc9,         // firmware version
                         &code_info);

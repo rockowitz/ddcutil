@@ -41,6 +41,21 @@
 
 void init_ddc_services();
 
+
+
+Global_Status_Code
+check_valid_operation_by_feature_rec_and_version(
+      VCP_Feature_Table_Entry * feature_rec,
+      Version_Spec              vcp_version,
+      Version_Feature_Flags     operation_flags);
+
+
+Global_Status_Code
+check_valid_operation_by_feature_id_and_dh(
+      Byte                  feature_id,
+      Display_Handle *      dh,
+      Version_Feature_Flags operation_flags);
+
 typedef enum {SUBSET_SCAN,
               SUBSET_ALL,
               SUBSET_SUPPORTED,

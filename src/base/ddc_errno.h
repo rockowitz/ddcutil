@@ -73,8 +73,10 @@
 #define DDCRC_DETERMINED_UNSUPPORTED (-(RCRANGE_DDC_START+17) ) // facility determined to be unsupported
 
 #define DDCL_ARG                     (-(RCRANGE_DDC_START+18) ) // illegal argument
-#define DDCL_UNIMPLEMENTED           (-(RCRANGE_DDC_START+19) ) // unimplemented service
-#define DDCL_UNINITIALIZED           (-(RCRANGE_DDC_START+20) ) // library not initialized
+#define DDCL_INVALID_OPERATION       (-(RCRANGE_DDC_START+19) ) // e.g. writing a r/o feature
+#define DDCL_UNIMPLEMENTED           (-(RCRANGE_DDC_START+20) ) // unimplemented service
+#define DDCL_UNINITIALIZED           (-(RCRANGE_DDC_START+21) ) // library not initialized
+#define DDCL_UNKNOWN_FEATURE         (-(RCRANGE_DDC_START+22) ) // feature not in feature table
 // never used
 // #define DDCRC_PACKET_ERROR_END      (-RCRANGE_DDC_START-16)   // special end value
 

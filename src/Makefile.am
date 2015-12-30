@@ -88,6 +88,7 @@ ddc/parse_capabilities.c \
 ddc/try_stats.c \
 ddc/vcp_feature_codes.c \
 ddc/vcp_feature_record.c \
+ddc/vcp_feature_groups.c \
 i2c/i2c_base_io.c \
 i2c/i2c_bus_core.c \
 i2c/i2c_do_io.c \
@@ -95,6 +96,7 @@ main/loadvcp.c \
 util/data_structures.c \
 util/debug_util.c \
 util/file_util.c  \
+util/output_sink.c \
 util/pci_id_util.c \
 util/report_util.c \
 util/string_util.c 
