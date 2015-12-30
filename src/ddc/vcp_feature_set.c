@@ -150,6 +150,18 @@ VCP_Feature_Table_Entry * get_feature_set_entry(VCP_Feature_Set feature_set, int
    return ventry;
 }
 
+int get_feature_set_size(VCP_Feature_Set feature_set) {
+   struct VCP_Feature_Set * fset = (struct VCP_Feature_Set *) feature_set;
+   assert( fset && memcmp(fset->marker, VCP_FEATURE_SET_MARKER, 4) == 0);
+   return fset->members->len;
+}
+
+VCP_Feature_Subset get_feature_set_subset_id(VCP_Feature_Set feature_set) {
+   struct VCP_Feature_Set * fset = (struct VCP_Feature_Set *) feature_set;
+   assert( fset && memcmp(fset->marker, VCP_FEATURE_SET_MARKER, 4) == 0);
+   return fset->subset;
+}
+
 void report_feature_set(VCP_Feature_Set feature_set, int depth) {
    struct VCP_Feature_Set * fset = (struct VCP_Feature_Set *) feature_set;
    assert( fset && memcmp(fset->marker, VCP_FEATURE_SET_MARKER, 4) == 0);

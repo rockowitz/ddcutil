@@ -42,15 +42,17 @@
 
 void init_ddc_services();
 
+void ddc_show_max_tries();
 
 
+// not currently used
 Global_Status_Code
 check_valid_operation_by_feature_rec_and_version(
       VCP_Feature_Table_Entry * feature_rec,
       Version_Spec              vcp_version,
       Version_Feature_Flags     operation_flags);
 
-
+// not currently used
 Global_Status_Code
 check_valid_operation_by_feature_id_and_dh(
       Byte                  feature_id,
@@ -83,6 +85,6 @@ char * format_timestamp(time_t time_millis, char * buf, int bufsz);
 GPtrArray * get_profile_related_values_by_display_handle(Display_Handle * dh);
 GPtrArray * get_profile_related_values_by_display_ref(   Display_Ref *    dref);
 
-void ddc_show_max_tries();
+
 
 #endif /* DDC_SERVICES_H_ */

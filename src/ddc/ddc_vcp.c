@@ -224,14 +224,29 @@ Global_Status_Code get_nontable_vcp_value_by_display_handle(
 
       rc = get_interpreted_vcp_code(response_packet_ptr, true /* make_copy */, &interpretation_ptr);
       //if (msgLevel >= VERBOSE)
-      if (output_level >= OL_VERBOSE)
-         report_interpreted_nontable_vcp_response(interpretation_ptr);
+      // if (output_level >= OL_VERBOSE)
+      //    report_interpreted_nontable_vcp_response(interpretation_ptr);
    }
+
+   if (rc == 0) {
+      if (!interpretation_ptr->valid_response)  {
+         rc = DDCRC_INVALID_DATA;
+      }
+      else if (!interpretation_ptr->supported_opcode) {
+         rc = DDCRC_REPORTED_UNSUPPORTED;
+      }
+      if (rc != 0) {
+         free(interpretation_ptr);
+         interpretation_ptr = NULL;
+      }
+   }
+
 
    if (request_packet_ptr)
       free_ddc_packet(request_packet_ptr);
    if (response_packet_ptr)
       free_ddc_packet(response_packet_ptr);
+
 
    // if (debug)
    //    DBGMSG("Returning %p", interpretation_ptr);

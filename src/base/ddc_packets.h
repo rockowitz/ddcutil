@@ -115,6 +115,21 @@ struct {
    Byte   sl;
 } Preparsed_Nontable_Vcp_Response;
 
+
+
+typedef enum {NON_TABLE_VCP_CALL,
+              TABLE_VCP_CALL,
+             } VCP_Call_Type;
+
+
+typedef
+struct {
+   VCP_Call_Type                     response_type;
+   Preparsed_Nontable_Vcp_Response * non_table_response;
+   Buffer *                          table_response;
+} Preparsed_Vcp_Response;
+
+
 typedef
 struct {
    int   fragment_offset;
