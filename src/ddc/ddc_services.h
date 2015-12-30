@@ -60,7 +60,8 @@ typedef enum {SUBSET_SCAN,
               SUBSET_ALL,
               SUBSET_SUPPORTED,
               SUBSET_COLORMGT,
-              SUBSET_PROFILE
+              SUBSET_PROFILE,
+              SUBSET_SINGLE_FEATURE
              } VCP_Feature_Subset;
 
 void show_vcp_values_by_display_ref(

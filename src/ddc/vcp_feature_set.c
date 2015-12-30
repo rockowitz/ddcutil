@@ -37,14 +37,16 @@
 
 #define VCP_FEATURE_SET_MARKER "FSET"
 struct VCP_Feature_Set {
-   char         marker[4];
-   GPtrArray *  members;
+   char                marker[4];
+   VCP_Feature_Subset  subset;
+   GPtrArray *         members;
 };
 
 
 VCP_Feature_Set create_feature_set(VCP_Feature_Subset subset, Version_Spec vcp_version) {
    struct VCP_Feature_Set * fset = calloc(1,sizeof(struct VCP_Feature_Set));
    memcpy(fset->marker, VCP_FEATURE_SET_MARKER, 4);
+   fset->subset = subset;
    fset->members = g_ptr_array_sized_new(30);
    if (subset == SUBSET_SCAN) {
       int ndx = 0;
@@ -80,6 +82,7 @@ VCP_Feature_Set create_feature_set(VCP_Feature_Subset subset, Version_Spec vcp_v
             showit = vflags & VCP2_PROFILE;
             break;
          case SUBSET_SCAN:    // will never happen, inserted to avoid compiler warning
+         case SUBSET_SINGLE_FEATURE:
             break;
          }
          if (showit) {
@@ -96,6 +99,7 @@ VCP_Feature_Set create_single_feature_set_by_vcp_entry(VCP_Feature_Table_Entry *
    struct VCP_Feature_Set * fset = calloc(1,sizeof(struct VCP_Feature_Set));
    memcpy(fset->marker, VCP_FEATURE_SET_MARKER, 4);
    fset->members = g_ptr_array_sized_new(1);
+   fset->subset = SUBSET_SINGLE_FEATURE;
    g_ptr_array_add(fset->members, vcp_entry);
    return fset;
 }

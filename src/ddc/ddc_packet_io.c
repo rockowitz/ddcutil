@@ -845,7 +845,6 @@ Global_Status_Code ddc_write_only( Display_Handle * dh, DDC_Packet *   request_p
    TRCMSGTF(tf, "Starting.");
 
    Global_Status_Code rc = 0;
-
    if (dh->ddc_io_mode == DDC_IO_DEVI2C) {
       rc = ddc_i2c_write_only(dh->fh, request_packet_ptr);
    }
@@ -855,8 +854,6 @@ Global_Status_Code ddc_write_only( Display_Handle * dh, DDC_Packet *   request_p
               get_packet_start(request_packet_ptr)+1,
               get_packet_len(request_packet_ptr)-1
              );
-
-      // rc = ddc_adl_write_only(dh->iAdapterIndex, dh->iDisplayIndex, request_packet_ptr);
    }
 
    TRCMSGTF(tf, "Done. rc=%d\n", rc);
