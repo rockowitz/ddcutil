@@ -25,6 +25,7 @@
  */
 
 #include <assert.h>
+#include <ddc/vcp_feature_set.h>
 #include <errno.h>
 #include <glib.h>
 #include <string.h>
@@ -51,8 +52,6 @@
 #include "ddc/ddc_packet_io.h"
 #include "ddc/ddc_vcp.h"
 #include "ddc/vcp_feature_codes.h"
-#include "ddc/vcp_feature_groups.h"
-
 #include "ddc/ddc_services.h"
 
 // Trace class for this file
@@ -661,8 +660,8 @@ void show_vcp_values_by_display_handle(
    // DBGMSG("VCP version = %d.%d", vcp_version.major, vcp_version.minor);
 
 
-   VCP_Feature_Group feature_group = create_feature_group(subset, vcp_version);
-   report_feature_group(feature_group, 0);
+   VCP_Feature_Set feature_group = create_feature_set(subset, vcp_version);
+   report_feature_set(feature_group, 0);
 
 
    if (subset == SUBSET_SCAN) {

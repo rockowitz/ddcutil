@@ -24,22 +24,22 @@
  * </endcopyright>
  */
 
-#ifndef SRC_DDC_VCP_FEATURE_GROUPS_H_
-#define SRC_DDC_VCP_FEATURE_GROUPS_H_
+#ifndef SRC_DDC_VCP_FEATURE_SET_H_
+#define SRC_DDC_VCP_FEATURE_SET_H_
 
 #include "glib.h"
 
 #include "ddc/ddc_services.h"      // TEMP, circular,  VCP_Feature_Subset defined here
 
 
-typedef void * VCP_Feature_Group;
+typedef void * VCP_Feature_Set;
 
 
-VCP_Feature_Group create_feature_group(VCP_Feature_Subset subset, Version_Spec vcp_version);
-VCP_Feature_Group create_single_feature_group_by_vcp_entry(VCP_Feature_Table_Entry * vcp_entry);
-VCP_Feature_Group create_single_feature_group_by_hexid(Byte id, bool force);
-VCP_Feature_Group create_single_feature_group_by_charid(Byte id, bool force);
-VCP_Feature_Table_Entry * get_feature_group_entry(VCP_Feature_Group feature_group, int index);
-void report_feature_group(VCP_Feature_Group feature_group, int depth);
+VCP_Feature_Set create_feature_set(VCP_Feature_Subset subset, Version_Spec vcp_version);
+VCP_Feature_Set create_single_feature_set_by_vcp_entry(VCP_Feature_Table_Entry * vcp_entry);
+VCP_Feature_Set create_single_feature_set_by_hexid(Byte id, bool force);
+VCP_Feature_Set create_single_feature_set_by_charid(Byte id, bool force);
+VCP_Feature_Table_Entry * get_feature_set_entry(VCP_Feature_Set feature_set, int index);
+void report_feature_set(VCP_Feature_Set feature_set, int depth);
 
-#endif /* SRC_DDC_VCP_FEATURE_GROUPS_H_ */
+#endif /* SRC_DDC_VCP_FEATURE_SET_H_ */

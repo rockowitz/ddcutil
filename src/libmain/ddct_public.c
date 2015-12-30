@@ -44,9 +44,8 @@
 #include "ddc/ddc_read_capabilities.h"
 #include "ddc/ddc_displays.h"
 
-#include "main/loadvcp.h"
-
 #include "libmain/ddct_public.h"
+#include "../ddctool_app/loadvcp.h"
 
 #define WITH_DR(ddct_dref, action) \
    do { \

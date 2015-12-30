@@ -30,29 +30,29 @@
 #include <string.h>
 
 #include "ddc/ddc_services.h"      // TEMP, circular, while VCP_Feature_Subset defined here
-#include "ddc/vcp_feature_groups.h"
+#include "vcp_feature_set.h"
 
 
 
 
-#define VCP_FEATURE_GROUP_MARKER "VFGP"
-struct VCP_Feature_Group {
+#define VCP_FEATURE_SET_MARKER "FSET"
+struct VCP_Feature_Set {
    char         marker[4];
    GPtrArray *  members;
 };
 
 
-VCP_Feature_Group create_feature_group(VCP_Feature_Subset subset, Version_Spec vcp_version) {
-   struct VCP_Feature_Group * fgrp = calloc(1,sizeof(struct VCP_Feature_Group));
-   memcpy(fgrp->marker, VCP_FEATURE_GROUP_MARKER, 4);
-   fgrp->members = g_ptr_array_sized_new(30);
+VCP_Feature_Set create_feature_set(VCP_Feature_Subset subset, Version_Spec vcp_version) {
+   struct VCP_Feature_Set * fset = calloc(1,sizeof(struct VCP_Feature_Set));
+   memcpy(fset->marker, VCP_FEATURE_SET_MARKER, 4);
+   fset->members = g_ptr_array_sized_new(30);
    if (subset == SUBSET_SCAN) {
       int ndx = 0;
       for (ndx = 0; ndx < 256; ndx++) {
          Byte id = ndx;
          VCP_Feature_Table_Entry* vcp_entry = vcp_find_feature_by_hexid_w_default(id);
          // original code looks at VCP2_READABLE, output level
-         g_ptr_array_add(fgrp->members, vcp_entry);
+         g_ptr_array_add(fset->members, vcp_entry);
       }
 
    }
@@ -83,76 +83,76 @@ VCP_Feature_Group create_feature_group(VCP_Feature_Subset subset, Version_Spec v
             break;
          }
          if (showit) {
-            g_ptr_array_add(fgrp->members, vcp_entry);
+            g_ptr_array_add(fset->members, vcp_entry);
          }
       }
    }
 
-   return fgrp;
+   return fset;
 }
 
 
-VCP_Feature_Group create_single_feature_group_by_vcp_entry(VCP_Feature_Table_Entry * vcp_entry) {
-   struct VCP_Feature_Group * fgrp = calloc(1,sizeof(struct VCP_Feature_Group));
-   memcpy(fgrp->marker, VCP_FEATURE_GROUP_MARKER, 4);
-   fgrp->members = g_ptr_array_sized_new(1);
-   g_ptr_array_add(fgrp->members, vcp_entry);
-   return fgrp;
+VCP_Feature_Set create_single_feature_set_by_vcp_entry(VCP_Feature_Table_Entry * vcp_entry) {
+   struct VCP_Feature_Set * fset = calloc(1,sizeof(struct VCP_Feature_Set));
+   memcpy(fset->marker, VCP_FEATURE_SET_MARKER, 4);
+   fset->members = g_ptr_array_sized_new(1);
+   g_ptr_array_add(fset->members, vcp_entry);
+   return fset;
 }
 
 
-VCP_Feature_Group create_single_feature_group_by_hexid(Byte id, bool force) {
-   struct VCP_Feature_Group * fgrp = NULL;
+VCP_Feature_Set create_single_feature_set_by_hexid(Byte id, bool force) {
+   struct VCP_Feature_Set * fset = NULL;
    VCP_Feature_Table_Entry* vcp_entry = NULL;
    if (force)
       vcp_entry = vcp_find_feature_by_hexid_w_default(id);
    else
       vcp_entry = vcp_find_feature_by_hexid(id);
    if (vcp_entry)
-      fgrp = create_single_feature_group_by_vcp_entry(vcp_entry);
-   return fgrp;
+      fset = create_single_feature_set_by_vcp_entry(vcp_entry);
+   return fset;
 }
 
 
-VCP_Feature_Group create_single_feature_group_by_charid(Byte id, bool force) {
+VCP_Feature_Set create_single_feature_set_by_charid(Byte id, bool force) {
    // TODO: copy and modify existing code:
    return NULL;
 }
 
 
-void free_feature_group(VCP_Feature_Group feature_group) {
-   struct VCP_Feature_Group * fgrp = (struct VCP_Feature_Group *) feature_group;
-   assert( fgrp && memcmp(fgrp->marker, VCP_FEATURE_GROUP_MARKER, 4) == 0);
+void free_feature_group(VCP_Feature_Set feature_group) {
+   struct VCP_Feature_Set * fset = (struct VCP_Feature_Set *) feature_group;
+   assert( fset && memcmp(fset->marker, VCP_FEATURE_SET_MARKER, 4) == 0);
    int ndx = 0;
    // free all generated members
-   for (; ndx < fgrp->members->len; ndx++) {
+   for (; ndx < fset->members->len; ndx++) {
       VCP_Feature_Table_Entry * vcp_entry = NULL;
-      vcp_entry = g_ptr_array_index(fgrp->members,ndx);
+      vcp_entry = g_ptr_array_index(fset->members,ndx);
       if (vcp_entry->vcp_global_flags & VCP2_SYNTHETIC) {
          // free_vcp_feature_table_entry(vcp_entry);    // UNIMPLEMENTED
       }
    }
-   fgrp->marker[3] = 'x';
-   free(fgrp);
+   fset->marker[3] = 'x';
+   free(fset);
 }
 
-VCP_Feature_Table_Entry * get_feature_group_entry(VCP_Feature_Group feature_group, int index) {
-   struct VCP_Feature_Group * fgrp = (struct VCP_Feature_Group *) feature_group;
-   assert( fgrp && memcmp(fgrp->marker, VCP_FEATURE_GROUP_MARKER, 4) == 0);
+VCP_Feature_Table_Entry * get_feature_set_entry(VCP_Feature_Set feature_set, int index) {
+   struct VCP_Feature_Set * fset = (struct VCP_Feature_Set *) feature_set;
+   assert( fset && memcmp(fset->marker, VCP_FEATURE_SET_MARKER, 4) == 0);
    VCP_Feature_Table_Entry * ventry = NULL;
-   if (index >= 0 || index < fgrp->members->len)
-      ventry = g_ptr_array_index(fgrp->members,index);
+   if (index >= 0 || index < fset->members->len)
+      ventry = g_ptr_array_index(fset->members,index);
    return ventry;
 }
 
-void report_feature_group(VCP_Feature_Group feature_group, int depth) {
-   struct VCP_Feature_Group * fgrp = (struct VCP_Feature_Group *) feature_group;
-   assert( fgrp && memcmp(fgrp->marker, VCP_FEATURE_GROUP_MARKER, 4) == 0);
+void report_feature_set(VCP_Feature_Set feature_set, int depth) {
+   struct VCP_Feature_Set * fset = (struct VCP_Feature_Set *) feature_set;
+   assert( fset && memcmp(fset->marker, VCP_FEATURE_SET_MARKER, 4) == 0);
    int ndx = 0;
    // free all generated members
-   for (; ndx < fgrp->members->len; ndx++) {
+   for (; ndx < fset->members->len; ndx++) {
       VCP_Feature_Table_Entry * vcp_entry = NULL;
-      vcp_entry = g_ptr_array_index(fgrp->members,ndx);
+      vcp_entry = g_ptr_array_index(fset->members,ndx);
       // TODO: replace w rpt function that uses depth:
       printf("VCP code: 0x%02x: %s\n",
              vcp_entry->code,

@@ -27,7 +27,7 @@
 #include <assert.h>
 #include <stdio.h>
 
-#include "main/loadvcp.h"         // loadvcp.h should be elsewhere, should not be including in main
+#include "../ddctool_app/loadvcp.h"         // loadvcp.h should be elsewhere, should not be including in main
 #include "libmain/ddct_public.h"
 
 #define FUNCTION_ERRMSG(function_name,status_code) \
@@ -302,4 +302,5 @@ int main(int argc, char** argv) {
       rc = ddct_free_display_identifier(did);
       printf("(%s) ddct_free_display_identifier() returned %d\n", __func__, rc);
    }
+   return 0;
 }

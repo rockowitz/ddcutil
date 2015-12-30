@@ -10,7 +10,7 @@ AM_CFLAGS = -Wall -fdump-rtl-expand
 # cmdline/.deps/*       \
 # ddc/.deps/*.Po        \
 # i2c/.deps/*           \
-# main/.deps/*          \
+# ddctool_app/.deps/*          \
 # test/ddc/.deps/*      \
 # test/i2c/.deps/*      \
 # test/.deps/*          
@@ -39,9 +39,9 @@ ddctool_SOURCES = \
 cmdline/cmd_parser_aux.c \
 cmdline/cmd_parser_goption.c \
 cmdline/parsed_cmd.c \
-main/main.c \
-main/query_sysenv.c \
-main/testcases.c 
+ddctool_app/main.c \
+ddctool_app/query_sysenv.c \
+ddctool_app/testcases.c 
 
 if INCLUDE_TESTCASES_COND
 ddctool_SOURCES += \
@@ -52,7 +52,7 @@ ddctool_SOURCES += \
    test/testcase_table.c
 else
 ddctool_SOURCES += \
-   main/testcase_mock_table.c
+   ddctool_app/testcase_mock_table.c
 endif
 
 # files only in libddctool:
@@ -61,7 +61,7 @@ libmain/ddct_public.c
 
 # files only in laclient:
 laclient_SOURCES = \
-clients/clmain.c
+sample_clients/clmain.c
 
 # libcommon contains the source files that are 
 # shared between ddctool and libddctool: 
@@ -88,11 +88,11 @@ ddc/parse_capabilities.c \
 ddc/try_stats.c \
 ddc/vcp_feature_codes.c \
 ddc/parsed_capabilities_feature.c \
-ddc/vcp_feature_groups.c \
+ddc/vcp_feature_set.c \
 i2c/i2c_base_io.c \
 i2c/i2c_bus_core.c \
 i2c/i2c_do_io.c \
-main/loadvcp.c \
+ddctool_app/loadvcp.c \
 util/data_structures.c \
 util/debug_util.c \
 util/file_util.c  \

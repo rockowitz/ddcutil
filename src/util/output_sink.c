@@ -118,7 +118,7 @@ int close_sink(Output_Sink * sink) {
 
 
 
-#ifdef ORIGINAL IDEA
+#ifdef ORIGINAL_IDEA
 // What I really need are curried functions.
 
 typedef int (*VCP_Emitter)(const char * format, ...);

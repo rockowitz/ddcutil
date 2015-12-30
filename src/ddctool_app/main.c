@@ -29,6 +29,9 @@
 
 #include <assert.h>
 #include <ctype.h>
+#include <ddctool_app/loadvcp.h>
+#include <ddctool_app/query_sysenv.h>
+#include <ddctool_app/testcases.h>
 #include <errno.h>
 #include <stdbool.h>
 #include <stdio.h>
@@ -66,9 +69,6 @@
 #include "cmdline/parsed_cmd.h"
 #include "cmdline/cmd_parser.h"
 
-#include "main/testcases.h"
-#include "main/loadvcp.h"
-#include "main/query_sysenv.h"
 
 
 //

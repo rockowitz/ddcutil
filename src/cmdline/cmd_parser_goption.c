@@ -169,7 +169,7 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
    // parsed_cmd->pdid = create_dispno_display_identifier(1);   // default monitor
    // DBGMSG("After new_parsed_cmd(), parsed_cmd->output_level_name = %s", output_level_name(parsed_cmd->output_level));
 
-   gboolean stats_flag     = false;
+// gboolean stats_flag     = false;
    gboolean ddc_flag       = false;
    gboolean force_flag     = false;
    gboolean version_flag   = false;
