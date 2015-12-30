@@ -209,7 +209,7 @@ bool execute_shell_cmd(char * shell_cmd, int depth) {
           // free(a_line);
        }
        int pclose_rc = pclose(fp);
-       // printf("(%s) plose() rc = %d\n", __func__, pclose_rc);
+       DBGMSF(debug, "plose() rc = %d\n", __func__, pclose_rc);
     }
     return ok;
  }
@@ -279,7 +279,7 @@ void query_base_env() {
 void check_i2c_devices(struct driver_name_node * driver_list) {
    bool debug = false;
    char username[32+1];       // per man useradd, max username length is 32
-   bool have_i2c_devices = false;
+   // bool have_i2c_devices = false;
 
    printf("\nChecking /dev/i2c-* devices...\n");
    Output_Level output_level = get_output_level();
@@ -346,12 +346,12 @@ void check_i2c_devices(struct driver_name_node * driver_list) {
       // execute_shell_cmd("grep i2c /etc/group", 1);
 
       bool group_i2c_exists = false;   // avoid special value in gid_i2c
-      gid_t gid_i2c;
+      // gid_t gid_i2c;
       struct group * pgi2c = getgrnam("i2c");
       if (pgi2c) {
          printf("   Group i2c exists\n");
          group_i2c_exists = true;
-         gid_i2c = pgi2c->gr_gid;
+         // gid_i2c = pgi2c->gr_gid;
          // DBGMSG("getgrnam returned gid=%d for group i2c", gid_i2c);
          // DBGMSG("getgrnam() reports members for group i2c: %s", *pgi2c->gr_mem);
          int ndx=0;
@@ -449,7 +449,7 @@ bool is_module_loaded_using_sysfs(char * module_name) {
    snprintf(module_fn, sizeof(module_fn), "/sys/module/%s", module_name);
    int rc = stat(module_fn, &statbuf);
    if (rc < 0) {
-       int errsv = errno;
+       // int errsv = errno;
        // will be ENOENT (2) if file not found
        // DBGMSF(debug, "stat(%s) returned %d, errno = %s",
        //       module_fn, rc, linux_errno_desc(errsv));
@@ -598,8 +598,7 @@ bool query_card_and_driver_using_lspci() {
 
 
 struct driver_name_node * query_card_and_driver_using_sysfs() {
-   bool debug = true;
-   // DBGMSF(debug, "Starting");
+   // bool debug = true;
    printf("Obtaining card and driver information from /sys...\n");
 
    // also of possible interest:
@@ -616,7 +615,7 @@ struct driver_name_node * query_card_and_driver_using_sysfs() {
    // /sys/module/i2c_dev ?
    // /sys/module/... etc
 
-   bool ok = true;
+   // bool ok = true;
    char * driver_name = NULL;
    struct driver_name_node * driver_list = NULL;
 
@@ -833,7 +832,7 @@ void query_i2c_bus_using_sysfs() {
          bool i2c_seen = false;
          while ((dent = readdir(d)) != NULL) {
             // DBGMSF("%s", dent->d_name);
-            char cur_fn[100];
+            // char cur_fn[100];
             char cur_dir_name[100];
             if (!streq(dent->d_name, ".") && !streq(dent->d_name, "..") ) {
                // DBGMSF(debug, "dent->dname: %s", dent->d_name);

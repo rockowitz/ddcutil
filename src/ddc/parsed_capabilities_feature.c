@@ -24,6 +24,8 @@
  * </endcopyright>
  */
 
+#include "parsed_capabilities_feature.h"
+
 #include <assert.h>
 #include <glib.h>
 #include <stdbool.h>
@@ -38,14 +40,13 @@
 
 #include "ddc/vcp_feature_codes.h"
 
-#include "ddc/vcp_feature_record.h"
 
 
 // Trace class for this file
 // static TraceGroup TRACE_GROUP = TRC_DDC;   // currently unused, commented out to avoid warning
 
 
-VCP_Feature_Record * new_VCP_Feature_Record(
+Capabilities_Feature_Record * new_Capabilities_Feature(
                         Byte   feature_id,
                         char * value_string_start,
                         int    value_string_len)
@@ -58,9 +59,9 @@ VCP_Feature_Record * new_VCP_Feature_Record(
       else
          DBGMSG("value_string_start = NULL");
    }
-   VCP_Feature_Record * vfr =
-         (VCP_Feature_Record *) call_calloc(1,sizeof(VCP_Feature_Record), "new_VCP_Feature_Record");
-   memcpy(vfr->marker, VCP_FEATURE_MARKER, 4);
+   Capabilities_Feature_Record * vfr =
+         (Capabilities_Feature_Record *) call_calloc(1,sizeof(Capabilities_Feature_Record), "new_VCP_Feature_Record");
+   memcpy(vfr->marker, CAPABILITIES_FEATURE_MARKER, 4);
    vfr->feature_id = feature_id;
    // relying on calloc to 0 all other fields
 
@@ -129,10 +130,10 @@ VCP_Feature_Record * new_VCP_Feature_Record(
 }
 
 
-void free_vcp_feature(VCP_Feature_Record * pfeat) {
+void free_capabilities_feature(Capabilities_Feature_Record * pfeat) {
    // DBGMSG("Starting. pfeat=%p", pfeat);
    assert(pfeat);
-   assert(memcmp(pfeat->marker, VCP_FEATURE_MARKER, 4) == 0);
+   assert(memcmp(pfeat->marker, CAPABILITIES_FEATURE_MARKER, 4) == 0);
 
    if (pfeat->value_string)
       free(pfeat->value_string);
@@ -150,8 +151,7 @@ void free_vcp_feature(VCP_Feature_Record * pfeat) {
 }
 
 
-
-void report_feature(VCP_Feature_Record * vfr, Version_Spec vcp_version) {
+void report_capabilities_feature(Capabilities_Feature_Record * vfr, Version_Spec vcp_version) {
    // DBGMSG("Starting. vfr=%p", vfr);
    printf("  Feature: %02X (%s)\n", vfr->feature_id,
           get_feature_name_by_id_and_vcp_version(vfr->feature_id, vcp_version));

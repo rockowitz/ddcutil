@@ -87,7 +87,7 @@ ddc/ddc_vcp.c \
 ddc/parse_capabilities.c \
 ddc/try_stats.c \
 ddc/vcp_feature_codes.c \
-ddc/vcp_feature_record.c \
+ddc/parsed_capabilities_feature.c \
 ddc/vcp_feature_groups.c \
 i2c/i2c_base_io.c \
 i2c/i2c_bus_core.c \

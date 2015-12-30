@@ -27,6 +27,7 @@
  */
 
 #include <assert.h>
+#include <ddc/parsed_capabilities_feature.h>
 #include <glib.h>
 #include <stdbool.h>
 #include <stdio.h>
@@ -40,8 +41,6 @@
 
 #include "ddc/ddc_command_codes.h"
 #include "ddc/vcp_feature_codes.h"
-#include "ddc/vcp_feature_record.h"
-
 #include "ddc/parse_capabilities.h"
 
 
@@ -65,8 +64,9 @@ void report_features(GArray* features, Version_Spec vcp_version) {
    int ct = features->len;
    int ndx;
    for (ndx=0; ndx < ct; ndx++) {
-      VCP_Feature_Record * vfr = g_array_index(features, VCP_Feature_Record *, ndx);
-      report_feature(vfr, vcp_version);
+      Capabilities_Feature_Record * vfr =
+          g_array_index(features, Capabilities_Feature_Record *, ndx);
+      report_capabilities_feature(vfr, vcp_version);
    }
 }
 
@@ -171,9 +171,9 @@ void free_parsed_capabilities(Parsed_Capabilities * pcaps) {
       // DBGMSG("vcp_features->len = %d", pcaps->vcp_features->len);
       int ndx;
       for (ndx=pcaps->vcp_features->len-1; ndx >=0; ndx--) {
-         VCP_Feature_Record * vfr = g_array_index(pcaps->vcp_features, VCP_Feature_Record *, ndx);
+         Capabilities_Feature_Record * vfr = g_array_index(pcaps->vcp_features, Capabilities_Feature_Record *, ndx);
          // report_feature(vfr);
-         free_vcp_feature(vfr);
+         free_capabilities_feature(vfr);
          g_array_remove_index(pcaps->vcp_features, ndx);
       }
       g_array_free(pcaps->vcp_features, true);
@@ -362,10 +362,10 @@ GArray * parse_vcp_segment(char * start, int len) {
       }
 
       if (valid_feature) {
-         VCP_Feature_Record * vfr = new_VCP_Feature_Record(cur_feature_id, value_start, value_len);
+         Capabilities_Feature_Record * vfr = new_Capabilities_Feature(cur_feature_id, value_start, value_len);
          if (debug) {
             Version_Spec dummy_version = {0,0};
-            report_feature(vfr, dummy_version);
+            report_capabilities_feature(vfr, dummy_version);
          }
          g_array_append_val(vcp_array, vfr);
       }

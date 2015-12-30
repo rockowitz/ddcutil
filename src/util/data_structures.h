@@ -29,6 +29,8 @@
 #ifndef DATA_STRUCTURES_H
 #define DATA_STRUCTURES_H
 
+#include <stdbool.h>
+
 #include "util/coredefs.h"   // for Byte
 
 // An opaque structure containing an array of bytes that

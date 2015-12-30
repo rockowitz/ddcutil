@@ -29,25 +29,26 @@
 
 #include "util/data_structures.h"
 
+#include "base/ddc_base_defs.h"
 #include "base/util.h"
 
 
 // Used when parsing capabilities string
 
-#define VCP_FEATURE_MARKER "VCPF"
+#define CAPABILITIES_FEATURE_MARKER "VCPF"
 typedef struct {
      char              marker[4];     // always "VCPF"
      Byte              feature_id;
      Byte_Value_Array  values;
      Byte_Bit_Flags    bbflags;       // alternative
      char *            value_string;
-} VCP_Feature_Record;
+} Capabilities_Feature_Record;
 
-VCP_Feature_Record * new_VCP_Feature_Record(
+Capabilities_Feature_Record * new_Capabilities_Feature(
                         Byte   feature_id,
                         char * value_string_start,
                         int    value_string_len);
-void free_vcp_feature(VCP_Feature_Record * pfeat);
-void report_feature(VCP_Feature_Record * vfr, Version_Spec vcp_version);
+void free_capabilities_feature(Capabilities_Feature_Record * pfeat);
+void report_capabilities_feature(Capabilities_Feature_Record * vfr, Version_Spec vcp_version);
 
 #endif /* VCP_FEATURE_RECORD_H_ */

@@ -37,6 +37,8 @@
 #include "base/util.h"
 
 
+// TODO: replace GArray with GPtrArray for vcp_features
+
 #define PARSED_CAPABILITIES_MARKER "CAPA"
 typedef struct {
    char              marker[4];       // always "CAPA"
