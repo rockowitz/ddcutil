@@ -54,7 +54,7 @@ void report_commands(Byte_Value_Array cmd_ids) {
    int ndx = 0;
    for (; ndx < ct; ndx++) {
       Byte hval = bva_get(cmd_ids, ndx);
-      printf("  Command: %02x (%s)\n", hval, get_command_name(hval));
+      printf("  Command: %02x (%s)\n", hval, ddc_cmd_code_name(hval));
    }
 }
 

@@ -53,3 +53,4 @@ misc/
 doxy_output/
 *.ctl
 *.lst
+create_ctl

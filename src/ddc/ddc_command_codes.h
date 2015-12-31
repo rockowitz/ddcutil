@@ -64,17 +64,16 @@ struct {
    char *  name;
 } Cmd_Code_Table_Entry;
 
-void list_cmd_codes();
 
-Cmd_Code_Table_Entry * find_cmd_entry_by_hexid(Byte id);
 
-Cmd_Code_Table_Entry * find_cmd_entry_by_charid(char * id);
+extern int ddc_cmd_code_count;    // number of entries in command code table
 
-char * get_command_name(Byte command_id);
+char * ddc_cmd_code_name(Byte command_id);
 
-extern int cmd_code_count;    // number of entries in VCP code table
+Cmd_Code_Table_Entry * get_ddc_cmd_struct_by_id(Byte char_code);
 
-Cmd_Code_Table_Entry * get_cmd_code_table_entry(int ndx);
+Cmd_Code_Table_Entry * get_ddc_cmd_struct_by_index(int ndx);
 
+// void list_cmd_codes();
 
 #endif /* DDC_COMMAND_CODES_H_ */
