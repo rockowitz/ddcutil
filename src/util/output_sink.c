@@ -27,6 +27,7 @@
 #include <assert.h>
 #include <errno.h>
 #include <glib.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -34,85 +35,115 @@
 #include "util/output_sink.h"
 
 
+#define OUTPUT_SINK_MARKER "SINK"
+struct Output_Sink{
+   char              marker[4];
+   Output_Sink_Type  sink_type;
+   FILE *            fp;
+   GPtrArray*        line_array;
+   int               cur_max_chars;
+   char *            workbuf;
+};
 
-Output_Sink * create_terminal_sink() {
-    Output_Sink * sink = calloc(1, sizeof(Output_Sink));
-    memcpy(sink->marker, OUTPUT_SINK_MARKER, 4);
-    sink->sink_type = SINK_STDOUT;
-    sink->fp = stdout;            // ??
-    return sink;
+
+
+Output_Sink create_terminal_sink() {
+    struct Output_Sink * psink = calloc(1, sizeof(Output_Sink));
+    memcpy(psink->marker, OUTPUT_SINK_MARKER, 4);
+    psink->sink_type = SINK_STDOUT;
+    psink->fp = stdout;            // ??
+    return psink;
 }
 
-Output_Sink * create_file_sink(FILE * fp) {
-   Output_Sink * sink = calloc(1, sizeof(Output_Sink));
-   memcpy(sink->marker, OUTPUT_SINK_MARKER, 4);
-   sink->sink_type = SINK_FILE;
-   sink->fp        = fp;
-   return sink;
+
+Output_Sink create_file_sink(FILE * fp) {
+   struct Output_Sink * psink = calloc(1, sizeof(Output_Sink));
+   memcpy(psink->marker, OUTPUT_SINK_MARKER, 4);
+   psink->sink_type = SINK_FILE;
+   psink->fp        = fp;
+   return psink;
 }
 
-Output_Sink * create_memory_sink(int initial_line_ct, int max_line_size) {
-   Output_Sink * sink = calloc(1, sizeof(Output_Sink));
-   memcpy(sink->marker, OUTPUT_SINK_MARKER, 4);
-   sink->sink_type = SINK_MEMORY;
-   sink->line_array = g_ptr_array_sized_new(initial_line_ct);
-   sink->max_line_size = max_line_size;
-   sink->workbuf = malloc(max_line_size+1);
-   return sink;
+
+Output_Sink create_memory_sink(int initial_line_ct, int estimated_max_chars) {
+   struct Output_Sink * psink = calloc(1, sizeof(Output_Sink));
+   memcpy(psink->marker, OUTPUT_SINK_MARKER, 4);
+   psink->sink_type = SINK_MEMORY;
+   psink->line_array = g_ptr_array_sized_new(initial_line_ct);
+   psink->cur_max_chars = estimated_max_chars;
+   psink->workbuf = calloc(estimated_max_chars+1, sizeof(char));
+   return psink;
 }
 
-int write_sink(Output_Sink * sink, const char * format, ...) {
-   assert(sink && memcmp(sink->marker, OUTPUT_SINK_MARKER, 4) == 0);
+
+int printf_sink(Output_Sink sink, const char * format, ...) {
+   struct Output_Sink * psink = (struct Output_Sink*) sink;
+   assert(psink && memcmp(psink->marker, OUTPUT_SINK_MARKER, 4) == 0);
    int rc = 0;
    va_list(args);
    va_start(args, format);
-   switch(sink->sink_type) {
+   switch(psink->sink_type) {
    case (SINK_STDOUT):
          // rc = vprintf(format, args);
          // break;
    case (SINK_FILE):
-         rc = vfprintf(sink->fp, format, args);
+         rc = vfprintf(psink->fp, format, args);
          if (rc < 0)
             rc = -errno;
          break;
    case (SINK_MEMORY):
       {
-         rc = vsnprintf(sink->workbuf, sink->max_line_size, format, args);
+         bool done = false;
+         while (!done) {
+            rc = vsnprintf(psink->workbuf, psink->cur_max_chars, format, args);
+            if (rc > psink->cur_max_chars) {
+               // if work buffer was too small, reallocate and retry
+               free(psink->workbuf);
+               psink->cur_max_chars = rc + 1;
+               psink->workbuf = calloc( (psink->cur_max_chars)+1, sizeof(char));
+            }
+            else
+               done = true;
+         };
          if (rc < 0)
             rc = -errno;
          else
-            g_ptr_array_add(sink->line_array, strdup(sink->workbuf));
+            g_ptr_array_add(psink->line_array, strdup(psink->workbuf));
          break;
       }
    }
    return rc;
 }
 
-GPtrArray *  read_sink(Output_Sink * sink) {
-   assert(sink && memcmp(sink->marker, OUTPUT_SINK_MARKER, 4) == 0);
-   assert(sink->sink_type == SINK_MEMORY);
-   return sink->line_array;
+
+GPtrArray *  read_sink(Output_Sink sink) {
+   struct Output_Sink * psink = (struct Output_Sink *) sink;
+   assert(psink && memcmp(psink->marker, OUTPUT_SINK_MARKER, 4) == 0);
+   assert(psink->sink_type == SINK_MEMORY);
+   return psink->line_array;
 }
 
-int close_sink(Output_Sink * sink) {
-   assert(sink && memcmp(sink->marker, OUTPUT_SINK_MARKER, 4) == 0);
+
+int close_sink(Output_Sink sink) {
+   struct Output_Sink * psink = (struct Output_Sink *) sink;
+   assert(psink && memcmp(psink->marker, OUTPUT_SINK_MARKER, 4) == 0);
    int rc = 0;
 
-   switch(sink->sink_type) {
+   switch(psink->sink_type) {
    case (SINK_STDOUT):
          break;
    case (SINK_FILE):
-         rc = fclose(sink->fp);
+         rc = fclose(psink->fp);
          if (rc < 0)
             rc = -errno;
          break;
    case (SINK_MEMORY):
       {
-         // destroy sink->line_array
+         // TODO: destroy psink->line_array
          break;
       }
    }
-   free(sink);
+   free(psink);
    return rc;
 }
 

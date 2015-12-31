@@ -32,24 +32,19 @@
 #include <stdio.h>
 
 
-
 typedef enum {SINK_STDOUT, SINK_FILE, SINK_MEMORY} Output_Sink_Type;
+typedef void * Output_Sink;
 
+Output_Sink create_terminal_sink();
 
+Output_Sink create_file_sink(FILE * fp);
 
-#define OUTPUT_SINK_MARKER "SINK"
-typedef struct {
-   char              marker[4];
-   Output_Sink_Type  sink_type;
-   FILE *            fp;
-   GPtrArray*        line_array;
-   int               max_line_size;
-   char *            workbuf;
+Output_Sink create_memory_sink(int initial_line_ct, int estimated_max_chars);
 
-} Output_Sink;
+int printf_sink(Output_Sink sink, const char * format, ...);
 
+GPtrArray *  read_sink(Output_Sink sink);
 
-int write_sink(Output_Sink * sink, const char * format, ...);
-
+int close_sink(Output_Sink sink);
 
 #endif /* SRC_UTIL_OUTPUT_SINK_H_ */
