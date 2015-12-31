@@ -65,6 +65,7 @@
 #include "ddc/vcp_feature_codes.h"
 #include "ddc/ddc_read_capabilities.h"
 #include "ddc/ddc_displays.h"
+#include "ddc/ddc_vcp_version.h"
 
 #include "cmdline/parsed_cmd.h"
 #include "cmdline/cmd_parser.h"
@@ -220,7 +221,7 @@ int main(int argc, char *argv[]) {
          set_output_format(OUTPUT_PROG_BUSINFO);
 #endif
       // new way:
-      ddc_show_active_displays(0);
+      ddc_report_active_displays(0);
    }
 
    else if (parsed_cmd->cmd_id == CMDID_TESTCASE) {
@@ -261,7 +262,7 @@ int main(int argc, char *argv[]) {
       ddc_set_max_multi_part_read_tries(MAX_MAX_TRIES);
       query_sysenv();
       printf("\nDetected displays:\n");
-      int display_ct = ddc_show_active_displays(1 /* logical depth */);
+      int display_ct = ddc_report_active_displays(1 /* logical depth */);
       int dispno;
       for (dispno=1; dispno <= display_ct; dispno++) {
          printf("\nCapabilities for display %d\n", dispno);
@@ -329,8 +330,8 @@ int main(int argc, char *argv[]) {
                   if (parsed_cmd->programmatic_output)
                      set_output_format(OUTPUT_PROG_VCP);
 #endif
-                  if (dref->ddc_io_mode == DDC_IO_DEVI2C)
-                  i2c_report_bus(dref->busno);
+                  // if (dref->ddc_io_mode == DDC_IO_DEVI2C)
+                  //    i2c_report_bus(dref->busno);
                   show_vcp_values_by_display_ref(dref, SUBSET_PROFILE, NULL);
                }
                else {

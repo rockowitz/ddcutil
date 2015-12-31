@@ -37,6 +37,10 @@
 #include "util/string_util.h"
 
 
+// Direct writes to stdout/stderr:
+//    debug messages
+//    stderr: hhs_to_byte() before terminating execution because of bad value
+
 //
 // General
 //
@@ -631,11 +635,12 @@ char * hexstring2(const unsigned char * bytes, int len, const char * sep, bool u
  * Arguments:
  *    data     start of region to show
  *    size     length of region
+ *    fh       where to write output
  *
  * Returns:
  *    nothing
  */
-void hex_dump(unsigned char *data, int size)
+void fhex_dump(FILE * fh, unsigned char *data, int size)
 {
    int i; // index in data...
    int j; // index in line...
@@ -647,7 +652,7 @@ void hex_dump(unsigned char *data, int size)
 
    // printf("\n");
    // Printing the ruler...
-   printf("        +0          +4          +8          +c            0   4   8   c   \n");
+   fprintf(fh, "        +0          +4          +8          +c            0   4   8   c   \n");
    ascii = buffer + 58;
    memset(buffer, ' ', 58 + 16);
    buffer[58 + 16] = '\n';
@@ -659,7 +664,7 @@ void hex_dump(unsigned char *data, int size)
    buffer[4] = '0';
    for (i = 0, j = 0; i < size; i++, j++) {
       if (j == 16) {
-         printf("%s", buffer);
+         fprintf(fh, "%s", buffer);
          memset(buffer, ' ', 58 + 16);
          sprintf(temp, "+%04x", i);
          memcpy(buffer, temp, 5);
@@ -675,6 +680,21 @@ void hex_dump(unsigned char *data, int size)
    }
 
    if (j != 0)
-      printf("%s", buffer);
+      fprintf(fh, "%s", buffer);
+}
+
+
+
+/* Dump a region of memory as hex characters and their ASCII values.
+ *
+ * Arguments:
+ *    data     start of region to show
+ *    size     length of region
+ *
+ * Returns:
+ *    nothing
+ */
+void hex_dump(unsigned char *data, int size) {
+   fhex_dump(stdout, data, size);
 }
 

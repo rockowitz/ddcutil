@@ -34,11 +34,12 @@
 
 void rpt_push_output_dest(FILE* new_dest);
 void rpt_pop_output_dest();
+FILE * rpt_cur_output_dest();
 void rpt_reset_output_dest_stack();
 
 void rpt_title(char * title, int depth);
 
-void rpt_vstring(int depth, char * format, ...) ;
+void rpt_printf(int depth, char * format, ...) ;
 
 void rpt_structure_loc(char * name, void * ptr, int depth);
 

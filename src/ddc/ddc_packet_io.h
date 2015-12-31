@@ -43,15 +43,6 @@ bool is_ddc_null_message(Byte * packet);
 Display_Handle* ddc_open_display(Display_Ref * dref,  Failure_Action failure_action);
 void         ddc_close_display(Display_Handle * dh);
 
-Display_Ref* ddc_find_display_by_model_and_sn(const char * model, const char * sn);
-
-Display_Ref* ddc_find_display_by_edid(const Byte * pEdidBytes);
-
-Parsed_Edid* ddc_get_parsed_edid_by_display_handle(Display_Handle * dh);
-Parsed_Edid* ddc_get_parsed_edid_by_display_ref(Display_Ref * dref);
-
-bool         ddc_is_valid_display_ref(Display_Ref * dref, bool emit_error_msg);
-
 
 // Retry management
 void ddc_set_max_write_only_exchange_tries(int ct);

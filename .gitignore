@@ -54,3 +54,6 @@ doxy_output/
 *.ctl
 *.lst
 create_ctl
+*.am2
+*.old
+NOTES

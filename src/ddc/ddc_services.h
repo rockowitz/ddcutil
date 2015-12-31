@@ -32,7 +32,7 @@
 #include <time.h>
 
 #include "base/common.h"
-#include "base/ddc_base_defs.h"     // for Version_Spec
+// #include "base/ddc_base_defs.h"     // for Version_Spec
 #include "base/displays.h"
 #include "base/status_code_mgt.h"
 
@@ -75,9 +75,6 @@ Global_Status_Code set_vcp_value_top(
         Display_Ref* dref,
         char *       feature,
         char *       new_value);
-
-Version_Spec get_vcp_version_by_display_handle(Display_Handle * dh);
-Version_Spec get_vcp_version_by_display_ref(   Display_Ref *    dref);
 
 
 char * format_timestamp(time_t time_millis, char * buf, int bufsz);

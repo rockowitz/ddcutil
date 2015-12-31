@@ -45,7 +45,7 @@ Parsed_Edid* adlshim_get_parsed_edid_by_display_ref(Display_Ref * dref) {
 }
 
 
-void adlshim_show_active_display_by_display_ref(Display_Ref * dref, int depth) {
+void adlshim_report_active_display_by_display_ref(Display_Ref * dref, int depth) {
 }
 
 

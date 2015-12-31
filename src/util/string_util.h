@@ -30,6 +30,7 @@
 #define STRINGUTIL_H_
 
 #include <stdbool.h>
+#include <stdio.h>
 
 #include "util/coredefs.h"
 
@@ -97,6 +98,7 @@ char * hexstring2(
           char *                buffer,     // buffer in which to return hex string
           int                   bufsz);     // buffer size
 
+void fhex_dump(FILE * fh, Byte * bytes, int size);
 void hex_dump(Byte * bytes, int size);
 
 

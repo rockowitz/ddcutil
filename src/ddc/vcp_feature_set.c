@@ -30,8 +30,8 @@
 #include <stdlib.h>
 #include <string.h>
 
-// #include "ddc/ddc_services.h"      // TEMP, circular, while VCP_Feature_Subset defined here
-#include "ddc/vcp_feature_codes.h"
+#include "base/msg_control.h"
+
 #include "ddc/vcp_feature_set.h"
 
 
@@ -45,6 +45,7 @@ struct VCP_Feature_Set {
 
 
 VCP_Feature_Set create_feature_set(VCP_Feature_Subset subset, Version_Spec vcp_version) {
+   // bool debug = false;
    struct VCP_Feature_Set * fset = calloc(1,sizeof(struct VCP_Feature_Set));
    memcpy(fset->marker, VCP_FEATURE_SET_MARKER, 4);
    fset->subset = subset;
@@ -96,7 +97,9 @@ VCP_Feature_Set create_feature_set(VCP_Feature_Subset subset, Version_Spec vcp_v
 }
 
 
+
 VCP_Feature_Set create_single_feature_set_by_vcp_entry(VCP_Feature_Table_Entry * vcp_entry) {
+   // bool debug = true;
    struct VCP_Feature_Set * fset = calloc(1,sizeof(struct VCP_Feature_Set));
    memcpy(fset->marker, VCP_FEATURE_SET_MARKER, 4);
    fset->members = g_ptr_array_sized_new(1);
@@ -122,6 +125,12 @@ VCP_Feature_Set create_single_feature_set_by_hexid(Byte id, bool force) {
 VCP_Feature_Set create_single_feature_set_by_charid(Byte id, bool force) {
    // TODO: copy and modify existing code:
    return NULL;
+}
+
+static inline struct VCP_Feature_Set * unopaque_feature_set(VCP_Feature_Set feature_set) {
+   struct VCP_Feature_Set * fset = (struct VCP_Feature_Set *) feature_set;
+   assert( fset && memcmp(fset->marker, VCP_FEATURE_SET_MARKER, 4) == 0);
+   return fset;
 }
 
 

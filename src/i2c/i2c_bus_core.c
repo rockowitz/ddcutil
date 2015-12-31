@@ -590,6 +590,8 @@ Parsed_Edid * i2c_get_parsed_edid_by_busno(int busno) {
 }
 
 
+// TODO: convert to use report functions
+
 /* Reports on a single I2C bus.
  *
  * Arguments:
@@ -678,15 +680,25 @@ static void report_businfo(Bus_Info * bus_info, int depth) {
 }
 
 
-void i2c_show_active_display(Bus_Info * businfo, int depth) {
+/* Reports a single active display.
+ *
+ * Output is written to the current report destination.
+ *
+ * Arguments:
+ *    businfo     bus record
+ *    depth       logical indentation depth
+ *
+ * Returns: nothing
+ */
+void i2c_report_active_display(Bus_Info * businfo, int depth) {
    Output_Level output_level = get_output_level();
-   rpt_vstring(depth, "Bus:                 /dev/i2c-%d", businfo->busno);
+   rpt_printf(depth, "Bus:                 /dev/i2c-%d", businfo->busno);
 
    if (output_level >= OL_VERBOSE)
-   rpt_vstring(depth, "Supports DDC:        %s", bool_repr(businfo->flags & I2C_BUS_ADDR_0X37));
+   rpt_printf(depth, "Supports DDC:        %s", bool_repr(businfo->flags & I2C_BUS_ADDR_0X37));
 
    if (output_level == OL_TERSE || output_level == OL_PROGRAM)
-   rpt_vstring(depth, "Monitor:             %s:%s:%s",  businfo->edid->mfg_id,
+   rpt_printf(depth, "Monitor:             %s:%s:%s",  businfo->edid->mfg_id,
                                                businfo->edid->model_name,
                                                businfo->edid->serial_ascii);
    if (output_level >= OL_NORMAL) {
@@ -695,10 +707,21 @@ void i2c_show_active_display(Bus_Info * businfo, int depth) {
    }
 }
 
-void i2c_show_active_display_by_busno(int busno, int depth) {
+
+/* Reports a single active display.
+ *
+ * Output is written to the current report destination.
+ *
+ * Arguments:
+ *    busno       bus number (must be valid)
+ *    depth       logical indentation depth
+ *
+ * Returns: nothing
+ */
+void i2c_report_active_display_by_busno(int busno, int depth) {
    Bus_Info * curinfo = i2c_get_bus_info(busno);
    assert(curinfo);
-   i2c_show_active_display(curinfo, depth);
+   i2c_report_active_display(curinfo, depth);
 }
 
 

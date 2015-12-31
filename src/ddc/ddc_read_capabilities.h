@@ -27,16 +27,11 @@
 #ifndef SRC_DDC_DDC_READ_CAPABILITIES_H_
 #define SRC_DDC_DDC_READ_CAPABILITIES_H_
 
-#include <glib.h>
-#include <stdio.h>
-#include <time.h>
 
-#include "base/common.h"
-#include "base/ddc_base_defs.h"     // for Version_Spec
+#include "util/data_structures.h"
+
 #include "base/displays.h"
 #include "base/status_code_mgt.h"
-
-#include "ddc/vcp_feature_codes.h"
 
 
 // Get capability string for monitor.

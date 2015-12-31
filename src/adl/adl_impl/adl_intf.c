@@ -620,15 +620,25 @@ DisplayIdInfo* get_adl_display_id_info(int iAdapterIndex, int iDisplayIndex) {
 #endif
 
 
-void adl_show_active_display(ADL_Display_Rec * pdisp, int depth) {
+/* Describes the specified display using report functions.
+ *
+ * Output is written to the currently active report destination.
+ *
+ * Arguments:
+ *    pdisp      points to ADL_Display_Rec for the display
+ *    depth      logical indentation depth
+ *
+ * Returns:      nothing
+ */
+void adl_report_active_display(ADL_Display_Rec * pdisp, int depth) {
    Output_Level output_level = get_output_level();
-   rpt_vstring(depth, "ADL Adapter number:   %d", pdisp->iAdapterIndex);
-   rpt_vstring(depth, "ADL Display number:   %d", pdisp->iDisplayIndex);
+   rpt_printf(depth, "ADL Adapter number:   %d", pdisp->iAdapterIndex);
+   rpt_printf(depth, "ADL Display number:   %d", pdisp->iDisplayIndex);
    if (output_level >= OL_VERBOSE)
-      rpt_vstring(depth, "Supports DDC:         %s", (pdisp->supports_ddc) ?  "true" : "false");
+      rpt_printf(depth, "Supports DDC:         %s", (pdisp->supports_ddc) ?  "true" : "false");
    if (output_level == OL_TERSE || output_level == OL_PROGRAM)
-   rpt_vstring(depth, "Monitor:              %s:%s:%s", pdisp->mfg_id, pdisp->model_name, pdisp->serial_ascii);
-   rpt_vstring(depth, "Xrandr name:          %s", pdisp->xrandr_name);
+   rpt_printf(depth, "Monitor:              %s:%s:%s", pdisp->mfg_id, pdisp->model_name, pdisp->serial_ascii);
+   rpt_printf(depth, "Xrandr name:          %s", pdisp->xrandr_name);
    if (output_level >= OL_NORMAL) {
       bool dump_edid = (output_level >= OL_VERBOSE);
       report_parsed_edid(pdisp->pEdid, dump_edid /* verbose */, depth);
@@ -637,49 +647,79 @@ void adl_show_active_display(ADL_Display_Rec * pdisp, int depth) {
       init_pci_ids();
       Pci_Id_Names pci_id_names = pci_id_get_names((ushort) pdisp->iVendorID, 0, 0, 0, 1);
       char * vendor_name = (pci_id_names.vendor_name) ? pci_id_names.vendor_name : "unknown vendor";
-      rpt_vstring(depth, "Vendor id:            0x%04x  %s", pdisp->iVendorID, vendor_name);
+      rpt_printf(depth, "Vendor id:            0x%04x  %s", pdisp->iVendorID, vendor_name);
       // waste of space to reserve full ADL_MAX_PATH for each field
       if (pdisp->pstrAdapterName)
-      rpt_vstring(depth, "Adapter name:         %s", pdisp->pstrAdapterName);
+      rpt_printf(depth, "Adapter name:         %s", pdisp->pstrAdapterName);
       if (pdisp->pstrDisplayName)
-      rpt_vstring(depth, "Display name:         %s", pdisp->pstrDisplayName);
+      rpt_printf(depth, "Display name:         %s", pdisp->pstrDisplayName);
    }
 }
 
-void adl_show_active_display_by_index(int ndx, int depth) {
+
+/* Describes the specified display using report functions.
+ *
+ * Output is written to the currently active report destination.
+ *
+ * Arguments:
+ *    ndx        index into array of active ADL displays
+ *    depth      logical indentation depth
+ *
+ * Returns:      nothing
+ */
+void adl_report_active_display_by_index(int ndx, int depth) {
    assert(ndx >= 0 && ndx < active_display_ct);
    ADL_Display_Rec * pdisp = &active_displays[ndx];
-   adl_show_active_display(pdisp, depth);
+   adl_report_active_display(pdisp, depth);
 }
 
 
-void adl_show_active_display_by_adlno(int iAdapterIndex, int iDisplayIndex, int depth) {
-   ADL_Display_Rec * pdisp = adl_get_display_by_adlno(iAdapterIndex, iDisplayIndex, true /* emit_error_msg */);
-   assert(pdisp);
-   adl_show_active_display(pdisp, depth);
+/* Describes the specified display using report functions.
+ *
+ * Output is written to the currently active report destination.
+ *
+ * Arguments:
+ *    iAdapterIndex  adapter number
+ *    iDisplayIndex  display number for adapter
+ *    depth          logical indentation depth
+ *
+ * Returns:      nothing
+ */
+void adl_report_active_display_by_adlno(
+        int iAdapterIndex,
+        int iDisplayIndex,
+        int depth)
+{
+   ADL_Display_Rec * pdisp = adl_get_display_by_adlno(iAdapterIndex, iDisplayIndex, false /* emit_error_msg */);
+   if (!pdisp)
+      rpt_printf(depth, "ADL display %d.%d not found", iAdapterIndex, iDisplayIndex);
+   else
+      adl_report_active_display(pdisp, depth);
 }
+
 
 /* Show information about attached displays.
+ *
+ * Output is written using report functions.
  *
  * Returns:
  *   number of active displays
  */
-int adl_show_active_displays() {
+int adl_report_active_displays() {
    if (adl_linked) {
-      printf("\nDisplays connected to AMD proprietary driver: %s\n", (active_display_ct == 0) ? "None" : "");
-      puts("");
+      rpt_printf(0, "\nDisplays connected to AMD proprietary driver: %s", (active_display_ct == 0) ? "None" : "");
+      rpt_printf(0, "");
       if (active_display_ct > 0) {
          int ndx;
          for (ndx=0; ndx < active_display_ct; ndx++) {
             ADL_Display_Rec * pdisp = &active_displays[ndx];
-            adl_show_active_display(pdisp, 0);
-            puts("");
+            adl_report_active_display(pdisp, 0);
+            rpt_printf(0,"");
          }
       }
    }
    return active_display_ct;
 }
-
 
 
 
@@ -716,6 +756,8 @@ typedef struct {
 
 
 /* Report on a single active display
+ *
+ * Output is written using report functions.
  *
  * Arguments:
  *   pRec   pointer to display record

@@ -37,18 +37,15 @@
 #include "base/common.h"
 #include "base/ddc_errno.h"
 #include "base/ddc_packets.h"
+#include "base/execution_stats.h"
 #include "base/msg_control.h"
 #include "base/parms.h"
 #include "base/status_code_mgt.h"
 #include "base/util.h"
 
-#include "i2c/i2c_bus_core.h"
-// #include "i2c/i2c_io.h"
 
 #include "ddc/ddc_packet_io.h"
-#include "ddc/parse_capabilities.h"
 #include "ddc/try_stats.h"
-#include "ddc/vcp_feature_codes.h"
 
 #include "ddc/ddc_multi_part_io.h"
 

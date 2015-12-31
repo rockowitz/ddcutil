@@ -24,8 +24,6 @@
  * </endcopyright>
  */
 
-
-
 #include <assert.h>
 #include <errno.h>
 #include <glib.h>
@@ -47,19 +45,17 @@
 #include "adl/adl_errors.h"
 #include "adl/adl_shim.h"
 
-#include "ddc/ddc_multi_part_io.h"
-#include "ddc/ddc_packet_io.h"
+#include "ddc/ddc_edid.h"
+#include "ddc/ddc_vcp_version.h"
 #include "ddc/ddc_vcp.h"
 #include "ddc/vcp_feature_codes.h"
-#include "ddc/ddc_services.h"
+// #include "ddc/ddc_services.h"
 
 #include "ddc/ddc_displays.h"
 
 
 // Trace class for this file
 static Trace_Group TRACE_GROUP = TRC_DDC;
-
-
 
 
 //
@@ -226,16 +222,17 @@ Display_Ref* ddc_find_display_by_dispno(int dispno) {
 
 /* Show information about a display.
  *
+ * Output is written using report functions
+ *
  * Arguments:
  *    curinfo   pointer to display information
  *    depth     logical indentation depth
  */
-void ddc_show_active_display(Display_Info * curinfo, int depth) {
+void ddc_report_active_display(Display_Info * curinfo, int depth) {
    if (curinfo->dref->ddc_io_mode == DDC_IO_DEVI2C)
-      i2c_show_active_display_by_busno(curinfo->dref->busno, depth);
+      i2c_report_active_display_by_busno(curinfo->dref->busno, depth);
    else {
-      adlshim_show_active_display_by_display_ref(curinfo->dref, depth);
-     // adl_show_active_display_by_adlno(curinfo->dref->iAdapterIndex, curinfo->dref->iDisplayIndex, depth);
+      adlshim_report_active_display_by_display_ref(curinfo->dref, depth);
    }
 
    Output_Level output_level = get_output_level();
@@ -252,9 +249,9 @@ void ddc_show_active_display(Display_Info * curinfo, int depth) {
 
       // printf("VCP version:   %d.%d\n", vspec.major, vspec.minor);
       if (vspec.major == 0)
-         rpt_vstring(depth, "VCP version: detection failed");
+         rpt_printf(depth, "VCP version: detection failed");
       else
-         rpt_vstring(depth, "VCP version:         %d.%d", vspec.major, vspec.minor);
+         rpt_printf(depth, "VCP version:         %d.%d", vspec.major, vspec.minor);
 
       if (output_level >= OL_VERBOSE) {
          // display controller mfg, firmware version
@@ -272,7 +269,7 @@ void ddc_show_active_display(Display_Info * curinfo, int depth) {
             char * mfg_name =  find_value_name_new(
                                   vals,
                                   code_info->sl);
-            rpt_vstring(depth, "Controller mfg:      %s", (mfg_name) ? mfg_name : "not set");
+            rpt_printf(depth, "Controller mfg:      %s", (mfg_name) ? mfg_name : "not set");
             if (mfg_name) {
                Global_Status_Code gsc = get_nontable_vcp_value_by_display_ref(
                         curinfo->dref,
@@ -282,7 +279,7 @@ void ddc_show_active_display(Display_Info * curinfo, int depth) {
                   DBGMSG("get_vcp_by_display_ref() returned %s", gsc_desc(gsc));
                }
                else {
-                  rpt_vstring(depth, "Firmware version:    %d.%d", code_info->sh, code_info->sl);
+                  rpt_printf(depth, "Firmware version:    %d.%d", code_info->sh, code_info->sl);
                }
             }
          }
@@ -295,29 +292,90 @@ void ddc_show_active_display(Display_Info * curinfo, int depth) {
 
 /* Reports all displays found.
  *
+ * Output is written to the current report destination using
+ * report functions.
+ *
  * Arguments:
  *    depth       logical indentation depth
  *
  * Returns:
  *    number of displays
  */
-int ddc_show_active_displays(int depth) {
+int ddc_report_active_displays(int depth) {
    Display_Info_List * display_list = ddc_get_valid_displays();
    int ndx;
    int valid_display_ct = 0;
    for (ndx=0; ndx<display_list->ct; ndx++) {
       Display_Info * curinfo = &display_list->info_recs[ndx];
       if (curinfo->dispno == -1)
-         rpt_vstring(depth, "Invalid display");
+         rpt_printf(depth, "Invalid display");
       else {
-         rpt_vstring(depth, "Display %d", curinfo->dispno);
+         rpt_printf(depth, "Display %d", curinfo->dispno);
          valid_display_ct++;
       }
-      ddc_show_active_display(curinfo, depth+1);
+      ddc_report_active_display(curinfo, depth+1);
       puts("");
    }
    if (valid_display_ct == 0)
-      rpt_vstring(depth, "No active displays found");
+      rpt_printf(depth, "No active displays found");
    return valid_display_ct;
 }
+
+
+Display_Ref* ddc_find_display_by_model_and_sn(const char * model, const char * sn) {
+   // DBGMSG("Starting.  model=%s, sn=%s   ", model, sn );
+   Display_Ref * result = NULL;
+   Bus_Info * businfo = i2c_find_bus_info_by_model_sn(model, sn);
+   if (businfo) {
+      result = create_bus_display_ref(businfo->busno);
+   }
+   else {
+      // ADL_Display_Rec * adlrec = adl_find_display_by_model_sn(model, sn);
+      // if (adlrec) {
+      //    result = create_adl_display_ref(adlrec->iAdapterIndex, adlrec->iDisplayIndex);
+      // }
+      result = adlshim_find_display_by_model_sn(model, sn);
+   }
+   // DBGMSG("Returning: %p  ", result );
+   return result;
+}
+
+
+Display_Ref* ddc_find_display_by_edid(const Byte * pEdidBytes) {
+   // DBGMSG("Starting.  model=%s, sn=%s   ", model, sn );
+   Display_Ref * result = NULL;
+   Bus_Info * businfo = i2c_find_bus_info_by_edid((pEdidBytes));
+   if (businfo) {
+      result = create_bus_display_ref(businfo->busno);
+   }
+   else {
+      // ADL_Display_Rec * adlrec = adl_find_display_by_edid(pEdidBytes);
+      // if (adlrec) {
+      //    result = create_adl_display_ref(adlrec->iAdapterIndex, adlrec->iDisplayIndex);
+      // }
+      result = adlshim_find_display_by_edid(pEdidBytes);
+   }
+   // DBGMSG("Returning: %p  ", result );
+   return result;
+}
+
+
+/** Tests if a DisplayRef identifies an attached display.
+ */
+bool ddc_is_valid_display_ref(Display_Ref * dref, bool emit_error_msg) {
+   assert( dref );
+   // char buf[100];
+   // DBGMSG("Starting.  %s   ", displayRefShortName(pdisp, buf, 100) );
+   bool result;
+   if (dref->ddc_io_mode == DDC_IO_DEVI2C) {
+      result = i2c_is_valid_bus(dref->busno, emit_error_msg );
+   }
+   else {
+      // result = adl_is_valid_adlno(dref->iAdapterIndex, dref->iDisplayIndex, true /* emit_error_msg */);
+      result = adlshim_is_valid_display_ref(dref, emit_error_msg);
+   }
+   // DBGMSG("Returning %d", result);
+   return result;
+}
+
 

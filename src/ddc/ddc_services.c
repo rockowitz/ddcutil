@@ -48,10 +48,12 @@
 #include "adl/adl_errors.h"
 #include "adl/adl_shim.h"
 
+#include "ddc/ddc_edid.h"
 #include "ddc/ddc_multi_part_io.h"
 #include "ddc/ddc_packet_io.h"
 #include "ddc/ddc_vcp.h"
-#include "ddc/vcp_feature_codes.h"
+#include "ddc/ddc_vcp_version.h"
+
 #include "ddc/ddc_services.h"
 
 // Trace class for this file
@@ -287,6 +289,7 @@ dump_nontable_vcp(
       snprintf(buf, 200, "VCP %02X %5d", vcp_entry->code, code_info->cur_value);
       char * s = strdup(buf);
       // write_sink(data_sink, "VCP %02X %5d", vcp_entry->code, code_info->cur_value);
+      assert(collector);
       g_ptr_array_add(collector, s);
       //   free(code_info);   // sometimes causes free failure, crash
       free(code_info);
@@ -300,11 +303,10 @@ Global_Status_Code
 show_value_for_nontable_feature_table_entry_by_display_handle(
         Display_Handle *          dh,
         VCP_Feature_Table_Entry * vcp_entry,
-        // Version_Spec              vcp_version,   // will be set for scan operations, not set for single
         GPtrArray *               collector,   // where to write output
         bool                      suppress_unsupported    // if set, do not output unsupported features
-        // Output_Sink               data_sink,
-        // Output_Sink               msg_sink
+     // Output_Sink               data_sink,
+     // Output_Sink               msg_sink
       )
 {
    bool debug = false;
@@ -338,8 +340,13 @@ show_value_for_nontable_feature_table_entry_by_display_handle(
          //                       vcp_code, feature_name, buf);
          // was this printf or append to collector?
          char * feature_name = get_version_specific_feature_name(vcp_entry, vcp_version);
+         // if (output_level == OL_PROGRAM) {
+         //    printf("VCP %02X %5d", vcp_entry->code, code_info->cur_value);
+         // }
+         // else {
          printf("VCP code 0x%02x (%-30s): %s\n",
                                vcp_entry->code, feature_name, buf);
+         // }
          free(code_info);
       }
    }
@@ -866,81 +873,6 @@ void show_vcp_values_by_display_ref(Display_Ref * dref, VCP_Feature_Subset subse
       show_vcp_values_by_display_handle(pDispHandle, subset, collector);
       ddc_close_display(pDispHandle);
    }
-}
-
-
-
-//
-// Functions for VCP (MCCS) version
-//
-
-/* Gets the VCP version.
- *
- * Because the VCP version is used repeatedly for interpreting other
- * VCP feature values, it is cached.
- *
- * Arguments:
- *    dh     display handle
- *
- * Returns:
- *    Version_Spec struct containing version, contains 0.0 if version
- *    could not be retrieved (pre MCCS v2)
- */
-Version_Spec get_vcp_version_by_display_handle(Display_Handle * dh) {
-   bool debug = false;
-   // printf("(%s) Starting. dh=%p, dh->vcp_version =  %d.%d\n",
-   //        __func__, dh, dh->vcp_version.major, dh->vcp_version.minor);
-   if (is_version_unqueried(dh->vcp_version)) {
-      dh->vcp_version.major = 0;
-      dh->vcp_version.minor = 0;
-      Preparsed_Nontable_Vcp_Response * pinterpreted_code;
-
-      // verbose output is distracting since this function is called when
-      // querying for other things
-      Output_Level olev = get_output_level();
-      if (olev == OL_VERBOSE)
-         set_output_level(OL_NORMAL);
-      Global_Status_Code  gsc = get_nontable_vcp_value_by_display_handle(dh, 0xdf, &pinterpreted_code);
-      if (olev == OL_VERBOSE)
-         set_output_level(olev);
-      if (gsc == 0) {
-         dh->vcp_version.major = pinterpreted_code->sh;
-         dh->vcp_version.minor = pinterpreted_code->sl;
-      }
-      else {
-         // happens for pre MCCS v2 monitors
-         DBGMSF(debug, "Error detecting VCP version. gsc=%s\n", gsc_desc(gsc) );
-      }
-   }
-   // DBGMSG("Returning: %d.%d", dh->vcp_version.major, dh->vcp_version.minor);
-   return dh->vcp_version;
-}
-
-
-/* Gets the VCP version.
- *
- * Because the VCP version is used repeatedly for interpreting other
- * VCP feature values, it is cached.
- *
- * Arguments:
- *    dref     display reference
- *
- * Returns:
- *    Version_Spec struct containing version, contains 0.0 if version
- *    could not be retrieved (pre MCCS v2)
- */
-Version_Spec get_vcp_version_by_display_ref(Display_Ref * dref) {
-   // printf("(%s) Starting. dref=%p, dref->vcp_version =  %d.%d\n",
-   //        __func__, dref, dref->vcp_version.major, dref->vcp_version.minor);
-
-   if (is_version_unqueried(dref->vcp_version)) {
-      Display_Handle * dh = ddc_open_display(dref, EXIT_IF_FAILURE);
-      dref->vcp_version = get_vcp_version_by_display_handle(dh);
-      ddc_close_display(dh);
-   }
-
-   // DBGMSG("Returning: %d.%d", dref->vcp_version.major, vspec.minor);
-   return dref->vcp_version;
 }
 
 

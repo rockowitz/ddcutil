@@ -1,4 +1,4 @@
-/* ddc_capabilities.h
+/* ddc_multi_part_io.h
  *
  * Created on: Jun 11, 2014
  *     Author: rock
@@ -24,13 +24,16 @@
  * </endcopyright>
  */
 
-#ifndef DDC_CAPABILITIES_H_
-#define DDC_CAPABILITIES_H_
+#ifndef DDC_MULTI_PART_IO_H_
+#define DDC_MULTI_PART_IO_H_
 
 #include <stdbool.h>
 
+#include "util/coredefs.h"
+#include "util/data_structures.h"
+
 #include "base/status_code_mgt.h"
-#include "base/util.h"
+#include "base/displays.h"
 
 
 // Statistics
@@ -42,10 +45,11 @@ void ddc_set_max_multi_part_read_tries(int ct);
 int ddc_get_max_multi_part_read_tries();
 
 
-Global_Status_Code multi_part_read_with_retry(
-                      Display_Handle * dh,
-                      Byte          request_type,
-                      Byte          request_subtype,   // VCP feature code for table read, ignore for capabilities
-                      Buffer**      ppbuffer);
+Global_Status_Code
+multi_part_read_with_retry(
+   Display_Handle * dh,
+   Byte             request_type,
+   Byte             request_subtype,   // VCP feature code for table read, ignore for capabilities
+   Buffer**         ppbuffer);
 
-#endif /* DDC_CAPABILITIES_H_ */
+#endif /* DDC_MULTI_PART_IO_H_ */

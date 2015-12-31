@@ -1505,7 +1505,6 @@ static  Feature_Value_Entry xd7_aux_power_output_values[] =
 
 
 
-
 // 0xda
 static  Feature_Value_Entry xda_scan_mode_values[] =
    { {0x00, "Normal operation"},
@@ -1534,17 +1533,26 @@ static Feature_Value_Entry xdc_display_application_values[] = {
 };
 
 
+#pragma GCC diagnostic push
+// not suppressing warning, why?
+#pragma GCC diagnostic ignored "-Wunused-variable"
 // 0xde         // write-only feature
 static  Feature_Value_Entry xde_wo_operation_mode_values[] =
    { {0x01, "Stand alone"},
      {0x02, "Slave (full PC control)"},
      {0x00, NULL}    // termination entry
 };
+#pragma GCC diagnostic pop
 
 
 //
 // DDC Virtual Control Panel (VCP) Feature Code Table
 //
+
+//TODO:
+// In 2.0 spec, the only the first letter of the first word of a name is capitalized
+// In 3.0/2.2, the first letter of each word of a name is capitalized
+// Need to make this consistent thoughout the table
 
 VCP_Feature_Table_Entry vcp_code_table[] = {
    { .code=0x01,
@@ -3177,7 +3185,13 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
      .v20_name = "Power mode",
 
    },
-
+   { .code=0xd7,                          // DONE - identical in 2.0, 3.0, 2.2
+     .vcp_spec_groups = VCP_SPEC_MISC,    // 2.0, 3.0, 2.2
+     .nc_sl_values = xd7_aux_power_output_values,
+     .desc="Controls an auxilliary power output from a display to a host device",
+     .v20_flags = VCP2_RW | VCP2_SIMPLE_NC,
+     .v20_name = "Auxilliary power output",
+   },
    { .code=0xdc,
      .vcp_spec_groups = VCP_SPEC_IMAGE,
      // defined in 2.0, 3.0 has different name, more values
@@ -3192,12 +3206,21 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
       .v20_flags = VCP2_RW | VCP2_SIMPLE_NC,
       .v20_name = "Display Mode",
    },
-   // need to look at v2.0 spec
-   // { .code=0xde,
-   //   .vcp_spec_groups = VCP_SPEC_MISC,   // 2.0
-   //
-   //   .desc = "operation mode",
-   // },
+   { .code=0xde,
+      // code 0xde has a completely different name and definition in v2.0
+      // vs v3.0/2.2
+      // 2.0: Operation Mode, W/O single byte value per xde_wo_operation_mode_values
+      // 3.0, 2.1: Scratch Pad: 2 bytes of volatile storage for use of software applications
+      // Did the definition really change so radically, or is the 2.0 spec a typo.
+      // What to do for 2.1?  Assume same as 3.0,2.2
+     .vcp_spec_groups = VCP_SPEC_MISC,   // 2.0, 3.0, 2.2
+     .desc = "Operation mode (2.0) or scratch pad (3.0)",
+     .nontable_formatter = format_feature_detail_debug_sl_sh,
+     .v20_flags = VCP2_WO | VCP2_WO_NC,
+     .v20_name  = "Operation Mode",
+     .v21_flags = VCP2_RW | VCP2_COMPLEX_NC,
+     .v21_name  = "Scratch Pad",
+   },
    { .code=0xdf,
      .vcp_spec_groups = VCP_SPEC_MISC,   // 2.0
      //.name="VCP Version",

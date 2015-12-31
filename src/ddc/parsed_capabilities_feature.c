@@ -36,7 +36,6 @@
 #include "util/debug_util.h"
 
 #include "base/msg_control.h"
-#include "base/util.h"
 
 #include "ddc/vcp_feature_codes.h"
 

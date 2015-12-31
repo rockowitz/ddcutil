@@ -88,7 +88,7 @@ void rpt_reset_output_dest_stack() {
    output_dest_stack_pos = 0;
 }
 
-static FILE * cur_output_dest() {
+FILE * rpt_cur_output_dest() {
    // special handling for unpushed case because can't statically initialize
    // output_dest_stack[0] to stdout
    return (output_dest_stack_pos < 0) ? stdout : output_dest_stack[output_dest_stack_pos];
@@ -101,12 +101,12 @@ static FILE * cur_output_dest() {
  * The output is indented per the specified indentation depth.
  */
 void rpt_title(char * title, int depth) {
-   fprintf(cur_output_dest(), "%*s%s\n", rpt_indent(depth), "", title);
+   fprintf(rpt_cur_output_dest(), "%*s%s\n", rpt_indent(depth), "", title);
 }
 
 
 // n. depth parm is first on this function because of variable args
-void rpt_vstring(int depth, char * format, ...)
+void rpt_printf(int depth, char * format, ...)
 {
    // assemble the message text 
    char buffer[300];
@@ -131,7 +131,7 @@ void rpt_structure_loc(char * name, void * ptr, int depth) {
    //        __func__, output_dest_stack_pos, output_dest_stack[output_dest_stack_pos]);
    // printf("(%s) curOutputDest() =%p\n", __func__, curOutputDest() );
    // fprintf(stdout, "%*s%s at: %p\n", rptIndent(depth), "", name, ptr);
-   fprintf(cur_output_dest(), "%*s%s at: %p\n", rpt_indent(depth), "", name, ptr);
+   fprintf(rpt_cur_output_dest(), "%*s%s at: %p\n", rpt_indent(depth), "", name, ptr);
 }
 
 
@@ -147,7 +147,7 @@ void rpt_str(char * name, char * info, char * val, int depth) {
       snprintf(infobuf, 99, "(%s)", info);
    else
       infobuf[0] = '\0';
-   fprintf(cur_output_dest(), "%*s%-25s %30s : %s\n", rpt_indent(depth), "", name, infobuf, val);
+   fprintf(rpt_cur_output_dest(), "%*s%-25s %30s : %s\n", rpt_indent(depth), "", name, infobuf, val);
 }
 
 
@@ -156,7 +156,7 @@ void rpt_2col(char * s1,  char * s2,  int col2offset, bool offset_absolute, int 
    int indentct = rpt_indent(depth);
    if (offset_absolute)
       col1sz = col1sz - indentct;
-   fprintf(cur_output_dest(), "%*s%-*s%s", indentct, "", col1sz, s1, s2 );
+   fprintf(rpt_cur_output_dest(), "%*s%-*s%s", indentct, "", col1sz, s1, s2 );
 }
 
 

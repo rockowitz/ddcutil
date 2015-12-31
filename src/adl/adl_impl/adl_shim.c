@@ -66,14 +66,17 @@ Parsed_Edid* adlshim_get_parsed_edid_by_display_ref(Display_Ref * dref) {
    return adl_get_parsed_edid_by_adlno(dref->iAdapterIndex, dref->iDisplayIndex);
 }
 
+#ifdef UNUSED
 // needed?
 void adlshim_show_active_display_by_adlno(int iAdapterIndex, int iDisplayIndex, int depth) {
-   return adl_show_active_display_by_adlno(iAdapterIndex, iDisplayIndex, depth);
+   return adl_report_active_display_by_adlno(iAdapterIndex, iDisplayIndex, depth);
 }
+#endif
 
-void adlshim_show_active_display_by_display_ref(Display_Ref * dref, int depth) {
+
+void adlshim_report_active_display_by_display_ref(Display_Ref * dref, int depth) {
    assert(dref->ddc_io_mode == DDC_IO_ADL);
-   return adl_show_active_display_by_adlno(dref->iAdapterIndex, dref->iDisplayIndex, depth);
+   return adl_report_active_display_by_adlno(dref->iAdapterIndex, dref->iDisplayIndex, depth);
 }
 
 

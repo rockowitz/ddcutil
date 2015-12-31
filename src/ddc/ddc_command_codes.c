@@ -24,6 +24,8 @@
  * </endcopyright>
  */
 
+// Direct writes to sysout/syserr: NO
+
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>

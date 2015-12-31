@@ -1,6 +1,6 @@
-/* ddc_displays.h
+/* ddc_vcp_version.h
  *
- * Created on: Dec 28, 2015
+ * Created on: Dec 31, 2015
  *     Author: rock
  *
  * <copyright>
@@ -24,25 +24,15 @@
  * </endcopyright>
  */
 
-#ifndef SRC_DDC_DDC_DISPLAYS_H_
-#define SRC_DDC_DDC_DISPLAYS_H_
+#ifndef SRC_DDC_DDC_VCP_VERSION_H_
+#define SRC_DDC_DDC_VCP_VERSION_H_
 
-
-#include "base/common.h"
+#include "base/ddc_base_defs.h"
 #include "base/displays.h"
 
 
-Display_Ref* get_display_ref_for_display_identifier(Display_Identifier* pdid, bool emit_error_msg);
+Version_Spec get_vcp_version_by_display_handle(Display_Handle * dh);
+Version_Spec get_vcp_version_by_display_ref(   Display_Ref *    dref);
 
-Display_Info_List * ddc_get_valid_displays();
-int ddc_report_active_displays(int depth);
 
-Display_Ref* ddc_find_display_by_dispno(int dispno);
-
-Display_Ref* ddc_find_display_by_model_and_sn(const char * model, const char * sn);
-
-Display_Ref* ddc_find_display_by_edid(const Byte * pEdidBytes);
-
-bool         ddc_is_valid_display_ref(Display_Ref * dref, bool emit_error_msg);
-
-#endif /* SRC_DDC_DDC_DISPLAYS_H_ */
+#endif /* SRC_DDC_DDC_VCP_VERSION_H_ */

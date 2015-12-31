@@ -41,6 +41,8 @@
 
 #include "base/edid.h"
 
+// Direct writes to stdout/stderr: NO
+
 
 /* Calculates checksum for a 128 byte EDID
  *
@@ -217,27 +219,36 @@ Parsed_Edid * create_parsed_edid(Byte* edidbytes) {
 }
 
 
+/* Writes EDID summary to the current report output destination.
+ * (normally stdout, but may be changed by rpt_push_output_desst())
+ *
+ * Arguments:
+ *    edid       pointer to parsed edid struct
+ *    verbose    include hex dump of EDID
+ *    depth      logical indentation depth
+ */
 void report_parsed_edid(Parsed_Edid * edid, bool verbose, int depth) {
    int d1 = depth+1;
    // verbose = true;
    if (edid) {
-      rpt_vstring(depth,"EDID synopsis:");
+      rpt_printf(depth,"EDID synopsis:");
 
-      rpt_vstring(d1,"Mfg id:           %s",          edid->mfg_id);
-      rpt_vstring(d1,"Model:            %s",          edid->model_name);
-      rpt_vstring(d1,"Serial number:    %s",          edid->serial_ascii);
+      rpt_printf(d1,"Mfg id:           %s",          edid->mfg_id);
+      rpt_printf(d1,"Model:            %s",          edid->model_name);
+      rpt_printf(d1,"Serial number:    %s",          edid->serial_ascii);
       char * title = (edid->is_model_year) ? "Model year" : "Manufacture year";
-      rpt_vstring(d1,"%-16s: %d", title, edid->year);
-      rpt_vstring(d1,"EDID version:     %d.%d", edid->edid_version_major, edid->edid_version_minor);
+      rpt_printf(d1,"%-16s: %d", title, edid->year);
+      rpt_printf(d1,"EDID version:     %d.%d", edid->edid_version_major, edid->edid_version_minor);
 
       if (verbose) {
-         rpt_vstring(d1,"EDID hex dump:");
-         hex_dump(edid->bytes, 128);
+         rpt_printf(d1,"EDID hex dump:");
+         FILE * fh = rpt_cur_output_dest();
+         fhex_dump(fh, edid->bytes, 128);
       }
    }
    else {
       if (verbose)
-         rpt_vstring(d1,"No edid");
+         rpt_printf(d1,"No edid");
    }
 }
 

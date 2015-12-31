@@ -820,13 +820,13 @@ void query_i2c_bus_using_sysfs() {
    d0 = "/sys/bus/i2c";
    d = opendir(d0);
    if (!d) {
-      rpt_vstring(1, "i2c bus not defined in sysfs. Unable to open directory %s: %s\n", d0, strerror(errno));
+      rpt_printf(1, "i2c bus not defined in sysfs. Unable to open directory %s: %s\n", d0, strerror(errno));
    }
    else {
       d0 = "/sys/bus/i2c/devices";
       d = opendir(d0);
       if (!d) {
-         rpt_vstring(1, "Unable to open sysfs directory %s: %s\n", d0, strerror(errno));
+         rpt_printf(1, "Unable to open sysfs directory %s: %s\n", d0, strerror(errno));
       }
       else {
          bool i2c_seen = false;
@@ -838,12 +838,12 @@ void query_i2c_bus_using_sysfs() {
                // DBGMSF(debug, "dent->dname: %s", dent->d_name);
                sprintf(cur_dir_name, "%s/%s", d0, dent->d_name);
                char * dev_name = read_sysfs_attr(cur_dir_name, "name", true);
-               rpt_vstring(1, "%s/name: %s", cur_dir_name, dev_name);
+               rpt_printf(1, "%s/name: %s", cur_dir_name, dev_name);
                i2c_seen = true;
             }
          }
          if (!i2c_seen)
-            rpt_vstring(1, "No i2c devices found in %s", d0);
+            rpt_printf(1, "No i2c devices found in %s", d0);
       }
    }
 }

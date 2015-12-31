@@ -38,21 +38,17 @@
 
 #include "util/debug_util.h"
 
-#include "base/common.h"
 #include "base/ddc_errno.h"
 #include "base/ddc_packets.h"
 #include "base/msg_control.h"
-#include "base/status_code_mgt.h"
 #include "base/util.h"
 
 #include "i2c/i2c_bus_core.h"
-// #include "i2c/i2c_io.h"
 
 #include "adl/adl_shim.h"
 
 #include "ddc/ddc_multi_part_io.h"
 #include "ddc/ddc_packet_io.h"
-#include "ddc/vcp_feature_codes.h"
 
 #include "ddc/ddc_vcp.h"
 
@@ -193,9 +189,7 @@ Global_Status_Code get_nontable_vcp_value_by_display_handle(
    TRCMSGTG(tg, "Reading feature 0x%02x", feature_code);
 
    Global_Status_Code rc = 0;
-   // Msg_Level msgLevel = get_global_msg_level();
-   Output_Level output_level = get_output_level();
-   // int file;
+   // Output_Level output_level = get_output_level();
    Preparsed_Nontable_Vcp_Response * interpretation_ptr = NULL;
 
    DDC_Packet * request_packet_ptr  = NULL;
@@ -241,12 +235,10 @@ Global_Status_Code get_nontable_vcp_value_by_display_handle(
       }
    }
 
-
    if (request_packet_ptr)
       free_ddc_packet(request_packet_ptr);
    if (response_packet_ptr)
       free_ddc_packet(response_packet_ptr);
-
 
    // if (debug)
    //    DBGMSG("Returning %p", interpretation_ptr);

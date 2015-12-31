@@ -51,7 +51,6 @@
 #include "i2c/i2c_bus_core.h"
 #include "i2c/i2c_do_io.h"
 
-// #include "adl/adl_intf.h"
 #include "adl/adl_shim.h"
 
 #include "ddc/try_stats.h"
@@ -88,6 +87,8 @@ bool is_ddc_null_message(Byte * packet) {
           );
 }
 #endif
+
+
 
 
 /* Opens a DDC display.
@@ -145,91 +146,6 @@ void ddc_close_display(Display_Handle * dh) {
 }
 
 
-Display_Ref* ddc_find_display_by_model_and_sn(const char * model, const char * sn) {
-   // DBGMSG("Starting.  model=%s, sn=%s   ", model, sn );
-   Display_Ref * result = NULL;
-   Bus_Info * businfo = i2c_find_bus_info_by_model_sn(model, sn);
-   if (businfo) {
-      result = create_bus_display_ref(businfo->busno);
-   }
-   else {
-      // ADL_Display_Rec * adlrec = adl_find_display_by_model_sn(model, sn);
-      // if (adlrec) {
-      //    result = create_adl_display_ref(adlrec->iAdapterIndex, adlrec->iDisplayIndex);
-      // }
-      result = adlshim_find_display_by_model_sn(model, sn);
-   }
-   // DBGMSG("Returning: %p  ", result );
-   return result;
-}
-
-
-Display_Ref* ddc_find_display_by_edid(const Byte * pEdidBytes) {
-   // DBGMSG("Starting.  model=%s, sn=%s   ", model, sn );
-   Display_Ref * result = NULL;
-   Bus_Info * businfo = i2c_find_bus_info_by_edid((pEdidBytes));
-   if (businfo) {
-      result = create_bus_display_ref(businfo->busno);
-   }
-   else {
-      // ADL_Display_Rec * adlrec = adl_find_display_by_edid(pEdidBytes);
-      // if (adlrec) {
-      //    result = create_adl_display_ref(adlrec->iAdapterIndex, adlrec->iDisplayIndex);
-      // }
-      result = adlshim_find_display_by_edid(pEdidBytes);
-   }
-   // DBGMSG("Returning: %p  ", result );
-   return result;
-}
-
-Parsed_Edid* ddc_get_parsed_edid_by_display_handle(Display_Handle * dh) {
-   Parsed_Edid* pEdid = NULL;
-
-   if (dh->ddc_io_mode == DDC_IO_DEVI2C)
-      pEdid = i2c_get_parsed_edid_by_busno(dh->busno);
-   else {
-      // pEdid = adl_get_parsed_edid_by_adlno(dref->iAdapterIndex, dref->iDisplayIndex);
-      pEdid = adlshim_get_parsed_edid_by_display_handle(dh);
-   }
-   // DBGMSG("Returning %p", pEdid);
-   TRCMSG("Returning %p", __func__, pEdid);
-   return pEdid;
-}
-
-
-
-Parsed_Edid* ddc_get_parsed_edid_by_display_ref(Display_Ref * dref) {
-   Parsed_Edid* pEdid = NULL;
-
-   if (dref->ddc_io_mode == DDC_IO_DEVI2C)
-      pEdid = i2c_get_parsed_edid_by_busno(dref->busno);
-   else {
-      // pEdid = adl_get_parsed_edid_by_adlno(dref->iAdapterIndex, dref->iDisplayIndex);
-      pEdid = adlshim_get_parsed_edid_by_display_ref(dref);
-   }
-   // DBGMSG("Returning %p", pEdid);
-   TRCMSG("Returning %p", __func__, pEdid);
-   return pEdid;
-}
-
-
-/** Tests if a DisplayRef identifies an attached display.
- */
-bool ddc_is_valid_display_ref(Display_Ref * dref, bool emit_error_msg) {
-   assert( dref );
-   // char buf[100];
-   // DBGMSG("Starting.  %s   ", displayRefShortName(pdisp, buf, 100) );
-   bool result;
-   if (dref->ddc_io_mode == DDC_IO_DEVI2C) {
-      result = i2c_is_valid_bus(dref->busno, emit_error_msg );
-   }
-   else {
-      // result = adl_is_valid_adlno(dref->iAdapterIndex, dref->iDisplayIndex, true /* emit_error_msg */);
-      result = adlshim_is_valid_display_ref(dref, emit_error_msg);
-   }
-   // DBGMSG("Returning %d", result);
-   return result;
-}
 
 
 // Retry Management and Statistics

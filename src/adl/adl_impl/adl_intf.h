@@ -80,10 +80,10 @@ void adl_release();
 
 Parsed_Edid* adl_get_parsed_edid_by_adlno(int iAdapterIndex, int iDisplayIndex);
 
-void adl_show_active_display(ADL_Display_Rec * pdisp, int depth);
-void adl_show_active_display_by_index(int ndx, int depth);
-void adl_show_active_display_by_adlno(int iAdapterIndex, int iDisplayIndex, int depth);
-int  adl_show_active_displays();   // returns number of active displays
+void adl_report_active_display(ADL_Display_Rec * pdisp, int depth);
+void adl_report_active_display_by_index(int ndx, int depth);
+void adl_report_active_display_by_adlno(int iAdapterIndex, int iDisplayIndex, int depth);
+int  adl_report_active_displays();   // returns number of active displays
 
 void report_adl_display_rec(ADL_Display_Rec * pRec, bool verbose, int depth);
 

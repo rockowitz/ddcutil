@@ -43,6 +43,8 @@
 #include "ddc/vcp_feature_codes.h"
 #include "ddc/ddc_read_capabilities.h"
 #include "ddc/ddc_displays.h"
+#include "ddc/ddc_edid.h"
+#include "ddc/ddc_vcp_version.h"
 
 #include "libmain/ddct_public.h"
 #include "../ddctool_app/loadvcp.h"

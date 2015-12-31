@@ -33,22 +33,15 @@
 #include "util/report_util.h"
 
 #include "base/ddc_errno.h"
-#include "base/ddc_packets.h"
-#include "base/displays.h"
-#include "base/linux_errno.h"
+// #include "base/ddc_packets.h"
+// #include "base/displays.h"
+// #include "base/linux_errno.h"
 #include "base/msg_control.h"
-#include "base/parms.h"
+// #include "base/parms.h"
 
-#include "i2c/i2c_bus_core.h"
-#include "i2c/i2c_do_io.h"
-
-#include "adl/adl_errors.h"
-#include "adl/adl_shim.h"
 
 #include "ddc/ddc_multi_part_io.h"
 #include "ddc/ddc_packet_io.h"
-#include "ddc/ddc_vcp.h"
-#include "ddc/vcp_feature_codes.h"
 
 #include "ddc/ddc_read_capabilities.h"
 

@@ -78,6 +78,7 @@ base/status_code_mgt.c \
 base/util.c \
 ddc/ddc_command_codes.c \
 ddc/ddc_displays.c      \
+ddc/ddc_edid.c          \
 ddc/ddc_multi_part_io.c \
 ddc/ddc_packet_io.c \
 ddc/ddc_read_capabilities.c \
@@ -89,6 +90,7 @@ ddc/try_stats.c \
 ddc/vcp_feature_codes.c \
 ddc/parsed_capabilities_feature.c \
 ddc/vcp_feature_set.c \
+ddc/ddc_vcp_version.c \
 i2c/i2c_base_io.c \
 i2c/i2c_bus_core.c \
 i2c/i2c_do_io.c \

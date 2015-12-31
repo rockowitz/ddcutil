@@ -46,12 +46,14 @@
 
 #include <i2c/i2c_bus_core.h>
 
-#include <ddc/ddc_services.h>
-#include <ddc/ddc_packet_io.h>
-#include <ddc/ddc_vcp.h>
-#include <ddctool_app/loadvcp.h>
+#include "ddc/ddc_services.h"
+#include "ddc/ddc_edid.h"
+#include "ddc/ddc_packet_io.h"
+#include "ddc/ddc_vcp.h"
 #include "ddc/ddc_read_capabilities.h"
 #include "ddc/ddc_displays.h"
+
+#include "ddctool_app/loadvcp.h"
 
 
 #define MAX_LOADVCP_VALUES  20

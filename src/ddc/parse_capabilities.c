@@ -27,20 +27,23 @@
  */
 
 #include <assert.h>
-#include <ddc/parsed_capabilities_feature.h>
+
 #include <glib.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <string.h>
 
-#include "util/data_structures.h"
+// #include "util/data_structures.h"
 #include "util/debug_util.h"
+#include "util/string_util.h"
 
 #include "base/msg_control.h"
 #include "base/util.h"
 
 #include "ddc/ddc_command_codes.h"
-#include "ddc/vcp_feature_codes.h"
+// #include "ddc/vcp_feature_codes.h"
+#include <ddc/parsed_capabilities_feature.h>
+
 #include "ddc/parse_capabilities.h"
 
 
