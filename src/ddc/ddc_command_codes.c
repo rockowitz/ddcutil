@@ -34,7 +34,7 @@
 
 
 //
-// DDC Command Codes
+// MCCS Command and Response Codes
 //
 
 Cmd_Code_Table_Entry cmd_code_table[] = {
