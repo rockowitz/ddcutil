@@ -29,15 +29,15 @@
 
 #include <assert.h>
 #include <ctype.h>
-#include <ddctool_app/loadvcp.h>
-#include <ddctool_app/query_sysenv.h>
-#include <ddctool_app/testcases.h>
 #include <errno.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
+#include "../app_ddctool/loadvcp.h"
+#include "../app_ddctool/query_sysenv.h"
+#include "../app_ddctool/testcases.h"
 #include "util/data_structures.h"
 
 #include "base/common.h"

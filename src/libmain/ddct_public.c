@@ -47,7 +47,8 @@
 #include "ddc/ddc_vcp_version.h"
 
 #include "libmain/ddct_public.h"
-#include "../ddctool_app/loadvcp.h"
+
+#include "../app_ddctool/loadvcp.h"
 
 #define WITH_DR(ddct_dref, action) \
    do { \

@@ -27,7 +27,7 @@
 #include <assert.h>
 #include <stdio.h>
 
-#include "../ddctool_app/loadvcp.h"         // loadvcp.h should be elsewhere, should not be including in main
+#include "../app_ddctool/loadvcp.h"         // loadvcp.h should be elsewhere, should not be including in main
 #include "libmain/ddct_public.h"
 
 #define FUNCTION_ERRMSG(function_name,status_code) \

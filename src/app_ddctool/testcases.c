@@ -39,7 +39,7 @@
 
 #include "test/testcase_table.h"
 
-#include <ddctool_app/testcases.h>
+#include "../app_ddctool/testcases.h"
 
 
 void show_test_cases() {

@@ -26,6 +26,8 @@
  * </endcopyright>
  */
 
+#include "../app_ddctool/loadvcp.h"
+
 #include <errno.h>
 #include <fcntl.h>
 #include <glib.h>
@@ -53,7 +55,6 @@
 #include "ddc/ddc_read_capabilities.h"
 #include "ddc/ddc_displays.h"
 
-#include "ddctool_app/loadvcp.h"
 
 
 #define MAX_LOADVCP_VALUES  20

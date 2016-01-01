@@ -62,7 +62,7 @@
 #include "i2c/i2c_bus_core.h"
 #include "adl/adl_shim.h"
 
-#include "../ddctool_app/query_sysenv.h"
+#include "../app_ddctool/query_sysenv.h"
 
 
 
