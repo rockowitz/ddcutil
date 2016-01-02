@@ -535,7 +535,7 @@ DDCT_Status ddct_get_nontable_vcp_value(
                DDCT_Non_Table_Value_Response * response)
 {
    WITH_DH(ddct_dh,  {
-       Preparsed_Nontable_Vcp_Response * code_info;
+       Parsed_Nontable_Vcp_Response * code_info;
        Global_Status_Code gsc = get_nontable_vcp_value_by_display_handle(dh, feature_code,&code_info);
        if (gsc == 0) {
           response->cur_value = code_info->cur_value;

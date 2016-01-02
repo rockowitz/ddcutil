@@ -504,6 +504,14 @@ char * create_simple_vcp_fn(Display_Ref * dref, time_t time_millis, char * buf, 
 
 
 
+GPtrArray * get_profile_related_values_by_display_ref(Display_Ref * dref) {
+   Display_Handle* dh = ddc_open_display(dref, EXIT_IF_FAILURE);
+   GPtrArray * vals = get_profile_related_values_by_display_handle(dh);
+   ddc_close_display(dh);
+   return vals;
+}
+
+
 
 bool dumpvcp(Display_Ref * dref, char * filename) {
    bool ok = true;

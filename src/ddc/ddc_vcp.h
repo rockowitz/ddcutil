@@ -59,12 +59,12 @@ Global_Status_Code get_table_vcp_value_by_display_handle(
 Global_Status_Code get_nontable_vcp_value_by_display_handle(
        Display_Handle *          dh,
        Byte                      feature_code,
-       Preparsed_Nontable_Vcp_Response** ppInterpretedCode);
+       Parsed_Nontable_Vcp_Response** ppInterpretedCode);
 
 Global_Status_Code get_nontable_vcp_value_by_display_ref(
        Display_Ref *             dref,
        Byte                      feature_code,
-       Preparsed_Nontable_Vcp_Response** ppInterpretedCode);
+       Parsed_Nontable_Vcp_Response** ppInterpretedCode);
 
 
 void vcp_list_feature_codes();

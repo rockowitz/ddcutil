@@ -143,7 +143,7 @@ Global_Status_Code set_nontable_vcp_value_by_dr(
 Global_Status_Code get_nontable_vcp_value_by_display_handle(
        Display_Handle *       dh,
        Byte                   feature_code,
-       Preparsed_Nontable_Vcp_Response** ppInterpretedCode)
+       Parsed_Nontable_Vcp_Response** ppInterpretedCode)
 {
    bool debug = false;
    Trace_Group tg = TRACE_GROUP;  if (debug) tg = 0xFF;
@@ -151,7 +151,7 @@ Global_Status_Code get_nontable_vcp_value_by_display_handle(
 
    Global_Status_Code rc = 0;
    // Output_Level output_level = get_output_level();
-   Preparsed_Nontable_Vcp_Response * interpretation_ptr = NULL;
+   Parsed_Nontable_Vcp_Response * interpretation_ptr = NULL;
 
    DDC_Packet * request_packet_ptr  = NULL;
    DDC_Packet * response_packet_ptr = NULL;
@@ -173,7 +173,7 @@ Global_Status_Code get_nontable_vcp_value_by_display_handle(
    TRCMSGTG(tg, "perform_ddc_write_read_with_retry() returned %s\n", gsc_desc(rc));
 
    if (rc == 0) {
-      interpretation_ptr = (Preparsed_Nontable_Vcp_Response *) call_calloc(1, sizeof(Preparsed_Nontable_Vcp_Response), "get_vcp_by_DisplayRef");
+      interpretation_ptr = (Parsed_Nontable_Vcp_Response *) call_calloc(1, sizeof(Parsed_Nontable_Vcp_Response), "get_vcp_by_DisplayRef");
 
       rc = get_interpreted_vcp_code(response_packet_ptr, true /* make_copy */, &interpretation_ptr);
       //if (msgLevel >= VERBOSE)
@@ -252,7 +252,7 @@ Global_Status_Code get_table_vcp_value_by_display_handle(
 Global_Status_Code get_nontable_vcp_value_by_display_ref(
                       Display_Ref *          dref,
                       Byte                   feature_code,
-                      Preparsed_Nontable_Vcp_Response** ppInterpretedCode) {
+                      Parsed_Nontable_Vcp_Response** ppInterpretedCode) {
    char buf0[100];
 
    // bool debug = false;

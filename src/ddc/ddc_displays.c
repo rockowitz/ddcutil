@@ -254,7 +254,7 @@ void ddc_report_active_display(Display_Info * curinfo, int depth) {
 
       if (output_level >= OL_VERBOSE) {
          // display controller mfg, firmware version
-         Preparsed_Nontable_Vcp_Response* code_info;
+         Parsed_Nontable_Vcp_Response* code_info;
 
          Global_Status_Code gsc = get_nontable_vcp_value_by_display_ref(
                 curinfo->dref,

@@ -59,7 +59,7 @@ Version_Spec get_vcp_version_by_display_handle(Display_Handle * dh) {
    if (is_version_unqueried(dh->vcp_version)) {
       dh->vcp_version.major = 0;
       dh->vcp_version.minor = 0;
-      Preparsed_Nontable_Vcp_Response * pinterpreted_code;
+      Parsed_Nontable_Vcp_Response * pinterpreted_code;
 
       // verbose output is distracting since this function is called when
       // querying for other things

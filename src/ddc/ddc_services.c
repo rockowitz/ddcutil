@@ -81,6 +81,19 @@ void init_ddc_services() {
 }
 
 
+void ddc_show_max_tries(FILE * fh) {
+   fprintf(fh, "Maximum Try Settings:\n");
+   fprintf(fh, "Operation Type             Current  Default\n");
+   fprintf(fh, "Write only exchange tries: %8d %8d\n",
+               ddc_get_max_write_only_exchange_tries(),
+               MAX_WRITE_ONLY_EXCHANGE_TRIES);
+   fprintf(fh, "Write read exchange tries: %8d %8d\n",
+               ddc_get_max_write_read_exchange_tries(),
+               MAX_WRITE_READ_EXCHANGE_TRIES);
+   fprintf(fh, "Multi-part exchange tries: %8d %8d\n",
+               ddc_get_max_multi_part_read_tries(),
+               MAX_MULTI_EXCHANGE_TRIES);
+}
 
 //
 // Show VCP value
@@ -97,7 +110,7 @@ Global_Status_Code get_and_check_nontable_value(
       VCP_Feature_Table_Entry * vcp_entry,
       bool                      suppress_unsupported,
       // Output_Sink               msg_sink,
-      Preparsed_Nontable_Vcp_Response ** pcode_info
+      Parsed_Nontable_Vcp_Response ** pcode_info
      )
 {
    bool debug = false;
@@ -111,7 +124,7 @@ Global_Status_Code get_and_check_nontable_value(
       printf("\nGetting data for VCP code 0x%02x - %s:\n", vcp_code, feature_name);
       // write_sink(msg_sink, "\nGetting data for VCP code 0x%02x - %s:", vcp_code, feature_name);
    }
-   Preparsed_Nontable_Vcp_Response * code_info = NULL;
+   Parsed_Nontable_Vcp_Response * code_info = NULL;
    Global_Status_Code rc = get_nontable_vcp_value_by_display_handle(dh, vcp_code, &code_info);
    assert ( (rc==0 && code_info) || (rc!=0 && !code_info) );
 
@@ -137,7 +150,6 @@ Global_Status_Code get_and_check_nontable_value(
          // write_sink(msg_sink, "VCP code 0x%02x (%-30s): Unsupported feature code",
          //                      vcp_code, feature_name);
       }
-
    }
 
    else {
@@ -179,7 +191,7 @@ dump_nontable_vcp(
    DBGMSF(debug, "Starting. Getting value for feature 0x%02x, dh=%s",
                  vcp_entry->code, display_handle_repr(dh));
 
-   Preparsed_Nontable_Vcp_Response * code_info;
+   Parsed_Nontable_Vcp_Response * code_info;
    Global_Status_Code gsc =
          get_and_check_nontable_value(
                dh,
@@ -228,7 +240,7 @@ show_value_for_nontable_feature_table_entry_by_display_handle(
       gsc = dump_nontable_vcp(dh, vcp_entry, collector);
    }
    else {
-      Preparsed_Nontable_Vcp_Response * code_info = NULL;
+      Parsed_Nontable_Vcp_Response * code_info = NULL;
       gsc = get_and_check_nontable_value(
                dh,
                vcp_entry,
@@ -447,7 +459,7 @@ void show_value_for_feature_table_entry_by_display_handle(
 }
 
 
-
+#ifdef UNUSED
 void show_value_for_feature_table_entry_by_display_ref(
         Display_Ref *              dref,
         VCP_Feature_Table_Entry *  vcp_entry,
@@ -466,7 +478,7 @@ void show_value_for_feature_table_entry_by_display_ref(
 
    DBGMSF(debug, "Done");
 }
-
+#endif
 
 // duplicate code, ugh!!!
 
@@ -663,24 +675,4 @@ GPtrArray * get_profile_related_values_by_display_handle(Display_Handle* dh) {
 }
 
 
-GPtrArray * get_profile_related_values_by_display_ref(Display_Ref * dref) {
-   Display_Handle* dh = ddc_open_display(dref, EXIT_IF_FAILURE);
-   GPtrArray * vals = get_profile_related_values_by_display_handle(dh);
-   ddc_close_display(dh);
-   return vals;
-}
 
-
-void ddc_show_max_tries(FILE * fh) {
-   fprintf(fh, "Maximum Try Settings:\n");
-   fprintf(fh, "Operation Type             Current  Default\n");
-   fprintf(fh, "Write only exchange tries: %8d %8d\n",
-               ddc_get_max_write_only_exchange_tries(),
-               MAX_WRITE_ONLY_EXCHANGE_TRIES);
-   fprintf(fh, "Write read exchange tries: %8d %8d\n",
-               ddc_get_max_write_read_exchange_tries(),
-               MAX_WRITE_READ_EXCHANGE_TRIES);
-   fprintf(fh, "Multi-part exchange tries: %8d %8d\n",
-               ddc_get_max_multi_part_read_tries(),
-               MAX_MULTI_EXCHANGE_TRIES);
-}
