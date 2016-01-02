@@ -170,7 +170,7 @@ Global_Status_Code get_nontable_vcp_value_by_display_handle(
            expected_subtype,
            &response_packet_ptr
         );
-   TRCMSGTG(tg, "perform_ddc_write_read_with_retry() returned %s\n", gsc_desc(rc));
+   TRCMSGTG(tg, "perform_ddc_write_read_with_retry() returned %s", gsc_desc(rc));
 
    if (rc == 0) {
       interpretation_ptr = (Parsed_Nontable_Vcp_Response *) call_calloc(1, sizeof(Parsed_Nontable_Vcp_Response), "get_vcp_by_DisplayRef");
@@ -199,7 +199,7 @@ Global_Status_Code get_nontable_vcp_value_by_display_handle(
    if (response_packet_ptr)
       free_ddc_packet(response_packet_ptr);
 
-   TRCMSGTG(tg, "Returning %p\n", __func__, interpretation_ptr);
+   TRCMSGTG(tg, "Returning %s, *ppinterpreted_code=%p", gsc_name(rc), interpretation_ptr);
    *ppInterpretedCode = interpretation_ptr;
    return rc;
 }
@@ -249,6 +249,58 @@ Global_Status_Code get_table_vcp_value_by_display_handle(
 }
 
 
+Global_Status_Code get_vcp_value_by_display_handle(
+       Display_Handle *          dh,
+       Byte                      feature_code,
+       VCP_Call_Type             call_type,
+       Parsed_Vcp_Response**     pp_parsed_response)
+{
+   bool debug = false;
+   Trace_Group tg = TRACE_GROUP;  if (debug) tg = 0xFF;
+   TRCMSGTG(tg, "Starting. Reading feature 0x%02x", feature_code);
+
+   Global_Status_Code gsc = 0;
+   *pp_parsed_response = NULL;
+   Parsed_Vcp_Response *  presp = calloc(1, sizeof(Parsed_Vcp_Response));
+   switch (call_type) {
+
+   case (NON_TABLE_VCP_CALL):
+         presp->response_type = NON_TABLE_VCP_CALL;
+         gsc = get_nontable_vcp_value_by_display_handle(
+                  dh,
+                  feature_code,
+                  &presp->non_table_response);
+         break;
+
+   case (TABLE_VCP_CALL):
+         presp->response_type = TABLE_VCP_CALL;
+         gsc = get_table_vcp_value_by_display_handle(
+                 dh,
+                 feature_code,
+                 &presp->table_response);
+         break;
+   }
+   if (gsc == 0)
+      *pp_parsed_response = presp;
+
+   TRCMSGTG(tg, "Done. Returning gsc=%s, *pp_parsed_response=%p", gsc_desc(gsc), *pp_parsed_response);
+   if (gsc == 0) {
+      assert(presp);
+      assert( presp->response_type == call_type);
+      if (call_type == NON_TABLE_VCP_CALL)
+         assert(presp->non_table_response && !presp->table_response);
+      else
+         assert(!presp->non_table_response && presp->table_response);
+   }
+   else {
+      if (*pp_parsed_response)
+         TRCMSGTG(tg, "WARNING: gsc == s but *pp_parsed_response=%p", gsc_desc(gsc), *pp_parsed_response);
+   }
+   return gsc;
+}
+
+
+#ifdef DEPRECATED
 Global_Status_Code get_nontable_vcp_value_by_display_ref(
                       Display_Ref *          dref,
                       Byte                   feature_code,
@@ -269,4 +321,4 @@ Global_Status_Code get_nontable_vcp_value_by_display_ref(
    TRCMSG("Returning %d\n", __func__, rc);
    return rc;
 }
-
+#endif

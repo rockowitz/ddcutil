@@ -32,6 +32,7 @@
 #include <stdio.h>
 
 #include "util/debug_util.h"
+#include "util/report_util.h"
 #include "util/string_util.h"
 
 #include "base/execution_stats.h"
@@ -238,7 +239,7 @@ void report_interpreted_aux_data(Byte response_type, void * aux_data) {
       report_interpreted_multi_read_fragment(aux_data);
       break;
    case (DDC_PACKET_TYPE_QUERY_VCP_RESPONSE):
-      report_interpreted_nontable_vcp_response(aux_data);
+      report_interpreted_nontable_vcp_response(aux_data, 0);
       break;
 
    default:
@@ -906,17 +907,31 @@ interpret_vcp_feature_response(
 
 
 void report_interpreted_nontable_vcp_response(
-        Parsed_Nontable_Vcp_Response * interpreted)
+        Parsed_Nontable_Vcp_Response * interpreted, int depth)
 {
-   printf("VCP code:         0x%02x\n", interpreted->vcp_code);
-   printf("valid_response:   %d\n",     interpreted->valid_response);
-   printf("supported_opcode: %d\n",     interpreted->supported_opcode);
-   printf("max_value:        %d\n",     interpreted->max_value);
-   printf("cur_value:        %d\n",     interpreted->cur_value);
-   printf("mh:               0x%02x\n", interpreted->mh);
-   printf("ml:               0x%02x\n", interpreted->ml);
-   printf("sh:               0x%02x\n", interpreted->sh);
-   printf("sl:               0x%02x\n", interpreted->sl);
+   rpt_printf(depth,"VCP code:         0x%02x", interpreted->vcp_code);
+   rpt_printf(depth,"valid_response:   %d",     interpreted->valid_response);
+   rpt_printf(depth,"supported_opcode: %d",     interpreted->supported_opcode);
+   rpt_printf(depth,"max_value:        %d",     interpreted->max_value);
+   rpt_printf(depth,"cur_value:        %d",     interpreted->cur_value);
+   rpt_printf(depth,"mh:               0x%02x", interpreted->mh);
+   rpt_printf(depth,"ml:               0x%02x", interpreted->ml);
+   rpt_printf(depth,"sh:               0x%02x", interpreted->sh);
+   rpt_printf(depth,"sl:               0x%02x", interpreted->sl);
+}
+
+
+void   report_parsed_vcp_response(Parsed_Vcp_Response * response, int depth) {
+   rpt_printf(depth, "Parsed_Vcp_Reponse at %p:", response);
+
+   rpt_printf(depth, "response_type:   %d",   response->response_type);
+   if (response->response_type == NON_TABLE_VCP_CALL) {
+      rpt_printf(depth, "non_table_response at %p:", response->non_table_response);
+      report_interpreted_nontable_vcp_response(response->non_table_response, depth+1);
+   }
+   else {
+      rpt_printf(depth, "table_response at %p", response->table_response);
+   }
 }
 
 

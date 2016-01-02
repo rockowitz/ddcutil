@@ -35,6 +35,9 @@
 #include "base/ddc_packets.h"
 #include "base/util.h"
 
+extern const char* standard_feature_format_w_nl;
+extern const char* standard_feature_format_wo_nl;
+
 //
 // VCP Feature Interpretation
 //
@@ -227,6 +230,15 @@ Version_Feature_Flags get_version_specific_feature_flags(
        VCP_Feature_Table_Entry * pvft_entry,
        Version_Spec              vcp_version);
 
+Version_Feature_Flags get_version_sensitive_feature_flags(
+       VCP_Feature_Table_Entry * pvft_entry,
+       Version_Spec              vcp_version);
+
+bool is_feature_supported_in_version(
+      VCP_Feature_Table_Entry * pvft_entry,
+      Version_Spec              vcp_version);
+
+
 bool is_feature_readable_by_vcp_version(
       VCP_Feature_Table_Entry * pvft_entry,
       Version_Spec              vcp_version);
@@ -241,7 +253,7 @@ Feature_Value_Entry * get_version_specific_sl_values(
        VCP_Feature_Table_Entry * pvft_entry,
        Version_Spec              vcp_version);
 
-char * get_version_specific_feature_name(
+char * get_version_sensitive_feature_name(
        VCP_Feature_Table_Entry * pvft_entry,
        Version_Spec              vcp_version);
 

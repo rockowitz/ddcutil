@@ -90,6 +90,12 @@
 // #define MAX_ARGS (MAX_SETVCP_VALUES*2)   // causes CMDID_* undefined
 #define MAX_ARGS 100        // hack
 
+//
+// Miscellaneous
+
+// Maximum numbers of values on command ddc setvcp
+#define MAX_SETVCP_VALUES    50
+
 
 
 #endif /* PARMS_H_ */

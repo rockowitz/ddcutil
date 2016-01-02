@@ -124,10 +124,12 @@ typedef enum {NON_TABLE_VCP_CALL,
 
 typedef
 struct {
-   VCP_Call_Type                     response_type;
-   Parsed_Nontable_Vcp_Response * non_table_response;
-   Buffer *                          table_response;
+   VCP_Call_Type                   response_type;
+   Parsed_Nontable_Vcp_Response *  non_table_response;
+   Buffer *                        table_response;
 } Parsed_Vcp_Response;
+
+void   report_parsed_vcp_response(Parsed_Vcp_Response * response, int depth);
 
 
 typedef
@@ -183,14 +185,17 @@ DDC_Packet *      create_ddc_multi_part_read_request_packet(
 void    update_ddc_capabilities_request_packet_offset(
           DDC_Packet *  packet,
           int           offset);
+
 void    update_ddc_multi_part_read_request_packet_offset(
           DDC_Packet *  packet,
           int           offset);
+
 Global_Status_DDC create_ddc_capabilities_response_packet(
           Byte *        i2c_response_bytes,
           int           response_bytes_buffer_size,
           const char *  tag,
           DDC_Packet ** packet_ptr);
+
 Global_Status_DDC interpret_capabilities_response(
           Byte *        data_bytes,
           int           bytect,
@@ -213,6 +218,7 @@ DDC_Packet * create_ddc_setvcp_request_packet(
           Byte          vcp_code,
           int           new_value,
           const char *  tag);
+
 Global_Status_DDC get_interpreted_vcp_code(
           DDC_Packet *  packet,
           bool          make_copy,
@@ -220,7 +226,7 @@ Global_Status_DDC get_interpreted_vcp_code(
 
 void   report_interpreted_capabilities(Interpreted_Capabilities_Fragment * interpreted);
 void   report_interpreted_multi_read_fragment(Interpreted_Multi_Part_Read_Fragment * interpreted);
-void   report_interpreted_nontable_vcp_response(Parsed_Nontable_Vcp_Response * interpreted);
+void   report_interpreted_nontable_vcp_response(Parsed_Nontable_Vcp_Response * interpreted, int depth);
 void   report_interpreted_aux_data(Byte response_type, void * interpreted);
 
 Byte * get_packet_start(DDC_Packet * packet);

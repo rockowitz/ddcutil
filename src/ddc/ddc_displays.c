@@ -49,6 +49,7 @@
 #include "ddc/ddc_vcp_version.h"
 #include "ddc/ddc_vcp.h"
 #include "ddc/vcp_feature_codes.h"
+#include "ddc/ddc_packet_io.h"                // TODO: CHECK IF CIRCULAR DEPENDENCY
 
 #include "ddc/ddc_displays.h"
 
@@ -236,6 +237,7 @@ void ddc_report_active_display(Display_Info * curinfo, int depth) {
 
    Output_Level output_level = get_output_level();
    if (output_level >= OL_NORMAL  && ddc_is_valid_display_ref(curinfo->dref, false)) {
+      Display_Handle * dh = ddc_open_display(curinfo->dref, EXIT_IF_FAILURE);
       // char * short_name = display_ref_short_name(curinfo->dref);
           // printf("Display:       %s\n", short_name);
           // works, but TMI
@@ -244,7 +246,7 @@ void ddc_report_active_display(Display_Info * curinfo, int depth) {
       if (output_level >= OL_VERBOSE)
          set_output_level(OL_NORMAL);
 
-      Version_Spec vspec = get_vcp_version_by_display_ref(curinfo->dref);
+      Version_Spec vspec = get_vcp_version_by_display_handle(dh);
 
       // printf("VCP version:   %d.%d\n", vspec.major, vspec.minor);
       if (vspec.major == 0)
@@ -256,8 +258,8 @@ void ddc_report_active_display(Display_Info * curinfo, int depth) {
          // display controller mfg, firmware version
          Parsed_Nontable_Vcp_Response* code_info;
 
-         Global_Status_Code gsc = get_nontable_vcp_value_by_display_ref(
-                curinfo->dref,
+         Global_Status_Code gsc = get_nontable_vcp_value_by_display_handle(
+                dh,
                 0xc8,         // controller manufacturer
                 &code_info);
          if (gsc != 0) {
@@ -270,8 +272,8 @@ void ddc_report_active_display(Display_Info * curinfo, int depth) {
                                   code_info->sl);
             rpt_printf(depth, "Controller mfg:      %s", (mfg_name) ? mfg_name : "not set");
             if (mfg_name) {
-               Global_Status_Code gsc = get_nontable_vcp_value_by_display_ref(
-                        curinfo->dref,
+               Global_Status_Code gsc = get_nontable_vcp_value_by_display_handle(
+                        dh,
                         0xc9,         // firmware version
                         &code_info);
                if (gsc != 0) {
@@ -283,6 +285,7 @@ void ddc_report_active_display(Display_Info * curinfo, int depth) {
             }
          }
       }
+      ddc_close_display(dh);
       if (output_level >= OL_VERBOSE)
          set_output_level(output_level);
    }

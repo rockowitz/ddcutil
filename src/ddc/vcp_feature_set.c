@@ -134,8 +134,8 @@ static inline struct VCP_Feature_Set * unopaque_feature_set(VCP_Feature_Set feat
 }
 
 
-void free_feature_group(VCP_Feature_Set feature_group) {
-   struct VCP_Feature_Set * fset = (struct VCP_Feature_Set *) feature_group;
+void free_feature_set(VCP_Feature_Set feature_set) {
+   struct VCP_Feature_Set * fset = (struct VCP_Feature_Set *) feature_set;
    assert( fset && memcmp(fset->marker, VCP_FEATURE_SET_MARKER, 4) == 0);
    int ndx = 0;
    // free all generated members

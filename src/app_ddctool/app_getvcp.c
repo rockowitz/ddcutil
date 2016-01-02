@@ -32,6 +32,7 @@
 
 #include "util/string_util.h"
 
+#include "base/ddc_errno.h"
 #include "base/msg_control.h"
 #include "base/status_code_mgt.h"
 // #include "base/linux_errno.h"
@@ -49,7 +50,7 @@
 
 Global_Status_Code
 app_show_single_vcp_value_by_dh(Display_Handle * dh, char * feature, bool force) {
-   bool debug = true;
+   bool debug = false;
    DBGMSF(debug, "Starting. Getting feature %s for %s",
                  feature, display_handle_repr(dh) );
 
@@ -66,21 +67,35 @@ app_show_single_vcp_value_by_dh(Display_Handle * dh, char * feature, bool force)
       }
       if (entry) {
          if (!is_feature_readable_by_vcp_version(entry, vspec)) {
-            char * feature_name =  get_version_specific_feature_name(entry, vspec);
+            char * feature_name =  get_version_sensitive_feature_name(entry, vspec);
             printf("Feature %02x (%s) is not readable\n", feature_id, feature_name);
-            gsc = modulate_rc(-EINVAL, RR_ERRNO);    // TEMP - what is appropriate?
+            // gsc = modulate_rc(-EINVAL, RR_ERRNO);    // TEMP - what is appropriate?
+            gsc = DDCL_INVALID_OPERATION;
          }
       }
    }
 
    if (!entry) {
       printf("Unrecognized VCP feature code: %s\n", feature);
-      gsc = modulate_rc(-EINVAL, RR_ERRNO);
+      // gsc = modulate_rc(-EINVAL, RR_ERRNO);
+      gsc = DDCL_UNKNOWN_FEATURE;
    }
    if (gsc == 0) {
       // DBGMSG("calling show_vcp_for_vcp_code_table_entry_by_display_ref()");
-      show_value_for_feature_table_entry_by_display_handle(dh, entry, NULL, false);
-      gsc = 0;    // until show_value_... has a status code
+      // show_value_for_feature_table_entry_by_display_handle(dh, entry, NULL, false);
+      // gsc = 0;    // until show_value_... has a status code
+
+      char * formatted_value = NULL;
+      gsc =
+      get_formatted_value_for_feature_table_entry(
+            dh,
+            entry,
+            false,      /* suppress_unsupported */
+            true,       /* prefix_value_with_feature_code */
+            &formatted_value,
+            stdout);    /* msg_fh */
+      if (formatted_value)
+         printf("%s\n", formatted_value);
    }
 
    DBGMSF(debug, "Done.  Returning: %s", gsc_desc(gsc));

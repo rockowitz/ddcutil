@@ -99,6 +99,7 @@ void ddc_show_max_tries(FILE * fh) {
 // Show VCP value
 //
 
+#ifdef OLD
 
 // performs 3 functions:
 // - gets vcp value
@@ -115,13 +116,16 @@ Global_Status_Code get_and_check_nontable_value(
 {
    bool debug = false;
    DBGMSF(debug, "Starting.  feature code = 0x%02x", vcp_entry->code);
+
+   FILE * data_fh = stdout;
+   FILE * msg_fh  = stdout;
    Output_Level output_level = get_output_level();
    Byte vcp_code = vcp_entry->code;
    // char * feature_name = vcp_entry->name;
    Version_Spec vspec = get_vcp_version_by_display_handle(dh);
-   char * feature_name = get_version_specific_feature_name(vcp_entry, vspec);
+   char * feature_name = get_version_sensitive_feature_name(vcp_entry, vspec);
    if (output_level >= OL_VERBOSE) {
-      printf("\nGetting data for VCP code 0x%02x - %s:\n", vcp_code, feature_name);
+      fprintf(msg_fh, "\nGetting data for VCP code 0x%02x - %s:\n", vcp_code, feature_name);
       // write_sink(msg_sink, "\nGetting data for VCP code 0x%02x - %s:", vcp_code, feature_name);
    }
    Parsed_Nontable_Vcp_Response * code_info = NULL;
@@ -136,42 +140,43 @@ Global_Status_Code get_and_check_nontable_value(
    // with unsupported feature indicator set
    if (output_level >= OL_NORMAL) {
       if (rc == DDCRC_NULL_RESPONSE && !suppress_unsupported) {
-         printf("VCP code 0x%02x (%-30s): Unsupported feature code (Null response)\n", vcp_code, feature_name);
+         fprintf(data_fh,
+                 "VCP code 0x%02x (%-30s): Unsupported feature code (Null response)\n",
+                 vcp_code, feature_name);
          // write_sink(msg_sink, "VCP code 0x%02x (%-30s): Unsupported feature code (Null response)",
          //                      vcp_code, feature_name);
       }
       else if (rc == DDCRC_INVALID_DATA) {
-         printf("VCP code 0x%02x (%-30s): Invalid response\n", vcp_code, feature_name);
+         fprintf(data_fh,
+                 "VCP code 0x%02x (%-30s): Invalid response\n",
+                 vcp_code, feature_name);
          // write_sink(msg_sink, "VCP code 0x%02x (%-30s): Invalid response",
          //                      vcp_code, feature_name);
       }
       else if (rc == DDCRC_REPORTED_UNSUPPORTED && !suppress_unsupported) {
-         printf("VCP code 0x%02x (%-30s): Unsupported feature code\n", vcp_code, feature_name);
+         fprintf(data_fh,
+                 "VCP code 0x%02x (%-30s): Unsupported feature code\n",
+                 vcp_code, feature_name);
          // write_sink(msg_sink, "VCP code 0x%02x (%-30s): Unsupported feature code",
          //                      vcp_code, feature_name);
       }
    }
 
    else {
-      if (output_level >= OL_VERBOSE)
+      if (output_level >= OL_VERBOSE) {
+         rpt_push_output_dest(msg_fh);
          report_interpreted_nontable_vcp_response(code_info);
-
-      // if interpretation is version dependent and version not already set, get it
-      // DBGMSG("vcp_entry->flags=0x%04x", vcp_entry->flags);
-      // Version_Spec vcp_version = {0,0};
-      // if ( (vcp_entry->flags & VCP_FUNC_VER) )
-#ifdef OLD
-      Version_Spec vcp_version = get_vcp_version_by_display_handle(dh);
-
-      if (output_level != OL_PROGRAM) {
-         char buf[100];
-         vcp_format_nontable_feature_detail(vcp_entry, vcp_version, code_info, buf, 100);
-         printf("VCP code 0x%02x (%-30s): %s\n", vcp_code, feature_name, buf);
-      }   // OUTPUT_NORMAL
-#endif
+         rpt_pop_output_dest();
+      }
    }
+
+   if (rc == DDCRC_NULL_RESPONSE)
+      rc = DDCRC_DETERMINED_UNSUPPORTED;
+
    *pcode_info = code_info;
    return rc;
+
+// TO HERE
 }
 
 
@@ -234,6 +239,7 @@ show_value_for_nontable_feature_table_entry_by_display_handle(
    Global_Status_Code gsc = 0;
 
    Output_Level output_level = get_output_level();
+
    // hack for now:
    if (output_level == OL_PROGRAM) {
       // gsc = dump_nontable_vcp(dh, vcp_entry, data_sink, msg_sink);
@@ -248,6 +254,7 @@ show_value_for_nontable_feature_table_entry_by_display_handle(
          //      msg_sink,
                &code_info
       );
+
       if (gsc == 0) {
          assert(code_info);
          Version_Spec vcp_version = get_vcp_version_by_display_handle(dh);
@@ -256,7 +263,7 @@ show_value_for_nontable_feature_table_entry_by_display_handle(
          // write_sink(data_sink, "VCP code 0x%02x (%-30s): %s\n",
          //                       vcp_code, feature_name, buf);
          // was this printf or append to collector?
-         char * feature_name = get_version_specific_feature_name(vcp_entry, vcp_version);
+         char * feature_name = get_version_sensitive_feature_name(vcp_entry, vcp_version);
          // if (output_level == OL_PROGRAM) {
          //    printf("VCP %02X %5d", vcp_entry->code, code_info->cur_value);
          // }
@@ -266,6 +273,7 @@ show_value_for_nontable_feature_table_entry_by_display_handle(
          // }
          free(code_info);
       }
+   // TO HERE
    }
    DBGMSF(debug, "Done.  Returning %d", gsc);
    // TRCMSG("Done");
@@ -292,13 +300,14 @@ void show_value_for_table_feature_table_entry_by_display_handle(
    Byte vcp_code = vcp_entry->code;
    // char * feature_name = vcp_entry->name;
    Version_Spec vspec = get_vcp_version_by_display_handle(dh);
-   char * feature_name = get_version_specific_feature_name(vcp_entry, vspec);
+   char * feature_name = get_version_sensitive_feature_name(vcp_entry, vspec);
    Output_Level output_level = get_output_level();
    if (output_level >= OL_VERBOSE) {
       printf("\nGetting data for VCP code 0x%02x - %s:\n", vcp_code, feature_name);
       // write_sink(msg_sink, "\nGetting data for VCP code 0x%02x - %s:",
       //                      vcp_code, feature_name);
    }
+
    Buffer * accumulator = NULL;
    Global_Status_Code rc = get_table_vcp_value_by_display_handle(dh, vcp_code, &accumulator);
    if (rc == DDCRC_NULL_RESPONSE) {
@@ -365,6 +374,7 @@ void show_value_for_table_feature_table_entry_by_display_handle(
 
       }
    }
+ // TO HERE
    if (accumulator)
       buffer_free(accumulator, __func__);
    // if (code_info)
@@ -373,7 +383,7 @@ void show_value_for_table_feature_table_entry_by_display_handle(
    // TRCMSG("Done");
    DBGMSGF(debug, "Done.");
 }
-
+#endif
 
 bool is_table_feature_by_display_handle(
         VCP_Feature_Table_Entry *  vcp_entry,
@@ -382,7 +392,7 @@ bool is_table_feature_by_display_handle(
    // bool debug = false;
    bool result = false;
    Version_Spec vcp_version = get_vcp_version_by_display_handle(dh);
-   Version_Feature_Flags feature_flags = get_version_specific_feature_flags(vcp_entry, vcp_version);
+   Version_Feature_Flags feature_flags = get_version_sensitive_feature_flags(vcp_entry, vcp_version);
    assert(feature_flags);
    result = (feature_flags & VCP2_TABLE);
    // DBGMSF(debug, "returning: %d", result);
@@ -428,7 +438,7 @@ check_valid_operation_by_feature_id_and_dh(
 }
 
 
-
+#ifdef OLD
 void show_value_for_feature_table_entry_by_display_handle(
         Display_Handle *           dh,
         VCP_Feature_Table_Entry *  vcp_entry,
@@ -457,6 +467,171 @@ void show_value_for_feature_table_entry_by_display_handle(
 
    TRCMSGTG(tg, "Done");
 }
+#endif
+
+Global_Status_Code
+get_formatted_value_for_feature_table_entry(
+      Display_Handle *           dh,
+      VCP_Feature_Table_Entry *  vcp_entry,
+      bool                       suppress_unsupported,
+      bool                       prefix_value_with_feature_code,
+      char **                    pformatted_value,
+      FILE *                     msg_fh)
+{
+   bool debug = false;
+   Trace_Group tg = (debug) ? 0xff : TRACE_GROUP;
+   TRCMSGTG(tg, "Starting");
+
+   Global_Status_Code gsc = 0;
+
+   *pformatted_value = NULL;
+   Version_Spec vspec = get_vcp_version_by_display_handle(dh);
+   Byte feature_code = vcp_entry->code;
+   char * feature_name = get_version_sensitive_feature_name(vcp_entry, vspec);
+   bool is_table_feature = is_table_feature_by_display_handle(vcp_entry, dh);
+   VCP_Call_Type feature_type = (is_table_feature) ? TABLE_VCP_CALL : NON_TABLE_VCP_CALL;
+   Output_Level output_level = get_output_level();
+   if (output_level >= OL_VERBOSE) {
+      fprintf(msg_fh, "\nGetting data for VCP code 0x%02x - %s:",
+                            feature_code, feature_name);
+   }
+   Parsed_Vcp_Response * parsed_vcp_response;
+   gsc = get_vcp_value_by_display_handle(
+           dh,
+           feature_code,
+           feature_type,
+           &parsed_vcp_response);
+   // assert ( (gsc==0 && parsed_vcp_response) || (gsc!=0 && !parsed_vcp_response) );
+
+   switch(gsc) {
+   case 0:
+      break;
+
+   case DDCRC_INVALID_DATA:
+      if (output_level >= OL_NORMAL)
+         fprintf(msg_fh, "VCP code 0x%02x (%-30s): Invalid response\n",
+                         feature_code, feature_name);
+      break;
+
+   case DDCRC_NULL_RESPONSE:
+      // for unsupported features, some monitors return null response rather than a valid response
+      // with unsupported feature indicator set
+      if (output_level >= OL_NORMAL && !suppress_unsupported)
+         fprintf(msg_fh, "VCP code 0x%02x (%-30s): Unsupported feature code (Null response)\n",
+                         feature_code, feature_name);
+      gsc = DDCRC_DETERMINED_UNSUPPORTED;
+      break;
+
+   case DDCRC_RETRIES:
+      fprintf(msg_fh, "VCP code 0x%02x (%-30s): Maximum retries exceeded\n",
+                      feature_code, feature_name);
+      break;
+
+   case DDCRC_REPORTED_UNSUPPORTED:
+   case DDCRC_DETERMINED_UNSUPPORTED:
+      if (output_level >= OL_NORMAL && !suppress_unsupported)
+         fprintf(msg_fh, "VCP code 0x%02x (%-30s): Unsupported feature code\n",
+                         feature_code, feature_name);
+      break;
+
+   default:
+      if (output_level >= OL_NORMAL)
+      fprintf(msg_fh, "VCP code 0x%02x (%-30s): Invalid response. status code=%s\n",
+             feature_code, feature_name, gsc_desc(gsc));
+   }
+
+   // if (gsc == 0)
+   //    report_parsed_vcp_response(parsed_vcp_response, 0);
+
+   assert( (gsc==0 && (feature_type == parsed_vcp_response->response_type)) || (gsc!=0) );
+   if (gsc == 0) {
+      if (!is_table_feature && output_level >= OL_VERBOSE) {
+         rpt_push_output_dest(msg_fh);
+         Parsed_Nontable_Vcp_Response *  non_table_response = (*parsed_vcp_response).non_table_response;
+         report_interpreted_nontable_vcp_response(non_table_response, 0);
+         rpt_pop_output_dest();
+      }
+
+      if (output_level == OL_PROGRAM) {
+         if (is_table_feature) {                // OL_PROGRAM, is table feature
+            // output VCP code  hex values of bytes
+            Buffer * accumulator = (*parsed_vcp_response).table_response;
+            int hexbufsize = buffer_length(accumulator) * 3;
+            char * hexbuf = calloc(hexbufsize, sizeof(char));
+            char space = ' ';
+            hexstring2(accumulator->bytes, accumulator->len, &space, false /* upper case */, hexbuf, hexbufsize);
+            char * formatted = calloc(hexbufsize + 20, sizeof(char));
+            snprintf(formatted, hexbufsize+20, "VCP %02X %s\n", feature_code, hexbuf);
+            *pformatted_value = formatted;
+            free(hexbuf);
+         }
+         else {                                // OL_PROGRAM, not table feature
+            Parsed_Nontable_Vcp_Response * code_info = (*parsed_vcp_response).non_table_response;
+            assert(code_info);
+            char buf[200];
+            snprintf(buf, 200, "VCP %02X %5d", vcp_entry->code, code_info->cur_value);
+            *pformatted_value = strdup(buf);
+         }
+      }
+      else  {          // normal (non OL_PROGRAM) output
+         bool ok;
+         char * formatted_data = NULL;
+         // TODO: IMPLEMENT unified vcp_format_feature_detail that takes Parsed_Vcp_Response as argument
+         if (is_table_feature) {               // normal (non OL_PROGRAM) output, table
+            ok = vcp_format_table_feature_detail(
+                                     vcp_entry,
+                                     vspec,
+                                     parsed_vcp_response->table_response,
+                                     &formatted_data);
+            // DBGMSG("vcp_format_table_feature_detail set formatted_data=|%s|", formatted_data);
+            if (!ok) {
+               fprintf(msg_fh, "VCP code 0x%02x (%-30s): !!! UNABLE TO FORMAT OUTPUT",
+                               feature_code, feature_name);
+               gsc = DDCRC_INTERPRETATION_FAILED;
+               // TODO: retry with default output function
+            }
+         }
+         else {                                // normal (non OL_PROGRAM) output, non- table
+            Parsed_Nontable_Vcp_Response * code_info = (*parsed_vcp_response).non_table_response;
+            assert(code_info);
+            formatted_data = calloc(1,100);
+            ok = vcp_format_nontable_feature_detail(vcp_entry, vspec, code_info, formatted_data, 100);
+            // DBGMSG("vcp_format_nontable_feature_detail set formatted_data=|%s|", formatted_data);
+            if (!ok) {
+               fprintf(msg_fh, "VCP code 0x%02x (%-30s): !!! UNABLE TO FORMAT OUTPUT",
+                               feature_code, feature_name);
+               gsc = DDCRC_INTERPRETATION_FAILED;
+               // TODO: retry with default output function
+            }
+         }
+
+         if (ok) {
+            if (prefix_value_with_feature_code) {
+               *pformatted_value = calloc(1, strlen(formatted_data) + 50);
+               snprintf(*pformatted_value, strlen(formatted_data) + 49,
+                        "VCP code 0x%02x (%-30s): %s",
+                        feature_code, feature_name, formatted_data);
+               free(formatted_data);
+            }
+            else {
+                *pformatted_value = formatted_data;
+             }
+
+         }
+      }     // normal (non OL_PROGRAM) output
+
+   }
+
+   // if (*parsed_vcp_response)
+   // free_parsed_vcp_response(*parsed_vcp_response);     // TODO: implement
+
+   TRCMSGTG(tg, "Done.  Returning: %s, *pformatted_value=|%s|", gsc_desc(gsc), *pformatted_value);
+   return gsc;
+}
+
+
+
+
 
 
 #ifdef UNUSED
@@ -515,7 +690,7 @@ void show_feature_set_values_by_display_handle(
       GPtrArray *           collector)
 {
    bool debug = false;
-   DBGMSF(debug, "Starting");
+   DBGMSF(debug, "Starting.  collector=%p", collector);
    Version_Spec vcp_version = get_vcp_version_by_display_handle(dh);
    int features_ct = get_feature_set_size(feature_set);
    VCP_Feature_Subset subset_id = get_feature_set_subset_id(feature_set);  // in anticipation of refactoring
@@ -528,22 +703,45 @@ void show_feature_set_values_by_display_handle(
    else if (subset_id == SUBSET_SUPPORTED) {
       suppress_unsupported = true;
    }
+   bool prefix_value_with_feature_code = true;    // TO FIX
+   FILE * msg_fh = stdout;                        // TO FIX
+   DBGMSF(debug, "features_ct=%d", features_ct);
    for (ndx=0; ndx< features_ct; ndx++) {
       VCP_Feature_Table_Entry * entry = get_feature_set_entry(feature_set, ndx);
+      DBGMSF(debug,"ndx=%d, feature = 0x%02x", ndx, entry->code);
       if (!is_feature_readable_by_vcp_version(entry, vcp_version)) {
          // confuses the output if suppressing unsupported
          if (!suppress_unsupported) {
-            char * feature_name =  get_version_specific_feature_name(entry, vcp_version);
-            printf("Feature 0x%02x (%s) is not readable\n", ndx, feature_name);
+            char * feature_name =  get_version_sensitive_feature_name(entry, vcp_version);
+            printf(standard_feature_format_w_nl,
+                   entry->code, feature_name, "Write-only feature");
          }
       }
       else {
+         char * formatted_value = NULL;
+         // Global_Status_Code gsc =       // unused
+         get_formatted_value_for_feature_table_entry(
+               dh,
+               entry,
+               suppress_unsupported,
+               prefix_value_with_feature_code,
+               &formatted_value,
+               msg_fh);
+         if (formatted_value) {
+            if (collector)
+               g_ptr_array_add(collector, formatted_value);
+            else
+               fprintf(stdout, "%s\n", formatted_value);
+         }
+
+#ifdef EVEN_NEWER_OLD
          show_value_for_feature_table_entry_by_display_handle(
                  dh,
                  entry,
                  collector,   // where to write output
                  suppress_unsupported
                 );
+#endif
 
 #ifdef THE_NEW_OLD
          bool is_table_feature = is_table_feature_by_display_handle(entry, dh);

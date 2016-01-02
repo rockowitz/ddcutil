@@ -134,7 +134,7 @@ app_set_vcp_value_by_display_handle(
          entry = vcp_create_dummy_feature_for_hexid(hexid);
       if (entry) {
          if (!is_feature_writable_by_vcp_version(entry, vspec)) {
-            char * feature_name =  get_version_specific_feature_name(entry, vspec);
+            char * feature_name =  get_version_sensitive_feature_name(entry, vspec);
             printf("Feature %s (%s) is not writable\n", feature, feature_name);
             // gsc = modulate_rc(-EINVAL, RR_ERRNO);    // TEMP - what is appropriate?
             gsc = DDCL_INVALID_OPERATION;

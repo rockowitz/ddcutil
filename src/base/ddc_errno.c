@@ -63,6 +63,11 @@ static Status_Code_Info ddcrc_info[] = {
       EDENTRY(DDCL_ARG                    , "illegal argument"),
       EDENTRY(DDCL_UNIMPLEMENTED          , "unimplemeneted"),
       EDENTRY(DDCL_UNINITIALIZED          , "library uninitialized"),
+
+      EDENTRY(DDCL_UNKNOWN_FEATURE        , "feature not in feature table"),
+      EDENTRY(DDCRC_INTERPRETATION_FAILED , "feature value interpretation function failed"),
+      EDENTRY(DDCRC_MULTI_FEATURE_ERROR   , "at least 1 error occurred on a multi-feature request"),
+
     };
 #undef EDENTRY
 static int ddcrc_desc_ct = sizeof(ddcrc_info)/sizeof(Status_Code_Info);

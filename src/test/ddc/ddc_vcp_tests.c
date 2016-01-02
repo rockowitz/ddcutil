@@ -272,7 +272,7 @@ void probe_get_luminosity(int busno, char * write_mode, char * read_mode) {
             Parsed_Nontable_Vcp_Response * interpretation_ptr = NULL;
             rc2 = get_interpreted_vcp_code(response_packet_ptr, false, &interpretation_ptr);
             if (rc2 == 0)
-               report_interpreted_nontable_vcp_response(interpretation_ptr);
+               report_interpreted_nontable_vcp_response(interpretation_ptr, 0);
          }
       } // read_ok
    } // write_ok

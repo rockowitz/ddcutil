@@ -98,6 +98,7 @@ Status_Code_Info * find_global_status_code_info(Global_Status_Code rc);
 
 // Returns status code description:
 char * gsc_desc(Global_Status_Code rc);   // must be freed after use
+char * gsc_name(Global_Status_Code status_code);   // do not free after use
 
 
 #endif /* STATUS_CODE_MGT_H_ */

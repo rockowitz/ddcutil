@@ -43,6 +43,11 @@
 //   in function: bool format_feature_detail_display_usage_time()
 //   in table validation functions (Benign)
 
+// Standard formatting string for reporting feature codes.
+// Not actually used in this file, but will be used by callers.
+// This seems as good a place as any to put the constant.
+const char* standard_feature_format_wo_nl = "VCP code 0x%02x (%-30s): %s";
+const char* standard_feature_format_w_nl  = "VCP code 0x%02x (%-30s): %s\n";
 
 // Forward references
 int vcp_feature_code_count;
@@ -184,7 +189,7 @@ char * get_feature_name_by_id_and_vcp_version(Byte feature_id, Version_Spec vspe
    char * result = NULL;
    VCP_Feature_Table_Entry * vcp_entry = vcp_find_feature_by_hexid(feature_id);
    if (vcp_entry) {
-      result = get_version_specific_feature_name(vcp_entry, vspec);
+      result = get_version_sensitive_feature_name(vcp_entry, vspec);
       if (!result)
          result = get_non_version_specific_feature_name(vcp_entry);    // fallback
    }
@@ -236,6 +241,64 @@ get_version_specific_feature_flags(
    return result;
 }
 
+
+bool is_feature_supported_in_version(
+      VCP_Feature_Table_Entry * pvft_entry,
+      Version_Spec              vcp_version)
+{
+   bool debug = false;
+   bool result = false;
+   Version_Feature_Flags vflags = get_version_specific_feature_flags(pvft_entry, vcp_version);
+   result = (vflags && !(vflags&VCP2_DEPRECATED));
+   DBGMSF(debug, "Feature = 0x%02x, vcp versinon=%d.%d, returning %s",
+                 pvft_entry->code, vcp_version.major, vcp_version.minor, bool_repr(result) );
+   return result;
+}
+
+
+/* Gets the appropriate VCP flags value for a feature, given
+ * the VCP version for the monitor.
+ *
+ * Arguments:
+ *   pvft_entry  vcp_feature_table entry
+ *   vcp_version VCP version for monitor
+ *
+ * Returns:
+ *   flags
+ */
+Version_Feature_Flags
+get_version_sensitive_feature_flags(
+       VCP_Feature_Table_Entry * pvft_entry,
+       Version_Spec              vcp_version)
+{
+   bool debug = false;
+   Version_Feature_Flags result = get_version_specific_feature_flags(pvft_entry, vcp_version);
+
+   if (!result) {
+      // vcp_version is lower than the first version level at which the field
+      // was defined.  This can occur e.g. if scanning.  Pick the best
+      // possible flags by scanning up in versions.
+      if (pvft_entry->v21_flags)
+         result = pvft_entry->v21_flags;
+      else if (pvft_entry->v30_flags)
+         result = pvft_entry->v30_flags;
+      else if (pvft_entry->v22_flags)
+         result = pvft_entry->v22_flags;
+      if (!result)
+         DBGMSG("Feature = 0x%02x, Version=%d.%d: No version sensitive feature flags found",
+                pvft_entry->code, vcp_version.major, vcp_version.minor);
+
+   }
+
+   DBGMSF(debug, "Feature = 0x%02x, vcp version=%d.%d, returning 0x%02x",
+          pvft_entry->code, vcp_version.major, vcp_version.minor, result);
+   return result;
+}
+
+
+
+
+
 bool has_version_specific_features(VCP_Feature_Table_Entry * pentry) {
    int ct = 0;
    if (pentry->v20_flags)  ct++;
@@ -274,7 +337,7 @@ bool is_feature_readable_by_vcp_version(
        VCP_Feature_Table_Entry * pvft_entry,
        Version_Spec vcp_version)
 {
-   bool result = (get_version_specific_feature_flags(pvft_entry, vcp_version) & VCP2_READABLE );
+   bool result = (get_version_sensitive_feature_flags(pvft_entry, vcp_version) & VCP2_READABLE );
    // DBGMSG("code=0x%02x, vcp_version=%d.%d, returning %d",
    //        pvft_entry->code, vcp_version.major, vcp_version.minor, result);
    return result;
@@ -285,7 +348,7 @@ bool is_feature_writable_by_vcp_version(
        VCP_Feature_Table_Entry * pvft_entry,
        Version_Spec vcp_version)
 {
-   return (get_version_specific_feature_flags(pvft_entry, vcp_version) & VCP2_WRITABLE );
+   return (get_version_sensitive_feature_flags(pvft_entry, vcp_version) & VCP2_WRITABLE );
 }
 
 // Checks if the table/non-table choice for a feature is version sensitive
@@ -332,7 +395,7 @@ Feature_Value_Entry * get_version_specific_sl_values(
 
 
 
-char * get_version_specific_feature_name(
+char * get_version_sensitive_feature_name(
        VCP_Feature_Table_Entry * pvft_entry,
        Version_Spec              vcp_version)
 {
@@ -352,11 +415,20 @@ char * get_version_specific_feature_name(
       result = pvft_entry->v20_name;
 
    if (!result) {
-   //    DBGMSG("Using original name field");
-   //    result = pvft_entry->name;
-
-      DBGMSG("Feature = 0x%02x, Version=%d.%d: No version specific feature name found",
-             pvft_entry->code, vcp_version.major, vcp_version.minor);
+      //    DBGMSG("Using original name field");
+      //    result = pvft_entry->name;
+      // vcp_version is lower than the first version level at which the field
+      // was defined.  This can occur e.g. if scanning.  Pick the best
+      // possible name by scanning up in versions.
+      if (pvft_entry->v21_name)
+         result = pvft_entry->v21_name;
+      else if (pvft_entry->v30_name)
+         result = pvft_entry->v30_name;
+      else if (pvft_entry->v22_name)
+         result = pvft_entry->v22_name;
+      if (!result)
+         DBGMSG("Feature = 0x%02x, Version=%d.%d: No version specific feature name found",
+                pvft_entry->code, vcp_version.major, vcp_version.minor);
    }
 
 
@@ -368,7 +440,7 @@ char * get_version_specific_feature_name(
 // for use when we don't know the version
 char * get_non_version_specific_feature_name(VCP_Feature_Table_Entry * pvft_entry) {
    Version_Spec vspec = {2,2};
-   return get_version_specific_feature_name(pvft_entry, vspec);
+   return get_version_sensitive_feature_name(pvft_entry, vspec);
 }
 
 
@@ -1404,6 +1476,18 @@ Feature_Value_Entry xc8_display_controller_type_values[] = {
    {0x11,  "Samsung"},
    {0x12,  "Novatek"},
    {0x13,  "STK"},
+   // end of MCCS 3.0 values, beginning of values added in 2.2:
+   {0x14,  "Silicon Optics"},
+   {0x15,  "Texas Instruments"},
+   {0x16,  "Analogix"},
+   {0x17,  "Quantum Data"},
+   {0x18,  "NXP Semiconductors"},
+   {0x19,  "Chrontel"},
+   {0x1a,  "Parade Technologies"},
+   {0x1b,  "THine Electronics"},
+   {0x1c,  "Trident"},
+   {0x1d,  "Micros"},
+   // end of values added in MCCS 2.2
    {0xff,  "Not defined - a manufacturer designed controller"},
    {0xff, NULL}     // terminator
 };
@@ -1418,6 +1502,10 @@ static Feature_Value_Entry xca_osd_values[] = {
 };
 
 // 0xcc
+// Note in v2.2 spec:
+//   Typo in Version 2.1.  10h should read 0Ah.  If a parser
+//   encounters a display with MCCS v2.1 using 10h it should
+//   auto-correct to 0Ah.
 static Feature_Value_Entry xcc_osd_language_values[] = {
           {0x00, "Reserved value, must be ignored"},
           {0x01, "Chinese (traditional, Hantai)"},
@@ -2267,7 +2355,8 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
      // defined in 2.0, 3.0 has extended consistent explanation
      //.name="Active control",
      //.flags=VCP_RO | VCP_NON_CONT,
-      .nontable_formatter=format_feature_detail_debug_bytes,
+     // .nontable_formatter=format_feature_detail_debug_bytes,
+      .nontable_formatter = format_feature_detail_sl_byte, // TODO: write proper function
 
      .desc= "Read id of one feature that has changed, 0x00 indicates no more",  // my desc
      //.global_flags = VCP_RO,
