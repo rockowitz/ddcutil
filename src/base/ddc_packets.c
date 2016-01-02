@@ -909,28 +909,28 @@ interpret_vcp_feature_response(
 void report_interpreted_nontable_vcp_response(
         Parsed_Nontable_Vcp_Response * interpreted, int depth)
 {
-   rpt_printf(depth,"VCP code:         0x%02x", interpreted->vcp_code);
-   rpt_printf(depth,"valid_response:   %d",     interpreted->valid_response);
-   rpt_printf(depth,"supported_opcode: %d",     interpreted->supported_opcode);
-   rpt_printf(depth,"max_value:        %d",     interpreted->max_value);
-   rpt_printf(depth,"cur_value:        %d",     interpreted->cur_value);
-   rpt_printf(depth,"mh:               0x%02x", interpreted->mh);
-   rpt_printf(depth,"ml:               0x%02x", interpreted->ml);
-   rpt_printf(depth,"sh:               0x%02x", interpreted->sh);
-   rpt_printf(depth,"sl:               0x%02x", interpreted->sl);
+   rpt_vstring(depth,"VCP code:         0x%02x", interpreted->vcp_code);
+   rpt_vstring(depth,"valid_response:   %d",     interpreted->valid_response);
+   rpt_vstring(depth,"supported_opcode: %d",     interpreted->supported_opcode);
+   rpt_vstring(depth,"max_value:        %d",     interpreted->max_value);
+   rpt_vstring(depth,"cur_value:        %d",     interpreted->cur_value);
+   rpt_vstring(depth,"mh:               0x%02x", interpreted->mh);
+   rpt_vstring(depth,"ml:               0x%02x", interpreted->ml);
+   rpt_vstring(depth,"sh:               0x%02x", interpreted->sh);
+   rpt_vstring(depth,"sl:               0x%02x", interpreted->sl);
 }
 
 
 void   report_parsed_vcp_response(Parsed_Vcp_Response * response, int depth) {
-   rpt_printf(depth, "Parsed_Vcp_Reponse at %p:", response);
+   rpt_vstring(depth, "Parsed_Vcp_Reponse at %p:", response);
 
-   rpt_printf(depth, "response_type:   %d",   response->response_type);
+   rpt_vstring(depth, "response_type:   %d",   response->response_type);
    if (response->response_type == NON_TABLE_VCP_CALL) {
-      rpt_printf(depth, "non_table_response at %p:", response->non_table_response);
+      rpt_vstring(depth, "non_table_response at %p:", response->non_table_response);
       report_interpreted_nontable_vcp_response(response->non_table_response, depth+1);
    }
    else {
-      rpt_printf(depth, "table_response at %p", response->table_response);
+      rpt_vstring(depth, "table_response at %p", response->table_response);
    }
 }
 

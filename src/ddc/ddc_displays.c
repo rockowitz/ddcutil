@@ -250,9 +250,9 @@ void ddc_report_active_display(Display_Info * curinfo, int depth) {
 
       // printf("VCP version:   %d.%d\n", vspec.major, vspec.minor);
       if (vspec.major == 0)
-         rpt_printf(depth, "VCP version: detection failed");
+         rpt_vstring(depth, "VCP version: detection failed");
       else
-         rpt_printf(depth, "VCP version:         %d.%d", vspec.major, vspec.minor);
+         rpt_vstring(depth, "VCP version:         %d.%d", vspec.major, vspec.minor);
 
       if (output_level >= OL_VERBOSE) {
          // display controller mfg, firmware version
@@ -270,7 +270,7 @@ void ddc_report_active_display(Display_Info * curinfo, int depth) {
             char * mfg_name =  get_feature_value_name(
                                   vals,
                                   code_info->sl);
-            rpt_printf(depth, "Controller mfg:      %s", (mfg_name) ? mfg_name : "not set");
+            rpt_vstring(depth, "Controller mfg:      %s", (mfg_name) ? mfg_name : "not set");
             if (mfg_name) {
                Global_Status_Code gsc = get_nontable_vcp_value_by_display_handle(
                         dh,
@@ -280,7 +280,7 @@ void ddc_report_active_display(Display_Info * curinfo, int depth) {
                   DBGMSG("get_vcp_by_display_ref() returned %s", gsc_desc(gsc));
                }
                else {
-                  rpt_printf(depth, "Firmware version:    %d.%d", code_info->sh, code_info->sl);
+                  rpt_vstring(depth, "Firmware version:    %d.%d", code_info->sh, code_info->sl);
                }
             }
          }
@@ -310,16 +310,16 @@ int ddc_report_active_displays(int depth) {
    for (ndx=0; ndx<display_list->ct; ndx++) {
       Display_Info * curinfo = &display_list->info_recs[ndx];
       if (curinfo->dispno == -1)
-         rpt_printf(depth, "Invalid display");
+         rpt_vstring(depth, "Invalid display");
       else {
-         rpt_printf(depth, "Display %d", curinfo->dispno);
+         rpt_vstring(depth, "Display %d", curinfo->dispno);
          valid_display_ct++;
       }
       ddc_report_active_display(curinfo, depth+1);
       puts("");
    }
    if (valid_display_ct == 0)
-      rpt_printf(depth, "No active displays found");
+      rpt_vstring(depth, "No active displays found");
    return valid_display_ct;
 }
 

@@ -106,7 +106,7 @@ void rpt_title(char * title, int depth) {
 
 
 // n. depth parm is first on this function because of variable args
-void rpt_printf(int depth, char * format, ...)
+void rpt_vstring(int depth, char * format, ...)
 {
    // assemble the message text 
    char buffer[300];

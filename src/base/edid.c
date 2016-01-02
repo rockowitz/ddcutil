@@ -231,24 +231,24 @@ void report_parsed_edid(Parsed_Edid * edid, bool verbose, int depth) {
    int d1 = depth+1;
    // verbose = true;
    if (edid) {
-      rpt_printf(depth,"EDID synopsis:");
+      rpt_vstring(depth,"EDID synopsis:");
 
-      rpt_printf(d1,"Mfg id:           %s",          edid->mfg_id);
-      rpt_printf(d1,"Model:            %s",          edid->model_name);
-      rpt_printf(d1,"Serial number:    %s",          edid->serial_ascii);
+      rpt_vstring(d1,"Mfg id:           %s",          edid->mfg_id);
+      rpt_vstring(d1,"Model:            %s",          edid->model_name);
+      rpt_vstring(d1,"Serial number:    %s",          edid->serial_ascii);
       char * title = (edid->is_model_year) ? "Model year" : "Manufacture year";
-      rpt_printf(d1,"%-16s: %d", title, edid->year);
-      rpt_printf(d1,"EDID version:     %d.%d", edid->edid_version_major, edid->edid_version_minor);
+      rpt_vstring(d1,"%-16s: %d", title, edid->year);
+      rpt_vstring(d1,"EDID version:     %d.%d", edid->edid_version_major, edid->edid_version_minor);
 
       if (verbose) {
-         rpt_printf(d1,"EDID hex dump:");
+         rpt_vstring(d1,"EDID hex dump:");
          FILE * fh = rpt_cur_output_dest();
          fhex_dump(fh, edid->bytes, 128);
       }
    }
    else {
       if (verbose)
-         rpt_printf(d1,"No edid");
+         rpt_vstring(d1,"No edid");
    }
 }
 

@@ -39,7 +39,7 @@ void rpt_reset_output_dest_stack();
 
 void rpt_title(char * title, int depth);
 
-void rpt_printf(int depth, char * format, ...) ;
+void rpt_vstring(int depth, char * format, ...) ;
 
 void rpt_structure_loc(char * name, void * ptr, int depth);
 

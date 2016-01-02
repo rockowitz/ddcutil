@@ -184,13 +184,13 @@ void report_io_call_stats(int depth) {
    // int max_name_length = max_event_name_length();
    // not working as variable length string specifier
    // DBGMSG("max_name_length=%d", max_name_length);
-   rpt_printf(d1, "%-40s Count Millisec  (   Nanosec)", "Type");
+   rpt_vstring(d1, "%-40s Count Millisec  (   Nanosec)", "Type");
    for (;ndx < IO_EVENT_TYPE_CT; ndx++) {
       if (io_event_stats[ndx].call_count > 0) {
          IO_Event_Type_Stats* curstat = &io_event_stats[ndx];
          char buf[100];
          snprintf(buf, 100, "%-17s (%s)", curstat->desc, curstat->name);
-         rpt_printf(d1, "%-40s  %4d  %7ld  (%10ld)",
+         rpt_vstring(d1, "%-40s  %4d  %7ld  (%10ld)",
                      buf,
                      curstat->call_count,
                      curstat->call_nanosec / (1000*1000),
@@ -200,7 +200,7 @@ void report_io_call_stats(int depth) {
          total_nanos += curstat->call_nanosec;
       }
    }
-   rpt_printf(d1, "%-40s  %4d  %7ld  (%10ld)",
+   rpt_vstring(d1, "%-40s  %4d  %7ld  (%10ld)",
                "Totals:",
                total_ct,
                total_nanos / (1000*1000),
@@ -213,9 +213,9 @@ void report_io_call_stats(int depth) {
 void report_one_call_stat(Single_Call_Stat * pstats, int depth) {
    if (pstats) {
 
-      rpt_printf(depth, "Total %-10s calls:                        %7d",
+      rpt_vstring(depth, "Total %-10s calls:                        %7d",
                   pstats->stat_name, pstats->total_call_ct);
-      rpt_printf(depth, "Total %-10s call milliseconds (nanosec):  %7ld  (%10ld)",
+      rpt_vstring(depth, "Total %-10s call milliseconds (nanosec):  %7ld  (%10ld)",
                   pstats->stat_name,
                   pstats->total_call_nanosecs / (1000*1000),
                   pstats->total_call_nanosecs);
