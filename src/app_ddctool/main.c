@@ -70,6 +70,9 @@
 #include "cmdline/parsed_cmd.h"
 #include "cmdline/cmd_parser.h"
 
+#include "app_ddctool/app_setvcp.h"
+#include "app_ddctool/app_getvcp.h"
+
 
 
 //
@@ -90,7 +93,7 @@ void report_stats(Stats_Type stats) {
    if (stats & STATS_TRIES) {
       puts("");
       // retry related stats
-      ddc_show_max_tries();
+      ddc_show_max_tries(stdout);
       ddc_report_write_only_stats();
       ddc_report_write_read_stats();
       ddc_report_multi_part_read_stats();
@@ -206,7 +209,7 @@ int main(int argc, char *argv[]) {
       set_sleep_strategy(parsed_cmd->sleep_strategy);
 
    if (parsed_cmd->cmd_id == CMDID_LISTVCP) {
-      vcp_list_feature_codes();
+      vcp_list_feature_codes(stdout);
       main_rc = EXIT_SUCCESS;
    }
 
@@ -278,7 +281,7 @@ int main(int argc, char *argv[]) {
          perform_get_capabilities(dref);
 
          printf("\n\nScanning all VCP feature codes for display %d\n", dispno);
-         show_vcp_values_by_display_ref(dref, SUBSET_SCAN, NULL);
+         app_show_vcp_subset_values_by_display_ref(dref, SUBSET_SCAN);
       }
       printf("\nDisplay scanning complete.\n");
 
@@ -313,16 +316,16 @@ int main(int argc, char *argv[]) {
 
                // n. show_vcp_values_by_display_ref() returns void
                if ( streq(us,"ALL" )) {
-                  show_vcp_values_by_display_ref(dref, SUBSET_ALL, NULL);
+                  app_show_vcp_subset_values_by_display_ref(dref, SUBSET_ALL);
                }
                else if ( is_abbrev(us,"SUPPORTED",3 )) {
-                  show_vcp_values_by_display_ref(dref, SUBSET_SUPPORTED, NULL);
+                  app_show_vcp_subset_values_by_display_ref(dref, SUBSET_SUPPORTED);
                 }
                else if ( is_abbrev(us,"SCAN",3 )) {
-                  show_vcp_values_by_display_ref(dref, SUBSET_SCAN, NULL);
+                  app_show_vcp_subset_values_by_display_ref(dref, SUBSET_SCAN);
                }
                else if ( is_abbrev(us, "COLORMGT",3) ) {
-                  show_vcp_values_by_display_ref(dref, SUBSET_COLORMGT, NULL);
+                  app_show_vcp_subset_values_by_display_ref(dref, SUBSET_COLORMGT);
                }
                else if ( is_abbrev(us, "PROFILE",3) ) {
                   // DBGMSG("calling setGlobalMsgLevel(%d), new value: %s   ", TERSE, msgLevelName(TERSE) );
@@ -332,10 +335,10 @@ int main(int argc, char *argv[]) {
 #endif
                   // if (dref->ddc_io_mode == DDC_IO_DEVI2C)
                   //    i2c_report_bus(dref->busno);
-                  show_vcp_values_by_display_ref(dref, SUBSET_PROFILE, NULL);
+                  app_show_vcp_subset_values_by_display_ref(dref, SUBSET_PROFILE);
                }
                else {
-                  show_single_vcp_value_by_display_ref(dref, parsed_cmd->args[0], parsed_cmd->force);
+                  app_show_single_vcp_value_by_display_ref(dref, parsed_cmd->args[0], parsed_cmd->force);
                }
                free(us);
                main_rc = EXIT_SUCCESS;
@@ -352,7 +355,11 @@ int main(int argc, char *argv[]) {
                int argNdx;
                Global_Status_Code rc = 0;
                for (argNdx=0; argNdx < parsed_cmd->argct; argNdx+= 2) {
-                  rc = set_vcp_value_top(dref, parsed_cmd->args[argNdx], parsed_cmd->args[argNdx+1]);
+                  rc = app_set_vcp_value_by_display_ref(
+                          dref,
+                          parsed_cmd->args[argNdx],
+                          parsed_cmd->args[argNdx+1],
+                          parsed_cmd->force);
                   if (rc != 0) {
                      main_rc = EXIT_FAILURE;   // ???
                      break;

@@ -486,7 +486,7 @@ DDCT_Status ddct_get_feature_info(
 // static char  default_feature_name_buffer[40];
 char * ddct_get_feature_name(VCP_Feature_Code feature_code) {
    // do we want get_feature_name()'s handling of mfg specific and unrecognized codes?
-   char * result = get_feature_name(feature_code);
+   char * result = get_feature_name_by_id_only(feature_code);
    // snprintf(default_feature_name_buffer, sizeof(default_feature_name_buffer), "VCP Feature 0x%02x", feature_code);
    // return default_feature_name_buffer;
    return result;
@@ -518,7 +518,7 @@ DDCT_Status ddct_get_nc_feature_value_name(
             rc = DDCL_ARG;
          }
          else {
-            feature_name = find_value_name_new(feature_value_entries, feature_value);
+            feature_name = get_feature_value_name(feature_value_entries, feature_value);
             if (feature_name == NULL)
                rc = DDCL_ARG;               // correct handling for value not found?
             else
@@ -580,7 +580,7 @@ DDCT_Status ddct_set_continuous_vcp_value(
                int              new_value)
 {
    WITH_DH(ddct_dh,  {
-         Global_Status_Code gsc = set_nontable_vcp_value_by_display_handle(dh, feature_code, new_value);
+         Global_Status_Code gsc = set_nontable_vcp_value_by_dh(dh, feature_code, new_value);
          rc = gsc;
       } );
 }

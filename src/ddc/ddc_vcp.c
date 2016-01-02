@@ -71,46 +71,41 @@ static Trace_Group TRACE_GROUP = TRC_DDC;
  *  Returns:
  *     status code from perform_ddc_write_only()
  */
-Global_Status_Code set_nontable_vcp_value_by_display_handle(
+Global_Status_Code set_nontable_vcp_value_by_dh(
                       Display_Handle * dh,
                       Byte             feature_code,
                       int              new_value) {
-   // bool debug = false;
-   // if (debug) {
-   //    DBGMSG("Writing feature 0x%02x , new value = %d", feature_code, new_value);
-   // }
-   TRCMSG("Writing feature 0x%02x , new value = %d\n", feature_code, new_value);
+   bool debug = false;
+   Trace_Group tg = TRACE_GROUP;  if (debug) tg = 0xFF;
+   TRCMSGTG(tg, "Writing feature 0x%02x , new value = %d\n", feature_code, new_value);
 
-   Global_Status_Code rc = 0;
-   // int fd;
-
-   DDC_Packet * request_packet_ptr = NULL;
-
-   request_packet_ptr = create_ddc_setvcp_request_packet(feature_code, new_value, "set_vcp:request packet");
+   DDC_Packet * request_packet_ptr =
+      create_ddc_setvcp_request_packet(feature_code, new_value, "set_vcp:request packet");
    // DBGMSG("create_ddc_getvcp_request_packet returned packet_ptr=%p", request_packet_ptr);
    // dump_packet(request_packet_ptr);
 
-   rc = ddc_write_only_with_retry(dh, request_packet_ptr);
+   Global_Status_Code gsc = ddc_write_only_with_retry(dh, request_packet_ptr);
 
    if (request_packet_ptr)
       free_ddc_packet(request_packet_ptr);
 
    // DBGMSG("Returning %p", interpretation_ptr);
-   return rc;
+   return gsc;
 }
 
 
+#ifdef APPARENTLY_UNUSED
 /* Sets a new VCP feature value.
  *
  * Arguments:
- *    pDisp         display reference
+ *    dref          display reference
  *    feature_code  VCP feature code
  *    new_value     new value
  *
  *  Returns:
  *     status code from perform_ddc_write_only()
  */
-Global_Status_Code set_nontable_vcp_value_by_display_ref(
+Global_Status_Code set_nontable_vcp_value_by_dr(
                       Display_Ref * dref,
                       Byte          feature_code,
                       int           new_value) {
@@ -125,33 +120,11 @@ Global_Status_Code set_nontable_vcp_value_by_display_ref(
    TRCMSG("Writing feature 0x%02x for %s, new value = %d\n", feature_code,
              display_ref_short_name_r(dref, buf, 100 ), new_value);
    Display_Handle * pDispHandle = ddc_open_display(dref, EXIT_IF_FAILURE);
-   Global_Status_Code rc = set_nontable_vcp_value_by_display_handle( pDispHandle, feature_code, new_value);
+   Global_Status_Code rc = set_nontable_vcp_value_by_dh( pDispHandle, feature_code, new_value);
    ddc_close_display(pDispHandle);
    return rc;
 }
-
-
-#ifdef OLD
-/* Similar to set_vcp_by_display_ref(), but specifies the feature using
- * a VCP feature table entry.
- */
-// corresponds to show_vcp
-Global_Status_Code put_vcp_by_display_ref(Display_Ref * pdisp, VCP_Feature_Table_Entry * vcp_entry, int new_value) {
-   Byte vcp_code = vcp_entry->code;
-   // char * feature_name = vcp_entry->name;
-   // printf("\nSetting new value for VCP code 0x%02x - %s:\n", vcp_code, feature_name);
-
-   Global_Status_Code rc = set_nontable_vcp_value_by_display_ref(pdisp, vcp_code, new_value);
-
-   if (rc != 0) {
-      printf("Setting value failed. rc=%d: %s\n", rc , gsc_desc(rc));
-   }
-
-   return rc;
-   // DBGMSG("Done");
-}
 #endif
-
 
 //
 // Get and show VCP values
@@ -172,20 +145,8 @@ Global_Status_Code get_nontable_vcp_value_by_display_handle(
        Byte                   feature_code,
        Preparsed_Nontable_Vcp_Response** ppInterpretedCode)
 {
-   // char buf0[100];
-   // bool debug = false;
-
-   // if (debug)
-   //    printf("(%s) Reading feature 0x%02x for %s\n",
-   //       __func__,
-   //       feature_code,
-   //       displayRefShortName(pDisp, buf0, 100)
-   //       );
-
    bool debug = false;
-   Trace_Group tg = TRACE_GROUP;
-   if (debug) tg = 0xFF;
-   // DBGMSG("Reading feature 0x%02x", feature_code);
+   Trace_Group tg = TRACE_GROUP;  if (debug) tg = 0xFF;
    TRCMSGTG(tg, "Reading feature 0x%02x", feature_code);
 
    Global_Status_Code rc = 0;
@@ -209,8 +170,6 @@ Global_Status_Code get_nontable_vcp_value_by_display_handle(
            expected_subtype,
            &response_packet_ptr
         );
-   // if (debug)
-   //    DBGMSG("perform_ddc_write_read_with_retry() returned %d", rc);
    TRCMSGTG(tg, "perform_ddc_write_read_with_retry() returned %s\n", gsc_desc(rc));
 
    if (rc == 0) {
@@ -240,8 +199,6 @@ Global_Status_Code get_nontable_vcp_value_by_display_handle(
    if (response_packet_ptr)
       free_ddc_packet(response_packet_ptr);
 
-   // if (debug)
-   //    DBGMSG("Returning %p", interpretation_ptr);
    TRCMSGTG(tg, "Returning %p\n", __func__, interpretation_ptr);
    *ppInterpretedCode = interpretation_ptr;
    return rc;
@@ -265,8 +222,7 @@ Global_Status_Code get_table_vcp_value_by_display_handle(
        Buffer**               pp_table_bytes)
 {
    bool debug = false;
-   Trace_Group tg = TRACE_GROUP;
-   if (debug) tg = 0xFF;
+   Trace_Group tg = TRACE_GROUP;  if (debug) tg = 0xFF;
    TRCMSGTG(tg, "Starting. Reading feature 0x%02x", feature_code);
 
    Global_Status_Code gsc = 0;
@@ -294,7 +250,7 @@ Global_Status_Code get_table_vcp_value_by_display_handle(
 
 
 Global_Status_Code get_nontable_vcp_value_by_display_ref(
-                      Display_Ref *          pDisp,
+                      Display_Ref *          dref,
                       Byte                   feature_code,
                       Preparsed_Nontable_Vcp_Response** ppInterpretedCode) {
    char buf0[100];
@@ -303,10 +259,10 @@ Global_Status_Code get_nontable_vcp_value_by_display_ref(
 
    TRCMSG("Reading feature 0x%02x for %s\n",
          feature_code,
-         display_ref_short_name_r(pDisp, buf0, 100)
+         display_ref_short_name_r(dref, buf0, 100)
          );
 
-   Display_Handle * pDispHandle = ddc_open_display(pDisp, EXIT_IF_FAILURE);
+   Display_Handle * pDispHandle = ddc_open_display(dref, EXIT_IF_FAILURE);
    Global_Status_Code rc = get_nontable_vcp_value_by_display_handle(pDispHandle, feature_code, ppInterpretedCode);
    ddc_close_display(pDispHandle);
 

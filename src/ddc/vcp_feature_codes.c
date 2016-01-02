@@ -39,6 +39,10 @@
 
 #include "ddc/vcp_feature_codes.h"
 
+// Direct writes to stdout,stderr:
+//   in function: bool format_feature_detail_display_usage_time()
+//   in table validation functions (Benign)
+
 
 // Forward references
 int vcp_feature_code_count;
@@ -131,8 +135,8 @@ static char * vcp_interpret_version_feature_flags(Version_Feature_Flags flags, c
 
 
 
-void vcp_list_feature_codes() {
-   printf("Recognized VCP feature codes:\n");
+void vcp_list_feature_codes(FILE * fh) {
+   fprintf(fh, "Recognized VCP feature codes:\n");
    char buf[200];
    char buf2[200];
    //  TODO make listvcp respect display to get version?
@@ -148,12 +152,12 @@ void vcp_list_feature_codes() {
          vermsg = " (Version specific interpretation)";
       snprintf(buf2, sizeof(buf2), "%s%s", buf, vermsg);
 
-      printf("  %02x - %-40s  %s\n",
-             entry.code,
-             get_non_version_specific_feature_name(&entry),
-             // vcp_interpret_feature_flags(entry.flags, buf, 200)   // *** TODO: HOW TO HANDLE THIS w/o version?
-             buf2
-            );
+      fprintf(fh, "  %02x - %-40s  %s\n",
+                  entry.code,
+                  get_non_version_specific_feature_name(&entry),
+                  // vcp_interpret_feature_flags(entry.flags, buf, 200)   // *** TODO: HOW TO HANDLE THIS w/o version?
+                  buf2
+             );
    }
 }
 
@@ -163,7 +167,7 @@ void vcp_list_feature_codes() {
 // Miscellaneous VCP_Feature_Table lookup functions
 //
 
-char * get_feature_name(Byte feature_id) {
+char * get_feature_name_by_id_only(Byte feature_id) {
    char * result = NULL;
    VCP_Feature_Table_Entry * vcp_entry = vcp_find_feature_by_hexid(feature_id);
    if (vcp_entry)
@@ -319,7 +323,7 @@ Feature_Value_Entry * get_version_specific_sl_values(
          result = pvft_entry->v21_sl_values;
 
    if (!result)
-      result = pvft_entry->nc_sl_values;
+      result = pvft_entry->default_sl_values;
 
    DBGMSF(debug, "Feature = 0x%02x, vcp version=%d.%d, returning %p",
           pvft_entry->code, vcp_version.major, vcp_version.minor, result);
@@ -470,27 +474,23 @@ VCP_Feature_Table_Entry * vcp_get_feature_table_entry(int ndx) {
  * Returns:
  *   created VCP_Feature_Table_Entry
  */
-static VCP_Feature_Table_Entry * vcp_create_dummy_feature_for_hexid(Byte id) {
+VCP_Feature_Table_Entry * vcp_create_dummy_feature_for_hexid(Byte id) {
    // memory leak
    VCP_Feature_Table_Entry* pentry = calloc(1, sizeof(VCP_Feature_Table_Entry) );
    pentry->code = id;
    if (id >= 0xe0) {
-      // pentry->name = "Manufacturer Specific";
       pentry->v20_name = "Manufacturer Specific";
    }
    else {
-      // pentry->name = "Unknown feature";
       pentry->v20_name = "Unknown feature";
    }
-   // VCP_SYNTHETIC => caller should free
-   // pentry->flags = VCP_READABLE;    // so readability tests pass
    pentry->nontable_formatter = format_feature_detail_debug_continuous;
-   pentry->v20_flags = VCP2_RO | VCP2_STD_CONT;
-   pentry->vcp_global_flags = VCP2_SYNTHETIC;
+   pentry->v20_flags = VCP2_RW | VCP2_STD_CONT;
+   pentry->vcp_global_flags = VCP2_SYNTHETIC;   // indicates caller should free
    return pentry;
 }
 
-
+#ifdef DEPRECATED
 /* Creates a dummy VCP feature table entry for a feature code,
  * based on a a character string representation of the code.
  * It is the responsibility of the caller to free this memory.
@@ -515,7 +515,7 @@ VCP_Feature_Table_Entry * vcp_create_dummy_feature_for_charid(char * id) {
    // DBGMSG("Returning %p", result);
    return result;
 }
-
+#endif
 
 /* Returns an entry in the VCP feature table based on the hex value
  * of its feature code.
@@ -541,7 +541,7 @@ VCP_Feature_Table_Entry * vcp_find_feature_by_hexid(Byte id) {
    return result;
 }
 
-
+#ifdef DEPRECATED
 /* Returns an entry in the VCP feature table based on the character
  * string representation of its feature code.
  *
@@ -571,6 +571,7 @@ VCP_Feature_Table_Entry * vcp_find_feature_by_charid(char * id) {
       DBGMSG("Returning %p", result);
    return result;
 }
+#endif
 
 
 /* Returns an entry in the VCP feature table based on the hex value
@@ -685,8 +686,8 @@ Feature_Value_Entry * find_feature_values_new(Byte feature_code, Version_Spec vc
 //      else {
 //         // DBGMSG("old way");
 //         if (pentry->flags & VCP_NCSL) {
-//            assert(pentry->nc_sl_values);
-//            result = pentry->nc_sl_values;
+//            assert(pentry->v20_sl_values);
+//            result = pentry->v20_sl_values;
 //         }
 //      }
    }
@@ -735,7 +736,7 @@ Feature_Value_Entry * find_feature_values_for_capabilities(Byte feature_code, Ve
  *    explanation string from the Feature_Value_Entry found,
  *    NULL if not found
  */
-char * find_value_name_new(Feature_Value_Entry * value_entries, Byte value_id) {
+char * get_feature_value_name(Feature_Value_Entry * value_entries, Byte value_id) {
    // DBGMSG("Starting. pvalues_for_feature=%p, value_id=0x%02x", pvalues_for_feature, value_id);
    char * result = NULL;
    Feature_Value_Entry *  cur_value = value_entries;
@@ -773,7 +774,7 @@ char * lookup_value_name_new(
           Byte          sl_value) {
    Feature_Value_Entry * values_for_feature = find_feature_values_new(feature_code, vcp_version);
    assert(values_for_feature);
-   char * name = find_value_name_new(values_for_feature, sl_value);
+   char * name = get_feature_value_name(values_for_feature, sl_value);
    if (!name)
       name = "Invalid value";
    return name;
@@ -978,7 +979,7 @@ bool format_feature_detail_select_color_preset(
       ok = false;
    }
    else if (vcp_version.major < 3 || code_info->mh == 0x00) {
-      sl_msg = find_value_name_new(x14_color_preset_absolute_values, code_info->sl);
+      sl_msg = get_feature_value_name(x14_color_preset_absolute_values, code_info->sl);
       if (!sl_msg) {
          sl_msg = "Invalid SL value";
          ok = false;
@@ -1097,7 +1098,8 @@ bool format_feature_detail_display_usage_time(
    // v2 spec says this is a 2 byte value, says nothing about mh, ml
    if (vcp_version.major >= 3) {
       if (code_info->mh != 0x00) {
-         printf("(%s) Data error.  Mh byte = 0x%02x, should 0x00 for display usage time  \n",
+         // FIXME: *** DIRECT WRITE TO SYSOUT ***
+         printf("(%s) Data error.  Mh byte = 0x%02x, should be 0x00 for display usage time\n",
                     __func__, code_info->mh );
       }
       usage_time = (code_info->ml << 16) | (code_info->sh << 8) | (code_info->sl);
@@ -1131,7 +1133,7 @@ bool format_feature_detail_display_controller_type(
    bool ok = true;
    Byte mfg_id = info->sl;
    char *sl_msg = NULL;
-   sl_msg = find_value_name_new(xc8_display_controller_type_values, info->sl);
+   sl_msg = get_feature_value_name(xc8_display_controller_type_values, info->sl);
    if (!sl_msg) {
       sl_msg = "Invalid SL value";
       ok = false;
@@ -1214,6 +1216,7 @@ static Feature_Value_Entry x1e_x1f_auto_setup_values[] = {
 };
 
 // 0x60: These are MCCS V2 values.   In V3, x60 is type table.
+// see also EloView Remote Mgt Local Cmd Set document
 Feature_Value_Entry x60_v2_input_source_values[] = {
       {0x01,  "VGA-1"},
       {0x02,  "VGA-2"},
@@ -1323,6 +1326,7 @@ static Feature_Value_Entry xaa_screen_orientation_values[] = {
       {0xff, NULL}     // terminator
 };
 
+// 0xa5
 static Feature_Value_Entry xa5_window_select_values[] = {
       {0x00, "Full display image area selected except active windows"},
       {0x01, "Window 1 selected"},
@@ -1573,7 +1577,7 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
      //,name="New Control Value",
      //.flags=VCP_RW | VCP_NON_CONT,
      .nontable_formatter = format_feature_detail_new_control_value,   // ??
-     .nc_sl_values = x02_new_control_values,
+     .default_sl_values = x02_new_control_values,
 
      .desc = "Indicates that a display user control (other than power) has been"
              "used to change and save (or autosave) a new value.",
@@ -1587,7 +1591,7 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
      //,name="Soft controls",
      //.flags=VCP_RW | VCP_NON_CONT,
      //.formatter = ?
-     .nc_sl_values = x03_soft_controls_values,
+     .default_sl_values = x03_soft_controls_values,
 
      .desc = "Allows display controls to be used as soft keys",
      //.global_flags = VCP_RW,
@@ -1766,7 +1770,7 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
      //.flags=VCP_RW | VCP_NON_CONT | VCP_FUNC_VER,
      // //.flags2=VCP_FUNC_VER,       // interpretation varies depending on VCP version
      .nontable_formatter=format_feature_detail_select_color_preset,
-     .nc_sl_values= x14_color_preset_absolute_values,
+     .default_sl_values= x14_color_preset_absolute_values,
 
      .desc="Select a specified color temperature",
      //.global_flags = VCP_RW,
@@ -1829,7 +1833,7 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
      //.flags=VCP_RW | VCP_NON_CONT | VCP_NCSL,
      // .formatter=format_feature_detail_auto_setup,
      .nontable_formatter=format_feature_detail_sl_lookup_new,
-      .nc_sl_values = x1e_x1f_auto_setup_values,
+      .default_sl_values = x1e_x1f_auto_setup_values,
 
       // from 2.0:
       .desc="Perform autosetup function (H/V position, clock, clock phase, "
@@ -1846,7 +1850,7 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
      //.flags=VCP_RW | VCP_NON_CONT | VCP_COLORMGT | VCP_NCSL,
       // .formatter=format_feature_detail_auto_setup,
       .nontable_formatter=format_feature_detail_sl_lookup_new,
-       .nc_sl_values = x1e_x1f_auto_setup_values,
+       .default_sl_values = x1e_x1f_auto_setup_values,
 
        .desc="Perform color autosetup function (R/G/B gain and offset, A/D setup, etc. ",
        //.global_flags = VCP_RW,
@@ -2393,7 +2397,7 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
      //.flags= VCP_RW | VCP_TYPE_V2NC_V3T | VCP_NCSL,   // MCCS 2.0: NC, MCCS 3.0: T
      .nontable_formatter=format_feature_detail_sl_lookup_new,    // used only for V2
      //  .formatter=format_feature_detail_debug_bytes,
-     .nc_sl_values = x60_v2_input_source_values,     // used only for V2
+     .default_sl_values = x60_v2_input_source_values,     // used only for V2
 
      .desc = "Selects active video source",
      //.global_flags = VCP_RW,
@@ -2426,7 +2430,7 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
      .desc="Selects a group of speakers",
      //.global_flags = VCP_RW,
      .v21_flags = VCP2_RW | VCP2_SIMPLE_NC,
-     .v21_sl_values = x63_speaker_select_values,
+     .default_sl_values = x63_speaker_select_values,
      .v21_name = "Speaker Select",
    },
    {
@@ -2453,7 +2457,7 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
       //.global_flags = VCP_RW,
       .v21_flags = VCP2_RW | VCP2_SIMPLE_NC,
       .v21_name = "Ambient light sensor",
-      .v21_sl_values = x66_ambient_light_sensor_values,
+      .default_sl_values = x66_ambient_light_sensor_values,
 
    },
    { .code=0x6c,
@@ -2635,7 +2639,7 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
 
      //.name="Placeholder",
      //.flags=VCP_WO | VCP_NON_CONT,
-     .nc_sl_values = x82_horizontal_flip_values,
+     .default_sl_values = x82_horizontal_flip_values,
 
      .desc="Flip picture horizontally",
      // DESIGN ISSUE!!!
@@ -2654,7 +2658,7 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
        // defined in 2.0, not in 3.0?
        //.name="Placeholder",
        //.flags=VCP_RW | VCP_NON_CONT,
-       .nc_sl_values = x84_vertical_flip_values,
+       .default_sl_values = x84_vertical_flip_values,
 
        // DESIGN ISSUE!!!
        // This feature is WO in 2.0 spec, RW in 3.0, what is it in 2.2
@@ -2671,7 +2675,7 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
      .vcp_spec_groups = VCP_SPEC_GEOMETRY,
      //.name="DisplayScaling",
      //.flags = VCP_RW | VCP_NON_CONT,
-     .nc_sl_values = x86_display_scaling_values,
+     .default_sl_values = x86_display_scaling_values,
 
      .desc = "Control the scaling (input vs output) of the display",
      //.global_flags=VCP_RW,
@@ -2685,7 +2689,7 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
      // defined in 2.0, is C in 3.0, assume 2.1 is C as well
      //.flags=VCP_RW | VCP_CONTINUOUS               ,
       .nontable_formatter=format_feature_detail_standard_continuous,
-      .nc_sl_values = x87_sharpness_values,
+      .default_sl_values = x87_sharpness_values,
 
       .desc = "Specifies one of a range of algorithms",
       //.global_flags=VCP_RW,
@@ -2744,7 +2748,7 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
      .vcp_classes = VCP_CLASS_TV,
      //.flags = VCP_RW | VCP_NON_CONT,
      .desc = "Mute (1) or unmute (2) the TV audio",
-     .nc_sl_values = x8d_tv_audio_mute_source_values,
+     .default_sl_values = x8d_tv_audio_mute_source_values,
      //.global_flags = VCP_RW,
      .v20_flags = VCP2_RW | VCP2_SIMPLE_NC,
      .v20_name = "TV-Audio Mute",
@@ -2827,7 +2831,7 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
      // in 2.0,  not in 3.0 or 2.2, what is correct choice for 2.1?
      //.name="Placeholder",
      //.flags = VCP_RW |VCP_NON_CONT,    // something
-     .nc_sl_values = x99_window_control_values,
+     .default_sl_values = x99_window_control_values,
 
      .desc="Enables the brightness and color within a window to be different "
            "from the desktop.",
@@ -2966,7 +2970,7 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
      // v3.0 appears to be identical
      //.name="Window Select",
      //.flags = VCP_RW | VCP_CONTINUOUS,
-     .nc_sl_values = xa5_window_select_values,
+     .default_sl_values = xa5_window_select_values,
 
      .desc = "Change selected window (as defined by 95h..98h)",
      //.global_flags = VCP_RW,
@@ -2980,7 +2984,7 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
      //.flags=VCP_RO  | VCP_NON_CONT | VCP_NCSL,
       // .formatter=format_feature_detail_screen_orientation,
      .nontable_formatter=format_feature_detail_sl_lookup_new,
-      .nc_sl_values=xaa_screen_orientation_values,
+      .default_sl_values=xaa_screen_orientation_values,
 
       .desc="Indicates screen orientation",
       //.global_flags=VCP_RO,
@@ -3032,7 +3036,7 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
      //.flags=VCP_RO | VCP_NON_CONT | VCP_NCSL,
       // .formatter=format_feature_flat_panel_subpixel_layout,
      .nontable_formatter=format_feature_detail_sl_lookup_new,
-      .nc_sl_values=xb2_flat_panel_subpixel_layout_values,
+      .default_sl_values=xb2_flat_panel_subpixel_layout_values,
 
       .desc = "LCD sub-pixel structure",
       //.global_flags = VCP_RO,
@@ -3045,7 +3049,7 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
      //.flags=VCP_RO | VCP_NON_CONT | VCP_NCSL,
       // .formatter=format_feature_detail_display_technology_type,
      .nontable_formatter=format_feature_detail_sl_lookup_new,
-      .nc_sl_values=xb6_v20_display_technology_type_values,
+      .default_sl_values=xb6_v20_display_technology_type_values,
 
       //.global_flags = VCP_RO,
       .v20_flags = VCP2_RO | VCP2_SIMPLE_NC,       // but v3.0 table not upward compatible w 2.0
@@ -3114,7 +3118,7 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
      //.flags=VCP_RW | VCP_NON_CONT  /* |  VCP_NCSL */ ,
      // .formatter=format_feature_detail_sl_lookup_new,    // works, but only interprets mfg id in sl
      .nontable_formatter=format_feature_detail_display_controller_type,
-     .nc_sl_values=xc8_display_controller_type_values,
+     .default_sl_values=xc8_display_controller_type_values,
 
      .desc = "Mfg id of controller and 2 byte manufacturer-specific controller type",
      //.global_flags = VCP_RW,
@@ -3138,7 +3142,7 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
        //.flags=VCP_RW | VCP_NON_CONT  | VCP_NCSL                ,
         // .formatter=format_feature_detail_osd,
        .nontable_formatter=format_feature_detail_sl_lookup_new,
-        .nc_sl_values=xca_osd_values,
+        .default_sl_values=xca_osd_values,
 
         .desc = "Is On Screen Display enabled?",
         //.global_flags = VCP_RW,
@@ -3151,7 +3155,7 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
      //.flags=VCP_RW | VCP_NON_CONT | VCP_NCSL,
      // .formatter=format_feature_detail_osd_language,
      .nontable_formatter=format_feature_detail_sl_lookup_new,
-      .nc_sl_values=xcc_osd_language_values,
+      .default_sl_values=xcc_osd_language_values,
 
       .desc = "On Screen Display languge",
       //.global_flags = VCP_RW,
@@ -3163,7 +3167,7 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
      .vcp_classes = VCP_CLASS_TV,
      //.flags = VCP_RW | VCP_NON_CONT,
      .desc = "Controls scan characteristics (aka format)",
-     .nc_sl_values = xda_scan_mode_values,
+     .default_sl_values = xda_scan_mode_values,
      //.global_flags = VCP_RW,
 
      .v20_flags = VCP2_RW | VCP2_SIMPLE_NC,
@@ -3177,7 +3181,7 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
      //.flags=VCP_RW | VCP_NON_CONT | VCP_NCSL,
      // .formatter=format_feature_detail_power_mode,
      .nontable_formatter=format_feature_detail_sl_lookup_new,
-     .nc_sl_values = xd6_power_mode_values,
+     .default_sl_values = xd6_power_mode_values,
 
      .desc = "DPM and DPMS status",
      //.global_flags = VCP_RW,
@@ -3187,7 +3191,7 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
    },
    { .code=0xd7,                          // DONE - identical in 2.0, 3.0, 2.2
      .vcp_spec_groups = VCP_SPEC_MISC,    // 2.0, 3.0, 2.2
-     .nc_sl_values = xd7_aux_power_output_values,
+     .default_sl_values = xd7_aux_power_output_values,
      .desc="Controls an auxilliary power output from a display to a host device",
      .v20_flags = VCP2_RW | VCP2_SIMPLE_NC,
      .v20_name = "Auxilliary power output",
@@ -3199,7 +3203,7 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
      //.flags=VCP_RW | VCP_NON_CONT | VCP_NCSL,
       // .formatter=format_feature_detail_display_application,
      .nontable_formatter=format_feature_detail_sl_lookup_new,
-      .nc_sl_values=xdc_display_application_values,
+      .default_sl_values=xdc_display_application_values,
 
       .desc="Type of application used on display",  // my desc
       //.global_flags = VCP_RW,
@@ -3237,36 +3241,13 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
 // #pragma GCC diagnostic pop
 int vcp_feature_code_count = sizeof(vcp_code_table)/sizeof(VCP_Feature_Table_Entry);
 
-// not used, no longer well defined
-// VCP_Feature_Table_Entry null_vcp_code_table_entry = { 0x00, "Unknown Feature", 0x00, NULL};
 
 
-#ifdef NO
-void init_vcp_feature_table() {
-   int ndx = 0;
-   for (;ndx < vcp_feature_code_count;ndx++) {
-      vcp_code_table[ndx].nc_sl_values = NULL;
-   }
-   VCP_Feature_Table_Entry * pentry = vcp_find_feature_by_hexid(0xd6);
-   assert(pentry);
-   pentry->nc_sl_values = xd6_power_mode_values;
-
-}
-#endif
-
-#ifdef OLD
-bool compare_rw_flags(VCP_Feature_Flags f1, Version_Feature_Flags f2) {
-    bool ok = true;
-    if ( ( (f1 & VCP_RO) && !(f2 & VCP2_RO) ) || ( !(f1 & VCP_RO) && (f2 & VCP2_RO) )  ||
-         ( (f1 & VCP_RW) && !(f2 & VCP2_RW) ) || ( !(f1 & VCP_RW) && (f2 & VCP2_RW) )  ||
-         ( (f1 & VCP_WO) && !(f2 & VCP2_WO) ) || ( !(f1 & VCP_WO) && (f2 & VCP2_WO) )
-       ) ok = false;
-
-    return ok;
-}
-#endif
-
-int check_one_version_flags(Version_Feature_Flags vflags, char * which_flags, VCP_Feature_Table_Entry entry) {
+int check_one_version_flags(
+      Version_Feature_Flags     vflags,
+      char *                    which_flags,
+      VCP_Feature_Table_Entry * pentry)
+{
    int ct = 0;
    if (vflags && !(vflags & VCP2_DEPRECATED))  {
       if (vflags & VCP2_STD_CONT)     ct++;
@@ -3281,649 +3262,134 @@ int check_one_version_flags(Version_Feature_Flags vflags, char * which_flags, VC
              stderr,
              "code: 0x%02x, exactly 1 of VCP2_STD_CONT, VCP2_COMPLEX_CONT, VCP2_SIMPLE_NC, "
              "VCP2_COMPLEX_NC, VCP2_TABLE, VCP2_WO_TABLE must be set in %s\n",
-             entry.code, which_flags);
+             pentry->code, which_flags);
           ct = -1;
        }
 
-#ifdef OLD
-      if ( ( (entry.flags & VCP_CONTINUOUS) && !(vflags & VCP2_CONT   ) ) ||
-           ( (entry.flags & VCP_NON_CONT  ) && !(vflags & VCP2_NC     ) ) ||
-           ( (entry.flags//.flags_TABLE     ) && !(vflags & VCP2_ANY_TABLE  ) )
-         )
-      {
-         if ( (entry.code != 0xa5) && (entry.code != 0x87) ) {
-            // printf("entry.flags = 0x%04x, vflags = 0x%04x\n", entry.flags, vflags);
-            // printf("(entry.flags & VCP_NON_CONT) = %x%04x, (vflags & VCP2_NC) = 0x%04x\n",
-            //        (entry.flags & VCP_NON_CONT),  (vflags & VCP2_NC) );
-            fprintf(
-                stderr,
-                "code: 0x%02x, types do not match between .flags and %s\n",
-                entry.code, which_flags);
-            ct = -2;
-         }
-      }
-#endif
+
       if (vflags & VCP2_SIMPLE_NC) {
-         if (!entry.nc_sl_values) {
+         if (!pentry->default_sl_values) {
             fprintf(
                stderr,
-               "code: 0x%02x, .flags: %s, VCP2_SIMPLE_NC set but .nc_sl_values == NULL\n",
-               entry.code, which_flags);
+               "code: 0x%02x, .flags: %s, VCP2_SIMPLE_NC set but .default_sl_values == NULL\n",
+               pentry->code, which_flags);
             ct = -2;
          }
       }
-      else if (vflags & VCP2_COMPLEX_NC) {
-         if (!entry.nontable_formatter) {
+      else
+
+      if (vflags & VCP2_COMPLEX_NC) {
+         if (!pentry->nontable_formatter) {
             fprintf(
                stderr,
                "code: 0x%02x, .flags: %s, VCP2_COMPLEX_NC set but .nontable_formatter == NULL\n",
-               entry.code, which_flags);
+               pentry->code, which_flags);
             ct = -2;
          }
       }
       else if (vflags & VCP2_COMPLEX_CONT) {
-         if (!entry.nontable_formatter) {
+         if (!pentry->nontable_formatter) {
             fprintf(
                stderr,
                "code: 0x%02x, .flags: %s, VCP2_COMPLEX_CONT set but .nontable_formatter == NULL\n",
-               entry.code, which_flags);
+               pentry->code, which_flags);
             ct = -2;
          }
       }
-      else if (vflags & VCP2_TABLE) {
-         if (!entry.table_formatter) {
-            fprintf(
-               stderr,
-               "code: 0x%02x, .flags: %s, VCP2_TABLE set but .table_formatter == NULL\n",
-               entry.code, which_flags);
-            ct = -2;
-         }
-      }
+//      // no longer an error.   get_table_feature_detail_function() sets default
+//      else if (vflags & VCP2_TABLE) {
+//         if (!pentry->table_formatter) {
+//            fprintf(
+//               stderr,
+//               "code: 0x%02x, .flags: %s, VCP2_TABLE set but .table_formatter == NULL\n",
+//               pentry->code, which_flags);
+//            ct = -2;
+//         }
+//      }
    }
 
    return ct;
 }
 
+
+/*  If the flags has anything set, and is not deprecated, checks that
+ * exactly 1 of VCP2_RO, VCP2_WO, VCP2_RW is set
+ *
+ * Returns: 1 of a value is set, 0 if no value set, -1 if
+ *          more than 1 value set
+ */
+int check_version_rw_flags(
+      Version_Feature_Flags vflags,
+      char * which_flags,
+      VCP_Feature_Table_Entry * entry)
+{
+   int ct = 0;
+   if (vflags && !(vflags & VCP2_DEPRECATED))  {
+        if (vflags & VCP2_RO) ct++;
+        if (vflags & VCP2_WO) ct++;
+        if (vflags & VCP2_RW) ct++;
+        if (ct != 1) {
+           fprintf(stderr,
+                   "code: 0x%02x, exactly 1 of VCP2_RO, VCP2_WO, VCP2_RW must be set in non-zero %s_flags\n",
+                   entry->code, which_flags);
+           ct = -1;
+        }
+   }
+   return ct;
+}
+
+
 void validate_vcp_feature_table() {
    // DBGMSG("Starting");
    bool ok = true;
+   bool ok2 = true;
    int ndx = 0;
    // return;       // *** TEMP ***
 
+   int total_ct = 0;
    for (;ndx < vcp_feature_code_count;ndx++) {
-      VCP_Feature_Table_Entry entry = vcp_code_table[ndx];
-#ifdef OLD
-      int ct = 0;
-      if (entry.flags & VCP_RO) ct++;
-      if (entry.flags & VCP_WO) ct++;
-      if (entry.flags & VCP_RW) ct++;
-      if (ct != 1) {
-         fprintf(stderr, "code: 0x%02x, exactly 1 of VCP_RO, VCP_WO, VCP_RW must be set in .flags\n", entry.code);
+      VCP_Feature_Table_Entry * pentry = &vcp_code_table[ndx];
+      int cur_ct;
+      cur_ct = check_version_rw_flags(pentry->v20_flags, "v20_flags", pentry);
+      if (cur_ct < 0) ok = false; else total_ct += cur_ct;
+      cur_ct = check_version_rw_flags(pentry->v21_flags, "v21_flags", pentry);
+      if (cur_ct < 0) ok = false; else total_ct += cur_ct;
+      cur_ct = check_version_rw_flags(pentry->v30_flags, "v30_flags", pentry);
+      if (cur_ct < 0) ok = false; else total_ct += cur_ct;
+      cur_ct = check_version_rw_flags(pentry->v22_flags, "v22_flags", pentry);
+      if (cur_ct < 0) ok = false; else total_ct += cur_ct;
+
+      if (ok && total_ct == 0) {
+         fprintf(stderr,
+                 "RW, RO, RW not set in any version specific flags for feature 0x%02x\n",
+                 pentry->code);
          ok = false;
       }
-#endif
 
-#ifdef OLD
-      if (entry//.global_flags) {
-         int ct = 0;
-         if (entry.global_flags & VCP_RO) ct++;
-         if (entry.global_flags & VCP_WO) ct++;
-         if (entry.global_flags & VCP_RW) ct++;
-         if (ct != 1) {
-            fprintf(stderr, "code: 0x%02x, exactly 1 of VCP_RO, VCP_WO, VCP_RW must be set in //.global_flags\n", entry.code);
-            ok = false;
-         }
-         // else
-         //    printf("code: 0x%02x global flags RW checked\n", entry.code);
-      }
-#endif
-      if (entry.v20_flags && !(entry.v20_flags & VCP2_DEPRECATED))  {
-           int ct = 0;
-           if (entry.v20_flags & VCP2_RO) ct++;
-           if (entry.v20_flags & VCP2_WO) ct++;
-           if (entry.v20_flags & VCP2_RW) ct++;
-           if (ct != 1) {
-              fprintf(stderr, "code: 0x%02x, exactly 1 of VCP2_RO, VCP2_WO, VCP2_RW must be set in non-zero .v20_flags\n", entry.code);
-              ok = false;
-           }
-#ifdef OLD
-           if ( !compare_rw_flags(entry.flags, entry.v20_flags) ) {
-              if (entry.code != 0x82 && entry.code!= 0x84) {
-              fprintf(stderr, "code: 0x%02x, RW flags in .flags vs .v20_flags do not match\n", entry.code);
-              ok = false;
-              }
-           }
-#endif
+      total_ct = 0;
+      cur_ct = 0;
+      cur_ct = check_one_version_flags(pentry->v20_flags, ".v20_flags", pentry);
+      if (cur_ct < 0) ok2 = false; else total_ct += 1;
+      cur_ct = check_one_version_flags(pentry->v21_flags, ".v21_flags", pentry);
+      if (cur_ct < 0) ok2 = false; else total_ct += 1;
+      cur_ct = check_one_version_flags(pentry->v30_flags, ".v30_flags", pentry);
+      if (cur_ct < 0) ok2 = false; else total_ct += 1;
+      cur_ct = check_one_version_flags(pentry->v22_flags, ".v22_flags", pentry);
+      if (cur_ct < 0) ok2 = false; else total_ct += 1;
 
-      }
-      if (entry.v21_flags && !(entry.v21_flags & VCP2_DEPRECATED)) {
-           int ct = 0;
-           if (entry.v21_flags & VCP2_RO) ct++;
-           if (entry.v21_flags & VCP2_WO) ct++;
-           if (entry.v21_flags & VCP2_RW) ct++;
-           if (ct != 1) {
-              fprintf(stderr, "code: 0x%02x, exactly 1 of VCP2_RO, VCP2_WO, VCP2_RW must be set in non-zero .v21_flags\n", entry.code);
-              ok = false;
-           }
-#ifdef OLD
-           if ( !compare_rw_flags(entry.flags, entry.v21_flags) ) {
-              if (entry.code != 0x82 && entry.code!= 0x84) {
-              fprintf(stderr, "code: 0x%02x, RW flags in .flags vs .v21_flags do not match\n", entry.code);
-              ok = false;
-              }
-           }
-#endif
-      }
-      if (entry.v30_flags && !(entry.v30_flags & VCP2_DEPRECATED)) {
-            int ct = 0;
-            if (entry.v30_flags & VCP2_RO) ct++;
-            if (entry.v30_flags & VCP2_WO) ct++;
-            if (entry.v30_flags & VCP2_RW) ct++;
-            if (ct != 1) {
-               fprintf(stderr, "code: 0x%02x, exactly 1 of VCP2_RO, VCP2_WO, VCP2_RW must be set in non-zero .v30_flags\n", entry.code);
-               ok = false;
-            }
-#ifdef OLD
-            if ( !compare_rw_flags(entry.flags, entry.v30_flags) ) {
-               if (entry.code != 0x82 && entry.code!= 0x84) {
-               fprintf(stderr, "code: 0x%02x, RW flags in .flags vs .v30_flags do not match\n", entry.code);
-               ok = false;
-               }
-            }
-#endif
-       }
-       if (entry.v22_flags && !(entry.v22_flags & VCP2_DEPRECATED)) {
-            int ct = 0;
-            if (entry.v22_flags & VCP2_RO) ct++;
-            if (entry.v22_flags & VCP2_WO) ct++;
-            if (entry.v22_flags & VCP2_RW) ct++;
-            if (ct != 1) {
-               fprintf(stderr, "code: 0x%02x, exactly 1 of VCP2_RO, VCP2_WO, VCP2_RW must be set in non-zero .v22_flags\n", entry.code);
-               ok = false;
-            }
-#ifdef OLD
-            if ( !compare_rw_flags(entry.flags, entry.v22_flags) ) {
-               if (entry.code != 0x82 && entry.code!= 0x84) {
-                  fprintf(stderr, "code: 0x%02x, RW flags in .flags vs .v22_flags do not match\n", entry.code);
-                  ok = false;
-               }
-            }
-#endif
-       }
-
-#ifdef OLD
-      ct = 0;
-      if (entry.flags & VCP_CONTINUOUS) ct++;
-      if (entry.flags & VCP_NON_CONT)   ct++;
-      if (entry.flags & VCP_TABLE)      ct++;
-      if (entry.flags & VCP_TYPE_V2NC_V3T) ct++;
-      if (ct != 1) {
-          fprintf(
-             stderr,
-             "code: 0x%02x, exactly 1 of VCP_CONTINUOUS, VCP_NON_CONT, VCP_TABLE, VCP_TYPE_V2NC_V3T must be set in .flags\n",
-             entry.code);
-          ok = false;
-       }
-
-
-      if ( (entry.flags & VCP_NCSL) && (entry.nontable_formatter != format_feature_detail_sl_lookup_new)) {
-         fprintf(stderr, "code: 0x%02x, VCP_NCSL set but formatter != feature_detail_sl_lookup_new\n", entry.code);
-         ok = false;
-      }
-#endif
-      int total_ct = 0;
-      bool really_bad = false;
-      int cur_ct = check_one_version_flags(entry.v20_flags, ".v20_flags", entry);
-      if (cur_ct < 0) {
-         ok = false;
-         if (cur_ct < -1)
-            really_bad = true;
-      }
-      else
-         total_ct += 1;
-      if (total_ct == 0 && !really_bad) {
-         fprintf(stderr, "code: 0x%02x, Type not specified in any vnn_flags\n", entry.code);
-         ok = false;
+      if (total_ct == 0 && ok2) {
+         fprintf(stderr, "code: 0x%02x, Type not specified in any vnn_flags\n", pentry->code);
+         ok2 = false;
       }
 
    }
-   if (!ok)
+   if (!(ok && ok2))
       PROGRAM_LOGIC_ERROR(NULL);
 }
 
 void init_vcp_feature_codes() {
    validate_vcp_feature_table();
-#ifdef NO
-   init_vcp_feature_table();
-#endif
 }
-
-
-
-#ifdef OLD
-
-typedef struct {
-   Byte              feature_id;
-   Feature_Value_Entry * value_entries;
-} VCP_Values_For_Feature;
-
-
-VCP_Values_For_Feature sl_values[] = {
-      {0x60, x60_v2_input_source_values},
-//      {0x60, {{0x01, "VGA-1"}, {0x02, "VGA-2"}} }    // fails
-};
-int sl_values_ct = sizeof(sl_values)/sizeof(VCP_Values_For_Feature);
-
-
-VCP_Values_For_Feature * find_feature_values(Byte feature_code) {
-   VCP_Values_For_Feature * result = NULL;
-   int ndx;
-   for (ndx=0; ndx< sl_values_ct; ndx++) {
-      if (sl_values[ndx].feature_id == feature_code) {
-         result = &sl_values[ndx];
-         break;
-      }
-   }
-   return result;
-}
-
-
-
-char * find_value_name(VCP_Values_For_Feature * pvalues_for_feature, Byte value_id) {
-   // DBGMSG("Starting. pvalues_for_feature=%p, value_id=0x%02x", pvalues_for_feature, value_id);
-   Feature_Value_Entry * value_entries = pvalues_for_feature->value_entries;
-   char * result = NULL;
-   Feature_Value_Entry *  cur_value = value_entries;
-   while (cur_value->value_name != NULL) {
-      // DBGMSG("value_code=0x%02x, value_name = %s", cur_value->value_code, cur_value->value_name);
-      if (cur_value->value_code == value_id) {
-         result = cur_value->value_name;
-         // DBGMSG("Found");
-         break;
-      }
-      cur_value++;
-   }
-   return result;
-}
-
-
-
-char * lookup_value_name(Byte feature_code, Byte sl_value) {
-   VCP_Values_For_Feature * values_for_feature = find_feature_values(feature_code);
-   char * name = find_value_name(values_for_feature, sl_value);
-   if (!name)
-      name = "Invalid value";
-   return name;
-}
-
-
-
-
-// 0x60
-// data seen does not correspond to the MCCS spec
-// values taken from EloView Remote Mgt Local Cmd Set document
-bool format_feature_detail_sl_lookup(
-      Preparsed_Nontable_Vcp_Response * code_info,  Version_Spec vcp_version, char * buffer, int bufsz)
-{
-   assert(code_info->vcp_code == 0x60);
-   char * s = lookup_value_name(code_info->vcp_code, code_info->sl);
-
-   snprintf(buffer, bufsz,"%s (sl=0x%02x)", s, code_info->sl);
-   return true;
-}
-
-
-// should not be needed:
-// .formatter = lookup_sl_new
-// .formatter_v3 = table
-
-bool format_feature_detail_input_source(
-         Preparsed_Nontable_Vcp_Response * code_info,  Version_Spec vcp_version, char * buffer, int bufsz)
-{
-   assert(code_info->vcp_code == 0x60);
-
-   // assert vcp_version < 3
-
-   // call
-
-   return true;
-}
-#endif
-
-
-
-
-
-#ifdef OLD
-// 0x1e, 0x1f
-bool format_feature_detail_auto_setup(
-      Preparsed_Nontable_Vcp_Response * code_info, Version_Spec vcp_version, char * buffer, int bufsz)
-{
-   assert(code_info->vcp_code == 0x1e || code_info->vcp_code == 0x1f);
-   char * s = NULL;
-   switch(code_info->sl) {
-      case 0x00: s = "Auto setup not active";                 break;
-      case 0x01: s = "Performing auto setup";                 break;
-      case 0x02: s = "Enable continuous/periodic auto setup"; break;
-      default:   s = "Reserved code, must be ignored";
-   }
-   snprintf(buffer, bufsz,"%s (sl=0x%02x)", s, code_info->sl);
-   return true;
-}
-#endif
-
-
-
-#ifdef OLD
-// 0xaa
-bool format_feature_detail_screen_orientation(
-      Preparsed_Nontable_Vcp_Response * code_info, Version_Spec vcp_version, char * buffer, int bufsz)
-{
-   assert(code_info->vcp_code == 0xaa);
-   char * s = NULL;
-   switch(code_info->sl) {
-      case 0x01: s = "0 degrees";    break;
-      case 0x02: s = "90 degrees";   break;
-      case 0x03: s = "180 degrees";  break;
-      case 0x04: s = "270 degrees";  break;
-      case 0xff: s = "Display cannot supply orientation"; break;
-      default:   s = "Reserved code, must be ignored";
-   }
-   snprintf(buffer, bufsz,"%s (sl=0x%02x)", s, code_info->sl);
-   return true;
-}
-
-// 0xb2
-bool format_feature_flat_panel_subpixel_layout(
-      Preparsed_Nontable_Vcp_Response * code_info, Version_Spec vcp_version, char * buffer, int bufsz)
-{
-   assert(code_info->vcp_code == 0xb2);
-   char * s = NULL;
-   switch(code_info->sl) {
-      case 0x00: s = "Sub-pixel layout not defined";     break;
-      case 0x01: s = "Red/Green/Blue vertical stripe";   break;
-      case 0x02: s = "Red/Green/Blue horizontal stripe"; break;
-      case 0x03: s = "Blue/Green/Red vertical stripe";   break;
-      case 0x04: s = "Blue/Green/Red horizontal stripe"; break;
-      case 0x05: s = "Quad pixel, red at top left";      break;
-      case 0x06: s = "Quad pixel, red at bottom left";   break;
-      case 0x07: s = "Delta (triad)";                   break;
-      case 0x08: s = "Mosaic";                           break;
-      default:   s = "Reserved code, must be ignored";
-   }
-   snprintf(buffer, bufsz,"%s (sl=0x%02x)", s, code_info->sl);
-   return true;
-}
-#endif
-
-#ifdef OLD
-// 0xb6
-bool format_feature_detail_display_technology_type(
-        Preparsed_Nontable_Vcp_Response * code_info, Version_Spec vcp_version, char * buffer, int bufsz)
-{
-   assert(code_info->vcp_code == 0xb6);
-   Byte techtype = code_info->sl;
-          char * typename = NULL;
-          switch(techtype) {
-          case 0x01: typename = "CRT (shadow mask)";      break;
-          case 0x02: typename = "CRT (aperture grill)";   break;
-          case 0x03: typename = "LCD (active matrix)";    break;
-          case 0x04: typename = "LCos";                   break;
-          case 0x05: typename = "Plasma";                 break;
-          case 0x06: typename = "OLED";                   break;
-          case 0x07: typename = "EL";                     break;
-          case 0x08: typename = "Dynamic MEM";            break;
-          case 0x09: typename = "Static MEM";             break;
-          default:   typename = "<reserved code>";
-          }
-    snprintf(buffer, bufsz,
-             "Display technology type:  %s (0x%02x)" ,
-             typename, techtype);
-   return true;
-}
-#endif
-
-#ifdef OLD
-// 0xc8
-bool format_feature_detail_display_controller_type(
-        Preparsed_Nontable_Vcp_Response * info,  Version_Spec vcp_version, char * buffer, int bufsz)
-{
-   assert(info->vcp_code == 0xc8);
-   Byte mfg_id = info->sl;
-   char *mfg_name = NULL;
-   switch (mfg_id) {
-   case 0x01: mfg_name = "Conexant";    break;
-   case 0x02: mfg_name = "Genesis";     break;
-   case 0x03: mfg_name = "Macronix";    break;
-   case 0x04: mfg_name = "MRT";         break;
-   case 0x05: mfg_name = "Mstar";       break;
-   case 0x06: mfg_name = "Myson";       break;
-   case 0x07: mfg_name = "Phillips";    break;
-   case 0x08: mfg_name = "PixelWorks";  break;
-   case 0x09: mfg_name = "RealTek";     break;
-   case 0x0a: mfg_name = "Sage";        break;
-   case 0x0b: mfg_name = "Silicon Image";   break;
-   case 0x0c: mfg_name = "SmartASIC";   break;
-   case 0x0d: mfg_name = "STMicroelectronics";   break;
-   case 0x0e: mfg_name = "Topro";   break;
-   case 0x0f: mfg_name = "Trumpion";   break;
-   case 0x10: mfg_name = "Welltrend";   break;
-   case 0x11: mfg_name = "Samsung";   break;
-   case 0x12: mfg_name = "Novatek";   break;
-   case 0x13: mfg_name = "STK";   break;
-   case 0xff: mfg_name = "Not defined - a manufacturer designed controller";   break;
-   default:   mfg_name = "Reserved value, must be ignored";
-   }
-   // ushort controller_number = info->ml << 8 | info->sh;
-   // spec is inconsistent, controller number can either be ML/SH or MH/ML
-   // observation suggests it's ml and sh
-   snprintf(buffer, bufsz,
-            "Mfg: %s (sl=0x%02x), controller number: mh=0x%02x, ml=0x%02x, sh=0x%02x",
-            mfg_name, mfg_id, info->mh, info->ml, info->sh);
-   return true;
-}
-#endif
-
-
-#ifdef OLD
-// 0xca
-bool format_feature_detail_osd(
-        Preparsed_Nontable_Vcp_Response * code_info, Version_Spec vcp_version, char * buffer, int bufsz)
-{
-   assert(code_info->vcp_code == 0xca);
-   char * s = NULL;
-   switch(code_info->sl) {
-          case 0x01: s = "OSD Disabled";      break;
-          case 0x02: s = "OSD Enabled";       break;
-          case 0xff: s = "Display cannot supply this information";   break;
-          default:   s = "Reserved value, must be ignored";
-    }
-    snprintf(buffer, bufsz,
-             "%s (sl=0x%02x)", s, code_info->sl);
-   return true;
-}
-#endif
-
-#ifdef OLD
-// 0xcc
-bool format_feature_detail_osd_language(
-        Preparsed_Nontable_Vcp_Response * code_info, Version_Spec vcp_version, char * buffer, int bufsz)
-{
-   assert(code_info->vcp_code == 0xcc);
-   char * s = NULL;
-   switch(code_info->sl) {
-          case 0x00: s = "Reserved value, must be ignored";  break;
-          case 0x01: s = "Chinese (traditional, Hantai)";      break;
-          case 0x02: s = "English";   break;
-          case 0x03: s = "French";   break;
-          case 0x04: s = "German";                   break;
-          case 0x05: s = "Italian";                 break;
-          case 0x06: s = "Japanese";                 break;
-          case 0x07: s = "Korean";                 break;
-          case 0x08: s = "Portuguese (Portugal)";                 break;
-          case 0x09: s = "Russian";                 break;
-          case 0x0a: s = "Spanish";                 break;
-          case 0x0b: s = "Swedish";                 break;
-          case 0x0c: s = "Turkish";                 break;
-          case 0x0d: s = "Chinese (simplified / Kantai)";                 break;
-          case 0x0e: s = "Portuguese (Brazil)"; break;
-          case 0x0f: s = "Arabic"; break;
-          case 0x10: s = "Bulgarian"; break;
-          case 0x11: s = "Croatian"; break;
-          case 0x12: s = "Czech  "; break;
-          case 0x13: s = "Danish "; break;
-          case 0x14: s = "Dutch  "; break;
-          case 0x15: s = "Estonian"; break;
-          case 0x16: s = "Finish "; break;
-          case 0x17: s = "Greek  "; break;
-          case 0x18: s = "Hebrew "; break;
-          case 0x19: s = "Hindi  "; break;
-          case 0x1a: s = "Hungarian  "; break;
-          case 0x1b: s = "Latvian"; break;
-          case 0x1c: s = "Lithuanian "; break;
-          case 0x1d: s = "Norwegian  "; break;
-          case 0x1e: s = "Polish "; break;
-          case 0x1f: s = "Romanian  "; break;
-          case 0x20: s = "Serbian"; break;
-          case 0x21: s = "Slovak "; break;
-          case 0x22: s = "Slovenian  "; break;
-          case 0x23: s = "Thai"; break;
-          case 0x24: s = "Ukranian   "; break;
-          case 0x25: s = "Vietnamese                           "; break;
-
-
-          default:   s = "Some other language, interpretation table incomplete";
-          }
-    snprintf(buffer, bufsz,
-        "%s (sl=0x%02x)", s, code_info->sl);
-   return true;
-}
-#endif
-
-#ifdef OLD
-// 0xd6
-bool format_feature_detail_power_mode(
-        Preparsed_Nontable_Vcp_Response * code_info, Version_Spec vcp_version, char * buffer, int bufsz)
-{
-   assert(code_info->vcp_code == 0xd6);
-   Byte techtype = code_info->sl;
-          char * s = NULL;
-          switch(techtype) {
-          case 0x00: s = "Reserved value, must be ignored";  break;
-          case 0x01: s = "DPM: On, DPMS: Off";      break;
-          case 0x02: s = "DPM: Off, DPMS: Standby";   break;
-          case 0x03: s = "DPM: Off, DPMS: Suspend";   break;
-          case 0x04: s = "DPM: Off, DPMS: Off";                   break;
-          case 0x05: s = "Write only value to turn off display";                 break;
-          default:   s = "Reserved value, must be ignored";
-          }
-    snprintf(buffer, bufsz,
-             "%s (sl=0x%02x)", s, techtype);
-   return true;
-}
-#endif
-
-#ifdef OLD
-// 0xdc
-bool format_feature_detail_display_application(
-        Preparsed_Nontable_Vcp_Response * code_info, Version_Spec vcp_version, char * buffer, int bufsz)
-{
-   assert(code_info->vcp_code == 0xdc);
-   char * s = NULL;
-   switch(code_info->sl) {
-          case 0x00: s = "Standard/Default mode";  break;
-          case 0x01: s = "Productivity";      break;
-          case 0x02: s = "Mixed";   break;
-          case 0x03: s = "Movie";   break;
-          case 0x04: s = "User defined";                   break;
-          case 0x05: s = "Games";                 break;
-          case 0x06: s = "Sports"; break;
-          case 0x07: s = "Professional (all signal processing disabled)";  break;
-          case 0x08: s = "Standard/Default mode with intermediate power consumption"; break;
-          case 0x09: s = "Standard/Default mode with low power consumption"; break;
-          case 0x0a: s = "Demonstration"; break;
-          case 0xf0: s = "Dynamic contrast"; break;
-          default:   s = "Reserved value, must be ignored";
-          }
-    snprintf(buffer, bufsz,
-             "%s (sl=0x%02x)", s, code_info->sl);
-   return true;
-}
-#endif
-
-
-
-
-#ifdef OLD
-VCP_Feature_Table_Entry0 vcp_code_table0[] = {
-    {0x02,  "New Control Value",              VCP_RW | VCP_NON_CONT                 , NULL, NULL},
-    {0x04,  "Restore factory defaults",       VCP_WO | VCP_NON_CONT                 , NULL, NULL},
-    {0x05,  "Restore factory lum/contrast",   VCP_WO | VCP_NON_CONT                 , NULL, NULL},
-    {0x06,  "Restore factory geometry dflts", VCP_WO | VCP_NON_CONT                 , NULL, NULL},
-    {0x08,  "Restore factory color defaults", VCP_WO | VCP_NON_CONT                 , NULL, NULL},
-    {0x0b,  "Color temperature increment",    VCP_RO | VCP_NON_CONT   | VCP_COLORMGT, NULL, NULL},
-    {0x0c,  "Color temperature request",      VCP_RW | VCP_CONTINUOUS | VCP_COLORMGT, NULL, NULL},
-    {0x10,  "Luminosity",                     VCP_RW | VCP_CONTINUOUS | VCP_COLORMGT | VCP_PROFILE, NULL, NULL},
-    {0x11,  "Flesh tone enhancement",         VCP_RW | VCP_NON_CONT   | VCP_COLORMGT, NULL, NULL},
-    {0x12,  "Contrast",                       VCP_RW | VCP_CONTINUOUS | VCP_COLORMGT | VCP_PROFILE, NULL, NULL},
-    {0x13,  "Backlight",                      VCP_RW | VCP_CONTINUOUS,                NULL, NULL},
-    {0x14,  "Select color preset",            VCP_RW | VCP_TABLE     ,                NULL, NULL},
-    {0x16,  "Red",                            VCP_RW | VCP_CONTINUOUS | VCP_COLORMGT | VCP_PROFILE, NULL, NULL},
-    {0x18,  "Green",                          VCP_RW | VCP_CONTINUOUS | VCP_COLORMGT | VCP_PROFILE, NULL, NULL},
-    {0x1a,  "Blue",                           VCP_RW | VCP_CONTINUOUS | VCP_COLORMGT | VCP_PROFILE, NULL, NULL},
-    {0x22,  "Width",                          VCP_RW | VCP_CONTINUOUS,                NULL, NULL},
-    {0x2e,  "Gray scale expansion",           VCP_RW | VCP_NON_CONT   | VCP_COLORMGT, NULL, NULL},
-    {0x32,  "Height",                         VCP_RW | VCP_CONTINUOUS,                NULL, NULL},
-    {0x52,  "Active control",                 VCP_RO | VCP_NON_CONT ,                 NULL, NULL},
-    {0x59,  "6 axis saturation: Red",         VCP_RW | VCP_CONTINUOUS | VCP_COLORMGT, NULL, NULL},
-    {0x5a,  "6 axis saturation: Yellow",      VCP_RW | VCP_CONTINUOUS | VCP_COLORMGT, NULL, NULL},
-    {0x5b,  "6 axis saturation: Green",       VCP_RW | VCP_CONTINUOUS | VCP_COLORMGT, NULL, NULL},
-    {0x5c,  "6 axis saturation: Cyan",        VCP_RW | VCP_CONTINUOUS | VCP_COLORMGT, NULL, NULL},
-    {0x5e,  "6 axis saturation: Blue",        VCP_RW | VCP_CONTINUOUS | VCP_COLORMGT, NULL, NULL},
-    {0x5e,  "6 axis saturation: Magenta",     VCP_RW | VCP_CONTINUOUS | VCP_COLORMGT, NULL, NULL},
-    {0x60,  "Input source",                   VCP_RW | VCP_TABLE ,                    NULL, NULL},
-    {0x66,  "Ambient light sensor",           VCP_RW | VCP_NON_CONT                 , NULL, NULL},
-    {0x6c,  "Video black level: Red",         VCP_RW | VCP_CONTINUOUS | VCP_COLORMGT | VCP_PROFILE, NULL, NULL},
-    {0x6e,  "Video black level: Green",       VCP_RW | VCP_CONTINUOUS | VCP_COLORMGT | VCP_PROFILE, NULL, NULL},
-    {0x70,  "Video black level: Blue",        VCP_RW | VCP_CONTINUOUS | VCP_COLORMGT | VCP_PROFILE, NULL, NULL},
-    {0x72,  "Gamma",                          VCP_RW | VCP_NON_CONT   | VCP_COLORMGT, NULL, NULL},
-    {0x73,  "LUT size",                       VCP_RO | VCP_TABLE      | VCP_COLORMGT, NULL, NULL},
-    {0x87,  "Sharpness",                      VCP_RW | VCP_CONTINUOUS               , NULL, NULL},
-    {0x8a,  "Color saturation",               VCP_RW | VCP_CONTINUOUS | VCP_COLORMGT, NULL, NULL},
-    {0x90,  "Hue",                            VCP_RW | VCP_CONTINUOUS | VCP_COLORMGT, NULL, NULL},
-    {0x9b,  "6 axis hue: Red",                VCP_RW | VCP_CONTINUOUS | VCP_COLORMGT, NULL, NULL},
-    {0x5a,  "6 axis hue: Yellow",             VCP_RW | VCP_CONTINUOUS | VCP_COLORMGT, NULL, NULL},
-    {0x9c,  "6 axis hue: Green",              VCP_RW | VCP_CONTINUOUS | VCP_COLORMGT, NULL, NULL},
-    {0x9e,  "6 axis hue: Cyan",               VCP_RW | VCP_CONTINUOUS | VCP_COLORMGT, NULL, NULL},
-    {0x9f,  "6 axis hue: Blue",               VCP_RW | VCP_CONTINUOUS | VCP_COLORMGT, NULL, NULL},
-    {0xa0,  "6 axis hue: Magenta",            VCP_RW | VCP_CONTINUOUS | VCP_COLORMGT, NULL, NULL},
-    {0xac,  "Horizontal frequency",           VCP_RO | VCP_CONTINUOUS               , NULL, NULL},
-    {0xae,  "Vertical frequency",             VCP_RO | VCP_CONTINUOUS               , NULL, NULL},
-    {0xb0,  "(Re)Store user saved vals for cur mode", VCP_RO | VCP_NON_CONT         , NULL, NULL},
-    {0xb2,  "Flat panel sub-pixel layout",    VCP_RO | VCP_NON_CONT                 , NULL, NULL},
-    {0xb6,  "Display technology type",        VCP_RO | VCP_NON_CONT                 , NULL, NULL},
-    {0xc0,  "Display usage time",             VCP_RO | VCP_CONTINUOUS,                NULL, NULL},
-    {0xc6,  "Application enable key",         VCP_RO | VCP_NON_CONT                 , NULL, NULL},
-    {0xc8,  "Display controller type",        VCP_RW | VCP_NON_CONT                 , NULL, NULL},
-    {0xc9,  "Display firmware level",         VCP_RO | VCP_CONTINUOUS               , NULL, NULL},
-    {0xcc,  "OSD Language",                   VCP_RW | VCP_NON_CONT                 , NULL, NULL},
-    {0xdc,  "Display application",            VCP_RW | VCP_NON_CONT                 , NULL, NULL},
-    {0xd6,  "Power mode",                     VCP_RW | VCP_NON_CONT                 , NULL, NULL},
-    {0xdf,  "VCP Version",                    VCP_RO | VCP_NON_CONT                 , NULL, NULL}
-};
-int vcp_feature_code_count0 = sizeof(vcp_code_table0)/sizeof(VCP_Feature_Table_Entry0);
-
-VCP_Feature_Table_Entry0 null_vcp_code_table_entry0 = { 0x00, "Unknown Feature", 0x00, NULL, NULL};
-
-
-
-VCP_Feature_Table_Entry0 * get_vcp_feature_code_table_entry0(int ndx) {
-   // DBGMSG("ndx=%d, vcp_code_count=%d  ", ndx, vcp_code_count );
-   assert( 0 <= ndx && ndx < vcp_feature_code_count);
-   return &vcp_code_table0[ndx];
-}
-#endif
-
 
 
 

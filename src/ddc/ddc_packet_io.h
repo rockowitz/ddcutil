@@ -38,10 +38,9 @@
 #include "base/util.h"
 
 
-bool is_ddc_null_message(Byte * packet);
 
 Display_Handle* ddc_open_display(Display_Ref * dref,  Failure_Action failure_action);
-void         ddc_close_display(Display_Handle * dh);
+void            ddc_close_display(Display_Handle * dh);
 
 
 // Retry management
@@ -55,7 +54,6 @@ void ddc_reset_write_only_stats();
 void ddc_report_write_only_stats();
 void ddc_reset_write_read_stats();
 void ddc_report_write_read_stats();
-
 
 
 Global_Status_Code ddc_write_only(

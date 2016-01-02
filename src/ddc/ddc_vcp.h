@@ -41,12 +41,12 @@ Global_Status_Code put_vcp_by_display_ref(
        int                       new_value);
 #endif
 
-Global_Status_Code set_nontable_vcp_value_by_display_ref(
+Global_Status_Code set_nontable_vcp_value_by_dr(
        Display_Ref *             dref,
        Byte                      feature_code,
        int                       new_value);
 
-Global_Status_Code set_nontable_vcp_value_by_display_handle(
+Global_Status_Code set_nontable_vcp_value_by_dh(
        Display_Handle *          dh,
        Byte                      feature_code,
        int                       new_value);

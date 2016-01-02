@@ -396,7 +396,7 @@ char * chars_to_string(char * start, int len) {
  *
  */
 bool hhs_to_byte_in_buf(char * s, Byte * result) {
-   // printf("(%s) Starting s=%s, strlen(s)=%d   \n", __func__, s, strlen(s) );
+   // printf("(%s) Starting s=%s, strlen(s)=%zd\n", __func__, s, strlen(s) );
    // consider changing to fail if len != 2, or perhaps len != 1,2
    //assert(strlen(s) == 2);
 
@@ -419,6 +419,7 @@ bool hhs_to_byte_in_buf(char * s, Byte * result) {
       *result = (Byte) longtemp;
    }
 
+   // printf("(%s) Returning ok=%d\n", __func__, ok);
    return ok;
 }
 

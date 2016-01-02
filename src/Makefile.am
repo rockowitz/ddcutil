@@ -39,9 +39,11 @@ ddctool_SOURCES = \
 cmdline/cmd_parser_aux.c \
 cmdline/cmd_parser_goption.c \
 cmdline/parsed_cmd.c \
-ddctool_app/main.c \
-ddctool_app/query_sysenv.c \
-ddctool_app/testcases.c 
+app_ddctool/main.c \
+app_ddctool/query_sysenv.c \
+app_ddctool/app_setvcp.c \
+app_ddctool/app_getvcp.c \
+app_ddctool/testcases.c 
 
 if INCLUDE_TESTCASES_COND
 ddctool_SOURCES += \
@@ -94,7 +96,7 @@ ddc/ddc_vcp_version.c \
 i2c/i2c_base_io.c \
 i2c/i2c_bus_core.c \
 i2c/i2c_do_io.c \
-ddctool_app/loadvcp.c \
+app_ddctool/loadvcp.c \
 util/data_structures.c \
 util/debug_util.c \
 util/file_util.c  \

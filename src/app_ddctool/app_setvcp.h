@@ -1,6 +1,6 @@
-/* ddc_displays.h
+/* app_setvcp.h
  *
- * Created on: Dec 28, 2015
+ * Created on: Jan 1, 2016
  *     Author: rock
  *
  * <copyright>
@@ -24,26 +24,22 @@
  * </endcopyright>
  */
 
-#ifndef SRC_DDC_DDC_DISPLAYS_H_
-#define SRC_DDC_DDC_DISPLAYS_H_
+#ifndef SRC_APP_DDCTOOL_APP_SETVCP_H_
+#define SRC_APP_DDCTOOL_APP_SETVCP_H_
 
-
-#include "base/common.h"
 #include "base/displays.h"
+#include "base/status_code_mgt.h"
 
+Global_Status_Code app_set_vcp_value_by_display_handle(
+        Display_Handle * dh,
+        char *           feature,
+        char *           new_value,
+        bool             force);
 
-Display_Ref* get_display_ref_for_display_identifier(Display_Identifier* pdid, bool emit_error_msg);
+Global_Status_Code app_set_vcp_value_by_display_ref(
+        Display_Ref* dref,
+        char *       feature,
+        char *       new_value,
+        bool         force);
 
-Display_Info_List * ddc_get_valid_displays();
-
-int ddc_report_active_displays(int depth);
-
-Display_Ref* ddc_find_display_by_dispno(int dispno);
-
-Display_Ref* ddc_find_display_by_model_and_sn(const char * model, const char * sn);
-
-Display_Ref* ddc_find_display_by_edid(const Byte * pEdidBytes);
-
-bool         ddc_is_valid_display_ref(Display_Ref * dref, bool emit_error_msg);
-
-#endif /* SRC_DDC_DDC_DISPLAYS_H_ */
+#endif /* SRC_APP_DDCTOOL_APP_SETVCP_H_ */

@@ -42,9 +42,10 @@
 
 void init_ddc_services();
 
-void ddc_show_max_tries();
+void ddc_show_max_tries(FILE * fh);
 
 
+#ifdef FUTURE
 // not currently used
 Global_Status_Code
 check_valid_operation_by_feature_rec_and_version(
@@ -58,30 +59,26 @@ check_valid_operation_by_feature_id_and_dh(
       Byte                  feature_id,
       Display_Handle *      dh,
       Version_Feature_Flags operation_flags);
+#endif
 
 
+void show_value_for_feature_table_entry_by_display_handle(
+        Display_Handle *           dh,
+        VCP_Feature_Table_Entry *  vcp_entry,
+        GPtrArray *                collector,   // where to write output
+        bool                       suppress_unsupported
+        // Output_Sink                data_sink,
+        // Output_Sink                msg_sink
+       );
 
-void show_vcp_values_by_display_ref(
-        Display_Ref *      dref,
-        VCP_Feature_Subset subset,
-        GPtrArray *        collector);
-
-void show_single_vcp_value_by_display_ref(
-        Display_Ref * dref,
-        char *        feature,
-        bool          force);
-
-Global_Status_Code set_vcp_value_top(
-        Display_Ref* dref,
-        char *       feature,
-        char *       new_value);
-
+void show_vcp_values_by_display_handle(
+        Display_Handle *    dh,
+        VCP_Feature_Subset  subset,
+        GPtrArray *         collector);
 
 char * format_timestamp(time_t time_millis, char * buf, int bufsz);
 
 GPtrArray * get_profile_related_values_by_display_handle(Display_Handle * dh);
 GPtrArray * get_profile_related_values_by_display_ref(   Display_Ref *    dref);
-
-
 
 #endif /* DDC_SERVICES_H_ */

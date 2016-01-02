@@ -178,7 +178,7 @@ void report_capabilities_feature(Capabilities_Feature_Record * vfr, Version_Spec
          int ndx = 0;
          for (; ndx < ct; ndx++) {
             Byte hval = bva_get(vfr->values, ndx);
-            char *  value_name = find_value_name_new(feature_values, hval);
+            char *  value_name = get_feature_value_name(feature_values, hval);
             if (!value_name)
                value_name = "Unrecognized value!!";
             printf("       %02x: %s\n", hval, value_name);

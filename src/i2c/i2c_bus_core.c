@@ -515,7 +515,6 @@ Bus_Info * i2c_find_bus_info_by_edid(const Byte * pEdidBytes) {
 
   // DBGMSG("Returning: %p", result );
   return result;
-
 }
 
 

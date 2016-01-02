@@ -83,101 +83,6 @@ void init_ddc_services() {
 
 
 //
-//  Set VCP value
-//
-
-/* Converts a VCP feature value from string form to internal form.
- *
- * Currently only handles values in range 0..255.
- *
- * Arguments:
- *    string_value
- *    parsed_value    location where to return result
- *
- * Returns:
- *    true if conversion successful, false if not
- */
-bool parse_vcp_value(char * string_value, long* parsed_value) {
-   bool ok = true;
-   char * endptr = NULL;
-   errno = 0;
-   long longtemp = strtol(string_value, &endptr, 0 );  // allow 0xdd  for hex values
-   int errsv = errno;
-   // printf("errno=%d, new_value=|%s|, &new_value=%p, longtemp = %ld, endptr=0x%02x\n",
-   //        errsv, new_value, &new_value, longtemp, *endptr);
-   if (*endptr || errsv != 0) {
-      printf("Not a number: %s", string_value);
-      ok = false;
-   }
-   else if (longtemp < 0 || longtemp > 255) {
-      printf("Number must be in range 0..255 (for now at least):  %ld\n", longtemp);
-      ok = false;
-   }
-   else {
-      *parsed_value = longtemp;
-      ok = true;
-   }
-   return ok;
-}
-
-
-/* Parses the Set VCP arguments passed and sets the new value.
- *
- * Arguments:
- *   pdisp      display reference
- *   feature    feature id (as string)
- *   new_value  new feature value (as string)
- *
- * Returns:
- *   0          success
- *   -EINVAL (modulated)  invalid setvcp arguments, feature not writable
- *   from put_vcp_by_display_ref()
- */
-
-// TODO: consider moving value parsing to command parser
-Global_Status_Code set_vcp_value_top(Display_Ref * pdisp, char * feature, char * new_value) {
-   Global_Status_Code my_errno = 0;
-   long               longtemp;
-
-   Version_Spec vspec = get_vcp_version_by_display_ref(pdisp);
-   VCP_Feature_Table_Entry * entry = vcp_find_feature_by_charid(feature);
-   if (entry) {
-
-      // if ( !( (entry->flags) & VCP_WRITABLE ) ){
-      if (!is_feature_writable_by_vcp_version(entry, vspec)) {
-         // just go with non version specific name to avoid VCP version lookup
-         // since we just have Display_Ref here
-         char * feature_name =  get_version_specific_feature_name(entry, vspec);
-         printf("Feature %s (%s) is not writable\n", feature, feature_name);
-         my_errno = modulate_rc(-EINVAL, RR_ERRNO);    // TEMP - what is appropriate?
-      }
-      else {
-         bool good_values = parse_vcp_value(new_value, &longtemp);
-         if (!good_values) {
-            my_errno = modulate_rc(-EINVAL, RR_ERRNO);
-         }
-      }
-   }
-   else {
-      printf("Unrecognized VCP feature code: %s\n", feature);
-      my_errno = modulate_rc(-EINVAL, RR_ERRNO);
-   }
-
-   if (my_errno == 0) {
-      // my_errno = put_vcp_by_display_ref(pdisp, entry, (int) longtemp);
-      my_errno = set_nontable_vcp_value_by_display_ref(pdisp, entry->code, (int) longtemp);
-
-        if (my_errno != 0) {
-           printf("Setting value failed. rc=%d: %s\n", my_errno , gsc_desc(my_errno));
-        }
-
-   }
-
-   return my_errno;
-}
-
-
-//
 // Show VCP value
 //
 
@@ -474,7 +379,7 @@ bool is_table_feature_by_display_handle(
 
 
 
-
+// For possible future use - currently unused
 Global_Status_Code
 check_valid_operation_by_feature_rec_and_version(
       VCP_Feature_Table_Entry * feature_rec,
@@ -523,8 +428,6 @@ void show_value_for_feature_table_entry_by_display_handle(
 {
    bool debug = false;
    Trace_Group tg = (debug) ? 0xff : TRACE_GROUP;
-   // if (debug)
-   //    tg = 0xff;
    TRCMSGTG(tg, "Starting");
 
    bool use_table_function = is_table_feature_by_display_handle(vcp_entry, dh);
@@ -591,165 +494,6 @@ void show_single_vcp_value_by_display_handle(Display_Handle * phandle, char * fe
 #endif
 
 
-
-void show_single_vcp_value_by_display_ref(Display_Ref * dref, char * feature, bool force) {
-   bool debug = false;
-   if (debug) {
-      printf("(%s) Starting. Getting feature %s for %s\n",
-             __func__, feature,
-             display_ref_short_name(dref) );
-   }
-   VCP_Feature_Table_Entry * entry = vcp_find_feature_by_charid(feature);
-   bool showit = true;
-
-   Version_Spec vspec = get_vcp_version_by_display_ref(dref);
-   if (entry) {
-      // if ( !( (entry->flags) & VCP_READABLE ) ){
-      if (!is_feature_readable_by_vcp_version(entry, vspec)) {
-         char * feature_name =  get_version_specific_feature_name(entry, vspec);
-         printf("Feature %s (%s) is not readable\n", feature, feature_name);
-         showit = false;
-      }
-   }
-   else if (force) {
-      // DBGMSG("force specified.  UNIMPLEMENTED" );
-      entry = vcp_create_dummy_feature_for_charid(feature);    // issues error message if invalid hex
-      if (!entry) {
-         showit = false;
-         printf("Invalid feature code: %s\n", feature);  // i.e. invalid hex value
-      }
-   }
-   else {
-      printf("Unrecognized VCP feature code: %s\n", feature);
-      showit = false;
-   }
-
-   // DBGMSG("showit=%d", showit);
-   if (showit) {
-      // DBGMSG("calling show_vcp_for_vcp_code_table_entry_by_display_ref()");
-      show_value_for_feature_table_entry_by_display_ref(dref, entry, NULL);
-   }
-
-   if (debug)
-      DBGMSG("Done");
-}
-
-
-#ifdef OLD
-/* Shows the VCP values for all features in a VCP feature subset.
- *
- * Arguments:
- *    dh         display handle for open display
- *    subset     feature subset
- *    collector  accumulates output
- *
- * Returns:
- *    nothing
- */
-void show_vcp_values_by_display_handle(
-        Display_Handle *    dh,
-        VCP_Feature_Subset  subset,
-        GPtrArray *         collector)
-{
-   bool debug = true;
-   DBGMSF(debug, "Starting.  subset=%d  dh=%s", subset, display_handle_repr(dh) );
-
-   // For collections of feature codes, just assume that at least one of them
-   // will need the version number for proper interpretation.
-   // TODO: verify lookup always occurs in called functions and eliminate parm
-   Version_Spec vcp_version = get_vcp_version_by_display_handle(dh);
-   // DBGMSG("VCP version = %d.%d", vcp_version.major, vcp_version.minor);
-
-
-   VCP_Feature_Set feature_group = create_feature_set(subset, vcp_version);
-   report_feature_set(feature_group, 0);
-
-
-   if (subset == SUBSET_SCAN) {
-      int ndx = 0;
-      for (ndx=0; ndx <= 255; ndx++) {
-         Byte id = ndx;
-         // DBGMSG("ndx=%d, id=0x%02x", ndx, id);
-         VCP_Feature_Table_Entry * entry = vcp_find_feature_by_hexid_w_default(id);
-         bool suppress_unsupported = (get_output_level() < OL_VERBOSE);
-         // if ( !( (entry->flags) & VCP_READABLE ) ){
-         if (!is_feature_readable_by_vcp_version(entry, vcp_version)) {
-            // confuses the output if suppressing unsupported
-            if (!suppress_unsupported) {
-               char * feature_name =  get_version_specific_feature_name(entry, vcp_version);
-               printf("Feature 0x%02x (%s) is not readable\n", ndx, feature_name);
-            }
-         }
-         else {
-            bool use_table_function = is_table_feature_by_display_handle(entry, dh);
-            if (use_table_function) {
-               show_value_for_table_feature_table_entry_by_display_handle(
-                  dh,
-                  entry,
-                  // vcp_version,
-                  collector,
-                  suppress_unsupported);              // suppress unsupported features
-            }
-            else {
-               show_value_for_nontable_feature_table_entry_by_display_handle(
-                  dh,
-                  entry,
-                  // vcp_version,
-                  collector,
-                  suppress_unsupported);   //  suppress unsupported features
-            }
-         }
-      }
-   }
-   else {
-      int ndx = 0;
-      int vcp_feature_code_count = vcp_get_feature_code_count();
-      for (ndx=0; ndx < vcp_feature_code_count; ndx++) {
-         VCP_Feature_Table_Entry * vcp_entry = vcp_get_feature_table_entry(ndx);
-         assert(vcp_entry != NULL);
-         Version_Feature_Flags vflags = get_version_specific_feature_flags(vcp_entry, vcp_version);
-         // if (vcp_entry->flags & VCP_READABLE) {
-         if (vflags & VCP2_READABLE) {
-            bool showIt = true;      //
-            switch (subset) {
-            case SUBSET_ALL:       showIt = true;                              break;
-            case SUBSET_SUPPORTED: showIt = true;                              break;
-            // case SUBSET_COLORMGT:  showIt = vcp_entry->flags & VCP_COLORMGT;   break;
-            // case SUBSET_PROFILE:   showIt = vcp_entry->flags & VCP_PROFILE;    break;
-            case SUBSET_COLORMGT:  showIt = vflags & VCP2_COLORMGT;   break;
-            case SUBSET_PROFILE:   showIt = vflags & VCP2_PROFILE;    break;
-            case SUBSET_SCAN:  // will never happen, inserted to avoid compiler warning
-            default: PROGRAM_LOGIC_ERROR("subset=%d", subset);
-            };
-
-           if (showIt) {
-              bool is_table_feature = is_table_feature_by_display_handle(vcp_entry, dh);
-              if (is_table_feature) {
-                 show_value_for_table_feature_table_entry_by_display_handle(
-                    dh,
-                    vcp_entry,
-                    // vcp_version,
-                    collector,
-                    (subset==SUBSET_SUPPORTED) );    // suppress unsupported features
-
-              }
-              else {
-                 show_value_for_nontable_feature_table_entry_by_display_handle(
-                     dh,
-                     vcp_entry,
-                     // vcp_version,
-                     collector,
-                     (subset==SUBSET_SUPPORTED));    // suppress_unsupported
-              }
-           }
-         }
-      }
-   }
-
-   if (debug)
-      DBGMSG("Done");
-}
-#endif
 
 
 
@@ -842,39 +586,6 @@ void show_vcp_values_by_display_handle(
 }
 
 
-/* Shows the VCP values for all features in a VCP feature subset.
- *
- * Arguments:
- *    pdisp      display reference
- *    subset     feature subset
- *    collector  accumulates output
- *
- * Returns:
- *    nothing
- */
-void show_vcp_values_by_display_ref(Display_Ref * dref, VCP_Feature_Subset subset, GPtrArray * collector) {
-   // DBGMSG("Starting.  subset=%d   ", subset );
-   // need to ensure that bus info initialized
-   bool validDisp = true;
-   if (dref->ddc_io_mode == DDC_IO_DEVI2C) {
-      // Is this needed?  or checked by openDisplay?
-      Bus_Info * bus_info = i2c_get_bus_info(dref->busno);
-      if (!bus_info ||  !(bus_info->flags & I2C_BUS_ADDR_0X37) ) {
-         printf("Address 0x37 not detected on bus %d. I2C communication not available.\n", dref->busno );
-         validDisp = false;
-      }
-   }
-   else {
-      validDisp = true;    // already checked
-   }
-
-   if (validDisp) {
-      Display_Handle * pDispHandle = ddc_open_display(dref, EXIT_IF_FAILURE);
-      show_vcp_values_by_display_handle(pDispHandle, subset, collector);
-      ddc_close_display(pDispHandle);
-   }
-}
-
 
 //
 //
@@ -960,16 +671,16 @@ GPtrArray * get_profile_related_values_by_display_ref(Display_Ref * dref) {
 }
 
 
-void ddc_show_max_tries() {
-   printf("Maximum Try Settings:\n");
-   printf("Operation Type             Current  Default\n");
-   printf("Write only exchange tries: %8d %8d\n",
-          ddc_get_max_write_only_exchange_tries(),
-          MAX_WRITE_ONLY_EXCHANGE_TRIES);
-   printf("Write read exchange tries: %8d %8d\n",
-          ddc_get_max_write_read_exchange_tries(),
-          MAX_WRITE_READ_EXCHANGE_TRIES);
-   printf("Multi-part exchange tries: %8d %8d\n",
-          ddc_get_max_multi_part_read_tries(),
-          MAX_MULTI_EXCHANGE_TRIES);
+void ddc_show_max_tries(FILE * fh) {
+   fprintf(fh, "Maximum Try Settings:\n");
+   fprintf(fh, "Operation Type             Current  Default\n");
+   fprintf(fh, "Write only exchange tries: %8d %8d\n",
+               ddc_get_max_write_only_exchange_tries(),
+               MAX_WRITE_ONLY_EXCHANGE_TRIES);
+   fprintf(fh, "Write read exchange tries: %8d %8d\n",
+               ddc_get_max_write_read_exchange_tries(),
+               MAX_WRITE_READ_EXCHANGE_TRIES);
+   fprintf(fh, "Multi-part exchange tries: %8d %8d\n",
+               ddc_get_max_multi_part_read_tries(),
+               MAX_MULTI_EXCHANGE_TRIES);
 }

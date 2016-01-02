@@ -49,13 +49,12 @@
 #include "ddc/ddc_vcp_version.h"
 #include "ddc/ddc_vcp.h"
 #include "ddc/vcp_feature_codes.h"
-// #include "ddc/ddc_services.h"
 
 #include "ddc/ddc_displays.h"
 
 
 // Trace class for this file
-static Trace_Group TRACE_GROUP = TRC_DDC;
+// static Trace_Group TRACE_GROUP = TRC_DDC;   // currently unused
 
 
 //
@@ -266,7 +265,7 @@ void ddc_report_active_display(Display_Info * curinfo, int depth) {
          }
          else {
             Feature_Value_Entry * vals = pxc8_display_controller_type_values;
-            char * mfg_name =  find_value_name_new(
+            char * mfg_name =  get_feature_value_name(
                                   vals,
                                   code_info->sl);
             rpt_printf(depth, "Controller mfg:      %s", (mfg_name) ? mfg_name : "not set");
@@ -330,10 +329,6 @@ Display_Ref* ddc_find_display_by_model_and_sn(const char * model, const char * s
       result = create_bus_display_ref(businfo->busno);
    }
    else {
-      // ADL_Display_Rec * adlrec = adl_find_display_by_model_sn(model, sn);
-      // if (adlrec) {
-      //    result = create_adl_display_ref(adlrec->iAdapterIndex, adlrec->iDisplayIndex);
-      // }
       result = adlshim_find_display_by_model_sn(model, sn);
    }
    // DBGMSG("Returning: %p  ", result );
@@ -349,10 +344,6 @@ Display_Ref* ddc_find_display_by_edid(const Byte * pEdidBytes) {
       result = create_bus_display_ref(businfo->busno);
    }
    else {
-      // ADL_Display_Rec * adlrec = adl_find_display_by_edid(pEdidBytes);
-      // if (adlrec) {
-      //    result = create_adl_display_ref(adlrec->iAdapterIndex, adlrec->iDisplayIndex);
-      // }
       result = adlshim_find_display_by_edid(pEdidBytes);
    }
    // DBGMSG("Returning: %p  ", result );
