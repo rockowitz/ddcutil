@@ -38,6 +38,7 @@
 #include "../app_ddctool/loadvcp.h"
 #include "../app_ddctool/query_sysenv.h"
 #include "../app_ddctool/testcases.h"
+#include "../ddc/ddc_output.h"
 #include "util/data_structures.h"
 
 #include "base/common.h"
@@ -60,7 +61,6 @@
 #include "ddc/ddc_packet_io.h"
 #include "ddc/ddc_vcp.h"
 #include "ddc/parse_capabilities.h"
-#include "ddc/ddc_services.h"
 #include "ddc/try_stats.h"
 #include "ddc/vcp_feature_codes.h"
 #include "ddc/ddc_read_capabilities.h"

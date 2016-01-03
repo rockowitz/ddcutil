@@ -43,9 +43,8 @@
 #include "ddc/ddc_packet_io.h"
 #include "ddc/vcp_feature_codes.h"
 #include "ddc/ddc_vcp_version.h"
-#include "ddc/ddc_services.h"
-
 #include "app_ddctool/app_getvcp.h"
+#include "../ddc/ddc_output.h"
 
 
 Global_Status_Code

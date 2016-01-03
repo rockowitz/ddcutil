@@ -38,7 +38,6 @@
 
 #include "ddc/ddc_multi_part_io.h"
 #include "ddc/ddc_packet_io.h"
-#include "ddc/ddc_services.h"
 #include "ddc/ddc_vcp.h"
 #include "ddc/vcp_feature_codes.h"
 #include "ddc/ddc_read_capabilities.h"
@@ -49,6 +48,7 @@
 #include "libmain/ddct_public.h"
 
 #include "../app_ddctool/loadvcp.h"
+#include "../ddc/ddc_output.h"
 
 #define WITH_DR(ddct_dref, action) \
    do { \

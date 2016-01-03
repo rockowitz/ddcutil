@@ -32,6 +32,8 @@
 #include "base/displays.h"
 #include "base/status_code_mgt.h"
 
+#include "ddc/vcp_feature_set.h"
+
 Global_Status_Code
 app_show_single_vcp_value_by_display_ref(
         Display_Ref * dref,

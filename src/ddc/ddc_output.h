@@ -1,10 +1,10 @@
-/* ddc_services.h
+/* ddc_output.h
  *
  * Created on: Nov 15, 2015
  *     Author: rock
  *
  * <copyright>
- * Copyright (C) 2014-2015 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2014-2016 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -24,8 +24,8 @@
  * </endcopyright>
  */
 
-#ifndef DDC_SERVICES_H_
-#define DDC_SERVICES_H_
+#ifndef DDC_OUTPUT_H_
+#define DDC_OUTPUT_H_
 
 #include <glib.h>
 #include <stdio.h>
@@ -92,4 +92,4 @@ char * format_timestamp(time_t time_millis, char * buf, int bufsz);
 GPtrArray * get_profile_related_values_by_display_handle(Display_Handle * dh);
 
 
-#endif /* DDC_SERVICES_H_ */
+#endif /* DDC_OUTPUT_H_ */

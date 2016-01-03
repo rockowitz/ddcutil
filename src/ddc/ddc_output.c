@@ -1,10 +1,10 @@
-/* ddc_services.c
+/* ddc_output.c
  *
  * Created on: Nov 15, 2015
  *     Author: rock
  *
  * <copyright>
- * Copyright (C) 2014-2015 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2014-2016 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -25,6 +25,7 @@
  */
 
 #include <assert.h>
+#include <ddc/ddc_output.h>
 #include <ddc/vcp_feature_set.h>
 #include <errno.h>
 #include <glib.h>
@@ -54,7 +55,6 @@
 #include "ddc/ddc_vcp.h"
 #include "ddc/ddc_vcp_version.h"
 
-#include "ddc/ddc_services.h"
 
 // Trace class for this file
 static Trace_Group TRACE_GROUP = TRC_DDC;
