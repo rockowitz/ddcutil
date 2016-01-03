@@ -577,6 +577,7 @@ get_formatted_value_for_feature_table_entry(
          bool ok;
          char * formatted_data = NULL;
          // TODO: IMPLEMENT unified vcp_format_feature_detail that takes Parsed_Vcp_Response as argument
+#ifdef OLD
          if (is_table_feature) {               // normal (non OL_PROGRAM) output, table
             ok = vcp_format_table_feature_detail(
                                      vcp_entry,
@@ -604,19 +605,32 @@ get_formatted_value_for_feature_table_entry(
                // TODO: retry with default output function
             }
          }
+#endif
+
+         ok = vcp_format_feature_detail(
+                 vcp_entry,
+                 vspec,
+                 parsed_vcp_response,
+                 &formatted_data);
+         // DBGMSG("vcp_format_feature_detail set formatted_data=|%s|", formatted_data);
+         if (!ok) {
+            fprintf(msg_fh, fmt_code_name_detail_wo_nl,
+                            feature_code, feature_name, "!!! UNABLE TO FORMAT OUTPUT");
+            gsc = DDCRC_INTERPRETATION_FAILED;
+            // TODO: retry with default output function
+         }
 
          if (ok) {
             if (prefix_value_with_feature_code) {
                *pformatted_value = calloc(1, strlen(formatted_data) + 50);
                snprintf(*pformatted_value, strlen(formatted_data) + 49,
-                        "VCP code 0x%02x (%-30s): %s",
+                        fmt_code_name_detail_wo_nl,
                         feature_code, feature_name, formatted_data);
                free(formatted_data);
             }
             else {
                 *pformatted_value = formatted_data;
              }
-
          }
       }     // normal (non OL_PROGRAM) output
 
@@ -628,10 +642,6 @@ get_formatted_value_for_feature_table_entry(
    TRCMSGTG(tg, "Done.  Returning: %s, *pformatted_value=|%s|", gsc_desc(gsc), *pformatted_value);
    return gsc;
 }
-
-
-
-
 
 
 #ifdef UNUSED
@@ -713,7 +723,7 @@ void show_feature_set_values_by_display_handle(
          // confuses the output if suppressing unsupported
          if (!suppress_unsupported) {
             char * feature_name =  get_version_sensitive_feature_name(entry, vcp_version);
-            printf(standard_feature_format_w_nl,
+            printf(fmt_code_name_detail_w_nl,
                    entry->code, feature_name, "Write-only feature");
          }
       }

@@ -35,8 +35,8 @@
 #include "base/ddc_packets.h"
 #include "base/util.h"
 
-extern const char* standard_feature_format_w_nl;
-extern const char* standard_feature_format_wo_nl;
+extern const char* fmt_code_name_detail_w_nl;
+extern const char* fmt_code_name_detail_wo_nl;
 
 //
 // VCP Feature Interpretation
@@ -278,6 +278,13 @@ bool vcp_format_table_feature_detail(
        Version_Spec              vcp_version,
        Buffer *                  accumulated_value,
        char * *                  aformatted_data   // address at which to return newly allocated buffer
+     );
+
+bool vcp_format_feature_detail(
+       VCP_Feature_Table_Entry * vcp_entry,
+       Version_Spec              vcp_version,
+       Parsed_Vcp_Response *     raw_data,
+       char * *                  aformatted_data
      );
 
 char* get_feature_name_by_id_only(Byte feature_code);

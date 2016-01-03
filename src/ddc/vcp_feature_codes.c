@@ -46,8 +46,8 @@
 // Standard formatting string for reporting feature codes.
 // Not actually used in this file, but will be used by callers.
 // This seems as good a place as any to put the constant.
-const char* standard_feature_format_wo_nl = "VCP code 0x%02x (%-30s): %s";
-const char* standard_feature_format_w_nl  = "VCP code 0x%02x (%-30s): %s\n";
+const char* fmt_code_name_detail_wo_nl = "VCP code 0x%02x (%-30s): %s";
+const char* fmt_code_name_detail_w_nl  = "VCP code 0x%02x (%-30s): %s\n";
 
 // Forward references
 int vcp_feature_code_count;
@@ -514,6 +514,53 @@ bool vcp_format_table_feature_detail(
 {
    Format_Table_Feature_Detail_Function ffd_func = get_table_feature_detail_function(vcp_entry);
    bool ok = ffd_func(accumulated_value, vcp_version, aformatted_data);
+   return ok;
+}
+
+
+bool vcp_format_feature_detail(
+       VCP_Feature_Table_Entry * vcp_entry,
+       Version_Spec              vcp_version,
+       Parsed_Vcp_Response *     raw_data,
+       char * *                  aformatted_data
+     )
+{
+   bool debug = false;
+   DBGMSF(debug, "Starting");
+   bool ok = true;
+   *aformatted_data = NULL;
+
+   char * formatted_data = NULL;
+   if (raw_data->response_type == NON_TABLE_VCP_CALL) {
+      char workbuf[200];
+      ok = vcp_format_nontable_feature_detail(
+              vcp_entry,
+              vcp_version,
+              raw_data->non_table_response,
+              workbuf,
+              200);
+      if (ok)
+         formatted_data = strdup(workbuf);
+   }
+   else {        // TABLE_VCP_CALL
+      ok = vcp_format_table_feature_detail(
+            vcp_entry,
+            vcp_version,
+            raw_data->table_response,
+            &formatted_data);
+   }
+
+   if (ok) {
+      *aformatted_data = formatted_data;
+      assert(*aformatted_data);
+   }
+   else {
+      if (formatted_data)
+         free(formatted_data);
+      assert(!*aformatted_data);
+   }
+
+   DBGMSF(debug, "Done.  Returning %d, *aformatted_data=%p", ok, *aformatted_data);
    return ok;
 }
 
