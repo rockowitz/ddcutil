@@ -93,6 +93,7 @@ AC_SEARCH_LIBS([dlopen], [dl dld], [], [
   AC_MSG_ERROR([unable to find the dlopen() function])
 ])
 
+dnl *** configure option: --with-adl-headers
 
 AC_ARG_WITH([adl-headers],
             [ AS_HELP_STRING([--with-adl-headers=DIR], [Directory containing ADL header files]) ],
@@ -104,12 +105,10 @@ AS_IF([test "x$adl_header_dir" != "x"],
       HAVE_ADL=1,
       HAVE_ADL=0)
 
-
 dnl this is the way to do it
 AS_IF([test "x$adl_header_dir" != "x"],
       AC_DEFINE_UNQUOTED( [HAVE_ADL], [1], [If defined, ADL headers are present.  Build with ADL support.]),
       [])
-
 
 AC_MSG_NOTICE([HAVE_ADL = $HAVE_ADL])
 
@@ -124,7 +123,7 @@ dnl AC_DEFINE_UNQUOTED([HAVE_ADL3], [$HAVE_ADL])
 dnl AC_DEFINE( [HAVE_ADL2], [1])
 
 
-
+dnl *** configure option: --enable-testcases
 AC_ARG_ENABLE([testcases],
               [ AS_HELP_STRING( [--enable-testcases=@<:@no/yes@:>@], [Include test cases @<:@default=no@:>@] )],
               [include_testcases=${enableval}],
@@ -140,6 +139,41 @@ AS_IF([test "x$include_testcases" == "xyes"],
 AS_IF([test "x$include_testcases" == "xyes"],
       AC_MSG_NOTICE( [testcases... enabled]  ),
       AC_MSG_NOTICE( [testcases... disabled] )
+     )
+
+
+dnl *** configure option: --enable-callgraph
+AC_ARG_ENABLE([callgraph],
+              [ AS_HELP_STRING( [--enable-callgraph=@<:@no/yes@:>@], [Create .expand files for static call graph@<:@default=no@:>@] )],
+              [enable_callgraph=${enableval}],
+              [enable_callgraph=no] )
+dnl disable after testing:
+dnl AC_MSG_NOTICE([enable_callgraph = $enable_callgraph])
+dnl Set flag for automake.am:
+AM_CONDITIONAL([ENABLE_CALLGRAPH_COND], [test "x$enable_callgraph" == "xyes"] )
+AS_IF([test "x$enable_callgraph" == "xyes"],
+      AC_MSG_NOTICE( [callgraph... enabled]  ),
+      AC_MSG_NOTICE( [callgraph... disabled] )
+     )
+
+
+
+dnl *** configure option: --enable-lib
+AC_ARG_ENABLE([lib],
+              [ AS_HELP_STRING( [--enable-lib=@<:@no/yes@:>@], [Create .expand files for static call graph@<:@default=no@:>@] )],
+              [enable_lib=${enableval}],
+              [enable_lib=no] )
+dnl disable after testing:
+dnl AC_MSG_NOTICE([enable_lib = $enable_lib])
+dnl Define INCLUDE_SHARED_LIB in config.h: (not needed)
+dnl AS_IF([test "x$enable_lib" == "xyes"],
+dnl       AC_DEFINE_UNQUOTED( [INCLUDE_SHARED_LIB], [1], [If defined, build shared lib and clients.]),
+dnl       [])
+dnl Set flag for automake.am:
+AM_CONDITIONAL([ENABLE_SHARED_LIB_COND], [test "x$enable_lib" == "xyes"] )
+AS_IF([test "x$enable_lib" == "xyes"],
+      AC_MSG_NOTICE( [lib... enabled]  ),
+      AC_MSG_NOTICE( [lib... disabled] )
      )
 
 

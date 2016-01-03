@@ -1,7 +1,10 @@
 ## Process this file with automake to produce Makefile.in
 
 # AM_CFLAGS = -Wall -Werror
-AM_CFLAGS = -Wall -fdump-rtl-expand
+AM_CFLAGS = -Wall
+if ENABLE_CALLGRAPH_COND
+  AM_CFLAGS += -fdump-rtl-expand
+endif
 
 # Is this really necessary?   Don't want to push these files to github.
 # there ought to be a cleaner way
@@ -40,15 +43,19 @@ util/*expand
 bin_PROGRAMS = \
 ddctool  
 
+if ENABLE_SHARED_LIB_COND
 # Sample client program for shared library:
 bin_PROGRAMS += \
 laclient 
+endif
 
 # Convenience library containing code shared between ddctool and libddctool
 noinst_LTLIBRARIES = libcommon.la
 
+if ENABLE_SHARED_LIB_COND
 # Shared library
 lib_LTLIBRARIES = libddctool.la
+endif
 
 # Files only in ddctool:
 ddctool_SOURCES = \
