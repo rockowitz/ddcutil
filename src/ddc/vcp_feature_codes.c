@@ -1909,10 +1909,10 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
 
      .desc="Select a specified color temperature",
      //.global_flags = VCP_RW,
-     .v20_flags = VCP2_RW | VCP2_SIMPLE_NC,
+     .v20_flags = VCP2_RW | VCP2_SIMPLE_NC | VCP2_COLORMGT,
      .v20_name  = "Select color preset",
-     .v30_flags = VCP2_RW | VCP2_COMPLEX_NC,
-     .v22_flags = VCP2_RW | VCP2_COMPLEX_NC,
+     .v30_flags = VCP2_RW | VCP2_COMPLEX_NC | VCP2_COLORMGT,
+     .v22_flags = VCP2_RW | VCP2_COMPLEX_NC | VCP2_COLORMGT,
    },
    { .code=0x16,
      .vcp_spec_groups = VCP_SPEC_IMAGE,
@@ -1989,7 +1989,7 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
 
        .desc="Perform color autosetup function (R/G/B gain and offset, A/D setup, etc. ",
        //.global_flags = VCP_RW,
-       .v21_flags = VCP2_RW | VCP2_SIMPLE_NC,
+       .v21_flags = VCP2_RW | VCP2_SIMPLE_NC| VCP2_COLORMGT,
        .v21_name = "Auto color setup",
    },
 
@@ -2456,7 +2456,7 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
       .desc = "Value < 127 decreases red saturation, 127 nominal (default) value, "
                 "> 127 increases red saturation",
         //.global_flags = VCP_RW | VCP2_COLORMGT,
-        .v21_flags = VCP2_RW | VCP2_STD_CONT,              // use special function?
+        .v21_flags = VCP2_RW | VCP2_STD_CONT| VCP2_COLORMGT,              // use special function?
         .v21_name = "6 axis saturation: Red",
    },
    { .code=0x5a,
@@ -2469,7 +2469,7 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
       .desc = "Value < 127 decreases yellow saturation, 127 nominal (default) value, "
                  "> 127 increases yellow saturation",
          //.global_flags = VCP_RW | VCP2_COLORMGT,
-         .v21_flags = VCP2_RW | VCP2_STD_CONT,              // use special function?
+         .v21_flags = VCP2_RW | VCP2_STD_CONT| VCP2_COLORMGT,              // use special function?
          .v21_name = "6 axis saturation: Yellow",
    },
    { .code=0x5b,
@@ -2482,7 +2482,7 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
      .desc = "Value < 127 decreases green saturation, 127 nominal (default) value, "
                 "> 127 increases green saturation",
         //.global_flags = VCP_RW | VCP2_COLORMGT,
-        .v21_flags = VCP2_RW | VCP2_STD_CONT,              // use special function?
+        .v21_flags = VCP2_RW | VCP2_STD_CONT| VCP2_COLORMGT,              // use special function?
         .v21_name = "6 axis saturation: Green",
    },
    { .code=0x5c,
@@ -2496,7 +2496,7 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
      .desc = "Value < 127 decreases cyan saturation, 127 nominal (default) value, "
                 "> 127 increases cyan saturation",
         //.global_flags = VCP_RW | VCP2_COLORMGT,
-        .v21_flags = VCP2_RW | VCP2_STD_CONT,              // use special function?
+        .v21_flags = VCP2_RW | VCP2_STD_CONT| VCP2_COLORMGT,              // use special function?
         .v21_name = "6 axis saturation: Cyan",
    },
    { .code=0x5d,
@@ -2510,7 +2510,7 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
      .desc = "Value < 127 decreases blue saturation, 127 nominal (default) value, "
                 "> 127 increases blue saturation",
         //.global_flags = VCP_RW | VCP2_COLORMGT,
-        .v21_flags = VCP2_RW | VCP2_STD_CONT,              // use special function?
+        .v21_flags = VCP2_RW | VCP2_STD_CONT| VCP2_COLORMGT,              // use special function?
         .v21_name = "6 axis saturation: Blue",
    },
    { .code=0x5e,
@@ -2522,7 +2522,7 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
       .desc = "Value < 127 decreases magenta saturation, 127 nominal (default) value, "
                  "> 127 increases magenta saturation",
          //.global_flags = VCP_RW | VCP2_COLORMGT,
-         .v21_flags = VCP2_RW | VCP2_STD_CONT,              // use special function?
+         .v21_flags = VCP2_RW | VCP2_STD_CONT| VCP2_COLORMGT,              // use special function?
          .v21_name = "6 axis saturation: Magenta",
    },
    { .code=0x60,
@@ -2596,6 +2596,14 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
       .default_sl_values = x66_ambient_light_sensor_values,
 
    },
+   { .code=0x6b,
+     // First defined in MCCS 2.2,
+     .vcp_spec_groups=VCP_SPEC_IMAGE,
+     .desc="Increase/decrease the white backlight level",
+     .nontable_formatter=format_feature_detail_standard_continuous,
+     .v22_name = "Backlight Level: White",
+     .v22_flags = VCP2_RW | VCP2_STD_CONT | VCP2_COLORMGT | VCP2_PROFILE,
+   },
    { .code=0x6c,
      .vcp_spec_groups = VCP_SPEC_IMAGE,
      // Defined in 2.0, name change in ?
@@ -2605,8 +2613,16 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
 
      .desc="Increase/decrease the black level of red pixels",  // my simplification
      //.global_flags = VCP_RW | VCP2_COLORMGT | VCP2_PROFILE,
-     .v20_flags =  VCP2_RW |VCP2_STD_CONT,
+     .v20_flags =  VCP2_RW |VCP2_STD_CONT| VCP2_COLORMGT  | VCP2_PROFILE,
      .v20_name = "Red video black level",
+   },
+   { .code=0x6d,
+     // First defined in MCCS 2.2,
+     .vcp_spec_groups=VCP_SPEC_IMAGE,
+     .desc="Increase/decrease the red backlight level",
+     .nontable_formatter=format_feature_detail_standard_continuous,
+     .v22_name = "Backlight Level: Red",
+     .v22_flags = VCP2_RW | VCP2_STD_CONT | VCP2_COLORMGT | VCP2_PROFILE,
    },
    { .code=0x6e,
       .vcp_spec_groups = VCP_SPEC_IMAGE,
@@ -2617,8 +2633,16 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
 
      .desc="Increase/decrease the black level of green pixels",  // my simplification
      //.global_flags = VCP_RW | VCP2_COLORMGT | VCP2_PROFILE,
-     .v20_flags =  VCP2_RW |VCP2_STD_CONT,
+     .v20_flags =  VCP2_RW |VCP2_STD_CONT| VCP2_COLORMGT | VCP2_PROFILE,
      .v20_name = "Green video black level",
+   },
+   { .code=0x6f,
+     // First defined in MCCS 2.2,
+     .vcp_spec_groups=VCP_SPEC_IMAGE,
+     .desc="Increase/decrease the green backlight level",
+     .nontable_formatter=format_feature_detail_standard_continuous,
+     .v22_name = "Backlight Level: Green",
+     .v22_flags = VCP2_RW | VCP2_STD_CONT | VCP2_COLORMGT | VCP2_PROFILE,
    },
    { .code=0x70,
      .vcp_spec_groups = VCP_SPEC_IMAGE,
@@ -2629,8 +2653,16 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
 
      .desc="Increase/decrease the black level of blue pixels",  // my simplification
      //.global_flags = VCP_RW | VCP2_COLORMGT | VCP2_PROFILE,
-     .v20_flags =  VCP2_RW |VCP2_STD_CONT,
+     .v20_flags =  VCP2_RW |VCP2_STD_CONT| VCP2_COLORMGT | VCP2_PROFILE,
      .v20_name = "Blue video black level",
+   },
+   { .code=0x71,
+     // First defined in MCCS 2.2,
+     .vcp_spec_groups=VCP_SPEC_IMAGE,
+     .desc="Increase/decrease the blue backlight level",
+     .nontable_formatter=format_feature_detail_standard_continuous,
+     .v22_name = "Backlight Level: Blue",
+     .v22_flags = VCP2_RW | VCP2_STD_CONT | VCP2_COLORMGT | VCP2_PROFILE,
    },
    { .code=0x72,
      .vcp_spec_groups = VCP_SPEC_IMAGE,
@@ -2655,7 +2687,7 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
      .desc = "Provides the size (number of entries and number of bits/entry) "
            "for the Red, Green, and Blue LUT in the display.",
      //.global_flags = VCP_RO,
-     .v20_flags = VCP2_RO| VCP2_TABLE,
+     .v20_flags = VCP2_RO| VCP2_TABLE| VCP2_COLORMGT,
      .v20_name  = "LUT Size",
    },
    { .code=0x74,
@@ -2667,7 +2699,7 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
 
      .desc = "Writes a single point within the display's LUT, reads a single point from the LUT",
      //.global_flags = VCP_RW,
-     .v20_flags = VCP2_RW | VCP2_TABLE,
+     .v20_flags = VCP2_RW | VCP2_TABLE| VCP2_COLORMGT,
      .v20_name = "Single point LUT operation",
    },
    { .code=0x75,
@@ -2679,7 +2711,7 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
 
      .desc = "Load (read) multiple values into (from) the display's LUT",
      //.global_flags = VCP_RW,
-     .v20_flags = VCP2_RW | VCP2_TABLE,
+     .v20_flags = VCP2_RW | VCP2_TABLE| VCP2_COLORMGT,
      .v20_name = "Block LUT operation",
    },
    { .code=0x76,
