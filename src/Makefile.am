@@ -85,6 +85,7 @@ ddc/ddc_multi_part_io.c \
 ddc/ddc_packet_io.c \
 ddc/ddc_read_capabilities.c \
 ddc/ddc_output.c \
+ddc/ddc_services.c \
 ddc/ddc_strategy.c \
 ddc/ddc_vcp.c \
 ddc/parse_capabilities.c \

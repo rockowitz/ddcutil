@@ -44,6 +44,7 @@
 #include "ddc/ddc_displays.h"
 #include "ddc/ddc_edid.h"
 #include "ddc/ddc_vcp_version.h"
+#include "ddc/ddc_services.h"
 
 #include "libmain/ddct_public.h"
 

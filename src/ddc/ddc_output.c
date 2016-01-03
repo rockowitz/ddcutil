@@ -60,40 +60,6 @@
 static Trace_Group TRACE_GROUP = TRC_DDC;
 
 
-/* Master initialization function
- */
-void init_ddc_services() {
-   ddc_reset_write_only_stats();
-   ddc_reset_write_read_stats();
-   ddc_reset_multi_part_read_stats();
-   init_sleep_stats();
-   init_execution_stats();
-
-   init_status_code_mgt();
-   init_linux_errno();
-   init_adl_errors();
-   init_vcp_feature_codes();
-   // adl_debug = true;      // turn on adl initialization tracing
-   adlshim_initialize();
-   init_ddc_packets();   // 11/2015: does nothing
-
-   i2c_set_io_strategy(DEFAULT_I2C_IO_STRATEGY);
-}
-
-
-void ddc_show_max_tries(FILE * fh) {
-   fprintf(fh, "Maximum Try Settings:\n");
-   fprintf(fh, "Operation Type             Current  Default\n");
-   fprintf(fh, "Write only exchange tries: %8d %8d\n",
-               ddc_get_max_write_only_exchange_tries(),
-               MAX_WRITE_ONLY_EXCHANGE_TRIES);
-   fprintf(fh, "Write read exchange tries: %8d %8d\n",
-               ddc_get_max_write_read_exchange_tries(),
-               MAX_WRITE_READ_EXCHANGE_TRIES);
-   fprintf(fh, "Multi-part exchange tries: %8d %8d\n",
-               ddc_get_max_multi_part_read_tries(),
-               MAX_MULTI_EXCHANGE_TRIES);
-}
 
 //
 // Show VCP value

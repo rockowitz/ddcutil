@@ -66,6 +66,7 @@
 #include "ddc/ddc_read_capabilities.h"
 #include "ddc/ddc_displays.h"
 #include "ddc/ddc_vcp_version.h"
+#include "ddc/ddc_services.h"
 
 #include "cmdline/parsed_cmd.h"
 #include "cmdline/cmd_parser.h"

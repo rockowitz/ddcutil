@@ -28,8 +28,8 @@
 #define DDC_OUTPUT_H_
 
 #include <glib.h>
-#include <stdio.h>
-#include <time.h>
+// #include <stdio.h>
+// #include <time.h>
 
 #include "base/common.h"
 // #include "base/ddc_base_defs.h"     // for Version_Spec
@@ -39,10 +39,6 @@
 #include "ddc/vcp_feature_codes.h"
 #include "ddc/vcp_feature_set.h"
 
-
-void init_ddc_services();
-
-void ddc_show_max_tries(FILE * fh);
 
 
 #ifdef FUTURE
