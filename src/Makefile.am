@@ -19,6 +19,22 @@ AM_CFLAGS = -Wall -fdump-rtl-expand
 # adl/adl_impl/.deps/*  \
 # adl/adl_mock_impl/.deps/*  
 
+CLEANFILES =\
+adl/*expand         \
+adl/adl_impl/*expand \
+adl/adl_mock_impl/*expand \
+app_ddctool/*expand  \
+base/*expand         \
+cmdline/*expand      \
+ddc/*expand          \
+i2c/*expand          \
+libmain/*expand      \
+sample_clients/*expand \
+test/*expand \
+test/adl/*expand \
+test/ddc/*expand \
+test/i2c/*expand \
+util/*expand 
 
 
 bin_PROGRAMS = \

@@ -1885,6 +1885,7 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
      .v20_name = "Contrast",
    },
    { .code=0x13,
+     .vcp_spec_groups = VCP_SPEC_IMAGE,
      // not in 2.0, is in 3.0
      // assume first defined in 2.1
      //.name="Backlight",
@@ -1927,7 +1928,7 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
       .v20_name = "Red video gain",
    },
    { .code=0x18,
-         .vcp_spec_groups = VCP_SPEC_IMAGE,
+     .vcp_spec_groups = VCP_SPEC_IMAGE,
          // Defined in 2.0
      //.name="Green",
      //.flags=VCP_RW | VCP_CONTINUOUS | VCP_COLORMGT | VCP_PROFILE,
@@ -1980,17 +1981,17 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
    { .code=0x1f,
      .vcp_spec_groups = VCP_SPEC_IMAGE,   // 3.0
      // not in 2.0, defined in 3.0
-     // assume firt introduced in 2.1
+     // assume first introduced in 2.1
      //.name="Auto Color Setup",
      //.flags=VCP_RW | VCP_NON_CONT | VCP_COLORMGT | VCP_NCSL,
       // .formatter=format_feature_detail_auto_setup,
-      .nontable_formatter=format_feature_detail_sl_lookup_new,
-       .default_sl_values = x1e_x1f_auto_setup_values,
+     .nontable_formatter=format_feature_detail_sl_lookup_new,
+     .default_sl_values = x1e_x1f_auto_setup_values,
 
-       .desc="Perform color autosetup function (R/G/B gain and offset, A/D setup, etc. ",
+     .desc="Perform color autosetup function (R/G/B gain and offset, A/D setup, etc. ",
        //.global_flags = VCP_RW,
-       .v21_flags = VCP2_RW | VCP2_SIMPLE_NC| VCP2_COLORMGT,
-       .v21_name = "Auto color setup",
+     .v21_flags = VCP2_RW | VCP2_SIMPLE_NC| VCP2_COLORMGT,
+     .v21_name = "Auto color setup",
    },
 
    { .code=0x20,        // Done
@@ -2071,7 +2072,7 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
    { .code=0x29,              // Done
      .vcp_spec_groups = VCP_SPEC_GEOMETRY,
      .vcp_classes = VCP_CLASS_ANALOG,
-     // when was this added?  2.1 or 3.0?   assuming 2.1
+     // not in 2.0, when was this added?  2.1 or 3.0?   assuming 2.1
      //.name="Horizontal Convergence M/G",
      //.flags=VCP_RW | VCP_CONTINUOUS,
       .nontable_formatter=format_feature_detail_standard_continuous,
@@ -2233,7 +2234,7 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
      .v20_name = "Vertical Linearity Balance",
    },
    { .code=0x3e,
-     .vcp_spec_groups = VCP_SPEC_IMAGE,
+     .vcp_spec_groups = VCP_SPEC_IMAGE | VCP_SPEC_MISC,     // 2.0: MISC
      // Define in 2.0, identical in 3.0
      //.name="Clock phase",
      //.flags=VCP_RW | VCP_CONTINUOUS,
@@ -2373,7 +2374,7 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
      //.flags=VCP_RW | VCP_CONTINUOUS,
      .nontable_formatter=format_feature_detail_standard_continuous,
 
-     .desc = "Increasing (decreasing) this value will increase (decrease) the"
+     .desc = "Increase/decrease the "
              "distance between the left and right sides at the bottom of the image.",
      //.global_flags=VCP_RW,
      .v20_flags= VCP2_RW | VCP2_STD_CONT,
@@ -2385,17 +2386,24 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
      .vcp_classes = VCP_CLASS_ANALOG,
      // Group 8.4 Geometry
      // name is different in 3.0, assume changed in 2.1
-     //.name="Placeholder",
-     //.flags=VCP_RW | VCP_CONTINUOUS,
      .nontable_formatter=format_feature_detail_standard_continuous,
-
      .desc = "Increasing (decreasing) this value moves the bottom end of the "
            "image to the right (left).",
-     //.global_flags=VCP_RW,
      .v20_flags= VCP2_RW | VCP2_STD_CONT,
      .v20_name="Bottom Corner Balance",
      .v21_name="Bottom Corner Hook",
    },
+
+   // code 0x4e:
+   // what is going on with 0x4e?
+   // In 2.0 spec, the cross ref lists it as Trapezoid, in Table Geometry
+   // However, the Geometry table lists 7E as Trapezoid
+   // In 3.0, neither 4E or 7E are defined
+
+   // code: 0x50
+   // listed as Keystone, table GEOMETRY in 2.0
+   // But Geometry table lists 0x80 as being keystone, not 0x4e
+   // In 3.0, neither x50 nor x80 are defined
 
    { .code=0x52,
      .vcp_spec_groups = VCP_SPEC_MISC,
@@ -2526,7 +2534,6 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
          .v21_name = "6 axis saturation: Magenta",
    },
    { .code=0x60,
-
      .vcp_spec_groups = VCP_SPEC_MISC,
      //.name="Input source",
      // should VCP_NCSL be set here?  yes: applies to NC values
@@ -2543,18 +2550,17 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
 
    },
    {
-     .code=0x62,                                       // how to handle?
+     .code=0x62,                                       // TODO: how to handle?
      .vcp_spec_groups = VCP_SPEC_AUDIO,
      // is in 2.0, special coding as of 3.0 assume changed as of 3.0
      //.name="Audio speaker volume",
-     //.flags=VCP_RW | VCP_CONTINUOUS,         // actually v2: C, v3: NC
      .nontable_formatter=format_feature_detail_standard_continuous,
      // requires special handling for V3, mix of C and NC, SL byte only
 
      .desc = "Adjusts speaker volume",
-     //.global_flags = VCP_RW,
      .v20_flags = VCP2_RW | VCP2_STD_CONT,
      .v30_flags = VCP2_RW | VCP2_COMPLEX_CONT,    // TODO
+     .v22_flags = VCP2_RW | VCP2_COMPLEX_CONT,    // VERIFY!
      .v20_name = "Audio speaker volume",
    },
    { .code=0x63,
@@ -2562,7 +2568,6 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
      // not in 2.0, is in 3.0, assume new as of 2.1
      //.name = "Speaker Select",
      //.flags = VCP_RW | VCP_NON_CONT,
-
      .desc="Selects a group of speakers",
      //.global_flags = VCP_RW,
      .v21_flags = VCP2_RW | VCP2_SIMPLE_NC,
@@ -2572,15 +2577,11 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
    {
      .code=0x64,
      .vcp_spec_groups = VCP_SPEC_AUDIO,
-     // is in 2.0
-     //.name="Audio microphone volume",
-     //.flags=VCP_RW | VCP_CONTINUOUS,         // actually v2: C, v3: NC
+     // is in 2.0, n. unlike x62, this code is identically defined in 2.0, 30
      .nontable_formatter=format_feature_detail_standard_continuous,
-
      .desc = "Increase/decrease microphone gain",
-        //.global_flags = VCP_RW,
-        .v20_flags = VCP2_RW | VCP2_STD_CONT,
-        .v20_name = "Audio: Microphone Volume",
+     .v20_flags = VCP2_RW | VCP2_STD_CONT,
+     .v20_name = "Audio: Microphone Volume",
    },
    { .code=0x66,
      .vcp_spec_groups = VCP_SPEC_MISC,
@@ -2608,11 +2609,8 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
      .vcp_spec_groups = VCP_SPEC_IMAGE,
      // Defined in 2.0, name change in ?
      //.name="Video black level: Red",
-     //.flags=VCP_RW | VCP_CONTINUOUS | VCP_COLORMGT | VCP_PROFILE,
      .nontable_formatter=format_feature_detail_standard_continuous,
-
      .desc="Increase/decrease the black level of red pixels",  // my simplification
-     //.global_flags = VCP_RW | VCP2_COLORMGT | VCP2_PROFILE,
      .v20_flags =  VCP2_RW |VCP2_STD_CONT| VCP2_COLORMGT  | VCP2_PROFILE,
      .v20_name = "Red video black level",
    },
@@ -2628,11 +2626,8 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
       .vcp_spec_groups = VCP_SPEC_IMAGE,
       // Defined in 2.0, name change in ?
      //.name="Video black level: Green",
-     //.flags=VCP_RW | VCP_CONTINUOUS | VCP_COLORMGT | VCP_PROFILE,
      .nontable_formatter=format_feature_detail_standard_continuous,
-
      .desc="Increase/decrease the black level of green pixels",  // my simplification
-     //.global_flags = VCP_RW | VCP2_COLORMGT | VCP2_PROFILE,
      .v20_flags =  VCP2_RW |VCP2_STD_CONT| VCP2_COLORMGT | VCP2_PROFILE,
      .v20_name = "Green video black level",
    },
@@ -2648,11 +2643,8 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
      .vcp_spec_groups = VCP_SPEC_IMAGE,
      // Defined in 2.0, name change in ?
      //.name="Video black level: Blue",
-     //.flags=VCP_RW | VCP_CONTINUOUS | VCP_COLORMGT | VCP_PROFILE,
      .nontable_formatter=format_feature_detail_standard_continuous,
-
      .desc="Increase/decrease the black level of blue pixels",  // my simplification
-     //.global_flags = VCP_RW | VCP2_COLORMGT | VCP2_PROFILE,
      .v20_flags =  VCP2_RW |VCP2_STD_CONT| VCP2_COLORMGT | VCP2_PROFILE,
      .v20_name = "Blue video black level",
    },
@@ -2680,13 +2672,9 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
    { .code=0x73,
      .vcp_spec_groups = VCP_SPEC_MISC | VCP_SPEC_IMAGE,
      // VCP_SPEC_MISC in 2.0, VCP_SPEC_IMAGE in 3.0, 2.1? 2.2?
-     //.name="LUT size",
-     //.flags=VCP_RO | VCP_TABLE      | VCP_COLORMGT,
-      .table_formatter=format_feature_detail_x73_lut_size,
-
+     .table_formatter=format_feature_detail_x73_lut_size,
      .desc = "Provides the size (number of entries and number of bits/entry) "
-           "for the Red, Green, and Blue LUT in the display.",
-     //.global_flags = VCP_RO,
+             "for the Red, Green, and Blue LUT in the display.",
      .v20_flags = VCP2_RO| VCP2_TABLE| VCP2_COLORMGT,
      .v20_name  = "LUT Size",
    },
@@ -2694,11 +2682,8 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
      // VCP_SPEC_MISC in 2.0, VCP_SPEC_?? in 3.0, 2.2
      .vcp_spec_groups = VCP_SPEC_MISC,
      //.name = "Single point LUT operation",
-     //.flags = VCP_RW | VCP_TABLE | VCP_COLORMGT,
      .table_formatter = default_table_feature_detail_function,
-
      .desc = "Writes a single point within the display's LUT, reads a single point from the LUT",
-     //.global_flags = VCP_RW,
      .v20_flags = VCP2_RW | VCP2_TABLE| VCP2_COLORMGT,
      .v20_name = "Single point LUT operation",
    },
@@ -2706,29 +2691,21 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
      // VCP_SPEC_MISC in 2.0, VCP_SPEC_?? in 3.0, 2.2
      .vcp_spec_groups = VCP_SPEC_MISC,
      //.name = "Block LUT operation",
-     //.flags = VCP_RW | VCP_TABLE | VCP_COLORMGT,
      .table_formatter = default_table_feature_detail_function,
-
      .desc = "Load (read) multiple values into (from) the display's LUT",
-     //.global_flags = VCP_RW,
      .v20_flags = VCP2_RW | VCP2_TABLE| VCP2_COLORMGT,
      .v20_name = "Block LUT operation",
    },
    { .code=0x76,
      // defined in 2.0, 3.0
      .vcp_spec_groups = VCP_SPEC_MISC,
-     //.flags = VCP_WO | VCP_TABLE,
-     //.name = "Remote Procedure Call",
-
      .desc = "Initiates a routine resident in the display",
-     //.global_flags = VCP_WO,
      .v20_flags = VCP2_WO | VCP2_WO_TABLE,
      .v20_name = "Remote Procedure Call",
    },
-
    { .code=0x78,
      .vcp_spec_groups = VCP_SPEC_MISC,
-     // apparently not in 2.0
+     // Not in 2.0
      // defined in 3.0, 2.2 - name and description vary, but content identical
      // what to do about 2.1?  assume it's defined in 2.1 and identical to 3.0
      //.name = "EDID operation",
@@ -2745,68 +2722,58 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
      .v22_name = "Display Identification Operation",
    },
    { .code=0x7a,
-     .vcp_spec_groups = VCP_SPEC_IMAGE,
+     .vcp_spec_groups = VCP_SPEC_IMAGE,      // v2.0
      // defined in 2.0, not in 3.0
-     //.name="Adjust Focal Plane",
-     //.flags=VCP_RW | VCP_CONTINUOUS,
-
+     // what to do for 2.1?
      .desc="Increase/decrease the distance to the focal plane of the image",  // my simplification
      //.global_flags=VCP_RW,
      .v20_flags = VCP2_RW | VCP2_STD_CONT,
      .v20_name = "Adjust Focal Plane",
+     .v30_flags = VCP2_DEPRECATED,
+     .v22_flags = VCP2_DEPRECATED,    // ??
    },
    { .code=0x7c,
       .vcp_spec_groups = VCP_SPEC_IMAGE,
-      // defined in 2.0, not in 3.0
-      //.name="Adjust Zoom",
-      //.flags=VCP_RW | VCP_CONTINUOUS,
-
-      .desc="Increase/decrease the distance to the zoom function of the optics",  // my simplification
-      //.global_flags=VCP_RW,
+      // defined in 2.0, is in 3.0
+      // my simplification, merger of 2.0 and 3.0 descriptions:
+      .desc="Increase/decrease the distance to the zoom function of the projection lens (optics)",
       .v20_flags =  VCP2_RW | VCP2_STD_CONT,
       .v20_name = "Adjust Zoom",
     },
    { .code=0x7e,                                    // TODO: CHECK 2.2 SPEC
+     // Is this really a valid v2.0 code?   See earlier comments
+     // Is in V2.0 Geometry table, but not cross reference.
      .vcp_spec_groups = VCP_SPEC_GEOMETRY,
      .vcp_classes = VCP_CLASS_ANALOG,
      // Section 8.4 Geometry
      // data from v2.0 spec
      // not in v3.0 spec
      // when was it deleted?  v3.0 or v2.1?   For safety assume 3.0
-     //.name="Placeholder",
-     //.flags=VCP_RW | VCP_CONTINUOUS,
 
      .desc = "Increase/decrease the trapezoid distortion in the image",
-     //.global_flags=VCP_RW,
      .v20_flags= VCP2_RW | VCP2_STD_CONT,
      .v30_flags=VCP2_DEPRECATED,
      .v22_flags=VCP2_DEPRECATED,
      .v20_name="Trapezoid",
    },
    { .code=0x80,                                    // TODO: CHECK 2.2 SPEC
+     // The v2.0 cross ref lists 0x50 as Keystone, group Geometry
+     // However, the Geometry table lists Keystone as x50, not x80
+     // Neither x50 nor x80 are defined in v3.0
      .vcp_spec_groups = VCP_SPEC_GEOMETRY,
      .vcp_classes = VCP_CLASS_ANALOG,
      // Section 8.4 Geometry
      // in 2.0 spec, not in 3.0
      // assume not in 2.1
      // TODO: CHECK 2.2
-     //.name="Placeholder",
-     //.flags=VCP_RW | VCP_CONTINUOUS,
 
-     // from spec:
-     // .desc = "Increasing (decreasing) this value will increase (decrease) "
-     //         "the degree of keystone distortion in the image.",
-     // my simplification:
      .desc="Increase/decrease the keystone distortion in the image.",
-     //.global_flags=VCP_RW,
      .v20_flags= VCP2_RW | VCP2_STD_CONT,
      .v20_name="Keystone",
+     .v21_flags = VCP2_DEPRECATED,
    },
    { .code=0x82,
      .vcp_spec_groups = VCP_SPEC_IMAGE | VCP_SPEC_GEOMETRY,         // 2.0: Image, 3.0: Geometry
-
-     //.name="Placeholder",
-     //.flags=VCP_WO | VCP_NON_CONT,
      .default_sl_values = x82_horizontal_flip_values,
 
      .desc="Flip picture horizontally",
@@ -2840,7 +2807,8 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
        .v21_sl_values = x84_vertical_flip_values,
      },
    { .code=0x86,                                              // Done
-     .vcp_spec_groups = VCP_SPEC_GEOMETRY,
+     // v2.0 spec cross ref lists as MISC, but defined in IMAGE table, assume IMAGE
+     .vcp_spec_groups = VCP_SPEC_IMAGE,              // 2.0: IMAGE
      //.name="DisplayScaling",
      //.flags = VCP_RW | VCP_NON_CONT,
      .default_sl_values = x86_display_scaling_values,
@@ -2851,29 +2819,24 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
      .v20_name = "Display Scaling",
    },
    { .code=0x87,                                                 // Done
-     .vcp_spec_groups = VCP_SPEC_IMAGE | VCP_SPEC_GEOMETRY,    // 2.0 geometry, 3.0 Image
-     .vcp_classes = VCP_CLASS_ANALOG,     // ???
-     //.name="Sharpness",
+     .vcp_spec_groups = VCP_SPEC_IMAGE ,    // 2.0 IMAGE, 3.0 Image
      // defined in 2.0, is C in 3.0, assume 2.1 is C as well
      //.flags=VCP_RW | VCP_CONTINUOUS               ,
       .nontable_formatter=format_feature_detail_standard_continuous,
       .default_sl_values = x87_sharpness_values,
 
       .desc = "Specifies one of a range of algorithms",
-      //.global_flags=VCP_RW,
-      .v20_flags=VCP2_RW | VCP2_SIMPLE_NC,        // need a lookup table
+      .v20_flags=VCP2_RW | VCP2_SIMPLE_NC,
       .v20_name="Sharpness",
       .v21_flags=VCP2_RW | VCP2_STD_CONT,
    },
    { .code=0x88,
      // defined in 2.0,
+     // 2.0 cross ref lists this as IMAGE, but defined in MISC table
      .vcp_spec_groups = VCP_SPEC_MISC,
      .vcp_classes = VCP_CLASS_ANALOG,    // ???
-     //.flags = VCP_RW | VCP_CONTINUOUS,
-
      .desc = "Increase (decrease) the velocity modulation of the horizontal "
            "scan as a function of the change in luminescence level",
-     //.global_flags = VCP_RW,
      .v20_flags = VCP2_RW | VCP2_STD_CONT,
      .v20_name = "Velocity Scan Modulation",
    },
