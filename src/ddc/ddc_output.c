@@ -59,8 +59,6 @@
 // Trace class for this file
 static Trace_Group TRACE_GROUP = TRC_DDC;
 
-
-
 //
 // Show VCP value
 //
@@ -663,7 +661,7 @@ void show_single_vcp_value_by_display_handle(Display_Handle * phandle, char * fe
 void show_feature_set_values_by_display_handle(
       Display_Handle *      dh,
       VCP_Feature_Set       feature_set,
-      GPtrArray *           collector)
+      GPtrArray *           collector)    // if null, write to stdout
 {
    bool debug = false;
    DBGMSF(debug, "Starting.  collector=%p", collector);
@@ -689,8 +687,10 @@ void show_feature_set_values_by_display_handle(
          // confuses the output if suppressing unsupported
          if (!suppress_unsupported) {
             char * feature_name =  get_version_sensitive_feature_name(entry, vcp_version);
+            Version_Feature_Flags vflags = get_version_sensitive_feature_flags(entry, vcp_version);
+            char * msg = (vflags & VCP2_DEPRECATED) ? "Deprecated" : "Write-only feature";
             printf(fmt_code_name_detail_w_nl,
-                   entry->code, feature_name, "Write-only feature");
+                   entry->code, feature_name, msg);
          }
       }
       else {
@@ -749,7 +749,7 @@ void show_feature_set_values_by_display_handle(
  * Arguments:
  *    dh         display handle for open display
  *    subset     feature subset
- *    collector  accumulates output
+ *    collector  accumulates output    // if null, write to stdout
  *
  * Returns:
  *    nothing
@@ -772,9 +772,8 @@ void show_vcp_values_by_display_handle(
 }
 
 
-
 //
-//
+// Support for dumpvcp command and returning profile info as string in API
 //
 
 
@@ -783,9 +782,7 @@ char * format_timestamp(time_t time_millis, char * buf, int bufsz) {
       bufsz = 128;
       buf = calloc(1, bufsz);
    }
-
    struct tm tm = *localtime(&time_millis);
-
    snprintf(buf, bufsz, "%4d%02d%02d-%02d%02d%02d",
                   tm.tm_year+1900,
                   tm.tm_mon+1,
@@ -798,41 +795,17 @@ char * format_timestamp(time_t time_millis, char * buf, int bufsz) {
 }
 
 
-GPtrArray * get_profile_related_values_by_display_handle(Display_Handle* dh) {
-   assert( get_output_level() == OL_PROGRAM);
-   GPtrArray * vals = g_ptr_array_sized_new(50);
-
-   // bool dumpvcp(Display_Ref * dref, char * filename) {
-
-   char timestamp_buf[30];
-   time_t time_millis = time(NULL);
-   // temporarily use same output format as filename, but format the date separately here
-   // for flexibility
-   format_timestamp(time_millis, timestamp_buf, sizeof(timestamp_buf));
-
+void collect_machine_readable_monitor_id(Display_Handle * dh, GPtrArray * vals) {
    char buf[400];
    int bufsz = sizeof(buf)/sizeof(char);
-   char * s;
-   snprintf(buf, bufsz, "TIMESTAMP_TEXT %s", timestamp_buf );
-   s = strdup(buf);
-   g_ptr_array_add(vals, s);
-   snprintf(buf, bufsz, "TIMESTAMP_MILLIS %ld", time_millis);
-   s = strdup(buf);
-   g_ptr_array_add(vals, s);
 
    Parsed_Edid * edid = ddc_get_parsed_edid_by_display_handle(dh);
-   // DBGMSG("strlen(mfg_id)=%ld", strlen(edid->mfg_id));
    snprintf(buf, bufsz, "MFG_ID  %s",  edid->mfg_id);
-   // DBGMSG("strlen(buf)=%ld", strlen(buf));
-   s = strdup(buf);
-   // DBGMSG("strlen(s)=%ld", strlen(s));
-   g_ptr_array_add(vals, s);
+   g_ptr_array_add(vals, strdup(buf));
    snprintf(buf, bufsz, "MODEL   %s",  edid->model_name);
-   s = strdup(buf);
-   g_ptr_array_add(vals, s);
+   g_ptr_array_add(vals, strdup(buf));
    snprintf(buf, bufsz, "SN      %s",  edid->serial_ascii);
-   s = strdup(buf);
-   g_ptr_array_add(vals, s);
+   g_ptr_array_add(vals, strdup(buf));
 
    char hexbuf[257];
    hexstring2(edid->bytes, 128,
@@ -840,13 +813,33 @@ GPtrArray * get_profile_related_values_by_display_handle(Display_Handle* dh) {
               true /* uppercase */,
               hexbuf, 257);
    snprintf(buf, bufsz, "EDID    %s", hexbuf);
-   s = strdup(buf);
-   g_ptr_array_add(vals, s);
+   g_ptr_array_add(vals, strdup(buf));
+}
 
+
+void collect_machine_readable_timestamp(time_t time_millis, GPtrArray* vals) {
+   // temporarily use same output format as filename, but format the
+   // date separately herefor flexibility
+   char timestamp_buf[30];
+   format_timestamp(time_millis, timestamp_buf, sizeof(timestamp_buf));
+   char buf[400];
+   int bufsz = sizeof(buf)/sizeof(char);
+   snprintf(buf, bufsz, "TIMESTAMP_TEXT %s", timestamp_buf );
+   g_ptr_array_add(vals, strdup(buf));
+
+   snprintf(buf, bufsz, "TIMESTAMP_MILLIS %ld", time_millis);
+   g_ptr_array_add(vals, strdup(buf));
+}
+
+
+GPtrArray * collect_profile_related_values_by_display_handle(Display_Handle* dh, time_t timestamp_millis) {
+   assert( get_output_level() == OL_PROGRAM);
+   GPtrArray * vals = g_ptr_array_sized_new(50);
+
+   collect_machine_readable_timestamp(timestamp_millis, vals);
+   collect_machine_readable_monitor_id(dh, vals);
    show_vcp_values_by_display_handle(dh, SUBSET_PROFILE, vals);
 
    return vals;
 }
-
-
 

@@ -85,7 +85,7 @@ void show_vcp_values_by_display_handle(
 
 char * format_timestamp(time_t time_millis, char * buf, int bufsz);
 
-GPtrArray * get_profile_related_values_by_display_handle(Display_Handle * dh);
+GPtrArray * collect_profile_related_values_by_display_handle(Display_Handle * dh, time_t timestamp_millis);
 
 
 #endif /* DDC_OUTPUT_H_ */

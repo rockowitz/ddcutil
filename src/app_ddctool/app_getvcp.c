@@ -67,7 +67,12 @@ app_show_single_vcp_value_by_dh(Display_Handle * dh, char * feature, bool force)
       if (entry) {
          if (!is_feature_readable_by_vcp_version(entry, vspec)) {
             char * feature_name =  get_version_sensitive_feature_name(entry, vspec);
-            printf("Feature %02x (%s) is not readable\n", feature_id, feature_name);
+            Version_Feature_Flags vflags = get_version_sensitive_feature_flags(entry, vspec);
+            if (vflags & VCP2_DEPRECATED)
+               printf("Feature %02x (%s) is deprecated in MCCS %d.%d\n",
+                      feature_id, feature_name, vspec.major, vspec.minor);
+            else
+               printf("Feature %02x (%s) is not readable\n", feature_id, feature_name);
             // gsc = modulate_rc(-EINVAL, RR_ERRNO);    // TEMP - what is appropriate?
             gsc = DDCL_INVALID_OPERATION;
          }

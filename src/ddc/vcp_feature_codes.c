@@ -229,7 +229,7 @@ get_version_specific_feature_flags(
       result = pvft_entry->v22_flags;
 
    if (!result &&
-       (vcp_version.major >= 3 || (vcp_version.major == 2 && vcp_version.minor == 1))
+       (vcp_version.major >= 3 || (vcp_version.major == 2 && vcp_version.minor >= 1))
       )
          result = pvft_entry->v21_flags;
 
@@ -3345,11 +3345,11 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
       // code 0xde has a completely different name and definition in v2.0
       // vs v3.0/2.2
       // 2.0: Operation Mode, W/O single byte value per xde_wo_operation_mode_values
-      // 3.0, 2.1: Scratch Pad: 2 bytes of volatile storage for use of software applications
+      // 3.0, 2.2: Scratch Pad: 2 bytes of volatile storage for use of software applications
       // Did the definition really change so radically, or is the 2.0 spec a typo.
       // What to do for 2.1?  Assume same as 3.0,2.2
      .vcp_spec_groups = VCP_SPEC_MISC,   // 2.0, 3.0, 2.2
-     .desc = "Operation mode (2.0) or scratch pad (3.0)",
+     .desc = "Operation mode (2.0) or scratch pad (3.0/2.2)",
      .nontable_formatter = format_feature_detail_debug_sl_sh,
      .v20_flags = VCP2_WO | VCP2_WO_NC,
      .v20_name  = "Operation Mode",

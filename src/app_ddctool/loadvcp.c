@@ -504,9 +504,9 @@ char * create_simple_vcp_fn(Display_Ref * dref, time_t time_millis, char * buf, 
 
 
 
-GPtrArray * get_profile_related_values_by_display_ref(Display_Ref * dref) {
+GPtrArray * get_profile_related_values_by_display_ref(Display_Ref * dref, time_t time_millis) {
    Display_Handle* dh = ddc_open_display(dref, EXIT_IF_FAILURE);
-   GPtrArray * vals = get_profile_related_values_by_display_handle(dh);
+   GPtrArray * vals = collect_profile_related_values_by_display_handle(dh, time_millis);
    ddc_close_display(dh);
    return vals;
 }
@@ -542,36 +542,7 @@ bool dumpvcp(Display_Ref * dref, char * filename) {
       ok = false;
    }
    else {
-#ifdef X
-      fprintf(output_fp, "TIMESTAMP_TEXT %s\n", timestamp_buf );
-      fprintf(output_fp, "TIMESTAMP_MILLIS %ld\n", time_millis);
-#endif
-#ifdef OLD
-      set_output_format(OUTPUT_PROG_VCP);
-      if (dref->ddc_io_mode == DDC_IO_DEVI2C)
-         report_i2c_bus(dref->busno, output_fp);
-      else {
-         // report ADL
-         // ADAPTER_INDEX, DISPLAY_INDEX, MFG_ID, MODEL, SN
-      }
-#endif
-#ifdef X
-      Parsed_Edid * edid = ddc_get_parsed_edid_by_display_ref(dref);
-      fprintf(output_fp, "MFG_ID  %s\n",  edid->mfg_id);
-      fprintf(output_fp, "MODEL   %s\n",  edid->model_name);
-      fprintf(output_fp, "SN      %s\n",  edid->serial_ascii);
-
-      char hexbuf[257];
-      hexstring2(edid->bytes, 128,
-                 NULL /* no separator */,
-                 true /* uppercase */,
-                 hexbuf, 257);
-      fprintf(output_fp, "EDID    %s\n", hexbuf);
-#endif
-#ifdef OLD
-      set_output_format(OUTPUT_PROG_VCP);
-#endif
-      GPtrArray * vals = get_profile_related_values_by_display_ref(dref);
+      GPtrArray * vals = get_profile_related_values_by_display_ref(dref, time_millis);
       DBGMSG("vals->len = %d", vals->len);
 #ifdef FAILS
       int ndx = 0;
@@ -604,7 +575,7 @@ bool dumpvcp(Display_Ref * dref, char * filename) {
 }
 
 char * dumpvcp_to_string_by_display_handle(Display_Handle * dh) {
-   GPtrArray * vals = get_profile_related_values_by_display_handle(dh);
+   GPtrArray * vals = collect_profile_related_values_by_display_handle(dh, time(NULL));
    int ct = vals->len;
    // DBGMSG("ct = %d", ct);
    char ** pieces = calloc(ct, sizeof(char*));
