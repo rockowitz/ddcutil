@@ -35,8 +35,8 @@
 #include "base/ddc_packets.h"
 #include "base/util.h"
 
-extern const char* fmt_code_name_detail_w_nl;
-extern const char* fmt_code_name_detail_wo_nl;
+extern const char* FMT_CODE_NAME_DETAIL_W_NL;
+extern const char* FMT_CODE_NAME_DETAIL_WO_NL;
 
 //
 // VCP Feature Interpretation
@@ -81,6 +81,7 @@ typedef ushort Version_Feature_Flags;
 // Used to mark that the feature is defined for a version
 #define VCP2_WO_NC           0x08
 #define VCP2_NC              (VCP2_SIMPLE_NC|VCP2_COMPLEX_NC|VCP2_WO_NC)
+#define VCP2_NON_TABLE       (VCP2_CONT | VCP2_NC)
 #define VCP2_TABLE           0x04
 #define VCP2_WO_TABLE        0x02
 #define VCP2_ANY_TABLE       (VCP2_TABLE | VCP2_WO_TABLE)
@@ -261,10 +262,10 @@ char * get_non_version_specific_feature_name(
        VCP_Feature_Table_Entry * pvft_entry);
 
 Format_Normal_Feature_Detail_Function
-get_nontable_feature_detail_function( VCP_Feature_Table_Entry * pvft_entry);
+get_nontable_feature_detail_function( VCP_Feature_Table_Entry * pvft_entry, Version_Spec vcp_version);
 
 Format_Table_Feature_Detail_Function
-get_table_feature_detail_function(VCP_Feature_Table_Entry * pvft_entry);
+get_table_feature_detail_function(VCP_Feature_Table_Entry * pvft_entry, Version_Spec vcp_version);
 
 bool vcp_format_nontable_feature_detail(
         VCP_Feature_Table_Entry * vcp_entry,

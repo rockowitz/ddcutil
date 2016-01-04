@@ -578,7 +578,7 @@ get_formatted_value_for_feature_table_entry(
                  &formatted_data);
          // DBGMSG("vcp_format_feature_detail set formatted_data=|%s|", formatted_data);
          if (!ok) {
-            fprintf(msg_fh, fmt_code_name_detail_wo_nl,
+            fprintf(msg_fh, FMT_CODE_NAME_DETAIL_WO_NL,
                             feature_code, feature_name, "!!! UNABLE TO FORMAT OUTPUT");
             gsc = DDCRC_INTERPRETATION_FAILED;
             // TODO: retry with default output function
@@ -588,7 +588,7 @@ get_formatted_value_for_feature_table_entry(
             if (prefix_value_with_feature_code) {
                *pformatted_value = calloc(1, strlen(formatted_data) + 50);
                snprintf(*pformatted_value, strlen(formatted_data) + 49,
-                        fmt_code_name_detail_wo_nl,
+                        FMT_CODE_NAME_DETAIL_WO_NL,
                         feature_code, feature_name, formatted_data);
                free(formatted_data);
             }
@@ -689,7 +689,7 @@ void show_feature_set_values_by_display_handle(
             char * feature_name =  get_version_sensitive_feature_name(entry, vcp_version);
             Version_Feature_Flags vflags = get_version_sensitive_feature_flags(entry, vcp_version);
             char * msg = (vflags & VCP2_DEPRECATED) ? "Deprecated" : "Write-only feature";
-            printf(fmt_code_name_detail_w_nl,
+            printf(FMT_CODE_NAME_DETAIL_W_NL,
                    entry->code, feature_name, msg);
          }
       }
