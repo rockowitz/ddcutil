@@ -524,7 +524,8 @@ get_nontable_feature_detail_function(
    bool debug = false;
    DBGMSF(debug, "Starting");
 
-   Version_Feature_Flags version_specific_flags = get_version_sensitive_feature_flags(pvft_entry, vcp_version);
+   Version_Feature_Flags version_specific_flags =
+         get_version_sensitive_feature_flags(pvft_entry, vcp_version);
    assert(version_specific_flags);
    assert(version_specific_flags & VCP2_NON_TABLE);
    Format_Normal_Feature_Detail_Function func = NULL;
@@ -1843,7 +1844,7 @@ static Feature_Value_Entry xcc_osd_language_values[] = {
           {0x23, "Thai"},
           {0x24, "Ukranian"},
           {0x25, "Vietnamese"},
-          {0x00,  NULL}       // end of list marker, 0x00 might be a valid value, but NULL never is
+          {0x00,  NULL}       // end of list marker
 };
 
 
@@ -1922,16 +1923,16 @@ static Feature_Value_Entry xdc_display_application_values[] = {
 };
 
 
-//#pragma GCC diagnostic push
-//// not suppressing warning, why?
-//#pragma GCC diagnostic ignored "-Wunused-variable"
-//// 0xde         // write-only feature
-//static  Feature_Value_Entry xde_wo_operation_mode_values[] =
-//   { {0x01, "Stand alone"},
-//     {0x02, "Slave (full PC control)"},
-//     {0x00, NULL}    // termination entry
-//};
-//#pragma GCC diagnostic pop
+#pragma GCC diagnostic push
+// not suppressing warning, why?, but removing static does avoid warning
+#pragma GCC diagnostic ignored "-Wunused-variable"
+// 0xde         // write-only feature
+Feature_Value_Entry xde_wo_operation_mode_values[] =
+   { {0x01, "Stand alone"},
+     {0x02, "Slave (full PC control)"},
+     {0x00, NULL}    // termination entry
+};
+#pragma GCC diagnostic pop
 
 
 //
