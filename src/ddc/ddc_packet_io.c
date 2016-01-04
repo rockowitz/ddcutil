@@ -475,6 +475,7 @@ Global_Status_Code ddc_write_read(
 
        if (rc != 0 && *response_packet_ptr_loc) {  // paranoid,  should never occur
           free(*response_packet_ptr_loc);
+          *response_packet_ptr_loc = NULL;
        }
    }
 

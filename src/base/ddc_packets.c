@@ -946,7 +946,7 @@ Global_Status_DDC create_ddc_typed_response_packet(
       int          response_bytes_buffer_size,
       Byte         expected_type,
       Byte         expected_subtype,
-      const char*        tag,
+      const char*  tag,
       DDC_Packet** packet_ptr_addr)
 {
    // bool debug = adjust_debug_level(true, ddc_packets_trace_level);
@@ -1016,6 +1016,7 @@ Global_Status_DDC create_ddc_typed_response_packet(
 
    if (rc != DDCRC_OK && *packet_ptr_addr) {
       free_ddc_packet(*packet_ptr_addr);
+      *packet_ptr_addr = NULL;
    }
 
    // if (debug) {

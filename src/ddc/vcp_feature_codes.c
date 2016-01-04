@@ -3153,72 +3153,46 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
      .default_sl_values=x94_audio_stereo_mode_values,
    },
    { .code=0x95,                               // Done
-     .vcp_spec_groups = VCP_SPEC_IMAGE | VCP_SPEC_GEOMETRY,  // 2.0: IMAGE, 3.0: GEOMETRY
-     //.name="Placeholder",
-     //.flags = VCP_RW |VCP_CONTINUOUS,    // something
-
+     .vcp_spec_groups = VCP_SPEC_WINDOW | VCP_SPEC_GEOMETRY,  // 2.0: WINDOW, 3.0: GEOMETRY
      .desc="Top left X pixel of an area of the image",
-     //.global_flags=VCP_RW,
      .v20_flags= VCP2_RW | VCP2_STD_CONT,
      .v20_name="Window Position(TL_X)",
    },
    { .code=0x96,                                             // Done
-         .vcp_spec_groups = VCP_SPEC_IMAGE | VCP_SPEC_GEOMETRY,  // 2.0: IMAGE, 3.0: GEOMETRY
-     //.name="Placeholder",
-     //.flags = VCP_RW |VCP_CONTINUOUS,    // something
-
+     .vcp_spec_groups = VCP_SPEC_WINDOW | VCP_SPEC_GEOMETRY,  // 2.0: WINDOW, 3.0: GEOMETRY
      .desc="Top left Y pixel of an area of the image",
-     //.global_flags=VCP_RW,
      .v20_flags= VCP2_RW | VCP2_STD_CONT,
      .v20_name="Window Position(TL_Y)",
    },
    { .code=0x97,                                            // Done
-     .vcp_spec_groups = VCP_SPEC_IMAGE | VCP_SPEC_GEOMETRY,  // 2.0: IMAGE, 3.0: GEOMETRY
-     //.name="Placeholder",
-     //.flags = VCP_RW |VCP_CONTINUOUS,    // something
-
+     .vcp_spec_groups = VCP_SPEC_WINDOW | VCP_SPEC_GEOMETRY,  // 2.0: WINDOW, 3.0: GEOMETRY
      .desc="Bottom right X pixel of an area of the image",
-     //.global_flags=VCP_RW,
      .v20_flags= VCP2_RW | VCP2_STD_CONT,
      .v20_name="Window Position(BR_X)",
    },
    { .code=0x98,                                                    // Done
-         .vcp_spec_groups = VCP_SPEC_IMAGE | VCP_SPEC_GEOMETRY,  // 2.0: IMAGE, 3.0: GEOMETRY
-     //.name="Placeholder",
-     //.flags = VCP_RW |VCP_CONTINUOUS,    // something
-
+     .vcp_spec_groups = VCP_SPEC_WINDOW | VCP_SPEC_GEOMETRY,  // 2.0: WINDOW, 3.0: GEOMETRY
      .desc="Bottom right Y pixel of an area of the image",
-     //.global_flags=VCP_RW,
      .v20_flags= VCP2_RW | VCP2_STD_CONT,
      .v20_name="Window Position(BR_Y)",
    },
    { .code=0x99,
-     .vcp_spec_groups = VCP_SPEC_IMAGE,
-     .vcp_classes = VCP_CLASS_WINDOW,
+     .vcp_spec_groups = VCP_SPEC_WINDOW,     // 2.0: WINDOW
      // in 2.0,  not in 3.0 or 2.2, what is correct choice for 2.1?
-     //.name="Placeholder",
-     //.flags = VCP_RW |VCP_NON_CONT,    // something
      .default_sl_values = x99_window_control_values,
-
      .desc="Enables the brightness and color within a window to be different "
            "from the desktop.",
-     //.global_flags=VCP_RW,
      .v20_flags= VCP2_RW | VCP2_SIMPLE_NC,
      .v20_name="Window control on/off",
      .v30_flags = VCP2_DEPRECATED,
      .v30_flags = VCP2_DEPRECATED,
    },
    { .code=0x9a,
-     .vcp_spec_groups = VCP_SPEC_IMAGE,
-     // in 2.0, same in 3.0
-     //.name="Window Background",
-     //.flags = VCP_RW |VCP_CONTINUOUS,    // temp
-
+     .vcp_spec_groups = VCP_SPEC_IMAGE | VCP_SPEC_WINDOW,   // 2.0: WINDOW, 3.0: IMAGE
      .desc="Changes the contrast ratio between the area of the window and the "
            "rest of the desktop",
-     //.global_flags=VCP_RW,
      .v20_flags= VCP2_RW | VCP2_STD_CONT,
-     .v20_name="Window control on/off",
+     .v20_name="Window background",
    },
    { .code=0x9b,
          .vcp_spec_groups = VCP_SPEC_IMAGE,

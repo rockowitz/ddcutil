@@ -112,11 +112,12 @@ typedef ushort Version_Feature_Flags;
 #define VCP_SPEC_AUDIO    0x04     // Section 8.6 Audio Functions
 #define VCP_SPEC_DPVL     0x02     // Section 8.7 DPVL Functions
 #define VCP_SPEC_MFG      0x01     // Section 8.8 Manufacturer Specific
+#define VCP_SPEC_WINDOW   0x8000   // Table 5 in MCCS 2.0 spec
 
 // my groupings, not in MCCS spec:
 #define VCP_CLASS_ANALOG  0x80     // setting that only applies to analog, e.g. CRT, devices
 #define VCP_CLASS_TV      0x40     // TV related setting
-#define VCP_CLASS_WINDOW  0x20
+// #define VCP_CLASS_WINDOW  0x20
 
 #ifdef FUTURE
 // redundant but might make table more self-documenting
@@ -186,7 +187,7 @@ struct {
    // VCP_Feature_Parser                 data_parser;
    // VCP_Feature_Reporter               data_reporter;
    Byte                                  vcp_global_flags;
-   Byte                                  vcp_spec_groups;
+   ushort                                vcp_spec_groups;
    Byte                                  vcp_classes;
    Byte                                  vcp_subsets;     // new - to implement
    char *                                v20_name;
