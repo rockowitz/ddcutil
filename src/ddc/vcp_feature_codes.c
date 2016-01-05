@@ -1568,6 +1568,23 @@ bool format_feature_detail_version(
    return true;
 }
 
+// 0xce
+bool format_feature_detail_xce_aux_display_size(
+        Parsed_Nontable_Vcp_Response * code_info,
+        Version_Spec                   vcp_version,
+        char *                         buffer,
+        int                            bufsz)
+{
+   assert (code_info->vcp_code == 0xce);
+
+   int rows = (code_info->sl & 0xc0) >> 6;
+   int chars_per_row = code_info->sl & 0x3f;
+   snprintf(buffer, bufsz, "Rows=%d, characters/row=%d (sl=0x%02x)",
+            rows, chars_per_row, code_info->sl);
+   return true;
+ }
+
+
 
 //
 // SL byte value lookup tables
@@ -1628,7 +1645,7 @@ static Feature_Value_Entry x1e_x1f_auto_setup_values[] = {
 // 0x60: These are MCCS V2 values.   In V3, x60 is type table.
 // see also EloView Remote Mgt Local Cmd Set document
 Feature_Value_Entry x60_v2_input_source_values[] = {
-      {0x01,  "VGA-1"},
+      {0x01,  "VGA-1"},    // aka Analog video (R/G/B) 1
       {0x02,  "VGA-2"},
       {0x03,  "DVI-1"},
       {0x04,  "DVI-2"},
@@ -1958,7 +1975,7 @@ static Feature_Value_Entry xcc_osd_language_values[] = {
           {0x00,  NULL}       // end of list marker
 };
 
-
+// TODO: consolidate with x60_v2_input_source_values
 // 0xd0: These are MCCS V2 values.   need to check V3
 Feature_Value_Entry xd0_v2_output_select_values[] = {
       {0x01,  "Analog video (R/G/B) 1"},
@@ -1977,10 +1994,10 @@ Feature_Value_Entry xd0_v2_output_select_values[] = {
       {0x0e,  "Component video (YPrPb/YCrCb) 3"},
       // end of v2.0 values
       // remaining values in v2.2 spec, assume also valid for v2.1   // TODO: CHECK
-      // {0x0f,  "DisplayPort-1"},
-      // {0x10,  "DisplayPort-2"},
-      // {0x11,  "HDMI-1"},
-      // {0x12,  "HDMI-2"},
+      {0x0f,  "DisplayPort-1"},
+      {0x10,  "DisplayPort-2"},
+      {0x11,  "HDMI-1"},
+      {0x12,  "HDMI-2"},
       {0x00,  NULL}
 };
 
@@ -3491,7 +3508,7 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
      .vcp_spec_groups = VCP_SPEC_DPVL,
      .desc = "Indicates status of the DVI link",
      .v20_name = "Link control",
-     .v20_flags = VCP2_RW | VCP2_SIMPLE_NC,
+     .v20_flags = VCP2_RW | VCP2_COMPLEX_NC,
      .nontable_formatter = format_feature_detail_xbe_link_control,
    },
    {  .code=0xc0,
@@ -3564,19 +3581,37 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
       .v20_flags  = VCP2_RW | VCP2_SIMPLE_NC,
       .v20_name = "OSD Language",
    },
-   { .code=0xda,                                                   // DONE
-     .vcp_spec_groups = VCP_SPEC_GEOMETRY | VCP_SPEC_IMAGE,         // 2.0: IMAGE, 3.0: GEOMETRY
-     .vcp_classes = VCP_CLASS_TV,
-     //.flags = VCP_RW | VCP_NON_CONT,
-     .desc = "Controls scan characteristics (aka format)",
-     .default_sl_values = xda_scan_mode_values,
-     //.global_flags = VCP_RW,
-
-     .v20_flags = VCP2_RW | VCP2_SIMPLE_NC,
-     .v20_name  = "Scan format",
-     // name differs in 3.0, assume changed as of 2.1
-     .v21_name  = "Scan characteristics",
+   {  .code=0xce,
+      .vcp_spec_groups = VCP_SPEC_MISC,   // 2.0
+      .desc = "Rows and characters/row of auxilliary display",
+      .v20_flags  = VCP2_RO | VCP2_COMPLEX_NC,
+      .v20_name = "Auxilliary display size",
+      .nontable_formatter =  format_feature_detail_xce_aux_display_size,
    },
+   {  .code=0xcf,
+      .vcp_spec_groups = VCP_SPEC_MISC,   // 2.0
+      .desc = "Sets contents of auxilliary display device",
+      .v20_flags  = VCP2_WO | VCP2_WO_TABLE,
+      .v20_name = "Auxilliary display data",
+   },
+   {  .code=0xd0,
+      .vcp_spec_groups = VCP_SPEC_MISC,
+      .desc = "Selects the active output",
+      .v20_name = "Output select",
+      .v20_flags = VCP2_RW | VCP2_SIMPLE_NC,
+      .default_sl_values = xd0_v2_output_select_values,
+      .table_formatter = default_table_feature_detail_function,  // TODO: implement proper function
+      .v30_flags = VCP2_RW | VCP2_TABLE,
+      .v22_flags = VCP2_RW | VCP2_SIMPLE_NC,
+   },
+   {  .code=0xd4,
+      .vcp_spec_groups = VCP_SPEC_MISC | VCP_SPEC_IMAGE,        // 2.0: MISC, 3.0: IMAGE
+      .desc="Stereo video mode",
+      .v20_name = "Stereo video mode",
+      .v20_flags = VCP2_RW | VCP2_COMPLEX_NC,
+      .nontable_formatter = format_feature_detail_sl_byte,     // TODO: implement proper function
+   },
+
    { .code=0xd6,                           // DONE
      .vcp_spec_groups = VCP_SPEC_MISC | VCP_SPEC_CONTROL,   // 2.0: MISC, 3.0: CONTROL
      //.name="Power mode",
@@ -3597,6 +3632,16 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
      .desc="Controls an auxilliary power output from a display to a host device",
      .v20_flags = VCP2_RW | VCP2_SIMPLE_NC,
      .v20_name = "Auxilliary power output",
+   },
+   { .code=0xda,                                                   // DONE
+     .vcp_spec_groups = VCP_SPEC_GEOMETRY | VCP_SPEC_IMAGE,         // 2.0: IMAGE, 3.0: GEOMETRY
+     .vcp_classes = VCP_CLASS_ANALOG,
+     .desc = "Controls scan characteristics (aka format)",
+     .default_sl_values = xda_scan_mode_values,
+     .v20_flags = VCP2_RW | VCP2_SIMPLE_NC,
+     .v20_name  = "Scan format",
+     // name differs in 3.0, assume changed as of 2.1
+     .v21_name  = "Scan mode",
    },
    { .code=0xdc,
      .vcp_spec_groups = VCP_SPEC_IMAGE,
