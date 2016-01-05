@@ -30,6 +30,10 @@
 #ifndef CMD_PARSER_BASE_H_
 #define CMD_PARSER_BASE_H_
 
+#include <string.h>
+
+#include "ddc/vcp_feature_set.h"
+
 #include "cmdline/parsed_cmd.h"
 
 
@@ -51,6 +55,11 @@ void validate_cmdinfo();
 bool all_digits(char * val, int ct);
 bool parse_adl_arg(const char * val, int * piAdapterIndex, int * piDisplayIndex);
 bool parse_int_arg(char * val, int * pIval);
+
+
+bool parse_feature_id_or_subset(char * val, Feature_Set_Ref * fsref);
+
+
 
 bool validate_output_level(Parsed_Cmd* parsed_cmd);
 

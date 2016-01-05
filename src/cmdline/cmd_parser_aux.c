@@ -149,6 +149,35 @@ bool parse_int_arg(char * val, int * pIval) {
    return (ct == 1);
 }
 
+bool parse_feature_id_or_subset(char * val, Feature_Set_Ref * fsref) {
+   bool ok = true;
+   char * us = strdup( val );
+   char * p = us;
+   while (*p) {*p=toupper(*p); p++; }
+
+   // TODO: replace with table
+   if ( streq(us,"ALL" ))
+      fsref->subset = SUBSET_ALL;
+   else if ( is_abbrev(us,"SUPPORTED",3 ))
+      fsref->subset = SUBSET_SUPPORTED;
+   else if ( is_abbrev(us,"SCAN",3 ) )
+      fsref->subset = SUBSET_SCAN;
+   else if ( is_abbrev(us, "COLORMGT",3) )
+      fsref->subset = SUBSET_COLORMGT;
+   else if ( is_abbrev(us, "PROFILE",3) )
+      fsref->subset = SUBSET_PROFILE;
+   else {
+     Byte feature_hexid = 0;   // temp
+     ok = hhs_to_byte_in_buf(val, &feature_hexid);
+     if (ok) {
+        fsref->subset = SUBSET_SINGLE_FEATURE;
+        fsref->specific_feature = feature_hexid;
+     }
+  }
+  return ok;
+}
+
+
 
 bool validate_output_level(Parsed_Cmd* parsed_cmd) {
    // printf("(%s) parsed_cmd->cmdid = %d, parsed_cmd->output_level = %s\n",

@@ -208,6 +208,8 @@ struct {
 
 int   vcp_get_feature_code_count();
 
+void report_vcp_feature_table_entry(VCP_Feature_Table_Entry * entry, int depth);
+
 VCP_Feature_Table_Entry * vcp_get_feature_table_entry(int ndx);
 #ifdef DEPRECATED
 VCP_Feature_Table_Entry * vcp_create_dummy_feature_for_charid(char * id);

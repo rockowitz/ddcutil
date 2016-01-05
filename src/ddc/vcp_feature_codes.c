@@ -33,6 +33,7 @@
 #include <string.h>
 
 #include "util/data_structures.h"
+#include "util/report_util.h"
 #include "util/string_util.h"
 
 #include "base/msg_control.h"
@@ -228,6 +229,21 @@ void vcp_list_feature_codes(FILE * fh) {
              );
    }
 }
+
+
+void report_vcp_feature_table_entry(VCP_Feature_Table_Entry * pentry, int depth) {
+   int d1 = depth+1;
+   Version_Spec vspec = get_highest_non_deprecated_version(pentry);
+   Version_Feature_Flags vflags = get_version_specific_feature_flags(pentry, vspec);
+   char * feature_name = get_non_version_specific_feature_name(pentry);
+   rpt_vstring(depth, "VCP code 0x%02x: %s", pentry->code, feature_name);
+   rpt_vstring(d1, "%s", pentry->desc);
+
+
+
+
+}
+
 
 
 

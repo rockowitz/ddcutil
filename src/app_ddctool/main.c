@@ -68,6 +68,7 @@
 #include "ddc/ddc_vcp_version.h"
 #include "ddc/ddc_services.h"
 
+#include "cmdline/cmd_parser_aux.h"    // for parse_feature_id_or_subset(), should it be elsewhere?
 #include "cmdline/parsed_cmd.h"
 #include "cmdline/cmd_parser.h"
 
@@ -216,7 +217,30 @@ int main(int argc, char *argv[]) {
 
    else if (parsed_cmd->cmd_id == CMDID_VCPINFO) {
       printf("Unimplemented: vcpinfo\n");
-      main_rc = EXIT_SUCCESS;
+      Feature_Set_Ref feature_set_ref;
+      char * val = (parsed_cmd->argct > 0) ? parsed_cmd->args[0] : "ALL";
+      bool ok = parse_feature_id_or_subset(val, &feature_set_ref);
+      if (ok) {
+         Version_Spec vcp_version_any = {0,0};
+         VCP_Feature_Set fset = create_feature_set_from_feature_set_ref(
+            &feature_set_ref,
+            vcp_version_any,
+            false);       // force
+
+         // TEMP:
+         report_feature_set(fset, 0);
+         int ct =   get_feature_set_size(fset);
+         int ndx = 0;
+         for (;ndx < ct; ndx++) {
+            VCP_Feature_Table_Entry * pentry = get_feature_set_entry(fset, ndx);
+            report_vcp_feature_table_entry(pentry, 0);
+         }
+         main_rc = EXIT_SUCCESS;
+      }
+      else {
+         printf("Unrecognized VCP feature code or group: %s\n", val);
+         main_rc = EXIT_FAILURE;
+      }
    }
 
    else if (parsed_cmd->cmd_id == CMDID_LISTTESTS) {
