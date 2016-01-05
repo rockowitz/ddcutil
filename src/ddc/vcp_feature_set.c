@@ -77,11 +77,11 @@ VCP_Feature_Set create_feature_set(VCP_Feature_Subset subset, Version_Spec vcp_v
             break;
          case SUBSET_COLORMGT:
             vflags = get_version_specific_feature_flags(vcp_entry, vcp_version);;
-            showit = vflags & VCP2_COLORMGT;
+            showit = (vflags & VCP_SUBSET_COLORMGT) | (vcp_entry->vcp_subsets & VCP_SUBSET_COLORMGT);
             break;
          case SUBSET_PROFILE:
             vflags = get_version_specific_feature_flags(vcp_entry, vcp_version);;
-            showit = vflags & VCP2_PROFILE;
+            showit = (vflags & VCP_SUBSET_PROFILE) | (vcp_entry->vcp_subsets & VCP_SUBSET_PROFILE);
             break;
          case SUBSET_SCAN:    // will never happen, inserted to avoid compiler warning
          case SUBSET_SINGLE_FEATURE:

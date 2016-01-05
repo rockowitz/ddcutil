@@ -61,8 +61,11 @@ extern const char* FMT_CODE_NAME_DETAIL_WO_NL;
 typedef ushort Version_Feature_Flags;
 // Bits in Version_Feature_Flags:
 
-#define VCP2_PROFILE         0x8000
-#define VCP2_COLORMGT        0x4000
+#define VCP_SUBSET_PROFILE         0x8000
+#define VCP_SUBSET_COLORMGT        0x4000
+#define VCP_SUBSET_LUT             0x2000
+#define VCP_SUBSET_ANALOG          0x1000
+#define VCP_SUBSET_TV              0x0800
 
 // Exactly 1 of the following 3 bits must be set
 #define  VCP2_RO             0x0400
@@ -189,7 +192,7 @@ struct {
    Byte                                  vcp_global_flags;
    ushort                                vcp_spec_groups;
    Byte                                  vcp_classes;
-   Byte                                  vcp_subsets;     // new - to implement
+   ushort                                vcp_subsets;     // new - to implement
    char *                                v20_name;
    char *                                v21_name;
    char *                                v30_name;
