@@ -2311,220 +2311,145 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
       .v20_flags = VCP2_RW | VCP2_STD_CONT,
       .v20_name="Horizontal Pincushion Balance",
    },
-   { // Group 8.4 Geometry, name changed in 3.0 & 2.2 vs 2.0  what should it be for 2.1?
-     // assume it changed in 2.1
-     .code=0x28,            // Done
-     .vcp_spec_groups = VCP_SPEC_GEOMETRY,
-     .vcp_subsets = VCP_SUBSET_ANALOG,
-     // description identical in 3.0, 2.0 even though name changed
-     .desc = "Increasing (decreasing) this value shifts the red pixels to "
-             "the right (left) and the blue pixels left (right) across the "
-             "image with respect to the green pixels.",
-     //.name="Horizontal Convergence",
-     //.flags=VCP_RW | VCP_CONTINUOUS,
-     // .nontable_formatter=format_feature_detail_standard_continuous,
-
-     //.global_flags = VCP_RW,
-     .v20_flags = VCP2_RW | VCP2_STD_CONT,
-     .v20_name="Horizontal Convergence",
-     .v21_name="Horizontal Convergence R/B",
+   {  .code=0x28,            // Done
+      // Group 8.4 Geometry, name changed in 3.0 & 2.2 vs 2.0  what should it be for 2.1?
+      // assume it changed in 2.1
+      .vcp_spec_groups = VCP_SPEC_GEOMETRY,
+      .vcp_subsets = VCP_SUBSET_ANALOG,
+      // description identical in 3.0, 2.0 even though name changed
+      .desc = "Increasing (decreasing) this value shifts the red pixels to "
+              "the right (left) and the blue pixels left (right) across the "
+              "image with respect to the green pixels.",
+      .v20_flags = VCP2_RW | VCP2_STD_CONT,
+      .v20_name="Horizontal Convergence",
+      .v21_name="Horizontal Convergence R/B",
    },
-   { .code=0x29,              // Done
-     .vcp_spec_groups = VCP_SPEC_GEOMETRY,
-     .vcp_subsets = VCP_SUBSET_ANALOG,
-     // not in 2.0, when was this added?  2.1 or 3.0?   assuming 2.1
-     //.name="Horizontal Convergence M/G",
-     //.flags=VCP_RW | VCP_CONTINUOUS,
-      // .nontable_formatter=format_feature_detail_standard_continuous,
-
+   {  .code=0x29,              // Done
+      // not in 2.0, when was this added?  2.1 or 3.0?   assuming 2.1
+      .vcp_spec_groups = VCP_SPEC_GEOMETRY,
+      .vcp_subsets = VCP_SUBSET_ANALOG,
       .desc = "Increasing (decreasing) this value shifts the magenta pixels to "
               "the right (left) and the green pixels left (right) across the "
               "image with respect to the magenta (sic) pixels.",
-     //.global_flags=VCP_RW,
-     .v21_name="Horizontal Convergence M/G",
-     .v21_flags=VCP2_RW | VCP2_STD_CONT,
+      .v21_name="Horizontal Convergence M/G",
+      .v21_flags=VCP2_RW | VCP2_STD_CONT,
    },
-   { .code = 0x2a,           // Done
-     .vcp_spec_groups = VCP_SPEC_GEOMETRY,
-     .vcp_subsets = VCP_SUBSET_ANALOG,
-     // Group 8.4 Geometry, identical in 3.0, 2.2
-     //.name = "Horizontal Linearity",
-     //.flags = VCP_RW | VCP_CONTINUOUS,
-
-     .desc = "Increase/decrease the density of pixels in the image center.",
-     //.global_flags=VCP_RW,
-     .v20_flags = VCP2_RW | VCP2_STD_CONT,
-     .v20_name="Horizontal Linearity",
+   {  .code = 0x2a,           // Done
+      .vcp_spec_groups = VCP_SPEC_GEOMETRY,
+      .vcp_subsets = VCP_SUBSET_ANALOG,
+      // Group 8.4 Geometry, identical in 3.0, 2.2
+      .desc = "Increase/decrease the density of pixels in the image center.",
+      .v20_flags = VCP2_RW | VCP2_STD_CONT,
+      .v20_name="Horizontal Linearity",
    },
-   { // Group 8.4 Geometry
-     .code = 0x2c,               // Done
-     .vcp_spec_groups = VCP_SPEC_GEOMETRY,
-     .vcp_subsets = VCP_SUBSET_ANALOG,
-     //.name = "Horizontal Linearity Balance",
-     //.flags = VCP_RW | VCP_CONTINUOUS,
-
-     .desc = "Increasing (decreasing) this value shifts the density of pixels "
-             "from the left (right) side to the right (left) side of the image.",
-     //.global_flags=VCP_RW,
-     .v20_flags = VCP2_RW | VCP2_STD_CONT,
-     .v20_name = "Horizontal Linearity Balance",
+   {  .code = 0x2c,               // Done
+      // Group 8.4 Geometry
+      .vcp_spec_groups = VCP_SPEC_GEOMETRY,
+      .vcp_subsets = VCP_SUBSET_ANALOG,
+      .desc = "Increasing (decreasing) this value shifts the density of pixels "
+              "from the left (right) side to the right (left) side of the image.",
+      .v20_flags = VCP2_RW | VCP2_STD_CONT,
+      .v20_name = "Horizontal Linearity Balance",
    },
-   { .code=0x2e,
-     .vcp_spec_groups = VCP_SPEC_IMAGE,
-     // not defined in 2.0, is defined in 3.0
-     // assume new in 2.1
-     //.name="Gray scale expansion",
-     //.flags=VCP_RW | VCP_NON_CONT   | VCP_COLORMGT,
+   {  .code=0x2e,
+      .vcp_spec_groups = VCP_SPEC_IMAGE,
+      // not defined in 2.0, is defined in 3.0
+      // assume new in 2.1
+      .vcp_subsets = VCP_SUBSET_COLORMGT,
       .nontable_formatter=format_feature_detail_debug_bytes,
-
-     .desc = "Gray Scale Expansion",
-     //.global_flags = VCP_RW | VCP_SUBSET_COLORMGT,
-     .v21_flags = VCP2_RW | VCP_SUBSET_COLORMGT | VCP2_COMPLEX_NC,
-     .v21_name = "Gray scale expansion",
+      .desc = "Gray Scale Expansion",
+      .v21_flags = VCP2_RW |  VCP2_COMPLEX_NC,
+      .v21_name = "Gray scale expansion",
    },
-   { .code=0x30,                // Done
-     .vcp_spec_groups = VCP_SPEC_GEOMETRY,
-     .vcp_subsets = VCP_SUBSET_ANALOG,
-     // Group 8.4 Geometry
-     // When did name change from 2.0? assuming 2.1
-     //.name="Vertical Position",
-     //.flags=VCP_RW | VCP_CONTINUOUS,
-      // .nontable_formatter=format_feature_detail_standard_continuous,
-
+   {  .code=0x30,                // Done
+      .vcp_spec_groups = VCP_SPEC_GEOMETRY,
+      .vcp_subsets = VCP_SUBSET_ANALOG,
       .desc = "Increasing (decreasing) this value moves the image toward "
               "the top (bottom) edge of the display.",
-     //.global_flags=VCP_RW,
-     .v20_flags = VCP2_RW | VCP2_STD_CONT,
-     .v20_name="Vertical Position",
-     .v21_name="Vertical Position (Phase)",
+      .v20_flags = VCP2_RW | VCP2_STD_CONT,
+      .v20_name="Vertical Position",
+      .v21_name="Vertical Position (Phase)",
    },
-   { .code=0x32,                // Done
-     .vcp_spec_groups = VCP_SPEC_GEOMETRY,
-     .vcp_subsets = VCP_SUBSET_ANALOG,
-     // Group 8.4 Geometry.  Did name change with 2.1 or 3.0/2.2? - assuming 2.1
-     //.name="Vertical Size",
-     //.flags=VCP_RW | VCP_CONTINUOUS,
-      // .nontable_formatter=format_feature_detail_standard_continuous,
-
+   {  .code=0x32,                // Done
+      .vcp_spec_groups = VCP_SPEC_GEOMETRY,
+      .vcp_subsets = VCP_SUBSET_ANALOG,
+      // Group 8.4 Geometry.  Did name change with 2.1 or 3.0/2.2? - assuming 2.1
       .desc = "Increase/decreasing the height of the image.",
-     //.global_flags=VCP_RW,
-     .v20_flags=VCP2_RW |  VCP2_STD_CONT,
-     .v20_name="Vertical Size",
+      .v20_flags=VCP2_RW |  VCP2_STD_CONT,
+      .v20_name="Vertical Size",
    },
-   { .code=0x34,                                  // Done
-     .vcp_spec_groups = VCP_SPEC_GEOMETRY,
-     .vcp_subsets = VCP_SUBSET_ANALOG,
-     // Group 8.4 Geometry.  Identical in 2.0, 3.0, 2.2
-     //.name = "Vertical Pincushion",
-     //.flags=VCP_RW | VCP_CONTINUOUS,
-
-     .desc = "Increasing (decreasing) this value will cause the top and "
-             "bottom edges of the image to become more (less) convex.",
-     //.global_flags=VCP_RW,
-     .v20_flags =  VCP2_RW | VCP2_STD_CONT,
-     .v20_name = "Vertical Pincushion",
+   {  .code=0x34,                                  // Done
+      .vcp_spec_groups = VCP_SPEC_GEOMETRY,
+      .vcp_subsets = VCP_SUBSET_ANALOG,
+      // Group 8.4 Geometry.  Identical in 2.0, 3.0, 2.2
+      .desc = "Increasing (decreasing) this value will cause the top and "
+              "bottom edges of the image to become more (less) convex.",
+      .v20_flags =  VCP2_RW | VCP2_STD_CONT,
+      .v20_name = "Vertical Pincushion",
    },
-   { .code=0x36,                                 // Done
-     .vcp_spec_groups = VCP_SPEC_GEOMETRY,
-     .vcp_subsets = VCP_SUBSET_ANALOG,
-     // Group 8.4 Geometry.
-     //.name = "Vertical Pincushion Balance",
-     //.flags=VCP_RW | VCP_CONTINUOUS,
-
-     .desc = "Increasing (decreasing) this value will move the center "
-             "section of the image toward the top (bottom) edge of the display.",
-     //.global_flags=VCP_RW,
-     .v20_flags =  VCP2_RW | VCP2_STD_CONT,
-     .v20_name = "Vertical Pincushion Balance",
+   {  .code=0x36,                                 // Done
+      .vcp_spec_groups = VCP_SPEC_GEOMETRY,
+      .vcp_subsets = VCP_SUBSET_ANALOG,
+      .desc = "Increasing (decreasing) this value will move the center "
+              "section of the image toward the top (bottom) edge of the display.",
+      .v20_flags =  VCP2_RW | VCP2_STD_CONT,
+      .v20_name = "Vertical Pincushion Balance",
    },
-   { .code=0x38,                                 // Done
-     .vcp_spec_groups = VCP_SPEC_GEOMETRY,
-     .vcp_subsets = VCP_SUBSET_ANALOG,
-     // Group 8.4 Geometry.  Assume name changed with 2.1
-     //.name="Vertical Convergence",
-     //.flags=VCP_RW | VCP_CONTINUOUS,
-     // .nontable_formatter=format_feature_detail_standard_continuous,
-
-     .desc = "Increasing (decreasing) this value shifts the red pixels up (down) "
-             "across the image and the blue pixels down (up) across the image "
-             "with respect to the green pixels.",
-     //.global_flags=VCP_RW,
-     .v20_flags= VCP2_RW | VCP2_STD_CONT,
-     .v20_name="Vertical Convergence",
-     .v21_name="Vertical Convergence R/B",
+   {  .code=0x38,                                 // Done
+      .vcp_spec_groups = VCP_SPEC_GEOMETRY,
+      .vcp_subsets = VCP_SUBSET_ANALOG,
+      // Group 8.4 Geometry.  Assume name changed with 2.1
+      .desc = "Increasing (decreasing) this value shifts the red pixels up (down) "
+              "across the image and the blue pixels down (up) across the image "
+              "with respect to the green pixels.",
+      .v20_flags= VCP2_RW | VCP2_STD_CONT,
+      .v20_name="Vertical Convergence",
+      .v21_name="Vertical Convergence R/B",
    },
-   { .code=0x39,                                 // Done
-     .vcp_spec_groups = VCP_SPEC_GEOMETRY,
-     .vcp_subsets = VCP_SUBSET_ANALOG,
-     // Group 8.4 Geometry.  Not in 2.0.  Assume added in 2.1
-     //.flags=VCP_RW | VCP_CONTINUOUS,
-     // .nontable_formatter=format_feature_detail_standard_continuous,
-
-     .desc = "Increasing (decreasing) this value shifts the magenta pixels up (down) "
-             "across the image and the green pixels down (up) across the image "
-             "with respect to the magenta (sic) pixels.",
-     //.global_flags=VCP_RW,
-     .v21_name="Vertical Convergence M/G",
-     .v21_flags= VCP2_RW | VCP2_STD_CONT,
+   {  .code=0x39,                                 // Done
+      .vcp_spec_groups = VCP_SPEC_GEOMETRY,
+      .vcp_subsets = VCP_SUBSET_ANALOG,
+      // Group 8.4 Geometry.  Not in 2.0.  Assume added in 2.1
+      .desc = "Increasing (decreasing) this value shifts the magenta pixels up (down) "
+              "across the image and the green pixels down (up) across the image "
+              "with respect to the magenta (sic) pixels.",
+      .v21_name="Vertical Convergence M/G",
+      .v21_flags= VCP2_RW | VCP2_STD_CONT,
    },
-   { .code=0x3a,                                  // Done
-     .vcp_spec_groups = VCP_SPEC_GEOMETRY,
-     .vcp_subsets = VCP_SUBSET_ANALOG,
-     // Group 8.4 Geometry
-     //.name = "Vertical Linearity",
-     //.flags = VCP_RW | VCP_CONTINUOUS,
-     // .nontable_formatter=format_feature_detail_standard_continuous,
-
-     .desc = "Increase/descrase the density of scan lines in the image center.",
-     //.global_flags=VCP_RW,
-     .v20_flags= VCP2_RW | VCP2_STD_CONT,
-     .v20_name = "Vertical Linearity",
+   {  .code=0x3a,                                  // Done
+      .vcp_spec_groups = VCP_SPEC_GEOMETRY,
+      .vcp_subsets = VCP_SUBSET_ANALOG,
+      // Group 8.4 Geometry
+      .desc = "Increase/decease the density of scan lines in the image center.",
+      .v20_flags= VCP2_RW | VCP2_STD_CONT,
+      .v20_name = "Vertical Linearity",
    },
-   { .code=0x3c,                                       // Done
-     .vcp_spec_groups = VCP_SPEC_GEOMETRY,
-     .vcp_subsets = VCP_SUBSET_ANALOG,
-     // Group 8.4 Geometry
-     //.name = "Vertical Linearity Balance",
-     //.flags = VCP_RW | VCP_CONTINUOUS,
-     // .nontable_formatter=format_feature_detail_standard_continuous,
-
-     .desc = "Increasing/decrease the density of scan lines in the image center.",
-     //.global_flags=VCP_RW,
-     .v20_flags= VCP2_RW | VCP2_STD_CONT,
-     .v20_name = "Vertical Linearity Balance",
+   {  .code=0x3c,                                       // Done
+      .vcp_spec_groups = VCP_SPEC_GEOMETRY,
+      .vcp_subsets = VCP_SUBSET_ANALOG,
+      // Group 8.4 Geometry
+      .desc = "Increase/decrease the density of scan lines in the image center.",
+      .v20_flags= VCP2_RW | VCP2_STD_CONT,
+      .v20_name = "Vertical Linearity Balance",
    },
-   { .code=0x3e,
-     .vcp_spec_groups = VCP_SPEC_IMAGE | VCP_SPEC_MISC,     // 2.0: MISC
-     // Define in 2.0, identical in 3.0
-     //.name="Clock phase",
-     //.flags=VCP_RW | VCP_CONTINUOUS,
-      // .nontable_formatter=format_feature_detail_standard_continuous,
-
-      // from 2.0 spec:
-      // .desc="Increasing (decreasing) this value will increase (decrease) the "
-      //       "phase shift of the sampling clock.",
-     // simpler:
-     .desc="Increase/decrease the sampling clock phase shift",
-     //.global_flags = VCP_RW,
-     .v20_flags =  VCP2_RW | VCP2_STD_CONT,
-     .v20_name = "Clock phase",
+   {  .code=0x3e,
+      .vcp_spec_groups = VCP_SPEC_IMAGE | VCP_SPEC_MISC,     // 2.0: MISC
+      // Defined in 2.0, identical in 3.0
+      .desc="Increase/decrease the sampling clock phase shift",
+      .v20_flags =  VCP2_RW | VCP2_STD_CONT,
+      .v20_name = "Clock phase",
    },
-   { .code=0x40,                                   // Done
-     .vcp_spec_groups = VCP_SPEC_GEOMETRY,
-     .vcp_subsets = VCP_SUBSET_ANALOG,
-     // Group 8.4 Geometry
-     // When did name change from 2.0?   assume 2.1
-     //.name="Horizontal Parallelogram",
-     //.flags=VCP_RW | VCP_CONTINUOUS,
-      // .nontable_formatter=format_feature_detail_standard_continuous,
-
+   {  .code=0x40,                                   // Done
+      .vcp_spec_groups = VCP_SPEC_GEOMETRY,
+      .vcp_subsets = VCP_SUBSET_ANALOG,
+      // When did name change from 2.0?   assume 2.1
+      //.name="Horizontal Parallelogram",
       .desc = "Increasing (decreasing) this value shifts the top section of "
               "the image to the right (left) with respect to the bottom section "
               "of the image.",
-      //.global_flags=VCP_RW,
       .v20_flags= VCP2_RW | VCP2_STD_CONT,
-     .v20_name="Key Balance",  // 2.0
-     .v21_name="Horizontal Parallelogram",
+      .v20_name="Key Balance",  // 2.0
+      .v21_name="Horizontal Parallelogram",
    },
    { .code=0x41,
      .vcp_spec_groups = VCP_SPEC_GEOMETRY,
