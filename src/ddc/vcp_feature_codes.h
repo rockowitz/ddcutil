@@ -66,6 +66,7 @@ typedef ushort Version_Feature_Flags;
 #define VCP_SUBSET_LUT             0x2000
 #define VCP_SUBSET_ANALOG          0x1000
 #define VCP_SUBSET_TV              0x0800
+#define VCP_SUBSET_AUDIO           0x0400
 
 // Exactly 1 of the following 3 bits must be set
 #define  VCP2_RO             0x0400
