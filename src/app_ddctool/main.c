@@ -214,6 +214,11 @@ int main(int argc, char *argv[]) {
       main_rc = EXIT_SUCCESS;
    }
 
+   else if (parsed_cmd->cmd_id == CMDID_VCPINFO) {
+      printf("Unimplemented: vcpinfo\n");
+      main_rc = EXIT_SUCCESS;
+   }
+
    else if (parsed_cmd->cmd_id == CMDID_LISTTESTS) {
       show_test_cases();
       main_rc = EXIT_SUCCESS;
@@ -292,7 +297,8 @@ int main(int argc, char *argv[]) {
    else {     // commands that require display identifier
       assert(parsed_cmd->pdid);
       // returns NULL if not a valid display:
-      Display_Ref * dref = get_display_ref_for_display_identifier(parsed_cmd->pdid, true /* emit_error_msg */);
+      Display_Ref * dref = get_display_ref_for_display_identifier(
+                              parsed_cmd->pdid, true /* emit_error_msg */);
       if (dref) {
          Version_Spec vspec = get_vcp_version_by_display_ref(dref);
          if (vspec.major < 2) {

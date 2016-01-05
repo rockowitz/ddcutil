@@ -45,7 +45,8 @@
 #define CMDID_DUMPVCP     10
 #define CMDID_INTERROGATE 11
 #define CMDID_ENVIRONMENT 12
-#define CMDID_END         13    // 1 past last valid CMDID value
+#define CMDID_VCPINFO     13
+#define CMDID_END         14    // 1 past last valid CMDID value
 
 typedef enum {STATS_NONE=0x00, STATS_TRIES=0x01, STATS_ERRORS=0x02, STATS_CALLS=0x04, STATS_ALL=0xFF} Stats_Type;
 

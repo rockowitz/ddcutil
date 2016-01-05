@@ -58,6 +58,7 @@ static Cmd_Desc cmdinfo[] = {
    {CMDID_DUMPVCP,      "dumpvcp",       3,  0,       1},
    {CMDID_INTERROGATE,  "interrogate",   3,  0,       0},
    {CMDID_ENVIRONMENT,  "environment",   3,  0,       0},
+   {CMDID_VCPINFO,      "vcpinfo",       5,  0,       1},
 };
 static int cmdct = sizeof(cmdinfo)/sizeof(Cmd_Desc);
 
@@ -192,7 +193,8 @@ char * commands_list_help =
        "   capabilities\n"
 //     "   info\n"
        "   listvcp\n"
-       "   getvcp <feature-code>\n"
+       "   vcpinfo (feature-code-or-group)\n"
+       "   getvcp <feature-code-or-group>\n"
        "   setvcp <feature-code> <new-value>\n"
        "   dumpvcp (filename)\n"
        "   loadvcp <filename>\n"
@@ -204,8 +206,8 @@ char * commands_list_help =
 
 char * command_argument_help =
        "Command Arguments\n"
-       "  getvcp:\n"
-       "    <feature-code> can be any of the following:\n"
+       "  getvcp, vcpinfo:\n"
+       "    <feature-code-or-group> can be any of the following:\n"
        "      - the hex feature code for a specific feature, with or without a leading 0x,\n"
        "        e.g. 10 or 0x10\n"
        "      - ALL       - all known feature codes\n"
