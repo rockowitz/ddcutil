@@ -1089,6 +1089,34 @@ bool format_feature_detail_standard_continuous(
 }
 
 
+
+/* Standard feature detail formatting function for a feature marked
+ * as Continuous for which the Sh/Sl bytes represent an integer in
+ * the range 0..65535 and max value is not relevant.
+ *
+ * Arguments:
+ *    code_info
+ *    vcp_version
+ *    buffer        location where to return formatted value
+ *    bufsz         size of buffer
+ *
+ * Returns:
+ *    true
+ */
+bool format_feature_detail_ushort(
+        Parsed_Nontable_Vcp_Response * code_info,
+        Version_Spec                   vcp_version,
+        char *                         buffer,
+        int bufsz)
+{
+   int cv = code_info->cur_value;
+   snprintf(buffer, bufsz, "%5d (0x%04x)", cv, cv);
+   return true;
+}
+
+
+
+
 //
 // Functions for specific non-table VCP Feature Codes
 //
@@ -1350,14 +1378,14 @@ bool format_feature_detail_audio_balance_v30(
                  code_info->sl, code_info->sl);
      else
         snprintf(buffer, bufsz, "%d Right channel dominates (0x%02x, centered + %d)",
-                 code_info->sl, code_info->sl, 0x80+code_info->sl);
+                 code_info->sl, code_info->sl, code_info->sl-0x80);
   }
   return ok;
 }
 
 
 // 0xac
-bool format_feature_detail_horizontal_frequency(
+bool format_feature_detail_xac_horizontal_frequency(
       Parsed_Nontable_Vcp_Response * code_info, Version_Spec vcp_version, char * buffer, int bufsz)
 {
   assert (code_info->vcp_code == 0xac);
@@ -1381,8 +1409,53 @@ bool format_feature_detail_horizontal_frequency(
 }
 
 
+
+// 0x9b..0xa0
+bool format_feature_detail_6_axis_hue(
+      Parsed_Nontable_Vcp_Response * code_info,
+      Version_Spec                   vcp_version,
+      char *                         buffer,
+      int                            bufsz)
+{
+   Byte vcp_code = code_info->vcp_code;
+   Byte sl       = code_info->sl;
+
+   assert (0x9b < vcp_code && vcp_code <= 0xa0);
+
+   struct Names {
+      Byte   id;
+      char * hue_name;
+      char * more_name;
+      char * less_name;
+   };
+
+   struct Names names[] = {
+         {0x9b,  "red",     "yellow",  "magenta"},
+         {0x9c,  "yellow",  "green",   "red"},
+         {0x9d,  "green",   "cyan",    "yellow"},
+         {0x9e,  "cyan",    "blue",    "green"},
+         {0x9f,  "blue",    "magenta", "cyan"},
+         {0xa0,  "magenta", "red",     "blue"},
+   };
+
+   struct Names curnames = names[vcp_code-0x9b];
+
+   if (sl < 0x7f)
+      snprintf(buffer, bufsz, "%d: Shift towards %s (0x%02x, nominal - %d)",
+               sl, curnames.less_name, sl, sl-0x7f);
+   else if (sl == 0x7f)
+      snprintf(buffer, bufsz, "%d: Nominal (default) value (0x%02x)",
+               sl, sl);
+   else
+      snprintf(buffer, bufsz, "%d Shift towards %s (0x%02x, nominal + %d)",
+               sl, curnames.more_name, sl, sl-0x7f);
+
+   return true;
+}
+
+
 // 0xae
-bool format_feature_detail_vertical_frequency(
+bool format_feature_detail_xae_vertical_frequency(
       Parsed_Nontable_Vcp_Response * code_info, Version_Spec vcp_version, char * buffer, int bufsz)
 {
   assert (code_info->vcp_code == 0xae);
@@ -1405,8 +1478,26 @@ bool format_feature_detail_vertical_frequency(
 }
 
 
+// 0xbe
+bool format_feature_detail_xbe_link_control(
+        Parsed_Nontable_Vcp_Response * code_info,
+        Version_Spec vcp_version,
+        char * buffer,
+        int bufsz)
+{
+   // test bit 0
+   // but in MCCS spec is bit 0 the high order bit or the low order bit?,
+   // i.e. 0x80 or 0x01?
+   // since spec refers to "Bits 7..1 reserved", implies that 0 is least
+   // significant bit
+   char * s = (code_info->sl & 0x01) ? "enabled" : "disabled";
+   snprintf(buffer, bufsz, "Link shutdown is %s (0x%02x)", s, code_info->sl);
+
+   return true;
+}
+
 // 0xc0
-bool format_feature_detail_display_usage_time(
+bool format_feature_detail_xc0_display_usage_time(
         Parsed_Nontable_Vcp_Response * code_info, Version_Spec vcp_version, char * buffer, int bufsz)
 {
    assert (code_info->vcp_code == 0xc0);
@@ -1686,6 +1777,15 @@ Feature_Value_Entry x99_window_control_values[] = {
 };
 
 
+// 0xa2
+Feature_Value_Entry xa2_auto_setup_values[] = {
+      {0x01,  "Off"},
+      {0x02,  "On"},
+      {0x00,  NULL}
+};
+
+
+
 // 0xaa
 static Feature_Value_Entry xaa_screen_orientation_values[] = {
       {0x01, "0 degrees"},
@@ -1709,6 +1809,17 @@ static Feature_Value_Entry xa5_window_select_values[] = {
       {0xff, NULL}     // terminator
 
 };
+
+
+// 0xb0
+static  Feature_Value_Entry xb0_settings_values[] =
+   {
+     {0x01, "Store current settings in the monitor"},
+     {0x02, "Restore factory defaults for current mode"},
+     {0x00, NULL}    // termination entry
+};
+
+
 
 // 0xb2
 static Feature_Value_Entry xb2_flat_panel_subpixel_layout_values[] = {
@@ -3194,312 +3305,262 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
      .v20_flags= VCP2_RW | VCP2_STD_CONT,
      .v20_name="Window background",
    },
-   { .code=0x9b,
-         .vcp_spec_groups = VCP_SPEC_IMAGE,
-         // in 2.0, same in 3.0
-     //.name="6 axis hue: Red",
-     //.flags=VCP_RW | VCP_CONTINUOUS | VCP_COLORMGT,
-      .nontable_formatter=format_feature_detail_sl_byte,
-
+   {  .code=0x9b,                                             // in 2.0, same in 3.0
+      .vcp_spec_groups = VCP_SPEC_IMAGE | VCP_SPEC_WINDOW,    // 2.0: WINDOW, 3.0: IMAGE
+      .nontable_formatter=format_feature_detail_6_axis_hue,
       .desc = "Value < 127 shifts toward magenta, 127 no effect, "
               "> 127 shifts toward yellow",
-      //.global_flags = VCP_RW | VCP2_COLORMGT,           // VCP_COLORMGT?
-      .v20_flags =VCP2_RW |  VCP2_COMPLEX_CONT,
-      .v20_name = "6 axis color control: Red",
+      .v20_flags =VCP2_RW |  VCP2_COMPLEX_CONT,               // VCP2_COLORMGT?
+      .v20_name = "6 axis hue control: Red",
    },
-   { .code=0x9c,
-         .vcp_spec_groups = VCP_SPEC_IMAGE,
-         // in 2.0, same in 3.0
-     //.name="6 axis hue: Yellow",
-     //.flags=VCP_RW | VCP_CONTINUOUS | VCP_COLORMGT,
-      .nontable_formatter=format_feature_detail_sl_byte,
-
-
+   {  .code=0x9c,                                             // in 2.0, same in 3.0
+      .vcp_spec_groups = VCP_SPEC_IMAGE | VCP_SPEC_WINDOW,    // 2.0: WINDOW, 3.0: IMAGE
+      .nontable_formatter=format_feature_detail_6_axis_hue,
       .desc = "Value < 127 shifts toward green, 127 no effect, "
               "> 127 shifts toward red",
-      //.global_flags = VCP_RW | VCP2_COLORMGT,           // VCP_COLORMGT?
-      .v20_flags = VCP2_RW | VCP2_COMPLEX_CONT,
-      .v20_name = "6 axis color control: Yellow",
+      .v20_flags = VCP2_RW | VCP2_COMPLEX_CONT,               // VCP2_COLORMGT?
+      .v20_name = "6 axis hue control: Yellow",
    },
-   { .code=0x9d,
-         .vcp_spec_groups = VCP_SPEC_IMAGE,
-         // in 2.0, same in 3.0
-     //.name="6 axis hue: Green",
-     //.flags=VCP_RW | VCP_CONTINUOUS | VCP_COLORMGT,
-      .nontable_formatter=format_feature_detail_sl_byte,
-
+   {  .code=0x9d,                                             // in 2.0, same in 3.0
+      .vcp_spec_groups = VCP_SPEC_IMAGE | VCP_SPEC_WINDOW,    // 2.0: WINDOW, 3.0: IMAGE
+      .nontable_formatter=format_feature_detail_6_axis_hue,
       .desc = "Value < 127 shifts toward yellow, 127 no effect, "
               "> 127 shifts toward cyan",
-      //.global_flags = VCP_RW | VCP2_COLORMGT,           // VCP_COLORMGT?
-      .v20_flags =VCP2_RW |  VCP2_COMPLEX_CONT,
-      .v20_name = "6 axis color control: Green",
+      .v20_flags =VCP2_RW |  VCP2_COMPLEX_CONT,               // VCP2_COLORMGT?
+      .v20_name = "6 axis hue control: Green",
    },
-   { .code=0x9e,
-         .vcp_spec_groups = VCP_SPEC_IMAGE,
-         // in 2.0, same in 3.0
-     //.name="6 axis hue: Cyan",
-     //.flags=VCP_RW | VCP_CONTINUOUS | VCP2_COLORMGT,
-      .nontable_formatter=format_feature_detail_sl_byte,
-
+   {  .code=0x9e,                                             // in 2.0, same in 3.0
+      .vcp_spec_groups = VCP_SPEC_IMAGE | VCP_SPEC_WINDOW,    // 2.0: WINDOW, 3.0: IMAGE
+      .nontable_formatter=format_feature_detail_6_axis_hue,
       .desc = "Value < 127 shifts toward green, 127 no effect, "
               "> 127 shifts toward blue",
-      //.global_flags = VCP_RW | VCP2_COLORMGT,           // VCP_COLORMGT?
-      .v20_flags = VCP2_RW | VCP2_COMPLEX_CONT,
-      .v20_name = "6 axis color control: Cyan",
+      .v20_flags = VCP2_RW | VCP2_COMPLEX_CONT,               // VCP2_COLORMGT?
+      .v20_name = "6 axis hue control: Cyan",
    },
-   { .code=0x9f,
-         .vcp_spec_groups = VCP_SPEC_IMAGE,
-         // in 2.0, same in 3.0
-     //.name="6 axis hue: Blue",
-     //.flags=VCP_RW | VCP_CONTINUOUS | VCP2_COLORMGT,
-      .nontable_formatter=format_feature_detail_sl_byte,
-
+   {  .code=0x9f,
+      .vcp_spec_groups = VCP_SPEC_IMAGE | VCP_SPEC_WINDOW,
+      .nontable_formatter=format_feature_detail_6_axis_hue,
       .desc = "Value < 127 shifts toward cyan, 127 no effect, "
               "> 127 shifts toward magenta",
-      //.global_flags = VCP_RW | VCP2_COLORMGT,    // VCP_COLORMGT
-      .v20_flags =VCP2_RW |  VCP2_COMPLEX_CONT,
-      .v20_name = "6 axis color control: Blue",
+      .v20_flags =VCP2_RW |  VCP2_COMPLEX_CONT | VCP_SPEC_WINDOW,
+      .v20_name = "6 axis hue control: Blue",
    },
-   { .code=0xa0,
-     //.name="6 axis hue: Magenta",
-     .vcp_spec_groups = VCP_SPEC_IMAGE,
-     // in 2.0, same in 3.0
-     //.flags=VCP_RW | VCP_CONTINUOUS | VCP2_COLORMGT,
-     .nontable_formatter=format_feature_detail_sl_byte,
-
+   {  .code=0xa0,
+      .vcp_spec_groups = VCP_SPEC_IMAGE | VCP_SPEC_WINDOW,
+      .nontable_formatter=format_feature_detail_6_axis_hue,
       .desc = "Value < 127 shifts toward blue, 127 no effect, "
               "> 127 shifts toward red",
-      //.global_flags = VCP_RW | VCP2_COLORMGT,    // VCP_COLORMGT?
       .v20_flags = VCP2_RW | VCP2_COMPLEX_CONT,
       .v20_name = "6 axis color control: Magenta",
    },
-   { .code=0xa2,
-     .vcp_spec_groups = VCP_SPEC_IMAGE,
-     // Spec section 8.2 Image Adjustment
-     // Defined in 2.0, values differ in 3.0
-     //.flags = VCP_WO | VCP_NON_CONT,
-
-     // .desc from 2.0
-     .desc="Turn on/off an auto setup function",
-     //.global_flags = VCP_WO,
-     .v20_flags = VCP2_WO | VCP2_WO_NC,
-     .v20_name = "Auto setup on/off",
+   {  .code=0xa2,                             // Defined in 2.0, same in 3.0
+      .vcp_spec_groups = VCP_SPEC_IMAGE,
+      .desc="Turn on/off an auto setup function",
+      .default_sl_values=xa2_auto_setup_values,
+      .v20_flags = VCP2_WO | VCP2_WO_NC,
+      .v20_name = "Auto setup on/off",
    },
-   { .code=0xa4,
+   { .code=0xa4,                                 // Complex interpretation, to be implemented
      .vcp_spec_groups = VCP_SPEC_IMAGE,
      // 2.0 spec says: "This command structure is recommended, in conjunction with VCP A5h
-     // for all new designs
-     // type NC in 2.0, type T in 3.0, 2.2
-     // what is correct choice for 2.1?
+     // for all new designs"
+     // type NC in 2.0, type T in 3.0, 2.2, what is correct choice for 2.1?
      //.name="Window control on/off",
      //.flags = VCP_RW | VCP_NON_CONT,
-     .nontable_formatter = format_feature_detail_sl_byte, // TODO: write proper function
+     .nontable_formatter = format_feature_detail_debug_sl_sh,   // TODO: write proper function
      .table_formatter = default_table_feature_detail_function,  // TODO: write proper function
-
-     .desc = "Turn selected window operation on/off",
-     //.global_flags = VCP_RW,
+     .desc = "Turn selected window operation on/off, window mask",
      .v20_flags = VCP2_RW | VCP2_COMPLEX_NC,
-     .v20_name = "Turn the selected window operation on/off",
      .v30_flags = VCP2_RW | VCP2_TABLE,
      .v22_flags = VCP2_RW | VCP2_TABLE,
+     .v20_name = "Turn the selected window operation on/off",
+     .v30_name = "Window mask control",
+     .v22_name = "Window mask control",
+
    },
    { .code=0xa5,
-     .vcp_spec_groups = VCP_SPEC_IMAGE,
+     .vcp_spec_groups = VCP_SPEC_IMAGE | VCP_SPEC_WINDOW,
      // 2.0 spec says: "This command structure is recommended, in conjunction with VCP A4h
      // for all new designs
      // designated as C, but only takes specific values
      // v3.0 appears to be identical
-     //.name="Window Select",
-     //.flags = VCP_RW | VCP_CONTINUOUS,
      .default_sl_values = xa5_window_select_values,
-
      .desc = "Change selected window (as defined by 95h..98h)",
-     //.global_flags = VCP_RW,
-     .v20_flags = VCP2_RW | VCP2_SIMPLE_NC,         // need lookup table
+     .v20_flags = VCP2_RW | VCP2_SIMPLE_NC,
      .v20_name = "Change the selected window",
 
    },
-   { .code=0xaa,                                          // Done
-     //.name="Screen orientation",
-     .vcp_spec_groups = VCP_SPEC_IMAGE | VCP_SPEC_GEOMETRY,    // 3.0: IMAGE, 2.0: GEOMETRY
-     //.flags=VCP_RO  | VCP_NON_CONT | VCP_NCSL,
-      // .formatter=format_feature_detail_screen_orientation,
-     // .nontable_formatter=format_feature_detail_sl_lookup,
+   {  .code=0xaa,                                          // Done
+      .vcp_spec_groups = VCP_SPEC_IMAGE | VCP_SPEC_GEOMETRY,    // 3.0: IMAGE, 2.0: GEOMETRY
       .default_sl_values=xaa_screen_orientation_values,
-
       .desc="Indicates screen orientation",
-      //.global_flags=VCP_RO,
       .v20_flags=VCP2_RO | VCP2_SIMPLE_NC,
       .v20_name="Screen Orientation",
    },
-   { .code=0xac,
-     //.name="Horizontal frequency",
-     .vcp_spec_groups = VCP_SPEC_MISC,   // 2.0
-     //.flags=VCP_RO | VCP_CONTINUOUS,
-      .nontable_formatter=format_feature_detail_horizontal_frequency,
-
+   {  .code=0xac,
+      .vcp_spec_groups = VCP_SPEC_MISC,   // 2.0
+      .nontable_formatter=format_feature_detail_xac_horizontal_frequency,
       .desc = "Horizontal sync signal frequency as determined by the display",
       // 2.0: 0xff 0xff 0xff indicates the display cannot supply this info
-      //.global_flags = VCP_RO,
       .v20_flags = VCP2_RO | VCP2_COMPLEX_CONT,
       .v20_name  = "Horizontal frequency",
    },
-   { .code=0xae,
-         .vcp_spec_groups = VCP_SPEC_MISC,   // 2.0
-     //.name="Vertical frequency",
-     //.flags=VCP_RO | VCP_CONTINUOUS,
-      .nontable_formatter=format_feature_detail_vertical_frequency,
-
-
+   {  .code=0xae,
+      .vcp_spec_groups = VCP_SPEC_MISC,   // 2.0
+      .nontable_formatter=format_feature_detail_xae_vertical_frequency,
       .desc = "Vertical sync signal frequency as determined by the display, "
-            "in .01 hz",
+              "in .01 hz",
       // 2.0: 0xff 0xff indicates the display cannot supply this info
-      //.global_flags = VCP_RO,
       .v20_flags =VCP2_RO |  VCP2_COMPLEX_CONT,
       .v20_name  = "Vertical frequency",
    },
-   { .code=0xb0,
-     .vcp_spec_groups = VCP_SPEC_PRESET,
-     // Section 8.1 Preset operation
-     // Defined in 2.0, v3.0 spec clarifies that value to be set is in SL byte
-     //.name="(Re)Store user saved values for cur mode",   // this was my name from the explanation
-     //.flags=VCP_WO | VCP_NON_CONT,
-     // .formatter=format_feature_detail_debug_bytes,
-
-     .desc = "Store/restore the user saved values for the current mode.",
-     //.global_flags = VCP_WO,
+   {  .code=0xb0,
+      .vcp_spec_groups = VCP_SPEC_PRESET,
+      // Defined in 2.0, v3.0 spec clarifies that value to be set is in SL byte
+      //.name="(Re)Store user saved values for cur mode",   // this was my name from the explanation
+      .default_sl_values = xb0_settings_values,
+      .desc = "Store/restore the user saved values for the current mode.",
       .v20_flags = VCP2_WO | VCP2_WO_NC,
       .v20_name = "Settings",
    },
-   { .code=0xb2,
-         .vcp_spec_groups = VCP_SPEC_MISC,   // 2.0
-     //.name="Flat panel sub-pixel layout",
-     //.flags=VCP_RO | VCP_NON_CONT | VCP_NCSL,
-      // .formatter=format_feature_flat_panel_subpixel_layout,
-     // .nontable_formatter=format_feature_detail_sl_lookup,
+   {  .code=0xb2,
+      .vcp_spec_groups = VCP_SPEC_MISC,   // 2.0
       .default_sl_values=xb2_flat_panel_subpixel_layout_values,
-
       .desc = "LCD sub-pixel structure",
-      //.global_flags = VCP_RO,
        .v20_flags = VCP2_RO | VCP2_SIMPLE_NC,
        .v20_name = "Flat panel sub-pixel layout",
    },
-   { .code=0xb6,                                               // DONE
-     .vcp_spec_groups = VCP_SPEC_MISC,     // 2.0, 3.0
-     //.name="Display technology type",
-     //.flags=VCP_RO | VCP_NON_CONT | VCP_NCSL,
-      // .formatter=format_feature_detail_display_technology_type,
-     // .nontable_formatter=format_feature_detail_sl_lookup,
+   {  .code=0xb6,                                               // DONE
+      .vcp_spec_groups = VCP_SPEC_MISC,     // 2.0, 3.0
+      // v3.0 table not upward compatible w 2.0, assume changed as of 2.1
       .default_sl_values=xb6_v20_display_technology_type_values,
-
-      //.global_flags = VCP_RO,
-      .v20_flags = VCP2_RO | VCP2_SIMPLE_NC,       // but v3.0 table not upward compatible w 2.0
-      .v20_name = "Display technology type",
       .v21_sl_values = xb6_display_technology_type_values,
+      .v20_flags = VCP2_RO | VCP2_SIMPLE_NC,
+      .v20_name = "Display technology type",
    },
-   { .code=0xc0,
-     .vcp_spec_groups = VCP_SPEC_MISC,
-     //.name="Display usage time",
-     //.flags=VCP_RO | VCP_CONTINUOUS | VCP_FUNC_VER,
-      .nontable_formatter=format_feature_detail_display_usage_time,
-
-     .desc = "Active power on time in hours",
-     //.global_flags = VCP_RO,
-     .v20_flags =VCP2_RO |  VCP2_COMPLEX_CONT,
-     .v20_name = "Display usage time",
+   { .code=0xb7,
+     .vcp_spec_groups = VCP_SPEC_DPVL,
+     .desc = "Video mode and status of a DPVL capabile monitor",
+     .v20_name = "Monitor status",
+     .v20_flags = VCP2_RO | VCP2_COMPLEX_NC,
+     .nontable_formatter = format_feature_detail_sl_byte,    //TODO: implement proper function
    },
-   { .code=0xc2,
-     .vcp_spec_groups = VCP_SPEC_MISC,    // 2.0
-     //.name = "Display descriptor length",
-     //.flags = VCP_RO | VCP_CONTINUOUS,
-
-     .desc = "Length in bytes of non-volatile storage in the display available "
-           "for writing a display descriptor, max 256",
-     //.global_flags = VCP_RO,
-     .v20_flags = VCP2_RO | VCP2_STD_CONT,    // should there be a different flag when we know value uses only SL?
-     .v20_name = "Display descriptor length",
+   { .code=0xb8,
+     .vcp_spec_groups = VCP_SPEC_DPVL,
+     .v20_name = "Packet count",
+     .desc = "Counter for DPVL packets received",
+     .v20_flags = VCP2_RW | VCP2_COMPLEX_CONT,
+     .nontable_formatter = format_feature_detail_ushort,
    },
-   {.code=0xc3,
-    .vcp_spec_groups = VCP_SPEC_MISC, // 2.0
-    //.flags = VCP_RW | VCP_TABLE,
-    .table_formatter = default_table_feature_detail_function,
-
-    .desc="Reads (writes) a display descriptor from (to) non-volatile storage "
-          "in the display.",
-    //.global_flags = VCP_RW,
-    .v20_flags = VCP2_RW | VCP2_TABLE,
-    .v20_name = "Transmit display descriptor",
+   { .code=0xb9,
+     .vcp_spec_groups = VCP_SPEC_DPVL,
+     .v20_name = "Monitor X origin",
+     .desc = "X origin of the monitor in the vertical screen",
+     .v20_flags = VCP2_RW | VCP2_COMPLEX_CONT,
+     .nontable_formatter = format_feature_detail_ushort,
    },
-   { .code = 0xc4,
-     .vcp_spec_groups = VCP_SPEC_MISC,  // 2.0
-     //.flags = VCP_RW | VCP_NON_CONT,
-     .nontable_formatter=format_feature_detail_debug_bytes,
-
-     .desc = "If enabled, the display descriptor shall be displayed when no video "
-           "is being received.",
-     //.global_flags = VCP_RW,
-     .v20_flags = VCP2_RW | VCP2_COMPLEX_NC,   // need to handle "All other values.  The display descriptor shall not be displayed"
-     .v20_name = "Enable display of \'display descriptor\'",
+   { .code=0xba,
+     .vcp_spec_groups = VCP_SPEC_DPVL,
+     .v20_name = "Monitor Y origin",
+     .desc = "Y origin of the monitor in the vertical screen",
+     .v20_flags = VCP2_RW | VCP2_COMPLEX_CONT,
+     .nontable_formatter = format_feature_detail_ushort,
    },
-   { .code=0xc6,
-     .vcp_spec_groups = VCP_SPEC_MISC, // 2.0
-     //.name="Application enable key",
-     //.flags=VCP_RO | VCP_NON_CONT                 ,
-      // .nontable_formatter=format_feature_detail_debug_bytes,
-     .nontable_formatter=format_feature_detail_application_enable_key,
-
+   { .code=0xbb,
+     .vcp_spec_groups = VCP_SPEC_DPVL,
+     .desc = "Error counter for the DPVL header",
+     .v20_name = "Header error count",
+     .v20_flags = VCP2_RW | VCP2_COMPLEX_CONT,
+     .nontable_formatter = format_feature_detail_ushort,
+   },
+   { .code=0xbc,
+     .vcp_spec_groups = VCP_SPEC_DPVL,
+     .desc = "CRC error counter for the DPVL body",
+     .v20_name = "Body CRC error count",
+     .v20_flags = VCP2_RW | VCP2_COMPLEX_CONT,
+     .nontable_formatter = format_feature_detail_ushort,
+   },
+   { .code=0xbd,
+     .vcp_spec_groups = VCP_SPEC_DPVL,
+     .desc = "Assigned identification number for the monitor",
+     .v20_name = "Client ID",
+     .v20_flags = VCP2_RW | VCP2_COMPLEX_CONT,
+     .nontable_formatter = format_feature_detail_ushort,
+   },
+   { .code=0xbe,
+     .vcp_spec_groups = VCP_SPEC_DPVL,
+     .desc = "Indicates status of the DVI link",
+     .v20_name = "Link control",
+     .v20_flags = VCP2_RW | VCP2_SIMPLE_NC,
+     .nontable_formatter = format_feature_detail_xbe_link_control,
+   },
+   {  .code=0xc0,
+      .vcp_spec_groups = VCP_SPEC_MISC,
+      .nontable_formatter=format_feature_detail_xc0_display_usage_time,
+      .desc = "Active power on time in hours",
+      .v20_flags =VCP2_RO |  VCP2_COMPLEX_CONT,
+      .v20_name = "Display usage time",
+   },
+   {  .code=0xc2,
+      .vcp_spec_groups = VCP_SPEC_MISC,    // 2.0
+      .desc = "Length in bytes of non-volatile storage in the display available "
+              "for writing a display descriptor, max 256",
+      //.global_flags = VCP_RO,
+      .v20_flags = VCP2_RO | VCP2_STD_CONT,
+      // should there be a different flag when we know value uses only SL?
+      // or could this value be exactly 256?
+      .v20_name = "Display descriptor length",
+   },
+   {  .code=0xc3,
+      .vcp_spec_groups = VCP_SPEC_MISC, // 2.0
+      .table_formatter = default_table_feature_detail_function,
+      .desc="Reads (writes) a display descriptor from (to) non-volatile storage "
+            "in the display.",
+      .v20_flags = VCP2_RW | VCP2_TABLE,
+      .v20_name = "Transmit display descriptor",
+   },
+   {  .code = 0xc4,
+      .vcp_spec_groups = VCP_SPEC_MISC,  // 2.0
+      .nontable_formatter=format_feature_detail_debug_bytes,
+      .desc = "If enabled, the display descriptor shall be displayed when no video "
+              "is being received.",
+      .v20_flags = VCP2_RW | VCP2_COMPLEX_NC,
+      // need to handle "All other values.  The display descriptor shall not be displayed"
+      .v20_name = "Enable display of \'display descriptor\'",
+   },
+   {  .code=0xc6,
+      .vcp_spec_groups = VCP_SPEC_MISC, // 2.0
+      .nontable_formatter=format_feature_detail_application_enable_key,
       .desc = "A 2 byte value used to allow an application to only operate with known products.",
-      //.global_flags =  VCP_RO,
       .v20_flags = VCP2_RO | VCP2_COMPLEX_NC,
       .v20_name = "Application enable key",
    },
    { .code=0xc8,
      .vcp_spec_groups = VCP_SPEC_MISC,    // 2.0
-     //.name="Display controller type",
-     //.flags=VCP_RW | VCP_NON_CONT  /* |  VCP_NCSL */ ,
-     // .formatter=format_feature_detail_sl_lookup,    // works, but only interprets mfg id in sl
      .nontable_formatter=format_feature_detail_display_controller_type,
      .default_sl_values=xc8_display_controller_type_values,
-
      .desc = "Mfg id of controller and 2 byte manufacturer-specific controller type",
-     //.global_flags = VCP_RW,
      .v20_flags = VCP2_RW | VCP2_COMPLEX_NC,
      .v20_name = "Display controller type",
    },
-   { .code=0xc9,
-     .vcp_spec_groups = VCP_SPEC_MISC,    // 2.0
-     //.name="Display firmware level",
-     //.flags=VCP_RO | VCP_NON_CONT,
+   {  .code=0xc9,
+      .vcp_spec_groups = VCP_SPEC_MISC,    // 2.0
       .nontable_formatter=format_feature_detail_version,
-
       .desc = "2 byte firmware level",
-      //.global_flags = VCP_RO,
       .v20_flags = VCP2_RO | VCP2_COMPLEX_NC,
       .v20_name = "Display firmware level",
    },
-   { .code=0xca,
-       //.name="On Screen Display",
-       .vcp_spec_groups = VCP_SPEC_MISC | VCP_SPEC_CONTROL,   // 2.0: MISC, 3.0: CONTROL
-       //.flags=VCP_RW | VCP_NON_CONT  | VCP_NCSL                ,
-        // .formatter=format_feature_detail_osd,
-       // .nontable_formatter=format_feature_detail_sl_lookup,
-        .default_sl_values=xca_osd_values,
-
-        .desc = "Is On Screen Display enabled?",
-        //.global_flags = VCP_RW,
-        .v20_flags = VCP2_RW | VCP2_SIMPLE_NC,
-        .v20_name = "OSD",
-     },
-   { .code=0xcc,
-     //.name="OSD Language",
-     .vcp_spec_groups = VCP_SPEC_MISC,   // 2.0
-     //.flags=VCP_RW | VCP_NON_CONT | VCP_NCSL,
-     // .formatter=format_feature_detail_osd_language,
-     // .nontable_formatter=format_feature_detail_sl_lookup,
+   {  .code=0xca,
+      .vcp_spec_groups = VCP_SPEC_MISC | VCP_SPEC_CONTROL,   // 2.0: MISC, 3.0: CONTROL
+      .default_sl_values=xca_osd_values,
+      .desc = "Indicates whether On Screen Display is enabled",
+      .v20_flags = VCP2_RW | VCP2_SIMPLE_NC,
+      .v20_name = "OSD",
+   },
+   {  .code=0xcc,
+      .vcp_spec_groups = VCP_SPEC_MISC,   // 2.0
       .default_sl_values=xcc_osd_language_values,
-
       .desc = "On Screen Display languge",
-      //.global_flags = VCP_RW,
       .v20_flags  = VCP2_RW | VCP2_SIMPLE_NC,
       .v20_name = "OSD Language",
    },
