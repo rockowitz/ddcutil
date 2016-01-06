@@ -77,7 +77,7 @@ create_feature_set(VCP_Feature_Subset subset, Version_Spec vcp_version) {
             break;
          case SUBSET_COLORMGT:
             vflags = get_version_specific_feature_flags(vcp_entry, vcp_version);;
-            showit = (vflags & VCP_SUBSET_COLORMGT) | (vcp_entry->vcp_subsets & VCP_SUBSET_COLORMGT);
+            showit = (vflags & VCP_SUBSET_COLOR) | (vcp_entry->vcp_subsets & VCP_SUBSET_COLOR);
             break;
          case SUBSET_PROFILE:
             vflags = get_version_specific_feature_flags(vcp_entry, vcp_version);;

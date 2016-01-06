@@ -2090,7 +2090,7 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
    {  .code=0x01,
       // defined in 2.0, identical in 3.0
       .vcp_spec_groups = VCP_SPEC_MISC,
-      .vcp_subsets = VCP_SUBSET_ANALOG,
+      .vcp_subsets = VCP_SUBSET_CRT,
       .desc = "Causes a CRT to perform a degauss cycle",
       .v20_flags = VCP2_WO |VCP2_WO_NC,
       .v20_name = "Degauss",
@@ -2156,7 +2156,7 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
       //       "adjust the color temperature.",
       // simpler:
       .desc="Color temperature increment used by feature 0Ch Color Temperature Request",
-      .vcp_subsets = VCP_SUBSET_COLORMGT,
+      .vcp_subsets = VCP_SUBSET_COLOR,
       .v20_flags =  VCP2_RO | VCP2_COMPLEX_NC,
       .v20_name="Color temperature increment",
    },
@@ -2166,7 +2166,7 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
       // Defined in 2.0
       .nontable_formatter=x0c_format_feature_detail_color_temperature_request,
       .desc="Specifies a color temperature (degrees Kelvin)",   // my desc
-      .vcp_subsets = VCP_SUBSET_COLORMGT,
+      .vcp_subsets = VCP_SUBSET_COLOR,
       .v20_flags = VCP2_RW | VCP2_COMPLEX_CONT,
       .v20_name="Color temperature request",
    },
@@ -2181,7 +2181,7 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
       // Defined in 2.0, name changed in 3.0, what is it in 2.1?
       //.name="Luminosity",
      .desc="Increase/decrease the brightness of the image.",
-     .vcp_subsets = VCP_SUBSET_COLORMGT | VCP_SUBSET_PROFILE,
+     .vcp_subsets = VCP_SUBSET_COLOR | VCP_SUBSET_PROFILE,
      .v20_flags =  VCP2_RW | VCP2_STD_CONT,
      .v20_name = "Brightness",
      .v30_name = "Luminosity",
@@ -2191,7 +2191,7 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
       .vcp_spec_groups = VCP_SPEC_IMAGE,
       .nontable_formatter=format_feature_detail_debug_bytes,
       .desc = "Select contrast enhancement algorithm respecting flesh tone region",
-      .vcp_subsets = VCP_SUBSET_COLORMGT,
+      .vcp_subsets = VCP_SUBSET_COLOR,
       .v21_flags = VCP2_RW | VCP2_COMPLEX_NC,
       .v21_name = "Flesh tone enhancement",
    },
@@ -2199,7 +2199,7 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
       .vcp_spec_groups = VCP_SPEC_IMAGE,
       // Defined in 2.0, identical in 3.0
       .desc="Increase/decrease the contrast of the image.",
-      .vcp_subsets = VCP_SUBSET_COLORMGT | VCP_SUBSET_PROFILE,
+      .vcp_subsets = VCP_SUBSET_COLOR | VCP_SUBSET_PROFILE,
       .v20_flags = VCP2_RW | VCP2_STD_CONT,
       .v20_name = "Contrast",
    },
@@ -2209,7 +2209,7 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
       // deprecated in 2.2
       .nontable_formatter=format_feature_detail_debug_bytes,
       .desc = "Increase/decrease the specified backlight control value",
-      .vcp_subsets = VCP_SUBSET_COLORMGT | VCP_SUBSET_PROFILE,
+      .vcp_subsets = VCP_SUBSET_COLOR | VCP_SUBSET_PROFILE,
       .v21_flags = VCP2_RW | VCP2_COMPLEX_CONT,
       .v21_name  = "Backlight control",
       .v22_flags = VCP2_DEPRECATED,
@@ -2222,7 +2222,7 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
       .nontable_formatter=format_feature_detail_select_color_preset,
       .default_sl_values= x14_color_preset_absolute_values,
       .desc="Select a specified color temperature",
-      .vcp_subsets = VCP_SUBSET_COLORMGT,
+      .vcp_subsets = VCP_SUBSET_COLOR,
       .v20_flags = VCP2_RW | VCP2_SIMPLE_NC,
       .v20_name  = "Select color preset",
       .v30_flags = VCP2_RW | VCP2_COMPLEX_NC,
@@ -2231,21 +2231,21 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
    {  .code=0x16,
       .vcp_spec_groups = VCP_SPEC_IMAGE,
       .desc="Increase/decrease the luminesence of red pixels",   // my simplification
-      .vcp_subsets = VCP_SUBSET_COLORMGT | VCP_SUBSET_PROFILE,
+      .vcp_subsets = VCP_SUBSET_COLOR | VCP_SUBSET_PROFILE,
       .v20_flags = VCP2_RW | VCP2_STD_CONT,
       .v20_name = "Video gain: Red",
    },
    {  .code=0x18,
       .vcp_spec_groups = VCP_SPEC_IMAGE,
       .desc="Increase/decrease the luminesence of green pixels",   // my simplification
-      .vcp_subsets = VCP_SUBSET_COLORMGT | VCP_SUBSET_PROFILE,
+      .vcp_subsets = VCP_SUBSET_COLOR | VCP_SUBSET_PROFILE,
       .v20_flags = VCP2_RW | VCP2_STD_CONT,
       .v20_name = "Video gain: Green",
    },
    {  .code=0x1a,
       .vcp_spec_groups = VCP_SPEC_IMAGE,
       .desc="Increase/decrease the luminesence of blue pixels",   // my simplification
-      .vcp_subsets = VCP_SUBSET_COLORMGT | VCP_SUBSET_PROFILE,
+      .vcp_subsets = VCP_SUBSET_COLOR | VCP_SUBSET_PROFILE,
       .v20_flags = VCP2_RW | VCP2_STD_CONT,
       .v20_name = "Video gain: Blue",
    },
@@ -2270,7 +2270,7 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
       .vcp_spec_groups = VCP_SPEC_IMAGE,   // 3.0
       .default_sl_values = x1e_x1f_auto_setup_values,
       .desc="Perform color autosetup function (R/G/B gain and offset, A/D setup, etc. ",
-      .vcp_subsets = VCP_SUBSET_COLORMGT,
+      .vcp_subsets = VCP_SUBSET_COLOR,
       .v21_flags = VCP2_RW | VCP2_SIMPLE_NC,
       .v21_name = "Auto color setup",
    },
@@ -2278,7 +2278,7 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
       // Group 8.4 Geometry, identical in 2.0, 3.0, 2.2 except for name
       // When did name change to include "(phase)"?  Assuming 2.1
       .vcp_spec_groups = VCP_SPEC_GEOMETRY,
-      .vcp_subsets = VCP_SUBSET_ANALOG,
+      .vcp_subsets = VCP_SUBSET_CRT,
       .desc = "Increasing (decreasing) this value moves the image toward "
               "the right (left) of the display.",
       .v20_flags = VCP2_RW | VCP2_STD_CONT,
@@ -2288,7 +2288,7 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
    {  .code=0x22,         // Done
       // Group 8.4 Geometry, identical in 2.0, 3.0, 2.2
       .vcp_spec_groups = VCP_SPEC_GEOMETRY,
-      .vcp_subsets = VCP_SUBSET_ANALOG,
+      .vcp_subsets = VCP_SUBSET_CRT,
       .desc = "Increase/decrease the width of the image.",
       .v20_name="Horizontal Size",
       .v20_flags = VCP2_RW | VCP2_STD_CONT,
@@ -2296,7 +2296,7 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
    {  .code=0x24,       // Done
       // Group 8.4 Geometry, identical in 2.0, 3.0, 2.2
       .vcp_spec_groups = VCP_SPEC_GEOMETRY,
-      .vcp_subsets = VCP_SUBSET_ANALOG,
+      .vcp_subsets = VCP_SUBSET_CRT,
       .desc = "Increasing (decreasing) this value causes the right and left "
               "sides of the image to become more (less) convex.",
       .v20_flags = VCP2_RW | VCP2_STD_CONT,
@@ -2305,7 +2305,7 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
    {  .code=0x26,              // Done
       // Group 8.4 Geometry, identical in 2.0, 3.0, 2.2
       .vcp_spec_groups = VCP_SPEC_GEOMETRY,
-      .vcp_subsets = VCP_SUBSET_ANALOG,
+      .vcp_subsets = VCP_SUBSET_CRT,
       .desc = "Increasing (decreasing) this value moves the center section "
               "of the image toward the right (left) side of the display.",
       .v20_flags = VCP2_RW | VCP2_STD_CONT,
@@ -2315,7 +2315,7 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
       // Group 8.4 Geometry, name changed in 3.0 & 2.2 vs 2.0  what should it be for 2.1?
       // assume it changed in 2.1
       .vcp_spec_groups = VCP_SPEC_GEOMETRY,
-      .vcp_subsets = VCP_SUBSET_ANALOG,
+      .vcp_subsets = VCP_SUBSET_CRT,
       // description identical in 3.0, 2.0 even though name changed
       .desc = "Increasing (decreasing) this value shifts the red pixels to "
               "the right (left) and the blue pixels left (right) across the "
@@ -2327,7 +2327,7 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
    {  .code=0x29,              // Done
       // not in 2.0, when was this added?  2.1 or 3.0?   assuming 2.1
       .vcp_spec_groups = VCP_SPEC_GEOMETRY,
-      .vcp_subsets = VCP_SUBSET_ANALOG,
+      .vcp_subsets = VCP_SUBSET_CRT,
       .desc = "Increasing (decreasing) this value shifts the magenta pixels to "
               "the right (left) and the green pixels left (right) across the "
               "image with respect to the magenta (sic) pixels.",
@@ -2336,7 +2336,7 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
    },
    {  .code = 0x2a,           // Done
       .vcp_spec_groups = VCP_SPEC_GEOMETRY,
-      .vcp_subsets = VCP_SUBSET_ANALOG,
+      .vcp_subsets = VCP_SUBSET_CRT,
       // Group 8.4 Geometry, identical in 3.0, 2.2
       .desc = "Increase/decrease the density of pixels in the image center.",
       .v20_flags = VCP2_RW | VCP2_STD_CONT,
@@ -2345,7 +2345,7 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
    {  .code = 0x2c,               // Done
       // Group 8.4 Geometry
       .vcp_spec_groups = VCP_SPEC_GEOMETRY,
-      .vcp_subsets = VCP_SUBSET_ANALOG,
+      .vcp_subsets = VCP_SUBSET_CRT,
       .desc = "Increasing (decreasing) this value shifts the density of pixels "
               "from the left (right) side to the right (left) side of the image.",
       .v20_flags = VCP2_RW | VCP2_STD_CONT,
@@ -2355,7 +2355,7 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
       .vcp_spec_groups = VCP_SPEC_IMAGE,
       // not defined in 2.0, is defined in 3.0
       // assume new in 2.1
-      .vcp_subsets = VCP_SUBSET_COLORMGT,
+      .vcp_subsets = VCP_SUBSET_COLOR,
       .nontable_formatter=format_feature_detail_debug_bytes,
       .desc = "Gray Scale Expansion",
       .v21_flags = VCP2_RW |  VCP2_COMPLEX_NC,
@@ -2363,7 +2363,7 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
    },
    {  .code=0x30,                // Done
       .vcp_spec_groups = VCP_SPEC_GEOMETRY,
-      .vcp_subsets = VCP_SUBSET_ANALOG,
+      .vcp_subsets = VCP_SUBSET_CRT,
       .desc = "Increasing (decreasing) this value moves the image toward "
               "the top (bottom) edge of the display.",
       .v20_flags = VCP2_RW | VCP2_STD_CONT,
@@ -2372,7 +2372,7 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
    },
    {  .code=0x32,                // Done
       .vcp_spec_groups = VCP_SPEC_GEOMETRY,
-      .vcp_subsets = VCP_SUBSET_ANALOG,
+      .vcp_subsets = VCP_SUBSET_CRT,
       // Group 8.4 Geometry.  Did name change with 2.1 or 3.0/2.2? - assuming 2.1
       .desc = "Increase/decreasing the height of the image.",
       .v20_flags=VCP2_RW |  VCP2_STD_CONT,
@@ -2380,7 +2380,7 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
    },
    {  .code=0x34,                                  // Done
       .vcp_spec_groups = VCP_SPEC_GEOMETRY,
-      .vcp_subsets = VCP_SUBSET_ANALOG,
+      .vcp_subsets = VCP_SUBSET_CRT,
       // Group 8.4 Geometry.  Identical in 2.0, 3.0, 2.2
       .desc = "Increasing (decreasing) this value will cause the top and "
               "bottom edges of the image to become more (less) convex.",
@@ -2389,7 +2389,7 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
    },
    {  .code=0x36,                                 // Done
       .vcp_spec_groups = VCP_SPEC_GEOMETRY,
-      .vcp_subsets = VCP_SUBSET_ANALOG,
+      .vcp_subsets = VCP_SUBSET_CRT,
       .desc = "Increasing (decreasing) this value will move the center "
               "section of the image toward the top (bottom) edge of the display.",
       .v20_flags =  VCP2_RW | VCP2_STD_CONT,
@@ -2397,7 +2397,7 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
    },
    {  .code=0x38,                                 // Done
       .vcp_spec_groups = VCP_SPEC_GEOMETRY,
-      .vcp_subsets = VCP_SUBSET_ANALOG,
+      .vcp_subsets = VCP_SUBSET_CRT,
       // Group 8.4 Geometry.  Assume name changed with 2.1
       .desc = "Increasing (decreasing) this value shifts the red pixels up (down) "
               "across the image and the blue pixels down (up) across the image "
@@ -2408,7 +2408,7 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
    },
    {  .code=0x39,                                 // Done
       .vcp_spec_groups = VCP_SPEC_GEOMETRY,
-      .vcp_subsets = VCP_SUBSET_ANALOG,
+      .vcp_subsets = VCP_SUBSET_CRT,
       // Group 8.4 Geometry.  Not in 2.0.  Assume added in 2.1
       .desc = "Increasing (decreasing) this value shifts the magenta pixels up (down) "
               "across the image and the green pixels down (up) across the image "
@@ -2418,7 +2418,7 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
    },
    {  .code=0x3a,                                  // Done
       .vcp_spec_groups = VCP_SPEC_GEOMETRY,
-      .vcp_subsets = VCP_SUBSET_ANALOG,
+      .vcp_subsets = VCP_SUBSET_CRT,
       // Group 8.4 Geometry
       .desc = "Increase/decease the density of scan lines in the image center.",
       .v20_flags= VCP2_RW | VCP2_STD_CONT,
@@ -2426,7 +2426,7 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
    },
    {  .code=0x3c,                                       // Done
       .vcp_spec_groups = VCP_SPEC_GEOMETRY,
-      .vcp_subsets = VCP_SUBSET_ANALOG,
+      .vcp_subsets = VCP_SUBSET_CRT,
       // Group 8.4 Geometry
       .desc = "Increase/decrease the density of scan lines in the image center.",
       .v20_flags= VCP2_RW | VCP2_STD_CONT,
@@ -2441,7 +2441,7 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
    },
    {  .code=0x40,                                   // Done
       .vcp_spec_groups = VCP_SPEC_GEOMETRY,
-      .vcp_subsets = VCP_SUBSET_ANALOG,
+      .vcp_subsets = VCP_SUBSET_CRT,
       // When did name change from 2.0?   assume 2.1
       //.name="Horizontal Parallelogram",
       .desc = "Increasing (decreasing) this value shifts the top section of "
@@ -2453,7 +2453,7 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
    },
    {  .code=0x41,
       .vcp_spec_groups = VCP_SPEC_GEOMETRY,
-      .vcp_subsets = VCP_SUBSET_ANALOG,
+      .vcp_subsets = VCP_SUBSET_CRT,
       // not defined in 2.0, assume defined in 2.1
       // 3.0 doc has same description for x41 as x40, is this right?
       // 2.2 spec has the same identical description in x41 and x40
@@ -2465,7 +2465,7 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
    },
    {  .code=0x42,                                  // Done
       .vcp_spec_groups = VCP_SPEC_GEOMETRY,
-      .vcp_subsets = VCP_SUBSET_ANALOG,
+      .vcp_subsets = VCP_SUBSET_CRT,
       // When did name change from 2.0?   assume 2.1
       .desc = "Increasing (decreasing) this value will increase (decrease) the "
               "ratio between the horizontal size at the top of the image and the "
@@ -2476,7 +2476,7 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
    },
    {  .code=0x43,                             // Done
       .vcp_spec_groups = VCP_SPEC_GEOMETRY,
-      .vcp_subsets = VCP_SUBSET_ANALOG,
+      .vcp_subsets = VCP_SUBSET_CRT,
       // Group 8.4 Geometry
       // When did name change from 2.0?   assume 2.1
       .desc = "Increasing (decreasing) this value will increase (decrease) the "
@@ -2488,7 +2488,7 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
    },
    {  .code=0x44,                                // Done
       .vcp_spec_groups = VCP_SPEC_GEOMETRY,
-      .vcp_subsets = VCP_SUBSET_ANALOG,
+      .vcp_subsets = VCP_SUBSET_CRT,
       // Group 8.4 Geometry
       // When did name change from 2.0?   assume 2.1
       .desc = "Increasing (decreasing) this value rotates the image (counter) "
@@ -2499,7 +2499,7 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
    },
    {  .code=0x46,                          // Done
       .vcp_spec_groups = VCP_SPEC_GEOMETRY,
-      .vcp_subsets = VCP_SUBSET_ANALOG,
+      .vcp_subsets = VCP_SUBSET_CRT,
       // Group 8.4 Geometry
       // When did name change from 2.0?   assume 2.1
       .desc = "Increase/decrease the distance between the left and right sides "
@@ -2510,7 +2510,7 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
    },
    {  .code=0x48,                              // Done
       .vcp_spec_groups = VCP_SPEC_GEOMETRY,
-      .vcp_subsets = VCP_SUBSET_ANALOG,
+      .vcp_subsets = VCP_SUBSET_CRT,
       // name is different in 3.0, assume changed in 2.1
      //.name="Placeholder",
      //.flags=VCP_RW | VCP_CONTINUOUS,
@@ -2524,7 +2524,7 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
    },
    {  .code=0x4a,                                             //Done
       .vcp_spec_groups = VCP_SPEC_GEOMETRY,
-      .vcp_subsets = VCP_SUBSET_ANALOG,
+      .vcp_subsets = VCP_SUBSET_CRT,
       // Group 8.4 Geometry
       // When did name change from 2.0?   assume 2.1
       .desc = "Increase/decrease the distance between the left "
@@ -2535,7 +2535,7 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
    },
    {  .code=0x4c,                                          // Done
       .vcp_spec_groups = VCP_SPEC_GEOMETRY,
-      .vcp_subsets = VCP_SUBSET_ANALOG,
+      .vcp_subsets = VCP_SUBSET_CRT,
       // name is different in 3.0, assume changed in 2.1
       .desc = "Increasing (decreasing) this value moves the bottom end of the "
               "image to the right (left).",
@@ -2601,7 +2601,7 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
       //.desc = "Value < 127 decreases red saturation, 127 nominal (default) value, "
       //          "> 127 increases red saturation",
       .desc="Increase/decrease red saturation",
-      .v21_flags = VCP2_RW | VCP2_STD_CONT| VCP_SUBSET_COLORMGT,
+      .v21_flags = VCP2_RW | VCP2_STD_CONT| VCP_SUBSET_COLOR,
       .v21_name = "6 axis saturation: Red",
    },
    {  .code=0x5a,                                                    // DONE
@@ -2611,7 +2611,7 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
       // .desc = "Value < 127 decreases yellow saturation, 127 nominal (default) value, "
       //         "> 127 increases yellow saturation",
       .desc="Increase/decrease yellow saturation",
-      .v21_flags = VCP2_RW | VCP2_STD_CONT| VCP_SUBSET_COLORMGT,
+      .v21_flags = VCP2_RW | VCP2_STD_CONT| VCP_SUBSET_COLOR,
       .v21_name = "6 axis saturation: Yellow",
    },
    {  .code=0x5b,                                                   // DONE
@@ -2621,7 +2621,7 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
       // .desc = "Value < 127 decreases green saturation, 127 nominal (default) value, "
       //           "> 127 increases green saturation",
       .desc="Increase/decrease green saturation",
-      .v21_flags = VCP2_RW | VCP2_STD_CONT| VCP_SUBSET_COLORMGT,
+      .v21_flags = VCP2_RW | VCP2_STD_CONT| VCP_SUBSET_COLOR,
       .v21_name = "6 axis saturation: Green",
    },
    {  .code=0x5c,                                                   // DONE
@@ -2631,7 +2631,7 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
       // .desc = "Value < 127 decreases cyan saturation, 127 nominal (default) value, "
       //          "> 127 increases cyan saturation",
       .desc="Increase/decrease cyan saturation",
-      .v21_flags = VCP2_RW | VCP2_STD_CONT| VCP_SUBSET_COLORMGT,
+      .v21_flags = VCP2_RW | VCP2_STD_CONT| VCP_SUBSET_COLOR,
       .v21_name = "6 axis saturation: Cyan",
    },
    {  .code=0x5d,                                                   // DONE
@@ -2641,7 +2641,7 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
       // .desc = "Value < 127 decreases blue saturation, 127 nominal (default) value, "
       //          "> 127 increases blue saturation",
       .desc="Increase/decrease blue saturation",
-      .v21_flags = VCP2_RW | VCP2_STD_CONT| VCP_SUBSET_COLORMGT,
+      .v21_flags = VCP2_RW | VCP2_STD_CONT| VCP_SUBSET_COLOR,
       .v21_name = "6 axis saturation: Blue",
    },
    {  .code=0x5e,                                                  // DONE
@@ -2651,7 +2651,7 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
       // .desc = "Value < 127 decreases magenta saturation, 127 nominal (default) value, "
       //            "> 127 increases magenta saturation",
       .desc="Increase/decrease magenta saturation",
-      .v21_flags = VCP2_RW | VCP2_STD_CONT| VCP_SUBSET_COLORMGT,
+      .v21_flags = VCP2_RW | VCP2_STD_CONT| VCP_SUBSET_COLOR,
       .v21_name = "6 axis saturation: Magenta",
    },
    {  .code=0x60,
@@ -2707,7 +2707,7 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
       // First defined in MCCS 2.2,
       .vcp_spec_groups=VCP_SPEC_IMAGE,
       .desc="Increase/decrease the white backlight level",
-      .vcp_subsets = VCP_SUBSET_COLORMGT | VCP_SUBSET_PROFILE,
+      .vcp_subsets = VCP_SUBSET_COLOR | VCP_SUBSET_PROFILE,
       .v22_name = "Backlight Level: White",
       .v22_flags = VCP2_RW | VCP2_STD_CONT,
    },
@@ -2717,20 +2717,20 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
      //.name="Video black level: Red",
      // .nontable_formatter=format_feature_detail_standard_continuous,
      .desc="Increase/decrease the black level of red pixels",  // my simplification
-     .v20_flags =  VCP2_RW |VCP2_STD_CONT| VCP_SUBSET_COLORMGT  | VCP_SUBSET_PROFILE,
+     .v20_flags =  VCP2_RW |VCP2_STD_CONT| VCP_SUBSET_COLOR  | VCP_SUBSET_PROFILE,
      .v20_name = "Video black level: Red",
    },
    {  .code=0x6d,
       // First defined in MCCS 2.2,
       .vcp_spec_groups=VCP_SPEC_IMAGE,
-      .vcp_subsets = VCP_SUBSET_COLORMGT | VCP_SUBSET_PROFILE,
+      .vcp_subsets = VCP_SUBSET_COLOR | VCP_SUBSET_PROFILE,
       .desc="Increase/decrease the red backlight level",
       .v22_name = "Backlight Level: Red",
       .v22_flags = VCP2_RW | VCP2_STD_CONT,
    },
    { .code=0x6e,
       .vcp_spec_groups = VCP_SPEC_IMAGE,
-      .vcp_subsets = VCP_SUBSET_COLORMGT | VCP_SUBSET_PROFILE,
+      .vcp_subsets = VCP_SUBSET_COLOR | VCP_SUBSET_PROFILE,
       // Defined in 2.0, name change in ?
       .desc="Increase/decrease the black level of green pixels",  // my simplification
       .v20_flags =  VCP2_RW |VCP2_STD_CONT,
@@ -2742,14 +2742,14 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
       .desc="Increase/decrease the green backlight level",
       // .nontable_formatter=format_feature_detail_standard_continuous,
       .v22_name = "Backlight Level: Green",
-      .vcp_subsets = VCP_SUBSET_COLORMGT | VCP_SUBSET_PROFILE,
+      .vcp_subsets = VCP_SUBSET_COLOR | VCP_SUBSET_PROFILE,
       .v22_flags = VCP2_RW | VCP2_STD_CONT,
    },
    {  .code=0x70,
       .vcp_spec_groups = VCP_SPEC_IMAGE,
       // Defined in 2.0, name change in ?
       .desc="Increase/decrease the black level of blue pixels",  // my simplification
-      .vcp_subsets = VCP_SUBSET_COLORMGT | VCP_SUBSET_PROFILE,
+      .vcp_subsets = VCP_SUBSET_COLOR | VCP_SUBSET_PROFILE,
       .v20_flags =  VCP2_RW |VCP2_STD_CONT,
       .v20_name = "Video black level: Blue",
    },
@@ -2758,406 +2758,397 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
       .vcp_spec_groups=VCP_SPEC_IMAGE,
       .desc="Increase/decrease the blue backlight level",
       .v22_name = "Backlight Level: Blue",
-      .vcp_subsets = VCP_SUBSET_COLORMGT | VCP_SUBSET_PROFILE,
+      .vcp_subsets = VCP_SUBSET_COLOR | VCP_SUBSET_PROFILE,
       .v22_flags = VCP2_RW | VCP2_STD_CONT,
    },
    {  .code=0x72,
+      // 2.0: undefined, 3.0 & 2.2: defined, assume defined in 2.1
       .vcp_spec_groups = VCP_SPEC_IMAGE,
-      // 2.0: undefined, 3.0 & 2.2: defined
-      // assume defined in 2.1
-     //.name="Gamma",
-     //.flags=VCP_RW | VCP_NON_CONT   | VCP_COLORMGT,
+      .vcp_subsets = VCP_SUBSET_COLOR,
+      .desc="Select relative or absolute gamma",
       .nontable_formatter=format_feature_detail_debug_sl_sh,
+      .v21_flags = VCP2_RW | VCP2_COMPLEX_NC,    // TODO implement function
+      .v21_name = "Gamma",
+   },
+   {  .code=0x73,
+      .vcp_spec_groups = VCP_SPEC_MISC | VCP_SPEC_IMAGE,
+      .vcp_subsets = VCP_SUBSET_LUT,
+      // VCP_SPEC_MISC in 2.0, VCP_SPEC_IMAGE in 3.0, 2.1? 2.2
+      .table_formatter=format_feature_detail_x73_lut_size,
+      .desc = "Provides the size (number of entries and number of bits/entry) "
+              "for the Red, Green, and Blue LUT in the display.",
+      .v20_flags = VCP2_RO| VCP2_TABLE,
+      .v20_name  = "LUT Size",
+   },
+   {  .code=0x74,
+      // VCP_SPEC_MISC in 2.0, VCP_SPEC_IMAGE in 3.0, 2.2
+      .vcp_spec_groups = VCP_SPEC_MISC | VCP_SPEC_IMAGE,
+      .vcp_subsets = VCP_SUBSET_LUT,
+      .table_formatter = default_table_feature_detail_function,
+      .desc = "Writes a single point within the display's LUT, reads a single point from the LUT",
+      .v20_flags = VCP2_RW | VCP2_TABLE,
+      .v20_name = "Single point LUT operation",
+   },
+   {  .code=0x75,
+      // VCP_SPEC_MISC in 2.0, VCP_SPEC_IMAGE in 3.0, 2.2
+      .vcp_spec_groups = VCP_SPEC_MISC | VCP_SPEC_IMAGE,
+      .vcp_subsets = VCP_SUBSET_LUT,
+      .table_formatter = default_table_feature_detail_function,
+      .desc = "Load (read) multiple values into (from) the display's LUT",
+      .v20_flags = VCP2_RW | VCP2_TABLE,
+      .v20_name = "Block LUT operation",
+   },
+   {  .code=0x76,
+      // defined in 2.0, 3.0
+      .vcp_spec_groups = VCP_SPEC_MISC,
+      .vcp_subsets = VCP_SUBSET_LUT,
+      .desc = "Initiates a routine resident in the display",
+      .v20_flags = VCP2_WO | VCP2_WO_TABLE,
+      .v20_name = "Remote Procedure Call",
+   },
+   {  .code=0x78,
+      .vcp_spec_groups = VCP_SPEC_MISC,
+      // Not in 2.0
+      // defined in 3.0, 2.2 - name and description vary, but content identical
+      // what to do about 2.1?  assume it's defined in 2.1 and identical to 3.0
+      .desc = "Causes a selected 128 byte block of Display Identification Data "
+              "(EDID or Display ID) to be read",
 
-     .desc="Select relative or absolute gamma",
-     //.global_flags = VCP_RW | VCP_SUBSET_COLORMGT,
-     .v21_flags = VCP2_RW | VCP2_COMPLEX_NC | VCP_SUBSET_COLORMGT,    // TODO implement function
-     .v21_name = "Gamma",
+      .v21_flags =  VCP2_RO | VCP2_TABLE,
+      .v21_name  = "EDID operation",
+      .v30_flags = VCP2_RO | VCP2_TABLE,
+      .v30_name  = "EDID operation",
+      .v22_flags = VCP2_RO | VCP2_TABLE,
+      .v22_name = "Display Identification Operation",
    },
-   { .code=0x73,
-     .vcp_spec_groups = VCP_SPEC_MISC | VCP_SPEC_IMAGE,
-     // VCP_SPEC_MISC in 2.0, VCP_SPEC_IMAGE in 3.0, 2.1? 2.2?
-     .table_formatter=format_feature_detail_x73_lut_size,
-     .desc = "Provides the size (number of entries and number of bits/entry) "
-             "for the Red, Green, and Blue LUT in the display.",
-     .v20_flags = VCP2_RO| VCP2_TABLE| VCP_SUBSET_COLORMGT,
-     .v20_name  = "LUT Size",
+   {  .code=0x7a,
+      .vcp_spec_groups = VCP_SPEC_IMAGE,      // v2.0
+      // defined in 2.0, not in 3.0 or 2.2, what to do for 2.1?
+      .desc="Increase/decrease the distance to the focal plane of the image",
+      .v20_flags = VCP2_RW | VCP2_STD_CONT,
+      .v20_name = "Adjust Focal Plane",
+      .v30_flags = VCP2_DEPRECATED,
+      .v22_flags = VCP2_DEPRECATED,
    },
-   { .code=0x74,
-     // VCP_SPEC_MISC in 2.0, VCP_SPEC_?? in 3.0, 2.2
-     .vcp_spec_groups = VCP_SPEC_MISC,
-     //.name = "Single point LUT operation",
-     .table_formatter = default_table_feature_detail_function,
-     .desc = "Writes a single point within the display's LUT, reads a single point from the LUT",
-     .v20_flags = VCP2_RW | VCP2_TABLE| VCP_SUBSET_COLORMGT,
-     .v20_name = "Single point LUT operation",
-   },
-   { .code=0x75,
-     // VCP_SPEC_MISC in 2.0, VCP_SPEC_?? in 3.0, 2.2
-     .vcp_spec_groups = VCP_SPEC_MISC,
-     //.name = "Block LUT operation",
-     .table_formatter = default_table_feature_detail_function,
-     .desc = "Load (read) multiple values into (from) the display's LUT",
-     .v20_flags = VCP2_RW | VCP2_TABLE| VCP_SUBSET_COLORMGT,
-     .v20_name = "Block LUT operation",
-   },
-   { .code=0x76,
-     // defined in 2.0, 3.0
-     .vcp_spec_groups = VCP_SPEC_MISC,
-     .desc = "Initiates a routine resident in the display",
-     .v20_flags = VCP2_WO | VCP2_WO_TABLE,
-     .v20_name = "Remote Procedure Call",
-   },
-   { .code=0x78,
-     .vcp_spec_groups = VCP_SPEC_MISC,
-     // Not in 2.0
-     // defined in 3.0, 2.2 - name and description vary, but content identical
-     // what to do about 2.1?  assume it's defined in 2.1 and identical to 3.0
-     //.name = "EDID operation",
-     //.flags = VCP_RO | VCP_TABLE,
-
-     .desc = "Reads a selected 128 byte block of Display Identification Data "
-           "(EDID or Display ID) to be read",
-     //.global_flags = VCP_RO,
-     .v21_flags =  VCP2_RO | VCP2_TABLE,
-     .v21_name  = "EDID operation",
-     .v30_flags = VCP2_RO | VCP2_TABLE,
-     .v30_name  = "EDID operation",
-     .v22_flags = VCP2_RO | VCP2_TABLE,
-     .v22_name = "Display Identification Operation",
-   },
-   { .code=0x7a,
-     .vcp_spec_groups = VCP_SPEC_IMAGE,      // v2.0
-     // defined in 2.0, not in 3.0
-     // what to do for 2.1?
-     .desc="Increase/decrease the distance to the focal plane of the image",  // my simplification
-     //.global_flags=VCP_RW,
-     .v20_flags = VCP2_RW | VCP2_STD_CONT,
-     .v20_name = "Adjust Focal Plane",
-     .v30_flags = VCP2_DEPRECATED,
-     .v22_flags = VCP2_DEPRECATED,    // ??
-   },
-   { .code=0x7c,
+   {  .code=0x7c,
       .vcp_spec_groups = VCP_SPEC_IMAGE,
       // defined in 2.0, is in 3.0
       // my simplification, merger of 2.0 and 3.0 descriptions:
       .desc="Increase/decrease the distance to the zoom function of the projection lens (optics)",
       .v20_flags =  VCP2_RW | VCP2_STD_CONT,
       .v20_name = "Adjust Zoom",
-    },
-   { .code=0x7e,                                    // TODO: CHECK 2.2 SPEC
-     // Is this really a valid v2.0 code?   See earlier comments
-     // Is in V2.0 Geometry table, but not cross reference.
-     .vcp_spec_groups = VCP_SPEC_GEOMETRY,
-     .vcp_subsets = VCP_SUBSET_ANALOG,
-     // Section 8.4 Geometry
-     // data from v2.0 spec
-     // not in v3.0 spec
-     // when was it deleted?  v3.0 or v2.1?   For safety assume 3.0
-
-     .desc = "Increase/decrease the trapezoid distortion in the image",
-     .v20_flags= VCP2_RW | VCP2_STD_CONT,
-     .v30_flags=VCP2_DEPRECATED,
-     .v22_flags=VCP2_DEPRECATED,
-     .v20_name="Trapezoid",
    },
-   { .code=0x80,                                    // TODO: CHECK 2.2 SPEC
-     // The v2.0 cross ref lists 0x50 as Keystone, group Geometry
-     // However, the Geometry table lists Keystone as x50, not x80
-     // Neither x50 nor x80 are defined in v3.0
-     .vcp_spec_groups = VCP_SPEC_GEOMETRY,
-     .vcp_subsets = VCP_SUBSET_ANALOG,
-     // Section 8.4 Geometry
-     // in 2.0 spec, not in 3.0
-     // assume not in 2.1
-     // TODO: CHECK 2.2
-
-     .desc="Increase/decrease the keystone distortion in the image.",
-     .v20_flags= VCP2_RW | VCP2_STD_CONT,
-     .v20_name="Keystone",
-     .v21_flags = VCP2_DEPRECATED,
+   {  .code=0x7e,                                    // TODO: CHECK 2.2 SPEC
+      // Is this really a valid v2.0 code?   See earlier comments
+      // Is in V2.0 Geometry table, but not cross reference.
+      .vcp_spec_groups = VCP_SPEC_GEOMETRY,
+      .vcp_subsets = VCP_SUBSET_CRT,
+      // data from v2.0 spec, not in v3.0 spec
+      // when was it deleted?  v3.0 or v2.1?   For safety assume 3.0
+      .desc = "Increase/decrease the trapezoid distortion in the image",
+      .v20_flags= VCP2_RW | VCP2_STD_CONT,
+      .v30_flags=VCP2_DEPRECATED,
+      .v22_flags=VCP2_DEPRECATED,
+      .v20_name="Trapezoid",
    },
-   { .code=0x82,
-     .vcp_spec_groups = VCP_SPEC_IMAGE | VCP_SPEC_GEOMETRY,         // 2.0: Image, 3.0: Geometry
-     .default_sl_values = x82_horizontal_flip_values,
-
-     .desc="Flip picture horizontally",
-     // DESIGN ISSUE!!!
-     // This feature is WO in 2.0 spec, RW in 3.0, what is it in 2.2
-     // implies cannot use global_flags to store RO/RW/WO
-     //.global_flags=VCP_RW,
-     .v20_flags =  VCP2_WO | VCP2_WO_NC,
-     .v20_name = "HorFlip",
-     .v21_name = "Horizontal Mirror (Flip)",
-     .v21_flags =  VCP2_RW | VCP2_SIMPLE_NC,
-     .v21_sl_values = x82_horizontal_flip_values,
-
+   {  .code=0x80,                                    // TODO: CHECK 2.2 SPEC
+      // The v2.0 cross ref lists 0x50 as Keystone, group Geometry
+      // However, the Geometry table lists Keystone as x50, not x80
+      // Neither x50 nor x80 are defined in v3.0
+      .vcp_spec_groups = VCP_SPEC_GEOMETRY,
+      .vcp_subsets = VCP_SUBSET_CRT,
+      // in 2.0 spec, not in 3.0, or 2.2
+      // assume not in 2.1
+      .desc="Increase/decrease the keystone distortion in the image.",
+      .v20_flags= VCP2_RW | VCP2_STD_CONT,
+      .v20_name="Keystone",
+      .v21_flags = VCP2_DEPRECATED,
    },
-   { .code=0x84,
-       .vcp_spec_groups = VCP_SPEC_IMAGE | VCP_SPEC_GEOMETRY,         // 2.0: Image, 3.0: Geometry
-       // defined in 2.0, not in 3.0?
-       //.name="Placeholder",
-       //.flags=VCP_RW | VCP_NON_CONT,
-       .default_sl_values = x84_vertical_flip_values,
-
-       // DESIGN ISSUE!!!
-       // This feature is WO in 2.0 spec, RW in 3.0, what is it in 2.2
-       // implies cannot use global_flags to store RO/RW/WO
-       .desc="Flip picture vertically",
-       //.global_flags=VCP_RW,
-       .v20_flags =  VCP2_WO | VCP2_WO_NC,
-       .v20_name = "VertFlip",
-       .v21_name = "Vertical Mirror (Flip)",
-       .v21_flags =  VCP2_RW | VCP2_SIMPLE_NC,
-       .v21_sl_values = x84_vertical_flip_values,
-     },
-   { .code=0x86,                                              // Done
-     // v2.0 spec cross ref lists as MISC, but defined in IMAGE table, assume IMAGE
-     .vcp_spec_groups = VCP_SPEC_IMAGE,              // 2.0: IMAGE
-     //.name="DisplayScaling",
-     //.flags = VCP_RW | VCP_NON_CONT,
-     .default_sl_values = x86_display_scaling_values,
-
-     .desc = "Control the scaling (input vs output) of the display",
-     //.global_flags=VCP_RW,
-     .v20_flags = VCP2_RW | VCP2_SIMPLE_NC,
-     .v20_name = "Display Scaling",
+   {  .code=0x82,
+      .vcp_spec_groups = VCP_SPEC_IMAGE | VCP_SPEC_GEOMETRY,   // 2.0: Image, 3.0: Geometry
+      .default_sl_values = x82_horizontal_flip_values,
+      .desc="Flip picture horizontally",
+      // DESIGN ISSUE!!!
+      // This feature is WO in 2.0 spec, RW in 3.0, what is it in 2.2
+      // implies cannot use global_flags to store RO/RW/WO
+      .v20_flags =  VCP2_WO | VCP2_WO_NC,
+      .v20_name = "HorFlip",
+      .v21_name = "Horizontal Mirror (Flip)",
+      .v21_flags =  VCP2_RW | VCP2_SIMPLE_NC,
+      .v21_sl_values = x82_horizontal_flip_values,
    },
-   { .code=0x87,                                                 // Done
-     .vcp_spec_groups = VCP_SPEC_IMAGE ,    // 2.0 IMAGE, 3.0 Image
-     // defined in 2.0, is C in 3.0, assume 2.1 is C as well
-     //.flags=VCP_RW | VCP_CONTINUOUS               ,
-      // .nontable_formatter=format_feature_detail_standard_continuous,
+   {  .code=0x84,
+      .vcp_spec_groups = VCP_SPEC_IMAGE | VCP_SPEC_GEOMETRY,   // 2.0: Image, 3.0: Geometry
+      .default_sl_values = x84_vertical_flip_values,
+      // DESIGN ISSUE!!!
+      // This feature is WO in 2.0 spec, RW in 3.0, what is it in 2.2
+      // implies cannot use global_flags to store RO/RW/WO
+      .desc="Flip picture vertically",
+      .v20_flags =  VCP2_WO | VCP2_WO_NC,
+      .v20_name = "VertFlip",
+      .v21_name = "Vertical Mirror (Flip)",
+      .v21_flags =  VCP2_RW | VCP2_SIMPLE_NC,
+      .v21_sl_values = x84_vertical_flip_values,
+   },
+   {  .code=0x86,                                              // Done
+      // v2.0 spec cross ref lists as MISC, but defined in IMAGE table, assume IMAGE
+      .vcp_spec_groups = VCP_SPEC_IMAGE,              // 2.0: IMAGE
+      //.name="DisplayScaling",
+      //.flags = VCP_RW | VCP_NON_CONT,
+      .default_sl_values = x86_display_scaling_values,
+      .desc = "Control the scaling (input vs output) of the display",
+      .v20_flags = VCP2_RW | VCP2_SIMPLE_NC,
+      .v20_name = "Display Scaling",
+   },
+   {  .code=0x87,                                                 // Done
+      .vcp_spec_groups = VCP_SPEC_IMAGE ,    // 2.0 IMAGE, 3.0 Image, 2.2 Image
+      // defined in 2.0, is C in 3.0 and 2.2, assume 2.1 is C as well
       .default_sl_values = x87_sharpness_values,
-
-      .desc = "Specifies one of a range of algorithms",
+      // .desc = "Specifies one of a range of algorithms",
+      .desc = "Selects one of a range of algorithms. "
+              "Increasing (decreasing) the value must increase (decrease) "
+              "the edge sharpness of image features.",
       .v20_flags=VCP2_RW | VCP2_SIMPLE_NC,
       .v20_name="Sharpness",
       .v21_flags=VCP2_RW | VCP2_STD_CONT,
    },
-   { .code=0x88,
-     // defined in 2.0,
-     // 2.0 cross ref lists this as IMAGE, but defined in MISC table
-     .vcp_spec_groups = VCP_SPEC_MISC,
-     .vcp_subsets = VCP_SUBSET_ANALOG,    // ???
-     .desc = "Increase (decrease) the velocity modulation of the horizontal "
-           "scan as a function of the change in luminescence level",
-     .v20_flags = VCP2_RW | VCP2_STD_CONT,
-     .v20_name = "Velocity Scan Modulation",
+   {  .code=0x88,
+      // 2.0 cross ref lists this as IMAGE, but defined in MISC table
+      // 2.2: Image
+      .vcp_spec_groups = VCP_SPEC_MISC | VCP_SPEC_IMAGE,
+      .vcp_subsets = VCP_SUBSET_CRT,    // ???
+      .desc = "Increase (decrease) the velocity modulation of the horizontal "
+              "scan as a function of the change in luminescence level",
+      .v20_flags = VCP2_RW | VCP2_STD_CONT,
+      .v20_name = "Velocity Scan Modulation",
    },
-
-   { .code=0x8a,
-     //.name="TV Color saturation",
-     .vcp_spec_groups = VCP_SPEC_IMAGE,     // 2.0
-     .vcp_subsets = VCP_SUBSET_TV,
-      // .nontable_formatter=format_feature_detail_standard_continuous,
-
-     .desc = "Increase (decrease) the amplitude of the color difference "
-           "components of the video signal",
-     //.global_flags = VCP_RW,
-     .v20_flags =VCP2_RW |  VCP2_STD_CONT,     // ??
-     .v20_name  = "TV Color Saturation",
+   {  .code=0x8a,
+      .vcp_spec_groups = VCP_SPEC_IMAGE,     // 2.0, 2.2
+      .vcp_subsets = VCP_SUBSET_TV | VCP_SUBSET_COLOR,
+      .desc = "Increase/decrease the amplitude of the color difference "
+              "components of the video signal",
+      .v20_flags =VCP2_RW |  VCP2_STD_CONT,
+      .v20_name  = "TV Color Saturation",
    },
-   {.code=0x8b,
-    .vcp_spec_groups = VCP_SPEC_MISC,   // 2.0
-    .vcp_subsets = VCP_SUBSET_TV,
-    .desc = "Increment (1) or decrement (2) television channel",
-    .v20_flags=VCP2_WO | VCP2_WO_NC,
-    .v20_name="TV Channel Up/Down",
-    .default_sl_values=x8b_tv_channel_values,
+   {  .code=0x8b,
+      .vcp_spec_groups = VCP_SPEC_MISC,   // 2.0
+      .vcp_subsets = VCP_SUBSET_TV,
+      .desc = "Increment (1) or decrement (2) television channel",
+      .v20_flags=VCP2_WO | VCP2_WO_NC,
+      .v20_name="TV Channel Up/Down",
+      .default_sl_values=x8b_tv_channel_values,
    },
-
-   { .code = 0x8c,
-     .vcp_spec_groups = VCP_SPEC_MISC, // 2.0
-     .vcp_subsets = VCP_SUBSET_TV,
-     //.flags = VCP_RW | VCP_CONTINUOUS,
-     .desc = "Increase/decrease the amplitude of the high frequency components  "
-           "of the video signal",
-     //.global_flags = VCP_RW,
-     .v20_flags = VCP2_RW | VCP2_STD_CONT,
-     .v20_name = "TV Sharpness",
+   {  .code = 0x8c,
+      .vcp_spec_groups = VCP_SPEC_MISC | VCP_SPEC_IMAGE,  // 2.0: SPEC, 2.2: IMAGE
+      .vcp_subsets = VCP_SUBSET_TV,
+      .desc = "Increase/decrease the amplitude of the high frequency components  "
+              "of the video signal",
+      .v20_flags = VCP2_RW | VCP2_STD_CONT,
+      .v20_name = "TV Sharpness",
    },
-   { .code=0x8d,
-     .vcp_spec_groups = VCP_SPEC_MISC,   // 2.0
-     // v3.0 same as v2.0
-     // v2.2 adds SH byte for screen blank
-     .vcp_subsets = VCP_SUBSET_TV,
-     .desc = "Mute/unmute audio, and (v2.2) screen blank",
-     .nontable_formatter=format_feature_detail_x8d_v22_mute_audio_blank_screen,
-     .default_sl_values = x8d_tv_audio_mute_source_values,
-     .v20_flags = VCP2_RW | VCP2_SIMPLE_NC,
-     .v20_name = "Audio Mute",
-     .v22_flags = VCP2_RW | VCP2_COMPLEX_NC,
-     .v22_name = "Audio mute/Screen blank",
+   {  .code=0x8d,
+      .vcp_spec_groups = VCP_SPEC_MISC,   // 2.0
+      // v3.0 same as v2.0
+      // v2.2 adds SH byte for screen blank
+      .vcp_subsets = VCP_SUBSET_TV | VCP_SUBSET_AUDIO,
+      .desc = "Mute/unmute audio, and (v2.2) screen blank",
+      .nontable_formatter=format_feature_detail_x8d_v22_mute_audio_blank_screen,
+      .default_sl_values = x8d_tv_audio_mute_source_values,
+      .v20_flags = VCP2_RW | VCP2_SIMPLE_NC,
+      .v20_name = "Audio Mute",
+      .v22_flags = VCP2_RW | VCP2_COMPLEX_NC,
+      .v22_name = "Audio mute/Screen blank",
    },
-   { .code=0x8e,
-     .vcp_spec_groups = VCP_SPEC_MISC,   // 2.0
-     //.flags = VCP_RW | VCP_CONTINUOUS,
-     .vcp_subsets = VCP_SUBSET_TV,
-     .desc = "Increase/decrease the ratio between blacks and whites in the image",
-     //.global_flags = VCP_RW,
-     .v20_flags = VCP2_RW | VCP2_STD_CONT,
-     .v20_name = "TV Contrast",
+   {  .code=0x8e,
+      .vcp_spec_groups = VCP_SPEC_MISC,   // 2.0
+      .vcp_subsets = VCP_SUBSET_TV,
+      .desc = "Increase/decrease the ratio between blacks and whites in the image",
+      .v20_flags = VCP2_RW | VCP2_STD_CONT,
+      .v20_name = "TV Contrast",
    },
-   { .code=0x8f,
-     .vcp_spec_groups = VCP_SPEC_AUDIO,    // v2.0, 2.2, 3.0
-     .desc="Emphasize/de-emphasize high frequency audio",
-     // n. for v2.0 name in spec is "TV-audio treble".  "TV" prefix is
-     // dropped in 2.2, 3.0.  just use the more generic term for all versions
-     // similar comments apply to x91, x93
-     .v20_name="Audio Treble",
-     // requires special handling for V3, mix of C and NC, SL byte only
-     .nontable_formatter=format_feature_detail_audio_treble_bass_v30,
-     .v20_flags = VCP2_RW | VCP2_STD_CONT,
-     .v30_flags = VCP2_RW | VCP2_COMPLEX_NC,
-     .v22_flags = VCP2_RW | VCP2_COMPLEX_NC,
+   {  .code=0x8f,
+      .vcp_spec_groups = VCP_SPEC_AUDIO,    // v2.0, 2.2, 3.0
+      .vcp_subsets = VCP_SUBSET_AUDIO,
+      .desc="Emphasize/de-emphasize high frequency audio",
+      // n. for v2.0 name in spec is "TV-audio treble".  "TV" prefix is
+      // dropped in 2.2, 3.0.  just use the more generic term for all versions
+      // similar comments apply to x91, x93
+      .v20_name="Audio Treble",
+      // requires special handling for V3, mix of C and NC, SL byte only
+      .nontable_formatter=format_feature_detail_audio_treble_bass_v30,
+      .v20_flags = VCP2_RW | VCP2_STD_CONT,
+      .v30_flags = VCP2_RW | VCP2_COMPLEX_NC,
+      .v22_flags = VCP2_RW | VCP2_COMPLEX_NC,
    },
-   { .code=0x90,
-     .vcp_spec_groups = VCP_SPEC_MISC,     // 2.0
-     .vcp_subsets = VCP_SUBSET_TV,
-     //.name="Hue",
-     //.flags=VCP_RW | VCP_CONTINUOUS | VCP_COLORMGT,
-     // .nontable_formatter=format_feature_detail_standard_continuous,
-
-     .desc = "Increase/decrease the wavelength of the color component of the video signal. "
-           "AKA tint",
-     //.global_flags = VCP_RW,
-     .v20_flags = VCP2_RW | VCP2_STD_CONT,
-     .v20_name = "TV-Hue",
+   {  .code=0x90,
+      .vcp_spec_groups = VCP_SPEC_MISC,     // 2.0
+      .vcp_subsets = VCP_SUBSET_TV | VCP_SUBSET_COLOR,
+      .desc = "Increase/decrease the wavelength of the color component of the video signal. "
+              "AKA tint.  Applies to currently active interface",
+      .v20_flags = VCP2_RW | VCP2_STD_CONT,
+      .v20_name = "Hue",
    },
-   { .code=0x91,
-     .vcp_spec_groups = VCP_SPEC_AUDIO,    // v2.0, 2.2, 3.0
-     .desc="Emphasize/de-emphasize low frequency audio",
-     .v20_name="Audio Bass",
-     // requires special handling for V3.0 and v2.2: mix of C and NC, SL byte only
-     .nontable_formatter=format_feature_detail_audio_treble_bass_v30,
-     .v20_flags = VCP2_RW | VCP2_STD_CONT,
-     .v30_flags = VCP2_RW | VCP2_COMPLEX_NC,
-     .v22_flags = VCP2_RW | VCP2_COMPLEX_NC,
+   {  .code=0x91,
+      .vcp_spec_groups = VCP_SPEC_AUDIO,    // v2.0, 2.2, 3.0
+      .vcp_subsets = VCP_SUBSET_AUDIO,
+      .desc="Emphasize/de-emphasize low frequency audio",
+      .v20_name="Audio Bass",
+      // requires special handling for V3.0 and v2.2: mix of C and NC, SL byte only
+      .nontable_formatter=format_feature_detail_audio_treble_bass_v30,
+      .v20_flags = VCP2_RW | VCP2_STD_CONT,
+      .v30_flags = VCP2_RW | VCP2_COMPLEX_NC,
+      .v22_flags = VCP2_RW | VCP2_COMPLEX_NC,
    },
-   { .code=0x92,
-     .vcp_spec_groups = VCP_SPEC_MISC,   // 2.0
-     .vcp_subsets = VCP_SUBSET_TV,
-     .desc = "Increase/decrease the black level of the video",
-     //.flags = VCP_RW | VCP_CONTINUOUS,
-     //.global_flags = VCP_RW,
-     .v20_flags = VCP2_RW | VCP2_STD_CONT,
-     .v20_name = "TV Black level/Brightness",
+   {  .code=0x92,
+      .vcp_spec_groups = VCP_SPEC_MISC,   // 2.0
+      .vcp_subsets = VCP_SUBSET_TV,
+      .desc = "Increase/decrease the black level of the video",
+      .v20_flags = VCP2_RW | VCP2_STD_CONT,
+      .v20_name = "TV Black level/Brightness",
+      .v21_name = "TV Black level/Luminesence",
    },
-   { .code=0x93,
-     .vcp_spec_groups = VCP_SPEC_AUDIO,    // v2.0, 2.2, 3.0
-     .desc="Controls left/right audio balance",
-     .v20_name="Audio Balance L/R",
-     // requires special handling for V3 and v2.2, mix of C and NC, SL byte only
-     .nontable_formatter=format_feature_detail_audio_treble_bass_v30,
-     .v20_flags = VCP2_RW | VCP2_STD_CONT,
-     .v30_flags = VCP2_RW | VCP2_COMPLEX_NC,
-     .v22_flags = VCP2_RW | VCP2_COMPLEX_NC,
+   {  .code=0x93,
+      .vcp_spec_groups = VCP_SPEC_AUDIO,    // v2.0, 2.2, 3.0
+      .vcp_subsets = VCP_SUBSET_AUDIO,
+      .desc="Controls left/right audio balance",
+      .v20_name="Audio Balance L/R",
+      // requires special handling for V3 and v2.2, mix of C and NC, SL byte only
+      .nontable_formatter=format_feature_detail_audio_treble_bass_v30,
+      .v20_flags = VCP2_RW | VCP2_STD_CONT,
+      .v30_flags = VCP2_RW | VCP2_COMPLEX_NC,
+      .v22_flags = VCP2_RW | VCP2_COMPLEX_NC,
    },
-   { .code=0x94,
-     .vcp_spec_groups = VCP_SPEC_AUDIO,    // v2.0
-     .vcp_subsets = VCP_SUBSET_TV,
-     .desc="Select audio mode",
-     .v20_name="Audio Stereo Mode",
-     .v20_flags = VCP2_RW | VCP2_SIMPLE_NC,
-     .default_sl_values=x94_audio_stereo_mode_values,
+   {  .code=0x94,
+      .vcp_spec_groups = VCP_SPEC_AUDIO,    // v2.0
+      .vcp_subsets = VCP_SUBSET_TV | VCP_SUBSET_AUDIO,
+      .desc="Select audio mode",
+      .v20_name="Audio Stereo Mode",
+      .v20_flags = VCP2_RW | VCP2_SIMPLE_NC,
+      .default_sl_values=x94_audio_stereo_mode_values,
    },
-   { .code=0x95,                               // Done
-     .vcp_spec_groups = VCP_SPEC_WINDOW | VCP_SPEC_GEOMETRY,  // 2.0: WINDOW, 3.0: GEOMETRY
-     .desc="Top left X pixel of an area of the image",
-     .v20_flags= VCP2_RW | VCP2_STD_CONT,
-     .v20_name="Window Position(TL_X)",
+   {  .code=0x95,                               // Done
+      .vcp_spec_groups = VCP_SPEC_WINDOW | VCP_SPEC_GEOMETRY,  // 2.0: WINDOW, 3.0: GEOMETRY
+      .vcp_subsets = VCP_SUBSET_WINDOW,
+      .desc="Top left X pixel of an area of the image",
+      .v20_flags= VCP2_RW | VCP2_STD_CONT,
+      .v20_name="Window Position(TL_X)",
    },
-   { .code=0x96,                                             // Done
-     .vcp_spec_groups = VCP_SPEC_WINDOW | VCP_SPEC_GEOMETRY,  // 2.0: WINDOW, 3.0: GEOMETRY
-     .desc="Top left Y pixel of an area of the image",
-     .v20_flags= VCP2_RW | VCP2_STD_CONT,
-     .v20_name="Window Position(TL_Y)",
+   {  .code=0x96,                                             // Done
+      .vcp_spec_groups = VCP_SPEC_WINDOW | VCP_SPEC_GEOMETRY,  // 2.0: WINDOW, 3.0: GEOMETRY
+      .vcp_subsets = VCP_SUBSET_WINDOW,
+      .desc="Top left Y pixel of an area of the image",
+      .v20_flags= VCP2_RW | VCP2_STD_CONT,
+      .v20_name="Window Position(TL_Y)",
    },
-   { .code=0x97,                                            // Done
-     .vcp_spec_groups = VCP_SPEC_WINDOW | VCP_SPEC_GEOMETRY,  // 2.0: WINDOW, 3.0: GEOMETRY
-     .desc="Bottom right X pixel of an area of the image",
-     .v20_flags= VCP2_RW | VCP2_STD_CONT,
-     .v20_name="Window Position(BR_X)",
+   {  .code=0x97,                                            // Done
+      .vcp_spec_groups = VCP_SPEC_WINDOW | VCP_SPEC_GEOMETRY,  // 2.0: WINDOW, 3.0: GEOMETRY
+      .vcp_subsets = VCP_SUBSET_WINDOW,
+      .desc="Bottom right X pixel of an area of the image",
+      .v20_flags= VCP2_RW | VCP2_STD_CONT,
+      .v20_name="Window Position(BR_X)",
    },
-   { .code=0x98,                                                    // Done
-     .vcp_spec_groups = VCP_SPEC_WINDOW | VCP_SPEC_GEOMETRY,  // 2.0: WINDOW, 3.0: GEOMETRY
-     .desc="Bottom right Y pixel of an area of the image",
-     .v20_flags= VCP2_RW | VCP2_STD_CONT,
-     .v20_name="Window Position(BR_Y)",
+   {  .code=0x98,                                                    // Done
+      .vcp_spec_groups = VCP_SPEC_WINDOW | VCP_SPEC_GEOMETRY,  // 2.0: WINDOW, 3.0: GEOMETRY
+      .vcp_subsets = VCP_SUBSET_WINDOW,
+      .desc="Bottom right Y pixel of an area of the image",
+      .v20_flags= VCP2_RW | VCP2_STD_CONT,
+      .v20_name="Window Position(BR_Y)",
    },
-   { .code=0x99,
-     .vcp_spec_groups = VCP_SPEC_WINDOW,     // 2.0: WINDOW
-     // in 2.0,  not in 3.0 or 2.2, what is correct choice for 2.1?
-     .default_sl_values = x99_window_control_values,
-     .desc="Enables the brightness and color within a window to be different "
-           "from the desktop.",
-     .v20_flags= VCP2_RW | VCP2_SIMPLE_NC,
-     .v20_name="Window control on/off",
-     .v30_flags = VCP2_DEPRECATED,
-     .v30_flags = VCP2_DEPRECATED,
+   {  .code=0x99,
+      .vcp_spec_groups = VCP_SPEC_WINDOW,     // 2.0: WINDOW
+      // in 2.0,  not in 3.0 or 2.2, what is correct choice for 2.1?
+      .vcp_subsets = VCP_SUBSET_WINDOW,
+      .default_sl_values = x99_window_control_values,
+      .desc="Enables the brightness and color within a window to be different "
+            "from the desktop.",
+      .v20_flags= VCP2_RW | VCP2_SIMPLE_NC,
+      .v20_name="Window control on/off",
+      .v30_flags = VCP2_DEPRECATED,
+      .v30_flags = VCP2_DEPRECATED,
    },
-   { .code=0x9a,
-     .vcp_spec_groups = VCP_SPEC_IMAGE | VCP_SPEC_WINDOW,   // 2.0: WINDOW, 3.0: IMAGE
-     .desc="Changes the contrast ratio between the area of the window and the "
-           "rest of the desktop",
-     .v20_flags= VCP2_RW | VCP2_STD_CONT,
-     .v20_name="Window background",
+   {  .code=0x9a,
+      .vcp_spec_groups = VCP_SPEC_IMAGE | VCP_SPEC_WINDOW,   // 2.0: WINDOW, 3.0, 2.2: IMAGE
+      .vcp_subsets = VCP_SUBSET_WINDOW,
+      // 2.2 spec notes:
+      // 1) should be used in conjunction with VCP 99h
+      // 2) Not recommended for new designs, see A5h for alternate
+      .desc="Changes the contrast ratio between the area of the window and the "
+            "rest of the desktop",
+      .v20_flags= VCP2_RW | VCP2_STD_CONT,
+      .v20_name="Window background",
    },
    {  .code=0x9b,                                             // in 2.0, same in 3.0
       .vcp_spec_groups = VCP_SPEC_IMAGE | VCP_SPEC_WINDOW,    // 2.0: WINDOW, 3.0: IMAGE
-      // .nontable_formatter=format_feature_detail_6_axis_hue,
-      .desc = "Value < 127 shifts toward magenta, 127 no effect, "
-              "> 127 shifts toward yellow",
-      // .v20_flags =VCP2_RW |  VCP2_COMPLEX_CONT,               // VCP_SUBSET_COLORMGT?
+      .vcp_subsets = VCP_SUBSET_COLOR,
       // U3011 doesn't implement the spec that puts the midpoint at 127,
-      // just interpret this and the other hue fields as standard continuous
-      .v20_flags = VCP2_RW | VCP2_STD_CONT | VCP_SUBSET_COLORMGT,
+      // Just interpret this and the other hue fields as standard continuous
+      // .desc = "Value < 127 shifts toward magenta, 127 no effect, "
+      //         "> 127 shifts toward yellow",
+      // .nontable_formatter=format_feature_detail_6_axis_hue,
+      // .v20_flags =VCP2_RW |  VCP2_COMPLEX_CONT,
+      .desc = "Decrease shifts toward magenta, "
+              "increase shifts toward yellow",
+      .v20_flags = VCP2_RW | VCP2_STD_CONT,
       .v20_name = "6 axis hue control: Red",
    },
    {  .code=0x9c,                                             // in 2.0, same in 3.0
       .vcp_spec_groups = VCP_SPEC_IMAGE | VCP_SPEC_WINDOW,    // 2.0: WINDOW, 3.0: IMAGE
+      .vcp_subsets = VCP_SUBSET_COLOR,
       // .nontable_formatter=format_feature_detail_6_axis_hue,
-      .desc = "Value < 127 shifts toward green, 127 no effect, "
-              "> 127 shifts toward red",
-      // .v20_flags = VCP2_RW | VCP2_COMPLEX_CONT,               // VCP_SUBSET_COLORMGT?
-      .v20_flags = VCP2_RW | VCP2_STD_CONT | VCP_SUBSET_COLORMGT,
+      // .desc = "Value < 127 shifts toward green, 127 no effect, "
+      //         "> 127 shifts toward red",
+      // .v20_flags = VCP2_RW | VCP2_COMPLEX_CONT,
+      .desc = "Decrease shifts toward green, "
+              "increase shifts toward red",
+      .v20_flags = VCP2_RW | VCP2_STD_CONT,
       .v20_name = "6 axis hue control: Yellow",
    },
    {  .code=0x9d,                                             // in 2.0, same in 3.0
       .vcp_spec_groups = VCP_SPEC_IMAGE | VCP_SPEC_WINDOW,    // 2.0: WINDOW, 3.0: IMAGE
+      .vcp_subsets = VCP_SUBSET_COLOR,
       // .nontable_formatter=format_feature_detail_6_axis_hue,
-      .desc = "Value < 127 shifts toward yellow, 127 no effect, "
-              "> 127 shifts toward cyan",
-      // .v20_flags =VCP2_RW |  VCP2_COMPLEX_CONT,               // VCP_SUBSET_COLORMGT?
-      .v20_flags = VCP2_RW | VCP2_STD_CONT | VCP_SUBSET_COLORMGT,
+      // .desc = "Value < 127 shifts toward yellow, 127 no effect, "
+      //        "> 127 shifts toward cyan",
+      // .v20_flags =VCP2_RW |  VCP2_COMPLEX_CONT,
+      .desc = "Decrease shifts toward yellow, "
+              "increase shifts toward cyan",
+      .v20_flags = VCP2_RW | VCP2_STD_CONT,
       .v20_name = "6 axis hue control: Green",
    },
    {  .code=0x9e,                                             // in 2.0, same in 3.0
       .vcp_spec_groups = VCP_SPEC_IMAGE | VCP_SPEC_WINDOW,    // 2.0: WINDOW, 3.0: IMAGE
+      .vcp_subsets = VCP_SUBSET_COLOR,
       // .nontable_formatter=format_feature_detail_6_axis_hue,
-      .desc = "Value < 127 shifts toward green, 127 no effect, "
-              "> 127 shifts toward blue",
+      // .desc = "Value < 127 shifts toward green, 127 no effect, "
+      //         "> 127 shifts toward blue",
       // .v20_flags = VCP2_RW | VCP2_COMPLEX_CONT,               // VCP_SUBSET_COLORMGT?
-      .v20_flags = VCP2_RW | VCP2_STD_CONT | VCP_SUBSET_COLORMGT,
+      .desc = "Decrease shifts toward green, "
+              "increase shifts toward blue",
+      .v20_flags = VCP2_RW | VCP2_STD_CONT | VCP_SUBSET_COLOR,
       .v20_name = "6 axis hue control: Cyan",
    },
    {  .code=0x9f,
       .vcp_spec_groups = VCP_SPEC_IMAGE | VCP_SPEC_WINDOW,
+      .vcp_subsets = VCP_SUBSET_COLOR,
       // .nontable_formatter=format_feature_detail_6_axis_hue,
-      .desc = "Value < 127 shifts toward cyan, 127 no effect, "
-              "> 127 shifts toward magenta",
+      // .desc = "Value < 127 shifts toward cyan, 127 no effect, "
+      //         "> 127 shifts toward magenta",
       // .v20_flags =VCP2_RW |  VCP2_COMPLEX_CONT,
-      .v20_flags = VCP2_RW | VCP2_STD_CONT | VCP_SUBSET_COLORMGT,
+      .desc = "Decrease shifts toward cyan, "
+              "increase shifts toward magenta",
+      .v20_flags = VCP2_RW | VCP2_STD_CONT | VCP_SUBSET_COLOR,
       .v20_name = "6 axis hue control: Blue",
    },
    {  .code=0xa0,
       .vcp_spec_groups = VCP_SPEC_IMAGE | VCP_SPEC_WINDOW,
+      .vcp_subsets = VCP_SUBSET_COLOR,
       // .nontable_formatter=format_feature_detail_6_axis_hue,
-      .desc = "Value < 127 shifts toward blue, 127 no effect, "
-              "> 127 shifts toward red",
+      // .desc = "Value < 127 shifts toward blue, 127 no effect, "
+      //         "> 127 shifts toward red",
       // .v20_flags = VCP2_RW | VCP2_COMPLEX_CONT,
-      .v20_flags = VCP2_RW | VCP2_STD_CONT | VCP_SUBSET_COLORMGT,
+      .v20_flags = VCP2_RW | VCP2_STD_CONT,
+      .desc = "Decrease shifts toward blue, 127 no effect, "
+              "increase shifts toward red",
       .v20_name = "6 axis hue control: Magenta",
    },
    {  .code=0xa2,                             // Defined in 2.0, same in 3.0
@@ -3169,6 +3160,7 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
    },
    { .code=0xa4,                                 // Complex interpretation, to be implemented
      .vcp_spec_groups = VCP_SPEC_IMAGE,
+     .vcp_subsets = VCP_SUBSET_WINDOW,
      // 2.0 spec says: "This command structure is recommended, in conjunction with VCP A5h
      // for all new designs"
      // type NC in 2.0, type T in 3.0, 2.2, what is correct choice for 2.1?
@@ -3425,7 +3417,7 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
    },
    { .code=0xda,                                                   // DONE
      .vcp_spec_groups = VCP_SPEC_GEOMETRY | VCP_SPEC_IMAGE,         // 2.0: IMAGE, 3.0: GEOMETRY
-     .vcp_subsets = VCP_SUBSET_ANALOG,
+     .vcp_subsets = VCP_SUBSET_CRT,
      .desc = "Controls scan characteristics (aka format)",
      .default_sl_values = xda_scan_mode_values,
      .v20_flags = VCP2_RW | VCP2_SIMPLE_NC,
