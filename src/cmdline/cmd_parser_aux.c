@@ -149,6 +149,32 @@ bool parse_int_arg(char * val, int * pIval) {
    return (ct == 1);
 }
 
+typedef struct feature_subset_table_entry_s {
+   Byte       subset_id;
+   int        min_chars;
+   char *     subset_name;
+   char *     subset_desc;
+} Feature_Subset_Table_Entry;
+
+Feature_Subset_Table_Entry subset_table[] = {
+      {SUBSET_ALL,        3,  "ALL",       "All known features"},
+      {SUBSET_SUPPORTED,  3, "SUPPORTED",  "All known features that are valid for the display"},
+      {SUBSET_SCAN,       3, "SCAN",       "All feature codes 00..FF, except those known to be WO"},
+      {SUBSET_PROFILE,    3, "PROFILE",    "Features for color profile management"},
+#ifdef FUTURE
+      {SUBSET_COLOR,      3, "COLOR",      "Color related features"},
+      {SUBSET_LUT,        3, "LUT",        "LUT related features"},
+      {SUBSET_AUDIO,      3, "AUDIO",      "Audio related features"},
+      {SUBSET_WINDOW,     3, "WINDOW",     "Window related features"},
+      {SUBSET_TV,         2, "TV",         "TV related features"},
+#endif
+};
+
+
+
+
+
+
 bool parse_feature_id_or_subset(char * val, Feature_Set_Ref * fsref) {
    bool ok = true;
    char * us = strdup( val );
@@ -221,7 +247,7 @@ char * commands_list_help =
        "   detect\n"
        "   capabilities\n"
 //     "   info\n"
-       "   listvcp\n"
+//     "   listvcp\n"
        "   vcpinfo (feature-code-or-group)\n"
        "   getvcp <feature-code-or-group>\n"
        "   setvcp <feature-code> <new-value>\n"
@@ -242,7 +268,7 @@ char * command_argument_help =
        "      - ALL       - all known feature codes\n"
        "      - COLORMGT  - color related feature codes\n"
        "      - PROFILE   - color related codes for profile management\n"
-       "      - SUPPORTED - scan all know features codes, but only show supported codes\n"
+       "      - SUPPORTED - scan all known features codes, but only show supported codes\n"
        "      - SCAN      - scan all feature codes 0x00..0xff\n"
        "    Keywords can be abbreviated to the first 3 characters.\n"
        "    Case is ignored.  e.g. \"COL\", \"pro\"\n"

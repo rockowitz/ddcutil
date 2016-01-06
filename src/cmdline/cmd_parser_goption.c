@@ -26,6 +26,8 @@
  * </endcopyright>
  */
 
+#include <config.h>
+
 #include <assert.h>
 #include <config.h>
 #include <glib.h>
@@ -386,8 +388,6 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
        debug = saved_debug;
     }
 
-
-
 #ifdef COMMA_DELIMITED_TRACE
    if (tracework) {
        bool saved_debug = debug;
@@ -458,12 +458,19 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
 // #endif
 
    if (version_flag) {
+      printf("ddctool %s\n", VERSION);
       printf("Compiled %s at %s\n", __DATE__, __TIME__ );
 #ifdef HAVE_ADL
       printf("Built with support for AMD Display Library (AMD proprietary driver)\n");
 #else
       printf("Built without support for AMD Display Library (AMD proprietary driver)\n");
 #endif
+      puts("");
+      puts("Copyright (C) 2015-2016 Sanford Rockowitz");
+      puts("License GPLv2: GNU GPL version 2 or later <http://gnu.org/licenses/gpl.html>");
+      puts("This is free software: you are free to change and redistribute it.");
+      puts("There is NO WARRANTY, to the extent permitted by law.");
+
       exit(0);
    }
 
@@ -474,37 +481,6 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
    }
    else if (explicit_display_spec_ct == 0)
       parsed_cmd->pdid = create_dispno_display_identifier(1);   // default monitor
-
-
-#ifdef NO
-   if (myhelp_flag)
-   {
-      // DBGMSG("Customize help option implemented here");
-      fprintf(stdout, "Usage: ddctool [options] command [command arguments]\n");
-      fprintf(stdout, "%s", commands_list_help);
-      fprintf(stdout, "%s", command_argument_help);
-      // DBGMSG("Output of poptPrintHelp():");
-      printf("Options:\n");
-      // problem: poptPrintHelp begins with "ddctool [OPTIONS]:" line
-      // poptPrintOptions  - my added function
-     //  poptPrintOptions(pc, /*FILE * fp*/ stdout, /*@unused@*/ /* int flags */ 0);
-      exit(0);
-
-   }
-   if (myusage_flag)
-   {
-      DBGMSG("Output of poptPrintUsage():");
-      // poptPrintUsage(pc, /*FILE * fp*/ stdout, /*@unused@*/ /* int flags */ 0);
-      fprintf(stdout, "        command [command-arguments]\n");
-      fprintf(stdout, "%s", commands_list_help);
-      exit(0);
-   }
-
-   if (explicit_display_spec_ct > 1) {
-       puts("Display has been specified in more than 1 way");
-       ok = false;
-   }
-#endif
 
    int rest_ct = 0;
    if (cmd_and_args) {
