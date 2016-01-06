@@ -30,10 +30,11 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "util/report_util.h"
+
 #include "base/msg_control.h"
 
 #include "ddc/vcp_feature_set.h"
-
 
 
 #define VCP_FEATURE_SET_MARKER "FSET"
@@ -109,7 +110,17 @@ create_single_feature_set_by_vcp_entry(VCP_Feature_Table_Entry * vcp_entry) {
    return fset;
 }
 
-
+/* Creates a VCP_Feature_Set for a single VCP code
+ *
+ * Arguments:
+ *    id      feature id
+ *    force   indicates behavior if feature id not found in vcp_feature_table,
+ *            if true, creates a feature set using a dummy feature table entry
+ *            if false, returns NULL
+ *
+ * Returns: feature set containing a single feature
+ *          NULL if the feature not found and force not specified
+ */
 VCP_Feature_Set
 create_single_feature_set_by_hexid(Byte id, bool force) {
    struct VCP_Feature_Set * fset = NULL;
@@ -123,6 +134,19 @@ create_single_feature_set_by_hexid(Byte id, bool force) {
    return fset;
 }
 
+
+/* Creates a VCP_Feature_Set from an external feature specification
+ *
+ * Arguments:
+ *    fsref   external feature set descriptor
+ *    force   indicates behavior in the case of a single feature code
+ *            if the feature id is not found in vcp_feature_table,
+ *            if true, creates a feature set using a dummy feature table entry
+ *            if false, returns NULL
+ *
+ * Returns: feature set containing a single feature
+ *          NULL if the feature not found and force not specified
+ */
 VCP_Feature_Set
 create_feature_set_from_feature_set_ref(
    Feature_Set_Ref * fsref,
@@ -196,10 +220,10 @@ void report_feature_set(VCP_Feature_Set feature_set, int depth) {
    for (; ndx < fset->members->len; ndx++) {
       VCP_Feature_Table_Entry * vcp_entry = NULL;
       vcp_entry = g_ptr_array_index(fset->members,ndx);
-      // TODO: replace w rpt function that uses depth:
-      printf("VCP code: 0x%02x: %s\n",
-             vcp_entry->code,
-             get_non_version_specific_feature_name(vcp_entry)
-            );
+      rpt_vstring(depth,
+                  "VCP code: %02X: %s",
+                  vcp_entry->code,
+                  get_non_version_specific_feature_name(vcp_entry)
+                 );
    }
 }

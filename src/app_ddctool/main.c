@@ -216,7 +216,6 @@ int main(int argc, char *argv[]) {
    }
 
    else if (parsed_cmd->cmd_id == CMDID_VCPINFO) {
-      printf("Unimplemented: vcpinfo\n");
       Feature_Set_Ref feature_set_ref;
       char * val = (parsed_cmd->argct > 0) ? parsed_cmd->args[0] : "ALL";
       bool ok = parse_feature_id_or_subset(val, &feature_set_ref);
@@ -226,15 +225,23 @@ int main(int argc, char *argv[]) {
             &feature_set_ref,
             vcp_version_any,
             false);       // force
-
-         // TEMP:
-         report_feature_set(fset, 0);
-         int ct =   get_feature_set_size(fset);
-         int ndx = 0;
-         for (;ndx < ct; ndx++) {
-            VCP_Feature_Table_Entry * pentry = get_feature_set_entry(fset, ndx);
-            report_vcp_feature_table_entry(pentry, 0);
+         if (!fset) {
+            ok = false;
          }
+         else {
+            if (parsed_cmd->output_level <= OL_TERSE)
+               report_feature_set(fset, 0);
+            else {
+               int ct =  get_feature_set_size(fset);
+               int ndx = 0;
+               for (;ndx < ct; ndx++) {
+                  VCP_Feature_Table_Entry * pentry = get_feature_set_entry(fset, ndx);
+                  report_vcp_feature_table_entry(pentry, 0);
+               }
+            }
+         }
+      }
+      if (ok) {
          main_rc = EXIT_SUCCESS;
       }
       else {

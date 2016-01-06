@@ -121,11 +121,11 @@ typedef ushort Version_Feature_Flags;
 #define VCP_SPEC_WINDOW   0x8000   // Table 5 in MCCS 2.0 spec
 
 // my groupings, not in MCCS spec:
-#define VCP_CLASS_ANALOG  0x80     // setting that only applies to analog, e.g. CRT, devices
-#define VCP_CLASS_TV      0x40     // TV related setting
+// #define VCP_CLASS_ANALOG  0x80     // setting that only applies to analog, e.g. CRT, devices
+// #define VCP_CLASS_TV      0x40     // TV related setting
 // #define VCP_CLASS_WINDOW  0x20
 
-#ifdef FUTURE
+// #ifdef FUTURE
 // redundant but might make table more self-documenting
 // set these bits in a flag to indicate which MCCS versions the feature is valid for
 #define MCCS_V10          0x80
@@ -133,7 +133,7 @@ typedef ushort Version_Feature_Flags;
 #define MCCS_V21          0x20
 #define MCCS_V30          0x01
 #define MCCS_V22          0x80
-#endif
+// #endif
 
 
 #ifdef ALTERNATIVE
@@ -194,7 +194,7 @@ struct {
    // VCP_Feature_Reporter               data_reporter;
    Byte                                  vcp_global_flags;
    ushort                                vcp_spec_groups;
-   Byte                                  vcp_classes;
+   //  Byte                                  vcp_classes;
    ushort                                vcp_subsets;     // new - to implement
    char *                                v20_name;
    char *                                v21_name;
