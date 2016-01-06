@@ -3158,36 +3158,35 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
       .v20_flags = VCP2_WO | VCP2_WO_NC,
       .v20_name = "Auto setup on/off",
    },
-   { .code=0xa4,                                 // Complex interpretation, to be implemented
-     .vcp_spec_groups = VCP_SPEC_IMAGE,
-     .vcp_subsets = VCP_SUBSET_WINDOW,
-     // 2.0 spec says: "This command structure is recommended, in conjunction with VCP A5h
-     // for all new designs"
-     // type NC in 2.0, type T in 3.0, 2.2, what is correct choice for 2.1?
-     //.name="Window control on/off",
-     //.flags = VCP_RW | VCP_NON_CONT,
-     .nontable_formatter = format_feature_detail_debug_sl_sh,   // TODO: write proper function
-     .table_formatter = default_table_feature_detail_function,  // TODO: write proper function
-     .desc = "Turn selected window operation on/off, window mask",
-     .v20_flags = VCP2_RW | VCP2_COMPLEX_NC,
-     .v30_flags = VCP2_RW | VCP2_TABLE,
-     .v22_flags = VCP2_RW | VCP2_TABLE,
-     .v20_name = "Turn the selected window operation on/off",
-     .v30_name = "Window mask control",
-     .v22_name = "Window mask control",
-
+   {  .code=0xa4,                                 // Complex interpretation, to be implemented
+      .vcp_spec_groups = VCP_SPEC_IMAGE,
+      .vcp_subsets = VCP_SUBSET_WINDOW,
+      // 2.0 spec says: "This command structure is recommended, in conjunction with VCP A5h
+      // for all new designs"
+      // type NC in 2.0, type T in 3.0, 2.2, what is correct choice for 2.1?
+      //.name="Window control on/off",
+      //.flags = VCP_RW | VCP_NON_CONT,
+      .nontable_formatter = format_feature_detail_debug_sl_sh,   // TODO: write proper function
+      .table_formatter = default_table_feature_detail_function,  // TODO: write proper function
+      .desc = "Turn selected window operation on/off, window mask",
+      .v20_flags = VCP2_RW | VCP2_COMPLEX_NC,
+      .v30_flags = VCP2_RW | VCP2_TABLE,
+      .v22_flags = VCP2_RW | VCP2_TABLE,
+      .v20_name = "Turn the selected window operation on/off",
+      .v30_name = "Window mask control",
+      .v22_name = "Window mask control",
    },
-   { .code=0xa5,
-     .vcp_spec_groups = VCP_SPEC_IMAGE | VCP_SPEC_WINDOW,
-     // 2.0 spec says: "This command structure is recommended, in conjunction with VCP A4h
-     // for all new designs
-     // designated as C, but only takes specific values
-     // v3.0 appears to be identical
-     .default_sl_values = xa5_window_select_values,
-     .desc = "Change selected window (as defined by 95h..98h)",
-     .v20_flags = VCP2_RW | VCP2_SIMPLE_NC,
-     .v20_name = "Change the selected window",
-
+   {  .code=0xa5,
+      .vcp_spec_groups = VCP_SPEC_IMAGE | VCP_SPEC_WINDOW,
+      .vcp_subsets = VCP_SUBSET_WINDOW,
+      // 2.0 spec says: "This command structure is recommended, in conjunction with VCP A4h
+      // for all new designs
+      // designated as C, but only takes specific values
+      // v3.0 appears to be identical
+      .default_sl_values = xa5_window_select_values,
+      .desc = "Change selected window (as defined by 95h..98h)",
+      .v20_flags = VCP2_RW | VCP2_SIMPLE_NC,
+      .v20_name = "Change the selected window",
    },
    {  .code=0xaa,                                          // Done
       .vcp_spec_groups = VCP_SPEC_IMAGE | VCP_SPEC_GEOMETRY,    // 3.0: IMAGE, 2.0: GEOMETRY
@@ -3226,8 +3225,8 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
       .vcp_spec_groups = VCP_SPEC_MISC,   // 2.0
       .default_sl_values=xb2_flat_panel_subpixel_layout_values,
       .desc = "LCD sub-pixel structure",
-       .v20_flags = VCP2_RO | VCP2_SIMPLE_NC,
-       .v20_name = "Flat panel sub-pixel layout",
+      .v20_flags = VCP2_RO | VCP2_SIMPLE_NC,
+      .v20_name = "Flat panel sub-pixel layout",
    },
    {  .code=0xb6,                                               // DONE
       .vcp_spec_groups = VCP_SPEC_MISC,     // 2.0, 3.0
@@ -3237,61 +3236,69 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
       .v20_flags = VCP2_RO | VCP2_SIMPLE_NC,
       .v20_name = "Display technology type",
    },
-   { .code=0xb7,
-     .vcp_spec_groups = VCP_SPEC_DPVL,
-     .desc = "Video mode and status of a DPVL capabile monitor",
-     .v20_name = "Monitor status",
-     .v20_flags = VCP2_RO | VCP2_COMPLEX_NC,
-     .nontable_formatter = format_feature_detail_sl_byte,    //TODO: implement proper function
+   {  .code=0xb7,
+      .vcp_spec_groups = VCP_SPEC_DPVL,
+      .vcp_subsets = VCP_SUBSET_DPVL,
+      .desc = "Video mode and status of a DPVL capable monitor",
+      .v20_name = "Monitor status",
+      .v20_flags = VCP2_RO | VCP2_COMPLEX_NC,
+      .nontable_formatter = format_feature_detail_sl_byte,    //TODO: implement proper function
    },
-   { .code=0xb8,
-     .vcp_spec_groups = VCP_SPEC_DPVL,
-     .v20_name = "Packet count",
-     .desc = "Counter for DPVL packets received",
-     .v20_flags = VCP2_RW | VCP2_COMPLEX_CONT,
-     .nontable_formatter = format_feature_detail_ushort,
+   {  .code=0xb8,
+      .vcp_spec_groups = VCP_SPEC_DPVL,
+      .vcp_subsets = VCP_SUBSET_DPVL,
+      .v20_name = "Packet count",
+      .desc = "Counter for DPVL packets received",
+      .v20_flags = VCP2_RW | VCP2_COMPLEX_CONT,
+      .nontable_formatter = format_feature_detail_ushort,
    },
-   { .code=0xb9,
-     .vcp_spec_groups = VCP_SPEC_DPVL,
-     .v20_name = "Monitor X origin",
-     .desc = "X origin of the monitor in the vertical screen",
-     .v20_flags = VCP2_RW | VCP2_COMPLEX_CONT,
-     .nontable_formatter = format_feature_detail_ushort,
+   {  .code=0xb9,
+      .vcp_spec_groups = VCP_SPEC_DPVL,
+      .vcp_subsets = VCP_SUBSET_DPVL,
+      .v20_name = "Monitor X origin",
+      .desc = "X origin of the monitor in the vertical screen",
+      .v20_flags = VCP2_RW | VCP2_COMPLEX_CONT,
+      .nontable_formatter = format_feature_detail_ushort,
    },
-   { .code=0xba,
-     .vcp_spec_groups = VCP_SPEC_DPVL,
-     .v20_name = "Monitor Y origin",
-     .desc = "Y origin of the monitor in the vertical screen",
-     .v20_flags = VCP2_RW | VCP2_COMPLEX_CONT,
-     .nontable_formatter = format_feature_detail_ushort,
+   {  .code=0xba,
+      .vcp_spec_groups = VCP_SPEC_DPVL,
+      .vcp_subsets = VCP_SUBSET_DPVL,
+      .v20_name = "Monitor Y origin",
+      .desc = "Y origin of the monitor in the vertical screen",
+      .v20_flags = VCP2_RW | VCP2_COMPLEX_CONT,
+      .nontable_formatter = format_feature_detail_ushort,
    },
-   { .code=0xbb,
-     .vcp_spec_groups = VCP_SPEC_DPVL,
-     .desc = "Error counter for the DPVL header",
-     .v20_name = "Header error count",
-     .v20_flags = VCP2_RW | VCP2_COMPLEX_CONT,
-     .nontable_formatter = format_feature_detail_ushort,
+   {  .code=0xbb,
+      .vcp_spec_groups = VCP_SPEC_DPVL,
+      .vcp_subsets = VCP_SUBSET_DPVL,
+      .desc = "Error counter for the DPVL header",
+      .v20_name = "Header error count",
+      .v20_flags = VCP2_RW | VCP2_COMPLEX_CONT,
+      .nontable_formatter = format_feature_detail_ushort,
    },
-   { .code=0xbc,
-     .vcp_spec_groups = VCP_SPEC_DPVL,
-     .desc = "CRC error counter for the DPVL body",
-     .v20_name = "Body CRC error count",
-     .v20_flags = VCP2_RW | VCP2_COMPLEX_CONT,
-     .nontable_formatter = format_feature_detail_ushort,
+   {  .code=0xbc,
+      .vcp_spec_groups = VCP_SPEC_DPVL,
+      .vcp_subsets = VCP_SUBSET_DPVL,
+      .desc = "CRC error counter for the DPVL body",
+      .v20_name = "Body CRC error count",
+      .v20_flags = VCP2_RW | VCP2_COMPLEX_CONT,
+      .nontable_formatter = format_feature_detail_ushort,
    },
-   { .code=0xbd,
-     .vcp_spec_groups = VCP_SPEC_DPVL,
-     .desc = "Assigned identification number for the monitor",
-     .v20_name = "Client ID",
-     .v20_flags = VCP2_RW | VCP2_COMPLEX_CONT,
-     .nontable_formatter = format_feature_detail_ushort,
+   {  .code=0xbd,
+      .vcp_spec_groups = VCP_SPEC_DPVL,
+      .vcp_subsets = VCP_SUBSET_DPVL,
+      .desc = "Assigned identification number for the monitor",
+      .v20_name = "Client ID",
+      .v20_flags = VCP2_RW | VCP2_COMPLEX_CONT,
+      .nontable_formatter = format_feature_detail_ushort,
    },
-   { .code=0xbe,
-     .vcp_spec_groups = VCP_SPEC_DPVL,
-     .desc = "Indicates status of the DVI link",
-     .v20_name = "Link control",
-     .v20_flags = VCP2_RW | VCP2_COMPLEX_NC,
-     .nontable_formatter = format_feature_detail_xbe_link_control,
+   {  .code=0xbe,
+      .vcp_spec_groups = VCP_SPEC_DPVL,
+      .vcp_subsets = VCP_SUBSET_DPVL,
+      .desc = "Indicates status of the DVI link",
+      .v20_name = "Link control",
+      .v20_flags = VCP2_RW | VCP2_COMPLEX_NC,
+      .nontable_formatter = format_feature_detail_xbe_link_control,
    },
    {  .code=0xc0,
       .vcp_spec_groups = VCP_SPEC_MISC,
@@ -3304,7 +3311,6 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
       .vcp_spec_groups = VCP_SPEC_MISC,    // 2.0
       .desc = "Length in bytes of non-volatile storage in the display available "
               "for writing a display descriptor, max 256",
-      //.global_flags = VCP_RO,
       .v20_flags = VCP2_RO | VCP2_STD_CONT,
       // should there be a different flag when we know value uses only SL?
       // or could this value be exactly 256?
@@ -3334,13 +3340,13 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
       .v20_flags = VCP2_RO | VCP2_COMPLEX_NC,
       .v20_name = "Application enable key",
    },
-   { .code=0xc8,
-     .vcp_spec_groups = VCP_SPEC_MISC,    // 2.0
-     .nontable_formatter=format_feature_detail_display_controller_type,
-     .default_sl_values=xc8_display_controller_type_values,
-     .desc = "Mfg id of controller and 2 byte manufacturer-specific controller type",
-     .v20_flags = VCP2_RW | VCP2_COMPLEX_NC,
-     .v20_name = "Display controller type",
+   {  .code=0xc8,
+      .vcp_spec_groups = VCP_SPEC_MISC,    // 2.0
+      .nontable_formatter=format_feature_detail_display_controller_type,
+      .default_sl_values=xc8_display_controller_type_values,
+      .desc = "Mfg id of controller and 2 byte manufacturer-specific controller type",
+      .v20_flags = VCP2_RW | VCP2_COMPLEX_NC,
+      .v20_name = "Display controller type",
    },
    {  .code=0xc9,
       .vcp_spec_groups = VCP_SPEC_MISC,    // 2.0
@@ -3393,78 +3399,60 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
       .v20_flags = VCP2_RW | VCP2_COMPLEX_NC,
       .nontable_formatter = format_feature_detail_sl_byte,     // TODO: implement proper function
    },
-
-   { .code=0xd6,                           // DONE
-     .vcp_spec_groups = VCP_SPEC_MISC | VCP_SPEC_CONTROL,   // 2.0: MISC, 3.0: CONTROL
-     //.name="Power mode",
-     //.flags=VCP_RW | VCP_NON_CONT | VCP_NCSL,
-     // .formatter=format_feature_detail_power_mode,
-     // .nontable_formatter=format_feature_detail_sl_lookup,
-     .default_sl_values = xd6_power_mode_values,
-
-     .desc = "DPM and DPMS status",
-     //.global_flags = VCP_RW,
-     .v20_flags = VCP2_RW | VCP2_SIMPLE_NC,
-     .v20_name = "Power mode",
-
+   {  .code=0xd6,                           // DONE
+      .vcp_spec_groups = VCP_SPEC_MISC | VCP_SPEC_CONTROL,   // 2.0: MISC, 3.0: CONTROL
+      .default_sl_values = xd6_power_mode_values,
+      .desc = "DPM and DPMS status",
+      .v20_flags = VCP2_RW | VCP2_SIMPLE_NC,
+      .v20_name = "Power mode",
    },
-   { .code=0xd7,                          // DONE - identical in 2.0, 3.0, 2.2
-     .vcp_spec_groups = VCP_SPEC_MISC,    // 2.0, 3.0, 2.2
-     .default_sl_values = xd7_aux_power_output_values,
-     .desc="Controls an auxilliary power output from a display to a host device",
-     .v20_flags = VCP2_RW | VCP2_SIMPLE_NC,
-     .v20_name = "Auxilliary power output",
+   {  .code=0xd7,                          // DONE - identical in 2.0, 3.0, 2.2
+      .vcp_spec_groups = VCP_SPEC_MISC,    // 2.0, 3.0, 2.2
+      .default_sl_values = xd7_aux_power_output_values,
+      .desc="Controls an auxiliary power output from a display to a host device",
+      .v20_flags = VCP2_RW | VCP2_SIMPLE_NC,
+      .v20_name = "Auxiliary power output",
    },
-   { .code=0xda,                                                   // DONE
-     .vcp_spec_groups = VCP_SPEC_GEOMETRY | VCP_SPEC_IMAGE,         // 2.0: IMAGE, 3.0: GEOMETRY
-     .vcp_subsets = VCP_SUBSET_CRT,
-     .desc = "Controls scan characteristics (aka format)",
-     .default_sl_values = xda_scan_mode_values,
-     .v20_flags = VCP2_RW | VCP2_SIMPLE_NC,
-     .v20_name  = "Scan format",
-     // name differs in 3.0, assume changed as of 2.1
-     .v21_name  = "Scan mode",
+   {  .code=0xda,                                                   // DONE
+      .vcp_spec_groups = VCP_SPEC_GEOMETRY | VCP_SPEC_IMAGE,         // 2.0: IMAGE, 3.0: GEOMETRY
+      .vcp_subsets = VCP_SUBSET_CRT,
+      .desc = "Controls scan characteristics (aka format)",
+      .default_sl_values = xda_scan_mode_values,
+      .v20_flags = VCP2_RW | VCP2_SIMPLE_NC,
+      .v20_name  = "Scan format",
+      // name differs in 3.0, assume changed as of 2.1
+      .v21_name  = "Scan mode",
    },
-   { .code=0xdc,
-     .vcp_spec_groups = VCP_SPEC_IMAGE,
-     // defined in 2.0, 3.0 has different name, more values
-     //.name="Display application",
-     //.flags=VCP_RW | VCP_NON_CONT | VCP_NCSL,
-      // .formatter=format_feature_detail_display_application,
-      // .nontable_formatter=format_feature_detail_sl_lookup,
+   {  .code=0xdc,
+      .vcp_spec_groups = VCP_SPEC_IMAGE,
+      // defined in 2.0, 3.0 has different name, more values
+      //.name="Display application",
       .default_sl_values=xdc_display_application_values,
-
       .desc="Type of application used on display",  // my desc
-      //.global_flags = VCP_RW,
       .v20_flags = VCP2_RW | VCP2_SIMPLE_NC,
       .v20_name = "Display Mode",
    },
-   { .code=0xde,
+   {  .code=0xde,
       // code 0xde has a completely different name and definition in v2.0
       // vs v3.0/2.2
       // 2.0: Operation Mode, W/O single byte value per xde_wo_operation_mode_values
       // 3.0, 2.2: Scratch Pad: 2 bytes of volatile storage for use of software applications
       // Did the definition really change so radically, or is the 2.0 spec a typo.
       // What to do for 2.1?  Assume same as 3.0,2.2
-     .vcp_spec_groups = VCP_SPEC_MISC,   // 2.0, 3.0, 2.2
-     .desc = "Operation mode (2.0) or scratch pad (3.0/2.2)",
-     .nontable_formatter = format_feature_detail_debug_sl_sh,
-     .v20_flags = VCP2_WO | VCP2_WO_NC,
-     .v20_name  = "Operation Mode",
-     .v21_flags = VCP2_RW | VCP2_COMPLEX_NC,
-     .v21_name  = "Scratch Pad",
+      .vcp_spec_groups = VCP_SPEC_MISC,   // 2.0, 3.0, 2.2
+      .desc = "Operation mode (2.0) or scratch pad (3.0/2.2)",
+      .nontable_formatter = format_feature_detail_debug_sl_sh,
+      .v20_flags = VCP2_WO | VCP2_WO_NC,
+      .v20_name  = "Operation Mode",
+      .v21_flags = VCP2_RW | VCP2_COMPLEX_NC,
+      .v21_name  = "Scratch Pad",
    },
-   { .code=0xdf,
-     .vcp_spec_groups = VCP_SPEC_MISC,   // 2.0
-     //.name="VCP Version",
-     //.flags=VCP_RO | VCP_NON_CONT,
-     .nontable_formatter=format_feature_detail_version,
-
-     .desc = "MCCS version",
-     //.global_flags = VCP_RO,
-     .v20_flags = VCP2_RO | VCP2_COMPLEX_NC,
-     .v20_name  = "VCP Version",
-
+   {  .code=0xdf,
+      .vcp_spec_groups = VCP_SPEC_MISC,   // 2.0
+      .nontable_formatter=format_feature_detail_version,
+      .desc = "MCCS version",
+      .v20_flags = VCP2_RO | VCP2_COMPLEX_NC,
+      .v20_name  = "VCP Version",
    }
 };
 // #pragma GCC diagnostic pop
