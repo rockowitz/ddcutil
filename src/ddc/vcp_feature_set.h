@@ -38,13 +38,6 @@
 
 // #include "ddc/ddc_services.h"      // TEMP, circular,  VCP_Feature_Subset defined here
 
-typedef enum {SUBSET_SCAN,
-              SUBSET_ALL,
-              SUBSET_SUPPORTED,
-              SUBSET_COLORMGT,
-              SUBSET_PROFILE,
-              SUBSET_SINGLE_FEATURE
-             } VCP_Feature_Subset;
 
 
 typedef void * VCP_Feature_Set;

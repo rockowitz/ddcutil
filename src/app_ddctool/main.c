@@ -216,13 +216,15 @@ int main(int argc, char *argv[]) {
    }
 
    else if (parsed_cmd->cmd_id == CMDID_VCPINFO) {
-      Feature_Set_Ref feature_set_ref;
-      char * val = (parsed_cmd->argct > 0) ? parsed_cmd->args[0] : "ALL";
-      bool ok = parse_feature_id_or_subset(val, &feature_set_ref);
-      if (ok) {
+      // Feature_Set_Ref feature_set_ref;
+      // char * val = (parsed_cmd->argct > 0) ? parsed_cmd->args[0] : "ALL";
+      // bool ok = parse_feature_id_or_subset(val, CMDID_VCPINFO, &feature_set_ref);
+      bool ok = true;
+      // if (ok) {
          Version_Spec vcp_version_any = {0,0};
          VCP_Feature_Set fset = create_feature_set_from_feature_set_ref(
-            &feature_set_ref,
+            // &feature_set_ref,
+            parsed_cmd->fref,
             vcp_version_any,
             false);       // force
          if (!fset) {
@@ -240,12 +242,12 @@ int main(int argc, char *argv[]) {
                }
             }
          }
-      }
+      // }
       if (ok) {
          main_rc = EXIT_SUCCESS;
       }
       else {
-         printf("Unrecognized VCP feature code or group: %s\n", val);
+         // printf("Unrecognized VCP feature code or group: %s\n", val);
          main_rc = EXIT_FAILURE;
       }
    }
@@ -318,7 +320,7 @@ int main(int argc, char *argv[]) {
          perform_get_capabilities(dref);
 
          printf("\n\nScanning all VCP feature codes for display %d\n", dispno);
-         app_show_vcp_subset_values_by_display_ref(dref, SUBSET_SCAN);
+         app_show_vcp_subset_values_by_display_ref(dref, VCP_SUBSET_SCAN, true);
       }
       printf("\nDisplay scanning complete.\n");
 
@@ -347,6 +349,26 @@ int main(int argc, char *argv[]) {
 
          case CMDID_GETVCP:
             {
+               Feature_Set_Ref * feature_set_ref;
+               // TODO: push parse_feature_id_or_subset() call down into parser
+               // bool ok = parse_feature_id_or_subset(parsed_cmd->args[0], CMDID_GETVCP, &feature_set_ref);
+               feature_set_ref = parsed_cmd->fref;
+               bool ok = true;     // hack
+               if (ok) {
+                  if (feature_set_ref->subset == VCP_SUBSET_SINGLE_FEATURE) {
+                     // TODO: should not be passing unparsed args[0]
+                     app_show_single_vcp_value_by_display_ref(dref, parsed_cmd->args[0], parsed_cmd->force);
+                  }
+                  else {
+                     // need variant that takes Feature_Set_Ref argument
+                     app_show_vcp_subset_values_by_display_ref(dref, feature_set_ref->subset, parsed_cmd->show_unsupported);
+                  }
+               }
+               else {
+                  printf("Invalid feature code or group: %s\n", parsed_cmd->args[0]);
+               }
+               main_rc = (ok) ? EXIT_SUCCESS : EXIT_FAILURE;
+#ifdef OLD
                // DBGMSG("CMD_GETVCP  " );
                char * us = strdup( parsed_cmd->args[0] );
                char * p = us;
@@ -354,32 +376,29 @@ int main(int argc, char *argv[]) {
 
                // n. show_vcp_values_by_display_ref() returns void
                if ( streq(us,"ALL" )) {
-                  app_show_vcp_subset_values_by_display_ref(dref, SUBSET_ALL);
+                  app_show_vcp_subset_values_by_display_ref(dref, VCP_SUBSET_ALL);
                }
                else if ( is_abbrev(us,"SUPPORTED",3 )) {
-                  app_show_vcp_subset_values_by_display_ref(dref, SUBSET_SUPPORTED);
+                  app_show_vcp_subset_values_by_display_ref(dref, VCP_SUBSET_SUPPORTED);
                 }
                else if ( is_abbrev(us,"SCAN",3 )) {
-                  app_show_vcp_subset_values_by_display_ref(dref, SUBSET_SCAN);
+                  app_show_vcp_subset_values_by_display_ref(dref, VCP_SUBSET_SCAN);
                }
                else if ( is_abbrev(us, "COLORMGT",3) ) {
-                  app_show_vcp_subset_values_by_display_ref(dref, SUBSET_COLORMGT);
+                  app_show_vcp_subset_values_by_display_ref(dref, VCP_SUBSET_COLOR);
                }
                else if ( is_abbrev(us, "PROFILE",3) ) {
                   // DBGMSG("calling setGlobalMsgLevel(%d), new value: %s   ", TERSE, msgLevelName(TERSE) );
-#ifdef OLD
-                  if (parsed_cmd->programmatic_output)
-                     set_output_format(OUTPUT_PROG_VCP);
-#endif
                   // if (dref->ddc_io_mode == DDC_IO_DEVI2C)
                   //    i2c_report_bus(dref->busno);
-                  app_show_vcp_subset_values_by_display_ref(dref, SUBSET_PROFILE);
+                  app_show_vcp_subset_values_by_display_ref(dref, VCP_SUBSET_PROFILE);
                }
                else {
                   app_show_single_vcp_value_by_display_ref(dref, parsed_cmd->args[0], parsed_cmd->force);
                }
                free(us);
                main_rc = EXIT_SUCCESS;
+#endif
             }
             break;
 
@@ -412,7 +431,12 @@ int main(int argc, char *argv[]) {
                main_rc = (ok) ? EXIT_SUCCESS : EXIT_FAILURE;
                break;
             }
+
+         default:
+           break;
          }
+
+
       }
    }
 

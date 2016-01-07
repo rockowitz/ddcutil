@@ -45,6 +45,8 @@
 #include "base/parms.h"
 #include "base/util.h"
 
+#include "ddc/vcp_feature_set.h"
+
 #include "cmdline/parsed_cmd.h"
 #include "cmdline/cmd_parser_aux.h"
 #include "cmdline/cmd_parser.h"
@@ -174,6 +176,7 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
 // gboolean stats_flag     = false;
    gboolean ddc_flag       = false;
    gboolean force_flag     = false;
+   gboolean show_unsupported_flag = false;
    gboolean version_flag   = false;
 // gboolean myhelp_flag    = false;PARSED_CMD_MARKERoutput
 // gboolean myusage_flag   = false;
@@ -203,11 +206,13 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
                            G_OPTION_ARG_CALLBACK, output_arg_func,   "Show brief detail",              NULL},
       {"program", 'p',  G_OPTION_FLAG_NO_ARG,
                            G_OPTION_ARG_CALLBACK, output_arg_func,   "Machine readable output",        NULL},
+      {"show-unsupported",
+                  'u',  0, G_OPTION_ARG_NONE,     &show_unsupported_flag, "Report unsupported features", NULL},
       {"force",   'f',  0, G_OPTION_ARG_NONE,     &force_flag,       "Do not check certain parms",     NULL},
       {"model",   'l',  0, G_OPTION_ARG_STRING,   &modelwork,        "Monitor model",                     "model name"},
       {"sn",      'n',  0, G_OPTION_ARG_STRING,   &snwork,           "Monitor serial number",          "serial number"},
       {"edid",    'e',  0, G_OPTION_ARG_STRING,   &edidwork,         "Monitor EDID",            "256 char hex string" },
-      {"trace",   '\0', 0, G_OPTION_ARG_STRING_ARRAY, &trace_classes, "Trace classes",         "comma separated list" },
+      {"trace",   '\0', 0, G_OPTION_ARG_STRING_ARRAY, &trace_classes, "Trace classes",         "trace class name" },
 //    {"trace",   '\0', 0, G_OPTION_ARG_STRING,   &tracework,        "Trace classes",          "comma separated list" },
       {"maxtries",'\0', 0, G_OPTION_ARG_STRING,   &maxtrywork,       "Max try adjustment",  "comma separated list" },
       {"version", 'V',  0, G_OPTION_ARG_NONE,     &version_flag,     "Show version information", NULL},
@@ -269,6 +274,7 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
 
    parsed_cmd->ddcdata      = ddc_flag;
    parsed_cmd->force        = force_flag;
+   parsed_cmd->show_unsupported = show_unsupported_flag;
    parsed_cmd->output_level = output_level;
    parsed_cmd->stats_types       = stats_work;
    parsed_cmd->sleep_strategy = sleep_strategy_work;
@@ -497,7 +503,6 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
       ok = false;
    }
    else {
-
       char * cmd = cmd_and_args[0];;
       if (debug)
          printf("cmd=|%s|\n", cmd);
@@ -535,7 +540,21 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
             fprintf(stderr, "Missing argument(s)\n");
             ok = false;
          }
-      }
+
+         if ( ok &&
+              (parsed_cmd->cmd_id == CMDID_VCPINFO ||
+               parsed_cmd->cmd_id == CMDID_GETVCP)
+            )
+         {
+            Feature_Set_Ref * fsref = calloc(1, sizeof(Feature_Set_Ref));
+            char * val = (parsed_cmd->argct > 0) ? parsed_cmd->args[0] : "ALL";
+            ok = parse_feature_id_or_subset(val, parsed_cmd->cmd_id, fsref);
+            if (ok)
+               parsed_cmd->fref = fsref;
+            else
+               printf("Invalid feature code or subset: %s\n", parsed_cmd->args[0]);
+         }
+      }  // recognized command
    }
 
    if (ok)

@@ -150,53 +150,79 @@ bool parse_int_arg(char * val, int * pIval) {
 }
 
 typedef struct feature_subset_table_entry_s {
-   Byte       subset_id;
-   int        min_chars;
-   char *     subset_name;
-   char *     subset_desc;
+   VCP_Feature_Subset   subset_id;
+   Cmd_Id_Type          valid_commands;
+   int                  min_chars;
+   char *               subset_name;
+   char *               subset_desc;
 } Feature_Subset_Table_Entry;
 
-Feature_Subset_Table_Entry subset_table[] = {
-      {SUBSET_ALL,        3,  "ALL",       "All known features"},
-      {SUBSET_SUPPORTED,  3, "SUPPORTED",  "All known features that are valid for the display"},
-      {SUBSET_SCAN,       3, "SCAN",       "All feature codes 00..FF, except those known to be WO"},
-      {SUBSET_PROFILE,    3, "PROFILE",    "Features for color profile management"},
-#ifdef FUTURE
-      {SUBSET_COLOR,      3, "COLOR",      "Color related features"},
-      {SUBSET_LUT,        3, "LUT",        "LUT related features"},
-      {SUBSET_AUDIO,      3, "AUDIO",      "Audio related features"},
-      {SUBSET_WINDOW,     3, "WINDOW",     "Window related features"},
-      {SUBSET_TV,         2, "TV",         "TV related features"},
-#endif
+const Feature_Subset_Table_Entry subset_table[] = {
+   {VCP_SUBSET_ALL,       CMDID_GETVCP|CMDID_VCPINFO, 3,  "ALL",      "All known features"},
+   {VCP_SUBSET_SUPPORTED, CMDID_GETVCP,               3, "SUPPORTED", "All known features that are valid for the display"},
+   {VCP_SUBSET_SCAN,      CMDID_GETVCP,               3, "SCAN",      "All feature codes 00..FF, except those known to be WO"},
+   {VCP_SUBSET_PROFILE,   CMDID_GETVCP|CMDID_VCPINFO, 3, "PROFILE",   "Features for color profile management"},
+   {VCP_SUBSET_COLOR,     CMDID_GETVCP|CMDID_VCPINFO, 3, "COLOR",     "Color related features"},
+   {VCP_SUBSET_LUT,       CMDID_GETVCP|CMDID_VCPINFO, 3, "LUT",       "LUT related features"},
+   {VCP_SUBSET_AUDIO,     CMDID_GETVCP|CMDID_VCPINFO, 3, "AUDIO",     "Audio related features"},
+   {VCP_SUBSET_WINDOW,    CMDID_GETVCP|CMDID_VCPINFO, 3, "WINDOW",    "Window related features"},
+   {VCP_SUBSET_TV,        CMDID_GETVCP|CMDID_VCPINFO, 2, "TV",        "TV related features"},
 };
+const int subset_table_ct = sizeof(subset_table)/sizeof(Feature_Subset_Table_Entry);
 
 
 
+VCP_Feature_Subset find_subset(char * name, int cmd_id) {
+   assert(cmd_id == CMDID_GETVCP || cmd_id == CMDID_VCPINFO);
+   VCP_Feature_Subset result = VCP_SUBSET_NONE;
 
-
-
-bool parse_feature_id_or_subset(char * val, Feature_Set_Ref * fsref) {
-   bool ok = true;
-   char * us = strdup( val );
+   char * us = strdup( name );
    char * p = us;
    while (*p) {*p=toupper(*p); p++; }
 
+   int ndx = 0;
+   for (;ndx < subset_table_ct; ndx++) {
+      if ( is_abbrev(us, subset_table[ndx].subset_name, subset_table[ndx].min_chars) ) {
+         if (cmd_id & subset_table[ndx].valid_commands)
+            result = subset_table[ndx].subset_id;
+         break;
+      }
+   }
+   return result;
+}
+
+
+
+bool parse_feature_id_or_subset(char * val, int cmd_id, Feature_Set_Ref * fsref) {
+   bool ok = true;
+   // char * us = strdup( val );
+   // char * p = us;
+   // while (*p) {*p=toupper(*p); p++; }
+
+   VCP_Feature_Subset subset_id = find_subset(val, cmd_id);
+
+
+#ifdef OLD
    // TODO: replace with table
    if ( streq(us,"ALL" ))
-      fsref->subset = SUBSET_ALL;
+      fsref->subset = VCP_SUBSET_ALL;
    else if ( is_abbrev(us,"SUPPORTED",3 ))
-      fsref->subset = SUBSET_SUPPORTED;
+      fsref->subset = VCP_SUBSET_SUPPORTED;
    else if ( is_abbrev(us,"SCAN",3 ) )
-      fsref->subset = SUBSET_SCAN;
+      fsref->subset = VCP_SUBSET_SCAN;
    else if ( is_abbrev(us, "COLORMGT",3) )
-      fsref->subset = SUBSET_COLORMGT;
+      fsref->subset = VCP_SUBSET_COLOR;
    else if ( is_abbrev(us, "PROFILE",3) )
-      fsref->subset = SUBSET_PROFILE;
+      fsref->subset = VCP_SUBSET_PROFILE;
+#endif
+   if (subset_id != VCP_SUBSET_NONE)
+      fsref->subset = subset_id;
+
    else {
      Byte feature_hexid = 0;   // temp
      ok = hhs_to_byte_in_buf(val, &feature_hexid);
      if (ok) {
-        fsref->subset = SUBSET_SINGLE_FEATURE;
+        fsref->subset = VCP_SUBSET_SINGLE_FEATURE;
         fsref->specific_feature = feature_hexid;
      }
   }

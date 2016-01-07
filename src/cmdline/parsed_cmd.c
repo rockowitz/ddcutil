@@ -77,6 +77,7 @@ void show_parsed_cmd(Parsed_Cmd * parsed_cmd) {
 #endif
    rpt_str( "output_level",NULL,  output_level_name(parsed_cmd->output_level), d1);
    rpt_bool("force",       NULL,  parsed_cmd->force,                  d1);
+   rpt_bool("show_unsupported", NULL, parsed_cmd->show_unsupported,   d1);
    rpt_int_as_hex(
             "trace",       NULL,  parsed_cmd->trace,                  d1);
    rpt_int( "argct",       NULL,  parsed_cmd->argct,                  d1);

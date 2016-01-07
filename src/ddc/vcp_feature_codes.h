@@ -58,17 +58,43 @@ extern const char* FMT_CODE_NAME_DETAIL_WO_NL;
 // new new way
 // Separate bytes for each VCP version
 
+#ifdef OLD
+typedef enum {VCP_SUBSET_SCAN,
+              VCP_SUBSET_ALL,
+              VCP_SUBSET_SUPPORTED,
+              VCP_SUBSET_COLORMGT,
+              VCP_SUBSET_PROFILE,
+              VCP_SUBSET_SINGLE_FEATURE
+             } VCP_Feature_Subset;
+#endif
+
+
+
+
 typedef ushort Version_Feature_Flags;
 // Bits in Version_Feature_Flags:
 
-#define VCP_SUBSET_PROFILE         0x8000
-#define VCP_SUBSET_COLOR           0x4000
-#define VCP_SUBSET_LUT             0x2000
-#define VCP_SUBSET_CRT             0x1000
-#define VCP_SUBSET_TV              0x0800
-#define VCP_SUBSET_AUDIO           0x0400
-#define VCP_SUBSET_WINDOW          0x0200
-#define VCP_SUBSET_DPVL            0x0100
+
+
+typedef enum {
+   VCP_SUBSET_PROFILE         = 0x8000,
+   VCP_SUBSET_COLOR           = 0x4000,
+   VCP_SUBSET_LUT             = 0x2000,
+   VCP_SUBSET_CRT             = 0x1000,
+   VCP_SUBSET_TV              = 0x0800,
+   VCP_SUBSET_AUDIO           = 0x0400,
+   VCP_SUBSET_WINDOW          = 0x0200,
+   VCP_SUBSET_DPVL            = 0x0100,
+
+   VCP_SUBSET_SCAN            = 0x0080,
+   VCP_SUBSET_ALL             = 0x0040,
+   VCP_SUBSET_SUPPORTED       = 0x0020,
+   VCP_SUBSET_SINGLE_FEATURE  = 0x0001,
+   VCP_SUBSET_NONE            = 0x0000,
+
+} VCP_Feature_Subset;
+
+
 
 // Exactly 1 of the following 3 bits must be set
 #define  VCP2_RO             0x0400
@@ -195,7 +221,7 @@ struct {
    Byte                                  vcp_global_flags;
    ushort                                vcp_spec_groups;
    //  Byte                                  vcp_classes;
-   ushort                                vcp_subsets;     // new - to implement
+   VCP_Feature_Subset                    vcp_subsets;
    char *                                v20_name;
    char *                                v21_name;
    char *                                v30_name;

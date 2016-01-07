@@ -52,7 +52,7 @@ create_feature_set(VCP_Feature_Subset subset, Version_Spec vcp_version) {
    memcpy(fset->marker, VCP_FEATURE_SET_MARKER, 4);
    fset->subset = subset;
    fset->members = g_ptr_array_sized_new(30);
-   if (subset == SUBSET_SCAN) {
+   if (subset == VCP_SUBSET_SCAN) {
       int ndx = 0;
       for (ndx = 0; ndx < 256; ndx++) {
          Byte id = ndx;
@@ -67,25 +67,35 @@ create_feature_set(VCP_Feature_Subset subset, Version_Spec vcp_version) {
       for (ndx=0; ndx < known_feature_ct; ndx++) {
          VCP_Feature_Table_Entry * vcp_entry = vcp_get_feature_table_entry(ndx);
          assert(vcp_entry);
-         Version_Feature_Flags vflags = 0;
+         // Version_Feature_Flags vflags = 0;
          bool showit = false;
          switch(subset) {
-         case SUBSET_ALL:
+         case VCP_SUBSET_ALL:
             showit = true;
             break;
-         case SUBSET_SUPPORTED:
+         case VCP_SUBSET_SUPPORTED:
             showit = true;
             break;
-         case SUBSET_COLORMGT:
-            vflags = get_version_specific_feature_flags(vcp_entry, vcp_version);;
-            showit = (vflags & VCP_SUBSET_COLOR) | (vcp_entry->vcp_subsets & VCP_SUBSET_COLOR);
+         case VCP_SUBSET_COLOR:
+            // vflags = get_version_specific_feature_flags(vcp_entry, vcp_version);;
+            showit = vcp_entry->vcp_subsets & VCP_SUBSET_COLOR;
             break;
-         case SUBSET_PROFILE:
-            vflags = get_version_specific_feature_flags(vcp_entry, vcp_version);;
-            showit = (vflags & VCP_SUBSET_PROFILE) | (vcp_entry->vcp_subsets & VCP_SUBSET_PROFILE);
+         case VCP_SUBSET_PROFILE:
+            // vflags = get_version_specific_feature_flags(vcp_entry, vcp_version);;
+            // showit = (vflags & VCP_SUBSET_PROFILE) | (vcp_entry->vcp_subsets & VCP_SUBSET_PROFILE);
+            showit = vcp_entry->vcp_subsets & VCP_SUBSET_PROFILE;
             break;
-         case SUBSET_SCAN:    // will never happen, inserted to avoid compiler warning
-         case SUBSET_SINGLE_FEATURE:
+         case VCP_SUBSET_LUT:
+         case VCP_SUBSET_TV:
+         case VCP_SUBSET_AUDIO:
+         case VCP_SUBSET_WINDOW:
+         case VCP_SUBSET_DPVL:
+         case VCP_SUBSET_CRT:
+            showit = vcp_entry->vcp_subsets & subset;
+            break;
+         case VCP_SUBSET_SCAN:    // will never happen, inserted to avoid compiler warning
+         case VCP_SUBSET_SINGLE_FEATURE:
+         case VCP_SUBSET_NONE:
             break;
          }
          if (showit) {
@@ -105,7 +115,7 @@ create_single_feature_set_by_vcp_entry(VCP_Feature_Table_Entry * vcp_entry) {
    struct VCP_Feature_Set * fset = calloc(1,sizeof(struct VCP_Feature_Set));
    memcpy(fset->marker, VCP_FEATURE_SET_MARKER, 4);
    fset->members = g_ptr_array_sized_new(1);
-   fset->subset = SUBSET_SINGLE_FEATURE;
+   fset->subset = VCP_SUBSET_SINGLE_FEATURE;
    g_ptr_array_add(fset->members, vcp_entry);
    return fset;
 }
@@ -154,7 +164,7 @@ create_feature_set_from_feature_set_ref(
    bool              force)
 {
     struct VCP_Feature_Set * fset = NULL;
-    if (fsref->subset == SUBSET_SINGLE_FEATURE)
+    if (fsref->subset == VCP_SUBSET_SINGLE_FEATURE)
        fset = create_single_feature_set_by_hexid(fsref->specific_feature, force);
     else
        fset = create_feature_set(fsref->subset, vcp_version);

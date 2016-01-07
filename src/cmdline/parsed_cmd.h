@@ -31,7 +31,9 @@
 
 #include "base/parms.h"
 
+#include "ddc/vcp_feature_set.h"
 
+#ifdef OLD
 #define CMDID_NONE         0
 #define CMDID_DETECT       1
 #define CMDID_INFO         2
@@ -47,6 +49,24 @@
 #define CMDID_ENVIRONMENT 12
 #define CMDID_VCPINFO     13
 #define CMDID_END         14    // 1 past last valid CMDID value
+#endif
+
+typedef enum {
+   CMDID_NONE         = 0x0000,
+   CMDID_DETECT       = 0x0001,
+   CMDID_CAPABILITIES = 0x0002,
+   CMDID_GETVCP       = 0x0004,
+   CMDID_SETVCP       = 0x0008,
+   CMDID_LISTVCP      = 0x0010,
+   CMDID_TESTCASE     = 0x0020,
+   CMDID_LISTTESTS    = 0x0040,
+   CMDID_LOADVCP      = 0x0080,
+   CMDID_DUMPVCP      = 0x0100,
+   CMDID_INTERROGATE  = 0x0200,
+   CMDID_ENVIRONMENT  = 0x0400,
+   CMDID_VCPINFO      = 0x0800,
+} Cmd_Id_Type;
+
 
 typedef enum {STATS_NONE=0x00, STATS_TRIES=0x01, STATS_ERRORS=0x02, STATS_CALLS=0x04, STATS_ALL=0xFF} Stats_Type;
 
@@ -55,9 +75,10 @@ typedef enum {STATS_NONE=0x00, STATS_TRIES=0x01, STATS_ERRORS=0x02, STATS_CALLS=
 typedef
 struct {
    char                marker[4];      // always PCMD
-   int                 cmd_id;
+   Cmd_Id_Type         cmd_id;
    int                 argct;
    char *              args[MAX_ARGS];
+   Feature_Set_Ref*    fref;
    Stats_Type          stats_types;
    bool                ddcdata;
 #ifdef OLD
@@ -65,6 +86,7 @@ struct {
    bool                programmatic_output;
 #endif
    bool                force;
+   bool                show_unsupported;
    Display_Identifier* pdid;
    Trace_Group         trace;
    Output_Level        output_level;   // new, to replace msg_level and programmatic_output

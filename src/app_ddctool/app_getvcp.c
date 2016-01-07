@@ -126,7 +126,7 @@ app_show_single_vcp_value_by_display_ref(Display_Ref * dref, char * feature, boo
  * Returns:
  *    nothing
  */
-void app_show_vcp_subset_values_by_display_ref(Display_Ref * dref, VCP_Feature_Subset subset)  {
+void app_show_vcp_subset_values_by_display_ref(Display_Ref * dref, VCP_Feature_Subset subset, bool show_unsupported)  {
    // DBGMSG("Starting.  subset=%d   ", subset );
    // need to ensure that bus info initialized
    bool validDisp = true;
@@ -145,7 +145,7 @@ void app_show_vcp_subset_values_by_display_ref(Display_Ref * dref, VCP_Feature_S
    if (validDisp) {
       GPtrArray * collector = NULL;
       Display_Handle * pDispHandle = ddc_open_display(dref, EXIT_IF_FAILURE);
-      show_vcp_values_by_display_handle(pDispHandle, subset, collector);
+      show_vcp_values_by_display_handle(pDispHandle, subset, collector, show_unsupported);
       ddc_close_display(pDispHandle);
    }
 }

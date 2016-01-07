@@ -7,7 +7,7 @@ AC_PREREQ([2.69])
 
 m4_define([ddctool_major_version], [0])
 m4_define([ddctool_minor_version], [1])
-m4_define([ddctool_micro_version], [0])
+m4_define([ddctool_micro_version], [1])
 m4_define([ddctool_version],
           [ddctool_major_version.ddctool_minor_version.ddctool_micro_version])
 
@@ -109,17 +109,13 @@ dnl this is the way to do it
 AS_IF([test "x$adl_header_dir" != "x"],
       AC_DEFINE_UNQUOTED( [HAVE_ADL], [1], [If defined, ADL headers are present.  Build with ADL support.]),
       [])
-
-AC_MSG_NOTICE([HAVE_ADL = $HAVE_ADL])
-
+dnl AC_MSG_NOTICE([HAVE_ADL = $HAVE_ADL])
 AC_SUBST([ADL_HEADER_DIR], [$adl_header_dir])
-
+dnl Makefile.am/.in variable: 
 AM_CONDITIONAL([HAVE_ADL_COND], [test "x$adl_header_dir" != "x"] )
 
-AC_MSG_NOTICE([adl_header_dir2 = $adl_header_dir2])
-
+dnl AC_MSG_NOTICE([adl_header_dir2 = $adl_header_dir2])
 dnl AC_DEFINE_UNQUOTED([HAVE_ADL3], [$HAVE_ADL])
-
 dnl AC_DEFINE( [HAVE_ADL2], [1])
 
 

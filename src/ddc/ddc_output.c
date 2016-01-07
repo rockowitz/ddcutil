@@ -671,10 +671,10 @@ void show_feature_set_values_by_display_handle(
    int ndx;
    Output_Level output_level = get_output_level();
    bool suppress_unsupported = false;
-   if (subset_id == SUBSET_SCAN) {
+   if (subset_id == VCP_SUBSET_SCAN) {
       suppress_unsupported = (output_level < OL_VERBOSE);
    }
-   else if (subset_id == SUBSET_SUPPORTED) {
+   else if (subset_id == VCP_SUBSET_SUPPORTED) {
       suppress_unsupported = true;
    }
    bool prefix_value_with_feature_code = true;    // TO FIX
@@ -757,7 +757,8 @@ void show_feature_set_values_by_display_handle(
 void show_vcp_values_by_display_handle(
         Display_Handle *    dh,
         VCP_Feature_Subset  subset,
-        GPtrArray *         collector)     // not used
+        GPtrArray *         collector,    // not used
+        bool                force_show_unsupported)
 {
    bool debug = false;
    DBGMSF(debug, "Starting.  subset=%d  dh=%s", subset, display_handle_repr(dh) );
@@ -838,7 +839,7 @@ GPtrArray * collect_profile_related_values_by_display_handle(Display_Handle* dh,
 
    collect_machine_readable_timestamp(timestamp_millis, vals);
    collect_machine_readable_monitor_id(dh, vals);
-   show_vcp_values_by_display_handle(dh, SUBSET_PROFILE, vals);
+   show_vcp_values_by_display_handle(dh, VCP_SUBSET_PROFILE, vals, false /* force_show_unsupported */);
 
    return vals;
 }
