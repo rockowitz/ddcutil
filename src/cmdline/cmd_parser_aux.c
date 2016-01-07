@@ -35,7 +35,8 @@
 
 #include "util/string_util.h"
 
-#include "base/common.h"
+// #include "base/common.h"
+#include "base/parms.h"
 
 #include "cmdline/parsed_cmd.h"
 #include "cmdline/cmd_parser_aux.h"
@@ -47,7 +48,6 @@
 static Cmd_Desc cmdinfo[] = {
  // cmd_id              cmd_name  minchars min_arg_ct max_arg_ct
    {CMDID_DETECT,       "detect",        3,  0,       0},
-// {CMDID_INFO,         "information",   3,  0,       0},
    {CMDID_CAPABILITIES, "capabilities",  3,  0,       0},
    {CMDID_GETVCP,       "getvcp",        3,  1,       1},
    {CMDID_SETVCP,       "setvcp",        3,  2,       MAX_SETVCP_VALUES*2},

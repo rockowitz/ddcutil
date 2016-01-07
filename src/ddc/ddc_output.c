@@ -661,7 +661,8 @@ void show_single_vcp_value_by_display_handle(Display_Handle * phandle, char * fe
 void show_feature_set_values_by_display_handle(
       Display_Handle *      dh,
       VCP_Feature_Set       feature_set,
-      GPtrArray *           collector)    // if null, write to stdout
+      GPtrArray *           collector,     // if null, write to stdout
+      bool                  force_show_unsupported)
 {
    bool debug = false;
    DBGMSF(debug, "Starting.  collector=%p", collector);
@@ -768,7 +769,8 @@ void show_vcp_values_by_display_handle(
    if (debug)
       report_feature_set(feature_set, 0);
 
-   show_feature_set_values_by_display_handle(dh, feature_set, collector);
+   show_feature_set_values_by_display_handle(
+      dh, feature_set, collector, force_show_unsupported);
    DBGMSF(debug, "Done");
 }
 

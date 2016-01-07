@@ -44,8 +44,7 @@
 #include "base/msg_control.h"
 #include "base/parms.h"
 #include "base/util.h"
-
-#include "ddc/vcp_feature_set.h"
+#include "base/vcp_feature_base.h"
 
 #include "cmdline/parsed_cmd.h"
 #include "cmdline/cmd_parser_aux.h"
@@ -563,7 +562,7 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
    g_option_context_free(context);
 
    if (debug)
-      show_parsed_cmd(parsed_cmd);
+      report_parsed_cmd(parsed_cmd);
 
    if (!ok) {
       free_parsed_cmd(parsed_cmd);

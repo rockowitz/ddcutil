@@ -101,6 +101,7 @@ base/linux_errno.c \
 base/msg_control.c \
 base/status_code_mgt.c \
 base/util.c \
+base/vcp_feature_base.c \
 ddc/ddc_command_codes.c \
 ddc/ddc_displays.c      \
 ddc/ddc_edid.c          \

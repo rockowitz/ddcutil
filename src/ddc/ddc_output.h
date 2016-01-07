@@ -81,7 +81,8 @@ get_formatted_value_for_feature_table_entry(
 void show_vcp_values_by_display_handle(
         Display_Handle *    dh,
         VCP_Feature_Subset  subset,
-        GPtrArray *         collector);
+        GPtrArray *         collector,
+        bool                force_show_unsupported);
 
 char * format_timestamp(time_t time_millis, char * buf, int bufsz);
 

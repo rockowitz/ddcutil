@@ -1,4 +1,4 @@
-/* vcp_feature_groups.h
+/* vcp_feature_set.h
  *
  * Created on: Dec 29, 2015
  *     Author: rock
@@ -36,14 +36,8 @@
 
 #include "ddc/vcp_feature_codes.h"
 
-// #include "ddc/ddc_services.h"      // TEMP, circular,  VCP_Feature_Subset defined here
-
-
 
 typedef void * VCP_Feature_Set;
-
-
-
 
 VCP_Feature_Set create_feature_set(VCP_Feature_Subset subset, Version_Spec vcp_version);
 VCP_Feature_Set create_single_feature_set_by_vcp_entry(VCP_Feature_Table_Entry * vcp_entry);
@@ -59,6 +53,8 @@ typedef struct {
    VCP_Feature_Subset  subset;
    Byte                specific_feature;
 } Feature_Set_Ref;
+
+void report_feature_set_ref(Feature_Set_Ref * fsref, int depth);
 
 
 VCP_Feature_Set

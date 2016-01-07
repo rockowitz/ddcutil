@@ -169,17 +169,11 @@ bool perform_get_capabilities(Display_Ref * dref) {
 //
 
 int main(int argc, char *argv[]) {
-// #ifdef INCLUDE_TESTCASES
-//    DBGMSG("INCLUDE_TESTCASES is set");
-// #else
-//    DBGMSG("INCLUDE_TESTCASES is NOT set");
-// #endif
    // set_trace_levels(TRC_ADL);   // uncomment to enable tracing during initialization
    initialize();
    int main_rc = EXIT_FAILURE;
 
    Parsed_Cmd * parsed_cmd = parse_command(argc, argv);
-   //Parsed_Cmd * parsed_cmd = parse_command(argc, argv);
    if (!parsed_cmd) {
       puts("Terminating execution");
       exit(EXIT_FAILURE);

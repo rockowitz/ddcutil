@@ -29,27 +29,12 @@
 
 #include <stdbool.h>
 
+#include "base/displays.h"
+#include "base/msg_control.h"
 #include "base/parms.h"
 
 #include "ddc/vcp_feature_set.h"
 
-#ifdef OLD
-#define CMDID_NONE         0
-#define CMDID_DETECT       1
-#define CMDID_INFO         2
-#define CMDID_CAPABILITIES 3
-#define CMDID_GETVCP       4
-#define CMDID_SETVCP       5
-#define CMDID_LISTVCP      6
-#define CMDID_TESTCASE     7
-#define CMDID_LISTTESTS    8
-#define CMDID_LOADVCP      9
-#define CMDID_DUMPVCP     10
-#define CMDID_INTERROGATE 11
-#define CMDID_ENVIRONMENT 12
-#define CMDID_VCPINFO     13
-#define CMDID_END         14    // 1 past last valid CMDID value
-#endif
 
 typedef enum {
    CMDID_NONE         = 0x0000,
@@ -68,7 +53,13 @@ typedef enum {
 } Cmd_Id_Type;
 
 
-typedef enum {STATS_NONE=0x00, STATS_TRIES=0x01, STATS_ERRORS=0x02, STATS_CALLS=0x04, STATS_ALL=0xFF} Stats_Type;
+typedef enum {
+   STATS_NONE     = 0x00,
+   STATS_TRIES    = 0x01,
+   STATS_ERRORS   = 0x02,
+   STATS_CALLS    = 0x04,
+   STATS_ALL      = 0xFF
+} Stats_Type;
 
 
 #define PARSED_CMD_MARKER  "PCMD"
@@ -95,7 +86,7 @@ struct {
 } Parsed_Cmd;
 
 Parsed_Cmd *  new_parsed_cmd();
-void free_parsed_cmd(Parsed_Cmd * parsed_cmd);
-void show_parsed_cmd(Parsed_Cmd * parsed_cmd);   // debugging function
+void          free_parsed_cmd(Parsed_Cmd * parsed_cmd);
+void          report_parsed_cmd(Parsed_Cmd * parsed_cmd);   // debugging function
 
 #endif /* PARSED_CMD_H_ */

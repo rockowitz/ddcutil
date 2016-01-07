@@ -56,20 +56,23 @@ Parsed_Cmd *  new_parsed_cmd() {
 
 
 // Debugging function
-void show_parsed_cmd(Parsed_Cmd * parsed_cmd) {
+void report_parsed_cmd(Parsed_Cmd * parsed_cmd) {
    int depth=0;
    int d1 = depth+1;
    int d2 = depth+2;
    rpt_structure_loc("Parsed_Cmd", parsed_cmd, depth);
    rpt_int( "cmd_id",      NULL,  parsed_cmd->cmd_id,                 d1);
-   // rptStructureLoc("dref", parsed_cmd->dref,                       d1);
-   // if (parsed_cmd->dref)
-   //    report_display_ref(parsed_cmd->dref, d2);
+
    rpt_structure_loc("pdid", parsed_cmd->pdid,                        d1);
    if (parsed_cmd->pdid)
        report_display_identifier(parsed_cmd->pdid,                    d2);
+
+   rpt_structure_loc("fref", parsed_cmd->fref,                        d1);
+   if (parsed_cmd->fref)
+       report_feature_set_ref(parsed_cmd->fref,                       d2);
+
    rpt_int_as_hex(
-            "stats",       NULL,  parsed_cmd->stats_types,                  d1);
+            "stats",       NULL,  parsed_cmd->stats_types,            d1);
    rpt_bool("ddcdata",     NULL,  parsed_cmd->ddcdata,                d1);
 #ifdef OLD
    rpt_str( "msg_level",   NULL,  msg_level_name(parsed_cmd->msg_level), d1);

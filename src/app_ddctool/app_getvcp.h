@@ -40,9 +40,10 @@ app_show_single_vcp_value_by_display_ref(
         char *        feature,
         bool          force);
 
-void app_show_vcp_subset_values_by_display_ref(
+void
+app_show_vcp_subset_values_by_display_ref(
         Display_Ref *      dref,
-        VCP_Feature_Subset subset);
-
+        VCP_Feature_Subset subset,
+        bool               show_unsupported);
 
 #endif /* SRC_APP_DDCTOOL_APP_GETVCP_H_ */

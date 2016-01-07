@@ -44,11 +44,6 @@
 //   in function: bool format_feature_detail_display_usage_time()
 //   in table validation functions (Benign)
 
-// Standard formatting string for reporting feature codes.
-// Not actually used in this file, but will be used by callers.
-// This seems as good a place as any to put the constant.
-const char* FMT_CODE_NAME_DETAIL_WO_NL = "VCP code 0x%02x (%-30s): %s";
-const char* FMT_CODE_NAME_DETAIL_W_NL  = "VCP code 0x%02x (%-30s): %s\n";
 
 // Forward references
 int vcp_feature_code_count;
@@ -122,50 +117,22 @@ bool vcp_version_gt(Version_Spec val, Version_Spec min) {
 
 
 
-
 //
 // Functions applicable to VCP_Feature_Table as a whole
 //
 
-// Creates humanly readable interpretation of VCP feature flags.
-//
-// The result is returned in a buffer supplied by the caller.
-#ifdef OLD
-static char * vcp_interpret_feature_flags(VCP_Feature_Flags flags, char* buf, int buflen) {
-   // DBGMSG("flags: 0x%04x", flags);
-   char * rwmsg = "";
-   if (flags & VCP_RO)
-      rwmsg = "ReadOnly ";
-   else if (flags & VCP_WO)
-      rwmsg = "WriteOnly";
-   else if (flags & VCP_RW)
-      rwmsg = "ReadWrite";
 
-   char * typemsg = "";
-   // NEED TO ALSO HANDLE TABLE TYPE
-   if (flags & VCP_CONTINUOUS)
-      typemsg = "Continuous";
-   else if (flags & VCP_NON_CONT)
-      typemsg = "Non-continuous";
-   else if (flags & VCP_TABLE)
-      typemsg = "Table";
-   else if (flags & VCP_TYPE_V2NC_V3T)
-      typemsg = "V2:NC, V3:Table";
-   else
-      typemsg = "Type not set";
 
-   char * vermsg = "";
-   if (flags & VCP_FUNC_VER)
-      vermsg = " (Version specific interpretation)";
-
-   snprintf(buf, buflen, "%s  %s%s", rwmsg, typemsg, vermsg);
-   return buf;
-}
-#endif
-
-// Creates humanly readable interpretation of VCP feature flags.
-//
-// The result is returned in a buffer supplied by the caller.
+/* Creates humanly readable interpretation of VCP feature flags.
+ * The result is returned in a buffer supplied by the caller.
+ *
+ * Arguments:
+ *    flags
+ *    buf
+ *    buflen
+ *
+ * Returns:   buf
+ */
 static char * vcp_interpret_version_feature_flags(Version_Feature_Flags flags, char* buf, int buflen) {
    // DBGMSG("flags: 0x%04x", flags);
    char * rwmsg = "";

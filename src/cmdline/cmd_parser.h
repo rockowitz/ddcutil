@@ -2,9 +2,9 @@
  *
  * Created on: Jun 16, 2014
  *     Author: rock
- *
+ * *
  * <copyright>
- * Copyright (C) 2014-2015 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2014-2016 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -24,18 +24,16 @@
  * </endcopyright>
  */
 
+//
+// This simple interface facilitated switching command parsers during
+// development.  Candidate for removal.
+//
+
 #ifndef CMD_PARSER_POPT_H_
 #define CMD_PARSER_POPT_H_
 
-#include "base/common.h"
-#include "base/displays.h"
-#include "base/msg_control.h"
-#include "base/util.h"
-
 #include "cmdline/parsed_cmd.h"
 
-
 Parsed_Cmd * parse_command(int argc, char * argv[]);
-// Parsed_Cmd * parse_command_goption(int argc, char * argv[]);
 
 #endif /* CMD_PARSER_POPT_H_ */

@@ -34,67 +34,25 @@
 #include "base/ddc_base_defs.h"
 #include "base/ddc_packets.h"
 #include "base/util.h"
+#include "base/vcp_feature_base.h"
 
-extern const char* FMT_CODE_NAME_DETAIL_W_NL;
-extern const char* FMT_CODE_NAME_DETAIL_WO_NL;
 
 //
 // VCP Feature Interpretation
 //
 
-
-// 12/2015:
-// new way, defines beginning with VCP_V3_..., if set override VCP_CONTINUOUS, VCP_NON_CONT, VCP_TABLE if V3
-// so VCP_TYPE_V2NC_V3T becomes VCP_NON_CONT | VCP_V3_TABLE
-// for example of VCP_NON| VCP_V3_NC_COMPLEX, see 0x62 audio volume
-// for example of NC using both sl and sh bytes, see 0xdf VCP version
-// should also have have e.g. VCP_NC_SIMPLE, VC_NC_COMPLEX
-
-// ..SIMPLE.. means it's just the sl byte
-// ..COMPLEX.. can mean: use of multiple bytes,
-//                       SL byte with some fixed values, remaining range continuous (see audio settings)
-
-// 12/2015
-// new new way
-// Separate bytes for each VCP version
-
-#ifdef OLD
-typedef enum {VCP_SUBSET_SCAN,
-              VCP_SUBSET_ALL,
-              VCP_SUBSET_SUPPORTED,
-              VCP_SUBSET_COLORMGT,
-              VCP_SUBSET_PROFILE,
-              VCP_SUBSET_SINGLE_FEATURE
-             } VCP_Feature_Subset;
-#endif
-
+// Examples of features that create need for complex data structures:
+//
+// x62: Audio Volume:
+//    v 2.0:   C
+//    v 3.0:   NC  Values x00 and xff are reserved, x01..xfe are a continuous range
+// xdf: VCP Version:
+//    NC, uses both high and low bytes
 
 
 
 typedef ushort Version_Feature_Flags;
 // Bits in Version_Feature_Flags:
-
-
-
-typedef enum {
-   VCP_SUBSET_PROFILE         = 0x8000,
-   VCP_SUBSET_COLOR           = 0x4000,
-   VCP_SUBSET_LUT             = 0x2000,
-   VCP_SUBSET_CRT             = 0x1000,
-   VCP_SUBSET_TV              = 0x0800,
-   VCP_SUBSET_AUDIO           = 0x0400,
-   VCP_SUBSET_WINDOW          = 0x0200,
-   VCP_SUBSET_DPVL            = 0x0100,
-
-   VCP_SUBSET_SCAN            = 0x0080,
-   VCP_SUBSET_ALL             = 0x0040,
-   VCP_SUBSET_SUPPORTED       = 0x0020,
-   VCP_SUBSET_SINGLE_FEATURE  = 0x0001,
-   VCP_SUBSET_NONE            = 0x0000,
-
-} VCP_Feature_Subset;
-
-
 
 // Exactly 1 of the following 3 bits must be set
 #define  VCP2_RO             0x0400
@@ -118,24 +76,14 @@ typedef enum {
 #define VCP2_WO_TABLE        0x02
 #define VCP2_ANY_TABLE       (VCP2_TABLE | VCP2_WO_TABLE)
 
+// Additional bits:
 #define VCP2_DEPRECATED      0x01
-
 #define VCP2_SYNTHETIC       0x80
 
 
-
-// n. VCP_FUNC_VER no longer needed
-#ifdef OLD
-// optional bit
-#define  VCP_FUNC_VER   0x0100   // interpretation function needs to know version
-#endif
-
-// more generic, deprecated:
-// #define  VCP_TYPE_VER 0x1000    // type (C, NC, T) varies by version
-
-
-// MCCS specification group to which code belongs
-// note a function can appear in multiple groups, e.g. in different spec versions
+// MCCS specification group to which feature belongs
+// Note a function can appear in multiple groups, e.g. in different spec versions
+// Should probably have been made version specific, but it's not worth redoing
 #define VCP_SPEC_PRESET   0x80     // Section 8.1 Preset Operations
 #define VCP_SPEC_IMAGE    0x40     // Section 8.2 Image Adjustment
 #define VCP_SPEC_CONTROL  0x20     // Section 8.3 Display Control
@@ -146,20 +94,14 @@ typedef enum {
 #define VCP_SPEC_MFG      0x01     // Section 8.8 Manufacturer Specific
 #define VCP_SPEC_WINDOW   0x8000   // Table 5 in MCCS 2.0 spec
 
-// my groupings, not in MCCS spec:
-// #define VCP_CLASS_ANALOG  0x80     // setting that only applies to analog, e.g. CRT, devices
-// #define VCP_CLASS_TV      0x40     // TV related setting
-// #define VCP_CLASS_WINDOW  0x20
 
-// #ifdef FUTURE
-// redundant but might make table more self-documenting
 // set these bits in a flag to indicate which MCCS versions the feature is valid for
 #define MCCS_V10          0x80
 #define MCCS_V20          0x40
 #define MCCS_V21          0x20
 #define MCCS_V30          0x01
 #define MCCS_V22          0x80
-// #endif
+
 
 
 #ifdef ALTERNATIVE
@@ -187,7 +129,7 @@ typedef bool (*Format_Normal_Feature_Detail_Function) (
 typedef bool (*Format_Table_Feature_Detail_Function) (
                  Buffer * data_bytes, Version_Spec vcp_version, char ** presult_buffer);
 
-
+// Describes one simple NC feature value
 typedef  struct {
    Byte   value_code;
    char * value_name;
@@ -196,17 +138,14 @@ typedef  struct {
 extern Feature_Value_Entry * pxc8_display_controller_type_values;
 
 // To consider:
+// In retrospect this is probably better, but not worth redoing
 // typedef struct {
 //    char *                 name;
+//    VCP_Feature_Subset     subsets;
 //    Version_Feature_Flags  flags;
 //    Feature_Value_Entry *  sl_values;
 // } Version_Specific_Info;
 
-
-// To consider:
-// Move subset flags to their own flags byte:
-// #define VCP3_PROFILE  0x80
-// #define VCP3_COLOR    0x40
 
 
 typedef
@@ -220,7 +159,6 @@ struct {
    // VCP_Feature_Reporter               data_reporter;
    Byte                                  vcp_global_flags;
    ushort                                vcp_spec_groups;
-   //  Byte                                  vcp_classes;
    VCP_Feature_Subset                    vcp_subsets;
    char *                                v20_name;
    char *                                v21_name;
@@ -240,15 +178,9 @@ int   vcp_get_feature_code_count();
 void report_vcp_feature_table_entry(VCP_Feature_Table_Entry * entry, int depth);
 
 VCP_Feature_Table_Entry * vcp_get_feature_table_entry(int ndx);
-#ifdef DEPRECATED
-VCP_Feature_Table_Entry * vcp_create_dummy_feature_for_charid(char * id);
-#endif
 VCP_Feature_Table_Entry * vcp_create_dummy_feature_for_hexid(Byte id);
 VCP_Feature_Table_Entry * vcp_find_feature_by_hexid(Byte id);
 VCP_Feature_Table_Entry * vcp_find_feature_by_hexid_w_default(Byte id);
-#ifdef DEPRECATED
-VCP_Feature_Table_Entry * vcp_find_feature_by_charid(char * id);
-#endif
 
 Feature_Value_Entry * find_feature_values_new(Byte feature_code, Version_Spec vcp_version);
 

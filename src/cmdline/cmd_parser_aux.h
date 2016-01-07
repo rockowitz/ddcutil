@@ -27,15 +27,17 @@
  * </endcopyright>
  */
 
-#ifndef CMD_PARSER_BASE_H_
-#define CMD_PARSER_BASE_H_
+// Command parsing functions that are independent of the specific parser
+// being used.
+
+#ifndef CMD_PARSER_AUX_H_
+#define CMD_PARSER_AUX_H_
 
 #include <string.h>
 
-#include "ddc/vcp_feature_set.h"
+#include "base/vcp_feature_base.h"
 
 #include "cmdline/parsed_cmd.h"
-
 
 typedef
 struct {
@@ -56,10 +58,7 @@ bool all_digits(char * val, int ct);
 bool parse_adl_arg(const char * val, int * piAdapterIndex, int * piDisplayIndex);
 bool parse_int_arg(char * val, int * pIval);
 
-
 bool parse_feature_id_or_subset(char * val, int cmd_id, Feature_Set_Ref * fsref);
-
-
 
 bool validate_output_level(Parsed_Cmd* parsed_cmd);
 
@@ -71,4 +70,4 @@ extern char * tracing_multiple_call_option_help;
 extern char * stats_multiple_call_option_help;
 extern char * retries_option_help;
 
-#endif /* CMD_PARSER_BASE_H_ */
+#endif /* CMD_PARSER_AUX_H_ */

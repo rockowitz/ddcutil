@@ -226,7 +226,6 @@ void report_feature_set(VCP_Feature_Set feature_set, int depth) {
    struct VCP_Feature_Set * fset = (struct VCP_Feature_Set *) feature_set;
    assert( fset && memcmp(fset->marker, VCP_FEATURE_SET_MARKER, 4) == 0);
    int ndx = 0;
-   // free all generated members
    for (; ndx < fset->members->len; ndx++) {
       VCP_Feature_Table_Entry * vcp_entry = NULL;
       vcp_entry = g_ptr_array_index(fset->members,ndx);
@@ -236,4 +235,16 @@ void report_feature_set(VCP_Feature_Set feature_set, int depth) {
                   get_non_version_specific_feature_name(vcp_entry)
                  );
    }
+}
+
+#ifdef REFERENCE
+   typedef struct {
+      VCP_Feature_Subset  subset;
+      Byte                specific_feature;
+   } Feature_Set_Ref;
+#endif
+
+void report_feature_set_ref(Feature_Set_Ref * fsref, int depth) {
+   rpt_vstring(depth, "subset: %s (%d)",  feature_subset_name(fsref->subset), fsref->subset);
+   rpt_vstring(depth, "specific_feature:  0x%02x", fsref->specific_feature);
 }

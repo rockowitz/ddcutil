@@ -122,11 +122,16 @@ app_show_single_vcp_value_by_display_ref(Display_Ref * dref, char * feature, boo
  *    pdisp      display reference
  *    subset     feature subset
  *    collector  accumulates output
+ *    show_unsupported
  *
  * Returns:
  *    nothing
  */
-void app_show_vcp_subset_values_by_display_ref(Display_Ref * dref, VCP_Feature_Subset subset, bool show_unsupported)  {
+void app_show_vcp_subset_values_by_display_ref(
+        Display_Ref *       dref,
+        VCP_Feature_Subset  subset,
+        bool                show_unsupported)
+{
    // DBGMSG("Starting.  subset=%d   ", subset );
    // need to ensure that bus info initialized
    bool validDisp = true;
