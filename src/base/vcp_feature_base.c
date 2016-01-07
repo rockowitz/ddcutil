@@ -61,6 +61,7 @@ static struct Vcp_Subset_Desc subset_desc[] = {
       {VCP_SUBSET_SCAN,            "VCP_SUBSET_SCAN"},
       {VCP_SUBSET_ALL,             "VCP_SUBSET_ALL"},
       {VCP_SUBSET_SUPPORTED,       "VCP_SUBSET_SUPPORTED"},
+      {VCP_SUBSET_KNOWN,           "VCP_SUBSET_KNOWN"},
       {VCP_SUBSET_SINGLE_FEATURE,  "VCP_SUBSET_SINGLE_FEATURE"},
       {VCP_SUBSET_NONE ,           "VCP_SUBSET_NONE"},
 };
@@ -96,3 +97,7 @@ void report_feature_set_ref(Feature_Set_Ref * fsref, int depth) {
    rpt_vstring(depth, "subset: %s (%d)",  feature_subset_name(fsref->subset), fsref->subset);
    rpt_vstring(depth, "specific_feature:  0x%02x", fsref->specific_feature);
 }
+
+
+
+

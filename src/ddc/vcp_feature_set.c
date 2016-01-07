@@ -70,21 +70,13 @@ create_feature_set(VCP_Feature_Subset subset, Version_Spec vcp_version) {
          // Version_Feature_Flags vflags = 0;
          bool showit = false;
          switch(subset) {
+         case VCP_SUBSET_KNOWN:
          case VCP_SUBSET_ALL:
-            showit = true;
-            break;
          case VCP_SUBSET_SUPPORTED:
             showit = true;
             break;
          case VCP_SUBSET_COLOR:
-            // vflags = get_version_specific_feature_flags(vcp_entry, vcp_version);;
-            showit = vcp_entry->vcp_subsets & VCP_SUBSET_COLOR;
-            break;
          case VCP_SUBSET_PROFILE:
-            // vflags = get_version_specific_feature_flags(vcp_entry, vcp_version);;
-            // showit = (vflags & VCP_SUBSET_PROFILE) | (vcp_entry->vcp_subsets & VCP_SUBSET_PROFILE);
-            showit = vcp_entry->vcp_subsets & VCP_SUBSET_PROFILE;
-            break;
          case VCP_SUBSET_LUT:
          case VCP_SUBSET_TV:
          case VCP_SUBSET_AUDIO:

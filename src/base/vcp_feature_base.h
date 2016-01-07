@@ -33,7 +33,8 @@
 extern const char* FMT_CODE_NAME_DETAIL_W_NL;
 extern const char* FMT_CODE_NAME_DETAIL_WO_NL;
 
-
+// If this enum is changed, be sure to change the corresponding
+// table in vcp_feature_base.c
 typedef enum {
    VCP_SUBSET_PROFILE         = 0x8000,
    VCP_SUBSET_COLOR           = 0x4000,
@@ -49,6 +50,7 @@ typedef enum {
    VCP_SUBSET_SCAN            = 0x0080,
    VCP_SUBSET_ALL             = 0x0040,
    VCP_SUBSET_SUPPORTED       = 0x0020,
+   VCP_SUBSET_KNOWN           = 0x0010,
    VCP_SUBSET_SINGLE_FEATURE  = 0x0001,
    VCP_SUBSET_NONE            = 0x0000,
 } VCP_Feature_Subset;

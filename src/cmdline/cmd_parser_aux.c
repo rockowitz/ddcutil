@@ -161,6 +161,7 @@ const Feature_Subset_Table_Entry subset_table[] = {
    {VCP_SUBSET_ALL,       CMDID_GETVCP|CMDID_VCPINFO, 3,  "ALL",      "All known features"},
    {VCP_SUBSET_SUPPORTED, CMDID_GETVCP,               3, "SUPPORTED", "All known features that are valid for the display"},
    {VCP_SUBSET_SCAN,      CMDID_GETVCP,               3, "SCAN",      "All feature codes 00..FF, except those known to be WO"},
+   {VCP_SUBSET_KNOWN,     CMDID_GETVCP|CMDID_VCPINFO, 3, "KNOWN",     "All features known by ddctool"},
    {VCP_SUBSET_PROFILE,   CMDID_GETVCP|CMDID_VCPINFO, 3, "PROFILE",   "Features for color profile management"},
    {VCP_SUBSET_COLOR,     CMDID_GETVCP|CMDID_VCPINFO, 3, "COLOR",     "Color related features"},
    {VCP_SUBSET_LUT,       CMDID_GETVCP|CMDID_VCPINFO, 3, "LUT",       "LUT related features"},

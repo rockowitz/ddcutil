@@ -668,16 +668,17 @@ void show_feature_set_values_by_display_handle(
    DBGMSF(debug, "Starting.  collector=%p", collector);
    Version_Spec vcp_version = get_vcp_version_by_display_handle(dh);
    int features_ct = get_feature_set_size(feature_set);
-   VCP_Feature_Subset subset_id = get_feature_set_subset_id(feature_set);  // in anticipation of refactoring
+   VCP_Feature_Subset subset_id = get_feature_set_subset_id(feature_set);
    int ndx;
    Output_Level output_level = get_output_level();
-   bool suppress_unsupported = false;
-   if (subset_id == VCP_SUBSET_SCAN) {
-      suppress_unsupported = (output_level < OL_VERBOSE);
-   }
-   else if (subset_id == VCP_SUBSET_SUPPORTED) {
-      suppress_unsupported = true;
-   }
+   bool show_unsupported = false;
+   if ( force_show_unsupported     ||
+        output_level >= OL_VERBOSE ||
+        subset_id == VCP_SUBSET_SINGLE_FEATURE
+       )
+       show_unsupported = true;
+
+   bool suppress_unsupported = !show_unsupported;
    bool prefix_value_with_feature_code = true;    // TO FIX
    FILE * msg_fh = stdout;                        // TO FIX
    DBGMSF(debug, "features_ct=%d", features_ct);
@@ -686,7 +687,7 @@ void show_feature_set_values_by_display_handle(
       DBGMSF(debug,"ndx=%d, feature = 0x%02x", ndx, entry->code);
       if (!is_feature_readable_by_vcp_version(entry, vcp_version)) {
          // confuses the output if suppressing unsupported
-         if (!suppress_unsupported) {
+         if (show_unsupported) {
             char * feature_name =  get_version_sensitive_feature_name(entry, vcp_version);
             Version_Feature_Flags vflags = get_version_sensitive_feature_flags(entry, vcp_version);
             char * msg = (vflags & VCP2_DEPRECATED) ? "Deprecated" : "Write-only feature";
