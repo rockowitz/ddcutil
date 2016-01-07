@@ -32,8 +32,7 @@
 #include "base/displays.h"
 #include "base/msg_control.h"
 #include "base/parms.h"
-
-#include "ddc/vcp_feature_set.h"
+#include "base/vcp_feature_base.h"
 
 
 typedef enum {

@@ -27,6 +27,8 @@
 #ifndef SRC_BASE_VCP_FEATURE_BASE_H_
 #define SRC_BASE_VCP_FEATURE_BASE_H_
 
+#include "util/coredefs.h"
+
 // Standard printf format strings for reporting feature codes values.
 extern const char* FMT_CODE_NAME_DETAIL_W_NL;
 extern const char* FMT_CODE_NAME_DETAIL_WO_NL;
@@ -52,6 +54,14 @@ typedef enum {
 } VCP_Feature_Subset;
 
 char * feature_subset_name(VCP_Feature_Subset subset_id);
+
+
+typedef struct {
+   VCP_Feature_Subset  subset;
+   Byte                specific_feature;
+} Feature_Set_Ref;
+
+void report_feature_set_ref(Feature_Set_Ref * fsref, int depth);
 
 
 #endif /* SRC_BASE_VCP_FEATURE_BASE_H_ */

@@ -49,13 +49,6 @@ VCP_Feature_Subset get_feature_set_subset_id(VCP_Feature_Set feature_set);
 
 void report_feature_set(VCP_Feature_Set feature_set, int depth);
 
-typedef struct {
-   VCP_Feature_Subset  subset;
-   Byte                specific_feature;
-} Feature_Set_Ref;
-
-void report_feature_set_ref(Feature_Set_Ref * fsref, int depth);
-
 
 VCP_Feature_Set
 create_feature_set_from_feature_set_ref(

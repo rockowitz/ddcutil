@@ -178,7 +178,6 @@ int main(int argc, char *argv[]) {
       puts("Terminating execution");
       exit(EXIT_FAILURE);
    }
-   // showParsedCmd(parsedCmd);
 
    set_trace_levels(parsed_cmd->trace);
 
@@ -191,7 +190,7 @@ int main(int argc, char *argv[]) {
    if (parsed_cmd->output_level >= OL_VERBOSE)
       show_reporting();
 
-   // where to check MAX_MAX_TRIES not exceeded?
+   // n. MAX_MAX_TRIES checked during command line parsing
    if (parsed_cmd->max_tries[0] > 0) {
       ddc_set_max_write_only_exchange_tries(parsed_cmd->max_tries[0]);
    }

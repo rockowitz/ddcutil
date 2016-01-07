@@ -30,6 +30,8 @@
 #include <assert.h>
 #include <stddef.h>
 
+#include "util/report_util.h"
+
 #include "base/vcp_feature_base.h"
 
 
@@ -83,3 +85,14 @@ char * feature_subset_name(VCP_Feature_Subset subset_id) {
 }
 
 
+#ifdef REFERENCE
+   typedef struct {
+      VCP_Feature_Subset  subset;
+      Byte                specific_feature;
+   } Feature_Set_Ref;
+#endif
+
+void report_feature_set_ref(Feature_Set_Ref * fsref, int depth) {
+   rpt_vstring(depth, "subset: %s (%d)",  feature_subset_name(fsref->subset), fsref->subset);
+   rpt_vstring(depth, "specific_feature:  0x%02x", fsref->specific_feature);
+}

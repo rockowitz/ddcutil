@@ -237,14 +237,3 @@ void report_feature_set(VCP_Feature_Set feature_set, int depth) {
    }
 }
 
-#ifdef REFERENCE
-   typedef struct {
-      VCP_Feature_Subset  subset;
-      Byte                specific_feature;
-   } Feature_Set_Ref;
-#endif
-
-void report_feature_set_ref(Feature_Set_Ref * fsref, int depth) {
-   rpt_vstring(depth, "subset: %s (%d)",  feature_subset_name(fsref->subset), fsref->subset);
-   rpt_vstring(depth, "specific_feature:  0x%02x", fsref->specific_feature);
-}
