@@ -34,6 +34,7 @@ ddctool \- Query and change monitor settings
 .RB [ "-v|--verbose" ]
 .RB [ -t | --terse ]
 .RB [ "-p" | "--program" ]
+.RB [ "-u" | "--show-unsupported" ]
 .RB [ --ddc ]
 .RB [ "-s" | "--stats" ]
 .RB [ --trace 
@@ -45,6 +46,8 @@ ddctool \- Query and change monitor settings
 .RB | setvcp 
 .I  feature-code new-value
 ] |
+.BR vcpinfo " "
+.RI [ "feature-code" | "feature-group" "] | "
 .B dumpvcp 
 .RI [ filename ]
 |
@@ -96,8 +99,8 @@ and then restored when the calibration is applied.
 .TP
 .BR "detect " "Report attached monitors"
 .TP
-.B  "listvcp "
-List VCP feature codes that \fBddctool\fP knows how to interpret
+\fBvcpinfo\fP [ \fIfeature-code\fP | \fIfeature-group\fP ]
+Describe VCP feature codes that \fBddctool\fP knows how to interpret
 .TP 
 .B "capabilities "
 Query the monitor's capabilities string 
@@ -132,22 +135,22 @@ A feature-code is specified by its 2 character hex feature number, with or witho
 .sp 2
 .I feature-group
 .sp 2
-The following feature groups are recognized:
+The following are the most useful feature groups recognized.  For a complete list,  use the \fB--help\fP option.
 .TP
-.B ALL
+.BR ALL
 All feature codes understood by \fBddctool\fP
 .TQ 
-.B SUPPORTED 
+.B KNOWN
 Scan all understood feature codes, but show only codes supported by the monitor
 .TQ 
-.B COLORMGT
+.B COLOR
 Scan color related feature codes
 .TQ
 .B PROFILE 
-Subset of color related feature codes that are saved and restored by \fBdumpvcp\FP and \fBloadvcp\fB
+Subset of color related feature codes that are saved and restored by \fBdumpvcp\fP and \fBloadvcp\fP
 .TQ
 .B SCAN
-Scan all possible feature codes 0x00..0xff
+Scan all possible feature codes 0x00..0xff, except those known the be write-only
 .PP
 Feature group names can be abbreviated to the first 3 characters.  Case is ignored.  e.g. COL, pro
 
@@ -188,6 +191,9 @@ serial number.  (This is the "serial ascii" field from the EDID, not the binary 
 .PP
 
 Options to control the amount and form of output.
+.TQ
+.B "-u, --show-unsupported"
+Normally, \fBgetvcp\fP does not report unsupported features when querying a feature-group.  This option forces output. 
 .TQ
 .B "-t, --terse"
 Show brief detail
@@ -257,14 +263,14 @@ adjust the \fBIdentifier\fP value in the file to correspond to the value in the 
 
 AMD's proprietary video driver \fBfglrx\fP does not expose the I2C bus.  Instead, it provides access to the bus through the
 AMD Display Library, aka \fBADL\fP. 
-Owing to copyright restrictions, the \fBADL\fP header files are not distributed with the ddctool source.  Additional steps are 
+Owing to copyright restrictions, the ADL header files are not distributed with the \fBddctool\fP source.  Additional steps are 
 required to build \fBddctool\fP with \fBfglrx\fP support.
 
 To see if your copy of \fBddctool\fP was built with \fBfglrx\fP support, issue the command:
 .br
 .B ddctool --version
 
-\fBADL\fP identifies monitors using an adapter-number/display-number pair.  To select a monitor using these numbers, specify the 
+ADL identifies monitors using an adapter-number/display-number pair.  To select a monitor using these numbers, specify the 
 \fB--adl\fP option with a period separating the adapter-number and display-number, e.g.
 .br
 .B --adl 0.1
@@ -272,11 +278,8 @@ To see if your copy of \fBddctool\fP was built with \fBfglrx\fP support, issue t
 
 .SH VIRTUAL MACHINES
 
-VirtualBox does not provide i2c emulation
+VirtualBox and VMware do not provide i2c emulation.  (qemu?)
 
-VMware? 
-
-qemu?
 
 .SH EXAMPLES
 .\" What do .EX and .EE do?
@@ -299,9 +302,9 @@ Query the luminosity value of the second monitor.
 .sp 0
 Set the luminosity value for the monitor on bus /dev/i2c-4. 
 
-.B ddctool listvcp
+.B ddctool vcpinfo --verbose
 .sp 0
-List all VCP features that `ddctool` understands. 
+List all information about VCP features that \fBddctool\fP understands. 
 
 .B interrrogate > ~/ddctool.out 
 .sp 0
@@ -337,6 +340,6 @@ Requesting help is regarded as success.
 .SH AUTHOR
 Sanford Rockowitz (rockowitz at minsoft dot com)
 .br
-Copyright 2014\-2015 Sanford Rockowitz
+Copyright 2014\-2016 Sanford Rockowitz
 
 

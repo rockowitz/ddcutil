@@ -221,6 +221,7 @@ char * lsub(char * s, int ct) {
 }
 
 
+
 /* Joins an array of strings into a single string, using a separator string.
  *
  * Arguments:
@@ -352,6 +353,24 @@ char * strupper(char * s) {
       }
    }
    return s;
+}
+
+
+/* Creates an upper case copy of a string
+ *
+ * Arguments:
+ *    s      string to copy
+ *
+ * Returns:
+ *    newly allocated string, NULL if s is NULL
+ */
+char * strdup_uc(char* s) {
+   if (!s)
+      return NULL;
+   char * us = strdup( s );
+   char * p = us;
+   while (*p) {*p=toupper(*p); p++; }
+   return us;
 }
 
 

@@ -70,7 +70,7 @@ Factory Defaults (02) are write-only.
 |-------------------------------| -------------------------------------------------------------|
 | detect                        | report monitors detected                                     |
 | capabilities                  | report a monitor's capabilities string                       |
-| listvcp                       | list VCP features codes that ddctool knows how to interpret  | 
+| vcpinfo                       | list VCP features codes that ddctool knows how to interpret  | 
 | getvcp feature-code-or-group  | report a single VCP feature value, or a group of values      |
 | setvcp feature-code new-value | set a single VCP feature value                               |
 | dumpvcp filename              | save color related VCP feature values in a file              |

@@ -27,6 +27,7 @@
  * </endcopyright>
  */
 
+#include <config.h>
 #include <assert.h>
 #include <ctype.h>
 #include <stdbool.h>
@@ -52,8 +53,10 @@ static Cmd_Desc cmdinfo[] = {
    {CMDID_GETVCP,       "getvcp",        3,  1,       1},
    {CMDID_SETVCP,       "setvcp",        3,  2,       MAX_SETVCP_VALUES*2},
    {CMDID_LISTVCP,      "listvcp",       5,  0,       0},
+#ifdef INCLUDE_TESTCASES
    {CMDID_TESTCASE,     "testcase",      3,  1,       1},
    {CMDID_LISTTESTS,    "listtests",     5,  0,       0},
+#endif
    {CMDID_LOADVCP,      "loadvcp",       3,  1,       1},
    {CMDID_DUMPVCP,      "dumpvcp",       3,  0,       1},
    {CMDID_INTERROGATE,  "interrogate",   3,  0,       0},
@@ -174,13 +177,9 @@ const int subset_table_ct = sizeof(subset_table)/sizeof(Feature_Subset_Table_Ent
 
 
 VCP_Feature_Subset find_subset(char * name, int cmd_id) {
-   assert(cmd_id == CMDID_GETVCP || cmd_id == CMDID_VCPINFO);
+   assert(name && (cmd_id == CMDID_GETVCP || cmd_id == CMDID_VCPINFO));
    VCP_Feature_Subset result = VCP_SUBSET_NONE;
-
-   char * us = strdup( name );
-   char * p = us;
-   while (*p) {*p=toupper(*p); p++; }
-
+   char * us = strdup_uc(name);
    int ndx = 0;
    for (;ndx < subset_table_ct; ndx++) {
       if ( is_abbrev(us, subset_table[ndx].subset_name, subset_table[ndx].min_chars) ) {
@@ -189,36 +188,16 @@ VCP_Feature_Subset find_subset(char * name, int cmd_id) {
          break;
       }
    }
+   free(us);
    return result;
 }
 
 
-
 bool parse_feature_id_or_subset(char * val, int cmd_id, Feature_Set_Ref * fsref) {
    bool ok = true;
-   // char * us = strdup( val );
-   // char * p = us;
-   // while (*p) {*p=toupper(*p); p++; }
-
    VCP_Feature_Subset subset_id = find_subset(val, cmd_id);
-
-
-#ifdef OLD
-   // TODO: replace with table
-   if ( streq(us,"ALL" ))
-      fsref->subset = VCP_SUBSET_ALL;
-   else if ( is_abbrev(us,"SUPPORTED",3 ))
-      fsref->subset = VCP_SUBSET_SUPPORTED;
-   else if ( is_abbrev(us,"SCAN",3 ) )
-      fsref->subset = VCP_SUBSET_SCAN;
-   else if ( is_abbrev(us, "COLORMGT",3) )
-      fsref->subset = VCP_SUBSET_COLOR;
-   else if ( is_abbrev(us, "PROFILE",3) )
-      fsref->subset = VCP_SUBSET_PROFILE;
-#endif
    if (subset_id != VCP_SUBSET_NONE)
       fsref->subset = subset_id;
-
    else {
      Byte feature_hexid = 0;   // temp
      ok = hhs_to_byte_in_buf(val, &feature_hexid);
@@ -229,7 +208,6 @@ bool parse_feature_id_or_subset(char * val, int cmd_id, Feature_Set_Ref * fsref)
   }
   return ok;
 }
-
 
 
 bool validate_output_level(Parsed_Cmd* parsed_cmd) {
@@ -271,19 +249,21 @@ bool validate_output_level(Parsed_Cmd* parsed_cmd) {
 
 char * commands_list_help =
        "Commands:\n"
-       "   detect\n"
-       "   capabilities\n"
+       "   detect                               Detect monitors\n"
+       "   capabilities                         Query monitor capabilities string\n"
 //     "   info\n"
 //     "   listvcp\n"
-       "   vcpinfo (feature-code-or-group)\n"
-       "   getvcp <feature-code-or-group>\n"
-       "   setvcp <feature-code> <new-value>\n"
-       "   dumpvcp (filename)\n"
-       "   loadvcp <filename>\n"
+       "   vcpinfo (feature-code-or-group)      Show VCP feature characteristics\n"
+       "   getvcp <feature-code-or-group>       Get VCP feature value(s)\n"
+       "   setvcp <feature-code> <new-value>    Set VCP feature value\n"
+       "   dumpvcp (filename)                   Write profile related settings to file\n"
+       "   loadvcp <filename>                   Load profile related settings from file\n"
+#ifdef INCLUDE_TESTCASES
        "   testcase <testcase-number>\n"
        "   listtests\n"
-       "   environment\n"
-       "   interrogate\n"
+#endif
+       "   environment                          Probe execution environment\n"
+       "   interrogate                          Report everything possible\n"
        "\n";
 
 char * command_argument_help =
@@ -292,11 +272,15 @@ char * command_argument_help =
        "    <feature-code-or-group> can be any of the following:\n"
        "      - the hex feature code for a specific feature, with or without a leading 0x,\n"
        "        e.g. 10 or 0x10\n"
-       "      - ALL       - all known feature codes\n"
-       "      - COLORMGT  - color related feature codes\n"
-       "      - PROFILE   - color related codes for profile management\n"
-       "      - SUPPORTED - scan all known features codes, but only show supported codes\n"
+       "      - KNOWN     - all feature codes known to ddctool\n"
+       "      - ALL       - like KNOWN, but implies --show-unsupported\n"
        "      - SCAN      - scan all feature codes 0x00..0xff\n"
+       "      - COLOR     - all color related feature codes\n"
+       "      - PROFILE   - color related codes for profile management\n"
+       "      - LUT       - LUT related features\n"
+       "      - AUDIO     - audio features\n"
+       "      - WINDOW    - window operations (e.g. PIP)\n"
+       "      - TV        - TV related settings\n"
        "    Keywords can be abbreviated to the first 3 characters.\n"
        "    Case is ignored.  e.g. \"COL\", \"pro\"\n"
        "\n"
@@ -309,7 +293,7 @@ char * command_argument_help =
 
 char * monitor_selection_option_help =
        "Monitor Selection\n"
-       "  The monitor to be processed can be specified using any of the options:\n"
+       "  The monitor to be communicated with can be specified using any of the options:\n"
        "  --display, --bus, --adl, --model and --sn, --edid\n"
        "  --display <display_number>, where <display_number> ranges from 1 to the number of\n"
        "    displays detected\n"

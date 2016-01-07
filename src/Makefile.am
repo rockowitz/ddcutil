@@ -77,7 +77,7 @@ ddctool_SOURCES += \
    test/testcase_table.c
 else
 ddctool_SOURCES += \
-   ddctool_app/testcase_mock_table.c
+   app_ddctool/testcase_mock_table.c
 endif
 
 # files only in libddctool:

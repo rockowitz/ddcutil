@@ -59,6 +59,7 @@ char * strtrim_r(const char * s, char * buffer, int bufsz);
 char * rtrim_in_place(char * s);
 char * substr(char * s, int startpos, int ct);
 char * lsub(char * s, int ct);
+char * strdup_uc(char* s);
 
 typedef bool (*String_Comp_Func)(const char * a, const char * b);
 

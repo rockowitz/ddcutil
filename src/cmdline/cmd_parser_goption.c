@@ -51,11 +51,11 @@
 #include "cmdline/cmd_parser.h"
 
 // Variables used by callback functions
-static char * adlwork = NULL;
-static Output_Level output_level = OL_DEFAULT;
-static int     iAdapterIndex = -1;
-static int     iDisplayIndex = -1;
-static Stats_Type stats_work = STATS_NONE;
+static char *       adlwork       = NULL;
+static Output_Level output_level  = OL_DEFAULT;
+static int          iAdapterIndex = -1;
+static int          iDisplayIndex = -1;
+static Stats_Type   stats_work    = STATS_NONE;
 
 // not currently used
 // Callback function for processing an --adl argument
@@ -67,18 +67,12 @@ gboolean adl_arg_func(const gchar* option_name,
    bool debug = true;
    DBGMSF(debug, "option_name=|%s|, value|%s|, data=%p", option_name, value, data);
 
-   // int iAdapterIndex;
-   // int iDisplayIndex;
    adlwork = strdup(value);   // alt way
-
    bool ok = parse_adl_arg(value, &iAdapterIndex, &iDisplayIndex);
-
    if (ok) {
       DBGMSG("parsed adl = %d.%d", iAdapterIndex, iDisplayIndex);
    }
    if (!ok) {
-      // *error = G_OPTION_ERROR_FAILED;
-      // alt?
       g_set_error(error, G_OPTION_ERROR, G_OPTION_ERROR_FAILED, "bad adl" );
    }
 
@@ -107,6 +101,7 @@ gboolean output_arg_func(const gchar* option_name,
    return true;
 }
 
+
 // Callback function for processing --stats
 gboolean stats_arg_func(const    gchar* option_name,
                         const    gchar* value,
@@ -115,8 +110,8 @@ gboolean stats_arg_func(const    gchar* option_name,
 {
    bool debug = false;
    DBGMSF(debug,"option_name=|%s|, value|%s|, data=%p", option_name, value, data);
-   bool ok = true;
 
+   bool ok = true;
    if (value) {
       char * v2 = strupper(strdup(value));
       if ( streq(v2,"ALL") ) {
@@ -143,6 +138,7 @@ gboolean stats_arg_func(const    gchar* option_name,
    }
    return ok;
 }
+
 
 /* Primary parsing function
  *
@@ -177,7 +173,7 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
    gboolean force_flag     = false;
    gboolean show_unsupported_flag = false;
    gboolean version_flag   = false;
-// gboolean myhelp_flag    = false;PARSED_CMD_MARKERoutput
+// gboolean myhelp_flag    = false;
 // gboolean myusage_flag   = false;
    char *   modelwork      = NULL;
    char *   snwork         = NULL;
