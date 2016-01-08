@@ -46,7 +46,7 @@
 
 #include <util/string_util.h>
 
-#include <base/ddc_base_defs.h>
+#include <base/ddc_base.h>
 #include <base/ddc_errno.h>
 #include <base/execution_stats.h>
 #include <base/common.h>

@@ -36,7 +36,6 @@
 #include "util/string_util.h"
 #include "util/report_util.h"
 
-#include "base/ddc_base_defs.h"
 #include "base/edid.h"
 
 #include "base/displays.h"

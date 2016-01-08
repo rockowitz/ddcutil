@@ -361,37 +361,6 @@ int main(int argc, char *argv[]) {
                   printf("Invalid feature code or group: %s\n", parsed_cmd->args[0]);
                }
                main_rc = (ok) ? EXIT_SUCCESS : EXIT_FAILURE;
-#ifdef OLD
-               // DBGMSG("CMD_GETVCP  " );
-               char * us = strdup( parsed_cmd->args[0] );
-               char * p = us;
-               while (*p) {*p=toupper(*p); p++; }
-
-               // n. show_vcp_values_by_display_ref() returns void
-               if ( streq(us,"ALL" )) {
-                  app_show_vcp_subset_values_by_display_ref(dref, VCP_SUBSET_ALL);
-               }
-               else if ( is_abbrev(us,"SUPPORTED",3 )) {
-                  app_show_vcp_subset_values_by_display_ref(dref, VCP_SUBSET_SUPPORTED);
-                }
-               else if ( is_abbrev(us,"SCAN",3 )) {
-                  app_show_vcp_subset_values_by_display_ref(dref, VCP_SUBSET_SCAN);
-               }
-               else if ( is_abbrev(us, "COLORMGT",3) ) {
-                  app_show_vcp_subset_values_by_display_ref(dref, VCP_SUBSET_COLOR);
-               }
-               else if ( is_abbrev(us, "PROFILE",3) ) {
-                  // DBGMSG("calling setGlobalMsgLevel(%d), new value: %s   ", TERSE, msgLevelName(TERSE) );
-                  // if (dref->ddc_io_mode == DDC_IO_DEVI2C)
-                  //    i2c_report_bus(dref->busno);
-                  app_show_vcp_subset_values_by_display_ref(dref, VCP_SUBSET_PROFILE);
-               }
-               else {
-                  app_show_single_vcp_value_by_display_ref(dref, parsed_cmd->args[0], parsed_cmd->force);
-               }
-               free(us);
-               main_rc = EXIT_SUCCESS;
-#endif
             }
             break;
 
@@ -424,6 +393,17 @@ int main(int argc, char *argv[]) {
                main_rc = (ok) ? EXIT_SUCCESS : EXIT_FAILURE;
                break;
             }
+
+         case CMDID_READCHANGES:
+            DBGMSG("Case CMDID_READCHANGES");
+            // report_parsed_cmd(parsed_cmd,0);
+            // first case of migrating open to main.c to eliminate use of _by_display_ref calls
+            Display_Handle * dh = ddc_open_display(dref, EXIT_IF_FAILURE);
+
+
+            app_read_changes_forever(dh);
+            ddc_close_display(dh);
+            break;
 
          default:
            break;

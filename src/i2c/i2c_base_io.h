@@ -34,7 +34,7 @@
 
 #include <base/execution_stats.h>
 #include <base/common.h>
-#include <base/ddc_base_defs.h>
+#include <base/ddc_base.h>
 #include <base/msg_control.h>
 #include <base/status_code_mgt.h>
 #include <base/util.h>

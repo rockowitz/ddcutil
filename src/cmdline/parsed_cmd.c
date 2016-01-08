@@ -56,8 +56,7 @@ Parsed_Cmd *  new_parsed_cmd() {
 
 
 // Debugging function
-void report_parsed_cmd(Parsed_Cmd * parsed_cmd) {
-   int depth=0;
+void report_parsed_cmd(Parsed_Cmd * parsed_cmd, int depth) {
    int d1 = depth+1;
    int d2 = depth+2;
    rpt_structure_loc("Parsed_Cmd", parsed_cmd, depth);

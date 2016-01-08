@@ -27,7 +27,7 @@
 #ifndef SRC_DDC_DDC_VCP_VERSION_H_
 #define SRC_DDC_DDC_VCP_VERSION_H_
 
-#include "base/ddc_base_defs.h"
+#include "base/ddc_base.h"
 #include "base/displays.h"
 
 

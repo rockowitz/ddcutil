@@ -29,7 +29,7 @@
 
 #include "util/data_structures.h"
 
-#include "base/ddc_base_defs.h"
+#include "base/ddc_base.h"
 #include "base/util.h"
 
 

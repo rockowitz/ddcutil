@@ -33,7 +33,7 @@
 
 #include <util/coredefs.h>
 
-#include <base/ddc_base_defs.h>
+#include <base/ddc_base.h>
 #include <base/edid.h>
 #include <base/util.h>
 

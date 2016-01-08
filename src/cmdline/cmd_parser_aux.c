@@ -62,6 +62,7 @@ static Cmd_Desc cmdinfo[] = {
    {CMDID_INTERROGATE,  "interrogate",   3,  0,       0},
    {CMDID_ENVIRONMENT,  "environment",   3,  0,       0},
    {CMDID_VCPINFO,      "vcpinfo",       5,  0,       1},
+   {CMDID_READCHANGES,  "changed",       3,  0,       0},
 };
 static int cmdct = sizeof(cmdinfo)/sizeof(Cmd_Desc);
 

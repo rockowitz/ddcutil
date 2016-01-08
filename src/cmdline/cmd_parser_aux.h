@@ -35,8 +35,7 @@
 
 #include <string.h>
 
-#include "base/vcp_feature_base.h"
-
+#include "../base/ddc_base.h"
 #include "cmdline/parsed_cmd.h"
 
 typedef

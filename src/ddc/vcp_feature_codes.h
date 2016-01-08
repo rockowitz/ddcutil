@@ -29,12 +29,12 @@
 
 #include <stdio.h>
 
+#include "../base/ddc_base.h"
 #include "util/string_util.h"
 
-#include "base/ddc_base_defs.h"
+#include "base/ddc_base.h"
 #include "base/ddc_packets.h"
 #include "base/util.h"
-#include "base/vcp_feature_base.h"
 
 
 //

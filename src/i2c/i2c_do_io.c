@@ -29,7 +29,7 @@
 
 #include <util/string_util.h>
 #include <base/execution_stats.h>
-#include <base/ddc_base_defs.h>
+#include <base/ddc_base.h>
 #include <base/parms.h>
 #include <i2c/i2c_base_io.h>
 #include <i2c/i2c_do_io.h>

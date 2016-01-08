@@ -29,10 +29,10 @@
 
 #include <stdbool.h>
 
+#include "../base/ddc_base.h"
 #include "base/displays.h"
 #include "base/msg_control.h"
 #include "base/parms.h"
-#include "base/vcp_feature_base.h"
 
 
 typedef enum {
@@ -49,6 +49,7 @@ typedef enum {
    CMDID_INTERROGATE  = 0x0200,
    CMDID_ENVIRONMENT  = 0x0400,
    CMDID_VCPINFO      = 0x0800,
+   CMDID_READCHANGES  = 0x1000,
 } Cmd_Id_Type;
 
 
@@ -86,6 +87,6 @@ struct {
 
 Parsed_Cmd *  new_parsed_cmd();
 void          free_parsed_cmd(Parsed_Cmd * parsed_cmd);
-void          report_parsed_cmd(Parsed_Cmd * parsed_cmd);   // debugging function
+void          report_parsed_cmd(Parsed_Cmd * parsed_cmd, int depth);   // debugging function
 
 #endif /* PARSED_CMD_H_ */

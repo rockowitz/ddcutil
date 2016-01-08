@@ -32,6 +32,7 @@
 
 #include "util/string_util.h"
 
+#include "base/common.h"
 #include "base/ddc_errno.h"
 #include "base/msg_control.h"
 #include "base/status_code_mgt.h"
@@ -43,47 +44,34 @@
 #include "ddc/ddc_packet_io.h"
 #include "ddc/vcp_feature_codes.h"
 #include "ddc/ddc_vcp_version.h"
+#include "ddc/ddc_vcp.h"
 #include "app_ddctool/app_getvcp.h"
 #include "../ddc/ddc_output.h"
 
 
-Global_Status_Code
-app_show_single_vcp_value_by_dh(Display_Handle * dh, char * feature, bool force) {
-   bool debug = false;
-   DBGMSF(debug, "Starting. Getting feature %s for %s",
-                 feature, display_handle_repr(dh) );
 
-   Global_Status_Code         gsc = 0;
-   Byte                       feature_id;
-   VCP_Feature_Table_Entry *  entry = NULL;
+Global_Status_Code
+app_show_single_vcp_value_by_dh3(Display_Handle * dh, VCP_Feature_Table_Entry * entry) {
+   bool debug = false;
+   DBGMSF(debug, "Starting. Getting feature 0x%02x for %s",
+                 entry->code, display_handle_repr(dh) );
 
    Version_Spec vspec = get_vcp_version_by_display_handle(dh);
-   if ( hhs_to_byte_in_buf(feature, &feature_id) )
-      entry = vcp_find_feature_by_hexid(feature_id);
-   {
-      if (!entry && force) {
-         entry = vcp_create_dummy_feature_for_hexid(feature_id);
-      }
-      if (entry) {
-         if (!is_feature_readable_by_vcp_version(entry, vspec)) {
-            char * feature_name =  get_version_sensitive_feature_name(entry, vspec);
-            Version_Feature_Flags vflags = get_version_sensitive_feature_flags(entry, vspec);
-            if (vflags & VCP2_DEPRECATED)
-               printf("Feature %02x (%s) is deprecated in MCCS %d.%d\n",
-                      feature_id, feature_name, vspec.major, vspec.minor);
-            else
-               printf("Feature %02x (%s) is not readable\n", feature_id, feature_name);
-            // gsc = modulate_rc(-EINVAL, RR_ERRNO);    // TEMP - what is appropriate?
-            gsc = DDCL_INVALID_OPERATION;
-         }
-      }
+   Global_Status_Code         gsc = 0;
+   Byte                       feature_id = entry->code;
+
+   if (!is_feature_readable_by_vcp_version(entry, vspec)) {
+      char * feature_name =  get_version_sensitive_feature_name(entry, vspec);
+      Version_Feature_Flags vflags = get_version_sensitive_feature_flags(entry, vspec);
+      if (vflags & VCP2_DEPRECATED)
+         printf("Feature %02x (%s) is deprecated in MCCS %d.%d\n",
+                feature_id, feature_name, vspec.major, vspec.minor);
+      else
+         printf("Feature %02x (%s) is not readable\n", feature_id, feature_name);
+      // gsc = modulate_rc(-EINVAL, RR_ERRNO);    // TEMP - what is appropriate?
+      gsc = DDCL_INVALID_OPERATION;
    }
 
-   if (!entry) {
-      printf("Unrecognized VCP feature code: %s\n", feature);
-      // gsc = modulate_rc(-EINVAL, RR_ERRNO);
-      gsc = DDCL_UNKNOWN_FEATURE;
-   }
    if (gsc == 0) {
       // DBGMSG("calling show_vcp_for_vcp_code_table_entry_by_display_ref()");
       // show_value_for_feature_table_entry_by_display_handle(dh, entry, NULL, false);
@@ -105,6 +93,62 @@ app_show_single_vcp_value_by_dh(Display_Handle * dh, char * feature, bool force)
    DBGMSF(debug, "Done.  Returning: %s", gsc_desc(gsc));
    return gsc;
 }
+
+
+
+
+Global_Status_Code
+app_show_single_vcp_value_by_dh2(Display_Handle * dh, Byte feature_id, bool force) {
+   bool debug = false;
+   DBGMSF(debug, "Starting. Getting feature %s for %s",
+                 feature_id, display_handle_repr(dh) );
+
+   Global_Status_Code         gsc = 0;
+   VCP_Feature_Table_Entry *  entry = NULL;
+
+   entry = vcp_find_feature_by_hexid(feature_id);
+   if (!entry && force) {
+      entry = vcp_create_dummy_feature_for_hexid(feature_id);
+   }
+   if (!entry) {
+      printf("Unrecognized VCP feature code: 0x%02x\n", feature_id);
+      // gsc = modulate_rc(-EINVAL, RR_ERRNO);
+      gsc = DDCL_UNKNOWN_FEATURE;
+   }
+   else {
+      gsc = app_show_single_vcp_value_by_dh3(dh, entry);
+   }
+
+   DBGMSF(debug, "Done.  Returning: %s", gsc_desc(gsc));
+   return gsc;
+}
+
+
+
+Global_Status_Code
+app_show_single_vcp_value_by_dh(Display_Handle * dh, char * feature, bool force) {
+   bool debug = false;
+   DBGMSF(debug, "Starting. Getting feature %s for %s",
+                 feature, display_handle_repr(dh) );
+
+   Global_Status_Code         gsc = 0;
+   Byte                       feature_id;
+
+   if ( hhs_to_byte_in_buf(feature, &feature_id) ) {
+      gsc = app_show_single_vcp_value_by_dh2(dh, feature_id, force);
+   }
+   else {
+      printf("Unrecognized VCP feature code: %s\n", feature);
+      // gsc = modulate_rc(-EINVAL, RR_ERRNO);
+      gsc = DDCL_UNKNOWN_FEATURE;
+   }
+
+   DBGMSF(debug, "Done.  Returning: %s", gsc_desc(gsc));
+   return gsc;
+}
+
+
+
 
 
 Global_Status_Code
@@ -155,6 +199,88 @@ void app_show_vcp_subset_values_by_display_ref(
    }
 }
 
+void
+app_read_changes(Display_Handle * dh) {
+   bool debug = false;
+   DBGMSF(debug, "Starting");
+   int MAX_CHANGES = 20;
+   // bool new_values_found = false;
 
+   Global_Status_Code gsc = 0;
+
+   // read 02h
+   // xff: no user controls
+   // x01: no new control values
+   // x02: new control values exist
+
+   Parsed_Nontable_Vcp_Response * p_nontable_response = NULL;
+
+
+   Version_Spec vspec = get_vcp_version_by_display_handle(dh);
+   gsc = get_nontable_vcp_value_by_display_handle(dh, 0x02, &p_nontable_response);
+   if (gsc != 0) {
+      DBGMSG("get_nontable_vcp_value_by_display_handle() returned %s", gsc_desc(gsc));
+   }
+   else if (p_nontable_response->sl == 0x01) {
+      DBGMSF(debug, "No new control values found");
+   }
+   else {
+      DBGMSG("x02 value: 0x%02x", p_nontable_response->sl);
+      free(p_nontable_response);
+      p_nontable_response = NULL;
+
+      // new_values_found = true;
+      if ( vcp_version_le(vspec, VCP_SPEC_V21) ) {
+         gsc = get_nontable_vcp_value_by_display_handle(dh, 0x52, &p_nontable_response);
+         if (gsc != 0) {
+             DBGMSG("get_nontable_vcp_value_by_display_handle() returned %s", gsc_desc(gsc));
+             return;
+          }
+          Byte changed_feature = p_nontable_response->sl;
+          app_show_single_vcp_value_by_dh2(dh, changed_feature, false);
+      }
+      else {  // x52 is a FIFO
+         int ctr = 0;
+         for (;ctr < MAX_CHANGES; ctr++) {
+            gsc = get_nontable_vcp_value_by_display_handle(dh, 0x52, &p_nontable_response);
+            if (gsc != 0) {
+                DBGMSG("get_nontable_vcp_value_by_display_handle() returned %s", gsc_desc(gsc));
+                return;
+             }
+             Byte changed_feature = p_nontable_response->sl;
+             free(p_nontable_response);
+             p_nontable_response = NULL;
+             if (changed_feature == 0x00) {
+                DBGMSG("No more changed features found");
+                break;
+             }
+             app_show_single_vcp_value_by_dh2(dh, changed_feature, false);
+         }
+      }
+
+      if (gsc == 0) {
+         gsc = set_nontable_vcp_value_by_dh(dh, 0x02, 0x01);
+         if (gsc != 0)
+            DBGMSG("set_nontable_vcp_value_by_display_handle() returned %s", gsc_desc(gsc));
+         else
+            DBGMSG("reset new control value successful");
+      }
+   }
+
+   if (p_nontable_response) {
+      free(p_nontable_response);
+      p_nontable_response = NULL;
+   }
+
+}
+
+void
+app_read_changes_forever(Display_Handle * dh) {
+   while(true) {
+      app_read_changes(dh);
+
+      sleep_millis( 2500);
+   }
+}
 
 #endif /* SRC_APP_DDCTOOL_APP_GETVCP_C_ */

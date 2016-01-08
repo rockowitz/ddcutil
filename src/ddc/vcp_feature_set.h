@@ -32,7 +32,7 @@
 
 #include "util/coredefs.h"
 
-#include "base/ddc_base_defs.h"
+#include "base/ddc_base.h"
 
 #include "ddc/vcp_feature_codes.h"
 

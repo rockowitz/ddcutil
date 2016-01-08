@@ -34,16 +34,33 @@
 
 #include "ddc/vcp_feature_set.h"
 
+
+
 Global_Status_Code
 app_show_single_vcp_value_by_display_ref(
         Display_Ref * dref,
         char *        feature,
         bool          force);
 
+#ifdef FUTURE
+void
+app_show_vcp_subset_values_by_display_handle(
+        Display_Handle *   dh,
+        VCP_Feature_Subset subset,
+        bool               show_unsupported);
+#endif
+
 void
 app_show_vcp_subset_values_by_display_ref(
         Display_Ref *      dref,
         VCP_Feature_Subset subset,
         bool               show_unsupported);
+
+
+void
+app_read_changes(Display_Handle * dh);
+
+void
+app_read_changes_forever(Display_Handle * dh);
 
 #endif /* SRC_APP_DDCTOOL_APP_GETVCP_H_ */
