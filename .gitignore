@@ -58,3 +58,5 @@ create_ctl
 *.old
 NOTES
 dh_make/
+/Makefile.oop
+*tar
