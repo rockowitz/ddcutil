@@ -35,4 +35,8 @@ int file_getlines(const char * fn, GPtrArray* line_array);
 
 char * read_one_line_file(char * fn, bool verbose);
 
+bool is_regular_file(const char * fqfn);
+
+int rpt_file_contents(const char * fn, int depth);
+
 #endif /* FILE_UTIL_H_ */

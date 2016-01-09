@@ -29,8 +29,12 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include <string.h>
+#include <sys/stat.h>
+
+#include "util/report_util.h"
 
 #include "util/file_util.h"
+
 
 int file_getlines(const char * fn,  GPtrArray* line_array) {
    bool debug = false;
@@ -91,4 +95,29 @@ char * read_one_line_file(char * fn, bool verbose) {
       }
    }
    return single_line;
+}
+
+
+int rpt_file_contents(const char * fn, int depth) {
+   GPtrArray * line_array = g_ptr_array_new();
+   int rc = file_getlines(fn, line_array);
+   if (rc > 0) {
+      int ndx = 0;
+      for (; ndx < line_array->len; ndx++) {
+         char * curline = g_ptr_array_index(line_array, ndx);
+         rpt_title(curline, depth);
+      }
+   }
+   return rc;
+}
+
+
+bool is_regular_file(const char * fqfn) {
+   bool result = false;
+   struct stat stat_buf;
+   int rc = stat(fqfn, &stat_buf);
+   if (rc == 0) {
+      result = S_ISREG(stat_buf.st_mode);
+   }
+   return result;
 }
