@@ -51,7 +51,10 @@
 
 
 Global_Status_Code
-app_show_single_vcp_value_by_dh3(Display_Handle * dh, VCP_Feature_Table_Entry * entry) {
+app_show_single_vcp_value_by_dh_and_feature_table_entry(
+      Display_Handle * dh,
+      VCP_Feature_Table_Entry * entry)
+{
    bool debug = false;
    DBGMSF(debug, "Starting. Getting feature 0x%02x for %s",
                  entry->code, display_handle_repr(dh) );
@@ -98,9 +101,13 @@ app_show_single_vcp_value_by_dh3(Display_Handle * dh, VCP_Feature_Table_Entry * 
 
 
 Global_Status_Code
-app_show_single_vcp_value_by_dh2(Display_Handle * dh, Byte feature_id, bool force) {
+app_show_single_vcp_value_by_dh_and_feature_id(
+      Display_Handle * dh,
+      Byte feature_id,
+      bool force)
+{
    bool debug = false;
-   DBGMSF(debug, "Starting. Getting feature %s for %s",
+   DBGMSF(debug, "Starting. Getting feature 0x%02x for %s",
                  feature_id, display_handle_repr(dh) );
 
    Global_Status_Code         gsc = 0;
@@ -116,7 +123,7 @@ app_show_single_vcp_value_by_dh2(Display_Handle * dh, Byte feature_id, bool forc
       gsc = DDCL_UNKNOWN_FEATURE;
    }
    else {
-      gsc = app_show_single_vcp_value_by_dh3(dh, entry);
+      gsc = app_show_single_vcp_value_by_dh_and_feature_table_entry(dh, entry);
    }
 
    DBGMSF(debug, "Done.  Returning: %s", gsc_desc(gsc));
@@ -124,7 +131,7 @@ app_show_single_vcp_value_by_dh2(Display_Handle * dh, Byte feature_id, bool forc
 }
 
 
-
+#ifdef DEPRECATED
 Global_Status_Code
 app_show_single_vcp_value_by_dh(Display_Handle * dh, char * feature, bool force) {
    bool debug = false;
@@ -135,7 +142,7 @@ app_show_single_vcp_value_by_dh(Display_Handle * dh, char * feature, bool force)
    Byte                       feature_id;
 
    if ( hhs_to_byte_in_buf(feature, &feature_id) ) {
-      gsc = app_show_single_vcp_value_by_dh2(dh, feature_id, force);
+      gsc = app_show_single_vcp_value_by_dh_and_feature_id(dh, feature_id, force);
    }
    else {
       printf("Unrecognized VCP feature code: %s\n", feature);
@@ -146,11 +153,11 @@ app_show_single_vcp_value_by_dh(Display_Handle * dh, char * feature, bool force)
    DBGMSF(debug, "Done.  Returning: %s", gsc_desc(gsc));
    return gsc;
 }
+#endif
 
 
 
-
-
+#ifdef DEPRECATED
 Global_Status_Code
 app_show_single_vcp_value_by_display_ref(Display_Ref * dref, char * feature, bool force) {
    Display_Handle * dh = ddc_open_display(dref, EXIT_IF_FAILURE);
@@ -158,6 +165,32 @@ app_show_single_vcp_value_by_display_ref(Display_Ref * dref, char * feature, boo
    ddc_close_display(dh);
    return gsc;
 }
+#endif
+
+
+
+/* Shows the VCP values for all features in a VCP feature subset.
+ *
+ * Arguments:
+ *    pdisp      display reference
+ *    subset     feature subset
+ *    collector  accumulates output
+ *    show_unsupported
+ *
+ * Returns:
+ *    nothing
+ */
+void app_show_vcp_subset_values_by_display_handle(
+        Display_Handle *    dh,
+        VCP_Feature_Subset  subset,
+        bool                show_unsupported)
+{
+   // DBGMSG("Starting.  subset=%d   ", subset );
+
+   GPtrArray * collector = NULL;
+   show_vcp_values_by_display_handle(dh, subset, collector, show_unsupported);
+}
+
 
 
 /* Shows the VCP values for all features in a VCP feature subset.
@@ -199,6 +232,39 @@ void app_show_vcp_subset_values_by_display_ref(
    }
 }
 
+
+Global_Status_Code
+app_show_feature_set_values_by_display_handle(
+      Display_Handle *     dh,
+      Feature_Set_Ref *    fsref,
+      bool                 show_unsupported,
+      bool                 force)
+{
+   bool debug = false;
+   if (debug) {
+      DBGMSG("Starting");
+      DBGMSG("dh: %s", display_handle_repr(dh) );
+      report_feature_set_ref(fsref,1);
+   }
+
+   Global_Status_Code gsc = 0;
+   if (fsref->subset == VCP_SUBSET_SINGLE_FEATURE) {
+      gsc = app_show_single_vcp_value_by_dh_and_feature_id(
+            dh, fsref->specific_feature, force);
+   }
+   else {
+      // currently returns void, needs to return status code
+      app_show_vcp_subset_values_by_display_handle(
+            dh,
+            fsref->subset,
+            show_unsupported);
+   }
+   return gsc;
+}
+
+
+
+
 void
 app_read_changes(Display_Handle * dh) {
    bool debug = false;
@@ -237,7 +303,7 @@ app_read_changes(Display_Handle * dh) {
              return;
           }
           Byte changed_feature = p_nontable_response->sl;
-          app_show_single_vcp_value_by_dh2(dh, changed_feature, false);
+          app_show_single_vcp_value_by_dh_and_feature_id(dh, changed_feature, false);
       }
       else {  // x52 is a FIFO
          int ctr = 0;
@@ -254,7 +320,7 @@ app_read_changes(Display_Handle * dh) {
                 DBGMSG("No more changed features found");
                 break;
              }
-             app_show_single_vcp_value_by_dh2(dh, changed_feature, false);
+             app_show_single_vcp_value_by_dh_and_feature_id(dh, changed_feature, false);
          }
       }
 

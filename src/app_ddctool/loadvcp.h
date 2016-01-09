@@ -33,9 +33,14 @@
 #include <base/displays.h>
 
 bool loadvcp_from_file(const char * fn);
+#ifdef DEPRECATED
 bool dumpvcp(Display_Ref * dref, char * optional_filename);
-char * dumpvcp_to_string_by_display_handle(Display_Handle * dh);
-char * dumpvcp_to_string_by_display_ref(Display_Ref * dref);
+#endif
+bool dumpvcp_to_file_by_display_handle(Display_Handle * dh, char * optional_filename);
+Global_Status_Code dumpvcp_to_string_by_display_handle(Display_Handle * dh, char** result);
+#ifdef DEPRECATED
+Global_Status_Code dumpvcp_to_string_by_display_ref(Display_Ref * dref, char ** result);
+#endif
 Global_Status_Code loadvcp_from_string(char * catenated);
 
 #endif /* LOADVCP_H_ */

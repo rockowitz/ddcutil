@@ -195,18 +195,23 @@ VCP_Feature_Subset find_subset(char * name, int cmd_id) {
 
 
 bool parse_feature_id_or_subset(char * val, int cmd_id, Feature_Set_Ref * fsref) {
+   bool debug = false;
    bool ok = true;
    VCP_Feature_Subset subset_id = find_subset(val, cmd_id);
    if (subset_id != VCP_SUBSET_NONE)
       fsref->subset = subset_id;
    else {
      Byte feature_hexid = 0;   // temp
-     ok = hhs_to_byte_in_buf(val, &feature_hexid);
+     ok = any_one_byte_hex_string_to_byte_in_buf(val, &feature_hexid);
      if (ok) {
         fsref->subset = VCP_SUBSET_SINGLE_FEATURE;
         fsref->specific_feature = feature_hexid;
      }
   }
+
+  DBGMSF(debug, "Returning: %d");
+  if (ok && debug)
+     report_feature_set_ref(fsref, 0);
   return ok;
 }
 

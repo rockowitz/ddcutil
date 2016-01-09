@@ -151,8 +151,7 @@ gboolean stats_arg_func(const    gchar* option_name,
  */
 Parsed_Cmd * parse_command(int argc, char * argv[]) {
    bool debug = false;
-   if (debug)
-      DBGMSG("Starting" );
+   DBGMSF(debug, "Starting" );
    validate_cmdinfo();   // assertions
 
    if (debug) {
@@ -543,6 +542,7 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
             Feature_Set_Ref * fsref = calloc(1, sizeof(Feature_Set_Ref));
             char * val = (parsed_cmd->argct > 0) ? parsed_cmd->args[0] : "ALL";
             ok = parse_feature_id_or_subset(val, parsed_cmd->cmd_id, fsref);
+            DBGMSF(debug, "parse_feature_id_or_subset() returned: %d", ok);
             if (ok)
                parsed_cmd->fref = fsref;
             else

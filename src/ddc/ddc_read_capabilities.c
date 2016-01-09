@@ -107,6 +107,7 @@ Global_Status_Code get_capabilities_string_by_display_handle(Display_Handle * dh
 }
 
 
+#ifdef UNUSED
 /* Executes the VCP Get Capabilities command to obtain the
  * capabilities string.  The string is returned in null terminated
  * form in a Buffer struct.  It is the responsibility of the caller to
@@ -126,8 +127,9 @@ Global_Status_Code get_capabilities_buffer_by_display_ref(Display_Ref * dref, Bu
    ddc_close_display(dh);
    return rc;
 }
+#endif
 
-
+#ifdef OLD
 Global_Status_Code get_capabilities_string_by_display_ref(Display_Ref * dref, char** pcaps) {
    int rc;
    Display_Handle* dh = ddc_open_display(dref, EXIT_IF_FAILURE);
@@ -135,3 +137,4 @@ Global_Status_Code get_capabilities_string_by_display_ref(Display_Ref * dref, ch
    ddc_close_display(dh);
    return rc;
 }
+#endif

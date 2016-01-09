@@ -339,6 +339,7 @@ void report_display_handle(Display_Handle * dh, const char * msg) {
 static char dh_repr_buf[100];
 
 char * display_handle_repr_r(Display_Handle * dref, char * buf, int bufsize) {
+   assert(memcmp(dref->marker, DISPLAY_HANDLE_MARKER, 4) == 0);
    char * bufptr = dh_repr_buf;
    int    bufsz  = 100;
    if (buf) {

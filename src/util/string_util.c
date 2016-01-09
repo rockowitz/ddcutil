@@ -374,6 +374,29 @@ char * strdup_uc(char* s) {
 }
 
 
+/* Replaces all instances of a character in a string with a different character.
+ * The original string is converted in place.
+ *
+ * Arguments:
+ *   s   string to force to upper case
+ *
+ * Returns:
+ *   s   converted string
+ */
+char * str_replace_char(char * s, char old_char, char new_char) {
+   if (s) {
+      char * p = s;
+      while (*p) {
+         if (*p == old_char)
+            *p = new_char;
+         p++;
+      }
+   }
+   return s;
+}
+
+
+
 /* Converts a sequence of characters into a (null-terminated) string.
  *
  * Arguments:
@@ -441,6 +464,22 @@ bool hhs_to_byte_in_buf(char * s, Byte * result) {
    // printf("(%s) Returning ok=%d\n", __func__, ok);
    return ok;
 }
+
+// be very lenient
+bool any_one_byte_hex_string_to_byte_in_buf(char * s, Byte * result) {
+   // printf("(%s) s = |%s|\n", __func__, s);
+   char * suc = strdup_uc(s);
+   if (str_starts_with(suc, "0X"))
+         suc = suc + 2;
+   else if (*suc == 'X')
+         suc = suc + 1;
+   else if (str_ends_with(suc, "H"))
+         *(suc+strlen(suc)-1) = '\0';
+   bool ok = hhs_to_byte_in_buf(suc, result);
+   // printf("(%s) returning %d, *result=0x%02x\n", __func__, ok, *result);
+   return ok;
+}
+
 
 
 /* Converts 2 hex characters to their corresponding byte value.

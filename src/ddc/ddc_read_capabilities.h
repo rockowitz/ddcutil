@@ -37,7 +37,10 @@
 // Get capability string for monitor.
 Global_Status_Code get_capabilities_buffer_by_display_handle(Display_Handle * dh, Buffer** ppCapabilitiesBuffer);
 Global_Status_Code get_capabilities_string_by_display_handle(Display_Handle * dh, char** pcaps);
+#ifdef UNUSED
 Global_Status_Code get_capabilities_buffer_by_display_ref(Display_Ref * pdisp, Buffer** ppCapabilitiesBuffer);
+#endif
+#ifdef OLD
 Global_Status_Code get_capabilities_string_by_display_ref(Display_Ref * pdisp, char** pcaps);
-
+#endif
 #endif /* SRC_DDC_DDC_READ_CAPABILITIES_H_ */

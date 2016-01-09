@@ -846,7 +846,7 @@ VCP_Feature_Table_Entry * vcp_create_dummy_feature_for_hexid(Byte id) {
       pentry->v20_name = "Unknown feature";
    }
    pentry->nontable_formatter = format_feature_detail_debug_continuous;
-   pentry->v20_flags = VCP2_RW | VCP2_STD_CONT;
+   pentry->v20_flags = VCP2_RW | VCP2_COMPLEX_CONT;
    pentry->vcp_global_flags = VCP2_SYNTHETIC;   // indicates caller should free
    return pentry;
 }
@@ -3404,6 +3404,22 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
       .desc = "LCD sub-pixel structure",
       .v20_flags = VCP2_RO | VCP2_SIMPLE_NC,
       .v20_name = "Flat panel sub-pixel layout",
+   },
+   {  .code = 0xb4,
+      .vcp_spec_groups = VCP_SPEC_CONTROL,       // 3.0
+      .desc = "Indicates timing mode being sent by host",
+      // not defined in 2.0, is defined in 3.0 and 2.2 as T
+      // seen on U3011 which is v2.1
+      // should this be seen as T or NC for 2.1?
+      // if set T for 2.1, monitor returns NULL response, which
+      // ddctool interprets as unsupported.
+      // if set NC for 2.1, response looks valid,
+      // supported opcode is set
+      .v21_name = "Source Timing Mode",
+      .nontable_formatter = format_feature_detail_debug_bytes,
+      .v21_flags = VCP2_RW | VCP2_COMPLEX_NC,
+      .v30_flags = VCP2_RW | VCP2_TABLE,
+      .v22_flags = VCP2_RW | VCP2_TABLE,
    },
    {  .code=0xb6,                                               // DONE
       .vcp_spec_groups = VCP_SPEC_MISC,     // 2.0, 3.0

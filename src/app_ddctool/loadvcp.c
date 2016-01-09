@@ -28,6 +28,7 @@
 
 #include "../app_ddctool/loadvcp.h"
 
+#include <assert.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <glib.h>
@@ -410,8 +411,6 @@ GPtrArray * g_ptr_array_from_ntsa(Null_Terminated_String_Array ntsa) {
 }
 
 
-
-
 bool loadvcp_from_ntsa(Null_Terminated_String_Array ntsa) {
    bool debug = true;
 
@@ -458,61 +457,149 @@ bool loadvcp_from_ntsa(Null_Terminated_String_Array ntsa) {
 }
 
 
-
-
 // TODO: generalize, get default dir following XDG settings
 #define USER_VCP_DATA_DIR ".local/share/icc"
 
 
-char * create_simple_vcp_fn(Display_Ref * dref, time_t time_millis, char * buf, int bufsz) {
+char * create_simple_vcp_fn_by_edid(
+          Parsed_Edid * edid,
+          time_t        time_millis,
+          char *        buf,
+          int           bufsz)
+{
+   assert(edid);
    if (bufsz == 0 || buf == NULL) {
       bufsz = 128;
       buf = calloc(1, bufsz);
    }
 
    char ts_buf[30];
-
    char * timestamp_text = format_timestamp(time_millis, ts_buf, 30);
-
-   Parsed_Edid* edid = ddc_get_parsed_edid_by_display_ref(dref);
-
-   // DisplayIdInfo* pIdInfo = get_display_id_info(dref);
-   char buf2[64];
-   if (!edid) {
-      fprintf(stderr, "Display not found: %s\n", display_ref_short_name_r(dref, buf2, 64));
-   }
-   else {
-      snprintf(buf, bufsz, "%s-%s-%s.vcp",
-               edid->model_name,
-               edid->serial_ascii,
-               timestamp_text
-              );
-
-      // convert blanks to underscores
-      char * p = buf;
-      while (*p) {
-         if (*p == ' ')
-            *p = '_';
-         p++;
-      }
-   }
+   snprintf(buf, bufsz, "%s-%s-%s.vcp",
+            edid->model_name,
+            edid->serial_ascii,
+            timestamp_text
+           );
+   str_replace_char(buf, ' ', '_');     // convert blanks to underscores
 
    // DBGMSG("Returning %s", buf );
    return buf;
 }
 
+#ifdef UNUSED
+char * create_simple_vcp_fn_by_display_ref(
+          Display_Ref * dref,
+          time_t        time_millis,
+          char *        buf,
+          int           bufsz)
+{
+   Parsed_Edid* edid = ddc_get_parsed_edid_by_display_ref(dref);
+   assert(edid);
+   return create_simple_vcp_fn_by_edid(edid, time_millis, buf, bufsz);
+}
+#endif
+
+
+char * create_simple_vcp_fn_by_display_handle(
+          Display_Handle * dh,
+          time_t           time_millis,
+          char *           buf,
+          int              bufsz)
+{
+   Parsed_Edid* edid = ddc_get_parsed_edid_by_display_handle(dh);
+   assert(edid);
+   return create_simple_vcp_fn_by_edid(edid, time_millis, buf, bufsz);
+}
 
 
 
+
+#ifdef UNUSED
 GPtrArray * get_profile_related_values_by_display_ref(Display_Ref * dref, time_t time_millis) {
    Display_Handle* dh = ddc_open_display(dref, EXIT_IF_FAILURE);
    GPtrArray * vals = collect_profile_related_values_by_display_handle(dh, time_millis);
    ddc_close_display(dh);
    return vals;
 }
+#endif
 
 
+// TODO: return Global_Status_Code rather than ok
+bool dumpvcp_to_file_by_display_handle(Display_Handle * dh, char * filename) {
+   bool ok = true;
+   Global_Status_Code gsc = 0;
+   char fqfn[PATH_MAX] = {0};
+   char timestamp_buf[30];
+   time_t time_millis = time(NULL);
+   // temporarily use same output format as filename, but format the date separately here
+   // for flexibility
+   format_timestamp(time_millis, timestamp_buf, sizeof(timestamp_buf));
 
+   if (!filename) {
+      char simple_fn_buf[NAME_MAX+1];
+      char * simple_fn = create_simple_vcp_fn_by_display_handle(
+                            dh,
+                            time_millis,
+                            simple_fn_buf,
+                            sizeof(simple_fn_buf));
+      // DBGMSG("simple_fn=%s", simple_fn );
+
+      snprintf(fqfn, PATH_MAX, "/home/%s/%s/%s", getlogin(), USER_VCP_DATA_DIR, simple_fn);
+      // DBGMSG("fqfn=%s   ", fqfn );
+      filename = fqfn;
+      // control with MsgLevel?
+      printf("Writing file: %s\n", filename);
+   }
+
+   FILE * output_fp = fopen(filename, "w+");
+   // DBGMSG("output_fp=%p  ", output_fp );
+   if (!output_fp) {
+      fprintf(stderr, "(%s) Unable to open %s for writing: %s\n", __func__, fqfn, strerror(errno)  );
+      ok = false;
+   }
+   else {
+      // TODO: return status codes up the call chain to here,
+      // look for DDCRC_MULTI_FEATURE_ERROR
+      GPtrArray * vals = NULL;
+      gsc = collect_profile_related_values_by_display_handle(dh, time_millis, &vals);
+      // DBGMSG("vals->len = %d", vals->len);
+#ifdef FAILS
+      int ndx = 0;
+      char * nextval = NULL;
+      nextval = g_ptr_array_index(vals, ndx);
+      while (nextval != NULL) {
+         fprintf(output_fp, "%s\n", nextval);
+         ndx++;
+         DBGMSG("ndx = %d", ndx);
+         nextval = g_ptr_array_index(vals, ndx);
+         DBGMSG("nextval = %p", nextval);
+         DBGMSG("nextval = |%s|", nextval);
+      }
+#endif
+      if (gsc != 0) {
+         fprintf(stderr, "Error reading at least one feature value.  File not written.\n");
+         ok = false;
+      }
+      else {
+         int ct = vals->len;
+         int ndx;
+         for (ndx=0; ndx<ct; ndx++){
+            // DBGMSG("ndx = %d", ndx);
+            char * nextval = g_ptr_array_index(vals, ndx);
+            // DBGMSG("nextval = %p", nextval);
+            // DBGMSG("strlen(nextval)=%ld, nextval = |%s|", strlen(nextval), nextval);
+            fprintf(output_fp, "%s\n", nextval);
+         }
+      }
+      if (vals)
+         g_ptr_array_free(vals, true);
+      fclose(output_fp);
+   }
+   return ok;
+}
+
+
+#ifdef DEPRECATED
 bool dumpvcp(Display_Ref * dref, char * filename) {
    bool ok = true;
    char fqfn[PATH_MAX] = {0};
@@ -524,7 +611,7 @@ bool dumpvcp(Display_Ref * dref, char * filename) {
 
    if (!filename) {
       char simple_fn_buf[NAME_MAX+1];
-      char * simple_fn = create_simple_vcp_fn(dref, time_millis, simple_fn_buf, sizeof(simple_fn_buf));
+      char * simple_fn = create_simple_vcp_fn_by_display_ref(dref, time_millis, simple_fn_buf, sizeof(simple_fn_buf));
       // DBGMSG("simple_fn=%s", simple_fn );
 
       snprintf(fqfn, PATH_MAX, "/home/%s/%s/%s", getlogin(), USER_VCP_DATA_DIR, simple_fn);
@@ -573,31 +660,40 @@ bool dumpvcp(Display_Ref * dref, char * filename) {
    }
    return ok;
 }
+#endif
 
-char * dumpvcp_to_string_by_display_handle(Display_Handle * dh) {
-   GPtrArray * vals = collect_profile_related_values_by_display_handle(dh, time(NULL));
-   int ct = vals->len;
-   // DBGMSG("ct = %d", ct);
-   char ** pieces = calloc(ct, sizeof(char*));
-   int ndx;
-   for (ndx=0; ndx < ct; ndx++) {
-      pieces[ndx] = g_ptr_array_index(vals,ndx);
-      // DBGMSG("pieces[%d] = %s", ndx, pieces[ndx]);
+
+Global_Status_Code
+dumpvcp_to_string_by_display_handle(Display_Handle * dh, char ** result) {
+   GPtrArray * vals = NULL;
+   result = NULL;
+   Global_Status_Code gsc = collect_profile_related_values_by_display_handle(dh, time(NULL), &vals);
+   if (gsc == 0) {
+      int ct = vals->len;
+      // DBGMSG("ct = %d", ct);
+      char ** pieces = calloc(ct, sizeof(char*));
+      int ndx;
+      for (ndx=0; ndx < ct; ndx++) {
+         pieces[ndx] = g_ptr_array_index(vals,ndx);
+         // DBGMSG("pieces[%d] = %s", ndx, pieces[ndx]);
+      }
+      char * catenated = strjoin((const char**) pieces, ct, ";");
+      // DBGMSG("strlen(catenated)=%ld, catenated=%p, catenated=|%s|", strlen(catenated), catenated, catenated);
+      // DBGMSG("returning %p", catenated);
+      *result = catenated;
    }
-   char * catenated = strjoin((const char**) pieces, ct, ";");
-   // DBGMSG("strlen(catenated)=%ld, catenated=%p, catenated=|%s|", strlen(catenated), catenated, catenated);
-   // DBGMSG("returning %p", catenated);
-   return catenated;
+   return gsc;
 }
 
 
-
-char * dumpvcp_to_string_by_display_ref(Display_Ref * dref) {
+#ifdef DEPRECATED
+Global_Status_Code dumpvcp_to_string_by_display_ref(Display_Ref * dref, char ** result) {
    Display_Handle* dh = ddc_open_display(dref, EXIT_IF_FAILURE);
-   char * result = dumpvcp_to_string_by_display_ref(dref);
+   Global_Status_Code gsc = dumpvcp_to_string_by_display_handle(dh, result);
    ddc_close_display(dh);
-   return result;
+   return gsc;
 }
+#endif
 
 
 

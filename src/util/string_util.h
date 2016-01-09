@@ -60,6 +60,7 @@ char * rtrim_in_place(char * s);
 char * substr(char * s, int startpos, int ct);
 char * lsub(char * s, int ct);
 char * strdup_uc(char* s);
+char * str_replace_char(char * s, char old_char, char new_char);
 
 typedef bool (*String_Comp_Func)(const char * a, const char * b);
 
@@ -84,6 +85,7 @@ int null_terminated_string_array_length(Null_Terminated_String_Array string_arra
 //
 
 bool hhs_to_byte_in_buf(char * s,  Byte * result);    // converts null terminated string into buffer
+bool any_one_byte_hex_string_to_byte_in_buf(char * s, Byte * result);
 bool hhc_to_byte_in_buf(char * hh, Byte * result);    // converts 2 characters at hh into buffer
 Byte hhs_to_byte(char * s);                           // converts null terminated string
 Byte hhc_to_byte(char * hh);                          // converts 2 characters at hh

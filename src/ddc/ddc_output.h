@@ -77,8 +77,8 @@ get_formatted_value_for_feature_table_entry(
       char **                    pformatted_value,
       FILE *                     msg_fh);
 
-
-void show_vcp_values_by_display_handle(
+Global_Status_Code
+show_vcp_values_by_display_handle(
         Display_Handle *    dh,
         VCP_Feature_Subset  subset,
         GPtrArray *         collector,
@@ -86,7 +86,12 @@ void show_vcp_values_by_display_handle(
 
 char * format_timestamp(time_t time_millis, char * buf, int bufsz);
 
-GPtrArray * collect_profile_related_values_by_display_handle(Display_Handle * dh, time_t timestamp_millis);
+
+Global_Status_Code
+collect_profile_related_values_by_display_handle(
+      Display_Handle*  dh,
+      time_t           timestamp_millis,
+      GPtrArray**      pvals);
 
 
 #endif /* DDC_OUTPUT_H_ */

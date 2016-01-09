@@ -121,6 +121,51 @@ void report_stats(Stats_Type stats) {
 }
 
 
+
+bool perform_get_capabilities_by_display_handle(Display_Handle * dh) {
+   bool ok = true;
+   // Buffer * capabilities = NULL;
+   char * capabilities_string;
+   // returns Global_Status_Code, but testing capabilities == NULL also checks for success
+   // int rc = get_capabilities_buffer_by_display_ref(dref, &capabilities);
+   int rc = get_capabilities_string_by_display_handle(dh, &capabilities_string);
+
+   if (rc < 0) {
+      // char buf[100];
+      switch(rc) {
+      case DDCRC_REPORTED_UNSUPPORTED:       // should not happen
+      case DDCRC_DETERMINED_UNSUPPORTED:
+         printf("Unsupported request\n");
+         break;
+      case DDCRC_RETRIES:
+         printf("Unable to get capabilities for monitor on %s.  Maximum DDC retries exceeded.\n",
+                 display_handle_repr(dh));
+          break;
+      default:
+         printf("(%s) !!! Unable to get capabilities for monitor on %s\n",
+                __func__, display_handle_repr(dh));
+         DBGMSG("Unexpected status code: %s", gsc_desc(rc));
+      }
+      ok = false;
+   }
+   else {
+      // assert(capabilities);
+      assert(capabilities_string);
+      // pcap is always set, but may be damaged if there was a parsing error
+      // Parsed_Capabilities * pcap = parse_capabilities_buffer(capabilities);
+      // Parsed_Capabilities * pcap = parse_capabilities_string(capabilities->bytes);
+      Parsed_Capabilities * pcap = parse_capabilities_string(capabilities_string);
+      // buffer_free(capabilities, "capabilities");
+      report_parsed_capabilities(pcap);
+      free_parsed_capabilities(pcap);
+      ok = true;
+   }
+
+   return ok;
+}
+
+
+#ifdef OLD
 bool perform_get_capabilities(Display_Ref * dref) {
    bool ok = true;
    // Buffer * capabilities = NULL;
@@ -162,6 +207,8 @@ bool perform_get_capabilities(Display_Ref * dref) {
 
    return ok;
 }
+#endif
+
 
 
 //
@@ -306,14 +353,16 @@ int main(int argc, char *argv[]) {
          if (!dref) {
             PROGRAM_LOGIC_ERROR("get_display_ref_for_display_identifier() failed for display %d", dispno);
          }
-         Version_Spec vspec = get_vcp_version_by_display_ref(dref);
+         Display_Handle * dh = ddc_open_display(dref, EXIT_IF_FAILURE);
+         Version_Spec vspec = get_vcp_version_by_display_handle(dh);
          if (vspec.major < 2) {
             printf("VCP (aka MCCS) version for display is less than 2.0. Output may not be accurate.\n");
          }
-         perform_get_capabilities(dref);
+         perform_get_capabilities_by_display_handle(dh);
 
          printf("\n\nScanning all VCP feature codes for display %d\n", dispno);
-         app_show_vcp_subset_values_by_display_ref(dref, VCP_SUBSET_SCAN, true);
+         app_show_vcp_subset_values_by_display_handle(dh, VCP_SUBSET_SCAN, true);
+         ddc_close_display(dh);
       }
       printf("\nDisplay scanning complete.\n");
 
@@ -326,7 +375,8 @@ int main(int argc, char *argv[]) {
       Display_Ref * dref = get_display_ref_for_display_identifier(
                               parsed_cmd->pdid, true /* emit_error_msg */);
       if (dref) {
-         Version_Spec vspec = get_vcp_version_by_display_ref(dref);
+         Display_Handle * dh = ddc_open_display(dref, EXIT_IF_FAILURE);
+         Version_Spec vspec = get_vcp_version_by_display_handle(dh);
          if (vspec.major < 2) {
             printf("VCP (aka MCCS) version for display is less than 2.0. Output may not be accurate.\n");
          }
@@ -335,32 +385,46 @@ int main(int argc, char *argv[]) {
 
          case CMDID_CAPABILITIES:
             {
-               bool ok = perform_get_capabilities(dref);
+               // Display_Handle * dh = ddc_open_display(dref, EXIT_IF_FAILURE);
+               bool ok = perform_get_capabilities_by_display_handle(dh);
+               // ddc_close_display(dh);
                main_rc = (ok) ? EXIT_SUCCESS : EXIT_FAILURE;
                break;
             }
 
          case CMDID_GETVCP:
             {
+#ifdef OLD
                Feature_Set_Ref * feature_set_ref;
-               // TODO: push parse_feature_id_or_subset() call down into parser
-               // bool ok = parse_feature_id_or_subset(parsed_cmd->args[0], CMDID_GETVCP, &feature_set_ref);
                feature_set_ref = parsed_cmd->fref;
-               bool ok = true;     // hack
-               if (ok) {
+               // bool ok = true;     // hack
+               Global_Status_Code gsc = 0;
+
                   if (feature_set_ref->subset == VCP_SUBSET_SINGLE_FEATURE) {
-                     // TODO: should not be passing unparsed args[0]
-                     app_show_single_vcp_value_by_display_ref(dref, parsed_cmd->args[0], parsed_cmd->force);
+                     Display_Handle * dh = ddc_open_display(dref, EXIT_IF_FAILURE);
+                     gsc = app_show_single_vcp_value_by_dh_and_feature_id(
+                           dh, feature_set_ref->specific_feature, parsed_cmd->force);
+                     ddc_close_display(dh);
                   }
                   else {
                      // need variant that takes Feature_Set_Ref argument
-                     app_show_vcp_subset_values_by_display_ref(dref, feature_set_ref->subset, parsed_cmd->show_unsupported);
+                     // needs also to set status code
+
+                     Display_Handle * dh = ddc_open_display(dref, EXIT_IF_FAILURE);
+                     app_show_vcp_subset_values_by_display_handle(
+                           dh, feature_set_ref->subset, parsed_cmd->show_unsupported);
+                     ddc_close_display(dh);
+
                   }
-               }
-               else {
-                  printf("Invalid feature code or group: %s\n", parsed_cmd->args[0]);
-               }
-               main_rc = (ok) ? EXIT_SUCCESS : EXIT_FAILURE;
+#endif
+               //  Display_Handle * dh = ddc_open_display(dref, EXIT_IF_FAILURE);
+               Global_Status_Code gsc = app_show_feature_set_values_by_display_handle(
+                     dh,
+                     parsed_cmd->fref,
+                     parsed_cmd->show_unsupported,
+                     parsed_cmd->force);
+               // ddc_close_display(dh);
+               main_rc = (gsc==0) ? EXIT_SUCCESS : EXIT_FAILURE;
             }
             break;
 
@@ -370,12 +434,13 @@ int main(int argc, char *argv[]) {
                main_rc = EXIT_FAILURE;
             }
             else {
+               // Display_Handle * dh = ddc_open_display(dref, EXIT_IF_FAILURE);
                main_rc = EXIT_SUCCESS;
                int argNdx;
                Global_Status_Code rc = 0;
                for (argNdx=0; argNdx < parsed_cmd->argct; argNdx+= 2) {
-                  rc = app_set_vcp_value_by_display_ref(
-                          dref,
+                  rc = app_set_vcp_value_by_display_handle(
+                          dh,
                           parsed_cmd->args[argNdx],
                           parsed_cmd->args[argNdx+1],
                           parsed_cmd->force);
@@ -384,12 +449,16 @@ int main(int argc, char *argv[]) {
                      break;
                   }
                }
+               // ddc_close_display(dh);
             }
             break;
 
          case CMDID_DUMPVCP:
             {
-               bool ok = dumpvcp(dref, (parsed_cmd->argct > 0) ? parsed_cmd->args[0] : NULL );
+               // bool ok = dumpvcp(dref, (parsed_cmd->argct > 0) ? parsed_cmd->args[0] : NULL );
+               // Display_Handle * dh = ddc_open_display(dref, EXIT_IF_FAILURE);
+               bool ok = dumpvcp_to_file_by_display_handle(dh, (parsed_cmd->argct > 0) ? parsed_cmd->args[0] : NULL );
+               // ddc_close_display(dh);
                main_rc = (ok) ? EXIT_SUCCESS : EXIT_FAILURE;
                break;
             }
@@ -398,18 +467,16 @@ int main(int argc, char *argv[]) {
             DBGMSG("Case CMDID_READCHANGES");
             // report_parsed_cmd(parsed_cmd,0);
             // first case of migrating open to main.c to eliminate use of _by_display_ref calls
-            Display_Handle * dh = ddc_open_display(dref, EXIT_IF_FAILURE);
-
-
+            // Display_Handle * dh = ddc_open_display(dref, EXIT_IF_FAILURE);
             app_read_changes_forever(dh);
-            ddc_close_display(dh);
+            // ddc_close_display(dh);
             break;
 
          default:
            break;
          }
 
-
+         ddc_close_display(dh);
       }
    }
 

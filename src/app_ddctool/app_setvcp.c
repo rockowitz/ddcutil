@@ -26,30 +26,9 @@
 
 //#include <assert.h>
 
+#include <assert.h>
 #include <errno.h>
 #include <string.h>
-
-// #include "util/output_sink.h"
-// #include "util/report_util.h"
-
-#ifdef OLD
-
-#include "base/ddc_packets.h"
-#include "base/linux_errno.h"
-
-#include "base/parms.h"
-
-#include "i2c/i2c_bus_core.h"
-#include "i2c/i2c_do_io.h"
-
-#include "adl/adl_errors.h"
-#include "adl/adl_shim.h"
-
-#include "ddc/ddc_edid.h"
-#include "ddc/ddc_multi_part_io.h"
-
-#include "ddc/vcp_feature_set.h"
-#endif
 
 #include "base/ddc_errno.h"
 #include "base/msg_control.h"
@@ -77,7 +56,22 @@
  *    true if conversion successful, false if not
  */
 bool parse_vcp_value(char * string_value, long* parsed_value) {
+   assert(string_value);
    bool ok = true;
+   char buf[20];
+   strupper(string_value);
+   if (*string_value == 'X' ) {
+      snprintf(buf, 20, "0%s", string_value);
+      string_value = buf;
+      // DBGMSG("Adjusted value: |%s|", string_value);
+   }
+   else if (*(string_value + strlen(string_value)-1) == 'H') {
+      int newlen = strlen(string_value)-1;
+      snprintf(buf, 20, "0x%.*s", newlen, string_value);
+      string_value = buf;
+      // DBGMSG("Adjusted value: |%s|", string_value);
+   }
+
    char * endptr = NULL;
    errno = 0;
    long longtemp = strtol(string_value, &endptr, 0 );  // allow 0xdd  for hex values
@@ -127,7 +121,7 @@ app_set_vcp_value_by_display_handle(
    bool                       good_value = false;
 
    Version_Spec vspec = get_vcp_version_by_display_handle(dh);
-   if ( hhs_to_byte_in_buf(feature, &hexid) )
+   if ( any_one_byte_hex_string_to_byte_in_buf(feature, &hexid) )
    {
       entry = vcp_find_feature_by_hexid(hexid);
       if (!entry && force)
@@ -165,7 +159,7 @@ app_set_vcp_value_by_display_handle(
    return gsc;
 }
 
-
+#ifdef DEPRECATED
 /* Parses the Set VCP arguments passed and sets the new value.
  *
  * Arguments:
@@ -178,8 +172,6 @@ app_set_vcp_value_by_display_handle(
  *   -EINVAL (modulated)  invalid setvcp arguments, feature not writable
  *   from put_vcp_by_display_ref()
  */
-
-
 Global_Status_Code
 app_set_vcp_value_by_display_ref(
    Display_Ref * dref,
@@ -192,4 +184,4 @@ app_set_vcp_value_by_display_ref(
    ddc_close_display(dh);
    return gsc;
 }
-
+#endif

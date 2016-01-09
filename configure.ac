@@ -178,7 +178,7 @@ AC_PROG_RANLIB
 
 
 # AC_CONFIG_FILES([Makefile, src/Makefile, src/util/Makefile])
-AC_CONFIG_FILES([Makefile src/Makefile man/Makefile])
+AC_CONFIG_FILES([Makefile src/Makefile man/Makefile data/Makefile])
 AC_OUTPUT
 
 

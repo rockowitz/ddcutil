@@ -60,3 +60,5 @@ NOTES
 dh_make/
 /Makefile.oop
 *tar
+*tar.gz
+junk*

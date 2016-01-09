@@ -251,13 +251,14 @@ i2c permissions
 Some newer Nvidia cards (e.g. GTX660Ti) require special settings to properly enable I2C support.   If you are using this driver and \fBddcctool\fP does not 
 work with your Nvidia card (TODO: Describe symptoms), you can try the following:
 
-Copy file /???/90-nvidia-i2c.conf to directory /etc/X11/xorg.conf.d 
+Copy file /usr/local/share/ddctool/data/90-nvidia-i2c.conf to directory /etc/X11/xorg.conf.d 
 
-.B sudo cp /???/90-nvidia-i2c.conf /etc/X11/xorg.conf.d 
+.B sudo cp /usr/local/share/ddctool/data/90-nvidia-i2c.conf /etc/X11/xorg.conf.d 
 
 This file will work "out of the box" if you do not have an /etc/X11/xorg.conf file.   If you do, 
 adjust the \fBIdentifier\fP value in the file to correspond to the value in the master xorg.conf file.
 
+(Note that the above instructions assume that datadir was set to /usr/local/share when ddctool was installed.  YMMV)
 
 .SH AMD PRORIETARY DRIVER
 
@@ -318,23 +319,24 @@ Returns 0 on success, 1 on failure.
 
 Requesting help is regarded as success.
 
-.SH FILES
+./" .SH FILES
 
 
 
-.SH SEE ALSO
+./" .SH SEE ALSO
+./" README file /usr/local/share/doc/ddctool/README.md
 ./" The program is documented fully in
 ./" .br
-./" /usr/share/doc/ddccontrol/html/index.html
+./" /usr/local/share/doc/ddctool/html/index.html
 ./" .PP
-./" The project homepage: http://ddccontrol.sourceforge.net
+./" The project homepage: http:// ??
 
 
 
-.SH NOTES
+./" .SH NOTES
 
 
-.SH BUGS
+./" .SH BUGS
 
 
 .SH AUTHOR

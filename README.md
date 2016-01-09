@@ -16,7 +16,7 @@ a monitor is calibrated, and then restored when the calibration is applied.
 ## Feedback Needed
 
 This is a preliminary release, and feedback would be very helpful.   
-There are a lot of "moving parts that can vary from system to system: 
+There are a lot of "moving parts" that can vary from system to system: 
 
 - The build environment can vary. 
 - I2C implementation can vary with card, monitor, and driver.  
@@ -206,7 +206,7 @@ For testing, it may be simpler to give everyone permission to write to
   sudo chmod a+rw /dev/i2c-*
 ~~~
 If needed, a udev rule for giving group i2c rw permission on the /i2c-dev-* devices 
-can be found in distribution file resources/etc/udev/rules.d/45-i2c-tools.rules.   
+can be found in distribution file data/etc/udev/rules.d/45-i2c-tools.rules.   
 You can copy this file to /etc/udev/rules.c. 
 
 The following section from the udev documentation 
@@ -293,8 +293,8 @@ following to the "Device" section for the Nvidia driver resolved the problem:
 ~~~
  Option     "RegistryDwords"  "RMUseSwI2c=0x01; RMI2cSpeed=100"
 ~~~
- A file for making this change is 50-nvidia_i2c.conf located in distribution 
- directory resources/etc/X11/xorg.conf.d  
+ A file for making this change is 90-nvidia_i2c.conf located in distribution 
+ directory data/etc/X11/xorg.conf.d  
 ~~~
 Section "Device"
    Driver "nvidia"

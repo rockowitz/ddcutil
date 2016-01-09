@@ -36,10 +36,11 @@ Global_Status_Code app_set_vcp_value_by_display_handle(
         char *           new_value,
         bool             force);
 
+#ifdef DEPRECATED
 Global_Status_Code app_set_vcp_value_by_display_ref(
         Display_Ref* dref,
         char *       feature,
         char *       new_value,
         bool         force);
-
+#endif
 #endif /* SRC_APP_DDCTOOL_APP_SETVCP_H_ */
