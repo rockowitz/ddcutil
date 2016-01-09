@@ -128,7 +128,8 @@ util/file_util.c  \
 util/output_sink.c \
 util/pci_id_util.c \
 util/report_util.c \
-util/string_util.c 
+util/string_util.c \
+util/subprocess_util.c
 
 if HAVE_ADL_COND
 libcommon_la_SOURCES += \

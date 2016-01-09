@@ -54,6 +54,7 @@
 #include "util/pci_id_util.h"
 #include "util/report_util.h"
 #include "util/string_util.h"
+#include "util/subprocess_util.h"
 
 #include "base/msg_control.h"
 #include "base/linux_errno.h"
@@ -169,50 +170,6 @@ int query_proc_modules_for_video() {
    return rc;
 }
 
-
-/* Executes a shell command and writes the output to the terminal
- *
- */
-bool execute_shell_cmd(char * shell_cmd, int depth) {
-   bool debug = false;
-   DBGMSF(debug, "Starting. shell_cmd = |%s|", shell_cmd);
-   bool ok = true;
-   FILE * fp;
-   char cmdbuf[200];
-   snprintf(cmdbuf, sizeof(cmdbuf), "(%s) 2>&1", shell_cmd);
-   // printf("(%s) cmdbuf=|%s|\n", __func__, cmdbuf);
-   fp = popen(cmdbuf, "r");
-   // printf("(%s) open. errno=%d\n", __func__, errno);
-    if (!fp) {
-       // int errsv = errno;
-       printf("Unable to execute command \"%s\": %s\n", shell_cmd, strerror(errno));
-       ok = false;
-    }
-    else {
-       char * a_line = NULL;
-       size_t len = 0;
-       ssize_t read;
-       bool first_line = true;
-       while ( (read=getline(&a_line, &len, fp)) != -1) {
-          if (strlen(a_line) > 0)
-             a_line[strlen(a_line)-1] = '\0';
-             if (first_line) {
-                if (str_ends_with(a_line, "not found")) {
-                   // printf("(%s) found \"not found\"\n", __func__);
-                   ok = false;
-                   break;
-                }
-                first_line = false;
-             }
-          rpt_title(a_line, depth);
-          // fputs(a_line, stdout);
-          // free(a_line);
-       }
-       int pclose_rc = pclose(fp);
-       DBGMSF(debug, "plose() rc = %d\n", __func__, pclose_rc);
-    }
-    return ok;
- }
 
 
 bool only_fglrx(struct driver_name_node * driver_list) {
