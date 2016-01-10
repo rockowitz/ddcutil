@@ -32,6 +32,7 @@
 #include <sys/stat.h>
 
 #include "util/report_util.h"
+#include "util/string_util.h"
 
 #include "util/file_util.h"
 
@@ -105,6 +106,7 @@ int rpt_file_contents(const char * fn, int depth) {
       int ndx = 0;
       for (; ndx < line_array->len; ndx++) {
          char * curline = g_ptr_array_index(line_array, ndx);
+         rtrim_in_place(curline);     // strip trailing newline
          rpt_title(curline, depth);
       }
    }
@@ -112,12 +114,23 @@ int rpt_file_contents(const char * fn, int depth) {
 }
 
 
-bool is_regular_file(const char * fqfn) {
+bool regular_file_exists(const char * fqfn) {
    bool result = false;
    struct stat stat_buf;
    int rc = stat(fqfn, &stat_buf);
    if (rc == 0) {
       result = S_ISREG(stat_buf.st_mode);
+   }
+   return result;
+}
+
+
+bool directory_exists(const char * fqfn) {
+   bool result = false;
+   struct stat stat_buf;
+   int rc = stat(fqfn, &stat_buf);
+   if (rc == 0) {
+      result = S_ISDIR(stat_buf.st_mode);
    }
    return result;
 }

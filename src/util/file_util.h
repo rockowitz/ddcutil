@@ -35,7 +35,8 @@ int file_getlines(const char * fn, GPtrArray* line_array);
 
 char * read_one_line_file(char * fn, bool verbose);
 
-bool is_regular_file(const char * fqfn);
+bool regular_file_exists(const char * fqfn);
+bool directory_exists(const char * fqfn);
 
 int rpt_file_contents(const char * fn, int depth);
 

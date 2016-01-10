@@ -171,6 +171,73 @@ int query_proc_modules_for_video() {
 }
 
 
+bool show_one_file(char * dir_name, char * simple_fn, bool verbose, int depth) {
+   bool result = false;
+   char fqfn[400];
+   strcpy(fqfn,dir_name);
+   if (!str_ends_with(dir_name, "/"))
+      strcat(fqfn,"/");
+   strcat(fqfn,simple_fn);
+   if (regular_file_exists(fqfn)) {
+      rpt_vstring(depth, "%s:", fqfn);
+      rpt_file_contents(fqfn, depth+1);
+      result = true;
+   }
+   else if (verbose)
+      rpt_vstring(depth, "File not found: %s", fqfn);
+   return result;
+}
+
+
+bool query_proc_driver_nvidia() {
+   bool debug = true;
+   bool result = false;
+   char * dn = "/proc/driver/nvidia/";
+   if ( directory_exists(dn) ) {
+      printf("Examining /proc/driver/nvidia:\n");
+      result = true;
+      show_one_file(dn, "version",  debug, 1);
+      show_one_file(dn, "registry", debug, 1);
+      show_one_file(dn, "params",   debug, 1);
+      char * dn_gpus = "/proc/driver/nvidia/gpus/";
+      if (directory_exists(dn_gpus)) {
+         DIR * dp = opendir(dn_gpus);
+         struct dirent * ep;
+
+         while ( (ep = readdir(dp)) ) {
+            if ( !streq(ep->d_name,".") && !streq(ep->d_name, "..") ) {
+               // puts(ep->d_name);
+               char dirbuf[400];
+               strcpy(dirbuf, dn_gpus);
+               strcat(dirbuf, ep->d_name);
+               // printf("Reading directory: %s\n", dirbuf);
+               // DIR * dp2 = opendir(dirbuf);
+               // if (dp2) {
+               //    struct dirent * ep2;
+               //    printf("GPU: %s\n", ep->d_name);
+               //    while ( (ep2 = readdir(dp2)) ) {
+               //       if ( !streq(ep2->d_name,".") && !streq(ep2->d_name, "..") ) {
+               //          puts(ep2->d_name);
+               //       }
+               //    }
+               //    closedir(dp2);
+               // }
+               if ( directory_exists(dirbuf)) {
+                  show_one_file(dirbuf, "information", debug, 1);
+                  show_one_file(dirbuf, "registry",    debug, 1);
+               }
+            }
+         }
+
+         closedir(dp);
+      }
+   }
+   else {
+       DBGMSF(debug, "Nvidia driver directory %s not found\n", dn);
+   }
+   return result;
+}
+
 
 bool only_fglrx(struct driver_name_node * driver_list) {
    int driverct = 0;
@@ -841,6 +908,13 @@ void query_sysenv() {
    printf("\n*** Primary Check 4: Driver specific checks ***\n");
    driver_specific_tests(driver_list);
 
+   struct driver_name_node * cur_node = driver_list;
+   while (cur_node) {
+      struct driver_name_node * next_node = cur_node->next;
+      free(cur_node);
+      cur_node = next_node;
+   }
+
    printf("\n*** Primary Check 5: Installed packages ***\n");
    query_packages();
    puts("");
@@ -854,12 +928,13 @@ void query_sysenv() {
    query_loaded_modules_using_sysfs();
    query_i2c_bus_using_sysfs();
 
-   struct driver_name_node * cur_node = driver_list;
-   while (cur_node) {
-      struct driver_name_node * next_node = cur_node->next;
-      free(cur_node);
-      cur_node = next_node;
+
+   Output_Level output_level = get_output_level();
+   if (output_level >= OL_VERBOSE) {
+      puts("");
+      query_proc_driver_nvidia();
    }
+
 }
 
 

@@ -61,6 +61,7 @@ char * substr(char * s, int startpos, int ct);
 char * lsub(char * s, int ct);
 char * strdup_uc(char* s);
 char * str_replace_char(char * s, char old_char, char new_char);
+char * strcat_new(char * s1, char * s2);
 
 typedef bool (*String_Comp_Func)(const char * a, const char * b);
 

@@ -396,6 +396,15 @@ char * str_replace_char(char * s, char old_char, char new_char) {
 }
 
 
+char * strcat_new(char * s1, char * s2) {
+    assert(s1);
+    assert(s2);
+    char * result = malloc(strlen(s1) + strlen(s2) + 1);
+    strcpy(result, s1);
+    strcpy(result+strlen(s1), s2);
+    return result;
+}
+
 
 /* Converts a sequence of characters into a (null-terminated) string.
  *
