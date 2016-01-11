@@ -112,6 +112,8 @@ static struct Vcp_Subset_Desc subset_desc[] = {
       {VCP_SUBSET_ALL,             "VCP_SUBSET_ALL"},
       {VCP_SUBSET_SUPPORTED,       "VCP_SUBSET_SUPPORTED"},
       {VCP_SUBSET_KNOWN,           "VCP_SUBSET_KNOWN"},
+      {VCP_SUBSET_PRESET,          "VCP_SUBSET_PRESET"},
+      {VCP_SUBSET_MFG,             "VCP_SUBSET_MFG"},
       {VCP_SUBSET_SINGLE_FEATURE,  "VCP_SUBSET_SINGLE_FEATURE"},
       {VCP_SUBSET_NONE ,           "VCP_SUBSET_NONE"},
 };

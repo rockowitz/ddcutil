@@ -47,15 +47,20 @@ struct VCP_Feature_Set {
 
 VCP_Feature_Set
 create_feature_set(VCP_Feature_Subset subset, Version_Spec vcp_version) {
-   // bool debug = false;
+   bool debug = false;
+   DBGMSF(debug, "Starting. subset=%s(0x%04x), vcp_version=%d.%d",
+                 feature_subset_name(subset), subset, vcp_version.major, vcp_version.minor);
    struct VCP_Feature_Set * fset = calloc(1,sizeof(struct VCP_Feature_Set));
    memcpy(fset->marker, VCP_FEATURE_SET_MARKER, 4);
    fset->subset = subset;
    fset->members = g_ptr_array_sized_new(30);
-   if (subset == VCP_SUBSET_SCAN) {
+   if (subset == VCP_SUBSET_SCAN || subset == VCP_SUBSET_MFG) {
       int ndx = 0;
-      for (ndx = 0; ndx < 256; ndx++) {
+      if (subset == VCP_SUBSET_MFG)
+         ndx = 0xe0;
+      for (; ndx < 256; ndx++) {
          Byte id = ndx;
+         // DBGMSF(debug, "examining id 0x%02x", id);
          VCP_Feature_Table_Entry* vcp_entry = vcp_find_feature_by_hexid_w_default(id);
          // original code looks at VCP2_READABLE, output level
          g_ptr_array_add(fset->members, vcp_entry);
@@ -70,6 +75,9 @@ create_feature_set(VCP_Feature_Subset subset, Version_Spec vcp_version) {
          // Version_Feature_Flags vflags = 0;
          bool showit = false;
          switch(subset) {
+         case VCP_SUBSET_PRESET:
+            showit = vcp_entry->vcp_spec_groups & VCP_SPEC_PRESET;
+            break;
          case VCP_SUBSET_KNOWN:
          case VCP_SUBSET_ALL:
          case VCP_SUBSET_SUPPORTED:
@@ -86,6 +94,7 @@ create_feature_set(VCP_Feature_Subset subset, Version_Spec vcp_version) {
             showit = vcp_entry->vcp_subsets & subset;
             break;
          case VCP_SUBSET_SCAN:    // will never happen, inserted to avoid compiler warning
+         case VCP_SUBSET_MFG:
          case VCP_SUBSET_SINGLE_FEATURE:
          case VCP_SUBSET_NONE:
             break;

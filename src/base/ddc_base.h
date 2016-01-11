@@ -72,6 +72,8 @@ typedef enum {
    VCP_SUBSET_ALL             = 0x0040,
    VCP_SUBSET_SUPPORTED       = 0x0020,
    VCP_SUBSET_KNOWN           = 0x0010,
+   VCP_SUBSET_PRESET          = 0x0008,    // uses VCP_SPEC_PRESET
+   VCP_SUBSET_MFG             = 0x0004,    // mfg specific codes
    VCP_SUBSET_SINGLE_FEATURE  = 0x0001,
    VCP_SUBSET_NONE            = 0x0000,
 } VCP_Feature_Subset;

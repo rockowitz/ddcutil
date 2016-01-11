@@ -162,7 +162,7 @@ typedef struct feature_subset_table_entry_s {
 } Feature_Subset_Table_Entry;
 
 const Feature_Subset_Table_Entry subset_table[] = {
-   {VCP_SUBSET_ALL,       CMDID_GETVCP|CMDID_VCPINFO, 3,  "ALL",      "All known features"},
+   {VCP_SUBSET_ALL,       CMDID_GETVCP|CMDID_VCPINFO, 3, "ALL",       "All known features"},
    {VCP_SUBSET_SUPPORTED, CMDID_GETVCP,               3, "SUPPORTED", "All known features that are valid for the display"},
    {VCP_SUBSET_SCAN,      CMDID_GETVCP,               3, "SCAN",      "All feature codes 00..FF, except those known to be WO"},
    {VCP_SUBSET_KNOWN,     CMDID_GETVCP|CMDID_VCPINFO, 3, "KNOWN",     "All features known by ddctool"},
@@ -172,6 +172,8 @@ const Feature_Subset_Table_Entry subset_table[] = {
    {VCP_SUBSET_AUDIO,     CMDID_GETVCP|CMDID_VCPINFO, 3, "AUDIO",     "Audio related features"},
    {VCP_SUBSET_WINDOW,    CMDID_GETVCP|CMDID_VCPINFO, 3, "WINDOW",    "Window related features"},
    {VCP_SUBSET_TV,        CMDID_GETVCP|CMDID_VCPINFO, 2, "TV",        "TV related features"},
+   {VCP_SUBSET_PRESET,                 CMDID_VCPINFO, 3, "PRESET",    "Presets"},     // all WO
+   {VCP_SUBSET_MFG,       CMDID_GETVCP,               3, "MANUFACTURER", "Manufacturer specific codes"},
 };
 const int subset_table_ct = sizeof(subset_table)/sizeof(Feature_Subset_Table_Entry);
 
@@ -287,6 +289,8 @@ char * command_argument_help =
        "      - AUDIO     - audio features\n"
        "      - WINDOW    - window operations (e.g. PIP)\n"
        "      - TV        - TV related settings\n"
+       "      - PRESET    - MCCS codes classed as PRESET\n"
+       "      - MANUFACTURER - manufacturer specific codes\n"
        "    Keywords can be abbreviated to the first 3 characters.\n"
        "    Case is ignored.  e.g. \"COL\", \"pro\"\n"
        "\n"
