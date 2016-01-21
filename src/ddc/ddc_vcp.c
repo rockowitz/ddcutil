@@ -140,7 +140,7 @@ Global_Status_Code set_nontable_vcp_value_by_dr(
  * Returns:
  *   status code
  */
-Global_Status_Code get_nontable_vcp_value_by_display_handle(
+Global_Status_Code get_nontable_vcp_value(
        Display_Handle *       dh,
        Byte                   feature_code,
        Parsed_Nontable_Vcp_Response** ppInterpretedCode)
@@ -266,7 +266,7 @@ Global_Status_Code get_vcp_value_by_display_handle(
 
    case (NON_TABLE_VCP_CALL):
          presp->response_type = NON_TABLE_VCP_CALL;
-         gsc = get_nontable_vcp_value_by_display_handle(
+         gsc = get_nontable_vcp_value(
                   dh,
                   feature_code,
                   &presp->non_table_response);
@@ -300,25 +300,3 @@ Global_Status_Code get_vcp_value_by_display_handle(
 }
 
 
-#ifdef DEPRECATED
-Global_Status_Code get_nontable_vcp_value_by_display_ref(
-                      Display_Ref *          dref,
-                      Byte                   feature_code,
-                      Parsed_Nontable_Vcp_Response** ppInterpretedCode) {
-   char buf0[100];
-
-   // bool debug = false;
-
-   TRCMSG("Reading feature 0x%02x for %s\n",
-         feature_code,
-         display_ref_short_name_r(dref, buf0, 100)
-         );
-
-   Display_Handle * pDispHandle = ddc_open_display(dref, EXIT_IF_FAILURE);
-   Global_Status_Code rc = get_nontable_vcp_value_by_display_handle(pDispHandle, feature_code, ppInterpretedCode);
-   ddc_close_display(pDispHandle);
-
-   TRCMSG("Returning %d\n", __func__, rc);
-   return rc;
-}
-#endif

@@ -552,8 +552,8 @@ DDCT_Status ddct_get_nontable_vcp_value(
 {
    WITH_DH(ddct_dh,  {
        Parsed_Nontable_Vcp_Response * code_info;
-       Global_Status_Code gsc = get_nontable_vcp_value_by_display_handle(dh, feature_code,&code_info);
-       // DBGMSG(" get_nontable_vcp_value_by_display_handle() returned %s", gsc_desc(gsc));
+       Global_Status_Code gsc = get_nontable_vcp_value(dh, feature_code,&code_info);
+       // DBGMSG(" get_nontable_vcp_value() returned %s", gsc_desc(gsc));
        if (gsc == 0) {
           response->cur_value = code_info->cur_value;
           response->max_value = code_info->max_value;
@@ -638,7 +638,7 @@ DDCT_Status ddct_get_capabilities_string(DDCT_Display_Handle ddct_dh, char** pca
 {
    WITH_DH(ddct_dh,
       {
-         Global_Status_Code gsc = get_capabilities_string_by_display_handle(dh, pcaps);
+         Global_Status_Code gsc = get_capabilities_string(dh, pcaps);
          rc = gsc;
       }
    );

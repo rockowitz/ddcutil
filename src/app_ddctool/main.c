@@ -128,7 +128,7 @@ bool perform_get_capabilities_by_display_handle(Display_Handle * dh) {
    char * capabilities_string;
    // returns Global_Status_Code, but testing capabilities == NULL also checks for success
    // int rc = get_capabilities_buffer_by_display_ref(dref, &capabilities);
-   int rc = get_capabilities_string_by_display_handle(dh, &capabilities_string);
+   int rc = get_capabilities_string(dh, &capabilities_string);
 
    if (rc < 0) {
       // char buf[100];

@@ -62,7 +62,7 @@
  * Returns:
  *   status code
  */
-Global_Status_Code get_capabilities_buffer_by_display_handle(
+Global_Status_Code get_capabilities_buffer(
                       Display_Handle * dh,
                       Buffer**         ppCapabilitiesBuffer) {
    int rc;
@@ -92,11 +92,11 @@ Global_Status_Code get_capabilities_buffer_by_display_handle(
 }
 
 
-Global_Status_Code get_capabilities_string_by_display_handle(Display_Handle * dh, char** pcaps) {
+Global_Status_Code get_capabilities_string(Display_Handle * dh, char** pcaps) {
    Global_Status_Code gsc = 0;
    if (!dh->capabilities_string) {
       Buffer * pcaps_buffer;
-      gsc = get_capabilities_buffer_by_display_handle(dh, &pcaps_buffer);
+      gsc = get_capabilities_buffer(dh, &pcaps_buffer);
       if (gsc == 0) {
          dh->capabilities_string = strdup((char *) pcaps_buffer->bytes);
          buffer_free(pcaps_buffer,__func__);
@@ -106,35 +106,3 @@ Global_Status_Code get_capabilities_string_by_display_handle(Display_Handle * dh
    return gsc;
 }
 
-
-#ifdef UNUSED
-/* Executes the VCP Get Capabilities command to obtain the
- * capabilities string.  The string is returned in null terminated
- * form in a Buffer struct.  It is the responsibility of the caller to
- * free this struct.
- *
- * Arguments:
- *    dref                  pointer to display reference
- *    ppCapabilitiesBuffer  address at which to return pointer to allocated Buffer
- *
- * Returns:
- *   status code
- */
-Global_Status_Code get_capabilities_buffer_by_display_ref(Display_Ref * dref, Buffer** ppCapabilitiesBuffer) {
-   int rc;
-   Display_Handle* dh = ddc_open_display(dref, EXIT_IF_FAILURE);
-   rc = get_capabilities_buffer_by_display_handle(dh, ppCapabilitiesBuffer);
-   ddc_close_display(dh);
-   return rc;
-}
-#endif
-
-#ifdef OLD
-Global_Status_Code get_capabilities_string_by_display_ref(Display_Ref * dref, char** pcaps) {
-   int rc;
-   Display_Handle* dh = ddc_open_display(dref, EXIT_IF_FAILURE);
-   rc = get_capabilities_string_by_display_handle(dh, pcaps);
-   ddc_close_display(dh);
-   return rc;
-}
-#endif

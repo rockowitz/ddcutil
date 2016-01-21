@@ -289,9 +289,9 @@ app_read_changes(Display_Handle * dh) {
 
 
    Version_Spec vspec = get_vcp_version_by_display_handle(dh);
-   gsc = get_nontable_vcp_value_by_display_handle(dh, 0x02, &p_nontable_response);
+   gsc = get_nontable_vcp_value(dh, 0x02, &p_nontable_response);
    if (gsc != 0) {
-      DBGMSG("get_nontable_vcp_value_by_display_handle() returned %s", gsc_desc(gsc));
+      DBGMSG("get_nontable_vcp_value() returned %s", gsc_desc(gsc));
    }
    else if (p_nontable_response->sl == 0x01) {
       DBGMSF(debug, "No new control values found");
@@ -303,9 +303,9 @@ app_read_changes(Display_Handle * dh) {
 
       // new_values_found = true;
       if ( vcp_version_le(vspec, VCP_SPEC_V21) ) {
-         gsc = get_nontable_vcp_value_by_display_handle(dh, 0x52, &p_nontable_response);
+         gsc = get_nontable_vcp_value(dh, 0x52, &p_nontable_response);
          if (gsc != 0) {
-             DBGMSG("get_nontable_vcp_value_by_display_handle() returned %s", gsc_desc(gsc));
+             DBGMSG("get_nontable_vcp_value() returned %s", gsc_desc(gsc));
              return;
           }
           Byte changed_feature = p_nontable_response->sl;
@@ -314,9 +314,9 @@ app_read_changes(Display_Handle * dh) {
       else {  // x52 is a FIFO
          int ctr = 0;
          for (;ctr < MAX_CHANGES; ctr++) {
-            gsc = get_nontable_vcp_value_by_display_handle(dh, 0x52, &p_nontable_response);
+            gsc = get_nontable_vcp_value(dh, 0x52, &p_nontable_response);
             if (gsc != 0) {
-                DBGMSG("get_nontable_vcp_value_by_display_handle() returned %s", gsc_desc(gsc));
+                DBGMSG("get_nontable_vcp_value() returned %s", gsc_desc(gsc));
                 return;
              }
              Byte changed_feature = p_nontable_response->sl;

@@ -66,7 +66,7 @@ Version_Spec get_vcp_version_by_display_handle(Display_Handle * dh) {
       Output_Level olev = get_output_level();
       if (olev == OL_VERBOSE)
          set_output_level(OL_NORMAL);
-      Global_Status_Code  gsc = get_nontable_vcp_value_by_display_handle(dh, 0xdf, &pinterpreted_code);
+      Global_Status_Code  gsc = get_nontable_vcp_value(dh, 0xdf, &pinterpreted_code);
       if (olev == OL_VERBOSE)
          set_output_level(olev);
       if (gsc == 0) {
