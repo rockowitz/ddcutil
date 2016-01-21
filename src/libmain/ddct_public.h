@@ -140,6 +140,7 @@ typedef void * DDCT_Display_Handle;
 DDCT_Status ddct_get_display_ref(DDCT_Display_Identifier did, DDCT_Display_Ref* ddct_dref);
 DDCT_Status ddct_free_display_ref(DDCT_Display_Ref ddct_ref);
 DDCT_Status ddct_repr_display_ref(DDCT_Display_Ref ddct_dref, char** repr);
+void        ddct_report_display_ref(DDCT_Display_Ref ddct_dref, int depth);
 
 DDCT_Status ddct_open_display(DDCT_Display_Ref dref, DDCT_Display_Handle * pdh);
 

@@ -26,6 +26,7 @@
 
 #include <string.h>
 
+#include "util/report_util.h"
 #include "util/string_util.h"
 
 #include "base/ddc_errno.h"
@@ -87,8 +88,12 @@
 static bool library_initialized = false;
 
 void ddct_init() {
-   init_ddc_services();
-   library_initialized = true;
+   DBGMSG("Starting. library_initialized=%s", bool_repr(library_initialized));
+   if (!library_initialized) {
+      DBGMSG("Calling init_ddc_services...");
+      init_ddc_services();
+      library_initialized = true;
+   }
 }
 
 bool ddct_built_with_adl() {
@@ -330,6 +335,12 @@ DDCT_Status ddct_repr_display_ref(DDCT_Display_Ref ddct_dref, char** repr){
    return rc;
 }
 
+void        ddct_report_display_ref(DDCT_Display_Ref ddct_dref, int depth) {
+   Display_Ref * dref = (Display_Ref *) ddct_dref;
+   rpt_vstring(depth, "DDCT_Display_Ref at %p:", dref);
+   report_display_ref(dref, depth+1);
+}
+
 
 DDCT_Status ddct_open_display(DDCT_Display_Ref ddct_dref, DDCT_Display_Handle * pdh) {
    if (!library_initialized)
@@ -367,6 +378,7 @@ DDCT_Status ddct_close_display(DDCT_Display_Handle ddct_dh) {
    return rc;
 }
 
+
 static char dh_work_buf[100];
 
 DDCT_Status ddct_repr_display_handle(DDCT_Display_Handle ddct_dh, char ** repr) {
@@ -388,8 +400,11 @@ DDCT_Status ddct_repr_display_handle(DDCT_Display_Handle ddct_dh, char ** repr) 
                   "Display Handle Type: %s, adlno=%d.%d", dh_type_name, dh->iAdapterIndex, dh->iDisplayIndex);
          break;
       }
-      *repr = did_work_buf;
+      *repr = dh_work_buf;
    }
+   DBGMSG("repr=%p, *repr=%p, dh_work_buf=%p", repr, *repr, dh_work_buf);
+   DBGMSG("dh_work_buf=|%s|", dh_work_buf);
+   DBGMSG("Returning rc=%d, *repr=%s", rc, *repr);
    return rc;
 }
 
@@ -538,6 +553,7 @@ DDCT_Status ddct_get_nontable_vcp_value(
    WITH_DH(ddct_dh,  {
        Parsed_Nontable_Vcp_Response * code_info;
        Global_Status_Code gsc = get_nontable_vcp_value_by_display_handle(dh, feature_code,&code_info);
+       DBGMSG(" get_nontable_vcp_value_by_display_handle() returned %s", gsc_desc(gsc));
        if (gsc == 0) {
           response->cur_value = code_info->cur_value;
           response->max_value = code_info->max_value;

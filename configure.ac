@@ -1,9 +1,18 @@
 #                                               -*- Autoconf -*-
 # Process this file with autoconf to produce a configure script.
 
-dnl CPPFLAGS="$CPPFLAGS -I/usr/include/glib2.0"
-
 AC_PREREQ([2.69])
+
+dnl interesting but unused settings in colord; 
+dnl
+dnl   GLIB_GSETTINGS
+dnl   # set up gtk-doc
+dnl   GTK_DOC_CHECK(1.9)
+dnl   AS_ALL_LINGUAS
+dnl   AC_PROG_INSTALL
+dnl   IT_PROG_INTLTOOL([0.35.0])
+dnl   AC_PATH_PROG(XSLTPROC, xsltproc)
+
 
 m4_define([ddctool_major_version], [0])
 m4_define([ddctool_minor_version], [1])
@@ -11,46 +20,50 @@ m4_define([ddctool_micro_version], [1])
 m4_define([ddctool_version],
           [ddctool_major_version.ddctool_minor_version.ddctool_micro_version])
 
+dnl causes VERSION to be set in config.h
 AC_INIT([ddctool], [ddctool_version], [rockowitz@minsoft.com])
+
 AC_CONFIG_AUX_DIR(config)
-dnl removed -Werror 
-AM_INIT_AUTOMAKE([1.11 -Wall -Wno-extra-portability foreign subdir-objects])
-AM_SILENT_RULES([yes])
-AM_PROG_AR
-dnl adds support for --enable/disable -static/shared, -with/without-pic configure flags
-LT_INIT
-
-dnl from online research
-dnl For creating both 32 and 64 bit: 
-dnl AM_ENABLE_MULTILIB
-dnl also write config-ml.in script 
-dnl needs system w both 32 and 64 bit libraries
-dnl ./configure --build=i686=pc-linux-gnu --prefix=/arch/x86-linux/gnu \
-dnl     CC=gcc -m32 -march-i586 \
-dnl     CXX="g++ -m32 -march=i585 LDFlags="-m32"
-
-
-dnl to automatically update libtool script if it becomes out of date:
-AC_SUBST([LIBTOOL_DEPS])
-
+dnl sanity check: check for a unique file in source directory: 
 AC_CONFIG_SRCDIR([src/util/coredefs.h])
 AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_MACRO_DIR([m4])
+# one entry for each Makefile.am:
+AC_CONFIG_FILES([Makefile src/Makefile man/Makefile data/Makefile])
 
-dnl AC_PROG_LIBTOOL, AM_PROG_LIBTOOL are deprecated names for older versions of LT_INIT
-dnl AC_PROG_LIBTOOL
 
-dnl GLIB_GSETTINGS
+dnl removed -Werror 
+dnl rmoved -Werror from AM_INIT_AUTOMAKE to allow compilation to proceed
+AM_INIT_AUTOMAKE([1.11 -Wall -Wno-extra-portability foreign subdir-objects])
+dnl AM_SILENT_RULES defined as of automake 1.11, so don't need to test for macro's existence
+AM_SILENT_RULES([no])
+AM_PROG_AR
 
-dnl for future: 
-dnl GOBJECT_INTROSPECTION_CHECK([0.9.8])
 
-dnl appends to GLIB_CFLAGS and GLIB_LIBS the output of pkg-config --cflags|--lib glib-2.0
-PKG_CHECK_MODULES(GLIB,  glib-2.0 >= 2.36) 
+### 
+### Version specification
+###
 
-dnl PKG_CHECK_MODULES(OSINFO, libosinfo-1.0 >= 0.1, [OSINFO_FOUND=yes], [OSINFO_FOUND=no])
+# libtool versioning - applies to libddctool
+#
+# See http://sources.redhat.com/autobook/autobook/autobook_91.html#SEC91 for details
+#
+# increment;
+# CURRENT   If the API or ABI interface has changed (reset REVISION to 0)
+# REVISION  If the API and ABI remains the same, but bugs are fixed.
+# AGE       backward compatibility
+LT_CURRENT=0
+LT_REVISION=1
+LT_AGE=0
+AC_SUBST(LT_CURRENT)
+AC_SUBST(LT_REVISION)
+AC_SUBST(LT_AGE)
 
-# Checks for programs.
+
+###
+### Checks for programs.
+###
+
 AC_PROG_CC
 
 dnl This is an obsolescent macro that checks that the C compiler supports the -c and -o options together. 
@@ -62,16 +75,47 @@ dnl AM_PROG_CC_C_0
 
 dnl but on Suse 13.2 w automake 1.13.4, get msg that 
 dnl warning: warning: compiling 'base/common.c' in subdir requires 'AM_PROG_CC_C_O' in 'configure.ac'
-dnl rmoved -Werror from AM_INIT_AUTOMAKE to allow compilation to proceed
 
-# Checks for libraries.
+dnl AC_PROG_LIBTOOL, AM_PROG_LIBTOOL are deprecated names for older versions of LT_INIT
+dnl adds support for --enable/disable -static/shared, -with/without-pic configure flags
+LT_INIT
 
-# Checks for header files.
+AC_PROG_RANLIB
+
+m4_ifdef([GOBJECT_INTROSPECTION_CHECK], [GOBJECT_INTROSPECTION_CHECK([1.30.0])])
+AM_CONDITIONAL(HAVE_INTROSPECTION, test "x$found_introspection" = xyes)
+
+dnl temporarily disable, introspection not working
+dnl AM_CONDITIONAL(HAVE_INTROSPECTION, test "x$found_introspection" = xyesxxx)
+
+
+
+
+###
+### Checks for libraries.
+###
+
+dnl appends to GLIB_CFLAGS and GLIB_LIBS the output of pkg-config --cflags|--lib glib-2.0
+PKG_CHECK_MODULES(GLIB,  glib-2.0 >= 2.36) 
+
+PKG_CHECK_MODULES(GOBJECT,  gobject-2.0 >= 2.36) 
+
+dnl PKG_CHECK_MODULES(OSINFO, libosinfo-1.0 >= 0.1, [OSINFO_FOUND=yes], [OSINFO_FOUND=no])
+
+
+###
+### Checks for header files.
+###
+
 AC_CHECK_HEADERS([fcntl.h langinfo.h libintl.h limits.h stdint.h stdlib.h string.h sys/ioctl.h termios.h unistd.h wchar.h  dlfcn.h])
 dnl i2c-dev.h not found:
 dnl AC_CHECK_HEADERS([i2c-dev.h])
 
-# Checks for typedefs, structures, and compiler characteristics.
+
+###
+### Checks for typedefs, structures, and compiler characteristics.
+###
+
 AC_CHECK_HEADER_STDBOOL
 # AC_CHECK_HEADERS([glib.h])
 AC_C_INLINE
@@ -81,7 +125,10 @@ AC_TYPE_UINT16_T
 AC_TYPE_UINT32_T
 AC_TYPE_UINT8_T
 
-# Checks for library functions.
+
+###
+### Checks for library functions.
+###
 AC_FUNC_MALLOC
 AC_FUNC_REALLOC
 AC_FUNC_STRERROR_R
@@ -93,8 +140,31 @@ AC_SEARCH_LIBS([dlopen], [dl dld], [], [
   AC_MSG_ERROR([unable to find the dlopen() function])
 ])
 
-dnl *** configure option: --with-adl-headers
 
+###
+### Other
+###
+
+dnl from online research
+dnl For creating both 32 and 64 bit: 
+dnl AM_ENABLE_MULTILIB
+dnl also write config-ml.in script 
+dnl needs system w both 32 and 64 bit libraries
+dnl ./configure --build=i686=pc-linux-gnu --prefix=/arch/x86-linux/gnu \
+dnl     CC=gcc -m32 -march-i586 \
+dnl     CXX="g++ -m32 -march=i585 LDFlags="-m32"
+
+
+dnl Automatically update libtool script if it becomes out of date:
+AC_SUBST([LIBTOOL_DEPS])
+
+
+
+### 
+### Begin options for configure script
+### 
+
+dnl *** configure option: --with-adl-headers
 AC_ARG_WITH([adl-headers],
             [ AS_HELP_STRING([--with-adl-headers=DIR], [Directory containing ADL header files]) ],
             [adl_header_dir=$withval],
@@ -118,7 +188,6 @@ dnl AC_MSG_NOTICE([adl_header_dir2 = $adl_header_dir2])
 dnl AC_DEFINE_UNQUOTED([HAVE_ADL3], [$HAVE_ADL])
 dnl AC_DEFINE( [HAVE_ADL2], [1])
 
-
 dnl *** configure option: --enable-testcases
 AC_ARG_ENABLE([testcases],
               [ AS_HELP_STRING( [--enable-testcases=@<:@no/yes@:>@], [Include test cases @<:@default=no@:>@] )],
@@ -137,7 +206,6 @@ AS_IF([test "x$include_testcases" == "xyes"],
       AC_MSG_NOTICE( [testcases... disabled] )
      )
 
-
 dnl *** configure option: --enable-callgraph
 AC_ARG_ENABLE([callgraph],
               [ AS_HELP_STRING( [--enable-callgraph=@<:@no/yes@:>@], [Create .expand files for static call graph@<:@default=no@:>@] )],
@@ -152,11 +220,9 @@ AS_IF([test "x$enable_callgraph" == "xyes"],
       AC_MSG_NOTICE( [callgraph... disabled] )
      )
 
-
-
 dnl *** configure option: --enable-lib
 AC_ARG_ENABLE([lib],
-              [ AS_HELP_STRING( [--enable-lib=@<:@no/yes@:>@], [Create .expand files for static call graph@<:@default=no@:>@] )],
+              [ AS_HELP_STRING( [--enable-lib=@<:@no/yes@:>@], [Build shared library and clients@<:@default=no@:>@] )],
               [enable_lib=${enableval}],
               [enable_lib=no] )
 dnl disable after testing:
@@ -172,14 +238,25 @@ AS_IF([test "x$enable_lib" == "xyes"],
       AC_MSG_NOTICE( [lib... disabled] )
      )
 
+dnl *** configure option: --enable-gobject-api
+AC_ARG_ENABLE([gobject-api],
+              [ AS_HELP_STRING( [--enable-gobject-api=@<:@no/yes@:>@], [Build gobject related files, typelib@<:@default=no@:>@] )],
+              [enable_gobject=${enableval}],
+              [enable_gobject=no] )
+AM_CONDITIONAL([ENABLE_GOBJECT_COND], [test "x$enable_gobject" == "xyes"] )
+AS_IF([test "x$enable_gobject" == "xyes"],
+      AC_MSG_NOTICE( [gobject-api... enabled]  ),
+      AC_MSG_NOTICE( [gobject-api... disabled] )
+     )
 
 
-AC_PROG_RANLIB
+### 
+### End options for configure script
+###
 
 
-# AC_CONFIG_FILES([Makefile, src/Makefile, src/util/Makefile])
-AC_CONFIG_FILES([Makefile src/Makefile man/Makefile data/Makefile])
+###
+### Generate output   
+###
+
 AC_OUTPUT
-
-
-# AM_CXXFLAGS = GLIB_CFLAGS

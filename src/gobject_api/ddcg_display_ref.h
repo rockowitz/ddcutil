@@ -1,0 +1,77 @@
+/* ddcg_display_ref.h
+ *
+ * Created on: Jan 13, 2016
+ *     Author: rock
+ *
+ * <copyright>
+ * Copyright (C) 2014-2015 Sanford Rockowitz <rockowitz@minsoft.com>
+ *
+ * Licensed under the GNU General Public License Version 2
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+ * </endcopyright>
+ */
+
+#ifndef DDCG_DISPLAY_REF_H_
+#define DDCG_DISPLAY_REF_H_
+
+#include <stdbool.h>
+
+#include <glib-2.0/glib.h>
+#include <glib-object.h>
+#include <glib-2.0/glib-object.h>
+
+#include "gobject_api/ddcg_types.h"
+#include "gobject_api/ddcg_display_identifier.h"
+
+G_BEGIN_DECLS
+
+#define DDCG_TYPE_DISPLAY_REF (ddcg_display_ref_get_type())
+
+G_DECLARE_FINAL_TYPE(DdcgDisplayRef, ddcg_display_ref, DDCG, DISPLAY_REF, GObject)
+
+#define DDCG_DISPLAY_REF_ERROR       ( ddcg_display_ref_quark()    )
+#define DDCG_DISPLAY_REF_TYPE_ERROR  ( ddcg_display_ref_get_type() )
+
+DdcgDisplayRef *
+ddcg_display_ref_new(void);
+
+DdcgDisplayRef *
+ddcg_display_ref_get(
+      DdcgDisplayIdentifier * ddcg_did,
+      GError **               error);
+
+gchar *
+ddcg_display_ref_repr(
+      DdcgDisplayRef *        ddcg_dref,
+      GError **               error);
+
+void
+ddcg_display_ref_report(
+      DdcgDisplayRef *        ddcg_dref,
+      int                     depth);
+
+DDCT_Display_Ref
+_ddcg_display_ref_get_ddct_object(
+      DdcgDisplayRef *        ddcg_dref);
+
+void
+_ddcg_display_ref_set_ddct_object(
+      DdcgDisplayRef *        ddcg_dref,
+      DDCT_Display_Ref        ddct_dref);
+
+G_END_DECLS
+
+#endif /* DDCG_DISPLAY_REF_H_ */

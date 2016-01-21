@@ -47,7 +47,15 @@ if ENABLE_SHARED_LIB_COND
 # Sample client program for shared library:
 bin_PROGRAMS += \
 laclient 
+
+if ENABLE_GOBJECT_COND
+bin_PROGRAMS += \
+goclient
 endif
+
+endif
+
+
 
 # Convenience library containing code shared between ddctool and libddctool
 noinst_LTLIBRARIES = libcommon.la
@@ -80,15 +88,49 @@ ddctool_SOURCES += \
    app_ddctool/testcase_mock_table.c
 endif
 
+
+# Files implementing GObject API for introspection: 
+gobject_api_sources = \
+gobject_api/ddcg_cont_response.c \
+gobject_api/ddcg_context.c \
+gobject_api/ddcg_display_handle.c \
+gobject_api/ddcg_display_identifier.c \
+gobject_api/ddcg_display_ref.c
+
+# if use ddcg_gobjects.h to pull in all the .h files, get strange errors re unexpected semicolons
+# gobject_api_headers = \
+# gobject_api/ddcg_gobjects.h
+
+gobject_api_headers = \
+gobject_api/ddcg_cont_response.h \
+gobject_api/ddcg_context.h \
+gobject_api/ddcg_display_handle.h \
+gobject_api/ddcg_display_identifier.h \
+gobject_api/ddcg_display_ref.h \
+gobject_api/ddcg_types.h
+
+
 # files only in libddctool:
 libddctool_la_SOURCES = \
 libmain/ddct_public.c  
+
+if ENABLE_GOBJECT_COND
+   libddctool_la_SOURCES += $(gobject_api_sources)
+endif
+
 
 # files only in laclient:
 laclient_SOURCES = \
 sample_clients/clmain.c
 
+#idef ENABLE_GOBJECT_COND
+# files only in goclient:
+goclient_SOURCES = \
+sample_clients/gomain.c
+#endif
+
 # libcommon contains the source files that are 
+
 # shared between ddctool and libddctool: 
 libcommon_la_SOURCES = \
 base/common.c \
@@ -157,13 +199,16 @@ endif
 # trying to get i2c-dev.h from /usr/include/linux causes errors
 
 # GLIB_CFLAGS contains output of pkgconfig --cflags glib-2.0
-AM_CPPFLAGS=$(GLIB_CFLAGS) \
+AM_CPPFLAGS= \
+$(GLIB_CFLAGS) \
+$(GOBJECT_CFLAGS) \
 -I$(top_srcdir) 
 
 
 # Compiler flags
 ddctool_CFLAGS        = $(AM_CFLAGS)
 laclient_CFLAGS       = $(AM_CFLAGS)
+goclient_CFLAGS       = $(AM_CFLAGS)
 libcommon_la_CFLAGS   = $(AM_CFLAGS) 
 libddctool_la_CFLAGS  = $(AM_CFLAGS)
 
@@ -178,13 +223,20 @@ endif
 # $(GLIB_LIBS) contains output of pkgconfig --libs glib-2.0
 
 
+# Be careful about library ordering 
+# library must be listed after any libraries that depend on it
+
+
 # Link the shared library
 libddctool_la_LIBADD = -lz
 libddctool_la_LIBADD +=  \
-   libcommon.la            \
+   libcommon.la   \
+   $(GOBJECT_LIBS) \
    $(GLIB_LIBS) 
 
-libddctool_la_LDFLAGS = -export_symbols-regex '^ddct_[^_]'
+         
+
+libddctool_la_LDFLAGS = -export_symbols-regex '^ddc[tg]_[^_]'
 # libddctool_la_LDFLAGS += -version-info '0:1:1'
 
 
@@ -195,12 +247,147 @@ ddctool_LDADD = \
    $(GLIB_LIBS)
 
 laclient_LDADD = \
-  libddctool.la
+  libddctool.la \
+  $(GOBJECT_LIBS)
 
-
+goclient_LDADD = \
+  libddctool.la \
+  $(GOBJECT_LIBS)
 
 
 
 # echo "hi there"
 # echo $(GLIB_LIBS)
 # LIBS = $(GLIB_LIBS) 
+
+
+# Comments from /usr/share/gobject-introspection-1.0/Makefile.introspection:
+
+#
+# * Input variables:
+#
+#   INTROSPECTION_GIRS - List of GIRS that should be generated
+#   INTROSPECTION_SCANNER - Command to invoke scanner, normally set by
+#      GOBJECT_INTROSPECTION_REQUIRE/CHECK() in introspection.m4
+#   INTROSPECTION_SCANNER_ARGS - Additional args to pass in to the scanner
+#   INTROSPECTION_SCANNER_ENV - Environment variables to set before running
+#      the scanner
+#   INTROSPECTION_COMPILER - Command to invoke compiler, normally set by
+#      GOBJECT_INTROSPECTION_REQUIRE/CHECK() in introspection.m4
+#   INTROSPECTION_COMPILER_ARGS - Additional args to pass in to the compiler
+#
+# * Simple tutorial
+#
+# Add this to configure.ac:
+#   -Wno-portability to AM_INIT_AUTOMAKE
+#   GOBJECT_INTROSPECTION_CHECK([0.6.7])
+#
+# Add this to Makefile.am where your library/program is built:
+#   include $(INTROSPECTION_MAKEFILE)
+#   INTROSPECTION_GIRS = YourLib-1.0.gir
+#   YourLib-1.0.gir: libyourlib.la
+#   YourLib_1_0_gir_NAMESPACE = YourLib
+#   YourLib_1_0_gir_VERSION = 1.0
+#   YourLib_1_0_gir_LIBS = libyourlib.la
+#   YourLib_1_0_gir_FILES = $(libyourlib_1_0_SOURCES)
+#   girdir = $(datadir)/gir-1.0
+#   dist_gir_DATA = YourLib-1.0.gir
+#   typelibdir = $(libdir)/girepository-1.0
+#   typelib_DATA = YourLib-1.0.typelib
+#   CLEANFILES = $(dist_gir_DATA) $(typelib_DATA)
+#
+
+# And later in file: 
+#
+# Creates a GIR by scanning C headers/sources
+# $(1) - Name of the gir file (output)
+#
+# If output is Gtk-2.0.gir then you should name the variables like
+# Gtk_2_0_gir_NAMESPACE, Gtk_2_0_gir_VERSION etc.
+# Required variables:
+# FILES - C sources and headers which should be scanned
+#
+# One of these variables are required:
+# LIBS - Library where the symbol represented in the gir can be found
+# PROGRAM - Program where the symbol represented in the gir can be found
+#
+# Optional variables
+# NAMESPACE - Namespace of the gir, first letter capital,
+#   rest should be lower case, for instance: 'Gtk', 'Clutter', 'ClutterGtk'.
+#   If not present the namespace will be fetched from the gir filename,
+#   the part before the first dash. For 'Gtk-2.0', namespace will be 'Gtk'.
+# VERSION - Version of the gir, if not present, will be fetched from gir
+# filename, the part after the first dash. For 'Gtk-2.0', version will be '2.0'.
+# LIBTOOL - Command to invoke libtool, usually set by automake
+# SCANNERFLAGS - Flags to pass in to the scanner, see g-ir-scanner(1) for a list
+# CFLAGS - Flags to pass in to the parser when scanning headers
+# LDFLAGS - Linker flags used by the scanner
+# PACKAGES - list of pkg-config names which cflags are required to parse
+#   the headers of this gir
+# INCLUDES - Gir files to include without the .gir suffix, for instance
+#   GLib-2.0, Gtk-2.0. This is needed for all libraries which you depend on that
+#   provides introspection information.
+# EXPORT_PACKAGES - list of pkg-config names that are provided by this gir.
+#   By default the names in the PACKAGES variable will be used.
+
+
+if HAVE_INTROSPECTION
+if ENABLE_GOBJECT_COND
+   -include $(INTROSPECTION_MAKEFILE)
+   INTROSPECTION_GIRS =
+   # INTROSPECTION_SCANNER_ARGS = --add-include-path=$(srcdir) --warn-all --verbose --identifier-prefix=Ddcg --symbol-prefix=ddcg
+   # INTROSPECTION_COMPILER_ARGS = --includedir=$(srcdir) --verbose
+   INTROSPECTION_SCANNER_ARGS = --add-include-path=$(srcdir) --warn-all --verbose 
+   INTROSPECTION_COMPILER_ARGS = --includedir=$(srcdir) --verbose
+
+   introspection_sources = \
+      $(gobject_api_sources) \
+      $(gobject_api_headers)
+
+   # add the target:
+   Ddctool-1.0.gir: libddctool.la
+   # Colord-1.0.gir: libcolord.la libcolordprivate.la
+
+   Ddctool_1_0_gir_INCLUDES = GObject-2.0
+   Ddctool_1_0_gir_CFLAGS = $(AM_CPPFLAGS)
+   # Colord_1_0_gir_INCLUDES = GObject-2.0 Gio-2.0
+   # Colord_1_0_gir_CFLAGS = $(AM_CPPFLAGS) -DCD_DISABLE_DEPRECATED
+
+   # Ddctool_1_0_gir_NAMESPACE=Ddcg
+   # Ddctool_1_0_gir_VERSION=1.0
+
+   Ddctool_1_0_gir_SCANNERFLAGS = --identifier-prefix=Ddcg \
+        --symbol-prefix=ddcg \
+        --warn-all \
+        --add-include-path=$(srcdir) 
+   # Colord_1_0_gir_SCANNERFLAGS = --identifier-prefix=Cd \
+   #       --symbol-prefix=cd \
+   #       --warn-all \
+   #       --add-include-path=$(srcdir) \
+   #       --c-include="colord.h"
+
+  
+   Ddctool_1_0_gir_EXPORT_PACKAGES  = ddctool
+   Ddctool_1_0_gir_LIBS             = libddctool.la
+   Ddctool_1_0_gir_FILES            = $(introspection_sources)
+   # Colord_1_0_gir_EXPORT_PACKAGES = colord
+   # Colord_1_0_gir_LIBS            = libcolord.la libcolordprivate.la
+   # Colord_1_0_gir_FILES           = $(introspection_sources)
+
+
+   INTROSPECTION_GIRS += Ddctool-1.0.gir
+   # INTROSPECTION_GIRS += Colord-1.0.gir
+
+
+   girdir = $(datadir)/gir-1.0
+   # dist_gir_DATA=$(INTROSPECTION_GIRS)
+   gir_DATA = $(INTROSPECTION_GIRS)
+
+   typelibdir = $(libdir)/girepository-1.0
+   typelib_DATA = $(INTROSPECTION_GIRS:.gir=.typelib)
+
+   CLEANFILES += $(gir_DATA) $(typelib_DATA)
+   # CLEANFILES += $(gir_DATA) $(typelib_DATA) *.log *.trs *.test
+endif
+endif
+

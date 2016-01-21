@@ -62,3 +62,6 @@ dh_make/
 *tar
 *tar.gz
 junk*
+*.typelib
+*.gir
+src/goclient
