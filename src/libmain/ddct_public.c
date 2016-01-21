@@ -402,9 +402,9 @@ DDCT_Status ddct_repr_display_handle(DDCT_Display_Handle ddct_dh, char ** repr) 
       }
       *repr = dh_work_buf;
    }
-   DBGMSG("repr=%p, *repr=%p, dh_work_buf=%p", repr, *repr, dh_work_buf);
-   DBGMSG("dh_work_buf=|%s|", dh_work_buf);
-   DBGMSG("Returning rc=%d, *repr=%s", rc, *repr);
+   // DBGMSG("repr=%p, *repr=%p, dh_work_buf=%p", repr, *repr, dh_work_buf);
+   // DBGMSG("dh_work_buf=|%s|", dh_work_buf);
+   // DBGMSG("Returning rc=%d, *repr=%s", rc, *repr);
    return rc;
 }
 
@@ -553,7 +553,7 @@ DDCT_Status ddct_get_nontable_vcp_value(
    WITH_DH(ddct_dh,  {
        Parsed_Nontable_Vcp_Response * code_info;
        Global_Status_Code gsc = get_nontable_vcp_value_by_display_handle(dh, feature_code,&code_info);
-       DBGMSG(" get_nontable_vcp_value_by_display_handle() returned %s", gsc_desc(gsc));
+       // DBGMSG(" get_nontable_vcp_value_by_display_handle() returned %s", gsc_desc(gsc));
        if (gsc == 0) {
           response->cur_value = code_info->cur_value;
           response->max_value = code_info->max_value;

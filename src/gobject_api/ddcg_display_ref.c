@@ -119,11 +119,10 @@ ddcg_display_ref_get(DdcgDisplayIdentifier * ddcg_did, GError ** error) {
    DDCT_Status ddct_status = ddct_get_display_ref( ddct_did, &ddct_dref);
    if (ddct_status == 0) {
       ddcg_dref = g_object_new(DDCG_TYPE_DISPLAY_REF, NULL);
-      DBGMSG("ddcg_dref=%p", ddcg_dref);
-      DBGMSG("ddcg_dref->priv=%p", ddcg_dref->priv);
+      // DBGMSG("ddcg_dref=%p", ddcg_dref);
+      // DBGMSG("ddcg_dref->priv=%p", ddcg_dref->priv);
       ddcg_dref->priv->ddct_dref = ddct_dref;
-
-      ddcg_display_ref_report(ddcg_dref, 0);
+      // ddcg_display_ref_report(ddcg_dref, 0);
    }
      else {
       GQuark domain = g_quark_from_string("DDCTOOL_DDCG");
@@ -150,17 +149,14 @@ ddcg_display_ref_repr(
 {
    g_return_val_if_fail (error == NULL || *error == NULL, NULL);
    g_return_val_if_fail( DDCG_IS_DISPLAY_REF(ddcg_dref), NULL);
-   gchar * repr = NULL;
 
+   gchar * repr = NULL;
    DDCT_Status ddcg_status = ddct_repr_display_ref(
                                 ddcg_dref->priv->ddct_dref, &repr);
-   DBGMSG("repr=%p", repr);
-   DBGMSG("repr=%s", repr);
    if (ddcg_status != 0) {
       GQuark domain = g_quark_from_string("DDCTOOL_DDCG");
       g_set_error(error,  domain, ddcg_status, "ddcg_display_ref_repr() returned %d=ddcg_status", ddcg_status);
    }
-
    return g_strdup(repr);  // w/o g_strdup get free(): invalid pointer in Python
 }
 

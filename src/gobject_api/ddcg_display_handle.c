@@ -183,7 +183,7 @@ ddcg_display_handle_get_nontable_vcp_value(
                   ddcg_dh->priv->ddct_dh,
                   feature_code,
                   &ddct_response);
-   DBGMSG("ddct_status = %d", ddct_status);
+   // DBGMSG("ddct_status = %d", ddct_status);
    if (ddct_status == 0) {
       // allocate a new DdcgContResponse instance
       ddcg_response = g_object_new(DDCG_TYPE_CONT_RESPONSE, NULL);
@@ -195,14 +195,14 @@ ddcg_display_handle_get_nontable_vcp_value(
       ddcg_response->sl = ddct_response.sl;
       ddcg_response->cur_value = ddct_response.cur_value;
       ddcg_response->max_value = ddct_response.max_value;
-      ddcg_cont_response_report(ddcg_response, 1);
+      // ddcg_cont_response_report(ddcg_response, 1);
    }
    else {
       GQuark domain = g_quark_from_string("DDCTOOL_DDCG");
       g_set_error(error,  domain, ddct_status, "ddct_get_nontable_vcp_value() returned ddct_status=%d", ddct_status);
    }
 
-   DBGMSG("Returning ddcg_response=%p", ddcg_response);
+   // DBGMSG("Returning ddcg_response=%p", ddcg_response);
    return ddcg_response;
 }
 
@@ -226,8 +226,8 @@ ddcg_display_handle_repr(
    gchar * repr = NULL;
    DDCT_Status ddct_status = ddct_repr_display_handle(
               ddcg_dh->priv->ddct_dh, &repr);
-   DBGMSG("repr=%p", repr);
-   DBGMSG("repr = %s", repr);
+   // DBGMSG("repr=%p", repr);
+   // DBGMSG("repr = %s", repr);
    if (ddct_status == 0) {
    }
    else {

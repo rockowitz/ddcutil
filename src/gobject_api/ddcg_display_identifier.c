@@ -62,7 +62,7 @@ ddcg_display_identifier_init(DdcgDisplayIdentifier * ddcg_did) {
    DBGMSG("Starting");
    // initialize the instance
    ddcg_did->priv = ddcg_display_identifier_get_instance_private(ddcg_did);
-   DBGMSG("Set ddcg_did->priv=%p", ddcg_did->priv);
+   // DBGMSG("Set ddcg_did->priv=%p", ddcg_did->priv);
 }
 
 // End of boilerplate
@@ -121,7 +121,7 @@ ddcg_display_identifier_create_busno_identifier(
    if (ddct_status == 0) {
       ddcg_did = g_object_new(DDCG_TYPE_DISPLAY_IDENTIFIER, NULL);
       ddcg_did->priv->ddct_did = ddct_did;
-      ddcg_display_identifier_report(ddcg_did, 0);
+      // ddcg_display_identifier_report(ddcg_did, 0);
    }
    else {
       GQuark domain = g_quark_from_string("DDCTOOL_DDCG");
@@ -154,7 +154,7 @@ ddcg_display_identifier_create_dispno_identifier(
    if (ddct_status == 0) {
       ddcg_did = g_object_new(DDCG_TYPE_DISPLAY_IDENTIFIER, NULL);
       ddcg_did->priv->ddct_did = ddct_did;
-      ddcg_display_identifier_report(ddcg_did, 0);
+      // ddcg_display_identifier_report(ddcg_did, 0);
    }
    else {
       GQuark domain = g_quark_from_string("DDCTOOL_DDCG");
@@ -179,10 +179,10 @@ ddcg_display_identifier_repr(
       DdcgDisplayIdentifier * ddcg_did,
       GError**                error)
 {
-   DBGMSG("Starting. ddcg_did=%p", ddcg_did);
+   // DBGMSG("Starting. ddcg_did=%p", ddcg_did);
    g_return_val_if_fail (error == NULL || *error == NULL, NULL);
    g_return_val_if_fail( DDCG_IS_DISPLAY_IDENTIFIER(ddcg_did), NULL);
-   DBGMSG("Past sanity checks");
+
    char * repr = NULL;
    DDCT_Status ddct_status = ddct_repr_display_identifier(
               ddcg_did->priv->ddct_did, &repr);
@@ -190,11 +190,11 @@ ddcg_display_identifier_repr(
       GQuark domain = g_quark_from_string("DDCTOOL_DDCG");
       g_set_error(error,  domain, ddct_status, "ddct_repr_identifier() returned %d=ddct_status", ddct_status);
    }
-   DBGMSG("Returning %p -> |%s|", repr, repr);
+   // DBGMSG("Returning %p -> |%s|", repr, repr);
    // solves the problem of free failure in python runtime,
    // but why was python trying to free result if transfer mode = none?
    char * s = g_strdup(repr);
-   DBGMSG("Returning %p -> |%s|", s, s);
+   // DBGMSG("Returning %p -> |%s|", s, s);
    return s;
 }
 
