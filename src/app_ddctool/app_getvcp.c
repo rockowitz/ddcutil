@@ -268,7 +268,7 @@ app_show_feature_set_values_by_display_handle(
 void
 app_read_changes(Display_Handle * dh) {
    bool debug = false;
-   DBGMSF(debug, "Starting");
+   // DBGMSF(debug, "Starting");
    int MAX_CHANGES = 20;
    // bool new_values_found = false;
 
@@ -278,6 +278,12 @@ app_read_changes(Display_Handle * dh) {
    // xff: no user controls
    // x01: no new control values
    // x02: new control values exist
+
+   /* Per the 3.0 and 2.2 specs, x52 is a FIFO to be read until x00 indicates empty
+    * What apparently happens on 2.1 (U3011) is that each time x02 is reset with value x01
+    * the subsequent read of x02 reports x02, new control values exist, until the queue
+    * of changes is flushed
+    */
 
    Parsed_Nontable_Vcp_Response * p_nontable_response = NULL;
 
@@ -342,6 +348,8 @@ app_read_changes(Display_Handle * dh) {
 
 void
 app_read_changes_forever(Display_Handle * dh) {
+   printf("Watching for VCP feature changes on display %s\n", display_handle_repr(dh));
+   printf("Type ^C to exit...\n");
    while(true) {
       app_read_changes(dh);
 

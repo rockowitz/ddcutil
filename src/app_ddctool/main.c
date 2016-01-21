@@ -165,51 +165,6 @@ bool perform_get_capabilities_by_display_handle(Display_Handle * dh) {
 }
 
 
-#ifdef OLD
-bool perform_get_capabilities(Display_Ref * dref) {
-   bool ok = true;
-   // Buffer * capabilities = NULL;
-   char * capabilities_string;
-   // returns Global_Status_Code, but testing capabilities == NULL also checks for success
-   // int rc = get_capabilities_buffer_by_display_ref(dref, &capabilities);
-   int rc = get_capabilities_string_by_display_ref(dref, &capabilities_string);
-
-   if (rc < 0) {
-      char buf[100];
-      switch(rc) {
-      case DDCRC_REPORTED_UNSUPPORTED:       // should not happen
-      case DDCRC_DETERMINED_UNSUPPORTED:
-         printf("Unsupported request\n");
-         break;
-      case DDCRC_RETRIES:
-         printf("Unable to get capabilities for monitor on %s.  Maximum DDC retries exceeded.\n",
-                 display_ref_short_name_r(dref, buf, 100));
-          break;
-      default:
-         printf("(%s) !!! Unable to get capabilities for monitor on %s\n",
-                __func__, display_ref_short_name_r(dref, buf, 100));
-         DBGMSG("Unexpected status code: %s", gsc_desc(rc));
-      }
-      ok = false;
-   }
-   else {
-      // assert(capabilities);
-      assert(capabilities_string);
-      // pcap is always set, but may be damaged if there was a parsing error
-      // Parsed_Capabilities * pcap = parse_capabilities_buffer(capabilities);
-      // Parsed_Capabilities * pcap = parse_capabilities_string(capabilities->bytes);
-      Parsed_Capabilities * pcap = parse_capabilities_string(capabilities_string);
-      // buffer_free(capabilities, "capabilities");
-      report_parsed_capabilities(pcap);
-      free_parsed_capabilities(pcap);
-      ok = true;
-   }
-
-   return ok;
-}
-#endif
-
-
 
 //
 // Mainline
@@ -256,33 +211,30 @@ int main(int argc, char *argv[]) {
    }
 
    else if (parsed_cmd->cmd_id == CMDID_VCPINFO) {
-      // Feature_Set_Ref feature_set_ref;
-      // char * val = (parsed_cmd->argct > 0) ? parsed_cmd->args[0] : "ALL";
-      // bool ok = parse_feature_id_or_subset(val, CMDID_VCPINFO, &feature_set_ref);
       bool ok = true;
-      // if (ok) {
-         Version_Spec vcp_version_any = {0,0};
-         VCP_Feature_Set fset = create_feature_set_from_feature_set_ref(
-            // &feature_set_ref,
-            parsed_cmd->fref,
-            vcp_version_any,
-            false);       // force
-         if (!fset) {
-            ok = false;
-         }
+
+      Version_Spec vcp_version_any = {0,0};
+      VCP_Feature_Set fset = create_feature_set_from_feature_set_ref(
+         // &feature_set_ref,
+         parsed_cmd->fref,
+         vcp_version_any,
+         false);       // force
+      if (!fset) {
+         ok = false;
+      }
+      else {
+         if (parsed_cmd->output_level <= OL_TERSE)
+            report_feature_set(fset, 0);
          else {
-            if (parsed_cmd->output_level <= OL_TERSE)
-               report_feature_set(fset, 0);
-            else {
-               int ct =  get_feature_set_size(fset);
-               int ndx = 0;
-               for (;ndx < ct; ndx++) {
-                  VCP_Feature_Table_Entry * pentry = get_feature_set_entry(fset, ndx);
-                  report_vcp_feature_table_entry(pentry, 0);
-               }
+            int ct =  get_feature_set_size(fset);
+            int ndx = 0;
+            for (;ndx < ct; ndx++) {
+               VCP_Feature_Table_Entry * pentry = get_feature_set_entry(fset, ndx);
+               report_vcp_feature_table_entry(pentry, 0);
             }
          }
-      // }
+      }
+
       if (ok) {
          main_rc = EXIT_SUCCESS;
       }
@@ -384,46 +336,19 @@ int main(int argc, char *argv[]) {
          switch(parsed_cmd->cmd_id) {
 
          case CMDID_CAPABILITIES:
-            {
-               // Display_Handle * dh = ddc_open_display(dref, EXIT_IF_FAILURE);
+            {;
                bool ok = perform_get_capabilities_by_display_handle(dh);
-               // ddc_close_display(dh);
                main_rc = (ok) ? EXIT_SUCCESS : EXIT_FAILURE;
                break;
             }
 
          case CMDID_GETVCP:
             {
-#ifdef OLD
-               Feature_Set_Ref * feature_set_ref;
-               feature_set_ref = parsed_cmd->fref;
-               // bool ok = true;     // hack
-               Global_Status_Code gsc = 0;
-
-                  if (feature_set_ref->subset == VCP_SUBSET_SINGLE_FEATURE) {
-                     Display_Handle * dh = ddc_open_display(dref, EXIT_IF_FAILURE);
-                     gsc = app_show_single_vcp_value_by_dh_and_feature_id(
-                           dh, feature_set_ref->specific_feature, parsed_cmd->force);
-                     ddc_close_display(dh);
-                  }
-                  else {
-                     // need variant that takes Feature_Set_Ref argument
-                     // needs also to set status code
-
-                     Display_Handle * dh = ddc_open_display(dref, EXIT_IF_FAILURE);
-                     app_show_vcp_subset_values_by_display_handle(
-                           dh, feature_set_ref->subset, parsed_cmd->show_unsupported);
-                     ddc_close_display(dh);
-
-                  }
-#endif
-               //  Display_Handle * dh = ddc_open_display(dref, EXIT_IF_FAILURE);
                Global_Status_Code gsc = app_show_feature_set_values_by_display_handle(
                      dh,
                      parsed_cmd->fref,
                      parsed_cmd->show_unsupported,
                      parsed_cmd->force);
-               // ddc_close_display(dh);
                main_rc = (gsc==0) ? EXIT_SUCCESS : EXIT_FAILURE;
             }
             break;
@@ -434,7 +359,6 @@ int main(int argc, char *argv[]) {
                main_rc = EXIT_FAILURE;
             }
             else {
-               // Display_Handle * dh = ddc_open_display(dref, EXIT_IF_FAILURE);
                main_rc = EXIT_SUCCESS;
                int argNdx;
                Global_Status_Code rc = 0;
@@ -449,27 +373,20 @@ int main(int argc, char *argv[]) {
                      break;
                   }
                }
-               // ddc_close_display(dh);
             }
             break;
 
          case CMDID_DUMPVCP:
             {
-               // bool ok = dumpvcp(dref, (parsed_cmd->argct > 0) ? parsed_cmd->args[0] : NULL );
-               // Display_Handle * dh = ddc_open_display(dref, EXIT_IF_FAILURE);
                bool ok = dumpvcp_to_file_by_display_handle(dh, (parsed_cmd->argct > 0) ? parsed_cmd->args[0] : NULL );
-               // ddc_close_display(dh);
                main_rc = (ok) ? EXIT_SUCCESS : EXIT_FAILURE;
                break;
             }
 
          case CMDID_READCHANGES:
-            DBGMSG("Case CMDID_READCHANGES");
+            // DBGMSG("Case CMDID_READCHANGES");
             // report_parsed_cmd(parsed_cmd,0);
-            // first case of migrating open to main.c to eliminate use of _by_display_ref calls
-            // Display_Handle * dh = ddc_open_display(dref, EXIT_IF_FAILURE);
             app_read_changes_forever(dh);
-            // ddc_close_display(dh);
             break;
 
          default:

@@ -65,3 +65,4 @@ junk*
 *.typelib
 *.gir
 src/goclient
+playdir/

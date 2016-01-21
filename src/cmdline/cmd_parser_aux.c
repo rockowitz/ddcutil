@@ -62,7 +62,7 @@ static Cmd_Desc cmdinfo[] = {
    {CMDID_INTERROGATE,  "interrogate",   3,  0,       0},
    {CMDID_ENVIRONMENT,  "environment",   3,  0,       0},
    {CMDID_VCPINFO,      "vcpinfo",       5,  0,       1},
-   {CMDID_READCHANGES,  "changed",       3,  0,       0},
+   {CMDID_READCHANGES,  "watch",         3,  0,       0},
 };
 static int cmdct = sizeof(cmdinfo)/sizeof(Cmd_Desc);
 
@@ -272,6 +272,7 @@ char * commands_list_help =
 #endif
        "   environment                          Probe execution environment\n"
        "   interrogate                          Report everything possible\n"
+       "   watch                                Watch display for reported changes (under development)\n"
        "\n";
 
 char * command_argument_help =
