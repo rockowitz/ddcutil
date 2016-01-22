@@ -148,7 +148,7 @@ app_set_vcp_value_by_display_handle(
    }
 
    if (entry && good_value) {
-      gsc = set_nontable_vcp_value_by_dh(dh, entry->code, (int) longtemp);
+      gsc = set_nontable_vcp_value(dh, entry->code, (int) longtemp);
 
       if (gsc != 0) {
          // Is this proper error message?

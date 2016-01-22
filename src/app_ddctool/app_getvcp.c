@@ -331,7 +331,7 @@ app_read_changes(Display_Handle * dh) {
       }
 
       if (gsc == 0) {
-         gsc = set_nontable_vcp_value_by_dh(dh, 0x02, 0x01);
+         gsc = set_nontable_vcp_value(dh, 0x02, 0x01);
          if (gsc != 0)
             DBGMSG("set_nontable_vcp_value_by_display_handle() returned %s", gsc_desc(gsc));
          else

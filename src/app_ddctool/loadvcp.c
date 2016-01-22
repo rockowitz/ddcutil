@@ -359,7 +359,7 @@ bool loadvcp_from_loadvcp_data(Loadvcp_Data* pdata) {
          int  new_value    = pdata->vcp_value[ndx].value;
          // DBGMSG("feature_code=0x%02x, new_value=%d", feature_code, new_value );
 
-         int rc =set_nontable_vcp_value_by_dh(dh, feature_code, new_value);
+         int rc =set_nontable_vcp_value(dh, feature_code, new_value);
          if (rc != 0) {
             DBGMSG("set_vcp_for_DisplayHandle() returned %d   ", rc );
             DBGMSG("Terminating.  " );

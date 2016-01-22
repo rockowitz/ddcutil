@@ -71,7 +71,7 @@ static Trace_Group TRACE_GROUP = TRC_DDC;
  *  Returns:
  *     status code from perform_ddc_write_only()
  */
-Global_Status_Code set_nontable_vcp_value_by_dh(
+Global_Status_Code set_nontable_vcp_value(
                       Display_Handle * dh,
                       Byte             feature_code,
                       int              new_value) {
@@ -93,38 +93,6 @@ Global_Status_Code set_nontable_vcp_value_by_dh(
    return gsc;
 }
 
-
-#ifdef APPARENTLY_UNUSED
-/* Sets a new VCP feature value.
- *
- * Arguments:
- *    dref          display reference
- *    feature_code  VCP feature code
- *    new_value     new value
- *
- *  Returns:
- *     status code from perform_ddc_write_only()
- */
-Global_Status_Code set_nontable_vcp_value_by_dr(
-                      Display_Ref * dref,
-                      Byte          feature_code,
-                      int           new_value) {
-   // bool debug = false;
-   // if (debug) {
-   //    char buf[100];
-
-   //    DBGMSG("Writing feature 0x%02x for %s, new value = %d", feature_code,
-   //           displayRefShortName(pdisp, buf, 100 ), new_value);
-   // }
-   char buf[100];
-   TRCMSG("Writing feature 0x%02x for %s, new value = %d\n", feature_code,
-             display_ref_short_name_r(dref, buf, 100 ), new_value);
-   Display_Handle * pDispHandle = ddc_open_display(dref, EXIT_IF_FAILURE);
-   Global_Status_Code rc = set_nontable_vcp_value_by_dh( pDispHandle, feature_code, new_value);
-   ddc_close_display(pDispHandle);
-   return rc;
-}
-#endif
 
 //
 // Get and show VCP values
@@ -216,7 +184,7 @@ Global_Status_Code get_nontable_vcp_value(
  * Returns:
  *    status code
  */
-Global_Status_Code get_table_vcp_value_by_display_handle(
+Global_Status_Code get_table_vcp_value(
        Display_Handle *       dh,
        Byte                   feature_code,
        Buffer**               pp_table_bytes)
@@ -249,7 +217,7 @@ Global_Status_Code get_table_vcp_value_by_display_handle(
 }
 
 
-Global_Status_Code get_vcp_value_by_display_handle(
+Global_Status_Code get_vcp_value(
        Display_Handle *          dh,
        Byte                      feature_code,
        VCP_Call_Type             call_type,
@@ -274,7 +242,7 @@ Global_Status_Code get_vcp_value_by_display_handle(
 
    case (TABLE_VCP_CALL):
          presp->response_type = TABLE_VCP_CALL;
-         gsc = get_table_vcp_value_by_display_handle(
+         gsc = get_table_vcp_value(
                  dh,
                  feature_code,
                  &presp->table_response);

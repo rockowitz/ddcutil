@@ -35,17 +35,12 @@
 #include "ddc/vcp_feature_codes.h"
 
 
-Global_Status_Code set_nontable_vcp_value_by_dr(
-       Display_Ref *             dref,
-       Byte                      feature_code,
-       int                       new_value);
-
-Global_Status_Code set_nontable_vcp_value_by_dh(
+Global_Status_Code set_nontable_vcp_value(
        Display_Handle *          dh,
        Byte                      feature_code,
        int                       new_value);
 
-Global_Status_Code get_table_vcp_value_by_display_handle(
+Global_Status_Code get_table_vcp_value(
        Display_Handle *          dh,
        Byte                      feature_code,
        Buffer**                  pp_table_bytes);
@@ -55,7 +50,7 @@ Global_Status_Code get_nontable_vcp_value(
        Byte                      feature_code,
        Parsed_Nontable_Vcp_Response** pp_parsed_response);
 
-Global_Status_Code get_vcp_value_by_display_handle(
+Global_Status_Code get_vcp_value(
        Display_Handle *          dh,
        Byte                      feature_code,
        VCP_Call_Type             call_type,

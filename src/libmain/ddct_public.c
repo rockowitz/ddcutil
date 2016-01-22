@@ -576,7 +576,7 @@ DDCT_Status ddct_get_table_vcp_value(
    WITH_DH(ddct_dh,
       {
          Buffer * p_table_bytes;
-         rc =  get_table_vcp_value_by_display_handle(dh, feature_code, &p_table_bytes);
+         rc =  get_table_vcp_value(dh, feature_code, &p_table_bytes);
          if (rc == 0) {
             int len = p_table_bytes->len;
             *value_len = len;
@@ -597,7 +597,7 @@ DDCT_Status ddct_set_continuous_vcp_value(
                int              new_value)
 {
    WITH_DH(ddct_dh,  {
-         Global_Status_Code gsc = set_nontable_vcp_value_by_dh(dh, feature_code, new_value);
+         Global_Status_Code gsc = set_nontable_vcp_value(dh, feature_code, new_value);
          rc = gsc;
       } );
 }

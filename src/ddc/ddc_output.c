@@ -142,7 +142,7 @@ get_formatted_value_for_feature_table_entry(
                             feature_code, feature_name);
    }
    Parsed_Vcp_Response * parsed_vcp_response;
-   gsc = get_vcp_value_by_display_handle(
+   gsc = get_vcp_value(
            dh,
            feature_code,
            feature_type,
