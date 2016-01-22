@@ -25,8 +25,6 @@
  */
 
 #include <assert.h>
-#include <ddc/ddc_output.h>
-#include <ddc/vcp_feature_set.h>
 #include <errno.h>
 #include <glib.h>
 #include <string.h>
@@ -54,6 +52,8 @@
 #include "ddc/ddc_packet_io.h"
 #include "ddc/ddc_vcp.h"
 #include "ddc/ddc_vcp_version.h"
+
+#include <ddc/ddc_output.h>
 
 
 // Trace class for this file
@@ -411,7 +411,7 @@ show_feature_set_values_by_display_handle(
  *    status code
  */
 Global_Status_Code
-show_vcp_values_by_display_handle(
+show_vcp_values(
         Display_Handle *    dh,
         VCP_Feature_Subset  subset,
         GPtrArray *         collector,    // not used
@@ -494,7 +494,7 @@ void collect_machine_readable_timestamp(time_t time_millis, GPtrArray* vals) {
 
 
 Global_Status_Code
-collect_profile_related_values_by_display_handle(
+collect_profile_related_values(
       Display_Handle*  dh,
       time_t           timestamp_millis,
       GPtrArray**      pvals)
@@ -505,7 +505,7 @@ collect_profile_related_values_by_display_handle(
 
    collect_machine_readable_timestamp(timestamp_millis, vals);
    collect_machine_readable_monitor_id(dh, vals);
-   gsc = show_vcp_values_by_display_handle(
+   gsc = show_vcp_values(
             dh,
             VCP_SUBSET_PROFILE,
             vals,

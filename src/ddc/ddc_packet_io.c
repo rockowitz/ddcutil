@@ -30,7 +30,6 @@
 #include <assert.h>
 #include <errno.h>
 #include <fcntl.h>
-// #include <i2c-dev.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -147,7 +146,6 @@ void ddc_close_display(Display_Handle * dh) {
 
 
 
-
 // Retry Management and Statistics
 
 // constants in parms.h:
@@ -229,9 +227,8 @@ Global_Status_Code (*Write_Read_Raw_Function)(
 
 
 //
-// write and read operations that take DDC_Packets
+// Write and read operations that take DDC_Packets
 //
-
 
 /* Writes a DDC request packet to an open I2C bus
  * and returns the raw response.
@@ -264,7 +261,7 @@ Global_Status_Code ddc_i2c_write_read_raw(
    TRCMSGTG(tg, "Starting. dh=%s, readbuf=%p", display_handle_repr_r(dh, NULL, 0), readbuf);
    // DBGMSG("request_packet_ptr=%p", request_packet_ptr);
    // dump_packet(request_packet_ptr);
-   ASSERT_VALID_DISPLAY_REF(dh, DDC_IO_DEVI2C);
+   ASSERT_DISPLAY_IO_MODE(dh, DDC_IO_DEVI2C);
 
    Global_Status_Code rc =
          invoke_i2c_writer(
@@ -328,7 +325,7 @@ Global_Status_Code ddc_adl_write_read_raw(
    if (debug) tf = true;
    TRCMSGTF(tf, "Starting. Using adl_ddc_write_only() and adl_ddc_read_only() dh=%s",
             display_handle_repr_r(dh, NULL, 0));
-   ASSERT_VALID_DISPLAY_REF(dh, DDC_IO_ADL);
+   ASSERT_DISPLAY_IO_MODE(dh, DDC_IO_ADL);
 
    Global_Status_Code gsc = adlshim_ddc_write_only(
                                dh,
@@ -383,9 +380,8 @@ Global_Status_Code ddc_write_read_raw(
       int *            pbytes_received
      )
 {
-   bool debug = false;  // override
-   if (debug)
-      DBGMSG("Starting.");
+   bool debug = false;
+   DBGMSF(debug, "Starting.");
    Global_Status_Code rc;
 
    if (dh->ddc_io_mode == DDC_IO_DEVI2C) {
@@ -407,8 +403,7 @@ Global_Status_Code ddc_write_read_raw(
        );
    }
 
-   if (debug)
-      DBGMSG("Done, returning: %s", gsc_desc(rc));
+   DBGMSF(debug, "Done, returning: %s", gsc_desc(rc));
    return rc;
 }
 
@@ -604,10 +599,9 @@ Global_Status_Code ddc_i2c_write_only(
    // tf = true;
    TRCMSGTF(tf, "Starting.");
 
-   Global_Status_Code rc;
-   rc = invoke_i2c_writer(fh,
-                           get_packet_len(request_packet_ptr)-1,
-                           get_packet_start(request_packet_ptr)+1 );;
+   Global_Status_Code rc = invoke_i2c_writer(fh,
+                              get_packet_len(request_packet_ptr)-1,
+                              get_packet_start(request_packet_ptr)+1 );
    if (rc < 0)
       log_status_code(rc, __func__);
    call_tuned_sleep_i2c(SE_POST_WRITE);
@@ -702,5 +696,4 @@ Global_Status_Code ddc_write_only_with_retry( Display_Handle * dh, DDC_Packet * 
    TRCMSGTF(tf, "Done. rc=%d", rc);
    return rc;
 }
-
 

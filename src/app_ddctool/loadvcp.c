@@ -517,7 +517,7 @@ char * create_simple_vcp_fn_by_display_handle(
 #ifdef UNUSED
 GPtrArray * get_profile_related_values_by_display_ref(Display_Ref * dref, time_t time_millis) {
    Display_Handle* dh = ddc_open_display(dref, EXIT_IF_FAILURE);
-   GPtrArray * vals = collect_profile_related_values_by_display_handle(dh, time_millis);
+   GPtrArray * vals = collect_profile_related_values(dh, time_millis);
    ddc_close_display(dh);
    return vals;
 }
@@ -561,7 +561,7 @@ bool dumpvcp_to_file_by_display_handle(Display_Handle * dh, char * filename) {
       // TODO: return status codes up the call chain to here,
       // look for DDCRC_MULTI_FEATURE_ERROR
       GPtrArray * vals = NULL;
-      gsc = collect_profile_related_values_by_display_handle(dh, time_millis, &vals);
+      gsc = collect_profile_related_values(dh, time_millis, &vals);
       // DBGMSG("vals->len = %d", vals->len);
 #ifdef FAILS
       int ndx = 0;
@@ -667,7 +667,7 @@ Global_Status_Code
 dumpvcp_to_string_by_display_handle(Display_Handle * dh, char ** result) {
    GPtrArray * vals = NULL;
    result = NULL;
-   Global_Status_Code gsc = collect_profile_related_values_by_display_handle(dh, time(NULL), &vals);
+   Global_Status_Code gsc = collect_profile_related_values(dh, time(NULL), &vals);
    if (gsc == 0) {
       int ct = vals->len;
       // DBGMSG("ct = %d", ct);

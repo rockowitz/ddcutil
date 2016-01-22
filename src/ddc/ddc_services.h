@@ -33,5 +33,4 @@ void init_ddc_services();
 
 void ddc_show_max_tries(FILE * fh);
 
-
 #endif /* SRC_DDC_DDC_SERVICES_H_ */

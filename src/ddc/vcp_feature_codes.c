@@ -73,12 +73,9 @@ bool format_feature_detail_sl_lookup(
         int                            bufsz);
 
 
-
 //
 // Functions applicable to VCP_Feature_Table as a whole
 //
-
-
 
 /* Creates humanly readable interpretation of VCP feature flags.
  * The result is returned in a buffer supplied by the caller.
@@ -127,7 +124,6 @@ static char * vcp_interpret_version_feature_flags(Version_Feature_Flags flags, c
 }
 
 
-
 void vcp_list_feature_codes(FILE * fh) {
    fprintf(fh, "Recognized VCP feature codes:\n");
    char buf[200];
@@ -153,11 +149,6 @@ void vcp_list_feature_codes(FILE * fh) {
              );
    }
 }
-
-
-
-
-
 
 
 Byte valid_versions(VCP_Feature_Table_Entry * pentry) {
@@ -191,7 +182,6 @@ Byte valid_versions(VCP_Feature_Table_Entry * pentry) {
    }
    return result;
 }
-
 
 
 char * valid_version_names_r(Byte valid_version_flags, char * version_name_buf, int bufsz) {
@@ -228,6 +218,7 @@ char * str_comma_cat_r(char * val, char * buf, int bufsz) {
    strcat(buf, val);
    return buf;
 }
+
 
 char * spec_group_names_r(VCP_Feature_Table_Entry * pentry, char * buf, int bufsz) {
    *buf = '\0';
@@ -273,32 +264,6 @@ char * subset_names_r(VCP_Feature_Table_Entry * pentry, char * buf, int bufsz) {
    return buf;
 }
 
-#ifdef REF
-// Exactly 1 of the following 3 bits must be set
-#define  VCP2_RO             0x0400
-#define  VCP2_WO             0x0200
-#define  VCP2_RW             0x0100
-#define  VCP2_READABLE       (VCP2_RO | VCP2_RW)
-#define  VCP2_WRITABLE       (VCP2_WO | VCP2_RW)
-
-// Further refine the MCCS C/NC/TABLE categorization
-#define VCP2_STD_CONT        0x80
-#define VCP2_COMPLEX_CONT    0x40
-#define VCP2_CONT            (VCP2_STD_CONT|VCP2_COMPLEX_CONT)
-#define VCP2_SIMPLE_NC       0x20
-#define VCP2_COMPLEX_NC      0x10
-// For WO NC features.  There's no interpretation function or lookup table
-// Used to mark that the feature is defined for a version
-#define VCP2_WO_NC           0x08
-#define VCP2_NC              (VCP2_SIMPLE_NC|VCP2_COMPLEX_NC|VCP2_WO_NC)
-#define VCP2_NON_TABLE       (VCP2_CONT | VCP2_NC)
-#define VCP2_TABLE           0x04
-#define VCP2_WO_TABLE        0x02
-#define VCP2_ANY_TABLE       (VCP2_TABLE | VCP2_WO_TABLE)
-
-
-#endif
-
 
 void report_sl_values(Feature_Value_Entry * sl_values, int depth) {
    while (sl_values->value_name != NULL) {
@@ -306,6 +271,7 @@ void report_sl_values(Feature_Value_Entry * sl_values, int depth) {
       sl_values++;
    }
 }
+
 
 char * interpret_feature_flags_r(Version_Feature_Flags vflags, char * workbuf, int bufsz) {
    bool debug = false;
@@ -343,6 +309,7 @@ char * interpret_feature_flags_r(Version_Feature_Flags vflags, char * workbuf, i
    return workbuf;
 }
 
+
 // report function specifically for use by report_vcp_feature_table_entry()
 void report_feature_table_entry_flags(
         VCP_Feature_Table_Entry * pentry,
@@ -356,6 +323,7 @@ void report_feature_table_entry_flags(
       rpt_vstring(depth, "Attributes (v%d.%d): %s", vcp_version.major, vcp_version.minor, workbuf);
    }
 }
+
 
 void report_vcp_feature_table_entry(VCP_Feature_Table_Entry * pentry, int depth) {
    char workbuf[200];
@@ -391,8 +359,6 @@ void report_vcp_feature_table_entry(VCP_Feature_Table_Entry * pentry, int depth)
    }
 
 }
-
-
 
 
 //
@@ -524,16 +490,12 @@ get_version_sensitive_feature_flags(
 }
 
 
-
-
-
 bool has_version_specific_features(VCP_Feature_Table_Entry * pentry) {
    int ct = 0;
    if (pentry->v20_flags)  ct++;
    if (pentry->v21_flags)  ct++;
    if (pentry->v30_flags)  ct++;
    if (pentry->v22_flags)  ct++;
-
    return (ct > 1);
 }
 
@@ -555,8 +517,6 @@ Version_Spec get_highest_non_deprecated_version(VCP_Feature_Table_Entry * pentry
        vspec.major = 2;
        vspec.minor = 0;
     }
-
-
    return vspec;
 }
 
@@ -620,7 +580,6 @@ Feature_Value_Entry * get_version_specific_sl_values(
           pvft_entry->code, vcp_version.major, vcp_version.minor, result);
    return result;
 }
-
 
 
 char * get_version_sensitive_feature_name(
@@ -708,7 +667,6 @@ get_nontable_feature_detail_function(
    DBGMSF(debug, "Returning: %p", func);
    return func;
 }
-
 
 
 Format_Table_Feature_Detail_Function
@@ -1014,9 +972,6 @@ bool format_feature_detail_x73_lut_size(
 }
 
 
-
-
-
 //
 // Functions for interpreting non-continuous features whose values are
 // stored in the SL byte
@@ -1253,7 +1208,6 @@ bool format_feature_detail_standard_continuous(
 }
 
 
-
 /* Standard feature detail formatting function for a feature marked
  * as Continuous for which the Sh/Sl bytes represent an integer in
  * the range 0..65535 and max value is not relevant.
@@ -1277,8 +1231,6 @@ bool format_feature_detail_ushort(
    snprintf(buffer, bufsz, "%5d (0x%04x)", cv, cv);
    return true;
 }
-
-
 
 
 //
@@ -1320,7 +1272,6 @@ bool x0b_format_feature_detail_color_temperature_increment(
    return true;   // or should it be false if invalid value?
 }
 
-
 // 0x0c
 bool x0c_format_feature_detail_color_temperature_request(
       Parsed_Nontable_Vcp_Response * code_info,
@@ -1335,7 +1286,6 @@ bool x0c_format_feature_detail_color_temperature_request(
 
    return true;
 }
-
 
 // 0x14
 bool format_feature_detail_select_color_preset(
@@ -1425,7 +1375,6 @@ bool format_feature_detail_select_color_preset(
    return ok;
 }
 
-
 // 0x62
 bool format_feature_detail_audio_speaker_volume_v30(
       Parsed_Nontable_Vcp_Response * code_info, Version_Spec vcp_version, char * buffer, int bufsz)
@@ -1478,7 +1427,6 @@ bool format_feature_detail_x8d_v22_mute_audio_blank_screen(
    return true;
 }
 
-
 // 0x8f, 0x91
 bool format_feature_detail_audio_treble_bass_v30(
       Parsed_Nontable_Vcp_Response * code_info, Version_Spec vcp_version, char * buffer, int bufsz)
@@ -1513,7 +1461,6 @@ bool format_feature_detail_audio_treble_bass_v30(
   return ok;
 }
 
-
 // 0x93
 bool format_feature_detail_audio_balance_v30(
       Parsed_Nontable_Vcp_Response * code_info, Version_Spec vcp_version, char * buffer, int bufsz)
@@ -1547,7 +1494,6 @@ bool format_feature_detail_audio_balance_v30(
   return ok;
 }
 
-
 // 0xac
 bool format_feature_detail_xac_horizontal_frequency(
       Parsed_Nontable_Vcp_Response * code_info, Version_Spec vcp_version, char * buffer, int bufsz)
@@ -1571,7 +1517,6 @@ bool format_feature_detail_xac_horizontal_frequency(
   }
   return true;
 }
-
 
 
 // This function implements the MCCS interpretation in MCCS 2.0 and 3.0.
@@ -1622,7 +1567,6 @@ bool format_feature_detail_6_axis_hue(
    return true;
 }
 
-
 // 0xae
 bool format_feature_detail_xae_vertical_frequency(
       Parsed_Nontable_Vcp_Response * code_info, Version_Spec vcp_version, char * buffer, int bufsz)
@@ -1645,7 +1589,6 @@ bool format_feature_detail_xae_vertical_frequency(
   }
   return true;
 }
-
 
 // 0xbe
 bool format_feature_detail_xbe_link_control(
@@ -1754,7 +1697,6 @@ bool format_feature_detail_xce_aux_display_size(
  }
 
 
-
 //
 // SL byte value lookup tables
 //
@@ -1853,8 +1795,6 @@ Feature_Value_Entry x66_ambient_light_sensor_values[] = {
       {0x00,  NULL}
 };
 
-
-
 // 0x82: Horizontal Mirror
 Feature_Value_Entry x82_horizontal_flip_values[] = {
       {0x00, "Normal mode"},
@@ -1915,8 +1855,6 @@ Feature_Value_Entry x87_sharpness_values[] = {
       {0x00,  NULL}
 };
 
-
-
 // 0x94
 Feature_Value_Entry x94_audio_stereo_mode_values[] = {
       {0x00,  "Speaker off/Audio not supported"},
@@ -1952,8 +1890,6 @@ Feature_Value_Entry x94_audio_stereo_mode_values[] = {
       {0x00,  NULL}
 };
 
-
-
 // 0x99
 Feature_Value_Entry x99_window_control_values[] = {
       {0x00,  "No effect"},
@@ -1962,24 +1898,11 @@ Feature_Value_Entry x99_window_control_values[] = {
       {0x00,  NULL}
 };
 
-
 // 0xa2
 Feature_Value_Entry xa2_auto_setup_values[] = {
       {0x01,  "Off"},
       {0x02,  "On"},
       {0x00,  NULL}
-};
-
-
-
-// 0xaa
-static Feature_Value_Entry xaa_screen_orientation_values[] = {
-      {0x01, "0 degrees"},
-      {0x02, "90 degrees"},
-      {0x03, "180 degrees"},
-      {0x04, "270 degrees"},
-      {0xff, "Display cannot supply orientation"},
-      {0xff, NULL}     // terminator
 };
 
 // 0xa5
@@ -1996,6 +1919,15 @@ static Feature_Value_Entry xa5_window_select_values[] = {
 
 };
 
+// 0xaa
+static Feature_Value_Entry xaa_screen_orientation_values[] = {
+      {0x01, "0 degrees"},
+      {0x02, "90 degrees"},
+      {0x03, "180 degrees"},
+      {0x04, "270 degrees"},
+      {0xff, "Display cannot supply orientation"},
+      {0xff, NULL}     // terminator
+};
 
 // 0xb0
 static  Feature_Value_Entry xb0_settings_values[] =
@@ -2004,8 +1936,6 @@ static  Feature_Value_Entry xb0_settings_values[] =
      {0x02, "Restore factory defaults for current mode"},
      {0x00, NULL}    // termination entry
 };
-
-
 
 // 0xb2
 static Feature_Value_Entry xb2_flat_panel_subpixel_layout_values[] = {
@@ -2048,7 +1978,6 @@ static Feature_Value_Entry xb6_display_technology_type_values[] = {
           { 0x09, "Static MEM"},      // not in 2.0
           {0xff, NULL}     // terminator
 };
-
 
 // 0xc8
 Feature_Value_Entry xc8_display_controller_type_values[] = {
@@ -3686,6 +3615,9 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
 int vcp_feature_code_count = sizeof(vcp_code_table)/sizeof(VCP_Feature_Table_Entry);
 
 
+//
+// Functions for validating vcp_code_table[]
+//
 
 int check_one_version_flags(
       Version_Feature_Flags     vflags,

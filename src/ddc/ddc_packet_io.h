@@ -38,7 +38,6 @@
 #include "base/util.h"
 
 
-
 Display_Handle* ddc_open_display(Display_Ref * dref,  Failure_Action failure_action);
 void            ddc_close_display(Display_Handle * dh);
 
@@ -55,15 +54,13 @@ void ddc_report_write_only_stats();
 void ddc_reset_write_read_stats();
 void ddc_report_write_read_stats();
 
-
 Global_Status_Code ddc_write_only(
-       Display_Handle *  dh,
-       DDC_Packet *      request_packet_ptr);
-
+      Display_Handle * dh,
+      DDC_Packet *     request_packet_ptr);
 
 Global_Status_Code ddc_write_only_with_retry(
-       Display_Handle *  dh,
-       DDC_Packet *      request_packet_ptr);
+      Display_Handle * dh,
+      DDC_Packet *     request_packet_ptr);
 
 Global_Status_Code ddc_write_read(
       Display_Handle * dh,
@@ -75,12 +72,12 @@ Global_Status_Code ddc_write_read(
      );
 
 Global_Status_Code ddc_write_read_with_retry(
-         Display_Handle * dh,
-         DDC_Packet *  request_packet_ptr,
-         int           max_read_bytes,
-         Byte          expected_response_type,
-         Byte          expected_subtype,
-         DDC_Packet ** response_packet_ptr_loc
-        );
+      Display_Handle * dh,
+      DDC_Packet *     request_packet_ptr,
+      int              max_read_bytes,
+      Byte             expected_response_type,
+      Byte             expected_subtype,
+      DDC_Packet **    response_packet_ptr_loc
+     );
 
 #endif /* DDC_PACKET_IO_H_ */

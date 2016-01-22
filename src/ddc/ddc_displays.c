@@ -45,7 +45,7 @@
 #include "adl/adl_errors.h"
 #include "adl/adl_shim.h"
 
-#include "ddc/ddc_edid.h"
+// #include "ddc/ddc_edid.h"
 #include "ddc/ddc_vcp_version.h"
 #include "ddc/ddc_vcp.h"
 #include "ddc/vcp_feature_codes.h"
@@ -62,10 +62,29 @@
 //  Display Specification
 //
 
-/* Converts the display identifiers passed on the command line to a logical
+/** Tests if a DisplayRef identifies an attached display.
+ */
+bool ddc_is_valid_display_ref(Display_Ref * dref, bool emit_error_msg) {
+   assert( dref );
+   // char buf[100];
+   // DBGMSG("Starting.  %s   ", displayRefShortName(pdisp, buf, 100) );
+   bool result;
+   if (dref->ddc_io_mode == DDC_IO_DEVI2C) {
+      result = i2c_is_valid_bus(dref->busno, emit_error_msg );
+   }
+   else {
+      // result = adl_is_valid_adlno(dref->iAdapterIndex, dref->iDisplayIndex, true /* emit_error_msg */);
+      result = adlshim_is_valid_display_ref(dref, emit_error_msg);
+   }
+   // DBGMSG("Returning %d", result);
+   return result;
+}
+
+
+/* Converts display identifiers passed on the command line to a logical
  * identifier for an I2C or ADL display.  If a bus number or ADL adapter.display
  * number is specified, the translation is direct.  If a model name/serial number
- * pair or an EDID is specified, the attached displays are searched.
+ * pair, an EDID, or a display number is specified, the attached displays are searched.
  *
  * Arguments:
  *    pdid      display identifiers
@@ -126,7 +145,6 @@ Display_Ref* get_display_ref_for_display_identifier(Display_Identifier* pdid, bo
 }
 
 
-
 //
 // Functions to get display information
 //
@@ -182,7 +200,6 @@ Display_Info_List * ddc_get_valid_displays() {
 }
 
 
-
 /* Returns a Display_Ref for the nth display.
  *
  * Arguments:
@@ -198,7 +215,6 @@ Display_Ref* ddc_find_display_by_dispno(int dispno) {
       DBGMSG("Starting.  dispno=%d", dispno);
    Display_Ref * result = NULL;
    Display_Info_List * all_displays = ddc_get_valid_displays();
-
    if (dispno >= 1 && dispno <= all_displays->ct) {
       // we're not done yet.   There may be an invalid display in the list.
       int ndx;
@@ -209,7 +225,6 @@ Display_Ref* ddc_find_display_by_dispno(int dispno) {
          }
       }
    }
-
    if (debug) {
       DBGMSG("Returning: %p  ", result );
       if (result)
@@ -218,6 +233,35 @@ Display_Ref* ddc_find_display_by_dispno(int dispno) {
    return result;
 }
 
+
+Display_Ref* ddc_find_display_by_model_and_sn(const char * model, const char * sn) {
+   // DBGMSG("Starting.  model=%s, sn=%s   ", model, sn );
+   Display_Ref * result = NULL;
+   Bus_Info * businfo = i2c_find_bus_info_by_model_sn(model, sn);
+   if (businfo) {
+      result = create_bus_display_ref(businfo->busno);
+   }
+   else {
+      result = adlshim_find_display_by_model_sn(model, sn);
+   }
+   // DBGMSG("Returning: %p  ", result );
+   return result;
+}
+
+
+Display_Ref* ddc_find_display_by_edid(const Byte * pEdidBytes) {
+   // DBGMSG("Starting.  model=%s, sn=%s   ", model, sn );
+   Display_Ref * result = NULL;
+   Bus_Info * businfo = i2c_find_bus_info_by_edid((pEdidBytes));
+   if (businfo) {
+      result = create_bus_display_ref(businfo->busno);
+   }
+   else {
+      result = adlshim_find_display_by_edid(pEdidBytes);
+   }
+   // DBGMSG("Returning: %p  ", result );
+   return result;
+}
 
 
 /* Show information about a display.
@@ -324,52 +368,5 @@ int ddc_report_active_displays(int depth) {
 }
 
 
-Display_Ref* ddc_find_display_by_model_and_sn(const char * model, const char * sn) {
-   // DBGMSG("Starting.  model=%s, sn=%s   ", model, sn );
-   Display_Ref * result = NULL;
-   Bus_Info * businfo = i2c_find_bus_info_by_model_sn(model, sn);
-   if (businfo) {
-      result = create_bus_display_ref(businfo->busno);
-   }
-   else {
-      result = adlshim_find_display_by_model_sn(model, sn);
-   }
-   // DBGMSG("Returning: %p  ", result );
-   return result;
-}
-
-
-Display_Ref* ddc_find_display_by_edid(const Byte * pEdidBytes) {
-   // DBGMSG("Starting.  model=%s, sn=%s   ", model, sn );
-   Display_Ref * result = NULL;
-   Bus_Info * businfo = i2c_find_bus_info_by_edid((pEdidBytes));
-   if (businfo) {
-      result = create_bus_display_ref(businfo->busno);
-   }
-   else {
-      result = adlshim_find_display_by_edid(pEdidBytes);
-   }
-   // DBGMSG("Returning: %p  ", result );
-   return result;
-}
-
-
-/** Tests if a DisplayRef identifies an attached display.
- */
-bool ddc_is_valid_display_ref(Display_Ref * dref, bool emit_error_msg) {
-   assert( dref );
-   // char buf[100];
-   // DBGMSG("Starting.  %s   ", displayRefShortName(pdisp, buf, 100) );
-   bool result;
-   if (dref->ddc_io_mode == DDC_IO_DEVI2C) {
-      result = i2c_is_valid_bus(dref->busno, emit_error_msg );
-   }
-   else {
-      // result = adl_is_valid_adlno(dref->iAdapterIndex, dref->iDisplayIndex, true /* emit_error_msg */);
-      result = adlshim_is_valid_display_ref(dref, emit_error_msg);
-   }
-   // DBGMSG("Returning %d", result);
-   return result;
-}
 
 

@@ -24,7 +24,7 @@
  * </endcopyright>
  */
 
-// functions in separate file to eliminate cirular dependencies
+// functions in separate file to eliminate circular dependencies
 
 #include "base/edid.h"
 #include "base/msg_control.h"
@@ -46,7 +46,6 @@ Parsed_Edid* ddc_get_parsed_edid_by_display_handle(Display_Handle * dh) {
    if (dh->ddc_io_mode == DDC_IO_DEVI2C)
       pEdid = i2c_get_parsed_edid_by_busno(dh->busno);
    else {
-      // pEdid = adl_get_parsed_edid_by_adlno(dref->iAdapterIndex, dref->iDisplayIndex);
       pEdid = adlshim_get_parsed_edid_by_display_handle(dh);
    }
    // DBGMSG("Returning %p", pEdid);
@@ -62,10 +61,9 @@ Parsed_Edid* ddc_get_parsed_edid_by_display_ref(Display_Ref * dref) {
    if (dref->ddc_io_mode == DDC_IO_DEVI2C)
       pEdid = i2c_get_parsed_edid_by_busno(dref->busno);
    else {
-      // pEdid = adl_get_parsed_edid_by_adlno(dref->iAdapterIndex, dref->iDisplayIndex);
       pEdid = adlshim_get_parsed_edid_by_display_ref(dref);
    }
    // DBGMSG("Returning %p", pEdid);
-   TRCMSG("Returning %p", __func__, pEdid);
+   TRCMSG("Returning %p", pEdid);
    return pEdid;
 }

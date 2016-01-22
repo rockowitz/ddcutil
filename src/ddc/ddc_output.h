@@ -28,8 +28,8 @@
 #define DDC_OUTPUT_H_
 
 #include <glib.h>
-// #include <stdio.h>
-// #include <time.h>
+#include <stdio.h>
+#include <time.h>
 
 #include "base/common.h"
 // #include "base/ddc_base_defs.h"     // for Version_Spec
@@ -38,7 +38,6 @@
 
 #include "ddc/vcp_feature_codes.h"
 #include "ddc/vcp_feature_set.h"
-
 
 
 #ifdef FUTURE
@@ -78,20 +77,22 @@ get_formatted_value_for_feature_table_entry(
       FILE *                     msg_fh);
 
 Global_Status_Code
-show_vcp_values_by_display_handle(
-        Display_Handle *    dh,
-        VCP_Feature_Subset  subset,
-        GPtrArray *         collector,
-        bool                force_show_unsupported);
+show_vcp_values(
+      Display_Handle *    dh,
+      VCP_Feature_Subset  subset,
+      GPtrArray *         collector,
+      bool                force_show_unsupported);
 
-char * format_timestamp(time_t time_millis, char * buf, int bufsz);
-
+char *
+format_timestamp(
+      time_t  time_millis,
+      char *  buf,
+      int     bufsz);
 
 Global_Status_Code
-collect_profile_related_values_by_display_handle(
-      Display_Handle*  dh,
-      time_t           timestamp_millis,
-      GPtrArray**      pvals);
-
+collect_profile_related_values(
+      Display_Handle*     dh,
+      time_t              timestamp_millis,
+      GPtrArray**         pvals);
 
 #endif /* DDC_OUTPUT_H_ */

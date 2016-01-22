@@ -27,12 +27,6 @@
 #ifndef DDC_COMMAND_CODES_H_
 #define DDC_COMMAND_CODES_H_
 
-
-#include "util/string_util.h"
-
-#include "base/ddc_packets.h"
-#include "base/util.h"
-
 //
 // MCCS Command and Response Codes
 //
@@ -63,8 +57,6 @@ struct {
    Byte    cmd_code;
    char *  name;
 } Cmd_Code_Table_Entry;
-
-
 
 extern int ddc_cmd_code_count;    // number of entries in command code table
 

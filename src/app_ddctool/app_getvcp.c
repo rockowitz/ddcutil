@@ -188,7 +188,7 @@ void app_show_vcp_subset_values_by_display_handle(
    // DBGMSG("Starting.  subset=%d   ", subset );
 
    GPtrArray * collector = NULL;
-   show_vcp_values_by_display_handle(dh, subset, collector, show_unsupported);
+   show_vcp_values(dh, subset, collector, show_unsupported);
 }
 
 
@@ -227,7 +227,7 @@ void app_show_vcp_subset_values_by_display_ref(
    if (validDisp) {
       GPtrArray * collector = NULL;
       Display_Handle * pDispHandle = ddc_open_display(dref, EXIT_IF_FAILURE);
-      show_vcp_values_by_display_handle(pDispHandle, subset, collector, show_unsupported);
+      show_vcp_values(pDispHandle, subset, collector, show_unsupported);
       ddc_close_display(pDispHandle);
    }
 }

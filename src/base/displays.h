@@ -107,7 +107,8 @@ struct {
    Version_Spec vcp_version;
 } Display_Ref;
 
-#define ASSERT_VALID_DISPLAY_REF(dref, io_mode) assert(dref && dref->ddc_io_mode == io_mode)
+// n. works for both Display_Ref and Display_Handle
+#define ASSERT_DISPLAY_IO_MODE(dref, io_mode) assert(dref && dref->ddc_io_mode == io_mode)
 
 
 Display_Ref * create_bus_display_ref(int busno);

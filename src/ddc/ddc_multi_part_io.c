@@ -25,7 +25,6 @@
  */
 
 #include <assert.h>
-// #include <i2c-dev.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -42,7 +41,6 @@
 #include "base/parms.h"
 #include "base/status_code_mgt.h"
 #include "base/util.h"
-
 
 #include "ddc/ddc_packet_io.h"
 #include "ddc/try_stats.h"
