@@ -30,7 +30,8 @@
 #include "base/linux_errno.h"
 #include "base/parms.h"
 
-
+/* Master initialization function for files in subdirectory base
+ */
 void init_base_services() {
    init_sleep_stats();
    init_execution_stats();
