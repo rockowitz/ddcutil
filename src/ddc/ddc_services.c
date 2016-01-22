@@ -26,9 +26,7 @@
 
 #include <stdio.h>
 
-#include "base/common.h"
-#include "base/ddc_packets.h"
-#include "base/linux_errno.h"
+#include "base/base_services.h"
 #include "base/parms.h"
 
 #include "i2c/i2c_do_io.h"
@@ -47,21 +45,24 @@
  */
 void init_ddc_services() {
    // DBGMSG("Executing");
+
+   // base:
+   init_base_services();
+
+   // i2c:
+   i2c_set_io_strategy(DEFAULT_I2C_IO_STRATEGY);
+
+   // adl:
+   init_adl_errors();
+   // adl_debug = true;      // turn on adl initialization tracing
+   adlshim_initialize();
+
+   // ddc:
    ddc_reset_write_only_stats();
    ddc_reset_write_read_stats();
    ddc_reset_multi_part_read_stats();
-   init_sleep_stats();
-   init_execution_stats();
-
-   init_status_code_mgt();
-   init_linux_errno();
-   init_adl_errors();
    init_vcp_feature_codes();
-   // adl_debug = true;      // turn on adl initialization tracing
-   adlshim_initialize();
    init_ddc_packets();   // 11/2015: does nothing
-
-   i2c_set_io_strategy(DEFAULT_I2C_IO_STRATEGY);
 }
 
 

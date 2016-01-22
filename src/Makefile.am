@@ -130,9 +130,9 @@ sample_clients/gomain.c
 #endif
 
 # libcommon contains the source files that are 
-
 # shared between ddctool and libddctool: 
 libcommon_la_SOURCES = \
+base/base_services.c \
 base/common.c \
 base/ddc_errno.c \
 base/ddc_packets.c \
