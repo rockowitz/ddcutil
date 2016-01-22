@@ -45,12 +45,14 @@
 #include "ddc/ddc_displays.h"
 #include "ddc/ddc_edid.h"
 #include "ddc/ddc_vcp_version.h"
+#include "ddc/ddc_output.h"
 #include "ddc/ddc_services.h"
+
 
 #include "libmain/ddct_public.h"
 
 #include "../app_ddctool/loadvcp.h"
-#include "../ddc/ddc_output.h"
+
 
 #define WITH_DR(ddct_dref, action) \
    do { \
@@ -650,7 +652,7 @@ DDCT_Status ddct_get_profile_related_values(DDCT_Display_Handle ddct_dh, char** 
       {
          set_output_level(OL_PROGRAM);
          // DBGMSG("Before dumpvcp_to_string_by_display_handle()");
-         rc = dumpvcp_to_string_by_display_handle(dh, pprofile_values_string);
+         rc = dumpvcp_to_string(dh, pprofile_values_string);
          // DBGMSG("After dumpvcp_to_string_by_display_handle(), catenated=%p", catenated);
          // printf("(%s) strlen(catenated)=%ld, catenated=|%s|\n",
          //       __func__,

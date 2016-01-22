@@ -48,8 +48,8 @@
 #include <base/util.h>
 
 #include <i2c/i2c_bus_core.h>
-#include "../ddc/ddc_output.h"
 
+#include "ddc/ddc_output.h"
 #include "ddc/ddc_edid.h"
 #include "ddc/ddc_packet_io.h"
 #include "ddc/ddc_vcp.h"
@@ -486,18 +486,7 @@ char * create_simple_vcp_fn_by_edid(
    return buf;
 }
 
-#ifdef UNUSED
-char * create_simple_vcp_fn_by_display_ref(
-          Display_Ref * dref,
-          time_t        time_millis,
-          char *        buf,
-          int           bufsz)
-{
-   Parsed_Edid* edid = ddc_get_parsed_edid_by_display_ref(dref);
-   assert(edid);
-   return create_simple_vcp_fn_by_edid(edid, time_millis, buf, bufsz);
-}
-#endif
+
 
 
 char * create_simple_vcp_fn_by_display_handle(
@@ -514,18 +503,9 @@ char * create_simple_vcp_fn_by_display_handle(
 
 
 
-#ifdef UNUSED
-GPtrArray * get_profile_related_values_by_display_ref(Display_Ref * dref, time_t time_millis) {
-   Display_Handle* dh = ddc_open_display(dref, EXIT_IF_FAILURE);
-   GPtrArray * vals = collect_profile_related_values(dh, time_millis);
-   ddc_close_display(dh);
-   return vals;
-}
-#endif
-
 
 // TODO: return Global_Status_Code rather than ok
-bool dumpvcp_to_file_by_display_handle(Display_Handle * dh, char * filename) {
+bool dumpvcp_to_file(Display_Handle * dh, char * filename) {
    bool ok = true;
    Global_Status_Code gsc = 0;
    char fqfn[PATH_MAX] = {0};
@@ -599,72 +579,9 @@ bool dumpvcp_to_file_by_display_handle(Display_Handle * dh, char * filename) {
 }
 
 
-#ifdef DEPRECATED
-bool dumpvcp(Display_Ref * dref, char * filename) {
-   bool ok = true;
-   char fqfn[PATH_MAX] = {0};
-   char timestamp_buf[30];
-   time_t time_millis = time(NULL);
-   // temporarily use same output format as filename, but format the date separately here
-   // for flexibility
-   format_timestamp(time_millis, timestamp_buf, sizeof(timestamp_buf));
-
-   if (!filename) {
-      char simple_fn_buf[NAME_MAX+1];
-      char * simple_fn = create_simple_vcp_fn_by_display_ref(dref, time_millis, simple_fn_buf, sizeof(simple_fn_buf));
-      // DBGMSG("simple_fn=%s", simple_fn );
-
-      snprintf(fqfn, PATH_MAX, "/home/%s/%s/%s", getlogin(), USER_VCP_DATA_DIR, simple_fn);
-      // DBGMSG("fqfn=%s   ", fqfn );
-      filename = fqfn;
-      // control with MsgLevel?
-      printf("Writing file: %s\n", filename);
-   }
-
-
-   FILE * output_fp = fopen(filename, "w+");
-   // DBGMSG("output_fp=%p  ", output_fp );
-   if (!output_fp) {
-      fprintf(stderr, "(%s) Unable to open %s for writing: %s\n", __func__, fqfn, strerror(errno)  );
-      ok = false;
-   }
-   else {
-      GPtrArray * vals = get_profile_related_values_by_display_ref(dref, time_millis);
-      DBGMSG("vals->len = %d", vals->len);
-#ifdef FAILS
-      int ndx = 0;
-      char * nextval = NULL;
-      nextval = g_ptr_array_index(vals, ndx);
-      while (nextval != NULL) {
-         fprintf(output_fp, "%s\n", nextval);
-         ndx++;
-         DBGMSG("ndx = %d", ndx);
-         nextval = g_ptr_array_index(vals, ndx);
-         DBGMSG("nextval = %p", nextval);
-         DBGMSG("nextval = |%s|", nextval);
-      }
-#endif
-      int ct = vals->len;
-      int ndx;
-      for (ndx=0; ndx<ct; ndx++){
-         // DBGMSG("ndx = %d", ndx);
-         char * nextval = g_ptr_array_index(vals, ndx);
-         // DBGMSG("nextval = %p", nextval);
-         // DBGMSG("strlen(nextval)=%ld, nextval = |%s|", strlen(nextval), nextval);
-         fprintf(output_fp, "%s\n", nextval);
-
-      }
-      g_ptr_array_free(vals, true);
-      fclose(output_fp);
-
-   }
-   return ok;
-}
-#endif
-
-
+// n. called from ddct_public.c
 Global_Status_Code
-dumpvcp_to_string_by_display_handle(Display_Handle * dh, char ** result) {
+dumpvcp_to_string(Display_Handle * dh, char ** result) {
    GPtrArray * vals = NULL;
    result = NULL;
    Global_Status_Code gsc = collect_profile_related_values(dh, time(NULL), &vals);
@@ -686,17 +603,8 @@ dumpvcp_to_string_by_display_handle(Display_Handle * dh, char ** result) {
 }
 
 
-#ifdef DEPRECATED
-Global_Status_Code dumpvcp_to_string_by_display_ref(Display_Ref * dref, char ** result) {
-   Display_Handle* dh = ddc_open_display(dref, EXIT_IF_FAILURE);
-   Global_Status_Code gsc = dumpvcp_to_string_by_display_handle(dh, result);
-   ddc_close_display(dh);
-   return gsc;
-}
-#endif
 
-
-
+// n. called from ddct_public:
 
 Global_Status_Code loadvcp_from_string(char * catenated) {
    Null_Terminated_String_Array nta = strsplit(catenated, ";");

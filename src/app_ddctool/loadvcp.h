@@ -36,8 +36,8 @@ bool loadvcp_from_file(const char * fn);
 #ifdef DEPRECATED
 bool dumpvcp(Display_Ref * dref, char * optional_filename);
 #endif
-bool dumpvcp_to_file_by_display_handle(Display_Handle * dh, char * optional_filename);
-Global_Status_Code dumpvcp_to_string_by_display_handle(Display_Handle * dh, char** result);
+bool dumpvcp_to_file(Display_Handle * dh, char * optional_filename);
+Global_Status_Code dumpvcp_to_string(Display_Handle * dh, char** result);
 #ifdef DEPRECATED
 Global_Status_Code dumpvcp_to_string_by_display_ref(Display_Ref * dref, char ** result);
 #endif
