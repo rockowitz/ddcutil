@@ -740,7 +740,7 @@ dumpvcp_to_loadvcp_data(Display_Handle * dh, Loadvcp_Data** ploadvcp_data, FILE 
 
 
 
-GPtrArray * loadvcp_data_to_string_array(Loadvcp_Data * data) {
+GPtrArray * convert_loadvcp_data_to_string_array(Loadvcp_Data * data) {
    bool debug = false;
    DBGMSF(debug, "Starting. data=%p", data);
    assert(data);
@@ -793,7 +793,7 @@ dumpvcp_to_string_new(Display_Handle * dh, char ** pstring) {
    FILE * msg_fh = stdout;   // temp
    gsc = dumpvcp_to_loadvcp_data(dh, &data, msg_fh);
    if (gsc == 0) {
-      GPtrArray * strings = loadvcp_data_to_string_array(data);
+      GPtrArray * strings = convert_loadvcp_data_to_string_array(data);
 
       int ct = strings->len;
       DBGMSG("ct = %d", ct);
@@ -841,7 +841,7 @@ dumpvcp_to_file_new(Display_Handle * dh, char * filename) {
    FILE * msg_fh = stdout;   // temp
    gsc = dumpvcp_to_loadvcp_data(dh, &data, msg_fh);
    if (gsc == 0) {
-      GPtrArray * strings = loadvcp_data_to_string_array(data);
+      GPtrArray * strings = convert_loadvcp_data_to_string_array(data);
 
       if (!filename) {
          time_t time_millis = data->timestamp_millis;
