@@ -319,6 +319,7 @@ Null_Terminated_String_Array strsplit(char * str_to_split, char * delims) {
 
 
 void null_terminated_string_array_free(Null_Terminated_String_Array string_array) {
+   assert(string_array);
    int ndx = 0;
    while (string_array[ndx] != NULL)
       free(string_array[ndx++]);
@@ -326,13 +327,26 @@ void null_terminated_string_array_free(Null_Terminated_String_Array string_array
 }
 
 int null_terminated_string_array_length(Null_Terminated_String_Array string_array) {
+   assert(string_array);
    int ndx = 0;
    while (string_array[ndx] != NULL) {
-      // printf("(%s) string_array[ndx] = %p\n", __func__, string_array[ndx]);
-      // printf("(%s) string_array[ndx] = |%s|\n", __func__, string_array[ndx]);
       ndx++;
    }
    return ndx;
+}
+
+
+// not a report function since having string_util depend on report_util would
+// create a circular dependency
+void null_terminated_string_array_show(Null_Terminated_String_Array string_array) {
+   assert(string_array);
+   printf("Null_Terminated_String_Array at %p:\n", string_array);
+   int ndx = 0;
+   while (string_array[ndx]) {
+      printf("  %p: |%s|\n", string_array[ndx], string_array[ndx]);
+      ndx++;
+   }
+   printf("Total entries: %d\n", ndx);
 }
 
 

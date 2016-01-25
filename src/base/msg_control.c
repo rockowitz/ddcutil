@@ -26,6 +26,7 @@
  * </endcopyright>
  */
 
+#include <assert.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdarg.h>
@@ -244,14 +245,35 @@ void dbgmsg(
         char *       format,
         ...)
 {
-      char buffer[200];
-      char buf2[250];
+   // char buffer[200];
+   // char buf2[250];
+   static char * buffer = NULL;
+   static int    bufsz  = 200;     // initial value
+   static char * buf2   = NULL;
+
+   if (!buffer) {      // first call
+      buffer = calloc(bufsz,    sizeof(char*));
+      buf2   = calloc(bufsz+50, sizeof(char*));
+   }
+   va_list(args);
+   va_start(args, format);
+   int ct = vsnprintf(buffer, bufsz, format, args);
+   if (ct >= bufsz) {
+      // printf("(dbgmsg) Reallocting buffer, new size = %d\n", ct+1);
+      // buffer too small, reallocate and try again
+      free(buffer);
+      free(buf2);
+      bufsz = ct+1;
+      buffer = calloc(bufsz, sizeof(char*));
+      buf2   = calloc(bufsz+50, sizeof(char*));
       va_list(args);
       va_start(args, format);
-      vsnprintf(buffer, 200, format, args);
-      snprintf(buf2, 250, "(%s) %s", funcname, buffer);
-      puts(buf2);
-      va_end(args);
+      ct = vsnprintf(buffer, bufsz, format, args);
+      assert(ct < bufsz);
+   }
+   snprintf(buf2, bufsz+50, "(%s) %s", funcname, buffer);
+   puts(buf2);
+   va_end(args);
 }
 
 

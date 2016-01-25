@@ -378,7 +378,7 @@ int main(int argc, char *argv[]) {
 
          case CMDID_DUMPVCP:
             {
-               bool ok = dumpvcp_to_file(dh, (parsed_cmd->argct > 0) ? parsed_cmd->args[0] : NULL );
+               bool ok = dumpvcp_to_file_new(dh, (parsed_cmd->argct > 0) ? parsed_cmd->args[0] : NULL );
                main_rc = (ok) ? EXIT_SUCCESS : EXIT_FAILURE;
                break;
             }

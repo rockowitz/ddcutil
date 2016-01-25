@@ -114,6 +114,93 @@ check_valid_operation_by_feature_id_and_dh(
    return result;
 }
 
+// work in progress - eventuall move elsewhere
+
+
+Global_Status_Code
+get_raw_value_for_feature_table_entry(
+      Display_Handle *           dh,
+      VCP_Feature_Table_Entry *  vcp_entry,
+      bool                       ignore_unsupported,
+      Parsed_Vcp_Response **     presp,
+      FILE *                     msg_fh)
+{
+   bool debug = false;
+   Trace_Group tg = (debug) ? 0xff : TRACE_GROUP;
+   TRCMSGTG(tg, "Starting");
+
+   *presp = NULL;
+   Global_Status_Code gsc = 0;
+   Version_Spec vspec = get_vcp_version_by_display_handle(dh);
+   char * feature_name = get_version_sensitive_feature_name(vcp_entry, vspec);
+
+   Byte feature_code = vcp_entry->code;
+   bool is_table_feature = is_table_feature_by_display_handle(vcp_entry, dh);
+   VCP_Call_Type feature_type = (is_table_feature) ? TABLE_VCP_CALL : NON_TABLE_VCP_CALL;
+   Output_Level output_level = get_output_level();
+   Parsed_Vcp_Response * parsed_vcp_response;
+   gsc = get_vcp_value(
+           dh,
+           feature_code,
+           feature_type,
+           &parsed_vcp_response);
+   // assert ( (gsc==0 && parsed_vcp_response) || (gsc!=0 && !parsed_vcp_response) );
+
+   switch(gsc) {
+   case 0:
+      *presp = parsed_vcp_response;
+      break;
+
+   case DDCRC_INVALID_DATA:
+      if (output_level >= OL_NORMAL)    // FMT_CODE_NAME_DETAIL_W_NL
+         // fprintf(msg_fh, "VCP code 0x%02x (%-30s): Invalid response\n",
+         //                 feature_code, feature_name);
+         fprintf(msg_fh, FMT_CODE_NAME_DETAIL_W_NL,
+                      feature_code, feature_name, "Invalid response");
+
+      break;
+
+   case DDCRC_NULL_RESPONSE:
+      // for unsupported features, some monitors return null response rather than a valid response
+      // with unsupported feature indicator set
+      if (!ignore_unsupported) {
+         fprintf(msg_fh, FMT_CODE_NAME_DETAIL_W_NL,
+                        feature_code, feature_name, "Unsupported feature code (Null response)");
+      }
+      gsc = DDCRC_DETERMINED_UNSUPPORTED;
+      break;
+
+   case DDCRC_RETRIES:
+      // fprintf(msg_fh, "VCP code 0x%02x (%-30s): Maximum retries exceeded\n",
+      //                 feature_code, feature_name);
+      fprintf(msg_fh, FMT_CODE_NAME_DETAIL_W_NL,
+                      feature_code, feature_name, "Maximum retries exceeded");
+      break;
+
+   case DDCRC_REPORTED_UNSUPPORTED:
+   case DDCRC_DETERMINED_UNSUPPORTED:
+      if (!ignore_unsupported) {
+         fprintf(msg_fh, FMT_CODE_NAME_DETAIL_W_NL,
+                         feature_code, feature_name, "Unsupported feature code");
+      }
+      break;
+
+   default:
+   {
+      char buf[200];
+       snprintf(buf, 200, "Invalid response. status code=%s", gsc_desc(gsc));
+       // fprintf(msg_fh, "VCP code 0x%02x (%-30s): Invalid response. status code=%s\n",
+       //     feature_code, feature_name, gsc_desc(gsc));
+       fprintf(msg_fh, FMT_CODE_NAME_DETAIL_W_NL,
+                       feature_code, feature_name, buf);
+   }
+   }
+
+   TRCMSGTG(tg, "Done.  Returning: %s, *presp = %p", gsc_desc(gsc), *presp);
+   return gsc;
+}
+
+
 
 Global_Status_Code
 get_formatted_value_for_feature_table_entry(
@@ -296,8 +383,53 @@ void show_value_for_feature_table_entry_by_display_ref(
 #endif
 
 
+// TODO: move to more appropriate location once done
 Global_Status_Code
-show_feature_set_values_by_display_handle(
+collect_raw_feature_set_values(
+      Display_Handle *      dh,
+      VCP_Feature_Set       feature_set,
+      GPtrArray *           collector,
+      bool                  ignore_unsupported,  // if false, is error if unsupported
+      FILE *                msg_fh)
+{
+   Global_Status_Code master_status_code = 0;
+   bool debug = false;
+   DBGMSF(debug, "Starting.  collector=%p", collector);
+   // Version_Spec vcp_version = get_vcp_version_by_display_handle(dh);
+   int features_ct = get_feature_set_size(feature_set);
+   int ndx;
+   for (ndx=0; ndx< features_ct; ndx++) {
+      VCP_Feature_Table_Entry * entry = get_feature_set_entry(feature_set, ndx);
+      DBGMSF(debug,"ndx=%d, feature = 0x%02x", ndx, entry->code);
+      Parsed_Vcp_Response * response;
+      Global_Status_Code cur_status_code =
+       get_raw_value_for_feature_table_entry(
+         dh,
+         entry,
+         ignore_unsupported,
+         &response,
+         msg_fh);
+      if (cur_status_code == 0) {
+         g_ptr_array_add(collector, response);
+      }
+      else if ( (cur_status_code == DDCRC_REPORTED_UNSUPPORTED ||
+                 cur_status_code == DDCRC_DETERMINED_UNSUPPORTED
+                ) && ignore_unsupported
+              )
+      {
+         // no problem
+      }
+      else {
+         master_status_code = cur_status_code;
+         break;
+      }
+   }
+
+   return master_status_code;
+}
+
+Global_Status_Code
+show_feature_set_values(
       Display_Handle *      dh,
       VCP_Feature_Set       feature_set,
       GPtrArray *           collector,     // if null, write to stdout
@@ -400,6 +532,33 @@ show_feature_set_values_by_display_handle(
    return master_status_code;
 }
 
+
+Global_Status_Code
+collect_raw_subset_values(
+        Display_Handle *    dh,
+        VCP_Feature_Subset  subset,
+        GPtrArray *         collector,
+        bool                ignore_unsupported,
+        FILE *              msg_fh)
+{
+   Global_Status_Code gsc = 0;
+   bool debug = false;
+   DBGMSF(debug, "Starting.  subset=%d  dh=%s", subset, display_handle_repr(dh) );
+   Version_Spec vcp_version = get_vcp_version_by_display_handle(dh);
+   // DBGMSG("VCP version = %d.%d", vcp_version.major, vcp_version.minor);
+   VCP_Feature_Set feature_set = create_feature_set(subset, vcp_version);
+   if (debug)
+      report_feature_set(feature_set, 0);
+
+   gsc = collect_raw_feature_set_values(
+            dh, feature_set, collector, ignore_unsupported, msg_fh);
+   DBGMSF(debug, "Done");
+   return gsc;
+}
+
+
+
+
 /* Shows the VCP values for all features in a VCP feature subset.
  *
  * Arguments:
@@ -426,7 +585,7 @@ show_vcp_values(
    if (debug)
       report_feature_set(feature_set, 0);
 
-   gsc = show_feature_set_values_by_display_handle(
+   gsc = show_feature_set_values(
             dh, feature_set, collector, force_show_unsupported);
    DBGMSF(debug, "Done");
    return gsc;
@@ -499,6 +658,8 @@ collect_profile_related_values(
       time_t           timestamp_millis,
       GPtrArray**      pvals)
 {
+   bool debug = false;
+   DBGMSF(debug, "Starting");
    assert( get_output_level() == OL_PROGRAM);
    Global_Status_Code gsc = 0;
    GPtrArray * vals = g_ptr_array_sized_new(50);
@@ -511,6 +672,13 @@ collect_profile_related_values(
             vals,
             false /* force_show_unsupported */);
    *pvals = vals;
+   if (debug) {
+      DBGMSG("Done.  *pvals->len=%d *pvals: ", vals->len);
+      int ndx = 0;
+      for (;ndx < vals->len; ndx++) {
+         DBGMSG("  |%s|", g_ptr_array_index(vals,ndx) );
+      }
+   }
    return gsc;
 }
 

@@ -79,6 +79,7 @@ typedef char** Null_Terminated_String_Array;
 Null_Terminated_String_Array strsplit(char * str_to_split, char* delims);
 void null_terminated_string_array_free(Null_Terminated_String_Array string_array);
 int null_terminated_string_array_length(Null_Terminated_String_Array string_array);
+void null_terminated_string_array_show(Null_Terminated_String_Array string_array);
 
 
 //

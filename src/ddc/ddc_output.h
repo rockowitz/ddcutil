@@ -95,4 +95,18 @@ collect_profile_related_values(
       time_t              timestamp_millis,
       GPtrArray**         pvals);
 
+
+Global_Status_Code
+collect_raw_subset_values(
+        Display_Handle *    dh,
+        VCP_Feature_Subset  subset,
+        GPtrArray *         collector,
+        bool                ignore_unsupported,
+        FILE *              msg_fh);
+
+
+void
+collect_machine_readable_timestamp(
+      time_t time_millis, GPtrArray* vals);
+
 #endif /* DDC_OUTPUT_H_ */

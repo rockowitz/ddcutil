@@ -27,6 +27,8 @@
 #include <assert.h>
 #include <stdio.h>
 
+#include "base/msg_control.h"
+
 #include "../app_ddctool/loadvcp.h"         // loadvcp.h should be elsewhere, should not be including in main
 #include "libmain/ddct_public.h"
 
@@ -271,6 +273,7 @@ int main(int argc, char** argv) {
 
    if (dh) {
       char * profile_values_string;
+      DBGMSG("&profile_values_string=%p", &profile_values_string);
       rc = ddct_get_profile_related_values(dh, &profile_values_string);
       if (rc != 0) {
          FUNCTION_ERRMSG("ddct_get_profile_related_values", rc);

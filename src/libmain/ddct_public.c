@@ -650,14 +650,14 @@ DDCT_Status ddct_get_profile_related_values(DDCT_Display_Handle ddct_dh, char** 
 {
    WITH_DH(ddct_dh,
       {
-         set_output_level(OL_PROGRAM);
-         // DBGMSG("Before dumpvcp_to_string_by_display_handle()");
-         rc = dumpvcp_to_string(dh, pprofile_values_string);
-         // DBGMSG("After dumpvcp_to_string_by_display_handle(), catenated=%p", catenated);
-         // printf("(%s) strlen(catenated)=%ld, catenated=|%s|\n",
-         //       __func__,
-         //       strlen(catenated),
-         //       catenated);
+         bool debug = false;
+         set_output_level(OL_PROGRAM);  // not needed for _new() variant
+         DBGMSF(debug, "Before dumpvcp_to_string_by_display_handle(), pprofile_values_string=%p, *pprofile_values_string=%p",
+               pprofile_values_string, *pprofile_values_string);
+         rc = dumpvcp_to_string_new(dh, pprofile_values_string);
+         DBGMSF(debug, "After dumpvcp_to_string_by_display_handle(), pprofile_values_string=%p, *pprofile_values_string=%p",
+               pprofile_values_string, *pprofile_values_string);
+         DBGMSF(debug, "*pprofile_values_string = |%s|", *pprofile_values_string);
       }
    );
 }
