@@ -33,6 +33,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdarg.h>
+
 
 #include "util/string_util.h"
 
@@ -780,3 +782,24 @@ void hex_dump(unsigned char *data, int size) {
    fhex_dump(stdout, data, size);
 }
 
+
+/* Version of fprintf() that allows a NULL stream argument,
+ * in which case no output is written.
+ *
+ * Arguments:
+ *    stream     if null do nothing
+ *    format     format string
+ *    ...        variable argument list
+ *
+ * Returns:
+ *    result of fprintf(), or 0 if stream is NULL
+ */
+int f0printf(FILE * stream, const char * format, ...) {
+   int rc = 0;
+   if (stream) {
+      va_list(args);
+      va_start(args, format);
+      vfprintf(stream, format, args);
+   }
+   return rc;
+}

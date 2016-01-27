@@ -106,5 +106,5 @@ char * hexstring2(
 void fhex_dump(FILE * fh, Byte * bytes, int size);
 void hex_dump(Byte * bytes, int size);
 
-
+int f0printf(FILE * stream, const char * format, ...);
 #endif /* STRINGUTIL_H_ */
