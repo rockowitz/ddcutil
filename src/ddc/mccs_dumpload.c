@@ -84,6 +84,7 @@ void report_dumpload_data(Dumpload_Data * data, int depth) {
    rpt_str( "serial_ascii", NULL, data->serial_ascii, d1);
    rpt_str( "edid",         NULL, data->edidstr,      d1);
    rpt_int( "vcp_value_ct", NULL, data->vcp_value_ct, d1);
+#ifdef OLD
    int ndx;
    for (ndx=0; ndx < data->vcp_value_ct; ndx++) {
       char buf[100];
@@ -91,6 +92,7 @@ void report_dumpload_data(Dumpload_Data * data, int depth) {
       snprintf(buf, 100, "0x%02x -> %d", curval->opcode, curval->value);
       rpt_str("VCP value", NULL, buf, d1);
    }
+#endif
    rpt_structure_loc("vcp_values", data->vcp_values, d1);
    if (data->vcp_values)
       report_vcp_value_set(data->vcp_values, d1);
@@ -178,29 +180,39 @@ Dumpload_Data* create_dumpload_data_from_g_ptr_array(GPtrArray * garray) {
                   validData = false;
                }
                else {
+#ifdef OLD
                   int ndx = data->vcp_value_ct;
                   Single_Vcp_Value * pval = &data->vcp_value[ndx];
-                  bool ok = hhs_to_byte_in_buf(s1, &pval->opcode);
+#endif
+                  Byte feature_id;
+                  bool ok = hhs_to_byte_in_buf(s1, &feature_id);
                   if (!ok) {
                      f0printf(FERR, "Invalid opcode at line %d: %s", linectr, s1);
                      validData = false;
                   }
                   else {
-                     ct = sscanf(s2, "%hd", &pval->value);
+
+                     ushort feature_value;
+                     ct = sscanf(s2, "%hd", &feature_value);
                      if (ct == 0) {
                         f0printf(FERR, "Invalid value for opcode at line %d: %s\n", linectr, line);
                         validData = false;
                      }
                      else {
+#ifdef OLD
+                     pval->opcode = feature_id;
+                     pval->value  = value;
+#endif
+
                         data->vcp_value_ct++;
 
                         // new way:
                         // assume non-table for now
                         // TODO: opcode and value should be saved in local vars
                         Single_Vcp_Value * valrec = create_cont_vcp_value(
-                              pval->opcode,
+                              feature_id,
                               0,   // max_val, unused for LOADVCP
-                              pval->value);
+                              feature_value);
                         vcp_value_set_add(data->vcp_values, valrec);
                      }
                   }
@@ -415,21 +427,27 @@ dumpvcp_as_dumpload_data(
               dumped_data->edidstr, 257);
 
    // VCP values
+#ifdef OLD
    GPtrArray* collector = g_ptr_array_sized_new(50);
+#endif
    Vcp_Value_Set vset = vcp_value_set_new(50);
    gsc = collect_raw_subset_values(
              dh,
              VCP_SUBSET_PROFILE,
              vset,
+#ifdef OLD
              collector,
+#endif
              true,               //  ignore_unsupported
              FERR);
    if (gsc == 0) {
+#ifdef OLD
       // hack for now, TODO: redo properly
       DBGMSF(debug, "collector->len=%d", collector->len);
       assert(collector->len <= 20);
       assert(collector->len == vset->len);
       int ndx = 0;
+
       for (;ndx < collector->len; ndx++) {
          Parsed_Vcp_Response *  val =  g_ptr_array_index(collector,ndx);
          if (val->response_type != NON_TABLE_VCP_CALL) {
@@ -443,13 +461,18 @@ dumpvcp_as_dumpload_data(
       }
       dumped_data->vcp_value_ct = collector->len;
       // TODO: free collector
+#endif
 
-      dumped_data->vcp_values = vset;
-      for (ndx=0; ndx < collector->len; ndx++) {
+      dumped_data->vcp_values = vset;             // NOTE REFERENCE, BE CAREFUL WHEN FREE
+      dumped_data->vcp_value_ct = vcp_value_set_size(vset);
+#ifdef OLD
+      int ndx;
+      for (ndx=0; ndx < dumped_data->vcp_value_ct; ndx++) {
          Single_Vcp_Value * vrec = vcp_value_set_get(dumped_data->vcp_values,ndx);
          assert(dumped_data->vcp_value[ndx].opcode == vrec->opcode);
          assert(dumped_data->vcp_value[ndx].value == vrec->val.nt.cur_val);
       }
+#endif
    }
 
 

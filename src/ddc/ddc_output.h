@@ -102,7 +102,9 @@ collect_raw_subset_values(
         Display_Handle *    dh,
         VCP_Feature_Subset  subset,
         Vcp_Value_Set         vset,
+#ifdef OLD
         GPtrArray *         collector,
+#endif
         bool                ignore_unsupported,
         FILE *              msg_fh);
 

@@ -58,7 +58,9 @@ struct {
    char   model[14];
    char   serial_ascii[14];
    int    vcp_value_ct;
+#ifdef OLD
    Single_Vcp_Value vcp_value[MAX_LOADVCP_VALUES];
+#endif
    // new way:
    Vcp_Value_Set vcp_values;
 } Dumpload_Data;

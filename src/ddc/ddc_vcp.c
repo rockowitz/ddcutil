@@ -274,8 +274,10 @@ Global_Status_Code get_vcp_value(
       Single_Vcp_Value * valrec = create_single_vcp_value_by_parsed_vcp_response(
             feature_code,
             presp);
-      report_parsed_vcp_response(presp, 1);
-      report_single_vcp_value(valrec,1);
+      if (debug) {
+         report_parsed_vcp_response(presp, 1);
+         report_single_vcp_value(valrec,1);
+      }
       *pvalrec = valrec;
    }
 

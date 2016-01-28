@@ -724,13 +724,16 @@ bool vcp_format_feature_detail(
        VCP_Feature_Table_Entry * vcp_entry,
        Version_Spec              vcp_version,
        Single_Vcp_Value *        valrec,
+#ifdef OLD
        Parsed_Vcp_Response *     raw_data,
+#endif
        char * *                  aformatted_data
      )
 {
-   bool debug = true;
+   bool debug = false;
    DBGMSF(debug, "Starting");
    // hack to avoid having to change all of vcp_feature_code.c
+   Parsed_Vcp_Response *
    raw_data = single_vcp_value_to_parsed_vcp_response(valrec);
    bool ok = true;
    *aformatted_data = NULL;
