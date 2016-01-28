@@ -252,8 +252,20 @@ app_show_feature_set_values_by_display_handle(
 }
 
 
-
-
+/* Checks for VCP feature changes by:
+ *   - reading feature x02 to check if changes exist,
+ *   - querying feature x52 for the id of a changed feature
+ *   - reading the value of the changed feature.
+ *
+ * If the VCP version is 2.1 or less a single feature is
+ * read from x52.  For VCP version 3.0 and 2.2, x52 is a
+ * FIFO is a queue of changed features.
+ *
+ * Finally, 1 is written to feature x02 as a reset.
+ *
+ * Arguments:
+ *    dh      display handle
+ */
 void
 app_read_changes(Display_Handle * dh) {
    bool debug = false;
