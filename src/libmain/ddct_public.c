@@ -51,7 +51,7 @@
 
 #include "libmain/ddct_public.h"
 
-#include "../app_ddctool/loadvcp.h"
+#include "../ddc/mccs_dumpload.h"
 
 
 #define WITH_DR(ddct_dref, action) \
@@ -654,7 +654,7 @@ DDCT_Status ddct_get_profile_related_values(DDCT_Display_Handle ddct_dh, char** 
          set_output_level(OL_PROGRAM);  // not needed for _new() variant
          DBGMSF(debug, "Before dumpvcp_to_string_by_display_handle(), pprofile_values_string=%p, *pprofile_values_string=%p",
                pprofile_values_string, *pprofile_values_string);
-         rc = dumpvcp_to_string_new(dh, pprofile_values_string);
+         rc = dumpvcp_as_string(dh, pprofile_values_string);
          DBGMSF(debug, "After dumpvcp_to_string_by_display_handle(), pprofile_values_string=%p, *pprofile_values_string=%p",
                pprofile_values_string, *pprofile_values_string);
          DBGMSF(debug, "*pprofile_values_string = |%s|", *pprofile_values_string);
@@ -663,6 +663,6 @@ DDCT_Status ddct_get_profile_related_values(DDCT_Display_Handle ddct_dh, char** 
 }
 
 DDCT_Status ddct_set_profile_related_values(char * profile_values_string) {
-   Global_Status_Code gsc = loadvcp_from_string(profile_values_string);
+   Global_Status_Code gsc = loadvcp_by_string(profile_values_string);
    return gsc;
 }

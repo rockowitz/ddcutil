@@ -1,9 +1,7 @@
-/* loadvcp.h
+/* glib_util.h
  *
- * Created on: Aug 16, 2014
+ * Created on: Jan 27, 2016
  *     Author: rock
- *
- * Load/store VCP settings from/to file.
  *
  * <copyright>
  * Copyright (C) 2014-2015 Sanford Rockowitz <rockowitz@minsoft.com>
@@ -26,19 +24,15 @@
  * </endcopyright>
  */
 
-#ifndef LOADVCP_H_
-#define LOADVCP_H_
+#ifndef SRC_UTIL_GLIB_UTIL_H_
+#define SRC_UTIL_GLIB_UTIL_H_
 
-#include <base/status_code_mgt.h>
-#include <base/displays.h>
+#include <glib.h>
 
-bool loadvcp_from_file(const char * fn);
+#include "util/string_util.h"
 
-bool dumpvcp_to_file(Display_Handle * dh, char * optional_filename);
-bool dumpvcp_to_file_new(Display_Handle * dh, char * optional_filename);
-Global_Status_Code dumpvcp_to_string(Display_Handle * dh, char** result);
-Global_Status_Code dumpvcp_to_string_new(Display_Handle * dh, char** result);
+GPtrArray * ntsa_to_g_ptr_array(Null_Terminated_String_Array ntsa);
 
-Global_Status_Code loadvcp_from_string(char * catenated);
+Null_Terminated_String_Array g_ptr_array_to_ntsa(GPtrArray * garray);
 
-#endif /* LOADVCP_H_ */
+#endif /* SRC_UTIL_GLIB_UTIL_H_ */

@@ -28,6 +28,8 @@
 
 
 
+#include "mccs_dumpload.h"
+
 #include <assert.h>
 #include <errno.h>
 #include <fcntl.h>
@@ -39,16 +41,18 @@
 #include <time.h>
 #include <unistd.h>
 
-#include <util/file_util.h>
+#include "util/file_util.h"
+#include "util/glib_util.h"
 
-#include <base/ddc_errno.h>
-#include <base/common.h>
-#include <base/displays.h>
-#include <base/ddc_packets.h>
-#include <util/report_util.h>
-#include <base/util.h>
+#include "base/ddc_errno.h"
+#include "base/common.h"
+#include "base/displays.h"
+#include "base/ddc_packets.h"
+#include "util/report_util.h"
+#include "base/util.h"
+#include "base/vcp_feature_values.h"
 
-#include <i2c/i2c_bus_core.h>
+#include "i2c/i2c_bus_core.h"
 
 #include "ddc/ddc_output.h"
 #include "ddc/ddc_edid.h"
@@ -57,20 +61,18 @@
 #include "ddc/ddc_read_capabilities.h"
 #include "ddc/ddc_displays.h"
 
-#include "app_ddctool/loadvcp.h"
 
 
-// Loadvcp_Data is the internal form data structure used to
+// Dumpload_Data is the internal form data structure used to
 // hold data being loaded.  Whatever the external form: a
-// file or a string, it is converted to Loadvcp_Data and then
+// file or a string, it is converted to Dumpload_Data and then
 // written to the monitor.
 
 #define MAX_LOADVCP_VALUES  20
 
-typedef struct {
-   Byte   opcode;
-   ushort value;
-} Single_Vcp_Value;
+
+
+
 
 typedef
 struct {
@@ -83,12 +85,14 @@ struct {
    char   serial_ascii[14];
    int    vcp_value_ct;
    Single_Vcp_Value vcp_value[MAX_LOADVCP_VALUES];
-} Loadvcp_Data;
+   // new way:
+   Vcp_Value_Set vcp_values;
+} Dumpload_Data;
 
 
-void report_loadvcp_data(Loadvcp_Data * data, int depth) {
+void report_dumpload_data(Dumpload_Data * data, int depth) {
    int d1 = depth+1;
-   rpt_structure_loc("Loadvcp_Data", data, depth);
+   rpt_structure_loc("Dumpload_Data", data, depth);
    // rptIval("busno", NULL, data->busno, d1);
    // TODO: show abbreviated edidstr
    rpt_str( "mfg_id",       NULL, data->mfg_id,       d1);
@@ -103,6 +107,9 @@ void report_loadvcp_data(Loadvcp_Data * data, int depth) {
       snprintf(buf, 100, "0x%02x -> %d", curval->opcode, curval->value);
       rpt_str("VCP value", NULL, buf, d1);
    }
+   rpt_structure_loc("vcp_values", data->vcp_values, d1);
+   if (data->vcp_values)
+      report_vcp_value_set(data->vcp_values, d1);
 }
 
 
@@ -207,20 +214,21 @@ Line_Iterator ntsa_iter = {
 
 
 /* Given an array of strings stored in a GPtrArray,
- * convert it a Loadvcp_Data structure.
+ * convert it a Dumpload_Data structure.
  */
 #ifdef USING_ITERATOR
-Loadvcp_Data* loadvcp_data_from_iterator(Line_Iterator iter) {
+Dumpload_Data* dumpload_data_from_iterator(Line_Iterator iter) {
 #else
-Loadvcp_Data* loadvcp_data_from_g_ptr_array(GPtrArray * garray) {
+Dumpload_Data* create_dumpload_data_from_g_ptr_array(GPtrArray * garray) {
 #endif
    bool debug = false;
    if (debug)
       DBGMSG("Starting.");
-   Loadvcp_Data * data = calloc(1, sizeof(Loadvcp_Data));
+   Dumpload_Data * data = calloc(1, sizeof(Dumpload_Data));
 
    bool validData = true;
-   data = calloc(1, sizeof(Loadvcp_Data));
+   data = calloc(1, sizeof(Dumpload_Data));
+   data->vcp_values = vcp_value_set_new(15);      // 15 = initial size
 
    // size_t len = 0;
    // ssize_t read;
@@ -311,6 +319,15 @@ Loadvcp_Data* loadvcp_data_from_g_ptr_array(GPtrArray * garray) {
                      }
                      else {
                         data->vcp_value_ct++;
+
+                        // new way:
+                        // assume non-table for now
+                        // TODO: opcode and value should be saved in local vars
+                        Single_Vcp_Value * valrec = create_cont_vcp_value(
+                              pval->opcode,
+                              0,   // max_val
+                              pval->value);
+                        vcp_value_set_add(data->vcp_values, valrec);
                      }
                   }
                }  // VCP
@@ -330,11 +347,11 @@ Loadvcp_Data* loadvcp_data_from_g_ptr_array(GPtrArray * garray) {
 }
 
 
-/* Read a file into a Loadvcp_Data data structure.
+/* Read a file into a Dumpload_Data struct.
  */
-Loadvcp_Data * read_vcp_file(const char * fn) {
+Dumpload_Data * read_vcp_file(const char * fn) {
    // DBGMSG("Starting. fn=%s  ", fn );
-   Loadvcp_Data * data = NULL;
+   Dumpload_Data * data = NULL;
    GPtrArray * g_line_array = g_ptr_array_sized_new(100);
    // issues message if error:
    int rc = file_getlines(fn, g_line_array);
@@ -344,9 +361,9 @@ Loadvcp_Data * read_vcp_file(const char * fn) {
    else {
 #ifdef USING_ITERATOR
       (g_ptr_iter.func_init)(g_line_array);
-      data = loadvcp_data_from_iterator(g_ptr_iter);
+      data = dumpload_data_from_iterator(g_ptr_iter);
 #else
-      data = loadvcp_data_from_g_ptr_array(g_line_array);
+      data = create_dumpload_data_from_g_ptr_array(g_line_array);
 #endif
    }
    // DBGMSG("Returning: %p  ", data );
@@ -354,17 +371,17 @@ Loadvcp_Data * read_vcp_file(const char * fn) {
 }
 
 
-/* Apply VCP settings from a Loadvcp_Data data structure to
+/* Apply VCP settings from a Dumpload_Data struct to
  * the monitor specified in that data structure.
  */
-bool loadvcp_from_loadvcp_data(Loadvcp_Data* pdata) {
+bool loadvcp_by_dumpload_data(Dumpload_Data* pdata) {
    bool debug = false;
    bool ok = false;
    // DBGMSG("Searching for monitor  " );
    if (debug) {
         DBGMSG("Loading VCP settings for monitor \"%s\", sn \"%s\" \n",
                pdata->model, pdata->serial_ascii);
-        report_loadvcp_data(pdata, 0);
+        report_dumpload_data(pdata, 0);
    }
    Display_Ref * dref = ddc_find_display_by_model_and_sn(pdata->model, pdata->serial_ascii);
    if (!dref) {
@@ -378,6 +395,11 @@ bool loadvcp_from_loadvcp_data(Loadvcp_Data* pdata) {
          Byte feature_code = pdata->vcp_value[ndx].opcode;
          int  new_value    = pdata->vcp_value[ndx].value;
          // DBGMSG("feature_code=0x%02x, new_value=%d", feature_code, new_value );
+
+         // new way
+         Single_Vcp_Value * vrec = vcp_value_set_get(pdata->vcp_values, ndx);
+         assert(vrec->val.nt.cur_val == new_value);
+         assert(vrec->opcode == feature_code);
 
          int rc = set_nontable_vcp_value(dh, feature_code, new_value);
          if (rc != 0) {
@@ -401,7 +423,7 @@ bool loadvcp_from_loadvcp_data(Loadvcp_Data* pdata) {
  * Returns:  true if load succeeded, false if not
  */
 // TODO: convert to Global_Status_Code
-bool loadvcp_from_file(const char * fn) {
+bool loadvcp_by_file(const char * fn) {
    // Msg_Level msg_level = get_global_msg_level();
    Output_Level output_level = get_output_level();
    // DBGMSG("msgLevel=%d", msgLevel);
@@ -411,7 +433,7 @@ bool loadvcp_from_file(const char * fn) {
    bool ok = false;
    // DBGMSG("Starting. fn=%s  ", fn );
 
-   Loadvcp_Data * pdata = read_vcp_file(fn);
+   Dumpload_Data * pdata = read_vcp_file(fn);
    if (!pdata) {
       fprintf(stderr, "Unable to load VCP data from file: %s\n", fn);
    }
@@ -419,49 +441,16 @@ bool loadvcp_from_file(const char * fn) {
       if (verbose) {
            printf("Loading VCP settings for monitor \"%s\", sn \"%s\" from file: %s\n",
                   pdata->model, pdata->serial_ascii, fn);
-           report_loadvcp_data(pdata, 0);
+           report_dumpload_data(pdata, 0);
       }
-      ok = loadvcp_from_loadvcp_data(pdata);
+      ok = loadvcp_by_dumpload_data(pdata);
    }
    return ok;
 }
 
 
-/* Converts a Null_Terminated_String_Array to a GPtrArry.
- * The underlying strings are referenced, not duplicated.
- */
-GPtrArray * g_ptr_array_from_ntsa(Null_Terminated_String_Array ntsa) {
-   int len = null_terminated_string_array_length(ntsa);
-   GPtrArray * garray = g_ptr_array_sized_new(len);
-   int ndx;
-   for (ndx=0; ndx<len; ndx++) {
-      g_ptr_array_add(garray, ntsa[ndx]);
-   }
-   return garray;
-}
 
-/* Converts a GPtrArray to a Null_Terminated_String_Array.
- * The underlying strings are referenced, not duplicated.
- */
-Null_Terminated_String_Array ntsa_from_g_ptr_array(GPtrArray * garray) {
-   bool debug = false;
-   DBGMSF(debug, "Starting");
-   assert(garray);
-   Null_Terminated_String_Array ntsa = calloc(garray->len+1, sizeof(char *));
-   int ndx = 0;
-   for (;ndx < garray->len; ndx++) {
-      // DBGMSF("&ntsa[ndx]=%p", &ntsa[ndx]);
-      ntsa[ndx] = g_ptr_array_index(garray,ndx);
-   }
-   if (debug) {
-      DBGMSG("Returning ntsa=%p", ntsa);
-      null_terminated_string_array_show(ntsa);
-   }
-   return ntsa;
-}
-
-
-bool loadvcp_from_ntsa(Null_Terminated_String_Array ntsa) {
+bool loadvcp_by_ntsa(Null_Terminated_String_Array ntsa) {
    bool debug = false;
 
    Output_Level output_level = get_output_level();
@@ -473,7 +462,7 @@ bool loadvcp_from_ntsa(Null_Terminated_String_Array ntsa) {
    }
    bool ok = false;
 
-   GPtrArray * garray = g_ptr_array_from_ntsa(ntsa);
+   GPtrArray * garray = ntsa_to_g_ptr_array(ntsa);
 
 #ifdef USING_ITERATOR
    (*ntsa_iter.func_init)(ntsa);
@@ -481,17 +470,17 @@ bool loadvcp_from_ntsa(Null_Terminated_String_Array ntsa) {
    if (debug)
       DBGMSG("after func_init");
 // Both ways work.   Using loadvcp_from_ntsa is simpler, can change
-// loadvcp_data_from_iteractor to not take iterator object
+// dumpload_data_from_iteractor to not take iterator object
 #ifdef WORKS
-   Loadvcp_Data * pdata = loadvcp_data_from_iterator(ntsa_iter);
+   Dumpload_Data * pdata = dumpload_data_from_iterator(ntsa_iter);
 #endif
-   Loadvcp_Data * pdata = loadvcp_data_from_iterator(g_ptr_iter);
+   Dumpload_Data * pdata = dumpload_data_from_iterator(g_ptr_iter);
 #endif
 
-   Loadvcp_Data * pdata = loadvcp_data_from_g_ptr_array(garray);
+   Dumpload_Data * pdata = create_dumpload_data_from_g_ptr_array(garray);
 
    if (debug)
-      DBGMSG("loadvcp_data_from_iterator() returned %p", pdata);
+      DBGMSG("dumpload_data_from_iterator() returned %p", pdata);
    if (!pdata) {
       fprintf(stderr, "Unable to load VCP data from string\n");
    }
@@ -499,9 +488,9 @@ bool loadvcp_from_ntsa(Null_Terminated_String_Array ntsa) {
       if (verbose) {
            printf("Loading VCP settings for monitor \"%s\", sn \"%s\" \n",
                   pdata->model, pdata->serial_ascii);
-           report_loadvcp_data(pdata, 0);
+           report_dumpload_data(pdata, 0);
       }
-      ok = loadvcp_from_loadvcp_data(pdata);
+      ok = loadvcp_by_dumpload_data(pdata);
    }
    return ok;
 }
@@ -510,7 +499,7 @@ bool loadvcp_from_ntsa(Null_Terminated_String_Array ntsa) {
 
 // n. called from ddct_public:
 
-Global_Status_Code loadvcp_from_string(char * catenated) {
+Global_Status_Code loadvcp_by_string(char * catenated) {
    // bool debug = false;
    Null_Terminated_String_Array nta = strsplit(catenated, ";");
    // if (debug) {
@@ -521,7 +510,7 @@ Global_Status_Code loadvcp_from_string(char * catenated) {
    //       DBGMSG("nta[%d]=|%s|", ndx, nta[ndx]);
    //    }
    // }
-   loadvcp_from_ntsa(nta);
+   loadvcp_by_ntsa(nta);
    null_terminated_string_array_free(nta);
    return 0;      // temp
 }
@@ -530,6 +519,9 @@ Global_Status_Code loadvcp_from_string(char * catenated) {
 //
 // Dumpvcp
 //
+
+
+// Filename creation
 
 // TODO: generalize, get default dir following XDG settings
 #define USER_VCP_DATA_DIR ".local/share/icc"
@@ -561,8 +553,6 @@ char * create_simple_vcp_fn_by_edid(
 }
 
 
-
-
 char * create_simple_vcp_fn_by_display_handle(
           Display_Handle * dh,
           time_t           time_millis,
@@ -579,7 +569,7 @@ char * create_simple_vcp_fn_by_display_handle(
 
 
 // TODO: return Global_Status_Code rather than ok
-bool dumpvcp_to_file(Display_Handle * dh, char * filename) {
+bool dumpvcp_as_file_old(Display_Handle * dh, char * filename) {
    bool               ok             = true;
    Global_Status_Code gsc            = 0;
    char               fqfn[PATH_MAX] = {0};
@@ -638,7 +628,7 @@ bool dumpvcp_to_file(Display_Handle * dh, char * filename) {
 
 // n. called from ddct_public.c
 Global_Status_Code
-dumpvcp_to_string(Display_Handle * dh, char ** pstring) {
+dumpvcp_as_string_old(Display_Handle * dh, char ** pstring) {
    bool debug = false;
    DBGMSF(debug, "Starting");
    GPtrArray * vals = NULL;
@@ -660,7 +650,7 @@ dumpvcp_to_string(Display_Handle * dh, char ** pstring) {
       DBGMSF(debug, "*pstring=%p", *pstring);
 #endif
       // Alternative implementation using glib:
-      Null_Terminated_String_Array ntsa_pieces = ntsa_from_g_ptr_array(vals);
+      Null_Terminated_String_Array ntsa_pieces = g_ptr_array_to_ntsa(vals);
       // n. our Null_Terminated_String_Array is identical to glib's GStrv
       gchar sepchar = ';';
       gchar * catenated2 = g_strjoinv(&sepchar, ntsa_pieces);
@@ -680,11 +670,11 @@ dumpvcp_to_string(Display_Handle * dh, char ** pstring) {
 
 // Under construction:
 Global_Status_Code
-dumpvcp_to_loadvcp_data(Display_Handle * dh, Loadvcp_Data** ploadvcp_data, FILE * msg_fh) {
+dumpvcp_as_dumpload_data(Display_Handle * dh, Dumpload_Data** pdumpload_data, FILE * msg_fh) {
    bool debug = false;
    DBGMSF(debug, "Starting");
    Global_Status_Code gsc = 0;
-   Loadvcp_Data * dumped_data = calloc(1, sizeof(Loadvcp_Data));
+   Dumpload_Data * dumped_data = calloc(1, sizeof(Dumpload_Data));
    // timestamp:
    dumped_data->timestamp_millis = time(NULL);
    // identification information from edid:
@@ -700,16 +690,19 @@ dumpvcp_to_loadvcp_data(Display_Handle * dh, Loadvcp_Data** ploadvcp_data, FILE 
               dumped_data->edidstr, 257);
 
    GPtrArray* collector = g_ptr_array_sized_new(50);
+   Vcp_Value_Set vset = vcp_value_set_new(50);
      gsc = collect_raw_subset_values(
              dh,
              VCP_SUBSET_PROFILE,
+             vset,
              collector,
              true,                //  ignore_unsupported
              msg_fh);
    if (gsc == 0) {
       // hack for now, TODO: redo properly
-      DBGMSG("collector->len=%d", collector->len);
+      DBGMSF(debug, "collector->len=%d", collector->len);
       assert(collector->len <= 20);
+      assert(collector->len == vset->len);
       int ndx = 0;
       for (;ndx < collector->len; ndx++) {
          Parsed_Vcp_Response *  val =  g_ptr_array_index(collector,ndx);
@@ -724,28 +717,35 @@ dumpvcp_to_loadvcp_data(Display_Handle * dh, Loadvcp_Data** ploadvcp_data, FILE 
       }
       dumped_data->vcp_value_ct = collector->len;
       // TODO: free collector
+
+      dumped_data->vcp_values = vset;
+      for (ndx=0; ndx < collector->len; ndx++) {
+         Single_Vcp_Value * vrec = vcp_value_set_get(dumped_data->vcp_values,ndx);
+         assert(dumped_data->vcp_value[ndx].opcode == vrec->opcode);
+         assert(dumped_data->vcp_value[ndx].value == vrec->val.nt.cur_val);
+      }
    }
 
 
    if (gsc != 0 && dumped_data)
       free(dumped_data);
    else
-      *ploadvcp_data = dumped_data;
+      *pdumpload_data = dumped_data;
    if (debug) {
-      DBGMSG("Returning: %s, *ploadvcp_data=%p", gsc_desc(gsc), *ploadvcp_data);
-      report_loadvcp_data(*ploadvcp_data, 1);
+      DBGMSG("Returning: %s, *pdumpload_data=%p", gsc_desc(gsc), *pdumpload_data);
+      report_dumpload_data(*pdumpload_data, 1);
    }
    return gsc;
 }
 
 
 
-GPtrArray * convert_loadvcp_data_to_string_array(Loadvcp_Data * data) {
+GPtrArray * convert_dumpload_data_to_string_array(Dumpload_Data * data) {
    bool debug = false;
    DBGMSF(debug, "Starting. data=%p", data);
    assert(data);
    if (debug)
-      report_loadvcp_data(data, 1);
+      report_dumpload_data(data, 1);
 
    GPtrArray * vals = g_ptr_array_sized_new(30);
 
@@ -774,26 +774,32 @@ GPtrArray * convert_loadvcp_data_to_string_array(Loadvcp_Data * data) {
       char buf[200];
       snprintf(buf, 200, "VCP %02X %5d", data->vcp_value[ndx].opcode, data->vcp_value[ndx].value);
       g_ptr_array_add(vals, strdup(buf));
-
-
+   }
+   for (ndx=0;ndx < data->vcp_values->len; ndx++) {
+      // n. get_formatted_value_for_feature_table_entry() also has code for table type values
+      Single_Vcp_Value * vrec = vcp_value_set_get(data->vcp_values,ndx);
+      char buf[200];
+      snprintf(buf, 200, "VCP %02X %5d",
+                         vrec->opcode, vrec->val.nt.cur_val);
+      g_ptr_array_add(vals, strdup(buf));
    }
    return vals;
 }
 
 // n. called from ddct_public.c
 Global_Status_Code
-dumpvcp_to_string_new(Display_Handle * dh, char ** pstring) {
+dumpvcp_as_string(Display_Handle * dh, char ** pstring) {
    bool debug = false;
    DBGMSF(debug, "Starting");
    // GPtrArray * vals = NULL;
    *pstring = NULL;
    // Under construction:
    Global_Status_Code gsc = 0;
-   Loadvcp_Data * data = NULL;
+   Dumpload_Data * data = NULL;
    FILE * msg_fh = stdout;   // temp
-   gsc = dumpvcp_to_loadvcp_data(dh, &data, msg_fh);
+   gsc = dumpvcp_as_dumpload_data(dh, &data, msg_fh);
    if (gsc == 0) {
-      GPtrArray * strings = convert_loadvcp_data_to_string_array(data);
+      GPtrArray * strings = convert_dumpload_data_to_string_array(data);
 
       int ct = strings->len;
       DBGMSG("ct = %d", ct);
@@ -810,7 +816,7 @@ dumpvcp_to_string_new(Display_Handle * dh, char ** pstring) {
 
 #ifdef GLIB_VARIANT
       // GLIB variant failing when used with file.  why?
-      Null_Terminated_String_Array ntsa_pieces = ntsa_from_g_ptr_array(strings);
+      Null_Terminated_String_Array ntsa_pieces = g_ptr_array_to_ntsa(strings);
       if (debug) {
          DBGMSG("ntsa_pieces before call to g_strjoinv():");
          null_terminated_string_array_show(ntsa_pieces);
@@ -831,17 +837,17 @@ dumpvcp_to_string_new(Display_Handle * dh, char ** pstring) {
 
 // Global_Status_Code
 bool
-dumpvcp_to_file_new(Display_Handle * dh, char * filename) {
+dumpvcp_as_file(Display_Handle * dh, char * filename) {
    bool debug = false;
    DBGMSF(debug, "Starting");
    char               fqfn[PATH_MAX] = {0};
 
    Global_Status_Code gsc = 0;
-   Loadvcp_Data * data = NULL;
+   Dumpload_Data * data = NULL;
    FILE * msg_fh = stdout;   // temp
-   gsc = dumpvcp_to_loadvcp_data(dh, &data, msg_fh);
+   gsc = dumpvcp_as_dumpload_data(dh, &data, msg_fh);
    if (gsc == 0) {
-      GPtrArray * strings = convert_loadvcp_data_to_string_array(data);
+      GPtrArray * strings = convert_dumpload_data_to_string_array(data);
 
       if (!filename) {
          time_t time_millis = data->timestamp_millis;

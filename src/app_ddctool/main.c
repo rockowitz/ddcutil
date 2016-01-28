@@ -35,10 +35,10 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "../app_ddctool/loadvcp.h"
 #include "../app_ddctool/query_sysenv.h"
 #include "../app_ddctool/testcases.h"
 #include "../ddc/ddc_output.h"
+#include "../ddc/mccs_dumpload.h"
 #include "util/data_structures.h"
 
 #include "base/common.h"
@@ -274,7 +274,7 @@ int main(int argc, char *argv[]) {
    else if (parsed_cmd->cmd_id == CMDID_LOADVCP) {
       char * fn = strdup( parsed_cmd->args[0] );
       // DBGMSG("Processing command loadvcp.  fn=%s", fn );
-      bool ok = loadvcp_from_file(fn);
+      bool ok = loadvcp_by_file(fn);
       main_rc = (ok) ? EXIT_SUCCESS : EXIT_FAILURE;
    }
 
@@ -378,7 +378,7 @@ int main(int argc, char *argv[]) {
 
          case CMDID_DUMPVCP:
             {
-               bool ok = dumpvcp_to_file_new(dh, (parsed_cmd->argct > 0) ? parsed_cmd->args[0] : NULL );
+               bool ok = dumpvcp_as_file(dh, (parsed_cmd->argct > 0) ? parsed_cmd->args[0] : NULL );
                main_rc = (ok) ? EXIT_SUCCESS : EXIT_FAILURE;
                break;
             }

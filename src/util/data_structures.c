@@ -410,9 +410,17 @@ Buffer * buffer_new(int size, const char * trace_msg) {
    return buffer;
 }
 
+// copy constructor
+Buffer * buffer_dup(Buffer * srcbuf, const char * trace_msg) {
+   int sz = srcbuf->buffer_size;
+   Buffer* newbuf = buffer_new(sz, trace_msg);
+   buffer_put(newbuf, srcbuf->bytes, srcbuf->len);
+   return newbuf;
+}
+
 
 // Frees a Buffer instance.  All memory associated with the Buffer is released.
-//S
+//
 // Arguments:
 //   buffer    pointer to Buffer instance, must be valid
 //
@@ -551,6 +559,19 @@ void buffer_append(Buffer * buffer, Byte * bytes, int bytect) {
    buffer->len = buffer->len + bytect;
 
    // printf("(%s) Returning.  cur len = %d\n", __func__, buffer->len);
+}
+
+
+bool     buffer_eq(Buffer* buf1, Buffer* buf2) {
+   bool result = false;
+   if (!buf1 && !buf2)
+      result = true;
+   else if (buf1 && buf2 &&
+            buf1->len == buf2->len &&
+            memcmp(buf1->bytes, buf2->bytes, buf1->len) == 0
+           )
+      result = true;
+   return result;
 }
 
 

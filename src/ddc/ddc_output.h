@@ -35,6 +35,7 @@
 // #include "base/ddc_base_defs.h"     // for Version_Spec
 #include "base/displays.h"
 #include "base/status_code_mgt.h"
+#include "base/vcp_feature_values.h"
 
 #include "ddc/vcp_feature_codes.h"
 #include "ddc/vcp_feature_set.h"
@@ -100,6 +101,7 @@ Global_Status_Code
 collect_raw_subset_values(
         Display_Handle *    dh,
         VCP_Feature_Subset  subset,
+        Vcp_Value_Set         vset,
         GPtrArray *         collector,
         bool                ignore_unsupported,
         FILE *              msg_fh);

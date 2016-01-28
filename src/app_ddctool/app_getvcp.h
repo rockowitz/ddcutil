@@ -35,47 +35,37 @@
 #include "ddc/vcp_feature_set.h"
 
 
-#ifdef DEPRECATED
 Global_Status_Code
-app_show_single_vcp_value_by_display_ref(
-        Display_Ref * dref,
-        char *        feature,
-        bool          force);
+app_show_single_vcp_value_by_feature_table_entry(
+      Display_Handle *   dh,
+      VCP_Feature_Table_Entry * entry);
+
+Global_Status_Code
+app_show_single_vcp_value_by_feature_id(
+      Display_Handle *   dh,
+      Byte               feature_id,
+      bool               force);
+
+Global_Status_Code
+app_show_vcp_subset_values_by_display_handle(
+      Display_Handle *   dh,
+      VCP_Feature_Subset subset,
+      bool               show_unsupported);
+
+#ifdef OLD
+Global_Status_Code
+app_show_vcp_subset_values_by_display_ref(
+      Display_Ref *      dref,
+      VCP_Feature_Subset subset,
+      bool               show_unsupported);
 #endif
 
 Global_Status_Code
-app_show_single_vcp_value_by_dh_and_feature_table_entry(
-      Display_Handle * dh,
-      VCP_Feature_Table_Entry * entry);
-
-
-Global_Status_Code
-app_show_single_vcp_value_by_dh_and_feature_id(
-      Display_Handle * dh,
-      Byte             feature_id,
-      bool             force);
-
-
-
-void
-app_show_vcp_subset_values_by_display_handle(
-        Display_Handle *   dh,
-        VCP_Feature_Subset subset,
-        bool               show_unsupported);
-
-
-void
-app_show_vcp_subset_values_by_display_ref(
-        Display_Ref *      dref,
-        VCP_Feature_Subset subset,
-        bool               show_unsupported);
-
-Global_Status_Code
 app_show_feature_set_values_by_display_handle(
-      Display_Handle *     dh,
-      Feature_Set_Ref *    fsref,
-      bool                 show_unsupported,
-      bool                 force);
+      Display_Handle *   dh,
+      Feature_Set_Ref *  fsref,
+      bool               show_unsupported,
+      bool               force);
 
 
 void

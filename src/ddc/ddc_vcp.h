@@ -31,6 +31,7 @@
 
 #include "base/common.h"
 #include "base/status_code_mgt.h"
+#include "base/vcp_feature_values.h"
 
 #include "ddc/vcp_feature_codes.h"
 
@@ -54,6 +55,7 @@ Global_Status_Code get_vcp_value(
        Display_Handle *          dh,
        Byte                      feature_code,
        VCP_Call_Type             call_type,
+       Single_Vcp_Value **       pvalrec,
        Parsed_Vcp_Response**     pp_parsed_response);
 
 void vcp_list_feature_codes();

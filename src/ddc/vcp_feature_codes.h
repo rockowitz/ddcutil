@@ -29,12 +29,12 @@
 
 #include <stdio.h>
 
-#include "../base/ddc_base.h"
 #include "util/string_util.h"
 
 #include "base/ddc_base.h"
 #include "base/ddc_packets.h"
 #include "base/util.h"
+#include "base/vcp_feature_values.h"
 
 
 //
@@ -78,6 +78,9 @@ typedef ushort Version_Feature_Flags;
 
 // Additional bits:
 #define VCP2_DEPRECATED      0x01
+
+
+// Bits in vcp_global_flags:
 #define VCP2_SYNTHETIC       0x80
 
 
@@ -251,6 +254,7 @@ bool vcp_format_table_feature_detail(
 bool vcp_format_feature_detail(
        VCP_Feature_Table_Entry * vcp_entry,
        Version_Spec              vcp_version,
+       Single_Vcp_Value *        valrec,
        Parsed_Vcp_Response *     raw_data,
        char * *                  aformatted_data
      );

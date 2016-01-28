@@ -144,6 +144,7 @@ base/msg_control.c \
 base/status_code_mgt.c \
 base/util.c \
 base/ddc_base.c \
+base/vcp_feature_values.c \
 ddc/ddc_command_codes.c \
 ddc/ddc_displays.c      \
 ddc/ddc_edid.c          \
@@ -163,10 +164,11 @@ ddc/ddc_vcp_version.c \
 i2c/i2c_base_io.c \
 i2c/i2c_bus_core.c \
 i2c/i2c_do_io.c \
-app_ddctool/loadvcp.c \
+ddc/mccs_dumpload.c \
 util/data_structures.c \
 util/debug_util.c \
 util/file_util.c  \
+util/glib_util.c \
 util/output_sink.c \
 util/pci_id_util.c \
 util/report_util.c \

@@ -36,7 +36,6 @@
 #include "base/ddc_errno.h"
 #include "base/msg_control.h"
 #include "base/status_code_mgt.h"
-// #include "base/linux_errno.h"
 #include "base/msg_control.h"
 
 #include "i2c/i2c_bus_core.h"
@@ -45,15 +44,26 @@
 #include "ddc/vcp_feature_codes.h"
 #include "ddc/ddc_vcp_version.h"
 #include "ddc/ddc_vcp.h"
+#include "ddc/ddc_output.h"
+
 #include "app_ddctool/app_getvcp.h"
-#include "../ddc/ddc_output.h"
 
 
-
+/* Shows a single VCP value specified by its feature table entry.
+ *
+ * Arguments:
+ *    dh          handle of open display
+ *    entry       hex feature id
+ *
+ * Returns:
+ *    status code 0 = normal
+ *                DDCL_INVALID_OPERATION - feature is deprecated or write-only
+ *                from get_formatted_value_for_feature_table_entry()
+ */
 Global_Status_Code
-app_show_single_vcp_value_by_dh_and_feature_table_entry(
-      Display_Handle * dh,
-      VCP_Feature_Table_Entry * entry)
+app_show_single_vcp_value_by_feature_table_entry(
+      Display_Handle *           dh,
+      VCP_Feature_Table_Entry *  entry)
 {
    bool debug = false;
    DBGMSF(debug, "Starting. Getting feature 0x%02x for %s",
@@ -76,19 +86,14 @@ app_show_single_vcp_value_by_dh_and_feature_table_entry(
    }
 
    if (gsc == 0) {
-      // DBGMSG("calling show_vcp_for_vcp_code_table_entry_by_display_ref()");
-      // show_value_for_feature_table_entry_by_display_handle(dh, entry, NULL, false);
-      // gsc = 0;    // until show_value_... has a status code
-
       char * formatted_value = NULL;
-      gsc =
-      get_formatted_value_for_feature_table_entry(
-            dh,
-            entry,
-            false,      /* suppress_unsupported */
-            true,       /* prefix_value_with_feature_code */
-            &formatted_value,
-            stdout);    /* msg_fh */
+      gsc = get_formatted_value_for_feature_table_entry(
+               dh,
+               entry,
+               false,      /* suppress_unsupported */
+               true,       /* prefix_value_with_feature_code */
+               &formatted_value,
+               stdout);    /* msg_fh */
       if (formatted_value)
          printf("%s\n", formatted_value);
    }
@@ -98,10 +103,20 @@ app_show_single_vcp_value_by_dh_and_feature_table_entry(
 }
 
 
-
-
+/* Shows a single VCP value specified by its feature id.
+ *
+ * Arguments:
+ *    dh          handle of open display
+ *    feature_id  hex feature id
+ *    force       attempt to show value even if feature_id not in feature table
+ *
+ * Returns:
+ *    status code 0 = success
+ *                DDCL_UNKNOWN_FEATURE  feature_id not in feature table and !force
+ *                from app_show_single_vcp_value_by_feature_table_entry()
+ */
 Global_Status_Code
-app_show_single_vcp_value_by_dh_and_feature_id(
+app_show_single_vcp_value_by_feature_id(
       Display_Handle * dh,
       Byte feature_id,
       bool force)
@@ -123,81 +138,43 @@ app_show_single_vcp_value_by_dh_and_feature_id(
       gsc = DDCL_UNKNOWN_FEATURE;
    }
    else {
-      gsc = app_show_single_vcp_value_by_dh_and_feature_table_entry(dh, entry);
+      gsc = app_show_single_vcp_value_by_feature_table_entry(dh, entry);
    }
 
    DBGMSF(debug, "Done.  Returning: %s", gsc_desc(gsc));
    return gsc;
 }
-
-
-#ifdef DEPRECATED
-Global_Status_Code
-app_show_single_vcp_value_by_dh(Display_Handle * dh, char * feature, bool force) {
-   bool debug = false;
-   DBGMSF(debug, "Starting. Getting feature %s for %s",
-                 feature, display_handle_repr(dh) );
-
-   Global_Status_Code         gsc = 0;
-   Byte                       feature_id;
-
-   if ( hhs_to_byte_in_buf(feature, &feature_id) ) {
-      gsc = app_show_single_vcp_value_by_dh_and_feature_id(dh, feature_id, force);
-   }
-   else {
-      printf("Unrecognized VCP feature code: %s\n", feature);
-      // gsc = modulate_rc(-EINVAL, RR_ERRNO);
-      gsc = DDCL_UNKNOWN_FEATURE;
-   }
-
-   DBGMSF(debug, "Done.  Returning: %s", gsc_desc(gsc));
-   return gsc;
-}
-#endif
-
-
-
-#ifdef DEPRECATED
-Global_Status_Code
-app_show_single_vcp_value_by_display_ref(Display_Ref * dref, char * feature, bool force) {
-   Display_Handle * dh = ddc_open_display(dref, EXIT_IF_FAILURE);
-   Global_Status_Code gsc = app_show_single_vcp_value_by_dh(dh, feature, force);
-   ddc_close_display(dh);
-   return gsc;
-}
-#endif
-
 
 
 /* Shows the VCP values for all features in a VCP feature subset.
  *
  * Arguments:
- *    pdisp      display reference
- *    subset     feature subset
- *    collector  accumulates output
- *    show_unsupported
+ *    dh                display handle
+ *    subset_id         feature subset
+ *    show_unsupported  report unsupported values
  *
  * Returns:
- *    nothing
+ *    status code       from show_vcp_values()
  */
-void app_show_vcp_subset_values_by_display_handle(
+Global_Status_Code
+app_show_vcp_subset_values_by_display_handle(
         Display_Handle *    dh,
-        VCP_Feature_Subset  subset,
+        VCP_Feature_Subset  subset_id,
         bool                show_unsupported)
 {
    // DBGMSG("Starting.  subset=%d   ", subset );
 
    GPtrArray * collector = NULL;
-   show_vcp_values(dh, subset, collector, show_unsupported);
+   return show_vcp_values(dh, subset_id, collector, show_unsupported);
 }
 
 
-
+#ifdef UNUSED
 /* Shows the VCP values for all features in a VCP feature subset.
  *
  * Arguments:
  *    pdisp      display reference
- *    subset     feature subset
+ *    subset_id  feature subset
  *    collector  accumulates output
  *    show_unsupported
  *
@@ -206,7 +183,7 @@ void app_show_vcp_subset_values_by_display_handle(
  */
 void app_show_vcp_subset_values_by_display_ref(
         Display_Ref *       dref,
-        VCP_Feature_Subset  subset,
+        VCP_Feature_Subset  subset_id,
         bool                show_unsupported)
 {
    // DBGMSG("Starting.  subset=%d   ", subset );
@@ -227,12 +204,25 @@ void app_show_vcp_subset_values_by_display_ref(
    if (validDisp) {
       GPtrArray * collector = NULL;
       Display_Handle * pDispHandle = ddc_open_display(dref, EXIT_IF_FAILURE);
-      show_vcp_values(pDispHandle, subset, collector, show_unsupported);
+      show_vcp_values(pDispHandle, subset_id, collector, show_unsupported);
       ddc_close_display(pDispHandle);
    }
 }
+#endif
 
 
+/* Shows the VCP values for all features indicated by a Feature_Set_ref
+ *
+ * Arguments:
+ *    dh                display handle
+ *    fsref             feature set reference
+ *    show_unsupported  report unsupported values (applies if not a single feature feature set)
+ *    force             applies if is a single feature feature set
+ *
+ * Returns:
+ *    status code       from app_show_single_vcp_value_by_feature_id() or
+ *                           app_show_subset_values_by_display_handle()
+ */
 Global_Status_Code
 app_show_feature_set_values_by_display_handle(
       Display_Handle *     dh,
@@ -249,12 +239,11 @@ app_show_feature_set_values_by_display_handle(
 
    Global_Status_Code gsc = 0;
    if (fsref->subset == VCP_SUBSET_SINGLE_FEATURE) {
-      gsc = app_show_single_vcp_value_by_dh_and_feature_id(
+      gsc = app_show_single_vcp_value_by_feature_id(
             dh, fsref->specific_feature, force);
    }
    else {
-      // currently returns void, needs to return status code
-      app_show_vcp_subset_values_by_display_handle(
+      gsc = app_show_vcp_subset_values_by_display_handle(
             dh,
             fsref->subset,
             show_unsupported);
@@ -281,7 +270,7 @@ app_read_changes(Display_Handle * dh) {
 
    /* Per the 3.0 and 2.2 specs, x52 is a FIFO to be read until x00 indicates empty
     * What apparently happens on 2.1 (U3011) is that each time x02 is reset with value x01
-    * the subsequent read of x02 reports x02, new control values exist, until the queue
+    * the subsequent read of x02 returns x02 (new control values exists) until the queue
     * of changes is flushed
     */
 
@@ -309,7 +298,7 @@ app_read_changes(Display_Handle * dh) {
              return;
           }
           Byte changed_feature = p_nontable_response->sl;
-          app_show_single_vcp_value_by_dh_and_feature_id(dh, changed_feature, false);
+          app_show_single_vcp_value_by_feature_id(dh, changed_feature, false);
       }
       else {  // x52 is a FIFO
          int ctr = 0;
@@ -326,7 +315,7 @@ app_read_changes(Display_Handle * dh) {
                 DBGMSG("No more changed features found");
                 break;
              }
-             app_show_single_vcp_value_by_dh_and_feature_id(dh, changed_feature, false);
+             app_show_single_vcp_value_by_feature_id(dh, changed_feature, false);
          }
       }
 
@@ -346,6 +335,15 @@ app_read_changes(Display_Handle * dh) {
 
 }
 
+
+/* Infinite loop watching for VCP feature changes reported by the display.
+ *
+ * Arguments:
+ *    dh        display handle
+ *
+ * Returns:
+ *    does not return - halts with program termination
+ */
 void
 app_read_changes_forever(Display_Handle * dh) {
    printf("Watching for VCP feature changes on display %s\n", display_handle_repr(dh));

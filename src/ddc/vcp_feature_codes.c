@@ -37,8 +37,10 @@
 #include "util/string_util.h"
 
 #include "base/msg_control.h"
+#include "base/vcp_feature_values.h"
 
 #include "ddc/vcp_feature_codes.h"
+
 
 // Direct writes to stdout,stderr:
 //   in function: bool format_feature_detail_display_usage_time()
@@ -721,12 +723,15 @@ bool vcp_format_table_feature_detail(
 bool vcp_format_feature_detail(
        VCP_Feature_Table_Entry * vcp_entry,
        Version_Spec              vcp_version,
+       Single_Vcp_Value *        valrec,
        Parsed_Vcp_Response *     raw_data,
        char * *                  aformatted_data
      )
 {
-   bool debug = false;
+   bool debug = true;
    DBGMSF(debug, "Starting");
+   // hack to avoid having to change all of vcp_feature_code.c
+   raw_data = single_vcp_value_to_parsed_vcp_response(valrec);
    bool ok = true;
    *aformatted_data = NULL;
 

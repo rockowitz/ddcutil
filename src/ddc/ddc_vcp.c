@@ -41,6 +41,7 @@
 #include "base/ddc_packets.h"
 #include "base/msg_control.h"
 #include "base/util.h"
+#include "base/vcp_feature_values.h"
 
 #include "i2c/i2c_bus_core.h"
 
@@ -220,6 +221,7 @@ Global_Status_Code get_vcp_value(
        Display_Handle *          dh,
        Byte                      feature_code,
        VCP_Call_Type             call_type,
+       Single_Vcp_Value **       pvalrec,
        Parsed_Vcp_Response**     pp_parsed_response)
 {
    bool debug = false;
@@ -247,10 +249,10 @@ Global_Status_Code get_vcp_value(
                  &presp->table_response);
          break;
    }
-   if (gsc == 0)
-      *pp_parsed_response = presp;
 
-   TRCMSGTG(tg, "Done. Returning gsc=%s, *pp_parsed_response=%p", gsc_desc(gsc), *pp_parsed_response);
+
+   TRCMSGTG(tg, "Done. Returning gsc=%s, presp=%p",
+                gsc_desc(gsc), presp);
    if (gsc == 0) {
       assert(presp);
       assert( presp->response_type == call_type);
@@ -260,9 +262,24 @@ Global_Status_Code get_vcp_value(
          assert(!presp->non_table_response && presp->table_response);
    }
    else {
-      if (*pp_parsed_response)
-         TRCMSGTG(tg, "WARNING: gsc == s but *pp_parsed_response=%p", gsc_desc(gsc), *pp_parsed_response);
+      if (presp)
+         TRCMSGTG(tg, "WARNING: gsc == %s but presp=%p",
+                      gsc_desc(gsc), presp);
    }
+   if (gsc == 0)
+      *pp_parsed_response = presp;
+
+
+   if (gsc == 0) {
+      Single_Vcp_Value * valrec = create_single_vcp_value_by_parsed_vcp_response(
+            feature_code,
+            presp);
+      report_parsed_vcp_response(presp, 1);
+      report_single_vcp_value(valrec,1);
+      *pvalrec = valrec;
+   }
+
+
    return gsc;
 }
 

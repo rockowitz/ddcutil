@@ -46,17 +46,18 @@ struct VCP_Feature_Set {
 
 
 VCP_Feature_Set
-create_feature_set(VCP_Feature_Subset subset, Version_Spec vcp_version) {
+create_feature_set(VCP_Feature_Subset subset_id, Version_Spec vcp_version) {
+   assert(subset_id);
    bool debug = false;
-   DBGMSF(debug, "Starting. subset=%s(0x%04x), vcp_version=%d.%d",
-                 feature_subset_name(subset), subset, vcp_version.major, vcp_version.minor);
+   DBGMSF(debug, "Starting. subset_id=%s(0x%04x), vcp_version=%d.%d",
+                 feature_subset_name(subset_id), subset_id, vcp_version.major, vcp_version.minor);
    struct VCP_Feature_Set * fset = calloc(1,sizeof(struct VCP_Feature_Set));
    memcpy(fset->marker, VCP_FEATURE_SET_MARKER, 4);
-   fset->subset = subset;
+   fset->subset = subset_id;
    fset->members = g_ptr_array_sized_new(30);
-   if (subset == VCP_SUBSET_SCAN || subset == VCP_SUBSET_MFG) {
+   if (subset_id == VCP_SUBSET_SCAN || subset_id == VCP_SUBSET_MFG) {
       int ndx = 0;
-      if (subset == VCP_SUBSET_MFG)
+      if (subset_id == VCP_SUBSET_MFG)
          ndx = 0xe0;
       for (; ndx < 256; ndx++) {
          Byte id = ndx;
@@ -74,7 +75,7 @@ create_feature_set(VCP_Feature_Subset subset, Version_Spec vcp_version) {
          assert(vcp_entry);
          // Version_Feature_Flags vflags = 0;
          bool showit = false;
-         switch(subset) {
+         switch(subset_id) {
          case VCP_SUBSET_PRESET:
             showit = vcp_entry->vcp_spec_groups & VCP_SPEC_PRESET;
             break;
@@ -91,7 +92,7 @@ create_feature_set(VCP_Feature_Subset subset, Version_Spec vcp_version) {
          case VCP_SUBSET_WINDOW:
          case VCP_SUBSET_DPVL:
          case VCP_SUBSET_CRT:
-            showit = vcp_entry->vcp_subsets & subset;
+            showit = vcp_entry->vcp_subsets & subset_id;
             break;
          case VCP_SUBSET_SCAN:    // will never happen, inserted to avoid compiler warning
          case VCP_SUBSET_MFG:

@@ -114,7 +114,8 @@ check_valid_operation_by_feature_id_and_dh(
    return result;
 }
 
-// work in progress - eventuall move elsewhere
+
+// work in progress - eventually move elsewhere
 
 
 Global_Status_Code
@@ -122,6 +123,7 @@ get_raw_value_for_feature_table_entry(
       Display_Handle *           dh,
       VCP_Feature_Table_Entry *  vcp_entry,
       bool                       ignore_unsupported,
+      Single_Vcp_Value **        pvalrec,
       Parsed_Vcp_Response **     presp,
       FILE *                     msg_fh)
 {
@@ -130,6 +132,7 @@ get_raw_value_for_feature_table_entry(
    TRCMSGTG(tg, "Starting");
 
    *presp = NULL;
+
    Global_Status_Code gsc = 0;
    Version_Spec vspec = get_vcp_version_by_display_handle(dh);
    char * feature_name = get_version_sensitive_feature_name(vcp_entry, vspec);
@@ -139,48 +142,46 @@ get_raw_value_for_feature_table_entry(
    VCP_Call_Type feature_type = (is_table_feature) ? TABLE_VCP_CALL : NON_TABLE_VCP_CALL;
    Output_Level output_level = get_output_level();
    Parsed_Vcp_Response * parsed_vcp_response;
+   Single_Vcp_Value * valrec;
    gsc = get_vcp_value(
            dh,
            feature_code,
            feature_type,
+           &valrec,
            &parsed_vcp_response);
    // assert ( (gsc==0 && parsed_vcp_response) || (gsc!=0 && !parsed_vcp_response) );
 
    switch(gsc) {
    case 0:
       *presp = parsed_vcp_response;
+      *pvalrec = valrec;
       break;
 
    case DDCRC_INVALID_DATA:
-      if (output_level >= OL_NORMAL)    // FMT_CODE_NAME_DETAIL_W_NL
-         // fprintf(msg_fh, "VCP code 0x%02x (%-30s): Invalid response\n",
-         //                 feature_code, feature_name);
-         fprintf(msg_fh, FMT_CODE_NAME_DETAIL_W_NL,
-                      feature_code, feature_name, "Invalid response");
-
+      if (output_level >= OL_NORMAL)
+         f0printf(msg_fh, FMT_CODE_NAME_DETAIL_W_NL,
+                         feature_code, feature_name, "Invalid response");
       break;
 
    case DDCRC_NULL_RESPONSE:
       // for unsupported features, some monitors return null response rather than a valid response
       // with unsupported feature indicator set
       if (!ignore_unsupported) {
-         fprintf(msg_fh, FMT_CODE_NAME_DETAIL_W_NL,
+         f0printf(msg_fh, FMT_CODE_NAME_DETAIL_W_NL,
                         feature_code, feature_name, "Unsupported feature code (Null response)");
       }
       gsc = DDCRC_DETERMINED_UNSUPPORTED;
       break;
 
    case DDCRC_RETRIES:
-      // fprintf(msg_fh, "VCP code 0x%02x (%-30s): Maximum retries exceeded\n",
-      //                 feature_code, feature_name);
-      fprintf(msg_fh, FMT_CODE_NAME_DETAIL_W_NL,
+      f0printf(msg_fh, FMT_CODE_NAME_DETAIL_W_NL,
                       feature_code, feature_name, "Maximum retries exceeded");
       break;
 
    case DDCRC_REPORTED_UNSUPPORTED:
    case DDCRC_DETERMINED_UNSUPPORTED:
       if (!ignore_unsupported) {
-         fprintf(msg_fh, FMT_CODE_NAME_DETAIL_W_NL,
+         f0printf(msg_fh, FMT_CODE_NAME_DETAIL_W_NL,
                          feature_code, feature_name, "Unsupported feature code");
       }
       break;
@@ -188,10 +189,8 @@ get_raw_value_for_feature_table_entry(
    default:
    {
       char buf[200];
-       snprintf(buf, 200, "Invalid response. status code=%s", gsc_desc(gsc));
-       // fprintf(msg_fh, "VCP code 0x%02x (%-30s): Invalid response. status code=%s\n",
-       //     feature_code, feature_name, gsc_desc(gsc));
-       fprintf(msg_fh, FMT_CODE_NAME_DETAIL_W_NL,
+      snprintf(buf, 200, "Invalid response. status code=%s", gsc_desc(gsc));
+      f0printf(msg_fh, FMT_CODE_NAME_DETAIL_W_NL,
                        feature_code, feature_name, buf);
    }
    }
@@ -218,6 +217,8 @@ get_formatted_value_for_feature_table_entry(
    Global_Status_Code gsc = 0;
 
    *pformatted_value = NULL;
+
+
    Version_Spec vspec = get_vcp_version_by_display_handle(dh);
    Byte feature_code = vcp_entry->code;
    char * feature_name = get_version_sensitive_feature_name(vcp_entry, vspec);
@@ -228,7 +229,10 @@ get_formatted_value_for_feature_table_entry(
       fprintf(msg_fh, "\nGetting data for VCP code 0x%02x - %s:\n",
                             feature_code, feature_name);
    }
+
    Parsed_Vcp_Response * parsed_vcp_response;
+   Single_Vcp_Value *    pvalrec;
+#ifdef OLD
    gsc = get_vcp_value(
            dh,
            feature_code,
@@ -286,16 +290,28 @@ get_formatted_value_for_feature_table_entry(
                          feature_code, feature_name, buf);
       }
    }
+#endif
+
+   bool ignore_unsupported = !(output_level >= OL_NORMAL && !suppress_unsupported);
+   gsc = get_raw_value_for_feature_table_entry(
+            dh,
+            vcp_entry,
+            ignore_unsupported,
+            &pvalrec,
+            &parsed_vcp_response,
+            msg_fh);
 
    // if (gsc == 0)
    //    report_parsed_vcp_response(parsed_vcp_response, 0);
 
    assert( (gsc==0 && (feature_type == parsed_vcp_response->response_type)) || (gsc!=0) );
+   assert( (gsc==0 && (feature_type == pvalrec->value_type)) || (gsc!=0) );
    if (gsc == 0) {
       if (!is_table_feature && output_level >= OL_VERBOSE) {
          rpt_push_output_dest(msg_fh);
          Parsed_Nontable_Vcp_Response *  non_table_response = (*parsed_vcp_response).non_table_response;
          report_interpreted_nontable_vcp_response(non_table_response, 0);
+         report_single_vcp_value(pvalrec, 0);
          rpt_pop_output_dest();
       }
 
@@ -310,6 +326,13 @@ get_formatted_value_for_feature_table_entry(
             char * formatted = calloc(hexbufsize + 20, sizeof(char));
             snprintf(formatted, hexbufsize+20, "VCP %02X %s\n", feature_code, hexbuf);
             *pformatted_value = formatted;
+
+            Buffer * accum2 = pvalrec->val.t.buffer;
+            assert(buffer_eq(accumulator, accum2));
+
+            assert(accum2->len == pvalrec->val.t.bytect);
+            assert(memcmp(accum2->bytes, pvalrec->val.t.bytes, accum2->len)==0);
+
             free(hexbuf);
          }
          else {                                // OL_PROGRAM, not table feature
@@ -318,6 +341,10 @@ get_formatted_value_for_feature_table_entry(
             char buf[200];
             snprintf(buf, 200, "VCP %02X %5d", vcp_entry->code, code_info->cur_value);
             *pformatted_value = strdup(buf);
+
+            snprintf(buf, 200, "VCP %02X %5d", vcp_entry->code, pvalrec->val.nt.cur_val);
+            assert(streq(*pformatted_value, buf));
+
          }
       }
       else  {          // normal (non OL_PROGRAM) output
@@ -327,11 +354,12 @@ get_formatted_value_for_feature_table_entry(
          ok = vcp_format_feature_detail(
                  vcp_entry,
                  vspec,
+                 pvalrec,
                  parsed_vcp_response,
                  &formatted_data);
          // DBGMSG("vcp_format_feature_detail set formatted_data=|%s|", formatted_data);
          if (!ok) {
-            fprintf(msg_fh, FMT_CODE_NAME_DETAIL_WO_NL,
+            f0printf(msg_fh, FMT_CODE_NAME_DETAIL_WO_NL,
                             feature_code, feature_name, "!!! UNABLE TO FORMAT OUTPUT");
             gsc = DDCRC_INTERPRETATION_FAILED;
             // TODO: retry with default output function
@@ -388,6 +416,7 @@ Global_Status_Code
 collect_raw_feature_set_values(
       Display_Handle *      dh,
       VCP_Feature_Set       feature_set,
+      Vcp_Value_Set         vset,
       GPtrArray *           collector,
       bool                  ignore_unsupported,  // if false, is error if unsupported
       FILE *                msg_fh)
@@ -402,15 +431,18 @@ collect_raw_feature_set_values(
       VCP_Feature_Table_Entry * entry = get_feature_set_entry(feature_set, ndx);
       DBGMSF(debug,"ndx=%d, feature = 0x%02x", ndx, entry->code);
       Parsed_Vcp_Response * response;
+      Single_Vcp_Value *    pvalrec;
       Global_Status_Code cur_status_code =
        get_raw_value_for_feature_table_entry(
          dh,
          entry,
          ignore_unsupported,
+         &pvalrec,
          &response,
          msg_fh);
       if (cur_status_code == 0) {
          g_ptr_array_add(collector, response);
+         vcp_value_set_add(vset, pvalrec);
       }
       else if ( (cur_status_code == DDCRC_REPORTED_UNSUPPORTED ||
                  cur_status_code == DDCRC_DETERMINED_UNSUPPORTED
@@ -537,6 +569,7 @@ Global_Status_Code
 collect_raw_subset_values(
         Display_Handle *    dh,
         VCP_Feature_Subset  subset,
+        Vcp_Value_Set       vset,
         GPtrArray *         collector,
         bool                ignore_unsupported,
         FILE *              msg_fh)
@@ -551,7 +584,7 @@ collect_raw_subset_values(
       report_feature_set(feature_set, 0);
 
    gsc = collect_raw_feature_set_values(
-            dh, feature_set, collector, ignore_unsupported, msg_fh);
+            dh, feature_set, vset, collector, ignore_unsupported, msg_fh);
    DBGMSF(debug, "Done");
    return gsc;
 }

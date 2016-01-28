@@ -94,6 +94,7 @@ struct {
 } Buffer;
 
 Buffer * buffer_new(int size, const char * trace_msg);
+Buffer * buffer_dup(Buffer * srcbuf, const char * trace_msg);
 int      buffer_length(Buffer * buffer);
 void     buffer_set_length(Buffer * buffer, int bytect);
 void     buffer_free(Buffer * buffer, const char * trace_msg);
@@ -102,6 +103,7 @@ void     buffer_set_byte(Buffer * buffer, int offset, Byte byte);
 void     buffer_set_bytes(Buffer * buffer, int offset, Byte * bytes, int bytect);
 void     buffer_append(Buffer * buffer, Byte * bytes, int bytect);
 void     buffer_dump(Buffer * buffer);
+bool     buffer_eq(Buffer* buf1, Buffer* buf2);
 
 
 #endif /* DATA_STRUCTURES_H */
