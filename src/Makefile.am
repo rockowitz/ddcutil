@@ -71,6 +71,7 @@ cmdline/cmd_parser_aux.c \
 cmdline/cmd_parser_goption.c \
 cmdline/parsed_cmd.c \
 app_ddctool/main.c \
+app_ddctool/app_dumpload.c \
 app_ddctool/query_sysenv.c \
 app_ddctool/app_setvcp.c \
 app_ddctool/app_getvcp.c \

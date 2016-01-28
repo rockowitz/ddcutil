@@ -29,15 +29,59 @@
 #ifndef LOADVCP_H_
 #define LOADVCP_H_
 
+#include <stdio.h>
+
 #include <base/status_code_mgt.h>
 #include <base/displays.h>
 
-bool loadvcp_by_file(const char * fn);
+#include "base/vcp_feature_values.h"
+
+
+// Dumpload_Data is the internal form data structure used to
+// hold data being loaded.  Whatever the external form: a
+// file or a string, it is converted to Dumpload_Data and then
+// written to the monitor.
+
+#define MAX_LOADVCP_VALUES  20
+
+
+
+
+
+typedef
+struct {
+   time_t timestamp_millis;
+ //  int    busno;
+   Byte   edidbytes[128];
+   char   edidstr[257];       // 128 byte edid as hex string (for future use)
+   char   mfg_id[4];
+   char   model[14];
+   char   serial_ascii[14];
+   int    vcp_value_ct;
+   Single_Vcp_Value vcp_value[MAX_LOADVCP_VALUES];
+   // new way:
+   Vcp_Value_Set vcp_values;
+} Dumpload_Data;
+
+void report_dumpload_data(Dumpload_Data * data, int depth);
+
+
+bool loadvcp_by_dumpload_data(Dumpload_Data* pdata);
 Global_Status_Code loadvcp_by_string(char * catenated);
 
-bool dumpvcp_as_file_old(Display_Handle * dh, char * optional_filename);
-bool dumpvcp_as_file(Display_Handle * dh, char * optional_filename);
-Global_Status_Code dumpvcp_as_string_old(Display_Handle * dh, char** result);
+Dumpload_Data* create_dumpload_data_from_g_ptr_array(GPtrArray * garray);
+GPtrArray * convert_dumpload_data_to_string_array(Dumpload_Data * data);
+
+Global_Status_Code
+dumpvcp_as_dumpload_data(
+      Display_Handle * dh,
+      Dumpload_Data** pdumpload_data,
+      FILE * msg_fh);
+
 Global_Status_Code dumpvcp_as_string(Display_Handle * dh, char** result);
+
+#ifdef OLD
+Global_Status_Code dumpvcp_as_string_old(Display_Handle * dh, char** result);
+#endif
 
 #endif /* LOADVCP_H_ */

@@ -61,33 +61,7 @@
 #include "ddc/ddc_read_capabilities.h"
 #include "ddc/ddc_displays.h"
 
-
-
-// Dumpload_Data is the internal form data structure used to
-// hold data being loaded.  Whatever the external form: a
-// file or a string, it is converted to Dumpload_Data and then
-// written to the monitor.
-
-#define MAX_LOADVCP_VALUES  20
-
-
-
-
-
-typedef
-struct {
-   time_t timestamp_millis;
- //  int    busno;
-   Byte   edidbytes[128];
-   char   edidstr[257];       // 128 byte edid as hex string (for future use)
-   char   mfg_id[4];
-   char   model[14];
-   char   serial_ascii[14];
-   int    vcp_value_ct;
-   Single_Vcp_Value vcp_value[MAX_LOADVCP_VALUES];
-   // new way:
-   Vcp_Value_Set vcp_values;
-} Dumpload_Data;
+#include "ddc/mccs_dumpload.h"
 
 
 void report_dumpload_data(Dumpload_Data * data, int depth) {
@@ -347,28 +321,6 @@ Dumpload_Data* create_dumpload_data_from_g_ptr_array(GPtrArray * garray) {
 }
 
 
-/* Read a file into a Dumpload_Data struct.
- */
-Dumpload_Data * read_vcp_file(const char * fn) {
-   // DBGMSG("Starting. fn=%s  ", fn );
-   Dumpload_Data * data = NULL;
-   GPtrArray * g_line_array = g_ptr_array_sized_new(100);
-   // issues message if error:
-   int rc = file_getlines(fn, g_line_array);
-   if (rc < 0) {
-      fprintf(stderr, "%s: %s\n", strerror(-rc), fn);
-   }
-   else {
-#ifdef USING_ITERATOR
-      (g_ptr_iter.func_init)(g_line_array);
-      data = dumpload_data_from_iterator(g_ptr_iter);
-#else
-      data = create_dumpload_data_from_g_ptr_array(g_line_array);
-#endif
-   }
-   // DBGMSG("Returning: %p  ", data );
-   return data;
-}
 
 
 /* Apply VCP settings from a Dumpload_Data struct to
@@ -412,42 +364,6 @@ bool loadvcp_by_dumpload_data(Dumpload_Data* pdata) {
    }
    return ok;
 }
-
-
-/* Apply the VCP settings stored in a file to the monitor
- * indicated in that file.
- *
- * Arguments:
- *    fn          file name
- *
- * Returns:  true if load succeeded, false if not
- */
-// TODO: convert to Global_Status_Code
-bool loadvcp_by_file(const char * fn) {
-   // Msg_Level msg_level = get_global_msg_level();
-   Output_Level output_level = get_output_level();
-   // DBGMSG("msgLevel=%d", msgLevel);
-   // bool verbose = (msg_level >= VERBOSE);
-   bool verbose = (output_level >= OL_VERBOSE);
-   // DBGMSG("verbose=%d", verbose);
-   bool ok = false;
-   // DBGMSG("Starting. fn=%s  ", fn );
-
-   Dumpload_Data * pdata = read_vcp_file(fn);
-   if (!pdata) {
-      fprintf(stderr, "Unable to load VCP data from file: %s\n", fn);
-   }
-   else {
-      if (verbose) {
-           printf("Loading VCP settings for monitor \"%s\", sn \"%s\" from file: %s\n",
-                  pdata->model, pdata->serial_ascii, fn);
-           report_dumpload_data(pdata, 0);
-      }
-      ok = loadvcp_by_dumpload_data(pdata);
-   }
-   return ok;
-}
-
 
 
 bool loadvcp_by_ntsa(Null_Terminated_String_Array ntsa) {
@@ -521,109 +437,8 @@ Global_Status_Code loadvcp_by_string(char * catenated) {
 //
 
 
-// Filename creation
-
-// TODO: generalize, get default dir following XDG settings
-#define USER_VCP_DATA_DIR ".local/share/icc"
 
 
-char * create_simple_vcp_fn_by_edid(
-          Parsed_Edid * edid,
-          time_t        time_millis,
-          char *        buf,
-          int           bufsz)
-{
-   assert(edid);
-   if (bufsz == 0 || buf == NULL) {
-      bufsz = 128;
-      buf = calloc(1, bufsz);
-   }
-
-   char ts_buf[30];
-   char * timestamp_text = format_timestamp(time_millis, ts_buf, 30);
-   snprintf(buf, bufsz, "%s-%s-%s.vcp",
-            edid->model_name,
-            edid->serial_ascii,
-            timestamp_text
-           );
-   str_replace_char(buf, ' ', '_');     // convert blanks to underscores
-
-   // DBGMSG("Returning %s", buf );
-   return buf;
-}
-
-
-char * create_simple_vcp_fn_by_display_handle(
-          Display_Handle * dh,
-          time_t           time_millis,
-          char *           buf,
-          int              bufsz)
-{
-   Parsed_Edid* edid = ddc_get_parsed_edid_by_display_handle(dh);
-   assert(edid);
-   return create_simple_vcp_fn_by_edid(edid, time_millis, buf, bufsz);
-}
-
-
-
-
-
-// TODO: return Global_Status_Code rather than ok
-bool dumpvcp_as_file_old(Display_Handle * dh, char * filename) {
-   bool               ok             = true;
-   Global_Status_Code gsc            = 0;
-   char               fqfn[PATH_MAX] = {0};
-   time_t             time_millis    = time(NULL);
-
-   if (!filename) {
-      char simple_fn_buf[NAME_MAX+1];
-      char * simple_fn = create_simple_vcp_fn_by_display_handle(
-                            dh,
-                            time_millis,
-                            simple_fn_buf,
-                            sizeof(simple_fn_buf));
-      // DBGMSG("simple_fn=%s", simple_fn );
-
-      snprintf(fqfn, PATH_MAX, "/home/%s/%s/%s", getlogin(), USER_VCP_DATA_DIR, simple_fn);
-      // DBGMSG("fqfn=%s   ", fqfn );
-      filename = fqfn;
-      // control with MsgLevel?
-      printf("Writing file: %s\n", filename);
-   }
-
-   FILE * output_fp = fopen(filename, "w+");
-   // DBGMSG("output_fp=%p  ", output_fp );
-   if (!output_fp) {
-      fprintf(stderr, "(%s) Unable to open %s for writing: %s\n", __func__, fqfn, strerror(errno)  );
-      ok = false;
-   }
-   else {
-      // TODO: return status codes up the call chain to here,
-      // look for DDCRC_MULTI_FEATURE_ERROR
-      GPtrArray * vals = NULL;
-      gsc = collect_profile_related_values(dh, time_millis, &vals);
-      // DBGMSG("vals->len = %d", vals->len);
-      if (gsc != 0) {
-         fprintf(stderr, "Error reading at least one feature value.  File not written.\n");
-         ok = false;
-      }
-      else {
-         int ct = vals->len;
-         int ndx;
-         for (ndx=0; ndx<ct; ndx++){
-            // DBGMSG("ndx = %d", ndx);
-            char * nextval = g_ptr_array_index(vals, ndx);
-            // DBGMSG("nextval = %p", nextval);
-            // DBGMSG("strlen(nextval)=%ld, nextval = |%s|", strlen(nextval), nextval);
-            fprintf(output_fp, "%s\n", nextval);
-         }
-      }
-      if (vals)
-         g_ptr_array_free(vals, true);
-      fclose(output_fp);
-   }
-   return ok;
-}
 
 
 // n. called from ddct_public.c
@@ -668,15 +483,35 @@ dumpvcp_as_string_old(Display_Handle * dh, char ** pstring) {
    return gsc;
 }
 
-// Under construction:
+
+/* Primary function for the DUMPVCP command.
+ *
+ * Writes DUMPVCP data to the in-core Dumpload_Data structure
+ *
+ * Arguments:
+ *    dh              display handle for connected display
+ *    pdumpload_data  address as which to return pointer to newly allocated
+ *                    Dumpload_Data struct.  It is the responsibility of the
+ *                    caller to free this data structure.
+ *    msg_fh          location where to write data error messages
+ *
+ * Returns:
+ *    status code
+ */
 Global_Status_Code
-dumpvcp_as_dumpload_data(Display_Handle * dh, Dumpload_Data** pdumpload_data, FILE * msg_fh) {
+dumpvcp_as_dumpload_data(
+      Display_Handle * dh,
+      Dumpload_Data** pdumpload_data,
+      FILE * msg_fh)
+{
    bool debug = false;
    DBGMSF(debug, "Starting");
    Global_Status_Code gsc = 0;
    Dumpload_Data * dumped_data = calloc(1, sizeof(Dumpload_Data));
+
    // timestamp:
    dumped_data->timestamp_millis = time(NULL);
+
    // identification information from edid:
    Parsed_Edid * edid = ddc_get_parsed_edid_by_display_handle(dh);
    memcpy(dumped_data->mfg_id, edid->mfg_id, sizeof(dumped_data->mfg_id));
@@ -689,9 +524,10 @@ dumpvcp_as_dumpload_data(Display_Handle * dh, Dumpload_Data** pdumpload_data, FI
               true /* uppercase */,
               dumped_data->edidstr, 257);
 
+   // VCP values
    GPtrArray* collector = g_ptr_array_sized_new(50);
    Vcp_Value_Set vset = vcp_value_set_new(50);
-     gsc = collect_raw_subset_values(
+   gsc = collect_raw_subset_values(
              dh,
              VCP_SUBSET_PROFILE,
              vset,
@@ -739,7 +575,14 @@ dumpvcp_as_dumpload_data(Display_Handle * dh, Dumpload_Data** pdumpload_data, FI
 }
 
 
-
+/* Converts a Dumpload_Data structure to an array of strings
+ *
+ * Arguments:
+ *    data     pointer to Dumpload_Data instance
+ *
+ * Returns:
+ *    array of strings
+ */
 GPtrArray * convert_dumpload_data_to_string_array(Dumpload_Data * data) {
    bool debug = false;
    DBGMSF(debug, "Starting. data=%p", data);
@@ -747,18 +590,18 @@ GPtrArray * convert_dumpload_data_to_string_array(Dumpload_Data * data) {
    if (debug)
       report_dumpload_data(data, 1);
 
-   GPtrArray * vals = g_ptr_array_sized_new(30);
+   GPtrArray * strings = g_ptr_array_sized_new(30);
 
-   collect_machine_readable_timestamp(data->timestamp_millis, vals);
+   collect_machine_readable_timestamp(data->timestamp_millis, strings);
 
    char buf[300];
    int bufsz = sizeof(buf)/sizeof(char);
    snprintf(buf, bufsz, "MFG_ID  %s",  data->mfg_id);
-   g_ptr_array_add(vals, strdup(buf));
+   g_ptr_array_add(strings, strdup(buf));
    snprintf(buf, bufsz, "MODEL   %s",  data->model);
-   g_ptr_array_add(vals, strdup(buf));
+   g_ptr_array_add(strings, strdup(buf));
    snprintf(buf, bufsz, "SN      %s",  data->serial_ascii);
-   g_ptr_array_add(vals, strdup(buf));
+   g_ptr_array_add(strings, strdup(buf));
 
    char hexbuf[257];
    hexstring2(data->edidbytes, 128,
@@ -766,132 +609,101 @@ GPtrArray * convert_dumpload_data_to_string_array(Dumpload_Data * data) {
               true /* uppercase */,
               hexbuf, 257);
    snprintf(buf, bufsz, "EDID    %s", hexbuf);
-   g_ptr_array_add(vals, strdup(buf));
+   g_ptr_array_add(strings, strdup(buf));
 
    int ndx = 0;
+#ifdef OLD
    for (;ndx < data->vcp_value_ct; ndx++) {
       // n. get_formatted_value_for_feature_table_entry() also has code for table type values
       char buf[200];
       snprintf(buf, 200, "VCP %02X %5d", data->vcp_value[ndx].opcode, data->vcp_value[ndx].value);
-      g_ptr_array_add(vals, strdup(buf));
+      g_ptr_array_add(strings, strdup(buf));
    }
+#endif
    for (ndx=0;ndx < data->vcp_values->len; ndx++) {
       // n. get_formatted_value_for_feature_table_entry() also has code for table type values
       Single_Vcp_Value * vrec = vcp_value_set_get(data->vcp_values,ndx);
       char buf[200];
       snprintf(buf, 200, "VCP %02X %5d",
                          vrec->opcode, vrec->val.nt.cur_val);
-      g_ptr_array_add(vals, strdup(buf));
+      g_ptr_array_add(strings, strdup(buf));
    }
-   return vals;
+   return strings;
 }
 
+/** JOints a GPtrArray containing pointers to character strings
+ *  into a single string,
+ *
+ *  Arguments:
+ *     string   GPtrArray of strings
+ *     sepstr   if non-null, separator to insert between joined strings
+ *
+ *  Returns:
+ *     joined string
+ */
+char * join_string_g_ptr_array(GPtrArray* strings, char * sepstr) {
+   bool debug = true;
+
+   int ct = strings->len;
+   DBGMSF(debug, "ct = %d", ct);
+   char ** pieces = calloc(ct, sizeof(char*));
+   int ndx;
+   for (ndx=0; ndx < ct; ndx++) {
+      pieces[ndx] = g_ptr_array_index(strings,ndx);
+      DBGMSF(debug, "pieces[%d] = %s", ndx, pieces[ndx]);
+   }
+   char * catenated = strjoin((const char**) pieces, ct, sepstr);
+   DBGMSF(debug, "strlen(catenated)=%ld, catenated=%p, catenated=|%s|", strlen(catenated), catenated, catenated);
+
+#ifdef GLIB_VARIANT
+   // GLIB variant failing when used with file.  why?
+   Null_Terminated_String_Array ntsa_pieces = g_ptr_array_to_ntsa(strings);
+   if (debug) {
+      DBGMSG("ntsa_pieces before call to g_strjoinv():");
+      null_terminated_string_array_show(ntsa_pieces);
+   }
+   // n. our Null_Terminated_String_Array is identical to glib's GStrv
+   gchar sepchar = ';';
+   gchar * catenated2 = g_strjoinv(&sepchar, ntsa_pieces);
+   DBGMSF(debug, "catenated2=%p", catenated2);
+   *pstring = catenated2;
+   assert(strcmp(catenated, catenated2) == 0);
+#endif
+
+   return catenated;
+}
+
+
+
+/* Returns the output of the DUMPVCP command a single string.
+ * Each field is separated by a semicolon.
+ *
+ * The caller is responsible for freeing the returned string.
+ *
+ * Arguments:
+ *    dh       display handle of open monnitor
+ *    pstring  location at which to return string
+ *
+ * Returns:
+ *    status code
+ */
 // n. called from ddct_public.c
+// move to glib_util.c?
 Global_Status_Code
 dumpvcp_as_string(Display_Handle * dh, char ** pstring) {
    bool debug = false;
    DBGMSF(debug, "Starting");
-   // GPtrArray * vals = NULL;
+
+   Global_Status_Code gsc    = 0;
+   Dumpload_Data *    data   = NULL;
+   FILE *             msg_fh = stdout;   // temp
    *pstring = NULL;
-   // Under construction:
-   Global_Status_Code gsc = 0;
-   Dumpload_Data * data = NULL;
-   FILE * msg_fh = stdout;   // temp
+
    gsc = dumpvcp_as_dumpload_data(dh, &data, msg_fh);
    if (gsc == 0) {
       GPtrArray * strings = convert_dumpload_data_to_string_array(data);
-
-      int ct = strings->len;
-      DBGMSG("ct = %d", ct);
-      char ** pieces = calloc(ct, sizeof(char*));
-      int ndx;
-      for (ndx=0; ndx < ct; ndx++) {
-         pieces[ndx] = g_ptr_array_index(strings,ndx);
-         DBGMSG("pieces[%d] = %s", ndx, pieces[ndx]);
-      }
-      char * catenated = strjoin((const char**) pieces, ct, ";");
-      DBGMSF(debug, "strlen(catenated)=%ld, catenated=%p, catenated=|%s|", strlen(catenated), catenated, catenated);
-      *pstring = catenated;
-
-
-#ifdef GLIB_VARIANT
-      // GLIB variant failing when used with file.  why?
-      Null_Terminated_String_Array ntsa_pieces = g_ptr_array_to_ntsa(strings);
-      if (debug) {
-         DBGMSG("ntsa_pieces before call to g_strjoinv():");
-         null_terminated_string_array_show(ntsa_pieces);
-      }
-      // n. our Null_Terminated_String_Array is identical to glib's GStrv
-      gchar sepchar = ';';
-      gchar * catenated2 = g_strjoinv(&sepchar, ntsa_pieces);
-      DBGMSF(debug, "catenated2=%p", catenated2);
-      *pstring = catenated2;
-      assert(strcmp(catenated, catenated2) == 0);
-#endif
-      DBGMSF(debug, "*pstring = |%s|", *pstring);
+      *pstring = join_string_g_ptr_array(strings, ";");
    }
-   DBGMSF(debug, "Returning: %s", gsc_desc(gsc));
+   DBGMSF(debug, "Returning: %s, *pstring=|%s|", gsc_desc(gsc), *pstring);
    return gsc;
 }
-
-
-// Global_Status_Code
-bool
-dumpvcp_as_file(Display_Handle * dh, char * filename) {
-   bool debug = false;
-   DBGMSF(debug, "Starting");
-   char               fqfn[PATH_MAX] = {0};
-
-   Global_Status_Code gsc = 0;
-   Dumpload_Data * data = NULL;
-   FILE * msg_fh = stdout;   // temp
-   gsc = dumpvcp_as_dumpload_data(dh, &data, msg_fh);
-   if (gsc == 0) {
-      GPtrArray * strings = convert_dumpload_data_to_string_array(data);
-
-      if (!filename) {
-         time_t time_millis = data->timestamp_millis;
-         char simple_fn_buf[NAME_MAX+1];
-         char * simple_fn = create_simple_vcp_fn_by_display_handle(
-                               dh,
-                               time_millis,
-                               simple_fn_buf,
-                               sizeof(simple_fn_buf));
-         // DBGMSG("simple_fn=%s", simple_fn );
-
-         snprintf(fqfn, PATH_MAX, "/home/%s/%s/%s", getlogin(), USER_VCP_DATA_DIR, simple_fn);
-         // DBGMSG("fqfn=%s   ", fqfn );
-         filename = fqfn;
-         // control with MsgLevel?
-         printf("Writing file: %s\n", filename);
-      }
-
-      FILE * output_fp = fopen(filename, "w+");
-      // DBGMSG("output_fp=%p  ", output_fp );
-      if (!output_fp) {
-         fprintf(stderr, "(%s) Unable to open %s for writing: %s\n", __func__, fqfn, strerror(errno)  );
-         gsc =  -1;     /* TEMP FAILURE VALUE */
-      }
-      else {
-         int ct = strings->len;
-                int ndx;
-                for (ndx=0; ndx<ct; ndx++){
-                   // DBGMSG("ndx = %d", ndx);
-                   char * nextval = g_ptr_array_index(strings, ndx);
-                   // DBGMSG("nextval = %p", nextval);
-                   // DBGMSG("strlen(nextval)=%ld, nextval = |%s|", strlen(nextval), nextval);
-                   fprintf(output_fp, "%s\n", nextval);
-                }
-
-         fclose(output_fp);
-
-      }
-
-   }
-   return (gsc == 0);
-}
-
-
-
-
-

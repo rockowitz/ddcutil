@@ -35,10 +35,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "../app_ddctool/query_sysenv.h"
-#include "../app_ddctool/testcases.h"
-#include "../ddc/ddc_output.h"
-#include "../ddc/mccs_dumpload.h"
+
 #include "util/data_structures.h"
 
 #include "base/common.h"
@@ -67,6 +64,7 @@
 #include "ddc/ddc_displays.h"
 #include "ddc/ddc_vcp_version.h"
 #include "ddc/ddc_services.h"
+#include "ddc/ddc_output.h"
 
 #include "cmdline/cmd_parser_aux.h"    // for parse_feature_id_or_subset(), should it be elsewhere?
 #include "cmdline/parsed_cmd.h"
@@ -74,6 +72,9 @@
 
 #include "app_ddctool/app_setvcp.h"
 #include "app_ddctool/app_getvcp.h"
+#include "app_ddctool/query_sysenv.h"
+#include "app_ddctool/testcases.h"
+#include "app_ddctool/app_dumpload.h"
 
 
 
@@ -378,8 +379,8 @@ int main(int argc, char *argv[]) {
 
          case CMDID_DUMPVCP:
             {
-               bool ok = dumpvcp_as_file(dh, (parsed_cmd->argct > 0) ? parsed_cmd->args[0] : NULL );
-               main_rc = (ok) ? EXIT_SUCCESS : EXIT_FAILURE;
+               Global_Status_Code gsc = dumpvcp_as_file(dh, (parsed_cmd->argct > 0) ? parsed_cmd->args[0] : NULL );
+               main_rc = (gsc==0) ? EXIT_SUCCESS : EXIT_FAILURE;
                break;
             }
 
