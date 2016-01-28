@@ -69,6 +69,10 @@ typedef void * DDCT_Display_Identifier;
 
 void ddct_free_table_value_response(DDCT_Table_Value_Response * table_value_response);
 
+void ddct_set_fout(FILE * fout);
+
+void ddct_set_ferr(FILE * ferr);
+
 void ddct_init();
 
 

@@ -95,16 +95,14 @@ static Bus_Info_Array *  _bus_infos;   // pointer to array of Bus_Info
  */
 static Bus_Info * _get_allocated_Bus_Info(int busno) {
    bool debug = false;
-   if (debug)
-      DBGMSG("busno=%d, _busct=%d", busno, _busct );
+   DBGMSF(debug, "busno=%d, _busct=%d", busno, _busct );
    assert(_bus_infos != NULL && _busct >= 0);   // Check initialized
    assert(busno >= 0 && busno < _busct);
 
    Bus_Info_Array * bia = _bus_infos;
    Bus_Info * bus_info  = (void *)bia + busno*sizeof(Bus_Info);
 
-   if (debug)
-       DBGMSG("Returning %p", bus_info );
+   DBGMSF(debug, "Returning %p", bus_info );
    return bus_info;
 }
 
@@ -524,6 +522,7 @@ Bus_Info * i2c_find_bus_info_by_edid(const Byte * pEdidBytes) {
  *
  * Arguments:
  *    busno      I2C bus number
+ *    emit_error_msg  if true, write message if error
  *
  * Returns:
  *    true or false
@@ -549,7 +548,7 @@ bool i2c_is_valid_bus(int busno, bool emit_error_msg) {
       result = true;
 
    if (complaint && emit_error_msg) {
-      fprintf(stderr, "%s /dev/i2c-%d\n", complaint, busno);
+      f0printf(FERR, "%s /dev/i2c-%d\n", complaint, busno);
    }
    // DBGMSG("returning %d", result);
    return result;
@@ -841,17 +840,17 @@ typedef struct {
  *
  * Arguments:
  *   busno            I2C bus number
- *   failure_action   exit if failure?
+ *   emit_error_msg   if true, output message if error
  *
  * Returns:
  *   file descriptor ( > 0) if success
- *   -errno if failure and failure_action == RETURN_ERROR_IF_FAILURE
+ *   -errno if failure
  *
  */
-int i2c_open_bus(int busno, Failure_Action failure_action) {
+int i2c_open_bus_new(int busno, bool emit_error_msg) {
    bool debug = false;
-   if (debug)
-      DBGMSG("busno=%d", busno);
+   DBGMSGF(debug, "busno=%d", busno);
+
    char filename[20];
    int  file;
 
@@ -865,14 +864,35 @@ int i2c_open_bus(int busno, Failure_Action failure_action) {
    // -1 if error, and errno is set
    int errsv = errno;
    if (file < 0) {
-      if (failure_action == EXIT_IF_FAILURE) {
-         TERMINATE_EXECUTION_ON_ERROR("Open failed. errno=%s\n", linux_errno_desc(errsv));
-      }
-      fprintf(stderr, "Open failed for %s: errno=%s\n", filename, linux_errno_desc(errsv));
+      if (emit_error_msg)
+         f0printf(FERR, "Open failed for %s: errno=%s\n", filename, linux_errno_desc(errsv));
       file = -errno;
    }
    return file;
 }
+
+
+/* Open an I2C bus
+ *
+ * Arguments:
+ *   busno            I2C bus number
+ *   failure_action   exit if failure?
+ *
+ * Returns:
+ *   file descriptor ( > 0) if success
+ *   -errno if failure and failure_action == RETURN_ERROR_IF_FAILURE
+ *
+ */
+int i2c_open_bus(int busno, Failure_Action failure_action) {
+   bool debug = false;
+   DBGMSGF(debug, "busno=%d", busno);
+
+   int file = i2c_open_bus_new(busno, (failure_action != EXIT_IF_FAILURE) );
+   if (file < 0 && failure_action == EXIT_IF_FAILURE)
+      TERMINATE_EXECUTION_ON_ERROR("Open failed. errno=%s\n", linux_errno_desc(-file));
+   return file;
+}
+
 
 
 /* Closes an open I2C bus device.

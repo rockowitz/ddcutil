@@ -65,8 +65,10 @@ struct {
 
 void report_dumpload_data(Dumpload_Data * data, int depth);
 
+// TODO: implement:
+// free_dupload_data(Dumpload_Data * pdata);
 
-bool loadvcp_by_dumpload_data(Dumpload_Data* pdata);
+Global_Status_Code loadvcp_by_dumpload_data(Dumpload_Data* pdata);
 Global_Status_Code loadvcp_by_string(char * catenated);
 
 Dumpload_Data* create_dumpload_data_from_g_ptr_array(GPtrArray * garray);
@@ -75,8 +77,8 @@ GPtrArray * convert_dumpload_data_to_string_array(Dumpload_Data * data);
 Global_Status_Code
 dumpvcp_as_dumpload_data(
       Display_Handle * dh,
-      Dumpload_Data** pdumpload_data,
-      FILE * msg_fh);
+      Dumpload_Data** pdumpload_data);
+
 
 Global_Status_Code dumpvcp_as_string(Display_Handle * dh, char** result);
 

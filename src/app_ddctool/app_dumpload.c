@@ -123,8 +123,7 @@ dumpvcp_as_file(Display_Handle * dh, char * filename) {
 
    Global_Status_Code gsc = 0;
    Dumpload_Data * data = NULL;
-   FILE * msg_fh = stdout;   // temp
-   gsc = dumpvcp_as_dumpload_data(dh, &data, msg_fh);
+   gsc = dumpvcp_as_dumpload_data(dh, &data);
    if (gsc == 0) {
       GPtrArray * strings = convert_dumpload_data_to_string_array(data);
 
@@ -225,6 +224,10 @@ bool dumpvcp_as_file_old(Display_Handle * dh, char * filename) {
 }
 
 
+//
+// Loadvcp
+//
+
 /* Read a file into a Dumpload_Data struct.
  */
 Dumpload_Data * read_vcp_file(const char * fn) {
@@ -249,7 +252,6 @@ Dumpload_Data * read_vcp_file(const char * fn) {
 }
 
 
-
 /* Apply the VCP settings stored in a file to the monitor
  * indicated in that file.
  *
@@ -260,29 +262,27 @@ Dumpload_Data * read_vcp_file(const char * fn) {
  */
 // TODO: convert to Global_Status_Code
 bool loadvcp_by_file(const char * fn) {
-   // Msg_Level msg_level = get_global_msg_level();
    Output_Level output_level = get_output_level();
-   // DBGMSG("msgLevel=%d", msgLevel);
-   // bool verbose = (msg_level >= VERBOSE);
    bool verbose = (output_level >= OL_VERBOSE);
-   // DBGMSG("verbose=%d", verbose);
    bool ok = false;
+   Global_Status_Code gsc = 0;
    // DBGMSG("Starting. fn=%s  ", fn );
 
    Dumpload_Data * pdata = read_vcp_file(fn);
    if (!pdata) {
-      fprintf(stderr, "Unable to load VCP data from file: %s\n", fn);
+      f0printf(FERR, "Unable to load VCP data from file: %s\n", fn);
    }
    else {
       if (verbose) {
-           printf("Loading VCP settings for monitor \"%s\", sn \"%s\" from file: %s\n",
-                  pdata->model, pdata->serial_ascii, fn);
+           f0printf(FOUT, "Loading VCP settings for monitor \"%s\", sn \"%s\" from file: %s\n",
+                           pdata->model, pdata->serial_ascii, fn);
+           rpt_push_output_dest(FOUT);
            report_dumpload_data(pdata, 0);
+           rpt_pop_output_dest();
       }
-      ok = loadvcp_by_dumpload_data(pdata);
+      gsc = loadvcp_by_dumpload_data(pdata);
+      ok = (gsc == 0);
    }
    return ok;
 }
-
-
 

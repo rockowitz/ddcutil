@@ -78,7 +78,8 @@
 #define DDCL_UNINITIALIZED           (-(RCRANGE_DDC_START+21) ) // library not initialized
 #define DDCL_UNKNOWN_FEATURE         (-(RCRANGE_DDC_START+22) ) // feature not in feature table
 #define DDCRC_INTERPRETATION_FAILED  (-(RCRANGE_DDC_START+23) ) // value format failed
-#define DDCRC_MULTI_FEATURE_ERROR    (-(RCRANGE_DDC_START+25) ) // an error occurred on a multi-feature request
+#define DDCRC_MULTI_FEATURE_ERROR    (-(RCRANGE_DDC_START+24) ) // an error occurred on a multi-feature request
+#define DDCRC_INVALID_DISPLAY        (-(RCRANGE_DDC_START+25) ) // monitor not found, can't open, no DDC support, etc
 
 // never used
 // #define DDCRC_PACKET_ERROR_END      (-RCRANGE_DDC_START-16)   // special end value

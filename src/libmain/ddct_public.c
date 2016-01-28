@@ -47,11 +47,10 @@
 #include "ddc/ddc_vcp_version.h"
 #include "ddc/ddc_output.h"
 #include "ddc/ddc_services.h"
-
+#include "ddc/mccs_dumpload.h"
 
 #include "libmain/ddct_public.h"
 
-#include "../ddc/mccs_dumpload.h"
 
 
 #define WITH_DR(ddct_dref, action) \
@@ -85,6 +84,14 @@
       return rc; \
    } while(0);
 
+
+void ddct_set_fout(FILE * fout) {
+   set_fout(fout);
+}
+
+void ddct_set_ferr(FILE * ferr) {
+   set_ferr(ferr);
+}
 
 
 static bool library_initialized = false;
@@ -510,6 +517,7 @@ char * ddct_get_feature_name(VCP_Feature_Code feature_code) {
    return result;
 }
 
+
 typedef void * Feature_Value_Table;   // temp
 
 DDCT_Status ddct_get_feature_sl_value_table(
@@ -568,6 +576,7 @@ DDCT_Status ddct_get_nontable_vcp_value(
     } );
 }
 
+
 // untested
 DDCT_Status ddct_get_table_vcp_value(
                DDCT_Display_Handle ddct_dh,
@@ -589,8 +598,6 @@ DDCT_Status ddct_get_table_vcp_value(
       }
      );
 }
-
-
 
 
 DDCT_Status ddct_set_continuous_vcp_value(
@@ -624,7 +631,6 @@ DDCT_Status ddct_set_raw_vcp_value(
 }
 
 
-
 /* Retrieves the capabilities string for the monitor.
  *
  * Arguments:
@@ -645,6 +651,7 @@ DDCT_Status ddct_get_capabilities_string(DDCT_Display_Handle ddct_dh, char** pca
       }
    );
 }
+
 
 DDCT_Status ddct_get_profile_related_values(DDCT_Display_Handle ddct_dh, char** pprofile_values_string)
 {

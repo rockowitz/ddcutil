@@ -82,6 +82,7 @@ void i2c_report_active_display_by_busno(int busno, int depth);
 // Basic bus operations
 
 int  i2c_open_bus(int busno, Failure_Action failure_action);
+int i2c_open_bus_new(int busno, bool emit_error_msg);
 int  i2c_close_bus(int fd, int busno, Failure_Action failure_action);
 void i2c_set_addr(int fd, int addr);
 

@@ -33,6 +33,7 @@
 /* Master initialization function for files in subdirectory base
  */
 void init_base_services() {
+   init_msg_control();
    init_sleep_stats();
    init_execution_stats();
    init_status_code_mgt();

@@ -39,6 +39,7 @@
 #include "util/report_util.h"
 #include "util/string_util.h"
 
+#include "base/msg_control.h"
 #include "base/execution_stats.h"
 #include "base/common.h"
 #include "base/ddc_packets.h"
@@ -827,7 +828,7 @@ ADL_Display_Rec * adl_get_display_by_adlno(int iAdapterIndex, int iDisplayIndex,
 
    if (active_display_ct == 0) {
       if (emit_error_msg)
-         fprintf(stderr, "No ADL displays found\n");
+         f0printf(FERR, "No ADL displays found\n");
    }
    else {
       int ndx;
@@ -841,7 +842,7 @@ ADL_Display_Rec * adl_get_display_by_adlno(int iAdapterIndex, int iDisplayIndex,
          }
       }
       if (!result && emit_error_msg)
-         fprintf(stderr, "ADL display %d.%d not found.\n", iAdapterIndex, iDisplayIndex);
+         f0printf(FERR, "ADL display %d.%d not found.\n", iAdapterIndex, iDisplayIndex);
    }
 
    return result;

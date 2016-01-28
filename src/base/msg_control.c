@@ -40,6 +40,25 @@
 #include "base/msg_control.h"
 
 
+FILE * FOUT = NULL;
+FILE * FERR = NULL;
+
+
+void init_msg_control() {
+   FOUT = stdout;
+   FERR = stderr;
+}
+
+
+void set_fout(FILE * fout) {
+   FOUT = fout;
+}
+
+void set_ferr(FILE * ferr) {
+   FERR = ferr;
+}
+
+
 //
 // Message level control
 //

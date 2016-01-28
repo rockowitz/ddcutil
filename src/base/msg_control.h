@@ -31,9 +31,23 @@
 
 #include <stdarg.h>
 #include <stdbool.h>
+#include <stdio.h>
 
 #include "util/coredefs.h"
 #include "base/util.h"
+
+// Global redirection for messages that normally go to stdout and stderr
+
+extern FILE * FOUT;
+extern FILE * FERR;
+
+void init_msg_control();
+
+
+void set_fout(FILE * fout);
+
+void set_ferr(FILE * ferr);
+
 
 
 //
