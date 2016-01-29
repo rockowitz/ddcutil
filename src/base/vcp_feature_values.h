@@ -37,8 +37,9 @@
 typedef struct {
    Byte          opcode;
    VCP_Call_Type value_type;      // probably a different type would be better
+#ifdef OLD
    ushort        value;
-
+#endif
    union {
       struct {
          Byte *  bytes;

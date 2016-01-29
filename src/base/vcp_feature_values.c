@@ -42,7 +42,9 @@ void report_single_vcp_value(Single_Vcp_Value * valrec, int depth) {
    rpt_vstring(depth, "Single_Vcp_Value at %p:", valrec);
    rpt_vstring(d1, "opcode=0x%02x, value_type=0x%02x",
                    valrec->opcode, valrec->value_type);
+#ifdef OLD
    rpt_vstring(d1, "value=%d", valrec->value);
+#endif
    if (valrec->value_type == NON_TABLE_VCP_CALL) {
       rpt_vstring(d1, "mh=0x%02x, ml=0x%02x, sh=0x%02x, sl=0x%02x",
                       valrec->val.nt.mh, valrec->val.nt.ml, valrec->val.nt.sh, valrec->val.nt.sl);
@@ -83,7 +85,9 @@ create_nontable_vcp_value(
    Single_Vcp_Value * valrec = calloc(1,sizeof(Single_Vcp_Value));
    valrec->value_type = NON_TABLE_VCP_CALL;
    valrec->opcode = feature_code;
+#ifdef OLD
    valrec->value  = sh << 8 | sl;     // for old way
+#endif
    valrec->val.nt.mh = mh;
    valrec->val.nt.ml = ml;
    valrec->val.nt.sh = sh;
@@ -102,7 +106,9 @@ create_cont_vcp_value(
    Single_Vcp_Value * valrec = calloc(1,sizeof(Single_Vcp_Value));
    valrec->value_type = NON_TABLE_VCP_CALL;
    valrec->opcode = feature_code;
+#ifdef OLD
    valrec->value  = cur_val;    // for old way
+#endif
    valrec->val.nt.mh = max_val >> 8;
    valrec->val.nt.ml = max_val & 0x0f;
    valrec->val.nt.sh = cur_val >> 8;
