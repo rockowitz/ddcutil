@@ -33,6 +33,7 @@
 #include <linux/limits.h>    // PATH_MAX, NAME_MAX
 #include <stdbool.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <time.h>
 #include <unistd.h>
@@ -104,13 +105,12 @@ char * create_simple_vcp_fn_by_display_handle(
 }
 
 
-
 /* Executes the DUMPVCP command, writing the output to a file.
  *
  * Arguments:
- *    dh       display handle
- *    filename name of file to write to,
- *             if NULL, the file name is generated
+ *    dh        display handle
+ *    filename  name of file to write to,
+ *              if NULL, the file name is generated
  *
  * Returns:
  *    status code
@@ -141,13 +141,13 @@ dumpvcp_as_file(Display_Handle * dh, char * filename) {
          // DBGMSG("fqfn=%s   ", fqfn );
          filename = fqfn;
          // control with MsgLevel?
-         printf("Writing file: %s\n", filename);
+         f0printf(FOUT, "Writing file: %s\n", filename);
       }
 
       FILE * output_fp = fopen(filename, "w+");
       if (!output_fp) {
          int errsv = errno;
-         fprintf(stderr, "Unable to open %s for writing: %s\n", fqfn, strerror(errno));
+         f0printf(FERR, "Unable to open %s for writing: %s\n", fqfn, strerror(errno));
          gsc = modulate_rc(errsv, RR_ERRNO);
       }
       else {
@@ -164,8 +164,7 @@ dumpvcp_as_file(Display_Handle * dh, char * filename) {
 }
 
 
-
-
+#ifdef OLD
 // TODO: return Global_Status_Code rather than ok
 bool dumpvcp_as_file_old(Display_Handle * dh, char * filename) {
    bool               ok             = true;
@@ -222,6 +221,7 @@ bool dumpvcp_as_file_old(Display_Handle * dh, char * filename) {
    }
    return ok;
 }
+#endif
 
 
 //
@@ -235,17 +235,12 @@ Dumpload_Data * read_vcp_file(const char * fn) {
    Dumpload_Data * data = NULL;
    GPtrArray * g_line_array = g_ptr_array_sized_new(100);
    // issues message if error:
-   int rc = file_getlines(fn, g_line_array);
+   int rc = file_getlines(fn, g_line_array, false);
    if (rc < 0) {
-      fprintf(stderr, "%s: %s\n", strerror(-rc), fn);
+      f0printf(FERR, "%s: %s\n", strerror(-rc), fn);
    }
    else {
-#ifdef USING_ITERATOR
-      (g_ptr_iter.func_init)(g_line_array);
-      data = dumpload_data_from_iterator(g_ptr_iter);
-#else
       data = create_dumpload_data_from_g_ptr_array(g_line_array);
-#endif
    }
    // DBGMSG("Returning: %p  ", data );
    return data;
@@ -270,7 +265,8 @@ bool loadvcp_by_file(const char * fn) {
 
    Dumpload_Data * pdata = read_vcp_file(fn);
    if (!pdata) {
-      f0printf(FERR, "Unable to load VCP data from file: %s\n", fn);
+      // Redundant, read_vcp_file() issues message:
+      // f0printf(FERR, "Unable to load VCP data from file: %s\n", fn);
    }
    else {
       if (verbose) {

@@ -30,6 +30,7 @@
 #define DDCT_PUBLIC_H_
 
 #include <stdbool.h>
+#include <stdio.h>
 
 #include "util/coredefs.h"
 

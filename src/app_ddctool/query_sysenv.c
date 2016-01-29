@@ -129,7 +129,7 @@ int query_proc_modules_for_video() {
    GPtrArray * garray = g_ptr_array_sized_new(300);
 
    printf("Scanning /proc/modules for driver environment...\n");
-   int ct = file_getlines("/proc/modules", garray);
+   int ct = file_getlines("/proc/modules", garray, true);
    if (ct < 0)
       rc = ct;
    else {

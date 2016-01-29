@@ -60,7 +60,7 @@ void report_parsed_cmd(Parsed_Cmd * parsed_cmd, int depth) {
    int d1 = depth+1;
    int d2 = depth+2;
    rpt_structure_loc("Parsed_Cmd", parsed_cmd, depth);
-   rpt_int( "cmd_id",      NULL,  parsed_cmd->cmd_id,                 d1);
+   rpt_int_as_hex( "cmd_id", NULL,  parsed_cmd->cmd_id,                 d1);
 
    rpt_structure_loc("pdid", parsed_cmd->pdid,                        d1);
    if (parsed_cmd->pdid)

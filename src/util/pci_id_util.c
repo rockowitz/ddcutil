@@ -109,8 +109,8 @@ GPtrArray * load_pci_ids(){
       char pci_id_fn[MAX_PATH];
       snprintf(pci_id_fn, MAX_PATH, pci_id_dir, "pci_ids");
       GPtrArray * all_lines = g_ptr_array_sized_new(30000);
-      int linect = file_getlines(pci_id_fn, all_lines);
-      if (all_lines) {
+      int linect = file_getlines(pci_id_fn, all_lines, true);
+      if (linect > 0) {
          all_vendors = g_ptr_array_sized_new(2800);
          Pci_Id_Vendor * cur_vendor = NULL;
          Pci_Id_Device * cur_device = NULL;

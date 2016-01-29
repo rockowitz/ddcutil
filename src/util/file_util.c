@@ -28,6 +28,7 @@
 #include <glib.h>
 #include <stdbool.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <sys/stat.h>
 
@@ -37,7 +38,21 @@
 #include "util/file_util.h"
 
 
-int file_getlines(const char * fn,  GPtrArray* line_array) {
+/* Reads the lines of a text file into a GPtrArray.
+ *
+ * Arguments:
+ *    fn          file name
+ *    line_array  pointer to GPtrArray where lines will be saved
+ *    verbose     if true, write message to stderr if unable to open file
+ *                or other error
+ *
+ *  Returns:
+ *    if >=0:  number of lines added to line_array
+ *    <0       -errno
+ *
+ *  The caller is responsible for freeing the lines added to line_array.
+ */
+int file_getlines(const char * fn,  GPtrArray* line_array, bool verbose) {
    bool debug = false;
    int rc = 0;
    if (debug)
@@ -46,9 +61,11 @@ int file_getlines(const char * fn,  GPtrArray* line_array) {
    if (!fp) {
       int errsv = errno;
       rc = -errno;
-      fprintf(stderr, "Error opening file %s: %s\n", fn, strerror(errsv));
+      if (verbose)
+         fprintf(stderr, "Error opening file %s: %s\n", fn, strerror(errsv));
    }
    else {
+      // if line == NULL && len == 0, then getline allocates buffer for line
       char * line = NULL;
       size_t len = 0;
       ssize_t read;
@@ -57,15 +74,24 @@ int file_getlines(const char * fn,  GPtrArray* line_array) {
       // char *  head;
       // char *  rest;
       int     linectr = 0;
-
+      errno = 0;
       while ((read = getline(&line, &len, fp)) != -1) {
          linectr++;
-         char * s = strdup(line);
-         g_ptr_array_add(line_array, s);
+         g_ptr_array_add(line_array, line);
          // printf("Retrieved line of length %zu :\n", read);
          // printf("%s", line);
+         line = NULL;
+         len  = 0;
       }
+      if (errno != 0)  {   // getline error?
+         rc = -errno;
+         if (verbose)
+            fprintf(stderr, "Error reading file %s: %s\n", fn, strerror(-rc));
+      }
+      free(line);
       rc = linectr;
+
+      fclose(fp);
    }
    if (debug)
       printf("(%s) Done. returning: %d\n", __func__, rc);
@@ -73,6 +99,16 @@ int file_getlines(const char * fn,  GPtrArray* line_array) {
 }
 
 
+/* Reads the contents of a single line file.
+ *
+ * Arguments:
+ *    fn          file name
+ *    verbose     if true, write message to stderr if unable to open file
+ *
+ *  Returns:
+ *    pointer to line read, caller responsible for freeing
+ *    NULL if error or no lines in file
+ */
 char * read_one_line_file(char * fn, bool verbose) {
    FILE * fp = fopen(fn, "r");
    char * single_line = NULL;
@@ -94,6 +130,7 @@ char * read_one_line_file(char * fn, bool verbose) {
             single_line[strlen(single_line)-1] = '\0';
          // printf("\n%s", single_line);     // single_line has trailing \n
       }
+      fclose(fp);
    }
    return single_line;
 }
@@ -101,8 +138,11 @@ char * read_one_line_file(char * fn, bool verbose) {
 
 int rpt_file_contents(const char * fn, int depth) {
    GPtrArray * line_array = g_ptr_array_new();
-   int rc = file_getlines(fn, line_array);
-   if (rc > 0) {
+   int rc = file_getlines(fn, line_array, false);
+   if (rc < 0) {
+      rpt_vstring(depth, "Error reading file %s: %s", fn, strerror(-rc));
+   }
+   else if (rc > 0) {
       int ndx = 0;
       for (; ndx < line_array->len; ndx++) {
          char * curline = g_ptr_array_index(line_array, ndx);

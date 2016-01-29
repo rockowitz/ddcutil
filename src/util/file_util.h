@@ -31,7 +31,7 @@
 #include <stdbool.h>
 
 
-int file_getlines(const char * fn, GPtrArray* line_array);
+int file_getlines(const char * fn, GPtrArray* line_array, bool verbose);
 
 char * read_one_line_file(char * fn, bool verbose);
 

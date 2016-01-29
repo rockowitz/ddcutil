@@ -77,11 +77,11 @@ void validate_cmdinfo() {
 
 void show_cmd_desc(Cmd_Desc * cmd_desc) {
    printf("CmdDesc at %p\n", cmd_desc);
-   printf("   cmd_id:     %d\n", cmd_desc->cmd_id);
-   printf("   cmd_name:   %s\n", cmd_desc->cmd_name);
-   printf("   minchars:   %d\n", cmd_desc->minchars);
-   printf("   min_arg_ct: %d\n", cmd_desc->min_arg_ct);
-   printf("   max_arg_ct: %d\n", cmd_desc->max_arg_ct);
+   printf("   cmd_id:     0x%04x\n", cmd_desc->cmd_id);
+   printf("   cmd_name:   %s\n",     cmd_desc->cmd_name);
+   printf("   minchars:   %d\n",     cmd_desc->minchars);
+   printf("   min_arg_ct: %d\n",     cmd_desc->min_arg_ct);
+   printf("   max_arg_ct: %d\n",     cmd_desc->max_arg_ct);
 }
 
 
@@ -100,7 +100,7 @@ Cmd_Desc * find_command(char * cmd) {
 
 
 Cmd_Desc * get_command(int cmdid) {
-   bool debug = true;
+   bool debug = false;
    Cmd_Desc * result = NULL;
    int ndx = 0;
    for (; ndx < cmdct; ndx++) {
@@ -110,7 +110,7 @@ Cmd_Desc * get_command(int cmdid) {
       }
    }
    if (debug) {
-      DBGMSG("cmdid=|%d|, returning %p", cmdid, result);
+      DBGMSG("cmdid=0x%04x, returning %p", cmdid, result);
       show_cmd_desc(result);
    }
    return result;
@@ -209,12 +209,11 @@ bool parse_feature_id_or_subset(char * val, int cmd_id, Feature_Set_Ref * fsref)
         fsref->subset = VCP_SUBSET_SINGLE_FEATURE;
         fsref->specific_feature = feature_hexid;
      }
-  }
-
-  DBGMSF(debug, "Returning: %d");
-  if (ok && debug)
-     report_feature_set_ref(fsref, 0);
-  return ok;
+   }
+   DBGMSF(debug, "Returning: %d");
+   if (ok && debug)
+      report_feature_set_ref(fsref, 0);
+   return ok;
 }
 
 
