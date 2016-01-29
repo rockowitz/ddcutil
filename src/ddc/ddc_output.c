@@ -333,22 +333,29 @@ get_formatted_value_for_feature_table_entry(
       if (output_level == OL_PROGRAM) {
          if (is_table_feature) {                // OL_PROGRAM, is table feature
             // output VCP code  hex values of bytes
+            int bytect = pvalrec->val.t.bytect;
+#ifdef TRANSITIONAL
             Buffer * accum2 = pvalrec->val.t.buffer;
 #ifdef OLD
             Buffer * accumulator = (*parsed_vcp_response).table_response;
             assert(buffer_eq(accumulator, accum2));
 #endif
             int hexbufsize = buffer_length(accum2) * 3;
+#endif
+            int hexbufsize = bytect * 3;
             char * hexbuf = calloc(hexbufsize, sizeof(char));
             char space = ' ';
+#ifdef TRANSITIONAL
             hexstring2(accum2->bytes, accum2->len, &space, false /* upper case */, hexbuf, hexbufsize);
+#endif
+            hexstring2(pvalrec->val.t.bytes, bytect, &space, false /* upper case */, hexbuf, hexbufsize);
             char * formatted = calloc(hexbufsize + 20, sizeof(char));
             snprintf(formatted, hexbufsize+20, "VCP %02X %s\n", feature_code, hexbuf);
             *pformatted_value = formatted;
-
+#ifdef TRANSITIONAL
             assert(accum2->len == pvalrec->val.t.bytect);
             assert(memcmp(accum2->bytes, pvalrec->val.t.bytes, accum2->len)==0);
-
+#endif
             free(hexbuf);
          }
          else {                                // OL_PROGRAM, not table feature

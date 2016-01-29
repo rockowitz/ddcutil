@@ -45,7 +45,9 @@ typedef struct {
       struct {
          Byte *  bytes;
          ushort  bytect;
+#ifdef TRANSITIONAL
          Buffer* buffer;    // temp for transition
+#endif
       }          t;
       struct {
          ushort max_val;

@@ -132,10 +132,11 @@ create_table_vcp_value_by_bytes(
    valrec->val.t.bytect = bytect;
    valrec->val.t.bytes = malloc(bytect);
    memcpy(valrec->val.t.bytes, bytes, bytect);
+#ifdef TRANSITIONAL
    // temp
    valrec->val.t.buffer = buffer_new(bytect, __func__);
    buffer_put(valrec->val.t.buffer, bytes, bytect);
-
+#endif
    return valrec;
 }
 
@@ -194,13 +195,16 @@ Parsed_Vcp_Response * single_vcp_value_to_parsed_vcp_response(Single_Vcp_Value *
 
    }
    else {
-      //redundant redundancy
       assert(valrec->value_type == TABLE_VCP_CALL);
+#ifdef TRANSITIONAL
+      //redundant redundancy
       presp->table_response = valrec->val.t.buffer;
+#endif
       Buffer * buf2 = buffer_new(valrec->val.t.bytect, __func__);
       buffer_put(buf2, valrec->val.t.bytes, valrec->val.t.bytect);
+#ifdef TRANSITIONAL
       assert(buffer_eq(buf2, presp->table_response));
-
+#endif
 
    }
    return presp;
