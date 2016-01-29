@@ -275,11 +275,11 @@ Global_Status_Code loadvcp_by_dumpload_data(Dumpload_Data* pdata) {
          Byte feature_code = pdata->vcp_value[ndx].opcode;
          int  new_value    = pdata->vcp_value[ndx].value;
          // DBGMSG("feature_code=0x%02x, new_value=%d", feature_code, new_value );
-         assert(vrec->val.nt.cur_val == new_value);
+         assert(vrec->val.c.cur_val == new_value);
          assert(vrec->opcode == feature_code);
 #endif
       Byte   feature_code = vrec->opcode;
-      ushort new_value    = vrec->val.nt.cur_val;
+      ushort new_value    = vrec->val.c.cur_val;
       gsc = set_nontable_vcp_value(dh, feature_code, new_value);
       if (gsc != 0) {
          f0printf(FERR, "Error setting value %d for VCP feature code 0x%02x: %s",
@@ -470,7 +470,7 @@ dumpvcp_as_dumpload_data(
       for (ndx=0; ndx < dumped_data->vcp_value_ct; ndx++) {
          Single_Vcp_Value * vrec = vcp_value_set_get(dumped_data->vcp_values,ndx);
          assert(dumped_data->vcp_value[ndx].opcode == vrec->opcode);
-         assert(dumped_data->vcp_value[ndx].value == vrec->val.nt.cur_val);
+         assert(dumped_data->vcp_value[ndx].value == vrec->val.c.cur_val);
       }
 #endif
    }
@@ -538,14 +538,14 @@ GPtrArray * convert_dumpload_data_to_string_array(Dumpload_Data * data) {
       Single_Vcp_Value * vrec = vcp_value_set_get(data->vcp_values,ndx);
       char buf[200];
       snprintf(buf, 200, "VCP %02X %5d",
-                         vrec->opcode, vrec->val.nt.cur_val);
+                         vrec->opcode, vrec->val.c.cur_val);
       g_ptr_array_add(strings, strdup(buf));
    }
    return strings;
 }
 
 
-/** JOints a GPtrArray containing pointers to character strings
+/** Joins a GPtrArray containing pointers to character strings
  *  into a single string,
  *
  *  Arguments:

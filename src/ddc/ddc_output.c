@@ -353,7 +353,7 @@ get_formatted_value_for_feature_table_entry(
          }
          else {                                // OL_PROGRAM, not table feature
             char buf[200];
-            snprintf(buf, 200, "VCP %02X %5d", vcp_entry->code, pvalrec->val.nt.cur_val);
+            snprintf(buf, 200, "VCP %02X %5d", vcp_entry->code, pvalrec->val.c.cur_val);
             *pformatted_value = strdup(buf);
 #ifdef OLD
             Parsed_Nontable_Vcp_Response * code_info = (*parsed_vcp_response).non_table_response;

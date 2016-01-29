@@ -47,12 +47,12 @@ void report_single_vcp_value(Single_Vcp_Value * valrec, int depth) {
 #endif
    if (valrec->value_type == NON_TABLE_VCP_CALL) {
       rpt_vstring(d1, "mh=0x%02x, ml=0x%02x, sh=0x%02x, sl=0x%02x",
-                      valrec->val.nt.mh, valrec->val.nt.ml, valrec->val.nt.sh, valrec->val.nt.sl);
+                      valrec->val.nc.mh, valrec->val.nc.ml, valrec->val.nc.sh, valrec->val.nc.sl);
       rpt_vstring(d1, "max_val=%d (0x%04x), cur_val=%d (0x%04x)",
-                      valrec->val.nt.max_val,
-                      valrec->val.nt.max_val,
-                      valrec->val.nt.cur_val,
-                      valrec->val.nt.cur_val);
+                      valrec->val.c.max_val,
+                      valrec->val.c.max_val,
+                      valrec->val.c.cur_val,
+                      valrec->val.c.cur_val);
    }
    else {
       assert(valrec->value_type == TABLE_VCP_CALL);
@@ -88,12 +88,13 @@ create_nontable_vcp_value(
 #ifdef OLD
    valrec->value  = sh << 8 | sl;     // for old way
 #endif
-   valrec->val.nt.mh = mh;
-   valrec->val.nt.ml = ml;
-   valrec->val.nt.sh = sh;
-   valrec->val.nt.sl = sl;
-   valrec->val.nt.max_val = mh <<8 | ml;
-   valrec->val.nt.cur_val = sh <<8 | sl;
+   valrec->val.nc.mh = mh;
+   valrec->val.nc.ml = ml;
+   valrec->val.nc.sh = sh;
+   valrec->val.nc.sl = sl;
+   // not needed thanks to overlay
+   // valrec->val.nt.max_val = mh <<8 | ml;
+   // valrec->val.nt.cur_val = sh <<8 | sl;
    return valrec;
 }
 
@@ -109,12 +110,13 @@ create_cont_vcp_value(
 #ifdef OLD
    valrec->value  = cur_val;    // for old way
 #endif
-   valrec->val.nt.mh = max_val >> 8;
-   valrec->val.nt.ml = max_val & 0x0f;
-   valrec->val.nt.sh = cur_val >> 8;
-   valrec->val.nt.sl = cur_val & 0x0f;
-   valrec->val.nt.max_val = max_val;
-   valrec->val.nt.cur_val = cur_val;
+   // not needed thanks to overlay
+   // valrec->val.nc.mh = max_val >> 8;
+   // valrec->val.nc.ml = max_val & 0x0f;
+   // valrec->val.nc.sh = cur_val >> 8;
+   // valrec->val.nc.sl = cur_val & 0x0f;
+   valrec->val.c.max_val = max_val;
+   valrec->val.c.cur_val = cur_val;
    return valrec;
 }
 
@@ -180,12 +182,12 @@ Parsed_Vcp_Response * single_vcp_value_to_parsed_vcp_response(Single_Vcp_Value *
    presp->response_type = valrec->value_type;
    if (valrec->value_type == NON_TABLE_VCP_CALL) {
       presp->non_table_response = calloc(1, sizeof(Parsed_Nontable_Vcp_Response));
-      presp->non_table_response->cur_value = valrec->val.nt.cur_val;
-      presp->non_table_response->max_value = valrec->val.nt.max_val;
-      presp->non_table_response->mh  = valrec->val.nt.mh;
-      presp->non_table_response->ml   = valrec->val.nt.ml;
-      presp->non_table_response->sh  = valrec->val.nt.sh;
-      presp->non_table_response->sl   = valrec->val.nt.sl;
+      presp->non_table_response->cur_value = valrec->val.c.cur_val;
+      presp->non_table_response->max_value = valrec->val.c.max_val;
+      presp->non_table_response->mh  = valrec->val.nc.mh;
+      presp->non_table_response->ml   = valrec->val.nc.ml;
+      presp->non_table_response->sh  = valrec->val.nc.sh;
+      presp->non_table_response->sl   = valrec->val.nc.sl;
       presp->non_table_response->supported_opcode = true;
       presp->non_table_response->valid_response = true;
       presp->non_table_response->vcp_code = valrec->opcode;

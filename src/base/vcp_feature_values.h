@@ -34,6 +34,7 @@
 
 #include "base/ddc_packets.h"
 
+
 typedef struct {
    Byte          opcode;
    VCP_Call_Type value_type;      // probably a different type would be better
@@ -46,22 +47,23 @@ typedef struct {
          ushort  bytect;
          Buffer* buffer;    // temp for transition
       }          t;
-#ifdef NO
-      // Can't overlay max_val/cur_val on top of bytes mh,ml/sh,sl: depends on endian-ness !
       struct {
          ushort max_val;
          ushort cur_val;
       }         c;
-#endif
       struct {
-         // little-endian
+#ifdef WORDS_BIGENDIAN
+         Byte mh;
+         Byte ml;
+         Byte sh;
+         Byte sl;
+#else
          Byte ml;
          Byte mh;
          Byte sl;
          Byte sh;
-         ushort max_val;
-         ushort cur_val;
-      }         nt;
+#endif
+      }         nc;
    }            val;
 } Single_Vcp_Value;
 
