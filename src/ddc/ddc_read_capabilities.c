@@ -71,6 +71,7 @@ Global_Status_Code get_capabilities_buffer(
            dh,
            DDC_PACKET_TYPE_CAPABILITIES_REQUEST,
            0x00,                       // no subtype for capabilities
+           false,                      // all_zero_response_ok
            ppCapabilitiesBuffer);
 
    Buffer * cap_buffer = *ppCapabilitiesBuffer;

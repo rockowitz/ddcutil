@@ -50,6 +50,7 @@ multi_part_read_with_retry(
    Display_Handle * dh,
    Byte             request_type,
    Byte             request_subtype,   // VCP feature code for table read, ignore for capabilities
+   bool             all_zero_response_ok,
    Buffer**         ppbuffer);
 
 #endif /* DDC_MULTI_PART_IO_H_ */

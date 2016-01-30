@@ -268,7 +268,7 @@ Global_Status_Code ddc_i2c_write_read_raw(
                            dh->fh,
                            get_packet_len(request_packet_ptr)-1,
                            get_packet_start(request_packet_ptr)+1 );
-   TRCMSGTG(tg, "perform_i2c_write2() returned %d\n", rc);
+   DBGMSF(debug, "perform_i2c_write2() returned %d\n", rc);
    if (rc == 0) {
       call_tuned_sleep_i2c(SE_WRITE_TO_READ);
       rc = invoke_i2c_reader(dh->fh, max_read_bytes, readbuf);
@@ -288,7 +288,7 @@ Global_Status_Code ddc_i2c_write_read_raw(
       COUNT_STATUS_CODE(rc);
    }
 
-   TRCMSGTG(tg, "Done. gsc=%d", rc);
+   TRCMSGTG(tg, "Done. gsc=%s", gsc_desc(rc));
    return rc;
 }
 
@@ -512,11 +512,13 @@ Global_Status_Code ddc_write_read_with_retry(
          int           max_read_bytes,
          Byte          expected_response_type,
          Byte          expected_subtype,
+         bool          all_zero_response_ok,
          DDC_Packet ** response_packet_ptr_loc
         )
 {
+   bool debug = false;
    bool tf = IS_TRACING();
-   // tf = true;
+   if (debug) tf = 0xff;
    TRCMSGTF(tf, "Starting. dh=%s", display_handle_repr_r(dh, NULL, 0)  );
 
    int  rc;
@@ -528,7 +530,7 @@ Global_Status_Code ddc_write_read_with_retry(
         tryctr < max_write_read_exchange_tries && rc < 0 && retryable;
         tryctr++)
    {
-      TRCMSGTF(tf,
+      DBGMSF(debug,
            "Start of try loop, tryctr=%d, max_write_read_echange_tries=%d, rc=%d, retryable=%d",
            tryctr, max_write_read_exchange_tries, rc, retryable );
 
@@ -541,12 +543,17 @@ Global_Status_Code ddc_write_read_with_retry(
                 response_packet_ptr_loc);
 
       if (rc < 0) {     // n. ADL status codes have been modulated
-         TRCMSGTF(tf, "perform_ddc_write_read() returned %d", rc );
+         DBGMSF(debug, "perform_ddc_write_read() returned %d", rc );
          if (dh->ddc_io_mode == DDC_IO_DEVI2C) {
             if (rc == DDCRC_NULL_RESPONSE)
                retryable = false;
             // when is DDCRC_READ_ALL_ZERO actually an error vs the response of the monitor instead of NULL response?
-            else if (rc == modulate_rc(-EIO, RR_ERRNO) || rc == DDCRC_READ_ALL_ZERO)
+            // On Dell monitors (P2411, U3011) all zero response occurs on unsupported Table features
+            // But also seen as a bad response
+            else if ( rc == DDCRC_READ_ALL_ZERO)
+               retryable = (all_zero_response_ok) ? false : true;
+
+            else if (rc == modulate_rc(-EIO, RR_ERRNO))
                 retryable = true;
             else
                retryable = true;     // for now
@@ -573,6 +580,7 @@ Global_Status_Code ddc_write_read_with_retry(
          // printf("(%s) All tries zero ddcrc_read_all_zero_ct=%d, max_write_read_exchange_tries=%d, tryctr=%d\n",
          //        __func__, ddcrc_read_all_zero_ct, max_write_read_exchange_tries, tryctr);
       }
+      COUNT_STATUS_CODE(rc);
    }
    try_data_record_tries(write_read_stats_rec, rc, tryctr);
    TRCMSGTF(tf, "Done. rc=%s\n", gsc_desc(rc));

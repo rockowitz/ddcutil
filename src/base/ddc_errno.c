@@ -47,7 +47,7 @@ static Status_Code_Info ddcrc_info[] = {
       EDENTRY(DDCRC_RESPONSE_TYPE         , "incorrect response type"       ),
       EDENTRY(DDCRC_INVALID_DATA          , "error parsing data bytes"      ),
       EDENTRY(DDCRC_NULL_RESPONSE         , "received DDC null response"    ),
-      EDENTRY(DDCRC_CAPABILITIES_FRAGMENT , "error in fragment"             ),
+      EDENTRY(DDCRC_MULTI_PART_READ_FRAGMENT , "error in fragment"             ),
       EDENTRY(DDCRC_ALL_TRIES_ZERO        , "every try response 0x00"        ),    // applies to multi-try exchange
       EDENTRY(DDCRC_DOUBLE_BYTE           , "duplicated byte in response"   ),
       EDENTRY(DDCRC_REPORTED_UNSUPPORTED  , "DDC reports facility unsupported"      ),

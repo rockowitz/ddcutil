@@ -107,6 +107,7 @@ Global_Status_Code try_multi_part_read(
                       Display_Handle * dh,
                       Byte             request_type,
                       Byte             request_subtype,
+                      bool             all_zero_response_ok,
                       Buffer *         accumulator) {
    bool force_debug = false;
    Trace_Group tg = TRACE_GROUP;
@@ -130,7 +131,7 @@ Global_Status_Code try_multi_part_read(
    while (!complete && rc == 0) {         // loop over fragments
       // if ( IS_TRACING() || force_debug )
       //    puts("");
-      TRCMSGTG(tg, "Top of fragment loop");
+      DBGMSF(force_debug, "Top of fragment loop");
 
       int fragment_size;
       update_ddc_multi_part_read_request_packet_offset(request_packet_ptr, cur_offset);
@@ -145,10 +146,12 @@ Global_Status_Code try_multi_part_read(
            readbuf_size,
            expected_response_type,
            expected_subtype,
+           all_zero_response_ok,
            &response_packet_ptr
         );
-      TRCMSGTG(tg, "ddc_write_read_with_retry() request_type=0x%02x, request_subtype=0x%02x, returned %s",
-               request_type, request_subtype, gsc_desc( rc));
+      DBGMSF(force_debug,
+             "ddc_write_read_with_retry() request_type=0x%02x, request_subtype=0x%02x, returned %s",
+             request_type, request_subtype, gsc_desc( rc));
 
       if (rc != 0) {
          if (response_packet_ptr)
@@ -157,7 +160,7 @@ Global_Status_Code try_multi_part_read(
       }
 
       if ( IS_TRACING() || force_debug ) {
-         TRCMSGTG(tg, "After try_write_read():");
+         DBGMSF(force_debug, "After try_write_read():");
          report_interpreted_multi_read_fragment(response_packet_ptr->aux_data);
       }
 
@@ -165,9 +168,9 @@ Global_Status_Code try_multi_part_read(
          (Interpreted_Multi_Part_Read_Fragment *) response_packet_ptr->aux_data;    // ***
       int display_current_offset = aux_data_ptr->fragment_offset;
       if (display_current_offset != cur_offset) {
-         TRCMSGTG(tg, "display_current_offset %d != cur_offset %d",
+         DBGMSF(force_debug, "display_current_offset %d != cur_offset %d",
                 display_current_offset, cur_offset);
-         rc = DDCRC_CAPABILITIES_FRAGMENT;                       // ***
+         rc = DDCRC_MULTI_PART_READ_FRAGMENT;                       // ***
          COUNT_STATUS_CODE(rc);
          free_ddc_packet(response_packet_ptr);
          break;
@@ -175,7 +178,7 @@ Global_Status_Code try_multi_part_read(
       // DBGMSG("display_current_offset = %d matches cur_offset", display_current_offset);
 
       fragment_size = aux_data_ptr->fragment_length;         // ***
-      TRCMSGTG(tg, "fragment_size = %d", fragment_size);
+      DBGMSF(force_debug, "fragment_size = %d", fragment_size);
       if (fragment_size == 0) {
          complete = true;   // redundant
          free_ddc_packet(response_packet_ptr);
@@ -185,11 +188,11 @@ Global_Status_Code try_multi_part_read(
       buffer_append(accumulator, aux_data_ptr->bytes, fragment_size);   // ***
 
       cur_offset = cur_offset + fragment_size;
-      TRCMSGTG(tg, "Currently assembled fragment: |%.*s|",accumulator->len, accumulator->bytes);   // ***
-      TRCMSGTG(tg, "cur_offset = %d", cur_offset);
+      DBGMSF(force_debug, "Currently assembled fragment: |%.*s|",accumulator->len, accumulator->bytes);   // ***
+      DBGMSF(force_debug, "cur_offset = %d", cur_offset);
 
       free_ddc_packet(response_packet_ptr);
-
+      all_zero_response_ok = false;              // accept all zero response only on first fragment
    } // while loop assembling fragments
 
    free_ddc_packet(request_packet_ptr);
@@ -225,6 +228,7 @@ Global_Status_Code multi_part_read_with_retry(
                       Display_Handle * dh,
                       Byte          request_type,
                       Byte          request_subtype,   // VCP feature code for table read, ignore for capabilities
+                      bool          all_zero_response_ok,
                       Buffer**      ppbuffer)
 {
    bool debug = false;
@@ -247,20 +251,35 @@ Global_Status_Code multi_part_read_with_retry(
       TRCMSGTG(tg, "Start of while loop. try_ctr=%d, max_multi_part_read_tries=%d",
                try_ctr, max_multi_part_read_tries);
 
-      rc = try_multi_part_read(dh, request_type, request_subtype, accumulator);
+      rc = try_multi_part_read(
+              dh,
+              request_type,
+              request_subtype,
+              all_zero_response_ok,
+              accumulator);
       if (rc == DDCRC_NULL_RESPONSE) {
          // generally means this, but could conceivably indicate a protocol error.
          // try multiple times to ensure it's really unsupported?
-         rc = DDCRC_DETERMINED_UNSUPPORTED;
-         COUNT_STATUS_CODE(rc);   // double counting?
+
+         // just pass DDCRC_NULL_RESPONSE up the chain
+         // rc = DDCRC_DETERMINED_UNSUPPORTED;
+         // COUNT_STATUS_CODE(rc);   // double counting?
+
          can_retry = false;
+      }
+      else if (rc == DDCRC_READ_ALL_ZERO) {
+         can_retry = false;
+
+         // just pass DDCRC_READ_ALL_ZERO up the chain:
+         // rc = DDCRC_DETERMINED_UNSUPPORTED;    // ??
+         // COUNT_STATUS_CODE(rc);   // double counting?
       }
       else if (rc == DDCRC_ALL_TRIES_ZERO) {
          can_retry = false;
-         COUNT_STATUS_CODE(rc);   // double counting?
-         // DBGMSG("DDCRC_ALL_TRIES_ZERO");
-         rc = DDCRC_DETERMINED_UNSUPPORTED;    // ??
-         COUNT_STATUS_CODE(rc);   // double counting?
+
+         // just pass it up
+         // rc = DDCRC_DETERMINED_UNSUPPORTED;    // ??
+         // COUNT_STATUS_CODE(rc);   // double counting?
       }
       try_ctr++;
    }

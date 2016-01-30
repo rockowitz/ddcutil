@@ -136,6 +136,7 @@ Global_Status_Code get_nontable_vcp_value(
            max_read_bytes,
            expected_response_type,
            expected_subtype,
+           false,                       // all_zero_respons_ok
            &response_packet_ptr
         );
    TRCMSGTG(tg, "perform_ddc_write_read_with_retry() returned %s", gsc_desc(rc));
@@ -201,8 +202,9 @@ Global_Status_Code get_table_vcp_value(
             dh,
             DDC_PACKET_TYPE_TABLE_READ_REQUEST,
             feature_code,
+            true,                      // all_zero_response_ok
             &paccumulator);
-   TRCMSGTG(tg, "perform_ddc_write_read_with_retry() returned %s", gsc_desc(gsc));
+   DBGMSF(debug, "perform_ddc_write_read_with_retry() returned %s", gsc_desc(gsc));
 
    if (gsc == 0) {
       *pp_table_bytes = paccumulator;

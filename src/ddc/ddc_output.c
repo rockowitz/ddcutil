@@ -153,6 +153,7 @@ get_raw_value_for_feature_table_entry(
            &parsed_vcp_response);
    // assert ( (gsc==0 && parsed_vcp_response) || (gsc!=0 && !parsed_vcp_response) );
 
+
    switch(gsc) {
    case 0:
 #ifdef OLD
@@ -174,7 +175,18 @@ get_raw_value_for_feature_table_entry(
          f0printf(msg_fh, FMT_CODE_NAME_DETAIL_W_NL,
                         feature_code, feature_name, "Unsupported feature code (Null response)");
       }
+      COUNT_STATUS_CODE(DDCRC_DETERMINED_UNSUPPORTED);
       gsc = DDCRC_DETERMINED_UNSUPPORTED;
+      break;
+
+   case DDCRC_READ_ALL_ZERO:
+      // treat as invalid response if not table type?
+      if (!ignore_unsupported) {
+         f0printf(msg_fh, FMT_CODE_NAME_DETAIL_W_NL,
+                        feature_code, feature_name, "Unsupported feature code (All zero response)");
+      }
+      gsc = DDCRC_DETERMINED_UNSUPPORTED;
+      COUNT_STATUS_CODE(DDCRC_DETERMINED_UNSUPPORTED);
       break;
 
    case DDCRC_RETRIES:

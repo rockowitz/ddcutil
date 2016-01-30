@@ -77,6 +77,7 @@ Global_Status_Code ddc_write_read_with_retry(
       int              max_read_bytes,
       Byte             expected_response_type,
       Byte             expected_subtype,
+      bool             all_zero_response_ok,
       DDC_Packet **    response_packet_ptr_loc
      );
 

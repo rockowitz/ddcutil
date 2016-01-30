@@ -60,7 +60,7 @@
 #define DDCRC_INVALID_DATA           (-RCRANGE_DDC_START-4)
 #define DDCRC_RESPONSE_TYPE          (-RCRANGE_DDC_START-5)
 #define DDCRC_NULL_RESPONSE          (-RCRANGE_DDC_START-6)
-#define DDCRC_CAPABILITIES_FRAGMENT  (-RCRANGE_DDC_START-7)
+#define DDCRC_MULTI_PART_READ_FRAGMENT  (-RCRANGE_DDC_START-7)
 #define DDCRC_ALL_TRIES_ZERO         (-RCRANGE_DDC_START-8)    // packet data entirely 0  // not used TODO eliminate
 #define DDCRC_DOUBLE_BYTE            (-RCRANGE_DDC_START-9)    // duplicated byte in packet
 #define DDCRC_REPORTED_UNSUPPORTED   (-RCRANGE_DDC_START-10)   // DDC reply says unsupported
