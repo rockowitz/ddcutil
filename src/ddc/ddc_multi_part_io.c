@@ -50,10 +50,6 @@
 
 // Trace management
 
-// TraceControl capabilities_trace_level = NEVER;
-
-// New way
-// Trace class for this file
 static Trace_Group TRACE_GROUP = TRC_DDC;
 
 

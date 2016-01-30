@@ -1,4 +1,4 @@
-/* loadvcp.c
+/* dumpload.c
  *
  * Created on: Aug 16, 2014
  *     Author: rock
@@ -342,51 +342,6 @@ Global_Status_Code loadvcp_by_string(char * catenated) {
 //
 // Dumpvcp
 //
-
-#ifdef OLD
-// n. called from ddct_public.c
-Global_Status_Code
-dumpvcp_as_string_old(Display_Handle * dh, char ** pstring) {
-   bool debug = false;
-   DBGMSF(debug, "Starting");
-   GPtrArray * vals = NULL;
-   *pstring = NULL;
-   Global_Status_Code gsc = collect_profile_related_values(dh, time(NULL), &vals);
-   if (gsc == 0) {
-#ifdef OLD
-      int ct = vals->len;
-      DBGMSG("ct = %d", ct);
-      char ** pieces = calloc(ct, sizeof(char*));
-      int ndx;
-      for (ndx=0; ndx < ct; ndx++) {
-         pieces[ndx] = g_ptr_array_index(vals,ndx);
-         DBGMSG("pieces[%d] = %s", ndx, pieces[ndx]);
-      }
-      char * catenated = strjoin((const char**) pieces, ct, ";");
-      DBGMSF(debug, "strlen(catenated)=%ld, catenated=%p, catenated=|%s|", strlen(catenated), catenated, catenated);
-      *pstring = catenated;
-      DBGMSF(debug, "*pstring=%p", *pstring);
-#endif
-      // Alternative implementation using glib:
-      Null_Terminated_String_Array ntsa_pieces = g_ptr_array_to_ntsa(vals);
-      // n. our Null_Terminated_String_Array is identical to glib's GStrv
-      gchar sepchar = ';';
-      gchar * catenated2 = g_strjoinv(&sepchar, ntsa_pieces);
-      DBGMSF(debug, "catenated2=%p", catenated2);
-#ifdef old
-      DBGMSF(debug, "catenated2=|%s|", catenated2);
-      assert(strcmp(catenated, catenated2) == 0);
-#endif
-      *pstring = catenated2;
-
-      g_ptr_array_free(vals, true);
-   }
-   DBGMSF(debug, "Returning: %s", gsc_desc(gsc));
-
-   return gsc;
-}
-#endif
-
 
 /* Primary function for the DUMPVCP command.
  *

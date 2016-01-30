@@ -211,13 +211,9 @@ get_raw_value_for_feature_table_entry(
    }
    }
 
-#ifdef OLD
-   TRCMSGTG(tg, "Done.  Returning: %s, *presp = %p", gsc_desc(gsc), *presp);
-#endif
    TRCMSGTG(tg, "Done.  Returning: %s", gsc_desc(gsc));
    return gsc;
 }
-
 
 
 Global_Status_Code
@@ -234,9 +230,7 @@ get_formatted_value_for_feature_table_entry(
    TRCMSGTG(tg, "Starting");
 
    Global_Status_Code gsc = 0;
-
    *pformatted_value = NULL;
-
 
    Version_Spec vspec = get_vcp_version_by_display_handle(dh);
    Byte feature_code = vcp_entry->code;
@@ -253,66 +247,6 @@ get_formatted_value_for_feature_table_entry(
    Parsed_Vcp_Response * parsed_vcp_response;
 #endif
    Single_Vcp_Value *    pvalrec;
-#ifdef OLD
-   gsc = get_vcp_value(
-           dh,
-           feature_code,
-           feature_type,
-           &parsed_vcp_response);
-   // assert ( (gsc==0 && parsed_vcp_response) || (gsc!=0 && !parsed_vcp_response) );
-
-   switch(gsc) {
-   case 0:
-      break;
-
-   case DDCRC_INVALID_DATA:
-      if (output_level >= OL_NORMAL)    // FMT_CODE_NAME_DETAIL_W_NL
-         // fprintf(msg_fh, "VCP code 0x%02x (%-30s): Invalid response\n",
-         //                 feature_code, feature_name);
-         fprintf(msg_fh, FMT_CODE_NAME_DETAIL_W_NL,
-                      feature_code, feature_name, "Invalid response");
-
-      break;
-
-   case DDCRC_NULL_RESPONSE:
-      // for unsupported features, some monitors return null response rather than a valid response
-      // with unsupported feature indicator set
-      if (output_level >= OL_NORMAL && !suppress_unsupported)
-         // fprintf(msg_fh, "VCP code 0x%02x (%-30s): Unsupported feature code (Null response)\n",
-         //                 feature_code, feature_name);
-         fprintf(msg_fh, FMT_CODE_NAME_DETAIL_W_NL,
-                        feature_code, feature_name, "Unsupported feature code (Null response)");
-      gsc = DDCRC_DETERMINED_UNSUPPORTED;
-      break;
-
-   case DDCRC_RETRIES:
-      // fprintf(msg_fh, "VCP code 0x%02x (%-30s): Maximum retries exceeded\n",
-      //                 feature_code, feature_name);
-      fprintf(msg_fh, FMT_CODE_NAME_DETAIL_W_NL,
-                      feature_code, feature_name, "Maximum retries exceeded");
-      break;
-
-   case DDCRC_REPORTED_UNSUPPORTED:
-   case DDCRC_DETERMINED_UNSUPPORTED:
-      if (output_level >= OL_NORMAL && !suppress_unsupported)
-         // fprintf(msg_fh, "VCP code 0x%02x (%-30s): Unsupported feature code\n",
-         //                 feature_code, feature_name);
-         fprintf(msg_fh, FMT_CODE_NAME_DETAIL_W_NL,
-                         feature_code, feature_name, "Unsupported feature code");
-      break;
-
-   default:
-      if (output_level >= OL_NORMAL) {
-         char buf[200];
-         snprintf(buf, 200, "Invalid response. status code=%s", gsc_desc(gsc));
-         // fprintf(msg_fh, "VCP code 0x%02x (%-30s): Invalid response. status code=%s\n",
-         //     feature_code, feature_name, gsc_desc(gsc));
-         fprintf(msg_fh, FMT_CODE_NAME_DETAIL_W_NL,
-                         feature_code, feature_name, buf);
-      }
-   }
-#endif
-
    bool ignore_unsupported = !(output_level >= OL_NORMAL && !suppress_unsupported);
    gsc = get_raw_value_for_feature_table_entry(
             dh,
@@ -426,27 +360,6 @@ get_formatted_value_for_feature_table_entry(
    return gsc;
 }
 
-
-#ifdef UNUSED
-void show_value_for_feature_table_entry_by_display_ref(
-        Display_Ref *              dref,
-        VCP_Feature_Table_Entry *  vcp_entry,
-        // Output_Sink                data_sink,
-        // Output_Sink                msg_sink)
-        GPtrArray *                collector)   // where to write output
-{
-   bool debug = false;
-   DBGMSF(debug, "Starting");
-
-   Display_Handle * dh = ddc_open_display(dref, EXIT_IF_FAILURE);
-   show_value_for_feature_table_entry_by_display_handle(
-         // dh, vcp_entry, data_sink, msg_sink);
-         dh, vcp_entry, collector, false);
-   ddc_close_display(dh);
-
-   DBGMSF(debug, "Done");
-}
-#endif
 
 
 // TODO: move to more appropriate location once done
@@ -583,26 +496,6 @@ show_feature_set_values(
                  suppress_unsupported
                 );
 #endif
-
-#ifdef THE_NEW_OLD
-         bool is_table_feature = is_table_feature_by_display_handle(entry, dh);
-         if (is_table_feature) {
-            show_value_for_table_feature_table_entry_by_display_handle(
-               dh,
-               entry,
-               // vcp_version,
-               collector,
-               suppress_unsupported);              // suppress unsupported features
-         }
-         else {
-            show_value_for_nontable_feature_table_entry_by_display_handle(
-               dh,
-               entry,
-               // vcp_version,
-               collector,
-               suppress_unsupported);   //  suppress unsupported features
-         }
-#endif
       }
    }   // loop over features
 
@@ -642,8 +535,6 @@ collect_raw_subset_values(
 }
 
 
-
-
 /* Shows the VCP values for all features in a VCP feature subset.
  *
  * Arguments:
@@ -681,7 +572,20 @@ show_vcp_values(
 // Support for dumpvcp command and returning profile info as string in API
 //
 
-
+/* Formats a timestamp in a way usable in a filename, specifically:
+ *    YYYMMDD-HHMMSS
+ *
+ * Arguments:
+ *    time_millis   timestamp in milliseconds
+ *    buf           buffer in which to return the formatted timestamp
+ *    bufsz         buffer size
+ *
+ *    If buf == NULL or bufsz == 0, then this function allocates a buffer.
+ *    It is the responsibility of the caller to free this buffer.
+ *
+ *  Returns:
+ *    formatted timestamp
+ */
 char * format_timestamp(time_t time_millis, char * buf, int bufsz) {
    if (bufsz == 0 || buf == NULL) {
       bufsz = 128;
@@ -700,6 +604,15 @@ char * format_timestamp(time_t time_millis, char * buf, int bufsz) {
 }
 
 
+/* Returns monitor identification information in an array of strings.
+ * The strings are written in the format of the DUMPVCP command.
+ *
+ * Arguments:
+ *    dh       display handle for monitor
+ *    vals     GPtrArray to which the identification strings are appended.
+ *
+ * Returns:  nothing
+ */
 void collect_machine_readable_monitor_id(Display_Handle * dh, GPtrArray * vals) {
    char buf[400];
    int bufsz = sizeof(buf)/sizeof(char);
@@ -722,6 +635,15 @@ void collect_machine_readable_monitor_id(Display_Handle * dh, GPtrArray * vals) 
 }
 
 
+/* Appends timestamp lines to an array of strings.
+ * The strings are written in the format of the DUMPVCP command.
+ *
+ * Arguments:
+ *    dh       display handle for monitor
+ *    vals     GPtrArray to which the timestamp strings are appended.
+ *
+ * Returns:  nothing
+ */
 void collect_machine_readable_timestamp(time_t time_millis, GPtrArray* vals) {
    // temporarily use same output format as filename, but format the
    // date separately herefor flexibility

@@ -57,16 +57,6 @@ check_valid_operation_by_feature_id_and_dh(
       Version_Feature_Flags operation_flags);
 #endif
 
-#ifdef OLD
-void show_value_for_feature_table_entry_by_display_handle(
-        Display_Handle *           dh,
-        VCP_Feature_Table_Entry *  vcp_entry,
-        GPtrArray *                collector,   // where to write output
-        bool                       suppress_unsupported
-        // Output_Sink                data_sink,
-        // Output_Sink                msg_sink
-       );
-#endif
 
 Global_Status_Code
 get_formatted_value_for_feature_table_entry(

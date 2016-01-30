@@ -48,11 +48,9 @@ Parsed_Edid* ddc_get_parsed_edid_by_display_handle(Display_Handle * dh) {
    else {
       pEdid = adlshim_get_parsed_edid_by_display_handle(dh);
    }
-   // DBGMSG("Returning %p", pEdid);
    TRCMSG("Returning %p", __func__, pEdid);
    return pEdid;
 }
-
 
 
 Parsed_Edid* ddc_get_parsed_edid_by_display_ref(Display_Ref * dref) {
@@ -63,7 +61,6 @@ Parsed_Edid* ddc_get_parsed_edid_by_display_ref(Display_Ref * dref) {
    else {
       pEdid = adlshim_get_parsed_edid_by_display_ref(dref);
    }
-   // DBGMSG("Returning %p", pEdid);
    TRCMSG("Returning %p", pEdid);
    return pEdid;
 }

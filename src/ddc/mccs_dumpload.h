@@ -1,4 +1,4 @@
-/* loadvcp.h
+/* dumpload.h
  *
  * Created on: Aug 16, 2014
  *     Author: rock
@@ -26,8 +26,8 @@
  * </endcopyright>
  */
 
-#ifndef LOADVCP_H_
-#define LOADVCP_H_
+#ifndef DUMPLOAD_H_
+#define DUMPLOAD_H_
 
 #include <stdio.h>
 
@@ -42,11 +42,9 @@
 // file or a string, it is converted to Dumpload_Data and then
 // written to the monitor.
 
+#ifdef OLD
 #define MAX_LOADVCP_VALUES  20
-
-
-
-
+#endif
 
 typedef
 struct {
@@ -81,11 +79,6 @@ dumpvcp_as_dumpload_data(
       Display_Handle * dh,
       Dumpload_Data** pdumpload_data);
 
-
 Global_Status_Code dumpvcp_as_string(Display_Handle * dh, char** result);
 
-#ifdef OLD
-Global_Status_Code dumpvcp_as_string_old(Display_Handle * dh, char** result);
-#endif
-
-#endif /* LOADVCP_H_ */
+#endif /* DUMPLOAD_H_ */

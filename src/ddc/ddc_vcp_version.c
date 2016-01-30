@@ -35,7 +35,6 @@
 #include "ddc/ddc_vcp_version.h"
 
 
-
 //
 // Functions for VCP (MCCS) version
 //

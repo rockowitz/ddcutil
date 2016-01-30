@@ -33,7 +33,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-// #include <sys/ioctl.h>
 
 #include "util/debug_util.h"
 
@@ -283,8 +282,6 @@ Global_Status_Code get_vcp_value(
       *pvalrec = valrec;
    }
 
-
    return gsc;
 }
-
 

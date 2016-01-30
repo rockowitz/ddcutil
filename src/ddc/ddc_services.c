@@ -65,7 +65,7 @@ void init_ddc_services() {
    init_ddc_packets();   // 11/2015: does nothing
 }
 
-
+// Located here because this function doesn't really belong anywhere else.
 void ddc_show_max_tries(FILE * fh) {
    fprintf(fh, "Maximum Try Settings:\n");
    fprintf(fh, "Operation Type             Current  Default\n");

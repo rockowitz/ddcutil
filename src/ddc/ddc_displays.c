@@ -81,7 +81,7 @@ bool ddc_is_valid_display_ref(Display_Ref * dref, bool emit_error_msg) {
 }
 
 
-/* Converts display identifiers passed on the command line to a logical
+/* Converts display identifier passed on the command line to a logical
  * identifier for an I2C or ADL display.  If a bus number or ADL adapter.display
  * number is specified, the translation is direct.  If a model name/serial number
  * pair, an EDID, or a display number is specified, the attached displays are searched.
@@ -360,13 +360,10 @@ int ddc_report_active_displays(int depth) {
          valid_display_ct++;
       }
       ddc_report_active_display(curinfo, depth+1);
-      puts("");
+      rpt_title("",0);
    }
    if (valid_display_ct == 0)
       rpt_vstring(depth, "No active displays found");
    return valid_display_ct;
 }
-
-
-
 
