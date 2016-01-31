@@ -74,9 +74,22 @@ typedef enum {
    VCP_SUBSET_KNOWN           = 0x0010,
    VCP_SUBSET_PRESET          = 0x0008,    // uses VCP_SPEC_PRESET
    VCP_SUBSET_MFG             = 0x0004,    // mfg specific codes
+   VCP_SUBSET_TABLE           = 0x0002,    // is a table feature
    VCP_SUBSET_SINGLE_FEATURE  = 0x0001,
    VCP_SUBSET_NONE            = 0x0000,
 } VCP_Feature_Subset;
+
+
+typedef
+struct _Vcp_Subset_Desc {
+   VCP_Feature_Subset     subset_id;
+   char *                 subset_id_name;
+   char *                 public_name;
+} Vcp_Subset_Desc;
+
+
+extern struct _Vcp_Subset_Desc vcp_subset_desc[];
+const int vcp_subset_count;
 
 char * feature_subset_name(VCP_Feature_Subset subset_id);
 

@@ -73,11 +73,15 @@ create_feature_set(VCP_Feature_Subset subset_id, Version_Spec vcp_version) {
       for (ndx=0; ndx < known_feature_ct; ndx++) {
          VCP_Feature_Table_Entry * vcp_entry = vcp_get_feature_table_entry(ndx);
          assert(vcp_entry);
-         // Version_Feature_Flags vflags = 0;
+         Version_Feature_Flags vflags = 0;
          bool showit = false;
          switch(subset_id) {
          case VCP_SUBSET_PRESET:
             showit = vcp_entry->vcp_spec_groups & VCP_SPEC_PRESET;
+            break;
+         case VCP_SUBSET_TABLE:
+            vflags = get_version_specific_feature_flags(vcp_entry, vcp_version);
+            showit = vflags & VCP2_ANY_TABLE;
             break;
          case VCP_SUBSET_KNOWN:
          case VCP_SUBSET_ALL:

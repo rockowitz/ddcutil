@@ -94,37 +94,34 @@ bool vcp_version_gt(Version_Spec val, Version_Spec min) {
 // VCP_Feature_Subset utilities
 //
 
-struct Vcp_Subset_Desc {
-   VCP_Feature_Subset     subset_id;
-   char *                 subset_id_name;
-};
 
-static struct Vcp_Subset_Desc subset_desc[] = {
-      {VCP_SUBSET_PROFILE,         "VCP_SUBSET_PROFILE"},
-      {VCP_SUBSET_COLOR,           "VCP_SUBSET_COLOR"},
-      {VCP_SUBSET_LUT,             "VCP_SUBSET_LUT"},
-      {VCP_SUBSET_CRT,             "VCP_SUBSET_CRT"},
-      {VCP_SUBSET_TV,              "VCP_SUBSET_TV"},
-      {VCP_SUBSET_AUDIO,           "VCP_SUBSET_AUDIO"},
-      {VCP_SUBSET_WINDOW,          "VCP_SUBSET_WINDOW"},
-      {VCP_SUBSET_DPVL,            "VCP_SUBSET_DPVL"},
-      {VCP_SUBSET_SCAN,            "VCP_SUBSET_SCAN"},
-      {VCP_SUBSET_ALL,             "VCP_SUBSET_ALL"},
-      {VCP_SUBSET_SUPPORTED,       "VCP_SUBSET_SUPPORTED"},
-      {VCP_SUBSET_KNOWN,           "VCP_SUBSET_KNOWN"},
-      {VCP_SUBSET_PRESET,          "VCP_SUBSET_PRESET"},
-      {VCP_SUBSET_MFG,             "VCP_SUBSET_MFG"},
-      {VCP_SUBSET_SINGLE_FEATURE,  "VCP_SUBSET_SINGLE_FEATURE"},
-      {VCP_SUBSET_NONE ,           "VCP_SUBSET_NONE"},
+Vcp_Subset_Desc vcp_subset_desc[] = {
+      {VCP_SUBSET_PROFILE,         "VCP_SUBSET_PROFILE",     "PROFILE"},
+      {VCP_SUBSET_COLOR,           "VCP_SUBSET_COLOR",       "COLOR"},
+      {VCP_SUBSET_LUT,             "VCP_SUBSET_LUT",         "LUT"},
+      {VCP_SUBSET_CRT,             "VCP_SUBSET_CRT",         "CRT"},
+      {VCP_SUBSET_TV,              "VCP_SUBSET_TV",          "TV"},
+      {VCP_SUBSET_AUDIO,           "VCP_SUBSET_AUDIO",       "AUDIO"},
+      {VCP_SUBSET_WINDOW,          "VCP_SUBSET_WINDOW",      "WINDOW"},
+      {VCP_SUBSET_DPVL,            "VCP_SUBSET_DPVL",        "DPVL"},
+      {VCP_SUBSET_SCAN,            "VCP_SUBSET_SCAN",        "SCAN"},
+      {VCP_SUBSET_ALL,             "VCP_SUBSET_ALL",         NULL},
+      {VCP_SUBSET_SUPPORTED,       "VCP_SUBSET_SUPPORTED",   "SUPPORTED"},
+      {VCP_SUBSET_KNOWN,           "VCP_SUBSET_KNOWN",       "KNOWN"},
+      {VCP_SUBSET_PRESET,          "VCP_SUBSET_PRESET",      "PRESET"},
+      {VCP_SUBSET_MFG,             "VCP_SUBSET_MFG",         "MFG"},
+      {VCP_SUBSET_TABLE,           "VCP_SUBSET_TABLE",       "TABLE"},
+      {VCP_SUBSET_SINGLE_FEATURE,  "VCP_SUBSET_SINGLE_FEATURE", NULL},
+      {VCP_SUBSET_NONE ,           "VCP_SUBSET_NONE",        NULL},
 };
-static int vcp_subset_count = sizeof(subset_desc)/sizeof(struct Vcp_Subset_Desc);
+const int vcp_subset_count = sizeof(vcp_subset_desc)/sizeof(struct _Vcp_Subset_Desc);
 
-static struct Vcp_Subset_Desc * find_subset_desc(VCP_Feature_Subset subset_id) {
-   struct Vcp_Subset_Desc * result = NULL;
+static struct _Vcp_Subset_Desc * find_subset_desc(VCP_Feature_Subset subset_id) {
+   struct _Vcp_Subset_Desc * result = NULL;
    int ndx = 0;
    for(; ndx<vcp_subset_count; ndx++) {
-     if (subset_id == subset_desc[ndx].subset_id) {
-        result = &subset_desc[ndx];
+     if (subset_id == vcp_subset_desc[ndx].subset_id) {
+        result = &vcp_subset_desc[ndx];
         break;
      }
    }
@@ -133,7 +130,7 @@ static struct Vcp_Subset_Desc * find_subset_desc(VCP_Feature_Subset subset_id) {
 }
 
 char * feature_subset_name(VCP_Feature_Subset subset_id) {
-   struct Vcp_Subset_Desc * desc = find_subset_desc(subset_id);
+   struct _Vcp_Subset_Desc * desc = find_subset_desc(subset_id);
    return desc->subset_id_name;
 }
 

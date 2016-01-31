@@ -36,6 +36,7 @@
 #include "util/report_util.h"
 #include "util/string_util.h"
 
+#include "base/ddc_base.h"
 #include "base/msg_control.h"
 #include "base/vcp_feature_values.h"
 
@@ -245,6 +246,7 @@ char * spec_group_names_r(VCP_Feature_Table_Entry * pentry, char * buf, int bufs
    return buf;
 }
 
+#ifdef OLD
 char * subset_names_r(VCP_Feature_Table_Entry * pentry, char * buf, int bufsz) {
    *buf = '\0';
    if (pentry->vcp_subsets & VCP_SUBSET_PROFILE)
@@ -263,6 +265,20 @@ char * subset_names_r(VCP_Feature_Table_Entry * pentry, char * buf, int bufsz) {
       str_comma_cat_r("WINDOW", buf, bufsz);
    if (pentry->vcp_subsets & VCP_SUBSET_DPVL)
       str_comma_cat_r("DPVL", buf, bufsz);
+   return buf;
+}
+#endif
+
+char * subset_names_r(VCP_Feature_Table_Entry * pentry, char * buf, int bufsz) {
+   *buf = '\0';
+
+   int kk = 0;
+   for(;kk < vcp_subset_count; kk++) {
+      Vcp_Subset_Desc cur_desc = vcp_subset_desc[kk];
+      if (pentry->vcp_subsets & cur_desc.subset_id)
+         str_comma_cat_r(cur_desc.public_name, buf, bufsz);
+   }
+
    return buf;
 }
 
@@ -821,32 +837,6 @@ VCP_Feature_Table_Entry * vcp_create_dummy_feature_for_hexid(Byte id) {
    return pentry;
 }
 
-#ifdef DEPRECATED
-/* Creates a dummy VCP feature table entry for a feature code,
- * based on a a character string representation of the code.
- * It is the responsibility of the caller to free this memory.
- *
- * Arguments:
- *    id     feature id, as character string
- *
- * Returns:
- *   created VCP_Feature_Table_Entry
- *   NULL if id does not consist of 2 hex characters
- */
-VCP_Feature_Table_Entry * vcp_create_dummy_feature_for_charid(char * id) {
-   VCP_Feature_Table_Entry * result = NULL;
-   Byte hexId;
-   bool ok = hhs_to_byte_in_buf(id, &hexId);
-   if (!ok) {
-      DBGMSG("Invalid feature code: %s", id);
-   }
-   else {
-      result = vcp_create_dummy_feature_for_hexid(hexId);
-   }
-   // DBGMSG("Returning %p", result);
-   return result;
-}
-#endif
 
 /* Returns an entry in the VCP feature table based on the hex value
  * of its feature code.
@@ -871,38 +861,6 @@ VCP_Feature_Table_Entry * vcp_find_feature_by_hexid(Byte id) {
    // DBGMSG("Done.  ndx=%d. returning %p", ndx, result);
    return result;
 }
-
-#ifdef DEPRECATED
-/* Returns an entry in the VCP feature table based on the character
- * string representation of its feature code.
- *
- * Arguments:
- *    id    feature id
- *
- * Returns:
- *    VCP_Feature_Table_Entry
- *    NULL if id does not consist of 2 hex characters, or feature code not found
- */
-VCP_Feature_Table_Entry * vcp_find_feature_by_charid(char * id) {
-   bool debug = false;
-   if (debug)
-      DBGMSG("Starting id=|%s|  ", id );
-   VCP_Feature_Table_Entry * result = NULL;
-
-   Byte hexId;
-   bool ok = hhs_to_byte_in_buf(id, &hexId);
-   if (!ok) {
-      if (debug)
-         DBGMSG("Invalid feature code: %s", id);
-   }
-   else {
-      result = vcp_find_feature_by_hexid(hexId);
-   }
-   if (debug)
-      DBGMSG("Returning %p", result);
-   return result;
-}
-#endif
 
 
 /* Returns an entry in the VCP feature table based on the hex value
@@ -1928,7 +1886,6 @@ static Feature_Value_Entry xa5_window_select_values[] = {
       {0x06, "Window 6 selected"},
       {0x07, "Window 7 selected"},
       {0xff, NULL}     // terminator
-
 };
 
 // 0xaa
