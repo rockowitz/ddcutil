@@ -72,7 +72,7 @@ bool is_table_feature_by_display_handle(
    Version_Spec vcp_version = get_vcp_version_by_display_handle(dh);
    Version_Feature_Flags feature_flags = get_version_sensitive_feature_flags(vcp_entry, vcp_version);
    assert(feature_flags);
-   result = (feature_flags & VCP2_TABLE);
+   result = (feature_flags & VCP2_ANY_TABLE);
    // DBGMSF(debug, "returning: %d", result);
    return result;
 }
@@ -143,14 +143,18 @@ get_raw_value_for_feature_table_entry(
    bool is_table_feature = is_table_feature_by_display_handle(vcp_entry, dh);
    VCP_Call_Type feature_type = (is_table_feature) ? TABLE_VCP_CALL : NON_TABLE_VCP_CALL;
    Output_Level output_level = get_output_level();
+#ifdef OLD
    Parsed_Vcp_Response * parsed_vcp_response;
+#endif
    Single_Vcp_Value * valrec;
    gsc = get_vcp_value(
            dh,
            feature_code,
            feature_type,
-           &valrec,
+           &valrec);
+#ifdef OLD
            &parsed_vcp_response);
+#endif
    // assert ( (gsc==0 && parsed_vcp_response) || (gsc!=0 && !parsed_vcp_response) );
 
 
@@ -454,8 +458,8 @@ show_feature_set_values(
             char * feature_name =  get_version_sensitive_feature_name(entry, vcp_version);
             Version_Feature_Flags vflags = get_version_sensitive_feature_flags(entry, vcp_version);
             char * msg = (vflags & VCP2_DEPRECATED) ? "Deprecated" : "Write-only feature";
-            printf(FMT_CODE_NAME_DETAIL_W_NL,
-                   entry->code, feature_name, msg);
+            fprintf(FOUT, FMT_CODE_NAME_DETAIL_W_NL,
+                          entry->code, feature_name, msg);
          }
       }
       else {
@@ -473,7 +477,7 @@ show_feature_set_values(
             if (collector)
                g_ptr_array_add(collector, formatted_value);
             else
-               fprintf(stdout, "%s\n", formatted_value);
+               fprintf(FOUT, "%s\n", formatted_value);
          }
          else {
             // or should I check features_ct == 1?

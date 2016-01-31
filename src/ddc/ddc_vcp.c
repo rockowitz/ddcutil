@@ -177,9 +177,9 @@ Global_Status_Code get_nontable_vcp_value(
  * It is the responsibility of the caller to free the Buffer.
  *
  * Arguments:
- *    dh         display handle
- *    feature_code   VCP feature code
- *    pp_table_bytes save address of newly allocated Buffer struct here
+ *    dh              display handle
+ *    feature_code    VCP feature code
+ *    pp_table_bytes  location at which to save address of newly allocated Buffer
  *
  * Returns:
  *    status code
@@ -222,36 +222,67 @@ Global_Status_Code get_vcp_value(
        Display_Handle *          dh,
        Byte                      feature_code,
        VCP_Call_Type             call_type,
-       Single_Vcp_Value **       pvalrec,
+       Single_Vcp_Value **       pvalrec)
+#ifdef OLD
        Parsed_Vcp_Response**     pp_parsed_response)
+#endif
 {
    bool debug = false;
    Trace_Group tg = TRACE_GROUP;  if (debug) tg = 0xFF;
    TRCMSGTG(tg, "Starting. Reading feature 0x%02x", feature_code);
 
    Global_Status_Code gsc = 0;
+
+   Buffer * buffer = NULL;
+#ifdef OLD
    *pp_parsed_response = NULL;
    Parsed_Vcp_Response *  presp = calloc(1, sizeof(Parsed_Vcp_Response));
+#endif
+   Parsed_Nontable_Vcp_Response * parsed_nontable_response = NULL;
+   Single_Vcp_Value * valrec = NULL;
    switch (call_type) {
 
    case (NON_TABLE_VCP_CALL):
+#ifdef OLD
          presp->response_type = NON_TABLE_VCP_CALL;
+#endif
          gsc = get_nontable_vcp_value(
                   dh,
                   feature_code,
-                  &presp->non_table_response);
+                  &parsed_nontable_response);
+#ifdef OLD
+         presp->non_table_response = parsed_nontable_response;
+#endif
+         if (gsc == 0) {
+            valrec = create_nontable_vcp_value(
+                        feature_code,
+                        parsed_nontable_response->mh,
+                        parsed_nontable_response->ml,
+                        parsed_nontable_response->sh,
+                        parsed_nontable_response->sl);
+            free(parsed_nontable_response);
+         }
          break;
 
    case (TABLE_VCP_CALL):
+#ifdef OLD
          presp->response_type = TABLE_VCP_CALL;
+#endif
          gsc = get_table_vcp_value(
                  dh,
                  feature_code,
-                 &presp->table_response);
+                 &buffer);
+#ifdef OLD
+         presp->table_response = buffer;
+#endif
+         if (gsc == 0) {
+            valrec = create_table_vcp_value_by_buffer(feature_code, buffer);
+            buffer_free(buffer, __func__);
+         }
          break;
    }
 
-
+#ifdef OLD
    TRCMSGTG(tg, "Done. Returning gsc=%s, presp=%p",
                 gsc_desc(gsc), presp);
    if (gsc == 0) {
@@ -267,21 +298,29 @@ Global_Status_Code get_vcp_value(
          TRCMSGTG(tg, "WARNING: gsc == %s but presp=%p",
                       gsc_desc(gsc), presp);
    }
+#endif
+
+#ifdef OLD
    if (gsc == 0)
       *pp_parsed_response = presp;
-
+#endif
 
    if (gsc == 0) {
-      Single_Vcp_Value * valrec = create_single_vcp_value_by_parsed_vcp_response(
+#ifdef OLD
+      valrec = create_single_vcp_value_by_parsed_vcp_response(
             feature_code,
             presp);
+#endif
       if (debug) {
+#ifdef OLD
          report_parsed_vcp_response(presp, 1);
+#endif
          report_single_vcp_value(valrec,1);
       }
       *pvalrec = valrec;
    }
 
+   TRCMSGTG(tg, "Done.  Returning: %s", gsc_desc(gsc) );
    return gsc;
 }
 

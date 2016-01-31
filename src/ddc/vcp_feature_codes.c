@@ -1668,10 +1668,11 @@ bool format_feature_detail_xce_aux_display_size(
 
 
 //
-// SL byte value lookup tables
+// Feature_Value_Entry tables (SL byte value lookup)
+// Used for Simple NC features
 //
 
-// {0x00,NULL} is used as end of list marker. 0x00 might be a valid value, but NULL never is
+// {0x00,NULL} is the end of list marker. 0x00 might be a valid value, but NULL never is
 
 // 0x02
 static Feature_Value_Entry x02_new_control_values[] = {

@@ -292,6 +292,7 @@ char * command_argument_help =
        "      - TV        - TV related settings\n"
        "      - PRESET    - MCCS codes classed as PRESET\n"
        "      - MANUFACTURER - manufacturer specific codes\n"
+       "      - TABLE     - table type features\n"
        "    Keywords can be abbreviated to the first 3 characters.\n"
        "    Case is ignored.  e.g. \"COL\", \"pro\"\n"
        "\n"

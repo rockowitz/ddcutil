@@ -56,10 +56,8 @@
 
 #include "ddc/ddc_packet_io.h"
 
-
 // Trace class for this file
 static Trace_Group TRACE_GROUP = TRC_DDC;
-
 
 // Tests if a range of bytes is entirely 0
 static bool all_zero(Byte * bytes, int bytect) {
@@ -74,9 +72,7 @@ static bool all_zero(Byte * bytes, int bytect) {
    return result;
 }
 
-
 // Test for DDC null message
-
 #ifdef APPARENTLY_UNUSED
 bool is_ddc_null_message(Byte * packet) {
    return (packet[0] == 0x6f &&
@@ -88,7 +84,9 @@ bool is_ddc_null_message(Byte * packet) {
 #endif
 
 
-
+//
+// Open/Close Display
+//
 
 /* Opens a DDC display.
  *
@@ -145,8 +143,9 @@ void ddc_close_display(Display_Handle * dh) {
 }
 
 
-
+//
 // Retry Management and Statistics
+//
 
 // constants in parms.h:
 static int max_write_only_exchange_tries =  MAX_WRITE_ONLY_EXCHANGE_TRIES;
