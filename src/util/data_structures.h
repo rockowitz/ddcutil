@@ -95,6 +95,7 @@ struct {
 
 Buffer * buffer_new(int size, const char * trace_msg);
 Buffer * buffer_dup(Buffer * srcbuf, const char * trace_msg);
+Buffer * buffer_new_with_value(Byte * bytes, int bytect, const char * trace_msg);
 int      buffer_length(Buffer * buffer);
 void     buffer_set_length(Buffer * buffer, int bytect);
 void     buffer_free(Buffer * buffer, const char * trace_msg);

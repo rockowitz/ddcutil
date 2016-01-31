@@ -59,17 +59,17 @@ bool default_table_feature_detail_function(
         Version_Spec                   vcp_version,
         char**                         presult);
 bool format_feature_detail_debug_continuous(
-        Parsed_Nontable_Vcp_Response * code_info,
+        Nontable_Vcp_Value * code_info,
         Version_Spec                   vcp_version,
         char *                         buffer,
         int                            bufsz);
 bool format_feature_detail_standard_continuous(
-        Parsed_Nontable_Vcp_Response * code_info,
+        Nontable_Vcp_Value * code_info,
         Version_Spec                   vcp_version,
         char *                         buffer,
         int                            bufsz);
 bool format_feature_detail_sl_lookup(
-        Parsed_Nontable_Vcp_Response * code_info,
+        Nontable_Vcp_Value * code_info,
         Version_Spec                   vcp_version,
         char *                         buffer,
         int                            bufsz);
@@ -692,7 +692,7 @@ get_table_feature_detail_function( VCP_Feature_Table_Entry * pvft_entry, Version
 bool vcp_format_nontable_feature_detail(
         VCP_Feature_Table_Entry * vcp_entry,
         Version_Spec              vcp_version,
-        Parsed_Nontable_Vcp_Response *    code_info,
+        Nontable_Vcp_Value *    code_info,
         char *                    buffer,
         int                       bufsz)
 {
@@ -733,18 +733,21 @@ bool vcp_format_feature_detail(
    bool debug = false;
    DBGMSF(debug, "Starting");
    // hack to avoid having to change all of vcp_feature_code.c
-   Parsed_Vcp_Response *
-   raw_data = single_vcp_value_to_parsed_vcp_response(valrec);
+   // Parsed_Vcp_Response *
+   // raw_data = single_vcp_value_to_parsed_vcp_response(valrec);
    bool ok = true;
    *aformatted_data = NULL;
 
    char * formatted_data = NULL;
-   if (raw_data->response_type == NON_TABLE_VCP_CALL) {
+//   if (raw_data->response_type == NON_TABLE_VCP_CALL) {
+   if (valrec->value_type == NON_TABLE_VCP_CALL) {
+      Nontable_Vcp_Value* nontable_value = single_vcp_value_to_nontable_vcp_value(valrec);
       char workbuf[200];
       ok = vcp_format_nontable_feature_detail(
               vcp_entry,
               vcp_version,
-              raw_data->non_table_response,
+           //   raw_data->non_table_response,
+              nontable_value,
               workbuf,
               200);
       if (ok)
@@ -754,7 +757,8 @@ bool vcp_format_feature_detail(
       ok = vcp_format_table_feature_detail(
             vcp_entry,
             vcp_version,
-            raw_data->table_response,
+        //  raw_data->table_response,
+            buffer_new_with_value(valrec->val.t.bytes, valrec->val.t.bytect, __func__),
             &formatted_data);
    }
 
@@ -1113,7 +1117,7 @@ char * lookup_value_name_new(
 // used when the value is calculated using the SL and SH bytes, but we haven't
 // written a full interpretation function
 bool format_feature_detail_debug_sl_sh(
-        Parsed_Nontable_Vcp_Response * code_info,  Version_Spec vcp_version, char * buffer, int bufsz)
+        Nontable_Vcp_Value * code_info,  Version_Spec vcp_version, char * buffer, int bufsz)
 {
     snprintf(buffer, bufsz,
              "SL: 0x%02x ,  SH: 0x%02x",
@@ -1126,7 +1130,7 @@ bool format_feature_detail_debug_sl_sh(
 // For debugging features marked as Continuous
 // Outputs both the byte fields and calculated cur and max values
 bool format_feature_detail_debug_continuous(
-        Parsed_Nontable_Vcp_Response * code_info,  Version_Spec vcp_version, char * buffer, int bufsz)
+        Nontable_Vcp_Value * code_info,  Version_Spec vcp_version, char * buffer, int bufsz)
 {
    snprintf(buffer, bufsz,
             "mh=0x%02x, ml=0x%02x, sh=0x%02x, sl=0x%02x, max value = %5d, cur value = %5d",
@@ -1138,7 +1142,7 @@ bool format_feature_detail_debug_continuous(
 
 
 bool format_feature_detail_debug_bytes(
-        Parsed_Nontable_Vcp_Response * code_info, Version_Spec vcp_version, char * buffer, int bufsz)
+        Nontable_Vcp_Value * code_info, Version_Spec vcp_version, char * buffer, int bufsz)
 {
    snprintf(buffer, bufsz,
             "mh=0x%02x, ml=0x%02x, sh=0x%02x, sl=0x%02x",
@@ -1154,7 +1158,7 @@ bool format_feature_detail_debug_bytes(
 // used when the value is just the SL byte, but we haven't
 // written a full interpretation function
 bool format_feature_detail_sl_byte(
-        Parsed_Nontable_Vcp_Response * code_info, Version_Spec vcp_version, char * buffer, int bufsz)
+        Nontable_Vcp_Value * code_info, Version_Spec vcp_version, char * buffer, int bufsz)
 {
     snprintf(buffer, bufsz,
              "Value: 0x%02x" ,
@@ -1177,7 +1181,7 @@ bool format_feature_detail_sl_byte(
  *    true if formatting successful, false if not
  */
 bool format_feature_detail_sl_lookup(
-        Parsed_Nontable_Vcp_Response *  code_info,
+        Nontable_Vcp_Value *  code_info,
         Version_Spec            vcp_version,
         char *                  buffer,
         int                     bufsz)
@@ -1201,7 +1205,7 @@ bool format_feature_detail_sl_lookup(
  *    true
  */
 bool format_feature_detail_standard_continuous(
-        Parsed_Nontable_Vcp_Response * code_info, Version_Spec vcp_version, char * buffer, int bufsz)
+        Nontable_Vcp_Value * code_info, Version_Spec vcp_version, char * buffer, int bufsz)
 {
    // TODO: calculate cv, mv here from bytes
    int cv = code_info->cur_value;
@@ -1230,7 +1234,7 @@ bool format_feature_detail_standard_continuous(
  *    true
  */
 bool format_feature_detail_ushort(
-        Parsed_Nontable_Vcp_Response * code_info,
+        Nontable_Vcp_Value * code_info,
         Version_Spec                   vcp_version,
         char *                         buffer,
         int bufsz)
@@ -1247,7 +1251,7 @@ bool format_feature_detail_ushort(
 
 // 0x02
 bool format_feature_detail_new_control_value(    // 0x02
-        Parsed_Nontable_Vcp_Response * code_info, Version_Spec vcp_version, char * buffer, int bufsz)
+        Nontable_Vcp_Value * code_info, Version_Spec vcp_version, char * buffer, int bufsz)
 {
    char * name = NULL;
    switch(code_info->sl) {
@@ -1265,7 +1269,7 @@ bool format_feature_detail_new_control_value(    // 0x02
 
 // 0x0b
 bool x0b_format_feature_detail_color_temperature_increment(
-      Parsed_Nontable_Vcp_Response * code_info,
+      Nontable_Vcp_Value * code_info,
       Version_Spec                        vcp_version,
       char *                              buffer,
       int                                 bufsz)
@@ -1282,7 +1286,7 @@ bool x0b_format_feature_detail_color_temperature_increment(
 
 // 0x0c
 bool x0c_format_feature_detail_color_temperature_request(
-      Parsed_Nontable_Vcp_Response * code_info,
+      Nontable_Vcp_Value * code_info,
       Version_Spec                        vcp_version,
       char *                              buffer,
       int                                 bufsz)
@@ -1297,7 +1301,7 @@ bool x0c_format_feature_detail_color_temperature_request(
 
 // 0x14
 bool format_feature_detail_select_color_preset(
-      Parsed_Nontable_Vcp_Response * code_info, Version_Spec vcp_version, char * buffer, int bufsz)
+      Nontable_Vcp_Value * code_info, Version_Spec vcp_version, char * buffer, int bufsz)
 {
    bool debug = false;
    if (debug)
@@ -1385,7 +1389,7 @@ bool format_feature_detail_select_color_preset(
 
 // 0x62
 bool format_feature_detail_audio_speaker_volume_v30(
-      Parsed_Nontable_Vcp_Response * code_info, Version_Spec vcp_version, char * buffer, int bufsz)
+      Nontable_Vcp_Value * code_info, Version_Spec vcp_version, char * buffer, int bufsz)
 {
   assert (code_info->vcp_code == 0x62);
   // Continous in 2.0, 2,2, assume 2.1 is same
@@ -1409,7 +1413,7 @@ bool format_feature_detail_audio_speaker_volume_v30(
 }
 
 bool format_feature_detail_x8d_v22_mute_audio_blank_screen(
-        Parsed_Nontable_Vcp_Response * code_info,
+        Nontable_Vcp_Value * code_info,
         Version_Spec                   vcp_version,
         char *                         buffer,
         int                            bufsz)
@@ -1437,7 +1441,7 @@ bool format_feature_detail_x8d_v22_mute_audio_blank_screen(
 
 // 0x8f, 0x91
 bool format_feature_detail_audio_treble_bass_v30(
-      Parsed_Nontable_Vcp_Response * code_info, Version_Spec vcp_version, char * buffer, int bufsz)
+      Nontable_Vcp_Value * code_info, Version_Spec vcp_version, char * buffer, int bufsz)
 {
   assert (code_info->vcp_code == 0x8f || code_info->vcp_code == 0x91);
   // Continous in 2.0, assume 2.1 same as 2.0,
@@ -1471,7 +1475,7 @@ bool format_feature_detail_audio_treble_bass_v30(
 
 // 0x93
 bool format_feature_detail_audio_balance_v30(
-      Parsed_Nontable_Vcp_Response * code_info, Version_Spec vcp_version, char * buffer, int bufsz)
+      Nontable_Vcp_Value * code_info, Version_Spec vcp_version, char * buffer, int bufsz)
 {
   assert (code_info->vcp_code == 0x93);
   // Continous in 2.0, NC in 3.0, 2.2, assume 2.1 same as 2.0
@@ -1504,7 +1508,7 @@ bool format_feature_detail_audio_balance_v30(
 
 // 0xac
 bool format_feature_detail_xac_horizontal_frequency(
-      Parsed_Nontable_Vcp_Response * code_info, Version_Spec vcp_version, char * buffer, int bufsz)
+      Nontable_Vcp_Value * code_info, Version_Spec vcp_version, char * buffer, int bufsz)
 {
   assert (code_info->vcp_code == 0xac);
   // this is R/O field, so max value is irrelevant
@@ -1534,7 +1538,7 @@ bool format_feature_detail_xac_horizontal_frequency(
 
 // 0x9b..0xa0
 bool format_feature_detail_6_axis_hue(
-      Parsed_Nontable_Vcp_Response * code_info,
+      Nontable_Vcp_Value * code_info,
       Version_Spec                   vcp_version,
       char *                         buffer,
       int                            bufsz)
@@ -1577,7 +1581,7 @@ bool format_feature_detail_6_axis_hue(
 
 // 0xae
 bool format_feature_detail_xae_vertical_frequency(
-      Parsed_Nontable_Vcp_Response * code_info, Version_Spec vcp_version, char * buffer, int bufsz)
+      Nontable_Vcp_Value * code_info, Version_Spec vcp_version, char * buffer, int bufsz)
 {
   assert (code_info->vcp_code == 0xae);
   if (code_info->mh == 0xff &&
@@ -1600,7 +1604,7 @@ bool format_feature_detail_xae_vertical_frequency(
 
 // 0xbe
 bool format_feature_detail_xbe_link_control(
-        Parsed_Nontable_Vcp_Response * code_info,
+        Nontable_Vcp_Value * code_info,
         Version_Spec vcp_version,
         char * buffer,
         int bufsz)
@@ -1618,7 +1622,7 @@ bool format_feature_detail_xbe_link_control(
 
 // 0xc0
 bool format_feature_detail_xc0_display_usage_time(
-        Parsed_Nontable_Vcp_Response * code_info, Version_Spec vcp_version, char * buffer, int bufsz)
+        Nontable_Vcp_Value * code_info, Version_Spec vcp_version, char * buffer, int bufsz)
 {
    assert (code_info->vcp_code == 0xc0);
    uint usage_time;
@@ -1644,7 +1648,7 @@ bool format_feature_detail_xc0_display_usage_time(
 
 // 0xc6
 bool format_feature_detail_application_enable_key(
-        Parsed_Nontable_Vcp_Response * code_info,
+        Nontable_Vcp_Value * code_info,
         Version_Spec vcp_version,
         char * buffer,
         int bufsz)
@@ -1657,7 +1661,7 @@ bool format_feature_detail_application_enable_key(
 
 // 0xc8
 bool format_feature_detail_display_controller_type(
-        Parsed_Nontable_Vcp_Response * info,  Version_Spec vcp_version, char * buffer, int bufsz)
+        Nontable_Vcp_Value * info,  Version_Spec vcp_version, char * buffer, int bufsz)
 {
    assert(info->vcp_code == 0xc8);
    bool ok = true;
@@ -1680,7 +1684,7 @@ bool format_feature_detail_display_controller_type(
 
 // xc9, xdf
 bool format_feature_detail_version(
-        Parsed_Nontable_Vcp_Response * code_info, Version_Spec vcp_version, char * buffer, int bufsz)
+        Nontable_Vcp_Value * code_info, Version_Spec vcp_version, char * buffer, int bufsz)
 {
    int version_number  = code_info->sh;
    int revision_number = code_info->sl;
@@ -1690,7 +1694,7 @@ bool format_feature_detail_version(
 
 // 0xce
 bool format_feature_detail_xce_aux_display_size(
-        Parsed_Nontable_Vcp_Response * code_info,
+        Nontable_Vcp_Value * code_info,
         Version_Spec                   vcp_version,
         char *                         buffer,
         int                            bufsz)

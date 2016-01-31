@@ -410,13 +410,25 @@ Buffer * buffer_new(int size, const char * trace_msg) {
    return buffer;
 }
 
+
+
+Buffer * buffer_new_with_value(Byte * bytes, int bytect, const char * trace_msg) {
+   Buffer* buf = buffer_new(bytect, trace_msg);
+   buffer_put(buf, bytes, bytect);
+   return buf;
+}
+
+
+
 // copy constructor
 Buffer * buffer_dup(Buffer * srcbuf, const char * trace_msg) {
-   int sz = srcbuf->buffer_size;
-   Buffer* newbuf = buffer_new(sz, trace_msg);
-   buffer_put(newbuf, srcbuf->bytes, srcbuf->len);
-   return newbuf;
+   return buffer_new_with_value(srcbuf->bytes, srcbuf->len, trace_msg);
+   // int sz = srcbuf->buffer_size;
+   // Buffer* newbuf = buffer_new(sz, trace_msg);
+   // buffer_put(newbuf, srcbuf->bytes, srcbuf->len);
+   // return newbuf;
 }
+
 
 
 // Frees a Buffer instance.  All memory associated with the Buffer is released.

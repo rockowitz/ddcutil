@@ -101,6 +101,24 @@ create_single_vcp_value_by_parsed_vcp_response(
 
 Parsed_Vcp_Response * single_vcp_value_to_parsed_vcp_response(Single_Vcp_Value * valrec);
 
+
+// Simple stripped-down version of Parsed_Nontable_Vcp_Response
+// for use within vcp_feature_codes.c
+
+typedef
+struct {
+   Byte   vcp_code;
+   ushort max_value;
+   ushort cur_value;
+   // for new way
+   Byte   mh;
+   Byte   ml;
+   Byte   sh;
+   Byte   sl;
+} Nontable_Vcp_Value;
+
+Nontable_Vcp_Value * single_vcp_value_to_nontable_vcp_value(Single_Vcp_Value * valrec);
+
 void free_single_vcp_value(Single_Vcp_Value * vcp_value);
 
 void report_single_vcp_value(Single_Vcp_Value * val, int depth);

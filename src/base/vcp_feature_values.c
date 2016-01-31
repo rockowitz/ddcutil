@@ -210,6 +210,22 @@ Parsed_Vcp_Response * single_vcp_value_to_parsed_vcp_response(Single_Vcp_Value *
    return presp;
 }
 
+Nontable_Vcp_Value * single_vcp_value_to_nontable_vcp_value(Single_Vcp_Value * valrec) {
+   Nontable_Vcp_Value * non_table_response = calloc(1, sizeof(Nontable_Vcp_Value));
+   assert (valrec->value_type == NON_TABLE_VCP_CALL);
+
+   non_table_response->cur_value = valrec->val.c.cur_val;
+   non_table_response->max_value = valrec->val.c.max_val;
+   non_table_response->mh        = valrec->val.nc.mh;
+   non_table_response->ml        = valrec->val.nc.ml;
+   non_table_response->sh        = valrec->val.nc.sh;
+   non_table_response->sl        = valrec->val.nc.sl;
+   non_table_response->vcp_code  = valrec->opcode;
+
+   return non_table_response;
+}
+
+
 Vcp_Value_Set vcp_value_set_new(int initial_size){
    GPtrArray* ga = g_ptr_array_sized_new(initial_size);
    g_ptr_array_set_free_func(ga, free_single_vcp_value_func);

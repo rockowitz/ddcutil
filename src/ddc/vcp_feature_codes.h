@@ -126,8 +126,10 @@ void                                   // returns nothing
       void *  interpreted_vcp_data);   // data returned by a VCP_Parser
 #endif
 
+
+
 typedef bool (*Format_Normal_Feature_Detail_Function) (
-                 Parsed_Nontable_Vcp_Response* code_info, Version_Spec vcp_version, char * buffer,  int     bufsz);
+                 Nontable_Vcp_Value* code_info, Version_Spec vcp_version, char * buffer,  int     bufsz);
 
 typedef bool (*Format_Table_Feature_Detail_Function) (
                  Buffer * data_bytes, Version_Spec vcp_version, char ** presult_buffer);
@@ -231,6 +233,7 @@ char * get_version_sensitive_feature_name(
 char * get_non_version_specific_feature_name(
        VCP_Feature_Table_Entry * pvft_entry);
 
+#ifdef NOT_PUBLIC
 Format_Normal_Feature_Detail_Function
 get_nontable_feature_detail_function( VCP_Feature_Table_Entry * pvft_entry, Version_Spec vcp_version);
 
@@ -250,7 +253,7 @@ bool vcp_format_table_feature_detail(
        Buffer *                  accumulated_value,
        char * *                  aformatted_data   // address at which to return newly allocated buffer
      );
-
+#endif
 bool vcp_format_feature_detail(
        VCP_Feature_Table_Entry * vcp_entry,
        Version_Spec              vcp_version,
