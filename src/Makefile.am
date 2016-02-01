@@ -165,7 +165,7 @@ ddc/ddc_vcp_version.c \
 i2c/i2c_base_io.c \
 i2c/i2c_bus_core.c \
 i2c/i2c_do_io.c \
-ddc/mccs_dumpload.c \
+ddc/ddc_dumpload.c \
 util/data_structures.c \
 util/debug_util.c \
 util/file_util.c  \

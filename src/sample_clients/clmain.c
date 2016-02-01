@@ -27,7 +27,7 @@
 #include <assert.h>
 #include <stdio.h>
 
-#include "../ddc/mccs_dumpload.h"         // loadvcp.h should be elsewhere, should not be including in main
+#include "../ddc/ddc_dumpload.h"         // loadvcp.h should be elsewhere, should not be including in main
 #include "base/msg_control.h"
 
 #include "libmain/ddct_public.h"

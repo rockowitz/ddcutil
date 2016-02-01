@@ -26,10 +26,6 @@
  * </endcopyright>
  */
 
-
-
-#include "mccs_dumpload.h"
-
 #include <assert.h>
 #include <errno.h>
 #include <fcntl.h>
@@ -43,13 +39,13 @@
 
 #include "util/file_util.h"
 #include "util/glib_util.h"
+#include "util/report_util.h"
 
 #include "base/ddc_errno.h"
 #include "base/common.h"
 #include "base/displays.h"
 #include "base/ddc_packets.h"
 #include "base/msg_control.h"
-#include "util/report_util.h"
 #include "base/util.h"
 #include "base/vcp_feature_values.h"
 
@@ -62,7 +58,7 @@
 #include "ddc/ddc_read_capabilities.h"
 #include "ddc/ddc_displays.h"
 
-#include "ddc/mccs_dumpload.h"
+#include "ddc_dumpload.h"
 
 
 /* Report the contents of a Dumpload_Data struct
@@ -234,6 +230,51 @@ Dumpload_Data* create_dumpload_data_from_g_ptr_array(GPtrArray * garray) {
 }
 
 
+/* Sets multiple VCP values.
+ *
+ * Arguments:
+ *    dh      display handle
+ *    vset    values to set
+ *
+ * Returns:
+ *    0 if success
+ *    status code of first error
+ *
+ * This function stops applying values on the first error encountered, and
+ * returns the value of that error as its status code.
+ */
+Global_Status_Code  ddc_set_multiple(Display_Handle* dh, Vcp_Value_Set vset) {
+   Global_Status_Code gsc = 0;
+   int value_ct = vcp_value_set_size(vset);
+
+   int ndx;
+   for (ndx=0; ndx < value_ct; ndx++) {
+      // new way
+      Single_Vcp_Value * vrec = vcp_value_set_get(vset, ndx);
+#ifdef OLD
+         // old way:
+         Byte feature_code = pdata->vcp_value[ndx].opcode;
+         int  new_value    = pdata->vcp_value[ndx].value;
+         // DBGMSG("feature_code=0x%02x, new_value=%d", feature_code, new_value );
+         assert(vrec->val.c.cur_val == new_value);
+         assert(vrec->opcode == feature_code);
+#endif
+      Byte   feature_code = vrec->opcode;
+      assert(vrec->value_type == NON_TABLE_VCP_CALL);     // Table not yet implemented
+      ushort new_value    = vrec->val.c.cur_val;
+      gsc = set_nontable_vcp_value(dh, feature_code, new_value);
+      if (gsc != 0) {
+         f0printf(FERR, "Error setting value %d for VCP feature code 0x%02x: %s",
+                         new_value, feature_code, gsc_desc(gsc) );
+         f0printf(FERR, "Terminating.");
+         break;
+      }
+   } // for loop
+
+   return gsc;
+}
+
+
 /* Apply VCP settings from a Dumpload_Data struct to
  * the monitor specified in that data structure.
  *
@@ -241,7 +282,7 @@ Dumpload_Data* create_dumpload_data_from_g_ptr_array(GPtrArray * garray) {
  *    pdata      pointer to Dumpload_Data instance
  *
  * Returns:
- *    TO CONVERT TO GSC
+ *    status code
  */
 Global_Status_Code loadvcp_by_dumpload_data(Dumpload_Data* pdata) {
    bool debug = false;
@@ -266,28 +307,7 @@ Global_Status_Code loadvcp_by_dumpload_data(Dumpload_Data* pdata) {
       goto bye;
    }
 
-   int ndx;
-   for (ndx=0; ndx < pdata->vcp_value_ct; ndx++) {
-      // new way
-      Single_Vcp_Value * vrec = vcp_value_set_get(pdata->vcp_values, ndx);
-#ifdef OLD
-         // old way:
-         Byte feature_code = pdata->vcp_value[ndx].opcode;
-         int  new_value    = pdata->vcp_value[ndx].value;
-         // DBGMSG("feature_code=0x%02x, new_value=%d", feature_code, new_value );
-         assert(vrec->val.c.cur_val == new_value);
-         assert(vrec->opcode == feature_code);
-#endif
-      Byte   feature_code = vrec->opcode;
-      ushort new_value    = vrec->val.c.cur_val;
-      gsc = set_nontable_vcp_value(dh, feature_code, new_value);
-      if (gsc != 0) {
-         f0printf(FERR, "Error setting value %d for VCP feature code 0x%02x: %s",
-                         new_value, feature_code, gsc_desc(gsc) );
-         f0printf(FERR, "Terminating.");
-         break;
-      }
-   } // for loop
+   gsc = ddc_set_multiple(dh, pdata->vcp_values);
    ddc_close_display(dh);
 
 bye:
@@ -295,6 +315,15 @@ bye:
 }
 
 
+/* Reads the monitor identification and VCP values from a null terminated
+ * string array and applies those values to the selected monitor.
+ *
+ * Arguments:
+ *    ntsa    null terminated array of strings
+ *
+ * Returns:
+ *    0 if success, status code if not
+ */
 Global_Status_Code loadvcp_by_ntsa(Null_Terminated_String_Array ntsa) {
    bool debug = false;
 
@@ -329,8 +358,17 @@ Global_Status_Code loadvcp_by_ntsa(Null_Terminated_String_Array ntsa) {
 }
 
 
+/* Reads the monitor identification and VCP values from a single string
+ * whose fields are separated by ';' and applies those values to the
+ * selected monitor.
+ *
+ * Arguments:
+ *    catenated    data string
+ *
+ * Returns:
+ *    0 if success, status code if not
+ */
 // n. called from ddct_public:
-
 Global_Status_Code loadvcp_by_string(char * catenated) {
    Null_Terminated_String_Array nta = strsplit(catenated, ";");
    Global_Status_Code gsc = loadvcp_by_ntsa(nta);
@@ -497,49 +535,6 @@ GPtrArray * convert_dumpload_data_to_string_array(Dumpload_Data * data) {
       g_ptr_array_add(strings, strdup(buf));
    }
    return strings;
-}
-
-
-/** Joins a GPtrArray containing pointers to character strings
- *  into a single string,
- *
- *  Arguments:
- *     string   GPtrArray of strings
- *     sepstr   if non-null, separator to insert between joined strings
- *
- *  Returns:
- *     joined string
- */
-char * join_string_g_ptr_array(GPtrArray* strings, char * sepstr) {
-   bool debug = true;
-
-   int ct = strings->len;
-   DBGMSF(debug, "ct = %d", ct);
-   char ** pieces = calloc(ct, sizeof(char*));
-   int ndx;
-   for (ndx=0; ndx < ct; ndx++) {
-      pieces[ndx] = g_ptr_array_index(strings,ndx);
-      DBGMSF(debug, "pieces[%d] = %s", ndx, pieces[ndx]);
-   }
-   char * catenated = strjoin((const char**) pieces, ct, sepstr);
-   DBGMSF(debug, "strlen(catenated)=%ld, catenated=%p, catenated=|%s|", strlen(catenated), catenated, catenated);
-
-#ifdef GLIB_VARIANT
-   // GLIB variant failing when used with file.  why?
-   Null_Terminated_String_Array ntsa_pieces = g_ptr_array_to_ntsa(strings);
-   if (debug) {
-      DBGMSG("ntsa_pieces before call to g_strjoinv():");
-      null_terminated_string_array_show(ntsa_pieces);
-   }
-   // n. our Null_Terminated_String_Array is identical to glib's GStrv
-   gchar sepchar = ';';
-   gchar * catenated2 = g_strjoinv(&sepchar, ntsa_pieces);
-   DBGMSF(debug, "catenated2=%p", catenated2);
-   *pstring = catenated2;
-   assert(strcmp(catenated, catenated2) == 0);
-#endif
-
-   return catenated;
 }
 
 

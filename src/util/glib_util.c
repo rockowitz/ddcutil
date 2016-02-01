@@ -27,6 +27,7 @@
 #include <assert.h>
 #include <stdbool.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "util/glib_util.h"
 
@@ -56,4 +57,51 @@ Null_Terminated_String_Array g_ptr_array_to_ntsa(GPtrArray * garray) {
       ntsa[ndx] = g_ptr_array_index(garray,ndx);
    }
    return ntsa;
+}
+
+
+/** Joins a GPtrArray containing pointers to character strings
+ *  into a single string,
+ *
+ *  Arguments:
+ *     string   GPtrArray of strings
+ *     sepstr   if non-null, separator to insert between joined strings
+ *
+ *  Returns:
+ *     joined string
+ */
+char * join_string_g_ptr_array(GPtrArray* strings, char * sepstr) {
+   bool debug = true;
+
+   int ct = strings->len;
+   if (debug)
+      fprintf(stdout, "(%s) ct = %d\n", __func__, ct);
+   char ** pieces = calloc(ct, sizeof(char*));
+   int ndx;
+   for (ndx=0; ndx < ct; ndx++) {
+      pieces[ndx] = g_ptr_array_index(strings,ndx);
+      if (debug)
+         fprintf(stdout, "(%s) pieces[%d] = %s\n", __func__, ndx, pieces[ndx]);
+   }
+   char * catenated = strjoin((const char**) pieces, ct, sepstr);
+   if (debug)
+      fprintf(stdout, "(%s) strlen(catenated)=%ld, catenated=%p, catenated=|%s|\n",
+                      __func__, strlen(catenated), catenated, catenated);
+
+#ifdef GLIB_VARIANT
+   // GLIB variant failing when used with file.  why?
+   Null_Terminated_String_Array ntsa_pieces = g_ptr_array_to_ntsa(strings);
+   if (debug) {
+      DBGMSG("ntsa_pieces before call to g_strjoinv():");
+      null_terminated_string_array_show(ntsa_pieces);
+   }
+   // n. our Null_Terminated_String_Array is identical to glib's GStrv
+   gchar sepchar = ';';
+   gchar * catenated2 = g_strjoinv(&sepchar, ntsa_pieces);
+   DBGMSF(debug, "catenated2=%p", catenated2);
+   *pstring = catenated2;
+   assert(strcmp(catenated, catenated2) == 0);
+#endif
+
+   return catenated;
 }

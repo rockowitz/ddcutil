@@ -1,4 +1,4 @@
-/* dumpload.h
+/* ddc_dumpload.h
  *
  * Created on: Aug 16, 2014
  *     Author: rock
@@ -26,8 +26,8 @@
  * </endcopyright>
  */
 
-#ifndef DUMPLOAD_H_
-#define DUMPLOAD_H_
+#ifndef DDC_DUMPLOAD_H_
+#define DDC_DUMPLOAD_H_
 
 #include <stdio.h>
 
@@ -81,4 +81,4 @@ dumpvcp_as_dumpload_data(
 
 Global_Status_Code dumpvcp_as_string(Display_Handle * dh, char** result);
 
-#endif /* DUMPLOAD_H_ */
+#endif /* DDC_DUMPLOAD_H_ */

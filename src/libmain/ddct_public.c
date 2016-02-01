@@ -47,9 +47,8 @@
 #include "ddc/ddc_vcp_version.h"
 #include "ddc/ddc_output.h"
 #include "ddc/ddc_services.h"
-#include "ddc/mccs_dumpload.h"
-
 #include "libmain/ddct_public.h"
+#include "../ddc/ddc_dumpload.h"
 
 
 

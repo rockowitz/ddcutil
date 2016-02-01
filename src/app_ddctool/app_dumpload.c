@@ -57,9 +57,8 @@
 #include "ddc/ddc_vcp.h"
 #include "ddc/ddc_read_capabilities.h"
 #include "ddc/ddc_displays.h"
-#include "ddc/mccs_dumpload.h"
-
 #include "app_ddctool/app_dumpload.h"
+#include "../ddc/ddc_dumpload.h"
 
 // Filename creation
 
