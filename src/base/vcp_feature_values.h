@@ -38,16 +38,10 @@
 typedef struct {
    Byte          opcode;
    VCP_Call_Type value_type;      // probably a different type would be better
-#ifdef OLD
-   ushort        value;
-#endif
    union {
       struct {
          Byte *  bytes;
          ushort  bytect;
-#ifdef TRANSITIONAL
-         Buffer* buffer;    // temp for transition
-#endif
       }          t;
       struct {
          ushort max_val;
@@ -68,6 +62,7 @@ typedef struct {
       }         nc;
    }            val;
 } Single_Vcp_Value;
+
 
 Single_Vcp_Value *
 create_nontable_vcp_value(

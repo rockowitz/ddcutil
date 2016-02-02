@@ -32,7 +32,6 @@
 #include <time.h>
 
 #include "base/common.h"
-// #include "base/ddc_base_defs.h"     // for Version_Spec
 #include "base/displays.h"
 #include "base/status_code_mgt.h"
 #include "base/vcp_feature_values.h"
@@ -60,14 +59,11 @@ check_valid_operation_by_feature_id_and_dh(
 
 Global_Status_Code
 collect_raw_subset_values(
-        Display_Handle *    dh,
-        VCP_Feature_Subset  subset,
-        Vcp_Value_Set       vset,
-#ifdef OLD
-        GPtrArray *        collector,
-#endif
-        bool               ignore_unsupported,
-        FILE *             msg_fh);
+      Display_Handle *    dh,
+      VCP_Feature_Subset  subset,
+      Vcp_Value_Set       vset,
+      bool                ignore_unsupported,
+      FILE *              msg_fh);
 
 Global_Status_Code
 get_formatted_value_for_feature_table_entry(
