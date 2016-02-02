@@ -1,7 +1,9 @@
-/* ddc_capabilities.c
+/* ddc_multi_part_io.c
+ *
+ * Handles multi-part reads and writes used for Table features and
+ * Capabilities.
  *
  * Created on: Jun 11, 2014
- *     Author: rock
  *
  * <copyright>
  * Copyright (C) 2014-2015 Sanford Rockowitz <rockowitz@minsoft.com>
