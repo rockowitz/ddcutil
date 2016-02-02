@@ -60,7 +60,7 @@ static Trace_Group TRACE_GROUP = TRC_DDC;
 // Set VCP feature value
 //
 
-/* The workhorse for setting a new VCP feature value.
+/* Sets a non-table VCP feature value.
  *
  * Arguments:
  *    dh            display handle for open display
@@ -68,14 +68,16 @@ static Trace_Group TRACE_GROUP = TRC_DDC;
  *    new_value     new value
  *
  *  Returns:
- *     status code from perform_ddc_write_only()
+ *     status code from ddc_write_only_with_retry()
  */
-Global_Status_Code set_nontable_vcp_value(
-                      Display_Handle * dh,
-                      Byte             feature_code,
-                      int              new_value) {
+Global_Status_Code
+set_nontable_vcp_value(
+      Display_Handle * dh,
+      Byte             feature_code,
+      int              new_value)
+{
    bool debug = false;
-   Trace_Group tg = TRACE_GROUP;  if (debug) tg = 0xFF;
+   Trace_Group tg = (debug) ? 0xFF : TRACE_GROUP;
    TRCMSGTG(tg, "Writing feature 0x%02x , new value = %d\n", feature_code, new_value);
 
    DDC_Packet * request_packet_ptr =
@@ -88,13 +90,70 @@ Global_Status_Code set_nontable_vcp_value(
    if (request_packet_ptr)
       free_ddc_packet(request_packet_ptr);
 
-   // DBGMSG("Returning %p", interpretation_ptr);
+   TRCMSGTG(tg, "Returning %s", gsc_desc(gsc));
+   return gsc;
+}
+
+
+/* Sets a table VCP feature value.
+ *
+ * Arguments:
+ *    dh            display handle for open display
+ *    feature_code  VCP feature code
+ *    bytes         pointer to table bytes
+ *    bytect        number of bytes
+ *
+ *  Returns:
+ *     status code (currently DDCL_UNIMPLEMENTED)
+ */
+Global_Status_Code
+set_table_vcp_value(
+      Display_Handle *  dh,
+      Byte              feature_code,
+      Byte *            bytes,
+      int               bytect)
+{
+   bool debug = false;
+   Trace_Group tg = (debug) ? 0xFF : TRACE_GROUP;
+   TRCMSGTG(tg, "Writing feature 0x%02x , bytect = %d\n", feature_code, bytect);
+
+   Global_Status_Code gsc = DDCL_UNIMPLEMENTED;
+
+
+   TRCMSGTG(tg, "Returning: %s", gsc_desc(gsc));
+   return gsc;
+}
+
+
+/* Sets a VCP feature value.
+ *
+ * Arguments:
+ *    dh            display handle for open display
+ *    vrec          pointer to value record
+ *
+ *  Returns:
+ *     status code
+ */
+Global_Status_Code
+set_vcp_value(
+      Display_Handle *   dh,
+      Single_Vcp_Value * vrec)
+{
+   Global_Status_Code gsc = 0;
+   if (vrec->value_type == NON_TABLE_VCP_CALL) {
+      gsc = set_nontable_vcp_value(dh, vrec->opcode, vrec->val.c.cur_val);
+   }
+   else {
+      assert(vrec->value_type == TABLE_VCP_CALL);
+      gsc = set_table_vcp_value(dh, vrec->opcode, vrec->val.t.bytes, vrec->val.t.bytect);
+   }
+
    return gsc;
 }
 
 
 //
-// Get and show VCP values
+// Get VCP values
 //
 
 /* Gets the value for a non-table feature.
@@ -118,7 +177,7 @@ Global_Status_Code get_nontable_vcp_value(
 
    Global_Status_Code rc = 0;
    // Output_Level output_level = get_output_level();
-   Parsed_Nontable_Vcp_Response * interpretation_ptr = NULL;
+   Parsed_Nontable_Vcp_Response * parsed_response = NULL;
 
    DDC_Packet * request_packet_ptr  = NULL;
    DDC_Packet * response_packet_ptr = NULL;
@@ -135,30 +194,31 @@ Global_Status_Code get_nontable_vcp_value(
            max_read_bytes,
            expected_response_type,
            expected_subtype,
-           false,                       // all_zero_respons_ok
+           false,                       // all_zero_response_ok
            &response_packet_ptr
         );
    TRCMSGTG(tg, "perform_ddc_write_read_with_retry() returned %s", gsc_desc(rc));
 
    if (rc == 0) {
-      interpretation_ptr = (Parsed_Nontable_Vcp_Response *) call_calloc(1, sizeof(Parsed_Nontable_Vcp_Response), "get_vcp_by_DisplayRef");
+      // ??? why is this allocated?  it's discarded by get_interpreted_vcp_code()?
+      parsed_response = (Parsed_Nontable_Vcp_Response *) calloc(1, sizeof(Parsed_Nontable_Vcp_Response));
 
-      rc = get_interpreted_vcp_code(response_packet_ptr, true /* make_copy */, &interpretation_ptr);
+      rc = get_interpreted_vcp_code(response_packet_ptr, true /* make_copy */, &parsed_response);   // ???
       //if (msgLevel >= VERBOSE)
       // if (output_level >= OL_VERBOSE)
       //    report_interpreted_nontable_vcp_response(interpretation_ptr);
    }
 
    if (rc == 0) {
-      if (!interpretation_ptr->valid_response)  {
+      if (!parsed_response->valid_response)  {
          rc = DDCRC_INVALID_DATA;
       }
-      else if (!interpretation_ptr->supported_opcode) {
+      else if (!parsed_response->supported_opcode) {
          rc = DDCRC_REPORTED_UNSUPPORTED;
       }
       if (rc != 0) {
-         free(interpretation_ptr);
-         interpretation_ptr = NULL;
+         free(parsed_response);
+         parsed_response = NULL;
       }
    }
 
@@ -167,8 +227,8 @@ Global_Status_Code get_nontable_vcp_value(
    if (response_packet_ptr)
       free_ddc_packet(response_packet_ptr);
 
-   TRCMSGTG(tg, "Returning %s, *ppinterpreted_code=%p", gsc_name(rc), interpretation_ptr);
-   *ppInterpretedCode = interpretation_ptr;
+   TRCMSGTG(tg, "Returning %s, *ppinterpreted_code=%p", gsc_name(rc), parsed_response);
+   *ppInterpretedCode = parsed_response;
    return rc;
 }
 
@@ -190,7 +250,7 @@ Global_Status_Code get_table_vcp_value(
        Buffer**               pp_table_bytes)
 {
    bool debug = false;
-   Trace_Group tg = TRACE_GROUP;  if (debug) tg = 0xFF;
+   Trace_Group tg = (debug) ? 0xff : TRACE_GROUP;
    TRCMSGTG(tg, "Starting. Reading feature 0x%02x", feature_code);
 
    Global_Status_Code gsc = 0;
@@ -236,9 +296,6 @@ Global_Status_Code get_vcp_value(
        Byte                      feature_code,
        VCP_Call_Type             call_type,
        Single_Vcp_Value **       pvalrec)
-#ifdef OLD
-       Parsed_Vcp_Response**     pp_parsed_response)
-#endif
 {
    bool debug = false;
    Trace_Group tg = TRACE_GROUP;  if (debug) tg = 0xFF;
@@ -247,25 +304,15 @@ Global_Status_Code get_vcp_value(
    Global_Status_Code gsc = 0;
 
    Buffer * buffer = NULL;
-#ifdef OLD
-   *pp_parsed_response = NULL;
-   Parsed_Vcp_Response *  presp = calloc(1, sizeof(Parsed_Vcp_Response));
-#endif
    Parsed_Nontable_Vcp_Response * parsed_nontable_response = NULL;
    Single_Vcp_Value * valrec = NULL;
    switch (call_type) {
 
    case (NON_TABLE_VCP_CALL):
-#ifdef OLD
-         presp->response_type = NON_TABLE_VCP_CALL;
-#endif
          gsc = get_nontable_vcp_value(
                   dh,
                   feature_code,
                   &parsed_nontable_response);
-#ifdef OLD
-         presp->non_table_response = parsed_nontable_response;
-#endif
          if (gsc == 0) {
             valrec = create_nontable_vcp_value(
                         feature_code,
@@ -278,16 +325,10 @@ Global_Status_Code get_vcp_value(
          break;
 
    case (TABLE_VCP_CALL):
-#ifdef OLD
-         presp->response_type = TABLE_VCP_CALL;
-#endif
          gsc = get_table_vcp_value(
                  dh,
                  feature_code,
                  &buffer);
-#ifdef OLD
-         presp->table_response = buffer;
-#endif
          if (gsc == 0) {
             valrec = create_table_vcp_value_by_buffer(feature_code, buffer);
             buffer_free(buffer, __func__);
@@ -295,39 +336,8 @@ Global_Status_Code get_vcp_value(
          break;
    }
 
-#ifdef OLD
-   TRCMSGTG(tg, "Done. Returning gsc=%s, presp=%p",
-                gsc_desc(gsc), presp);
    if (gsc == 0) {
-      assert(presp);
-      assert( presp->response_type == call_type);
-      if (call_type == NON_TABLE_VCP_CALL)
-         assert(presp->non_table_response && !presp->table_response);
-      else
-         assert(!presp->non_table_response && presp->table_response);
-   }
-   else {
-      if (presp)
-         TRCMSGTG(tg, "WARNING: gsc == %s but presp=%p",
-                      gsc_desc(gsc), presp);
-   }
-#endif
-
-#ifdef OLD
-   if (gsc == 0)
-      *pp_parsed_response = presp;
-#endif
-
-   if (gsc == 0) {
-#ifdef OLD
-      valrec = create_single_vcp_value_by_parsed_vcp_response(
-            feature_code,
-            presp);
-#endif
       if (debug) {
-#ifdef OLD
-         report_parsed_vcp_response(presp, 1);
-#endif
          report_single_vcp_value(valrec,1);
       }
       *pvalrec = valrec;
