@@ -59,6 +59,17 @@ check_valid_operation_by_feature_id_and_dh(
 
 
 Global_Status_Code
+collect_raw_subset_values(
+        Display_Handle *    dh,
+        VCP_Feature_Subset  subset,
+        Vcp_Value_Set       vset,
+#ifdef OLD
+        GPtrArray *        collector,
+#endif
+        bool               ignore_unsupported,
+        FILE *             msg_fh);
+
+Global_Status_Code
 get_formatted_value_for_feature_table_entry(
       Display_Handle *           dh,
       VCP_Feature_Table_Entry *  vcp_entry,
@@ -73,34 +84,5 @@ show_vcp_values(
       VCP_Feature_Subset  subset,
       GPtrArray *         collector,
       bool                force_show_unsupported);
-
-char *
-format_timestamp(
-      time_t  time_millis,
-      char *  buf,
-      int     bufsz);
-
-Global_Status_Code
-collect_profile_related_values(
-      Display_Handle*     dh,
-      time_t              timestamp_millis,
-      GPtrArray**         pvals);
-
-
-Global_Status_Code
-collect_raw_subset_values(
-        Display_Handle *    dh,
-        VCP_Feature_Subset  subset,
-        Vcp_Value_Set         vset,
-#ifdef OLD
-        GPtrArray *         collector,
-#endif
-        bool                ignore_unsupported,
-        FILE *              msg_fh);
-
-
-void
-collect_machine_readable_timestamp(
-      time_t time_millis, GPtrArray* vals);
 
 #endif /* DDC_OUTPUT_H_ */

@@ -74,6 +74,7 @@ void report_dumpload_data(Dumpload_Data * data, int depth) {
    int d1 = depth+1;
    rpt_structure_loc("Dumpload_Data", data, depth);
    // rptIval("busno", NULL, data->busno, d1);
+   // TODO: timestamp_millis
    // TODO: show abbreviated edidstr
    rpt_str( "mfg_id",       NULL, data->mfg_id,       d1);
    rpt_str( "model",        NULL, data->model,        d1);
@@ -104,8 +105,8 @@ void report_dumpload_data(Dumpload_Data * data, int depth) {
  * Returns:
  *
  */
-
-Dumpload_Data* create_dumpload_data_from_g_ptr_array(GPtrArray * garray) {
+Dumpload_Data*
+create_dumpload_data_from_g_ptr_array(GPtrArray * garray) {
    bool debug = false;
    DBGMSF(debug, "Starting.");
 
@@ -380,6 +381,146 @@ Global_Status_Code loadvcp_by_string(char * catenated) {
 //
 // Dumpvcp
 //
+
+
+
+//
+// Support for dumpvcp command and returning profile info as string in API
+//
+
+/* Formats a timestamp in a way usable in a filename, specifically:
+ *    YYYMMDD-HHMMSS
+ *
+ * Arguments:
+ *    time_millis   timestamp in milliseconds
+ *    buf           buffer in which to return the formatted timestamp
+ *    bufsz         buffer size
+ *
+ *    If buf == NULL or bufsz == 0, then this function allocates a buffer.
+ *    It is the responsibility of the caller to free this buffer.
+ *
+ *  Returns:
+ *    formatted timestamp
+ */
+char * format_timestamp(time_t time_millis, char * buf, int bufsz) {
+   if (bufsz == 0 || buf == NULL) {
+      bufsz = 128;
+      buf = calloc(1, bufsz);
+   }
+   struct tm tm = *localtime(&time_millis);
+   snprintf(buf, bufsz, "%4d%02d%02d-%02d%02d%02d",
+                  tm.tm_year+1900,
+                  tm.tm_mon+1,
+                  tm.tm_mday,
+                  tm.tm_hour,
+                  tm.tm_min,
+                  tm.tm_sec
+                 );
+   return buf;
+}
+
+
+/* Returns monitor identification information in an array of strings.
+ * The strings are written in the format of the DUMPVCP command.
+ *
+ * Arguments:
+ *    dh       display handle for monitor
+ *    vals     GPtrArray to which the identification strings are appended.
+ *
+ * Returns:  nothing
+ */
+void collect_machine_readable_monitor_id(Display_Handle * dh, GPtrArray * vals) {
+   char buf[400];
+   int bufsz = sizeof(buf)/sizeof(char);
+
+   Parsed_Edid * edid = ddc_get_parsed_edid_by_display_handle(dh);
+   snprintf(buf, bufsz, "MFG_ID  %s",  edid->mfg_id);
+   g_ptr_array_add(vals, strdup(buf));
+   snprintf(buf, bufsz, "MODEL   %s",  edid->model_name);
+   g_ptr_array_add(vals, strdup(buf));
+   snprintf(buf, bufsz, "SN      %s",  edid->serial_ascii);
+   g_ptr_array_add(vals, strdup(buf));
+
+   char hexbuf[257];
+   hexstring2(edid->bytes, 128,
+              NULL /* no separator */,
+              true /* uppercase */,
+              hexbuf, 257);
+   snprintf(buf, bufsz, "EDID    %s", hexbuf);
+   g_ptr_array_add(vals, strdup(buf));
+}
+
+// Used only in dumpload - move there?
+
+/* Appends timestamp lines to an array of strings.
+ * The strings are written in the format of the DUMPVCP command.
+ *
+ * Arguments:
+ *    dh       display handle for monitor
+ *    vals     GPtrArray to which the timestamp strings are appended.
+ *
+ * Returns:  nothing
+ */
+void collect_machine_readable_timestamp(time_t time_millis, GPtrArray* vals) {
+   // temporarily use same output format as filename, but format the
+   // date separately herefor flexibility
+   char timestamp_buf[30];
+   format_timestamp(time_millis, timestamp_buf, sizeof(timestamp_buf));
+   char buf[400];
+   int bufsz = sizeof(buf)/sizeof(char);
+   snprintf(buf, bufsz, "TIMESTAMP_TEXT %s", timestamp_buf );
+   g_ptr_array_add(vals, strdup(buf));
+
+   snprintf(buf, bufsz, "TIMESTAMP_MILLIS %ld", time_millis);
+   g_ptr_array_add(vals, strdup(buf));
+}
+
+// for completeness, currently unused
+/* Save profile related information (timestamp, monitor identification,
+ * VCP values) in external form in a GPtrArray of string.
+ *
+ * Arguments:
+ *    dh           display handle
+ *    time_millis  timestamp in milliseconds
+ *    pvals        Location of newly allocated GptrArray
+ *
+ * Returns:
+ *    status code
+ *
+ * It is the responsibility of the caller to free the newly allocated
+ * GPtrArray.
+ */
+Global_Status_Code
+collect_profile_related_values(
+      Display_Handle*  dh,
+      time_t           timestamp_millis,
+      GPtrArray**      pvals)
+{
+   bool debug = false;
+   DBGMSF(debug, "Starting");
+   assert( get_output_level() == OL_PROGRAM);
+   Global_Status_Code gsc = 0;
+   GPtrArray * vals = g_ptr_array_sized_new(50);
+
+   collect_machine_readable_timestamp(timestamp_millis, vals);
+   collect_machine_readable_monitor_id(dh, vals);
+   gsc = show_vcp_values(
+            dh,
+            VCP_SUBSET_PROFILE,
+            vals,
+            false /* force_show_unsupported */);
+   *pvals = vals;
+   if (debug) {
+      DBGMSG("Done.  *pvals->len=%d *pvals: ", vals->len);
+      int ndx = 0;
+      for (;ndx < vals->len; ndx++) {
+         DBGMSG("  |%s|", g_ptr_array_index(vals,ndx) );
+      }
+   }
+   return gsc;
+}
+
+
 
 /* Primary function for the DUMPVCP command.
  *

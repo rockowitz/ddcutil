@@ -60,7 +60,7 @@
 static Trace_Group TRACE_GROUP = TRC_DDC;
 
 //
-// Show VCP value
+// VCP Feature Table inquiry
 //
 
 bool is_table_feature_by_display_handle(
@@ -115,9 +115,24 @@ check_valid_operation_by_feature_id_and_dh(
 }
 
 
-// work in progress - eventually move elsewhere
+//
+// Get raw VCP feature values
+//
 
-
+/* Get the raw value (i.e. bytes) for a feature table entry.
+ *
+ * Convert and refine status codes, issue error messages.
+ *
+ * Arguments;
+ *    dh                  display handle
+ *    vcp_entry           pointer to VCP_Feature_Table_Entry for feature
+ *    ignore_unsupported  if false, issue error message for unsupported feature
+ *    pvalrec             location where to return pointer to feature value
+ *    msg_fh              file handle for error messages
+ *
+ * Returns:
+ *    status code
+ */
 Global_Status_Code
 get_raw_value_for_feature_table_entry(
       Display_Handle *           dh,
@@ -218,6 +233,123 @@ get_raw_value_for_feature_table_entry(
    TRCMSGTG(tg, "Done.  Returning: %s", gsc_desc(gsc));
    return gsc;
 }
+
+
+/* Gather values for the features in a feature set.
+ *
+ * Arguments:
+ *    dh                 display handle
+ *    feature_set        feature set identifying features to be queried
+ *    vset               append values retrieved to this value set
+ *    ignore_unspported  unsupported features are not an error
+ *    msg_fh             destination for error messages
+ *
+ * Returns:
+ *    status code
+ */
+Global_Status_Code
+collect_raw_feature_set_values(
+      Display_Handle *      dh,
+      VCP_Feature_Set       feature_set,
+      Vcp_Value_Set         vset,
+#ifdef OLD
+      GPtrArray *           collector,
+#endif
+      bool                  ignore_unsupported,  // if false, is error if unsupported
+      FILE *                msg_fh)
+{
+   Global_Status_Code master_status_code = 0;
+   bool debug = false;
+   DBGMSF(debug, "Starting.");
+   // Version_Spec vcp_version = get_vcp_version_by_display_handle(dh);
+   int features_ct = get_feature_set_size(feature_set);
+   int ndx;
+   for (ndx=0; ndx< features_ct; ndx++) {
+      VCP_Feature_Table_Entry * entry = get_feature_set_entry(feature_set, ndx);
+      DBGMSF(debug,"ndx=%d, feature = 0x%02x", ndx, entry->code);
+#ifdef OLD
+      Parsed_Vcp_Response * response;
+#endif
+      Single_Vcp_Value *    pvalrec;
+      Global_Status_Code cur_status_code =
+       get_raw_value_for_feature_table_entry(
+         dh,
+         entry,
+         ignore_unsupported,
+         &pvalrec,
+#ifdef OLD
+         &response,
+#endif
+         msg_fh);
+      if (cur_status_code == 0) {
+#ifdef OLD
+         g_ptr_array_add(collector, response);
+#endif
+         vcp_value_set_add(vset, pvalrec);
+      }
+      else if ( (cur_status_code == DDCRC_REPORTED_UNSUPPORTED ||
+                 cur_status_code == DDCRC_DETERMINED_UNSUPPORTED
+                ) && ignore_unsupported
+              )
+      {
+         // no problem
+      }
+      else {
+         master_status_code = cur_status_code;
+         break;
+      }
+   }
+
+   return master_status_code;
+}
+
+
+/* Gather values for the features in a named feature subset
+ *
+ * Arguments:
+ *    dh                 display handle
+ *    subset             feature set identifier
+ *    vset               append values retrieved to this value set
+ *    ignore_unspported  unsupported features are not an error
+ *    msg_fh             destination for error messages
+ *
+ * Returns:
+ *    status code
+ */
+Global_Status_Code
+collect_raw_subset_values(
+        Display_Handle *    dh,
+        VCP_Feature_Subset  subset,
+        Vcp_Value_Set       vset,
+#ifdef OLD
+        GPtrArray *         collector,
+#endif
+        bool                ignore_unsupported,
+        FILE *              msg_fh)
+{
+   Global_Status_Code gsc = 0;
+   bool debug = false;
+   DBGMSF(debug, "Starting.  subset=%d  dh=%s", subset, display_handle_repr(dh) );
+   Version_Spec vcp_version = get_vcp_version_by_display_handle(dh);
+   // DBGMSG("VCP version = %d.%d", vcp_version.major, vcp_version.minor);
+   VCP_Feature_Set feature_set = create_feature_set(subset, vcp_version);
+   if (debug)
+      report_feature_set(feature_set, 0);
+
+   gsc = collect_raw_feature_set_values(
+            dh, feature_set, vset,
+#ifdef OLD
+            collector,
+#endif
+            ignore_unsupported, msg_fh);
+   DBGMSF(debug, "Done");
+   return gsc;
+}
+
+
+//
+// Get formatted feature values
+//
 
 
 Global_Status_Code
@@ -365,64 +497,6 @@ get_formatted_value_for_feature_table_entry(
 }
 
 
-
-// TODO: move to more appropriate location once done
-Global_Status_Code
-collect_raw_feature_set_values(
-      Display_Handle *      dh,
-      VCP_Feature_Set       feature_set,
-      Vcp_Value_Set         vset,
-#ifdef OLD
-      GPtrArray *           collector,
-#endif
-      bool                  ignore_unsupported,  // if false, is error if unsupported
-      FILE *                msg_fh)
-{
-   Global_Status_Code master_status_code = 0;
-   bool debug = false;
-   DBGMSF(debug, "Starting.");
-   // Version_Spec vcp_version = get_vcp_version_by_display_handle(dh);
-   int features_ct = get_feature_set_size(feature_set);
-   int ndx;
-   for (ndx=0; ndx< features_ct; ndx++) {
-      VCP_Feature_Table_Entry * entry = get_feature_set_entry(feature_set, ndx);
-      DBGMSF(debug,"ndx=%d, feature = 0x%02x", ndx, entry->code);
-#ifdef OLD
-      Parsed_Vcp_Response * response;
-#endif
-      Single_Vcp_Value *    pvalrec;
-      Global_Status_Code cur_status_code =
-       get_raw_value_for_feature_table_entry(
-         dh,
-         entry,
-         ignore_unsupported,
-         &pvalrec,
-#ifdef OLD
-         &response,
-#endif
-         msg_fh);
-      if (cur_status_code == 0) {
-#ifdef OLD
-         g_ptr_array_add(collector, response);
-#endif
-         vcp_value_set_add(vset, pvalrec);
-      }
-      else if ( (cur_status_code == DDCRC_REPORTED_UNSUPPORTED ||
-                 cur_status_code == DDCRC_DETERMINED_UNSUPPORTED
-                ) && ignore_unsupported
-              )
-      {
-         // no problem
-      }
-      else {
-         master_status_code = cur_status_code;
-         break;
-      }
-   }
-
-   return master_status_code;
-}
-
 Global_Status_Code
 show_feature_set_values(
       Display_Handle *      dh,
@@ -508,43 +582,14 @@ show_feature_set_values(
 }
 
 
-Global_Status_Code
-collect_raw_subset_values(
-        Display_Handle *    dh,
-        VCP_Feature_Subset  subset,
-        Vcp_Value_Set       vset,
-#ifdef OLD
-        GPtrArray *         collector,
-#endif
-        bool                ignore_unsupported,
-        FILE *              msg_fh)
-{
-   Global_Status_Code gsc = 0;
-   bool debug = false;
-   DBGMSF(debug, "Starting.  subset=%d  dh=%s", subset, display_handle_repr(dh) );
-   Version_Spec vcp_version = get_vcp_version_by_display_handle(dh);
-   // DBGMSG("VCP version = %d.%d", vcp_version.major, vcp_version.minor);
-   VCP_Feature_Set feature_set = create_feature_set(subset, vcp_version);
-   if (debug)
-      report_feature_set(feature_set, 0);
-
-   gsc = collect_raw_feature_set_values(
-            dh, feature_set, vset,
-#ifdef OLD
-            collector,
-#endif
-            ignore_unsupported, msg_fh);
-   DBGMSF(debug, "Done");
-   return gsc;
-}
-
 
 /* Shows the VCP values for all features in a VCP feature subset.
  *
  * Arguments:
  *    dh         display handle for open display
- *    subset     feature subset
+ *    subset     feature subset id
  *    collector  accumulates output    // if null, write to stdout
+ *    force_show_unsupported
  *
  * Returns:
  *    status code
@@ -568,128 +613,6 @@ show_vcp_values(
    gsc = show_feature_set_values(
             dh, feature_set, collector, force_show_unsupported);
    DBGMSF(debug, "Done");
-   return gsc;
-}
-
-
-//
-// Support for dumpvcp command and returning profile info as string in API
-//
-
-/* Formats a timestamp in a way usable in a filename, specifically:
- *    YYYMMDD-HHMMSS
- *
- * Arguments:
- *    time_millis   timestamp in milliseconds
- *    buf           buffer in which to return the formatted timestamp
- *    bufsz         buffer size
- *
- *    If buf == NULL or bufsz == 0, then this function allocates a buffer.
- *    It is the responsibility of the caller to free this buffer.
- *
- *  Returns:
- *    formatted timestamp
- */
-char * format_timestamp(time_t time_millis, char * buf, int bufsz) {
-   if (bufsz == 0 || buf == NULL) {
-      bufsz = 128;
-      buf = calloc(1, bufsz);
-   }
-   struct tm tm = *localtime(&time_millis);
-   snprintf(buf, bufsz, "%4d%02d%02d-%02d%02d%02d",
-                  tm.tm_year+1900,
-                  tm.tm_mon+1,
-                  tm.tm_mday,
-                  tm.tm_hour,
-                  tm.tm_min,
-                  tm.tm_sec
-                 );
-   return buf;
-}
-
-
-/* Returns monitor identification information in an array of strings.
- * The strings are written in the format of the DUMPVCP command.
- *
- * Arguments:
- *    dh       display handle for monitor
- *    vals     GPtrArray to which the identification strings are appended.
- *
- * Returns:  nothing
- */
-void collect_machine_readable_monitor_id(Display_Handle * dh, GPtrArray * vals) {
-   char buf[400];
-   int bufsz = sizeof(buf)/sizeof(char);
-
-   Parsed_Edid * edid = ddc_get_parsed_edid_by_display_handle(dh);
-   snprintf(buf, bufsz, "MFG_ID  %s",  edid->mfg_id);
-   g_ptr_array_add(vals, strdup(buf));
-   snprintf(buf, bufsz, "MODEL   %s",  edid->model_name);
-   g_ptr_array_add(vals, strdup(buf));
-   snprintf(buf, bufsz, "SN      %s",  edid->serial_ascii);
-   g_ptr_array_add(vals, strdup(buf));
-
-   char hexbuf[257];
-   hexstring2(edid->bytes, 128,
-              NULL /* no separator */,
-              true /* uppercase */,
-              hexbuf, 257);
-   snprintf(buf, bufsz, "EDID    %s", hexbuf);
-   g_ptr_array_add(vals, strdup(buf));
-}
-
-
-/* Appends timestamp lines to an array of strings.
- * The strings are written in the format of the DUMPVCP command.
- *
- * Arguments:
- *    dh       display handle for monitor
- *    vals     GPtrArray to which the timestamp strings are appended.
- *
- * Returns:  nothing
- */
-void collect_machine_readable_timestamp(time_t time_millis, GPtrArray* vals) {
-   // temporarily use same output format as filename, but format the
-   // date separately herefor flexibility
-   char timestamp_buf[30];
-   format_timestamp(time_millis, timestamp_buf, sizeof(timestamp_buf));
-   char buf[400];
-   int bufsz = sizeof(buf)/sizeof(char);
-   snprintf(buf, bufsz, "TIMESTAMP_TEXT %s", timestamp_buf );
-   g_ptr_array_add(vals, strdup(buf));
-
-   snprintf(buf, bufsz, "TIMESTAMP_MILLIS %ld", time_millis);
-   g_ptr_array_add(vals, strdup(buf));
-}
-
-
-Global_Status_Code
-collect_profile_related_values(
-      Display_Handle*  dh,
-      time_t           timestamp_millis,
-      GPtrArray**      pvals)
-{
-   bool debug = false;
-   DBGMSF(debug, "Starting");
-   assert( get_output_level() == OL_PROGRAM);
-   Global_Status_Code gsc = 0;
-   GPtrArray * vals = g_ptr_array_sized_new(50);
-
-   collect_machine_readable_timestamp(timestamp_millis, vals);
-   collect_machine_readable_monitor_id(dh, vals);
-   gsc = show_vcp_values(
-            dh,
-            VCP_SUBSET_PROFILE,
-            vals,
-            false /* force_show_unsupported */);
-   *pvals = vals;
-   if (debug) {
-      DBGMSG("Done.  *pvals->len=%d *pvals: ", vals->len);
-      int ndx = 0;
-      for (;ndx < vals->len; ndx++) {
-         DBGMSG("  |%s|", g_ptr_array_index(vals,ndx) );
-      }
-   }
    return gsc;
 }
 
