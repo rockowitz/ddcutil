@@ -39,13 +39,23 @@
 
 typedef void * VCP_Feature_Set;
 
-VCP_Feature_Set create_feature_set(VCP_Feature_Subset subset, Version_Spec vcp_version);
-VCP_Feature_Set create_single_feature_set_by_vcp_entry(VCP_Feature_Table_Entry * vcp_entry);
-VCP_Feature_Set create_single_feature_set_by_hexid(Byte id, bool force);
-VCP_Feature_Set create_single_feature_set_by_charid(Byte id, bool force);
-VCP_Feature_Table_Entry * get_feature_set_entry(VCP_Feature_Set feature_set, int index);
-int get_feature_set_size(VCP_Feature_Set feature_set);
-VCP_Feature_Subset get_feature_set_subset_id(VCP_Feature_Set feature_set);
+VCP_Feature_Set
+create_feature_set(VCP_Feature_Subset subset, Version_Spec vcp_version);
+
+VCP_Feature_Set
+create_single_feature_set_by_vcp_entry(VCP_Feature_Table_Entry * vcp_entry);
+
+VCP_Feature_Set
+create_single_feature_set_by_hexid(Byte id, bool force);
+
+VCP_Feature_Table_Entry *
+get_feature_set_entry(VCP_Feature_Set feature_set, int index);
+
+int
+get_feature_set_size(VCP_Feature_Set feature_set);
+
+VCP_Feature_Subset
+get_feature_set_subset_id(VCP_Feature_Set feature_set);
 
 void report_feature_set(VCP_Feature_Set feature_set, int depth);
 

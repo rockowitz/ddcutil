@@ -122,36 +122,22 @@ typedef enum {
 #define MCCS_V22          0x80
 
 
-
-#ifdef ALTERNATIVE
-// VCP_Feature_Parser is function that parses data from a VCP get feature response
 typedef
-int                    // return code
-(*VCP_Feature_Parser) (
-      Byte *  vcp_data_bytes,
-      int     bytect,
-      Byte    requested_vcp_code,
-      void ** aux_data,           // where to store parsed data
-      bool    debug);             //  debug)
+bool (*Format_Normal_Feature_Detail_Function) (
+          Nontable_Vcp_Value*  code_info,
+          Version_Spec         vcp_version,
+          char *               buffer,
+          int                  bufsz);
 
-// didn't work out
-// VCP_Feature_Reporter parses the data returned by a VCP_Feature_Parser
 typedef
-void                                   // returns nothing
-(*VCP_Feature_Reporter) (
-      void *  interpreted_vcp_data);   // data returned by a VCP_Parser
-#endif
-
-
-
-typedef bool (*Format_Normal_Feature_Detail_Function) (
-                 Nontable_Vcp_Value* code_info, Version_Spec vcp_version, char * buffer,  int     bufsz);
-
-typedef bool (*Format_Table_Feature_Detail_Function) (
-                 Buffer * data_bytes, Version_Spec vcp_version, char ** presult_buffer);
+bool (*Format_Table_Feature_Detail_Function) (
+          Buffer *            data_bytes,
+          Version_Spec        vcp_version,
+          char **             presult_buffer);
 
 // Describes one simple NC feature value
-typedef  struct {
+typedef
+struct {
    Byte   value_code;
    char * value_name;
 } Feature_Value_Entry;
@@ -168,7 +154,6 @@ extern Feature_Value_Entry * pxc8_display_controller_type_values;
 // } Version_Specific_Info;
 
 
-
 typedef
 struct {
    Byte                                  code;
@@ -176,8 +161,6 @@ struct {
    Format_Normal_Feature_Detail_Function nontable_formatter;
    Format_Table_Feature_Detail_Function  table_formatter;
    Feature_Value_Entry *                 default_sl_values;
-   // VCP_Feature_Parser                 data_parser;
-   // VCP_Feature_Reporter               data_reporter;
    Byte                                  vcp_global_flags;
    ushort                                vcp_spec_groups;
    VCP_Feature_Subset                    vcp_subsets;
@@ -194,83 +177,85 @@ struct {
    Feature_Value_Entry *                 v22_sl_values;
 } VCP_Feature_Table_Entry;
 
-int   vcp_get_feature_code_count();
+int
+vcp_get_feature_code_count();
 
-void report_vcp_feature_table_entry(VCP_Feature_Table_Entry * entry, int depth);
+void
+report_vcp_feature_table_entry(VCP_Feature_Table_Entry * entry, int depth);
 
-VCP_Feature_Table_Entry * vcp_get_feature_table_entry(int ndx);
-VCP_Feature_Table_Entry * vcp_create_dummy_feature_for_hexid(Byte id);
-VCP_Feature_Table_Entry * vcp_find_feature_by_hexid(Byte id);
-VCP_Feature_Table_Entry * vcp_find_feature_by_hexid_w_default(Byte id);
+VCP_Feature_Table_Entry *
+vcp_get_feature_table_entry(int ndx);
 
-Feature_Value_Entry * find_feature_values_new(Byte feature_code, Version_Spec vcp_version);
+VCP_Feature_Table_Entry *
+vcp_create_dummy_feature_for_hexid(Byte id);
 
-Feature_Value_Entry * find_feature_values_for_capabilities(Byte feature_code, Version_Spec vcp_version);
+VCP_Feature_Table_Entry *
+vcp_find_feature_by_hexid(Byte id);
 
-char * get_feature_value_name(Feature_Value_Entry * value_entries, Byte value_id);
+VCP_Feature_Table_Entry *
+vcp_find_feature_by_hexid_w_default(Byte id);
 
-bool has_version_specific_features(
+Feature_Value_Entry *
+find_feature_values(Byte feature_code, Version_Spec vcp_version);
+
+Feature_Value_Entry *
+find_feature_values_for_capabilities(Byte feature_code, Version_Spec vcp_version);
+
+char *
+get_feature_value_name(Feature_Value_Entry * value_entries, Byte value_id);
+
+bool
+has_version_specific_features(
       VCP_Feature_Table_Entry * pvft_entry);
 
-Version_Spec get_highest_non_deprecated_version(
+Version_Spec
+get_highest_non_deprecated_version(
       VCP_Feature_Table_Entry * pvft_entry);
 
-Version_Feature_Flags get_version_specific_feature_flags(
+Version_Feature_Flags
+get_version_specific_feature_flags(
        VCP_Feature_Table_Entry * pvft_entry,
        Version_Spec              vcp_version);
 
-Version_Feature_Flags get_version_sensitive_feature_flags(
+Version_Feature_Flags
+get_version_sensitive_feature_flags(
        VCP_Feature_Table_Entry * pvft_entry,
        Version_Spec              vcp_version);
 
-bool is_feature_supported_in_version(
+bool
+is_feature_supported_in_version(
       VCP_Feature_Table_Entry * pvft_entry,
       Version_Spec              vcp_version);
 
-
-bool is_feature_readable_by_vcp_version(
+bool
+is_feature_readable_by_vcp_version(
       VCP_Feature_Table_Entry * pvft_entry,
       Version_Spec              vcp_version);
 
-bool is_feature_writable_by_vcp_version(
+bool
+is_feature_writable_by_vcp_version(
       VCP_Feature_Table_Entry * pvft_entry,
       Version_Spec              vcp_version);
 
-bool is_version_conditional_vcp_type(VCP_Feature_Table_Entry * pvft_entry);
+bool
+is_version_conditional_vcp_type(VCP_Feature_Table_Entry * pvft_entry);
 
-Feature_Value_Entry * get_version_specific_sl_values(
+Feature_Value_Entry *
+get_version_specific_sl_values(
        VCP_Feature_Table_Entry * pvft_entry,
        Version_Spec              vcp_version);
 
-char * get_version_sensitive_feature_name(
+char *
+get_version_sensitive_feature_name(
        VCP_Feature_Table_Entry * pvft_entry,
        Version_Spec              vcp_version);
 
-char * get_non_version_specific_feature_name(
+char *
+get_non_version_specific_feature_name(
        VCP_Feature_Table_Entry * pvft_entry);
 
-#ifdef NOT_PUBLIC
-Format_Normal_Feature_Detail_Function
-get_nontable_feature_detail_function( VCP_Feature_Table_Entry * pvft_entry, Version_Spec vcp_version);
-
-Format_Table_Feature_Detail_Function
-get_table_feature_detail_function(VCP_Feature_Table_Entry * pvft_entry, Version_Spec vcp_version);
-
-bool vcp_format_nontable_feature_detail(
-        VCP_Feature_Table_Entry * vcp_entry,
-        Version_Spec              vcp_version,
-        Parsed_Nontable_Vcp_Response *    code_info,
-        char *                    buffer,
-        int                       bufsz) ;
-
-bool vcp_format_table_feature_detail(
-       VCP_Feature_Table_Entry * vcp_entry,
-       Version_Spec              vcp_version,
-       Buffer *                  accumulated_value,
-       char * *                  aformatted_data   // address at which to return newly allocated buffer
-     );
-#endif
-bool vcp_format_feature_detail(
+bool
+vcp_format_feature_detail(
        VCP_Feature_Table_Entry * vcp_entry,
        Version_Spec              vcp_version,
        Single_Vcp_Value *        valrec,
@@ -280,11 +265,16 @@ bool vcp_format_feature_detail(
        char * *                  aformatted_data
      );
 
-char* get_feature_name_by_id_only(Byte feature_code);
-char* get_feature_name_by_id_and_vcp_version(Byte feature_code, Version_Spec vspec);
+char*
+get_feature_name_by_id_only(Byte feature_code);
 
-void vcp_list_feature_codes(FILE * fh);
+char*
+get_feature_name_by_id_and_vcp_version(Byte feature_code, Version_Spec vspec);
 
-void init_vcp_feature_codes();
+void
+vcp_list_feature_codes(FILE * fh);
+
+void
+init_vcp_feature_codes();
 
 #endif /* VCP_FEATURE_CODES_H_ */

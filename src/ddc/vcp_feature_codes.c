@@ -56,28 +56,28 @@ static Feature_Value_Entry x14_color_preset_absolute_values[];
 static Feature_Value_Entry x8d_tv_audio_mute_source_values[];
 static Feature_Value_Entry x8d_sh_blank_screen_values[];
 bool default_table_feature_detail_function(
-        Buffer *                       data,
-        Version_Spec                   vcp_version,
-        char**                         presult);
+        Buffer *              data,
+        Version_Spec          vcp_version,
+        char**                presult);
 bool format_feature_detail_debug_continuous(
-        Nontable_Vcp_Value * code_info,
-        Version_Spec                   vcp_version,
-        char *                         buffer,
-        int                            bufsz);
+        Nontable_Vcp_Value *  code_info,
+        Version_Spec          vcp_version,
+        char *                buffer,
+        int                   bufsz);
 bool format_feature_detail_standard_continuous(
-        Nontable_Vcp_Value * code_info,
-        Version_Spec                   vcp_version,
-        char *                         buffer,
-        int                            bufsz);
+        Nontable_Vcp_Value *  code_info,
+        Version_Spec          vcp_version,
+        char *                buffer,
+        int                   bufsz);
 bool format_feature_detail_sl_lookup(
         Nontable_Vcp_Value * code_info,
-        Version_Spec                   vcp_version,
-        char *                         buffer,
-        int                            bufsz);
+        Version_Spec          vcp_version,
+        char *                buffer,
+        int                   bufsz);
 
 
 //
-// Functions applicable to VCP_Feature_Table as a whole
+// Functions implementing the VCPINFO command
 //
 
 /* Creates humanly readable interpretation of VCP feature flags.
@@ -375,8 +375,9 @@ void report_vcp_feature_table_entry(VCP_Feature_Table_Entry * pentry, int depth)
       rpt_vstring(d1, "Simple NC values:");
       report_sl_values(pentry->default_sl_values, d1+1);
    }
-
 }
+
+// End of VCPINFO related functions
 
 
 //
@@ -708,7 +709,7 @@ get_table_feature_detail_function( VCP_Feature_Table_Entry * pvft_entry, Version
 bool vcp_format_nontable_feature_detail(
         VCP_Feature_Table_Entry * vcp_entry,
         Version_Spec              vcp_version,
-        Nontable_Vcp_Value *    code_info,
+        Nontable_Vcp_Value *      code_info,
         char *                    buffer,
         int                       bufsz)
 {
@@ -736,6 +737,20 @@ bool vcp_format_table_feature_detail(
 }
 
 
+/* Given a feature table entry and a raw feature value,
+ * return a formatted string interpretation of the value.
+ *
+ * Arguments:
+ *    vcp_entry        vcp_feature_table_entry
+ *    vcp_version      monitor VCP version
+ *    valrec           feature value
+ *    aformatted_data  location where to return formatted string value
+ *
+ * Returns:
+ *    true if formatting successful, false if not
+ *
+ * It is the caller's responsibility to free the returned string.
+ */
 bool vcp_format_feature_detail(
        VCP_Feature_Table_Entry * vcp_entry,
        Version_Spec              vcp_version,
@@ -947,8 +962,17 @@ bool format_feature_detail_x73_lut_size(
 // stored in the SL byte
 //
 
-
-Feature_Value_Entry * find_feature_values_new(Byte feature_code, Version_Spec vcp_version) {
+/* Returns the feature value table for a feature.   In a few cases, the table
+ * is VCP version sensitive.
+ *
+ * Arguments:
+ *    feature_code    VCP feature id
+ *    vcp_version     VCP version of monitor
+ *
+ * Returns:
+ *   pointer to feature value table, NULL if not found
+ */
+Feature_Value_Entry * find_feature_values(Byte feature_code, Version_Spec vcp_version) {
    bool debug = false;
    if (debug)
       DBGMSG("Starting. feature_code=0x%02x", feature_code);
@@ -956,26 +980,12 @@ Feature_Value_Entry * find_feature_values_new(Byte feature_code, Version_Spec vc
    VCP_Feature_Table_Entry * pentry = vcp_find_feature_by_hexid(feature_code);
    // may not be found if called for capabilities and it's a mfg specific code
    if (pentry) {
-      // TODO:
-      // if VCP_V2NC_V3T, check version id, if V3 return NULL
-      //
-      // could add a VCP feature table entry for v3 version values a distinguished from V2
-
       Version_Feature_Flags feature_flags = get_version_specific_feature_flags(pentry, vcp_version);
       assert(feature_flags);
-      // if (feature_flags) {
-         // DBGMSG("new way");
-         if (feature_flags & VCP2_SIMPLE_NC) {
-            result = get_version_specific_sl_values(pentry, vcp_version);
-         }
-//      }
-//      else {
-//         // DBGMSG("old way");
-//         if (pentry->flags & VCP_NCSL) {
-//            assert(pentry->v20_sl_values);
-//            result = pentry->v20_sl_values;
-//         }
-//      }
+
+      if (feature_flags & VCP2_SIMPLE_NC) {
+         result = get_version_specific_sl_values(pentry, vcp_version);
+      }
    }
    if (debug)
       DBGMSG("Starting. feature_code=0x%02x. Returning: %p", feature_code, result);
@@ -1002,7 +1012,7 @@ Feature_Value_Entry * find_feature_values_for_capabilities(Byte feature_code, Ve
    else {
       // returns NULL if feature_code not found, which would be the case, e.g., for a
       // manufacturer specific code
-      result = find_feature_values_new(feature_code, vcp_version);
+      result = find_feature_values(feature_code, vcp_version);
    }
 
    if (debug)
@@ -1054,11 +1064,11 @@ char * get_feature_value_name(Feature_Value_Entry * value_entries, Byte value_id
  * Returns:
  *    explanation string, or "Invalid value" if value_id not found
  */
-char * lookup_value_name_new(
+char * lookup_value_name(
           Byte          feature_code,
           Version_Spec  vcp_version,
           Byte          sl_value) {
-   Feature_Value_Entry * values_for_feature = find_feature_values_new(feature_code, vcp_version);
+   Feature_Value_Entry * values_for_feature = find_feature_values(feature_code, vcp_version);
    assert(values_for_feature);
    char * name = get_feature_value_name(values_for_feature, sl_value);
    if (!name)
@@ -1140,11 +1150,11 @@ bool format_feature_detail_sl_byte(
  */
 bool format_feature_detail_sl_lookup(
         Nontable_Vcp_Value *  code_info,
-        Version_Spec            vcp_version,
-        char *                  buffer,
-        int                     bufsz)
+        Version_Spec          vcp_version,
+        char *                buffer,
+        int                   bufsz)
 {
-   char * s = lookup_value_name_new(code_info->vcp_code, vcp_version, code_info->sl);
+   char * s = lookup_value_name(code_info->vcp_code, vcp_version, code_info->sl);
    snprintf(buffer, bufsz,"%s (sl=0x%02x)", s, code_info->sl);
    return true;
 }

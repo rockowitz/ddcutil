@@ -218,6 +218,19 @@ Global_Status_Code get_table_vcp_value(
 }
 
 
+/* Gets the value of a VCP feature.
+ *
+ * Arguments:
+ *   dh              handle for open display
+ *   feature_code    feature code id
+ *   call_type       indicates whether table or non-table
+ *   pvalrec         location where to return newly allocated result
+ *
+ * Returns:
+ *   status code
+ *
+ * The caller is responsible for freeing the value result returned.
+ */
 Global_Status_Code get_vcp_value(
        Display_Handle *          dh,
        Byte                      feature_code,

@@ -538,7 +538,7 @@ DDCT_Status ddct_get_nc_feature_value_name(
          // this should be a function in vcp_feature_codes:
          char * feature_name = NULL;
          Version_Spec vspec = dh->vcp_version;
-         Feature_Value_Entry * feature_value_entries = find_feature_values_new(feature_code, vspec);
+         Feature_Value_Entry * feature_value_entries = find_feature_values(feature_code, vspec);
          if (feature_value_entries == NULL) {
             rc = DDCL_ARG;
          }

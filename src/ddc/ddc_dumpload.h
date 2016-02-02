@@ -68,6 +68,8 @@ void report_dumpload_data(Dumpload_Data * data, int depth);
 // TODO: implement:
 // free_dupload_data(Dumpload_Data * pdata);
 
+char * format_timestamp(time_t time_millis, char * buf, int bufsz);
+
 Global_Status_Code loadvcp_by_dumpload_data(Dumpload_Data* pdata);
 Global_Status_Code loadvcp_by_string(char * catenated);
 
