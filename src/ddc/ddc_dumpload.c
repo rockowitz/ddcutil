@@ -419,7 +419,7 @@ char * format_timestamp(time_t time_millis, char * buf, int bufsz) {
    return buf;
 }
 
-
+#ifdef UNUSED
 /* Returns monitor identification information in an array of strings.
  * The strings are written in the format of the DUMPVCP command.
  *
@@ -449,8 +449,8 @@ void collect_machine_readable_monitor_id(Display_Handle * dh, GPtrArray * vals) 
    snprintf(buf, bufsz, "EDID    %s", hexbuf);
    g_ptr_array_add(vals, strdup(buf));
 }
+#endif
 
-// Used only in dumpload - move there?
 
 /* Appends timestamp lines to an array of strings.
  * The strings are written in the format of the DUMPVCP command.
@@ -475,6 +475,7 @@ void collect_machine_readable_timestamp(time_t time_millis, GPtrArray* vals) {
    g_ptr_array_add(vals, strdup(buf));
 }
 
+#ifdef UNUSED
 // for completeness, currently unused
 /* Save profile related information (timestamp, monitor identification,
  * VCP values) in external form in a GPtrArray of string.
@@ -519,7 +520,7 @@ collect_profile_related_values(
    }
    return gsc;
 }
-
+#endif
 
 
 /* Primary function for the DUMPVCP command.
@@ -608,7 +609,6 @@ dumpvcp_as_dumpload_data(
       }
 #endif
    }
-
 
    if (gsc != 0 && dumped_data)
       free(dumped_data);

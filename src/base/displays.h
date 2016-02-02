@@ -37,7 +37,6 @@
 #include <base/edid.h>
 #include <base/util.h>
 
-
 /*
 Monitors are specified in different ways in different contexts:
 
@@ -58,15 +57,19 @@ For I2C displays, the device must be opened.  Display_Handle then contains the o
 
 // *** DisplayIdentifier ***
 
-typedef enum {DISP_ID_BUSNO, DISP_ID_ADL, DISP_ID_MONSER, DISP_ID_EDID, DISP_ID_DISPNO} Display_Id_Type;
+typedef enum {
+   DISP_ID_BUSNO,
+   DISP_ID_ADL,
+   DISP_ID_MONSER,
+   DISP_ID_EDID,
+   DISP_ID_DISPNO
+} Display_Id_Type;
+
 char * display_id_type_name(Display_Id_Type val);
 
 #define DISPLAY_IDENTIFIER_MARKER "DPID"
-
-typedef
-struct {
+typedef struct {
    char            marker[4];         // always "DPID"
-// int             ui_display_number; // is this appropriate here?
    Display_Id_Type id_type;
    int             dispno;
    int             busno;
@@ -93,12 +96,15 @@ bool is_version_unqueried(Version_Spec vspec);
 
 // *** Display_Ref ***
 
-typedef enum {DDC_IO_DEVI2C, DDC_IO_ADL} DDC_IO_Mode;
+typedef enum {
+   DDC_IO_DEVI2C,
+   DDC_IO_ADL}
+DDC_IO_Mode;
+
 char * ddc_io_mode_name(DDC_IO_Mode val);
 
 #define DISPLAY_REF_MARKER "DREF"
-typedef
-struct {
+typedef struct {
    char         marker[4];
    DDC_IO_Mode  ddc_io_mode;
    int          busno;
@@ -109,7 +115,6 @@ struct {
 
 // n. works for both Display_Ref and Display_Handle
 #define ASSERT_DISPLAY_IO_MODE(dref, io_mode) assert(dref && dref->ddc_io_mode == io_mode)
-
 
 Display_Ref * create_bus_display_ref(int busno);
 Display_Ref * create_adl_display_ref(int iAdapterIndex, int iDisplayIndex);
@@ -126,8 +131,7 @@ bool dreq(Display_Ref* this, Display_Ref* that);
 // *** Display_Handle ***
 
 #define DISPLAY_HANDLE_MARKER "DSPH"
-typedef
-struct {
+typedef struct {
    char         marker[4];
    DDC_IO_Mode  ddc_io_mode;
    // include pointer to Display_Ref?
@@ -142,10 +146,9 @@ struct {
 Display_Handle * create_bus_display_handle(int fh, int busno);
 Display_Handle * create_adl_display_handle(int iAdapterIndex, int iDisplayIndex);
 Display_Handle * create_adl_display_handle_from_display_ref(Display_Ref * ref);
-void report_display_handle(Display_Handle * dh, const char * msg);
+void   report_display_handle(Display_Handle * dh, const char * msg, int depth);
 char * display_handle_repr_r(Display_Handle * dh, char * buf, int bufsize);
 char * display_handle_repr(Display_Handle * dh);
-
 
 #define VIDEO_CARD_INFO_MARKER "VIDC"
 typedef struct {
@@ -167,7 +170,7 @@ typedef struct {
 } Display_Info;
 
 typedef struct {
-   int ct;
+   int            ct;
    Display_Info * info_recs;
 } Display_Info_List;
 

@@ -257,9 +257,9 @@ void report_display_ref(Display_Ref * dref, int depth) {
       rpt_int("iAdapterIndex", NULL, dref->iAdapterIndex, d1);
       rpt_int("iDisplayIndex", NULL, dref->iDisplayIndex, d1);
    }
-   // TODO: fix to use report function:
-   printf("   vcp_version:  %d.%d\n", dref->vcp_version.major, dref->vcp_version.minor );
+   rpt_vstring(d1, "vcp_version:  %d.%d\n", dref->vcp_version.major, dref->vcp_version.minor );
 }
+
 
 char * display_ref_short_name_r(Display_Ref * dref, char * buf, int bufsize) {
    if (dref->ddc_io_mode == DDC_IO_DEVI2C) {
@@ -271,15 +271,15 @@ char * display_ref_short_name_r(Display_Ref * dref, char * buf, int bufsize) {
    return buf;
 }
 
-static char display_ref_short_name_buffer[100];
 
 char * display_ref_short_name(Display_Ref * dref) {
+   static char display_ref_short_name_buffer[100];
    return display_ref_short_name_r(dref, display_ref_short_name_buffer, 100);
 }
 
 
 
-// *** DisplayHandle ***
+// *** Display_Handle ***
 
 Display_Handle * create_bus_display_handle(int fh, int busno) {
    Display_Handle * dh = calloc(1, sizeof(Display_Handle));
@@ -307,94 +307,152 @@ Display_Handle * create_adl_display_handle_from_display_ref(Display_Ref * ref) {
    return create_adl_display_handle(ref->iAdapterIndex, ref->iDisplayIndex);
 }
 
-void report_display_handle(Display_Handle * dh, const char * msg) {
+/* Reports the contents of a Display_Handle
+ *
+ * Arguments:
+ *    dh       display handle
+ *    msg      if non-null, output this string before the Display_Handle detail
+ *    depth    logical indentation depth
+ *
+ * Returns: nothing
+ */
+void report_display_handle(Display_Handle * dh, const char * msg, int depth) {
+   int d1 = depth+1;
    if (msg)
-      printf("%s", msg);
-   printf("Display_Handle: %p\n", dh);
+      rpt_vstring(depth, "%s", msg);
+   rpt_vstring(d1, "Display_Handle: %p\n", dh);
    if (dh) {
       if (memcmp(dh->marker, DISPLAY_HANDLE_MARKER, 4) != 0) {
-         printf("  Invalid marker in struct: 0x%08x, |%.4s|\n", *dh->marker, (char *)dh->marker);
+         rpt_vstring(d1, "Invalid marker in struct: 0x%08x, |%.4s|\n",
+                         *dh->marker, (char *)dh->marker);
       }
       else {
          switch (dh->ddc_io_mode) {
          case (DDC_IO_DEVI2C):
-            printf("  ddc_io_mode = DDC_IO_DEVI2C\n");
-            printf("  fh:    %d\n", dh->fh);
-            printf("  busno: %d\n", dh->busno);
+            rpt_vstring(d1, "ddc_io_mode = DDC_IO_DEVI2C\n");
+            rpt_vstring(d1, "fh:    %d\n", dh->fh);
+            rpt_vstring(d1, "busno: %d\n", dh->busno);
             break;
          case (DDC_IO_ADL):
-            printf("  ddc_io_mode = DDC_IO_ADL\n");
-            printf("  iAdapterIndex:    %d\n", dh->iAdapterIndex);
-            printf("  iDisplayIndex:    %d\n", dh->iDisplayIndex);
+            rpt_vstring(d1, "ddc_io_mode = DDC_IO_ADL\n");
+            rpt_vstring(d1, "iAdapterIndex:    %d\n", dh->iAdapterIndex);
+            rpt_vstring(d1, "iDisplayIndex:    %d\n", dh->iDisplayIndex);
             break;
+#ifdef UNNECESSARY
          default:
             PROGRAM_LOGIC_ERROR("Invalid ddc_io_mode: %d\n", dh->ddc_io_mode);
+#endif
          }
       }
-      printf("   vcp_version:     %d.%d\n", dh->vcp_version.major, dh->vcp_version.minor);
+      rpt_vstring(d1, "   vcp_version:     %d.%d\n", dh->vcp_version.major, dh->vcp_version.minor);
    }
 
 }
 
-static char dh_repr_buf[100];
 
-char * display_handle_repr_r(Display_Handle * dref, char * buf, int bufsize) {
+/* Returns a summary string of the specified Display_Handle in
+ * a buffer provided by the caller.
+ *
+ * Arguments:
+ *   dh      display handle
+ *   buf     pointer to buffer in which to return summary string
+ *   bufsz   buffer size
+ *
+ * Returns:
+ *   string representation of handle
+ */
+char * display_handle_repr_r(Display_Handle * dref, char * buf, int bufsz) {
    assert(memcmp(dref->marker, DISPLAY_HANDLE_MARKER, 4) == 0);
-   char * bufptr = dh_repr_buf;
-   int    bufsz  = 100;
-   if (buf) {
-      bufptr = buf;
-      bufsz  = bufsize;
-   }
+   assert(buf && bufsz);
 
    if (dref->ddc_io_mode == DDC_IO_DEVI2C) {
-      snprintf(bufptr, bufsz, "Display_Handle[i2c: fh=%d, busno=%d]", dref->fh, dref->busno);
+      snprintf(buf, bufsz,
+               "Display_Handle[i2c: fh=%d, busno=%d]",
+               dref->fh, dref->busno);
    }
    else {
-      snprintf(bufptr, bufsz, "Display_Handle[adl: display %d.%d]", dref->iAdapterIndex, dref->iDisplayIndex);
+      snprintf(buf, bufsz,
+               "Display_Handle[adl: display %d.%d]",
+               dref->iAdapterIndex, dref->iDisplayIndex);
    }
-   return bufptr;
+   return buf;
 }
 
 
+/* Returns a summary string of the specified Display_Handle.
+ * The string is valid until the next call to this function.
+ * Caller should NOT free this string.
+ *
+ * Arguments:
+ *   dh    display handle
+ *
+ * Returns:
+ *   string representation of handle
+ */
 char * display_handle_repr(Display_Handle * dh) {
-   return display_handle_repr_r(dh,NULL,0);
+   static char dh_repr_buf[100];
+   return display_handle_repr_r(dh,dh_repr_buf,100);
 }
 
 
+/* Outputs a debug report of a Display_Info struct.
+ *
+ * Arguments:
+ *   dinfo   pointer to display_Info
+ *   depth   logical indentation depth
+ *
+ * Returns:  nothing
+ */
 void report_display_info(Display_Info * dinfo, int depth) {
-   // TODO: implement depth
-   printf("Display_Info at %p:\n", dinfo);
+   rpt_vstring(depth, "Display_Info at %p:\n", dinfo);
    if (dinfo) {
-      printf("   dref=%p\n", dinfo->dref);
+      int d1 = depth+1;
+      rpt_vstring(d1, "dref=%p\n", dinfo->dref);
       if (dinfo->dref) {
-         printf("      short name:   %s\n", display_ref_short_name(dinfo->dref));
+         rpt_vstring(d1, "short name:   %s\n", display_ref_short_name(dinfo->dref));
       }
-      printf("   edid=%p\n", dinfo->edid);
+      rpt_vstring(d1, "edid=%p\n", dinfo->edid);
       if (dinfo->edid) {
-         report_parsed_edid(dinfo->edid, false /* !verbose */, depth);
+         report_parsed_edid(dinfo->edid, false /* !verbose */, d1);
       }
    }
 }
 
+
+/* Outputs a debug report of a Display_Info_List.
+ *
+ * Arguments:
+ *   pinfo_list  pointer to display_Info_List
+ *   depth       logical indentation depth
+ *
+ * Returns:  nothing
+ */
 void report_display_info_list(Display_Info_List * pinfo_list, int depth) {
-   // TODO: implement depth
-   printf("Display_Info_List at %p\n", pinfo_list);
+   rpt_vstring(depth, "Display_Info_List at %p\n", pinfo_list);
    if (pinfo_list) {
-      printf("  Count:         %d\n", pinfo_list->ct);
+      int d1 = depth+1;
+      rpt_vstring(d1, "Count:         %d\n", pinfo_list->ct);
       int ndx = 0;
       for (; ndx < pinfo_list->ct; ndx++) {
          Display_Info * dinfo = &pinfo_list->info_recs[ndx];
-         report_display_info(dinfo, depth+1);
+         report_display_info(dinfo, d1);
       }
    }
 }
 
 
+// Currently unused.  Needed for video card information retrieval
+// currently defined only in ADL code.
+
+/* Creates and initializes a Video_Card_Info struct.
+ *
+ * Arguments:  none
+ *
+ * Returns:    new instance
+ */
 Video_Card_Info * create_video_card_info() {
    Video_Card_Info * card_info = calloc(1, sizeof(Video_Card_Info));
    memcpy(card_info->marker, VIDEO_CARD_INFO_MARKER, 4);
    return card_info;
 }
-
 

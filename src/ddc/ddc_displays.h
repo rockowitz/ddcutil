@@ -30,22 +30,27 @@
 #include "base/common.h"
 #include "base/displays.h"
 
-Display_Info_List * ddc_get_valid_displays();
+Display_Info_List *
+ddc_get_valid_displays();
 
-int ddc_report_active_displays(int depth);
+int
+ddc_report_active_displays(int depth);
 
-Display_Ref* get_display_ref_for_display_identifier(
-                Display_Identifier* pdid,
-                bool          emit_error_msg);
+Display_Ref*
+get_display_ref_for_display_identifier(
+   Display_Identifier* pdid,
+   bool                emit_error_msg);
 
-Display_Ref* ddc_find_display_by_dispno(
-                int           dispno);
+Display_Ref*
+ddc_find_display_by_dispno(
+   int           dispno);
 
-Display_Ref* ddc_find_display_by_model_and_sn(
-                const char *  model,
-                const char *  sn);
+Display_Ref*
+ddc_find_display_by_model_and_sn(
+   const char *  model,
+   const char *  sn);
 
 Display_Ref* ddc_find_display_by_edid(
-                const Byte *  pEdidBytes);
+   const Byte *  pEdidBytes);
 
 #endif /* SRC_DDC_DDC_DISPLAYS_H_ */

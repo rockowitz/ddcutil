@@ -257,7 +257,7 @@ Global_Status_Code ddc_i2c_write_read_raw(
    Trace_Group tg = TRACE_GROUP;
    if (debug)
       tg = 0xff;
-   TRCMSGTG(tg, "Starting. dh=%s, readbuf=%p", display_handle_repr_r(dh, NULL, 0), readbuf);
+   TRCMSGTG(tg, "Starting. dh=%s, readbuf=%p", display_handle_repr(dh), readbuf);
    // DBGMSG("request_packet_ptr=%p", request_packet_ptr);
    // dump_packet(request_packet_ptr);
    ASSERT_DISPLAY_IO_MODE(dh, DDC_IO_DEVI2C);
@@ -323,7 +323,7 @@ Global_Status_Code ddc_adl_write_read_raw(
    bool tf = IS_TRACING();
    if (debug) tf = true;
    TRCMSGTF(tf, "Starting. Using adl_ddc_write_only() and adl_ddc_read_only() dh=%s",
-            display_handle_repr_r(dh, NULL, 0));
+            display_handle_repr(dh));
    ASSERT_DISPLAY_IO_MODE(dh, DDC_IO_ADL);
 
    Global_Status_Code gsc = adlshim_ddc_write_only(
@@ -439,7 +439,7 @@ Global_Status_Code ddc_write_read(
    bool debug = false;  // override
    bool tf = IS_TRACING();
    if (debug) tf = 0xff;
-   TRCMSGTF(tf, "Starting. io dh=%s", display_handle_repr_r(dh, NULL, 0) );
+   TRCMSGTF(tf, "Starting. io dh=%s", display_handle_repr(dh) );
 
    Byte * readbuf = calloc(1, max_read_bytes);
    int    bytes_received = max_read_bytes;
@@ -518,7 +518,7 @@ Global_Status_Code ddc_write_read_with_retry(
    bool debug = false;
    bool tf = IS_TRACING();
    if (debug) tf = 0xff;
-   TRCMSGTF(tf, "Starting. dh=%s", display_handle_repr_r(dh, NULL, 0)  );
+   TRCMSGTF(tf, "Starting. dh=%s", display_handle_repr(dh)  );
 
    int  rc;
    int  tryctr;

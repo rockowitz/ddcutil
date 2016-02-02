@@ -45,11 +45,10 @@
 #include "adl/adl_errors.h"
 #include "adl/adl_shim.h"
 
-// #include "ddc/ddc_edid.h"
-#include "ddc/ddc_vcp_version.h"
-#include "ddc/ddc_vcp.h"
+#include "ddc/ddc_packet_io.h"
 #include "ddc/vcp_feature_codes.h"
-#include "ddc/ddc_packet_io.h"                // TODO: CHECK IF CIRCULAR DEPENDENCY
+#include "ddc/ddc_vcp.h"
+#include "ddc/ddc_vcp_version.h"
 
 #include "ddc/ddc_displays.h"
 
@@ -62,7 +61,14 @@
 //  Display Specification
 //
 
-/** Tests if a DisplayRef identifies an attached display.
+/* Tests if a Display_Ref identifies an attached display.
+ *
+ * Arguments:
+ *    dref     display reference
+ *    emit_error_msg emit error message if not valid
+ *
+ * Returns:
+ *    true if dref identifiers a valid Display_Ref, false if not
  */
 bool ddc_is_valid_display_ref(Display_Ref * dref, bool emit_error_msg) {
    assert( dref );
@@ -73,7 +79,6 @@ bool ddc_is_valid_display_ref(Display_Ref * dref, bool emit_error_msg) {
       result = i2c_is_valid_bus(dref->busno, emit_error_msg );
    }
    else {
-      // result = adl_is_valid_adlno(dref->iAdapterIndex, dref->iDisplayIndex, true /* emit_error_msg */);
       result = adlshim_is_valid_display_ref(dref, emit_error_msg);
    }
    // DBGMSG("Returning %d", result);
@@ -194,7 +199,6 @@ Display_Info_List * ddc_get_valid_displays() {
       }
    }
 
-   // DBGMSG("all_displays in main.c:");
    // report_display_info_list(all_displays, 0);
    return all_displays;
 }
@@ -206,13 +210,13 @@ Display_Info_List * ddc_get_valid_displays() {
  *    dispno     display number
  *
  * Returns:
- *    Display_Ref for the dispno'th display, NULL if
- *    dispno < 1 or dispno > number of actual displays
+ *    Display_Ref for the dispno'th display,
+ *    NULL if dispno < 1 or dispno > number of actual displays
  */
 Display_Ref* ddc_find_display_by_dispno(int dispno) {
    bool debug = false;
-   if (debug)
-      DBGMSG("Starting.  dispno=%d", dispno);
+   DBGMSF(debug, "Starting.  dispno=%d", dispno);
+
    Display_Ref * result = NULL;
    Display_Info_List * all_displays = ddc_get_valid_displays();
    if (dispno >= 1 && dispno <= all_displays->ct) {
@@ -225,17 +229,34 @@ Display_Ref* ddc_find_display_by_dispno(int dispno) {
          }
       }
    }
+
    if (debug) {
       DBGMSG("Returning: %p  ", result );
       if (result)
          report_display_ref(result, 0);
    }
+
    return result;
 }
 
 
-Display_Ref* ddc_find_display_by_model_and_sn(const char * model, const char * sn) {
+/* Returns a Display_Ref for a display identified by its model name and serial number.
+ *
+ * Arguments:
+ *    model    model name
+ *    sn       serial number (character string)
+ *
+ * Returns:
+ *    Display_Ref for the specified monitor
+ *    NULL if not found
+ */
+Display_Ref*
+ddc_find_display_by_model_and_sn(
+   const char * model,
+   const char * sn)
+{
    // DBGMSG("Starting.  model=%s, sn=%s   ", model, sn );
+
    Display_Ref * result = NULL;
    Bus_Info * businfo = i2c_find_bus_info_by_model_sn(model, sn);
    if (businfo) {
@@ -244,12 +265,23 @@ Display_Ref* ddc_find_display_by_model_and_sn(const char * model, const char * s
    else {
       result = adlshim_find_display_by_model_sn(model, sn);
    }
+
    // DBGMSG("Returning: %p  ", result );
    return result;
 }
 
 
-Display_Ref* ddc_find_display_by_edid(const Byte * pEdidBytes) {
+/* Returns a Display_Ref for a display identified by its EDID
+ *
+ * Arguments:
+ *    edid     pointer to 128 byte edid
+ *
+ * Returns:
+ *    Display_Ref for the specified monitor
+ *    NULL if not found
+ */
+Display_Ref*
+ddc_find_display_by_edid(const Byte * pEdidBytes) {
    // DBGMSG("Starting.  model=%s, sn=%s   ", model, sn );
    Display_Ref * result = NULL;
    Bus_Info * businfo = i2c_find_bus_info_by_edid((pEdidBytes));
@@ -272,7 +304,8 @@ Display_Ref* ddc_find_display_by_edid(const Byte * pEdidBytes) {
  *    curinfo   pointer to display information
  *    depth     logical indentation depth
  */
-void ddc_report_active_display(Display_Info * curinfo, int depth) {
+void
+ddc_report_active_display(Display_Info * curinfo, int depth) {
    if (curinfo->dref->ddc_io_mode == DDC_IO_DEVI2C)
       i2c_report_active_display_by_busno(curinfo->dref->busno, depth);
    else {
@@ -347,7 +380,8 @@ void ddc_report_active_display(Display_Info * curinfo, int depth) {
  * Returns:
  *    number of displays
  */
-int ddc_report_active_displays(int depth) {
+int
+ddc_report_active_displays(int depth) {
    Display_Info_List * display_list = ddc_get_valid_displays();
    int ndx;
    int valid_display_ct = 0;
