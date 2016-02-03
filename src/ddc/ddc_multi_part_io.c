@@ -92,21 +92,22 @@ int ddc_get_max_multi_part_read_tries() {
 }
 
 
-// Makes one attempt to read the entire capabilities string
-//
-// Arguments:
-//   dh             display handle for open i2c or adl device
-//   capabilities   address of buffer in which to return response
-//
-// Returns:
-//   status code
-
-Global_Status_Code try_multi_part_read(
-                      Display_Handle * dh,
-                      Byte             request_type,
-                      Byte             request_subtype,
-                      bool             all_zero_response_ok,
-                      Buffer *         accumulator) {
+/* Makes one attempt to read the entire capabilities string
+*
+* Arguments:
+*   dh             display handle for open i2c or adl device
+*   capabilities   address of buffer in which to return response
+*
+* Returns:         status code
+*/
+Global_Status_Code
+try_multi_part_read(
+      Display_Handle * dh,
+      Byte             request_type,
+      Byte             request_subtype,
+      bool             all_zero_response_ok,
+      Buffer *         accumulator)
+{
    bool force_debug = false;
    Trace_Group tg = TRACE_GROUP;
    if (force_debug)
@@ -222,12 +223,13 @@ Global_Status_Code try_multi_part_read(
 *   DDCRC_UNSUPPORTED   monitor does not support get capabilities request
 *   DDCRC_TRIES         maximum retries exceeded
 */
-Global_Status_Code multi_part_read_with_retry(
-                      Display_Handle * dh,
-                      Byte          request_type,
-                      Byte          request_subtype,   // VCP feature code for table read, ignore for capabilities
-                      bool          all_zero_response_ok,
-                      Buffer**      ppbuffer)
+Global_Status_Code
+multi_part_read_with_retry(
+      Display_Handle * dh,
+      Byte             request_type,
+      Byte             request_subtype,   // VCP feature code for table read, ignore for capabilities
+      bool             all_zero_response_ok,
+      Buffer**         ppbuffer)
 {
    bool debug = false;
    Trace_Group tg = TRACE_GROUP;

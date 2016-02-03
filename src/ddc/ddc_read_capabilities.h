@@ -27,15 +27,18 @@
 #ifndef SRC_DDC_DDC_READ_CAPABILITIES_H_
 #define SRC_DDC_DDC_READ_CAPABILITIES_H_
 
-
+#ifdef NOT_USED
 #include "util/data_structures.h"
+#endif
 
 #include "base/displays.h"
 #include "base/status_code_mgt.h"
 
 
 // Get capability string for monitor.
+#ifdef NOT_USED
 Global_Status_Code get_capabilities_buffer(Display_Handle * dh, Buffer** ppCapabilitiesBuffer);
+#endif
 Global_Status_Code get_capabilities_string(Display_Handle * dh, char** pcaps);
 
 #endif /* SRC_DDC_DDC_READ_CAPABILITIES_H_ */

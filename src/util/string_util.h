@@ -64,22 +64,15 @@ char * str_replace_char(char * s, char old_char, char new_char);
 char * strcat_new(char * s1, char * s2);
 
 typedef bool (*String_Comp_Func)(const char * a, const char * b);
-
-int matches_by_func(char * word, char ** null_terminated_string_array, String_Comp_Func  comp_func);
-
+int matches_by_func(    char * word, char ** null_terminated_string_array, String_Comp_Func  comp_func);
 int exactly_matches_any(char * word, char ** null_terminated_string_array);
-
-int starts_with_any(char * word, char ** null_terminated_string_array);
-
-
-
+int starts_with_any(    char * word, char ** null_terminated_string_array);
 
 typedef char** Null_Terminated_String_Array;
-
 Null_Terminated_String_Array strsplit(char * str_to_split, char* delims);
-void null_terminated_string_array_free(Null_Terminated_String_Array string_array);
-int null_terminated_string_array_length(Null_Terminated_String_Array string_array);
-void null_terminated_string_array_show(Null_Terminated_String_Array string_array);
+void null_terminated_string_array_free(  Null_Terminated_String_Array string_array);
+int  null_terminated_string_array_length(Null_Terminated_String_Array string_array);
+void null_terminated_string_array_show(  Null_Terminated_String_Array string_array);
 
 
 //
@@ -106,5 +99,10 @@ char * hexstring2(
 void fhex_dump(FILE * fh, Byte * bytes, int size);
 void hex_dump(Byte * bytes, int size);
 
+
+//
+// Miscellaneous
+//
 int f0printf(FILE * stream, const char * format, ...);
+
 #endif /* STRINGUTIL_H_ */

@@ -1,7 +1,10 @@
 /* ddc_vcp_version.c
  *
  * Created on: Dec 31, 2015
- *     Author: rock
+ *
+ * Functions to obtain the VCP (MCCS) version for a display.
+ * These functions are in a separate source file to simplify
+ * the acyclic graph of #includes within the ddc source directory.
  *
  * <copyright>
  * Copyright (C) 2014-2015 Sanford Rockowitz <rockowitz@minsoft.com>
@@ -53,31 +56,43 @@
  */
 Version_Spec get_vcp_version_by_display_handle(Display_Handle * dh) {
    bool debug = false;
-   // printf("(%s) Starting. dh=%p, dh->vcp_version =  %d.%d\n",
-   //        __func__, dh, dh->vcp_version.major, dh->vcp_version.minor);
+   DBGMSF(debug, "Starting. dh=%p, dh->vcp_version =  %d.%d",
+                 dh, dh->vcp_version.major, dh->vcp_version.minor);
    if (is_version_unqueried(dh->vcp_version)) {
       dh->vcp_version.major = 0;
       dh->vcp_version.minor = 0;
+#ifdef OLD
       Parsed_Nontable_Vcp_Response * pinterpreted_code;
+#endif
+      Single_Vcp_Value * pvalrec;
 
       // verbose output is distracting since this function is called when
       // querying for other things
       Output_Level olev = get_output_level();
       if (olev == OL_VERBOSE)
          set_output_level(OL_NORMAL);
+#ifdef OLD
       Global_Status_Code  gsc = get_nontable_vcp_value(dh, 0xdf, &pinterpreted_code);
+#endif
+      Global_Status_Code gsc = get_vcp_value(dh, 0xdf, NON_TABLE_VCP_CALL, &pvalrec);
+
+
       if (olev == OL_VERBOSE)
          set_output_level(olev);
       if (gsc == 0) {
+#ifdef OLD
          dh->vcp_version.major = pinterpreted_code->sh;
          dh->vcp_version.minor = pinterpreted_code->sl;
+#endif
+         dh->vcp_version.major = pvalrec->val.nc.sh;
+         dh->vcp_version.minor = pvalrec->val.nc.sl;
       }
       else {
          // happens for pre MCCS v2 monitors
          DBGMSF(debug, "Error detecting VCP version. gsc=%s\n", gsc_desc(gsc) );
       }
    }
-   // DBGMSG("Returning: %d.%d", dh->vcp_version.major, dh->vcp_version.minor);
+   DBGMSF(debug, "Returning: %d.%d", dh->vcp_version.major, dh->vcp_version.minor);
    return dh->vcp_version;
 }
 
