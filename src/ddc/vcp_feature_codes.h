@@ -35,7 +35,7 @@
 #include "base/ddc_packets.h"
 #include "base/util.h"
 
-#include "vcp_feature_values.h"
+#include "ddc/vcp_feature_values.h"
 
 
 //
@@ -260,9 +260,6 @@ vcp_format_feature_detail(
        VCP_Feature_Table_Entry * vcp_entry,
        Version_Spec              vcp_version,
        Single_Vcp_Value *        valrec,
-#ifdef OLD
-       Parsed_Vcp_Response *     raw_data,
-#endif
        char * *                  aformatted_data
      );
 

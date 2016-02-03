@@ -42,24 +42,16 @@
 // file or a string, it is converted to Dumpload_Data and then
 // written to the monitor.
 
-#ifdef OLD
-#define MAX_LOADVCP_VALUES  20
-#endif
 
 typedef
 struct {
    time_t timestamp_millis;
- //  int    busno;
    Byte   edidbytes[128];
    char   edidstr[257];       // 128 byte edid as hex string (for future use)
    char   mfg_id[4];
    char   model[14];
    char   serial_ascii[14];
    int    vcp_value_ct;
-#ifdef OLD
-   Single_Vcp_Value vcp_value[MAX_LOADVCP_VALUES];
-#endif
-   // new way:
    Vcp_Value_Set vcp_values;
 } Dumpload_Data;
 
@@ -68,19 +60,29 @@ void report_dumpload_data(Dumpload_Data * data, int depth);
 // TODO: implement:
 // free_dupload_data(Dumpload_Data * pdata);
 
-char * format_timestamp(time_t time_millis, char * buf, int bufsz);
+char *
+format_timestamp(time_t time_millis, char * buf, int bufsz);
 
-Global_Status_Code loadvcp_by_dumpload_data(Dumpload_Data* pdata);
-Global_Status_Code loadvcp_by_string(char * catenated);
+Global_Status_Code
+loadvcp_by_dumpload_data(Dumpload_Data* pdata);
 
-Dumpload_Data* create_dumpload_data_from_g_ptr_array(GPtrArray * garray);
-GPtrArray * convert_dumpload_data_to_string_array(Dumpload_Data * data);
+Global_Status_Code
+loadvcp_by_string(char * catenated);
+
+Dumpload_Data*
+create_dumpload_data_from_g_ptr_array(GPtrArray * garray);
+
+GPtrArray *
+convert_dumpload_data_to_string_array(Dumpload_Data * data);
 
 Global_Status_Code
 dumpvcp_as_dumpload_data(
       Display_Handle * dh,
-      Dumpload_Data** pdumpload_data);
+      Dumpload_Data**  pdumpload_data);
 
-Global_Status_Code dumpvcp_as_string(Display_Handle * dh, char** result);
+Global_Status_Code
+dumpvcp_as_string(
+      Display_Handle * dh,
+      char**           result);
 
 #endif /* DDC_DUMPLOAD_H_ */

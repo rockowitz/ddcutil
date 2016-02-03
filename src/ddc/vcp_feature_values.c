@@ -44,9 +44,6 @@ void report_single_vcp_value(Single_Vcp_Value * valrec, int depth) {
    rpt_vstring(depth, "Single_Vcp_Value at %p:", valrec);
    rpt_vstring(d1, "opcode=0x%02x, value_type=0x%02x",
                    valrec->opcode, valrec->value_type);
-#ifdef OLD
-   rpt_vstring(d1, "value=%d", valrec->value);
-#endif
    if (valrec->value_type == NON_TABLE_VCP_VALUE) {
       rpt_vstring(d1, "mh=0x%02x, ml=0x%02x, sh=0x%02x, sl=0x%02x",
                       valrec->val.nc.mh, valrec->val.nc.ml, valrec->val.nc.sh, valrec->val.nc.sl);
@@ -87,9 +84,6 @@ create_nontable_vcp_value(
    Single_Vcp_Value * valrec = calloc(1,sizeof(Single_Vcp_Value));
    valrec->value_type = NON_TABLE_VCP_VALUE;
    valrec->opcode = feature_code;
-#ifdef OLD
-   valrec->value  = sh << 8 | sl;     // for old way
-#endif
    valrec->val.nc.mh = mh;
    valrec->val.nc.ml = ml;
    valrec->val.nc.sh = sh;
@@ -109,9 +103,6 @@ create_cont_vcp_value(
    Single_Vcp_Value * valrec = calloc(1,sizeof(Single_Vcp_Value));
    valrec->value_type = NON_TABLE_VCP_VALUE;
    valrec->opcode = feature_code;
-#ifdef OLD
-   valrec->value  = cur_val;    // for old way
-#endif
    // not needed thanks to overlay
    // valrec->val.nc.mh = max_val >> 8;
    // valrec->val.nc.ml = max_val & 0x0f;
@@ -134,11 +125,6 @@ create_table_vcp_value_by_bytes(
    valrec->val.t.bytect = bytect;
    valrec->val.t.bytes = malloc(bytect);
    memcpy(valrec->val.t.bytes, bytes, bytect);
-#ifdef TRANSITIONAL
-   // temp
-   valrec->val.t.buffer = buffer_new(bytect, __func__);
-   buffer_put(valrec->val.t.buffer, bytes, bytect);
-#endif
    return valrec;
 }
 
@@ -198,16 +184,8 @@ Parsed_Vcp_Response * single_vcp_value_to_parsed_vcp_response(Single_Vcp_Value *
    }
    else {
       assert(valrec->value_type == TABLE_VCP_VALUE);
-#ifdef TRANSITIONAL
-      //redundant redundancy
-      presp->table_response = valrec->val.t.buffer;
-#endif
       Buffer * buf2 = buffer_new(valrec->val.t.bytect, __func__);
       buffer_put(buf2, valrec->val.t.bytes, valrec->val.t.bytect);
-#ifdef TRANSITIONAL
-      assert(buffer_eq(buf2, presp->table_response));
-#endif
-
    }
    return presp;
 }
@@ -258,6 +236,4 @@ void report_vcp_value_set(Vcp_Value_Set vset, int depth) {
    for(;ndx<vset->len; ndx++) {
       report_single_vcp_value( g_ptr_array_index(vset, ndx), depth+1);
    }
-
-
 }
