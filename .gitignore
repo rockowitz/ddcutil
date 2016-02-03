@@ -67,3 +67,7 @@ junk*
 src/goclient
 playdir/
 call_egypt
+.settings/
+.autotools
+.cproject
+.project
