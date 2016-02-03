@@ -175,19 +175,52 @@ If the following package exists, it is required to build ddctool.
 
 - libi2c-dev 
 
+### Notes on building from tarball
+
+**ddctool** is not yet packaged as a *tar* file.  Nor are *rpm* or *dev* files yet available.  
+Currently the only way to build it is from git.
+
 ### Notes on building from git
 
-Notes on building from git:
+- Building **ddctool** from git requires that the *autotools* related packages be installed.  
+The exact packages vary from distribution to distribution.   On Ubuntu, these include:
+  -- autoconf
+  -- automake
+  -- autotools-dev
+  -- libtool
+  -- m4
+  -- pkg-config
 
-- If you see a message "required file './ltmain.sh.' not found", run \fIlibtoolize\fP
+To configure the build, change to the main **ddctool** directory and execute the file: 
+~~~
+autogen.sh
+~~~
+
+Or issue the individual commands: 
+~~~
+# aclocal
+# autoconf
+# automake
+# ./configure
+~~~
+
+Then to build and install **ddctool**: 
+~~~
+# make
+# sudo make install
+~~~
+
+Common issues:
+- Building with support for the AMD proprietary video driver (fglrx) requires that *configure* be executed using 
+the *-with-adl-headers* argument.  See below.
+- If you see a message "required file './ltmain.sh.' not found", run *libtoolize*
   (See https://www.gnu.org/software/automake/manual/html_node/Error-required-file-ltmain_002esh-not-found.html)
-- Execute file \fIautogen.sh\fP.   
-- (need notes on warnings that can be ignored) 
-
 - May get the following warning when running automake
+~~~
 src/Makefile.am:38: warning: compiling 'cmdline/cmd_parser_aux.c' in subdir requires 'AM_PROG_CC_C_O' in 'configure.ac'
-
+~~~
 This is an autotools versioning issue.  It appears that this warning can be ignored.
+- (need notes on other warnings that can be ignored) 
 
 ### /dev/i2c permissions
 
@@ -198,12 +231,12 @@ Some versions of i2c-tools create group i2c, and make that the group for
 /dev/i2c-* devices. In that case all that is necessary is to add your user
 name to group i2c: 
 ~~~
-  sudo usermod your-user-name -G i2c
+# sudo usermod your-user-name -G i2c
 ~~~
 For testing, it may be simpler to give everyone permission to write to 
 /dev/i2c-* for the current boot:
 ~~~
-  sudo chmod a+rw /dev/i2c-*
+#  sudo chmod a+rw /dev/i2c-*
 ~~~
 If needed, a udev rule for giving group i2c rw permission on the /i2c-dev-* devices 
 can be found in distribution file data/etc/udev/rules.d/45-i2c-tools.rules.   
@@ -279,7 +312,7 @@ do the following:
  
 - When building ddctool, execute configure as follows
 ~~~
-configure --with-adl-headlers=DIR
+# ./configure --with-adl-headers=DIR
 ~~~
 where DIR is the name of the directory where you saved the ADL header files.
 
