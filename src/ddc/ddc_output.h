@@ -34,10 +34,9 @@
 #include "base/common.h"
 #include "base/displays.h"
 #include "base/status_code_mgt.h"
-#include "base/vcp_feature_values.h"
-
 #include "ddc/vcp_feature_codes.h"
 #include "ddc/vcp_feature_set.h"
+#include "vcp_feature_values.h"
 
 
 #ifdef FUTURE

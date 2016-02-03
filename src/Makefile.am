@@ -145,7 +145,7 @@ base/msg_control.c \
 base/status_code_mgt.c \
 base/util.c \
 base/ddc_base.c \
-base/vcp_feature_values.c \
+ddc/vcp_feature_values.c \
 ddc/ddc_command_codes.c \
 ddc/ddc_displays.c      \
 ddc/ddc_edid.c          \

@@ -24,6 +24,8 @@
  * </endcopyright>
  */
 
+#include "vcp_feature_values.h"
+
 #include <assert.h>
 #include <glib.h>
 #include <stdlib.h>
@@ -33,8 +35,8 @@
 #include "util/report_util.h"
 
 #include "base/ddc_packets.h"
-#include "base/vcp_feature_values.h"
 
+#include "ddc/vcp_feature_values.h"
 
 
 void report_single_vcp_value(Single_Vcp_Value * valrec, int depth) {

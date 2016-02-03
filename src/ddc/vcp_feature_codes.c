@@ -38,7 +38,6 @@
 
 #include "base/ddc_base.h"
 #include "base/msg_control.h"
-#include "base/vcp_feature_values.h"
 
 #include "ddc/vcp_feature_codes.h"
 

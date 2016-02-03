@@ -47,7 +47,6 @@
 #include "base/ddc_packets.h"
 #include "base/msg_control.h"
 #include "base/util.h"
-#include "base/vcp_feature_values.h"
 
 #include "i2c/i2c_bus_core.h"
 
@@ -57,8 +56,10 @@
 #include "ddc/ddc_vcp.h"
 #include "ddc/ddc_read_capabilities.h"
 #include "ddc/ddc_displays.h"
+#include "ddc/vcp_feature_values.h"
 
 #include "ddc_dumpload.h"
+
 
 
 /* Report the contents of a Dumpload_Data struct

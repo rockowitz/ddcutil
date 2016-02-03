@@ -31,10 +31,10 @@
 
 #include <stdio.h>
 
-#include <base/status_code_mgt.h>
-#include <base/displays.h>
+#include "base/status_code_mgt.h"
+#include "base/displays.h"
 
-#include "base/vcp_feature_values.h"
+#include "ddc/vcp_feature_values.h"
 
 
 // Dumpload_Data is the internal form data structure used to

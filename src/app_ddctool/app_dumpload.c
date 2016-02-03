@@ -40,14 +40,13 @@
 
 #include "util/file_util.h"
 #include "util/glib_util.h"
+#include "util/report_util.h"
 
 #include "base/ddc_errno.h"
 #include "base/common.h"
 #include "base/displays.h"
 #include "base/ddc_packets.h"
-#include "util/report_util.h"
 #include "base/util.h"
-#include "base/vcp_feature_values.h"
 
 #include "i2c/i2c_bus_core.h"
 
@@ -57,8 +56,11 @@
 #include "ddc/ddc_vcp.h"
 #include "ddc/ddc_read_capabilities.h"
 #include "ddc/ddc_displays.h"
+#include "ddc/ddc_dumpload.h"
+#include "ddc/vcp_feature_values.h"
+
 #include "app_ddctool/app_dumpload.h"
-#include "../ddc/ddc_dumpload.h"
+
 
 // Filename creation
 

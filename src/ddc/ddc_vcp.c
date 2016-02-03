@@ -40,14 +40,13 @@
 #include "base/ddc_packets.h"
 #include "base/msg_control.h"
 #include "base/util.h"
-#include "base/vcp_feature_values.h"
-
 #include "i2c/i2c_bus_core.h"
 
 #include "adl/adl_shim.h"
 
 #include "ddc/ddc_multi_part_io.h"
 #include "ddc/ddc_packet_io.h"
+#include "ddc/vcp_feature_values.h"
 
 #include "ddc/ddc_vcp.h"
 

@@ -24,8 +24,8 @@
  * </endcopyright>
  */
 
-#ifndef SRC_BASE_VCP_FEATURE_VALUES_H_
-#define SRC_BASE_VCP_FEATURE_VALUES_H_
+#ifndef SRC_DDC_VCP_FEATURE_VALUES_H_
+#define SRC_DDC_VCP_FEATURE_VALUES_H_
 
 #include <glib.h>
 
@@ -136,4 +136,4 @@ void report_vcp_value_set(Vcp_Value_Set vset, int depth);
 
 
 
-#endif /* SRC_BASE_VCP_FEATURE_VALUES_H_ */
+#endif /* SRC_DDC_VCP_FEATURE_VALUES_H_ */
