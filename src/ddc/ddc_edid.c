@@ -1,7 +1,11 @@
 /* ddc_edid.c
  *
  * Created on: Dec 31, 2015
- *     Author: rock
+ *
+ * Functions to obtain EDID information for a display.
+ *
+ * These functions are in a separate source file to simplify ensuring that
+ * there are no circular #include dependencies within the ddc source directory.
  *
  * <copyright>
  * Copyright (C) 2014-2015 Sanford Rockowitz <rockowitz@minsoft.com>
@@ -24,8 +28,6 @@
  * </endcopyright>
  */
 
-// functions in separate file to eliminate circular dependencies
-
 #include "base/edid.h"
 #include "base/msg_control.h"
 
@@ -40,7 +42,8 @@
 static Trace_Group TRACE_GROUP = TRC_DDC;
 
 
-Parsed_Edid* ddc_get_parsed_edid_by_display_handle(Display_Handle * dh) {
+Parsed_Edid*
+ddc_get_parsed_edid_by_display_handle(Display_Handle * dh) {
    Parsed_Edid* pEdid = NULL;
 
    if (dh->ddc_io_mode == DDC_IO_DEVI2C)
@@ -53,7 +56,8 @@ Parsed_Edid* ddc_get_parsed_edid_by_display_handle(Display_Handle * dh) {
 }
 
 
-Parsed_Edid* ddc_get_parsed_edid_by_display_ref(Display_Ref * dref) {
+Parsed_Edid*
+ddc_get_parsed_edid_by_display_ref(Display_Ref * dref) {
    Parsed_Edid* pEdid = NULL;
 
    if (dref->ddc_io_mode == DDC_IO_DEVI2C)

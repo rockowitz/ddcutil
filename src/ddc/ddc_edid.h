@@ -1,7 +1,6 @@
-/* ddc_vcp_edid.h
+/* ddc_edid.h
  *
  * Created on: Dec 31, 2015
- *     Author: rock
  *
  * <copyright>
  * Copyright (C) 2014-2015 Sanford Rockowitz <rockowitz@minsoft.com>
