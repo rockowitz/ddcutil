@@ -770,7 +770,7 @@ bool vcp_format_feature_detail(
 
    char * formatted_data = NULL;
 //   if (raw_data->response_type == NON_TABLE_VCP_CALL) {
-   if (valrec->value_type == NON_TABLE_VCP_CALL) {
+   if (valrec->value_type == NON_TABLE_VCP_VALUE) {
       Nontable_Vcp_Value* nontable_value = single_vcp_value_to_nontable_vcp_value(valrec);
       char workbuf[200];
       ok = vcp_format_nontable_feature_detail(

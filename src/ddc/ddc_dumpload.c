@@ -262,7 +262,7 @@ Global_Status_Code  ddc_set_multiple(Display_Handle* dh, Vcp_Value_Set vset) {
          assert(vrec->opcode == feature_code);
 #endif
       Byte   feature_code = vrec->opcode;
-      assert(vrec->value_type == NON_TABLE_VCP_CALL);     // Table not yet implemented
+      assert(vrec->value_type == NON_TABLE_VCP_VALUE);     // Table not yet implemented
       ushort new_value    = vrec->val.c.cur_val;
       gsc = set_nontable_vcp_value(dh, feature_code, new_value);
       if (gsc != 0) {
@@ -586,7 +586,7 @@ dumpvcp_as_dumpload_data(
 
       for (;ndx < collector->len; ndx++) {
          Parsed_Vcp_Response *  val =  g_ptr_array_index(collector,ndx);
-         if (val->response_type != NON_TABLE_VCP_CALL) {
+         if (val->response_type != NON_TABLE_VCP_VALUE) {
             gsc = DDCL_UNIMPLEMENTED;
          }
          else {

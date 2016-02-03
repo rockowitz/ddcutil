@@ -74,7 +74,7 @@ Version_Spec get_vcp_version_by_display_handle(Display_Handle * dh) {
 #ifdef OLD
       Global_Status_Code  gsc = get_nontable_vcp_value(dh, 0xdf, &pinterpreted_code);
 #endif
-      Global_Status_Code gsc = get_vcp_value(dh, 0xdf, NON_TABLE_VCP_CALL, &pvalrec);
+      Global_Status_Code gsc = get_vcp_value(dh, 0xdf, NON_TABLE_VCP_VALUE, &pvalrec);
 
 
       if (olev == OL_VERBOSE)

@@ -117,14 +117,15 @@ struct {
 
 
 
-typedef enum {NON_TABLE_VCP_CALL,
-              TABLE_VCP_CALL,
-             } VCP_Call_Type;
+typedef enum {
+   NON_TABLE_VCP_VALUE,
+   TABLE_VCP_VALUE,
+} Vcp_Value_Type;
 
 
 typedef
 struct {
-   VCP_Call_Type                   response_type;
+   Vcp_Value_Type                   response_type;
    Parsed_Nontable_Vcp_Response *  non_table_response;
    Buffer *                        table_response;
 } Parsed_Vcp_Response;

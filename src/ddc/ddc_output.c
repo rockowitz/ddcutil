@@ -167,7 +167,7 @@ get_raw_value_for_feature_table_entry(
 
    Byte feature_code = frec->code;
    bool is_table_feature = is_table_feature_by_display_handle(frec, dh);
-   VCP_Call_Type feature_type = (is_table_feature) ? TABLE_VCP_CALL : NON_TABLE_VCP_CALL;
+   Vcp_Value_Type feature_type = (is_table_feature) ? TABLE_VCP_VALUE : NON_TABLE_VCP_VALUE;
    Output_Level output_level = get_output_level();
    Single_Vcp_Value * valrec;
    gsc = get_vcp_value(
@@ -355,7 +355,7 @@ get_formatted_value_for_feature_table_entry(
    Byte feature_code = vcp_entry->code;
    char * feature_name = get_version_sensitive_feature_name(vcp_entry, vspec);
    bool is_table_feature = is_table_feature_by_display_handle(vcp_entry, dh);
-   VCP_Call_Type feature_type = (is_table_feature) ? TABLE_VCP_CALL : NON_TABLE_VCP_CALL;
+   Vcp_Value_Type feature_type = (is_table_feature) ? TABLE_VCP_VALUE : NON_TABLE_VCP_VALUE;
    Output_Level output_level = get_output_level();
    if (output_level >= OL_VERBOSE) {
       fprintf(msg_fh, "\nGetting data for VCP code 0x%02x - %s:\n",

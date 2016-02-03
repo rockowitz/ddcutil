@@ -47,7 +47,7 @@ void report_single_vcp_value(Single_Vcp_Value * valrec, int depth) {
 #ifdef OLD
    rpt_vstring(d1, "value=%d", valrec->value);
 #endif
-   if (valrec->value_type == NON_TABLE_VCP_CALL) {
+   if (valrec->value_type == NON_TABLE_VCP_VALUE) {
       rpt_vstring(d1, "mh=0x%02x, ml=0x%02x, sh=0x%02x, sl=0x%02x",
                       valrec->val.nc.mh, valrec->val.nc.ml, valrec->val.nc.sh, valrec->val.nc.sl);
       rpt_vstring(d1, "max_val=%d (0x%04x), cur_val=%d (0x%04x)",
@@ -57,14 +57,14 @@ void report_single_vcp_value(Single_Vcp_Value * valrec, int depth) {
                       valrec->val.c.cur_val);
    }
    else {
-      assert(valrec->value_type == TABLE_VCP_CALL);
+      assert(valrec->value_type == TABLE_VCP_VALUE);
       // TODO: complete
    }
 }
 
 // ignoring Buffer * since it only exists temporarily for transition
 void free_single_vcp_value(Single_Vcp_Value * vcp_value) {
-   if (vcp_value->value_type == TABLE_VCP_CALL) {
+   if (vcp_value->value_type == TABLE_VCP_VALUE) {
       if (vcp_value->val.t.bytes)
          free(vcp_value->val.t.bytes);
    }
@@ -85,7 +85,7 @@ create_nontable_vcp_value(
       Byte sl)
 {
    Single_Vcp_Value * valrec = calloc(1,sizeof(Single_Vcp_Value));
-   valrec->value_type = NON_TABLE_VCP_CALL;
+   valrec->value_type = NON_TABLE_VCP_VALUE;
    valrec->opcode = feature_code;
 #ifdef OLD
    valrec->value  = sh << 8 | sl;     // for old way
@@ -107,7 +107,7 @@ create_cont_vcp_value(
       ushort cur_val)
 {
    Single_Vcp_Value * valrec = calloc(1,sizeof(Single_Vcp_Value));
-   valrec->value_type = NON_TABLE_VCP_CALL;
+   valrec->value_type = NON_TABLE_VCP_VALUE;
    valrec->opcode = feature_code;
 #ifdef OLD
    valrec->value  = cur_val;    // for old way
@@ -129,7 +129,7 @@ create_table_vcp_value_by_bytes(
       ushort bytect)
 {
    Single_Vcp_Value * valrec = calloc(1,sizeof(Single_Vcp_Value));
-   valrec->value_type = TABLE_VCP_CALL;
+   valrec->value_type = TABLE_VCP_VALUE;
    valrec->opcode = feature_code;
    valrec->val.t.bytect = bytect;
    valrec->val.t.bytes = malloc(bytect);
@@ -156,7 +156,7 @@ create_single_vcp_value_by_parsed_vcp_response(
 {
    Single_Vcp_Value * valrec = NULL;
 
-   if (presp->response_type == NON_TABLE_VCP_CALL) {
+   if (presp->response_type == NON_TABLE_VCP_VALUE) {
       assert(presp->non_table_response->valid_response);
       assert(presp->non_table_response->supported_opcode);
       assert(feature_id == presp->non_table_response->vcp_code);
@@ -173,7 +173,7 @@ create_single_vcp_value_by_parsed_vcp_response(
       // assert(valrec->val.c.cur_val == presp->non_table_response->cur_value);
    }
    else {
-      assert(presp->response_type == TABLE_VCP_CALL);
+      assert(presp->response_type == TABLE_VCP_VALUE);
       valrec = create_table_vcp_value_by_buffer(feature_id, presp->table_response);
    }
    return valrec;
@@ -183,7 +183,7 @@ create_single_vcp_value_by_parsed_vcp_response(
 Parsed_Vcp_Response * single_vcp_value_to_parsed_vcp_response(Single_Vcp_Value * valrec) {
    Parsed_Vcp_Response * presp = calloc(1, sizeof(Parsed_Vcp_Response));
    presp->response_type = valrec->value_type;
-   if (valrec->value_type == NON_TABLE_VCP_CALL) {
+   if (valrec->value_type == NON_TABLE_VCP_VALUE) {
       presp->non_table_response = calloc(1, sizeof(Parsed_Nontable_Vcp_Response));
       presp->non_table_response->cur_value = valrec->val.c.cur_val;
       presp->non_table_response->max_value = valrec->val.c.max_val;
@@ -197,7 +197,7 @@ Parsed_Vcp_Response * single_vcp_value_to_parsed_vcp_response(Single_Vcp_Value *
 
    }
    else {
-      assert(valrec->value_type == TABLE_VCP_CALL);
+      assert(valrec->value_type == TABLE_VCP_VALUE);
 #ifdef TRANSITIONAL
       //redundant redundancy
       presp->table_response = valrec->val.t.buffer;
@@ -214,7 +214,7 @@ Parsed_Vcp_Response * single_vcp_value_to_parsed_vcp_response(Single_Vcp_Value *
 
 Nontable_Vcp_Value * single_vcp_value_to_nontable_vcp_value(Single_Vcp_Value * valrec) {
    Nontable_Vcp_Value * non_table_response = calloc(1, sizeof(Nontable_Vcp_Value));
-   assert (valrec->value_type == NON_TABLE_VCP_CALL);
+   assert (valrec->value_type == NON_TABLE_VCP_VALUE);
 
    non_table_response->cur_value = valrec->val.c.cur_val;
    non_table_response->max_value = valrec->val.c.max_val;

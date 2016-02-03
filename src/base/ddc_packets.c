@@ -925,7 +925,7 @@ void   report_parsed_vcp_response(Parsed_Vcp_Response * response, int depth) {
    rpt_vstring(depth, "Parsed_Vcp_Reponse at %p:", response);
 
    rpt_vstring(depth, "response_type:   %d",   response->response_type);
-   if (response->response_type == NON_TABLE_VCP_CALL) {
+   if (response->response_type == NON_TABLE_VCP_VALUE) {
       rpt_vstring(depth, "non_table_response at %p:", response->non_table_response);
       report_interpreted_nontable_vcp_response(response->non_table_response, depth+1);
    }

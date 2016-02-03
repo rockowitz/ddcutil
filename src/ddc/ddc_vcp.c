@@ -139,11 +139,11 @@ set_vcp_value(
       Single_Vcp_Value * vrec)
 {
    Global_Status_Code gsc = 0;
-   if (vrec->value_type == NON_TABLE_VCP_CALL) {
+   if (vrec->value_type == NON_TABLE_VCP_VALUE) {
       gsc = set_nontable_vcp_value(dh, vrec->opcode, vrec->val.c.cur_val);
    }
    else {
-      assert(vrec->value_type == TABLE_VCP_CALL);
+      assert(vrec->value_type == TABLE_VCP_VALUE);
       gsc = set_table_vcp_value(dh, vrec->opcode, vrec->val.t.bytes, vrec->val.t.bytect);
    }
 
@@ -293,7 +293,7 @@ Global_Status_Code get_table_vcp_value(
 Global_Status_Code get_vcp_value(
        Display_Handle *          dh,
        Byte                      feature_code,
-       VCP_Call_Type             call_type,
+       Vcp_Value_Type             call_type,
        Single_Vcp_Value **       pvalrec)
 {
    bool debug = false;
@@ -307,7 +307,7 @@ Global_Status_Code get_vcp_value(
    Single_Vcp_Value * valrec = NULL;
    switch (call_type) {
 
-   case (NON_TABLE_VCP_CALL):
+   case (NON_TABLE_VCP_VALUE):
          gsc = get_nontable_vcp_value(
                   dh,
                   feature_code,
@@ -323,7 +323,7 @@ Global_Status_Code get_vcp_value(
          }
          break;
 
-   case (TABLE_VCP_CALL):
+   case (TABLE_VCP_VALUE):
          gsc = get_table_vcp_value(
                  dh,
                  feature_code,

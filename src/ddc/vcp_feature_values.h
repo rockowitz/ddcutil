@@ -37,7 +37,7 @@
 
 typedef struct {
    Byte          opcode;
-   VCP_Call_Type value_type;      // probably a different type would be better
+   Vcp_Value_Type value_type;      // probably a different type would be better
    union {
       struct {
          Byte *  bytes;

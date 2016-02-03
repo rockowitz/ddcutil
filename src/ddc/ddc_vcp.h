@@ -63,7 +63,7 @@ Global_Status_Code
 get_vcp_value(
       Display_Handle *          dh,
       Byte                      feature_code,
-      VCP_Call_Type             call_type,
+      Vcp_Value_Type             call_type,
       Single_Vcp_Value **       pvalrec);
 
 #endif /* DDC_VCP_H_ */
