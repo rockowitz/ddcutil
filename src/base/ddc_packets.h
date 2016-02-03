@@ -125,13 +125,12 @@ typedef enum {
 
 typedef
 struct {
-   Vcp_Value_Type                   response_type;
+   Vcp_Value_Type                  response_type;
    Parsed_Nontable_Vcp_Response *  non_table_response;
    Buffer *                        table_response;
 } Parsed_Vcp_Response;
 
 void   report_parsed_vcp_response(Parsed_Vcp_Response * response, int depth);
-
 
 typedef
 struct {
@@ -157,73 +156,84 @@ struct {
 } Interpreted_Multi_Part_Read_Fragment;
 
 
-
-
 void   free_ddc_packet(DDC_Packet * packet);
 
-Global_Status_DDC create_ddc_base_response_packet(
-          Byte *        i2c_response_bytes,
-          int           response_bytes_buffer_size,
-          const char *  tag,
-          DDC_Packet ** packet_ptr);
-Global_Status_DDC create_ddc_typed_response_packet(
-          Byte *        i2c_response_bytes,
-          int           response_bytes_buffer_size,
-          Byte          expected_type,
-          Byte          expected_subtype,
-          const char *  tag,
-          DDC_Packet ** packet_ptr_addr);
-DDC_Packet *      create_ddc_capabilities_request_packet(
-          int           offset,
-          const char *  tag);
-DDC_Packet *      create_ddc_multi_part_read_request_packet(
-          Byte          request_type,
-          Byte          request_subtype,
-          int           offset,
-          const char *  tag);
+Global_Status_DDC
+create_ddc_base_response_packet(
+      Byte *        i2c_response_bytes,
+      int           response_bytes_buffer_size,
+      const char *  tag,
+      DDC_Packet ** packet_ptr);
 
+Global_Status_DDC
+create_ddc_typed_response_packet(
+      Byte *        i2c_response_bytes,
+      int           response_bytes_buffer_size,
+      Byte          expected_type,
+      Byte          expected_subtype,
+      const char *  tag,
+      DDC_Packet ** packet_ptr_addr);
 
-void    update_ddc_capabilities_request_packet_offset(
-          DDC_Packet *  packet,
-          int           offset);
+DDC_Packet *
+create_ddc_capabilities_request_packet(
+      int           offset,
+      const char *  tag);
 
-void    update_ddc_multi_part_read_request_packet_offset(
-          DDC_Packet *  packet,
-          int           offset);
+DDC_Packet *
+create_ddc_multi_part_read_request_packet(
+      Byte          request_type,
+      Byte          request_subtype,
+      int           offset,
+      const char *  tag);
 
-Global_Status_DDC create_ddc_capabilities_response_packet(
-          Byte *        i2c_response_bytes,
-          int           response_bytes_buffer_size,
-          const char *  tag,
-          DDC_Packet ** packet_ptr);
+void
+update_ddc_capabilities_request_packet_offset(
+      DDC_Packet *  packet,
+      int           offset);
 
-Global_Status_DDC interpret_capabilities_response(
-          Byte *        data_bytes,
-          int           bytect,
-          Interpreted_Capabilities_Fragment * aux_data,
-          bool          debug);
+void
+update_ddc_multi_part_read_request_packet_offset(
+      DDC_Packet *  packet,
+      int           offset);
 
+Global_Status_DDC
+create_ddc_capabilities_response_packet(
+      Byte *        i2c_response_bytes,
+      int           response_bytes_buffer_size,
+      const char *  tag,
+      DDC_Packet ** packet_ptr);
 
-DDC_Packet * create_ddc_getvcp_request_packet(
-          Byte          vcp_code,
-          const char *  tag);
+Global_Status_DDC
+interpret_capabilities_response(
+      Byte *        data_bytes,
+      int           bytect,
+      Interpreted_Capabilities_Fragment * aux_data,
+      bool          debug);
 
-Global_Status_DDC create_ddc_getvcp_response_packet(
-          Byte *        i2c_response_bytes,
-          int           response_bytes_buffer_size,
-          Byte          expected_vcp_opcode,
-          const char *  tag,
-          DDC_Packet ** packet_ptr);
+DDC_Packet *
+create_ddc_getvcp_request_packet(
+      Byte          vcp_code,
+      const char *  tag);
 
-DDC_Packet * create_ddc_setvcp_request_packet(
-          Byte          vcp_code,
-          int           new_value,
-          const char *  tag);
+Global_Status_DDC
+create_ddc_getvcp_response_packet(
+      Byte *        i2c_response_bytes,
+      int           response_bytes_buffer_size,
+      Byte          expected_vcp_opcode,
+      const char *  tag,
+      DDC_Packet ** packet_ptr);
 
-Global_Status_DDC get_interpreted_vcp_code(
-          DDC_Packet *  packet,
-          bool          make_copy,
-          Parsed_Nontable_Vcp_Response ** interpreted_ptr);
+DDC_Packet *
+create_ddc_setvcp_request_packet(
+      Byte          vcp_code,
+      int           new_value,
+      const char *  tag);
+
+Global_Status_DDC
+get_interpreted_vcp_code(
+      DDC_Packet *  packet,
+      bool          make_copy,
+      Parsed_Nontable_Vcp_Response ** interpreted_ptr);
 
 void   report_interpreted_capabilities(Interpreted_Capabilities_Fragment * interpreted);
 void   report_interpreted_multi_read_fragment(Interpreted_Multi_Part_Read_Fragment * interpreted);
@@ -234,7 +244,5 @@ Byte * get_packet_start(DDC_Packet * packet);
 int    get_packet_len(  DDC_Packet * packet);
 Byte * get_data_start(  DDC_Packet * packet);
 int    get_data_len(    DDC_Packet * packet);
-
-
 
 #endif /* DDC_PACKETS_H_ */
