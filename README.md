@@ -177,8 +177,17 @@ If the following package exists, it is required to build ddctool.
 
 ### Notes on building from tarball
 
-**ddctool** is not yet packaged as a *tar* file.  Nor are *rpm* or *dev* files yet available.  
-Currently the only way to build it is from git.
+**ddctool** can be built from its tarball in the usual way.  Unpack the tar file, change to its directory, and issue the commands: 
+~~~
+# ./configure
+# make
+# sudo make install
+~~~
+Note that additional steps are required to build **ddctool** with *ADL* support.
+See below.
+
+Other distribution formats, including *rpm*  *dev* files are not yet available.  
+
 
 ### Notes on building from git
 
