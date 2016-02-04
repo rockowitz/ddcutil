@@ -10,6 +10,7 @@ perf.data
 *.lo
 *.la
 *.expand
+*.swp
 .deps
 .dirstamp
 aclocal.m4
@@ -60,7 +61,7 @@ NOTES
 dh_make/
 /Makefile.oop
 *tar
-*tar.gz
+# /*tar.gz
 junk*
 *.typelib
 *.gir

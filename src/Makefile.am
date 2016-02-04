@@ -192,6 +192,15 @@ libcommon_la_SOURCES += \
 endif
 
 
+# EXTRA_DIST = \
+# util/string_util.h \
+# util/subprocess_util.h
+
+dist-hook:
+	find .  -type f | grep  \.h$ | xargs -i cp --parents "{}" $(distdir)
+    
+
+
 # Header files
 
 # -I/usr/src/linux-headers-4.2.0-18/include/linux 
