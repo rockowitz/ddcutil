@@ -335,14 +335,12 @@ Global_Status_Code get_vcp_value(
          break;
    }
 
-   if (gsc == 0) {
-      if (debug) {
-         report_single_vcp_value(valrec,1);
-      }
-      *pvalrec = valrec;
-   }
+   *pvalrec = valrec;
 
    TRCMSGTG(tg, "Done.  Returning: %s", gsc_desc(gsc) );
+   if (gsc == 0 && debug)
+      report_single_vcp_value(valrec,1);
+   assert( (gsc == 0 && *pvalrec) || (gsc != 0 && !*pvalrec) );
    return gsc;
 }
 

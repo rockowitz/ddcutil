@@ -169,7 +169,7 @@ get_raw_value_for_feature_table_entry(
    bool is_table_feature = is_table_feature_by_display_handle(frec, dh);
    Vcp_Value_Type feature_type = (is_table_feature) ? TABLE_VCP_VALUE : NON_TABLE_VCP_VALUE;
    Output_Level output_level = get_output_level();
-   Single_Vcp_Value * valrec;
+   Single_Vcp_Value * valrec = NULL;
    gsc = get_vcp_value(
            dh,
            feature_code,
@@ -179,7 +179,6 @@ get_raw_value_for_feature_table_entry(
 
    switch(gsc) {
    case 0:
-      *pvalrec = valrec;
       break;
 
    case DDCRC_INVALID_DATA:
@@ -231,7 +230,9 @@ get_raw_value_for_feature_table_entry(
    }
    }
 
-   TRCMSGTG(tg, "Done.  Returning: %s", gsc_desc(gsc));
+   *pvalrec = valrec;
+   TRCMSGTG(tg, "Done.  Returning: %s, *pvalrec=%p", gsc_desc(gsc), *pvalrec);
+   assert( (gsc == 0 && *pvalrec) || (gsc != 0 && !*pvalrec) );
    return gsc;
 }
 
@@ -362,7 +363,7 @@ get_formatted_value_for_feature_table_entry(
                             feature_code, feature_name);
    }
 
-   Single_Vcp_Value *    pvalrec;
+   Single_Vcp_Value *    pvalrec = NULL;
    bool ignore_unsupported = !(output_level >= OL_NORMAL && !suppress_unsupported);
    gsc = get_raw_value_for_feature_table_entry(
             dh,
@@ -370,7 +371,7 @@ get_formatted_value_for_feature_table_entry(
             ignore_unsupported,
             &pvalrec,
             msg_fh);
-   assert( (gsc==0 && (feature_type == pvalrec->value_type)) || (gsc!=0) );
+   assert( (gsc==0 && (feature_type == pvalrec->value_type)) || (gsc!=0 && !pvalrec) );
    if (gsc == 0) {
       if (!is_table_feature && output_level >= OL_VERBOSE) {
          rpt_push_output_dest(msg_fh);
