@@ -30,14 +30,15 @@
 #ifndef I2C_BASE_IO_H_
 #define I2C_BASE_IO_H_
 
-#include <stdbool.h>
+// #include <stdbool.h>
 
-#include <base/execution_stats.h>
-#include <base/common.h>
-#include <base/ddc_base.h>
-#include <base/msg_control.h>
-#include <base/status_code_mgt.h>
-#include <base/util.h>
+#include "util/coredefs.h"
+// #include <base/execution_stats.h>
+// #include <base/common.h>
+// #include <base/ddc_base.h>
+// #include <base/msg_control.h>
+#include "base/status_code_mgt.h"
+// #include <base/util.h>
 
 // void init_i2c_io_stats(I2C_Call_Stats* pStats);
 

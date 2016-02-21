@@ -16,7 +16,7 @@ dnl   AC_PATH_PROG(XSLTPROC, xsltproc)
 
 m4_define([ddctool_major_version], [0])
 m4_define([ddctool_minor_version], [2])
-m4_define([ddctool_micro_version], [2])
+m4_define([ddctool_micro_version], [3])
 m4_define([ddctool_version],
           [ddctool_major_version.ddctool_minor_version.ddctool_micro_version])
 
@@ -29,14 +29,14 @@ AC_CONFIG_SRCDIR([src/util/coredefs.h])
 AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_MACRO_DIR([m4])
 # one entry for each Makefile.am:
-AC_CONFIG_FILES([Makefile src/Makefile man/Makefile data/Makefile])
+AC_CONFIG_FILES([Makefile src/Makefile man/Makefile data/Makefile obs/Makefile obs/ddctool.spec])
 
 
 dnl removed -Werror 
 dnl rmoved -Werror from AM_INIT_AUTOMAKE to allow compilation to proceed
 AM_INIT_AUTOMAKE([1.11 -Wall -Wno-extra-portability foreign subdir-objects])
 dnl AM_SILENT_RULES defined as of automake 1.11, so don't need to test for macro's existence
-AM_SILENT_RULES([no])
+AM_SILENT_RULES([yes])
 AM_PROG_AR
 
 

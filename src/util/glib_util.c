@@ -25,6 +25,7 @@
  */
 
 #include <assert.h>
+// #include <glib-2.0/glib.h>
 #include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
@@ -105,3 +106,71 @@ char * join_string_g_ptr_array(GPtrArray* strings, char * sepstr) {
 
    return catenated;
 }
+
+/**
+ * g_hash_table_get_keys_as_array:
+ * @hash_table: a #GHashTable
+ * @length: (out): the length of the returned array
+ *
+ * Retrieves every key inside @hash_table, as an array.
+ *
+ * The returned array is %NULL-terminated but may contain %NULL as a
+ * key.  Use @length to determine the true length if it's possible that
+ * %NULL was used as the value for a key.
+ *
+ * Note: in the common case of a string-keyed #GHashTable, the return
+ * value of this function can be conveniently cast to (gchar **).
+ *
+ * You should always free the return result with g_free().  In the
+ * above-mentioned case of a string-keyed hash table, it may be
+ * appropriate to use g_strfreev() if you call g_hash_table_steal_all()
+ * first to transfer ownership of the keys.
+ *
+ * Returns: (array length=length) (transfer container): a
+ *   %NULL-terminated array containing each key from the table.
+ *
+ * Since: 2.40
+ **/
+/*
+gpointer *
+g_hash_table_get_keys_as_array_local (GHashTable *hash_table,
+                                      guint      *length)
+{
+  gpointer *result;
+  guint i, j = 0;
+
+  result = g_new(gpointer, hash_table->nnodes + 1);
+  for (i = 0; i < hash_table->size; i++)
+    {
+      if (HASH_IS_REAL (hash_table->hashes[i]))
+        result[j++] = hash_table->keys[i];
+    }
+  g_assert_cmpint (j, ==, hash_table->nnodes);
+  result[j] = NULL;
+
+  if (length)
+    *length = j;
+
+  return result;
+}
+*/
+
+gpointer * g_list_to_g_array(GList * glist, guint * length) {
+   int len = 0;
+   gpointer * result = NULL;
+   guint ndx = 0;
+   GList * lptr;
+
+   len = g_list_length(glist);
+   result = g_new(gpointer, len+1);
+   for (lptr = glist; lptr!=NULL; lptr=lptr->next) {
+      result[ndx++] = lptr->data;
+   }
+   result[ndx] = NULL;
+
+   *length = len;
+   return result;
+}
+
+
+

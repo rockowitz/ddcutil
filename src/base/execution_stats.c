@@ -32,6 +32,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "util/glib_util.h"
 #include "util/report_util.h"
 
 #include "base/common.h"   // for sleep functions
@@ -315,7 +316,13 @@ void show_specific_status_counts(Status_Code_Counts * pcounts) {
       printf("%s:\n", pcounts->name);
    assert(pcounts->error_counts_hash);
    unsigned int keyct;
-   gpointer * keysp = g_hash_table_get_keys_as_array(pcounts->error_counts_hash, &keyct);
+
+   // g_hash_table_get_keys_as_array() new in v 2.40, which is not later than the version
+   // in all but the most recent distros, .e.g SUSE 13.2 is v 2.18
+   // gpointer * keysp = g_hash_table_get_keys_as_array(pcounts->error_counts_hash, &keyct);
+   GList * glist = g_hash_table_get_keys(pcounts->error_counts_hash);
+   gpointer * keysp = g_list_to_g_array(glist, &keyct);
+
    int summed_ct = 0;
    // fprintf(stdout, "DDC packet error status codes with non-zero counts:  %s\n",
    fprintf(stdout, "DDC Related Errors:  %s\n",
@@ -394,7 +401,13 @@ void show_all_status_counts() {
 int get_true_io_error_count(Status_Code_Counts * pcounts) {
    assert(pcounts->error_counts_hash);
      unsigned int keyct;
-     gpointer * keysp = g_hash_table_get_keys_as_array(pcounts->error_counts_hash, &keyct);
+
+     // g_hash_table_get_keys_as_array() new in v 2.40, which is not later than the version
+     // in all but the most recent distros, .e.g SUSE 13.2 is v 2.18
+     // gpointer * keysp = g_hash_table_get_keys_as_array(pcounts->error_counts_hash, &keyct);
+     GList * glist = g_hash_table_get_keys(pcounts->error_counts_hash);
+     gpointer * keysp = g_list_to_g_array(glist, &keyct);
+
      int summed_ct = 0;
 
      int ndx;

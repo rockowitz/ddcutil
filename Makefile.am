@@ -13,4 +13,21 @@ ACLOCAL_AMFLAGS = -I m4 ${ACLOCAL_FLAGS}
 DISTCHECK_CONFIGURE_FLAGS = --enable-introspection
 EXTRA_DIST = m4/introspection.m4 README.md
 
-SUBDIRS = src man data
+SUBDIRS = src man data obs
+
+RPM = rpm
+
+rpms srcrpm: dist
+	(cd obs && $(MAKE) $(AM_MAKEFLAGS) $@) || exit 1
+
+
+.PHONY: srcrpm rpms
+
+
+
+# rpmarch=`$(RPM) --showrc | grep "^build arc" | \
+# 	sed 's/\(.*: \)\(.*\)/\2/'`; \
+#	echo "$$rpmarch" ;\
+#test -z "obs/$$rpmarch" || \
+#	( mv obs/$$rpmarch/* . && rm -rf /obs/$$rpmarch )
+#rm -rf obs/$(distdir)

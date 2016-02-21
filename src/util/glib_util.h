@@ -37,4 +37,6 @@ Null_Terminated_String_Array g_ptr_array_to_ntsa(GPtrArray * garray);
 
 char * join_string_g_ptr_array(GPtrArray* strings, char * sepstr);
 
+gpointer * g_list_to_g_array(GList * glist, guint * length);
+
 #endif /* SRC_UTIL_GLIB_UTIL_H_ */

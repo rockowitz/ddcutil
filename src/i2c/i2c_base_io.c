@@ -30,30 +30,24 @@
 #include <assert.h>
 #include <errno.h>
 #include <fcntl.h>
-// On Fedora, i2c-dev.h is minimal.  i2c.h is required for struct i2c_msg and
-// other stuff.  On Ubuntu and SuSE, including both causes redefinition errors.
-// If I2C_FUNC_I2C is not defined, the definition is present in the full version
-// of i2c-dev.h but not in the abbreviated version, so i2c.h must be included.
-#include <linux/i2c-dev.h>
-#ifndef I2C_FUNC_I2C
-#include <linux/i2c.h>
-#endif
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/ioctl.h>
 #include <unistd.h>
 
-#include <util/string_util.h>
+#include "util/string_util.h"
 
-#include <base/ddc_base.h>
-#include <base/ddc_errno.h>
-#include <base/execution_stats.h>
-#include <base/common.h>
-#include <base/status_code_mgt.h>
-#include <base/linux_errno.h>
+#include "base/ddc_base.h"
+#include "base/ddc_errno.h"
+#include "base/execution_stats.h"
+#include "base/common.h"
+#include "base/status_code_mgt.h"
+#include "base/linux_errno.h"
 
-#include <i2c/i2c_base_io.h>
+#include "i2c/wrap_i2c-dev.h"
+
+#include "i2c/i2c_base_io.h"
 
 
 //

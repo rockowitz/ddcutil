@@ -27,14 +27,6 @@
 #include <assert.h>
 #include <errno.h>
 #include <fcntl.h>
-// On Fedora, i2c-dev.h is minimal.  i2c.h is required for struct i2c_msg and
-// other stuff.  On Ubuntu and SuSE, including both causes redefinition errors.
-// If I2C_FUNC_I2C is not defined, the definition is present in the full version
-// of i2c-dev.h but not in the abbreviated version, so i2c.h must be included.
-#include <linux/i2c-dev.h>
-#ifndef I2C_FUNC_I2C
-#include <linux/i2c.h>
-#endif
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -44,23 +36,24 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-#include <util/debug_util.h>
-#include <util/report_util.h>
-#include <util/string_util.h>
+#include "util/debug_util.h"
+#include "util/report_util.h"
+#include "util/string_util.h"
 
-#include <base/ddc_errno.h>
-#include <base/common.h>
-#include <base/displays.h>
-#include <base/edid.h>
-#include <base/linux_errno.h>
-#include <base/msg_control.h>
-#include <base/parms.h>
-#include <base/status_code_mgt.h>
-#include <base/util.h>
+#include "base/ddc_errno.h"
+#include "base/common.h"
+#include "base/displays.h"
+#include "base/edid.h"
+#include "base/linux_errno.h"
+#include "base/msg_control.h"
+#include "base/parms.h"
+#include "base/status_code_mgt.h"
+#include "base/util.h"
 
-#include <i2c/i2c_do_io.h>
+#include "i2c/i2c_do_io.h"
+#include "i2c/wrap_i2c-dev.h"
 
-#include <i2c/i2c_bus_core.h>
+#include "i2c/i2c_bus_core.h"
 
 
 // maximum number of i2c buses this code supports,
@@ -73,7 +66,6 @@
 
 // Trace class for this file
 static Trace_Group TRACE_GROUP = TRC_I2C;
-// static TraceControl bus_core_trace_level = NEVER;   // old way of controlling tracing
 
 
 //
@@ -370,6 +362,7 @@ Byte detect_ddc_addrs_by_busno(int busno) {
 }
 #endif
 
+
 /* Calculates bus information for an I2C bus.
  *
  * Arguments:
@@ -594,23 +587,21 @@ Parsed_Edid * i2c_get_parsed_edid_by_busno(int busno) {
  *
  * Arguments:
  *    bus_info    pointer to Bus_Info structure describing bus
- *    fp          output file pointer - where output will be written
+ *    depth       logical indentation depth
  *
  * Returns:  nothing
  *
- * The format of the output is controlled by a call to getOutputFormat().
- * fp ignored unless getOutputFormat() is OUTPUT_PROG_VCP or OUTPUT_PROG_BUSINFO
- *
- * The extent of information reported (as opposed to its format) is affected
- * by getGlobalMessageLevel().
+ * The format of the output as well as its extent is controlled by
+ * getGlobalMessageLevel().
  */
 static void report_businfo(Bus_Info * bus_info, int depth) {
-   // TODO: implement depth
-   // bool debug = adjust_debug_level(false, bus_core_trace_level);
+   // THIS IS NOT A REPORT FUNCTION:
+   //   Uses printf() rather than report functions
+   //   Does not implement depth
+   // Rename to show_busino()?
    bool debug = false;
    Output_Level output_level = get_output_level();
-   if (debug)
-      DBGMSG("bus_info=%p, output_level=%s", bus_info, output_level_name(output_level));
+   DBGMSF(debug, "bus_info=%p, output_level=%s", bus_info, output_level_name(output_level));
    assert(bus_info);
 
    Buffer * buf0 = buffer_new(1000, "report_businfo");
@@ -673,8 +664,7 @@ static void report_businfo(Bus_Info * bus_info, int depth) {
       }  // switch
 
    buffer_free(buf0, "report_businfo");
-   if (debug)
-      DBGMSG("Done");
+   DBGMSF(debug, "Done");
 }
 
 
@@ -727,7 +717,6 @@ void i2c_report_active_display_by_busno(int busno, int depth) {
  *
  * Arguments:
  *    busno       bus number
- *    fp          output file pointer - where output will be written
  *
  * Returns:  nothing
  *
@@ -736,8 +725,7 @@ void i2c_report_active_display_by_busno(int busno, int depth) {
 void i2c_report_bus(int busno) {
    // bool debug = adjust_debug_level(false, bus_core_trace_level);
    bool debug = false;
-   if (debug)
-      DBGMSG("Starting. busno=%d", busno );
+   DBGMSF(debug, "Starting. busno=%d", busno );
    assert(busno >= 0);
 
   int busct = i2c_get_busct();
@@ -748,8 +736,7 @@ void i2c_report_bus(int busno) {
      report_businfo(busInfo, 0);
   }
 
-  if (debug)
-     DBGMSG("Done");
+  DBGMSF(debug, "Done");
 }
 
 
@@ -766,8 +753,7 @@ void i2c_report_bus(int busno) {
  */
 int i2c_report_buses(bool report_all) {
    bool debug = false;
-   Trace_Group tg = TRACE_GROUP;
-   if (debug) tg = 0xff;
+   Trace_Group tg = (debug) ? 0xff : TRACE_GROUP;
    TRCMSGTG(tg, "Starting. report_all=%s\n", bool_repr(report_all));
 
    Output_Level output_level = get_output_level();

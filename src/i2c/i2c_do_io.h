@@ -27,9 +27,12 @@
 #ifndef I2C_DO_IO_H_
 #define I2C_DO_IO_H_
 
-#include <util/coredefs.h>
-#include <base/status_code_mgt.h>
-#include <i2c/i2c_base_io.h>
+#include "util/coredefs.h"
+
+#include "base/execution_stats.h"
+#include "base/status_code_mgt.h"
+
+#include "i2c/i2c_base_io.h"
 
 
 typedef struct {
