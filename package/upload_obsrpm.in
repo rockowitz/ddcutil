@@ -1,0 +1,65 @@
+#!/bin/sh
+
+# srcdir=/shared/playproj/i2c
+# workdir=.
+
+
+name=@PACKAGE_TARNAME@ 
+ver="@PACKAGE_VERSION@"
+
+
+obs_proj="home:rockowitz"
+obs_pkg=ddctool
+
+srcdir=${PWD}/..
+curdir=${PWD}
+workdir=${PWD}/obswork
+
+echo srcdir=$srcdir
+echo workdir=$workdir
+
+# TODO: error if workdir exists but not a directory
+
+if [ ! -d $workdir ]; then
+  echo creating $workdir
+  mkdir $workdir
+else
+  echo clearing $workdir
+  rm -r $workdir/*
+  rm -r $workdir/.osc
+fi
+
+cmd="osc checkout -o $workdir $obs_proj $obs_pkg"
+echo "cmd: $cmd"
+$cmd
+
+tar_fn=ddctool-${ver}.tar.gz
+
+tar_fn_new=
+if [ -e $workdir/$tar_fn ]; then
+  echo "$tar_fn already exists"
+else 
+  echo "$tar_fn not checked out"
+  tar_fn_new=1
+fi
+
+# TODO: remove all prior versions 
+cp -p $srcdir/$tar_fn $workdir
+cp -p $curdir/ddctool.spec $workdir
+
+cd obswork
+
+osc addremove ddctool
+
+
+
+
+# cp -p $srcdir/ddctool-${ver}.tar.gz $workdir
+
+# cp -p $srcdir/obs/ddctool.spec $workdir
+
+cmd="osc commit ddctool-${ver}.tar.gz ddctool.spec --message=\"new rpm build files\""
+echo cmd: $cmd
+$cmd
+
+# osc rebuild

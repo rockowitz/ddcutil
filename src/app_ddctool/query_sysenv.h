@@ -27,6 +27,10 @@
 #ifndef QUERY_SYSENV_H_
 #define QUERY_SYSENV_H_
 
+#include <stdbool.h>
+
+bool is_module_loaded_using_sysfs(char * module_name);
+
 void query_sysenv();
 
 #endif /* QUERY_SYSENV_H_ */

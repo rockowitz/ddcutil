@@ -1,0 +1,243 @@
+Name: @PACKAGE_TARNAME@
+Version: @PACKAGE_VERSION@
+
+%{echo:"?????????????????????????????????????????????????????????????????????????????????"}
+
+# So here's the problem: 
+# We'd like to include an indication of the distribution being built for in the package filename. 
+# Otherwise, packages built for different distributions can have the same filename, making it 
+# easy to use the wrong file when installing a package.  
+
+# Some distributions include a distribution string.  Examples:
+# Fedora: coreutils-8.25-4.fc24.x86_64.rpm
+# Mageia: coreutils-8.25-1.mga6.x86_64.rpm
+# CentOS: coreutils-5.97-34.el5_8.1.x86_64.rpm (CentOS 5.11)
+#
+# Some distributions do not include a distribution string: 
+# openSUSE: coreutils-8.23-2.12.1.x86_64.rpm (openSUSE 13.2)
+# 
+# Mandravia does it both ways
+# Mandravia: coreutils-8.12.1-2.x86_64.rpm   (Mandravia 2011)
+# Mandravia: coreutils-7.5-2.1mdv2010.0.x86_64.rpm (Mandravia 2010)
+#
+# Constraints on a solution: 
+#
+# OBS replaces the Release: tag in the spec file with its own value.  
+# By default, this is Release: <CI_CNT>.<B_CNT>
+# This can be overridden in the prjconf file 
+# 
+# Various macros may or may not exist depending on whether the package is being 
+# built locally or under OBS, and depending on the target OS. 
+#
+# The following files are not installed by OBS: 
+#   /etc/os-release
+#   /etc/fedora-release
+#   /etc/SuSE-release     
+# 
+
+
+# Release: tag template specified in prjconf: 
+# Release: <CI_CNT>.<B_CNT>%%{?release_suffix}
+
+
+# Inventory of interesting predefined macros: 
+%{echo: Interesting predefined macros: }
+%{echo: disturl is %{?disturl}, }
+%{echo: _build_arch is %{?_build_arch}, }
+%{echo: _build_name_fmt is %{?_build_name_fmt}, }
+%{echo: _host_vendor is %{?_host_vendor}, }
+%{echo: _host_cpu is %{?_host_cpu}, }
+%{echo: _target is %{?_target}, }
+%{echo: _target_cpu is %{?_target_cpu}, }
+%{echo: _target_os is %{?_target_os}, }
+%{echo: _target_platform is %{?_target_platform}, }
+%{echo: _target_vendor is %{?_target_vendor}, }
+%{echo: _vendor is %{?_vendor}, }
+%{echo: fedora is %{?fedora}, }
+%{echo: fedora_version is %{?fedora_version}, }
+%{echo: opensuse_bs is %{?opensuse_bs}, }
+%{echo: suse is %{?suse}, }
+%{echo: suse_version is %{?suse_version}, }
+%{echo: dist is %{?dist}, }
+
+%{echo: ARCH is %{?ARCH}, }
+%{echo: NAME is %{?NAME}, }
+%{echo: RELEASE is %{?RELEASE}, }
+
+
+# Detect if executing under OBS 
+# Documentation (https://en.opensuse.org/openSUSE:Build_Service_Tips_and_Tricks#List_available_packages_in_a_distro) 
+# states that macro %%opensuse_bs is defined for OBS builds.  
+# However, as observed: 
+#     it is defined if building for suse 
+#     it is not defined if building for fedora
+# Instead, test for macro %%{disturl}, which is defined on the command in OBS invoking rpmbuild 
+# TODO: add check that disturl starts with obs:
+%define is_obs_build %{defined disturl}
+
+# These macros will work on local builds, but not on OBS builds because the files being checked do not exist. 
+%define is_fedora %(test -e /etc/fedora-release && echo 1 || echo 0)
+%define is_suse   %(test -e /etc/SuSE-release && echo 1 || echo 0)
+# release number with periods removed
+%define distver %(release="`rpm -q --whatprovides /etc/os-release --queryformat='%{VERSION}' 2> /dev/null | tr . : | sed s/://g`" ; if test $? != 0 ; then release="" ; fi ; echo "$release")
+%define osid %(grep "^ID=" /etc/os-release | sed s/ID=//)
+%define osversionid %(grep "^VERSION_ID=" /etc/os-release | sed s/VERSION_ID=// | tr -d \"\")
+
+# Defined on: Fedora (local), Ubuntu (local), not defined Fedora (OBS)
+%define lsb_release %(lsb_release -r -s)
+
+# Inventory of our macros:
+%{echo:is_obs_build is %{?is_obs_build}, }
+%{echo:is_fedora is %{?is_fedora}, }
+%{echo:is_suse is %{?is_suse}, }
+%{echo:distver is %{?distver}, }
+%{echo:osid is %{?osid}, }
+%{echo:osversionid is %{?osversionid}, }
+%{echo:lsb_release is %{?lsb_release}, }
+
+
+%if %{is_obs_build}
+   %{echo:Executing in Open Build Service, }
+   %if 0%{?suse_version}
+      %define release_suffix .suse_%{suse_version}
+   %endif
+   %if 0%{?fedora_version}
+      %define release_suffix .fc%{fedora_version}
+   %endif
+%else
+   %{echo:Not an Open Build Service build, }
+   %if %{defined dist}
+      %{echo:dist IS defined, }
+      %define distro %{dist}
+      %{echo: distro(a) is %{?distro}, }
+   %else 
+      %{echo:dist IS NOT defined, }
+      %define distro .%{osid}%{osversionid}
+      %if 0%{?fedora}
+         # should never happen, dist should be defined
+         %{echo: case fedora, }
+         %define distro .fb%{fedora}
+      %endif
+      %if 0%{?suse_version}
+         %{echo: case  suse_version, }
+         # suse_version is 1230 when building on 13.1! 
+         # %%define distro .susb%%{suse_version}
+         %define distro .suse_%{distver}
+      %endif
+
+   %endif
+   %{echo: distro(b) is %{?distro}, }
+%endif
+
+
+# %%dump
+# will be replaced with version from prjdata if running in OBS 
+%{echo: distro(c) is %{?distro}, }
+Release: 1%{?distro}
+%{echo:"==================================================================="}
+
+# will be 0 or 1:
+%define build_libs @ENABLE_SHARED_LIB_FLAG@
+
+%if %{build_libs} == 1
+%{echo: =================================> defining _unpackaged_files_terminate_build 0, }
+# laclient is built but not packaged, avoid termination
+%define _unpackaged_files_terminate_build 0 
+%endif
+
+
+
+
+Summary: Query and update monitor settings
+License: GPL-2.0+
+URL: http://github.com/rockowitz/ddctool
+# BuildRequires: gcc  glib2 glib2-devel
+BuildRequires: gcc  pkgconfig(glib-2.0) i2c-tools
+Requires: i2c-tools glib2
+Source: %{name}-%{version}.tar.gz
+
+%description
+Query and change monitor settings 
+
+ddctool communicates with monitors implementing MCCS (Monitor Control Command 
+Set) using the DDC/CI protocol on the I2C bus.  Normally, the video driver for
+the monitor exposes the I2C bus as devices named /dev/i2c-n.
+
+A particular use case for ddctool is as part of color profile management.  
+Monitor calibration is relative to the monitor color settings currently in 
+effect, e.g. red gain.  ddctool allows color related settings to be saved at 
+the time a monitor is calibrated, and then restored when the calibration is 
+applied.
+
+Group:  Applications/System
+# Fedora guidelines say Group tag optional
+
+# Fedora guidelines say BuildRoot ignored
+BuildRoot: %{_tmppath}/%{name}-%{version}-build
+
+
+%package devel
+Summary: Library to query and update of monitor settings
+
+
+%description devel
+Long descripton of development library
+
+Contains a basic C API, and a primitive GOBject API.
+
+
+%prep
+%setup 
+# %%setup -q
+
+%build
+%if %{build_libs} == 1
+%{echo: =================================> building libraries, }
+%configure -enable-lib=yes
+%else
+%{echo: =================================> NOT building libraries, }
+%configure -enable-lib=no
+%endif
+make
+
+%check
+%{echo: =================================> Executing make check, }
+make check
+
+%install
+%{echo: =================================> Executing make install, }
+make DESTDIR=%{buildroot} install
+rm -rf %{buildroot}%{_datadir}/doc/%{name}/html
+
+# Fedora guidelines: %%clean section not required
+%clean
+rm -rf %{buildroot}
+
+%files
+%defattr(-,root,root)
+# %%doc %%{_datadir}/doc/%%{name}/AUTHORS
+# %%doc %%{_datadir}/doc/%%{name}/ChangeLog
+# %%doc %%{_datadir}/doc/%%{name}/COPYING
+# %%doc %%{_datadir}/doc/%%{name}/INSTALL
+# %%doc %%{_datadir}/doc/%%{name}/NEWS 
+# %%doc %%{_datadir}/doc/%%{name}/README
+%{_datadir}/%{name}/
+%{_mandir}/man1/ddctool.1*
+%if %{build_libs} == 1
+%{echo: ============================> files: building libraries, }
+%{_libdir}/libddctool.a
+%{_libdir}/libddctool.la
+%{_libdir}/libddctool.so*
+%else
+%{echo: ============================> files: NOT building libraries, }
+%endif
+%{_bindir}/ddctool
+
+
+
+%files devel
+# %%{_libdir}/libddctool.a
+# %%{_includedir}/flaim.h
+
+
+%doc

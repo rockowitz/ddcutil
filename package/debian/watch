@@ -1,0 +1,8 @@
+# Watch control file for uscan
+# See uscan(1) for format
+
+# Compulsory line, this is a version 3 file
+version=3
+
+# Dummy watch page to make lintian happy
+

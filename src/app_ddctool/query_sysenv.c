@@ -522,7 +522,6 @@ void check_i2c_dev_module(struct driver_name_node * driver_list) {
                         "/etc/modprobe.d/*conf "
                         "/run/modprobe.d/*conf "
                         , 1);
-
    }
 }
 
@@ -556,8 +555,6 @@ void query_packages() {
    ok = execute_shell_cmd("rpm -q -l --scripts i2c-tools", 1);
    if (!ok)
       printf("rpm command not found\n");
-
-
 }
 
 

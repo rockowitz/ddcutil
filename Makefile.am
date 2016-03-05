@@ -13,15 +13,37 @@ ACLOCAL_AMFLAGS = -I m4 ${ACLOCAL_FLAGS}
 DISTCHECK_CONFIGURE_FLAGS = --enable-introspection
 EXTRA_DIST = m4/introspection.m4 README.md
 
-SUBDIRS = src man data obs
+SUBDIRS = src man data package
 
 RPM = rpm
 
 rpms srcrpm: dist
-	(cd obs && $(MAKE) $(AM_MAKEFLAGS) $@) || exit 1
+	(cd package && $(MAKE) $(AM_MAKEFLAGS) $@) || exit 1
+
+obsrpm:  
+	echo "---> Makefile: obsrpm"
+	(cd package && $(MAKE) $(AM_MAKEFLAGS) $@) || exit 1
+
+dpkg:  
+	echo "---> Makefile: dpkg"
+	(cd package && $(MAKE) $(AM_MAKEFLAGS) $@) || exit 1
+
+pdebuild:  
+	echo "---> Makefile: pdebuild"
+	(cd package && $(MAKE) $(AM_MAKEFLAGS) $@) || exit 1
 
 
-.PHONY: srcrpm rpms
+obsdeb:  
+	echo "---> Makefile: obsdeb"
+	(cd package && $(MAKE) $(AM_MAKEFLAGS) $@) || exit 1
+
+ppa:  
+	echo "---> Makefile: ppa"
+	(cd package && $(MAKE) $(AM_MAKEFLAGS) $@) || exit 1
+
+
+
+.PHONY: srcrpm rpms obsrpm dpkg obsdeb ppa
 
 
 

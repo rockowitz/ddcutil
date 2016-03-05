@@ -77,12 +77,12 @@
 #include "app_ddctool/app_dumpload.h"
 
 
-
 //
 // Initialization and Statistics
 //
 
 static long start_time_nanos;
+
 
 void initialize() {
    start_time_nanos = cur_realtime_nanosec();
@@ -90,7 +90,15 @@ void initialize() {
 
    // overrides setting in init_ddc_services():
    i2c_set_io_strategy(DEFAULT_I2C_IO_STRATEGY);
+
+#ifndef HAVE_ADL
+   if ( is_module_loaded_using_sysfs("fglrx") ) {
+      fprintf(stdout, "WARNING: AMD proprietary video driver fglrx is loaded,");
+      fprintf(stdout, "but this copy of ddctool was built without fglrx support.");
+   }
+#endif
 }
+
 
 void report_stats(Stats_Type stats) {
    if (stats & STATS_TRIES) {
@@ -120,7 +128,6 @@ void report_stats(Stats_Type stats) {
          elapsed_nanos / (1000*1000),
          elapsed_nanos);
 }
-
 
 
 bool perform_get_capabilities_by_display_handle(Display_Handle * dh) {
@@ -166,7 +173,6 @@ bool perform_get_capabilities_by_display_handle(Display_Handle * dh) {
 }
 
 
-
 //
 // Mainline
 //
@@ -178,7 +184,7 @@ int main(int argc, char *argv[]) {
 
    Parsed_Cmd * parsed_cmd = parse_command(argc, argv);
    if (!parsed_cmd) {
-      puts("Terminating execution");
+      // puts("Terminating execution");
       exit(EXIT_FAILURE);
    }
 

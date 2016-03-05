@@ -1,0 +1,31 @@
+Source: ddctool
+# Graphics?  Utils? ddccontrol is in Utilities
+Section: utils
+Priority: optional
+Maintainer: Sanford Rockowitz <rockowitz@minsoft.com>
+Build-Depends: debhelper (>= 9), autotools-dev,  libc6 (>= 2.2.4), pkg-config, gobject-introspection, libglib2.0-0, libglib2.0-dev, libi2c-dev
+Standards-Version: 3.9.6
+Homepage: http://www.github.com/rockowitz/ddctool
+# #Vcs-Git: git://anonscm.debian.org/collab-maint/ddctool.git
+Vcs-Git: git://www.github.com/rockowitz/ddctool.git
+#Vcs-Browser: http://anonscm.debian.org/?p=collab-maint/ddctool.git;a=summary
+
+Package: ddctool
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, i2c-tools, libglib2.0-0, gobject-introspection
+# Description: 60 char max short description, followed by long description
+# Long description should be a paragraph which gives more details about the package. 
+# Column 1 of each line should be empty. There must be no blank lines, but you can put a single . (dot) 
+# in a column to simulate that. Also, there must be no more than one blank line after the long description. 
+Description: Query and update monitor settings
+ ddctool is used to query and change monitor settings.
+ .
+ ddctool  communicates  with monitors implementing MCCS (Monitor Control 
+ Command Set) using the DDC/CI protocol on the I2C bus.  Normally, the video
+ driver for the monitor exposes the I2C bus as devices named /dev/i2c-n.
+ .
+ A particular use case for ddctool is as part of color profile management.  
+ Monitor calibration is relative to the monitor color settings currently in  
+ effect,  e.g. red  gain.  ddctool allows color related settings to be saved 
+ at the time a monitor is calibrated, and then restored when the calibration 
+ is applied.

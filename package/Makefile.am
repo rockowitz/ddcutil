@@ -1,0 +1,66 @@
+rpmspec = $(PACKAGE_TARNAME).spec
+
+rpmmacros = \
+ --define="-rpmdir $${PWD}/built_rpms"\
+ --define="-srcrpmdir $${PWD}/built_rpms"\
+ --define="-sourcedir $${PWD}/.."\
+ --define="-specdir $${PWD}"\
+ --define="-builddir $${PWD}/rpmwork"
+
+# RPMENV is hack for Fedora rpm build error from rpm/check-paths error into warning:
+#  file '/usr/bin/laclient' contains a standard rpath '/usr/lib64' in [/usr/lib64]
+RPMENV = QA_RPATHS=$$(( 0x0001 ))
+RPMBUILD = rpmbuild
+RPMFLAGS = --nodeps --buildroot="$${PWD}/_rpm"
+
+# n. ver must be set here, not within a target, where it's treated as an unrecognized command
+ver = @PACKAGE_VERSION@
+rlse = @DEBIAN_RELEASE@
+
+rpmcheck:
+	if [ which $(RPMBUILD) &> /dev/null ]; then \
+		echo "*** This target requires an rpm build environmnent"; \
+		(exit 1); exit 1; \
+	fi
+
+srcrpm: rpmcheck $(rpmspec)
+	echo "--------------------------> package/Makefile: target srcrpm"
+	$(RPMBUILD) $(RPMFLAGS) -bs $(rpmmacros) $(rpmspec)
+
+rpms: rpmcheck $(rpmspec)
+	echo "--------------------------> package/Makefile: target rpms"
+	$(RPMENV) $(RPMBUILD) $(RPMFLAGS) -ba $(rpmmacros) $(rpmspec)
+
+obsrpm:
+	echo "--------------------------> package/Makefile: target obsrpm"
+	echo "ver --> ${ver}"
+	chmod +x upload_obsrpm
+	./upload_obsrpm ${ver}
+
+dpkg:
+	echo "--------------------------> obs/Makefile: target dpkg"
+	chmod +x build_dpkg
+	./build_dpkg debuild
+
+pdebuild:
+	echo "--------------------------> obs/Makefile: target pdebuild"
+	chmod +x build_dpkg
+	./build_dpkg pdebuild
+
+
+obsdeb:
+	echo "--------------------------> package/Makefile: target obsdeb"
+	chmod +x build_dpkg upload_obsdeb
+	./build_dpkg obsdeb 
+	./upload_obsdeb ${ver} ${rlse}
+
+
+ppa:
+	echo "--------------------------> package/Makefile: target ppa"
+	chmod +x build_dpkg upload_ppa
+	./build_dpkg ppa
+	debsign debwork/ddctool_${ver}-${rlse}_source.changes   
+	./upload_ppa ${ver} ${rlse}
+
+
+.PHONY:  rpmcheck srcrpm rpms obsrpm dpkg obsdeb ppa

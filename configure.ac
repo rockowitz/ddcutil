@@ -16,7 +16,7 @@ dnl   AC_PATH_PROG(XSLTPROC, xsltproc)
 
 m4_define([ddctool_major_version], [0])
 m4_define([ddctool_minor_version], [2])
-m4_define([ddctool_micro_version], [3])
+m4_define([ddctool_micro_version], [5])
 m4_define([ddctool_version],
           [ddctool_major_version.ddctool_minor_version.ddctool_micro_version])
 
@@ -29,8 +29,19 @@ AC_CONFIG_SRCDIR([src/util/coredefs.h])
 AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_MACRO_DIR([m4])
 # one entry for each Makefile.am:
-AC_CONFIG_FILES([Makefile src/Makefile man/Makefile data/Makefile obs/Makefile obs/ddctool.spec])
-
+AC_CONFIG_FILES([
+	Makefile 
+	src/Makefile 
+	man/Makefile 
+	data/Makefile 
+	package/Makefile 
+	package/ddctool.spec 
+	package/upload_obsrpm
+  package/build_dpkg
+  package/debian/changelog
+  ],
+ )
+dnl cannot chmod on build_dpkg, upload_obsrpm, since they will not exist within dpkg build environment
 
 dnl removed -Werror 
 dnl rmoved -Werror from AM_INIT_AUTOMAKE to allow compilation to proceed
@@ -59,6 +70,12 @@ AC_SUBST(LT_CURRENT)
 AC_SUBST(LT_REVISION)
 AC_SUBST(LT_AGE)
 
+
+dnl for debian/changelog - should do it some other way
+DEBIAN_RELEASE=2
+DEBIAN_DISTRIBUTION=wily
+AC_SUBST(DEBIAN_RELEASE)
+AC_SUBST(DEBIAN_DISTRIBUTION)
 
 ###
 ### Checks for programs.
@@ -96,9 +113,10 @@ dnl AM_CONDITIONAL(HAVE_INTROSPECTION, test "x$found_introspection" = xyesxxx)
 ###
 
 dnl appends to GLIB_CFLAGS and GLIB_LIBS the output of pkg-config --cflags|--lib glib-2.0
-PKG_CHECK_MODULES(GLIB,  glib-2.0 >= 2.36) 
+# was 2.36, can be drop this to 2.14 to allow for Debian 7.0
+PKG_CHECK_MODULES(GLIB,  glib-2.0 >= 2.14) 
 
-PKG_CHECK_MODULES(GOBJECT,  gobject-2.0 >= 2.36) 
+PKG_CHECK_MODULES(GOBJECT,  gobject-2.0 >= 2.14) 
 
 dnl PKG_CHECK_MODULES(OSINFO, libosinfo-1.0 >= 0.1, [OSINFO_FOUND=yes], [OSINFO_FOUND=no])
 
@@ -238,6 +256,14 @@ AS_IF([test "x$enable_lib" == "xyes"],
       AC_MSG_NOTICE( [lib... enabled]  ),
       AC_MSG_NOTICE( [lib... disabled] )
      )
+dnl AC_SUBST([ENABLE_SHARED_LIB_FLAG], [test "x$enable_lib" == "xyes"; $?])
+dnl AC_SUBST([ENABLE_SHARED_LIB_FLAG], [xy])
+AS_IF([test "x$enable_lib" == "xyes"],
+      AC_SUBST([ENABLE_SHARED_LIB_FLAG], [1] ),
+      AC_SUBST([ENABLE_SHARED_LIB_FLAG], [0]  )
+     )
+
+
 
 dnl *** configure option: --enable-gobject-api
 AC_ARG_ENABLE([gobject-api],

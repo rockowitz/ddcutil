@@ -2090,8 +2090,8 @@ static  Feature_Value_Entry xd6_power_mode_values[] =
 
 // 0xd7
 static  Feature_Value_Entry xd7_aux_power_output_values[] =
-   { {0x01, "Disable auxilliary power"},
-     {0x02, "Enable Auxilliar power"},
+   { {0x01, "Disable auxiliary power"},
+     {0x02, "Enable Auxiliary power"},
      {0x00, NULL}    // termination entry
 };
 

@@ -1,0 +1,2 @@
+?package(ddctool):needs="text" section="Applications/System/Hardware"\
+  title="ddctool" command="/usr/bin/ddctool"

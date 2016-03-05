@@ -1,0 +1,110 @@
+#!/bin/sh
+
+# srcdir=/shared/playproj/i2c
+# workdir=.
+
+
+name=ddctool 
+# ver="0.2.4"
+ver=$1
+rlse=$2
+
+echo "(upload_obsdeb) parm 1 = $1, ver=${ver}"
+echo "(upload_obsdeb) parm 2 = $2, rlse=${rlse}"
+
+
+obs_proj="home:rockowitz"
+obs_pkg=ddctool
+
+srcdir=${PWD}/..
+curdir=${PWD}
+workdir=${PWD}/obswork
+debdir=${PWD}/debwork
+
+echo srcdir=$srcdir
+echo workdir=$workdir
+
+# TODO: error if workdir exists but not a directory
+
+if [ ! -d $workdir ]; then
+  echo creating $workdir
+  mkdir $workdir
+else
+  echo clearing $workdir
+  rm -r $workdir/*
+  rm -r $workdir/.osc
+fi
+
+cmd="osc checkout -o $workdir $obs_proj $obs_pkg"
+echo "cmd: $cmd"
+$cmd
+
+
+
+# tar_fn=ddctool-${ver}.tar.gz
+
+# tar_fn_new=
+# if [ -e $workdir/$tar_fn ]; then
+#   echo "$tar_fn already exists"
+# else 
+#   echo "$tar_fn not checked out"
+#   tar_fn_new=1
+# fi
+
+# Remove all prior versions - build will fail if they're still there
+
+# doesn't work
+# delfiles() {
+#    echo delfiles: $1
+#    for file in $1; do
+#       echo delfiles: f: $f
+#    done
+# }
+
+# echo Deleting ddctool_*.orig.tar.gz
+# echo Deleting ddctool_*.
+# rm ddctool_*.orig.tar.gz
+# rm ddctool_*.debian.tar.xz
+# rm ddctool_*.dsc
+
+cd $workdir
+
+# delfiles ddctool_*.orig.tar.gz
+
+for f in ddctool_*.orig.tar.gz; do
+   echo "Deleting file: $f"
+   rm $f
+done
+
+for f in ddctool_*.debian.tar.xz; do
+   echo "Deleting file: $f"
+   rm $f
+done
+
+for f in ddctool_*.dsc; do
+   echo "Deleting file: $f"
+   rm $f
+done
+
+fn1="ddctool_${ver}.orig.tar.gz"        
+fn2="ddctool_${ver}-${rlse}.debian.tar.xz"
+fn3="ddctool_${ver}-${rlse}.dsc"    
+
+echo "Adding file: ${fn1}" 
+cp -p $debdir/$fn1  .
+echo "Adding file: ${fn2}" 
+cp -p $debdir/$fn2  .
+echo "Adding file: ${fn3}" 
+cp -p $debdir/$fn3  .
+
+osc addremove ddctool
+
+# echo "fn1=${fn1}"
+# echo "fn2=${fn2}"
+# echo "fn3=${fn3}"
+
+cmd="osc commit ${fn1} ${fn2} ${fn3} --message=\"new deb build files\""
+echo "cmd: ${cmd}"
+$cmd
+
+# osc rebuild
