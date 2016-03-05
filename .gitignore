@@ -85,10 +85,6 @@ package/config.log
 package/ddctool.spec
 package/debwork
 package/debwork/
-package/debwork/**/
-package/debwork/**/*
-package/debwork/**
-package/debwork/*
 package/debwork/**
 package/obswork/
 package/rpmwork
