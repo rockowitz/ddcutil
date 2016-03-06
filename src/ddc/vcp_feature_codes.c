@@ -1963,7 +1963,7 @@ Feature_Value_Entry xc8_display_controller_type_values[] = {
    {0x01,  "Conexant"},
    {0x02,  "Genesis"},
    {0x03,  "Macronix"},
-   {0x04,  "MRT"},
+   {0x04,  "IDT"},    // was MRT, 2.2a and 3.0 update have IDT
    {0x05,  "Mstar"},
    {0x06,  "Myson"},
    {0x07,  "Phillips"},
@@ -1979,8 +1979,8 @@ Feature_Value_Entry xc8_display_controller_type_values[] = {
    {0x11,  "Samsung"},
    {0x12,  "Novatek"},
    {0x13,  "STK"},
+   {0x14,  "Silicon Optics"},  // added in 3.0 Update Document 3/20/2007
    // end of MCCS 3.0 values, beginning of values added in 2.2:
-   {0x14,  "Silicon Optics"},
    {0x15,  "Texas Instruments"},
    {0x16,  "Analogix"},
    {0x17,  "Quantum Data"},
