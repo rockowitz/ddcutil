@@ -40,7 +40,6 @@
 #include "ddc/vcp_feature_codes.h"
 
 
-
 // Trace class for this file
 // static TraceGroup TRACE_GROUP = TRC_DDC;   // currently unused, commented out to avoid warning
 
@@ -159,13 +158,12 @@ void report_capabilities_feature(Capabilities_Feature_Record * vfr, Version_Spec
    // if (vfr->values)
    //    report_id_array(vfr->values, "Feature values:");
    char * buf0 = NULL;
-
-   if (vfr->value_string) {
+   Output_Level ol = get_output_level();
+   if (ol >= OL_VERBOSE && vfr->value_string) {
       printf("    Values (unparsed): %s\n", vfr->value_string);
    }
 
    if (vfr->values) {
-
       Feature_Value_Entry * feature_values = find_feature_values_for_capabilities(vfr->feature_id, vcp_version);
       // if (feature_values)
       //    DBGMSG("Feature values found for feature 0x%02x", vfr->feature_id);
@@ -174,7 +172,10 @@ void report_capabilities_feature(Capabilities_Feature_Record * vfr, Version_Spec
 
       int ct = bva_length(vfr->values);
       if (feature_values) {
-         printf("    Values (  parsed):\n");
+         if (ol >= OL_VERBOSE)
+            printf("    Values (  parsed):\n");
+         else
+            printf("    Values:\n");
          int ndx = 0;
          for (; ndx < ct; ndx++) {
             Byte hval = bva_get(vfr->values, ndx);
@@ -205,6 +206,3 @@ void report_capabilities_feature(Capabilities_Feature_Record * vfr, Version_Spec
    if (buf0)
       free(buf0);
 }
-
-
-

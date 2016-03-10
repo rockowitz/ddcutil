@@ -132,14 +132,10 @@ void report_stats(Stats_Type stats) {
 
 bool perform_get_capabilities_by_display_handle(Display_Handle * dh) {
    bool ok = true;
-   // Buffer * capabilities = NULL;
    char * capabilities_string;
-   // returns Global_Status_Code, but testing capabilities == NULL also checks for success
-   // int rc = get_capabilities_buffer_by_display_ref(dref, &capabilities);
    int rc = get_capabilities_string(dh, &capabilities_string);
 
    if (rc < 0) {
-      // char buf[100];
       switch(rc) {
       case DDCRC_REPORTED_UNSUPPORTED:       // should not happen
       case DDCRC_DETERMINED_UNSUPPORTED:
@@ -148,7 +144,7 @@ bool perform_get_capabilities_by_display_handle(Display_Handle * dh) {
       case DDCRC_RETRIES:
          printf("Unable to get capabilities for monitor on %s.  Maximum DDC retries exceeded.\n",
                  display_handle_repr(dh));
-          break;
+         break;
       default:
          printf("(%s) !!! Unable to get capabilities for monitor on %s\n",
                 __func__, display_handle_repr(dh));
@@ -157,15 +153,16 @@ bool perform_get_capabilities_by_display_handle(Display_Handle * dh) {
       ok = false;
    }
    else {
-      // assert(capabilities);
       assert(capabilities_string);
-      // pcap is always set, but may be damaged if there was a parsing error
-      // Parsed_Capabilities * pcap = parse_capabilities_buffer(capabilities);
-      // Parsed_Capabilities * pcap = parse_capabilities_string(capabilities->bytes);
-      Parsed_Capabilities * pcap = parse_capabilities_string(capabilities_string);
-      // buffer_free(capabilities, "capabilities");
-      report_parsed_capabilities(pcap);
-      free_parsed_capabilities(pcap);
+      Output_Level output_level = get_output_level();
+      if (output_level <= OL_TERSE)
+         printf("Unparsed capabilities string: %s\n", capabilities_string);
+      else {
+         // pcap is always set, but may be damaged if there was a parsing error
+         Parsed_Capabilities * pcap = parse_capabilities_string(capabilities_string);
+         report_parsed_capabilities(pcap);
+         free_parsed_capabilities(pcap);
+      }
       ok = true;
    }
 

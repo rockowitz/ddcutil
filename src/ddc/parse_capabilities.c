@@ -77,12 +77,8 @@ void report_features(GArray* features, Version_Spec vcp_version) {
 void report_parsed_capabilities(Parsed_Capabilities* pcaps) {
    // DBGMSG("Starting.");
    assert(pcaps && memcmp(pcaps->marker, PARSED_CAPABILITIES_MARKER, 4) == 0);
-   // typedef enum {TERSE, NORMAL, VERBOSE } MsgLevel;
-   // MsgLevel msgLevel = get_global_msg_level();
-   // printf("Parsed Capabilities:\n");
    Output_Level output_level = get_output_level();
    if (output_level >= OL_VERBOSE) {
-   // if (msgLevel >= VERBOSE) {
       printf("Unparsed capabilities string: %s\n", pcaps->raw_value);
    }
    bool damaged = false;
