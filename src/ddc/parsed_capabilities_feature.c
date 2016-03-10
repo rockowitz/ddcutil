@@ -1,4 +1,4 @@
-/* vcp_feature_record.c
+/* parsed_capabilities_feature.c
  *
  * Created on: Nov 1, 2015
  *     Author: rock
@@ -24,8 +24,6 @@
  * </endcopyright>
  */
 
-#include "parsed_capabilities_feature.h"
-
 #include <assert.h>
 #include <glib.h>
 #include <stdbool.h>
@@ -38,6 +36,8 @@
 #include "base/msg_control.h"
 
 #include "ddc/vcp_feature_codes.h"
+
+#include "ddc/parsed_capabilities_feature.h"
 
 
 // Trace class for this file

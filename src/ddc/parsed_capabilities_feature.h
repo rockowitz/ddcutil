@@ -1,10 +1,10 @@
-/* vcp_feature_record.h
+/* parsed_capabilities_feature.h
  *
  * Created on: Nov 1, 2015
  *     Author: rock
  *
  * <copyright>
- * Copyright (C) 2014-2015 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2015-2016 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -24,8 +24,8 @@
  * </endcopyright>
  */
 
-#ifndef VCP_FEATURE_RECORD_H_
-#define VCP_FEATURE_RECORD_H_
+#ifndef PARSED_CAPABILITIES_H
+#define PARSED_CAPABILITIES_H
 
 #include "util/data_structures.h"
 
@@ -51,4 +51,4 @@ Capabilities_Feature_Record * new_Capabilities_Feature(
 void free_capabilities_feature(Capabilities_Feature_Record * pfeat);
 void report_capabilities_feature(Capabilities_Feature_Record * vfr, Version_Spec vcp_version);
 
-#endif /* VCP_FEATURE_RECORD_H_ */
+#endif /* PARSED_CAPABILITIES_H */
