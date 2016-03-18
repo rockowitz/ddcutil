@@ -457,6 +457,13 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
    }
 // #endif
 
+   int rest_ct = 0;
+   if (cmd_and_args) {
+      for (; cmd_and_args[rest_ct] != NULL; rest_ct++) {
+            DBGMSF(debug, "cmd_and_args[%d]: %s", rest_ct, cmd_and_args[rest_ct]);
+      }
+   }
+
    if (version_flag) {
       printf("ddctool %s\n", VERSION);
       printf("Compiled %s at %s\n", __DATE__, __TIME__ );
@@ -466,12 +473,15 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
       printf("Built without support for AMD Display Library (AMD proprietary driver)\n");
 #endif
       puts("");
-      puts("Copyright (C) 2015-2016 Sanford Rockowitz");
-      puts("License GPLv2: GNU GPL version 2 or later <http://gnu.org/licenses/gpl.html>");
-      puts("This is free software: you are free to change and redistribute it.");
-      puts("There is NO WARRANTY, to the extent permitted by law.");
+      // if no command specified, include license in version information and terminate
+      if (rest_ct == 0) {
+         puts("Copyright (C) 2015-2016 Sanford Rockowitz");
+         puts("License GPLv2: GNU GPL version 2 or later <http://gnu.org/licenses/gpl.html>");
+         puts("This is free software: you are free to change and redistribute it.");
+         puts("There is NO WARRANTY, to the extent permitted by law.");
 
-      exit(0);
+         exit(0);
+      }
    }
 
    // All options processed.  Check for consistency, set defaults
@@ -482,15 +492,6 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
    else if (explicit_display_spec_ct == 0)
       parsed_cmd->pdid = create_dispno_display_identifier(1);   // default monitor
 
-   int rest_ct = 0;
-   if (cmd_and_args) {
-      for (; cmd_and_args[rest_ct] != NULL; rest_ct++) {
-         if (debug) {
-            DBGMSG("rest_ct=%d", rest_ct);
-            DBGMSG("cmd_and_args: %s", cmd_and_args[rest_ct]);
-         }
-      }
-   }
 
    if (rest_ct == 0) {
       fprintf(stderr, "No command specified\n");
