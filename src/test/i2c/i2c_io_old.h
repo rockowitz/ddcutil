@@ -26,7 +26,7 @@
 
 #include <stdbool.h>
 
-#include <base/ddc_base_defs.h>
+// #include <base/ddc_base_defs.h>
 #include <base/execution_stats.h>
 #include <base/common.h>
 #include <base/msg_control.h>

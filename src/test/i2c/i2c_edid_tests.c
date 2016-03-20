@@ -32,7 +32,7 @@
 #include <sys/ioctl.h>
 #include <unistd.h>        // usleep
 #include <stdbool.h>
-#include <linux/i2c-dev.h>
+#include "i2c/wrap_i2c-dev.h"
 #include <fcntl.h>
 
 #include <util/debug_util.h>

@@ -15,8 +15,8 @@ dnl   AC_PATH_PROG(XSLTPROC, xsltproc)
 
 
 m4_define([ddctool_major_version], [0])
-m4_define([ddctool_minor_version], [2])
-m4_define([ddctool_micro_version], [5])
+m4_define([ddctool_minor_version], [3])
+m4_define([ddctool_micro_version], [1])
 m4_define([ddctool_version],
           [ddctool_major_version.ddctool_minor_version.ddctool_micro_version])
 
@@ -72,7 +72,7 @@ AC_SUBST(LT_AGE)
 
 
 dnl for debian/changelog - should do it some other way
-DEBIAN_RELEASE=2
+DEBIAN_RELEASE=1
 DEBIAN_DISTRIBUTION=wily
 AC_SUBST(DEBIAN_RELEASE)
 AC_SUBST(DEBIAN_DISTRIBUTION)

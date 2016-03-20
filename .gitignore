@@ -19,7 +19,6 @@ autoscan.log
 build-config2
 configure
 config.cache
-/config/
 /config.h
 /config.h.in
 /config.log
@@ -38,7 +37,6 @@ Makefile.in
 /src/laclient
 /src/fixit
 stamp-h1
-m4/
 src/.libs
 /fedora_gcc_paths.txt
 /ubuntu_gcc_paths.txt
@@ -89,3 +87,5 @@ package/debwork/**
 package/obswork/
 package/rpmwork
 package/upload_obsrpm
+ubuntuvm_notes.txt
+test
