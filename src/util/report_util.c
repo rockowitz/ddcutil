@@ -106,15 +106,25 @@ void rpt_title(char * title, int depth) {
 
 
 // n. depth parm is first on this function because of variable args
-void rpt_vstring(int depth, char * format, ...)
-{
-   // assemble the message text 
-   char buffer[300];
+void rpt_vstring(int depth, char * format, ...) {
+   int buffer_size = 200;
+   char buffer[buffer_size];
+   char * buf = buffer;
    va_list(args);
    va_start(args, format);
-   vsnprintf(buffer, 300, format, args);
+   int reqd_size = vsnprintf(buffer, buffer_size, format, args);
+   // if buffer wasn't sufficiently large, allocate a temporary buffer
+   if (reqd_size >= buffer_size) {
+      // printf("(%s) Allocating temp buffer, reqd_size=%d\n", __func__, reqd_size);
+      buf = malloc(reqd_size+1);
+      va_start(args, format);
+      vsnprintf(buf, reqd_size, format, args);
+   }
 
-   rpt_title(buffer, depth);
+   rpt_title(buf, depth);
+
+   if (buf != buffer)
+      free(buf);
 }
 
 

@@ -110,7 +110,6 @@ Global_Status_Code invoke_i2c_writer(
  *    fh              file handle for open /dev/i2c bus
  *    bytect          number of bytes to read
  *    bytes_to_write  location where bytes will be read to
- *    sleep_millisec  delay after reading from bus
  */
 Global_Status_Code invoke_i2c_reader(
        int        fh,
@@ -118,20 +117,40 @@ Global_Status_Code invoke_i2c_reader(
        Byte *     readbuf)
 {
      bool debug = false;
-     if (debug)
-        DBGMSG("reader=%s, bytect=%d", i2c_io_strategy->i2c_reader_name, bytect);
+     DBGMSF(debug, "reader=%s, bytect=%d", i2c_io_strategy->i2c_reader_name, bytect);
 
      Base_Status_Errno_DDC rc;
      RECORD_IO_EVENT(
         IE_READ,
         ( rc = i2c_io_strategy->i2c_reader(fh, bytect, readbuf) )
        );
-     if (debug)
-        DBGMSG("reader() function returned %d", rc);
+     DBGMSF(debug, "reader() function returned %d", rc);
      assert (rc <= 0);
 
      Global_Status_Code gsc = modulate_base_errno_ddc_to_global(rc);
-     if (debug )
-        DBGMSG("Returning gsc=%s", gsc_desc(gsc));
+     DBGMSF(debug, "Returning gsc=%s", gsc_desc(gsc));
      return gsc;
 }
+
+#ifdef TEST_THAT_DIDNT_WORK
+// fails
+Global_Status_Code invoke_single_byte_i2c_reader(
+      int        fh,
+      int        bytect,
+      Byte *     readbuf)
+{
+   bool debug = true;
+   DBGMSF(debug, "bytect=%d", bytect);
+   Global_Status_Code gsc = 0;
+   int ndx = 0;
+   for (;ndx < bytect; ndx++) {
+      gsc = invoke_i2c_reader(fh, 1, readbuf+ndx);
+      if (gsc != 0)
+         break;
+      // call_tuned_sleep_i2c(SE_POST_READ);
+   }
+   DBGMSF(debug, "Returning gsc=%s", gsc_desc(gsc));
+   return gsc;
+}
+#endif
+

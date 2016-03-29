@@ -893,15 +893,26 @@ bool query_card_and_driver_using_osinfo() {
 }
 
 
+void query_i2c_buses() {
+   printf("\nExamining i2c buses...\n");
+   i2c_report_buses(true, 1 /* indentation depth */);
+}
+
+
+
+
 void query_sysenv() {
    query_base_env();
+
    printf("\n*** Primary Check 1: Identify video card and driver ***\n");
    struct driver_name_node * driver_list = query_card_and_driver_using_sysfs();
 
    printf("\n*** Primary Check 2: Check that /dev/i2c-* exist and writable ***\n");
    check_i2c_devices(driver_list);
+
    printf("\n*** Primary Check 3: Check that module i2c_dev is loaded ***\n");
    check_i2c_dev_module(driver_list);
+
    printf("\n*** Primary Check 4: Driver specific checks ***\n");
    driver_specific_tests(driver_list);
 
@@ -915,6 +926,7 @@ void query_sysenv() {
    printf("\n*** Primary Check 5: Installed packages ***\n");
    query_packages();
    puts("");
+
    printf("\n*** Additional probes ***\n");
    // printf("Gathering card and driver information...\n");
    puts("");
@@ -925,12 +937,18 @@ void query_sysenv() {
    query_loaded_modules_using_sysfs();
    query_i2c_bus_using_sysfs();
 
-
    Output_Level output_level = get_output_level();
    if (output_level >= OL_VERBOSE) {
       puts("");
       query_proc_driver_nvidia();
    }
+
+   // temporary location:
+   query_i2c_buses();
+
+   puts("");
+   printf("xrandr connection report:\n");
+   execute_shell_cmd("xrandr|grep connected", 1 /* depth */);
 
 }
 

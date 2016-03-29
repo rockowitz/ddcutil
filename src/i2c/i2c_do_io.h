@@ -54,4 +54,11 @@ Global_Status_Code invoke_i2c_reader(
        int        bytect,
        Byte *     readbuf);
 
+#ifdef TEST_THAT_DIDNT_WORK
+Global_Status_Code invoke_single_byte_i2c_reader(
+       int        fh,
+       int        bytect,
+       Byte *     readbuf);
+#endif
+
 #endif /* I2C_DO_IO_H_ */

@@ -81,9 +81,7 @@ Base_Status_Errno_DDC  write_writer(int fh, int bytect, Byte * pbytes) {
    }
    else  {       // rc < 0
       int errsv = errno;
-      if (debug)
-         DBGMSG("write() returned %d, errno=%s", rc, linux_errno_desc(errsv));
-      // rc = modulate_rc(-errsv, RR_ERRNO);
+      DBGMSF(debug, "write() returned %d, errno=%s", rc, linux_errno_desc(errsv));
       rc = -errsv;
    }
    return rc;
@@ -117,9 +115,7 @@ Base_Status_Errno_DDC read_reader(int fh, int bytect, Byte * readbuf) {
    }
    else {    // rc < 0
       int errsv = errno;
-      if (debug)
-         DBGMSG("read() returned %d, errno=%s", rc, linux_errno_desc(errsv));
-      // rc = modulate_rc(-errsv, RR_ERRNO);
+      DBGMSF(debug, "read() returned %d, errno=%s", rc, linux_errno_desc(errsv));
       rc = -errsv;
    }
    return rc;
@@ -159,8 +155,8 @@ Base_Status_Errno_DDC read_reader(int fh, int bytect, Byte * readbuf) {
  */
 Base_Status_Errno_DDC ioctl_writer(int fh, int bytect, Byte * pbytes) {
    bool debug = false;
-   if (debug)
-      DBGMSG("Starting. fh=%d, bytect=%d, pbytes=%p", fh, bytect, pbytes);
+   DBGMSF(debug, "Starting. fh=%d, bytect=%d, pbytes=%p", fh, bytect, pbytes);
+
    struct i2c_msg              messages[1];
    struct i2c_rdwr_ioctl_data  msgset;
 
@@ -231,11 +227,12 @@ Base_Status_Errno_DDC ioctl_writer(int fh, int bytect, Byte * pbytes) {
  * Returns:
  *   0 if success
  *   if error:
- *      -errno (modulated)
+ *      -errno
  */
 Base_Status_Errno_DDC ioctl_reader(int fh, int bytect, Byte * readbuf) {
    bool debug = true;
    // DBGMSG("Starting");
+
    struct i2c_msg              messages[1];
    struct i2c_rdwr_ioctl_data  msgset;
 
@@ -277,7 +274,6 @@ Base_Status_Errno_DDC ioctl_reader(int fh, int bytect, Byte * readbuf) {
       rc = 0;
    }
    else if (rc < 0)
-      // rc = modulate_rc(-errno, RR_ERRNO);
       rc = -errno;
    return rc;
 }

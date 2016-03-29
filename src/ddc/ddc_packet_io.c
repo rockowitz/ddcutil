@@ -262,15 +262,24 @@ Global_Status_Code ddc_i2c_write_read_raw(
    // dump_packet(request_packet_ptr);
    ASSERT_DISPLAY_IO_MODE(dh, DDC_IO_DEVI2C);
 
+#ifdef TEST_THAT_DIDNT_WORK
+   bool single_byte_reads = false;   // doesn't work
+#endif
+
    Global_Status_Code rc =
          invoke_i2c_writer(
                            dh->fh,
                            get_packet_len(request_packet_ptr)-1,
                            get_packet_start(request_packet_ptr)+1 );
-   DBGMSF(debug, "perform_i2c_write2() returned %d\n", rc);
+   DBGMSF(debug, "invoke_i2c_writer() returned %d\n", rc);
    if (rc == 0) {
       call_tuned_sleep_i2c(SE_WRITE_TO_READ);
-      rc = invoke_i2c_reader(dh->fh, max_read_bytes, readbuf);
+#if TEST_THAT_DIDNT_WORK
+      if (single_byte_reads)  // fails
+         rc = invoke_single_byte_i2c_reader(dh->fh, max_read_bytes, readbuf);
+      else
+#endif
+         rc = invoke_i2c_reader(dh->fh, max_read_bytes, readbuf);
       // try adding to see if improves capabilities read for P2411H
       call_tuned_sleep_i2c(SE_POST_READ);
       // note_io_event(IE_READ_AFTER_WRITE, __func__);

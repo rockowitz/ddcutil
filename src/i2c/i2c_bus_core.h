@@ -64,7 +64,7 @@ struct {
 
 int  i2c_get_busct();
 void i2c_report_bus(int busno);
-int  i2c_report_buses(bool report_all);
+int  i2c_report_buses(bool report_all, int depth);
 
 Display_Info_List i2c_get_valid_displays();
 
