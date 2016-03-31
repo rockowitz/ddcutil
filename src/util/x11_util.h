@@ -1,4 +1,4 @@
-/* x11_edid.h
+/* x11_util.h
  *
  * Created on: Mar 30, 2016
  *     Author: rock

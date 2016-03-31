@@ -92,87 +92,9 @@ static const char * const edid_names[] =
 
 #define EDID_NAME_COUNT (sizeof(edid_names)/sizeof(*edid_names))
 
-#ifdef UNUSED
-Display * open_default_x11_display() {
-   return XOpenDisplay(NULL);
-}
 
-void close_x11_display(Display * disp) {
-   XCloseDisplay(disp);
-}
-
-GPtrArray * get_x11_connected_outputs(Display * disp) {
-   assert(disp);
-   GPtrArray * outputs = g_ptr_array_new();
-
-   if ( disp ) {
-
-     int event_base, error_base;
-     int maj, min;
-
-     if( XRRQueryExtension(disp, &event_base, &error_base)
-      && XRRQueryVersion(disp, &maj, &min) )
-     {
-
-       int version = (maj << 8) | min;
-
-       int scr_count = ScreenCount(disp);
-       int screen;
-
-       for(screen=0; screen<scr_count; ++screen) {
-          XRRScreenResources *rsrc = NULL;
-          Window root = RootWindow(disp, screen);
-
- #if (RANDR_MAJOR > 1) || (RANDR_MAJOR == 1 && RANDR_MINOR >=3)
-          if( version >= 0x0103 ) {
-            /* get cached resources if they are available */
-            rsrc = XRRGetScreenResourcesCurrent(disp, root);
-          }
-
-          if( NULL == rsrc )
- #endif
-            rsrc = XRRGetScreenResources(disp, root);
-
-          if( NULL != rsrc ) {
-
-             int output_id;
-             for ( output_id=0; output_id < rsrc->noutput; ++output_id ) {
-// #ifdef NO
-                RROutput rr_output_id = rsrc->outputs[output_id];
-                XRROutputInfo *output_info = XRRGetOutputInfo(disp, rsrc, rr_output_id);
-                assert(output_info);
-                printf("Found output %.*s\n", output_info->nameLen, output_info->name);
-                if( RR_Connected == output_info->connection ) {
-                   printf("is connected\n");
-                   g_ptr_array_add(outputs, output_info);
-                }
-                // XRRFreeOutputInfo(output_info);
-
-                // XRRFreeScreenResources(rsrc);
-// #endif
-             }  // for output_id
-
-          }  // rsrc
-
-       }   // for screen
-
-    } // if extensions
-
-   }  // if (disp)
-
-   printf("Returning %d outputs\n", outputs->len);
-   return outputs;
-}
-
-Byte * get_x11_edid_for_output(XRROutputInfo * output_info) {
-   Byte * edid = NULL;
-
-   return edid;
-}
-#endif
-
-
-
+// GPtrArray callback function
+// typedef: void (*GDestroyNotify)(gpointer data)
 void edid_recs_free_func(gpointer voidptr) {
    X11_Edid_Rec * prec = voidptr;
    free(prec->edid);
@@ -181,8 +103,7 @@ void edid_recs_free_func(gpointer voidptr) {
 
 
 
-GPtrArray * get_x11_edids()
-{
+GPtrArray * get_x11_edids() {
    GPtrArray * edid_recs = g_ptr_array_new();
    g_ptr_array_set_free_func(edid_recs, edid_recs_free_func);
   //uint16_t physical_address = 0;
