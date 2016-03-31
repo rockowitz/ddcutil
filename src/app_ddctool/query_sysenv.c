@@ -50,15 +50,21 @@
 #include <sys/stat.h>
 // #include <libosinfo-1.0/osinfo/osinfo.h>
 
+#include <X11/Xlib.h>
+#include <X11/Xatom.h>
+#include <X11/extensions/Xrandr.h>
+
 #include "util/file_util.h"
 #include "util/pci_id_util.h"
 #include "util/report_util.h"
 #include "util/string_util.h"
 #include "util/subprocess_util.h"
+#include "util/x11_util.h"
 
 #include "base/msg_control.h"
 #include "base/linux_errno.h"
 #include "base/util.h"
+#include "base/edid.h"
 
 #include "i2c/i2c_bus_core.h"
 #include "adl/adl_shim.h"
@@ -950,6 +956,26 @@ void query_sysenv() {
    printf("xrandr connection report:\n");
    execute_shell_cmd("xrandr|grep connected", 1 /* depth */);
 
+   GPtrArray* edid_recs = get_x11_edids();
+   puts("");
+   printf("EDIDs reported by X11 for connected xrandr outputs:\n");
+   // DBGMSG("Got %d X11_Edid_Recs\n", edid_recs->len);
+   int ndx = 0;
+   for (; ndx < edid_recs->len; ndx++) {
+      X11_Edid_Rec * prec = g_ptr_array_index(edid_recs, ndx);
+      // printf(" Output name: %s -> %p\n", prec->output_name, prec->edid);
+      // hex_dump(prec->edid, 128);
+      rpt_vstring(1, "xrandr output: %s", prec->output_name);
+      Parsed_Edid * parsed_edid = create_parsed_edid(prec->edid);
+      bool verbose_edid = false;
+      report_parsed_edid(parsed_edid, verbose_edid, 2 /* depth */);
+      free_parsed_edid(parsed_edid);
+   }
+   free_x11_edids(edid_recs);
+
+   // Display * x11_disp = open_default_x11_display();
+   // GPtrArray *  outputs = get_x11_connected_outputs(x11_disp);
+   // close_x11_display(x11_disp);
 }
 
 

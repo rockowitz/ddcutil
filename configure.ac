@@ -120,6 +120,9 @@ PKG_CHECK_MODULES(GOBJECT,  gobject-2.0 >= 2.14)
 
 dnl PKG_CHECK_MODULES(OSINFO, libosinfo-1.0 >= 0.1, [OSINFO_FOUND=yes], [OSINFO_FOUND=no])
 
+PKG_CHECK_MODULES(XRANDR, xrandr)
+PKG_CHECK_MODULES(X11, x11)
+
 
 ###
 ### Checks for header files.

@@ -67,6 +67,7 @@ endif
 
 # Files only in ddctool:
 ddctool_SOURCES = \
+util/x11_util.c \
 cmdline/cmd_parser_aux.c \
 cmdline/cmd_parser_goption.c \
 cmdline/parsed_cmd.c \
@@ -214,6 +215,7 @@ dist-hook:
 AM_CPPFLAGS= \
 $(GLIB_CFLAGS) \
 $(GOBJECT_CFLAGS) \
+$(XRANDR_CFLAGS) \
 -I$(top_srcdir) 
 
 
@@ -256,6 +258,8 @@ libddctool_la_LDFLAGS = -export_symbols-regex '^ddc[tg]_[^_]'
 
 ddctool_LDADD = \
    libcommon.la \
+   $(XRANDR_LIBS) \
+   $(X11_LIBS) \
    $(GLIB_LIBS)
 
 laclient_LDADD = \

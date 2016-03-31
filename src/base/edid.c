@@ -219,6 +219,13 @@ Parsed_Edid * create_parsed_edid(Byte* edidbytes) {
 }
 
 
+void          free_parsed_edid(Parsed_Edid * parsed_edid) {
+   assert( parsed_edid );
+   assert( memcmp(parsed_edid->marker, EDID_MARKER_NAME, 4)==0 );
+   free(parsed_edid);
+}
+
+
 /* Writes EDID summary to the current report output destination.
  * (normally stdout, but may be changed by rpt_push_output_desst())
  *
