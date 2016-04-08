@@ -56,10 +56,9 @@ typedef char * (*Value_To_Name_Function)(int val);
 void rpt_mapped_int(char * name, char * info, int val, Value_To_Name_Function func, int depth);
 
 void rpt_int_as_hex(char * name, char * info, int val, int depth);
+void rpt_uint8_as_hex(char * name, char * info, unsigned char val, int depth) ;
 
 void rpt_bytes_as_hex(const char * name, char * info, Byte * bytes, int ct, bool hex_prefix_flag, int depth);
-
-void rpt_uint8_as_hex(const char * name, char * info, unsigned char val, int depth);
 
 typedef
 struct {

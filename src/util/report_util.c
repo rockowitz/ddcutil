@@ -215,6 +215,12 @@ void rpt_int_as_hex(char * name, char * info, int val, int depth) {
    rpt_str(name, info, buf, depth);
 }
 
+void rpt_uint8_as_hex(char * name, char * info, unsigned char val, int depth) {
+   char buf[16];
+   snprintf(buf, 15, "0x%02x", val);
+   rpt_str(name, info, buf, depth);
+}
+
 
 /* Writes a string to the current output destination describing a sequence of bytes,
  * indented per the specified indentation depth.
@@ -243,13 +249,6 @@ void rpt_bytes_as_hex(
    rpt_str(name, info, buf, depth);
    free(buf);
    free(hs);
-}
-
-
-void rpt_uint8_as_hex(const char * name, char * info, unsigned char val, int depth) {
-   char buf[16];
-   snprintf(buf, 15, "0x%02x", val);
-   rpt_str(name, info, buf, depth);
 }
 
 
