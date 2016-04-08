@@ -29,12 +29,12 @@
 #include <stdbool.h>
 #include <string.h>
 
-#include <base/execution_stats.h>
-#include <base/common.h>
-#include <base/displays.h>
-#include <base/edid.h>
-#include <base/status_code_mgt.h>
-#include <base/util.h>
+#include "base/execution_stats.h"
+#include "base/common.h"
+#include "base/displays.h"
+#include "base/edid.h"
+#include "base/status_code_mgt.h"
+#include "base/util.h"
 
 #include "adl/adl_impl/adl_intf.h"
 #include "adl/adl_shim.h"
@@ -56,13 +56,15 @@ void adlshim_release() {
 // Report on active displays
 
 Parsed_Edid* adlshim_get_parsed_edid_by_display_handle(Display_Handle * dh) {
-   assert(dh->ddc_io_mode == DDC_IO_ADL);
+   ASSERT_DISPLAY_IO_MODE(dh, DDC_IO_ADL);
+   // assert(dh->io_mode == DDC_IO_ADL);
    return adl_get_parsed_edid_by_adlno(dh->iAdapterIndex, dh->iDisplayIndex);
 }
 
 
 Parsed_Edid* adlshim_get_parsed_edid_by_display_ref(Display_Ref * dref) {
-   assert(dref->ddc_io_mode == DDC_IO_ADL);
+   // assert(dref->io_mode == DDC_IO_ADL);
+   ASSERT_DISPLAY_IO_MODE(dref, DDC_IO_ADL);
    return adl_get_parsed_edid_by_adlno(dref->iAdapterIndex, dref->iDisplayIndex);
 }
 
@@ -75,7 +77,7 @@ void adlshim_show_active_display_by_adlno(int iAdapterIndex, int iDisplayIndex, 
 
 
 void adlshim_report_active_display_by_display_ref(Display_Ref * dref, int depth) {
-   assert(dref->ddc_io_mode == DDC_IO_ADL);
+   ASSERT_DISPLAY_IO_MODE(dref, DDC_IO_ADL);
    return adl_report_active_display_by_adlno(dref->iAdapterIndex, dref->iDisplayIndex, depth);
 }
 
@@ -83,7 +85,8 @@ void adlshim_report_active_display_by_display_ref(Display_Ref * dref, int depth)
 // Find and validate display
 
 bool              adlshim_is_valid_display_ref(Display_Ref * dref, bool emit_error_msg) {
-   assert(dref->ddc_io_mode == DDC_IO_ADL);
+   // assert(dref->ddc_io_mode == DDC_IO_ADL);
+   ASSERT_DISPLAY_IO_MODE(dref, DDC_IO_ADL);
    return adl_is_valid_adlno(dref->iAdapterIndex, dref->iDisplayIndex, emit_error_msg);
 }
 
@@ -123,7 +126,7 @@ Global_Status_Code adlshim_ddc_write_only(
       Byte *  pSendMsgBuf,
       int     sendMsgLen)
 {
-   assert(dh->ddc_io_mode == DDC_IO_ADL);
+   assert(dh->io_mode == DDC_IO_ADL);
    Base_Status_ADL adlrc = adl_ddc_write_only(dh->iAdapterIndex, dh->iDisplayIndex, pSendMsgBuf, sendMsgLen);
    Global_Status_Code gsc = modulate_rc(adlrc, RR_ADL);
    return gsc;
@@ -134,7 +137,7 @@ Global_Status_Code adlshim_ddc_read_only(
       Byte *  pRcvMsgBuf,
       int *   pRcvBytect)
 {
-   assert(dh->ddc_io_mode == DDC_IO_ADL);
+   assert(dh->io_mode == DDC_IO_ADL);
    Base_Status_ADL adlrc = adl_ddc_read_only(dh->iAdapterIndex, dh->iDisplayIndex, pRcvMsgBuf, pRcvBytect);
    Global_Status_Code gsc = modulate_rc(adlrc, RR_ADL);
    return gsc;

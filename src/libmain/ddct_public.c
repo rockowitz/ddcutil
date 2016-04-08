@@ -325,7 +325,7 @@ DDCT_Status ddct_repr_display_ref(DDCT_Display_Ref ddct_dref, char** repr){
    }
    else {
 #ifdef TOO_MUCH_WORK
-      char * dref_type_name = ddc_io_mode_name(dref->ddc_io_mode);
+      char * dref_type_name = mccs_io_mode_name(dref->ddc_io_mode);
       switch (dref->ddc_io_mode) {
       case(DISP_ID_BUSNO):
          snprintf(dref_work_buf, 100,
@@ -397,8 +397,8 @@ DDCT_Status ddct_repr_display_handle(DDCT_Display_Handle ddct_dh, char ** repr) 
       *repr = "invalid display handle";
    }
    else {
-      char * dh_type_name = ddc_io_mode_name(dh->ddc_io_mode);
-      switch (dh->ddc_io_mode) {
+      char * dh_type_name = mccs_io_mode_name(dh->io_mode);
+      switch (dh->io_mode) {
       case(DISP_ID_BUSNO):
          snprintf(dh_work_buf, 100,
                   "Display Handle Type: %s, bus=/dev/i2c-%d", dh_type_name, dh->busno);
@@ -406,6 +406,10 @@ DDCT_Status ddct_repr_display_handle(DDCT_Display_Handle ddct_dh, char ** repr) 
       case(DISP_ID_ADL):
          snprintf(dh_work_buf, 100,
                   "Display Handle Type: %s, adlno=%d.%d", dh_type_name, dh->iAdapterIndex, dh->iDisplayIndex);
+         break;
+      case USB_IO:
+         snprintf(dh_work_buf, 100,
+                  "(%s) case USB_IO unimplemented", __func__);
          break;
       }
       *repr = dh_work_buf;

@@ -98,15 +98,16 @@ bool is_version_unqueried(Version_Spec vspec);
 
 typedef enum {
    DDC_IO_DEVI2C,
-   DDC_IO_ADL}
-DDC_IO_Mode;
+   DDC_IO_ADL,
+   USB_IO}
+MCCS_IO_Mode;
 
-char * ddc_io_mode_name(DDC_IO_Mode val);
+char * mccs_io_mode_name(MCCS_IO_Mode val);
 
 #define DISPLAY_REF_MARKER "DREF"
 typedef struct {
    char         marker[4];
-   DDC_IO_Mode  ddc_io_mode;
+   MCCS_IO_Mode io_mode;
    int          busno;
    int          iAdapterIndex;
    int          iDisplayIndex;
@@ -114,7 +115,7 @@ typedef struct {
 } Display_Ref;
 
 // n. works for both Display_Ref and Display_Handle
-#define ASSERT_DISPLAY_IO_MODE(dref, io_mode) assert(dref && dref->ddc_io_mode == io_mode)
+#define ASSERT_DISPLAY_IO_MODE(_dref, _mode) assert(_dref && _dref->io_mode == _mode)
 
 Display_Ref * create_bus_display_ref(int busno);
 Display_Ref * create_adl_display_ref(int iAdapterIndex, int iDisplayIndex);
@@ -133,7 +134,7 @@ bool dreq(Display_Ref* this, Display_Ref* that);
 #define DISPLAY_HANDLE_MARKER "DSPH"
 typedef struct {
    char         marker[4];
-   DDC_IO_Mode  ddc_io_mode;
+   MCCS_IO_Mode  io_mode;
    // include pointer to Display_Ref?
    int          busno;  // used for messages
    int          fh;     // file handle if ddc_io_mode == DDC_IO_DEVI2C

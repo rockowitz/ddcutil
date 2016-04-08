@@ -75,7 +75,7 @@ bool ddc_is_valid_display_ref(Display_Ref * dref, bool emit_error_msg) {
    // char buf[100];
    // DBGMSG("Starting.  %s   ", displayRefShortName(pdisp, buf, 100) );
    bool result;
-   if (dref->ddc_io_mode == DDC_IO_DEVI2C) {
+   if (dref->io_mode == DDC_IO_DEVI2C) {
       result = i2c_is_valid_bus(dref->busno, emit_error_msg );
    }
    else {
@@ -256,6 +256,7 @@ ddc_find_display_by_model_and_sn(
    const char * sn)
 {
    // DBGMSG("Starting.  model=%s, sn=%s   ", model, sn );
+   printf("(%s) WARNING: Support for USB devices unimplemented\n", __func__);
 
    Display_Ref * result = NULL;
    Bus_Info * businfo = i2c_find_bus_info_by_model_sn(model, sn);
@@ -288,9 +289,13 @@ ddc_find_display_by_edid(const Byte * pEdidBytes) {
    if (businfo) {
       result = create_bus_display_ref(businfo->busno);
    }
-   else {
+
+   if (!result)
       result = adlshim_find_display_by_edid(pEdidBytes);
-   }
+
+   if (!result)
+      printf("(%s) WARNING: Support for USB edid unimplemented\n", __func__);
+
    // DBGMSG("Returning: %p  ", result );
    return result;
 }
@@ -306,11 +311,17 @@ ddc_find_display_by_edid(const Byte * pEdidBytes) {
  */
 void
 ddc_report_active_display(Display_Info * curinfo, int depth) {
-   if (curinfo->dref->ddc_io_mode == DDC_IO_DEVI2C)
+   switch(curinfo->dref->io_mode) {
+   case DDC_IO_DEVI2C:
       i2c_report_active_display_by_busno(curinfo->dref->busno, depth);
-   else {
+      break;
+   case DDC_IO_ADL:
       adlshim_report_active_display_by_display_ref(curinfo->dref, depth);
+      break;
+   case USB_IO:
+      printf("(%s) Case USB_IO unimplemented\n", __func__);
    }
+
 
    Output_Level output_level = get_output_level();
    if (output_level >= OL_NORMAL  && ddc_is_valid_display_ref(curinfo->dref, false)) {

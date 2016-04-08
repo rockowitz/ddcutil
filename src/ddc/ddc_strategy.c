@@ -33,21 +33,23 @@
 // keep in sync w DDC_IO_Mode
 DDC_Strategy ddc_strategies[] = {
       {DDC_IO_DEVI2C, NULL, NULL },
-      {DDC_IO_ADL,    NULL, NULL }
+      {DDC_IO_ADL,    NULL, NULL },
+      {USB_IO,        NULL, NULL }
 };
 
 void validate_ddc_strategies() {
    assert(  ddc_strategies[DDC_IO_DEVI2C].io_mode == DDC_IO_DEVI2C);
-   assert(  ddc_strategies[DDC_IO_ADL].io_mode == DDC_IO_ADL);
+   assert(  ddc_strategies[DDC_IO_ADL].io_mode    == DDC_IO_ADL);
+   assert(  ddc_strategies[USB_IO].io_mode        == USB_IO);
 }
 
 
 
 DDC_Raw_Writer ddc_raw_writer(Display_Handle * dh) {
-   return ddc_strategies[dh->ddc_io_mode].writer;
+   return ddc_strategies[dh->io_mode].writer;
 }
 DDC_Raw_Reader ddc_raw_reader(Display_Handle * dh) {
-   return ddc_strategies[dh->ddc_io_mode].reader;
+   return ddc_strategies[dh->io_mode].reader;
 }
 
 

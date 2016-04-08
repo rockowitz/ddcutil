@@ -100,7 +100,9 @@ bool is_ddc_null_message(Byte * packet) {
  */
 Display_Handle* ddc_open_display(Display_Ref * dref,  Failure_Action failure_action) {
    Display_Handle * pDispHandle = NULL;
-   if (dref->ddc_io_mode == DDC_IO_DEVI2C) {
+   switch (dref->io_mode) {
+   case DDC_IO_DEVI2C:
+   {
       int fd = i2c_open_bus(dref->busno, failure_action);
       // TODO: handle open failure, when failure_action = return error
       // all callers currently EXIT_IF_FAILURE
@@ -116,9 +118,14 @@ Display_Handle* ddc_open_display(Display_Ref * dref,  Failure_Action failure_act
       else {
          log_status_code(modulate_rc(fd, RR_ERRNO), __func__);
       }
+      break;
    }
-   else {
+   case DDC_IO_ADL:
       pDispHandle = create_adl_display_handle_from_display_ref(dref);
+      break;
+
+   case USB_IO:
+      PROGRAM_LOGIC_ERROR("USB_IO unimplemented");
    }
    // needed?  for both or just I2C?
    // sleep_millis_with_trace(DDC_TIMEOUT_MILLIS_DEFAULT, __func__, NULL);
@@ -131,7 +138,9 @@ Display_Handle* ddc_open_display(Display_Ref * dref,  Failure_Action failure_act
 void ddc_close_display(Display_Handle * dh) {
    // DBGMSG("Starting.");
    // report_display_handle(dh, __func__);
-   if (dh->ddc_io_mode == DDC_IO_DEVI2C) {
+   switch(dh->io_mode) {
+   case DDC_IO_DEVI2C:
+   {
       bool failure_action = EXIT_IF_FAILURE;
       // bool  failure_action = RETURN_ERROR_IF_FAILURE;
       int rc = i2c_close_bus(dh->fh, dh->busno,  failure_action);
@@ -139,6 +148,12 @@ void ddc_close_display(Display_Handle * dh) {
          DBGMSG("close_i2c_bus returned %d", rc);
          log_status_code(modulate_rc(rc, RR_ERRNO), __func__);
       }
+      break;
+   }
+   case DDC_IO_ADL:
+      break;           // nothing to do
+   case USB_IO:
+      PROGRAM_LOGIC_ERROR("USB_IO Unimplemented");
    }
 }
 
@@ -392,7 +407,8 @@ Global_Status_Code ddc_write_read_raw(
    DBGMSF(debug, "Starting.");
    Global_Status_Code rc;
 
-   if (dh->ddc_io_mode == DDC_IO_DEVI2C) {
+   assert(dh->io_mode == DDC_IO_DEVI2C || dh->io_mode == DDC_IO_ADL);
+   if (dh->io_mode == DDC_IO_DEVI2C) {
         rc =  ddc_i2c_write_read_raw(
               dh,
               request_packet_ptr,
@@ -528,6 +544,7 @@ Global_Status_Code ddc_write_read_with_retry(
    bool tf = IS_TRACING();
    if (debug) tf = 0xff;
    TRCMSGTF(tf, "Starting. dh=%s", display_handle_repr(dh)  );
+   assert(dh->io_mode != USB_IO);
 
    int  rc;
    int  tryctr;
@@ -552,7 +569,7 @@ Global_Status_Code ddc_write_read_with_retry(
 
       if (rc < 0) {     // n. ADL status codes have been modulated
          DBGMSF(debug, "perform_ddc_write_read() returned %d", rc );
-         if (dh->ddc_io_mode == DDC_IO_DEVI2C) {
+         if (dh->io_mode == DDC_IO_DEVI2C) {
             if (rc == DDCRC_NULL_RESPONSE)
                retryable = false;
             // when is DDCRC_READ_ALL_ZERO actually an error vs the response of the monitor instead of NULL response?
@@ -642,7 +659,8 @@ Global_Status_Code ddc_write_only( Display_Handle * dh, DDC_Packet *   request_p
    TRCMSGTF(tf, "Starting.");
 
    Global_Status_Code rc = 0;
-   if (dh->ddc_io_mode == DDC_IO_DEVI2C) {
+   assert(dh->io_mode != USB_IO);
+   if (dh->io_mode == DDC_IO_DEVI2C) {
       rc = ddc_i2c_write_only(dh->fh, request_packet_ptr);
    }
    else {
@@ -675,6 +693,7 @@ Global_Status_Code ddc_write_only_with_retry( Display_Handle * dh, DDC_Packet * 
    bool tf = IS_TRACING();
    tf = false;
    TRCMSGTF(tf, "Starting.");
+   assert(dh->io_mode != USB_IO);
 
    Global_Status_Code rc;
    int  tryctr;
@@ -690,7 +709,7 @@ Global_Status_Code ddc_write_only_with_retry( Display_Handle * dh, DDC_Packet * 
       rc = ddc_write_only(dh, request_packet_ptr);
 
       if (rc < 0) {
-         if (dh->ddc_io_mode == DDC_IO_DEVI2C) {
+         if (dh->io_mode == DDC_IO_DEVI2C) {
             if (rc < 0) {
                if (rc != modulate_rc(-EIO, RR_ERRNO) )
                    retryable = false;

@@ -491,16 +491,18 @@ void call_tuned_sleep_adl(Sleep_Event_Type event_type) {
    call_tuned_sleep(DDC_IO_ADL, event_type);
 }
 void call_tuned_sleep_dh(Display_Handle* dh, Sleep_Event_Type event_type) {
-   call_tuned_sleep(dh->ddc_io_mode, event_type);
+   call_tuned_sleep(dh->io_mode, event_type);
 }
 
 
 // TODO: Extend to take account of actual time since return from
 // last system call, previous error rate, etc.
 
-void call_tuned_sleep(DDC_IO_Mode io_mode, Sleep_Event_Type event_type) {
+void call_tuned_sleep(MCCS_IO_Mode io_mode, Sleep_Event_Type event_type) {
    int sleep_time_millis = 0;    // should be a default
-   if (io_mode == DDC_IO_DEVI2C) {
+   switch(io_mode) {
+
+   case DDC_IO_DEVI2C:
       switch(event_type) {
       case (SE_WRITE_TO_READ):
             sleep_time_millis = DDC_TIMEOUT_MILLIS_DEFAULT;
@@ -536,9 +538,10 @@ void call_tuned_sleep(DDC_IO_Mode io_mode, Sleep_Event_Type event_type) {
             break;
       default:
          sleep_time_millis = DDC_TIMEOUT_MILLIS_DEFAULT;
-      }
-   }
-   else {    // DDC_IO_ADL
+      }  // switch within DDC_IO_DEVI2C
+      break;
+
+   case DDC_IO_ADL:
       switch(event_type) {
       case (SE_WRITE_TO_READ):
             sleep_time_millis = DDC_TIMEOUT_MILLIS_DEFAULT;
@@ -552,6 +555,11 @@ void call_tuned_sleep(DDC_IO_Mode io_mode, Sleep_Event_Type event_type) {
       default:
          sleep_time_millis = DDC_TIMEOUT_MILLIS_DEFAULT;
       }
+      break;
+
+   case USB_IO:
+      printf("(%s) call_tuned_sleep() called for USB_IO\n", __func__);
+      break;
    }
 
    // TODO:

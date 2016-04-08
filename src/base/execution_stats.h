@@ -85,7 +85,7 @@ void call_tuned_sleep_i2c(Sleep_Event_Type event_type);   // DDC_IO_DEVI2C
 void call_tuned_sleep_adl(Sleep_Event_Type event_type);   // DDC_IO_ADL
 void call_tuned_sleep_dh(Display_Handle* dh, Sleep_Event_Type event_type);
 // The workhorse:
-void call_tuned_sleep(DDC_IO_Mode io_mode, Sleep_Event_Type event_type);
+void call_tuned_sleep(MCCS_IO_Mode io_mode, Sleep_Event_Type event_type);
 
 void report_sleep_strategy_stats(int depth);
 

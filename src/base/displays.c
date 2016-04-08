@@ -171,13 +171,15 @@ void free_display_identifier(Display_Identifier * pdid) {
 
 // *** DisplayRef ***
 
-static char * DDC_IO_Mode_Names[] = {
+static char * MCCS_IO_Mode_Names[] = {
       "DDC_IO_DEVI2C",
-      "DDC_IO_ADL"
+      "DDC_IO_ADL",
+      "USB_IO"
 };
 
-char * ddc_io_mode_name(DDC_IO_Mode val) {
-   return DDC_IO_Mode_Names[val];
+
+char * mccs_io_mode_name(MCCS_IO_Mode val) {
+   return MCCS_IO_Mode_Names[val];
 }
 
 static const Version_Spec version_spec_unqueried = {0xff, 0xff};
@@ -191,7 +193,7 @@ bool is_version_unqueried(Version_Spec vspec) {
 Display_Ref * create_bus_display_ref(int busno) {
    Display_Ref * dref = calloc(1, sizeof(Display_Ref));
    memcpy(dref->marker, DISPLAY_REF_MARKER, 4);
-   dref->ddc_io_mode = DDC_IO_DEVI2C;
+   dref->io_mode = DDC_IO_DEVI2C;
    dref->busno       = busno;
    dref->vcp_version = version_spec_unqueried;
    // DBGMSG("Done.  Constructed bus display ref: ");
@@ -202,7 +204,7 @@ Display_Ref * create_bus_display_ref(int busno) {
 Display_Ref * create_adl_display_ref(int iAdapterIndex, int iDisplayIndex) {
    Display_Ref * dref = calloc(1, sizeof(Display_Ref));
    memcpy(dref->marker, DISPLAY_REF_MARKER, 4);
-   dref->ddc_io_mode   = DDC_IO_ADL;
+   dref->io_mode   = DDC_IO_ADL;
    dref->iAdapterIndex = iAdapterIndex;
    dref->iDisplayIndex = iDisplayIndex;
    dref->vcp_version   = version_spec_unqueried;
@@ -234,12 +236,23 @@ bool dreq(Display_Ref* this, Display_Ref* that) {
    if (!this && !that)
       result = true;
    else if (this && that) {
-      if (this->ddc_io_mode == that->ddc_io_mode) {
-         if (this->ddc_io_mode == DDC_IO_DEVI2C)
+      if (this->io_mode == that->io_mode) {
+         switch (this->io_mode) {
+
+         case DDC_IO_DEVI2C:
             result = (this->busno == that->busno);
-         else
+            break;
+
+         case DDC_IO_ADL:
             result = (this->iAdapterIndex == that->iAdapterIndex &&
                       this->iDisplayIndex == that->iDisplayIndex);
+            break;
+
+         case USB_IO:
+            printf("(%s) Case USB_IO unimplemented.  Returning false\n", __func__);
+            result = false;
+            break;
+         }
       }
    }
    return result;
@@ -249,20 +262,29 @@ bool dreq(Display_Ref* this, Display_Ref* that) {
 void report_display_ref(Display_Ref * dref, int depth) {
    rpt_structure_loc("BasicStructureRef", dref, depth );
    int d1 = depth+1;
-   rpt_mapped_int("ddc_io_mode", NULL, dref->ddc_io_mode, (Value_To_Name_Function) ddc_io_mode_name, d1);
-   if (dref->ddc_io_mode == DDC_IO_DEVI2C) {
+   rpt_mapped_int("ddc_io_mode", NULL, dref->io_mode, (Value_To_Name_Function) mccs_io_mode_name, d1);
+
+   switch (dref->io_mode) {
+
+   case DDC_IO_DEVI2C:
       rpt_int("busno", NULL, dref->busno, d1);
-   }
-   else {
+      break;
+
+   case DDC_IO_ADL:
       rpt_int("iAdapterIndex", NULL, dref->iAdapterIndex, d1);
       rpt_int("iDisplayIndex", NULL, dref->iDisplayIndex, d1);
+      break;
+
+   case USB_IO:
+      rpt_vstring(d1, "(%s) Case USB_IO unimplemented", __func__);
    }
+
    rpt_vstring(d1, "vcp_version:  %d.%d\n", dref->vcp_version.major, dref->vcp_version.minor );
 }
 
 
 char * display_ref_short_name_r(Display_Ref * dref, char * buf, int bufsize) {
-   if (dref->ddc_io_mode == DDC_IO_DEVI2C) {
+   if (dref->io_mode == DDC_IO_DEVI2C) {
       snprintf(buf, bufsize, "bus /dev/i2c-%d", dref->busno);
    }
    else {
@@ -284,7 +306,7 @@ char * display_ref_short_name(Display_Ref * dref) {
 Display_Handle * create_bus_display_handle(int fh, int busno) {
    Display_Handle * dh = calloc(1, sizeof(Display_Handle));
    memcpy(dh->marker, DISPLAY_HANDLE_MARKER, 4);
-   dh->ddc_io_mode = DDC_IO_DEVI2C;
+   dh->io_mode = DDC_IO_DEVI2C;
    dh->fh = fh;
    dh->busno = busno;
    dh->vcp_version = version_spec_unqueried;
@@ -296,7 +318,7 @@ Display_Handle * create_bus_display_handle(int fh, int busno) {
 Display_Handle * create_adl_display_handle(int iAdapterIndex, int iDisplayIndex) {
    Display_Handle * dh = calloc(1, sizeof(Display_Handle));
    memcpy(dh->marker, DISPLAY_HANDLE_MARKER, 4);
-   dh->ddc_io_mode = DDC_IO_ADL;
+   dh->io_mode = DDC_IO_ADL;
    dh->iAdapterIndex = iAdapterIndex;
    dh->iDisplayIndex = iDisplayIndex;
    dh->vcp_version = version_spec_unqueried;
@@ -327,7 +349,7 @@ void report_display_handle(Display_Handle * dh, const char * msg, int depth) {
                          *dh->marker, (char *)dh->marker);
       }
       else {
-         switch (dh->ddc_io_mode) {
+         switch (dh->io_mode) {
          case (DDC_IO_DEVI2C):
             rpt_vstring(d1, "ddc_io_mode = DDC_IO_DEVI2C\n");
             rpt_vstring(d1, "fh:    %d\n", dh->fh);
@@ -338,10 +360,9 @@ void report_display_handle(Display_Handle * dh, const char * msg, int depth) {
             rpt_vstring(d1, "iAdapterIndex:    %d\n", dh->iAdapterIndex);
             rpt_vstring(d1, "iDisplayIndex:    %d\n", dh->iDisplayIndex);
             break;
-#ifdef UNNECESSARY
-         default:
-            PROGRAM_LOGIC_ERROR("Invalid ddc_io_mode: %d\n", dh->ddc_io_mode);
-#endif
+         case (USB_IO):
+            rpt_vstring(d1, "(%s) Case USB_IO unimplemented", __func__);
+            break;
          }
       }
       rpt_vstring(d1, "   vcp_version:     %d.%d\n", dh->vcp_version.major, dh->vcp_version.minor);
@@ -365,16 +386,26 @@ char * display_handle_repr_r(Display_Handle * dref, char * buf, int bufsz) {
    assert(memcmp(dref->marker, DISPLAY_HANDLE_MARKER, 4) == 0);
    assert(buf && bufsz);
 
-   if (dref->ddc_io_mode == DDC_IO_DEVI2C) {
+   switch (dref->io_mode) {
+
+   case DDC_IO_DEVI2C:
       snprintf(buf, bufsz,
                "Display_Handle[i2c: fh=%d, busno=%d]",
                dref->fh, dref->busno);
-   }
-   else {
+      break;
+
+   case DDC_IO_ADL:
       snprintf(buf, bufsz,
                "Display_Handle[adl: display %d.%d]",
                dref->iAdapterIndex, dref->iDisplayIndex);
+      break;
+
+   case USB_IO:
+      snprintf(buf, bufsz,
+               "(%s) USB Display_Handle unimplemented", __func__);
+      break;
    }
+
    return buf;
 }
 

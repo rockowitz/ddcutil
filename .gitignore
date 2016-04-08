@@ -87,5 +87,6 @@ package/debwork/**
 package/obswork/
 package/rpmwork
 package/upload_obsrpm
+package/debian/changelog
 ubuntuvm_notes.txt
 test

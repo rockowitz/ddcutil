@@ -46,10 +46,16 @@ Parsed_Edid*
 ddc_get_parsed_edid_by_display_handle(Display_Handle * dh) {
    Parsed_Edid* pEdid = NULL;
 
-   if (dh->ddc_io_mode == DDC_IO_DEVI2C)
+   switch (dh->io_mode) {
+   case DDC_IO_DEVI2C:
       pEdid = i2c_get_parsed_edid_by_busno(dh->busno);
-   else {
+      break;
+   case DDC_IO_ADL:
       pEdid = adlshim_get_parsed_edid_by_display_handle(dh);
+      break;
+   case USB_IO:
+      printf("(%s) Case USB_IO unimplemented\n", __func__);
+      break;
    }
    TRCMSG("Returning %p", __func__, pEdid);
    return pEdid;
@@ -60,11 +66,18 @@ Parsed_Edid*
 ddc_get_parsed_edid_by_display_ref(Display_Ref * dref) {
    Parsed_Edid* pEdid = NULL;
 
-   if (dref->ddc_io_mode == DDC_IO_DEVI2C)
+   switch(dref->io_mode) {
+   case DDC_IO_DEVI2C:
       pEdid = i2c_get_parsed_edid_by_busno(dref->busno);
-   else {
+      break;
+   case DDC_IO_ADL:
       pEdid = adlshim_get_parsed_edid_by_display_ref(dref);
+      break;
+   case USB_IO:
+      printf("(%s) Case USB_IO unimplemented\n", __func__);
+      break;
    }
+
    TRCMSG("Returning %p", pEdid);
    return pEdid;
 }
