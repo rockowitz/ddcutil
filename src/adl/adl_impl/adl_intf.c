@@ -646,7 +646,7 @@ void adl_report_active_display(ADL_Display_Rec * pdisp, int depth) {
    }
    if (output_level >= OL_VERBOSE) {
       init_pci_ids();
-      Pci_Id_Names pci_id_names = pci_id_get_names((ushort) pdisp->iVendorID, 0, 0, 0, 1);
+      Pci_Usb_Id_Names pci_id_names = pci_id_get_names((ushort) pdisp->iVendorID, 0, 0, 0, 1);
       char * vendor_name = (pci_id_names.vendor_name) ? pci_id_names.vendor_name : "unknown vendor";
       rpt_vstring(depth, "Vendor id:            0x%04x  %s", pdisp->iVendorID, vendor_name);
       // waste of space to reserve full ADL_MAX_PATH for each field

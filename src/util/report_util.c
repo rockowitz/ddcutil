@@ -151,7 +151,7 @@ void rpt_structure_loc(char * name, void * ptr, int depth) {
  *
  * Optionally, a description string can be specified along with the name.
  */
-void rpt_str(char * name, char * info, char * val, int depth) {
+void rpt_str(const char * name, char * info, char * val, int depth) {
    char infobuf[100];
    if (info)
       snprintf(infobuf, 99, "(%s)", info);
@@ -224,14 +224,15 @@ void rpt_int_as_hex(char * name, char * info, int val, int depth) {
  * The output is formatted as printable hex.
  */
 void rpt_bytes_as_hex(
-        char *   name,
+        const char *   name,
         char *   info,
         Byte *   bytes,
         int      ct,
         bool     hex_prefix_flag,
         int      depth) {
-   printf("(%s) bytes=%p, ct=%d\n", __func__, bytes, ct);
+   // printf("(%s) bytes=%p, ct=%d\n", __func__, bytes, ct);
    int bufsz = 2*ct + 1;
+   bufsz++;   // hack
    if (hex_prefix_flag)
       bufsz += 2;
    char * buf = malloc(bufsz);
@@ -242,6 +243,13 @@ void rpt_bytes_as_hex(
    rpt_str(name, info, buf, depth);
    free(buf);
    free(hs);
+}
+
+
+void rpt_uint8_as_hex(const char * name, char * info, unsigned char val, int depth) {
+   char buf[16];
+   snprintf(buf, 15, "0x%02x", val);
+   rpt_str(name, info, buf, depth);
 }
 
 

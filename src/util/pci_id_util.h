@@ -42,33 +42,49 @@ typedef struct {
 typedef struct {
    ushort      device_id;
    char *      device_name;
-   GPtrArray * device_subsystems;  // Pci_Id_Subsystem
+   GPtrArray * device_subsystems;  // Pci_Id_Subsys
 } Pci_Id_Device;
 
 
 typedef struct {
    ushort      vendor_id;
    char *      vendor_name;
-   GPtrArray * vendor_devices;    // Pci_Id_Sub_Device
+   GPtrArray * vendor_devices;    // Pci_Id_Device
 } Pci_Id_Vendor;
 
 
 typedef struct {
    char * vendor_name;
    char * device_name;
-   char * subsys_name;
-} Pci_Id_Names;
+   char * subsys_or_interface_name;
+} Pci_Usb_Id_Names;
+
+
+
+
 
 
 bool init_pci_ids();
 Pci_Id_Vendor * pci_id_find_vendor(ushort vendor_id);
 Pci_Id_Device * pci_id_find_device(Pci_Id_Vendor * cur_vendor, ushort device_id);
 Pci_Id_Subsys * pci_id_find_subsys(Pci_Id_Device * cur_device, ushort subvendor_id, ushort subdevice_id);
-Pci_Id_Names pci_id_get_names(
+
+Pci_Id_Vendor * usb_id_find_vendor(ushort vendor_id);
+Pci_Id_Device * usb_id_find_device(Pci_Id_Vendor * cur_vendor, ushort device_id);
+Pci_Id_Subsys * usb_id_find_interface(Pci_Id_Device * cur_device, ushort interface_id);
+
+Pci_Usb_Id_Names pci_id_get_names(
                 ushort vendor_id,
                 ushort device_id,
                 ushort subvendor_id,
                 ushort subdevice_id,
                 int argct);
+
+Pci_Usb_Id_Names usb_id_get_names(
+                ushort vendor_id,
+                ushort device_id,
+                ushort interface_id,
+                int argct);
+
 
 #endif /* PCI_ID_UTIL_H_ */

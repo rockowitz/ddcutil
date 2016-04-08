@@ -43,7 +43,7 @@ void rpt_vstring(int depth, char * format, ...) ;
 
 void rpt_structure_loc(char * name, void * ptr, int depth);
 
-void rpt_str(char * name, char * info, char * val, int depth);
+void rpt_str(const char * name, char * info, char * val, int depth);
 
 void rpt_int(char * name, char * info, int val, int depth);
 
@@ -57,7 +57,9 @@ void rpt_mapped_int(char * name, char * info, int val, Value_To_Name_Function fu
 
 void rpt_int_as_hex(char * name, char * info, int val, int depth);
 
-void rpt_bytes_as_hex(char * name, char * info, Byte * bytes, int ct, bool hex_prefix_flag, int depth);
+void rpt_bytes_as_hex(const char * name, char * info, Byte * bytes, int ct, bool hex_prefix_flag, int depth);
+
+void rpt_uint8_as_hex(const char * name, char * info, unsigned char val, int depth);
 
 typedef
 struct {

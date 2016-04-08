@@ -762,7 +762,7 @@ struct driver_name_node * query_card_and_driver_using_sysfs() {
                printf("\nVideo card identification:\n");
                bool pci_ids_ok = init_pci_ids();
                if (pci_ids_ok) {
-                  Pci_Id_Names names = pci_id_get_names(
+                  Pci_Usb_Id_Names names = pci_id_get_names(
                                   xvendor_id,
                                   xdevice_id,
                                   xsubvendor_id,
@@ -775,8 +775,8 @@ struct driver_name_node * query_card_and_driver_using_sysfs() {
 
                   printf("   Vendor:              %04x       %s\n", xvendor_id, names.vendor_name);
                   printf("   Device:              %04x       %s\n", xdevice_id, names.device_name);
-                  if (names.subsys_name)
-                  printf("   Subvendor/Subdevice: %04x/%04x  %s\n", xsubvendor_id, xsubdevice_id, names.subsys_name);
+                  if (names.subsys_or_interface_name)
+                  printf("   Subvendor/Subdevice: %04x/%04x  %s\n", xsubvendor_id, xsubdevice_id, names.subsys_or_interface_name);
                }
                else {
                   printf("Unable to find pci.ids file for name lookup.\n");

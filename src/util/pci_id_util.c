@@ -54,9 +54,32 @@
 #endif
 
 
-// better: use find command
+typedef enum {
+   ID_TYPE_PCI,
+   ID_TYPE_USB
+} Device_Id_Type;
 
-char * find_pci_ids() {
+
+char * simple_device_fn[] = {
+      "pci.ids",
+      "usb.ids"
+};
+
+
+
+/* Returns fully qualified file name of device id file.
+ *
+ * Arguments:
+ *    id_type     ID_TYPE_PCI or ID_TYPE_USB
+ *
+ * Returns:   fully qualified file name of device id file,
+ *            NULL if not found
+ *            It is the responsibility of the caller to free
+ *            this value
+ */
+static char * find_id_file(Device_Id_Type id_type) {
+   bool debug = true;
+
    char * known_pci_ids_dirs[] = {
          "/usr/share/libosinfo/db",
          "/usr/share",
@@ -65,12 +88,17 @@ char * find_pci_ids() {
          NULL
    };
 
+   // better: use find command ??
+
+   char * id_fn = simple_device_fn[id_type];
+   printf("(%s) id_type=%d, id_fn = |%s|\n", __func__, id_type, id_fn);
+
    char * result = NULL;
    int ndx;
    for (ndx=0; known_pci_ids_dirs[ndx] != NULL; ndx++) {
       char fnbuf[MAX_PATH];
-      snprintf(fnbuf, MAX_PATH, "%s/%s", known_pci_ids_dirs[ndx], "pci.ids");
-      // printf("(%s) Looking for %s\n", __func__, fnbuf);
+      snprintf(fnbuf, MAX_PATH, "%s/%s", known_pci_ids_dirs[ndx], id_fn);
+      printf("(%s) Looking for |%s|\n", __func__, fnbuf);
       struct stat stat_buf;
       int rc = stat(fnbuf, &stat_buf);
       if (rc == 0) {
@@ -79,7 +107,8 @@ char * find_pci_ids() {
       }
    }
 
-   // printf("(%s) Returning: %s\n", __func__, result);
+   if (debug)
+      printf("(%s) id_type=%d, Returning: %s\n", __func__, id_type, result);
    return result;
 }
 
@@ -89,6 +118,7 @@ char * find_pci_ids() {
 // and yet, performance not a problem
 
 static GPtrArray * pci_vendors;
+static GPtrArray * usb_vendors;
 
 // stats 12/2015:
 //   lines in pci.ids:  25,339
@@ -97,19 +127,26 @@ static GPtrArray * pci_vendors;
 //   subsystem:     10,974
 
 
-GPtrArray * load_pci_ids(){
-   bool debug = false;
+static GPtrArray * load_device_ids(Device_Id_Type id_type){
+   bool debug = true;
    int total_vendors = 0;
    int total_devices = 0;
    int total_subsys  = 0;
    GPtrArray * all_vendors = NULL;
 
-   char * pci_id_dir = find_pci_ids();
-   if (pci_id_dir) {
-      char pci_id_fn[MAX_PATH];
-      snprintf(pci_id_fn, MAX_PATH, pci_id_dir, "pci_ids");
+   if (debug)
+      printf("(%s) id_type=%d\n", __func__, id_type);
+
+   // char * id_fn = simple_device_fn[id_type];
+   char * device_id_fqfn = find_id_file(id_type);
+   if (device_id_fqfn) {
+      // char device_id_fqfn[MAX_PATH];
+      // snprintf(device_id_fqfn, MAX_PATH, id_fqfn, id_fn);  // ???
+      if (debug)
+         printf("(%s) device_id_fqfn = %s\n", __func__, device_id_fqfn);
+
       GPtrArray * all_lines = g_ptr_array_sized_new(30000);
-      int linect = file_getlines(pci_id_fn, all_lines, true);
+      int linect = file_getlines(device_id_fqfn, all_lines, true);
       if (linect > 0) {
          all_vendors = g_ptr_array_sized_new(2800);
          Pci_Id_Vendor * cur_vendor = NULL;
@@ -127,6 +164,13 @@ GPtrArray * load_pci_ids(){
                tabct++;
             if (strlen(rtrim_in_place(a_line+tabct)) == 0 || a_line[tabct] == '#')
                continue;
+            if (id_type == ID_TYPE_USB) {
+               // hacky test for end of id section
+               if (memcmp(a_line+tabct, "C", 1) == 0) {
+                  pci_ids_done = true;
+                  break;
+               }
+            }
 
             switch(tabct) {
 
@@ -146,6 +190,7 @@ GPtrArray * load_pci_ids(){
                      total_vendors++;
                      cur_vendor->vendor_devices = g_ptr_array_sized_new(20);
                      g_ptr_array_add(all_vendors, cur_vendor);
+                     // usb.ids has no final ffff field, test works only for pci.ids
                      if (cur_vendor->vendor_id == 0xffff)
                         pci_ids_done = true;
                   }
@@ -173,22 +218,39 @@ GPtrArray * load_pci_ids(){
 
             case (2):
                {
-                  if (cur_device) {     // in case of error
-                     cur_subsys = calloc(1, sizeof(Pci_Id_Subsys));
-                     int ct = sscanf(a_line+tabct, "%4hx %4hx %m[^\n]",
-                                     &cur_subsys->subvendor_id,
-                                     &cur_subsys->subdevice_id,
-                                     &cur_subsys->subsystem_name);
-                     if (ct != 3) {
-                        printf("(%s) Error reading line: %s\n", __func__, a_line+tabct);
-                        free(cur_subsys);
-                        cur_subsys = NULL;
-                     }
-                     else {
-                        total_subsys++;
-                        g_ptr_array_add(cur_device->device_subsystems, cur_subsys);
-                     }
-                  }
+                  if (cur_device) {
+                     if (id_type == ID_TYPE_PCI) {
+                        cur_subsys = calloc(1, sizeof(Pci_Id_Subsys));
+                        int ct = sscanf(a_line+tabct, "%4hx %4hx %m[^\n]",
+                                        &cur_subsys->subvendor_id,
+                                        &cur_subsys->subdevice_id,
+                                        &cur_subsys->subsystem_name);
+                        if (ct != 3) {
+                           printf("(%s) Error reading line: %s\n", __func__, a_line+tabct);
+                           free(cur_subsys);
+                           cur_subsys = NULL;
+                        }
+                        else {
+                           total_subsys++;
+                           g_ptr_array_add(cur_device->device_subsystems, cur_subsys);
+                        }
+                     }  // ID_TYPE_PCI
+                     else {     // ID_TYPE_USB
+                        cur_subsys = calloc(1, sizeof(Pci_Id_Subsys));
+                        int ct = sscanf(a_line+tabct, "%4hx  %m[^\n]",
+                                        &cur_subsys->subvendor_id,
+                                        &cur_subsys->subsystem_name);
+                        if (ct != 2) {
+                           printf("(%s) Error reading line: %s\n", __func__, a_line+tabct);
+                           free(cur_subsys);
+                           cur_subsys = NULL;
+                        }
+                        else {
+                           total_subsys++;
+                           g_ptr_array_add(cur_device->device_subsystems, cur_subsys);
+                        }
+                     }  //ID_TYPE_USB
+                  }  // if (cur_device)
                   break;
                }
 
@@ -203,8 +265,9 @@ GPtrArray * load_pci_ids(){
       g_ptr_array_free(all_lines, true);
    }          // if (pci_id_dir)
    if (debug) {
-      printf("(%s) Total vendors: %d, total devices: %d, total subsystems: %d\n",
-             __func__, total_vendors, total_devices, total_subsys);
+      char * level3_name = (id_type == ID_TYPE_PCI) ? "subsystems" : "interfaces";
+      printf("(%s) Total vendors: %d, total devices: %d, total %s: %d\n",
+             __func__, total_vendors, total_devices, level3_name, total_subsys);
    }
    return all_vendors;
 }
@@ -212,8 +275,10 @@ GPtrArray * load_pci_ids(){
 
 
 
-void report_pci_devices() {
-   GPtrArray * all_devices = pci_vendors;
+void report_device_ids(Device_Id_Type id_type) {
+   // bool debug = true;
+
+   GPtrArray * all_devices = (id_type == ID_TYPE_PCI) ? pci_vendors : usb_vendors;
    int total_vendors = 0;
    int total_devices = 0;
    int total_subsys  = 0;
@@ -232,39 +297,58 @@ void report_pci_devices() {
          for (sctr=0; sctr<cur_device->device_subsystems->len; sctr++) {
             total_subsys++;
             cur_subsys = g_ptr_array_index(cur_device->device_subsystems, sctr);
-            printf("\t\t%04x %04x %s\n",
-                   cur_subsys->subvendor_id, cur_subsys->subdevice_id, cur_subsys->subsystem_name);
+            if (id_type == ID_TYPE_PCI)
+               printf("\t\t%04x %04x %s\n",
+                      cur_subsys->subvendor_id, cur_subsys->subdevice_id, cur_subsys->subsystem_name);
+            else
+               printf("\t\t%04x %s\n",
+                      cur_subsys->subvendor_id, cur_subsys->subsystem_name);
          }
       }
    }
-   printf("(%s) Total vendors: %d, total devices: %d, total subsystems: %d\n",
-          __func__, total_vendors, total_devices, total_subsys);
+   char * level3_name = (id_type == ID_TYPE_PCI) ? "subsystems" : "interfaces";
+   printf("(%s) Total vendors: %d, total devices: %d, total %s: %d\n",
+          __func__, total_vendors, total_devices, level3_name, total_subsys);
 }
 
 
 bool init_pci_ids() {
-   bool debug = false;
-   if (!pci_vendors)
-      pci_vendors = load_pci_ids();
+   bool debug = true;
+   if (!pci_vendors) {
+      pci_vendors = load_device_ids(ID_TYPE_PCI);
+      usb_vendors = load_device_ids(ID_TYPE_USB);
+   }
    bool ok = (pci_vendors);
-   if (ok && debug)
-      report_pci_devices();
+   if (ok && debug) {
+      // report_device_ids(ID_TYPE_PCI);
+      report_device_ids(ID_TYPE_USB);
+   }
    return ok;
 }
 
 
 
-Pci_Id_Vendor * pci_id_find_vendor(ushort vendor_id) {
+Pci_Id_Vendor * pciusb_id_find_vendor(ushort vendor_id, Device_Id_Type id_type) {
    int ndx = 0;
+   GPtrArray * all_vendors = (id_type == ID_TYPE_PCI) ? pci_vendors : usb_vendors;
    Pci_Id_Vendor * result = NULL;
    for (ndx=0; ndx<pci_vendors->len; ndx++) {
-      Pci_Id_Vendor * cur_vendor = g_ptr_array_index(pci_vendors, ndx);
+      Pci_Id_Vendor * cur_vendor = g_ptr_array_index(all_vendors, ndx);
       if (cur_vendor->vendor_id == vendor_id) {
          result = cur_vendor;
          break;
       }
    }
    return result;
+}
+
+
+Pci_Id_Vendor * pci_id_find_vendor(ushort vendor_id) {
+   return pciusb_id_find_vendor(vendor_id, ID_TYPE_PCI);
+}
+
+Pci_Id_Vendor * usb_id_find_vendor(ushort vendor_id) {
+   return pciusb_id_find_vendor(vendor_id, ID_TYPE_USB);
 }
 
 
@@ -282,6 +366,10 @@ Pci_Id_Device * pci_id_find_device(Pci_Id_Vendor * cur_vendor, ushort device_id)
    return result;
 }
 
+Pci_Id_Device * usb_id_find_device(Pci_Id_Vendor * cur_vendor, ushort device_id) {
+   return pci_id_find_device(cur_vendor, device_id);
+}
+
 
 Pci_Id_Subsys * pci_id_find_subsys(Pci_Id_Device * cur_device, ushort subvendor_id, ushort subdevice_id) {
    int ndx = 0;
@@ -296,11 +384,25 @@ Pci_Id_Subsys * pci_id_find_subsys(Pci_Id_Device * cur_device, ushort subvendor_
    return result;
 }
 
+Pci_Id_Subsys * usb_id_find_interface(Pci_Id_Device * cur_device, ushort interface_id) {
+   int ndx = 0;
+   Pci_Id_Subsys * result = NULL;
+   for (ndx=0; ndx<cur_device->device_subsystems->len; ndx++) {
+      Pci_Id_Subsys * cur_subsys = g_ptr_array_index(cur_device->device_subsystems, ndx);
+      if (cur_subsys->subvendor_id == interface_id) {
+         result = cur_subsys;
+         break;
+      }
+   }
+   return result;
+}
+
+
 
 
 // sadly, both 0000 and ffff are used as ids, so can't use them as special arguments for "not set"
 
-Pci_Id_Names pci_id_get_names(
+Pci_Usb_Id_Names pci_id_get_names(
                 ushort vendor_id,
                 ushort device_id,
                 ushort subvendor_id,
@@ -314,7 +416,7 @@ Pci_Id_Names pci_id_get_names(
              vendor_id, device_id, subvendor_id, subdevice_id);
    }
    assert( argct==1 || argct==2 || argct==4);
-   Pci_Id_Names names = {NULL, NULL, NULL};
+   Pci_Usb_Id_Names names = {NULL, NULL, NULL};
    Pci_Id_Vendor * vendor = pci_id_find_vendor(vendor_id);
    if (vendor) {
       names.vendor_name = vendor->vendor_name;
@@ -325,11 +427,11 @@ Pci_Id_Names pci_id_get_names(
             if (argct == 4) {
                Pci_Id_Subsys * subsys = pci_id_find_subsys(device, subvendor_id, subdevice_id);
                if (subsys)
-                  names.subsys_name = subsys->subsystem_name;
+                  names.subsys_or_interface_name = subsys->subsystem_name;
                else {
                   Pci_Id_Vendor * subsys_vendor = pci_id_find_vendor(subvendor_id);
                   if (subsys_vendor)
-                     names.subsys_name = subsys_vendor->vendor_name;
+                     names.subsys_or_interface_name = subsys_vendor->vendor_name;
                }
             }
          }
@@ -337,5 +439,39 @@ Pci_Id_Names pci_id_get_names(
    }
    return names;
 }
+
+
+Pci_Usb_Id_Names usb_id_get_names(
+                ushort vendor_id,
+                ushort device_id,
+                ushort interface_id,
+                int argct)
+{
+   bool debug = true;
+   if (debug) {
+      printf("(%s) vendor_id = %02x, device_id=%02x, interface_id=%02x\n",
+             __func__,
+             vendor_id, device_id, interface_id);
+   }
+   assert( argct==1 || argct==2 || argct==3);
+   Pci_Usb_Id_Names names = {NULL, NULL, NULL};
+   Pci_Id_Vendor * vendor = usb_id_find_vendor(vendor_id);
+   if (vendor) {
+      names.vendor_name = vendor->vendor_name;
+      if (argct > 1) {
+         Pci_Id_Device * device = pci_id_find_device(vendor, device_id);
+         if (device) {
+            names.device_name = device->device_name;
+            if (argct == 3) {
+               Pci_Id_Subsys * subsys = usb_id_find_interface(device, interface_id);
+               if (subsys)
+                  names.subsys_or_interface_name = subsys->subsystem_name;
+            }
+         }
+      }
+   }
+   return names;
+}
+
 
 
