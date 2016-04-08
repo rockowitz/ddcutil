@@ -78,7 +78,7 @@ char * simple_device_fn[] = {
  *            this value
  */
 static char * find_id_file(Device_Id_Type id_type) {
-   bool debug = true;
+   bool debug = false;
 
    char * known_pci_ids_dirs[] = {
          "/usr/share/libosinfo/db",
@@ -128,7 +128,7 @@ static GPtrArray * usb_vendors;
 
 
 static GPtrArray * load_device_ids(Device_Id_Type id_type){
-   bool debug = true;
+   bool debug = false;
    int total_vendors = 0;
    int total_devices = 0;
    int total_subsys  = 0;
@@ -313,7 +313,7 @@ void report_device_ids(Device_Id_Type id_type) {
 
 
 bool init_pci_ids() {
-   bool debug = true;
+   bool debug = false;
    if (!pci_vendors) {
       pci_vendors = load_device_ids(ID_TYPE_PCI);
       usb_vendors = load_device_ids(ID_TYPE_USB);
@@ -329,15 +329,24 @@ bool init_pci_ids() {
 
 
 Pci_Id_Vendor * pciusb_id_find_vendor(ushort vendor_id, Device_Id_Type id_type) {
+   bool debug = false;
    int ndx = 0;
    GPtrArray * all_vendors = (id_type == ID_TYPE_PCI) ? pci_vendors : usb_vendors;
    Pci_Id_Vendor * result = NULL;
-   for (ndx=0; ndx<pci_vendors->len; ndx++) {
+   for (ndx=0; ndx<all_vendors->len; ndx++) {
       Pci_Id_Vendor * cur_vendor = g_ptr_array_index(all_vendors, ndx);
+      // printf("(%s) Comparing cur_vendor=0x%04x\n", __func__, cur_vendor->vendor_id);
       if (cur_vendor->vendor_id == vendor_id) {
          result = cur_vendor;
          break;
       }
+   }
+   if (debug) {
+   printf("(%s) id_type=%d, vendor_id=0x%02x, returning %p\n",
+          __func__,
+          id_type,
+          vendor_id,
+          result);
    }
    return result;
 }
@@ -447,7 +456,7 @@ Pci_Usb_Id_Names usb_id_get_names(
                 ushort interface_id,
                 int argct)
 {
-   bool debug = true;
+   bool debug = false;
    if (debug) {
       printf("(%s) vendor_id = %02x, device_id=%02x, interface_id=%02x\n",
              __func__,
@@ -469,6 +478,12 @@ Pci_Usb_Id_Names usb_id_get_names(
             }
          }
       }
+   }
+   if (debug) {
+      printf("(%s) Returning: vendor_name=%s, device_name=%s, subsys_or_interface_name=%s\n",
+            __func__,
+
+            names.vendor_name, names.device_name, names.subsys_or_interface_name);
    }
    return names;
 }
