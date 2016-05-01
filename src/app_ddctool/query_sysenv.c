@@ -35,6 +35,7 @@
 #include <ctype.h>
 #include <dirent.h>
 #include <errno.h>
+#include <fcntl.h>
 #include <glib.h>
 #include <grp.h>
 #include <pwd.h>
@@ -49,12 +50,17 @@
 #include <limits.h>
 #include <sys/stat.h>
 // #include <libosinfo-1.0/osinfo/osinfo.h>
+#include <libudev.h>        // does this need pkgconfig?
+#include <linux/hiddev.h>
+#include <sys/ioctl.h>
 
 #include <X11/Xlib.h>
 #include <X11/Xatom.h>
 #include <X11/extensions/Xrandr.h>
 
 #include "util/file_util.h"
+#include "util/hiddev_util.h"
+#include "util/hiddev_reports.h"
 #include "util/pci_id_util.h"
 #include "util/report_util.h"
 #include "util/string_util.h"
@@ -760,7 +766,7 @@ struct driver_name_node * query_card_and_driver_using_sysfs() {
 
                // printf("\nLooking up names in pci.ids...\n");
                printf("\nVideo card identification:\n");
-               bool pci_ids_ok = init_pci_ids();
+               bool pci_ids_ok = pciusb_id_ensure_initialized();
                if (pci_ids_ok) {
                   Pci_Usb_Id_Names names = pci_id_get_names(
                                   xvendor_id,
@@ -905,6 +911,56 @@ void query_i2c_buses() {
 }
 
 
+void query_usb_monitors() {
+   printf("\nChecking for USB connected monitors...\n");
+
+   int rc;
+
+   GPtrArray * hiddev_devices = get_hiddev_device_names();
+   printf("Found %d USB HID devices.\n", hiddev_devices->len);
+   for (int devndx=0; devndx<hiddev_devices->len; devndx++) {
+      errno=0;
+      char * curfn = g_ptr_array_index(hiddev_devices,devndx);
+      int fd = open(curfn, O_RDONLY);
+      if (fd < 1) {
+         // perror("Unable to open device");
+         printf("Unable to open %s: %s\n", curfn, strerror(errno));
+      }
+      else {
+         char * cgname = get_hiddev_name(fd);
+         struct hiddev_devinfo dev_info;
+         errno = 0;
+         rc = ioctl(fd, HIDIOCGDEVINFO, &dev_info);
+         if (rc != 0) {
+            printf("Unable to retrieve information for device %s: %s\n",
+                   curfn, strerror(errno));
+         }
+         else {
+            char dev_summary[200];
+            snprintf(dev_summary, 200, "Device %s - %d:%d  %04x:%04x - %s",
+                     curfn, dev_info.busnum, dev_info.devnum,
+                     dev_info.vendor, dev_info.product,
+                     cgname);
+            if (!is_hiddev_monitor(fd)) {
+               printf("%s\n", dev_summary);
+
+               printf("   Not a USB connected monitor\n");
+            }
+            else {
+               printf("%s\n", dev_summary);
+               report_hiddev_device_by_fd(fd, 1);
+
+            }
+         }
+
+         close(fd);
+      }
+   }
+
+   // need to set destroy function
+   g_ptr_array_free(hiddev_devices, true);
+
+}
 
 
 void query_sysenv() {
@@ -994,6 +1050,8 @@ void query_sysenv() {
    // Display * x11_disp = open_default_x11_display();
    // GPtrArray *  outputs = get_x11_connected_outputs(x11_disp);
    // close_x11_display(x11_disp);
+
+   query_usb_monitors();
 }
 
 

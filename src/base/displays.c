@@ -48,29 +48,14 @@ static char * Display_Id_Type_Names[] = {
       "DISP_ID_ADL",
       "DISP_ID_MONSER",
       "DISP_ID_EDID",
-      "DISP_ID_DISPNO"
+      "DISP_ID_DISPNO",
+      "DISP_ID_USB"
 };
 
 
 char * display_id_type_name(Display_Id_Type val) {
    return Display_Id_Type_Names[val];
 }
-
-
-#ifdef REFERENCE
-typedef
-struct {
-   char          marker[4];         // always "DPID"
-   Display_Id_Type id_type;
-   int           busno;
-   int           iAdapterIndex;
-   int           iDisplayIndex;
-// char          mfg_id[EDID_MFG_ID_FIELD_SIZE];
-   char          model_name[EDID_MODEL_NAME_FIELD_SIZE];
-   char          serial_ascii[EDID_SERIAL_ASCII_FIELD_SIZE];
-   Byte          edidbyes[128]
-} Display_Identifier;
-#endif
 
 
 static
@@ -81,6 +66,8 @@ Display_Identifier* common_create_display_identifier(Display_Id_Type id_type) {
    pIdent->busno  = -1;
    pIdent->iAdapterIndex = -1;
    pIdent->iDisplayIndex = -1;
+   pIdent->usb_bus = -1;
+   pIdent->usb_device = -1;
    memset(pIdent->edidbytes, '\0', 128);
    *pIdent->model_name = '\0';
    *pIdent->serial_ascii = '\0';
@@ -133,6 +120,14 @@ Display_Identifier* create_mon_ser_display_identifier(
    return pIdent;
 }
 
+Display_Identifier* create_usb_display_identifier(int bus, int device) {
+   Display_Identifier* pIdent = common_create_display_identifier(DISP_ID_USB);
+   pIdent->usb_bus = bus;
+   pIdent->usb_device = device;
+   return pIdent;
+
+}
+
 
 void report_display_identifier(Display_Identifier * pdid, int depth) {
 
@@ -143,6 +138,8 @@ void report_display_identifier(Display_Identifier * pdid, int depth) {
    rpt_int( "busno",         NULL, pdid->busno,         d1);
    rpt_int( "iAdapterIndex", NULL, pdid->iAdapterIndex, d1);
    rpt_int( "iDisplayIndex", NULL, pdid->iDisplayIndex, d1);
+   rpt_int( "usb_bus",       NULL, pdid->usb_bus,       d1);
+   rpt_int( "usb_device",    NULL, pdid->usb_device,    d1);
    rpt_str( "model_name",    NULL, pdid->model_name,    d1);
    rpt_str( "serial_ascii",  NULL, pdid->serial_ascii,  d1);
 
@@ -211,6 +208,19 @@ Display_Ref * create_adl_display_ref(int iAdapterIndex, int iDisplayIndex) {
    return dref;
 }
 
+Display_Ref * create_usb_display_ref(int usb_bus, int usb_device, char * hiddev_devname) {
+   assert(hiddev_devname);
+   Display_Ref * dref = calloc(1, sizeof(Display_Ref));
+   memcpy(dref->marker, DISPLAY_REF_MARKER, 4);
+   dref->io_mode     = USB_IO;
+   dref->usb_bus     = usb_bus;
+   dref->usb_device  = usb_device;
+   dref->usb_hiddev_name = strdup(hiddev_devname);
+   dref->vcp_version = version_spec_unqueried;
+   return dref;
+}
+
+
 Display_Ref * clone_display_ref(Display_Ref * old) {
    assert(old);
    Display_Ref * dref = calloc(1, sizeof(Display_Ref));
@@ -249,8 +259,8 @@ bool dreq(Display_Ref* this, Display_Ref* that) {
             break;
 
          case USB_IO:
-            printf("(%s) Case USB_IO unimplemented.  Returning false\n", __func__);
-            result = false;
+            result = (this->usb_bus    == that->usb_bus  &&
+                      this->usb_device == that->usb_device);
             break;
          }
       }
@@ -260,7 +270,7 @@ bool dreq(Display_Ref* this, Display_Ref* that) {
 
 
 void report_display_ref(Display_Ref * dref, int depth) {
-   rpt_structure_loc("BasicStructureRef", dref, depth );
+   rpt_structure_loc("DisplayRef", dref, depth );
    int d1 = depth+1;
    rpt_mapped_int("ddc_io_mode", NULL, dref->io_mode, (Value_To_Name_Function) mccs_io_mode_name, d1);
 
@@ -276,34 +286,41 @@ void report_display_ref(Display_Ref * dref, int depth) {
       break;
 
    case USB_IO:
-      rpt_vstring(d1, "(%s) Case USB_IO unimplemented", __func__);
+      rpt_int("usb_bus",    NULL, dref->usb_bus,    d1);
+      rpt_int("usb_device", NULL, dref->usb_device, d1);
+      break;
    }
 
    rpt_vstring(d1, "vcp_version:  %d.%d\n", dref->vcp_version.major, dref->vcp_version.minor );
 }
 
 
-char * display_ref_short_name_r(Display_Ref * dref, char * buf, int bufsize) {
-   if (dref->io_mode == DDC_IO_DEVI2C) {
+char * dref_short_name_r(Display_Ref * dref, char * buf, int bufsize) {
+   switch (dref->io_mode) {
+   case DDC_IO_DEVI2C:
       snprintf(buf, bufsize, "bus /dev/i2c-%d", dref->busno);
-   }
-   else {
+      break;
+   case DDC_IO_ADL:
       snprintf(buf, bufsize, "adl display %d.%d", dref->iAdapterIndex, dref->iDisplayIndex);
+      break;
+   case USB_IO:
+      snprintf(buf, bufsize, "usb %d:%d", dref->usb_bus, dref->usb_device);
+      break;
    }
    return buf;
 }
 
 
-char * display_ref_short_name(Display_Ref * dref) {
+char * dref_short_name(Display_Ref * dref) {
    static char display_ref_short_name_buffer[100];
-   return display_ref_short_name_r(dref, display_ref_short_name_buffer, 100);
+   return dref_short_name_r(dref, display_ref_short_name_buffer, 100);
 }
 
 
 
 // *** Display_Handle ***
 
-Display_Handle * create_bus_display_handle(int fh, int busno) {
+static Display_Handle * create_bus_display_handle(int fh, int busno) {
    Display_Handle * dh = calloc(1, sizeof(Display_Handle));
    memcpy(dh->marker, DISPLAY_HANDLE_MARKER, 4);
    dh->io_mode = DDC_IO_DEVI2C;
@@ -315,7 +332,17 @@ Display_Handle * create_bus_display_handle(int fh, int busno) {
    return dh;
 }
 
-Display_Handle * create_adl_display_handle(int iAdapterIndex, int iDisplayIndex) {
+
+// hacky implementation for transition
+Display_Handle * create_bus_display_handle_from_display_ref(int fh, Display_Ref * dref) {
+   assert(dref->io_mode == DDC_IO_DEVI2C);
+   Display_Handle * dh = create_bus_display_handle(fh, dref->busno);
+   dh->dref = dref;
+   return dh;
+}
+
+
+static Display_Handle * create_adl_display_handle(int iAdapterIndex, int iDisplayIndex) {
    Display_Handle * dh = calloc(1, sizeof(Display_Handle));
    memcpy(dh->marker, DISPLAY_HANDLE_MARKER, 4);
    dh->io_mode = DDC_IO_ADL;
@@ -325,9 +352,32 @@ Display_Handle * create_adl_display_handle(int iAdapterIndex, int iDisplayIndex)
    return dh;
 }
 
-Display_Handle * create_adl_display_handle_from_display_ref(Display_Ref * ref) {
-   return create_adl_display_handle(ref->iAdapterIndex, ref->iDisplayIndex);
+
+// hacky implementation for transition
+Display_Handle * create_adl_display_handle_from_display_ref(Display_Ref * dref) {
+   assert(dref->io_mode == DDC_IO_ADL);
+   Display_Handle * dh = create_adl_display_handle(dref->iAdapterIndex, dref->iDisplayIndex);
+   dh->dref = dref;
+   return dh;
 }
+
+
+Display_Handle * create_usb_display_handle_from_display_ref(int fh, Display_Ref * dref) {
+   assert(dref->io_mode == USB_IO);
+   Display_Handle * dh = calloc(1, sizeof(Display_Handle));
+   memcpy(dh->marker, DISPLAY_HANDLE_MARKER, 4);
+   dh->io_mode = USB_IO;
+   dh->fh = fh;
+   dh->dref = dref;
+   dh->hiddev_device_name = dref->usb_hiddev_name;
+   dh->usb_bus = dref->usb_bus;
+   dh->usb_device = dref->usb_device;
+   dh->vcp_version = version_spec_unqueried;
+
+   // report_display_handle(dh,__func__);
+   return dh;
+}
+
 
 /* Reports the contents of a Display_Handle
  *
@@ -349,25 +399,30 @@ void report_display_handle(Display_Handle * dh, const char * msg, int depth) {
                          *dh->marker, (char *)dh->marker);
       }
       else {
+         rpt_vstring(d1, "dref:                 %p", dh->dref);
+         rpt_vstring(d1, "ddc_io_mode:          %s",  display_id_type_name(dh->io_mode) );
          switch (dh->io_mode) {
          case (DDC_IO_DEVI2C):
-            rpt_vstring(d1, "ddc_io_mode = DDC_IO_DEVI2C\n");
-            rpt_vstring(d1, "fh:    %d\n", dh->fh);
-            rpt_vstring(d1, "busno: %d\n", dh->busno);
+            // rpt_vstring(d1, "ddc_io_mode = DDC_IO_DEVI2C");
+            rpt_vstring(d1, "fh:                  %d", dh->fh);
+            rpt_vstring(d1, "busno:               %d", dh->busno);
             break;
          case (DDC_IO_ADL):
-            rpt_vstring(d1, "ddc_io_mode = DDC_IO_ADL\n");
-            rpt_vstring(d1, "iAdapterIndex:    %d\n", dh->iAdapterIndex);
-            rpt_vstring(d1, "iDisplayIndex:    %d\n", dh->iDisplayIndex);
+            // rpt_vstring(d1, "ddc_io_mode = DDC_IO_ADL");
+            rpt_vstring(d1, "iAdapterIndex:       %d", dh->iAdapterIndex);
+            rpt_vstring(d1, "iDisplayIndex:       %d", dh->iDisplayIndex);
             break;
          case (USB_IO):
-            rpt_vstring(d1, "(%s) Case USB_IO unimplemented", __func__);
+            // rpt_vstring(d1, "ddc_io_mode = USB_IO");
+            rpt_vstring(d1, "fh:                  %d", dh->fh);
+            rpt_vstring(d1, "usb_bus:             %d", dh->usb_bus);
+            rpt_vstring(d1, "usb_device:          %d", dh->usb_device);
+            rpt_vstring(d1, "hiddev_device_name:  %s", dh->hiddev_device_name);
             break;
          }
       }
-      rpt_vstring(d1, "   vcp_version:     %d.%d\n", dh->vcp_version.major, dh->vcp_version.minor);
+      rpt_vstring(d1, "   vcp_version:         %d.%d", dh->vcp_version.major, dh->vcp_version.minor);
    }
-
 }
 
 
@@ -402,7 +457,8 @@ char * display_handle_repr_r(Display_Handle * dref, char * buf, int bufsz) {
 
    case USB_IO:
       snprintf(buf, bufsz,
-               "(%s) USB Display_Handle unimplemented", __func__);
+               "Display_Handle[usb: %d:%d]",
+               dref->usb_bus, dref->usb_device);
       break;
    }
 
@@ -426,6 +482,8 @@ char * display_handle_repr(Display_Handle * dh) {
 }
 
 
+// *** Display_Info ***
+
 /* Outputs a debug report of a Display_Info struct.
  *
  * Arguments:
@@ -435,14 +493,13 @@ char * display_handle_repr(Display_Handle * dh) {
  * Returns:  nothing
  */
 void report_display_info(Display_Info * dinfo, int depth) {
-   rpt_vstring(depth, "Display_Info at %p:\n", dinfo);
+   const int d1 = depth+1;
+   rpt_structure_loc("Display_Info", dinfo, depth);
    if (dinfo) {
-      int d1 = depth+1;
-      rpt_vstring(d1, "dref=%p\n", dinfo->dref);
-      if (dinfo->dref) {
-         rpt_vstring(d1, "short name:   %s\n", display_ref_short_name(dinfo->dref));
-      }
-      rpt_vstring(d1, "edid=%p\n", dinfo->edid);
+      rpt_vstring(d1, "dref:         %p  %s",
+                      dinfo->dref,
+                      (dinfo->dref) ? dref_short_name(dinfo->dref) : "");
+      rpt_vstring(d1, "edid          %p", dinfo->edid);
       if (dinfo->edid) {
          report_parsed_edid(dinfo->edid, false /* !verbose */, d1);
       }
@@ -459,10 +516,10 @@ void report_display_info(Display_Info * dinfo, int depth) {
  * Returns:  nothing
  */
 void report_display_info_list(Display_Info_List * pinfo_list, int depth) {
-   rpt_vstring(depth, "Display_Info_List at %p\n", pinfo_list);
+   rpt_vstring(depth, "Display_Info_List at %p", pinfo_list);
    if (pinfo_list) {
       int d1 = depth+1;
-      rpt_vstring(d1, "Count:         %d\n", pinfo_list->ct);
+      rpt_vstring(d1, "Count:         %d", pinfo_list->ct);
       int ndx = 0;
       for (; ndx < pinfo_list->ct; ndx++) {
          Display_Info * dinfo = &pinfo_list->info_recs[ndx];
@@ -471,6 +528,8 @@ void report_display_info_list(Display_Info_List * pinfo_list, int depth) {
    }
 }
 
+
+// *** Miscellaneous ***
 
 // Currently unused.  Needed for video card information retrieval
 // currently defined only in ADL code.

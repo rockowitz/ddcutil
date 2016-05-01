@@ -48,6 +48,8 @@
 #include "ddc/ddc_packet_io.h"
 #include "ddc/vcp_feature_values.h"
 
+#include "usb/usb_core.h"
+
 #include "ddc/ddc_vcp.h"
 
 
@@ -78,16 +80,22 @@ set_nontable_vcp_value(
    bool debug = false;
    Trace_Group tg = (debug) ? 0xFF : TRACE_GROUP;
    TRCMSGTG(tg, "Writing feature 0x%02x , new value = %d\n", feature_code, new_value);
+   Global_Status_Code gsc = 0;
 
-   DDC_Packet * request_packet_ptr =
-      create_ddc_setvcp_request_packet(feature_code, new_value, "set_vcp:request packet");
-   // DBGMSG("create_ddc_getvcp_request_packet returned packet_ptr=%p", request_packet_ptr);
-   // dump_packet(request_packet_ptr);
+   if (dh->io_mode == USB_IO) {
+      gsc = usb_set_nontable_vcp_value(dh, feature_code, new_value);
+   }
+   else {
+      DDC_Packet * request_packet_ptr =
+         create_ddc_setvcp_request_packet(feature_code, new_value, "set_vcp:request packet");
+      // DBGMSG("create_ddc_getvcp_request_packet returned packet_ptr=%p", request_packet_ptr);
+      // dump_packet(request_packet_ptr);
 
-   Global_Status_Code gsc = ddc_write_only_with_retry(dh, request_packet_ptr);
+      gsc = ddc_write_only_with_retry(dh, request_packet_ptr);
 
-   if (request_packet_ptr)
-      free_ddc_packet(request_packet_ptr);
+      if (request_packet_ptr)
+         free_ddc_packet(request_packet_ptr);
+   }
 
    TRCMSGTG(tg, "Returning %s", gsc_desc(gsc));
    return gsc;
@@ -117,7 +125,6 @@ set_table_vcp_value(
    TRCMSGTG(tg, "Writing feature 0x%02x , bytect = %d\n", feature_code, bytect);
 
    Global_Status_Code gsc = DDCL_UNIMPLEMENTED;
-
 
    TRCMSGTG(tg, "Returning: %s", gsc_desc(gsc));
    return gsc;
@@ -293,7 +300,7 @@ Global_Status_Code get_table_vcp_value(
 Global_Status_Code get_vcp_value(
        Display_Handle *          dh,
        Byte                      feature_code,
-       Vcp_Value_Type             call_type,
+       Vcp_Value_Type            call_type,
        Single_Vcp_Value **       pvalrec)
 {
    bool debug = false;
@@ -303,37 +310,71 @@ Global_Status_Code get_vcp_value(
    Global_Status_Code gsc = 0;
 
    Buffer * buffer = NULL;
-   Parsed_Nontable_Vcp_Response * parsed_nontable_response = NULL;
+   Parsed_Nontable_Vcp_Response * parsed_nontable_response = NULL;  // vs interpreted ..
    Single_Vcp_Value * valrec = NULL;
-   switch (call_type) {
 
-   case (NON_TABLE_VCP_VALUE):
-         gsc = get_nontable_vcp_value(
-                  dh,
-                  feature_code,
-                  &parsed_nontable_response);
-         if (gsc == 0) {
-            valrec = create_nontable_vcp_value(
-                        feature_code,
-                        parsed_nontable_response->mh,
-                        parsed_nontable_response->ml,
-                        parsed_nontable_response->sh,
-                        parsed_nontable_response->sl);
-            free(parsed_nontable_response);
-         }
-         break;
+   // why are we coming here for USB?
+   if (dh->io_mode == USB_IO) {
+      DBGMSF(debug, "USB case");
 
-   case (TABLE_VCP_VALUE):
-         gsc = get_table_vcp_value(
-                 dh,
-                 feature_code,
-                 &buffer);
-         if (gsc == 0) {
-            valrec = create_table_vcp_value_by_buffer(feature_code, buffer);
-            buffer_free(buffer, __func__);
-         }
-         break;
+      switch (call_type) {
+
+          case (NON_TABLE_VCP_VALUE):
+                gsc = usb_get_nontable_vcp_value(
+                      dh,
+                      feature_code,
+                      &parsed_nontable_response);    //
+                if (gsc == 0) {
+                   valrec = create_nontable_vcp_value(
+                               feature_code,
+                               parsed_nontable_response->mh,
+                               parsed_nontable_response->ml,
+                               parsed_nontable_response->sh,
+                               parsed_nontable_response->sl);
+                   free(parsed_nontable_response);
+                }
+                break;
+
+          case (TABLE_VCP_VALUE):
+                gsc = DDCRC_REPORTED_UNSUPPORTED;
+                break;
+          }
+
    }
+   else {
+
+      switch (call_type) {
+
+      case (NON_TABLE_VCP_VALUE):
+            gsc = get_nontable_vcp_value(
+                     dh,
+                     feature_code,
+                     &parsed_nontable_response);
+            if (gsc == 0) {
+               valrec = create_nontable_vcp_value(
+                           feature_code,
+                           parsed_nontable_response->mh,
+                           parsed_nontable_response->ml,
+                           parsed_nontable_response->sh,
+                           parsed_nontable_response->sl);
+               free(parsed_nontable_response);
+            }
+            break;
+
+      case (TABLE_VCP_VALUE):
+            gsc = get_table_vcp_value(
+                    dh,
+                    feature_code,
+                    &buffer);
+            if (gsc == 0) {
+               valrec = create_table_vcp_value_by_buffer(feature_code, buffer);
+               buffer_free(buffer, __func__);
+            }
+            break;
+      }
+
+   } // non USB
+
 
    *pvalrec = valrec;
 

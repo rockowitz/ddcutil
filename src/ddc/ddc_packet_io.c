@@ -52,6 +52,8 @@
 
 #include "adl/adl_shim.h"
 
+#include "usb/usb_core.h"
+
 #include "ddc/try_stats.h"
 
 #include "ddc/ddc_packet_io.h"
@@ -99,22 +101,24 @@ bool is_ddc_null_message(Byte * packet) {
  *       failure_action == RETURN_ERROR_IF_FAILURE
  */
 Display_Handle* ddc_open_display(Display_Ref * dref,  Failure_Action failure_action) {
+   bool debug = false;
+   DBGMSF(debug,"Opening display %s",dref_short_name(dref));
    Display_Handle * pDispHandle = NULL;
    switch (dref->io_mode) {
    case DDC_IO_DEVI2C:
-   {
-      int fd = i2c_open_bus(dref->busno, failure_action);
-      // TODO: handle open failure, when failure_action = return error
-      // all callers currently EXIT_IF_FAILURE
-      if (fd >= 0) {    // will be < 0 if open_i2c_bus failed and failure_action = RETURN_ERROR_IF_FAILURE
-         i2c_set_addr(fd, 0x37);
+      {
+         int fd = i2c_open_bus(dref->busno, failure_action);
+         // TODO: handle open failure, when failure_action = return error
+         // all callers currently EXIT_IF_FAILURE
+         if (fd >= 0) {    // will be < 0 if open_i2c_bus failed and failure_action = RETURN_ERROR_IF_FAILURE
+            i2c_set_addr(fd, 0x37);
 
-         // Is this needed?
-         // 10/24/15, try disabling:
-         // sleepMillisWithTrace(DDC_TIMEOUT_MILLIS_DEFAULT, __func__, NULL);
+            // Is this needed?
+            // 10/24/15, try disabling:
+            // sleepMillisWithTrace(DDC_TIMEOUT_MILLIS_DEFAULT, __func__, NULL);
 
-         pDispHandle = create_bus_display_handle(fd, dref->busno);
-      }
+            pDispHandle = create_bus_display_handle_from_display_ref(fd, dref);
+         }
       else {
          log_status_code(modulate_rc(fd, RR_ERRNO), __func__);
       }
@@ -125,36 +129,63 @@ Display_Handle* ddc_open_display(Display_Ref * dref,  Failure_Action failure_act
       break;
 
    case USB_IO:
-      PROGRAM_LOGIC_ERROR("USB_IO unimplemented");
-   }
+      {
+         bool emit_error_msg = true;
+         DBGMSF(debug, "Opening USB device: %s", dref->usb_hiddev_name);
+         assert(dref->usb_hiddev_name);
+         // if (!dref->usb_hiddev_name) { // HACK
+         //    DBGMSG("HACK FIXUP.  dref->usb_hiddev_name");
+         //    dref->usb_hiddev_name = get_hiddev_devname_by_display_ref(dref);
+         // }
+         int fd = usb_open_hiddev_device(dref->usb_hiddev_name, emit_error_msg);
+         if (fd < 0) {
+            log_status_code(modulate_rc(fd,RR_ERRNO),__func__);
+            if (failure_action == EXIT_IF_FAILURE) {
+               TERMINATE_EXECUTION_ON_ERROR("Open failed");
+            }
+         }
+         else
+            pDispHandle = create_usb_display_handle_from_display_ref(fd, dref);
+      }
+   } // switch
    // needed?  for both or just I2C?
    // sleep_millis_with_trace(DDC_TIMEOUT_MILLIS_DEFAULT, __func__, NULL);
-   call_tuned_sleep_i2c(SE_POST_OPEN);
+   if (dref->io_mode != USB_IO)
+      call_tuned_sleep_i2c(SE_POST_OPEN);
    // report_display_handle(pDispHandle, __func__);
    return pDispHandle;
 }
 
 
 void ddc_close_display(Display_Handle * dh) {
-   // DBGMSG("Starting.");
-   // report_display_handle(dh, __func__);
+   bool debug = false;
+   if (debug) {
+      DBGMSG("Starting.");
+      report_display_handle(dh, __func__, 1);
+   }
+   bool failure_action = EXIT_IF_FAILURE;
    switch(dh->io_mode) {
    case DDC_IO_DEVI2C:
-   {
-      bool failure_action = EXIT_IF_FAILURE;
-      // bool  failure_action = RETURN_ERROR_IF_FAILURE;
-      int rc = i2c_close_bus(dh->fh, dh->busno,  failure_action);
-      if (rc != 0) {
-         DBGMSG("close_i2c_bus returned %d", rc);
-         log_status_code(modulate_rc(rc, RR_ERRNO), __func__);
+      {
+         int rc = i2c_close_bus(dh->fh, dh->busno,  failure_action);
+         if (rc != 0) {
+            DBGMSG("close_i2c_bus returned %d", rc);
+            log_status_code(modulate_rc(rc, RR_ERRNO), __func__);
+         }
+         break;
       }
-      break;
-   }
    case DDC_IO_ADL:
       break;           // nothing to do
    case USB_IO:
-      PROGRAM_LOGIC_ERROR("USB_IO Unimplemented");
-   }
+      {
+         int rc = usb_close_device(dh->fh, dh->hiddev_device_name, failure_action);
+         if (rc != 0) {
+            DBGMSG("usb_closedevice returned %d", rc);
+            log_status_code(modulate_rc(rc, RR_ERRNO), __func__);
+         }
+         break;
+      }
+   } //switch
 }
 
 

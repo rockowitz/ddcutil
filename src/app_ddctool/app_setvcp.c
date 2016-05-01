@@ -124,7 +124,7 @@ app_set_vcp_value_by_display_handle(
    if ( any_one_byte_hex_string_to_byte_in_buf(feature, &hexid) )
    {
       entry = vcp_find_feature_by_hexid(hexid);
-      if (!entry && force)
+      if (!entry && ( force || hexid >= 0xe0) )  // assume force for mfg specific codes
          entry = vcp_create_dummy_feature_for_hexid(hexid);
       if (entry) {
          if (!is_feature_writable_by_vcp_version(entry, vspec)) {
@@ -149,6 +149,16 @@ app_set_vcp_value_by_display_handle(
 
    if (entry && good_value) {
       gsc = set_nontable_vcp_value(dh, entry->code, (int) longtemp);
+
+#ifdef FUTURE
+      // routes all set calls through set_vcp_value(), at cost of more verbose calling sequence
+      Single_Vcp_Value vrec = {
+         .opcode = entry->code,
+         .value_type = NON_TABLE_VCP_VALUE,
+         .val.c.cur_val = longtemp
+      };
+      gsc = set_vcp_value(dh, &vrec);
+#endif
 
       if (gsc != 0) {
          // Is this proper error message?

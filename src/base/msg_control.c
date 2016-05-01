@@ -179,12 +179,13 @@ typedef Byte Trace_Group;
 #define TRC_I2C  0x40
 #define TRC_ADL  0x20
 #define TRC_DDC  0x10
-#define TRC_TOP  0x08
+#define TRC_USB  0x08
+#define TRC_TOP  0x04
 #endif
 
 // same order as flags in TraceGroup
-const Byte   trace_group_ids[]   = {TRC_BASE, TRC_I2C, TRC_ADL, TRC_DDC, TRC_TOP};
-const char * trace_group_names[] = {"BASE",   "I2C",   "ADL",   "DDC",   "TOP"};
+const Byte   trace_group_ids[]   = {TRC_BASE, TRC_I2C, TRC_ADL, TRC_DDC, TRC_USB, TRC_TOP};
+const char * trace_group_names[] = {"BASE",   "I2C",   "ADL",   "DDC",   "USB",   "TOP"};
 const int    trace_group_ct = sizeof(trace_group_names)/sizeof(char *);
 
 Trace_Group trace_class_name_to_value(char * name) {

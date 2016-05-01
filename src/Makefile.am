@@ -31,6 +31,7 @@ base/*expand         \
 cmdline/*expand      \
 ddc/*expand          \
 i2c/*expand          \
+usb/*expand          \
 libmain/*expand      \
 sample_clients/*expand \
 test/*expand \
@@ -166,11 +167,14 @@ ddc/ddc_vcp_version.c \
 i2c/i2c_base_io.c \
 i2c/i2c_bus_core.c \
 i2c/i2c_do_io.c \
+usb/usb_core.c  \
 ddc/ddc_dumpload.c \
 util/data_structures.c \
 util/debug_util.c \
 util/file_util.c  \
 util/glib_util.c \
+util/hiddev_reports.c \
+util/hiddev_util.c \
 util/output_sink.c \
 util/pci_id_util.c \
 util/report_util.c \

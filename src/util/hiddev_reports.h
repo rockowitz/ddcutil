@@ -1,10 +1,10 @@
-/* cmd_parser.h
+/* hiddev_reports.h
  *
- * Created on: Jun 16, 2014
+ * Created on: Apr 26, 2016
  *     Author: rock
- * *
+ *
  * <copyright>
- * Copyright (C) 2014-2016 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2014-2015 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -24,16 +24,21 @@
  * </endcopyright>
  */
 
-//
-// This simple interface facilitated switching command parsers during
-// development.  Candidate for removal.
-//
+#ifndef UTIL_HIDDEV_REPORTS_H_
+#define HIDDEV_REPORTS_H_
 
-#ifndef CMD_PARSER_H_
-#define CMD_PARSER_H_
+#include <linux/hiddev.h>
 
-#include "cmdline/parsed_cmd.h"
+void init_hiddev_reports();
 
-Parsed_Cmd * parse_command(int argc, char * argv[]);
+void report_hiddev_devinfo(struct hiddev_devinfo * devinfo, bool lookup_names, int depth);
+void report_hiddev_device_by_fd(int fd, int depth);
 
-#endif /* CMD_PARSER_H_ */
+void report_hiddev_report_info(struct hiddev_report_info * rinfo, int depth);
+void report_hiddev_field_info(struct hiddev_field_info * finfo, int depth);
+
+char * interpret_report_id(__u32 report_id);
+
+char * interpret_usage_code(int usage_code );
+
+#endif /* UTIL_HIDDEV_REPORTS_H_ */

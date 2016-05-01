@@ -50,6 +50,7 @@ typedef enum {
    CMDID_ENVIRONMENT  = 0x0400,
    CMDID_VCPINFO      = 0x0800,
    CMDID_READCHANGES  = 0x1000,
+   CMDID_CHKUSBMON    = 0x2000,
 } Cmd_Id_Type;
 
 

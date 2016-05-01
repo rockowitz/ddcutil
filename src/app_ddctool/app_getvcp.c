@@ -122,14 +122,14 @@ app_show_single_vcp_value_by_feature_id(
       bool force)
 {
    bool debug = false;
-   DBGMSF(debug, "Starting. Getting feature 0x%02x for %s",
-                 feature_id, display_handle_repr(dh) );
+   DBGMSF(debug, "Starting. Getting feature 0x%02x for %s, force=%s",
+                 feature_id, display_handle_repr(dh), bool_repr(force) );
 
    Global_Status_Code         gsc = 0;
    VCP_Feature_Table_Entry *  entry = NULL;
 
    entry = vcp_find_feature_by_hexid(feature_id);
-   if (!entry && force) {
+   if (!entry && (force || feature_id >= 0xe0)) {    // don't require force if manufacturer specific code
       entry = vcp_create_dummy_feature_for_hexid(feature_id);
    }
    if (!entry) {

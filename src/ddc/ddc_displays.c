@@ -45,6 +45,8 @@
 #include "adl/adl_errors.h"
 #include "adl/adl_shim.h"
 
+#include "usb/usb_core.h"
+
 #include "ddc/ddc_packet_io.h"
 #include "ddc/vcp_feature_codes.h"
 #include "ddc/ddc_vcp.h"
@@ -55,6 +57,9 @@
 
 // Trace class for this file
 // static Trace_Group TRACE_GROUP = TRC_DDC;   // currently unused
+
+// forward references
+Display_Ref * ddc_find_display_by_usb_busnum_devnum(int   busnum, int   devnum);
 
 
 //
@@ -68,20 +73,26 @@
  *    emit_error_msg emit error message if not valid
  *
  * Returns:
- *    true if dref identifiers a valid Display_Ref, false if not
+ *    true if dref identifies a valid Display_Ref, false if not
  */
 bool ddc_is_valid_display_ref(Display_Ref * dref, bool emit_error_msg) {
+   bool debug = false;
    assert( dref );
    // char buf[100];
    // DBGMSG("Starting.  %s   ", displayRefShortName(pdisp, buf, 100) );
-   bool result;
-   if (dref->io_mode == DDC_IO_DEVI2C) {
+   bool result = false;
+   switch(dref->io_mode) {
+   case DDC_IO_DEVI2C:
       result = i2c_is_valid_bus(dref->busno, emit_error_msg );
-   }
-   else {
+      break;
+   case DDC_IO_ADL:
       result = adlshim_is_valid_display_ref(dref, emit_error_msg);
+      break;
+   case USB_IO:
+      result = usb_is_valid_display_ref(dref, emit_error_msg);
+
    }
-   // DBGMSG("Returning %d", result);
+   DBGMSF(debug, "Returning %s", bool_repr(result));
    return result;
 }
 
@@ -122,7 +133,7 @@ Display_Ref* get_display_ref_for_display_identifier(Display_Identifier* pdid, bo
       validated = false;
       break;
    case DISP_ID_MONSER:
-      dref = ddc_find_display_by_model_and_sn(pdid->model_name, pdid->serial_ascii);  // in ddc_packet_io
+      dref = ddc_find_display_by_model_and_sn(pdid->model_name, pdid->serial_ascii);
       if (!dref && emit_error_msg) {
          fprintf(stderr, "Unable to find monitor with the specified model and serial number\n");
       }
@@ -132,6 +143,13 @@ Display_Ref* get_display_ref_for_display_identifier(Display_Identifier* pdid, bo
       if (!dref && emit_error_msg) {
          fprintf(stderr, "Unable to find monitor with the specified EDID\n" );
       }
+      break;
+   case DISP_ID_USB:
+      dref = ddc_find_display_by_usb_busnum_devnum(pdid->usb_bus, pdid->usb_device);
+       if (!dref && emit_error_msg) {
+          fprintf(stderr, "Unable to find monitor with the specified USB bus and device numbers\n");
+       }
+       break;
       break;
    // no default case because switch is exhaustive, compiler warns if case missing
    }  // switch
@@ -150,6 +168,22 @@ Display_Ref* get_display_ref_for_display_identifier(Display_Identifier* pdid, bo
 }
 
 
+#ifdef REDUNDANT
+void report_display_info(Display_Info * dinfo, int depth) {
+   const int d1 = depth+1;
+   const int d2 = depth+2;
+   rpt_structure_loc("Display_Info", dinfo, depth);
+   rpt_int("dispno", NULL, dinfo->dispno, d1);
+   rpt_vstring(d1, "dref: %p",   dinfo->dref);
+   if (dinfo->dref)
+      report_display_ref(dinfo->dref, d2);
+   rpt_vstring(d1, "edid: %p",   dinfo->edid);
+   if (dinfo->edid)
+      report_parsed_edid(dinfo->edid, false /* verbose */,  d2);
+}
+#endif
+
+
 //
 // Functions to get display information
 //
@@ -166,31 +200,73 @@ Display_Ref* get_display_ref_for_display_identifier(Display_Identifier* pdid, bo
  *    Display_Info_list struct
  */
 Display_Info_List * ddc_get_valid_displays() {
+   bool debug = false;
    int ndx;
 
    Display_Info_List i2c_displays = i2c_get_valid_displays();
+   if (debug) {
+      DBGMSG("i2c_displays returned from i2c_get_valid_displays():");
+      report_display_info_list(&i2c_displays,1);
+   }
+
    Display_Info_List adl_displays = adlshim_get_valid_displays();
 
+   Display_Info_List usb_displays = usb_get_valid_displays();
+   if (debug) {
+      DBGMSG("usb_displays returned from usb_get_valid_displays():");
+      report_display_info_list(&usb_displays,1);
+   }
+
    // merge the lists
-   int displayct = i2c_displays.ct + adl_displays.ct;
+   int displayct = i2c_displays.ct + adl_displays.ct + usb_displays.ct;
+   // DBGMSG("displayct=%d", displayct);
    Display_Info_List * all_displays = calloc(1, sizeof(Display_Info_List));
    all_displays->info_recs = calloc(displayct, sizeof(Display_Info));
    all_displays->ct = displayct;
+   // DBGMSG("dest addr = %p", all_displays->info_recs );
+   // DBGMSG("copying %d bytes", i2c_displays.ct * sizeof(Display_Info));
    memcpy(all_displays->info_recs,
           i2c_displays.info_recs,
           i2c_displays.ct * sizeof(Display_Info));
-   memcpy(all_displays->info_recs + i2c_displays.ct*sizeof(Display_Info),
+   // DBGMSG("dest addr = %p", all_displays->info_recs + (i2c_displays.ct)*sizeof(Display_Info));
+   // DBGMSG("dest addr = %p", (Byte *) all_displays->info_recs + (i2c_displays.ct)*sizeof(Display_Info));
+   // DBGMSG("copying %d bytes",adl_displays.ct * sizeof(Display_Info));
+
+   //works:
+   // memcpy((Byte *)all_displays->info_recs + i2c_displays.ct*sizeof(Display_Info),
+   //        adl_displays.info_recs,
+   //        adl_displays.ct * sizeof(Display_Info));
+
+   // cleaner:
+   memcpy(all_displays->info_recs + i2c_displays.ct,
           adl_displays.info_recs,
           adl_displays.ct * sizeof(Display_Info));
+
+   // DBGMSG("dest addr   = %p", (Byte *)all_displays->info_recs + (i2c_displays.ct+adl_displays.ct)*sizeof(Display_Info));
+   // DBGMSG("source addr = %p", usb_displays.info_recs);
+   // DBGMSG("copying %d bytes", usb_displays.ct * sizeof(Display_Info));
+
+   // works
+   // memcpy((Byte *)all_displays->info_recs + (i2c_displays.ct+adl_displays.ct)*sizeof(Display_Info),
+   //        usb_displays.info_recs,
+   //        usb_displays.ct * sizeof(Display_Info));
+
+   memcpy(all_displays->info_recs + (i2c_displays.ct+adl_displays.ct),
+          usb_displays.info_recs,
+          usb_displays.ct * sizeof(Display_Info));
+
    if (i2c_displays.info_recs)
       free(i2c_displays.info_recs);
    if (adl_displays.info_recs)
       free(adl_displays.info_recs);
-   int displayctr = 0;
+   if (usb_displays.info_recs)
+      free(usb_displays.info_recs);
+   // rpt_title("merged list:", 0);
+   int displayctr = 1;
    for (ndx = 0; ndx < displayct; ndx++) {
+      // report_display_info(&all_displays->info_recs[ndx],1);
       if (ddc_is_valid_display_ref(all_displays->info_recs[ndx].dref, false /* emit msgs */)) {
-         displayctr++;
-         all_displays->info_recs[ndx].dispno = displayctr;  // displays are numbered from 1, not 0
+         all_displays->info_recs[ndx].dispno = displayctr++;  // displays are numbered from 1, not 0
       }
       else {
          // Do not assign display number in case of I2C bus entry that isn't in fact a display
@@ -199,7 +275,10 @@ Display_Info_List * ddc_get_valid_displays() {
       }
    }
 
-   // report_display_info_list(all_displays, 0);
+   if (debug) {
+      DBGMSG("Returning merged list:");
+      report_display_info_list(all_displays, 1);
+   }
    return all_displays;
 }
 
@@ -256,18 +335,36 @@ ddc_find_display_by_model_and_sn(
    const char * sn)
 {
    // DBGMSG("Starting.  model=%s, sn=%s   ", model, sn );
-   printf("(%s) WARNING: Support for USB devices unimplemented\n", __func__);
+   // printf("(%s) WARNING: Support for USB devices unimplemented\n", __func__);
 
    Display_Ref * result = NULL;
    Bus_Info * businfo = i2c_find_bus_info_by_model_sn(model, sn);
    if (businfo) {
       result = create_bus_display_ref(businfo->busno);
    }
-   else {
+
+   if (!result)
       result = adlshim_find_display_by_model_sn(model, sn);
-   }
+
+   if (!result)
+      result = usb_find_display_by_model_sn(model, sn);
 
    // DBGMSG("Returning: %p  ", result );
+   return result;
+}
+
+Display_Ref *
+ddc_find_display_by_usb_busnum_devnum(
+   int   busnum,
+   int   devnum)
+{
+   bool debug = false;
+   DBGMSF(debug, "Starting.  busnum=%d, devnum=%d", busnum, devnum);
+   // printf("(%s) WARNING: Support for USB devices unimplemented\n", __func__);
+
+   Display_Ref * result = usb_find_display_by_busnum_devnum(busnum, devnum);
+
+   DBGMSF(debug, "Returning: %p  ", result );
    return result;
 }
 
@@ -294,7 +391,8 @@ ddc_find_display_by_edid(const Byte * pEdidBytes) {
       result = adlshim_find_display_by_edid(pEdidBytes);
 
    if (!result)
-      printf("(%s) WARNING: Support for USB edid unimplemented\n", __func__);
+      // printf("(%s) WARNING: Support for USB edid unimplemented\n", __func__);
+      result = usb_find_display_by_edid(pEdidBytes);
 
    // DBGMSG("Returning: %p  ", result );
    return result;
@@ -319,14 +417,15 @@ ddc_report_active_display(Display_Info * curinfo, int depth) {
       adlshim_report_active_display_by_display_ref(curinfo->dref, depth);
       break;
    case USB_IO:
-      printf("(%s) Case USB_IO unimplemented\n", __func__);
+      // printf("(%s) Case USB_IO unimplemented\n", __func__);
+      usb_report_active_display_by_display_ref(curinfo->dref, depth);
    }
 
 
    Output_Level output_level = get_output_level();
    if (output_level >= OL_NORMAL  && ddc_is_valid_display_ref(curinfo->dref, false)) {
       Display_Handle * dh = ddc_open_display(curinfo->dref, EXIT_IF_FAILURE);
-      // char * short_name = display_ref_short_name(curinfo->dref);
+          // char * short_name = dref_short_name(curinfo->dref);
           // printf("Display:       %s\n", short_name);
           // works, but TMI
           // printf("Mfg:           %s\n", cur_info->edid->mfg_id);
@@ -344,34 +443,62 @@ ddc_report_active_display(Display_Info * curinfo, int depth) {
 
       if (output_level >= OL_VERBOSE) {
          // display controller mfg, firmware version
-         Parsed_Nontable_Vcp_Response* code_info;
-
+         char mfg_name_buf[100];
+         char * mfg_name         = "Unspecified";
+         // char * firmware_version = "Unspecified";
+         // old way: Parsed_Nontable_Vcp_Response* code_info;
+         /* works only for non-USB
          Global_Status_Code gsc = get_nontable_vcp_value(
                 dh,
                 0xc8,         // controller manufacturer
                 &code_info);
+         */
+         // bump it up to get_nontable_vcp_value()'s caller, which does know how to handle USB
+         Single_Vcp_Value *   valrec;
+         Global_Status_Code  gsc = get_vcp_value(dh, 0xc8, NON_TABLE_VCP_VALUE, &valrec);
+
          if (gsc != 0) {
-            DBGMSG("get_vcp_by_display_ref() returned %s", gsc_desc(gsc));
+            if (gsc != DDCRC_REPORTED_UNSUPPORTED)
+                DBGMSG("get_nontable_vcp_value(0xc8) returned %s", gsc_desc(gsc));
+            rpt_vstring(depth, "Controller mfg:      Unspecified");
          }
          else {
             Feature_Value_Entry * vals = pxc8_display_controller_type_values;
-            char * mfg_name =  get_feature_value_name(
+            mfg_name =  get_feature_value_name(
                                   vals,
-                                  code_info->sl);
-            rpt_vstring(depth, "Controller mfg:      %s", (mfg_name) ? mfg_name : "not set");
-            if (mfg_name) {
-               Global_Status_Code gsc = get_nontable_vcp_value(
-                        dh,
-                        0xc9,         // firmware version
-                        &code_info);
-               if (gsc != 0) {
-                  DBGMSG("get_vcp_by_display_ref() returned %s", gsc_desc(gsc));
-               }
-               else {
-                  rpt_vstring(depth, "Firmware version:    %d.%d", code_info->sh, code_info->sl);
-               }
+                                  valrec->val.nc.sl);
+ //                               code_info->sl);
+            if (!mfg_name) {
+               // vsnprintf(mfg_name_buf, 100, "Unrecognized manufacturer code 0x%02x", code_info->sl);
+               rpt_vstring(depth, "Controller mfg:       Unrecognized manufacturer code 0x%02x",
+                                  valrec->val.nc.sl);
+                         //       code_info->sl);
+               mfg_name = mfg_name_buf;
+            }
+            else {
+               // rpt_vstring(depth, "Controller mfg:      %s", (mfg_name) ? mfg_name : "not set");
+               rpt_vstring(depth,    "Controller mfg:      %s", mfg_name);
             }
          }
+#ifdef OLD
+         gsc = get_nontable_vcp_value(
+                     dh,
+                     0xc9,         // firmware version
+                     &code_info);
+#endif
+         gsc = get_vcp_value(dh, 0xc8, NON_TABLE_VCP_VALUE, &valrec);  // new way
+         if (gsc != 0) {
+            if (gsc != DDCRC_REPORTED_UNSUPPORTED)
+               DBGMSG("get_nontable_vcp_value(0xc9) returned %s", gsc_desc(gsc));
+            rpt_vstring(depth, "Firmware version:    Unspecified");
+         }
+         else if (gsc == 0) {
+            rpt_vstring(depth, "Firmware version:    %d.%d",
+                  // code_info->sh, code_info->sl);
+                  valrec->val.nc.sh, valrec->val.nc.sl);
+
+         }
+
       }
       ddc_close_display(dh);
       if (output_level >= OL_VERBOSE)

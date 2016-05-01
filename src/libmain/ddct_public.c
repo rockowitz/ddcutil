@@ -275,6 +275,11 @@ DDCT_Status ddct_repr_display_identifier(DDCT_Display_Identifier ddct_did, char 
       case(DISP_ID_DISPNO):
             snprintf(did_work_buf, 100,
                      "Display Id Type: %s, dispno=%d", did_type_name, pdid->dispno);
+            break;
+      case DISP_ID_USB:
+            snprintf(did_work_buf, 100,
+                     "Display Id Type: %s, dispno=%d", did_type_name, pdid->dispno);
+            break;
 
       } // switch
       *repr = did_work_buf;
@@ -338,7 +343,7 @@ DDCT_Status ddct_repr_display_ref(DDCT_Display_Ref ddct_dref, char** repr){
       }
       *repr = did_work_buf;
 #endif
-      *repr = display_ref_short_name(dref);
+      *repr = dref_short_name(dref);
    }
    return rc;
 }

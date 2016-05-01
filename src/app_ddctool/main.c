@@ -284,9 +284,15 @@ int main(int argc, char *argv[]) {
 
    else if (parsed_cmd->cmd_id == CMDID_ENVIRONMENT) {
       printf("The following tests probe the runtime environment using multiple overlapping methods.\n");
-      // printf("Exploring runtime environment...\n");
+      // DBGMSG("Exploring runtime environment...\n");
       query_sysenv();
-      main_rc = true;
+      main_rc = EXIT_SUCCESS;
+   }
+
+   else if (parsed_cmd->cmd_id == CMDID_CHKUSBMON) {
+      // DBGMSG("Processing command chkusbmon...\n");
+      bool is_monitor = check_usb_monitor( parsed_cmd->args[0] );
+      main_rc = (is_monitor) ? EXIT_SUCCESS : EXIT_FAILURE;
    }
 
    else if (parsed_cmd->cmd_id == CMDID_INTERROGATE) {

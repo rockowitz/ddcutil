@@ -63,6 +63,7 @@ static Cmd_Desc cmdinfo[] = {
    {CMDID_ENVIRONMENT,  "environment",   3,  0,       0},
    {CMDID_VCPINFO,      "vcpinfo",       5,  0,       1},
    {CMDID_READCHANGES,  "watch",         3,  0,       0},
+   {CMDID_CHKUSBMON,    "chkusbmon",     3,  1,       1},
 };
 static int cmdct = sizeof(cmdinfo)/sizeof(Cmd_Desc);
 
@@ -140,7 +141,7 @@ bool all_digits(char * val, int ct) {
 }
 
 
-bool parse_adl_arg(const char * val, int * piAdapterIndex, int * piDisplayIndex) {
+bool parse_dot_separated_arg(const char * val, int * piAdapterIndex, int * piDisplayIndex) {
    int rc = sscanf(val, "%d.%d", piAdapterIndex, piDisplayIndex);
    // DBGMSG("val=|%s| sscanf() returned %d  ", val, rc );
    bool ok = (rc == 2);
@@ -272,6 +273,7 @@ char * commands_list_help =
 #endif
        "   environment                          Probe execution environment\n"
        "   interrogate                          Report everything possible\n"
+       "   chkusbmon                            Check if USB device is monitor (for UDEV)\n"
        "   watch                                Watch display for reported changes (under development)\n"
        "\n";
 
@@ -310,8 +312,9 @@ char * monitor_selection_option_help =
        "  --display <display_number>, where <display_number> ranges from 1 to the number of\n"
        "    displays detected\n"
        "  --bus <bus number>, for /dev/i2c-<bus number>\n"
-       "  --adl <adapter_number.display_number>, for monitors connected to an AMD video card\n"
+       "  --adl <adapter_number>.<display_number>, for monitors connected to an AMD video card\n"
        "          running AMD's proprietary video driver (ADL is an acronym for AMD Display Library)\n"
+       "  --usb <usb bus number>.<usb device number>, for monitots communicating via USB\n"
        "  --edid <hex string>, where <hex string> is a 256 hex character representation of the\n"
        "          128 byte first block of the EDID\n"
        "  --model <model_name>, where <model name> is as reported by the EDID\n"

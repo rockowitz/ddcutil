@@ -32,6 +32,17 @@
 #include <stdlib.h>
 
 
+typedef enum {
+   ID_TYPE_PCI,
+   ID_TYPE_USB
+} Device_Id_Type;
+
+
+
+char * find_id_file(Device_Id_Type id_type);
+
+
+
 typedef struct {
    ushort subvendor_id;
    ushort subdevice_id;
@@ -60,11 +71,47 @@ typedef struct {
 } Pci_Usb_Id_Names;
 
 
+#define MLT_MAX_LEVELS 4
+
+typedef struct {
+   int   levels;
+   char * names[MLT_MAX_LEVELS];
+} Multi_Level_Names;
+
+
+// *** HID Descriptor Item Types ***
+
+typedef struct {
+   ushort  id;
+   char *  name;
+} Id_Simple_Table_Entry;
+
+
+char * ids_hid_descriptor_item_type(ushort id);
+
+char * ids_hid_descriptor_type(ushort id);
+
+// *** HUT table ***
+
+typedef struct {
+   ushort  usage_page;        // usage page
+   char *  usage_page_name;
+   GPtrArray * usage_ids;
+} Id_Usage_Page;
+
+typedef struct {
+   ushort  usage_page;
+   ushort  simple_usage_code;         // id within the page
+   char *  usage_code_name;
+} Id_Usage_Code;
+
+Id_Usage_Page * ids_find_usage_page(ushort usage_page);
+Id_Usage_Code * ids_find_usage_id(ulong fq_usage_code);
+Id_Usage_Code * ids_find_usage_by_page_and_id(ushort usage_page, ushort simple_usage_code);
 
 
 
-
-bool init_pci_ids();
+bool pciusb_id_ensure_initialized();
 Pci_Id_Vendor * pci_id_find_vendor(ushort vendor_id);
 Pci_Id_Device * pci_id_find_device(Pci_Id_Vendor * cur_vendor, ushort device_id);
 Pci_Id_Subsys * pci_id_find_subsys(Pci_Id_Device * cur_device, ushort subvendor_id, ushort subdevice_id);
@@ -85,6 +132,11 @@ Pci_Usb_Id_Names usb_id_get_names(
                 ushort device_id,
                 ushort interface_id,
                 int argct);
+
+
+char * usage_code_page_name(ushort usage_page_code);
+
+char * usage_code_value_name(ushort usage_page_code, ushort usage_simple_id);
 
 
 #endif /* PCI_ID_UTIL_H_ */

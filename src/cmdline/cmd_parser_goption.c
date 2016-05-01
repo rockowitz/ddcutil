@@ -51,6 +51,7 @@
 
 // Variables used by callback functions
 static char *       adlwork       = NULL;
+static char *       usbwork       = NULL;
 static Output_Level output_level  = OL_DEFAULT;
 static int          iAdapterIndex = -1;
 static int          iDisplayIndex = -1;
@@ -67,7 +68,7 @@ gboolean adl_arg_func(const gchar* option_name,
    DBGMSF(debug, "option_name=|%s|, value|%s|, data=%p", option_name, value, data);
 
    adlwork = strdup(value);   // alt way
-   bool ok = parse_adl_arg(value, &iAdapterIndex, &iDisplayIndex);
+   bool ok = parse_dot_separated_arg(value, &iAdapterIndex, &iDisplayIndex);
    if (ok) {
       DBGMSG("parsed adl = %d.%d", iAdapterIndex, iDisplayIndex);
    }
@@ -178,7 +179,7 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
    char *   edidwork       = NULL;
 // char *   tracework      = NULL;
    char**   cmd_and_args   = NULL;
-   gchar**   trace_classes  = NULL;
+   gchar**  trace_classes  = NULL;
    gint     buswork        = -1;
    gint     dispwork       = -1;
    char *   maxtrywork      = NULL;
@@ -188,9 +189,10 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
    //  long_name short flags option-type          gpointer           description                    arg description
       {"display", 'd',  0, G_OPTION_ARG_INT,      &dispwork,         "Display number",              "number"},
       {"dis",    '\0',  0, G_OPTION_ARG_INT,      &dispwork,         "Display number",              "number"},
-      {"bus",     'b',  0, G_OPTION_ARG_INT,      &buswork,          "I2C bus number",              "busNum" },
+      {"bus",     'b',  0, G_OPTION_ARG_INT,      &buswork,          "I2C bus number",              "busnum" },
 //    {"adl",     'a',  0, G_OPTION_ARG_CALLBACK, adl_arg_func,      "ADL adapter and display indexes", "adapterIndex.displayIndex"},
       {"adl",     'a',  0, G_OPTION_ARG_STRING,   &adlwork,          "ADL adapter and display indexes", "adapterIndex.displayIndex"},
+      {"usb",     'U',  0, G_OPTION_ARG_STRING,   &usbwork,          "USB bus and device numbers", "busnum.devicenum"},
       {"stats",   's',  G_OPTION_FLAG_OPTIONAL_ARG,
                            G_OPTION_ARG_CALLBACK, stats_arg_func,    "Show retry statistics",    "stats type"},
       {"ddc",     '\0', 0, G_OPTION_ARG_NONE,     &ddc_flag,         "Report DDC protocol and data errors", NULL},
@@ -266,12 +268,12 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
 
    int explicit_display_spec_ct = 0;  // number of ways the display is explicitly specified
 
-   parsed_cmd->ddcdata      = ddc_flag;
-   parsed_cmd->force        = force_flag;
+   parsed_cmd->ddcdata          = ddc_flag;
+   parsed_cmd->force            = force_flag;
    parsed_cmd->show_unsupported = show_unsupported_flag;
-   parsed_cmd->output_level = output_level;
-   parsed_cmd->stats_types       = stats_work;
-   parsed_cmd->sleep_strategy = sleep_strategy_work;
+   parsed_cmd->output_level     = output_level;
+   parsed_cmd->stats_types      = stats_work;
+   parsed_cmd->sleep_strategy   = sleep_strategy_work;
 
    if (adlwork) {
 #ifdef HAVE_ADL
@@ -279,7 +281,7 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
          DBGMSG("adlwork = |%s|", adlwork);
       int iAdapterIndex;
       int iDisplayIndex;
-      bool adlok = parse_adl_arg(adlwork, &iAdapterIndex, &iDisplayIndex);
+      bool adlok = parse_dot_separated_arg(adlwork, &iAdapterIndex, &iDisplayIndex);
       if (!adlok) {
           printf("Invalid ADL argument: %s\n", adlwork );
           ok = false;
@@ -294,6 +296,25 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
 #else
       fprintf(stderr, "ddctool not built with support for AMD proprietary driver.  --adl option invalid.\n");
 #endif
+   }
+
+   if (usbwork) {
+      if (debug)
+         DBGMSG("usbwork = |%s|", usbwork);
+      int busnum;
+      int devicenum;
+      bool ok = parse_dot_separated_arg(usbwork, &busnum, &devicenum);
+      if (!ok) {
+          printf("Invalid USB argument: %s\n", usbwork );
+          ok = false;
+          // DBGMSG("After USB parse, ok=%d", ok);
+      }
+      else {
+         // parsedCmd->dref = createAdlDisplayRef(iAdapterIndex, iDisplayIndex);
+         // free(parsed_cmd->pdid);
+         parsed_cmd->pdid = create_usb_display_identifier(busnum, devicenum);
+      }
+      explicit_display_spec_ct++;
    }
 
    if (buswork >= 0) {

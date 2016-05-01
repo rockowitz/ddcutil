@@ -216,7 +216,9 @@ Capabilities_Segment * next_capabilities_segment(char * start, int len) {
    char * pos = start;
    while(*pos != '(') pos++;
    segment->name_start = start;
-   segment->name_len = pos-start;
+   // Fix for Apple Cinema Display, which precedes segment name with blank
+   while(segment->name_start < pos && *segment->name_start == ' ') segment->name_start++;
+   segment->name_len = pos-(segment->name_start);
    int depth = 1;
    segment->value_start = pos+1;
    while (depth > 0) {
@@ -389,19 +391,23 @@ Parsed_Capabilities * parse_capabilities(char * buf_start, int buf_len) {
       hex_dump((Byte*)buf_start, buf_len);
       DBGMSG("Starting. buf_start -> |%.*s|", buf_len, buf_start);
    }
-   assert(buf_start[0] == '(');
-   assert(buf_start[buf_len-1] == ')' );
 
-   char * raw_value = NULL;
+   // Make a copy of the unparsed value
+   char * raw_value = chars_to_string(buf_start, buf_len);
+
    char * mccs_ver  = NULL;
    // Version_Spec parsed_vcp_version = {0.0};
    Byte_Value_Array commands = NULL;
    GArray * vcp_features = NULL;
 
-   raw_value = chars_to_string(buf_start, buf_len);
+   // Apple Cinema display violates spec, does not surround capabilities string with parens
+   if (buf_start[0] == '(') {
+      // for now, don't try to fix bad string
+      assert(buf_start[buf_len-1] == ')' );
 
-   buf_start = buf_start+1;
-   buf_len = buf_len -2;
+      buf_start = buf_start+1;
+      buf_len = buf_len -2;
+   }
 
    while (buf_len > 0) {
       Capabilities_Segment * seg = next_capabilities_segment(buf_start, buf_len);
@@ -417,7 +423,10 @@ Parsed_Capabilities * parse_capabilities(char * buf_start, int buf_len) {
       if (memcmp(seg->name_start, "cmds", seg->name_len) == 0) {
          commands = parse_cmds_segment(seg->value_start, seg->value_len);
       }
-      else if (memcmp(seg->name_start, "vcp", seg->name_len) == 0) {
+      else if (memcmp(seg->name_start, "vcp", seg->name_len) == 0 ||
+               memcmp(seg->name_start, "VCP", seg->name_len) == 0      // hack for Apple Cinema Display
+              )
+      {
          vcp_features = parse_vcp_segment(seg->value_start, seg->value_len);
       }
       else if (memcmp(seg->name_start, "mccs_ver", seg->name_len) == 0) {

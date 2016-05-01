@@ -79,7 +79,8 @@ typedef Byte Trace_Group;
 #define TRC_I2C  0x40
 #define TRC_ADL  0x20
 #define TRC_DDC  0x10
-#define TRC_TOP  0x08
+#define TRC_USB  0x08
+#define TRC_TOP  0x04
 
 #define TRC_NEVER  0x00
 #define TRC_ALWAYS 0xff

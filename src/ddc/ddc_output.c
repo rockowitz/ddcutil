@@ -47,6 +47,8 @@
 #include "adl/adl_errors.h"
 #include "adl/adl_shim.h"
 
+#include "usb/usb_core.h"
+
 #include "ddc/ddc_edid.h"
 #include "ddc/ddc_multi_part_io.h"
 #include "ddc/ddc_packet_io.h"
@@ -170,11 +172,20 @@ get_raw_value_for_feature_table_entry(
    Vcp_Value_Type feature_type = (is_table_feature) ? TABLE_VCP_VALUE : NON_TABLE_VCP_VALUE;
    Output_Level output_level = get_output_level();
    Single_Vcp_Value * valrec = NULL;
-   gsc = get_vcp_value(
-           dh,
-           feature_code,
-           feature_type,
-           &valrec);
+   if (dh->io_mode == USB_IO) {
+      gsc = usb_get_vcp_value(
+              dh,
+              feature_code,
+              feature_type,
+              &valrec);
+   }
+   else {
+      gsc = get_vcp_value(
+              dh,
+              feature_code,
+              feature_type,
+              &valrec);
+   }
    assert ( (gsc==0 && valrec) || (gsc!=0 && !valrec) );
 
    switch(gsc) {

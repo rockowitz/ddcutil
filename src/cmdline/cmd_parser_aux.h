@@ -54,7 +54,7 @@ void show_cmd_desc(Cmd_Desc * cmd_desc);   // debugging function
 void validate_cmdinfo();
 
 bool all_digits(char * val, int ct);
-bool parse_adl_arg(const char * val, int * piAdapterIndex, int * piDisplayIndex);
+bool parse_dot_separated_arg(const char * val, int * piAdapterIndex, int * piDisplayIndex);
 bool parse_int_arg(char * val, int * pIval);
 
 bool parse_feature_id_or_subset(char * val, int cmd_id, Feature_Set_Ref * fsref);
