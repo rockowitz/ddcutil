@@ -1171,7 +1171,7 @@ usb_set_vcp_value(                               // changed from set_vcp_value()
    else {
       assert(vrec->value_type == TABLE_VCP_VALUE);
       // gsc = usb_set_table_vcp_value(dh, vrec->opcode, vrec->val.t.bytes, vrec->val.t.bytect);
-      gsc = DDCRC_REPORTED_UNSUPPORTED;
+      gsc = DDCL_UNIMPLEMENTED;
    }
 
    return gsc;

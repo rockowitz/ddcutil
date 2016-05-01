@@ -69,7 +69,7 @@ bool format_feature_detail_standard_continuous(
         char *                buffer,
         int                   bufsz);
 bool format_feature_detail_sl_lookup(
-        Nontable_Vcp_Value * code_info,
+        Nontable_Vcp_Value *  code_info,
         Version_Spec          vcp_version,
         char *                buffer,
         int                   bufsz);
