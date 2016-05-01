@@ -82,15 +82,6 @@ void report_dumpload_data(Dumpload_Data * data, int depth) {
    rpt_str( "serial_ascii", NULL, data->serial_ascii, d1);
    rpt_str( "edid",         NULL, data->edidstr,      d1);
    rpt_int( "vcp_value_ct", NULL, data->vcp_value_ct, d1);
-#ifdef OLD
-   int ndx;
-   for (ndx=0; ndx < data->vcp_value_ct; ndx++) {
-      char buf[100];
-      Single_Vcp_Value * curval = &data->vcp_value[ndx];
-      snprintf(buf, 100, "0x%02x -> %d", curval->opcode, curval->value);
-      rpt_str("VCP value", NULL, buf, d1);
-   }
-#endif
    rpt_structure_loc("vcp_values", data->vcp_values, d1);
    if (data->vcp_values)
       report_vcp_value_set(data->vcp_values, d1);
@@ -178,10 +169,6 @@ create_dumpload_data_from_g_ptr_array(GPtrArray * garray) {
                   validData = false;
                }
                else {
-#ifdef OLD
-                  int ndx = data->vcp_value_ct;
-                  Single_Vcp_Value * pval = &data->vcp_value[ndx];
-#endif
                   Byte feature_id;
                   bool ok = hhs_to_byte_in_buf(s1, &feature_id);
                   if (!ok) {
@@ -189,7 +176,7 @@ create_dumpload_data_from_g_ptr_array(GPtrArray * garray) {
                      validData = false;
                   }
                   else {
-
+                     // look up opcode, is it valid?
                      ushort feature_value;
                      ct = sscanf(s2, "%hd", &feature_value);
                      if (ct == 0) {
@@ -197,11 +184,7 @@ create_dumpload_data_from_g_ptr_array(GPtrArray * garray) {
                         validData = false;
                      }
                      else {
-#ifdef OLD
-                     pval->opcode = feature_id;
-                     pval->value  = value;
-#endif
-
+                        // good opcode and value
                         data->vcp_value_ct++;
 
                         // new way:
@@ -253,14 +236,6 @@ Global_Status_Code  ddc_set_multiple(Display_Handle* dh, Vcp_Value_Set vset) {
    for (ndx=0; ndx < value_ct; ndx++) {
       // new way
       Single_Vcp_Value * vrec = vcp_value_set_get(vset, ndx);
-#ifdef OLD
-         // old way:
-         Byte feature_code = pdata->vcp_value[ndx].opcode;
-         int  new_value    = pdata->vcp_value[ndx].value;
-         // DBGMSG("feature_code=0x%02x, new_value=%d", feature_code, new_value );
-         assert(vrec->val.c.cur_val == new_value);
-         assert(vrec->opcode == feature_code);
-#endif
       Byte   feature_code = vrec->opcode;
       assert(vrec->value_type == NON_TABLE_VCP_VALUE);     // Table not yet implemented
       ushort new_value    = vrec->val.c.cur_val;
@@ -563,52 +538,17 @@ dumpvcp_as_dumpload_data(
               dumped_data->edidstr, 257);
 
    // VCP values
-#ifdef OLD
-   GPtrArray* collector = g_ptr_array_sized_new(50);
-#endif
    Vcp_Value_Set vset = vcp_value_set_new(50);
    gsc = collect_raw_subset_values(
              dh,
              VCP_SUBSET_PROFILE,
              vset,
-#ifdef OLD
-             collector,
-#endif
+
              true,               //  ignore_unsupported
              FERR);
    if (gsc == 0) {
-#ifdef OLD
-      // hack for now, TODO: redo properly
-      DBGMSF(debug, "collector->len=%d", collector->len);
-      assert(collector->len <= 20);
-      assert(collector->len == vset->len);
-      int ndx = 0;
-
-      for (;ndx < collector->len; ndx++) {
-         Parsed_Vcp_Response *  val =  g_ptr_array_index(collector,ndx);
-         if (val->response_type != NON_TABLE_VCP_VALUE) {
-            gsc = DDCL_UNIMPLEMENTED;
-         }
-         else {
-            dumped_data->vcp_value[ndx].opcode = val->non_table_response->vcp_code;
-            dumped_data->vcp_value[ndx].value = val->non_table_response->sh << 8 |
-                                                val->non_table_response->sl;
-         }
-      }
-      dumped_data->vcp_value_ct = collector->len;
-      // TODO: free collector
-#endif
-
       dumped_data->vcp_values = vset;             // NOTE REFERENCE, BE CAREFUL WHEN FREE
       dumped_data->vcp_value_ct = vcp_value_set_size(vset);
-#ifdef OLD
-      int ndx;
-      for (ndx=0; ndx < dumped_data->vcp_value_ct; ndx++) {
-         Single_Vcp_Value * vrec = vcp_value_set_get(dumped_data->vcp_values,ndx);
-         assert(dumped_data->vcp_value[ndx].opcode == vrec->opcode);
-         assert(dumped_data->vcp_value[ndx].value == vrec->val.c.cur_val);
-      }
-#endif
    }
 
    if (gsc != 0 && dumped_data)
@@ -659,16 +599,7 @@ GPtrArray * convert_dumpload_data_to_string_array(Dumpload_Data * data) {
    snprintf(buf, bufsz, "EDID    %s", hexbuf);
    g_ptr_array_add(strings, strdup(buf));
 
-   int ndx = 0;
-#ifdef OLD
-   for (;ndx < data->vcp_value_ct; ndx++) {
-      // n. get_formatted_value_for_feature_table_entry() also has code for table type values
-      char buf[200];
-      snprintf(buf, 200, "VCP %02X %5d", data->vcp_value[ndx].opcode, data->vcp_value[ndx].value);
-      g_ptr_array_add(strings, strdup(buf));
-   }
-#endif
-   for (ndx=0;ndx < data->vcp_values->len; ndx++) {
+   for (int ndx=0; ndx < data->vcp_values->len; ndx++) {
       // n. get_formatted_value_for_feature_table_entry() also has code for table type values
       Single_Vcp_Value * vrec = vcp_value_set_get(data->vcp_values,ndx);
       char buf[200];
