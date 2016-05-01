@@ -49,6 +49,9 @@ Display_Ref * usb_find_display_by_edid(const Byte * edidbytes);
 
 Display_Ref *usb_find_display_by_busnum_devnum(int busnum, int devnum);
 
+Parsed_Edid * usb_get_parsed_edid_by_display_ref(   Display_Ref    * dref);
+Parsed_Edid * usb_get_parsed_edid_by_display_handle(Display_Handle * dh);
+
 Global_Status_Code usb_get_nontable_vcp_value(
       Display_Handle *       dh,
       Byte                   feature_code,

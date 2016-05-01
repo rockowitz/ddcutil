@@ -560,6 +560,17 @@ void usb_report_active_display_by_display_ref(Display_Ref * dref, int depth) {
    }
 }
 
+Parsed_Edid * usb_get_parsed_edid_by_display_ref(Display_Ref * dref) {
+   Usb_Monitor_Info * moninfo = usb_find_monitor_by_display_ref(dref);
+   return moninfo->edid;
+}
+
+Parsed_Edid * usb_get_parsed_edid_by_display_handle(Display_Handle * dh) {
+   Usb_Monitor_Info * moninfo = usb_find_monitor_by_display_handle(dh);
+   return moninfo->edid;
+}
+
+
 
 /* Open a USB device
  *

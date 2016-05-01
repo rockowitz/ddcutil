@@ -4,8 +4,8 @@
  *
  * Functions to obtain EDID information for a display.
  *
- * These functions are in a separate source file to simplify ensuring that
- * there are no circular #include dependencies within the ddc source directory.
+ * These functions are in a separate source file to avoid circular
+ * #include dependencies within the ddc source directory.
  *
  * <copyright>
  * Copyright (C) 2014-2015 Sanford Rockowitz <rockowitz@minsoft.com>
@@ -32,8 +32,8 @@
 #include "base/msg_control.h"
 
 #include "i2c/i2c_bus_core.h"
-
 #include "adl/adl_shim.h"
+#include "usb/usb_core.h"
 
 #include "ddc/ddc_edid.h"
 
@@ -54,7 +54,7 @@ ddc_get_parsed_edid_by_display_handle(Display_Handle * dh) {
       pEdid = adlshim_get_parsed_edid_by_display_handle(dh);
       break;
    case USB_IO:
-      printf("(%s) Case USB_IO unimplemented\n", __func__);
+      pEdid = usb_get_parsed_edid_by_display_handle(dh);
       break;
    }
    TRCMSG("Returning %p", __func__, pEdid);
@@ -74,7 +74,7 @@ ddc_get_parsed_edid_by_display_ref(Display_Ref * dref) {
       pEdid = adlshim_get_parsed_edid_by_display_ref(dref);
       break;
    case USB_IO:
-      printf("(%s) Case USB_IO unimplemented\n", __func__);
+      pEdid = usb_get_parsed_edid_by_display_ref(dref);
       break;
    }
 
