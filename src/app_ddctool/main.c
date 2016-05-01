@@ -54,6 +54,8 @@
 #include "adl/adl_shim.h"
 #include "adl/adl_errors.h"
 
+#include "usb/usb_core.h"
+
 #include "ddc/ddc_multi_part_io.h"
 #include "ddc/ddc_packet_io.h"
 #include "ddc/ddc_vcp.h"

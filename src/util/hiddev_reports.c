@@ -3,6 +3,10 @@
  * Created on: Apr 26, 2016
  *     Author: rock
  *
+ * The functions in this file report the contents of hiddev data structures.
+ * They are used for debugging, exploratory programming, and in the
+ * ddctool interrogate command.
+ *
  * <copyright>
  * Copyright (C) 2014-2015 Sanford Rockowitz <rockowitz@minsoft.com>
  *
@@ -25,33 +29,26 @@
  */
 
 
-#include <stdio.h>
-#include <stdlib.h>
+#include <assert.h>
+#include <errno.h>
 #include <errno.h>
 #include <fcntl.h>
+#include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
-#include <unistd.h>
-#include <errno.h>
 #include <sys/ioctl.h>
-#include <assert.h>
+#include <unistd.h>
 #include <wchar.h>
 
-
-
-#include "util/string_util.h"
-#include "util/report_util.h"
+#include "util/hiddev_util.h"
 #include "util/pci_id_util.h"
+#include "util/report_util.h"
+#include "util/string_util.h"
 
 #include "util/hiddev_reports.h"
 
-#ifdef NO
-#include "names.h"
-#include "hiddev_util.h"
-#endif
 
-#include "util/hiddev_util.h"
-
-
+// use report_ioctl_error in base/util.c?
 #define REPORT_IOCTL_ERROR(_ioctl_name, _rc) \
    do { \
          printf("(%s) ioctl(%s) returned %d (0x%08x), errno=%d: %s\n", \
@@ -65,7 +62,7 @@
    } while(0)
 
 
-/** Wrap ioctl(HIDIOCGSTRING) to retrieve a string.
+/* Wrap ioctl(HIDIOCGSTRING) to retrieve a string.
  *
  * It is the responsibility of the caller to free the returned string.
  *
@@ -94,6 +91,19 @@ char * get_hiddev_string(int fd, __s32 index) {
 }
 
 
+/* Reports all defined strings.
+ *
+ * Arguments:
+ *    fd       file descriptor
+ *    max_ct   maximum number of strings to report
+ *    depth    logical indentation depth
+ *
+ * Returns:  nothing
+ *
+ * Note: Parm max_ct exists because at least the Apple Cinema display
+ *       does not report that a string index is out of range, it just
+ *       reports the last valid value.
+ */
 void report_hiddev_strings(int fd, int max_ct, int depth) {
    rpt_title("Device strings returned by ioctl(HIDIOCGSTRING):", depth);
    int d1 = depth+1;
@@ -102,59 +112,25 @@ void report_hiddev_strings(int fd, int max_ct, int depth) {
    for (; (string_value = get_hiddev_string(fd, string_index)); string_index++) {
    // for (; string_index < 10; string_index++) {
       // string_value = get_hiddev_string(fd, string_index);
-      if (max_ct >= 0 && string_index > max_ct)
+      if (max_ct >= 0 && string_index > max_ct) {
+         free(string_value);
          break;
+      }
       rpt_vstring(d1, "String index: %d, value = |%s|", string_index, string_value);
+      free(string_value);
    }
 }
 
 
-#ifdef OLD
-void report_hiddev_devinfo(struct hiddev_devinfo * devinfo, int depth) {
-   int d1 = depth+1;
-
-   rpt_structure_loc("hiddev_devinfo", devinfo, depth);
-
-   rpt_int("bustype", NULL, devinfo->bustype, d1);
-   rpt_int("busnum",  NULL, devinfo->busnum,  d1);
-   rpt_int("devnum",  NULL, devinfo->devnum,  d1);
-   rpt_int("ifnum",   NULL, devinfo->ifnum,   d1);
-
-   Pci_Usb_Id_Names usb_id_names =
-         usb_id_get_names(
-                   devinfo->vendor,
-                   devinfo->product,
-                   0,
-                   2);
-
-   // uint16_t idVendor;
-   rpt_vstring(d1, "vendor:  0x%04x  %s", devinfo->vendor,               usb_id_names.vendor_name);
-   rpt_vstring(d1, "product: 0x%04x  %s", devinfo->product & 0x0000ffff, usb_id_names.device_name);
-   rpt_vstring(d1, "version: %2x.%02x",   devinfo->version >> 8, devinfo->version & 0x0f);
-
-   rpt_int("num_applications", NULL, devinfo->num_applications, d1);
-
-}
-
-
-// essentially same as version in hidapi_util.c
-void report_hiddev_devinfo2(struct hiddev_devinfo * dinfo, int depth) {
-   int d1 = depth+1;
-
-   rpt_structure_loc("hiddev_devinfo", dinfo, depth);
-   rpt_vstring(d1,"%-20s: %u",       "bustype", dinfo->bustype);
-   rpt_vstring(d1,"%-20s: %u",       "busnum",  dinfo->busnum);
-   rpt_vstring(d1,"%-20s: %u",       "devnum",  dinfo->devnum);
-   rpt_vstring(d1,"%-20s: %u",       "ifnum",   dinfo->ifnum);
-   rpt_vstring(d1,"%-20s: 0x%04x",   "vendor",  dinfo->vendor);
-   rpt_vstring(d1,"%-20s: 0x%04x",   "product", dinfo->product);
-   rpt_vstring(d1,"%-20s: %2x.%02x", "version", dinfo->version>>8, dinfo->version & 0x0f);  // bcd
-   rpt_vstring(d1,"%-20s: %u",       "num_applications", dinfo->num_applications);
-}
-#endif
-
-
-
+/* Outputs debug report for struct hiddev_devinfo
+ *
+ * Arguments:
+ *    dinfo         pointer to struct hiddev_devinfo
+ *    lookup_names  if true, ids for usb vendor and product ids are looked up
+ *    depth         logical indentation depth
+ *
+ * Returns:  nothing
+ */
 void report_hiddev_devinfo(struct hiddev_devinfo * dinfo, bool lookup_names, int depth) {
    int d1 = depth+1;
 
@@ -181,7 +157,14 @@ void report_hiddev_devinfo(struct hiddev_devinfo * dinfo, bool lookup_names, int
 }
 
 
-
+/* Outputs debug report for struct hiddev_collection info
+ *
+ * Arguments:
+ *    cinfo         pointer to struct hiddev_collecion_info
+ *    depth         logical indentation depth
+ *
+ * Returns:  nothing
+ */
 void report_hiddev_collection_info(struct hiddev_collection_info * cinfo, int depth) {
    int d1 = depth+1;
 
@@ -193,6 +176,14 @@ void report_hiddev_collection_info(struct hiddev_collection_info * cinfo, int de
 }
 
 
+/* Outputs debug report for struct hiddev_string_descriptor
+ *
+ * Arguments:
+ *    desc          pointer to struct hiddev_string_descriptor
+ *    depth         logical indentation depth
+ *
+ * Returns:  nothing
+ */
 void report_hiddev_string_descriptor(struct hiddev_string_descriptor * desc, int depth) {
    int d1 = depth+1;
    rpt_structure_loc("hiddev_string_descriptor", desc, depth);
@@ -201,14 +192,21 @@ void report_hiddev_string_descriptor(struct hiddev_string_descriptor * desc, int
 }
 
 
-static char* report_type_name_table[] = {
+static const char* report_type_name_table[] = {
       "invalid value",
       "HID_REPORT_TYPE_INPUT",
       "HID_REPORT_TYPE_OUTPUT",
       "HID_REPORT_TYPE_FEATURE"
 };
 
-char * report_type_name(__u32 report_type) {
+
+/* Returns a string representation of a report type id
+ *
+ * Arguments:  report_type
+ *
+ * Returns:  string representation of id
+ */
+const char * report_type_name(__u32 report_type) {
    if (report_type < HID_REPORT_TYPE_MIN || report_type > HID_REPORT_TYPE_MAX)
       report_type = 0;
    return report_type_name_table[report_type];
@@ -228,11 +226,21 @@ char * report_type_name(__u32 report_type) {
 #endif
 
 
+/* Produces a string representation of the HID field flag bits
+ *
+ * Arguments: flags    word of flags
+ *
+ * Returns:  String representation of flags.
+ *
+ * The value is built in an internal buffer and is valid
+ * until the next call of this function.
+ */
+char * interpret_field_bits(__u32 flags) {
+
 #define FLAG_BIT(_bitname) \
    if (flags & _bitname) \
       curpos += sprintf(curpos, #_bitname "|")
 
-char * interpret_field_bits(__u32 flags) {
    static char field_bits_buffer[200];
 
    field_bits_buffer[0] = '\0';
@@ -250,10 +258,19 @@ char * interpret_field_bits(__u32 flags) {
    if (curpos != field_bits_buffer)
       *(curpos-1) = '\0';
    return field_bits_buffer;
-}
+
 #undef FLAG_BIT
+}
 
 
+/* Outputs debug report for struct hiddev_report_info
+ *
+ * Arguments:
+ *    desc          pointer to struct hiddev_report_info
+ *    depth         logical indentation depth
+ *
+ * Returns:  nothing
+ */
 void report_hiddev_report_info(struct hiddev_report_info * rinfo, int depth) {
    int d1 = depth+1;
    rpt_structure_loc("hiddev_report_info", rinfo, depth);
@@ -273,6 +290,15 @@ void report_hiddev_report_info(struct hiddev_report_info * rinfo, int depth) {
 #endif
 
 
+/* Returns a string representation of a report id value
+ *
+ * Arguments:  report_id
+ *
+ * Returns:  string representation of id
+ *
+ * The value is built in an internal buffer and is valid
+ * until the next call of this function.
+ */
 char * interpret_report_id(__u32 report_id) {
    static char report_id_buffer[100];
    report_id_buffer[0] = '\0';
@@ -291,6 +317,15 @@ char * interpret_report_id(__u32 report_id) {
 }
 
 
+/* Returns a string representation of a HID usage code
+ *
+ * Arguments:  usage_code
+ *
+ * Returns:    string representation of usage code
+ *
+ * The value is built in an internal buffer and is valid
+ * until the next call of this function.
+ */
 char * interpret_usage_code(int usage_code ) {
    static char usage_buffer[100];
    usage_buffer[0] = '\0';
@@ -322,22 +357,14 @@ char * interpret_usage_code(int usage_code ) {
 }
 
 
-#ifdef DEPRECATED
-void rpt_usage_code(
-      const char * field_name,
-      const char * field_info,
-      const int usage_value,
-      int depth)
-{
-      rpt_vstring(depth, "%-20s: %s %s",
-            field_name,
-            interpret_usage_code(usage_value),
-            (field_info) ? field_info : ""
-            );
-}
-#endif
-
-
+/* Outputs debug report for struct hiddev_field_info
+ *
+ * Arguments:
+ *    desc          pointer to struct hiddev_field_info
+ *    depth         logical indentation depth
+ *
+ * Returns:  nothing
+ */
 void report_hiddev_field_info(struct hiddev_field_info * finfo, int depth) {
    int d1 = depth+1;
    rpt_structure_loc("hiddev_field_info", finfo, depth);
@@ -352,14 +379,8 @@ void report_hiddev_field_info(struct hiddev_field_info * finfo, int depth) {
    rpt_vstring(d1, "%-20s: 0x%08x  %s", "flags", finfo->flags, interpret_field_bits(finfo->flags) );
    // rpt_vstring(d1, "%-20s: %u 0x%08x huts=|%s|, hutus=|%s| (physical usage for this field)", "physical",
    //                        finfo->physical, finfo->physical, s1, s2);
-   // rpt_usage_code("physical (usage)", NULL, finfo->physical, d1);  // TO DO: ELMINATE AFTER TEST
    rpt_vstring(d1, "%-20s: %s", "physical (usage)", interpret_usage_code(finfo->physical) );
-   // rpt_usage_code("logical (usage)",  NULL, finfo->logical, d1);
    rpt_vstring(d1, "%-20s: %s", "logical (usage)", interpret_usage_code(finfo->logical) );
-   // rpt_vstring(d1, "%-20s: 0x%08x (logical usage for this field)", "logical", finfo->logical);
-   // rpt_vstring(d1, "%-20s: 0x%08x (application usage for this field)", "application",
-   //       finfo->application);
-   // rpt_usage_code("application (usage)", NULL, finfo->application, d1);
    rpt_vstring(d1, "%-20s: %s", "application (usage)", interpret_usage_code(finfo->application) );
    rpt_vstring(d1, "%-20s: %d",     "logical_minimum",  finfo->logical_minimum);
    rpt_vstring(d1, "%-20s: %d",     "logical_maximum",  finfo->logical_maximum);
@@ -370,6 +391,14 @@ void report_hiddev_field_info(struct hiddev_field_info * finfo, int depth) {
 }
 
 
+/* Outputs debug report for struct hiddev_usage_ref
+ *
+ * Arguments:
+ *    desc          pointer to struct hiddev_usage_ref
+ *    depth         logical indentation depth
+ *
+ * Returns:  nothing
+ */
 void report_hiddev_usage_ref(struct hiddev_usage_ref * uref, int depth) {
    int d1 = depth+1;
    rpt_structure_loc("hiddev_usage_ref", uref, depth);
@@ -472,8 +501,6 @@ void report_report_descriptors_for_report_type(int fd, __u32 report_type, int de
       report_hiddev_report_info(&rinfo, d1);
       rptct++;
 
-
-
       // So that usage value filled in  - should we be doing this?
       int rc = ioctl(fd, HIDIOCGREPORT, &rinfo);
       if (rc != 0) {
@@ -482,11 +509,7 @@ void report_report_descriptors_for_report_type(int fd, __u32 report_type, int de
          break;
       }
 
-
-
-
-
-      int fndx, j;
+      int fndx, undx;
       rpt_vstring(d1, "Scanning fields of report %s", interpret_report_id(rinfo.report_id));
       for (fndx = 0; fndx < rinfo.num_fields; fndx++) {
          // printf("(%s) field index = %d\n", __func__, i);
@@ -494,22 +517,7 @@ void report_report_descriptors_for_report_type(int fd, __u32 report_type, int de
          memset(&finfo, 0, sizeof(finfo));
          finfo.report_type = rinfo.report_type;
          finfo.report_id = rinfo.report_id;
-
-#ifdef OLD
-         Byte * edidbuf = get_hiddev_edid_base(
-               fd,
-               &rinfo,
-               fndx);
-         if (edidbuf) {
-            rpt_vstring(d2, "Report id: %d, Field index: %d contains EDID:",
-                            finfo.report_id, fndx);
-            hex_dump(edidbuf, 128);
-            free(edidbuf);
-         }
-#endif
-
-         struct hiddev_field_info * finfo2 =
-            is_field_edid(fd, &rinfo, fndx);
+         struct hiddev_field_info * finfo2 = is_field_edid(fd, &rinfo, fndx);
          if (finfo2) {
             free(finfo2);
             rpt_vstring(d2, "Report id: %d, Field index: %d contains EDID:",
@@ -522,13 +530,15 @@ void report_report_descriptors_for_report_type(int fd, __u32 report_type, int de
             int jumped_field_index = -1;
             rpt_vstring(d2, "Report id: %d, Field index %d:", finfo.report_id, finfo.field_index);
             // printf("(%s) Before ioctl(HIDIOCGFIELDINFO), report_type=%s, report_id=%s, field_index=%d\n",
-            //        __func__, get_report_type_name(finfo.report_type), interpret_report_id(finfo.report_id), finfo.field_index);
+            //        __func__, get_report_type_name(finfo.report_type),
+            //        interpret_report_id(finfo.report_id), finfo.field_index);
             // report_hiddev_field_info(&finfo, d2);
             int rc = ioctl(fd, HIDIOCGFIELDINFO, &finfo);
             if (rc != 0)
                REPORT_IOCTL_ERROR("HIDIOCGFIELDINFO", rc);
             assert(rc == 0);
-            // printf("(%s) After ioctl(HIDIOCGFIELDINFO) finfo.field_index = %d\n", __func__, finfo.field_index);
+            // printf("(%s) After ioctl(HIDIOCGFIELDINFO) finfo.field_index = %d\n",
+            //              __func__, finfo.field_index);
             if (finfo.field_index != saved_field_index) {
                printf("(%s) !!! ioctl(HIDIOCGFIELDINFO) changed field_index from %d to %d\n",
                       __func__, saved_field_index, finfo.field_index);
@@ -538,21 +548,21 @@ void report_report_descriptors_for_report_type(int fd, __u32 report_type, int de
             report_hiddev_field_info(&finfo, d3);
             rpt_vstring(d3, "Usages for report_id: %d, field_index %d:",
                             finfo.report_id, fndx /*finfo.field_index */);
-            for (j = 0; j < finfo.maxusage; j++) {
+            for (undx = 0; undx < finfo.maxusage; undx++) {
                report_field_usage(fd,
                                   finfo.report_type,
                                   finfo.report_id,
                                   fndx,
-                                  j,
+                                  undx,
                                   true,   // show_value
                                   d4);
             }
             if (jumped_field_index >= 0) {
    #ifdef NOTHING_INTERESTING
                printf("!!! Probing usage values for jumped field index = %d...\n", jumped_field_index);
-               for (j = 0; j < 5 /* TEMP */; j++) {
+               for (undx = 0; undx < 5 /* TEMP */; undx++) {
                   // always rc = 0, invalid argument
-                  report_field_usage( fd, finfo.report_type, finfo.report_id, jumped_field_index, j, d4);
+                  report_field_usage( fd, finfo.report_type, finfo.report_id, jumped_field_index, undx, d4);
                }
    #endif
             }
@@ -714,11 +724,11 @@ void report_hiddev_device_by_fd(int fd, int depth) {
 }
 
 
-
-
+#ifdef NOT_NEEDED
+// pci_usb_ids functions now call pciusb_ids_ensure_initialized() as necessary
 void init_hiddev_reports() {
    pciusb_id_ensure_initialized();
    // names_init();
 }
-
+#endif
 

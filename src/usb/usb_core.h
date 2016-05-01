@@ -32,6 +32,8 @@
 #include "base/ddc_packets.h"
 #include "ddc/vcp_feature_values.h"
 
+bool check_usb_monitor( char * device_name );
+
 Display_Info_List usb_get_valid_displays();
 
 bool usb_is_valid_display_ref(Display_Ref * dref, bool emit_error_msg);
