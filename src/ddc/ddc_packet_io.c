@@ -75,7 +75,7 @@ static bool all_zero(Byte * bytes, int bytect) {
 }
 
 // Test for DDC null message
-#ifdef APPARENTLY_UNUSED
+#ifdef UNUSED
 bool is_ddc_null_message(Byte * packet) {
    return (packet[0] == 0x6f &&
            packet[1] == 0x6e &&
@@ -157,13 +157,20 @@ Display_Handle* ddc_open_display(Display_Ref * dref,  Failure_Action failure_act
 }
 
 
+/* Closes a DDC display.
+ *
+ * Arguments:
+ *    dh            display handle
+ *
+ * Logs status code but continues execution if error.
+ */
 void ddc_close_display(Display_Handle * dh) {
    bool debug = false;
    if (debug) {
       DBGMSG("Starting.");
       report_display_handle(dh, __func__, 1);
    }
-   bool failure_action = EXIT_IF_FAILURE;
+   bool failure_action = RETURN_ERROR_IF_FAILURE;
    switch(dh->io_mode) {
    case DDC_IO_DEVI2C:
       {
