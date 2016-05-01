@@ -346,7 +346,6 @@ collect_raw_subset_values(
 // Get formatted feature values
 //
 
-
 Global_Status_Code
 get_formatted_value_for_feature_table_entry(
       Display_Handle *           dh,
@@ -525,7 +524,6 @@ show_feature_set_values(
    DBGMSF(debug, "Returning: %s", gsc_desc(master_status_code));
    return master_status_code;
 }
-
 
 
 /* Shows the VCP values for all features in a VCP feature subset.
