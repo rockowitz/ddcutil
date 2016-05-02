@@ -557,6 +557,14 @@ bool is_feature_writable_by_vcp_version(
    return (get_version_sensitive_feature_flags(pvft_entry, vcp_version) & VCP2_WRITABLE );
 }
 
+// convenience function
+bool is_feature_table_by_vcp_version(
+       VCP_Feature_Table_Entry * pvft_entry,
+       Version_Spec vcp_version)
+{
+   return (get_version_sensitive_feature_flags(pvft_entry, vcp_version) & VCP2_TABLE );
+}
+
 // Checks if the table/non-table choice for a feature is version sensitive
 
 bool is_version_conditional_vcp_type(VCP_Feature_Table_Entry * pvft_entry) {

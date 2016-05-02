@@ -321,9 +321,9 @@ DDC_Packet * create_empty_ddc_packet(int max_size, const char * tag) {
 /* Create a generic DDC request packet
  *
  * Arguments:
- *    data_bytes data bytes of packet
- *    bytect     number of data bytes
- *    tag        debug string
+ *    data_bytes   data bytes of packet
+ *    data_bytect  number of data bytes
+ *    tag          debug string
  *
  * Returns:
  *    pointer to created packet
@@ -437,6 +437,49 @@ void update_ddc_multi_part_read_request_packet_offset(DDC_Packet * packet, int n
    // DBGMSG("Done.");
    // dump_packet(packet);
 }
+
+
+
+
+/* Creates a DDC VCP table write request packet
+ *
+ * Arguments:
+ *    offset  offset value
+ *    tag     debug string
+ *
+ * Returns:
+ *    pointer to created capabilities request packet
+ */
+DDC_Packet * create_ddc_multi_part_write_request_packet(
+                Byte   request_type,     // always DDC_PACKET_TYPE_WRITE_REQUEST
+                Byte   request_subtype,  // VCP code
+                int    offset,
+                Byte * bytes_to_write,
+                int    bytect,
+                const char * tag)
+{
+   assert (request_type ==  DDC_PACKET_TYPE_TABLE_WRITE_REQUEST );
+   assert (bytect + 4 <= 35);    // is this the right limit?, spec unclear
+   DDC_Packet * packet_ptr = NULL;
+
+   Byte ofs_hi_byte = (offset >> 16) & 0xff;
+   Byte ofs_lo_byte = offset & 0xff;
+
+
+   Byte data_bytes[40] = { DDC_PACKET_TYPE_TABLE_WRITE_REQUEST,
+                           request_subtype,    // VCP code
+                           ofs_hi_byte,
+                           ofs_lo_byte
+                         };
+   memcpy(data_bytes+4, bytes_to_write, bytect);
+   packet_ptr = create_ddc_base_request_packet(data_bytes, 4+bytect, tag);
+
+   // DBGMSG("Done. packet_ptr=%p", packet_ptr);
+   // dump_packet(packet_ptr);
+   return packet_ptr;
+}
+
+
 
 
 /* Creates a Get VCP request packet

@@ -123,9 +123,20 @@ set_table_vcp_value(
    bool debug = false;
    Trace_Group tg = (debug) ? 0xFF : TRACE_GROUP;
    TRCMSGTG(tg, "Writing feature 0x%02x , bytect = %d\n", feature_code, bytect);
+   Global_Status_Code gsc = 0;
 
-   Global_Status_Code gsc = DDCL_UNIMPLEMENTED;
+   if (dh->io_mode == USB_IO) {
+      gsc = DDCL_UNIMPLEMENTED;
+   }
+   else {
+      // TODO: clean up function signatures
+      // pointless wrapping in a Buffer just to unwrap
+      Buffer * new_value = buffer_new_with_value(bytes, bytect, __func__);
 
+      gsc = multi_part_write_with_retry(dh, feature_code, new_value);
+
+      buffer_free(new_value, __func__);
+   }
    TRCMSGTG(tg, "Returning: %s", gsc_desc(gsc));
    return gsc;
 }

@@ -119,6 +119,7 @@ app_set_vcp_value_by_display_handle(
    Byte                       hexid;
    VCP_Feature_Table_Entry *  entry = NULL;
    bool                       good_value = false;
+   Single_Vcp_Value           vrec;
 
    Version_Spec vspec = get_vcp_version_by_display_handle(dh);
    if ( any_one_byte_hex_string_to_byte_in_buf(feature, &hexid) )
@@ -133,10 +134,28 @@ app_set_vcp_value_by_display_handle(
             // gsc = modulate_rc(-EINVAL, RR_ERRNO);    // TEMP - what is appropriate?
             gsc = DDCL_INVALID_OPERATION;
          }
-         else {
-            good_value = parse_vcp_value(new_value, &longtemp);
-            if (!good_value) {
-               gsc = modulate_rc(-EINVAL, RR_ERRNO);
+         else {  // valid vcp code
+            if (is_feature_table_by_vcp_version(entry, vspec)) {
+               Byte * value_bytes;
+               int bytect = hhs_to_byte_array(new_value, &value_bytes);
+               if (bytect < 0) {    // bad hex string
+                  good_value = false;
+               }
+               else {
+                  good_value = true;
+                  vrec.opcode  = entry->code;
+                  vrec.value_type = TABLE_VCP_VALUE;
+                  vrec.val.t.bytect = bytect;
+                  vrec.val.t.bytes  = value_bytes;
+               }
+            }
+            else {  // the common non-table case
+               good_value = parse_vcp_value(new_value, &longtemp);
+               if (good_value) {
+                  vrec.opcode        = entry->code;
+                  vrec.value_type    = NON_TABLE_VCP_VALUE;
+                  vrec.val.c.cur_val = longtemp;
+               }
             }
          }
       }
@@ -146,7 +165,20 @@ app_set_vcp_value_by_display_handle(
       // gsc = modulate_rc(-EINVAL, RR_ERRNO);
       gsc = DDCL_UNKNOWN_FEATURE;
    }
+   else if (!good_value) {
+      printf("Invalid VCP value: %s\n", new_value);
+      // what is better status code?
+      gsc = modulate_rc(-EINVAL, RR_ERRNO);
+   }
+   else {
+      gsc = set_vcp_value(dh, &vrec);
+      if (gsc != 0)  {
+         // Is this proper error message?
+         printf("Setting value failed. rc=%d: %s\n", gsc , gsc_desc(gsc));
+      }
+   }
 
+#ifdef OLD
    if (entry && good_value) {
       gsc = set_nontable_vcp_value(dh, entry->code, (int) longtemp);
 
@@ -165,6 +197,7 @@ app_set_vcp_value_by_display_handle(
          printf("Setting value failed. rc=%d: %s\n", gsc , gsc_desc(gsc));
       }
    }
+#endif
 
    return gsc;
 }

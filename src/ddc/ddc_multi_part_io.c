@@ -296,3 +296,102 @@ multi_part_read_with_retry(
    *ppbuffer = accumulator;
    return rc;
 }
+
+
+
+/* Makes one attempt to write an entire table value
+*
+* Arguments:
+*   dh             display handle for open i2c or adl device
+*   capabilities   address of buffer in which to return response
+*
+* Returns:         status code
+*/
+Global_Status_Code
+try_multi_part_write(
+      Display_Handle * dh,
+      Byte             vcp_code,
+      Buffer *         value_to_set)
+{
+   bool force_debug = false;
+   Trace_Group tg = TRACE_GROUP;
+   if (force_debug)
+      tg = 0xFF;  // force tracing
+   Byte request_type = DDC_PACKET_TYPE_TABLE_WRITE_REQUEST;
+   Byte request_subtype = vcp_code;
+   TRCMSGTG(tg, "Starting. request_type=0x%02x, request_subtype=x%02x, accumulator=%p",
+            request_type, request_subtype, value_to_set);
+
+
+
+   Global_Status_Code rc = 0;
+   int MAX_FRAGMENT_SIZE = 32;
+   int max_fragment_size = MAX_FRAGMENT_SIZE - 4;    // hack
+   // const int writebbuf_size = 6 + MAX_FRAGMENT_SIZE + 1;
+
+   DDC_Packet * request_packet_ptr  = NULL;
+   int bytes_remaining = value_to_set->len;
+   int offset = 0;
+   while (bytes_remaining >= 0 && rc == 0) {
+      int bytect_to_write = (bytes_remaining <= max_fragment_size)
+                                    ? bytes_remaining
+                                    : max_fragment_size;
+      request_packet_ptr =  create_ddc_multi_part_write_request_packet(
+                   DDC_PACKET_TYPE_TABLE_WRITE_REQUEST,
+                   vcp_code,       // request_subtype,
+                   offset,
+                   value_to_set->bytes+offset,
+                   bytect_to_write,
+                   __func__);
+      rc = ddc_write_only_with_retry(dh, request_packet_ptr);
+      free_ddc_packet(request_packet_ptr);
+
+      if (rc == 0) {
+         if (bytect_to_write == 0)   // if just wrote fine empty segment to indicate done
+            break;
+         offset += bytect_to_write;
+         bytes_remaining -= bytect_to_write;
+      }
+   }
+
+   TRCMSGTG(tg, "Returning %s", gsc_desc(rc));
+   return rc;
+}
+
+Global_Status_Code
+multi_part_write_with_retry(
+     Display_Handle * dh,
+     Byte             vcp_code,
+     Buffer *         value_to_set)
+{
+   bool debug = false;
+   Trace_Group tg = TRACE_GROUP;
+   if (debug)
+      tg = 0xFF;
+   // char buf[100];
+   if (IS_TRACING())
+      puts("");
+   // TODO: fix:
+   // TRCMSGTG(tg, "Starting. pdisp = %s", display_ref_short_name(pdisp, buf, 100) );
+
+   Global_Status_Code rc = -1;   // dummy value for first call of while loop
+
+   int try_ctr = 0;
+   bool can_retry = true;
+
+   while (try_ctr < max_multi_part_read_tries && rc < 0 && can_retry) {
+      TRCMSGTG(tg, "Start of while loop. try_ctr=%d, max_multi_part_read_tries=%d",
+               try_ctr, max_multi_part_read_tries);
+
+      rc = try_multi_part_write(
+              dh,
+              vcp_code,
+              value_to_set);
+
+      // TODO: What rc values set can_retry = false?
+
+      try_ctr++;
+   }
+
+   return rc;
+}

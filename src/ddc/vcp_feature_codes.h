@@ -239,6 +239,11 @@ is_feature_writable_by_vcp_version(
       Version_Spec              vcp_version);
 
 bool
+is_feature_table_by_vcp_version(
+       VCP_Feature_Table_Entry * pvft_entry,
+       Version_Spec vcp_version);
+
+bool
 is_version_conditional_vcp_type(VCP_Feature_Table_Entry * pvft_entry);
 
 Feature_Value_Entry *

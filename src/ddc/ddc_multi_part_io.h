@@ -53,4 +53,9 @@ multi_part_read_with_retry(
    bool             all_zero_response_ok,
    Buffer**         ppbuffer);
 
+Global_Status_Code
+multi_part_write_with_retry(
+     Display_Handle * dh,
+     Byte             vcp_code,
+     Buffer *         value_to_set);
 #endif /* DDC_MULTI_PART_IO_H_ */
