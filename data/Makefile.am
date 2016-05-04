@@ -1,6 +1,7 @@
 
 resfiles = \
-	etc/udev/rules.d/45-i2c-tools.rules \
+	etc/udev/rules.d/45-ddctool-i2c.rules \
+	etc/udev/rules.d/45-ddctool-usb.rules \
 	etc/X11/xorg.conf.d/90-nvidia-i2c.conf 
 # resdir: not used
 # resdir = $(datadir)/ddctool/data
