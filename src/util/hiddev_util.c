@@ -209,94 +209,9 @@ bye:
 }
 
 
-
-
-
+// ******************* EDID RETRIEVAL **********************
 
 #define EDID_SIZE 128
-
-#ifdef OLD
-struct edid_report {
-   int report_id;
-   int field_id;
-   Byte edid[EDID_SIZE];
-};
-
-// a resusable fragment
-Byte * get_hiddev_edid_base(
-      int fd,
-      struct hiddev_report_info * rinfo,
-      int field_index)
-{
-   Byte edidbuf[128];
-   int rc;
-
-   printf("(%s) report_id=%d, field index = %d\n", __func__, rinfo->report_id, field_index);
-   struct hiddev_field_info finfo = {
-      .report_type = rinfo->report_type,
-      .report_id   = rinfo->report_id,
-      .field_index = field_index
-   };
-
-
-   int saved_field_index = field_index;
-   rc = ioctl(fd, HIDIOCGFIELDINFO, &finfo);
-   if (rc != 0)
-      REPORT_IOCTL_ERROR("HIDIOCGFIELDINFO", rc);
-   assert(rc == 0);
-   if (finfo.field_index != saved_field_index) {
-      printf("(%s) !!! ioctl(HIDIOCGFIELDINFO) changed field_index from %d to %d\n",
-             __func__, saved_field_index, finfo.field_index);
-      printf("(%s)   rinfo.num_fields=%d, finfo.maxusage=%d\n",
-             __func__, rinfo->num_fields, finfo.maxusage);
-   }
-   // result->field_id = fndx;
-
-   bool all_usages_edid = true;
-   int undx;
-   for (undx = 0; undx < finfo.maxusage && all_usages_edid; undx++) {
-      struct hiddev_usage_ref uref = {
-          .report_type = rinfo->report_type,   // rinfo.report_type;
-          .report_id =   rinfo->report_id,     // rinfo.report_id;
-          .field_index = saved_field_index,    // use original value, not value changed form HIDIOCGFIELDINFO
-          .usage_index = undx
-      };
-      // printf("(%s) report_type=%d, report_id=%d, field_index=%d, usage_index=%d\n",
-      //       __func__, rinfo->report_type, rinfo->report_id, field_index=saved_field_index, undx);
-      rc = ioctl(fd, HIDIOCGUCODE, &uref);    // Fills in usage code
-      if (rc != 0) {
-          REPORT_IOCTL_ERROR("HIDIOCGUCODE", rc);
-          all_usages_edid = false;
-          continue;
-      }
-      // printf("(%s) uref.field_index=%d, uref.usage_code = 0x%08x\n",
-      //        __func__, uref.field_index, uref.usage_code);
-      if (uref.usage_code != 0x00800002) {   // USB Monitor/EDID Information
-         all_usages_edid = false;
-         continue;
-      }
-      // Only interested in first 128 bytes
-      if (undx < 128) {
-         rc = ioctl(fd, HIDIOCGUSAGE, &uref);  // Fills in usage value
-         if (rc != 0) {
-            REPORT_IOCTL_ERROR("HIDIOCGUSAGE", rc);
-            all_usages_edid = false;
-            continue;
-         }
-         edidbuf[undx] = uref.value & 0xff;
-         // printf("(%s) byte = 0x%02x\n", __func__, uref.value&0xff);
-      }
-   }   // loop over usages
-   Byte * result = NULL;
-   printf("(%s) all_usages_edid = %d\n", __func__, all_usages_edid);
-   if (all_usages_edid) {
-
-      result = malloc(128);
-      memcpy(result, edidbuf, 128);
-   }
-   return result;
-}
-#endif
 
 struct edid_location {
    struct hiddev_report_info * rinfo;
@@ -375,104 +290,6 @@ locate_edid_report(int fd) {
 }
 
 
-
-
-
-
-#ifdef OLD
-/* Locates the report for querying the monitor's EDID, and also
- * returns the EDID value (first 128 bytes only).
- *
- * Arguments:   fd    file descriptor for open USB monitor hiddev device
- *
- * Returns:   struct edid_report, containing:
- *                report number
- *                raw edid bytes
- *
- * The caller is responsible for freeing the returned struct
- */
-struct edid_report * find_edid_report(int fd) {
-   bool debug = false;
-   int reportinfo_rc = 0;
-   struct hiddev_report_info rinfo = {
-      .report_type = HID_REPORT_TYPE_FEATURE,
-      .report_id   = HID_REPORT_ID_FIRST
-   };
-
-   struct edid_report * result = calloc(1, sizeof(struct edid_report));
-
-   bool report_found = false;
-   while (reportinfo_rc >= 0 && !report_found) {
-       // printf("(%s) Report counter %d, report_id = 0x%08x %s\n",
-       //       __func__, rptct, rinfo.report_id, interpret_report_id(rinfo.report_id));
-
-      errno = 0;
-      reportinfo_rc = ioctl(fd, HIDIOCGREPORTINFO, &rinfo);
-      if (reportinfo_rc != 0) {    // no more reports
-         if (reportinfo_rc != -1)
-            REPORT_IOCTL_ERROR("HIDIOCGREPORTINFO", reportinfo_rc);
-         break;
-      }
-      // result->report_id = rinfo.report_id;
-
-      if (rinfo.num_fields == 0)
-         break;
-
-
-      // So that usage value filled in
-      int rc = ioctl(fd, HIDIOCGREPORT, rinfo);
-      if (rc != 0) {
-         REPORT_IOCTL_ERROR("HIDIOCGREPORT", rc);
-         printf("(%s) Unable to get Feature report %d\n", __func__, rinfo.report_id);
-         break;
-      }
-
-
-
-
-
-
-      bool field_found = false;
-      int fndx;
-      for (fndx = 0; fndx < rinfo.num_fields && !field_found; fndx++) {
-
-         Byte * edidbytes = get_hiddev_edid_base(fd, &rinfo, fndx);
-
-         if (edidbytes) {
-            field_found = true;
-            result->field_id = fndx;
-            result->report_id = rinfo.report_id;
-            memcpy(result->edid, edidbytes, 128);
-            free(edidbytes);
-         }
-      } // loop over fields
-
-      if (field_found)
-         report_found = true;
-      else
-         rinfo.report_id |= HID_REPORT_ID_NEXT;
-    }  // loop over reports
-
-   if (!report_found) {
-      free(result);
-      result = NULL;
-   }
-
-   if (debug) {
-      if (result) {
-         DBGMSG("Returning report_id=%d, field_id=%d, edid bytes:",
-               __func__, result->report_id, result->field_id);
-         hex_dump(result->edid, EDID_SIZE);
-      }
-      else
-         DBGMSG("Returning NULL");
-   }
-
-   return result;
-}
-#endif
-
-
 Buffer * get_hiddev_edid_by_location(int fd, struct edid_location * loc) {
    assert(loc);
    bool debug = false;
@@ -526,21 +343,6 @@ bye:
 }
 
 
-
-
-
-#ifdef OLD
-Buffer * get_hiddev_edid_old(int fd) {
-   Buffer * result = NULL;
-   struct edid_report * er = find_edid_report(fd);
-   if (er) {
-      result = buffer_new_with_value(er->edid, EDID_SIZE, __func__);
-      free(er);
-   }
-   return result;
-}
-#endif
-
 Buffer * get_hiddev_edid(int fd)  {
    Buffer * result = NULL;
    struct edid_location * loc = locate_edid_report(fd);
@@ -549,7 +351,6 @@ Buffer * get_hiddev_edid(int fd)  {
    }
    return result;
 }
-
 
 
 // Gets device name - ioctl(HIDIOCGNAME)
@@ -565,6 +366,4 @@ char * get_hiddev_name(int fd) {
       result = strdup(buf);
    return result;
 }
-
-
 

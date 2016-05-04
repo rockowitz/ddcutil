@@ -426,7 +426,7 @@ void report_display_handle(Display_Handle * dh, const char * msg, int depth) {
 }
 
 
-/* Returns a summary string of the specified Display_Handle in
+/* Returns a string summarizing the specified Display_Handle, in
  * a buffer provided by the caller.
  *
  * Arguments:
@@ -466,7 +466,7 @@ char * display_handle_repr_r(Display_Handle * dref, char * buf, int bufsz) {
 }
 
 
-/* Returns a summary string of the specified Display_Handle.
+/* Returns a string summarizing the specified Display_Handle.
  * The string is valid until the next call to this function.
  * Caller should NOT free this string.
  *

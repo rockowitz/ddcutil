@@ -37,6 +37,7 @@
 #include "util/debug_util.h"
 #include "util/string_util.h"
 
+#include "base/displays.h"
 #include "base/msg_control.h"
 #include "base/util.h"
 
@@ -74,19 +75,27 @@ void report_features(GArray* features, Version_Spec vcp_version) {
 }
 
 
-void report_parsed_capabilities(Parsed_Capabilities* pcaps) {
-   // DBGMSG("Starting.");
+void report_parsed_capabilities(
+        Parsed_Capabilities* pcaps,
+        MCCS_IO_Mode io_mode)       // needed for proper error message
+{
    assert(pcaps && memcmp(pcaps->marker, PARSED_CAPABILITIES_MARKER, 4) == 0);
+   // DBGMSG("Starting. pcaps->commands=%p, pcaps->vcp_features=%p", pcaps->commands, pcaps->vcp_features);
    Output_Level output_level = get_output_level();
    if (output_level >= OL_VERBOSE) {
       printf("Unparsed capabilities string: %s\n", pcaps->raw_value);
    }
    bool damaged = false;
    printf("MCCS version: %s\n", (pcaps->mccs_ver) ? pcaps->mccs_ver : "not present");
+
    if (pcaps->commands)
       report_commands(pcaps->commands);
-   else
-      damaged = true;
+   else {
+      // not an error in the case of USB_IO, as the capabilities string was
+      // synthesized and does not include a commands segment
+      if (io_mode != USB_IO)
+         damaged = true;
+   }
    if (pcaps->vcp_features)
       report_features(pcaps->vcp_features, pcaps->parsed_mccs_version);
    else

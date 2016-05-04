@@ -937,9 +937,11 @@ void query_usb_monitors() {
          }
          else {
             char dev_summary[200];
-            snprintf(dev_summary, 200, "Device %s - %d:%d  %04x:%04x - %s",
-                     curfn, dev_info.busnum, dev_info.devnum,
-                     dev_info.vendor, dev_info.product,
+            snprintf(dev_summary, 200,
+                     "Device %s, devnum.busnum: %d.%d, uid:vid: %04x:%04x - %s",
+                     curfn,
+                     dev_info.busnum, dev_info.devnum,
+                     dev_info.vendor, dev_info.product & 0xffff,
                      cgname);
             if (!is_hiddev_monitor(fd)) {
                printf("%s\n", dev_summary);
@@ -1005,53 +1007,58 @@ void query_sysenv() {
       query_proc_driver_nvidia();
    }
 
-   // temporary location:
-   query_i2c_buses();
+   if (output_level >= OL_VERBOSE) {
+      // temporary location:
 
-   puts("");
-   printf("xrandr connection report:\n");
-   execute_shell_cmd("xrandr|grep connected", 1 /* depth */);
-   puts("");
+      query_i2c_buses();
 
-   printf("Examining I2C buses using i2cdetect: \n");
-   int busct = i2c_get_busct();
-   int ndx = 0;
-   char cmd[80];
-   for (ndx=0; ndx<busct; ndx++) {
-      snprintf(cmd, 80, "i2cdetect -y %d", ndx);
-      printf("\nProbing bus /dev/i2c-%d using command \"%s\"\n", ndx, cmd);
-      // DBGMSG("Executing command: |%s|\n", cmd);
-      int rc = execute_shell_cmd(cmd, 1 /* depth */);
-      // DBGMSG("execute_shell_cmd(\"%s\") returned %d", cmd, rc);
-      if (rc != 1) {
-          printf("i2cdetect command unavailable\n");
-          break;
+      puts("");
+      printf("xrandr connection report:\n");
+      execute_shell_cmd("xrandr|grep connected", 1 /* depth */);
+      puts("");
+
+      printf("Examining I2C buses using i2cdetect: \n");
+      int busct = i2c_get_busct();
+      int ndx = 0;
+      char cmd[80];
+      for (ndx=0; ndx<busct; ndx++) {
+         snprintf(cmd, 80, "i2cdetect -y %d", ndx);
+         printf("\nProbing bus /dev/i2c-%d using command \"%s\"\n", ndx, cmd);
+         // DBGMSG("Executing command: |%s|\n", cmd);
+         int rc = execute_shell_cmd(cmd, 1 /* depth */);
+         // DBGMSG("execute_shell_cmd(\"%s\") returned %d", cmd, rc);
+         if (rc != 1) {
+             printf("i2cdetect command unavailable\n");
+             break;
+         }
       }
+
+
+      GPtrArray* edid_recs = get_x11_edids();
+      puts("");
+      printf("EDIDs reported by X11 for connected xrandr outputs:\n");
+      // DBGMSG("Got %d X11_Edid_Recs\n", edid_recs->len);
+
+      for (ndx=0; ndx < edid_recs->len; ndx++) {
+         X11_Edid_Rec * prec = g_ptr_array_index(edid_recs, ndx);
+         // printf(" Output name: %s -> %p\n", prec->output_name, prec->edid);
+         // hex_dump(prec->edid, 128);
+         rpt_vstring(1, "xrandr output: %s", prec->output_name);
+         Parsed_Edid * parsed_edid = create_parsed_edid(prec->edid);
+         bool verbose_edid = false;
+         report_parsed_edid(parsed_edid, verbose_edid, 2 /* depth */);
+         free_parsed_edid(parsed_edid);
+      }
+      free_x11_edids(edid_recs);
+
+      // Display * x11_disp = open_default_x11_display();
+      // GPtrArray *  outputs = get_x11_connected_outputs(x11_disp);
+      // close_x11_display(x11_disp);
    }
 
-
-   GPtrArray* edid_recs = get_x11_edids();
-   puts("");
-   printf("EDIDs reported by X11 for connected xrandr outputs:\n");
-   // DBGMSG("Got %d X11_Edid_Recs\n", edid_recs->len);
-
-   for (ndx=0; ndx < edid_recs->len; ndx++) {
-      X11_Edid_Rec * prec = g_ptr_array_index(edid_recs, ndx);
-      // printf(" Output name: %s -> %p\n", prec->output_name, prec->edid);
-      // hex_dump(prec->edid, 128);
-      rpt_vstring(1, "xrandr output: %s", prec->output_name);
-      Parsed_Edid * parsed_edid = create_parsed_edid(prec->edid);
-      bool verbose_edid = false;
-      report_parsed_edid(parsed_edid, verbose_edid, 2 /* depth */);
-      free_parsed_edid(parsed_edid);
+   if (output_level >= OL_VERBOSE) {
+      query_usb_monitors();
    }
-   free_x11_edids(edid_recs);
-
-   // Display * x11_disp = open_default_x11_display();
-   // GPtrArray *  outputs = get_x11_connected_outputs(x11_disp);
-   // close_x11_display(x11_disp);
-
-   query_usb_monitors();
 }
 
 

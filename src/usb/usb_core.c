@@ -603,15 +603,16 @@ int usb_open_hiddev_device(char * hiddev_devname, bool emit_error_msg) {
       file = -errno;
    }
 
-
-   // Solves problem of ddc detect not getting edid unless ddctool env called first
-   errsv = errno;
-   int rc = ioctl(file, HIDIOCINITREPORT);
-   if (rc != 0) {
-      REPORT_IOCTL_ERROR("HIDIOCGREPORT", rc);
-      printf("(%s) HIDIOCINITREPORT failed\n", __func__  );
+   if (file > 0)
+   {
+      // Solves problem of ddc detect not getting edid unless ddctool env called first
+      errsv = errno;
+      int rc = ioctl(file, HIDIOCINITREPORT);
+      if (rc != 0) {
+         REPORT_IOCTL_ERROR("HIDIOCGREPORT", rc);
+         printf("(%s) HIDIOCINITREPORT failed\n", __func__  );
+      }
    }
-
    return file;
 }
 
@@ -674,7 +675,7 @@ GPtrArray * get_usb_monitor_list() {
       char * hiddev_fn = g_ptr_array_index(hiddev_names, devname_ndx);
       DBGMSF(debug, "Examining device: %s", hiddev_fn);
       // will need better message handling for API
-      int fd = usb_open_hiddev_device(hiddev_fn, true);
+      int fd = usb_open_hiddev_device(hiddev_fn, (ol >= OL_VERBOSE));
       if (fd > 0) {
          // Declare variables here and initialize them to NULL so that code at label close: works
          struct hiddev_devinfo *   devinfo     = NULL;

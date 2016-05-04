@@ -162,7 +162,7 @@ bool perform_get_capabilities_by_display_handle(Display_Handle * dh) {
       else {
          // pcap is always set, but may be damaged if there was a parsing error
          Parsed_Capabilities * pcap = parse_capabilities_string(capabilities_string);
-         report_parsed_capabilities(pcap);
+         report_parsed_capabilities(pcap, dh->io_mode);
          free_parsed_capabilities(pcap);
       }
       ok = true;

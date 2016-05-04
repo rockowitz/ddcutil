@@ -61,6 +61,26 @@
 #include "ddc_dumpload.h"
 
 
+// belongs with vspec code:
+
+char * format_vspec(Version_Spec vspec) {
+   static char private_buffer[20];
+   snprintf(private_buffer, 20, "%d.%d", vspec.major, vspec.minor);
+   return private_buffer;
+}
+
+
+Version_Spec parse_vspec(char * s) {
+   Version_Spec vspec;
+   int ct = sscanf(s, "%hhd . %hhd", &vspec.major, &vspec.minor);
+   if (ct != 2 || vspec.major < 0 || vspec.major > 3 || vspec.minor < 0 || vspec.minor > 2) {
+      vspec.major = -1;
+      vspec.minor = -1;
+   }
+   return vspec;
+}
+
+
 
 /* Report the contents of a Dumpload_Data struct
  *
@@ -81,6 +101,7 @@ void report_dumpload_data(Dumpload_Data * data, int depth) {
    rpt_str( "model",        NULL, data->model,        d1);
    rpt_str( "serial_ascii", NULL, data->serial_ascii, d1);
    rpt_str( "edid",         NULL, data->edidstr,      d1);
+   rpt_str( "vcp_version",  NULL, format_vspec(data->vcp_version), d1);
    rpt_int( "vcp_value_ct", NULL, data->vcp_value_ct, d1);
    rpt_structure_loc("vcp_values", data->vcp_values, d1);
    if (data->vcp_values)
@@ -103,7 +124,10 @@ create_dumpload_data_from_g_ptr_array(GPtrArray * garray) {
    DBGMSF(debug, "Starting.");
 
    Dumpload_Data * data = calloc(1, sizeof(Dumpload_Data));
-   bool validData = true;
+   bool valid_data = true;
+   // default:
+   data->vcp_version.major = 2;
+   data->vcp_version.minor = 0;
    data->vcp_values = vcp_value_set_new(15);      // 15 = initial size
 
    int     ct;
@@ -125,7 +149,7 @@ create_dumpload_data_from_g_ptr_array(GPtrArray * garray) {
       if (ct > 0 && *s0 != '*' && *s0 != '#') {
          if (ct == 1) {
             printf("Invalid data at line %d: %s\n", linectr, line);
-            validData = false;
+            valid_data = false;
          }
          else {
             rest = head + strlen(s0);;
@@ -142,7 +166,7 @@ create_dumpload_data_from_g_ptr_array(GPtrArray * garray) {
                // ct = sscanf(s1, "%d", &data->busno);
                // if (ct == 0) {
                //    fprintf(stderr, "Invalid bus number at line %d: %s\n", linectr, line);
-               //    validData = false;
+               //    valid_data = false;
                // }
             }
             else if (streq(s0, "EDID") || streq(s0, "EDIDSTR")) {
@@ -157,6 +181,13 @@ create_dumpload_data_from_g_ptr_array(GPtrArray * garray) {
             else if (streq(s0, "SN")) {
                strncpy(data->serial_ascii, rest, sizeof(data->serial_ascii));
             }
+            else if (streq(s0, "VCP_VERSION")) {
+               data->vcp_version = parse_vspec(s1);
+               if (data->vcp_version.major == -1) {
+                  f0printf(FERR, "Invalid VCP VERSION at line %d: %s\n", linectr, line);
+                  valid_data = false;
+               }
+            }
             else if (streq(s0, "TIMESTAMP_TEXT")   ||
                      streq(s0, "TIMESTAMP_MILLIS")
 
@@ -166,48 +197,83 @@ create_dumpload_data_from_g_ptr_array(GPtrArray * garray) {
             else if (streq(s0, "VCP")) {
                if (ct != 3) {
                   f0printf(FERR, "Invalid VCP data at line %d: %s\n", linectr, line);
-                  validData = false;
+                  valid_data = false;
                }
-               else {
+               else {   // found feature id and value
                   Byte feature_id;
                   bool ok = hhs_to_byte_in_buf(s1, &feature_id);
                   if (!ok) {
                      f0printf(FERR, "Invalid opcode at line %d: %s", linectr, s1);
-                     validData = false;
+                     valid_data = false;
                   }
-                  else {
+                  else {     // valid opcode
+                     Single_Vcp_Value * valrec = NULL;
                      // look up opcode, is it valid?
-                     ushort feature_value;
-                     ct = sscanf(s2, "%hd", &feature_value);
-                     if (ct == 0) {
-                        f0printf(FERR, "Invalid value for opcode at line %d: %s\n", linectr, line);
-                        validData = false;
-                     }
-                     else {
-                        // good opcode and value
-                        data->vcp_value_ct++;
 
-                        // new way:
-                        // assume non-table for now
-                        // TODO: opcode and value should be saved in local vars
-                        Single_Vcp_Value * valrec = create_cont_vcp_value(
+                     // table values need special handling
+
+                     // Problem: without VCP version, can't look up feature in
+                     // VCP code table and definitively know if it's a table feature.
+                     // One solution: rework data structures to parse later
+                     // second solution: vcp version in dumpload data
+
+                     VCP_Feature_Table_Entry * pvft_entry =
+                         vcp_find_feature_by_hexid_w_default(feature_id);
+
+                     bool is_table_feature = is_feature_table_by_vcp_version(
+                                                pvft_entry,data->vcp_version);
+
+                     if (is_table_feature) {
+                        // s2 is hex string
+                        Byte * ba;
+                        int bytect =  hhs_to_byte_array(s2, &ba);
+                        if (bytect < 0) {
+                           f0printf(FERR,
+                                    "Invalid hex string value for opcode at line %d: %s\n",
+                                    linectr, line);
+                           valid_data = false;
+                        }
+                        else {
+                           valrec = create_table_vcp_value_by_bytes(
+                                 feature_id,
+                                 ba,
+                                 bytect);
+                        }
+                     }
+                     else {   // non-table feature
+                        ushort feature_value;
+                        ct = sscanf(s2, "%hd", &feature_value);
+                        if (ct == 0) {
+                           f0printf(FERR, "Invalid value for opcode at line %d: %s\n", linectr, line);
+                           valid_data = false;
+                        }
+                        else {
+                           // good opcode and value
+                           // TODO: opcode and value should be saved in local vars
+                           valrec = create_cont_vcp_value(
                               feature_id,
                               0,   // max_val, unused for LOADVCP
                               feature_value);
+                        }
+                     }   // non-table feature
+                     if (valrec) {
+                        data->vcp_value_ct++;
                         vcp_value_set_add(data->vcp_values, valrec);
                      }
-                  }
-               }  // VCP
-            }
+                  } // valid opcode
+
+               } // found feature id and value
+            }  // VCP
+
             else {
                f0printf(FERR, "Unexpected field \"%s\" at line %d: %s\n", s0, linectr, line );
-               validData = false;
+               valid_data = false;
             }
          }    // more than 1 field on line
       }       // non-comment line
    }          // one line of file
 
-   if (!validData)
+   if (!valid_data)
       // if (data)
       //    free_dumpload_data(data);   // UNIMPLEMENTED
       data = NULL;
@@ -505,7 +571,7 @@ collect_profile_related_values(
  *
  * Arguments:
  *    dh              display handle for connected display
- *    pdumpload_data  address as which to return pointer to newly allocated
+ *    pdumpload_data  address at which to return pointer to newly allocated
  *                    Dumpload_Data struct.  It is the responsibility of the
  *                    caller to free this data structure.
  *
@@ -524,6 +590,8 @@ dumpvcp_as_dumpload_data(
 
    // timestamp:
    dumped_data->timestamp_millis = time(NULL);
+
+   dumped_data->vcp_version = dh->vcp_version;   // ??? NEED TO USE FUNCTION TO ENSURE SET?
 
    // identification information from edid:
    Parsed_Edid * edid = ddc_get_parsed_edid_by_display_handle(dh);
@@ -599,6 +667,9 @@ GPtrArray * convert_dumpload_data_to_string_array(Dumpload_Data * data) {
    snprintf(buf, bufsz, "EDID    %s", hexbuf);
    g_ptr_array_add(strings, strdup(buf));
 
+   snprintf(buf, bufsz, "VCP_VERSION %d.%d", data->vcp_version.major, data->vcp_version.minor);
+   g_ptr_array_add(strings, strdup(buf));
+
    for (int ndx=0; ndx < data->vcp_values->len; ndx++) {
       // n. get_formatted_value_for_feature_table_entry() also has code for table type values
       Single_Vcp_Value * vrec = vcp_value_set_get(data->vcp_values,ndx);
@@ -617,7 +688,7 @@ GPtrArray * convert_dumpload_data_to_string_array(Dumpload_Data * data) {
  * The caller is responsible for freeing the returned string.
  *
  * Arguments:
- *    dh       display handle of open monnitor
+ *    dh       display handle of open monitor
  *    pstring  location at which to return string
  *
  * Returns:

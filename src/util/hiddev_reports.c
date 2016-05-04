@@ -40,14 +40,15 @@
 #include <unistd.h>
 #include <wchar.h>
 
-#include "util/hiddev_util.h"
 #include "util/pci_id_util.h"
 #include "util/report_util.h"
 #include "util/string_util.h"
 
+#include "util/hiddev_util.h"
 #include "util/hiddev_reports.h"
 
 
+#ifdef DUPLICATES_HIDDEV_UTIL_H
 // use report_ioctl_error in base/util.c?
 #define REPORT_IOCTL_ERROR(_ioctl_name, _rc) \
    do { \
@@ -60,6 +61,7 @@
                 strerror(errno) \
                ); \
    } while(0)
+#endif
 
 
 /* Wrap ioctl(HIDIOCGSTRING) to retrieve a string.
@@ -330,23 +332,35 @@ char * interpret_usage_code(int usage_code ) {
    static char usage_buffer[100];
    usage_buffer[0] = '\0';
    if (usage_code == 0) {
-       sprintf(usage_buffer, "0x%08x", usage_code);
+       // sprintf(usage_buffer, "0x%08x", usage_code);
+      usage_buffer[0] = '\0';
    }
    else {
       unsigned short usage_page = usage_code >> 16;
       unsigned short usage_id   = usage_code & 0xffff;
-      const char * page_name = (usage_page >= 0xff00)
-                                   ? "Manufacturer"
-                             //    :  names_huts(usage_page);
-                                   :  usage_code_page_name(usage_page);
+      char * page_name;
+      char * page_value_name;
+      if (usage_page >= 0xff00) {
+         page_name = "Manufacturer";
+         page_value_name = "";
+      }
+      else {
+         page_name = usage_code_page_name(usage_page);
+         if (!page_name) {
+            page_name = "";
+            page_value_name = "";
+         }
+         else {
+            page_value_name = usage_code_value_name(usage_page, usage_id);
+            if (!page_value_name)
+               page_value_name = "";
+         }
+      }
 
-      const char * page_value_name = (usage_page >= 0xff00)
-                                   ? ""
-                                // : names_hutus(usage_code);
-                                   : usage_code_value_name(usage_page, usage_id);
       snprintf(usage_buffer, sizeof(usage_buffer),
-               "0x%08x page=0x%04x (%s), id=0x%04x (%s)",
-               usage_code,
+               // "0x%08x page=0x%04x (%s), id=0x%04x (%s)",
+               // usage_code,
+               "page=0x%04x (%s), id=0x%04x (%s)",
                usage_page,
                page_name,
                usage_id,
@@ -379,9 +393,9 @@ void report_hiddev_field_info(struct hiddev_field_info * finfo, int depth) {
    rpt_vstring(d1, "%-20s: 0x%08x  %s", "flags", finfo->flags, interpret_field_bits(finfo->flags) );
    // rpt_vstring(d1, "%-20s: %u 0x%08x huts=|%s|, hutus=|%s| (physical usage for this field)", "physical",
    //                        finfo->physical, finfo->physical, s1, s2);
-   rpt_vstring(d1, "%-20s: %s", "physical (usage)", interpret_usage_code(finfo->physical) );
-   rpt_vstring(d1, "%-20s: %s", "logical (usage)", interpret_usage_code(finfo->logical) );
-   rpt_vstring(d1, "%-20s: %s", "application (usage)", interpret_usage_code(finfo->application) );
+   rpt_vstring(d1, "%-20s: %s",     "physical (usage)", interpret_usage_code(finfo->physical) );
+   rpt_vstring(d1, "%-20s: %s",     "logical (usage)", interpret_usage_code(finfo->logical) );
+   rpt_vstring(d1, "%-20s: %s",     "application (usage)", interpret_usage_code(finfo->application) );
    rpt_vstring(d1, "%-20s: %d",     "logical_minimum",  finfo->logical_minimum);
    rpt_vstring(d1, "%-20s: %d",     "logical_maximum",  finfo->logical_maximum);
    rpt_vstring(d1, "%-20s: %d",     "physical_minimum", finfo->physical_minimum);
@@ -447,7 +461,7 @@ void report_field_usage(
       REPORT_IOCTL_ERROR("HIDIOCGUCODE", rc);
    // assert(rc == 0);
    if (rc == 0) {
-     rpt_vstring(d1, "HIDIOGUCODE returned usage_code=0x%08x  %s",
+     rpt_vstring(d1, "Usage code = 0x%08x  %s",
                      uref.usage_code, interpret_usage_code(uref.usage_code));
 
      if (show_value) {
@@ -524,27 +538,19 @@ void report_report_descriptors_for_report_type(int fd, __u32 report_type, int de
                             finfo.report_id, fndx);
          }
          else {
-
             finfo.field_index = fndx;
-            int saved_field_index = fndx;
-            int jumped_field_index = -1;
-            rpt_vstring(d2, "Report id: %d, Field index %d:", finfo.report_id, finfo.field_index);
-            // printf("(%s) Before ioctl(HIDIOCGFIELDINFO), report_type=%s, report_id=%s, field_index=%d\n",
-            //        __func__, get_report_type_name(finfo.report_type),
-            //        interpret_report_id(finfo.report_id), finfo.field_index);
-            // report_hiddev_field_info(&finfo, d2);
+            rpt_vstring(d2, "Report id: %d, Field index %d:", finfo.report_id, fndx);
             int rc = ioctl(fd, HIDIOCGFIELDINFO, &finfo);
-            if (rc != 0)
+            if (rc != 0) {   // should never occur
                REPORT_IOCTL_ERROR("HIDIOCGFIELDINFO", rc);
-            assert(rc == 0);
-            // printf("(%s) After ioctl(HIDIOCGFIELDINFO) finfo.field_index = %d\n",
-            //              __func__, finfo.field_index);
-            if (finfo.field_index != saved_field_index) {
-               printf("(%s) !!! ioctl(HIDIOCGFIELDINFO) changed field_index from %d to %d\n",
-                      __func__, saved_field_index, finfo.field_index);
-               jumped_field_index = finfo.field_index;  // how to use this?
+               break;        // just stop checking fields
             }
-            rpt_vstring(d2, "Description of field %d:", finfo.field_index);
+
+            rpt_vstring(d2, "Description of field %d:", fndx);
+            if (finfo.field_index != fndx) {
+               rpt_vstring(d3, "!! Note that HIDIOCGFIELDINFO changed field_index to %d",
+                               finfo.field_index);
+            }
             report_hiddev_field_info(&finfo, d3);
             rpt_vstring(d3, "Usages for report_id: %d, field_index %d:",
                             finfo.report_id, fndx /*finfo.field_index */);
@@ -556,18 +562,9 @@ void report_report_descriptors_for_report_type(int fd, __u32 report_type, int de
                                   undx,
                                   true,   // show_value
                                   d4);
-            }
-            if (jumped_field_index >= 0) {
-   #ifdef NOTHING_INTERESTING
-               printf("!!! Probing usage values for jumped field index = %d...\n", jumped_field_index);
-               for (undx = 0; undx < 5 /* TEMP */; undx++) {
-                  // always rc = 0, invalid argument
-                  report_field_usage( fd, finfo.report_type, finfo.report_id, jumped_field_index, undx, d4);
-               }
-   #endif
-            }
-         }
-      }
+            }  //loop over undx
+         }  // not an EDID field
+      }  // loop over fndx
       rinfo.report_id |= HID_REPORT_ID_NEXT;
       ret = ioctl(fd, HIDIOCGREPORTINFO, &rinfo);
    }
@@ -628,10 +625,12 @@ void report_hiddev_device_by_fd(int fd, int depth) {
    rpt_vstring(d1, "hiddev driver version (reported by HIDIOCGVERSION): %d.%d.%d",
           version>>16, (version >> 8) & 0xff, version & 0xff);
 
+#ifdef REDUNDANT_INFORMATION
    char * cgname = get_hiddev_name(fd);               // HIDIOCGNAME
    // printf("(%s) get_hiddev_name() returned: |%s|\n", __func__, cgname);
    rpt_vstring(d1, "device name (reported by HIDIOCGNAME): |%s|", cgname);
    free(cgname);
+#endif
 
    rc = ioctl(fd, HIDIOCGDEVINFO, &dev_info);
    if (rc != 0) {
