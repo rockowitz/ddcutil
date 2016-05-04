@@ -25,6 +25,8 @@ ddctool \- Query and change monitor settings
 .IR busno ]
 .RB [ "--adl" | "-a " 
 .IR "adapter-index.display-index" ]
+.RG [ "--usb" | "-U"
+.IR "busnum.devicenum" ]
 .RB [ "--edid" 
 .IR "256 hex character EDID" ]
 .RB [ "--model" | "-l"
@@ -124,6 +126,9 @@ Probe the \fBddctool\fP installation environment.
 .TP
 .B "interrogate "
 Collect maximum information for problem diagnosis.
+.TP
+.B "chkusbmon "
+Tests if hiddev device is a USB connected monitor, for use in udev rules.
 .PP
 
 .SH COMMAND ARGUMENTS
@@ -178,6 +183,9 @@ I2C bus number
 .TQ
 .BI "-a,--adl " "adapterIndex.displayIndex"
 ADL adapter and display indexes
+.TQ
+.BI "-U,--usb " "busnum.devicenum"
+USB bus and device numbers
 .TQ
 .B -l,--model
 model name

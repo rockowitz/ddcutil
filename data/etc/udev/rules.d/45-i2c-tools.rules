@@ -1,3 +1,0 @@
-# This is 40-i2c-tools.rules from Ubuntu
-# To give everyone rw access to the /dev/i2c devices, change MODE="0666"
-KERNEL=="i2c-[0-9]*", GROUP="i2c", MODE="0660"
