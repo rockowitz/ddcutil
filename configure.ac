@@ -93,6 +93,9 @@ dnl AM_PROG_CC_C_0
 dnl but on Suse 13.2 w automake 1.13.4, get msg that 
 dnl warning: warning: compiling 'base/common.c' in subdir requires 'AM_PROG_CC_C_O' in 'configure.ac'
 
+dnl needed for OBS
+AC_PROG_CC_STDC
+
 dnl AC_PROG_LIBTOOL, AM_PROG_LIBTOOL are deprecated names for older versions of LT_INIT
 dnl adds support for --enable/disable -static/shared, -with/without-pic configure flags
 LT_INIT

@@ -50,7 +50,7 @@
 #include <limits.h>
 #include <sys/stat.h>
 // #include <libosinfo-1.0/osinfo/osinfo.h>
-#include <libudev.h>        // does this need pkgconfig?
+// #include <libudev.h>        // not yet used
 #include <linux/hiddev.h>
 #include <sys/ioctl.h>
 

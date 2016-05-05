@@ -152,8 +152,8 @@ Summary: Query and update monitor settings
 License: GPL-2.0+
 URL: http://github.com/rockowitz/ddctool
 # BuildRequires: gcc  glib2 glib2-devel
-BuildRequires: gcc  pkgconfig(glib-2.0) i2c-tools
-Requires: i2c-tools glib2
+BuildRequires: gcc  pkgconfig(glib-2.0) i2c-tools libXrandr-devel
+Requires: i2c-tools glib2 libXrandr
 Source: %{name}-%{version}.tar.gz
 
 %description

@@ -24,42 +24,31 @@
  * </endcopyright>
  */
 
+#include <assert.h>
+#include <dirent.h>
+#include <errno.h>
+#include <glib.h>
+#include <linux/hiddev.h>
+#include <linux/limits.h>
 #include <stddef.h>
-#include <string.h>
-
 #include <stdio.h>
 #include <stdlib.h>
-#include <errno.h>
-#include <fcntl.h>
 #include <string.h>
-#include <unistd.h>
-#include <errno.h>
-#include <sys/ioctl.h>
-#include <assert.h>
-#include <wchar.h>
-#include <dirent.h>
-#include <glib.h>
 #include <strings.h>
-
-#include <linux/limits.h>
-
-#include <linux/hiddev.h>
-
-#include "base/common.h"
-#include "base/msg_control.h"
-#include "base/execution_stats.h"
-#include "base/linux_errno.h"
-#include "base/ddc_errno.h"
-#include "base/ddc_packets.h"    // for Parsed_Nontable_Vcp_Response    - to sort out
+#include <sys/ioctl.h>
+#include <unistd.h>
+#include <wchar.h>
 
 #include "util/coredefs.h"
 #include "util/string_util.h"
-#include "util/report_util.h"
-#include "util/hiddev_reports.h"
+#include "util/hiddev_reports.h"   // circular dependency, but only used in debug code
+
 #include "util/hiddev_util.h"
 
 
-
+//
+// *** Functions to identify hiddev devices representing monitors ***
+//
 
 /* Filter to find hiddevN files for scandir() */
 static int is_hiddev(const struct dirent *ent) {
@@ -105,12 +94,18 @@ GPtrArray * get_hiddev_device_names() {
 }
 
 
-
-// Per USB Monitor Control Class Specification section 5.5,
-// "to identify a HID class device as a monitor, the devices's
-// HID Report Descriptor must contain a top-level collection with
-// a usage of Monitor Control from the USB Monitor Usage Page."
-
+/* Check if an open hiddev device represents a USB compliant monitor.
+ *
+ * Arguments:
+ *    fd       file descriptor
+ *
+ * Returns:    true/false
+ *
+ * Per USB Monitor Control Class Specification section 5.5,
+ * "to identify a HID class device as a monitor, the devices's
+ * HID Report Descriptor must contain a top-level collection with
+ * a usage of Monitor Control from the USB Monitor Usage Page."
+*/
 bool is_hiddev_monitor(int fd) {
    int monitor_collection_index = -1;
 
@@ -140,8 +135,22 @@ bool is_hiddev_monitor(int fd) {
 }
 
 
-/* Does a field report an EDID?  The field must have at least 128 usages, and
- * the usage code for each must be USB Monitor/EDID information
+//
+// *** Functions for EDID retrieval ***
+//
+
+/* Checks if a field in a HID report represents an EDID
+ *
+ * Arguments:
+ *    fd           file descriptor
+ *    rinfo        pointer to hiddev_report_info struct
+ *    field_index  index number of field to check
+ *
+ * Returns:        pointer to hiddev_field_info struct for field if true,
+ *                 NULL if field does not represent an EDID
+ *
+ * The field must have at least 128 usages, and the usage code for each must
+ * be USB Monitor/EDID information
  */
 struct hiddev_field_info *
 is_field_edid(int fd, struct hiddev_report_info * rinfo, int field_index) {
@@ -209,13 +218,15 @@ bye:
 }
 
 
-// ******************* EDID RETRIEVAL **********************
 
 #define EDID_SIZE 128
 
+
+// Describes report and field withing that report representing the EDID
+
 struct edid_location {
-   struct hiddev_report_info * rinfo;
-   struct hiddev_field_info  * finfo;
+   struct hiddev_report_info * rinfo;         // simplify by eliminating?
+   struct hiddev_field_info  * finfo;         // simplify by eliminating?
    int                         report_id;
    int                         field_index;
 };
@@ -231,6 +242,18 @@ void free_edid_location(struct edid_location * location) {
 }
 
 
+/* Finds the report describing the EDID.
+ *
+ * Arguments:
+ *   fd          file handle of open hiddev device
+ *
+ * Returns:      pointer to newly allocated struct edid_location representing
+ *               the feature report and field within that report which returns
+ *               the EDID,
+ *               NULL if not found
+ *
+ * It is the responsibility of the caller to free the returned struct.
+ */
 struct edid_location *
 locate_edid_report(int fd) {
    bool debug = false;
@@ -290,6 +313,18 @@ locate_edid_report(int fd) {
 }
 
 
+/* Retrieve first 128 bytes of EDID, given that the report and field
+ * locating the EDID are known.
+ *
+ * Arguments:
+ *    fd     file descriptor
+ *    loc    pointer to edid_location struct
+ *
+ * Returns:
+ *    pointer to Buffer struct containing the EDID
+ *
+ * It is the responsibility of the caller to free the returned buffer.
+ */
 Buffer * get_hiddev_edid_by_location(int fd, struct edid_location * loc) {
    assert(loc);
    bool debug = false;
@@ -343,6 +378,17 @@ bye:
 }
 
 
+/* Retrieves the EDID (128 bytes) from a hiddev device representing a HID
+ * compliant monitor.
+ *
+ * Arguments:
+ *    fd     file descriptor
+ *
+ * Returns:
+ *    pointer to Buffer struct containing the EDID
+ *
+ * It is the responsibility of the caller to free the returned buffer.
+ */
 Buffer * get_hiddev_edid(int fd)  {
    Buffer * result = NULL;
    struct edid_location * loc = locate_edid_report(fd);
@@ -353,7 +399,18 @@ Buffer * get_hiddev_edid(int fd)  {
 }
 
 
-// Gets device name - ioctl(HIDIOCGNAME)
+//
+// *** Miscellaneous functions ***
+//
+
+/* Returns the name of a hiddev device, as reported by ioctl HIDIOCGNAME.
+ *
+ * Arguments:
+ *    fd         file descriptor of open hiddev device
+ *
+ * Returns:      pointer to newly allocated string,
+ *               NULL if ioctl call fails (should never happen)
+ */
 char * get_hiddev_name(int fd) {
    const int blen = 256;
    char buf[blen];
@@ -366,4 +423,3 @@ char * get_hiddev_name(int fd) {
       result = strdup(buf);
    return result;
 }
-
