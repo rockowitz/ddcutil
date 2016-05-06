@@ -40,41 +40,41 @@ bool usb_is_valid_display_ref(Display_Ref * dref, bool emit_error_msg);
 
 void usb_report_active_display_by_display_ref(Display_Ref * dref, int depth);
 
-char * usb_get_capabilities_string_by_display_handle(Display_Handle * dh);
 
 int usb_open_hiddev_device(char * hiddev_devname, bool emit_error_msg);
 int usb_close_device(int fd, char * device_fn, Failure_Action failure_action);
 
 Display_Ref * usb_find_display_by_model_sn(const char * model, const char * sn);
-
 Display_Ref * usb_find_display_by_edid(const Byte * edidbytes);
-
-Display_Ref *usb_find_display_by_busnum_devnum(int busnum, int devnum);
+Display_Ref * usb_find_display_by_busnum_devnum(int busnum, int devnum);
 
 Parsed_Edid * usb_get_parsed_edid_by_display_ref(   Display_Ref    * dref);
 Parsed_Edid * usb_get_parsed_edid_by_display_handle(Display_Handle * dh);
 
 Global_Status_Code usb_get_nontable_vcp_value(
-      Display_Handle *       dh,
-      Byte                   feature_code,
+      Display_Handle *               dh,
+      Byte                           feature_code,
       Parsed_Nontable_Vcp_Response** ppInterpretedCode);
 
 Global_Status_Code usb_get_vcp_value(
-       Display_Handle *          dh,
-       Byte                      feature_code,
-       Vcp_Value_Type            call_type,
-       Single_Vcp_Value **       pvalrec);
+      Display_Handle *          dh,
+      Byte                      feature_code,
+      Vcp_Value_Type            call_type,
+      Single_Vcp_Value **       pvalrec);
 
 Global_Status_Code usb_set_nontable_vcp_value(
-       Display_Handle *       dh,
-       Byte                   feature_code,
-       int                    new_value);
+      Display_Handle *          dh,
+      Byte                      feature_code,
+      int                       new_value);
 
-Global_Status_Code
-usb_set_vcp_value(                               // changed from set_vcp_value()
-      Display_Handle *   dh,
-      Single_Vcp_Value * vrec);
+Global_Status_Code usb_set_vcp_value(
+      Display_Handle *           dh,
+      Single_Vcp_Value *         valrec);
 
-char * get_hiddev_devname_by_display_ref(Display_Ref * dref);
+char * usb_get_capabilities_string_by_display_handle(Display_Handle * dh);
+
+#ifdef NO_LONGER_NEEDED
+char * get_hiddev_devnae_by_display_ref(Display_Ref * dref);
+#endif
 
 #endif /* SRC_USB_USB_CORE_H_ */
