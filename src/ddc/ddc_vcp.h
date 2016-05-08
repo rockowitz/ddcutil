@@ -32,8 +32,8 @@
 #include "base/common.h"
 #include "base/status_code_mgt.h"
 
-#include "ddc/vcp_feature_codes.h"
-#include "ddc/vcp_feature_values.h"
+#include "vcp/vcp_feature_codes.h"
+#include "vcp/vcp_feature_values.h"
 
 
 Global_Status_Code

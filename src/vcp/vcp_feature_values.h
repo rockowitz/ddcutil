@@ -4,7 +4,7 @@
  *     Author: rock
  *
  * <copyright>
- * Copyright (C) 2014-2015 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2014-2016 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -24,8 +24,8 @@
  * </endcopyright>
  */
 
-#ifndef SRC_DDC_VCP_FEATURE_VALUES_H_
-#define SRC_DDC_VCP_FEATURE_VALUES_H_
+#ifndef VCP_FEATURE_VALUES_H_
+#define VCP_FEATURE_VALUES_H_
 
 #include <glib.h>
 
@@ -136,4 +136,4 @@ void report_vcp_value_set(Vcp_Value_Set vset, int depth);
 
 
 
-#endif /* SRC_DDC_VCP_FEATURE_VALUES_H_ */
+#endif /* SRC_VCP_VCP_FEATURE_VALUES_H_ */

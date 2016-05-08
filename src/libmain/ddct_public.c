@@ -35,12 +35,13 @@
 #include "base/parms.h"
 #include "base/msg_control.h"
 
+#include "vcp/vcp_feature_codes.h"
+
 #include "adl/adl_shim.h"
 
 #include "ddc/ddc_multi_part_io.h"
 #include "ddc/ddc_packet_io.h"
 #include "ddc/ddc_vcp.h"
-#include "ddc/vcp_feature_codes.h"
 #include "ddc/ddc_read_capabilities.h"
 #include "ddc/ddc_displays.h"
 #include "ddc/ddc_edid.h"
@@ -49,7 +50,6 @@
 #include "ddc/ddc_services.h"
 #include "libmain/ddct_public.h"
 #include "../ddc/ddc_dumpload.h"
-
 
 
 #define WITH_DR(ddct_dref, action) \

@@ -39,6 +39,8 @@
 #include "base/msg_control.h"
 #include "base/parms.h"
 
+#include "vcp/vcp_feature_codes.h"
+
 #include "i2c/i2c_bus_core.h"
 #include "i2c/i2c_do_io.h"
 
@@ -48,7 +50,6 @@
 #include "usb/usb_core.h"
 
 #include "ddc/ddc_packet_io.h"
-#include "ddc/vcp_feature_codes.h"
 #include "ddc/ddc_vcp.h"
 #include "ddc/ddc_vcp_version.h"
 

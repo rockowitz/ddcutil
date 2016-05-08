@@ -52,7 +52,7 @@
 #include "base/linux_errno.h"
 #include "base/msg_control.h"
 
-#include "ddc/ddc_vcp.h"     // circular include, for Single_Vcp_Value
+#include "vcp/vcp_feature_values.h"
 
 #include "usb/usb_core.h"
 
@@ -61,7 +61,7 @@
 static Trace_Group TRACE_GROUP = TRC_USB;
 
 // Forward declarations
-GPtrArray * get_usb_monitor_list();
+static GPtrArray * get_usb_monitor_list();
 
 
 

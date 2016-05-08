@@ -4,7 +4,7 @@
  *     Author: rock
  *
  * <copyright>
- * Copyright (C) 2014-2015 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2014-2016 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -24,8 +24,8 @@
  * </endcopyright>
  */
 
-#ifndef SRC_APP_DDCTOOL_APP_GETVCP_C_
-#define SRC_APP_DDCTOOL_APP_GETVCP_C_
+#ifndef APP_GETVCP_C_
+#define APP_GETVCP_C_
 
 #include <errno.h>
 #include <stdio.h>
@@ -35,16 +35,17 @@
 #include "base/common.h"
 #include "base/ddc_errno.h"
 #include "base/msg_control.h"
-#include "base/status_code_mgt.h"
 #include "base/msg_control.h"
+#include "base/status_code_mgt.h"
+
+#include "vcp/vcp_feature_codes.h"
 
 #include "i2c/i2c_bus_core.h"
 
+#include "ddc/ddc_output.h"
 #include "ddc/ddc_packet_io.h"
-#include "ddc/vcp_feature_codes.h"
 #include "ddc/ddc_vcp_version.h"
 #include "ddc/ddc_vcp.h"
-#include "ddc/ddc_output.h"
 
 #include "app_ddctool/app_getvcp.h"
 

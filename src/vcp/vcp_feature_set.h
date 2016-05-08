@@ -4,7 +4,7 @@
  *     Author: rock
  *
  * <copyright>
- * Copyright (C) 2014-2015 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2014-2016 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -24,8 +24,8 @@
  * </endcopyright>
  */
 
-#ifndef SRC_DDC_VCP_FEATURE_SET_H_
-#define SRC_DDC_VCP_FEATURE_SET_H_
+#ifndef SRC_VCP_VCP_FEATURE_SET_H_
+#define SRC_VCP_VCP_FEATURE_SET_H_
 
 #include <glib.h>
 #include <stdbool.h>
@@ -34,7 +34,7 @@
 
 #include "base/ddc_base.h"
 
-#include "ddc/vcp_feature_codes.h"
+#include "vcp/vcp_feature_codes.h"
 
 
 typedef void * VCP_Feature_Set;
@@ -65,4 +65,4 @@ create_feature_set_from_feature_set_ref(
    Version_Spec      vcp_version,
    bool              force);
 
-#endif /* SRC_DDC_VCP_FEATURE_SET_H_ */
+#endif /* SRC_VCP_VCP_FEATURE_SET_H_ */

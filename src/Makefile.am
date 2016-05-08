@@ -147,7 +147,7 @@ base/msg_control.c \
 base/status_code_mgt.c \
 base/util.c \
 base/ddc_base.c \
-ddc/vcp_feature_values.c \
+vcp/vcp_feature_values.c \
 ddc/ddc_command_codes.c \
 ddc/ddc_displays.c      \
 ddc/ddc_edid.c          \
@@ -160,9 +160,9 @@ ddc/ddc_strategy.c \
 ddc/ddc_vcp.c \
 ddc/parse_capabilities.c \
 ddc/try_stats.c \
-ddc/vcp_feature_codes.c \
+vcp/vcp_feature_codes.c \
 ddc/parsed_capabilities_feature.c \
-ddc/vcp_feature_set.c \
+vcp/vcp_feature_set.c \
 ddc/ddc_vcp_version.c \
 i2c/i2c_base_io.c \
 i2c/i2c_bus_core.c \

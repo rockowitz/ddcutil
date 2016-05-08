@@ -6,7 +6,7 @@
  * VCP Feature Code Table and the functions it references
  *
  * <copyright>
- * Copyright (C) 2014-2015 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2014-2016 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -39,7 +39,7 @@
 #include "base/ddc_base.h"
 #include "base/msg_control.h"
 
-#include "ddc/vcp_feature_codes.h"
+#include "vcp/vcp_feature_codes.h"
 
 
 // Direct writes to stdout,stderr:

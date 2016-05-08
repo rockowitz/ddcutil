@@ -35,9 +35,9 @@
 
 #include "base/msg_control.h"
 
-#include "ddc/vcp_feature_codes.h"
-
 #include "ddc/parsed_capabilities_feature.h"
+
+#include "../vcp/vcp_feature_codes.h"
 
 
 // Trace class for this file

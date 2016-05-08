@@ -1,10 +1,10 @@
-/* vcp_feature_groups.c
+/* vcp_feature_set.c
  *
  * Created on: Dec 29, 2015
  *     Author: rock
  *
  * <copyright>
- * Copyright (C) 2014-2015 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2014-2016 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -34,7 +34,7 @@
 
 #include "base/msg_control.h"
 
-#include "ddc/vcp_feature_set.h"
+#include "vcp/vcp_feature_set.h"
 
 
 #define VCP_FEATURE_SET_MARKER "FSET"

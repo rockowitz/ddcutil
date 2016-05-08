@@ -33,6 +33,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <vcp/vcp_feature_values.h>
 
 #include "util/debug_util.h"
 
@@ -46,8 +47,6 @@
 
 #include "ddc/ddc_multi_part_io.h"
 #include "ddc/ddc_packet_io.h"
-#include "ddc/vcp_feature_values.h"
-
 #include "usb/usb_core.h"
 
 #include "ddc/ddc_vcp.h"

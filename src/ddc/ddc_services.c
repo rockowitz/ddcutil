@@ -25,7 +25,7 @@
  */
 
 #include <stdio.h>
-
+#include <vcp/vcp_feature_codes.h>
 #include "base/base_services.h"
 #include "base/parms.h"
 
@@ -36,8 +36,6 @@
 
 #include "ddc/ddc_multi_part_io.h"
 #include "ddc/ddc_packet_io.h"
-#include "ddc/vcp_feature_codes.h"
-
 #include "ddc/ddc_services.h"
 
 

@@ -4,7 +4,7 @@
  *     Author: rock
  *
  * <copyright>
- * Copyright (C) 2014-2015 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2014-2016 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -24,8 +24,6 @@
  * </endcopyright>
  */
 
-#include "vcp_feature_values.h"
-
 #include <assert.h>
 #include <glib.h>
 #include <stdlib.h>
@@ -36,7 +34,8 @@
 
 #include "base/ddc_packets.h"
 
-#include "ddc/vcp_feature_values.h"
+#include "vcp/vcp_feature_values.h"
+#include "vcp/vcp_feature_values.h"
 
 
 void report_single_vcp_value(Single_Vcp_Value * valrec, int depth) {

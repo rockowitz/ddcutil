@@ -35,7 +35,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-
 #include "util/data_structures.h"
 
 #include "base/common.h"
@@ -47,6 +46,8 @@
 #include "base/parms.h"
 #include "base/util.h"
 #include "base/status_code_mgt.h"
+
+#include "vcp/vcp_feature_codes.h"
 
 #include "i2c/i2c_bus_core.h"
 #include "i2c/i2c_do_io.h"
@@ -61,7 +62,6 @@
 #include "ddc/ddc_vcp.h"
 #include "ddc/parse_capabilities.h"
 #include "ddc/try_stats.h"
-#include "ddc/vcp_feature_codes.h"
 #include "ddc/ddc_read_capabilities.h"
 #include "ddc/ddc_displays.h"
 #include "ddc/ddc_vcp_version.h"

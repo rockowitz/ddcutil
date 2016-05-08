@@ -27,10 +27,10 @@
 #ifndef SRC_USB_USB_CORE_H_
 #define SRC_USB_USB_CORE_H_
 
+#include "../vcp/vcp_feature_values.h"
 #include "util/coredefs.h"
 #include "base/displays.h"
 #include "base/ddc_packets.h"
-#include "ddc/vcp_feature_values.h"
 
 bool check_usb_monitor( char * device_name );
 

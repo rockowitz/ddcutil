@@ -34,14 +34,13 @@
 #include "base/status_code_mgt.h"
 #include "base/displays.h"
 
-#include "ddc/vcp_feature_values.h"
+#include "vcp/vcp_feature_values.h"
 
 
 // Dumpload_Data is the internal form data structure used to
 // hold data being loaded.  Whatever the external form: a
 // file or a string, it is converted to Dumpload_Data and then
 // written to the monitor.
-
 
 typedef
 struct {

@@ -45,10 +45,10 @@
 #include <adl/adl_shim.h>
 
 #include <ddc/ddc_packet_io.h>
-#include <ddc/vcp_feature_codes.h>
 #include <ddc/ddc_vcp.h>
 
 #include <test/ddc/ddc_vcp_tests.h>
+#include <vcp/vcp_feature_codes.h>
 
 // #define TIMEOUT 50000
 

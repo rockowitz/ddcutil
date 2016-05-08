@@ -4,7 +4,7 @@
  *     Author: rock
  *
  * <copyright>
- * Copyright (C) 2014-2015 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2014-2016 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -35,7 +35,7 @@
 #include "base/ddc_packets.h"
 #include "base/util.h"
 
-#include "ddc/vcp_feature_values.h"
+#include "vcp/vcp_feature_values.h"
 
 
 //

@@ -4,7 +4,7 @@
  *     Author: rock
  *
  * <copyright>
- * Copyright (C) 2014-2015 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2014-2016 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -24,15 +24,15 @@
  * </endcopyright>
  */
 
-#ifndef SRC_APP_DDCTOOL_APP_GETVCP_H_
-#define SRC_APP_DDCTOOL_APP_GETVCP_H_
+#ifndef APP_GETVCP_H_
+#define APP_GETVCP_H_
 
 #include <stdbool.h>
 
 #include "base/displays.h"
 #include "base/status_code_mgt.h"
 
-#include "ddc/vcp_feature_set.h"
+#include "vcp/vcp_feature_set.h"
 
 
 Global_Status_Code
@@ -74,4 +74,4 @@ app_read_changes(Display_Handle * dh);
 void
 app_read_changes_forever(Display_Handle * dh);
 
-#endif /* SRC_APP_DDCTOOL_APP_GETVCP_H_ */
+#endif /* APP_GETVCP_H_ */

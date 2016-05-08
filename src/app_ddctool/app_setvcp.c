@@ -4,7 +4,7 @@
  *     Author: rock
  *
  * <copyright>
- * Copyright (C) 2014-2015 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2014-2016 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -24,8 +24,6 @@
  * </endcopyright>
  */
 
-//#include <assert.h>
-
 #include <assert.h>
 #include <errno.h>
 #include <string.h>
@@ -33,11 +31,11 @@
 #include "base/ddc_errno.h"
 #include "base/msg_control.h"
 
+#include "vcp/vcp_feature_codes.h"
+
 #include "ddc/ddc_packet_io.h"
-// #include "ddc/ddc_services.h"
 #include "ddc/ddc_vcp.h"
 #include "ddc/ddc_vcp_version.h"
-#include "ddc/vcp_feature_codes.h"
 
 
 //
