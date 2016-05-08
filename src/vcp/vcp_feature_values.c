@@ -35,7 +35,6 @@
 #include "base/ddc_packets.h"
 
 #include "vcp/vcp_feature_values.h"
-#include "vcp/vcp_feature_values.h"
 
 
 void report_single_vcp_value(Single_Vcp_Value * valrec, int depth) {

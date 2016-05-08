@@ -4,7 +4,7 @@
  *     Author: rock
  *
  * <copyright>
- * Copyright (C) 2014-2015 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2016 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -24,13 +24,16 @@
  * </endcopyright>
  */
 
-#ifndef SRC_USB_USB_CORE_H_
-#define SRC_USB_USB_CORE_H_
+#ifndef USB_CORE_H_
+#define USB_CORE_H_
 
-#include "../vcp/vcp_feature_values.h"
 #include "util/coredefs.h"
+
 #include "base/displays.h"
 #include "base/ddc_packets.h"
+
+#include "vcp/vcp_feature_values.h"
+
 
 bool check_usb_monitor( char * device_name );
 
@@ -39,7 +42,6 @@ Display_Info_List usb_get_valid_displays();
 bool usb_is_valid_display_ref(Display_Ref * dref, bool emit_error_msg);
 
 void usb_report_active_display_by_display_ref(Display_Ref * dref, int depth);
-
 
 int usb_open_hiddev_device(char * hiddev_devname, bool emit_error_msg);
 int usb_close_device(int fd, char * device_fn, Failure_Action failure_action);
@@ -77,4 +79,4 @@ char * usb_get_capabilities_string_by_display_handle(Display_Handle * dh);
 char * get_hiddev_devnae_by_display_ref(Display_Ref * dref);
 #endif
 
-#endif /* SRC_USB_USB_CORE_H_ */
+#endif /* USB_CORE_H_ */
