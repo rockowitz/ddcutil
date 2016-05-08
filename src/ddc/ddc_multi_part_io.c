@@ -92,7 +92,7 @@ int ddc_get_max_multi_part_read_tries() {
 }
 
 
-/* Makes one attempt to read the entire capabilities string
+/* Makes one attempt to read the entire capabilities string or table feature value
 *
 * Arguments:
 *   dh             display handle for open i2c or adl device
