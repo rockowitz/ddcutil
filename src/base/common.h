@@ -35,19 +35,6 @@
 #include "base/msg_control.h"
 
 
-
-//
-// Output format control
-//
-
-#ifdef OLD
-typedef enum {OUTPUT_NORMAL, OUTPUT_PROG_VCP, OUTPUT_PROG_BUSINFO} Output_Format;
-
-char * output_format_name(Output_Format format);
-void   set_output_format(Output_Format format);
-Output_Format get_output_format();
-#endif
-
 //
 // Sleep and sleep statistics
 //

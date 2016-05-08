@@ -6,7 +6,7 @@
  * This file contains basic code used throughout the ddctool application.
  *
  * <copyright>
- * Copyright (C) 2014-2015 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2014-2016 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -38,32 +38,6 @@
 
 #include "base/common.h"
 
-
-//
-// Output format control
-//
-
-#ifdef OLD
-static Output_Format output_format = OUTPUT_NORMAL;
-
-char * output_format_name(Output_Format format)  {
-   char * result = "UNSET";
-   switch (format) {
-   case OUTPUT_NORMAL:        result = "OUTPUT_NORMAL";       break;
-   case OUTPUT_PROG_VCP:      result = "OUTPUT_PROG_VCP";      break;
-   case OUTPUT_PROG_BUSINFO:  result = "OUTPUT_PROG_BUSINFO";  break;
-   }
-   return result;
-}
-
-void set_output_format(Output_Format format) {
-   output_format = format;
-}
-
-Output_Format get_output_format() {
-   return output_format;
-}
-#endif
 
 //
 // Sleep and sleep statistics
