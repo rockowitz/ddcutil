@@ -6,7 +6,7 @@
  *     Author: rock
  *
  * <copyright>
- * Copyright (C) 2014-2015 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2014-2016 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -40,6 +40,8 @@
 #include "base/msg_control.h"
 
 
+// Global SDTOUT and STDERR redirection, for controlling message output in API
+
 FILE * FOUT = NULL;
 FILE * FERR = NULL;
 
@@ -59,55 +61,17 @@ void set_ferr(FILE * ferr) {
 }
 
 
-//
-// Message level control
-//
-
-#ifdef OLD
-static Msg_Level global_msg_level;
-
-Msg_Level get_global_msg_level() {
-   return global_msg_level;
-}
-
-void set_global_msg_level(Msg_Level newval) {
-   // printf("(%s) newval=%s  \n", __func__, msgLevelName(newval) );
-   global_msg_level = newval;
-   // old way:
-   // if (globalMsgLevel == VERBOSE) {
-   //    // primitive control for now
-   //    traceLevels = 0xFF;   // turn everything on
-   // }
-}
-
-char * msg_level_name(Msg_Level val) {
-   char * result = NULL;
-   switch (val) {
-      case TERSE:
-         result = "Terse";
-         break;
-      case NORMAL:
-         result = "Normal";
-         break;
-      case VERBOSE:
-         result = "Verbose";
-         break;
-      default:
-         PROGRAM_LOGIC_ERROR("Invalid Msg_Level value: %d", val);
-   }
-   return result;
-}
-#endif
-
+// Local definitions and functions shared by all message control categories
 
 #define SHOW_REPORTING_TITLE_START 0
 #define SHOW_REPORTING_MIN_TITLE_SIZE 28
 
 
-void print_simple_title_value(int    offset_start_to_title,
-                              char * title,
-                              int    offset_title_start_to_value,
-                              char * value)
+static void
+print_simple_title_value(int    offset_start_to_title,
+                         char * title,
+                         int    offset_title_start_to_value,
+                         char * value)
 {
    printf("%.*s%-*s%s\n",
           offset_start_to_title,"",
@@ -116,7 +80,9 @@ void print_simple_title_value(int    offset_start_to_title,
 }
 
 
-// New way
+//
+// Message level control for normal output
+//
 
 static Output_Level output_level;
 
@@ -127,11 +93,6 @@ Output_Level get_output_level() {
 void set_output_level(Output_Level newval) {
    // printf("(%s) newval=%s  \n", __func__, msgLevelName(newval) );
    output_level = newval;
-   // old way:
-   // if (output_level == VERBOSE) {
-   //    // primitive control for now
-   //    traceLevels = 0xFF;   // turn everything on
-   // }
 }
 
 char * output_level_name(Output_Level val) {
@@ -166,7 +127,6 @@ void show_output_level() {
                               SHOW_REPORTING_MIN_TITLE_SIZE,
                               output_level_name(output_level));
 }
-
 
 
 //
@@ -234,10 +194,63 @@ void show_trace_groups() {
                               "Trace groups active: ",
                               SHOW_REPORTING_MIN_TITLE_SIZE,
                               buf);
-
 }
 
 
+//
+// Control DDC data error reporting
+//
+
+// global variable
+bool show_recoverable_errors = true;
+
+
+bool is_reporting_ddc(Trace_Group traceGroup, const char * fn) {
+  bool result = (is_tracing(traceGroup,fn) || show_recoverable_errors);
+  return result;
+}
+
+
+void ddcmsg(Trace_Group  traceGroup,
+            const char * funcname,
+            const int    lineno,
+            const char * fn,
+            char *       format,
+            ...)
+{
+//  if ( is_reporting_ddc(traceGroup, fn) ) {   // wrong
+    if (show_recoverable_errors) {
+      char buffer[200];
+      va_list(args);
+      va_start(args, format);
+      vsnprintf(buffer, 200, format, args);
+      printf("(%s) %s\n", funcname, buffer);
+   }
+}
+
+
+void show_ddcmsg() {
+   // printf("Reporting DDC data errors: %s\n", bool_repr(show_recoverable_errors));
+   print_simple_title_value(SHOW_REPORTING_TITLE_START,
+                              "Reporting DDC data errors: ",
+                              SHOW_REPORTING_MIN_TITLE_SIZE,
+                              bool_repr(show_recoverable_errors));
+}
+
+
+void show_reporting() {
+   show_output_level();
+   show_ddcmsg();
+   show_trace_groups();
+   puts("");
+}
+
+
+//
+// Issue messages of various types
+//
+
+// n. used within macro LOADFUNC of adl_intf.c
 
 void severemsg(
         const char * funcname,
@@ -255,7 +268,6 @@ void severemsg(
       fputs(buf2, stderr);
       va_end(args);
 }
-
 
 
 void dbgmsg(
@@ -317,107 +329,3 @@ void trcmsg(
    }
 }
 
-
-
-
-
-
-//
-// Old debug message control - to be eliminated
-//
-
-#ifdef OLD
-// Adjust local_debug based on global_trace_level
-bool adjust_debug_level(bool local_debug, TraceControl global_trace_level) {
-   bool result = local_debug;      // if global_trace_level == RESPECT
-   if (global_trace_level == NEVER)
-      result = false;
-   else if (global_trace_level == ALWAYS)
-      result = true;
-   return result;
-}
-#endif
-
-//
-// DDC Data Errors
-//
-
-// global variable
-bool show_recoverable_errors = true;
-
-
-bool is_reporting_ddc(Trace_Group traceGroup, const char * fn) {
-  bool result = (is_tracing(traceGroup,fn) || show_recoverable_errors);
-  return result;
-}
-
-void ddcmsg(Trace_Group traceGroup, const char * funcname, const int lineno, const char * fn, char * format, ...) {
-//  if ( is_reporting_ddc(traceGroup, fn) ) {   // wrong
-    if (show_recoverable_errors) {
-      char buffer[200];
-      va_list(args);
-      va_start(args, format);
-      vsnprintf(buffer, 200, format, args);
-      printf("(%s) %s\n", funcname, buffer);
-   }
-}
-
-void show_ddcmsg() {
-   // printf("Reporting DDC data errors: %s\n", bool_repr(show_recoverable_errors));
-   print_simple_title_value(SHOW_REPORTING_TITLE_START,
-                              "Reporting DDC data errors: ",
-                              SHOW_REPORTING_MIN_TITLE_SIZE,
-                              bool_repr(show_recoverable_errors));
-
-}
-
-
-void show_reporting() {
-   show_output_level();
-   show_ddcmsg();
-   show_trace_groups();
-   puts("");
-}
-
-
-//
-// Dead code
-//
-
-
-
-// typedef enum {MsgNoOutput, MsgNormalOutput, MsgDebugOutput} MsgOutputType;
-
-// MsgOutputType getMsgOutputType(Byte msgGroup, MessageLevel severity) {
-//    return MsgDebugOutput;    // *** TEMP ***
-// }
-
-
-//
-//void errmsg(
-//        Byte         msgGroup,
-//        MessageLevel severity,
-//        const char * funcname,
-//        const int    lineno,
-//        const char * fn,
-//        char *       format,
-//        ...)
-//{
-//   MsgOutputType outputType = getMsgOutputType(msgGroup, severity);
-//   if (outputType != MsgNoOutput) {
-//      char buffer[200];
-//      char buf2[250];
-//      char * finalBuffer = buffer;
-//      va_list(args);
-//      va_start(args, format);
-//      vsnprintf(buffer, 200, format, args);
-//
-//      if (outputType != MsgNormalOutput) {
-//         snprintf(buf2, 250, "(%s) %s", funcname, buffer);
-//         finalBuffer = buf2;
-//      }
-//
-//      puts(finalBuffer);
-//   }
-//}
-//
