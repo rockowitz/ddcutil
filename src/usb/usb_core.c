@@ -27,7 +27,6 @@
 #include <assert.h>
 #include <dirent.h>
 #include <errno.h>
-#include <errno.h>
 #include <fcntl.h>
 #include <glib.h>
 #include <linux/hiddev.h>
@@ -36,22 +35,21 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <string.h>
 #include <sys/ioctl.h>
 #include <unistd.h>
 #include <wchar.h>
 
 #include "util/coredefs.h"
-#include "util/string_util.h"
-#include "util/report_util.h"
 #include "util/hiddev_util.h"
+#include "util/report_util.h"
+#include "util/string_util.h"
 
 #include "base/common.h"
 #include "base/ddc_errno.h"
 #include "base/ddc_packets.h"    // for Parsed_Nontable_Vcp_Response    - to sort out
+#include "base/displays.h"
 #include "base/execution_stats.h"
 #include "base/linux_errno.h"
-#include "base/displays.h"
 #include "base/msg_control.h"
 
 #include "ddc/ddc_vcp.h"     // circular include, for Single_Vcp_Value
@@ -684,7 +682,7 @@ int usb_close_device(int fd, char * device_fn, Failure_Action failure_action) {
  *
  *  The result is cached in global variable usb_monitors
  */
-GPtrArray * get_usb_monitor_list() {
+static GPtrArray * get_usb_monitor_list() {
    bool debug = false;
    DBGMSF(debug, "Starting...");
    Output_Level ol = get_output_level();
@@ -794,6 +792,14 @@ GPtrArray * get_usb_monitor_list() {
 }
 
 
+/* Returns a list of all valid USB HID compliant monitors,
+ * in a form expected by higher levels of ddctool, namely
+ * a collection of Display_Refs
+ *
+ * Arguments:    none
+ *
+ * Returns:      Display_Info_List of Display_Refs
+ */
 Display_Info_List usb_get_valid_displays() {
    bool debug = false;
    get_usb_monitor_list();
