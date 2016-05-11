@@ -1,8 +1,5 @@
 /* cmd_parser.h
  *
- * Created on: Jun 16, 2014
- *     Author: rock
- * *
  * <copyright>
  * Copyright (C) 2014-2016 Sanford Rockowitz <rockowitz@minsoft.com>
  *

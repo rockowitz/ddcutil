@@ -1,13 +1,10 @@
 /* ddc_packet_io.h
  *
- * Created on: Jun 13, 2014
- *     Author: rock
- *
  *  Functions for performing DDC packet IO, using either the I2C bus API
  *  or the ADL API, as appropriate.
  *
  * <copyright>
- * Copyright (C) 2014-2015 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2014-2016 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -32,10 +29,9 @@
 
 #include <stdbool.h>
 
-#include "base/common.h"
+#include "base/core.h"
 #include "base/ddc_packets.h"
 #include "base/displays.h"
-#include "base/util.h"
 
 
 Display_Handle* ddc_open_display(Display_Ref * dref,  Failure_Action failure_action);

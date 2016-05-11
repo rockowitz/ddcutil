@@ -1,10 +1,7 @@
-/* vcp_base.c
- *
- * Created on: Jan 7, 2016
- *     Author: rock
+/* ddc_base.c
  *
  * <copyright>
- * Copyright (C) 2014-2015 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2014-2016 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -34,15 +31,12 @@
 
 #include "util/report_util.h"
 
-#include "base/util.h"
-
+#include "base/core.h"
 
 
 // Standard format strings for reporting feature codes.
 const char* FMT_CODE_NAME_DETAIL_WO_NL = "VCP code 0x%02x (%-30s): %s";
 const char* FMT_CODE_NAME_DETAIL_W_NL  = "VCP code 0x%02x (%-30s): %s\n";
-
-
 
 
 //

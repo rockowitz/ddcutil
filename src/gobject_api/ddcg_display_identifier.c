@@ -1,10 +1,7 @@
 /* ddcg_display_identifier.c
  *
- * Created on: Jan 12, 2016
- *     Author: rock
- *
  * <copyright>
- * Copyright (C) 2014-2015 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2014-2016 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -28,7 +25,8 @@
 #include <stddef.h>
 
 #include "util/report_util.h"
-#include "base/msg_control.h"
+
+#include "base/core.h"
 
 #include "gobject_api/ddcg_gobjects.h"
 

@@ -1,13 +1,10 @@
 /* adl_friendly.h
  *
- * Created on: Jul 27, 2014
- *     Author: rock
- *
  * Type definitions, function declarations, etc that should be private to adl_intf.c,
  * but need to be visible to other ADL related files, particularly tests.
  *
  * <copyright>
- * Copyright (C) 2014-2015 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2014-2016 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -30,10 +27,10 @@
 #ifndef ADL_FRIENDLY_H_
 #define ADL_FRIENDLY_H_
 
-#include <base/util.h>
+#include <base/core.h>
 
-#include "adl/adl_impl/adl_sdk_includes.h"
 #include "adl/adl_impl/adl_intf.h"
+#include "adl/adl_impl/adl_sdk_includes.h"
 
 
 #define MAX_ACTIVE_DISPLAYS 16

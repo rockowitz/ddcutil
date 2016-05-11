@@ -1,10 +1,7 @@
 /* base_services.h
  *
- * Created on: Jan 22, 2016
- *     Author: rock
- *
  * <copyright>
- * Copyright (C) 2014-2015 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2014-2016 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -24,9 +21,9 @@
  * </endcopyright>
  */
 
-#ifndef SRC_BASE_BASE_SERVICES_H_
-#define SRC_BASE_BASE_SERVICES_H_
+#ifndef BASE_SERVICES_H_
+#define BASE_SERVICES_H_
 
 void init_base_services();
 
-#endif /* SRC_BASE_BASE_SERVICES_H_ */
+#endif /* BASE_SERVICES_H_ */

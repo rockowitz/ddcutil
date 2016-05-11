@@ -1,8 +1,5 @@
 /* app_getvcp.h
  *
- * Created on: Jan 1, 2016
- *     Author: rock
- *
  * <copyright>
  * Copyright (C) 2014-2016 Sanford Rockowitz <rockowitz@minsoft.com>
  *

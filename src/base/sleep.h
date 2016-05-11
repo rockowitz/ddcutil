@@ -1,12 +1,7 @@
-/* common.h
- *
- * Created on: Jun 5, 2014
- *     Author: rock
- *
- * Declarations used throughout the I2C DDC application.
+/* sleep.h
  *
  * <copyright>
- * Copyright (C) 2014-2015 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2014-2016 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -26,13 +21,8 @@
  * </endcopyright>
  */
 
-
-#ifndef DDC_COMMON_H_
-#define DDC_COMMON_H_
-
-#include "base/util.h"
-#include "base/displays.h"
-#include "base/msg_control.h"
+#ifndef BASE_SLEEP_H_
+#define BASE_SLEEP_H_
 
 
 //
@@ -52,21 +42,4 @@ void init_sleep_stats();
 Sleep_Stats * get_sleep_stats();
 void report_sleep_stats(int depth);
 
-
-//
-// Error handling
-//
-
-void terminate_execution_on_error(
-        Trace_Group  trace_group,
-        const char * funcname,
-        const int    lineno,
-        const char * fn,
-        char *       format,
-        ...);
-
-#define TERMINATE_EXECUTION_ON_ERROR(format, ...) \
-   terminate_execution_on_error(TRACE_GROUP, __func__, __LINE__, __FILE__, format, ##__VA_ARGS__)
-
-
-#endif /* DDC_COMMON_H_ */
+#endif /* BASE_SLEEP_H_ */

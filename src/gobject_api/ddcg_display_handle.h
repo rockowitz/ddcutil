@@ -1,8 +1,5 @@
 /* ddc_display_handle.h
  *
- * Created on: Jan 15, 2016
- *     Author: rock
- *
  * <copyright>
  * Copyright (C) 2014-2015 Sanford Rockowitz <rockowitz@minsoft.com>
  *

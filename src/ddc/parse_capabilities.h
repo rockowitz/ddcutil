@@ -1,12 +1,9 @@
 /* parse_capabilities.h
  *
- * Created on: Jul 16, 2014
- *     Author: rock
- *
  * Parse the capabilities string.
  *
  * <copyright>
- * Copyright (C) 2014-2015 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2014-2016 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -33,9 +30,9 @@
 
 #include "util/data_structures.h"
 
-#include "base/displays.h"
+#include "base/core.h"
 #include "base/ddc_base.h"
-#include "base/util.h"
+#include "base/displays.h"
 
 
 // TODO: replace GArray with GPtrArray for vcp_features

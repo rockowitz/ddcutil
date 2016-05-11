@@ -1,10 +1,7 @@
 /* ddc_capabilities_tests.c
  *
- * Created on: Jul 30, 2014
- *     Author: rock
- *
  * <copyright>
- * Copyright (C) 2014-2015 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2014-2016 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -26,15 +23,16 @@
 
 #include <unistd.h>
 
-#include <base/common.h>
-#include <base/ddc_packets.h>
-#include <base/parms.h>
-#include <util/string_util.h>
+#include "util/string_util.h"
 
-#include <test/i2c/i2c_io_old.h>
-#include <i2c/i2c_bus_core.h>
+#include "base/ddc_packets.h"
+#include "base/parms.h"
+#include "base/sleep.h"
 
-#include <test/ddc/ddc_capabilities_tests.h>
+#include "test/i2c/i2c_io_old.h"
+#include "i2c/i2c_bus_core.h"
+
+#include "test/ddc/ddc_capabilities_tests.h"
 
 
 //

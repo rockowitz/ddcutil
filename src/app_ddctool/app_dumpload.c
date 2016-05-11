@@ -1,8 +1,5 @@
 /* app_dumpload.c
  *
- * Created on: Jan 28, 2016
- *     Author: rock
- *
  * <copyright>
  * Copyright (C) 2014-2016 Sanford Rockowitz <rockowitz@minsoft.com>
  *
@@ -24,8 +21,6 @@
  * </endcopyright>
  */
 
-
-
 #include <assert.h>
 #include <errno.h>
 #include <fcntl.h>
@@ -42,11 +37,9 @@
 #include "util/glib_util.h"
 #include "util/report_util.h"
 
-#include "base/common.h"
+#include "base/core.h"
 #include "base/ddc_errno.h"
 #include "base/ddc_packets.h"
-#include "base/displays.h"
-#include "base/util.h"
 
 #include "vcp/vcp_feature_values.h"
 

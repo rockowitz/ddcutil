@@ -1,10 +1,7 @@
 /* ddc_capabilities_tests.h
  *
- * Created on: Jul 30, 2014
- *     Author: rock
- *
  * <copyright>
- * Copyright (C) 2014-2015 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2014-2016 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -27,7 +24,7 @@
 #ifndef DDC_CAPABILITIES_TESTS_H_
 #define DDC_CAPABILITIES_TESTS_H_
 
-#include <base/util.h>
+#include <base/core.h>
 
 // Exploratory programming and tests
 

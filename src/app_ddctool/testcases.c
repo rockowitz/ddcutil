@@ -1,12 +1,9 @@
 /* testcases.c
  *
- * Created on: Oct 27, 2015
- *     Author: rock
- *
  * Dispatch test cases
  *
  * <copyright>
- * Copyright (C) 2014-2015 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2014-2016 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -29,8 +26,7 @@
 #include <config.h>
 #include <stdio.h>
 
-#include "base/displays.h"
-#include "base/util.h"
+#include "base/core.h"
 
 #include "adl/adl_shim.h"
 #ifdef HAVE_ADL
@@ -39,7 +35,7 @@
 
 #include "test/testcase_table.h"
 
-#include "../app_ddctool/testcases.h"
+#include "app_ddctool/testcases.h"
 
 
 void show_test_cases() {

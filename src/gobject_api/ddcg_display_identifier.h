@@ -1,10 +1,7 @@
 /* ddcg_display_identifier.h
  *
- * Created on: Jan 12, 2016
- *     Author: rock
- *
  * <copyright>
- * Copyright (C) 2014-2015 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2014-2016 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -24,8 +21,8 @@
  * </endcopyright>
  */
 
-#ifndef SRC_LIBMAIN_DDCG_DISPLAY_IDENTIFIER_H_
-#define SRC_LIBMAIN_DDCG_DISPLAY_IDENTIFIER_H_
+#ifndef DDCG_DISPLAY_IDENTIFIER_H_
+#define DDCG_DISPLAY_IDENTIFIER_H_
 
 // #include <glib.h>
 #include <glib-object.h>
@@ -141,4 +138,4 @@ struct _DdcgBusnoDisplayIdentifier {
 #endif
 
 
-#endif /* SRC_LIBMAIN_DDCG_DISPLAY_IDENTIFIER_H_ */
+#endif /* DDCG_DISPLAY_IDENTIFIER_H_ */

@@ -1,10 +1,7 @@
 /* testcase_table.h
  *
- * Created on: Nov 29, 2015
- *     Author: rock
- *
  * <copyright>
- * Copyright (C) 2014-2015 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2014-2016 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -27,7 +24,7 @@
 #ifndef TESTCASE_TABLE_H_
 #define TESTCASE_TABLE_H_
 
-#include <base/displays.h>
+#include "base/displays.h"
 
 // type of display reference required/supported by the command
 typedef enum {DisplayRefNone, DisplayRefAny, DisplayRefBus, DisplayRefAdl} DisplayRefType;

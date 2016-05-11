@@ -1,8 +1,5 @@
 /* usb_core.h
  *
- * Created on: Apr 23, 2016
- *     Author: rock
- *
  * <copyright>
  * Copyright (C) 2016 Sanford Rockowitz <rockowitz@minsoft.com>
  *

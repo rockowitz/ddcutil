@@ -1,13 +1,10 @@
-/* adl_services.c
- *
- * Created on: Oct 30, 2015
- *     Author: rock
+/* adl_aux_intf.c
  *
  *  Functions in this file were originally part of adl_inf.c,
  *  but with code refactoring are now only called from tests.
  *
  * <copyright>
- * Copyright (C) 2014-2015 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2014-2016 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -32,15 +29,15 @@
 #include <stdio.h>
 #include <string.h>
 
-#include <base/common.h>
-#include <base/ddc_packets.h>
-#include <base/parms.h>
-#include <util/string_util.h>
-#include <base/util.h>
+#include "util/string_util.h"
 
-#include "adl/adl_shim.h"
+#include "base/ddc_packets.h"
+#include "base/parms.h"
+#include "base/sleep.h"
+
 #include "adl/adl_impl/adl_friendly.h"
 #include "adl/adl_impl/adl_intf.h"
+#include "adl/adl_shim.h"
 
 #include "adl/adl_impl/adl_aux_intf.h"
 

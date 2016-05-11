@@ -1,12 +1,9 @@
 /* adl_errors.c
  *
- * Created on: Oct 31, 2015
- *     Author: rock
- *
  *  Interpret ADL error codes
  *
  * <copyright>
- * Copyright (C) 2014-2015 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2014-2016 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -28,9 +25,9 @@
 
 #include <stdio.h>    // for NULL
 
-#include <base/status_code_mgt.h>
-
 #include <adl_defines.h>
+
+#include "base/status_code_mgt.h"
 
 
 #define EDENTRY(id,desc) {id, #id, desc}

@@ -1,12 +1,9 @@
 /* cmd_parser_goption.c
  *
- * Created on: Nov 24, 2015
- *     Author: rock
- *
  * Parse the command line using the glib goption functions.
  *
  * <copyright>
- * Copyright (C) 2014-2015 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2014-2016 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -29,7 +26,6 @@
 #include <config.h>
 
 #include <assert.h>
-#include <base/ddc_base.h>
 #include <config.h>
 #include <glib.h>
 #include <stdbool.h>
@@ -40,14 +36,15 @@
 #include "util/string_util.h"
 #include "util/report_util.h"
 
-#include "base/common.h"
+#include "base/core.h"
+#include <base/ddc_base.h>
 #include "base/displays.h"
-#include "base/msg_control.h"
 #include "base/parms.h"
-#include "base/util.h"
-#include "cmdline/parsed_cmd.h"
+
 #include "cmdline/cmd_parser_aux.h"
 #include "cmdline/cmd_parser.h"
+#include "cmdline/parsed_cmd.h"
+
 
 // Variables used by callback functions
 static char *       adlwork       = NULL;

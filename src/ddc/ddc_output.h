@@ -1,8 +1,5 @@
 /* ddc_output.h
  *
- * Created on: Nov 15, 2015
- *     Author: rock
- *
  * <copyright>
  * Copyright (C) 2014-2016 Sanford Rockowitz <rockowitz@minsoft.com>
  *
@@ -27,16 +24,17 @@
 #ifndef DDC_OUTPUT_H_
 #define DDC_OUTPUT_H_
 
-#include <glib.h>
+// #include <glib.h>
 #include <stdio.h>
 #include <time.h>
 
-#include "vcp/vcp_feature_codes.h"
-#include "vcp/vcp_feature_set.h"
-#include "../vcp/vcp_feature_values.h"
-#include "base/common.h"
+#include "base/core.h"
 #include "base/displays.h"
 #include "base/status_code_mgt.h"
+
+#include "vcp/vcp_feature_codes.h"
+#include "vcp/vcp_feature_set.h"
+#include "vcp/vcp_feature_values.h"
 
 
 #ifdef FUTURE

@@ -1,10 +1,7 @@
 /* i2c_bus_core.c
  *
- * Created on: Jun 13, 2014
- *     Author: rock
- *
  * <copyright>
- * Copyright (C) 2014-2015 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2014-2016 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -27,8 +24,6 @@
 #include <assert.h>
 #include <errno.h>
 #include <fcntl.h>
-#include <stdbool.h>
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/ioctl.h>
@@ -41,14 +36,9 @@
 #include "util/string_util.h"
 
 #include "base/ddc_errno.h"
-#include "base/common.h"
-#include "base/displays.h"
-#include "base/edid.h"
 #include "base/linux_errno.h"
-#include "base/msg_control.h"
 #include "base/parms.h"
-#include "base/status_code_mgt.h"
-#include "base/util.h"
+#include "base/sleep.h"
 
 #include "i2c/i2c_do_io.h"
 #include "i2c/wrap_i2c-dev.h"

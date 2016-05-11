@@ -1,9 +1,7 @@
-/* common.c
+/* sleep.c
  *
- * Created on: Jun 21, 2014
+ * Created on: May 10, 2016
  *     Author: rock
- *
- * This file contains basic code used throughout the ddctool application.
  *
  * <copyright>
  * Copyright (C) 2014-2016 Sanford Rockowitz <rockowitz@minsoft.com>
@@ -26,17 +24,14 @@
  * </endcopyright>
  */
 
-
-#include <stdarg.h>
+#include <stdbool.h>
 #include <stdio.h>
-#include <string.h>
 #include <unistd.h>
 
 #include "util/report_util.h"
 
-#include "base/msg_control.h"
-
-#include "base/common.h"
+#include "base/core.h"
+#include "base/sleep.h"
 
 
 //
@@ -99,35 +94,4 @@ void sleep_millis_with_trace(int milliseconds, const char * caller_location, con
 
    sleep_millis(milliseconds);
 }
-
-
-//
-// Error handling
-//
-
-void terminate_execution_on_error(
-        Trace_Group   trace_group,
-        const char * funcname,
-        const int    lineno,
-        const char * fn,
-        char *       format,
-        ...)
-{
-   char buffer[200];
-   char buf2[250];
-   char * finalBuffer = buffer;
-   va_list(args);
-   va_start(args, format);
-   vsnprintf(buffer, 200, format, args);
-
-   if ( is_tracing(trace_group, fn) ) {
-      snprintf(buf2, 250, "(%s) %s", funcname, buffer);
-      finalBuffer = buf2;
-   }
-
-   puts(finalBuffer);
-   puts("Terminating execution.");
-   exit(EXIT_FAILURE);
-}
-
 

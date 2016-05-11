@@ -1,10 +1,7 @@
 /* ddc_strategy.h
  *
- * Created on: Nov 21, 2015
- *     Author: rock
- *
  * <copyright>
- * Copyright (C) 2015 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2016 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *

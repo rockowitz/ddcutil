@@ -1,14 +1,12 @@
 /* ddc_edid.c
  *
- * Created on: Dec 31, 2015
- *
  * Functions to obtain EDID information for a display.
  *
  * These functions are in a separate source file to avoid circular
  * #include dependencies within the ddc source directory.
  *
  * <copyright>
- * Copyright (C) 2014-2015 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2014-2016 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -28,8 +26,8 @@
  * </endcopyright>
  */
 
+#include "base/core.h"
 #include "base/edid.h"
-#include "base/msg_control.h"
 
 #include "i2c/i2c_bus_core.h"
 #include "adl/adl_shim.h"

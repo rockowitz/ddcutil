@@ -1,10 +1,7 @@
 /* i2c_bus_core.h
  *
- * Created on: Jun 13, 2014
- *     Author: rock
- *
  * <copyright>
- * Copyright (C) 2014-2015 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2014-2016 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -32,13 +29,11 @@
 
 #include <util/data_structures.h>
 
-#include <base/execution_stats.h>
-#include <base/common.h>
+#include <base/core.h>
 #include <base/displays.h>
 #include <base/edid.h>
-#include <base/msg_control.h>
+#include <base/execution_stats.h>
 #include <base/status_code_mgt.h>
-#include <base/util.h>
 
 
 // Retrieve and inspect bus information

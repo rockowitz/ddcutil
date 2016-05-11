@@ -30,12 +30,11 @@
 #include <stdlib.h>     // wchar_t, needed by adl_structures.h
 #include <stdbool.h>
 
-#include "base/execution_stats.h"
-#include "base/common.h"
+#include "base/core.h"
 #include "base/displays.h"
 #include "base/edid.h"
+#include "base/execution_stats.h"
 #include "base/status_code_mgt.h"
-#include "base/util.h"
 
 
 // Initialization

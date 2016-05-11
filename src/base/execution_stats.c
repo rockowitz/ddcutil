@@ -35,7 +35,7 @@
 #include "util/glib_util.h"
 #include "util/report_util.h"
 
-#include "base/common.h"   // for sleep functions
+#include "base/sleep.h"
 #include "base/parms.h"
 #include "base/ddc_errno.h"
 

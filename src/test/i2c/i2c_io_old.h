@@ -1,7 +1,7 @@
 /* i2c_io_old.h
  *
  * <copyright>
- * Copyright (C) 2014-2015 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2014-2016 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -26,12 +26,9 @@
 
 #include <stdbool.h>
 
-// #include <base/ddc_base_defs.h>
+#include <base/core.h>
 #include <base/execution_stats.h>
-#include <base/common.h>
-#include <base/msg_control.h>
 #include <base/status_code_mgt.h>
-#include <base/util.h>
 
 #include <i2c/i2c_base_io.h>
 

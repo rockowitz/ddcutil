@@ -1,12 +1,9 @@
 /* displays.h
  *
- * Created on: Jul 21, 2014
- *     Author: rock
- *
  * Display specification
  *
  * <copyright>
- * Copyright (C) 2014-2015 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2014-2016 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -33,9 +30,9 @@
 
 #include "util/coredefs.h"
 
+#include "base/core.h"
 #include "base/ddc_base.h"
 #include "base/edid.h"
-#include "base/util.h"
 
 /*
 Monitors are specified in different ways in different contexts:

@@ -1,8 +1,5 @@
 /* vcp_feature_values.c
  *
- * Created on: Jan 26, 2016
- *     Author: rock
- *
  * <copyright>
  * Copyright (C) 2014-2016 Sanford Rockowitz <rockowitz@minsoft.com>
  *

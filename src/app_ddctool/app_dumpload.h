@@ -1,10 +1,7 @@
 /* app_dumpload.h
  *
- * Created on: Jan 28, 2016
- *     Author: rock
- *
  * <copyright>
- * Copyright (C) 2014-2015 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2014-2016 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -24,11 +21,11 @@
  * </endcopyright>
  */
 
-#ifndef SRC_APP_DDCTOOL_APP_DUMPLOAD_H_
-#define SRC_APP_DDCTOOL_APP_DUMPLOAD_H_
+#ifndef APP_DUMPLOAD_H_
+#define APP_DUMPLOAD_H_
 
-#include <base/status_code_mgt.h>
 #include <base/displays.h>
+#include <base/status_code_mgt.h>
 
 bool loadvcp_by_file(const char * fn);
 
@@ -38,4 +35,4 @@ Global_Status_Code dumpvcp_as_file(Display_Handle * dh, char * optional_filename
 bool dumpvcp_as_file_old(Display_Handle * dh, char * optional_filename);
 #endif
 
-#endif /* SRC_APP_DDCTOOL_APP_DUMPLOAD_H_ */
+#endif /* APP_DUMPLOAD_H_ */

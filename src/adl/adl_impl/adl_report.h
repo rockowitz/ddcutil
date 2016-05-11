@@ -1,12 +1,9 @@
 /* adl_report.h
  *
- * Created on: Jul 18, 2014
- *     Author: rock
- *
  * Report on data structures in ADL SDK
  *
  * <copyright>
- * Copyright (C) 2014-2015 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2014-2016 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *

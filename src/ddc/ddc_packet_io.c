@@ -1,8 +1,5 @@
 /* ddc_packet_io.c
  *
- * Created on: Jun 13, 2014
- *     Author: rock
- *
  *  Functions for performing DDC packet IO, using either the I2C bus API
  *  or the ADL API, as appropriate.
  *
@@ -40,12 +37,8 @@
 #include "util/string_util.h"
 
 #include "base/ddc_errno.h"
-#include "base/ddc_packets.h"
-#include "base/displays.h"
-#include "base/msg_control.h"
 #include "base/parms.h"
 #include "base/status_code_mgt.h"
-#include "base/util.h"
 
 #include "i2c/i2c_bus_core.h"
 #include "i2c/i2c_do_io.h"

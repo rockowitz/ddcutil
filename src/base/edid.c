@@ -1,8 +1,5 @@
 /* edid.c
  *
- * Created on: Oct 17, 2015
- *     Author: rock
- *
  * Functions for processing the EDID data structure, irrespective of how
  * the bytes of the EDID are obtained.
  *
@@ -10,7 +7,7 @@
  * structure of the EDID.
  *
  * <copyright>
- * Copyright (C) 2014-2015 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2014-2016 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -31,13 +28,11 @@
  */
 
 #include <assert.h>
-#include <stdbool.h>
 #include <stdio.h>
 #include <string.h>
 
 #include "util/report_util.h"
 #include "util/string_util.h"
-#include "base/util.h"       // used only by debugging code
 
 #include "base/edid.h"
 

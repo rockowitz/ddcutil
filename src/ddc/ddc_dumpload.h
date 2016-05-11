@@ -1,12 +1,9 @@
 /* ddc_dumpload.h
  *
- * Created on: Aug 16, 2014
- *     Author: rock
- *
  * Load/store VCP settings from/to file.
  *
  * <copyright>
- * Copyright (C) 2014-2015 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2014-2016 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -31,8 +28,8 @@
 
 #include <stdio.h>
 
-#include "base/status_code_mgt.h"
 #include "base/displays.h"
+#include "base/status_code_mgt.h"
 
 #include "vcp/vcp_feature_values.h"
 

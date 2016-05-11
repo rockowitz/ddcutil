@@ -1,8 +1,5 @@
 /* vcp_feature_code_data.c
  *
- * Created on: Nov 17, 2015
- *     Author: rock
- *
  * VCP Feature Code Table and the functions it references
  *
  * <copyright>
@@ -28,16 +25,11 @@
 
 #include <assert.h>
 #include <stdbool.h>
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
 #include "util/data_structures.h"
 #include "util/report_util.h"
-#include "util/string_util.h"
-
-#include "base/ddc_base.h"
-#include "base/msg_control.h"
 
 #include "vcp/vcp_feature_codes.h"
 

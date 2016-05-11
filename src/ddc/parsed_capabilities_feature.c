@@ -1,10 +1,7 @@
 /* parsed_capabilities_feature.c
  *
- * Created on: Nov 1, 2015
- *     Author: rock
- *
  * <copyright>
- * Copyright (C) 2014-2015 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2014-2016 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -33,11 +30,9 @@
 #include "util/data_structures.h"
 #include "util/debug_util.h"
 
-#include "base/msg_control.h"
+#include "vcp/vcp_feature_codes.h"
 
 #include "ddc/parsed_capabilities_feature.h"
-
-#include "../vcp/vcp_feature_codes.h"
 
 
 // Trace class for this file

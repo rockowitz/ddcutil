@@ -2,11 +2,8 @@
  *
  * ADL DDC functions extracted from ADL sample code
  *
- * Created on: Jul 27, 2014
- *     Author: rock
- *
  * <copyright>
- * Copyright (C) 2014-2015 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2014-2016 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -31,16 +28,15 @@
 #include <string.h>
 #include <stdio.h>
 
-#include <base/common.h>
-#include <base/msg_control.h>
-#include <util/string_util.h>
+#include "util/string_util.h"
+
+#include "base/core.h"
+#include "base/sleep.h"
 
 #include "adl/adl_impl/adl_sdk_includes.h"
 #include "adl/adl_impl/adl_intf.h"
-#include "adl/adl_impl/adl_friendly.h"
 
 #include "test/adl/adl_from_sample.h"
-
 
 
 #define MAX_NUM_DISPLAY_DEVICES 16

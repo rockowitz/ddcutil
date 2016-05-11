@@ -1,8 +1,5 @@
 /* ddc_errno.h
  *
- * Created on: Nov 8, 2015
- *     Author: rock
- *
  * Error codes internal to the application, which are
  * primarily ddctool related.
  *
@@ -27,11 +24,10 @@
  * </endcopyright>
  */
 
-#ifndef APP_ERRNO_H_
-#define APP_ERRNO_H_
+#ifndef DDC_ERRNO_H_
+#define DDC_ERRNO_H_
 
 #include "base/status_code_mgt.h"
-
 
 // Why not use #define:
 // - Eclipse global name change doesn't work well

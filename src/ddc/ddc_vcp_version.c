@@ -29,7 +29,7 @@
 
 #include <stdbool.h>
 
-#include "base/msg_control.h"
+#include "base/core.h"
 #include "base/status_code_mgt.h"
 
 #include "ddc/ddc_packet_io.h"

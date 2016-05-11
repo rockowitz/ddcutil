@@ -1,10 +1,7 @@
 /* ddcg_cont_response.c
  *
- * Created on: Jan 15, 2016
- *     Author: rock
- *
  * <copyright>
- * Copyright (C) 2014-2015 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2014-2016 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -25,7 +22,8 @@
  */
 
 #include "util/report_util.h"
-#include "base/msg_control.h"
+
+#include "base/core.h"
 
 #include "libmain/ddct_public.h"
 

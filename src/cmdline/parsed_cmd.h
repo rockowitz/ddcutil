@@ -1,10 +1,7 @@
 /* parsed_cmd.h
  *
- * Created on: Nov 24, 2015
- *     Author: rock
- *
  * <copyright>
- * Copyright (C) 2014-2015 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2014-2016 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -29,9 +26,9 @@
 
 #include <stdbool.h>
 
-#include "../base/ddc_base.h"
+#include "base/core.h"
+#include "base/ddc_base.h"
 #include "base/displays.h"
-#include "base/msg_control.h"
 #include "base/parms.h"
 
 

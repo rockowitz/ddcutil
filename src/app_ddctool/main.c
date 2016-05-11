@@ -1,11 +1,9 @@
 /* main.c
  *
- * Author: rock
- *
  * Program mainline
  *
  * <copyright>
- * Copyright (C) 2014-2015 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2014-2016 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -37,14 +35,13 @@
 
 #include "util/data_structures.h"
 
-#include "base/common.h"
+#include "base/core.h"
 #include "base/ddc_errno.h"
 #include "base/ddc_packets.h"
 #include "base/displays.h"
-#include "base/msg_control.h"
 #include "base/linux_errno.h"
 #include "base/parms.h"
-#include "base/util.h"
+#include "base/sleep.h"
 #include "base/status_code_mgt.h"
 
 #include "vcp/vcp_feature_codes.h"
@@ -52,31 +49,31 @@
 #include "i2c/i2c_bus_core.h"
 #include "i2c/i2c_do_io.h"
 
-#include "adl/adl_shim.h"
 #include "adl/adl_errors.h"
+#include "adl/adl_shim.h"
 
 #include "usb/usb_core.h"
 
+#include "ddc/ddc_displays.h"
 #include "ddc/ddc_multi_part_io.h"
+#include "ddc/ddc_output.h"
 #include "ddc/ddc_packet_io.h"
+#include "ddc/ddc_read_capabilities.h"
+#include "ddc/ddc_services.h"
+#include "ddc/ddc_vcp_version.h"
 #include "ddc/ddc_vcp.h"
 #include "ddc/parse_capabilities.h"
 #include "ddc/try_stats.h"
-#include "ddc/ddc_read_capabilities.h"
-#include "ddc/ddc_displays.h"
-#include "ddc/ddc_vcp_version.h"
-#include "ddc/ddc_services.h"
-#include "ddc/ddc_output.h"
 
 #include "cmdline/cmd_parser_aux.h"    // for parse_feature_id_or_subset(), should it be elsewhere?
-#include "cmdline/parsed_cmd.h"
 #include "cmdline/cmd_parser.h"
+#include "cmdline/parsed_cmd.h"
 
-#include "app_ddctool/app_setvcp.h"
+#include "app_ddctool/app_dumpload.h"
 #include "app_ddctool/app_getvcp.h"
+#include "app_ddctool/app_setvcp.h"
 #include "app_ddctool/query_sysenv.h"
 #include "app_ddctool/testcases.h"
-#include "app_ddctool/app_dumpload.h"
 
 
 //

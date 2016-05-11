@@ -1,9 +1,4 @@
-/* msg_control.h
- *
- * Message management
- *
- * Created on: Jun 15, 2014
- *     Author: rock
+/* core.h
  *
  * <copyright>
  * Copyright (C) 2014-2016 Sanford Rockowitz <rockowitz@minsoft.com>
@@ -26,16 +21,85 @@
  * </endcopyright>
  */
 
-#ifndef DEBUG_H_
-#define DEBUG_H_
+#ifndef BASE_CORE_H_
+#define BASE_CORE_H_
 
 #include <stdarg.h>
 #include <stdbool.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 #include "util/coredefs.h"
 
-#include "base/util.h"
+// from util
+
+//
+// General
+//
+
+// A way to return both a status code and a pointer.
+// Has the benefit of avoiding the "Something** parm" construct,
+// but requires a cast by the caller, so loses type checking.
+// How useful will this be?
+
+typedef struct {
+   int      rc;
+   void *   result;
+} RC_And_Result;
+
+
+// For defining boolean "exit if failure" function parameters, allowing
+// functions to be called with more comprehensible parameter values than
+// "true" and "false".
+typedef bool Failure_Action;
+static const Failure_Action EXIT_IF_FAILURE = true;
+static const Failure_Action RETURN_ERROR_IF_FAILURE = false;
+
+
+//
+// Timing functions
+//
+
+// Returns the current value of the realtime clock in nanoseconds:
+long cur_realtime_nanosec();
+// For debugging:
+void report_timestamp_history();
+
+
+//
+// Error handling
+//
+
+void report_ioctl_error(
+      int         errnum,
+      const char* funcname,
+      int         lineno,
+      char*       filename,
+      bool        fatal);
+
+void report_ioctl_error2(
+      int   errnum,
+      int   fh,
+      int   request,
+      void* data,
+      const char* funcname,   // const to avoid warning msg on references at compile time
+      int   lineno,
+      char* filename,
+      bool fatal);
+
+// reports a program logic error and terminates execution
+void program_logic_error(
+      const char * funcname,
+      const int    lineno,
+      const char * fn,
+      char *       format,
+      ...);
+
+#define PROGRAM_LOGIC_ERROR(format, ...) \
+   program_logic_error(__func__, __LINE__, __FILE__, format, ##__VA_ARGS__)
+
+
+
 
 
 void init_msg_control();
@@ -143,4 +207,32 @@ void trcmsg(
     do { if (trace_flag) trcmsg(0xff, __func__, __LINE__, __FILE__, format, ##__VA_ARGS__); }  while(0)
 // alt: trcmsg( ( (trace_flag) ? (0xff) : TRACE_GROUP ), __func__, __LINE__, __FILE__, format, ##__VA_ARGS__)
 
-#endif /* DEBUG_H_ */
+
+
+// common.h
+
+
+
+
+
+//
+// Error handling
+//
+
+void terminate_execution_on_error(
+        Trace_Group  trace_group,
+        const char * funcname,
+        const int    lineno,
+        const char * fn,
+        char *       format,
+        ...);
+
+#define TERMINATE_EXECUTION_ON_ERROR(format, ...) \
+   terminate_execution_on_error(TRACE_GROUP, __func__, __LINE__, __FILE__, format, ##__VA_ARGS__)
+
+
+// from common
+
+
+
+#endif /* BASE_CORE_H_ */

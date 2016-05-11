@@ -2,11 +2,8 @@
  *
  * Virtual Control Panel access
  *
- * Created on: Jun 10, 2014
- *      Author: rock
- *
  * <copyright>
- * Copyright (C) 2014-2015 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2014-2016 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -33,21 +30,20 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <vcp/vcp_feature_values.h>
 
 #include "util/debug_util.h"
 
 #include "base/ddc_errno.h"
 #include "base/ddc_packets.h"
-#include "base/msg_control.h"
-#include "base/util.h"
+
 #include "i2c/i2c_bus_core.h"
 
 #include "adl/adl_shim.h"
 
+#include "usb/usb_core.h"
+
 #include "ddc/ddc_multi_part_io.h"
 #include "ddc/ddc_packet_io.h"
-#include "usb/usb_core.h"
 
 #include "ddc/ddc_vcp.h"
 

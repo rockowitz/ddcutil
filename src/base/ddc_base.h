@@ -1,10 +1,7 @@
-/* vcp_base.h
- *
- * Created on: Jan 7, 2016
- *     Author: rock
+/* ddc_base.h
  *
  * <copyright>
- * Copyright (C) 2014-2015 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2014-2016 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -24,8 +21,8 @@
  * </endcopyright>
  */
 
-#ifndef SRC_BASE_DDC_BASE_H_
-#define SRC_BASE_DDC_BASE_H_
+#ifndef DDC_BASE_H_
+#define DDC_BASE_H_
 
 #include <stdbool.h>
 
@@ -102,4 +99,4 @@ typedef struct {
 void report_feature_set_ref(Feature_Set_Ref * fsref, int depth);
 
 
-#endif /* SRC_BASE_DDC_BASE_H_ */
+#endif /* DDC_BASE_H_ */

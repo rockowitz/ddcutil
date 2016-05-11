@@ -25,28 +25,28 @@
  */
 
 #include <assert.h>
-#include <stdlib.h>
-#include <stdio.h>
 #include <errno.h>
+#include <fcntl.h>
+#include <stdbool.h>
+#include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <sys/ioctl.h>
 #include <unistd.h>        // usleep
-#include <stdbool.h>
+
+#include "util/debug_util.h"
+#include "util/string_util.h"
+
+#include "base/core.h"
+#include "base/parms.h"
+#include "base/sleep.h"
+
 #include "i2c/wrap_i2c-dev.h"
-#include <fcntl.h>
 
-#include <util/debug_util.h>
-#include <util/string_util.h>
+#include "i2c/i2c_bus_core.h"
 
-#include <base/util.h>
-#include <base/msg_control.h>
-#include <base/parms.h>
-
-
-#include <test/i2c/i2c_io_old.h>
-#include <i2c/i2c_bus_core.h>
-
-#include <test/i2c/i2c_edid_tests.h>
+#include "test/i2c/i2c_io_old.h"
+#include "test/i2c/i2c_edid_tests.h"
 
 
 // Test reading EDID using essentially the code in libxcm.

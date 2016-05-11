@@ -1,8 +1,5 @@
 /* ddcg_display_ref.h
  *
- * Created on: Jan 13, 2016
- *     Author: rock
- *
  * <copyright>
  * Copyright (C) 2014-2015 Sanford Rockowitz <rockowitz@minsoft.com>
  *

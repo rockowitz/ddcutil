@@ -1,10 +1,7 @@
 /* testcase_table.c
  *
- * Created on: Nov 29, 2015
- *     Author: rock
- *
  * <copyright>
- * Copyright (C) 2014-2015 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2014-2016 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -26,15 +23,12 @@
 
 #include <config.h>
 
-#include "base/displays.h"
-
 #include "test/ddc/ddc_capabilities_tests.h"
 #include "test/ddc/ddc_vcp_tests.h"
 #include "test/i2c/i2c_edid_tests.h"
 #ifdef HAVE_ADL
 #include "test/adl/adl_tests.h"
 #endif
-
 
 #include "test/testcase_table.h"
 

@@ -1,10 +1,7 @@
 /* ddc_displays.h
  *
- * Created on: Dec 28, 2015
- *     Author: rock
- *
  * <copyright>
- * Copyright (C) 2014-2015 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2014-2016 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -24,10 +21,10 @@
  * </endcopyright>
  */
 
-#ifndef SRC_DDC_DDC_DISPLAYS_H_
-#define SRC_DDC_DDC_DISPLAYS_H_
+#ifndef DDC_DISPLAYS_H_
+#define DDC_DDC_DISPLAYS_H_
 
-#include "base/common.h"
+#include "base/core.h"
 #include "base/displays.h"
 
 Display_Info_List *
@@ -53,4 +50,4 @@ ddc_find_display_by_model_and_sn(
 Display_Ref* ddc_find_display_by_edid(
    const Byte *  pEdidBytes);
 
-#endif /* SRC_DDC_DDC_DISPLAYS_H_ */
+#endif /* DDC_DISPLAYS_H_ */

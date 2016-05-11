@@ -1,8 +1,5 @@
 /* ddc_output.c
  *
- * Created on: Nov 15, 2015
- *     Author: rock
- *
  * <copyright>
  * Copyright (C) 2014-2016 Sanford Rockowitz <rockowitz@minsoft.com>
  *
@@ -35,11 +32,8 @@
 
 #include "base/ddc_errno.h"
 #include "base/ddc_packets.h"
-#include "base/displays.h"
 #include "base/linux_errno.h"
-#include "base/msg_control.h"
 #include "base/parms.h"
-#include "base/status_code_mgt.h"
 
 #include "i2c/i2c_bus_core.h"
 #include "i2c/i2c_do_io.h"

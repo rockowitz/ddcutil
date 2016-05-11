@@ -1,8 +1,5 @@
 /* ddc_vcp_version.h
  *
- * Created on: Dec 31, 2015
- *     Author: rock
- *
  * <copyright>
  * Copyright (C) 2014-2015 Sanford Rockowitz <rockowitz@minsoft.com>
  *
@@ -24,8 +21,8 @@
  * </endcopyright>
  */
 
-#ifndef SRC_DDC_DDC_VCP_VERSION_H_
-#define SRC_DDC_DDC_VCP_VERSION_H_
+#ifndef DDC_VCP_VERSION_H_
+#define DDC_VCP_VERSION_H_
 
 #include "base/ddc_base.h"
 #include "base/displays.h"
@@ -35,4 +32,4 @@ Version_Spec get_vcp_version_by_display_handle(Display_Handle * dh);
 Version_Spec get_vcp_version_by_display_ref(   Display_Ref *    dref);
 
 
-#endif /* SRC_DDC_DDC_VCP_VERSION_H_ */
+#endif /* DDC_VCP_VERSION_H_ */

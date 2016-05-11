@@ -1,8 +1,5 @@
 /* app_getvcp.c
  *
- * Created on: Jan 1, 2016
- *     Author: rock
- *
  * <copyright>
  * Copyright (C) 2014-2016 Sanford Rockowitz <rockowitz@minsoft.com>
  *
@@ -32,11 +29,9 @@
 
 #include "util/string_util.h"
 
-#include "base/common.h"
+#include "base/core.h"
 #include "base/ddc_errno.h"
-#include "base/msg_control.h"
-#include "base/msg_control.h"
-#include "base/status_code_mgt.h"
+#include "base/sleep.h"
 
 #include "vcp/vcp_feature_codes.h"
 

@@ -1,10 +1,7 @@
 /* ddct_public.c
  *
- * Created on: Dec 1, 2015
- *     Author: rock
- *
  * <copyright>
- * Copyright (C) 2014-2015 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2015-2016 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -29,27 +26,28 @@
 #include "util/report_util.h"
 #include "util/string_util.h"
 
+#include "base/core.h"
 #include "base/ddc_errno.h"
-#include "base/displays.h"
 #include "base/ddc_packets.h"
+#include "base/displays.h"
 #include "base/parms.h"
-#include "base/msg_control.h"
 
 #include "vcp/vcp_feature_codes.h"
 
 #include "adl/adl_shim.h"
 
-#include "ddc/ddc_multi_part_io.h"
-#include "ddc/ddc_packet_io.h"
-#include "ddc/ddc_vcp.h"
-#include "ddc/ddc_read_capabilities.h"
 #include "ddc/ddc_displays.h"
+#include "ddc/ddc_dumpload.h"
 #include "ddc/ddc_edid.h"
-#include "ddc/ddc_vcp_version.h"
+#include "ddc/ddc_multi_part_io.h"
 #include "ddc/ddc_output.h"
+#include "ddc/ddc_packet_io.h"
+#include "ddc/ddc_read_capabilities.h"
 #include "ddc/ddc_services.h"
+#include "ddc/ddc_vcp_version.h"
+#include "ddc/ddc_vcp.h"
+
 #include "libmain/ddct_public.h"
-#include "../ddc/ddc_dumpload.h"
 
 
 #define WITH_DR(ddct_dref, action) \

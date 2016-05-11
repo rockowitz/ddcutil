@@ -1,10 +1,7 @@
 /* status_code_mgt.c
  *
- * Created on: Nov 3, 2015
- *     Author: rock
- *
  * <copyright>
- * Copyright (C) 2014-2015 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2014-2016 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -26,13 +23,11 @@
 
 #include <assert.h>
 #include <glib.h>
-#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 
 #include "base/ddc_errno.h"
 #include "base/linux_errno.h"
-#include "base/msg_control.h"
 
 #include "base/status_code_mgt.h"
 
@@ -176,8 +171,9 @@ static Status_Code_Info ok_status_code_info = {0, "OK", "success"};
 
 Status_Code_Info * find_global_status_code_info(Global_Status_Code rc) {
    bool debug = false;
+   // use don't use DBGMSG to avoid circular includes
    if (debug)
-      DBGMSG("Starting.  rc = %d", rc);
+      printf("(%s) Starting.  rc = %d", __func__, rc);
 
    Status_Code_Info * pinfo = NULL;
 
@@ -193,7 +189,7 @@ Status_Code_Info * find_global_status_code_info(Global_Status_Code rc) {
    pinfo = finder_func(rawrc);
    }
    if (debug) {
-      DBGMSG("Done.  Returning %p", pinfo);
+      printf("(%s) Done.  Returning %p", __func__, pinfo);
       if (pinfo)
          report_status_code_info(pinfo);
    }

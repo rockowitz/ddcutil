@@ -1,10 +1,7 @@
 /* ddc_displays.c
  *
- * Created on: Dec 28, 2015
- *     Author: rock
- *
  * <copyright>
- * Copyright (C) 2014-2015 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2014-2016 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -34,9 +31,7 @@
 
 #include "base/ddc_errno.h"
 #include "base/ddc_packets.h"
-#include "base/displays.h"
 #include "base/linux_errno.h"
-#include "base/msg_control.h"
 #include "base/parms.h"
 
 #include "vcp/vcp_feature_codes.h"

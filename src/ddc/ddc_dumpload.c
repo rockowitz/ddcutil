@@ -1,12 +1,9 @@
 /* dumpload.c
  *
- * Created on: Aug 16, 2014
- *     Author: rock
- *
  * Load/store VCP settings from/to file.
  *
  * <copyright>
- * Copyright (C) 2014-2015 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2014-2016 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -32,7 +29,6 @@
 #include <glib.h>
 #include <linux/limits.h>    // PATH_MAX, NAME_MAX
 #include <stdbool.h>
-#include <stdio.h>
 #include <string.h>
 #include <time.h>
 #include <unistd.h>
@@ -41,24 +37,19 @@
 #include "util/glib_util.h"
 #include "util/report_util.h"
 
+#include "base/core.h"
 #include "base/ddc_errno.h"
-#include "base/common.h"
-#include "base/displays.h"
 #include "base/ddc_packets.h"
-#include "base/msg_control.h"
-#include "base/util.h"
-
-#include "vcp/vcp_feature_values.h"
 
 #include "i2c/i2c_bus_core.h"
 
-#include "ddc/ddc_output.h"
-#include "ddc/ddc_edid.h"
-#include "ddc/ddc_packet_io.h"
-#include "ddc/ddc_vcp.h"
-#include "ddc/ddc_read_capabilities.h"
+#include "ddc/ddc_dumpload.h"
 #include "ddc/ddc_displays.h"
-#include "ddc_dumpload.h"
+#include "ddc/ddc_edid.h"
+#include "ddc/ddc_output.h"
+#include "ddc/ddc_packet_io.h"
+#include "ddc/ddc_read_capabilities.h"
+#include "ddc/ddc_vcp.h"
 
 
 // belongs with vspec code:

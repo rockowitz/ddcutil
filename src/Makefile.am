@@ -30,6 +30,7 @@ app_ddctool/*expand  \
 base/*expand         \
 cmdline/*expand      \
 ddc/*expand          \
+vcp/*expand          \
 i2c/*expand          \
 usb/*expand          \
 libmain/*expand      \
@@ -136,16 +137,15 @@ sample_clients/gomain.c
 # shared between ddctool and libddctool: 
 libcommon_la_SOURCES = \
 base/base_services.c \
-base/common.c \
+base/core.c \
 base/ddc_errno.c \
 base/ddc_packets.c \
 base/displays.c \
 base/edid.c \
 base/execution_stats.c \
 base/linux_errno.c \
-base/msg_control.c \
 base/status_code_mgt.c \
-base/util.c \
+base/sleep.c \
 base/ddc_base.c \
 vcp/vcp_feature_values.c \
 ddc/ddc_command_codes.c \

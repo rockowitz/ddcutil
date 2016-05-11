@@ -1,10 +1,7 @@
 /* ddc_read_capabilities.h
  *
- * Created on: Dec 28, 2015
- *     Author: rock
- *
  * <copyright>
- * Copyright (C) 2014-2015 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2014-2016 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -24,8 +21,8 @@
  * </endcopyright>
  */
 
-#ifndef SRC_DDC_DDC_READ_CAPABILITIES_H_
-#define SRC_DDC_DDC_READ_CAPABILITIES_H_
+#ifndef DDC_READ_CAPABILITIES_H_
+#define DDC_READ_CAPABILITIES_H_
 
 #ifdef NOT_USED
 #include "util/data_structures.h"
@@ -41,4 +38,4 @@ Global_Status_Code get_capabilities_buffer(Display_Handle * dh, Buffer** ppCapab
 #endif
 Global_Status_Code get_capabilities_string(Display_Handle * dh, char** pcaps);
 
-#endif /* SRC_DDC_DDC_READ_CAPABILITIES_H_ */
+#endif /* DDC_READ_CAPABILITIES_H_ */

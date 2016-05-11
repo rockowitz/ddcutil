@@ -1,13 +1,11 @@
 /* ddc_read_capabilities.c
  *
- * Created on: Dec 28, 2015
- *
  * Functions to obtain the capabilities string for a display.
  * These functions are in a separate source file to simplify
  * the acyclic graph of #includes within the ddc source directory.
  *
  * <copyright>
- * Copyright (C) 2014-2015 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2014-2016 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -36,8 +34,8 @@
 #include "util/data_structures.h"
 #include "util/report_util.h"
 
+#include "base/core.h"
 #include "base/ddc_errno.h"
-#include "base/msg_control.h"
 
 #include "usb/usb_core.h"
 

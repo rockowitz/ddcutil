@@ -1,12 +1,9 @@
 /* ddc_packets.h
  *
- * Created on: Jun 10, 2014
- *     Author: rock
- *
  * Functions for creating DDC packets and interpreting DDC response packets.
  *
  * <copyright>
- * Copyright (C) 2014-2015 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2014-2016 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -34,7 +31,7 @@
 #include "util/data_structures.h"
 
 #include "base/status_code_mgt.h"
-#include "base/util.h"
+#include "base/core.h"
 
 // was in common.h
 #define MAX_DDCCI_PACKET_SIZE   37    //  32 + 5;

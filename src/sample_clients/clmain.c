@@ -1,10 +1,7 @@
 /* clmain.c
  *
- * Created on: Dec 4, 2015
- *     Author: rock
- *
  * <copyright>
- * Copyright (C) 2014-2015 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2014-2016 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -27,10 +24,12 @@
 #include <assert.h>
 #include <stdio.h>
 
-#include "../ddc/ddc_dumpload.h"         // loadvcp.h should be elsewhere, should not be including in main
-#include "base/msg_control.h"
+#include "base/core.h"
+
+#include "ddc/ddc_dumpload.h"         // loadvcp.h should be elsewhere, should not be including in main
 
 #include "libmain/ddct_public.h"
+
 
 #define FUNCTION_ERRMSG(function_name,status_code) \
    printf("(%s) %s() returned %d (%s): %s\n",      \

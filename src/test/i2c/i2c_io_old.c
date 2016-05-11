@@ -12,7 +12,7 @@
  * identifiers are simply strings.
  *
  * <copyright>
- * Copyright (C) 2014-2015 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2014-2016 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -44,21 +44,19 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-#include <util/string_util.h>
+#include "util/string_util.h"
 
-// #include <base/ddc_base_defs.h>
-#include <base/ddc_errno.h>
-#include <base/execution_stats.h>
-#include <base/common.h>
-#include <base/ddc_packets.h>
-#include <base/msg_control.h>
-#include <base/parms.h>
-#include <base/util.h>
-#include <base/status_code_mgt.h>
-#include <base/linux_errno.h>
+#include "base/ddc_errno.h"
+#include "base/ddc_packets.h"
+#include "base/execution_stats.h"
+#include "base/linux_errno.h"
+#include "base/parms.h"
+#include "base/sleep.h"
+#include "base/status_code_mgt.h"
 
-#include <i2c/i2c_base_io.h>
-#include <test/i2c/i2c_io_old.h>
+#include "i2c/i2c_base_io.h"
+
+#include "test/i2c/i2c_io_old.h"
 
 
 

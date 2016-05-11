@@ -1,9 +1,7 @@
 /* ddc_edid.h
  *
- * Created on: Dec 31, 2015
- *
  * <copyright>
- * Copyright (C) 2014-2015 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2014-2016 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -23,12 +21,12 @@
  * </endcopyright>
  */
 
-#ifndef SRC_DDC_DDC_EDID_H_
-#define SRC_DDC_DDC_EDID_H_
+#ifndef DDC_EDID_H_
+#define DDC_EDID_H_
 
 #include "base/displays.h"
 
 Parsed_Edid* ddc_get_parsed_edid_by_display_handle(Display_Handle * dh);
 Parsed_Edid* ddc_get_parsed_edid_by_display_ref(Display_Ref * dref);
 
-#endif /* SRC_DDC_DDC_EDID_H_ */
+#endif /* DDC_EDID_H_ */

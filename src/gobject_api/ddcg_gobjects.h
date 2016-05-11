@@ -1,8 +1,5 @@
 /* ddcg_gobjects.h
  *
- * Created on: Jan 14, 2016
- *     Author: rock
- *
  * <copyright>
  * Copyright (C) 2016 Sanford Rockowitz <rockowitz@minsoft.com>
  *

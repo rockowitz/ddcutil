@@ -1,12 +1,9 @@
 /* ddc_packets.c
  *
- * Created on: Jun 10, 2014
- *     Author: rock
- *
  * Functions for creating DDC packets and interpreting DDC response packets.
  *
  * <copyright>
- * Copyright (C) 2014-2015 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2014-2016 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -27,20 +24,16 @@
  */
 
 #include <assert.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <stdio.h>
 
 #include "util/debug_util.h"
 #include "util/report_util.h"
 #include "util/string_util.h"
 
-#include "base/execution_stats.h"
 #include "base/ddc_errno.h"
-#include "base/common.h"
-#include "base/msg_control.h"
-// #include "base/status_code_mgt.h"
-#include "base/util.h"
+#include "base/execution_stats.h"
 
 #include "base/ddc_packets.h"
 

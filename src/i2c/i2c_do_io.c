@@ -28,10 +28,10 @@
 #include <stdio.h>
 
 #include "util/string_util.h"
-#include "base/execution_stats.h"
+
+#include "base/core.h"
 #include "base/ddc_base.h"
 #include "base/parms.h"
-#include "base/msg_control.h"
 
 #include "i2c/i2c_base_io.h"
 

@@ -1,7 +1,4 @@
-/* clmain.c
- *
- * Created on: Dec 4, 2015
- *     Author: rock
+/* gomain.c
  *
  * <copyright>
  * Copyright (C) 2014-2015 Sanford Rockowitz <rockowitz@minsoft.com>
@@ -27,7 +24,7 @@
 #include <assert.h>
 #include <stdio.h>
 
-#include <base/msg_control.h>
+#include <base/core.h>
 
 #include "gobject_api/ddcg_gobjects.h"
 

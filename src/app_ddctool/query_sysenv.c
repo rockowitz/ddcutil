@@ -1,10 +1,7 @@
 /* query_sysenv.c
  *
- * Created on: Dec 9, 2015
- *     Author: rock
- *
  * <copyright>
- * Copyright (C) 2014-2015 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2014-2016 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -38,21 +35,21 @@
 #include <fcntl.h>
 #include <glib.h>
 #include <grp.h>
+#include <limits.h>
+// #include <libosinfo-1.0/osinfo/osinfo.h>
+// #include <libudev.h>        // not yet used
+#include <linux/hiddev.h>
+#include <linux/limits.h>
 #include <pwd.h>
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/ioctl.h>
+#include <sys/stat.h>
 #include <sys/types.h>
 #include <time.h>
 #include <unistd.h>
-#include <linux/limits.h>
-#include <limits.h>
-#include <sys/stat.h>
-// #include <libosinfo-1.0/osinfo/osinfo.h>
-// #include <libudev.h>        // not yet used
-#include <linux/hiddev.h>
-#include <sys/ioctl.h>
 
 #include <X11/Xlib.h>
 #include <X11/Xatom.h>
@@ -67,15 +64,15 @@
 #include "util/subprocess_util.h"
 #include "util/x11_util.h"
 
-#include "base/msg_control.h"
-#include "base/linux_errno.h"
-#include "base/util.h"
+#include "base/core.h"
 #include "base/edid.h"
+#include "base/linux_errno.h"
 
 #include "i2c/i2c_bus_core.h"
+
 #include "adl/adl_shim.h"
 
-#include "../app_ddctool/query_sysenv.h"
+#include "app_ddctool/query_sysenv.h"
 
 
 

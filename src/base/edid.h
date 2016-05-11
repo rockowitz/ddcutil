@@ -1,13 +1,10 @@
 /* edid.h
  *
- * Created on: Oct 17, 2015
- *     Author: rock
- *
  * Functions for processing the EDID data structure, irrespective of how
  * the bytes of the EDID are obtained.
  *
  * <copyright>
- * Copyright (C) 2014-2015 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2014-2016 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -33,7 +30,7 @@
 #include <stdbool.h>
 
 #include "util/coredefs.h"
-#include "base/util.h"
+#include "base/core.h"
 
 
 // Field sizes for holding strings extracted from an EDID

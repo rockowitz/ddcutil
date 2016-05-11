@@ -1,8 +1,5 @@
 /* vcp_feature_set.c
  *
- * Created on: Dec 29, 2015
- *     Author: rock
- *
  * <copyright>
  * Copyright (C) 2014-2016 Sanford Rockowitz <rockowitz@minsoft.com>
  *
@@ -25,14 +22,13 @@
  */
 
 #include <assert.h>
-#include <glib.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
 #include "util/report_util.h"
 
-#include "base/msg_control.h"
+#include "base/core.h"
 
 #include "vcp/vcp_feature_set.h"
 

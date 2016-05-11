@@ -1,10 +1,7 @@
 /* ddc_errno.c
  *
- * Created on: Nov 8, 2015
- *     Author: rock
- *
  * <copyright>
- * Copyright (C) 2014-2015 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2014-2016 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -25,8 +22,6 @@
  */
 
 #include <stdio.h>
-
-#include "base/status_code_mgt.h"
 
 #include "base/ddc_errno.h"
 

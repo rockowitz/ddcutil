@@ -1,10 +1,7 @@
 /* adl_intf.h
  *
- * Created on: Jul 17, 2014
- *     Author: rock
- *
  * <copyright>
- * Copyright (C) 2014-2015 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2014-2016 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -28,15 +25,14 @@
 #define ADL_INTF_H_
 
 #include <config.h>
-#include <stdlib.h>     // wchar_t, needed by adl_structures.h
 #include <stdbool.h>
+#include <stdlib.h>     // wchar_t, needed by adl_structures.h
 
-#include "base/execution_stats.h"
-#include "base/common.h"
+#include "base/core.h"
 #include "base/displays.h"
 #include "base/edid.h"
+#include "base/execution_stats.h"
 #include "base/status_code_mgt.h"
-#include "base/util.h"
 
 #include "adl/adl_impl/adl_sdk_includes.h"
 

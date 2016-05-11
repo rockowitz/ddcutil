@@ -28,8 +28,8 @@
 #include <errno.h>
 #include <string.h>
 
+#include "base/core.h"
 #include "base/ddc_errno.h"
-#include "base/msg_control.h"
 
 #include "vcp/vcp_feature_codes.h"
 

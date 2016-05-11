@@ -1,10 +1,7 @@
-/* ddc_strategy.c
- *
- * Created on: Nov 21, 2015
- *     Author: rock
+/* ddc_strategy.h
  *
  * <copyright>
- * Copyright (C) 2015 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2015-2016 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -27,7 +24,6 @@
 #include <assert.h>
 
 #include "ddc/ddc_strategy.h"
-
 
 
 // keep in sync w DDC_IO_Mode

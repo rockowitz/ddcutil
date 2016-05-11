@@ -1,8 +1,5 @@
 /* vcp_feature_set.h
  *
- * Created on: Dec 29, 2015
- *     Author: rock
- *
  * <copyright>
  * Copyright (C) 2014-2016 Sanford Rockowitz <rockowitz@minsoft.com>
  *
@@ -24,8 +21,8 @@
  * </endcopyright>
  */
 
-#ifndef SRC_VCP_VCP_FEATURE_SET_H_
-#define SRC_VCP_VCP_FEATURE_SET_H_
+#ifndef VCP_FEATURE_SET_H_
+#define VCP_FEATURE_SET_H_
 
 #include <glib.h>
 #include <stdbool.h>
@@ -65,4 +62,4 @@ create_feature_set_from_feature_set_ref(
    Version_Spec      vcp_version,
    bool              force);
 
-#endif /* SRC_VCP_VCP_FEATURE_SET_H_ */
+#endif /* VCP_FEATURE_SET_H_ */

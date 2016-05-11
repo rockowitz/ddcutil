@@ -1,10 +1,7 @@
 /* linux_errno.c
  *
- * Created on: Nov 4, 2015
- *     Author: rock
- *
  * <copyright>
- * Copyright (C) 2014-2015 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2014-2016 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -29,9 +26,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include <base/status_code_mgt.h>
-#include <base/linux_errno.h>
-
+#include "base/linux_errno.h"
 
 
 // To be considered:  using libexplain.

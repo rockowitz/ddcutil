@@ -1,13 +1,10 @@
 /* cmd_parser_aux.c
  *
- * Created on: Nov 24, 2015
- *     Author: rock
- *
  * Functions and strings that are independent of the parser
  * package used.
  *
  * <copyright>
- * Copyright (C) 2014-2015 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2014-2016 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -36,10 +33,8 @@
 
 #include "util/string_util.h"
 
-// #include "base/common.h"
 #include "base/parms.h"
 
-#include "cmdline/parsed_cmd.h"
 #include "cmdline/cmd_parser_aux.h"
 
 //

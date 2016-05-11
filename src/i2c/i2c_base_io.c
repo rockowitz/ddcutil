@@ -1,13 +1,10 @@
 /* i2c_base_io.c
  *
- * Created on: Nov 17, 2015
- *     Author: rock
- *
  *  Basic functions for writing to and reading from the I2C bus,
  *  using alternative mechanisms.
  *
  * <copyright>
- * Copyright (C) 2014-2015 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2014-2016 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -38,11 +35,10 @@
 
 #include "util/string_util.h"
 
+#include "base/core.h"
 #include "base/ddc_base.h"
 #include "base/ddc_errno.h"
 #include "base/execution_stats.h"
-#include "base/common.h"
-#include "base/status_code_mgt.h"
 #include "base/linux_errno.h"
 
 #include "i2c/wrap_i2c-dev.h"

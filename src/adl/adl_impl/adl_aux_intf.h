@@ -1,13 +1,10 @@
-/* adl_services.h
- *
- * Created on: Oct 30, 2015
- *     Author: rock
+/* adl_aux_intf.h
  *
  * Functions in this file were originally part of adl_inf.c,
  * but with code refactoring are now only called from tests.
  *
  * <copyright>
- * Copyright (C) 2014-2015 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2014-2016 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -30,8 +27,8 @@
 #ifndef ADL_AUX_INTF_H_
 #define ADL_AUX_INTF_H_
 
+#include <base/core.h>
 #include <base/status_code_mgt.h>
-#include <base/util.h>
 
 
 Base_Status_ADL adl_ddc_write_only_with_retry(

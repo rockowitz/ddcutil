@@ -1,10 +1,7 @@
 /* usb_core.c
  *
- * Created on: Apr 23, 2016
- *     Author: rock
- *
  * <copyright>
- * Copyright (C) 2014-2015 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2014-2016 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -39,20 +36,14 @@
 #include <unistd.h>
 #include <wchar.h>
 
-#include "util/coredefs.h"
 #include "util/hiddev_util.h"
 #include "util/report_util.h"
 #include "util/string_util.h"
 
-#include "base/common.h"
+#include "base/core.h"
 #include "base/ddc_errno.h"
-#include "base/ddc_packets.h"    // for Parsed_Nontable_Vcp_Response    - to sort out
-#include "base/displays.h"
 #include "base/execution_stats.h"
 #include "base/linux_errno.h"
-#include "base/msg_control.h"
-
-#include "vcp/vcp_feature_values.h"
 
 #include "usb/usb_core.h"
 

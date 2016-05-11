@@ -1,10 +1,7 @@
 /* wrap_i2c-dev.h
  *
- * Created on: Feb 17, 2016
- *     Author: rock
- *
  * <copyright>
- * Copyright (C) 2014-2015 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2014-2016 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -24,8 +21,8 @@
  * </endcopyright>
  */
 
-#ifndef SRC_I2C_WRAP_I2C_DEV_H_
-#define SRC_I2C_WRAP_I2C_DEV_H_
+#ifndef WRAP_I2C_DEV_H_
+#define WRAP_I2C_DEV_H_
 
 /* Including file i2c-dev.h presents multiple issues.
  * This header file addresses those issues in one place.
@@ -60,4 +57,4 @@
 #endif
 
 
-#endif /* SRC_I2C_WRAP_I2C_DEV_H_ */
+#endif /* WRAP_I2C_DEV_H_ */

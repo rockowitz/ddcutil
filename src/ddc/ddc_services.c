@@ -1,8 +1,5 @@
 /* ddc_services.c
  *
- * Created on: Jan 2, 2016
- *     Author: rock
- *
  * <copyright>
  * Copyright (C) 2014-2016 Sanford Rockowitz <rockowitz@minsoft.com>
  *
@@ -25,9 +22,11 @@
  */
 
 #include <stdio.h>
-#include <vcp/vcp_feature_codes.h>
+
 #include "base/base_services.h"
 #include "base/parms.h"
+
+#include "vcp/vcp_feature_codes.h"
 
 #include "i2c/i2c_do_io.h"
 
@@ -36,6 +35,7 @@
 
 #include "ddc/ddc_multi_part_io.h"
 #include "ddc/ddc_packet_io.h"
+
 #include "ddc/ddc_services.h"
 
 

@@ -1,10 +1,7 @@
 /* ddcgt_gocontext.h
  *
- * Created on: Jan 13, 2016
- *     Author: rock
- *
  * <copyright>
- * Copyright (C) 2014-2015 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2014-2016 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -29,8 +26,6 @@
 
 #include <stdbool.h>
 
-
-// #include <glib.h>
 #include <glib-object.h>
 
 #include "ddcg_display_ref.h"

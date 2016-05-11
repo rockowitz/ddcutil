@@ -1,10 +1,7 @@
 /* ddc_vcp_tests.h
  *
- * Created on: Jul 28, 2014
- *     Author: rock
- *
  * <copyright>
- * Copyright (C) 2014-2015 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2014-2016 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -27,7 +24,7 @@
 #ifndef DDC_VCP_TESTS_H_
 #define DDC_VCP_TESTS_H_
 
-#include <test/ddc/ddc_vcp_tests.h>
+#include "test/ddc/ddc_vcp_tests.h"
 
 void get_luminosity_sample_code(int busno);
 void demo_nvidia_bug_sample_code(int busno);

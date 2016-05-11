@@ -1,8 +1,5 @@
 /* ddcg_display_ref.c
  *
- * Created on: Jan 13, 2016
- *     Author: rock
- *
  * <copyright>
  * Copyright (C) 2014-2015 Sanford Rockowitz <rockowitz@minsoft.com>
  *
@@ -29,7 +26,7 @@
 #include <string.h>
 
 #include "util/report_util.h"
-#include "base/msg_control.h"
+#include "base/core.h"
 #include "libmain/ddct_public.h"
 
 #include "gobject_api/ddcg_gobjects.h"

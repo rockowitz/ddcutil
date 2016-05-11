@@ -1,8 +1,5 @@
 /* parsed_capabilities_feature.h
  *
- * Created on: Nov 1, 2015
- *     Author: rock
- *
  * <copyright>
  * Copyright (C) 2015-2016 Sanford Rockowitz <rockowitz@minsoft.com>
  *
@@ -29,8 +26,8 @@
 
 #include "util/data_structures.h"
 
+#include "base/core.h"
 #include "base/ddc_base.h"
-#include "base/util.h"
 
 
 // Used when parsing capabilities string

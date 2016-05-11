@@ -2,12 +2,8 @@
  *
  * Maintains list of all detected monitors.
  *
- *
- * Created on: Jul 21, 2014
- *     Author: rock
- *
  * <copyright>
- * Copyright (C) 2014-2015 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2014-2016 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -35,8 +31,6 @@
 
 #include "util/string_util.h"
 #include "util/report_util.h"
-
-#include "base/edid.h"
 
 #include "base/displays.h"
 

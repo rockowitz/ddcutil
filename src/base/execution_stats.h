@@ -1,8 +1,5 @@
 /* execution_stats.h
  *
- * Created on: Oct 31, 2015
- *     Author: rock
- *
  * For recording the count and elapsed time of system calls.
  *
  * <copyright>
@@ -26,8 +23,8 @@
  * </endcopyright>
  */
 
-#ifndef CALL_STATS_H_
-#define CALL_STATS_H_
+#ifndef EXECUTION_STATS_H_
+#define EXECUTION_STATS_H_
 
 #include <stdbool.h>
 
@@ -91,7 +88,6 @@ void report_sleep_strategy_stats(int depth);
 
 
 
-
 #ifdef OLD
 #define RECORD_TIMING_STATS(pstats, event_type, cmd_to_time)  { \
    int  _errsv = 0; \
@@ -127,4 +123,4 @@ void report_sleep_strategy_stats(int depth);
 }
 #endif
 
-#endif /* CALL_STATS_H_ */
+#endif /* EXECUTION_STATS_H_ */

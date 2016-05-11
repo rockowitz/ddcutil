@@ -1,8 +1,5 @@
 /* ddc_services.h
  *
- * Created on: Jan 2, 2016
- *     Author: rock
- *
  * <copyright>
  * Copyright (C) 2014-2016 Sanford Rockowitz <rockowitz@minsoft.com>
  *
@@ -24,8 +21,8 @@
  * </endcopyright>
  */
 
-#ifndef SRC_DDC_DDC_SERVICES_H_
-#define SRC_DDC_DDC_SERVICES_H_
+#ifndef DDC_SERVICES_H_
+#define DDC_SERVICES_H_
 
 #include <stdio.h>
 
@@ -33,4 +30,4 @@ void init_ddc_services();
 
 void ddc_show_max_tries(FILE * fh);
 
-#endif /* SRC_DDC_DDC_SERVICES_H_ */
+#endif /* DDC_SERVICES_H_ */
