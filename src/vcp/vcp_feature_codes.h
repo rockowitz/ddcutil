@@ -1,8 +1,5 @@
 /* vcp_feature_codes.h
  *
- * Created on: Nov 17, 2015
- *     Author: rock
- *
  * <copyright>
  * Copyright (C) 2014-2016 Sanford Rockowitz <rockowitz@minsoft.com>
  *
