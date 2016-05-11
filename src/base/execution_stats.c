@@ -1,12 +1,9 @@
 /* execution_stats.c
  *
- * Created on: Oct 31, 2015
- *     Author: rock
- *
  * For recording and reporting the count and elapsed time of system calls.
  *
  * <copyright>
- * Copyright (C) 2014-2015 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2014-2016 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -42,9 +39,6 @@
 #include "base/execution_stats.h"
 
 
-// Forward References
-
-
 //
 // Typedefs
 //
@@ -74,10 +68,7 @@ typedef struct {
 static IO_Event_Type        last_io_event;
 static long                 last_io_timestamp = -1;
 static long                 program_start_timestamp;
-// static int               total_io_event_ct = 0;  // unused
-// static int               total_io_error_ct = 0;
 static Status_Code_Counts * primary_error_code_counts;
-// static Status_Code_Counts * secondary_status_code_counts;
 
 
 //
@@ -176,7 +167,6 @@ void log_io_call(
 
 
 void report_io_call_stats(int depth) {
-   // report_call_stats_old(depth);    // for comparing
    int d1 = depth+1;
    rpt_title("Call Stats:", depth);
    int total_ct = 0;
@@ -210,36 +200,6 @@ void report_io_call_stats(int depth) {
 }
 
 
-#ifdef OLD
-void report_one_call_stat(Single_Call_Stat * pstats, int depth) {
-   if (pstats) {
-
-      rpt_vstring(depth, "Total %-10s calls:                        %7d",
-                  pstats->stat_name, pstats->total_call_ct);
-      rpt_vstring(depth, "Total %-10s call milliseconds (nanosec):  %7ld  (%10ld)",
-                  pstats->stat_name,
-                  pstats->total_call_nanosecs / (1000*1000),
-                  pstats->total_call_nanosecs);
-   }
-
-}
-
-
-void report_call_stats_old(int depth) {
-
-   int d1 = depth+1;
-   if (ddc_call_stats.stats_active) {
-      rpt_title("Call Stats:", depth);
-      report_one_call_stat(ddc_call_stats.pread_write_stats, d1);
-      report_one_call_stat(ddc_call_stats.popen_stats,       d1);
-      report_one_call_stat(ddc_call_stats.pclose_stats,      d1);
-      report_one_call_stat(ddc_call_stats.pother_stats,      d1);
-   }
-}
-#endif
-
-
-
 //
 // Status Code Occurrence Tracking
 //
@@ -249,7 +209,6 @@ void report_call_stats_old(int depth) {
 // if a called function has already set.
 //
 // BUT: status codes are not noted until they are modulated to Global_Status_Code
-
 
 Status_Code_Counts * new_status_code_counts(char * name) {
    Status_Code_Counts * pcounts = calloc(1,sizeof(Status_Code_Counts));
@@ -291,13 +250,6 @@ int log_status_code(int rc, const char * caller_name) {
    return rc;
 }
 
-#ifdef CURRENTLY_UNUSED
-int log_secondary_status_code(int rc, const char * caller_name) {
-   log_any_status_code(secondary_status_code_counts, rc, caller_name);
-   return rc;
-}
-#endif
-
 
 // Used by qsort in show_specific_status_counts()
 int compare( const void* a, const void* b)
@@ -330,9 +282,6 @@ void show_specific_status_counts(Status_Code_Counts * pcounts) {
    if (keyct > 0) {
       qsort(keysp, keyct, sizeof(gpointer), compare);    // sort keys
       fprintf(stdout, "Count   Status Code                          Description\n");
-#ifdef OLD
-      Status_Code_Info default_description;
-#endif
       int ndx;
       for (ndx=0; ndx<keyct; ndx++) {
          gpointer keyp = keysp[ndx];
@@ -349,33 +298,6 @@ void show_specific_status_counts(Status_Code_Counts * pcounts) {
             aux_msg = " (derived)";
          else if (ddcrc_is_not_error(key))
             aux_msg = " (not an error)";
-
-
-#ifdef OLD
-         Retcode_Range_Id rc_range = get_modulation(key);
-         Retcode_Description_Finder desc_finder = retcode_range_table[rc_range].desc_finder;
-         Status_Code_Info * desc = NULL;
-         if (desc_finder) {
-            int search_key = key;
-            bool value_is_modulated = retcode_range_table[rc_range].finder_arg_is_modulated;
-            if (!value_is_modulated) {
-               search_key = demodulate_rc(key, rc_range);
-            }
-            desc = desc_finder(search_key);
-            if (!desc) {
-               desc = &default_description;
-               desc->code = key;
-               desc->name = "";
-               desc->description = "unrecognized status code";
-            }
-         }
-         else {     // no finder
-            desc = &default_description;
-            desc->code = key;
-            desc->name = "";
-            desc->description = "(status code not in interpretable range)";
-         }
-#endif
          fprintf(stdout, "%5d   %-28s (%5d) %s %s\n",
               ct,
               desc->name,
@@ -577,25 +499,12 @@ void call_tuned_sleep(MCCS_IO_Mode io_mode, Sleep_Event_Type event_type) {
 void report_sleep_strategy_stats(int depth) {
    // TODO: implement depth
    printf("Sleep Strategy Stats:\n");
-
    printf("   Total IO events:     %5d\n", total_io_event_count());
    printf("   IO error count:      %5d\n", get_true_io_error_count(primary_error_code_counts));
    printf("   Total sleep events:  %5d\n", total_sleep_event_ct);
-
-
-   int id;
-#ifdef OLD
-   puts("");
-   // printf("   IO Events by type:\n");
-   printf("   IO Event type       Count\n");
-   for (id=0; id < IO_EVENT_TYPE_CT; id++) {
-      printf("   %-20s  %3d\n", io_event_stats[id].name, io_event_stats[id].call_count);
-   }
-#endif
-
    puts("");
    printf("   Sleep Event type     Count\n");
-   for (id=0; id < SLEEP_EVENT_ID_CT; id++) {
+   for (int id=0; id < SLEEP_EVENT_ID_CT; id++) {
       printf("   %-20s  %4d\n", sleep_event_names[id], sleep_event_cts_by_id[id]);
    }
 }
@@ -610,7 +519,4 @@ void init_execution_stats() {
    // secondary_status_code_counts = new_status_code_counts("Derived and Other Errors");
    program_start_timestamp = cur_realtime_nanosec();
 }
-
-
-
 

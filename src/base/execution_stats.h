@@ -3,7 +3,7 @@
  * For recording the count and elapsed time of system calls.
  *
  * <copyright>
- * Copyright (C) 2014-2015 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2014-2016 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -30,6 +30,7 @@
 
 #include "base/displays.h"
 #include "base/status_code_mgt.h"
+
 
 // Initialization
 
@@ -85,42 +86,5 @@ void call_tuned_sleep_dh(Display_Handle* dh, Sleep_Event_Type event_type);
 void call_tuned_sleep(MCCS_IO_Mode io_mode, Sleep_Event_Type event_type);
 
 void report_sleep_strategy_stats(int depth);
-
-
-
-#ifdef OLD
-#define RECORD_TIMING_STATS(pstats, event_type, cmd_to_time)  { \
-   int  _errsv = 0; \
-   long _start_time = 0; \
-   if (pstats) {\
-     _start_time = cur_realtime_nanosec(); \
-   } \
-   cmd_to_time; \
-   if (pstats) { \
-      _errsv = errno; \
-      pstats->total_call_nanosecs += (cur_realtime_nanosec()-_start_time); \
-      pstats->total_call_ct++; \
-      errno = _errsv; \
-   } \
-   note_io_event(event_type,__func__); \
-}
-#endif
-
-
-#ifdef OLD
-// Similar to RECORD_TIMING_STATS, but do not save and preserve errno
-#define RECORD_TIMING_STATS_NOERRNO(pstats, event_type, cmd_to_time)  { \
-   long _start_time = 0; \
-   if (pstats) {\
-     _start_time = cur_realtime_nanosec(); \
-   } \
-   cmd_to_time; \
-   if (pstats) { \
-      pstats->total_call_nanosecs += (cur_realtime_nanosec()-_start_time); \
-      pstats->total_call_ct++; \
-   } \
-   note_io_event(event_type,__func__); \
-}
-#endif
 
 #endif /* EXECUTION_STATS_H_ */

@@ -29,11 +29,14 @@
 #include "base/linux_errno.h"
 
 
-// To be considered:  using libexplain.
+// To consider:  use libexplain.
 
 
+// Forward declarations
+static Status_Code_Info * get_negative_errno_info(int errnum);
 Status_Code_Info * find_errno_description(int errnum);
 
+// Initialization
 // n. called from main before command line parsed, trace control not yet established
 void init_linux_errno() {
    register_retcode_desc_finder(
@@ -183,14 +186,13 @@ Status_Code_Info * create_dynamic_errno_info(int errnum) {
 }
 
 
-
 Status_Code_Info * get_errno_info(int errnum) {
    Status_Code_Info * result = find_errno_description(errnum);
    return result;
 }
 
 
-Status_Code_Info * get_negative_errno_info(int errnum) {
+static Status_Code_Info * get_negative_errno_info(int errnum) {
    return get_errno_info(-errnum);
 }
 
