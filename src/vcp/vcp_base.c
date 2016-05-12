@@ -81,13 +81,9 @@ bool vcp_version_gt(Version_Spec val, Version_Spec min) {
 }
 
 
-
-
-
 //
 // VCP_Feature_Subset utilities
 //
-
 
 Vcp_Subset_Desc vcp_subset_desc[] = {
       {VCP_SUBSET_PROFILE,         "VCP_SUBSET_PROFILE",     "PROFILE"},
@@ -128,7 +124,6 @@ char * feature_subset_name(VCP_Feature_Subset subset_id) {
    return desc->subset_id_name;
 }
 
-
 #ifdef REFERENCE
    typedef struct {
       VCP_Feature_Subset  subset;
@@ -140,7 +135,4 @@ void report_feature_set_ref(Feature_Set_Ref * fsref, int depth) {
    rpt_vstring(depth, "subset: %s (%d)",  feature_subset_name(fsref->subset), fsref->subset);
    rpt_vstring(depth, "specific_feature:  0x%02x", fsref->specific_feature);
 }
-
-
-
 

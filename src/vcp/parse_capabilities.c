@@ -29,8 +29,6 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include <string.h>
-#include <vcp/parse_capabilities.h>
-#include <vcp/parsed_capabilities_feature.h>
 
 #include "util/debug_util.h"
 #include "util/string_util.h"

@@ -28,8 +28,10 @@
 // MCCS Command and Response Codes
 //
 
-// Used in 2 ways: to identify commands, and as identifiers
-// in command request and response packets
+// Used in 3 ways:
+// - to identify commands within ddctool
+// - as identifiers in command request and response packets
+// - in capabilities string
 
 #define CMD_VCP_REQUEST          0x01
 #define CMD_VCP_RESPONSE         0x02
