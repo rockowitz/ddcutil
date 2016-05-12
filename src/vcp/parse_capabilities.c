@@ -194,9 +194,9 @@ void free_parsed_capabilities(Parsed_Capabilities * pcaps) {
 
 /* Capabilities string format.
 
-   Parenthesied expression
+   Parenthesized expression
    containing sequence of "segments"
-   each segment consists of a segment name, followed by a parentheized value
+   each segment consists of a segment name, followed by a parenthesized value
 
  */
 
@@ -243,6 +243,10 @@ Capabilities_Segment * next_capabilities_segment(char * start, int len) {
 }
 
 
+// TODO: On every monitor tested, the values are separated by spaces.
+// However, per the Access Bus spec, Section 7, values need not be separated by spaces,
+// e.g.  010203 is valid
+
 /* Parse the value of the cmds segment, which is a list of
  * 2 character hex values separated by spaces.
  *
@@ -254,7 +258,7 @@ Capabilities_Segment * next_capabilities_segment(char * start, int len) {
  *    Byte_Value_Array indicating command values seen
  */
 //  Alternatively, return a ByteBitFlag instance,
-//  or pass a preallocted instance
+//  or pass a preallocted instances
 Byte_Value_Array parse_cmds_segment(char * start, int len) {
    bool debug = false;
    if (debug)
