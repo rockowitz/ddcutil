@@ -31,8 +31,9 @@
 #include "util/data_structures.h"
 
 #include "base/core.h"
-#include "base/ddc_base.h"
 #include "base/displays.h"
+
+#include "vcp/vcp_base.h"
 
 
 // TODO: replace GArray with GPtrArray for vcp_features

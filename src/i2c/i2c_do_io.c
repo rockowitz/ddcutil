@@ -26,11 +26,10 @@
 
 #include <assert.h>
 #include <stdio.h>
-
+#include <vcp/vcp_base.h>
 #include "util/string_util.h"
 
 #include "base/core.h"
-#include "base/ddc_base.h"
 #include "base/parms.h"
 
 #include "i2c/i2c_base_io.h"

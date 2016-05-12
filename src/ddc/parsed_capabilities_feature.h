@@ -27,7 +27,8 @@
 #include "util/data_structures.h"
 
 #include "base/core.h"
-#include "base/ddc_base.h"
+
+#include "vcp/vcp_base.h"
 
 
 // Used when parsing capabilities string

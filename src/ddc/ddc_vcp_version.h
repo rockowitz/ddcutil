@@ -1,7 +1,7 @@
 /* ddc_vcp_version.h
  *
  * <copyright>
- * Copyright (C) 2014-2015 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2014-2016 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -24,12 +24,11 @@
 #ifndef DDC_VCP_VERSION_H_
 #define DDC_VCP_VERSION_H_
 
-#include "base/ddc_base.h"
 #include "base/displays.h"
 
+#include "vcp/vcp_base.h"
 
 Version_Spec get_vcp_version_by_display_handle(Display_Handle * dh);
 Version_Spec get_vcp_version_by_display_ref(   Display_Ref *    dref);
-
 
 #endif /* DDC_VCP_VERSION_H_ */

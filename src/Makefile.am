@@ -146,7 +146,7 @@ base/execution_stats.c \
 base/linux_errno.c \
 base/status_code_mgt.c \
 base/sleep.c \
-base/ddc_base.c \
+vcp/vcp_base.c \
 vcp/vcp_feature_values.c \
 ddc/ddc_command_codes.c \
 ddc/ddc_displays.c      \

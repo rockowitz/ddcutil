@@ -29,10 +29,9 @@
 #include "util/string_util.h"
 
 #include "base/core.h"
-#include "base/ddc_base.h"
 #include "base/ddc_packets.h"
-
 #include "vcp/vcp_feature_values.h"
+#include "vcp_base.h"
 
 
 //

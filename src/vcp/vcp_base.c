@@ -24,14 +24,14 @@
 // Putting these definitions and functions into subdirectory base
 // so that subdirectory cmdline is not dependent on ddc
 
-#include "ddc_base.h"
-
 #include <assert.h>
 #include <stddef.h>
 
 #include "util/report_util.h"
 
 #include "base/core.h"
+
+#include "vcp_base.h"
 
 
 // Standard format strings for reporting feature codes.
@@ -50,7 +50,7 @@ const Version_Spec VCP_SPEC_V22 = {2,2};
 
 // addresses the fact that v3.0 spec is not a direct superset of 2.2
 // both are greater than 2.1
-// will require modificiation if a new spec appears
+// will require modification if a new spec appears
 bool vcp_version_le(Version_Spec val, Version_Spec max) {
    bool result = false;
    assert (val.major <= 3);

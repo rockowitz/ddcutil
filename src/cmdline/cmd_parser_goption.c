@@ -37,7 +37,7 @@
 #include "util/report_util.h"
 
 #include "base/core.h"
-#include <base/ddc_base.h>
+// #include "base/ddc_base.h"
 #include "base/displays.h"
 #include "base/parms.h"
 

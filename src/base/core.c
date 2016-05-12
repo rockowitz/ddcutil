@@ -22,19 +22,11 @@
  */
 
 #include <assert.h>
-// #include <ctype.h>
-//#include <dirent.h>
 #include <errno.h>
-// #include <limits.h>
-// #include <linux/limits.h>
-// #include <glib.h>
-// #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-// #include <sys/stat.h>
 #include <time.h>
-// #include <unistd.h>
 
 #include "util/file_util.h"
 #include "util/string_util.h"
@@ -44,21 +36,23 @@
 #include "base/core.h"
 
 
-// from util
-
-
 //
-// Timing functions
+// Timestamp Generation
 //
 
 // For debugging timestamp generation, maintain a timestamp history.
+bool  tracking_timestamps = false;    // set true to enable timestamp history
 #define MAX_TIMESTAMPS 1000
-long  timestamp[MAX_TIMESTAMPS];
-int   timestamp_ct = 0;
-bool  tracking_timestamps = false;    // set true to enable timestamp tracking
+static long  timestamp[MAX_TIMESTAMPS];
+static int   timestamp_ct = 0;
 
 
-// Returns the current value of the realtime clock in nanoseconds.
+/* Returns the current value of the realtime clock in nanoseconds.
+ * If debugging timestamp generation, remember the timestamp as well.
+ *
+ * Arguments:   none
+ * Returns:     timestamp, in nanoseconds
+ */
 long cur_realtime_nanosec() {
    struct timespec tvNow;
    clock_gettime(CLOCK_REALTIME, &tvNow);
@@ -72,7 +66,9 @@ long cur_realtime_nanosec() {
 }
 
 
-void report_timestamp_history() {
+/* Reports history of generated timestamps
+ */
+void show_timestamp_history() {
    if (tracking_timestamps) {
       DBGMSG("total timestamps: %d", timestamp_ct);
       bool monotonic = true;
@@ -92,113 +88,16 @@ void report_timestamp_history() {
 
 
 //
-// Standardized mechanisms for handling exceptional conditions, including
-// error messages and possible program termination.
-//
-
-void report_ioctl_error(
-      int   errnum,
-      const char* funcname,   // const to avoid warning msg on references at compile time
-      int   lineno,
-      char* filename,
-      bool fatal) {
-   int errsv = errno;
-   // fprintf(stderr, "(report_ioctl_error)\n");
-   fprintf(stderr, "ioctl error in function %s at line %d in file %s: errno=%s\n",
-           funcname, lineno, filename, linux_errno_desc(errnum) );
-   // fprintf(stderr, "  %s\n", strerror(errnum));  // linux_errno_desc now calls strerror
-   // will contain at least sterror(errnum), possibly more:
-   // not worth the linkage issues:
-   // fprintf(stderr, "  %s\n", explain_errno_ioctl(errnum, filedes, request, data));
-   if (fatal)
-      exit(EXIT_FAILURE);
-   errno = errsv;
-}
-
-
-
-void report_ioctl_error2(
-      int   errnum,
-      int   fh,
-      int   request,
-      void* data,
-      const char* funcname,   // const to avoid warning msg on references at compile time
-      int   lineno,
-      char* filename,
-      bool fatal)
-{
-   int errsv = errno;
-   // fprintf(stderr, "(report_ioctl_error2)\n");
-   report_ioctl_error(errno, funcname, lineno, filename, false /* non-fatal */ );
-#ifdef USE_LIBEXPLAIN
-   // fprintf(stderr, "(report_ioctl_error2) within USE_LIBEXPLAIN\n");
-   fprintf(stderr, "%s\n", explain_ioctl(fh, request, data));
-#endif
-   if (fatal)
-      exit(EXIT_FAILURE);
-   errno = errsv;
-}
-
-
-
-/* Called when a condition that should be impossible has been detected.
- * Issues messages to stderr and terminates execution.
- *
- * This function is normally invoked using macro PROGRAM_LOGIC_ERROR
- * defined in util.h.
- *
- * Arguments:
- *    funcname    function name
- *    lineno      line number in source file
- *    fn          source file name
- *    format      format string, as in printf()
- *    ...         or or more substitution values for the format string
- *
- * Returns:
- *    nothing (terminates execution)
- */
-void program_logic_error(
-      const char * funcname,
-      const int    lineno,
-      const char * fn,
-      char *       format,
-      ...)
-{
-  // assemble the error message
-  char buffer[200];
-  va_list(args);
-  va_start(args, format);
-  vsnprintf(buffer, 200, format, args);
-
-  // assemble the location message:
-  char buf2[250];
-  snprintf(buf2, 250, "Program logic error in function %s at line %d in file %s:\n",
-                      funcname, lineno, fn);
-
-  // don't combine into 1 line, might be very long.  just output 2 lines:
-  fputs(buf2,   stderr);
-  fputs(buffer, stderr);
-  fputc('\n',   stderr);
-
-  fputs("Terminating execution.\n", stderr);
-  exit(EXIT_FAILURE);
-}
-
-// from msg_control
-
-
-
 // Global SDTOUT and STDERR redirection, for controlling message output in API
+//
 
 FILE * FOUT = NULL;
 FILE * FERR = NULL;
-
 
 void init_msg_control() {
    FOUT = stdout;
    FERR = stderr;
 }
-
 
 void set_fout(FILE * fout) {
    FOUT = fout;
@@ -346,19 +245,26 @@ void show_trace_groups() {
 
 
 //
-// Control DDC data error reporting
+// Report DDC data errors
 //
 
-// global variable
+// global variable - controls display of messages regarding DDC data errors
 bool show_recoverable_errors = true;
 
-
+// Normally wrapped in macro IS_REPORTING_DDC
 bool is_reporting_ddc(Trace_Group traceGroup, const char * fn) {
   bool result = (is_tracing(traceGroup,fn) || show_recoverable_errors);
   return result;
 }
 
 
+/* Submits a message regarding a DDC data error for possible output.
+ * Whether a message is actually output depends on whether DDC errors are
+ * being shown and (currently unimplemented) the trace group for the
+ * message.
+ *
+ * Normally, invocation of this function is wrapped in macro DDCMSG.
+ */
 void ddcmsg(Trace_Group  traceGroup,
             const char * funcname,
             const int    lineno,
@@ -377,6 +283,11 @@ void ddcmsg(Trace_Group  traceGroup,
 }
 
 
+/* Tells whether DDC data errors are reported
+ *
+ * Arguments:   none
+ * Returns:     nothing
+ */
 void show_ddcmsg() {
    // printf("Reporting DDC data errors: %s\n", bool_repr(show_recoverable_errors));
    print_simple_title_value(SHOW_REPORTING_TITLE_START,
@@ -386,6 +297,14 @@ void show_ddcmsg() {
 }
 
 
+/* Reports output levels for:
+ *   - general output level (terse, verbose, etc)
+ *   - DDC data errors
+ *   - trace groups
+ *
+ * Arguments:    none
+ * Returns:      nothing
+ */
 void show_reporting() {
    show_output_level();
    show_ddcmsg();
@@ -418,6 +337,7 @@ void severemsg(
 }
 
 
+// normally wrapped in one of the DBSMGS macros
 void dbgmsg(
         const char * funcname,
         const int    lineno,
@@ -456,7 +376,7 @@ void dbgmsg(
    va_end(args);
 }
 
-
+// normally wrapped in one of the TRCMSG macros
 void trcmsg(
         Byte         trace_group,
         const char * funcname,
@@ -477,14 +397,105 @@ void trcmsg(
    }
 }
 
-// from common
-
-
 
 //
-// Error handling
+// Standardized handling of exceptional conditions, including
+// error messages and possible program termination.
 //
 
+void report_ioctl_error(
+      int   errnum,
+      const char* funcname,   // const to avoid warning msg on references at compile time
+      int   lineno,
+      char* filename,
+      bool fatal) {
+   int errsv = errno;
+   // fprintf(stderr, "(report_ioctl_error)\n");
+   fprintf(stderr, "ioctl error in function %s at line %d in file %s: errno=%s\n",
+           funcname, lineno, filename, linux_errno_desc(errnum) );
+   // fprintf(stderr, "  %s\n", strerror(errnum));  // linux_errno_desc now calls strerror
+   // will contain at least sterror(errnum), possibly more:
+   // not worth the linkage issues:
+   // fprintf(stderr, "  %s\n", explain_errno_ioctl(errnum, filedes, request, data));
+   if (fatal)
+      exit(EXIT_FAILURE);
+   errno = errsv;
+}
+
+
+#ifdef UNUSED
+// variant that can use libexplain, unused
+void report_ioctl_error2(
+      int   errnum,
+      int   fh,
+      int   request,
+      void* data,
+      const char* funcname,   // const to avoid warning msg on references at compile time
+      int   lineno,
+      char* filename,
+      bool fatal)
+{
+   int errsv = errno;
+   // fprintf(stderr, "(report_ioctl_error2)\n");
+   report_ioctl_error(errno, funcname, lineno, filename, false /* non-fatal */ );
+#ifdef USE_LIBEXPLAIN
+   // fprintf(stderr, "(report_ioctl_error2) within USE_LIBEXPLAIN\n");
+   fprintf(stderr, "%s\n", explain_ioctl(fh, request, data));
+#endif
+   if (fatal)
+      exit(EXIT_FAILURE);
+   errno = errsv;
+}
+#endif
+
+
+
+/* Called when a condition that should be impossible has been detected.
+ * Issues messages to stderr and terminates execution.
+ *
+ * This function is normally invoked using macro PROGRAM_LOGIC_ERROR
+ * defined in util.h.
+ *
+ * Arguments:
+ *    funcname    function name
+ *    lineno      line number in source file
+ *    fn          source file name
+ *    format      format string, as in printf()
+ *    ...         or or more substitution values for the format string
+ *
+ * Returns:
+ *    nothing (terminates execution)
+ */
+void program_logic_error(
+      const char * funcname,
+      const int    lineno,
+      const char * fn,
+      char *       format,
+      ...)
+{
+  // assemble the error message
+  char buffer[200];
+  va_list(args);
+  va_start(args, format);
+  vsnprintf(buffer, 200, format, args);
+
+  // assemble the location message:
+  char buf2[250];
+  snprintf(buf2, 250, "Program logic error in function %s at line %d in file %s:\n",
+                      funcname, lineno, fn);
+
+  // don't combine into 1 line, might be very long.  just output 2 lines:
+  fputs(buf2,   stderr);
+  fputs(buffer, stderr);
+  fputc('\n',   stderr);
+
+  fputs("Terminating execution.\n", stderr);
+  exit(EXIT_FAILURE);
+}
+
+
+
+// normally wrapped in macro TERMINATE_EXECUTION_ON_ERROR
 void terminate_execution_on_error(
         Trace_Group   trace_group,
         const char * funcname,
@@ -509,7 +520,4 @@ void terminate_execution_on_error(
    puts("Terminating execution.");
    exit(EXIT_FAILURE);
 }
-
-
-
 

@@ -47,7 +47,7 @@ bool vcp_version_le(Version_Spec val, Version_Spec max);
 bool vcp_version_gt(Version_Spec val, Version_Spec min);
 
 
-typedef enum {I2C_IO_STRATEGY_FILEIO, I2C_IO_STRATEGY_IOCTL} I2C_IO_Strategy_Id;
+// typedef enum {I2C_IO_STRATEGY_FILEIO, I2C_IO_STRATEGY_IOCTL} I2C_IO_Strategy_Id;
 
 
 

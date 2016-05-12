@@ -28,10 +28,10 @@
 
 #include <stdbool.h>
 
+#include "../vcp/vcp_base.h"
 #include "util/coredefs.h"
 
 #include "base/core.h"
-#include "base/ddc_base.h"
 #include "base/edid.h"
 
 /*

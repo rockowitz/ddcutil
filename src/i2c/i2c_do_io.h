@@ -39,6 +39,9 @@ typedef struct {
    char *     i2c_reader_name;
 } I2C_IO_Strategy;
 
+// may need to move this definition to base
+typedef enum {I2C_IO_STRATEGY_FILEIO, I2C_IO_STRATEGY_IOCTL} I2C_IO_Strategy_Id;
+
 void i2c_set_io_strategy(I2C_IO_Strategy_Id strategy_id);
 
 Global_Status_Code invoke_i2c_writer(

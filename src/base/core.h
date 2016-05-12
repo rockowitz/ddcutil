@@ -31,12 +31,25 @@
 
 #include "util/coredefs.h"
 
-// from util
 
 //
-// General
+// Initialization
+//
+void init_msg_control();
+
+
+//
+// Timestamp Generation
+//
+long cur_realtime_nanosec();   // Returns the current value of the realtime clock in nanoseconds
+void show_timestamp_history(); // For debugging
+
+
+//
+// General Function Arguments and Return Values
 //
 
+#ifdef FUTURE
 // A way to return both a status code and a pointer.
 // Has the benefit of avoiding the "Something** parm" construct,
 // but requires a cast by the caller, so loses type checking.
@@ -46,9 +59,10 @@ typedef struct {
    int      rc;
    void *   result;
 } RC_And_Result;
+#endif
 
 
-// For defining boolean "exit if failure" function parameters, allowing
+// For defining boolean "exit if failure" function arguments, allowing
 // functions to be called with more comprehensible parameter values than
 // "true" and "false".
 typedef bool Failure_Action;
@@ -57,56 +71,9 @@ static const Failure_Action RETURN_ERROR_IF_FAILURE = false;
 
 
 //
-// Timing functions
-//
-
-// Returns the current value of the realtime clock in nanoseconds:
-long cur_realtime_nanosec();
-// For debugging:
-void report_timestamp_history();
-
-
-//
-// Error handling
-//
-
-void report_ioctl_error(
-      int         errnum,
-      const char* funcname,
-      int         lineno,
-      char*       filename,
-      bool        fatal);
-
-void report_ioctl_error2(
-      int   errnum,
-      int   fh,
-      int   request,
-      void* data,
-      const char* funcname,   // const to avoid warning msg on references at compile time
-      int   lineno,
-      char* filename,
-      bool fatal);
-
-// reports a program logic error and terminates execution
-void program_logic_error(
-      const char * funcname,
-      const int    lineno,
-      const char * fn,
-      char *       format,
-      ...);
-
-#define PROGRAM_LOGIC_ERROR(format, ...) \
-   program_logic_error(__func__, __LINE__, __FILE__, format, ##__VA_ARGS__)
-
-
-
-
-
-void init_msg_control();
-
 // Global redirection for messages that normally go to stdout and stderr,
-// used for API
-
+// used within functions that are part of the shared library.
+//
 extern FILE * FOUT;
 extern FILE * FERR;
 
@@ -114,7 +81,9 @@ void set_fout(FILE * fout);
 void set_ferr(FILE * ferr);
 
 
+//
 // Message level control
+//
 
 // Values assigned to constants allow them to be or'd in bit flags
 // Values are ascending in order of verbosity, except for OL_DEFAULT
@@ -153,25 +122,25 @@ bool is_tracing(Trace_Group trace_group, const char * filename);
 #define IS_TRACING() is_tracing(TRACE_GROUP, __FILE__)
 
 
-// Manage reporting of DDC data errors
+// Manage DDC data error reporting
 
-// Display messages for I2C error conditions that can be retried.
+// Controls display of messages regarding I2C error conditions that can be retried.
 extern bool show_recoverable_errors;
 
 bool is_reporting_ddc(Trace_Group trace_group, const char * fn);
 #define IS_REPORTING_DDC() is_reporting_ddc(TRACE_GROUP, __FILE__)
 
 void ddcmsg(Trace_Group trace_group, const char * funcname, const int lineno, const char * fn, char * format, ...);
-
 #define DDCMSG(format, ...) ddcmsg(TRACE_GROUP, __func__, __LINE__, __FILE__, format, ##__VA_ARGS__)
 
 
 // Show report levels for all types
-
 void show_reporting();
 
 
+//
 // Issue messages of various types
+//
 
 void severemsg(
         const char * funcname,
@@ -208,16 +177,40 @@ void trcmsg(
 // alt: trcmsg( ( (trace_flag) ? (0xff) : TRACE_GROUP ), __func__, __LINE__, __FILE__, format, ##__VA_ARGS__)
 
 
-
-// common.h
-
-
-
-
-
 //
 // Error handling
 //
+
+void report_ioctl_error(
+      int         errnum,
+      const char* funcname,
+      int         lineno,
+      char*       filename,
+      bool        fatal);
+
+#ifdef UNUSED
+void report_ioctl_error2(
+      int   errnum,
+      int   fh,
+      int   request,
+      void* data,
+      const char* funcname,   // const to avoid warning msg on references at compile time
+      int   lineno,
+      char* filename,
+      bool fatal);
+#endif
+
+// reports a program logic error and terminates execution
+void program_logic_error(
+      const char * funcname,
+      const int    lineno,
+      const char * fn,
+      char *       format,
+      ...);
+
+#define PROGRAM_LOGIC_ERROR(format, ...) \
+   program_logic_error(__func__, __LINE__, __FILE__, format, ##__VA_ARGS__)
+
 
 void terminate_execution_on_error(
         Trace_Group  trace_group,
@@ -229,10 +222,6 @@ void terminate_execution_on_error(
 
 #define TERMINATE_EXECUTION_ON_ERROR(format, ...) \
    terminate_execution_on_error(TRACE_GROUP, __func__, __LINE__, __FILE__, format, ##__VA_ARGS__)
-
-
-// from common
-
 
 
 #endif /* BASE_CORE_H_ */
