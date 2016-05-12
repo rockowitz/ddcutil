@@ -30,7 +30,7 @@
 #include "util/coredefs.h"
 
 #include "vcp/vcp_feature_codes.h"
-#include "vcp_base.h"
+#include "vcp/vcp_base.h"
 
 
 typedef void * VCP_Feature_Set;
