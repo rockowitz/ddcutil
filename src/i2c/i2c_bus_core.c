@@ -314,7 +314,7 @@ Byte detect_ddc_addrs_by_fd(int file) {
 
    // result |= I2C_BUS_ADDRS_CHECKED;
 
-   DBGMSGF(debug, "Done.  Returning 0x%02x", result);
+   DBGMSF(debug, "Done.  Returning 0x%02x", result);
    return result;
 }
 
@@ -817,7 +817,7 @@ typedef struct {
  */
 int i2c_open_bus_new(int busno, bool emit_error_msg) {
    bool debug = false;
-   DBGMSGF(debug, "busno=%d", busno);
+   DBGMSF(debug, "busno=%d", busno);
 
    char filename[20];
    int  file;
@@ -853,7 +853,7 @@ int i2c_open_bus_new(int busno, bool emit_error_msg) {
  */
 int i2c_open_bus(int busno, Failure_Action failure_action) {
    bool debug = false;
-   DBGMSGF(debug, "busno=%d", busno);
+   DBGMSF(debug, "busno=%d", busno);
 
    int file = i2c_open_bus_new(busno, (failure_action != EXIT_IF_FAILURE) );
    if (file < 0 && failure_action == EXIT_IF_FAILURE)

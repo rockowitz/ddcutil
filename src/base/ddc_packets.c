@@ -259,7 +259,7 @@ void free_ddc_packet(DDC_Packet * packet) {
 
    if (packet) {
       if (packet->aux_data) {
-         DBGMSGF(debug, "freeing packet->aux_data=%p", packet->aux_data);
+         DBGMSF(debug, "freeing packet->aux_data=%p", packet->aux_data);
          call_free(packet->aux_data, "free_ddc_packet:aux_data");
       }
 
@@ -285,7 +285,7 @@ void free_ddc_packet(DDC_Packet * packet) {
  */
 DDC_Packet * create_empty_ddc_packet(int max_size, const char * tag) {
    bool debug = false;
-   DBGMSGF(debug, "Starting. max_size=%d, tag=%s", max_size, (tag) ? tag : "(nil)");
+   DBGMSF(debug, "Starting. max_size=%d, tag=%s", max_size, (tag) ? tag : "(nil)");
 
    DDC_Packet * packet = call_malloc(sizeof(DDC_Packet), "create_empty_ddc_packet:packet");
    packet->buf = buffer_new(max_size, "empty DDC packet");
@@ -299,7 +299,7 @@ DDC_Packet * create_empty_ddc_packet(int max_size, const char * tag) {
    packet->type = DDC_PACKET_TYPE_NONE;
    packet->aux_data = NULL;
 
-   DBGMSGF(debug, "Done. Returning %p, packet->tag=%p", packet, packet->tag);
+   DBGMSF(debug, "Done. Returning %p, packet->tag=%p", packet, packet->tag);
    if (debug)
       dump_packet(packet);
 
@@ -857,7 +857,7 @@ interpret_vcp_feature_response_std(
       }
    }
 
-   // DBGMSGF(debug, "returning %s", ddcrc_description(result));
+   // DBGMSF(debug, "returning %s", ddcrc_description(result));
    TRCMSG("returning %s\n", __func__, ddcrc_desc(result));
    return result;
 }

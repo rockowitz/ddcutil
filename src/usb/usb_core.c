@@ -588,7 +588,7 @@ Parsed_Edid * usb_get_parsed_edid_by_display_handle(Display_Handle * dh) {
  */
 int usb_open_hiddev_device(char * hiddev_devname, bool emit_error_msg) {
    bool debug = false;
-   DBGMSGF(debug, "hiddev_devname=%s", hiddev_devname);
+   DBGMSF(debug, "hiddev_devname=%s", hiddev_devname);
 
    int  file;
 

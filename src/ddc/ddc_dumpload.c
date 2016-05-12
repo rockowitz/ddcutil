@@ -373,7 +373,7 @@ Global_Status_Code loadvcp_by_ntsa(Null_Terminated_String_Array ntsa) {
    GPtrArray * garray = ntsa_to_g_ptr_array(ntsa);
 
    Dumpload_Data * pdata = create_dumpload_data_from_g_ptr_array(garray);
-   DBGMSGF(debug, "create_dumpload_data_from_g_ptr_array() returned %p", pdata);
+   DBGMSF(debug, "create_dumpload_data_from_g_ptr_array() returned %p", pdata);
    if (!pdata) {
       f0printf(FERR, "Unable to load VCP data from string\n");
       gsc = DDCRC_INVALID_DATA;
