@@ -44,6 +44,7 @@
 #include "base/sleep.h"
 #include "base/status_code_mgt.h"
 
+#include "vcp/parse_capabilities.h"
 #include "vcp/vcp_feature_codes.h"
 
 #include "i2c/i2c_bus_core.h"
@@ -62,7 +63,6 @@
 #include "ddc/ddc_services.h"
 #include "ddc/ddc_vcp_version.h"
 #include "ddc/ddc_vcp.h"
-#include "ddc/parse_capabilities.h"
 #include "ddc/try_stats.h"
 
 #include "cmdline/cmd_parser_aux.h"    // for parse_feature_id_or_subset(), should it be elsewhere?

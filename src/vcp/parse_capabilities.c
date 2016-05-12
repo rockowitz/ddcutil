@@ -29,6 +29,8 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include <string.h>
+#include <vcp/parse_capabilities.h>
+#include <vcp/parsed_capabilities_feature.h>
 
 #include "util/debug_util.h"
 #include "util/string_util.h"
@@ -36,10 +38,10 @@
 #include "base/core.h"
 #include "base/displays.h"
 
-#include "ddc/ddc_command_codes.h"
-#include "ddc/parsed_capabilities_feature.h"
+#include "vcp/ddc_command_codes.h"
+#include "vcp/parsed_capabilities_feature.h"
 
-#include "ddc/parse_capabilities.h"
+#include "vcp/parse_capabilities.h"
 
 
 //

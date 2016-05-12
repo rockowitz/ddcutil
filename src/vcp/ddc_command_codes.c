@@ -29,7 +29,7 @@
 
 #include "util/string_util.h"
 
-#include "ddc/ddc_command_codes.h"
+#include "vcp/ddc_command_codes.h"
 
 
 //

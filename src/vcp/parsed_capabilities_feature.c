@@ -21,6 +21,8 @@
  * </endcopyright>
  */
 
+#include "../vcp/parsed_capabilities_feature.h"
+
 #include <assert.h>
 #include <glib.h>
 #include <stdbool.h>
@@ -32,7 +34,6 @@
 
 #include "vcp/vcp_feature_codes.h"
 
-#include "ddc/parsed_capabilities_feature.h"
 
 
 // Trace class for this file
