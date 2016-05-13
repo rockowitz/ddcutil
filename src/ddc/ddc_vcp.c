@@ -73,8 +73,11 @@ set_nontable_vcp_value(
       int              new_value)
 {
    bool debug = false;
-   Trace_Group tg = (debug) ? 0xFF : TRACE_GROUP;
-   TRCMSGTG(tg, "Writing feature 0x%02x , new value = %d\n", feature_code, new_value);
+   // Trace_Group tg = (debug) ? 0xFF : TRACE_GROUP;
+   // TRCMSGTG(tg, "Writing feature 0x%02x , new value = %d\n", feature_code, new_value);
+   DBGTRC(debug, TRACE_GROUP,
+          "Writing feature 0x%02x , new value = %d\n",
+          feature_code, new_value);
    Global_Status_Code gsc = 0;
 
    if (dh->io_mode == USB_IO) {
@@ -92,7 +95,8 @@ set_nontable_vcp_value(
          free_ddc_packet(request_packet_ptr);
    }
 
-   TRCMSGTG(tg, "Returning %s", gsc_desc(gsc));
+   // TRCMSGTG(tg, "Returning %s", gsc_desc(gsc));
+   DBGTRC(debug, TRACE_GROUP, "Returning %s", gsc_desc(gsc));
    return gsc;
 }
 
@@ -116,8 +120,9 @@ set_table_vcp_value(
       int               bytect)
 {
    bool debug = false;
-   Trace_Group tg = (debug) ? 0xFF : TRACE_GROUP;
-   TRCMSGTG(tg, "Writing feature 0x%02x , bytect = %d\n", feature_code, bytect);
+   // Trace_Group tg = (debug) ? 0xFF : TRACE_GROUP;
+   // TRCMSGTG(tg, "Writing feature 0x%02x , bytect = %d\n", feature_code, bytect);
+   DBGTRC(debug, TRACE_GROUP, "Writing feature 0x%02x , bytect = %d\n", feature_code, bytect);
    Global_Status_Code gsc = 0;
 
    if (dh->io_mode == USB_IO) {
@@ -132,7 +137,8 @@ set_table_vcp_value(
 
       buffer_free(new_value, __func__);
    }
-   TRCMSGTG(tg, "Returning: %s", gsc_desc(gsc));
+   // TRCMSGTG(tg, "Returning: %s", gsc_desc(gsc));
+   DBGTRC(debug, TRACE_GROUP, "Returning: %s", gsc_desc(gsc));
    return gsc;
 }
 
@@ -184,8 +190,9 @@ Global_Status_Code get_nontable_vcp_value(
        Parsed_Nontable_Vcp_Response** ppInterpretedCode)
 {
    bool debug = false;
-   Trace_Group tg = TRACE_GROUP;  if (debug) tg = 0xFF;
-   TRCMSGTG(tg, "Reading feature 0x%02x", feature_code);
+   // Trace_Group tg = TRACE_GROUP;  if (debug) tg = 0xFF;
+   // TRCMSGTG(tg, "Reading feature 0x%02x", feature_code);
+   DBGTRC(debug, TRACE_GROUP, "Reading feature 0x%02x", feature_code);
 
    Global_Status_Code rc = 0;
    // Output_Level output_level = get_output_level();
@@ -209,7 +216,10 @@ Global_Status_Code get_nontable_vcp_value(
            false,                       // all_zero_response_ok
            &response_packet_ptr
         );
-   TRCMSGTG(tg, "perform_ddc_write_read_with_retry() returned %s", gsc_desc(rc));
+   // TRCMSGTG(tg, "perform_ddc_write_read_with_retry() returned %s", gsc_desc(rc));
+   if (debug || rc != 0 ) {
+      DBGTRC(debug, TRACE_GROUP, "perform_ddc_write_read_with_retry() returned %s", gsc_desc(rc));
+   }
 
    if (rc == 0) {
       // ??? why is this allocated?  it's discarded by get_interpreted_vcp_code()?
@@ -239,7 +249,9 @@ Global_Status_Code get_nontable_vcp_value(
    if (response_packet_ptr)
       free_ddc_packet(response_packet_ptr);
 
-   TRCMSGTG(tg, "Returning %s, *ppinterpreted_code=%p", gsc_name(rc), parsed_response);
+   // TRCMSGTG(tg, "Returning %s, *ppinterpreted_code=%p", gsc_name(rc), parsed_response);
+   DBGTRC(debug, TRACE_GROUP,
+          "Returning %s, *ppinterpreted_code=%p", gsc_name(rc), parsed_response);
    *ppInterpretedCode = parsed_response;
    return rc;
 }
@@ -262,8 +274,9 @@ Global_Status_Code get_table_vcp_value(
        Buffer**               pp_table_bytes)
 {
    bool debug = false;
-   Trace_Group tg = (debug) ? 0xff : TRACE_GROUP;
-   TRCMSGTG(tg, "Starting. Reading feature 0x%02x", feature_code);
+   // Trace_Group tg = (debug) ? 0xff : TRACE_GROUP;
+   // TRCMSGTG(tg, "Starting. Reading feature 0x%02x", feature_code);
+   DBGTRC(debug, TRACE_GROUP, "Starting. Reading feature 0x%02x", feature_code);
 
    Global_Status_Code gsc = 0;
    Output_Level output_level = get_output_level();
@@ -275,7 +288,10 @@ Global_Status_Code get_table_vcp_value(
             feature_code,
             true,                      // all_zero_response_ok
             &paccumulator);
-   DBGMSF(debug, "perform_ddc_write_read_with_retry() returned %s", gsc_desc(gsc));
+   if (debug || gsc != 0) {
+      DBGTRC(debug, TRACE_GROUP,
+             "perform_ddc_write_read_with_retry() returned %s", gsc_desc(gsc));
+   }
 
    if (gsc == 0) {
       *pp_table_bytes = paccumulator;
@@ -285,7 +301,9 @@ Global_Status_Code get_table_vcp_value(
       }
    }
 
-   TRCMSGTG(tg, "Done. Returning rc=%s, *pp_table_bytes=%p", gsc_desc(gsc), *pp_table_bytes);
+   // TRCMSGTG(tg, "Done. Returning rc=%s, *pp_table_bytes=%p", gsc_desc(gsc), *pp_table_bytes);
+   DBGTRC(debug, TRACE_GROUP,
+          "Done. Returning rc=%s, *pp_table_bytes=%p", gsc_desc(gsc), *pp_table_bytes);
    return gsc;
 }
 
@@ -310,8 +328,9 @@ Global_Status_Code get_vcp_value(
        Single_Vcp_Value **       pvalrec)
 {
    bool debug = false;
-   Trace_Group tg = TRACE_GROUP;  if (debug) tg = 0xFF;
-   TRCMSGTG(tg, "Starting. Reading feature 0x%02x", feature_code);
+   // Trace_Group tg = TRACE_GROUP;  if (debug) tg = 0xFF;
+   // TRCMSGTG(tg, "Starting. Reading feature 0x%02x", feature_code);
+   DBGTRC(debug, TRACE_GROUP, "Starting. Reading feature 0x%02x", feature_code);
 
    Global_Status_Code gsc = 0;
 
@@ -384,7 +403,8 @@ Global_Status_Code get_vcp_value(
 
    *pvalrec = valrec;
 
-   TRCMSGTG(tg, "Done.  Returning: %s", gsc_desc(gsc) );
+   // TRCMSGTG(tg, "Done.  Returning: %s", gsc_desc(gsc) );
+   DBGTRC(debug, TRACE_GROUP, "Done.  Returning: %s", gsc_desc(gsc) );
    if (gsc == 0 && debug)
       report_single_vcp_value(valrec,1);
    assert( (gsc == 0 && *pvalrec) || (gsc != 0 && !*pvalrec) );

@@ -914,8 +914,10 @@ Global_Status_Code usb_get_nontable_vcp_value(
        Parsed_Nontable_Vcp_Response** ppInterpretedCode)
 {
    bool debug = false;
-   Trace_Group tg = TRACE_GROUP;  if (debug) tg = 0xFF;
-   TRCMSGTG(tg, "Reading feature 0x%02x, dh=%p, dh->dref=%p", feature_code, dh, dh->dref);
+   // Trace_Group tg = TRACE_GROUP;  if (debug) tg = 0xFF;
+   // TRCMSGTG(tg, "Reading feature 0x%02x, dh=%p, dh->dref=%p", feature_code, dh, dh->dref);
+   DBGTRC(debug, TRACE_GROUP,
+             "Reading feature 0x%02x, dh=%p, dh->dref=%p", feature_code, dh, dh->dref);
 
    assert(dh->io_mode == USB_IO);
    // if (!dh->dref) {
@@ -970,7 +972,9 @@ Global_Status_Code usb_get_nontable_vcp_value(
       parsed_response->sl = curval & 0xff;
    }
 
-   TRCMSGTG(tg, "Returning %s, *ppinterpreted_code=%p", gsc_name(gsc), parsed_response);
+   // TRCMSGTG(tg, "Returning %s, *ppinterpreted_code=%p", gsc_name(gsc), parsed_response);
+   DBGTRC(debug, TRACE_GROUP,
+             "Returning %s, *ppinterpreted_code=%p", gsc_name(gsc), parsed_response);
    *ppInterpretedCode = parsed_response;
    return gsc;
 }
@@ -998,8 +1002,9 @@ Global_Status_Code usb_get_vcp_value(
        Single_Vcp_Value **       pvalrec)
 {
    bool debug = false;
-   Trace_Group tg = TRACE_GROUP;  if (debug) tg = 0xFF;
-   TRCMSGTG(tg, "Starting. Reading feature 0x%02x", feature_code);
+   // Trace_Group tg = TRACE_GROUP;  if (debug) tg = 0xFF;
+   // TRCMSGTG(tg, "Starting. Reading feature 0x%02x", feature_code);
+   DBGTRC(debug, TRACE_GROUP, "Starting. Reading feature 0x%02x", feature_code);
 
    Global_Status_Code gsc = 0;
 
@@ -1043,7 +1048,8 @@ Global_Status_Code usb_get_vcp_value(
 
    *pvalrec = valrec;
 
-   TRCMSGTG(tg, "Done.  Returning: %s", gsc_desc(gsc) );
+   // TRCMSGTG(tg, "Done.  Returning: %s", gsc_desc(gsc) );
+   DBGTRC(debug, TRACE_GROUP, "Done.  Returning: %s", gsc_desc(gsc) );
    if (gsc == 0 && debug)
       report_single_vcp_value(valrec,1);
    assert( (gsc == 0 && *pvalrec) || (gsc != 0 && !*pvalrec) );
@@ -1135,9 +1141,12 @@ Global_Status_Code usb_set_nontable_vcp_value(
        int                    new_value)
 {
    bool debug = true;
-   Trace_Group tg = TRACE_GROUP;  if (debug) tg = 0xFF;
-   TRCMSGTG(tg, "Setting feature 0x%02x, dh=%p, dh->dref=%p, new_value=%d",
-                feature_code, dh, dh->dref, new_value);
+   // Trace_Group tg = TRACE_GROUP;  if (debug) tg = 0xFF;
+   // TRCMSGTG(tg, "Setting feature 0x%02x, dh=%p, dh->dref=%p, new_value=%d",
+   //              feature_code, dh, dh->dref, new_value);
+   DBGTRC(debug, TRACE_GROUP,
+          "Setting feature 0x%02x, dh=%p, dh->dref=%p, new_value=%d",
+          feature_code, dh, dh->dref, new_value);
 
    Global_Status_Code gsc =  DDCRC_REPORTED_UNSUPPORTED;  // = 0;
    assert(dh->io_mode == USB_IO);
@@ -1170,7 +1179,8 @@ Global_Status_Code usb_set_nontable_vcp_value(
       // }
    }
 
-   TRCMSGTG(tg, "Returning %s", gsc_name(gsc));
+   // TRCMSGTG(tg, "Returning %s", gsc_name(gsc));
+   DBGTRC(debug, TRACE_GROUP, "Returning %s", gsc_name(gsc));
    return gsc;
 }
 

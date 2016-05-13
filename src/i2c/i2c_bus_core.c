@@ -733,8 +733,9 @@ void i2c_report_bus(int busno) {
  */
 int i2c_report_buses(bool report_all, int depth) {
    bool debug = false;
-   Trace_Group tg = (debug) ? 0xff : TRACE_GROUP;
-   TRCMSGTG(tg, "Starting. report_all=%s\n", bool_repr(report_all));
+   // Trace_Group tg = (debug) ? 0xff : TRACE_GROUP;
+   // TRCMSGTG(tg, "Starting. report_all=%s\n", bool_repr(report_all));
+   DBGTRC(debug, TRACE_GROUP, "Starting. report_all=%s\n", bool_repr(report_all));
 
    Output_Level output_level = get_output_level();
    int busct = i2c_get_busct();
@@ -757,7 +758,8 @@ int i2c_report_buses(bool report_all, int depth) {
    if (reported_ct == 0)
       rpt_vstring(depth, "   No buses\n");
 
-   TRCMSGTG(tg, "Done. Returning %d\n", reported_ct);
+   // TRCMSGTG(tg, "Done. Returning %d\n", reported_ct);
+   DBGTRC(debug, TRACE_GROUP, "Done. Returning %d\n", reported_ct);
    return reported_ct;
 }
 

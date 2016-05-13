@@ -101,11 +101,14 @@ try_multi_part_read(
       Buffer *         accumulator)
 {
    bool force_debug = false;
-   Trace_Group tg = TRACE_GROUP;
-   if (force_debug)
-      tg = 0xFF;  // force tracing
-   TRCMSGTG(tg, "Starting. request_type=0x%02x, request_subtype=x%02x, accumulator=%p",
-            request_type, request_subtype, accumulator);
+   // Trace_Group tg = TRACE_GROUP;
+   // if (force_debug)
+   //    tg = 0xFF;  // force tracing
+   // TRCMSGTG(tg, "Starting. request_type=0x%02x, request_subtype=x%02x, accumulator=%p",
+   //          request_type, request_subtype, accumulator);
+   DBGTRC(force_debug, TRACE_GROUP,
+          "Starting. request_type=0x%02x, request_subtype=x%02x, accumulator=%p",
+          request_type, request_subtype, accumulator);
 
    Global_Status_Code rc = 0;
    const int MAX_FRAGMENT_SIZE = 32;
@@ -197,7 +200,8 @@ try_multi_part_read(
         // TRCMSGTG(tg, "Returning capabilities: %s",accumulator->bytes);
    }
 
-   TRCMSGTG(tg, "Returning %s", gsc_desc(rc));
+   // TRCMSGTG(tg, "Returning %s", gsc_desc(rc));
+   DBGTRC(force_debug, TRACE_GROUP, "Returning %s", gsc_desc(rc));
    return rc;
 }
 
@@ -224,9 +228,9 @@ multi_part_read_with_retry(
       Buffer**         ppbuffer)
 {
    bool debug = false;
-   Trace_Group tg = TRACE_GROUP;
-   if (debug)
-      tg = 0xFF;
+   // Trace_Group tg = TRACE_GROUP;
+   // if (debug)
+   //    tg = 0xFF;
    // char buf[100];
    if (IS_TRACING())
       puts("");
@@ -240,8 +244,12 @@ multi_part_read_with_retry(
    Buffer * accumulator = buffer_new(2048, "multi part read buffer");
 
    while (try_ctr < max_multi_part_read_tries && rc < 0 && can_retry) {
-      TRCMSGTG(tg, "Start of while loop. try_ctr=%d, max_multi_part_read_tries=%d",
-               try_ctr, max_multi_part_read_tries);
+      // TRCMSGTG(tg, "Start of while loop. try_ctr=%d, max_multi_part_read_tries=%d",
+      //          try_ctr, max_multi_part_read_tries);
+      DBGTRC(debug, TRACE_GROUP,
+             "Start of while loop. try_ctr=%d, max_multi_part_read_tries=%d",
+             try_ctr, max_multi_part_read_tries);
+
 
       rc = try_multi_part_read(
               dh,
@@ -290,7 +298,6 @@ multi_part_read_with_retry(
 }
 
 
-
 /* Makes one attempt to write an entire table value
 *
 * Arguments:
@@ -306,13 +313,16 @@ try_multi_part_write(
       Buffer *         value_to_set)
 {
    bool force_debug = false;
-   Trace_Group tg = TRACE_GROUP;
-   if (force_debug)
-      tg = 0xFF;  // force tracing
+   // Trace_Group tg = TRACE_GROUP;
+   // if (force_debug)
+   //    tg = 0xFF;  // force tracing
    Byte request_type = DDC_PACKET_TYPE_TABLE_WRITE_REQUEST;
    Byte request_subtype = vcp_code;
-   TRCMSGTG(tg, "Starting. request_type=0x%02x, request_subtype=x%02x, accumulator=%p",
-            request_type, request_subtype, value_to_set);
+   // TRCMSGTG(tg, "Starting. request_type=0x%02x, request_subtype=x%02x, accumulator=%p",
+   //          request_type, request_subtype, value_to_set);
+   DBGTRC(force_debug, TRACE_GROUP,
+          "Starting. request_type=0x%02x, request_subtype=x%02x, accumulator=%p",
+          request_type, request_subtype, value_to_set);
 
 
 
@@ -346,9 +356,11 @@ try_multi_part_write(
       }
    }
 
-   TRCMSGTG(tg, "Returning %s", gsc_desc(rc));
+   // TRCMSGTG(tg, "Returning %s", gsc_desc(rc));
+   DBGTRC(force_debug, TRACE_GROUP, "Returning %s", gsc_desc(rc));
    return rc;
 }
+
 
 Global_Status_Code
 multi_part_write_with_retry(
@@ -357,9 +369,9 @@ multi_part_write_with_retry(
      Buffer *         value_to_set)
 {
    bool debug = false;
-   Trace_Group tg = TRACE_GROUP;
-   if (debug)
-      tg = 0xFF;
+   // Trace_Group tg = TRACE_GROUP;
+   // if (debug)
+   //    tg = 0xFF;
    // char buf[100];
    if (IS_TRACING())
       puts("");
@@ -372,8 +384,11 @@ multi_part_write_with_retry(
    bool can_retry = true;
 
    while (try_ctr < max_multi_part_read_tries && rc < 0 && can_retry) {
-      TRCMSGTG(tg, "Start of while loop. try_ctr=%d, max_multi_part_read_tries=%d",
-               try_ctr, max_multi_part_read_tries);
+      // TRCMSGTG(tg, "Start of while loop. try_ctr=%d, max_multi_part_read_tries=%d",
+      //          try_ctr, max_multi_part_read_tries);
+      DBGTRC(debug, TRACE_GROUP,
+             "Start of while loop. try_ctr=%d, max_multi_part_read_tries=%d",
+             try_ctr, max_multi_part_read_tries);
 
       rc = try_multi_part_write(
               dh,

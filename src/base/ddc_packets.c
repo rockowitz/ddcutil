@@ -249,11 +249,7 @@ bool isNullPacket(DDC_Packet * packet) {
 
 void free_ddc_packet(DDC_Packet * packet) {
    bool debug = false;
-   // bool tf = IS_TRACING();    // TMI
-   bool tf = false;
-   if (debug)
-      tf = true;
-   TRCMSGTF(tf, "packet=%p", packet);
+   DBGMSF(debug, "packet=%p", packet);
 
    // dump_packet(packet);
 
@@ -270,7 +266,7 @@ void free_ddc_packet(DDC_Packet * packet) {
       DBGMSF(debug, "freeing packet=%p", packet);
       call_free(packet, "free_ddc_packet:packet");
    }
-   TRCMSGTF(tf, "Done" );
+   DBGMSF(debug, "Done" );
 }
 
 

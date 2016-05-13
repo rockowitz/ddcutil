@@ -154,8 +154,9 @@ get_raw_value_for_feature_table_entry(
       FILE *                     msg_fh)
 {
    bool debug = false;
-   Trace_Group tg = (debug) ? 0xff : TRACE_GROUP;
-   TRCMSGTG(tg, "Starting");
+   // Trace_Group tg = (debug) ? 0xff : TRACE_GROUP;
+   // TRCMSGTG(tg, "Starting");
+   DBGTRC(debug, TRACE_GROUP, "Starting");
 
    Global_Status_Code gsc = 0;
    Version_Spec vspec = get_vcp_version_by_display_handle(dh);
@@ -236,7 +237,8 @@ get_raw_value_for_feature_table_entry(
    }
 
    *pvalrec = valrec;
-   TRCMSGTG(tg, "Done.  Returning: %s, *pvalrec=%p", gsc_desc(gsc), *pvalrec);
+   // TRCMSGTG(tg, "Done.  Returning: %s, *pvalrec=%p", gsc_desc(gsc), *pvalrec);
+   DBGTRC(debug, TRACE_GROUP, "Done.  Returning: %s, *pvalrec=%p", gsc_desc(gsc), *pvalrec);
    assert( (gsc == 0 && *pvalrec) || (gsc != 0 && !*pvalrec) );
    return gsc;
 }
@@ -350,8 +352,9 @@ get_formatted_value_for_feature_table_entry(
       FILE *                     msg_fh)
 {
    bool debug = false;
-   Trace_Group tg = (debug) ? 0xff : TRACE_GROUP;
-   TRCMSGTG(tg, "Starting");
+   // Trace_Group tg = (debug) ? 0xff : TRACE_GROUP;
+   // TRCMSGTG(tg, "Starting");
+   DBGTRC(debug, TRACE_GROUP, "Starting");
 
    Global_Status_Code gsc = 0;
    *pformatted_value = NULL;
@@ -438,7 +441,10 @@ get_formatted_value_for_feature_table_entry(
    if (pvalrec)
       free_single_vcp_value(pvalrec);
 
-   TRCMSGTG(tg, "Done.  Returning: %s, *pformatted_value=|%s|", gsc_desc(gsc), *pformatted_value);
+   // TRCMSGTG(tg, "Done.  Returning: %s, *pformatted_value=|%s|", gsc_desc(gsc), *pformatted_value);
+   DBGTRC(debug, TRACE_GROUP,
+          "Done.  Returning: %s, *pformatted_value=|%s|",
+          gsc_desc(gsc), *pformatted_value);
    return gsc;
 }
 

@@ -217,8 +217,9 @@ void set_trace_levels(Trace_Group trace_flags) {
    trace_levels = trace_flags;
 }
 
+// n. takes filename parm but used only in debug message, not result calculation
 bool is_tracing(Trace_Group trace_group, const char * filename) {
-   bool result =  (trace_group == 0xff) || (trace_levels & trace_group); // is traceGroup being traced?
+   bool result =  (trace_group == 0xff) || (trace_levels & trace_group); // is trace_group being traced?
    // printf("(%s) traceGroup = %02x, filename=%s, traceLevels=0x%02x, returning %d\n",
    //        __func__, traceGroup, filename, traceLevels, result);
    return result;

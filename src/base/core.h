@@ -167,14 +167,19 @@ void trcmsg(
 #define DBGMSF( debug_flag,     format, ...) \
    do { if (debug_flag) dbgmsg(  __func__, __LINE__, __FILE__, format, ##__VA_ARGS__); }  while(0)
 #define TRCMSG(               format, ...) trcmsg(TRACE_GROUP, __func__, __LINE__, __FILE__, format, ##__VA_ARGS__)
+
 // which of these are really useful?
+// not currently used: TRCALWAYS, TRCMSGTG, TRCMSGTF
 #define TRCALWAYS(            format, ...) trcmsg(0xff,        __func__, __LINE__, __FILE__, format, ##__VA_ARGS__)
 #define TRCMSGTG(trace_group, format, ...) trcmsg(trace_group, __func__, __LINE__, __FILE__, format, ##__VA_ARGS__)
 #define TRCMSGTF(trace_flag, format, ...) \
     do { if (trace_flag) trcmsg(0xff, __func__, __LINE__, __FILE__, format, ##__VA_ARGS__); }  while(0)
 // alt: trcmsg( ( (trace_flag) ? (0xff) : TRACE_GROUP ), __func__, __LINE__, __FILE__, format, ##__VA_ARGS__)
-#define DBGTRCFTG(debug_flag, trace_group, format, ...) \
-    trcmsg( ( (debug_flag) ) ? 0xff ? (trace_group), __func__, __LINE__, __FILE__, format, ##__VA_ARGS__)
+
+// For messages that are issued either if tracing is enabled for the appropriate trace group or
+// if a debug flag is set.
+#define DBGTRC(debug_flag, trace_group, format, ...) \
+    trcmsg( ( (debug_flag) ) ? 0xff : (trace_group), __func__, __LINE__, __FILE__, format, ##__VA_ARGS__)
 
 //
 // Error handling

@@ -300,10 +300,11 @@ Global_Status_Code ddc_i2c_write_read_raw(
         )
 {
    bool debug = false;
-   Trace_Group tg = TRACE_GROUP;
-   if (debug)
-      tg = 0xff;
-   TRCMSGTG(tg, "Starting. dh=%s, readbuf=%p", display_handle_repr(dh), readbuf);
+   // Trace_Group tg = TRACE_GROUP;
+   // if (debug)
+   //    tg = 0xff;
+   // TRCMSGTG(tg, "Starting. dh=%s, readbuf=%p", display_handle_repr(dh), readbuf);
+   DBGTRC(debug, TRACE_GROUP, "Starting. dh=%s, readbuf=%p", display_handle_repr(dh), readbuf);
    // DBGMSG("request_packet_ptr=%p", request_packet_ptr);
    // dump_packet(request_packet_ptr);
    ASSERT_DISPLAY_IO_MODE(dh, DDC_IO_DEVI2C);
@@ -342,7 +343,8 @@ Global_Status_Code ddc_i2c_write_read_raw(
       COUNT_STATUS_CODE(rc);
    }
 
-   TRCMSGTG(tg, "Done. gsc=%s", gsc_desc(rc));
+   // TRCMSGTG(tg, "Done. gsc=%s", gsc_desc(rc));
+   DBGTRC(debug, TRACE_GROUP, "Done. gsc=%s", gsc_desc(rc));
    return rc;
 }
 
@@ -375,10 +377,13 @@ Global_Status_Code ddc_adl_write_read_raw(
      )
 {
    bool debug = false;
-   bool tf = IS_TRACING();
-   if (debug) tf = true;
-   TRCMSGTF(tf, "Starting. Using adl_ddc_write_only() and adl_ddc_read_only() dh=%s",
-            display_handle_repr(dh));
+   // bool tf = IS_TRACING();
+   // if (debug) tf = true;
+   // TRCMSGTF(tf, "Starting. Using adl_ddc_write_only() and adl_ddc_read_only() dh=%s",
+   //          display_handle_repr(dh));
+   DBGTRC(debug, TRACE_GROUP,
+          "Starting. Using adl_ddc_write_only() and adl_ddc_read_only() dh=%s",
+          display_handle_repr(dh));
    ASSERT_DISPLAY_IO_MODE(dh, DDC_IO_ADL);
 
    Global_Status_Code gsc = adlshim_ddc_write_only(
@@ -387,7 +392,8 @@ Global_Status_Code ddc_adl_write_read_raw(
                                get_packet_len(request_packet_ptr)
                               );
    if (gsc < 0) {
-      TRCMSGTF(tf, "adl_ddc_write_only() returned gsc=%d\n", gsc);
+      // TRCMSGTF(tf, "adl_ddc_write_only() returned gsc=%d\n", gsc);
+      DBGTRC(debug, TRACE_GROUP, "adl_ddc_write_only() returned gsc=%d\n", gsc);
    }
    else {
       call_tuned_sleep_adl(SE_WRITE_TO_READ);
@@ -397,12 +403,13 @@ Global_Status_Code ddc_adl_write_read_raw(
             pbytes_received);
       // note_io_event(IE_READ_AFTER_WRITE, __func__);
       if (gsc < 0) {
-         TRCMSGTF(tf, "adl_ddc_read_only() returned adlrc=%d\n", gsc);
+         // TRCMSGTF(tf, "adl_ddc_read_only() returned adlrc=%d\n", gsc);
+         DBGTRC(debug, TRACE_GROUP, "adl_ddc_read_only() returned adlrc=%d\n", gsc);
       }
       else {
          if ( all_zero(readbuf+1, max_read_bytes-1)) {
                  gsc = DDCRC_READ_ALL_ZERO;
-                 DBGMSG("All zero response." );
+                 DBGTRC(debug, TRACE_GROUP, "All zero response.");
                  DDCMSG("All zero response.");
                  COUNT_STATUS_CODE(gsc);
          }
@@ -421,7 +428,8 @@ Global_Status_Code ddc_adl_write_read_raw(
 
    if (gsc < 0)
       log_status_code(gsc, __func__);
-   TRCMSGTF(tf, "Done. rc=%s\n", gsc_desc(gsc));
+   // TRCMSGTF(tf, "Done. rc=%s\n", gsc_desc(gsc));
+   DBGTRC(debug, TRACE_GROUP, "Done. rc=%s\n", gsc_desc(gsc));
    return gsc;
 }
 
@@ -493,9 +501,10 @@ Global_Status_Code ddc_write_read(
      )
 {
    bool debug = false;  // override
-   bool tf = IS_TRACING();
-   if (debug) tf = 0xff;
-   TRCMSGTF(tf, "Starting. io dh=%s", display_handle_repr(dh) );
+   // bool tf = IS_TRACING();
+   // if (debug) tf = 0xff;
+   // TRCMSGTF(tf, "Starting. io dh=%s", display_handle_repr(dh) );
+   DBGTRC(debug, TRACE_GROUP, "Starting. io dh=%s", display_handle_repr(dh) );
 
    Byte * readbuf = calloc(1, max_read_bytes);
    int    bytes_received = max_read_bytes;
@@ -520,8 +529,11 @@ Global_Status_Code ddc_write_read(
               expected_subtype,
               __func__,
               response_packet_ptr_loc);
-       TRCMSGTF(tf, "create_ddc_typed_response_packet() returned %s, *response_packet_ptr_loc=%p",
-                ddcrc_desc(rc), *response_packet_ptr_loc );
+       DBGTRC(debug, TRACE_GROUP,
+              "create_ddc_typed_response_packet() returned %s, *response_packet_ptr_loc=%p",
+              ddcrc_desc(rc), *response_packet_ptr_loc );
+       // TRCMSGTF(tf, "create_ddc_typed_response_packet() returned %s, *response_packet_ptr_loc=%p",
+       //          ddcrc_desc(rc), *response_packet_ptr_loc );
 
        if (rc != 0 && *response_packet_ptr_loc) {  // paranoid,  should never occur
           free(*response_packet_ptr_loc);
@@ -535,8 +547,10 @@ Global_Status_Code ddc_write_read(
    // if (rc != 0) {
    //    COUNT_STATUS_CODE(rc);
    // }
-   TRCMSGTF(tf, "Done. rc=%d: %s\n", rc, gsc_desc(rc) );
-   if (rc == 0 && tf)
+   // TRCMSGTF(tf, "Done. rc=%d: %s\n", rc, gsc_desc(rc) );
+   DBGTRC(debug, TRACE_GROUP, "Done. rc=%d: %s\n", rc, gsc_desc(rc) );
+   // if (rc == 0 && tf)
+   if (rc == 0 && (IS_TRACING() || debug) )
       dump_packet(*response_packet_ptr_loc);
 
    return rc;
@@ -572,9 +586,10 @@ Global_Status_Code ddc_write_read_with_retry(
         )
 {
    bool debug = false;
-   bool tf = IS_TRACING();
-   if (debug) tf = 0xff;
-   TRCMSGTF(tf, "Starting. dh=%s", display_handle_repr(dh)  );
+   // bool tf = IS_TRACING();
+   // if (debug) tf = 0xff;
+   // TRCMSGTF(tf, "Starting. dh=%s", display_handle_repr(dh)  );
+   DBGTRC(debug, TRACE_GROUP, "Starting. dh=%s", display_handle_repr(dh)  );
    assert(dh->io_mode != USB_IO);
 
    int  rc;
@@ -639,7 +654,8 @@ Global_Status_Code ddc_write_read_with_retry(
       COUNT_STATUS_CODE(rc);
    }
    try_data_record_tries(write_read_stats_rec, rc, tryctr);
-   TRCMSGTF(tf, "Done. rc=%s\n", gsc_desc(rc));
+   // TRCMSGTF(tf, "Done. rc=%s\n", gsc_desc(rc));
+   DBGTRC(debug, TRACE_GROUP, "Done. rc=%s\n", gsc_desc(rc));
    return rc;
 }
 
@@ -659,9 +675,11 @@ Global_Status_Code ddc_i2c_write_only(
          DDC_Packet *  request_packet_ptr
         )
 {
-   bool tf = IS_TRACING();
+   bool debug = false;
+   // bool tf = IS_TRACING();
    // tf = true;
-   TRCMSGTF(tf, "Starting.");
+   // TRCMSGTF(tf, "Starting.");
+   DBGTRC(debug, TRACE_GROUP, "Starting.");
 
    Global_Status_Code rc = invoke_i2c_writer(fh,
                               get_packet_len(request_packet_ptr)-1,
@@ -669,7 +687,8 @@ Global_Status_Code ddc_i2c_write_only(
    if (rc < 0)
       log_status_code(rc, __func__);
    call_tuned_sleep_i2c(SE_POST_WRITE);
-   TRCMSGTF(tf, "Done. rc=%d\n", rc);
+   // TRCMSGTF(tf, "Done. rc=%d\n", rc);
+   DBGTRC(debug, TRACE_GROUP, "Done. rc=%d\n", rc);
    return rc;
 }
 
@@ -685,9 +704,11 @@ Global_Status_Code ddc_i2c_write_only(
  *   < 0 if error
  */
 Global_Status_Code ddc_write_only( Display_Handle * dh, DDC_Packet *   request_packet_ptr) {
-   bool tf = IS_TRACING();
+   bool debug = false;
+   // bool tf = IS_TRACING();
    // tf = true;
-   TRCMSGTF(tf, "Starting.");
+   // TRCMSGTF(tf, "Starting.");
+   DBGTRC(debug, TRACE_GROUP, "Starting.");
 
    Global_Status_Code rc = 0;
    assert(dh->io_mode != USB_IO);
@@ -702,7 +723,8 @@ Global_Status_Code ddc_write_only( Display_Handle * dh, DDC_Packet *   request_p
              );
    }
 
-   TRCMSGTF(tf, "Done. rc=%d\n", rc);
+   // TRCMSGTF(tf, "Done. rc=%d\n", rc);
+   DBGTRC(debug, TRACE_GROUP, "Done. rc=%d\n", rc);
    return rc;
 }
 
@@ -720,10 +742,14 @@ Global_Status_Code ddc_write_only( Display_Handle * dh, DDC_Packet *   request_p
  *  The maximum number of tries allowed has been set in global variable
  *  max_write_only_exchange_tries.
  */
-Global_Status_Code ddc_write_only_with_retry( Display_Handle * dh, DDC_Packet *   request_packet_ptr) {
-   bool tf = IS_TRACING();
-   tf = false;
-   TRCMSGTF(tf, "Starting.");
+Global_Status_Code
+ddc_write_only_with_retry( Display_Handle * dh, DDC_Packet *   request_packet_ptr) {
+   bool debug = false;
+   // bool tf = IS_TRACING();
+   // tf = false;
+   // TRCMSGTF(tf, "Starting.");
+   DBGTRC(debug, TRACE_GROUP, "Starting.");
+
    assert(dh->io_mode != USB_IO);
 
    Global_Status_Code rc;
@@ -734,8 +760,9 @@ Global_Status_Code ddc_write_only_with_retry( Display_Handle * dh, DDC_Packet * 
        tryctr < max_write_only_exchange_tries && rc < 0 && retryable;
        tryctr++)
    {
-      TRCMSGTF(tf, "Start of try loop, tryctr=%d, max_write_only_exchange_tries=%d, rc=%d, retryable=%d",
-               tryctr, max_write_only_exchange_tries, rc, retryable );
+      DBGMSF(debug,
+             "Start of try loop, tryctr=%d, max_write_only_exchange_tries=%d, rc=%d, retryable=%d",
+             tryctr, max_write_only_exchange_tries, rc, retryable );
 
       rc = ddc_write_only(dh, request_packet_ptr);
 
@@ -759,7 +786,8 @@ Global_Status_Code ddc_write_only_with_retry( Display_Handle * dh, DDC_Packet * 
       rc = DDCRC_RETRIES;
    try_data_record_tries(write_only_stats_rec, rc, tryctr);
 
-   TRCMSGTF(tf, "Done. rc=%d", rc);
+   // TRCMSGTF(tf, "Done. rc=%d", rc);
+   DBGTRC(debug, TRACE_GROUP, "Done. rc=%d", rc);
    return rc;
 }
 
