@@ -54,6 +54,8 @@ static Trace_Group TRACE_GROUP = TRC_USB;
 // Forward declarations
 static GPtrArray * get_usb_monitor_list();
 
+// Global variables
+static GPtrArray * usb_monitors;    // array of Usb_Monitor_Info
 
 
 #define HID_USAGE_PAGE_MASK   0xffff0000
@@ -144,8 +146,6 @@ static void report_usb_monitor_info(Usb_Monitor_Info * moninfo, int depth) {
 }
 
 
-
-static GPtrArray * usb_monitors;    // array of Usb_Monitor_Info
 
 static void report_usb_monitors(GPtrArray * monitors, int depth) {
    const int d1 = depth+1;
@@ -339,7 +339,7 @@ bool check_usb_monitor( char * device_name ) {
 
 
 
-#ifdef NO_LONGER_UNUSED
+#ifdef NO_LONGER_USED
 Display_Info * is_usb_display_device(char * device_name) {
    bool debug = true;
 
