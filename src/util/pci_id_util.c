@@ -50,7 +50,7 @@
 
 
 // keep in order with enum Device_Id_Type defined in pci_it_util.h
-char * simple_device_fn[] = {
+static char * simple_device_fn[] = {
       "pci.ids",
       "usb.ids"
 };
@@ -76,8 +76,6 @@ char * find_id_file(Device_Id_Type id_type) {
          "/usr/share/hwdata",
          NULL
    };
-
-   // better: use find command ??
 
    char * id_fn = simple_device_fn[id_type];
    if (debug)
@@ -117,6 +115,33 @@ typedef struct {
 
 
 typedef GPtrArray  Simple_Id_Table;    // array of Simple_Id_Table_Entry
+/* Creates a new Simple_Id_Table
+ *
+ * Arguments:
+ *    initial_size     if > 0, size for initial allocation
+ *
+ * Returns:            pointer to newly allocated table
+ */
+static Simple_Id_Table *
+create_simple_id_table(int initial_size) {
+   Simple_Id_Table * new_table = NULL;
+   if (initial_size > 0)
+      new_table = g_ptr_array_sized_new(initial_size);
+   else
+      new_table = g_ptr_array_new();
+   return new_table;
+}
+
+
+static Simple_Id_Table_Entry *
+sit_add(Simple_Id_Table * sit, ushort id, char * name) {
+   Simple_Id_Table_Entry * new_entry = calloc(1, sizeof(Simple_Id_Table_Entry));
+   new_entry->id = id;
+   new_entry->name = strdup(name);
+   g_ptr_array_add(sit, new_entry);
+   return new_entry;
+}
+
 
 
 /* Parses a subrange of an array of text lines into an empty Simple_Id_Table
@@ -168,12 +193,13 @@ load_simple_id_segment(
          break;
       }
 
-      Simple_Id_Table_Entry * cur_entry = calloc(1,sizeof(Simple_Id_Table_Entry));
-      cur_entry->id   = acode;
-      cur_entry->name = strdup(aname);
+      // Simple_Id_Table_Entry * cur_entry = calloc(1,sizeof(Simple_Id_Table_Entry));
+      // cur_entry->id   = acode;
+      // cur_entry->name = strdup(aname);
       // printf("(%s) Created new entry for id=0x%08x, name=|%s|\n",
       //       __func__, cur_entry->id, cur_entry->name);
-      g_ptr_array_add(simple_table, cur_entry);
+      // g_ptr_array_add(simple_table, cur_entry);
+      sit_add(simple_table, acode, aname);
    }
 
    if (cur_pos <= linect)
@@ -195,7 +221,7 @@ report_simple_id_table(Simple_Id_Table * simple_table, int depth) {
 }
 #endif
 
-
+#ifdef OLD
 Multi_Level_Map hid_usages_table0 = {
       .table_name = "HID usages",
       .segment_tag = "HUT",
@@ -205,8 +231,11 @@ Multi_Level_Map hid_usages_table0 = {
             {"usage_id", 40, 0}
       }
 };
+#endif
 
 Multi_Level_Map * hid_usages_table;
+
+
 
 
 
@@ -347,9 +376,9 @@ static  Multi_Level_Map * load_multi_level_segment(
 static GPtrArray * pci_vendors;
 static GPtrArray * usb_vendors;
 #endif
-static GPtrArray * hid_descriptor_types;       // tag HID
-static GPtrArray * hid_descriptor_item_types;  // tag R
-static GPtrArray * hid_country_codes;          // tag HCC - for keyboards
+static Simple_Id_Table * hid_descriptor_types;       // tag HID
+static Simple_Id_Table * hid_descriptor_item_types;  // tag R
+static Simple_Id_Table * hid_country_codes;          // tag HCC - for keyboards
 
 static Multi_Level_Map * pci_vendors_mlm = {0};
 static Multi_Level_Map * usb_vendors_mlm = {0};
@@ -726,21 +755,21 @@ static void load_file_lines(Device_Id_Type id_type, GPtrArray * all_lines) {
             break;
 
          if ( streq(tagbuf,"HID") ) {
-            hid_descriptor_types = g_ptr_array_new();
+            hid_descriptor_types = create_simple_id_table(0);
             load_simple_id_segment(hid_descriptor_types, all_lines, tagbuf, linendx, &linendx);
                // printf("(%s) After HID, linendx=%d\n", __func__, linendx);
                // rpt_title("hid_descriptor_types: ", 0);
                // report_simple_ids(hid_descriptor_types, 1);
          }
          else if ( streq(tagbuf,"R") ) {
-             hid_descriptor_item_types = g_ptr_array_new();
+             hid_descriptor_item_types = create_simple_id_table(0);
              load_simple_id_segment(hid_descriptor_item_types, all_lines, tagbuf, linendx, &linendx);
                 // printf("(%s) After R, linendx=%d\n", __func__, linendx);
                 // rpt_title("hid_descriptor_item_types: ", 0);
                 // report_simple_ids(hid_descriptor_item_types, 1);
           }
          else if ( streq(tagbuf,"HCC") ) {
-             hid_country_codes = g_ptr_array_new();
+             hid_country_codes = create_simple_id_table(0);
              load_simple_id_segment(hid_country_codes, all_lines, tagbuf, linendx, &linendx);
                 // printf("(%s) After HCC, linendx=%d\n", __func__, linendx);
                 // rpt_title("hid_country_codes: ", 0);
@@ -748,10 +777,23 @@ static void load_file_lines(Device_Id_Type id_type, GPtrArray * all_lines) {
           }
 
           else if ( streq(tagbuf,"HUT") ) {
+#ifdef OLD
              hid_usages_table = mlm_create(
                                                     hid_usages_table0.table_name,
                                                     hid_usages_table0.levels,
                                                     hid_usages_table0.level_detail);
+#endif
+             MLM_Level hut_level_desc[] = {
+                   {"usage page", 20, 0},
+                   {"usage_id",   20, 0}
+             };
+
+             hid_usages_table = mlm_create(
+                                  "HUT",
+                                  2,
+                                  hut_level_desc);
+
+
              load_multi_level_segment(hid_usages_table, tagbuf, all_lines, &linendx);
                 // printf("(%s) After HUT, linendx=%d\n", __func__, linendx);
                 // rpt_title("usages table: ", 0);
