@@ -343,8 +343,10 @@ static  Multi_Level_Map * load_multi_level_segment(
 // Poor choice of data structures.   Replace with linked list or hash
 // and yet, performance not a problem
 
+#ifdef OLD
 static GPtrArray * pci_vendors;
 static GPtrArray * usb_vendors;
+#endif
 static GPtrArray * hid_descriptor_types;       // tag HID
 static GPtrArray * hid_descriptor_item_types;  // tag R
 static GPtrArray * hid_country_codes;          // tag HCC - for keyboards
@@ -411,8 +413,9 @@ int load_device_ids(Device_Id_Type id_type, GPtrArray * all_lines) {
     int total_vendors = 0;
     int total_devices = 0;
     int total_subsys  = 0;
+#ifdef OLD
     GPtrArray * all_vendors = NULL;
-
+#endif
     // new way:
 
     MLM_Level usb_id_levels[] = {
@@ -438,14 +441,16 @@ int load_device_ids(Device_Id_Type id_type, GPtrArray * all_lines) {
         mlm = mlm_create("USB Devices", 3, usb_id_levels);
 
 
+#ifdef OLD
     all_vendors = g_ptr_array_sized_new(2800);
     Pci_Id_Vendor * cur_vendor = NULL;
     Pci_Id_Device * cur_device = NULL;
     Pci_Id_Subsys * cur_subsys = NULL;
+#endif
 
     // new way:
-    int    cur_id = 0;
-    char * cur_name = NULL;
+    // int    cur_id = 0;
+    // char * cur_name = NULL;
     MLM_Node * cur_node[MAX_LEVELS] = {NULL};
 
     int linect = all_lines->len;
@@ -471,6 +476,7 @@ int load_device_ids(Device_Id_Type id_type, GPtrArray * all_lines) {
 
        case (0):
           {
+#ifdef OLD
              cur_vendor = calloc(1, sizeof(Pci_Id_Vendor));
              int ct = sscanf(a_line+tabct, "%4hx %m[^\n]",
                              &cur_vendor->vendor_id,
@@ -478,12 +484,20 @@ int load_device_ids(Device_Id_Type id_type, GPtrArray * all_lines) {
              // hack
              cur_id   = cur_vendor->vendor_id;
              cur_name = cur_vendor->vendor_name;
+#endif
+             ushort cur_id = 0;
+             char * cur_name = NULL;
+             int ct = sscanf(a_line+tabct, "%4hx %m[^\n]",
+                             &cur_id,
+                             &cur_name);
 
              if (ct != 2) {
                 printf("(%s) Error reading line: %s\n", __func__, a_line+tabct);
                 // hex_dump(a_line+tabct, strlen(a_line+tabct));
+#ifdef OLD
                 free(cur_vendor);
                 cur_vendor = NULL;
+#endif
 
                 // new way:
                 for (int ndx = tabct; ndx < levelct; ndx++) {
@@ -493,12 +507,17 @@ int load_device_ids(Device_Id_Type id_type, GPtrArray * all_lines) {
              else {
                 total_vendors++;
 
+#ifdef OLD
                 //old
                 cur_vendor->vendor_devices = g_ptr_array_sized_new(20);
                 g_ptr_array_add(all_vendors, cur_vendor);
-
                 // usb.ids has no final ffff field, test works only for pci.ids
                 if (cur_vendor->vendor_id == 0xffff)
+                   device_ids_done = true;
+#endif
+
+                // usb.ids has no final ffff field, test works only for pci.ids
+                if (cur_id == 0xffff)
                    device_ids_done = true;
 
                 // new:
@@ -514,7 +533,8 @@ int load_device_ids(Device_Id_Type id_type, GPtrArray * all_lines) {
 
        case (1):
           {
-             // if (cur_id[tabct-1])  {
+             if (cur_node[tabct-1])  {
+#ifdef OLD
              if (cur_vendor) {     // in case of vendor error
                 cur_device = calloc(1, sizeof(Pci_Id_Device));
                 int ct = sscanf(a_line+tabct, "%4hx %m[^\n]", &cur_device->device_id, &cur_device->device_name);
@@ -522,18 +542,24 @@ int load_device_ids(Device_Id_Type id_type, GPtrArray * all_lines) {
                 // hack:
                 cur_id   = cur_device->device_id;
                 cur_name = cur_device->device_name;
+#endif
+                ushort cur_id;
+                char * cur_name;
+                int ct = sscanf(a_line+tabct, "%4hx %m[^\n]", &cur_id, &cur_name);
 
                 if (ct != 2) {
                    printf("(%s) Error reading line: %s\n", __func__, a_line+tabct);
+#ifdef OLD
                    free(cur_device);
                    cur_device = NULL;
-
+#endif
                 }
                 else {
                    total_devices++;
+#ifdef OLD
                    cur_device->device_subsystems = g_ptr_array_sized_new(5);
                    g_ptr_array_add(cur_vendor->vendor_devices, cur_device);
-
+#endif
                    // new:
                    cur_node[tabct] = mlm_add_node(mlm, cur_node[tabct-1], cur_id, cur_name);
                    for (int ndx = tabct+1; ndx < levelct; ndx++) {
@@ -551,6 +577,7 @@ int load_device_ids(Device_Id_Type id_type, GPtrArray * all_lines) {
 
        case (2):
           {
+#ifdef OLD
              if (cur_device) {
                 if (id_type == ID_TYPE_PCI) {
                    cur_subsys = calloc(1, sizeof(Pci_Id_Subsys));
@@ -568,6 +595,7 @@ int load_device_ids(Device_Id_Type id_type, GPtrArray * all_lines) {
                       printf("(%s) Error reading line: %s\n", __func__, a_line+tabct);
                       free(cur_subsys);
                       cur_subsys = NULL;
+
                    }
                    else {
                       total_subsys++;
@@ -599,6 +627,46 @@ int load_device_ids(Device_Id_Type id_type, GPtrArray * all_lines) {
                    }
                 }  //ID_TYPE_USB
              }  // if (cur_device)
+
+#endif
+             if (cur_node[tabct-1]) {
+                if (id_type == ID_TYPE_PCI) {
+                   ushort this_subvendor_id = 0;
+                   ushort this_subdevice_id = 0;
+                   char * this_name = NULL;
+                   int ct = sscanf(a_line+tabct, "%4hx %4hx %m[^\n]",
+                                   &this_subvendor_id,
+                                   &this_subdevice_id,
+                                   &this_name);
+                   // transitional:
+
+                   uint   this_id = this_subvendor_id << 16 | this_subdevice_id;
+
+                   if (ct != 3) {
+                      printf("(%s) Error reading line: %s\n", __func__, a_line+tabct);
+                   }
+                   else {
+                      total_subsys++;
+                      cur_node[tabct] = mlm_add_node(mlm, cur_node[tabct-1], this_id, this_name);
+                   }
+                }  // ID_TYPE_PCI
+                else {     // ID_TYPE_USB
+                   ushort this_id = 0;
+                   char * this_name = NULL;
+                   int ct = sscanf(a_line+tabct, "%4hx  %m[^\n]",
+                                   &this_id,
+                                   &this_name);
+
+                   if (ct != 2) {
+                      printf("(%s) Error reading line: %s\n", __func__, a_line+tabct);
+                   }
+                   else {
+                      total_subsys++;
+                      // new
+                      cur_node[tabct] = mlm_add_node(mlm, cur_node[tabct-1], this_id, this_name);
+                   }
+                }  //ID_TYPE_USB
+             }  // if (cur_device)
              break;
           }
 
@@ -608,14 +676,17 @@ int load_device_ids(Device_Id_Type id_type, GPtrArray * all_lines) {
     }    // line loop
 
     if (id_type == ID_TYPE_PCI) {
+#ifdef OLD
        pci_vendors = all_vendors;
+#endif
        pci_vendors_mlm = mlm;
     }
     else {
+#ifdef OLD
        usb_vendors = all_vendors;
+#endif
        usb_vendors_mlm = mlm;
     }
-
 
     if (debug) {
        char * level3_name = (id_type == ID_TYPE_PCI) ? "subsystems" : "interfaces";
@@ -727,6 +798,7 @@ static void load_id_file(Device_Id_Type id_type){
 }
 
 
+#ifdef OLD
 /* Reports a device id table.
  *
  * Arguments:
@@ -769,7 +841,7 @@ void report_device_ids(Device_Id_Type id_type) {
    printf("(%s) Total vendors: %d, total devices: %d, total %s: %d\n",
           __func__, total_vendors, total_devices, level3_name, total_subsys);
 }
-
+#endif
 
 
 /* Reports a device id table.
@@ -827,7 +899,10 @@ bool pciusb_id_ensure_initialized() {
    bool debug = false;
    if (debug)
       printf("(%s) Starting\n", __func__);
+#ifdef OLD
    bool ok = (pci_vendors && usb_vendors);
+#endif
+   bool ok = (pci_vendors_mlm && usb_vendors_mlm);
 
    if (!ok) {
       load_id_file(ID_TYPE_PCI);
@@ -846,7 +921,7 @@ bool pciusb_id_ensure_initialized() {
 }
 
 
-
+#ifdef OLD
 Pci_Id_Vendor * pciusb_id_find_vendor(ushort vendor_id, Device_Id_Type id_type) {
    pciusb_id_ensure_initialized();
    bool debug = false;
@@ -928,7 +1003,7 @@ Pci_Id_Subsys * usb_id_find_interface(Pci_Id_Device * cur_device, ushort interfa
    }
    return result;
 }
-
+#endif
 
 
 
@@ -949,6 +1024,7 @@ Pci_Usb_Id_Names pci_id_get_names(
    }
    assert( argct==1 || argct==2 || argct==4);
    pciusb_id_ensure_initialized();
+#ifdef OLD
    Pci_Usb_Id_Names names = {NULL, NULL, NULL};
    Pci_Id_Vendor * vendor = pci_id_find_vendor(vendor_id);
    if (vendor) {
@@ -970,7 +1046,7 @@ Pci_Usb_Id_Names pci_id_get_names(
          }
       }
    }
-
+#endif
 
    // new way:
    uint ids[3] = {vendor_id, device_id, subvendor_id << 16 | subdevice_id};   // only diff from usb_id_get_names
@@ -991,15 +1067,17 @@ Pci_Usb_Id_Names pci_id_get_names(
    }
 
    if (debug) {
+#ifdef OLD
       printf("(%s) Returning: vendor_name=%s, device_name=%s, subsys_or_interface_name=%s\n",
             __func__,
             names.vendor_name, names.device_name, names.subsys_or_interface_name);
+#endif
       printf("(%s) names2: vendor_name=%s, device_name=%s, subsys_or_interface_name=%s\n",
             __func__,
             names2.vendor_name, names2.device_name, names2.subsys_or_interface_name);
    }
 
-
+#ifdef OLD
    if (debug)
       printf("(%s) Asserts\n", __func__);
    assert(streq(names.vendor_name, names2.vendor_name));
@@ -1007,9 +1085,12 @@ Pci_Usb_Id_Names pci_id_get_names(
       assert(streq(names.device_name, names2.device_name));
    if (argct >= 3)
       assert(streq(names.subsys_or_interface_name, names2.subsys_or_interface_name));
+#endif
 
-
+#ifdef OLD
    return names;
+#endif
+   return names2;
 }
 
 
@@ -1027,6 +1108,7 @@ Pci_Usb_Id_Names usb_id_get_names(
    }
    assert( argct==1 || argct==2 || argct==3);
    pciusb_id_ensure_initialized();
+#ifdef OLD
    Pci_Usb_Id_Names names = {NULL, NULL, NULL};
    Pci_Id_Vendor * vendor = usb_id_find_vendor(vendor_id);
    if (vendor) {
@@ -1043,6 +1125,7 @@ Pci_Usb_Id_Names usb_id_get_names(
          }
       }
    }
+#endif
 
    // new way:
    uint ids[3] = {vendor_id, device_id, interface_id};
@@ -1053,14 +1136,17 @@ Pci_Usb_Id_Names usb_id_get_names(
    names2.subsys_or_interface_name = mlm_names.names[2];
 
    if (debug) {
+#ifdef OLD
       printf("(%s) Returning: vendor_name=%s, device_name=%s, subsys_or_interface_name=%s\n",
             __func__,
             names.vendor_name, names.device_name, names.subsys_or_interface_name);
+#endif
       printf("(%s) names2: vendor_name=%s, device_name=%s, subsys_or_interface_name=%s\n",
             __func__,
             names2.vendor_name, names2.device_name, names2.subsys_or_interface_name);
    }
 
+#ifdef OLD
    if (debug)
       printf("(%s) Asserts\n", __func__);
    assert(streq(names.vendor_name, names2.vendor_name));
@@ -1070,6 +1156,8 @@ Pci_Usb_Id_Names usb_id_get_names(
       assert(streq(names.subsys_or_interface_name, names2.subsys_or_interface_name));
 
    return names;
+#endif
+   return names2;
 }
 
 

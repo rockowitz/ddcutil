@@ -36,7 +36,7 @@ typedef enum {
 
 char * find_id_file(Device_Id_Type id_type);
 
-
+#ifdef OLD
 typedef struct {
    ushort subvendor_id;
    ushort subdevice_id;
@@ -54,6 +54,7 @@ typedef struct {
    char *      vendor_name;
    GPtrArray * vendor_devices;    // Pci_Id_Device
 } Pci_Id_Vendor;
+#endif
 
 typedef struct {
    char * vendor_name;
@@ -93,6 +94,7 @@ Id_Usage_Code * ids_find_usage_by_page_and_id(ushort usage_page, ushort simple_u
 
 
 bool pciusb_id_ensure_initialized();
+#ifdef OLD
 Pci_Id_Vendor * pci_id_find_vendor(ushort vendor_id);
 Pci_Id_Device * pci_id_find_device(Pci_Id_Vendor * cur_vendor, ushort device_id);
 Pci_Id_Subsys * pci_id_find_subsys(Pci_Id_Device * cur_device, ushort subvendor_id, ushort subdevice_id);
@@ -100,6 +102,7 @@ Pci_Id_Subsys * pci_id_find_subsys(Pci_Id_Device * cur_device, ushort subvendor_
 Pci_Id_Vendor * usb_id_find_vendor(ushort vendor_id);
 Pci_Id_Device * usb_id_find_device(Pci_Id_Vendor * cur_vendor, ushort device_id);
 Pci_Id_Subsys * usb_id_find_interface(Pci_Id_Device * cur_device, ushort interface_id);
+#endif
 
 Pci_Usb_Id_Names pci_id_get_names(
                 ushort vendor_id,
