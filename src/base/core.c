@@ -320,6 +320,10 @@ void show_reporting() {
 
 // n. used within macro LOADFUNC of adl_intf.c
 
+
+// NB CANNOT MAP TO dbgtrc - writes to stderr, not stdout
+
+
 void severemsg(
         const char * funcname,
         const int    lineno,
@@ -338,6 +342,8 @@ void severemsg(
 }
 
 
+
+#ifdef OLD
 // normally wrapped in one of the DBSMGS macros
 void dbgmsg(
         const char * funcname,
@@ -376,9 +382,25 @@ void dbgmsg(
    puts(buf2);
    va_end(args);
 }
+#endif
 
-// normally wrapped in one of the TRCMSG macros
-void trcmsg(
+
+/* Core function for emitting debug or trace messages.
+ * Normally wrapped in a DBGMSG or TRCMSG macro to
+ * simplify calling.
+ *
+ * Arguments:
+ *    trace_group   trace group of caller, to determine whether to output msg
+ *                  0xff to always output
+ *    funcname      function name in message
+ *    lineno        line number in message
+ *    fn            file name
+ *    format        format string for message
+ *    ...           format arguments
+ *
+ * Returns:         nothing
+ */
+void dbgtrc(
         Byte         trace_group,
         const char * funcname,
         const int    lineno,
@@ -386,14 +408,36 @@ void trcmsg(
         char *       format,
         ...)
 {
+   static char * buffer = NULL;
+   static int    bufsz  = 200;     // initial value
+   static char * buf2   = NULL;
+
+   if (!buffer) {      // first call
+      buffer = calloc(bufsz,    sizeof(char*));
+      buf2   = calloc(bufsz+50, sizeof(char*));
+   }
+
    if ( is_tracing(trace_group, fn) ) {
-      char buffer[200];
-      char buf2[250];
       va_list(args);
       va_start(args, format);
-      vsnprintf(buffer, 200, format, args);
-      snprintf(buf2, 250, "(%s) %s", funcname, buffer);
-      puts(buf2);
+      int ct = vsnprintf(buffer, bufsz, format, args);
+      if (ct >= bufsz) {   // if buffer too small, reallocate
+         // printf("(dbgmsg) Reallocting buffer, new size = %d\n", ct+1);
+         // buffer too small, reallocate and try again
+         free(buffer);
+         free(buf2);
+         bufsz = ct+1;
+         buffer = calloc(bufsz, sizeof(char*));
+         buf2   = calloc(bufsz+50, sizeof(char*));
+         va_list(args);
+         va_start(args, format);
+         ct = vsnprintf(buffer, bufsz, format, args);
+         assert(ct < bufsz);
+      }
+
+      snprintf(buf2, bufsz+50, "(%s) %s\n", funcname, buffer);
+      // puts(buf2);        // automatic terminating null
+      fputs(buf2, FOUT);    // no automatic terminating null
       va_end(args);
    }
 }

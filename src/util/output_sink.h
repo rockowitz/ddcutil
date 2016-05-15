@@ -1,10 +1,7 @@
 /* output_sink.h
  *
- * Created on: Dec 28, 2015
- *     Author: rock
- *
  * <copyright>
- * Copyright (C) 2014-2015 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2014-2016 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -24,8 +21,8 @@
  * </endcopyright>
  */
 
-#ifndef SRC_UTIL_OUTPUT_SINK_H_
-#define SRC_UTIL_OUTPUT_SINK_H_
+#ifndef UTIL_OUTPUT_SINK_H_
+#define UTIL_OUTPUT_SINK_H_
 
 
 #include <glib.h>
@@ -47,4 +44,4 @@ GPtrArray *  read_sink(Output_Sink sink);
 
 int close_sink(Output_Sink sink);
 
-#endif /* SRC_UTIL_OUTPUT_SINK_H_ */
+#endif /* UTIL_OUTPUT_SINK_H_ */

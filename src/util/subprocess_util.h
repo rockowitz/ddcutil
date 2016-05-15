@@ -1,10 +1,7 @@
 /* subprocess_util.h
  *
- * Created on: Jan 9, 2016
- *     Author: rock
- *
  * <copyright>
- * Copyright (C) 2014-2015 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2014-2016 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -24,11 +21,11 @@
  * </endcopyright>
  */
 
-#ifndef SRC_UTIL_SUBPROCESS_UTIL_H_
-#define SRC_UTIL_SUBPROCESS_UTIL_H_
+#ifndef SUBPROCESS_UTIL_H_
+#define SUBPROCESS_UTIL_H_
 
 #include <stdbool.h>
 
 bool execute_shell_cmd(char * shell_cmd, int depth);
 
-#endif /* SRC_UTIL_SUBPROCESS_UTIL_H_ */
+#endif /* SUBPROCESS_UTIL_H_ */

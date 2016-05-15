@@ -1,10 +1,7 @@
 /* subprocess_util.c
  *
- * Created on: Jan 9, 2016
- *     Author: rock
- *
  * <copyright>
- * Copyright (C) 2014-2015 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2014-2016 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -24,17 +21,14 @@
  * </endcopyright>
  */
 
-
-// #include <assert.h>
 #include <errno.h>
-// #include <glib.h>
-// #include <stdarg.h>
 #include <stdio.h>
-// #include <stdlib.h>
 #include <string.h>
 
 #include "util/report_util.h"
 #include "util/string_util.h"
+
+#include "util/subprocess_util.h"
 
 
 /* Executes a shell command and writes the output to the terminal

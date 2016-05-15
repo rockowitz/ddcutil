@@ -1,13 +1,10 @@
-/* stringutil.c
- *
- * Created on: Nov 4, 2015
- *     Author: rock
+/* string_util.c
  *
  * Basic utility functions for basic data types,
  * particularly strings and hex values.
  *
  * <copyright>
- * Copyright (C) 2014-2015 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2014-2016 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *

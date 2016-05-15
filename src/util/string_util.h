@@ -1,7 +1,4 @@
-/* stringutil.h
- *
- * Created on: Nov 4, 2015
- *     Author: rock
+/* string_util.h
  *
  * String and hex conversion functions
  *

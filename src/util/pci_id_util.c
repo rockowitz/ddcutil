@@ -1,10 +1,7 @@
 /* pci_id_util.c
  *
- * Created on: Dec 9, 2015
- *     Author: rock
- *
  * <copyright>
- * Copyright (C) 2014-2015 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2014-2016 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -29,26 +26,21 @@
 #include <dirent.h>
 #include <errno.h>
 #include <glib.h>
+#include <limits.h>
+#include <linux/limits.h>
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/stat.h>
 #include <time.h>
 #include <unistd.h>
-#include <linux/limits.h>
-#include <limits.h>
-#include <sys/stat.h>
 // #include <libosinfo-1.0/osinfo/osinfo.h>
 
-
-
 #include "util/file_util.h"
-#include "util/string_util.h"
+#include "util/multi_level_map.h"
 #include "util/report_util.h"
-
-// #include "base/linux_errno.h"
-
-// #include "base/util.h"
+#include "util/string_util.h"
 
 #include "util/pci_id_util.h"
 
@@ -57,15 +49,14 @@
 #endif
 
 
-
+// keep in order with enum Device_Id_Type defined in pci_it_util.h
 char * simple_device_fn[] = {
       "pci.ids",
       "usb.ids"
 };
 
 
-
-/* Returns fully qualified file name of device id file.
+/* Finds the pci.ids or usb.ids file.
  *
  * Arguments:
  *    id_type     ID_TYPE_PCI or ID_TYPE_USB
@@ -113,25 +104,37 @@ char * find_id_file(Device_Id_Type id_type) {
 }
 
 
+//
+// Simple_Id_Table
+//
+// A simple data structure for the simple case where there is only a single
+// level of lookup
 
-// Poor choice of data structures.   Replace with linked list or hash
-// and yet, performance not a problem
-
-static GPtrArray * pci_vendors;
-static GPtrArray * usb_vendors;
-static GPtrArray * hid_descriptor_types;       // tag HID
-static GPtrArray * hid_descriptor_item_types;  // tag R
-static GPtrArray * hid_country_codes;          // tag HCC - for keyboards
+typedef struct {
+   ushort  id;
+   char *  name;
+} Simple_Id_Table_Entry;
 
 
+typedef GPtrArray  Simple_Id_Table;    // array of Simple_Id_Table_Entry
 
+
+/* Parses a subrange of an array of text lines into an empty Simple_Id_Table
+ *
+ * Arguments:
+ *   simple_table
+ *   all_lines       array of pointer to text lines to parse
+ *   segment_tag     first token in lines, when this changes it indicates segment exhausted
+ *   cur_pos         first line of all_lines to parse
+ *   end_pos         updated with line number after last line of segment
+ */
 static void
-load_simple_ids(
-      GPtrArray * simple_table,
-      GPtrArray * all_lines,
-      char * segment_tag,
-      int cur_pos,
-      int * end_pos)
+load_simple_id_segment(
+      Simple_Id_Table * simple_table,      // empty GPtrArray, will be filled in w Simple_Id_Table_Entry *
+      GPtrArray *       all_lines,         // array of pointers to lines
+      char *            segment_tag,
+      int               cur_pos,
+      int *             end_pos)
 {
    bool debug = false;
    assert(simple_table);
@@ -165,7 +168,7 @@ load_simple_ids(
          break;
       }
 
-      Id_Simple_Table_Entry * cur_entry = calloc(1,sizeof(Id_Simple_Table_Entry));
+      Simple_Id_Table_Entry * cur_entry = calloc(1,sizeof(Simple_Id_Table_Entry));
       cur_entry->id   = acode;
       cur_entry->name = strdup(aname);
       // printf("(%s) Created new entry for id=0x%08x, name=|%s|\n",
@@ -181,46 +184,19 @@ load_simple_ids(
 }
 
 
-void report_simple_ids(GPtrArray * simple_table, int depth) {
+#ifdef DEBUGGING_FUNCTION
+static void
+report_simple_id_table(Simple_Id_Table * simple_table, int depth) {
    rpt_structure_loc("Simple ids table", simple_table, depth);
    for (int ndx = 0; ndx < simple_table->len; ndx++) {
-      Id_Simple_Table_Entry * cur_entry = g_ptr_array_index(simple_table, ndx);
+      Simple_Id_Table_Entry * cur_entry = g_ptr_array_index(simple_table, ndx);
       rpt_vstring(depth+1, "0x%04x -> |%s|", cur_entry->id, cur_entry->name);
    }
 }
-
-
-typedef struct {
-   ushort   code;
-   char *   name;
-   GPtrArray * children;
-} Node_Entry;
-
-#ifdef OLD
-typedef struct {
-   ushort   code;
-   char *   name;
-} Leaf_Entry;
 #endif
 
-typedef struct {
-   char *      name;
-   int         initial_size;
-   int         total_entries;
-   Node_Entry * cur_entry;
-} MLT_Level;
 
-
-typedef struct {
-   char*       table_name;
-   char*       segment_tag;
-   int         levels;
-   GPtrArray * root;
-   MLT_Level   level_detail[];
-} Multi_Level_Table;
-
-
-Multi_Level_Table hid_usages_table = {
+Multi_Level_Map hid_usages_table0 = {
       .table_name = "HID usages",
       .segment_tag = "HUT",
       .levels = 2,
@@ -230,18 +206,13 @@ Multi_Level_Table hid_usages_table = {
       }
 };
 
+Multi_Level_Map * hid_usages_table;
 
-void mlt_cur_entries(Multi_Level_Table * mlt) {
-   int d1 = 1;
-   rpt_vstring(0, "Multi_Level_Table.  levels=%d", mlt->levels);
-   for (int ndx=0; ndx < mlt->levels; ndx++) {
-      rpt_vstring(d1, "  mlt->level_detail[%d].cur_entry=%p, addr of entry=%p",
-                      ndx, mlt->level_detail[ndx].cur_entry,  &mlt->level_detail[ndx].cur_entry);
-   }
-}
 
-static /* GPtrArray */  Multi_Level_Table * load_multi_level_table(
-      Multi_Level_Table * header,
+
+static  Multi_Level_Map * load_multi_level_segment(
+      Multi_Level_Map * header,
+      char *            segment_tag,
       GPtrArray *       all_lines,
       int*              curpos)
 {
@@ -251,11 +222,16 @@ static /* GPtrArray */  Multi_Level_Table * load_multi_level_table(
       printf("(%s) Starting. linendx=%d, -> |%s|\n",
              __func__, linendx, (char *) g_ptr_array_index(all_lines,linendx));
 
+   MLM_Node * cur_nodes[8] = {NULL};     // todo: deal properly w max levels
+
    for (int ndx = 0; ndx < header->levels; ndx++) {
       header->level_detail[ndx].total_entries = 0;
       header->level_detail[ndx].cur_entry = NULL;
    }
-   header->root = g_ptr_array_sized_new(header->level_detail[0].initial_size);
+   // header->root = g_ptr_array_sized_new(header->level_detail[0].initial_size);
+
+   ushort cur_code;
+   char * cur_name;
 
    bool more = true;
    while (more && linendx < all_lines->len) {
@@ -267,18 +243,21 @@ static /* GPtrArray */  Multi_Level_Table * load_multi_level_table(
          continue;
 
       // MLT_Level * lvl_detail = &header->level_detail[tabct];
-      header->level_detail[tabct].cur_entry = calloc(1, sizeof(Node_Entry));
-      // printf("Created new Node_Entry.  Set header->level_detail[tabct].cur_entry (addr %p) to %p\n",
+      // A header->level_detail[tabct].cur_entry = calloc(1, sizeof(MLM_Node));
+      // printf("Created new MLT_Node.  Set header->level_detail[tabct].cur_entry (addr %p) to %p\n",
       //        &(header->level_detail[tabct].cur_entry), header->level_detail[tabct].cur_entry);
 
+      // printf("(%s) tabct==%d\n", __func__, tabct);
       if (tabct == 0) {
+
          char cur_tag[40];
          int ct = sscanf(a_line+tabct, "%s %4hx %m[^\n]",
                               cur_tag,
-                              &header->level_detail[tabct].cur_entry->code,
-                              &header->level_detail[tabct].cur_entry->name );
-         if (!streq(cur_tag, header->segment_tag)) {
-            free(header->level_detail[tabct].cur_entry);
+                              &cur_code,    // &header->level_detail[tabct].cur_entry->code,
+                              &cur_name);   // &header->level_detail[tabct].cur_entry->name );
+         // if (!streq(cur_tag, header->segment_tag)) {
+         if (!streq(cur_tag, segment_tag)) {
+            // A free(header->level_detail[tabct].cur_entry);
             // segment_done = true;
             // more = false;   // needed for continue
             break;     // or continue?
@@ -287,16 +266,19 @@ static /* GPtrArray */  Multi_Level_Table * load_multi_level_table(
             printf("(%s) Error processing line %d: \"%s\"\n", __func__, linendx, a_line);
             printf("(%s) Lines has %d fields, not 3.  Ignoring\n", __func__, ct);
             // hex_dump(a_line+tabct, strlen(a_line+tabct));
-            free(header->level_detail[tabct].cur_entry);
-            header->level_detail[tabct].cur_entry = NULL;
+            // A free(header->level_detail[tabct].cur_entry);
+            // A  header->level_detail[tabct].cur_entry = NULL;
          }
          else {
             header->level_detail[tabct].total_entries++;
-            if (tabct < header->levels-1)  // if not a leaf
-               header->level_detail[tabct].cur_entry->children = g_ptr_array_sized_new(20);
-            g_ptr_array_add(header->root, header->level_detail[tabct].cur_entry);
-            for (int lvl = tabct+1; lvl < header->levels; lvl++)
+            // A if (tabct < header->levels-1)  // if not a leaf
+            // A   header->level_detail[tabct].cur_entry->children = g_ptr_array_sized_new(20);
+            // A g_ptr_array_add(header->root, header->level_detail[tabct].cur_entry);
+            cur_nodes[tabct] = mlm_add_node(header, NULL, cur_code, cur_name);
+            for (int lvl = tabct+1; lvl < header->levels; lvl++) {
                 header->level_detail[lvl].cur_entry = NULL;
+                cur_nodes[lvl] = NULL;
+            }
             // printf("Successful level 0 node added. set header->level_detail[%d].cur_entry (addr %p) to %p\n",
             //        tabct, &(header->level_detail[tabct].cur_entry), header->level_detail[tabct].cur_entry   );
             // mlt_cur_entries(header);
@@ -304,30 +286,36 @@ static /* GPtrArray */  Multi_Level_Table * load_multi_level_table(
      }
 
      else  {    // intermediate or leaf node
-        if (!header->level_detail[tabct-1].cur_entry) {   // bad data, issue warning and ignore
+        // A if (!header->level_detail[tabct-1].cur_entry) {   // bad data, issue warning and ignore
+        if (!cur_nodes[tabct-1]) {
            printf("Error processing line %d: \"%s\"\n", linendx-1, a_line);
            printf("No enclosing level %d node\n", tabct-1);
            // printf("(A) tabct=%d\n", tabct);
            // mlt_cur_entries(header);
-           free(header->level_detail[tabct].cur_entry);
+           // A free(header->level_detail[tabct].cur_entry);
            header->level_detail[tabct].cur_entry = NULL;
 
         }
         else {
            int ct = sscanf(a_line+tabct, "%4hx  %m[^\n]",
-                            &header->level_detail[tabct].cur_entry->code,
-                            &header->level_detail[tabct].cur_entry->name);
+                            &cur_code,   // &header->level_detail[tabct].cur_entry->code,
+                            &cur_name);  // &header->level_detail[tabct].cur_entry->name);
             if (ct != 2) {
                printf("(%s) Error reading line %d: %s\n",
                       __func__, linendx-1, a_line);
-               free(header->level_detail[tabct].cur_entry);
-               header->level_detail[tabct].cur_entry = NULL;
+               // A free(header->level_detail[tabct].cur_entry);
+               // A header->level_detail[tabct].cur_entry = NULL;
             }
             else {
                header->level_detail[tabct].total_entries++;
-               if (tabct < header->levels-1)  // if not a leaf
-                  header->level_detail[tabct].cur_entry->children = g_ptr_array_sized_new(20);
-               g_ptr_array_add(header->level_detail[tabct-1].cur_entry->children, header->level_detail[tabct].cur_entry);
+               // A if (tabct < header->levels-1)  // if not a leaf
+               // A    header->level_detail[tabct].cur_entry->children = g_ptr_array_sized_new(20);
+               // A g_ptr_array_add(header->level_detail[tabct-1].cur_entry->children, header->level_detail[tabct].cur_entry);
+               cur_nodes[tabct] = mlm_add_node(header, cur_nodes[tabct-1],  cur_code, cur_name);
+               for (int lvl = tabct+1; lvl < header->levels; lvl++) {
+                   header->level_detail[lvl].cur_entry = NULL;
+                   cur_nodes[lvl] = NULL;
+               }
             }
         }
      }     // intermediate or leaf node
@@ -350,40 +338,19 @@ static /* GPtrArray */  Multi_Level_Table * load_multi_level_table(
 }
 
 
-void report_multi_level_table_node(Multi_Level_Table * header, int level, Node_Entry * entry, int depth) {
-   // MLT_Level level_detail = header->level_detail[level];
-   rpt_vstring(depth, "%04x  %s", entry->code, entry->name);
-   if (entry->children) {
-      for (int ndx=0; ndx<entry->children->len; ndx++) {
-         report_multi_level_table_node(
-               header,
-               level+1,
-               g_ptr_array_index(entry->children, ndx),
-               depth+1);
-      }
-   }
-}
 
 
+// Poor choice of data structures.   Replace with linked list or hash
+// and yet, performance not a problem
 
+static GPtrArray * pci_vendors;
+static GPtrArray * usb_vendors;
+static GPtrArray * hid_descriptor_types;       // tag HID
+static GPtrArray * hid_descriptor_item_types;  // tag R
+static GPtrArray * hid_country_codes;          // tag HCC - for keyboards
 
-void report_multi_level_table(Multi_Level_Table * header, int depth) {
-      // bool debug = true;
-   int d1 = depth+1;
-   int d2 = depth+2;
-   rpt_structure_loc("Multi_Level_Table", header, depth);
-   rpt_vstring(d1, "%-20s:  %s", "Table",       header->table_name);
-   rpt_vstring(d1, "%-20s:  %s", "Segment tag", header->segment_tag);
-
-   for (int ndx=0; ndx < header->root->len; ndx++) {
-      report_multi_level_table_node(
-            header,
-            0,
-            g_ptr_array_index(header->root, ndx),
-            d2);
-   }
-}
-
+static Multi_Level_Map * pci_vendors_mlm = {0};
+static Multi_Level_Map * usb_vendors_mlm = {0};
 
 // stats 12/2015:
 //   lines in pci.ids:  25,339
@@ -392,6 +359,20 @@ void report_multi_level_table(Multi_Level_Table * header, int depth) {
 //   subsystem:         10,974
 
 
+//
+// File parsing
+//
+
+/* Find the start of the next segment in a line array,
+ * i.e. a non-comment line that begins with a different tag
+ *
+ * Arguments:
+ *    lines         array of pointers to lines
+ *    cur_ndx       current position in line array
+ *    segment_tag   first token of lines in current segment
+ *
+ * Returns:         line number of start of next segment
+ */
 int find_next_segment_start(GPtrArray* lines, int cur_ndx, char* segment_tag) {
    bool debug = false;
    if (debug)
@@ -425,14 +406,300 @@ int find_next_segment_start(GPtrArray* lines, int cur_ndx, char* segment_tag) {
 }
 
 
-
-
-static void load_device_ids(Device_Id_Type id_type){
+int load_device_ids(Device_Id_Type id_type, GPtrArray * all_lines) {
    bool debug = false;
-   int total_vendors = 0;
-   int total_devices = 0;
-   int total_subsys  = 0;
-   GPtrArray * all_vendors = NULL;
+    int total_vendors = 0;
+    int total_devices = 0;
+    int total_subsys  = 0;
+    GPtrArray * all_vendors = NULL;
+
+    // new way:
+
+    MLM_Level usb_id_levels[] = {
+          {"vendor", 5000, 0},
+          {"product",  20, 0},
+          {"interface", 10, 0}
+    };
+
+    MLM_Level pci_id_levels[] = {
+          {"vendor",   10000, 0},
+          {"device",      20, 0},
+          {"subsystem",    5, 0}
+    };
+
+#define MAX_LEVELS 5
+     Multi_Level_Map * mlm = NULL;
+     int levelct = 3;
+
+     if (id_type == ID_TYPE_PCI) {
+        mlm = mlm_create("PCI Devices", 3, pci_id_levels);
+     }
+     else
+        mlm = mlm_create("USB Devices", 3, usb_id_levels);
+
+
+    all_vendors = g_ptr_array_sized_new(2800);
+    Pci_Id_Vendor * cur_vendor = NULL;
+    Pci_Id_Device * cur_device = NULL;
+    Pci_Id_Subsys * cur_subsys = NULL;
+
+    // new way:
+    int    cur_id = 0;
+    char * cur_name = NULL;
+    MLM_Node * cur_node[MAX_LEVELS] = {NULL};
+
+    int linect = all_lines->len;
+    int linendx;
+    char * a_line;
+    bool device_ids_done = false;    // end of PCI id section seen?
+    for (linendx=0; linendx<linect && !device_ids_done; linendx++) {
+       a_line = g_ptr_array_index(all_lines, linendx);
+       int tabct = 0;
+       while (a_line[tabct] == '\t')
+          tabct++;
+       if (strlen(rtrim_in_place(a_line+tabct)) == 0 || a_line[tabct] == '#')
+          continue;
+       if (id_type == ID_TYPE_USB) {
+          // hacky test for end of id section
+          if (memcmp(a_line+tabct, "C", 1) == 0) {
+             device_ids_done = true;
+             break;
+          }
+       }
+
+       switch(tabct) {
+
+       case (0):
+          {
+             cur_vendor = calloc(1, sizeof(Pci_Id_Vendor));
+             int ct = sscanf(a_line+tabct, "%4hx %m[^\n]",
+                             &cur_vendor->vendor_id,
+                             &cur_vendor->vendor_name);
+             // hack
+             cur_id   = cur_vendor->vendor_id;
+             cur_name = cur_vendor->vendor_name;
+
+             if (ct != 2) {
+                printf("(%s) Error reading line: %s\n", __func__, a_line+tabct);
+                // hex_dump(a_line+tabct, strlen(a_line+tabct));
+                free(cur_vendor);
+                cur_vendor = NULL;
+
+                // new way:
+                for (int ndx = tabct; ndx < levelct; ndx++) {
+                   cur_node[ndx] = NULL;
+                }
+             }
+             else {
+                total_vendors++;
+
+                //old
+                cur_vendor->vendor_devices = g_ptr_array_sized_new(20);
+                g_ptr_array_add(all_vendors, cur_vendor);
+
+                // usb.ids has no final ffff field, test works only for pci.ids
+                if (cur_vendor->vendor_id == 0xffff)
+                   device_ids_done = true;
+
+                // new:
+
+                cur_node[tabct] = mlm_add_node(mlm, NULL, cur_id, cur_name);
+                for (int ndx = tabct+1; ndx < levelct; ndx++) {
+                   cur_node[ndx] = NULL;
+                }
+
+             }
+             break;
+          }
+
+       case (1):
+          {
+             // if (cur_id[tabct-1])  {
+             if (cur_vendor) {     // in case of vendor error
+                cur_device = calloc(1, sizeof(Pci_Id_Device));
+                int ct = sscanf(a_line+tabct, "%4hx %m[^\n]", &cur_device->device_id, &cur_device->device_name);
+
+                // hack:
+                cur_id   = cur_device->device_id;
+                cur_name = cur_device->device_name;
+
+                if (ct != 2) {
+                   printf("(%s) Error reading line: %s\n", __func__, a_line+tabct);
+                   free(cur_device);
+                   cur_device = NULL;
+
+                }
+                else {
+                   total_devices++;
+                   cur_device->device_subsystems = g_ptr_array_sized_new(5);
+                   g_ptr_array_add(cur_vendor->vendor_devices, cur_device);
+
+                   // new:
+                   cur_node[tabct] = mlm_add_node(mlm, cur_node[tabct-1], cur_id, cur_name);
+                   for (int ndx = tabct+1; ndx < levelct; ndx++) {
+                      cur_node[ndx] = NULL;
+                   }
+
+                }
+
+             }
+             else {
+                // TODO: handle bad data case
+             }
+             break;
+          }
+
+       case (2):
+          {
+             if (cur_device) {
+                if (id_type == ID_TYPE_PCI) {
+                   cur_subsys = calloc(1, sizeof(Pci_Id_Subsys));
+                   int ct = sscanf(a_line+tabct, "%4hx %4hx %m[^\n]",
+                                   &cur_subsys->subvendor_id,
+                                   &cur_subsys->subdevice_id,
+                                   &cur_subsys->subsystem_name);
+                   // transitional:
+                   ushort this_subvendor_id = cur_subsys->subvendor_id;
+                   ushort this_subdevice_id = cur_subsys->subdevice_id;
+                   uint   this_id = this_subvendor_id << 16 | this_subdevice_id;
+                   char * this_name  = cur_subsys->subsystem_name;
+
+                   if (ct != 3) {
+                      printf("(%s) Error reading line: %s\n", __func__, a_line+tabct);
+                      free(cur_subsys);
+                      cur_subsys = NULL;
+                   }
+                   else {
+                      total_subsys++;
+                      g_ptr_array_add(cur_device->device_subsystems, cur_subsys);
+
+                      cur_node[tabct] = mlm_add_node(mlm, cur_node[tabct-1], this_id, this_name);
+                   }
+                }  // ID_TYPE_PCI
+                else {     // ID_TYPE_USB
+                   cur_subsys = calloc(1, sizeof(Pci_Id_Subsys));
+                   int ct = sscanf(a_line+tabct, "%4hx  %m[^\n]",
+                                   &cur_subsys->subvendor_id,
+                                   &cur_subsys->subsystem_name);
+
+                   ushort this_id = cur_subsys->subvendor_id;
+                   char * this_name = cur_subsys->subsystem_name;
+
+                   if (ct != 2) {
+                      printf("(%s) Error reading line: %s\n", __func__, a_line+tabct);
+                      free(cur_subsys);
+                      cur_subsys = NULL;
+                   }
+                   else {
+                      total_subsys++;
+                      g_ptr_array_add(cur_device->device_subsystems, cur_subsys);
+
+                      // new
+                      cur_node[tabct] = mlm_add_node(mlm, cur_node[tabct-1], this_id, this_name);
+                   }
+                }  //ID_TYPE_USB
+             }  // if (cur_device)
+             break;
+          }
+
+       default:
+          printf("Unexpected number of leading tabs in line: %s\n", a_line);
+       } // switch
+    }    // line loop
+
+    if (id_type == ID_TYPE_PCI) {
+       pci_vendors = all_vendors;
+       pci_vendors_mlm = mlm;
+    }
+    else {
+       usb_vendors = all_vendors;
+       usb_vendors_mlm = mlm;
+    }
+
+
+    if (debug) {
+       char * level3_name = (id_type == ID_TYPE_PCI) ? "subsystems" : "interfaces";
+       printf("(%s) Total vendors: %d, total devices: %d, total %s: %d\n",
+              __func__, total_vendors, total_devices, level3_name, total_subsys);
+    }
+
+   return linendx;
+}
+
+
+static void load_file_lines(Device_Id_Type id_type, GPtrArray * all_lines) {
+   // bool debug = false;
+   int linendx;
+   // char * a_line;
+
+   linendx = load_device_ids(id_type, all_lines);
+
+   // if usb.ids, look for additional segments
+   if (id_type == ID_TYPE_USB) {
+         // a_line = g_ptr_array_index(all_lines, linendx);
+         // printf("(%s) First line of next segment: |%s|, linendx=%d\n", __func__, a_line, linendx);
+      linendx--; //  start looking on comment line before segment
+         // a_line = g_ptr_array_index(all_lines, linendx);
+         // printf("(%s) First line of next segment: |%s|, linendx=%d\n", __func__, a_line, linendx);
+#define MAX_TAG_SIZE 40
+      char tagbuf[MAX_TAG_SIZE];
+      tagbuf[0] = '\0';
+
+      while (linendx < all_lines->len) {
+            //printf("(%s) Before find_next_segment_start(), linendx=%d: |%s|\n",
+            //       __func__, linendx, (char *) g_ptr_array_index(all_lines, linendx));
+         linendx = find_next_segment_start(all_lines, linendx, tagbuf);
+            // printf("(%s) Next segment starts at line %d: |%s|\n",
+            //        __func__, linendx, (char *) g_ptr_array_index(all_lines, linendx));
+         if (linendx >= all_lines->len)
+            break;
+
+         if ( streq(tagbuf,"HID") ) {
+            hid_descriptor_types = g_ptr_array_new();
+            load_simple_id_segment(hid_descriptor_types, all_lines, tagbuf, linendx, &linendx);
+               // printf("(%s) After HID, linendx=%d\n", __func__, linendx);
+               // rpt_title("hid_descriptor_types: ", 0);
+               // report_simple_ids(hid_descriptor_types, 1);
+         }
+         else if ( streq(tagbuf,"R") ) {
+             hid_descriptor_item_types = g_ptr_array_new();
+             load_simple_id_segment(hid_descriptor_item_types, all_lines, tagbuf, linendx, &linendx);
+                // printf("(%s) After R, linendx=%d\n", __func__, linendx);
+                // rpt_title("hid_descriptor_item_types: ", 0);
+                // report_simple_ids(hid_descriptor_item_types, 1);
+          }
+         else if ( streq(tagbuf,"HCC") ) {
+             hid_country_codes = g_ptr_array_new();
+             load_simple_id_segment(hid_country_codes, all_lines, tagbuf, linendx, &linendx);
+                // printf("(%s) After HCC, linendx=%d\n", __func__, linendx);
+                // rpt_title("hid_country_codes: ", 0);
+                // report_simple_ids(hid_country_codes, 1);
+          }
+
+          else if ( streq(tagbuf,"HUT") ) {
+             hid_usages_table = mlm_create(
+                                                    hid_usages_table0.table_name,
+                                                    hid_usages_table0.levels,
+                                                    hid_usages_table0.level_detail);
+             load_multi_level_segment(hid_usages_table, tagbuf, all_lines, &linendx);
+                // printf("(%s) After HUT, linendx=%d\n", __func__, linendx);
+                // rpt_title("usages table: ", 0);
+                // report_multi_level_table(hid_usages_table, 1);
+          }
+      }
+   }
+}
+
+
+/* Locates a pci.ids or usb.ids file and loads its contents into internal tables.
+ *
+ * Arguments:
+ *    id_type
+ *
+ * Returns:    nothing
+ */
+static void load_id_file(Device_Id_Type id_type){
+   bool debug = false;
 
    if (debug)
       printf("(%s) id_type=%d\n", __func__, id_type);
@@ -448,191 +715,25 @@ static void load_device_ids(Device_Id_Type id_type){
       GPtrArray * all_lines = g_ptr_array_sized_new(30000);
       int linect = file_getlines(device_id_fqfn, all_lines, true);
       if (linect > 0) {
-         all_vendors = g_ptr_array_sized_new(2800);
-         Pci_Id_Vendor * cur_vendor = NULL;
-         Pci_Id_Device * cur_device = NULL;
-         Pci_Id_Subsys * cur_subsys = NULL;
-
-         assert( linect == all_lines->len);
-         int linendx;
-         char * a_line;
-         bool pci_ids_done = false;    // end of PCI id section seen?
-         for (linendx=0; linendx<linect && !pci_ids_done; linendx++) {
-            a_line = g_ptr_array_index(all_lines, linendx);
-            int tabct = 0;
-            while (a_line[tabct] == '\t')
-               tabct++;
-            if (strlen(rtrim_in_place(a_line+tabct)) == 0 || a_line[tabct] == '#')
-               continue;
-            if (id_type == ID_TYPE_USB) {
-               // hacky test for end of id section
-               if (memcmp(a_line+tabct, "C", 1) == 0) {
-                  pci_ids_done = true;
-                  break;
-               }
-            }
-
-            switch(tabct) {
-
-            case (0):
-               {
-                  cur_vendor = calloc(1, sizeof(Pci_Id_Vendor));
-                  int ct = sscanf(a_line+tabct, "%4hx %m[^\n]",
-                                  &cur_vendor->vendor_id,
-                                  &cur_vendor->vendor_name);
-                  if (ct != 2) {
-                     printf("(%s) Error reading line: %s\n", __func__, a_line+tabct);
-                     // hex_dump(a_line+tabct, strlen(a_line+tabct));
-                     free(cur_vendor);
-                     cur_vendor = NULL;
-                  }
-                  else {
-                     total_vendors++;
-                     cur_vendor->vendor_devices = g_ptr_array_sized_new(20);
-                     g_ptr_array_add(all_vendors, cur_vendor);
-                     // usb.ids has no final ffff field, test works only for pci.ids
-                     if (cur_vendor->vendor_id == 0xffff)
-                        pci_ids_done = true;
-                  }
-                  break;
-               }
-
-            case (1):
-               {
-                  if (cur_vendor) {     // in case of vendor error
-                     cur_device = calloc(1, sizeof(Pci_Id_Device));
-                     int ct = sscanf(a_line+tabct, "%4hx %m[^\n]", &cur_device->device_id, &cur_device->device_name);
-                     if (ct != 2) {
-                        printf("(%s) Error reading line: %s\n", __func__, a_line+tabct);
-                        free(cur_device);
-                        cur_device = NULL;
-                     }
-                     else {
-                        total_devices++;
-                        cur_device->device_subsystems = g_ptr_array_sized_new(5);
-                        g_ptr_array_add(cur_vendor->vendor_devices, cur_device);
-                     }
-                  }
-                  break;
-               }
-
-            case (2):
-               {
-                  if (cur_device) {
-                     if (id_type == ID_TYPE_PCI) {
-                        cur_subsys = calloc(1, sizeof(Pci_Id_Subsys));
-                        int ct = sscanf(a_line+tabct, "%4hx %4hx %m[^\n]",
-                                        &cur_subsys->subvendor_id,
-                                        &cur_subsys->subdevice_id,
-                                        &cur_subsys->subsystem_name);
-                        if (ct != 3) {
-                           printf("(%s) Error reading line: %s\n", __func__, a_line+tabct);
-                           free(cur_subsys);
-                           cur_subsys = NULL;
-                        }
-                        else {
-                           total_subsys++;
-                           g_ptr_array_add(cur_device->device_subsystems, cur_subsys);
-                        }
-                     }  // ID_TYPE_PCI
-                     else {     // ID_TYPE_USB
-                        cur_subsys = calloc(1, sizeof(Pci_Id_Subsys));
-                        int ct = sscanf(a_line+tabct, "%4hx  %m[^\n]",
-                                        &cur_subsys->subvendor_id,
-                                        &cur_subsys->subsystem_name);
-                        if (ct != 2) {
-                           printf("(%s) Error reading line: %s\n", __func__, a_line+tabct);
-                           free(cur_subsys);
-                           cur_subsys = NULL;
-                        }
-                        else {
-                           total_subsys++;
-                           g_ptr_array_add(cur_device->device_subsystems, cur_subsys);
-                        }
-                     }  //ID_TYPE_USB
-                  }  // if (cur_device)
-                  break;
-               }
-
-            default:
-               printf("Unexpected number of leading tabs in line: %s\n", a_line);
-            } // switch
-         }    // line loop
-
-         if (id_type == ID_TYPE_PCI)
-            pci_vendors = all_vendors;
-         else
-            usb_vendors = all_vendors;
-
-
-         // if usb.ids, look for additional segments
-         if (id_type == ID_TYPE_USB) {
-            a_line = g_ptr_array_index(all_lines, linendx);
-            // printf("(%s) First line of next segment: |%s|, linendx=%d\n", __func__, a_line, linendx);
-            linendx--; //  start looking on comment line before segment
-            a_line = g_ptr_array_index(all_lines, linendx);
-            // printf("(%s) First line of next segment: |%s|, linendx=%d\n", __func__, a_line, linendx);
-#define MAX_TAG_SIZE 40
-            char tagbuf[MAX_TAG_SIZE];
-            tagbuf[0] = '\0';
-
-            while (linendx < all_lines->len) {
-               //printf("(%s) Before find_next_segment_start(), linendx=%d: |%s|\n",
-               //       __func__, linendx, (char *) g_ptr_array_index(all_lines, linendx));
-               linendx = find_next_segment_start(all_lines, linendx, tagbuf);
-               // printf("(%s) Next segment starts at line %d: |%s|\n",
-               //        __func__, linendx, (char *) g_ptr_array_index(all_lines, linendx));
-               if (linendx >= all_lines->len)
-                  break;
-
-               if ( streq(tagbuf,"HID") ) {
-                  hid_descriptor_types = g_ptr_array_new();
-                  load_simple_ids(hid_descriptor_types, all_lines, tagbuf, linendx, &linendx);
-                  // printf("(%s) After HID, linendx=%d\n", __func__, linendx);
-                  // rpt_title("hid_descriptor_types: ", 0);
-                  // report_simple_ids(hid_descriptor_types, 1);
-               }
-               else if ( streq(tagbuf,"R") ) {
-                   hid_descriptor_item_types = g_ptr_array_new();
-                   load_simple_ids(hid_descriptor_item_types, all_lines, tagbuf, linendx, &linendx);
-                   // printf("(%s) After R, linendx=%d\n", __func__, linendx);
-                   // rpt_title("hid_descriptor_item_types: ", 0);
-                   // report_simple_ids(hid_descriptor_item_types, 1);
-                }
-               else if ( streq(tagbuf,"HCC") ) {
-                   hid_country_codes = g_ptr_array_new();
-                   load_simple_ids(hid_country_codes, all_lines, tagbuf, linendx, &linendx);
-                   // printf("(%s) After HCC, linendx=%d\n", __func__, linendx);
-                   // rpt_title("hid_country_codes: ", 0);
-                   // report_simple_ids(hid_country_codes, 1);
-                }
-
-                else if ( streq(tagbuf,"HUT") ) {
-                   load_multi_level_table(&hid_usages_table, all_lines, &linendx);
-                   // printf("(%s) After HUT, linendx=%d\n", __func__, linendx);
-                   // rpt_title("usages table: ", 0);
-                   // report_multi_level_table(&hid_usages_table, 1);
-                }
-            }
-         }
-
+         load_file_lines(id_type, all_lines);
       }       // if (all_lines)
       // to do: call
 
       g_ptr_array_set_free_func(all_lines, free);
       g_ptr_array_free(all_lines, true);
    }          // if pci.ids or usb.ids was found
-   if (debug) {
-      char * level3_name = (id_type == ID_TYPE_PCI) ? "subsystems" : "interfaces";
-      printf("(%s) Total vendors: %d, total devices: %d, total %s: %d\n",
-             __func__, total_vendors, total_devices, level3_name, total_subsys);
-   }
+
    return;
 }
 
 
-
-
+/* Reports a device id table.
+ *
+ * Arguments:
+ *    id_type
+ *
+ * Returns:    nothing
+ */
 void report_device_ids(Device_Id_Type id_type) {
    // bool debug = true;
 
@@ -670,19 +771,77 @@ void report_device_ids(Device_Id_Type id_type) {
 }
 
 
+
+/* Reports a device id table.
+ *
+ * Arguments:
+ *    id_type
+ *
+ * Returns:    nothing
+ */
+void report_device_ids_mlm(Device_Id_Type id_type) {
+   // bool debug = true;
+
+   Multi_Level_Map * all_devices = (id_type == ID_TYPE_PCI) ? pci_vendors_mlm : usb_vendors_mlm;
+   GPtrArray * top_level_nodes = all_devices->root;
+   int total_vendors = 0;
+   int total_devices = 0;
+   int total_subsys  = 0;
+   int vctr, dctr, sctr;
+   MLM_Node * cur_vendor;
+   MLM_Node * cur_device;
+   MLM_Node * cur_subsys;
+   for (vctr=0; vctr < top_level_nodes->len; vctr++) {
+      total_vendors++;
+      cur_vendor = g_ptr_array_index(top_level_nodes, vctr);
+      printf("%04x %s\n", cur_vendor->code, cur_vendor->name);
+      if (cur_vendor->children) {
+         for (dctr=0; dctr<cur_vendor->children->len; dctr++) {
+            total_devices++;
+            cur_device = g_ptr_array_index(cur_vendor->children, dctr);
+            printf("\t%04x %s\n", cur_device->code, cur_device->name);
+            if (cur_device->children) {
+               for (sctr=0; sctr<cur_device->children->len; sctr++) {
+                  total_subsys++;
+                  cur_subsys = g_ptr_array_index(cur_device->children, sctr);
+                  if (id_type == ID_TYPE_PCI)
+                     printf("\t\t%04x %04x %s\n",
+                            cur_subsys->code>>16, cur_subsys->code&0xffff, cur_subsys->name);
+                  else
+                     printf("\t\t%04x %s\n",
+                            cur_subsys->code, cur_subsys->name);
+               }
+            }
+         }
+      }
+   }
+   char * level3_name = (id_type == ID_TYPE_PCI) ? "subsystems" : "interfaces";
+   printf("(%s) Total vendors: %d, total devices: %d, total %s: %d\n",
+          __func__, total_vendors, total_devices, level3_name, total_subsys);
+}
+
+
+
+
 bool pciusb_id_ensure_initialized() {
    bool debug = false;
    if (debug)
       printf("(%s) Starting\n", __func__);
-   if (!pci_vendors) {
-      load_device_ids(ID_TYPE_PCI);
-      load_device_ids(ID_TYPE_USB);
+   bool ok = (pci_vendors && usb_vendors);
+
+   if (!ok) {
+      load_id_file(ID_TYPE_PCI);
+      load_id_file(ID_TYPE_USB);
+      ok = true;
+      if (ok && debug) {
+         // report_device_ids(ID_TYPE_PCI);
+         // report_device_ids_mlm(ID_TYPE_PCI);
+         // report_device_ids(ID_TYPE_USB);
+         // report_device_ids_mlm(ID_TYPE_USB);
+      }
    }
-   bool ok = (pci_vendors);
-   if (ok && debug) {
-      // report_device_ids(ID_TYPE_PCI);
-      // report_device_ids(ID_TYPE_USB);
-   }
+   if (debug)
+      printf("(%s) Returning: %s\n", __func__, bool_repr(ok));
    return ok;
 }
 
@@ -811,6 +970,45 @@ Pci_Usb_Id_Names pci_id_get_names(
          }
       }
    }
+
+
+   // new way:
+   uint ids[3] = {vendor_id, device_id, subvendor_id << 16 | subdevice_id};   // only diff from usb_id_get_names
+   int levelct = (argct == 4) ? 3 : argct;              // also this
+   Multi_Level_Names mlm_names =  mlm_get_names2(pci_vendors_mlm, levelct, ids);  // and this
+   Pci_Usb_Id_Names names2;
+   names2.vendor_name = mlm_names.names[0];
+   names2.device_name = mlm_names.names[1];
+   names2.subsys_or_interface_name = mlm_names.names[2];
+   if (levelct == 3 && mlm_names.levels == 2) {
+      // couldn't find the subsystem, see if at least we can look up the subsystem vendor
+      uint ids[1] = {subvendor_id};
+      Multi_Level_Names mlm_names3 = mlm_get_names2(pci_vendors_mlm, 1, ids);
+      if (mlm_names3.levels == 1) {
+         names2.subsys_or_interface_name = mlm_names3.names[0];
+      }
+
+   }
+
+   if (debug) {
+      printf("(%s) Returning: vendor_name=%s, device_name=%s, subsys_or_interface_name=%s\n",
+            __func__,
+            names.vendor_name, names.device_name, names.subsys_or_interface_name);
+      printf("(%s) names2: vendor_name=%s, device_name=%s, subsys_or_interface_name=%s\n",
+            __func__,
+            names2.vendor_name, names2.device_name, names2.subsys_or_interface_name);
+   }
+
+
+   if (debug)
+      printf("(%s) Asserts\n", __func__);
+   assert(streq(names.vendor_name, names2.vendor_name));
+   if (argct >= 2)
+      assert(streq(names.device_name, names2.device_name));
+   if (argct >= 3)
+      assert(streq(names.subsys_or_interface_name, names2.subsys_or_interface_name));
+
+
    return names;
 }
 
@@ -845,108 +1043,52 @@ Pci_Usb_Id_Names usb_id_get_names(
          }
       }
    }
+
+   // new way:
+   uint ids[3] = {vendor_id, device_id, interface_id};
+   Multi_Level_Names mlm_names =  mlm_get_names2(usb_vendors_mlm, argct, ids);
+   Pci_Usb_Id_Names names2;
+   names2.vendor_name = mlm_names.names[0];
+   names2.device_name = mlm_names.names[1];
+   names2.subsys_or_interface_name = mlm_names.names[2];
+
    if (debug) {
       printf("(%s) Returning: vendor_name=%s, device_name=%s, subsys_or_interface_name=%s\n",
             __func__,
-
             names.vendor_name, names.device_name, names.subsys_or_interface_name);
+      printf("(%s) names2: vendor_name=%s, device_name=%s, subsys_or_interface_name=%s\n",
+            __func__,
+            names2.vendor_name, names2.device_name, names2.subsys_or_interface_name);
    }
+
+   if (debug)
+      printf("(%s) Asserts\n", __func__);
+   assert(streq(names.vendor_name, names2.vendor_name));
+   if (argct >= 2)
+      assert(streq(names.device_name, names2.device_name));
+   if (argct >= 3)
+      assert(streq(names.subsys_or_interface_name, names2.subsys_or_interface_name));
+
    return names;
 }
 
 
-Node_Entry * mlt_find_child(GPtrArray * nodelist, ushort id) {
-   bool debug = false;
-   if (debug)
-      printf("(%s) Starting, id=0x%04x\n", __func__, id);
-   Node_Entry * result = NULL;
-
-   for (int ndx = 0; ndx < nodelist->len; ndx++) {
-      Node_Entry * cur_entry = g_ptr_array_index(nodelist, ndx);
-      if (debug) printf("(%s) Comparing code=0x%04x, name=%s\n",
-                 __func__, cur_entry->code, cur_entry->name);
-      if (cur_entry->code == id) {
-         result = cur_entry;
-         break;
-      }
-   }
-
-   if (debug)
-      printf("(%s) Returning %p\n", __func__, result);
-   return result;
-}
-
-static void report_multi_level_names(Multi_Level_Names * mln, int depth) {
-   int d1 = depth+1;
-   rpt_structure_loc("Multi_Level_Names", mln, depth);
-   rpt_int("levels", NULL, mln->levels, d1);
-   for (int ndx = 0; ndx < mln->levels; ndx++) {
-      rpt_str("names", NULL, mln->names[ndx], d1);
-   }
-}
-
-// Implement using varargs
-// variable arguments are of type ushort
-Multi_Level_Names mlt_get_names(Multi_Level_Table * table, int argct, ...) {
-  bool debug = false;
-  assert(argct >= 1 && argct <= MLT_MAX_LEVELS);
-  pciusb_id_ensure_initialized();
-
-  Multi_Level_Names result = {0};
-
-  ushort args[MLT_MAX_LEVELS];
-
-  va_list ap;
-  int ndx;
-  va_start(ap, argct);
-  for (ndx=0; ndx<argct; ndx++) {
-     args[ndx] = (ushort) va_arg(ap,int);
-     // printf("(%s) args[%d] = 0x%04x\n", __func__, ndx, args[ndx]);
-  }
-  va_end(ap);
-
-  int argndx = 0;
-  GPtrArray * children = table->root;
-  while (argndx < argct) {
-     assert(children);
-     Node_Entry * level_entry = mlt_find_child(children, args[argndx]);
-     if (!level_entry) {
-        result.levels = 0;   // indicates not found
-        break;
-     }
-     result.levels = argndx+1;
-     result.names[argndx] = level_entry->name;
-     children = level_entry->children;
-     argndx++;
-  }
-
-  if (debug) {
-     printf("(%s) Returning: \n", __func__);
-     report_multi_level_names(&result, 1);
-  }
-  return result;
-}
-
 char * usage_code_page_name(ushort usage_page_code) {
    char * result = NULL;
    // ushort * args = {usage_page_code};
-   Multi_Level_Names names_found = mlt_get_names(&hid_usages_table, 1, usage_page_code);
+   Multi_Level_Names names_found = mlm_get_names(hid_usages_table, 1, usage_page_code);
    if (names_found.levels == 1)
       result = names_found.names[0];
    return result;
 }
 
-char * usage_code_value_name(ushort usage_page_code, ushort usage_simple_id) {
+char * usage_code_id_name(ushort usage_page_code, ushort usage_simple_id) {
    // printf("(%s) usage_page_code=0x%04x, usage_simple_id=0x%04x\n", __func__, usage_page_code, usage_simple_id);
    char * result = NULL;
    // ushort * args = {usage_page_code, usage_simple_id};
-   Multi_Level_Names names_found = mlt_get_names(&hid_usages_table, 2, usage_page_code, usage_simple_id);
+   Multi_Level_Names names_found = mlm_get_names(hid_usages_table, 2, usage_page_code, usage_simple_id);
    if (names_found.levels == 2)
       result = names_found.names[1];
    return result;
 }
-
-
-
-
 

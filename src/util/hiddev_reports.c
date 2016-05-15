@@ -351,7 +351,7 @@ char * interpret_usage_code(int usage_code ) {
             page_value_name = "";
          }
          else {
-            page_value_name = usage_code_value_name(usage_page, usage_id);
+            page_value_name = usage_code_id_name(usage_page, usage_id);
             if (!page_value_name)
                page_value_name = "";
          }
@@ -448,7 +448,7 @@ void report_field_usage(
    int d1 = depth+1;
    int rc;
    // printf("(%s) field index = %d, usage index=%d\n", __func__, i, j);
-   struct hiddev_usage_ref uref;
+   struct hiddev_usage_ref uref = {0};  // initialize to make valgrind happy
    uref.report_type = report_type;   // rinfo.report_type;
    uref.report_id   = report_id;     // rinfo.report_id;
    uref.field_index = field_index;   // i;
@@ -489,7 +489,7 @@ void report_report_descriptors_for_report_type(int fd, __u32 report_type, int de
    const int d3 = d0 + 3;
    const int d4 = d0 + 4;
 
-   struct hiddev_report_info rinfo;
+   struct hiddev_report_info rinfo = {0};  // initialize to make valgrind happy
 
    // rinfo.report_type = HID_REPORT_TYPE_INPUT;
    rinfo.report_type = report_type;

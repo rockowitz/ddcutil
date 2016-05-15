@@ -1,12 +1,28 @@
-/*
- * report_util.c
+/* report_util.c
  *
- *  Created on: Jul 20, 2014
- *      Author: rock
+ * Functions for creating report messages for tracing data structures.
  *
- *  Functions for creating report messages for tracing data structures.
+ * This source file maintains state in static variables so is not thread safe.
  *
- *  This source file maintains state in static variables so is not thread safe.
+ * <copyright>
+ * Copyright (C) 2014-2016 Sanford Rockowitz <rockowitz@minsoft.com>
+ *
+ * Licensed under the GNU General Public License Version 2
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+ * </endcopyright>
  */
 
 #include <assert.h>
@@ -336,6 +352,7 @@ void flag_val_to_string_using_dictionary(
    // printf("(%s) Returning |%s|\n", __func__, buffer );
 }
 
+
 /* Writes a string to the current output destination describing an integer
  * that is to be interpreted as a named collection of named bits.
  *
@@ -368,6 +385,4 @@ void rpt_bool(char * name, char * info, bool val, int depth) {
    char * valName = (val) ? "true" : "false";
    rpt_str(name, info, valName, depth);
 }
-
-
 

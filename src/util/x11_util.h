@@ -1,10 +1,7 @@
 /* x11_util.h
  *
- * Created on: Mar 30, 2016
- *     Author: rock
- *
  * <copyright>
- * Copyright (C) 2014-2015 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2014-2016 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -24,8 +21,8 @@
  * </endcopyright>
  */
 
-#ifndef SRC_UTIL_X11_UTIL_H_
-#define SRC_UTIL_X11_UTIL_H_
+#ifndef X11_UTIL_H_
+#define X11_UTIL_H_
 
 #include <glib.h>
 
@@ -42,4 +39,4 @@ GPtrArray * get_x11_edids();
 
 void free_x11_edids(GPtrArray * edidrecs);
 
-#endif /* SRC_UTIL_X11_UTIL_H_ */
+#endif /* X11_UTIL_H_ */

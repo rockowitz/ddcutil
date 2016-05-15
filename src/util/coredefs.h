@@ -1,9 +1,6 @@
 /* coredefs.h
  *
- * Created on: Nov 4, 2015
- *     Author: rock
- *
- * Core definitions.   These definitions are not application specific.
+ * Basic definitions.   These definitions are not application specific.
  *
  * <copyright>
  * Copyright (C) 2014-2015 Sanford Rockowitz <rockowitz@minsoft.com>

@@ -1,12 +1,9 @@
 /* data_structures.h
  *
- * Created on: Jun 18, 2014
- *     Author: rock
- *
  * General purpose data structures
  *
  * <copyright>
- * Copyright (C) 2014-2015 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2014-2016 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -32,6 +29,7 @@
 #include <stdbool.h>
 
 #include "util/coredefs.h"   // for Byte
+
 
 // An opaque structure containing an array of bytes that
 // can grow dynamically.  Note that the same byte can
@@ -79,7 +77,6 @@ bool store_bytehex_list(char * start, int len, void * data_struct, Byte_Appender
 void test_value_array();
 
 
-
 //
 // Buffer with length management
 //
@@ -106,5 +103,5 @@ void     buffer_append(Buffer * buffer, Byte * bytes, int bytect);
 void     buffer_dump(Buffer * buffer);
 bool     buffer_eq(Buffer* buf1, Buffer* buf2);
 
-
 #endif /* DATA_STRUCTURES_H */
+

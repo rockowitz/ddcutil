@@ -1,10 +1,7 @@
 /* pci_id_util.h
  *
- * Created on: Dec 9, 2015
- *     Author: rock
- *
  * <copyright>
- * Copyright (C) 2014-2015 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2014-2016 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -37,10 +34,7 @@ typedef enum {
    ID_TYPE_USB
 } Device_Id_Type;
 
-
-
 char * find_id_file(Device_Id_Type id_type);
-
 
 
 typedef struct {
@@ -49,20 +43,17 @@ typedef struct {
    char * subsystem_name;
 } Pci_Id_Subsys;
 
-
 typedef struct {
    ushort      device_id;
    char *      device_name;
    GPtrArray * device_subsystems;  // Pci_Id_Subsys
 } Pci_Id_Device;
 
-
 typedef struct {
    ushort      vendor_id;
    char *      vendor_name;
    GPtrArray * vendor_devices;    // Pci_Id_Device
 } Pci_Id_Vendor;
-
 
 typedef struct {
    char * vendor_name;
@@ -71,25 +62,15 @@ typedef struct {
 } Pci_Usb_Id_Names;
 
 
-#define MLT_MAX_LEVELS 4
-
-typedef struct {
-   int   levels;
-   char * names[MLT_MAX_LEVELS];
-} Multi_Level_Names;
 
 
 // *** HID Descriptor Item Types ***
-
-typedef struct {
-   ushort  id;
-   char *  name;
-} Id_Simple_Table_Entry;
 
 
 char * ids_hid_descriptor_item_type(ushort id);
 
 char * ids_hid_descriptor_type(ushort id);
+
 
 // *** HUT table ***
 
@@ -136,7 +117,6 @@ Pci_Usb_Id_Names usb_id_get_names(
 
 char * usage_code_page_name(ushort usage_page_code);
 
-char * usage_code_value_name(ushort usage_page_code, ushort usage_simple_id);
-
+char * usage_code_id_name(ushort usage_page_code, ushort usage_simple_id);
 
 #endif /* PCI_ID_UTIL_H_ */

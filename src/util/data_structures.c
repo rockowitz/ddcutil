@@ -1,8 +1,5 @@
 /* data_structures.c
  *
- * Created on: Jun 17, 2014
- *     Author: rock
- *
  * General purpose data structures..
  *
  * <copyright>

@@ -1,8 +1,5 @@
 /* x11_util.c
  *
- * Created on: Mar 30, 2016
- *     Author: rock
- *
  * * Adapted from file randr-edid.c from libCEC.    How to properly handle copyright?
  *
  * <copyright>
@@ -24,11 +21,10 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  * </endcopyright>
- */
-
-
-
-/*
+ *
+ *
+ * Adapted from libCEC by Pulse-Eight Limited.  Pulse-Eight's copyright follows:
+ *
  * This file is part of the libCEC(R) library.
  *
  * libCEC(R) is Copyright (C) 2011-2015 Pulse-Eight Limited.  All rights reserved.

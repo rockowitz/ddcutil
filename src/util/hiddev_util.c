@@ -412,14 +412,18 @@ Buffer * get_hiddev_edid(int fd)  {
  *               NULL if ioctl call fails (should never happen)
  */
 char * get_hiddev_name(int fd) {
+   // printf("(%s) Starting. fd=%d\n", __func__, fd);
    const int blen = 256;
-   char buf[blen];
+   char buf1[blen];
+   for (int ndx=0; ndx < blen; ndx++)
+   buf1[ndx] = '\0';   // initialize to avoid valgrind warning
    // returns length of result, including terminating null
-   int rc = ioctl(fd, HIDIOCGNAME(blen), buf);
+   int rc = ioctl(fd, HIDIOCGNAME(blen), buf1);
    // printf("(%s) HIDIOCGNAME returned %d\n", __func__, rc);
-   // hex_dump(buf,64);
+   // hex_dump(buf1,64);
    char * result = NULL;
    if (rc >= 0)
-      result = strdup(buf);
+      result = strdup(buf1);
+   // printf("(%s) Returning |%s|\n", __func__, result);
    return result;
 }

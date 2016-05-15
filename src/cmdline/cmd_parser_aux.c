@@ -120,8 +120,7 @@ void init_cmd_parser_base() {
 
 bool all_digits(char * val, int ct) {
    bool debug = false;
-   if (debug)
-      DBGMSG("ct-%d, val -> |%.*s|", ct, ct, val );
+   DBGMSF(debug, "ct-%d, val -> |%.*s|", ct, ct, val );
    bool ok = true;
    int ndx;
    for (ndx = 0; ndx < ct; ndx++) {
@@ -130,8 +129,7 @@ bool all_digits(char * val, int ct) {
          break;
       }
    }
-   if (debug)
-      DBGMSG("Returning: %d  ", ok );
+   DBGMSF(debug, "Returning: %d  ", ok );
    return ok;
 }
 
