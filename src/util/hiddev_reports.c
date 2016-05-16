@@ -1,14 +1,11 @@
 /* hiddev_reports.c
  *
- * Created on: Apr 26, 2016
- *     Author: rock
- *
  * The functions in this file report the contents of hiddev data structures.
  * They are used for debugging, exploratory programming, and in the
  * ddctool interrogate command.
  *
  * <copyright>
- * Copyright (C) 2014-2015 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2016 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *

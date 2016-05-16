@@ -1,10 +1,7 @@
 /* hiddev_util.c
  *
- * Created on: Apr 26, 2016
- *     Author: rock
- *
  * <copyright>
- * Copyright (C) 2014-2015 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2016 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -222,7 +219,7 @@ bye:
 #define EDID_SIZE 128
 
 
-// Describes report and field withing that report representing the EDID
+// Describes report and field within the report that represent the EDID
 
 struct edid_location {
    struct hiddev_report_info * rinfo;         // simplify by eliminating?
