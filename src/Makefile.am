@@ -177,7 +177,7 @@ util/hiddev_reports.c \
 util/hiddev_util.c \
 util/multi_level_map.c \
 util/output_sink.c \
-util/pci_id_util.c \
+util/device_id_util.c \
 util/report_util.c \
 util/string_util.c \
 util/subprocess_util.c

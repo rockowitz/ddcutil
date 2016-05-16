@@ -1,4 +1,4 @@
-/* pci_id_util.c
+/* device_id_util.c
  *
  * <copyright>
  * Copyright (C) 2014-2016 Sanford Rockowitz <rockowitz@minsoft.com>
@@ -35,14 +35,13 @@
 #include <sys/stat.h>
 #include <time.h>
 #include <unistd.h>
-// #include <libosinfo-1.0/osinfo/osinfo.h>
 
 #include "util/file_util.h"
 #include "util/multi_level_map.h"
 #include "util/report_util.h"
 #include "util/string_util.h"
 
-#include "util/pci_id_util.h"
+#include "util/device_id_util.h"
 
 #ifndef MAX_PATH
 #define MAX_PATH 256

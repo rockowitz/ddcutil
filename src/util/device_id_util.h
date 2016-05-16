@@ -1,4 +1,4 @@
-/* pci_id_util.h
+/* device_id_util.h
  *
  * <copyright>
  * Copyright (C) 2014-2016 Sanford Rockowitz <rockowitz@minsoft.com>
@@ -21,8 +21,8 @@
  * </endcopyright>
  */
 
-#ifndef PCI_ID_UTIL_H_
-#define PCI_ID_UTIL_H_
+#ifndef DEVICE_ID_UTIL_H_
+#define DEVICE_ID_UTIL_H_
 
 #include <glib.h>
 #include <stdbool.h>
@@ -122,4 +122,4 @@ char * usage_code_page_name(ushort usage_page_code);
 
 char * usage_code_id_name(ushort usage_page_code, ushort usage_simple_id);
 
-#endif /* PCI_ID_UTIL_H_ */
+#endif /* DEVICE_ID_UTIL_H_ */

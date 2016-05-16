@@ -40,7 +40,7 @@
 #include <unistd.h>
 #include <wchar.h>
 
-#include "util/pci_id_util.h"
+#include "util/device_id_util.h"
 #include "util/report_util.h"
 #include "util/string_util.h"
 
