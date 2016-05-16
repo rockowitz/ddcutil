@@ -31,7 +31,6 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-#include "util/debug_util.h"
 #include "util/report_util.h"
 #include "util/string_util.h"
 
@@ -139,7 +138,7 @@ static int _get_i2c_busct() {
 static Bus_Info_Array * _allocate_Bus_Info_Array(int ct) {
    bool debug = false;
    DBGMSF(debug, "Starting. ct=%d", ct );
-   Bus_Info_Array * bia = (Bus_Info_Array*) call_calloc(ct, sizeof(Bus_Info), "_allocate_Bus_Info_Array");
+   Bus_Info_Array * bia = (Bus_Info_Array*) calloc(ct, sizeof(Bus_Info));
    if (debug) DBGMSG("&bia=%p, bia=%p ", &bia, bia);
    _bus_infos = bia;
    int busno = 0;
@@ -235,7 +234,7 @@ bool * detect_all_addrs_by_fd(int fd) {
 
    unsigned char byte_to_write = 0x00;
    int addr;
-   addrmap = call_calloc(BUS_ADDR_MAX, sizeof(bool), "detect_all_addrs" );
+   addrmap = calloc(BUS_ADDR_MAX, sizeof(bool));
    //bool addrmap[128] = {0};
 
    for (addr = 3; addr < BUS_ADDR_MAX; addr++) {
@@ -1086,7 +1085,7 @@ void show_functionality(int busno) {
    unsigned long funcs = get_i2c_functionality_flags_by_busno(busno);
    char * buf = interpret_functionality(funcs);
    printf("Functionality for bus /dev/i2c-%d: %s\n\n", busno, buf);
-   call_free(buf, "show_functionality");
+   free(buf);
 }
 #endif
 

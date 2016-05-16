@@ -30,7 +30,6 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "util/debug_util.h"
 #include "util/string_util.h"
 
 #include "base/core.h"
@@ -64,7 +63,7 @@ void report_features(GArray* features, Version_Spec vcp_version) {
    for (ndx=0; ndx < ct; ndx++) {
       Capabilities_Feature_Record * vfr =
           g_array_index(features, Capabilities_Feature_Record *, ndx);
-      report_capabilities_feature(vfr, vcp_version);
+      show_capabilities_feature(vfr, vcp_version);
    }
 }
 
@@ -213,8 +212,7 @@ struct {
 
 static
 Capabilities_Segment * next_capabilities_segment(char * start, int len) {
-   Capabilities_Segment * segment = call_calloc(1, sizeof(Capabilities_Segment), "next_capabilities_segment");
-   // bool ok = true;
+   Capabilities_Segment * segment = calloc(1, sizeof(Capabilities_Segment));
 
    char * pos = start;
    while(*pos != '(') pos++;
@@ -370,10 +368,10 @@ GArray * parse_vcp_segment(char * start, int len) {
       }
 
       if (valid_feature) {
-         Capabilities_Feature_Record * vfr = new_Capabilities_Feature(cur_feature_id, value_start, value_len);
+         Capabilities_Feature_Record * vfr = new_capabilities_feature(cur_feature_id, value_start, value_len);
          if (debug) {
             Version_Spec dummy_version = {0,0};
-            report_capabilities_feature(vfr, dummy_version);
+            show_capabilities_feature(vfr, dummy_version);
          }
          g_array_append_val(vcp_array, vfr);
       }

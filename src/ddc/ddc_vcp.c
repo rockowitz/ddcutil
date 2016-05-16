@@ -31,8 +31,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "util/debug_util.h"
-
 #include "base/ddc_errno.h"
 #include "base/ddc_packets.h"
 

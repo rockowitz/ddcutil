@@ -28,7 +28,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "util/debug_util.h"
 #include "util/report_util.h"
 #include "util/string_util.h"
 
@@ -108,20 +107,16 @@ Byte ddc_checksum(Byte * bytes, int len, bool altmode) {
    Byte result;
 
    if (altmode) {
-      // bytes2 = (unsigned char *) call_malloc(len,"ddc_checksum");
       bytes2 = workbuf;
       memcpy(bytes2, bytes, len);
       bytes2[0] = 0x50;
-      // bytes2[1] = 0x50;   // alt
    }
    result = xor_bytes(bytes2, len);
 
-   char * hs = hexstring(bytes2, len);
+   // char * hs = hexstring(bytes2, len);
    // DBGMSG("checksum for %s is 0x%02x", hs, result);
-   free(hs);
+   // free(hs);
 
-   // if (altmode)
-   //    call_free(bytes2, "ddc_checksum");
    return result;
 }
 
@@ -256,15 +251,14 @@ void free_ddc_packet(DDC_Packet * packet) {
    if (packet) {
       if (packet->aux_data) {
          DBGMSF(debug, "freeing packet->aux_data=%p", packet->aux_data);
-         call_free(packet->aux_data, "free_ddc_packet:aux_data");
+         free(packet->aux_data);
       }
 
       DBGMSF(debug, "calling free_buffer() for packet->buf=%p", packet->buf);
       buffer_free(packet->buf, "free DDC packet");
 
-
       DBGMSF(debug, "freeing packet=%p", packet);
-      call_free(packet, "free_ddc_packet:packet");
+      free(packet);
    }
    DBGMSF(debug, "Done" );
 }
@@ -283,7 +277,7 @@ DDC_Packet * create_empty_ddc_packet(int max_size, const char * tag) {
    bool debug = false;
    DBGMSF(debug, "Starting. max_size=%d, tag=%s", max_size, (tag) ? tag : "(nil)");
 
-   DDC_Packet * packet = call_malloc(sizeof(DDC_Packet), "create_empty_ddc_packet:packet");
+   DDC_Packet * packet = malloc(sizeof(DDC_Packet));
    packet->buf = buffer_new(max_size, "empty DDC packet");
    if (tag) {
       strncpy(packet->tag, tag, MAX_DDC_TAG);
@@ -1005,8 +999,7 @@ Global_Status_DDC create_ddc_typed_response_packet(
       DDC_Packet * packet = *packet_ptr_addr;
       switch (expected_type) {
       case DDC_PACKET_TYPE_CAPABILITIES_RESPONSE:
-//         aux_data = call_calloc(1, sizeof(Interpreted_Capabilities_Fragment),
-//                                "create_ddc_capabilities_response_packet:aux_data");
+//         aux_data = calloc(1, sizeof(Interpreted_Capabilities_Fragment));
 //         packet->aux_data = aux_data;
 //
 //         rc = interpret_capabilities_response(
@@ -1016,8 +1009,7 @@ Global_Status_DDC create_ddc_typed_response_packet(
 //                true);
 //         break;
       case DDC_PACKET_TYPE_TABLE_READ_RESPONSE:
-         aux_data = call_calloc(1, sizeof(Interpreted_Multi_Part_Read_Fragment),
-                                "create_ddc_typed_response_packet:table_read:aux_data");
+         aux_data = calloc(1, sizeof(Interpreted_Multi_Part_Read_Fragment));
          packet->aux_data = aux_data;
 
          rc = interpret_multi_part_read_response(
@@ -1028,8 +1020,7 @@ Global_Status_DDC create_ddc_typed_response_packet(
                 true);
          break;
       case DDC_PACKET_TYPE_QUERY_VCP_RESPONSE:
-         aux_data = call_calloc(1, sizeof(Parsed_Nontable_Vcp_Response),
-                                "create_ddc_getvcp_response_packet:aux_data");
+         aux_data = calloc(1, sizeof(Parsed_Nontable_Vcp_Response));
          packet->aux_data = aux_data;
 
          rc =  interpret_vcp_feature_response_std(get_data_start(packet),
@@ -1093,8 +1084,7 @@ Global_Status_DDC create_ddc_multi_part_read_response_packet(
          rc = COUNT_STATUS_CODE(DDCRC_INVALID_DATA);
       }
       else {
-         void * aux_data = call_calloc(1, sizeof(Interpreted_Capabilities_Fragment),
-                                                 "create_ddc_capabilities_response_packet:aux_data");
+         void * aux_data = calloc(1, sizeof(Interpreted_Capabilities_Fragment));
          packet->aux_data = aux_data;
 
          rc = interpret_multi_part_read_response(
@@ -1147,8 +1137,7 @@ create_ddc_getvcp_response_packet(
          rc = COUNT_STATUS_CODE(DDCRC_INVALID_DATA);
       }
       else {
-         void * aux_data = call_calloc(1, sizeof(Parsed_Nontable_Vcp_Response),
-                                       "create_ddc_getvcp_response_packet:aux_data");
+         void * aux_data = calloc(1, sizeof(Parsed_Nontable_Vcp_Response));
          packet->aux_data = aux_data;
 
          rc =  interpret_vcp_feature_response_std(
@@ -1186,8 +1175,7 @@ Global_Status_DDC get_interpreted_capabilities_fragment(
    else {
       if (make_copy) {
          Interpreted_Capabilities_Fragment * copy =
-            call_malloc(sizeof(Interpreted_Capabilities_Fragment),
-                        "get_interpreted_capabilities_fragmente:make_copy");
+            malloc(sizeof(Interpreted_Capabilities_Fragment));
          memcpy(copy, packet->aux_data, sizeof(Interpreted_Capabilities_Fragment));
          *interpreted_ptr = copy;
       }
@@ -1242,8 +1230,7 @@ Global_Status_DDC get_interpreted_table_read_fragment(
    else {
       if (make_copy) {
          Interpreted_Table_Read_Fragment * copy =
-            call_malloc(sizeof(Interpreted_Table_Read_Fragment),
-                        "get_interpreted_table_read_fragmente:make_copy");
+            malloc(sizeof(Interpreted_Table_Read_Fragment));
          memcpy(copy, packet->aux_data, sizeof(Interpreted_Table_Read_Fragment));
          *interpreted_ptr = copy;
       }
@@ -1286,7 +1273,7 @@ Global_Status_DDC get_interpreted_vcp_code(
    else {
       if (make_copy) {
          Parsed_Nontable_Vcp_Response * copy =
-            call_malloc(sizeof(Parsed_Nontable_Vcp_Response), "get_interpreted_vcp_code:make_copy");
+            malloc(sizeof(Parsed_Nontable_Vcp_Response));
          memcpy(copy, packet->aux_data, sizeof(Parsed_Nontable_Vcp_Response));
          *interpreted_ptr = copy;
       }

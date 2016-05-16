@@ -1,8 +1,5 @@
 /* i2c_edid_tests.c
  *
- * Created on: Jul 30, 2014
- *     Author: rock
- *
  * <copyright>
  * Copyright (C) 2014-2015 Sanford Rockowitz <rockowitz@minsoft.com>
  *
@@ -34,7 +31,6 @@
 #include <sys/ioctl.h>
 #include <unistd.h>        // usleep
 
-#include "util/debug_util.h"
 #include "util/string_util.h"
 
 #include "base/core.h"
@@ -57,7 +53,7 @@ void read_edid_ala_libxcm(int busno) {
    int    fd;
    char   command[128] = {0};
    int    rc;
-   unsigned char* edidbuf;
+   Byte*  edidbuf;
 
    fd = i2c_open_bus(busno,EXIT_IF_FAILURE);
    i2c_set_addr(fd, 0x50);
@@ -71,13 +67,13 @@ void read_edid_ala_libxcm(int busno) {
    else {
       // usleep(TIMEOUT);
       sleep_millis_with_trace(DDC_TIMEOUT_MILLIS_DEFAULT, __func__, NULL);
-      edidbuf = (Byte *)call_calloc(sizeof(Byte),256, "read_edid_ala_libxcm");
+      edidbuf = calloc(256, sizeof(Byte) );
       rc = read(fd, edidbuf, 128);
       printf("(%s) read() returned %d\n", __func__, rc);
       if (rc >= 0) {
          hex_dump(edidbuf, rc);
       }
-      call_free(edidbuf, "read_edid_ala_libxcm");
+      free(edidbuf);
    }
    close(fd);
 }
@@ -106,7 +102,7 @@ void probe_read_edid(int busno, char * write_mode, char * read_mode) {
    // rc = perform_i2c_write(fd, write_mode, 1, &byte_to_write);
 
    if (rc == 0) {
-      edidbuf = (Byte *)call_calloc(sizeof(Byte),256, "probe_read_edid, edidbuf");
+      edidbuf = calloc(256, sizeof(Byte));
 
       if ( streq(read_mode,"read") ) {
          rc = do_i2c_file_read(fd, 128, edidbuf, DDC_TIMEOUT_USE_DEFAULT);
@@ -185,7 +181,7 @@ void probe_read_edid(int busno, char * write_mode, char * read_mode) {
       if (rc > 0) {
          hex_dump(edidbuf,rc);
       }
-      call_free(edidbuf, "probe_read_edid, edidbuf");
+      free(edidbuf);
    }
    close(fd);
 }

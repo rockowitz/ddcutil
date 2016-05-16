@@ -21,8 +21,6 @@
  * </endcopyright>
  */
 
-#include "../vcp/parsed_capabilities_feature.h"
-
 #include <assert.h>
 #include <glib.h>
 #include <stdbool.h>
@@ -30,20 +28,20 @@
 #include <string.h>
 
 #include "util/data_structures.h"
-#include "util/debug_util.h"
 
 #include "vcp/vcp_feature_codes.h"
 
+#include "vcp/parsed_capabilities_feature.h"
 
 
 // Trace class for this file
 // static TraceGroup TRACE_GROUP = TRC_DDC;   // currently unused, commented out to avoid warning
 
 
-Capabilities_Feature_Record * new_Capabilities_Feature(
-                        Byte   feature_id,
-                        char * value_string_start,
-                        int    value_string_len)
+Capabilities_Feature_Record * new_capabilities_feature(
+                                 Byte   feature_id,
+                                 char * value_string_start,
+                                 int    value_string_len)
 {
    bool debug = false;
    if (debug) {
@@ -54,7 +52,7 @@ Capabilities_Feature_Record * new_Capabilities_Feature(
          DBGMSG("value_string_start = NULL");
    }
    Capabilities_Feature_Record * vfr =
-         (Capabilities_Feature_Record *) call_calloc(1,sizeof(Capabilities_Feature_Record), "new_VCP_Feature_Record");
+         (Capabilities_Feature_Record *) calloc(1,sizeof(Capabilities_Feature_Record));
    memcpy(vfr->marker, CAPABILITIES_FEATURE_MARKER, 4);
    vfr->feature_id = feature_id;
    // relying on calloc to 0 all other fields
@@ -74,12 +72,16 @@ Capabilities_Feature_Record * new_Capabilities_Feature(
       Byte_Value_Array bva_values = bva_create();
       bool ok1 = store_bytehex_list(value_string_start, value_string_len, bva_values, bva_appender);
       if (!ok1) {
-         fprintf(stderr, "Error processing VCP feature value list into bva_values: %.*s\n", value_string_len, value_string_start);
+         fprintf(stderr,
+                 "Error processing VCP feature value list into bva_values: %.*s\n",
+                 value_string_len, value_string_start);
       }
       Byte_Bit_Flags bbf_values = bbf_create();
       bool ok2 = store_bytehex_list(value_string_start, value_string_len, bbf_values, bbf_appender);
       if (!ok2) {
-          fprintf(stderr, "Error processing VCP feature value list into bbf_values: %.*s\n", value_string_len, value_string_start);
+          fprintf(stderr,
+                  "Error processing VCP feature value list into bbf_values: %.*s\n",
+                  value_string_len, value_string_start);
        }
       if (debug) {
           DBGMSG("store_bytehex_list for bva returned %d", ok1);
@@ -140,12 +142,12 @@ void free_capabilities_feature(Capabilities_Feature_Record * pfeat) {
 
    pfeat->marker[3] = 'x';
 
-   call_free(pfeat, "free_vcp_feature");
+   free(pfeat);
    // DBGMSG("Done.");
 }
 
 
-void report_capabilities_feature(Capabilities_Feature_Record * vfr, Version_Spec vcp_version) {
+void show_capabilities_feature(Capabilities_Feature_Record * vfr, Version_Spec vcp_version) {
    // DBGMSG("Starting. vfr=%p", vfr);
    printf("  Feature: %02X (%s)\n", vfr->feature_id,
           get_feature_name_by_id_and_vcp_version(vfr->feature_id, vcp_version));
