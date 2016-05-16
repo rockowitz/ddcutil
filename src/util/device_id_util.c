@@ -65,7 +65,7 @@ static char * simple_device_fn[] = {
  *            It is the responsibility of the caller to free
  *            this value
  */
-char * find_id_file(Device_Id_Type id_type) {
+char * devid_find_file(Device_Id_Type id_type) {
    bool debug = false;
 
    char * known_pci_ids_dirs[] = {
@@ -817,7 +817,7 @@ static void load_id_file(Device_Id_Type id_type){
       printf("(%s) id_type=%d\n", __func__, id_type);
 
    // char * id_fn = simple_device_fn[id_type];
-   char * device_id_fqfn = find_id_file(id_type);
+   char * device_id_fqfn = devid_find_file(id_type);
    if (device_id_fqfn) {
       // char device_id_fqfn[MAX_PATH];
       // snprintf(device_id_fqfn, MAX_PATH, id_fqfn, id_fn);  // ???
@@ -936,7 +936,7 @@ void report_device_ids_mlm(Device_Id_Type id_type) {
 
 
 
-bool pciusb_id_ensure_initialized() {
+bool devid_ensure_initialized() {
    bool debug = false;
    if (debug)
       printf("(%s) Starting\n", __func__);
@@ -964,7 +964,7 @@ bool pciusb_id_ensure_initialized() {
 
 #ifdef OLD
 Pci_Id_Vendor * pciusb_id_find_vendor(ushort vendor_id, Device_Id_Type id_type) {
-   pciusb_id_ensure_initialized();
+   devid_ensure_initialized();
    bool debug = false;
    int ndx = 0;
    GPtrArray * all_vendors = (id_type == ID_TYPE_PCI) ? pci_vendors : usb_vendors;
@@ -999,7 +999,7 @@ Pci_Id_Vendor * usb_id_find_vendor(ushort vendor_id) {
 
 
 Pci_Id_Device * pci_id_find_device(Pci_Id_Vendor * cur_vendor, ushort device_id) {
-   pciusb_id_ensure_initialized();
+   devid_ensure_initialized();
    int ndx = 0;
    Pci_Id_Device * result = NULL;
    for (ndx=0; ndx<cur_vendor->vendor_devices->len; ndx++) {
@@ -1018,7 +1018,7 @@ Pci_Id_Device * usb_id_find_device(Pci_Id_Vendor * cur_vendor, ushort device_id)
 
 
 Pci_Id_Subsys * pci_id_find_subsys(Pci_Id_Device * cur_device, ushort subvendor_id, ushort subdevice_id) {
-   pciusb_id_ensure_initialized();
+   devid_ensure_initialized();
    int ndx = 0;
    Pci_Id_Subsys * result = NULL;
    for (ndx=0; ndx<cur_device->device_subsystems->len; ndx++) {
@@ -1032,7 +1032,7 @@ Pci_Id_Subsys * pci_id_find_subsys(Pci_Id_Device * cur_device, ushort subvendor_
 }
 
 Pci_Id_Subsys * usb_id_find_interface(Pci_Id_Device * cur_device, ushort interface_id) {
-   pciusb_id_ensure_initialized();
+   devid_ensure_initialized();
    int ndx = 0;
    Pci_Id_Subsys * result = NULL;
    for (ndx=0; ndx<cur_device->device_subsystems->len; ndx++) {
@@ -1050,7 +1050,7 @@ Pci_Id_Subsys * usb_id_find_interface(Pci_Id_Device * cur_device, ushort interfa
 
 // sadly, both 0000 and ffff are used as ids, so can't use them as special arguments for "not set"
 
-Pci_Usb_Id_Names pci_id_get_names(
+Pci_Usb_Id_Names devid_get_pci_names(
                 ushort vendor_id,
                 ushort device_id,
                 ushort subvendor_id,
@@ -1064,7 +1064,7 @@ Pci_Usb_Id_Names pci_id_get_names(
              vendor_id, device_id, subvendor_id, subdevice_id);
    }
    assert( argct==1 || argct==2 || argct==4);
-   pciusb_id_ensure_initialized();
+   devid_ensure_initialized();
 #ifdef OLD
    Pci_Usb_Id_Names names = {NULL, NULL, NULL};
    Pci_Id_Vendor * vendor = pci_id_find_vendor(vendor_id);
@@ -1135,7 +1135,7 @@ Pci_Usb_Id_Names pci_id_get_names(
 }
 
 
-Pci_Usb_Id_Names usb_id_get_names(
+Pci_Usb_Id_Names devid_get_usb_names(
                 ushort vendor_id,
                 ushort device_id,
                 ushort interface_id,
@@ -1148,7 +1148,7 @@ Pci_Usb_Id_Names usb_id_get_names(
              vendor_id, device_id, interface_id);
    }
    assert( argct==1 || argct==2 || argct==3);
-   pciusb_id_ensure_initialized();
+   devid_ensure_initialized();
 #ifdef OLD
    Pci_Usb_Id_Names names = {NULL, NULL, NULL};
    Pci_Id_Vendor * vendor = usb_id_find_vendor(vendor_id);
@@ -1202,7 +1202,7 @@ Pci_Usb_Id_Names usb_id_get_names(
 }
 
 
-char * usage_code_page_name(ushort usage_page_code) {
+char * devid_usage_code_page_name(ushort usage_page_code) {
    char * result = NULL;
    // ushort * args = {usage_page_code};
    Multi_Level_Names names_found = mlm_get_names(hid_usages_table, 1, usage_page_code);
@@ -1211,7 +1211,7 @@ char * usage_code_page_name(ushort usage_page_code) {
    return result;
 }
 
-char * usage_code_id_name(ushort usage_page_code, ushort usage_simple_id) {
+char * devid_usage_code_id_name(ushort usage_page_code, ushort usage_simple_id) {
    // printf("(%s) usage_page_code=0x%04x, usage_simple_id=0x%04x\n", __func__, usage_page_code, usage_simple_id);
    char * result = NULL;
    // ushort * args = {usage_page_code, usage_simple_id};

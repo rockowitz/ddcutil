@@ -763,9 +763,9 @@ struct driver_name_node * query_card_and_driver_using_sysfs() {
 
                // printf("\nLooking up names in pci.ids...\n");
                printf("\nVideo card identification:\n");
-               bool pci_ids_ok = pciusb_id_ensure_initialized();
+               bool pci_ids_ok = devid_ensure_initialized();
                if (pci_ids_ok) {
-                  Pci_Usb_Id_Names names = pci_id_get_names(
+                  Pci_Usb_Id_Names names = devid_get_pci_names(
                                   xvendor_id,
                                   xdevice_id,
                                   xsubvendor_id,

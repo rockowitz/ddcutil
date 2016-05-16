@@ -34,7 +34,7 @@ typedef enum {
    ID_TYPE_USB
 } Device_Id_Type;
 
-char * find_id_file(Device_Id_Type id_type);
+char * devid_find_file(Device_Id_Type id_type);
 
 #ifdef OLD
 typedef struct {
@@ -68,9 +68,9 @@ typedef struct {
 // *** HID Descriptor Item Types ***
 
 
-char * ids_hid_descriptor_item_type(ushort id);
+char * devid_hid_descriptor_item_type(ushort id);
 
-char * ids_hid_descriptor_type(ushort id);
+char * devid_hid_descriptor_type(ushort id);
 
 
 // *** HUT table ***
@@ -79,21 +79,21 @@ typedef struct {
    ushort  usage_page;        // usage page
    char *  usage_page_name;
    GPtrArray * usage_ids;
-} Id_Usage_Page;
+} Devid_Usage_Page;
 
 typedef struct {
    ushort  usage_page;
    ushort  simple_usage_code;         // id within the page
    char *  usage_code_name;
-} Id_Usage_Code;
+} Devid_Usage_Code;
 
-Id_Usage_Page * ids_find_usage_page(ushort usage_page);
-Id_Usage_Code * ids_find_usage_id(ulong fq_usage_code);
-Id_Usage_Code * ids_find_usage_by_page_and_id(ushort usage_page, ushort simple_usage_code);
+Devid_Usage_Page * devid_find_usage_page(ushort usage_page);
+Devid_Usage_Code * devid_find_usage_id(ulong fq_usage_code);
+Devid_Usage_Code * devid_find_usage_by_page_and_id(ushort usage_page, ushort simple_usage_code);
 
 
 
-bool pciusb_id_ensure_initialized();
+bool devid_ensure_initialized();
 #ifdef OLD
 Pci_Id_Vendor * pci_id_find_vendor(ushort vendor_id);
 Pci_Id_Device * pci_id_find_device(Pci_Id_Vendor * cur_vendor, ushort device_id);
@@ -104,22 +104,22 @@ Pci_Id_Device * usb_id_find_device(Pci_Id_Vendor * cur_vendor, ushort device_id)
 Pci_Id_Subsys * usb_id_find_interface(Pci_Id_Device * cur_device, ushort interface_id);
 #endif
 
-Pci_Usb_Id_Names pci_id_get_names(
+Pci_Usb_Id_Names devid_get_pci_names(
                 ushort vendor_id,
                 ushort device_id,
                 ushort subvendor_id,
                 ushort subdevice_id,
                 int argct);
 
-Pci_Usb_Id_Names usb_id_get_names(
+Pci_Usb_Id_Names devid_get_usb_names(
                 ushort vendor_id,
                 ushort device_id,
                 ushort interface_id,
                 int argct);
 
 
-char * usage_code_page_name(ushort usage_page_code);
+char * devid_usage_code_page_name(ushort usage_page_code);
 
-char * usage_code_id_name(ushort usage_page_code, ushort usage_simple_id);
+char * devid_usage_code_id_name(ushort usage_page_code, ushort usage_simple_id);
 
 #endif /* DEVICE_ID_UTIL_H_ */

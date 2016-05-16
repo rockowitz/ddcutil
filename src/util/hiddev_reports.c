@@ -138,7 +138,7 @@ void report_hiddev_devinfo(struct hiddev_devinfo * dinfo, bool lookup_names, int
 
    Pci_Usb_Id_Names names = {"","",""};
    if (lookup_names) {
-      usb_id_get_names(
+      devid_get_usb_names(
                 dinfo->vendor,
                 dinfo->product,
                 0,
@@ -345,13 +345,13 @@ char * interpret_usage_code(int usage_code ) {
          page_value_name = "";
       }
       else {
-         page_name = usage_code_page_name(usage_page);
+         page_name = devid_usage_code_page_name(usage_page);
          if (!page_name) {
             page_name = "";
             page_value_name = "";
          }
          else {
-            page_value_name = usage_code_id_name(usage_page, usage_id);
+            page_value_name = devid_usage_code_id_name(usage_page, usage_id);
             if (!page_value_name)
                page_value_name = "";
          }
