@@ -62,6 +62,7 @@
 #include "util/report_util.h"
 #include "util/string_util.h"
 #include "util/subprocess_util.h"
+#include "util/udev_util.h"
 #include "util/x11_util.h"
 
 #include "base/core.h"
@@ -959,6 +960,8 @@ void query_usb_monitors() {
    // need to set destroy function
    g_ptr_array_free(hiddev_devices, true);
 
+   printf("\nProbing using udev...\n");
+   query_udev_subsystem("usbmisc");
 }
 
 

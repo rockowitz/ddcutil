@@ -76,6 +76,7 @@ cmdline/parsed_cmd.c \
 app_ddctool/main.c \
 app_ddctool/app_dumpload.c \
 app_ddctool/query_sysenv.c \
+util/udev_util.c \
 app_ddctool/app_setvcp.c \
 app_ddctool/app_getvcp.c \
 app_ddctool/testcases.c 
@@ -264,10 +265,13 @@ ddctool_LDADD = \
    libcommon.la \
    $(XRANDR_LIBS) \
    $(X11_LIBS) \
+   $(UDEV_LIBS) \
    $(GLIB_LIBS)
 
+# Fails if not linked with libudev - why?
 laclient_LDADD = \
   libddctool.la \
+  $(UDEV_LIBS) \
   $(GOBJECT_LIBS)
 
 goclient_LDADD = \
