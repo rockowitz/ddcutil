@@ -24,6 +24,7 @@
 #ifndef BASE_CORE_H_
 #define BASE_CORE_H_
 
+#include <setjmp.h>
 #include <stdarg.h>
 #include <stdbool.h>
 #include <stdio.h>
@@ -36,6 +37,11 @@
 // Initialization
 //
 void init_msg_control();
+
+
+// For aborting out of shared library
+void register_jmp_buf(jmp_buf* jb);
+void call_longjmp(int status);
 
 
 //

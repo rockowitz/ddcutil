@@ -28,6 +28,7 @@
 #include <assert.h>
 #include <ctype.h>
 #include <errno.h>
+#include <setjmp.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -177,6 +178,15 @@ int main(int argc, char *argv[]) {
    // set_trace_levels(TRC_ADL);   // uncomment to enable tracing during initialization
    initialize();
    int main_rc = EXIT_FAILURE;
+
+   jmp_buf abort_buf;
+   int jmprc = setjmp(abort_buf);
+   if (jmprc) {
+      fprintf(stderr, "Aborting. Internal status code = %d\n", jmprc);
+      exit(EXIT_FAILURE);
+   }
+   register_jmp_buf(&abort_buf);
+
 
    Parsed_Cmd * parsed_cmd = parse_command(argc, argv);
    if (!parsed_cmd) {

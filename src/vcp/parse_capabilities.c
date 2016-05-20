@@ -259,8 +259,7 @@ Capabilities_Segment * next_capabilities_segment(char * start, int len) {
 //  or pass a preallocted instances
 Byte_Value_Array parse_cmds_segment(char * start, int len) {
    bool debug = false;
-   if (debug)
-      DBGMSG("Starting. start=%p, len=%d", start, len);
+   DBGMSF(debug, "Starting. start=%p, len=%d", start, len);
 
    Byte_Value_Array cmd_ids2 = bva_create();
    bool ok = store_bytehex_list(start, len, cmd_ids2, bva_appender);
@@ -274,8 +273,7 @@ Byte_Value_Array parse_cmds_segment(char * start, int len) {
       report_commands(cmd_ids2);
    }
    Byte_Value_Array result = (ok) ? cmd_ids2 : NULL;
-   if (debug)
-      DBGMSG("returning %p", result);
+   DBGMSF(debug, "returning %p", result);
    return result;
 }
 
@@ -359,7 +357,9 @@ GArray * parse_vcp_segment(char * start, int len) {
          if (value_end == end) {
             DBGMSG("Value parse terminated without closing paren   " );
             // bad data, what to do?
-            exit(1);
+            // need better error message
+            // TODO: recover from error, this is bad data from the monitor
+            goto bye;
          }
          value_start = pos+1;
          value_len = value_end - (pos + 1);
@@ -376,6 +376,7 @@ GArray * parse_vcp_segment(char * start, int len) {
          g_array_append_val(vcp_array, vfr);
       }
    }
+bye:
    return vcp_array;
 }
 
@@ -435,14 +436,12 @@ Parsed_Capabilities * parse_capabilities(char * buf_start, int buf_len) {
          vcp_features = parse_vcp_segment(seg->value_start, seg->value_len);
       }
       else if (memcmp(seg->name_start, "mccs_ver", seg->name_len) == 0) {
-         if (debug)
-            DBGMSG("MCCS version: %.*s", seg->value_len, seg->value_start);
+         DBGMSF(debug, "MCCS version: %.*s", seg->value_len, seg->value_start);
          mccs_ver = chars_to_string(seg->value_start, seg->value_len);
       }
       else {
          // additional segment names seen: asset_eep, mpu, mswhql
-         if (debug)
-            DBGMSG("Ignoring segment: %.*s", seg->name_len, seg->name_start);
+         DBGMSF(debug, "Ignoring segment: %.*s", seg->name_len, seg->name_start);
       }
    }
 
@@ -454,8 +453,7 @@ Parsed_Capabilities * parse_capabilities(char * buf_start, int buf_len) {
               commands,         // each stored byte is command id
               vcp_features);
 
-   if (debug)
-      DBGMSG("Returning %p", pcaps);
+   DBGMSF(debug, "Returning %p", pcaps);
    return pcaps;
 }
 

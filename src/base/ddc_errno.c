@@ -62,6 +62,8 @@ static Status_Code_Info ddcrc_info[] = {
       EDENTRY(DDCL_UNKNOWN_FEATURE        , "feature not in feature table"),
       EDENTRY(DDCRC_INTERPRETATION_FAILED , "feature value interpretation function failed"),
       EDENTRY(DDCRC_MULTI_FEATURE_ERROR   , "at least 1 error occurred on a multi-feature request"),
+      EDENTRY(DDCRC_INVALID_DISPLAY       , "invalid display"),
+      EDENTRY(DDCL_INTERNAL_ERROR         , "fatal error condition"),
 
     };
 #undef EDENTRY

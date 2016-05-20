@@ -21,11 +21,15 @@
  * </endcopyright>
  */
 
+// #include <config.h>
+
 #include <assert.h>
 #include <dirent.h>
 #include <errno.h>
 #include <glib.h>
+#ifdef USE_LIBUDEV
 #include <libudev.h>
+#endif
 #include <linux/hiddev.h>
 #include <linux/limits.h>
 #include <stddef.h>
@@ -94,7 +98,7 @@ GPtrArray * get_hiddev_device_names_using_filesys() {
 }
 
 
-
+#ifdef USE_LIBUDEV
 /* Comparison function used by g_ptr_array_sort() in
  * find_hiddev_devices()
  */
@@ -189,11 +193,15 @@ bye:
    // return result;
    return dev_names;
 }
-
+#endif
 
 GPtrArray * get_hiddev_device_names() {
-   // return get_hiddev_device_names_using_filesys();
+
+#ifdef USE_LIBUDEV
    return get_hiddev_device_names_using_udev();
+#else
+   return get_hiddev_device_names_using_filesys();
+#endif
 }
 
 

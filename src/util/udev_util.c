@@ -25,7 +25,6 @@
 
 #include <assert.h>
 #include <glib.h>
-#include <libudev.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <locale.h>
@@ -35,6 +34,8 @@
 #include "util/glib_util.h"
 #include "util/report_util.h"
 #include "util/string_util.h"
+
+#include "util/udev_util.h"
 
 
 void report_udev_device(struct udev_device * dev, int depth) {

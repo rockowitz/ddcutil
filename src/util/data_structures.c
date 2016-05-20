@@ -420,10 +420,6 @@ Buffer * buffer_new_with_value(Byte * bytes, int bytect, const char * trace_msg)
 // copy constructor
 Buffer * buffer_dup(Buffer * srcbuf, const char * trace_msg) {
    return buffer_new_with_value(srcbuf->bytes, srcbuf->len, trace_msg);
-   // int sz = srcbuf->buffer_size;
-   // Buffer* newbuf = buffer_new(sz, trace_msg);
-   // buffer_put(newbuf, srcbuf->bytes, srcbuf->len);
-   // return newbuf;
 }
 
 
@@ -458,20 +454,10 @@ void buffer_free(Buffer * buffer, const char * trace_msg) {
 }
 
 
-#ifdef UNUSED
-// No real benefit over simple assert
-//#define BUFFER_POSITION_OUT_OF_RANGE  66   // *** TEMP ***
-//
-// Macro for standardized parameter verification
-#define BUFFER_VALIDATE(EXPR) if (!(EXPR))                                 \
-     { printf("(%s) Failed check (" #EXPR ") at line %d in file %s",__func__, __LINE__, __FILE__); \
-       exit(BUFFER_POSITION_OUT_OF_RANGE); }
-#endif
-
-
 int buffer_length(Buffer * buffer) {
    return buffer->len;
 }
+
 
 // Adjusts the number of bytes in the buffer.
 //
@@ -483,8 +469,6 @@ void buffer_set_length(Buffer * buffer, int bytect) {
    if (trace_buffer)
       printf("(%s) bytect=%d, buffer_size=%d\n", __func__, bytect, buffer->buffer_size);
    assert (bytect <= buffer->buffer_size);
-   // BUFFER_VALIDATE(bytect <= buffer->buffer_size);
-
    buffer->len = bytect;
 }
 
@@ -504,13 +488,7 @@ void buffer_put(Buffer * buffer, Byte * bytes, int bytect) {
       printf("(%s) cur len = %d, storing |%.*s|, bytect=%d\n",
              __func__, buffer->len, bytect, bytes, bytect);
    }
-   //  buffer->len + 2 + bytect  .. why the  + 2?
-   // if (bytect > buffer->buffer_size) {
-   //    printf("(%s) Buffer overflow\n", __func__);
-   //    exit(1);
-   // }
    assert (bytect <= buffer->buffer_size);
-
    memcpy(buffer->bytes, bytes, bytect);
    buffer->len = buffer->len + bytect;
    // printf("(%s) Returning.  cur len = %d\n", __func__, buffer->len);

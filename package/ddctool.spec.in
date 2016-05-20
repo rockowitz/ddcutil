@@ -73,6 +73,7 @@ Version: @PACKAGE_VERSION@
 #     it is not defined if building for fedora
 # Instead, test for macro %%{disturl}, which is defined on the command in OBS invoking rpmbuild 
 # TODO: add check that disturl starts with obs:
+
 %define is_obs_build %{defined disturl}
 
 # These macros will work on local builds, but not on OBS builds because the files being checked do not exist. 
@@ -138,6 +139,7 @@ Release: 1%{?distro}
 
 # will be 0 or 1:
 %define build_libs @ENABLE_SHARED_LIB_FLAG@
+%define use_libudev @ENABLE_LIBUDEV_FLAG@
 
 %if %{build_libs} == 1
 %{echo: =================================> defining _unpackaged_files_terminate_build 0, }
@@ -151,9 +153,32 @@ Release: 1%{?distro}
 Summary: Query and update monitor settings
 License: GPL-2.0+
 URL: http://github.com/rockowitz/ddctool
-# BuildRequires: gcc  glib2 glib2-devel
+# BuildRequires: gcc  glib2 glib2-devel 
 BuildRequires: gcc  pkgconfig(glib-2.0) i2c-tools libXrandr-devel
+# %%if %%{use_libudev} == 1
+# FIXME: package for udev depends on OS.  Fedora requires systemd-devel, suse still has udev in libudev-devel
+%if %{defined fedora}
+BuildRequires: systemd-devel
+%endif
+%if %{defined suse_version}
+BuildRequires: libudev-devel
+BuildRequires: libz1 zlib-devel zlib-devel-static
+# temporarily disable rpmlint after build - will this prevent failure?
+BuildRequires: -post-build-checks
+%endif
+# %%endif
+
+# OBS complains for SuSE:
+# ddctool.x86_64: W: explicit-lib-dependency glib2
+# ddctool.x86_64: W: explicit-lib-dependency libXrandr
+# You must let rpm find the library dependencies by itself. Do not put unneeded
+# explicit Requires: tags.
+%if %{defined suse_version}
+Requires: i2c-tools 
+%else
 Requires: i2c-tools glib2 libXrandr
+%endif
+
 Source: %{name}-%{version}.tar.gz
 
 %description
@@ -171,6 +196,8 @@ applied.
 
 Group:  Applications/System
 # Fedora guidelines say Group tag optional
+# But OBS for SuSE complains: 
+
 
 # Fedora guidelines say BuildRoot ignored
 BuildRoot: %{_tmppath}/%{name}-%{version}-build
@@ -198,7 +225,7 @@ Contains a basic C API, and a primitive GOBject API.
 %{echo: =================================> NOT building libraries, }
 %configure -enable-lib=no
 %endif
-make
+make V=1
 
 %check
 %{echo: =================================> Executing make check, }

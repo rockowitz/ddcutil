@@ -16,7 +16,7 @@ dnl   AC_PATH_PROG(XSLTPROC, xsltproc)
 
 m4_define([ddctool_major_version], [0])
 m4_define([ddctool_minor_version], [4])
-m4_define([ddctool_micro_version], [0])
+m4_define([ddctool_micro_version], [1])
 m4_define([ddctool_version],
           [ddctool_major_version.ddctool_minor_version.ddctool_micro_version])
 
@@ -47,7 +47,7 @@ dnl removed -Werror
 dnl rmoved -Werror from AM_INIT_AUTOMAKE to allow compilation to proceed
 AM_INIT_AUTOMAKE([1.11 -Wall -Wno-extra-portability foreign subdir-objects])
 dnl AM_SILENT_RULES defined as of automake 1.11, so don't need to test for macro's existence
-AM_SILENT_RULES([yes])
+AM_SILENT_RULES([no])
 AM_PROG_AR
 
 
@@ -125,7 +125,15 @@ dnl PKG_CHECK_MODULES(OSINFO, libosinfo-1.0 >= 0.1, [OSINFO_FOUND=yes], [OSINFO_
 
 PKG_CHECK_MODULES(XRANDR, xrandr)
 PKG_CHECK_MODULES(X11, x11)
-PKG_CHECK_MODULES(UDEV, libudev)
+dnl PKG_CHECK_MODULES(UDEV, libudev)
+
+dnl failing in OBS if no proper BuildRequires, even if libudev use disabled
+PKG_CHECK_MODULES([UDEV], [libudev],
+  [AC_DEFINE_UNQUOTED( [UDEV_IN_SYSTEMD], [0], [Use standalone UDEV])],
+      [PKG_CHECK_MODULES([SYSTEMD], [systemd],
+      [AC_DEFINE_UNQUOTED( [UDEV_IN_SYSTEMD], [1], [UDEV in SYSTEMD])
+   ])
+ ])
 
 
 ###
@@ -270,8 +278,6 @@ AS_IF([test "x$enable_lib" == "xyes"],
       AC_SUBST([ENABLE_SHARED_LIB_FLAG], [0]  )
      )
 
-
-
 dnl *** configure option: --enable-gobject-api
 AC_ARG_ENABLE([gobject-api],
               [ AS_HELP_STRING( [--enable-gobject-api=@<:@no/yes@:>@], [Build gobject related files, typelib@<:@default=no@:>@] )],
@@ -282,6 +288,26 @@ AS_IF([test "x$enable_gobject" == "xyes"],
       AC_MSG_NOTICE( [gobject-api... enabled]  ),
       AC_MSG_NOTICE( [gobject-api... disabled] )
      )
+
+dnl *** configure option: --enable-libudev
+AC_ARG_ENABLE([libudev],
+              [ AS_HELP_STRING( [--enable-libudev=@<:@yes/no@:>@], [Use libudev to find devices@<:@default=yes@:>@] )],
+              [enable_libudev=${enableval}],
+              [enable_libudev=yes] )
+AM_CONDITIONAL([ENABLE_LIBUDEV_COND], [test "x$enable_libudev" == "xyes"] )
+AS_IF([test "x$enable_libudev" == "xyes"],
+      AC_SUBST([ENABLE_LIBUDEV_FLAG], [1] ),
+      AC_SUBST([ENABLE_LIBUDEV_FLAG], [0]  )
+     )
+dnl Define USE_LIBUDEV in config.h:
+AS_IF([test "x$enable_libudev" == "xyes"],
+      AC_DEFINE_UNQUOTED( [USE_LIBUDEV], [1], [If defined, use libudev.]),
+      [])
+AS_IF([test "x$enable_libudev" == "xyes"],
+      AC_MSG_NOTICE( [libudev... enabled]  ),
+      AC_MSG_NOTICE( [libudev... disabled] )
+     )
+
 
 
 ### 

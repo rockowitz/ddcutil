@@ -32,13 +32,13 @@
 #include <string.h>
 #include <stdarg.h>
 
-
 #include "util/string_util.h"
 
 
 // Direct writes to stdout/stderr:
 //    debug messages
 //    stderr: hhs_to_byte() before terminating execution because of bad value
+
 
 //
 // General
@@ -545,7 +545,8 @@ Byte hhs_to_byte(char * s) {
       // don't call a function such as program_logic_error() since this
       // file should have no dependencies on any other program files.
       fprintf(stderr, "Invalid hex value: %s", s);
-      exit(1);
+      // exit(1);   //  warnings in OBS re exit() in library
+      converted = 0x00;    // stick something in there, ugh
    }
    return converted;
 }

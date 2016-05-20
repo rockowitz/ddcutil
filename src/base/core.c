@@ -23,6 +23,7 @@
 
 #include <assert.h>
 #include <errno.h>
+#include <setjmp.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -31,9 +32,22 @@
 #include "util/file_util.h"
 #include "util/string_util.h"
 
+#include "base/ddc_errno.h"
 #include "base/linux_errno.h"
 
 #include "base/core.h"
+
+
+static jmp_buf* global_abort_loc;
+
+
+void register_jmp_buf(jmp_buf* jb) {
+   global_abort_loc = jb;
+}
+
+void call_longjmp(int status) {
+   longjmp(*global_abort_loc, status);
+}
 
 
 //
@@ -462,8 +476,10 @@ void report_ioctl_error(
    // will contain at least sterror(errnum), possibly more:
    // not worth the linkage issues:
    // fprintf(stderr, "  %s\n", explain_errno_ioctl(errnum, filedes, request, data));
-   if (fatal)
-      exit(EXIT_FAILURE);
+   if (fatal) {
+      call_longjmp(DDCL_INTERNAL_ERROR);
+      // exit(EXIT_FAILURE);
+   }
    errno = errsv;
 }
 
@@ -535,7 +551,8 @@ void program_logic_error(
   fputc('\n',   stderr);
 
   fputs("Terminating execution.\n", stderr);
-  exit(EXIT_FAILURE);
+  call_longjmp(DDCL_INTERNAL_ERROR);
+  // exit(EXIT_FAILURE);
 }
 
 
@@ -563,6 +580,7 @@ void terminate_execution_on_error(
 
    puts(finalBuffer);
    puts("Terminating execution.");
-   exit(EXIT_FAILURE);
+   call_longjmp(DDCL_INTERNAL_ERROR);
+   // exit(EXIT_FAILURE);
 }
 

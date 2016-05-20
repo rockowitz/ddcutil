@@ -76,10 +76,14 @@ cmdline/parsed_cmd.c \
 app_ddctool/main.c \
 app_ddctool/app_dumpload.c \
 app_ddctool/query_sysenv.c \
-util/udev_util.c \
 app_ddctool/app_setvcp.c \
 app_ddctool/app_getvcp.c \
 app_ddctool/testcases.c 
+
+if ENABLE_LIBUDEV_COND
+ddctool_SOURCES += \
+util/udev_util.c 
+endif
 
 if INCLUDE_TESTCASES_COND
 ddctool_SOURCES += \
@@ -253,6 +257,10 @@ libddctool_la_LIBADD +=  \
    $(GOBJECT_LIBS) \
    $(GLIB_LIBS) 
 
+if ENABLE_LIBUDEV_COND
+libddctool_la_LIBADD += \
+   $(UDEV_LIBS) 
+endif
          
 
 libddctool_la_LDFLAGS = -export_symbols-regex '^ddc[tg]_[^_]'
@@ -265,14 +273,22 @@ ddctool_LDADD = \
    libcommon.la \
    $(XRANDR_LIBS) \
    $(X11_LIBS) \
-   $(UDEV_LIBS) \
    $(GLIB_LIBS)
+
+if ENABLE_LIBUDEV_COND
+ddctool_LDADD += \
+   $(UDEV_LIBS) 
+endif
 
 # Fails if not linked with libudev - why?
 laclient_LDADD = \
   libddctool.la \
-  $(UDEV_LIBS) \
   $(GOBJECT_LIBS)
+
+if ENABLE_LIBUDEV_COND
+laclient_LDADD += \
+  $(UDEV_LIBS) 
+endif
 
 goclient_LDADD = \
   libddctool.la \

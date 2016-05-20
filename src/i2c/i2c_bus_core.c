@@ -982,13 +982,9 @@ static bool is_function_supported(int busno, char * funcname) {
       I2C_Func_Table_Entry * func_table_entry = find_func_table_entry_by_funcname(funcname);
       if (!func_table_entry) {
          TERMINATE_EXECUTION_ON_ERROR("Unrecognized function name: %s", funcname);
-         // printf("Unrecognized function name: %s\n", funcname);
-         // exit(1);
       }
       if (busno < 0 || busno >= i2c_get_busct() ) {
          TERMINATE_EXECUTION_ON_ERROR("Invalid bus: /dev/i2c-%d\n", busno);
-         // printf("Invalid bus: /dev/i2c-%d\n", busno);
-         // exit(1);
       }
 
       // DBGMSG("functionality=0x%lx, func_table_entry->bit=-0x%lx", bus_infos[busno].functionality, func_table_entry->bit);
