@@ -718,8 +718,10 @@ Global_Status_Code ddc_write_only( Display_Handle * dh, DDC_Packet *   request_p
    else {
       rc = adlshim_ddc_write_only(
               dh,
-              get_packet_start(request_packet_ptr)+1,
-              get_packet_len(request_packet_ptr)-1
+              get_packet_start(request_packet_ptr),
+              get_packet_len(request_packet_ptr)
+              // get_packet_start(request_packet_ptr)+1,
+              // get_packet_len(request_packet_ptr)-1
              );
    }
 
