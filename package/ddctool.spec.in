@@ -1,7 +1,7 @@
 Name: @PACKAGE_TARNAME@
 Version: @PACKAGE_VERSION@
 
-%{echo:"?????????????????????????????????????????????????????????????????????????????????"}
+# %%{echo:"?????????????????????????????????????????????????????????????????????????????????"}
 
 # So here's the problem: 
 # We'd like to include an indication of the distribution being built for in the package filename. 
@@ -39,30 +39,7 @@ Version: @PACKAGE_VERSION@
 # Release: tag template specified in prjconf: 
 # Release: <CI_CNT>.<B_CNT>%%{?release_suffix}
 
-
-# Inventory of interesting predefined macros: 
-%{echo: Interesting predefined macros: }
-%{echo: disturl is %{?disturl}, }
-%{echo: _build_arch is %{?_build_arch}, }
-%{echo: _build_name_fmt is %{?_build_name_fmt}, }
-%{echo: _host_vendor is %{?_host_vendor}, }
-%{echo: _host_cpu is %{?_host_cpu}, }
-%{echo: _target is %{?_target}, }
-%{echo: _target_cpu is %{?_target_cpu}, }
-%{echo: _target_os is %{?_target_os}, }
-%{echo: _target_platform is %{?_target_platform}, }
-%{echo: _target_vendor is %{?_target_vendor}, }
-%{echo: _vendor is %{?_vendor}, }
-%{echo: fedora is %{?fedora}, }
-%{echo: fedora_version is %{?fedora_version}, }
-%{echo: opensuse_bs is %{?opensuse_bs}, }
-%{echo: suse is %{?suse}, }
-%{echo: suse_version is %{?suse_version}, }
-%{echo: dist is %{?dist}, }
-
-%{echo: ARCH is %{?ARCH}, }
-%{echo: NAME is %{?NAME}, }
-%{echo: RELEASE is %{?RELEASE}, }
+# Inventory of interesting predefined macros goes here
 
 
 # Detect if executing under OBS 
@@ -87,14 +64,35 @@ Version: @PACKAGE_VERSION@
 # Defined on: Fedora (local), Ubuntu (local), not defined Fedora (OBS)
 %define lsb_release %(lsb_release -r -s)
 
-# Inventory of our macros:
+# Get following message (also or line for suse) but seems to work
+# Warning: spec file parser line 69: can't expand %%(...)
+%define any_fedora %{expand: %{is_fedora} || 0%{?fedora_version}}
+%if %{is_fedora} || 0%{?fedora_version} 
+  %define any_fedora 1
+%else 
+  %define any_fedora 0
+%endif
+%define any_suse %{expand: %{is_suse} || 0%{?suse_version}}
+%if %{is_suse} || 0%{?suse_version} 
+  %define any_suse 1
+%else 
+  %define any_suse 0
+%endif
+
+#define any_suse2 0
+%if %{is_suse} 
+  %define any_suse2 1
+%endif
+
+
+# Inventory of our macros goes here
 %{echo:is_obs_build is %{?is_obs_build}, }
-%{echo:is_fedora is %{?is_fedora}, }
-%{echo:is_suse is %{?is_suse}, }
-%{echo:distver is %{?distver}, }
-%{echo:osid is %{?osid}, }
-%{echo:osversionid is %{?osversionid}, }
-%{echo:lsb_release is %{?lsb_release}, }
+%{echo:is_fedora    is %{?is_fedora}, }
+%{echo:is_suse      is %{?is_suse}, }
+%{echo:any_fedora   is %{?any_fedora}, }
+%{echo:any_suse     is %{?any_suse}, }
+%{echo:any_suse2    is %{?any_suse2}, }
+
 
 
 %if %{is_obs_build}
@@ -151,10 +149,15 @@ Release: 1%{?distro}
 
 
 Summary: Query and update monitor settings
-License: GPL-2.0+
+License: GPLv2+
 URL: http://github.com/rockowitz/ddctool
 # BuildRequires: gcc  glib2 glib2-devel 
 BuildRequires: gcc  pkgconfig(glib-2.0) i2c-tools libXrandr-devel
+# Works on Fedora, fails on OBS with message 
+# "nothing provides libudev-devel, nothing provides or, nothing provides systemd-devel", 
+# whether or not a version is included
+# BuildRequires: (libudev-devel or systemd-devel)
+# BuildRequires: libudev-devel >= 1 or systemd-devel >= 200
 # %%if %%{use_libudev} == 1
 # FIXME: package for udev depends on OS.  Fedora requires systemd-devel, suse still has udev in libudev-devel
 %if %{defined fedora}
@@ -162,9 +165,10 @@ BuildRequires: systemd-devel
 %endif
 %if %{defined suse_version}
 BuildRequires: libudev-devel
-BuildRequires: libz1 zlib-devel zlib-devel-static
+BuildRequires: libz1 zlib-devel 
+# BuildRequires: zlib-devel-static
 # temporarily disable rpmlint after build - will this prevent failure?
-BuildRequires: -post-build-checks
+# BuildRequires: -post-build-checks
 %endif
 # %%endif
 
@@ -173,34 +177,37 @@ BuildRequires: -post-build-checks
 # ddctool.x86_64: W: explicit-lib-dependency libXrandr
 # You must let rpm find the library dependencies by itself. Do not put unneeded
 # explicit Requires: tags.
-%if %{defined suse_version}
+# %%if %%{defined suse_version}
 Requires: i2c-tools 
-%else
-Requires: i2c-tools glib2 libXrandr
-%endif
+# %%else
+# Requires: i2c-tools 
+# Requires: glib2 libXrandr
+# %%endif
 
 Source: %{name}-%{version}.tar.gz
 
-%description
-Query and change monitor settings 
-
-ddctool communicates with monitors implementing MCCS (Monitor Control Command 
-Set) using the DDC/CI protocol on the I2C bus.  Normally, the video driver for
-the monitor exposes the I2C bus as devices named /dev/i2c-n.
-
-A particular use case for ddctool is as part of color profile management.  
-Monitor calibration is relative to the monitor color settings currently in 
-effect, e.g. red gain.  ddctool allows color related settings to be saved at 
-the time a monitor is calibrated, and then restored when the calibration is 
-applied.
-
-Group:  Applications/System
-# Fedora guidelines say Group tag optional
-# But OBS for SuSE complains: 
-
+# Fedora guidelines say Group tag optional, but OBS for SuSE complains if not present 
+Group: Applications/System
 
 # Fedora guidelines say BuildRoot ignored
 BuildRoot: %{_tmppath}/%{name}-%{version}-build
+
+
+# if description comes before tags, it gobbles them up into 
+# the description, or at least rpmlint thinks it does
+%description 
+Query and change monitor settings
+
+ddctool communicates with monitors implementing MCCS (Monitor Control Command
+Set), using either the DDC/CI protocol on the I2C bus or as a Human Interface
+Device on USB.
+
+A particular use case for ddctool is as part of color profile management.
+Monitor calibration is relative to the monitor color settings currently in
+effect, e.g. red gain.  ddctool allows color related settings to be saved at
+the time a monitor is calibrated, and then restored when the calibration is
+applied.
+
 
 
 %package devel
@@ -216,6 +223,8 @@ Contains a basic C API, and a primitive GOBject API.
 %prep
 %setup 
 # %%setup -q
+rpm --version
+rpmbuild --version
 
 %build
 %if %{build_libs} == 1
@@ -268,3 +277,12 @@ rm -rf %{buildroot}
 
 
 %doc
+
+
+
+
+%changelog
+
+* Fri May 20 2016 Sanford Rockowitz <rockowitz@minsoft.com> 0.4.1-1
+
+- dummy change log 

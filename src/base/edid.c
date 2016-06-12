@@ -178,7 +178,6 @@ struct {
 
 
 Parsed_Edid * create_parsed_edid(Byte* edidbytes) {
-   // TODO: implement depth
    assert(edidbytes);
    bool        ok;
    Parsed_Edid* parsed_edid = NULL;

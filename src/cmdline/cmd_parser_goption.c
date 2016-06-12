@@ -239,7 +239,7 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
                              "\n",
                              stats_multiple_call_option_help,
                              "\n",
-                             retries_option_help};
+                             maxtries_option_help};
    char * help_description = strjoin(pieces4, 6, NULL);
 
    // on --help, comes after usage line, before option detail

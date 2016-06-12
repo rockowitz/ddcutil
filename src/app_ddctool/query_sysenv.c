@@ -945,14 +945,12 @@ void query_usb_monitors() {
                      cgname);
             if (!is_hiddev_monitor(fd)) {
                printf("%s\n", dev_summary);
-
                printf("   Not a USB connected monitor\n");
             }
-            else {
+            // else {                                 // *** TEMP ***
                printf("%s\n", dev_summary);
                report_hiddev_device_by_fd(fd, 1);
-
-            }
+            // }
          }
 
          close(fd);
@@ -1049,9 +1047,15 @@ void query_sysenv() {
          // hex_dump(prec->edid, 128);
          rpt_vstring(1, "xrandr output: %s", prec->output_name);
          Parsed_Edid * parsed_edid = create_parsed_edid(prec->edid);
-         bool verbose_edid = false;
-         report_parsed_edid(parsed_edid, verbose_edid, 2 /* depth */);
-         free_parsed_edid(parsed_edid);
+         if (parsed_edid) {
+            bool verbose_edid = false;
+            report_parsed_edid(parsed_edid, verbose_edid, 2 /* depth */);
+            free_parsed_edid(parsed_edid);
+         }
+         else {
+            printf(" Unparsable EDID for output name: %s -> %p\n", prec->output_name, prec->edid);
+            hex_dump(prec->edid, 128);
+         }
       }
       free_x11_edids(edid_recs);
 

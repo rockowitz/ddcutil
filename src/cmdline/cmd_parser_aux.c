@@ -313,7 +313,7 @@ char * monitor_selection_option_help =
        "  --model <model_name>, where <model name> is as reported by the EDID\n"
        "  --sn <serial_number>, where <serial_number> is the string form of the serial number\n"
        "          reported by the EDID\n"
-       "  Options --model and --sn must be specfied together.\n"
+       "  Options --model and --sn must be specified together.\n"
        "\n"
       ;
 
@@ -348,9 +348,9 @@ char * stats_multiple_call_option_help =
        "  output.\n"
       ;
 
-char * retries_option_help =
+char * maxtries_option_help =
       "Retries:\n"
-      "  The argument to --retries is a comma separated list of 3 values:\n"
+      "  The argument to --maxtries is a comma separated list of 3 values:\n"
       "    maximum write-only exchange count\n"
       "    maximum write-read exchange count\n"
       "    maximum multi-part-read exchange count\n"

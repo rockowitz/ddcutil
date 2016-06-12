@@ -11,7 +11,8 @@ rpmmacros = \
 #  file '/usr/bin/laclient' contains a standard rpath '/usr/lib64' in [/usr/lib64]
 RPMENV = QA_RPATHS=$$(( 0x0001 ))
 RPMBUILD = rpmbuild
-RPMFLAGS = --nodeps --buildroot="$${PWD}/_rpm"
+# --showrc   - displays macros 
+RPMFLAGS = --nodeps --buildroot="$${PWD}/_rpm"  --verbose
 
 # n. ver must be set here, not within a target, where it's treated as an unrecognized command
 ver = @PACKAGE_VERSION@

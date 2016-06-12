@@ -64,6 +64,6 @@ extern char * monitor_selection_option_help;
 extern char * tracing_comma_separated_option_help;
 extern char * tracing_multiple_call_option_help;
 extern char * stats_multiple_call_option_help;
-extern char * retries_option_help;
+extern char * maxtries_option_help;
 
 #endif /* CMD_PARSER_AUX_H_ */

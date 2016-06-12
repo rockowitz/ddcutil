@@ -24,11 +24,11 @@ obsrpm:
 	echo "---> Makefile: obsrpm"
 	(cd package && $(MAKE) $(AM_MAKEFLAGS) $@) || exit 1
 
-dpkg:  
+dpkg:  dist
 	echo "---> Makefile: dpkg"
 	(cd package && $(MAKE) $(AM_MAKEFLAGS) $@) || exit 1
 
-pdebuild:  
+pdebuild:  dist
 	echo "---> Makefile: pdebuild"
 	(cd package && $(MAKE) $(AM_MAKEFLAGS) $@) || exit 1
 

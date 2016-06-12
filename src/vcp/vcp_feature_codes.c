@@ -3474,7 +3474,7 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
    {  .code=0xcc,
       .vcp_spec_groups = VCP_SPEC_MISC | VCP_SPEC_CONTROL,   // 2.0: MISC, 3.0: CONTROL
       .default_sl_values=xcc_osd_language_values,
-      .desc = "On Screen Display languge",
+      .desc = "On Screen Display language",
       .v20_flags  = VCP2_RW | VCP2_SIMPLE_NC,
       .v20_name = "OSD Language",
    },

@@ -21,7 +21,7 @@
  * </endcopyright>
  */
 
-// #include <config.h>
+#include <config.h>
 
 #include <assert.h>
 #include <dirent.h>
@@ -219,6 +219,7 @@ GPtrArray * get_hiddev_device_names() {
  * a usage of Monitor Control from the USB Monitor Usage Page."
 */
 bool is_hiddev_monitor(int fd) {
+   bool debug = true;
    int monitor_collection_index = -1;
 
    int cndx = 0;   // indexes start at 0
@@ -236,6 +237,9 @@ bool is_hiddev_monitor(int fd) {
       // }
       if (ioctl_rc == -1)
          continue;
+      if (debug)
+         printf("(%s) cndx=%d, cinfo.level=%d, cinfo.usage=0x%08x\n", __func__,
+                cndx, cinfo.level, cinfo.usage);
       if (cinfo.level == 0 && cinfo.usage == 0x00800001) { // USB Monitor Usage Page/Monitor Control
          monitor_collection_index = cndx;
          break;
@@ -316,11 +320,11 @@ is_field_edid(int fd, struct hiddev_report_info * rinfo, int field_index) {
       else {
          // printf("(%s) uref.field_index=%d, uref.usage_code = 0x%08x\n",
          //        __func__, uref.field_index, uref.usage_code);
-         if (uref.usage_code != 0x00800002) {   // USB Monitor/EDID Information
+         if (uref.usage_code != 0x00800002)   // USB Monitor/EDID Information
             all_usages_edid = false;
       }
    }   // loop over usages
-   if (all_usages_edid)
+   if (all_usages_edid) {
       result = malloc(sizeof(struct hiddev_field_info));
       memcpy(result, &finfo, sizeof(struct hiddev_field_info));
    }
