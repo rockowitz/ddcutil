@@ -31,6 +31,7 @@
 #include "base/ddc_packets.h"
 #include "base/displays.h"
 #include "base/parms.h"
+#include "base/base_services.h"
 
 #include "vcp/vcp_feature_codes.h"
 
