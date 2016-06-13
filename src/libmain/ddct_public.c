@@ -97,6 +97,7 @@ void ddct_init() {
    DBGMSG("Starting. library_initialized=%s", bool_repr(library_initialized));
    if (!library_initialized) {
       DBGMSG("Calling init_ddc_services...");
+      init_base_services();
       init_ddc_services();
       library_initialized = true;
    }
