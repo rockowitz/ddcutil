@@ -943,6 +943,14 @@ Base_Status_ADL call_ADL_Display_DDCBlockAccess_Get(
 
    // rc = adl->ADL_Display_DDCBlockAccess_Get( iAdapterIndex, iDisplayIndex, iOption, xxx,
    //       iSendMsgLen, lpucSendMsgBuf, iRecvMsgLen, lpucRcvMsgBuf);
+   if (adl_debug) {
+      if (lpucRcvMsgBuf) {
+         char * hs = hexstring(lpucRcvMsgBuf, *iRecvMsgLen);
+         DBGMSG("lpucRecvMsgBuf -> %s  ", hs  );
+         free(hs);
+      }
+      DBGMSG("Returning %d", rc);
+   }
    return rc;
 
 }

@@ -21,23 +21,16 @@
  * </endcopyright>
  */
 
-#ifndef SRC_APP_DDCTOOL_APP_SETVCP_H_
-#define SRC_APP_DDCTOOL_APP_SETVCP_H_
+#ifndef APP_SETVCP_H_
+#define APP_SETVCP_H_
 
 #include "base/displays.h"
 #include "base/status_code_mgt.h"
 
-Global_Status_Code app_set_vcp_value_by_display_handle(
+Global_Status_Code app_set_vcp_value(
         Display_Handle * dh,
         char *           feature,
         char *           new_value,
         bool             force);
 
-#ifdef DEPRECATED
-Global_Status_Code app_set_vcp_value_by_display_ref(
-        Display_Ref* dref,
-        char *       feature,
-        char *       new_value,
-        bool         force);
-#endif
-#endif /* SRC_APP_DDCTOOL_APP_SETVCP_H_ */
+#endif /* APP_SETVCP_H_ */

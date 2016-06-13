@@ -226,8 +226,7 @@ static Byte trace_levels = 0x00;
 
 void set_trace_levels(Trace_Group trace_flags) {
    bool debug = false;
-   if (debug)
-      DBGMSG("trace_flags=0x%02x\n", trace_flags);
+   DBGMSF(debug, "trace_flags=0x%02x\n", trace_flags);
    trace_levels = trace_flags;
 }
 

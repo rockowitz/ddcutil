@@ -21,9 +21,6 @@
  * </endcopyright>
  */
 
-#ifndef APP_GETVCP_C_
-#define APP_GETVCP_C_
-
 #include <errno.h>
 #include <stdio.h>
 
@@ -207,7 +204,7 @@ void app_show_vcp_subset_values_by_display_ref(
 #endif
 
 
-/* Shows the VCP values for all features indicated by a Feature_Set_ref
+/* Shows the VCP values for all features indicated by a Feature_Set_Ref
  *
  * Arguments:
  *    dh                display handle
@@ -340,7 +337,6 @@ app_read_changes(Display_Handle * dh) {
       free(p_nontable_response);
       p_nontable_response = NULL;
    }
-
 }
 
 
@@ -362,5 +358,3 @@ app_read_changes_forever(Display_Handle * dh) {
       sleep_millis( 2500);
    }
 }
-
-#endif /* SRC_APP_DDCTOOL_APP_GETVCP_C_ */

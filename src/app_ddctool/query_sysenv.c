@@ -314,6 +314,7 @@ void query_base_env() {
 
 void check_i2c_devices(struct driver_name_node * driver_list) {
    bool debug = false;
+   int rc;
    char username[32+1];       // per man useradd, max username length is 32
    // bool have_i2c_devices = false;
 
@@ -344,8 +345,17 @@ void check_i2c_devices(struct driver_name_node * driver_list) {
    printf("\nChecking for /dev/i2c-* devices...\n");
    execute_shell_cmd("ls -l /dev/i2c-*", 1);
 
-   getlogin_r(username, sizeof(username));
+   rc = getlogin_r(username, sizeof(username));
+   printf("(%s) getlogin_r() returned %d, strlen(username)=%zd\n", __func__,
+          rc, strlen(username));
+   if (rc == 0)
+      printf("(%s) username = |%s|\n", __func__, username);
    // printf("\nLogged on user:  %s\n", username);
+   printf("(%s) getlogin() returned |%s|\n", __func__, getlogin());
+   char * cmd = "echo $LOGNAME";
+   printf("(%s) executing command: %s\n", __func__, cmd);
+   bool ok = execute_shell_cmd(cmd, 0);
+   printf("(%s) execute_shell_cmd() returned %s\n", __func__, bool_repr(ok));
 
    bool all_i2c_rw = false;
    int busct = i2c_get_busct();   // Consider replacing with local code

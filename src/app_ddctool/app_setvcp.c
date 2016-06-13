@@ -1,8 +1,5 @@
 /* app_setvcp.c
  *
- * Created on: Jan 1, 2016
- *     Author: rock
- *
  * <copyright>
  * Copyright (C) 2014-2016 Sanford Rockowitz <rockowitz@minsoft.com>
  *
@@ -106,7 +103,7 @@ bool parse_vcp_value(char * string_value, long* parsed_value) {
  */
 // TODO: consider moving value parsing to command parser
 Global_Status_Code
-app_set_vcp_value_by_display_handle(
+app_set_vcp_value(
       Display_Handle * dh,
       char *           feature,
       char *           new_value,
@@ -199,30 +196,3 @@ app_set_vcp_value_by_display_handle(
 
    return gsc;
 }
-
-#ifdef DEPRECATED
-/* Parses the Set VCP arguments passed and sets the new value.
- *
- * Arguments:
- *   pdisp      display reference
- *   feature    feature id (as string)
- *   new_value  new feature value (as string)
- *
- * Returns:
- *   0          success
- *   -EINVAL (modulated)  invalid setvcp arguments, feature not writable
- *   from put_vcp_by_display_ref()
- */
-Global_Status_Code
-app_set_vcp_value_by_display_ref(
-   Display_Ref * dref,
-   char *        feature,
-   char *        new_value,
-   bool          force)
-{
-   Display_Handle * dh = ddc_open_display(dref, EXIT_IF_FAILURE);
-   Global_Status_Code gsc = app_set_vcp_value_by_display_handle(dh, feature, new_value, force);
-   ddc_close_display(dh);
-   return gsc;
-}
-#endif

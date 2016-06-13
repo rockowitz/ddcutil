@@ -45,7 +45,7 @@ void init_ddc_services() {
    // DBGMSG("Executing");
 
    // base:
-   init_base_services();
+   // init_base_services();
 
    // i2c:
    i2c_set_io_strategy(DEFAULT_I2C_IO_STRATEGY);

@@ -159,64 +159,6 @@ dumpvcp_as_file(Display_Handle * dh, char * filename) {
 }
 
 
-#ifdef OLD
-// TODO: return Global_Status_Code rather than ok
-bool dumpvcp_as_file_old(Display_Handle * dh, char * filename) {
-   bool               ok             = true;
-   Global_Status_Code gsc            = 0;
-   char               fqfn[PATH_MAX] = {0};
-   time_t             time_millis    = time(NULL);
-
-   if (!filename) {
-      char simple_fn_buf[NAME_MAX+1];
-      char * simple_fn = create_simple_vcp_fn_by_display_handle(
-                            dh,
-                            time_millis,
-                            simple_fn_buf,
-                            sizeof(simple_fn_buf));
-      // DBGMSG("simple_fn=%s", simple_fn );
-
-      snprintf(fqfn, PATH_MAX, "/home/%s/%s/%s", getlogin(), USER_VCP_DATA_DIR, simple_fn);
-      // DBGMSG("fqfn=%s   ", fqfn );
-      filename = fqfn;
-      // control with MsgLevel?
-      printf("Writing file: %s\n", filename);
-   }
-
-   FILE * output_fp = fopen(filename, "w+");
-   // DBGMSG("output_fp=%p  ", output_fp );
-   if (!output_fp) {
-      fprintf(stderr, "(%s) Unable to open %s for writing: %s\n", __func__, fqfn, strerror(errno)  );
-      ok = false;
-   }
-   else {
-      // TODO: return status codes up the call chain to here,
-      // look for DDCRC_MULTI_FEATURE_ERROR
-      GPtrArray * vals = NULL;
-      gsc = collect_profile_related_values(dh, time_millis, &vals);
-      // DBGMSG("vals->len = %d", vals->len);
-      if (gsc != 0) {
-         fprintf(stderr, "Error reading at least one feature value.  File not written.\n");
-         ok = false;
-      }
-      else {
-         int ct = vals->len;
-         int ndx;
-         for (ndx=0; ndx<ct; ndx++){
-            // DBGMSG("ndx = %d", ndx);
-            char * nextval = g_ptr_array_index(vals, ndx);
-            // DBGMSG("nextval = %p", nextval);
-            // DBGMSG("strlen(nextval)=%ld, nextval = |%s|", strlen(nextval), nextval);
-            fprintf(output_fp, "%s\n", nextval);
-         }
-      }
-      if (vals)
-         g_ptr_array_free(vals, true);
-      fclose(output_fp);
-   }
-   return ok;
-}
-#endif
 
 
 //

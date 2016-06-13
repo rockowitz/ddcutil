@@ -37,6 +37,7 @@
 #include "util/data_structures.h"
 
 #include "base/core.h"
+#include "base/base_services.h"
 #include "base/ddc_errno.h"
 #include "base/ddc_packets.h"
 #include "base/displays.h"
@@ -84,20 +85,6 @@
 static long start_time_nanos;
 
 
-void initialize() {
-   start_time_nanos = cur_realtime_nanosec();
-   init_ddc_services();
-
-   // overrides setting in init_ddc_services():
-   i2c_set_io_strategy(DEFAULT_I2C_IO_STRATEGY);
-
-#ifndef HAVE_ADL
-   if ( is_module_loaded_using_sysfs("fglrx") ) {
-      fprintf(stdout, "WARNING: AMD proprietary video driver fglrx is loaded,");
-      fprintf(stdout, "but this copy of ddctool was built without fglrx support.");
-   }
-#endif
-}
 
 
 void report_stats(Stats_Type stats) {
@@ -175,9 +162,7 @@ bool perform_get_capabilities_by_display_handle(Display_Handle * dh) {
 //
 
 int main(int argc, char *argv[]) {
-   // set_trace_levels(TRC_ADL);   // uncomment to enable tracing during initialization
-   initialize();
-   int main_rc = EXIT_FAILURE;
+   start_time_nanos = cur_realtime_nanosec();
 
    jmp_buf abort_buf;
    int jmprc = setjmp(abort_buf);
@@ -187,14 +172,27 @@ int main(int argc, char *argv[]) {
    }
    register_jmp_buf(&abort_buf);
 
-
+   // set_trace_levels(TRC_ADL);   // uncomment to enable tracing during initialization
+   init_base_services();  // so tracing related modules are initialized
    Parsed_Cmd * parsed_cmd = parse_command(argc, argv);
    if (!parsed_cmd) {
       // puts("Terminating execution");
       exit(EXIT_FAILURE);
    }
-
    set_trace_levels(parsed_cmd->trace);
+
+   init_ddc_services();
+   // overrides setting in init_ddc_services():
+   i2c_set_io_strategy(DEFAULT_I2C_IO_STRATEGY);
+
+#ifndef HAVE_ADL
+   if ( is_module_loaded_using_sysfs("fglrx") ) {
+      fprintf(stdout, "WARNING: AMD proprietary video driver fglrx is loaded,");
+      fprintf(stdout, "but this copy of ddctool was built without fglrx support.");
+   }
+#endif
+
+   int main_rc = EXIT_FAILURE;
 
    set_output_level(parsed_cmd->output_level);
    show_recoverable_errors = parsed_cmd->ddcdata;
@@ -382,7 +380,7 @@ int main(int argc, char *argv[]) {
                int argNdx;
                Global_Status_Code rc = 0;
                for (argNdx=0; argNdx < parsed_cmd->argct; argNdx+= 2) {
-                  rc = app_set_vcp_value_by_display_handle(
+                  rc = app_set_vcp_value(
                           dh,
                           parsed_cmd->args[argNdx],
                           parsed_cmd->args[argNdx+1],

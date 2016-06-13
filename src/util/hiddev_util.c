@@ -247,6 +247,8 @@ bool is_hiddev_monitor(int fd) {
    }
 
    bool result = (monitor_collection_index >= 0);
+   if (debug)
+      printf("(%s) Returning: %s\n", __func__, bool_repr(result));
    return result;
 }
 
