@@ -99,7 +99,7 @@ GPtrArray * get_hiddev_device_names_using_filesys() {
 
 
 #ifdef USE_LIBUDEV
-/* Comparison function used by g_ptr_array_sort() in
+/* Comparison function used by g_ptr_array_sort() in function
  * find_hiddev_devices()
  */
 gint g_ptr_scomp(gconstpointer a, gconstpointer b) {

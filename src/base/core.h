@@ -136,7 +136,7 @@ extern bool show_recoverable_errors;
 bool is_reporting_ddc(Trace_Group trace_group, const char * fn);
 #define IS_REPORTING_DDC() is_reporting_ddc(TRACE_GROUP, __FILE__)
 
-void ddcmsg(Trace_Group trace_group, const char * funcname, const int lineno, const char * fn, char * format, ...);
+void ddcmsg(Trace_Group trace_group, const char* funcname, const int lineno, const char* fn, char* format, ...);
 #define DDCMSG(format, ...) ddcmsg(TRACE_GROUP, __func__, __LINE__, __FILE__, format, ##__VA_ARGS__)
 
 
@@ -173,26 +173,31 @@ void dbgtrc(
         ...);
 
 
-#define SEVEREMSG(            format, ...) severemsg(             __func__, __LINE__, __FILE__, format, ##__VA_ARGS__)
+#define SEVEREMSG(          format, ...) \
+   severemsg(          __func__, __LINE__, __FILE__, format, ##__VA_ARGS__)
 #ifdef OLD
-#define DBGMSG(               format, ...) dbgmsg(             __func__, __LINE__, __FILE__, format, ##__VA_ARGS__)
-#define DBGMSF( debug_flag,     format, ...) \
+#define DBGMSG(             format, ...) \
+   dbgmsg(             __func__, __LINE__, __FILE__, format, ##__VA_ARGS__)
+#define DBGMSF(debug_flag,  format, ...) \
    do { if (debug_flag) dbgmsg(  __func__, __LINE__, __FILE__, format, ##__VA_ARGS__); }  while(0)
 #endif
 
 // cannot map to dbgtrc, writes to stderr, not stdout
-// #define SEVEREMSG(            format, ...) dbgtrc(0xff,             __func__, __LINE__, __FILE__, format, ##__VA_ARGS__)
-#define DBGMSG(               format, ...) dbgtrc(0xff,             __func__, __LINE__, __FILE__, format, ##__VA_ARGS__)
-#define DBGMSF( debug_flag,     format, ...) \
+// #define SEVEREMSG(format, ...) dbgtrc(0xff,       __func__, __LINE__, __FILE__, format, ##__VA_ARGS__)
+#define DBGMSG(            format, ...) dbgtrc(0xff, __func__, __LINE__, __FILE__, format, ##__VA_ARGS__)
+#define DBGMSF(debug_flag, format, ...) \
    do { if (debug_flag) dbgtrc( 0xff, __func__, __LINE__, __FILE__, format, ##__VA_ARGS__); }  while(0)
 
 
-#define TRCMSG(               format, ...) dbgtrc(TRACE_GROUP, __func__, __LINE__, __FILE__, format, ##__VA_ARGS__)
+#define TRCMSG(            format, ...) \
+   dbgtrc(TRACE_GROUP, __func__, __LINE__, __FILE__, format, ##__VA_ARGS__)
 
 // which of these are really useful?
 // not currently used: TRCALWAYS, TRCMSGTG, TRCMSGTF
-#define TRCALWAYS(            format, ...) dbgtrc(0xff,        __func__, __LINE__, __FILE__, format, ##__VA_ARGS__)
-#define TRCMSGTG(trace_group, format, ...) dbgtrc(trace_group, __func__, __LINE__, __FILE__, format, ##__VA_ARGS__)
+#define TRCALWAYS(            format, ...) \
+   dbgtrc(0xff,        __func__, __LINE__, __FILE__, format, ##__VA_ARGS__)
+#define TRCMSGTG(trace_group, format, ...) \
+   dbgtrc(trace_group, __func__, __LINE__, __FILE__, format, ##__VA_ARGS__)
 #define TRCMSGTF(trace_flag, format, ...) \
     do { if (trace_flag) dbgtrc(0xff, __func__, __LINE__, __FILE__, format, ##__VA_ARGS__); }  while(0)
 // alt: dbgtrc( ( (trace_flag) ? (0xff) : TRACE_GROUP ), __func__, __LINE__, __FILE__, format, ##__VA_ARGS__)
