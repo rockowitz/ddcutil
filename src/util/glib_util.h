@@ -1,10 +1,7 @@
 /* glib_util.h
  *
- * Created on: Jan 27, 2016
- *     Author: rock
- *
  * <copyright>
- * Copyright (C) 2014-2015 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2014-2016 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -24,8 +21,8 @@
  * </endcopyright>
  */
 
-#ifndef SRC_UTIL_GLIB_UTIL_H_
-#define SRC_UTIL_GLIB_UTIL_H_
+#ifndef GLIB_UTIL_H_
+#define GLIB_UTIL_H_
 
 #include <glib.h>
 
@@ -39,4 +36,4 @@ char * join_string_g_ptr_array(GPtrArray* strings, char * sepstr);
 
 gpointer * g_list_to_g_array(GList * glist, guint * length);
 
-#endif /* SRC_UTIL_GLIB_UTIL_H_ */
+#endif /* GLIB_UTIL_H_ */
