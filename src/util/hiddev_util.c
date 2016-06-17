@@ -44,7 +44,7 @@
 #include "util/coredefs.h"
 #include "util/string_util.h"
 #include "util/glib_util.h"
-// #include "util/report_util.h"
+#include "util/report_util.h"
 #include "util/hiddev_reports.h"   // circular dependency, but only used in debug code
 
 #include "util/hiddev_util.h"
@@ -272,9 +272,10 @@ bool is_hiddev_monitor(int fd) {
  */
 struct hiddev_field_info *
 is_field_edid(int fd, struct hiddev_report_info * rinfo, int field_index) {
-   bool debug = false;
+   bool debug = true;
    if (debug)
-      printf("(%s) report_id=%d, field index = %d\n", __func__, rinfo->report_id, field_index);
+      printf("(%s) report_type=%d, report_id=%d, field index = %d\n",
+             __func__, rinfo->report_type, rinfo->report_id, field_index);
 
    struct hiddev_field_info *  result = NULL;
    int rc;
@@ -332,6 +333,15 @@ is_field_edid(int fd, struct hiddev_report_info * rinfo, int field_index) {
    }
 
 bye:
+   if (debug) {
+      if (result) {
+         printf("(%s) Returning: \n", __func__);
+         report_hiddev_field_info(result, 1);
+      }
+      else
+         printf("(%s) Returning: null\n", __func__);
+
+   }
    return result;
 }
 
@@ -345,9 +355,26 @@ bye:
 struct edid_location {
    struct hiddev_report_info * rinfo;         // simplify by eliminating?
    struct hiddev_field_info  * finfo;         // simplify by eliminating?
-   int                         report_id;
-   int                         field_index;
+   __u32                       report_type;
+   __u32                       report_id;
+   __u32                       field_index;
 };
+
+
+void report_edid_location(struct edid_location * ploc, int depth) {
+   int d1 = depth+1;
+
+   rpt_structure_loc("struct edid_location", ploc, depth);
+   if (ploc) {
+      rpt_vstring(d1, "%-20s %u", "report_type:",  ploc->report_type );
+      rpt_vstring(d1, "%-20s %u", "report_id:",  ploc->report_id );
+      rpt_vstring(d1, "%-20s %u", "field_index:",  ploc->field_index);
+      report_hiddev_report_info(ploc->rinfo, d1);
+      report_hiddev_field_info(ploc->finfo, d1);
+
+   }
+}
+
 
 void free_edid_location(struct edid_location * location) {
    if (location) {
@@ -374,7 +401,7 @@ void free_edid_location(struct edid_location * location) {
  */
 struct edid_location *
 locate_edid_report(int fd) {
-   bool debug = false;
+   bool debug = true;
 
    struct hiddev_report_info rinfo = {
       .report_type = HID_REPORT_TYPE_FEATURE,
@@ -414,6 +441,7 @@ locate_edid_report(int fd) {
        result->rinfo = calloc(1, sizeof(struct hiddev_report_info));
        memcpy(result->rinfo, &rinfo, sizeof(struct hiddev_report_info));
        result->finfo = finfo_found;   // returned by is_field_edid()
+       result->report_type = rinfo.report_type;
        result->report_id   = report_id_found;
        result->field_index = field_index_found;    // finfo.field_index may habe been changed by HIDIOGREPORTINFO
     }
@@ -427,6 +455,11 @@ locate_edid_report(int fd) {
           printf("(%s) Returning NULL", __func__);
     }
 
+    if (debug) {
+       printf("(%s) Returning: %p\n", __func__, result);
+       if (result)
+          report_edid_location(result, 1);
+    }
    return result;
 }
 
@@ -445,12 +478,13 @@ locate_edid_report(int fd) {
  */
 Buffer * get_hiddev_edid_by_location(int fd, struct edid_location * loc) {
    assert(loc);
-   bool debug = false;
+   bool debug = true;
    if (debug) {
       printf("(%s) Starting.  loc=%p, loc->report_id=%d, loc->field_index=%d\n",
              __func__, loc, loc->report_id, loc->field_index);
-      report_hiddev_report_info(loc->rinfo, 1);
-      report_hiddev_field_info(loc->finfo, 1);
+      // report_hiddev_report_info(loc->rinfo, 1);
+      // report_hiddev_field_info(loc->finfo, 1);
+      report_edid_location(loc, 1);
    }
 
    int rc;
@@ -471,8 +505,10 @@ Buffer * get_hiddev_edid_by_location(int fd, struct edid_location * loc) {
    int undx;
    for (undx = 0; undx < 128; undx++) {
       struct hiddev_usage_ref uref = {
-          .report_type = loc->rinfo->report_type,  // rinfo.report_type;
+        //   .report_type = loc->rinfo->report_type,  // rinfo.report_type;
+          .report_type = loc->report_type,
           .report_id   = loc->report_id,           // rinfo.report_id may have flag bits set
+        //  .report_id   = loc->finfo->report_id,    // *** loc->report)id also has flag bits set
           .field_index = loc->field_index,         // use original value, not value changed from HIDIOCGFIELDINFO
           .usage_index = undx
       };
@@ -492,6 +528,8 @@ Buffer * get_hiddev_edid_by_location(int fd, struct edid_location * loc) {
    }
 
 bye:
+   if (debug)
+      printf("(%s) Returning: %p\n", __func__, result);
    return result;
 }
 
