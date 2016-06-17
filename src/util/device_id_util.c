@@ -809,6 +809,7 @@ Pci_Usb_Id_Names devid_get_usb_names(
 
 
 char * devid_usage_code_page_name(ushort usage_page_code) {
+   devid_ensure_initialized();
    char * result = NULL;
    // ushort * args = {usage_page_code};
    Multi_Level_Names names_found = mlm_get_names(hid_usages_table, 1, usage_page_code);
@@ -820,6 +821,7 @@ char * devid_usage_code_page_name(ushort usage_page_code) {
 
 char * devid_usage_code_id_name(ushort usage_page_code, ushort usage_simple_id) {
    // printf("(%s) usage_page_code=0x%04x, usage_simple_id=0x%04x\n", __func__, usage_page_code, usage_simple_id);
+   devid_ensure_initialized();
    char * result = NULL;
    // ushort * args = {usage_page_code, usage_simple_id};
    Multi_Level_Names names_found = mlm_get_names(hid_usages_table, 2, usage_page_code, usage_simple_id);
