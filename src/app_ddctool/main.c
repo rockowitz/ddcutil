@@ -323,10 +323,11 @@ int main(int argc, char *argv[]) {
             PROGRAM_LOGIC_ERROR("get_display_ref_for_display_identifier() failed for display %d", dispno);
          }
          Display_Handle * dh = ddc_open_display(dref, EXIT_IF_FAILURE);
-         Version_Spec vspec = get_vcp_version_by_display_handle(dh);
-         if (vspec.major < 2) {
-            printf("VCP (aka MCCS) version for display is less than 2.0. Output may not be accurate.\n");
-         }
+         // not needed, causes confusing messages if get_vcp_version fails but get_capabilities succeeds
+         // Version_Spec vspec = get_vcp_version_by_display_handle(dh);
+         // if (vspec.major < 2) {
+         //    printf("VCP (aka MCCS) version for display is less than 2.0. Output may not be accurate.\n");
+         // }
          perform_get_capabilities_by_display_handle(dh);
 
          printf("\n\nScanning all VCP feature codes for display %d\n", dispno);

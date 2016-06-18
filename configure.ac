@@ -47,7 +47,7 @@ dnl removed -Werror
 dnl rmoved -Werror from AM_INIT_AUTOMAKE to allow compilation to proceed
 AM_INIT_AUTOMAKE([1.11 -Wall -Wno-extra-portability foreign subdir-objects])
 dnl AM_SILENT_RULES defined as of automake 1.11, so don't need to test for macro's existence
-AM_SILENT_RULES([no])
+AM_SILENT_RULES([yes])
 AM_PROG_AR
 
 
