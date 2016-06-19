@@ -346,15 +346,22 @@ int main(int argc, char *argv[]) {
                               parsed_cmd->pdid, true /* emit_error_msg */);
       if (dref) {
          Display_Handle * dh = ddc_open_display(dref, EXIT_IF_FAILURE);
-         Version_Spec vspec = get_vcp_version_by_display_handle(dh);
-         if (vspec.major < 2) {
-            printf("VCP (aka MCCS) version for display is less than 2.0. Output may not be accurate.\n");
+
+         if (// parsed_cmd->cmd_id == CMDID_CAPABILITIES ||
+             parsed_cmd->cmd_id == CMDID_GETVCP       ||
+             parsed_cmd->cmd_id == CMDID_READCHANGES
+            )
+         {
+            Version_Spec vspec = get_vcp_version_by_display_handle(dh);
+            if (vspec.major < 2) {
+               printf("VCP (aka MCCS) version for display is less than 2.0. Output may not be accurate.\n");
+            }
          }
 
          switch(parsed_cmd->cmd_id) {
 
          case CMDID_CAPABILITIES:
-            {;
+            {
                bool ok = perform_get_capabilities_by_display_handle(dh);
                main_rc = (ok) ? EXIT_SUCCESS : EXIT_FAILURE;
                break;

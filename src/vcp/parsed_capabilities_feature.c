@@ -179,7 +179,7 @@ void show_capabilities_feature(Capabilities_Feature_Record * vfr, Version_Spec v
             Byte hval = bva_get(vfr->values, ndx);
             char *  value_name = get_feature_value_name(feature_values, hval);
             if (!value_name)
-               value_name = "Unrecognized value!!";
+               value_name = "Unrecognized value";
             printf("       %02x: %s\n", hval, value_name);
          }
       }
@@ -196,7 +196,10 @@ void show_capabilities_feature(Capabilities_Feature_Record * vfr, Version_Spec v
             pos = pos+3;
          }
          *(pos-1) = '\0';
-         printf("    Values (  parsed): %s (interpretation unavailable)\n", buf0);
+         if (ol >= OL_VERBOSE)
+            printf("    Values (  parsed): %s (interpretation unavailable)\n", buf0);
+         else
+            printf("    Values: %s (interpretation unavailable)\n", buf0);
       }
    }
 
