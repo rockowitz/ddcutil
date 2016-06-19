@@ -314,8 +314,9 @@ void query_base_env() {
 
 void check_i2c_devices(struct driver_name_node * driver_list) {
    bool debug = false;
-   int rc;
-   char username[32+1];       // per man useradd, max username length is 32
+   // int rc;
+   // char username[32+1];       // per man useradd, max username length is 32
+   char *uname = NULL;
    // bool have_i2c_devices = false;
 
    printf("\nChecking /dev/i2c-* devices...\n");
@@ -323,7 +324,7 @@ void check_i2c_devices(struct driver_name_node * driver_list) {
 
    bool just_fglrx = only_fglrx(driver_list);
    if (just_fglrx){
-      printf("\nApparently using only the AMC proprietary driver fglrx.\n"
+      printf("\nApparently using only the AMD proprietary driver fglrx.\n"
              "Devices /dev/i2c-* are not required.\n");
       if (output_level >= OL_VERBOSE)
          printf("/dev/i2c device detail is purely informational.\n");
@@ -345,6 +346,7 @@ void check_i2c_devices(struct driver_name_node * driver_list) {
    printf("\nChecking for /dev/i2c-* devices...\n");
    execute_shell_cmd("ls -l /dev/i2c-*", 1);
 
+#ifdef OLD
    rc = getlogin_r(username, sizeof(username));
    printf("(%s) getlogin_r() returned %d, strlen(username)=%zd\n", __func__,
           rc, strlen(username));
@@ -356,6 +358,16 @@ void check_i2c_devices(struct driver_name_node * driver_list) {
    printf("(%s) executing command: %s\n", __func__, cmd);
    bool ok = execute_shell_cmd(cmd, 0);
    printf("(%s) execute_shell_cmd() returned %s\n", __func__, bool_repr(ok));
+
+#endif
+   uid_t uid = getuid();
+   // uid_t euid = geteuid();
+   // printf("(%s) uid=%u, euid=%u\n", __func__, uid, euid);
+   struct passwd *  pwd = getpwuid(uid);
+   printf("\nCurrent user: %s (%u)\n\n", pwd->pw_name, uid);
+   uname = strdup(pwd->pw_name);
+
+
 
    bool all_i2c_rw = false;
    int busct = i2c_get_busct();   // Consider replacing with local code
@@ -380,10 +392,14 @@ void check_i2c_devices(struct driver_name_node * driver_list) {
          }
       }
       if (!all_i2c_rw) {
-         printf("\nWARNING: Current user (%s) does not have RW access to all /dev/i2c-* devices.\n", username);
+         printf("WARNING: Current user (%s) does not have RW access to all /dev/i2c-* devices.\n",
+ //               username);
+                uname);
       }
       else
-         printf("\nCurrent user (%s) has RW access to all /dev/i2c-* devices.\n", username);
+         printf("Current user (%s) has RW access to all /dev/i2c-* devices.\n",
+               // username);
+               uname);
    }
 
    if (!all_i2c_rw || output_level >= OL_VERBOSE) {
@@ -406,22 +422,23 @@ void check_i2c_devices(struct driver_name_node * driver_list) {
          while ( (curname = pgi2c->gr_mem[ndx]) ) {
             rtrim_in_place(curname);
             // DBGMSG("member_names[%d] = |%s|", ndx, curname);
-            if (streq(curname, username)) {
+            if (streq(curname, uname /* username */)) {
                found_curuser = true;
             }
             ndx++;
          }
          if (found_curuser) {
-            printf("   Current user %s is a member of group i2c\n", username);
+            printf("   Current user %s is a member of group i2c\n", uname  /* username */);
          }
          else {
-            printf("   WARNING: Current user %s is NOT a member of group i2c\n", username);
+            printf("   WARNING: Current user %s is NOT a member of group i2c\n", uname /*username*/);
 
          }
       }
       if (!group_i2c_exists) {
          printf("   Group i2c does not exist\n");
       }
+      free(uname);
    #ifdef BAD
       // getgroups, getgrouplist returning nonsense
       else {
