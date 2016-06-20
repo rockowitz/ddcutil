@@ -46,6 +46,8 @@
 #include "util/glib_util.h"
 #include "util/report_util.h"
 #include "util/hiddev_reports.h"   // circular dependency, but only used in debug code
+#include "util/x11_util.h"         // *** TEMP ***
+#include "base/edid.h"             // *** TEMP ***
 
 #include "util/hiddev_util.h"
 
@@ -551,6 +553,43 @@ Buffer * get_hiddev_edid(int fd)  {
    if (loc) {
       result = get_hiddev_edid_by_location(fd, loc);
    }
+
+   // *** TEMPORARY HACK FOR TESTING ***
+   if (!result) {
+      printf("(%s) *** HACK: USING X11 EDID ***\n", __func__);
+
+      GPtrArray* edid_recs = get_x11_edids();
+      puts("");
+      printf("EDIDs reported by X11 for connected xrandr outputs:\n");
+      // DBGMSG("Got %d X11_Edid_Recs\n", edid_recs->len);
+
+      int ndx = 0;
+      for (ndx=0; ndx < edid_recs->len; ndx++) {
+         X11_Edid_Rec * prec = g_ptr_array_index(edid_recs, ndx);
+         // printf(" Output name: %s -> %p\n", prec->output_name, prec->edid);
+         // hex_dump(prec->edid, 128);
+         rpt_vstring(1, "xrandr output: %s", prec->output_name);
+         Parsed_Edid * parsed_edid = create_parsed_edid(prec->edid);
+         if (parsed_edid) {
+            bool verbose_edid = false;
+            report_parsed_edid(parsed_edid, verbose_edid, 2 /* depth */);
+            free_parsed_edid(parsed_edid);
+         }
+         else {
+            printf(" Unparsable EDID for output name: %s -> %p\n", prec->output_name, prec->edid);
+            hex_dump(prec->edid, 128);
+         }
+      }
+
+      if (edid_recs->len > 0) {
+         X11_Edid_Rec * prec = g_ptr_array_index(edid_recs, edid_recs->len-1);
+         result = buffer_new_with_value(prec->edid, 128, __func__);
+      }
+
+      free_x11_edids(edid_recs);
+   }
+
+
    return result;
 }
 

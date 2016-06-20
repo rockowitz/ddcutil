@@ -560,6 +560,46 @@ void report_report_descriptors_for_report_type(int fd, __u32 report_type, int de
                                   true,   // show_value
                                   d4);
             }  //loop over undx
+            if (finfo.maxusage > 1) {
+               rpt_title("Collected usage value:", d3);
+               Buffer * buf = buffer_new(finfo.maxusage+1, __func__);
+               int offset = 0;
+               for (undx = 0; undx < finfo.maxusage; undx++) {
+
+                  struct hiddev_usage_ref uref = {0};  // initialize to make valgrind happy
+                  uref.report_type = finfo.report_type;   // rinfo.report_type;
+                  uref.report_id   = finfo.report_id;     // rinfo.report_id;
+                  uref.field_index = fndx;   // i;
+                  uref.usage_index = undx;   //  j;
+
+                  // rpt_vstring(d0, "report_id: %d, field_index: %d, usage_index: %d",
+                  //               uref.report_id, uref.field_index, uref.usage_index);
+                  errno = 0;
+                  int rc = ioctl(fd, HIDIOCGUCODE, &uref);    // Fills in usage code
+                  if (rc != 0)
+                    REPORT_IOCTL_ERROR("HIDIOCGUCODE", rc);
+                  // assert(rc == 0);
+                  if (rc == 0) {
+                     // rpt_vstring(d1, "Usage code = 0x%08x  %s",
+                     //               uref.usage_code, interpret_usage_code(uref.usage_code));
+
+
+                     // Gets the current value of the field
+                     rc = ioctl(fd, HIDIOCGUSAGE, &uref);  // Fills in usage value
+                     if (rc != 0)
+                        REPORT_IOCTL_ERROR("HIDIOCGUSAGE", rc);
+                       // occasionally see -1, errno = 22 invalid argument - for Battery System Page: Run Time to Empty
+                     if (rc == 0) {
+                        Byte b = uref.value;
+                        buffer_set_byte(buf, offset++, b);
+
+                     }
+                  }
+               }
+               buffer_set_length(buf, offset);
+               if (buf->len > 0)
+                  hex_dump(buf->bytes, buf->len);
+            }
          }  // not an EDID field
       }  // loop over fndx
       rinfo.report_id |= HID_REPORT_ID_NEXT;
