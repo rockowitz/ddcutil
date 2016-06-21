@@ -100,6 +100,7 @@ void     buffer_put(Buffer * buffer, Byte * bytes, int bytect);
 void     buffer_set_byte(Buffer * buffer, int offset, Byte byte);
 void     buffer_set_bytes(Buffer * buffer, int offset, Byte * bytes, int bytect);
 void     buffer_append(Buffer * buffer, Byte * bytes, int bytect);
+void     buffer_add(Buffer * buffer, Byte byte);
 void     buffer_dump(Buffer * buffer);
 bool     buffer_eq(Buffer* buf1, Buffer* buf2);
 

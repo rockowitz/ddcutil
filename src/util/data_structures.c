@@ -549,6 +549,22 @@ void buffer_append(Buffer * buffer, Byte * bytes, int bytect) {
 }
 
 
+
+// Appends a single byte to the current value in the buffer.
+// The buffer length is updated.
+//
+// Arguments:
+//   buf      pointer to Buffer instance
+//   byte     value to append
+
+void     buffer_add(Buffer * buffer, Byte byte) {
+   assert( memcmp(buffer->marker, BUFFER_MARKER, 4) == 0);
+   assert(buffer->len + 1 <= buffer->buffer_size);
+   buffer->bytes[buffer->len++] = byte;
+}
+
+
+
 bool     buffer_eq(Buffer* buf1, Buffer* buf2) {
    bool result = false;
    if (!buf1 && !buf2)
