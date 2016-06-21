@@ -125,6 +125,7 @@ bool get_edid_modelname_and_sn(
         char* snbuf,
         int   snbuf_len)
 {
+   bool debug = true;
    assert(namebuf_len >= 14);
    assert(snbuf_len >= 14);
 
@@ -137,10 +138,12 @@ bool get_edid_modelname_and_sn(
       Byte * descriptor = edidbytes +
                           EDID_DESCRIPTORS_BLOCKS_START +
                           descriptor_ndx * EDID_DESCRIPTOR_BLOCK_SIZE;
-      // printf("full descriptor: %s\n", hexstring(descriptor, EDID_DESCRIPTOR_BLOCK_SIZE));
-      // printf("descriptor[0] = 0x%02x\n", descriptor[0]);
-      // printf("descriptor[1] = 0x%02x\n", descriptor[1]);
-      // printf("descriptor[3] = 0x%02x\n", descriptor[3]);
+      if (debug) {
+         DBGMSG("full descriptor: %s",    hexstring(descriptor, EDID_DESCRIPTOR_BLOCK_SIZE));
+         // DBGMSG("descriptor[0] = 0x%02x", descriptor[0]);
+         // DBGMSG("descriptor[1] = 0x%02x", descriptor[1]);
+         // DBGMSG("descriptor[3] = 0x%02x", descriptor[3]);
+      }
       if ( descriptor[0] == 0x00 &&       // 0x00 if not a timing descriptor
            descriptor[1] == 0x00 &&       // 0x00 if not a timing descriptor
            descriptor[2] == 0x00 &&       // 0x00 for all descriptors
@@ -150,7 +153,7 @@ bool get_edid_modelname_and_sn(
          // char * nametype = (descriptor[3] == 0xff) ? "Serial number" : "Model name";
          char * nameslot = (descriptor[3] == 0xff) ? snbuf : namebuf;
          Byte * textstart = descriptor+5;
-         // printf("String in descriptor: %s\n", hexstring(textstart, 14));
+         DBGMSF(debug, "String in descriptor: %s", hexstring(textstart, 14));
          int    textlen = 0;
          while (*(textstart+textlen) != 0x0a && textlen < 14) {
             // DBGMSG("textlen=%d, char=0x%02x", textlen, *(textstart+textlen));
@@ -158,7 +161,7 @@ bool get_edid_modelname_and_sn(
          }
          memcpy(nameslot, textstart, textlen);
          nameslot[textlen] = '\0';
-         // DBGMSG("name = %s", nameslot);
+         DBGMSF(debug, "name = %s", nameslot);
          fields_found++;
       }
    }
