@@ -549,7 +549,6 @@ void buffer_append(Buffer * buffer, Byte * bytes, int bytect) {
 }
 
 
-
 // Appends a single byte to the current value in the buffer.
 // The buffer length is updated.
 //
