@@ -516,7 +516,7 @@ void report_report_descriptors_for_report_type(int fd, __u32 report_type, int de
       int rc = ioctl(fd, HIDIOCGREPORT, &rinfo);
       if (rc != 0) {
          REPORT_IOCTL_ERROR("HIDIOCGREPORT", rc);
-         printf("(%s) Unable to get Feature report %d\n", __func__, rinfo.report_id);
+         printf("(%s) Unable to get report %d\n", __func__, rinfo.report_id);
          break;
       }
 
@@ -534,7 +534,8 @@ void report_report_descriptors_for_report_type(int fd, __u32 report_type, int de
             rpt_vstring(d2, "Report id: %d, Field index: %d contains EDID:",
                             finfo.report_id, fndx);
          }
-         else {
+         if (true) {     // *** TEMP ***
+         // else {
             finfo.field_index = fndx;
             rpt_vstring(d2, "Report id: %d, Field index %d:", finfo.report_id, fndx);
             int rc = ioctl(fd, HIDIOCGFIELDINFO, &finfo);

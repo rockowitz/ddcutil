@@ -521,8 +521,8 @@ Buffer * get_hiddev_edid_by_location(int fd, struct edid_location * loc) {
          break;
       }
       edidbuf[undx] = uref.value & 0xff;
-      // if (debug)
-      //    printf("(%s) usage = %d, byte = 0x%02x\n", __func__, undx, uref.value&0xff);
+      if (debug)
+         printf("(%s) usage = %d, value=0x%08x, byte = 0x%02x\n", __func__, undx, uref.value, uref.value&0xff);
    }   // loop over usages
 
    if (undx == 128) {   // if got them all
@@ -530,8 +530,12 @@ Buffer * get_hiddev_edid_by_location(int fd, struct edid_location * loc) {
    }
 
 bye:
-   if (debug)
+   if (debug) {
       printf("(%s) Returning: %p\n", __func__, result);
+      if (result) {
+         buffer_dump(result);
+      }
+   }
    return result;
 }
 
@@ -555,6 +559,13 @@ Buffer * get_hiddev_edid(int fd)  {
    }
 
    // *** TEMPORARY HACK FOR TESTING ***
+   if (result) {
+      Parsed_Edid * parsed_edid0 = create_parsed_edid(result->bytes);
+      if (!parsed_edid0)
+         result = NULL;
+   }
+
+
    if (!result) {
       printf("(%s) *** HACK: USING X11 EDID ***\n", __func__);
 
