@@ -493,7 +493,14 @@ Buffer * get_hiddev_edid_by_location(int fd, struct edid_location * loc) {
    Buffer * result = NULL;
    Byte edidbuf[128];
 
-   rc = ioctl(fd, HIDIOCGREPORT, loc->rinfo);
+   struct hiddev_report_info rinfo;
+   rinfo.report_type = loc->rinfo->report_type;
+   rinfo.report_id   = loc->report_id;
+   // rinfo.num_fields  = loc->rinfo->num_fields;
+   rinfo.num_fields  = 1;
+
+   // rc = ioctl(fd, HIDIOCGREPORT, loc->rinfo);
+   rc = ioctl(fd, HIDIOCGREPORT, &rinfo);
    if (rc != 0) {
       REPORT_IOCTL_ERROR("HIDIOCGREPORT", rc);
       printf("(%s) Unable to get report %d\n", __func__, loc->rinfo->report_id);
@@ -528,6 +535,27 @@ Buffer * get_hiddev_edid_by_location(int fd, struct edid_location * loc) {
    if (undx == 128) {   // if got them all
       result = buffer_new_with_value(edidbuf, 128, __func__);
    }
+
+   struct hiddev_usage_ref_multi uref_multi;
+   uref_multi.uref.report_type = loc->report_type;
+   uref_multi.uref.report_id   = loc->report_id;
+   uref_multi.uref.field_index = loc->field_index;
+   uref_multi.uref.usage_index = 0;
+   uref_multi.num_values = 128; // needed? yes!
+
+   rc = ioctl(fd, HIDIOCGUSAGES, &uref_multi);  // Fills in usage value
+   if (rc != 0) {
+      REPORT_IOCTL_ERROR("HIDIOCGUSAGES", rc);
+      goto bye;
+   }
+
+   printf("(%s) Value retrieved by HIDIOCGUSAGES:\n", __func__);
+   Byte edidbuf2[128];
+   for (int ndx=0; ndx<128; ndx++)
+      edidbuf2[ndx] = uref_multi.values[ndx] & 0xff;
+   hex_dump(edidbuf2, 128);
+
+
 
 bye:
    if (debug) {

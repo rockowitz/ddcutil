@@ -601,6 +601,35 @@ void report_report_descriptors_for_report_type(int fd, __u32 report_type, int de
                if (buf->len > 0)
                   hex_dump(buf->bytes, buf->len);
             }
+
+            if (finfo.flags & HID_FIELD_BUFFERED_BYTE) {
+               rpt_vstring(d3, "Retrieving using HIDIOCGUSAGES");
+
+
+               struct hiddev_usage_ref_multi uref_multi;
+               uref_multi.uref.report_type = finfo.report_type;
+               uref_multi.uref.report_id   = finfo.report_id;
+               uref_multi.uref.field_index = fndx;
+               uref_multi.uref.usage_index = 0;
+               uref_multi.num_values = finfo.maxusage; // needed? yes!
+
+               rc = ioctl(fd, HIDIOCGUSAGES, &uref_multi);  // Fills in usage values
+               if (rc != 0) {
+                  REPORT_IOCTL_ERROR("HIDIOCGUSAGES", rc);
+
+               }
+               else {
+                  printf("(%s) Value retrieved by HIDIOCGUSAGES:\n", __func__);
+                  Byte * buf = calloc(1, finfo.maxusage);
+
+                  for (int ndx=0; ndx<128; ndx++)
+                     buf[ndx] = uref_multi.values[ndx] & 0xff;
+                  hex_dump(buf, 128);
+               }
+
+
+
+            }
          }  // not an EDID field
       }  // loop over fndx
       rinfo.report_id |= HID_REPORT_ID_NEXT;
