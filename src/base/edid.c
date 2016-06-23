@@ -34,9 +34,20 @@
 #include "util/report_util.h"
 #include "util/string_util.h"
 
+#include "base/core.h"
+
 #include "base/edid.h"
 
 // Direct writes to stdout/stderr: NO
+
+
+static inline bool all_bytes_zero(Byte * bytes, int len) {
+   for (int ndx = 0; ndx < len; ndx++) {
+      if (bytes[ndx])
+         return false;
+   }
+   return true;
+}
 
 
 /* Calculates checksum for a 128 byte EDID
@@ -126,8 +137,13 @@ bool get_edid_modelname_and_sn(
         int   snbuf_len)
 {
    bool debug = true;
+   bool edid_ok = true;
    assert(namebuf_len >= 14);
    assert(snbuf_len >= 14);
+   strcpy(namebuf, "Unspecified");
+   strcpy(snbuf,   "Unspecified");
+   char otherbuf[14];                // used for code FE: ASCII string
+
 
    int fields_found = 0;
 
@@ -146,14 +162,25 @@ bool get_edid_modelname_and_sn(
       }
       if ( descriptor[0] == 0x00 &&       // 0x00 if not a timing descriptor
            descriptor[1] == 0x00 &&       // 0x00 if not a timing descriptor
-           descriptor[2] == 0x00 &&       // 0x00 for all descriptors
-          (descriptor[3] == 0xff || descriptor[3] == 0xfc)  // 0xff: serial number, 0xfc: model name
+           descriptor[2] == 0x00  // &&       // 0x00 for all descriptors
+          // (descriptor[3] == 0xff || descriptor[3] == 0xfc || descriptor[3] == 0xfe)  // 0xff: serial number, 0xfc: model name
          )
       {
          // char * nametype = (descriptor[3] == 0xff) ? "Serial number" : "Model name";
-         char * nameslot = (descriptor[3] == 0xff) ? snbuf : namebuf;
+         char * nameslot = NULL;
+         switch(descriptor[3]) {
+         case 0xff:   nameslot = snbuf;     break;
+         case 0xfe:   nameslot = otherbuf;  break;
+         case 0xfc:   nameslot = namebuf;   break;
+         // default:     nameslot = NULL;               // not an ASCII string
+         }
+
+         if (nameslot) {
+
+
+         // char * nameslot = (descriptor[3] == 0xff) ? snbuf : namebuf;
          Byte * textstart = descriptor+5;
-         DBGMSF(debug, "String in descriptor: %s", hexstring(textstart, 14));
+         // DBGMSF(debug, "String in descriptor: %s", hexstring(textstart, 14));
          int    textlen = 0;
          while (*(textstart+textlen) != 0x0a && textlen < 14) {
             // DBGMSG("textlen=%d, char=0x%02x", textlen, *(textstart+textlen));
@@ -162,10 +189,14 @@ bool get_edid_modelname_and_sn(
          memcpy(nameslot, textstart, textlen);
          nameslot[textlen] = '\0';
          DBGMSF(debug, "name = %s", nameslot);
+
          fields_found++;
+         }
       }
    }
-   return (fields_found == 2);
+
+// bye:
+   return (edid_ok);
 }
 
 #ifdef REFERENCE
@@ -182,8 +213,14 @@ struct {
 
 Parsed_Edid * create_parsed_edid(Byte* edidbytes) {
    assert(edidbytes);
+   bool debug = true;
    bool        ok;
    Parsed_Edid* parsed_edid = NULL;
+   if (all_bytes_zero(edidbytes,128)) {
+      DBGMSF(debug, "all bytes 0");
+      goto bye;
+
+   }
 
    parsed_edid = calloc(1,sizeof(Parsed_Edid));
    assert(sizeof(parsed_edid->bytes) == 128);
@@ -206,12 +243,18 @@ Parsed_Edid * create_parsed_edid(Byte* edidbytes) {
    parsed_edid->year = edidbytes[17] + 1990;
    parsed_edid->is_model_year = edidbytes[16] == 0xff;
    parsed_edid->edid_version_major = edidbytes[18];
+   if (parsed_edid->edid_version_major != 1) {
+      DBGMSF(debug, "Invalid EDID major version number: %d", parsed_edid->edid_version_major);
+      ok = false;
+   }
    parsed_edid->edid_version_minor = edidbytes[19];
 
    if (!ok) {
       free(parsed_edid);
       parsed_edid = NULL;
    }
+
+   bye:
    return parsed_edid;
 }
 
