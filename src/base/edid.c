@@ -211,16 +211,28 @@ struct {
 #endif
 
 
+
+
 Parsed_Edid * create_parsed_edid(Byte* edidbytes) {
    assert(edidbytes);
    bool debug = true;
    bool        ok;
    Parsed_Edid* parsed_edid = NULL;
-   if (all_bytes_zero(edidbytes,128)) {
-      DBGMSF(debug, "all bytes 0");
-      goto bye;
 
+
+   const Byte edid_header_tag[] = {0x00, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0x00};
+   if (memcmp(edidbytes, edid_header_tag, 8) != 0) {
+      char * hs = hexstring(edidbytes,8);
+      DBGMSF(debug, "Invalid initial EDID bytes: %s", hs);
+      free(hs);
+      goto bye;
    }
+
+   if (edid_checksum(edidbytes) != 0x00) {
+      DBGMSF(debug, "Invalid EDID checksum: 0x%02x", edid_checksum(edidbytes));
+      goto bye;
+   }
+
 
    parsed_edid = calloc(1,sizeof(Parsed_Edid));
    assert(sizeof(parsed_edid->bytes) == 128);
@@ -243,10 +255,12 @@ Parsed_Edid * create_parsed_edid(Byte* edidbytes) {
    parsed_edid->year = edidbytes[17] + 1990;
    parsed_edid->is_model_year = edidbytes[16] == 0xff;
    parsed_edid->edid_version_major = edidbytes[18];
-   if (parsed_edid->edid_version_major != 1) {
+#ifdef UNNEEDED
+   if (parsed_edid->edid_version_major != 1 && parsed_edid->edid_version_major != 2) {
       DBGMSF(debug, "Invalid EDID major version number: %d", parsed_edid->edid_version_major);
       ok = false;
    }
+#endif
    parsed_edid->edid_version_minor = edidbytes[19];
 
    if (!ok) {
