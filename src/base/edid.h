@@ -28,6 +28,7 @@
 #define EDID_H_
 
 #include <stdbool.h>
+#include <stdint.h>
 
 #include "util/coredefs.h"
 #include "base/core.h"
@@ -73,7 +74,9 @@ struct {
    char         marker[4];          // always "EDID"
    Byte         bytes[128];
    char         mfg_id[EDID_MFG_ID_FIELD_SIZE];
+   ushort       model_hex;
    char         model_name[EDID_MODEL_NAME_FIELD_SIZE];
+   uint32_t      serial_binary;
    char         serial_ascii[EDID_SERIAL_ASCII_FIELD_SIZE];
    int          year;    // can be year of manufacture or model
    bool         is_model_year;   // if true, year is model year, if false, is manufacture year

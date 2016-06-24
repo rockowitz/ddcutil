@@ -199,19 +199,6 @@ bool get_edid_modelname_and_sn(
    return (edid_ok);
 }
 
-#ifdef REFERENCE
-typedef
-struct {
-   char         marker[4];          // always "EDID"
-   Byte         bytes[128];
-   char         mfg_id[4];
-   char         model_name[14];
-   char         serial_ascii[14];
-} Parsed_Edid;
-#endif
-
-
-
 
 Parsed_Edid * create_parsed_edid(Byte* edidbytes) {
    assert(edidbytes);
@@ -243,6 +230,13 @@ Parsed_Edid * create_parsed_edid(Byte* edidbytes) {
            edidbytes,
            parsed_edid->mfg_id,
            sizeof(parsed_edid->mfg_id) );
+
+   parsed_edid->model_hex = edidbytes[0x0b] << 8 | edidbytes[0x0a];
+
+   parsed_edid->serial_binary = edidbytes[0x0c]       |
+                                edidbytes[0x0d] <<  8 |
+                                edidbytes[0x0e] << 16 |
+                                edidbytes[0x0f] << 24;
 
    ok = get_edid_modelname_and_sn(
            edidbytes,
@@ -297,6 +291,10 @@ void report_parsed_edid(Parsed_Edid * edid, bool verbose, int depth) {
       rpt_vstring(d1,"Mfg id:           %s",          edid->mfg_id);
       rpt_vstring(d1,"Model:            %s",          edid->model_name);
       rpt_vstring(d1,"Serial number:    %s",          edid->serial_ascii);
+      if (verbose) {
+      rpt_vstring(d1,"Hex model:        0x%04x",      edid->model_hex);
+      rpt_vstring(d1,"Binary sn:        %u (0x%08x)", edid->serial_binary, edid->serial_binary);
+      }
       char * title = (edid->is_model_year) ? "Model year" : "Manufacture year";
       rpt_vstring(d1,"%-16s: %d", title, edid->year);
       rpt_vstring(d1,"EDID version:     %d.%d", edid->edid_version_major, edid->edid_version_minor);
