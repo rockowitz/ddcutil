@@ -834,7 +834,7 @@ usb_get_usage(int fd, Usb_Monitor_Vcp_Rec * vcprec, __s32 * maxval, __s32 * curv
    int rc;
 
    assert(vcprec->rinfo->report_type == vcprec->report_type);
-   assert(vcprec->rinfo->report_type == HID_REPORT_TYPE_FEATURE);
+ //  assert(vcprec->rinfo->report_type == HID_REPORT_TYPE_FEATURE);
    assert(vcprec->rinfo->report_id   == vcprec->report_id);
 
    DBGMSF(debug, "report_id=%d, field_index=%d, usage_index=%d",
@@ -1084,7 +1084,7 @@ set_control_value(int fd, int report_type, int report_id, int field_idx,
    if ((rc=ioctl(fd, HIDIOCSUSAGE, &uref)) < 0) {
       result = -errno;
       // fprintf(stderr, "HIDIOCSUSAGE failed - unable to set control value.\n");
-      REPORT_IOCTL_ERROR("HIDIOCGUSAGE", rc);
+      REPORT_IOCTL_ERROR("HIDIOSUSAGE", rc);
       goto bye;
    }
    if ((rc=ioctl(fd, HIDIOCSREPORT, &rinfo)) < 0) {
@@ -1107,13 +1107,15 @@ usb_set_usage(int fd, Usb_Monitor_Vcp_Rec * vcprec, __s32 new_value) {
    Global_Status_Code gsc = 0;
 
    assert(vcprec->rinfo->report_type == vcprec->report_type);
-   assert(vcprec->rinfo->report_type == HID_REPORT_TYPE_FEATURE);
+   // assert(vcprec->rinfo->report_type == HID_REPORT_TYPE_FEATURE);
    assert(vcprec->rinfo->report_id   == vcprec->report_id);
 
-   DBGMSF(debug, "report_id=%d, field_index=%d, usage_index=%d",
-                 vcprec->report_id,
+   DBGMSF(debug, "report_type=%d, report_id=%d, field_index=%d, usage_index=%d, new_value=%d",
+                 vcprec->report_type,
+		         vcprec->report_id,
                  vcprec->field_index,
-                 vcprec->usage_index);
+                 vcprec->usage_index,
+				 new_value);
 
    Base_Status_Errno rc = set_control_value(fd, vcprec->report_type, vcprec->report_id, vcprec->field_index,
          vcprec->usage_index, new_value);
