@@ -395,7 +395,7 @@ bool trace_buffer = false;    // controls buffer tracing
 
 Buffer * buffer_new(int size, const char * trace_msg) {
    int hacked_size = size+16;     // try allocating extra space see if free failures go away - overruns?
-   // printf("(%s) sizeof(Buffer)=%ld\n", __func__, sizeof(Buffer));    // is 16
+   // printf("(%s) sizeof(Buffer)=%ld, size=%d\n", __func__, sizeof(Buffer), size);    // sizeof(Buffer) == 16
    Buffer * buffer = (Buffer *) malloc(sizeof(Buffer));
    memcpy(buffer->marker, BUFFER_MARKER, 4);
    buffer->bytes = (Byte *) calloc(1, hacked_size);    // hack
