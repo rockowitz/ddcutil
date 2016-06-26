@@ -974,10 +974,10 @@ void query_usb_monitors() {
                printf("%s\n", dev_summary);
                printf("   Not a USB connected monitor\n");
             }
-            // else {                                 // *** TEMP ***
+            else {                                 // comment out else to display all USB HID devices
                printf("%s\n", dev_summary);
                report_hiddev_device_by_fd(fd, 1);
-            // }
+            }
          }
 
          close(fd);

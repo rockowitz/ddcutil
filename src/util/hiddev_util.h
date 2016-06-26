@@ -43,6 +43,8 @@
    } while(0)
 
 
+const char * report_type_name(__u32 report_type);
+
 
 bool is_hiddev_monitor(int fd);
 
@@ -54,6 +56,8 @@ Buffer * get_hiddev_edid(int fd);
 
 struct hiddev_field_info *
 is_field_edid(int fd, struct hiddev_report_info * rinfo, int field_index);
+
+__u32 get_identical_ucode(int fd, struct hiddev_field_info * finfo, __u32 actual_field_index);
 
 #ifdef OLD
 Byte * get_hiddev_edid_base(

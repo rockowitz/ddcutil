@@ -191,27 +191,6 @@ void report_hiddev_string_descriptor(struct hiddev_string_descriptor * desc, int
 }
 
 
-static const char* report_type_name_table[] = {
-      "invalid value",
-      "HID_REPORT_TYPE_INPUT",
-      "HID_REPORT_TYPE_OUTPUT",
-      "HID_REPORT_TYPE_FEATURE"
-};
-
-
-/* Returns a string representation of a report type id
- *
- * Arguments:  report_type
- *
- * Returns:  string representation of id
- */
-const char * report_type_name(__u32 report_type) {
-   if (report_type < HID_REPORT_TYPE_MIN || report_type > HID_REPORT_TYPE_MAX)
-      report_type = 0;
-   return report_type_name_table[report_type];
-}
-
-
 #ifdef REF
 #define HID_FIELD_CONSTANT    0x001
 #define HID_FIELD_VARIABLE    0x002
@@ -488,9 +467,8 @@ void report_report_descriptors_for_report_type(int fd, __u32 report_type, int de
 
    struct hiddev_report_info rinfo = {0};  // initialize to make valgrind happy
 
-   // rinfo.report_type = HID_REPORT_TYPE_INPUT;
    rinfo.report_type = report_type;
-   rinfo.report_id = HID_REPORT_ID_FIRST;
+   rinfo.report_id   = HID_REPORT_ID_FIRST;
 
    puts("");
    rpt_vstring(d0, "Getting descriptors for report_type=%s", report_type_name(report_type));
@@ -527,29 +505,62 @@ void report_report_descriptors_for_report_type(int fd, __u32 report_type, int de
          struct hiddev_field_info finfo = {0};
          memset(&finfo, 0, sizeof(finfo));
          finfo.report_type = rinfo.report_type;
-         finfo.report_id = rinfo.report_id;
+         finfo.report_id   = rinfo.report_id;
          struct hiddev_field_info * finfo2 = is_field_edid(fd, &rinfo, fndx);
          if (finfo2) {
             free(finfo2);
             rpt_vstring(d2, "Report id: %d, Field index: %d contains EDID:",
                             finfo.report_id, fndx);
          }
-         if (true) {     // *** TEMP ***
-         // else {
-            finfo.field_index = fndx;
-            rpt_vstring(d2, "Report id: %d, Field index %d:", finfo.report_id, fndx);
-            int rc = ioctl(fd, HIDIOCGFIELDINFO, &finfo);
-            if (rc != 0) {   // should never occur
-               REPORT_IOCTL_ERROR("HIDIOCGFIELDINFO", rc);
-               break;        // just stop checking fields
+
+         finfo.field_index = fndx;
+         rpt_vstring(d2, "Report id: %d, Field index %d:", finfo.report_id, fndx);
+         int rc = ioctl(fd, HIDIOCGFIELDINFO, &finfo);
+         if (rc != 0) {   // should never occur
+            REPORT_IOCTL_ERROR("HIDIOCGFIELDINFO", rc);
+            break;        // just stop checking fields
+         }
+
+         rpt_vstring(d2, "Description of field %d:", fndx);
+         if (finfo.field_index != fndx) {
+            rpt_vstring(d3, "!! Note that HIDIOCGFIELDINFO changed field_index to %d",
+                            finfo.field_index);
+         }
+         report_hiddev_field_info(&finfo, d3);
+
+
+         __u32 common_ucode = 0;
+         if (finfo.flags & HID_FIELD_BUFFERED_BYTE)
+            common_ucode = get_identical_ucode(fd, &finfo, fndx);
+         if (common_ucode) {
+
+            rpt_vstring(d2, "Identical ucode for all usages: 0x%08x\n", common_ucode);
+            rpt_vstring(d3, "Retrieving using HIDIOCGUSAGES");
+
+            struct hiddev_usage_ref_multi uref_multi;
+            uref_multi.uref.report_type = finfo.report_type;
+            uref_multi.uref.report_id   = finfo.report_id;
+            uref_multi.uref.field_index = fndx;
+            uref_multi.uref.usage_index = 0;
+            uref_multi.num_values = finfo.maxusage; // needed? yes!
+
+            rc = ioctl(fd, HIDIOCGUSAGES, &uref_multi);  // Fills in usage values
+            if (rc != 0) {
+               REPORT_IOCTL_ERROR("HIDIOCGUSAGES", rc);
+            }
+            else {
+               printf("(%s) Value retrieved by HIDIOCGUSAGES:\n", __func__);
+               Byte * buf = calloc(1, finfo.maxusage);
+
+               for (int ndx=0; ndx<finfo.maxusage; ndx++)
+                  buf[ndx] = uref_multi.values[ndx] & 0xff;
+               hex_dump(buf, 128);
             }
 
-            rpt_vstring(d2, "Description of field %d:", fndx);
-            if (finfo.field_index != fndx) {
-               rpt_vstring(d3, "!! Note that HIDIOCGFIELDINFO changed field_index to %d",
-                               finfo.field_index);
-            }
-            report_hiddev_field_info(&finfo, d3);
+         }
+
+         else {
+
             rpt_vstring(d3, "Usages for report_id: %d, field_index %d:",
                             finfo.report_id, fndx /*finfo.field_index */);
             for (undx = 0; undx < finfo.maxusage; undx++) {
@@ -604,34 +615,7 @@ void report_report_descriptors_for_report_type(int fd, __u32 report_type, int de
                buffer_free(buf,__func__);
             }
 
-            if (finfo.flags & HID_FIELD_BUFFERED_BYTE) {
-               rpt_vstring(d3, "Retrieving using HIDIOCGUSAGES");
 
-
-               struct hiddev_usage_ref_multi uref_multi;
-               uref_multi.uref.report_type = finfo.report_type;
-               uref_multi.uref.report_id   = finfo.report_id;
-               uref_multi.uref.field_index = fndx;
-               uref_multi.uref.usage_index = 0;
-               uref_multi.num_values = finfo.maxusage; // needed? yes!
-
-               rc = ioctl(fd, HIDIOCGUSAGES, &uref_multi);  // Fills in usage values
-               if (rc != 0) {
-                  REPORT_IOCTL_ERROR("HIDIOCGUSAGES", rc);
-
-               }
-               else {
-                  printf("(%s) Value retrieved by HIDIOCGUSAGES:\n", __func__);
-                  Byte * buf = calloc(1, finfo.maxusage);
-
-                  for (int ndx=0; ndx<finfo.maxusage; ndx++)
-                     buf[ndx] = uref_multi.values[ndx] & 0xff;
-                  hex_dump(buf, 128);
-               }
-
-
-
-            }
          }  // not an EDID field
       }  // loop over fndx
       rinfo.report_id |= HID_REPORT_ID_NEXT;

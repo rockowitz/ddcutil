@@ -717,7 +717,6 @@ static GPtrArray * get_usb_monitor_list() {
             fprintf(stderr, "Monitor on device %s reports no EDID. Ignoring.\n", hiddev_fn);
             goto close;
          }
-         // parsed_edid = create_parsed_edid(pedid->edid);
          parsed_edid = create_parsed_edid(pedid->bytes);    // assumes 128 byte edid
 
          if (!parsed_edid) {
@@ -834,10 +833,13 @@ usb_get_usage(int fd, Usb_Monitor_Vcp_Rec * vcprec, __s32 * maxval, __s32 * curv
    int rc;
 
    assert(vcprec->rinfo->report_type == vcprec->report_type);
- //  assert(vcprec->rinfo->report_type == HID_REPORT_TYPE_FEATURE);
+   assert(vcprec->rinfo->report_type == HID_REPORT_TYPE_FEATURE ||
+          vcprec->rinfo->report_type == HID_REPORT_TYPE_INPUT);   // *** CG19 ***
    assert(vcprec->rinfo->report_id   == vcprec->report_id);
 
-   DBGMSF(debug, "report_id=%d, field_index=%d, usage_index=%d",
+   DBGMSF(debug, "report_type=%d (%s), report_id=%d, field_index=%d, usage_index=%d",
+                 vcprec->report_type,
+                 report_type_name(vcprec->report_type),
                  vcprec->report_id,
                  vcprec->field_index,
                  vcprec->usage_index);
@@ -948,15 +950,19 @@ Global_Status_Code usb_get_nontable_vcp_value(
       // usage 0 returns correct value, usage 1 returns 0
       // is usage 1 for writing?
 
-      // for (int ndx=0; ndx<vcp_recs->len; ndx++) {
+      for (int ndx=0; ndx<vcp_recs->len; ndx++) {
       int ndx = 0;
          Usb_Monitor_Vcp_Rec * vcprec = g_ptr_array_index(vcp_recs,ndx);
          assert( memcmp(vcprec->marker, USB_MONITOR_VCP_REC_MARKER,4) == 0 );
 
+         if (vcprec->report_type == HID_REPORT_TYPE_OUTPUT)
+            continue;
          gsc = usb_get_usage(dh->fh,  vcprec, &maxval, &curval);
          DBGMSF(debug, "usb_get_usage() usage index: %d returned %d, maxval=%d, curval=%d",
                        vcprec->usage_index, gsc, maxval, curval);
-      // }
+         if (gsc == 0)
+            break;
+      }
    }
 
    if (gsc == 0) {
@@ -1048,7 +1054,6 @@ Global_Status_Code usb_get_vcp_value(
 
    *pvalrec = valrec;
 
-   // TRCMSGTG(tg, "Done.  Returning: %s", gsc_desc(gsc) );
    DBGTRC(debug, TRACE_GROUP, "Done.  Returning: %s", gsc_desc(gsc) );
    if (gsc == 0 && debug)
       report_single_vcp_value(valrec,1);
@@ -1059,8 +1064,13 @@ Global_Status_Code usb_get_vcp_value(
 
 // adapted from usbmonctl
 Base_Status_Errno
-set_control_value(int fd, int report_type, int report_id, int field_idx,
-            int usage_idx, int value) {
+set_control_value(int fd,
+                  int report_type,
+                  int report_id,
+                  int field_idx,
+                  int usage_idx,
+                  int value)
+{
    int rc;
    Base_Status_Errno result = 0;
 
@@ -1083,12 +1093,10 @@ set_control_value(int fd, int report_type, int report_id, int field_idx,
    };
    if ((rc=ioctl(fd, HIDIOCSUSAGE, &uref)) < 0) {
       result = -errno;
-      // fprintf(stderr, "HIDIOCSUSAGE failed - unable to set control value.\n");
       REPORT_IOCTL_ERROR("HIDIOSUSAGE", rc);
       goto bye;
    }
    if ((rc=ioctl(fd, HIDIOCSREPORT, &rinfo)) < 0) {
-      // fprintf(stderr, "HIDIOCSREPORT failed - unable to set control value.\n");
       result = -errno;
       REPORT_IOCTL_ERROR("HIDIOCGUSAGE", rc);
       goto bye;
@@ -1107,18 +1115,25 @@ usb_set_usage(int fd, Usb_Monitor_Vcp_Rec * vcprec, __s32 new_value) {
    Global_Status_Code gsc = 0;
 
    assert(vcprec->rinfo->report_type == vcprec->report_type);
-   // assert(vcprec->rinfo->report_type == HID_REPORT_TYPE_FEATURE);
+   // assert(vcprec->rinfo->report_type == HID_REPORT_TYPE_FEATURE);  // *** disabled for CG19 ***
+   assert(vcprec->report_type == HID_REPORT_TYPE_FEATURE ||
+          vcprec->report_type == HID_REPORT_TYPE_OUTPUT);
    assert(vcprec->rinfo->report_id   == vcprec->report_id);
 
-   DBGMSF(debug, "report_type=%d, report_id=%d, field_index=%d, usage_index=%d, new_value=%d",
+   DBGMSF(debug, "report_type=%d (%s), report_id=%d, field_index=%d, usage_index=%d, new_value=%d",
                  vcprec->report_type,
-		         vcprec->report_id,
+                 report_type_name(vcprec->report_type),
+		           vcprec->report_id,
                  vcprec->field_index,
                  vcprec->usage_index,
-				 new_value);
+				     new_value);
 
-   Base_Status_Errno rc = set_control_value(fd, vcprec->report_type, vcprec->report_id, vcprec->field_index,
-         vcprec->usage_index, new_value);
+   Base_Status_Errno rc = set_control_value(fd,
+                                            vcprec->report_type,
+                                            vcprec->report_id,
+                                            vcprec->field_index,
+                                            vcprec->usage_index,
+                                            new_value);
    if (rc < 0)
       gsc = modulate_rc(rc, RR_ERRNO);
 
@@ -1169,16 +1184,18 @@ Global_Status_Code usb_set_nontable_vcp_value(
       // when writing, usage 0 works properly
       //  usage 1, at least for brightness, sets control to max value
 
-      // for (int ndx=0; ndx<vcp_recs->len; ndx++) {
-
-      int ndx = 0;
+      for (int ndx=0; ndx<vcp_recs->len; ndx++) {
          Usb_Monitor_Vcp_Rec * vcprec = g_ptr_array_index(vcp_recs,ndx);
          assert( memcmp(vcprec->marker, USB_MONITOR_VCP_REC_MARKER,4) == 0 );
+         if (vcprec->report_type == HID_REPORT_TYPE_INPUT)
+            continue;
 
          gsc = usb_set_usage(dh->fh,  vcprec, new_value);
          DBGMSF(debug, "usb_set_usage() usage index: %d returned %d",
                        vcprec->usage_index, gsc);
-      // }
+         if (gsc == 0)
+            break;
+      }
    }
 
    // TRCMSGTG(tg, "Returning %s", gsc_name(gsc));
