@@ -972,13 +972,14 @@ Buffer * get_hiddev_edid(int fd)  {
          result = NULL;
    }
 
+   struct eizo_model_sn * model_sn = NULL;
 
    if (!result) {
 
       if (is_eizo_monitor(fd)) {
          printf("(%s) *** Special fixup for Eizo monitor ***\n", __func__);
 
-         struct eizo_model_sn * model_sn = get_eizo_model_sn_by_report(fd);
+         model_sn = get_eizo_model_sn_by_report(fd);
          if (model_sn) {
             Bus_Info * bus_info = i2c_find_bus_info_by_model_sn(model_sn->model, model_sn->sn);
             if (bus_info) {
@@ -992,7 +993,8 @@ Buffer * get_hiddev_edid(int fd)  {
       }
    }
 
-   if (!result) {
+   if (model_sn) {
+   // if (!result) {
 
       printf("(%s) *** HACK: USING X11 EDID ***\n", __func__);
 
@@ -1011,6 +1013,13 @@ Buffer * get_hiddev_edid(int fd)  {
          if (parsed_edid) {
             bool verbose_edid = false;
             report_parsed_edid(parsed_edid, verbose_edid, 2 /* depth */);
+            if (streq(parsed_edid->model_name, model_sn->model) &&
+                streq(parsed_edid->serial_ascii, model_sn->sn) )
+            {
+               printf("(%s) Found EIZO EDID from X11\n", __func__);
+               if (!result)
+                  result = buffer_new_with_value(parsed_edid->bytes, 128, __func__);
+            }
             free_parsed_edid(parsed_edid);
          }
          else {
@@ -1019,7 +1028,8 @@ Buffer * get_hiddev_edid(int fd)  {
          }
       }
 
-      if (edid_recs->len > 0) {
+      if (!result && edid_recs->len > 0) {
+         printf("(%s) Using last X11 EDID\n", __func__);
          X11_Edid_Rec * prec = g_ptr_array_index(edid_recs, edid_recs->len-1);
          result = buffer_new_with_value(prec->edid, 128, __func__);
       }
