@@ -168,6 +168,3 @@ gpointer * g_list_to_g_array(GList * glist, guint * length) {
    *length = len;
    return result;
 }
-
-
-
