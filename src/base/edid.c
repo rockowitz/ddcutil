@@ -116,36 +116,17 @@ char * get_edid_mfg_id(Byte * edidbytes) {
 
 #define EDID_DESCRIPTORS_BLOCKS_START 54
 #define EDID_DESCRIPTOR_BLOCK_SIZE    18
+#define EDID_DESCRIPTOR_DATA_SIZE     13
 #define EDID_DESCRIPTOR_BLOCK_CT       4
 
 
-/* Extracts the ASCII model name and serial number from an EDID.
- *
- * Note that the maximum length of these strings is 13 bytes.
- *
- * Returns:
- *    true if both fields found, false if not
- */
-
-// Use Buffer instead of pointers and lengths?
-
-bool get_edid_modelname_and_sn(
-        Byte* edidbytes,
-        char* namebuf,
-        int   namebuf_len,
-        char* snbuf,
-        int   snbuf_len)
-{
+#ifdef UNUSED
+char * get_edid_descriptor_string(Byte * edidbytes, Byte tag) {
+   assert( tag==0xff || tag==0xfe || tag==0xfc);     // valid string tags
    bool debug = true;
-   bool edid_ok = true;
-   assert(namebuf_len >= 14);
-   assert(snbuf_len >= 14);
-   strcpy(namebuf, "Unspecified");
-   strcpy(snbuf,   "Unspecified");
-   char otherbuf[14];                // used for code FE: ASCII string
 
-
-   int fields_found = 0;
+   static char stringbuf[EDID_DESCRIPTOR_DATA_SIZE+1];   // +1 for terminating null
+   stringbuf[0] = '\0';
 
    // 4 descriptor blocks beginning at offset 54.  Each block is 18 bytes.
    // In each block, bytes 0-3 indicates the contents.
@@ -156,28 +137,15 @@ bool get_edid_modelname_and_sn(
                           descriptor_ndx * EDID_DESCRIPTOR_BLOCK_SIZE;
       if (debug) {
          DBGMSG("full descriptor: %s",    hexstring(descriptor, EDID_DESCRIPTOR_BLOCK_SIZE));
-         // DBGMSG("descriptor[0] = 0x%02x", descriptor[0]);
-         // DBGMSG("descriptor[1] = 0x%02x", descriptor[1]);
-         // DBGMSG("descriptor[3] = 0x%02x", descriptor[3]);
       }
+      // test if a string descriptor
       if ( descriptor[0] == 0x00 &&       // 0x00 if not a timing descriptor
            descriptor[1] == 0x00 &&       // 0x00 if not a timing descriptor
-           descriptor[2] == 0x00  // &&       // 0x00 for all descriptors
+           descriptor[2] == 0x00 &&       // &&       // 0x00 for all descriptors
+           descriptor[4] == 0x00
           // (descriptor[3] == 0xff || descriptor[3] == 0xfc || descriptor[3] == 0xfe)  // 0xff: serial number, 0xfc: model name
          )
       {
-         // char * nametype = (descriptor[3] == 0xff) ? "Serial number" : "Model name";
-         char * nameslot = NULL;
-         switch(descriptor[3]) {
-         case 0xff:   nameslot = snbuf;     break;
-         case 0xfe:   nameslot = otherbuf;  break;
-         case 0xfc:   nameslot = namebuf;   break;
-         // default:     nameslot = NULL;               // not an ASCII string
-         }
-
-         if (nameslot) {
-
-
          // char * nameslot = (descriptor[3] == 0xff) ? snbuf : namebuf;
          Byte * textstart = descriptor+5;
          // DBGMSF(debug, "String in descriptor: %s", hexstring(textstart, 14));
@@ -186,9 +154,79 @@ bool get_edid_modelname_and_sn(
             // DBGMSG("textlen=%d, char=0x%02x", textlen, *(textstart+textlen));
             textlen++;
          }
-         memcpy(nameslot, textstart, textlen);
-         nameslot[textlen] = '\0';
-         DBGMSF(debug, "name = %s", nameslot);
+         memcpy(stringbuf, textstart, textlen);
+         stringbuf[textlen] = '\0';
+      }
+   }
+
+   DBGMSF(debug, "tag=0x%02x, returning: %s", tag, stringbuf);
+   return stringbuf;
+}
+#endif
+
+
+/* Extracts the ASCII model name and serial number from an EDID.
+ *
+ * Note that the maximum length of these strings is 13 bytes.
+ *
+ * Returns: nothing
+
+ */
+
+// Use Buffer instead of pointers and lengths?
+
+void get_edid_descriptor_strings(
+        Byte* edidbytes,
+        char* namebuf,
+        int   namebuf_len,
+        char* snbuf,
+        int   snbuf_len,
+        char* otherbuf,
+        int   otherbuf_len)
+{
+   bool debug = false;
+   // bool edid_ok = true;
+   assert(namebuf_len >= 14 && snbuf_len >= 14 && otherbuf_len >= 14);
+   strcpy(namebuf,  "Unspecified");
+   strcpy(snbuf,    "Unspecified");
+   strcpy(otherbuf, "Unspecified");
+
+   int fields_found = 0;
+
+   // 4 descriptor blocks beginning at offset 54.  Each block is 18 bytes.
+   // In each block, bytes 0-3 indicates the contents.
+   int descriptor_ndx = 0;
+   for (descriptor_ndx = 0; descriptor_ndx < EDID_DESCRIPTOR_BLOCK_CT; descriptor_ndx++) {
+      Byte * descriptor = edidbytes +
+                          EDID_DESCRIPTORS_BLOCKS_START +
+                          descriptor_ndx * EDID_DESCRIPTOR_BLOCK_SIZE;
+      DBGMSF(debug, "full descriptor: %s",    hexstring(descriptor, EDID_DESCRIPTOR_BLOCK_SIZE));
+
+      // test if a string descriptor
+      if ( descriptor[0] == 0x00 &&       // 0x00 if not a timing descriptor
+           descriptor[1] == 0x00 &&       // 0x00 if not a timing descriptor
+           descriptor[2] == 0x00 &&       // 0x00 for all descriptors
+           descriptor[4] == 0x00
+         )
+      {
+         char * nameslot = NULL;
+         switch(descriptor[3]) {
+         case 0xff:   nameslot = snbuf;     break;      // monitor serial number
+         case 0xfe:   nameslot = otherbuf;  break;      // arbitrary ASCII string
+         case 0xfc:   nameslot = namebuf;   break;      // monitor name
+         }
+
+         if (nameslot) {
+            Byte * textstart = descriptor+5;
+            // DBGMSF(debug, "String in descriptor: %s", hexstring(textstart, 14));
+            int    textlen = 0;
+            while (*(textstart+textlen) != 0x0a && textlen < 14) {
+               // DBGMSG("textlen=%d, char=0x%02x", textlen, *(textstart+textlen));
+               textlen++;
+            }
+            memcpy(nameslot, textstart, textlen);
+            nameslot[textlen] = '\0';
+            DBGMSF(debug, "name = %s", nameslot);
 
          fields_found++;
          }
@@ -196,16 +234,15 @@ bool get_edid_modelname_and_sn(
    }
 
 // bye:
-   return (edid_ok);
+   return;
 }
 
 
 Parsed_Edid * create_parsed_edid(Byte* edidbytes) {
    assert(edidbytes);
    bool debug = true;
-   bool        ok;
+   bool ok = true;
    Parsed_Edid* parsed_edid = NULL;
-
 
    const Byte edid_header_tag[] = {0x00, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0x00};
    if (memcmp(edidbytes, edid_header_tag, 8) != 0) {
@@ -219,7 +256,6 @@ Parsed_Edid * create_parsed_edid(Byte* edidbytes) {
       DBGMSF(debug, "Invalid EDID checksum: 0x%02x", edid_checksum(edidbytes));
       goto bye;
    }
-
 
    parsed_edid = calloc(1,sizeof(Parsed_Edid));
    assert(sizeof(parsed_edid->bytes) == 128);
@@ -238,14 +274,13 @@ Parsed_Edid * create_parsed_edid(Byte* edidbytes) {
                                 edidbytes[0x0e] << 16 |
                                 edidbytes[0x0f] << 24;
 
-   ok = get_edid_modelname_and_sn(
+   get_edid_descriptor_strings(
            edidbytes,
            parsed_edid->model_name,   sizeof(parsed_edid->model_name),
-           parsed_edid->serial_ascii, sizeof(parsed_edid->serial_ascii) );
+           parsed_edid->serial_ascii, sizeof(parsed_edid->serial_ascii),
+           parsed_edid->extra_descriptor_string, sizeof(parsed_edid->extra_descriptor_string)
+           );
 
-   // DBGMSG("mfg_id=|%s|", parsed_edid->mfg_id);
-   // DBGMSG("model_name=|%s|", parsed_edid->model_name);
-   // DBGMSG("serial_ascii=|%s|", parsed_edid->serial_ascii);
    parsed_edid->year = edidbytes[17] + 1990;
    parsed_edid->is_model_year = edidbytes[16] == 0xff;
    parsed_edid->edid_version_major = edidbytes[18];
@@ -257,12 +292,24 @@ Parsed_Edid * create_parsed_edid(Byte* edidbytes) {
 #endif
    parsed_edid->edid_version_minor = edidbytes[19];
 
+   parsed_edid->rx = edidbytes[0x1b] << 2 | ( (edidbytes[0x19]&0b11000000)>>6 );
+   parsed_edid->ry = edidbytes[0x1c] << 2 | ( (edidbytes[0x19]&0b00110000)>>4 );
+   parsed_edid->gx = edidbytes[0x1d] << 2 | ( (edidbytes[0x19]&0b00001100)>>2 );
+   parsed_edid->gy = edidbytes[0x1e] << 2 | ( (edidbytes[0x19]&0b00000011)>>0 );
+   parsed_edid->bx = edidbytes[0x1f] << 2 | ( (edidbytes[0x1a]&0b11000000)>>6 );
+   parsed_edid->by = edidbytes[0x20] << 2 | ( (edidbytes[0x1a]&0b00110000)>>4 );
+   parsed_edid->wx = edidbytes[0x21] << 2 | ( (edidbytes[0x1a]&0b00001100)>>2 );
+   parsed_edid->wy = edidbytes[0x22] << 2 | ( (edidbytes[0x1a]&0b00000011)>>0 );
+
+   // low order digits wrong, try another way
+   parsed_edid->wy = edidbytes[0x22] * 4 + ((edidbytes[0x1a]&0b00000011)>>0);
+
    if (!ok) {
       free(parsed_edid);
       parsed_edid = NULL;
    }
 
-   bye:
+bye:
    return parsed_edid;
 }
 
@@ -272,6 +319,7 @@ void          free_parsed_edid(Parsed_Edid * parsed_edid) {
    assert( memcmp(parsed_edid->marker, EDID_MARKER_NAME, 4)==0 );
    free(parsed_edid);
 }
+
 
 
 /* Writes EDID summary to the current report output destination.
@@ -291,13 +339,19 @@ void report_parsed_edid(Parsed_Edid * edid, bool verbose, int depth) {
       rpt_vstring(d1,"Mfg id:           %s",          edid->mfg_id);
       rpt_vstring(d1,"Model:            %s",          edid->model_name);
       rpt_vstring(d1,"Serial number:    %s",          edid->serial_ascii);
-      if (verbose) {
-      rpt_vstring(d1,"Hex model:        0x%04x",      edid->model_hex);
-      rpt_vstring(d1,"Binary sn:        %u (0x%08x)", edid->serial_binary, edid->serial_binary);
-      }
       char * title = (edid->is_model_year) ? "Model year" : "Manufacture year";
       rpt_vstring(d1,"%-16s: %d", title, edid->year);
       rpt_vstring(d1,"EDID version:     %d.%d", edid->edid_version_major, edid->edid_version_minor);
+
+      if (verbose) {
+      rpt_vstring(d1,"Hex model:        0x%04x",      edid->model_hex);
+      rpt_vstring(d1,"Binary sn:        %u (0x%08x)", edid->serial_binary, edid->serial_binary);
+      rpt_vstring(d1,"Extra descriptor: %s",          edid->extra_descriptor_string);
+      rpt_vstring(d1,"White-x, White-y: %.3f, %.3f",  edid->wx/1000.0, edid->wy/1000.0);
+      rpt_vstring(d1,"Red-x, Red-y:     %.3f, %.3f",  edid->rx/1000.0, edid->ry/1000.0);
+      rpt_vstring(d1,"Green-x, Green-y: %.3f, %.3f",  edid->gx/1000.0, edid->gy/1000.0);
+      rpt_vstring(d1,"Blue-x, Blue-y:   %.3f, %.3f",  edid->bx/1000.0, edid->by/1000.0);
+      }
 
       if (verbose) {
          rpt_vstring(d1,"EDID hex dump:");
@@ -306,8 +360,7 @@ void report_parsed_edid(Parsed_Edid * edid, bool verbose, int depth) {
       }
    }
    else {
-      if (verbose)
-         rpt_vstring(d1,"No edid");
+      // if (verbose)
+         rpt_vstring(d1,"No EDID");
    }
 }
-
