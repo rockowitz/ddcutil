@@ -25,6 +25,7 @@
 #define SRC_UTIL_HIDDEV_UTIL_H_
 
 #include <glib.h>
+#include <string.h>        // so users will have definition of strerror()
 #include <linux/hiddev.h>
 
 #include "util/data_structures.h"

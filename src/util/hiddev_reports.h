@@ -31,6 +31,8 @@ void init_hiddev_reports();
 void report_hiddev_devinfo(struct hiddev_devinfo * devinfo, bool lookup_names, int depth);
 void report_hiddev_device_by_fd(int fd, int depth);
 
+void report_hiddev_usage_ref(struct hiddev_usage_ref * uref, int depth);
+
 void report_hiddev_report_info(struct hiddev_report_info * rinfo, int depth);
 void report_hiddev_field_info(struct hiddev_field_info * finfo, int depth);
 
