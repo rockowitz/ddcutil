@@ -946,6 +946,7 @@ void query_usb_monitors() {
    GPtrArray * hiddev_devices = get_hiddev_device_names();
    printf("Found %d USB HID devices.\n", hiddev_devices->len);
    for (int devndx=0; devndx<hiddev_devices->len; devndx++) {
+      puts("");
       errno=0;
       char * curfn = g_ptr_array_index(hiddev_devices,devndx);
       int fd = open(curfn, O_RDONLY);
@@ -965,17 +966,20 @@ void query_usb_monitors() {
          else {
             char dev_summary[200];
             snprintf(dev_summary, 200,
-                     "Device %s, devnum.busnum: %d.%d, uid:vid: %04x:%04x - %s",
+                     "Device %s, devnum.busnum: %d.%d, vid:pid: %04x:%04x - %s",
                      curfn,
                      dev_info.busnum, dev_info.devnum,
                      dev_info.vendor, dev_info.product & 0xffff,
                      cgname);
-            if (!is_hiddev_monitor(fd)) {
-               printf("%s\n", dev_summary);
+            printf("%s\n", dev_summary);
+            bool b0 = is_hiddev_monitor(fd);
+            if (!b0) {
                printf("   Not a USB connected monitor\n");
+               b0 = force_hiddev_monitor(fd);
+               if (b0)
+                  printf("   Device vid/pid matches exception list.  Forcing report for device.\n");
             }
-            else {                                 // comment out else to display all USB HID devices
-               printf("%s\n", dev_summary);
+            if (b0) {
                report_hiddev_device_by_fd(fd, 1);
             }
          }

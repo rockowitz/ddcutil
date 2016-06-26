@@ -45,6 +45,7 @@
 
 const char * report_type_name(__u32 report_type);
 
+bool force_hiddev_monitor(int fd);
 
 bool is_hiddev_monitor(int fd);
 

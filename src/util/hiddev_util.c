@@ -48,6 +48,7 @@
 #include "util/hiddev_reports.h"   // circular dependency, but only used in debug code
 #include "util/x11_util.h"         // *** TEMP ***
 #include "base/edid.h"             // *** TEMP ***
+#include "i2c/i2c_bus_core.h"      // *** TEMP ***
 
 #include "util/hiddev_util.h"
 
@@ -231,6 +232,46 @@ GPtrArray * get_hiddev_device_names() {
 }
 
 
+struct vid_pid {
+   __s16   vid;
+   __s16   pid;
+};
+
+
+bool force_hiddev_monitor(int fd) {
+   bool debug = true;
+   bool result = false;
+
+   struct hiddev_devinfo dev_info;
+
+   int rc = ioctl(fd, HIDIOCGDEVINFO, &dev_info);
+   if (rc != 0) {
+      REPORT_IOCTL_ERROR("HIDIOCGDEVINFO", rc);
+      goto bye;
+   }
+
+   struct vid_pid exceptions[] = {
+         {0x0424, 0x3328},     // Std Micrososystems USB HID I2C - HP LP2480
+         {0x05d6, 0x0002},    // Eizo
+   };
+   const int vid_pid_ct = sizeof(exceptions)/sizeof(struct vid_pid);
+
+   for (int ndx = 0; ndx < vid_pid_ct && !result; ndx++) {
+      if (dev_info.vendor == exceptions[ndx].vid) {
+         if (exceptions[ndx].pid == 0 || dev_info.product == exceptions[ndx].pid) {
+            result = true;
+            if (debug)
+               printf("(%s) Matched exception vid=0x%04x, pid=0x%04x\n", __func__,
+                      exceptions[ndx].vid, exceptions[ndx].pid);
+         }
+      }
+   }
+
+bye:
+   return result;
+}
+
+
 
 /* Check if an open hiddev device represents a USB compliant monitor.
  *
@@ -245,7 +286,7 @@ GPtrArray * get_hiddev_device_names() {
  * a usage of Monitor Control from the USB Monitor Usage Page."
 */
 bool is_hiddev_monitor(int fd) {
-   bool debug = true;
+   bool debug = false;
    int monitor_collection_index = -1;
 
    int cndx = 0;   // indexes start at 0
@@ -273,6 +314,11 @@ bool is_hiddev_monitor(int fd) {
    }
 
    bool result = (monitor_collection_index >= 0);
+
+   // FOR TESTING
+   // if (!result)
+   //    result = force_hiddev_monitor(fd);
+
    if (debug)
       printf("(%s) Returning: %s\n", __func__, bool_repr(result));
    return result;
@@ -331,7 +377,7 @@ __u32 get_identical_ucode(int fd, struct hiddev_field_info * finfo, __u32 actual
  */
 struct hiddev_field_info *
 is_field_edid(int fd, struct hiddev_report_info * rinfo, int field_index) {
-   bool debug = true;
+   bool debug = false;
    if (debug)
       printf("(%s) report_type=%d, report_id=%d, field index = %d\n",
              __func__, rinfo->report_type, rinfo->report_id, field_index);
@@ -849,19 +895,28 @@ bye:
 }
 
 
-struct eizo_model_sn *  get_eizo_model_sn_by_report(int fd) {
-   bool debug = true;
+bool is_eizo_monitor(int fd) {
+   bool result = false;
    struct hiddev_devinfo dev_info;
-   struct eizo_model_sn* result = NULL;
-
    int rc = ioctl(fd, HIDIOCGDEVINFO, &dev_info);
    if (rc != 0) {
       REPORT_IOCTL_ERROR("HIDIOCGDEVINFO", rc);
       goto bye;
    }
-   if (dev_info.vendor == 0x05d6 && dev_info.product == 0x0002)  {
-      struct edid_location * loc = find_eizo_model_sn_report(fd);
+   if (dev_info.vendor == 0x05d6 && dev_info.product == 0x0002)
+      result = true;
 
+bye:
+   return result;
+}
+
+
+struct eizo_model_sn *  get_eizo_model_sn_by_report(int fd) {
+   bool debug = true;
+   struct eizo_model_sn* result = NULL;
+
+   if (is_eizo_monitor(fd)) {
+      struct edid_location * loc = find_eizo_model_sn_report(fd);
       if (loc) {
          // get report
          Buffer * modelsn = get_multibyte_report_value(fd, loc);
@@ -881,7 +936,6 @@ struct eizo_model_sn *  get_eizo_model_sn_by_report(int fd) {
       }
    }
 
-bye:
    if (debug) {
       printf("(%s) Returning: %p\n", __func__, result);
       if (result)
@@ -920,6 +974,26 @@ Buffer * get_hiddev_edid(int fd)  {
 
 
    if (!result) {
+
+      if (is_eizo_monitor(fd)) {
+         printf("(%s) *** Special fixup for Eizo monitor ***\n", __func__);
+
+         struct eizo_model_sn * model_sn = get_eizo_model_sn_by_report(fd);
+         if (model_sn) {
+            Bus_Info * bus_info = i2c_find_bus_info_by_model_sn(model_sn->model, model_sn->sn);
+            if (bus_info) {
+               printf("(%s) Using EDID for /dev/i2c-%d\n", __func__, bus_info->busno);
+               result = buffer_new_with_value(bus_info->edid->bytes, 128, __func__);
+            }
+            else {
+               // TODO: try ADL
+            }
+         }
+      }
+   }
+
+   if (!result) {
+
       printf("(%s) *** HACK: USING X11 EDID ***\n", __func__);
 
       GPtrArray* edid_recs = get_x11_edids();

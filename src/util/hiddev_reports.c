@@ -439,6 +439,8 @@ void report_field_usage(
    if (rc == 0) {
      rpt_vstring(d1, "Usage code = 0x%08x  %s",
                      uref.usage_code, interpret_usage_code(uref.usage_code));
+     int collection_index = ioctl(fd, HIDIOCGCOLLECTIONINDEX, &uref);
+     rpt_vstring(d1, "Collection index for usage code: %d", collection_index);
 
      if (show_value) {
         // Gets the current value of the field
@@ -455,8 +457,15 @@ void report_field_usage(
 }
 
 
-/* Traverse the report descriptors for a HID device */
-
+/* Reports all report descriptors of a particular type for an open HID device.
+ *
+ * Arguments:
+ *   fd           file descriptor
+ *   report_type  HID_REPORT_TYPE_INPUT, HID_REPORT_TYPE_OUTPUT, or HID_REPORT_TYPE_FEATURE
+ *   depth        logical indentation depth
+ *
+ * Returns:    nothing
+ */
 void report_report_descriptors_for_report_type(int fd, __u32 report_type, int depth) {
    int ret;
    const int d0 = depth;
@@ -490,12 +499,14 @@ void report_report_descriptors_for_report_type(int fd, __u32 report_type, int de
       report_hiddev_report_info(&rinfo, d1);
       rptct++;
 
-      // So that usage value filled in  - should we be doing this?
-      int rc = ioctl(fd, HIDIOCGREPORT, &rinfo);
-      if (rc != 0) {
-         REPORT_IOCTL_ERROR("HIDIOCGREPORT", rc);
-         printf("(%s) Unable to get report %d\n", __func__, rinfo.report_id);
-         break;
+      if (rinfo.report_type != HID_REPORT_TYPE_OUTPUT) {
+         // So that usage value filled in  - should we be doing this?
+         int rc = ioctl(fd, HIDIOCGREPORT, &rinfo);
+         if (rc != 0) {
+            REPORT_IOCTL_ERROR("HIDIOCGREPORT", rc);
+            printf("(%s) Unable to get report %d\n", __func__, rinfo.report_id);
+            break;
+         }
       }
 
       int fndx, undx;
@@ -535,28 +546,29 @@ void report_report_descriptors_for_report_type(int fd, __u32 report_type, int de
          if (common_ucode) {
 
             rpt_vstring(d2, "Identical ucode for all usages: 0x%08x\n", common_ucode);
-            rpt_vstring(d3, "Retrieving using HIDIOCGUSAGES");
+            if (finfo.report_type != HID_REPORT_TYPE_OUTPUT) {
+               rpt_vstring(d3, "Retrieving using HIDIOCGUSAGES");
 
-            struct hiddev_usage_ref_multi uref_multi;
-            uref_multi.uref.report_type = finfo.report_type;
-            uref_multi.uref.report_id   = finfo.report_id;
-            uref_multi.uref.field_index = fndx;
-            uref_multi.uref.usage_index = 0;
-            uref_multi.num_values = finfo.maxusage; // needed? yes!
+               struct hiddev_usage_ref_multi uref_multi;
+               uref_multi.uref.report_type = finfo.report_type;
+               uref_multi.uref.report_id   = finfo.report_id;
+               uref_multi.uref.field_index = fndx;
+               uref_multi.uref.usage_index = 0;
+               uref_multi.num_values = finfo.maxusage; // needed? yes!
 
-            rc = ioctl(fd, HIDIOCGUSAGES, &uref_multi);  // Fills in usage values
-            if (rc != 0) {
-               REPORT_IOCTL_ERROR("HIDIOCGUSAGES", rc);
+               rc = ioctl(fd, HIDIOCGUSAGES, &uref_multi);  // Fills in usage values
+               if (rc != 0) {
+                  REPORT_IOCTL_ERROR("HIDIOCGUSAGES", rc);
+               }
+               else {
+                  printf("(%s) Value retrieved by HIDIOCGUSAGES:\n", __func__);
+                  Byte * buf = calloc(1, finfo.maxusage);
+
+                  for (int ndx=0; ndx<finfo.maxusage; ndx++)
+                     buf[ndx] = uref_multi.values[ndx] & 0xff;
+                  hex_dump(buf, 128);
+               }
             }
-            else {
-               printf("(%s) Value retrieved by HIDIOCGUSAGES:\n", __func__);
-               Byte * buf = calloc(1, finfo.maxusage);
-
-               for (int ndx=0; ndx<finfo.maxusage; ndx++)
-                  buf[ndx] = uref_multi.values[ndx] & 0xff;
-               hex_dump(buf, 128);
-            }
-
          }
 
          else {
@@ -569,9 +581,10 @@ void report_report_descriptors_for_report_type(int fd, __u32 report_type, int de
                                   finfo.report_id,
                                   fndx,
                                   undx,
-                                  true,   // show_value
+                                  (finfo.report_type != HID_REPORT_TYPE_OUTPUT),   // show_value
                                   d4);
             }  //loop over undx
+#ifdef REDUNDANT
             if (finfo.maxusage > 1) {
                rpt_title("Collected usage value:", d3);
                Buffer * buf = buffer_new(finfo.maxusage+1, __func__);
@@ -614,7 +627,7 @@ void report_report_descriptors_for_report_type(int fd, __u32 report_type, int de
                   hex_dump(buf->bytes, buf->len);
                buffer_free(buf,__func__);
             }
-
+#endif
 
          }  // not an EDID field
       }  // loop over fndx
@@ -626,6 +639,14 @@ void report_report_descriptors_for_report_type(int fd, __u32 report_type, int de
 }
 
 
+/* Reports all report descriptors for an open HID device.
+ *
+ * Arguments:
+ *   fd        file descriptor
+ *   depth     logical indentation depth
+ *
+ * Returns:    nothing
+ */
 void report_all_report_descriptors(int fd, int depth) {
    report_report_descriptors_for_report_type(fd, HID_REPORT_TYPE_INPUT, depth);
    report_report_descriptors_for_report_type(fd, HID_REPORT_TYPE_OUTPUT, depth);
@@ -633,6 +654,14 @@ void report_all_report_descriptors(int fd, int depth) {
 }
 
 
+/* Reports all collection information for an open HID device.
+ *
+ * Arguments:
+ *   fd        file descriptor
+ *   depth     logical indentation depth
+ *
+ * Returns:    nothing
+ */
 void report_all_collections(int fd, int depth) {
    int d1 = depth+1;
    // int d2 = depth+2;
@@ -644,12 +673,7 @@ void report_all_collections(int fd, int depth) {
       memset(&cinfo, 0, sizeof(cinfo));
       errno = 0;
       cinfo.index = cndx;
-      // printf("(%s) Calling HIDIOCGCOLLECTIONINFO, cndx=%d\n", __func__, cndx);
       ioctl_rc = ioctl(fd, HIDIOCGCOLLECTIONINFO, &cinfo);
-      // if (rc != 0) {
-      //    REPORT_IOCTL_ERROR("HIDIOCGCOLLECTIONINFO", rc);
-      //    continue;
-      // }
       if (ioctl_rc != -1) {
          rpt_vstring(d1,"Collection %d:", cinfo.index);
          report_hiddev_collection_info(&cinfo, d1);
@@ -658,6 +682,14 @@ void report_all_collections(int fd, int depth) {
 }
 
 
+/* Reports all information about an open HID device.
+ *
+ * Arguments:
+ *   fd        file descriptor
+ *   depth     logical indentation depth
+ *
+ * Returns:    nothing
+ */
 void report_hiddev_device_by_fd(int fd, int depth) {
    const int d0 = depth;
    const int d1 = d0+1;
@@ -666,15 +698,8 @@ void report_hiddev_device_by_fd(int fd, int depth) {
 
    struct hiddev_devinfo dev_info;
 
-   // Get hiddev driver version
    int version;
    int rc = ioctl(fd, HIDIOCGVERSION, &version);
-
-   // printf("(%s) HIDIOCGVERSION returned %d, version=0x%08x  %d.%d.%d\n",
-   //        __func__, rc,
-   //        version,
-   //        version>>16, (version >> 8) & 0xff, version & 0xff);
-
    rpt_vstring(d1, "hiddev driver version (reported by HIDIOCGVERSION): %d.%d.%d",
           version>>16, (version >> 8) & 0xff, version & 0xff);
 
@@ -690,7 +715,6 @@ void report_hiddev_device_by_fd(int fd, int depth) {
       REPORT_IOCTL_ERROR("HIDIOCGDEVINFO", rc);
       return;
    }
-
    report_hiddev_devinfo(&dev_info, /*lookup_names=*/true, d1);
 
    // if (!is_interesting_device(&dev_info)) {
@@ -698,75 +722,50 @@ void report_hiddev_device_by_fd(int fd, int depth) {
    //       return;
    // }
 
-#ifdef SKIP
-   // skip - string retrieval painfully slow for Apple Cinema
    int string_id_limit = -1;
-   // Apple never says invalid index
-   if (dev_info.vendor == 0x05ac)
-      string_id_limit = 3;
+   if (dev_info.vendor == 0x05ac) {
+      // string_id_limit = 3;   // Apple never returns invalid index.
+      rpt_vstring(d1, "Skipping string retrieval for Apple Cinema display due to limitations.");
+      string_id_limit = 0;     // disable entirely - string retrieval painfully slow for Apple Cinema
+   }
    puts("");
-   report_hiddev_strings(fd,string_id_limit,d1);    // HIDIOCGSTRING
+   if (string_id_limit != 0) {
+      report_hiddev_strings(fd,string_id_limit,d1);    // HIDIOCGSTRING
+      puts("");
+   }
+
+   rpt_title("Usages for each application associated with the device:", d1);
+   if (dev_info.num_applications == 0) {   // should never occur, but just in case
+      rpt_title("No applications", d3);
+   }
+   else {
+      for (int ndx = 0; ndx < dev_info.num_applications; ndx++) {
+         int usage = ioctl(fd, HIDIOCAPPLICATION, ndx);
+         // printf("(%s) HIDIOCAPPLICATION returned 0x%08x for application %d\n", __func__, usage, i);
+         if (usage == -1) {
+            continue;
+         }
+         rpt_vstring(d2, "Application %d:  Usage: %s", ndx, interpret_usage_code(usage));
+      }
+   }
    puts("");
-#endif
+
+   rpt_title("Collection information is a superset of application information.", d1);
+   rpt_title("Querying collections returns information on all collections the device has,", d1);
+   rpt_title("not just application collections.", d1);
+   puts("");
    report_all_collections(fd,d1);
-   // puts("");
+   puts("");
 
    rpt_vstring(d1, "Identified as HID monitor: %s", bool_repr(is_hiddev_monitor(fd)) );
-   puts("");
+   // puts("");
 
 
-   rpt_vstring(d1, "Applications:");
-   int application_ct = 0;
-   for (unsigned int i = 0; i < dev_info.num_applications; i++) {
-      // printf("(%s) Getting application %i\n", __func__,  i);
-      // Returns the application usage
-      int usage = ioctl(fd, HIDIOCAPPLICATION, i);
-      // printf("(%s) HIDIOCAPPLICATION returned 0x%08x for application %d\n", __func__, usage, i);
-      if (usage == -1) {
-         continue;
-      }
-      application_ct++;
-      rpt_vstring(d2, "Application %d:", i);
-      rpt_vstring(d3, "Application usage: %s", interpret_usage_code(usage));
-      // printf("(%s) Application usage 0x%08x  0x%08x\n", __func__, usage, usage & HID_USAGE_PAGE_MASK);
-
-      // if (((usage & HID_USAGE_PAGE_MASK) == HID_UP_MONITOR)) {
-
-#ifdef REDUNDANT
-         char name[256];
-         name[0] = 0;
-         errno = 0;
-         if (ioctl(fd, HIDIOCGNAME(sizeof(name)), &name) < 0)
-            snprintf(name, 256,
-                     "Unable to get device name, ioctl(HIDIOCGNAME) error %d",
-                     errno);
-         rpt_vstring(d3, "device name: %s", name);
-
-         printf("%s (0x%04hx:0x%04hx) v%x.%02x\n",
-                   name, dev_info.vendor,
-                   dev_info.product, dev_info.version >> 8,
-                   dev_info.version & 0xff);
-#endif
-         // show_descriptors(fd);
-
-        //    monitor_vendor = dev_info.vendor;
-         //    get_controls(fd, HID_REPORT_TYPE_INPUT);
-         //    get_controls(fd, HID_REPORT_TYPE_OUTPUT);
-         //    get_controls(fd, HID_REPORT_TYPE_FEATURE);
-         //    printf("\n");
-
-      //    break;
-      // }
-   }
-   if (application_ct == 0)
-      rpt_vstring(d3, "None");
-
-   puts("");
    report_all_report_descriptors(fd, d1);
 
 #ifdef FUTURE
    puts("");
-   if (dev_info.vendor == 0x05ac)
+   if (dev_info.vendor == 0x05ac)    // Apple
       get_edid(fd);
 
    if (is_hiddev_monitor(fd)) {
