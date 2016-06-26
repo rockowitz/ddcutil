@@ -21,10 +21,16 @@
  * </endcopyright>
  */
 
+#include <assert.h>
 #include <errno.h>
 #include <stdio.h>
+#include <sys/ioctl.h>
+#include <unistd.h>
 
 #include "util/string_util.h"
+#include "util/hiddev_util.h"
+#include "util/hiddev_reports.h"
+#include "util/report_util.h"
 
 #include "base/core.h"
 #include "base/ddc_errno.h"
@@ -340,6 +346,47 @@ app_read_changes(Display_Handle * dh) {
 }
 
 
+void
+app_read_changes_usb(Display_Handle * dh) {
+   bool debug = true;
+   DBGMSF(debug, "Starting");
+   // bool new_values_found = false;
+
+   assert(dh->io_mode == USB_IO);
+   int fd = dh->fh;
+   int flaguref = HIDDEV_FLAG_UREF;
+   struct hiddev_usage_ref uref;
+   int rc = ioctl(fd, HIDIOCSFLAG, &flaguref);
+   if (rc < 0) {
+      REPORT_IOCTL_ERROR("HIDIOCSFLAG", rc);
+      return;
+   }
+
+   ssize_t ct = read(fd, &uref, sizeof(&uref));
+   if (ct < 0) {
+      int errsv = errno;
+      // report the error
+      printf("(%s) read failed, errno=%d\n", __func__, errsv);
+   }
+   else if (ct > 0) {
+      rpt_vstring(1, "Read new value:");
+      report_hiddev_usage_ref(&uref, 1);
+      rpt_vstring(1, "New value: 0x%04x (%d)", uref.value, uref.value);
+
+
+   }
+   else {
+      DBGMSF(debug, "tick");
+   }
+
+
+
+
+}
+
+
+
+
 /* Infinite loop watching for VCP feature changes reported by the display.
  *
  * Arguments:
@@ -353,7 +400,10 @@ app_read_changes_forever(Display_Handle * dh) {
    printf("Watching for VCP feature changes on display %s\n", display_handle_repr(dh));
    printf("Type ^C to exit...\n");
    while(true) {
-      app_read_changes(dh);
+      if (dh->io_mode == USB_IO)
+         app_read_changes_usb(dh);
+      else
+         app_read_changes(dh);
 
       sleep_millis( 2500);
    }
