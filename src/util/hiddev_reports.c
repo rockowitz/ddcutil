@@ -142,7 +142,9 @@ void report_hiddev_devinfo(struct hiddev_devinfo * dinfo, bool lookup_names, int
                 2);
    }
    rpt_structure_loc("hiddev_devinfo", dinfo, depth);
-   rpt_vstring(d1,"%-20s: %u",         "bustype", dinfo->bustype);
+   // bus types are defined in <linux/input.h>.  No need to define a lookup table of types
+   // to names, since the bus type is always USB
+   rpt_vstring(d1,"%-20s: %u  %s",     "bustype", dinfo->bustype, (dinfo->bustype == 3) ? "BUS_USB" : "");
    rpt_vstring(d1,"%-20s: %u",         "busnum",  dinfo->busnum);
    rpt_vstring(d1,"%-20s: %u",         "devnum",  dinfo->devnum);
    rpt_vstring(d1,"%-20s: %u",         "ifnum",   dinfo->ifnum);
@@ -153,6 +155,29 @@ void report_hiddev_devinfo(struct hiddev_devinfo * dinfo, bool lookup_names, int
    rpt_vstring(d1,"%-20s: 0x%04x  %s", "product", dinfo->product & 0xffff, names.device_name);
    rpt_vstring(d1,"%-20s: %2x.%02x",   "version", dinfo->version>>8, dinfo->version & 0x0f);  // BCD
    rpt_vstring(d1,"%-20s: %u",         "num_applications", dinfo->num_applications);
+}
+
+
+char * interpret_collection_type(__u32 type) {
+   char * result = NULL;
+
+   // Per USB HID spec section 6.2.2.4 Main Items
+   // and section 6.2.2.6 Collection, End Collection Items
+   switch(type) {
+   case(0x00):  result = "Physical";       break;
+   case(0x01):  result = "Application";    break;
+   case(0x02):  result = "Logical";        break;
+   case(0x03):  result = "Report";         break;
+   case(0x04):  result = "Named Array";    break;
+   case(0x05):  result = "Usage Switch";   break;
+   case(0x06):  result = "Usage Modifier"; break;
+   default:
+      if (type >= 0x80 && type <= 0xff)
+                result = "Vendor-defined";
+      else
+                result = "Reserved";        // should never occur
+   } //switch
+   return result;
 }
 
 
@@ -169,7 +194,7 @@ void report_hiddev_collection_info(struct hiddev_collection_info * cinfo, int de
 
    rpt_structure_loc("hiddev_collection_info", cinfo, depth);
    rpt_vstring(d1, "%-20s: %u",        "index", cinfo->index);
-   rpt_vstring(d1, "%-20s: %u",        "type",  cinfo->type);
+   rpt_vstring(d1, "%-20s: %u  %s",    "type",  cinfo->type, interpret_collection_type(cinfo->type));
    rpt_vstring(d1, "%-20s: 0x%08x %s", "usage", cinfo->usage, interpret_usage_code(cinfo->usage));
    rpt_vstring(d1, "%-20s: %u",        "level", cinfo->level);
 }
@@ -510,7 +535,8 @@ void report_report_descriptors_for_report_type(int fd, __u32 report_type, int de
       }
 
       int fndx, undx;
-      rpt_vstring(d1, "Scanning fields of report %s", interpret_report_id(rinfo.report_id));
+      if (rinfo.num_fields > 0)
+         rpt_vstring(d1, "Scanning fields of report %s", interpret_report_id(rinfo.report_id));
       for (fndx = 0; fndx < rinfo.num_fields; fndx++) {
          // printf("(%s) field index = %d\n", __func__, i);
          struct hiddev_field_info finfo = {0};
