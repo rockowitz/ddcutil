@@ -370,18 +370,18 @@ app_read_changes_usb(Display_Handle * dh) {
    }
    else if (ct > 0) {
       rpt_vstring(1, "Read new value:");
-      report_hiddev_usage_ref(&uref, 1);
-      rpt_vstring(1, "New value: 0x%04x (%d)", uref.value, uref.value);
-
+      if (ct < sizeof(&uref)) {
+         rpt_vstring(1, "Short read");
+      }
+      else {
+         report_hiddev_usage_ref(&uref, 1);
+         rpt_vstring(1, "New value: 0x%04x (%d)", uref.value, uref.value);
+      }
 
    }
    else {
       DBGMSF(debug, "tick");
    }
-
-
-
-
 }
 
 
