@@ -252,7 +252,7 @@ bool force_hiddev_monitor(int fd) {
 
    struct vid_pid exceptions[] = {
          {0x0424, 0x3328},     // Std Micrososystems USB HID I2C - HP LP2480
-         {0x05d6, 0x0002},    // Eizo
+         {0x056d, 0x0002},    // Eizo
    };
    const int vid_pid_ct = sizeof(exceptions)/sizeof(struct vid_pid);
 
@@ -326,7 +326,7 @@ bool is_hiddev_monitor(int fd) {
 
 
 __u32 get_identical_ucode(int fd, struct hiddev_field_info * finfo, __u32 actual_field_index) {
-   assert(finfo->flags & HID_FIELD_BUFFERED_BYTE);
+   // assert(finfo->flags & HID_FIELD_BUFFERED_BYTE);
    __u32 result = 0;
 
    for (int undx = 0; undx < finfo->maxusage; undx++) {
@@ -354,6 +354,100 @@ __u32 get_identical_ucode(int fd, struct hiddev_field_info * finfo, __u32 actual
       }
    }   // loop over usages
 
+   return result;
+}
+
+
+/* Collects all the usage values for a field and returns them in a Buffer.
+ *
+ * The field must meet the following requirements:
+ *   All usages must have the same usage code
+ *   All values must be single byte
+ *
+ * The function should only be called for INPUT and FEATURE reports.  (assertion check)
+ *
+ * This function assumes that HIDIOCGREPORT has already been called
+ *
+ * Arguments:
+ *   fd           file descriptor
+ *   finfo        pointer to filled in hiddev_field_info for the field
+ *   field_index  actual field index to use
+ *
+ * Returns:   Buffer with accumulated value,
+ *            NULL if multiple usage codes or some usage value is > 0xff
+ */
+
+Buffer * collect_single_byte_usage_values(
+            int                         fd,
+            struct hiddev_field_info *  finfo,
+            __u32                       field_index)
+{
+   bool debug = true;
+   Buffer * result = buffer_new(finfo->maxusage, __func__);
+   bool ok = true;
+   __s32 common_usage_code;
+
+   // n.b. assumes HIDIOCGREPORT has been called
+
+   assert(finfo->report_type != HID_REPORT_TYPE_OUTPUT);
+
+   for (int undx = 0; undx < finfo->maxusage; undx++) {
+       struct hiddev_usage_ref uref = {
+           .report_type = finfo->report_type,   // rinfo.report_type;
+           .report_id =   finfo->report_id,     // rinfo.report_id;
+           .field_index = field_index,   // use original value, not value changed by HIDIOCGFIELDINFO
+           .usage_index = undx
+       };
+       // printf("(%s) report_type=%d, report_id=%d, field_index=%d, usage_index=%d\n",
+       //       __func__, rinfo->report_type, rinfo->report_id, field_index=saved_field_index, undx);
+       int rc = ioctl(fd, HIDIOCGUCODE, &uref);    // Fills in usage code
+       if (rc != 0) {
+           REPORT_IOCTL_ERROR("HIDIOCGUCODE", rc);
+           ok = false;
+           break;
+       }
+       // printf("(%s) uref.field_index=%d, uref.usage_code = 0x%08x\n",
+       //        __func__, uref.field_index, uref.usage_code);
+       if (undx == 0) {
+          common_usage_code = uref.usage_code;
+       }
+       else if (uref.usage_code != common_usage_code) {
+          ok = false;
+          if (debug)
+             printf("(%s) Multiple usage codes", __func__);
+          break;
+       }
+
+       rc = ioctl(fd, HIDIOCGUSAGE, &uref);  // Fills in usage value
+       if (rc != 0) {
+          REPORT_IOCTL_ERROR("HIDIOCGUSAGE", rc);
+          ok = false;
+          break;
+       }
+       if (uref.value &0xffffff00) {     // if high order bytes non-zero
+          if (true)
+             printf("(%s) High order bytes of value for usage %d are non-zero", __func__, undx);
+          ok = false;
+          break;
+       }
+       Byte b = uref.value;
+       buffer_add(result, b);
+       if (false)
+          printf("(%s) usage = %d, value=0x%08x, byte = 0x%02x\n",
+                 __func__, undx, uref.value, uref.value&0xff);
+    }   // loop over usages
+
+
+   if (!ok && result) {
+      buffer_free(result, __func__);
+      result = NULL;
+   }
+
+   if (debug) {
+      printf("(%s) Returning: %p\n", __func__, result);
+      // if (result)
+      //    buffer_dump(result);
+   }
    return result;
 }
 
@@ -457,7 +551,7 @@ bye:
 
 // Describes report and field within the report that represent the EDID
 
-struct edid_location {
+struct report_and_field {
    struct hiddev_report_info * rinfo;         // simplify by eliminating?
    struct hiddev_field_info  * finfo;         // simplify by eliminating?
    __u32                       report_type;
@@ -466,10 +560,10 @@ struct edid_location {
 };
 
 
-void report_edid_location(struct edid_location * ploc, int depth) {
+void report_report_and_field(struct report_and_field * ploc, int depth) {
    int d1 = depth+1;
 
-   rpt_structure_loc("struct edid_location", ploc, depth);
+   rpt_structure_loc("struct report_and_field", ploc, depth);
    if (ploc) {
       rpt_vstring(d1, "%-20s %u", "report_type:",  ploc->report_type );
       rpt_vstring(d1, "%-20s %u", "report_id:",  ploc->report_id );
@@ -489,12 +583,13 @@ test_field_ucode(
    __u32  report_type,
    __u32  report_id,
    __u32  field_index,
-   __u32  ucode)
+   __u32  ucode,
+   bool   require_all_match)
 {
    bool debug = true;
    if (debug)
-      printf("(%s) report_type=%d, report_id=%d, field index=%d, ucode=0x%08x\n",
-             __func__, report_type, report_id, field_index, ucode);
+      printf("(%s) report_type=%d, report_id=%d, field index=%d, ucode=0x%08x, require_all_match=%s\n",
+             __func__, report_type, report_id, field_index, ucode, bool_repr(require_all_match));
 
    struct hiddev_field_info * result = NULL;
    int rc;
@@ -518,9 +613,35 @@ test_field_ucode(
    }
    // result->field_id = fndx;
 
-   __u32 ucode_found = get_identical_ucode(fd, &finfo, field_index);
+   bool is_matched = false;
+   if (require_all_match) {
+      __u32 ucode_found = get_identical_ucode(fd, &finfo, field_index);
 
-   if (ucode_found == ucode) {
+      if (ucode_found == ucode)
+         is_matched = true;
+   }
+   else {
+      // loop over all usage codes
+      int undx;
+      for (undx = 0; undx < finfo.maxusage; undx++) {
+         struct hiddev_usage_ref uref = {
+            .report_type = report_type,
+            .report_id =   report_id,
+            .field_index = field_index,
+            .usage_index = undx
+         };
+         rc = ioctl(fd, HIDIOCGUCODE, &uref);    // Fills in usage code
+         if (rc != 0) {
+            REPORT_IOCTL_ERROR("HIDIOCGUCODE", rc);
+            break;
+         }
+         if (uref.usage_code == ucode) {
+            is_matched = true;
+            break;
+         }
+      }   // loop over usages
+   }
+   if (is_matched) {
       result = malloc(sizeof(struct hiddev_field_info));
       memcpy(result, &finfo, sizeof(struct hiddev_field_info));
    }
@@ -537,11 +658,11 @@ bye:
 
 
 
-struct edid_location*
-find_report(int fd, __u32 report_type, __u32 ucode) {
+struct report_and_field*
+find_report(int fd, __u32 report_type, __u32 ucode, bool match_all_ucodes) {
    bool debug = true;
 
-   struct edid_location * result = NULL;
+   struct report_and_field * result = NULL;
 
    struct hiddev_report_info rinfo = {
       .report_type = report_type,
@@ -566,8 +687,8 @@ find_report(int fd, __u32 report_type, __u32 ucode) {
 
       for (int fndx = 0; fndx < rinfo.num_fields && field_index_found == -1; fndx++) {
          // finfo_found = is_field_edid(fd, &rinfo, fndx);
-    	 // *** TEMP *** FORCE FAILURE
-         // finfo_found = test_field_ucode(fd, report_type, rinfo.report_id, fndx, ucode);
+         // *** TEMP *** FORCE FAILURE
+         finfo_found = test_field_ucode(fd, report_type, rinfo.report_id, fndx, ucode, match_all_ucodes);
          if (finfo_found) {
             report_id_found    = rinfo.report_id;
             field_index_found  = fndx;
@@ -578,7 +699,7 @@ find_report(int fd, __u32 report_type, __u32 ucode) {
      }  // loop over reports
 
      if (report_id_found >= 0) {
-        result = calloc(1, sizeof(struct edid_location));
+        result = calloc(1, sizeof(struct report_and_field));
         result->rinfo = calloc(1, sizeof(struct hiddev_report_info));
         memcpy(result->rinfo, &rinfo, sizeof(struct hiddev_report_info));
         result->finfo = finfo_found;   // returned by is_field_edid()
@@ -599,14 +720,14 @@ find_report(int fd, __u32 report_type, __u32 ucode) {
      if (debug) {
         printf("(%s) Returning: %p\n", __func__, result);
         if (result)
-           report_edid_location(result, 1);
+           report_report_and_field(result, 1);
      }
     return result;
 }
 
 
 
-void free_edid_location(struct edid_location * location) {
+void free_edid_location(struct report_and_field * location) {
    if (location) {
       if (location->rinfo)
          free(location->rinfo);
@@ -629,7 +750,7 @@ void free_edid_location(struct edid_location * location) {
  *
  * It is the responsibility of the caller to free the returned struct.
  */
-struct edid_location *
+struct report_and_field *
 locate_edid_report(int fd) {
    bool debug = true;
 
@@ -665,9 +786,9 @@ locate_edid_report(int fd) {
       rinfo.report_id |= HID_REPORT_ID_NEXT;
     }  // loop over reports
 
-    struct edid_location * result = NULL;
+    struct report_and_field * result = NULL;
     if (report_id_found >= 0) {
-       result = calloc(1, sizeof(struct edid_location));
+       result = calloc(1, sizeof(struct report_and_field));
        result->rinfo = calloc(1, sizeof(struct hiddev_report_info));
        memcpy(result->rinfo, &rinfo, sizeof(struct hiddev_report_info));
        result->finfo = finfo_found;   // returned by is_field_edid()
@@ -688,7 +809,7 @@ locate_edid_report(int fd) {
     if (debug) {
        printf("(%s) Returning: %p\n", __func__, result);
        if (result)
-          report_edid_location(result, 1);
+          report_report_and_field(result, 1);
     }
    return result;
 }
@@ -706,7 +827,7 @@ locate_edid_report(int fd) {
  *
  * It is the responsibility of the caller to free the returned buffer.
  */
-Buffer * get_hiddev_edid_by_location(int fd, struct edid_location * loc) {
+Buffer * get_hiddev_edid_by_location(int fd, struct report_and_field * loc) {
    assert(loc);
    bool debug = true;
    if (debug) {
@@ -714,7 +835,7 @@ Buffer * get_hiddev_edid_by_location(int fd, struct edid_location * loc) {
              __func__, loc, loc->report_id, loc->field_index);
       // report_hiddev_report_info(loc->rinfo, 1);
       // report_hiddev_field_info(loc->finfo, 1);
-      report_edid_location(loc, 1);
+      report_report_and_field(loc, 1);
    }
 
    int rc;
@@ -800,7 +921,7 @@ bye:
 }
 
 
-struct edid_location * find_eizo_model_sn_report(int fd) {
+struct report_and_field * find_eizo_model_sn_report(int fd) {
    // struct hiddev_report_info * rinfo = calloc(1,sizeof(struct hiddev_report_info));
 
    // find report
@@ -811,7 +932,7 @@ struct edid_location * find_eizo_model_sn_report(int fd) {
 
 
    bool debug = true;
-   struct edid_location * loc = NULL;
+   struct report_and_field * loc = NULL;
    struct hiddev_devinfo dev_info;
 
    int rc = ioctl(fd, HIDIOCGDEVINFO, &dev_info);
@@ -820,13 +941,13 @@ struct edid_location * find_eizo_model_sn_report(int fd) {
       goto bye;
    }
    if (dev_info.vendor == 0x056d && dev_info.product == 0x0002)  {
-      loc = find_report(fd, HID_REPORT_TYPE_FEATURE, 0xff000035);
+      loc = find_report(fd, HID_REPORT_TYPE_FEATURE, 0xff000035, /*match_all_ucodes=*/false);
    }
 
 bye:
-DBGMSF(debug, "Returning: %p", loc);
+   DBGMSF(debug, "Returning: %p", loc);
    if (loc)
-	   report_edid_location(loc,2);
+	   report_report_and_field(loc,2);
    return loc;
 }
 
@@ -852,7 +973,7 @@ void report_eizo_model_sn(struct eizo_model_sn * p, int depth) {
 }
 
 
-Buffer * get_multibyte_report_value(int fd, struct edid_location * loc) {
+Buffer * get_multibyte_report_value(int fd, struct report_and_field * loc) {
    bool debug = true;
    Buffer * result = NULL;
 
@@ -921,7 +1042,7 @@ struct eizo_model_sn *  get_eizo_model_sn_by_report(int fd) {
    struct eizo_model_sn* result = NULL;
 
    if (is_eizo_monitor(fd)) {
-      struct edid_location * loc = find_eizo_model_sn_report(fd);
+      struct report_and_field * loc = find_eizo_model_sn_report(fd);
       DBGMSF(debug, "find_eizo_model_sn_report() returned: %p", loc);
       if (loc) {
          // get report
@@ -968,7 +1089,7 @@ Buffer * get_hiddev_edid(int fd)  {
    bool debug = true;
    DBGMSF(debug, "Starting");
    Buffer * result = NULL;
-   struct edid_location * loc = locate_edid_report(fd);
+   struct report_and_field * loc = locate_edid_report(fd);
    if (loc) {
       result = get_hiddev_edid_by_location(fd, loc);
    }

@@ -61,6 +61,11 @@ is_field_edid(int fd, struct hiddev_report_info * rinfo, int field_index);
 
 __u32 get_identical_ucode(int fd, struct hiddev_field_info * finfo, __u32 actual_field_index);
 
+Buffer * collect_single_byte_usage_values(
+            int                         fd,
+            struct hiddev_field_info *  finfo,
+            __u32                       field_index);
+
 #ifdef OLD
 Byte * get_hiddev_edid_base(
       int fd,
