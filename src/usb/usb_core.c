@@ -674,7 +674,7 @@ int usb_close_device(int fd, char * device_fn, Failure_Action failure_action) {
  *  The result is cached in global variable usb_monitors
  */
 static GPtrArray * get_usb_monitor_list() {
-   bool debug = true;
+   bool debug = false;
    DBGMSF(debug, "Starting...");
    Output_Level ol = get_output_level();
 
