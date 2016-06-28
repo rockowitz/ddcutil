@@ -268,6 +268,9 @@ bool force_hiddev_monitor(int fd) {
    }
 
 bye:
+   if (debug)
+      printf("(%s) vid=0x%04x, pid=0x%04x, returning: %s\n", __func__,
+             dev_info.vendor, dev_info.product, bool_repr(result));
    return result;
 }
 
