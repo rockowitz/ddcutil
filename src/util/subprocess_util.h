@@ -24,8 +24,10 @@
 #ifndef SUBPROCESS_UTIL_H_
 #define SUBPROCESS_UTIL_H_
 
+#include <glib.h>
 #include <stdbool.h>
 
 bool execute_shell_cmd(char * shell_cmd, int depth);
+GPtrArray * execute_shell_cmd_collect(char * shell_cmd);
 
 #endif /* SUBPROCESS_UTIL_H_ */

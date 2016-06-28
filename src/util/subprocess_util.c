@@ -83,3 +83,65 @@ bool execute_shell_cmd(char * shell_cmd, int depth) {
     }
     return ok;
  }
+
+
+
+/* Executes a shell command and returns the output as an array
+ * of strings.
+ *
+ * Arguments:
+ *    shell_cmd      command to execute
+ *
+ * Returns:
+ *    true           command succeeded
+ *    false          failed, e.g. command not found
+ */
+GPtrArray *
+execute_shell_cmd_collect(char * shell_cmd) {
+   bool debug = true;
+   GPtrArray * result = g_ptr_array_new();
+   // TO DO: set free func
+   if (debug)
+      printf("(%s) Starting. shell_cmd = |%s|", __func__, shell_cmd);
+   bool ok = true;
+   FILE * fp;
+   char cmdbuf[200];
+   snprintf(cmdbuf, sizeof(cmdbuf), "(%s) 2>&1", shell_cmd);
+   // printf("(%s) cmdbuf=|%s|\n", __func__, cmdbuf);
+   fp = popen(cmdbuf, "r");
+   // printf("(%s) open. errno=%d\n", __func__, errno);
+    if (!fp) {
+       // int errsv = errno;
+       printf("Unable to execute command \"%s\": %s\n", shell_cmd, strerror(errno));
+       ok = false;
+    }
+    else {
+
+       char * a_line = NULL;
+       size_t len = 0;
+       ssize_t read;
+       bool first_line = true;
+       while ( (read=getline(&a_line, &len, fp)) != -1) {
+          if (strlen(a_line) > 0)
+             a_line[strlen(a_line)-1] = '\0';
+             if (first_line) {
+                if (str_ends_with(a_line, "not found")) {
+                   // printf("(%s) found \"not found\"\n", __func__);
+                   ok = false;
+                   break;
+                }
+                first_line = false;
+             }
+          g_ptr_array_add(result, strdup(a_line));
+       }
+       int pclose_rc = pclose(fp);
+       if (debug)
+          printf("(%s) plose() rc = %d\n", __func__, pclose_rc);
+    }
+    if (!ok) {
+
+       g_ptr_array_free(result, true);
+       result = NULL;
+    }
+    return result;
+ }
