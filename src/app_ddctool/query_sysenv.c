@@ -1051,6 +1051,26 @@ void query_sysenv() {
       puts("");
 
       printf("Examining I2C buses using i2cdetect: \n");
+      GPtrArray * busnames = execute_shell_cmd_collect("ls /dev/i2c*");
+      for (int ndx = 0; ndx < busnames->len; ndx++) {
+         // printf("ndx=%d, value=|%s|\n", ndx, (char *) g_ptr_array_index(busnames, ndx));
+
+         char cmd[80];
+         char * busname = (char *) g_ptr_array_index(busnames, ndx);
+         busname+=9;   // strip off "/dev/i2c-"
+         snprintf(cmd, 80, "i2cdetect -y %s", busname);
+         printf("\nProbing bus /dev/i2c-%d using command \"%s\"\n", ndx, cmd);
+         // DBGMSG("Executing command: |%s|\n", cmd);
+         int rc = execute_shell_cmd(cmd, 1 /* depth */);
+         // DBGMSG("execute_shell_cmd(\"%s\") returned %d", cmd, rc);
+         if (rc != 1) {
+            printf("i2cdetect command unavailable\n");
+            break;
+         }
+
+      }
+      g_ptr_array_free(busnames, true);
+#ifdef OLD
       int busct = i2c_get_busct();
       int ndx = 0;
       char cmd[80];
@@ -1065,6 +1085,7 @@ void query_sysenv() {
              break;
          }
       }
+#endif
 
 
       GPtrArray* edid_recs = get_x11_edids();
@@ -1072,7 +1093,7 @@ void query_sysenv() {
       printf("EDIDs reported by X11 for connected xrandr outputs:\n");
       // DBGMSG("Got %d X11_Edid_Recs\n", edid_recs->len);
 
-      for (ndx=0; ndx < edid_recs->len; ndx++) {
+      for (int ndx=0; ndx < edid_recs->len; ndx++) {
          X11_Edid_Rec * prec = g_ptr_array_index(edid_recs, ndx);
          // printf(" Output name: %s -> %p\n", prec->output_name, prec->edid);
          // hex_dump(prec->edid, 128);
