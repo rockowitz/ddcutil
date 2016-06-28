@@ -566,7 +566,8 @@ find_report(int fd, __u32 report_type, __u32 ucode) {
 
       for (int fndx = 0; fndx < rinfo.num_fields && field_index_found == -1; fndx++) {
          // finfo_found = is_field_edid(fd, &rinfo, fndx);
-         finfo_found = test_field_ucode(fd, report_type, rinfo.report_id, fndx, ucode);
+    	 // *** TEMP *** FORCE FAILURE
+         // finfo_found = test_field_ucode(fd, report_type, rinfo.report_id, fndx, ucode);
          if (finfo_found) {
             report_id_found    = rinfo.report_id;
             field_index_found  = fndx;
@@ -809,7 +810,7 @@ struct edid_location * find_eizo_model_sn_report(int fd) {
    // ucode: 0xff000035
 
 
-   // bool debug = true;
+   bool debug = true;
    struct edid_location * loc = NULL;
    struct hiddev_devinfo dev_info;
 
@@ -818,12 +819,14 @@ struct edid_location * find_eizo_model_sn_report(int fd) {
       REPORT_IOCTL_ERROR("HIDIOCGDEVINFO", rc);
       goto bye;
    }
-   if (dev_info.vendor == 0x05d6 && dev_info.product == 0x0002)  {
+   if (dev_info.vendor == 0x056d && dev_info.product == 0x0002)  {
       loc = find_report(fd, HID_REPORT_TYPE_FEATURE, 0xff000035);
-
    }
 
 bye:
+DBGMSF(debug, "Returning: %p", loc);
+   if (loc)
+	   report_edid_location(loc,2);
    return loc;
 }
 
@@ -896,6 +899,7 @@ bye:
 
 
 bool is_eizo_monitor(int fd) {
+	bool debug = true;
    bool result = false;
    struct hiddev_devinfo dev_info;
    int rc = ioctl(fd, HIDIOCGDEVINFO, &dev_info);
@@ -903,10 +907,11 @@ bool is_eizo_monitor(int fd) {
       REPORT_IOCTL_ERROR("HIDIOCGDEVINFO", rc);
       goto bye;
    }
-   if (dev_info.vendor == 0x05d6 && dev_info.product == 0x0002)
+   if (dev_info.vendor == 0x056d && dev_info.product == 0x0002)
       result = true;
 
 bye:
+   DBGMSF(debug, "Returning %s", bool_repr(result));
    return result;
 }
 
@@ -917,6 +922,7 @@ struct eizo_model_sn *  get_eizo_model_sn_by_report(int fd) {
 
    if (is_eizo_monitor(fd)) {
       struct edid_location * loc = find_eizo_model_sn_report(fd);
+      DBGMSF(debug, "find_eizo_model_sn_report() returned: %p", loc);
       if (loc) {
          // get report
          Buffer * modelsn = get_multibyte_report_value(fd, loc);
@@ -959,6 +965,8 @@ struct eizo_model_sn *  get_eizo_model_sn_by_report(int fd) {
  * It is the responsibility of the caller to free the returned buffer.
  */
 Buffer * get_hiddev_edid(int fd)  {
+   bool debug = true;
+   DBGMSF(debug, "Starting");
    Buffer * result = NULL;
    struct edid_location * loc = locate_edid_report(fd);
    if (loc) {
@@ -968,8 +976,10 @@ Buffer * get_hiddev_edid(int fd)  {
    // *** TEMPORARY HACK FOR TESTING ***
    if (result) {
       Parsed_Edid * parsed_edid0 = create_parsed_edid(result->bytes);
-      if (!parsed_edid0)
+      if (!parsed_edid0) {
          result = NULL;
+         DBGMSF(debug, "create_parsed_edid() returned invalid edid");
+      }
    }
 
    struct eizo_model_sn * model_sn = NULL;
@@ -993,8 +1003,8 @@ Buffer * get_hiddev_edid(int fd)  {
       }
    }
 
-   if (model_sn) {
-   // if (!result) {
+   // if (model_sn) {
+   if (!result) {
 
       printf("(%s) *** HACK: USING X11 EDID ***\n", __func__);
 
@@ -1003,29 +1013,31 @@ Buffer * get_hiddev_edid(int fd)  {
       printf("EDIDs reported by X11 for connected xrandr outputs:\n");
       // DBGMSG("Got %d X11_Edid_Recs\n", edid_recs->len);
 
-      int ndx = 0;
-      for (ndx=0; ndx < edid_recs->len; ndx++) {
-         X11_Edid_Rec * prec = g_ptr_array_index(edid_recs, ndx);
-         // printf(" Output name: %s -> %p\n", prec->output_name, prec->edid);
-         // hex_dump(prec->edid, 128);
-         rpt_vstring(1, "xrandr output: %s", prec->output_name);
-         Parsed_Edid * parsed_edid = create_parsed_edid(prec->edid);
-         if (parsed_edid) {
-            bool verbose_edid = false;
-            report_parsed_edid(parsed_edid, verbose_edid, 2 /* depth */);
-            if (streq(parsed_edid->model_name, model_sn->model) &&
-                streq(parsed_edid->serial_ascii, model_sn->sn) )
-            {
-               printf("(%s) Found EIZO EDID from X11\n", __func__);
-               if (!result)
-                  result = buffer_new_with_value(parsed_edid->bytes, 128, __func__);
-            }
-            free_parsed_edid(parsed_edid);
-         }
-         else {
-            printf(" Unparsable EDID for output name: %s -> %p\n", prec->output_name, prec->edid);
-            hex_dump(prec->edid, 128);
-         }
+      if (model_sn) {
+		  int ndx = 0;
+		  for (ndx=0; ndx < edid_recs->len; ndx++) {
+			 X11_Edid_Rec * prec = g_ptr_array_index(edid_recs, ndx);
+			 // printf(" Output name: %s -> %p\n", prec->output_name, prec->edid);
+			 // hex_dump(prec->edid, 128);
+			 rpt_vstring(1, "xrandr output: %s", prec->output_name);
+			 Parsed_Edid * parsed_edid = create_parsed_edid(prec->edid);
+			 if (parsed_edid) {
+				bool verbose_edid = false;
+				report_parsed_edid(parsed_edid, verbose_edid, 2 /* depth */);
+				if (streq(parsed_edid->model_name, model_sn->model) &&
+					streq(parsed_edid->serial_ascii, model_sn->sn) )
+				{
+				   printf("(%s) Found EIZO EDID from X11\n", __func__);
+				   if (!result)
+					  result = buffer_new_with_value(parsed_edid->bytes, 128, __func__);
+				}
+				free_parsed_edid(parsed_edid);
+			 }
+			 else {
+				printf(" Unparsable EDID for output name: %s -> %p\n", prec->output_name, prec->edid);
+				hex_dump(prec->edid, 128);
+			 }
+		  }
       }
 
       if (!result && edid_recs->len > 0) {
@@ -1037,7 +1049,7 @@ Buffer * get_hiddev_edid(int fd)  {
       free_x11_edids(edid_recs);
    }
 
-
+   DBGMSF(debug, "Returning: %p", result);
    return result;
 }
 

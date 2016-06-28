@@ -827,7 +827,7 @@ Display_Info_List usb_get_valid_displays() {
 
 Global_Status_Code
 usb_get_usage(int fd, Usb_Monitor_Vcp_Rec * vcprec, __s32 * maxval, __s32 * curval) {
-   bool debug = false;
+   bool debug = true;
    DBGMSF(debug, "Starting. fd=%d, vcprec=%p", fd, vcprec);
    Global_Status_Code gsc = 0;
    int rc;
@@ -915,7 +915,7 @@ Global_Status_Code usb_get_nontable_vcp_value(
        Byte                   feature_code,
        Parsed_Nontable_Vcp_Response** ppInterpretedCode)
 {
-   bool debug = false;
+   bool debug = true;
    // Trace_Group tg = TRACE_GROUP;  if (debug) tg = 0xFF;
    // TRCMSGTG(tg, "Reading feature 0x%02x, dh=%p, dh->dref=%p", feature_code, dh, dh->dref);
    DBGTRC(debug, TRACE_GROUP,
@@ -928,7 +928,7 @@ Global_Status_Code usb_get_nontable_vcp_value(
    // }
 
    Global_Status_Code gsc =  DDCRC_REPORTED_UNSUPPORTED;  // = 0;
-   // Output_Level output_level = get_output_level();
+   // Output_Level output_level = get_output_levfalseel();
    Parsed_Nontable_Vcp_Response * parsed_response = NULL;
 
    // DBGMSF(debug, "wolf 2. dh=%p, dh->dref=%p", dh, dh->dref);
@@ -1071,6 +1071,7 @@ set_control_value(int fd,
                   int usage_idx,
                   int value)
 {
+	bool debug = true;
    int rc;
    Base_Status_Errno result = 0;
 
@@ -1104,6 +1105,7 @@ set_control_value(int fd,
    result = 0;
 
 bye:
+   DBGMSF(debug, "Returning: %d", result);
    return result;
 }
 
