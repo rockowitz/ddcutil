@@ -109,17 +109,17 @@ static int _get_i2c_busct() {
       errno = 0;
       rc = stat(namebuf, &statbuf);
       errsv = errno;
-      if (debug) {
-         if (rc == 0) {
-            DBGMSG("Found %s", namebuf);
-         }
-         else {
-            DBGMSG("stat(%s) returned %d, errno=%s", namebuf, rc, linux_errno_desc(errsv) );
-         }
+
+      if (rc == 0) {
+         DBGTRC(debug, TRACE_GROUP, "Found %s", namebuf);
+      }
+      else {
+         DBGTRC(debug, TRACE_GROUP, "stat(%s) returned %d, errno=%s",
+                                    namebuf, rc, linux_errno_desc(errsv) );
       }
    }
    int result = busno-1;
-   DBGMSF(debug, "Returning %d", result );
+   DBGTRC(debug, TRACE_GROUP, "Returning %d", result );
    return result;
 }
 
