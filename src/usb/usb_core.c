@@ -825,6 +825,19 @@ Display_Info_List usb_get_valid_displays() {
 // *** Get and set VCP feature code values ***
 //
 
+
+/* Gets the current value of a usage, as identified by a Usb_Monitor_Vcp_Rec
+ *
+ * Arguments:
+ *    fd
+ *    vcprec  pointer to a Usb_Monitor_Vcp_Rec identifying the value to retrieve
+ *    maxval  address at which to return max value of the usage
+ *    curval  address at which to return the current value of the usage
+ *
+ * Returns:  status code
+ *
+ * Calls to this function are valid only for Feature or Input reports.
+ */
 Global_Status_Code
 usb_get_usage(int fd, Usb_Monitor_Vcp_Rec * vcprec, __s32 * maxval, __s32 * curval) {
    bool debug = false;
@@ -846,7 +859,8 @@ usb_get_usage(int fd, Usb_Monitor_Vcp_Rec * vcprec, __s32 * maxval, __s32 * curv
    rc = ioctl(fd, HIDIOCGREPORT, vcprec->rinfo);
    if (rc != 0) {
       REPORT_IOCTL_ERROR("HIDIOCGREPORT", rc);
-      printf("(%s) Unable to get Feature report %d\n", __func__, vcprec->report_id);
+      // printf("(%s) Unable to get Feature report %d\n", __func__, vcprec->report_id);
+      PROGRAM_LOGIC_ERROR("HIDIOCGREPORT returned %d for report %d", vcprec->report_id); // terminates execution
       gsc = DDCRC_REPORTED_UNSUPPORTED;   // *** TEMP **
       goto bye;
    }
@@ -1110,6 +1124,17 @@ bye:
 }
 
 
+/* Sets the value of a usage, as identified by a Usb_Monitor_Vcp_Rec
+ *
+ * Arguments:
+ *    fd
+ *    vcprec     pointer to a Usb_Monitor_Vcp_Rec identifying the usage to set
+ *    new_value  new value
+ *
+ * Returns:  status code
+ *
+ * Calls to this function are valid only for Feature or Output reports.
+ */
 Global_Status_Code
 usb_set_usage(int fd, Usb_Monitor_Vcp_Rec * vcprec, __s32 new_value) {
    bool debug = true;
@@ -1117,9 +1142,8 @@ usb_set_usage(int fd, Usb_Monitor_Vcp_Rec * vcprec, __s32 new_value) {
    Global_Status_Code gsc = 0;
 
    assert(vcprec->rinfo->report_type == vcprec->report_type);
-   // assert(vcprec->rinfo->report_type == HID_REPORT_TYPE_FEATURE);  // *** disabled for CG19 ***
    assert(vcprec->report_type == HID_REPORT_TYPE_FEATURE ||
-          vcprec->report_type == HID_REPORT_TYPE_OUTPUT);
+          vcprec->report_type == HID_REPORT_TYPE_OUTPUT);    // CG19
    assert(vcprec->rinfo->report_id   == vcprec->report_id);
 
    DBGMSF(debug, "report_type=%d (%s), report_id=%d, field_index=%d, usage_index=%d, new_value=%d",
