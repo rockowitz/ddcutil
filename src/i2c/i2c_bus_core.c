@@ -98,6 +98,13 @@ bool i2c_bus_exists(int busno) {
    struct stat statbuf;
    int  rc = 0;
 
+#ifdef MOCK_DATA
+   if (busno == 0 || busno == 3) {
+      DBGMSG("Inserting mock data.  Returning false for bus %d", busno);
+      return false;
+   }
+#endif
+
    sprintf(namebuf, "/dev/i2c-%d", busno);
    errno = 0;
    rc = stat(namebuf, &statbuf);
@@ -413,6 +420,29 @@ Bus_Info * i2c_check_bus(Bus_Info * bus_info) {
    return bus_info;
 }
 
+
+Bus_Info * i2c_get_bus_info_by_index(int busndx) {
+   assert(busndx >= 0);
+   // bool debug = adjust_debug_level(false, bus_core_trace_level);
+   bool debug = false;
+   DBGMSF(debug, "Starting.  busndx=%d", busndx );
+
+   Bus_Info * bus_info = NULL;
+
+   /* int busct = */  i2c_get_busct();   // forces initialization of Bus_Info data structs if necessary
+   bus_info = (Bus_Info *) _bus_infos + busndx;
+   // report_businfo(busInfo);
+   if (debug) {
+      DBGMSG("flags=0x%02x", bus_info->flags);
+      DBGMSG("flags & I2C_BUS_PROBED = 0x%02x", (bus_info->flags & I2C_BUS_PROBED) );
+   }
+   if (!(bus_info->flags & I2C_BUS_PROBED)) {
+      // DBGMSG("Calling check_i2c_bus()");
+      i2c_check_bus(bus_info);
+   }
+   DBGMSF(debug, "busndx=%d, returning %p", busndx, bus_info );
+   return bus_info;
+}
 
 
 
@@ -814,9 +844,9 @@ Display_Info_List i2c_get_valid_displays() {
    Display_Info info_recs[256];
    int busct = i2c_get_busct();
    int cur_display = 0;
-   int busno = 0;
-   for (busno=0; busno < busct; busno++) {
-      Bus_Info * businfo = i2c_get_bus_info(busno);
+   int busndx = 0;
+   for (busndx=0; busndx < busct; busndx++) {
+      Bus_Info * businfo = i2c_get_bus_info_by_index(busndx);
       if ( (businfo->flags & I2C_BUS_ADDR_0X50) ) {
          Display_Info * pcur = &info_recs[cur_display];
          pcur->dref = create_bus_display_ref(businfo->busno);
