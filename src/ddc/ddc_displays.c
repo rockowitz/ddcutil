@@ -482,7 +482,7 @@ ddc_report_active_display(Display_Info * curinfo, int depth) {
                      0xc9,         // firmware version
                      &code_info);
 #endif
-         gsc = get_vcp_value(dh, 0xc8, NON_TABLE_VCP_VALUE, &valrec);  // new way
+         gsc = get_vcp_value(dh, 0xc9, NON_TABLE_VCP_VALUE, &valrec);  // new way
          if (gsc != 0) {
             if (gsc != DDCRC_REPORTED_UNSUPPORTED)
                DBGMSG("get_nontable_vcp_value(0xc9) returned %s", gsc_desc(gsc));
