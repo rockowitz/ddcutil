@@ -262,7 +262,15 @@ bool force_hiddev_monitor(int fd) {
 
    struct vid_pid exceptions[] = {
          {0x0424, 0x3328},     // Std Micrososystems USB HID I2C - HP LP2480
-         {0x056d, 0x0002},    // Eizo
+         {0x056d, 0x0002},    // Eizo,      HID Monitor Controls
+
+         // additional values from usb.ids
+         {0x0419, 0x8002},    // Samsung,   Syncmaster HID Monitor Control
+         {0x0452, 0x0021},    // Misubishi, HID Monitor Controls
+         {0x04a6, 0x0181},    // Nokia,     HID Monitor Controls
+         {0x04ca, 0x1766},    // Lite-on,   HID Monitor Controls
+
+
    };
    const int vid_pid_ct = sizeof(exceptions)/sizeof(struct vid_pid);
 
