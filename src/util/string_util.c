@@ -713,28 +713,32 @@ char * hexstring2(const unsigned char * bytes, int len, const char * sep, bool u
 
 
 /* Dump a region of memory as hex characters and their ASCII values.
+ * The output is indented by the specified number of spaces.
  *
  * Arguments:
+ *    fh       where to write output
  *    data     start of region to show
  *    size     length of region
- *    fh       where to write output
+ *    indents  number of spaces to indent the output
  *
  * Returns:
  *    nothing
  */
-void fhex_dump(FILE * fh, unsigned char *data, int size)
+void fhex_dump_indented(FILE * fh, unsigned char *data, int size, int indents)
 {
    int i; // index in data...
    int j; // index in line...
    char temp[8];
    char buffer[128];
    char *ascii;
+   char indentation[100];
+   snprintf(indentation, 100, "%*s", indents, "");
 
    memset(buffer, 0, 128);
 
    // printf("\n");
    // Printing the ruler...
-   fprintf(fh, "        +0          +4          +8          +c            0   4   8   c   \n");
+   fprintf(fh, "%s        +0          +4          +8          +c            0   4   8   c   \n", indentation);
    ascii = buffer + 58;
    memset(buffer, ' ', 58 + 16);
    buffer[58 + 16] = '\n';
@@ -746,7 +750,7 @@ void fhex_dump(FILE * fh, unsigned char *data, int size)
    buffer[4] = '0';
    for (i = 0, j = 0; i < size; i++, j++) {
       if (j == 16) {
-         fprintf(fh, "%s", buffer);
+         fprintf(fh, "%s%s", indentation, buffer);
          memset(buffer, ' ', 58 + 16);
          sprintf(temp, "+%04x", i);
          memcpy(buffer, temp, 5);
@@ -762,9 +766,24 @@ void fhex_dump(FILE * fh, unsigned char *data, int size)
    }
 
    if (j != 0)
-      fprintf(fh, "%s", buffer);
+      fprintf(fh, "%s%s", indentation, buffer);
 }
 
+
+/* Dump a region of memory as hex characters and their ASCII values.
+ *
+ * Arguments:
+ *    data     start of region to show
+ *    size     length of region
+ *    fh       where to write output
+ *
+ * Returns:
+ *    nothing
+ */
+void fhex_dump(FILE * fh, unsigned char *data, int size)
+{
+   fhex_dump_indented(fh, data, size, 0);
+}
 
 
 /* Dump a region of memory as hex characters and their ASCII values.

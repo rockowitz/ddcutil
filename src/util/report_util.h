@@ -89,6 +89,8 @@ void rpt_ifval2(char * name,
 
 void rpt_bool(char * name, char * info, bool val, int depth);
 
+void rpt_hex_dump(unsigned char * data, int size, int depth);
+
 int rpt_indent(int depth);
 
 #endif /* REPORT_UTIL_H_ */

@@ -386,3 +386,7 @@ void rpt_bool(char * name, char * info, bool val, int depth) {
    rpt_str(name, info, valName, depth);
 }
 
+
+void rpt_hex_dump(unsigned char * data, int size, int depth) {
+   fhex_dump_indented(rpt_cur_output_dest(), data, size, rpt_indent(depth));
+}
