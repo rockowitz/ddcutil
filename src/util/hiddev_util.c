@@ -563,7 +563,7 @@ bye:
 
 // Describes a field within a report
 
-struct usb_field_locator {
+struct hid_field_locator {
    // struct hiddev_report_info * rinfo;         // simplify by eliminating?
    struct hiddev_field_info  * finfo;         // simplify by eliminating?
    __u32                       report_type;
@@ -572,17 +572,27 @@ struct usb_field_locator {
 };
 
 
-void report_usb_field_locator(struct usb_field_locator * ploc, int depth) {
+void free_hid_field_locator(struct hid_field_locator * location) {
+   if (location) {
+      // if (location->rinfo)
+      //    free(location->rinfo);
+      if (location->finfo)
+         free(location->finfo);
+      free(location);
+   }
+}
+
+
+void report_hid_field_locator(struct hid_field_locator * ploc, int depth) {
    int d1 = depth+1;
 
-   rpt_structure_loc("struct usb_field_locator", ploc, depth);
+   rpt_structure_loc("struct hid_field_locator", ploc, depth);
    if (ploc) {
       rpt_vstring(d1, "%-20s %u", "report_type:",  ploc->report_type );
       rpt_vstring(d1, "%-20s %u", "report_id:",  ploc->report_id );
       rpt_vstring(d1, "%-20s %u", "field_index:",  ploc->field_index);
       // report_hiddev_report_info(ploc->rinfo, d1);
       report_hiddev_field_info(ploc->finfo, d1);
-
    }
 }
 
@@ -691,11 +701,11 @@ bye:
  *
  * Returns:            record identifying the report and field
  */
-struct usb_field_locator*
+struct hid_field_locator*
 find_report(int fd, __u32 report_type, __u32 ucode, bool match_all_ucodes) {
    bool debug = true;
 
-   struct usb_field_locator * result = NULL;
+   struct hid_field_locator * result = NULL;
 
    struct hiddev_report_info rinfo = {
       .report_type = report_type,
@@ -732,7 +742,7 @@ find_report(int fd, __u32 report_type, __u32 ucode, bool match_all_ucodes) {
      }  // loop over reports
 
      if (report_id_found >= 0) {
-        result = calloc(1, sizeof(struct usb_field_locator));
+        result = calloc(1, sizeof(struct hid_field_locator));
         // result->rinfo = calloc(1, sizeof(struct hiddev_report_info));
         // memcpy(result->rinfo, &rinfo, sizeof(struct hiddev_report_info));
         result->finfo = finfo_found;   // returned by is_field_edid()
@@ -753,21 +763,9 @@ find_report(int fd, __u32 report_type, __u32 ucode, bool match_all_ucodes) {
      if (debug) {
         printf("(%s) Returning: %p\n", __func__, result);
         if (result)
-           report_usb_field_locator(result, 1);
+           report_hid_field_locator(result, 1);
      }
     return result;
-}
-
-
-
-void free_edid_location(struct usb_field_locator * location) {
-   if (location) {
-      // if (location->rinfo)
-      //    free(location->rinfo);
-      if (location->finfo)
-         free(location->finfo);
-      free(location);
-   }
 }
 
 
@@ -783,7 +781,7 @@ void free_edid_location(struct usb_field_locator * location) {
  *
  * It is the responsibility of the caller to free the returned struct.
  */
-struct usb_field_locator *
+struct hid_field_locator *
 locate_edid_report(int fd) {
    bool debug = true;
 
@@ -819,9 +817,9 @@ locate_edid_report(int fd) {
       rinfo.report_id |= HID_REPORT_ID_NEXT;
     }  // loop over reports
 
-    struct usb_field_locator * result = NULL;
+    struct hid_field_locator * result = NULL;
     if (report_id_found >= 0) {
-       result = calloc(1, sizeof(struct usb_field_locator));
+       result = calloc(1, sizeof(struct hid_field_locator));
        // result->rinfo = calloc(1, sizeof(struct hiddev_report_info));
        // memcpy(result->rinfo, &rinfo, sizeof(struct hiddev_report_info));
        result->finfo = finfo_found;   // returned by is_field_edid()
@@ -842,7 +840,7 @@ locate_edid_report(int fd) {
     if (debug) {
        printf("(%s) Returning: %p\n", __func__, result);
        if (result)
-          report_usb_field_locator(result, 1);
+          report_hid_field_locator(result, 1);
     }
    return result;
 }
@@ -860,7 +858,7 @@ locate_edid_report(int fd) {
  *
  * It is the responsibility of the caller to free the returned buffer.
  */
-Buffer * get_hiddev_edid_by_location(int fd, struct usb_field_locator * loc) {
+Buffer * get_hiddev_edid_by_location(int fd, struct hid_field_locator * loc) {
    assert(loc);
    bool debug = true;
    if (debug) {
@@ -868,7 +866,7 @@ Buffer * get_hiddev_edid_by_location(int fd, struct usb_field_locator * loc) {
              __func__, loc, loc->report_id, loc->field_index);
       // report_hiddev_report_info(loc->rinfo, 1);
       // report_hiddev_field_info(loc->finfo, 1);
-      report_usb_field_locator(loc, 1);
+      report_hid_field_locator(loc, 1);
    }
 
    int rc;
@@ -955,7 +953,7 @@ bye:
 }
 
 
-struct usb_field_locator * find_eizo_model_sn_report(int fd) {
+struct hid_field_locator * find_eizo_model_sn_report(int fd) {
    // struct hiddev_report_info * rinfo = calloc(1,sizeof(struct hiddev_report_info));
 
    // find report
@@ -966,7 +964,7 @@ struct usb_field_locator * find_eizo_model_sn_report(int fd) {
 
 
    bool debug = true;
-   struct usb_field_locator * loc = NULL;
+   struct hid_field_locator * loc = NULL;
    struct hiddev_devinfo dev_info;
 
    int rc = ioctl(fd, HIDIOCGDEVINFO, &dev_info);
@@ -981,7 +979,7 @@ struct usb_field_locator * find_eizo_model_sn_report(int fd) {
 bye:
    DBGMSF(debug, "Returning: %p", loc);
    if (loc)
-	   report_usb_field_locator(loc,2);
+	   report_hid_field_locator(loc,2);
    return loc;
 }
 
@@ -1007,7 +1005,7 @@ void report_model_sn_pair(struct model_sn_pair * p, int depth) {
 }
 
 
-Buffer * get_multibyte_report_value(int fd, struct usb_field_locator * loc) {
+Buffer * get_multibyte_report_value(int fd, struct hid_field_locator * loc) {
    bool debug = true;
    Buffer * result = NULL;
 
@@ -1081,7 +1079,7 @@ struct model_sn_pair *  get_eizo_model_sn_by_report(int fd) {
    struct model_sn_pair* result = NULL;
 
    if (is_eizo_monitor(fd)) {
-      struct usb_field_locator * loc = find_eizo_model_sn_report(fd);
+      struct hid_field_locator * loc = find_eizo_model_sn_report(fd);
       DBGMSF(debug, "find_eizo_model_sn_report() returned: %p", loc);
       if (loc) {
          // get report
@@ -1128,7 +1126,7 @@ Buffer * get_hiddev_edid(int fd)  {
    bool debug = true;
    DBGMSF(debug, "Starting");
    Buffer * result = NULL;
-   struct usb_field_locator * loc = locate_edid_report(fd);
+   struct hid_field_locator * loc = locate_edid_report(fd);
    if (loc) {
       result = get_hiddev_edid_by_location(fd, loc);
    }
