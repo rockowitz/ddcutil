@@ -68,23 +68,51 @@ static Bus_Info_Array *  _bus_infos;   // pointer to array of Bus_Info
 
 // Data structure allocation
 
+#ifdef OLD
 /* Returns the Bus_Info structure for a bus.
  *
- * Arguments:  busno   bus number (must be valid)
+ * Arguments:  busndx   index into _bus_infos array
  *
  * Returns:    Bus_Info structure for the bus
  */
-static Bus_Info * _get_allocated_Bus_Info(int busno) {
-   bool debug = false;
-   DBGMSF(debug, "busno=%d, _busct=%d", busno, _busct );
-   assert(_bus_infos != NULL && _busct >= 0);   // Check initialized
-   assert(busno >= 0 && busno < _busct);
+static Bus_Info * _get_allocated_bus_info(int busndx) {
+   bool debug = true;
+   DBGMSF(debug, "busndx=%d, _busct=%d", busndx, _busct );
+   // assert(_bus_infos != NULL && _busct >= 0);   // Check initialized
+   assert(busndx >= 0 && busndx < _busct);
 
    Bus_Info_Array * bia = _bus_infos;
-   Bus_Info * bus_info  = (void *)bia + busno*sizeof(Bus_Info);
+   Bus_Info * bus_info  = (void *)bia + busndx*sizeof(Bus_Info);
 
    DBGMSF(debug, "Returning %p", bus_info );
    return bus_info;
+}
+#endif
+
+
+bool i2c_bus_exists(int busno) {
+   bool result = false;
+   bool debug = false;
+   int  errsv;
+   char namebuf[20];
+   struct stat statbuf;
+   int  rc = 0;
+
+   sprintf(namebuf, "/dev/i2c-%d", busno);
+   errno = 0;
+   rc = stat(namebuf, &statbuf);
+   errsv = errno;
+   if (rc == 0) {
+      DBGTRC(debug, TRACE_GROUP, "Found %s", namebuf);
+      result = true;
+    }
+    else {
+        DBGTRC(debug, TRACE_GROUP, "stat(%s) returned %d, errno=%s",
+                                   namebuf, rc, linux_errno_desc(errsv) );
+    }
+
+    DBGTRC(debug, TRACE_GROUP, "busno=%d, returning %s", busno, bool_repr(result) );
+   return result;
 }
 
 
@@ -92,38 +120,20 @@ static Bus_Info * _get_allocated_Bus_Info(int busno) {
  * devices named /dev/i2c-n.
  *
  * Note that no attempt is made to open the devices.
- *
- * Note also the assumption that all buses are numbered
- * consecutively starting from 0.
  */
 static int _get_i2c_busct() {
    bool debug = false;
-   int  errsv;
-   int  busno = 0;
-   char namebuf[20];
-   struct stat statbuf;
-   int  rc = 0;
+   int  busct = 0;
 
-   for (busno=0; busno < I2C_BUS_MAX && rc==0; busno++) {
-      sprintf(namebuf, "/dev/i2c-%d", busno);
-      errno = 0;
-      rc = stat(namebuf, &statbuf);
-      errsv = errno;
-
-      if (rc == 0) {
-         DBGTRC(debug, TRACE_GROUP, "Found %s", namebuf);
-      }
-      else {
-         DBGTRC(debug, TRACE_GROUP, "stat(%s) returned %d, errno=%s",
-                                    namebuf, rc, linux_errno_desc(errsv) );
-      }
+   for (int busno=0; busno < I2C_BUS_MAX; busno++) {
+      if (i2c_bus_exists(busno))
+         busct++;
    }
-   int result = busno-1;
-   DBGTRC(debug, TRACE_GROUP, "Returning %d", result );
-   return result;
+   DBGTRC(debug, TRACE_GROUP, "Returning %d", busct );
+   return busct;
 }
 
-
+#ifdef OLD
 /* Allocates an array of Bus_Info and initializes each entry
  *
  * Arguments:
@@ -141,19 +151,19 @@ static Bus_Info_Array * _allocate_Bus_Info_Array(int ct) {
    Bus_Info_Array * bia = (Bus_Info_Array*) calloc(ct, sizeof(Bus_Info));
    if (debug) DBGMSG("&bia=%p, bia=%p ", &bia, bia);
    _bus_infos = bia;
-   int busno = 0;
-   for (; busno < ct; busno++) {
-      Bus_Info * bus_info = _get_allocated_Bus_Info(busno);
+   int busndx = 0;
+   for (; busndx < ct; busndx++) {
+      Bus_Info * bus_info = _get_allocated_Bus_Info(busndx);
       // if (debug) DBGMSG("Putting marker in Bus_Info at %p", bus_info );
       memcpy(bus_info->marker, "BINF", 4);
-      bus_info->busno = busno;
       // I2C_BUS_PRESENT currently always set.  Might not be set if it turns out that
       // I2C bus numbers can be non-consecutive, and the same Bus_Info_Array is used
-      bus_info->flags = I2C_BUS_EXISTS;
+      // bus_info->flags = I2C_BUS_EXISTS;
    }
    DBGMSF(debug, "Returning %p", bia);
    return bia;
 }
+#endif
 
 
 /* Determines the number of I2C buses and initializes the Bus_Info array
@@ -169,10 +179,27 @@ static Bus_Info_Array * _allocate_Bus_Info_Array(int ct) {
  *   _bus_infos = address of allocated Bus_Info array
  */
 static void _init_bus_infos_and_busct() {
-   // DBGMSG("Starting" );
+   bool debug = false;
+   DBGMSF(debug, "Starting" );
    assert( _busct < 0 && _bus_infos == NULL);  // check not yet initialized
    _busct = _get_i2c_busct();
-   _allocate_Bus_Info_Array(_busct);
+   _bus_infos = (Bus_Info_Array*) calloc(_busct, sizeof(Bus_Info));
+   DBGMSF(debug, "_bus_infos=%p, _busct=%d", _bus_infos, _busct);
+
+   int busndx = 0;
+   int busno = 0;
+
+   for (busno=0; busno < I2C_BUS_MAX; busno++) {
+      if (i2c_bus_exists(busno)) {
+         // Bus_Info * bus_info = _get_allocated_bus_info(busndx);
+         Bus_Info * bus_info = (Bus_Info *) _bus_infos + busndx;
+         DBGMSF(debug, "Initializing Bus_Info at %p, busno=%d, busndx=%d", bus_info, busno, busndx);
+         memcpy(bus_info->marker, "BINF", 4);
+         bus_info->busno = busno;
+         bus_info->flags = I2C_BUS_EXISTS;
+         busndx++;
+      }
+   }
    // DBGMSG("Done" );
 }
 
@@ -387,6 +414,8 @@ Bus_Info * i2c_check_bus(Bus_Info * bus_info) {
 }
 
 
+
+
 /* Retrieves bus information by I2C bus number.
  *
  * If the bus information does not already exist in the Bus_Info struct for the
@@ -408,19 +437,24 @@ Bus_Info * i2c_get_bus_info(int busno) {
    Bus_Info * bus_info = NULL;
 
    int busct = i2c_get_busct();   // forces initialization of Bus_Info data structs if necessary
-   if (busno < busct) {
-      bus_info = _get_allocated_Bus_Info(busno);
-      // report_businfo(busInfo);
-      if (debug) {
-         DBGMSG("flags=0x%02x", bus_info->flags);
-         DBGMSG("flags & I2C_BUS_PROBED = 0x%02x", (bus_info->flags & I2C_BUS_PROBED) );
-      }
-      if (!(bus_info->flags & I2C_BUS_PROBED)) {
-         // DBGMSG("Calling check_i2c_bus()");
-         i2c_check_bus(bus_info);
+   int busndx = 0;
+   for (busndx=0; busndx < busct; busndx++) {
+      // bus_info = _get_allocated_bus_info(busndx);
+      bus_info = (Bus_Info *) _bus_infos + busndx;
+      if (busno == bus_info->busno) {
+         // report_businfo(busInfo);
+         if (debug) {
+            DBGMSG("flags=0x%02x", bus_info->flags);
+            DBGMSG("flags & I2C_BUS_PROBED = 0x%02x", (bus_info->flags & I2C_BUS_PROBED) );
+         }
+         if (!(bus_info->flags & I2C_BUS_PROBED)) {
+            // DBGMSG("Calling check_i2c_bus()");
+            i2c_check_bus(bus_info);
+         }
+         break;
       }
    }
-   DBGMSF(debug, "Returning %p", bus_info );
+   DBGMSF(debug, "busno=%d, returning %p", busno, bus_info );
    return bus_info;
 }
 
@@ -440,8 +474,14 @@ Bus_Info * i2c_find_bus_info_by_model_sn(const char * model, const char * sn) {
    // DBGMSG("Starting. mode=%s, sn=%s", model, sn );
    Bus_Info * result = NULL;
    int busct = i2c_get_busct();
-   int busno;
-   for (busno=0; busno<busct; busno++) {
+   int busndx;
+   Bus_Info * bus_info;
+   for (busndx=0; busndx<busct; busndx++) {
+      // TODO: SIMPLIFY
+      // bus_info = _get_allocated_bus_info(busndx);
+
+      bus_info = (Bus_Info *) _bus_infos + busndx;
+      int busno =bus_info->busno;
       Bus_Info * curinfo = i2c_get_bus_info(busno);  // ensures probed
       // report_businfo(curinfo);
       // Edid * pEdid = curinfo->edid;
@@ -472,8 +512,14 @@ Bus_Info * i2c_find_bus_info_by_edid(const Byte * pEdidBytes) {
    // DBGMSG("Starting. mode=%s, sn=%s", model, sn );
   Bus_Info * result = NULL;
   int busct = i2c_get_busct();
-  int busno;
-  for (busno=0; busno<busct; busno++) {
+  int busndx;
+  Bus_Info * bus_info;
+  for (busndx=0; busndx<busct; busndx++) {
+     // TODO: SIMPLIFY
+     // bus_info = _get_allocated_bus_info(busndx);
+     bus_info = (Bus_Info *) _bus_infos + busndx;
+     int busno =bus_info->busno;
+
      Bus_Info * curinfo = i2c_get_bus_info(busno);
      // report_businfo(curinfo);
      // Edid * pEdid = curinfo->edid;
