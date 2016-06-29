@@ -344,7 +344,7 @@ void report_parsed_edid(Parsed_Edid * edid, bool verbose, int depth) {
       rpt_vstring(d1,"EDID version:     %d.%d", edid->edid_version_major, edid->edid_version_minor);
 
       if (verbose) {
-      rpt_vstring(d1,"Hex model:        0x%04x",      edid->model_hex);
+      rpt_vstring(d1,"Product code:     0x%04x (%u)",      edid->model_hex, edid->model_hex);
       // useless, binary serial number is typically 0x00000000 or 0x01010101
       // rpt_vstring(d1,"Binary sn:        %u (0x%08x)", edid->serial_binary, edid->serial_binary);
       rpt_vstring(d1,"Extra descriptor: %s",          edid->extra_descriptor_string);
