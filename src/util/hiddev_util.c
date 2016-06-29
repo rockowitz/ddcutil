@@ -285,7 +285,6 @@ bye:
 }
 
 
-
 /* Check if an open hiddev device represents a USB compliant monitor.
  *
  * Arguments:
