@@ -323,7 +323,7 @@ void          free_parsed_edid(Parsed_Edid * parsed_edid) {
 
 
 /* Writes EDID summary to the current report output destination.
- * (normally stdout, but may be changed by rpt_push_output_desst())
+ * (normally stdout, but may be changed by rpt_push_output_dest())
  *
  * Arguments:
  *    edid       pointer to parsed edid struct
@@ -355,9 +355,10 @@ void report_parsed_edid(Parsed_Edid * edid, bool verbose, int depth) {
       }
 
       if (verbose) {
-         rpt_vstring(d1,"EDID hex dump:");
-         FILE * fh = rpt_cur_output_dest();
-         fhex_dump(fh, edid->bytes, 128);
+         rpt_vstring(depth,"EDID hex dump:");
+         // FILE * fh = rpt_cur_output_dest();
+         // fhex_dump(fh, edid->bytes, 128);
+         rpt_hex_dump(edid->bytes, 128, d1);
       }
    }
    else {
