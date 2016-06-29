@@ -238,6 +238,16 @@ struct vid_pid {
 };
 
 
+/* Check for specific USB devices that should be treated as
+ * monitors, even though the normal monitor check fails.
+ *
+ * This is a hack.
+ *
+ * Arguments:
+ *   fd       file descriptor
+ *
+ * Returns    true/false
+ */
 bool force_hiddev_monitor(int fd) {
    bool debug = true;
    bool result = false;
@@ -299,14 +309,10 @@ bool is_hiddev_monitor(int fd) {
       memset(&cinfo, 0, sizeof(cinfo));
       errno = 0;
       cinfo.index = cndx;
-      // printf("(%s) Calling HIDIOCGCOLLECTIONINFO, cndx=%d\n", __func__, cndx);
       ioctl_rc = ioctl(fd, HIDIOCGCOLLECTIONINFO, &cinfo);
-      // if (rc != 0) {
-      //    REPORT_IOCTL_ERROR("HIDIOCGCOLLECTIONINFO", rc);
-      //    continue;
-      // }
       if (ioctl_rc == -1)
          continue;
+      assert(ioctl_rc == 0);
       if (debug)
          printf("(%s) cndx=%d, cinfo.level=%d, cinfo.usage=0x%08x\n", __func__,
                 cndx, cinfo.level, cinfo.usage);
@@ -474,7 +480,7 @@ Buffer * collect_single_byte_usage_values(
  */
 struct hiddev_field_info *
 is_field_edid(int fd, struct hiddev_report_info * rinfo, int field_index) {
-   bool debug = false;
+   bool debug = true;
    if (debug)
       printf("(%s) report_type=%d, report_id=%d, field index = %d\n",
              __func__, rinfo->report_type, rinfo->report_id, field_index);
@@ -506,6 +512,8 @@ is_field_edid(int fd, struct hiddev_report_info * rinfo, int field_index) {
    if (finfo.maxusage < 128)
       goto bye;
 
+   bool all_usages_edid = ( get_identical_ucode(fd, &finfo, field_index) == 0x00800002 );
+#ifdef OLD
    bool all_usages_edid = true;
    int undx;
    for (undx = 0; undx < finfo.maxusage && all_usages_edid; undx++) {
@@ -529,6 +537,7 @@ is_field_edid(int fd, struct hiddev_report_info * rinfo, int field_index) {
             all_usages_edid = false;
       }
    }   // loop over usages
+#endif
    if (all_usages_edid) {
       result = malloc(sizeof(struct hiddev_field_info));
       memcpy(result, &finfo, sizeof(struct hiddev_field_info));
@@ -554,7 +563,7 @@ bye:
 
 // Describes report and field within the report that represent the EDID
 
-struct report_and_field {
+struct usb_report_and_field {
    struct hiddev_report_info * rinfo;         // simplify by eliminating?
    struct hiddev_field_info  * finfo;         // simplify by eliminating?
    __u32                       report_type;
@@ -563,10 +572,10 @@ struct report_and_field {
 };
 
 
-void report_report_and_field(struct report_and_field * ploc, int depth) {
+void report_usb_report_and_field(struct usb_report_and_field * ploc, int depth) {
    int d1 = depth+1;
 
-   rpt_structure_loc("struct report_and_field", ploc, depth);
+   rpt_structure_loc("struct usb_report_and_field", ploc, depth);
    if (ploc) {
       rpt_vstring(d1, "%-20s %u", "report_type:",  ploc->report_type );
       rpt_vstring(d1, "%-20s %u", "report_id:",  ploc->report_id );
@@ -578,8 +587,18 @@ void report_report_and_field(struct report_and_field * ploc, int depth) {
 }
 
 
-
-
+/* Test if all, or at least 1, usage codes of a field match a specified usage code.
+ *
+ * Arguments:
+ *   fd
+ *   report_type
+ *   report_id
+ *   field_index
+ *   ucode              usage code to test against
+ *   require_all_match  if true, all usages must be the specified value
+ *
+ * Returns:    field information if true, NULL if false
+ */
 struct hiddev_field_info *
 test_field_ucode(
    int    fd,
@@ -660,12 +679,23 @@ bye:
 }
 
 
-
-struct report_and_field*
+/* Look through all reports of a given type (HID_REPORT_TYPE_FEATURE, etc) to
+ * find one having a field with a given usage code.
+ *
+ * Arguments:
+ *   fd
+ *   report_type       HID_REPORT_TYPE_INPUT, HID_REPORT_TYPE_OUTPUT, or HID_REPORT_TYPE_FEATURE
+ *   ucode             usage code
+ *   match_all_ucodes  if true, all usages must match ucode
+ *                     if false, at least one usage must match ucode
+ *
+ * Returns:            record identifying the report and field
+ */
+struct usb_report_and_field*
 find_report(int fd, __u32 report_type, __u32 ucode, bool match_all_ucodes) {
    bool debug = true;
 
-   struct report_and_field * result = NULL;
+   struct usb_report_and_field * result = NULL;
 
    struct hiddev_report_info rinfo = {
       .report_type = report_type,
@@ -702,7 +732,7 @@ find_report(int fd, __u32 report_type, __u32 ucode, bool match_all_ucodes) {
      }  // loop over reports
 
      if (report_id_found >= 0) {
-        result = calloc(1, sizeof(struct report_and_field));
+        result = calloc(1, sizeof(struct usb_report_and_field));
         result->rinfo = calloc(1, sizeof(struct hiddev_report_info));
         memcpy(result->rinfo, &rinfo, sizeof(struct hiddev_report_info));
         result->finfo = finfo_found;   // returned by is_field_edid()
@@ -723,14 +753,14 @@ find_report(int fd, __u32 report_type, __u32 ucode, bool match_all_ucodes) {
      if (debug) {
         printf("(%s) Returning: %p\n", __func__, result);
         if (result)
-           report_report_and_field(result, 1);
+           report_usb_report_and_field(result, 1);
      }
     return result;
 }
 
 
 
-void free_edid_location(struct report_and_field * location) {
+void free_edid_location(struct usb_report_and_field * location) {
    if (location) {
       if (location->rinfo)
          free(location->rinfo);
@@ -753,7 +783,7 @@ void free_edid_location(struct report_and_field * location) {
  *
  * It is the responsibility of the caller to free the returned struct.
  */
-struct report_and_field *
+struct usb_report_and_field *
 locate_edid_report(int fd) {
    bool debug = true;
 
@@ -789,9 +819,9 @@ locate_edid_report(int fd) {
       rinfo.report_id |= HID_REPORT_ID_NEXT;
     }  // loop over reports
 
-    struct report_and_field * result = NULL;
+    struct usb_report_and_field * result = NULL;
     if (report_id_found >= 0) {
-       result = calloc(1, sizeof(struct report_and_field));
+       result = calloc(1, sizeof(struct usb_report_and_field));
        result->rinfo = calloc(1, sizeof(struct hiddev_report_info));
        memcpy(result->rinfo, &rinfo, sizeof(struct hiddev_report_info));
        result->finfo = finfo_found;   // returned by is_field_edid()
@@ -812,7 +842,7 @@ locate_edid_report(int fd) {
     if (debug) {
        printf("(%s) Returning: %p\n", __func__, result);
        if (result)
-          report_report_and_field(result, 1);
+          report_usb_report_and_field(result, 1);
     }
    return result;
 }
@@ -830,7 +860,7 @@ locate_edid_report(int fd) {
  *
  * It is the responsibility of the caller to free the returned buffer.
  */
-Buffer * get_hiddev_edid_by_location(int fd, struct report_and_field * loc) {
+Buffer * get_hiddev_edid_by_location(int fd, struct usb_report_and_field * loc) {
    assert(loc);
    bool debug = true;
    if (debug) {
@@ -838,7 +868,7 @@ Buffer * get_hiddev_edid_by_location(int fd, struct report_and_field * loc) {
              __func__, loc, loc->report_id, loc->field_index);
       // report_hiddev_report_info(loc->rinfo, 1);
       // report_hiddev_field_info(loc->finfo, 1);
-      report_report_and_field(loc, 1);
+      report_usb_report_and_field(loc, 1);
    }
 
    int rc;
@@ -924,7 +954,7 @@ bye:
 }
 
 
-struct report_and_field * find_eizo_model_sn_report(int fd) {
+struct usb_report_and_field * find_eizo_model_sn_report(int fd) {
    // struct hiddev_report_info * rinfo = calloc(1,sizeof(struct hiddev_report_info));
 
    // find report
@@ -935,7 +965,7 @@ struct report_and_field * find_eizo_model_sn_report(int fd) {
 
 
    bool debug = true;
-   struct report_and_field * loc = NULL;
+   struct usb_report_and_field * loc = NULL;
    struct hiddev_devinfo dev_info;
 
    int rc = ioctl(fd, HIDIOCGDEVINFO, &dev_info);
@@ -950,17 +980,17 @@ struct report_and_field * find_eizo_model_sn_report(int fd) {
 bye:
    DBGMSF(debug, "Returning: %p", loc);
    if (loc)
-	   report_report_and_field(loc,2);
+	   report_usb_report_and_field(loc,2);
    return loc;
 }
 
 
-struct eizo_model_sn {
+struct model_sn_pair {
    char * model;
    char * sn;
 };
 
-void free_eizo_model_sn(struct eizo_model_sn * p) {
+void free_model_sn_pair(struct model_sn_pair * p) {
    if (p) {
       free(p->model);
       free(p->sn);
@@ -968,15 +998,15 @@ void free_eizo_model_sn(struct eizo_model_sn * p) {
    }
 }
 
-void report_eizo_model_sn(struct eizo_model_sn * p, int depth) {
+void report_model_sn_pair(struct model_sn_pair * p, int depth) {
    int d1 = depth+1;
-   rpt_structure_loc("struct eizo_model_sn",p, depth);
+   rpt_structure_loc("struct model_sn_pair",p, depth);
    rpt_vstring(d1, "model:  %s\n", p->model);
    rpt_vstring(d1, "sn:     %s\n", p->sn);
 }
 
 
-Buffer * get_multibyte_report_value(int fd, struct report_and_field * loc) {
+Buffer * get_multibyte_report_value(int fd, struct usb_report_and_field * loc) {
    bool debug = true;
    Buffer * result = NULL;
 
@@ -1040,19 +1070,19 @@ bye:
 }
 
 
-struct eizo_model_sn *  get_eizo_model_sn_by_report(int fd) {
+struct model_sn_pair *  get_eizo_model_sn_by_report(int fd) {
    bool debug = true;
-   struct eizo_model_sn* result = NULL;
+   struct model_sn_pair* result = NULL;
 
    if (is_eizo_monitor(fd)) {
-      struct report_and_field * loc = find_eizo_model_sn_report(fd);
+      struct usb_report_and_field * loc = find_eizo_model_sn_report(fd);
       DBGMSF(debug, "find_eizo_model_sn_report() returned: %p", loc);
       if (loc) {
          // get report
          Buffer * modelsn = get_multibyte_report_value(fd, loc);
          if (modelsn) {
             assert(modelsn->len >= 16);
-            result = calloc(1, sizeof(struct eizo_model_sn));
+            result = calloc(1, sizeof(struct model_sn_pair));
             result->model = calloc(1,9);
             result->sn    = calloc(1,9);
             memcpy(result->sn, modelsn->bytes,8);
@@ -1069,7 +1099,7 @@ struct eizo_model_sn *  get_eizo_model_sn_by_report(int fd) {
    if (debug) {
       printf("(%s) Returning: %p\n", __func__, result);
       if (result)
-         report_eizo_model_sn(result, 1);
+         report_model_sn_pair(result, 1);
    }
    return result;
 
@@ -1092,7 +1122,7 @@ Buffer * get_hiddev_edid(int fd)  {
    bool debug = true;
    DBGMSF(debug, "Starting");
    Buffer * result = NULL;
-   struct report_and_field * loc = locate_edid_report(fd);
+   struct usb_report_and_field * loc = locate_edid_report(fd);
    if (loc) {
       result = get_hiddev_edid_by_location(fd, loc);
    }
@@ -1106,7 +1136,7 @@ Buffer * get_hiddev_edid(int fd)  {
       }
    }
 
-   struct eizo_model_sn * model_sn = NULL;
+   struct model_sn_pair * model_sn = NULL;
 
    if (!result) {
 
@@ -1129,7 +1159,6 @@ Buffer * get_hiddev_edid(int fd)  {
 
    // if (model_sn) {
    if (!result) {
-
       printf("(%s) *** HACK: USING X11 EDID ***\n", __func__);
 
       GPtrArray* edid_recs = get_x11_edids();
@@ -1138,30 +1167,30 @@ Buffer * get_hiddev_edid(int fd)  {
       // DBGMSG("Got %d X11_Edid_Recs\n", edid_recs->len);
 
       if (model_sn) {
-		  int ndx = 0;
-		  for (ndx=0; ndx < edid_recs->len; ndx++) {
-			 X11_Edid_Rec * prec = g_ptr_array_index(edid_recs, ndx);
-			 // printf(" Output name: %s -> %p\n", prec->output_name, prec->edid);
-			 // hex_dump(prec->edid, 128);
-			 rpt_vstring(1, "xrandr output: %s", prec->output_name);
-			 Parsed_Edid * parsed_edid = create_parsed_edid(prec->edid);
-			 if (parsed_edid) {
-				bool verbose_edid = false;
-				report_parsed_edid(parsed_edid, verbose_edid, 2 /* depth */);
-				if (streq(parsed_edid->model_name, model_sn->model) &&
-					streq(parsed_edid->serial_ascii, model_sn->sn) )
-				{
-				   printf("(%s) Found EIZO EDID from X11\n", __func__);
-				   if (!result)
-					  result = buffer_new_with_value(parsed_edid->bytes, 128, __func__);
-				}
-				free_parsed_edid(parsed_edid);
-			 }
-			 else {
-				printf(" Unparsable EDID for output name: %s -> %p\n", prec->output_name, prec->edid);
-				hex_dump(prec->edid, 128);
-			 }
-		  }
+         int ndx = 0;
+         for (ndx=0; ndx < edid_recs->len; ndx++) {
+            X11_Edid_Rec * prec = g_ptr_array_index(edid_recs, ndx);
+            // printf(" Output name: %s -> %p\n", prec->output_name, prec->edid);
+            // hex_dump(prec->edid, 128);
+            rpt_vstring(1, "xrandr output: %s", prec->output_name);
+            Parsed_Edid * parsed_edid = create_parsed_edid(prec->edid);
+            if (parsed_edid) {
+               bool verbose_edid = false;
+               report_parsed_edid(parsed_edid, verbose_edid, 2 /* depth */);
+               if (streq(parsed_edid->model_name, model_sn->model) &&
+                     streq(parsed_edid->serial_ascii, model_sn->sn) )
+               {
+                  printf("(%s) Found EIZO EDID from X11\n", __func__);
+                  if (!result)
+                     result = buffer_new_with_value(parsed_edid->bytes, 128, __func__);
+               }
+               free_parsed_edid(parsed_edid);
+            }
+            else {
+               printf(" Unparsable EDID for output name: %s -> %p\n", prec->output_name, prec->edid);
+               hex_dump(prec->edid, 128);
+            }
+         }
       }
 
       if (!result && edid_recs->len > 0) {
