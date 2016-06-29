@@ -928,7 +928,8 @@ Buffer * get_hiddev_edid_by_location(int fd, struct hid_field_locator * loc) {
 #endif
 
 
-   struct hiddev_usage_ref_multi uref_multi = {0};   // initialize all fields to make valgrind happy
+   struct hiddev_usage_ref_multi uref_multi;
+   memset(&uref_multi, 0, sizeof(uref_multi));  // initialize all fields to make valgrind happy
    uref_multi.uref.report_type = loc->report_type;
    uref_multi.uref.report_id   = loc->report_id;
    uref_multi.uref.field_index = loc->field_index;
