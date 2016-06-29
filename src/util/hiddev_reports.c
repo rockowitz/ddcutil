@@ -567,7 +567,7 @@ void report_report_descriptors_for_report_type(int fd, __u32 report_type, int de
          }
          report_hiddev_field_info(&finfo, d3);
 
-         bool usage_values_collected = false;
+         bool usage_values_reported = false;
          __u32 common_ucode = 0;
          if (finfo.maxusage > 1)
             common_ucode = get_identical_ucode(fd, &finfo, fndx);
@@ -576,6 +576,7 @@ void report_report_descriptors_for_report_type(int fd, __u32 report_type, int de
                             common_ucode, interpret_usage_code(common_ucode));
          }
 
+         // Get values for Feature or Output report
          if (finfo.report_type != HID_REPORT_TYPE_OUTPUT) {
             if (common_ucode) {
                if (finfo.flags & HID_FIELD_BUFFERED_BYTE) {
@@ -600,19 +601,19 @@ void report_report_descriptors_for_report_type(int fd, __u32 report_type, int de
                         buf[ndx] = uref_multi.values[ndx] & 0xff;
                      hex_dump(buf, finfo.maxusage);
                   }
-                  usage_values_collected = true;
+                  usage_values_reported = true;
                }
                else {
                   Buffer * buf = collect_single_byte_usage_values(fd, &finfo, fndx);
                   if (buf) {
                      printf("(%s) Values retrieved by collect_single_byte_usage_values()\n", __func__);
                      hex_dump(buf->bytes, buf->len);
-                     usage_values_collected = true;
+                     usage_values_reported = true;
                   }
                }
             } // common_ucode == true
 
-            if (!usage_values_collected) {
+            if (!usage_values_reported) {
                rpt_vstring(d3, "Usages for report_id: %d, field_index %d:",
                                finfo.report_id, fndx /*finfo.field_index */);
                for (undx = 0; undx < finfo.maxusage; undx++) {
@@ -621,7 +622,7 @@ void report_report_descriptors_for_report_type(int fd, __u32 report_type, int de
                                      finfo.report_id,
                                      fndx,
                                      undx,
-                                     (finfo.report_type != HID_REPORT_TYPE_OUTPUT),   // show_value
+                                     /*show_value=*/ true,
                                      d4);
                }  //loop over undx
             }  // common_ucode == false or !usage_values_collected
