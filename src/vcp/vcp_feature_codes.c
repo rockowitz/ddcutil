@@ -972,7 +972,7 @@ bool format_feature_detail_x73_lut_size(
  *   pointer to feature value table, NULL if not found
  */
 Feature_Value_Entry * find_feature_values(Byte feature_code, Version_Spec vcp_version) {
-   bool debug = false;
+   bool debug = true;
    if (debug)
       DBGMSG("Starting. feature_code=0x%02x", feature_code);
    Feature_Value_Entry * result = NULL;
@@ -980,6 +980,8 @@ Feature_Value_Entry * find_feature_values(Byte feature_code, Version_Spec vcp_ve
    // may not be found if called for capabilities and it's a mfg specific code
    if (pentry) {
       Version_Feature_Flags feature_flags = get_version_specific_feature_flags(pentry, vcp_version);
+      if (feature_code == 0x66)                           // *** TEMP ***
+    	  feature_flags = VCP2_RW | VCP2_SIMPLE_NC;
       assert(feature_flags);
 
       if (feature_flags & VCP2_SIMPLE_NC) {

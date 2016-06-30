@@ -263,6 +263,7 @@ bool force_hiddev_monitor(int fd) {
    struct vid_pid exceptions[] = {
          {0x0424, 0x3328},     // Std Micrososystems USB HID I2C - HP LP2480
          {0x056d, 0x0002},    // Eizo,      HID Monitor Controls
+		 {0x0409, 0x02b8},    // NEC PA241
 
          // additional values from usb.ids
          {0x0419, 0x8002},    // Samsung,   Syncmaster HID Monitor Control
@@ -1161,6 +1162,7 @@ Buffer * get_hiddev_edid(int fd)  {
             if (bus_info) {
                printf("(%s) Using EDID for /dev/i2c-%d\n", __func__, bus_info->busno);
                result = buffer_new_with_value(bus_info->edid->bytes, 128, __func__);
+               result = NULL;   // for testing
             }
             else {
                // TODO: try ADL
