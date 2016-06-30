@@ -57,6 +57,7 @@ struct {
    Byte             flags;              // I2C_BUS_ flags
 } Bus_Info;
 
+bool i2c_bus_exists(int busno);
 int  i2c_get_busct();
 void i2c_report_bus(int busno);
 int  i2c_report_buses(bool report_all, int depth);
