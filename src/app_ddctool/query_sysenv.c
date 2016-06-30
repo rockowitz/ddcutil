@@ -376,21 +376,25 @@ void check_i2c_devices(struct driver_name_node * driver_list) {
    }
    else {
       all_i2c_rw = true;
-      int busno;
+      int  busno;
       char fnbuf[20];
-      for (busno=0; busno < busct; busno++) {
-         snprintf(fnbuf, sizeof(fnbuf), "/dev/i2c-%d", busno);
-         int rc;
-         int errsv;
-         DBGMSF(debug, "Calling access() for %s", fnbuf);
-         rc = access(fnbuf, R_OK|W_OK);
-         if (rc < 0) {
-            errsv = errno;
-            printf("Device %s is not readable and writable.  Error = %s\n",
-                   fnbuf, linux_errno_desc(errsv) );
-            all_i2c_rw = false;
+
+      for (busno=0; busno < 32; busno++) {
+         if (i2c_bus_exists(busno)) {
+            snprintf(fnbuf, sizeof(fnbuf), "/dev/i2c-%d", busno);
+            int rc;
+            int errsv;
+            DBGMSF(debug, "Calling access() for %s", fnbuf);
+            rc = access(fnbuf, R_OK|W_OK);
+            if (rc < 0) {
+               errsv = errno;
+               printf("Device %s is not readable and writable.  Error = %s\n",
+                      fnbuf, linux_errno_desc(errsv) );
+               all_i2c_rw = false;
+            }
          }
       }
+
       if (!all_i2c_rw) {
          printf("WARNING: Current user (%s) does not have RW access to all /dev/i2c-* devices.\n",
  //               username);

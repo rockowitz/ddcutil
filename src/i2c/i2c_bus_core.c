@@ -110,11 +110,11 @@ bool i2c_bus_exists(int busno) {
    rc = stat(namebuf, &statbuf);
    errsv = errno;
    if (rc == 0) {
-      DBGTRC(debug, TRACE_GROUP, "Found %s", namebuf);
+      DBGMSF(debug, "Found %s", namebuf);
       result = true;
     }
     else {
-        DBGTRC(debug, TRACE_GROUP, "stat(%s) returned %d, errno=%s",
+        DBGMSF(debug,  "stat(%s) returned %d, errno=%s",
                                    namebuf, rc, linux_errno_desc(errsv) );
     }
 
