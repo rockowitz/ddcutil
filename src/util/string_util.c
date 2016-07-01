@@ -665,7 +665,7 @@ char * hexstring(unsigned char * bytes, int len) {
  * Arguments:
  *    bytes    pointer to bytes
  *    len      number of bytes
- *    sep      string to separate each 2 hex character pairs representing a byte,
+ *    sepstr   string to separate each 2 hex character pairs representing a byte,
  *             if NULL then no separators will be inserted
  *    uppercase if true, use uppercase hex characters,
  *              if false, use lower case hex characters
@@ -677,32 +677,49 @@ char * hexstring(unsigned char * bytes, int len) {
  * Returns:
  *   pointer to hex string
  *
- * If this function allocates a buffer, it is the responsiblity of the caller
+ * If this function allocates a buffer, it is the responsibility of the caller
  * to free the memory.
  */
-char * hexstring2(const unsigned char * bytes, int len, const char * sep, bool uppercase, char * buffer, int bufsz) {
+char * hexstring2(
+          const unsigned char * bytes,
+          int                   len,
+          const char *          sepstr,
+          bool                  uppercase,
+          char *                buffer,
+          int                   bufsz)
+{
+   // printf("(%s) bytes=%p, len=%d, sepstr=|%s|, uppercase=%s, buffer=%p, bufsz=%d\n", __func__,
+   //        bytes, len, sepstr, bool_repr(uppercase), buffer, bufsz);
    int sepsize = 0;
-   if (sep) {
-      sepsize = strlen(sep);
+   if (sepstr) {
+      sepsize = strlen(sepstr);
    }
    int required_size =   2*len             // hex rep of bytes
                        + (len-1)*sepsize   // for separators
                        + 1;                // terminating null
+   // special case:
+   if (len == 0)
+      required_size = 1;
+
    if (!buffer)
       bufsz = 0;
    assert (bufsz == 0 || bufsz >= required_size);
    if (bufsz == 0) {
       buffer = malloc(required_size);
+      // printf("(%s) allocate buffer at %p, length=%d\n", __func__, buffer, required_size);
    }
 
-   char * pattern = (uppercase) ? "%02X" : "%0sx";
+   char * pattern = (uppercase) ? "%02X" : "%02x";
 
    int incr1 = 2 + sepsize;
    int i;
+   if (len == 0)
+      *buffer = '\0';
    for (i=0; i < len; i++) {
+      // printf("(%s) i=%d, buffer+i*incr1=%p\n", __func__, i, buffer+i*incr1);
       sprintf(buffer+i*incr1, pattern, bytes[i]);
-      if (i < (len-1) && sep)
-         strcat(buffer, sep);
+      if (i < (len-1) && sepstr)
+         strcat(buffer, sepstr);
    }
    // printf("(%s) strlen(buffer) = %ld, required_size=%d   \n", __func__, strlen(buffer), required_size );
    // printf("(%s)  buffer=|%s|\n", __func__, buffer );

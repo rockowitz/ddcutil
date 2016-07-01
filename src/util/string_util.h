@@ -88,7 +88,7 @@ char * hexstring(Byte * bytes, int size);  // buffer returned must be freed
 char * hexstring2(
           const unsigned char * bytes,      // bytes to convert
           int                   len,        // number of bytes
-          const char *          sep,        // separator character (used how?)
+          const char *          sepstr,     // separator string between hex digits
           bool                  uppercase,  // use upper case hex characters?
           char *                buffer,     // buffer in which to return hex string
           int                   bufsz);     // buffer size
