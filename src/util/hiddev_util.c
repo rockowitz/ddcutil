@@ -308,6 +308,7 @@ bye:
 */
 bool is_hiddev_monitor(int fd) {
    bool debug = false;
+   DBGMSF(debug, "Starting");
    int monitor_collection_index = -1;
 
    int cndx = 0;   // indexes start at 0
