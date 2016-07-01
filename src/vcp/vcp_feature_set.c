@@ -58,9 +58,18 @@ create_feature_set(VCP_Feature_Subset subset_id, Version_Spec vcp_version) {
       for (; ndx < 256; ndx++) {
          Byte id = ndx;
          // DBGMSF(debug, "examining id 0x%02x", id);
-         VCP_Feature_Table_Entry* vcp_entry = vcp_find_feature_by_hexid_w_default(id);
+         VCP_Feature_Table_Entry* vcp_entry = vcp_find_feature_by_hexid(id);
          // original code looks at VCP2_READABLE, output level
-         g_ptr_array_add(fset->members, vcp_entry);
+         if (vcp_entry)
+            g_ptr_array_add(fset->members, vcp_entry);
+         else {
+            g_ptr_array_add(fset->members, vcp_create_dummy_feature_for_hexid(id));
+            if (ndx >= 0xe0 && (get_output_level() >= OL_VERBOSE) ) {
+               // for manufacturer specific features, probe as both table and non-table
+               // Only probe table if --verbose, output is confusing otherwise
+               g_ptr_array_add(fset->members, vcp_create_table_dummy_feature_for_hexid(id));
+            }
+         }
       }
    }
    else {
