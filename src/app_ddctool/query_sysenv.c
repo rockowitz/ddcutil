@@ -72,10 +72,11 @@
 #include "base/linux_errno.h"
 
 #include "i2c/i2c_bus_core.h"
-
 #include "adl/adl_shim.h"
+#include "usb/usb_core.h"
 
 #include "app_ddctool/query_sysenv.h"
+
 
 
 
@@ -953,11 +954,15 @@ void query_usb_monitors() {
       puts("");
       errno=0;
       char * curfn = g_ptr_array_index(hiddev_devices,devndx);
-      int fd = open(curfn, O_RDONLY);
-      if (fd < 1) {
-         // perror("Unable to open device");
-         printf("Unable to open %s: %s\n", curfn, strerror(errno));
+      int fd = usb_open_hiddev_device(curfn, /* bool emit_error_msg */ false);
+      if (fd < 0) {      // fd is -errno
+          printf("Unable to open %s: %s\n", curfn, strerror(errno));
       }
+      // int fd = open(curfn, O_RDONLY);
+      // if (fd < 1) {
+      //    // perror("Unable to open device");
+      //    printf("Unable to open %s: %s\n", curfn, strerror(errno));
+      // }
       else {
          char * cgname = get_hiddev_name(fd);
          struct hiddev_devinfo dev_info;
