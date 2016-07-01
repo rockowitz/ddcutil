@@ -399,7 +399,7 @@ Buffer * collect_single_byte_usage_values(
             struct hiddev_field_info *  finfo,
             __u32                       field_index)
 {
-   bool debug = true;
+   bool debug = false;
    Buffer * result = buffer_new(finfo->maxusage, __func__);
    bool ok = true;
    __s32 common_usage_code;
@@ -791,7 +791,7 @@ find_report(int fd, __u32 report_type, __u32 ucode, bool match_all_ucodes) {
  */
 struct hid_field_locator *
 locate_edid_report(int fd) {
-   bool debug = true;
+   bool debug = false;
 
    struct hiddev_report_info rinfo = {
       .report_type = HID_REPORT_TYPE_FEATURE,
@@ -868,7 +868,7 @@ locate_edid_report(int fd) {
  */
 Buffer * get_hiddev_edid_by_location(int fd, struct hid_field_locator * loc) {
    assert(loc);
-   bool debug = true;
+   bool debug = false;
    if (debug) {
       printf("(%s) Starting.  loc=%p, loc->report_id=%d, loc->field_index=%d\n",
              __func__, loc, loc->report_id, loc->field_index);
@@ -942,14 +942,10 @@ Buffer * get_hiddev_edid_by_location(int fd, struct hid_field_locator * loc) {
       REPORT_IOCTL_ERROR("HIDIOCGUSAGES", rc);
       goto bye;
    }
-
-   printf("(%s) Value retrieved by HIDIOCGUSAGES:\n", __func__);
    Byte edidbuf2[128];
    for (int ndx=0; ndx<128; ndx++)
       edidbuf2[ndx] = uref_multi.values[ndx] & 0xff;
-   // hex_dump(edidbuf2, 128);
    result = buffer_new_with_value(edidbuf2, 128, __func__);
-
 
 bye:
    if (debug) {
@@ -986,9 +982,11 @@ struct hid_field_locator * find_eizo_model_sn_report(int fd) {
    }
 
 bye:
-   DBGMSF(debug, "Returning: %p", loc);
-   if (loc)
-	   report_hid_field_locator(loc,2);
+   if (debug) {
+      printf("(%s) Returning: %p\n", __func__, loc);
+      if (loc)
+	      report_hid_field_locator(loc,2);
+   }
    return loc;
 }
 
@@ -1132,7 +1130,7 @@ struct model_sn_pair *  get_eizo_model_sn_by_report(int fd) {
  * It is the responsibility of the caller to free the returned buffer.
  */
 Buffer * get_hiddev_edid(int fd)  {
-   bool debug = true;
+   bool debug = false;
    DBGMSF(debug, "Starting");
    Buffer * result = NULL;
    struct hid_field_locator * loc = locate_edid_report(fd);

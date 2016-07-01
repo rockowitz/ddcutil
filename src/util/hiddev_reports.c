@@ -556,7 +556,7 @@ void report_report_descriptors_for_report_type(int fd, __u32 report_type, int de
          if (finfo.maxusage > 1)
             common_ucode = get_identical_ucode(fd, &finfo, fndx);
          if (common_ucode) {
-            rpt_vstring(d2, "Identical ucode for all usages: 0x%08x  %s\n",
+            rpt_vstring(d2, "Identical ucode for all usages: 0x%08x  %s",
                             common_ucode, interpret_usage_code(common_ucode));
          }
 
@@ -564,7 +564,7 @@ void report_report_descriptors_for_report_type(int fd, __u32 report_type, int de
          if (finfo.report_type != HID_REPORT_TYPE_OUTPUT) {
             if (common_ucode) {
                if (finfo.flags & HID_FIELD_BUFFERED_BYTE) {
-                  rpt_vstring(d3, "Retrieving using HIDIOCGUSAGES");
+                  rpt_vstring(d2, "Retrieving values using HIDIOCGUSAGES");
 
                   struct hiddev_usage_ref_multi uref_multi;
                   uref_multi.uref.report_type = finfo.report_type;
@@ -578,27 +578,28 @@ void report_report_descriptors_for_report_type(int fd, __u32 report_type, int de
                      REPORT_IOCTL_ERROR("HIDIOCGUSAGES", rc);
                   }
                   else {
-                     printf("(%s) Value retrieved by HIDIOCGUSAGES:\n", __func__);
+                     // printf("(%s) Value retrieved by HIDIOCGUSAGES:\n", __func__);
                      Byte * buf = calloc(1, finfo.maxusage);
 
                      for (int ndx=0; ndx<finfo.maxusage; ndx++)
                         buf[ndx] = uref_multi.values[ndx] & 0xff;
-                     hex_dump(buf, finfo.maxusage);
+                     rpt_hex_dump(buf, finfo.maxusage, d2);
                   }
                   usage_values_reported = true;
                }
                else {
                   Buffer * buf = collect_single_byte_usage_values(fd, &finfo, fndx);
                   if (buf) {
-                     printf("(%s) Values retrieved by collect_single_byte_usage_values()\n", __func__);
-                     hex_dump(buf->bytes, buf->len);
+                     // printf("(%s) Values retrieved by collect_single_byte_usage_values()\n", __func__);
+                     rpt_vstring(d2, "Retrieving values using multiple HIDIOCGUSAGE calls");
+                     rpt_hex_dump(buf->bytes, buf->len, d2);
                      usage_values_reported = true;
                   }
                }
             } // common_ucode == true
 
             if (!usage_values_reported) {
-               rpt_vstring(d3, "Usages for report_id: %d, field_index %d:",
+               rpt_vstring(d2, "Usages for report_id: %d, field_index %d:",
                                finfo.report_id, fndx /*finfo.field_index */);
                for (undx = 0; undx < finfo.maxusage; undx++) {
                   report_field_usage(fd,
