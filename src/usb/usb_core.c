@@ -605,6 +605,7 @@ int usb_open_hiddev_device(char * hiddev_devname, bool emit_error_msg) {
          f0printf(FERR, "Open failed for %s: errno=%s\n", hiddev_devname, linux_errno_desc(errsv));
       file = -errno;
    }
+   DBGMSF(debug, "open() finished, file=%d", file);
 
    if (file > 0)
    {
@@ -616,6 +617,7 @@ int usb_open_hiddev_device(char * hiddev_devname, bool emit_error_msg) {
          // printf("(%s) HIDIOCINITREPORT failed\n", __func__  );
       }
    }
+   DBGMSF(debug, "Returning %d", file);
    return file;
 }
 
