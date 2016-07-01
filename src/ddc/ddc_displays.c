@@ -197,6 +197,7 @@ void report_display_info(Display_Info * dinfo, int depth) {
  */
 Display_Info_List * ddc_get_valid_displays() {
    bool debug = false;
+   DBGMSF(debug, "Starting");
    int ndx;
 
    Display_Info_List i2c_displays = i2c_get_valid_displays();
@@ -206,6 +207,10 @@ Display_Info_List * ddc_get_valid_displays() {
    }
 
    Display_Info_List adl_displays = adlshim_get_valid_displays();
+   if (debug) {
+      DBGMSG("adl_displays returned from adlshim_get_valid_displays():");
+      report_display_info_list(&adl_displays,1);
+   }
 
    Display_Info_List usb_displays = usb_get_valid_displays();
    if (debug) {
