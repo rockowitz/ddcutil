@@ -366,8 +366,10 @@ get_formatted_value_for_feature_table_entry(
    Vcp_Value_Type feature_type = (is_table_feature) ? TABLE_VCP_VALUE : NON_TABLE_VCP_VALUE;
    Output_Level output_level = get_output_level();
    if (output_level >= OL_VERBOSE) {
-      fprintf(msg_fh, "\nGetting data for VCP code 0x%02x - %s:\n",
-                            feature_code, feature_name);
+      fprintf(msg_fh, "\nGetting data for %s VCP code 0x%02x - %s:\n",
+                            (is_table_feature) ? "table" : "non-table",
+                            feature_code,
+                            feature_name);
    }
 
    Single_Vcp_Value *    pvalrec = NULL;
