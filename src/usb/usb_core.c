@@ -613,7 +613,7 @@ int usb_open_hiddev_device(char * hiddev_devname, bool emit_error_msg) {
       int rc = ioctl(file, HIDIOCINITREPORT);
       if (rc != 0) {
          REPORT_IOCTL_ERROR("HIDIOCGREPORT", rc);
-         printf("(%s) HIDIOCINITREPORT failed\n", __func__  );
+         // printf("(%s) HIDIOCINITREPORT failed\n", __func__  );
       }
    }
    return file;
