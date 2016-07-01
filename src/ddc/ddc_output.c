@@ -98,7 +98,7 @@ check_valid_operation_by_feature_rec_and_version(
       Version_Feature_Flags     operation_flags)
 {
    Version_Feature_Flags feature_flags
-      = get_version_specific_feature_flags(frec, vcp_version);
+      = get_version_sensitive_feature_flags(frec, vcp_version);
    assert(feature_flags);
    ushort rwflags   = operation_flags & VCP2_RW;
    ushort typeflags = operation_flags & (VCP2_TABLE | VCP2_CONT | VCP2_NC);

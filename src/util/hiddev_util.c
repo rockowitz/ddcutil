@@ -261,9 +261,9 @@ bool force_hiddev_monitor(int fd) {
    }
 
    struct vid_pid exceptions[] = {
-         {0x0424, 0x3328},     // Std Micrososystems USB HID I2C - HP LP2480
+         {0x0424, 0x3328},    // Std Micrososystems USB HID I2C - HP LP2480
          {0x056d, 0x0002},    // Eizo,      HID Monitor Controls
-		 {0x0409, 0x02b8},    // NEC PA241
+         {0x0409, 0x02b8},    // NEC PA241
 
          // additional values from usb.ids
          {0x0419, 0x8002},    // Samsung,   Syncmaster HID Monitor Control
@@ -443,7 +443,7 @@ Buffer * collect_single_byte_usage_values(
        }
        if (uref.value &0xffffff00) {     // if high order bytes non-zero
           if (true)
-             printf("(%s) High order bytes of value for usage %d are non-zero", __func__, undx);
+             printf("(%s) High order bytes of value for usage %d are non-zero\n", __func__, undx);
           ok = false;
           break;
        }
@@ -488,7 +488,7 @@ Buffer * collect_single_byte_usage_values(
  */
 struct hiddev_field_info *
 is_field_edid(int fd, struct hiddev_report_info * rinfo, int field_index) {
-   bool debug = true;
+   bool debug = false;
    if (debug)
       printf("(%s) report_type=%d, report_id=%d, field index = %d\n",
              __func__, rinfo->report_type, rinfo->report_id, field_index);
@@ -1009,8 +1009,8 @@ void free_model_sn_pair(struct model_sn_pair * p) {
 void report_model_sn_pair(struct model_sn_pair * p, int depth) {
    int d1 = depth+1;
    rpt_structure_loc("struct model_sn_pair",p, depth);
-   rpt_vstring(d1, "model:  %s\n", p->model);
-   rpt_vstring(d1, "sn:     %s\n", p->sn);
+   rpt_vstring(d1, "model:  %s", p->model);
+   rpt_vstring(d1, "sn:     %s", p->sn);
 }
 
 
@@ -1162,7 +1162,7 @@ Buffer * get_hiddev_edid(int fd)  {
             if (bus_info) {
                printf("(%s) Using EDID for /dev/i2c-%d\n", __func__, bus_info->busno);
                result = buffer_new_with_value(bus_info->edid->bytes, 128, __func__);
-               result = NULL;   // for testing
+               // result = NULL;   // for testing - both i2c and X11 methods work
             }
             else {
                // TODO: try ADL

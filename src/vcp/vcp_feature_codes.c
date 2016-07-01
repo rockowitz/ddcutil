@@ -439,6 +439,42 @@ get_version_specific_feature_flags(
    if (!result)
       result = pvft_entry->v20_flags;
 
+#ifdef NO
+   // this is what get_version_sensisitve_feature_flags() is for
+   if (!result) {
+      Version_Spec version_used = {0,0};
+      result = pvft_entry->v21_flags;
+      if (result) {
+         version_used.major = 2;
+         version_used.minor = 1;
+      }
+      else {
+         result = pvft_entry->v22_flags;
+         if (result) {
+            version_used.major = 2;
+            version_used.minor = 2;
+         }
+         else {
+            result = pvft_entry->v30_flags;
+            assert(result);
+            version_used.major = 3;
+            version_used.minor = 0;
+         }
+      }
+      char buf[20];
+      if (vcp_version.major < 1)
+         strcpy(buf, "Undefined");
+      else
+         snprintf(buf, 20, "%d.%d", vcp_version.major, vcp_version.minor);
+
+      DBGTRC(true, TRACE_GROUP,
+            "Monitor version %s is less than earliest MCCS version for which VCP feature code %02x is defined.",
+            buf, pvft_entry->code);
+      DBGTRC(true, TRACE_GROUP,
+            "Using definition for MCCS version %d.%d", version_used.major, version_used.minor);
+   }
+#endif
+
    DBGMSF(debug, "Feature = 0x%02x, vcp version=%d.%d, returning 0x%02x",
           pvft_entry->code, vcp_version.major, vcp_version.minor, result);
    return result;
@@ -979,9 +1015,9 @@ Feature_Value_Entry * find_feature_values(Byte feature_code, Version_Spec vcp_ve
    VCP_Feature_Table_Entry * pentry = vcp_find_feature_by_hexid(feature_code);
    // may not be found if called for capabilities and it's a mfg specific code
    if (pentry) {
-      Version_Feature_Flags feature_flags = get_version_specific_feature_flags(pentry, vcp_version);
-      if (feature_code == 0x66)                           // *** TEMP ***
-    	  feature_flags = VCP2_RW | VCP2_SIMPLE_NC;
+      Version_Feature_Flags feature_flags = get_version_sensitive_feature_flags(pentry, vcp_version);
+      // if (feature_code == 0x66)                           // *** TEMP ***
+    	//   feature_flags = VCP2_RW | VCP2_SIMPLE_NC;
       assert(feature_flags);
 
       if (feature_flags & VCP2_SIMPLE_NC) {
@@ -2779,6 +2815,7 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
    {  .code=0x66,
       .vcp_spec_groups = VCP_SPEC_MISC,
       // not in 2.0, assume new in 2.1
+      // however, seen on NEC PA241W, which reports VCP version as 2.0
       .nontable_formatter=format_feature_detail_debug_bytes,
       .desc = "Enable/Disable ambient light sensor",
       .v21_flags = VCP2_RW | VCP2_SIMPLE_NC,
