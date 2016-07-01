@@ -43,8 +43,9 @@ typedef struct {
    char              marker[4];       // always "CAPA"
    char *            raw_value;
    char *            mccs_ver;
+   bool              raw_cmds_segment_seen;
    Byte_Value_Array  commands;        // each stored byte is command id
-   GArray *          vcp_features;    // entries are VCP_Feature_Record
+   GPtrArray *       vcp_features;    // entries are VCP_Feature_Record*
    Version_Spec      parsed_mccs_version;
 } Parsed_Capabilities;
 

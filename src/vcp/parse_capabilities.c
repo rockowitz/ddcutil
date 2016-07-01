@@ -56,13 +56,13 @@ void report_commands(Byte_Value_Array cmd_ids) {
 }
 
 
-void report_features(GArray* features, Version_Spec vcp_version) {
+void report_features(GPtrArray* features, Version_Spec vcp_version) {
    printf("VCP Features:\n");
    int ct = features->len;
    int ndx;
    for (ndx=0; ndx < ct; ndx++) {
       Capabilities_Feature_Record * vfr =
-          g_array_index(features, Capabilities_Feature_Record *, ndx);
+          g_ptr_array_index(features, ndx);
       show_capabilities_feature(vfr, vcp_version);
    }
 }
@@ -70,10 +70,12 @@ void report_features(GArray* features, Version_Spec vcp_version) {
 
 void report_parsed_capabilities(
         Parsed_Capabilities* pcaps,
-        MCCS_IO_Mode io_mode)       // needed for proper error message
+        MCCS_IO_Mode io_mode)       // needed for proper error message  -- NO LONGER NEEDED
 {
+   bool debug = false;
    assert(pcaps && memcmp(pcaps->marker, PARSED_CAPABILITIES_MARKER, 4) == 0);
-   // DBGMSG("Starting. pcaps->commands=%p, pcaps->vcp_features=%p", pcaps->commands, pcaps->vcp_features);
+   DBGMSF(debug, "Starting. pcaps->raw_cmds_segment_seen=%s, pcaps->commands=%p, pcaps->vcp_features=%p",
+          bool_repr(pcaps->raw_cmds_segment_seen), pcaps->commands, pcaps->vcp_features);
    Output_Level output_level = get_output_level();
    if (output_level >= OL_VERBOSE) {
       printf("Unparsed capabilities string: %s\n", pcaps->raw_value);
@@ -86,7 +88,9 @@ void report_parsed_capabilities(
    else {
       // not an error in the case of USB_IO, as the capabilities string was
       // synthesized and does not include a commands segment
-      if (io_mode != USB_IO)
+      // also, HP LP2480zx does not have cmds segment
+      if (pcaps->raw_cmds_segment_seen)
+      // if (io_mode != USB_IO)
          damaged = true;
    }
    if (pcaps->vcp_features)
@@ -116,14 +120,18 @@ void report_parsed_capabilities(
 Parsed_Capabilities * new_parsed_capabilities(
                          char *            raw_value,
                          char *            mccs_ver,
+                         bool              raw_cmds_segment_seen,
                          Byte_Value_Array  commands,         // each stored byte is command id
-                         GArray *          vcp_features
+                         GPtrArray *       vcp_features
                         )
 {
+   bool debug = false;
+   DBGMSF(debug, "raw_cmds_segment_seen=%s, commands=%p", bool_repr(raw_cmds_segment_seen), commands);
    Parsed_Capabilities* pcaps = calloc(1, sizeof(Parsed_Capabilities));
    memcpy(pcaps->marker, PARSED_CAPABILITIES_MARKER, 4);
    pcaps->raw_value    = raw_value;
    pcaps->mccs_ver     = mccs_ver;
+   pcaps->raw_cmds_segment_seen = raw_cmds_segment_seen,
    pcaps->commands     = commands;
    pcaps->vcp_features = vcp_features;
 
@@ -172,12 +180,13 @@ void free_parsed_capabilities(Parsed_Capabilities * pcaps) {
       // DBGMSG("vcp_features->len = %d", pcaps->vcp_features->len);
       int ndx;
       for (ndx=pcaps->vcp_features->len-1; ndx >=0; ndx--) {
-         Capabilities_Feature_Record * vfr = g_array_index(pcaps->vcp_features, Capabilities_Feature_Record *, ndx);
+         Capabilities_Feature_Record * vfr =
+               g_ptr_array_index(pcaps->vcp_features, ndx);
          // report_feature(vfr);
          free_capabilities_feature(vfr);
-         g_array_remove_index(pcaps->vcp_features, ndx);
+         g_ptr_array_remove_index(pcaps->vcp_features, ndx);
       }
-      g_array_free(pcaps->vcp_features, true);
+      g_ptr_array_free(pcaps->vcp_features, true);
    }
 
    pcaps->marker[3] = 'x';
@@ -316,15 +325,11 @@ char * find_closing_paren(char * start, char * end) {
  *    len
  *
  * Returns:
- *    GArray of VCP_Feature_Records
+ *    GPtrArray of VCP_Feature_Records
  */
-GArray * parse_vcp_segment(char * start, int len) {
+GPtrArray * parse_vcp_segment(char * start, int len) {
    bool debug = false;
-   GArray* vcp_array = g_array_sized_new(
-              true,             // zero terminated
-              true,             // clear all bits on allocation
-              sizeof(void *),   // element size
-              40);              // initial size
+   GPtrArray* vcp_array = g_ptr_array_sized_new(40);              // initial size
    // Vcp_Code_Table_Entry * vcp_entry;    // future?
    char * pos = start;
    char * end = start + len;
@@ -373,7 +378,7 @@ GArray * parse_vcp_segment(char * start, int len) {
             Version_Spec dummy_version = {0,0};
             show_capabilities_feature(vfr, dummy_version);
          }
-         g_array_append_val(vcp_array, vfr);
+         g_ptr_array_add(vcp_array, vfr);
       }
    }
 bye:
@@ -404,7 +409,8 @@ Parsed_Capabilities * parse_capabilities(char * buf_start, int buf_len) {
    char * mccs_ver  = NULL;
    // Version_Spec parsed_vcp_version = {0.0};
    Byte_Value_Array commands = NULL;
-   GArray * vcp_features = NULL;
+   GPtrArray * vcp_features = NULL;
+   bool  raw_cmds_segment_seen = false;
 
    // Apple Cinema display violates spec, does not surround capabilities string with parens
    if (buf_start[0] == '(') {
@@ -427,6 +433,7 @@ Parsed_Capabilities * parse_capabilities(char * buf_start, int buf_len) {
                );
       }
       if (memcmp(seg->name_start, "cmds", seg->name_len) == 0) {
+         raw_cmds_segment_seen = true;
          commands = parse_cmds_segment(seg->value_start, seg->value_len);
       }
       else if (memcmp(seg->name_start, "vcp", seg->name_len) == 0 ||
@@ -450,6 +457,7 @@ Parsed_Capabilities * parse_capabilities(char * buf_start, int buf_len) {
    pcaps = new_parsed_capabilities(
               raw_value,
               mccs_ver,
+              raw_cmds_segment_seen,
               commands,         // each stored byte is command id
               vcp_features);
 
