@@ -45,22 +45,6 @@
 #include "util/hiddev_reports.h"
 
 
-#ifdef DUPLICATES_HIDDEV_UTIL_H
-// use report_ioctl_error in base/util.c?
-#define REPORT_IOCTL_ERROR(_ioctl_name, _rc) \
-   do { \
-         printf("(%s) ioctl(%s) returned %d (0x%08x), errno=%d: %s\n", \
-                __func__, \
-                _ioctl_name, \
-                _rc, \
-                _rc, \
-                errno, \
-                strerror(errno) \
-               ); \
-   } while(0)
-#endif
-
-
 /* Wrap ioctl(HIDIOCGSTRING) to retrieve a string.
  *
  * It is the responsibility of the caller to free the returned string.
