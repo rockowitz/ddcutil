@@ -46,205 +46,137 @@
 
 
 // maximum number of i2c buses this code supports,
-// i.e. it only looks for /dev/i2c-0 .. /dev/i2c-31
 #define I2C_BUS_MAX 32
 
 // Addresses on an I2C bus are 7 bits in size
 #define BUS_ADDR_MAX 128
-
 
 // Trace class for this file
 static Trace_Group TRACE_GROUP = TRC_I2C;
 
 
 //
-// Bus inventory - retrieve and inspect bus information
+// Basic I2C bus operations
 //
 
-static int _busct = -1;                // number of i2c buses found, -1 if not yet checked
-typedef Bus_Info Bus_Info_Array[];     // type for an array of Bus_Info
-static Bus_Info_Array *  _bus_infos;   // pointer to array of Bus_Info
-
-
-// Data structure allocation
-
-#ifdef OLD
-/* Returns the Bus_Info structure for a bus.
- *
- * Arguments:  busndx   index into _bus_infos array
- *
- * Returns:    Bus_Info structure for the bus
- */
-static Bus_Info * _get_allocated_bus_info(int busndx) {
-   bool debug = true;
-   DBGMSF(debug, "busndx=%d, _busct=%d", busndx, _busct );
-   // assert(_bus_infos != NULL && _busct >= 0);   // Check initialized
-   assert(busndx >= 0 && busndx < _busct);
-
-   Bus_Info_Array * bia = _bus_infos;
-   Bus_Info * bus_info  = (void *)bia + busndx*sizeof(Bus_Info);
-
-   DBGMSF(debug, "Returning %p", bus_info );
-   return bus_info;
-}
-#endif
-
-
-bool i2c_bus_exists(int busno) {
-   bool result = false;
-   bool debug = false;
-   int  errsv;
-   char namebuf[20];
-   struct stat statbuf;
-   int  rc = 0;
-
-#ifdef MOCK_DATA
-   if (busno == 0 || busno == 3) {
-      DBGMSG("Inserting mock data.  Returning false for bus %d", busno);
-      return false;
-   }
-#endif
-
-   sprintf(namebuf, "/dev/i2c-%d", busno);
-   errno = 0;
-   rc = stat(namebuf, &statbuf);
-   errsv = errno;
-   if (rc == 0) {
-      DBGMSF(debug, "Found %s", namebuf);
-      result = true;
-    }
-    else {
-        DBGMSF(debug,  "stat(%s) returned %d, errno=%s",
-                                   namebuf, rc, linux_errno_desc(errsv) );
-    }
-
-    DBGTRC(debug, TRACE_GROUP, "busno=%d, returning %s", busno, bool_repr(result) );
-   return result;
-}
-
-
-/* Returns the number of I2C buses on the system, by looking for
- * devices named /dev/i2c-n.
- *
- * Note that no attempt is made to open the devices.
- */
-static int _get_i2c_busct() {
-   bool debug = false;
-   int  busct = 0;
-
-   for (int busno=0; busno < I2C_BUS_MAX; busno++) {
-      if (i2c_bus_exists(busno))
-         busct++;
-   }
-   DBGTRC(debug, TRACE_GROUP, "Returning %d", busct );
-   return busct;
-}
-
-#ifdef OLD
-/* Allocates an array of Bus_Info and initializes each entry
+/* Open an I2C bus
  *
  * Arguments:
- *   ct   number of entries
+ *   busno            I2C bus number
+ *   emit_error_msg   if true, output message if error
  *
  * Returns:
- *   pointer to Bus_Info array
+ *   file descriptor ( > 0) if success
+ *   -errno if failure
  *
- * Side effects:
- *   _bus_infos = address of allocated Bus_Info array
  */
-static Bus_Info_Array * _allocate_Bus_Info_Array(int ct) {
+int i2c_open_bus_new(int busno, bool emit_error_msg) {
    bool debug = false;
-   DBGMSF(debug, "Starting. ct=%d", ct );
-   Bus_Info_Array * bia = (Bus_Info_Array*) calloc(ct, sizeof(Bus_Info));
-   if (debug) DBGMSG("&bia=%p, bia=%p ", &bia, bia);
-   _bus_infos = bia;
-   int busndx = 0;
-   for (; busndx < ct; busndx++) {
-      Bus_Info * bus_info = _get_allocated_Bus_Info(busndx);
-      // if (debug) DBGMSG("Putting marker in Bus_Info at %p", bus_info );
-      memcpy(bus_info->marker, "BINF", 4);
-      // I2C_BUS_PRESENT currently always set.  Might not be set if it turns out that
-      // I2C bus numbers can be non-consecutive, and the same Bus_Info_Array is used
-      // bus_info->flags = I2C_BUS_EXISTS;
+   DBGMSF(debug, "busno=%d", busno);
+
+   char filename[20];
+   int  file;
+
+   snprintf(filename, 19, "/dev/i2c-%d", busno);
+   RECORD_IO_EVENT(
+         IE_OPEN,
+         ( file = open(filename, O_RDWR) )
+         );
+   // per man open:
+   // returns file descriptor if successful
+   // -1 if error, and errno is set
+   int errsv = errno;
+   if (file < 0) {
+      if (emit_error_msg)
+         f0printf(FERR, "Open failed for %s: errno=%s\n", filename, linux_errno_desc(errsv));
+      file = -errno;
    }
-   DBGMSF(debug, "Returning %p", bia);
-   return bia;
-}
-#endif
-
-
-/* Determines the number of I2C buses and initializes the Bus_Info array
- *
- * This function should be called exactly once.
- *
- * Arguments:   none
- *
- * Returns:     nothing
- *
- * Side effects:
- *   _busct = number of I2C buses
- *   _bus_infos = address of allocated Bus_Info array
- */
-static void _init_bus_infos_and_busct() {
-   bool debug = false;
-   DBGMSF(debug, "Starting" );
-   assert( _busct < 0 && _bus_infos == NULL);  // check not yet initialized
-   _busct = _get_i2c_busct();
-   _bus_infos = (Bus_Info_Array*) calloc(_busct, sizeof(Bus_Info));
-   DBGMSF(debug, "_bus_infos=%p, _busct=%d", _bus_infos, _busct);
-
-   int busndx = 0;
-   int busno = 0;
-
-   for (busno=0; busno < I2C_BUS_MAX; busno++) {
-      if (i2c_bus_exists(busno)) {
-         // Bus_Info * bus_info = _get_allocated_bus_info(busndx);
-         Bus_Info * bus_info = (Bus_Info *) _bus_infos + busndx;
-         DBGMSF(debug, "Initializing Bus_Info at %p, busno=%d, busndx=%d", bus_info, busno, busndx);
-         memcpy(bus_info->marker, "BINF", 4);
-         bus_info->busno = busno;
-         bus_info->flags = I2C_BUS_EXISTS;
-         busndx++;
-      }
-   }
-   // DBGMSG("Done" );
+   return file;
 }
 
 
-// Ensures that global variables _busct and _bus_infos are initialized
+/* Open an I2C bus
+ *
+ * Arguments:
+ *   busno            I2C bus number
+ *   failure_action   exit if failure?
+ *
+ * Returns:
+ *   file descriptor ( > 0) if success
+ *   -errno if failure and failure_action == RETURN_ERROR_IF_FAILURE
+ *
+ */
+int i2c_open_bus(int busno, Failure_Action failure_action) {
+   bool debug = false;
+   DBGMSF(debug, "busno=%d", busno);
+
+   int file = i2c_open_bus_new(busno, (failure_action != EXIT_IF_FAILURE) );
+   if (file < 0 && failure_action == EXIT_IF_FAILURE)
+      TERMINATE_EXECUTION_ON_ERROR("Open failed. errno=%s\n", linux_errno_desc(-file));
+   return file;
+}
+
+
+/* Closes an open I2C bus device.
+ *
+ * Arguments:
+ *   fd     file descriptor
+ *   busno  bus number (for error messages)
+ *          if -1, ignore
+ *   failure_action  if true, exit if close fails
+ *
+ * Returns:
+ *    0 if success
+ *    -errno if close fails and exit on failure was not specified
+ */
+int i2c_close_bus(int fd, int busno, Failure_Action failure_action) {
+   bool debug = false;
+   DBGMSF(debug, "Starting. fd=%d", fd);
+
+   errno = 0;
+   int rc = 0;
+   RECORD_IO_EVENT(IE_CLOSE, ( rc = close(fd) ) );
+   int errsv = errno;
+   if (rc < 0) {
+      // EBADF  fd isn't a valid open file descriptor
+      // EINTR  close() interrupted by a signal
+      // EIO    I/O error
+      char workbuf[80];
+      if (busno >= 0)
+         snprintf(workbuf, 80,
+                  "Close failed for bus /dev/i2c-%d. errno=%s",
+                  busno, linux_errno_desc(errsv));
+      else
+         snprintf(workbuf, 80,
+                  "Bus device close failed. errno=%s",
+                  linux_errno_desc(errsv));
+
+      if (failure_action == EXIT_IF_FAILURE)
+         TERMINATE_EXECUTION_ON_ERROR(workbuf);
+
+      fprintf(stderr, "%s\n", workbuf);
+
+      rc = errsv;
+   }
+   return rc;
+}
+
+
+void i2c_set_addr(int file, int addr) {
+   int rc = 0;
+   RECORD_IO_EVENT(
+         IE_OTHER,
+         ( rc = ioctl(file, I2C_SLAVE, addr) )
+        );
+   if (rc < 0){
+      report_ioctl_error(errno, __func__, __LINE__-2, __FILE__, true /*fatal*/);
+   }
+}
+
+
 //
-// Allows for lazy initialization.
-// Useless optimization, should eliminate.
-static void _ensure_bus_infos_and_busct_initialized() {
-   // DBGMSG("Starting" );
-   assert( (_busct < 0 && _bus_infos == NULL) || (_busct >= 0 && _bus_infos != NULL));
-   if (_busct < 0)
-      _init_bus_infos_and_busct();
-   assert( _busct >= 0 && _bus_infos);
-   // DBGMSG("Done" );
-}
-
-
-/* Returns the number of /dev/i2c-n devices found on the system.
- *
- * As a side effect, data structures for storing information about
- * the devices are initialized if not already initialized.
- */
-int i2c_get_busct() {
-   bool debug = false;
-   assert( (_busct < 0 && _bus_infos == NULL) || (_busct >= 0 && _bus_infos != NULL));
-
-   _ensure_bus_infos_and_busct_initialized();
-
-   DBGMSF(debug, "Returning %d", _busct);
-   assert(_busct >= 0 && _bus_infos != NULL);
-   return _busct;
-}
-
-
-
-
 // I2C device inspection
+//
 
 /* Checks each address on an I2C bus to see if a device exists.
  * The bus device has already been opened.
@@ -256,9 +188,10 @@ int i2c_get_busct() {
  *   128 byte array of booleans, byte n is true iff a device is
  *   detected at bus address n
  *
- * This "exploratory" function is not currently used.
+ * This "exploratory" function is not currently used but is
+ * retained for diagnostic purposes.
  *
- * TODO: excluded reserved I2C bus addresses from check
+ * TODO: exclude reserved I2C bus addresses from check
  */
 bool * detect_all_addrs_by_fd(int fd) {
    bool debug = false;
@@ -293,7 +226,8 @@ bool * detect_all_addrs_by_fd(int fd) {
  *   128 byte boolean array,
  *   NULL if unable to open I2C bus
  *
- * This "exploratory" function is not currently used.
+ * This "exploratory" function is not currently used but is
+ * retained for diagnostic purposes.
  */
 bool * detect_all_addrs(int busno) {
    bool debug = false;
@@ -351,33 +285,10 @@ Byte detect_ddc_addrs_by_fd(int file) {
    return result;
 }
 
-#ifdef UNUSED
-/* Checks DDC related addresses on an I2C bus.
- *
- * Arguments:
- *   busno   bus number
- *
- * Returns:
- *   I2C_BUS_ flags byte (see detect_addrs_by_fd() for details)
- *   0x00 if bus cannot be opened
- */
-Byte detect_ddc_addrs_by_busno(int busno) {
-   bool debug = false;
-   if (debug)
-      DBGMSG("Starting.  busno=%d", busno);
 
-   unsigned char result = 0x00;
-   int file = i2c_open_bus(busno, RETURN_ERROR_IF_FAILURE);
-   if (file >= 0) {
-      result = detect_ddc_addrs_by_fd(file);
-      i2c_close_bus(file, busno, EXIT_IF_FAILURE);
-   }
-
-   if (debug)
-      DBGMSG("Done.  Returning 0x%02x", result);
-   return result;
-}
-#endif
+//
+// I2C Bus Inspection
+//
 
 
 /* Calculates bus information for an I2C bus.
@@ -420,6 +331,153 @@ Bus_Info * i2c_check_bus(Bus_Info * bus_info) {
    return bus_info;
 }
 
+
+
+//
+// Bus inventory - retrieve and inspect bus information
+//
+
+static int _busct = -1;                // number of i2c buses found, -1 if not yet checked
+// typedef Bus_Info Bus_Info_Array[];     // type for an array of Bus_Info
+// static Bus_Info_Array *  _bus_infos;   // pointer to array of Bus_Info
+static Bus_Info * _bus_infos = NULL;
+
+
+
+// Data structure allocation
+
+
+/* Checks if an I2C bus with a given number exists.
+ *
+ * Arguments:
+ *    busno     bus number
+ *
+ * Returns:     true/false
+ */
+bool i2c_bus_exists(int busno) {
+   bool result = false;
+   bool debug = false;
+   int  errsv;
+   char namebuf[20];
+   struct stat statbuf;
+   int  rc = 0;
+
+#ifdef MOCK_DATA
+   if (busno == 0 || busno == 3) {
+      DBGMSG("Inserting mock data.  Returning false for bus %d", busno);
+      return false;
+   }
+#endif
+
+   sprintf(namebuf, "/dev/i2c-%d", busno);
+   errno = 0;
+   rc = stat(namebuf, &statbuf);
+   errsv = errno;
+   if (rc == 0) {
+      DBGMSF(debug, "Found %s", namebuf);
+      result = true;
+    }
+    else {
+        DBGMSF(debug,  "stat(%s) returned %d, errno=%s",
+                                   namebuf, rc, linux_errno_desc(errsv) );
+    }
+
+    DBGTRC(debug, TRACE_GROUP, "busno=%d, returning %s", busno, bool_repr(result) );
+   return result;
+}
+
+
+/* Returns the number of I2C buses on the system, by looking for
+ * devices named /dev/i2c-n.
+ *
+ * Note that no attempt is made to open the devices.
+ */
+static int _get_i2c_busct() {
+   bool debug = false;
+   int  busct = 0;
+
+   for (int busno=0; busno < I2C_BUS_MAX; busno++) {
+      if (i2c_bus_exists(busno))
+         busct++;
+   }
+   DBGTRC(debug, TRACE_GROUP, "Returning %d", busct );
+   return busct;
+}
+
+
+
+
+/* Determines the number of I2C buses and initializes the Bus_Info array
+ *
+ * This function should be called exactly once.
+ *
+ * Arguments:   none
+ *
+ * Returns:     nothing
+ *
+ * Side effects:
+ *   _busct = number of I2C buses
+ *   _bus_infos = address of allocated Bus_Info array
+ */
+static void _init_bus_infos_and_busct() {
+   bool debug = false;
+   DBGMSF(debug, "Starting" );
+   assert( _busct < 0 && _bus_infos == NULL);  // check not yet initialized
+   _busct = _get_i2c_busct();
+   _bus_infos = calloc(_busct, sizeof(Bus_Info));
+   DBGMSF(debug, "_bus_infos=%p, _busct=%d", _bus_infos, _busct);
+
+   int busndx = 0;
+   int busno = 0;
+
+   for (busno=0; busno < I2C_BUS_MAX; busno++) {
+      if (i2c_bus_exists(busno)) {
+         // Bus_Info * bus_info = _get_allocated_bus_info(busndx);
+         Bus_Info * bus_info = _bus_infos + busndx;
+         DBGMSF(debug, "Initializing Bus_Info at %p, busno=%d, busndx=%d", bus_info, busno, busndx);
+         memcpy(bus_info->marker, "BINF", 4);
+         bus_info->busno = busno;
+         bus_info->flags = I2C_BUS_EXISTS;
+         i2c_check_bus(bus_info);
+         busndx++;
+      }
+   }
+   // DBGMSG("Done" );
+}
+
+
+// Ensures that global variables _busct and _bus_infos are initialized
+//
+// Allows for lazy initialization.
+// Useless optimization, should eliminate.
+static void _ensure_bus_infos_and_busct_initialized() {
+   // DBGMSG("Starting" );
+   assert( (_busct < 0 && _bus_infos == NULL) || (_busct >= 0 && _bus_infos != NULL));
+   if (_busct < 0)
+      _init_bus_infos_and_busct();
+   assert( _busct >= 0 && _bus_infos);
+   // DBGMSG("Done" );
+}
+
+
+/* Returns the number of /dev/i2c-n devices found on the system.
+ *
+ * As a side effect, data structures for storing information about
+ * the devices are initialized if not already initialized.
+ */
+int i2c_get_busct() {
+   bool debug = false;
+
+   _ensure_bus_infos_and_busct_initialized();
+
+   DBGMSF(debug, "Returning %d", _busct);
+   return _busct;
+}
+
+
+//
+// Bus_Info retrieval
+//
 
 Bus_Info * i2c_get_bus_info_by_index(int busndx) {
    assert(busndx >= 0);
@@ -611,23 +669,6 @@ bool i2c_is_valid_bus(int busno, bool emit_error_msg) {
 // Bus Reports
 //
 
-#ifdef DEPRECATED
-// use get_ParsedEdid_by_busno
-DisplayIdInfo* get_bus_display_id_info(int busno) {
-   DisplayIdInfo * pIdInfo = NULL;
-
-      Parsed_Edid* edid = i2c_get_parsed_edid_by_busno(busno);
-      if (edid) {
-         pIdInfo = calloc(1, sizeof(DisplayIdInfo));
-         memcpy(pIdInfo->mfg_id,       edid->mfg_id,       sizeof(pIdInfo->mfg_id)      );
-         memcpy(pIdInfo->model_name,   edid->model_name,   sizeof(pIdInfo->model_name)  );
-         memcpy(pIdInfo->serial_ascii, edid->serial_ascii, sizeof(pIdInfo->serial_ascii));
-         memcpy(pIdInfo->edid_bytes,   edid->bytes,        128                          );
-      }
-
-   return pIdInfo;
-}
-#endif
 
 Parsed_Edid * i2c_get_parsed_edid_by_busno(int busno) {
    Parsed_Edid * edid = NULL;
@@ -804,7 +845,7 @@ void i2c_report_bus(int busno) {
  * Returns:
  *    count of reported buses
  *
- * The format of the output is determined by a call to getOutputFormat().
+ * The format of the output is determined by get_output_level().
  */
 int i2c_report_buses(bool report_all, int depth) {
    bool debug = false;
@@ -875,125 +916,6 @@ typedef struct {
 } Display_Info_List;
 
 #endif
-
-
-//
-// Basic I2C bus operations
-//
-
-/* Open an I2C bus
- *
- * Arguments:
- *   busno            I2C bus number
- *   emit_error_msg   if true, output message if error
- *
- * Returns:
- *   file descriptor ( > 0) if success
- *   -errno if failure
- *
- */
-int i2c_open_bus_new(int busno, bool emit_error_msg) {
-   bool debug = false;
-   DBGMSF(debug, "busno=%d", busno);
-
-   char filename[20];
-   int  file;
-
-   snprintf(filename, 19, "/dev/i2c-%d", busno);
-   RECORD_IO_EVENT(
-         IE_OPEN,
-         ( file = open(filename, O_RDWR) )
-         );
-   // per man open:
-   // returns file descriptor if successful
-   // -1 if error, and errno is set
-   int errsv = errno;
-   if (file < 0) {
-      if (emit_error_msg)
-         f0printf(FERR, "Open failed for %s: errno=%s\n", filename, linux_errno_desc(errsv));
-      file = -errno;
-   }
-   return file;
-}
-
-
-/* Open an I2C bus
- *
- * Arguments:
- *   busno            I2C bus number
- *   failure_action   exit if failure?
- *
- * Returns:
- *   file descriptor ( > 0) if success
- *   -errno if failure and failure_action == RETURN_ERROR_IF_FAILURE
- *
- */
-int i2c_open_bus(int busno, Failure_Action failure_action) {
-   bool debug = false;
-   DBGMSF(debug, "busno=%d", busno);
-
-   int file = i2c_open_bus_new(busno, (failure_action != EXIT_IF_FAILURE) );
-   if (file < 0 && failure_action == EXIT_IF_FAILURE)
-      TERMINATE_EXECUTION_ON_ERROR("Open failed. errno=%s\n", linux_errno_desc(-file));
-   return file;
-}
-
-
-/* Closes an open I2C bus device.
- *
- * Arguments:
- *   fd     file descriptor
- *   busno  bus number (for error messages)
- *          if -1, ignore
- *   failure_action  if true, exit if close fails
- *
- * Returns:
- *    0 if success
- *    -errno if close fails and exit on failure was not specified
- */
-int i2c_close_bus(int fd, int busno, Failure_Action failure_action) {
-   bool debug = false;
-   DBGMSF(debug, "Starting. fd=%d", fd);
-
-   errno = 0;
-   int rc = 0;
-   RECORD_IO_EVENT(IE_CLOSE, ( rc = close(fd) ) );
-   int errsv = errno;
-   if (rc < 0) {
-      // EBADF  fd isn't a valid open file descriptor
-      // EINTR  close() interrupted by a signal
-      // EIO    I/O error
-      char workbuf[80];
-      if (busno >= 0)
-         snprintf(workbuf, 80,
-                  "Close failed for bus /dev/i2c-%d. errno=%s",
-                  busno, linux_errno_desc(errsv));
-      else
-         snprintf(workbuf, 80,
-                  "Bus device close failed. errno=%s",
-                  linux_errno_desc(errsv));
-
-      if (failure_action == EXIT_IF_FAILURE)
-         TERMINATE_EXECUTION_ON_ERROR(workbuf);
-
-      fprintf(stderr, "%s\n", workbuf);
-
-      rc = errsv;
-   }
-   return rc;
-}
-
-
-void i2c_set_addr(int file, int addr) {
-   int rc = 0;
-   RECORD_IO_EVENT(
-         IE_OTHER,
-         ( rc = ioctl(file, I2C_SLAVE, addr) )
-        );
-   if (rc < 0){
-      report_ioctl_error(errno, __func__, __LINE__-2, __FILE__, true /*fatal*/);
-   }
-}
 
 
 //
@@ -1093,15 +1015,6 @@ unsigned long i2c_get_functionality_flags_by_fd(int fd) {
    unsigned long funcs;
    int rc;
 
-   // long start_time = 0;
-   // if (gather_timing_stats)
-   //    start_time = cur_realtime_nanosec();
-   // int rc = ioctl(fd, I2C_FUNCS, &funcs);
-   // int errsv = errno;
-   // if (gather_timing_stats) {
-   //    pTimingStats->total_call_nanosecs += (cur_realtime_nanosec()-start_time);
-   //    pTimingStats->total_call_ct++;
-   // }
    RECORD_IO_EVENT(IE_OTHER, ( rc = ioctl(fd, I2C_FUNCS, &funcs) ) );
    int errsv = errno;
    if (rc < 0)
@@ -1110,20 +1023,6 @@ unsigned long i2c_get_functionality_flags_by_fd(int fd) {
    // DBGMSG("Functionality for file %d: %lu, 0x%lx", file, funcs, funcs);
    return funcs;
 }
-
-#ifdef UNUSED
-unsigned long get_i2c_functionality_flags_by_busno(int busno) {
-   unsigned long funcs;
-   int           file;
-
-   file = i2c_open_bus(busno, EXIT_IF_FAILURE);
-   funcs = i2c_get_functionality_flags_by_fd(file);
-   i2c_close_bus(file, busno, EXIT_IF_FAILURE);
-
-   // DBGMSG("Functionality for bus %d: %lu, 0x%lx", busno, funcs, funcs);
-   return funcs;
-}
-#endif
 
 
 
@@ -1152,25 +1051,15 @@ char * i2c_interpret_functionality_into_buffer(unsigned long functionality, Buff
 }
 
 
-#ifdef OLD
-void show_functionality(int busno) {
-   unsigned long funcs = get_i2c_functionality_flags_by_busno(busno);
-   char * buf = interpret_functionality(funcs);
-   printf("Functionality for bus /dev/i2c-%d: %s\n\n", busno, buf);
-   free(buf);
-}
-#endif
-
-
 //
 // EDID
 //
 
-/* retrieve edid with i2c calls known to work
+/* Retrieve EDID with I2C calls known to work
  *
  * Arguments:
  *   fd       file descriptor for open bus
- *   rawedid  buffer in which to return 128 byte edid
+ *   rawedid  buffer in which to return 128 byte EDID
  *
  * Returns:
  *   0        success
@@ -1230,7 +1119,6 @@ Global_Status_Code i2c_get_raw_edid_by_fd(int fd, Buffer * rawedid) {
  *
  * Arguments:
  *   fd          file descriptor for open /dev/i2c-n
- *   rawedidbuf  pointer to Buffer in which bytes are returned
  *
  * Returns:
  *   Parsed_Edid, NULL if get_raw_edid_by_fd() fails
