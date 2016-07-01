@@ -888,6 +888,24 @@ VCP_Feature_Table_Entry * vcp_create_dummy_feature_for_hexid(Byte id) {
 }
 
 
+VCP_Feature_Table_Entry * vcp_create_table_dummy_feature_for_hexid(Byte id) {
+   // memory leak
+   VCP_Feature_Table_Entry* pentry = calloc(1, sizeof(VCP_Feature_Table_Entry) );
+   pentry->code = id;
+   if (id >= 0xe0) {
+      pentry->v20_name = "Manufacturer Specific";
+   }
+   else {
+      pentry->v20_name = "Unknown feature";
+   }
+   pentry->table_formatter = default_table_feature_detail_function,
+   pentry->v20_flags = VCP2_RW | VCP2_TABLE;
+   pentry->vcp_global_flags = VCP2_SYNTHETIC;   // indicates caller should free
+   return pentry;
+}
+
+
+
 /* Returns an entry in the VCP feature table based on the hex value
  * of its feature code.
  *
@@ -940,15 +958,19 @@ VCP_Feature_Table_Entry * vcp_find_feature_by_hexid_w_default(Byte id) {
 //
 
 bool default_table_feature_detail_function(Buffer * data, Version_Spec vcp_version, char ** presult) {
-   DBGMSG("vcp_version=%d.%d", vcp_version.major, vcp_version.minor);
-   int hexbufsize = buffer_length(data) * 3;
-   char * result_buf = calloc(hexbufsize,1);
+   // DBGMSG("vcp_version=%d.%d, data length=%d", vcp_version.major, vcp_version.minor, data->len);
+   // int hexbufsize = buffer_length(data) * 3;
+   // if (buffer_length(data) == 0)
+   //    hexbufsize=1;
+   // char * result_buf = calloc(hexbufsize,1);
+   // DBGMSG("result_buf=%p, hexbufsize=%d", result_buf, hexbufsize);
 
-   char space = ' ';
-   hexstring2(data->bytes, data->len, &space, false /* upper case */, result_buf, hexbufsize);
-   *presult = result_buf;
+   // char * spacer = " ";
+   // hexstring2(data->bytes, data->len, spacer, false /* upper case */, result_buf, hexbufsize);
+   *presult = hexstring2(data->bytes, data->len, " " /*spacer*/, false /* upper case */, NULL, 0);
    return true;
 }
+
 
 //
 // Functions applicable to multiple table feature codes

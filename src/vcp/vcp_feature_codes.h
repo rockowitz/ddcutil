@@ -188,6 +188,9 @@ VCP_Feature_Table_Entry *
 vcp_create_dummy_feature_for_hexid(Byte id);
 
 VCP_Feature_Table_Entry *
+vcp_create_table_dummy_feature_for_hexid(Byte id);
+
+VCP_Feature_Table_Entry *
 vcp_find_feature_by_hexid(Byte id);
 
 VCP_Feature_Table_Entry *
