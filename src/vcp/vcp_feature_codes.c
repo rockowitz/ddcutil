@@ -1030,7 +1030,7 @@ bool format_feature_detail_x73_lut_size(
  *   pointer to feature value table, NULL if not found
  */
 Feature_Value_Entry * find_feature_values(Byte feature_code, Version_Spec vcp_version) {
-   bool debug = true;
+   bool debug = false;
    if (debug)
       DBGMSG("Starting. feature_code=0x%02x", feature_code);
    Feature_Value_Entry * result = NULL;
