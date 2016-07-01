@@ -354,7 +354,7 @@ int main(int argc, char *argv[]) {
          {
             Version_Spec vspec = get_vcp_version_by_display_handle(dh);
             if (vspec.major < 2) {
-               printf("VCP (aka MCCS) version for display is less than 2.0. Output may not be accurate.\n");
+               printf("VCP (aka MCCS) version for display is undetected or less than 2.0. Output may not be accurate.\n");
             }
          }
 
