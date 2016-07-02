@@ -37,6 +37,7 @@
 // Initialization
 //
 void init_msg_control();
+extern bool dbgtrc_show_time;  // include elapsed time in debug/trace timestamps
 
 
 // For aborting out of shared library
@@ -49,6 +50,8 @@ void call_longjmp(int status);
 //
 long cur_realtime_nanosec();   // Returns the current value of the realtime clock in nanoseconds
 void show_timestamp_history(); // For debugging
+long elapsed_time_nanaosec();  // nanoseconds since start of program, first call initializes
+char * formatted_elapsed_time();
 
 
 //

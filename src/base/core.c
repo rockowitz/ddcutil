@@ -37,6 +37,7 @@
 
 #include "base/core.h"
 
+bool dbgtrc_show_time = true;    // include elapsed time in debug/trace output
 
 static jmp_buf* global_abort_loc;
 
@@ -99,6 +100,35 @@ void show_timestamp_history() {
    else
       DBGMSG("Not tracking timestamps");
 }
+
+static long initial_timestamp_nanos = 0;
+// nanoseconds since start of program, first call initializes
+long elapsed_time_nanosec() {
+   long cur_nanos = cur_realtime_nanosec();
+   if (initial_timestamp_nanos == 0)
+      initial_timestamp_nanos = cur_nanos;
+   return cur_nanos - initial_timestamp_nanos;
+}
+
+
+
+
+char * formatted_elapsed_time() {
+   // static char elapsed_buf1[40];
+   static char elapsed_buf2[40];
+   long et_nanos = elapsed_time_nanosec();
+   // double secs = et_nanos/(1000.0 * 1000.0 * 1000.0);
+   // snprintf(elapsed_buf1, 40, "%7.3f", secs);
+   long    isecs   = et_nanos/ (1000 * 1000 * 1000);
+   long    imillis = et_nanos/ (1000 * 1000);
+   snprintf(elapsed_buf2, 40, "%3ld.%03ld", isecs, imillis - (isecs*1000) );
+   // printf("(%s) %s, %s\n", __func__, elapsed_buf1, elapsed_buf2);
+   return elapsed_buf2;
+}
+
+
+
+
 
 
 //
@@ -427,7 +457,7 @@ void dbgtrc(
 
    if (!buffer) {      // first call
       buffer = calloc(bufsz,    sizeof(char*));
-      buf2   = calloc(bufsz+50, sizeof(char*));
+      buf2   = calloc(bufsz+60, sizeof(char*));
    }
 
    if ( is_tracing(trace_group, fn) ) {
@@ -448,7 +478,10 @@ void dbgtrc(
          assert(ct < bufsz);
       }
 
-      snprintf(buf2, bufsz+50, "(%s) %s\n", funcname, buffer);
+      if (dbgtrc_show_time)
+         snprintf(buf2, bufsz+60, "[%s](%s) %s\n", formatted_elapsed_time(), funcname, buffer);
+      else
+         snprintf(buf2, bufsz+60, "(%s) %s\n", funcname, buffer);
       // puts(buf2);        // automatic terminating null
       fputs(buf2, FOUT);    // no automatic terminating null
       va_end(args);
