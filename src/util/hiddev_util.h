@@ -25,10 +25,11 @@
 #define SRC_UTIL_HIDDEV_UTIL_H_
 
 #include <glib.h>
-#include <string.h>        // so users will have definition of strerror()
 #include <linux/hiddev.h>
+#include <string.h>        // so users will have definition of strerror()
 
 #include "util/data_structures.h"
+#include "util/edid.h"
 
 
 #define REPORT_IOCTL_ERROR(_ioctl_name, _rc) \
@@ -44,6 +45,24 @@
    } while(0)
 
 
+// Describes a field within a report
+
+struct hid_field_locator {
+   // struct hiddev_report_info * rinfo;         // simplify by eliminating?
+   struct hiddev_field_info  * finfo;         // simplify by eliminating?
+   __u32                       report_type;
+   __u32                       report_id;
+   __u32                       field_index;
+};
+
+void free_hid_field_locator(struct hid_field_locator * location);
+void report_hid_field_locator(struct hid_field_locator * ploc, int depth);
+
+struct hid_field_locator*
+find_report(int fd, __u32 report_type, __u32 ucode, bool match_all_ucodes);
+Buffer * get_multibyte_report_value(int fd, struct hid_field_locator * loc);
+Buffer * get_hiddev_edid(int fd);
+
 const char * report_type_name(__u32 report_type);
 
 bool force_hiddev_monitor(int fd);
@@ -54,7 +73,7 @@ GPtrArray * get_hiddev_device_names();
 
 char * get_hiddev_name(int fd);
 
-Buffer * get_hiddev_edid(int fd);
+Parsed_Edid * get_hiddev_edid_with_backup(int fd);
 
 struct hiddev_field_info *
 is_field_edid(int fd, struct hiddev_report_info * rinfo, int field_index);

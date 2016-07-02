@@ -31,7 +31,7 @@
 
 typedef struct {
    char * output_name;
-   Byte * edid;
+   Byte * edidbytes;
 } X11_Edid_Rec;
 
 

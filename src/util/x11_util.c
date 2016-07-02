@@ -93,11 +93,14 @@ static const char * const edid_names[] =
 // typedef: void (*GDestroyNotify)(gpointer data)
 void edid_recs_free_func(gpointer voidptr) {
    X11_Edid_Rec * prec = voidptr;
-   free(prec->edid);
+   free(prec->edidbytes);
    free(prec->output_name);
 }
 
 
+
+// Returns GPtrArray of X11_Edid_Rec
+// It is the responsibility of the caller to free the returned data structure
 
 GPtrArray * get_x11_edids() {
    GPtrArray * edid_recs = g_ptr_array_new();
@@ -192,8 +195,8 @@ GPtrArray * get_x11_edids() {
                         {
                            // printf("found edid. nitems = %lu\n", nitems);
                            X11_Edid_Rec * edidrec = calloc(1, sizeof(X11_Edid_Rec));
-                           edidrec->edid = calloc(1,128);
-                           memcpy(edidrec->edid, data, 128);
+                           edidrec->edidbytes = calloc(1,128);
+                           memcpy(edidrec->edidbytes, data, 128);
                            edidrec->output_name = calloc(1, output_info->nameLen + 1);
                            memcpy(edidrec->output_name, output_info->name, output_info->nameLen);
                            g_ptr_array_add(edid_recs, edidrec);
@@ -225,8 +228,8 @@ GPtrArray * get_x11_edids() {
   printf("Returning %d X11_Edid_Recs\n", edid_recs->len);
   for (; ndx < edid_recs->len; ndx++) {
      X11_Edid_Rec * prec = g_ptr_array_index(edid_recs, ndx);
-     printf(" Output name: %s -> %p\n", prec->output_name, prec->edid);
-     hex_dump(prec->edid, 128);
+     printf(" Output name: %s -> %p\n", prec->output_name, prec->edidbytes);
+     hex_dump(prec->edidbytes, 128);
   }
 #endif
   return edid_recs;

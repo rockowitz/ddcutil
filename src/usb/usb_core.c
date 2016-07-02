@@ -39,11 +39,14 @@
 #include "util/hiddev_util.h"
 #include "util/report_util.h"
 #include "util/string_util.h"
+#include "util/x11_util.h"         // *** TEMP **
 
 #include "base/core.h"
 #include "base/ddc_errno.h"
 #include "base/execution_stats.h"
 #include "base/linux_errno.h"
+
+#include "i2c/i2c_bus_core.h"      // *** TEMP ***
 
 #include "usb/usb_core.h"
 
@@ -374,7 +377,7 @@ Display_Info * is_usb_display_device(char * device_name) {
 
     Buffer * pedid = NULL;
     if (is_hiddev_monitor(fd)) {
-       pedid = get_hiddev_edid(fd);
+       pedid = get_hiddev_edid_with_backup(fd);
     }
     if (pedid) {
        Display_Ref * dref = create_usb_display_ref(dev_info.busnum, dev_info.devnum, device_name);
@@ -667,6 +670,236 @@ int usb_close_device(int fd, char * device_fn, Failure_Action failure_action) {
 }
 
 
+//
+// Functions to get EDID
+//
+
+
+
+struct hid_field_locator * find_eizo_model_sn_report(int fd) {
+   // struct hiddev_report_info * rinfo = calloc(1,sizeof(struct hiddev_report_info));
+
+   // find report
+   // Find: HID_REPORT_TYPE_FEATURE
+   // field application(usage)  00800001      USB Monitor/Monitor Control
+   // flags   HID_FIELD_VARIABLE | HID_FIELD_BUFFERED_BYTE
+   // ucode: 0xff000035
+
+
+   bool debug = true;
+   struct hid_field_locator * loc = NULL;
+   struct hiddev_devinfo dev_info;
+
+   int rc = ioctl(fd, HIDIOCGDEVINFO, &dev_info);
+   if (rc != 0) {
+      REPORT_IOCTL_ERROR("HIDIOCGDEVINFO", rc);
+      goto bye;
+   }
+   if (dev_info.vendor == 0x056d && dev_info.product == 0x0002)  {
+      loc = find_report(fd, HID_REPORT_TYPE_FEATURE, 0xff000035, /*match_all_ucodes=*/false);
+   }
+
+bye:
+   if (debug) {
+      printf("(%s) Returning: %p\n", __func__, loc);
+      if (loc)
+         report_hid_field_locator(loc,2);
+   }
+   return loc;
+}
+
+
+struct model_sn_pair {
+   char * model;
+   char * sn;
+};
+
+void free_model_sn_pair(struct model_sn_pair * p) {
+   if (p) {
+      free(p->model);
+      free(p->sn);
+      free(p);
+   }
+}
+
+void report_model_sn_pair(struct model_sn_pair * p, int depth) {
+   int d1 = depth+1;
+   rpt_structure_loc("struct model_sn_pair",p, depth);
+   rpt_vstring(d1, "model:  %s", p->model);
+   rpt_vstring(d1, "sn:     %s", p->sn);
+}
+
+
+bool is_eizo_monitor(int fd) {
+   bool debug = true;
+   bool result = false;
+   struct hiddev_devinfo dev_info;
+   int rc = ioctl(fd, HIDIOCGDEVINFO, &dev_info);
+   if (rc != 0) {
+      REPORT_IOCTL_ERROR("HIDIOCGDEVINFO", rc);
+      goto bye;
+   }
+   if (dev_info.vendor == 0x056d && dev_info.product == 0x0002)
+      result = true;
+
+bye:
+   DBGMSF(debug, "Returning %s", bool_repr(result));
+   return result;
+}
+
+
+struct model_sn_pair *  get_eizo_model_sn_by_report(int fd) {
+   bool debug = true;
+   struct model_sn_pair* result = NULL;
+
+   if (is_eizo_monitor(fd)) {
+      struct hid_field_locator * loc = find_eizo_model_sn_report(fd);
+      DBGMSF(debug, "find_eizo_model_sn_report() returned: %p", loc);
+      if (loc) {
+         // get report
+         Buffer * modelsn = get_multibyte_report_value(fd, loc);
+         if (modelsn) {
+            assert(modelsn->len >= 16);
+            result = calloc(1, sizeof(struct model_sn_pair));
+            result->model = calloc(1,9);
+            result->sn    = calloc(1,9);
+            memcpy(result->sn, modelsn->bytes,8);
+            result->sn[8] = '\0';
+            memcpy(result->model, modelsn->bytes+8, 8);
+            result->model[8] = '\0';
+            rtrim_in_place(result->sn);
+            rtrim_in_place(result->model);
+            free(modelsn);
+         }
+      }
+   }
+
+   if (debug) {
+      printf("(%s) Returning: %p\n", __func__, result);
+      if (result)
+         report_model_sn_pair(result, 1);
+   }
+   return result;
+
+}
+
+
+
+Parsed_Edid * get_x11_edid_by_model_sn(char * model_name, char * sn_ascii) {
+   bool debug = true;
+   Parsed_Edid * parsed_edid = NULL;
+
+   GPtrArray* edid_recs = get_x11_edids();
+   puts("");
+   printf("EDIDs reported by X11 for connected xrandr outputs:\n");
+   // DBGMSG("Got %d X11_Edid_Recs\n", edid_recs->len);
+
+
+   int ndx = 0;
+   for (ndx=0; ndx < edid_recs->len; ndx++) {
+      X11_Edid_Rec * prec = g_ptr_array_index(edid_recs, ndx);
+      // printf(" Output name: %s -> %p\n", prec->output_name, prec->edid);
+      // hex_dump(prec->edid, 128);
+      rpt_vstring(1, "xrandr output: %s", prec->output_name);
+      parsed_edid = create_parsed_edid(prec->edidbytes);
+      if (parsed_edid) {
+         bool verbose_edid = false;
+         report_parsed_edid(parsed_edid, verbose_edid, 2 /* depth */);
+         if (streq(parsed_edid->model_name, model_name) &&
+               streq(parsed_edid->serial_ascii, sn_ascii) )
+         {
+            printf("(%s) Found matching EDID from X11\n", __func__);
+            break;
+         }
+         free_parsed_edid(parsed_edid);
+      }
+      else {
+         printf(" Unparsable EDID for output name: %s -> %p\n", prec->output_name, prec->edidbytes);
+         hex_dump(prec->edidbytes, 128);
+      }
+   }
+
+   // HACK FOR TESTING
+   if (!parsed_edid && edid_recs->len > 0) {
+      printf("(%s) HACK FOR TESTING: Using last X11 EDID\n", __func__);
+      X11_Edid_Rec * prec = g_ptr_array_index(edid_recs, edid_recs->len-1);
+      parsed_edid = create_parsed_edid(prec->edidbytes);
+   }
+
+   g_ptr_array_free(edid_recs, true);
+
+
+   DBGMSF(debug, "returning %p", parsed_edid);
+   return parsed_edid;
+}
+
+
+
+
+
+/* Retrieves the EDID (128 bytes) from a hiddev device representing a HID
+ * compliant monitor.
+ *
+ * Arguments:
+ *    fd     file descriptor
+ *
+ * Returns:
+ *    pointer to Buffer struct containing the EDID
+ *
+ * It is the responsibility of the caller to free the returned buffer.
+ */
+Parsed_Edid * get_hiddev_edid_with_backup(int fd)  {
+   bool debug = true;
+   Parsed_Edid * parsed_edid = NULL;
+   DBGMSF(debug, "Starting");
+   Buffer * edid_buffer = get_hiddev_edid(fd);
+
+   // if edid_buffer == NULL, issue message
+
+   if (edid_buffer) {
+       parsed_edid = create_parsed_edid(edid_buffer->bytes);
+       if (!parsed_edid) {
+          DBGMSF(debug, "get_hiddev_edid() returned invalid EDID");
+          // if debug or verbose, dump the bad edid
+       }
+    }
+
+   struct model_sn_pair * model_sn = NULL;
+
+   if (!edid_buffer) {
+      if (is_eizo_monitor(fd)) {
+         printf("(%s) *** Special fixup for Eizo monitor ***\n", __func__);
+
+         model_sn = get_eizo_model_sn_by_report(fd);
+         if (model_sn) {
+            Bus_Info * bus_info = i2c_find_bus_info_by_model_sn(model_sn->model, model_sn->sn);
+            if (bus_info) {
+               printf("(%s) Using EDID for /dev/i2c-%d\n", __func__, bus_info->busno);
+               parsed_edid = bus_info->edid;
+               // result = NULL;   // for testing - both i2c and X11 methods work
+            }
+            else {
+               // TODO: try ADL
+            }
+         }
+      }
+   }
+
+   // if (model_sn) {
+   if (!parsed_edid && model_sn) {
+      parsed_edid = get_x11_edid_by_model_sn(model_sn->model, model_sn->sn);
+   }
+
+   DBGMSF(debug, "Returning: %p", parsed_edid);
+   return parsed_edid;
+}
+
+
+//
+//
+//
+
+
 /*  Examines all hiddev devices to see if they are USB HID compliant monitors.
  *  If so, obtains the EDID, determines which reports to use for VCP feature
  *  values, etc.
@@ -676,7 +909,7 @@ int usb_close_device(int fd, char * device_fn, Failure_Action failure_action) {
  *  The result is cached in global variable usb_monitors
  */
 static GPtrArray * get_usb_monitor_list() {
-   bool debug = false;
+   bool debug = true;
    DBGMSF(debug, "Starting...");
    Output_Level ol = get_output_level();
 
@@ -714,17 +947,10 @@ static GPtrArray * get_usb_monitor_list() {
             goto close;
 
          // pedid = find_edid_report(fd);
-         pedid = get_hiddev_edid(fd);
-         if (!pedid) {
-            fprintf(stderr, "Monitor on device %s reports no EDID. Ignoring.\n", hiddev_fn);
-            goto close;
-         }
-         parsed_edid = create_parsed_edid(pedid->bytes);    // assumes 128 byte edid
+         parsed_edid = get_hiddev_edid_with_backup(fd);
 
          if (!parsed_edid) {
-            fprintf(stderr, "Monitor on device %s has invalid EDID. Ignoring.\n", hiddev_fn);
-            if (ol >= OL_VERBOSE || debug)
-               hex_dump(pedid->bytes, 128);
+            fprintf(stderr, "Monitor on device %s reports no EDID or has invalid EDID. Ignoring.\n", hiddev_fn);
             goto close;
          }
 

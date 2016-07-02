@@ -56,6 +56,7 @@
 #include <X11/extensions/Xrandr.h>
 
 #include "util/device_id_util.h"
+#include "util/edid.h"
 #include "util/file_util.h"
 #include "util/hiddev_reports.h"
 #include "util/hiddev_util.h"
@@ -68,7 +69,6 @@
 #include "util/x11_util.h"
 
 #include "base/core.h"
-#include "base/edid.h"
 #include "base/linux_errno.h"
 
 #include "i2c/i2c_bus_core.h"
@@ -1107,15 +1107,15 @@ void query_sysenv() {
          // printf(" Output name: %s -> %p\n", prec->output_name, prec->edid);
          // hex_dump(prec->edid, 128);
          rpt_vstring(1, "xrandr output: %s", prec->output_name);
-         Parsed_Edid * parsed_edid = create_parsed_edid(prec->edid);
+         Parsed_Edid * parsed_edid = create_parsed_edid(prec->edidbytes);
          if (parsed_edid) {
             bool verbose_edid = false;
             report_parsed_edid(parsed_edid, verbose_edid, 2 /* depth */);
             free_parsed_edid(parsed_edid);
          }
          else {
-            printf(" Unparsable EDID for output name: %s -> %p\n", prec->output_name, prec->edid);
-            hex_dump(prec->edid, 128);
+            printf(" Unparsable EDID for output name: %s -> %p\n", prec->output_name, prec->edidbytes);
+            hex_dump(prec->edidbytes, 128);
          }
       }
       free_x11_edids(edid_recs);

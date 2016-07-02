@@ -27,8 +27,7 @@
  */
 
 #include "base/core.h"
-#include "base/edid.h"
-
+#include "util/edid.h"
 #include "i2c/i2c_bus_core.h"
 #include "adl/adl_shim.h"
 #include "usb/usb_core.h"

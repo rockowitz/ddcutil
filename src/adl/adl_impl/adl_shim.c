@@ -26,10 +26,11 @@
 #include <stdbool.h>
 #include <string.h>
 
+#include "util/edid.h"
+
 #include "base/execution_stats.h"
 #include "base/core.h"
 #include "base/displays.h"
-#include "base/edid.h"
 #include "base/status_code_mgt.h"
 
 #include "adl/adl_impl/adl_intf.h"

@@ -28,11 +28,13 @@
 
 #include <stdbool.h>
 
-#include "../vcp/vcp_base.h"
 #include "util/coredefs.h"
+#include "util/edid.h"
 
 #include "base/core.h"
-#include "base/edid.h"
+
+#include "vcp/vcp_base.h"
+
 
 /*
 Monitors are specified in different ways in different contexts:

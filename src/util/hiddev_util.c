@@ -46,9 +46,10 @@
 #include "util/glib_util.h"
 #include "util/report_util.h"
 #include "util/hiddev_reports.h"   // circular dependency, but only used in debug code
-#include "util/x11_util.h"         // *** TEMP ***
-#include "base/edid.h"             // *** TEMP ***
-#include "i2c/i2c_bus_core.h"      // *** TEMP ***
+
+#include "util/edid.h"
+
+
 
 #include "util/hiddev_util.h"
 
@@ -307,8 +308,9 @@ bye:
  * a usage of Monitor Control from the USB Monitor Usage Page."
 */
 bool is_hiddev_monitor(int fd) {
-   bool debug = false;
-   DBGMSF(debug, "Starting");
+   bool debug = true;
+   if (debug)
+      printf("(%s) Starting\n", __func__);
    int monitor_collection_index = -1;
 
    int cndx = 0;   // indexes start at 0
@@ -572,14 +574,6 @@ bye:
 
 // Describes a field within a report
 
-struct hid_field_locator {
-   // struct hiddev_report_info * rinfo;         // simplify by eliminating?
-   struct hiddev_field_info  * finfo;         // simplify by eliminating?
-   __u32                       report_type;
-   __u32                       report_id;
-   __u32                       field_index;
-};
-
 
 void free_hid_field_locator(struct hid_field_locator * location) {
    if (location) {
@@ -783,8 +777,8 @@ find_report(int fd, __u32 report_type, __u32 ucode, bool match_all_ucodes) {
  * Arguments:
  *   fd          file handle of open hiddev device
  *
- * Returns:      pointer to newly allocated struct edid_location representing
- *               the feature report and field within that report which returns
+ * Returns:      pointer to newly allocated struct hid_field_locator representing
+ *               the feature report and field within that report that returns
  *               the EDID,
  *               NULL if not found
  *
@@ -792,8 +786,12 @@ find_report(int fd, __u32 report_type, __u32 ucode, bool match_all_ucodes) {
  */
 struct hid_field_locator *
 locate_edid_report(int fd) {
-   bool debug = false;
+   bool debug = true;
 
+   struct hid_field_locator* result = NULL;
+   result = find_report(fd, HID_REPORT_TYPE_FEATURE, 0x00800002, /*match_all_ucodes=*/true);
+
+#ifdef OLD
    struct hiddev_report_info rinfo = {
       .report_type = HID_REPORT_TYPE_FEATURE,
       .report_id   = HID_REPORT_ID_FIRST
@@ -836,6 +834,7 @@ locate_edid_report(int fd) {
        result->report_id   = report_id_found;
        result->field_index = field_index_found;    // finfo.field_index may have been changed by HIDIOGREPORTINFO
     }
+#endif
 
     if (debug) {
        if (result) {
@@ -869,7 +868,7 @@ locate_edid_report(int fd) {
  */
 Buffer * get_hiddev_edid_by_location(int fd, struct hid_field_locator * loc) {
    assert(loc);
-   bool debug = false;
+   bool debug = true;
    if (debug) {
       printf("(%s) Starting.  loc=%p, loc->report_id=%d, loc->field_index=%d\n",
              __func__, loc, loc->report_id, loc->field_index);
@@ -959,58 +958,6 @@ bye:
 }
 
 
-struct hid_field_locator * find_eizo_model_sn_report(int fd) {
-   // struct hiddev_report_info * rinfo = calloc(1,sizeof(struct hiddev_report_info));
-
-   // find report
-   // Find: HID_REPORT_TYPE_FEATURE
-   // field application(usage)  00800001      USB Monitor/Monitor Control
-   // flags   HID_FIELD_VARIABLE | HID_FIELD_BUFFERED_BYTE
-   // ucode: 0xff000035
-
-
-   bool debug = true;
-   struct hid_field_locator * loc = NULL;
-   struct hiddev_devinfo dev_info;
-
-   int rc = ioctl(fd, HIDIOCGDEVINFO, &dev_info);
-   if (rc != 0) {
-      REPORT_IOCTL_ERROR("HIDIOCGDEVINFO", rc);
-      goto bye;
-   }
-   if (dev_info.vendor == 0x056d && dev_info.product == 0x0002)  {
-      loc = find_report(fd, HID_REPORT_TYPE_FEATURE, 0xff000035, /*match_all_ucodes=*/false);
-   }
-
-bye:
-   if (debug) {
-      printf("(%s) Returning: %p\n", __func__, loc);
-      if (loc)
-	      report_hid_field_locator(loc,2);
-   }
-   return loc;
-}
-
-
-struct model_sn_pair {
-   char * model;
-   char * sn;
-};
-
-void free_model_sn_pair(struct model_sn_pair * p) {
-   if (p) {
-      free(p->model);
-      free(p->sn);
-      free(p);
-   }
-}
-
-void report_model_sn_pair(struct model_sn_pair * p, int depth) {
-   int d1 = depth+1;
-   rpt_structure_loc("struct model_sn_pair",p, depth);
-   rpt_vstring(d1, "model:  %s", p->model);
-   rpt_vstring(d1, "sn:     %s", p->sn);
-}
 
 
 Buffer * get_multibyte_report_value(int fd, struct hid_field_locator * loc) {
@@ -1064,60 +1011,6 @@ bye:
 }
 
 
-bool is_eizo_monitor(int fd) {
-	bool debug = true;
-   bool result = false;
-   struct hiddev_devinfo dev_info;
-   int rc = ioctl(fd, HIDIOCGDEVINFO, &dev_info);
-   if (rc != 0) {
-      REPORT_IOCTL_ERROR("HIDIOCGDEVINFO", rc);
-      goto bye;
-   }
-   if (dev_info.vendor == 0x056d && dev_info.product == 0x0002)
-      result = true;
-
-bye:
-   DBGMSF(debug, "Returning %s", bool_repr(result));
-   return result;
-}
-
-
-struct model_sn_pair *  get_eizo_model_sn_by_report(int fd) {
-   bool debug = true;
-   struct model_sn_pair* result = NULL;
-
-   if (is_eizo_monitor(fd)) {
-      struct hid_field_locator * loc = find_eizo_model_sn_report(fd);
-      DBGMSF(debug, "find_eizo_model_sn_report() returned: %p", loc);
-      if (loc) {
-         // get report
-         Buffer * modelsn = get_multibyte_report_value(fd, loc);
-         if (modelsn) {
-            assert(modelsn->len >= 16);
-            result = calloc(1, sizeof(struct model_sn_pair));
-            result->model = calloc(1,9);
-            result->sn    = calloc(1,9);
-            memcpy(result->sn, modelsn->bytes,8);
-            result->sn[8] = '\0';
-            memcpy(result->model, modelsn->bytes+8, 8);
-            result->model[8] = '\0';
-            rtrim_in_place(result->sn);
-            rtrim_in_place(result->model);
-            free(modelsn);
-         }
-      }
-   }
-
-   if (debug) {
-      printf("(%s) Returning: %p\n", __func__, result);
-      if (result)
-         report_model_sn_pair(result, 1);
-   }
-   return result;
-
-}
-
-
 
 /* Retrieves the EDID (128 bytes) from a hiddev device representing a HID
  * compliant monitor.
@@ -1131,93 +1024,30 @@ struct model_sn_pair *  get_eizo_model_sn_by_report(int fd) {
  * It is the responsibility of the caller to free the returned buffer.
  */
 Buffer * get_hiddev_edid(int fd)  {
-   bool debug = false;
-   DBGMSF(debug, "Starting");
+   bool debug = true;
+   if (debug)
+      printf("(%s) Starting\n", __func__);
    Buffer * result = NULL;
    struct hid_field_locator * loc = locate_edid_report(fd);
    if (loc) {
       result = get_hiddev_edid_by_location(fd, loc);
    }
 
-   // *** TEMPORARY HACK FOR TESTING ***
+#ifdef MOVE_TO_CALLER
    if (result) {
-      Parsed_Edid * parsed_edid0 = create_parsed_edid(result->bytes);
-      if (!parsed_edid0) {
-         result = NULL;
-         DBGMSF(debug, "create_parsed_edid() returned invalid edid");
-      }
-   }
+       Parsed_Edid * parsed_edid0 = create_parsed_edid(result->bytes);
+       if (!parsed_edid0) {
+          result = NULL;
+          DBGMSF(debug, "create_parsed_edid() returned invalid EDID");
+       }
+    }
+#endif
 
-   struct model_sn_pair * model_sn = NULL;
-
-   if (!result) {
-
-      if (is_eizo_monitor(fd)) {
-         printf("(%s) *** Special fixup for Eizo monitor ***\n", __func__);
-
-         model_sn = get_eizo_model_sn_by_report(fd);
-         if (model_sn) {
-            Bus_Info * bus_info = i2c_find_bus_info_by_model_sn(model_sn->model, model_sn->sn);
-            if (bus_info) {
-               printf("(%s) Using EDID for /dev/i2c-%d\n", __func__, bus_info->busno);
-               result = buffer_new_with_value(bus_info->edid->bytes, 128, __func__);
-               // result = NULL;   // for testing - both i2c and X11 methods work
-            }
-            else {
-               // TODO: try ADL
-            }
-         }
-      }
-   }
-
-   // if (model_sn) {
-   if (!result) {
-      printf("(%s) *** HACK: USING X11 EDID ***\n", __func__);
-
-      GPtrArray* edid_recs = get_x11_edids();
-      puts("");
-      printf("EDIDs reported by X11 for connected xrandr outputs:\n");
-      // DBGMSG("Got %d X11_Edid_Recs\n", edid_recs->len);
-
-      if (model_sn) {
-         int ndx = 0;
-         for (ndx=0; ndx < edid_recs->len; ndx++) {
-            X11_Edid_Rec * prec = g_ptr_array_index(edid_recs, ndx);
-            // printf(" Output name: %s -> %p\n", prec->output_name, prec->edid);
-            // hex_dump(prec->edid, 128);
-            rpt_vstring(1, "xrandr output: %s", prec->output_name);
-            Parsed_Edid * parsed_edid = create_parsed_edid(prec->edid);
-            if (parsed_edid) {
-               bool verbose_edid = false;
-               report_parsed_edid(parsed_edid, verbose_edid, 2 /* depth */);
-               if (streq(parsed_edid->model_name, model_sn->model) &&
-                     streq(parsed_edid->serial_ascii, model_sn->sn) )
-               {
-                  printf("(%s) Found EIZO EDID from X11\n", __func__);
-                  if (!result)
-                     result = buffer_new_with_value(parsed_edid->bytes, 128, __func__);
-               }
-               free_parsed_edid(parsed_edid);
-            }
-            else {
-               printf(" Unparsable EDID for output name: %s -> %p\n", prec->output_name, prec->edid);
-               hex_dump(prec->edid, 128);
-            }
-         }
-      }
-
-      if (!result && edid_recs->len > 0) {
-         printf("(%s) Using last X11 EDID\n", __func__);
-         X11_Edid_Rec * prec = g_ptr_array_index(edid_recs, edid_recs->len-1);
-         result = buffer_new_with_value(prec->edid, 128, __func__);
-      }
-
-      free_x11_edids(edid_recs);
-   }
-
-   DBGMSF(debug, "Returning: %p", result);
+   if (debug)
+      printf("(%s) Returning: %p\n", __func__, result);
    return result;
 }
+
 
 
 //

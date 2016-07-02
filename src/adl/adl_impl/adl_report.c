@@ -28,11 +28,10 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "util/edid.h"
 #include "util/string_util.h"
 
 #include "base/core.h"
-#include "base/edid.h"
-
 #include "adl/adl_impl/adl_sdk_includes.h"
 
 #include "adl/adl_impl/adl_report.h"

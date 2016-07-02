@@ -146,7 +146,7 @@ base/core.c \
 base/ddc_errno.c \
 base/ddc_packets.c \
 base/displays.c \
-base/edid.c \
+util/edid.c \
 base/execution_stats.c \
 base/linux_errno.c \
 base/status_code_mgt.c \

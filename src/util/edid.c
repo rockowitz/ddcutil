@@ -34,9 +34,8 @@
 #include "util/report_util.h"
 #include "util/string_util.h"
 
-#include "base/core.h"
+#include <util/edid.h>
 
-#include "base/edid.h"
 
 // Direct writes to stdout/stderr: NO
 
@@ -200,7 +199,9 @@ void get_edid_descriptor_strings(
       Byte * descriptor = edidbytes +
                           EDID_DESCRIPTORS_BLOCKS_START +
                           descriptor_ndx * EDID_DESCRIPTOR_BLOCK_SIZE;
-      DBGMSF(debug, "full descriptor: %s",    hexstring(descriptor, EDID_DESCRIPTOR_BLOCK_SIZE));
+      if (debug)
+         printf("(%s) full descriptor: %s\n",  __func__,
+                hexstring(descriptor, EDID_DESCRIPTOR_BLOCK_SIZE));
 
       // test if a string descriptor
       if ( descriptor[0] == 0x00 &&       // 0x00 if not a timing descriptor
@@ -226,7 +227,8 @@ void get_edid_descriptor_strings(
             }
             memcpy(nameslot, textstart, textlen);
             nameslot[textlen] = '\0';
-            DBGMSF(debug, "name = %s", nameslot);
+            if (debug)
+               printf("(%s) name = %s\n", __func__, nameslot);
 
          fields_found++;
          }
@@ -247,13 +249,15 @@ Parsed_Edid * create_parsed_edid(Byte* edidbytes) {
    const Byte edid_header_tag[] = {0x00, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0x00};
    if (memcmp(edidbytes, edid_header_tag, 8) != 0) {
       char * hs = hexstring(edidbytes,8);
-      DBGMSF(debug, "Invalid initial EDID bytes: %s", hs);
+      if (debug)
+         printf("(%s) Invalid initial EDID bytes: %s\n", __func__, hs);
       free(hs);
       goto bye;
    }
 
    if (edid_checksum(edidbytes) != 0x00) {
-      DBGMSF(debug, "Invalid EDID checksum: 0x%02x", edid_checksum(edidbytes));
+      if (debug)
+         printf("(%s) Invalid EDID checksum: 0x%02x\n", __func__, edid_checksum(edidbytes));
       goto bye;
    }
 
