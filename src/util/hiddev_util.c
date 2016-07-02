@@ -46,14 +46,9 @@
 #include "util/glib_util.h"
 #include "util/report_util.h"
 #include "util/hiddev_reports.h"   // circular dependency, but only used in debug code
-
 #include "util/edid.h"
 
-
-
 #include "util/hiddev_util.h"
-
-
 
 
 static const char* report_type_name_table[] = {
