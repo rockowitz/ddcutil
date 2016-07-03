@@ -628,7 +628,7 @@ int usb_open_hiddev_device(char * hiddev_devname, bool emit_error_msg) {
 /* Closes an open USB device.
  *
  * Arguments:
- *   fd     file descriptor
+ *   fd     file descriptor for open hiddev device
  *   device_fn
  *          if NULL, ignore
  *   failure_action  if true, exit if close fails
@@ -1057,7 +1057,7 @@ Display_Info_List usb_get_valid_displays() {
 /* Gets the current value of a usage, as identified by a Usb_Monitor_Vcp_Rec
  *
  * Arguments:
- *    fd
+ *    fd      file descriptor for open hiddev device
  *    vcprec  pointer to a Usb_Monitor_Vcp_Rec identifying the value to retrieve
  *    maxval  address at which to return max value of the usage
  *    curval  address at which to return the current value of the usage
@@ -1304,6 +1304,19 @@ Global_Status_Code usb_get_vcp_value(
 }
 
 
+/* Sets the value of usage, as identified by hiddev
+ *
+ * Arguments:
+ *   fd           file descriptor for open hiddev device
+ *   report_type  HID_REPORT_TYPE_FEATURE or HID_REPORT_TYPE_OUTPUT
+ *   report_id    report number
+ *   field_idx    field number
+ *   usage_idx    usage number
+ *   value        value to set
+ *
+ * Returns:       status code
+ */
+
 // adapted from usbmonctl
 Base_Status_Errno
 set_control_value(int fd,
@@ -1355,7 +1368,7 @@ bye:
 /* Sets the value of a usage, as identified by a Usb_Monitor_Vcp_Rec
  *
  * Arguments:
- *    fd
+ *    fd         file descriptor for open hiddev device
  *    vcprec     pointer to a Usb_Monitor_Vcp_Rec identifying the usage to set
  *    new_value  new value
  *

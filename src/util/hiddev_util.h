@@ -45,10 +45,8 @@
    } while(0)
 
 
-// Describes a field within a report
-
+// Identifies a field within a report
 struct hid_field_locator {
-   // struct hiddev_report_info * rinfo;         // simplify by eliminating?
    struct hiddev_field_info  * finfo;         // simplify by eliminating?
    __u32                       report_type;
    __u32                       report_id;
@@ -75,8 +73,7 @@ char * get_hiddev_name(int fd);
 
 Parsed_Edid * get_hiddev_edid_with_backup(int fd);
 
-struct hiddev_field_info *
-is_field_edid(int fd, struct hiddev_report_info * rinfo, int field_index);
+bool is_field_edid(int fd, struct hiddev_report_info * rinfo, int field_index);
 
 __u32 get_identical_ucode(int fd, struct hiddev_field_info * finfo, __u32 actual_field_index);
 

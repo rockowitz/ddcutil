@@ -303,7 +303,7 @@ bye:
  * a usage of Monitor Control from the USB Monitor Usage Page."
 */
 bool is_hiddev_monitor(int fd) {
-   bool debug = true;
+   bool debug = false;
    if (debug)
       printf("(%s) Starting\n", __func__);
    int monitor_collection_index = -1;
@@ -340,15 +340,25 @@ bool is_hiddev_monitor(int fd) {
 }
 
 
-__u32 get_identical_ucode(int fd, struct hiddev_field_info * finfo, __u32 actual_field_index) {
+/* Checks that all usages of a field have the same usage code.
+ *
+ * Arguments:
+ *   fd            file descriptor of open hiddev device
+ *   finfo         pointer to hiddev_field_info struct describing the field
+ *   field_index   actual field index, value in finfo may have been changed by
+ *                 HIDIOCGFIELDINFO call, that filled in hiddev_field_info
+ *
+ * Returns:        usage code if all are identical, 0 if not
+ */
+__u32 get_identical_ucode(int fd, struct hiddev_field_info * finfo, __u32 field_index) {
    // assert(finfo->flags & HID_FIELD_BUFFERED_BYTE);
    __u32 result = 0;
 
    for (int undx = 0; undx < finfo->maxusage; undx++) {
       struct hiddev_usage_ref uref = {
-          .report_type = finfo->report_type,   // rinfo.report_type;
-          .report_id =   finfo->report_id,     // rinfo.report_id;
-          .field_index = actual_field_index,   // use original value, not value changed by HIDIOCGFIELDINFO
+          .report_type = finfo->report_type,
+          .report_id   = finfo->report_id,
+          .field_index = field_index,         // actual field index, not value changed by HIDIOCGFIELDINFO
           .usage_index = undx
       };
       // printf("(%s) report_type=%d, report_id=%d, field_index=%d, usage_index=%d\n",
@@ -478,20 +488,19 @@ Buffer * collect_single_byte_usage_values(
  *    rinfo        pointer to hiddev_report_info struct
  *    field_index  index number of field to check
  *
- * Returns:        pointer to hiddev_field_info struct for field if true,
- *                 NULL if field does not represent an EDID
+ * Returns:        true if the field represents an EDID, false if not
  *
  * The field must have at least 128 usages, and the usage code for each must
  * be USB Monitor/EDID information
  */
-struct hiddev_field_info *
-is_field_edid(int fd, struct hiddev_report_info * rinfo, int field_index) {
+bool is_field_edid(int fd, struct hiddev_report_info * rinfo, int field_index) {
    bool debug = false;
    if (debug)
       printf("(%s) report_type=%d, report_id=%d, field index = %d\n",
              __func__, rinfo->report_type, rinfo->report_id, field_index);
 
-   struct hiddev_field_info *  result = NULL;
+   // struct hiddev_field_info *  result = NULL;
+   bool all_usages_edid = false;
    int rc;
 
    struct hiddev_field_info finfo = {
@@ -518,7 +527,7 @@ is_field_edid(int fd, struct hiddev_report_info * rinfo, int field_index) {
    if (finfo.maxusage < 128)
       goto bye;
 
-   bool all_usages_edid = ( get_identical_ucode(fd, &finfo, field_index) == 0x00800002 );
+   all_usages_edid = ( get_identical_ucode(fd, &finfo, field_index) == 0x00800002 );
 #ifdef OLD
    bool all_usages_edid = true;
    int undx;
@@ -544,12 +553,14 @@ is_field_edid(int fd, struct hiddev_report_info * rinfo, int field_index) {
       }
    }   // loop over usages
 #endif
-   if (all_usages_edid) {
-      result = malloc(sizeof(struct hiddev_field_info));
-      memcpy(result, &finfo, sizeof(struct hiddev_field_info));
-   }
+
+   // if (all_usages_edid) {
+   //    result = malloc(sizeof(struct hiddev_field_info));
+   //    memcpy(result, &finfo, sizeof(struct hiddev_field_info));
+   // }
 
 bye:
+#ifdef OLD
    if (debug) {
       if (result) {
          printf("(%s) Returning: \n", __func__);
@@ -560,6 +571,8 @@ bye:
 
    }
    return result;
+#endif
+   return all_usages_edid;
 }
 
 
@@ -567,8 +580,9 @@ bye:
 #define EDID_SIZE 128
 
 
-// Describes a field within a report
-
+//
+// hid_field_locator functions
+//
 
 void free_hid_field_locator(struct hid_field_locator * location) {
    if (location) {
@@ -853,8 +867,8 @@ locate_edid_report(int fd) {
  * locating the EDID are known.
  *
  * Arguments:
- *    fd     file descriptor
- *    loc    pointer to edid_location struct
+ *    fd     file descriptor of open hiddev device
+ *    loc    pointer to hid_field_locator struct
  *
  * Returns:
  *    pointer to Buffer struct containing the EDID
@@ -1004,7 +1018,6 @@ bye:
 
    return result;
 }
-
 
 
 /* Retrieves the EDID (128 bytes) from a hiddev device representing a HID

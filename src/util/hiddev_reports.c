@@ -469,7 +469,7 @@ void report_field_usage(
 /* Reports all report descriptors of a particular type for an open HID device.
  *
  * Arguments:
- *   fd           file descriptor
+ *   fd           file descriptor for open hiddev device
  *   report_type  HID_REPORT_TYPE_INPUT, HID_REPORT_TYPE_OUTPUT, or HID_REPORT_TYPE_FEATURE
  *   depth        logical indentation depth
  *
@@ -524,17 +524,18 @@ void report_report_descriptors_for_report_type(int fd, __u32 report_type, int de
       for (fndx = 0; fndx < rinfo.num_fields; fndx++) {
 
          // printf("(%s) field index = %d\n", __func__, i);
+
+         // struct hiddev_field_info * finfo2 = is_field_edid(fd, &rinfo, fndx);
+         bool edidfg = is_field_edid(fd, &rinfo, fndx);
+         if (edidfg) {
+            rpt_vstring(d2, "Report id: %d, Field index: %d contains EDID:",
+                            rinfo.report_id, fndx);
+         }
+
          struct hiddev_field_info finfo = {0};
          memset(&finfo, 0, sizeof(finfo));
          finfo.report_type = rinfo.report_type;
          finfo.report_id   = rinfo.report_id;
-         struct hiddev_field_info * finfo2 = is_field_edid(fd, &rinfo, fndx);
-         if (finfo2) {
-            free(finfo2);
-            rpt_vstring(d2, "Report id: %d, Field index: %d contains EDID:",
-                            finfo.report_id, fndx);
-         }
-
          finfo.field_index = fndx;
          rpt_vstring(d2, "Report id: %d, Field index %d:", finfo.report_id, fndx);
          int rc = ioctl(fd, HIDIOCGFIELDINFO, &finfo);
@@ -542,7 +543,6 @@ void report_report_descriptors_for_report_type(int fd, __u32 report_type, int de
             REPORT_IOCTL_ERROR("HIDIOCGFIELDINFO", rc);
             break;        // just stop checking fields
          }
-
 
          rpt_vstring(d2, "Description of field %d:", fndx);
          if (finfo.field_index != fndx) {
@@ -560,7 +560,7 @@ void report_report_descriptors_for_report_type(int fd, __u32 report_type, int de
                             common_ucode, interpret_usage_code(common_ucode));
          }
 
-         // Get values for Feature or Output report
+         // Get values for Feature or Input report
          if (finfo.report_type != HID_REPORT_TYPE_OUTPUT) {
             if (common_ucode) {
                if (finfo.flags & HID_FIELD_BUFFERED_BYTE) {
