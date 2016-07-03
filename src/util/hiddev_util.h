@@ -71,8 +71,6 @@ GPtrArray * get_hiddev_device_names();
 
 char * get_hiddev_name(int fd);
 
-Parsed_Edid * get_hiddev_edid_with_backup(int fd);
-
 bool is_field_edid(int fd, struct hiddev_report_info * rinfo, int field_index);
 
 __u32 get_identical_ucode(int fd, struct hiddev_field_info * finfo, __u32 actual_field_index);
