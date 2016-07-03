@@ -93,9 +93,9 @@ char * hexstring2(
           char *                buffer,     // buffer in which to return hex string
           int                   bufsz);     // buffer size
 
-void fhex_dump_indented(FILE * fh, unsigned char *data, int size, int indents);
-void fhex_dump(FILE * fh, Byte * bytes, int size);
-void hex_dump(Byte * bytes, int size);
+void fhex_dump_indented(FILE * fh, const Byte* data, int size, int indents);
+void fhex_dump(FILE * fh, const Byte* bytes, int size);
+void hex_dump(const Byte * bytes, int size);
 
 
 //

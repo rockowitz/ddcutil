@@ -741,7 +741,7 @@ char * hexstring2(
  * Returns:
  *    nothing
  */
-void fhex_dump_indented(FILE * fh, unsigned char *data, int size, int indents)
+void fhex_dump_indented(FILE * fh, const Byte* data, int size, int indents)
 {
    int i; // index in data...
    int j; // index in line...
@@ -755,7 +755,9 @@ void fhex_dump_indented(FILE * fh, unsigned char *data, int size, int indents)
 
    // printf("\n");
    // Printing the ruler...
-   fprintf(fh, "%s        +0          +4          +8          +c            0   4   8   c   \n", indentation);
+   fprintf(fh,
+           "%s        +0          +4          +8          +c            0   4   8   c   \n",
+           indentation);
    ascii = buffer + 58;
    memset(buffer, ' ', 58 + 16);
    buffer[58 + 16] = '\n';
@@ -797,7 +799,7 @@ void fhex_dump_indented(FILE * fh, unsigned char *data, int size, int indents)
  * Returns:
  *    nothing
  */
-void fhex_dump(FILE * fh, unsigned char *data, int size)
+void fhex_dump(FILE * fh, const Byte* data, int size)
 {
    fhex_dump_indented(fh, data, size, 0);
 }
@@ -812,7 +814,7 @@ void fhex_dump(FILE * fh, unsigned char *data, int size)
  * Returns:
  *    nothing
  */
-void hex_dump(unsigned char *data, int size) {
+void hex_dump(const Byte* data, int size) {
    fhex_dump(stdout, data, size);
 }
 

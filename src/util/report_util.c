@@ -150,7 +150,7 @@ void rpt_vstring(int depth, char * format, ...) {
  *
  * The output is indented per the specified indentation depth.
  */
-void rpt_structure_loc(char * name, void * ptr, int depth) {
+void rpt_structure_loc(const char * name, const void * ptr, int depth) {
    // printf("(%s) Starting\n", __func__);
    // printf("(%s) stdout=%p\n", __func__, stdout);
    // printf("(%s) output_dest_stack_pos=%d, on stack=%p\n",
@@ -167,13 +167,14 @@ void rpt_structure_loc(char * name, void * ptr, int depth) {
  *
  * Optionally, a description string can be specified along with the name.
  */
-void rpt_str(const char * name, char * info, char * val, int depth) {
+void rpt_str(const char * name, char * info, const char * val, int depth) {
    char infobuf[100];
    if (info)
       snprintf(infobuf, 99, "(%s)", info);
    else
       infobuf[0] = '\0';
-   fprintf(rpt_cur_output_dest(), "%*s%-25s %30s : %s\n", rpt_indent(depth), "", name, infobuf, val);
+   fprintf(rpt_cur_output_dest(),
+           "%*s%-25s %30s : %s\n", rpt_indent(depth), "", name, infobuf, val);
 }
 
 
@@ -387,6 +388,6 @@ void rpt_bool(char * name, char * info, bool val, int depth) {
 }
 
 
-void rpt_hex_dump(unsigned char * data, int size, int depth) {
+void rpt_hex_dump(const Byte * data, int size, int depth) {
    fhex_dump_indented(rpt_cur_output_dest(), data, size, rpt_indent(depth));
 }

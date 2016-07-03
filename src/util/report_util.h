@@ -38,9 +38,9 @@ void rpt_title(char * title, int depth);
 
 void rpt_vstring(int depth, char * format, ...) ;
 
-void rpt_structure_loc(char * name, void * ptr, int depth);
+void rpt_structure_loc(const char * name, const void * ptr, int depth);
 
-void rpt_str(const char * name, char * info, char * val, int depth);
+void rpt_str(const char * name, char * info, const char * val, int depth);
 
 void rpt_int(char * name, char * info, int val, int depth);
 
@@ -89,7 +89,7 @@ void rpt_ifval2(char * name,
 
 void rpt_bool(char * name, char * info, bool val, int depth);
 
-void rpt_hex_dump(unsigned char * data, int size, int depth);
+void rpt_hex_dump(const Byte * data, int size, int depth);
 
 int rpt_indent(int depth);
 
