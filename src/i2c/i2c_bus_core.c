@@ -433,6 +433,105 @@ char * i2c_interpret_functionality_into_buffer(unsigned long functionality, Buff
 }
 
 
+//
+// EDID Retrieval
+//
+
+/* Gets EDID bytes of a monitor on an open I2C device.
+ *
+ * Arguments:
+ *   fd        file descriptor for open /dev/i2c-n
+ *   rawedid   buffer in which to return first 128 bytes of EDID
+ *
+ * Returns:
+ *   0        success
+ *   <0       error
+ */
+Global_Status_Code i2c_get_raw_edid_by_fd(int fd, Buffer * rawedid) {
+   bool debug = false;
+   DBGMSF(debug, "Getting EDID for file %d", fd);
+
+   bool conservative = false;
+
+   assert(rawedid->buffer_size >= 128);
+   Global_Status_Code gsc;
+
+   i2c_set_addr(fd, 0x50);
+   // 10/23/15, try disabling sleep before write
+   if (conservative)
+      sleep_millis_with_trace(DDC_TIMEOUT_MILLIS_DEFAULT, __func__, "before write");
+
+   Byte byte_to_write = 0x00;
+
+   gsc = invoke_i2c_writer(fd, 1, &byte_to_write);
+   if (gsc == 0) {
+      gsc = invoke_i2c_reader(fd, 128, rawedid->bytes);
+      assert(gsc <= 0);
+      if (gsc == 0) {
+         rawedid->len = 128;
+         if (debug) {
+            DBGMSG("call_read returned:");
+            buffer_dump(rawedid);
+            DBGMSG("edid checksum = %d", edid_checksum(rawedid->bytes) );
+         }
+         Byte checksum = edid_checksum(rawedid->bytes);
+         if (checksum != 0) {
+            // possible if successfully read bytes from i2c bus with no monitor
+            // attached - the bytes will be junk.
+            // e.g. nouveau driver, Quadro card, on blackrock
+            DBGMSF(debug, "Invalid EDID checksum %d, expected 0.\n", checksum);
+            rawedid->len = 0;
+            gsc = DDCRC_EDID;
+         }
+      }
+   }
+
+   if (gsc < 0)
+      rawedid->len = 0;
+
+   if (debug) {
+      DBGMSG("Returning %d.  edidbuf contents:", gsc);
+      buffer_dump(rawedid);
+   }
+   return gsc;
+}
+
+
+/* Returns a parsed EDID record for the monitor on an I2C bus.
+ *
+ * Arguments:
+ *   fd          file descriptor for open /dev/i2c-n
+ *
+ * Returns:
+ *   Parsed_Edid, NULL if get_raw_edid_by_fd() fails
+ *
+ * Terminates execution if open or close of bus fails
+ */
+Parsed_Edid * i2c_get_parsed_edid_by_fd(int fd) {
+   bool debug = false;
+   DBGMSF(debug, "Starting. fd=%d\n", fd);
+   Parsed_Edid * edid = NULL;
+   Buffer * rawedidbuf = buffer_new(128, NULL);
+
+   int rc = i2c_get_raw_edid_by_fd(fd, rawedidbuf);
+   if (rc == 0) {
+      edid = create_parsed_edid(rawedidbuf->bytes);
+      if (debug) {
+         if (edid)
+            report_parsed_edid(edid, false /* dump hex */, 0);
+         else
+            DBGMSG("create_parsed_edid() returned NULL");
+      }
+   }
+   else if (rc == DDCRC_EDID) {
+      DBGMSF(debug, "i2c_get_raw_edid_by_fd() returned %s", gsc_desc(rc));
+
+   }
+   buffer_free(rawedidbuf, NULL);
+   DBGMSF(debug, "Returning %p", edid);
+   return edid;
+}
+
 
 //
 // I2C Bus Inspection
@@ -477,7 +576,6 @@ Bus_Info * i2c_check_bus(Bus_Info * bus_info) {
    DBGMSF(debug, "Returning %p, flags=0x%02x", bus_info, bus_info->flags );
    return bus_info;
 }
-
 
 
 //
@@ -914,6 +1012,9 @@ Bus_Info * i2c_find_bus_info_by_edid(const Byte * edidbytes) {
 }
 
 
+//
+// I2C bus inquiry
+//
 
 /* Checks whether an I2C bus supports DDC.
  *
@@ -957,11 +1058,14 @@ bool i2c_is_valid_bus(int busno, bool emit_error_msg) {
 }
 
 
-//
-// Bus Reports
-//
-
-
+/* Gets the parsed EDID record for the monitor on an I2C bus
+ * specified by its bus number.
+ *
+ * Arguments:
+ *   busno        I2C bus number
+ *
+ * Returns:       Parsed_Edid record, NULL if not found
+ */
 Parsed_Edid * i2c_get_parsed_edid_by_busno(int busno) {
    bool debug = false;
    DBGMSF(debug, "Starting. busno=%d", busno);
@@ -975,6 +1079,10 @@ Parsed_Edid * i2c_get_parsed_edid_by_busno(int busno) {
    return edid;
 }
 
+
+//
+// Bus Reports
+//
 
 /* Reports on a single I2C bus.
  *
@@ -1086,7 +1194,7 @@ void i2c_report_active_display(Bus_Info * businfo, int depth) {
 }
 
 
-/* Reports a single active display.
+/* Reports a single active display, specified by its bus number.
  *
  * Output is written to the current report destination.
  *
@@ -1212,101 +1320,9 @@ typedef struct {
 #endif
 
 
+
 //
-// EDID
+// Miscellaneous
 //
 
-/* Retrieve EDID with I2C calls known to work
- *
- * Arguments:
- *   fd       file descriptor for open bus
- *   rawedid  buffer in which to return 128 byte EDID
- *
- * Returns:
- *   0        success
- *   <0       error
- */
-Global_Status_Code i2c_get_raw_edid_by_fd(int fd, Buffer * rawedid) {
-   bool debug = false;
-   DBGMSF(debug, "Getting EDID for file %d", fd);
 
-   bool conservative = false;
-
-   assert(rawedid->buffer_size >= 128);
-   Global_Status_Code gsc;
-
-   i2c_set_addr(fd, 0x50);
-   // 10/23/15, try disabling sleep before write
-   if (conservative)
-      sleep_millis_with_trace(DDC_TIMEOUT_MILLIS_DEFAULT, __func__, "before write");
-
-   Byte byte_to_write = 0x00;
-
-   gsc = invoke_i2c_writer(fd, 1, &byte_to_write);
-   if (gsc == 0) {
-      gsc = invoke_i2c_reader(fd, 128, rawedid->bytes);
-      assert(gsc <= 0);
-      if (gsc == 0) {
-         rawedid->len = 128;
-         if (debug) {
-            DBGMSG("call_read returned:");
-            buffer_dump(rawedid);
-            DBGMSG("edid checksum = %d", edid_checksum(rawedid->bytes) );
-         }
-         Byte checksum = edid_checksum(rawedid->bytes);
-         if (checksum != 0) {
-            // possible if successfully read bytes from i2c bus with no monitor
-            // attached - the bytes will be junk.
-            // e.g. nouveau driver, Quadro card, on blackrock
-            DBGMSF(debug, "Invalid EDID checksum %d, expected 0.\n", checksum);
-            rawedid->len = 0;
-            gsc = DDCRC_EDID;
-         }
-      }
-   }
-
-   if (gsc < 0)
-      rawedid->len = 0;
-
-   if (debug) {
-      DBGMSG("Returning %d.  edidbuf contents:", gsc);
-      buffer_dump(rawedid);
-   }
-   return gsc;
-}
-
-
-/* Returns the EDID bytes for the monitor on an I2C bus.
- *
- * Arguments:
- *   fd          file descriptor for open /dev/i2c-n
- *
- * Returns:
- *   Parsed_Edid, NULL if get_raw_edid_by_fd() fails
- *
- * Terminates execution if open or close of bus fails
- */
-Parsed_Edid * i2c_get_parsed_edid_by_fd(int fd) {
-   bool debug = false;
-   DBGMSF(debug, "Starting. fd=%d\n", fd);
-   Parsed_Edid * edid = NULL;
-   Buffer * rawedidbuf = buffer_new(128, NULL);
-
-   int rc = i2c_get_raw_edid_by_fd(fd, rawedidbuf);
-   if (rc == 0) {
-      edid = create_parsed_edid(rawedidbuf->bytes);
-      if (debug) {
-         if (edid)
-            report_parsed_edid(edid, false /* dump hex */, 0);
-         else
-            DBGMSG("create_parsed_edid() returned NULL");
-      }
-   }
-   else if (rc == DDCRC_EDID) {
-      DBGMSF(debug, "i2c_get_raw_edid_by_fd() returned %s", gsc_desc(rc));
-
-   }
-   buffer_free(rawedidbuf, NULL);
-   DBGMSF(debug, "Returning %p", edid);
-   return edid;
-}
