@@ -407,7 +407,6 @@ unsigned long i2c_get_functionality_flags_by_fd(int fd) {
 }
 
 
-
 char * i2c_interpret_functionality_into_buffer(unsigned long functionality, Buffer * buf) {
    char * result = "--";
 
@@ -730,11 +729,12 @@ Bus_Info * i2c_get_bus_info_by_index(int busndx) {
    return bus_info;
 }
 
+
 typedef struct {
-   int    busno;
-   const char * model_name;
-   const char * serial_ascii;
-   const Byte * edidbytes;
+   int           busno;
+   const char *  model_name;
+   const char *  serial_ascii;
+   const Byte *  edidbytes;
 } I2C_Bus_Selector;
 
 
@@ -757,24 +757,18 @@ void init_i2c_bus_selector(I2C_Bus_Selector* sel) {
    sel->busno = -1;
 }
 
-#ifdef NO
-// OR: strings and memory pointed to by selector are NEVER owned by selector
-
-void free_i2c_bus_selector(I2C_Bus_Selector * sel) {
-   if (sel) {
-      if (sel->model_name)
-         free(sel->model_name);
-      if (sel->serial_ascii)
-         free(sel->serial_ascii);
-      if (sel->edidbytes)
-         free(sel->edidbytes);
-      free(sel);
-   }
-}
-#endif
+// Note: No need for free_i2c_bus_selector() function since strings and memory
+// pointed to by selector are always in other data structures
 
 
-
+/* Tests if a bus_info table entry matches the criteria of a selector.
+ *
+ * Arguments:
+ *   bus_info    pointer to Bus_Info instance to test
+ *   sel         selection criteria
+ *
+ * Returns:      true/false
+ */
 bool bus_info_matches_selector(Bus_Info * bus_info, I2C_Bus_Selector * sel) {
    bool debug = false;
    if (debug) {
@@ -833,7 +827,13 @@ bye:
 }
 
 
-
+/* Finds the first Bus_Info instance that matches a selector
+ *
+ * Arguments:
+ *   sel       pointer to selection criteria
+ *
+ * Returns:    pointer to Bus_Info instance if found, NULL if not
+ */
 Bus_Info * find_bus_info_by_selector(I2C_Bus_Selector * sel) {
    assert(sel);
    bool debug = false;
@@ -884,7 +884,7 @@ Bus_Info * i2c_get_bus_info(int busno) {
    sel.busno = busno;
    Bus_Info * bus_info = find_bus_info_by_selector(&sel);
 
-#ifdef OLD
+#ifdef OLD   // keep for reuse in general selection code moved to ddc level
    int busct = i2c_get_busct();   // forces initialization of Bus_Info data structs if necessary
    int busndx = 0;
    for (busndx=0; busndx < busct; busndx++) {
@@ -931,32 +931,7 @@ Bus_Info * i2c_find_bus_info_by_model_sn(const char * model, const char * sn) {
    sel.serial_ascii = sn;
    Bus_Info * result = find_bus_info_by_selector(&sel);
 
-#ifdef OLD
-   // DBGMSG("Starting. mode=%s, sn=%s", model, sn );
-   Bus_Info * result = NULL;
-   int busct = i2c_get_busct();
-   int busndx;
-   Bus_Info * bus_info;
-   for (busndx=0; busndx<busct; busndx++) {
-      // TODO: SIMPLIFY
-      // bus_info = _get_allocated_bus_info(busndx);
-
-      bus_info = (Bus_Info *) _bus_infos + busndx;
-      int busno =bus_info->busno;
-      Bus_Info * curinfo = i2c_get_bus_info(busno);  // ensures probed
-      // report_businfo(curinfo);
-      // Edid * pEdid = curinfo->edid;
-      Parsed_Edid * edid = curinfo->edid;
-      if (edid) {        // if there's a monitor on the bus
-         // report_edid_summary(pEdid, false);
-         if (streq(edid->model_name, model) && streq(edid->serial_ascii, sn)) {
-            result = curinfo;
-           break;
-         }
-      }
-   }
-#endif
-   // DBGMSG("Returning: %p", result );
+   DBGMSF(debug, "Returning: %p", result );
    return result;
 }
 
@@ -971,7 +946,7 @@ Bus_Info * i2c_find_bus_info_by_model_sn(const char * model, const char * sn) {
  *    NULL if not found
  */
 Bus_Info * i2c_find_bus_info_by_edid(const Byte * edidbytes) {
-   bool debug = true;
+   bool debug = false;
    DBGMSF(debug, "Starting. edidbytes=%p", edidbytes);
    assert(edidbytes);
 
@@ -980,40 +955,13 @@ Bus_Info * i2c_find_bus_info_by_edid(const Byte * edidbytes) {
    sel.edidbytes   = edidbytes;
    Bus_Info * result = find_bus_info_by_selector(&sel);
 
-#ifdef OLD
-   // DBGMSG("Starting. mode=%s, sn=%s", model, sn );
-  Bus_Info * result = NULL;
-  int busct = i2c_get_busct();
-  int busndx;
-  Bus_Info * bus_info;
-  for (busndx=0; busndx<busct; busndx++) {
-     // TODO: SIMPLIFY
-     // bus_info = _get_allocated_bus_info(busndx);
-     bus_info = (Bus_Info *) _bus_infos + busndx;
-     int busno =bus_info->busno;
-
-     Bus_Info * curinfo = i2c_get_bus_info(busno);
-     // report_businfo(curinfo);
-     // Edid * pEdid = curinfo->edid;
-     Parsed_Edid * pEdid = curinfo->edid;
-     if (pEdid) {        // if there's a monitor on the bus
-        // report_edid_summary(pEdid, false);
-        if ( memcmp(pEdid->bytes, edidbytes, 128) == 0)  {
-           result = curinfo;
-          break;
-        }
-     }
-  }
-
-#endif
-
-  // DBGMSG("Returning: %p", result );
-  return result;
+   DBGMSF(debug, "Returning: %p", result );
+   return result;
 }
 
 
 //
-// I2C bus inquiry
+// I2C Bus Inquiry
 //
 
 /* Checks whether an I2C bus supports DDC.
@@ -1078,6 +1026,56 @@ Parsed_Edid * i2c_get_parsed_edid_by_busno(int busno) {
    DBGMSF(debug, "Returning: %p", edid);
    return edid;
 }
+
+
+#ifdef REFERENCE
+typedef struct {
+   Display_Ref * dref;
+   Parsed_Edid * edid;
+} Display_Info;
+
+typedef struct {
+   int ct;
+   Display_Info * info_recs;
+} Display_Info_List;
+
+#endif
+
+
+/* Gets list of I2C connected displays in the form expected by
+ * higher levels of the program.
+ *
+ * Note this list may contain displays that do not support DDC.
+ *
+ * Arguments:   none
+ *
+ * Returns:     list of displays
+ */
+Display_Info_List i2c_get_valid_displays() {
+   Display_Info_List info_list = {0,NULL};
+   Display_Info info_recs[256];
+   int busct = i2c_get_busct();
+   int cur_display = 0;
+   int busndx = 0;
+   for (busndx=0; busndx < busct; busndx++) {
+      Bus_Info * businfo = i2c_get_bus_info_by_index(busndx);
+      if ( (businfo->flags & I2C_BUS_ADDR_0X50) ) {
+         Display_Info * pcur = &info_recs[cur_display];
+         pcur->dref = create_bus_display_ref(businfo->busno);
+         pcur->edid = businfo->edid;
+         cur_display++;
+      }
+   }
+   info_list.info_recs = calloc(cur_display,sizeof(Display_Info));
+   memcpy(info_list.info_recs, info_recs, cur_display*sizeof(Display_Info));
+   info_list.ct = cur_display;
+   // DBGMSG("Done. Returning:");
+   // report_display_info_list(&info_list, 0);
+   return info_list;
+}
+
+
+
 
 
 //
@@ -1280,49 +1278,4 @@ int i2c_report_buses(bool report_all, int depth) {
    DBGTRC(debug, TRACE_GROUP, "Done. Returning %d\n", reported_ct);
    return reported_ct;
 }
-
-
-Display_Info_List i2c_get_valid_displays() {
-   Display_Info_List info_list = {0,NULL};
-   Display_Info info_recs[256];
-   int busct = i2c_get_busct();
-   int cur_display = 0;
-   int busndx = 0;
-   for (busndx=0; busndx < busct; busndx++) {
-      Bus_Info * businfo = i2c_get_bus_info_by_index(busndx);
-      if ( (businfo->flags & I2C_BUS_ADDR_0X50) ) {
-         Display_Info * pcur = &info_recs[cur_display];
-         pcur->dref = create_bus_display_ref(businfo->busno);
-         pcur->edid = businfo->edid;
-         cur_display++;
-      }
-   }
-   info_list.info_recs = calloc(cur_display,sizeof(Display_Info));
-   memcpy(info_list.info_recs, info_recs, cur_display*sizeof(Display_Info));
-   info_list.ct = cur_display;
-   // DBGMSG("Done. Returning:");
-   // report_display_info_list(&info_list, 0);
-   return info_list;
-}
-
-
-#ifdef REFERENCE
-typedef struct {
-   Display_Ref * dref;
-   Parsed_Edid * edid;
-} Display_Info;
-
-typedef struct {
-   int ct;
-   Display_Info * info_recs;
-} Display_Info_List;
-
-#endif
-
-
-
-//
-// Miscellaneous
-//
-
 
