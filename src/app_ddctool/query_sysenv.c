@@ -943,20 +943,78 @@ void query_i2c_buses() {
 }
 
 
+void query_x11() {
+   GPtrArray* edid_recs = get_x11_edids();
+   puts("");
+   printf("EDIDs reported by X11 for connected xrandr outputs:\n");
+   // DBGMSG("Got %d X11_Edid_Recs\n", edid_recs->len);
+
+   for (int ndx=0; ndx < edid_recs->len; ndx++) {
+      X11_Edid_Rec * prec = g_ptr_array_index(edid_recs, ndx);
+      // printf(" Output name: %s -> %p\n", prec->output_name, prec->edid);
+      // hex_dump(prec->edid, 128);
+      rpt_vstring(1, "xrandr output: %s", prec->output_name);
+      Parsed_Edid * parsed_edid = create_parsed_edid(prec->edidbytes);
+      if (parsed_edid) {
+         bool verbose_edid = false;
+         report_parsed_edid(parsed_edid, verbose_edid, 2 /* depth */);
+         free_parsed_edid(parsed_edid);
+      }
+      else {
+         printf(" Unparsable EDID for output name: %s -> %p\n", prec->output_name, prec->edidbytes);
+         hex_dump(prec->edidbytes, 128);
+      }
+   }
+   free_x11_edids(edid_recs);
+
+   // Display * x11_disp = open_default_x11_display();
+   // GPtrArray *  outputs = get_x11_connected_outputs(x11_disp);
+   // close_x11_display(x11_disp);
+}
+
+
+void query_using_i2cdetect() {
+   printf("Examining I2C buses using i2cdetect: \n");
+   GPtrArray * busnames = execute_shell_cmd_collect("ls /dev/i2c*");
+   for (int ndx = 0; ndx < busnames->len; ndx++) {
+      // printf("ndx=%d, value=|%s|\n", ndx, (char *) g_ptr_array_index(busnames, ndx));
+      char cmd[80];
+      char * busname = (char *) g_ptr_array_index(busnames, ndx);
+      busname+=9;   // strip off "/dev/i2c-"
+      snprintf(cmd, 80, "i2cdetect -y %s", busname);
+      printf("\nProbing bus /dev/i2c-%d using command \"%s\"\n", ndx, cmd);
+      // DBGMSG("Executing command: |%s|\n", cmd);
+      int rc = execute_shell_cmd(cmd, 1 /* depth */);
+      // DBGMSG("execute_shell_cmd(\"%s\") returned %d", cmd, rc);
+      if (rc != 1) {
+         printf("i2cdetect command unavailable\n");
+         break;
+      }
+   }
+   g_ptr_array_free(busnames, true);
+}
+
+
 void query_usb_monitors() {
    printf("\nChecking for USB connected monitors...\n");
+
+   puts("");
+   rpt_vstring(1, "Listing /dev/usb...");
+   execute_shell_cmd("ls -l /dev/usb", 2);
+   puts("");
+
 
    int rc;
 
    GPtrArray * hiddev_devices = get_hiddev_device_names();
-   printf("Found %d USB HID devices.\n", hiddev_devices->len);
+   rpt_vstring(1, "Found %d USB HID devices.", hiddev_devices->len);
    for (int devndx=0; devndx<hiddev_devices->len; devndx++) {
       puts("");
       errno=0;
       char * curfn = g_ptr_array_index(hiddev_devices,devndx);
       int fd = usb_open_hiddev_device(curfn, /* bool emit_error_msg */ false);
       if (fd < 0) {      // fd is -errno
-          printf("Unable to open %s: %s\n", curfn, strerror(errno));
+          rpt_vstring(1, "Device %s, unable to open: %s", curfn, strerror(errno));
       }
       // int fd = open(curfn, O_RDONLY);
       // if (fd < 1) {
@@ -969,7 +1027,7 @@ void query_usb_monitors() {
          errno = 0;
          rc = ioctl(fd, HIDIOCGDEVINFO, &dev_info);
          if (rc != 0) {
-            printf("Unable to retrieve information for device %s: %s\n",
+            rpt_vstring(1, "Device %s, unable to retrieve information: %s",
                    curfn, strerror(errno));
          }
          else {
@@ -980,16 +1038,22 @@ void query_usb_monitors() {
                      dev_info.busnum, dev_info.devnum,
                      dev_info.vendor, dev_info.product & 0xffff,
                      cgname);
-            printf("%s\n", dev_summary);
+            rpt_vstring(1, "%s", dev_summary);
             bool b0 = is_hiddev_monitor(fd);
-            if (!b0) {
-               printf("   Not a USB connected monitor\n");
-               b0 = force_hiddev_monitor(fd);
-               if (b0)
-                  printf("   Device vid/pid matches exception list.  Forcing report for device.\n");
-            }
-            if (b0) {
-               report_hiddev_device_by_fd(fd, 1);
+            if (b0)
+               rpt_vstring(2, "Identifies as a USB HID monitor");
+            else
+               rpt_vstring(2, "Not a USB HID monitor");
+
+            if (get_output_level() >= OL_VERBOSE) {
+               if (!b0) {
+                  b0 = force_hiddev_monitor(fd);
+                  if (b0)
+                     rpt_vstring(2, "Device vid/pid matches exception list.  Forcing report for device.\n");
+               }
+               if (b0) {
+                  report_hiddev_device_by_fd(fd, 3);
+               }
             }
          }
 
@@ -999,11 +1063,6 @@ void query_usb_monitors() {
 
    // need to set destroy function
    g_ptr_array_free(hiddev_devices, true);
-
-#ifdef USE_LIBUDEV
-   printf("\nProbing using udev...\n");
-   query_udev_subsystem("usbmisc");
-#endif
 }
 
 
@@ -1050,8 +1109,6 @@ void query_sysenv() {
    }
 
    if (output_level >= OL_VERBOSE) {
-      // temporary location:
-
       query_i2c_buses();
 
       puts("");
@@ -1059,75 +1116,19 @@ void query_sysenv() {
       execute_shell_cmd("xrandr|grep connected", 1 /* depth */);
       puts("");
 
-      printf("Examining I2C buses using i2cdetect: \n");
-      GPtrArray * busnames = execute_shell_cmd_collect("ls /dev/i2c*");
-      for (int ndx = 0; ndx < busnames->len; ndx++) {
-         // printf("ndx=%d, value=|%s|\n", ndx, (char *) g_ptr_array_index(busnames, ndx));
+      query_using_i2cdetect();
 
-         char cmd[80];
-         char * busname = (char *) g_ptr_array_index(busnames, ndx);
-         busname+=9;   // strip off "/dev/i2c-"
-         snprintf(cmd, 80, "i2cdetect -y %s", busname);
-         printf("\nProbing bus /dev/i2c-%d using command \"%s\"\n", ndx, cmd);
-         // DBGMSG("Executing command: |%s|\n", cmd);
-         int rc = execute_shell_cmd(cmd, 1 /* depth */);
-         // DBGMSG("execute_shell_cmd(\"%s\") returned %d", cmd, rc);
-         if (rc != 1) {
-            printf("i2cdetect command unavailable\n");
-            break;
-         }
-
-      }
-      g_ptr_array_free(busnames, true);
-#ifdef OLD
-      int busct = i2c_get_busct();
-      int ndx = 0;
-      char cmd[80];
-      for (ndx=0; ndx<busct; ndx++) {
-         snprintf(cmd, 80, "i2cdetect -y %d", ndx);
-         printf("\nProbing bus /dev/i2c-%d using command \"%s\"\n", ndx, cmd);
-         // DBGMSG("Executing command: |%s|\n", cmd);
-         int rc = execute_shell_cmd(cmd, 1 /* depth */);
-         // DBGMSG("execute_shell_cmd(\"%s\") returned %d", cmd, rc);
-         if (rc != 1) {
-             printf("i2cdetect command unavailable\n");
-             break;
-         }
-      }
-#endif
-
-
-      GPtrArray* edid_recs = get_x11_edids();
-      puts("");
-      printf("EDIDs reported by X11 for connected xrandr outputs:\n");
-      // DBGMSG("Got %d X11_Edid_Recs\n", edid_recs->len);
-
-      for (int ndx=0; ndx < edid_recs->len; ndx++) {
-         X11_Edid_Rec * prec = g_ptr_array_index(edid_recs, ndx);
-         // printf(" Output name: %s -> %p\n", prec->output_name, prec->edid);
-         // hex_dump(prec->edid, 128);
-         rpt_vstring(1, "xrandr output: %s", prec->output_name);
-         Parsed_Edid * parsed_edid = create_parsed_edid(prec->edidbytes);
-         if (parsed_edid) {
-            bool verbose_edid = false;
-            report_parsed_edid(parsed_edid, verbose_edid, 2 /* depth */);
-            free_parsed_edid(parsed_edid);
-         }
-         else {
-            printf(" Unparsable EDID for output name: %s -> %p\n", prec->output_name, prec->edidbytes);
-            hex_dump(prec->edidbytes, 128);
-         }
-      }
-      free_x11_edids(edid_recs);
-
-      // Display * x11_disp = open_default_x11_display();
-      // GPtrArray *  outputs = get_x11_connected_outputs(x11_disp);
-      // close_x11_display(x11_disp);
+      query_x11();
    }
 
+   query_usb_monitors();
+
+#ifdef USE_LIBUDEV
    if (output_level >= OL_VERBOSE) {
-      query_usb_monitors();
+      printf("\nProbing USB HID devices using udev...\n");
+      query_udev_subsystem("usbmisc");
    }
+#endif
 }
 
 

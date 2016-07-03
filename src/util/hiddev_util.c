@@ -266,8 +266,6 @@ bool force_hiddev_monitor(int fd) {
          {0x0452, 0x0021},    // Misubishi, HID Monitor Controls
          {0x04a6, 0x0181},    // Nokia,     HID Monitor Controls
          {0x04ca, 0x1766},    // Lite-on,   HID Monitor Controls
-
-
    };
    const int vid_pid_ct = sizeof(exceptions)/sizeof(struct vid_pid);
 
