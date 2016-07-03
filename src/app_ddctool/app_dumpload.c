@@ -159,8 +159,6 @@ dumpvcp_as_file(Display_Handle * dh, char * filename) {
 }
 
 
-
-
 //
 // Loadvcp
 //

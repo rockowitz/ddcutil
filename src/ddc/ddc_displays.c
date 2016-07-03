@@ -438,7 +438,7 @@ ddc_report_active_display(Display_Info * curinfo, int depth) {
 
       // printf("VCP version:   %d.%d\n", vspec.major, vspec.minor);
       if (vspec.major == 0)
-         rpt_vstring(depth, "VCP version: detection failed");
+         rpt_vstring(depth, "VCP version:         Detection failed");
       else
          rpt_vstring(depth, "VCP version:         %d.%d", vspec.major, vspec.minor);
 
