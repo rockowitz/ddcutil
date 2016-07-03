@@ -299,8 +299,10 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
          DBGMSG("usbwork = |%s|", usbwork);
       int busnum;
       int devicenum;
-      bool ok = parse_dot_separated_arg(usbwork, &busnum, &devicenum);
-      if (!ok) {
+      bool arg_ok = parse_dot_separated_arg(usbwork, &busnum, &devicenum);
+      if (!arg_ok)
+         arg_ok = parse_colon_separated_arg(usbwork, &busnum, &devicenum);
+      if (!arg_ok) {
           printf("Invalid USB argument: %s\n", usbwork );
           ok = false;
           // DBGMSG("After USB parse, ok=%d", ok);

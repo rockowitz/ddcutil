@@ -141,6 +141,13 @@ bool parse_dot_separated_arg(const char * val, int * piAdapterIndex, int * piDis
    return ok;
 }
 
+bool parse_colon_separated_arg(const char * val, int * pv1, int * pv2) {
+   int rc = sscanf(val, "%d:%d", pv1, pv2);
+   // DBGMSG("val=|%s| sscanf() returned %d  ", val, rc );
+   bool ok = (rc == 2);
+   return ok;
+}
+
 
 bool parse_int_arg(char * val, int * pIval) {
    int ct = sscanf(val, "%d", pIval);
