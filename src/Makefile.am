@@ -173,6 +173,7 @@ i2c/i2c_base_io.c \
 i2c/i2c_bus_core.c \
 i2c/i2c_do_io.c \
 usb/usb_core.c  \
+usb/usb_vcp.c  \
 ddc/ddc_dumpload.c \
 util/data_structures.c \
 util/file_util.c  \

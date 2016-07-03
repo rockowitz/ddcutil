@@ -24,6 +24,8 @@
 #ifndef USB_CORE_H_
 #define USB_CORE_H_
 
+#include <linux/hiddev.h>     // for __u32
+
 #include "util/coredefs.h"
 
 #include "base/displays.h"
@@ -50,30 +52,46 @@ Display_Ref * usb_find_display_by_busnum_devnum(int busnum, int devnum);
 Parsed_Edid * usb_get_parsed_edid_by_display_ref(   Display_Ref    * dref);
 Parsed_Edid * usb_get_parsed_edid_by_display_handle(Display_Handle * dh);
 
-Global_Status_Code usb_get_nontable_vcp_value(
-      Display_Handle *               dh,
-      Byte                           feature_code,
-      Parsed_Nontable_Vcp_Response** ppInterpretedCode);
 
-Global_Status_Code usb_get_vcp_value(
-      Display_Handle *          dh,
-      Byte                      feature_code,
-      Vcp_Value_Type            call_type,
-      Single_Vcp_Value **       pvalrec);
-
-Global_Status_Code usb_set_nontable_vcp_value(
-      Display_Handle *          dh,
-      Byte                      feature_code,
-      int                       new_value);
-
-Global_Status_Code usb_set_vcp_value(
-      Display_Handle *           dh,
-      Single_Vcp_Value *         valrec);
 
 char * usb_get_capabilities_string_by_display_handle(Display_Handle * dh);
 
 #ifdef NO_LONGER_NEEDED
 char * get_hiddev_devnae_by_display_ref(Display_Ref * dref);
 #endif
+
+
+// struct defs here for sharing with usb_vcp
+
+/* Used to record hiddev settings for reading and
+ * writing a VCP feature code
+ */
+#define USB_MONITOR_VCP_REC_MARKER "UMVR"
+typedef struct usb_monitor_vcp_rec {
+   char                        marker[4];
+   Byte                        vcp_code;
+   __u32                       report_type;       // type?
+   // have both indexes and struct pointers - redundant
+   int                         report_id;
+   int                         field_index;
+   int                         usage_index;
+   struct hiddev_report_info * rinfo;
+   struct hiddev_field_info  * finfo;
+   struct hiddev_usage_ref   * uref;
+} Usb_Monitor_Vcp_Rec;
+
+
+/* Describes a USB connected monitor.  */
+#define USB_MONITOR_INFO_MARKER "UMIN"
+typedef struct usb_monitor_info {
+   char                     marker[4];
+   char *                   hiddev_device_name;
+   Parsed_Edid *            edid;
+   struct hiddev_devinfo *  hiddev_devinfo;
+   // a flagrant waste of space, avoid premature optimization
+   GPtrArray *              vcp_codes[256];   // array of Usb_Monitor_Vcp_Rec *
+} Usb_Monitor_Info;
+
+Usb_Monitor_Info * usb_find_monitor_by_display_handle(Display_Handle * dh);
 
 #endif /* USB_CORE_H_ */
