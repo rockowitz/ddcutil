@@ -21,10 +21,11 @@
  * </endcopyright>
  */
 
-#ifndef UTIL_HIDDEV_REPORTS_H_
+#ifndef HIDDEV_REPORTS_H_
 #define HIDDEV_REPORTS_H_
 
 #include <linux/hiddev.h>
+#include <stdbool.h>
 
 void init_hiddev_reports();
 
