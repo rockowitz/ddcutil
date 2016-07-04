@@ -41,17 +41,18 @@
 #include <unistd.h>
 #include <wchar.h>
 
+#include "util/hiddev_reports.h"
 #include "util/hiddev_util.h"
 #include "util/report_util.h"
 #include "util/string_util.h"
-#include "util/x11_util.h"         // *** TEMP **
+// #include "util/x11_util.h"         // *** TEMP **
 
 #include "base/core.h"
 #include "base/ddc_errno.h"
 #include "base/execution_stats.h"
 #include "base/linux_errno.h"
 
-#include "i2c/i2c_bus_core.h"      // *** TEMP ***
+// #include "i2c/i2c_bus_core.h"      // *** TEMP ***
 
 #include "usb/usb_core.h"
 #include "usb/usb_vcp.h"
@@ -80,7 +81,7 @@ static Trace_Group TRACE_GROUP = TRC_USB;
  */
 Global_Status_Code
 usb_get_usage(int fd, Usb_Monitor_Vcp_Rec * vcprec, __s32 * maxval, __s32 * curval) {
-   bool debug = false;
+   bool debug = true;
    DBGMSF(debug, "Starting. fd=%d, vcprec=%p", fd, vcprec);
    Global_Status_Code gsc = 0;
    int rc;
@@ -119,18 +120,16 @@ usb_get_usage(int fd, Usb_Monitor_Vcp_Rec * vcprec, __s32 * maxval, __s32 * curv
    uref->field_index = vcprec->field_index;
    uref->usage_index = vcprec->usage_index;
 #endif
-   DBGMSF(debug, "in hiddev_usage_ref: report_type=%d, report_id=%d, field_index=%d, usage_index=%d",
-                 uref->report_type,
-                 uref->report_id,
-                 uref->field_index,
-                 uref->usage_index);
+   if (debug)
+      report_hiddev_usage_ref(uref, 1);
+
 #ifdef DISABLE
    rc = ioctl(fd, HIDIOCGUCODE, uref);  // Fills in usage code
    if (rc != 0) {
       int errsv = errno;
       REPORT_IOCTL_ERROR("HIDIOCGUCODE", rc);
       // occasionally see -1, errno = 22 invalid argument - for Battery System Page: Run Time to Empty
-      gsc = modulate_rc(RR_ERRNO, errsv);
+      gsc = modulate_rc(errsv, RR_ERRNO);
       goto bye;
    }
 #endif
@@ -140,13 +139,81 @@ usb_get_usage(int fd, Usb_Monitor_Vcp_Rec * vcprec, __s32 * maxval, __s32 * curv
       int errsv = errno;
       REPORT_IOCTL_ERROR("HIDIOCGUSAGE", rc);
       // occasionally see -1, errno = 22 invalid argument - for Battery System Page: Run Time to Empty
-      gsc = modulate_rc(RR_ERRNO, errsv);
+      gsc = modulate_rc(-errsv, RR_ERRNO);
    }
    else {
       DBGMSF(debug, "usage_index=%d, value = 0x%08x",uref->usage_index, uref->value);
       *curval = uref->value;
       gsc = 0;
    }
+
+bye:
+   DBGMSF(debug, "Returning: %d", gsc);
+   return gsc;
+}
+
+
+Global_Status_Code
+usb_get_usage_alt(int fd, __u32 report_type, __u32 usage_code, __s32 * maxval, __s32 * curval) {
+   bool debug = false;
+   DBGMSF(debug, "Starting. fd=%d, report_type=%d, usage_code=0x%08x", fd, report_type, usage_code);
+   Global_Status_Code gsc = 0;
+   int rc;
+
+   assert(report_type == HID_REPORT_TYPE_FEATURE ||
+          report_type == HID_REPORT_TYPE_INPUT);   // *** CG19 ***
+
+   struct hiddev_usage_ref uref = {0};
+   uref.report_type = report_type;
+   uref.report_id   = HID_REPORT_ID_UNKNOWN;
+   uref.usage_code  = usage_code;
+
+   rc = ioctl(fd, HIDIOCGUSAGE, &uref);  // Fills in usage value
+   if (rc != 0) {
+      int errsv = errno;
+
+
+      // Problem: errno=22 (invalid argument) can mean the usage code is invalid,
+      // i.e. invalid feature code, or another arg error which indicates a programming error
+      if (errsv == EINVAL) {
+
+         gsc = DDCRC_DETERMINED_UNSUPPORTED;
+      }
+      else {
+         REPORT_IOCTL_ERROR("HIDIOCGUSAGE", rc);
+         // occasionally see -1, errno = 22 invalid argument - for Battery System Page: Run Time to Empty
+         gsc = modulate_rc(-errsv, RR_ERRNO);
+      }
+      // printf("(%s) errsv=%d, gsc=%d\n", __func__, errsv, gsc);
+      goto bye;
+   }
+   *curval = uref.value;
+
+   report_hiddev_usage_ref(&uref, 1);
+
+   struct hiddev_field_info finfo = {0};
+   finfo.report_type = uref.report_type;
+   finfo.report_id   = uref.report_id;
+   finfo.field_index = uref.field_index;    // ?
+
+   rc = ioctl(fd, HIDIOCGFIELDINFO, &finfo);  // Fills in usage value
+   if (rc != 0) {
+      int errsv = errno;
+      REPORT_IOCTL_ERROR("HIDIOCGFIELDINFO", rc);
+      // occasionally see -1, errno = 22 invalid argument - for Battery System Page: Run Time to Empty
+      gsc = modulate_rc(-errsv, RR_ERRNO);
+      // printf("(%s) errsv=%d, gsc=%d\n", __func__, errsv, gsc);
+      goto bye;
+   }
+
+   report_hiddev_field_info(&finfo, 1);
+
+   __s32 maxval1 = finfo.logical_maximum;
+   __s32 maxval2 = finfo.physical_maximum;
+   DBGMSF(debug, "logical_maximum: %d", maxval1);
+   DBGMSF(debug, "physical_maximum: %d", maxval2);
+   *maxval = maxval1;
+   gsc = 0;
 
 bye:
    DBGMSF(debug, "Returning: %d", gsc);
@@ -190,33 +257,46 @@ Global_Status_Code usb_get_nontable_vcp_value(
    Usb_Monitor_Info * moninfo = usb_find_monitor_by_display_handle(dh);
    assert(moninfo);
 
-   // find the field record
-   GPtrArray * vcp_recs = moninfo->vcp_codes[feature_code];
    __s32 maxval;
    __s32 curval;
-   if (!vcp_recs) {
-      DBGMSF(debug, "Unrecognized feature code 0x%02x", feature_code);
-      gsc = DDCRC_REPORTED_UNSUPPORTED;
+   bool use_alt_method = true;
+
+   if (use_alt_method) {
+      __u32 usage_code = 0x0082 << 16 | feature_code;
+      gsc = usb_get_usage_alt(dh->fh, HID_REPORT_TYPE_FEATURE, usage_code, &maxval, &curval);
+      if (gsc != 0)
+         gsc = usb_get_usage_alt(dh->fh, HID_REPORT_TYPE_INPUT, usage_code, &maxval, &curval);
    }
    else {
-      // DBGMSF(debug, "reading value");
-      // for testing purposes, try using each entry
-      // usage 0 returns correct value, usage 1 returns 0
-      // is usage 1 for writing?
 
-      for (int ndx=0; ndx<vcp_recs->len; ndx++) {
-      int ndx = 0;
-         Usb_Monitor_Vcp_Rec * vcprec = g_ptr_array_index(vcp_recs,ndx);
-         assert( memcmp(vcprec->marker, USB_MONITOR_VCP_REC_MARKER,4) == 0 );
+      // find the field record
+      GPtrArray * vcp_recs = moninfo->vcp_codes[feature_code];
 
-         if (vcprec->report_type == HID_REPORT_TYPE_OUTPUT)
-            continue;
-         gsc = usb_get_usage(dh->fh,  vcprec, &maxval, &curval);
-         DBGMSF(debug, "usb_get_usage() usage index: %d returned %d, maxval=%d, curval=%d",
-                       vcprec->usage_index, gsc, maxval, curval);
-         if (gsc == 0)
-            break;
+      if (!vcp_recs) {
+         DBGMSF(debug, "Unrecognized feature code 0x%02x", feature_code);
+         gsc = DDCRC_REPORTED_UNSUPPORTED;
       }
+      else {
+         // DBGMSF(debug, "reading value");
+         // for testing purposes, try using each entry
+         // usage 0 returns correct value, usage 1 returns 0
+         // is usage 1 for writing?
+
+         for (int ndx=0; ndx<vcp_recs->len; ndx++) {
+         int ndx = 0;
+            Usb_Monitor_Vcp_Rec * vcprec = g_ptr_array_index(vcp_recs,ndx);
+            assert( memcmp(vcprec->marker, USB_MONITOR_VCP_REC_MARKER,4) == 0 );
+
+            if (vcprec->report_type == HID_REPORT_TYPE_OUTPUT)
+               continue;
+            gsc = usb_get_usage(dh->fh,  vcprec, &maxval, &curval);
+            DBGMSF(debug, "usb_get_usage() usage index: %d returned %d, maxval=%d, curval=%d",
+                          vcprec->usage_index, gsc, maxval, curval);
+            if (gsc == 0)
+               break;
+         }
+      }
+
    }
 
    if (gsc == 0) {
