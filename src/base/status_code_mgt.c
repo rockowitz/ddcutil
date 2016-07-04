@@ -26,6 +26,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "util/string_util.h"
+
 #include "base/ddc_errno.h"
 #include "base/linux_errno.h"
 
@@ -110,14 +112,19 @@ void register_retcode_desc_finder(
         Retcode_Range_Id           id,
         Retcode_Description_Finder finder_func,
         bool                       finder_arg_is_modulated) {
-   // DBGMSG("registering callback description finder for range id %d", id);
+   bool debug = false;
+   if (debug)
+      printf("(%s) registering callback description finder for range id %d, finder_func=%p, finder_arg_is_modulated=%s\n",
+            __func__, id, finder_func, bool_repr(finder_arg_is_modulated));
    retcode_range_table[id].desc_finder = finder_func;
    retcode_range_table[id].finder_arg_is_modulated = finder_arg_is_modulated;
 }
 
 
 int modulate_rc(int rc, Retcode_Range_Id range_id){
-   // DBGMSG("rc=%d, range_id=%d", rc, range_id);
+   bool debug = false;
+   if (debug)
+      printf("(%s) rc=%d, range_id=%d\n", __func__, rc, range_id);
    assert( abs(rc) <= RCRANGE_BASE_MAX );
    int base = retcode_range_table[range_id].base;
    if (rc != 0) {
@@ -126,7 +133,8 @@ int modulate_rc(int rc, Retcode_Range_Id range_id){
       else
          base = base+rc;
    }
-   // DBGMSG("Returning: %d", rc);
+   if (debug)
+      printf("(%s) Returning: %d\n", __func__, rc);
    return rc;
 }
 
@@ -173,7 +181,7 @@ Status_Code_Info * find_global_status_code_info(Global_Status_Code rc) {
    bool debug = false;
    // use don't use DBGMSG to avoid circular includes
    if (debug)
-      printf("(%s) Starting.  rc = %d", __func__, rc);
+      printf("(%s) Starting.  rc = %d\n", __func__, rc);
 
    Status_Code_Info * pinfo = NULL;
 
@@ -181,6 +189,8 @@ Status_Code_Info * find_global_status_code_info(Global_Status_Code rc) {
       pinfo = &ok_status_code_info;
    else {
    Retcode_Range_Id modulation = get_modulation(rc);
+   if (debug)
+      printf("(%s) modulation=%d\n", __func__, modulation);
 
    Retcode_Description_Finder finder_func = retcode_range_table[modulation].desc_finder;
    assert(finder_func != NULL);
@@ -229,7 +239,7 @@ char * gsc_name(Global_Status_Code status_code) {
 
 // N.B called before command line parsed, so command line trace control not in effect
 void init_status_code_mgt() {
-   // DBGMSG("Starting");
+   // printf("(%s) Starting\n", __func__);
    validate_retcode_range_table();                         // uses asserts to check consistency
    // error_counts_hash = g_hash_table_new(NULL,NULL);
 
