@@ -245,7 +245,7 @@ struct vid_pid {
  * Returns    true/false
  */
 bool force_hiddev_monitor(int fd) {
-   bool debug = true;
+   bool debug = false;
    bool result = false;
 
    struct hiddev_devinfo dev_info;
