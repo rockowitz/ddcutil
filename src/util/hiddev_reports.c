@@ -373,15 +373,20 @@ void report_hiddev_field_info(struct hiddev_field_info * finfo, int depth) {
    // const char * s0 = names_reporttag(finfo->report_id);
    // const char * s1 = names_huts(finfo->physical>>16);
    // const char * s2 = names_hutus(finfo->physical);
-   rpt_vstring(d1, "%-20s: %s (0x%08x)", "report_id", interpret_report_id(finfo->report_id), finfo->report_id);
+   rpt_vstring(d1, "%-20s: %s (0x%08x)", "report_id",
+                   interpret_report_id(finfo->report_id), finfo->report_id);
    rpt_vstring(d1, "%-20s: %u",     "field_index", finfo->field_index);
    rpt_vstring(d1, "%-20s: %u",     "maxusage",    finfo->maxusage);
-   rpt_vstring(d1, "%-20s: 0x%08x  %s", "flags", finfo->flags, interpret_field_bits(finfo->flags) );
+   rpt_vstring(d1, "%-20s: 0x%08x  %s", "flags",
+                   finfo->flags, interpret_field_bits(finfo->flags) );
    // rpt_vstring(d1, "%-20s: %u 0x%08x huts=|%s|, hutus=|%s| (physical usage for this field)", "physical",
-   //                        finfo->physical, finfo->physical, s1, s2);
-   rpt_vstring(d1, "%-20s: %s",     "physical (usage)", interpret_usage_code(finfo->physical) );
-   rpt_vstring(d1, "%-20s: %s",     "logical (usage)", interpret_usage_code(finfo->logical) );
-   rpt_vstring(d1, "%-20s: %s",     "application (usage)", interpret_usage_code(finfo->application) );
+   //                 finfo->physical, finfo->physical, s1, s2);
+   rpt_vstring(d1, "%-20s: 0x%08x  %s",     "physical (usage)",
+                   finfo->physical, interpret_usage_code(finfo->physical) );
+   rpt_vstring(d1, "%-20s: 0x%08x  %s",     "logical (usage)",
+                   finfo->logical,  interpret_usage_code(finfo->logical) );
+   rpt_vstring(d1, "%-20s: 0x%08x  %s",     "application (usage)",
+                   finfo->application, interpret_usage_code(finfo->application) );
    rpt_vstring(d1, "%-20s: %d",     "logical_minimum",  finfo->logical_minimum);
    rpt_vstring(d1, "%-20s: %d",     "logical_maximum",  finfo->logical_maximum);
    rpt_vstring(d1, "%-20s: %d",     "physical_minimum", finfo->physical_minimum);
@@ -413,7 +418,9 @@ void report_hiddev_usage_ref(struct hiddev_usage_ref * uref, int depth) {
    rpt_vstring(d1, "%-20s: %u",     "usage_index",  uref->usage_index);
    // rpt_vstring(d1, "%-20s: 0x%08x huts=|%s|, hutus=|%s|", "usage_code",   uref->usage_code, s1, s2);
    // rpt_usage_code("usage_code", NULL, uref->usage_code, d1);
-   rpt_vstring(d1, "%-20s: %s", "usage_code", interpret_usage_code(uref->usage_code) );
+   rpt_vstring(d1, "%-20s: 0x%08x  %s", "usage_code", uref->usage_code,
+                   interpret_usage_code(uref->usage_code) );
+   rpt_vstring(d1, "%-20s: %d", "value", uref->value);
 }
 
 
@@ -510,7 +517,7 @@ void report_report_descriptors_for_report_type(int fd, __u32 report_type, int de
       rptct++;
 
       if (rinfo.report_type != HID_REPORT_TYPE_OUTPUT) {
-         // So that usage value filled in  - should we be doing this?
+         // So that usage value filled in
          int rc = ioctl(fd, HIDIOCGREPORT, &rinfo);
          if (rc != 0) {
             REPORT_IOCTL_ERROR("HIDIOCGREPORT", rc);
@@ -523,10 +530,7 @@ void report_report_descriptors_for_report_type(int fd, __u32 report_type, int de
       if (rinfo.num_fields > 0)
          rpt_vstring(d1, "Scanning fields of report %s", interpret_report_id(rinfo.report_id));
       for (fndx = 0; fndx < rinfo.num_fields; fndx++) {
-
          // printf("(%s) field index = %d\n", __func__, i);
-
-         // struct hiddev_field_info * finfo2 = is_field_edid(fd, &rinfo, fndx);
          bool edidfg = is_field_edid(fd, &rinfo, fndx);
          if (edidfg) {
             rpt_vstring(d2, "Report id: %d, Field index: %d contains EDID:",
@@ -729,7 +733,8 @@ void report_hiddev_device_by_fd(int fd, int depth) {
          if (usage == -1) {
             continue;
          }
-         rpt_vstring(d2, "Application %d:  Usage: %s", ndx, interpret_usage_code(usage));
+         rpt_vstring(d2, "Application %d:  Usage code: 0x%08x  %s",
+                         ndx, usage, interpret_usage_code(usage));
       }
    }
    puts("");
