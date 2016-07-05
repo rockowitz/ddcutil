@@ -259,7 +259,32 @@ bool force_hiddev_monitor(int fd) {
    struct vid_pid exceptions[] = {
          {0x0424, 0x3328},    // Std Micrososystems USB HID I2C - HP LP2480
          {0x056d, 0x0002},    // Eizo,      HID Monitor Controls
-         {0x0409, 0x02b8},    // NEC PA241
+
+         // NEC monitors
+         {0x0409, 0x040d},    // P232W
+         {0x0409, 0x02b7},    // P241W
+         {0x0409, 0x042c},    // P242W
+         {0x0409, 0x02bb},    // PA231W
+         {0x0409, 0x02b8},    // PA241W   (seen at RIT)
+         {0x0409, 0x042d},    // PA242W
+         {0x0409, 0x02b9},    // PA271W
+         {0x0409, 0x042e},    // PA272W
+         {0x0409, 0x02ba},    // PA301W
+         {0x0409, 0x042f},    // PA302W
+         {0x0409, 0x02bc},    // MD301C4
+         {0x0409, 0x040a},    // MD211G3
+         {0x0409, 0x040b},    // MD211C3
+         {0x0409, 0x040c},    // MD211C2
+         {0x0409, 0x042b},    // MD242C2
+         {0x0409, 0x044f},    // EA244UHD
+         {0x0409, 0x042b},    // EA304WMi
+         {0x0409, 0x046b},    // PA322UHD
+         {0x0409, 0x047d},    // X841UHD
+         {0x0409, 0x04ac},    // X981UHD
+         {0x0409, 0x04ad},    // X651UHD
+         {0x0409, 0x046c},    // MD322C8
+         {0x0409, 0x04Ae},    // P212
+         {0x0409, 0x050c},    // PA322UHD2
 
          // additional values from usb.ids
          {0x0419, 0x8002},    // Samsung,   Syncmaster HID Monitor Control
@@ -610,10 +635,10 @@ void report_hid_field_locator(struct hid_field_locator * ploc, int depth) {
 /* Test if all, or at least 1, usage codes of a field match a specified usage code.
  *
  * Arguments:
- *   fd
- *   report_type
- *   report_id
- *   field_index
+ *   fd                 file descriptor of open hiddev device
+ *   report_type        HID_REPORT_TYPE_INPUT, HID_REPORT_TYPE_OUTPUT, or HID_REPORT_TYPE_FEATURE
+ *   report_id          report number
+ *   field_index        field index
  *   ucode              usage code to test against
  *   require_all_match  if true, all usages must be the specified value
  *
@@ -703,7 +728,7 @@ bye:
  * find one having a field with a given usage code.
  *
  * Arguments:
- *   fd
+ *   fd                file descriptor of open hiddev device
  *   report_type       HID_REPORT_TYPE_INPUT, HID_REPORT_TYPE_OUTPUT, or HID_REPORT_TYPE_FEATURE
  *   ucode             usage code
  *   match_all_ucodes  if true, all usages must match ucode
@@ -782,7 +807,7 @@ find_report(int fd, __u32 report_type, __u32 ucode, bool match_all_ucodes) {
 /* Finds the report describing the EDID.
  *
  * Arguments:
- *   fd          file handle of open hiddev device
+ *   fd          file descriptor of open hiddev device
  *
  * Returns:      pointer to newly allocated struct hid_field_locator representing
  *               the feature report and field within that report that returns
