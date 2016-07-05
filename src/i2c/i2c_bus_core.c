@@ -1075,9 +1075,6 @@ Display_Info_List i2c_get_valid_displays() {
 }
 
 
-
-
-
 //
 // Bus Reports
 //
