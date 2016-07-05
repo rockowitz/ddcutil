@@ -56,12 +56,16 @@ Pci_Usb_Id_Names devid_get_usb_names(
 
 
 // *** HID Descriptor Item Types ***
-char * devid_hid_descriptor_item_type(ushort id);
-char * devid_hid_descriptor_type(ushort id);
+// declared here but not defined
+char * devid_hid_descriptor_item_type(ushort id);  // HID entry in usb.ids
+
+// *** HID Descriptor Type ***
+// declared here but not defined
+char * devid_hid_descriptor_type(ushort id);       // R   entry in usb.ids, corresponds to names_reporttag()
 
 
 // *** HUT table ***
-char * devid_usage_code_page_name(ushort usage_page_code);
-char * devid_usage_code_id_name(ushort usage_page_code, ushort usage_simple_id);
+char * devid_usage_code_page_name(ushort usage_page_code);  // corresponds to names_huts()
+char * devid_usage_code_id_name(ushort usage_page_code, ushort usage_simple_id);  // corresponds to names_hutus()
 
 #endif /* DEVICE_ID_UTIL_H_ */
