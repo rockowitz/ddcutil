@@ -1013,7 +1013,7 @@ void query_usb_monitors() {
       puts("");
       errno=0;
       char * curfn = g_ptr_array_index(hiddev_devices,devndx);
-      int fd = usb_open_hiddev_device(curfn, /* readonly */ true, /* bool emit_error_msg */ false);
+      int fd = usb_open_hiddev_device(curfn, CALLOPT_RDONLY);    // do not emit error msg
       if (fd < 0) {      // fd is -errno
           rpt_vstring(1, "Device %s, unable to open: %s", curfn, strerror(errno));
       }

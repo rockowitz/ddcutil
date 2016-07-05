@@ -126,14 +126,14 @@ Display_Handle* ddc_open_display(Display_Ref * dref,  Failure_Action failure_act
 
    case USB_IO:
       {
-         bool emit_error_msg = true;
+         // bool emit_error_msg = true;
          DBGMSF(debug, "Opening USB device: %s", dref->usb_hiddev_name);
          assert(dref->usb_hiddev_name);
          // if (!dref->usb_hiddev_name) { // HACK
          //    DBGMSG("HACK FIXUP.  dref->usb_hiddev_name");
          //    dref->usb_hiddev_name = get_hiddev_devname_by_display_ref(dref);
          // }
-         int fd = usb_open_hiddev_device(dref->usb_hiddev_name, /* readonly */ false, emit_error_msg);
+         int fd = usb_open_hiddev_device(dref->usb_hiddev_name, CALLOPT_RDONLY | CALLOPT_ERR_MSG);
          if (fd < 0) {
             log_status_code(modulate_rc(fd,RR_ERRNO),__func__);
             if (failure_action == EXIT_IF_FAILURE) {
@@ -166,7 +166,7 @@ void ddc_close_display(Display_Handle * dh) {
       DBGMSG("Starting.");
       report_display_handle(dh, __func__, 1);
    }
-   bool failure_action = RETURN_ERROR_IF_FAILURE;
+   // bool failure_action = RETURN_ERROR_IF_FAILURE;
    switch(dh->io_mode) {
    case DDC_IO_DEVI2C:
       {
@@ -181,7 +181,7 @@ void ddc_close_display(Display_Handle * dh) {
       break;           // nothing to do
    case USB_IO:
       {
-         int rc = usb_close_device(dh->fh, dh->hiddev_device_name, failure_action);
+         int rc = usb_close_device(dh->fh, dh->hiddev_device_name, CALLOPT_NONE); // return error if failure
          if (rc != 0) {
             DBGMSG("usb_closedevice returned %d", rc);
             log_status_code(modulate_rc(rc, RR_ERRNO), __func__);

@@ -42,8 +42,8 @@ bool usb_is_valid_display_ref(Display_Ref * dref, bool emit_error_msg);
 
 void usb_report_active_display_by_display_ref(Display_Ref * dref, int depth);
 
-int usb_open_hiddev_device(char * hiddev_devname, bool readonly, bool emit_error_msg);
-int usb_close_device(int fd, char * device_fn, Failure_Action failure_action);
+int usb_open_hiddev_device(char * hiddev_devname, Byte calloptions);
+int usb_close_device(int fd, char * device_fn, Byte calloptions);
 
 Display_Ref * usb_find_display_by_model_sn(const char * model, const char * sn);
 Display_Ref * usb_find_display_by_edid(const Byte * edidbytes);

@@ -194,12 +194,12 @@ void report_model_sn_pair(struct model_sn_pair * p, int depth) {
  *   -errno if failure
  *
  */
-int usb_open_hiddev_device(char * hiddev_devname, bool readonly, bool emit_error_msg) {
+int usb_open_hiddev_device(char * hiddev_devname, Byte calloptions) {
    bool debug = false;
    DBGMSF(debug, "hiddev_devname=%s", hiddev_devname);
 
    int  file;
-   int mode = (readonly) ? O_RDONLY : O_RDWR;
+   int mode = (calloptions & CALLOPT_RDONLY) ? O_RDONLY : O_RDWR;
 
    RECORD_IO_EVENT(
          IE_OPEN,
@@ -210,7 +210,7 @@ int usb_open_hiddev_device(char * hiddev_devname, bool readonly, bool emit_error
    // -1 if error, and errno is set
    int errsv = errno;
    if (file < 0) {
-      if (emit_error_msg)
+      if (calloptions & CALLOPT_ERR_MSG)
          f0printf(FERR, "Open failed for %s: errno=%s\n", hiddev_devname, linux_errno_desc(errsv));
       file = -errno;
    }
@@ -243,7 +243,7 @@ int usb_open_hiddev_device(char * hiddev_devname, bool readonly, bool emit_error
  *    0 if success
  *    -errno if close fails and exit on failure was not specified
  */
-int usb_close_device(int fd, char * device_fn, Failure_Action failure_action) {
+int usb_close_device(int fd, char * device_fn, Byte calloptions) {
    bool debug = false;
    DBGMSF(debug, "Starting. fd=%d", fd);
 
@@ -265,10 +265,11 @@ int usb_close_device(int fd, char * device_fn, Failure_Action failure_action) {
                   "USB device close failed. errno=%s",
                   linux_errno_desc(errsv));
 
-      if (failure_action == EXIT_IF_FAILURE)
+      if (calloptions & CALLOPT_ERR_ABORT)
          TERMINATE_EXECUTION_ON_ERROR(workbuf);
 
-      fprintf(stderr, "%s\n", workbuf);
+      if (calloptions & CALLOPT_ERR_MSG)
+         fprintf(stderr, "%s\n", workbuf);
 
       rc = errsv;
    }
@@ -778,7 +779,10 @@ static GPtrArray * get_usb_monitor_list() {
       char * hiddev_fn = g_ptr_array_index(hiddev_names, devname_ndx);
       DBGMSF(debug, "Examining device: %s", hiddev_fn);
       // will need better message handling for API
-      int fd = usb_open_hiddev_device(hiddev_fn, /*readonly=*/ true, (ol >= OL_VERBOSE));
+      Byte calloptions = CALLOPT_RDONLY;
+      if (ol >= OL_VERBOSE)
+         calloptions |= CALLOPT_ERR_MSG;
+      int fd = usb_open_hiddev_device(hiddev_fn, calloptions);
       if (fd > 0) {
          // Declare variables here and initialize them to NULL so that code at label close: works
          struct hiddev_devinfo *   devinfo     = NULL;
@@ -857,7 +861,7 @@ static GPtrArray * get_usb_monitor_list() {
             free(pedid);
          if (parsed_edid)
             free(parsed_edid);
-         usb_close_device(fd, hiddev_fn, RETURN_ERROR_IF_FAILURE);
+         usb_close_device(fd, hiddev_fn, CALLOPT_NONE); // return error if failure
       }  // monitor opened
 
 
