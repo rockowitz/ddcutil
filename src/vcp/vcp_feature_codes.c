@@ -1,4 +1,4 @@
-/* vcp_feature_code_data.c
+/* vcp_feature_codes.c
  *
  * VCP Feature Code Table and the functions it references
  *
