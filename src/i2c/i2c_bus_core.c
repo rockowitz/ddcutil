@@ -57,10 +57,44 @@ static Trace_Group TRACE_GROUP = TRC_I2C;
 // forward declarations
 void report_businfo(Bus_Info * bus_info, int depth);
 
+
 //
 // Basic I2C bus operations
 //
 
+int i2c_open_bus(int busno, Byte calloptions) {
+   bool debug = false;
+   DBGMSF(debug, "busno=%d, calloptions=0x%02x", busno, calloptions);
+
+   char filename[20];
+   int  file;
+
+   snprintf(filename, 19, "/dev/i2c-%d", busno);
+   RECORD_IO_EVENT(
+         IE_OPEN,
+         ( file = open(filename, (calloptions & CALLOPT_RDONLY) ? O_RDONLY : O_RDWR) )
+         );
+   // per man open:
+   // returns file descriptor if successful
+   // -1 if error, and errno is set
+   int errsv = errno;
+   if (file < 0) {
+      if (calloptions & CALLOPT_ERR_ABORT) {
+         TERMINATE_EXECUTION_ON_ERROR("Open failed for %s. errno=%s\n",
+                                      filename, linux_errno_desc(errsv));
+      }
+      if (calloptions & CALLOPT_ERR_MSG) {
+         f0printf(FERR, "Open failed for %s: errno=%s\n",
+                        filename, linux_errno_desc(errsv));
+      }
+      file = -errsv;
+   }
+
+   return file;
+}
+
+
+#ifdef OLD
 /* Open an I2C bus
  *
  * Arguments:
@@ -117,6 +151,7 @@ int i2c_open_bus(int busno, Failure_Action failure_action) {
       TERMINATE_EXECUTION_ON_ERROR("Open failed. errno=%s\n", linux_errno_desc(-file));
    return file;
 }
+#endif
 
 
 /* Closes an open I2C bus device.
@@ -131,7 +166,7 @@ int i2c_open_bus(int busno, Failure_Action failure_action) {
  *    0 if success
  *    -errno if close fails and exit on failure was not specified
  */
-int i2c_close_bus(int fd, int busno, Failure_Action failure_action) {
+int i2c_close_bus(int fd, int busno, Byte calloptions) {
    bool debug = false;
    DBGMSF(debug, "Starting. fd=%d", fd);
 
@@ -153,10 +188,11 @@ int i2c_close_bus(int fd, int busno, Failure_Action failure_action) {
                   "Bus device close failed. errno=%s",
                   linux_errno_desc(errsv));
 
-      if (failure_action == EXIT_IF_FAILURE)
+      if (calloptions & CALLOPT_ERR_ABORT)
          TERMINATE_EXECUTION_ON_ERROR(workbuf);
 
-      fprintf(stderr, "%s\n", workbuf);
+      if (calloptions & CALLOPT_ERR_MSG)
+         fprintf(FERR, "%s\n", workbuf);
 
       rc = errsv;
    }
@@ -243,12 +279,12 @@ bool * detect_all_addrs(int busno) {
    bool debug = false;
    DBGMSF(debug, "Starting. busno=%d", busno);
 
-   int file = i2c_open_bus(busno, RETURN_ERROR_IF_FAILURE);
+   int file = i2c_open_bus(busno, CALLOPT_ERR_MSG);  // return if failure
    bool * addrmap = NULL;
 
    if (file >= 0) {
       addrmap = detect_all_addrs_by_fd(file);
-      i2c_close_bus(file, busno, EXIT_IF_FAILURE);
+      i2c_close_bus(file, busno, CALLOPT_ERR_ABORT);
    }
 
    DBGMSF(debug, "Returning %p", addrmap);
@@ -554,7 +590,7 @@ Bus_Info * i2c_check_bus(Bus_Info * bus_info) {
 
    if (!(bus_info->flags & I2C_BUS_PROBED)) {
       bus_info->flags |= I2C_BUS_PROBED;
-      int file = i2c_open_bus(bus_info->busno, RETURN_ERROR_IF_FAILURE);
+      int file = i2c_open_bus(bus_info->busno, CALLOPT_ERR_MSG);  // returns if failure
 
       if (file >= 0) {
          bus_info->flags |= I2C_BUS_ACCESSIBLE;
@@ -568,7 +604,7 @@ Bus_Info * i2c_check_bus(Bus_Info * bus_info) {
             bus_info->edid = i2c_get_parsed_edid_by_fd(file);
             // bus_info->flags |= I2C_BUS_EDID_CHECKED;
          }
-         i2c_close_bus(file, bus_info->busno,  EXIT_IF_FAILURE);
+         i2c_close_bus(file, bus_info->busno,  CALLOPT_ERR_ABORT);
       }
    }
 

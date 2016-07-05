@@ -2,6 +2,7 @@
 *~
 Debug/
 oldsrc/
+newsrc/
 build-debug/
 .tmp
 temp*

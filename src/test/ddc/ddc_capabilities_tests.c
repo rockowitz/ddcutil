@@ -55,7 +55,7 @@ void probe_get_capabilities(int busno, char* write_mode, char* read_mode, Byte a
 
    int len_packet_bytes = sizeof(packet_bytes);
 
-   file = i2c_open_bus(busno,EXIT_IF_FAILURE);
+   file = i2c_open_bus2(busno,ERR_ACTION_ABORT);
    printf("Setting addr to %02x\n", addr);
    i2c_set_addr(file, addr);
    // usleep(TIMEOUT);

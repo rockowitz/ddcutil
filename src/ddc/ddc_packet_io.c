@@ -97,10 +97,13 @@ Display_Handle* ddc_open_display(Display_Ref * dref,  Failure_Action failure_act
    bool debug = false;
    DBGMSF(debug,"Opening display %s",dref_short_name(dref));
    Display_Handle * pDispHandle = NULL;
+   Byte open_flags = 0x00;
+   if (EXIT_IF_FAILURE)
+      open_flags |= CALLOPT_ERR_ABORT;
    switch (dref->io_mode) {
    case DDC_IO_DEVI2C:
       {
-         int fd = i2c_open_bus(dref->busno, failure_action);
+         int fd = i2c_open_bus(dref->busno, open_flags);
          // TODO: handle open failure, when failure_action = return error
          // all callers currently EXIT_IF_FAILURE
          if (fd >= 0) {    // will be < 0 if open_i2c_bus failed and failure_action = RETURN_ERROR_IF_FAILURE
@@ -167,7 +170,7 @@ void ddc_close_display(Display_Handle * dh) {
    switch(dh->io_mode) {
    case DDC_IO_DEVI2C:
       {
-         int rc = i2c_close_bus(dh->fh, dh->busno,  failure_action);
+         int rc = i2c_close_bus(dh->fh, dh->busno,  CALLOPT_NONE);    // return error if failure
          if (rc != 0) {
             DBGMSG("close_i2c_bus returned %d", rc);
             log_status_code(modulate_rc(rc, RR_ERRNO), __func__);

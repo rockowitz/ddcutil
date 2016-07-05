@@ -238,7 +238,7 @@ void probe_get_luminosity(int busno, char * write_mode, char * read_mode) {
    // printf("(%s) create_ddc_getvcp_request_packet returned rc=%d, packet_ptr=%p\n", __func__, rc, request_packet_ptr);
    // dump_packet(request_packet_ptr);
 
-   file = i2c_open_bus(busno, EXIT_IF_FAILURE);
+   file = i2c_open_bus2(busno, ERR_ACTION_ABORT);
    i2c_set_addr(file, 0x37);
    // usleep(DEFAULT_TIMEOUT);
    sleep_millis_with_trace(DDC_TIMEOUT_MILLIS_DEFAULT, __func__, NULL);

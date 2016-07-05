@@ -55,7 +55,7 @@ void read_edid_ala_libxcm(int busno) {
    int    rc;
    Byte*  edidbuf;
 
-   fd = i2c_open_bus(busno,EXIT_IF_FAILURE);
+   fd = i2c_open_bus(busno, CALLOPT_ERR_ABORT);
    i2c_set_addr(fd, 0x50);
    // usleep(TIMEOUT);
    sleep_millis_with_trace(100, __func__, "before write()");
@@ -91,7 +91,7 @@ void probe_read_edid(int busno, char * write_mode, char * read_mode) {
    // bool  debug = true;
    Byte  cmd_byte = 0xFF;  // for cases where cmd byte must be passed
 
-   fd = i2c_open_bus(busno,EXIT_IF_FAILURE);
+   fd = i2c_open_bus(busno, CALLOPT_ERR_ABORT);
    i2c_set_addr(fd, 0x50);
    // usleep(TIMEOUT);
    sleep_millis_with_trace(DDC_TIMEOUT_MILLIS_DEFAULT, __func__, NULL);

@@ -39,7 +39,7 @@
 
 bool dbgtrc_show_time = true;    // include elapsed time in debug/trace output
 
-static jmp_buf* global_abort_loc;
+static jmp_buf* global_abort_loc = NULL;
 
 
 void register_jmp_buf(jmp_buf* jb) {
@@ -47,7 +47,10 @@ void register_jmp_buf(jmp_buf* jb) {
 }
 
 void call_longjmp(int status) {
-   longjmp(*global_abort_loc, status);
+   if (global_abort_loc)
+      longjmp(*global_abort_loc, status);
+   else
+      exit(status);
 }
 
 

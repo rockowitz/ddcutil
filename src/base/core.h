@@ -45,6 +45,12 @@ void register_jmp_buf(jmp_buf* jb);
 void call_longjmp(int status);
 
 
+// Standard flags to indicate behavior if a system call fails
+#define CALLOPT_NONE      0x00
+#define CALLOPT_ERR_MSG   0x80      // issue message
+#define CALLOPT_ERR_ABORT 0x40      // terminate execution
+#define CALLOPT_RDONLY    0x20      // open read-only
+
 //
 // Timestamp Generation
 //
