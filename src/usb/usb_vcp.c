@@ -1,10 +1,7 @@
 /* usb_vcp.c
  *
- * Created on: Jul 3, 2016
- *     Author: rock
- *
  * <copyright>
- * Copyright (C) 2014-2015 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2016 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -24,37 +21,27 @@
  * </endcopyright>
  */
 
-
-
 #include <assert.h>
-#include <dirent.h>
 #include <errno.h>
-#include <fcntl.h>
-#include <glib.h>
 #include <linux/hiddev.h>
-#include <linux/limits.h>
 #include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/ioctl.h>
-#include <unistd.h>
-#include <wchar.h>
 
 #include "util/hiddev_reports.h"
 #include "util/hiddev_util.h"
 #include "util/report_util.h"
 #include "util/string_util.h"
-// #include "util/x11_util.h"         // *** TEMP **
 
 #include "base/core.h"
 #include "base/ddc_errno.h"
 #include "base/execution_stats.h"
 #include "base/linux_errno.h"
 
-// #include "i2c/i2c_bus_core.h"      // *** TEMP ***
-
 #include "usb/usb_core.h"
+
 #include "usb/usb_vcp.h"
 
 
@@ -65,7 +52,6 @@ static Trace_Group TRACE_GROUP = TRC_USB;
 //
 // *** Get and set VCP feature code values ***
 //
-
 
 /* Gets the current value of a usage, as identified by a Usb_Monitor_Vcp_Rec
  *
@@ -155,7 +141,7 @@ bye:
 
 Global_Status_Code
 usb_get_usage_alt(int fd, __u32 report_type, __u32 usage_code, __s32 * maxval, __s32 * curval) {
-   bool debug = false;
+   bool debug = true;
    DBGMSF(debug, "Starting. fd=%d, report_type=%d, usage_code=0x%08x", fd, report_type, usage_code);
    Global_Status_Code gsc = 0;
    int rc;
@@ -176,7 +162,8 @@ usb_get_usage_alt(int fd, __u32 report_type, __u32 usage_code, __s32 * maxval, _
       // Problem: errno=22 (invalid argument) can mean the usage code is invalid,
       // i.e. invalid feature code, or another arg error which indicates a programming error
       if (errsv == EINVAL) {
-
+         if (debug)
+            REPORT_IOCTL_ERROR("HIDIOCGUSAGE", rc);
          gsc = DDCRC_DETERMINED_UNSUPPORTED;
       }
       else {
@@ -218,6 +205,59 @@ usb_get_usage_alt(int fd, __u32 report_type, __u32 usage_code, __s32 * maxval, _
 bye:
    DBGMSF(debug, "Returning: %d", gsc);
    return gsc;
+}
+
+void usb_get_vesa_version(int fd, __u32 report_type) {
+   __s32 maxval;
+   __s32 curval;
+   Global_Status_Code gsc = usb_get_usage_alt(fd, report_type, 0x00800004, &maxval, &curval);
+   if (gsc != 0) {
+      DBGMSG("usb_get_usage_alt() status code %d (%s)", gsc, gsc_name(gsc) );
+   }
+   else {
+      DBGMSG("vesa version: 0x%08x", curval);
+   }
+}
+
+
+
+
+Buffer *
+simple_get_multibyte(int fd, __u32 report_type, __u32 usage_code, __u32 num_values) {
+   bool debug = true;
+   DBGMSF(debug, "Starting. fd=%d, report_type=%d", fd, report_type);
+   // Global_Status_Code gsc = 0;
+   int rc;
+   Buffer * result = NULL;
+
+   assert(report_type == HID_REPORT_TYPE_FEATURE ||
+          report_type == HID_REPORT_TYPE_INPUT);   // *** CG19 ***
+
+   struct hiddev_usage_ref_multi uref_multi;
+   memset(&uref_multi, 0, sizeof(uref_multi));  // initialize all fields to make valgrind happy
+   uref_multi.uref.report_type = report_type;
+   uref_multi.uref.report_id   = HID_REPORT_ID_UNKNOWN;
+   uref_multi.uref.usage_code  = usage_code;
+   uref_multi.num_values = num_values; // needed? yes!
+
+   rc = ioctl(fd, HIDIOCGUSAGES, &uref_multi);  // Fills in usage value
+   if (rc != 0) {
+      REPORT_IOCTL_ERROR("HIDIOCGUSAGES", rc);
+      goto bye;
+   }
+   Byte edidbuf2[128];
+   for (int ndx=0; ndx<128; ndx++)
+      edidbuf2[ndx] = uref_multi.values[ndx] & 0xff;
+   result = buffer_new_with_value(edidbuf2, 128, __func__);
+
+bye:
+   if (debug) {
+      printf("(%s) Returning: %p\n", __func__, result);
+      if (result) {
+         buffer_dump(result);
+      }
+   }
+   return result;
 }
 
 
@@ -457,6 +497,56 @@ bye:
 }
 
 
+
+// not working - HIDIOCSUSAGE failes
+Global_Status_Code
+set_usage_alt(int fd,
+                  __u32 report_type,
+                  __u32 usage_code,
+                  __s32 value)
+{
+   bool debug = true;
+   int rc;
+   Base_Status_Errno result = 0;
+   Global_Status_Code gsc = 0;
+
+   struct hiddev_usage_ref uref = {
+      .report_type = report_type,
+      .report_id   = HID_REPORT_ID_UNKNOWN,
+      .usage_code  = usage_code,
+      .value       = value,
+   };
+   if ((rc=ioctl(fd, HIDIOCSUSAGE, &uref)) < 0) {
+      result = -errno;
+      REPORT_IOCTL_ERROR("HIDIOSUSAGE", rc);
+      goto bye;
+   }
+   if (debug) {
+      DBGMSG("HIDIOSUAGE succeeded");
+      report_hiddev_usage_ref(&uref, 1);
+   }
+   struct hiddev_report_info rinfo = {
+         .report_type = report_type,
+         .report_id   = uref.report_id
+   };
+
+   if ((rc=ioctl(fd, HIDIOCSREPORT, &rinfo)) < 0) {
+      result = -errno;
+      REPORT_IOCTL_ERROR("HIDIOCSREPORT", rc);
+      goto bye;
+   }
+   result = 0;
+
+bye:
+   if (result != 0)
+      gsc = modulate_rc(result, RR_ERRNO);
+   DBGMSF(debug, "Returning: %d", gsc);
+   return gsc;
+}
+
+
+
+
 /* Sets the value of a usage, as identified by a Usb_Monitor_Vcp_Rec
  *
  * Arguments:
@@ -529,31 +619,44 @@ Global_Status_Code usb_set_nontable_vcp_value(
    Usb_Monitor_Info * moninfo = usb_find_monitor_by_display_handle(dh);
    assert(moninfo);
 
-   // find the field record
-   GPtrArray * vcp_recs = moninfo->vcp_codes[feature_code];
-   if (!vcp_recs) {
-      DBGMSF(debug, "Unrecognized feature code 0x%02x", feature_code);
-      gsc = DDCRC_REPORTED_UNSUPPORTED;
+   bool use_alt = false;
+   if (use_alt) {
+      __u32 usage_code = 0x0082 << 16 | feature_code;
+      gsc = set_usage_alt(dh->fh, HID_REPORT_TYPE_FEATURE, usage_code, new_value);
+      if (gsc != 0)
+         gsc = set_usage_alt(dh->fh, HID_REPORT_TYPE_OUTPUT, usage_code, new_value);
+      if (gsc == modulate_rc(EINVAL, RR_ERRNO))
+         gsc = DDCRC_REPORTED_UNSUPPORTED;
+
    }
    else {
-      DBGMSF(debug, "setting value");
-      // for testing purposes, try using each entry
-      // for reading, usage 0 returns correct value, usage 1 returns 0
-      // is usage 1 for writing?
-      // when writing, usage 0 works properly
-      //  usage 1, at least for brightness, sets control to max value
 
-      for (int ndx=0; ndx<vcp_recs->len; ndx++) {
-         Usb_Monitor_Vcp_Rec * vcprec = g_ptr_array_index(vcp_recs,ndx);
-         assert( memcmp(vcprec->marker, USB_MONITOR_VCP_REC_MARKER,4) == 0 );
-         if (vcprec->report_type == HID_REPORT_TYPE_INPUT)
-            continue;
+      // find the field record
+      GPtrArray * vcp_recs = moninfo->vcp_codes[feature_code];
+      if (!vcp_recs) {
+         DBGMSF(debug, "Unrecognized feature code 0x%02x", feature_code);
+         gsc = DDCRC_REPORTED_UNSUPPORTED;
+      }
+      else {
+         DBGMSF(debug, "setting value");
+         // for testing purposes, try using each entry
+         // for reading, usage 0 returns correct value, usage 1 returns 0
+         // is usage 1 for writing?
+         // when writing, usage 0 works properly
+         //  usage 1, at least for brightness, sets control to max value
 
-         gsc = usb_set_usage(dh->fh,  vcprec, new_value);
-         DBGMSF(debug, "usb_set_usage() usage index: %d returned %d",
-                       vcprec->usage_index, gsc);
-         if (gsc == 0)
-            break;
+         for (int ndx=0; ndx<vcp_recs->len; ndx++) {
+            Usb_Monitor_Vcp_Rec * vcprec = g_ptr_array_index(vcp_recs,ndx);
+            assert( memcmp(vcprec->marker, USB_MONITOR_VCP_REC_MARKER,4) == 0 );
+            if (vcprec->report_type == HID_REPORT_TYPE_INPUT)
+               continue;
+
+            gsc = usb_set_usage(dh->fh,  vcprec, new_value);
+            DBGMSF(debug, "usb_set_usage() usage index: %d returned %d",
+                          vcprec->usage_index, gsc);
+            if (gsc == 0)
+               break;
+         }
       }
    }
 

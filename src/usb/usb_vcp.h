@@ -53,4 +53,13 @@ Global_Status_Code usb_set_vcp_value(
       Display_Handle *           dh,
       Single_Vcp_Value *         valrec);
 
-#endif /* SRC_USB_USB_VCP_H_ */
+
+Global_Status_Code
+usb_get_usage_alt(int fd, __u32 report_type, __u32 usage_code, __s32 * maxval, __s32 * curval);
+
+// temporarily here
+Buffer * simple_get_multibyte(int fd, __u32 report_type, __u32 usage_code, __u32 num_values);
+
+void usb_get_vesa_version(int fd, __u32 report_type);
+
+#endif /* USB_VCP_H_ */

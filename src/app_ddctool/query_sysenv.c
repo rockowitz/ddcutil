@@ -60,6 +60,7 @@
 #include "util/file_util.h"
 #include "util/hiddev_reports.h"
 #include "util/hiddev_util.h"
+#include "util/libusb_reports.h"
 #include "util/report_util.h"
 #include "util/string_util.h"
 #include "util/subprocess_util.h"
@@ -1012,7 +1013,7 @@ void query_usb_monitors() {
       puts("");
       errno=0;
       char * curfn = g_ptr_array_index(hiddev_devices,devndx);
-      int fd = usb_open_hiddev_device(curfn, /* bool emit_error_msg */ false);
+      int fd = usb_open_hiddev_device(curfn, /* readonly */ true, /* bool emit_error_msg */ false);
       if (fd < 0) {      // fd is -errno
           rpt_vstring(1, "Device %s, unable to open: %s", curfn, strerror(errno));
       }
@@ -1129,6 +1130,19 @@ void query_sysenv() {
       query_udev_subsystem("usbmisc");
    }
 #endif
+
+   if (output_level >= OL_VERBOSE) {
+      printf("\nChecking for USB connected monitors on /dev/hidraw* ...\n");
+
+      puts("");
+      rpt_vstring(1, "Listing /dev/hidraw*...");
+      execute_shell_cmd("ls -l /dev/hidraw*", 2);
+      puts("");
+      // currently an overwhelming amount of information - need to display
+      // only possible HID connected monitors
+      // printf("\nProbing possible HID monitors using libusb...\n");
+      // probe_libusb(/*possible_monitors_only=*/ true);
+   }
 }
 
 

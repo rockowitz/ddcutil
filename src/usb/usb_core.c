@@ -50,6 +50,8 @@
 
 #include "usb/usb_core.h"
 
+#include "usb/usb_vcp.h"      // TEMP for simple_get_edid()
+
 
 // Trace class for this file
 static Trace_Group TRACE_GROUP = TRC_USB;
@@ -75,6 +77,9 @@ static GPtrArray * usb_monitors;    // array of Usb_Monitor_Info
 //
 // Data Structures
 //
+// Report and manage data structures for this module.
+// Some data structures are defined here, others in usb_core.h
+//
 
 /* Reports contents of usb_monitor_vcp_rec struct
  *
@@ -98,7 +103,6 @@ static void report_usb_monitor_vcp_rec(Usb_Monitor_Vcp_Rec * vcprec, int depth) 
    rpt_structure_loc("struct hiddev_field_info ", vcprec->finfo, d1);
    rpt_structure_loc("struct hiddev_usage_ref  ", vcprec->uref, d1);
 }
-
 
 
 /* Reports contents of Usb_Monitor_Info struct
@@ -131,7 +135,14 @@ static void report_usb_monitor_info(Usb_Monitor_Info * moninfo, int depth) {
 }
 
 
-
+/* Reports on an array of Usb_Monitor_info structs
+ *
+ * Arguments:
+ *   monitors    pointer to GPtrArray of pointer to struct Usb_Monitor_Info
+ *   depth       logical indentation depth
+ *
+ * Returns:      nothing
+ */
 static void report_usb_monitors(GPtrArray * monitors, int depth) {
    const int d1 = depth+1;
 
@@ -141,6 +152,8 @@ static void report_usb_monitors(GPtrArray * monitors, int depth) {
    }
 }
 
+
+// struct model_sn_pair
 
 struct model_sn_pair {
    char * model;
@@ -172,6 +185,8 @@ void report_model_sn_pair(struct model_sn_pair * p, int depth) {
  *
  * Arguments:
  *   hiddev_devname
+ *   readonly         if true, open read only
+ *                    if false, open for reading and writing
  *   emit_error_msg   if true, output message if error
  *
  * Returns:
@@ -179,15 +194,16 @@ void report_model_sn_pair(struct model_sn_pair * p, int depth) {
  *   -errno if failure
  *
  */
-int usb_open_hiddev_device(char * hiddev_devname, bool emit_error_msg) {
+int usb_open_hiddev_device(char * hiddev_devname, bool readonly, bool emit_error_msg) {
    bool debug = false;
    DBGMSF(debug, "hiddev_devname=%s", hiddev_devname);
 
    int  file;
+   int mode = (readonly) ? O_RDONLY : O_RDWR;
 
    RECORD_IO_EVENT(
          IE_OPEN,
-         ( file = open(hiddev_devname, O_RDWR) )
+         ( file = open(hiddev_devname, mode) )
          );
    // per man open:
    // returns file descriptor if successful
@@ -559,6 +575,42 @@ struct model_sn_pair *  get_eizo_model_sn_by_report(int fd) {
 }
 
 
+struct model_sn_pair *  get_eizo_model_sn_alt(int fd) {
+   bool debug = true;
+   struct model_sn_pair* result = NULL;
+   DBGMSF(debug, "Starting");
+
+   __u32              usage_code  = 0xff000035;
+
+   Buffer * modelsn = NULL;
+   modelsn = simple_get_multibyte(fd, HID_REPORT_TYPE_FEATURE, usage_code, /* num_values */ 16);
+   if (!modelsn)
+      modelsn = simple_get_multibyte(fd, HID_REPORT_TYPE_INPUT, usage_code, /* num_values */ 16);
+   if (modelsn) {
+      assert(modelsn->len >= 16);
+      result = calloc(1, sizeof(struct model_sn_pair));
+      result->model = calloc(1,9);
+      result->sn    = calloc(1,9);
+      memcpy(result->sn, modelsn->bytes,8);
+      result->sn[8] = '\0';
+      memcpy(result->model, modelsn->bytes+8, 8);
+      result->model[8] = '\0';
+      rtrim_in_place(result->sn);
+      rtrim_in_place(result->model);
+      free(modelsn);
+   }
+
+   if (debug) {
+      printf("(%s) Returning: %p\n", __func__, result);
+      if (result)
+         report_model_sn_pair(result, 1);
+   }
+   return result;
+}
+
+
+
+
 //
 //  Move to new file base/x11_base.c  ??
 //
@@ -656,6 +708,8 @@ Parsed_Edid * get_hiddev_edid_with_fallback(int fd, struct hiddev_devinfo * dev_
     }
 
    struct model_sn_pair * model_sn = NULL;
+   struct model_sn_pair * model_sn2 = NULL;
+
 
    if (!edid_buffer) {
       if (dev_info->vendor == 0x056d && dev_info->product == 0x0002) {   // if is EIZO monitor?
@@ -663,6 +717,15 @@ Parsed_Edid * get_hiddev_edid_with_fallback(int fd, struct hiddev_devinfo * dev_
          printf("(%s) *** Special fixup for Eizo monitor ***\n", __func__);
 
          model_sn = get_eizo_model_sn_by_report(fd);
+         model_sn2 = get_eizo_model_sn_alt(fd);
+         if (debug) {
+            DBGMSG("As reported by get_eizo_model_sn():");
+            report_model_sn_pair(model_sn,1);
+            DBGMSG("As reported by get_eizo_model_alt():");
+            report_model_sn_pair(model_sn2,1);
+         }
+
+
          if (model_sn) {
             // Should this be a ddc level function to find non-usb EDID?
             Bus_Info * bus_info = i2c_find_bus_info_by_model_sn(model_sn->model, model_sn->sn);
@@ -715,7 +778,7 @@ static GPtrArray * get_usb_monitor_list() {
       char * hiddev_fn = g_ptr_array_index(hiddev_names, devname_ndx);
       DBGMSF(debug, "Examining device: %s", hiddev_fn);
       // will need better message handling for API
-      int fd = usb_open_hiddev_device(hiddev_fn, (ol >= OL_VERBOSE));
+      int fd = usb_open_hiddev_device(hiddev_fn, /*readonly=*/ true, (ol >= OL_VERBOSE));
       if (fd > 0) {
          // Declare variables here and initialize them to NULL so that code at label close: works
          struct hiddev_devinfo *   devinfo     = NULL;
@@ -738,6 +801,18 @@ static GPtrArray * get_usb_monitor_list() {
             goto close;
 
          parsed_edid = get_hiddev_edid_with_fallback(fd, devinfo);
+
+         // for testing, try using alternative method
+         DBGMSF(true, "Trying simple_get_edid(,HID_REPORT_TYPE_FEATURE) ...");
+         /* Buffer * b1 = */ simple_get_multibyte(fd, HID_REPORT_TYPE_FEATURE,  0x00800002, 128);
+         DBGMSF(true, "Trying simple_get_edid(,HID_REPORT_TYPE_INPUT) ...");
+         /* Buffer * b2 = */ simple_get_multibyte(fd, HID_REPORT_TYPE_INPUT,  0x00800002, 128);
+
+         DBGMSG("Trying to get VESA version using HID_REPORT_TYPE_FEATURE...");
+         usb_get_vesa_version(fd, HID_REPORT_TYPE_FEATURE);
+         DBGMSG("Trying to get VESA version using HID_REPORT_TYPE_INPUT...");
+         usb_get_vesa_version(fd, HID_REPORT_TYPE_INPUT);
+
 
          if (!parsed_edid) {
             fprintf(FERR,
