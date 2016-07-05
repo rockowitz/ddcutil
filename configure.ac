@@ -126,6 +126,7 @@ dnl PKG_CHECK_MODULES(OSINFO, libosinfo-1.0 >= 0.1, [OSINFO_FOUND=yes], [OSINFO_
 PKG_CHECK_MODULES(XRANDR, xrandr)
 PKG_CHECK_MODULES(X11, x11)
 dnl PKG_CHECK_MODULES(UDEV, libudev)
+dnl PKG_CHECK_MODULES(LIBUSB, libusb-1.0)
 
 dnl failing in OBS if no proper BuildRequires, even if libudev use disabled
 PKG_CHECK_MODULES([UDEV], [libudev],

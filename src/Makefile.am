@@ -187,6 +187,9 @@ util/report_util.c \
 util/string_util.c \
 util/subprocess_util.c
 
+# libcommon_la_SOURCES += \
+# util/libusb_reports.c 
+
 if HAVE_ADL_COND
 libcommon_la_SOURCES += \
   adl/adl_impl/adl_aux_intf.c \
@@ -226,6 +229,7 @@ AM_CPPFLAGS= \
 $(GLIB_CFLAGS) \
 $(GOBJECT_CFLAGS) \
 $(XRANDR_CFLAGS) \
+$(LIBUSB_CFLAGS) \
 -I$(top_srcdir) 
 
 
@@ -273,6 +277,7 @@ libddctool_la_LDFLAGS = -export_symbols-regex '^ddc[tg]_[^_]'
 ddctool_LDADD = \
    libcommon.la \
    $(XRANDR_LIBS) \
+   $(LIBUSB_LIBS) \
    $(X11_LIBS) \
    $(GLIB_LIBS)
 
