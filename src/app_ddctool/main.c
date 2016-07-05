@@ -152,7 +152,6 @@ bool perform_get_capabilities_by_display_handle(Display_Handle * dh) {
       }
       ok = true;
    }
-
    return ok;
 }
 
@@ -164,6 +163,7 @@ bool perform_get_capabilities_by_display_handle(Display_Handle * dh) {
 int main(int argc, char *argv[]) {
    start_time_nanos = cur_realtime_nanosec();
 
+   // For aborting out of shared library
    jmp_buf abort_buf;
    int jmprc = setjmp(abort_buf);
    if (jmprc) {
@@ -354,7 +354,8 @@ int main(int argc, char *argv[]) {
          {
             Version_Spec vspec = get_vcp_version_by_display_handle(dh);
             if (vspec.major < 2) {
-               printf("VCP (aka MCCS) version for display is undetected or less than 2.0. Output may not be accurate.\n");
+               printf("VCP (aka MCCS) version for display is undetected or less than 2.0. "
+                     "Output may not be accurate.\n");
             }
          }
 
