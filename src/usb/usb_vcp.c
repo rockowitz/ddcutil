@@ -146,7 +146,7 @@ usb_get_usage(int fd, Usb_Monitor_Vcp_Rec * vcprec, __s32 * maxval, __s32 * curv
 
 Global_Status_Code
 usb_get_usage_alt(int fd, __u32 report_type, __u32 usage_code, __s32 * maxval, __s32 * curval) {
-   bool debug = true;
+   bool debug = false;
    DBGMSF(debug, "Starting. fd=%d, report_type=%d, usage_code=0x%08x", fd, report_type, usage_code);
    Global_Status_Code gsc = 0;
    int rc;
@@ -180,7 +180,8 @@ usb_get_usage_alt(int fd, __u32 report_type, __u32 usage_code, __s32 * maxval, _
    }
    *curval = uref.value;
 
-   report_hiddev_usage_ref(&uref, 1);
+   if (debug)
+      report_hiddev_usage_ref(&uref, 1);
 
    struct hiddev_field_info finfo = {0};
    finfo.report_type = uref.report_type;
@@ -197,7 +198,8 @@ usb_get_usage_alt(int fd, __u32 report_type, __u32 usage_code, __s32 * maxval, _
       goto bye;
    }
 
-   report_hiddev_field_info(&finfo, 1);
+   if (debug)
+      report_hiddev_field_info(&finfo, 1);
 
    __s32 maxval1 = finfo.logical_maximum;
    __s32 maxval2 = finfo.physical_maximum;

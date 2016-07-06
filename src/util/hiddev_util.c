@@ -507,7 +507,7 @@ Buffer * collect_single_byte_usage_values(
 /* Checks if a field in a HID report represents an EDID
  *
  * Arguments:
- *    fd           file descriptor
+ *    fd           file descriptor for open hiddev device
  *    rinfo        pointer to hiddev_report_info struct
  *    field_index  index number of field to check
  *
@@ -545,56 +545,12 @@ bool is_field_edid(int fd, struct hiddev_report_info * rinfo, int field_index) {
                 __func__, rinfo->num_fields, finfo.maxusage);
       }
    }
-   // result->field_id = fndx;
 
-   if (finfo.maxusage < 128)
-      goto bye;
+   if (finfo.maxusage >= 128)
+      all_usages_edid = ( get_identical_ucode(fd, &finfo, field_index) == 0x00800002 );
 
-   all_usages_edid = ( get_identical_ucode(fd, &finfo, field_index) == 0x00800002 );
-#ifdef OLD
-   bool all_usages_edid = true;
-   int undx;
-   for (undx = 0; undx < finfo.maxusage && all_usages_edid; undx++) {
-      struct hiddev_usage_ref uref = {
-          .report_type = rinfo->report_type,   // rinfo.report_type;
-          .report_id =   rinfo->report_id,     // rinfo.report_id;
-          .field_index = saved_field_index,    // use original value, not value changed by HIDIOCGFIELDINFO
-          .usage_index = undx
-      };
-      // printf("(%s) report_type=%d, report_id=%d, field_index=%d, usage_index=%d\n",
-      //       __func__, rinfo->report_type, rinfo->report_id, field_index=saved_field_index, undx);
-      rc = ioctl(fd, HIDIOCGUCODE, &uref);    // Fills in usage code
-      if (rc != 0) {
-          REPORT_IOCTL_ERROR("HIDIOCGUCODE", rc);
-          all_usages_edid = false;
-      }
-      else {
-         // printf("(%s) uref.field_index=%d, uref.usage_code = 0x%08x\n",
-         //        __func__, uref.field_index, uref.usage_code);
-         if (uref.usage_code != 0x00800002)   // USB Monitor/EDID Information
-            all_usages_edid = false;
-      }
-   }   // loop over usages
-#endif
-
-   // if (all_usages_edid) {
-   //    result = malloc(sizeof(struct hiddev_field_info));
-   //    memcpy(result, &finfo, sizeof(struct hiddev_field_info));
-   // }
-
-bye:
-#ifdef OLD
-   if (debug) {
-      if (result) {
-         printf("(%s) Returning: \n", __func__);
-         report_hiddev_field_info(result, 1);
-      }
-      else
-         printf("(%s) Returning: null\n", __func__);
-
-   }
-   return result;
-#endif
+   if (debug)
+      printf("(%s) Returning: %s", __func__, bool_repr(all_usages_edid));
    return all_usages_edid;
 }
 
