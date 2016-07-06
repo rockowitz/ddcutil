@@ -83,6 +83,9 @@ usb_get_usage(int fd, Usb_Monitor_Vcp_Rec * vcprec, __s32 * maxval, __s32 * curv
                  vcprec->report_id,
                  vcprec->field_index,
                  vcprec->usage_index);
+   hid_get_report(fd, vcprec->rinfo, CALLOPT_ERR_MSG|CALLOPT_ERR_ABORT);
+
+#ifdef OLD
    rc = ioctl(fd, HIDIOCGREPORT, vcprec->rinfo);
    if (rc != 0) {
       REPORT_IOCTL_ERROR("HIDIOCGREPORT", rc);
@@ -92,6 +95,7 @@ usb_get_usage(int fd, Usb_Monitor_Vcp_Rec * vcprec, __s32 * maxval, __s32 * curv
       goto bye;
    }
    // DBGMSF(debug, "HIDIOCGREPORT succeeded");
+#endif
 
    __s32 maxval1 = vcprec->finfo->logical_maximum;
    __s32 maxval2 = vcprec->finfo->physical_maximum;
@@ -120,10 +124,11 @@ usb_get_usage(int fd, Usb_Monitor_Vcp_Rec * vcprec, __s32 * maxval, __s32 * curv
    }
 #endif
 
-   rc = ioctl(fd, HIDIOCGUSAGE, uref);  // Fills in usage value
+   rc  = hid_get_usage_value(fd, uref, CALLOPT_ERR_MSG);
+   // rc = ioctl(fd, HIDIOCGUSAGE, uref);  // Fills in usage value
    if (rc != 0) {
       int errsv = errno;
-      REPORT_IOCTL_ERROR("HIDIOCGUSAGE", rc);
+      // REPORT_IOCTL_ERROR("HIDIOCGUSAGE", rc);
       // occasionally see -1, errno = 22 invalid argument - for Battery System Page: Run Time to Empty
       gsc = modulate_rc(-errsv, RR_ERRNO);
    }
@@ -133,7 +138,7 @@ usb_get_usage(int fd, Usb_Monitor_Vcp_Rec * vcprec, __s32 * maxval, __s32 * curv
       gsc = 0;
    }
 
-bye:
+
    DBGMSF(debug, "Returning: %d", gsc);
    return gsc;
 }
@@ -154,11 +159,10 @@ usb_get_usage_alt(int fd, __u32 report_type, __u32 usage_code, __s32 * maxval, _
    uref.report_id   = HID_REPORT_ID_UNKNOWN;
    uref.usage_code  = usage_code;
 
-   rc = ioctl(fd, HIDIOCGUSAGE, &uref);  // Fills in usage value
+   rc = hid_get_usage_value(fd, &uref, CALLOPT_NONE);
+   // rc = ioctl(fd, HIDIOCGUSAGE, &uref);  // Fills in usage value
    if (rc != 0) {
       int errsv = errno;
-
-
       // Problem: errno=22 (invalid argument) can mean the usage code is invalid,
       // i.e. invalid feature code, or another arg error which indicates a programming error
       if (errsv == EINVAL) {

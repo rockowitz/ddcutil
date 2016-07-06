@@ -26,7 +26,9 @@
 
 #include <glib.h>
 #include <linux/hiddev.h>
-#include <string.h>        // so users will have definition of strerror()
+// so callers will have definition of strerror() used in REPORT_IOCTL_ERROR macro:
+#include <string.h>
+
 
 #include "util/data_structures.h"
 #include "util/edid.h"

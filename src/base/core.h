@@ -42,7 +42,7 @@ extern bool dbgtrc_show_time;  // include elapsed time in debug/trace timestamps
 
 // For aborting out of shared library
 void register_jmp_buf(jmp_buf* jb);
-void call_longjmp(int status);
+void ddc_abort(int status);
 
 
 // Standard flags to indicate behavior if a system call fails
@@ -50,6 +50,7 @@ void call_longjmp(int status);
 #define CALLOPT_ERR_MSG   0x80      // issue message
 #define CALLOPT_ERR_ABORT 0x40      // terminate execution
 #define CALLOPT_RDONLY    0x20      // open read-only
+#define CALLOPT_WARN_FINDEX 0x01    // issue warning msg re hiddev_field_info.field_index change
 
 //
 // Timestamp Generation

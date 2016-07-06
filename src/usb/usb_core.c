@@ -283,6 +283,109 @@ int usb_close_device(int fd, char * device_fn, Byte calloptions) {
 
 
 
+int hid_get_device_info(int fd, struct hiddev_devinfo * dev_info, Byte calloptions) {
+   assert(dev_info);
+
+   int rc = ioctl(fd, HIDIOCGDEVINFO, dev_info);
+   if (rc != 0) {
+      int errsv = errno;
+      if (calloptions & CALLOPT_ERR_MSG)
+         REPORT_IOCTL_ERROR("HIDIOCGDEVINFO", rc);
+
+      if (calloptions & CALLOPT_ERR_ABORT)
+         ddc_abort(errsv);
+  }
+
+  return rc;
+}
+
+
+int hid_get_report_info(int fd, struct hiddev_report_info * rinfo, Byte calloptions) {
+   assert(rinfo);
+
+   int rc = ioctl(fd, HIDIOCGREPORTINFO, rinfo);
+   if (rc < -1) {     // -1 means no more reports
+      int errsv = errno;
+      if (calloptions & CALLOPT_ERR_MSG)
+         REPORT_IOCTL_ERROR("HIDIOCGREPORTINFO", rc);
+
+      if (calloptions & CALLOPT_ERR_ABORT)
+         ddc_abort(errsv);
+  }
+
+  return rc;
+}
+
+
+int hid_get_field_info(int fd, struct hiddev_field_info * finfo, Byte calloptions) {
+   int saved_field_index = finfo->field_index;
+   int rc = ioctl(fd, HIDIOCGFIELDINFO, finfo);
+   if (rc != 0) {
+      int errsv = errno;
+      if (calloptions & CALLOPT_ERR_MSG)
+         REPORT_IOCTL_ERROR("HIDIOCGFIELDINFO", rc);
+
+      if (calloptions & CALLOPT_ERR_ABORT)
+         ddc_abort(errsv);
+   }
+   assert(rc == 0);
+   if (finfo->field_index != saved_field_index && (calloptions &CALLOPT_WARN_FINDEX)) {
+      printf("(%s) !!! ioctl(HIDIOCGFIELDINFO) changed field_index from %d to %d\n",
+             __func__, saved_field_index, finfo->field_index);
+      printf("(%s) finfo.maxusage=%d\n",
+             __func__,  finfo->maxusage);
+   }
+
+   return rc;
+}
+
+
+int hid_get_usage_code(int fd, struct hiddev_usage_ref * uref, Byte calloptions) {
+   int rc = ioctl(fd, HIDIOCGUCODE, uref);    // Fills in usage code
+   if (rc != 0) {
+      int errsv = errno;
+      if (calloptions & CALLOPT_ERR_MSG)
+         REPORT_IOCTL_ERROR("HIDIOCGUCODE", rc);
+
+      if (calloptions & CALLOPT_ERR_ABORT)
+         ddc_abort(errsv);
+   }
+
+   return rc;
+}
+
+
+int hid_get_usage_value(int fd, struct hiddev_usage_ref * uref, Byte calloptions) {
+   int rc = ioctl(fd, HIDIOCGUSAGE, uref);
+   if (rc != 0) {
+      int errsv = errno;
+      if (calloptions & CALLOPT_ERR_MSG)
+         REPORT_IOCTL_ERROR("HIDIOCGUSAGE", rc);
+
+      if (calloptions & CALLOPT_ERR_ABORT)
+         ddc_abort(errsv);
+   }
+
+   return rc;
+}
+
+
+int hid_get_report(int fd, struct hiddev_report_info * rinfo, Byte calloptions) {
+   int rc = ioctl(fd, HIDIOCGUCODE, rinfo);
+   if (rc != 0) {
+      int errsv = errno;
+      if (calloptions & CALLOPT_ERR_MSG)
+         REPORT_IOCTL_ERROR("HIDIOCGREPORT", rc);
+
+      if (calloptions & CALLOPT_ERR_ABORT)
+         ddc_abort(errsv);
+   }
+
+   return rc;
+}
+
+
+
 //
 // HID Report Inquiry
 //
@@ -293,7 +396,7 @@ int usb_close_device(int fd, char * device_fn, Byte calloptions) {
  * Returns:  array of Usb_Monitor_Vcp_Rec for each usage
  */
 GPtrArray * collect_vcp_reports(int fd) {
-   bool debug = false;
+   // bool debug = false;
    GPtrArray * vcp_reports = g_ptr_array_new();
    for (__u32 report_type = HID_REPORT_TYPE_MIN; report_type <= HID_REPORT_TYPE_MAX; report_type++) {
       int reportinfo_rc = 0;
@@ -307,10 +410,10 @@ GPtrArray * collect_vcp_reports(int fd) {
            //       __func__, rptct, rinfo.report_id, interpret_report_id(rinfo.report_id));
 
           errno = 0;
-          reportinfo_rc = ioctl(fd, HIDIOCGREPORTINFO, &rinfo);
+          reportinfo_rc = hid_get_report_info(fd, &rinfo, CALLOPT_ERR_MSG | CALLOPT_ERR_ABORT);
+          // reportinfo_rc = ioctl(fd, HIDIOCGREPORTINFO, &rinfo);
           if (reportinfo_rc != 0) {    // no more reports
-             if (reportinfo_rc != -1)
-                REPORT_IOCTL_ERROR("HIDIOCGREPORTINFO", reportinfo_rc);
+             assert( reportinfo_rc == -1);
              break;
           }
           // result->report_id = rinfo.report_id;
@@ -326,6 +429,8 @@ GPtrArray * collect_vcp_reports(int fd) {
                    .report_id   = rinfo.report_id,
                    .field_index = fndx
              };
+             hid_get_field_info(fd, &finfo, CALLOPT_WARN_FINDEX | CALLOPT_ERR_MSG | CALLOPT_ERR_ABORT);
+#ifdef OLD
              int saved_field_index = fndx;
              int rc = ioctl(fd, HIDIOCGFIELDINFO, &finfo);
              if (rc != 0)
@@ -337,7 +442,7 @@ GPtrArray * collect_vcp_reports(int fd) {
                 printf("(%s)   rinfo.num_fields=%d, finfo.maxusage=%d\n",
                        __func__, rinfo.num_fields, finfo.maxusage);
              }
-
+#endif
              if (finfo.application != 0x00800001) // USB Monitor Page/Monitor Control
                 continue;
 
@@ -348,11 +453,7 @@ GPtrArray * collect_vcp_reports(int fd) {
                        .field_index = fndx,
                        .usage_index = undx
                 };
-                rc = ioctl(fd, HIDIOCGUCODE, &uref);    // Fills in usage code
-                if (rc != 0) {
-                    REPORT_IOCTL_ERROR("HIDIOCGUCODE", rc);
-                    continue;
-                }
+                hid_get_usage_code(fd, &uref, CALLOPT_ERR_MSG|CALLOPT_ERR_ABORT);
                 if ( (uref.usage_code & 0xffff0000) != 0x00820000)  // Monitor VESA Virtual Controls page
                    continue;
                 Byte vcp_feature = uref.usage_code & 0xff;
@@ -498,11 +599,10 @@ struct hid_field_locator * find_eizo_model_sn_report(int fd) {
    struct hid_field_locator * loc = NULL;
    struct hiddev_devinfo dev_info;
 
-   int rc = ioctl(fd, HIDIOCGDEVINFO, &dev_info);
-   if (rc != 0) {
-      REPORT_IOCTL_ERROR("HIDIOCGDEVINFO", rc);
+   int rc = hid_get_device_info(fd, &dev_info, CALLOPT_ERR_MSG);
+   if (rc != 0)
       goto bye;
-   }
+
    if (dev_info.vendor == 0x056d && dev_info.product == 0x0002)  {
       loc = find_report(fd, HID_REPORT_TYPE_FEATURE, 0xff000035, /*match_all_ucodes=*/false);
    }
@@ -795,11 +895,15 @@ static GPtrArray * get_usb_monitor_list() {
 
          cgname = get_hiddev_name(fd);               // HIDIOCGNAME
          devinfo = calloc(1,sizeof(struct hiddev_devinfo));
+         if ( hid_get_device_info(fd, devinfo, CALLOPT_ERR_MSG) != 0)
+            goto close;
+#ifdef OLD
          int rc = ioctl(fd, HIDIOCGDEVINFO, devinfo);
          if (rc != 0) {
             REPORT_IOCTL_ERROR("HIDIOCGDEVINFO", rc);
             goto close;
          }
+#endif
 
          if (!is_hiddev_monitor(fd))
             goto close;

@@ -46,11 +46,13 @@ void register_jmp_buf(jmp_buf* jb) {
    global_abort_loc = jb;
 }
 
-void call_longjmp(int status) {
+void ddc_abort(int status) {
    if (global_abort_loc)
       longjmp(*global_abort_loc, status);
-   else
-      exit(status);
+   else {
+      puts("Terminating execution.");
+      exit(EXIT_FAILURE);     // or return status?
+   }
 }
 
 
@@ -512,7 +514,7 @@ void report_ioctl_error(
    // not worth the linkage issues:
    // fprintf(stderr, "  %s\n", explain_errno_ioctl(errnum, filedes, request, data));
    if (fatal) {
-      call_longjmp(DDCL_INTERNAL_ERROR);
+      ddc_abort(DDCL_INTERNAL_ERROR);
       // exit(EXIT_FAILURE);
    }
    errno = errsv;
@@ -585,8 +587,8 @@ void program_logic_error(
   fputs(buffer, stderr);
   fputc('\n',   stderr);
 
-  fputs("Terminating execution.\n", stderr);
-  call_longjmp(DDCL_INTERNAL_ERROR);
+  // fputs("Terminating execution.\n", stderr);
+  ddc_abort(DDCL_INTERNAL_ERROR);
   // exit(EXIT_FAILURE);
 }
 
@@ -614,8 +616,7 @@ void terminate_execution_on_error(
    }
 
    puts(finalBuffer);
-   puts("Terminating execution.");
-   call_longjmp(DDCL_INTERNAL_ERROR);
-   // exit(EXIT_FAILURE);
+
+   ddc_abort(DDCL_INTERNAL_ERROR);
 }
 
