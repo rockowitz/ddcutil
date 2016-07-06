@@ -21,8 +21,8 @@
  * </endcopyright>
  */
 
-#ifndef SRC_UTIL_HIDDEV_UTIL_H_
-#define SRC_UTIL_HIDDEV_UTIL_H_
+#ifndef HIDDEV_UTIL_H_
+#define HIDDEV_UTIL_H_
 
 #include <glib.h>
 #include <linux/hiddev.h>
@@ -93,4 +93,4 @@ Byte * get_hiddev_edid_base(
       struct hiddev_report_info * rinfo,
       int field_index);
 #endif
-#endif /* SRC_UTIL_HIDDEV_UTIL_H_ */
+#endif /* HIDDEV_UTIL_H_ */
