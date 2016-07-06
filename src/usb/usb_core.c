@@ -388,7 +388,6 @@ int hid_get_report(int fd, struct hiddev_report_info * rinfo, Byte calloptions) 
 // HID Report Inquiry
 //
 
-
 /* Locates all USB HID reports relating to querying and setting VCP feature values.
  *
  * Returns:  array of Usb_Monitor_Vcp_Rec for each usage
@@ -489,18 +488,9 @@ GPtrArray * collect_vcp_reports(int fd) {
 }
 
 
-
-
 //
-// EDID Retrieval
+// Capabilities
 //
-
-
-
-//
-//
-//
-
 
 /** Creates a capabilities string for the USB device.
  *
@@ -532,55 +522,6 @@ static char * usb_synthesize_capabilities_string(Usb_Monitor_Info * moninfo) {
    char * result = strdup(buf);
    return result;
 }
-
-
-/* Tests if a hiddev device (specified by its name) appears to
- * be a USB HID compliant monitor.
- *
- * This stripped down test implements the ddctool chkusbmon command,
- * which is intended for use in a udev rules test.
- *
- * Arguments:
- *    device_name        e.g. /dev/usb/hiddev3
- *
- * Returns:              true if device is a monitor,
- *                       false if not, or unable to open device
- *
- * Note that messages will not appear when this function runs as part
- * of normal udev execution.  They are intended to aid in debugging.
- */
-bool check_usb_monitor( char * device_name ) {
-   assert(device_name);
-   bool debug = false;
-   Output_Level ol = get_output_level();
-   if (debug)
-      ol = OL_VERBOSE;
-
-   DBGMSF(debug, "Examining device: %s", device_name);
-   bool result = false;
-
-   int fd = open(device_name, O_RDONLY);
-   if (fd < 1) {
-      if (ol >= OL_VERBOSE)
-         printf("Unable to open device %s: %s", device_name, strerror(errno));
-      goto exit;
-   }
-
-   result = is_hiddev_monitor(fd);
-
-   close(fd);
-
-   if (ol >= OL_VERBOSE) {
-      if (result)
-         printf("Device %s appears to be a USB HID compliant monitor.\n", device_name);
-      else
-         printf("Device %s is not a USB HID compliant monitor.\n", device_name);
-   }
-
- exit:
-    return result;
- }
-
 
 
 //
@@ -714,7 +655,7 @@ struct model_sn_pair *  get_eizo_model_sn_alt(int fd) {
 
 
 //
-//  Move to new file base/x11_base.c  ??
+//  EDID Retrieval
 //
 
 /* Obtains EDID from X11.
@@ -776,11 +717,6 @@ Parsed_Edid * get_x11_edid_by_model_sn(char * model_name, char * sn_ascii) {
    return parsed_edid;
 }
 
-
-
-//
-// Functions to get EDID
-//
 
 /* Retrieves the EDID (128 bytes) from a hiddev device representing a HID
  * compliant monitor.
@@ -1177,7 +1113,7 @@ bool usb_is_valid_display_ref(Display_Ref * dref, bool emit_error_msg) {
 }
 
 
-void usb_report_active_display_by_display_ref(Display_Ref * dref, int depth) {
+void usb_show_active_display_by_display_ref(Display_Ref * dref, int depth) {
    Output_Level output_level = get_output_level();
    rpt_vstring(depth, "USB bus:device:      %d:%d", dref->usb_bus, dref->usb_device);
 
@@ -1198,6 +1134,12 @@ void usb_report_active_display_by_display_ref(Display_Ref * dref, int depth) {
    }
 }
 
+
+//
+// Get monitor information by Display_Ref or Display_Handle
+// (for hiding Usb_Monitor_Info from higher software levels)
+//
+
 Parsed_Edid * usb_get_parsed_edid_by_display_ref(Display_Ref * dref) {
    Usb_Monitor_Info * moninfo = usb_find_monitor_by_display_ref(dref);
    return moninfo->edid;
@@ -1209,17 +1151,65 @@ Parsed_Edid * usb_get_parsed_edid_by_display_handle(Display_Handle * dh) {
 }
 
 
+char * usb_get_capabilities_string_by_display_handle(Display_Handle * dh) {
+   Usb_Monitor_Info * moninfo = usb_find_monitor_by_display_handle(dh);
+   assert(dh);
+   return usb_synthesize_capabilities_string(moninfo);
+}
 
 
 //
 // *** Miscellaneous services ***
 //
 
-char * usb_get_capabilities_string_by_display_handle(Display_Handle * dh) {
-   Usb_Monitor_Info * moninfo = usb_find_monitor_by_display_handle(dh);
-   assert(dh);
-   return usb_synthesize_capabilities_string(moninfo);
-}
+/* Tests if a hiddev device (specified by its name) appears to
+ * be a USB HID compliant monitor.
+ *
+ * This stripped down test implements the ddctool chkusbmon command,
+ * which is intended for use in a udev rules test.
+ *
+ * Arguments:
+ *    device_name        e.g. /dev/usb/hiddev3
+ *
+ * Returns:              true if device is a monitor,
+ *                       false if not, or unable to open device
+ *
+ * Note that messages will not appear when this function runs as part
+ * of normal udev execution.  They are intended to aid in debugging.
+ */
+bool check_usb_monitor( char * device_name ) {
+   assert(device_name);
+   bool debug = false;
+   Output_Level ol = get_output_level();
+   if (debug)
+      ol = OL_VERBOSE;
+
+   DBGMSF(debug, "Examining device: %s", device_name);
+   bool result = false;
+
+   int fd = open(device_name, O_RDONLY);
+   if (fd < 1) {
+      if (ol >= OL_VERBOSE)
+         printf("Unable to open device %s: %s", device_name, strerror(errno));
+      goto exit;
+   }
+
+   result = is_hiddev_monitor(fd);
+
+   close(fd);
+
+   if (ol >= OL_VERBOSE) {
+      if (result)
+         printf("Device %s appears to be a USB HID compliant monitor.\n", device_name);
+      else
+         printf("Device %s is not a USB HID compliant monitor.\n", device_name);
+   }
+
+ exit:
+    return result;
+ }
+
+
 
 
 

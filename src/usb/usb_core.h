@@ -55,7 +55,7 @@ Display_Info_List usb_get_valid_displays();
 
 bool usb_is_valid_display_ref(Display_Ref * dref, bool emit_error_msg);
 
-void usb_report_active_display_by_display_ref(Display_Ref * dref, int depth);
+void usb_show_active_display_by_display_ref(Display_Ref * dref, int depth);
 
 int usb_open_hiddev_device(char * hiddev_devname, Byte calloptions);
 int usb_close_device(int fd, char * device_fn, Byte calloptions);

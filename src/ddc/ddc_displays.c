@@ -419,7 +419,7 @@ ddc_report_active_display(Display_Info * curinfo, int depth) {
       break;
    case USB_IO:
       // printf("(%s) Case USB_IO unimplemented\n", __func__);
-      usb_report_active_display_by_display_ref(curinfo->dref, depth);
+      usb_show_active_display_by_display_ref(curinfo->dref, depth);
    }
 
 

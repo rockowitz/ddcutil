@@ -502,7 +502,7 @@ bye:
 
 
 
-// not working - HIDIOCSUSAGE failes
+// not working - HIDIOCSUSAGE fails
 Global_Status_Code
 set_usage_alt(int fd,
                   __u32 report_type,
