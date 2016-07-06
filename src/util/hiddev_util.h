@@ -47,6 +47,11 @@
    } while(0)
 
 
+#define HID_REPORT_TYPE_INPUT_FG   (1 << HID_REPORT_TYPE_INPUT)
+#define HID_REPORT_TYPE_OUTPUT_FG  (1 << HID_REPORT_TYPE_OUTPUT)
+#define HID_REPORT_TYPE_FEATURE_FG (1 << HID_REPORT_TYPE_FEATURE)
+
+
 // Identifies a field within a report
 struct hid_field_locator {
    struct hiddev_field_info  * finfo;         // simplify by eliminating?
