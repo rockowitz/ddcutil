@@ -30,21 +30,18 @@
 #include "util/edid.h"
 #include "util/data_structures.h"
 
-#include <base/core.h>
-#include <base/displays.h>
-#include <base/execution_stats.h>
-#include <base/status_code_mgt.h>
+#include "base/core.h"
+#include "base/displays.h"
+#include "base/execution_stats.h"
+#include "base/status_code_mgt.h"
 
 
 // Retrieve and inspect bus information
 
 #define I2C_BUS_EXISTS        0x80
 #define I2C_BUS_ACCESSIBLE    0x40
-// if I2C_BUS_ADDRS_CHECKED set, then I2C_BUS_ADDR_0X50 and I2C_BUS_ADDR_0X37 are meaningful
-// #define I2C_BUS_ADDRS_CHECKED 0x02
 #define I2C_BUS_ADDR_0X50     0x20
 #define I2C_BUS_ADDR_0X37     0x10
-// #define I2C_BUS_EDID_CHECKED  0x04
 #define I2C_BUS_PROBED        0x01      // has bus been checked?
 
 #define BUS_INFO_MARKER "BINF"
@@ -78,34 +75,22 @@ void i2c_report_active_display_by_busno(int busno, int depth);
 // Basic bus operations
 
 int  i2c_open_bus(int busno, Byte calloptions);
-#ifdef OLD
-int  i2c_open_bus(int busno, Failure_Action failure_action);
-int i2c_open_bus_new(int busno, bool emit_error_msg);
-#endif
 int  i2c_close_bus(int fd, int busno, Byte calloptions);
 void i2c_set_addr(int fd, int addr);
 
 
-// Bus functionality
+// Bus functionality fltags
 
 unsigned long i2c_get_functionality_flags_by_fd(int fd);
 unsigned long i2c_get_functionality_flags_by_busno(int busno);
-#ifdef OLD
-char * interpret_functionality(unsigned long functionality);  // must free returned string
-#endif
 char * i2c_interpret_functionality_into_buffer(unsigned long functionality, Buffer * buf);
-// void i2c_show_functionality(int busno);  // no longer exists
 bool i2c_verify_functions_supported(int busno, char * write_func_name, char * read_func_name);
 
 
 // Retrieve EDID
 
 Global_Status_Code i2c_get_raw_edid_by_fd( int fd,      Buffer * rawedidbuf);
-#ifdef UNUSED
-Global_Status_Code get_raw_edid_by_busno(int busno, Buffer * rawedidbuf, bool debug);
-#endif
 Parsed_Edid * i2c_get_parsed_edid_by_fd(int fd);
 Parsed_Edid * i2c_get_parsed_edid_by_busno(int busno);
 
 #endif /* I2C_BUS_CORE_H_ */
-

@@ -94,66 +94,6 @@ int i2c_open_bus(int busno, Byte calloptions) {
 }
 
 
-#ifdef OLD
-/* Open an I2C bus
- *
- * Arguments:
- *   busno            I2C bus number
- *   emit_error_msg   if true, output message if error
- *
- * Returns:
- *   file descriptor ( > 0) if success
- *   -errno if failure
- *
- */
-int i2c_open_bus_new(int busno, bool emit_error_msg) {
-   bool debug = false;
-   DBGMSF(debug, "busno=%d", busno);
-
-   char filename[20];
-   int  file;
-
-   snprintf(filename, 19, "/dev/i2c-%d", busno);
-   RECORD_IO_EVENT(
-         IE_OPEN,
-         ( file = open(filename, O_RDWR) )
-         );
-   // per man open:
-   // returns file descriptor if successful
-   // -1 if error, and errno is set
-   int errsv = errno;
-   if (file < 0) {
-      if (emit_error_msg)
-         f0printf(FERR, "Open failed for %s: errno=%s\n", filename, linux_errno_desc(errsv));
-      file = -errno;
-   }
-   return file;
-}
-
-
-/* Open an I2C bus
- *
- * Arguments:
- *   busno            I2C bus number
- *   failure_action   exit if failure?
- *
- * Returns:
- *   file descriptor ( > 0) if success
- *   -errno if failure and failure_action == RETURN_ERROR_IF_FAILURE
- *
- */
-int i2c_open_bus(int busno, Failure_Action failure_action) {
-   bool debug = false;
-   DBGMSF(debug, "busno=%d", busno);
-
-   int file = i2c_open_bus_new(busno, (failure_action != EXIT_IF_FAILURE) );
-   if (file < 0 && failure_action == EXIT_IF_FAILURE)
-      TERMINATE_EXECUTION_ON_ERROR("Open failed. errno=%s\n", linux_errno_desc(-file));
-   return file;
-}
-#endif
-
-
 /* Closes an open I2C bus device.
  *
  * Arguments:
@@ -309,8 +249,6 @@ Byte detect_ddc_addrs_by_fd(int fd) {
    assert(fd >= 0);
    unsigned char result = 0x00;
 
-   // result |= I2C_BUS_PRESENT;   // file >= 0 => bus exists
-
    Byte    readbuf;  //  1 byte buffer
    int rc;
 
@@ -322,10 +260,9 @@ Byte detect_ddc_addrs_by_fd(int fd) {
    i2c_set_addr(fd, 0x37);
    rc = invoke_i2c_reader(fd, 1, &readbuf);
    // DBGMSG("call_read() returned %d", rc);
-   if (rc >= 0 || rc == DDCRC_READ_ALL_ZERO)   // 11/2015: DDCRC_READ_ALL_ZERO currently set only in ddc_packet_io.c
+   // 11/2015: DDCRC_READ_ALL_ZERO currently set only in ddc_packet_io.c:
+   if (rc >= 0 || rc == DDCRC_READ_ALL_ZERO)
       result |= I2C_BUS_ADDR_0X37;
-
-   // result |= I2C_BUS_ADDRS_CHECKED;
 
    DBGMSF(debug, "Done.  Returning 0x%02x", result);
    return result;
