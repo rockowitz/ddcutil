@@ -37,6 +37,7 @@
 #include <wchar.h>
 
 #include "util/hiddev_util.h"
+#include "util/hiddev_reports.h"
 #include "util/report_util.h"
 #include "util/string_util.h"
 #include "util/x11_util.h"         // *** TEMP **
@@ -732,6 +733,7 @@ Parsed_Edid * get_x11_edid_by_model_sn(char * model_name, char * sn_ascii) {
 Parsed_Edid * get_hiddev_edid_with_fallback(int fd, struct hiddev_devinfo * dev_info)  {
    bool debug = true;
    DBGMSF(debug, "Starting");
+   report_hiddev_devinfo(dev_info, true, 1);
 
    Parsed_Edid * parsed_edid = NULL;
    Buffer * edid_buffer = get_hiddev_edid(fd);    // in hiddev_util.c
@@ -742,6 +744,8 @@ Parsed_Edid * get_hiddev_edid_with_fallback(int fd, struct hiddev_devinfo * dev_
           // if debug or verbose, dump the bad edid  ??
           // if (debug || get_output_level() >= OL_VERBOSE) {
           // }
+          buffer_free(edid_buffer, __func__);
+          edid_buffer = NULL;
        }
     }
 
