@@ -37,7 +37,7 @@
 
 #include "base/core.h"
 
-bool dbgtrc_show_time = true;    // include elapsed time in debug/trace output
+bool dbgtrc_show_time = false;    // include elapsed time in debug/trace output
 
 static jmp_buf* global_abort_loc = NULL;
 

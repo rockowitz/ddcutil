@@ -278,10 +278,8 @@ int usb_close_device(int fd, char * device_fn, Byte calloptions) {
 
 
 //
-// HID Device Inquiry
+// Wrapper hiddev ioctl calls
 //
-
-
 
 int hid_get_device_info(int fd, struct hiddev_devinfo * dev_info, Byte calloptions) {
    assert(dev_info);
@@ -329,7 +327,7 @@ int hid_get_field_info(int fd, struct hiddev_field_info * finfo, Byte calloption
          ddc_abort(errsv);
    }
    assert(rc == 0);
-   if (finfo->field_index != saved_field_index && (calloptions &CALLOPT_WARN_FINDEX)) {
+   if (finfo->field_index != saved_field_index && (calloptions & CALLOPT_WARN_FINDEX)) {
       printf("(%s) !!! ioctl(HIDIOCGFIELDINFO) changed field_index from %d to %d\n",
              __func__, saved_field_index, finfo->field_index);
       printf("(%s) finfo.maxusage=%d\n",
@@ -396,7 +394,7 @@ int hid_get_report(int fd, struct hiddev_report_info * rinfo, Byte calloptions) 
  * Returns:  array of Usb_Monitor_Vcp_Rec for each usage
  */
 GPtrArray * collect_vcp_reports(int fd) {
-   // bool debug = false;
+   bool debug = false;
    GPtrArray * vcp_reports = g_ptr_array_new();
    for (__u32 report_type = HID_REPORT_TYPE_MIN; report_type <= HID_REPORT_TYPE_MAX; report_type++) {
       int reportinfo_rc = 0;
@@ -429,7 +427,10 @@ GPtrArray * collect_vcp_reports(int fd) {
                    .report_id   = rinfo.report_id,
                    .field_index = fndx
              };
-             hid_get_field_info(fd, &finfo, CALLOPT_WARN_FINDEX | CALLOPT_ERR_MSG | CALLOPT_ERR_ABORT);
+             Byte callopts = CALLOPT_ERR_MSG | CALLOPT_ERR_ABORT;
+             if (debug)
+                callopts |= CALLOPT_WARN_FINDEX;
+             hid_get_field_info(fd, &finfo, callopts);
 #ifdef OLD
              int saved_field_index = fndx;
              int rc = ioctl(fd, HIDIOCGFIELDINFO, &finfo);

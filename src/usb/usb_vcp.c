@@ -207,7 +207,7 @@ usb_get_usage_alt(int fd, __u32 report_type, __u32 usage_code, __s32 * maxval, _
    gsc = 0;
 
 bye:
-   DBGMSF(debug, "Returning: %d", gsc);
+   DBGMSF(debug, "Returning: %d (%s)", gsc, gsc_name(gsc));
    return gsc;
 }
 
