@@ -318,8 +318,8 @@ Global_Status_Code  ddc_set_multiple(Display_Handle* dh, Vcp_Value_Set vset) {
  * Returns:
  *    status code
  */
-Global_Status_Code loadvcp_by_dumpload_data(Dumpload_Data* pdata) {
-   bool debug = true;
+Global_Status_Code loadvcp_by_dumpload_data(Dumpload_Data* pdata, Display_Handle * dh) {
+   bool debug = false;
    if (debug) {
         DBGMSG("Loading VCP settings for monitor \"%s\", sn \"%s\" \n",
                pdata->model, pdata->serial_ascii);
@@ -328,17 +328,40 @@ Global_Status_Code loadvcp_by_dumpload_data(Dumpload_Data* pdata) {
 
    Global_Status_Code gsc = 0;
 
-   Display_Ref * dref = ddc_find_display_by_model_and_sn(pdata->model, pdata->serial_ascii);
-   if (!dref) {
-      f0printf(FERR, "Monitor not connected: %s - %s   \n", pdata->model, pdata->serial_ascii );
-      gsc = DDCRC_INVALID_DISPLAY;
-      goto bye;
+   if (dh) {
+      // If explicit display specified, check that the data is valid for it
+      assert(dh->pedid);
+      bool ok = true;
+      if ( !streq(dh->pedid->model_name, pdata->model) ) {
+         f0printf(FERR,
+            "Monitor model in data (%s) does not match that for specified device (%s)\n",
+            pdata->model, dh->pedid->model_name);
+         ok = false;
+      }
+      if (!streq(dh->pedid->serial_ascii, pdata->serial_ascii) ) {
+         f0printf(FERR,
+            "Monitor serial number in data (%s) does not match that for specified device (%s)\n",
+            pdata->serial_ascii, dh->pedid->serial_ascii);
+         ok = false;
+      }
+      if (!ok)
+         goto bye;
    }
+   else {
+     // no Display_Ref passed as argument, just use the identifiers in the
+     // data to pick the display
+      Display_Ref * dref = ddc_find_display_by_model_and_sn(pdata->model, pdata->serial_ascii);
+      if (!dref) {
+         f0printf(FERR, "Monitor not connected: %s - %s   \n", pdata->model, pdata->serial_ascii );
+         gsc = DDCRC_INVALID_DISPLAY;
+         goto bye;
+      }
 
-   Display_Handle * dh = ddc_open_display(dref, CALLOPT_ERR_MSG);
-   if (!dh) {
-      gsc = DDCRC_INVALID_DISPLAY;
-      goto bye;
+      dh = ddc_open_display(dref, CALLOPT_ERR_MSG);
+      if (!dh) {
+         gsc = DDCRC_INVALID_DISPLAY;
+         goto bye;
+      }
    }
 
    gsc = ddc_set_multiple(dh, pdata->vcp_values);
@@ -358,7 +381,7 @@ bye:
  * Returns:
  *    0 if success, status code if not
  */
-Global_Status_Code loadvcp_by_ntsa(Null_Terminated_String_Array ntsa) {
+Global_Status_Code loadvcp_by_ntsa(Null_Terminated_String_Array ntsa, Display_Handle * dh) {
    bool debug = false;
 
    Output_Level output_level = get_output_level();
@@ -386,7 +409,7 @@ Global_Status_Code loadvcp_by_ntsa(Null_Terminated_String_Array ntsa) {
            report_dumpload_data(pdata, 0);
            rpt_pop_output_dest();
       }
-      gsc = loadvcp_by_dumpload_data(pdata);
+      gsc = loadvcp_by_dumpload_data(pdata, dh);
    }
    return gsc;
 }
@@ -403,9 +426,9 @@ Global_Status_Code loadvcp_by_ntsa(Null_Terminated_String_Array ntsa) {
  *    0 if success, status code if not
  */
 // n. called from ddct_public:
-Global_Status_Code loadvcp_by_string(char * catenated) {
+Global_Status_Code loadvcp_by_string(char * catenated, Display_Handle * dh) {
    Null_Terminated_String_Array nta = strsplit(catenated, ";");
-   Global_Status_Code gsc = loadvcp_by_ntsa(nta);
+   Global_Status_Code gsc = loadvcp_by_ntsa(nta, dh);
    null_terminated_string_array_free(nta);
    return gsc;
 }

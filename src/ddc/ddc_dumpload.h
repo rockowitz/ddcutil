@@ -61,10 +61,10 @@ char *
 format_timestamp(time_t time_millis, char * buf, int bufsz);
 
 Global_Status_Code
-loadvcp_by_dumpload_data(Dumpload_Data* pdata);
+loadvcp_by_dumpload_data(Dumpload_Data* pdata, Display_Handle * dh);
 
 Global_Status_Code
-loadvcp_by_string(char * catenated);
+loadvcp_by_string(char * catenated, Display_Handle * dh);
 
 Dumpload_Data*
 create_dumpload_data_from_g_ptr_array(GPtrArray * garray);

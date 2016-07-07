@@ -79,7 +79,7 @@ int  i2c_close_bus(int fd, int busno, Byte calloptions);
 void i2c_set_addr(int fd, int addr);
 
 
-// Bus functionality fltags
+// Bus functionality flags
 
 unsigned long i2c_get_functionality_flags_by_fd(int fd);
 unsigned long i2c_get_functionality_flags_by_busno(int busno);

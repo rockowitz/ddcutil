@@ -109,10 +109,13 @@ void show_timestamp_history() {
 static long initial_timestamp_nanos = 0;
 // nanoseconds since start of program, first call initializes
 long elapsed_time_nanosec() {
+   // printf("(%s) initial_timestamp_nanos=%ld\n", __func__, initial_timestamp_nanos);
    long cur_nanos = cur_realtime_nanosec();
    if (initial_timestamp_nanos == 0)
       initial_timestamp_nanos = cur_nanos;
-   return cur_nanos - initial_timestamp_nanos;
+   long result = cur_nanos - initial_timestamp_nanos;
+   // printf("(%s) Returning: %ld\n", __func__, result);
+   return result;
 }
 
 
@@ -126,8 +129,10 @@ char * formatted_elapsed_time() {
    // snprintf(elapsed_buf1, 40, "%7.3f", secs);
    long    isecs   = et_nanos/ (1000 * 1000 * 1000);
    long    imillis = et_nanos/ (1000 * 1000);
+   // printf("(%s) et_nanos=%ld, isecs=%ld, imillis=%ld\n", __func__,  et_nanos, isecs, imillis);
    snprintf(elapsed_buf2, 40, "%3ld.%03ld", isecs, imillis - (isecs*1000) );
    // printf("(%s) %s, %s\n", __func__, elapsed_buf1, elapsed_buf2);
+   // printf("(%s) %s\n", __func__, elapsed_buf2);
    return elapsed_buf2;
 }
 

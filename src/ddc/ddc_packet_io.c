@@ -93,8 +93,10 @@ bool is_ddc_null_message(Byte * packet) {
  *    Display_Handle of opened display, or NULL if open failed and
  *       failure_action == RETURN_ERROR_IF_FAILURE
  */
+// NB: calls i2c_set_addr() if I2C bus.  this call is valid
+// only for opening bus for VCP, not EDID
 Display_Handle* ddc_open_display(Display_Ref * dref,  Byte open_flags) {
-   bool debug = true;
+   bool debug = false;
    DBGMSF(debug,"Opening display %s",dref_short_name(dref));
    Display_Handle * pDispHandle = NULL;
    // Byte open_flags = 0x00;
@@ -104,6 +106,7 @@ Display_Handle* ddc_open_display(Display_Ref * dref,  Byte open_flags) {
    case DDC_IO_DEVI2C:
       {
          int fd = i2c_open_bus(dref->busno, open_flags);
+         // Parsed_Edid * pedid2 = i2c_get_parsed_edid_by_fd(fd);
          // TODO: handle open failure, when failure_action = return error
          // all callers currently EXIT_IF_FAILURE
          if (fd >= 0) {    // will be < 0 if open_i2c_bus failed and failure_action = RETURN_ERROR_IF_FAILURE
@@ -114,6 +117,8 @@ Display_Handle* ddc_open_display(Display_Ref * dref,  Byte open_flags) {
             // sleepMillisWithTrace(DDC_TIMEOUT_MILLIS_DEFAULT, __func__, NULL);
 
             pDispHandle = create_bus_display_handle_from_display_ref(fd, dref);
+            Bus_Info * bus_info = i2c_get_bus_info(dref->busno);
+            pDispHandle->pedid = bus_info->edid;
          }
       else {
          log_status_code(modulate_rc(fd, RR_ERRNO), __func__);
@@ -122,6 +127,7 @@ Display_Handle* ddc_open_display(Display_Ref * dref,  Byte open_flags) {
    }
    case DDC_IO_ADL:
       pDispHandle = create_adl_display_handle_from_display_ref(dref);
+      pDispHandle->pedid = adlshim_get_parsed_edid_by_display_handle(pDispHandle);
       break;
 
    case USB_IO:
@@ -137,10 +143,13 @@ Display_Handle* ddc_open_display(Display_Ref * dref,  Byte open_flags) {
          if (fd < 0) {
             log_status_code(modulate_rc(fd,RR_ERRNO),__func__);
          }
-         else
+         else {
             pDispHandle = create_usb_display_handle_from_display_ref(fd, dref);
+            pDispHandle->pedid = usb_get_parsed_edid_by_display_handle(pDispHandle);
+         }
       }
    } // switch
+   assert(pDispHandle->pedid);
    // needed?  for both or just I2C?
    // sleep_millis_with_trace(DDC_TIMEOUT_MILLIS_DEFAULT, __func__, NULL);
    if (dref->io_mode != USB_IO)

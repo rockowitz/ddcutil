@@ -60,7 +60,7 @@ gboolean adl_arg_func(const gchar* option_name,
                       gpointer     data,
                       GError**     error)
 {
-   bool debug = true;
+   bool debug = false;
    DBGMSF(debug, "option_name=|%s|, value|%s|, data=%p", option_name, value, data);
 
    adlwork = strdup(value);   // alt way
@@ -168,6 +168,7 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
    gboolean force_flag     = false;
    gboolean show_unsupported_flag = false;
    gboolean version_flag   = false;
+   gboolean timestamp_trace_flag = false;
 // gboolean myhelp_flag    = false;
 // gboolean myusage_flag   = false;
    char *   modelwork      = NULL;
@@ -206,6 +207,8 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
       {"edid",    'e',  0, G_OPTION_ARG_STRING,   &edidwork,         "Monitor EDID",            "256 char hex string" },
       {"trace",   '\0', 0, G_OPTION_ARG_STRING_ARRAY, &trace_classes, "Trace classes",         "trace class name" },
 //    {"trace",   '\0', 0, G_OPTION_ARG_STRING,   &tracework,        "Trace classes",          "comma separated list" },
+      {"timestamp",'\0',  0, G_OPTION_ARG_NONE,   &timestamp_trace_flag, "Prepend trace msgs with elapsed time",  NULL},
+      {"ts",      '\0',   0, G_OPTION_ARG_NONE,   &timestamp_trace_flag, "Prepend trace msgs with elapsed time",  NULL},
       {"maxtries",'\0', 0, G_OPTION_ARG_STRING,   &maxtrywork,       "Max try adjustment",  "comma separated list" },
       {"version", 'V',  0, G_OPTION_ARG_NONE,     &version_flag,     "Show version information", NULL},
 //    {"myusage", '\0', 0, G_OPTION_ARG_NONE,     &myusage_flag,     "Show usage", NULL},
@@ -270,6 +273,7 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
    parsed_cmd->output_level     = output_level;
    parsed_cmd->stats_types      = stats_work;
    parsed_cmd->sleep_strategy   = sleep_strategy_work;
+   parsed_cmd->timestamp_trace  = timestamp_trace_flag;
 
    if (adlwork) {
 #ifdef HAVE_ADL
@@ -317,7 +321,7 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
 
    if (buswork >= 0) {
       // DBGMSG("case B");
-      free(parsed_cmd->pdid);
+      // free(parsed_cmd->pdid);
       parsed_cmd->pdid = create_busno_display_identifier(buswork);
       explicit_display_spec_ct++;
    }
@@ -508,8 +512,8 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
       fprintf(stderr, "Monitor specified in more than one way\n");
       ok = false;
    }
-   else if (explicit_display_spec_ct == 0)
-      parsed_cmd->pdid = create_dispno_display_identifier(1);   // default monitor
+   // else if (explicit_display_spec_ct == 0)
+   //   parsed_cmd->pdid = create_dispno_display_identifier(1);   // default monitor
 
 
    if (rest_ct == 0) {

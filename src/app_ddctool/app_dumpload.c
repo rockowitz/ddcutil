@@ -191,7 +191,7 @@ Dumpload_Data * read_vcp_file(const char * fn) {
  * Returns:  true if load succeeded, false if not
  */
 // TODO: convert to Global_Status_Code
-bool loadvcp_by_file(const char * fn) {
+bool loadvcp_by_file(const char * fn, Display_Handle * dh) {
    Output_Level output_level = get_output_level();
    bool verbose = (output_level >= OL_VERBOSE);
    bool ok = false;
@@ -211,7 +211,7 @@ bool loadvcp_by_file(const char * fn) {
            report_dumpload_data(pdata, 0);
            rpt_pop_output_dest();
       }
-      gsc = loadvcp_by_dumpload_data(pdata);
+      gsc = loadvcp_by_dumpload_data(pdata, dh);
       ok = (gsc == 0);
    }
    return ok;

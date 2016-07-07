@@ -74,6 +74,7 @@ struct {
    bool                programmatic_output;
 #endif
    bool                force;
+   bool                timestamp_trace;    // prepend trace and debug msgs with elapsed time
    bool                show_unsupported;
    Display_Identifier* pdid;
    Trace_Group         trace;

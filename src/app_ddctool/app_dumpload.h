@@ -27,7 +27,7 @@
 #include <base/displays.h>
 #include <base/status_code_mgt.h>
 
-bool loadvcp_by_file(const char * fn);
+bool loadvcp_by_file(const char * fn, Display_Handle * dh);
 
 Global_Status_Code dumpvcp_as_file(Display_Handle * dh, char * optional_filename);
 

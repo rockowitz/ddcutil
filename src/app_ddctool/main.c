@@ -179,6 +179,8 @@ int main(int argc, char *argv[]) {
       // puts("Terminating execution");
       exit(EXIT_FAILURE);
    }
+   if (parsed_cmd->timestamp_trace)         // timestamps on debug and trace messages?
+      dbgtrc_show_time = true;              // extern in core.h
    set_trace_levels(parsed_cmd->trace);
 
    init_ddc_services();
@@ -278,6 +280,8 @@ int main(int argc, char *argv[]) {
          ok = false;
          main_rc = EXIT_FAILURE;     // ?? What should value be?
       }
+      if (!parsed_cmd->pdid)
+         parsed_cmd->pdid = create_dispno_display_identifier(1);   // default monitor
       ok = execute_testcase(testnum, parsed_cmd->pdid);
       main_rc = (ok) ? EXIT_SUCCESS : EXIT_FAILURE;
    }
@@ -285,7 +289,19 @@ int main(int argc, char *argv[]) {
    else if (parsed_cmd->cmd_id == CMDID_LOADVCP) {
       char * fn = strdup( parsed_cmd->args[0] );
       // DBGMSG("Processing command loadvcp.  fn=%s", fn );
-      bool ok = loadvcp_by_file(fn);
+      Display_Handle * dh   = NULL;
+      bool ok = true;
+      if (parsed_cmd->pdid) {
+         Display_Ref * dref = get_display_ref_for_display_identifier(
+                                 parsed_cmd->pdid, true /* emit_error_msg */);
+         if (dref)
+            dh = ddc_open_display(dref, CALLOPT_ERR_ABORT | CALLOPT_ERR_MSG);
+
+         // if (!dref)      // not needed - ddc_open_display() aborts
+         //    ok = false;
+      }
+      // if (ok)
+         ok = loadvcp_by_file(fn, dh);
       main_rc = (ok) ? EXIT_SUCCESS : EXIT_FAILURE;
    }
 
@@ -340,7 +356,9 @@ int main(int argc, char *argv[]) {
    }
 
    else {     // commands that require display identifier
-      assert(parsed_cmd->pdid);
+      if (!parsed_cmd->pdid)
+         parsed_cmd->pdid = create_dispno_display_identifier(1);   // default monitor
+      // assert(parsed_cmd->pdid);
       // returns NULL if not a valid display:
       Display_Ref * dref = get_display_ref_for_display_identifier(
                               parsed_cmd->pdid, true /* emit_error_msg */);

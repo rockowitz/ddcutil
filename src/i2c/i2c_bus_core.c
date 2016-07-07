@@ -90,6 +90,7 @@ int i2c_open_bus(int busno, Byte calloptions) {
       file = -errsv;
    }
 
+   DBGMSF(debug, "Returning: %d", file);
    return file;
 }
 
@@ -420,7 +421,7 @@ char * i2c_interpret_functionality_into_buffer(unsigned long functionality, Buff
  *   <0       error
  */
 Global_Status_Code i2c_get_raw_edid_by_fd(int fd, Buffer * rawedid) {
-   bool debug = false;
+   bool debug = true;
    DBGMSF(debug, "Getting EDID for file %d", fd);
 
    bool conservative = false;
@@ -462,7 +463,7 @@ Global_Status_Code i2c_get_raw_edid_by_fd(int fd, Buffer * rawedid) {
       rawedid->len = 0;
 
    if (debug) {
-      DBGMSG("Returning %d.  edidbuf contents:", gsc);
+      DBGMSG("Returning %s.  edidbuf contents:", gsc_desc(gsc));
       buffer_dump(rawedid);
    }
    return gsc;
@@ -480,7 +481,7 @@ Global_Status_Code i2c_get_raw_edid_by_fd(int fd, Buffer * rawedid) {
  * Terminates execution if open or close of bus fails
  */
 Parsed_Edid * i2c_get_parsed_edid_by_fd(int fd) {
-   bool debug = false;
+   bool debug = true;
    DBGMSF(debug, "Starting. fd=%d\n", fd);
    Parsed_Edid * edid = NULL;
    Buffer * rawedidbuf = buffer_new(128, NULL);
