@@ -93,13 +93,13 @@ bool is_ddc_null_message(Byte * packet) {
  *    Display_Handle of opened display, or NULL if open failed and
  *       failure_action == RETURN_ERROR_IF_FAILURE
  */
-Display_Handle* ddc_open_display(Display_Ref * dref,  Failure_Action failure_action) {
-   bool debug = false;
+Display_Handle* ddc_open_display(Display_Ref * dref,  Byte open_flags) {
+   bool debug = true;
    DBGMSF(debug,"Opening display %s",dref_short_name(dref));
    Display_Handle * pDispHandle = NULL;
-   Byte open_flags = 0x00;
-   if (EXIT_IF_FAILURE)
-      open_flags |= CALLOPT_ERR_ABORT;
+   // Byte open_flags = 0x00;
+   // if (EXIT_IF_FAILURE)
+   //    open_flags |= CALLOPT_ERR_ABORT;
    switch (dref->io_mode) {
    case DDC_IO_DEVI2C:
       {
@@ -133,12 +133,9 @@ Display_Handle* ddc_open_display(Display_Ref * dref,  Failure_Action failure_act
          //    DBGMSG("HACK FIXUP.  dref->usb_hiddev_name");
          //    dref->usb_hiddev_name = get_hiddev_devname_by_display_ref(dref);
          // }
-         int fd = usb_open_hiddev_device(dref->usb_hiddev_name, CALLOPT_RDONLY | CALLOPT_ERR_MSG);
+         int fd = usb_open_hiddev_device(dref->usb_hiddev_name, open_flags);
          if (fd < 0) {
             log_status_code(modulate_rc(fd,RR_ERRNO),__func__);
-            if (failure_action == EXIT_IF_FAILURE) {
-               TERMINATE_EXECUTION_ON_ERROR("Open failed");
-            }
          }
          else
             pDispHandle = create_usb_display_handle_from_display_ref(fd, dref);

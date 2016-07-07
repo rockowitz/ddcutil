@@ -298,7 +298,7 @@ Global_Status_Code  ddc_set_multiple(Display_Handle* dh, Vcp_Value_Set vset) {
       ushort new_value    = vrec->val.c.cur_val;
       gsc = set_nontable_vcp_value(dh, feature_code, new_value);
       if (gsc != 0) {
-         f0printf(FERR, "Error setting value %d for VCP feature code 0x%02x: %s",
+         f0printf(FERR, "Error setting value %d for VCP feature code 0x%02x: %s\n",
                          new_value, feature_code, gsc_desc(gsc) );
          f0printf(FERR, "Terminating.");
          break;
@@ -319,7 +319,7 @@ Global_Status_Code  ddc_set_multiple(Display_Handle* dh, Vcp_Value_Set vset) {
  *    status code
  */
 Global_Status_Code loadvcp_by_dumpload_data(Dumpload_Data* pdata) {
-   bool debug = false;
+   bool debug = true;
    if (debug) {
         DBGMSG("Loading VCP settings for monitor \"%s\", sn \"%s\" \n",
                pdata->model, pdata->serial_ascii);
@@ -335,7 +335,7 @@ Global_Status_Code loadvcp_by_dumpload_data(Dumpload_Data* pdata) {
       goto bye;
    }
 
-   Display_Handle * dh = ddc_open_display(dref, RETURN_ERROR_IF_FAILURE);
+   Display_Handle * dh = ddc_open_display(dref, CALLOPT_ERR_MSG);
    if (!dh) {
       gsc = DDCRC_INVALID_DISPLAY;
       goto bye;

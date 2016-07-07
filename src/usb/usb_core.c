@@ -731,9 +731,11 @@ Parsed_Edid * get_x11_edid_by_model_sn(char * model_name, char * sn_ascii) {
  * It is the responsibility of the caller to free the returned buffer.
  */
 Parsed_Edid * get_hiddev_edid_with_fallback(int fd, struct hiddev_devinfo * dev_info)  {
-   bool debug = true;
-   DBGMSF(debug, "Starting");
-   report_hiddev_devinfo(dev_info, true, 1);
+   bool debug = false;
+   if (debug) {
+      DBGMSG("Starting");
+      report_hiddev_devinfo(dev_info, true, 1);
+   }
 
    Parsed_Edid * parsed_edid = NULL;
    Buffer * edid_buffer = get_hiddev_edid(fd);    // in hiddev_util.c
@@ -806,7 +808,7 @@ Parsed_Edid * get_hiddev_edid_with_fallback(int fd, struct hiddev_devinfo * dev_
  *  The result is cached in global variable usb_monitors
  */
 static GPtrArray * get_usb_monitor_list() {
-   bool debug = true;
+   bool debug = false;
    DBGMSF(debug, "Starting...");
    Output_Level ol = get_output_level();
 
@@ -1194,7 +1196,7 @@ bool check_usb_monitor( char * device_name ) {
    int fd = open(device_name, O_RDONLY);
    if (fd < 1) {
       if (ol >= OL_VERBOSE)
-         printf("Unable to open device %s: %s", device_name, strerror(errno));
+         printf("Unable to open device %s: %s\n", device_name, strerror(errno));
       goto exit;
    }
 

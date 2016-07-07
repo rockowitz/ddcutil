@@ -365,7 +365,7 @@ DDCT_Status ddct_open_display(DDCT_Display_Ref ddct_dref, DDCT_Display_Handle * 
    }
    else {
      // TODO: fix ddc_open_display for RETURN_ERROR_IF_FAILURE
-     Display_Handle* dh = ddc_open_display(dref,  RETURN_ERROR_IF_FAILURE);
+     Display_Handle* dh = ddc_open_display(dref,  CALLOPT_ERR_MSG);
      if (dh)
         *pdh = dh;
      else

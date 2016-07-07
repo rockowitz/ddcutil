@@ -34,7 +34,7 @@
 #include "base/displays.h"
 
 
-Display_Handle* ddc_open_display(Display_Ref * dref,  Failure_Action failure_action);
+Display_Handle* ddc_open_display(Display_Ref * dref,  Byte calloptions);
 void            ddc_close_display(Display_Handle * dh);
 
 

@@ -425,7 +425,8 @@ ddc_report_active_display(Display_Info * curinfo, int depth) {
 
    Output_Level output_level = get_output_level();
    if (output_level >= OL_NORMAL  && ddc_is_valid_display_ref(curinfo->dref, false)) {
-      Display_Handle * dh = ddc_open_display(curinfo->dref, EXIT_IF_FAILURE);
+      Display_Handle * dh = ddc_open_display(curinfo->dref,
+                                             CALLOPT_ERR_MSG | CALLOPT_ERR_ABORT | CALLOPT_RDONLY);
           // char * short_name = dref_short_name(curinfo->dref);
           // printf("Display:       %s\n", short_name);
           // works, but TMI

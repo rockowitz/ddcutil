@@ -33,6 +33,7 @@
 
 #include "base/ddc_errno.h"
 #include "base/ddc_packets.h"
+#include "base/displays.h"
 
 #include "i2c/i2c_bus_core.h"
 
@@ -71,12 +72,12 @@ set_nontable_vcp_value(
       Byte             feature_code,
       int              new_value)
 {
-   bool debug = false;
+   bool debug = true;
    // Trace_Group tg = (debug) ? 0xFF : TRACE_GROUP;
    // TRCMSGTG(tg, "Writing feature 0x%02x , new value = %d\n", feature_code, new_value);
    DBGTRC(debug, TRACE_GROUP,
-          "Writing feature 0x%02x , new value = %d\n",
-          feature_code, new_value);
+          "Writing feature 0x%02x , new value = %d, dh=%s\n",
+          feature_code, new_value, display_handle_repr(dh));
    Global_Status_Code gsc = 0;
 
    if (dh->io_mode == USB_IO) {
