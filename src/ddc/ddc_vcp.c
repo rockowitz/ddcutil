@@ -72,7 +72,7 @@ set_nontable_vcp_value(
       Byte             feature_code,
       int              new_value)
 {
-   bool debug = true;
+   bool debug = false;
    // Trace_Group tg = (debug) ? 0xFF : TRACE_GROUP;
    // TRCMSGTG(tg, "Writing feature 0x%02x , new value = %d\n", feature_code, new_value);
    DBGTRC(debug, TRACE_GROUP,
@@ -330,7 +330,8 @@ Global_Status_Code get_vcp_value(
    bool debug = false;
    // Trace_Group tg = TRACE_GROUP;  if (debug) tg = 0xFF;
    // TRCMSGTG(tg, "Starting. Reading feature 0x%02x", feature_code);
-   DBGTRC(debug, TRACE_GROUP, "Starting. Reading feature 0x%02x", feature_code);
+   DBGTRC(debug, TRACE_GROUP, "Starting. Reading feature 0x%02x, dh=%s, dh->fh=%d",
+            feature_code, display_handle_repr(dh), dh->fh);
 
    Global_Status_Code gsc = 0;
 

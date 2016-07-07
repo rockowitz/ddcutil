@@ -425,8 +425,9 @@ ddc_report_active_display(Display_Info * curinfo, int depth) {
 
    Output_Level output_level = get_output_level();
    if (output_level >= OL_NORMAL  && ddc_is_valid_display_ref(curinfo->dref, false)) {
+      // n. requires write access since may call get_vcp_value(), which does a write
       Display_Handle * dh = ddc_open_display(curinfo->dref,
-                                             CALLOPT_ERR_MSG | CALLOPT_ERR_ABORT | CALLOPT_RDONLY);
+                                             CALLOPT_ERR_MSG | CALLOPT_ERR_ABORT);
           // char * short_name = dref_short_name(curinfo->dref);
           // printf("Display:       %s\n", short_name);
           // works, but TMI
@@ -460,7 +461,7 @@ ddc_report_active_display(Display_Info * curinfo, int depth) {
          Global_Status_Code  gsc = get_vcp_value(dh, 0xc8, NON_TABLE_VCP_VALUE, &valrec);
 
          if (gsc != 0) {
-            if (gsc != DDCRC_REPORTED_UNSUPPORTED)
+            if (gsc != DDCRC_REPORTED_UNSUPPORTED && gsc != DDCRC_DETERMINED_UNSUPPORTED)
                 DBGMSG("get_nontable_vcp_value(0xc8) returned %s", gsc_desc(gsc));
             rpt_vstring(depth, "Controller mfg:      Unspecified");
          }
@@ -490,7 +491,7 @@ ddc_report_active_display(Display_Info * curinfo, int depth) {
 #endif
          gsc = get_vcp_value(dh, 0xc9, NON_TABLE_VCP_VALUE, &valrec);  // new way
          if (gsc != 0) {
-            if (gsc != DDCRC_REPORTED_UNSUPPORTED)
+            if (gsc != DDCRC_REPORTED_UNSUPPORTED && gsc != DDCRC_DETERMINED_UNSUPPORTED)
                DBGMSG("get_nontable_vcp_value(0xc9) returned %s", gsc_desc(gsc));
             rpt_vstring(depth, "Firmware version:    Unspecified");
          }

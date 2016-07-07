@@ -37,6 +37,7 @@
 #include "util/string_util.h"
 
 #include "base/ddc_errno.h"
+#include "base/displays.h"
 #include "base/parms.h"
 #include "base/status_code_mgt.h"
 
@@ -110,6 +111,7 @@ Display_Handle* ddc_open_display(Display_Ref * dref,  Byte open_flags) {
          // TODO: handle open failure, when failure_action = return error
          // all callers currently EXIT_IF_FAILURE
          if (fd >= 0) {    // will be < 0 if open_i2c_bus failed and failure_action = RETURN_ERROR_IF_FAILURE
+            DBGMSF(debug, "Calling set_addr(,0x37) for dref=%p %s", dref, dref_short_name(dref));
             i2c_set_addr(fd, 0x37);
 
             // Is this needed?
@@ -181,6 +183,7 @@ void ddc_close_display(Display_Handle * dh) {
             DBGMSG("close_i2c_bus returned %d", rc);
             log_status_code(modulate_rc(rc, RR_ERRNO), __func__);
          }
+         dh->fh = -1;    // indicate invalid, in case we try to continue using dh
          break;
       }
    case DDC_IO_ADL:
@@ -192,6 +195,7 @@ void ddc_close_display(Display_Handle * dh) {
             DBGMSG("usb_closedevice returned %d", rc);
             log_status_code(modulate_rc(rc, RR_ERRNO), __func__);
          }
+         dh->fh = -1;
          break;
       }
    } //switch
@@ -313,7 +317,8 @@ Global_Status_Code ddc_i2c_write_read_raw(
    // if (debug)
    //    tg = 0xff;
    // TRCMSGTG(tg, "Starting. dh=%s, readbuf=%p", display_handle_repr(dh), readbuf);
-   DBGTRC(debug, TRACE_GROUP, "Starting. dh=%s, readbuf=%p", display_handle_repr(dh), readbuf);
+   DBGTRC(debug, TRACE_GROUP, "Starting. dh=%s, readbuf=%p",
+                              display_handle_repr(dh), readbuf);
    // DBGMSG("request_packet_ptr=%p", request_packet_ptr);
    // dump_packet(request_packet_ptr);
    ASSERT_DISPLAY_IO_MODE(dh, DDC_IO_DEVI2C);
@@ -452,7 +457,8 @@ Global_Status_Code ddc_write_read_raw(
      )
 {
    bool debug = false;
-   DBGMSF(debug, "Starting.");
+   DBGTRC(debug, TRACE_GROUP, "Starting. dh=%s, readbuf=%p",
+                              display_handle_repr(dh), readbuf);
    Global_Status_Code rc;
 
    assert(dh->io_mode == DDC_IO_DEVI2C || dh->io_mode == DDC_IO_ADL);
@@ -601,20 +607,20 @@ Global_Status_Code ddc_write_read_with_retry(
    DBGTRC(debug, TRACE_GROUP, "Starting. dh=%s", display_handle_repr(dh)  );
    assert(dh->io_mode != USB_IO);
 
-   int  rc;
+   Global_Status_Code  gsc;
    int  tryctr;
    bool retryable;
    int  ddcrc_read_all_zero_ct = 0;
 
-   for (tryctr=0, rc=-999, retryable=true;
-        tryctr < max_write_read_exchange_tries && rc < 0 && retryable;
+   for (tryctr=0, gsc=-999, retryable=true;
+        tryctr < max_write_read_exchange_tries && gsc < 0 && retryable;
         tryctr++)
    {
       DBGMSF(debug,
            "Start of try loop, tryctr=%d, max_write_read_echange_tries=%d, rc=%d, retryable=%d",
-           tryctr, max_write_read_exchange_tries, rc, retryable );
+           tryctr, max_write_read_exchange_tries, gsc, retryable );
 
-      rc = ddc_write_read(
+      gsc = ddc_write_read(
                 dh,
                 request_packet_ptr,
                 max_read_bytes,
@@ -622,50 +628,54 @@ Global_Status_Code ddc_write_read_with_retry(
                 expected_subtype,
                 response_packet_ptr_loc);
 
-      if (rc < 0) {     // n. ADL status codes have been modulated
-         DBGMSF(debug, "perform_ddc_write_read() returned %d", rc );
+      if (gsc < 0) {     // n. ADL status codes have been modulated
+         DBGMSF(debug, "perform_ddc_write_read() returned %d", gsc );
          if (dh->io_mode == DDC_IO_DEVI2C) {
-            if (rc == DDCRC_NULL_RESPONSE)
+            if (gsc == DDCRC_NULL_RESPONSE)
                retryable = false;
             // when is DDCRC_READ_ALL_ZERO actually an error vs the response of the monitor instead of NULL response?
             // On Dell monitors (P2411, U3011) all zero response occurs on unsupported Table features
             // But also seen as a bad response
-            else if ( rc == DDCRC_READ_ALL_ZERO)
+            else if ( gsc == DDCRC_READ_ALL_ZERO)
                retryable = (all_zero_response_ok) ? false : true;
 
-            else if (rc == modulate_rc(-EIO, RR_ERRNO))
+            else if (gsc == modulate_rc(-EIO, RR_ERRNO))
                 retryable = true;
+
+            else if (gsc == modulate_rc(-EBADF, RR_ERRNO))
+               retryable = false;
+
             else
                retryable = true;     // for now
-         }   // DDC_IO_ADL
-         else {
+         }
+         else {   // DDC_IO_ADL
             // TODO more detailed tests
-            if (rc == DDCRC_NULL_RESPONSE)
+            if (gsc == DDCRC_NULL_RESPONSE)
                retryable = false;
-            else if (rc == DDCRC_READ_ALL_ZERO)
+            else if (gsc == DDCRC_READ_ALL_ZERO)
                retryable = true;
             else
                retryable = false;
          }
-         if (rc == DDCRC_READ_ALL_ZERO)
+         if (gsc == DDCRC_READ_ALL_ZERO)
             ddcrc_read_all_zero_ct++;
       }    // rc < 0
    }
    // n. rc is now the value from the last pass through the loop
    // set it to a DDC status code indicating max tries exceeded
-   if ( rc < 0 && retryable ) {
-      rc = DDCRC_RETRIES;
+   if ( gsc < 0 && retryable ) {
+      gsc = DDCRC_RETRIES;
       if (ddcrc_read_all_zero_ct == max_write_read_exchange_tries) {
-         rc = DDCRC_ALL_TRIES_ZERO;
+         gsc = DDCRC_ALL_TRIES_ZERO;
          // printf("(%s) All tries zero ddcrc_read_all_zero_ct=%d, max_write_read_exchange_tries=%d, tryctr=%d\n",
          //        __func__, ddcrc_read_all_zero_ct, max_write_read_exchange_tries, tryctr);
       }
-      COUNT_STATUS_CODE(rc);
+      COUNT_STATUS_CODE(gsc);
    }
-   try_data_record_tries(write_read_stats_rec, rc, tryctr);
-   // TRCMSGTF(tf, "Done. rc=%s\n", gsc_desc(rc));
-   DBGTRC(debug, TRACE_GROUP, "Done. rc=%s\n", gsc_desc(rc));
-   return rc;
+   try_data_record_tries(write_read_stats_rec, gsc, tryctr);
+   // TRCMSGTF(tf, "Done. rc=%s\n", gsc_desc(gsc));
+   DBGTRC(debug, TRACE_GROUP, "Done. gsc=%s\n", gsc_desc(gsc));
+   return gsc;
 }
 
 

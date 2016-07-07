@@ -36,18 +36,20 @@
 #include <unistd.h>
 #include <wchar.h>
 
+#include "util/device_id_util.h"
 #include "util/hiddev_util.h"
 #include "util/hiddev_reports.h"
 #include "util/report_util.h"
 #include "util/string_util.h"
-#include "util/x11_util.h"         // *** TEMP **
+#include "util/x11_util.h"         // for EDID fallback
 
 #include "base/core.h"
 #include "base/ddc_errno.h"
 #include "base/execution_stats.h"
 #include "base/linux_errno.h"
 
-#include "i2c/i2c_bus_core.h"      // *** TEMP ***
+#include "i2c/i2c_bus_core.h"     // for EDID fallback
+#include "adl/adl_shim.h"         // for EDID fallback
 
 #include "usb/usb_core.h"
 
@@ -197,7 +199,7 @@ void report_model_sn_pair(struct model_sn_pair * p, int depth) {
  */
 int usb_open_hiddev_device(char * hiddev_devname, Byte calloptions) {
    bool debug = false;
-   DBGMSF(debug, "hiddev_devname=%s", hiddev_devname);
+   DBGMSF(debug, "hiddev_devname=%s, calloptions=0x%02x", hiddev_devname, calloptions);
 
    int  file;
    int mode = (calloptions & CALLOPT_RDONLY) ? O_RDONLY : O_RDWR;
@@ -227,7 +229,7 @@ int usb_open_hiddev_device(char * hiddev_devname, Byte calloptions) {
          // printf("(%s) HIDIOCINITREPORT failed\n", __func__  );
       }
    }
-   DBGMSF(debug, "Returning %d", file);
+   DBGMSF(debug, "Returning file descriptor: %d", file);
    return file;
 }
 
@@ -246,7 +248,7 @@ int usb_open_hiddev_device(char * hiddev_devname, Byte calloptions) {
  */
 int usb_close_device(int fd, char * device_fn, Byte calloptions) {
    bool debug = false;
-   DBGMSF(debug, "Starting. fd=%d", fd);
+   DBGMSF(debug, "Starting. fd=%d, device_fn=%s, calloptions=0x%02x", fd, device_fn, calloptions);
 
    errno = 0;
    int rc = 0;
@@ -538,7 +540,7 @@ static char * usb_synthesize_capabilities_string(Usb_Monitor_Info * moninfo) {
  */
 
 struct hid_field_locator * find_eizo_model_sn_report(int fd) {
-   bool debug = true;
+   bool debug = false;
    struct hid_field_locator * loc = NULL;
    struct hiddev_devinfo dev_info;
 
@@ -553,8 +555,8 @@ struct hid_field_locator * find_eizo_model_sn_report(int fd) {
 bye:
    if (debug) {
       printf("(%s) Returning: %p\n", __func__, loc);
-      if (loc)
-         report_hid_field_locator(loc,2);
+      // if (loc)
+      //    report_hid_field_locator(loc,2);
    }
    return loc;
 }
@@ -582,17 +584,20 @@ bye:
 
 /* Gets the module and serial number of an Eizo monitor using an Eizo specific report.
  *
+ * Finds the specific report, the reads it.
+ *
  * Arguments:
  *   fd      file descriptor of open USB HID device for an Eizo monitor
  *
  * Returns:  model and serial number strings
  */
 struct model_sn_pair *  get_eizo_model_sn_by_report(int fd) {
-   bool debug = true;
+   bool debug = false;
+   DBGMSF(debug, "Starting");
    struct model_sn_pair* result = NULL;
 
    struct hid_field_locator * loc = find_eizo_model_sn_report(fd);
-   DBGMSF(debug, "find_eizo_model_sn_report() returned: %p", loc);
+   // DBGMSF(debug, "find_eizo_model_sn_report() returned: %p", loc);
    if (loc) {
       Buffer * modelsn = get_multibyte_report_value(fd, loc);
       if (modelsn) {
@@ -611,16 +616,30 @@ struct model_sn_pair *  get_eizo_model_sn_by_report(int fd) {
    }
 
    if (debug) {
-      printf("(%s) Returning: %p\n", __func__, result);
-      if (result)
-         report_model_sn_pair(result, 1);
+      if (result) {
+         printf("(%s) Returning: %p -> mode=|%s|, sn=|%s|\n",
+               __func__, result, result->model, result->sn);
+         // report_model_sn_pair(result, 1);
+      }
+      else
+         printf("(%s) Returning: %p\n", __func__, result);
    }
    return result;
 }
 
 
+/* Gets the module and serial number of an Eizo monitor.
+ *
+ * Obtains the values by requesting the value of the usage code for the strings,
+ * leaving it to hiddev to find the required report.
+ *
+ * Arguments:
+ *   fd      file descriptor of open USB HID device for an Eizo monitor
+ *
+ * Returns:  model and serial number strings
+ */
 struct model_sn_pair *  get_eizo_model_sn_alt(int fd) {
-   bool debug = true;
+   bool debug = false;
    struct model_sn_pair* result = NULL;
    DBGMSF(debug, "Starting");
 
@@ -645,14 +664,17 @@ struct model_sn_pair *  get_eizo_model_sn_alt(int fd) {
    }
 
    if (debug) {
-      printf("(%s) Returning: %p\n", __func__, result);
-      if (result)
-         report_model_sn_pair(result, 1);
+      if (result) {
+         printf("(%s) Returning: %p -> mode=|%s|, sn=|%s|\n",
+               __func__, result, result->model, result->sn);
+         // report_model_sn_pair(result, 1);
+      }
+      else
+         printf("(%s) Returning: %p\n", __func__, result);
    }
+
    return result;
 }
-
-
 
 
 //
@@ -668,7 +690,7 @@ struct model_sn_pair *  get_eizo_model_sn_alt(int fd) {
  * Returns:   parsed EDID if found
  */
 Parsed_Edid * get_x11_edid_by_model_sn(char * model_name, char * sn_ascii) {
-   bool debug = true;
+   bool debug = false;
    DBGMSF(debug, "Starting.  model_name=|%s|, sn_ascii=|%s|", model_name, sn_ascii);
    Parsed_Edid * parsed_edid = NULL;
 
@@ -769,7 +791,6 @@ Parsed_Edid * get_hiddev_edid_with_fallback(int fd, struct hiddev_devinfo * dev_
             report_model_sn_pair(model_sn2,1);
          }
 
-
          if (model_sn) {
             // Should this be a ddc level function to find non-usb EDID?
             Bus_Info * bus_info = i2c_find_bus_info_by_model_sn(model_sn->model, model_sn->sn);
@@ -778,8 +799,11 @@ Parsed_Edid * get_hiddev_edid_with_fallback(int fd, struct hiddev_devinfo * dev_
                parsed_edid = bus_info->edid;
                // result = NULL;   // for testing - both i2c and X11 methods work
             }
-            else {
-               // TODO: try ADL
+            else {    // ADL
+               Display_Ref * dref = adlshim_find_display_by_model_sn(model_sn->model, model_sn->sn);
+               parsed_edid = adlshim_get_parsed_edid_by_display_ref(dref);
+               // memory leak: not freeing dref because don't want to clobber parsed_edid
+               // need to review Display_Ref lifecycle
             }
          }
       }
@@ -840,14 +864,6 @@ static GPtrArray * get_usb_monitor_list() {
          devinfo = calloc(1,sizeof(struct hiddev_devinfo));
          if ( hid_get_device_info(fd, devinfo, CALLOPT_ERR_MSG) != 0)
             goto close;
-#ifdef OLD
-         int rc = ioctl(fd, HIDIOCGDEVINFO, devinfo);
-         if (rc != 0) {
-            REPORT_IOCTL_ERROR("HIDIOCGDEVINFO", rc);
-            goto close;
-         }
-#endif
-
          if (!is_hiddev_monitor(fd))
             goto close;
 
@@ -1130,10 +1146,23 @@ void usb_show_active_display_by_display_ref(Display_Ref * dref, int depth) {
                          moninfo->edid->mfg_id,
                          moninfo->edid->model_name,
                          moninfo->edid->serial_ascii);
+   Pci_Usb_Id_Names usb_names =  devid_get_usb_names(moninfo->hiddev_devinfo->vendor,
+                                                     moninfo->hiddev_devinfo->product,
+                                                     0,
+                                                     2);
+
+   char vname[80] = {'\0'};
+   char dname[80] = {'\0'};
+   if (usb_names.vendor_name)
+      snprintf(vname, 80, "(%s)", usb_names.vendor_name);
+   if (usb_names.device_name)
+      snprintf(dname, 80, "(%s)", usb_names.device_name);
    if (output_level >= OL_NORMAL) {
       rpt_vstring(depth, "Device name:         %s",    dref->usb_hiddev_name);
-      rpt_vstring(depth, "Vendor id:           %04x",  moninfo->hiddev_devinfo->vendor  & 0xffff);
-      rpt_vstring(depth, "Product id:          %04x",  moninfo->hiddev_devinfo->product & 0xffff);
+      rpt_vstring(depth, "Vendor id:           %04x  %s",
+                         moninfo->hiddev_devinfo->vendor  & 0xffff, vname);
+      rpt_vstring(depth, "Product id:          %04x  %s",
+                         moninfo->hiddev_devinfo->product & 0xffff, dname);
       bool dump_edid = (output_level >= OL_VERBOSE);
 
       report_parsed_edid(moninfo->edid, dump_edid /* verbose */, depth);

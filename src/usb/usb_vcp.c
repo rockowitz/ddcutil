@@ -67,7 +67,7 @@ static Trace_Group TRACE_GROUP = TRC_USB;
  */
 Global_Status_Code
 usb_get_usage(int fd, Usb_Monitor_Vcp_Rec * vcprec, __s32 * maxval, __s32 * curval) {
-   bool debug = true;
+   bool debug = false;
    DBGMSF(debug, "Starting. fd=%d, vcprec=%p", fd, vcprec);
    Global_Status_Code gsc = 0;
    int rc;
