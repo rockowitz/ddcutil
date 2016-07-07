@@ -3225,7 +3225,7 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
    },
    {  .code=0x9b,                                             // in 2.0, same in 3.0
       .vcp_spec_groups = VCP_SPEC_IMAGE | VCP_SPEC_WINDOW,    // 2.0: WINDOW, 3.0: IMAGE
-      .vcp_subsets = VCP_SUBSET_COLOR,
+      .vcp_subsets = VCP_SUBSET_COLOR | VCP_SUBSET_PROFILE,
       // U3011 doesn't implement the spec that puts the midpoint at 127,
       // Just interpret this and the other hue fields as standard continuous
       // .desc = "Value < 127 shifts toward magenta, 127 no effect, "
@@ -3239,7 +3239,7 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
    },
    {  .code=0x9c,                                             // in 2.0, same in 3.0
       .vcp_spec_groups = VCP_SPEC_IMAGE | VCP_SPEC_WINDOW,    // 2.0: WINDOW, 3.0: IMAGE
-      .vcp_subsets = VCP_SUBSET_COLOR,
+      .vcp_subsets = VCP_SUBSET_COLOR | VCP_SUBSET_PROFILE,
       // .nontable_formatter=format_feature_detail_6_axis_hue,
       // .desc = "Value < 127 shifts toward green, 127 no effect, "
       //         "> 127 shifts toward red",
@@ -3251,7 +3251,7 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
    },
    {  .code=0x9d,                                             // in 2.0, same in 3.0
       .vcp_spec_groups = VCP_SPEC_IMAGE | VCP_SPEC_WINDOW,    // 2.0: WINDOW, 3.0: IMAGE
-      .vcp_subsets = VCP_SUBSET_COLOR,
+      .vcp_subsets = VCP_SUBSET_COLOR | VCP_SUBSET_PROFILE,
       // .nontable_formatter=format_feature_detail_6_axis_hue,
       // .desc = "Value < 127 shifts toward yellow, 127 no effect, "
       //        "> 127 shifts toward cyan",
@@ -3263,31 +3263,31 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
    },
    {  .code=0x9e,                                             // in 2.0, same in 3.0
       .vcp_spec_groups = VCP_SPEC_IMAGE | VCP_SPEC_WINDOW,    // 2.0: WINDOW, 3.0: IMAGE
-      .vcp_subsets = VCP_SUBSET_COLOR,
+      .vcp_subsets = VCP_SUBSET_COLOR | VCP_SUBSET_PROFILE,
       // .nontable_formatter=format_feature_detail_6_axis_hue,
       // .desc = "Value < 127 shifts toward green, 127 no effect, "
       //         "> 127 shifts toward blue",
       // .v20_flags = VCP2_RW | VCP2_COMPLEX_CONT,               // VCP_SUBSET_COLORMGT?
       .desc = "Decrease shifts toward green, "
               "increase shifts toward blue",
-      .v20_flags = VCP2_RW | VCP2_STD_CONT | VCP_SUBSET_COLOR,
+      .v20_flags = VCP2_RW | VCP2_STD_CONT,
       .v20_name = "6 axis hue control: Cyan",
    },
    {  .code=0x9f,
       .vcp_spec_groups = VCP_SPEC_IMAGE | VCP_SPEC_WINDOW,
-      .vcp_subsets = VCP_SUBSET_COLOR,
+      .vcp_subsets = VCP_SUBSET_COLOR | VCP_SUBSET_PROFILE,
       // .nontable_formatter=format_feature_detail_6_axis_hue,
       // .desc = "Value < 127 shifts toward cyan, 127 no effect, "
       //         "> 127 shifts toward magenta",
       // .v20_flags =VCP2_RW |  VCP2_COMPLEX_CONT,
       .desc = "Decrease shifts toward cyan, "
               "increase shifts toward magenta",
-      .v20_flags = VCP2_RW | VCP2_STD_CONT | VCP_SUBSET_COLOR,
+      .v20_flags = VCP2_RW | VCP2_STD_CONT,
       .v20_name = "6 axis hue control: Blue",
    },
    {  .code=0xa0,
       .vcp_spec_groups = VCP_SPEC_IMAGE | VCP_SPEC_WINDOW,
-      .vcp_subsets = VCP_SUBSET_COLOR,
+      .vcp_subsets = VCP_SUBSET_COLOR | VCP_SUBSET_PROFILE,
       // .nontable_formatter=format_feature_detail_6_axis_hue,
       // .desc = "Value < 127 shifts toward blue, 127 no effect, "
       //         "> 127 shifts toward red",
