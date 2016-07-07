@@ -213,23 +213,26 @@ bye:
    return gsc;
 }
 
-void usb_get_vesa_version(int fd, __u32 report_type) {
+__s32 usb_get_vesa_version(int fd, __u32 report_type) {
+   bool debug = true;
    __s32 maxval;
    __s32 curval;
    Global_Status_Code gsc = usb_get_usage_alt(fd, report_type, 0x00800004, &maxval, &curval);
-   if (gsc != 0) {
-      DBGMSG("usb_get_usage_alt() status code %d (%s)", gsc, gsc_name(gsc) );
+   if (gsc != 0 && debug) {
+      DBGMSG("report_type=%s, usb_get_usage_alt() status code %d (%s)",
+             report_type_name(report_type), gsc, gsc_name(gsc) );
    }
-   else {
-      DBGMSG("vesa version: 0x%08x", curval);
-   }
+
+   // DBGMSF(debug, "report_type=%s, returning: 0x%08x", report_type_name(report_type), curval);
+   return curval;
 }
 
 
 
 
+
 Buffer *
-simple_get_multibyte(int fd, __u32 report_type, __u32 usage_code, __u32 num_values) {
+get_multibyte_value_by_report_type_and_ucode(int fd, __u32 report_type, __u32 usage_code, __u32 num_values) {
    bool debug = true;
    DBGMSF(debug, "Starting. fd=%d, report_type=%d", fd, report_type);
    // Global_Status_Code gsc = 0;
@@ -265,6 +268,18 @@ bye:
    }
    return result;
 }
+
+
+Buffer *
+get_multibyte_value_by_ucode(int fd,__u32 usage_code, __u32 num_values) {
+   Buffer * result = get_multibyte_value_by_report_type_and_ucode(
+                        fd, HID_REPORT_TYPE_FEATURE, usage_code, num_values);
+    if (!result)
+            result = get_multibyte_value_by_report_type_and_ucode(
+                        fd, HID_REPORT_TYPE_INPUT, usage_code, num_values);
+    return result;
+}
+
 
 
 /* Gets the value for a non-table feature.

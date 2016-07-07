@@ -58,8 +58,10 @@ Global_Status_Code
 usb_get_usage_alt(int fd, __u32 report_type, __u32 usage_code, __s32 * maxval, __s32 * curval);
 
 // temporarily here
-Buffer * simple_get_multibyte(int fd, __u32 report_type, __u32 usage_code, __u32 num_values);
+Buffer * get_multibyte_value_by_report_type_and_ucode(int fd, __u32 report_type, __u32 usage_code, __u32 num_values);
+Buffer * get_multibyte_value_by_ucode(int fd, __u32 usage_code, __u32 num_values);
 
-void usb_get_vesa_version(int fd, __u32 report_type);
+
+__s32 usb_get_vesa_version(int fd, __u32 report_type);
 
 #endif /* USB_VCP_H_ */

@@ -770,7 +770,7 @@ find_report(int fd, __u32 report_type, __u32 ucode, bool match_all_ucodes) {
  */
 struct hid_field_locator *
 locate_edid_report(int fd) {
-   bool debug = true;
+   bool debug = false;
 
    struct hid_field_locator* result = NULL;
    result = find_report(fd, HID_REPORT_TYPE_FEATURE, 0x00800002, /*match_all_ucodes=*/true);
@@ -936,7 +936,7 @@ bye:
  * It is the responsibility of the caller to free the returned buffer.
  */
 Buffer * get_multibyte_report_value(int fd, struct hid_field_locator * loc) {
-   bool debug = true;
+   bool debug = false;
    Buffer * result = NULL;
 
    struct hiddev_report_info rinfo;

@@ -586,6 +586,10 @@ bye:
  *
  * Finds the specific report, the reads it.
  *
+ * Alternatively:
+ * Obtains the values by requesting the value of the usage code for the strings,
+ * leaving it to hiddev to find the required report.
+ *
  * Arguments:
  *   fd      file descriptor of open USB HID device for an Eizo monitor
  *
@@ -595,60 +599,20 @@ struct model_sn_pair *  get_eizo_model_sn_by_report(int fd) {
    bool debug = false;
    DBGMSF(debug, "Starting");
    struct model_sn_pair* result = NULL;
+   Buffer * modelsn  = NULL;
+   Buffer * modelsn2 = NULL;
 
    struct hid_field_locator * loc = find_eizo_model_sn_report(fd);
    // DBGMSF(debug, "find_eizo_model_sn_report() returned: %p", loc);
-   if (loc) {
-      Buffer * modelsn = get_multibyte_report_value(fd, loc);
-      if (modelsn) {
-         assert(modelsn->len >= 16);
-         result = calloc(1, sizeof(struct model_sn_pair));
-         result->model = calloc(1,9);
-         result->sn    = calloc(1,9);
-         memcpy(result->sn, modelsn->bytes,8);
-         result->sn[8] = '\0';
-         memcpy(result->model, modelsn->bytes+8, 8);
-         result->model[8] = '\0';
-         rtrim_in_place(result->sn);
-         rtrim_in_place(result->model);
-         free(modelsn);
-      }
-   }
+   if (loc)
+      modelsn = get_multibyte_report_value(fd, loc);
+   modelsn2 = get_multibyte_value_by_ucode(
+                         fd,
+                         0xff000035,  // usage code
+                         16);         // num_values
 
-   if (debug) {
-      if (result) {
-         printf("(%s) Returning: %p -> mode=|%s|, sn=|%s|\n",
-               __func__, result, result->model, result->sn);
-         // report_model_sn_pair(result, 1);
-      }
-      else
-         printf("(%s) Returning: %p\n", __func__, result);
-   }
-   return result;
-}
+   assert(buffer_eq(modelsn, modelsn2));
 
-
-/* Gets the module and serial number of an Eizo monitor.
- *
- * Obtains the values by requesting the value of the usage code for the strings,
- * leaving it to hiddev to find the required report.
- *
- * Arguments:
- *   fd      file descriptor of open USB HID device for an Eizo monitor
- *
- * Returns:  model and serial number strings
- */
-struct model_sn_pair *  get_eizo_model_sn_alt(int fd) {
-   bool debug = false;
-   struct model_sn_pair* result = NULL;
-   DBGMSF(debug, "Starting");
-
-   __u32              usage_code  = 0xff000035;
-
-   Buffer * modelsn = NULL;
-   modelsn = simple_get_multibyte(fd, HID_REPORT_TYPE_FEATURE, usage_code, /* num_values */ 16);
-   if (!modelsn)
-      modelsn = simple_get_multibyte(fd, HID_REPORT_TYPE_INPUT, usage_code, /* num_values */ 16);
    if (modelsn) {
       assert(modelsn->len >= 16);
       result = calloc(1, sizeof(struct model_sn_pair));
@@ -663,6 +627,7 @@ struct model_sn_pair *  get_eizo_model_sn_alt(int fd) {
       free(modelsn);
    }
 
+
    if (debug) {
       if (result) {
          printf("(%s) Returning: %p -> mode=|%s|, sn=|%s|\n",
@@ -672,7 +637,6 @@ struct model_sn_pair *  get_eizo_model_sn_alt(int fd) {
       else
          printf("(%s) Returning: %p\n", __func__, result);
    }
-
    return result;
 }
 
@@ -741,6 +705,47 @@ Parsed_Edid * get_x11_edid_by_model_sn(char * model_name, char * sn_ascii) {
 }
 
 
+Parsed_Edid * get_fallback_hiddev_edid(int fd, struct hiddev_devinfo * dev_info) {
+   bool debug = false;
+   DBGMSF(debug, "Starting");
+
+   Parsed_Edid * parsed_edid = NULL;
+
+   struct model_sn_pair * model_sn = NULL;
+
+   // Special handling for Eizo monitors
+   if (dev_info->vendor == 0x056d && dev_info->product == 0x0002) {   // if is EIZO monitor?
+      printf("(%s) *** Special fixup for Eizo monitor ***\n", __func__);
+
+      model_sn  = get_eizo_model_sn_by_report(fd);
+
+      if (model_sn) {
+         // Should there be a ddc level function to find non-usb EDID?
+         Bus_Info * bus_info = i2c_find_bus_info_by_model_sn(model_sn->model, model_sn->sn);
+         if (bus_info) {
+            printf("(%s) Using EDID for /dev/i2c-%d\n", __func__, bus_info->busno);
+            parsed_edid = bus_info->edid;
+            // result = NULL;   // for testing - both i2c and X11 methods work
+         }
+         else {    // ADL
+            Display_Ref * dref = adlshim_find_display_by_model_sn(model_sn->model, model_sn->sn);
+            parsed_edid = adlshim_get_parsed_edid_by_display_ref(dref);
+            // memory leak: not freeing dref because don't want to clobber parsed_edid
+            // need to review Display_Ref lifecycle
+         }
+      }
+   }
+
+
+   if (!parsed_edid && model_sn) {
+      parsed_edid = get_x11_edid_by_model_sn(model_sn->model, model_sn->sn);
+   }
+
+   DBGMSF(debug, "Returning: %p", parsed_edid);
+   return parsed_edid;
+}
+
+
 /* Retrieves the EDID (128 bytes) from a hiddev device representing a HID
  * compliant monitor.
  *
@@ -761,6 +766,16 @@ Parsed_Edid * get_hiddev_edid_with_fallback(int fd, struct hiddev_devinfo * dev_
 
    Parsed_Edid * parsed_edid = NULL;
    Buffer * edid_buffer = get_hiddev_edid(fd);    // in hiddev_util.c
+   // try alternative
+   Buffer * edid_buf2   = get_multibyte_value_by_ucode(fd, 0x00800002, 128);
+   if (edid_buffer->len > 128)
+      buffer_set_length(edid_buffer,128);
+   // printf("edid_buffer:\n");
+   // buffer_dump(edid_buffer);
+   // printf("edid_buf2:\n");
+   // buffer_dump(edid_buf2);
+   assert(buffer_eq(edid_buffer, edid_buf2));
+
    if (edid_buffer) {
        parsed_edid = create_parsed_edid(edid_buffer->bytes);
        if (!parsed_edid) {
@@ -773,46 +788,8 @@ Parsed_Edid * get_hiddev_edid_with_fallback(int fd, struct hiddev_devinfo * dev_
        }
     }
 
-   struct model_sn_pair * model_sn = NULL;
-   struct model_sn_pair * model_sn2 = NULL;
-
-
-   if (!edid_buffer) {
-      if (dev_info->vendor == 0x056d && dev_info->product == 0x0002) {   // if is EIZO monitor?
-      // if (is_eizo_monitor(fd)) {
-         printf("(%s) *** Special fixup for Eizo monitor ***\n", __func__);
-
-         model_sn = get_eizo_model_sn_by_report(fd);
-         model_sn2 = get_eizo_model_sn_alt(fd);
-         if (debug) {
-            DBGMSG("As reported by get_eizo_model_sn():");
-            report_model_sn_pair(model_sn,1);
-            DBGMSG("As reported by get_eizo_model_alt():");
-            report_model_sn_pair(model_sn2,1);
-         }
-
-         if (model_sn) {
-            // Should this be a ddc level function to find non-usb EDID?
-            Bus_Info * bus_info = i2c_find_bus_info_by_model_sn(model_sn->model, model_sn->sn);
-            if (bus_info) {
-               printf("(%s) Using EDID for /dev/i2c-%d\n", __func__, bus_info->busno);
-               parsed_edid = bus_info->edid;
-               // result = NULL;   // for testing - both i2c and X11 methods work
-            }
-            else {    // ADL
-               Display_Ref * dref = adlshim_find_display_by_model_sn(model_sn->model, model_sn->sn);
-               parsed_edid = adlshim_get_parsed_edid_by_display_ref(dref);
-               // memory leak: not freeing dref because don't want to clobber parsed_edid
-               // need to review Display_Ref lifecycle
-            }
-         }
-      }
-   }
-
-   // if (model_sn) {
-   if (!parsed_edid && model_sn) {
-      parsed_edid = get_x11_edid_by_model_sn(model_sn->model, model_sn->sn);
-   }
+   if (!parsed_edid)
+      parsed_edid = get_fallback_hiddev_edid(fd, dev_info);
 
    DBGMSF(debug, "Returning: %p", parsed_edid);
    return parsed_edid;
@@ -869,16 +846,11 @@ static GPtrArray * get_usb_monitor_list() {
 
          parsed_edid = get_hiddev_edid_with_fallback(fd, devinfo);
 
-         // for testing, try using alternative method
-         DBGMSF(true, "Trying simple_get_edid(,HID_REPORT_TYPE_FEATURE) ...");
-         /* Buffer * b1 = */ simple_get_multibyte(fd, HID_REPORT_TYPE_FEATURE,  0x00800002, 128);
-         DBGMSF(true, "Trying simple_get_edid(,HID_REPORT_TYPE_INPUT) ...");
-         /* Buffer * b2 = */ simple_get_multibyte(fd, HID_REPORT_TYPE_INPUT,  0x00800002, 128);
-
-         DBGMSG("Trying to get VESA version using HID_REPORT_TYPE_FEATURE...");
-         usb_get_vesa_version(fd, HID_REPORT_TYPE_FEATURE);
-         DBGMSG("Trying to get VESA version using HID_REPORT_TYPE_INPUT...");
-         usb_get_vesa_version(fd, HID_REPORT_TYPE_INPUT);
+         // DBGMSG("Trying to get VESA version...");
+         __s32 vesa_ver =  usb_get_vesa_version(fd, HID_REPORT_TYPE_FEATURE);
+         if (!vesa_ver)
+            vesa_ver = usb_get_vesa_version(fd, HID_REPORT_TYPE_INPUT);
+         DBGMSF(debug, "VESA version from usb_get_vesa_version(): 0x%08x", vesa_ver);
 
 
          if (!parsed_edid) {
