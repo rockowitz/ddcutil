@@ -627,7 +627,7 @@ Global_Status_Code usb_set_nontable_vcp_value(
        Byte                   feature_code,
        int                    new_value)
 {
-   bool debug = true;
+   bool debug = false;
    // Trace_Group tg = TRACE_GROUP;  if (debug) tg = 0xFF;
    // TRCMSGTG(tg, "Setting feature 0x%02x, dh=%p, dh->dref=%p, new_value=%d",
    //              feature_code, dh, dh->dref, new_value);
