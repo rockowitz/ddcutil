@@ -759,6 +759,10 @@ bool bus_info_matches_selector(Bus_Info * bus_info, I2C_Bus_Selector * sel) {
            sel->edidbytes);
 
    bool result = false;
+   // does the bus represent a valid display?
+   // test causes failure in ddctool detect - need to rethink
+   // if (!(bus_info->flags & I2C_BUS_ADDR_0X37))
+   //   goto bye;
    bool some_test_passed = false;
 
    if (sel->busno >= 0) {
