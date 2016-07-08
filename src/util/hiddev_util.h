@@ -29,7 +29,6 @@
 // so callers will have definition of strerror() used in REPORT_IOCTL_ERROR macro:
 #include <string.h>
 
-
 #include "util/data_structures.h"
 #include "util/edid.h"
 
@@ -87,10 +86,4 @@ Buffer * collect_single_byte_usage_values(
             struct hiddev_field_info *  finfo,
             __u32                       field_index);
 
-#ifdef OLD
-Byte * get_hiddev_edid_base(
-      int fd,
-      struct hiddev_report_info * rinfo,
-      int field_index);
-#endif
 #endif /* HIDDEV_UTIL_H_ */

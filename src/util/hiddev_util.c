@@ -783,65 +783,17 @@ locate_edid_report(int fd) {
       }
    }
 
-#ifdef OLD
-   struct hiddev_report_info rinfo = {
-      .report_type = HID_REPORT_TYPE_FEATURE,
-      .report_id   = HID_REPORT_ID_FIRST
-   };
-
-   int report_id_found   = -1;
-   int field_index_found = -1;
-   struct hiddev_field_info * finfo_found = NULL;
-   int reportinfo_rc = 0;
-   while (reportinfo_rc >= 0 && report_id_found == -1) {
-      // printf("(%s) Report counter %d, report_id = 0x%08x %s\n",
-      //       __func__, rptct, rinfo.report_id, interpret_report_id(rinfo.report_id));
-
-      errno = 0;
-      reportinfo_rc = ioctl(fd, HIDIOCGREPORTINFO, &rinfo);
-      if (reportinfo_rc != 0) {    // no more reports
-         if (reportinfo_rc != -1)
-            REPORT_IOCTL_ERROR("HIDIOCGREPORTINFO", reportinfo_rc);
-         break;
+   if (debug) {
+      if (result) {
+         printf("(%s) Returning %p report_id=%d, field_index=%d\n",
+                __func__, result, result->report_id, result->field_index);
+         // report_hid_field_locator(result, 1);
       }
+      else
+         printf("(%s) Returning NULL", __func__);
+   }
 
-      for (int fndx = 0; fndx < rinfo.num_fields && field_index_found == -1; fndx++) {
-         finfo_found = is_field_edid(fd, &rinfo, fndx);
-         if (finfo_found) {
-            report_id_found    = rinfo.report_id;
-            field_index_found  = fndx;
-         }
-      }
 
-      rinfo.report_id |= HID_REPORT_ID_NEXT;
-    }  // loop over reports
-
-    struct hid_field_locator * result = NULL;
-    if (report_id_found >= 0) {
-       result = calloc(1, sizeof(struct hid_field_locator));
-       // result->rinfo = calloc(1, sizeof(struct hiddev_report_info));
-       // memcpy(result->rinfo, &rinfo, sizeof(struct hiddev_report_info));
-       result->finfo = finfo_found;   // returned by is_field_edid()
-       result->report_type = rinfo.report_type;
-       result->report_id   = report_id_found;
-       result->field_index = field_index_found;    // finfo.field_index may have been changed by HIDIOGREPORTINFO
-    }
-#endif
-
-    if (debug) {
-       if (result) {
-          printf("(%s) Returning report_id=%d, field_index=%d\n",
-                 __func__, result->report_id, result->field_index);
-       }
-       else
-          printf("(%s) Returning NULL", __func__);
-    }
-
-    if (debug) {
-       printf("(%s) Returning: %p\n", __func__, result);
-       if (result)
-          report_hid_field_locator(result, 1);
-    }
    return result;
 }
 
@@ -875,10 +827,8 @@ Buffer * get_hiddev_edid_by_location(int fd, struct hid_field_locator * loc) {
    // Byte edidbuf[128];
 
    struct hiddev_report_info rinfo;
-   // rinfo.report_type = loc->rinfo->report_type;
    rinfo.report_type = loc->report_type;
    rinfo.report_id   = loc->report_id;
-   // rinfo.num_fields  = loc->rinfo->num_fields;
    rinfo.num_fields  = 1;
 
    // rc = ioctl(fd, HIDIOCGREPORT, loc->rinfo);
@@ -889,8 +839,6 @@ Buffer * get_hiddev_edid_by_location(int fd, struct hid_field_locator * loc) {
       printf("(%s) Unable to get report %d\n", __func__, loc->report_id);
       goto bye;
    }
-
-   // To do: replace with HIDIOCGUSAGES
 
    assert(loc->finfo->maxusage >= 128);
 
