@@ -610,7 +610,12 @@ struct model_sn_pair *  get_eizo_model_sn_by_report(int fd) {
                          fd,
                          0xff000035,  // usage code
                          16);         // num_values
-
+   if (modelsn2->len >= 16)
+	   buffer_set_length(modelsn2, 16);
+   // printf("modelsn:\n");
+   // buffer_dump(modelsn);
+   // printf("modelsn2:\n");
+   // buffer_dump(modelsn2);
    assert(buffer_eq(modelsn, modelsn2));
 
    if (modelsn) {
