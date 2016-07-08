@@ -142,11 +142,16 @@ bool perform_get_capabilities_by_display_handle(Display_Handle * dh) {
    else {
       assert(capabilities_string);
       Output_Level output_level = get_output_level();
-      if (output_level <= OL_TERSE)
-         printf("Unparsed capabilities string: %s\n", capabilities_string);
+      if (output_level <= OL_TERSE) {
+         printf("%s capabilities string: %s\n",
+               (dh->io_mode == USB_IO) ? "Synthesized unparsed" : "Unparsed",
+               capabilities_string);
+      }
       else {
          // pcap is always set, but may be damaged if there was a parsing error
          Parsed_Capabilities * pcap = parse_capabilities_string(capabilities_string);
+         if (dh->io_mode == USB_IO)
+            pcap->raw_value_synthesized = true;
          report_parsed_capabilities(pcap, dh->io_mode);
          free_parsed_capabilities(pcap);
       }
