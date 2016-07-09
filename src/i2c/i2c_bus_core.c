@@ -1158,7 +1158,7 @@ void report_businfo(Bus_Info * bus_info, int depth) {
  */
 void i2c_report_active_display(Bus_Info * businfo, int depth) {
    Output_Level output_level = get_output_level();
-   rpt_vstring(depth, "Bus:                 /dev/i2c-%d", businfo->busno);
+   rpt_vstring(depth, "I2C bus:             /dev/i2c-%d", businfo->busno);
 
    if (output_level >= OL_VERBOSE)
    rpt_vstring(depth, "Supports DDC:        %s", bool_repr(businfo->flags & I2C_BUS_ADDR_0X37));
