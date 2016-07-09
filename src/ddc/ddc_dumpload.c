@@ -319,7 +319,7 @@ Global_Status_Code  ddc_set_multiple(Display_Handle* dh, Vcp_Value_Set vset) {
  *    status code
  */
 Global_Status_Code loadvcp_by_dumpload_data(Dumpload_Data* pdata, Display_Handle * dh) {
-   bool debug = true;
+   bool debug = false;
    if (debug) {
         DBGMSG("Loading VCP settings for monitor \"%s\", sn \"%s\", dh=%p \n",
                pdata->model, pdata->serial_ascii, dh);

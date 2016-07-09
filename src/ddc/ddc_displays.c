@@ -109,7 +109,7 @@ bool ddc_is_valid_display_ref(Display_Ref * dref, bool emit_error_msg) {
  *    or an ADL adapter.display number, NULL if display not found
  */
 Display_Ref* get_display_ref_for_display_identifier(Display_Identifier* pdid, bool emit_error_msg) {
-   bool debug = true;
+   bool debug = false;
    Display_Ref* dref = NULL;
    bool validated = true;
 
@@ -300,7 +300,7 @@ Display_Info_List * ddc_get_valid_displays() {
  *    NULL if dispno < 1 or dispno > number of actual displays
  */
 Display_Ref* ddc_find_display_by_dispno(int dispno) {
-   bool debug = true;
+   bool debug = false;
    DBGMSF(debug, "Starting.  dispno=%d", dispno);
 
    Display_Ref * result = NULL;
@@ -345,7 +345,7 @@ ddc_find_display_by_model_and_sn(
    const char * sn,
    Byte         findopts)
 {
-   bool debug = true;
+   bool debug = false;
    DBGMSF(debug, "Starting.  model=%s, sn=%s, findopts=0x%02x", model, sn, findopts );
 
    Display_Ref * result = NULL;
@@ -392,7 +392,7 @@ ddc_find_display_by_usb_busnum_devnum(
  */
 Display_Ref*
 ddc_find_display_by_edid(const Byte * pEdidBytes, Byte findopts) {
-   bool debug = true;
+   bool debug = false;
    DBGMSF(debug, "Starting.  pEdidBytes=%p, findopts=0x%02x", pEdidBytes, findopts );
    Display_Ref * result = NULL;
    Bus_Info * businfo = i2c_find_bus_info_by_edid(pEdidBytes, findopts);
