@@ -26,10 +26,10 @@
 
 
 #include <assert.h>
-#include <dirent.h>
+// #include <dirent.h>
 #include <errno.h>
 #include <fcntl.h>
-#include <glib.h>
+// include <glib.h>
 #include <linux/hiddev.h>
 #include <linux/limits.h>
 #include <stddef.h>
@@ -38,27 +38,20 @@
 #include <string.h>
 #include <sys/ioctl.h>
 #include <unistd.h>
-#include <wchar.h>
+// #include <wchar.h>
 
-#include "util/device_id_util.h"
+// #include "util/device_id_util.h"
 #include "util/hiddev_util.h"
-#include "util/hiddev_reports.h"
-#include "util/report_util.h"
+// #include "util/hiddev_reports.h"
+// #include "util/report_util.h"
 #include "util/string_util.h"
-// #include "util/x11_util.h"         // for EDID fallback
 
 #include "base/core.h"
-// #include "base/ddc_errno.h"
 #include "base/execution_stats.h"
 #include "base/linux_errno.h"
 
-// #include "i2c/i2c_bus_core.h"     // for EDID fallback
-// #include "adl/adl_shim.h"         // for EDID fallback
-
-
-// #include "usb/usb_vcp.h"      // TEMP for simple_get_edid()
-
 #include "usb/usb_base.h"
+
 
 // Trace class for this file
 static Trace_Group TRACE_GROUP = TRC_USB;
@@ -272,5 +265,3 @@ int hid_get_report(int fd, struct hiddev_report_info * rinfo, Byte calloptions) 
 
    return rc;
 }
-
-

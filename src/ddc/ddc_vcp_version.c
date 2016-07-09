@@ -30,7 +30,10 @@
 #include <stdbool.h>
 
 #include "base/core.h"
+#include "base/displays.h"
 #include "base/status_code_mgt.h"
+
+#include "usb/usb_vcp.h"
 
 #include "ddc/ddc_packet_io.h"
 #include "ddc/ddc_vcp.h"
@@ -56,8 +59,9 @@
  */
 Version_Spec get_vcp_version_by_display_handle(Display_Handle * dh) {
    bool debug = false;
-   DBGMSF(debug, "Starting. dh=%p, dh->vcp_version =  %d.%d",
-                 dh, dh->vcp_version.major, dh->vcp_version.minor);
+   // TMI
+   // DBGMSF(debug, "Starting. dh=%p, dh->vcp_version =  %d.%d",
+   //               dh, dh->vcp_version.major, dh->vcp_version.minor);
    if (is_version_unqueried(dh->vcp_version)) {
       dh->vcp_version.major = 0;
       dh->vcp_version.minor = 0;
@@ -75,10 +79,9 @@ Version_Spec get_vcp_version_by_display_handle(Display_Handle * dh) {
       Global_Status_Code  gsc = get_nontable_vcp_value(dh, 0xdf, &pinterpreted_code);
 #endif
       Global_Status_Code gsc = get_vcp_value(dh, 0xdf, NON_TABLE_VCP_VALUE, &pvalrec);
-
-
       if (olev == OL_VERBOSE)
          set_output_level(olev);
+
       if (gsc == 0) {
 #ifdef OLD
          dh->vcp_version.major = pinterpreted_code->sh;
@@ -89,10 +92,22 @@ Version_Spec get_vcp_version_by_display_handle(Display_Handle * dh) {
       }
       else {
          // happens for pre MCCS v2 monitors
-         DBGMSF(debug, "Error detecting VCP version. gsc=%s\n", gsc_desc(gsc) );
+         DBGMSF(debug, "Error detecting VCP version using VCP feature 0xdf. gsc=%s\n", gsc_desc(gsc) );
+
+         if (dh->io_mode == USB_IO) {
+            // DBGMSG("Trying to get VESA version...");
+            __s32 vesa_ver =  usb_get_vesa_version(dh->fh);
+            DBGMSF(debug, "VESA version from usb_get_vesa_version(): 0x%08x", vesa_ver);
+            if (vesa_ver) {
+               DBGMSF(debug, "VESA version from usb_get_vesa_version(): 0x%08x", vesa_ver);
+               dh->vcp_version.major = (vesa_ver >> 8) & 0xff;
+               dh->vcp_version.minor = vesa_ver & 0xff;
+            }
+         }
       }
+      DBGMSF(debug, "Non-cache lookup returning: %d.%d", dh->vcp_version.major, dh->vcp_version.minor);
    }
-   DBGMSF(debug, "Returning: %d.%d", dh->vcp_version.major, dh->vcp_version.minor);
+   // DBGMSF(debug, "Returning: %d.%d", dh->vcp_version.major, dh->vcp_version.minor);
    return dh->vcp_version;
 }
 

@@ -45,8 +45,10 @@
 #include "util/string_util.h"
 #include "util/glib_util.h"
 #include "util/report_util.h"
-#include "util/hiddev_reports.h"   // circular dependency, but only used in debug code
-#include "util/edid.h"
+
+// circular dependency, but only used in debug code
+// report_hiddev_field_info() in report_hid_field_locator()
+#include "util/hiddev_reports.h"
 
 #include "util/hiddev_util.h"
 

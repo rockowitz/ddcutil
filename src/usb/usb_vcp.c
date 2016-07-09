@@ -213,8 +213,11 @@ bye:
    return gsc;
 }
 
-__s32 usb_get_vesa_version(int fd, __u32 report_type) {
-   bool debug = true;
+
+// 7/2016: this code is based on USB HID Monitor spec.
+// have yet to see a monitor that supports VESA Version usage code
+__s32 usb_get_vesa_version_by_report_type(int fd, __u32 report_type) {
+   bool debug = false;
    __s32 maxval;
    __s32 curval;
    Global_Status_Code gsc = usb_get_usage_alt(fd, report_type, 0x00800004, &maxval, &curval);
@@ -228,6 +231,18 @@ __s32 usb_get_vesa_version(int fd, __u32 report_type) {
 }
 
 
+__s32 usb_get_vesa_version(int fd) {
+   bool debug = false;
+
+   __s32 vesa_ver =  usb_get_vesa_version_by_report_type(fd, HID_REPORT_TYPE_FEATURE);
+   if (!vesa_ver)
+      vesa_ver = usb_get_vesa_version_by_report_type(fd, HID_REPORT_TYPE_INPUT);
+
+   DBGMSF(debug, "VESA version from usb_get_vesa_version_by_report_type(): 0x%08x", vesa_ver);
+
+   DBGMSF(debug, "returning: 0x%08x", vesa_ver);
+   return vesa_ver;
+}
 
 
 
@@ -357,7 +372,6 @@ Global_Status_Code usb_get_nontable_vcp_value(
                break;
          }
       }
-
    }
 
    if (gsc == 0) {

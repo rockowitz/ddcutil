@@ -62,6 +62,6 @@ Buffer * get_multibyte_value_by_report_type_and_ucode(int fd, __u32 report_type,
 Buffer * get_multibyte_value_by_ucode(int fd, __u32 usage_code, __u32 num_values);
 
 
-__s32 usb_get_vesa_version(int fd, __u32 report_type);
+__s32 usb_get_vesa_version(int fd);
 
 #endif /* USB_VCP_H_ */
