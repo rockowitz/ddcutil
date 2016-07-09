@@ -181,213 +181,6 @@ void report_model_sn_pair(struct model_sn_pair * p, int depth) {
 
 
 //
-// Basic USB HID Device Operations
-//
-
-/* Open a USB device
- *
- * Arguments:
- *   hiddev_devname
- *   readonly         if true, open read only
- *                    if false, open for reading and writing
- *   emit_error_msg   if true, output message if error
- *
- * Returns:
- *   file descriptor ( > 0) if success
- *   -errno if failure
- *
- */
-int usb_open_hiddev_device(char * hiddev_devname, Byte calloptions) {
-   bool debug = false;
-   DBGMSF(debug, "hiddev_devname=%s, calloptions=0x%02x", hiddev_devname, calloptions);
-
-   int  file;
-   int mode = (calloptions & CALLOPT_RDONLY) ? O_RDONLY : O_RDWR;
-
-   RECORD_IO_EVENT(
-         IE_OPEN,
-         ( file = open(hiddev_devname, mode) )
-         );
-   // per man open:
-   // returns file descriptor if successful
-   // -1 if error, and errno is set
-   int errsv = errno;
-   if (file < 0) {
-      if (calloptions & CALLOPT_ERR_MSG)
-         f0printf(FERR, "Open failed for %s: errno=%s\n", hiddev_devname, linux_errno_desc(errsv));
-      file = -errno;
-   }
-   DBGMSF(debug, "open() finished, file=%d", file);
-
-   if (file > 0)
-   {
-      // Solves problem of ddc detect not getting edid unless ddctool env called first
-      errsv = errno;
-      int rc = ioctl(file, HIDIOCINITREPORT);
-      if (rc != 0) {
-         REPORT_IOCTL_ERROR("HIDIOCGREPORT", rc);
-         // printf("(%s) HIDIOCINITREPORT failed\n", __func__  );
-      }
-   }
-   DBGMSF(debug, "Returning file descriptor: %d", file);
-   return file;
-}
-
-
-/* Closes an open USB device.
- *
- * Arguments:
- *   fd     file descriptor for open hiddev device
- *   device_fn
- *          if NULL, ignore
- *   failure_action  if true, exit if close fails
- *
- * Returns:
- *    0 if success
- *    -errno if close fails and exit on failure was not specified
- */
-int usb_close_device(int fd, char * device_fn, Byte calloptions) {
-   bool debug = false;
-   DBGMSF(debug, "Starting. fd=%d, device_fn=%s, calloptions=0x%02x", fd, device_fn, calloptions);
-
-   errno = 0;
-   int rc = 0;
-   RECORD_IO_EVENT(IE_CLOSE, ( rc = close(fd) ) );
-   int errsv = errno;
-   if (rc < 0) {
-      // EBADF  fd isn't a valid open file descriptor
-      // EINTR  close() interrupted by a signal
-      // EIO    I/O error
-      char workbuf[300];
-      if (device_fn)
-         snprintf(workbuf, 300,
-                  "Close failed for USB device %s. errno=%s",
-                  device_fn, linux_errno_desc(errsv));
-      else
-         snprintf(workbuf, 300,
-                  "USB device close failed. errno=%s",
-                  linux_errno_desc(errsv));
-
-      if (calloptions & CALLOPT_ERR_ABORT)
-         TERMINATE_EXECUTION_ON_ERROR(workbuf);
-
-      if (calloptions & CALLOPT_ERR_MSG)
-         fprintf(stderr, "%s\n", workbuf);
-
-      rc = errsv;
-   }
-   return rc;
-}
-
-
-//
-// Wrapper hiddev ioctl calls
-//
-
-int hid_get_device_info(int fd, struct hiddev_devinfo * dev_info, Byte calloptions) {
-   assert(dev_info);
-
-   int rc = ioctl(fd, HIDIOCGDEVINFO, dev_info);
-   if (rc != 0) {
-      int errsv = errno;
-      if (calloptions & CALLOPT_ERR_MSG)
-         REPORT_IOCTL_ERROR("HIDIOCGDEVINFO", rc);
-
-      if (calloptions & CALLOPT_ERR_ABORT)
-         ddc_abort(errsv);
-  }
-
-  return rc;
-}
-
-
-int hid_get_report_info(int fd, struct hiddev_report_info * rinfo, Byte calloptions) {
-   assert(rinfo);
-
-   int rc = ioctl(fd, HIDIOCGREPORTINFO, rinfo);
-   if (rc < -1) {     // -1 means no more reports
-      int errsv = errno;
-      if (calloptions & CALLOPT_ERR_MSG)
-         REPORT_IOCTL_ERROR("HIDIOCGREPORTINFO", rc);
-
-      if (calloptions & CALLOPT_ERR_ABORT)
-         ddc_abort(errsv);
-  }
-
-  return rc;
-}
-
-
-int hid_get_field_info(int fd, struct hiddev_field_info * finfo, Byte calloptions) {
-   int saved_field_index = finfo->field_index;
-   int rc = ioctl(fd, HIDIOCGFIELDINFO, finfo);
-   if (rc != 0) {
-      int errsv = errno;
-      if (calloptions & CALLOPT_ERR_MSG)
-         REPORT_IOCTL_ERROR("HIDIOCGFIELDINFO", rc);
-
-      if (calloptions & CALLOPT_ERR_ABORT)
-         ddc_abort(errsv);
-   }
-   assert(rc == 0);
-   if (finfo->field_index != saved_field_index && (calloptions & CALLOPT_WARN_FINDEX)) {
-      printf("(%s) !!! ioctl(HIDIOCGFIELDINFO) changed field_index from %d to %d\n",
-             __func__, saved_field_index, finfo->field_index);
-      printf("(%s) finfo.maxusage=%d\n",
-             __func__,  finfo->maxusage);
-   }
-
-   return rc;
-}
-
-
-int hid_get_usage_code(int fd, struct hiddev_usage_ref * uref, Byte calloptions) {
-   int rc = ioctl(fd, HIDIOCGUCODE, uref);    // Fills in usage code
-   if (rc != 0) {
-      int errsv = errno;
-      if (calloptions & CALLOPT_ERR_MSG)
-         REPORT_IOCTL_ERROR("HIDIOCGUCODE", rc);
-
-      if (calloptions & CALLOPT_ERR_ABORT)
-         ddc_abort(errsv);
-   }
-
-   return rc;
-}
-
-
-int hid_get_usage_value(int fd, struct hiddev_usage_ref * uref, Byte calloptions) {
-   int rc = ioctl(fd, HIDIOCGUSAGE, uref);
-   if (rc != 0) {
-      int errsv = errno;
-      if (calloptions & CALLOPT_ERR_MSG)
-         REPORT_IOCTL_ERROR("HIDIOCGUSAGE", rc);
-
-      if (calloptions & CALLOPT_ERR_ABORT)
-         ddc_abort(errsv);
-   }
-
-   return rc;
-}
-
-
-int hid_get_report(int fd, struct hiddev_report_info * rinfo, Byte calloptions) {
-   int rc = ioctl(fd, HIDIOCGUCODE, rinfo);
-   if (rc != 0) {
-      int errsv = errno;
-      if (calloptions & CALLOPT_ERR_MSG)
-         REPORT_IOCTL_ERROR("HIDIOCGREPORT", rc);
-
-      if (calloptions & CALLOPT_ERR_ABORT)
-         ddc_abort(errsv);
-   }
-
-   return rc;
-}
-
-
-
-//
 // HID Report Inquiry
 //
 
@@ -682,6 +475,7 @@ Parsed_Edid * get_x11_edid_by_model_sn(char * model_name, char * sn_ascii) {
          if (streq(parsed_edid->model_name, model_name) &&
                streq(parsed_edid->serial_ascii, sn_ascii) )
          {
+            parsed_edid->edid_source = "X11";
             DBGMSF(debug, "Found matching EDID from X11\n", __func__);
             break;
          }
@@ -730,11 +524,13 @@ Parsed_Edid * get_fallback_hiddev_edid(int fd, struct hiddev_devinfo * dev_info)
          if (bus_info) {
             printf("(%s) Using EDID for /dev/i2c-%d\n", __func__, bus_info->busno);
             parsed_edid = bus_info->edid;
+            parsed_edid->edid_source = "I2C";
             // result = NULL;   // for testing - both i2c and X11 methods work
          }
          else {    // ADL
             Display_Ref * dref = adlshim_find_display_by_model_sn(model_sn->model, model_sn->sn);
             parsed_edid = adlshim_get_parsed_edid_by_display_ref(dref);
+            parsed_edid->edid_source = "ADL";
             // memory leak: not freeing dref because don't want to clobber parsed_edid
             // need to review Display_Ref lifecycle
          }
@@ -791,6 +587,8 @@ Parsed_Edid * get_hiddev_edid_with_fallback(int fd, struct hiddev_devinfo * dev_
           buffer_free(edid_buffer, __func__);
           edid_buffer = NULL;
        }
+       else
+          parsed_edid->edid_source = "USB";
     }
 
    if (!parsed_edid)

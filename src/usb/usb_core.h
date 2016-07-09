@@ -34,18 +34,8 @@
 
 #include "vcp/vcp_feature_values.h"
 
-#define REPORT_IOCTL_ERROR_AND_QUIT(_ioctl_name, _rc) \
-   do { \
-         printf("(%s) ioctl(%s) returned %d (0x%08x), errno=%d: %s\n", \
-                __func__, \
-                _ioctl_name, \
-                _rc, \
-                _rc, \
-                errno, \
-                strerror(errno) \
-               ); \
-         ddc_abort(errno); \
-   } while(0)
+#include "usb/usb_base.h"
+
 
 
 
@@ -57,8 +47,7 @@ bool usb_is_valid_display_ref(Display_Ref * dref, bool emit_error_msg);
 
 void usb_show_active_display_by_display_ref(Display_Ref * dref, int depth);
 
-int usb_open_hiddev_device(char * hiddev_devname, Byte calloptions);
-int usb_close_device(int fd, char * device_fn, Byte calloptions);
+
 
 int hid_get_device_info(int fd, struct hiddev_devinfo *     dinfo, Byte calloptions);
 int hid_get_report_info(int fd, struct hiddev_report_info * rinfo, Byte calloptions);

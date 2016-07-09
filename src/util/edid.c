@@ -352,13 +352,15 @@ void report_parsed_edid(Parsed_Edid * edid, bool verbose, int depth) {
       // useless, binary serial number is typically 0x00000000 or 0x01010101
       // rpt_vstring(d1,"Binary sn:        %u (0x%08x)", edid->serial_binary, edid->serial_binary);
       rpt_vstring(d1,"Extra descriptor: %s",          edid->extra_descriptor_string);
-      rpt_vstring(d1,"White-x, White-y: %.3f, %.3f",  edid->wx/1024.0, edid->wy/1024.0);
-      rpt_vstring(d1,"Red-x,   Red-y:   %.3f, %.3f",  edid->rx/1024.0, edid->ry/1024.0);
-      rpt_vstring(d1,"Green-x, Green-y: %.3f, %.3f",  edid->gx/1024.0, edid->gy/1024.0);
-      rpt_vstring(d1,"Blue-x,  Blue-y:  %.3f, %.3f",  edid->bx/1024.0, edid->by/1024.0);
+      rpt_vstring(d1,"White x,y:        %.3f, %.3f",  edid->wx/1024.0, edid->wy/1024.0);
+      rpt_vstring(d1,"Red   x,y:        %.3f, %.3f",  edid->rx/1024.0, edid->ry/1024.0);
+      rpt_vstring(d1,"Green x,y:        %.3f, %.3f",  edid->gx/1024.0, edid->gy/1024.0);
+      rpt_vstring(d1,"Blue  x,y:        %.3f, %.3f",  edid->bx/1024.0, edid->by/1024.0);
       }
 
       if (verbose) {
+         if (edid->edid_source)
+         rpt_vstring(depth,"EDID source: %s",        edid->edid_source);
          rpt_vstring(depth,"EDID hex dump:");
          // FILE * fh = rpt_cur_output_dest();
          // fhex_dump(fh, edid->bytes, 128);

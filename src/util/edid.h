@@ -90,6 +90,7 @@ struct {
    ushort       rx, ry;
    ushort       gx, gy;
    ushort       bx, by;
+   char *       edid_source;
 } Parsed_Edid;
 
 
