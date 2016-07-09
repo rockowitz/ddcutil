@@ -192,11 +192,13 @@ Dumpload_Data * read_vcp_file(const char * fn) {
  */
 // TODO: convert to Global_Status_Code
 bool loadvcp_by_file(const char * fn, Display_Handle * dh) {
+   bool debug = true;
+   DBGMSF(debug, "Starting. fn=%s, dh=%p %s", fn, dh, (dh) ? display_handle_repr(dh):"");
+
    Output_Level output_level = get_output_level();
    bool verbose = (output_level >= OL_VERBOSE);
    bool ok = false;
    Global_Status_Code gsc = 0;
-   // DBGMSG("Starting. fn=%s  ", fn );
 
    Dumpload_Data * pdata = read_vcp_file(fn);
    if (!pdata) {
@@ -214,6 +216,7 @@ bool loadvcp_by_file(const char * fn, Display_Handle * dh) {
       gsc = loadvcp_by_dumpload_data(pdata, dh);
       ok = (gsc == 0);
    }
+
+   DBGMSF(debug, "Returning: %s", bool_repr(ok));
    return ok;
 }
-

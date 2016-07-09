@@ -726,7 +726,7 @@ Parsed_Edid * get_fallback_hiddev_edid(int fd, struct hiddev_devinfo * dev_info)
 
       if (model_sn) {
          // Should there be a ddc level function to find non-usb EDID?
-         Bus_Info * bus_info = i2c_find_bus_info_by_model_sn(model_sn->model, model_sn->sn);
+         Bus_Info * bus_info = i2c_find_bus_info_by_model_sn(model_sn->model, model_sn->sn, DISPSEL_NONE);
          if (bus_info) {
             printf("(%s) Using EDID for /dev/i2c-%d\n", __func__, bus_info->busno);
             parsed_edid = bus_info->edid;
@@ -946,7 +946,7 @@ static Usb_Monitor_Info * usb_find_monitor_by_busnum_devnum(int busnum, int devn
 
 static Usb_Monitor_Info * usb_find_monitor_by_display_ref(Display_Ref * dref) {
    bool debug = false;
-   DBGMSF(debug, "Starting. dref = %s", dref_short_name(dref));
+   DBGMSF(debug, "Starting. dref = %s", dref_repr(dref));
    assert(dref->io_mode == USB_IO);
    Usb_Monitor_Info * result = usb_find_monitor_by_busnum_devnum(dref->usb_bus, dref->usb_device);
    DBGMSF(debug, "Returning %p", result);

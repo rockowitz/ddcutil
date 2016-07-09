@@ -319,10 +319,11 @@ Global_Status_Code  ddc_set_multiple(Display_Handle* dh, Vcp_Value_Set vset) {
  *    status code
  */
 Global_Status_Code loadvcp_by_dumpload_data(Dumpload_Data* pdata, Display_Handle * dh) {
-   bool debug = false;
+   bool debug = true;
    if (debug) {
-        DBGMSG("Loading VCP settings for monitor \"%s\", sn \"%s\" \n",
-               pdata->model, pdata->serial_ascii);
+        DBGMSG("Loading VCP settings for monitor \"%s\", sn \"%s\", dh=%p \n",
+               pdata->model, pdata->serial_ascii, dh);
+
         report_dumpload_data(pdata, 0);
    }
 
@@ -344,13 +345,16 @@ Global_Status_Code loadvcp_by_dumpload_data(Dumpload_Data* pdata, Display_Handle
             pdata->serial_ascii, dh->pedid->serial_ascii);
          ok = false;
       }
-      if (!ok)
+      if (!ok) {
+         gsc = DDCRC_INVALID_DISPLAY;
          goto bye;
+      }
    }
    else {
      // no Display_Ref passed as argument, just use the identifiers in the
      // data to pick the display
-      Display_Ref * dref = ddc_find_display_by_model_and_sn(pdata->model, pdata->serial_ascii);
+      Display_Ref * dref = ddc_find_display_by_model_and_sn(
+                              pdata->model, pdata->serial_ascii, DISPSEL_VALID_ONLY);
       if (!dref) {
          f0printf(FERR, "Monitor not connected: %s - %s   \n", pdata->model, pdata->serial_ascii );
          gsc = DDCRC_INVALID_DISPLAY;
@@ -368,6 +372,7 @@ Global_Status_Code loadvcp_by_dumpload_data(Dumpload_Data* pdata, Display_Handle
    ddc_close_display(dh);
 
 bye:
+   DBGMSF(debug, "Returning: %s", gsc_desc(gsc));
    return gsc;
 }
 
@@ -437,7 +442,6 @@ Global_Status_Code loadvcp_by_string(char * catenated, Display_Handle * dh) {
 //
 // Dumpvcp
 //
-
 
 
 //

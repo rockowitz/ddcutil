@@ -344,7 +344,7 @@ static bool is_function_supported(int busno, char * funcname) {
       }
 
       // DBGMSG("functionality=0x%lx, func_table_entry->bit=-0x%lx", bus_infos[busno].functionality, func_table_entry->bit);
-      Bus_Info * bus_info = i2c_get_bus_info(busno);
+      Bus_Info * bus_info = i2c_get_bus_info(busno, DISPSEL_NONE);
       result = (bus_info->functionality & func_table_entry->bit) != 0;
    }
    // DBGMSG("busno=%d, funcname=%s, returning %d", busno, funcname, result);
@@ -711,6 +711,7 @@ typedef struct {
    const char *  model_name;
    const char *  serial_ascii;
    const Byte *  edidbytes;
+   Byte          options;
 } I2C_Bus_Selector;
 
 
@@ -760,9 +761,10 @@ bool bus_info_matches_selector(Bus_Info * bus_info, I2C_Bus_Selector * sel) {
 
    bool result = false;
    // does the bus represent a valid display?
-   // test causes failure in ddctool detect - need to rethink
-   // if (!(bus_info->flags & I2C_BUS_ADDR_0X37))
-   //   goto bye;
+   if (sel->options & DISPSEL_VALID_ONLY) {
+      if (!(bus_info->flags & I2C_BUS_ADDR_0X37))
+         goto bye;
+   }
    bool some_test_passed = false;
 
    if (sel->busno >= 0) {
@@ -854,14 +856,15 @@ Bus_Info * find_bus_info_by_selector(I2C_Bus_Selector * sel) {
  *    pointer to Bus_Info struct for the bus,
  *    NULL if busno is greater than the highest bus number
  */
-Bus_Info * i2c_get_bus_info(int busno) {
+Bus_Info * i2c_get_bus_info(int busno, Byte findopts) {
    bool debug = false;
-   DBGMSF(debug, "Starting.  busno=%d", busno );
+   DBGMSF(debug, "Starting.  busno=%d, findopts=0x%02x", busno, findopts );
    assert(busno >= 0);
 
    I2C_Bus_Selector sel;
    init_i2c_bus_selector(&sel);
-   sel.busno = busno;
+   sel.busno   = busno;
+   sel.options = findopts;
    Bus_Info * bus_info = find_bus_info_by_selector(&sel);
 
 #ifdef OLD   // keep for reuse in general selection code moved to ddc level
@@ -900,7 +903,7 @@ Bus_Info * i2c_get_bus_info(int busno) {
  *    pointer to Bus_Info struct for the bus,
  *    NULL if not found
  */
-Bus_Info * i2c_find_bus_info_by_model_sn(const char * model, const char * sn) {
+Bus_Info * i2c_find_bus_info_by_model_sn(const char * model, const char * sn, Byte findopts) {
    bool debug = false;
    DBGMSF(debug, "Starting. model=|%s|, sn=|%s|", model, sn );
    assert(model || sn);    // loosen the requirements
@@ -909,6 +912,7 @@ Bus_Info * i2c_find_bus_info_by_model_sn(const char * model, const char * sn) {
    init_i2c_bus_selector(&sel);
    sel.model_name   = model;
    sel.serial_ascii = sn;
+   sel.options      = findopts;
    Bus_Info * result = find_bus_info_by_selector(&sel);
 
    DBGMSF(debug, "Returning: %p", result );
@@ -925,14 +929,15 @@ Bus_Info * i2c_find_bus_info_by_model_sn(const char * model, const char * sn) {
  *    pointer to Bus_Info struct for the bus,
  *    NULL if not found
  */
-Bus_Info * i2c_find_bus_info_by_edid(const Byte * edidbytes) {
+Bus_Info * i2c_find_bus_info_by_edid(const Byte * edidbytes, Byte findopts) {
    bool debug = false;
-   DBGMSF(debug, "Starting. edidbytes=%p", edidbytes);
+   DBGMSF(debug, "Starting. edidbytes=%p, findopts=0x%02x", edidbytes, findopts);
    assert(edidbytes);
 
    I2C_Bus_Selector sel;
    init_i2c_bus_selector(&sel);
    sel.edidbytes   = edidbytes;
+   sel.options = findopts;
    Bus_Info * result = find_bus_info_by_selector(&sel);
 
    DBGMSF(debug, "Returning: %p", result );
@@ -961,7 +966,7 @@ bool i2c_is_valid_bus(int busno, bool emit_error_msg) {
    bool result = false;
    char * complaint = NULL;
 
-   Bus_Info * businfo = i2c_get_bus_info(busno);
+   Bus_Info * businfo = i2c_get_bus_info(busno, DISPSEL_NONE);
    if (debug && businfo)
       report_businfo(businfo, 1);
 
@@ -999,7 +1004,7 @@ Parsed_Edid * i2c_get_parsed_edid_by_busno(int busno) {
    DBGMSF(debug, "Starting. busno=%d", busno);
    Parsed_Edid * edid = NULL;
 
-   Bus_Info * pbus_info = i2c_get_bus_info(busno);
+   Bus_Info * pbus_info = i2c_get_bus_info(busno, DISPSEL_NONE);
    if (pbus_info)
       edid = pbus_info->edid;
 
@@ -1031,7 +1036,7 @@ typedef struct {
  *
  * Returns:     list of displays
  */
-Display_Info_List i2c_get_valid_displays() {
+Display_Info_List i2c_get_displays() {
    Display_Info_List info_list = {0,NULL};
    Display_Info info_recs[256];
    int busct = i2c_get_busct();
@@ -1180,7 +1185,7 @@ void i2c_report_active_display(Bus_Info * businfo, int depth) {
  * Returns: nothing
  */
 void i2c_report_active_display_by_busno(int busno, int depth) {
-   Bus_Info * curinfo = i2c_get_bus_info(busno);
+   Bus_Info * curinfo = i2c_get_bus_info(busno, DISPSEL_NONE);
    assert(curinfo);
    i2c_report_active_display(curinfo, depth);
 }
@@ -1204,7 +1209,7 @@ void i2c_report_bus(int busno) {
   if (busno >= busct)
      fprintf(stderr, "Invalid I2C bus number: %d\n", busno);
   else {
-     Bus_Info * busInfo = i2c_get_bus_info(busno);
+     Bus_Info * busInfo = i2c_get_bus_info(busno, DISPSEL_NONE);
      report_businfo(busInfo, 0);
   }
 
@@ -1242,7 +1247,7 @@ int i2c_report_buses(bool report_all, int depth) {
    }
    int busno = 0;
    for (busno=0; busno < busct; busno++) {
-      Bus_Info * busInfo = i2c_get_bus_info(busno);
+      Bus_Info * busInfo = i2c_get_bus_info(busno, DISPSEL_NONE);
       if ( (busInfo->flags & I2C_BUS_ADDR_0X50) || report_all) {
          report_businfo(busInfo, depth);
          reported_ct++;

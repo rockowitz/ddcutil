@@ -299,13 +299,12 @@ int main(int argc, char *argv[]) {
       if (parsed_cmd->pdid) {
          Display_Ref * dref = get_display_ref_for_display_identifier(
                                  parsed_cmd->pdid, true /* emit_error_msg */);
-         if (dref)
+         if (!dref)
+            ok = false;
+         else
             dh = ddc_open_display(dref, CALLOPT_ERR_ABORT | CALLOPT_ERR_MSG);
-
-         // if (!dref)      // not needed - ddc_open_display() aborts
-         //    ok = false;
       }
-      // if (ok)
+      if (ok)
          ok = loadvcp_by_file(fn, dh);
       main_rc = (ok) ? EXIT_SUCCESS : EXIT_FAILURE;
    }

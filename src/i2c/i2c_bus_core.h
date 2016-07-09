@@ -59,12 +59,12 @@ int  i2c_get_busct();
 void i2c_report_bus(int busno);
 int  i2c_report_buses(bool report_all, int depth);
 
-Display_Info_List i2c_get_valid_displays();
+Display_Info_List i2c_get_displays();
 
-Bus_Info * i2c_get_bus_info(int busno);
+Bus_Info * i2c_get_bus_info(int busno, Byte findopts);
 Bus_Info * i2c_check_bus(Bus_Info * bus_info);
-Bus_Info * i2c_find_bus_info_by_model_sn(const char * model, const char * sn);
-Bus_Info * i2c_find_bus_info_by_edid(const Byte * pEdidBytes);
+Bus_Info * i2c_find_bus_info_by_model_sn(const char * model, const char * sn, Byte findopts);
+Bus_Info * i2c_find_bus_info_by_edid(const Byte * pEdidBytes, Byte findopts);
 // void report_businfo(Bus_Info * bus_info);
 bool i2c_is_valid_bus(int busno, bool emit_error_msg);
 

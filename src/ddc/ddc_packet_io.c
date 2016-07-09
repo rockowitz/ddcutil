@@ -111,7 +111,7 @@ Display_Handle* ddc_open_display(Display_Ref * dref,  Byte open_flags) {
          // TODO: handle open failure, when failure_action = return error
          // all callers currently EXIT_IF_FAILURE
          if (fd >= 0) {    // will be < 0 if open_i2c_bus failed and failure_action = RETURN_ERROR_IF_FAILURE
-            DBGMSF(debug, "Calling set_addr(,0x37) for dref=%p %s", dref, dref_short_name(dref));
+            DBGMSF(debug, "Calling set_addr(,0x37) for dref=%p %s", dref, dref_repr(dref));
             i2c_set_addr(fd, 0x37);
 
             // Is this needed?
@@ -119,7 +119,7 @@ Display_Handle* ddc_open_display(Display_Ref * dref,  Byte open_flags) {
             // sleepMillisWithTrace(DDC_TIMEOUT_MILLIS_DEFAULT, __func__, NULL);
 
             pDispHandle = create_bus_display_handle_from_display_ref(fd, dref);
-            Bus_Info * bus_info = i2c_get_bus_info(dref->busno);
+            Bus_Info * bus_info = i2c_get_bus_info(dref->busno, DISPSEL_VALID_ONLY);   // or DISPSEL_NONE?
             pDispHandle->pedid = bus_info->edid;
          }
       else {

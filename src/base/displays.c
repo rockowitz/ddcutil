@@ -311,6 +311,14 @@ char * dref_short_name(Display_Ref * dref) {
 }
 
 
+char * dref_repr(Display_Ref * dref) {
+   char buf[100];
+   static char display_ref_short_id_buffer[100];
+   snprintf(display_ref_short_id_buffer, 100,
+            "Display_Ref[%s]", dref_short_name_r(dref, buf, 100) );
+   return display_ref_short_id_buffer;
+}
+
 
 // *** Display_Handle ***
 

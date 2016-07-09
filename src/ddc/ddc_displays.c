@@ -109,6 +109,7 @@ bool ddc_is_valid_display_ref(Display_Ref * dref, bool emit_error_msg) {
  *    or an ADL adapter.display number, NULL if display not found
  */
 Display_Ref* get_display_ref_for_display_identifier(Display_Identifier* pdid, bool emit_error_msg) {
+   bool debug = true;
    Display_Ref* dref = NULL;
    bool validated = true;
 
@@ -129,13 +130,13 @@ Display_Ref* get_display_ref_for_display_identifier(Display_Identifier* pdid, bo
       validated = false;
       break;
    case DISP_ID_MONSER:
-      dref = ddc_find_display_by_model_and_sn(pdid->model_name, pdid->serial_ascii);
+      dref = ddc_find_display_by_model_and_sn(pdid->model_name, pdid->serial_ascii, DISPSEL_VALID_ONLY);
       if (!dref && emit_error_msg) {
          fprintf(stderr, "Unable to find monitor with the specified model and serial number\n");
       }
       break;
    case DISP_ID_EDID:
-      dref = ddc_find_display_by_edid(pdid->edidbytes);
+      dref = ddc_find_display_by_edid(pdid->edidbytes, DISPSEL_VALID_ONLY);
       if (!dref && emit_error_msg) {
          fprintf(stderr, "Unable to find monitor with the specified EDID\n" );
       }
@@ -147,7 +148,7 @@ Display_Ref* get_display_ref_for_display_identifier(Display_Identifier* pdid, bo
        }
        break;
       break;
-   // no default case because switch is exhaustive, compiler warns if case missing
+   // no default case because switch is exhaustive
    }  // switch
 
    if (dref) {
@@ -159,7 +160,12 @@ Display_Ref* get_display_ref_for_display_identifier(Display_Identifier* pdid, bo
       }
    }
 
-   // DBGMSG("Returning: %s", (pdref)?"non-null": "NULL" );
+   if (debug) {
+      if (dref)
+         DBGMSG("Returning: %p  %s", dref, dref_repr(dref) );
+      else
+         DBGMSG("Returning: NULL");
+   }
    return dref;
 }
 
@@ -185,7 +191,7 @@ void report_display_info(Display_Info * dinfo, int depth) {
 //
 
 /* Creates a list of all displays found.  The list first contains any displays
- * on /dev/i2c-n busses, then any ADL displays.
+ * on /dev/i2c-n buses, then any ADL displays, then USB connected displays.
  *
  * The displays are assigned a display number (starting from 1) based on the
  * above order.
@@ -200,9 +206,9 @@ Display_Info_List * ddc_get_valid_displays() {
    DBGMSF(debug, "Starting");
    int ndx;
 
-   Display_Info_List i2c_displays = i2c_get_valid_displays();
+   Display_Info_List i2c_displays = i2c_get_displays();
    if (debug) {
-      DBGMSG("i2c_displays returned from i2c_get_valid_displays():");
+      DBGMSG("i2c_displays returned from i2c_get_displays():");
       report_display_info_list(&i2c_displays,1);
    }
 
@@ -294,7 +300,7 @@ Display_Info_List * ddc_get_valid_displays() {
  *    NULL if dispno < 1 or dispno > number of actual displays
  */
 Display_Ref* ddc_find_display_by_dispno(int dispno) {
-   bool debug = false;
+   bool debug = true;
    DBGMSF(debug, "Starting.  dispno=%d", dispno);
 
    Display_Ref * result = NULL;
@@ -310,11 +316,14 @@ Display_Ref* ddc_find_display_by_dispno(int dispno) {
       }
    }
 
+   DBGMSF(debug, "Returning: %p  %s", result, (result)?dref_repr(result):"" );
+#ifdef OLD
    if (debug) {
       DBGMSG("Returning: %p  ", result );
       if (result)
          report_display_ref(result, 0);
    }
+#endif
 
    return result;
 }
@@ -333,13 +342,14 @@ Display_Ref* ddc_find_display_by_dispno(int dispno) {
 Display_Ref*
 ddc_find_display_by_model_and_sn(
    const char * model,
-   const char * sn)
+   const char * sn,
+   Byte         findopts)
 {
-   // DBGMSG("Starting.  model=%s, sn=%s   ", model, sn );
-   // printf("(%s) WARNING: Support for USB devices unimplemented\n", __func__);
+   bool debug = true;
+   DBGMSF(debug, "Starting.  model=%s, sn=%s, findopts=0x%02x", model, sn, findopts );
 
    Display_Ref * result = NULL;
-   Bus_Info * businfo = i2c_find_bus_info_by_model_sn(model, sn);
+   Bus_Info * businfo = i2c_find_bus_info_by_model_sn(model, sn, findopts);
    if (businfo) {
       result = create_bus_display_ref(businfo->busno);
    }
@@ -350,9 +360,10 @@ ddc_find_display_by_model_and_sn(
    if (!result)
       result = usb_find_display_by_model_sn(model, sn);
 
-   // DBGMSG("Returning: %p  ", result );
+   DBGMSF(debug, "Returning: %p  %s", result, (result)?dref_repr(result):"" );
    return result;
 }
+
 
 Display_Ref *
 ddc_find_display_by_usb_busnum_devnum(
@@ -365,7 +376,7 @@ ddc_find_display_by_usb_busnum_devnum(
 
    Display_Ref * result = usb_find_display_by_busnum_devnum(busnum, devnum);
 
-   DBGMSF(debug, "Returning: %p  ", result );
+   DBGMSF(debug, "Returning: %p  %s", result, (result)?dref_repr(result):"" );
    return result;
 }
 
@@ -380,10 +391,11 @@ ddc_find_display_by_usb_busnum_devnum(
  *    NULL if not found
  */
 Display_Ref*
-ddc_find_display_by_edid(const Byte * pEdidBytes) {
-   // DBGMSG("Starting.  model=%s, sn=%s   ", model, sn );
+ddc_find_display_by_edid(const Byte * pEdidBytes, Byte findopts) {
+   bool debug = true;
+   DBGMSF(debug, "Starting.  pEdidBytes=%p, findopts=0x%02x", pEdidBytes, findopts );
    Display_Ref * result = NULL;
-   Bus_Info * businfo = i2c_find_bus_info_by_edid((pEdidBytes));
+   Bus_Info * businfo = i2c_find_bus_info_by_edid(pEdidBytes, findopts);
    if (businfo) {
       result = create_bus_display_ref(businfo->busno);
    }
@@ -392,10 +404,9 @@ ddc_find_display_by_edid(const Byte * pEdidBytes) {
       result = adlshim_find_display_by_edid(pEdidBytes);
 
    if (!result)
-      // printf("(%s) WARNING: Support for USB edid unimplemented\n", __func__);
       result = usb_find_display_by_edid(pEdidBytes);
 
-   // DBGMSG("Returning: %p  ", result );
+   DBGMSF(debug, "Returning: %p  %s", result, (result)?dref_repr(result):"" );
    return result;
 }
 

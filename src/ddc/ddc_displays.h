@@ -45,9 +45,11 @@ ddc_find_display_by_dispno(
 Display_Ref*
 ddc_find_display_by_model_and_sn(
    const char *  model,
-   const char *  sn);
+   const char *  sn,
+   Byte          findopts);
 
 Display_Ref* ddc_find_display_by_edid(
-   const Byte *  pEdidBytes);
+   const Byte *  pEdidBytes,
+   Byte          findopts);
 
 #endif /* DDC_DISPLAYS_H_ */

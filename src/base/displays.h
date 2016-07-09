@@ -129,6 +129,7 @@ Display_Ref * create_usb_display_ref(int bus, int device, char * hiddev_devname)
 void          report_display_ref(Display_Ref * dref, int depth);
 char *        dref_short_name_r(Display_Ref * dref, char * buf, int bufsize);
 char *        dref_short_name(Display_Ref * dref);  // value valid until next call
+char *        dref_repr(Display_Ref * dref);  // value valid until next call
 Display_Ref * clone_display_ref(Display_Ref * old);
 void          free_display_ref(Display_Ref * dref);
 
@@ -194,5 +195,19 @@ typedef struct {
 
 void report_display_info(Display_Info * dinfo, int depth);
 void report_display_info_list(Display_Info_List * pinfo_list, int depth);
+
+
+// For internal display selection functions
+
+#define DISPSEL_NONE       0x00
+#define DISPSEL_VALID_ONLY 0x80
+#ifdef FUTURE
+#define DISPSEL_I2C        0x40
+#define DISPSEL_ADL        0x20
+#define DISPSEL_USB        0x10
+#define DISPSEL_ANY        (DISPSEL_I2C | DISPSEL_ADL | DISPSEL_USB)
+#endif
+
+
 
 #endif /* DISPLAYS_H_ */
