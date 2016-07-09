@@ -41,26 +41,25 @@
 #include "util/hiddev_reports.h"
 #include "util/report_util.h"
 #include "util/string_util.h"
-// #include "util/x11_util.h"         // for EDID fallback
 
 #include "base/core.h"
 #include "base/ddc_errno.h"
 #include "base/execution_stats.h"
 #include "base/linux_errno.h"
 
-// #include "i2c/i2c_bus_core.h"     // for EDID fallback
-// #include "adl/adl_shim.h"         // for EDID fallback
-
 #include "usb/usb_base.h"
 #include "usb/usb_edid.h"
 
 #include "usb/usb_core.h"
 
-#include "usb/usb_vcp.h"      // TEMP for simple_get_edid()
-
 
 // Trace class for this file
-// static Trace_Group TRACE_GROUP = TRC_USB;   // not currently used, comment out to avoid warning
+static Trace_Group TRACE_GROUP = TRC_USB;  // may be unused if all diagnostics turned off
+
+// n. #pragma GCC diagnostic ignored "-Wunused-variable" not working
+void usb_core_unused_function_to_avoid_unused_variable_warning() {
+   printf("0x%02x\n",TRACE_GROUP);
+}
 
 // Forward declarations
 static GPtrArray * get_usb_monitor_list();

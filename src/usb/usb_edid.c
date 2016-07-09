@@ -58,13 +58,25 @@
 #include "usb/usb_core.h"
 #include "usb/usb_edid.h"
 
-#include "usb/usb_vcp.h"      // TEMP for simple_get_edid()
+#include "usb/usb_vcp.h"      // get_multibyte_value_by_ucode()
+
+
 
 
 // Trace class for this file
+
+// Doesn't work
+// Avoid unused variable warning if all debug code turned off
+// #pragma GCC diagnostic push
+// #pragma GCC diagnostic ignored "-Wunused-variable"
+// static Trace_Group TRACE_GROUP = TRC_USB;
+// #pragma GCC diagnostic pop
+
 static Trace_Group TRACE_GROUP = TRC_USB;
 
-
+void usb_edid_unused_function_to_avoid_unused_variable_warning() {
+   printf("0x%02x\n",TRACE_GROUP);
+}
 
 // struct model_sn_pair
 

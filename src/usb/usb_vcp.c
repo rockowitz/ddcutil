@@ -247,9 +247,15 @@ __s32 usb_get_vesa_version(int fd) {
 
 
 Buffer *
-get_multibyte_value_by_report_type_and_ucode(int fd, __u32 report_type, __u32 usage_code, __u32 num_values) {
+get_multibyte_value_by_report_type_and_ucode(
+      int   fd,
+      __u32 report_type,
+      __u32 usage_code,
+      __u32 num_values)
+{
    bool debug = true;
-   DBGMSF(debug, "Starting. fd=%d, report_type=%d", fd, report_type);
+   DBGMSF(debug, "Starting. fd=%d, report_type=%d, usage_code=0x%08x, num_values=%d",
+                 fd, report_type, usage_code, num_values);
    // Global_Status_Code gsc = 0;
    int rc;
    Buffer * result = NULL;
@@ -262,17 +268,22 @@ get_multibyte_value_by_report_type_and_ucode(int fd, __u32 report_type, __u32 us
    uref_multi.uref.report_type = report_type;
    uref_multi.uref.report_id   = HID_REPORT_ID_UNKNOWN;
    uref_multi.uref.usage_code  = usage_code;
-   uref_multi.num_values = num_values; // needed? yes!
+   uref_multi.num_values       = num_values; // needed? yes!
 
    rc = ioctl(fd, HIDIOCGUSAGES, &uref_multi);  // Fills in usage value
    if (rc != 0) {
       REPORT_IOCTL_ERROR("HIDIOCGUSAGES", rc);
       goto bye;
    }
+#ifdef OLD
    Byte edidbuf2[128];
    for (int ndx=0; ndx<128; ndx++)
       edidbuf2[ndx] = uref_multi.values[ndx] & 0xff;
    result = buffer_new_with_value(edidbuf2, 128, __func__);
+#endif
+   result = buffer_new(num_values, __func__);
+   for (int ndx=0; ndx<num_values; ndx++)
+      buffer_add(result, uref_multi.values[ndx] & 0xff);
 
 bye:
    if (debug) {
