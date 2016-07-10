@@ -46,11 +46,12 @@
 
 #include "adl/adl_shim.h"
 
-#include "usb/usb_core.h"
+#include "usb/usb_displays.h"
 
 #include "ddc/try_stats.h"
 
 #include "ddc/ddc_packet_io.h"
+
 
 // Trace class for this file
 static Trace_Group TRACE_GROUP = TRC_DDC;

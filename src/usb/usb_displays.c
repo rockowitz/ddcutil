@@ -50,7 +50,7 @@
 #include "usb/usb_base.h"
 #include "usb/usb_edid.h"
 
-#include "usb/usb_core.h"
+#include "usb/usb_displays.h"
 
 
 // Trace class for this file

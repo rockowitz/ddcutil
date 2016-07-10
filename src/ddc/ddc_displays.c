@@ -42,13 +42,14 @@
 #include "adl/adl_errors.h"
 #include "adl/adl_shim.h"
 
-#include "usb/usb_core.h"
+#include "usb/usb_displays.h"
 
 #include "ddc/ddc_packet_io.h"
 #include "ddc/ddc_vcp.h"
 #include "ddc/ddc_vcp_version.h"
 
 #include "ddc/ddc_displays.h"
+
 
 
 // Trace class for this file

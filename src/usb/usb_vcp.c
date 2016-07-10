@@ -42,7 +42,7 @@
 #include "base/execution_stats.h"
 #include "base/linux_errno.h"
 
-#include "usb/usb_core.h"
+#include "usb/usb_displays.h"
 
 #include "usb/usb_vcp.h"
 

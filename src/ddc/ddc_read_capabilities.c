@@ -37,7 +37,7 @@
 #include "base/core.h"
 #include "base/ddc_errno.h"
 
-#include "usb/usb_core.h"
+#include "usb/usb_displays.h"
 
 #include "ddc/ddc_multi_part_io.h"
 #include "ddc/ddc_packet_io.h"

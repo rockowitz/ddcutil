@@ -55,7 +55,7 @@
 #include "i2c/i2c_bus_core.h"     // for EDID fallback
 #include "adl/adl_shim.h"         // for EDID fallback
 
-#include "usb/usb_core.h"
+#include "usb/usb_base.h"
 
 #include "usb/usb_edid.h"
 

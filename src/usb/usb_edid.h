@@ -28,12 +28,8 @@
 
 #include <linux/hiddev.h>
 
-// #include "util/coredefs.h"
 #include "util/edid.h"
 
-// #include "base/core.h"
-// #include "base/displays.h"
-// #include "base/ddc_packets.h"
 
 Parsed_Edid * get_hiddev_edid_with_fallback(int fd, struct hiddev_devinfo * dev_info);
 

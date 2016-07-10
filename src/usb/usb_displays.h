@@ -21,8 +21,8 @@
  * </endcopyright>
  */
 
-#ifndef USB_CORE_H_
-#define USB_CORE_H_
+#ifndef USB_DISPLAYS_H_
+#define USB_DISPLAYS_H_
 
 #include <linux/hiddev.h>     // for __u32
 
@@ -52,13 +52,7 @@ Display_Ref * usb_find_display_by_busnum_devnum(int busnum, int devnum);
 Parsed_Edid * usb_get_parsed_edid_by_display_ref(   Display_Ref    * dref);
 Parsed_Edid * usb_get_parsed_edid_by_display_handle(Display_Handle * dh);
 
-
-
 char * usb_get_capabilities_string_by_display_handle(Display_Handle * dh);
-
-#ifdef NO_LONGER_NEEDED
-char * get_hiddev_devname_by_display_ref(Display_Ref * dref);
-#endif
 
 
 // struct defs here for sharing with usb_vcp
@@ -94,4 +88,4 @@ typedef struct usb_monitor_info {
 
 Usb_Monitor_Info * usb_find_monitor_by_display_handle(Display_Handle * dh);
 
-#endif /* USB_CORE_H_ */
+#endif /* USB_DISPLAYS_H_ */

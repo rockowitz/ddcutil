@@ -30,9 +30,8 @@
 #include "util/edid.h"
 #include "i2c/i2c_bus_core.h"
 #include "adl/adl_shim.h"
-#include "usb/usb_core.h"
-
 #include "ddc/ddc_edid.h"
+#include "usb/usb_displays.h"
 
 
 // Trace class for this file

@@ -39,7 +39,7 @@
 
 #include "adl/adl_shim.h"
 
-#include "usb/usb_core.h"
+#include "usb/usb_displays.h"
 #include "usb/usb_vcp.h"
 
 #include "ddc/ddc_multi_part_io.h"
