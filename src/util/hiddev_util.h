@@ -64,7 +64,7 @@ void report_hid_field_locator(struct hid_field_locator * ploc, int depth);
 
 struct hid_field_locator*
 find_report(int fd, __u32 report_type, __u32 ucode, bool match_all_ucodes);
-Buffer * get_multibyte_report_value(int fd, struct hid_field_locator * loc);
+Buffer * get_multibyte_report_value_by_hid_field_locator(int fd, struct hid_field_locator * loc);
 Buffer * get_hiddev_edid(int fd);
 
 

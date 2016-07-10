@@ -1,4 +1,4 @@
-/* usb_core.h
+/* usb_displays.h
  *
  * <copyright>
  * Copyright (C) 2016 Sanford Rockowitz <rockowitz@minsoft.com>

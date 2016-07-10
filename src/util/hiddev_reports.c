@@ -423,6 +423,17 @@ void report_hiddev_usage_ref(struct hiddev_usage_ref * uref, int depth) {
 }
 
 
+void report_hiddev_usage_ref_multi(struct hiddev_usage_ref_multi * uref_multi, int depth) {
+   int d1 = depth+1;
+   // int d2 = depth+2;
+   rpt_structure_loc("hiddev_usage_ref_multi", uref_multi, depth);
+   report_hiddev_usage_ref(&uref_multi->uref, d1);
+   rpt_vstring(d1, "%-20s: %d", "num_values", uref_multi->num_values);
+   rpt_vstring(d1, "%-20s at %p", "values", &uref_multi->values);
+   // rpt_hex_dump(&uref_multi->values, uref_multi->num_values, d2);
+}
+
+
 /** Reports a usage code for a field, based on the index, and also optionally the
  *  usage value of the field.
  *

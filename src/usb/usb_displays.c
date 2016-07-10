@@ -1,4 +1,4 @@
-/* usb_core.c
+/* usb_displays.c
  *
  * <copyright>
  * Copyright (C) 2014-2016 Sanford Rockowitz <rockowitz@minsoft.com>
@@ -22,19 +22,12 @@
  */
 
 #include <assert.h>
-#include <dirent.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <glib.h>
 #include <linux/hiddev.h>
-#include <linux/limits.h>
-#include <stddef.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 #include <sys/ioctl.h>
 #include <unistd.h>
-#include <wchar.h>
 
 #include "util/device_id_util.h"
 #include "util/hiddev_util.h"
