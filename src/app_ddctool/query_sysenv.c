@@ -369,8 +369,6 @@ void check_i2c_devices(struct driver_name_node * driver_list) {
    printf("\nCurrent user: %s (%u)\n\n", pwd->pw_name, uid);
    uname = strdup(pwd->pw_name);
 
-
-
    bool all_i2c_rw = false;
    int busct = i2c_get_busct();   // Consider replacing with local code
    if (busct == 0 && !just_fglrx) {
@@ -510,6 +508,13 @@ void check_i2c_devices(struct driver_name_node * driver_list) {
 }
 
 
+/* Looks in the /sys file system to check if a module is loaded.
+ *
+ * Arguments:
+ *   module_name    module name
+ *
+ * Returns:         true if the module is loaded, false if not
+ */
 bool is_module_loaded_using_sysfs(char * module_name) {
    bool debug = false;
    struct stat statbuf;
@@ -518,11 +523,11 @@ bool is_module_loaded_using_sysfs(char * module_name) {
    snprintf(module_fn, sizeof(module_fn), "/sys/module/%s", module_name);
    int rc = stat(module_fn, &statbuf);
    if (rc < 0) {
-       // int errsv = errno;
-       // will be ENOENT (2) if file not found
-       // DBGMSF(debug, "stat(%s) returned %d, errno = %s",
-       //       module_fn, rc, linux_errno_desc(errsv));
-       found = false;
+      // int errsv = errno;
+      // will be ENOENT (2) if file not found
+      // DBGMSF(debug, "stat(%s) returned %d, errno = %s",
+      //       module_fn, rc, linux_errno_desc(errsv));
+      found = false;
    }
    else {
       // if (S_ISDIR(statbuf.st_mode))   // pointless
@@ -533,7 +538,14 @@ bool is_module_loaded_using_sysfs(char * module_name) {
 }
 
 
-
+/* Checks if module i2c_dev is required and if so whether it is loaded.
+ * Reports the result.
+ *
+ * Arguments:
+ *    driver_list    list of drivers
+ *
+ * Returns:          nothing
+ */
 void check_i2c_dev_module(struct driver_name_node * driver_list) {
    printf("\nChecking for module i2c_dev...\n");
 
@@ -541,12 +553,10 @@ void check_i2c_dev_module(struct driver_name_node * driver_list) {
 
    bool module_required = !only_nvidia_or_fglrx(driver_list);
    if (!module_required) {
-      printf("Only using proprietary nvidia or fglrx driver. Module i2c_dev not required.\n");
-      if (output_level >= OL_VERBOSE) {
-         printf("Remaining i2c_dev detail is purely informational.\n");
-      }
-      else
+      printf("Using only proprietary nvidia or fglrx driver. Module i2c_dev not required.\n");
+      if (output_level < OL_VERBOSE)
          return;
+      printf("Remaining i2c_dev detail is purely informational.\n");
    }
 
    bool i2c_dev_is_loaded = is_module_loaded_using_sysfs("i2c_dev");
@@ -832,6 +842,14 @@ struct driver_name_node * query_card_and_driver_using_sysfs() {
    return driver_list;
 }
 
+
+/* Performs checks specific to the nvidia and fglrx proprietary video drivers.
+ *
+ * Arguments:
+ *    driver list    list of loaded drivers
+ *
+ * Returns:          nothing
+ */
 void driver_specific_tests(struct driver_name_node * driver_list) {
    printf("\nPerforming driver specific checks...\n");
    if (found_driver(driver_list, "nvidia")) {
@@ -839,7 +857,6 @@ void driver_specific_tests(struct driver_name_node * driver_list) {
       printf("(needed for some newer Nvidia cards).\n");
       execute_shell_cmd("grep -iH i2c /etc/X11/xorg.conf /etc/X11/xorg.conf.d/*", 1);
    }
-
 
    if (found_driver(driver_list, "fglrx")) {
 #ifdef HAVE_ADL
@@ -876,6 +893,7 @@ void query_loaded_modules_using_sysfs() {
       printf("   Module %-16s is %sloaded\n", curmodule, (is_loaded) ? "" : "NOT ");
    }
 }
+
 
 void query_i2c_bus_using_sysfs() {
    struct dirent *dent;
@@ -944,6 +962,12 @@ void query_i2c_buses() {
 }
 
 
+/* Reports EDIDs known to X11
+ *
+ * Arguments:    none
+ *
+ * Returns:      nothing
+ */
 void query_x11() {
    GPtrArray* edid_recs = get_x11_edids();
    puts("");
@@ -974,6 +998,12 @@ void query_x11() {
 }
 
 
+/* Uses i2cdetect to probe active addresses on I2C buses
+ *
+ * Arguments:    none
+ *
+ * Returns:      nothing
+ */
 void query_using_i2cdetect() {
    printf("Examining I2C buses using i2cdetect: \n");
    GPtrArray * busnames = execute_shell_cmd_collect("ls /dev/i2c*");
@@ -996,6 +1026,12 @@ void query_using_i2cdetect() {
 }
 
 
+/* Report information about USB connected monitors
+ *
+ * Arguments:    none
+ *
+ * Returns:      nothing
+ */
 void query_usb_monitors() {
    printf("\nChecking for USB connected monitors...\n");
 
@@ -1003,7 +1039,6 @@ void query_usb_monitors() {
    rpt_vstring(1, "Listing /dev/usb...");
    execute_shell_cmd("ls -l /dev/usb", 2);
    puts("");
-
 
    int rc;
 
@@ -1067,6 +1102,12 @@ void query_usb_monitors() {
 }
 
 
+/* Master function to query the system environment
+ *
+ * Arguments:    none
+ *
+ * Returns:      nothing
+ */
 void query_sysenv() {
    query_base_env();
 
