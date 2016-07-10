@@ -28,8 +28,6 @@
 
 #include "util/coredefs.h"
 
-// #include "base/core.h"
-
 
 #define REPORT_IOCTL_ERROR_AND_QUIT(_ioctl_name, _rc) \
    do { \

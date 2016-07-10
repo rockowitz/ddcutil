@@ -56,11 +56,8 @@
 #include "adl/adl_shim.h"         // for EDID fallback
 
 #include "usb/usb_core.h"
+
 #include "usb/usb_edid.h"
-
-#include "usb/usb_vcp.h"      // get_multibyte_value_by_ucode()
-
-
 
 
 // Trace class for this file

@@ -1,5 +1,7 @@
 /* usb_vcp.h
  *
+ * Get and set VCP feature codes for USB connected monitors.
+ *
  * <copyright>
  * Copyright (C) 2016 Sanford Rockowitz <rockowitz@minsoft.com>
  *
@@ -24,6 +26,8 @@
 #ifndef USB_VCP_H_
 #define USB_VCP_H_
 
+#include <linux/hiddev.h>
+
 #include "util/coredefs.h"
 
 #include "base/displays.h"
@@ -31,7 +35,14 @@
 
 #include "vcp/vcp_feature_values.h"
 
-#include "usb_core.h"
+
+Global_Status_Code
+usb_get_usage_value_by_report_type_and_ucode(
+      int fd,
+      __u32 report_type,
+      __u32 usage_code,
+      __s32 * maxval,
+      __s32 * curval);
 
 Global_Status_Code usb_get_nontable_vcp_value(
       Display_Handle *               dh,
@@ -52,15 +63,6 @@ Global_Status_Code usb_set_nontable_vcp_value(
 Global_Status_Code usb_set_vcp_value(
       Display_Handle *           dh,
       Single_Vcp_Value *         valrec);
-
-
-Global_Status_Code
-usb_get_usage_alt(int fd, __u32 report_type, __u32 usage_code, __s32 * maxval, __s32 * curval);
-
-// temporarily here
-Buffer * get_multibyte_value_by_report_type_and_ucode(int fd, __u32 report_type, __u32 usage_code, __u32 num_values);
-Buffer * get_multibyte_value_by_ucode(int fd, __u32 usage_code, __u32 num_values);
-
 
 __s32 usb_get_vesa_version(int fd);
 

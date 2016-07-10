@@ -37,8 +37,6 @@
 #include "usb/usb_base.h"
 
 
-
-
 bool check_usb_monitor( char * device_name );
 
 Display_Info_List usb_get_valid_displays();
@@ -46,15 +44,6 @@ Display_Info_List usb_get_valid_displays();
 bool usb_is_valid_display_ref(Display_Ref * dref, bool emit_error_msg);
 
 void usb_show_active_display_by_display_ref(Display_Ref * dref, int depth);
-
-
-
-int hid_get_device_info(int fd, struct hiddev_devinfo *     dinfo, Byte calloptions);
-int hid_get_report_info(int fd, struct hiddev_report_info * rinfo, Byte calloptions);
-int hid_get_field_info( int fd, struct hiddev_field_info *  finfo, Byte calloptions);
-int hid_get_usage_code( int fd, struct hiddev_usage_ref *   uref,  Byte calloptions);
-int hid_get_usage_value(int fd, struct hiddev_usage_ref *   uref,  Byte calloptions);
-int hid_get_report(     int fd, struct hiddev_report_info * rinfo, Byte calloptions);
 
 Display_Ref * usb_find_display_by_model_sn(const char * model, const char * sn);
 Display_Ref * usb_find_display_by_edid(const Byte * edidbytes);
@@ -68,7 +57,7 @@ Parsed_Edid * usb_get_parsed_edid_by_display_handle(Display_Handle * dh);
 char * usb_get_capabilities_string_by_display_handle(Display_Handle * dh);
 
 #ifdef NO_LONGER_NEEDED
-char * get_hiddev_devnae_by_display_ref(Display_Ref * dref);
+char * get_hiddev_devname_by_display_ref(Display_Ref * dref);
 #endif
 
 

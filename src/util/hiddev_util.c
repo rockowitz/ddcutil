@@ -936,6 +936,71 @@ bye:
 }
 
 
+
+
+Buffer *
+get_multibyte_value_by_report_type_and_ucode(
+      int   fd,
+      __u32 report_type,
+      __u32 usage_code,
+      __u32 num_values)
+{
+   bool debug = true;
+   if (debug)
+      printf("(%s) Starting. fd=%d, report_type=%d, usage_code=0x%08x, num_values=%d",
+                 __func__, fd, report_type, usage_code, num_values);
+   // Global_Status_Code gsc = 0;
+   int rc;
+   Buffer * result = NULL;
+
+   assert(report_type == HID_REPORT_TYPE_FEATURE ||
+          report_type == HID_REPORT_TYPE_INPUT);   // *** CG19 ***
+
+   struct hiddev_usage_ref_multi uref_multi;
+   memset(&uref_multi, 0, sizeof(uref_multi));  // initialize all fields to make valgrind happy
+   uref_multi.uref.report_type = report_type;
+   uref_multi.uref.report_id   = HID_REPORT_ID_UNKNOWN;
+   uref_multi.uref.usage_code  = usage_code;
+   uref_multi.num_values       = num_values; // needed? yes!
+
+   rc = ioctl(fd, HIDIOCGUSAGES, &uref_multi);  // Fills in usage value
+   if (rc != 0) {
+      REPORT_IOCTL_ERROR("HIDIOCGUSAGES", rc);
+      goto bye;
+   }
+#ifdef OLD
+   Byte edidbuf2[128];
+   for (int ndx=0; ndx<128; ndx++)
+      edidbuf2[ndx] = uref_multi.values[ndx] & 0xff;
+   result = buffer_new_with_value(edidbuf2, 128, __func__);
+#endif
+   result = buffer_new(num_values, __func__);
+   for (int ndx=0; ndx<num_values; ndx++)
+      buffer_add(result, uref_multi.values[ndx] & 0xff);
+
+bye:
+   if (debug) {
+      printf("(%s) Returning: %p\n", __func__, result);
+      if (result) {
+         buffer_dump(result);
+      }
+   }
+   return result;
+}
+
+
+Buffer *
+get_multibyte_value_by_ucode(int fd,__u32 usage_code, __u32 num_values) {
+   Buffer * result = get_multibyte_value_by_report_type_and_ucode(
+                        fd, HID_REPORT_TYPE_FEATURE, usage_code, num_values);
+    if (!result)
+            result = get_multibyte_value_by_report_type_and_ucode(
+                        fd, HID_REPORT_TYPE_INPUT, usage_code, num_values);
+    return result;
+}
+
+
+
 /* Retrieves the EDID (128 bytes) from a hiddev device representing a HID
  * compliant monitor.
  *

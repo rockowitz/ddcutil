@@ -1,5 +1,7 @@
 /* usb_vcp.c
  *
+ * Get and set VCP feature codes for USB connected monitors.
+ *
  * <copyright>
  * Copyright (C) 2016 Sanford Rockowitz <rockowitz@minsoft.com>
  *
@@ -50,102 +52,29 @@ static Trace_Group TRACE_GROUP = TRC_USB;
 
 
 //
-// *** Get and set VCP feature code values ***
+// Get and set HID usage values, parameterized only by HID data structures
 //
 
-/* Gets the current value of a usage, as identified by a Usb_Monitor_Vcp_Rec
+
+/* Gets the value of usage by specifying the usage code
  *
  * Arguments:
- *    fd      file descriptor for open hiddev device
- *    vcprec  pointer to a Usb_Monitor_Vcp_Rec identifying the value to retrieve
- *    maxval  address at which to return max value of the usage
- *    curval  address at which to return the current value of the usage
+ *   fd           file descriptor for open hiddev device
+ *   report_type  HID_REPORT_TYPE_FEATURE or HID_REPORT_TYPE_OUTPUT
+ *   usage_code   usage code to get
+ *   maxval       where to return maximum values
+ *   curval       where to return current value
  *
- * Returns:  status code
- *
- * Calls to this function are valid only for Feature or Input reports.
+ * Returns:       status code
  */
-Global_Status_Code
-usb_get_usage(int fd, Usb_Monitor_Vcp_Rec * vcprec, __s32 * maxval, __s32 * curval) {
-   bool debug = false;
-   DBGMSF(debug, "Starting. fd=%d, vcprec=%p", fd, vcprec);
-   Global_Status_Code gsc = 0;
-   int rc;
-
-   assert(vcprec->rinfo->report_type == vcprec->report_type);
-   assert(vcprec->rinfo->report_type == HID_REPORT_TYPE_FEATURE ||
-          vcprec->rinfo->report_type == HID_REPORT_TYPE_INPUT);   // *** CG19 ***
-   assert(vcprec->rinfo->report_id   == vcprec->report_id);
-
-   DBGMSF(debug, "report_type=%d (%s), report_id=%d, field_index=%d, usage_index=%d",
-                 vcprec->report_type,
-                 report_type_name(vcprec->report_type),
-                 vcprec->report_id,
-                 vcprec->field_index,
-                 vcprec->usage_index);
-   hid_get_report(fd, vcprec->rinfo, CALLOPT_ERR_MSG|CALLOPT_ERR_ABORT);
-
-#ifdef OLD
-   rc = ioctl(fd, HIDIOCGREPORT, vcprec->rinfo);
-   if (rc != 0) {
-      REPORT_IOCTL_ERROR("HIDIOCGREPORT", rc);
-      // printf("(%s) Unable to get Feature report %d\n", __func__, vcprec->report_id);
-      PROGRAM_LOGIC_ERROR("HIDIOCGREPORT returned %d for report %d", vcprec->report_id); // terminates execution
-      gsc = DDCRC_REPORTED_UNSUPPORTED;   // *** TEMP **
-      goto bye;
-   }
-   // DBGMSF(debug, "HIDIOCGREPORT succeeded");
-#endif
-
-   __s32 maxval1 = vcprec->finfo->logical_maximum;
-   __s32 maxval2 = vcprec->finfo->physical_maximum;
-   DBGMSF(debug, "logical_maximum: %d", maxval1);
-   DBGMSF(debug, "physical_maximum: %d", maxval2);
-   *maxval = maxval1;
-
-   struct hiddev_usage_ref * uref = vcprec->uref;
-#ifdef DISABLE
-   uref->report_type = vcprec->report_type;
-   uref->report_id   = vcprec->report_id;
-   uref->field_index = vcprec->field_index;
-   uref->usage_index = vcprec->usage_index;
-#endif
-   if (debug)
-      report_hiddev_usage_ref(uref, 1);
-
-#ifdef DISABLE
-   rc = ioctl(fd, HIDIOCGUCODE, uref);  // Fills in usage code
-   if (rc != 0) {
-      int errsv = errno;
-      REPORT_IOCTL_ERROR("HIDIOCGUCODE", rc);
-      // occasionally see -1, errno = 22 invalid argument - for Battery System Page: Run Time to Empty
-      gsc = modulate_rc(errsv, RR_ERRNO);
-      goto bye;
-   }
-#endif
-
-   rc  = hid_get_usage_value(fd, uref, CALLOPT_ERR_MSG);
-   // rc = ioctl(fd, HIDIOCGUSAGE, uref);  // Fills in usage value
-   if (rc != 0) {
-      int errsv = errno;
-      // REPORT_IOCTL_ERROR("HIDIOCGUSAGE", rc);
-      // occasionally see -1, errno = 22 invalid argument - for Battery System Page: Run Time to Empty
-      gsc = modulate_rc(-errsv, RR_ERRNO);
-   }
-   else {
-      DBGMSF(debug, "usage_index=%d, value = 0x%08x",uref->usage_index, uref->value);
-      *curval = uref->value;
-      gsc = 0;
-   }
-
-
-   DBGMSF(debug, "Returning: %d", gsc);
-   return gsc;
-}
-
 
 Global_Status_Code
-usb_get_usage_alt(int fd, __u32 report_type, __u32 usage_code, __s32 * maxval, __s32 * curval) {
+usb_get_usage_value_by_report_type_and_ucode(
+      int     fd,
+      __u32   report_type,
+      __u32   usage_code,
+      __s32 * maxval,
+      __s32 * curval) {
    bool debug = false;
    DBGMSF(debug, "Starting. fd=%d, report_type=%d, usage_code=0x%08x", fd, report_type, usage_code);
    Global_Status_Code gsc = 0;
@@ -214,99 +143,245 @@ bye:
 }
 
 
-// 7/2016: this code is based on USB HID Monitor spec.
-// have yet to see a monitor that supports VESA Version usage code
-__s32 usb_get_vesa_version_by_report_type(int fd, __u32 report_type) {
-   bool debug = false;
-   __s32 maxval;
-   __s32 curval;
-   Global_Status_Code gsc = usb_get_usage_alt(fd, report_type, 0x00800004, &maxval, &curval);
-   if (gsc != 0 && debug) {
-      DBGMSG("report_type=%s, usb_get_usage_alt() status code %d (%s)",
-             report_type_name(report_type), gsc, gsc_name(gsc) );
-   }
+/* Sets the value of usage, with explicit report field, and usage indexes
+ *
+ * Arguments:
+ *   fd           file descriptor for open hiddev device
+ *   report_type  HID_REPORT_TYPE_FEATURE or HID_REPORT_TYPE_OUTPUT
+ *   report_id    report number
+ *   field_idx    field number
+ *   usage_idx    usage number
+ *   value        value to set
+ *
+ * Returns:       status code
+ */
 
-   // DBGMSF(debug, "report_type=%s, returning: 0x%08x", report_type_name(report_type), curval);
-   return curval;
-}
-
-
-__s32 usb_get_vesa_version(int fd) {
-   bool debug = false;
-
-   __s32 vesa_ver =  usb_get_vesa_version_by_report_type(fd, HID_REPORT_TYPE_FEATURE);
-   if (!vesa_ver)
-      vesa_ver = usb_get_vesa_version_by_report_type(fd, HID_REPORT_TYPE_INPUT);
-
-   DBGMSF(debug, "VESA version from usb_get_vesa_version_by_report_type(): 0x%08x", vesa_ver);
-
-   DBGMSF(debug, "returning: 0x%08x", vesa_ver);
-   return vesa_ver;
-}
-
-
-
-Buffer *
-get_multibyte_value_by_report_type_and_ucode(
-      int   fd,
-      __u32 report_type,
-      __u32 usage_code,
-      __u32 num_values)
+// adapted from usbmonctl
+Base_Status_Errno
+set_control_value(int fd,
+                  int report_type,
+                  int report_id,
+                  int field_idx,
+                  int usage_idx,
+                  int value)
 {
    bool debug = true;
-   DBGMSF(debug, "Starting. fd=%d, report_type=%d, usage_code=0x%08x, num_values=%d",
-                 fd, report_type, usage_code, num_values);
-   // Global_Status_Code gsc = 0;
    int rc;
-   Buffer * result = NULL;
+   Base_Status_Errno result = 0;
 
-   assert(report_type == HID_REPORT_TYPE_FEATURE ||
-          report_type == HID_REPORT_TYPE_INPUT);   // *** CG19 ***
-
-   struct hiddev_usage_ref_multi uref_multi;
-   memset(&uref_multi, 0, sizeof(uref_multi));  // initialize all fields to make valgrind happy
-   uref_multi.uref.report_type = report_type;
-   uref_multi.uref.report_id   = HID_REPORT_ID_UNKNOWN;
-   uref_multi.uref.usage_code  = usage_code;
-   uref_multi.num_values       = num_values; // needed? yes!
-
-   rc = ioctl(fd, HIDIOCGUSAGES, &uref_multi);  // Fills in usage value
-   if (rc != 0) {
-      REPORT_IOCTL_ERROR("HIDIOCGUSAGES", rc);
+#ifdef NO
+   if (control_hidden(report_id)) {
+      fprintf(stderr, "Control 0x%x is hidden because it's probably broken.\n", report_id);
+      return false;
+   }
+#endif
+   struct hiddev_report_info rinfo = {
+      .report_type = report_type,
+      .report_id   = report_id,
+   };
+   struct hiddev_usage_ref uref = {
+      .report_type = report_type,
+      .report_id   = report_id,
+      .field_index = field_idx,
+      .usage_index = usage_idx,
+      .value       = value,
+   };
+   if ((rc=ioctl(fd, HIDIOCSUSAGE, &uref)) < 0) {
+      result = -errno;
+      REPORT_IOCTL_ERROR("HIDIOSUSAGE", rc);
       goto bye;
    }
-#ifdef OLD
-   Byte edidbuf2[128];
-   for (int ndx=0; ndx<128; ndx++)
-      edidbuf2[ndx] = uref_multi.values[ndx] & 0xff;
-   result = buffer_new_with_value(edidbuf2, 128, __func__);
-#endif
-   result = buffer_new(num_values, __func__);
-   for (int ndx=0; ndx<num_values; ndx++)
-      buffer_add(result, uref_multi.values[ndx] & 0xff);
+   if ((rc=ioctl(fd, HIDIOCSREPORT, &rinfo)) < 0) {
+      result = -errno;
+      REPORT_IOCTL_ERROR("HIDIOCGUSAGE", rc);
+      goto bye;
+   }
+   result = 0;
 
 bye:
-   if (debug) {
-      printf("(%s) Returning: %p\n", __func__, result);
-      if (result) {
-         buffer_dump(result);
-      }
-   }
+   DBGMSF(debug, "Returning: %d", result);
    return result;
 }
 
 
-Buffer *
-get_multibyte_value_by_ucode(int fd,__u32 usage_code, __u32 num_values) {
-   Buffer * result = get_multibyte_value_by_report_type_and_ucode(
-                        fd, HID_REPORT_TYPE_FEATURE, usage_code, num_values);
-    if (!result)
-            result = get_multibyte_value_by_report_type_and_ucode(
-                        fd, HID_REPORT_TYPE_INPUT, usage_code, num_values);
-    return result;
+/* Sets the value of usage based on its usage code.
+ * It is left to hiddev to determine the actual report field, and usage indexes
+ *
+ * Arguments:
+ *   fd           file descriptor for open hiddev device
+ *   report_type  HID_REPORT_TYPE_FEATURE or HID_REPORT_TYPE_OUTPUT
+ *   report_id    report number
+ *   field_idx    field number
+ *   usage_idx    usage number
+ *   value        value to set
+ *
+ * Returns:       status code
+ */
+
+// not working - HIDIOCSUSAGE fails
+Global_Status_Code
+set_usage_value_by_report_type_and_ucode(int fd,
+                  __u32 report_type,
+                  __u32 usage_code,
+                  __s32 value)
+{
+   bool debug = true;
+   int rc;
+   Base_Status_Errno result = 0;
+   Global_Status_Code gsc = 0;
+
+   struct hiddev_usage_ref uref = {
+      .report_type = report_type,
+      .report_id   = HID_REPORT_ID_UNKNOWN,
+      .usage_code  = usage_code,
+      .value       = value,
+   };
+   if ((rc=ioctl(fd, HIDIOCSUSAGE, &uref)) < 0) {
+      result = -errno;
+      REPORT_IOCTL_ERROR("HIDIOSUSAGE", rc);
+      goto bye;
+   }
+   if (debug) {
+      DBGMSG("HIDIOSUAGE succeeded");
+      report_hiddev_usage_ref(&uref, 1);
+   }
+   struct hiddev_report_info rinfo = {
+         .report_type = report_type,
+         .report_id   = uref.report_id
+   };
+
+   if ((rc=ioctl(fd, HIDIOCSREPORT, &rinfo)) < 0) {
+      result = -errno;
+      REPORT_IOCTL_ERROR("HIDIOCSREPORT", rc);
+      goto bye;
+   }
+   result = 0;
+
+bye:
+   if (result != 0)
+      gsc = modulate_rc(result, RR_ERRNO);
+   DBGMSF(debug, "Returning: %d", gsc);
+   return gsc;
 }
 
 
+//
+// Get and set based on a Usb_Monitor_Vcp_Rec
+//
+
+/* Gets the current value of a usage, as identified by a Usb_Monitor_Vcp_Rec
+ *
+ * Arguments:
+ *    fd      file descriptor for open hiddev device
+ *    vcprec  pointer to a Usb_Monitor_Vcp_Rec identifying the value to retrieve
+ *    maxval  address at which to return max value of the usage
+ *    curval  address at which to return the current value of the usage
+ *
+ * Returns:  status code
+ *
+ * Calls to this function are valid only for Feature or Input reports.
+ */
+Global_Status_Code
+usb_get_usage_value_by_vcprec(int fd, Usb_Monitor_Vcp_Rec * vcprec, __s32 * maxval, __s32 * curval) {
+   bool debug = false;
+   DBGMSF(debug, "Starting. fd=%d, vcprec=%p", fd, vcprec);
+   Global_Status_Code gsc = 0;
+   int rc;
+
+   assert(vcprec->rinfo->report_type == vcprec->report_type);
+   assert(vcprec->rinfo->report_type == HID_REPORT_TYPE_FEATURE ||
+          vcprec->rinfo->report_type == HID_REPORT_TYPE_INPUT);   // *** CG19 ***
+   assert(vcprec->rinfo->report_id   == vcprec->report_id);
+
+   DBGMSF(debug, "report_type=%d (%s), report_id=%d, field_index=%d, usage_index=%d",
+                 vcprec->report_type,
+                 report_type_name(vcprec->report_type),
+                 vcprec->report_id,
+                 vcprec->field_index,
+                 vcprec->usage_index);
+   hid_get_report(fd, vcprec->rinfo, CALLOPT_ERR_MSG|CALLOPT_ERR_ABORT);
+   __s32 maxval1 = vcprec->finfo->logical_maximum;
+   __s32 maxval2 = vcprec->finfo->physical_maximum;
+   DBGMSF(debug, "logical_maximum: %d", maxval1);
+   DBGMSF(debug, "physical_maximum: %d", maxval2);
+   *maxval = maxval1;
+
+   struct hiddev_usage_ref * uref = vcprec->uref;
+#ifdef DISABLE
+   uref->report_type = vcprec->report_type;
+   uref->report_id   = vcprec->report_id;
+   uref->field_index = vcprec->field_index;
+   uref->usage_index = vcprec->usage_index;
+#endif
+   if (debug)
+      report_hiddev_usage_ref(uref, 1);
+
+   rc  = hid_get_usage_value(fd, uref, CALLOPT_ERR_MSG);
+   // rc = ioctl(fd, HIDIOCGUSAGE, uref);  // Fills in usage value
+   if (rc != 0) {
+      int errsv = errno;
+      // REPORT_IOCTL_ERROR("HIDIOCGUSAGE", rc);
+      // occasionally see -1, errno = 22 invalid argument - for Battery System Page: Run Time to Empty
+      gsc = modulate_rc(-errsv, RR_ERRNO);
+   }
+   else {
+      DBGMSF(debug, "usage_index=%d, value = 0x%08x",uref->usage_index, uref->value);
+      *curval = uref->value;
+      gsc = 0;
+   }
+
+   DBGMSF(debug, "Returning: %d", gsc);
+   return gsc;
+}
+
+
+/* Sets the value of a usage, as identified by a Usb_Monitor_Vcp_Rec
+ *
+ * Arguments:
+ *    fd         file descriptor for open hiddev device
+ *    vcprec     pointer to a Usb_Monitor_Vcp_Rec identifying the usage to set
+ *    new_value  new value
+ *
+ * Returns:  status code
+ *
+ * Calls to this function are valid only for Feature or Output reports.
+ */
+Global_Status_Code
+usb_set_usage_value_by_vcprec(int fd, Usb_Monitor_Vcp_Rec * vcprec, __s32 new_value) {
+   bool debug = true;
+   DBGMSF(debug, "Starting. fd=%d, vcprec=%p", fd, vcprec);
+   Global_Status_Code gsc = 0;
+
+   assert(vcprec->rinfo->report_type == vcprec->report_type);
+   assert(vcprec->report_type == HID_REPORT_TYPE_FEATURE ||
+          vcprec->report_type == HID_REPORT_TYPE_OUTPUT);    // CG19
+   assert(vcprec->rinfo->report_id   == vcprec->report_id);
+
+   DBGMSF(debug, "report_type=%d (%s), report_id=%d, field_index=%d, usage_index=%d, new_value=%d",
+                 vcprec->report_type,
+                 report_type_name(vcprec->report_type),
+                 vcprec->report_id,
+                 vcprec->field_index,
+                 vcprec->usage_index,
+                 new_value);
+
+   Base_Status_Errno rc = set_control_value(fd,
+                                            vcprec->report_type,
+                                            vcprec->report_id,
+                                            vcprec->field_index,
+                                            vcprec->usage_index,
+                                            new_value);
+   if (rc < 0)
+      gsc = modulate_rc(rc, RR_ERRNO);
+
+   DBGMSF(debug, "Returning: %d", gsc);
+   return gsc;
+}
+
+
+//
+//  High level getters/setters
+//
 
 /* Gets the value for a non-table feature.
  *
@@ -350,9 +425,9 @@ Global_Status_Code usb_get_nontable_vcp_value(
 
    if (use_alt_method) {
       __u32 usage_code = 0x0082 << 16 | feature_code;
-      gsc = usb_get_usage_alt(dh->fh, HID_REPORT_TYPE_FEATURE, usage_code, &maxval, &curval);
+      gsc = usb_get_usage_value_by_report_type_and_ucode(dh->fh, HID_REPORT_TYPE_FEATURE, usage_code, &maxval, &curval);
       if (gsc != 0)
-         gsc = usb_get_usage_alt(dh->fh, HID_REPORT_TYPE_INPUT, usage_code, &maxval, &curval);
+         gsc = usb_get_usage_value_by_report_type_and_ucode(dh->fh, HID_REPORT_TYPE_INPUT, usage_code, &maxval, &curval);
    }
    else {
 
@@ -376,7 +451,7 @@ Global_Status_Code usb_get_nontable_vcp_value(
 
             if (vcprec->report_type == HID_REPORT_TYPE_OUTPUT)
                continue;
-            gsc = usb_get_usage(dh->fh,  vcprec, &maxval, &curval);
+            gsc = usb_get_usage_value_by_vcprec(dh->fh,  vcprec, &maxval, &curval);
             DBGMSF(debug, "usb_get_usage() usage index: %d returned %d, maxval=%d, curval=%d",
                           vcprec->usage_index, gsc, maxval, curval);
             if (gsc == 0)
@@ -481,162 +556,6 @@ Global_Status_Code usb_get_vcp_value(
    return gsc;
 }
 
-
-/* Sets the value of usage, as identified by hiddev
- *
- * Arguments:
- *   fd           file descriptor for open hiddev device
- *   report_type  HID_REPORT_TYPE_FEATURE or HID_REPORT_TYPE_OUTPUT
- *   report_id    report number
- *   field_idx    field number
- *   usage_idx    usage number
- *   value        value to set
- *
- * Returns:       status code
- */
-
-// adapted from usbmonctl
-Base_Status_Errno
-set_control_value(int fd,
-                  int report_type,
-                  int report_id,
-                  int field_idx,
-                  int usage_idx,
-                  int value)
-{
-   bool debug = true;
-   int rc;
-   Base_Status_Errno result = 0;
-
-#ifdef NO
-   if (control_hidden(report_id)) {
-      fprintf(stderr, "Control 0x%x is hidden because it's probably broken.\n", report_id);
-      return false;
-   }
-#endif
-   struct hiddev_report_info rinfo = {
-      .report_type = report_type,
-      .report_id   = report_id,
-   };
-   struct hiddev_usage_ref uref = {
-      .report_type = report_type,
-      .report_id   = report_id,
-      .field_index = field_idx,
-      .usage_index = usage_idx,
-      .value       = value,
-   };
-   if ((rc=ioctl(fd, HIDIOCSUSAGE, &uref)) < 0) {
-      result = -errno;
-      REPORT_IOCTL_ERROR("HIDIOSUSAGE", rc);
-      goto bye;
-   }
-   if ((rc=ioctl(fd, HIDIOCSREPORT, &rinfo)) < 0) {
-      result = -errno;
-      REPORT_IOCTL_ERROR("HIDIOCGUSAGE", rc);
-      goto bye;
-   }
-   result = 0;
-
-bye:
-   DBGMSF(debug, "Returning: %d", result);
-   return result;
-}
-
-
-
-// not working - HIDIOCSUSAGE fails
-Global_Status_Code
-set_usage_alt(int fd,
-                  __u32 report_type,
-                  __u32 usage_code,
-                  __s32 value)
-{
-   bool debug = true;
-   int rc;
-   Base_Status_Errno result = 0;
-   Global_Status_Code gsc = 0;
-
-   struct hiddev_usage_ref uref = {
-      .report_type = report_type,
-      .report_id   = HID_REPORT_ID_UNKNOWN,
-      .usage_code  = usage_code,
-      .value       = value,
-   };
-   if ((rc=ioctl(fd, HIDIOCSUSAGE, &uref)) < 0) {
-      result = -errno;
-      REPORT_IOCTL_ERROR("HIDIOSUSAGE", rc);
-      goto bye;
-   }
-   if (debug) {
-      DBGMSG("HIDIOSUAGE succeeded");
-      report_hiddev_usage_ref(&uref, 1);
-   }
-   struct hiddev_report_info rinfo = {
-         .report_type = report_type,
-         .report_id   = uref.report_id
-   };
-
-   if ((rc=ioctl(fd, HIDIOCSREPORT, &rinfo)) < 0) {
-      result = -errno;
-      REPORT_IOCTL_ERROR("HIDIOCSREPORT", rc);
-      goto bye;
-   }
-   result = 0;
-
-bye:
-   if (result != 0)
-      gsc = modulate_rc(result, RR_ERRNO);
-   DBGMSF(debug, "Returning: %d", gsc);
-   return gsc;
-}
-
-
-
-
-/* Sets the value of a usage, as identified by a Usb_Monitor_Vcp_Rec
- *
- * Arguments:
- *    fd         file descriptor for open hiddev device
- *    vcprec     pointer to a Usb_Monitor_Vcp_Rec identifying the usage to set
- *    new_value  new value
- *
- * Returns:  status code
- *
- * Calls to this function are valid only for Feature or Output reports.
- */
-Global_Status_Code
-usb_set_usage(int fd, Usb_Monitor_Vcp_Rec * vcprec, __s32 new_value) {
-   bool debug = true;
-   DBGMSF(debug, "Starting. fd=%d, vcprec=%p", fd, vcprec);
-   Global_Status_Code gsc = 0;
-
-   assert(vcprec->rinfo->report_type == vcprec->report_type);
-   assert(vcprec->report_type == HID_REPORT_TYPE_FEATURE ||
-          vcprec->report_type == HID_REPORT_TYPE_OUTPUT);    // CG19
-   assert(vcprec->rinfo->report_id   == vcprec->report_id);
-
-   DBGMSF(debug, "report_type=%d (%s), report_id=%d, field_index=%d, usage_index=%d, new_value=%d",
-                 vcprec->report_type,
-                 report_type_name(vcprec->report_type),
-                 vcprec->report_id,
-                 vcprec->field_index,
-                 vcprec->usage_index,
-                 new_value);
-
-   Base_Status_Errno rc = set_control_value(fd,
-                                            vcprec->report_type,
-                                            vcprec->report_id,
-                                            vcprec->field_index,
-                                            vcprec->usage_index,
-                                            new_value);
-   if (rc < 0)
-      gsc = modulate_rc(rc, RR_ERRNO);
-
-   DBGMSF(debug, "Returning: %d", gsc);
-   return gsc;
-}
-
-
 /* Sets the value for a non-table feature.
  *
  * Arguments:
@@ -668,9 +587,9 @@ Global_Status_Code usb_set_nontable_vcp_value(
    bool use_alt = false;
    if (use_alt) {
       __u32 usage_code = 0x0082 << 16 | feature_code;
-      gsc = set_usage_alt(dh->fh, HID_REPORT_TYPE_FEATURE, usage_code, new_value);
+      gsc = set_usage_value_by_report_type_and_ucode(dh->fh, HID_REPORT_TYPE_FEATURE, usage_code, new_value);
       if (gsc != 0)
-         gsc = set_usage_alt(dh->fh, HID_REPORT_TYPE_OUTPUT, usage_code, new_value);
+         gsc = set_usage_value_by_report_type_and_ucode(dh->fh, HID_REPORT_TYPE_OUTPUT, usage_code, new_value);
       if (gsc == modulate_rc(EINVAL, RR_ERRNO))
          gsc = DDCRC_REPORTED_UNSUPPORTED;
 
@@ -697,7 +616,7 @@ Global_Status_Code usb_set_nontable_vcp_value(
             if (vcprec->report_type == HID_REPORT_TYPE_INPUT)
                continue;
 
-            gsc = usb_set_usage(dh->fh,  vcprec, new_value);
+            gsc = usb_set_usage_value_by_vcprec(dh->fh,  vcprec, new_value);
             DBGMSF(debug, "usb_set_usage() usage index: %d returned %d",
                           vcprec->usage_index, gsc);
             if (gsc == 0)
@@ -738,4 +657,41 @@ usb_set_vcp_value(                               // changed from set_vcp_value()
 
    return gsc;
 }
+
+
+//
+// Special case: get VESA version
+//
+
+// 7/2016: this code is based on USB HID Monitor spec.
+// have yet to see a monitor that supports VESA Version usage code
+__s32 usb_get_vesa_version_by_report_type(int fd, __u32 report_type) {
+   bool debug = false;
+   __s32 maxval;
+   __s32 curval;
+   Global_Status_Code gsc = usb_get_usage_value_by_report_type_and_ucode(
+                               fd, report_type, 0x00800004, &maxval, &curval);
+   if (gsc != 0 && debug) {
+      DBGMSG("report_type=%s, usb_get_usage_alt() status code %d (%s)",
+             report_type_name(report_type), gsc, gsc_name(gsc) );
+   }
+
+   // DBGMSF(debug, "report_type=%s, returning: 0x%08x", report_type_name(report_type), curval);
+   return curval;
+}
+
+
+__s32 usb_get_vesa_version(int fd) {
+   bool debug = false;
+
+   __s32 vesa_ver =  usb_get_vesa_version_by_report_type(fd, HID_REPORT_TYPE_FEATURE);
+   if (!vesa_ver)
+      vesa_ver = usb_get_vesa_version_by_report_type(fd, HID_REPORT_TYPE_INPUT);
+
+   // DBGMSF(debug, "VESA version from usb_get_vesa_version_by_report_type(): 0x%08x", vesa_ver);
+
+   DBGMSF(debug, "returning: 0x%08x", vesa_ver);
+   return vesa_ver;
+}
+
 
