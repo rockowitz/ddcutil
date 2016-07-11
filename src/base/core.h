@@ -105,10 +105,12 @@ typedef struct {
 // For defining boolean "exit if failure" function arguments, allowing
 // functions to be called with more comprehensible parameter values than
 // "true" and "false".
+// deprecated in favor of options byte using CALLOPT_ flags
+#ifdef OLD
 typedef bool Failure_Action;
 static const Failure_Action EXIT_IF_FAILURE = true;
 static const Failure_Action RETURN_ERROR_IF_FAILURE = false;
-
+#endif
 
 //
 // Global redirection for messages that normally go to stdout and stderr,
@@ -119,7 +121,6 @@ extern FILE * FERR;
 
 void set_fout(FILE * fout);
 void set_ferr(FILE * ferr);
-
 
 //
 // Message level control
@@ -181,7 +182,6 @@ void show_reporting();
 //
 // Issue messages of various types
 //
-
 
 void severemsg(
         const char * funcname,
@@ -286,6 +286,5 @@ void terminate_execution_on_error(
 
 #define TERMINATE_EXECUTION_ON_ERROR(format, ...) \
    terminate_execution_on_error(TRACE_GROUP, __func__, __LINE__, __FILE__, format, ##__VA_ARGS__)
-
 
 #endif /* BASE_CORE_H_ */
