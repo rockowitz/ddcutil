@@ -69,7 +69,8 @@ static Trace_Group TRACE_GROUP = TRC_USB;
  */
 int usb_open_hiddev_device(char * hiddev_devname, Byte calloptions) {
    bool debug = false;
-   DBGMSF(debug, "hiddev_devname=%s, calloptions=0x%02x", hiddev_devname, calloptions);
+   DBGMSF(debug, "hiddev_devname=%s, calloptions=0x%02x (%s)",
+                 hiddev_devname, calloptions, interpret_calloptions(calloptions));
 
    int  file;
    int mode = (calloptions & CALLOPT_RDONLY) ? O_RDONLY : O_RDWR;
@@ -83,6 +84,10 @@ int usb_open_hiddev_device(char * hiddev_devname, Byte calloptions) {
    // -1 if error, and errno is set
    int errsv = errno;
    if (file < 0) {
+      if (calloptions & CALLOPT_ERR_ABORT)
+         TERMINATE_EXECUTION_ON_ERROR(
+               "Open failed for %s: errno=%s\n", hiddev_devname, linux_errno_desc(errsv));
+
       if (calloptions & CALLOPT_ERR_MSG)
          f0printf(FERR, "Open failed for %s: errno=%s\n", hiddev_devname, linux_errno_desc(errsv));
       file = -errno;
@@ -95,8 +100,11 @@ int usb_open_hiddev_device(char * hiddev_devname, Byte calloptions) {
       errsv = errno;
       int rc = ioctl(file, HIDIOCINITREPORT);
       if (rc != 0) {
+         // call should never fail.  always wrote an error message
          REPORT_IOCTL_ERROR("HIDIOCGREPORT", rc);
-         // printf("(%s) HIDIOCINITREPORT failed\n", __func__  );
+         if (calloptions & CALLOPT_ERR_ABORT)
+            ddc_abort(errsv);
+         file = rc;
       }
    }
    DBGMSF(debug, "Returning file descriptor: %d", file);

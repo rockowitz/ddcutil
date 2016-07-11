@@ -104,6 +104,10 @@ usb_get_usage_value_by_report_type_and_ucode(
          // occasionally see -1, errno = 22 invalid argument - for Battery System Page: Run Time to Empty
          gsc = modulate_rc(-errsv, RR_ERRNO);
       }
+      if (debug) {
+         DBGMSG("After hid_get_usage_value():");
+         report_hiddev_usage_ref(&uref, 1);
+      }
       // printf("(%s) errsv=%d, gsc=%d\n", __func__, errsv, gsc);
       goto bye;
    }
@@ -165,7 +169,10 @@ set_control_value(int fd,
                   int usage_idx,
                   int value)
 {
-   bool debug = true;
+   bool debug = false;
+   DBGMSF(debug,
+         "Starting. fd=%d, report_type=%d, report_id=%d, field_idx=%d, usage_idx=%d, value=%d",
+         fd, report_type, report_type, field_idx, usage_idx, value);
    int rc;
    Base_Status_Errno result = 0;
 
@@ -186,9 +193,13 @@ set_control_value(int fd,
       .usage_index = usage_idx,
       .value       = value,
    };
+   if (debug) {
+      DBGMSG("Before HIDIOCSUSAGE");
+      report_hiddev_usage_ref(&uref, 1);
+   }
    if ((rc=ioctl(fd, HIDIOCSUSAGE, &uref)) < 0) {
       result = -errno;
-      REPORT_IOCTL_ERROR("HIDIOSUSAGE", rc);
+      REPORT_IOCTL_ERROR("HIDIOCSUSAGE", rc);
       goto bye;
    }
    if ((rc=ioctl(fd, HIDIOCSREPORT, &rinfo)) < 0) {
@@ -217,15 +228,16 @@ bye:
  *
  * Returns:       status code
  */
-
-// not working - HIDIOCSUSAGE fails
 Global_Status_Code
-set_usage_value_by_report_type_and_ucode(int fd,
+set_usage_value_by_report_type_and_ucode(
+                  int   fd,
                   __u32 report_type,
                   __u32 usage_code,
                   __s32 value)
 {
-   bool debug = true;
+   bool debug = false;
+   DBGMSF(debug, "Starting. fd=%d, report_type=%d, usage_code=0x%08x, value=%d",
+                 fd, report_type, usage_code, value);
    int rc;
    Base_Status_Errno result = 0;
    Global_Status_Code gsc = 0;
@@ -236,15 +248,28 @@ set_usage_value_by_report_type_and_ucode(int fd,
       .usage_code  = usage_code,
       .value       = value,
    };
-   if ((rc=ioctl(fd, HIDIOCSUSAGE, &uref)) < 0) {
-      result = -errno;
-      REPORT_IOCTL_ERROR("HIDIOSUSAGE", rc);
-      goto bye;
-   }
    if (debug) {
-      DBGMSG("HIDIOSUAGE succeeded");
+      DBGMSG("Before HIDIOCSUSAGE");
       report_hiddev_usage_ref(&uref, 1);
    }
+   if ((rc=ioctl(fd, HIDIOCSUSAGE, &uref)) < 0) {
+      result = -errno;
+      REPORT_IOCTL_ERROR("HIDIOCSUSAGE", rc);
+      goto bye;
+   }
+   // if (debug) {
+   //    DBGMSG("HIDIOCSUSAGE succeeded");
+   //    report_hiddev_usage_ref(&uref, 1);
+   // }
+
+   // need to get the actual report_id - HIDIOCSREPORT failes if HID_REPORT_ID_UNKNOWN
+   hid_get_usage_value(fd, &uref, CALLOPT_ERR_ABORT|CALLOPT_ERR_MSG);   // should never fail
+   // if (debug) {
+   //    DBGMSG("After get_hid_usage_value()");
+   //    report_hiddev_usage_ref(&uref, 1);
+   // }
+
+
    struct hiddev_report_info rinfo = {
          .report_type = report_type,
          .report_id   = uref.report_id
@@ -348,7 +373,7 @@ usb_get_usage_value_by_vcprec(int fd, Usb_Monitor_Vcp_Rec * vcprec, __s32 * maxv
  */
 Global_Status_Code
 usb_set_usage_value_by_vcprec(int fd, Usb_Monitor_Vcp_Rec * vcprec, __s32 new_value) {
-   bool debug = true;
+   bool debug = false;
    DBGMSF(debug, "Starting. fd=%d, vcprec=%p", fd, vcprec);
    Global_Status_Code gsc = 0;
 
@@ -556,6 +581,7 @@ Global_Status_Code usb_get_vcp_value(
    return gsc;
 }
 
+
 /* Sets the value for a non-table feature.
  *
  * Arguments:
@@ -584,18 +610,18 @@ Global_Status_Code usb_set_nontable_vcp_value(
    Usb_Monitor_Info * moninfo = usb_find_monitor_by_display_handle(dh);
    assert(moninfo);
 
-   bool use_alt = false;
+   bool use_alt = true;
    if (use_alt) {
       __u32 usage_code = 0x0082 << 16 | feature_code;
-      gsc = set_usage_value_by_report_type_and_ucode(dh->fh, HID_REPORT_TYPE_FEATURE, usage_code, new_value);
-      if (gsc != 0)
-         gsc = set_usage_value_by_report_type_and_ucode(dh->fh, HID_REPORT_TYPE_OUTPUT, usage_code, new_value);
+      gsc = set_usage_value_by_report_type_and_ucode(
+               dh->fh, HID_REPORT_TYPE_FEATURE, usage_code, new_value);
+      // if (gsc != 0)
+      //    gsc = set_usage_value_by_report_type_and_ucode(dh->fh, HID_REPORT_TYPE_OUTPUT, usage_code, new_value);
       if (gsc == modulate_rc(EINVAL, RR_ERRNO))
          gsc = DDCRC_REPORTED_UNSUPPORTED;
 
    }
    else {
-
       // find the field record
       GPtrArray * vcp_recs = moninfo->vcp_codes[feature_code];
       if (!vcp_recs) {

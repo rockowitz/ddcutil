@@ -39,18 +39,42 @@
 void init_msg_control();
 extern bool dbgtrc_show_time;  // include elapsed time in debug/trace timestamps
 
-
+//
 // For aborting out of shared library
+//
 void register_jmp_buf(jmp_buf* jb);
 void ddc_abort(int status);
 
+//
+// Generic data structure and function for creating string representation of named bits
+//
+typedef struct {
+   unsigned int  bitvalue;
+   char *        bitname;
+} Bitname_Table_Entry;
 
+// last entry MUST have bitvalue = 0
+typedef Bitname_Table_Entry Bitname_Table[];
+
+char * bitflags_to_string(
+          int            flags_val,
+          Bitname_Table  bitname_table,
+          char *         sepstr,
+          char *         buffer,
+          int            bufsize );
+
+//
 // Standard flags to indicate behavior if a system call fails
+//
 #define CALLOPT_NONE      0x00
 #define CALLOPT_ERR_MSG   0x80      // issue message
 #define CALLOPT_ERR_ABORT 0x40      // terminate execution
 #define CALLOPT_RDONLY    0x20      // open read-only
 #define CALLOPT_WARN_FINDEX 0x01    // issue warning msg re hiddev_field_info.field_index change
+
+// Return string interpretation of CALLOPT_ flag byte
+char * interpret_calloptions_r(Byte calloptions, char * buffer, int bufsize);
+char * interpret_calloptions(Byte calloptions);
 
 //
 // Timestamp Generation

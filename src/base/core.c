@@ -37,7 +37,16 @@
 
 #include "base/core.h"
 
+//
+// Externally visible variables
+//
+
 bool dbgtrc_show_time = false;    // include elapsed time in debug/trace output
+
+
+//
+// Global error return
+//
 
 static jmp_buf* global_abort_loc = NULL;
 
@@ -53,6 +62,68 @@ void ddc_abort(int status) {
       puts("Terminating execution.");
       exit(EXIT_FAILURE);     // or return status?
    }
+}
+
+
+//
+// For interpreting field of named bits
+//
+
+static void char_buf_append(char * buffer, int bufsize, char * val_to_append) {
+   assert(strlen(buffer) + strlen(val_to_append) < bufsize);
+   strcat(buffer, val_to_append);
+}
+
+char * bitflags_to_string(
+          int            flags_val,
+          Bitname_Table  bitname_table,
+          char *         sepstr,
+          char *         buffer,
+          int            bufsize )
+{
+   assert(buffer && bufsize > 1);
+   buffer[0] = '\0';
+   bool first = true;
+   Bitname_Table_Entry * cur_entry = bitname_table;
+   while (cur_entry->bitvalue) {
+      if (flags_val & bitname_table->bitvalue) {
+         if (first)
+            first = false;
+         else
+            char_buf_append(buffer, bufsize, sepstr);
+         char_buf_append(buffer, bufsize, cur_entry->bitname);
+      }
+      cur_entry++;
+   }
+   if (!flags_val && cur_entry->bitname)
+      char_buf_append(buffer, bufsize, cur_entry->bitname);
+   // printf("(%s) Returning |%s|\n", __func__, buffer );
+   return buffer;
+}
+
+
+//
+// Standard call options
+//
+
+Bitname_Table callopt_bitname_table = {
+      {CALLOPT_ERR_MSG,     "CALLOPT_ERR_MSG"},
+      {CALLOPT_ERR_ABORT,   "CALLOPT_ERR_ABORT"},
+      {CALLOPT_RDONLY,      "CALLOPT_RDONLY"},
+      {CALLOPT_WARN_FINDEX, "CALLOPT_WARN_FINDEX"},
+      {CALLOPT_NONE,        "CALLOPT_NONE"},
+};
+
+
+
+char * interpret_calloptions_r(Byte calloptions, char * buffer, int bufsize) {
+   bitflags_to_string(calloptions, callopt_bitname_table, "|", buffer, bufsize);
+   return buffer;
+}
+
+char * interpret_calloptions(Byte calloptions) {
+   static char buffer[100];
+   return interpret_calloptions_r(calloptions, buffer, 100);
 }
 
 
