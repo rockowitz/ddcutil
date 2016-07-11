@@ -55,7 +55,6 @@ static Trace_Group TRACE_GROUP = TRC_USB;
 // Get and set HID usage values, parameterized only by HID data structures
 //
 
-
 /* Gets the value of usage by specifying the usage code
  *
  * Arguments:
@@ -158,30 +157,24 @@ bye:
  *   value        value to set
  *
  * Returns:       status code
+ *
+ * Adapted from usbmonctl
  */
-
-// adapted from usbmonctl
 Base_Status_Errno
 set_control_value(int fd,
                   int report_type,
                   int report_id,
-                  int field_idx,
-                  int usage_idx,
+                  int field_ndx,
+                  int usage_ndx,
                   int value)
 {
    bool debug = false;
    DBGMSF(debug,
-         "Starting. fd=%d, report_type=%d, report_id=%d, field_idx=%d, usage_idx=%d, value=%d",
-         fd, report_type, report_type, field_idx, usage_idx, value);
+         "Starting. fd=%d, report_type=%d, report_id=%d, field_ndx=%d, usage_ndx=%d, value=%d",
+         fd, report_type, report_type, field_ndx, usage_ndx, value);
    int rc;
    Base_Status_Errno result = 0;
 
-#ifdef NO
-   if (control_hidden(report_id)) {
-      fprintf(stderr, "Control 0x%x is hidden because it's probably broken.\n", report_id);
-      return false;
-   }
-#endif
    struct hiddev_report_info rinfo = {
       .report_type = report_type,
       .report_id   = report_id,
@@ -189,8 +182,8 @@ set_control_value(int fd,
    struct hiddev_usage_ref uref = {
       .report_type = report_type,
       .report_id   = report_id,
-      .field_index = field_idx,
-      .usage_index = usage_idx,
+      .field_index = field_ndx,
+      .usage_index = usage_ndx,
       .value       = value,
    };
    if (debug) {
@@ -450,12 +443,13 @@ Global_Status_Code usb_get_nontable_vcp_value(
 
    if (use_alt_method) {
       __u32 usage_code = 0x0082 << 16 | feature_code;
-      gsc = usb_get_usage_value_by_report_type_and_ucode(dh->fh, HID_REPORT_TYPE_FEATURE, usage_code, &maxval, &curval);
+      gsc = usb_get_usage_value_by_report_type_and_ucode(
+                  dh->fh, HID_REPORT_TYPE_FEATURE, usage_code, &maxval, &curval);
       if (gsc != 0)
-         gsc = usb_get_usage_value_by_report_type_and_ucode(dh->fh, HID_REPORT_TYPE_INPUT, usage_code, &maxval, &curval);
+         gsc = usb_get_usage_value_by_report_type_and_ucode(
+                  dh->fh, HID_REPORT_TYPE_INPUT,   usage_code, &maxval, &curval);
    }
    else {
-
       // find the field record
       GPtrArray * vcp_recs = moninfo->vcp_codes[feature_code];
 
@@ -498,13 +492,11 @@ Global_Status_Code usb_get_nontable_vcp_value(
       parsed_response->sl = curval & 0xff;
    }
 
-   // TRCMSGTG(tg, "Returning %s, *ppinterpreted_code=%p", gsc_name(gsc), parsed_response);
    DBGTRC(debug, TRACE_GROUP,
              "Returning %s, *ppinterpreted_code=%p", gsc_name(gsc), parsed_response);
    *ppInterpretedCode = parsed_response;
    return gsc;
 }
-
 
 
 /* Gets the value of a VCP feature.
@@ -528,8 +520,6 @@ Global_Status_Code usb_get_vcp_value(
        Single_Vcp_Value **       pvalrec)
 {
    bool debug = false;
-   // Trace_Group tg = TRACE_GROUP;  if (debug) tg = 0xFF;
-   // TRCMSGTG(tg, "Starting. Reading feature 0x%02x", feature_code);
    DBGTRC(debug, TRACE_GROUP, "Starting. Reading feature 0x%02x", feature_code);
 
    Global_Status_Code gsc = 0;
@@ -598,9 +588,6 @@ Global_Status_Code usb_set_nontable_vcp_value(
        int                    new_value)
 {
    bool debug = false;
-   // Trace_Group tg = TRACE_GROUP;  if (debug) tg = 0xFF;
-   // TRCMSGTG(tg, "Setting feature 0x%02x, dh=%p, dh->dref=%p, new_value=%d",
-   //              feature_code, dh, dh->dref, new_value);
    DBGTRC(debug, TRACE_GROUP,
           "Setting feature 0x%02x, dh=%p, dh->dref=%p, new_value=%d",
           feature_code, dh, dh->dref, new_value);
@@ -651,7 +638,6 @@ Global_Status_Code usb_set_nontable_vcp_value(
       }
    }
 
-   // TRCMSGTG(tg, "Returning %s", gsc_name(gsc));
    DBGTRC(debug, TRACE_GROUP, "Returning %s", gsc_name(gsc));
    return gsc;
 }

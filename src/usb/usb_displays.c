@@ -151,8 +151,6 @@ static void report_usb_monitors(GPtrArray * monitors, int depth) {
 }
 
 
-
-
 //
 // HID Report Inquiry
 //
@@ -199,19 +197,6 @@ GPtrArray * collect_vcp_reports(int fd) {
              if (debug)
                 callopts |= CALLOPT_WARN_FINDEX;
              hid_get_field_info(fd, &finfo, callopts);
-#ifdef OLD
-             int saved_field_index = fndx;
-             int rc = ioctl(fd, HIDIOCGFIELDINFO, &finfo);
-             if (rc != 0)
-                REPORT_IOCTL_ERROR("HIDIOCGFIELDINFO", rc);
-             assert(rc == 0);
-             if (finfo.field_index != saved_field_index && debug) {
-                printf("(%s) !!! ioctl(HIDIOCGFIELDINFO) changed field_index from %d to %d\n",
-                       __func__, saved_field_index, finfo.field_index);
-                printf("(%s)   rinfo.num_fields=%d, finfo.maxusage=%d\n",
-                       __func__, rinfo.num_fields, finfo.maxusage);
-             }
-#endif
              if (finfo.application != 0x00800001) // USB Monitor Page/Monitor Control
                 continue;
 
@@ -705,8 +690,3 @@ bool check_usb_monitor( char * device_name ) {
  exit:
     return result;
  }
-
-
-
-
-
