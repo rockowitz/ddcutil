@@ -69,7 +69,6 @@ endif
 
 # Files only in ddctool:
 ddctool_SOURCES = \
-util/x11_util.c \
 cmdline/cmd_parser_aux.c \
 cmdline/cmd_parser_goption.c \
 cmdline/parsed_cmd.c \
@@ -79,6 +78,11 @@ app_ddctool/query_sysenv.c \
 app_ddctool/app_setvcp.c \
 app_ddctool/app_getvcp.c \
 app_ddctool/testcases.c 
+
+if ENABLE_LIBUSB_COND
+ddctool_SOURCES += \
+util/libusb_reports.c 
+endif
 
 if ENABLE_LIBUDEV_COND
 ddctool_SOURCES += \
@@ -187,6 +191,7 @@ util/output_sink.c \
 util/device_id_util.c \
 util/report_util.c \
 util/string_util.c \
+util/x11_util.c \
 util/subprocess_util.c
 
 # libcommon_la_SOURCES += \
@@ -252,10 +257,8 @@ endif
 # Link the libraries 
 # $(GLIB_LIBS) contains output of pkgconfig --libs glib-2.0
 
-
 # Be careful about library ordering 
 # library must be listed after any libraries that depend on it
-
 
 # Link the shared library
 libddctool_la_LIBADD = -lz

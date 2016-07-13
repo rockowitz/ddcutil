@@ -60,7 +60,9 @@
 #include "util/file_util.h"
 #include "util/hiddev_reports.h"
 #include "util/hiddev_util.h"
-// #include "util/libusb_reports.h"
+#ifdef USE_LIBUSB
+#include "util/libusb_reports.h"
+#endif
 #include "util/report_util.h"
 #include "util/string_util.h"
 #include "util/subprocess_util.h"
@@ -1179,10 +1181,12 @@ void query_sysenv() {
       rpt_vstring(1, "Listing /dev/hidraw*...");
       execute_shell_cmd("ls -l /dev/hidraw*", 2);
       puts("");
+#ifdef USE_LIBUSB
       // currently an overwhelming amount of information - need to display
       // only possible HID connected monitors
-      // printf("\nProbing possible HID monitors using libusb...\n");
-      // probe_libusb(/*possible_monitors_only=*/ true);
+      printf("\nProbing possible HID monitors using libusb...\n");
+      probe_libusb(/*possible_monitors_only=*/ true);
+#endif
    }
 }
 

@@ -70,12 +70,12 @@ AC_SUBST(LT_CURRENT)
 AC_SUBST(LT_REVISION)
 AC_SUBST(LT_AGE)
 
-
 dnl for debian/changelog - should do it some other way
 DEBIAN_RELEASE=1
 DEBIAN_DISTRIBUTION=wily
 AC_SUBST(DEBIAN_RELEASE)
 AC_SUBST(DEBIAN_DISTRIBUTION)
+
 
 ###
 ### Checks for programs.
@@ -109,8 +109,6 @@ dnl temporarily disable, introspection not working
 dnl AM_CONDITIONAL(HAVE_INTROSPECTION, test "x$found_introspection" = xyesxxx)
 
 
-
-
 ###
 ### Checks for libraries.
 ###
@@ -126,7 +124,7 @@ dnl PKG_CHECK_MODULES(OSINFO, libosinfo-1.0 >= 0.1, [OSINFO_FOUND=yes], [OSINFO_
 PKG_CHECK_MODULES(XRANDR, xrandr)
 PKG_CHECK_MODULES(X11, x11)
 dnl PKG_CHECK_MODULES(UDEV, libudev)
-dnl PKG_CHECK_MODULES(LIBUSB, libusb-1.0)
+PKG_CHECK_MODULES(LIBUSB, libusb-1.0)
 
 dnl failing in OBS if no proper BuildRequires, even if libudev use disabled
 PKG_CHECK_MODULES([UDEV], [libudev],
@@ -189,10 +187,8 @@ dnl ./configure --build=i686=pc-linux-gnu --prefix=/arch/x86-linux/gnu \
 dnl     CC=gcc -m32 -march-i586 \
 dnl     CXX="g++ -m32 -march=i585 LDFlags="-m32"
 
-
 dnl Automatically update libtool script if it becomes out of date:
 AC_SUBST([LIBTOOL_DEPS])
-
 
 
 ### 
@@ -309,7 +305,24 @@ AS_IF([test "x$enable_libudev" == "xyes"],
       AC_MSG_NOTICE( [libudev... disabled] )
      )
 
-
+dnl *** configure option: --enable-libusb
+AC_ARG_ENABLE([libusb],
+              [ AS_HELP_STRING( [--enable-libusb=@<:@no/yes@:>@], [Use libusb to probe devices@<:@default=no@:>@] )],
+              [enable_libusb=${enableval}],
+              [enable_libusb=no] )
+AM_CONDITIONAL([ENABLE_LIBUSB_COND], [test "x$enable_libusb" == "xyes"] )
+AS_IF([test "x$enable_libusb" == "xyes"],
+      AC_SUBST([ENABLE_LIBUSB_FLAG], [1] ),
+      AC_SUBST([ENABLE_LIBUSB_FLAG], [0]  )
+     )
+dnl Define USE_LIBUSB in config.h:
+AS_IF([test "x$enable_libusb" == "xyes"],
+      AC_DEFINE_UNQUOTED( [USE_LIBUSB], [1], [If defined, use libusb.]),
+      [])
+AS_IF([test "x$enable_libusb" == "xyes"],
+      AC_MSG_NOTICE( [libusb... enabled]  ),
+      AC_MSG_NOTICE( [libusb... disabled] )
+     )
 
 ### 
 ### End options for configure script
