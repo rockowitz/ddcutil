@@ -60,6 +60,11 @@
    } while(0);
 
 
+// Initialization
+
+void init_names();  // initialize lookup tables
+
+
 // Lookup descriptive names of constants
 
 char * descriptor_title(Byte val);
@@ -69,42 +74,42 @@ char * class_code_title(Byte val);
 
 // Misc utilities
 
-char * lookup_libusb_string(struct libusb_device_handle * dh, int string_id);
+char *    lookup_libusb_string(     struct libusb_device_handle * dh, int string_id);
 wchar_t * lookup_libusb_string_wide(struct libusb_device_handle * dh, int string_id);
 
 // Report functions for libusb data structures
 
 void report_endpoint_descriptor(
-        const struct libusb_endpoint_descriptor *epdesc,
-        libusb_device_handle * dh,    // may be null
-        int depth);
+        const struct libusb_endpoint_descriptor *  epdesc,
+        libusb_device_handle *                     dh,    // may be null
+        int                                        depth);
 void report_interface_descriptor(
-        const struct libusb_interface_descriptor *inter,
-        libusb_device_handle * dh,    // may be null
-        int depth);
+        const struct libusb_interface_descriptor * inter,
+        libusb_device_handle *                     dh,    // may be null
+        int                                        depth);
 void report_interface(
-      const struct libusb_interface * interface,
-      libusb_device_handle * dh,    // may be null
-      int depth) ;
+        const struct libusb_interface *            interface,
+        libusb_device_handle *                     dh,    // may be null
+        int                                        depth) ;
 void report_config_descriptor(
-        const struct libusb_config_descriptor *config,
-        libusb_device_handle * dh,    // may be null
-        int depth);
+        const struct libusb_config_descriptor *    config,
+        libusb_device_handle *                     dh,    // may be null
+        int                                        depth);
 void report_device_descriptor(
-      const struct libusb_device_descriptor * desc,
-                              libusb_device_handle * dh,    // may be null
-                              int depth);
+        const struct libusb_device_descriptor *    desc,
+        libusb_device_handle *                     dh,    // may be null
+        int                                        depth);
 void report_dev(
-      libusb_device * dev,
-      libusb_device_handle * dh,    // may be null
-      bool show_hubs, int depth);
+        libusb_device *                            dev,
+        libusb_device_handle *                     dh,    // may be null
+        bool                                       show_hubs,
+        int                                        depth);
 
 
 bool possible_monitor_dev(libusb_device * dev);
 bool is_hub_descriptor(const struct libusb_device_descriptor * desc);
 
-// struct possible_monitor_device;
-
+// singly linked list of possbile monitors
 struct possible_monitor_device {
    libusb_device * libusb_device;
    int             bus;
@@ -147,9 +152,14 @@ typedef struct __attribute__((__packed__)) hid_descriptor {
    uint16_t     wClassDescriptorLength;
 } HID_Descriptor;
 
-void report_hid_descriptor(HID_Descriptor * desc, int depth);
 
-void init_names();
+void report_hid_descriptor(
+        libusb_device_handle * dh,
+        uint8_t                bInterfaceNumber,
+        HID_Descriptor *       desc,
+        int                    depth);
+
+
 
 void probe_libusb(bool possible_monitors_only);
 

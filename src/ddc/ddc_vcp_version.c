@@ -129,7 +129,7 @@ Version_Spec get_vcp_version_by_display_ref(Display_Ref * dref) {
    //        __func__, dref, dref->vcp_version.major, dref->vcp_version.minor);
 
    if (is_version_unqueried(dref->vcp_version)) {
-      Display_Handle * dh = ddc_open_display(dref, CALLOPT_ERR_MSG | CALLOPT_ERR_ABORT | CALLOPT_RDONLY);
+      Display_Handle * dh = ddc_open_display(dref, CALLOPT_ERR_MSG | CALLOPT_ERR_ABORT);
       dref->vcp_version = get_vcp_version_by_display_handle(dh);
       ddc_close_display(dh);
    }

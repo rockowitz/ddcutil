@@ -342,7 +342,7 @@ int main(int argc, char *argv[]) {
          if (!dref) {
             PROGRAM_LOGIC_ERROR("get_display_ref_for_display_identifier() failed for display %d", dispno);
          }
-         Display_Handle * dh = ddc_open_display(dref, CALLOPT_ERR_MSG | CALLOPT_ERR_ABORT | CALLOPT_RDONLY);
+         Display_Handle * dh = ddc_open_display(dref, CALLOPT_ERR_MSG | CALLOPT_ERR_ABORT);
          // not needed, causes confusing messages if get_vcp_version fails but get_capabilities succeeds
          // Version_Spec vspec = get_vcp_version_by_display_handle(dh);
          // if (vspec.major < 2) {

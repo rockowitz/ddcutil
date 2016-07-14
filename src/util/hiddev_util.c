@@ -261,6 +261,7 @@ bool force_hiddev_monitor(int fd) {
    struct vid_pid exceptions[] = {
          {0x0424, 0x3328},    // Std Micrososystems USB HID I2C - HP LP2480
          {0x056d, 0x0002},    // Eizo,      HID Monitor Controls
+         {0x0451, 0xca01},    // Texas Instruments USB to I2C Solution  - what is this
 
          // NEC monitors
          {0x0409, 0x040d},    // P232W

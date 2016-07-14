@@ -854,13 +854,17 @@ struct driver_name_node * query_card_and_driver_using_sysfs() {
  */
 void driver_specific_tests(struct driver_name_node * driver_list) {
    printf("\nPerforming driver specific checks...\n");
+   bool found_driver_specific_checks = false;
    if (found_driver(driver_list, "nvidia")) {
+      found_driver_specific_checks = true;
       printf("\nChecking for special settings for proprietary Nvidia driver \n");
       printf("(needed for some newer Nvidia cards).\n");
       execute_shell_cmd("grep -iH i2c /etc/X11/xorg.conf /etc/X11/xorg.conf.d/*", 1);
    }
 
    if (found_driver(driver_list, "fglrx")) {
+      found_driver_specific_checks = true;
+      printf("\nPerforming ADL specific checks...\n");
 #ifdef HAVE_ADL
      if (!adlshim_is_available()) {
         set_output_level(OL_VERBOSE);  // force error msg that names missing dll
@@ -871,6 +875,8 @@ void driver_specific_tests(struct driver_name_node * driver_list) {
 #else
      printf("WARNING: Using AMD proprietary video driver fglrx but ddctool built without ADL support");
 #endif
+     if (!found_driver_specific_checks)
+        printf("No driver specific checks apply.");
 
    }
 }
@@ -1041,9 +1047,20 @@ void query_usb_monitors() {
    rpt_vstring(1, "Listing /dev/usb...");
    execute_shell_cmd("ls -l /dev/usb", 2);
    puts("");
+   rpt_vstring(1, "Listing /dev/bus/usb...");
+   execute_shell_cmd("ls -lR /dev/bus/usb", 2);
+   puts("");
+
+   rpt_vstring(1, "Using lsusb to summarize USB devices...");
+   execute_shell_cmd("lsusb", 2);
+   puts("");
+   rpt_vstring(1, "USB device toplogy...");
+   execute_shell_cmd("lsusb -t", 2);
+   puts("");
 
    int rc;
 
+   rpt_vstring(1, "Checking for USB HID devices using hiddev...");
    GPtrArray * hiddev_devices = get_hiddev_device_names();
    rpt_vstring(1, "Found %d USB HID devices.", hiddev_devices->len);
    for (int devndx=0; devndx<hiddev_devices->len; devndx++) {

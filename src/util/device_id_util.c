@@ -163,6 +163,19 @@ report_simple_id_table(Simple_Id_Table * simple_table, int depth) {
    }
 }
 
+char * get_simple_id_name(Simple_Id_Table * simple_table, ushort id) {
+   char * result = NULL;
+   for (int ndx = 0; ndx < simple_table->len; ndx++) {
+      Simple_Id_Table_Entry * cur_entry = g_ptr_array_index(simple_table, ndx);
+      if (cur_entry->id == id) {
+         result = cur_entry->name;
+         break;
+      }
+   }
+   return result;
+}
+
+
 
 //
 // *** Global Variables ***
@@ -681,6 +694,10 @@ static void load_id_file(Device_Id_Type id_type){
 }
 
 
+//
+// Internal Report Functions
+//
+
 /* Reports a device id table.
  *
  * Arguments:
@@ -832,6 +849,14 @@ char * devid_usage_code_id_name(ushort usage_page_code, ushort usage_simple_id) 
    return result;
 }
 
+
+
+char * devid_hid_descriptor_item_type(ushort id) {
+   devid_ensure_initialized();
+   char * result = NULL;
+   result = get_simple_id_name(hid_descriptor_item_types, id);
+   return result;
+}
 
 //
 // *** Initialization ***

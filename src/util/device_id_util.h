@@ -57,11 +57,11 @@ Pci_Usb_Id_Names devid_get_usb_names(
 
 // *** HID Descriptor Item Types ***
 // declared here but not defined
-char * devid_hid_descriptor_item_type(ushort id);  // HID entry in usb.ids
+char * devid_hid_descriptor_item_type(ushort id);  // R entry in usb.ids, corresponds to names_reporttag()
 
 // *** HID Descriptor Type ***
 // declared here but not defined
-char * devid_hid_descriptor_type(ushort id);       // R   entry in usb.ids, corresponds to names_reporttag()
+char * devid_hid_descriptor_type(ushort id);       // HID   entry in usb.ids
 
 
 // *** HUT table ***

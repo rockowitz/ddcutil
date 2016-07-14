@@ -596,7 +596,7 @@ bool i2c_bus_exists(int busno) {
                                    namebuf, rc, linux_errno_desc(errsv) );
     }
 
-    DBGTRC(debug, TRACE_GROUP, "busno=%d, returning %s", busno, bool_repr(result) );
+    DBGMSF(debug, "busno=%d, returning %s", busno, bool_repr(result) );
    return result;
 }
 
