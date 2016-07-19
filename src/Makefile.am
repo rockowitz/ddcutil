@@ -81,7 +81,9 @@ app_ddctool/testcases.c
 
 if ENABLE_LIBUSB_COND
 ddctool_SOURCES += \
-util/libusb_reports.c 
+util/libusb_reports.c \
+util/libusb_util.c \
+util/hid_report_descriptor.c
 endif
 
 if ENABLE_LIBUDEV_COND
@@ -191,11 +193,12 @@ util/output_sink.c \
 util/device_id_util.c \
 util/report_util.c \
 util/string_util.c \
+util/usb_hid_common.c \
 util/x11_util.c \
 util/subprocess_util.c
 
 # libcommon_la_SOURCES += \
-# util/libusb_reports.c 
+# util/libusb_reports.c
 
 if HAVE_ADL_COND
 libcommon_la_SOURCES += \

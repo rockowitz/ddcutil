@@ -1,5 +1,7 @@
 /* libusb_reports.c
  *
+ * Report libusb data structures
+ *
  * <copyright>
  * Copyright (C) 2016 Sanford Rockowitz <rockowitz@minsoft.com>
  *
@@ -19,30 +21,31 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  * </endcopyright>
+ *
+ * Portions adapted from lsusb.c by David Brownell
  */
 
 
 // Adapted from usbplay2 file libusb_util.c
 
-#include <stdio.h>
-#include <stdlib.h>
+#include <assert.h>
 #include <errno.h>
 #include <fcntl.h>
+#include <glib.h>
+#include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
-#include <unistd.h>
-#include <errno.h>
 #include <sys/ioctl.h>
-#include <assert.h>
+#include <unistd.h>
 #include <wchar.h>
-
 
 #include "util/string_util.h"
 #include "util/report_util.h"
-// #include "util/pci_id_util.h"
 #include "util/device_id_util.h"
+#include "util/hid_report_descriptor.h"
+#include "util/usb_hid_common.h"
 
-// #include "names.h"
-#include "libusb_reports.h"
+#include "util/libusb_reports.h"
 
 
 //
@@ -73,7 +76,6 @@ Value_Name class_id_table[] = {
       VALUE_NAME_END
 };
 
-
 Value_Name_Title class_code_table[] = {
       /** In the context of a \ref libusb_device_descriptor "device descriptor",
        * LIBUSB_CLASS_PER_INSTANCE indicates that each interface specifies its
@@ -99,9 +101,6 @@ Value_Name_Title class_code_table[] = {
       VN2( LIBUSB_CLASS_VENDOR_SPEC,         "Vendor specific"),       //  0xff
       VN_END2
 };
-
-
-
 
 Value_Name_Title descriptor_type_table[] = {
       VN2( LIBUSB_DT_DEVICE,                "Device"),            // 0x01
@@ -134,7 +133,6 @@ enum libusb_endpoint_direction {
    LIBUSB_ENDPOINT_OUT = 0x00
 };
 #endif
-
 
 
 Value_Name_Title endpoint_direction_table[] = {
@@ -288,8 +286,6 @@ typesafe_control_msg(
 }
 
 #define usb_control_msg    typesafe_control_msg
-
-
 
 
 
@@ -452,11 +448,11 @@ static void dump_unit(unsigned int data, unsigned int len)
 
    printf("          Report Descriptor: (length is %d)\n", l);
    for (i = 0; i < l; ) {
-      bsize = b[i] & 0x03;     // first 2 bits are size indicator
-      if (bsize == 3)          // values are indicators, not the size:
-         bsize = 4;            //  0,1,2,4
-      btype = b[i] & (0x03 << 2);    // next to bits are type
-      btag = b[i] & ~0x03; /* 2 LSB bits encode length */
+      bsize = b[i] & 0x03;           // first 2 bits are size indicator
+      if (bsize == 3)                // values are indicators, not the actual size:
+         bsize = 4;                  //  0,1,2,4
+      btype = b[i] & (0x03 << 2);    // next 2 bits are type
+      btag = b[i] & ~0x03;           // mask out size bits to get tag
 
       printf("            Item(%-6s): %s, data=", types[btype>>2],
             names_reporttag(btag));                                       // ok
@@ -474,6 +470,7 @@ static void dump_unit(unsigned int data, unsigned int len)
       } else
          printf("none");
       printf("\n");
+
       switch (btag) {
       case 0x04: /* Usage Page */
          // printf("%s0x%02x ", indent, data);                                //  A
@@ -490,7 +487,6 @@ static void dump_unit(unsigned int data, unsigned int len)
          printf("%s%s\n", indent,
                devid_usage_code_page_name(data));
                // names_huts(data));
-
          hut = data;
 
          break;
@@ -518,6 +514,7 @@ static void dump_unit(unsigned int data, unsigned int len)
       case 0x54: /* Unit Exponent */
          printf("%sUnit Exponent: %i\n", indent,
                 (signed char)data);
+
          break;
 
       case 0x64: /* Unit */
@@ -1032,15 +1029,23 @@ void report_device_descriptor(
       // uint8_t  iManufacturer;
       rpt_int("iManufacturer", "mfg string descriptor index", desc->iManufacturer, d1);
       char * mfg_name = "";
-      if (dh)
+      wchar_t * mfg_name_w = L"";
+
+      if (dh) {
          mfg_name = lookup_libusb_string(dh, desc->iManufacturer);
+         mfg_name_w =  lookup_libusb_string_wide(dh, desc->iManufacturer) ;
+         wprintf(L"Manufacturer (wide) %d -%ls\n",
+               desc->iManufacturer,
+                 lookup_libusb_string_wide(dh, desc->iManufacturer) );
+      }
       rpt_vstring(d1, "%-20s %d  %s", "iManufacturer:", desc->iManufacturer, mfg_name);
+      rpt_vstring(d1, "%-20s %d  %S", "iManufacturer:", desc->iManufacturer, mfg_name_w);
 
 
 
       /** Index of string descriptor describing product */
       // uint8_t  iProduct;
-      rpt_int("iProduct", "mfg string descriptor index", desc->iProduct, d1);
+      rpt_int("iProduct", "product string descriptor index", desc->iProduct, d1);
 
       /** Index of string descriptor containing device serial number */
       // uint8_t  iSerialNumber;
@@ -1068,6 +1073,10 @@ char * format_port_number_path(unsigned char path[], int portct, char * buf, int
 }
 
 
+bool is_hub_descriptor(const struct libusb_device_descriptor * desc) {
+   return (desc->bDeviceClass == 9);
+}
+
 
 
 void report_dev(
@@ -1076,6 +1085,9 @@ void report_dev(
       bool                    show_hubs,
       int                     depth)
 {
+   bool debug = true;
+   if (debug)
+      printf("(%s) Starting.  dev=%p, dh=%p, show_hubs=%s\n", __func__, dev, dh, bool_repr(show_hubs));
    int d1 = depth+1;
    int rc;
    // int j;
@@ -1103,263 +1115,58 @@ void report_dev(
       rpt_title("Is hub device, skipping detail", d1);
    }
    else {
-      report_device_descriptor(&desc, NULL, d1);
+
+      struct libusb_device_handle * dh = NULL;
+      int rc = libusb_open(dev, &dh);
+      if (rc < 0) {
+         REPORT_LIBUSB_ERROR("libusb_open", rc, LIBUSB_CONTINUE);
+         dh = NULL;   // belt and suspenders
+      }
+      else {
+         printf("(%s) Successfully opened\n", __func__);
+         int has_detach_kernel_capability =
+               libusb_has_capability(LIBUSB_CAP_SUPPORTS_DETACH_KERNEL_DRIVER);
+         printf("(%s) %s kernel detach driver capability\n",
+                __func__,
+                (has_detach_kernel_capability) ?
+                      "Has" : "Does not have");
+
+         if (has_detach_kernel_capability) {
+            rc = libusb_set_auto_detach_kernel_driver(dh, 1);
+            if (rc < 0) {
+               REPORT_LIBUSB_ERROR("libusb_set_auto_detach_kernel_driver", rc, LIBUSB_CONTINUE);
+            }
+         }
+
+      }
+
+
+      report_device_descriptor(&desc, dh, d1);
       struct libusb_config_descriptor *config;
       libusb_get_config_descriptor(dev, 0, &config);  // returns a pointer
       report_config_descriptor(config, dh, d1);
       libusb_free_config_descriptor(config);
+      if (dh)
+         libusb_close(dh);
    }
    printf("\n");
+   if (debug)
+      printf("(%s) Done\n", __func__);
 }
 
 
-// Identify HID interfaces that that are not keyboard or mouse
-
-
-
-static bool possible_monitor_interface_descriptor(
-      const struct libusb_interface_descriptor * inter) {
-   bool result = false;
-   if (inter->bInterfaceClass == LIBUSB_CLASS_HID) {
-      rpt_vstring(0, "bInterfaceClass:     0x%02x (%d)", inter->bInterfaceClass,    inter->bInterfaceClass);
-      rpt_vstring(0, "bInterfaceSubClass:  0x%02x (%d)", inter->bInterfaceSubClass, inter->bInterfaceSubClass);
-      rpt_int("bInterfaceProtocol", NULL, inter->bInterfaceProtocol, 0);
-      if (inter->bInterfaceProtocol != 1 && inter->bInterfaceProtocol != 2)
-         result = true;
-   }
-   // printf("(%s) Returning %d\n", __func__, result);
-   return result;
-}
-
-static bool possible_monitor_interface(const struct libusb_interface * interface) {
-   bool result = false;
-   int ndx;
-   for (ndx=0; ndx<interface->num_altsetting; ndx++) {
-      const struct libusb_interface_descriptor * idesc = &interface->altsetting[ndx];
-      // report_interface_descriptor(idesc, d1);
-      result |= possible_monitor_interface_descriptor(idesc);
-   }
-   // if (result)
-   //    printf("(%s) Returning: %d\n", __func__, result);
-   return result;
-}
-
-
-
-
-bool possible_monitor_config_descriptor(
-      const struct libusb_config_descriptor * config)
+// Report a list of libusb_devices
+void report_libusb_devices(libusb_device **devs, bool show_hubs, int depth)
 {
-    bool result = false;
+      libusb_device *dev;
 
-    int ndx = 0;
-    if (config->bNumInterfaces > 1)
-       printf("(%s) Examining only interface 0\n", __func__);
-    // HACK: look at only interface 0
-    // for (ndx=0; ndx<config->bNumInterfaces; ndx++) {
-       const struct libusb_interface *inter = &(config->interface[ndx]);
-       result |= possible_monitor_interface(inter);
-    // }
-
-    // if (result)
-    //    printf("(%s) Returning: %d\n", __func__, result);
-    return result;
-}
-
-
-bool possible_monitor_dev(libusb_device * dev) {
-   bool result = false;
-
-   struct libusb_config_descriptor *config;
-   libusb_get_config_descriptor(dev, 0, &config);
-
-   result = possible_monitor_config_descriptor(config);
-
-   libusb_free_config_descriptor(config);
-
-   // printf("(%s) Returning %d\n:" , __func__, result);
-   return result;
-}
-
-
-struct possible_monitor_device * new_possible_monitor_device() {
-   struct possible_monitor_device * cur = calloc(1, sizeof(struct possible_monitor_device));
-   return cur;
-}
-
-
-void report_possible_monitor_device(struct possible_monitor_device * mondev, int depth) {
-   int d1 = depth+1;
-
-   rpt_structure_loc("possible_monitor_device", mondev, depth);
-
-   rpt_vstring(d1, "%-20s   %p", "libusb_device", mondev->libusb_device);
-   rpt_vstring(d1, "%-20s   %d", "bus", mondev->bus);
-   rpt_vstring(d1, "%-20s   %d", "device_address", mondev->device_address);
-   rpt_vstring(d1, "%-20s   0x%04x", "vid", mondev->vid);
-   rpt_vstring(d1, "%-20s   0x%04x", "pid", mondev->pid);
-   rpt_vstring(d1, "%-20s   %d", "interface", mondev->interface);
-   rpt_vstring(d1, "%-20s   %d", "alt_setting", mondev->alt_setting);
-   rpt_vstring(d1, "%-20s   %s", "manufacturer_name", mondev->manufacturer_name);
-   rpt_vstring(d1, "%-20s   %s", "product_name", mondev->product_name);
-   rpt_vstring(d1, "%-20s   %s", "serial_number_ascii", mondev->serial_number);
-// rpt_vstring(d1, "%-20s   %S", "serial_number_wide", mondev->serial_number_wide);
-   rpt_vstring(d1, "%-20s   %p", "next", mondev->next);
-}
-
-
-void report_possible_monitors(struct possible_monitor_device * mondev_head, int depth) {
-   rpt_title("Possible monitor devices:", depth);
-   if (!mondev_head) {
-      rpt_title("None", depth+1);
-   }
-   else {
-      struct possible_monitor_device * cur = mondev_head;
-      while(cur) {
-         report_possible_monitor_device(cur, depth+1);
-         cur = cur->next;
+      int i = 0;
+      while ((dev = devs[i++]) != NULL) {
+         report_dev(dev, NULL, show_hubs, depth);
       }
-   }
 }
 
 
-struct possible_monitor_device * get_possible_monitors(
-       libusb_device **devs      // null terminated list
-      )
-{
-   // struct possible_monitor_device * last_device = new_possible_monitor_device();
-   // struct possible_mointor_device * head_device = last_device;
-
-   Possible_Monitor_Device * last_device = new_possible_monitor_device();
-   Possible_Monitor_Device * head_device = last_device;
-
-
-   int rc;
-   libusb_device *dev;
-
-   int i = 0;
-   while ((dev = devs[i++]) != NULL) {
-      // report_dev(dev, NULL, false /* show hubs */, 0);
-      int bus            = libusb_get_bus_number(dev);
-      int device_address = libusb_get_device_address(dev);
-      ushort vid = 0;
-      ushort pid = 0;
-
-      struct libusb_device_descriptor desc;
-      rc = libusb_get_device_descriptor(dev, &desc);
-      CHECK_LIBUSB_RC("libusb_device_descriptor", rc, LIBUSB_EXIT);
-      vid = desc.idVendor;
-      pid = desc.idProduct;
-
-      struct libusb_config_descriptor * config;
-      rc = libusb_get_config_descriptor(dev, 0, &config);   // returns a pointer
-      CHECK_LIBUSB_RC("libusb_config_descriptor", rc, LIBUSB_EXIT);
-
-      // Logitech receiver has subclass 0 on interface 2,
-      // try ignoring all interfaces other than 0
-      int inter_no = 0;
-      // for (inter_no=0; inter_no<config->bNumInterfaces; inter_no++) {
-         const struct libusb_interface *inter = &(config->interface[inter_no]);
-
-         int altset_no;
-         for (altset_no=0; altset_no<inter->num_altsetting; altset_no++) {
-            const struct libusb_interface_descriptor * idesc  = &inter->altsetting[altset_no];
-
-            if (idesc->bInterfaceClass == LIBUSB_CLASS_HID) {
-               rpt_vstring(0, "bInterfaceClass:     0x%02x (%d)", idesc->bInterfaceClass,    idesc->bInterfaceClass);
-               rpt_vstring(0, "bInterfaceSubClass:  0x%02x (%d)", idesc->bInterfaceSubClass, idesc->bInterfaceSubClass);
-               rpt_int("bInterfaceProtocol", NULL, idesc->bInterfaceProtocol, 0);
-
-               if (idesc->bInterfaceProtocol != 1 && idesc->bInterfaceProtocol != 2)
-               {
-                  // TO ADDRESS: WHAT IF MULTIPLE altsettings?  what if they conflict?
-
-                  struct possible_monitor_device * new_node = new_possible_monitor_device();
-                  libusb_ref_device(dev);
-                  new_node->libusb_device = dev;
-                  new_node->bus = bus;
-                  new_node->device_address = device_address;
-                  new_node->alt_setting = altset_no;
-                  new_node->interface = inter_no;
-                  new_node->vid = vid;
-                  new_node->pid = pid;
-
-                  struct libusb_device_handle * dh = NULL;
-                  rc = libusb_open(dev, &dh);
-                  if (rc < 0) {
-                     REPORT_LIBUSB_ERROR("libusb_open", rc, LIBUSB_CONTINUE);
-                     dh = NULL;   // belt and suspenders
-                  }
-                  else {
-                     printf("(%s) Successfully opened\n", __func__);
-                     rc = libusb_set_auto_detach_kernel_driver(dh, 1);
-                  }
-
-                  report_dev(dev, dh, false, 0);
-
-                  if (dh) {
-                     printf("Manufacturer:  %d - %s\n",
-                               desc.iManufacturer,
-                               lookup_libusb_string(dh, desc.iManufacturer) );
-                     printf("Product:  %d - %s\n",
-                               desc.iProduct,
-                               lookup_libusb_string(dh, desc.iProduct) );
-                     printf("Serial number:  %d - %s\n",
-                                          desc.iSerialNumber,
-                                          lookup_libusb_string(dh, desc.iSerialNumber) );
-                     new_node->manufacturer_name = strdup(lookup_libusb_string(dh, desc.iManufacturer));
-                     new_node->product_name      = strdup(lookup_libusb_string(dh, desc.iProduct));
-                     new_node->serial_number     = strdup(lookup_libusb_string(dh, desc.iSerialNumber));
-                  // new_node->serial_number_wide = wcsdup(lookup_libusb_string_wide(dh, desc.iSerialNumber));
-                     // printf("(%s) serial_number_wide = |%S|\n", __func__, new_node->serial_number_wide);
-
-                     // report_device_descriptor(&desc, NULL, d1);
-                     // report_open_libusb_device(dh, 1);
-                     libusb_close(dh);
-                  }
-
-                  last_device->next = new_node;
-                  last_device = new_node;
-
-               }
-            }
-         }
-      // }   // interfaces
-
-      libusb_free_config_descriptor(config);
-   }
-
-   struct possible_monitor_device * true_head;
-   true_head = head_device->next;
-   return true_head;
-}
-
-
-
-bool is_hub_descriptor(const struct libusb_device_descriptor * desc) {
-   return (desc->bDeviceClass == 9);
-}
-
-
-// copied and modified from make_path() in libusb/hid.c in hidapi
-
-char *make_path(int bus_number, int device_address, int interface_number)
-{
-   char str[64];
-   snprintf(str, sizeof(str), "%04x:%04x:%02x",
-      bus_number,
-      device_address,
-      interface_number);
-   str[sizeof(str)-1] = '\0';
-
-   return strdup(str);
-}
-
-
-char *make_path_from_libusb_device(libusb_device *dev, int interface_number)
-{
-   return make_path(libusb_get_bus_number(dev), libusb_get_device_address(dev), interface_number);
-}
 
 #ifdef REF
 typedef struct hid_class_descriptor {
@@ -1387,7 +1194,7 @@ void report_hid_descriptor(
         HID_Descriptor *       desc,
         int                    depth)
 {
-   bool debug = true;
+   bool debug = false;
    if (debug)
       printf("(%s) Starting. dh=%p, bInterfaceNumber=%d, desc=%p\n",
             __func__, dh, bInterfaceNumber, desc);
@@ -1425,137 +1232,29 @@ void report_hid_descriptor(
       }
       else {
          bool ok = get_raw_report_descriptor(
-                 dh,    // may be null, need to check
+                 dh,
                  bInterfaceNumber,
                  descriptor_len,              // report length
                  dbuf,
                  sizeof(dbuf) );
-         printf("(%s) get_raw_report_descriptor() returned %s\n", __func__, bool_repr(ok));
+         if (!ok)
+            printf("(%s) get_raw_report_descriptor() returned %s\n", __func__, bool_repr(ok));
+         if (ok) {
+            Parsed_Hid_Descriptor * phd =  parse_report_desc(dbuf, descriptor_len);
+            if (phd) {
+               report_parsed_hid_descriptor(phd, depth+1);
+            }
+         }
       }
    }
 
 
 }
+
+
 
 
 void init_names() {
    devid_ensure_initialized();
 }
-
-
-// From usbplay2.c
-
-// TODO: return a data structure
-void collect_possible_monitor_devs( libusb_device **devs) {
-   libusb_device *dev;
-
-   int has_detach_kernel_capability =
-         libusb_has_capability(LIBUSB_CAP_SUPPORTS_DETACH_KERNEL_DRIVER);
-   printf("(%s) %s kernel detach driver capability\n",
-          __func__,
-          (has_detach_kernel_capability) ?
-                "Has" : "Does not have");
-
-   int i = 0;
-   while ((dev = devs[i++]) != NULL) {
-
-      unsigned short busno =  libusb_get_bus_number(dev);
-      unsigned short devno =  libusb_get_device_address(dev);
-
-      printf("(%s) Examining device. bus=0x%04x, device=0x%04x\n", __func__, busno, devno);
-      bool possible = possible_monitor_dev(dev);
-      if (possible) {
-         printf("(%s) Found potential HID device. busno=0x%04x, devno=0x%04x\n", __func__, busno, devno);
-
-         struct libusb_device_handle * dh = NULL;
-         int rc = libusb_open(dev, &dh);
-         if (rc < 0) {
-            REPORT_LIBUSB_ERROR("libusb_open", rc, LIBUSB_CONTINUE);
-            dh = NULL;   // belt and suspenders
-         }
-         else {
-            printf("(%s) Successfully opened\n", __func__);
-            if (has_detach_kernel_capability) {
-               rc = libusb_set_auto_detach_kernel_driver(dh, 1);
-               if (rc < 0) {
-                  REPORT_LIBUSB_ERROR("libusb_set_auto_detach_kernel_driver", rc, LIBUSB_CONTINUE);
-               }
-            }
-         }
-
-         report_dev(dev, dh, false, 0);
-
-
-         if (dh) {
-            struct libusb_device_descriptor desc;
-            // copies data into struct pointed to by desc, does not allocate:
-            rc = libusb_get_device_descriptor(dev, &desc);
-            if (rc < 0)
-               REPORT_LIBUSB_ERROR("libusb_get_device_descriptor",  rc, LIBUSB_EXIT);
-
-            printf("Manufacturer:  %d - %s\n",
-                      desc.iManufacturer,
-                      lookup_libusb_string(dh, desc.iManufacturer) );
-
-
-            printf("Product:  %d - %s\n",
-                      desc.iProduct,
-                      lookup_libusb_string(dh, desc.iProduct) );
-
-            printf("Serial number:  %d - %s\n",
-                                 desc.iSerialNumber,
-                                 lookup_libusb_string(dh, desc.iSerialNumber) );
-
-            // report_device_descriptor(&desc, NULL, d1);
-            // report_open_libusb_device(dh, 1);
-            libusb_close(dh);
-         }
-      }
-   }
-}
-
-
-// Report a list of libusb_devices
-static void report_libusb_devices(libusb_device **devs, bool show_hubs, int depth)
-{
-      libusb_device *dev;
-
-      int i = 0;
-      while ((dev = devs[i++]) != NULL) {
-         report_dev(dev, NULL, show_hubs, depth);
-      }
-}
-
-
-// Probe using libusb
-void probe_libusb(bool possible_monitors_only) {
-   printf("(libusb) Starting\n");
-
-   bool ok = devid_ensure_initialized();
-   printf("(libusb) devid_ensure_initialized() returned: %s\n", bool_repr(ok));
-
-   libusb_device **devs;
-   libusb_context *ctx = NULL; //a libusb session
-   int r;
-   ssize_t cnt;   // number of devices in list
-
-   r = libusb_init(&ctx);   // initialize a library session
-   CHECK_LIBUSB_RC("libusb_init", r, LIBUSB_EXIT);
-   libusb_set_debug(ctx,3);
-
-   cnt = libusb_get_device_list(ctx, &devs);
-   CHECK_LIBUSB_RC("libusb_get_device_list", (int) cnt, LIBUSB_EXIT);
-
-   if (!possible_monitors_only)
-      report_libusb_devices(devs, false /* show_hubs */, 0);
-
-   // ignore result for now
-   printf("(%s) =========== Calling collect_possible_monitor_devs() ==============\n", __func__);
-   collect_possible_monitor_devs(devs);   // this is just a filter!
-
-   libusb_free_device_list(devs, 1 /* unref the devices in the list */);
-
-   libusb_exit(ctx);
-}
-
 

@@ -839,7 +839,11 @@ char * devid_usage_code_page_name(ushort usage_page_code) {
 // corresponds to names_hutus() in names
 // first and second fields of HUT entry in usb.ids
 char * devid_usage_code_id_name(ushort usage_page_code, ushort usage_simple_id) {
-   // printf("(%s) usage_page_code=0x%04x, usage_simple_id=0x%04x\n", __func__, usage_page_code, usage_simple_id);
+   bool debug = false;
+   if (debug) {
+      printf("(%s) usage_page_code=0x%04x, usage_simple_id=0x%04x\n",
+             __func__, usage_page_code, usage_simple_id);
+   }
    devid_ensure_initialized();
    char * result = NULL;
    // ushort * args = {usage_page_code, usage_simple_id};
@@ -849,7 +853,14 @@ char * devid_usage_code_id_name(ushort usage_page_code, ushort usage_simple_id) 
    return result;
 }
 
+char * devid_usage_code_name_by_extended_id(uint32_t extended_usage) {
+   return devid_usage_code_id_name( extended_usage >> 16, extended_usage & 0xffff );
+}
 
+
+// HID documentation refers to this as item tag
+// usb.ids file refers to this as item type
+// is actually 1 byte
 
 char * devid_hid_descriptor_item_type(ushort id) {
    devid_ensure_initialized();
@@ -857,6 +868,7 @@ char * devid_hid_descriptor_item_type(ushort id) {
    result = get_simple_id_name(hid_descriptor_item_types, id);
    return result;
 }
+
 
 //
 // *** Initialization ***

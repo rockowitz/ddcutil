@@ -23,10 +23,11 @@
 
 // Adapted from usbplay2 file libusb_util.h
 
-#include <libusb-1.0/libusb.h>      // need pkgconfig?
 
-#ifndef LIBUSB_UTIL_H_
-#define LIBUSB_UTIL_H_
+#ifndef LIBUSB_REPORTS_H_
+#define LIBUSB_REPORTS_H_
+
+#include <libusb-1.0/libusb.h>      // need pkgconfig?
 
 
 #define LIBUSB_EXIT     true
@@ -105,35 +106,19 @@ void report_dev(
         bool                                       show_hubs,
         int                                        depth);
 
+void report_libusb_devices(
+        libusb_device **                           devs,
+        bool                                       show_hubs,
+        int                                        depth);
 
-bool possible_monitor_dev(libusb_device * dev);
+bool get_raw_report_descriptor(
+        struct libusb_device_handle * dh,
+        uint8_t                       bInterfaceNumber,
+        uint16_t                      rptlen,        // report length
+        Byte *                        dbuf,
+        int                           dbufsz);
+
 bool is_hub_descriptor(const struct libusb_device_descriptor * desc);
-
-// singly linked list of possbile monitors
-struct possible_monitor_device {
-   libusb_device * libusb_device;
-   int             bus;
-   int             device_address;
-   int             alt_setting;
-   int             interface;
-   ushort          vid;
-   ushort          pid;
-   char *          manufacturer_name;
-   char *          product_name;
-   // conversion is annoying, just retrieve both ascii and wchar version of the serial number
-   // wchar_t *       serial_number_wide;
-   char *          serial_number;  // retrieved as ASCII, note some usages expect wchar
-   struct possible_monitor_device * next;
-};
-typedef struct possible_monitor_device Possible_Monitor_Device;
-
-struct possible_monitor_device * get_possible_monitors();
-
-void report_possible_monitors(struct possible_monitor_device * mondev_head, int depth);
-
-char *make_path(int bus_number, int device_address, int interface_number);
-
-char *make_path_from_libusb_device(libusb_device *dev, int interface_number);
 
 // really belongs elsewhere
 
@@ -161,6 +146,4 @@ void report_hid_descriptor(
 
 
 
-void probe_libusb(bool possible_monitors_only);
-
-#endif /* LIBUSB_UTIL_H_ */
+#endif /* LIBUSB_REPORTS_H_ */

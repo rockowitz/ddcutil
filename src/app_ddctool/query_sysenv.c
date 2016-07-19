@@ -61,7 +61,8 @@
 #include "util/hiddev_reports.h"
 #include "util/hiddev_util.h"
 #ifdef USE_LIBUSB
-#include "util/libusb_reports.h"
+// #include "util/libusb_reports.h"
+#include "util/libusb_util.h"
 #endif
 #include "util/report_util.h"
 #include "util/string_util.h"
