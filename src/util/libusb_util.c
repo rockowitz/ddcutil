@@ -1,8 +1,5 @@
 /* libusb_util.c
  *
- * Created on: Jul 18, 2016
- *     Author: rock
- *
  * <copyright>
  * Copyright (C) 2014-2015 Sanford Rockowitz <rockowitz@minsoft.com>
  *
@@ -88,18 +85,18 @@ void report_possible_monitor_device(struct possible_monitor_device * mondev, int
 
    rpt_structure_loc("possible_monitor_device", mondev, depth);
 
-   rpt_vstring(d1, "%-20s   %p", "libusb_device", mondev->libusb_device);
-   rpt_vstring(d1, "%-20s   %d", "bus", mondev->bus);
-   rpt_vstring(d1, "%-20s   %d", "device_address", mondev->device_address);
-   rpt_vstring(d1, "%-20s   0x%04x", "vid", mondev->vid);
-   rpt_vstring(d1, "%-20s   0x%04x", "pid", mondev->pid);
-   rpt_vstring(d1, "%-20s   %d", "interface", mondev->interface);
-   rpt_vstring(d1, "%-20s   %d", "alt_setting", mondev->alt_setting);
-   rpt_vstring(d1, "%-20s   %s", "manufacturer_name", mondev->manufacturer_name);
-   rpt_vstring(d1, "%-20s   %s", "product_name", mondev->product_name);
-   rpt_vstring(d1, "%-20s   %s", "serial_number_ascii", mondev->serial_number);
-// rpt_vstring(d1, "%-20s   %S", "serial_number_wide", mondev->serial_number_wide);
-   rpt_vstring(d1, "%-20s   %p", "next_sibling", mondev->next);
+   rpt_vstring(d1, "%-20s   %p",     "libusb_device",       mondev->libusb_device);
+   rpt_vstring(d1, "%-20s   %d",     "bus",                 mondev->bus);
+   rpt_vstring(d1, "%-20s   %d",     "device_address",      mondev->device_address);
+   rpt_vstring(d1, "%-20s   0x%04x", "vid",                 mondev->vid);
+   rpt_vstring(d1, "%-20s   0x%04x", "pid",                 mondev->pid);
+   rpt_vstring(d1, "%-20s   %d",     "interface",           mondev->interface);
+   rpt_vstring(d1, "%-20s   %d",     "alt_setting",         mondev->alt_setting);
+   rpt_vstring(d1, "%-20s   %s",     "manufacturer_name",   mondev->manufacturer_name);
+   rpt_vstring(d1, "%-20s   %s",     "product_name",        mondev->product_name);
+   rpt_vstring(d1, "%-20s   %s",     "serial_number_ascii", mondev->serial_number);
+// rpt_vstring(d1, "%-20s   %S",     "serial_number_wide",  mondev->serial_number_wide);
+   rpt_vstring(d1, "%-20s   %p",      "next_sibling",       mondev->next);
 }
 
 
@@ -118,16 +115,43 @@ void report_possible_monitors(struct possible_monitor_device * mondev_head, int 
 }
 
 
+typedef struct descriptor_path {
+   unsigned short busno;
+   unsigned short devno;
+   struct libusb_device_descriptor *    desc;
+   struct libusb_device *               dev;
+   struct libusb_config_descriptor *    config;
+   struct libusb_interface *            interface;
+   struct libusb_interface_descriptor * inter;
+} Descriptor_Path;
+
+
+void report_descriptor_path(Descriptor_Path * pdpath, int depth) {
+   int d1 = depth+1;
+
+   rpt_structure_loc("Descriptor_Path", pdpath, depth);
+   rpt_vstring(d1, "%-20s %d", "busno:", pdpath->busno);
+   rpt_vstring(d1, "%-20s %d", "devno:", pdpath->devno);
+   rpt_vstring(d1, "%-20s %p", "desc:",  pdpath->desc);
+   rpt_vstring(d1, "%-20s %p", "dev:",  pdpath->dev);
+   rpt_vstring(d1, "%-20s %p", "config:",  pdpath->config);
+   rpt_vstring(d1, "%-20s %p", "interface:",  pdpath->interface);
+   rpt_vstring(d1, "%-20s %p", "inter:",  pdpath->inter);
+}
+
+
 //
 // Identify HID interfaces that that are not keyboard or mouse
 //
 
 static bool possible_monitor_interface_descriptor(
-      const struct libusb_interface_descriptor * inter)
+      const struct libusb_interface_descriptor * inter, Descriptor_Path dpath)
 {
    bool debug = false;
    if (debug)
       printf("(%s) Starting.\n", __func__);
+
+   dpath.inter = inter;
 
    bool result = false;
    if (inter->bInterfaceClass == LIBUSB_CLASS_HID) {
@@ -146,18 +170,20 @@ static bool possible_monitor_interface_descriptor(
 
 
 static bool possible_monitor_interface(
-      const struct libusb_interface * interface)
+      const struct libusb_interface * interface, Descriptor_Path dpath)
 {
    bool debug = false;
    if (debug)
       printf("(%s) Starting.\n", __func__);
+
+   dpath.interface = interface;
 
    bool result = false;
    int ndx;
    for (ndx=0; ndx<interface->num_altsetting; ndx++) {
       const struct libusb_interface_descriptor * idesc = &interface->altsetting[ndx];
       // report_interface_descriptor(idesc, d1);
-      result |= possible_monitor_interface_descriptor(idesc);
+      result |= possible_monitor_interface_descriptor(idesc, dpath);
    }
 
    if (debug)
@@ -166,18 +192,35 @@ static bool possible_monitor_interface(
 }
 
 static bool possible_monitor_config_descriptor(
-      const struct libusb_config_descriptor * config)
+      const struct libusb_config_descriptor * config, Descriptor_Path dpath)
 {
     bool result = false;
 
+    dpath.config = config;
+
     int ndx = 0;
-    if (config->bNumInterfaces > 1)
-       printf("(%s) Examining only interface 0\n", __func__);
+    if (config->bNumInterfaces > 1) {
+       // report_descriptor_path(&dpath, 0);
+       uint16_t vid = dpath.desc->idVendor;
+       uint16_t pid = dpath.desc->idProduct;
+
+       Pci_Usb_Id_Names names;
+       names = devid_get_usb_names(
+                       vid,
+                       pid,
+                       0,
+                       2);
+
+
+       printf("(%s) Examining only interface 0 for device %d:%d, vid=0x%04x, pid=0x%04x  %s %s\n",
+              __func__, dpath.busno, dpath.devno, vid, pid, names.vendor_name, names.device_name);
+    }
     // HACK: look at only interface 0
     // for (ndx=0; ndx<config->bNumInterfaces; ndx++) {
        const struct libusb_interface *inter = &(config->interface[ndx]);
-       result |= possible_monitor_interface(inter);
+       result |= possible_monitor_interface(inter, dpath);
     // }
+
 
     // if (result)
     //    printf("(%s) Returning: %d\n", __func__, result);
@@ -185,7 +228,7 @@ static bool possible_monitor_config_descriptor(
 }
 
 
-bool possible_monitor_dev(libusb_device * dev, bool check_forced_monitor) {
+bool possible_monitor_dev(libusb_device * dev, bool check_forced_monitor, Descriptor_Path dpath) {
    bool debug = false;
    if (debug)
       printf("(%s) Starting. dev=%p\n", __func__, dev);
@@ -194,7 +237,17 @@ bool possible_monitor_dev(libusb_device * dev, bool check_forced_monitor) {
    struct libusb_config_descriptor *config;
    libusb_get_config_descriptor(dev, 0, &config);
 
-   result = possible_monitor_config_descriptor(config);
+   struct libusb_device_descriptor desc;
+    // copies data into struct pointed to by desc, does not allocate:
+    int rc = libusb_get_device_descriptor(dev, &desc);
+    if (rc < 0)
+       REPORT_LIBUSB_ERROR("libusb_get_device_descriptor",  rc, LIBUSB_EXIT);
+   dpath.desc = &desc;
+
+
+   dpath.dev    = dev;
+
+   result = possible_monitor_config_descriptor(config, dpath);
 
    libusb_free_config_descriptor(config);
 
@@ -211,17 +264,20 @@ bool possible_monitor_dev(libusb_device * dev, bool check_forced_monitor) {
       result = force_hid_monitor_by_vid_pid(vid, pid);
    }
 
-
    if (debug)
       printf("(%s) Returning: %s\n" , __func__, bool_repr(result));
    return result;
 }
 
 
+// Not currently used.
+// check_forced_monitor not implemented
+// apparently can get by without collected information in struct possible_monitor_device
+
 struct possible_monitor_device *
 alt_possible_monitor_dev(
       libusb_device *  dev,
-      bool             check_forced_monitor)
+      bool             check_forced_monitor)   // NOT CURRENTLY USED!
 {
    bool debug = true;
    if (debug)
@@ -276,6 +332,9 @@ alt_possible_monitor_dev(
                new_node->vid = vid;
                new_node->pid = pid;
 
+               // if (debug)
+               //    report_dev(dev, NULL, false, 0);
+
                struct libusb_device_handle * dh = NULL;
                rc = libusb_open(dev, &dh);
                if (rc < 0) {
@@ -287,8 +346,7 @@ alt_possible_monitor_dev(
                   rc = libusb_set_auto_detach_kernel_driver(dh, 1);
                }
 
-               if (debug)
-                  report_dev(dev, dh, false, 0);
+
 
                if (dh) {
                   if (true) {     // TEMP - should be debug
@@ -329,6 +387,7 @@ alt_possible_monitor_dev(
  *  Returns a linked list of struct possible_monitor_device that represents
  *  possible monitors
  */
+// not currently used
 struct possible_monitor_device *
 get_possible_monitors(
        libusb_device **devs      // null terminated list
@@ -387,12 +446,41 @@ libusb_device ** collect_possible_monitor_devs( libusb_device **devs) {
       unsigned short busno =  libusb_get_bus_number(dev);
       unsigned short devno =  libusb_get_device_address(dev);
 
+      Descriptor_Path dpath;
+      memset(&dpath, 0, sizeof(Descriptor_Path));
+      dpath.busno = busno;
+      dpath.devno = devno;
+
+
+      struct libusb_device_descriptor desc;
+      // copies data into struct pointed to by desc, does not allocate:
+      int rc = libusb_get_device_descriptor(dev, &desc);
+      if (rc < 0)
+         REPORT_LIBUSB_ERROR("libusb_get_device_descriptor",  rc, LIBUSB_EXIT);
+      dpath.desc = &desc;
+
+
       if (debug)
          printf("(%s) Examining device. bus=0x%04x, device=0x%04x\n", __func__, busno, devno);
-      bool possible = possible_monitor_dev(dev, /*check_forced_monitor=*/ true);
+
+      bool possible = possible_monitor_dev(dev, /*check_forced_monitor=*/ true, dpath);
 
       if (possible) {
-         printf("(%s) Found potential HID device. busno=0x%04x, devno=0x%04x\n", __func__, busno, devno);
+         uint16_t vid = dpath.desc->idVendor;
+         uint16_t pid = dpath.desc->idProduct;
+
+         Pci_Usb_Id_Names names;
+         names = devid_get_usb_names(
+                         vid,
+                         pid,
+                         0,
+                         2);
+
+
+         printf("Found potential HID device %d:%d, vid=0x%04x, pid=0x%04x  %s %s\n",
+                dpath.busno, dpath.devno, vid, pid, names.vendor_name,
+                (names.device_name) ? names.device_name : "(unrecognized pid)");
+
          result[foundndx++] = dev;
 
 #ifdef OUT
@@ -467,28 +555,40 @@ void probe_libusb(bool possible_monitors_only) {
       printf("(%s) Starting\n", __func__);
 
    bool ok = devid_ensure_initialized();
-   printf("(%s) devid_ensure_initialized() returned: %s\n", __func__, bool_repr(ok));
+   if (!ok) {
+      printf("(%s) devid_ensure_initialized() failed.  Terminating probe_libusb()\n", __func__);
+      return;
+   }
 
    libusb_device **devs;
-   libusb_context *ctx = NULL; //a libusb session
-   int r;
+   // libusb_context *ctx = NULL; //a libusb session
+   int rc;
    ssize_t cnt;   // number of devices in list
 
-   r = libusb_init(&ctx);   // initialize a library session
-   CHECK_LIBUSB_RC("libusb_init", r, LIBUSB_EXIT);
-   libusb_set_debug(ctx,3);
+   // rc = libusb_init(&ctx);   // initialize a library session
+   rc = libusb_init(NULL);      // initialize a library session, use default context
+   CHECK_LIBUSB_RC("libusb_init", rc, LIBUSB_EXIT);
+   // libusb_set_debug(ctx,3);
+   libusb_set_debug(NULL /*default context*/, LIBUSB_LOG_LEVEL_INFO);
 
-   cnt = libusb_get_device_list(ctx, &devs);
+   // cnt = libusb_get_device_list(ctx, &devs);
+   cnt = libusb_get_device_list(NULL /* default context */, &devs);
    CHECK_LIBUSB_RC("libusb_get_device_list", (int) cnt, LIBUSB_EXIT);
 
    libusb_device ** devs_to_show = devs;
    if (possible_monitors_only)
       devs_to_show = collect_possible_monitor_devs(devs);
-   report_libusb_devices(devs_to_show, false /* show_hubs */, 0);
+   report_libusb_devices(devs_to_show,
+                         false,         // show_hubs
+                         0);            // depth
 
    libusb_free_device_list(devs, 1 /* unref the devices in the list */);
 
-   libusb_exit(ctx);
+   // libusb_exit(ctx);
+   libusb_exit(NULL);
+   if (debug)
+      printf("(%s) Done\n", __func__);
+
 }
 
 

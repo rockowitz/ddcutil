@@ -81,24 +81,24 @@ Value_Name_Title class_code_table[] = {
        * LIBUSB_CLASS_PER_INSTANCE indicates that each interface specifies its
        * own class information and all interfaces operate independently.
        */
-      VN2( LIBUSB_CLASS_PER_INTERFACE,       "Per interface"),   // 0
-      VN2( LIBUSB_CLASS_AUDIO,               "Audio"),           // 1
-      VN2( LIBUSB_CLASS_COMM,                "Communications"),  // 2
+      VN2( LIBUSB_CLASS_PER_INTERFACE,       "Per interface"),       // 0
+      VN2( LIBUSB_CLASS_AUDIO,               "Audio"),               // 1
+      VN2( LIBUSB_CLASS_COMM,                "Communications"),      // 2
       VN2( LIBUSB_CLASS_HID,                 "Human Interface Device"),  // 3
-      VN2( LIBUSB_CLASS_PHYSICAL,            "Physical device"),  //5
-      VN2( LIBUSB_CLASS_PRINTER,             "Printer"), // 7
-      VN2( LIBUSB_CLASS_IMAGE,               "Image"),  // 6
-      VN2( LIBUSB_CLASS_MASS_STORAGE,        "Mass storage"),  // 8
-      VN2( LIBUSB_CLASS_HUB,                 "Hub"),   // 9
-      VN2( LIBUSB_CLASS_DATA,                "Data"),     // 10
-      VN2( LIBUSB_CLASS_SMART_CARD,          "Smart card"),     // 0x0b
-      VN2( LIBUSB_CLASS_CONTENT_SECURITY,    "Content security"), // 0x0d
-      VN2( LIBUSB_CLASS_VIDEO,               "Video"),            // 0x0e
-      VN2( LIBUSB_CLASS_PERSONAL_HEALTHCARE, "Personal healthcare"),  // 0x0f
-      VN2( LIBUSB_CLASS_DIAGNOSTIC_DEVICE,   "Diagnostic device"),    // 0xdc
-      VN2( LIBUSB_CLASS_WIRELESS,            "Wireless"),             // 0xe0
-      VN2( LIBUSB_CLASS_APPLICATION,         "Application"),          // 0xfe
-      VN2( LIBUSB_CLASS_VENDOR_SPEC,         "Vendor specific"),       //  0xff
+      VN2( LIBUSB_CLASS_PHYSICAL,            "Physical device"),     //5
+      VN2( LIBUSB_CLASS_PRINTER,             "Printer"),             // 7
+      VN2( LIBUSB_CLASS_IMAGE,               "Image"),               // 6
+      VN2( LIBUSB_CLASS_MASS_STORAGE,        "Mass storage"),        // 8
+      VN2( LIBUSB_CLASS_HUB,                 "Hub"),                 // 9
+      VN2( LIBUSB_CLASS_DATA,                "Data"),                // 10
+      VN2( LIBUSB_CLASS_SMART_CARD,          "Smart card"),          // 0x0b
+      VN2( LIBUSB_CLASS_CONTENT_SECURITY,    "Content security"),    // 0x0d
+      VN2( LIBUSB_CLASS_VIDEO,               "Video"),               // 0x0e
+      VN2( LIBUSB_CLASS_PERSONAL_HEALTHCARE, "Personal healthcare"), // 0x0f
+      VN2( LIBUSB_CLASS_DIAGNOSTIC_DEVICE,   "Diagnostic device"),   // 0xdc
+      VN2( LIBUSB_CLASS_WIRELESS,            "Wireless"),            // 0xe0
+      VN2( LIBUSB_CLASS_APPLICATION,         "Application"),         // 0xfe
+      VN2( LIBUSB_CLASS_VENDOR_SPEC,         "Vendor specific"),     // 0xff
       VN_END2
 };
 
@@ -290,7 +290,7 @@ typesafe_control_msg(
 
 
 //
-// Report functions for lubusb data structures
+// Report functions for libusb data structures
 //
 
 void report_endpoint_descriptor(
@@ -381,6 +381,7 @@ char * names_hutus(unsigned int val) {
    return "Dummy hutus";
 }
 
+
 static void dump_unit(unsigned int data, unsigned int len)
 {
    char *systems[5] = { "None", "SI Linear", "SI Rotation",
@@ -439,8 +440,261 @@ static void dump_unit(unsigned int data, unsigned int len)
 }
 
 
+typedef struct hid_report_item {
+   struct hid_report_item * next;
+
+   Byte     btype;         // Main, Global, Local
+   Byte     btag;
+   Byte     bsize;
+   uint32_t data;
+} Hid_Report_Item;
+
+void report_raw_hid_report_item(Hid_Report_Item * item, int depth) {
+   int d1 = depth+1;
+   rpt_structure_loc("Hid_Report_Item", item, depth);
+   rpt_vstring(d1, "%-20s:  0x%02x", "btype", item->btype);
+   rpt_vstring(d1, "%-20s:  0x%02x", "btag", item->btag);
+   rpt_vstring(d1, "%-20s:  %d",     "bsize", item->bsize);
+   rpt_vstring(d1, "%-20s:  0x%08x", "data", item->data);
+}
+
+
+
+void free_hid_report_item_list(Hid_Report_Item * head) {
+   while (head) {
+      Hid_Report_Item * next = head->next;
+      free(head);
+      head = next;
+   }
+}
+
+
+
+
+// need better name
+Hid_Report_Item * preparse_hid_report(Byte * b, int l) {
+   bool debug = false;
+   if (debug)
+      printf("(%s) Starting. b=%p, l=%d\n", __func__, b, l);
+
+   Hid_Report_Item * root   = NULL;
+   Hid_Report_Item * prev   = NULL;
+   Hid_Report_Item * cur    = NULL;
+
+   // unsigned int j, bsize, btag, btype, data = 0xffff, hut = 0xffff;
+   int i, j;
+   // char *types[4] = { "Main", "Global", "Local", "reserved" };
+
+   if (debug)
+      printf("(%s)          Report Descriptor: (length is %d)\n", __func__, l);
+
+   for (i = 0; i < l; ) {
+      cur = calloc(1, sizeof(Hid_Report_Item));
+
+      Byte b0 = b[i] & 0x03;           // first 2 bits are size indicator
+      cur->bsize = b0;
+      if (cur->bsize == 3)                // values are indicators, not the actual size:
+         cur->bsize = 4;                  //  0,1,2,4
+      cur->btype = b[i] & (0x03 << 2);    // next 2 bits are type
+      cur->btag = b[i] & ~0x03;           // mask out size bits to get tag
+
+      if (cur->bsize > 0) {
+         cur->data = 0;
+         for (j = 0; j < cur->bsize; j++) {
+            cur->data += (b[i+1+j] << (8*j));
+         }
+      }
+
+      if (!root) {
+         root = cur;
+         prev = cur;
+      }
+      else {
+         prev->next = cur;
+         prev = cur;
+      }
+      i += 1 + cur->bsize;
+   }
+
+
+   if (debug)
+      printf("(%s) Returning: %p\n", __func__, root);
+   return root;
+}
+
+
+typedef
+struct hid_report_item_globals {
+   uint16_t    usage_page;
+   struct hid_report_item_globals * prev;
+} Hid_Report_Item_Globals;
+
+
+void report_hid_report_item(Hid_Report_Item * item, Hid_Report_Item_Globals * globals, int depth) {
+   int d1 = depth+1;
+
+   // TODO: handle push/pop of globals
+
+   // unsigned int j, bsize, btag, btype, data = 0xffff, hut = 0xffff;
+   unsigned int hut = 0xffff;
+   // int i;
+   char *types[4] = { "Main", "Global", "Local", "reserved" };
+   char indent[] = "                            ";
+
+   char databuf[80];
+   if (item->bsize == 0)
+      strcpy(databuf, "none");
+   else
+      snprintf(databuf, 80, "[ 0x%0*x ]", item->bsize*2, item->data);
+
+   rpt_vstring(depth, "Item(%-6s): %s, data=%s",
+                      types[item->btype>>2],
+               names_reporttag(item->btag),
+               databuf);
+
+
+   switch (item->btag) {
+   case 0x04: /* Usage Page */
+      // printf("%s0x%02x ", indent, data);                                //  A
+      // hack
+        switch(item->data) {     // belongs elsewhere
+        case 0xffa0:
+           printf("Fixup: data = 0xffa0 -> 0x80\n");
+           item->data = 0x80;
+           break;
+        case 0xffa1:
+           item->data = 0x81;
+           break;
+        }
+      rpt_vstring(depth, "%s%s", indent,
+            devid_usage_code_page_name(item->data));      // names_huts(data));
+      hut = item->data;
+      globals->usage_page = item->data;
+
+      break;
+
+   case 0x08: /* Usage */
+   case 0x18: /* Usage Minimum */
+   case 0x28: /* Usage Maximum */
+   {
+      // char * name = names_hutus((hut<<16) + item->data);
+      char * name = devid_usage_code_id_name(globals->usage_page,item->data);
+      char buf[16];
+      // if (!name && item->btag == 0x08) {
+      //    sprintf(buf, "EDID %d", item->data);
+      //    name = buf;
+      // }
+      if (!name) {
+         name = "Unrecognized usage";
+      }
+      printf("%s%s\n", indent, name);
+
+      // printf("%s%s\n", indent,
+      //        names_hutus((hut << 16) + item->data));                                 // B
+      // printf("%s0x%08x\n", indent,
+      //        (hut << 16) + item->data);
+   }
+      break;
+
+   case 0x54: /* Unit Exponent */
+      printf("%sUnit Exponent: %i\n", indent,
+             (signed char)item->data);
+
+      break;
+
+   case 0x64: /* Unit */
+      printf("%s", indent);
+      dump_unit(item->data, item->bsize);
+      break;
+
+   case 0xa0: /* Collection */
+      printf("%s", indent);
+      switch (item->data) {
+      case 0x00:
+         printf("Physical\n");
+         break;
+
+      case 0x01:
+         printf("Application\n");
+         break;
+
+      case 0x02:
+         printf("Logical\n");
+         break;
+
+      case 0x03:
+         printf("Report\n");
+         break;
+
+      case 0x04:
+         printf("Named Array\n");
+         break;
+
+      case 0x05:
+         printf("Usage Switch\n");
+         break;
+
+      case 0x06:
+         printf("Usage Modifier\n");
+         break;
+
+      default:
+         if (item->data & 0x80)
+            printf("Vendor defined\n");
+         else
+            printf("Reserved for future use.\n");
+      }
+      break;
+   case 0x80: /* Input */
+   case 0x90: /* Output */
+   case 0xb0: /* Feature */
+      printf("%s%s %s %s %s %s\n%s%s %s %s %s\n",
+             indent,
+             item->data & 0x01  ? "Constant"   : "Data",
+             item->data & 0x02  ? "Variable"   : "Array",
+             item->data & 0x04  ? "Relative"   : "Absolute",
+             item->data & 0x08  ? "Wrap"       : "No_Wrap",
+             item->data & 0x10  ? "Non_Linear" : "Linear",
+             indent,
+             item->data & 0x20  ? "No_Preferred_State" : "Preferred_State",
+             item->data & 0x40  ? "Null_State"     : "No_Null_Position",
+             item->data & 0x80  ? "Volatile"       : "Non_Volatile",
+             item->data & 0x100 ? "Buffered Bytes" : "Bitfield");
+      break;
+
+   }
+}
+
+
+void report_hid_report_item_list(Hid_Report_Item * head, int depth) {
+   bool debug = false;
+   if (debug)
+      printf("(%s) Starting.\n", __func__);
+   Hid_Report_Item_Globals globals;
+   memset(&globals, 0, sizeof(Hid_Report_Item_Globals));
+   while (head) {
+      report_hid_report_item(head, &globals, depth);
+      head = head->next;
+   }
+}
+
+
+
+/* Processes the bytes of a HID Report Descriptor,
+ * writes a report in the form similar to that used
+ * in HID Report Descriptor documentation.
+ *
+ * Arguments:
+ *    b        address of bytes
+ *    l        number of bytes
+ *
+ * Returns:    nothing
+ */
  void dump_report_desc(unsigned char *b, int l)
 {
+    bool debug = true;
+    if (debug)
+       printf("(%s) Starting. b=%p, l=%d\n", __func__, b, l);
    unsigned int j, bsize, btag, btype, data = 0xffff, hut = 0xffff;
    int i;
    char *types[4] = { "Main", "Global", "Local", "reserved" };
@@ -582,19 +836,31 @@ static void dump_unit(unsigned int data, unsigned int len)
 }
 
 
+ /* Get bytes of HID Report Descriptor
+  *
+  * Arguments:
+  *   dh
+  *   bInterfaceNumber
+  *   rptlen
+  *   dbuf
+  *   dbufsz
+  *
+  * Returns:        true if success, false if not
+  */
  bool get_raw_report_descriptor(
          struct libusb_device_handle * dh,
          uint8_t                       bInterfaceNumber,
          uint16_t                      rptlen,        // report length
          Byte *                        dbuf,
-         int                           dbufsz)
+         int                           dbufsz,
+         int *                         pbytes_read)
 {
     bool ok = false;
     assert(dh);
 #define CTRL_RETRIES  2
 #define CTRL_TIMEOUT (5*1000) /* milliseconds */
 
-    int bytes_read;
+    int bytes_read = 0;
 
     if (rptlen > dbufsz) {
        printf("report descriptor too long\n");
@@ -618,7 +884,11 @@ static void dump_unit(unsigned int data, unsigned int len)
        if (bytes_read > 0) {
           if (bytes_read < rptlen)
              printf("          Warning: incomplete report descriptor\n");
-          dump_report_desc(dbuf, bytes_read);
+          // dump_report_desc(dbuf, bytes_read);    // old way
+
+          *pbytes_read = bytes_read;
+
+
           ok = true;
        }
        libusb_release_interface(dh, bInterfaceNumber);
@@ -709,14 +979,16 @@ void report_interface_descriptor(
                    inter->bInterfaceProtocol,
                    "");
 
-   /** Index of string descriptor describing this interface */
-   // uint8_t  iInterface;
-   // rpt_int("iInterface", "string descriptor index", inter->iInterface, d1);
-   rpt_vstring(d1, "%-20s %d  %s",
+   // Index of string descriptor describing this interface: uint8_t  iInterface;
+   char * interface_name = "";
+   if (dh && inter->iInterface > 0)
+      interface_name = lookup_libusb_string(dh, inter->iInterface);
+   rpt_vstring(d1, "%-20s %d  \"%s\" ",
                    "iInterface",
                    inter->iInterface,
-                   "(string descriptor index)"
+                   interface_name
                    );
+
 
    /** Array of endpoint descriptors. This length of this array is determined
     * by the bNumEndpoints field. */
@@ -743,9 +1015,10 @@ void report_interface_descriptor(
                    inter->extra_length);
    if (inter->extra_length > 0) {
       rpt_vstring(d1, "extra_data at %p: ", inter->extra);
-      hex_dump(inter->extra, inter->extra_length);
+      rpt_hex_dump(inter->extra, inter->extra_length, d1);
 
-      if (inter->bInterfaceClass == 3) { // replace with constant
+      if (dh) {
+      if (inter->bInterfaceClass == LIBUSB_CLASS_HID) {  // 3
          const Byte * cur_extra = inter->extra;
          int remaining_length = inter->extra_length;
          while (remaining_length > 0) {
@@ -809,6 +1082,7 @@ void report_interface_descriptor(
 #endif
          }
       }
+      }
 
    }
 }
@@ -864,23 +1138,18 @@ void report_config_descriptor(
 
    rpt_structure_loc("libusb_config_descriptor", config, depth);
 
-      /** Size of this descriptor (in bytes) */
-      // uint8_t  bLength;
-   rpt_int("bLength", NULL, config->bLength, d1);
+   // Size of this descriptor (in bytes): uint8_t  bLength;
+   rpt_vstring(d1, "%-20s  %d", "bLength:", config->bLength, d1);
 
 
-      /** Descriptor type. Will have value
-       * \ref libusb_descriptor_type::LIBUSB_DT_CONFIG LIBUSB_DT_CONFIG
-       * in this context. */
-     // uint8_t  bDescriptorType;
-      // rpt_int("bDescriptorType", NULL, config->bDescriptorType, d1);
-      rpt_vstring(d1, "%-20s 0x%02x  %s",
-                      "bDescriptorType:",
-                      config->bDescriptorType,
-                      descriptor_title(config->bDescriptorType)
-                 );
-
-
+   /** Descriptor type. Will have value
+     * \ref libusb_descriptor_type::LIBUSB_DT_CONFIG LIBUSB_DT_CONFIG
+     * in this context. */
+   rpt_vstring(d1, "%-20s 0x%02x  %s",
+                   "bDescriptorType:",
+                   config->bDescriptorType,              // uint8_t  bDescriptorType;
+                   descriptor_title(config->bDescriptorType)
+              );
 
       /** Total length of data returned for this configuration */
       //uint16_t wTotalLength;
@@ -928,6 +1197,15 @@ void report_config_descriptor(
 }
 
 
+/* Reports struct libusb_device_descriptor.
+ *
+ * Arguments:
+ *    desc
+ *    dh               if non-null, string values are looked up for string descriptor indexes
+ *    depth            logical indentation depth
+ *
+ * Returns:    nothing
+ */
 void report_device_descriptor(
         const struct libusb_device_descriptor * desc,
         libusb_device_handle *                  dh,    // may be null
@@ -943,117 +1221,107 @@ void report_device_descriptor(
 
    rpt_structure_loc("libusb_device_descriptor", desc, depth);
 
-      /** Size of this descriptor (in bytes) */
-      // uint8_t  bLength;
-      rpt_int("bLength", NULL, desc->bLength, d1);
+   // Size of this descriptor (in bytes):  uint8_t  bLength;
+   rpt_vstring(d1, "%-20s %d", "bLength:", desc->bLength);
 
-      /** Descriptor type. Will have value
-       * \ref libusb_descriptor_type::LIBUSB_DT_DEVICE LIBUSB_DT_DEVICE in this
-       * context. */
-      // uint8_t  bDescriptorType;
-      // rpt_int("bDecriptorType", NULL, desc->bDescriptorType, d1);
-      rpt_vstring(d1, "%-20s 0x%02x  %s",
-                      "bDescriptorType:",
-                      desc->bDescriptorType,
-                      descriptor_title(desc->bDescriptorType)
-                 );
+   /** Descriptor type. Will have value
+     * \ref libusb_descriptor_type::LIBUSB_DT_DEVICE LIBUSB_DT_DEVICE in this
+     * context. */
+   rpt_vstring(d1, "%-20s 0x%02x  %s",
+                   "bDescriptorType:",
+                   desc->bDescriptorType,          // uint8_t  bDescriptorType;
+                   descriptor_title(desc->bDescriptorType) );
 
+   /** USB specification release number in binary-coded decimal. A value of
+    * 0x0200 indicates USB 2.0, 0x0110 indicates USB 1.1, etc. */
+   // uint16_t bcdUSB;
+   unsigned int bcdHi  = desc->bcdUSB >> 8;
+   unsigned int bcdLo  = desc->bcdUSB & 0x0f;
+   rpt_vstring(d1,"%-20s 0x%04x (%x.%02x)",
+                  "bcdUSB",
+                  desc->bcdUSB,
+                  bcdHi,
+                  bcdLo);
 
-      /** USB specification release number in binary-coded decimal. A value of
-       * 0x0200 indicates USB 2.0, 0x0110 indicates USB 1.1, etc. */
-      // uint16_t bcdUSB;
-      unsigned int bcdHi  = desc->bcdUSB >> 8;
-      unsigned int bcdLo  = desc->bcdUSB & 0x0f;
-      rpt_vstring(d1,"%-20s 0x%04x (%x.%02x)",
-                      "bcdUSB",
-                      desc->bcdUSB,
-                      bcdHi,
-                      bcdLo);
+   /** USB-IF class code for the device. See \ref libusb_class_code. */
+   rpt_vstring(d1, "%-20s 0x%02x  (%u)  %s",
+                   "bDeviceClass:",
+                   desc->bDeviceClass,             // uint8_t  bDeviceClass;
+                   desc->bDeviceClass,
+                   class_code_title(desc->bDeviceClass) );
 
-      /** USB-IF class code for the device. See \ref libusb_class_code. */
-      // uint8_t  bDeviceClass;
-      // rpt_int("bDeviceClass", NULL, desc->bDeviceClass, d1);
-      // rpt_vstring(d1, "bDeviceClass:       0x%02x (%d)", desc->bDeviceClass, desc->bDeviceClass);
-      rpt_vstring(d1, "%-20s %u  (0x%02x)  %s",
-                      "bDeviceClass:",
-                      desc->bDeviceClass,
-                      desc->bDeviceClass,
-                      class_code_title(desc->bDeviceClass) );
+   /** USB-IF subclass code for the device, qualified by the bDeviceClass value */
+   // uint8_t  bDeviceSubClass;
+   rpt_vstring(d1, "%-20s 0x%02x (%u)", "bDeviceSubClass:",
+                   desc->bDeviceSubClass, desc->bDeviceSubClass);
 
-      /** USB-IF subclass code for the device, qualified by the bDeviceClass
-       * value */
-      // uint8_t  bDeviceSubClass;
-      rpt_int("bDeviceSubClass", NULL, desc->bDeviceSubClass, d1);
-      rpt_vstring(d1, "bDeviceSubClass:       0x%02x (%d)", desc->bDeviceSubClass, desc->bDeviceSubClass);
+   /** USB-IF protocol code for the device, qualified by the bDeviceClass and
+    * bDeviceSubClass values */
+   // uint8_t  bDeviceProtocol;
+   // rpt_int("bDeviceProtocol", NULL, desc->bDeviceProtocol, d1);
+   rpt_vstring(d1, "%-20s 0x%02x (%u)", "bDeviceProtocol:", desc->bDeviceProtocol, desc->bDeviceProtocol);
 
-      /** USB-IF protocol code for the device, qualified by the bDeviceClass and
-       * bDeviceSubClass values */
-      // uint8_t  bDeviceProtocol;
-      rpt_int("bDeviceProtocol", NULL, desc->bDeviceProtocol, d1);
+   /** Maximum packet size for endpoint 0 */
+   // uint8_t  bMaxPacketSize0;
+   rpt_vstring(d1, "%-20s %u  (max size for endpoint 0)", "bMaxPacketSize0:", desc->bMaxPacketSize0);
 
-      /** Maximum packet size for endpoint 0 */
-      // uint8_t  bMaxPacketSize0;
-      rpt_int("bMaxPacketSize0", "max size for endpoint 0", desc->bMaxPacketSize0, d1);
-
-      Pci_Usb_Id_Names usb_id_names =
+   Pci_Usb_Id_Names usb_id_names =
             devid_get_usb_names(
                       desc->idVendor,
                       desc->idProduct,
                       0,
                       2);
 
-      /** USB-IF vendor ID */
-      // uint16_t idVendor;
-      rpt_vstring(d1, "idVendor: 0x%04x  %s", desc->idVendor, usb_id_names.vendor_name);
+   // USB-IF vendor ID:  uint16_t idVendor;
+   rpt_vstring(d1, "%-20s 0x%04x  %s", "idVendor:", desc->idVendor, usb_id_names.vendor_name);
 
-      // Pci_Id_Vendor * pvendor_id_info =  usb_id_find_vendor(desc->idVendor);
-      // printf("(report_device_descriptor) usb_id_find_vendor() returned: %p\n", pvendor_id_info);
-      // if (pvendor_id_info)
-      //    printf("--> %s\n", pvendor_id_info->vendor_name);
-      // free(pvendor_id_info);
+   // USB-IF product ID:  uint16_t idProduct;
+   rpt_vstring(d1, "%-20s 0x%04x  %s", "idProduct:", desc->idProduct, usb_id_names.device_name);
 
-      /** USB-IF product ID */
-      // uint16_t idProduct;
-      rpt_vstring(d1, "idProduct: 0x%04x  %s", desc->idProduct, usb_id_names.device_name);
+   // Device release number in binary-coded decimal: uint16_t bcdDevice;
+   bcdHi  = desc->bcdDevice >> 8;
+   bcdLo  = desc->bcdDevice & 0x0f;
+   rpt_vstring(d1, "%-20s %2x.%02x  (device release number)", "bcdDevice:", bcdHi, bcdLo);
 
 
+   // Index of string descriptor describing manufacturer: uint8_t  iManufacturer;
+   // rpt_vstring(d1, "%-20s %u  (mfg string descriptor index)", "iManufacturer:", desc->iManufacturer);
 
-      /** Device release number in binary-coded decimal */
-      // uint16_t bcdDevice;
-      bcdHi  = desc->bcdDevice >> 8;
-      bcdLo  = desc->bcdDevice & 0x0f;
-      rpt_vstring(d1, "bcdDevice (device release number): %2x.%02x", bcdHi, bcdLo);
+   char *    mfg_name = "";
+   // wchar_t * mfg_name_w = L"";
 
-
-      /** Index of string descriptor describing manufacturer */
-      // uint8_t  iManufacturer;
-      rpt_int("iManufacturer", "mfg string descriptor index", desc->iManufacturer, d1);
-      char * mfg_name = "";
-      wchar_t * mfg_name_w = L"";
-
-      if (dh) {
-         mfg_name = lookup_libusb_string(dh, desc->iManufacturer);
-         mfg_name_w =  lookup_libusb_string_wide(dh, desc->iManufacturer) ;
-         wprintf(L"Manufacturer (wide) %d -%ls\n",
-               desc->iManufacturer,
-                 lookup_libusb_string_wide(dh, desc->iManufacturer) );
-      }
-      rpt_vstring(d1, "%-20s %d  %s", "iManufacturer:", desc->iManufacturer, mfg_name);
-      rpt_vstring(d1, "%-20s %d  %S", "iManufacturer:", desc->iManufacturer, mfg_name_w);
+   if (dh && desc->iManufacturer) {
+      mfg_name = lookup_libusb_string(dh, desc->iManufacturer);
+      // mfg_name_w =  lookup_libusb_string_wide(dh, desc->iManufacturer) ;
+      // wprintf(L"Manufacturer (wide) %d -%ls\n",
+      //          desc->iManufacturer,
+      //            lookup_libusb_string_wide(dh, desc->iManufacturer) );
+   }
+   rpt_vstring(d1, "%-20s %d  %s", "iManufacturer:", desc->iManufacturer, mfg_name);
+   // rpt_vstring(d1, "%-20s %u  %S", "iManufacturer:", desc->iManufacturer, mfg_name_w);
 
 
+   // Index of string descriptor describing product: uint8_t  iProduct;
+   // rpt_int("iProduct", "product string descriptor index", desc->iProduct, d1);
 
-      /** Index of string descriptor describing product */
-      // uint8_t  iProduct;
-      rpt_int("iProduct", "product string descriptor index", desc->iProduct, d1);
+   char *    product_name = "";
+   if (dh && desc->iProduct)
+      product_name = lookup_libusb_string(dh, desc->iProduct);
+   rpt_vstring(d1, "%-20s %u  %s", "iProduct:", desc->iProduct, product_name);
 
-      /** Index of string descriptor containing device serial number */
-      // uint8_t  iSerialNumber;
-      rpt_int("iSerialNumber", "index of string desc for serial num", desc->iProduct, d1);
 
-      /** Number of possible configurations */
-      // uint8_t  bNumConfigurations;
-      rpt_int("bNumConfigurations", "number of possible configurations", desc->bNumConfigurations, d1);
+   //Index of string descriptor containing device serial number: uint8_t  iSerialNumber;
+   // rpt_int("iSerialNumber", "index of string desc for serial num", desc->iProduct, d1);
+
+   char *    sn_name = "";
+   if (dh && desc->iSerialNumber)
+      sn_name = lookup_libusb_string(dh, desc->iSerialNumber);
+   rpt_vstring(d1, "%-20s %u  %s", "iSerialNumber:", desc->iSerialNumber, sn_name);
+
+
+
+   // Number of possible configurations:  uint8_t  bNumConfigurations;
+   rpt_vstring(d1, "%-20s %u (number of possible configurations)", "bNumConfigurations:", desc->bNumConfigurations);
 }
 
 
@@ -1077,24 +1345,57 @@ bool is_hub_descriptor(const struct libusb_device_descriptor * desc) {
    return (desc->bDeviceClass == 9);
 }
 
-
-
-void report_dev(
+#ifdef IN_PROGRESS
+void report_open_dev(
       libusb_device *         dev,
-      libusb_device_handle *  dh,    // may be null
+      libusb_device_handle *  dh,    // must not be null
       bool                    show_hubs,
       int                     depth)
 {
    bool debug = true;
    if (debug)
       printf("(%s) Starting.  dev=%p, dh=%p, show_hubs=%s\n", __func__, dev, dh, bool_repr(show_hubs));
+
+   assert(dev);
+   assert(dh);
+
+   int d1 = depth+1;
+   int rc;
+
+
+
+}
+#endif
+
+
+
+/* Reports a single libusb device.
+ *
+ */
+void report_dev(
+      libusb_device *         dev,
+      bool                    show_hubs,
+      int                     depth)
+{
+   bool debug = false;
+   if (debug)
+      printf("(%s) Starting. dev=%p, show_hubs=%s\n", __func__, dev, bool_repr(show_hubs));
+
    int d1 = depth+1;
    int rc;
    // int j;
 
+   // if (debug) {
    rpt_structure_loc("libusb_device", dev, depth);
-   rpt_vstring(d1, "%-20s: 0x%04x", "Bus number",     libusb_get_bus_number(dev));
-   rpt_vstring(d1, "%-20s: 0x%04x", "Device address", libusb_get_device_address(dev));
+   uint8_t busno = libusb_get_bus_number(dev);
+   uint8_t devno = libusb_get_device_address(dev);
+
+   rpt_vstring(d1, "%-20s: %d  (0x%04x)", "Bus number",     busno, busno);
+   rpt_vstring(d1, "%-20s: %d  (0x%04x)", "Device address", devno, devno);
+   // }
+   // else {
+   //    rpt_vstring(depth, "USB bus:device = %d:%d", libusb_get_bus_number(dev), libusb_get_device_address(dev));
+   // }
    uint8_t portno = libusb_get_port_number(dev);
    rpt_vstring(d1, "%-20s: %u (%s)", "Port number",
                    portno,
@@ -1123,13 +1424,14 @@ void report_dev(
          dh = NULL;   // belt and suspenders
       }
       else {
-         printf("(%s) Successfully opened\n", __func__);
+         if (debug)
+            printf("(%s) Successfully opened\n", __func__);
          int has_detach_kernel_capability =
                libusb_has_capability(LIBUSB_CAP_SUPPORTS_DETACH_KERNEL_DRIVER);
-         printf("(%s) %s kernel detach driver capability\n",
-                __func__,
-                (has_detach_kernel_capability) ?
-                      "Has" : "Does not have");
+         if (debug)
+            printf("(%s) %s kernel detach driver capability\n",
+                   __func__,
+                   (has_detach_kernel_capability) ? "Has" : "Does not have");
 
          if (has_detach_kernel_capability) {
             rc = libusb_set_auto_detach_kernel_driver(dh, 1);
@@ -1140,12 +1442,22 @@ void report_dev(
 
       }
 
+#ifdef TEMPORARY_TEST
+      if (dh) {
+      // printf("String 0:\n");
+      // printf("%s\n", lookup_libusb_string(dh, 0));    // INVALID_PARM
+      printf("String 1:\n");
+      printf("%s\n", lookup_libusb_string(dh, 1));
+      }
+#endif
 
       report_device_descriptor(&desc, dh, d1);
+
       struct libusb_config_descriptor *config;
-      libusb_get_config_descriptor(dev, 0, &config);  // returns a pointer
+      libusb_get_config_descriptor(dev, 0 /* config_index */, &config);  // returns a pointer
       report_config_descriptor(config, dh, d1);
       libusb_free_config_descriptor(config);
+
       if (dh)
          libusb_close(dh);
    }
@@ -1162,7 +1474,8 @@ void report_libusb_devices(libusb_device **devs, bool show_hubs, int depth)
 
       int i = 0;
       while ((dev = devs[i++]) != NULL) {
-         report_dev(dev, NULL, show_hubs, depth);
+         puts("");
+         report_dev(dev,  show_hubs, depth);
       }
 }
 
@@ -1199,6 +1512,7 @@ void report_hid_descriptor(
       printf("(%s) Starting. dh=%p, bInterfaceNumber=%d, desc=%p\n",
             __func__, dh, bInterfaceNumber, desc);
    int d1 = depth+1;
+   int d2 = depth+2;
 
    rpt_structure_loc("HID_Descriptor", desc, depth);
 
@@ -1222,29 +1536,52 @@ void report_hid_descriptor(
       // uint16_t rpt_len = buf[7+3*i] | (buf[8+3*i] <<
       rpt_vstring(d1, "%-20s   %u", "wDescriptorLength", descriptor_len);
 
-      if (cur->bDescriptorType != LIBUSB_DT_REPORT)
-           continue;
+      switch(cur->bDescriptorType) {
+      case LIBUSB_DT_REPORT:
+      {
+         rpt_vstring(d1, "Reading report descriptor of type LIBUSB_DT_REPORT from device...");
 
-      Byte dbuf[8192];
+         Byte dbuf[8192];
 
-      if (dh == NULL) {
-         printf("(%s) device handle is NULL, unable to get report descriptor\n", __func__);
-      }
-      else {
-         bool ok = get_raw_report_descriptor(
-                 dh,
-                 bInterfaceNumber,
-                 descriptor_len,              // report length
-                 dbuf,
-                 sizeof(dbuf) );
-         if (!ok)
-            printf("(%s) get_raw_report_descriptor() returned %s\n", __func__, bool_repr(ok));
-         if (ok) {
-            Parsed_Hid_Descriptor * phd =  parse_report_desc(dbuf, descriptor_len);
-            if (phd) {
-               report_parsed_hid_descriptor(phd, depth+1);
+         if (dh == NULL) {
+            printf("(%s) device handle is NULL, Cannot get report descriptor\n", __func__);
+         }
+         else {
+            int bytes_read = 0;
+            bool ok = get_raw_report_descriptor(
+                    dh,
+                    bInterfaceNumber,
+                    descriptor_len,              // report length
+                    dbuf,
+                    sizeof(dbuf),
+                    &bytes_read);
+            if (!ok)
+               printf("(%s) get_raw_report_descriptor() returned %s\n", __func__, bool_repr(ok));
+            if (ok) {
+               puts("");
+               rpt_vstring(d1, "Displaying report descriptor in HID external form:");
+               Hid_Report_Item * item_list = preparse_hid_report(dbuf, bytes_read);
+               report_hid_report_item_list(item_list,d2);
+               free_hid_report_item_list(item_list);
+               puts("");
+               Parsed_Hid_Descriptor * phd =  parse_report_desc(dbuf, descriptor_len);
+               if (phd) {
+
+                  rpt_vstring(d1, "Parsed report descriptor:");
+                  report_parsed_hid_descriptor(phd, d2);
+               }
             }
          }
+         break;
+      }
+
+      case LIBUSB_DT_STRING:
+         printf("(%s) Unimplemented: String report descriptor\n", __func__);
+         break;
+
+      default:
+         printf("(%s) Descriptor. Type= 0x%02x\n", __func__, cur->bDescriptorType);
+         break;
       }
    }
 

@@ -21,6 +21,8 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  * </endcopyright>
+ *
+ * Report parsing adapted from lsusb by ...
  */
 
 #include <assert.h>
@@ -77,6 +79,7 @@ static const char* collection_type_name_table[] = {
       "Usage Switch",
       "Usage Modifier"
 };
+
 
 /* Returns a string representation of a collection type byte.
  */
@@ -153,7 +156,6 @@ void report_hid_field(Hid_Field * hf, int depth) {
    rpt_vstring(d1, "%-20s:  %d", "Report count", hf->report_count);
    rpt_vstring(d1, "%-20s:  0x%04x      %d", "Unit_exponent", hf->unit_exponent, hf->unit_exponent);
    rpt_vstring(d1, "%-20s:  0x%04x      %d", "Unit", hf->unit, hf->unit);
-
 }
 
 
@@ -164,21 +166,6 @@ void report_hid_report(Hid_Report * hr, int depth) {
    rpt_vstring(depth, "%-20s:%*s 0x%02x  %d", "Report id",   rpt_indent(1), "", hr->report_id, hr->report_id);
    rpt_vstring(d1, "%-20s: 0x%02x  %s", "Report type",
                    hr->report_type, hid_report_type_name(hr->report_type) );
-
-#ifdef OLD
-   if (hr->hid_field_list) {
-      rpt_title("Fields: ", d1);
-      Hid_Field * cur = hr->hid_field_list;
-      while (cur) {
-         report_hid_field(cur,  d2);
-         cur = cur->next;
-
-      }
-   }
-   else
-      rpt_vstring(d1, "%-20s: none", "Fields");
-#endif
-   //alt
    if (hr->hid_fields && hr->hid_fields->len > 0) {
       // rpt_title("Fields: (alt) ", d1);
       for (int ndx=0; ndx<hr->hid_fields->len; ndx++) {
@@ -186,7 +173,7 @@ void report_hid_report(Hid_Report * hr, int depth) {
       }
    }
    else
-      rpt_vstring(d1, "%-20s: none   (alt)", "Fields");
+      rpt_vstring(d1, "%-20s: none", "Fields");
 }
 
 
@@ -200,8 +187,15 @@ void report_hid_collection(Hid_Collection * col, int depth) {
                       col->collection_type, collection_type_name(col->collection_type));
       rpt_vstring(d1, "%-20s:  x%02x  %s", "Usage page",
                       col->usage_page, devid_usage_code_page_name(col->usage_page));
-      rpt_vstring(d1, "%-20s:  x%02x  %s", "Usage id",
-                      col->usage_id, devid_usage_code_id_name(col->usage_page, col->usage_id));
+
+      // deprecated:
+      // rpt_vstring(d1, "%-20s:  x%02x  %s", "Usage id",
+      //                 col->usage_id, devid_usage_code_id_name(col->usage_page, col->usage_id));
+
+      rpt_vstring(d1, "%-20s:  0x%08x  %s", "Extended Usage",
+                      col->extended_usage,
+                      devid_usage_code_name_by_extended_id(col->extended_usage));
+
    }
 
    if (col->child_collections && col->child_collections->len > 0) {
@@ -233,7 +227,7 @@ void report_parsed_hid_descriptor(Parsed_Hid_Descriptor * pdesc, int depth) {
 // Data structures and functions For building Parsed_Hid_Descriptor
 //
 
-struct cur_report_globals;
+// struct cur_report_globals;
 
 typedef
 struct cur_report_globals {
@@ -251,53 +245,24 @@ struct cur_report_globals {
 } Cur_Report_Globals;
 
 
-#ifdef OLD
-struct local_item_value;
-typedef
-struct local_item_value {
-   uint16_t  value;
-   struct local_item_value * next;
-} Local_Item_Value;
-#endif
-
 typedef
 struct cur_report_locals {
-#ifdef OLD
-   Local_Item_Value * usage;
-#endif
    // if bSize = 3, usages are 4 byte extended usages
-   int         bSize;    // actually just 0..4
+   int         usage_bsize;    // actually just 0..4
    GArray *    usages;
    uint32_t    usage_minimum;
    uint32_t    usage_maximum;
-#ifdef OLD
-   Local_Item_Value *    designator_index;      // TO ELIMINATE
-#endif
    GArray *    designator_indexes;
    uint16_t    designator_minimum;
    uint16_t    designator_maximum;
-#ifdef OLD
-   Local_Item_Value *    string_index;          // TO_ELIMINATE
-#endif
    GArray *    string_indexes;
    uint16_t    string_maximum;
    uint16_t    string_minimum;
 } Cur_Report_Locals;
 
 
-#ifdef OLD
-void free_local_item_value_chain(Local_Item_Value * lav) {
-   // TODO
-}
-#endif
-
 void free_cur_report_locals(Cur_Report_Locals * locals) {
    if (locals) {
-#ifdef OLD
-      free(locals->usage);
-      free(locals->string_index);
-      free(locals->designator_index);
-#endif
       if (locals->usages)
          g_array_free(locals->usages, true);
       if (locals->string_indexes)
@@ -307,7 +272,6 @@ void free_cur_report_locals(Cur_Report_Locals * locals) {
       free(locals);
    }
 }
-
 
 
 Hid_Report * find_hid_report(Hid_Collection * col, Byte report_type, uint16_t report_id) {
@@ -341,24 +305,13 @@ Hid_Report * find_hid_report_or_new(Hid_Collection * hc, Byte report_type, uint1
    return result;
 }
 
+
 void add_report_field(Hid_Report * hr, Hid_Field * hf) {
    assert(hr && hf);
-#ifdef OLD
-   if (!hr->hid_field_list)
-      hr->hid_field_list = hf;
-   else {
-      Hid_Field * cf = hr->hid_field_list;
-      while (cf->next)
-         cf = cf->next;
-      cf->next = hf;
-   }
-#endif
-   // new way:
    if (!hr->hid_fields)
       hr->hid_fields = g_ptr_array_new();
    g_ptr_array_add(hr->hid_fields, hf);
 }
-
 
 
 void add_hid_collection_child(Hid_Collection * parent, Hid_Collection * new_child) {
@@ -386,11 +339,30 @@ override the currently defined Usage Page for individual usages.
  */
 
 
+/* Creates an extended usage value from a usage page and usage value.
+ * If the usage value size (usage_bsize) is 4 bytes, then it is already
+ * and extended value and is returned.   If it is 1 or 2 bytes, then it
+ * represents a simple usage id and is combined with the usage page to
+ * create an extended value.
+ *
+ * If usage_bsize is not in the range 1..4, then the extended value is
+ * created heuristically.  If the high order bytes of usage are non-zero,
+ * the usage is assumed to be an extended usage and returned.  If the high
+ * order bytes of usage are 0, it is treated as a simple usage id and is
+ * combined with with usage_page to create the extended usage value.
+ *
+ * Arguments:
+ *   usage_page
+ *   usage
+ *   usage_bsize         3 or 4 indicates a 4 byte value
+ *
+ * Returns:              extended usage value
+ */
 
 uint32_t extended_usage(uint16_t usage_page, uint32_t usage, int usage_bsize) {
    bool debug = false;
    uint32_t result = 0;
-   if (usage_bsize == 3 || usage_bsize == 4)
+   if (usage_bsize == 3 || usage_bsize == 4)  // allow it to be indicator (3) or actual number of bytes
       result = usage;
    else if (usage_bsize == 1 || usage_bsize == 2) {
       assert( (usage & 0xff00) == 0);
@@ -409,10 +381,15 @@ uint32_t extended_usage(uint16_t usage_page, uint32_t usage, int usage_bsize) {
 }
 
 
-
-
-Parsed_Hid_Descriptor *
-parse_report_desc(Byte * b, int desclen) {
+/* Primary function to parse the bytes of an HID report descriptor.
+ *
+ * Arguments:
+ *    b             address of first byte
+ *    desclen       number of bytes
+ *
+ * Returns:         parsed report descriptor
+ */
+Parsed_Hid_Descriptor * parse_report_desc(Byte * b, int desclen) {
    bool debug = false;
    if (debug)
       printf("(%s) Starting. b=%p, desclen=%d\n", __func__, b, desclen);
@@ -422,14 +399,10 @@ parse_report_desc(Byte * b, int desclen) {
    unsigned int j, bsize, btag, btype, data = 0xffff;
    // unsigned int hut = 0xffff;
    int i;
-   // char indent[] = "                            ";
 
    Cur_Report_Globals * cur_globals = calloc(1, sizeof(struct cur_report_globals));
    Cur_Report_Locals  * cur_locals  = calloc(1, sizeof(struct cur_report_locals));
-   // Hid_Report * cur_report;
    Hid_Collection * cur_collection = NULL;
-   // Hid_Collection * collection_list = NULL;
-
 
    Parsed_Hid_Descriptor * parsed_descriptor = calloc(1, sizeof(Parsed_Hid_Descriptor));
    parsed_descriptor->root_collection = calloc(1,sizeof(Hid_Collection));
@@ -439,7 +412,6 @@ parse_report_desc(Byte * b, int desclen) {
    Hid_Collection * collection_stack[COLLECTION_STACK_SIZE];
    collection_stack[0] = parsed_descriptor->root_collection;
    int collection_stack_cur = 0;
-
 
    for (i = 0; i < desclen; ) {
       bsize = b[i] & 0x03;           // first 2 bits are size indicator
@@ -500,18 +472,25 @@ parse_report_desc(Byte * b, int desclen) {
             cur_collection = calloc(1, sizeof(Hid_Collection));
             cur_collection->collection_type = data;
             cur_collection->usage_page = cur_globals->usage_page;
-            // cur_collection->usage_id   = cur_locals->usage->value;    // TODO: ensure value exists
+            uint32_t cur_usage = 0;
             if (cur_locals->usages && cur_locals->usages->len > 0) {
-               cur_collection->usage_id = g_array_index(cur_locals->usages, uint32_t, 0);
+               cur_usage = g_array_index(cur_locals->usages, uint32_t, 0);
+               // cur_collection->usage_id = cur_usage;    // deprecated
             }
             else {
                printf("(%s) No usage id has been set for collection\n", __func__);
             }
-            cur_collection->extended_usage = extended_usage(
+            if (cur_usage) {
+               cur_collection->extended_usage = extended_usage(
                                                 cur_globals->usage_page,
-                                                cur_collection->usage_id,
-                                                cur_locals->bSize);
-                                       //         0 /* use heuristic */);
+                                                cur_usage,
+                                                cur_locals->usage_bsize);  // or 0 to use heuristic
+            }
+            else {
+               // what to do if there was no usage value?
+               // makes no sense to combine it with usage page
+               printf("(%s) Collection has no usage value\n", __func__);
+            }
 
             cur_collection->reports = g_ptr_array_new();
 
@@ -546,10 +525,9 @@ parse_report_desc(Byte * b, int desclen) {
                int usagect = cur_locals->usages->len;
                int usagendx = (field_index < usagect) ? field_index : usagect-1;
                uint32_t this_usage = g_array_index(cur_locals->usages, uint32_t, usagendx);
-               // hf->usage_id = this_usage;
                hf->extended_usage = extended_usage(cur_globals->usage_page,
                                                    this_usage,
-                                                   0 /* use heuristic */);
+                                                   cur_locals->usage_bsize); // or 0  to use heuristic
                if (debug) {
                   printf("(%s) item 0x%02x, usagect=%d, usagendx=%d, this_usage=0x%04x\n", __func__,
                          btag, usagect, usagendx, this_usage);
@@ -665,19 +643,6 @@ parse_report_desc(Byte * b, int desclen) {
            {
               if (debug)
                  printf("(%s) tag 0x08 (Usage), bSize=%d, value=0x%08x %d\n", __func__, bsize, data, data);
-#ifdef OLD
-              Local_Item_Value * lav = calloc(1, sizeof(Local_Item_Value));
-              lav->value = data;
-              if (cur_locals->usage == NULL)
-                 cur_locals->usage = lav;
-              else {
-                 Local_Item_Value * v = cur_locals->usage;
-                 while (v->next)
-                    v = v->next;
-                 v->next = lav;
-              }
-#endif
-              // alt:
 
               if (cur_locals->usages == NULL)
                  cur_locals->usages = g_array_new(
@@ -690,14 +655,14 @@ parse_report_desc(Byte * b, int desclen) {
                         cur_locals->usages->len);
               }
               if (cur_locals->usages->len == 1)
-                 cur_locals->bSize = bsize;
+                 cur_locals->usage_bsize = bsize;
               else {
-                 if (bsize != cur_locals->bSize &&
-                       cur_locals->bSize != 0)       // avoid redundant messages
+                 if (bsize != cur_locals->usage_bsize &&
+                       cur_locals->usage_bsize != 0)       // avoid redundant messages
                  {
                     printf("(%s) Warning: Multiple usages for fields have different size values\n", __func__);
                     printf("     Switching to heurisitic interpretation of usage\n");
-                    cur_locals->bSize = 0;
+                    cur_locals->usage_bsize = 0;
                  }
               }
               break;
@@ -741,7 +706,6 @@ parse_report_desc(Byte * b, int desclen) {
            printf("(%s) Invalid item type: 0x%04x\n", __func__, btype);
 
       }
-
 
       i += 1 + bsize;
    }

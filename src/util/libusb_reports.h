@@ -102,7 +102,6 @@ void report_device_descriptor(
         int                                        depth);
 void report_dev(
         libusb_device *                            dev,
-        libusb_device_handle *                     dh,    // may be null
         bool                                       show_hubs,
         int                                        depth);
 
@@ -116,7 +115,8 @@ bool get_raw_report_descriptor(
         uint8_t                       bInterfaceNumber,
         uint16_t                      rptlen,        // report length
         Byte *                        dbuf,
-        int                           dbufsz);
+        int                           dbufsz,
+        int *                         pbytes_read);
 
 bool is_hub_descriptor(const struct libusb_device_descriptor * desc);
 

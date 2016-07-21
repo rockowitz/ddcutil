@@ -52,9 +52,7 @@ override the currently defined Usage Page for individual usages.
  */
 
 
-
 typedef struct hid_field {
-   // struct hid_field * next;
    uint16_t           item_flags;
    uint16_t           usage_page;
 
@@ -70,17 +68,12 @@ typedef struct hid_field {
    uint16_t           report_count;
    uint16_t           unit_exponent;
    uint16_t           unit;
-
 } Hid_Field;
 
 
 typedef struct hid_report {
    uint16_t   report_id;
    Byte       report_type;
-   // ...
-#ifdef OLD
-   Hid_Field * hid_field_list;   // old
-#endif
    GPtrArray * hid_fields;
 } Hid_Report;
 
@@ -88,7 +81,7 @@ typedef struct hid_report {
 struct hid_collection;
 typedef struct hid_collection {
    uint16_t     usage_page;
-   uint32_t     usage_id;     // id within page - deprecated
+//   uint32_t     usage_id;     // id within page - deprecated
    uint32_t     extended_usage;
    Byte         collection_type;
    bool         is_root_collection;

@@ -749,15 +749,18 @@ locate_edid_report(int fd) {
 }
 
 
-/* Retrieve the bytes of a multibyte field value using a
- * call to HIDIOCGUSAGES.  It is left to hiddev to determine
- * the correct report to use to get the usage value.
+//
+// Get multibyte value
+//
+
+/* Base function for retrieving a multibyte field value using a
+ * call to HIDIOCGUSAGES.  The value to be retrieved is specified
+ * using a struct hiddev_usage_ref_multi.
  *
  * Arguments:
  *    fd           file descriptor of open hiddev device
- *    report_type  HID_REPORT_TYPE_FEATURE or HID_REPORT_TYPE_INPUT
- *    usage_code   usage code to retrieve
- *    num_values   number of bytes
+ *    uref_multi   specifies value to be retrieve, and buffer
+ *                 in which to return bytes
  *
  * Returns:
  *    pointer to Buffer struct containing the value
@@ -802,9 +805,9 @@ bye:
 }
 
 
-
 /* Retrieve the bytes of a multibyte field value using a
- * call to HIDIOCGUSAGES.
+ * call to HIDIOCGUSAGES.  The field to be retrieved is
+ * specified using a struct hid_field_locator.
  *
  * Arguments:
  *    fd     file descriptor of open hiddev device
@@ -852,40 +855,6 @@ bye:
    if (debug)
       printf("(%s) Returning: %p\n", __func__, result);
    return result;
-
-#ifdef OLD
-   rc = ioctl(fd, HIDIOCGUSAGES, &uref_multi);  // Fills in usage value
-   if (rc != 0) {
-      REPORT_IOCTL_ERROR("HIDIOCGUSAGES", rc);
-      goto bye;
-   }
-
-#ifdef OLD
-   Byte workbuf[HID_MAX_MULTI_USAGES];
-   for (int ndx=0; ndx<maxusage; ndx++)
-      workbuf[ndx] = uref_multi.values[ndx] & 0xff;
-   // if (debug) {
-   //    printf("(%s) Value retrieved by HIDIOCGUSAGES:\n", __func__);
-   //    hex_dump(workbuf, maxusage);
-   // }
-   result = buffer_new_with_value(workbuf, maxusage, __func__);
-#endif
-   result = buffer_new(maxusage, __func__);
-   for (int ndx=0; ndx<maxusage; ndx++)
-      buffer_add(result, uref_multi.values[ndx] & 0xff );
-
-
-bye:
-   if (debug) {
-      printf("(%s) Returning: %p\n", __func__, result);
-      if (result) {
-         buffer_dump(result);
-      }
-   }
-
-   return result;
-#endif
-
 }
 
 
@@ -918,7 +887,7 @@ get_multibyte_value_by_report_type_and_ucode(
    Buffer * result = NULL;
 
    assert(report_type == HID_REPORT_TYPE_FEATURE ||
-          report_type == HID_REPORT_TYPE_INPUT);   // *** CG19 ***
+          report_type == HID_REPORT_TYPE_INPUT);   // *** Eizo CG19 ***
 
    struct hiddev_usage_ref_multi uref_multi;
    memset(&uref_multi, 0, sizeof(uref_multi));  // initialize all fields to make valgrind happy
@@ -932,32 +901,6 @@ get_multibyte_value_by_report_type_and_ucode(
    if (debug)
       printf("(%s) Returning: %p\n", __func__, result);
    return result;
-
-#ifdef OLD
-   rc = ioctl(fd, HIDIOCGUSAGES, &uref_multi);  // Fills in usage value
-   if (rc != 0) {
-      REPORT_IOCTL_ERROR("HIDIOCGUSAGES", rc);
-      goto bye;
-   }
-#ifdef OLD
-   Byte edidbuf2[128];
-   for (int ndx=0; ndx<128; ndx++)
-      edidbuf2[ndx] = uref_multi.values[ndx] & 0xff;
-   result = buffer_new_with_value(edidbuf2, 128, __func__);
-#endif
-   result = buffer_new(num_values, __func__);
-   for (int ndx=0; ndx<num_values; ndx++)
-      buffer_add(result, uref_multi.values[ndx] & 0xff);
-
-bye:
-   if (debug) {
-      printf("(%s) Returning: %p\n", __func__, result);
-      if (result) {
-         buffer_dump(result);
-      }
-   }
-   return result;
-#endif
 }
 
 

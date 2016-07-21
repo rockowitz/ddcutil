@@ -1053,7 +1053,7 @@ void query_usb_monitors() {
    puts("");
 
    rpt_vstring(1, "Using lsusb to summarize USB devices...");
-   execute_shell_cmd("lsusb", 2);
+   execute_shell_cmd("lsusb|sort", 2);
    puts("");
    rpt_vstring(1, "USB device toplogy...");
    execute_shell_cmd("lsusb -t", 2);

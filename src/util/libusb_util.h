@@ -34,7 +34,7 @@
 char *make_path(int bus_number, int device_address, int interface_number);
 char *make_path_from_libusb_device(libusb_device *dev, int interface_number);
 
-bool possible_monitor_dev(libusb_device * dev, bool check_forced_monitor);
+// bool possible_monitor_dev(libusb_device * dev, bool check_forced_monitor);
 
 
 // singly linked list of possible monitors
