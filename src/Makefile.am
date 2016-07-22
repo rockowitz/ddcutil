@@ -83,6 +83,7 @@ if ENABLE_LIBUSB_COND
 ddctool_SOURCES += \
 util/libusb_reports.c \
 util/libusb_util.c \
+util/base_hid_report_descriptor.c \
 util/hid_report_descriptor.c
 endif
 
