@@ -861,7 +861,7 @@ char * devid_usage_code_name_by_extended_id(uint32_t extended_usage) {
 // HID documentation refers to this as item tag
 // usb.ids file refers to this as item type
 // is actually 1 byte
-
+// corresponds to names.c function names_reporttag()
 char * devid_hid_descriptor_item_type(ushort id) {
    devid_ensure_initialized();
    char * result = NULL;

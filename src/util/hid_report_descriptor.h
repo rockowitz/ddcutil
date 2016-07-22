@@ -38,11 +38,11 @@
 /* From the Device Class Definition for Human Interface Devices:
 
 Interpretation of Usage, Usage Minimum orUsage Maximum items vary as a
-function of the item’s bSize field. If the bSize field = 3 then the item is
+function of the item's bSize field. If the bSize field = 3 then the item is
 interpreted as a 32 bit unsigned value where the high order 16 bits defines the
 Usage Page  and the low order 16 bits defines the Usage ID. 32 bit usage items
 that define both the Usage Page and Usage ID are often referred to as
-“Extended” Usages.
+"Extended" Usages.
 
 If the bSize field = 1 or 2 then the Usage is interpreted as an unsigned value
 that selects a Usage ID on the currently defined Usage Page. When the parser
@@ -55,10 +55,6 @@ override the currently defined Usage Page for individual usages.
 typedef struct hid_field {
    uint16_t           item_flags;
    uint16_t           usage_page;
-
-   // deprecated
-   // uint32_t           usage_id;        // ??
-
    uint32_t           extended_usage;      // hi 16 bits usage_page, lo 16 bits usage_id
    uint16_t           logical_minimum;
    uint16_t           logical_maximum;
@@ -81,7 +77,6 @@ typedef struct hid_report {
 struct hid_collection;
 typedef struct hid_collection {
    uint16_t     usage_page;
-//   uint32_t     usage_id;     // id within page - deprecated
    uint32_t     extended_usage;
    Byte         collection_type;
    bool         is_root_collection;

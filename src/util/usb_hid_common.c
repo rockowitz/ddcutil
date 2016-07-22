@@ -24,16 +24,35 @@
  * </endcopyright>
  */
 
-
 #include <stdio.h>
 
 #include "util/usb_hid_common.h"
 
 
-struct vid_pid {
-   int16_t   vid;
-   int16_t   pid;
-};
+/* Return's the name of a collection type in a HID report descriptor.
+ *
+ * Per USB HID Specification v1.11, Section 6.2.2.6
+ */
+const char * collection_type_name(uint8_t collection_type) {
+   static char * collection_type_names[] = {
+         "Physical",        // 0
+         "Application",     // 1
+         "Logical",         // 2
+         "Report",          // 3
+         "Named Array",     // 4
+         "Usage Switch",    // 5
+         "Usage_Modifier",  // 6
+   };
+   char * result = NULL;
+
+   if (collection_type < 7)
+      result = collection_type_names[collection_type];
+   else if (collection_type & 0x80)
+      result = "Vendor defined";
+   else
+      result = "Reserved for future use.";
+   return result;
+}
 
 
 /* Check for specific USB devices that should be treated as
@@ -48,6 +67,11 @@ struct vid_pid {
  * Returns    true/false
  */
 bool force_hid_monitor_by_vid_pid(int16_t vid, int16_t pid) {
+   struct vid_pid {
+      int16_t   vid;
+      int16_t   pid;
+   };
+
    bool debug = true;
    bool result = false;
 
@@ -88,18 +112,18 @@ bool force_hid_monitor_by_vid_pid(int16_t vid, int16_t pid) {
             {0x04a6, 0x0181},    // Nokia,     HID Monitor Controls
             {0x04ca, 0x1766},    // Lite-on,   HID Monitor Controls
       };
-      const int vid_pid_ct = sizeof(exceptions)/sizeof(struct vid_pid);
+   const int vid_pid_ct = sizeof(exceptions)/sizeof(struct vid_pid);
 
-      for (int ndx = 0; ndx < vid_pid_ct && !result; ndx++) {
-         if (vid == exceptions[ndx].vid) {
-            if (exceptions[ndx].pid == 0 && pid == exceptions[ndx].pid) {
-               result = true;
-               if (debug)
-                  printf("(%s) Matched exception vid=0x%04x, pid=0x%04x\n", __func__,
-                         exceptions[ndx].vid, exceptions[ndx].pid);
-            }
+   for (int ndx = 0; ndx < vid_pid_ct && !result; ndx++) {
+      if (vid == exceptions[ndx].vid) {
+         if (exceptions[ndx].pid == 0 && pid == exceptions[ndx].pid) {
+            result = true;
+            if (debug)
+               printf("(%s) Matched exception vid=0x%04x, pid=0x%04x\n", __func__,
+                      exceptions[ndx].vid, exceptions[ndx].pid);
          }
       }
+   }
 
    return result;
 }

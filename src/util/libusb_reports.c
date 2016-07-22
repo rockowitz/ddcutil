@@ -22,9 +22,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  * </endcopyright>
  *
- * Portions adapted from lsusb.c by David Brownell
+ * Portions adapted from lsusb.c (command lsusb) by Thomas Sailer and David Brownell
  */
-
 
 // Adapted from usbplay2 file libusb_util.c
 
@@ -81,24 +80,24 @@ Value_Name_Title class_code_table[] = {
        * LIBUSB_CLASS_PER_INSTANCE indicates that each interface specifies its
        * own class information and all interfaces operate independently.
        */
-      VN2( LIBUSB_CLASS_PER_INTERFACE,       "Per interface"),       // 0
-      VN2( LIBUSB_CLASS_AUDIO,               "Audio"),               // 1
-      VN2( LIBUSB_CLASS_COMM,                "Communications"),      // 2
-      VN2( LIBUSB_CLASS_HID,                 "Human Interface Device"),  // 3
-      VN2( LIBUSB_CLASS_PHYSICAL,            "Physical device"),     //5
-      VN2( LIBUSB_CLASS_PRINTER,             "Printer"),             // 7
-      VN2( LIBUSB_CLASS_IMAGE,               "Image"),               // 6
-      VN2( LIBUSB_CLASS_MASS_STORAGE,        "Mass storage"),        // 8
-      VN2( LIBUSB_CLASS_HUB,                 "Hub"),                 // 9
-      VN2( LIBUSB_CLASS_DATA,                "Data"),                // 10
-      VN2( LIBUSB_CLASS_SMART_CARD,          "Smart card"),          // 0x0b
-      VN2( LIBUSB_CLASS_CONTENT_SECURITY,    "Content security"),    // 0x0d
-      VN2( LIBUSB_CLASS_VIDEO,               "Video"),               // 0x0e
-      VN2( LIBUSB_CLASS_PERSONAL_HEALTHCARE, "Personal healthcare"), // 0x0f
-      VN2( LIBUSB_CLASS_DIAGNOSTIC_DEVICE,   "Diagnostic device"),   // 0xdc
-      VN2( LIBUSB_CLASS_WIRELESS,            "Wireless"),            // 0xe0
-      VN2( LIBUSB_CLASS_APPLICATION,         "Application"),         // 0xfe
-      VN2( LIBUSB_CLASS_VENDOR_SPEC,         "Vendor specific"),     // 0xff
+      VN2( LIBUSB_CLASS_PER_INTERFACE,       "Per interface"),          // 0
+      VN2( LIBUSB_CLASS_AUDIO,               "Audio"),                  // 1
+      VN2( LIBUSB_CLASS_COMM,                "Communications"),         // 2
+      VN2( LIBUSB_CLASS_HID,                 "Human Interface Device"), // 3
+      VN2( LIBUSB_CLASS_PHYSICAL,            "Physical device"),        // 5
+      VN2( LIBUSB_CLASS_PRINTER,             "Printer"),                // 7
+      VN2( LIBUSB_CLASS_IMAGE,               "Image"),                  // 6
+      VN2( LIBUSB_CLASS_MASS_STORAGE,        "Mass storage"),           // 8
+      VN2( LIBUSB_CLASS_HUB,                 "Hub"),                    // 9
+      VN2( LIBUSB_CLASS_DATA,                "Data"),                   // 10
+      VN2( LIBUSB_CLASS_SMART_CARD,          "Smart card"),             // 0x0b
+      VN2( LIBUSB_CLASS_CONTENT_SECURITY,    "Content security"),       // 0x0d
+      VN2( LIBUSB_CLASS_VIDEO,               "Video"),                  // 0x0e
+      VN2( LIBUSB_CLASS_PERSONAL_HEALTHCARE, "Personal healthcare"),    // 0x0f
+      VN2( LIBUSB_CLASS_DIAGNOSTIC_DEVICE,   "Diagnostic device"),      // 0xdc
+      VN2( LIBUSB_CLASS_WIRELESS,            "Wireless"),               // 0xe0
+      VN2( LIBUSB_CLASS_APPLICATION,         "Application"),            // 0xfe
+      VN2( LIBUSB_CLASS_VENDOR_SPEC,         "Vendor specific"),        // 0xff
       VN_END2
 };
 
@@ -288,7 +287,6 @@ typesafe_control_msg(
 #define usb_control_msg    typesafe_control_msg
 
 
-
 //
 // Report functions for libusb data structures
 //
@@ -363,12 +361,14 @@ void report_endpoint_descriptor(
 // from lsusb.c
 
 
+#ifdef OLD
 char * names_reporttag(unsigned int btag) {
    // return "Dummy tag string";
    return devid_hid_descriptor_item_type(btag);
 }
+#endif
 
-
+#ifdef OLD
 // char * devid_usage_code_page_name(ushort usage_page_code);
 // char * devid_usage_code_id_name(ushort usage_page_code, ushort usage_simple_id);
 // huts: HID Usage Table  ??
@@ -380,6 +380,7 @@ char * names_huts(unsigned int data) {
 char * names_hutus(unsigned int val) {
    return "Dummy hutus";
 }
+#endif
 
 
 static void dump_unit(unsigned int data, unsigned int len)
@@ -530,13 +531,17 @@ struct hid_report_item_globals {
 } Hid_Report_Item_Globals;
 
 
+
+
+
 void report_hid_report_item(Hid_Report_Item * item, Hid_Report_Item_Globals * globals, int depth) {
-   int d1 = depth+1;
+   // int d1 = depth+1;
+   int d_indent = depth+5;
 
    // TODO: handle push/pop of globals
 
    // unsigned int j, bsize, btag, btype, data = 0xffff, hut = 0xffff;
-   unsigned int hut = 0xffff;
+   // unsigned int hut = 0xffff;
    // int i;
    char *types[4] = { "Main", "Global", "Local", "reserved" };
    char indent[] = "                            ";
@@ -549,8 +554,8 @@ void report_hid_report_item(Hid_Report_Item * item, Hid_Report_Item_Globals * gl
 
    rpt_vstring(depth, "Item(%-6s): %s, data=%s",
                       types[item->btype>>2],
-               names_reporttag(item->btag),
-               databuf);
+                      devid_hid_descriptor_item_type(item->btag),  // replacement for names_reporttag()
+                      databuf);
 
 
    switch (item->btag) {
@@ -566,9 +571,8 @@ void report_hid_report_item(Hid_Report_Item * item, Hid_Report_Item_Globals * gl
            item->data = 0x81;
            break;
         }
-      rpt_vstring(depth, "%s%s", indent,
-            devid_usage_code_page_name(item->data));      // names_huts(data));
-      hut = item->data;
+      rpt_vstring(d_indent, "%s", devid_usage_code_page_name(item->data));   // names_huts(data));
+      // hut = item->data;
       globals->usage_page = item->data;
 
       break;
@@ -579,7 +583,7 @@ void report_hid_report_item(Hid_Report_Item * item, Hid_Report_Item_Globals * gl
    {
       // char * name = names_hutus((hut<<16) + item->data);
       char * name = devid_usage_code_id_name(globals->usage_page,item->data);
-      char buf[16];
+      // char buf[16];
       // if (!name && item->btag == 0x08) {
       //    sprintf(buf, "EDID %d", item->data);
       //    name = buf;
@@ -587,7 +591,8 @@ void report_hid_report_item(Hid_Report_Item * item, Hid_Report_Item_Globals * gl
       if (!name) {
          name = "Unrecognized usage";
       }
-      printf("%s%s\n", indent, name);
+      rpt_vstring(d_indent, "%s", name);
+      // printf("%s%s\n", indent, name);
 
       // printf("%s%s\n", indent,
       //        names_hutus((hut << 16) + item->data));                                 // B
@@ -607,44 +612,11 @@ void report_hid_report_item(Hid_Report_Item * item, Hid_Report_Item_Globals * gl
       dump_unit(item->data, item->bsize);
       break;
 
+
    case 0xa0: /* Collection */
-      printf("%s", indent);
-      switch (item->data) {
-      case 0x00:
-         printf("Physical\n");
-         break;
-
-      case 0x01:
-         printf("Application\n");
-         break;
-
-      case 0x02:
-         printf("Logical\n");
-         break;
-
-      case 0x03:
-         printf("Report\n");
-         break;
-
-      case 0x04:
-         printf("Named Array\n");
-         break;
-
-      case 0x05:
-         printf("Usage Switch\n");
-         break;
-
-      case 0x06:
-         printf("Usage Modifier\n");
-         break;
-
-      default:
-         if (item->data & 0x80)
-            printf("Vendor defined\n");
-         else
-            printf("Reserved for future use.\n");
-      }
+      rpt_vstring(d_indent, "%s", collection_type_name(item->data));
       break;
+
    case 0x80: /* Input */
    case 0x90: /* Output */
    case 0xb0: /* Feature */
@@ -709,7 +681,7 @@ void report_hid_report_item_list(Hid_Report_Item * head, int depth) {
       btag = b[i] & ~0x03;           // mask out size bits to get tag
 
       printf("            Item(%-6s): %s, data=", types[btype>>2],
-            names_reporttag(btag));                                       // ok
+            devid_hid_descriptor_item_type(btag));      // replaces names_reporttag()
       // printf("            Item(%-6s): 0x%08x, data=",
       //        types[btype>>2],
       //        btag);
@@ -904,7 +876,7 @@ void report_hid_report_item_list(Hid_Report_Item * head, int depth) {
 }
 
 
-void report_interface_descriptor(
+void report_libusb_interface_descriptor(
         const struct libusb_interface_descriptor * inter,
         libusb_device_handle *                     dh,    // may be null
         int                                        depth)
@@ -1088,7 +1060,7 @@ void report_interface_descriptor(
 }
 
 
-void report_interface(
+void report_libusb_interface(
       const struct libusb_interface *  interface,
       libusb_device_handle *           dh,    // may be null
       int                              depth)
@@ -1117,12 +1089,12 @@ void report_interface(
       // struct libusb_interface_descriptor * idesc;
       // idesc = &interface->altsetting[ndx];
       // report_interface_descriptor(idesc, dh, d1);
-      report_interface_descriptor(&interface->altsetting[ndx], dh, d1);
+      report_libusb_interface_descriptor(&interface->altsetting[ndx], dh, d1);
    }
 }
 
 
-void report_config_descriptor(
+void report_libusb_config_descriptor(
         const struct libusb_config_descriptor * config,
         libusb_device_handle *                  dh,    // may be null
         int                                     depth)
@@ -1182,7 +1154,7 @@ void report_config_descriptor(
       int ndx = 0;
       for (ndx=0; ndx<config->bNumInterfaces; ndx++) {
          const struct libusb_interface *inter = &(config->interface[ndx]);
-         report_interface(inter, dh, d1);
+         report_libusb_interface(inter, dh, d1);
       }
 
 
@@ -1206,7 +1178,7 @@ void report_config_descriptor(
  *
  * Returns:    nothing
  */
-void report_device_descriptor(
+void report_libusb_device_descriptor(
         const struct libusb_device_descriptor * desc,
         libusb_device_handle *                  dh,    // may be null
         int                                     depth)
@@ -1372,7 +1344,7 @@ void report_open_dev(
 /* Reports a single libusb device.
  *
  */
-void report_dev(
+void report_libusb_device(
       libusb_device *         dev,
       bool                    show_hubs,
       int                     depth)
@@ -1451,11 +1423,11 @@ void report_dev(
       }
 #endif
 
-      report_device_descriptor(&desc, dh, d1);
+      report_libusb_device_descriptor(&desc, dh, d1);
 
       struct libusb_config_descriptor *config;
       libusb_get_config_descriptor(dev, 0 /* config_index */, &config);  // returns a pointer
-      report_config_descriptor(config, dh, d1);
+      report_libusb_config_descriptor(config, dh, d1);
       libusb_free_config_descriptor(config);
 
       if (dh)
@@ -1475,7 +1447,7 @@ void report_libusb_devices(libusb_device **devs, bool show_hubs, int depth)
       int i = 0;
       while ((dev = devs[i++]) != NULL) {
          puts("");
-         report_dev(dev,  show_hubs, depth);
+         report_libusb_device(dev,  show_hubs, depth);
       }
 }
 
@@ -1566,7 +1538,6 @@ void report_hid_descriptor(
                puts("");
                Parsed_Hid_Descriptor * phd =  parse_report_desc(dbuf, descriptor_len);
                if (phd) {
-
                   rpt_vstring(d1, "Parsed report descriptor:");
                   report_parsed_hid_descriptor(phd, d2);
                }
@@ -1590,8 +1561,9 @@ void report_hid_descriptor(
 
 
 
-
-void init_names() {
+/* Module initialization
+ */
+void init_libusb_reports() {
    devid_ensure_initialized();
 }
 

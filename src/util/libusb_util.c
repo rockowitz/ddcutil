@@ -1,7 +1,7 @@
 /* libusb_util.c
  *
  * <copyright>
- * Copyright (C) 2014-2015 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2016 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -20,7 +20,6 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  * </endcopyright>
  */
-
 
 // Adapted from usbplay2 file libusb_util.c
 
@@ -151,7 +150,10 @@ static bool possible_monitor_interface_descriptor(
    if (debug)
       printf("(%s) Starting.\n", __func__);
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdiscarded-qualifiers"
    dpath.inter = inter;
+#pragma GCC diagnostic pop
 
    bool result = false;
    if (inter->bInterfaceClass == LIBUSB_CLASS_HID) {
@@ -176,7 +178,10 @@ static bool possible_monitor_interface(
    if (debug)
       printf("(%s) Starting.\n", __func__);
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdiscarded-qualifiers"
    dpath.interface = interface;
+#pragma GCC diagnostic pop
 
    bool result = false;
    int ndx;
@@ -191,12 +196,16 @@ static bool possible_monitor_interface(
    return result;
 }
 
+
 static bool possible_monitor_config_descriptor(
       const struct libusb_config_descriptor * config, Descriptor_Path dpath)
 {
     bool result = false;
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdiscarded-qualifiers"
     dpath.config = config;
+#pragma GCC diagnostic pop
 
     int ndx = 0;
     if (config->bNumInterfaces > 1) {
@@ -210,8 +219,6 @@ static bool possible_monitor_config_descriptor(
                        pid,
                        0,
                        2);
-
-
        printf("(%s) Examining only interface 0 for device %d:%d, vid=0x%04x, pid=0x%04x  %s %s\n",
               __func__, dpath.busno, dpath.devno, vid, pid, names.vendor_name, names.device_name);
     }
@@ -220,7 +227,6 @@ static bool possible_monitor_config_descriptor(
        const struct libusb_interface *inter = &(config->interface[ndx]);
        result |= possible_monitor_interface(inter, dpath);
     // }
-
 
     // if (result)
     //    printf("(%s) Returning: %d\n", __func__, result);
@@ -243,10 +249,7 @@ bool possible_monitor_dev(libusb_device * dev, bool check_forced_monitor, Descri
     if (rc < 0)
        REPORT_LIBUSB_ERROR("libusb_get_device_descriptor",  rc, LIBUSB_EXIT);
    dpath.desc = &desc;
-
-
-   dpath.dev    = dev;
-
+   dpath.dev  = dev;
    result = possible_monitor_config_descriptor(config, dpath);
 
    libusb_free_config_descriptor(config);

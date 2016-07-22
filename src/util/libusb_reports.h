@@ -63,7 +63,7 @@
 
 // Initialization
 
-void init_names();  // initialize lookup tables
+void init_libusb_reports();  // initialize lookup tables
 
 
 // Lookup descriptive names of constants
@@ -84,23 +84,23 @@ void report_endpoint_descriptor(
         const struct libusb_endpoint_descriptor *  epdesc,
         libusb_device_handle *                     dh,    // may be null
         int                                        depth);
-void report_interface_descriptor(
+void report_libusb_interface_descriptor(
         const struct libusb_interface_descriptor * inter,
         libusb_device_handle *                     dh,    // may be null
         int                                        depth);
-void report_interface(
+void report_libusb_interface(
         const struct libusb_interface *            interface,
         libusb_device_handle *                     dh,    // may be null
         int                                        depth) ;
-void report_config_descriptor(
+void report_libusb_config_descriptor(
         const struct libusb_config_descriptor *    config,
         libusb_device_handle *                     dh,    // may be null
         int                                        depth);
-void report_device_descriptor(
+void report_libusb_device_descriptor(
         const struct libusb_device_descriptor *    desc,
         libusb_device_handle *                     dh,    // may be null
         int                                        depth);
-void report_dev(
+void report_libusb_device(
         libusb_device *                            dev,
         bool                                       show_hubs,
         int                                        depth);

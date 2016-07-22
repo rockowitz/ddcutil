@@ -858,9 +858,9 @@ bye:
 }
 
 
-/* Retrieve the bytes of a multibyte field value using a
- * call to HIDIOCGUSAGES.  It is left to hiddev to determine
- * the correct report to use to get the usage value.
+/* Retrieve the bytes of a multibyte field value using a call to HIDIOCGUSAGES.
+ * It is left to hiddev to determine the correct report to use to get the
+ * value of the specified usage code.
  *
  * Arguments:
  *    fd           file descriptor of open hiddev device
@@ -886,8 +886,7 @@ get_multibyte_value_by_report_type_and_ucode(
                  __func__, fd, report_type, usage_code, num_values);
    Buffer * result = NULL;
 
-   assert(report_type == HID_REPORT_TYPE_FEATURE ||
-          report_type == HID_REPORT_TYPE_INPUT);   // *** Eizo CG19 ***
+   assert(report_type == HID_REPORT_TYPE_FEATURE || report_type == HID_REPORT_TYPE_INPUT);
 
    struct hiddev_usage_ref_multi uref_multi;
    memset(&uref_multi, 0, sizeof(uref_multi));  // initialize all fields to make valgrind happy
@@ -904,9 +903,9 @@ get_multibyte_value_by_report_type_and_ucode(
 }
 
 
-/* Retrieve the bytes of a multibyte field value using a
- * call to HIDIOCGUSAGES.  It is left to hiddev to determine
- * the correct report to use to get the usage value.
+/* Retrieve the bytes of a multibyte field value using a call to HIDIOCGUSAGES.
+ * It is left to hiddev to determine the correct report to use to get the value
+ * of the specified usage code.  Both Feature and Input reports are tried.
  *
  * This function first tries to get a value using a feature report.
  * If that fails, an input report is tried.

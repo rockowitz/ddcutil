@@ -41,7 +41,7 @@
 #include "util/string_util.h"
 #include "util/report_util.h"
 #include "util/device_id_util.h"
-
+#include "util/usb_hid_common.h"
 
 #include "util/hid_report_descriptor.h"
 
@@ -68,26 +68,6 @@ const char * hid_report_type_name(Byte report_type) {
    if (report_type < HID_REPORT_TYPE_MIN || report_type > HID_REPORT_TYPE_MAX)
       report_type = 0;
    return report_type_name_table[report_type];
-}
-
-static const char* collection_type_name_table[] = {
-      "Physical",
-      "Application",
-      "Logical",
-      "Report",
-      "Named Array",
-      "Usage Switch",
-      "Usage Modifier"
-};
-
-
-/* Returns a string representation of a collection type byte.
- */
-const char * collection_type_name(Byte collection_type) {
-   if (collection_type >= sizeof(collection_type_name_table))
-      return "invalid";
-   else
-      return collection_type_name_table[collection_type];
 }
 
 
@@ -137,9 +117,15 @@ void report_hid_field(Hid_Field * hf, int depth) {
    //                 hf->usage_id,
    //                 devid_usage_code_id_name(hf->usage_page, hf->usage_id));
 
+   char * ucode_name = "";
+   if (hf->extended_usage) {
+      ucode_name = devid_usage_code_name_by_extended_id(hf->extended_usage);
+      if (!ucode_name)
+         ucode_name = "(Unrecognized usage code)";
+   }
    rpt_vstring(d1, "%-20s:  0x%08x  %s", "Extended Usage",
                    hf->extended_usage,
-                   devid_usage_code_name_by_extended_id(hf->extended_usage));
+                   ucode_name);
 
    rpt_vstring(d1, "%-20s:  0x%04x      %s", "Item flags",
                    hf->item_flags,
@@ -150,7 +136,7 @@ void report_hid_field(Hid_Field * hf, int depth) {
                    hf->logical_maximum, hf->logical_maximum);
    rpt_vstring(d1, "%-20s:  0x%04x      %d", "Physical minimum",
                    hf->physical_minimum, hf->physical_minimum);
-   rpt_vstring(d1, "%-20s:  0x%04x      %d", "Logical maximum",
+   rpt_vstring(d1, "%-20s:  0x%04x      %d", "Physical maximum",
                    hf->physical_maximum, hf->physical_maximum);
    rpt_vstring(d1, "%-20s:  %d", "Report size", hf->report_size);
    rpt_vstring(d1, "%-20s:  %d", "Report count", hf->report_count);
@@ -178,10 +164,15 @@ void report_hid_report(Hid_Report * hr, int depth) {
 
 
 void report_hid_collection(Hid_Collection * col, int depth) {
+   bool show_dummy_root = false;
+
    int d1 = depth+1;
-   rpt_structure_loc("Hid_Collection", col, depth);
-   if (col->is_root_collection)
-      rpt_title("Dummy root collection", d1);
+   if (!col->is_root_collection || show_dummy_root)
+      rpt_structure_loc("Hid_Collection", col, depth);
+   if (col->is_root_collection) {
+      if (show_dummy_root)
+         rpt_title("Dummy root collection", d1);
+   }
    else {
       rpt_vstring(d1, "%-20s:  x%02x  %s", "Collection type",
                       col->collection_type, collection_type_name(col->collection_type));
@@ -195,18 +186,23 @@ void report_hid_collection(Hid_Collection * col, int depth) {
       rpt_vstring(d1, "%-20s:  0x%08x  %s", "Extended Usage",
                       col->extended_usage,
                       devid_usage_code_name_by_extended_id(col->extended_usage));
-
    }
 
    if (col->child_collections && col->child_collections->len > 0) {
-      rpt_title("Contained collections: ", d1);
+      int child_depth = d1;
+      if (!col->is_root_collection || show_dummy_root)
+         rpt_title("Contained collections: ", d1);
+      else
+         child_depth = depth;
       for (int ndx = 0; ndx < col->child_collections->len; ndx++) {
          Hid_Collection * a_child = g_ptr_array_index(col->child_collections, ndx);
-         report_hid_collection(a_child, d1);
+         report_hid_collection(a_child, child_depth);
       }
    }
 
    if (col->reports && col->reports->len > 0) {
+      if (col->is_root_collection)
+         printf("(%s) ERROR: Dummy root collection contains reports\n", __func__);
       rpt_title("Reports:", d1);
       for (int ndx = 0; ndx < col->reports->len; ndx++)
          report_hid_report(g_ptr_array_index(col->reports, ndx), d1);
@@ -325,11 +321,11 @@ void add_hid_collection_child(Hid_Collection * parent, Hid_Collection * new_chil
 /* From the Device Class Definition for Human Interface Devices:
 
 Interpretation of Usage, Usage Minimum orUsage Maximum items vary as a
-function of the item’s bSize field. If the bSize field = 3 then the item is
+function of the item's bSize field. If the bSize field = 3 then the item is
 interpreted as a 32 bit unsigned value where the high order 16 bits defines the
 Usage Page  and the low order 16 bits defines the Usage ID. 32 bit usage items
 that define both the Usage Page and Usage ID are often referred to as
-“Extended” Usages.
+"Extended" Usages.
 
 If the bSize field = 1 or 2 then the Usage is interpreted as an unsigned value
 that selects a Usage ID on the currently defined Usage Page. When the parser
@@ -381,7 +377,7 @@ uint32_t extended_usage(uint16_t usage_page, uint32_t usage, int usage_bsize) {
 }
 
 
-/* Primary function to parse the bytes of an HID report descriptor.
+/* Primary function to parse the bytes of a HID report descriptor.
  *
  * Arguments:
  *    b             address of first byte

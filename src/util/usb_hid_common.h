@@ -27,6 +27,8 @@
 #include <stdbool.h>
 #include <stdint.h>
 
+const char * collection_type_name(uint8_t collection_type);
+
 bool force_hid_monitor_by_vid_pid(int16_t vid, int16_t pid);
 
 #endif /* USB_HID_COMMON_H_ */
