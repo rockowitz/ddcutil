@@ -143,6 +143,15 @@ void report_descriptor_path(Descriptor_Path * pdpath, int depth) {
 // Identify HID interfaces that that are not keyboard or mouse
 //
 
+/* Tests if the specified libusb_interface_descriptor possibly represents a
+ * USB connected monitor.
+ *
+ * Arguments:
+ *   config     pointer to instance to test
+ *   dpath      structure path to this instance, used for messages
+ *
+ * Returns:     true/false
+ */
 static bool possible_monitor_interface_descriptor(
       const struct libusb_interface_descriptor * inter, Descriptor_Path dpath)
 {
@@ -171,6 +180,15 @@ static bool possible_monitor_interface_descriptor(
 }
 
 
+/* Tests if the specified libusb_interface possibly represents a
+ * USB connected monitor.
+ *
+ * Arguments:
+ *   config     pointer to instance to test
+ *   dpath      structure path to this instance, used for messages
+ *
+ * Returns:     true/false
+ */
 static bool possible_monitor_interface(
       const struct libusb_interface * interface, Descriptor_Path dpath)
 {
@@ -197,6 +215,15 @@ static bool possible_monitor_interface(
 }
 
 
+/* Tests if the specified libusb_config_descriptor possibly represents a
+ * USB connected monitor.
+ *
+ * Arguments:
+ *   config     pointer to instance to test
+ *   dpath      structure path to this instance, used for messages
+ *
+ * Returns:     true/false
+ */
 static bool possible_monitor_config_descriptor(
       const struct libusb_config_descriptor * config, Descriptor_Path dpath)
 {
@@ -234,6 +261,15 @@ static bool possible_monitor_config_descriptor(
 }
 
 
+/* Tests if the specified libusb_device instance possibly represents a
+ * USB connected monitor.
+ *
+ * Arguments:
+ *   config     pointer to instance to test
+ *   dpath      structure path to this instance, used for messages
+ *
+ * Returns:     true/false
+ */
 bool possible_monitor_dev(libusb_device * dev, bool check_forced_monitor, Descriptor_Path dpath) {
    bool debug = false;
    if (debug)
@@ -271,6 +307,7 @@ bool possible_monitor_dev(libusb_device * dev, bool check_forced_monitor, Descri
       printf("(%s) Returning: %s\n" , __func__, bool_repr(result));
    return result;
 }
+
 
 
 // Not currently used.
@@ -348,8 +385,6 @@ alt_possible_monitor_dev(
                   printf("(%s) Successfully opened\n", __func__);
                   rc = libusb_set_auto_detach_kernel_driver(dh, 1);
                }
-
-
 
                if (dh) {
                   if (true) {     // TEMP - should be debug
@@ -431,13 +466,6 @@ libusb_device ** collect_possible_monitor_devs( libusb_device **devs) {
 
    libusb_device *dev;
 
-#ifdef OUT
-   int has_detach_kernel_capability =
-         libusb_has_capability(LIBUSB_CAP_SUPPORTS_DETACH_KERNEL_DRIVER);
-   // printf("(%s) %s kernel detach driver capability\n",
-   //        __func__,
-   //        (has_detach_kernel_capability) ? "Has" : "Does not have");
-#endif
    int devct = 0;
    while ( devs[devct++] ) {}
 
@@ -479,63 +507,11 @@ libusb_device ** collect_possible_monitor_devs( libusb_device **devs) {
                          0,
                          2);
 
-
          printf("Found potential HID device %d:%d, vid=0x%04x, pid=0x%04x  %s %s\n",
                 dpath.busno, dpath.devno, vid, pid, names.vendor_name,
                 (names.device_name) ? names.device_name : "(unrecognized pid)");
 
          result[foundndx++] = dev;
-
-#ifdef OUT
-         struct libusb_device_handle * dh = NULL;
-         int rc = libusb_open(dev, &dh);
-         if (rc < 0) {
-            REPORT_LIBUSB_ERROR("libusb_open", rc, LIBUSB_CONTINUE);
-            dh = NULL;   // belt and suspenders
-         }
-         else {
-            printf("(%s) Successfully opened\n", __func__);
-            if (has_detach_kernel_capability) {
-               rc = libusb_set_auto_detach_kernel_driver(dh, 1);
-               if (rc < 0) {
-                  REPORT_LIBUSB_ERROR("libusb_set_auto_detach_kernel_driver", rc, LIBUSB_CONTINUE);
-               }
-            }
-         }
-
-         report_dev(dev, dh, /*show_hubs=*/ false, 0);
-
-
-         if (dh) {
-            struct libusb_device_descriptor desc;
-            // copies data into struct pointed to by desc, does not allocate:
-            rc = libusb_get_device_descriptor(dev, &desc);
-            if (rc < 0)
-               REPORT_LIBUSB_ERROR("libusb_get_device_descriptor",  rc, LIBUSB_EXIT);
-
-            printf("Manufacturer:  %d - %s\n",
-                      desc.iManufacturer,
-                      lookup_libusb_string(dh, desc.iManufacturer) );
-
-            wprintf(L"Manufacturer (wide) %d -%ls\n",
-                  desc.iManufacturer,
-                    lookup_libusb_string_wide(dh, desc.iManufacturer) );
-
-
-            printf("Product:  %d - %s\n",
-                      desc.iProduct,
-                      lookup_libusb_string(dh, desc.iProduct) );
-
-            printf("Serial number:  %d - %s\n",
-                                 desc.iSerialNumber,
-                                 lookup_libusb_string(dh, desc.iSerialNumber) );
-
-            // report_device_descriptor(&desc, NULL, d1);
-            // report_open_libusb_device(dh, 1);
-            libusb_close(dh);
-
-         }
-#endif
       }
    }
 

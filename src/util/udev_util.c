@@ -1,7 +1,7 @@
 /* udev_util.c
  *
  * <copyright>
- * Copyright (C) 2014-2016 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2016 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -92,7 +92,7 @@ void query_udev_subsystem(char * subsystem) {
       return;   // exit(1);
    }
 
-   /* Create a list of the devices in the 'hidraw' subsystem. */
+   /* Create a list of the devices in the specified subsystem. */
    enumerate = udev_enumerate_new(udev);
    udev_enumerate_add_match_subsystem(enumerate, subsystem);
    udev_enumerate_scan_devices(enumerate);
@@ -112,7 +112,7 @@ void query_udev_subsystem(char * subsystem) {
       printf("path: %s\n", path);
       dev = udev_device_new_from_syspath(udev, path);
 
-      /* usb_device_get_devnode() returns the path to the device node
+      /* udev_device_get_devnode() returns the path to the device node
          itself in /dev. */
       printf("Device Node Path: %s\n", udev_device_get_devnode(dev));
 
@@ -153,7 +153,6 @@ void query_udev_subsystem(char * subsystem) {
 
       report_udev_device(dev, 1);
 
-
       udev_device_unref(dev);
    }
    /* Free the enumerator object */
@@ -163,8 +162,3 @@ void query_udev_subsystem(char * subsystem) {
 
    return;
 }
-
-
-
-
-

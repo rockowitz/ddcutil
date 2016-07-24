@@ -25,22 +25,16 @@
  * </endcopyright>
  */
 
-
 #include <assert.h>
-#include <errno.h>
-#include <fcntl.h>
 #include <glib.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sys/ioctl.h>
-#include <unistd.h>
-#include <wchar.h>
 
-#include "util/string_util.h"
-#include "util/report_util.h"
 #include "util/device_id_util.h"
 #include "util/hid_report_descriptor.h"
+#include "util/report_util.h"
+#include "util/string_util.h"
 #include "util/usb_hid_common.h"
 
 #include "util/base_hid_report_descriptor.h"
@@ -221,8 +215,8 @@ void report_raw_hid_report_item(Hid_Report_Item * item, int depth) {
    rpt_structure_loc("Hid_Report_Item", item, depth);
    rpt_vstring(d1, "%-20s:  0x%02x", "btype", item->btype);
    rpt_vstring(d1, "%-20s:  0x%02x", "btag", item->btag);
-   rpt_vstring(d1, "%-20s:  %d",     "bsize", item->bsize);
-   rpt_vstring(d1, "%-20s:  %d",     "bsize_orig", item->bsize_orig);
+   // rpt_vstring(d1, "%-20s:  %d",     "bsize", item->bsize);
+   // rpt_vstring(d1, "%-20s:  %d",     "bsize_orig", item->bsize_orig);
    rpt_vstring(d1, "%-20s:  %d",     "bsize_bytect", item->bsize_bytect);
    rpt_vstring(d1, "%-20s:  0x%08x", "data", item->data);
 }
@@ -257,21 +251,19 @@ Hid_Report_Item * preparse_hid_report(Byte * b, int l) {
    Hid_Report_Item * prev   = NULL;
    Hid_Report_Item * cur    = NULL;
 
-   // unsigned int j, bsize, btag, btype, data = 0xffff, hut = 0xffff;
    int i, j;
-   // char *types[4] = { "Main", "Global", "Local", "reserved" };
 
-   if (debug)
-      printf("(%s)          Report Descriptor: (length is %d)\n", __func__, l);
+   // if (debug)
+   //   printf("(%s)          Report Descriptor: (length is %d)\n", __func__, l);
 
    for (i = 0; i < l; ) {
       cur = calloc(1, sizeof(Hid_Report_Item));
 
       Byte b0 = b[i] & 0x03;           // first 2 bits are size indicator
-      cur->bsize = b0;
-      if (cur->bsize == 3)                // values are indicators, not the actual size:
-         cur->bsize = 4;                  //  0,1,2,4
-      cur->bsize_orig = b0;
+      // cur->bsize = b0;
+      // if (cur->bsize == 3)                // values are indicators, not the actual size:
+      //    cur->bsize = 4;                  //  0,1,2,4
+      // cur->bsize_orig = b0;
       cur->bsize_bytect = (b0 == 3) ? 4 : b0;
       cur->btype = b[i] & (0x03 << 2);    // next 2 bits are type
       cur->btag = b[i] & ~0x03;           // mask out size bits to get tag
@@ -427,10 +419,9 @@ void report_hid_report_item(Hid_Report_Item * item, Hid_Report_Item_Globals * gl
 }
 
 
-
-/* Given a Hid_Report_Descriptor, represented as a linked list of
- * Hid_Report_Items, display the descriptor in the form used in
- * HID documentation, with annotation.
+/* Given a Hid report descriptor, represented as a linked list of
+ * Hid_Report_Items, display the descriptor in a form similar to that
+ * used in HID documentation, with annotation.
  *
  * Arguments:
  *    head      first item in list
@@ -449,162 +440,3 @@ void report_hid_report_item_list(Hid_Report_Item * head, int depth) {
       head = head->next;
    }
 }
-
-
-
-#ifdef OLD
-/* Processes the bytes of a HID Report Descriptor,
- * writes a report in the form similar to that used
- * in HID Report Descriptor documentation.
- *
- * Arguments:
- *    b        address of bytes
- *    l        number of bytes
- *
- * Returns:    nothing
- */
- void dump_report_desc(unsigned char *b, int l)
-{
-    bool debug = true;
-    if (debug)
-       printf("(%s) Starting. b=%p, l=%d\n", __func__, b, l);
-   unsigned int j, bsize, btag, btype, data = 0xffff, hut = 0xffff;
-   int i;
-   char *types[4] = { "Main", "Global", "Local", "reserved" };
-   char indent[] = "                            ";
-
-   printf("          Report Descriptor: (length is %d)\n", l);
-   for (i = 0; i < l; ) {
-      bsize = b[i] & 0x03;           // first 2 bits are size indicator
-      if (bsize == 3)                // values are indicators, not the actual size:
-         bsize = 4;                  //  0,1,2,4
-      btype = b[i] & (0x03 << 2);    // next 2 bits are type
-      btag = b[i] & ~0x03;           // mask out size bits to get tag
-
-      printf("            Item(%-6s): %s, data=", types[btype>>2],
-            devid_hid_descriptor_item_type(btag));      // replaces names_reporttag()
-      // printf("            Item(%-6s): 0x%08x, data=",
-      //        types[btype>>2],
-      //        btag);
-      if (bsize > 0) {
-         printf(" [ ");
-         data = 0;
-         for (j = 0; j < bsize; j++) {
-            printf("0x%02x ", b[i+1+j]);
-            data += (b[i+1+j] << (8*j));
-         }
-         printf("] %d", data);
-      } else
-         printf("none");
-      printf("\n");
-
-      switch (btag) {
-      case 0x04: /* Usage Page */
-         // printf("%s0x%02x ", indent, data);                                //  A
-         // hack
-           switch(data) {
-           case 0xffa0:
-              printf("Fixup: data = 0xffa0 -> 0x80\n");
-              data = 0x80;
-              break;
-           case 0xffa1:
-              data = 0x81;
-              break;
-           }
-         printf("%s%s\n", indent,
-               devid_usage_code_page_name(data));
-               // names_huts(data));
-         hut = data;
-
-         break;
-
-      case 0x08: /* Usage */
-      case 0x18: /* Usage Minimum */
-      case 0x28: /* Usage Maximum */
-      {
-         // char * name = names_hutus((hut<<16) + data);
-         char * name = devid_usage_code_id_name(hut,data);
-         char buf[16];
-         if (!name && btag == 0x08) {
-            sprintf(buf, "EDID %d", data);
-            name = buf;
-         }
-         printf("%s%s\n", indent, name);
-
-         // printf("%s%s\n", indent,
-         //        names_hutus((hut << 16) + data));                                 // B
-         // printf("%s0x%08x\n", indent,
-         //        (hut << 16) + data);
-      }
-         break;
-
-      case 0x54: /* Unit Exponent */
-         printf("%sUnit Exponent: %i\n", indent,
-                (signed char)data);
-
-         break;
-
-      case 0x64: /* Unit */
-         printf("%s", indent);
-         dump_unit(data, bsize);
-         break;
-
-      case 0xa0: /* Collection */
-         printf("%s", indent);
-         switch (data) {
-         case 0x00:
-            printf("Physical\n");
-            break;
-
-         case 0x01:
-            printf("Application\n");
-            break;
-
-         case 0x02:
-            printf("Logical\n");
-            break;
-
-         case 0x03:
-            printf("Report\n");
-            break;
-
-         case 0x04:
-            printf("Named Array\n");
-            break;
-
-         case 0x05:
-            printf("Usage Switch\n");
-            break;
-
-         case 0x06:
-            printf("Usage Modifier\n");
-            break;
-
-         default:
-            if (data & 0x80)
-               printf("Vendor defined\n");
-            else
-               printf("Reserved for future use.\n");
-         }
-         break;
-      case 0x80: /* Input */
-      case 0x90: /* Output */
-      case 0xb0: /* Feature */
-         printf("%s%s %s %s %s %s\n%s%s %s %s %s\n",
-                indent,
-                data & 0x01  ? "Constant"   : "Data",
-                data & 0x02  ? "Variable"   : "Array",
-                data & 0x04  ? "Relative"   : "Absolute",
-                data & 0x08  ? "Wrap"       : "No_Wrap",
-                data & 0x10  ? "Non_Linear" : "Linear",
-                indent,
-                data & 0x20  ? "No_Preferred_State" : "Preferred_State",
-                data & 0x40  ? "Null_State"     : "No_Null_Position",
-                data & 0x80  ? "Volatile"       : "Non_Volatile",
-                data & 0x100 ? "Buffered Bytes" : "Bitfield");
-         break;
-      }
-      i += 1 + bsize;
-   }
-}
-#endif

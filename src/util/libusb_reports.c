@@ -431,6 +431,15 @@ void report_endpoint_descriptor(
 }
 
 
+ /* Reports struct libusb_interface_descriptor
+  *
+  * Arguments:
+  *   inter      pointer to libusb_interface_descriptor instance
+  *   dh         display handle, not required but allows for additional information
+  *   depth      logical indentation depth
+  *
+  * Returns:     nothing
+  */
 void report_libusb_interface_descriptor(
         const struct libusb_interface_descriptor * inter,
         libusb_device_handle *                     dh,    // may be null
@@ -615,52 +624,57 @@ void report_libusb_interface_descriptor(
 }
 
 
+/* Reports struct libusb_interface
+ *
+ * Arguments:
+ *   inter      pointer to libusb_interface instance
+ *   dh         display handle, not required but allows for additional information
+ *   depth      logical indentation depth
+ *
+ * Returns:     nothing
+ *
+ * struct libusb_interface represents a collection of alternate settings for a
+ * particular USB interface.  It contains an array of interface descriptors, one
+ * for each alternate settings.
+ */
 void report_libusb_interface(
       const struct libusb_interface *  interface,
       libusb_device_handle *           dh,    // may be null
       int                              depth)
 {
-
-   /** \ingroup desc
-    * A collection of alternate settings for a particular USB interface.
-    */
-
    int d1 = depth+1;
-
    rpt_structure_loc("libusb_interface", interface, depth);
 
+   // The number of alternate settings that belong to this interface
+   rpt_vstring(d1, "%-20s", "num_altsetting", interface->num_altsetting);
+   // rpt_int("num_altsetting", NULL, interface->num_altsetting, d1);
 
-      /** Array of interface descriptors. The length of this array is determined
-       * by the num_altsetting field. */
-      // const struct libusb_interface_descriptor *altsetting;
-
-      /** The number of alternate settings that belong to this interface */
-      // int num_altsetting;
-
-   rpt_int("num_altsetting", NULL, interface->num_altsetting, d1);
-
-   int ndx;
-   for (ndx=0; ndx<interface->num_altsetting; ndx++) {
-      // struct libusb_interface_descriptor * idesc;
-      // idesc = &interface->altsetting[ndx];
-      // report_interface_descriptor(idesc, dh, d1);
+   for (int ndx=0; ndx<interface->num_altsetting; ndx++) {
       report_libusb_interface_descriptor(&interface->altsetting[ndx], dh, d1);
    }
 }
 
 
+/* Reports struct libusb_config_descriptor
+ *
+ * Arguments:
+ *   config     pointer to libusb_config_descriptor instance
+ *   dh         display handle, not required but allows for additional information
+ *   depth      logical indentation depth
+ *
+ * Returns:     nothing
+ *
+ * struct libusb_config_descriptor represents the standard USB configuration
+ * descriptor. This descriptor is documented in section 9.6.3 of the USB 3.0
+ * specification.  It contains multiple libusb_interface structs.
+ *
+ * All multiple-byte fields are represented in host-endian format.
+ */
 void report_libusb_config_descriptor(
         const struct libusb_config_descriptor * config,
         libusb_device_handle *                  dh,    // may be null
         int                                     depth)
 {
-
-   /** \ingroup desc
-    * A structure representing the standard USB configuration descriptor. This
-    * descriptor is documented in section 9.6.3 of the USB 3.0 specification.
-    * All multiple-byte fields are represented in host-endian format.
-    */
-
    int d1 = depth+1;
 
    rpt_structure_loc("libusb_config_descriptor", config, depth);
@@ -669,57 +683,55 @@ void report_libusb_config_descriptor(
    rpt_vstring(d1, "%-20s  %d", "bLength:", config->bLength, d1);
 
 
-   /** Descriptor type. Will have value
-     * \ref libusb_descriptor_type::LIBUSB_DT_CONFIG LIBUSB_DT_CONFIG
-     * in this context. */
+   // Descriptor type. Will have value LIBUSB_DT_CONFIG in this context.
    rpt_vstring(d1, "%-20s 0x%02x  %s",
                    "bDescriptorType:",
                    config->bDescriptorType,              // uint8_t  bDescriptorType;
                    descriptor_title(config->bDescriptorType)
               );
 
-      /** Total length of data returned for this configuration */
-      //uint16_t wTotalLength;
+   /** Total length of data returned for this configuration */
+   //uint16_t wTotalLength;
 
-      /** Number of interfaces supported by this configuration */
-      // uint8_t  bNumInterfaces;
-      rpt_int("bNumInterfaces", NULL, config->bNumInterfaces, d1);
+   /** Number of interfaces supported by this configuration */
+   // uint8_t  bNumInterfaces;
+   rpt_int("bNumInterfaces", NULL, config->bNumInterfaces, d1);
 
-      /** Identifier value for this configuration */
-      // uint8_t  bConfigurationValue;
-      rpt_int("bConfigurationValue", "id for this configuration", config->bConfigurationValue, d1);
+   /** Identifier value for this configuration */
+   // uint8_t  bConfigurationValue;
+   rpt_int("bConfigurationValue", "id for this configuration", config->bConfigurationValue, d1);
 
-      /** Index of string descriptor describing this configuration */
-      // uint8_t  iConfiguration;
-      rpt_int("iConfiguration", "index of string descriptor", config->iConfiguration, d1);
+   /** Index of string descriptor describing this configuration */
+   // uint8_t  iConfiguration;
+   rpt_int("iConfiguration", "index of string descriptor", config->iConfiguration, d1);
 
-      /** Configuration characteristics */
-      // uint8_t  bmAttributes;
-      rpt_uint8_as_hex("bmAttributes", "config characteristics", config->bmAttributes, d1);
+   /** Configuration characteristics */
+   // uint8_t  bmAttributes;
+   rpt_uint8_as_hex("bmAttributes", "config characteristics", config->bmAttributes, d1);
 
-      /** Maximum power consumption of the USB device from this bus in this
-       * configuration when the device is fully opreation. Expressed in units
-       * of 2 mA. */
-      // uint8_t  MaxPower;
-      rpt_int("MaxPower", "units of 2 mA", config->MaxPower, d1);
+   /** Maximum power consumption of the USB device from this bus in this
+    * configuration when the device is fully opreation. Expressed in units
+    * of 2 mA. */
+   // uint8_t  MaxPower;
+   rpt_int("MaxPower", "units of 2 mA", config->MaxPower, d1);
 
-      /** Array of interfaces supported by this configuration. The length of
-       * this array is determined by the bNumInterfaces field. */
-      // const struct libusb_interface *interface;
-      int ndx = 0;
-      for (ndx=0; ndx<config->bNumInterfaces; ndx++) {
-         const struct libusb_interface *inter = &(config->interface[ndx]);
-         report_libusb_interface(inter, dh, d1);
-      }
+   /** Array of interfaces supported by this configuration. The length of
+    * this array is determined by the bNumInterfaces field. */
+   // const struct libusb_interface *interface;
+   int ndx = 0;
+   for (ndx=0; ndx<config->bNumInterfaces; ndx++) {
+      const struct libusb_interface *inter = &(config->interface[ndx]);
+      report_libusb_interface(inter, dh, d1);
+   }
 
 
-      /** Extra descriptors. If libusb encounters unknown configuration
-       * descriptors, it will store them here, should you wish to parse them. */
-      // const unsigned char *extra;
+   /** Extra descriptors. If libusb encounters unknown configuration
+    * descriptors, it will store them here, should you wish to parse them. */
+   // const unsigned char *extra;
 
-      /** Length of the extra descriptors, in bytes. */
-      // int extra_length;
-      rpt_int("extra_length", "len of extra descriptors", config->extra_length, d1);
+   /** Length of the extra descriptors, in bytes. */
+   // int extra_length;
+   rpt_int("extra_length", "len of extra descriptors", config->extra_length, d1);
 
 }
 
@@ -727,23 +739,22 @@ void report_libusb_config_descriptor(
 /* Reports struct libusb_device_descriptor.
  *
  * Arguments:
- *    desc
+ *    desc             pointer to libusb_device_descriptor instance
  *    dh               if non-null, string values are looked up for string descriptor indexes
  *    depth            logical indentation depth
  *
  * Returns:    nothing
+ *
+ * struct libusb_device_descriptor represents the standard USB device descriptor.
+ * This descriptor is documented in section 9.6.1 of the USB 3.0 specification.
+ *
+ * All multiple-byte fields are represented in host-endian format.
  */
 void report_libusb_device_descriptor(
         const struct libusb_device_descriptor * desc,
         libusb_device_handle *                  dh,    // may be null
         int                                     depth)
 {
-   /** \ingroup desc
-    * A structure representing the standard USB device descriptor. This
-    * descriptor is documented in section 9.6.1 of the USB 3.0 specification.
-    * All multiple-byte fields are represented in host-endian format.
-    */
-
    int d1 = depth+1;
 
    rpt_structure_loc("libusb_device_descriptor", desc, depth);
@@ -751,9 +762,7 @@ void report_libusb_device_descriptor(
    // Size of this descriptor (in bytes):  uint8_t  bLength;
    rpt_vstring(d1, "%-20s %d", "bLength:", desc->bLength);
 
-   /** Descriptor type. Will have value
-     * \ref libusb_descriptor_type::LIBUSB_DT_DEVICE LIBUSB_DT_DEVICE in this
-     * context. */
+   // Descriptor type. Will have value LIBUSB_DT_DEVICE in this context.
    rpt_vstring(d1, "%-20s 0x%02x  %s",
                    "bDescriptorType:",
                    desc->bDescriptorType,          // uint8_t  bDescriptorType;
@@ -1115,9 +1124,10 @@ void report_hid_descriptor(
 }
 
 
+//
+// Module initialization
+//
 
-/* Module initialization
- */
 void init_libusb_reports() {
    devid_ensure_initialized();
 }

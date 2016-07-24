@@ -868,8 +868,8 @@ bye:
 
 
 /* Retrieve the bytes of a multibyte field value using a call to HIDIOCGUSAGES.
- * It is left to hiddev to determine the correct report to use to get the
- * value of the specified usage code.
+ * It is left to hiddev to determine the correct report of the specified report
+ * type to use to get the value of the specified usage code.
  *
  * Arguments:
  *    fd           file descriptor of open hiddev device

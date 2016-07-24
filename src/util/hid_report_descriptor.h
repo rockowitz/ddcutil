@@ -26,6 +26,8 @@
 
 #include <stdint.h>
 
+#include "util/coredefs.h"
+
 
 // values identical to those for HID_REPORT_TYPE_... in hiddev.h:
 #define HID_REPORT_TYPE_INPUT 1

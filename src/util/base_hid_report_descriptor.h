@@ -37,8 +37,8 @@ typedef struct hid_report_item {
 
    Byte     btype;         // Main, Global, Local
    Byte     btag;
-   Byte     bsize;
-   Byte     bsize_orig;        // indicator, i.e. 3 means 4 bytes
+   // Byte     bsize;
+   // Byte     bsize_orig;        // indicator, i.e. 3 means 4 bytes
    Byte     bsize_bytect;      // number of bytes, as opposed to indicator, i.e 4 means 4 bytes
    uint32_t data;
 } Hid_Report_Item;

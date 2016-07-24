@@ -22,26 +22,23 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  * </endcopyright>
  *
- * Report parsing adapted from lsusb by ...
+ * Report parsing adapted from lsusb.c (command lsusb) by Thomas Sailer and
+ * David Brownell.
  */
 
 #include <assert.h>
-#include <errno.h>
-#include <errno.h>
-#include <fcntl.h>
 #include <glib.h>
+#include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sys/ioctl.h>
-#include <unistd.h>
-#include <wchar.h>
 
-#include "util/string_util.h"
-#include "util/report_util.h"
+#include "util/coredefs.h"
 #include "util/device_id_util.h"
+#include "util/report_util.h"
 #include "util/usb_hid_common.h"
+#include "util/base_hid_report_descriptor.h"
 
 #include "util/hid_report_descriptor.h"
 
@@ -145,6 +142,15 @@ void report_hid_field(Hid_Field * hf, int depth) {
 }
 
 
+
+/* Report a single report in a parsed HID report descriptor
+ *
+ * Arguments:
+ *   pdesc      pointer to Hid_Report instance
+ *   depth      logical indentation depth
+ *
+ * Returns:     nothing
+ */
 void report_hid_report(Hid_Report * hr, int depth) {
    int d1 = depth+1;
    // int d2 = depth+2;
@@ -212,6 +218,14 @@ void report_hid_collection(Hid_Collection * col, int depth) {
 }
 
 
+/* Report a parsed HID descriptor.
+ *
+ * Arguments:
+ *   pdesc      pointer to Parsed_Hid_Descriptor
+ *   depth      logical indentation depth
+ *
+ * Returns:     nothing
+ */
 void report_parsed_hid_descriptor(Parsed_Hid_Descriptor * pdesc, int depth) {
    int d1 = depth + 1;
    rpt_structure_loc("Parsed_Hid_Descriptor", pdesc, depth);
@@ -219,7 +233,9 @@ void report_parsed_hid_descriptor(Parsed_Hid_Descriptor * pdesc, int depth) {
 }
 
 
-void accumulate_report_descriptors_for_collection(Hid_Collection * col, Byte report_type_flags, GPtrArray * accumulator) {
+static void accumulate_report_descriptors_for_collection(
+               Hid_Collection * col, Byte report_type_flags, GPtrArray * accumulator)
+{
    if (col->child_collections && col->child_collections->len > 0) {
       for (int ndx = 0; ndx < col->child_collections->len; ndx++) {
          Hid_Collection * a_child = g_ptr_array_index(col->child_collections, ndx);
@@ -242,14 +258,20 @@ void accumulate_report_descriptors_for_collection(Hid_Collection * col, Byte rep
 }
 
 
-
-GPtrArray * select_parsed_report_descriptors(Parsed_Hid_Descriptor * phd, Byte report_type_flags) {
+/* Extracts the report descriptors of the specified report type or types and
+ * returns them as an array of pointers to the reports.
+ *
+ * Arguments:
+ *   phd                 pointer to parsed HID descriptor
+ *   report_type_flags   report types to select, as array of flag bits
+ *
+ * Returns:              array of pointers to Hid_Report
+ */
+GPtrArray *
+select_parsed_report_descriptors(Parsed_Hid_Descriptor * phd, Byte report_type_flags) {
    GPtrArray * selected_reports = g_ptr_array_new();
-
-   accumulate_report_descriptors_for_collection(phd->root_collection, report_type_flags, selected_reports);
-
-
-
+   accumulate_report_descriptors_for_collection(
+      phd->root_collection, report_type_flags, selected_reports);
    return selected_reports;
 }
 
@@ -279,7 +301,7 @@ struct cur_report_globals {
 typedef
 struct cur_report_locals {
    // if bSize = 3, usages are 4 byte extended usages
-   int         usage_bsize;    // actually just 0..4
+   // int         usage_bsize;    // actually just 0..4
    int         usage_bsize_bytect;   // 0, 1, 2, or 4
    GArray *    usages;
    uint32_t    usage_minimum;
@@ -421,7 +443,7 @@ uint32_t extended_usage(uint16_t usage_page, uint32_t usage, int usage_bsize) {
  *
  * Returns:         parsed report descriptor
  */
-Parsed_Hid_Descriptor * parse_report_desc(Byte * b, int desclen) {
+Parsed_Hid_Descriptor * parse_report_desc_old(Byte * b, int desclen) {
    bool debug = false;
    if (debug)
       printf("(%s) Starting. b=%p, desclen=%d\n", __func__, b, desclen);
@@ -747,4 +769,338 @@ Parsed_Hid_Descriptor * parse_report_desc(Byte * b, int desclen) {
 
    return parsed_descriptor;
 }
+
+
+/* Primary function to parse the bytes of a HID report descriptor.
+ *
+ * Arguments:
+ *    b             address of first byte
+ *    desclen       number of bytes
+ *
+ * Returns:         parsed report descriptor
+ */
+Parsed_Hid_Descriptor * parse_report_desc_from_item_list(Hid_Report_Item * items_head) {
+   bool debug = false;
+   if (debug)
+      printf("(%s) Starting.", __func__);
+
+   char *types[4] = { "Main", "Global", "Local", "reserved" };
+
+  // unsigned int j, bsize, btag, btype, data = 0xffff;
+   // unsigned int bsize_bytect;
+   // unsigned int hut = 0xffff;
+   // int i;
+
+   Cur_Report_Globals * cur_globals = calloc(1, sizeof(struct cur_report_globals));
+   Cur_Report_Locals  * cur_locals  = calloc(1, sizeof(struct cur_report_locals));
+   Hid_Collection * cur_collection = NULL;
+
+   Parsed_Hid_Descriptor * parsed_descriptor = calloc(1, sizeof(Parsed_Hid_Descriptor));
+   parsed_descriptor->root_collection = calloc(1,sizeof(Hid_Collection));
+   parsed_descriptor->root_collection->is_root_collection = true;
+
+#define COLLECTION_STACK_SIZE 10
+   Hid_Collection * collection_stack[COLLECTION_STACK_SIZE];
+   collection_stack[0] = parsed_descriptor->root_collection;
+   int collection_stack_cur = 0;
+
+   Hid_Report_Item * item = items_head;
+   while(item) {
+
+      if (debug) {
+         char datastr[20];
+         snprintf(datastr, 20, "[0x%0*x] %d", item->bsize_bytect*2, item->data, item->data);
+#ifdef OLD
+         switch(item->bsize_bytect) {
+         case 0:
+            strcpy(datastr, "none");
+            break;
+         case 1:
+            snprintf(datastr, 20, "[0x%02x] %d", item->data, item->data);
+            break;
+         case 2:
+            snprintf(datastr, 20, "[0x%04x] %d", item->data, item->data);
+            break;
+         case 4:
+            snprintf(datastr, 20, "[0x%08x] %d", item->data, item->data);
+            break;
+         default:
+           // program logic error
+            break;
+         }
+#endif
+         printf("(%s) Item(%-6s): %s, data=%s\n",
+                 __func__,
+                 types[item->btype],   // or btype>>2 ?
+                 devid_hid_descriptor_item_type(item->btag),
+                 datastr);
+      }
+
+
+      switch (item->btype) {
+
+      // Main item tags
+
+      case 0x00:     // Main item
+         switch(item->btag) {
+
+         case 0xa0:     // Collection
+         {
+            cur_collection = calloc(1, sizeof(Hid_Collection));
+            cur_collection->collection_type = item->data;
+            cur_collection->usage_page = cur_globals->usage_page;
+            uint32_t cur_usage = 0;
+            if (cur_locals->usages && cur_locals->usages->len > 0) {
+               cur_usage = g_array_index(cur_locals->usages, uint32_t, 0);
+               // cur_collection->usage_id = cur_usage;    // deprecated
+            }
+            else {
+               printf("(%s) No usage id has been set for collection\n", __func__);
+            }
+            if (cur_usage) {
+               cur_collection->extended_usage = extended_usage(
+                                                cur_globals->usage_page,
+                                                cur_usage,
+                                                cur_locals->usage_bsize_bytect);  // or 0 to use heuristic
+            }
+            else {
+               // what to do if there was no usage value?
+               // makes no sense to combine it with usage page
+               printf("(%s) Collection has no usage value\n", __func__);
+            }
+
+            cur_collection->reports = g_ptr_array_new();
+
+            // add this collection as a child of the parent collection
+            add_hid_collection_child(collection_stack[collection_stack_cur], cur_collection);
+            assert(collection_stack_cur < COLLECTION_STACK_SIZE-1);
+            collection_stack[++collection_stack_cur] = cur_collection;
+            break;
+         }
+
+         case 0x80: /* Input */
+         case 0x90: /* Output */
+         case 0xb0: /* Feature */
+         {
+            Hid_Field * hf = calloc(1, sizeof(Hid_Field));
+            Byte report_type;
+            if      (item->btag == 0x80) report_type = HID_REPORT_TYPE_INPUT;
+            else if (item->btag == 0x90) report_type = HID_REPORT_TYPE_OUTPUT;
+            else                         report_type = HID_REPORT_TYPE_FEATURE;
+            hf->item_flags = item->data;
+            uint16_t report_id = cur_globals->report_id;
+            Hid_Report * hr = find_hid_report_or_new(
+                     cur_collection,
+                     report_type,
+                     report_id);
+
+            // add this item/field to current report
+            add_report_field(hr, hf);
+
+            int field_index = hr->hid_fields->len - 1;
+            if (cur_locals->usages && cur_locals->usages->len > 0) {
+               int usagect = cur_locals->usages->len;
+               int usagendx = (field_index < usagect) ? field_index : usagect-1;
+               uint32_t this_usage = g_array_index(cur_locals->usages, uint32_t, usagendx);
+               hf->extended_usage = extended_usage(cur_globals->usage_page,
+                                                   this_usage,
+                                                   cur_locals->usage_bsize_bytect); // or 0  to use heuristic
+               if (debug) {
+                  printf("(%s) item 0x%02x, usagect=%d, usagendx=%d, this_usage=0x%04x\n", __func__,
+                         item->btag, usagect, usagendx, this_usage);
+               }
+            }
+            else {
+               printf("(%s) Tag 0x%02x, Report id: %d: No usage values in cur_locals\n",
+                     __func__, item->btag, report_id);
+            }
+
+            hf->usage_page       = cur_globals->usage_page;
+            hf->logical_minimum  = cur_globals->logical_minimum;
+            hf->logical_maximum  = cur_globals->logical_maximum;
+            hf->physical_minimum = cur_globals->physical_minimum;
+            hf->physical_maximum = cur_globals->physical_maximum;
+            hf->report_size      = cur_globals->report_size;
+            hf->report_count     = cur_globals->report_count;
+            hf->unit_exponent    = cur_globals->unit_exponent;
+            hf->unit             = cur_globals->unit;
+
+#define UNHANDLED(F) \
+   if (cur_locals->F) \
+      printf("%s) Tag 0x%02x, Unimplemented: %s\n", __func__, item->btag, #F);
+
+            UNHANDLED(designator_indexes)
+            UNHANDLED(designator_minimum)
+            UNHANDLED(designator_maximum)
+            UNHANDLED(string_indexes)
+            UNHANDLED(string_minimum)
+            UNHANDLED(string_maximum)
+            UNHANDLED(usage_minimum)
+#undef UNHANDLED
+
+            break;
+         }
+         case 0xc0: // End Collection
+            if (collection_stack_cur == 0) {
+               printf("(%s) End Collection item without corresponding Collection\n", __func__);
+            }
+            collection_stack_cur--;
+            break;
+         default:
+            break;
+         }   // switch(btag)
+
+         free_cur_report_locals(cur_locals);
+         cur_locals  = calloc(1, sizeof(struct cur_report_locals));
+         break;
+
+      // Global item tags
+
+      case 0x04:     // Global item
+         switch (item->btag) {
+         case 0x04: /* Usage Page */
+              cur_globals->usage_page = item->data;
+              break;
+         case 0x14:       // Logical Minimum
+              cur_globals->logical_minimum = item->data;
+              break;
+         case 0x24:
+              cur_globals->logical_maximum = item->data;
+              break;
+         case 0x34:
+              cur_globals->physical_minimum = item->data;
+              break;
+         case 0x44:
+              cur_globals->physical_maximum = item->data;
+              break;
+         case 0x54:     // Unit Exponent
+              cur_globals->unit_exponent = item->data;                     // Global
+              break;
+         case 0x64:     // Unit
+              cur_globals->unit = item->data;      // ??                   // Global
+              break;
+         case 0x74:
+              cur_globals->report_size = item->data;
+              break;
+         case 0x84:
+              cur_globals->report_id = item->data;
+              break;
+         case 0x94:
+              cur_globals->report_count = item->data;
+              break;
+         case 0xa4:      // Push
+         {
+              Cur_Report_Globals* old_globals = cur_globals;
+              cur_globals = calloc(1, sizeof(Cur_Report_Globals));
+              cur_globals->prev = old_globals;
+              break;
+         }
+         case 0xb4:     // Pop
+              if (!cur_globals->prev) {
+                 printf("(%s) Invalid item Pop without previous Push\n", __func__);
+              }
+              else {
+                 Cur_Report_Globals * popped_globals = cur_globals;
+                 cur_globals = cur_globals->prev;
+                 free(popped_globals);
+              }
+              break;
+         default:
+              printf("(%s) Invalid global item tag: 0x%02x\n", __func__, item->btag);
+
+         }   // switch(btag)
+         break;
+
+
+      // Local item tags
+
+      case 0x08:     // Local item
+         switch(item->btag) {
+         case 0x08:     // Usage
+           {
+              if (debug)
+                 printf("(%s) tag 0x08 (Usage), bsize_bytect=%d, value=0x%08x %d\n",
+                        __func__, item->bsize_bytect, item->data, item->data);
+
+              if (cur_locals->usages == NULL)
+                 cur_locals->usages = g_array_new(
+                       /* null terminated */ false,
+                       /* init to 0       */ true,
+                       /* field size      */ sizeof(uint32_t) );
+              g_array_append_val(cur_locals->usages, item->data);
+              if (cur_locals->usages->len > 1) {
+                 printf("(%s) After append, cur_locals->usages->len = %d\n", __func__,
+                        cur_locals->usages->len);
+              }
+              if (cur_locals->usages->len == 1)
+                 cur_locals->usage_bsize_bytect = item->bsize_bytect;
+              else {
+                 if (item->bsize_bytect != cur_locals->usage_bsize_bytect &&
+                       cur_locals->usage_bsize_bytect != 0)       // avoid redundant messages
+                 {
+                    printf("(%s) Warning: Multiple usages for fields have different size values\n", __func__);
+                    printf("     Switching to heurisitic interpretation of usage\n");
+                    cur_locals->usage_bsize_bytect = 0;
+                 }
+              }
+              break;
+           }
+           case 0x18:     // Usage minimum
+             cur_locals->usage_minimum = item->data;
+             break;
+           case 0x28:
+              cur_locals->usage_maximum = item->data;
+              break;
+           case 0x38:    // designator index
+              // TODO: same as 0x08 Usage
+              printf("(%s) Local item value 0x38 (Designator Index) unimplemented\n", __func__);
+              break;
+           case 0x48:
+              cur_locals->designator_minimum = item->data;
+              break;
+           case 0x58:
+              cur_locals->designator_maximum = item->data;
+              break;
+           case 0x78:           // string index
+              // TODO: same as 0x08 Usage
+              printf("(%s) Local item value 0x78 (String Index) unimplemented\n", __func__);
+              break;
+           case 0x88:
+              cur_locals->string_minimum = item->data;
+              break;
+           case 0x98:
+              cur_locals->string_maximum = item->data;
+              break;
+           case 0xa8:     // delimiter - defines beginning or end of set of local items
+              // what to do?
+              printf("(%s) Local item Delimiter unimplemented\n", __func__);
+              break;
+           default:
+              printf("(%s) Invalid local item tax: 0x%02x\n", __func__, item->btag);
+         }
+         break;
+
+      default:
+           printf("(%s) Invalid item type: 0x%04x\n", __func__, item->btype);
+
+      }
+
+      item = item->next;
+   }
+
+   return parsed_descriptor;
+}
+
+
+Parsed_Hid_Descriptor * parse_report_desc(Byte * b, int desclen) {
+   bool debug = false;
+   if (debug)
+      printf("(%s) Starting. b=%p, desclen=%d\n", __func__, b, desclen);
+
+   Hid_Report_Item * item_list = preparse_hid_report(b, desclen) ;
+
+   return parse_report_desc_from_item_list(item_list);
+}
+
+
 
