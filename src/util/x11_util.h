@@ -35,7 +35,7 @@ typedef struct {
 } X11_Edid_Rec;
 
 
-GPtrArray * get_x11_edids();   // returns array of X11_Edid_rec
+GPtrArray * get_x11_edids();   // returns array of X11_Edid_Rec
 
 void free_x11_edids(GPtrArray * edidrecs);
 
