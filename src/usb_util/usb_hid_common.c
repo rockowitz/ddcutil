@@ -26,7 +26,7 @@
 
 #include <stdio.h>
 
-#include "util/usb_hid_common.h"
+#include "usb_util/usb_hid_common.h"
 
 
 /* Return's the name of a collection type in a HID report descriptor.

@@ -28,9 +28,10 @@
 #include <unistd.h>
 
 #include "util/string_util.h"
-#include "util/hiddev_util.h"
-#include "util/hiddev_reports.h"
 #include "util/report_util.h"
+
+#include "usb_util/hiddev_reports.h"
+#include "usb_util/hiddev_util.h"
 
 #include "base/core.h"
 #include "base/ddc_errno.h"

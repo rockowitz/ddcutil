@@ -39,6 +39,7 @@ test/*expand \
 test/adl/*expand \
 test/ddc/*expand \
 test/i2c/*expand \
+usb_util/*expand \
 util/*expand 
 
 
@@ -81,11 +82,11 @@ app_ddctool/testcases.c
 
 if ENABLE_LIBUSB_COND
 ddctool_SOURCES += \
-util/hidraw_util.c \
-util/libusb_reports.c \
-util/libusb_util.c \
-util/base_hid_report_descriptor.c \
-util/hid_report_descriptor.c
+usb_util/hidraw_util.c \
+usb_util/libusb_reports.c \
+usb_util/libusb_util.c \
+usb_util/base_hid_report_descriptor.c \
+usb_util/hid_report_descriptor.c
 endif
 
 if ENABLE_LIBUDEV_COND
@@ -188,14 +189,14 @@ ddc/ddc_dumpload.c \
 util/data_structures.c \
 util/file_util.c  \
 util/glib_util.c \
-util/hiddev_reports.c \
-util/hiddev_util.c \
+usb_util/hiddev_reports.c \
+usb_util/hiddev_util.c \
 util/multi_level_map.c \
 util/output_sink.c \
 util/device_id_util.c \
 util/report_util.c \
 util/string_util.c \
-util/usb_hid_common.c \
+usb_util/usb_hid_common.c \
 util/x11_util.c \
 util/subprocess_util.c
 

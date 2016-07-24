@@ -58,11 +58,11 @@
 #include "util/device_id_util.h"
 #include "util/edid.h"
 #include "util/file_util.h"
-#include "util/hiddev_reports.h"
-#include "util/hiddev_util.h"
+#include "../usb_util/hiddev_reports.h"
+#include "../usb_util/hiddev_util.h"
 #ifdef USE_LIBUSB
 // #include "util/libusb_reports.h"
-#include "util/libusb_util.h"
+#include "../usb_util/libusb_util.h"
 #endif
 #include "util/report_util.h"
 #include "util/string_util.h"
@@ -71,7 +71,7 @@
 #include "util/udev_util.h"
 #endif
 #include "util/x11_util.h"
-#include "util/hidraw_util.h"
+#include "../usb_util/hidraw_util.h"
 
 #include "base/core.h"
 #include "base/linux_errno.h"

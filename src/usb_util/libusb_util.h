@@ -25,17 +25,16 @@
 #ifndef LIBUSB_UTIL_H_
 #define LIBUSB_UTIL_H_
 
-
 #include <libusb-1.0/libusb.h>      // need pkgconfig?
 #include <stdint.h>
 
-#include "util/libusb_reports.h"
+#include "usb_util/libusb_reports.h"
+
 
 char *make_path(int bus_number, int device_address, int interface_number);
 char *make_path_from_libusb_device(libusb_device *dev, int interface_number);
 
 // bool possible_monitor_dev(libusb_device * dev, bool check_forced_monitor);
-
 
 // singly linked list of possible monitors
 typedef

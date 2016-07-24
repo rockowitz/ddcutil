@@ -40,9 +40,10 @@
 #include "util/device_id_util.h"
 #include "util/report_util.h"
 #include "util/string_util.h"
-#include "util/hiddev_util.h"    // numerous functions and macro definitions
 
-#include "util/hiddev_reports.h"
+#include "usb_util/hiddev_util.h"    // numerous functions and macro definitions
+
+#include "usb_util/hiddev_reports.h"
 
 
 /* Wrap ioctl(HIDIOCGSTRING) to retrieve a string.

@@ -32,12 +32,11 @@
 #include <string.h>
 
 #include "util/device_id_util.h"
-#include "util/hid_report_descriptor.h"
 #include "util/report_util.h"
 #include "util/string_util.h"
-#include "util/usb_hid_common.h"
 
-#include "util/base_hid_report_descriptor.h"
+#include "usb_util/usb_hid_common.h"
+#include "usb_util/base_hid_report_descriptor.h"
 
 
 typedef

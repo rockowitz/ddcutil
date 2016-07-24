@@ -32,8 +32,9 @@
 #include <sys/ioctl.h>
 #include <unistd.h>
 
-#include "util/hiddev_util.h"
 #include "util/string_util.h"
+
+#include "usb_util/hiddev_util.h"
 
 #include "base/core.h"
 #include "base/execution_stats.h"

@@ -23,11 +23,14 @@
 
 // Adapted from usbplay2 file libusb_util.h
 
-
 #ifndef LIBUSB_REPORTS_H_
 #define LIBUSB_REPORTS_H_
 
 #include <libusb-1.0/libusb.h>      // need pkgconfig?
+#include <stdbool.h>
+#include <wchar.h>
+
+#include "util/coredefs.h"
 
 
 #define LIBUSB_EXIT     true

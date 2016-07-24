@@ -46,13 +46,14 @@
 #include "util/glib_util.h"
 #include "util/report_util.h"
 #include "util/string_util.h"
-#include "util/usb_hid_common.h"
+
+#include "usb_util/usb_hid_common.h"
 
 // circular dependency, but only used in debug code
 // report_hiddev_field_info() in report_hid_field_locator()
-#include "util/hiddev_reports.h"
+#include "usb_util/hiddev_reports.h"
 
-#include "util/hiddev_util.h"
+#include "usb_util/hiddev_util.h"
 
 
 static const char* report_type_id_table[] = {

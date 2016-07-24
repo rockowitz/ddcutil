@@ -23,6 +23,8 @@
 
 // Adapted from usbplay2 file libusb_util.c
 
+
+
 #include <assert.h>
 #include <errno.h>
 #include <fcntl.h>
@@ -34,15 +36,15 @@
 #include <unistd.h>
 #include <wchar.h>
 
-#include "util/string_util.h"
-#include "util/report_util.h"
 #include "util/device_id_util.h"
-#include "util/hid_report_descriptor.h"
-#include "util/usb_hid_common.h"
-#include "util/libusb_reports.h"
+#include "util/report_util.h"
+#include "util/string_util.h"
 
-#include "util/libusb_util.h"
+#include "usb_util/hid_report_descriptor.h"
+#include "usb_util/libusb_reports.h"
+#include "usb_util/usb_hid_common.h"
 
+#include "usb_util/libusb_util.h"
 
 //
 // Utility functions

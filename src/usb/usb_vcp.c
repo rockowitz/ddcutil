@@ -32,10 +32,11 @@
 #include <string.h>
 #include <sys/ioctl.h>
 
-#include "util/hiddev_reports.h"
-#include "util/hiddev_util.h"
 #include "util/report_util.h"
 #include "util/string_util.h"
+
+#include "usb_util/hiddev_reports.h"
+#include "usb_util/hiddev_util.h"
 
 #include "base/core.h"
 #include "base/ddc_errno.h"
@@ -66,7 +67,6 @@ static Trace_Group TRACE_GROUP = TRC_USB;
  *
  * Returns:       status code
  */
-
 Global_Status_Code
 usb_get_usage_value_by_report_type_and_ucode(
       int     fd,
