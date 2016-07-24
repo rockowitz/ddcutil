@@ -824,17 +824,35 @@ Pci_Usb_Id_Names devid_get_usb_names(
    return names2;
 }
 
-// corresponds to names_huts() in names
-// first field in HUT entry of usb.ids
+
+/* Gets the page name for a usage page code
+ *
+ * Corresponds to names_huts() in names.c
+ * Is top level field in HUT entry of usb.ids
+*/
 char * devid_usage_code_page_name(ushort usage_page_code) {
    devid_ensure_initialized();
-   char * result = NULL;
-   // ushort * args = {usage_page_code};
-   Multi_Level_Names names_found = mlm_get_names(hid_usages_table, 1, usage_page_code);
-   if (names_found.levels == 1)
-      result = names_found.names[0];
+   // Per USB HID Usage Tables spec v1.12, section 3.0,
+   // Usage page ID xff00..xffff are vendor defined
+   //               x0092..xfeff are reserved
+   // We regard any value < xff00 for which lookup fails as reserved.
+   // This allows for additional usage pages beyond x0092 to be specified
+   // in the usb.ids file.   However, usb.ids includes the line:
+   //     HUT  ff  Vendor specific
+   // This is incorrect.  It is treating use page code as 1 byte instead of 2.
+   // xff is in the reserved range.  It is not a vendor defined page.
+   char * result = "Reserved";
+   if (usage_page_code > 0xff00)
+      result = "Vendor-defined";
+   else {
+      // ushort * args = {usage_page_code};
+      Multi_Level_Names names_found = mlm_get_names(hid_usages_table, /*argct=*/ 1, usage_page_code);
+      if (names_found.levels == 1)
+         result = names_found.names[0];
+   }
    return result;
 }
+
 
 // corresponds to names_hutus() in names
 // first and second fields of HUT entry in usb.ids

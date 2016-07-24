@@ -71,6 +71,7 @@
 #include "util/udev_util.h"
 #endif
 #include "util/x11_util.h"
+#include "util/hidraw_util.h"
 
 #include "base/core.h"
 #include "base/linux_errno.h"
@@ -1187,24 +1188,32 @@ void query_sysenv() {
 
 #ifdef USE_LIBUDEV
    if (output_level >= OL_VERBOSE) {
-      printf("\nProbing USB HID devices using udev...\n");
-      query_udev_subsystem("usbmisc");
+      char * subsys_name = "usbmisc";
+      printf("\nProbing USB HID devices, susbsystem %s. using udev...\n", subsys_name);
+      query_udev_subsystem(subsys_name);
+      subsys_name = "hidraw";
+      printf("\nProbing USB HID devices, susbsystem %s. using udev...\n", subsys_name);
+      query_udev_subsystem(subsys_name);
+
    }
 #endif
 
    if (output_level >= OL_VERBOSE) {
-      printf("\nChecking for USB connected monitors on /dev/hidraw* ...\n");
 
-      puts("");
-      rpt_vstring(1, "Listing /dev/hidraw*...");
-      execute_shell_cmd("ls -l /dev/hidraw*", 2);
-      puts("");
 #ifdef USE_LIBUSB
       // currently an overwhelming amount of information - need to display
       // only possible HID connected monitors
       printf("\nProbing possible HID monitors using libusb...\n");
       probe_libusb(/*possible_monitors_only=*/ true);
 #endif
+
+      printf("\nChecking for USB connected monitors on /dev/hidraw* ...\n");
+
+       puts("");
+       rpt_vstring(1, "Listing /dev/hidraw*...");
+       execute_shell_cmd("ls -l /dev/hidraw*", 2);
+       puts("");
+       probe_hidraw(1);
    }
 }
 

@@ -46,7 +46,44 @@
 #include "util/base_hid_report_descriptor.h"
 
 
+typedef
+struct ptr_pair{
+   void * p1;
+   void * p2;
+} Ptr_Pair;
 
+Ptr_Pair item_flag_names_r(uint16_t flags, char * b1, int b1_size, char * b2, int b2_size) {
+   assert(b1_size >= 80);
+   assert(b2_size >= 80);
+
+   snprintf(b1, b1_size, "%s %s %s %s %s",
+         flags & 0x01  ? "Constant"   : "Data",
+         flags & 0x02  ? "Variable"   : "Array",
+         flags & 0x04  ? "Relative"   : "Absolute",
+         flags & 0x08  ? "Wrap"       : "No_Wrap",
+         flags & 0x10  ? "Non_Linear" : "Linear"
+        );
+   snprintf(b2, b2_size, "%s %s %s %s",
+         flags & 0x20  ? "No_Preferred_State" : "Preferred_State",
+         flags & 0x40  ? "Null_State"         : "No_Null_Position",
+         flags & 0x80  ? "Volatile"           : "Non_Volatile",
+         flags & 0x100 ? "Buffered Bytes"     : "Bitfield"
+        );
+
+   Ptr_Pair result = {b1,b2};
+   return result;
+}
+
+
+Ptr_Pair item_flag_names(uint16_t flags) {
+   static char b1[80];
+   static char b2[80];
+   return item_flag_names_r(flags, b1, 80, b2, 80);
+}
+
+
+
+#ifdef OLD
 static void dump_unit(unsigned int data, unsigned int len)
 {
    char *systems[5] = { "None", "SI Linear", "SI Rotation",
@@ -104,15 +141,89 @@ static void dump_unit(unsigned int data, unsigned int len)
    printf("\n");
 }
 
+#endif
+
+
+static char * unit_name_r(unsigned int data, unsigned int len, char * buf, int bufsz)
+{
+   assert(bufsz >= 80);
+
+   char *systems[5] = { "None", "SI Linear", "SI Rotation",
+         "English Linear", "English Rotation" };
+
+   char *units[5][8] = {
+      { "None", "None", "None", "None", "None",
+            "None", "None", "None" },
+      { "None", "Centimeter", "Gram", "Seconds", "Kelvin",
+            "Ampere", "Candela", "None" },
+      { "None", "Radians",    "Gram", "Seconds", "Kelvin",
+            "Ampere", "Candela", "None" },
+      { "None", "Inch",       "Slug", "Seconds", "Fahrenheit",
+            "Ampere", "Candela", "None" },
+      { "None", "Degrees",    "Slug", "Seconds", "Fahrenheit",
+            "Ampere", "Candela", "None" },
+   };
+
+   unsigned int i;
+   unsigned int sys;
+   int earlier_unit = 0;
+
+   /* First nibble tells us which system we're in. */
+   sys = data & 0xf;
+   data >>= 4;
+
+   if (sys > 4) {
+      if (sys == 0xf)
+         strcpy(buf, "System: Vendor defined, Unit: (unknown)");
+      else
+         strcpy(buf, "System: Reserved, Unit: (unknown)");
+   }
+   else {
+      sprintf(buf, "System: %s, Unit: ", systems[sys]);
+
+      for (i = 1 ; i < len * 2 ; i++) {
+         char nibble = data & 0xf;
+         data >>= 4;
+         if (nibble != 0) {
+            if (earlier_unit++ > 0)
+               strcat(buf, "*");
+            sprintf(buf+strlen(buf), "%s", units[sys][i]);
+            if (nibble != 1) {
+               /* This is a _signed_ nibble(!) */
+
+               int val = nibble & 0x7;
+               if (nibble & 0x08)
+                  val = -((0x7 & ~val) + 1);
+               sprintf(buf+strlen(buf), "^%d", val);
+            }
+         }
+      }
+   }
+   if (earlier_unit == 0)
+      strcat(buf, "(None)");
+
+   return buf;
+}
+
+
+static char * unit_name(unsigned int data, unsigned int len) {
+   static char buf[80];
+   return unit_name_r(data, len, buf, 80);
+}
 
 
 
+
+/** Debugging function.
+ */
 void report_raw_hid_report_item(Hid_Report_Item * item, int depth) {
    int d1 = depth+1;
    rpt_structure_loc("Hid_Report_Item", item, depth);
    rpt_vstring(d1, "%-20s:  0x%02x", "btype", item->btype);
    rpt_vstring(d1, "%-20s:  0x%02x", "btag", item->btag);
    rpt_vstring(d1, "%-20s:  %d",     "bsize", item->bsize);
+   rpt_vstring(d1, "%-20s:  %d",     "bsize_orig", item->bsize_orig);
+   rpt_vstring(d1, "%-20s:  %d",     "bsize_bytect", item->bsize_bytect);
    rpt_vstring(d1, "%-20s:  0x%08x", "data", item->data);
 }
 
@@ -127,8 +238,15 @@ void free_hid_report_item_list(Hid_Report_Item * head) {
 }
 
 
-
-
+/* Converts the bytes of a HID Report Descriptor to a linked list of
+ * Hid_Report_Items.
+ *
+ * Arguments:
+ *    b        address of bytes
+ *    l        number of bytes
+ *
+ * Returns:    linked list of Hid_Report_Items
+ */
 // need better name
 Hid_Report_Item * preparse_hid_report(Byte * b, int l) {
    bool debug = false;
@@ -153,12 +271,14 @@ Hid_Report_Item * preparse_hid_report(Byte * b, int l) {
       cur->bsize = b0;
       if (cur->bsize == 3)                // values are indicators, not the actual size:
          cur->bsize = 4;                  //  0,1,2,4
+      cur->bsize_orig = b0;
+      cur->bsize_bytect = (b0 == 3) ? 4 : b0;
       cur->btype = b[i] & (0x03 << 2);    // next 2 bits are type
       cur->btag = b[i] & ~0x03;           // mask out size bits to get tag
 
-      if (cur->bsize > 0) {
+      if (cur->bsize_bytect > 0) {
          cur->data = 0;
-         for (j = 0; j < cur->bsize; j++) {
+         for (j = 0; j < cur->bsize_bytect; j++) {
             cur->data += (b[i+1+j] << (8*j));
          }
       }
@@ -171,9 +291,9 @@ Hid_Report_Item * preparse_hid_report(Byte * b, int l) {
          prev->next = cur;
          prev = cur;
       }
-      i += 1 + cur->bsize;
+      // i += 1 + cur->bsize;
+      i += 1 + cur->bsize_bytect;
    }
-
 
    if (debug)
       printf("(%s) Returning: %p\n", __func__, root);
@@ -188,9 +308,13 @@ struct hid_report_item_globals {
 } Hid_Report_Item_Globals;
 
 
-
-
-
+/* Reports a single Hid_Report_Item
+ *
+ * Arguments:
+ *   item
+ *   globals       current globals state
+ *   depth         logical indentation depth
+ */
 void report_hid_report_item(Hid_Report_Item * item, Hid_Report_Item_Globals * globals, int depth) {
    // int d1 = depth+1;
    int d_indent = depth+5;
@@ -201,13 +325,13 @@ void report_hid_report_item(Hid_Report_Item * item, Hid_Report_Item_Globals * gl
    // unsigned int hut = 0xffff;
    // int i;
    char *types[4] = { "Main", "Global", "Local", "reserved" };
-   char indent[] = "                            ";
+   // char indent[] = "                            ";
 
    char databuf[80];
-   if (item->bsize == 0)
+   if (item->bsize_bytect == 0)
       strcpy(databuf, "none");
    else
-      snprintf(databuf, 80, "[ 0x%0*x ]", item->bsize*2, item->data);
+      snprintf(databuf, 80, "[ 0x%0*x ]", item->bsize_bytect*2, item->data);
 
    rpt_vstring(depth, "Item(%-6s): %s, data=%s",
                       types[item->btype>>2],
@@ -259,14 +383,15 @@ void report_hid_report_item(Hid_Report_Item * item, Hid_Report_Item_Globals * gl
       break;
 
    case 0x54: /* Unit Exponent */
-      printf("%sUnit Exponent: %i\n", indent,
-             (signed char)item->data);
+      // printf("%sUnit Exponent: %i\n", indent, (signed char)item->data);
+      rpt_vstring(d_indent, "Unit Exponent: %i", (signed char)item->data);
 
       break;
 
    case 0x64: /* Unit */
-      printf("%s", indent);
-      dump_unit(item->data, item->bsize);
+      // printf("%s", indent);
+      // dump_unit(item->data, item->bsize_bytect);
+      rpt_vstring(d_indent, "%s", unit_name(item->data, item->bsize_bytect));
       break;
 
 
@@ -277,6 +402,8 @@ void report_hid_report_item(Hid_Report_Item * item, Hid_Report_Item_Globals * gl
    case 0x80: /* Input */
    case 0x90: /* Output */
    case 0xb0: /* Feature */
+   {
+#ifdef OLD
       printf("%s%s %s %s %s %s\n%s%s %s %s %s\n",
              indent,
              item->data & 0x01  ? "Constant"   : "Data",
@@ -289,12 +416,28 @@ void report_hid_report_item(Hid_Report_Item * item, Hid_Report_Item_Globals * gl
              item->data & 0x40  ? "Null_State"     : "No_Null_Position",
              item->data & 0x80  ? "Volatile"       : "Non_Volatile",
              item->data & 0x100 ? "Buffered Bytes" : "Bitfield");
+#endif
+      Ptr_Pair flag_names = item_flag_names(item->data);
+      rpt_vstring(d_indent, "%s", flag_names.p1);
+      rpt_vstring(d_indent, "%s", flag_names.p2);
       break;
+   }
 
    }
 }
 
 
+
+/* Given a Hid_Report_Descriptor, represented as a linked list of
+ * Hid_Report_Items, display the descriptor in the form used in
+ * HID documentation, with annotation.
+ *
+ * Arguments:
+ *    head      first item in list
+ *    depth     logical indentation depth
+ *
+ * Returns:     nothing
+ */
 void report_hid_report_item_list(Hid_Report_Item * head, int depth) {
    bool debug = false;
    if (debug)
@@ -309,6 +452,7 @@ void report_hid_report_item_list(Hid_Report_Item * head, int depth) {
 
 
 
+#ifdef OLD
 /* Processes the bytes of a HID Report Descriptor,
  * writes a report in the form similar to that used
  * in HID Report Descriptor documentation.
@@ -463,3 +607,4 @@ void report_hid_report_item_list(Hid_Report_Item * head, int depth) {
       i += 1 + bsize;
    }
 }
+#endif

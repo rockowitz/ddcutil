@@ -92,6 +92,21 @@ typedef struct parsed_hid_descriptor {
 
 Parsed_Hid_Descriptor * parse_report_desc(Byte * b, int desclen);
 
+void report_hid_report(Hid_Report * hr, int depth);
 void report_parsed_hid_descriptor(Parsed_Hid_Descriptor * pdesc, int depth);
+
+// TODO: use same bit values as item type?   will that work?
+// TODO: poor names
+typedef enum hid_report_type_enum {
+   HIDF_REPORT_TYPE_NONE    = 0x00,
+   HIDF_REPORT_TYPE_INPUT   = 0x0,
+   HIDF_REPORT_TYPE_OUTPUT  = 0x02,
+   HIDF_REPORT_TYPE_FEATURE = 0x04,
+   HIDF_REPORT_TYPE_ANY     = 0xff
+} Hid_Report_Type_Enum;
+
+GPtrArray * select_parsed_report_descriptors(Parsed_Hid_Descriptor * phd, Byte report_type_flags);
+
+
 
 #endif /* HID_REPORT_DESCRIPTOR_H_ */

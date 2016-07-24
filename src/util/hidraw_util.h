@@ -1,7 +1,8 @@
-/* file_util.h
+/* hidraw_util.h
+ *
  *
  * <copyright>
- * Copyright (C) 2014-2016 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2016 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -21,24 +22,10 @@
  * </endcopyright>
  */
 
-#ifndef FILE_UTIL_H_
-#define FILE_UTIL_H_
+#ifndef HIDRAW_UTIL_H_
+#define HIDRAW_UTIL_H_
 
-#include <dirent.h>
-#include <glib.h>
-#include <stdbool.h>
+void probe_hidraw(int depth);
 
 
-int file_getlines(const char * fn, GPtrArray* line_array, bool verbose);
-
-char * read_one_line_file(char * fn, bool verbose);
-
-bool regular_file_exists(const char * fqfn);
-bool directory_exists(const char * fqfn);
-
-int rpt_file_contents(const char * fn, int depth);
-
-typedef int (*Dirent_Filter)(const struct dirent *end);
-GPtrArray * get_filenames_by_filter(const char * dirnames[], Dirent_Filter filter_func);
-
-#endif /* FILE_UTIL_H_ */
+#endif /* _HIDRAW_UTIL_H_ */

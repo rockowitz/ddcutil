@@ -42,10 +42,11 @@
 #include <wchar.h>
 
 #include "util/coredefs.h"
-#include "util/string_util.h"
+#include "util/file_util.h"
 #include "util/glib_util.h"
 #include "util/report_util.h"
-#include "usb_hid_common.h"
+#include "util/string_util.h"
+#include "util/usb_hid_common.h"
 
 // circular dependency, but only used in debug code
 // report_hiddev_field_info() in report_hid_field_locator()
@@ -85,7 +86,7 @@ static int is_hiddev(const struct dirent *ent) {
    return !strncmp(ent->d_name, "hiddev", strlen("hiddev"));
 }
 
-
+#ifdef OLD
 /*  Scans /dev to obtain list of hiddev device names
  *
  * Returns:   GPtrArray of device device names.
@@ -122,6 +123,14 @@ GPtrArray * get_hiddev_device_names_using_filesys() {
    }
    return devnames;
 }
+#endif
+
+
+GPtrArray * get_hiddev_device_names_using_filesys() {
+   const char *hidraw_paths[] = { "/dev/", "/dev/usb", NULL };
+   return get_filenames_by_filter(hidraw_paths, is_hiddev);
+}
+
 
 
 #ifdef USE_LIBUDEV

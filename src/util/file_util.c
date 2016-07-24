@@ -21,6 +21,7 @@
  * </endcopyright>
  */
 
+#include <assert.h>
 #include <errno.h>
 #include <glib.h>
 #include <stdbool.h>
@@ -171,3 +172,46 @@ bool directory_exists(const char * fqfn) {
    }
    return result;
 }
+
+
+/* Scans list of directories to obtain for file names matching a criterion
+ *
+ * Arguments:
+ *   dirnames     null terminated array of pointers to directory names
+ *   filter_func  tests directory entry
+ *
+ * Returns:   GPtrArray of fully qualified file names
+ *
+ * Adapted from usbmonctl
+ */
+GPtrArray * get_filenames_by_filter(const char * dirnames[], Dirent_Filter filter_func) {
+   // const char *hiddev_paths[] = { "/dev/", "/dev/usb/", NULL };
+   bool debug = true;
+   GPtrArray * devnames =  g_ptr_array_new();
+   char path[PATH_MAX];
+
+   for (int i = 0; dirnames[i] != NULL; i++) {
+      struct dirent ** filelist;
+
+      int count = scandir(dirnames[i], &filelist, filter_func, alphasort);
+      if (count < 0) {
+         assert(count == -1);
+         fprintf(stderr, "(%s) scandir() error: %s\n", __func__, strerror(errno));
+         continue;
+      }
+      for (int j = 0; j < count; j++) {
+         snprintf(path, PATH_MAX, "%s%s", dirnames[i], filelist[j]->d_name);
+         g_ptr_array_add(devnames, strdup(path));
+         free(filelist[j]);
+      }
+      free(filelist);
+   }
+
+   if (debug) {
+      printf("(%s) Found %d device names:\n", __func__, devnames->len);
+      for (int ndx = 0; ndx < devnames->len; ndx++)
+         printf("   %s\n", (char *) g_ptr_array_index(devnames, ndx) );
+   }
+   return devnames;
+}
+

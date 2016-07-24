@@ -81,6 +81,7 @@ app_ddctool/testcases.c
 
 if ENABLE_LIBUSB_COND
 ddctool_SOURCES += \
+util/hidraw_util.c \
 util/libusb_reports.c \
 util/libusb_util.c \
 util/base_hid_report_descriptor.c \
