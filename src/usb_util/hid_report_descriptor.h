@@ -27,6 +27,7 @@
 #include <stdint.h>
 
 #include "util/coredefs.h"
+#include "usb_util/base_hid_report_descriptor.h"
 
 
 // values identical to those for HID_REPORT_TYPE_... in hiddev.h:
@@ -53,8 +54,7 @@ Usage to form a complete usage value. Extended usages can be used to
 override the currently defined Usage Page for individual usages.
  */
 
-
-typedef struct hid_field {
+typedef struct parsed_hid_field {
    uint16_t           item_flags;
    uint16_t           usage_page;
    uint32_t           extended_usage;      // hi 16 bits usage_page, lo 16 bits usage_id
@@ -66,35 +66,31 @@ typedef struct hid_field {
    uint16_t           report_count;
    uint16_t           unit_exponent;
    uint16_t           unit;
-} Hid_Field;
+} Parsed_Hid_Field;
 
-
-typedef struct hid_report {
+typedef struct parsed_hid_report {
    uint16_t   report_id;
    Byte       report_type;
    GPtrArray * hid_fields;
-} Hid_Report;
+} Parsed_Hid_Report;
 
-
-struct hid_collection;
-typedef struct hid_collection {
+typedef struct parsed_hid_collection {
    uint16_t     usage_page;
    uint32_t     extended_usage;
    Byte         collection_type;
    bool         is_root_collection;
    GPtrArray *  reports;
    GPtrArray *  child_collections;
-} Hid_Collection;
-
+} Parsed_Hid_Collection;
 
 typedef struct parsed_hid_descriptor {
-   Hid_Collection * root_collection;
+   Parsed_Hid_Collection * root_collection;
 } Parsed_Hid_Descriptor;
 
-
+Parsed_Hid_Descriptor * parse_report_desc_from_item_list(Hid_Report_Item * items_head);
 Parsed_Hid_Descriptor * parse_report_desc(Byte * b, int desclen);
 
-void report_hid_report(Hid_Report * hr, int depth);
+void report_hid_report(Parsed_Hid_Report * hr, int depth);
 void report_parsed_hid_descriptor(Parsed_Hid_Descriptor * pdesc, int depth);
 
 // TODO: use same bit values as item type?   will that work?
@@ -108,7 +104,5 @@ typedef enum hid_report_type_enum {
 } Hid_Report_Type_Enum;
 
 GPtrArray * select_parsed_report_descriptors(Parsed_Hid_Descriptor * phd, Byte report_type_flags);
-
-
 
 #endif /* HID_REPORT_DESCRIPTOR_H_ */

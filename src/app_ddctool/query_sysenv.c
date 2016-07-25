@@ -1195,7 +1195,6 @@ void query_sysenv() {
       subsys_name = "hidraw";
       printf("\nProbing USB HID devices, susbsystem %s. using udev...\n", subsys_name);
       query_udev_subsystem(subsys_name);
-
    }
 #endif
 
@@ -1221,6 +1220,9 @@ void query_sysenv() {
        // don't use.  wipes out /dev/hidraw  and /dev/usb/hiddev devices it opens
        // no addional information.   Feature values are returned as with libusb -
        // leading byte is report number
+       // note that probe_hidapi() tests all possible report numbers, not just those
+       // listed in the report descriptor.  Found some additional reports in the
+       // vendor specific range on the Apple Cinema display
        probe_hidapi(1);
 #endif
 #endif

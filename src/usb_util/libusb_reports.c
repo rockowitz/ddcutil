@@ -564,58 +564,6 @@ void report_libusb_interface_descriptor(
 
             cur_extra += cur_hid_desc->bLength;
             remaining_length -= cur_hid_desc->bLength;
-
-
-
-#ifdef HUH
-            int i, n;
-            int len;
-            unsigned char * buf = inter->extra;
-            unsigned char dbuf[8192];
-            libusb_device_handle * dev = dh;
-            struct libusb_interface_descriptor *interface = inter;
-
-#define CTRL_RETRIES  2
-#define CTRL_TIMEOUT (5*1000) /* milliseconds */
-
-
-            for (i = 0; i < buf[5]; i++) {
-               /* we are just interested in report descriptors*/
-               if (buf[6+3*i] != LIBUSB_DT_REPORT)
-                  continue;
-               len = buf[7+3*i] | (buf[8+3*i] << 8);
-               if (len > (unsigned int)sizeof(dbuf)) {
-                  printf("report descriptor too long\n");
-                  continue;
-               }
-               if (libusb_claim_interface(dev, interface->bInterfaceNumber) == 0) {
-                  int retries = 4;
-                  n = 0;
-                  while (n < len && retries--)
-                     n = usb_control_msg(dev,
-                         LIBUSB_ENDPOINT_IN | LIBUSB_REQUEST_TYPE_STANDARD
-                           | LIBUSB_RECIPIENT_INTERFACE,
-                         LIBUSB_REQUEST_GET_DESCRIPTOR,
-                         (LIBUSB_DT_REPORT << 8),
-                         interface->bInterfaceNumber,
-                         dbuf, len,
-                         CTRL_TIMEOUT);
-
-                  if (n > 0) {
-                     if (n < len)
-                        printf("          Warning: incomplete report descriptor\n");
-                     dump_report_desc(dbuf, n);
-                  }
-                  libusb_release_interface(dev, interface->bInterfaceNumber);
-               } else {
-                  /* recent Linuxes require claim() for RECIP_INTERFACE,
-                   * so "rmmod hid" will often make these available.
-                   */
-                  printf("         Report Descriptors: \n"
-                         "           ** UNAVAILABLE **\n");
-               }
-            }
-#endif
          }
       }
       }
@@ -1098,13 +1046,13 @@ void report_hid_descriptor(
                rpt_vstring(d1, "Displaying report descriptor in HID external form:");
                Hid_Report_Item * item_list = preparse_hid_report(dbuf, bytes_read);
                report_hid_report_item_list(item_list,d2);
-               free_hid_report_item_list(item_list);
-               puts("");
-               Parsed_Hid_Descriptor * phd =  parse_report_desc(dbuf, descriptor_len);
+               Parsed_Hid_Descriptor * phd =  parse_report_desc_from_item_list(item_list);
                if (phd) {
+                  puts("");
                   rpt_vstring(d1, "Parsed report descriptor:");
                   report_parsed_hid_descriptor(phd, d2);
                }
+               free_hid_report_item_list(item_list);
             }
          }
          break;
@@ -1119,8 +1067,6 @@ void report_hid_descriptor(
          break;
       }
    }
-
-
 }
 
 

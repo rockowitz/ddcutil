@@ -101,7 +101,7 @@ char * interpret_item_flags_r(uint16_t data, char * buffer, int bufsz) {
 // Functions to report Parsed_Hid_Descriptor and its contained structs
 //
 
-void report_hid_field(Hid_Field * hf, int depth) {
+void report_hid_field(Parsed_Hid_Field * hf, int depth) {
    int d1 = depth+1;
    // rpt_structure_loc("Hid_Field", hf, depth);
    rpt_title("Field: ", depth);
@@ -143,7 +143,6 @@ void report_hid_field(Hid_Field * hf, int depth) {
 }
 
 
-
 /* Report a single report in a parsed HID report descriptor
  *
  * Arguments:
@@ -152,7 +151,7 @@ void report_hid_field(Hid_Field * hf, int depth) {
  *
  * Returns:     nothing
  */
-void report_hid_report(Hid_Report * hr, int depth) {
+void report_hid_report(Parsed_Hid_Report * hr, int depth) {
    int d1 = depth+1;
    // int d2 = depth+2;
    // rpt_structure_loc("Hid_Report", hr,depth);
@@ -170,7 +169,7 @@ void report_hid_report(Hid_Report * hr, int depth) {
 }
 
 
-void report_hid_collection(Hid_Collection * col, int depth) {
+void report_hid_collection(Parsed_Hid_Collection * col, int depth) {
    bool show_dummy_root = false;
 
    int d1 = depth+1;
@@ -202,7 +201,7 @@ void report_hid_collection(Hid_Collection * col, int depth) {
       else
          child_depth = depth;
       for (int ndx = 0; ndx < col->child_collections->len; ndx++) {
-         Hid_Collection * a_child = g_ptr_array_index(col->child_collections, ndx);
+         Parsed_Hid_Collection * a_child = g_ptr_array_index(col->child_collections, ndx);
          report_hid_collection(a_child, child_depth);
       }
    }
@@ -235,24 +234,24 @@ void report_parsed_hid_descriptor(Parsed_Hid_Descriptor * pdesc, int depth) {
 
 
 static void accumulate_report_descriptors_for_collection(
-               Hid_Collection * col, Byte report_type_flags, GPtrArray * accumulator)
+               Parsed_Hid_Collection * col, Byte report_type_flags, GPtrArray * accumulator)
 {
    if (col->child_collections && col->child_collections->len > 0) {
       for (int ndx = 0; ndx < col->child_collections->len; ndx++) {
-         Hid_Collection * a_child = g_ptr_array_index(col->child_collections, ndx);
+         Parsed_Hid_Collection * a_child = g_ptr_array_index(col->child_collections, ndx);
          accumulate_report_descriptors_for_collection(a_child, report_type_flags, accumulator);
       }
    }
 
    if (col->reports && col->reports->len > 0) {
       for (int ndx = 0; ndx < col->reports->len; ndx++) {
-         Hid_Report * a_report = g_ptr_array_index(col->reports, ndx);
-         if ( (a_report->report_type == HID_REPORT_TYPE_INPUT   &&  (report_type_flags & HIDF_REPORT_TYPE_INPUT  )) ||
-              (a_report->report_type == HID_REPORT_TYPE_OUTPUT  &&  (report_type_flags & HIDF_REPORT_TYPE_OUTPUT )) ||
-              (a_report->report_type == HID_REPORT_TYPE_FEATURE &&  (report_type_flags & HIDF_REPORT_TYPE_FEATURE))
+         Parsed_Hid_Report * rpt = g_ptr_array_index(col->reports, ndx);
+         if ( (rpt->report_type == HID_REPORT_TYPE_INPUT   && (report_type_flags & HIDF_REPORT_TYPE_INPUT  )) ||
+              (rpt->report_type == HID_REPORT_TYPE_OUTPUT  && (report_type_flags & HIDF_REPORT_TYPE_OUTPUT )) ||
+              (rpt->report_type == HID_REPORT_TYPE_FEATURE && (report_type_flags & HIDF_REPORT_TYPE_FEATURE))
             )
          {
-            g_ptr_array_add(accumulator, a_report);
+            g_ptr_array_add(accumulator, rpt);
          }
       }
    }
@@ -329,12 +328,12 @@ void free_cur_report_locals(Cur_Report_Locals * locals) {
 }
 
 
-Hid_Report * find_hid_report(Hid_Collection * col, Byte report_type, uint16_t report_id) {
-   Hid_Report * result = NULL;
+Parsed_Hid_Report * find_hid_report(Parsed_Hid_Collection * col, Byte report_type, uint16_t report_id) {
+   Parsed_Hid_Report * result = NULL;
 
    if (col->reports->len) {
       for (int ndx=0; ndx < col->reports->len && !result; ndx++) {
-         Hid_Report * cur = g_ptr_array_index(col->reports, ndx);
+         Parsed_Hid_Report * cur = g_ptr_array_index(col->reports, ndx);
          if (cur->report_type == report_type && cur->report_id == report_id)
             result = cur;
       }
@@ -343,16 +342,16 @@ Hid_Report * find_hid_report(Hid_Collection * col, Byte report_type, uint16_t re
    return result;
 }
 
-Hid_Report * find_hid_report_or_new(Hid_Collection * hc, Byte report_type, uint16_t report_id) {
+Parsed_Hid_Report * find_hid_report_or_new(Parsed_Hid_Collection * hc, Byte report_type, uint16_t report_id) {
    bool debug = false;
    if (debug)
       printf("(%s) report_type=%d, report_id=%d\n", __func__, report_type, report_id);
-   Hid_Report * result = find_hid_report(hc, report_type, report_id);
+   Parsed_Hid_Report * result = find_hid_report(hc, report_type, report_id);
    if (!result) {
       if (!hc->reports) {
          hc->reports = g_ptr_array_new();
       }
-      result = calloc(1, sizeof(Hid_Report));
+      result = calloc(1, sizeof(Parsed_Hid_Report));
       result->report_id = report_id;
       result->report_type = report_type;
       g_ptr_array_add(hc->reports, result);
@@ -361,7 +360,7 @@ Hid_Report * find_hid_report_or_new(Hid_Collection * hc, Byte report_type, uint1
 }
 
 
-void add_report_field(Hid_Report * hr, Hid_Field * hf) {
+void add_report_field(Parsed_Hid_Report * hr, Parsed_Hid_Field * hf) {
    assert(hr && hf);
    if (!hr->hid_fields)
       hr->hid_fields = g_ptr_array_new();
@@ -369,7 +368,7 @@ void add_report_field(Hid_Report * hr, Hid_Field * hf) {
 }
 
 
-void add_hid_collection_child(Hid_Collection * parent, Hid_Collection * new_child) {
+void add_hid_collection_child(Parsed_Hid_Collection * parent, Parsed_Hid_Collection * new_child) {
    if (!parent->child_collections)
       parent->child_collections = g_ptr_array_new();
 
@@ -436,6 +435,7 @@ uint32_t extended_usage(uint16_t usage_page, uint32_t usage, int usage_bsize) {
 }
 
 
+#ifdef OLD
 /* Primary function to parse the bytes of a HID report descriptor.
  *
  * Arguments:
@@ -458,14 +458,14 @@ Parsed_Hid_Descriptor * parse_report_desc_old(Byte * b, int desclen) {
 
    Cur_Report_Globals * cur_globals = calloc(1, sizeof(struct cur_report_globals));
    Cur_Report_Locals  * cur_locals  = calloc(1, sizeof(struct cur_report_locals));
-   Hid_Collection * cur_collection = NULL;
+   Parsed_Hid_Collection * cur_collection = NULL;
 
    Parsed_Hid_Descriptor * parsed_descriptor = calloc(1, sizeof(Parsed_Hid_Descriptor));
-   parsed_descriptor->root_collection = calloc(1,sizeof(Hid_Collection));
+   parsed_descriptor->root_collection = calloc(1,sizeof(Parsed_Hid_Collection));
    parsed_descriptor->root_collection->is_root_collection = true;
 
 #define COLLECTION_STACK_SIZE 10
-   Hid_Collection * collection_stack[COLLECTION_STACK_SIZE];
+   Parsed_Hid_Collection * collection_stack[COLLECTION_STACK_SIZE];
    collection_stack[0] = parsed_descriptor->root_collection;
    int collection_stack_cur = 0;
 
@@ -526,7 +526,7 @@ Parsed_Hid_Descriptor * parse_report_desc_old(Byte * b, int desclen) {
 
          case 0xa0:     // Collection
          {
-            cur_collection = calloc(1, sizeof(Hid_Collection));
+            cur_collection = calloc(1, sizeof(Parsed_Hid_Collection));
             cur_collection->collection_type = data;
             cur_collection->usage_page = cur_globals->usage_page;
             uint32_t cur_usage = 0;
@@ -562,14 +562,14 @@ Parsed_Hid_Descriptor * parse_report_desc_old(Byte * b, int desclen) {
          case 0x90: /* Output */
          case 0xb0: /* Feature */
          {
-            Hid_Field * hf = calloc(1, sizeof(Hid_Field));
+            Parsed_Hid_Field * hf = calloc(1, sizeof(Parsed_Hid_Field));
             Byte report_type;
             if      (btag == 0x80) report_type = HID_REPORT_TYPE_INPUT;
             else if (btag == 0x90) report_type = HID_REPORT_TYPE_OUTPUT;
             else                   report_type = HID_REPORT_TYPE_FEATURE;
             hf->item_flags = data;
             uint16_t report_id = cur_globals->report_id;
-            Hid_Report * hr = find_hid_report_or_new(
+            Parsed_Hid_Report * hr = find_hid_report_or_new(
                      cur_collection,
                      report_type,
                      report_id);
@@ -770,38 +770,33 @@ Parsed_Hid_Descriptor * parse_report_desc_old(Byte * b, int desclen) {
 
    return parsed_descriptor;
 }
+#endif
 
 
-/* Primary function to parse the bytes of a HID report descriptor.
+/* Fully interpret a sequence of Hid_Report_Items
  *
  * Arguments:
- *    b             address of first byte
- *    desclen       number of bytes
+ *    head          pointer to linked list of Hid_Report_Items
  *
  * Returns:         parsed report descriptor
  */
 Parsed_Hid_Descriptor * parse_report_desc_from_item_list(Hid_Report_Item * items_head) {
    bool debug = false;
    if (debug)
-      printf("(%s) Starting.", __func__);
+      printf("(%s) Starting.\n", __func__);
 
    char *types[4] = { "Main", "Global", "Local", "reserved" };
 
-  // unsigned int j, bsize, btag, btype, data = 0xffff;
-   // unsigned int bsize_bytect;
-   // unsigned int hut = 0xffff;
-   // int i;
-
    Cur_Report_Globals * cur_globals = calloc(1, sizeof(struct cur_report_globals));
    Cur_Report_Locals  * cur_locals  = calloc(1, sizeof(struct cur_report_locals));
-   Hid_Collection * cur_collection = NULL;
+   Parsed_Hid_Collection * cur_collection = NULL;
 
    Parsed_Hid_Descriptor * parsed_descriptor = calloc(1, sizeof(Parsed_Hid_Descriptor));
-   parsed_descriptor->root_collection = calloc(1,sizeof(Hid_Collection));
+   parsed_descriptor->root_collection = calloc(1,sizeof(Parsed_Hid_Collection));
    parsed_descriptor->root_collection->is_root_collection = true;
 
 #define COLLECTION_STACK_SIZE 10
-   Hid_Collection * collection_stack[COLLECTION_STACK_SIZE];
+   Parsed_Hid_Collection * collection_stack[COLLECTION_STACK_SIZE];
    collection_stack[0] = parsed_descriptor->root_collection;
    int collection_stack_cur = 0;
 
@@ -811,28 +806,9 @@ Parsed_Hid_Descriptor * parse_report_desc_from_item_list(Hid_Report_Item * items
       if (debug) {
          char datastr[20];
          snprintf(datastr, 20, "[0x%0*x] %d", item->bsize_bytect*2, item->data, item->data);
-#ifdef OLD
-         switch(item->bsize_bytect) {
-         case 0:
-            strcpy(datastr, "none");
-            break;
-         case 1:
-            snprintf(datastr, 20, "[0x%02x] %d", item->data, item->data);
-            break;
-         case 2:
-            snprintf(datastr, 20, "[0x%04x] %d", item->data, item->data);
-            break;
-         case 4:
-            snprintf(datastr, 20, "[0x%08x] %d", item->data, item->data);
-            break;
-         default:
-           // program logic error
-            break;
-         }
-#endif
          printf("(%s) Item(%-6s): %s, data=%s\n",
                  __func__,
-                 types[item->btype],   // or btype>>2 ?
+                 types[item->btype],
                  devid_hid_descriptor_item_type(item->btag),
                  datastr);
       }
@@ -842,12 +818,12 @@ Parsed_Hid_Descriptor * parse_report_desc_from_item_list(Hid_Report_Item * items
 
       // Main item tags
 
-      case 0x00:     // Main item
+      case 0:     // Main item
          switch(item->btag) {
 
          case 0xa0:     // Collection
          {
-            cur_collection = calloc(1, sizeof(Hid_Collection));
+            cur_collection = calloc(1, sizeof(Parsed_Hid_Collection));
             cur_collection->collection_type = item->data;
             cur_collection->usage_page = cur_globals->usage_page;
             uint32_t cur_usage = 0;
@@ -883,14 +859,14 @@ Parsed_Hid_Descriptor * parse_report_desc_from_item_list(Hid_Report_Item * items
          case 0x90: /* Output */
          case 0xb0: /* Feature */
          {
-            Hid_Field * hf = calloc(1, sizeof(Hid_Field));
+            Parsed_Hid_Field * hf = calloc(1, sizeof(Parsed_Hid_Field));
             Byte report_type;
             if      (item->btag == 0x80) report_type = HID_REPORT_TYPE_INPUT;
             else if (item->btag == 0x90) report_type = HID_REPORT_TYPE_OUTPUT;
             else                         report_type = HID_REPORT_TYPE_FEATURE;
             hf->item_flags = item->data;
             uint16_t report_id = cur_globals->report_id;
-            Hid_Report * hr = find_hid_report_or_new(
+            Parsed_Hid_Report * hr = find_hid_report_or_new(
                      cur_collection,
                      report_type,
                      report_id);
@@ -957,7 +933,7 @@ Parsed_Hid_Descriptor * parse_report_desc_from_item_list(Hid_Report_Item * items
 
       // Global item tags
 
-      case 0x04:     // Global item
+      case 1:     // Global item
          switch (item->btag) {
          case 0x04: /* Usage Page */
               cur_globals->usage_page = item->data;
@@ -1015,7 +991,7 @@ Parsed_Hid_Descriptor * parse_report_desc_from_item_list(Hid_Report_Item * items
 
       // Local item tags
 
-      case 0x08:     // Local item
+      case 2:     // Local item
          switch(item->btag) {
          case 0x08:     // Usage
            {
@@ -1093,6 +1069,14 @@ Parsed_Hid_Descriptor * parse_report_desc_from_item_list(Hid_Report_Item * items
 }
 
 
+/* Parse and interpret the bytes of a HID report descriptor.
+ *
+ * Arguments:
+ *    b             address of first byte
+ *    desclen       number of bytes
+ *
+ * Returns:         parsed report descriptor
+ */
 Parsed_Hid_Descriptor * parse_report_desc(Byte * b, int desclen) {
    bool debug = false;
    if (debug)

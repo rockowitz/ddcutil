@@ -310,7 +310,7 @@ bool possible_monitor_dev(libusb_device * dev, bool check_forced_monitor, Descri
 
 
 
-// Not currently used.
+// *** NOT CURRENTLY USED ***
 // check_forced_monitor not implemented
 // apparently can get by without collected information in struct possible_monitor_device
 
@@ -425,7 +425,7 @@ alt_possible_monitor_dev(
  *  Returns a linked list of struct possible_monitor_device that represents
  *  possible monitors
  */
-// not currently used
+// *** NOT CURRENTLY USED ***
 struct possible_monitor_device *
 get_possible_monitors(
        libusb_device **devs      // null terminated list
@@ -457,9 +457,17 @@ get_possible_monitors(
 
 
 
-// From usbplay2.c
-
-libusb_device ** collect_possible_monitor_devs( libusb_device **devs) {
+/* Filters a null terminated list of pointers to struct libusb_device to
+ * those representing possible USB connected monitors.
+ *
+ * Arguments:
+ *    devs      null terminated list
+ *
+ * Returns:     filtered list (newly allocated)
+ *
+ * It is the responsibility of the caller to free the returned list.
+ */
+libusb_device ** filter_possible_monitor_devs( libusb_device **devs) {
    bool debug = false;
    if (debug)
       printf("(%s) Starting.\n", __func__);
@@ -481,7 +489,6 @@ libusb_device ** collect_possible_monitor_devs( libusb_device **devs) {
       memset(&dpath, 0, sizeof(Descriptor_Path));
       dpath.busno = busno;
       dpath.devno = devno;
-
 
       struct libusb_device_descriptor desc;
       // copies data into struct pointed to by desc, does not allocate:
@@ -556,7 +563,7 @@ void probe_libusb(bool possible_monitors_only) {
 
    libusb_device ** devs_to_show = devs;
    if (possible_monitors_only)
-      devs_to_show = collect_possible_monitor_devs(devs);
+      devs_to_show = filter_possible_monitor_devs(devs);
    report_libusb_devices(devs_to_show,
                          false,         // show_hubs
                          0);            // depth

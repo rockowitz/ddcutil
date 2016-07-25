@@ -258,14 +258,10 @@ Hid_Report_Item * preparse_hid_report(Byte * b, int l) {
    for (i = 0; i < l; ) {
       cur = calloc(1, sizeof(Hid_Report_Item));
 
-      Byte b0 = b[i] & 0x03;           // first 2 bits are size indicator
-      // cur->bsize = b0;
-      // if (cur->bsize == 3)                // values are indicators, not the actual size:
-      //    cur->bsize = 4;                  //  0,1,2,4
-      // cur->bsize_orig = b0;
-      cur->bsize_bytect = (b0 == 3) ? 4 : b0;
-      cur->btype = b[i] & (0x03 << 2);    // next 2 bits are type
-      cur->btag = b[i] & ~0x03;           // mask out size bits to get tag
+      Byte b0 = b[i] & 0x03;                  // first 2 bits are size indicator, 0, 1, 2, or 3
+      cur->bsize_bytect = (b0 == 3) ? 4 : b0; // actual number of bytes
+      cur->btype = (b[i] & (0x03 << 2))>>2;   // next 2 bits are type, shift to range 0..3
+      cur->btag = b[i] & ~0x03;               // mask out size bits to get tag
 
       if (cur->bsize_bytect > 0) {
          cur->data = 0;
@@ -282,7 +278,6 @@ Hid_Report_Item * preparse_hid_report(Byte * b, int l) {
          prev->next = cur;
          prev = cur;
       }
-      // i += 1 + cur->bsize;
       i += 1 + cur->bsize_bytect;
    }
 
@@ -302,7 +297,7 @@ struct hid_report_item_globals {
 /* Reports a single Hid_Report_Item
  *
  * Arguments:
- *   item
+ *   item          pointer to Hid_Report_Item to report
  *   globals       current globals state
  *   depth         logical indentation depth
  */
@@ -312,11 +307,7 @@ void report_hid_report_item(Hid_Report_Item * item, Hid_Report_Item_Globals * gl
 
    // TODO: handle push/pop of globals
 
-   // unsigned int j, bsize, btag, btype, data = 0xffff, hut = 0xffff;
-   // unsigned int hut = 0xffff;
-   // int i;
    char *types[4] = { "Main", "Global", "Local", "reserved" };
-   // char indent[] = "                            ";
 
    char databuf[80];
    if (item->bsize_bytect == 0)
@@ -325,14 +316,13 @@ void report_hid_report_item(Hid_Report_Item * item, Hid_Report_Item_Globals * gl
       snprintf(databuf, 80, "[ 0x%0*x ]", item->bsize_bytect*2, item->data);
 
    rpt_vstring(depth, "Item(%-6s): %s, data=%s",
-                      types[item->btype>>2],
+                      types[item->btype],
                       devid_hid_descriptor_item_type(item->btag),  // replacement for names_reporttag()
                       databuf);
 
 
    switch (item->btag) {
    case 0x04: /* Usage Page */
-      // printf("%s0x%02x ", indent, data);                                //  A
       // hack
         switch(item->data) {     // belongs elsewhere
         case 0xffa0:
@@ -344,9 +334,7 @@ void report_hid_report_item(Hid_Report_Item * item, Hid_Report_Item_Globals * gl
            break;
         }
       rpt_vstring(d_indent, "%s", devid_usage_code_page_name(item->data));   // names_huts(data));
-      // hut = item->data;
       globals->usage_page = item->data;
-
       break;
 
    case 0x08: /* Usage */
@@ -374,14 +362,10 @@ void report_hid_report_item(Hid_Report_Item * item, Hid_Report_Item_Globals * gl
       break;
 
    case 0x54: /* Unit Exponent */
-      // printf("%sUnit Exponent: %i\n", indent, (signed char)item->data);
       rpt_vstring(d_indent, "Unit Exponent: %i", (signed char)item->data);
-
       break;
 
    case 0x64: /* Unit */
-      // printf("%s", indent);
-      // dump_unit(item->data, item->bsize_bytect);
       rpt_vstring(d_indent, "%s", unit_name(item->data, item->bsize_bytect));
       break;
 

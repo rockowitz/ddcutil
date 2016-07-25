@@ -205,7 +205,7 @@ void probe_hidraw_device(char * devname, int depth) {
          GPtrArray * reports = select_parsed_report_descriptors(phd, HIDF_REPORT_TYPE_FEATURE);
 
          for (int ndx = 0; ndx < reports->len; ndx++) {
-            Hid_Report * a_report = g_ptr_array_index(reports, ndx);
+            Parsed_Hid_Report * a_report = g_ptr_array_index(reports, ndx);
             puts("");
             rpt_vstring(d1, "Feature report id: %3d  0x%02x", a_report->report_id, a_report->report_id);
 
