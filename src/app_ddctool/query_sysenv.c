@@ -63,7 +63,7 @@
 #ifdef USE_LIBUSB
 // #include "util/libusb_reports.h"
 #include "usb_util/libusb_util.h"
-#include "usb_util/hidapi_util.h"
+// #include "usb_util/hidapi_util.h"
 #endif
 #include "util/report_util.h"
 #include "util/string_util.h"
