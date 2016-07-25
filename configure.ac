@@ -135,6 +135,11 @@ PKG_CHECK_MODULES([UDEV], [libudev],
  ])
 
 
+dnl do not use
+dnl TODO: allow for either hidapi-libusb or hidapi-hidraw
+dnl PKG_CHECK_MODULES(HIDAPI, hidapi-hidraw)
+dnl PKG_CHECK_MODULES(HIDAPI, hidapi-libusb)
+
 ###
 ### Checks for header files.
 ###

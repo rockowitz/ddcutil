@@ -23,8 +23,6 @@
 
 // Adapted from usbplay2 file libusb_util.c
 
-
-
 #include <assert.h>
 #include <errno.h>
 #include <fcntl.h>
@@ -573,3 +571,75 @@ void probe_libusb(bool possible_monitors_only) {
 }
 
 
+bool libusb_is_monitor_by_path(ushort busno, ushort devno, ushort intfno) {
+   bool debug = true;
+   printf("(%s) Starting. busno=%d 0x%04x, devno=%d 0x%04x, intfno=%d 0x%02x\n",
+         __func__, busno, busno, devno, devno, intfno, intfno);
+   bool result = false;
+
+   if (intfno == 0) {     // monitors never have more than 1 interface
+
+      bool ok = devid_ensure_initialized();
+      if (!ok) {
+         printf("(%s) devid_ensure_initialized() failed.  Terminating probe_libusb()\n", __func__);
+         goto bye;
+      }
+
+      libusb_device **devs;
+      // libusb_context *ctx = NULL; //a libusb session
+      int rc;
+      ssize_t cnt;   // number of devices in list
+
+      // rc = libusb_init(&ctx);   // initialize a library session
+      rc = libusb_init(NULL);      // initialize a library session, use default context
+      CHECK_LIBUSB_RC("libusb_init", rc, LIBUSB_EXIT);
+      // libusb_set_debug(ctx,3);
+      libusb_set_debug(NULL /*default context*/, LIBUSB_LOG_LEVEL_INFO);
+
+      // cnt = libusb_get_device_list(ctx, &devs);
+      cnt = libusb_get_device_list(NULL /* default context */, &devs);
+      CHECK_LIBUSB_RC("libusb_get_device_list", (int) cnt, LIBUSB_EXIT);
+
+      libusb_device *dev;
+
+      int i = 0;
+      while ((dev = devs[i++]) != NULL) {
+          // unsigned short busno =  libusb_get_bus_number(dev);
+          // unsigned short devno =  libusb_get_device_address(dev);
+
+          if (busno == libusb_get_bus_number(dev) && devno == libusb_get_device_address(dev)) {
+             printf ("(%s) Found busno=%d, devno=%d\n", __func__, busno, devno);
+
+             Descriptor_Path dpath;
+             memset(&dpath, 0, sizeof(Descriptor_Path));
+             dpath.busno = busno;
+             dpath.devno = devno;
+
+
+             struct libusb_device_descriptor desc;
+             // copies data into struct pointed to by desc, does not allocate:
+             int rc = libusb_get_device_descriptor(dev, &desc);
+             if (rc < 0)
+                REPORT_LIBUSB_ERROR("libusb_get_device_descriptor",  rc, LIBUSB_EXIT);
+             dpath.desc = &desc;
+
+             if (debug)
+                printf("(%s) Examining device. bus=0x%04x, device=0x%04x\n", __func__, busno, devno);
+
+             result = possible_monitor_dev(dev, /*check_forced_monitor=*/ true, dpath);
+             break;
+          }
+       }
+
+      libusb_free_device_list(devs, 1 /* unref the devices in the list */);
+
+      // libusb_exit(ctx);
+      libusb_exit(NULL);
+      if (debug)
+         printf("(%s) Done.  Returning %s\n", __func__, bool_repr(result));
+
+   }
+
+bye:
+   return result;
+}

@@ -60,4 +60,6 @@ void report_possible_monitors(struct possible_monitor_device * mondev_head, int 
 
 void probe_libusb(bool possible_monitors_only);
 
+bool libusb_is_monitor_by_path(ushort busno, ushort devno, ushort intfno);
+
 #endif /* LIBUSB_UTIL_H_ */

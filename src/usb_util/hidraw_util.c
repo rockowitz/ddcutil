@@ -107,6 +107,7 @@ bus_str(int bus)
 // Probe hidraw devices
 //
 
+
 void probe_hidraw_device(char * devname, int depth) {
    rpt_vstring(depth, "Probing device %s", devname);
    // printf("(%s) %s\n", __func__, devname);
@@ -236,6 +237,76 @@ void probe_hidraw_device(char * devname, int depth) {
 
    close(fd);
 
+}
+
+
+
+
+bool hidraw_is_monitor_device(char * devname) {
+   bool debug = false;
+   if (debug)
+      printf("(%s) 'Checking device %s\n", __func__, devname);
+
+   bool is_monitor = false;
+
+   int fd;
+   // int i;
+   int res, desc_size = 0;
+   Byte buf[1024];     // TODO: maximum report size
+   struct hidraw_report_descriptor rpt_desc;
+   // struct hidraw_devinfo info;
+
+   /* Open the Device with non-blocking reads. In real life,
+      don't use a hard coded path; use libudev instead. */
+   fd = open(devname, O_RDWR|O_NONBLOCK);
+
+   if (fd < 0) {
+      perror("Unable to open device");
+      goto bye;
+   }
+
+   memset(&rpt_desc, 0x0, sizeof(rpt_desc));
+   // memset(&info,     0x0, sizeof(info));
+   memset(buf,       0x0, sizeof(buf));
+
+   /* Get Report Descriptor Size */
+   res = ioctl(fd, HIDIOCGRDESCSIZE, &desc_size);
+   if (res < 0) {
+      perror("HIDIOCGRDESCSIZE");
+      goto bye;
+   }
+
+   /* Get Report Descriptor */
+   rpt_desc.size = desc_size;
+   res = ioctl(fd, HIDIOCGRDESC, &rpt_desc);
+   if (res < 0) {
+      perror("HIDIOCGRDESC");
+      goto bye;
+   }
+
+   Hid_Report_Item * report_item_list = preparse_hid_report(rpt_desc.value, rpt_desc.size) ;
+   // report_hid_report_item_list(report_item_list, 2);
+
+   Hid_Report_Item * cur_item = report_item_list;
+
+   // Look at the first Usage Page item, is it USB Monitor?
+   while (cur_item) {
+      if (cur_item->btag == 0x04) {
+         if (cur_item->data == 0x80)
+            is_monitor = true;
+         break;
+      }
+      cur_item = cur_item->next;
+   }
+
+   free_hid_report_item_list(report_item_list);
+
+bye:
+   if (fd > 0)
+      close(fd);
+   if (debug)
+      printf("(%s) devname=%s, returning %s\n", __func__, devname, bool_repr(is_monitor));
+   return is_monitor;
 }
 
 

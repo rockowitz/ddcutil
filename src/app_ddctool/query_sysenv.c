@@ -62,7 +62,8 @@
 #include "../usb_util/hiddev_util.h"
 #ifdef USE_LIBUSB
 // #include "util/libusb_reports.h"
-#include "../usb_util/libusb_util.h"
+#include "usb_util/libusb_util.h"
+#include "usb_util/hidapi_util.h"
 #endif
 #include "util/report_util.h"
 #include "util/string_util.h"
@@ -1214,6 +1215,15 @@ void query_sysenv() {
        execute_shell_cmd("ls -l /dev/hidraw*", 2);
        puts("");
        probe_hidraw(1);
+#ifdef NO
+#ifdef USE_LIBUSB
+       printf("\nProbing using hidapi...\n");
+       // don't use.  wipes out /dev/hidraw  and /dev/usb/hiddev devices it opens
+       // no addional information.   Feature values are returned as with libusb -
+       // leading byte is report number
+       probe_hidapi(1);
+#endif
+#endif
    }
 }
 

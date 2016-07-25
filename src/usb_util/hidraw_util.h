@@ -27,5 +27,6 @@
 
 void probe_hidraw(int depth);
 
+bool hidraw_is_monitor_device(char * devname);
 
 #endif /* _HIDRAW_UTIL_H_ */

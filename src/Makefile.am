@@ -246,6 +246,9 @@ $(LIBUSB_CFLAGS) \
 -I$(top_srcdir) 
 
 
+# AM_CPPFLAGS += \
+# $(HIDAPI_CFLAGS)
+
 # Compiler flags
 ddctool_CFLAGS        = $(AM_CFLAGS)
 laclient_CFLAGS       = $(AM_CFLAGS)
@@ -266,6 +269,7 @@ endif
 # Be careful about library ordering 
 # library must be listed after any libraries that depend on it
 
+# deleted $(HIDAPI_LIBS)
 # Link the shared library
 libddctool_la_LIBADD = -lz
 libddctool_la_LIBADD +=  \
@@ -285,10 +289,11 @@ libddctool_la_LDFLAGS = -export_symbols-regex '^ddc[tg]_[^_]'
 
 # Link the executables
 
+# deleted: $(HIDAPI_LIBS) 
 ddctool_LDADD = \
    libcommon.la \
-   $(XRANDR_LIBS) \
    $(LIBUSB_LIBS) \
+   $(XRANDR_LIBS) \
    $(X11_LIBS) \
    $(GLIB_LIBS)
 
