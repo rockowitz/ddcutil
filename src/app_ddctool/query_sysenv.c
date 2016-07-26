@@ -1214,6 +1214,10 @@ void query_sysenv() {
        execute_shell_cmd("ls -l /dev/hidraw*", 2);
        puts("");
        probe_hidraw(1);
+#ifdef USE_LIBUDEV
+       /* Hidraw_Devinfo * */ get_udev_device_info("hidraw", "hidraw3");
+       /* Hidraw_Devinfo * */ get_udev_device_info("usbmisc", "hiddev2");
+#endif
 #ifdef NO
 #ifdef USE_LIBUSB
        printf("\nProbing using hidapi...\n");

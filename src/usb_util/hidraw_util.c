@@ -31,9 +31,9 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <glib.h>
-// #ifdef USE_LIBUDEV
-// #include <libudev.h>
-// #endif
+#ifdef USE_LIBUDEV
+#include <libudev.h>
+#endif
 #include <linux/hidraw.h>
 #include <linux/input.h>
 #include <linux/limits.h>
@@ -51,6 +51,9 @@
 #include "util/glib_util.h"
 #include "util/report_util.h"
 #include "util/string_util.h"
+#ifdef USE_LIBUDEV
+#include "util/udev_util.h"
+#endif
 
 #include "usb_util/base_hid_report_descriptor.h"
 #include "usb_util/hid_report_descriptor.h"
@@ -160,6 +163,7 @@ void probe_hidraw_device(char * devname, int depth) {
    memset(buf, 0x0, sizeof(buf));
 
    /* Get Report Descriptor Size */
+   // why is this necessary? buffer in rpt_desc is already HID_MAX_DESCRIPTOR_SIZE?
    res = ioctl(fd, HIDIOCGRDESCSIZE, &desc_size);
    if (res < 0)
       perror("HIDIOCGRDESCSIZE");
@@ -292,8 +296,14 @@ bool hidraw_is_monitor_device(char * devname) {
    // Look at the first Usage Page item, is it USB Monitor?
    while (cur_item) {
       if (cur_item->btag == 0x04) {
-         if (cur_item->data == 0x80)
+         if (cur_item->data == 0x80) {
             is_monitor = true;
+#ifdef USE_LIBUDEV
+            Udev_Usb_Devinfo * devinfo = get_udev_device_info("hidraw", devname);
+            printf("(%s) USB busno:devno = %d:%d\n", __func__, devinfo->busno, devinfo->devno);
+            free(devinfo);
+#endif
+         }
          break;
       }
       cur_item = cur_item->next;

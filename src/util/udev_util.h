@@ -26,6 +26,8 @@
 
 // #include <config.h>
 
+#include <stdint.h>
+
 // #ifdef HAVE_UDEV
 #include "libudev.h"
 // #endif
@@ -33,5 +35,11 @@
 void report_udev_device(struct udev_device * dev, int depth);
 void query_udev_subsystem(char * udev_class);
 
+typedef struct udev_usb_devinfo {
+   uint16_t busno;
+   uint16_t devno;
+} Udev_Usb_Devinfo;
+
+Udev_Usb_Devinfo * get_udev_device_info(char * subsystem, char * simple_devname);
 
 #endif /* UDEV_UTIL_H_ */
