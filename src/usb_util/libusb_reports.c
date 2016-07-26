@@ -1044,7 +1044,7 @@ void report_hid_descriptor(
             if (ok) {
                puts("");
                rpt_vstring(d1, "Displaying report descriptor in HID external form:");
-               Hid_Report_Item * item_list = preparse_hid_report(dbuf, bytes_read);
+               Hid_Report_Descriptor_Item * item_list = tokenize_hid_report_descriptor(dbuf, bytes_read);
                report_hid_report_item_list(item_list,d2);
                Parsed_Hid_Descriptor * phd =  parse_report_desc_from_item_list(item_list);
                if (phd) {

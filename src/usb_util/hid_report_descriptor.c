@@ -151,7 +151,7 @@ void report_hid_field(Parsed_Hid_Field * hf, int depth) {
  *
  * Returns:     nothing
  */
-void report_hid_report(Parsed_Hid_Report * hr, int depth) {
+void report_parsed_hid_report(Parsed_Hid_Report * hr, int depth) {
    int d1 = depth+1;
    // int d2 = depth+2;
    // rpt_structure_loc("Hid_Report", hr,depth);
@@ -211,7 +211,7 @@ void report_hid_collection(Parsed_Hid_Collection * col, int depth) {
          printf("(%s) ERROR: Dummy root collection contains reports\n", __func__);
       rpt_title("Reports:", d1);
       for (int ndx = 0; ndx < col->reports->len; ndx++)
-         report_hid_report(g_ptr_array_index(col->reports, ndx), d1);
+         report_parsed_hid_report(g_ptr_array_index(col->reports, ndx), d1);
    }
    else
       rpt_vstring(d1, "%-20s:  None", "Reports");
@@ -780,7 +780,7 @@ Parsed_Hid_Descriptor * parse_report_desc_old(Byte * b, int desclen) {
  *
  * Returns:         parsed report descriptor
  */
-Parsed_Hid_Descriptor * parse_report_desc_from_item_list(Hid_Report_Item * items_head) {
+Parsed_Hid_Descriptor * parse_report_desc_from_item_list(Hid_Report_Descriptor_Item * items_head) {
    bool debug = false;
    if (debug)
       printf("(%s) Starting.\n", __func__);
@@ -800,7 +800,7 @@ Parsed_Hid_Descriptor * parse_report_desc_from_item_list(Hid_Report_Item * items
    collection_stack[0] = parsed_descriptor->root_collection;
    int collection_stack_cur = 0;
 
-   Hid_Report_Item * item = items_head;
+   Hid_Report_Descriptor_Item * item = items_head;
    while(item) {
 
       if (debug) {
@@ -1082,10 +1082,40 @@ Parsed_Hid_Descriptor * parse_report_desc(Byte * b, int desclen) {
    if (debug)
       printf("(%s) Starting. b=%p, desclen=%d\n", __func__, b, desclen);
 
-   Hid_Report_Item * item_list = preparse_hid_report(b, desclen) ;
+   Hid_Report_Descriptor_Item * item_list = tokenize_hid_report_descriptor(b, desclen) ;
 
    return parse_report_desc_from_item_list(item_list);
 }
 
+
+/* Indicates if a parsed HID Report Descriptor represents a USB connected monitor.
+ *
+ * Arguments:
+ *    phd       pointer parsed HID Report Descriptor
+ *
+ * Returns:     true/false
+ *
+ * Per section 5.5 of USB Monitor Control Class Specification Rev 1.0:
+ * "In order to identify a HID class device as a monitor, the device's
+ * HID Report Descriptor must contain a top-level collection with a usage
+ * of Monitor Control from the USB Monitor Usage Page."
+ *
+ * i.e. Usage page = 0x80  USB monitor
+ *      Usage id   = 0x01  Monitor Control
+ */
+bool is_monitor_by_parsed_report_descriptor(Parsed_Hid_Descriptor * phd) {
+   bool is_monitor = false;
+
+   Parsed_Hid_Collection * root_collection = phd->root_collection;
+   for (int ndx = 0; ndx < root_collection->child_collections->len; ndx++) {
+      Parsed_Hid_Collection * col = g_ptr_array_index(root_collection->child_collections, ndx);
+      if (col->extended_usage == (0x0080 << 16 | 0x0001) ) {
+         is_monitor = true;
+         break;
+      }
+   }
+
+   return is_monitor;
+}
 
 

@@ -87,11 +87,13 @@ typedef struct parsed_hid_descriptor {
    Parsed_Hid_Collection * root_collection;
 } Parsed_Hid_Descriptor;
 
-Parsed_Hid_Descriptor * parse_report_desc_from_item_list(Hid_Report_Item * items_head);
+Parsed_Hid_Descriptor * parse_report_desc_from_item_list(Hid_Report_Descriptor_Item * items_head);
 Parsed_Hid_Descriptor * parse_report_desc(Byte * b, int desclen);
 
-void report_hid_report(Parsed_Hid_Report * hr, int depth);
+void report_parsed_hid_report(Parsed_Hid_Report * hr, int depth);
 void report_parsed_hid_descriptor(Parsed_Hid_Descriptor * pdesc, int depth);
+
+bool is_monitor_by_parsed_report_descriptor(Parsed_Hid_Descriptor * phd);
 
 // TODO: use same bit values as item type?   will that work?
 // TODO: poor names

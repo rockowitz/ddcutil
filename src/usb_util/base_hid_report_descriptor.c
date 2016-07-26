@@ -209,7 +209,7 @@ static char * unit_name(unsigned int data, unsigned int len) {
 
 /** Debugging function.
  */
-void report_raw_hid_report_item(Hid_Report_Item * item, int depth) {
+void report_raw_hid_report_item(Hid_Report_Descriptor_Item * item, int depth) {
    int d1 = depth+1;
    rpt_structure_loc("Hid_Report_Item", item, depth);
    rpt_vstring(d1, "%-20s:  0x%02x", "btype", item->btype);
@@ -222,9 +222,9 @@ void report_raw_hid_report_item(Hid_Report_Item * item, int depth) {
 
 
 
-void free_hid_report_item_list(Hid_Report_Item * head) {
+void free_hid_report_item_list(Hid_Report_Descriptor_Item * head) {
    while (head) {
-      Hid_Report_Item * next = head->next;
+      Hid_Report_Descriptor_Item * next = head->next;
       free(head);
       head = next;
    }
@@ -241,14 +241,14 @@ void free_hid_report_item_list(Hid_Report_Item * head) {
  * Returns:    linked list of Hid_Report_Items
  */
 // need better name
-Hid_Report_Item * preparse_hid_report(Byte * b, int l) {
+Hid_Report_Descriptor_Item * tokenize_hid_report_descriptor(Byte * b, int l) {
    bool debug = false;
    if (debug)
       printf("(%s) Starting. b=%p, l=%d\n", __func__, b, l);
 
-   Hid_Report_Item * root   = NULL;
-   Hid_Report_Item * prev   = NULL;
-   Hid_Report_Item * cur    = NULL;
+   Hid_Report_Descriptor_Item * root   = NULL;
+   Hid_Report_Descriptor_Item * prev   = NULL;
+   Hid_Report_Descriptor_Item * cur    = NULL;
 
    int i, j;
 
@@ -256,7 +256,7 @@ Hid_Report_Item * preparse_hid_report(Byte * b, int l) {
    //   printf("(%s)          Report Descriptor: (length is %d)\n", __func__, l);
 
    for (i = 0; i < l; ) {
-      cur = calloc(1, sizeof(Hid_Report_Item));
+      cur = calloc(1, sizeof(Hid_Report_Descriptor_Item));
 
       Byte b0 = b[i] & 0x03;                  // first 2 bits are size indicator, 0, 1, 2, or 3
       cur->bsize_bytect = (b0 == 3) ? 4 : b0; // actual number of bytes
@@ -301,7 +301,7 @@ struct hid_report_item_globals {
  *   globals       current globals state
  *   depth         logical indentation depth
  */
-void report_hid_report_item(Hid_Report_Item * item, Hid_Report_Item_Globals * globals, int depth) {
+void report_hid_report_item(Hid_Report_Descriptor_Item * item, Hid_Report_Item_Globals * globals, int depth) {
    // int d1 = depth+1;
    int d_indent = depth+5;
 
@@ -402,7 +402,7 @@ void report_hid_report_item(Hid_Report_Item * item, Hid_Report_Item_Globals * gl
 }
 
 
-/* Given a Hid report descriptor, represented as a linked list of
+/* Given a Hid Report Descriptor, represented as a linked list of
  * Hid_Report_Items, display the descriptor in a form similar to that
  * used in HID documentation, with annotation.
  *
@@ -412,7 +412,7 @@ void report_hid_report_item(Hid_Report_Item * item, Hid_Report_Item_Globals * gl
  *
  * Returns:     nothing
  */
-void report_hid_report_item_list(Hid_Report_Item * head, int depth) {
+void report_hid_report_item_list(Hid_Report_Descriptor_Item * head, int depth) {
    bool debug = false;
    if (debug)
       printf("(%s) Starting.\n", __func__);
@@ -422,4 +422,38 @@ void report_hid_report_item_list(Hid_Report_Item * head, int depth) {
       report_hid_report_item(head, &globals, depth);
       head = head->next;
    }
+}
+
+
+/* Indicates if a tokenized HID Report Descriptor, represented as a linked
+ * list of Hid_Report_Descriptor_Items, represents a USB connected monitor.
+ *
+ * Arguments:
+ *    report_item_list   list head
+ *
+ * Returns:        true/false
+ *
+ * Per section 5.5 of Usb Monitor Control Class Specification Rev 1.0:
+ * "In order to identify a HID class device as a monitor, the device's
+ * HID Report Descriptor must contain a top-level collection with a usage
+ * of Monitor Control from the USB Monitor Usage Page."
+ *
+ * i.e. Usage page = 0x80  USB monitor
+ *      Usage id   = 0x01  Monitor Control
+ */
+bool is_monitor_by_tokenized_report_descriptor(Hid_Report_Descriptor_Item * report_item_list) {
+   bool is_monitor = false;
+
+   Hid_Report_Descriptor_Item * cur_item = report_item_list;
+
+   // We cheat on the spec. Just look at the first Usage Page item, is it USB Monitor?
+   while (cur_item) {
+      if (cur_item->btag == 0x04) {
+         if (cur_item->data == 0x80) {
+            is_monitor = true;
+         }
+         break;
+      }
+   }
+   return is_monitor;
 }

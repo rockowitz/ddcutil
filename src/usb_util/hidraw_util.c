@@ -184,10 +184,10 @@ void probe_hidraw_device(char * devname, int depth) {
       // puts("\n");
       rpt_hex_dump(rpt_desc.value, rpt_desc.size, d2);
 
-      Hid_Report_Item * report_item_list = preparse_hid_report(rpt_desc.value, rpt_desc.size) ;
+      Hid_Report_Descriptor_Item * report_item_list = tokenize_hid_report_descriptor(rpt_desc.value, rpt_desc.size) ;
       report_hid_report_item_list(report_item_list, d2);
 
-      Hid_Report_Item * cur_item = report_item_list;
+      Hid_Report_Descriptor_Item * cur_item = report_item_list;
 
       // Look at the first Usage Page item, is it USB Monitor?
       while (cur_item) {
@@ -214,7 +214,7 @@ void probe_hidraw_device(char * devname, int depth) {
             rpt_vstring(d1, "Feature report id: %3d  0x%02x", a_report->report_id, a_report->report_id);
 
             rpt_vstring(d1, "Parsed report description:");
-            report_hid_report(a_report, d2);
+            report_parsed_hid_report(a_report, d2);
 
             /* Get Feature */
             buf[0] = a_report->report_id; /* Report Number */
@@ -244,8 +244,14 @@ void probe_hidraw_device(char * devname, int depth) {
 }
 
 
-
-
+/* Indicates if a hidraw device represents a monitor.
+ *
+ * Arguments:
+ *    devname      devices name, e.g. /dev/hidraw3
+ *
+ * Returns:        true/false
+ *
+ */
 bool hidraw_is_monitor_device(char * devname) {
    bool debug = false;
    if (debug)
@@ -263,7 +269,6 @@ bool hidraw_is_monitor_device(char * devname) {
    /* Open the Device with non-blocking reads. In real life,
       don't use a hard coded path; use libudev instead. */
    fd = open(devname, O_RDWR|O_NONBLOCK);
-
    if (fd < 0) {
       perror("Unable to open device");
       goto bye;
@@ -288,26 +293,18 @@ bool hidraw_is_monitor_device(char * devname) {
       goto bye;
    }
 
-   Hid_Report_Item * report_item_list = preparse_hid_report(rpt_desc.value, rpt_desc.size) ;
+   Hid_Report_Descriptor_Item * report_item_list =
+         tokenize_hid_report_descriptor(rpt_desc.value, rpt_desc.size) ;
    // report_hid_report_item_list(report_item_list, 2);
+   is_monitor = is_monitor_by_tokenized_report_descriptor(report_item_list);
 
-   Hid_Report_Item * cur_item = report_item_list;
-
-   // Look at the first Usage Page item, is it USB Monitor?
-   while (cur_item) {
-      if (cur_item->btag == 0x04) {
-         if (cur_item->data == 0x80) {
-            is_monitor = true;
 #ifdef USE_LIBUDEV
+   if (is_monitor) {   // for testing purposes
             Udev_Usb_Devinfo * devinfo = get_udev_device_info("hidraw", devname);
             printf("(%s) USB busno:devno = %d:%d\n", __func__, devinfo->busno, devinfo->devno);
             free(devinfo);
-#endif
-         }
-         break;
-      }
-      cur_item = cur_item->next;
    }
+#endif
 
    free_hid_report_item_list(report_item_list);
 
