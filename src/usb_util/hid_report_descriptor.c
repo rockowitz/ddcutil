@@ -893,14 +893,30 @@ Parsed_Hid_Descriptor * parse_report_desc_from_item_list(Hid_Report_Descriptor_I
             }
 
             hf->usage_page       = cur_globals->usage_page;
-            hf->logical_minimum  = cur_globals->logical_minimum;
-            hf->logical_maximum  = cur_globals->logical_maximum;
-            hf->physical_minimum = cur_globals->physical_minimum;
-            hf->physical_maximum = cur_globals->physical_maximum;
             hf->report_size      = cur_globals->report_size;
             hf->report_count     = cur_globals->report_count;
             hf->unit_exponent    = cur_globals->unit_exponent;
             hf->unit             = cur_globals->unit;
+
+            hf->logical_minimum  = cur_globals->logical_minimum;
+            hf->logical_maximum  = cur_globals->logical_maximum;
+
+            /* Per the HID Device Class Definition spec section 6.2.2.7:
+
+               Until Physical Minimum and Physical Maximum are declared in a report
+               descriptor they are assumed by the HID parser to be equal to Logical
+               Minimum and Logical Maximum, respectively. After declaring them to so
+               that they can applied to a (Input, Output or Feature) main item they continue to
+               effect all subsequent main items. If both the Physical Minimum and Physical
+               Maximum extents are equal to 0 then they will revert to their default
+               interpretation.
+             */
+            hf->physical_minimum = (cur_globals->physical_minimum)
+                                       ? cur_globals->physical_minimum
+                                       : cur_globals->logical_minimum;
+            hf->physical_maximum = (cur_globals->physical_maximum)
+                                       ? cur_globals->physical_maximum
+                                       : cur_globals->logical_maximum;
 
 #define UNHANDLED(F) \
    if (cur_locals->F) \
@@ -1088,6 +1104,10 @@ Parsed_Hid_Descriptor * parse_report_desc(Byte * b, int desclen) {
 }
 
 
+//
+// Functions that extract information from a Parsed_Hid_Descriptor
+//
+
 /* Indicates if a parsed HID Report Descriptor represents a USB connected monitor.
  *
  * Arguments:
@@ -1119,3 +1139,168 @@ bool is_monitor_by_parsed_report_descriptor(Parsed_Hid_Descriptor * phd) {
 }
 
 
+uint16_t get_vcp_code_from_parsed_hid_report(Parsed_Hid_Report * rpt) {
+   uint16_t vcp_code = 0;
+   if (rpt->report_type == HID_REPORT_TYPE_FEATURE &&
+         rpt->hid_fields &&
+         rpt->hid_fields->len == 1) {
+      Parsed_Hid_Field * f = g_ptr_array_index(rpt->hid_fields, 0);
+      if (f->usage_page == 0x80) {
+         vcp_code = f->extended_usage & 0xffff;
+         assert( (vcp_code & 0xff00) == 0);
+      }
+
+   }
+   return vcp_code;
+}
+
+
+
+void report_vcp_code_report(Vcp_Code_Report * vcr, int depth) {
+   int d1 = depth+1;
+   rpt_structure_loc("Vcp_Code_Report", vcr, depth);
+   rpt_vstring(d1, "%-20s %d  0x%02x", "vcp_code", vcr->vcp_code, vcr->vcp_code);
+   rpt_vstring(d1, "%-20s %p",         "rpt", vcr->rpt);
+   report_parsed_hid_report(vcr->rpt, d1);
+}
+
+void report_vcp_code_report_array(GPtrArray * vcr_array, int depth) {
+   rpt_vstring(depth, "Vcp_Code_Report array at %p contains %d entries:", vcr_array, vcr_array->len);
+   int d1 = depth+1;
+   for (int ndx=0; ndx < vcr_array->len; ndx++) {
+      report_vcp_code_report( g_ptr_array_index(vcr_array, ndx), d1);
+   }
+}
+
+
+
+
+/* Per the spec, e.g. USB Monitor Control Class Spec section 5.5, there can be
+ * multiple top application collections, one of which must be a monitor application.
+ * In practice, we've only seen a single top level application collection, but for
+ * generality this function selects the monitor application from a parsed HID descriptor.
+ */
+// May be null in case where device was forced to be a monitor for
+// testing purposes based on its vid/pid
+Parsed_Hid_Collection * get_monitor_application_collection(Parsed_Hid_Descriptor * phd) {
+   bool debug = false;
+   if (debug)
+      printf("(%s) Starting. phd=%p\n", __func__, phd);
+
+   Parsed_Hid_Collection * result = NULL;
+
+   Parsed_Hid_Collection * root_collection = phd->root_collection;
+   for (int ndx = 0; ndx < root_collection->child_collections->len; ndx++) {
+      Parsed_Hid_Collection * col = g_ptr_array_index(root_collection->child_collections, ndx);
+      if (debug)
+         printf("(%s) extended_usage = 0x%08x\n", __func__, col->extended_usage);
+      if (col->extended_usage == (0x0080 << 16 | 0x0001) ) {
+         result = col;
+         break;
+      }
+   }
+
+   if (debug)
+      printf("(%s) Returning: %p\n", __func__, result);
+   return result;
+}
+
+
+static int compare_vcp_code_report(gconstpointer first, gconstpointer second) {
+   int result = 0;
+   const Vcp_Code_Report * a = first;
+   const Vcp_Code_Report * b = second;
+   if (a->vcp_code < b->vcp_code)
+      result = -1;
+   else if (a->vcp_code > b->vcp_code)
+      result = 1;
+   return result;
+}
+
+
+GPtrArray * get_vcp_code_reports(Parsed_Hid_Descriptor * phd) {
+   bool debug = false;
+   if (debug)
+      printf("(%s) Starting. phd=%p\n", __func__, phd);
+
+   // May be null in case where device was forced to be a monitor for
+   // testing purposds based on its vid/pid
+   Parsed_Hid_Collection * col = get_monitor_application_collection(phd);
+   GPtrArray * vcp_reports = g_ptr_array_new();
+
+   // Simplifying assumptions:
+   // report has only one field
+
+   if (col && col->reports) {
+      for (int ndx = 0; ndx < col->reports->len; ndx++) {
+         Parsed_Hid_Report * rpt = g_ptr_array_index(col->reports, ndx);
+         if (rpt->report_type == HID_REPORT_TYPE_FEATURE) {
+            if (rpt->hid_fields && rpt->hid_fields->len == 1) {
+               Parsed_Hid_Field * f = g_ptr_array_index(rpt->hid_fields, 0);
+               if (debug)
+                  report_hid_field(f, 5);
+               if (f->usage_page == 0x0082   &&
+                   f->report_size == 8
+                  )
+               {
+                  // Have seen cases where usage ID == 0, e.g. Apple Cinema Display report xe7
+                  // ignore such
+                  Byte vcp_feature_code = f->extended_usage & 0xff;
+                  if (vcp_feature_code) {
+                     Vcp_Code_Report * code_rpt = calloc(1, sizeof(Vcp_Code_Report));
+                     code_rpt->vcp_code = vcp_feature_code;
+                     code_rpt->rpt = rpt;
+                     g_ptr_array_add(vcp_reports, code_rpt);
+                  }
+                  else {
+                     if (debug)
+                        printf("(%s) Ignoring report with usage_id = 0\n", __func__);
+                  }
+               }
+            }
+         }
+      }
+    }
+
+    // sort array by vcp code
+    g_ptr_array_sort(vcp_reports, compare_vcp_code_report);
+
+    if (debug) {
+       printf("(%s) Returning array of %d reports at %p\n", __func__, vcp_reports->len, vcp_reports);
+       report_vcp_code_report_array(vcp_reports, 1);
+    }
+    return vcp_reports;
+}
+
+
+
+Parsed_Hid_Report * find_edid_report_descriptor(Parsed_Hid_Descriptor * phd) {
+   bool debug = false;
+    if (debug)
+       printf("(%s) Starting. phd=%p\n", __func__, phd);
+
+   Parsed_Hid_Collection * col = get_monitor_application_collection(phd);
+   Parsed_Hid_Report * edid_report = NULL;
+
+   if (col && col->reports) {
+     for (int ndx = 0; ndx < col->reports->len; ndx++) {
+        Parsed_Hid_Report * rpt = g_ptr_array_index(col->reports, ndx);
+        if (rpt->report_type == HID_REPORT_TYPE_FEATURE) {
+           if (rpt->hid_fields && rpt->hid_fields->len == 1) {
+              Parsed_Hid_Field * f = g_ptr_array_index(rpt->hid_fields, 0);
+              if (f->extended_usage == ((0x0080 << 16) | 0x0002)  &&
+                  (f->item_flags & HID_FIELD_BUFFERED_BYTE)  &&
+                  f->report_size == 8 &&
+                  f->report_count >= 128
+                 )
+              {
+                 edid_report = rpt;
+                 break;
+              }
+           }
+        }
+     }
+  }
+
+   return edid_report;
+}

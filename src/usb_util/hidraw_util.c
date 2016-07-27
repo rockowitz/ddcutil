@@ -208,6 +208,23 @@ void probe_hidraw_device(char * devname, int depth) {
 
          GPtrArray * reports = select_parsed_report_descriptors(phd, HIDF_REPORT_TYPE_FEATURE);
 
+         Parsed_Hid_Report * edid_report = find_edid_report_descriptor(phd);
+         if (edid_report) {
+            rpt_title("Report descriptor for EDID:", d1);
+            report_parsed_hid_report(edid_report, d2);
+         }
+         else
+            rpt_title("No EDID report descriptor found!!!", d1);
+
+
+         GPtrArray * feature_reports = get_vcp_code_reports(phd);
+         if (feature_reports && feature_reports->len > 0) {
+            rpt_title("Report descriptors for VCP features:", d1);
+            report_vcp_code_report_array(feature_reports, d2);
+         }
+         else
+            rpt_title("No VCP Feature report descriptors found!!!", d1);
+
          for (int ndx = 0; ndx < reports->len; ndx++) {
             Parsed_Hid_Report * a_report = g_ptr_array_index(reports, ndx);
             puts("");
