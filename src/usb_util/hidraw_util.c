@@ -120,7 +120,8 @@ void probe_hidraw_device(char * devname, int depth) {
    int fd;
    // int i;
    int res, desc_size = 0;
-   Byte buf[1024];     // TODO: maximum report size
+   Byte buf[1024] = {0};     // TODO: maximum report size, initialize to avoid valgrind warning
+
    struct hidraw_report_descriptor rpt_desc;
    struct hidraw_devinfo info;
 
@@ -159,8 +160,8 @@ void probe_hidraw_device(char * devname, int depth) {
    }
 
    memset(&rpt_desc, 0x0, sizeof(rpt_desc));
-   memset(&info, 0x0, sizeof(info));
-   memset(buf, 0x0, sizeof(buf));
+   memset(&info,     0x0, sizeof(info));
+   memset(buf,       0x0, sizeof(buf));
 
    /* Get Report Descriptor Size */
    // why is this necessary? buffer in rpt_desc is already HID_MAX_DESCRIPTOR_SIZE?
