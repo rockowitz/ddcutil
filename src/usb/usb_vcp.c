@@ -133,11 +133,22 @@ usb_get_usage_value_by_report_type_and_ucode(
    if (debug)
       report_hiddev_field_info(&finfo, 1);
 
+   // per spec, logical max/min bound the values in the report,
+   // physical min/max bound the "real world" units
+   // if physical min/max = 0, set physical to logical
+   // So we should use logical max as ddc maxval.
+   // But logical_minimum can be < 0 per USB spec,
+   // in which case the value in the report is interpreted as a
+   // 2's complement number.  How to handle this?
+   // Map to a range >= 0?  e.g. -128..127 -> 0..255
    __s32 maxval1 = finfo.logical_maximum;
    __s32 maxval2 = finfo.physical_maximum;
    DBGMSF(debug, "logical_maximum: %d", maxval1);
    DBGMSF(debug, "physical_maximum: %d", maxval2);
-   *maxval = maxval1;
+   *maxval = finfo.logical_maximum;
+   if (finfo.logical_minimum < 0) {
+      DBGMSG("Unexpected: logical_minimum (%d) for field is < 0", finfo.logical_minimum);
+   }
    gsc = 0;
 
 bye:
@@ -322,7 +333,10 @@ usb_get_usage_value_by_vcprec(int fd, Usb_Monitor_Vcp_Rec * vcprec, __s32 * maxv
    __s32 maxval2 = vcprec->finfo->physical_maximum;
    DBGMSF(debug, "logical_maximum: %d", maxval1);
    DBGMSF(debug, "physical_maximum: %d", maxval2);
-   *maxval = maxval1;
+   *maxval = vcprec->finfo->logical_maximum;
+   if (vcprec->finfo->logical_minimum < 0) {
+      DBGMSG("Unexpected: logical_minmum (%d) is < 0", vcprec->finfo->logical_minimum);
+   }
 
    struct hiddev_usage_ref * uref = vcprec->uref;
 #ifdef DISABLE
