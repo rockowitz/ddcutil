@@ -365,6 +365,8 @@ Buffer * collect_single_byte_usage_values(
 
    assert(finfo->report_type != HID_REPORT_TYPE_OUTPUT);
 
+   // bound is < finfo->maxusage, not <= finfo->maxusage
+   // undx == finfo->maxusage returns errno=22, invalid argument
    for (int undx = 0; undx < finfo->maxusage; undx++) {
        struct hiddev_usage_ref uref = {
            .report_type = finfo->report_type,   // rinfo.report_type;
@@ -372,8 +374,8 @@ Buffer * collect_single_byte_usage_values(
            .field_index = field_index,   // use original value, not value changed by HIDIOCGFIELDINFO
            .usage_index = undx
        };
-       // printf("(%s) report_type=%d, report_id=%d, field_index=%d, usage_index=%d\n",
-       //       __func__, rinfo->report_type, rinfo->report_id, field_index=saved_field_index, undx);
+       // printf("(%s) report_type=%d, report_id=%d, field_index=%d, maxusage=%d, usage_index=%d\n",
+       //       __func__, finfo->report_type, finfo->report_id, finfo->field_index, finfo->maxusage, undx);
        int rc = ioctl(fd, HIDIOCGUCODE, &uref);    // Fills in usage code
        if (rc != 0) {
            REPORT_IOCTL_ERROR("HIDIOCGUCODE", rc);

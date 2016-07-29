@@ -113,6 +113,16 @@ void report_libusb_devices(
         bool                                       show_hubs,
         int                                        depth);
 
+#ifdef OLD
+bool get_raw_report_descriptor_old(
+        struct libusb_device_handle * dh,
+        uint8_t                       bInterfaceNumber,
+        uint16_t                      rptlen,        // report length
+        Byte *                        dbuf,
+        int                           dbufsz,
+        int *                         pbytes_read);
+#endif
+
 bool get_raw_report_descriptor(
         struct libusb_device_handle * dh,
         uint8_t                       bInterfaceNumber,
@@ -120,6 +130,15 @@ bool get_raw_report_descriptor(
         Byte *                        dbuf,
         int                           dbufsz,
         int *                         pbytes_read);
+
+bool get_raw_report(
+      struct libusb_device_handle * dh,
+      uint8_t                       bInterfaceNumber,
+      uint8_t                      report_id,
+      uint16_t                      rptlen,        // report length
+      Byte *                        dbuf,
+      int                           dbufsz,
+      int *                         pbytes_read);
 
 bool is_hub_descriptor(const struct libusb_device_descriptor * desc);
 
