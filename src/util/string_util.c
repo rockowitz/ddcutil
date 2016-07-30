@@ -278,7 +278,18 @@ String_Array* new_string_array(int size) {
 #endif
 
 
-Null_Terminated_String_Array strsplit(char * str_to_split, char * delims) {
+/* Splits a string based on a list of delimiter characters.
+ *
+ * Arguments:
+ *    str_to_split     string to be split
+ *    delims           string of delimiter characters
+ *
+ * Returns:            null terminated array of pieces
+ *
+ * Note: Each character in delims is used as an individual test.
+ * The full string is NOT a delimiter string.
+ */
+Null_Terminated_String_Array strsplit(const char * str_to_split, const char * delims) {
    bool debug = false;
    int max_pieces = (strlen(str_to_split)+1);
    if (debug)
@@ -287,11 +298,12 @@ Null_Terminated_String_Array strsplit(char * str_to_split, char * delims) {
    char** workstruct = calloc(sizeof(char *), max_pieces+1);
    int piecect = 0;
 
-   char * rest = str_to_split;
+   char * str_to_split_dup = strdup(str_to_split);
+   char * rest = str_to_split_dup;
    char * token;
    // originally token assignment was in while() clause, but valgrind
    // complaining about uninitialized variable, trying to figure out why
-   token = strsep(&rest, delims);
+   token = strsep(&rest, delims);      // n. overwrites character found
    while (token) {
       // printf("(%s) token: |%s|\n", __func__, token);
       workstruct[piecect++] = strdup(token);
@@ -313,6 +325,7 @@ Null_Terminated_String_Array strsplit(char * str_to_split, char * delims) {
       }
    }
    free(workstruct);
+   free(str_to_split_dup);
    return result;
 }
 
