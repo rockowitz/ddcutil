@@ -33,7 +33,7 @@
 // #endif
 
 void report_udev_device(struct udev_device * dev, int depth);
-void query_udev_subsystem(char * udev_class);
+void query_udev_subsystem(char * udev_class, int depth);
 
 typedef struct udev_usb_devinfo {
    uint16_t busno;

@@ -1190,11 +1190,11 @@ void query_sysenv() {
 #ifdef USE_LIBUDEV
    if (output_level >= OL_VERBOSE) {
       char * subsys_name = "usbmisc";
-      printf("\nProbing USB HID devices, susbsystem %s. using udev...\n", subsys_name);
-      query_udev_subsystem(subsys_name);
+      printf("\nProbing USB HID devices using udev, susbsystem %s...\n", subsys_name);
+      query_udev_subsystem(subsys_name, 1);
       subsys_name = "hidraw";
-      printf("\nProbing USB HID devices, susbsystem %s. using udev...\n", subsys_name);
-      query_udev_subsystem(subsys_name);
+      printf("\nProbing USB HID devices using udev, susbsystem %s...\n", subsys_name);
+      query_udev_subsystem(subsys_name, 1);
    }
 #endif
 

@@ -72,23 +72,55 @@ void report_udev_device(struct udev_device * dev, int depth) {
       const char * attr_value  = udev_list_entry_get_value(cur_entry);
       const char * attr_value2 = udev_device_get_sysattr_value(dev, attr_name);
       assert(attr_value == NULL);
-      rpt_vstring(d2, "%s -> %s", attr_name, attr_value2);
+      // hex_dump( (Byte*) attr_value2, strlen(attr_value2)+1);
+      if (attr_value2 && strchr(attr_value2, '\n')) {
+      // if (streq(attr_name, "uevent")) {
+         // output is annoying to visually scan since it contains newlines
+         Null_Terminated_String_Array ntsa = strsplit(attr_value2, "\n");
+         if (null_terminated_string_array_length(ntsa) == 0)
+            rpt_vstring(d2, "%s -> %s", attr_name, "");
+         else {
+            rpt_vstring(d2, "%s -> %s", attr_name, ntsa[0]);
+            int ndx = 1;
+            while (ntsa[ndx]) {
+               rpt_vstring(d2, "%*s %s", strlen(attr_name) + 3, " ", ntsa[ndx]);
+               ndx++;
+            }
+         }
+
+#ifdef ALTERNATIVE
+         // simpler, works
+         char * av = strdup(attr_value2);
+         char * p = av;
+         while (*p) {
+            if (*p == 0x0a)
+               *p = ',';
+            p++;
+         }
+         rpt_vstring(d2, "%s -> %s", attr_name, av);
+         free(av);
+#endif
+      }
+      else
+         rpt_vstring(d2, "%s -> %s", attr_name, attr_value2);
+
    }
 }
 
 
 
-void query_udev_subsystem(char * subsystem) {
+void query_udev_subsystem(char * subsystem, int depth) {
+   int d1 = depth+1;
+
    struct udev *udev;
    struct udev_enumerate *enumerate;
    struct udev_list_entry *devices, *dev_list_entry;
    struct udev_device *dev;
 
-
    /* Create the udev object */
    udev = udev_new();
    if (!udev) {
-      printf("Can't create udev\n");
+      printf("(%s) Can't create udev\n", __func__);
       return;   // exit(1);
    }
 
@@ -103,20 +135,21 @@ void query_udev_subsystem(char * subsystem) {
       devices, setting dev_list_entry to a list entry
       which contains the device's path in /sys. */
    udev_list_entry_foreach(dev_list_entry, devices) {
-      printf("\n***One Device ***\n");
+      puts("");
+      rpt_vstring(depth, "***One Device ***");
       const char *path;
 
       /* Get the filename of the /sys entry for the device
          and create a udev_device object (dev) representing it */
       path = udev_list_entry_get_name(dev_list_entry);
-      printf("path: %s\n", path);
+      rpt_vstring(depth, "path: %s", path);
       dev = udev_device_new_from_syspath(udev, path);
 
       /* udev_device_get_devnode() returns the path to the device node
          itself in /dev. */
-      printf("Device Node Path: %s\n", udev_device_get_devnode(dev));
+      rpt_vstring(depth, "Device Node Path: %s", udev_device_get_devnode(dev));
 
-      report_udev_device(dev, 1);
+      report_udev_device(dev, d1);
 
       /* The device pointed to by dev contains information about
          the hidraw device. In order to get information about the
@@ -129,11 +162,12 @@ void query_udev_subsystem(char * subsystem) {
              "usb",
              "usb_device");
       if (!dev) {
-         printf("Unable to find parent usb device.");
+         rpt_vstring(depth, "Unable to find parent USB device.");
          return;   // exit(1);
       }
 
-      printf("Parent device: \n");
+      puts("");
+      rpt_vstring(depth, "Parent device:");
 
       /* From here, we can call get_sysattr_value() for each file
          in the device's /sys entry. The strings passed into these
@@ -142,16 +176,17 @@ void query_udev_subsystem(char * subsystem) {
          the USB device. Note that USB strings are Unicode, UCS2
          encoded, but the strings returned from
          udev_device_get_sysattr_value() are UTF-8 encoded. */
-      printf("  VID/PID: %s %s\n",
-              udev_device_get_sysattr_value(dev,"idVendor"),
-              udev_device_get_sysattr_value(dev, "idProduct"));
-      printf("  %s\n  %s\n",
-              udev_device_get_sysattr_value(dev,"manufacturer"),
+      rpt_vstring(d1, "VID/PID: %s %s",
+                      udev_device_get_sysattr_value(dev,"idVendor"),
+                      udev_device_get_sysattr_value(dev, "idProduct"));
+      rpt_vstring(d1, "%s",
+              udev_device_get_sysattr_value(dev,"manufacturer") );
+      rpt_vstring(d1, "%s",
               udev_device_get_sysattr_value(dev,"product"));
-      printf("  serial: %s\n",
+      rpt_vstring(d1, "serial: %s",
                udev_device_get_sysattr_value(dev, "serial"));
 
-      report_udev_device(dev, 1);
+      report_udev_device(dev, d1);
 
       udev_device_unref(dev);
    }
