@@ -119,22 +119,22 @@ Global_Status_Code
 get_capabilities_string(Display_Handle * dh, char** pcaps) {
    Global_Status_Code gsc = 0;
    if (!dh->capabilities_string) {
-#ifdef USE_USB
       if (dh->io_mode == USB_IO) {
+#ifdef USE_USB
          // newly created string, can just  reference
          dh->capabilities_string = usb_get_capabilities_string_by_display_handle(dh);
+#else
+         PROGRAM_LOGIC_ERROR("ddctool not build with USB support");
+#endif
       }
       else {
-#endif
          Buffer * pcaps_buffer;
          gsc = get_capabilities_buffer(dh, &pcaps_buffer);
          if (gsc == 0) {
             dh->capabilities_string = strdup((char *) pcaps_buffer->bytes);
             buffer_free(pcaps_buffer,__func__);
          }
-#ifdef USE_USB
       }
-#endif
    }
    *pcaps = dh->capabilities_string;
    return gsc;

@@ -23,8 +23,6 @@
  * </endcopyright>
  */
 
-#include <config.h>
-
 #include <assert.h>
 #include <glib.h>
 #include <stdio.h>
@@ -481,11 +479,9 @@ void call_tuned_sleep(MCCS_IO_Mode io_mode, Sleep_Event_Type event_type) {
       }
       break;
 
-#ifdef USE_USB
    case USB_IO:
       printf("(%s) call_tuned_sleep() called for USB_IO\n", __func__);
       break;
-#endif
 
    }
 

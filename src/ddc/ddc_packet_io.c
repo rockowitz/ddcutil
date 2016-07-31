@@ -109,6 +109,7 @@ Display_Handle* ddc_open_display(Display_Ref * dref,  Byte open_flags) {
    // if (EXIT_IF_FAILURE)
    //    open_flags |= CALLOPT_ERR_ABORT;
    switch (dref->io_mode) {
+
    case DDC_IO_DEVI2C:
       {
          int fd = i2c_open_bus(dref->busno, open_flags);
@@ -132,13 +133,14 @@ Display_Handle* ddc_open_display(Display_Ref * dref,  Byte open_flags) {
       }
       break;
    }
+
    case DDC_IO_ADL:
       pDispHandle = create_adl_display_handle_from_display_ref(dref);
       pDispHandle->pedid = adlshim_get_parsed_edid_by_display_handle(pDispHandle);
       break;
 
-#ifdef USE_USB
    case USB_IO:
+#ifdef USE_USB
       {
          // bool emit_error_msg = true;
          DBGMSF(debug, "Opening USB device: %s", dref->usb_hiddev_name);
@@ -155,16 +157,16 @@ Display_Handle* ddc_open_display(Display_Ref * dref,  Byte open_flags) {
             pDispHandle = create_usb_display_handle_from_display_ref(fd, dref);
             pDispHandle->pedid = usb_get_parsed_edid_by_display_handle(pDispHandle);
          }
-         break;
       }
+#else
+      PROGRAM_LOGIC_ERROR("ddctool not built with USB support");
 #endif
+      break;
    } // switch
    assert(pDispHandle->pedid);
    // needed?  for both or just I2C?
    // sleep_millis_with_trace(DDC_TIMEOUT_MILLIS_DEFAULT, __func__, NULL);
-#ifdef USE_USB
    if (dref->io_mode != USB_IO)
-#endif
       call_tuned_sleep_i2c(SE_POST_OPEN);
    // report_display_handle(pDispHandle, __func__);
    return pDispHandle;
@@ -198,8 +200,9 @@ void ddc_close_display(Display_Handle * dh) {
       }
    case DDC_IO_ADL:
       break;           // nothing to do
-#ifdef USE_USB
+
    case USB_IO:
+#ifdef USE_USB
       {
          int rc = usb_close_device(dh->fh, dh->hiddev_device_name, CALLOPT_NONE); // return error if failure
          if (rc != 0) {
@@ -209,6 +212,8 @@ void ddc_close_display(Display_Handle * dh) {
          dh->fh = -1;
          break;
       }
+#else
+      PROGRAM_LOGIC_ERROR("ddctool not build with USB support");
 #endif
    } //switch
 }
@@ -617,9 +622,7 @@ Global_Status_Code ddc_write_read_with_retry(
    // if (debug) tf = 0xff;
    // TRCMSGTF(tf, "Starting. dh=%s", display_handle_repr(dh)  );
    DBGTRC(debug, TRACE_GROUP, "Starting. dh=%s", display_handle_repr(dh)  );
-#ifdef USE_USB
    assert(dh->io_mode != USB_IO);
-#endif
 
    Global_Status_Code  gsc;
    int  tryctr;
@@ -744,9 +747,7 @@ Global_Status_Code ddc_write_only( Display_Handle * dh, DDC_Packet *   request_p
    DBGTRC(debug, TRACE_GROUP, "Starting.");
 
    Global_Status_Code rc = 0;
-#ifdef USE_USB
    assert(dh->io_mode != USB_IO);
-#endif
    if (dh->io_mode == DDC_IO_DEVI2C) {
       rc = ddc_i2c_write_only(dh->fh, request_packet_ptr);
    }
@@ -787,9 +788,7 @@ ddc_write_only_with_retry( Display_Handle * dh, DDC_Packet *   request_packet_pt
    // TRCMSGTF(tf, "Starting.");
    DBGTRC(debug, TRACE_GROUP, "Starting.");
 
-#ifdef USE_USB
    assert(dh->io_mode != USB_IO);
-#endif
 
    Global_Status_Code rc;
    int  tryctr;

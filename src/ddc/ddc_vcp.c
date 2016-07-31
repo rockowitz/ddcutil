@@ -84,12 +84,14 @@ set_nontable_vcp_value(
           feature_code, new_value, display_handle_repr(dh));
    Global_Status_Code gsc = 0;
 
-#ifdef USE_USB
    if (dh->io_mode == USB_IO) {
+#ifdef USE_USB
       gsc = usb_set_nontable_vcp_value(dh, feature_code, new_value);
+#else
+      PROGRAM_LOGIC_ERROR("ddctool not build with USB support");
+#endif
    }
    else {
-#endif
       DDC_Packet * request_packet_ptr =
          create_ddc_setvcp_request_packet(feature_code, new_value, "set_vcp:request packet");
       // DBGMSG("create_ddc_getvcp_request_packet returned packet_ptr=%p", request_packet_ptr);
@@ -99,9 +101,7 @@ set_nontable_vcp_value(
 
       if (request_packet_ptr)
          free_ddc_packet(request_packet_ptr);
-#ifdef USE_USB
    }
-#endif
 
    // TRCMSGTG(tg, "Returning %s", gsc_desc(gsc));
    DBGTRC(debug, TRACE_GROUP, "Returning %s", gsc_desc(gsc));
@@ -133,12 +133,15 @@ set_table_vcp_value(
    DBGTRC(debug, TRACE_GROUP, "Writing feature 0x%02x , bytect = %d\n", feature_code, bytect);
    Global_Status_Code gsc = 0;
 
-#ifdef USE_USB
+
    if (dh->io_mode == USB_IO) {
+#ifdef USE_USB
       gsc = DDCL_UNIMPLEMENTED;
+#else
+      PROGRAM_LOGIC_ERROR("ddctool not build with USB support");
+#endif
    }
    else {
-#endif
       // TODO: clean up function signatures
       // pointless wrapping in a Buffer just to unwrap
       Buffer * new_value = buffer_new_with_value(bytes, bytect, __func__);
@@ -146,9 +149,7 @@ set_table_vcp_value(
       gsc = multi_part_write_with_retry(dh, feature_code, new_value);
 
       buffer_free(new_value, __func__);
-#ifdef USE_USB
    }
-#endif
    // TRCMSGTG(tg, "Returning: %s", gsc_desc(gsc));
    DBGTRC(debug, TRACE_GROUP, "Returning: %s", gsc_desc(gsc));
    return gsc;
@@ -351,9 +352,9 @@ Global_Status_Code get_vcp_value(
    Parsed_Nontable_Vcp_Response * parsed_nontable_response = NULL;  // vs interpreted ..
    Single_Vcp_Value * valrec = NULL;
 
-#ifdef USE_USB
    // why are we coming here for USB?
    if (dh->io_mode == USB_IO) {
+#ifdef USE_USB
       DBGMSF(debug, "USB case");
 
       switch (call_type) {
@@ -378,10 +379,11 @@ Global_Status_Code get_vcp_value(
                 gsc = DDCRC_REPORTED_UNSUPPORTED;
                 break;
           }
-
+#else
+      PROGRAM_LOGIC_ERROR("ddctool not build with USB support");
+#endif
    }
    else {
-#endif
       switch (call_type) {
 
       case (NON_TABLE_VCP_VALUE):
@@ -412,10 +414,7 @@ Global_Status_Code get_vcp_value(
             break;
       }
 
-#ifdef USE_USB
    } // non USB
-#endif
-
 
    *pvalrec = valrec;
 

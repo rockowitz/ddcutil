@@ -26,8 +26,6 @@
 #ifndef DISPLAYS_H_
 #define DISPLAYS_H_
 
-#include <config.h>
-
 #include <stdbool.h>
 
 #include "util/coredefs.h"
@@ -64,9 +62,7 @@ typedef enum {
    DISP_ID_MONSER,
    DISP_ID_EDID,
    DISP_ID_DISPNO,
-#ifdef USE_USB
    DISP_ID_USB
-#endif
 } Display_Id_Type;
 
 char * display_id_type_name(Display_Id_Type val);
@@ -106,9 +102,7 @@ bool is_version_unqueried(Version_Spec vspec);
 typedef enum {
    DDC_IO_DEVI2C,
    DDC_IO_ADL,
-#ifdef USE_USB
    USB_IO
-#endif
 }MCCS_IO_Mode;
 
 char * mccs_io_mode_name(MCCS_IO_Mode val);

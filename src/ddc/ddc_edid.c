@@ -51,10 +51,13 @@ ddc_get_parsed_edid_by_display_handle(Display_Handle * dh) {
    case DDC_IO_ADL:
       pEdid = adlshim_get_parsed_edid_by_display_handle(dh);
       break;
-#ifdef USE_USB
+
    case USB_IO:
+#ifdef USE_USB
       pEdid = usb_get_parsed_edid_by_display_handle(dh);
       break;
+#else
+      PROGRAM_LOGIC_ERROR("ddctool not build with USB support");
 #endif
    }
    TRCMSG("Returning %p", __func__, pEdid);
@@ -73,10 +76,12 @@ ddc_get_parsed_edid_by_display_ref(Display_Ref * dref) {
    case DDC_IO_ADL:
       pEdid = adlshim_get_parsed_edid_by_display_ref(dref);
       break;
-#ifdef USE_USB
    case USB_IO:
+#ifdef USE_USB
       pEdid = usb_get_parsed_edid_by_display_ref(dref);
       break;
+#else
+      PROGRAM_LOGIC_ERROR("ddctool not built with USB support");
 #endif
    }
 

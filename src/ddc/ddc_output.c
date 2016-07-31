@@ -172,24 +172,24 @@ get_raw_value_for_feature_table_entry(
    Vcp_Value_Type feature_type = (is_table_feature) ? TABLE_VCP_VALUE : NON_TABLE_VCP_VALUE;
    Output_Level output_level = get_output_level();
    Single_Vcp_Value * valrec = NULL;
-#ifdef USE_USB
    if (dh->io_mode == USB_IO) {
+#ifdef USE_USB
       gsc = usb_get_vcp_value(
               dh,
               feature_code,
               feature_type,
               &valrec);
+#else
+      PROGRAM_LOGIC_ERROR("ddctool not build with USB support");
+#endif
    }
    else {
-#endif
       gsc = get_vcp_value(
               dh,
               feature_code,
               feature_type,
               &valrec);
-#ifdef USE_USB
    }
-#endif
    assert ( (gsc==0 && valrec) || (gsc!=0 && !valrec) );
 
    switch(gsc) {

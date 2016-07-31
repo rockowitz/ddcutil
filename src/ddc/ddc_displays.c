@@ -89,10 +89,11 @@ bool ddc_is_valid_display_ref(Display_Ref * dref, bool emit_error_msg) {
    case DDC_IO_ADL:
       result = adlshim_is_valid_display_ref(dref, emit_error_msg);
       break;
-#ifdef USE_USB
    case USB_IO:
+#ifdef USE_USB
       result = usb_is_valid_display_ref(dref, emit_error_msg);
 #endif
+      break;
    }
    DBGMSF(debug, "Returning %s", bool_repr(result));
    return result;
@@ -147,17 +148,17 @@ Display_Ref* get_display_ref_for_display_identifier(Display_Identifier* pdid, bo
          fprintf(stderr, "Unable to find monitor with the specified EDID\n" );
       }
       break;
-#ifdef USE_USB
    case DISP_ID_USB:
+#ifdef USE_USB
       dref = ddc_find_display_by_usb_busnum_devnum(pdid->usb_bus, pdid->usb_device);
-       if (!dref && emit_error_msg) {
-          fprintf(stderr, "Unable to find monitor with the specified USB bus and device numbers\n");
-       }
-       break;
+      if (!dref && emit_error_msg) {
+         fprintf(stderr, "Unable to find monitor with the specified USB bus and device numbers\n");
+      }
+#else
+      PROGRAM_LOGIC_ERROR("ddctool not built with USB support");
 #endif
-      //    break;
-   // no default case because switch is exhaustive
-   }  // switch
+      break;
+   }  // switch - no default case, switch is exhaustive
 
    if (dref) {
       if (!validated)      // DISP_ID_BUSNO or DISP_ID_ADL
@@ -450,12 +451,14 @@ ddc_report_active_display(Display_Info * curinfo, int depth) {
    case DDC_IO_ADL:
       adlshim_report_active_display_by_display_ref(curinfo->dref, depth);
       break;
-#ifdef USE_USB
    case USB_IO:
-      // printf("(%s) Case USB_IO unimplemented\n", __func__);
+#ifdef USE_USB
       usb_show_active_display_by_display_ref(curinfo->dref, depth);
-      break;
+#else
+      PROGRAM_LOGIC_ERROR("ddctool not built with USB support");
 #endif
+      break;
+
    }
 
 
