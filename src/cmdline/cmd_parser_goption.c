@@ -295,6 +295,7 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
       explicit_display_spec_ct++;
 #else
       fprintf(stderr, "ddctool not built with support for AMD proprietary driver.  --adl option invalid.\n");
+      ok = false;
 #endif
    }
 
