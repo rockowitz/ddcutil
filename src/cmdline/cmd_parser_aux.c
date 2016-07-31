@@ -25,6 +25,7 @@
  */
 
 #include <config.h>
+
 #include <assert.h>
 #include <ctype.h>
 #include <stdbool.h>
@@ -58,7 +59,9 @@ static Cmd_Desc cmdinfo[] = {
    {CMDID_ENVIRONMENT,  "environment",   3,  0,       0},
    {CMDID_VCPINFO,      "vcpinfo",       5,  0,       1},
    {CMDID_READCHANGES,  "watch",         3,  0,       0},
+#ifdef USE_USB
    {CMDID_CHKUSBMON,    "chkusbmon",     3,  1,       1},
+#endif
 };
 static int cmdct = sizeof(cmdinfo)/sizeof(Cmd_Desc);
 
@@ -273,7 +276,9 @@ char * commands_list_help =
 #endif
        "   environment                          Probe execution environment\n"
        "   interrogate                          Report everything possible\n"
+#ifdef USE_USB
        "   chkusbmon                            Check if USB device is monitor (for UDEV)\n"
+#endif
        "   watch                                Watch display for reported changes (under development)\n"
        "\n";
 
@@ -312,9 +317,13 @@ char * monitor_selection_option_help =
        "  --display <display_number>, where <display_number> ranges from 1 to the number of\n"
        "    displays detected\n"
        "  --bus <bus number>, for /dev/i2c-<bus number>\n"
+#ifdef HAVE_ADL
        "  --adl <adapter_number>.<display_number>, for monitors connected to an AMD video card\n"
        "          running AMD's proprietary video driver (ADL is an acronym for AMD Display Library)\n"
-       "  --usb <usb bus number>.<usb device number>, for monitots communicating via USB\n"
+#endif
+#ifdef USE_USB
+       "  --usb <usb bus number>.<usb device number>, for monitors communicating via USB\n"
+#endif
        "  --edid <hex string>, where <hex string> is a 256 hex character representation of the\n"
        "          128 byte first block of the EDID\n"
        "  --model <model_name>, where <model name> is as reported by the EDID\n"

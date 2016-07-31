@@ -205,8 +205,6 @@ static char * unit_name(unsigned int data, unsigned int len) {
 }
 
 
-
-
 /** Debugging function.
  */
 void report_raw_hid_report_item(Hid_Report_Descriptor_Item * item, int depth) {

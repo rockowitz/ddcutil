@@ -325,8 +325,6 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
 #endif
    }
 
-
-
    if (buswork >= 0) {
       // DBGMSG("case B");
       // free(parsed_cmd->pdid);
