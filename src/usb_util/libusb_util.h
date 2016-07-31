@@ -25,7 +25,7 @@
 #ifndef LIBUSB_UTIL_H_
 #define LIBUSB_UTIL_H_
 
-#include <libusb-1.0/libusb.h>      // need pkgconfig?
+#include <libusb-1.0/libusb.h>
 #include <stdint.h>
 
 #include "usb_util/libusb_reports.h"

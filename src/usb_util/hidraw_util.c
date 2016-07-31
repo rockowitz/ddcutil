@@ -26,9 +26,7 @@
 
 #include <config.h>
 
-#include <assert.h>
 #include <dirent.h>
-#include <errno.h>
 #include <fcntl.h>
 #include <glib.h>
 #include <libudev.h>
@@ -39,10 +37,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <strings.h>
 #include <sys/ioctl.h>
 #include <unistd.h>
-#include <wchar.h>
 
 #include "util/coredefs.h"
 #include "util/file_util.h"

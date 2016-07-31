@@ -76,7 +76,7 @@ typedef struct usb_monitor_vcp_rec {
 
 
 /* Describes a USB connected monitor.  */
-#define USB_MONITOR_INFO_MARKER "UMIN"
+#define USB_MONITOR_INFO_MARKER "UMNF"
 typedef struct usb_monitor_info {
    char                     marker[4];
    char *                   hiddev_device_name;

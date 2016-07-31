@@ -27,6 +27,7 @@
 #include <dirent.h>
 #include <errno.h>
 #include <glib.h>
+#include <glib-2.0/glib.h>
 #include <libudev.h>
 #include <linux/hiddev.h>
 #include <linux/limits.h>

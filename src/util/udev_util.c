@@ -24,14 +24,10 @@
 // Adapted from source code at http://www.signal11.us/oss/udev/
 
 #include <assert.h>
-#include <glib.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <locale.h>
-#include <unistd.h>
 #include <string.h>
 
-#include "util/glib_util.h"
 #include "util/report_util.h"
 #include "util/string_util.h"
 
@@ -324,9 +320,4 @@ bye:
 
    return result;
 }
-
-
-
-
-
 

@@ -363,16 +363,20 @@ void report_endpoint_descriptor(
 
 
 
-/* Get bytes of HID Report Descriptor
+/* Read a control message
  *
  * Arguments:
- *   dh
- *   bInterfaceNumber
- *   rptlen
- *   dbuf
- *   dbufsz
+ *   dh              libusb display handle
+ *   bmRequestType
+ *   bRequest
+ *   wValue
+ *   wIndex          bInterfaceNumber parm
+ *   dbuf            pointer to buffer
+ *   dbufsz          buffer size
+ *   WLength         number of bytes to try to read
+ *   pbytes_read     return number of bytes actually read here
  *
- * Returns:        true if success, false if not
+ * Returns:          true if success, false if not
  */
 bool call_read_control_msg(
         struct libusb_device_handle * dh,
@@ -388,13 +392,14 @@ bool call_read_control_msg(
    bool debug = true;
    if (debug)
       printf("(%s) Starting\n", __func__);
-   bool ok = false;
+
    assert(dh);
    assert( dbufsz >= wLength);
 
    // const int CTRL_RETRIES = 2;
    const int CTRL_TIMEOUT = (5*1000); /* milliseconds */
 
+   bool ok = false;
    int bytes_read = 0;
 
    uint16_t bInterfaceNumber = wIndex;
@@ -408,7 +413,6 @@ bool call_read_control_msg(
    }
 
    int retries = 4;
-   bytes_read = 0;
    while (bytes_read < rptlen && retries--) {
       bytes_read = usb_control_msg(
                       dh,
@@ -421,23 +425,16 @@ bool call_read_control_msg(
                       CTRL_TIMEOUT);
    }
    if (bytes_read > 0) {
-      if (bytes_read < rptlen)
-         printf("          Warning: incomplete report descriptor\n");
-      // dump_report_desc(dbuf, bytes_read);    // old way
-
-      *pbytes_read = bytes_read;
       ok = true;
    }
    libusb_release_interface(dh, bInterfaceNumber);
 
 bye:
+   *pbytes_read = bytes_read;
    if (debug)
-      printf("(%s) Returning: %s\n", __func__, bool_repr(ok));
+      printf("(%s) Returning: %s, *pbytes_read=%d\n", __func__, bool_repr(ok), *pbytes_read);
    return ok;
 }
-
-
-
 
 
 /* Get bytes of HID Report Descriptor
@@ -474,6 +471,10 @@ bool get_raw_report_descriptor(
          pbytes_read
          );
 
+   if (ok && *pbytes_read < rptlen) {
+      printf("          Warning: incomplete report descriptor\n");
+      // dump_report_desc(dbuf, *pbytes_read);    // old way
+   }
 
    return ok;
 }
@@ -495,10 +496,24 @@ bool get_raw_report_descriptor(
 #endif
 
 
+
+/* Get bytes of HID Feature Report
+ *
+ * Arguments:
+ *   dh                 libusb device handle
+ *   bInterfaceNumber   interface number
+ *   report_id          feature report number
+ *   rptlen             bytes requested (may be larger than actual report size)
+ *   dbuf               pointer to buffer
+ *   dbufsz             buffer size
+ *   pbytes_read        return number of bytes read here
+ *
+ * Returns:        true if success, false if not
+ */
 bool get_raw_report(
       struct libusb_device_handle * dh,
       uint8_t                       bInterfaceNumber,
-      uint8_t                      report_id,
+      uint8_t                       report_id,
       uint16_t                      rptlen,        // report length
       Byte *                        dbuf,
       int                           dbufsz,

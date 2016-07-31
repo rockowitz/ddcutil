@@ -24,13 +24,8 @@
 #ifndef UDEV_UTIL_H_
 #define UDEV_UTIL_H_
 
-// #include <config.h>
-
+#include <libudev.h>
 #include <stdint.h>
-
-// #ifdef HAVE_UDEV
-#include "libudev.h"
-// #endif
 
 void report_udev_device(struct udev_device * dev, int depth);
 void query_udev_subsystem(char * udev_class, int depth);

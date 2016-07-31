@@ -321,6 +321,7 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
       explicit_display_spec_ct++;
 #else
       fprintf(stderr, "ddctool not built with support for USB connected monitors.  --usb option invalid.\n");
+      ok = false;
 #endif
    }
 

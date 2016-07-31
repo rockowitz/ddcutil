@@ -23,16 +23,9 @@
 
 // Adapted from usbplay2 file libusb_util.c
 
-#include <assert.h>
-#include <errno.h>
-#include <fcntl.h>
-#include <glib.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sys/ioctl.h>
-#include <unistd.h>
-#include <wchar.h>
 
 #include "util/device_id_util.h"
 #include "util/report_util.h"
@@ -196,6 +189,7 @@ static bool possible_monitor_interface(
    if (debug)
       printf("(%s) Starting.\n", __func__);
 
+// apparently doesn't work on older versions of GCC
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdiscarded-qualifiers"
    dpath.interface = interface;
@@ -456,7 +450,6 @@ get_possible_monitors(
 }
 
 
-
 /* Filters a null terminated list of pointers to struct libusb_device to
  * those representing possible USB connected monitors.
  *
@@ -644,7 +637,6 @@ bool libusb_is_monitor_by_path(ushort busno, ushort devno, ushort intfno) {
       libusb_exit(NULL);
       if (debug)
          printf("(%s) Done.  Returning %s\n", __func__, bool_repr(result));
-
    }
 
 bye:
