@@ -24,6 +24,8 @@
  * </endcopyright>
  */
 
+#include <config.h>
+
 #include <assert.h>
 #include <errno.h>
 #include <fcntl.h>
@@ -46,7 +48,9 @@
 
 #include "adl/adl_shim.h"
 
+#ifdef USE_USB
 #include "usb/usb_displays.h"
+#endif
 
 #include "ddc/try_stats.h"
 
@@ -133,6 +137,7 @@ Display_Handle* ddc_open_display(Display_Ref * dref,  Byte open_flags) {
       pDispHandle->pedid = adlshim_get_parsed_edid_by_display_handle(pDispHandle);
       break;
 
+#ifdef USE_USB
    case USB_IO:
       {
          // bool emit_error_msg = true;
@@ -150,12 +155,16 @@ Display_Handle* ddc_open_display(Display_Ref * dref,  Byte open_flags) {
             pDispHandle = create_usb_display_handle_from_display_ref(fd, dref);
             pDispHandle->pedid = usb_get_parsed_edid_by_display_handle(pDispHandle);
          }
+         break;
       }
+#endif
    } // switch
    assert(pDispHandle->pedid);
    // needed?  for both or just I2C?
    // sleep_millis_with_trace(DDC_TIMEOUT_MILLIS_DEFAULT, __func__, NULL);
+#ifdef USE_USB
    if (dref->io_mode != USB_IO)
+#endif
       call_tuned_sleep_i2c(SE_POST_OPEN);
    // report_display_handle(pDispHandle, __func__);
    return pDispHandle;
@@ -189,6 +198,7 @@ void ddc_close_display(Display_Handle * dh) {
       }
    case DDC_IO_ADL:
       break;           // nothing to do
+#ifdef USE_USB
    case USB_IO:
       {
          int rc = usb_close_device(dh->fh, dh->hiddev_device_name, CALLOPT_NONE); // return error if failure
@@ -199,6 +209,7 @@ void ddc_close_display(Display_Handle * dh) {
          dh->fh = -1;
          break;
       }
+#endif
    } //switch
 }
 
@@ -606,7 +617,9 @@ Global_Status_Code ddc_write_read_with_retry(
    // if (debug) tf = 0xff;
    // TRCMSGTF(tf, "Starting. dh=%s", display_handle_repr(dh)  );
    DBGTRC(debug, TRACE_GROUP, "Starting. dh=%s", display_handle_repr(dh)  );
+#ifdef USE_USB
    assert(dh->io_mode != USB_IO);
+#endif
 
    Global_Status_Code  gsc;
    int  tryctr;
@@ -731,7 +744,9 @@ Global_Status_Code ddc_write_only( Display_Handle * dh, DDC_Packet *   request_p
    DBGTRC(debug, TRACE_GROUP, "Starting.");
 
    Global_Status_Code rc = 0;
+#ifdef USE_USB
    assert(dh->io_mode != USB_IO);
+#endif
    if (dh->io_mode == DDC_IO_DEVI2C) {
       rc = ddc_i2c_write_only(dh->fh, request_packet_ptr);
    }
@@ -772,7 +787,9 @@ ddc_write_only_with_retry( Display_Handle * dh, DDC_Packet *   request_packet_pt
    // TRCMSGTF(tf, "Starting.");
    DBGTRC(debug, TRACE_GROUP, "Starting.");
 
+#ifdef USE_USB
    assert(dh->io_mode != USB_IO);
+#endif
 
    Global_Status_Code rc;
    int  tryctr;

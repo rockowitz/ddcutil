@@ -21,6 +21,8 @@
  * </endcopyright>
  */
 
+#include <config.h>
+
 #include <assert.h>
 #include <errno.h>
 #include <glib.h>
@@ -42,7 +44,9 @@
 #include "adl/adl_errors.h"
 #include "adl/adl_shim.h"
 
+#ifdef USE_USB
 #include "usb/usb_displays.h"
+#endif
 
 #include "ddc/ddc_packet_io.h"
 #include "ddc/ddc_vcp.h"
@@ -85,9 +89,10 @@ bool ddc_is_valid_display_ref(Display_Ref * dref, bool emit_error_msg) {
    case DDC_IO_ADL:
       result = adlshim_is_valid_display_ref(dref, emit_error_msg);
       break;
+#ifdef USE_USB
    case USB_IO:
       result = usb_is_valid_display_ref(dref, emit_error_msg);
-
+#endif
    }
    DBGMSF(debug, "Returning %s", bool_repr(result));
    return result;
@@ -142,13 +147,15 @@ Display_Ref* get_display_ref_for_display_identifier(Display_Identifier* pdid, bo
          fprintf(stderr, "Unable to find monitor with the specified EDID\n" );
       }
       break;
+#ifdef USE_USB
    case DISP_ID_USB:
       dref = ddc_find_display_by_usb_busnum_devnum(pdid->usb_bus, pdid->usb_device);
        if (!dref && emit_error_msg) {
           fprintf(stderr, "Unable to find monitor with the specified USB bus and device numbers\n");
        }
        break;
-      break;
+#endif
+      //    break;
    // no default case because switch is exhaustive
    }  // switch
 
@@ -219,14 +226,19 @@ Display_Info_List * ddc_get_valid_displays() {
       report_display_info_list(&adl_displays,1);
    }
 
+#ifdef USE_USB
    Display_Info_List usb_displays = usb_get_valid_displays();
    if (debug) {
       DBGMSG("usb_displays returned from usb_get_valid_displays():");
       report_display_info_list(&usb_displays,1);
    }
+#endif
 
    // merge the lists
-   int displayct = i2c_displays.ct + adl_displays.ct + usb_displays.ct;
+   int displayct = i2c_displays.ct + adl_displays.ct;
+#ifdef USE_USB
+   displayct += usb_displays.ct;
+#endif
    // DBGMSG("displayct=%d", displayct);
    Display_Info_List * all_displays = calloc(1, sizeof(Display_Info_List));
    all_displays->info_recs = calloc(displayct, sizeof(Display_Info));
@@ -259,16 +271,19 @@ Display_Info_List * ddc_get_valid_displays() {
    //        usb_displays.info_recs,
    //        usb_displays.ct * sizeof(Display_Info));
 
+#ifdef USE_USB
    memcpy(all_displays->info_recs + (i2c_displays.ct+adl_displays.ct),
           usb_displays.info_recs,
           usb_displays.ct * sizeof(Display_Info));
-
+#endif
    if (i2c_displays.info_recs)
       free(i2c_displays.info_recs);
    if (adl_displays.info_recs)
       free(adl_displays.info_recs);
+#ifdef USE_USB
    if (usb_displays.info_recs)
       free(usb_displays.info_recs);
+#endif
    // rpt_title("merged list:", 0);
    int displayctr = 1;
    for (ndx = 0; ndx < displayct; ndx++) {
@@ -358,14 +373,17 @@ ddc_find_display_by_model_and_sn(
    if (!result)
       result = adlshim_find_display_by_model_sn(model, sn);
 
+#ifdef USE_USB
    if (!result)
       result = usb_find_display_by_model_sn(model, sn);
+#endif
 
    DBGMSF(debug, "Returning: %p  %s", result, (result)?dref_repr(result):"" );
    return result;
 }
 
 
+#ifdef USE_USB
 Display_Ref *
 ddc_find_display_by_usb_busnum_devnum(
    int   busnum,
@@ -380,6 +398,7 @@ ddc_find_display_by_usb_busnum_devnum(
    DBGMSF(debug, "Returning: %p  %s", result, (result)?dref_repr(result):"" );
    return result;
 }
+#endif
 
 
 /* Returns a Display_Ref for a display identified by its EDID
@@ -404,8 +423,10 @@ ddc_find_display_by_edid(const Byte * pEdidBytes, Byte findopts) {
    if (!result)
       result = adlshim_find_display_by_edid(pEdidBytes);
 
+#ifdef USE_USB
    if (!result)
       result = usb_find_display_by_edid(pEdidBytes);
+#endif
 
    DBGMSF(debug, "Returning: %p  %s", result, (result)?dref_repr(result):"" );
    return result;
@@ -429,9 +450,12 @@ ddc_report_active_display(Display_Info * curinfo, int depth) {
    case DDC_IO_ADL:
       adlshim_report_active_display_by_display_ref(curinfo->dref, depth);
       break;
+#ifdef USE_USB
    case USB_IO:
       // printf("(%s) Case USB_IO unimplemented\n", __func__);
       usb_show_active_display_by_display_ref(curinfo->dref, depth);
+      break;
+#endif
    }
 
 

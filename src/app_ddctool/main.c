@@ -144,14 +144,20 @@ bool perform_get_capabilities_by_display_handle(Display_Handle * dh) {
       Output_Level output_level = get_output_level();
       if (output_level <= OL_TERSE) {
          printf("%s capabilities string: %s\n",
+#ifdef USE_USB
                (dh->io_mode == USB_IO) ? "Synthesized unparsed" : "Unparsed",
+#else
+               "Unparsed",
+#endif
                capabilities_string);
       }
       else {
          // pcap is always set, but may be damaged if there was a parsing error
          Parsed_Capabilities * pcap = parse_capabilities_string(capabilities_string);
+#ifdef USE_USB
          if (dh->io_mode == USB_IO)
             pcap->raw_value_synthesized = true;
+#endif
          report_parsed_capabilities(pcap, dh->io_mode);
          free_parsed_capabilities(pcap);
       }
@@ -316,11 +322,13 @@ int main(int argc, char *argv[]) {
       main_rc = EXIT_SUCCESS;
    }
 
+#ifdef USE_USB
    else if (parsed_cmd->cmd_id == CMDID_CHKUSBMON) {
       // DBGMSG("Processing command chkusbmon...\n");
       bool is_monitor = check_usb_monitor( parsed_cmd->args[0] );
       main_rc = (is_monitor) ? EXIT_SUCCESS : EXIT_FAILURE;
    }
+#endif
 
    else if (parsed_cmd->cmd_id == CMDID_INTERROGATE) {
       printf("Setting output level verbose...\n");

@@ -298,7 +298,9 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
 #endif
    }
 
+
    if (usbwork) {
+#ifdef USE_USB
       if (debug)
          DBGMSG("usbwork = |%s|", usbwork);
       int busnum;
@@ -317,7 +319,12 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
          parsed_cmd->pdid = create_usb_display_identifier(busnum, devicenum);
       }
       explicit_display_spec_ct++;
+#else
+      fprintf(stderr, "ddctool not built with support for USB connected monitors.  --usb option invalid.\n");
+#endif
    }
+
+
 
    if (buswork >= 0) {
       // DBGMSG("case B");

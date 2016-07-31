@@ -21,6 +21,8 @@
  * </endcopyright>
  */
 
+#include <config.h>
+
 #include <assert.h>
 #include <errno.h>
 #include <glib.h>
@@ -41,8 +43,10 @@
 #include "adl/adl_errors.h"
 #include "adl/adl_shim.h"
 
+#ifdef USE_USB
 #include "usb/usb_displays.h"
 #include "usb/usb_vcp.h"
+#endif
 
 #include "ddc/ddc_edid.h"
 #include "ddc/ddc_multi_part_io.h"
@@ -168,6 +172,7 @@ get_raw_value_for_feature_table_entry(
    Vcp_Value_Type feature_type = (is_table_feature) ? TABLE_VCP_VALUE : NON_TABLE_VCP_VALUE;
    Output_Level output_level = get_output_level();
    Single_Vcp_Value * valrec = NULL;
+#ifdef USE_USB
    if (dh->io_mode == USB_IO) {
       gsc = usb_get_vcp_value(
               dh,
@@ -176,12 +181,15 @@ get_raw_value_for_feature_table_entry(
               &valrec);
    }
    else {
+#endif
       gsc = get_vcp_value(
               dh,
               feature_code,
               feature_type,
               &valrec);
+#ifdef USE_USB
    }
+#endif
    assert ( (gsc==0 && valrec) || (gsc!=0 && !valrec) );
 
    switch(gsc) {

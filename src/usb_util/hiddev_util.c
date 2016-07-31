@@ -27,9 +27,7 @@
 #include <dirent.h>
 #include <errno.h>
 #include <glib.h>
-#ifdef USE_LIBUDEV
 #include <libudev.h>
-#endif
 #include <linux/hiddev.h>
 #include <linux/limits.h>
 #include <stddef.h>
@@ -48,11 +46,7 @@
 #include "util/string_util.h"
 
 #include "usb_util/usb_hid_common.h"
-
-// circular dependency, but only used in debug code
-// report_hiddev_field_info() in report_hid_field_locator()
 #include "usb_util/hiddev_reports.h"
-
 #include "usb_util/hiddev_util.h"
 
 
@@ -98,7 +92,6 @@ GPtrArray * get_hiddev_device_names_using_filesys() {
 }
 
 
-#ifdef USE_LIBUDEV
 /* Comparison function used by g_ptr_array_sort() in function
  * find_hiddev_devices()
  */
@@ -193,15 +186,12 @@ bye:
    // return result;
    return dev_names;
 }
-#endif
+
 
 GPtrArray * get_hiddev_device_names() {
 
-#ifdef USE_LIBUDEV
    return get_hiddev_device_names_using_udev();
-#else
-   return get_hiddev_device_names_using_filesys();
-#endif
+   // return get_hiddev_device_names_using_filesys();
 }
 
 

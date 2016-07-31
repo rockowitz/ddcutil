@@ -21,6 +21,8 @@
  * </endcopyright>
  */
 
+#include <config.h>
+
 #include <assert.h>
 
 #include "ddc/ddc_strategy.h"
@@ -30,13 +32,17 @@
 DDC_Strategy ddc_strategies[] = {
       {DDC_IO_DEVI2C, NULL, NULL },
       {DDC_IO_ADL,    NULL, NULL },
+#ifdef USE_USB
       {USB_IO,        NULL, NULL }
+#endif
 };
 
 void validate_ddc_strategies() {
    assert(  ddc_strategies[DDC_IO_DEVI2C].io_mode == DDC_IO_DEVI2C);
    assert(  ddc_strategies[DDC_IO_ADL].io_mode    == DDC_IO_ADL);
+#ifdef USE_USB
    assert(  ddc_strategies[USB_IO].io_mode        == USB_IO);
+#endif
 }
 
 

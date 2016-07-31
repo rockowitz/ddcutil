@@ -31,9 +31,7 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <glib.h>
-#ifdef USE_LIBUDEV
 #include <libudev.h>
-#endif
 #include <linux/hidraw.h>
 #include <linux/input.h>
 #include <linux/limits.h>
@@ -51,9 +49,7 @@
 #include "util/glib_util.h"
 #include "util/report_util.h"
 #include "util/string_util.h"
-#ifdef USE_LIBUDEV
 #include "util/udev_util.h"
-#endif
 
 #include "usb_util/base_hid_report_descriptor.h"
 #include "usb_util/hid_report_descriptor.h"
@@ -316,13 +312,11 @@ bool hidraw_is_monitor_device(char * devname) {
    // report_hid_report_item_list(report_item_list, 2);
    is_monitor = is_monitor_by_tokenized_report_descriptor(report_item_list);
 
-#ifdef USE_LIBUDEV
    if (is_monitor) {   // for testing purposes
             Udev_Usb_Devinfo * devinfo = get_udev_device_info("hidraw", devname);
             printf("(%s) USB busno:devno = %d:%d\n", __func__, devinfo->busno, devinfo->devno);
             free(devinfo);
    }
-#endif
 
    free_hid_report_item_list(report_item_list);
 

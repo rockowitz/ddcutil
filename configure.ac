@@ -16,7 +16,8 @@ dnl   AC_PATH_PROG(XSLTPROC, xsltproc)
 
 m4_define([ddctool_major_version], [0])
 m4_define([ddctool_minor_version], [4])
-m4_define([ddctool_micro_version], [2])
+dnl micro version 3 set 7/30/16 - development version
+m4_define([ddctool_micro_version], [3])
 m4_define([ddctool_version],
           [ddctool_major_version.ddctool_minor_version.ddctool_micro_version])
 
@@ -124,7 +125,8 @@ dnl PKG_CHECK_MODULES(OSINFO, libosinfo-1.0 >= 0.1, [OSINFO_FOUND=yes], [OSINFO_
 PKG_CHECK_MODULES(XRANDR, xrandr)
 PKG_CHECK_MODULES(X11, x11)
 dnl PKG_CHECK_MODULES(UDEV, libudev)
-PKG_CHECK_MODULES(LIBUSB, libusb-1.0)
+dnl know that 1.0.8 fails, 1.0.20  works
+PKG_CHECK_MODULES(LIBUSB, libusb-1.0 >= 1.0.15)
 
 dnl failing in OBS if no proper BuildRequires, even if libudev use disabled
 PKG_CHECK_MODULES([UDEV], [libudev],
@@ -291,42 +293,42 @@ AS_IF([test "x$enable_gobject" == "xyes"],
       AC_MSG_NOTICE( [gobject-api... disabled] )
      )
 
-dnl *** configure option: --enable-libudev
-AC_ARG_ENABLE([libudev],
-              [ AS_HELP_STRING( [--enable-libudev=@<:@yes/no@:>@], [Use libudev to find devices@<:@default=yes@:>@] )],
-              [enable_libudev=${enableval}],
-              [enable_libudev=yes] )
-AM_CONDITIONAL([ENABLE_LIBUDEV_COND], [test "x$enable_libudev" == "xyes"] )
-AS_IF([test "x$enable_libudev" == "xyes"],
-      AC_SUBST([ENABLE_LIBUDEV_FLAG], [1] ),
-      AC_SUBST([ENABLE_LIBUDEV_FLAG], [0]  )
-     )
-dnl Define USE_LIBUDEV in config.h:
-AS_IF([test "x$enable_libudev" == "xyes"],
-      AC_DEFINE_UNQUOTED( [USE_LIBUDEV], [1], [If defined, use libudev.]),
-      [])
-AS_IF([test "x$enable_libudev" == "xyes"],
-      AC_MSG_NOTICE( [libudev... enabled]  ),
-      AC_MSG_NOTICE( [libudev... disabled] )
-     )
+dnl dnl *** configure option: --enable-libudev
+dnl AC_ARG_ENABLE([libudev],
+dnl               [ AS_HELP_STRING( [--enable-libudev=@<:@yes/no@:>@], [Use libudev to find devices@<:@default=yes@:>@] )],
+dnl               [enable_libudev=${enableval}],
+dnl               [enable_libudev=yes] )
+dnl AM_CONDITIONAL([ENABLE_LIBUDEV_COND], [test "x$enable_libudev" == "xyes"] )
+dnl AS_IF([test "x$enable_libudev" == "xyes"],
+dnl       AC_SUBST([ENABLE_LIBUDEV_FLAG], [1] ),
+dnl       AC_SUBST([ENABLE_LIBUDEV_FLAG], [0]  )
+dnl      )
+dnl dnl Define USE_LIBUDEV in config.h:
+dnl AS_IF([test "x$enable_libudev" == "xyes"],
+dnl       AC_DEFINE_UNQUOTED( [USE_LIBUDEV], [1], [If defined, use libudev.]),
+ dnl      [])
+dnl AS_IF([test "x$enable_libudev" == "xyes"],
+dnl       AC_MSG_NOTICE( [libudev... enabled]  ),
+dnl      AC_MSG_NOTICE( [libudev... disabled] )
+dnl      )
 
-dnl *** configure option: --enable-libusb
-AC_ARG_ENABLE([libusb],
-              [ AS_HELP_STRING( [--enable-libusb=@<:@no/yes@:>@], [Use libusb to probe devices@<:@default=no@:>@] )],
-              [enable_libusb=${enableval}],
-              [enable_libusb=no] )
-AM_CONDITIONAL([ENABLE_LIBUSB_COND], [test "x$enable_libusb" == "xyes"] )
-AS_IF([test "x$enable_libusb" == "xyes"],
-      AC_SUBST([ENABLE_LIBUSB_FLAG], [1] ),
-      AC_SUBST([ENABLE_LIBUSB_FLAG], [0]  )
+dnl *** configure option: --enable-usb
+AC_ARG_ENABLE([usb],
+              [ AS_HELP_STRING( [--enable-usb=@<:@yes/no@:>@], [Use usb to probe devices@<:@default=yes@:>@] )],
+              [enable_usb=${enableval}],
+              [enable_usb=yes] )
+AM_CONDITIONAL([ENABLE_USB_COND], [test "x$enable_usb" == "xyes"] )
+AS_IF([test "x$enable_usb" == "xyes"],
+      AC_SUBST([ENABLE_USB_FLAG], [1] ),
+      AC_SUBST([ENABLE_USB_FLAG], [0]  )
      )
-dnl Define USE_LIBUSB in config.h:
-AS_IF([test "x$enable_libusb" == "xyes"],
-      AC_DEFINE_UNQUOTED( [USE_LIBUSB], [1], [If defined, use libusb.]),
+dnl Define USE_USB in config.h:
+AS_IF([test "x$enable_usb" == "xyes"],
+      AC_DEFINE_UNQUOTED( [USE_USB], [1], [If defined, use usb.]),
       [])
-AS_IF([test "x$enable_libusb" == "xyes"],
-      AC_MSG_NOTICE( [libusb... enabled]  ),
-      AC_MSG_NOTICE( [libusb... disabled] )
+AS_IF([test "x$enable_usb" == "xyes"],
+      AC_MSG_NOTICE( [usb... enabled]  ),
+      AC_MSG_NOTICE( [usb... disabled] )
      )
 
 ### 

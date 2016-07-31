@@ -31,7 +31,9 @@
 #include "i2c/i2c_bus_core.h"
 #include "adl/adl_shim.h"
 #include "ddc/ddc_edid.h"
+#ifdef USE_USB
 #include "usb/usb_displays.h"
+#endif
 
 
 // Trace class for this file
@@ -49,9 +51,11 @@ ddc_get_parsed_edid_by_display_handle(Display_Handle * dh) {
    case DDC_IO_ADL:
       pEdid = adlshim_get_parsed_edid_by_display_handle(dh);
       break;
+#ifdef USE_USB
    case USB_IO:
       pEdid = usb_get_parsed_edid_by_display_handle(dh);
       break;
+#endif
    }
    TRCMSG("Returning %p", __func__, pEdid);
    return pEdid;
@@ -69,9 +73,11 @@ ddc_get_parsed_edid_by_display_ref(Display_Ref * dref) {
    case DDC_IO_ADL:
       pEdid = adlshim_get_parsed_edid_by_display_ref(dref);
       break;
+#ifdef USE_USB
    case USB_IO:
       pEdid = usb_get_parsed_edid_by_display_ref(dref);
       break;
+#endif
    }
 
    TRCMSG("Returning %p", pEdid);

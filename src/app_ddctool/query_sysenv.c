@@ -58,28 +58,29 @@
 #include "util/device_id_util.h"
 #include "util/edid.h"
 #include "util/file_util.h"
-#include "../usb_util/hiddev_reports.h"
-#include "../usb_util/hiddev_util.h"
-#ifdef USE_LIBUSB
-// #include "util/libusb_reports.h"
-#include "usb_util/libusb_util.h"
-// #include "usb_util/hidapi_util.h"
-#endif
 #include "util/report_util.h"
 #include "util/string_util.h"
 #include "util/subprocess_util.h"
-#ifdef USE_LIBUDEV
-#include "util/udev_util.h"
-#endif
 #include "util/x11_util.h"
-#include "../usb_util/hidraw_util.h"
+
+#ifdef USE_USB
+#include "util/udev_util.h"
+#include "usb_util/hiddev_reports.h"
+#include "usb_util/hiddev_util.h"
+// #include "usb_util/hidapi_util.h"
+#include "usb_util/hidraw_util.h"
+// #include "util/libusb_reports.h"
+#include "usb_util/libusb_util.h"
+#endif
 
 #include "base/core.h"
 #include "base/linux_errno.h"
 
 #include "i2c/i2c_bus_core.h"
 #include "adl/adl_shim.h"
+#ifdef USE_USB
 #include "usb/usb_displays.h"
+#endif
 
 #include "app_ddctool/query_sysenv.h"
 
@@ -1037,6 +1038,7 @@ void query_using_i2cdetect() {
 }
 
 
+#ifdef USE_USB
 /* Report information about USB connected monitors
  *
  * Arguments:    none
@@ -1122,6 +1124,7 @@ void query_usb_monitors() {
    // need to set destroy function
    g_ptr_array_free(hiddev_devices, true);
 }
+#endif
 
 
 /* Master function to query the system environment
@@ -1185,9 +1188,10 @@ void query_sysenv() {
       query_x11();
    }
 
+#ifdef USE_USB
    query_usb_monitors();
 
-#ifdef USE_LIBUDEV
+
    if (output_level >= OL_VERBOSE) {
       char * subsys_name = "usbmisc";
       printf("\nProbing USB HID devices using udev, susbsystem %s...\n", subsys_name);
@@ -1196,17 +1200,14 @@ void query_sysenv() {
       printf("\nProbing USB HID devices using udev, susbsystem %s...\n", subsys_name);
       query_udev_subsystem(subsys_name, 1);
    }
-#endif
+
 
    if (output_level >= OL_VERBOSE) {
 
-#ifdef USE_LIBUSB
       // currently an overwhelming amount of information - need to display
       // only possible HID connected monitors
       printf("\nProbing possible HID monitors using libusb...\n");
       probe_libusb(/*possible_monitors_only=*/ true);
-#endif
-
       printf("\nChecking for USB connected monitors on /dev/hidraw* ...\n");
 
        puts("");
@@ -1214,23 +1215,19 @@ void query_sysenv() {
        execute_shell_cmd("ls -l /dev/hidraw*", 2);
        puts("");
        probe_hidraw(1);
-#ifdef USE_LIBUDEV
        /* Hidraw_Devinfo * */ get_udev_device_info("hidraw", "hidraw3");
        /* Hidraw_Devinfo * */ get_udev_device_info("usbmisc", "hiddev2");
-#endif
-#ifdef NO
-#ifdef USE_LIBUSB
-       printf("\nProbing using hidapi...\n");
+
+       // printf("\nProbing using hidapi...\n");
        // don't use.  wipes out /dev/hidraw  and /dev/usb/hiddev devices it opens
        // no addional information.   Feature values are returned as with libusb -
        // leading byte is report number
        // note that probe_hidapi() tests all possible report numbers, not just those
        // listed in the report descriptor.  Found some additional reports in the
        // vendor specific range on the Apple Cinema display
-       probe_hidapi(1);
-#endif
-#endif
+       // probe_hidapi(1);
    }
+#endif
 }
 
 

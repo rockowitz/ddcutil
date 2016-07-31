@@ -80,19 +80,6 @@ app_ddctool/app_setvcp.c \
 app_ddctool/app_getvcp.c \
 app_ddctool/testcases.c 
 
-if ENABLE_LIBUSB_COND
-ddctool_SOURCES += \
-usb_util/hidraw_util.c \
-usb_util/libusb_reports.c \
-usb_util/libusb_util.c \
-usb_util/base_hid_report_descriptor.c \
-usb_util/hid_report_descriptor.c
-endif
-
-if ENABLE_LIBUDEV_COND
-ddctool_SOURCES += \
-util/udev_util.c 
-endif
 
 if INCLUDE_TESTCASES_COND
 ddctool_SOURCES += \
@@ -181,22 +168,15 @@ ddc/ddc_vcp_version.c \
 i2c/i2c_base_io.c \
 i2c/i2c_bus_core.c \
 i2c/i2c_do_io.c \
-usb/usb_base.c \
-usb/usb_edid.c \
-usb/usb_displays.c  \
-usb/usb_vcp.c  \
 ddc/ddc_dumpload.c \
 util/data_structures.c \
 util/file_util.c  \
 util/glib_util.c \
-usb_util/hiddev_reports.c \
-usb_util/hiddev_util.c \
 util/multi_level_map.c \
 util/output_sink.c \
 util/device_id_util.c \
 util/report_util.c \
 util/string_util.c \
-usb_util/usb_hid_common.c \
 util/x11_util.c \
 util/subprocess_util.c
 
@@ -216,6 +196,23 @@ else
 libcommon_la_SOURCES += \
   adl/adl_mock_impl/adl_mock_shim.c \
   adl/adl_mock_impl/adl_mock_errors.c
+endif
+
+if ENABLE_USB_COND
+libcommon_la_SOURCES += \
+  usb/usb_base.c \
+  usb/usb_edid.c \
+  usb/usb_displays.c  \
+  usb/usb_vcp.c  \
+  usb_util/usb_hid_common.c \
+  usb_util/hiddev_reports.c \
+  usb_util/hiddev_util.c \
+  usb_util/hidraw_util.c \
+  usb_util/libusb_reports.c \
+  usb_util/libusb_util.c \
+  usb_util/base_hid_report_descriptor.c \
+  usb_util/hid_report_descriptor.c \
+  util/udev_util.c 
 endif
 
 
@@ -274,12 +271,14 @@ endif
 libddctool_la_LIBADD = -lz
 libddctool_la_LIBADD +=  \
    libcommon.la   \
+   $(X11_LIBS) \
    $(GOBJECT_LIBS) \
    $(GLIB_LIBS) 
 
-if ENABLE_LIBUDEV_COND
+if ENABLE_USB_COND
 libddctool_la_LIBADD += \
-   $(UDEV_LIBS) 
+   $(UDEV_LIBS) \
+   $(LIBUSB_LIBS)
 endif
          
 
@@ -289,16 +288,15 @@ libddctool_la_LDFLAGS = -export_symbols-regex '^ddc[tg]_[^_]'
 
 # Link the executables
 
-# deleted: $(HIDAPI_LIBS) 
 ddctool_LDADD = \
    libcommon.la \
-   $(LIBUSB_LIBS) \
    $(XRANDR_LIBS) \
    $(X11_LIBS) \
    $(GLIB_LIBS)
 
-if ENABLE_LIBUDEV_COND
+if ENABLE_USB_COND
 ddctool_LDADD += \
+   $(LIBUSB_LIBS) \
    $(UDEV_LIBS) 
 endif
 
@@ -307,10 +305,6 @@ laclient_LDADD = \
   libddctool.la \
   $(GOBJECT_LIBS)
 
-if ENABLE_LIBUDEV_COND
-laclient_LDADD += \
-  $(UDEV_LIBS) 
-endif
 
 goclient_LDADD = \
   libddctool.la \

@@ -43,7 +43,9 @@ static char * Display_Id_Type_Names[] = {
       "DISP_ID_MONSER",
       "DISP_ID_EDID",
       "DISP_ID_DISPNO",
+#ifdef USE_USB
       "DISP_ID_USB"
+#endif
 };
 
 
@@ -60,8 +62,10 @@ Display_Identifier* common_create_display_identifier(Display_Id_Type id_type) {
    pIdent->busno  = -1;
    pIdent->iAdapterIndex = -1;
    pIdent->iDisplayIndex = -1;
+#ifdef USE_USB
    pIdent->usb_bus = -1;
    pIdent->usb_device = -1;
+#endif
    memset(pIdent->edidbytes, '\0', 128);
    *pIdent->model_name = '\0';
    *pIdent->serial_ascii = '\0';
@@ -114,6 +118,7 @@ Display_Identifier* create_mon_ser_display_identifier(
    return pIdent;
 }
 
+#ifdef USE_USB
 Display_Identifier* create_usb_display_identifier(int bus, int device) {
    Display_Identifier* pIdent = common_create_display_identifier(DISP_ID_USB);
    pIdent->usb_bus = bus;
@@ -121,6 +126,7 @@ Display_Identifier* create_usb_display_identifier(int bus, int device) {
    return pIdent;
 
 }
+#endif
 
 
 void report_display_identifier(Display_Identifier * pdid, int depth) {
@@ -132,8 +138,10 @@ void report_display_identifier(Display_Identifier * pdid, int depth) {
    rpt_int( "busno",         NULL, pdid->busno,         d1);
    rpt_int( "iAdapterIndex", NULL, pdid->iAdapterIndex, d1);
    rpt_int( "iDisplayIndex", NULL, pdid->iDisplayIndex, d1);
+#ifdef USE_USB
    rpt_int( "usb_bus",       NULL, pdid->usb_bus,       d1);
    rpt_int( "usb_device",    NULL, pdid->usb_device,    d1);
+#endif
    rpt_str( "model_name",    NULL, pdid->model_name,    d1);
    rpt_str( "serial_ascii",  NULL, pdid->serial_ascii,  d1);
 
@@ -202,6 +210,7 @@ Display_Ref * create_adl_display_ref(int iAdapterIndex, int iDisplayIndex) {
    return dref;
 }
 
+#ifdef USE_USB
 Display_Ref * create_usb_display_ref(int usb_bus, int usb_device, char * hiddev_devname) {
    assert(hiddev_devname);
    Display_Ref * dref = calloc(1, sizeof(Display_Ref));
@@ -213,6 +222,7 @@ Display_Ref * create_usb_display_ref(int usb_bus, int usb_device, char * hiddev_
    dref->vcp_version = version_spec_unqueried;
    return dref;
 }
+#endif
 
 
 Display_Ref * clone_display_ref(Display_Ref * old) {
@@ -252,10 +262,13 @@ bool dreq(Display_Ref* this, Display_Ref* that) {
                       this->iDisplayIndex == that->iDisplayIndex);
             break;
 
+#ifdef USE_USB
          case USB_IO:
             result = (this->usb_bus    == that->usb_bus  &&
                       this->usb_device == that->usb_device);
             break;
+#endif
+
          }
       }
    }
@@ -279,10 +292,13 @@ void report_display_ref(Display_Ref * dref, int depth) {
       rpt_int("iDisplayIndex", NULL, dref->iDisplayIndex, d1);
       break;
 
+#ifdef USE_USB
    case USB_IO:
       rpt_int("usb_bus",    NULL, dref->usb_bus,    d1);
       rpt_int("usb_device", NULL, dref->usb_device, d1);
       break;
+#endif
+
    }
 
    rpt_vstring(d1, "vcp_version:  %d.%d\n", dref->vcp_version.major, dref->vcp_version.minor );
@@ -291,15 +307,21 @@ void report_display_ref(Display_Ref * dref, int depth) {
 
 char * dref_short_name_r(Display_Ref * dref, char * buf, int bufsize) {
    switch (dref->io_mode) {
+
    case DDC_IO_DEVI2C:
       snprintf(buf, bufsize, "bus /dev/i2c-%d", dref->busno);
       break;
+
    case DDC_IO_ADL:
       snprintf(buf, bufsize, "adl display %d.%d", dref->iAdapterIndex, dref->iDisplayIndex);
       break;
+
+#ifdef USE_USB
    case USB_IO:
       snprintf(buf, bufsize, "usb %d:%d", dref->usb_bus, dref->usb_device);
       break;
+#endif
+
    }
    return buf;
 }
@@ -363,7 +385,7 @@ Display_Handle * create_adl_display_handle_from_display_ref(Display_Ref * dref) 
    return dh;
 }
 
-
+#ifdef USE_USB
 Display_Handle * create_usb_display_handle_from_display_ref(int fh, Display_Ref * dref) {
    assert(dref->io_mode == USB_IO);
    Display_Handle * dh = calloc(1, sizeof(Display_Handle));
@@ -379,7 +401,7 @@ Display_Handle * create_usb_display_handle_from_display_ref(int fh, Display_Ref 
    // report_display_handle(dh,__func__);
    return dh;
 }
-
+#endif
 
 /* Reports the contents of a Display_Handle
  *
@@ -414,6 +436,7 @@ void report_display_handle(Display_Handle * dh, const char * msg, int depth) {
             rpt_vstring(d1, "iAdapterIndex:       %d", dh->iAdapterIndex);
             rpt_vstring(d1, "iDisplayIndex:       %d", dh->iDisplayIndex);
             break;
+#ifdef USE_USB
          case (USB_IO):
             // rpt_vstring(d1, "ddc_io_mode = USB_IO");
             rpt_vstring(d1, "fh:                  %d", dh->fh);
@@ -421,6 +444,7 @@ void report_display_handle(Display_Handle * dh, const char * msg, int depth) {
             rpt_vstring(d1, "usb_device:          %d", dh->usb_device);
             rpt_vstring(d1, "hiddev_device_name:  %s", dh->hiddev_device_name);
             break;
+#endif
          }
       }
       rpt_vstring(d1, "   vcp_version:         %d.%d", dh->vcp_version.major, dh->vcp_version.minor);
@@ -457,11 +481,13 @@ char * display_handle_repr_r(Display_Handle * dref, char * buf, int bufsz) {
                dref->iAdapterIndex, dref->iDisplayIndex);
       break;
 
+#ifdef USE_USB
    case USB_IO:
       snprintf(buf, bufsz,
                "Display_Handle[usb: %d:%d]",
                dref->usb_bus, dref->usb_device);
       break;
+#endif
    }
 
    return buf;

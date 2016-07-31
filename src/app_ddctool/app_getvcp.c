@@ -21,6 +21,8 @@
  * </endcopyright>
  */
 
+#include <config.h>
+
 #include <assert.h>
 #include <errno.h>
 #include <stdio.h>
@@ -30,8 +32,10 @@
 #include "util/string_util.h"
 #include "util/report_util.h"
 
+#ifdef USE_USB
 #include "usb_util/hiddev_reports.h"
 #include "usb_util/hiddev_util.h"
+#endif
 
 #include "base/core.h"
 #include "base/ddc_errno.h"
@@ -346,7 +350,7 @@ app_read_changes(Display_Handle * dh) {
    }
 }
 
-
+#ifdef USE_USB
 void
 app_read_changes_usb(Display_Handle * dh) {
    bool debug = true;
@@ -384,7 +388,7 @@ app_read_changes_usb(Display_Handle * dh) {
       DBGMSF(debug, "tick");
    }
 }
-
+#endif
 
 
 
@@ -401,9 +405,11 @@ app_read_changes_forever(Display_Handle * dh) {
    printf("Watching for VCP feature changes on display %s\n", display_handle_repr(dh));
    printf("Type ^C to exit...\n");
    while(true) {
+#ifdef USE_USB
       if (dh->io_mode == USB_IO)
          app_read_changes_usb(dh);
       else
+#endif
          app_read_changes(dh);
 
       sleep_millis( 2500);

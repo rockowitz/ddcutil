@@ -137,7 +137,7 @@ Release: 1%{?distro}
 
 # will be 0 or 1:
 %define build_libs @ENABLE_SHARED_LIB_FLAG@
-%define use_libudev @ENABLE_LIBUDEV_FLAG@
+%define use_usb @ENABLE_USB_FLAG@
 
 %if %{build_libs} == 1
 %{echo: =================================> defining _unpackaged_files_terminate_build 0, }
@@ -158,19 +158,21 @@ BuildRequires: gcc  pkgconfig(glib-2.0) i2c-tools libXrandr-devel
 # whether or not a version is included
 # BuildRequires: (libudev-devel or systemd-devel)
 # BuildRequires: libudev-devel >= 1 or systemd-devel >= 200
-# %%if %%{use_libudev} == 1
+%if %{use_usb} == 1
 # FIXME: package for udev depends on OS.  Fedora requires systemd-devel, suse still has udev in libudev-devel
 %if %{defined fedora}
+BuildRequires: libusbx-devel
 BuildRequires: systemd-devel
 %endif
 %if %{defined suse_version}
+BuildRequires: libusb-1_0-devel
 BuildRequires: libudev-devel
 BuildRequires: libz1 zlib-devel 
 # BuildRequires: zlib-devel-static
 # temporarily disable rpmlint after build - will this prevent failure?
 # BuildRequires: -post-build-checks
 %endif
-# %%endif
+%endif
 
 # OBS complains for SuSE:
 # ddctool.x86_64: W: explicit-lib-dependency glib2

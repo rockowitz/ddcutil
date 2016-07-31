@@ -3,6 +3,7 @@
 Debug/
 oldsrc/
 newsrc/
+src_package/
 build-debug/
 .tmp
 temp*

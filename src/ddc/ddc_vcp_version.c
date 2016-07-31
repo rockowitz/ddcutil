@@ -27,13 +27,17 @@
  * </endcopyright>
  */
 
+#include <config.h>
+
 #include <stdbool.h>
 
 #include "base/core.h"
 #include "base/displays.h"
 #include "base/status_code_mgt.h"
 
+#ifdef USE_USB
 #include "usb/usb_vcp.h"
+#endif
 
 #include "ddc/ddc_packet_io.h"
 #include "ddc/ddc_vcp.h"
@@ -94,6 +98,7 @@ Version_Spec get_vcp_version_by_display_handle(Display_Handle * dh) {
          // happens for pre MCCS v2 monitors
          DBGMSF(debug, "Error detecting VCP version using VCP feature 0xdf. gsc=%s\n", gsc_desc(gsc) );
 
+#ifdef USE_USB
          if (dh->io_mode == USB_IO) {
             // DBGMSG("Trying to get VESA version...");
             __s32 vesa_ver =  usb_get_vesa_version(dh->fh);
@@ -104,6 +109,7 @@ Version_Spec get_vcp_version_by_display_handle(Display_Handle * dh) {
                dh->vcp_version.minor = vesa_ver & 0xff;
             }
          }
+#endif
       }
       DBGMSF(debug, "Non-cache lookup returning: %d.%d", dh->vcp_version.major, dh->vcp_version.minor);
    }
