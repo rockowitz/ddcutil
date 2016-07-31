@@ -1048,20 +1048,66 @@ void query_using_i2cdetect() {
 void query_usb_monitors() {
    printf("\nChecking for USB connected monitors...\n");
 
-   puts("");
-   rpt_vstring(1, "Listing /dev/usb...");
-   execute_shell_cmd("ls -l /dev/usb", 2);
-   puts("");
-   rpt_vstring(1, "Listing /dev/bus/usb...");
-   execute_shell_cmd("ls -lR /dev/bus/usb", 2);
-   puts("");
+   Output_Level output_level = get_output_level();
 
+   puts("");
    rpt_vstring(1, "Using lsusb to summarize USB devices...");
    execute_shell_cmd("lsusb|sort", 2);
    puts("");
    rpt_vstring(1, "USB device toplogy...");
    execute_shell_cmd("lsusb -t", 2);
    puts("");
+
+   rpt_vstring(1, "Listing /dev/usb...");
+   execute_shell_cmd("ls -l /dev/usb", 2);
+   puts("");
+   rpt_vstring(1, "Listing /dev/bus/usb...");
+   execute_shell_cmd("ls -lR /dev/bus/usb", 2);
+   puts("");
+   rpt_vstring(1, "Listing /dev/hidraw*...");
+   execute_shell_cmd("ls -l /dev/hidraw*", 2);
+   puts("");
+
+   if (output_level >= OL_VERBOSE) {
+      char * subsys_name = "usbmisc";
+      printf("\nProbing USB HID devices using udev, susbsystem %s...\n", subsys_name);
+      query_udev_subsystem(subsys_name, 1);
+      subsys_name = "hidraw";
+      printf("\nProbing USB HID devices using udev, susbsystem %s...\n", subsys_name);
+      query_udev_subsystem(subsys_name, 1);
+   }
+
+
+   if (output_level >= OL_VERBOSE) {
+
+      // currently an overwhelming amount of information - need to display
+      // only possible HID connected monitors
+      printf("\nProbing possible HID monitors using libusb...\n");
+      probe_libusb(/*possible_monitors_only=*/ true);
+      printf("\nChecking for USB connected monitors on /dev/hidraw* ...\n");
+
+       puts("");
+
+       probe_hidraw(1);
+
+       // ** TEMP **
+       printf("(%s) Testing get_udev_device_info()...\n", __func__);
+       /* Hidraw_Devinfo * */ get_udev_device_info("hidraw", "hidraw3");
+       /* Hidraw_Devinfo * */ get_udev_device_info("usbmisc", "hiddev2");
+
+       // printf("\nProbing using hidapi...\n");
+       // don't use.  wipes out /dev/hidraw  and /dev/usb/hiddev devices it opens
+       // no addional information.   Feature values are returned as with libusb -
+       // leading byte is report number
+       // note that probe_hidapi() tests all possible report numbers, not just those
+       // listed in the report descriptor.  Found some additional reports in the
+       // vendor specific range on the Apple Cinema display
+       // probe_hidapi(1);
+   }
+
+   puts("");
+
+
 
    int rc;
 
@@ -1190,44 +1236,8 @@ void query_sysenv() {
 
 #ifdef USE_USB
    query_usb_monitors();
-
-
-   if (output_level >= OL_VERBOSE) {
-      char * subsys_name = "usbmisc";
-      printf("\nProbing USB HID devices using udev, susbsystem %s...\n", subsys_name);
-      query_udev_subsystem(subsys_name, 1);
-      subsys_name = "hidraw";
-      printf("\nProbing USB HID devices using udev, susbsystem %s...\n", subsys_name);
-      query_udev_subsystem(subsys_name, 1);
-   }
-
-
-   if (output_level >= OL_VERBOSE) {
-
-      // currently an overwhelming amount of information - need to display
-      // only possible HID connected monitors
-      printf("\nProbing possible HID monitors using libusb...\n");
-      probe_libusb(/*possible_monitors_only=*/ true);
-      printf("\nChecking for USB connected monitors on /dev/hidraw* ...\n");
-
-       puts("");
-       rpt_vstring(1, "Listing /dev/hidraw*...");
-       execute_shell_cmd("ls -l /dev/hidraw*", 2);
-       puts("");
-       probe_hidraw(1);
-       /* Hidraw_Devinfo * */ get_udev_device_info("hidraw", "hidraw3");
-       /* Hidraw_Devinfo * */ get_udev_device_info("usbmisc", "hiddev2");
-
-       // printf("\nProbing using hidapi...\n");
-       // don't use.  wipes out /dev/hidraw  and /dev/usb/hiddev devices it opens
-       // no addional information.   Feature values are returned as with libusb -
-       // leading byte is report number
-       // note that probe_hidapi() tests all possible report numbers, not just those
-       // listed in the report descriptor.  Found some additional reports in the
-       // vendor specific range on the Apple Cinema display
-       // probe_hidapi(1);
-   }
 #endif
+
 }
 
 
