@@ -168,6 +168,13 @@ void report_parsed_hid_report(Parsed_Hid_Report * hr, int depth) {
       rpt_vstring(d1, "%-20s: none", "Fields");
 }
 
+void summarize_parsed_hid_report(Parsed_Hid_Report * hr, int depth) {
+   int d1 = depth+1;
+   rpt_vstring(depth, "%-20s:%*s 0x%02x  %d", "Report id",   rpt_indent(1), "", hr->report_id, hr->report_id);
+   rpt_vstring(d1, "%-20s: 0x%02x  %s", "Report type",
+                   hr->report_type, hid_report_type_name(hr->report_type) );
+}
+
 
 void report_hid_collection(Parsed_Hid_Collection * col, int depth) {
    bool show_dummy_root = false;
@@ -911,12 +918,17 @@ Parsed_Hid_Descriptor * parse_report_desc_from_item_list(Hid_Report_Descriptor_I
                Maximum extents are equal to 0 then they will revert to their default
                interpretation.
              */
+#ifdef WRONG
+            // see section 6.2.2.7 for correct algorithm
             hf->physical_minimum = (cur_globals->physical_minimum)
                                        ? cur_globals->physical_minimum
                                        : cur_globals->logical_minimum;
             hf->physical_maximum = (cur_globals->physical_maximum)
                                        ? cur_globals->physical_maximum
                                        : cur_globals->logical_maximum;
+#endif
+            hf->physical_minimum = cur_globals->physical_minimum;
+            hf->physical_maximum = cur_globals->physical_maximum;
 
 #define UNHANDLED(F) \
    if (cur_locals->F) \
@@ -1171,6 +1183,23 @@ void report_vcp_code_report_array(GPtrArray * vcr_array, int depth) {
       report_vcp_code_report( g_ptr_array_index(vcr_array, ndx), d1);
    }
 }
+
+
+void summarize_vcp_code_report(Vcp_Code_Report * vcr, int depth) {
+   int d1 = depth+1;
+   rpt_vstring(depth, "%-20s %d  0x%02x", "vcp_code", vcr->vcp_code, vcr->vcp_code);
+   rpt_vstring(d1,    "%-20s %d  0x%02x", "report_id", vcr->rpt->report_id, vcr->rpt->report_id);
+}
+
+void summarize_vcp_code_report_array(GPtrArray * vcr_array, int depth) {
+   rpt_vstring(depth, "VCP code reports:");
+   int d1 = depth+1;
+   for (int ndx=0; ndx < vcr_array->len; ndx++) {
+      summarize_vcp_code_report( g_ptr_array_index(vcr_array, ndx), d1);
+   }
+}
+
+
 
 
 

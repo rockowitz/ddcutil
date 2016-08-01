@@ -186,7 +186,7 @@ bool directory_exists(const char * fqfn) {
  */
 GPtrArray * get_filenames_by_filter(const char * dirnames[], Dirent_Filter filter_func) {
    // const char *hiddev_paths[] = { "/dev/", "/dev/usb/", NULL };
-   bool debug = true;
+   bool debug = false;
    GPtrArray * devnames =  g_ptr_array_new();
    char path[PATH_MAX];
 

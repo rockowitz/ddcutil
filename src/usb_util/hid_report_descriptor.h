@@ -126,6 +126,7 @@ Parsed_Hid_Descriptor * parse_report_desc_from_item_list(Hid_Report_Descriptor_I
 Parsed_Hid_Descriptor * parse_report_desc(Byte * b, int desclen);
 
 void report_parsed_hid_report(Parsed_Hid_Report * hr, int depth);
+void summarize_parsed_hid_report(Parsed_Hid_Report * hr, int depth);
 void report_parsed_hid_descriptor(Parsed_Hid_Descriptor * pdesc, int depth);
 
 bool is_monitor_by_parsed_report_descriptor(Parsed_Hid_Descriptor * phd);
@@ -148,7 +149,9 @@ typedef struct vcp_code_report {
 } Vcp_Code_Report;
 
 void report_vcp_code_report(Vcp_Code_Report * vcr, int depth);
-void report_vcp_code_report_array(GPtrArray * vcr_array, int depth);
+void report_vcp_code_report_array(GPtrArray * vcr_array,  int depth);
+void summarize_vcp_code_report(Vcp_Code_Report * vcr, int depth);
+void summarize_vcp_code_report_array(GPtrArray * vcr_array,  int depth);
 GPtrArray * get_vcp_code_reports(Parsed_Hid_Descriptor * phd);
 Parsed_Hid_Report * find_edid_report_descriptor(Parsed_Hid_Descriptor * phd);
 

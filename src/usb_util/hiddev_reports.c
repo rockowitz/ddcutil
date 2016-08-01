@@ -690,22 +690,20 @@ void report_all_collections(int fd, int depth) {
  * Returns:    nothing
  */
 void report_hiddev_device_by_fd(int fd, int depth) {
-   const int d0 = depth;
-   const int d1 = d0+1;
-   const int d2 = d0+2;
-   const int d3 = d0+3;
+   const int d1 = depth+1;
+   const int d2 = depth+2;
 
    struct hiddev_devinfo dev_info;
 
    int version;
    int rc = ioctl(fd, HIDIOCGVERSION, &version);
-   rpt_vstring(d1, "hiddev driver version (reported by HIDIOCGVERSION): %d.%d.%d",
+   rpt_vstring(depth, "hiddev driver version (reported by HIDIOCGVERSION): %d.%d.%d",
           version>>16, (version >> 8) & 0xff, version & 0xff);
 
 #ifdef REDUNDANT_INFORMATION
    char * cgname = get_hiddev_name(fd);               // HIDIOCGNAME
    // printf("(%s) get_hiddev_name() returned: |%s|\n", __func__, cgname);
-   rpt_vstring(d1, "device name (reported by HIDIOCGNAME): |%s|", cgname);
+   rpt_vstring(depth, "device name (reported by HIDIOCGNAME): |%s|", cgname);
    free(cgname);
 #endif
 
@@ -714,7 +712,7 @@ void report_hiddev_device_by_fd(int fd, int depth) {
       REPORT_IOCTL_ERROR("HIDIOCGDEVINFO", rc);
       return;
    }
-   report_hiddev_devinfo(&dev_info, /*lookup_names=*/true, d1);
+   report_hiddev_devinfo(&dev_info, /*lookup_names=*/true, depth);
 
    // if (!is_interesting_device(&dev_info)) {
    //       printf("(%s) Uninteresting device\n", __func__);
@@ -724,18 +722,18 @@ void report_hiddev_device_by_fd(int fd, int depth) {
    int string_id_limit = -1;
    if (dev_info.vendor == 0x05ac) {
       // string_id_limit = 3;   // Apple never returns invalid index.
-      rpt_vstring(d1, "Skipping string retrieval for Apple Cinema display due to limitations.");
+      rpt_vstring(depth, "Skipping string retrieval for Apple Cinema display due to limitations.");
       string_id_limit = 0;     // disable entirely - string retrieval painfully slow for Apple Cinema
    }
    puts("");
    if (string_id_limit != 0) {
-      report_hiddev_strings(fd,string_id_limit,d1);    // HIDIOCGSTRING
+      report_hiddev_strings(fd,string_id_limit,depth);    // HIDIOCGSTRING
       puts("");
    }
 
-   rpt_title("Usages for each application associated with the device:", d1);
+   rpt_title("Usages for each application associated with the device:", depth);
    if (dev_info.num_applications == 0) {   // should never occur, but just in case
-      rpt_title("No applications", d3);
+      rpt_title("No applications", d2);
    }
    else {
       for (int ndx = 0; ndx < dev_info.num_applications; ndx++) {
@@ -744,24 +742,24 @@ void report_hiddev_device_by_fd(int fd, int depth) {
          if (usage == -1) {
             continue;
          }
-         rpt_vstring(d2, "Application %d:  Usage code: 0x%08x  %s",
+         rpt_vstring(d1, "Application %d:  Usage code: 0x%08x  %s",
                          ndx, usage, interpret_usage_code(usage));
       }
    }
    puts("");
 
-   rpt_title("Collection information is a superset of application information.", d1);
-   rpt_title("Querying collections returns information on all collections the device has,", d1);
-   rpt_title("not just application collections.", d1);
+   rpt_title("Collection information is a superset of application information.", depth);
+   rpt_title("Querying collections returns information on all collections the device has,", depth);
+   rpt_title("not just application collections.", depth);
    puts("");
-   report_all_collections(fd,d1);
+   report_all_collections(fd,depth);
    puts("");
 
-   rpt_vstring(d1, "Identified as HID monitor: %s", bool_repr(is_hiddev_monitor(fd)) );
+   rpt_vstring(depth, "Identified as HID monitor: %s", bool_repr(is_hiddev_monitor(fd)) );
    // puts("");
 
 
-   report_all_report_descriptors(fd, d1);
+   report_all_report_descriptors(fd, depth);
 
 #ifdef FUTURE
    puts("");

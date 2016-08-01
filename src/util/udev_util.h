@@ -35,6 +35,7 @@ typedef struct udev_usb_devinfo {
    uint16_t devno;
 } Udev_Usb_Devinfo;
 
+void report_hidraw_devinfo(struct udev_usb_devinfo * dinfo, int depth);
 Udev_Usb_Devinfo * get_udev_device_info(char * subsystem, char * simple_devname);
 
 #endif /* UDEV_UTIL_H_ */

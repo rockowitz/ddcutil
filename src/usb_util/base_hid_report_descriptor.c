@@ -411,7 +411,7 @@ void report_hid_report_item(Hid_Report_Descriptor_Item * item, Hid_Report_Item_G
  * Returns:     nothing
  */
 void report_hid_report_item_list(Hid_Report_Descriptor_Item * head, int depth) {
-   bool debug = true;
+   bool debug = false;
    if (debug)
       printf("(%s) Starting.\n", __func__);
    Hid_Report_Item_Globals globals;   // will contain current globals as list is walked

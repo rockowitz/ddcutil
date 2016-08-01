@@ -209,7 +209,7 @@ Udev_Usb_Devinfo * get_udev_device_info(char * subsystem, char * simple_devname)
    // needs to be in caller, may start with /dev/usb
    // if ( str_starts_with(simple_devname, "/dev/"))
    //    simple_devname = simple_devname + 5;
-   bool debug = true;
+   bool debug = false;
    if (debug)
       printf("(%s) Starting. subsystem=|%s|, simple_devname=|%s|\n",
              __func__, subsystem, simple_devname);
@@ -250,9 +250,10 @@ Udev_Usb_Devinfo * get_udev_device_info(char * subsystem, char * simple_devname)
       // printf("path: %s\n", path);
       dev = udev_device_new_from_syspath(udev, path);
 
-      /* udev_device_get_devnode() returns the path to the device node
-         itself in /dev. */
-      printf("Device Node Path: %s\n", udev_device_get_devnode(dev));
+      // udev_device_get_devnode() returns the path to the device node
+      //   itself in /dev, e.g. /dev/hidraw3, /dev/usb/hiddev2
+      if (debug)
+         printf("(%s) Device Node Path: %s\n", __func__, udev_device_get_devnode(dev));
 
       // report_udev_device(dev, 1);
 
@@ -280,19 +281,20 @@ Udev_Usb_Devinfo * get_udev_device_info(char * subsystem, char * simple_devname)
          the USB device. Note that USB strings are Unicode, UCS2
          encoded, but the strings returned from
          udev_device_get_sysattr_value() are UTF-8 encoded. */
-      printf("  VID/PID: %s %s\n",
-              udev_device_get_sysattr_value(dev,"idVendor"),
-              udev_device_get_sysattr_value(dev, "idProduct"));
-      printf("  %s\n  %s\n",
-              udev_device_get_sysattr_value(dev,"manufacturer"),
-              udev_device_get_sysattr_value(dev,"product"));
-      printf("  serial: %s\n",
-               udev_device_get_sysattr_value(dev, "serial"));
-      printf("  busnum: %s\n",
-               udev_device_get_sysattr_value(dev, "busnum"));
-      printf("  devnum: %s\n",
-               udev_device_get_sysattr_value(dev, "devnum"));
-
+      if (debug) {
+         printf("  VID/PID: %s %s\n",
+                 udev_device_get_sysattr_value(dev,"idVendor"),
+                 udev_device_get_sysattr_value(dev, "idProduct"));
+         printf("  %s\n  %s\n",
+                 udev_device_get_sysattr_value(dev,"manufacturer"),
+                 udev_device_get_sysattr_value(dev,"product"));
+         printf("  serial: %s\n",
+                  udev_device_get_sysattr_value(dev, "serial"));
+         printf("  busnum: %s\n",
+                  udev_device_get_sysattr_value(dev, "busnum"));
+         printf("  devnum: %s\n",
+                  udev_device_get_sysattr_value(dev, "devnum"));
+         }
       const char *  sbusnum = udev_device_get_sysattr_value(dev, "busnum");
       const char *  sdevnum = udev_device_get_sysattr_value(dev, "devnum");
 

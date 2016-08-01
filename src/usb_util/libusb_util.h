@@ -58,7 +58,7 @@ struct possible_monitor_device * get_possible_monitors();
 
 void report_possible_monitors(struct possible_monitor_device * mondev_head, int depth);
 
-void probe_libusb(bool possible_monitors_only);
+void probe_libusb(bool possible_monitors_only,int depth);
 
 bool libusb_is_monitor_by_path(ushort busno, ushort devno, ushort intfno);
 

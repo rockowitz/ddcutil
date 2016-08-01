@@ -389,7 +389,7 @@ bool call_read_control_msg(
         uint16_t                      wLength,       // report length
         int *                         pbytes_read)
 {
-   bool debug = true;
+   bool debug = false;
    if (debug)
       printf("(%s) Starting\n", __func__);
 
@@ -1268,7 +1268,7 @@ void report_hid_descriptor(
                   if (vcp_code_report_descriptors && vcp_code_report_descriptors->len > 0) {
                      for (int ndx = 0; ndx < vcp_code_report_descriptors->len; ndx++) {
                         Vcp_Code_Report * vcr = g_ptr_array_index(vcp_code_report_descriptors, ndx);
-                        report_vcp_code_report(vcr, depth+3);
+                        summarize_vcp_code_report(vcr, depth+3);
                         rpt_vstring(depth+2, "Getting report for VCP feature 0x%02x", vcr->vcp_code);
                         uint16_t rptlen = 3;   // TODO
                         Byte buf[1024] = {0};

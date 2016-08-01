@@ -525,10 +525,11 @@ libusb_device ** filter_possible_monitor_devs( libusb_device **devs) {
  *
  * Arguments:
  *    possible_monitors_only   if true, only show detail for possible monitors
+ *    depth                    logical indentation depth
  *
  * Returns:  nothing
  */
-void probe_libusb(bool possible_monitors_only) {
+void probe_libusb(bool possible_monitors_only, int depth) {
    bool debug = false;
    if (debug)
       printf("(%s) Starting\n", __func__);
@@ -559,7 +560,7 @@ void probe_libusb(bool possible_monitors_only) {
       devs_to_show = filter_possible_monitor_devs(devs);
    report_libusb_devices(devs_to_show,
                          false,         // show_hubs
-                         0);            // depth
+                         depth);
 
    libusb_free_device_list(devs, 1 /* unref the devices in the list */);
 
