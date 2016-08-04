@@ -111,15 +111,8 @@ typedef struct parsed_hid_collection {
    GPtrArray *    child_collections;      // array of pointers to Parsed_Hid_Collection
 } Parsed_Hid_Collection;
 
-// #define PARSED_HID_DESCRIPTOR_ANALYZED 0x80
 typedef struct parsed_hid_descriptor {
-   // Byte * raw_bytes;
-   // int    raw_byte_ct;
-   // point to tokenized version
    Parsed_Hid_Collection * root_collection;
-   // Byte   flags;
-   // Parsed_Hid_Report * edid_report;
-   // GPtrArray *         vcp_feature_reports;
 } Parsed_Hid_Descriptor;
 
 Parsed_Hid_Descriptor * parse_report_desc_from_item_list(Hid_Report_Descriptor_Item * items_head);

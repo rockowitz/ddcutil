@@ -857,6 +857,7 @@ char * devid_usage_code_page_name(ushort usage_page_code) {
 // corresponds to names_hutus() in names
 // first and second fields of HUT entry in usb.ids
 char * devid_usage_code_id_name(ushort usage_page_code, ushort usage_simple_id) {
+   static char resultbuf[12] = {0};
    bool debug = false;
    if (debug) {
       printf("(%s) usage_page_code=0x%04x, usage_simple_id=0x%04x\n",
@@ -864,12 +865,19 @@ char * devid_usage_code_id_name(ushort usage_page_code, ushort usage_simple_id) 
    }
    devid_ensure_initialized();
    char * result = NULL;
-   // ushort * args = {usage_page_code, usage_simple_id};
-   Multi_Level_Names names_found = mlm_get_names(hid_usages_table, 2, usage_page_code, usage_simple_id);
-   if (names_found.levels == 2)
-      result = names_found.names[1];
+   if (usage_page_code == 0x81) {
+      snprintf(resultbuf, 10, "ENUM_%d", usage_simple_id);
+      result = resultbuf;
+   }
+   else {
+      // ushort * args = {usage_page_code, usage_simple_id};
+      Multi_Level_Names names_found = mlm_get_names(hid_usages_table, 2, usage_page_code, usage_simple_id);
+      if (names_found.levels == 2)
+         result = names_found.names[1];
+   }
    return result;
 }
+
 
 char * devid_usage_code_name_by_extended_id(uint32_t extended_usage) {
    return devid_usage_code_id_name( extended_usage >> 16, extended_usage & 0xffff );

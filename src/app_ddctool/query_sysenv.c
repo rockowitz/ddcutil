@@ -1042,7 +1042,6 @@ void query_using_i2cdetect() {
 
 void probe_hiddev(int depth) {
    int d1 = depth+1;
-   int d2 = depth+2;
    int rc;
 
    // rpt_vstring(0, "Checking for USB HID devices using hiddev...");
@@ -1054,13 +1053,8 @@ void probe_hiddev(int depth) {
       char * curfn = g_ptr_array_index(hiddev_devices,devndx);
       int fd = usb_open_hiddev_device(curfn, CALLOPT_RDONLY);    // do not emit error msg
       if (fd < 0) {      // fd is -errno
-          rpt_vstring(d1, "Device %s, unable to open: %s", curfn, strerror(errno));
+          rpt_vstring(depth, "Unable to open device %s: %s", curfn, strerror(errno));
       }
-      // int fd = open(curfn, O_RDONLY);
-      // if (fd < 1) {
-      //    // perror("Unable to open device");
-      //    printf("Unable to open %s: %s\n", curfn, strerror(errno));
-      // }
       else {
           char * cgname = get_hiddev_name(fd);
           struct hiddev_devinfo dev_info;
@@ -1078,31 +1072,28 @@ void probe_hiddev(int depth) {
                       dev_info.busnum, dev_info.devnum,
                       dev_info.vendor, dev_info.product & 0xffff,
                       cgname);
-             rpt_vstring(d1, "%s", dev_summary);
+             rpt_vstring(depth, "%s", dev_summary);
              bool b0 = is_hiddev_monitor(fd);
              if (b0)
-                rpt_vstring(d2, "Identifies as a USB HID monitor");
+                rpt_vstring(d1, "Identifies as a USB HID monitor");
              else
-                rpt_vstring(d2, "Not a USB HID monitor");
-
+                rpt_vstring(d1, "Not a USB HID monitor");
 
              if (get_output_level() >= OL_VERBOSE) {
                 if (!b0) {
                    b0 = force_hiddev_monitor(fd);
                    if (b0)
-                      rpt_vstring(d2, "Device vid/pid matches exception list.  Forcing report for device.\n");
+                      rpt_vstring(d1, "Device vid/pid matches exception list.  Forcing report for device.\n");
                 }
                 if (b0) {
-
                    char * simple_devname = strstr(curfn, "hiddev");
                    Udev_Usb_Devinfo * dinfo = get_udev_device_info("usbmisc", simple_devname);
                    // report_hidraw_devinfo(dinfo, d2);
-                   rpt_vstring(d2, "Busno:Devno as reported by get_udev_device_info() for %s: %03d:%03d",
+                   rpt_vstring(d1, "Busno:Devno as reported by get_udev_device_info() for %s: %03d:%03d",
                                    simple_devname, dinfo->busno, dinfo->devno);
                    free(dinfo);
 
-
-                   report_hiddev_device_by_fd(fd, d2);
+                   report_hiddev_device_by_fd(fd, d1);
                 }
              }
           }
@@ -1111,8 +1102,8 @@ void probe_hiddev(int depth) {
       }
    }
 
-    // need to set destroy function
-    g_ptr_array_free(hiddev_devices, true);
+   // need to set destroy function
+   g_ptr_array_free(hiddev_devices, true);
 }
 
 

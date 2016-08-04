@@ -341,21 +341,10 @@ void report_hid_report_item(Hid_Report_Descriptor_Item * item, Hid_Report_Item_G
    {
       // char * name = names_hutus((hut<<16) + item->data);
       char * name = devid_usage_code_id_name(globals->usage_page,item->data);
-      // char buf[16];
-      // if (!name && item->btag == 0x08) {
-      //    sprintf(buf, "EDID %d", item->data);
-      //    name = buf;
-      // }
       if (!name) {
          name = "Unrecognized usage";
       }
       rpt_vstring(d_indent, "%s", name);
-      // printf("%s%s\n", indent, name);
-
-      // printf("%s%s\n", indent,
-      //        names_hutus((hut << 16) + item->data));                                 // B
-      // printf("%s0x%08x\n", indent,
-      //        (hut << 16) + item->data);
    }
       break;
 
@@ -376,20 +365,7 @@ void report_hid_report_item(Hid_Report_Descriptor_Item * item, Hid_Report_Item_G
    case 0x90: /* Output */
    case 0xb0: /* Feature */
    {
-#ifdef OLD
-      printf("%s%s %s %s %s %s\n%s%s %s %s %s\n",
-             indent,
-             item->data & 0x01  ? "Constant"   : "Data",
-             item->data & 0x02  ? "Variable"   : "Array",
-             item->data & 0x04  ? "Relative"   : "Absolute",
-             item->data & 0x08  ? "Wrap"       : "No_Wrap",
-             item->data & 0x10  ? "Non_Linear" : "Linear",
-             indent,
-             item->data & 0x20  ? "No_Preferred_State" : "Preferred_State",
-             item->data & 0x40  ? "Null_State"     : "No_Null_Position",
-             item->data & 0x80  ? "Volatile"       : "Non_Volatile",
-             item->data & 0x100 ? "Buffered Bytes" : "Bitfield");
-#endif
+      // interpret the bits into 2 lines of text
       Ptr_Pair flag_names = item_flag_names(item->data);
       rpt_vstring(d_indent, "%s", flag_names.p1);
       rpt_vstring(d_indent, "%s", flag_names.p2);

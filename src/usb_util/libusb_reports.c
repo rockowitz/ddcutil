@@ -300,7 +300,7 @@ void report_endpoint_descriptor(
    int d1 = depth+1;
    rpt_structure_loc("libusb_endpoint_descriptor", epdesc, depth);
 
-   rpt_vstring(d1, "%-20s 0x%02x  (%s)",
+   rpt_vstring(d1, "%-20s 0x%02x  %s",
                    "bDescriptorType:",
                    epdesc->bDescriptorType,
                    descriptor_title(epdesc->bDescriptorType)
@@ -343,7 +343,7 @@ void report_endpoint_descriptor(
 
    /** Interval for polling endpoint for data transfers. */
    // uint8_t  bInterval;
-   rpt_vstring(d1, "%-20s %d    %s",
+   rpt_vstring(d1, "%-20s %d     %s",
                    "bInterval",
                    epdesc->bInterval,
                    "(data transfer polling interval)"
@@ -462,8 +462,8 @@ bool get_raw_report_descriptor(
    ok = call_read_control_msg(
          dh,                                                                               // dev_handle
          LIBUSB_ENDPOINT_IN | LIBUSB_REQUEST_TYPE_STANDARD | LIBUSB_RECIPIENT_INTERFACE,   // bmRequestType
-         LIBUSB_REQUEST_GET_DESCRIPTOR,             // bRequest
-         LIBUSB_DT_REPORT << 8,             // wValue - the value field for the setup packet
+         LIBUSB_REQUEST_GET_DESCRIPTOR,     // bRequest
+         LIBUSB_DT_REPORT << 8 | 0x0,       // wValue - the value field for the setup packet
          bInterfaceNumber,                  // ?? wIndex - index field for the setup packet  ???
          dbuf,                              // data
          dbufsz,
@@ -535,79 +535,6 @@ bool get_raw_report(
 
    return ok;
 }
-
-
-
-#ifdef OLD
- /* Get bytes of HID Report Descriptor
-  *
-  * Arguments:
-  *   dh
-  *   bInterfaceNumber
-  *   rptlen
-  *   dbuf
-  *   dbufsz
-  *
-  * Returns:        true if success, false if not
-  */
- bool get_raw_report_descriptor_old(
-         struct libusb_device_handle * dh,
-         uint8_t                       bInterfaceNumber,
-         uint16_t                      rptlen,        // report length
-         Byte *                        dbuf,
-         int                           dbufsz,
-         int *                         pbytes_read)
-{
-    bool ok = false;
-    assert(dh);
-#define CTRL_RETRIES  2
-#define CTRL_TIMEOUT (5*1000) /* milliseconds */
-
-    int bytes_read = 0;
-
-    if (rptlen > dbufsz) {
-       printf("report descriptor too long\n");
-       return false;
-    }
-
-    if (libusb_claim_interface(dh, bInterfaceNumber) == 0) {
-       int retries = 4;
-       bytes_read = 0;
-       while (bytes_read < rptlen && retries--) {
-          bytes_read = usb_control_msg(
-                          dh,
-                          LIBUSB_ENDPOINT_IN | LIBUSB_REQUEST_TYPE_STANDARD | LIBUSB_RECIPIENT_INTERFACE,
-                          LIBUSB_REQUEST_GET_DESCRIPTOR,
-                          (LIBUSB_DT_REPORT << 8),
-                          bInterfaceNumber,
-                          dbuf,
-                          rptlen,
-                          CTRL_TIMEOUT);
-       }
-       if (bytes_read > 0) {
-          if (bytes_read < rptlen)
-             printf("          Warning: incomplete report descriptor\n");
-          // dump_report_desc(dbuf, bytes_read);    // old way
-
-          *pbytes_read = bytes_read;
-
-
-          ok = true;
-       }
-       libusb_release_interface(dh, bInterfaceNumber);
-    }
-    else {
-       // recent Linuxes require claim() for RECIP_INTERFACE,
-       // so "rmmod hid" will often make these available.
-       printf("         Report Descriptors: \n"
-              "           ** UNAVAILABLE **\n");
-       ok = false;
-    }
-    return ok;
-}
-
-#endif
-
 
 
  /* Reports struct libusb_interface_descriptor
@@ -733,20 +660,19 @@ void report_libusb_interface_descriptor(
       rpt_hex_dump(inter->extra, inter->extra_length, d1);
 
       if (dh) {
-      if (inter->bInterfaceClass == LIBUSB_CLASS_HID) {  // 3
-         const Byte * cur_extra = inter->extra;
-         int remaining_length = inter->extra_length;
-         while (remaining_length > 0) {
-            HID_Descriptor * cur_hid_desc = (HID_Descriptor *) cur_extra;
-            assert(cur_hid_desc->bLength <= remaining_length);
-            report_hid_descriptor(dh, inter->bInterfaceNumber, cur_hid_desc, d1);
+         if (inter->bInterfaceClass == LIBUSB_CLASS_HID) {  // 3
+            const Byte * cur_extra = inter->extra;
+            int remaining_length = inter->extra_length;
+            while (remaining_length > 0) {
+               HID_Descriptor * cur_hid_desc = (HID_Descriptor *) cur_extra;
+               assert(cur_hid_desc->bLength <= remaining_length);
+               report_hid_descriptor(dh, inter->bInterfaceNumber, cur_hid_desc, d1);
 
-            cur_extra += cur_hid_desc->bLength;
-            remaining_length -= cur_hid_desc->bLength;
+               cur_extra += cur_hid_desc->bLength;
+               remaining_length -= cur_hid_desc->bLength;
+            }
          }
       }
-      }
-
    }
 }
 
@@ -1079,7 +1005,6 @@ void report_libusb_device(
       rpt_title("Is hub device, skipping detail", d1);
    }
    else {
-
       struct libusb_device_handle * dh = NULL;
       int rc = libusb_open(dev, &dh);
       if (rc < 0) {
@@ -1115,8 +1040,6 @@ void report_libusb_device(
 #endif
 
       report_libusb_device_descriptor(&desc, dh, d1);
-
-
 
       struct libusb_config_descriptor *config;
       libusb_get_config_descriptor(dev, 0 /* config_index */, &config);  // returns a pointer
@@ -1165,7 +1088,103 @@ typedef struct hid_descriptor {
 
 
 
+static void report_retrieved_report_descriptor_and_probe(libusb_device_handle* dh, Byte * dbuf, int dbufct, int depth) {
+   // bool debug = true;
 
+   int d1 = depth+1;
+   int d2 = depth+2;
+   // int d3 = depth+3;
+
+   Byte buf[1024] = {0};
+   int bytes_read = 0;
+
+   rpt_vstring(depth, "Displaying report descriptor in HID external form:");
+   Hid_Report_Descriptor_Item* item_list = tokenize_hid_report_descriptor(dbuf, dbufct);
+   report_hid_report_item_list(item_list, d1);
+   Parsed_Hid_Descriptor* phd = parse_report_desc_from_item_list(item_list);
+   if (phd) {
+      puts("");
+      rpt_vstring(depth, "Parsed report descriptor:");
+      report_parsed_hid_descriptor(phd, d1);
+      puts("");
+
+      rpt_vstring(d1, "Finding HID report for EDID...");
+      Parsed_Hid_Report* edid_report_desc = find_edid_report_descriptor(phd);
+      if (edid_report_desc == NULL) {
+         printf("(%s) Unable to find EDID report descriptor\n", __func__);
+      } else {
+         // get EDID report
+         report_parsed_hid_report(edid_report_desc, d1);
+         rpt_vstring(d1, "Get report data for EDID");
+         uint16_t rptlen = 258;
+
+         bytes_read = 0;
+         uint16_t report_id = edid_report_desc->report_id;
+         bool ok = get_raw_report(
+               dh,
+               0,                      // interface number  TODO
+               report_id,
+               rptlen,
+               buf,
+               1024,
+               &bytes_read);
+         if (!ok)
+            printf("(%s) Error reading report\n", __func__);
+         else {
+            rpt_vstring(d2, "Read %d bytes for report %d 0x%02x for EDID", bytes_read,
+                  report_id, report_id);
+            rpt_hex_dump(buf, bytes_read, d2);
+         }
+      }
+
+      // VCP Codes
+      puts("");
+      rpt_vstring(d1, "Finding HID feature reports for VCP features...");
+      GPtrArray* vcp_code_report_descriptors = get_vcp_code_reports(phd);
+      if (vcp_code_report_descriptors && vcp_code_report_descriptors->len > 0) {
+         for (int ndx = 0; ndx < vcp_code_report_descriptors->len; ndx++) {
+            Vcp_Code_Report* vcr = g_ptr_array_index(vcp_code_report_descriptors, ndx);
+            puts("");
+            summarize_vcp_code_report(vcr, d2);
+            rpt_vstring(d2, "Get report data for VCP feature 0x%02x", vcr->vcp_code);
+            uint16_t rptlen = 3;
+            bytes_read = 0;
+            uint16_t report_id = vcr->rpt->report_id;
+            bool ok = get_raw_report(
+                         dh,
+                         0, // interface number  TODO
+                         report_id,
+                         rptlen,
+                         buf,
+                         1024,
+                         &bytes_read);
+            if (!ok)
+               printf("(%s) Error reading report\n", __func__);
+            else {
+               rpt_vstring(d2, "Read %d bytes for report %d 0x%02x for vcp feature 0x%02x",
+                     bytes_read, report_id, report_id, vcr->vcp_code);
+               rpt_hex_dump(buf, bytes_read, d2);
+            }
+         }
+      } else {
+         printf("(%s) Unable to find any report descriptors for VCP feature codes\n", __func__);
+      }
+   }
+   free_hid_report_item_list(item_list);
+}
+
+
+/* Reports a HID_Descriptor
+ *
+ * Arguments:
+ *    dh                libusb device handle
+ *    bInterfaceNumber  interface number
+ *    desc              pointer to HID_Descriptor to report
+ *    depth             logical indentation depth
+ *
+ * Returns:
+ *    nothing
+ */
 void report_hid_descriptor(
         libusb_device_handle * dh,
         uint8_t                bInterfaceNumber,
@@ -1177,12 +1196,11 @@ void report_hid_descriptor(
       printf("(%s) Starting. dh=%p, bInterfaceNumber=%d, desc=%p\n",
             __func__, dh, bInterfaceNumber, desc);
    int d1 = depth+1;
-   int d2 = depth+2;
 
    rpt_structure_loc("HID_Descriptor", desc, depth);
 
    rpt_vstring(d1, "%-20s   %u", "bLength", desc->bLength);
-   rpt_vstring(d1, "%-20s   %u", "bDescriptorType", desc->bDescriptorType);
+   rpt_vstring(d1, "%-20s   %u  %s", "bDescriptorType", desc->bDescriptorType,  descriptor_title(desc->bDescriptorType));
    rpt_vstring(d1, "%-20s   %2x.%02x  (0x%04x)", "bcdHID",
                    desc->bcdHID>>8, desc->bcdHID & 0x0f, desc->bcdHID);
    rpt_vstring(d1, "%-20s   %u", "bCountryCode", desc->bCountryCode);
@@ -1224,107 +1242,7 @@ void report_hid_descriptor(
                printf("(%s) get_raw_report_descriptor() returned %s\n", __func__, bool_repr(ok));
             if (ok) {
                puts("");
-               rpt_vstring(d1, "Displaying report descriptor in HID external form:");
-               Hid_Report_Descriptor_Item * item_list = tokenize_hid_report_descriptor(dbuf, bytes_read);
-               report_hid_report_item_list(item_list,d2);
-               Parsed_Hid_Descriptor * phd =  parse_report_desc_from_item_list(item_list);
-               if (phd) {
-                  puts("");
-                  rpt_vstring(d1, "Parsed report descriptor:");
-                  report_parsed_hid_descriptor(phd, d2);
-
-                  Parsed_Hid_Report * edid_report_desc = find_edid_report_descriptor(phd);
-                  if (edid_report_desc == NULL) {
-                     printf("(%s) Unable to find EDID report descriptor\n", __func__);
-                  }
-                  else {
-                     // get EDID report
-
-                     report_parsed_hid_report(edid_report_desc, depth+3);
-                     rpt_vstring(depth+2, "Getting report for EDID");
-                     uint16_t rptlen = 258;   // TODO
-                     Byte buf[1024] = {0};
-                     int bytes_read = 0;
-                     uint16_t report_id = edid_report_desc->report_id;
-                     bool ok = get_raw_report(
-                                       dh,
-                                       0,            // interface number  TODO
-                                       report_id,
-                                       rptlen,
-                                       buf,
-                                       1024,
-                                       &bytes_read);
-                     if (!ok)
-                        printf("(%s) Error reading report\n", __func__);
-                     else {
-                        rpt_vstring(depth+3, "Read %d bytes for report %d 0x%02x for EDID",
-                                                   bytes_read,       report_id, report_id);
-                        rpt_hex_dump(buf, bytes_read, depth+3);
-
-                                             }
-                  }
-
-                  GPtrArray * vcp_code_report_descriptors = get_vcp_code_reports(phd);
-                  if (vcp_code_report_descriptors && vcp_code_report_descriptors->len > 0) {
-                     for (int ndx = 0; ndx < vcp_code_report_descriptors->len; ndx++) {
-                        Vcp_Code_Report * vcr = g_ptr_array_index(vcp_code_report_descriptors, ndx);
-                        summarize_vcp_code_report(vcr, depth+3);
-                        rpt_vstring(depth+2, "Getting report for VCP feature 0x%02x", vcr->vcp_code);
-                        uint16_t rptlen = 3;   // TODO
-                        Byte buf[1024] = {0};
-                        int bytes_read = 0;
-                        uint16_t report_id = vcr->rpt->report_id;
-                        bool ok = get_raw_report(
-                              dh,
-                              0,            // interface number  TODO
-                              report_id,
-                              rptlen,
-                              buf,
-                              1024,
-                              &bytes_read);
-                        if (!ok)
-                           printf("(%s) Error reading report\n", __func__);
-                        else {
-                           rpt_vstring(depth+3, "Read %d bytes for report %d 0x%02x for vcp feature 0x%02x",
-                                                 bytes_read, report_id, report_id, vcr->vcp_code);
-                           rpt_hex_dump(buf, bytes_read, depth+3);
-
-                        }
-
-
-                     }
-                  }
-                  else {
-                     printf("(%s) Unable to find any report descriptors for VCP feature codes\n", __func__);
-                  }
-
-#ifdef ELSEWHERE
-
-                  typedef struct vcp_code_report {
-                     uint8_t vcp_code;
-                     Parsed_Hid_Report * rpt;
-                  } Vcp_Code_Report;
-
-
-      // get edid report id, report it
-
-      // get feature report ids, report them
-
-      bool get_raw_report(
-            struct libusb_device_handle * dh,
-            uint8_t                       bInterfaceNumber,
-            uint8_t                      report_id,
-            uint16_t                      rptlen,        // report length
-            Byte *                        dbuf,
-            int                           dbufsz,
-            int *                         pbytes_read);
-#endif
-
-
-
-
-               }
-               free_hid_report_item_list(item_list);
+               report_retrieved_report_descriptor_and_probe(dh, dbuf, bytes_read, d1);
             }
          }
          break;

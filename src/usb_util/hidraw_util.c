@@ -27,6 +27,7 @@
 #include <config.h>
 
 #include <dirent.h>
+#include <errno.h>
 #include <fcntl.h>
 #include <glib.h>
 #include <libudev.h>
@@ -124,42 +125,45 @@ void probe_hidraw_device(char * devname, bool show_monitors_only,  int depth) {
    fd = open(devname, O_RDWR|O_NONBLOCK);
 
    if (fd < 0) {
-      perror("Unable to open device");
-      return;
+      rpt_vstring(depth, "Unable to open device %s: %s", devname, strerror(errno));
+      goto bye;
    }
 
    /* Get Raw Name */
    res = ioctl(fd, HIDIOCGRAWNAME(256), buf);
-   if (res < 0)
+   if (res < 0) {
       perror("HIDIOCGRAWNAME");
-   else
-      rpt_vstring(d1, "Raw Name: %s", buf);
+      goto bye;
+   }
+   rpt_vstring(d1, "Raw Name: %s", buf);
 
    /* Get Physical Location */
    res = ioctl(fd, HIDIOCGRAWPHYS(256), buf);
-   if (res < 0)
+   if (res < 0) {
       perror("HIDIOCGRAWPHYS");
-   else
-      rpt_vstring(d1, "Raw Phys: %s", buf);
+      goto bye;
+   }
+   rpt_vstring(d1, "Raw Phys: %s", buf);
 
    /* Get Raw Info */
    res = ioctl(fd, HIDIOCGRAWINFO, &info);
    if (res < 0) {
       perror("HIDIOCGRAWINFO");
-   } else {
-      rpt_vstring(d1, "Raw Info:");
-      rpt_vstring(d2, "bustype: %d (%s)", info.bustype, bus_str(info.bustype));
-      rpt_vstring(d2, "vendor:  0x%04hx", info.vendor);
-      rpt_vstring(d2, "product: 0x%04hx", info.product);
+      goto bye;
    }
+   rpt_vstring(d1, "Raw Info:");
+   rpt_vstring(d2, "bustype: %d (%s)", info.bustype, bus_str(info.bustype));
+   rpt_vstring(d2, "vendor:  0x%04hx", info.vendor);
+   rpt_vstring(d2, "product: 0x%04hx", info.product);
 
+
+   // Get bus and device numbers using udev since hidraw doesn't report it
    char * simple_devname = strstr(devname, "hidraw");
    Udev_Usb_Devinfo * dinfo = get_udev_device_info("hidraw", simple_devname);
    // report_hidraw_devinfo(dinfo, d2);
    rpt_vstring(d1, "Busno:Devno as reported by get_udev_device_info() for %s: %03d:%03d",
                    simple_devname, dinfo->busno, dinfo->devno);
    free(dinfo);
-
 
    memset(&rpt_desc, 0x0, sizeof(rpt_desc));
    memset(&info,     0x0, sizeof(info));
@@ -168,12 +172,12 @@ void probe_hidraw_device(char * devname, bool show_monitors_only,  int depth) {
    /* Get Report Descriptor Size */
    // why is this necessary? buffer in rpt_desc is already HID_MAX_DESCRIPTOR_SIZE?
    res = ioctl(fd, HIDIOCGRDESCSIZE, &desc_size);
-   if (res < 0)
+   if (res < 0) {
       perror("HIDIOCGRDESCSIZE");
-   else {
-      if (debug)
-         rpt_vstring(d1, "Report Descriptor Size: %d", desc_size);
+      goto bye;
    }
+   if (debug)
+      rpt_vstring(d1, "Report Descriptor Size: %d", desc_size);
    bool is_monitor = false;
 
    /* Get Report Descriptor */
@@ -181,97 +185,92 @@ void probe_hidraw_device(char * devname, bool show_monitors_only,  int depth) {
    res = ioctl(fd, HIDIOCGRDESC, &rpt_desc);
    if (res < 0) {
       perror("HIDIOCGRDESC");
-   } else {
-      if (debug) {
-         rpt_vstring(d1, "Report Descriptor:");
-         // for (i = 0; i < rpt_desc.size; i++)
-         //    printf("%hhx ", rpt_desc.value[i]);
-         // puts("\n");
-         rpt_hex_dump(rpt_desc.value, rpt_desc.size, d2);
+      goto bye;
+   }
+   if (debug) {
+      rpt_vstring(d1, "Report Descriptor:");
+      // for (i = 0; i < rpt_desc.size; i++)
+      //    printf("%hhx ", rpt_desc.value[i]);
+      // puts("\n");
+      rpt_hex_dump(rpt_desc.value, rpt_desc.size, d2);
+   }
+   Hid_Report_Descriptor_Item * report_item_list = tokenize_hid_report_descriptor(rpt_desc.value, rpt_desc.size) ;
+   // report_hid_report_item_list(report_item_list, d2);
+
+   Hid_Report_Descriptor_Item * cur_item = report_item_list;
+
+   // Look at the first Usage Page item, is it USB Monitor?
+   while (cur_item) {
+      if (cur_item->btag == 0x04) {
+         if (cur_item->data == 0x80)
+            is_monitor = true;
+         break;
       }
-      Hid_Report_Descriptor_Item * report_item_list = tokenize_hid_report_descriptor(rpt_desc.value, rpt_desc.size) ;
-      // report_hid_report_item_list(report_item_list, d2);
+      cur_item = cur_item->next;
+   }
+   rpt_vstring(d1, "%s a USB connected monitor",
+                    (is_monitor) ? "Is" : "Not");
 
-      Hid_Report_Descriptor_Item * cur_item = report_item_list;
-
-      // Look at the first Usage Page item, is it USB Monitor?
-      while (cur_item) {
-         if (cur_item->btag == 0x04) {
-            if (cur_item->data == 0x80)
-               is_monitor = true;
-            break;
-         }
-         cur_item = cur_item->next;
-      }
-      rpt_vstring(d1, "%s a USB connected monitor",
-                       (is_monitor) ? "Is" : "Not");
-
-      Parsed_Hid_Descriptor * phd = NULL;
-      if (is_monitor || !show_monitors_only) {
-         rpt_vstring(d1,"Tokenized report descriptor:");
-         report_hid_report_item_list(report_item_list, d2);
-      }
-
-      if (is_monitor) {
-         phd =  parse_report_desc(rpt_desc.value, rpt_desc.size);
-         Parsed_Hid_Report * edid_report = find_edid_report_descriptor(phd);
-         if (edid_report) {
-            rpt_title("Report descriptor for EDID:", d1);
-            summarize_parsed_hid_report(edid_report, d2);
-         }
-         else
-            rpt_title("No EDID report descriptor found!!!", d1);
-
-
-         GPtrArray * feature_reports = get_vcp_code_reports(phd);
-         if (feature_reports && feature_reports->len > 0) {
-            rpt_title("Report descriptors for VCP features:", d1);
-            summarize_vcp_code_report_array(feature_reports, d2);
-         }
-         else
-            rpt_title("No VCP Feature report descriptors found!!!", d1);
-
-         GPtrArray * reports = select_parsed_report_descriptors(phd, HIDF_REPORT_TYPE_FEATURE);
-         for (int ndx = 0; ndx < reports->len; ndx++) {
-            Parsed_Hid_Report * a_report = g_ptr_array_index(reports, ndx);
-            puts("");
-            rpt_vstring(d1, "Feature report id: %3d  0x%02x", a_report->report_id, a_report->report_id);
-
-            rpt_vstring(d1, "Parsed report description:");
-            report_parsed_hid_report(a_report, d2);
-
-            /* Get Feature */
-            buf[0] = a_report->report_id; /* Report Number */
-            res = ioctl(fd, HIDIOCGFEATURE(1024), buf);
-            if (res < 0) {
-               perror("HIDIOCGFEATURE");
-            } else {
-               // printf("ioctl HIDIOCGFEATURE returned: %d\n", res);
-               rpt_vstring(d1,"Report data:");
-               rpt_vstring(d1, "Per hidraw.h: The first byte of SFEATURE and GFEATURE is the report number");
-
-               // for (i = 0; i < res; i++)
-               //    printf("%hhx ", buf[i]);
-               // puts("\n");
-               rpt_hex_dump(buf, res, d2);
-            }
-
-         }
-      }
-
-
-      free_hid_report_item_list(report_item_list);
+   Parsed_Hid_Descriptor * phd = NULL;
+   if (is_monitor || !show_monitors_only) {
+      rpt_vstring(d1,"Tokenized report descriptor:");
+      report_hid_report_item_list(report_item_list, d2);
    }
 
-   close(fd);
+   if (is_monitor) {
+      phd =  parse_report_desc(rpt_desc.value, rpt_desc.size);
+      Parsed_Hid_Report * edid_report = find_edid_report_descriptor(phd);
+      if (edid_report) {
+         rpt_title("Report descriptor for EDID:", d1);
+         summarize_parsed_hid_report(edid_report, d2);
+      }
+      else
+         rpt_title("No EDID report descriptor found!!!", d1);
 
+      GPtrArray * feature_reports = get_vcp_code_reports(phd);
+      if (feature_reports && feature_reports->len > 0) {
+         rpt_title("Report descriptors for VCP features:", d1);
+         summarize_vcp_code_report_array(feature_reports, d2);
+      }
+      else
+         rpt_title("No VCP Feature report descriptors found!!!", d1);
+
+      GPtrArray * reports = select_parsed_report_descriptors(phd, HIDF_REPORT_TYPE_FEATURE);
+      for (int ndx = 0; ndx < reports->len; ndx++) {
+         Parsed_Hid_Report * a_report = g_ptr_array_index(reports, ndx);
+         puts("");
+         rpt_vstring(d1, "Feature report id: %3d  0x%02x", a_report->report_id, a_report->report_id);
+
+         rpt_vstring(d1, "Parsed report description:");
+         report_parsed_hid_report(a_report, d2);
+
+         /* Get Feature */
+         buf[0] = a_report->report_id; /* Report Number */
+         res = ioctl(fd, HIDIOCGFEATURE(1024), buf);
+         if (res < 0) {
+            perror("HIDIOCGFEATURE");
+         } else {
+            // printf("ioctl HIDIOCGFEATURE returned: %d\n", res);
+            rpt_vstring(d1,"Report data:");
+            rpt_vstring(d1, "Per hidraw.h: The first byte of SFEATURE and GFEATURE is the report number");
+            rpt_hex_dump(buf, res, d2);
+         }
+      }
+   }
+
+   free_hid_report_item_list(report_item_list);
+
+
+bye:
+   if (fd > 0)
+      close(fd);
 }
 
 
 /* Indicates if a hidraw device represents a monitor.
  *
  * Arguments:
- *    devname      devices name, e.g. /dev/hidraw3
+ *    devname      device name, e.g. /dev/hidraw3
  *
  * Returns:        true/false
  *
@@ -284,7 +283,6 @@ bool hidraw_is_monitor_device(char * devname) {
    bool is_monitor = false;
 
    int fd;
-   // int i;
    int res, desc_size = 0;
    Byte buf[1024];     // TODO: maximum report size
    struct hidraw_report_descriptor rpt_desc;
@@ -321,13 +319,6 @@ bool hidraw_is_monitor_device(char * devname) {
          tokenize_hid_report_descriptor(rpt_desc.value, rpt_desc.size) ;
    // report_hid_report_item_list(report_item_list, 2);
    is_monitor = is_monitor_by_tokenized_report_descriptor(report_item_list);
-
-   if (is_monitor) {   // for testing purposes
-            Udev_Usb_Devinfo * devinfo = get_udev_device_info("hidraw", devname);
-            printf("(%s) USB busno:devno = %d:%d\n", __func__, devinfo->busno, devinfo->devno);
-            free(devinfo);
-   }
-
    free_hid_report_item_list(report_item_list);
 
 bye:
@@ -339,14 +330,22 @@ bye:
 }
 
 
-
+/* Probes hidraw devices.
+ *
+ * Arguments:
+ *   show_monitors_only   show detailed information only for monitors
+ *   depth                logical indentation depth
+ *
+ * Returns: nothing
+ */
 void probe_hidraw(bool show_monitors_only, int depth) {
    GPtrArray * hidraw_names = get_hidraw_device_names_using_filesys();
+   rpt_vstring(depth, "Found %d USB HID devices.", hidraw_names->len);
 
    for (int ndx = 0; ndx < hidraw_names->len; ndx++) {
       char * devname = g_ptr_array_index(hidraw_names, ndx);
       // printf("(%s) Probing %s...\n", __func__, devname);
-      probe_hidraw_device(devname, true,  depth+1);
+      probe_hidraw_device(devname, true,  depth);
    }
 }
 
