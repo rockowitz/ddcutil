@@ -1087,11 +1087,16 @@ void probe_hiddev(int depth) {
                 }
                 if (b0) {
                    char * simple_devname = strstr(curfn, "hiddev");
-                   Udev_Usb_Devinfo * dinfo = get_udev_device_info("usbmisc", simple_devname);
-                   // report_hidraw_devinfo(dinfo, d2);
-                   rpt_vstring(d1, "Busno:Devno as reported by get_udev_device_info() for %s: %03d:%03d",
-                                   simple_devname, dinfo->busno, dinfo->devno);
-                   free(dinfo);
+                   Udev_Usb_Devinfo * dinfo = get_udev_usb_devinfo("usbmisc", simple_devname);
+                   if (dinfo) {
+                      // report_hidraw_devinfo(dinfo, d2);
+                      rpt_vstring(
+                         d1,"Busno:Devno as reported by get_udev_usb_devinfo() for %s: %03d:%03d",
+                            simple_devname, dinfo->busno, dinfo->devno);
+                      free(dinfo);
+                   }
+                   else
+                      rpt_vstring(d1, "Error getting busno:devno using get_udev_usb_devinfo()");
 
                    report_hiddev_device_by_fd(fd, d1);
                 }
@@ -1143,10 +1148,10 @@ void query_usb_monitors() {
    if (output_level >= OL_VERBOSE) {
       char * subsys_name = "usbmisc";
       printf("\nProbing USB HID devices using udev, susbsystem %s...\n", subsys_name);
-      query_udev_subsystem(subsys_name, 1);
+      probe_udev_subsystem(subsys_name, 1);
       subsys_name = "hidraw";
       printf("\nProbing USB HID devices using udev, susbsystem %s...\n", subsys_name);
-      query_udev_subsystem(subsys_name, 1);
+      probe_udev_subsystem(subsys_name, 1);
    }
 
    if (output_level >= OL_VERBOSE) {

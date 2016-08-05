@@ -159,11 +159,15 @@ void probe_hidraw_device(char * devname, bool show_monitors_only,  int depth) {
 
    // Get bus and device numbers using udev since hidraw doesn't report it
    char * simple_devname = strstr(devname, "hidraw");
-   Udev_Usb_Devinfo * dinfo = get_udev_device_info("hidraw", simple_devname);
-   // report_hidraw_devinfo(dinfo, d2);
-   rpt_vstring(d1, "Busno:Devno as reported by get_udev_device_info() for %s: %03d:%03d",
-                   simple_devname, dinfo->busno, dinfo->devno);
-   free(dinfo);
+   Udev_Usb_Devinfo * dinfo = get_udev_usb_devinfo("hidraw", simple_devname);
+   if (dinfo) {
+      rpt_vstring(d1, "Busno:Devno as reported by get_udev_usb_devinfo() for %s: %03d:%03d",
+                      simple_devname, dinfo->busno, dinfo->devno);
+      free(dinfo);
+   }
+   else
+      rpt_vstring(d1, "Error getting busno:devno using get_udev_usb_devinfo()");
+
 
    memset(&rpt_desc, 0x0, sizeof(rpt_desc));
    memset(&info,     0x0, sizeof(info));

@@ -48,7 +48,6 @@
 //    NC, uses both high and low bytes
 
 
-
 typedef ushort Version_Feature_Flags;
 // Bits in Version_Feature_Flags:
 
@@ -85,19 +84,6 @@ typedef ushort Version_Feature_Flags;
 // MCCS specification group to which feature belongs
 // Note a function can appear in multiple groups, e.g. in different spec versions
 // Should probably have been made version specific, but it's not worth redoing
-#ifdef OLD
-#define VCP_SPEC_PRESET   0x80     // Section 8.1 Preset Operations
-#define VCP_SPEC_IMAGE    0x40     // Section 8.2 Image Adjustment
-#define VCP_SPEC_CONTROL  0x20     // Section 8.3 Display Control
-#define VCP_SPEC_GEOMETRY 0x10     // Section 8.4 Geometry
-#define VCP_SPEC_MISC     0x08     // Section 8.5 Miscellaneous Functions
-#define VCP_SPEC_AUDIO    0x04     // Section 8.6 Audio Functions
-#define VCP_SPEC_DPVL     0x02     // Section 8.7 DPVL Functions
-#define VCP_SPEC_MFG      0x01     // Section 8.8 Manufacturer Specific
-#define VCP_SPEC_WINDOW   0x8000   // Table 5 in MCCS 2.0 spec
-#endif
-
-// new way:
 typedef enum {
    VCP_SPEC_PRESET   = 0x80     ,  // Section 8.1 Preset Operations
    VCP_SPEC_IMAGE    = 0x40     ,  // Section 8.2 Image Adjustment
@@ -109,7 +95,6 @@ typedef enum {
    VCP_SPEC_MFG      = 0x01     ,  // Section 8.8 Manufacturer Specific
    VCP_SPEC_WINDOW   = 0x8000   ,  // Table 5 in MCCS 2.0 spec
 } Vcp_Spec_Ids;
-
 
 
 // set these bits in a flag to indicate which MCCS versions the feature is valid for

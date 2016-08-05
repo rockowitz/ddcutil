@@ -34,6 +34,14 @@
 #include "util/udev_util.h"
 
 
+/* Report on a single udev device
+ *
+ * Arguments:
+ *   dev           pointer to struct_udev_device to report
+ *   depth         logical indentation depth
+ *
+ * Returns:        nothing
+ */
 void report_udev_device(struct udev_device * dev, int depth) {
    int d1 = depth+1;
    int d2 = depth+2;
@@ -104,8 +112,17 @@ void report_udev_device(struct udev_device * dev, int depth) {
 }
 
 
-
-void query_udev_subsystem(char * subsystem, int depth) {
+/* Reports on all devices in a udev subsystem
+ *
+ * Arguments:
+ *   subsystem      subsystem name, e.g. "usbmisc"
+ *   depth          logical indentation depth
+ *
+ * Returns:         nothing
+ *
+ * Adapted from USB sample code
+ */
+void probe_udev_subsystem(char * subsystem, int depth) {
    int d1 = depth+1;
 
    struct udev *udev;
@@ -197,7 +214,7 @@ void query_udev_subsystem(char * subsystem, int depth) {
 
 
 
-void report_hidraw_devinfo(struct udev_usb_devinfo * dinfo, int depth) {
+void report_udev_usb_devinfo(struct udev_usb_devinfo * dinfo, int depth) {
    rpt_structure_loc("Hidraw_Devinfo", dinfo, depth);
    int d1 = depth+1;
    rpt_vstring(d1, "%-20s %d 0x%04x", "busno", dinfo->busno, dinfo->busno);
@@ -205,27 +222,34 @@ void report_hidraw_devinfo(struct udev_usb_devinfo * dinfo, int depth) {
 }
 
 
-Udev_Usb_Devinfo * get_udev_device_info(char * subsystem, char * simple_devname) {
-   // needs to be in caller, may start with /dev/usb
-   // if ( str_starts_with(simple_devname, "/dev/"))
-   //    simple_devname = simple_devname + 5;
+/* Use udev to get the bus and device numbers for a USB device
+ *
+ * Arguments:
+ *    subsystem        device subsystem,   e.g. "usbmisc"
+ *    simple_devname   simple device name, e.g. "hiddev"
+ *
+ * Returns:            pointer to Udev_Usb_Devinfo containing result
+ *                     NULL if not found
+ */
+Udev_Usb_Devinfo * get_udev_usb_devinfo(char * subsystem, char * simple_devname) {
+   assert(subsystem);
+   assert(simple_devname);
+
    bool debug = false;
    if (debug)
       printf("(%s) Starting. subsystem=|%s|, simple_devname=|%s|\n",
              __func__, subsystem, simple_devname);
 
-   // char * subsystem = "hidraw";
    struct udev *udev;
    struct udev_enumerate *enumerate;
-   struct udev_list_entry *devices, *dev_list_entry;
+   struct udev_list_entry *dev_list_entry;
    struct udev_device *dev;
 
-   Udev_Usb_Devinfo * result = calloc(1, sizeof(Udev_Usb_Devinfo));
+   Udev_Usb_Devinfo * result = NULL;
 
-   /* Create the udev object */
-   udev = udev_new();
-   if (!udev) {
-      printf("Can't create udev\n");
+   udev = udev_new();    // create udev context object
+   if (!udev) {                   // should never happen
+      printf("(%s) Can't create udev\n", __func__);
       goto bye;
    }
 
@@ -234,19 +258,14 @@ Udev_Usb_Devinfo * get_udev_device_info(char * subsystem, char * simple_devname)
    udev_enumerate_add_match_subsystem(enumerate, subsystem);
    udev_enumerate_add_match_sysname(enumerate, simple_devname);
    udev_enumerate_scan_devices(enumerate);
-   devices = udev_enumerate_get_list_entry(enumerate);
-   /* For each item enumerated, print out its information.
-      udev_list_entry_foreach is a macro which expands to
-      a loop. The loop will be executed for each member in
-      devices, setting dev_list_entry to a list entry
-      which contains the device's path in /sys. */
-   udev_list_entry_foreach(dev_list_entry, devices) {
-      // printf("\n***One Device ***\n");
-      const char *path;
+   // Given the specificity of our search, list should contain exactly 0 or 1 entries
+   dev_list_entry = udev_enumerate_get_list_entry(enumerate);  // get first entry of list
+   if (dev_list_entry) {
+      assert( udev_list_entry_get_next(dev_list_entry) == NULL);   // should be 0 or 1 devices
 
       /* Get the filename of the /sys entry for the device
          and create a udev_device object (dev) representing it */
-      path = udev_list_entry_get_name(dev_list_entry);
+      const char * path = udev_list_entry_get_name(dev_list_entry);
       // printf("path: %s\n", path);
       dev = udev_device_new_from_syspath(udev, path);
 
@@ -268,45 +287,46 @@ Udev_Usb_Devinfo * get_udev_device_info(char * subsystem, char * simple_devname)
              "usb",
              "usb_device");
       if (!dev) {
-         printf("Unable to find parent usb device.");
-         goto bye;
+         printf("(%s) Unable to find parent USB device for subsystem %s, device %s.",
+                __func__, subsystem, simple_devname);
       }
+      else {
+         // printf("Parent device: \n");
 
-      // printf("Parent device: \n");
-
-      /* From here, we can call get_sysattr_value() for each file
-         in the device's /sys entry. The strings passed into these
-         functions (idProduct, idVendor, serial, etc.) correspond
-         directly to the files in the directory which represents
-         the USB device. Note that USB strings are Unicode, UCS2
-         encoded, but the strings returned from
-         udev_device_get_sysattr_value() are UTF-8 encoded. */
-      if (debug) {
-         printf("  VID/PID: %s %s\n",
-                 udev_device_get_sysattr_value(dev,"idVendor"),
-                 udev_device_get_sysattr_value(dev, "idProduct"));
-         printf("  %s\n  %s\n",
-                 udev_device_get_sysattr_value(dev,"manufacturer"),
-                 udev_device_get_sysattr_value(dev,"product"));
-         printf("  serial: %s\n",
-                  udev_device_get_sysattr_value(dev, "serial"));
-         printf("  busnum: %s\n",
-                  udev_device_get_sysattr_value(dev, "busnum"));
-         printf("  devnum: %s\n",
-                  udev_device_get_sysattr_value(dev, "devnum"));
+         /* From here, we can call get_sysattr_value() for each file
+            in the device's /sys entry. The strings passed into these
+            functions (idProduct, idVendor, serial, etc.) correspond
+            directly to the files in the directory which represents
+            the USB device. Note that USB strings are Unicode, UCS2
+            encoded, but the strings returned from
+            udev_device_get_sysattr_value() are UTF-8 encoded. */
+         if (debug) {
+            printf("  VID/PID: %s %s\n",
+                    udev_device_get_sysattr_value(dev,"idVendor"),
+                    udev_device_get_sysattr_value(dev, "idProduct"));
+            printf("  %s\n  %s\n",
+                    udev_device_get_sysattr_value(dev,"manufacturer"),
+                    udev_device_get_sysattr_value(dev,"product"));
+            printf("  serial: %s\n",
+                     udev_device_get_sysattr_value(dev, "serial"));
+            printf("  busnum: %s\n",
+                     udev_device_get_sysattr_value(dev, "busnum"));
+            printf("  devnum: %s\n",
+                     udev_device_get_sysattr_value(dev, "devnum"));
          }
-      const char *  sbusnum = udev_device_get_sysattr_value(dev, "busnum");
-      const char *  sdevnum = udev_device_get_sysattr_value(dev, "devnum");
 
-      //are these decimal or hex numbers?
+         const char *  sbusnum = udev_device_get_sysattr_value(dev, "busnum");
+         const char *  sdevnum = udev_device_get_sysattr_value(dev, "devnum");
 
-      result->busno = atoi(sbusnum);
-      result->devno = atoi(sdevnum);
+         result = calloc(1, sizeof(Udev_Usb_Devinfo));
+         //are these decimal or hex numbers?
+         result->busno = atoi(sbusnum);
+         result->devno = atoi(sdevnum);
 
+         // report_udev_device(dev, 1);
 
-      // report_udev_device(dev, 1);
-
-      udev_device_unref(dev);
+         udev_device_unref(dev);
+      }
    }
    /* Free the enumerator object */
    udev_enumerate_unref(enumerate);
@@ -317,7 +337,7 @@ bye:
    if (debug) {
       printf("(%s) Returning: %p\n", __func__, result);
       if (result)
-         report_hidraw_devinfo(result, 1);
+         report_udev_usb_devinfo(result, 1);
    }
 
    return result;

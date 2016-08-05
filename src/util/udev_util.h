@@ -28,14 +28,14 @@
 #include <stdint.h>
 
 void report_udev_device(struct udev_device * dev, int depth);
-void query_udev_subsystem(char * udev_class, int depth);
+void probe_udev_subsystem(char * udev_class, int depth);
 
 typedef struct udev_usb_devinfo {
    uint16_t busno;
    uint16_t devno;
 } Udev_Usb_Devinfo;
 
-void report_hidraw_devinfo(struct udev_usb_devinfo * dinfo, int depth);
-Udev_Usb_Devinfo * get_udev_device_info(char * subsystem, char * simple_devname);
+void report_udev_usb_devinfo(struct udev_usb_devinfo * dinfo, int depth);
+Udev_Usb_Devinfo * get_udev_usb_devinfo(char * subsystem, char * simple_devname);
 
 #endif /* UDEV_UTIL_H_ */
