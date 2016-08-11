@@ -127,7 +127,7 @@ struct driver_name_node {
 char * read_sysfs_attr(char * dirname, char * attrname, bool verbose) {
    char fn[MAX_PATH];
    sprintf(fn, "%s/%s", dirname, attrname);
-   return read_one_line_file(fn, verbose);
+   return file_get_first_line(fn, verbose);
 }
 
 
@@ -311,7 +311,7 @@ bool found_driver(struct driver_name_node * driver_list, char * driver_name) {
 void query_base_env() {
    printf("\nSystem information (uname):\n");
    // uname response:
-   char * version_line = read_one_line_file("/proc/version", true /* verbose */);
+   char * version_line = file_get_first_line("/proc/version", true /* verbose */);
    if (version_line)
       printf("   %s\n", version_line);
    else
@@ -1044,15 +1044,10 @@ bool is_hid_monitor_rdesc(const char * fn) {
    bool debug = false;
    bool result = false;
 
-   GPtrArray * lines = g_ptr_array_new();
-
-   int linect = file_getlines(fn, lines, /*verbose=*/ true);
-   if (linect > 0) {
-      DBGMSF(debug, "First line: %s", g_ptr_array_index(lines, 0));
-      if (str_starts_with( g_ptr_array_index(lines, 0), "05 80"))
-         result = true;
-   }
-   g_ptr_array_free(lines, true);
+   char * first_line = file_get_first_line(fn, /*verbose=*/ true);
+   DBGMSF(debug, "First line: %s", first_line);
+   if ( first_line && str_starts_with( first_line, "05 80"))
+      result = true;
 
    DBGMSF(debug, "fn=%s, returning: %s", fn, bool_repr(result));
    return result;
@@ -1072,7 +1067,7 @@ void probe_uhid(int depth) {
    int d1 = depth+1;
    int d2 = depth+2;
 
-   bool debug = true;
+   bool debug = false;
    DBGMSF(debug, "Starting");
 
    struct dirent * ep;

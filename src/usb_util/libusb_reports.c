@@ -1144,7 +1144,7 @@ static void report_retrieved_report_descriptor_and_probe(libusb_device_handle* d
       if (vcp_code_report_descriptors && vcp_code_report_descriptors->len > 0) {
          for (int ndx = 0; ndx < vcp_code_report_descriptors->len; ndx++) {
             Vcp_Code_Report* vcr = g_ptr_array_index(vcp_code_report_descriptors, ndx);
-            puts("");
+            // puts("");
             summarize_vcp_code_report(vcr, d2);
             rpt_vstring(d2, "Get report data for VCP feature 0x%02x", vcr->vcp_code);
             uint16_t rptlen = 3;
@@ -1165,6 +1165,7 @@ static void report_retrieved_report_descriptor_and_probe(libusb_device_handle* d
                      bytes_read, report_id, report_id, vcr->vcp_code);
                rpt_hex_dump(buf, bytes_read, d2);
             }
+            puts("");
          }
       } else {
          printf("(%s) Unable to find any report descriptors for VCP feature codes\n", __func__);

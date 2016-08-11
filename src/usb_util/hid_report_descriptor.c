@@ -180,10 +180,14 @@ void report_parsed_hid_report(Parsed_Hid_Report * hr, int depth) {
  * Returns:     nothing
  */
 void summarize_parsed_hid_report(Parsed_Hid_Report * hr, int depth) {
-   int d1 = depth+1;
-   rpt_vstring(depth, "%-20s:%*s 0x%02x  %d", "Report id",   rpt_indent(1), "", hr->report_id, hr->report_id);
-   rpt_vstring(d1, "%-20s: 0x%02x  %s", "Report type",
-                   hr->report_type, hid_report_type_name(hr->report_type) );
+   // int d1 = depth+1;
+   // rpt_vstring(depth, "%-20s:%*s 0x%02x  %d", "Report id",   rpt_indent(1), "", hr->report_id, hr->report_id);
+   // rpt_vstring(d1, "%-20s: 0x%02x  %s", "Report type",
+   //                 hr->report_type, hid_report_type_name(hr->report_type) );
+
+   rpt_vstring(depth, "report id:  0x%02x (%3d),  report type: 0x%02x (%s)",
+                      hr->report_id, hr->report_id,
+                      hr->report_type, hid_report_type_name(hr->report_type) );
 }
 
 
@@ -860,16 +864,21 @@ void report_vcp_code_report_array(GPtrArray * vcr_array, int depth) {
 
 
 void summarize_vcp_code_report(Vcp_Code_Report * vcr, int depth) {
-   int d1 = depth+1;
-   rpt_vstring(depth, "%-20s %d  0x%02x", "vcp_code", vcr->vcp_code, vcr->vcp_code);
-   rpt_vstring(d1,    "%-20s %d  0x%02x", "report_id", vcr->rpt->report_id, vcr->rpt->report_id);
+   // int d1 = depth+1;
+   // rpt_vstring(depth, "%-20s %d  0x%02x", "vcp_code", vcr->vcp_code, vcr->vcp_code);
+   // rpt_vstring(d1,    "%-20s %d  0x%02x", "report_id", vcr->rpt->report_id, vcr->rpt->report_id);
+
+   rpt_vstring(depth, "vcp code:   0x%02x (%3d),  report id: 0x%02x (%3d),  report type: 0x%02x (%s)",
+                      vcr->vcp_code, vcr->vcp_code,
+                      vcr->rpt->report_id, vcr->rpt->report_id,
+                      vcr->rpt->report_type, hid_report_type_name(vcr->rpt->report_type));
 }
 
 void summarize_vcp_code_report_array(GPtrArray * vcr_array, int depth) {
-   rpt_vstring(depth, "VCP code reports:");
-   int d1 = depth+1;
+   // rpt_vstring(depth, "VCP code reports:");
+   // int d1 = depth+1;
    for (int ndx=0; ndx < vcr_array->len; ndx++) {
-      summarize_vcp_code_report( g_ptr_array_index(vcr_array, ndx), d1);
+      summarize_vcp_code_report( g_ptr_array_index(vcr_array, ndx), depth);
    }
 }
 

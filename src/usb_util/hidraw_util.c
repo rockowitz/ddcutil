@@ -222,6 +222,7 @@ void probe_hidraw_device(char * devname, bool show_monitors_only,  int depth) {
    }
 
    if (is_monitor) {
+      puts("");
       phd =  parse_report_desc(rpt_desc.value, rpt_desc.size);
       Parsed_Hid_Report * edid_report = find_edid_report_descriptor(phd);
       if (edid_report) {
@@ -231,6 +232,7 @@ void probe_hidraw_device(char * devname, bool show_monitors_only,  int depth) {
       else
          rpt_title("No EDID report descriptor found!!!", d1);
 
+      puts("");
       GPtrArray * feature_reports = get_vcp_code_reports(phd);
       if (feature_reports && feature_reports->len > 0) {
          rpt_title("Report descriptors for VCP features:", d1);
