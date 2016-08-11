@@ -31,7 +31,7 @@
 
 int file_getlines(const char * fn, GPtrArray* line_array, bool verbose);
 
-char * read_one_line_file(char * fn, bool verbose);
+char * file_get_first_line(const char * fn, bool verbose);
 
 bool regular_file_exists(const char * fqfn);
 bool directory_exists(const char * fqfn);

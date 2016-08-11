@@ -97,7 +97,7 @@ int file_getlines(const char * fn,  GPtrArray* line_array, bool verbose) {
 }
 
 
-/* Reads the contents of a single line file.
+/* Reads the first line of a file.
  *
  * Arguments:
  *    fn          file name
@@ -107,7 +107,7 @@ int file_getlines(const char * fn,  GPtrArray* line_array, bool verbose) {
  *    pointer to line read, caller responsible for freeing
  *    NULL if error or no lines in file
  */
-char * read_one_line_file(char * fn, bool verbose) {
+char * file_get_first_line(const char * fn, bool verbose) {
    FILE * fp = fopen(fn, "r");
    char * single_line = NULL;
    if (!fp) {
