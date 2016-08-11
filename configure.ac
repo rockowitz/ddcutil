@@ -118,7 +118,8 @@ dnl appends to GLIB_CFLAGS and GLIB_LIBS the output of pkg-config --cflags|--lib
 # was 2.36, can be drop this to 2.14 to allow for Debian 7.0
 PKG_CHECK_MODULES(GLIB,  glib-2.0 >= 2.14) 
 
-PKG_CHECK_MODULES(GOBJECT,  gobject-2.0 >= 2.14) 
+dnl made conditional:
+dnl PKG_CHECK_MODULES(GOBJECT,  gobject-2.0 >= 2.14) 
 
 dnl PKG_CHECK_MODULES(OSINFO, libosinfo-1.0 >= 0.1, [OSINFO_FOUND=yes], [OSINFO_FOUND=no])
 
@@ -126,7 +127,8 @@ PKG_CHECK_MODULES(XRANDR, xrandr)
 PKG_CHECK_MODULES(X11, x11)
 dnl PKG_CHECK_MODULES(UDEV, libudev)
 dnl know that 1.0.8 fails, 1.0.20  works
-PKG_CHECK_MODULES(LIBUSB, libusb-1.0 >= 1.0.15)
+dnl check made conditional on --enable-usb
+dnl PKG_CHECK_MODULES(LIBUSB, libusb-1.0 >= 1.0.15)
 
 dnl failing in OBS if no proper BuildRequires, even if libudev use disabled
 PKG_CHECK_MODULES([UDEV], [libudev],
@@ -146,7 +148,9 @@ dnl PKG_CHECK_MODULES(HIDAPI, hidapi-libusb)
 ### Checks for header files.
 ###
 
+dnl AC_MSG_NOTICE( [*** Before first header checks] )
 AC_CHECK_HEADERS([fcntl.h langinfo.h libintl.h limits.h stdint.h stdlib.h string.h sys/ioctl.h termios.h unistd.h wchar.h  dlfcn.h])
+dnl is2c-dev.h is in linux-headers
 dnl i2c-dev.h not found:
 dnl AC_CHECK_HEADERS([i2c-dev.h])
 
@@ -295,7 +299,7 @@ AS_IF([test "x$enable_gobject" == "xyes"],
 
 dnl dnl *** configure option: --enable-libudev
 dnl AC_ARG_ENABLE([libudev],
-dnl               [ AS_HELP_STRING( [--enable-libudev=@<:@yes/no@:>@], [Use libudev to find devices@<:@default=yes@:>@] )],
+dnl               [ AS_HELP_STRING( [--enable-libudev=@<:@yes/no@:>@], [Support USB connected monitors@<:@default=yes@:>@] )],
 dnl               [enable_libudev=${enableval}],
 dnl               [enable_libudev=yes] )
 dnl AM_CONDITIONAL([ENABLE_LIBUDEV_COND], [test "x$enable_libudev" == "xyes"] )
@@ -306,7 +310,7 @@ dnl      )
 dnl dnl Define USE_LIBUDEV in config.h:
 dnl AS_IF([test "x$enable_libudev" == "xyes"],
 dnl       AC_DEFINE_UNQUOTED( [USE_LIBUDEV], [1], [If defined, use libudev.]),
- dnl      [])
+dnl      [])
 dnl AS_IF([test "x$enable_libudev" == "xyes"],
 dnl       AC_MSG_NOTICE( [libudev... enabled]  ),
 dnl      AC_MSG_NOTICE( [libudev... disabled] )
@@ -330,6 +334,44 @@ AS_IF([test "x$enable_usb" == "xyes"],
       AC_MSG_NOTICE( [usb... enabled]  ),
       AC_MSG_NOTICE( [usb... disabled] )
      )
+
+
+### Conditional library tests 
+
+dnl know that 1.0.8 fails, 1.0.20  works
+AS_IF([test "x$enable_usb" == "xyes"],
+     [ PKG_CHECK_MODULES(LIBUSB, libusb-1.0 >= 1.0.15) ],
+     [ echo usb disabled, not checking for libusb ]
+     )
+
+dnl AC_MSG_NOTICE( $LIBUSB_CFLAGS )
+dnl CPPFLAGS=$LIBUSB_CFLAGS
+dnl AC_MSG_NOTICE( CPPFLAGS: $CPPFLAGS )
+dnl AC_CHECK_HEADERS([libusb-1.0/libusb.h])
+
+dnl header check for libusb.h not necessary.  PKG_CHECK_MODULES for libusb-1.0 will fail 
+dnl if development package not installed
+dnl AC_MSG_NOTICE( [Wolf 1])
+dnl AC_CHECK_HEADER fails but AC_CHECK_HEADERS succeeds.  why???
+AS_IF([test "x$enable_usb" == "xyes"],
+     [ 
+        AC_CHECK_HEADERS( [libusb-1.0/libusb.h],
+                        [libusb_h_found=yes],
+                        [libusb_h_found=no],
+                        )
+     ],
+     [ echo usb disabled, not checking for libusb.h ]
+     )
+AS_IF([test "x$libusb_h_found" == "xno"],
+     AC_MSG_ERROR( [Header file libusb.h not found.  Install distro-specific development package for libusb-1.0 ] ) 
+)
+
+
+AS_IF([test "x$enable_gobject" == "xyes"],
+     [ PKG_CHECK_MODULES(GOBJECT,  gobject-2.0 >= 2.14)  ],
+     )
+
+
 
 ### 
 ### End options for configure script

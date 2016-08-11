@@ -272,6 +272,7 @@ libddctool_la_LIBADD = -lz
 libddctool_la_LIBADD +=  \
    libcommon.la   \
    $(X11_LIBS) \
+   $(XRANDR_LIBS) \
    $(GOBJECT_LIBS) \
    $(GLIB_LIBS) 
 
@@ -300,9 +301,10 @@ ddctool_LDADD += \
    $(UDEV_LIBS) 
 endif
 
-# Fails if not linked with libudev - why?
+# Fails if not linked with libxrandr - why?
 laclient_LDADD = \
   libddctool.la \
+  $(XRANDR_LIBS) \
   $(GOBJECT_LIBS)
 
 
