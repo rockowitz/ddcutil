@@ -1040,6 +1040,75 @@ void query_using_i2cdetect() {
 
 #ifdef USE_USB
 
+bool is_hid_monitor_rdesc(const char * fn) {
+   bool debug = false;
+   bool result = false;
+
+   GPtrArray * lines = g_ptr_array_new();
+
+   int linect = file_getlines(fn, lines, /*verbose=*/ true);
+   if (linect > 0) {
+      DBGMSF(debug, "First line: %s", g_ptr_array_index(lines, 0));
+      if (str_starts_with( g_ptr_array_index(lines, 0), "05 80"))
+         result = true;
+   }
+   g_ptr_array_free(lines, true);
+
+   DBGMSF(debug, "fn=%s, returning: %s", fn, bool_repr(result));
+   return result;
+}
+
+
+/* Probe using the UHID debug interface in /sys/kernel/debug/hid
+ *
+ * For each HID device that's a monitor, displays the HID Report Descriptor.
+ *
+ * Arguments:
+ *    depth     logical indentation depth
+ *
+ * Returns:     nothing
+ */
+void probe_uhid(int depth) {
+   int d1 = depth+1;
+   int d2 = depth+2;
+
+   bool debug = true;
+   DBGMSF(debug, "Starting");
+
+   struct dirent * ep;
+   char * dirname = "/sys/kernel/debug/hid/";
+   DIR * dp;
+   dp = opendir(dirname);
+   if (!dp) {
+      int errsv = errno;
+      printf("Unable to open directory %s: %s\n", dirname, strerror(errsv));
+   }
+   else {
+      while ( (ep = readdir(dp))) {
+         // puts(ep->d_name);
+         char fqfn[MAX_PATH];
+         if (!streq(ep->d_name, ".") && !streq(ep->d_name, "..") ) {
+            // file names look like: "0003:0424:3328:004D"
+            // field 1:    ?
+            // field 2:    vid
+            // field 3:    pid
+            // field 4:    appears to be a sequence number of some sort
+            //             increases with each call to ddctool env -v
+            snprintf(fqfn, MAX_PATH, "%s%s/rdesc", dirname, ep->d_name);
+            // puts(fqfn);
+            if (is_hid_monitor_rdesc(fqfn)) {
+               puts("");
+               rpt_vstring(d1, "%s:", fqfn);
+               rpt_file_contents(fqfn, d2);
+            }
+         }
+      }
+      closedir(dp);
+   }
+
+   DBGMSF(debug, "Done");
+}
+
 void probe_hiddev(int depth) {
    int d1 = depth+1;
    int rc;
@@ -1180,6 +1249,9 @@ void query_usb_monitors() {
    rpt_vstring(0, "Checking for USB HID devices using hiddev...");
    probe_hiddev(1);
 
+   puts("");
+   rpt_vstring(0, "Checking for USB HID Report Descriptors in /sys/kernel/debug/hid...");
+   probe_uhid(1);
 
 }
 #endif
