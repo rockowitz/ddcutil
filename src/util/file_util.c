@@ -174,7 +174,7 @@ bool directory_exists(const char * fqfn) {
 }
 
 
-/* Scans list of directories to obtain for file names matching a criterion
+/* Scans list of directories to obtain file names matching a criterion
  *
  * Arguments:
  *   dirnames     null terminated array of pointers to directory names
@@ -208,7 +208,7 @@ GPtrArray * get_filenames_by_filter(const char * dirnames[], Dirent_Filter filte
    }
 
    if (debug) {
-      printf("(%s) Found %d device names:\n", __func__, devnames->len);
+      printf("(%s) Found %d file names:\n", __func__, devnames->len);
       for (int ndx = 0; ndx < devnames->len; ndx++)
          printf("   %s\n", (char *) g_ptr_array_index(devnames, ndx) );
    }
