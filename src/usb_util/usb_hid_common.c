@@ -26,6 +26,8 @@
 
 #include <stdio.h>
 
+#include "util/string_util.h"
+
 #include "usb_util/usb_hid_common.h"
 
 
@@ -72,8 +74,11 @@ bool force_hid_monitor_by_vid_pid(int16_t vid, int16_t pid) {
       int16_t   pid;
    };
 
-   bool debug = true;
+   bool debug = false;
+   if (debug)
+      printf("(%s) Starting. vid=0x%04x, pid=0x%04x\n", __func__, vid, pid);
    bool result = false;
+
 
    struct vid_pid exceptions[] = {
             {0x0424, 0x3328},    // Std Micrososystems USB HID I2C - HP LP2480
@@ -116,14 +121,17 @@ bool force_hid_monitor_by_vid_pid(int16_t vid, int16_t pid) {
 
    for (int ndx = 0; ndx < vid_pid_ct && !result; ndx++) {
       if (vid == exceptions[ndx].vid) {
-         if (exceptions[ndx].pid == 0 && pid == exceptions[ndx].pid) {
+         // there used to be some buggy code here looking at case of exceptions[ndx].pid == 0,  why?
+         if ( pid == exceptions[ndx].pid) {
             result = true;
-            if (debug)
+            // if (debug)
                printf("(%s) Matched exception vid=0x%04x, pid=0x%04x\n", __func__,
                       exceptions[ndx].vid, exceptions[ndx].pid);
          }
       }
    }
 
+   if (debug)
+      printf("(%s) vid=0x%04x, pid=0x%04x, returning: %s\n", __func__, vid, pid, bool_repr(result));
    return result;
 }
