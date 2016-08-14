@@ -321,7 +321,8 @@ void report_hid_report_item(Hid_Report_Descriptor_Item * item, Hid_Report_Item_G
 
    switch (item->btag) {
    case 0x04: /* Usage Page */
-      // hack
+
+#ifdef HACK_FOR_HP_LP2480ZX
         switch(item->data) {     // belongs elsewhere
         case 0xffa0:
            printf("Fixup: data = 0xffa0 -> 0x80\n");
@@ -331,6 +332,8 @@ void report_hid_report_item(Hid_Report_Descriptor_Item * item, Hid_Report_Item_G
            item->data = 0x81;
            break;
         }
+#endif
+
       rpt_vstring(d_indent, "%s", devid_usage_code_page_name(item->data));   // names_huts(data));
       globals->usage_page = item->data;
       break;
