@@ -105,6 +105,10 @@ void report_udev_device(struct udev_device * dev, int depth) {
          free(av);
 #endif
       }
+      // n. attr_name "descriptors" returns a hex value, not a null-terminated string
+      //    should display as hex, but how to determine length?
+      // for example of reading, see http://fossies.org/linux/systemd/src/udev/udev-builtin-usb_id.c
+      // not worth pursuing
       else
          rpt_vstring(d2, "%s -> %s", attr_name, attr_value2);
 
