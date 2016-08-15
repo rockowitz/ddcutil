@@ -573,8 +573,11 @@ Parsed_Hid_Descriptor * parse_report_desc_from_item_list(Hid_Report_Descriptor_I
                }
             }
             else {
-               printf("(%s) Tag 0x%02x, Report id: %d  0x%02x: No usage values in cur_locals\n",
-                     __func__, item->btag, report_id, report_id);
+               // message unnecessary here, warning will be issued by report_parsed_hid_report()
+               if (debug) {
+                  printf("(%s) Tag 0x%02x, Report id: %d  0x%02x: No usage values in cur_locals\n",
+                         __func__, item->btag, report_id, report_id);
+               }
             }
 
             hf->usage_page       = cur_globals->usage_page;
@@ -586,7 +589,7 @@ Parsed_Hid_Descriptor * parse_report_desc_from_item_list(Hid_Report_Descriptor_I
             hf->logical_minimum  = cur_globals->logical_minimum;
             hf->logical_maximum  = cur_globals->logical_maximum;
 
-            /* Per the HID Device Class Definition spec section 6.2.2.7:
+            /* From the HID Device Class Definition spec section 6.2.2.7:
 
                Until Physical Minimum and Physical Maximum are declared in a report
                descriptor they are assumed by the HID parser to be equal to Logical
