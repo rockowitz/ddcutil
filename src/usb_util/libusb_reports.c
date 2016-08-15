@@ -563,7 +563,6 @@ void report_libusb_interface_descriptor(
     * \ref libusb_descriptor_type::LIBUSB_DT_INTERFACE LIBUSB_DT_INTERFACE
     * in this context. */
    // uint8_t  bDescriptorType;
-   // rpt_int("bDescriptorType", NULL, inter->bDescriptorType, d1);
    rpt_vstring(d1, "%-20s 0x%02x  %s",
                    "bDescriptorType:",
                    inter->bDescriptorType,
@@ -572,7 +571,6 @@ void report_libusb_interface_descriptor(
 
    /** Number of this interface */
    // uint8_t  bInterfaceNumber;
-   // rpt_int("bInterfaceNumber", NULL, inter->bInterfaceNumber, d1);
    rpt_vstring(d1, "%-20s %u",
                    "bInterfaceNumber:",
                    inter->bInterfaceNumber);
@@ -580,20 +578,16 @@ void report_libusb_interface_descriptor(
 
    /** Value used to select this alternate setting for this interface */
    // uint8_t  bAlternateSetting;
-   // rpt_int("bAlternateSetting", NULL, inter->bAlternateSetting, d1);
    rpt_vstring(d1, "%-20s %u", "bAlternateSetting:", inter->bAlternateSetting);
 
 
    /** Number of endpoints used by this interface (excluding the control
     * endpoint). */
    // uint8_t  bNumEndpoints;
-   // rpt_int("bNumEndpoints", "excludes control endpoint", inter->bNumEndpoints, d1);
    rpt_vstring(d1, "%-20s %u", "bNumEndpoints:", inter->bNumEndpoints);
 
    /** USB-IF class code for this interface. See \ref libusb_class_code. */
    // uint8_t  bInterfaceClass;
-   // rpt_int("bInterfaceClass", NULL, inter->bInterfaceClass, d1);
-   // rpt_vstring(d1, "bInterfaceClass:       0x%02x (%d)", inter->bInterfaceClass, inter->bInterfaceClass);
    rpt_vstring(d1, "%-20s %u  (0x%02x)  %s",
                    "bInterfaceClass:",
                    inter->bInterfaceClass,
@@ -603,8 +597,6 @@ void report_libusb_interface_descriptor(
    /** USB-IF subclass code for this interface, qualified by the
     * bInterfaceClass value */
    // uint8_t  bInterfaceSubClass;
-   // rpt_int("bInterfaceSubClass", NULL, inter->bInterfaceSubClass, d1);
-   // rpt_vstring(d1, "bInterfaceSubClass:       0x%02x (%d)", inter->bInterfaceSubClass, inter->bInterfaceSubClass);
    rpt_vstring(d1, "%-20s %u  (0x%02x)  %s",
                    "bInterfaceSubClass:",
                    inter->bInterfaceSubClass,
@@ -614,7 +606,6 @@ void report_libusb_interface_descriptor(
    /** USB-IF protocol code for this interface, qualified by the
     * bInterfaceClass and bInterfaceSubClass values */
    // uint8_t  bInterfaceProtocol;
-   // rpt_int("bInterfaceProtocol", NULL, inter->bInterfaceProtocol, d1);
    rpt_vstring(d1, "%-20s %u  (0x%02x)  %s",
                    "bInterfaceProtocol:",
                    inter->bInterfaceProtocol,
@@ -651,12 +642,11 @@ void report_libusb_interface_descriptor(
 
    /** Length of the extra descriptors, in bytes. */
    // int extra_length;
-   // rpt_int("extra_length", "len of extra descriptors", inter->extra_length, d1);
    rpt_vstring(d1, "%-20s %d     (length of extra descriptors)",
                    "extra_length:",
                    inter->extra_length);
    if (inter->extra_length > 0) {
-      rpt_vstring(d1, "extra_data at %p: ", inter->extra);
+      rpt_vstring(d1, "extra at %p: ", inter->extra);
       rpt_hex_dump(inter->extra, inter->extra_length, d1);
 
       if (dh) {
@@ -1088,7 +1078,11 @@ typedef struct hid_descriptor {
 
 
 
-static void report_retrieved_report_descriptor_and_probe(libusb_device_handle* dh, Byte * dbuf, int dbufct, int depth) {
+static void report_retrieved_report_descriptor_and_probe(
+               libusb_device_handle* dh,
+               Byte *                dbuf,
+               int                   dbufct,
+               int                   depth) {
    // bool debug = true;
 
    int d1 = depth+1;
@@ -1101,17 +1095,17 @@ static void report_retrieved_report_descriptor_and_probe(libusb_device_handle* d
    rpt_vstring(depth, "Displaying report descriptor in HID external form:");
    Hid_Report_Descriptor_Item* item_list = tokenize_hid_report_descriptor(dbuf, dbufct);
    report_hid_report_item_list(item_list, d1);
+   puts("");
    Parsed_Hid_Descriptor* phd = parse_report_desc_from_item_list(item_list);
    if (phd) {
-      puts("");
       rpt_vstring(depth, "Parsed report descriptor:");
       report_parsed_hid_descriptor(phd, d1);
       puts("");
 
       rpt_vstring(d1, "Finding HID report for EDID...");
       Parsed_Hid_Report* edid_report_desc = find_edid_report_descriptor(phd);
-      if (edid_report_desc == NULL) {
-         printf("(%s) Unable to find EDID report descriptor\n", __func__);
+      if (!edid_report_desc) {
+         rpt_vstring(d2, "Not found");
       } else {
          // get EDID report
          report_parsed_hid_report(edid_report_desc, d1);
@@ -1168,7 +1162,8 @@ static void report_retrieved_report_descriptor_and_probe(libusb_device_handle* d
             puts("");
          }
       } else {
-         printf("(%s) Unable to find any report descriptors for VCP feature codes\n", __func__);
+         rpt_vstring(d2, "Not found");
+         puts("");
       }
    }
    free_hid_report_item_list(item_list);
@@ -1192,7 +1187,7 @@ void report_hid_descriptor(
         HID_Descriptor *       desc,
         int                    depth)
 {
-   bool debug = true;
+   bool debug = false;
    if (debug)
       printf("(%s) Starting. dh=%p, bInterfaceNumber=%d, desc=%p\n",
             __func__, dh, bInterfaceNumber, desc);
@@ -1242,6 +1237,8 @@ void report_hid_descriptor(
             if (!ok)
                printf("(%s) get_raw_report_descriptor() returned %s\n", __func__, bool_repr(ok));
             if (ok) {
+               puts("");
+               rpt_hex_dump(dbuf, bytes_read, d1);
                puts("");
                report_retrieved_report_descriptor_and_probe(dh, dbuf, bytes_read, d1);
             }
