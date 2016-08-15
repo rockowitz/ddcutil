@@ -71,6 +71,7 @@
 #include "usb_util/hidraw_util.h"
 // #include "util/libusb_reports.h"
 #include "usb_util/libusb_util.h"
+#include "usb_util/usb_hid_common.h"
 #endif
 
 #include "base/core.h"
@@ -1091,7 +1092,28 @@ void probe_uhid(int depth) {
             //             increases with each call to ddctool env -v
             snprintf(fqfn, MAX_PATH, "%s%s/rdesc", dirname, ep->d_name);
             // puts(fqfn);
-            if (is_hid_monitor_rdesc(fqfn)) {
+#ifdef FAILS
+            puts(ep->d_name);
+            printf("(%s) strlen(d_name) = %ld\n", __func__, strlen(ep->d_name));
+            uint16_t vid, pid, x, seq = 0;
+
+            int ct = sscanf(ep->d_name, "%hX:%hX:%hX:%hX", &x, &vid, &pid, &seq);
+            if (ct != 2)
+               printf("(%s) sscanf failed, ct = %d\n", __func__, ct);
+            else
+               printf("(%s) sscanf ok, vid=0x%04x, pid=0x%04x\n", __func__, vid, pid);
+            printf("(%s) x=0x%04x, vid=0x%04x, pid=0x%04x, seq=0x%04x\n", __func__,x,vid,pid,seq);
+            // returns ct = 3, seq is unset,  why?
+#endif
+
+            bool is_monitor = is_hid_monitor_rdesc(fqfn);
+            if (!is_monitor) {
+               char * endptr;
+               uint16_t vid = (uint16_t) strtoul(ep->d_name+5,  &endptr, 16);
+               uint16_t pid = (uint16_t) strtoul(ep->d_name+10, &endptr, 16);
+               is_monitor = force_hid_monitor_by_vid_pid(vid, pid);
+            }
+            if (is_monitor) {
                puts("");
                rpt_vstring(d1, "%s:", fqfn);
                rpt_file_contents(fqfn, d2);
