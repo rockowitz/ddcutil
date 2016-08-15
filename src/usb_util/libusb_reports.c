@@ -31,6 +31,7 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <glib.h>
+#include <linux/uhid.h>    // for HID_MAX_DESCRIPTOR_SIZE
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -1220,7 +1221,7 @@ void report_hid_descriptor(
       {
          rpt_vstring(d1, "Reading report descriptor of type LIBUSB_DT_REPORT from device...");
 
-         Byte dbuf[8192];
+         Byte dbuf[HID_MAX_DESCRIPTOR_SIZE];
 
          if (dh == NULL) {
             printf("(%s) device handle is NULL, Cannot get report descriptor\n", __func__);

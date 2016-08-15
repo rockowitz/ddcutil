@@ -27,7 +27,7 @@
 #include <dirent.h>
 #include <errno.h>
 #include <glib.h>
-#include <glib-2.0/glib.h>
+// #include <glib-2.0/glib.h>
 #include <libudev.h>
 #include <linux/hiddev.h>
 #include <linux/limits.h>
@@ -441,7 +441,6 @@ bool is_field_edid(int fd, struct hiddev_report_info * rinfo, int field_index) {
       printf("(%s) report_type=%d, report_id=%d, field index = %d\n",
              __func__, rinfo->report_type, rinfo->report_id, field_index);
 
-   // struct hiddev_field_info *  result = NULL;
    bool all_usages_edid = false;
    int rc;
 

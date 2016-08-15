@@ -115,7 +115,7 @@ void probe_hidraw_device(char * devname, bool show_monitors_only,  int depth) {
    int fd;
    // int i;
    int res, desc_size = 0;
-   Byte buf[1024] = {0};     // TODO: maximum report size, initialize to avoid valgrind warning
+   Byte buf[1024] = {0};     // initialize to avoid valgrind warning
 
    struct hidraw_report_descriptor rpt_desc;
    struct hidraw_devinfo info;
@@ -182,7 +182,7 @@ void probe_hidraw_device(char * devname, bool show_monitors_only,  int depth) {
    }
    if (debug)
       rpt_vstring(d1, "Report Descriptor Size: %d", desc_size);
-   bool is_monitor = false;
+   // bool is_monitor = false;
 
    /* Get Report Descriptor */
    rpt_desc.size = desc_size;
@@ -200,9 +200,10 @@ void probe_hidraw_device(char * devname, bool show_monitors_only,  int depth) {
    }
    Hid_Report_Descriptor_Item * report_item_list = tokenize_hid_report_descriptor(rpt_desc.value, rpt_desc.size) ;
    // report_hid_report_item_list(report_item_list, d2);
+   bool is_monitor = is_monitor_by_tokenized_report_descriptor(report_item_list);
 
+#ifdef OLD
    Hid_Report_Descriptor_Item * cur_item = report_item_list;
-
    // Look at the first Usage Page item, is it USB Monitor?
    while (cur_item) {
       if (cur_item->btag == 0x04) {
@@ -212,6 +213,8 @@ void probe_hidraw_device(char * devname, bool show_monitors_only,  int depth) {
       }
       cur_item = cur_item->next;
    }
+#endif
+
    rpt_vstring(d1, "%s a USB connected monitor",
                     (is_monitor) ? "Is" : "Not");
 

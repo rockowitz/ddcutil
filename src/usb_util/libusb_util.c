@@ -285,16 +285,16 @@ bool possible_monitor_dev(libusb_device * dev, bool check_forced_monitor, Descri
    libusb_free_config_descriptor(config);
 
    if (!result && check_forced_monitor) {
-        struct libusb_device_descriptor desc;
+      struct libusb_device_descriptor desc;
       int rc = libusb_get_device_descriptor(dev, &desc);
       CHECK_LIBUSB_RC("libusb_device_descriptor", rc, LIBUSB_EXIT);
-      ushort vid = desc.idVendor;
-      ushort pid = desc.idProduct;
+      // ushort vid = desc.idVendor;
+      // ushort pid = desc.idProduct;
 
       if (debug)
            printf("(%s) Callling force_hid_monitor_by_vid_pid(0x%04x, 0x%04x)\n",
                   __func__, desc.idVendor, desc.idProduct );
-      result = force_hid_monitor_by_vid_pid(vid, pid);
+      result = force_hid_monitor_by_vid_pid(desc.idVendor, desc.idProduct);
    }
 
    if (debug)
