@@ -234,6 +234,8 @@ void report_udev_usb_devinfo(struct udev_usb_devinfo * dinfo, int depth) {
  *
  * Returns:            pointer to Udev_Usb_Devinfo containing result
  *                     NULL if not found
+ *
+ * Adapted from UDEV sample code.
  */
 Udev_Usb_Devinfo * get_udev_usb_devinfo(char * subsystem, char * simple_devname) {
    assert(subsystem);
