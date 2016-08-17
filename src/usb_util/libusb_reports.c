@@ -690,7 +690,8 @@ void report_libusb_interface(
    rpt_structure_loc("libusb_interface", interface, depth);
 
    // The number of alternate settings that belong to this interface
-   rpt_vstring(d1, "%-20s", "num_altsetting", interface->num_altsetting);
+   rpt_vstring(d1, "%-20s  %d  (number of alternate settings for this interface)",
+                   "num_altsetting", interface->num_altsetting);
    // rpt_int("num_altsetting", NULL, interface->num_altsetting, d1);
 
    for (int ndx=0; ndx<interface->num_altsetting; ndx++) {
