@@ -260,6 +260,7 @@ Hid_Report_Descriptor_Item * tokenize_hid_report_descriptor(Byte * b, int l) {
       cur->bsize_bytect = (b0 == 3) ? 4 : b0; // actual number of bytes
       cur->btype = (b[i] & (0x03 << 2))>>2;   // next 2 bits are type, shift to range 0..3
       cur->btag = b[i] & ~0x03;               // mask out size bits to get tag
+      memcpy(cur->raw_bytes, b+i, 1+cur->bsize_bytect);
 
       if (cur->bsize_bytect > 0) {
          cur->data = 0;
@@ -311,9 +312,25 @@ void report_hid_report_item(Hid_Report_Descriptor_Item * item, Hid_Report_Item_G
    if (item->bsize_bytect == 0)
       strcpy(databuf, "none");
    else
-      snprintf(databuf, 80, "[ 0x%0*x ]", item->bsize_bytect*2, item->data);
+      snprintf(databuf, 80, "0x%0*x", item->bsize_bytect*2, item->data);
 
-   rpt_vstring(depth, "Item(%-6s): %s, data=%s",
+
+   char rawbuf[16];
+   rawbuf[0] = '\0';
+   // possibly switch this on and off
+   char workbuf[8];
+   hexstring2(
+             item->raw_bytes+1,       // bytes to convert
+             item->bsize_bytect,      // number of bytes
+             NULL,                    // no separator string
+             false,                   // uppercase,
+             workbuf,                 // buffer in which to return hex string
+             sizeof(workbuf) );       // buffer size
+   snprintf(rawbuf, 16, "%02x %-8s ", item->raw_bytes[0], workbuf);
+
+
+   rpt_vstring(depth, "%sItem(%-6s): %s, data=[ %s ]",
+                      rawbuf,
                       types[item->btype],
                       devid_hid_descriptor_item_type(item->btag),  // replacement for names_reporttag()
                       databuf);
