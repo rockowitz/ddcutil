@@ -73,6 +73,10 @@ typedef struct parsed_hid_field {
    uint16_t       usage_page;
    uint32_t       extended_usage;      // hi 16 bits usage_page, lo 16 bits usage_id
 
+   GArray *       extended_usages;     // new way, array of uint_32t
+   uint32_t       min_extended_usage;
+   uint32_t       max_extended_usage;
+
    /* The meaning of logical min/max vs physical/min max is the opposite of
       what one might expect.  Logical refers to the values returned by the
       device.  Physical refers to the "real world" bounds.
@@ -86,10 +90,10 @@ typedef struct parsed_hid_field {
       physical extents of 32 and 212 degrees.
     */
 
-   uint16_t       logical_minimum;
-   uint16_t       logical_maximum;
-   uint16_t       physical_minimum;
-   uint16_t       physical_maximum;
+   int16_t        logical_minimum;
+   int16_t        logical_maximum;
+   int16_t        physical_minimum;
+   int16_t        physical_maximum;
    uint16_t       report_size;
    uint16_t       report_count;
    uint16_t       unit_exponent;
@@ -112,6 +116,7 @@ typedef struct parsed_hid_collection {
 } Parsed_Hid_Collection;
 
 typedef struct parsed_hid_descriptor {
+   bool                    valid_descriptor;
    Parsed_Hid_Collection * root_collection;
 } Parsed_Hid_Descriptor;
 

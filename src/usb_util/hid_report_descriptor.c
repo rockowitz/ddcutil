@@ -115,7 +115,9 @@ void report_hid_field(Parsed_Hid_Field * hf, int depth) {
    //                 hf->usage_id,
    //                 devid_usage_code_id_name(hf->usage_page, hf->usage_id));
 
+
    char * ucode_name = "";
+#ifdef OLD
    if (hf->extended_usage) {
       ucode_name = devid_usage_code_name_by_extended_id(hf->extended_usage);
       if (!ucode_name)
@@ -126,6 +128,47 @@ void report_hid_field(Parsed_Hid_Field * hf, int depth) {
    rpt_vstring(d1, "%-20s:  0x%08x  %s", "Extended Usage",
                    hf->extended_usage,
                    ucode_name);
+#endif
+
+   if (!hf->extended_usages && !hf->min_extended_usage && !hf->max_extended_usage) {
+      rpt_vstring(d1, "WARNING: No usage specified for field");
+   }
+   else {
+      if (hf->extended_usages) {
+         for (int ndx = 0; ndx < hf->extended_usages->len; ndx++) {
+            uint32_t extusage = g_array_index(hf->extended_usages, uint32_t, ndx);
+            ucode_name = devid_usage_code_name_by_extended_id(extusage);
+            if (!ucode_name)
+               ucode_name = "(Unrecognized usage code)";
+            if (ndx == 0)
+               rpt_vstring(d1, "%-20s:  0x%08x  %s", "Extended Usage", extusage, ucode_name);
+            else
+               rpt_vstring(d1, "%-20s   0x%08x  %s", "", extusage, ucode_name);
+         }
+      }
+
+      if (hf->min_extended_usage) {
+         ucode_name = devid_usage_code_name_by_extended_id(hf->min_extended_usage);
+         if (!ucode_name)
+            ucode_name = "(Unrecognized usage code)";
+         rpt_vstring(d1, "%-20s:  0x%08x  %s", "Minimum Extended Usage",
+                         hf->min_extended_usage,
+                         ucode_name);
+      }
+      if (hf->max_extended_usage) {
+         ucode_name = devid_usage_code_name_by_extended_id(hf->max_extended_usage);
+         if (!ucode_name)
+            ucode_name = "(Unrecognized usage code)";
+         rpt_vstring(d1, "%-20s:  0x%08x  %s", "Maximum Extended Usage",
+                         hf->max_extended_usage,
+                         ucode_name);
+      }
+      if ( ( hf->min_extended_usage && !hf->max_extended_usage) ||
+           (!hf->min_extended_usage &&  hf->max_extended_usage)
+         )
+         rpt_vstring(d1, "Min and max extended usage must occur together");
+
+   }
 
    rpt_vstring(d1, "%-20s:  0x%04x      %s", "Item flags",
                    hf->item_flags,
@@ -459,6 +502,41 @@ uint32_t extended_usage(uint16_t usage_page, uint32_t usage, int usage_bsize) {
 }
 
 
+/* The data value in the report descriptor can be 1, 2, or 4 bytes.
+ * In tokenized form, it is stored as a 4 byte unsigned integer.
+ * This function looks at the high order bit of the original value
+ * to determine if the value is negative.
+ *
+ * Arguments:
+ *   data       data value, possibly expanded to 4 bytes
+ *   bytect     number of bytes in original value
+ *
+ * Returns:     signed value
+ */
+static int32_t maybe_signed_data(uint32_t data, int bytect) {
+   bool debug = false;
+   if (debug)
+      printf("(%s) bytect = %d, data = 0x%0*x\n", __func__, bytect, 2*bytect, data);
+   int32_t result = 0;
+
+   assert(bytect == 0 || bytect == 1 || bytect==2 || bytect==4);
+   if (bytect > 0) {
+      int sign_bitno = (bytect * 8) - 1;
+      uint32_t sign_mask = 1 << sign_bitno;
+      // printf("     sign_bitno = %d, sign_mask=0x%08x\n", sign_bitno, sign_mask);
+      if (data & sign_mask)
+            result = -data;
+      else
+         result = data;
+   }
+
+   if (debug)
+      printf("(%s) Returning: %d\n", __func__, result);
+   return result;
+}
+
+
+
 /* Fully interpret a sequence of Hid_Report_Items
  *
  * Arguments:
@@ -480,6 +558,7 @@ Parsed_Hid_Descriptor * parse_report_desc_from_item_list(Hid_Report_Descriptor_I
    Parsed_Hid_Descriptor * parsed_descriptor = calloc(1, sizeof(Parsed_Hid_Descriptor));
    parsed_descriptor->root_collection = calloc(1,sizeof(Parsed_Hid_Collection));
    parsed_descriptor->root_collection->is_root_collection = true;
+   parsed_descriptor->valid_descriptor = true;   // set false if invalid, should never occur
 
 #define COLLECTION_STACK_SIZE 10
    Parsed_Hid_Collection * collection_stack[COLLECTION_STACK_SIZE];
@@ -558,8 +637,13 @@ Parsed_Hid_Descriptor * parse_report_desc_from_item_list(Hid_Report_Descriptor_I
 
             // add this item/field to current report
             add_report_field(hr, hf);
+            int field_index = hr->hid_fields->len - 1;  // field number within report
 
-            int field_index = hr->hid_fields->len - 1;
+            // if multiple usages, does this apply to fields within report or
+            // occurrences within field ???
+
+
+            // WRONG!
             if (cur_locals->usages && cur_locals->usages->len > 0) {
                int usagect = cur_locals->usages->len;
                int usagendx = (field_index < usagect) ? field_index : usagect-1;
@@ -579,6 +663,36 @@ Parsed_Hid_Descriptor * parse_report_desc_from_item_list(Hid_Report_Descriptor_I
                          __func__, item->btag, report_id, report_id);
                }
             }
+
+            if ( ( cur_locals->usage_minimum && !cur_locals->usage_maximum) ||
+                 (!cur_locals->usage_minimum &&  cur_locals->usage_maximum) )
+            {
+                  printf("(%s) Either both or neither usage_minimum or usage_maximum must be specified\n",
+                        __func__);
+                  parsed_descriptor->valid_descriptor = false;
+            }
+
+            if (cur_locals->usage_minimum)
+               hf->min_extended_usage = extended_usage(cur_globals->usage_page,
+                                                       cur_locals->usage_minimum,
+                                                       0);
+            if (cur_locals->usage_maximum)
+               hf->max_extended_usage = extended_usage(cur_globals->usage_page,
+                                                       cur_locals->usage_maximum,
+                                                       0);
+            if (cur_locals->usages && cur_locals->usages->len > 0) {
+               hf->extended_usages = g_array_new(true, true, sizeof(uint32_t));
+               for (int ndx = 0; ndx < cur_locals->usages->len; ndx++) {
+                  uint32_t ausage = g_array_index(cur_locals->usages, uint32_t, ndx);
+                  uint32_t extusage = extended_usage(cur_globals->usage_page,
+                                                     ausage,
+                                                     0);
+                  g_array_append_val(hf->extended_usages,
+                                     extusage
+                                    );
+               }
+            }
+
 
             hf->usage_page       = cur_globals->usage_page;
             hf->report_size      = cur_globals->report_size;
@@ -648,16 +762,16 @@ Parsed_Hid_Descriptor * parse_report_desc_from_item_list(Hid_Report_Descriptor_I
               cur_globals->usage_page = item->data;
               break;
          case 0x14:       // Logical Minimum
-              cur_globals->logical_minimum = item->data;
+              cur_globals->logical_minimum = maybe_signed_data(item->data, item->bsize_bytect);
               break;
          case 0x24:
-              cur_globals->logical_maximum = item->data;
+              cur_globals->logical_maximum = maybe_signed_data(item->data, item->bsize_bytect);
               break;
          case 0x34:
-              cur_globals->physical_minimum = item->data;
+              cur_globals->physical_minimum = maybe_signed_data(item->data, item->bsize_bytect);
               break;
          case 0x44:
-              cur_globals->physical_maximum = item->data;
+              cur_globals->physical_maximum = maybe_signed_data(item->data, item->bsize_bytect);;
               break;
          case 0x54:     // Unit Exponent
               cur_globals->unit_exponent = item->data;                     // Global
@@ -762,7 +876,7 @@ Parsed_Hid_Descriptor * parse_report_desc_from_item_list(Hid_Report_Descriptor_I
               printf("(%s) Local item Delimiter unimplemented\n", __func__);
               break;
            default:
-              printf("(%s) Invalid local item tax: 0x%02x\n", __func__, item->btag);
+              printf("(%s) Invalid local item tag: 0x%02x\n", __func__, item->btag);
          }
          break;
 
