@@ -261,12 +261,35 @@ Hid_Report_Descriptor_Item * tokenize_hid_report_descriptor(Byte * b, int l) {
       cur->btype = (b[i] & (0x03 << 2))>>2;   // next 2 bits are type, shift to range 0..3
       cur->btag = b[i] & ~0x03;               // mask out size bits to get tag
       memcpy(cur->raw_bytes, b+i, 1+cur->bsize_bytect);
+      // WRONG: printf("(%s) raw_bytes: 0x%0*x\n", __func__, (1+cur->bsize_bytect)*2, cur->raw_bytes);
 
       if (cur->bsize_bytect > 0) {
          cur->data = 0;
          for (j = 0; j < cur->bsize_bytect; j++) {
             cur->data += (b[i+1+j] << (8*j));
          }
+      }
+
+      // alt:
+      int kk = i+1;
+      switch(cur->bsize_bytect) {
+
+      case 4:
+         cur->data_alt.u32 = b[kk+3]<< 24 | b[kk+2] << 16 | b[kk+1] << 8 | b[kk];
+         assert (cur->data_alt.u32 == cur->data);
+         break;
+      case 2:
+         cur->data_alt.u16 = b[kk+1] << 8 | b[kk];
+         // printf("(%s) data_alt.u16 = 0x%04x, cur->data = 0x%08x\n",
+         //        __func__, cur->data_alt.u16, cur->data);
+         assert (cur->data_alt.u16 == cur->data);
+         break;
+      case 1:
+         cur->data_alt.u8 =  b[kk];
+         assert (cur->data_alt.u8 == cur->data);
+         break;
+      default:
+         assert(cur->bsize_bytect == 0);
       }
 
       if (!root) {
@@ -300,7 +323,11 @@ struct hid_report_item_globals {
  *   globals       current globals state
  *   depth         logical indentation depth
  */
-void report_hid_report_item(Hid_Report_Descriptor_Item * item, Hid_Report_Item_Globals * globals, int depth) {
+void report_hid_report_item(
+        Hid_Report_Descriptor_Item * item,
+        Hid_Report_Item_Globals *    globals,
+        int                          depth)
+{
    // int d1 = depth+1;
    int d_indent = depth+5;
 

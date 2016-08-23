@@ -36,10 +36,22 @@ typedef struct hid_report_item {
    struct hid_report_item * next;
 
    Byte     raw_bytes[5];
-   Byte     btype;         // 0=Main, 1=Global, 2=Local
+   Byte     btype;         // 0=Main, 1=Global, 2=Local, prefix bits 2-3
    Byte     btag;
    Byte     bsize_bytect;  // number of bytes, as opposed to indicator, i.e 4 means 4 bytes
    uint32_t data;
+
+   // alternative, as done in struct hid_item in kernel header file hid.h:
+   union {
+      uint8_t   u8;
+      int8_t    s8;
+      uint16_t u16;
+      int8_t   s16;
+      uint32_t u32;
+      int32_t  s32;
+      uint8_t  *longdata;
+   } data_alt;
+
 } Hid_Report_Descriptor_Item;
 
 void report_hid_report_item_list(Hid_Report_Descriptor_Item * head, int depth);
