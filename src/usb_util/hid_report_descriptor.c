@@ -409,10 +409,12 @@ Parsed_Hid_Report * find_hid_report(Parsed_Hid_Collection * col, Byte report_typ
    return result;
 }
 
+
 Parsed_Hid_Report * find_hid_report_or_new(Parsed_Hid_Collection * hc, Byte report_type, uint16_t report_id) {
    bool debug = false;
    if (debug)
       printf("(%s) report_type=%d, report_id=%d\n", __func__, report_type, report_id);
+
    Parsed_Hid_Report * result = find_hid_report(hc, report_type, report_id);
    if (!result) {
       if (!hc->reports) {
@@ -423,6 +425,7 @@ Parsed_Hid_Report * find_hid_report_or_new(Parsed_Hid_Collection * hc, Byte repo
       result->report_type = report_type;
       g_ptr_array_add(hc->reports, result);
    }
+
    return result;
 }
 
@@ -438,7 +441,6 @@ void add_report_field(Parsed_Hid_Report * hr, Parsed_Hid_Field * hf) {
 void add_hid_collection_child(Parsed_Hid_Collection * parent, Parsed_Hid_Collection * new_child) {
    if (!parent->child_collections)
       parent->child_collections = g_ptr_array_new();
-
    g_ptr_array_add(parent->child_collections, new_child);
 }
 
@@ -637,11 +639,11 @@ Parsed_Hid_Descriptor * parse_report_desc_from_item_list(Hid_Report_Descriptor_I
 
             // add this item/field to current report
             add_report_field(hr, hf);
+#ifdef OLD
             int field_index = hr->hid_fields->len - 1;  // field number within report
 
             // if multiple usages, does this apply to fields within report or
             // occurrences within field ???
-
 
             // WRONG!
             if (cur_locals->usages && cur_locals->usages->len > 0) {
@@ -663,6 +665,7 @@ Parsed_Hid_Descriptor * parse_report_desc_from_item_list(Hid_Report_Descriptor_I
                          __func__, item->btag, report_id, report_id);
                }
             }
+#endif
 
             if ( ( cur_locals->usage_minimum && !cur_locals->usage_maximum) ||
                  (!cur_locals->usage_minimum &&  cur_locals->usage_maximum) )
@@ -735,7 +738,6 @@ Parsed_Hid_Descriptor * parse_report_desc_from_item_list(Hid_Report_Descriptor_I
             UNHANDLED(string_indexes)
             UNHANDLED(string_minimum)
             UNHANDLED(string_maximum)
-            UNHANDLED(usage_minimum)
 #undef UNHANDLED
 
             break;
@@ -829,8 +831,9 @@ Parsed_Hid_Descriptor * parse_report_desc_from_item_list(Hid_Report_Descriptor_I
                        /* field size      */ sizeof(uint32_t) );
               g_array_append_val(cur_locals->usages, item->data);
               if (cur_locals->usages->len > 1) {
-                 printf("(%s) After append, cur_locals->usages->len = %d\n", __func__,
-                        cur_locals->usages->len);
+                 if (debug)
+                    printf("(%s) After append, cur_locals->usages->len = %d\n", __func__,
+                           cur_locals->usages->len);
               }
               if (cur_locals->usages->len == 1)
                  cur_locals->usage_bsize_bytect = item->bsize_bytect;
@@ -952,8 +955,10 @@ uint16_t get_vcp_code_from_parsed_hid_report(Parsed_Hid_Report * rpt) {
          rpt->hid_fields &&
          rpt->hid_fields->len == 1) {
       Parsed_Hid_Field * f = g_ptr_array_index(rpt->hid_fields, 0);
+      // n. ignoring possibility of report count > 1, multiple usages
       if (f->usage_page == 0x80) {
-         vcp_code = f->extended_usage & 0xffff;
+         // vcp_code = f->extended_usage & 0xffff;
+         vcp_code = g_array_index(f->extended_usages, uint32_t, 0) & 0xffff;
          assert( (vcp_code & 0xff00) == 0);
       }
 
@@ -1078,16 +1083,20 @@ GPtrArray * get_vcp_code_reports(Parsed_Hid_Descriptor * phd) {
                {
                   // Have seen cases where usage ID == 0, e.g. Apple Cinema Display report xe7
                   // ignore such
-                  Byte vcp_feature_code = f->extended_usage & 0xff;
-                  if (vcp_feature_code) {
-                     Vcp_Code_Report * code_rpt = calloc(1, sizeof(Vcp_Code_Report));
-                     code_rpt->vcp_code = vcp_feature_code;
-                     code_rpt->rpt = rpt;
-                     g_ptr_array_add(vcp_reports, code_rpt);
-                  }
-                  else {
-                     if (debug)
-                        printf("(%s) Ignoring report with usage_id = 0\n", __func__);
+                  // Byte vcp_feature_code = f->extended_usage & 0xff;
+                  // TO DO: Handle case of min_usage/max_usage
+                  if (f->extended_usages) {
+                     Byte vcp_feature_code = g_array_index(f->extended_usages, uint32_t, 0) & 0xffff;
+                     if (vcp_feature_code) {
+                        Vcp_Code_Report * code_rpt = calloc(1, sizeof(Vcp_Code_Report));
+                        code_rpt->vcp_code = vcp_feature_code;
+                        code_rpt->rpt = rpt;
+                        g_ptr_array_add(vcp_reports, code_rpt);
+                     }
+                     else {
+                        if (debug)
+                           printf("(%s) Ignoring report with usage_id = 0\n", __func__);
+                     }
                   }
                }
             }
@@ -1126,14 +1135,17 @@ Parsed_Hid_Report * find_edid_report_descriptor(Parsed_Hid_Descriptor * phd) {
         if (rpt->report_type == HID_REPORT_TYPE_FEATURE) {
            if (rpt->hid_fields && rpt->hid_fields->len == 1) {
               Parsed_Hid_Field * f = g_ptr_array_index(rpt->hid_fields, 0);
-              if (f->extended_usage == ((0x0080 << 16) | 0x0002)  &&
-                  (f->item_flags & HID_FIELD_BUFFERED_BYTE)  &&
-                  f->report_size == 8 &&
-                  f->report_count >= 128
-                 )
-              {
-                 edid_report = rpt;
-                 break;
+              if (f->extended_usages && f->extended_usages->len == 1) {
+                 uint32_t extusage = g_array_index(f->extended_usages, uint32_t, 0);
+                 if (extusage == ((0x0080 << 16) | 0x0002)  &&
+                     (f->item_flags & HID_FIELD_BUFFERED_BYTE)  &&
+                     f->report_size == 8 &&
+                     f->report_count >= 128
+                    )
+                 {
+                    edid_report = rpt;
+                    break;
+                 }
               }
            }
         }
