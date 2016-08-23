@@ -71,9 +71,10 @@ override the currently defined Usage Page for individual usages.
 typedef struct parsed_hid_field {
    uint16_t       item_flags;
    uint16_t       usage_page;
+#ifdef OLD
    uint32_t       extended_usage;      // hi 16 bits usage_page, lo 16 bits usage_id
-
-   GArray *       extended_usages;     // new way, array of uint_32t
+#endif
+   GArray *       extended_usages;     // new way, array of uint_32t, hi 16 bits usage page, lo 16 bits usage id
    uint32_t       min_extended_usage;
    uint32_t       max_extended_usage;
 

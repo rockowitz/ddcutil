@@ -216,10 +216,8 @@ void probe_udev_subsystem(char * subsystem, int depth) {
 }
 
 
-
-
 void report_udev_usb_devinfo(struct udev_usb_devinfo * dinfo, int depth) {
-   rpt_structure_loc("Hidraw_Devinfo", dinfo, depth);
+   rpt_structure_loc("udev_usb_devinfo", dinfo, depth);
    int d1 = depth+1;
    rpt_vstring(d1, "%-20s %d 0x%04x", "busno", dinfo->busno, dinfo->busno);
    rpt_vstring(d1, "%-20s %d 0x%04x", "devno", dinfo->devno, dinfo->devno);
