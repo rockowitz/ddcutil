@@ -31,6 +31,7 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <glib.h>
+#include <linux/hid.h>     // HID_MAX_DESCRIPTOR_SIZE is here on Mint
 #include <linux/uhid.h>    // for HID_MAX_DESCRIPTOR_SIZE
 #include <stdio.h>
 #include <stdlib.h>
@@ -168,13 +169,16 @@ enum libusb_transfer_type {
 
 #endif
 
+// Problem: LIBUSB_TRANFER_TYPE_BULK_STREAM not defined in 1.0.17
+#define LIBUSB_TRANSFER_TYPE_BULK_STREAM_LOCAL 4
+
 
 Value_Name_Title transfer_type_table[] = {
       VN2(LIBUSB_TRANSFER_TYPE_CONTROL,     "Control"),          // 0
       VN2(LIBUSB_TRANSFER_TYPE_ISOCHRONOUS, "Isochronous"),      // 1
       VN2(LIBUSB_TRANSFER_TYPE_BULK,        "Bulk"),             // 2
       VN2(LIBUSB_TRANSFER_TYPE_INTERRUPT,   "Interrupt"),        // 3
-      VN2(LIBUSB_TRANSFER_TYPE_BULK_STREAM, "Bulk Stream"),      // 4
+      VN2(LIBUSB_TRANSFER_TYPE_BULK_STREAM_LOCAL, "Bulk Stream"),      // 4
       VN_END2
 };
 

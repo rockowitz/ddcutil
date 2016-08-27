@@ -345,7 +345,7 @@ void report_hid_report_item(
    char rawbuf[16];
    rawbuf[0] = '\0';
    // possibly switch this on and off
-   char workbuf[8];
+   char workbuf[9];  // 2 chars/byte + 1 for terminating null
    hexstring2(
              item->raw_bytes+1,       // bytes to convert
              item->bsize_bytect,      // number of bytes

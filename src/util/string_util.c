@@ -701,8 +701,9 @@ char * hexstring2(
           char *                buffer,
           int                   bufsz)
 {
+   // if (len > 1)
    // printf("(%s) bytes=%p, len=%d, sepstr=|%s|, uppercase=%s, buffer=%p, bufsz=%d\n", __func__,
-   //        bytes, len, sepstr, bool_repr(uppercase), buffer, bufsz);
+   //       bytes, len, sepstr, bool_repr(uppercase), buffer, bufsz);
    int sepsize = 0;
    if (sepstr) {
       sepsize = strlen(sepstr);
@@ -710,6 +711,8 @@ char * hexstring2(
    int required_size =   2*len             // hex rep of bytes
                        + (len-1)*sepsize   // for separators
                        + 1;                // terminating null
+   // if (len > 1)
+   // printf("(%s) required_size=%d\n", __func__, required_size);
    // special case:
    if (len == 0)
       required_size = 1;
