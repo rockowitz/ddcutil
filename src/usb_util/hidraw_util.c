@@ -250,10 +250,14 @@ void probe_hidraw_device(char * devname, bool show_monitors_only,  int depth) {
          rpt_title("No VCP Feature report descriptors found!!!", d1);
 
       GPtrArray * reports = select_parsed_report_descriptors(phd, HIDF_REPORT_TYPE_FEATURE);
+      if (reports->len == 0) {
+         puts("");
+         rpt_title("No HID reports exist of type HIDF_REPORT_TYPE_FEATURE.", d1);
+      }
       for (int ndx = 0; ndx < reports->len; ndx++) {
          Parsed_Hid_Report * a_report = g_ptr_array_index(reports, ndx);
          puts("");
-         rpt_vstring(d1, "Feature report id: %3d  0x%02x", a_report->report_id, a_report->report_id);
+         rpt_vstring(d1, "HID Feature report id: %3d  0x%02x", a_report->report_id, a_report->report_id);
 
          rpt_vstring(d1, "Parsed report description:");
          report_parsed_hid_report(a_report, d2);
