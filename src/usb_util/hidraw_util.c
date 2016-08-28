@@ -120,6 +120,10 @@ void probe_hidraw_device(char * devname, bool show_monitors_only,  int depth) {
    struct hidraw_report_descriptor rpt_desc;
    struct hidraw_devinfo info;
 
+   memset(&rpt_desc, 0x0, sizeof(rpt_desc));
+   memset(&info,     0x0, sizeof(info));
+   // memset(buf,       0x0, sizeof(buf));
+
    /* Open the Device with non-blocking reads. In real life,
       don't use a hard coded path; use libudev instead. */
    fd = open(devname, O_RDWR|O_NONBLOCK);
@@ -168,11 +172,6 @@ void probe_hidraw_device(char * devname, bool show_monitors_only,  int depth) {
    else
       rpt_vstring(d1, "Error getting busno:devno using get_udev_usb_devinfo()");
 
-
-   memset(&rpt_desc, 0x0, sizeof(rpt_desc));
-   memset(&info,     0x0, sizeof(info));
-   memset(buf,       0x0, sizeof(buf));
-
    /* Get Report Descriptor Size */
    // why is this necessary? buffer in rpt_desc is already HID_MAX_DESCRIPTOR_SIZE?
    res = ioctl(fd, HIDIOCGRDESCSIZE, &desc_size);
@@ -217,6 +216,12 @@ void probe_hidraw_device(char * devname, bool show_monitors_only,  int depth) {
 
    rpt_vstring(d1, "%s a USB connected monitor",
                     (is_monitor) ? "Is" : "Not");
+
+   if (!is_monitor && show_monitors_only) {
+      is_monitor = force_hid_monitor_by_vid_pid( info.vendor, info.product);
+      if (is_monitor)
+         rpt_vstring(d1, "Device vid/pid matches exception list.  Forcing report for device.");
+   }
 
    Parsed_Hid_Descriptor * phd = NULL;
    if (is_monitor || !show_monitors_only) {
