@@ -28,7 +28,7 @@
 #include <stdint.h>
 
 void report_udev_device(struct udev_device * dev, int depth);
-void probe_udev_subsystem(char * udev_class, int depth);
+void probe_udev_subsystem(char * udev_class, bool show_usb_parent, int depth);
 
 typedef struct udev_usb_devinfo {
    uint16_t busno;

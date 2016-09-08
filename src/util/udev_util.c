@@ -126,7 +126,7 @@ void report_udev_device(struct udev_device * dev, int depth) {
  *
  * Adapted from USB sample code
  */
-void probe_udev_subsystem(char * subsystem, int depth) {
+void probe_udev_subsystem(char * subsystem, bool show_usb_parent, int depth) {
    int d1 = depth+1;
 
    struct udev *udev;
@@ -168,6 +168,9 @@ void probe_udev_subsystem(char * subsystem, int depth) {
 
       report_udev_device(dev, d1);
 
+      if (!show_usb_parent)
+         continue;
+
       /* The device pointed to by dev contains information about
          the hidraw device. In order to get information about the
          USB device, get the parent device with the
@@ -180,7 +183,7 @@ void probe_udev_subsystem(char * subsystem, int depth) {
              "usb_device");
       if (!dev) {
          rpt_vstring(depth, "Unable to find parent USB device.");
-         return;   // exit(1);
+         continue;   // exit(1);
       }
 
       puts("");

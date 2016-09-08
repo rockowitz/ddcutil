@@ -1234,10 +1234,10 @@ void query_usb_monitors() {
    if (output_level >= OL_VERBOSE) {
       char * subsys_name = "usbmisc";
       printf("\nProbing USB HID devices using udev, susbsystem %s...\n", subsys_name);
-      probe_udev_subsystem(subsys_name, 1);
+      probe_udev_subsystem(subsys_name, /*show_usb_parent=*/ true, 1);
       subsys_name = "hidraw";
       printf("\nProbing USB HID devices using udev, susbsystem %s...\n", subsys_name);
-      probe_udev_subsystem(subsys_name, 1);
+      probe_udev_subsystem(subsys_name, /*show_usb_parent=*/ true, 1);
    }
 
    if (output_level >= OL_VERBOSE) {
@@ -1333,6 +1333,13 @@ void query_sysenv() {
       query_using_i2cdetect();
 
       query_x11();
+
+#ifdef USE_USB
+      // probe_udev_subsystem() is in udev_util.c, which is only linked in if USE_USB
+      char * subsys_name = "i2c-dev";
+      printf("\nProbing I2C devices using udev, susbsystem %s...\n", subsys_name);
+      probe_udev_subsystem(subsys_name, /*show_usb_parent=*/ false, 1);
+#endif
    }
 
 #ifdef USE_USB
