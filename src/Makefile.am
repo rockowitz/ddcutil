@@ -134,12 +134,23 @@ goclient_SOURCES = \
 sample_clients/gomain.c
 #endif
 
-# fails to force compliation
-# build_info.o:	.FORCE
+
+# Despite what the Autotools book says, all-local is executed aftar all, not before 
+# So this ensures that the NEXT execution of all will compile build_info.c 
 all-local:
 	@echo "Executing hook all-local..."
-	@echo "touching base/build_info.c ...":
 	touch base/build_info.c
+
+# Never executed:
+# all-hook:
+#	@echo "Executing hook all-hook..."
+#	touch base/build_info.c
+
+# fails
+# base/build_info.o: .FORCE
+#	@echo "Executing phony rule for build_info.o"
+#	touch base/built_info.c
+
 
 # libcommon contains the source files that are 
 # shared between ddctool and libddctool: 
