@@ -348,7 +348,9 @@ int main(int argc, char *argv[]) {
       ddc_set_max_write_read_exchange_tries(MAX_MAX_TRIES);
       ddc_set_max_multi_part_read_tries(MAX_MAX_TRIES);
       query_sysenv();
+#ifdef USE_USB
       query_usbenv();
+#endif
       printf("\nDetected displays:\n");
       int display_ct = ddc_report_active_displays(1 /* logical depth */);
       int dispno;

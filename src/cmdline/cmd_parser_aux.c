@@ -57,9 +57,7 @@ static Cmd_Desc cmdinfo[] = {
    {CMDID_DUMPVCP,      "dumpvcp",        3,  0,       1},
    {CMDID_INTERROGATE,  "interrogate",    3,  0,       0},
    {CMDID_ENVIRONMENT,  "environment",    3,  0,       0},
-#ifdef USE_USB
    {CMDID_USBENV,       "usbenvironment", 6,  0,       0},
-#endif
    {CMDID_VCPINFO,      "vcpinfo",        5,  0,       1},
    {CMDID_READCHANGES,  "watch",          3,  0,       0},
 #ifdef USE_USB

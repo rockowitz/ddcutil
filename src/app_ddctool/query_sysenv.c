@@ -1230,7 +1230,6 @@ void query_usb_monitors() {
    execute_shell_cmd("ls -l /dev/hidraw*", 2);
    puts("");
 
-
    if (output_level >= OL_VERBOSE) {
       char * subsys_name = "usbmisc";
       printf("\nProbing USB HID devices using udev, susbsystem %s...\n", subsys_name);
@@ -1250,7 +1249,6 @@ void query_usb_monitors() {
       probe_hidraw(
             true,    // possible_monitors_only
             1);      // logical indentation depth
-
 
        // printf("\nProbing using hidapi...\n");
        // don't use.  wipes out /dev/hidraw  and /dev/usb/hiddev devices it opens
@@ -1347,16 +1345,13 @@ void query_sysenv() {
 
 
 #ifdef USE_USB
-
-/* Master function to query USB aapects of the system environment
+/* Master function to query USB aspects of the system environment
  *
  * Arguments:    none
  *
  * Returns:      nothing
  */
 void query_usbenv() {
-   printf("(%s) UNIMPLEMENTED\n", __func__);
    query_usb_monitors();
 }
-
 #endif
