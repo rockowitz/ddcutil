@@ -36,6 +36,7 @@
 #include "util/string_util.h"
 #include "util/report_util.h"
 
+#include "base/build_info.h"
 #include "base/core.h"
 #include "base/displays.h"
 #include "base/parms.h"
@@ -495,12 +496,17 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
    }
 
    if (version_flag) {
-      printf("ddctool %s\n", VERSION);
-      printf("Compiled %s at %s\n", __DATE__, __TIME__ );
+      printf("ddctool %s\n", BUILD_VERSION);
+      printf("Compiled %s at %s\n", BUILD_DATE, BUILD_TIME);
 #ifdef HAVE_ADL
-      printf("Built with support for AMD Display Library (AMD proprietary driver)\n");
+      printf("Built with support for AMD Display Library (AMD proprietary driver).\n");
 #else
-      printf("Built without support for AMD Display Library (AMD proprietary driver)\n");
+      printf("Built without support for AMD Display Library (AMD proprietary driver).\n");
+#endif
+#ifdef USE_USB
+      printf("Built with support for USB connected displays.\n");
+#else
+      printf("Built without support for USB connected displays.\n");
 #endif
       puts("");
       // if no command specified, include license in version information and terminate

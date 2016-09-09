@@ -134,9 +134,17 @@ goclient_SOURCES = \
 sample_clients/gomain.c
 #endif
 
+# fails to force compliation
+# build_info.o:	.FORCE
+all-local:
+	@echo "Executing hook all-local..."
+	@echo "touching base/build_info.c ...":
+	touch base/build_info.c
+
 # libcommon contains the source files that are 
 # shared between ddctool and libddctool: 
 libcommon_la_SOURCES = \
+base/build_info.c \
 base/base_services.c \
 base/core.c \
 base/ddc_errno.c \
