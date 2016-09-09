@@ -316,6 +316,18 @@ int main(int argc, char *argv[]) {
       main_rc = EXIT_SUCCESS;
    }
 
+   else if (parsed_cmd->cmd_id == CMDID_USBENV) {
+#ifdef USE_USB
+      printf("The following tests probe for USB connected monitors.\n");
+      // DBGMSG("Exploring runtime environment...\n");
+      query_usbenv();
+      main_rc = EXIT_SUCCESS;
+#else
+      printf("ddctool was not built with support for USB connected monitors\n");
+      main_rc = EXIT_FAILURE;
+#endif
+   }
+
    else if (parsed_cmd->cmd_id == CMDID_CHKUSBMON) {
 #ifdef USE_USB
       // DBGMSG("Processing command chkusbmon...\n");
@@ -336,6 +348,7 @@ int main(int argc, char *argv[]) {
       ddc_set_max_write_read_exchange_tries(MAX_MAX_TRIES);
       ddc_set_max_multi_part_read_tries(MAX_MAX_TRIES);
       query_sysenv();
+      query_usbenv();
       printf("\nDetected displays:\n");
       int display_ct = ddc_report_active_displays(1 /* logical depth */);
       int dispno;

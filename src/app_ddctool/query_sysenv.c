@@ -1342,10 +1342,21 @@ void query_sysenv() {
 #endif
    }
 
-#ifdef USE_USB
-   query_usb_monitors();
-#endif
 
 }
 
 
+#ifdef USE_USB
+
+/* Master function to query USB aapects of the system environment
+ *
+ * Arguments:    none
+ *
+ * Returns:      nothing
+ */
+void query_usbenv() {
+   printf("(%s) UNIMPLEMENTED\n", __func__);
+   query_usb_monitors();
+}
+
+#endif

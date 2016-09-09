@@ -43,24 +43,27 @@
 //
 
 static Cmd_Desc cmdinfo[] = {
- // cmd_id              cmd_name  minchars min_arg_ct max_arg_ct
-   {CMDID_DETECT,       "detect",        3,  0,       0},
-   {CMDID_CAPABILITIES, "capabilities",  3,  0,       0},
-   {CMDID_GETVCP,       "getvcp",        3,  1,       1},
-   {CMDID_SETVCP,       "setvcp",        3,  2,       MAX_SETVCP_VALUES*2},
-   {CMDID_LISTVCP,      "listvcp",       5,  0,       0},
+ // cmd_id              cmd_name   minchars min_arg_ct max_arg_ct
+   {CMDID_DETECT,       "detect",         3,  0,       0},
+   {CMDID_CAPABILITIES, "capabilities",   3,  0,       0},
+   {CMDID_GETVCP,       "getvcp",         3,  1,       1},
+   {CMDID_SETVCP,       "setvcp",         3,  2,       MAX_SETVCP_VALUES*2},
+   {CMDID_LISTVCP,      "listvcp",        5,  0,       0},
 #ifdef INCLUDE_TESTCASES
-   {CMDID_TESTCASE,     "testcase",      3,  1,       1},
-   {CMDID_LISTTESTS,    "listtests",     5,  0,       0},
+   {CMDID_TESTCASE,     "testcase",       3,  1,       1},
+   {CMDID_LISTTESTS,    "listtests",      5,  0,       0},
 #endif
-   {CMDID_LOADVCP,      "loadvcp",       3,  1,       1},
-   {CMDID_DUMPVCP,      "dumpvcp",       3,  0,       1},
-   {CMDID_INTERROGATE,  "interrogate",   3,  0,       0},
-   {CMDID_ENVIRONMENT,  "environment",   3,  0,       0},
-   {CMDID_VCPINFO,      "vcpinfo",       5,  0,       1},
-   {CMDID_READCHANGES,  "watch",         3,  0,       0},
+   {CMDID_LOADVCP,      "loadvcp",        3,  1,       1},
+   {CMDID_DUMPVCP,      "dumpvcp",        3,  0,       1},
+   {CMDID_INTERROGATE,  "interrogate",    3,  0,       0},
+   {CMDID_ENVIRONMENT,  "environment",    3,  0,       0},
 #ifdef USE_USB
-   {CMDID_CHKUSBMON,    "chkusbmon",     3,  1,       1},
+   {CMDID_USBENV,       "usbenvironment", 6,  0,       0},
+#endif
+   {CMDID_VCPINFO,      "vcpinfo",        5,  0,       1},
+   {CMDID_READCHANGES,  "watch",          3,  0,       0},
+#ifdef USE_USB
+   {CMDID_CHKUSBMON,    "chkusbmon",      3,  1,       1},
 #endif
 };
 static int cmdct = sizeof(cmdinfo)/sizeof(Cmd_Desc);
@@ -275,6 +278,9 @@ char * commands_list_help =
        "   listtests\n"
 #endif
        "   environment                          Probe execution environment\n"
+#ifdef USE_USB
+       "   usbenv                               Probe for USB connected monitors\n"
+#endif
        "   interrogate                          Report everything possible\n"
 #ifdef USE_USB
        "   chkusbmon                            Check if USB device is monitor (for UDEV)\n"

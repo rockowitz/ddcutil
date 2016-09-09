@@ -602,7 +602,6 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
       parsed_cmd = NULL;
    }
 
-   if (debug)
-       DBGMSG("Returning: %p", parsed_cmd);
+   DBGMSF(debug, "Returning: %p", parsed_cmd);
    return parsed_cmd;
 }
