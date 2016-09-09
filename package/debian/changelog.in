@@ -1,5 +1,0 @@
-ddctool (@PACKAGE_VERSION@-@DEBIAN_RELEASE@) @DEBIAN_DISTRIBUTION@; urgency=low
-
-  * Alpha release (Closes: #0000) 
-
- -- Sanford Rockowitz <rockowitz@minsoft.com>  Sat, 13 Feb 2016 09:39:15 -0500

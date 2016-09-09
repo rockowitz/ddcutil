@@ -33,6 +33,7 @@ ddc/*expand          \
 vcp/*expand          \
 i2c/*expand          \
 usb/*expand          \
+usb_util/*expand     \
 libmain/*expand      \
 sample_clients/*expand \
 test/*expand \

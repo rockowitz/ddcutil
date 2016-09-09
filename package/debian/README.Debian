@@ -1,6 +1,6 @@
 ddctool for Debian
 ------------------
 
-<possible notes regarding this package - if none, delete this file>
+Works for both Wily and Xenial. 
 
- -- Sanford Rockowitz <rockowitz@minsoft.com>  Tue, 23 Feb 2016 11:42:05 -0500
+ -- Sanford Rockowitz <rockowitz@minsoft.com>  Fri, 09 Sep 2016 12:00:00 -0500
