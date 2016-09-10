@@ -48,6 +48,7 @@
 #include <sys/ioctl.h>
 #include <sys/stat.h>
 #include <sys/types.h>
+#include <sys/utsname.h>
 #include <time.h>
 #include <unistd.h>
 
@@ -545,20 +546,67 @@ bool is_module_loaded_using_sysfs(char * module_name) {
 }
 
 
+/* Checks if a module is built in to the kernel.
+ *
+ * Arguments:
+ *   module_name    simple module name, as it appears in the file system, e.g. i2c-dev
+ *
+ * Returns:         true/false
+ */
+bool is_module_builtin(char * module_name) {
+   bool debug = false;
+   bool result = false;
+
+   struct utsname utsbuf;
+   int rc = uname(&utsbuf);
+   assert(rc == 0);
+   // DBGMSG("uname() returned release: %s", &utsbuf.release);
+
+   // works, but simpler to use uname() that doesn't require free(osrelease)
+   // char * osrelease = file_get_first_line("/proc/sys/kernel/osrelease", true /* verbose */);
+   // assert(streq(utsbuf.release, osrelease));
+
+   char modules_builtin_fn[100];
+   snprintf(modules_builtin_fn, 100, "/lib/modules/%s/modules.builtin", utsbuf.release);
+   // free(osrelease);
+
+   char cmdbuf[200];
+
+   snprintf(cmdbuf, 200, "grep -H %s.ko %s", module_name, modules_builtin_fn);
+   // DBGMSG("cmdbuf = |%s|", cmdbuf);
+
+   GPtrArray * response = execute_shell_cmd_collect(cmdbuf);
+   // internal rc =  0 if found, 256 if not found
+   // returns 0 lines if not found
+
+   // DBGMSG("execute_shell_cmd_collect() returned %d lines", response->len);
+   // for (int ndx = 0; ndx < response->len; ndx++) {
+   //    puts(g_ptr_array_index(response, ndx));
+   // }
+
+   result = (response->len > 0);
+   g_ptr_array_free(response, true);
+
+   DBGMSF(debug, "module_name = %s, returning %s", module_name, bool_repr(result));
+   return result;
+}
+
+
+
 /* Checks if module i2c_dev is required and if so whether it is loaded.
  * Reports the result.
  *
  * Arguments:
- *    driver_list    list of drivers
+ *    video_driver_list  list of video drivers
  *
- * Returns:          nothing
+ * Returns:              nothing
  */
-void check_i2c_dev_module(struct driver_name_node * driver_list) {
+void check_i2c_dev_module(struct driver_name_node * video_driver_list) {
    printf("\nChecking for module i2c_dev...\n");
 
    Output_Level output_level = get_output_level();
 
-   bool module_required = !only_nvidia_or_fglrx(driver_list);
+   bool module_required = !only_nvidia_or_fglrx(video_driver_list);
    if (!module_required) {
       printf("Using only proprietary nvidia or fglrx driver. Module i2c_dev not required.\n");
       if (output_level < OL_VERBOSE)
@@ -566,11 +614,15 @@ void check_i2c_dev_module(struct driver_name_node * driver_list) {
       printf("Remaining i2c_dev detail is purely informational.\n");
    }
 
-   bool i2c_dev_is_loaded = is_module_loaded_using_sysfs("i2c_dev");
-      // DBGMSF(debug, "is_loaded=%d", is_loaded);
-   printf("   Module %-16s is %sloaded\n", "i2c_dev", (i2c_dev_is_loaded) ? "" : "NOT ");
+   bool is_builtin = is_module_builtin("i2c-dev");
+   printf("   Module %-16s is %sbuilt into kernel\n", "i2c_dev", (is_builtin) ? "" : "NOT ");
 
-   if (!i2c_dev_is_loaded || output_level >= OL_VERBOSE) {
+   bool is_loaded = is_module_loaded_using_sysfs("i2c_dev");
+      // DBGMSF(debug, "is_loaded=%d", is_loaded);
+   if (!is_builtin)
+      printf("   Module %-16s is %sloaded\n", "i2c_dev", (is_loaded) ? "" : "NOT ");
+
+   if ( (!is_loaded && !is_builtin) || output_level >= OL_VERBOSE) {
       printf("\nCheck that kernel module i2c_dev is being loaded by examining files where this would be specified...\n");
       execute_shell_cmd("grep -H i2c[-_]dev "
                         "/etc/modules "
