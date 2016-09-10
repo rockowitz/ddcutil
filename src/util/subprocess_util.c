@@ -93,12 +93,12 @@ bool execute_shell_cmd(char * shell_cmd, int depth) {
  *    shell_cmd      command to execute
  *
  * Returns:
- *    true           command succeeded
- *    false          failed, e.g. command not found
+ *    GPtrArray of response lines if command succeeded
+ *    NULL                        if command failed, e.g. command not found
  */
 GPtrArray *
 execute_shell_cmd_collect(char * shell_cmd) {
-   bool debug = true;
+   bool debug = false;
    GPtrArray * result = g_ptr_array_new();
    // TO DO: set free func
    if (debug)
@@ -116,7 +116,6 @@ execute_shell_cmd_collect(char * shell_cmd) {
        ok = false;
     }
     else {
-
        char * a_line = NULL;
        size_t len = 0;
        ssize_t read;
@@ -139,7 +138,6 @@ execute_shell_cmd_collect(char * shell_cmd) {
           printf("(%s) plose() rc = %d\n", __func__, pclose_rc);
     }
     if (!ok) {
-
        g_ptr_array_free(result, true);
        result = NULL;
     }
