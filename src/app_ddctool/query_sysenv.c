@@ -87,14 +87,13 @@
 #include "app_ddctool/query_sysenv.h"
 
 
-
-
 #ifndef MAX_PATH
 #define MAX_PATH 256
 #endif
 
 
-char * known_video_driver_modules[] = {
+static char * known_video_driver_modules[] = {
+      "amdgpu",
       "fglrx",
       "nvidia",
       "nouveau",
@@ -103,13 +102,14 @@ char * known_video_driver_modules[] = {
       NULL
 };
 
-char * prefix_matches[] = {
+static char * prefix_matches[] = {
+      "amdgpu",
       "i2c",
       "video",
       NULL
 };
 
-char * other_driver_modules[] = {
+static char * other_driver_modules[] = {
       "i2c_dev",
       "i2c_algo_bit",
       "i2c_piix4",
@@ -145,7 +145,7 @@ ushort h2ushort(char * hval) {
 }
 
 
-int query_proc_modules_for_video() {
+static int query_proc_modules_for_video() {
    int rc = 0;
 
    GPtrArray * garray = g_ptr_array_sized_new(300);
@@ -193,7 +193,7 @@ int query_proc_modules_for_video() {
 }
 
 
-bool show_one_file(char * dir_name, char * simple_fn, bool verbose, int depth) {
+static bool show_one_file(char * dir_name, char * simple_fn, bool verbose, int depth) {
    bool result = false;
    char fqfn[400];
    strcpy(fqfn,dir_name);
@@ -211,7 +211,7 @@ bool show_one_file(char * dir_name, char * simple_fn, bool verbose, int depth) {
 }
 
 
-bool query_proc_driver_nvidia() {
+static bool query_proc_driver_nvidia() {
    bool debug = true;
    bool result = false;
    char * dn = "/proc/driver/nvidia/";
@@ -277,8 +277,7 @@ bool only_fglrx(struct driver_name_node * driver_list) {
 }
 
 
-
-bool only_nvidia_or_fglrx(struct driver_name_node * driver_list) {
+static bool only_nvidia_or_fglrx(struct driver_name_node * driver_list) {
    int driverct = 0;
    bool other_driver_seen = false;
    struct driver_name_node * curnode = driver_list;
@@ -297,7 +296,8 @@ bool only_nvidia_or_fglrx(struct driver_name_node * driver_list) {
    return result;
 }
 
-bool found_driver(struct driver_name_node * driver_list, char * driver_name) {
+
+static bool found_driver(struct driver_name_node * driver_list, char * driver_name) {
    bool found = false;
    struct driver_name_node * curnode = driver_list;
    while (curnode) {
@@ -310,7 +310,7 @@ bool found_driver(struct driver_name_node * driver_list, char * driver_name) {
 }
 
 
-void query_base_env() {
+static void query_base_env() {
    printf("\nSystem information (uname):\n");
    // uname response:
    char * version_line = file_get_first_line("/proc/version", true /* verbose */);
@@ -322,7 +322,7 @@ void query_base_env() {
 
 
 
-void check_i2c_devices(struct driver_name_node * driver_list) {
+static void check_i2c_devices(struct driver_name_node * driver_list) {
    bool debug = false;
    // int rc;
    // char username[32+1];       // per man useradd, max username length is 32
@@ -523,7 +523,7 @@ void check_i2c_devices(struct driver_name_node * driver_list) {
  *
  * Returns:         true if the module is loaded, false if not
  */
-bool is_module_loaded_using_sysfs(char * module_name) {
+static bool is_module_loaded_using_sysfs(char * module_name) {
    bool debug = false;
    struct stat statbuf;
    char   module_fn[100];
@@ -553,7 +553,7 @@ bool is_module_loaded_using_sysfs(char * module_name) {
  *
  * Returns:         true/false
  */
-bool is_module_builtin(char * module_name) {
+static bool is_module_builtin(char * module_name) {
    bool debug = false;
    bool result = false;
 
@@ -601,7 +601,7 @@ bool is_module_builtin(char * module_name) {
  *
  * Returns:              nothing
  */
-void check_i2c_dev_module(struct driver_name_node * video_driver_list) {
+static void check_i2c_dev_module(struct driver_name_node * video_driver_list) {
    printf("\nChecking for module i2c_dev...\n");
 
    Output_Level output_level = get_output_level();
@@ -616,6 +616,12 @@ void check_i2c_dev_module(struct driver_name_node * video_driver_list) {
 
    bool is_builtin = is_module_builtin("i2c-dev");
    printf("   Module %-16s is %sbuilt into kernel\n", "i2c_dev", (is_builtin) ? "" : "NOT ");
+   if (is_builtin) {
+      if (output_level < OL_VERBOSE)
+         return;
+      if (module_required)  // no need for duplicate message
+         printf("Remaining i2c_dev detail is purely informational.\n");
+   }
 
    bool is_loaded = is_module_loaded_using_sysfs("i2c_dev");
       // DBGMSF(debug, "is_loaded=%d", is_loaded);
@@ -640,7 +646,7 @@ void check_i2c_dev_module(struct driver_name_node * video_driver_list) {
 }
 
 
-void query_packages() {
+static void query_packages() {
    printf("\nddctool requiries package i2c-tools.  Use both dpkg and rpm to look for it.\n"
           "While we're at it, check for package libi2c-dev which is used for building\n"
           "ddctool.\n"
@@ -672,7 +678,7 @@ void query_packages() {
 }
 
 
-bool query_card_and_driver_using_lspci() {
+static bool query_card_and_driver_using_lspci() {
    // DBGMSG("Starting");
    bool ok = true;
    FILE * fp;
@@ -732,7 +738,7 @@ bool query_card_and_driver_using_lspci() {
 
 
 
-struct driver_name_node * query_card_and_driver_using_sysfs() {
+static struct driver_name_node * query_card_and_driver_using_sysfs() {
    // bool debug = true;
    printf("Obtaining card and driver information from /sys...\n");
 
@@ -909,7 +915,7 @@ struct driver_name_node * query_card_and_driver_using_sysfs() {
  *
  * Returns:          nothing
  */
-void driver_specific_tests(struct driver_name_node * driver_list) {
+static void driver_specific_tests(struct driver_name_node * driver_list) {
    printf("\nPerforming driver specific checks...\n");
    bool found_driver_specific_checks = false;
    if (found_driver(driver_list, "nvidia")) {
@@ -939,7 +945,7 @@ void driver_specific_tests(struct driver_name_node * driver_list) {
 }
 
 
-void query_loaded_modules_using_sysfs() {
+static void query_loaded_modules_using_sysfs() {
    printf("\nTesting if modules are loaded using /sys...\n");
    // known_video_driver_modules
    // other_driver_modules
@@ -960,7 +966,7 @@ void query_loaded_modules_using_sysfs() {
 }
 
 
-void query_i2c_bus_using_sysfs() {
+static void query_i2c_bus_using_sysfs() {
    struct dirent *dent;
    DIR           *d;
    char          *d0;
@@ -998,7 +1004,8 @@ void query_i2c_bus_using_sysfs() {
 }
 
 
-bool query_card_and_driver_using_osinfo() {
+#ifdef UNUSED
+static bool query_card_and_driver_using_osinfo() {
    bool ok = false;
 
 #ifdef FAILS
@@ -1019,9 +1026,10 @@ bool query_card_and_driver_using_osinfo() {
 
    return ok;
 }
+#endif
 
 
-void query_i2c_buses() {
+static void query_i2c_buses() {
    printf("\nExamining i2c buses...\n");
    i2c_report_buses(true, 1 /* indentation depth */);
 }
@@ -1069,7 +1077,7 @@ void query_x11() {
  *
  * Returns:      nothing
  */
-void query_using_i2cdetect() {
+static void query_using_i2cdetect() {
    printf("Examining I2C buses using i2cdetect: \n");
    GPtrArray * busnames = execute_shell_cmd_collect("ls /dev/i2c*");
    for (int ndx = 0; ndx < busnames->len; ndx++) {
@@ -1093,7 +1101,7 @@ void query_using_i2cdetect() {
 
 #ifdef USE_USB
 
-bool is_hid_monitor_rdesc(const char * fn) {
+static bool is_hid_monitor_rdesc(const char * fn) {
    bool debug = false;
    bool result = false;
 
@@ -1116,7 +1124,7 @@ bool is_hid_monitor_rdesc(const char * fn) {
  *
  * Returns:     nothing
  */
-void probe_uhid(int depth) {
+static void probe_uhid(int depth) {
    int d1 = depth+1;
    int d2 = depth+2;
 
@@ -1178,7 +1186,7 @@ void probe_uhid(int depth) {
    DBGMSF(debug, "Done");
 }
 
-void probe_hiddev(int depth) {
+static void probe_hiddev(int depth) {
    int d1 = depth+1;
    int rc;
 
@@ -1256,7 +1264,7 @@ void probe_hiddev(int depth) {
  *
  * Returns:      nothing
  */
-void query_usb_monitors() {
+static void query_usb_monitors() {
    printf("\nChecking for USB connected monitors...\n");
 
    Output_Level output_level = get_output_level();
@@ -1319,9 +1327,9 @@ void query_usb_monitors() {
    puts("");
    rpt_vstring(0, "Checking for USB HID Report Descriptors in /sys/kernel/debug/hid...");
    probe_uhid(1);
-
 }
-#endif
+
+#endif  // USE_USB
 
 
 /* Master function to query the system environment
