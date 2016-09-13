@@ -67,6 +67,39 @@ Display_Ref * ddc_find_display_by_usb_busnum_devnum(int   busnum, int   devnum);
 //  Display Specification
 //
 
+
+// Problem: ADL does not notice that a display doesn't support DDC,
+// e.g. Dell 1905FP
+// As a heuristic check, try reading the brightness.  Observationally, any monitor
+// that supports DDC allows for for bightness adjustment.
+static bool verify_adl_display_ref(Display_Ref * dref) {
+   bool debug = false;
+   bool result = true;
+
+   Display_Handle * dh = ddc_open_display(dref, CALLOPT_ERR_MSG | CALLOPT_ERR_ABORT);
+   dref->vcp_version = get_vcp_version_by_display_handle(dh);
+   ddc_close_display(dh);
+
+   Single_Vcp_Value * pvalrec;
+
+    // verbose output is distracting since this function is called when
+    // querying for other things
+    Output_Level olev = get_output_level();
+    if (olev == OL_VERBOSE)
+       set_output_level(OL_NORMAL);
+    Global_Status_Code gsc = get_vcp_value(dh, 0x10, NON_TABLE_VCP_VALUE, &pvalrec);
+    if (olev == OL_VERBOSE)
+       set_output_level(olev);
+
+    if (gsc != 0) {
+       result = false;
+       DBGMSF(debug, "Error geting value for bightness VCP feature 0x10. gsc=%s\n", gsc_desc(gsc) );
+    }
+
+   return result;
+}
+
+
 /* Tests if a Display_Ref identifies an attached display.
  *
  * Arguments:
@@ -76,7 +109,7 @@ Display_Ref * ddc_find_display_by_usb_busnum_devnum(int   busnum, int   devnum);
  * Returns:
  *    true if dref identifies a valid Display_Ref, false if not
  */
-bool ddc_is_valid_display_ref(Display_Ref * dref, bool emit_error_msg) {
+static bool ddc_is_valid_display_ref(Display_Ref * dref, bool emit_error_msg) {
    bool debug = false;
    assert( dref );
    // char buf[100];
@@ -88,6 +121,8 @@ bool ddc_is_valid_display_ref(Display_Ref * dref, bool emit_error_msg) {
       break;
    case DDC_IO_ADL:
       result = adlshim_is_valid_display_ref(dref, emit_error_msg);
+      if (result)
+         result = verify_adl_display_ref(dref);   // is it really a valid monitor?
       break;
    case USB_IO:
 #ifdef USE_USB
@@ -240,43 +275,23 @@ Display_Info_List * ddc_get_valid_displays() {
 #ifdef USE_USB
    displayct += usb_displays.ct;
 #endif
-   // DBGMSG("displayct=%d", displayct);
    Display_Info_List * all_displays = calloc(1, sizeof(Display_Info_List));
    all_displays->info_recs = calloc(displayct, sizeof(Display_Info));
    all_displays->ct = displayct;
-   // DBGMSG("dest addr = %p", all_displays->info_recs );
-   // DBGMSG("copying %d bytes", i2c_displays.ct * sizeof(Display_Info));
    memcpy(all_displays->info_recs,
           i2c_displays.info_recs,
           i2c_displays.ct * sizeof(Display_Info));
-   // DBGMSG("dest addr = %p", all_displays->info_recs + (i2c_displays.ct)*sizeof(Display_Info));
-   // DBGMSG("dest addr = %p", (Byte *) all_displays->info_recs + (i2c_displays.ct)*sizeof(Display_Info));
-   // DBGMSG("copying %d bytes",adl_displays.ct * sizeof(Display_Info));
 
-   //works:
-   // memcpy((Byte *)all_displays->info_recs + i2c_displays.ct*sizeof(Display_Info),
-   //        adl_displays.info_recs,
-   //        adl_displays.ct * sizeof(Display_Info));
-
-   // cleaner:
    memcpy(all_displays->info_recs + i2c_displays.ct,
           adl_displays.info_recs,
           adl_displays.ct * sizeof(Display_Info));
-
-   // DBGMSG("dest addr   = %p", (Byte *)all_displays->info_recs + (i2c_displays.ct+adl_displays.ct)*sizeof(Display_Info));
-   // DBGMSG("source addr = %p", usb_displays.info_recs);
-   // DBGMSG("copying %d bytes", usb_displays.ct * sizeof(Display_Info));
-
-   // works
-   // memcpy((Byte *)all_displays->info_recs + (i2c_displays.ct+adl_displays.ct)*sizeof(Display_Info),
-   //        usb_displays.info_recs,
-   //        usb_displays.ct * sizeof(Display_Info));
 
 #ifdef USE_USB
    memcpy(all_displays->info_recs + (i2c_displays.ct+adl_displays.ct),
           usb_displays.info_recs,
           usb_displays.ct * sizeof(Display_Info));
 #endif
+
    if (i2c_displays.info_recs)
       free(i2c_displays.info_recs);
    if (adl_displays.info_recs)

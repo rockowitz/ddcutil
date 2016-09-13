@@ -46,6 +46,7 @@
 
 #pragma GCC diagnostic ignored "-Wpointer-sign"
 
+
 //
 // ADL framework shim functions
 //
@@ -309,23 +310,22 @@ static bool is_active_display(int iAdapterIndex, ADLDisplayInfo * pDisplayInfo) 
  *    true  if successful, false if not
  */
 static bool scan_for_displays() {
+   bool debug = false;
    if (adl_debug)
-      DBGMSG("Starting." );
+      debug = true;
+   DBGMSF(debug, "Starting." );
    int            rc;
    int            iNumberAdapters;
    AdapterInfo *  pAdapterInfo;
    bool           ok = true;
 
    // Obtain the number of adapters for the system
-
    RECORD_IO_EVENT(
       IE_OTHER,
       (
          rc = adl->ADL_Adapter_NumberOfAdapters_Get ( &iNumberAdapters )
       )
    );
-
-   // rc = adl->ADL_Adapter_NumberOfAdapters_Get ( &iNumberAdapters );
    if (rc != ADL_OK) {
       DBGMSG("Cannot get the number of adapters!  ADL_Adapter_NumberOfAdapaters_Get() returned %d", rc);
       ok = false;
@@ -343,7 +343,6 @@ static bool scan_for_displays() {
             adl->ADL_Adapter_AdapterInfo_Get(pAdapterInfo, sizeof (AdapterInfo) * iNumberAdapters)
          )
       );
-      // adl->ADL_Adapter_AdapterInfo_Get(pAdapterInfo, sizeof (AdapterInfo) * iNumberAdapters);
 
       // Repeat for all available adapters in the system
       int adapterNdx, displayNdx;   // counters for looping
@@ -394,7 +393,6 @@ static bool scan_for_displays() {
 #endif
 
          pAdlDisplayInfo = NULL;    // set to NULL before calling ADL_Display_DisplayInfo_Get()
-         // DBGMSG("pAdlDisplayInfo=%p", pAdlDisplayInfo );
          RECORD_IO_EVENT(
             IE_OTHER,
             (
@@ -402,14 +400,9 @@ static bool scan_for_displays() {
                             iAdapterIndex,
                             &displayCtForAdapter,   // return number of displays detected here
                             &pAdlDisplayInfo,       // return pointer to retrieved displayinfo array here
-                            0)
+                            0)                      // do not force detection
             )
          );
-         // rc = adl->ADL_Display_DisplayInfo_Get (
-         //         iAdapterIndex,
-         //         &displayCtForAdapter,   // return number of displays detected here
-         //         &pAdlDisplayInfo,       // return pointer to retrieved displayinfo array here
-         //         0);                     // do not force detection
          if (rc != ADL_OK) {
             DBGMSG("ADL_Display_DisplayInfo_Get() returned %d", rc);
             continue;
@@ -421,7 +414,7 @@ static bool scan_for_displays() {
             ADLDisplayInfo * pCurDisplayInfo = &pAdlDisplayInfo[displayNdx];
             iDisplayIndex = pCurDisplayInfo->displayID.iDisplayLogicalIndex;
             // DBGMSG("iAdapterIndex=%d, iDisplayIndex=%d", iAdapterIndex, iDisplayIndex );
-            if (adl_debug) {
+            if (debug) {
                DBGMSG("iAdapterIndex=%d, iDisplayIndex=%d", iAdapterIndex, iDisplayIndex );
                report_adl_ADLDisplayInfo(pCurDisplayInfo, 2);
             }
@@ -433,11 +426,10 @@ static bool scan_for_displays() {
                                iAdapterIndex, iDisplayIndex, xrandrname, 100)
                )
             );
-            //rc = adl->ADL_Display_XrandrDisplayName_Get(iAdapterIndex, iDisplayIndex, xrandrname, 100);
             if (rc != 0)
                DBGMSG("ADL_Display_XrandrDisplayName_Get() returned %d\n   ", rc );
             // if (rc == 0)
-            //    DBGMSG("ADL_Display_XrandrDisplayName returned xrandrname=|%s|", xrandrname );
+            //    DBGMSG("ADL_Display_XrandrDisplayName_Get returned xrandrname=|%s|", xrandrname );
 
             if (is_active_display(iAdapterIndex, pCurDisplayInfo)) {
             // if (isConnectedAndMapped(pCurDisplayInfo) ) {
@@ -463,7 +455,6 @@ static bool scan_for_displays() {
                      rc = adl->ADL_Display_EdidData_Get(iAdapterIndex, iDisplayIndex, pEdidData)
                   )
                );
-               // rc = adl->ADL_Display_EdidData_Get(iAdapterIndex, iDisplayIndex, pEdidData);
                if (rc != ADL_OK) {
                   DBGMSG("ADL_Display_EdidData_Get() returned %d", rc );
                   pCurActiveDisplay->pAdlEdidData = NULL;
@@ -490,18 +481,21 @@ static bool scan_for_displays() {
                      rc = adl->ADL_Display_DDCInfo2_Get(iAdapterIndex, iDisplayIndex, pDDCInfo2)
                   )
                );
-               // rc = adl->ADL_Display_DDCInfo2_Get(iAdapterIndex, iDisplayIndex, pDDCInfo2 );
                if (rc != ADL_OK) {
-                     DBGMSG("ADL_Display_DDCInfo2_Get() returned %d", rc );
-                     pCurActiveDisplay->pAdlDDCInfo2 = NULL;
-                     free(pDDCInfo2);
-                     pCurActiveDisplay->supports_ddc = false;
+                  DBGMSG("ADL_Display_DDCInfo2_Get() returned %d", rc );
+                  pCurActiveDisplay->pAdlDDCInfo2 = NULL;
+                  free(pDDCInfo2);
+                  pCurActiveDisplay->supports_ddc = false;
                }
                else {
-                     // puts("ADL_DISPLAY_DDCInfo2_Get succeeded");
-                     // reportADLDDCInfo2(pDDCInfo2, false /* verbose */, 3);
-                     pCurActiveDisplay->pAdlDDCInfo2 = pDDCInfo2;
-                     pCurActiveDisplay->supports_ddc = (pDDCInfo2->ulSupportsDDC) ? true : false;
+                  // DBGMSG("ADL_DISPLAY_DDCInfo2_Get succeeded");
+                  // report_adl_ADLDDCInfo2(pDDCInfo2, false /* verbose */, 3);
+                  pCurActiveDisplay->pAdlDDCInfo2 = pDDCInfo2;
+
+                  // This is less useful than the name suggests.
+                  // Dell 1905FP does not support DDC, but returns true.
+                  // Needs further checking to confirm that DDC supported
+                  pCurActiveDisplay->supports_ddc = (pDDCInfo2->ulSupportsDDC) ? true : false;
                }
 
                active_display_ct++;
@@ -515,8 +509,7 @@ static bool scan_for_displays() {
 
    }  // iNumberAdapters > 0
 
-   if (adl_debug)
-      DBGMSG("Returning %d", ok );
+   DBGMSF(debug, "Returning %d", ok );
    return ok;
 }
 
@@ -576,7 +569,6 @@ void adl_release() {
 }
 
 
-
 //
 // Report on active displays
 //
@@ -624,8 +616,10 @@ void adl_report_active_display(ADL_Display_Rec * pdisp, int depth) {
    Output_Level output_level = get_output_level();
    rpt_vstring(depth, "ADL Adapter number:   %d", pdisp->iAdapterIndex);
    rpt_vstring(depth, "ADL Display number:   %d", pdisp->iDisplayIndex);
-   if (output_level >= OL_VERBOSE)
-      rpt_vstring(depth, "Supports DDC:         %s", (pdisp->supports_ddc) ?  "true" : "false");
+   // Can be true even if doesn't support DDC, e.g. Dell 1905FP
+   // avoid confusion - do not display
+   // if (output_level >= OL_VERBOSE)
+   //    rpt_vstring(depth, "Supports DDC:         %s", (pdisp->supports_ddc) ?  "true" : "false");
    if (output_level == OL_TERSE || output_level == OL_PROGRAM)
    rpt_vstring(depth, "Monitor:              %s:%s:%s", pdisp->mfg_id, pdisp->model_name, pdisp->serial_ascii);
    rpt_vstring(depth, "Xrandr name:          %s", pdisp->xrandr_name);
