@@ -489,9 +489,9 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
 // #endif
 
    int rest_ct = 0;
-   if (cmd_and_args) {
+   if (debug && cmd_and_args) {
       for (; cmd_and_args[rest_ct] != NULL; rest_ct++) {
-            DBGMSF(debug, "cmd_and_args[%d]: %s", rest_ct, cmd_and_args[rest_ct]);
+            DBGMSG("cmd_and_args[%d]: %s", rest_ct, cmd_and_args[rest_ct]);
       }
    }
 
