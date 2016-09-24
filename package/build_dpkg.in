@@ -6,7 +6,7 @@ echo $2
 export DEBFULLNAME="Sanford Rockowitz"
 export DEBEMAIL="rockowitz@minsoft.com"
 
-basename=ddctool
+basename=ddcutil
 rootdir=${PWD}/..
 ver="@PACKAGE_VERSION@"
 echo "PACKAGE_TARNAME: ${PACKAGE_TARNAME}"

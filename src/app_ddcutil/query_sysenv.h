@@ -26,6 +26,9 @@
 
 #include <config.h>
 
+#include <stdbool.h>
+
+bool is_module_loaded_using_sysfs(char * module_name);
 void query_sysenv();
 
 #ifdef USE_USB

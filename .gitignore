@@ -92,6 +92,9 @@ package/obswork/
 package/rpmwork
 package/upload_obsrpm
 package/debian/changelog
+package/debian/changelog.1
+package/debian/ddcutil.debhelper.log
+.pc
 ubuntuvm_notes.txt
 test
 qudev

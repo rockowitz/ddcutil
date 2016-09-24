@@ -1,2 +1,2 @@
-?package(ddctool):needs="text" section="Applications/System/Hardware"\
-  title="ddctool" command="/usr/bin/ddctool"
+?package(ddcutil):needs="text" section="Applications/System/Hardware"\
+  title="ddcutil" command="/usr/bin/ddcutil"

@@ -1,6 +1,6 @@
 Format: http://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
-Upstream-Name: ddctool
-Source: http://www.github.com/rockowitz/ddctool
+Upstream-Name: ddcutil
+Source: http://www.github.com/rockowitz/ddcutil
 
 Files: *
 Copyright: 2015-2016 Sanford Rockowitz <rockowitz@minsoft.com>
