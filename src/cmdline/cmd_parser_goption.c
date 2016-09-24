@@ -303,8 +303,7 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
 
    if (usbwork) {
 #ifdef USE_USB
-      if (debug)
-         DBGMSG("usbwork = |%s|", usbwork);
+      DBGMSF(debug, "usbwork = |%s|", usbwork);
       int busnum;
       int devicenum;
       bool arg_ok = parse_dot_separated_arg(usbwork, &busnum, &devicenum);
@@ -377,13 +376,11 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
    if (maxtrywork) {
        bool saved_debug = debug;
        debug = false;
-       if (debug)
-          DBGMSG("retrywork, argument = |%s|", maxtrywork );
+       DBGMSF(debug, "retrywork, argument = |%s|", maxtrywork );
 
        Null_Terminated_String_Array pieces = strsplit(maxtrywork, ",");
        int ntsal = null_terminated_string_array_length(pieces);
-       if (debug)
-          DBGMSG("ntsal=%d", ntsal );
+       DBGMSF(debug, "ntsal=%d", ntsal );
        if (null_terminated_string_array_length(pieces) != 3) {
           fprintf(stderr, "--retries requires 3 values\n");
           ok = false;
@@ -414,8 +411,7 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
        }
        null_terminated_string_array_free(pieces);
 
-       if (debug)
-          DBGMSG("retries = %d,%d,%d", parsed_cmd->max_tries[0], parsed_cmd->max_tries[1], parsed_cmd->max_tries[2]);
+       DBGMSF(debug, "retries = %d,%d,%d", parsed_cmd->max_tries[0], parsed_cmd->max_tries[1], parsed_cmd->max_tries[2]);
        debug = saved_debug;
     }
 
@@ -489,9 +485,10 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
 // #endif
 
    int rest_ct = 0;
-   if (debug && cmd_and_args) {
+   // don't pull debug into the if clause, need rest_ct to be set
+   if (cmd_and_args) {
       for (; cmd_and_args[rest_ct] != NULL; rest_ct++) {
-            DBGMSG("cmd_and_args[%d]: %s", rest_ct, cmd_and_args[rest_ct]);
+            DBGMSF(debug, "cmd_and_args[%d]: %s", rest_ct, cmd_and_args[rest_ct]);
       }
    }
 
