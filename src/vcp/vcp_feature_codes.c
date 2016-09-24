@@ -348,7 +348,7 @@ void report_vcp_feature_table_entry(VCP_Feature_Table_Entry * pentry, int depth)
    rpt_vstring(d1, "MCCS versions: %s", workbuf);
    rpt_vstring(d1, "MCCS specification groups: %s",
                    spec_group_names_r(pentry, workbuf, sizeof(workbuf)));
-   rpt_vstring(d1, "ddctool feature subsets: %s",
+   rpt_vstring(d1, "ddcutil feature subsets: %s",
                    subset_names_r(pentry, workbuf, sizeof(workbuf)));
    if (has_version_specific_features(pentry)) {
       // rpt_vstring(d1, "VERSION SPECIFIC FLAGS");
@@ -3381,7 +3381,7 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
       // seen on U3011 which is v2.1
       // should this be seen as T or NC for 2.1?
       // if set T for 2.1, monitor returns NULL response, which
-      // ddctool interprets as unsupported.
+      // ddcutil interprets as unsupported.
       // if set NC for 2.1, response looks valid,
       // supported opcode is set
       .v21_name = "Source Timing Mode",

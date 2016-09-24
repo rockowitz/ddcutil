@@ -454,7 +454,7 @@ char * get_hiddev_devname_by_display_ref(Display_Ref * dref) {
 
 
 /* Returns a list of all valid USB HID compliant monitors,
- * in a form expected by higher levels of ddctool, namely
+ * in a form expected by higher levels of ddcutil, namely
  * a collection of Display_Refs
  *
  * Arguments:    none
@@ -648,7 +648,7 @@ char * usb_get_capabilities_string_by_display_handle(Display_Handle * dh) {
 /* Tests if a hiddev device (specified by its name) appears to
  * be a USB HID compliant monitor.
  *
- * This stripped down test implements the ddctool chkusbmon command,
+ * This stripped down test implements the ddcutil chkusbmon command,
  * which is intended for use in a udev rules test.
  *
  * Arguments:

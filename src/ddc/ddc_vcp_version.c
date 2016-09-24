@@ -110,7 +110,7 @@ Version_Spec get_vcp_version_by_display_handle(Display_Handle * dh) {
             }
          }
 #else
-         PROGRAM_LOGIC_ERROR("ddctool not build with USB support");
+         PROGRAM_LOGIC_ERROR("ddcutil not build with USB support");
 #endif
       }
       DBGMSF(debug, "Non-cache lookup returning: %d.%d", dh->vcp_version.major, dh->vcp_version.minor);

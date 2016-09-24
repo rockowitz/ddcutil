@@ -13,7 +13,7 @@ endif
 # cmdline/.deps/*       \
 # ddc/.deps/*.Po        \
 # i2c/.deps/*           \
-# ddctool_app/.deps/*          \
+# ddcutil_app/.deps/*          \
 # test/ddc/.deps/*      \
 # test/i2c/.deps/*      \
 # test/.deps/*          
@@ -26,7 +26,7 @@ CLEANFILES =\
 adl/*expand         \
 adl/adl_impl/*expand \
 adl/adl_mock_impl/*expand \
-app_ddctool/*expand  \
+app_ddcutil/*expand  \
 base/*expand         \
 cmdline/*expand      \
 ddc/*expand          \
@@ -45,7 +45,7 @@ util/*expand
 
 
 bin_PROGRAMS = \
-ddctool  
+ddcutil  
 
 if ENABLE_SHARED_LIB_COND
 # Sample client program for shared library:
@@ -61,37 +61,37 @@ endif
 
 
 
-# Convenience library containing code shared between ddctool and libddctool
+# Convenience library containing code shared between ddcutil and libddcutil
 noinst_LTLIBRARIES = libcommon.la
 
 if ENABLE_SHARED_LIB_COND
 # Shared library
-lib_LTLIBRARIES = libddctool.la
+lib_LTLIBRARIES = libddcutil.la
 endif
 
-# Files only in ddctool:
-ddctool_SOURCES = \
+# Files only in ddcutil:
+ddcutil_SOURCES = \
 cmdline/cmd_parser_aux.c \
 cmdline/cmd_parser_goption.c \
 cmdline/parsed_cmd.c \
-app_ddctool/main.c \
-app_ddctool/app_dumpload.c \
-app_ddctool/query_sysenv.c \
-app_ddctool/app_setvcp.c \
-app_ddctool/app_getvcp.c \
-app_ddctool/testcases.c 
+app_ddcutil/main.c \
+app_ddcutil/app_dumpload.c \
+app_ddcutil/query_sysenv.c \
+app_ddcutil/app_setvcp.c \
+app_ddcutil/app_getvcp.c \
+app_ddcutil/testcases.c 
 
 
 if INCLUDE_TESTCASES_COND
-ddctool_SOURCES += \
+ddcutil_SOURCES += \
    test/ddc/ddc_capabilities_tests.c \
    test/ddc/ddc_vcp_tests.c \
    test/i2c/i2c_edid_tests.c \
    test/i2c/i2c_io_old.c \
    test/testcase_table.c
 else
-ddctool_SOURCES += \
-   app_ddctool/testcase_mock_table.c
+ddcutil_SOURCES += \
+   app_ddcutil/testcase_mock_table.c
 endif
 
 
@@ -116,12 +116,12 @@ gobject_api/ddcg_display_ref.h \
 gobject_api/ddcg_types.h
 
 
-# files only in libddctool:
-libddctool_la_SOURCES = \
+# files only in libddcutil:
+libddcutil_la_SOURCES = \
 libmain/ddct_public.c  
 
 if ENABLE_GOBJECT_COND
-   libddctool_la_SOURCES += $(gobject_api_sources)
+   libddcutil_la_SOURCES += $(gobject_api_sources)
 endif
 
 
@@ -154,7 +154,7 @@ all-local:
 
 
 # libcommon contains the source files that are 
-# shared between ddctool and libddctool: 
+# shared between ddcutil and libddcutil: 
 libcommon_la_SOURCES = \
 base/build_info.c \
 base/base_services.c \
@@ -267,11 +267,11 @@ $(LIBUSB_CFLAGS) \
 # $(HIDAPI_CFLAGS)
 
 # Compiler flags
-ddctool_CFLAGS        = $(AM_CFLAGS)
+ddcutil_CFLAGS        = $(AM_CFLAGS)
 laclient_CFLAGS       = $(AM_CFLAGS)
 goclient_CFLAGS       = $(AM_CFLAGS)
 libcommon_la_CFLAGS   = $(AM_CFLAGS) 
-libddctool_la_CFLAGS  = $(AM_CFLAGS)
+libddcutil_la_CFLAGS  = $(AM_CFLAGS)
 
   
 if HAVE_ADL_COND
@@ -288,8 +288,8 @@ endif
 
 # deleted $(HIDAPI_LIBS)
 # Link the shared library
-libddctool_la_LIBADD = -lz
-libddctool_la_LIBADD +=  \
+libddcutil_la_LIBADD = -lz
+libddcutil_la_LIBADD +=  \
    libcommon.la   \
    $(X11_LIBS) \
    $(XRANDR_LIBS) \
@@ -297,39 +297,39 @@ libddctool_la_LIBADD +=  \
    $(GLIB_LIBS) 
 
 if ENABLE_USB_COND
-libddctool_la_LIBADD += \
+libddcutil_la_LIBADD += \
    $(UDEV_LIBS) \
    $(LIBUSB_LIBS)
 endif
          
 
-libddctool_la_LDFLAGS = -export_symbols-regex '^ddc[tg]_[^_]'
-# libddctool_la_LDFLAGS += -version-info '0:1:1'
+libddcutil_la_LDFLAGS = -export_symbols-regex '^ddc[tg]_[^_]'
+# libddcutil_la_LDFLAGS += -version-info '0:1:1'
 
 
 # Link the executables
 
-ddctool_LDADD = \
+ddcutil_LDADD = \
    libcommon.la \
    $(XRANDR_LIBS) \
    $(X11_LIBS) \
    $(GLIB_LIBS)
 
 if ENABLE_USB_COND
-ddctool_LDADD += \
+ddcutil_LDADD += \
    $(LIBUSB_LIBS) \
    $(UDEV_LIBS) 
 endif
 
 # Fails if not linked with libxrandr - why?
 laclient_LDADD = \
-  libddctool.la \
+  libddcutil.la \
   $(XRANDR_LIBS) \
   $(GOBJECT_LIBS)
 
 
 goclient_LDADD = \
-  libddctool.la \
+  libddcutil.la \
   $(GOBJECT_LIBS)
 
 
@@ -423,18 +423,18 @@ if ENABLE_GOBJECT_COND
       $(gobject_api_headers)
 
    # add the target:
-   Ddctool-1.0.gir: libddctool.la
+   ddcutil-1.0.gir: libddcutil.la
    # Colord-1.0.gir: libcolord.la libcolordprivate.la
 
-   Ddctool_1_0_gir_INCLUDES = GObject-2.0
-   Ddctool_1_0_gir_CFLAGS = $(AM_CPPFLAGS)
+   ddcutil_1_0_gir_INCLUDES = GObject-2.0
+   ddcutil_1_0_gir_CFLAGS = $(AM_CPPFLAGS)
    # Colord_1_0_gir_INCLUDES = GObject-2.0 Gio-2.0
    # Colord_1_0_gir_CFLAGS = $(AM_CPPFLAGS) -DCD_DISABLE_DEPRECATED
 
-   # Ddctool_1_0_gir_NAMESPACE=Ddcg
-   # Ddctool_1_0_gir_VERSION=1.0
+   # ddcutil_1_0_gir_NAMESPACE=Ddcg
+   # ddcutil_1_0_gir_VERSION=1.0
 
-   Ddctool_1_0_gir_SCANNERFLAGS = --identifier-prefix=Ddcg \
+   ddcutil_1_0_gir_SCANNERFLAGS = --identifier-prefix=Ddcg \
         --symbol-prefix=ddcg \
         --warn-all \
         --add-include-path=$(srcdir) 
@@ -445,15 +445,15 @@ if ENABLE_GOBJECT_COND
    #       --c-include="colord.h"
 
   
-   Ddctool_1_0_gir_EXPORT_PACKAGES  = ddctool
-   Ddctool_1_0_gir_LIBS             = libddctool.la
-   Ddctool_1_0_gir_FILES            = $(introspection_sources)
+   ddcutil_1_0_gir_EXPORT_PACKAGES  = ddcutil
+   ddcutil_1_0_gir_LIBS             = libddcutil.la
+   ddcutil_1_0_gir_FILES            = $(introspection_sources)
    # Colord_1_0_gir_EXPORT_PACKAGES = colord
    # Colord_1_0_gir_LIBS            = libcolord.la libcolordprivate.la
    # Colord_1_0_gir_FILES           = $(introspection_sources)
 
 
-   INTROSPECTION_GIRS += Ddctool-1.0.gir
+   INTROSPECTION_GIRS += ddcutil-1.0.gir
    # INTROSPECTION_GIRS += Colord-1.0.gir
 
 

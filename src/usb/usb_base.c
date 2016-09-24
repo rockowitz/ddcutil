@@ -97,7 +97,7 @@ int usb_open_hiddev_device(char * hiddev_devname, Byte calloptions) {
 
    if (file > 0)
    {
-      // Solves problem of ddc detect not getting edid unless ddctool env called first
+      // Solves problem of ddc detect not getting edid unless ddcutil env called first
       errsv = errno;
       int rc = ioctl(file, HIDIOCINITREPORT);
       if (rc != 0) {

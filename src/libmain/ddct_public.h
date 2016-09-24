@@ -81,7 +81,7 @@ char * ddct_status_code_desc(DDCT_Status status_code);
 
 typedef Byte VCP_Feature_Code;
 
-DDCT_Version_Spec ddct_get_version();       // ddctool version
+DDCT_Version_Spec ddct_get_version();       // ddcutil version
 
 bool ddct_built_with_adl();
 #define  DDCT_BUILT_WITH_ADL  0x01
@@ -153,7 +153,7 @@ DDCT_Status ddct_repr_display_handle(DDCT_Display_Handle ddct_dh, char** repr);
 DDCT_Status ddct_get_mccs_version(DDCT_Display_Handle ddct_dh, DDCT_MCCS_Version_Spec* pspec);
 
 // DDCT_Status ddct_get_edid(DDCT_Display_Handle * dh, Byte * edid_buffer);    // edid_buffer must be >= 128 bytes
-DDCT_Status ddct_get_edid_by_display_ref(DDCT_Display_Ref ddct_dref, Byte ** pbytes);   // pointer into ddctool data structures, do not free
+DDCT_Status ddct_get_edid_by_display_ref(DDCT_Display_Ref ddct_dref, Byte ** pbytes);   // pointer into ddcutil data structures, do not free
 
 DDCT_Status ddct_get_nontable_vcp_value(
                DDCT_Display_Handle             ddct_dh,

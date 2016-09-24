@@ -84,7 +84,7 @@
 #include "usb/usb_displays.h"
 #endif
 
-#include "app_ddctool/query_sysenv.h"
+#include "app_ddcutil/query_sysenv.h"
 
 
 #ifndef MAX_PATH
@@ -647,9 +647,9 @@ static void check_i2c_dev_module(struct driver_name_node * video_driver_list) {
 
 
 static void query_packages() {
-   printf("\nddctool requiries package i2c-tools.  Use both dpkg and rpm to look for it.\n"
+   printf("\nddcutil requiries package i2c-tools.  Use both dpkg and rpm to look for it.\n"
           "While we're at it, check for package libi2c-dev which is used for building\n"
-          "ddctool.\n"
+          "ddcutil.\n"
          );
 
    bool ok;
@@ -936,7 +936,7 @@ static void driver_specific_tests(struct driver_name_node * driver_list) {
            printf("WARNING: Using AMD proprietary video driver fglrx but unable to load ADL library");
      }
 #else
-     printf("WARNING: Using AMD proprietary video driver fglrx but ddctool built without ADL support");
+     printf("WARNING: Using AMD proprietary video driver fglrx but ddcutil built without ADL support");
 #endif
      if (!found_driver_specific_checks)
         printf("No driver specific checks apply.");
@@ -1149,7 +1149,7 @@ static void probe_uhid(int depth) {
             // field 2:    vid
             // field 3:    pid
             // field 4:    appears to be a sequence number of some sort
-            //             increases with each call to ddctool env -v
+            //             increases with each call to ddcutil env -v
             snprintf(fqfn, MAX_PATH, "%s%s/rdesc", dirname, ep->d_name);
             // puts(fqfn);
 #ifdef FAILS

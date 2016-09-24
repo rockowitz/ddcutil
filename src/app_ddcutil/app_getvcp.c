@@ -50,7 +50,7 @@
 #include "ddc/ddc_vcp_version.h"
 #include "ddc/ddc_vcp.h"
 
-#include "app_ddctool/app_getvcp.h"
+#include "app_ddcutil/app_getvcp.h"
 
 
 /* Shows a single VCP value specified by its feature table entry.

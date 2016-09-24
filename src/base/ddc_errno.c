@@ -52,7 +52,7 @@ static Status_Code_Info ddcrc_info[] = {
       EDENTRY(DDCRC_INVALID_MODE          , "invalid read or write mode"            ),
       EDENTRY(DDCRC_RETRIES               , "maximum retries exceeded"              ),
       EDENTRY(DDCRC_EDID                  , "invalid EDID"                          ),
-      EDENTRY(DDCRC_DETERMINED_UNSUPPORTED , "ddctool determined that facility unsupported" ),
+      EDENTRY(DDCRC_DETERMINED_UNSUPPORTED , "ddcutil determined that facility unsupported" ),
 
       // library errors
       EDENTRY(DDCL_ARG                    , "illegal argument"),

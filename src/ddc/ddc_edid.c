@@ -57,7 +57,7 @@ ddc_get_parsed_edid_by_display_handle(Display_Handle * dh) {
       pEdid = usb_get_parsed_edid_by_display_handle(dh);
       break;
 #else
-      PROGRAM_LOGIC_ERROR("ddctool not build with USB support");
+      PROGRAM_LOGIC_ERROR("ddcutil not build with USB support");
 #endif
    }
    TRCMSG("Returning %p", __func__, pEdid);
@@ -81,7 +81,7 @@ ddc_get_parsed_edid_by_display_ref(Display_Ref * dref) {
       pEdid = usb_get_parsed_edid_by_display_ref(dref);
       break;
 #else
-      PROGRAM_LOGIC_ERROR("ddctool not built with USB support");
+      PROGRAM_LOGIC_ERROR("ddcutil not built with USB support");
 #endif
    }
 

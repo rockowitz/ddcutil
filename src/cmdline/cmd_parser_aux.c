@@ -170,7 +170,7 @@ const Feature_Subset_Table_Entry subset_table[] = {
    {VCP_SUBSET_ALL,       CMDID_GETVCP|CMDID_VCPINFO, 3, "ALL",       "All known features"},
    {VCP_SUBSET_SUPPORTED, CMDID_GETVCP,               3, "SUPPORTED", "All known features that are valid for the display"},
    {VCP_SUBSET_SCAN,      CMDID_GETVCP,               3, "SCAN",      "All feature codes 00..FF, except those known to be WO"},
-   {VCP_SUBSET_KNOWN,     CMDID_GETVCP|CMDID_VCPINFO, 3, "KNOWN",     "All features known by ddctool"},
+   {VCP_SUBSET_KNOWN,     CMDID_GETVCP|CMDID_VCPINFO, 3, "KNOWN",     "All features known by ddcutil"},
    {VCP_SUBSET_PROFILE,   CMDID_GETVCP|CMDID_VCPINFO, 3, "PROFILE",   "Features for color profile management"},
    {VCP_SUBSET_COLOR,     CMDID_GETVCP|CMDID_VCPINFO, 3, "COLOR",     "Color related features"},
    {VCP_SUBSET_LUT,       CMDID_GETVCP|CMDID_VCPINFO, 3, "LUT",       "LUT related features"},
@@ -292,7 +292,7 @@ char * command_argument_help =
        "    <feature-code-or-group> can be any of the following:\n"
        "      - the hex feature code for a specific feature, with or without a leading 0x,\n"
        "        e.g. 10 or 0x10\n"
-       "      - KNOWN     - all feature codes known to ddctool\n"
+       "      - KNOWN     - all feature codes known to ddcutil\n"
        "      - ALL       - like KNOWN, but implies --show-unsupported\n"
        "      - SCAN      - scan all feature codes 0x00..0xff\n"
        "      - COLOR     - all color related feature codes\n"

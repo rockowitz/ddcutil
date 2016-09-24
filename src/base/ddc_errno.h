@@ -1,7 +1,7 @@
 /* ddc_errno.h
  *
  * Error codes internal to the application, which are
- * primarily ddctool related.
+ * primarily ddcutil related.
  *
  * <copyright>
  * Copyright (C) 2014-2015 Sanford Rockowitz <rockowitz@minsoft.com>

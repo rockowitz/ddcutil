@@ -295,7 +295,7 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
       }
       explicit_display_spec_ct++;
 #else
-      fprintf(stderr, "ddctool not built with support for AMD proprietary driver.  --adl option invalid.\n");
+      fprintf(stderr, "ddcutil not built with support for AMD proprietary driver.  --adl option invalid.\n");
       ok = false;
 #endif
    }
@@ -322,7 +322,7 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
       }
       explicit_display_spec_ct++;
 #else
-      fprintf(stderr, "ddctool not built with support for USB connected monitors.  --usb option invalid.\n");
+      fprintf(stderr, "ddcutil not built with support for USB connected monitors.  --usb option invalid.\n");
       ok = false;
 #endif
    }
@@ -496,7 +496,7 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
    }
 
    if (version_flag) {
-      printf("ddctool %s\n", BUILD_VERSION);
+      printf("ddcutil %s\n", BUILD_VERSION);
       printf("Built %s at %s\n", BUILD_DATE, BUILD_TIME);
 #ifdef HAVE_ADL
       printf("Built with support for AMD Display Library (AMD proprietary driver).\n");

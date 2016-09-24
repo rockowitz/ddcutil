@@ -190,7 +190,7 @@ Display_Ref* get_display_ref_for_display_identifier(Display_Identifier* pdid, bo
          fprintf(stderr, "Unable to find monitor with the specified USB bus and device numbers\n");
       }
 #else
-      PROGRAM_LOGIC_ERROR("ddctool not built with USB support");
+      PROGRAM_LOGIC_ERROR("ddcutil not built with USB support");
 #endif
       break;
    }  // switch - no default case, switch is exhaustive
@@ -470,7 +470,7 @@ ddc_report_active_display(Display_Info * curinfo, int depth) {
 #ifdef USE_USB
       usb_show_active_display_by_display_ref(curinfo->dref, depth);
 #else
-      PROGRAM_LOGIC_ERROR("ddctool not built with USB support");
+      PROGRAM_LOGIC_ERROR("ddcutil not built with USB support");
 #endif
       break;
 

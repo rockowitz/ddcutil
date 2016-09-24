@@ -37,6 +37,7 @@ config.cache
 Makefile
 Makefile.in
 /src/ddctool
+/src/ddcutil
 /src/laclient
 /src/fixit
 stamp-h1

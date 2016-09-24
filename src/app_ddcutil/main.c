@@ -71,11 +71,11 @@
 #include "cmdline/cmd_parser.h"
 #include "cmdline/parsed_cmd.h"
 
-#include "app_ddctool/app_dumpload.h"
-#include "app_ddctool/app_getvcp.h"
-#include "app_ddctool/app_setvcp.h"
-#include "app_ddctool/query_sysenv.h"
-#include "app_ddctool/testcases.h"
+#include "app_ddcutil/app_dumpload.h"
+#include "app_ddcutil/app_getvcp.h"
+#include "app_ddcutil/app_setvcp.h"
+#include "app_ddcutil/query_sysenv.h"
+#include "app_ddcutil/testcases.h"
 
 
 //
@@ -195,7 +195,7 @@ int main(int argc, char *argv[]) {
 #ifndef HAVE_ADL
    if ( is_module_loaded_using_sysfs("fglrx") ) {
       fprintf(stdout, "WARNING: AMD proprietary video driver fglrx is loaded,");
-      fprintf(stdout, "but this copy of ddctool was built without fglrx support.");
+      fprintf(stdout, "but this copy of ddcutil was built without fglrx support.");
    }
 #endif
 
@@ -323,7 +323,7 @@ int main(int argc, char *argv[]) {
       query_usbenv();
       main_rc = EXIT_SUCCESS;
 #else
-      printf("ddctool was not built with support for USB connected monitors\n");
+      printf("ddcutil was not built with support for USB connected monitors\n");
       main_rc = EXIT_FAILURE;
 #endif
    }
@@ -334,7 +334,7 @@ int main(int argc, char *argv[]) {
       bool is_monitor = check_usb_monitor( parsed_cmd->args[0] );
       main_rc = (is_monitor) ? EXIT_SUCCESS : EXIT_FAILURE;
 #else
-      PROGRAM_LOGIC_ERROR("ddctool not built with USB support");
+      PROGRAM_LOGIC_ERROR("ddcutil not built with USB support");
 #endif
    }
 

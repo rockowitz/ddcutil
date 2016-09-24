@@ -88,7 +88,7 @@ set_nontable_vcp_value(
 #ifdef USE_USB
       gsc = usb_set_nontable_vcp_value(dh, feature_code, new_value);
 #else
-      PROGRAM_LOGIC_ERROR("ddctool not build with USB support");
+      PROGRAM_LOGIC_ERROR("ddcutil not build with USB support");
 #endif
    }
    else {
@@ -138,7 +138,7 @@ set_table_vcp_value(
 #ifdef USE_USB
       gsc = DDCL_UNIMPLEMENTED;
 #else
-      PROGRAM_LOGIC_ERROR("ddctool not build with USB support");
+      PROGRAM_LOGIC_ERROR("ddcutil not build with USB support");
 #endif
    }
    else {
@@ -380,7 +380,7 @@ Global_Status_Code get_vcp_value(
                 break;
           }
 #else
-      PROGRAM_LOGIC_ERROR("ddctool not build with USB support");
+      PROGRAM_LOGIC_ERROR("ddcutil not build with USB support");
 #endif
    }
    else {

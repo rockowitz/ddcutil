@@ -29,7 +29,7 @@
 //
 
 // Used in 3 ways:
-// - to identify commands within ddctool
+// - to identify commands within ddcutil
 // - as identifiers in command request and response packets
 // - in capabilities string
 

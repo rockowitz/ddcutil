@@ -14,15 +14,15 @@ dnl   IT_PROG_INTLTOOL([0.35.0])
 dnl   AC_PATH_PROG(XSLTPROC, xsltproc)
 
 
-m4_define([ddctool_major_version], [0])
-m4_define([ddctool_minor_version], [5])
+m4_define([ddcutil_major_version], [0])
+m4_define([ddcutil_minor_version], [5])
 dnl micro version 3 set 7/30/16 - development version
-m4_define([ddctool_micro_version], [1])
-m4_define([ddctool_version],
-          [ddctool_major_version.ddctool_minor_version.ddctool_micro_version])
+m4_define([ddcutil_micro_version], [2])
+m4_define([ddcutil_version],
+          [ddcutil_major_version.ddcutil_minor_version.ddcutil_micro_version])
 
 dnl causes VERSION to be set in config.h
-AC_INIT([ddctool], [ddctool_version], [rockowitz@minsoft.com])
+AC_INIT([ddcutil], [ddcutil_version], [rockowitz@minsoft.com])
 
 AC_CONFIG_AUX_DIR(config)
 dnl sanity check: check for a unique file in source directory: 
@@ -56,7 +56,7 @@ AM_PROG_AR
 ### Version specification
 ###
 
-# libtool versioning - applies to libddctool
+# libtool versioning - applies to libddcutil
 #
 # See http://sources.redhat.com/autobook/autobook/autobook_91.html#SEC91 for details
 #

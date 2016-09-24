@@ -180,7 +180,7 @@ get_raw_value_for_feature_table_entry(
               feature_type,
               &valrec);
 #else
-      PROGRAM_LOGIC_ERROR("ddctool not build with USB support");
+      PROGRAM_LOGIC_ERROR("ddcutil not build with USB support");
 #endif
    }
    else {

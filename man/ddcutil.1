@@ -2,7 +2,7 @@
 .\" First parameter, NAME, should be all caps
 .\" Second parameter, SECTION, should be 1-8, maybe w/ subsection
 .\" other parameters are allowed: see man(7), man(1)
-.TH DDCTOOL 1 "15 December 2015"
+.TH ddcutil 1 "15 December 2015"
 .\" Please adjust this date whenever revising the manpage.
 .\"
 .\" Some roff macros, for reference:
@@ -16,9 +16,9 @@
 .\" .sp <n>    insert n+1 empty lines
 .\" for manpage-specific macros, see man(7)
 .SH NAME
-ddctool \- Query and change monitor settings
+ddcutil \- Query and change monitor settings
 .SH SYNOPSIS
-.B ddctool
+.B ddcutil
 .RB [ "--display|-d"
 .IR dispno ]
 .RB [ "--bus|-b"
@@ -69,17 +69,17 @@ ddctool \- Query and change monitor settings
 
 
 .SH DESCRIPTION
-\fBddctool\fP is used to query and change monitor settings.  
+\fBddcutil\fP is used to query and change monitor settings.  
 
-\fBddctool\fP communicates with monitors implementing MCCS (Monitor Control Command Set) using the DDC/CI protocol on the I2C bus.  Normally, the video driver for the monitor exposes the I2C bus as devices named /dev/i2c-n.  
+\fBddcutil\fP communicates with monitors implementing MCCS (Monitor Control Command Set) using the DDC/CI protocol on the I2C bus.  Normally, the video driver for the monitor exposes the I2C bus as devices named /dev/i2c-n.  
 
 
 Discussion of I2C, MCCS goes here.  Define VCP.
 
 
-A particular use case for \fBddctool\fP is as part of color profile management.  
+A particular use case for \fBddcutil\fP is as part of color profile management.  
 Monitor calibration is relative to the monitor color settings currently in effect, e.g. red gain.  
-\fBddctool\fP allows color related settings to be saved at the time a monitor is calibrated, 
+\fBddcutil\fP allows color related settings to be saved at the time a monitor is calibrated, 
 and then restored when the calibration is applied.
 
 
@@ -89,7 +89,7 @@ and then restored when the calibration is applied.
 .\" respectively.
 
 
-.\" .B ddctool
+.\" .B ddcutil
 .\" .I command 
 .\" .R [
 .\" .I command-arguments
@@ -102,7 +102,7 @@ and then restored when the calibration is applied.
 .BR "detect " "Report attached monitors"
 .TP
 \fBvcpinfo\fP [ \fIfeature-code\fP | \fIfeature-group\fP ]
-Describe VCP feature codes that \fBddctool\fP knows how to interpret
+Describe VCP feature codes that \fBddcutil\fP knows how to interpret
 .TP 
 .B "capabilities "
 Query the monitor's capabilities string 
@@ -122,7 +122,7 @@ Set VCP feature values from a file.  The monitor to which the values will be app
 If the monitor is not attached, nothing happens.
 .TP
 .B "environment "
-Probe the \fBddctool\fP installation environment.
+Probe the \fBddcutil\fP installation environment.
 .TP
 .B "interrogate "
 Collect maximum information for problem diagnosis.
@@ -143,7 +143,7 @@ A feature-code is specified by its 2 character hex feature number, with or witho
 The following are the most useful feature groups recognized.  For a complete list,  use the \fB--help\fP option.
 .TP
 .BR ALL
-All feature codes understood by \fBddctool\fP
+All feature codes understood by \fBddcutil\fP
 .TQ 
 .B KNOWN
 Scan all understood feature codes, but show only codes supported by the monitor
@@ -259,25 +259,25 @@ i2c permissions
 Some newer Nvidia cards (e.g. GTX660Ti) require special settings to properly enable I2C support.   If you are using this driver and \fBddcctool\fP does not 
 work with your Nvidia card (TODO: Describe symptoms), you can try the following:
 
-Copy file /usr/local/share/ddctool/data/90-nvidia-i2c.conf to directory /etc/X11/xorg.conf.d 
+Copy file /usr/local/share/ddcutil/data/90-nvidia-i2c.conf to directory /etc/X11/xorg.conf.d 
 
-.B sudo cp /usr/local/share/ddctool/data/90-nvidia-i2c.conf /etc/X11/xorg.conf.d 
+.B sudo cp /usr/local/share/ddcutil/data/90-nvidia-i2c.conf /etc/X11/xorg.conf.d 
 
 This file will work "out of the box" if you do not have an /etc/X11/xorg.conf file.   If you do, 
 adjust the \fBIdentifier\fP value in the file to correspond to the value in the master xorg.conf file.
 
-(Note that the above instructions assume that datadir was set to /usr/local/share when ddctool was installed.  YMMV)
+(Note that the above instructions assume that datadir was set to /usr/local/share when ddcutil was installed.  YMMV)
 
 .SH AMD PRORIETARY DRIVER
 
 AMD's proprietary video driver \fBfglrx\fP does not expose the I2C bus.  Instead, it provides access to the bus through the
 AMD Display Library, aka \fBADL\fP. 
-Owing to copyright restrictions, the ADL header files are not distributed with the \fBddctool\fP source.  Additional steps are 
-required to build \fBddctool\fP with \fBfglrx\fP support.
+Owing to copyright restrictions, the ADL header files are not distributed with the \fBddcutil\fP source.  Additional steps are 
+required to build \fBddcutil\fP with \fBfglrx\fP support.
 
-To see if your copy of \fBddctool\fP was built with \fBfglrx\fP support, issue the command:
+To see if your copy of \fBddcutil\fP was built with \fBfglrx\fP support, issue the command:
 .br
-.B ddctool --version
+.B ddcutil --version
 
 ADL identifies monitors using an adapter-number/display-number pair.  To select a monitor using these numbers, specify the 
 \fB--adl\fP option with a period separating the adapter-number and display-number, e.g.
@@ -293,29 +293,29 @@ VirtualBox and VMware do not provide i2c emulation.  (qemu?)
 .SH EXAMPLES
 .\" What do .EX and .EE do?
 
-.B ddctool detect
+.B ddcutil detect
 .sp 0
 Identify all attached monitors.
 .sp 4
-.B ddctool getvcp supported
+.B ddcutil getvcp supported
 .sp 1
 .br
-Show all settings that the default monitor supports and that \fBddctool\fP understands.
+Show all settings that the default monitor supports and that \fBddcutil\fP understands.
 .PP
 .sp 0
 .B ddctpp getvcp 10 --display 2
 .br
 Query the luminosity value of the second monitor. 
 
-.B   ddctool setvcp 10 30 --bus 4
+.B   ddcutil setvcp 10 30 --bus 4
 .sp 0
 Set the luminosity value for the monitor on bus /dev/i2c-4. 
 
-.B ddctool vcpinfo --verbose
+.B ddcutil vcpinfo --verbose
 .sp 0
-Show detailed information about VCP features that \fBddctool\fP understands. 
+Show detailed information about VCP features that \fBddcutil\fP understands. 
 
-.B ddctool interrogate > ~/ddctool.out 
+.B ddcutil interrogate > ~/ddcutil.out 
 .sp 0
 Collect maximum information about monitor capabilities and the execution environment, and 
 direct the output to a file.
@@ -332,12 +332,12 @@ Requesting help is regarded as success.
 
 
 .SH SEE ALSO
-.\" README file /usr/local/share/doc/ddctool/README.md
+.\" README file /usr/local/share/doc/ddcutil/README.md
 .\" The program is documented fully in
 .\" .br
-.\" /usr/local/share/doc/ddctool/html/index.html
+.\" /usr/local/share/doc/ddcutil/html/index.html
 .\" .PP
-The project homepage: http://www.ddctool.com
+The project homepage: http://www.ddcutil.com
 
 
 

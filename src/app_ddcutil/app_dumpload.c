@@ -53,7 +53,7 @@
 #include "ddc/ddc_read_capabilities.h"
 #include "ddc/ddc_vcp.h"
 
-#include "app_ddctool/app_dumpload.h"
+#include "app_ddcutil/app_dumpload.h"
 
 
 // Filename creation

@@ -1,6 +1,6 @@
 /* build_info.c
  *
- * This file is recompiled every time ddctool is built.
+ * This file is recompiled every time ddcutil is built.
  *
  * <copyright>
  * Copyright (C) 2014-2015 Sanford Rockowitz <rockowitz@minsoft.com>

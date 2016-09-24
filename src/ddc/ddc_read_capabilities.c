@@ -124,7 +124,7 @@ get_capabilities_string(Display_Handle * dh, char** pcaps) {
          // newly created string, can just  reference
          dh->capabilities_string = usb_get_capabilities_string_by_display_handle(dh);
 #else
-         PROGRAM_LOGIC_ERROR("ddctool not build with USB support");
+         PROGRAM_LOGIC_ERROR("ddcutil not build with USB support");
 #endif
       }
       else {
