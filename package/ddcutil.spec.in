@@ -200,13 +200,13 @@ BuildRoot: %{_tmppath}/%{name}-%{version}-build
 %description 
 Query and change monitor settings
 
-ddctool communicates with monitors implementing MCCS (Monitor Control Command
+ddcutil communicates with monitors implementing MCCS (Monitor Control Command
 Set), using either the DDC/CI protocol on the I2C bus or as a Human Interface
 Device on USB.
 
-A particular use case for ddctool is as part of color profile management.
+A particular use case for ddcutil is as part of color profile management.
 Monitor calibration is relative to the monitor color settings currently in
-effect, e.g. red gain.  ddctool allows color related settings to be saved at
+effect, e.g. red gain.  ddcutil allows color related settings to be saved at
 the time a monitor is calibrated, and then restored when the calibration is
 applied.
 
@@ -260,21 +260,21 @@ rm -rf %{buildroot}
 # %%doc %%{_datadir}/doc/%%{name}/NEWS 
 # %%doc %%{_datadir}/doc/%%{name}/README
 %{_datadir}/%{name}/
-%{_mandir}/man1/ddctool.1*
+%{_mandir}/man1/ddcutil.1*
 %if %{build_libs} == 1
 %{echo: ============================> files: building libraries, }
-%{_libdir}/libddctool.a
-%{_libdir}/libddctool.la
-%{_libdir}/libddctool.so*
+%{_libdir}/libddcutil.a
+%{_libdir}/libddcutil.la
+%{_libdir}/libddcutil.so*
 %else
 %{echo: ============================> files: NOT building libraries, }
 %endif
-%{_bindir}/ddctool
+%{_bindir}/ddcutil
 
 
 
 %files devel
-# %%{_libdir}/libddctool.a
+# %%{_libdir}/libddcutil.a
 # %%{_includedir}/flaim.h
 
 

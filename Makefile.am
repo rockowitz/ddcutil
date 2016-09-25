@@ -18,6 +18,7 @@ SUBDIRS = src man data package
 RPM = rpm
 
 rpms srcrpm: dist
+	echo "----> Makefile: rps srcrpm"
 	(cd package && $(MAKE) $(AM_MAKEFLAGS) $@) || exit 1
 
 obsrpm:  

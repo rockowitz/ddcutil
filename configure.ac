@@ -37,7 +37,7 @@ AC_CONFIG_FILES([
 	man/Makefile 
 	data/Makefile 
 	package/Makefile 
-	package/ddctool.spec 
+	package/ddcutil.spec 
 	package/upload_obsrpm
   package/build_dpkg
   ],
