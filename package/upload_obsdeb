@@ -4,7 +4,7 @@
 # workdir=.
 
 
-name=ddctool 
+name=ddcutil 
 # ver="0.2.4"
 ver=$1
 rlse=$2
@@ -14,7 +14,7 @@ echo "(upload_obsdeb) parm 2 = $2, rlse=${rlse}"
 
 
 obs_proj="home:rockowitz"
-obs_pkg=ddctool
+obs_pkg=ddcutil
 
 srcdir=${PWD}/..
 curdir=${PWD}
@@ -41,7 +41,7 @@ $cmd
 
 
 
-# tar_fn=ddctool-${ver}.tar.gz
+# tar_fn=ddcutil-${ver}.tar.gz
 
 # tar_fn_new=
 # if [ -e $workdir/$tar_fn ]; then
@@ -61,34 +61,34 @@ $cmd
 #    done
 # }
 
-# echo Deleting ddctool_*.orig.tar.gz
-# echo Deleting ddctool_*.
-# rm ddctool_*.orig.tar.gz
-# rm ddctool_*.debian.tar.xz
-# rm ddctool_*.dsc
+# echo Deleting ddcutil_*.orig.tar.gz
+# echo Deleting ddcutil_*.
+# rm ddcutil_*.orig.tar.gz
+# rm ddcutil_*.debian.tar.xz
+# rm ddcutil_*.dsc
 
 cd $workdir
 
-# delfiles ddctool_*.orig.tar.gz
+# delfiles ddcutil_*.orig.tar.gz
 
-for f in ddctool_*.orig.tar.gz; do
+for f in ddcutil_*.orig.tar.gz; do
    echo "Deleting file: $f"
    rm $f
 done
 
-for f in ddctool_*.debian.tar.xz; do
+for f in ddcutil_*.debian.tar.xz; do
    echo "Deleting file: $f"
    rm $f
 done
 
-for f in ddctool_*.dsc; do
+for f in ddcutil_*.dsc; do
    echo "Deleting file: $f"
    rm $f
 done
 
-fn1="ddctool_${ver}.orig.tar.gz"        
-fn2="ddctool_${ver}-${rlse}.debian.tar.xz"
-fn3="ddctool_${ver}-${rlse}.dsc"    
+fn1="ddcutil_${ver}.orig.tar.gz"        
+fn2="ddcutil_${ver}-${rlse}.debian.tar.xz"
+fn3="ddcutil_${ver}-${rlse}.dsc"    
 
 echo "Adding file: ${fn1}" 
 cp -p $debdir/$fn1  .
@@ -97,7 +97,7 @@ cp -p $debdir/$fn2  .
 echo "Adding file: ${fn3}" 
 cp -p $debdir/$fn3  .
 
-osc addremove ddctool
+osc addremove ddcutil
 
 # echo "fn1=${fn1}"
 # echo "fn2=${fn2}"
