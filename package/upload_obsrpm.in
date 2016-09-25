@@ -9,7 +9,7 @@ ver="@PACKAGE_VERSION@"
 
 
 obs_proj="home:rockowitz"
-obs_pkg=ddctool
+obs_pkg=ddcutil
 
 srcdir=${PWD}/..
 curdir=${PWD}
@@ -33,7 +33,7 @@ cmd="osc checkout -o $workdir $obs_proj $obs_pkg"
 echo "cmd: $cmd"
 $cmd
 
-tar_fn=ddctool-${ver}.tar.gz
+tar_fn=ddcutil-${ver}.tar.gz
 
 tar_fn_new=
 if [ -e $workdir/$tar_fn ]; then
@@ -45,20 +45,20 @@ fi
 
 # TODO: remove all prior versions 
 cp -p $srcdir/$tar_fn $workdir
-cp -p $curdir/ddctool.spec $workdir
+cp -p $curdir/ddcutil.spec $workdir
 
 cd obswork
 
-osc addremove ddctool
+osc addremove ddcutil
 
 
 
 
-# cp -p $srcdir/ddctool-${ver}.tar.gz $workdir
+# cp -p $srcdir/ddcutil-${ver}.tar.gz $workdir
 
-# cp -p $srcdir/obs/ddctool.spec $workdir
+# cp -p $srcdir/obs/ddcutil.spec $workdir
 
-cmd="osc commit ddctool-${ver}.tar.gz ddctool.spec --message=\"new rpm build files\""
+cmd="osc commit ddcutil-${ver}.tar.gz ddcutil.spec --message=\"new rpm build files\""
 echo cmd: $cmd
 $cmd
 
