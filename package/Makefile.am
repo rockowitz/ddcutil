@@ -60,7 +60,7 @@ ppa:
 	echo "--------------------------> package/Makefile: target ppa"
 	chmod +x build_dpkg upload_ppa
 	./build_dpkg ppa
-	debsign debwork/ddctool_${ver}-${rlse}_source.changes   
+	debsign debwork/ddcutil_${ver}-${rlse}_source.changes   
 	./upload_ppa ${ver} ${rlse}
 
 
