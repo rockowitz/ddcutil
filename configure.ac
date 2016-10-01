@@ -15,9 +15,9 @@ dnl   AC_PATH_PROG(XSLTPROC, xsltproc)
 
 
 m4_define([ddcutil_major_version], [0])
-m4_define([ddcutil_minor_version], [5])
+m4_define([ddcutil_minor_version], [6])
 dnl micro version 3 set 7/30/16 - development version
-m4_define([ddcutil_micro_version], [9])
+m4_define([ddcutil_micro_version], [0])
 m4_define([ddcutil_version],
           [ddcutil_major_version.ddcutil_minor_version.ddcutil_micro_version])
 
