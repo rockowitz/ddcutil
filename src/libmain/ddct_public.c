@@ -95,12 +95,18 @@ void ddct_set_ferr(FILE * ferr) {
 static bool library_initialized = false;
 
 void ddct_init() {
-   DBGMSG("Starting. library_initialized=%s", bool_repr(library_initialized));
+   // Problem: until init_msg_control() is called within init_base_services(),
+   // FOUT is null, so DBGMSG() causes a segfault
+   // DBGMSG("Starting. library_initialized=%s", bool_repr(library_initialized));
    if (!library_initialized) {
-      DBGMSG("Calling init_ddc_services...");
+      // DBGMSG("Calling init_ddc_services...");
       init_base_services();
       init_ddc_services();
       library_initialized = true;
+      DBGMSG("library initialization executed");
+   }
+   else {
+      DBGMSG("library was already initialized");
    }
 }
 
