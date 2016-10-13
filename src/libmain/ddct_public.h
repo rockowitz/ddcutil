@@ -47,7 +47,6 @@ typedef struct {
 } DDCT_MCCS_Version_Spec;
 
 
-
 typedef struct {
    Byte  mh;
    Byte  ml;
@@ -71,7 +70,7 @@ void ddct_set_fout(FILE * fout);
 
 void ddct_set_ferr(FILE * ferr);
 
-void ddct_init();
+void ddct_init(void);
 
 
 typedef int DDCT_Status;    // for now
@@ -81,13 +80,16 @@ char * ddct_status_code_desc(DDCT_Status status_code);
 
 typedef Byte VCP_Feature_Code;
 
-DDCT_Version_Spec ddct_get_version();       // ddcutil version
+#ifdef UNIMPLEMENTED
+DDCT_Version_Spec ddct_get_version(void);       // ddcutil version
+#endif
 
-bool ddct_built_with_adl();
+bool ddct_built_with_adl(void);
+#ifdef UNIMPLEMENTED
 #define  DDCT_BUILT_WITH_ADL  0x01
-unsigned long ddct_get_global_flags();
+unsigned long ddct_get_global_flags(void);
 // or: more generalizable: return a byte of flags, one of which is DDCT_SUPPORTS_ADL
-
+#endif
 
 // Get and set max retries
 // Get and set timeouts
@@ -98,9 +100,12 @@ int  ddct_get_max_tries(DDCT_Retry_Type retry_type);
 DDCT_Status ddct_set_max_tries(DDCT_Retry_Type retry_type, int max_tries);
 
 typedef enum{DDCT_TIMEOUT_STANDARD, DDCT_TIMEOUT_TABLE_RETRY} DDCT_Timeout_Type;
+#ifdef UNIMPLEMENTED
 // Unimplemented:
 int  ddct_get_timeout_millis(DDCT_Timeout_Type timeout_type);
 void ddct_set_timeout_millis(DDCT_Timeout_Type timeout_type, int millisec);
+#endif
+
 
 
 // Display_Info_List ddct_get_displays();
@@ -136,6 +141,7 @@ DDCT_Status ddct_free_display_identifier(DDCT_Display_Identifier ddct_did);
 DDCT_Status ddct_repr_display_identifier(DDCT_Display_Identifier ddct_did, char** repr);
 
 
+
 typedef void * DDCT_Display_Ref;
 typedef void * DDCT_Display_Handle;
 
@@ -152,6 +158,8 @@ DDCT_Status ddct_repr_display_handle(DDCT_Display_Handle ddct_dh, char** repr);
 
 DDCT_Status ddct_get_mccs_version(DDCT_Display_Handle ddct_dh, DDCT_MCCS_Version_Spec* pspec);
 
+
+
 // DDCT_Status ddct_get_edid(DDCT_Display_Handle * dh, Byte * edid_buffer);    // edid_buffer must be >= 128 bytes
 DDCT_Status ddct_get_edid_by_display_ref(DDCT_Display_Ref ddct_dref, Byte ** pbytes);   // pointer into ddcutil data structures, do not free
 
@@ -159,6 +167,8 @@ DDCT_Status ddct_get_nontable_vcp_value(
                DDCT_Display_Handle             ddct_dh,
                VCP_Feature_Code                feature_code,
                DDCT_Non_Table_Value_Response * response);
+
+
 
 
 // flags for ddct_get_feature_info():
@@ -184,6 +194,9 @@ char *      ddct_get_feature_name(VCP_Feature_Code feature_code);
 
 typedef void * Feature_Value_Table;   // temp
 
+
+#ifdef UNIMPLEMENTED
+
 // Unimplemented
 DDCT_Status ddct_get_feature_sl_value_table(
                DDCT_Display_Handle   ddct_dh,
@@ -202,7 +215,7 @@ DDCT_Status ddct_is_feature_supported(
       VCP_Feature_Code      feature_code,
       bool *                answer);
 
-
+#endif
 
 
 DDCT_Status ddct_set_continuous_vcp_value(
@@ -224,6 +237,8 @@ DDCT_Status ddct_set_raw_vcp_value(
                Byte                 lo_byte);
 
 
+
+
 // Implemented, but untested
 DDCT_Status ddct_get_table_vcp_value(
                DDCT_Display_Handle ddct_dh,
@@ -231,22 +246,27 @@ DDCT_Status ddct_get_table_vcp_value(
                int *               value_len,
                Byte**              value_bytes);
 
+#ifdef UNIMPLEMENTED
 // Unimplemented
 DDCT_Status ddct_set_table_vcp_value(
                DDCT_Display_Handle  ddct_dh,
                VCP_Feature_Code     feature_code,
                int                  value_len,
                Byte *               value_bytes);
+#endif
 
 DDCT_Status ddct_get_capabilities_string(DDCT_Display_Handle ddct_dh, char** buffer);
 
+
+#ifdef UNIMPLEMENTED
 // Unimplemented.  Parsed capabilities has a complex data structure.  How to make visible?
 typedef void DDCT_Parsed_Capabilities;    // TEMP
 DDCT_Status ddct_parse_capabilities_string(char * capabilities_string, DDCT_Parsed_Capabilities ** parsed_capabilities);
-
+#endif
 
 DDCT_Status ddct_get_profile_related_values(DDCT_Display_Handle ddct_dh, char** pprofile_values_string);
 
 DDCT_Status ddct_set_profile_related_values(char * profile_values_string);
+
 
 #endif /* DDCT_PUBLIC_H_ */
