@@ -67,51 +67,50 @@ Version_Spec get_vcp_version_by_display_handle(Display_Handle * dh) {
    // DBGMSF(debug, "Starting. dh=%p, dh->vcp_version =  %d.%d",
    //               dh, dh->vcp_version.major, dh->vcp_version.minor);
    if (is_version_unqueried(dh->vcp_version)) {
+      if (debug) {
+         DBGMSG("Starting.  vcp_version not set");
+         report_display_handle(dh, /*msg=*/ NULL, 1);
+      }
       dh->vcp_version.major = 0;
       dh->vcp_version.minor = 0;
-#ifdef OLD
-      Parsed_Nontable_Vcp_Response * pinterpreted_code;
-#endif
-      Single_Vcp_Value * pvalrec;
 
-      // verbose output is distracting since this function is called when
-      // querying for other things
-      Output_Level olev = get_output_level();
-      if (olev == OL_VERBOSE)
-         set_output_level(OL_NORMAL);
-#ifdef OLD
-      Global_Status_Code  gsc = get_nontable_vcp_value(dh, 0xdf, &pinterpreted_code);
-#endif
-      Global_Status_Code gsc = get_vcp_value(dh, 0xdf, NON_TABLE_VCP_VALUE, &pvalrec);
-      if (olev == OL_VERBOSE)
-         set_output_level(olev);
-
-      if (gsc == 0) {
-#ifdef OLD
-         dh->vcp_version.major = pinterpreted_code->sh;
-         dh->vcp_version.minor = pinterpreted_code->sl;
-#endif
-         dh->vcp_version.major = pvalrec->val.nc.sh;
-         dh->vcp_version.minor = pvalrec->val.nc.sl;
-      }
-      else {
-         // happens for pre MCCS v2 monitors
-         DBGMSF(debug, "Error detecting VCP version using VCP feature 0xdf. gsc=%s\n", gsc_desc(gsc) );
-
+      if (dh->io_mode == USB_IO) {
 #ifdef USE_USB
-         if (dh->io_mode == USB_IO) {
-            // DBGMSG("Trying to get VESA version...");
-            __s32 vesa_ver =  usb_get_vesa_version(dh->fh);
+         // DBGMSG("Trying to get VESA version...");
+         __s32 vesa_ver =  usb_get_vesa_version(dh->fh);
+         DBGMSF(debug, "VESA version from usb_get_vesa_version(): 0x%08x", vesa_ver);
+         if (vesa_ver) {
             DBGMSF(debug, "VESA version from usb_get_vesa_version(): 0x%08x", vesa_ver);
-            if (vesa_ver) {
-               DBGMSF(debug, "VESA version from usb_get_vesa_version(): 0x%08x", vesa_ver);
-               dh->vcp_version.major = (vesa_ver >> 8) & 0xff;
-               dh->vcp_version.minor = vesa_ver & 0xff;
-            }
+            dh->vcp_version.major = (vesa_ver >> 8) & 0xff;
+            dh->vcp_version.minor = vesa_ver & 0xff;
+         }
+         else {
+            DBGMSF(debug, "Error detecting VESA version using usb_get_vesa_version()");
          }
 #else
-         PROGRAM_LOGIC_ERROR("ddcutil not build with USB support");
+         PROGRAM_LOGIC_ERROR("ddcutil not built with USB support");
 #endif
+      }
+      else {    // normal case, not USB
+         Single_Vcp_Value * pvalrec;
+
+         // verbose output is distracting since this function is called when
+         // querying for other things
+         Output_Level olev = get_output_level();
+         if (olev == OL_VERBOSE)
+            set_output_level(OL_NORMAL);
+         Global_Status_Code gsc = get_vcp_value(dh, 0xdf, NON_TABLE_VCP_VALUE, &pvalrec);
+         if (olev == OL_VERBOSE)
+            set_output_level(olev);
+
+         if (gsc == 0) {
+            dh->vcp_version.major = pvalrec->val.nc.sh;
+            dh->vcp_version.minor = pvalrec->val.nc.sl;
+         }
+         else {
+            // happens for pre MCCS v2 monitors
+            DBGMSF(debug, "Error detecting VCP version using VCP feature 0xdf. gsc=%s\n", gsc_desc(gsc) );
+         }
       }
       DBGMSF(debug, "Non-cache lookup returning: %d.%d", dh->vcp_version.major, dh->vcp_version.minor);
    }
