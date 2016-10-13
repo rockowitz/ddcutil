@@ -195,7 +195,7 @@ DDCT_Status ddct_create_adlno_display_identifier(
    return 0;
 }
 
-DDCT_Status ddct_create_mon_ser_display_identifier(
+DDCT_Status ddct_create_model_sn_display_identifier(
       char* model_name,
       char* serial_ascii,
       DDCT_Display_Identifier* pdid
