@@ -334,7 +334,7 @@ char * dref_repr(Display_Ref * dref) {
 
 // *** Display_Handle ***
 
-static Display_Handle * create_bus_display_handle(int fh, int busno) {
+static Display_Handle * create_bus_display_handle_from_busno(int fh, int busno) {
    Display_Handle * dh = calloc(1, sizeof(Display_Handle));
    memcpy(dh->marker, DISPLAY_HANDLE_MARKER, 4);
    dh->io_mode = DDC_IO_DEVI2C;
@@ -350,13 +350,13 @@ static Display_Handle * create_bus_display_handle(int fh, int busno) {
 // hacky implementation for transition
 Display_Handle * create_bus_display_handle_from_display_ref(int fh, Display_Ref * dref) {
    assert(dref->io_mode == DDC_IO_DEVI2C);
-   Display_Handle * dh = create_bus_display_handle(fh, dref->busno);
+   Display_Handle * dh = create_bus_display_handle_from_busno(fh, dref->busno);
    dh->dref = dref;
    return dh;
 }
 
 
-static Display_Handle * create_adl_display_handle(int iAdapterIndex, int iDisplayIndex) {
+static Display_Handle * create_adl_display_handle_from_adlno(int iAdapterIndex, int iDisplayIndex) {
    Display_Handle * dh = calloc(1, sizeof(Display_Handle));
    memcpy(dh->marker, DISPLAY_HANDLE_MARKER, 4);
    dh->io_mode = DDC_IO_ADL;
@@ -370,7 +370,7 @@ static Display_Handle * create_adl_display_handle(int iAdapterIndex, int iDispla
 // hacky implementation for transition
 Display_Handle * create_adl_display_handle_from_display_ref(Display_Ref * dref) {
    assert(dref->io_mode == DDC_IO_ADL);
-   Display_Handle * dh = create_adl_display_handle(dref->iAdapterIndex, dref->iDisplayIndex);
+   Display_Handle * dh = create_adl_display_handle_from_adlno(dref->iAdapterIndex, dref->iDisplayIndex);
    dh->dref = dref;
    return dh;
 }
