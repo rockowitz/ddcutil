@@ -101,6 +101,9 @@ void hex_dump(const Byte * bytes, int size);
 //
 // Miscellaneous
 //
+
+int f0puts(const char * s, FILE * stream);
 int f0printf(FILE * stream, const char * format, ...);
+int vf0printf(FILE * stream, const char * format, va_list ap);
 
 #endif /* STRINGUTIL_H_ */

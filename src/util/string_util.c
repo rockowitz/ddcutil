@@ -749,7 +749,7 @@ char * hexstring2(
  * The output is indented by the specified number of spaces.
  *
  * Arguments:
- *    fh       where to write output
+ *    fh       where to write output, if NULL, write nothing
  *    data     start of region to show
  *    size     length of region
  *    indents  number of spaces to indent the output
@@ -759,49 +759,51 @@ char * hexstring2(
  */
 void fhex_dump_indented(FILE * fh, const Byte* data, int size, int indents)
 {
-   int i; // index in data...
-   int j; // index in line...
-   char temp[8];
-   char buffer[128];
-   char *ascii;
-   char indentation[100];
-   snprintf(indentation, 100, "%*s", indents, "");
+   if (fh) {
+      int i; // index in data...
+      int j; // index in line...
+      char temp[8];
+      char buffer[128];
+      char *ascii;
+      char indentation[100];
+      snprintf(indentation, 100, "%*s", indents, "");
 
-   memset(buffer, 0, 128);
+      memset(buffer, 0, 128);
 
-   // printf("\n");
-   // Printing the ruler...
-   fprintf(fh,
-           "%s        +0          +4          +8          +c            0   4   8   c   \n",
-           indentation);
-   ascii = buffer + 58;
-   memset(buffer, ' ', 58 + 16);
-   buffer[58 + 16] = '\n';
-   buffer[58 + 17] = '\0';
-   buffer[0] = '+';
-   buffer[1] = '0';
-   buffer[2] = '0';
-   buffer[3] = '0';
-   buffer[4] = '0';
-   for (i = 0, j = 0; i < size; i++, j++) {
-      if (j == 16) {
-         fprintf(fh, "%s%s", indentation, buffer);
-         memset(buffer, ' ', 58 + 16);
-         sprintf(temp, "+%04x", i);
-         memcpy(buffer, temp, 5);
-         j = 0;
+      // printf("\n");
+      // Printing the ruler...
+      fprintf(fh,
+              "%s        +0          +4          +8          +c            0   4   8   c   \n",
+              indentation);
+      ascii = buffer + 58;
+      memset(buffer, ' ', 58 + 16);
+      buffer[58 + 16] = '\n';
+      buffer[58 + 17] = '\0';
+      buffer[0] = '+';
+      buffer[1] = '0';
+      buffer[2] = '0';
+      buffer[3] = '0';
+      buffer[4] = '0';
+      for (i = 0, j = 0; i < size; i++, j++) {
+         if (j == 16) {
+            fprintf(fh, "%s%s", indentation, buffer);
+            memset(buffer, ' ', 58 + 16);
+            sprintf(temp, "+%04x", i);
+            memcpy(buffer, temp, 5);
+            j = 0;
+         }
+
+         sprintf(temp, "%02x", 0xff & data[i]);
+         memcpy(buffer + 8 + (j * 3), temp, 2);
+         if ((data[i] > 31) && (data[i] < 127))
+            ascii[j] = data[i];
+         else
+            ascii[j] = '.';
       }
 
-      sprintf(temp, "%02x", 0xff & data[i]);
-      memcpy(buffer + 8 + (j * 3), temp, 2);
-      if ((data[i] > 31) && (data[i] < 127))
-         ascii[j] = data[i];
-      else
-         ascii[j] = '.';
+      if (j != 0)
+         fprintf(fh, "%s%s", indentation, buffer);
    }
-
-   if (j != 0)
-      fprintf(fh, "%s%s", indentation, buffer);
 }
 
 
@@ -835,6 +837,24 @@ void hex_dump(const Byte* data, int size) {
 }
 
 
+/* Version of fputs() that allows a NULL stream argument,
+ * in which case no output is written.
+ *
+ * Arguments:
+ *    msg        text to write
+ *    stream     if null do nothing
+ *
+ * Returns:
+ *    result of fputs(), or 0 if stream is NULL
+ */
+int f0puts(const char * msg, FILE * stream) {
+   int rc = 0;
+   if (stream)
+      rc = fputs(msg, stream);
+   return rc;
+}
+
+
 /* Version of fprintf() that allows a NULL stream argument,
  * in which case no output is written.
  *
@@ -851,7 +871,26 @@ int f0printf(FILE * stream, const char * format, ...) {
    if (stream) {
       va_list(args);
       va_start(args, format);
-      vfprintf(stream, format, args);
+      rc = vfprintf(stream, format, args);
    }
+   return rc;
+}
+
+
+/* Version of vfprintf() that allows a NULL stream argument,
+ * in which case no output is written.
+ *
+ * Arguments:
+ *    stream     if null do nothing
+ *    format     format string
+ *    ...        variable argument list
+ *
+ * Returns:
+ *    result of vfprintf(), or 0 if stream is NULL
+ */
+int vf0printf(FILE * stream, const char * format, va_list ap) {
+   int rc = 0;
+   if (stream)
+      rc = vfprintf(stream, format, ap);
    return rc;
 }
