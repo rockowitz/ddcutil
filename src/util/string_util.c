@@ -837,6 +837,24 @@ void hex_dump(const Byte* data, int size) {
 }
 
 
+/* Version of fputc() that allows a NULL stream argument,
+ * in which case no output is written.
+ *
+ * Arguments:
+ *    c          character to write
+ *    stream     if null do nothing
+ *
+ * Returns:
+ *    result of fputs(), or 0 if stream is NULL
+ */
+int f0putc(int c, FILE * stream) {
+   int rc = 0;
+   if (stream)
+      rc = fputc(c, stream);
+   return rc;
+}
+
+
 /* Version of fputs() that allows a NULL stream argument,
  * in which case no output is written.
  *
