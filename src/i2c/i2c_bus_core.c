@@ -133,7 +133,7 @@ int i2c_close_bus(int fd, int busno, Byte calloptions) {
          TERMINATE_EXECUTION_ON_ERROR(workbuf);
 
       if (calloptions & CALLOPT_ERR_MSG)
-         fprintf(FERR, "%s\n", workbuf);
+         f0printf(FERR, "%s\n", workbuf);
 
       rc = errsv;
    }

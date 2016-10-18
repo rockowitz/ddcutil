@@ -496,7 +496,7 @@ show_feature_set_values(
             char * feature_name =  get_version_sensitive_feature_name(entry, vcp_version);
             Version_Feature_Flags vflags = get_version_sensitive_feature_flags(entry, vcp_version);
             char * msg = (vflags & VCP2_DEPRECATED) ? "Deprecated" : "Write-only feature";
-            fprintf(FOUT, FMT_CODE_NAME_DETAIL_W_NL,
+            f0printf(FOUT, FMT_CODE_NAME_DETAIL_W_NL,
                           entry->code, feature_name, msg);
          }
       }
@@ -515,7 +515,7 @@ show_feature_set_values(
             if (collector)
                g_ptr_array_add(collector, formatted_value);
             else
-               fprintf(FOUT, "%s\n", formatted_value);
+               f0printf(FOUT, "%s\n", formatted_value);
          }
          else {
             // or should I check features_ct == 1?

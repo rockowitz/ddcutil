@@ -323,14 +323,14 @@ static GPtrArray * get_usb_monitor_list() {
 
          cgname = get_hiddev_name(fd);               // HIDIOCGNAME
          devinfo = calloc(1,sizeof(struct hiddev_devinfo));
-         if ( hid_get_device_info(fd, devinfo, CALLOPT_ERR_MSG) != 0)
+         if ( hid_get_device_info(fd, devinfo, CALLOPT_ERR_MSG) != 0 )
             goto close;
          if (!is_hiddev_monitor(fd))
             goto close;
 
          parsed_edid = get_hiddev_edid_with_fallback(fd, devinfo);
          if (!parsed_edid) {
-            fprintf(FERR,
+            f0printf(FERR,
                     "Monitor on device %s reports no EDID or has invalid EDID. Ignoring.\n",
                     hiddev_fn);
             goto close;
