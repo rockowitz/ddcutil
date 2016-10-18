@@ -41,7 +41,30 @@
 // Externally visible variables
 //
 
+// n.b. will be NULL until init_msg_control() is called
+// be careful about referencing during initialization
+FILE * FOUT = NULL;
+FILE * FERR = NULL;
+
 bool dbgtrc_show_time = false;    // include elapsed time in debug/trace output
+
+
+//
+// Global SDTOUT and STDERR redirection, for controlling message output in API
+//
+
+void init_msg_control() {
+   FOUT = stdout;
+   FERR = stderr;
+}
+
+void set_fout(FILE * fout) {
+   FOUT = fout;
+}
+
+void set_ferr(FILE * ferr) {
+   FERR = ferr;
+}
 
 
 //
@@ -59,7 +82,7 @@ void ddc_abort(int status) {
    if (global_abort_loc)
       longjmp(*global_abort_loc, status);
    else {
-      puts("Terminating execution.");
+      f0puts("Terminating execution.\n", FERR);
       exit(EXIT_FAILURE);     // or return status?
    }
 }
@@ -161,21 +184,23 @@ long cur_realtime_nanosec() {
  */
 void show_timestamp_history() {
    if (tracking_timestamps) {
+      // n. DBGMSG writes to FOUT
       DBGMSG("total timestamps: %d", timestamp_ct);
       bool monotonic = true;
       int ctr = 0;
       for (; ctr < timestamp_ct; ctr++) {
-         printf("  timestamp[%d] =  %15ld\n", ctr, timestamp[ctr] );
+         f0printf(FOUT, "  timestamp[%d] =  %15ld\n", ctr, timestamp[ctr] );
          if (ctr > 0 && timestamp[ctr] <= timestamp[ctr-1]) {
-            printf("   !!! NOT STRICTLY MONOTONIC !!!\n");
+            f0printf(FOUT, "   !!! NOT STRICTLY MONOTONIC !!!\n");
             monotonic = false;
          }
       }
-      printf("Timestamps are%s strictly monotonic\n", (monotonic) ? "" : " NOT");
+      f0printf(FOUT, "Timestamps are%s strictly monotonic\n", (monotonic) ? "" : " NOT");
    }
    else
       DBGMSG("Not tracking timestamps");
 }
+
 
 static long initial_timestamp_nanos = 0;
 // nanoseconds since start of program, first call initializes
@@ -188,8 +213,6 @@ long elapsed_time_nanosec() {
    // printf("(%s) Returning: %ld\n", __func__, result);
    return result;
 }
-
-
 
 
 char * formatted_elapsed_time() {
@@ -208,31 +231,6 @@ char * formatted_elapsed_time() {
 }
 
 
-
-
-
-
-//
-// Global SDTOUT and STDERR redirection, for controlling message output in API
-//
-
-FILE * FOUT = NULL;
-FILE * FERR = NULL;
-
-void init_msg_control() {
-   FOUT = stdout;
-   FERR = stderr;
-}
-
-void set_fout(FILE * fout) {
-   FOUT = fout;
-}
-
-void set_ferr(FILE * ferr) {
-   FERR = ferr;
-}
-
-
 // Local definitions and functions shared by all message control categories
 
 #define SHOW_REPORTING_TITLE_START 0
@@ -245,10 +243,10 @@ print_simple_title_value(int    offset_start_to_title,
                          int    offset_title_start_to_value,
                          char * value)
 {
-   printf("%.*s%-*s%s\n",
-          offset_start_to_title,"",
-          offset_title_start_to_value, title,
-          value);
+   f0printf(FOUT, "%.*s%-*s%s\n",
+            offset_start_to_title,"",
+            offset_title_start_to_value, title,
+            value);
 }
 
 
@@ -403,7 +401,7 @@ void ddcmsg(Trace_Group  traceGroup,
       va_list(args);
       va_start(args, format);
       vsnprintf(buffer, 200, format, args);
-      printf("(%s) %s\n", funcname, buffer);
+      f0printf(FOUT, "(%s) %s\n", funcname, buffer);
    }
 }
 
@@ -434,7 +432,7 @@ void show_reporting() {
    show_output_level();
    show_ddcmsg();
    show_trace_groups();
-   puts("");
+   f0puts("", FOUT);
 }
 
 
@@ -461,7 +459,8 @@ void severemsg(
       va_start(args, format);
       vsnprintf(buffer, 200, format, args);
       snprintf(buf2, 250, "(%s) %s\n", funcname, buffer);
-      fputs(buf2, stderr);
+      // fputs(buf2, stderr);
+      f0puts(buf2, FERR);
       va_end(args);
 }
 
@@ -564,7 +563,7 @@ void dbgtrc(
       else
          snprintf(buf2, bufsz+60, "(%s) %s\n", funcname, buffer);
       // puts(buf2);        // automatic terminating null
-      fputs(buf2, FOUT);    // no automatic terminating null
+      f0puts(buf2, FOUT);    // no automatic terminating null
       va_end(args);
    }
 }
@@ -583,7 +582,7 @@ void report_ioctl_error(
       bool fatal) {
    int errsv = errno;
    // fprintf(stderr, "(report_ioctl_error)\n");
-   fprintf(stderr, "ioctl error in function %s at line %d in file %s: errno=%s\n",
+   f0printf(FERR, "ioctl error in function %s at line %d in file %s: errno=%s\n",
            funcname, lineno, filename, linux_errno_desc(errnum) );
    // fprintf(stderr, "  %s\n", strerror(errnum));  // linux_errno_desc now calls strerror
    // will contain at least sterror(errnum), possibly more:
@@ -659,9 +658,9 @@ void program_logic_error(
                       funcname, lineno, fn);
 
   // don't combine into 1 line, might be very long.  just output 2 lines:
-  fputs(buf2,   stderr);
-  fputs(buffer, stderr);
-  fputc('\n',   stderr);
+  f0puts(buf2,   FERR);
+  f0puts(buffer, FERR);
+  f0puts("\n",   FERR);
 
   // fputs("Terminating execution.\n", stderr);
   ddc_abort(DDCL_INTERNAL_ERROR);
@@ -691,7 +690,7 @@ void terminate_execution_on_error(
       finalBuffer = buf2;
    }
 
-   puts(finalBuffer);
+   f0puts(finalBuffer, FERR);
 
    ddc_abort(DDCL_INTERNAL_ERROR);
 }
