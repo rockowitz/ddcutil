@@ -51,6 +51,26 @@ ddcg_display_identifier_create_busno_identifier(
       gint32                  busno,
       GError **               error);
 
+DdcgDisplayIdentifier*
+ddcg_display_identifier_create_adlno_identifier(
+      gint32      adapter_index,
+      gint32      display_index,
+      gint32      busno,
+      GError **   error);
+
+DdcgDisplayIdentifier*
+ddcg_display_identifier_create_model_sn_identifier(
+      const gchar *  model,
+      const gchar *  sn,
+      GError **      error);
+
+DdcgDisplayIdentifier*
+ddcg_display_identifier_create_usb_identifier(
+      gint32      bus,
+      gint32      device,
+      GError **   error);
+
+
 DdcgDisplayIdentifier *
 ddcg_display_identifier_create_dispno_identifier(
       gint32                  dispno,

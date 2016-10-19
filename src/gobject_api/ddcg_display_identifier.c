@@ -131,6 +131,115 @@ ddcg_display_identifier_create_busno_identifier(
 
 
 /**
+ *  ddcg_display_identifier_create_adlno_identifier: (constructor):
+ *  @adapter_index:     ADL adapter index
+ *  @display_index:     ADL display index
+ *  @error: (out): location where to return #GError if failure
+ *
+ *  Creates a #DdcgDisplayIdentifier specifying an I2C bus number
+ *
+ *  Returns: (transfer full): newly created #DdcgDisplayIdentifier
+ */
+DdcgDisplayIdentifier*
+ddcg_display_identifier_create_adlno_identifier(
+      gint32      adapter_index,
+      gint32      display_index,
+      gint32      busno,
+      GError **   error)
+{
+   g_return_val_if_fail (error == NULL || *error == NULL, NULL);
+
+   DdcgDisplayIdentifier * ddcg_did = NULL;
+   DDCT_Display_Identifier ddct_did = NULL;
+   DDCT_Status ddct_status = ddct_create_adlno_display_identifier(adapter_index, display_index, &ddct_did);
+   if (ddct_status == 0) {
+      ddcg_did = g_object_new(DDCG_TYPE_DISPLAY_IDENTIFIER, NULL);
+      ddcg_did->priv->ddct_did = ddct_did;
+      // ddcg_display_identifier_report(ddcg_did, 0);
+   }
+   else {
+      GQuark domain = g_quark_from_string("DDCTOOL_DDCG");
+      g_set_error(error,  domain, ddct_status,
+                  "ddct_create_adlno_display_identifier() returned %d=ddct_status", ddct_status);
+   }
+   return ddcg_did;
+}
+
+
+/**
+ *  ddcg_display_identifier_create_usb_identifier: (constructor):
+ *  @bus:          bus number
+ *  @device:       device number
+ *  @error: (out): location where to return #GError if failure
+ *
+ *  Creates a #DdcgDisplayIdentifier using USB bus and device numbers
+ *
+ *  Returns: (transfer full): newly created #DdcgDisplayIdentifier
+ */
+DdcgDisplayIdentifier*
+ddcg_display_identifier_create_usb_identifier(
+      gint32      bus,
+      gint32      device,
+      GError **   error)
+{
+   g_return_val_if_fail (error == NULL || *error == NULL, NULL);
+
+   DdcgDisplayIdentifier * ddcg_did = NULL;
+   DDCT_Display_Identifier ddct_did = NULL;
+   DDCT_Status ddct_status = ddct_create_usb_display_identifier(bus, device, &ddct_did);
+   if (ddct_status == 0) {
+      ddcg_did = g_object_new(DDCG_TYPE_DISPLAY_IDENTIFIER, NULL);
+      ddcg_did->priv->ddct_did = ddct_did;
+      // ddcg_display_identifier_report(ddcg_did, 0);
+   }
+   else {
+      GQuark domain = g_quark_from_string("DDCTOOL_DDCG");
+      g_set_error(error,  domain, ddct_status,
+                  "ddct_create_usb_display_identifier() returned %d=ddct_status", ddct_status);
+   }
+   return ddcg_did;
+}
+
+
+/**
+ *  ddcg_display_identifier_create_model_sn_identifier: (constructor):
+ *  @model:        model name
+ *  @sn:           serial number string
+ *  @error: (out): location where to return #GError if failure
+ *
+ *  Creates a #DdcgDisplayIdentifier using USB bus and device numbers
+ *
+ *  Returns: (transfer full): newly created #DdcgDisplayIdentifier
+ */
+DdcgDisplayIdentifier*
+ddcg_display_identifier_create_model_sn_identifier(
+      const gchar *  model,
+      const gchar *  sn,
+      GError **      error)
+{
+   g_return_val_if_fail (error == NULL || *error == NULL, NULL);
+
+   DdcgDisplayIdentifier * ddcg_did = NULL;
+   DDCT_Display_Identifier ddct_did = NULL;
+   DDCT_Status ddct_status = ddct_create_model_sn_display_identifier(model, sn, &ddct_did);
+   if (ddct_status == 0) {
+      ddcg_did = g_object_new(DDCG_TYPE_DISPLAY_IDENTIFIER, NULL);
+      ddcg_did->priv->ddct_did = ddct_did;
+      // ddcg_display_identifier_report(ddcg_did, 0);
+   }
+   else {
+      GQuark domain = g_quark_from_string("DDCTOOL_DDCG");
+      g_set_error(error,  domain, ddct_status,
+                  "ddct_create_model_sn_identifier() returned %d=ddct_status", ddct_status);
+   }
+   return ddcg_did;
+}
+
+
+
+
+
+/**
  *  ddcg_display_identifier_create_dispno_identifier: (constructor):
  *  @dispno:    display number
  *  @error: (out) : location where to return #GError if failure
