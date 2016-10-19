@@ -87,8 +87,8 @@ typedef struct {
 Display_Identifier* create_dispno_display_identifier(int dispno);
 Display_Identifier* create_busno_display_identifier(int busno);
 Display_Identifier* create_adlno_display_identifier(int iAdapterIndex, int iDisplayIndex);
-Display_Identifier* create_edid_display_identifier(Byte* edidbytes);
-Display_Identifier* create_mon_ser_display_identifier(char* model_name, char* serial_ascii);
+Display_Identifier* create_edid_display_identifier(const Byte* edidbytes);
+Display_Identifier* create_model_sn_display_identifier(const char* model_name, const char* serial_ascii);
 Display_Identifier* create_usb_display_identifier(int bus, int device);
 void                report_display_identifier(Display_Identifier * pdid, int depth);
 void                free_display_identifier(Display_Identifier * pdid);

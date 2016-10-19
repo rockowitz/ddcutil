@@ -130,12 +130,16 @@ DDCT_Status ddct_create_busno_display_identifier(
                int busno,
                DDCT_Display_Identifier* pdid);
 DDCT_Status ddct_create_model_sn_display_identifier(
-               char * model,
-               char * sn,
+               const char * model,
+               const char * sn,
                DDCT_Display_Identifier* pdid);
 DDCT_Status ddct_create_edid_display_identifier(
-               Byte * edid,
+               const Byte * edid,
                DDCT_Display_Identifier * pdid);      // 128 byte edid
+DDCT_Status ddct_create_usb_display_identifier(
+               int bus,
+               int device,
+               DDCT_Display_Identifier* pdid);
 DDCT_Status ddct_free_display_identifier(DDCT_Display_Identifier ddct_did);
 
 DDCT_Status ddct_repr_display_identifier(DDCT_Display_Identifier ddct_did, char** repr);

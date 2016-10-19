@@ -196,8 +196,8 @@ DDCT_Status ddct_create_adlno_display_identifier(
 }
 
 DDCT_Status ddct_create_model_sn_display_identifier(
-      char* model_name,
-      char* serial_ascii,
+      const char* model_name,
+      const char* serial_ascii,
       DDCT_Display_Identifier* pdid
      )
 {
@@ -213,13 +213,13 @@ DDCT_Status ddct_create_model_sn_display_identifier(
       *pdid = NULL;
    }
    else {
-      *pdid = create_mon_ser_display_identifier(model_name, serial_ascii);
+      *pdid = create_model_sn_display_identifier(model_name, serial_ascii);
    }
    return rc;
 }
 
 DDCT_Status ddct_create_edid_display_identifier(
-               Byte * edid,
+               const Byte * edid,
                DDCT_Display_Identifier * pdid)    // 128 byte EDID
 {
    *pdid = NULL;
@@ -233,6 +233,17 @@ DDCT_Status ddct_create_edid_display_identifier(
    }
    return rc;
 }
+
+DDCT_Status ddct_create_usb_display_identifier(
+               int bus,
+               int device,
+               DDCT_Display_Identifier* pdid) {
+   Display_Identifier* did = create_usb_display_identifier(bus, device);
+   *pdid = did;
+   return 0;
+}
+
+
 
 DDCT_Status ddct_free_display_identifier(DDCT_Display_Identifier did) {
    DDCT_Status rc = 0;

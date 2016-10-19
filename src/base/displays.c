@@ -95,7 +95,7 @@ Display_Identifier* create_adlno_display_identifier(
 }
 
 Display_Identifier* create_edid_display_identifier(
-      Byte* edidbytes
+      const Byte* edidbytes
       )
 {
    Display_Identifier* pIdent = common_create_display_identifier(DISP_ID_EDID);
@@ -103,9 +103,9 @@ Display_Identifier* create_edid_display_identifier(
    return pIdent;
 }
 
-Display_Identifier* create_mon_ser_display_identifier(
-      char* model_name,
-      char* serial_ascii
+Display_Identifier* create_model_sn_display_identifier(
+      const char* model_name,
+      const char* serial_ascii
       )
 {
    assert(model_name && strlen(model_name) > 0 && strlen(model_name) < EDID_MODEL_NAME_FIELD_SIZE);
@@ -116,7 +116,7 @@ Display_Identifier* create_mon_ser_display_identifier(
    return pIdent;
 }
 
-#ifdef USE_USB
+// #ifdef USE_USB
 Display_Identifier* create_usb_display_identifier(int bus, int device) {
    Display_Identifier* pIdent = common_create_display_identifier(DISP_ID_USB);
    pIdent->usb_bus = bus;
@@ -124,7 +124,7 @@ Display_Identifier* create_usb_display_identifier(int bus, int device) {
    return pIdent;
 
 }
-#endif
+// #endif
 
 
 void report_display_identifier(Display_Identifier * pdid, int depth) {
@@ -177,7 +177,7 @@ char * mccs_io_mode_name(MCCS_IO_Mode val) {
    return MCCS_IO_Mode_Names[val];
 }
 
-static const Version_Spec version_spec_unqueried = {0xff, 0xff};
+static const Version_Spec VERSION_SPEC_UNQUERIED = {0xff, 0xff};
 
 bool is_version_unqueried(Version_Spec vspec) {
    return (vspec.major == 0xff && vspec.minor == 0xff);
@@ -190,7 +190,7 @@ Display_Ref * create_bus_display_ref(int busno) {
    memcpy(dref->marker, DISPLAY_REF_MARKER, 4);
    dref->io_mode = DDC_IO_DEVI2C;
    dref->busno       = busno;
-   dref->vcp_version = version_spec_unqueried;
+   dref->vcp_version = VERSION_SPEC_UNQUERIED;
    // DBGMSG("Done.  Constructed bus display ref: ");
    // report_display_ref(dref,0);
    return dref;
@@ -202,7 +202,7 @@ Display_Ref * create_adl_display_ref(int iAdapterIndex, int iDisplayIndex) {
    dref->io_mode   = DDC_IO_ADL;
    dref->iAdapterIndex = iAdapterIndex;
    dref->iDisplayIndex = iDisplayIndex;
-   dref->vcp_version   = version_spec_unqueried;
+   dref->vcp_version   = VERSION_SPEC_UNQUERIED;
    return dref;
 }
 
@@ -215,7 +215,7 @@ Display_Ref * create_usb_display_ref(int usb_bus, int usb_device, char * hiddev_
    dref->usb_bus     = usb_bus;
    dref->usb_device  = usb_device;
    dref->usb_hiddev_name = strdup(hiddev_devname);
-   dref->vcp_version = version_spec_unqueried;
+   dref->vcp_version = VERSION_SPEC_UNQUERIED;
    return dref;
 }
 #endif
@@ -340,7 +340,7 @@ static Display_Handle * create_bus_display_handle_from_busno(int fh, int busno) 
    dh->io_mode = DDC_IO_DEVI2C;
    dh->fh = fh;
    dh->busno = busno;
-   dh->vcp_version = version_spec_unqueried;
+   dh->vcp_version = VERSION_SPEC_UNQUERIED;
 
    // report_display_handle(dh,__func__);
    return dh;
@@ -362,7 +362,7 @@ static Display_Handle * create_adl_display_handle_from_adlno(int iAdapterIndex, 
    dh->io_mode = DDC_IO_ADL;
    dh->iAdapterIndex = iAdapterIndex;
    dh->iDisplayIndex = iDisplayIndex;
-   dh->vcp_version = version_spec_unqueried;
+   dh->vcp_version = VERSION_SPEC_UNQUERIED;
    return dh;
 }
 
@@ -386,7 +386,7 @@ Display_Handle * create_usb_display_handle_from_display_ref(int fh, Display_Ref 
    dh->hiddev_device_name = dref->usb_hiddev_name;
    dh->usb_bus = dref->usb_bus;
    dh->usb_device = dref->usb_device;
-   dh->vcp_version = version_spec_unqueried;
+   dh->vcp_version = VERSION_SPEC_UNQUERIED;
 
    // report_display_handle(dh,__func__);
    return dh;
