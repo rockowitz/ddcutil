@@ -159,7 +159,7 @@ Display_Ref* get_display_ref_for_display_identifier(Display_Identifier* pdid, bo
    case DISP_ID_DISPNO:
       dref = ddc_find_display_by_dispno(pdid->dispno);
       if (!dref && emit_error_msg) {
-         fprintf(stderr, "Invalid display number\n");
+         f0printf(FERR, "Invalid display number\n");
       }
       validated = false;
       break;
@@ -174,23 +174,25 @@ Display_Ref* get_display_ref_for_display_identifier(Display_Identifier* pdid, bo
    case DISP_ID_MONSER:
       dref = ddc_find_display_by_model_and_sn(pdid->model_name, pdid->serial_ascii, DISPSEL_VALID_ONLY);
       if (!dref && emit_error_msg) {
-         fprintf(stderr, "Unable to find monitor with the specified model and serial number\n");
+         f0printf(FERR, "Unable to find monitor with the specified model and serial number\n");
       }
       break;
    case DISP_ID_EDID:
       dref = ddc_find_display_by_edid(pdid->edidbytes, DISPSEL_VALID_ONLY);
       if (!dref && emit_error_msg) {
-         fprintf(stderr, "Unable to find monitor with the specified EDID\n" );
+         f0printf(FERR, "Unable to find monitor with the specified EDID\n" );
       }
       break;
    case DISP_ID_USB:
 #ifdef USE_USB
       dref = ddc_find_display_by_usb_busnum_devnum(pdid->usb_bus, pdid->usb_device);
       if (!dref && emit_error_msg) {
-         fprintf(stderr, "Unable to find monitor with the specified USB bus and device numbers\n");
+         f0printf(FERR, "Unable to find monitor with the specified USB bus and device numbers\n");
       }
 #else
-      PROGRAM_LOGIC_ERROR("ddcutil not built with USB support");
+      if (emit_error_msg)
+         f0printf(FERR, "ddcutil not built with USB support\n");
+      // PROGRAM_LOGIC_ERROR("ddcutil not built with USB support");
 #endif
       break;
    }  // switch - no default case, switch is exhaustive
