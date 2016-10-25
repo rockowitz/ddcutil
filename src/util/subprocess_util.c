@@ -65,14 +65,14 @@ bool execute_shell_cmd(char * shell_cmd, int depth) {
        while ( (read=getline(&a_line, &len, fp)) != -1) {
           if (strlen(a_line) > 0)
              a_line[strlen(a_line)-1] = '\0';
-             if (first_line) {
-                if (str_ends_with(a_line, "not found")) {
-                   // printf("(%s) found \"not found\"\n", __func__);
-                   ok = false;
-                   break;
-                }
-                first_line = false;
+          if (first_line) {
+             if (str_ends_with(a_line, "not found")) {
+                // printf("(%s) found \"not found\"\n", __func__);
+                ok = false;
+                break;
              }
+             first_line = false;
+          }
           rpt_title(a_line, depth);
           // fputs(a_line, stdout);
           // free(a_line);
@@ -123,14 +123,14 @@ execute_shell_cmd_collect(char * shell_cmd) {
        while ( (read=getline(&a_line, &len, fp)) != -1) {
           if (strlen(a_line) > 0)
              a_line[strlen(a_line)-1] = '\0';
-             if (first_line) {
-                if (str_ends_with(a_line, "not found")) {
-                   // printf("(%s) found \"not found\"\n", __func__);
-                   ok = false;
-                   break;
-                }
-                first_line = false;
+          if (first_line) {
+             if (str_ends_with(a_line, "not found")) {
+                // printf("(%s) found \"not found\"\n", __func__);
+                ok = false;
+                break;
              }
+             first_line = false;
+          }
           g_ptr_array_add(result, strdup(a_line));
        }
        int pclose_rc = pclose(fp);
