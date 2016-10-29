@@ -113,4 +113,8 @@ ddctool-0.5.0.tar.gz
 ddcutil*tar.gz
 src/swig/*.py
 src/swig/*_wrap.c
+*plist/
+clang-report/
+cov-int/
+ddcutil-coverity.tgz
 

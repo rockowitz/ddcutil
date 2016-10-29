@@ -43,8 +43,21 @@ ppa:
 	(cd package && $(MAKE) $(AM_MAKEFLAGS) $@) || exit 1
 
 
+# Copied and adapted from colord
+# is calling autogen.sh within this file dangerous?
+clang:
+	$(MAKE) clean;                                  \
+	rm -rf clang;                                   \
+	scan-build --use-analyzer=/usr/bin/clang        \
+	        -o clang-report                         \
+		./autogen.sh				\
+	        --disable_gobject_api                   \
+	        ;                                       \
+	scan-build --use-analyzer=/usr/bin/clang        \
+	        -o clang-report make
 
-.PHONY: srcrpm rpms obsrpm dpkg obsdeb ppa
+
+.PHONY: srcrpm rpms obsrpm dpkg obsdeb ppa clang
 
 
 
