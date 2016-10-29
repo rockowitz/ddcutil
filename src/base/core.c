@@ -536,8 +536,8 @@ void dbgtrc(
    static char * buf2   = NULL;
 
    if (!buffer) {      // first call
-      buffer = calloc(bufsz,    sizeof(char*));
-      buf2   = calloc(bufsz+60, sizeof(char*));
+      buffer = calloc(bufsz,    sizeof(char));
+      buf2   = calloc(bufsz+60, sizeof(char));
    }
 
    if ( is_tracing(trace_group, fn) ) {
@@ -550,8 +550,8 @@ void dbgtrc(
          free(buffer);
          free(buf2);
          bufsz = ct+1;
-         buffer = calloc(bufsz, sizeof(char*));
-         buf2   = calloc(bufsz+50, sizeof(char*));
+         buffer = calloc(bufsz, sizeof(char));
+         buf2   = calloc(bufsz+50, sizeof(char));
          va_list(args);
          va_start(args, format);
          ct = vsnprintf(buffer, bufsz, format, args);
