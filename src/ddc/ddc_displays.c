@@ -475,9 +475,7 @@ ddc_report_active_display(Display_Info * curinfo, int depth) {
       PROGRAM_LOGIC_ERROR("ddcutil not built with USB support");
 #endif
       break;
-
    }
-
 
    Output_Level output_level = get_output_level();
    if (output_level >= OL_NORMAL  && ddc_is_valid_display_ref(curinfo->dref, false)) {
@@ -493,8 +491,6 @@ ddc_report_active_display(Display_Info * curinfo, int depth) {
          set_output_level(OL_NORMAL);
 
       Version_Spec vspec = get_vcp_version_by_display_handle(dh);
-
-      // printf("VCP version:   %d.%d\n", vspec.major, vspec.minor);
       if (vspec.major == 0)
          rpt_vstring(depth, "VCP version:         Detection failed");
       else
@@ -502,17 +498,10 @@ ddc_report_active_display(Display_Info * curinfo, int depth) {
 
       if (output_level >= OL_VERBOSE) {
          // display controller mfg, firmware version
-         char mfg_name_buf[100];
+         // char mfg_name_buf[100];
          char * mfg_name         = "Unspecified";
-         // char * firmware_version = "Unspecified";
-         // old way: Parsed_Nontable_Vcp_Response* code_info;
-         /* works only for non-USB
-         Global_Status_Code gsc = get_nontable_vcp_value(
-                dh,
-                0xc8,         // controller manufacturer
-                &code_info);
-         */
-         // bump it up to get_nontable_vcp_value()'s caller, which does know how to handle USB
+         // n. can't use get_nontable_vcp_value()'s caller, which does know how to handle USB,
+         // but get_vcp_value() does
          Single_Vcp_Value *   valrec;
          Global_Status_Code  gsc = get_vcp_value(dh, 0xc8, NON_TABLE_VCP_VALUE, &valrec);
 
@@ -526,39 +515,30 @@ ddc_report_active_display(Display_Info * curinfo, int depth) {
             mfg_name =  get_feature_value_name(
                                   vals,
                                   valrec->val.nc.sl);
- //                               code_info->sl);
             if (!mfg_name) {
-               // vsnprintf(mfg_name_buf, 100, "Unrecognized manufacturer code 0x%02x", code_info->sl);
                rpt_vstring(depth, "Controller mfg:       Unrecognized manufacturer code 0x%02x",
                                   valrec->val.nc.sl);
-                         //       code_info->sl);
-               mfg_name = mfg_name_buf;
+               // mfg_name = mfg_name_buf;
             }
             else {
-               // rpt_vstring(depth, "Controller mfg:      %s", (mfg_name) ? mfg_name : "not set");
                rpt_vstring(depth,    "Controller mfg:      %s", mfg_name);
             }
          }
-#ifdef OLD
-         gsc = get_nontable_vcp_value(
-                     dh,
-                     0xc9,         // firmware version
-                     &code_info);
-#endif
-         gsc = get_vcp_value(dh, 0xc9, NON_TABLE_VCP_VALUE, &valrec);  // new way
+
+         // now get firmware version
+         gsc = get_vcp_value(dh, 0xc9, NON_TABLE_VCP_VALUE, &valrec);
          if (gsc != 0) {
             if (gsc != DDCRC_REPORTED_UNSUPPORTED && gsc != DDCRC_DETERMINED_UNSUPPORTED)
                DBGMSG("get_nontable_vcp_value(0xc9) returned %s", gsc_desc(gsc));
             rpt_vstring(depth, "Firmware version:    Unspecified");
          }
-         else if (gsc == 0) {
+         else {
             rpt_vstring(depth, "Firmware version:    %d.%d",
-                  // code_info->sh, code_info->sl);
-                  valrec->val.nc.sh, valrec->val.nc.sl);
+                               valrec->val.nc.sh, valrec->val.nc.sl);
 
          }
-
       }
+
       ddc_close_display(dh);
       if (output_level >= OL_VERBOSE)
          set_output_level(output_level);
