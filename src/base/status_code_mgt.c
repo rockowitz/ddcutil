@@ -129,14 +129,15 @@ int modulate_rc(int rc, Retcode_Range_Id range_id){
    int base = retcode_range_table[range_id].base;
    if (rc != 0) {
       if (rc < 0)
-         rc = -base + rc;
+         rc -= base;
       else
-         base = base+rc;
+         rc += base;
    }
    if (debug)
       printf("(%s) Returning: %d\n", __func__, rc);
    return rc;
 }
+
 
 int demodulate_rc(int rc, Retcode_Range_Id range_id) {
    assert( abs(rc) > RCRANGE_BASE_MAX );
