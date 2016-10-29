@@ -183,13 +183,14 @@ create_ddc_multi_part_read_request_packet(
       int           offset,
       const char *  tag);
 
-DDC_Packet * create_ddc_multi_part_write_request_packet(
-                Byte   request_type,     // always DDC_PACKET_TYPE_WRITE_REQUEST
-                Byte   request_subtype,  // VCP code
-                int    offset,
-                Byte * bytes_to_write,
-                int    bytect,
-                const char * tag);
+DDC_Packet *
+create_ddc_multi_part_write_request_packet(
+      Byte   request_type,     // always DDC_PACKET_TYPE_WRITE_REQUEST
+      Byte   request_subtype,  // VCP code
+      int    offset,
+      Byte * bytes_to_write,
+      int    bytect,
+      const char * tag);
 
 void
 update_ddc_capabilities_request_packet_offset(

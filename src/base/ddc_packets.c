@@ -36,13 +36,14 @@
 
 #include "base/ddc_packets.h"
 
-
+#ifdef OLD
 // forward reference:
 int interpret_vcp_feature_response(Byte * vcp_data_bytes,
                                    int bytect,
                                    Byte requested_vcp_code,
                                    Parsed_Nontable_Vcp_Response * aux_data,
                                    bool debug);
+#endif
 
 //
 //  Initialization
@@ -207,6 +208,7 @@ int get_packet_max_size(DDC_Packet * packet) {
 
 
 void dump_packet(DDC_Packet * packet) {
+   assert(packet);      // make clang analyzer happy
    printf("DDC_Packet dump.  Addr: %p, Type: 0x%02x, Tag: |%s|, buf: %p, aux_data: %p\n",
           packet, packet->type, packet->tag, packet->buf, packet->aux_data);
    // hex_dump(packet->buf->bytes, packet->buf->len);
@@ -1217,6 +1219,7 @@ int get_capabilities_fragment(DDC_Packet * packet, char ** fragment_ptr) {
 
 // Table Read
 
+#ifdef UNUSED
 
 Global_Status_DDC get_interpreted_table_read_fragment(
                      DDC_Packet *  packet,
@@ -1242,18 +1245,16 @@ Global_Status_DDC get_interpreted_table_read_fragment(
 }
 
 
-int get_table_read_offset(DDC_Packet * packet, int * offset_ptr) {
+Global_Status_DDC get_table_read_offset(DDC_Packet * packet, int * offset_ptr) {
    Interpreted_Table_Read_Fragment * aux_ptr;
    int rc = get_interpreted_table_read_fragment(packet, false, &aux_ptr );
    if (rc == 0) {
       *offset_ptr = aux_ptr->fragment_offset;
    }
-
    return rc;
 }
 
-
-
+#endif
 
 // VCP Feature Code
 
