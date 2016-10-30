@@ -69,8 +69,8 @@ void report_features(GPtrArray* features, Version_Spec vcp_version) {
 
 
 void report_parsed_capabilities(
-        Parsed_Capabilities* pcaps,
-        MCCS_IO_Mode io_mode)       // needed for proper error message  -- NO LONGER NEEDED
+        Parsed_Capabilities* pcaps)
+     //   MCCS_IO_Mode io_mode)       // needed for proper error message  -- NO LONGER NEEDED
 {
    bool debug = false;
    assert(pcaps && memcmp(pcaps->marker, PARSED_CAPABILITIES_MARKER, 4) == 0);
@@ -521,5 +521,7 @@ void test_segments() {
 
 
 void test_parse_caps() {
-   parse_capabilities_string("(alpha(adsf)vcp(10 20 30(31 32) ))");
+   Parsed_Capabilities * pcaps = parse_capabilities_string("(alpha(adsf)vcp(10 20 30(31 32) ))");
+   report_parsed_capabilities(pcaps);
+   free_parsed_capabilities(pcaps);
 }

@@ -53,7 +53,7 @@ typedef struct {
 
 Parsed_Capabilities* parse_capabilities_buffer(Buffer * capabilities);
 Parsed_Capabilities* parse_capabilities_string(char * capabilities);
-void report_parsed_capabilities(Parsed_Capabilities* pcaps, MCCS_IO_Mode io_mode);
+void report_parsed_capabilities(Parsed_Capabilities* pcaps);
 void free_parsed_capabilities(Parsed_Capabilities * pcaps);
 
 
