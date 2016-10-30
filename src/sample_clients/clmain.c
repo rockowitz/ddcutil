@@ -177,7 +177,7 @@ bool test_cont_value(DDCT_Display_Handle dh, Byte feature_code) {
 
       }
    }
-   return (rc == 0 && ok);
+   return ( (rc == 0) && ok);
 }
 
 bool test_get_capabilities_string(DDCT_Display_Handle dh) {
