@@ -457,7 +457,7 @@ int load_device_ids(Device_Id_Type id_type, GPtrArray * all_lines) {
           // hacky test for end of id section
           if (memcmp(a_line+tabct, "C", 1) == 0) {
              device_ids_done = true;
-             break;
+             continue;
           }
        }
 
