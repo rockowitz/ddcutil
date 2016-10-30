@@ -694,9 +694,9 @@ void report_hiddev_device_by_fd(int fd, int depth) {
    const int d2 = depth+2;
 
    struct hiddev_devinfo dev_info;
-
+   int rc;
    int version;
-   int rc = ioctl(fd, HIDIOCGVERSION, &version);
+   ioctl(fd, HIDIOCGVERSION, &version);   // no need to test return code, always succeeds
    rpt_vstring(depth, "hiddev driver version (reported by HIDIOCGVERSION): %d.%d.%d",
           version>>16, (version >> 8) & 0xff, version & 0xff);
 
