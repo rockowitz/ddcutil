@@ -159,7 +159,7 @@ bye:
 
 /* Gets the module and serial number of an Eizo monitor using an Eizo specific report.
  *
- * Finds the specific report, the reads it.
+ * Finds the specific report, then reads it.
  *
  * Alternatively:
  * Obtains the values by requesting the value of the usage code for the strings,
@@ -185,13 +185,15 @@ struct model_sn_pair *  get_eizo_model_sn_by_report(int fd) {
                          fd,
                          0xff000035,  // usage code
                          16);         // num_values
-   if (modelsn2->len >= 16)
+   if (modelsn2 && modelsn2->len >= 16)
       buffer_set_length(modelsn2, 16);
    // printf("modelsn:\n");
    // buffer_dump(modelsn);
    // printf("modelsn2:\n");
    // buffer_dump(modelsn2);
    assert(buffer_eq(modelsn, modelsn2));
+   if (modelsn2)
+      buffer_free(modelsn2, __func__);
 
    if (modelsn) {
       assert(modelsn->len >= 16);
@@ -207,6 +209,8 @@ struct model_sn_pair *  get_eizo_model_sn_by_report(int fd) {
       free(modelsn);
    }
 
+   if (loc)
+      free_hid_field_locator(loc);
 
    if (debug) {
       if (result) {
@@ -323,6 +327,8 @@ Parsed_Edid * get_fallback_hiddev_edid(int fd, struct hiddev_devinfo * dev_info)
       parsed_edid = get_x11_edid_by_model_sn(model_sn->model, model_sn->sn);
    }
 
+   if (model_sn)
+      free_model_sn_pair(model_sn);
    DBGMSF(debug, "Returning: %p", parsed_edid);
    return parsed_edid;
 }
