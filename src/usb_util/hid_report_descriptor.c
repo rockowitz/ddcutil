@@ -548,6 +548,7 @@ static int32_t maybe_signed_data(uint32_t data, int bytect) {
  *
  * Returns:         parsed report descriptor
  */
+// TODO: Should this function return NULL in case of invalid data (e.g. more end than start collections)?
 Parsed_Hid_Descriptor * parse_report_desc_from_item_list(Hid_Report_Descriptor_Item * items_head) {
    bool debug = false;
    if (debug)
