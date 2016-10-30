@@ -654,7 +654,7 @@ find_report(int fd, __u32 report_type, __u32 ucode, bool match_all_ucodes) {
       result = calloc(1, sizeof(struct hid_field_locator));
       // result->rinfo = calloc(1, sizeof(struct hiddev_report_info));
       // memcpy(result->rinfo, &rinfo, sizeof(struct hiddev_report_info));
-      result->finfo = finfo_found;   // returned by is_field_edid()
+      result->finfo = finfo_found;   // returned by is_field_edid() or test_field_ucode()
       result->report_type = rinfo.report_type;
       result->report_id   = report_id_found;
       result->field_index = field_index_found;    // finfo.field_index may have been changed by HIDIOGREPORTINFO
@@ -729,7 +729,7 @@ locate_edid_report(int fd) {
  *                 in which to return bytes
  *
  * Returns:
- *    pointer to Buffer struct containing the value
+ *    pointer to Buffer struct containing the value, NULL if error
  *
  * It is the responsibility of the caller to free the returned buffer.
  */
@@ -780,7 +780,7 @@ bye:
  *    loc    pointer to hid_field_locator struct
  *
  * Returns:
- *    pointer to Buffer struct containing the value
+ *    pointer to Buffer struct containing the value, NULL if error
  *
  * It is the responsibility of the caller to free the returned buffer.
  */
@@ -835,7 +835,7 @@ bye:
  *    num_values   number of bytes
  *
  * Returns:
- *    pointer to Buffer struct containing the value
+ *    pointer to Buffer struct containing the value, NULL if error
  *
  * It is the responsibility of the caller to free the returned buffer.
  */
@@ -916,6 +916,7 @@ Buffer * get_hiddev_edid(int fd)  {
    struct hid_field_locator * loc = locate_edid_report(fd);
    if (loc) {
       result = get_multibyte_report_value_by_hid_field_locator(fd, loc);
+      free_hid_field_locator(loc);
    }
 
    if (debug)
