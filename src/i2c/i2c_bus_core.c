@@ -339,6 +339,7 @@ static bool is_function_supported(int busno, char * funcname) {
       if (!func_table_entry) {
          TERMINATE_EXECUTION_ON_ERROR("Unrecognized function name: %s", funcname);
       }
+      assert(func_table_entry);   // suppresses clang analyzer warning re dereference of possibly null func_table_entry
       if (busno < 0 || busno >= i2c_get_busct() ) {
          TERMINATE_EXECUTION_ON_ERROR("Invalid bus: /dev/i2c-%d\n", busno);
       }
