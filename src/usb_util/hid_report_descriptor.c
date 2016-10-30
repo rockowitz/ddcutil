@@ -410,10 +410,12 @@ Parsed_Hid_Report * find_hid_report(Parsed_Hid_Collection * col, Byte report_typ
 }
 
 
-Parsed_Hid_Report * find_hid_report_or_new(Parsed_Hid_Collection * hc, Byte report_type, uint16_t report_id) {
+Parsed_Hid_Report *
+find_hid_report_or_new(Parsed_Hid_Collection * hc, Byte report_type, uint16_t report_id) {
    bool debug = false;
    if (debug)
       printf("(%s) report_type=%d, report_id=%d\n", __func__, report_type, report_id);
+   assert(hc);
 
    Parsed_Hid_Report * result = find_hid_report(hc, report_type, report_id);
    if (!result) {
@@ -745,8 +747,10 @@ Parsed_Hid_Descriptor * parse_report_desc_from_item_list(Hid_Report_Descriptor_I
          case 0xc0: // End Collection
             if (collection_stack_cur == 0) {
                printf("(%s) End Collection item without corresponding Collection\n", __func__);
+               // Need to do anything more to recover?
             }
-            collection_stack_cur--;
+            else
+               collection_stack_cur--;
             break;
          default:
             break;
