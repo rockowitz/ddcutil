@@ -378,6 +378,8 @@ alt_possible_monitor_dev(
                else {
                   printf("(%s) Successfully opened\n", __func__);
                   rc = libusb_set_auto_detach_kernel_driver(dh, 1);
+                  if (rc < 0)
+                     REPORT_LIBUSB_ERROR("libusb_set_auto_detach_kernel_driver", rc, LIBUSB_CONTINUE);
                }
 
                if (dh) {
