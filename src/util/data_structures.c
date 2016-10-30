@@ -361,6 +361,7 @@ bool store_bytehex_list(char * start, int len, void * data_struct, Byte_Appender
          appender(data_struct, byteVal);
    }
 
+   free(buf);
    // printf("(%s) Returning %s\n", __func__, bool_repr(ok));
    return ok;
 }
