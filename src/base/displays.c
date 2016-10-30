@@ -230,6 +230,9 @@ Display_Ref * clone_display_ref(Display_Ref * old) {
    // dref->iDisplayIndex = old->iDisplayIndex;
    // DBGMSG("dref=%p, old=%p, len=%d  ", dref, old, (int) sizeof(BasicDisplayRef) );
    memcpy(dref, old, sizeof(Display_Ref));
+   if (old->usb_hiddev_name) {
+      dref->usb_hiddev_name = strcpy(dref->usb_hiddev_name, old->usb_hiddev_name);
+   }
    return dref;
 }
 
@@ -237,6 +240,8 @@ void free_display_ref(Display_Ref * dref) {
    if (dref) {
       assert(memcmp(dref->marker, DISPLAY_REF_MARKER,4) == 0);
       dref->marker[3] = 'x';
+      if (dref->usb_hiddev_name)
+         free(dref->usb_hiddev_name);
       free(dref);
    }
 }
@@ -498,6 +503,25 @@ char * display_handle_repr(Display_Handle * dh) {
 
 // *** Display_Info ***
 
+
+// n.b. frees the contents of dinfo, but not dinfo itself
+void free_display_info(Display_Info * dinfo) {
+   if (dinfo) {
+      assert(memcmp(dinfo->marker, DISPLAY_INFO_MARKER, 4) == 0);
+      dinfo->marker[3] = 'x';
+      if (dinfo->dref) {
+         // TODO: are there other references to dinfo->dref?   need to check
+         // free_display_ref(dinfo->dref);
+      }
+      if (dinfo->edid) {
+         // TODO: are there other references to dinfo->edid?   need to check
+         // free_parsed_edid(dinfo->edid);
+      }
+      // free(dinfo);
+   }
+}
+
+
 /* Outputs a debug report of a Display_Info struct.
  *
  * Arguments:
@@ -510,6 +534,7 @@ void report_display_info(Display_Info * dinfo, int depth) {
    const int d1 = depth+1;
    rpt_structure_loc("Display_Info", dinfo, depth);
    if (dinfo) {
+      assert(memcmp(dinfo->marker, DISPLAY_INFO_MARKER, 4) == 0);
       rpt_vstring(d1, "dref:         %p  %s",
                       dinfo->dref,
                       (dinfo->dref) ? dref_short_name(dinfo->dref) : "");
@@ -518,6 +543,17 @@ void report_display_info(Display_Info * dinfo, int depth) {
          report_parsed_edid(dinfo->edid, false /* !verbose */, d1);
       }
    }
+}
+
+
+void free_display_info_list(Display_Info_List * pinfo_list) {
+   if (pinfo_list && pinfo_list->info_recs) {
+      for (int ndx = 0; ndx < pinfo_list->ct; ndx++) {
+         Display_Info * dinfo = &pinfo_list->info_recs[ndx];
+         free_display_info(dinfo);
+      }
+   }
+   free(pinfo_list);
 }
 
 

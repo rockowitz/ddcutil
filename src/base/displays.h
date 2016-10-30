@@ -179,19 +179,27 @@ Video_Card_Info * create_video_card_info();
 
 // for surfacing display information at higher levels than i2c and adl, without creating
 // circular dependencies
+#define DISPLAY_INFO_MARKER "DINF"
 typedef struct {
+   char          marker[4];
    int           dispno;
    Display_Ref * dref;
    Parsed_Edid * edid;
 } Display_Info;
 
+
+// #define DISPLAY_INFO_LIST_MARKER "DINL"
 typedef struct {
+   // char           marker[4];   // complicates an otherwise simple initialization, not worth it
    int            ct;
-   Display_Info * info_recs;
+   Display_Info * info_recs;      // n. this is a pointer to an array of Display_Info, not an array of Display_Info *
 } Display_Info_List;
 
 void report_display_info(Display_Info * dinfo, int depth);
 void report_display_info_list(Display_Info_List * pinfo_list, int depth);
+
+void free_display_info(Display_Info * dinfo);
+void free_display_info_list(Display_Info_List * pinfo_list);
 
 
 // For internal display selection functions
