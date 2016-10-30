@@ -105,9 +105,6 @@ Display_Handle* ddc_open_display(Display_Ref * dref,  Byte open_flags) {
    bool debug = false;
    DBGMSF(debug,"Opening display %s",dref_short_name(dref));
    Display_Handle * pDispHandle = NULL;
-   // Byte open_flags = 0x00;
-   // if (EXIT_IF_FAILURE)
-   //    open_flags |= CALLOPT_ERR_ABORT;
    switch (dref->io_mode) {
 
    case DDC_IO_DEVI2C:
@@ -163,7 +160,7 @@ Display_Handle* ddc_open_display(Display_Ref * dref,  Byte open_flags) {
 #endif
       break;
    } // switch
-   assert(pDispHandle->pedid);
+   assert(!pDispHandle || pDispHandle->pedid);
    // needed?  for both or just I2C?
    // sleep_millis_with_trace(DDC_TIMEOUT_MILLIS_DEFAULT, __func__, NULL);
    if (dref->io_mode != USB_IO)
