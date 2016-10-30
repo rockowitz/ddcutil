@@ -100,6 +100,7 @@ int egmain(int argc, char** argv) {
    list1 = g_list_append(list1, "Hello world!");
    // generates warning:
    // printf("The first item is '%s'\n", g_list_first(list1)->data);
+   g_list_free(list1);
 
    GSList* list = NULL;
    printf("The list is now %d items long\n", g_slist_length(list));
