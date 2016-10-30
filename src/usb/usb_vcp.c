@@ -78,6 +78,8 @@ usb_get_usage_value_by_report_type_and_ucode(
    DBGMSF(debug, "Starting. fd=%d, report_type=%d, usage_code=0x%08x", fd, report_type, usage_code);
    Global_Status_Code gsc = 0;
    int rc;
+   *curval = 0;  // so there's a definite value in case of failure ...
+   *maxval = 0;  // avoids complaints by clang analyzer
 
    assert(report_type == HID_REPORT_TYPE_FEATURE ||
           report_type == HID_REPORT_TYPE_INPUT);   // *** CG19 ***
