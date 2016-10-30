@@ -152,7 +152,8 @@ bool perform_get_capabilities_by_display_handle(Display_Handle * dh) {
          Parsed_Capabilities * pcap = parse_capabilities_string(capabilities_string);
          if (dh->io_mode == USB_IO)
             pcap->raw_value_synthesized = true;
-         report_parsed_capabilities(pcap, dh->io_mode);
+         // report_parsed_capabilities(pcap, dh->io_mode);    // io_mode no longer needed
+         report_parsed_capabilities(pcap);
          free_parsed_capabilities(pcap);
       }
       ok = true;
@@ -283,11 +284,12 @@ int main(int argc, char *argv[]) {
       if (ct != 1) {
          printf("Invalid test number: %s\n", parsed_cmd->args[0]);
          ok = false;
-         main_rc = EXIT_FAILURE;     // ?? What should value be?
       }
-      if (!parsed_cmd->pdid)
-         parsed_cmd->pdid = create_dispno_display_identifier(1);   // default monitor
-      ok = execute_testcase(testnum, parsed_cmd->pdid);
+      else {
+         if (!parsed_cmd->pdid)
+            parsed_cmd->pdid = create_dispno_display_identifier(1);   // default monitor
+         ok = execute_testcase(testnum, parsed_cmd->pdid);
+      }
       main_rc = (ok) ? EXIT_SUCCESS : EXIT_FAILURE;
    }
 
