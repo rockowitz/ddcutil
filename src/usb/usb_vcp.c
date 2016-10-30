@@ -451,8 +451,8 @@ Global_Status_Code usb_get_nontable_vcp_value(
    Usb_Monitor_Info * moninfo = usb_find_monitor_by_display_handle(dh);
    assert(moninfo);
 
-   __s32 maxval;
-   __s32 curval;
+   __s32 maxval = 0;    // initialization logically unnecessary, but avoids clang scan warning
+   __s32 curval = 0;    // ditto
    bool use_alt_method = true;
 
    if (use_alt_method) {
