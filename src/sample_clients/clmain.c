@@ -105,7 +105,7 @@ void test_get_feature_info(DDCT_Display_Handle dh) {
 bool test_cont_value(DDCT_Display_Handle dh, Byte feature_code) {
 
    DDCT_Status rc;
-   bool ok;
+   bool ok = true;
    char * feature_name = ddct_get_feature_name(feature_code);
 
    unsigned long feature_flags;
@@ -125,7 +125,6 @@ bool test_cont_value(DDCT_Display_Handle dh, Byte feature_code) {
    if (rc != 0)
       FUNCTION_ERRMSG("ddct_set_continuous_vcp_value", rc);
    else {
-      rc = 0;
       printf("(%s) Feature 0x%02x (%s) current value = %d, max value = %d\n",
              __func__, feature_code, feature_name,
              non_table_response.cur_value,
@@ -204,7 +203,7 @@ int main(int argc, char** argv) {
    DDCT_Status rc;
    DDCT_Display_Identifier did;
    DDCT_Display_Ref dref;
-   DDCT_Display_Handle dh;
+   DDCT_Display_Handle dh = NULL;  // initialize to avoid clang analyzer warning
 
 
    ddct_init();
@@ -251,7 +250,7 @@ int main(int argc, char** argv) {
       }
       else {
          char * dh_repr;
-         rc = ddct_repr_display_handle(dh, &dh_repr);
+         /* rc = */  ddct_repr_display_handle(dh, &dh_repr);
          printf("(%s) display handle: %s\n", __func__, dh_repr);
 
          DDCT_MCCS_Version_Spec vspec;
