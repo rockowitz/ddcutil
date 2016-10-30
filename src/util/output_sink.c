@@ -45,7 +45,7 @@ struct Output_Sink{
 
 
 Output_Sink create_terminal_sink() {
-    struct Output_Sink * psink = calloc(1, sizeof(Output_Sink));
+    struct Output_Sink * psink = calloc(1, sizeof(struct Output_Sink));
     memcpy(psink->marker, OUTPUT_SINK_MARKER, 4);
     psink->sink_type = SINK_STDOUT;
     psink->fp = stdout;            // ??
@@ -54,7 +54,7 @@ Output_Sink create_terminal_sink() {
 
 
 Output_Sink create_file_sink(FILE * fp) {
-   struct Output_Sink * psink = calloc(1, sizeof(Output_Sink));
+   struct Output_Sink * psink = calloc(1, sizeof(struct Output_Sink));
    memcpy(psink->marker, OUTPUT_SINK_MARKER, 4);
    psink->sink_type = SINK_FILE;
    psink->fp        = fp;
@@ -63,7 +63,7 @@ Output_Sink create_file_sink(FILE * fp) {
 
 
 Output_Sink create_memory_sink(int initial_line_ct, int estimated_max_chars) {
-   struct Output_Sink * psink = calloc(1, sizeof(Output_Sink));
+   struct Output_Sink * psink = calloc(1, sizeof(struct Output_Sink));
    memcpy(psink->marker, OUTPUT_SINK_MARKER, 4);
    psink->sink_type = SINK_MEMORY;
    psink->line_array = g_ptr_array_sized_new(initial_line_ct);
