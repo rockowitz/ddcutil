@@ -938,10 +938,9 @@ static void driver_specific_tests(struct driver_name_node * driver_list) {
 #else
      printf("WARNING: Using AMD proprietary video driver fglrx but ddcutil built without ADL support");
 #endif
-     if (!found_driver_specific_checks)
-        printf("No driver specific checks apply.");
-
    }
+   if (!found_driver_specific_checks)
+      printf("No driver specific checks apply.");
 }
 
 
