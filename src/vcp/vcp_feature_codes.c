@@ -3756,7 +3756,8 @@ int check_version_rw_flags(
 
 
 void validate_vcp_feature_table() {
-   // DBGMSG("Starting");
+   bool debug = false;
+   DBGMSF(debug, "Starting");
    bool ok = true;
    bool ok2 = true;
    int ndx = 0;
@@ -3783,7 +3784,6 @@ void validate_vcp_feature_table() {
       }
 
       total_ct = 0;
-      cur_ct = 0;
       cur_ct = check_one_version_flags(pentry->v20_flags, ".v20_flags", pentry);
       if (cur_ct < 0) ok2 = false; else total_ct += 1;
       cur_ct = check_one_version_flags(pentry->v21_flags, ".v21_flags", pentry);
