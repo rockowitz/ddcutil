@@ -101,11 +101,6 @@ try_multi_part_read(
       Buffer *         accumulator)
 {
    bool force_debug = false;
-   // Trace_Group tg = TRACE_GROUP;
-   // if (force_debug)
-   //    tg = 0xFF;  // force tracing
-   // TRCMSGTG(tg, "Starting. request_type=0x%02x, request_subtype=x%02x, accumulator=%p",
-   //          request_type, request_subtype, accumulator);
    DBGTRC(force_debug, TRACE_GROUP,
           "Starting. request_type=0x%02x, request_subtype=x%02x, accumulator=%p",
           request_type, request_subtype, accumulator);
@@ -116,15 +111,12 @@ try_multi_part_read(
 
    DDC_Packet * request_packet_ptr  = NULL;
    DDC_Packet * response_packet_ptr = NULL;
-   // request_packet_ptr = create_ddc_capabilities_request_packet(0, "try_multi_part_read");
    request_packet_ptr = create_ddc_multi_part_read_request_packet(
                            request_type, request_subtype, 0, "try_multi_part_read");
    buffer_set_length(accumulator,0);
    int  cur_offset = 0;
    bool complete   = false;
    while (!complete && rc == 0) {         // loop over fragments
-      // if ( IS_TRACING() || force_debug )
-      //    puts("");
       DBGMSF(force_debug, "Top of fragment loop");
 
       int fragment_size;
@@ -142,7 +134,7 @@ try_multi_part_read(
            expected_subtype,
            all_zero_response_ok,
            &response_packet_ptr
-        );
+          );
       DBGMSF(force_debug,
              "ddc_write_read_with_retry() request_type=0x%02x, request_subtype=0x%02x, returned %s",
              request_type, request_subtype, gsc_desc( rc));
@@ -150,7 +142,7 @@ try_multi_part_read(
       if (rc != 0) {
          if (response_packet_ptr)
             free_ddc_packet(response_packet_ptr);
-         break;
+         continue;
       }
 
       if ( IS_TRACING() || force_debug ) {
@@ -159,15 +151,15 @@ try_multi_part_read(
       }
 
       Interpreted_Multi_Part_Read_Fragment * aux_data_ptr =
-         (Interpreted_Multi_Part_Read_Fragment *) response_packet_ptr->aux_data;    // ***
+         (Interpreted_Multi_Part_Read_Fragment *) response_packet_ptr->aux_data;
       int display_current_offset = aux_data_ptr->fragment_offset;
       if (display_current_offset != cur_offset) {
          DBGMSF(force_debug, "display_current_offset %d != cur_offset %d",
                 display_current_offset, cur_offset);
-         rc = DDCRC_MULTI_PART_READ_FRAGMENT;                       // ***
+         rc = DDCRC_MULTI_PART_READ_FRAGMENT;
          COUNT_STATUS_CODE(rc);
          free_ddc_packet(response_packet_ptr);
-         break;
+         continue;
       }
       // DBGMSG("display_current_offset = %d matches cur_offset", display_current_offset);
 
@@ -176,31 +168,23 @@ try_multi_part_read(
       if (fragment_size == 0) {
          complete = true;   // redundant
          free_ddc_packet(response_packet_ptr);
-         break;
       }
-      // cur_offset = (readbuf[5] << 8) | readbuf[4];
-      buffer_append(accumulator, aux_data_ptr->bytes, fragment_size);   // ***
+      else {
+         buffer_append(accumulator, aux_data_ptr->bytes, fragment_size);
+         cur_offset = cur_offset + fragment_size;
+         DBGMSF(force_debug, "Currently assembled fragment: |%.*s|",
+                             accumulator->len, accumulator->bytes);
+         DBGMSF(force_debug, "cur_offset = %d", cur_offset);
 
-      cur_offset = cur_offset + fragment_size;
-      DBGMSF(force_debug, "Currently assembled fragment: |%.*s|",accumulator->len, accumulator->bytes);   // ***
-      DBGMSF(force_debug, "cur_offset = %d", cur_offset);
-
-      free_ddc_packet(response_packet_ptr);
-      all_zero_response_ok = false;              // accept all zero response only on first fragment
+         free_ddc_packet(response_packet_ptr);
+         all_zero_response_ok = false;           // accept all zero response only on first fragment
+      }
    } // while loop assembling fragments
 
    free_ddc_packet(request_packet_ptr);
 
    if (rc > 0)
       rc = 0;
-   if (rc == 0) {
-        // NO, only works if accumulator contains string
-        // unsigned char null_byte = 0x00;
-        // buffer_append(accumulator, &null_byte, 1);                       // ***
-        // TRCMSGTG(tg, "Returning capabilities: %s",accumulator->bytes);
-   }
-
-   // TRCMSGTG(tg, "Returning %s", gsc_desc(rc));
    DBGTRC(force_debug, TRACE_GROUP, "Returning %s", gsc_desc(rc));
    return rc;
 }
