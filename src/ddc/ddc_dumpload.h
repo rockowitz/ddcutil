@@ -54,8 +54,7 @@ struct {
 
 void report_dumpload_data(Dumpload_Data * data, int depth);
 
-// TODO: implement:
-// free_dupload_data(Dumpload_Data * pdata);
+void free_dupload_data(Dumpload_Data * pdata);
 
 char *
 format_timestamp(time_t time_millis, char * buf, int bufsz);

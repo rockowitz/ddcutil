@@ -72,6 +72,21 @@ Version_Spec parse_vspec(char * s) {
 }
 
 
+/* Free a Dumpload_Data struct.  The underlying Vcp_Value_set is also freed.
+ *
+ * Arguments:   data    pointer to Dumpload_Data struct to free
+ *                      if NULL, do nothing
+ *
+ * Returns:     nothing
+ */
+void free_dumpload_data(Dumpload_Data * data) {
+   if (data) {
+      if (data->vcp_values)
+         free_vcp_value_set(data->vcp_values);
+      free(data);
+   }
+}
+
 
 /* Report the contents of a Dumpload_Data struct
  *
@@ -106,8 +121,9 @@ void report_dumpload_data(Dumpload_Data * data, int depth) {
  * Arguments:
  *    garray      array of strings
  *
- * Returns:
- *
+ * Returns:       pointer to newly allocated Dumpload_Data struct, or
+ *                NULL if the data is not valid.
+ *                It is the responsibility of the caller to free this struct.
  */
 Dumpload_Data*
 create_dumpload_data_from_g_ptr_array(GPtrArray * garray) {
@@ -264,10 +280,11 @@ create_dumpload_data_from_g_ptr_array(GPtrArray * garray) {
       }       // non-comment line
    }          // one line of file
 
-   if (!valid_data)
-      // if (data)
-      //    free_dumpload_data(data);   // UNIMPLEMENTED
+   if (!valid_data) {
+      if (data)
+         free_dumpload_data(data);
       data = NULL;
+   }
    return data;
 }
 
