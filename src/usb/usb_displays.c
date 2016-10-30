@@ -479,6 +479,7 @@ Display_Info_List usb_get_valid_displays() {
       info_recs[ndx].dispno = -1;    // not yet set
       info_recs[ndx].dref = dref;
       info_recs[ndx].edid = curmon->edid;
+      memcpy(info_recs[ndx].marker, DISPLAY_INFO_MARKER, 4);
    }
    memcpy(info_list.info_recs, info_recs, (usb_monitors->len)*sizeof(Display_Info));
    info_list.ct = usb_monitors->len;

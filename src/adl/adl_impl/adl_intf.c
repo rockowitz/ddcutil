@@ -716,6 +716,7 @@ Display_Info_List adl_get_valid_displays() {
       ADL_Display_Rec * pdisp = &active_displays[ndx];
       info_recs[ndx].dref = create_adl_display_ref(pdisp->iAdapterIndex, pdisp->iDisplayIndex);
       info_recs[ndx].edid = pdisp->pEdid;
+      memcpy(info_recs[ndx].marker, DISPLAY_INFO_MARKER, 4);
    }
    info_list.info_recs = info_recs;
    info_list.ct = active_display_ct;

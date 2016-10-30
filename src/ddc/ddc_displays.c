@@ -236,8 +236,8 @@ void report_display_info(Display_Info * dinfo, int depth) {
 // Functions to get display information
 //
 
-/* Creates a list of all displays found.  The list first contains any displays
- * on /dev/i2c-n buses, then any ADL displays, then USB connected displays.
+/* Creates a list of all displays found.  The list first contains displays
+ * on /dev/i2c-n buses, then ADL displays, then USB connected displays.
  *
  * The displays are assigned a display number (starting from 1) based on the
  * above order.
@@ -245,7 +245,7 @@ void report_display_info(Display_Info * dinfo, int depth) {
  * Arguments: none
  *
  * Returns:
- *    Display_Info_list struct
+ *    pointer to newly allocated Display_Info_List struct
  */
 Display_Info_List * ddc_get_valid_displays() {
    bool debug = false;
@@ -278,21 +278,27 @@ Display_Info_List * ddc_get_valid_displays() {
    displayct += usb_displays.ct;
 #endif
    Display_Info_List * all_displays = calloc(1, sizeof(Display_Info_List));
-   all_displays->info_recs = calloc(displayct, sizeof(Display_Info));
    all_displays->ct = displayct;
-   memcpy(all_displays->info_recs,
-          i2c_displays.info_recs,
-          i2c_displays.ct * sizeof(Display_Info));
+   if (displayct > 0) {
+      all_displays->info_recs = calloc(displayct, sizeof(Display_Info));
 
-   memcpy(all_displays->info_recs + i2c_displays.ct,
-          adl_displays.info_recs,
-          adl_displays.ct * sizeof(Display_Info));
+      if (i2c_displays.ct > 0)
+         memcpy(all_displays->info_recs,
+                i2c_displays.info_recs,
+                i2c_displays.ct * sizeof(Display_Info));
 
-#ifdef USE_USB
-   memcpy(all_displays->info_recs + (i2c_displays.ct+adl_displays.ct),
-          usb_displays.info_recs,
-          usb_displays.ct * sizeof(Display_Info));
-#endif
+      if (all_displays->ct > 0)
+         memcpy(all_displays->info_recs + i2c_displays.ct,
+                adl_displays.info_recs,
+                adl_displays.ct * sizeof(Display_Info));
+
+   #ifdef USE_USB
+      if (usb_displays.ct > 0)
+         memcpy(all_displays->info_recs + (i2c_displays.ct+adl_displays.ct),
+                usb_displays.info_recs,
+                usb_displays.ct * sizeof(Display_Info));
+   #endif
+   }
 
    if (i2c_displays.info_recs)
       free(i2c_displays.info_recs);
@@ -344,11 +350,12 @@ Display_Ref* ddc_find_display_by_dispno(int dispno) {
       int ndx;
       for (ndx=0; ndx<all_displays->ct; ndx++) {
          if (all_displays->info_recs[ndx].dispno == dispno) {
-            result = all_displays->info_recs[ndx].dref;
+            result = clone_display_ref(all_displays->info_recs[ndx].dref);
             break;
          }
       }
    }
+   free_display_info_list(all_displays);
 
    DBGMSF(debug, "Returning: %p  %s", result, (result)?dref_repr(result):"" );
 #ifdef OLD
@@ -461,6 +468,7 @@ ddc_find_display_by_edid(const Byte * pEdidBytes, Byte findopts) {
  */
 void
 ddc_report_active_display(Display_Info * curinfo, int depth) {
+   assert(memcmp(curinfo->marker, DISPLAY_INFO_MARKER, 4) == 0);
    switch(curinfo->dref->io_mode) {
    case DDC_IO_DEVI2C:
       i2c_report_active_display_by_busno(curinfo->dref->busno, depth);
@@ -575,6 +583,7 @@ ddc_report_active_displays(int depth) {
    }
    if (valid_display_ct == 0)
       rpt_vstring(depth, "No active displays found");
+   free_display_info_list(display_list);
    return valid_display_ct;
 }
 

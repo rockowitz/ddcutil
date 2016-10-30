@@ -1048,12 +1048,15 @@ Display_Info_List i2c_get_displays() {
          Display_Info * pcur = &info_recs[cur_display];
          pcur->dref = create_bus_display_ref(businfo->busno);
          pcur->edid = businfo->edid;
+         memcpy(pcur->marker, DISPLAY_INFO_MARKER, 4);
          cur_display++;
       }
    }
-   info_list.info_recs = calloc(cur_display,sizeof(Display_Info));
-   memcpy(info_list.info_recs, info_recs, cur_display*sizeof(Display_Info));
-   info_list.ct = cur_display;
+   if (cur_display > 0) {
+      info_list.info_recs = calloc(cur_display,sizeof(Display_Info));
+     memcpy(info_list.info_recs, info_recs, cur_display*sizeof(Display_Info));
+     info_list.ct = cur_display;
+   }
    // DBGMSG("Done. Returning:");
    // report_display_info_list(&info_list, 0);
    return info_list;
