@@ -432,6 +432,7 @@ Global_Status_Code loadvcp_by_ntsa(Null_Terminated_String_Array ntsa, Display_Ha
            rpt_pop_output_dest();
       }
       gsc = loadvcp_by_dumpload_data(pdata, dh);
+      free_dumpload_data(pdata);
    }
    return gsc;
 }

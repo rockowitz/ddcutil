@@ -214,6 +214,7 @@ bool loadvcp_by_file(const char * fn, Display_Handle * dh) {
            rpt_pop_output_dest();
       }
       gsc = loadvcp_by_dumpload_data(pdata, dh);
+      free_dumpload_data(pdata);
       ok = (gsc == 0);
    }
 
