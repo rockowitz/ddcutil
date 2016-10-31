@@ -44,6 +44,13 @@ usb_util/*expand \
 util/*expand 
 
 
+clean-local: 
+	@echo "(clean-local)"
+	find . -name "*plist" -type d  -exec ls -ld {} \;
+	rm -rf `find . -name "*plist" -type d`
+	find . -name ".libs"  -type d  -exec ls -ld {} \;
+	find . -name ".libs"  -type d  -exec rm -rf {} \;
+
 bin_PROGRAMS = \
 ddcutil  
 
