@@ -43,12 +43,16 @@ util/*expand              \
 vcp/*expand
 
 
+# todo: factor out swig 
 clean-local: 
 	@echo "(clean-local)"
 	find . -name "*plist" -type d  -exec ls -ld {} \;
 	rm -rf `find . -name "*plist" -type d`
 	find . -name ".libs"  -type d  -exec ls -ld {} \;
 	find . -name ".libs"  -type d  -exec rm -rf {} \;
+	rm -rf swig/ddct_public_wrap.c ddct_public.py ddct_public.pyc
+
+
 
 bin_PROGRAMS = \
 ddcutil  
@@ -63,7 +67,7 @@ endif
 
 
 # Convenience library containing code shared between ddcutil and libddcutil
-noinst_LTLIBRARIES = libcommon.la
+noinst_LTLIBRARIES = libcommon.la  libsharedbase.la
 
 if ENABLE_SHARED_LIB_COND
 # Shared library
@@ -99,8 +103,9 @@ endif
 
 
 # files only in libddcutil:
-libddcutil_la_SOURCES = \
+libsharedbase_la_SOURCES = \
 libmain/ddct_public.c  
+
 
 
 # files only in laclient:
@@ -238,10 +243,11 @@ $(LIBUSB_CFLAGS) \
 # $(HIDAPI_CFLAGS)
 
 # Compiler flags
-ddcutil_CFLAGS        = $(AM_CFLAGS)
-laclient_CFLAGS       = $(AM_CFLAGS)
-libcommon_la_CFLAGS   = $(AM_CFLAGS) 
-libddcutil_la_CFLAGS  = $(AM_CFLAGS)
+ddcutil_CFLAGS          = $(AM_CFLAGS)
+laclient_CFLAGS         = $(AM_CFLAGS)
+libcommon_la_CFLAGS     = $(AM_CFLAGS)
+libsharedbase_la_CFLAGS = $(AM_CFLAGS)
+libddcutil_la_CFLAGS    = $(AM_CFLAGS)
 
   
 if HAVE_ADL_COND
@@ -258,19 +264,23 @@ endif
 
 # deleted $(HIDAPI_LIBS)
 # Link the shared library
-libddcutil_la_LIBADD = -lz
-libddcutil_la_LIBADD +=  \
+libsharedbase_la_LIBADD =  \
    libcommon.la   \
    $(X11_LIBS) \
    $(XRANDR_LIBS) \
    $(GLIB_LIBS) 
 
 if ENABLE_USB_COND
-libddcutil_la_LIBADD += \
+libsharedbase_la_LIBADD += \
    $(UDEV_LIBS) \
    $(LIBUSB_LIBS)
 endif
-         
+
+
+libddcutil_la_LIBADD = -lz
+libddcutil_la_SOURCES =
+# libsharedbase_la_SOURCES =
+libddcutil_la_LIBADD += libsharedbase.la
 
 libddcutil_la_LDFLAGS = -export_symbols-regex '^ddc[tg]_[^_]'
 # libddcutil_la_LDFLAGS += -version-info '0:1:1'
@@ -290,14 +300,16 @@ ddcutil_LDADD += \
    $(UDEV_LIBS) 
 endif
 
+
+
+
+
 # Fails if not linked with libxrandr - why?
 laclient_LDADD = \
   libddcutil.la \
   $(XRANDR_LIBS) 
 
-#  $(GOBJECT_LIBS)
 
-
-
-# This is an include at the Makefile.am level:
-include introspection_am
+# These includes are at the Makefile.am level:
+include make_swig_am
+include make_gobject_am

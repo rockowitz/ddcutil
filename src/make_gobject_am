@@ -35,7 +35,7 @@ gobject_api_headers = \
   gobject_api/ddcg_types.h
 
 if ENABLE_GOBJECT_COND
-   libddcutil_la_SOURCES += $(gobject_api_sources)
+   libsharedbase_la_SOURCES += $(gobject_api_sources)
 endif
 
 
