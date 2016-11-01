@@ -106,8 +106,10 @@ AC_PROG_RANLIB
 m4_ifdef([GOBJECT_INTROSPECTION_CHECK], [GOBJECT_INTROSPECTION_CHECK([1.30.0])])
 AM_CONDITIONAL(HAVE_INTROSPECTION, test "x$found_introspection" = xyes)
 
-dnl temporarily disable, introspection not working
-dnl AM_CONDITIONAL(HAVE_INTROSPECTION, test "x$found_introspection" = xyesxxx)
+#check for swig
+AC_CHECK_PROG( [swig_var], [swig], [swig], [noswig] )
+AC_MSG_NOTICE( [yada yada swig_var = $swig_var] )
+
 
 
 ###
@@ -286,6 +288,36 @@ AS_IF([test "x$enable_lib" == "xyes"],
       AC_SUBST([ENABLE_SHARED_LIB_FLAG], [0]  )
      )
 
+
+dnl *** configure option: --enable-swig
+AC_ARG_ENABLE([swig],
+              [ AS_HELP_STRING( [--enable-swig=@<:@no/yes@:>@], [Build SWIG interface@<:@default=no@:>@] )],
+              [enable_swig=${enableval}],
+              [enable_swig=no] )
+dnl Set flag for automake.am:
+AM_CONDITIONAL([ENABLE_SWIG_COND], [test "x$enable_swig" == "xyes"] )
+AS_IF([test "x$enable_swig" == "xyes"],
+      AC_MSG_NOTICE( [swig... enabled]  ),
+      AC_MSG_NOTICE( [swig... disabled] )
+     )
+dnl AC_SUBST([ENABLE_SWIG_FLAG], [test "x$enable_swig" == "xyes"; $?])
+dnl AC_SUBST([ENABLE_SWIG_FLAG], [xy])
+AS_IF([test "x$enable_swig" == "xyes"],
+      AC_SUBST([ENABLE_SWIG_FLAG], [1] ),
+      AC_SUBST([ENABLE_SWIG_FLAG], [0]  )
+     )
+
+dnl Alternative, copied from somewhere
+#present configure with a command-line option to disable the python bindings
+AC_ARG_ENABLE([python],[AS_HELP_STRING([--disable-python],[build without the python bindings])],[enable_python=$enableval],[enable_python=check])
+#default behavior is to install the python bindings into subfolders of $prefix
+#however, this may require the user to set the PYTHONPATH environment variable
+#in order to avoid this, invoke configure with the --enable-python-integration option
+
+AC_ARG_ENABLE([python-integration],[AS_HELP_STRING([--enable-python-integration],[install the python bindings in the interpreters site-packages folder])],[enable_python_integration=$enableval],[enable_python_integration=check])
+
+
+
 dnl *** configure option: --enable-gobject-api
 AC_ARG_ENABLE([gobject-api],
               [ AS_HELP_STRING( [--enable-gobject-api=@<:@no/yes@:>@], [Build gobject related files, typelib@<:@default=no@:>@] )],
@@ -372,6 +404,98 @@ AS_IF([test "x$enable_gobject" == "xyes"],
      )
 
 
+AS_IF([test "x$enable_swig" == "xyes"],
+      [ AM_PATH_PYTHON(2.3) ],
+     )
+AC_MSG_NOTICE( [pyexecdir = $pyexecdir] )
+
+
+dnl aclocal doesn't find AX_PKG_SWIG if inside AS_IF, so execute it whether or not we need it
+AX_PKG_SWIG(1.3.21, [swig_found=yes], [swig_found=no])
+
+AC_MSG_NOTICE([swig_found = $swig_found])
+
+dnl outside of if test for now
+AX_SWIG_PYTHON
+dnl AC_MSG_NOTICE([ Set by AX..SWIG_PYTHON:])
+AC_MSG_NOTICE( [AX_SWIG_PYTHON_CPPFLAGS = $AX_SWIG_PYTHON_CPPFLAGS ])
+AC_MSG_NOTICE(  AX_SWIG_PYTHON_OPT      = $AX_SWIG_PYTHON_OPT  )
+
+
+dnl AX_PKG_SWIG within AS_IF causes newline error at execution time.
+dnl so test instead vs swig_found
+dnl AS_IF([test "x$enable_swig" == "xyes"],
+dnl       [ AX_PKG_SWIG(1.3.21, [AC_MSG_NOTICE( [SWIG found] ) ], [AC_MSG_ERROR(  [SWIG installation not found] ) ]  ],
+dnl       [ AC_MSG_NOTICE( [No need to check for SWIG] ) ]
+dnl      )
+
+AS_IF( [test "x$enable_swig" == "xyes" -a "x$swig_found" == "xno"],
+          [ AC_MSG_ERROR( [--enable-swig requires that SWIG be installed])],
+         )
+
+AC_MSG_NOTICE( [yada2 swig_var = $swig_var] )
+
+
+VALID_PYTHON=
+
+if test "x$swig_var" = xnoswig && test "x$enable_python" = xyes ; then
+        #don't even bother when swig is not found
+        AC_MSG_ERROR([--enable-python was given as an option but swig was not found on the system])
+elif test "x$swig_var" = xswig && test "x$enable_python" != xno ; then
+        #verify the python installation
+        AM_PATH_PYTHON(,[PYTHON_FOUND=true],[PYTHON_FOUND=false])
+        if test "x$PYTHON_FOUND" = xtrue ; then
+                PYTHON_CPPFLAGS=
+                PYTHON_LDFLAGS=
+                AX_PYTHON_DEVEL
+                if test "x$PYTHON" = x ; then
+                        if test "x$enable_python" = xyes ; then
+                                AC_MSG_ERROR([Incomplete python development package])
+                        else
+                                AC_MSG_WARN([Incomplete python development package])
+                        fi
+                        VALID_PYTHON=no
+                else
+                        VALID_PYTHON=yes
+                fi
+
+        fi
+fi
+
+dnl if put "AX_PYTHON_DEVEL" inside string,  autoconf expands it, resulting in error
+AC_MSG_NOTICE( [From .._PYTHON_DEVEL                         ] )
+AC_MSG_NOTICE( [  PYTHON_CPPFLAGS      = $PYTHON_CPPFLAGS      ] )
+AC_MSG_NOTICE( [  PYTHON_LIBS          = $PYTHON_LIBS          ] )
+AC_MSG_NOTICE( [  PYTHON_EXTRA_LIBS    = $PYTHON_EXTRA_LIBS    ] )
+AC_MSG_NOTICE( [  PYTHON_EXTRA_LDFLAGS = $PYTHON_EXTRA_LDFLAGS ] )
+
+
+if test "x$VALID_PYTHON" = xyes ; then
+  AC_MSG_NOTICE([Building with Python bindings])
+
+
+  if test "x$enable_python_integration" = xyes ; then
+          pythondir=$PYTHON_SITE_PKG
+          pyexecdir=$PYTHON_SITE_PKG_EXEC
+  fi
+
+
+  AC_SUBST(PYTHONDIR,$pythondir)
+  AC_SUBST(PKGPYTHONDIR,$pkgpythondir)
+  AC_SUBST(PYEXECDIR,$pyexecdir)
+  AC_SUBST(PKGPYEXECDIR,$pkgpyexecdir)
+
+  AC_MSG_NOTICE( [pythondir=$pythondir])
+  AC_MSG_NOTICE( [pkgpythondir=$pkgpythondir])
+  AC_MSG_NOTICE( [pyexecdir=$pyexecdir])
+  AC_MSG_NOTICE( [pkgpyexecdir=$pkgpyexecdir])
+
+fi
+
+AM_CONDITIONAL([ENABLE_PYTHON],[test x$VALID_PYTHON = xyes])
+
+
+
 
 ### 
 ### End options for configure script
@@ -383,3 +507,5 @@ AS_IF([test "x$enable_gobject" == "xyes"],
 ###
 
 AC_OUTPUT
+
+dnl m4_include([m4/ax_pkg_swig.m4])

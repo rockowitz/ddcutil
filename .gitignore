@@ -117,4 +117,5 @@ src/swig/*_wrap.c
 clang-report/
 cov-int/
 ddcutil-coverity.tgz
+*.diff
 
