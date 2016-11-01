@@ -23,25 +23,24 @@ endif
 # adl/adl_mock_impl/.deps/*  
 
 CLEANFILES =\
-adl/*expand         \
-adl/adl_impl/*expand \
+adl/*expand               \
+adl/adl_impl/*expand      \
 adl/adl_mock_impl/*expand \
-app_ddcutil/*expand  \
-base/*expand         \
-cmdline/*expand      \
-ddc/*expand          \
-vcp/*expand          \
-i2c/*expand          \
-usb/*expand          \
-usb_util/*expand     \
-libmain/*expand      \
-sample_clients/*expand \
-test/*expand \
-test/adl/*expand \
-test/ddc/*expand \
-test/i2c/*expand \
-usb_util/*expand \
-util/*expand 
+app_ddcutil/*expand       \
+base/*expand              \
+cmdline/*expand           \
+ddc/*expand               \
+i2c/*expand               \
+libmain/*expand           \
+sample_clients/*expand    \
+test/*expand              \
+test/adl/*expand          \
+test/ddc/*expand          \
+test/i2c/*expand          \
+usb/*expand               \
+usb_util/*expand          \
+util/*expand              \
+vcp/*expand
 
 
 clean-local: 
