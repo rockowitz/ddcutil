@@ -898,6 +898,10 @@ static struct driver_name_node * query_card_and_driver_using_sysfs() {
                   printf("   Device:              %04x       \n", xdevice_id);
                   printf("   Subvendor/Subdevice: %04x/%04x  \n", xsubvendor_id, xsubdevice_id);
                }
+               free(vendor_id);
+               free(device_id);
+               free(subsystem_vendor);
+               free(subsystem_device);
             }
          }
       }
