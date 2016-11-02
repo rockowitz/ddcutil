@@ -972,19 +972,21 @@ static void query_loaded_modules_using_sysfs() {
 static void query_i2c_bus_using_sysfs() {
    struct dirent *dent;
    DIR           *d;
-   char          *d0;
+   char          *dname;
 
    printf("\nExamining /sys/bus/i2c/devices...\n");
-   d0 = "/sys/bus/i2c";
-   d = opendir(d0);
+   dname = "/sys/bus/i2c";
+   d = opendir(dname);
    if (!d) {
-      rpt_vstring(1, "i2c bus not defined in sysfs. Unable to open directory %s: %s\n", d0, strerror(errno));
+      rpt_vstring(1, "i2c bus not defined in sysfs. Unable to open directory %s: %s\n",
+                     dname, strerror(errno));
    }
    else {
-      d0 = "/sys/bus/i2c/devices";
-      d = opendir(d0);
+      closedir(d);
+      dname = "/sys/bus/i2c/devices";
+      d = opendir(dname);
       if (!d) {
-         rpt_vstring(1, "Unable to open sysfs directory %s: %s\n", d0, strerror(errno));
+         rpt_vstring(1, "Unable to open sysfs directory %s: %s\n", dname, strerror(errno));
       }
       else {
          bool i2c_seen = false;
@@ -994,14 +996,15 @@ static void query_i2c_bus_using_sysfs() {
             char cur_dir_name[100];
             if (!streq(dent->d_name, ".") && !streq(dent->d_name, "..") ) {
                // DBGMSF(debug, "dent->dname: %s", dent->d_name);
-               sprintf(cur_dir_name, "%s/%s", d0, dent->d_name);
+               sprintf(cur_dir_name, "%s/%s", dname, dent->d_name);
                char * dev_name = read_sysfs_attr(cur_dir_name, "name", true);
                rpt_vstring(1, "%s/name: %s", cur_dir_name, dev_name);
                i2c_seen = true;
             }
          }
          if (!i2c_seen)
-            rpt_vstring(1, "No i2c devices found in %s", d0);
+            rpt_vstring(1, "No i2c devices found in %s", dname);
+         closedir(d);
       }
    }
 }
