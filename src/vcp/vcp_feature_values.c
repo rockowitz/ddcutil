@@ -181,6 +181,7 @@ Parsed_Vcp_Response * single_vcp_value_to_parsed_vcp_response(Single_Vcp_Value *
       assert(valrec->value_type == TABLE_VCP_VALUE);
       Buffer * buf2 = buffer_new(valrec->val.t.bytect, __func__);
       buffer_put(buf2, valrec->val.t.bytes, valrec->val.t.bytect);
+      buffer_free(buf2,__func__);
    }
    return presp;
 }
