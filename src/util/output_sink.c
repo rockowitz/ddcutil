@@ -109,6 +109,7 @@ int printf_sink(Output_Sink sink, const char * format, ...) {
          break;
       }
    }
+   va_end(args);
    return rc;
 }
 
@@ -158,6 +159,7 @@ int vcp_file_emitter(const char * format, ...) {
    va_list(args);
    va_start(args, format);
    int rc = vfprintf(vcp_file_emitter_fp, format, args);
+   va_end(args);
    return rc;
 }
 
