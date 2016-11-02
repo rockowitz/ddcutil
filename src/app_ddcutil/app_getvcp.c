@@ -367,7 +367,7 @@ app_read_changes_usb(Display_Handle * dh) {
       return;
    }
 
-   ssize_t ct = read(fd, &uref, sizeof(&uref));
+   ssize_t ct = read(fd, &uref, sizeof(uref));
    if (ct < 0) {
       int errsv = errno;
       // report the error
@@ -375,7 +375,7 @@ app_read_changes_usb(Display_Handle * dh) {
    }
    else if (ct > 0) {
       rpt_vstring(1, "Read new value:");
-      if (ct < sizeof(&uref)) {
+      if (ct < sizeof(uref)) {
          rpt_vstring(1, "Short read");
       }
       else {
