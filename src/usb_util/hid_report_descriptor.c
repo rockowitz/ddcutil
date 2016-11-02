@@ -101,21 +101,59 @@ char * interpret_item_flags_r(uint16_t data, char * buffer, int bufsz) {
 // Free functions for Parsed_Hid_Descriptor and its contained structs
 //
 
-// should use GPtrArray destroy functions
+void free_parsed_hid_field(Parsed_Hid_Field * phf) {
+   if (phf) {
+      if (phf->extended_usages)
+         g_array_free(phf->extended_usages, true);
+      free(phf);
+   }
+}
+
+// wrap free_parsed_hid_field() in signature of GDestroyNotify()
+void free_parsed_hid_field_func(gpointer data) {
+   free_parsed_hid_field((Parsed_Hid_Field *) data);
+}
+
+
+void free_parsed_hid_report(Parsed_Hid_Report * phr) {
+   if (phr) {
+      if (phr->hid_fields) {
+          g_ptr_array_set_free_func(phr->hid_fields, free_parsed_hid_field_func);
+          g_ptr_array_free(phr->hid_fields, true);
+      }
+      free(phr);
+   }
+}
+
+// wrap free_parsed_hid_report() in signature of GDestroyNotify()
+void free_parsed_hid_report_func(gpointer data) {
+   free_parsed_hid_report((Parsed_Hid_Report *) data);
+}
+
+
+void free_parsed_hid_collection_func(gpointer data);   // forward ref
+
+
 void free_parsed_hid_collection(Parsed_Hid_Collection * phc) {
-#ifdef TODO
    if (phc) {
       if (phc->reports) {
-         if (phc->reports->len > 0) {
-            for (int rptndx = phc->reports->len - 1;
-                  rptndx >= 0;
-                  rptndx--)
-            {
-               Parsed_Hid_Report cur_rpt = g_ptr_array_index(phc->reports, rptndx);
-               free_parsed_hid_report(cur_rpt);
-               g_ptr_array_delete(
-#endif
+         g_ptr_array_set_free_func(phc->reports, free_parsed_hid_report_func);
+         g_ptr_array_free(phc->reports, true);
+      }
+      if (phc->child_collections) {
+         g_ptr_array_set_free_func(phc->child_collections, free_parsed_hid_collection_func);
+         g_ptr_array_free(phc->child_collections, true);
+      }
+      free(phc);
+   }
 }
+
+
+// wrap free_parsed_hid_collection() in signature of GDestroyNotify()
+void free_parsed_hid_collection_func(gpointer data) {
+   free_parsed_hid_collection((Parsed_Hid_Collection *) data);
+}
+
 
 
 void free_parsed_hid_descriptor(Parsed_Hid_Descriptor * phd) {

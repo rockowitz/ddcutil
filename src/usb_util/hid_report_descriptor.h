@@ -101,11 +101,13 @@ typedef struct parsed_hid_field {
    uint16_t       unit;
 } Parsed_Hid_Field;
 
+
 typedef struct parsed_hid_report {
    uint16_t       report_id;
    Byte           report_type;
    GPtrArray *    hid_fields;             // array of pointers to Parsed_Hid_Field
 } Parsed_Hid_Report;
+
 
 typedef struct parsed_hid_collection {
    uint16_t       usage_page;
