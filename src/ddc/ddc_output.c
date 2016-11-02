@@ -404,6 +404,7 @@ get_formatted_value_for_feature_table_entry(
             int hexbufsize = bytect * 3;
             char * hexbuf = calloc(hexbufsize, sizeof(char));
             char space = ' ';
+            // n. buffer passed to hexstring2(), so no allocation
             hexstring2(pvalrec->val.t.bytes, bytect, &space, false /* upper case */, hexbuf, hexbufsize);
             char * formatted = calloc(hexbufsize + 20, sizeof(char));
             snprintf(formatted, hexbufsize+20, "VCP %02X %s\n", feature_code, hexbuf);
