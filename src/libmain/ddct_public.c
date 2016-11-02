@@ -21,6 +21,7 @@
  * </endcopyright>
  */
 
+#include <assert.h>
 #include <string.h>
 
 #include "util/report_util.h"
@@ -611,9 +612,10 @@ DDCT_Status ddct_get_table_vcp_value(
 {
    WITH_DH(ddct_dh,
       {
-         Buffer * p_table_bytes;
+         Buffer * p_table_bytes = NULL;
          rc =  get_table_vcp_value(dh, feature_code, &p_table_bytes);
          if (rc == 0) {
+            assert(p_table_bytes);  // avoid coverity warning
             int len = p_table_bytes->len;
             *value_len = len;
             *value_bytes = malloc(len);
