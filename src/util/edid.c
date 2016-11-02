@@ -303,9 +303,8 @@ Parsed_Edid * create_parsed_edid(Byte* edidbytes) {
    parsed_edid->bx = edidbytes[0x1f] << 2 | ( (edidbytes[0x1a]&0b11000000)>>6 );
    parsed_edid->by = edidbytes[0x20] << 2 | ( (edidbytes[0x1a]&0b00110000)>>4 );
    parsed_edid->wx = edidbytes[0x21] << 2 | ( (edidbytes[0x1a]&0b00001100)>>2 );
-   parsed_edid->wy = edidbytes[0x22] << 2 | ( (edidbytes[0x1a]&0b00000011)>>0 );
-
-   // low order digits wrong, try another way
+// parsed_edid->wy = edidbytes[0x22] << 2 | ( (edidbytes[0x1a]&0b00000011)>>0 );
+// low order digits wrong, try another way
    parsed_edid->wy = edidbytes[0x22] * 4 + ((edidbytes[0x1a]&0b00000011)>>0);
 
    if (!ok) {
