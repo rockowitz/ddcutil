@@ -136,6 +136,7 @@ void rpt_vstring(int depth, char * format, ...) {
       va_start(args, format);
       vsnprintf(buf, reqd_size, format, args);
    }
+   va_end(args);
 
    rpt_title(buf, depth);
 
