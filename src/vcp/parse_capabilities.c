@@ -446,6 +446,7 @@ Parsed_Capabilities * parse_capabilities(char * buf_start, int buf_len) {
       }
       else if (memcmp(seg->name_start, "mccs_ver", seg->name_len) == 0) {
          DBGMSF(debug, "MCCS version: %.*s", seg->value_len, seg->value_start);
+         // n. pointer will be stored in pcaps
          mccs_ver = chars_to_string(seg->value_start, seg->value_len);
       }
       else {
@@ -458,7 +459,7 @@ Parsed_Capabilities * parse_capabilities(char * buf_start, int buf_len) {
    Parsed_Capabilities * pcaps = NULL;
    pcaps = new_parsed_capabilities(
               raw_value,
-              mccs_ver,
+              mccs_ver,          // this pointer is saved in returned struct
               raw_cmds_segment_seen,
               commands,         // each stored byte is command id
               vcp_features);
@@ -509,7 +510,8 @@ Parsed_Capabilities* parse_capabilities_string(char * caps) {
 void test_segment(char * text) {
    char * start = text;
    int len   = strlen(text);
-   next_capabilities_segment(start, len);
+   Capabilities_Segment * capseg = next_capabilities_segment(start, len);
+   free(capseg);      // it's just a test function, but avoid coverity flagging memory leak
 }
 
 
