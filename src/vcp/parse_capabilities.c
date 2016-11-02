@@ -221,6 +221,16 @@ struct {
    int    remainder_len;
 } Capabilities_Segment;
 
+
+/* Extract information about the next segment of the capabilities string.
+ *
+ * Arguments:     start   current position in the capabilities string
+ *                len     length of remainder of capabilities string
+ *
+ * Returns:    pointer to newly allocated Capabilities_Segment describing the segment
+ *             It is the responsibility of the caller to free the returned struct,
+ *             BUT NOT THE LOCATIONS IT ADDRESSES
+ */
 static
 Capabilities_Segment * next_capabilities_segment(char * start, int len) {
    Capabilities_Segment * segment = calloc(1, sizeof(Capabilities_Segment));
@@ -453,6 +463,7 @@ Parsed_Capabilities * parse_capabilities(char * buf_start, int buf_len) {
          // additional segment names seen: asset_eep, mpu, mswhql
          DBGMSF(debug, "Ignoring segment: %.*s", seg->name_len, seg->name_start);
       }
+      free(seg);
    }
 
    // n. may be damaged
