@@ -541,8 +541,9 @@ void collect_machine_readable_monitor_id(Display_Handle * dh, GPtrArray * vals) 
  */
 void collect_machine_readable_timestamp(time_t time_millis, GPtrArray* vals) {
    // temporarily use same output format as filename, but format the
-   // date separately herefor flexibility
+   // date separately here for flexibility
    char timestamp_buf[30];
+   // n. since buffer provided, format_timestamp() does not allocate
    format_timestamp(time_millis, timestamp_buf, sizeof(timestamp_buf));
    char buf[400];
    int bufsz = sizeof(buf)/sizeof(char);
