@@ -688,6 +688,7 @@ static void load_id_file(Device_Id_Type id_type){
 
       g_ptr_array_set_free_func(all_lines, free);
       g_ptr_array_free(all_lines, true);
+      free(device_id_fqfn);
    }          // if pci.ids or usb.ids was found
 
    return;
