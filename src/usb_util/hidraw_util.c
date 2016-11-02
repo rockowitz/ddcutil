@@ -274,6 +274,7 @@ void probe_hidraw_device(char * devname, bool show_monitors_only,  int depth) {
             rpt_hex_dump(buf, res, d2);
          }
       }
+      free_parsed_hid_descriptor(phd);  // not defined, but need to free phd
    }
 
    free_hid_report_item_list(report_item_list);
