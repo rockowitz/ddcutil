@@ -366,6 +366,7 @@ void probe_hidraw(bool show_monitors_only, int depth) {
       // printf("(%s) Probing %s...\n", __func__, devname);
       probe_hidraw_device(devname, true,  depth);
    }
+   g_ptr_array_free(hidraw_names, true);
 }
 
 
