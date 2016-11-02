@@ -98,6 +98,38 @@ char * interpret_item_flags_r(uint16_t data, char * buffer, int bufsz) {
 
 
 //
+// Free functions for Parsed_Hid_Descriptor and its contained structs
+//
+
+// should use GPtrArray destroy functions
+void free_parsed_hid_collection(Parsed_Hid_Collection * phc) {
+#ifdef TODO
+   if (phc) {
+      if (phc->reports) {
+         if (phc->reports->len > 0) {
+            for (int rptndx = phc->reports->len - 1;
+                  rptndx >= 0;
+                  rptndx--)
+            {
+               Parsed_Hid_Report cur_rpt = g_ptr_array_index(phc->reports, rptndx);
+               free_parsed_hid_report(cur_rpt);
+               g_ptr_array_delete(
+#endif
+}
+
+
+void free_parsed_hid_descriptor(Parsed_Hid_Descriptor * phd) {
+   if (phd) {
+      if (phd->root_collection) {
+         free_parsed_hid_collection(phd->root_collection);
+      }
+      free(phd);
+   }
+}
+
+
+
+//
 // Functions to report Parsed_Hid_Descriptor and its contained structs
 //
 

@@ -121,6 +121,9 @@ typedef struct parsed_hid_descriptor {
    Parsed_Hid_Collection * root_collection;
 } Parsed_Hid_Descriptor;
 
+
+void free_parsed_hid_descriptor(Parsed_Hid_Descriptor * phd);
+
 Parsed_Hid_Descriptor * parse_report_desc_from_item_list(Hid_Report_Descriptor_Item * items_head);
 Parsed_Hid_Descriptor * parse_report_desc(Byte * b, int desclen);
 
