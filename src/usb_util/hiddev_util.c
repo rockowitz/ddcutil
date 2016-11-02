@@ -120,6 +120,7 @@ get_hiddev_device_names_using_udev() {
    if (debug) printf("(%s) Starting...\n", __func__);
 
    GPtrArray * dev_names = g_ptr_array_sized_new(10);
+   g_ptr_array_set_free_func(dev_names, free);
    // Null_Terminated_String_Array result = NULL;
 
    struct udev *udev;
