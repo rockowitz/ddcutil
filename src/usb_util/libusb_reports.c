@@ -636,8 +636,7 @@ void report_libusb_interface_descriptor(
    //     nor a pointer to array of pointers to endpoint descriptors
    int ndx = 0;
    for (ndx=0; ndx<inter->bNumEndpoints; ndx++) {
-      const struct libusb_endpoint_descriptor *epdesc =
-         epdesc = &(inter->endpoint[ndx]);
+      const struct libusb_endpoint_descriptor *epdesc = &(inter->endpoint[ndx]);
       report_endpoint_descriptor(epdesc, dh, d1);
    }
 
