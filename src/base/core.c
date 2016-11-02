@@ -348,10 +348,13 @@ bool is_tracing(Trace_Group trace_group, const char * filename) {
 }
 
 void show_trace_groups() {
-   char buf[100] = "";
+   const int bufsz = 200;
+   char buf[bufsz];
+   buf[0] = '\0';
    int ndx;
    for (ndx=0; ndx< trace_group_ct; ndx++) {
       if ( trace_levels & trace_group_ids[ndx]) {
+         // TODO: guard against buffer overflow
          if (strlen(buf) > 0)
             strcat(buf, ", ");
          strcat(buf, trace_group_names[ndx]);
@@ -402,6 +405,7 @@ void ddcmsg(Trace_Group  traceGroup,
       va_start(args, format);
       vsnprintf(buffer, 200, format, args);
       f0printf(FOUT, "(%s) %s\n", funcname, buffer);
+      va_end(args);
    }
 }
 
