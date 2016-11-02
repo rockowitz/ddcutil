@@ -181,6 +181,8 @@ bool directory_exists(const char * fqfn) {
  *   filter_func  tests directory entry
  *
  * Returns:   GPtrArray of fully qualified file names
+ *            A free function is set on the array, so g_ptr_array_free() releases
+ *            all the pointers
  *
  * Adapted from usbmonctl
  */
@@ -188,6 +190,7 @@ GPtrArray * get_filenames_by_filter(const char * dirnames[], Dirent_Filter filte
    // const char *hiddev_paths[] = { "/dev/", "/dev/usb/", NULL };
    bool debug = false;
    GPtrArray * devnames =  g_ptr_array_new();
+   g_ptr_array_set_free_func(devnames, free);
    char path[PATH_MAX];
 
    for (int i = 0; dirnames[i] != NULL; i++) {
