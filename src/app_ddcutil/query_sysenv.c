@@ -195,11 +195,12 @@ static int query_proc_modules_for_video() {
 
 static bool show_one_file(char * dir_name, char * simple_fn, bool verbose, int depth) {
    bool result = false;
-   char fqfn[400];
+   char fqfn[MAX_PATH+2];
    strcpy(fqfn,dir_name);
    if (!str_ends_with(dir_name, "/"))
       strcat(fqfn,"/");
-   strcat(fqfn,simple_fn);
+   assert(strlen(fqfn) + strlen(simple_fn) <= MAX_PATH);   // for Coverity
+   strncat(fqfn,simple_fn, sizeof(fqfn)-(strlen(fqfn)+1));  // use strncat to make Coverity happy
    if (regular_file_exists(fqfn)) {
       rpt_vstring(depth, "%s:", fqfn);
       rpt_file_contents(fqfn, depth+1);
@@ -836,6 +837,7 @@ static struct driver_name_node * query_card_and_driver_using_sysfs() {
 
                // printf("\nParsing modalias for values...\n");
                char * colonpos = strchr(modalias, ':');
+               assert(colonpos);                // coverity complains that strchr() might return NULL
                assert(*(colonpos+1) == 'v');    // vendor_id
                char * vendor_id = substr(colonpos, 2, 8);
                // printf("vendor_id:        %s\n", vendor_id);
@@ -922,6 +924,7 @@ static struct driver_name_node * query_card_and_driver_using_sysfs() {
 static void driver_specific_tests(struct driver_name_node * driver_list) {
    printf("\nPerforming driver specific checks...\n");
    bool found_driver_specific_checks = false;
+
    if (found_driver(driver_list, "nvidia")) {
       found_driver_specific_checks = true;
       printf("\nChecking for special settings for proprietary Nvidia driver \n");
@@ -943,6 +946,7 @@ static void driver_specific_tests(struct driver_name_node * driver_list) {
      printf("WARNING: Using AMD proprietary video driver fglrx but ddcutil built without ADL support");
 #endif
    }
+
    if (!found_driver_specific_checks)
       printf("No driver specific checks apply.");
 }
@@ -1253,13 +1257,14 @@ static void probe_hiddev(int depth) {
                    report_hiddev_device_by_fd(fd, d1);
                 }
              }
+             free(cgname);
           }
 
           close(fd);
       }
    }
 
-   // need to set destroy function
+   // n. free function was set at allocation time
    g_ptr_array_free(hiddev_devices, true);
 }
 
