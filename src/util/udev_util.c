@@ -91,6 +91,7 @@ void report_udev_device(struct udev_device * dev, int depth) {
                ndx++;
             }
          }
+         null_terminated_string_array_free(ntsa);
 
 #ifdef ALTERNATIVE
          // simpler, works
