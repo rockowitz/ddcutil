@@ -890,6 +890,7 @@ int f0printf(FILE * stream, const char * format, ...) {
       va_list(args);
       va_start(args, format);
       rc = vfprintf(stream, format, args);
+      va_end(args);
    }
    return rc;
 }
