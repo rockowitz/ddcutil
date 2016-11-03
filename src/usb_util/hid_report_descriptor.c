@@ -966,6 +966,15 @@ Parsed_Hid_Descriptor * parse_report_desc_from_item_list(Hid_Report_Descriptor_I
       item = item->next;
    }
 
+   free_cur_report_locals(cur_locals);
+   // Free the globals stack, in case there's anything on it
+   Cur_Report_Globals * prev_globals = NULL;
+   while (cur_globals) {
+      prev_globals = cur_globals->prev;
+      free(cur_globals);
+      cur_globals = prev_globals;
+   }
+
    return parsed_descriptor;
 }
 
@@ -985,7 +994,9 @@ Parsed_Hid_Descriptor * parse_report_desc(Byte * b, int desclen) {
 
    Hid_Report_Descriptor_Item * item_list = tokenize_hid_report_descriptor(b, desclen) ;
 
-   return parse_report_desc_from_item_list(item_list);
+   Parsed_Hid_Descriptor * result = parse_report_desc_from_item_list(item_list);
+   free_hid_report_item_list(item_list);
+   return result;
 }
 
 
