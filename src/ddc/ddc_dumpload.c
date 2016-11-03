@@ -675,6 +675,8 @@ dumpvcp_as_dumpload_data(
  *
  * Returns:
  *    array of strings
+ *
+ * Note that the result shares no memory with data
  */
 GPtrArray * convert_dumpload_data_to_string_array(Dumpload_Data * data) {
    bool debug = false;

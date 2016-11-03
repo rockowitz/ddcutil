@@ -74,8 +74,8 @@ char * create_simple_vcp_fn_by_edid(
       buf = calloc(1, bufsz);
    }
 
-   char ts_buf[30];
-   char * timestamp_text = format_timestamp(time_millis, ts_buf, 30);
+   char timestamp_text[30];
+   format_timestamp(time_millis, timestamp_text, 30);
    snprintf(buf, bufsz, "%s-%s-%s.vcp",
             edid->model_name,
             edid->serial_ascii,
@@ -125,19 +125,18 @@ dumpvcp_as_file(Display_Handle * dh, char * filename) {
       if (!filename) {
          time_t time_millis = data->timestamp_millis;
          char simple_fn_buf[NAME_MAX+1];
-         char * simple_fn = create_simple_vcp_fn_by_display_handle(
+         create_simple_vcp_fn_by_display_handle(
                                dh,
                                time_millis,
                                simple_fn_buf,
                                sizeof(simple_fn_buf));
-         // DBGMSG("simple_fn=%s", simple_fn );
-
-         snprintf(fqfn, PATH_MAX, "/home/%s/%s/%s", getlogin(), USER_VCP_DATA_DIR, simple_fn);
+         snprintf(fqfn, PATH_MAX, "/home/%s/%s/%s", getlogin(), USER_VCP_DATA_DIR, simple_fn_buf);
          // DBGMSG("fqfn=%s   ", fqfn );
          filename = fqfn;
          // control with MsgLevel?
          f0printf(FOUT, "Writing file: %s\n", filename);
       }
+      free_dumpload_data(data);
 
       FILE * output_fp = fopen(filename, "w+");
       if (!output_fp) {
