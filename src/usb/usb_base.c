@@ -103,6 +103,7 @@ int usb_open_hiddev_device(char * hiddev_devname, Byte calloptions) {
       if (rc != 0) {
          // call should never fail.  always wrote an error message
          REPORT_IOCTL_ERROR("HIDIOCGREPORT", rc);
+         close(file);
          if (calloptions & CALLOPT_ERR_ABORT)
             ddc_abort(errsv);
          file = rc;
