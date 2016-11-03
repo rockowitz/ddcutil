@@ -353,8 +353,9 @@ Parsed_Edid * get_hiddev_edid_with_fallback(int fd, struct hiddev_devinfo * dev_
    }
 
    Parsed_Edid * parsed_edid = NULL;
+
    Buffer * edid_buffer = get_hiddev_edid(fd);    // in hiddev_util.c
-   // try alternative
+   // try alternative - both work, pick one
    Buffer * edid_buf2   = get_multibyte_value_by_ucode(fd, 0x00800002, 128);
    if (edid_buffer && edid_buffer->len > 128)
       buffer_set_length(edid_buffer,128);
@@ -363,19 +364,21 @@ Parsed_Edid * get_hiddev_edid_with_fallback(int fd, struct hiddev_devinfo * dev_
    // printf("edid_buf2:\n");
    // buffer_dump(edid_buf2);
    assert(buffer_eq(edid_buffer, edid_buf2));
+   buffer_free(edid_buf2, __func__);
 
    if (edid_buffer) {
-       parsed_edid = create_parsed_edid(edid_buffer->bytes);
+       parsed_edid = create_parsed_edid(edid_buffer->bytes);  // copies bytes
        if (!parsed_edid) {
           DBGMSF(debug, "get_hiddev_edid() returned invalid EDID");
           // if debug or verbose, dump the bad edid  ??
           // if (debug || get_output_level() >= OL_VERBOSE) {
           // }
-          buffer_free(edid_buffer, __func__);
-          edid_buffer = NULL;
        }
        else
           parsed_edid->edid_source = "USB";
+
+       buffer_free(edid_buffer, __func__);
+       edid_buffer = NULL;
     }
 
    if (!parsed_edid)
