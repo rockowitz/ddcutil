@@ -341,7 +341,7 @@ bool hidraw_is_monitor_device(char * devname) {
    free_hid_report_item_list(report_item_list);
 
 bye:
-   if (fd > 0)
+   if (fd >= 0)    // really shouldn't be closing 0..2 stdin..stderr, but coverity complains
       close(fd);
    if (debug)
       printf("(%s) devname=%s, returning %s\n", __func__, devname, bool_repr(is_monitor));
