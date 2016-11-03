@@ -341,7 +341,6 @@ void report_hid_report_item(
    else
       snprintf(databuf, 80, "0x%0*x", item->bsize_bytect*2, item->data);
 
-
    char rawbuf[16];
    rawbuf[0] = '\0';
    // possibly switch this on and off
@@ -355,13 +354,11 @@ void report_hid_report_item(
              sizeof(workbuf) );       // buffer size
    snprintf(rawbuf, 16, "%02x %-8s ", item->raw_bytes[0], workbuf);
 
-
    rpt_vstring(depth, "%sItem(%-6s): %s, data=[ %s ]",
                       rawbuf,
                       types[item->btype],
                       devid_hid_descriptor_item_type(item->btag),  // replacement for names_reporttag()
                       databuf);
-
 
    switch (item->btag) {
    case 0x04: /* Usage Page */
