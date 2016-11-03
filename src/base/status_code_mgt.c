@@ -97,6 +97,7 @@ Retcode_Range_Table_Entry retcode_range_table[] = {
 };
 int retcode_range_ct = sizeof(retcode_range_table)/sizeof(Retcode_Range_Table_Entry);
 
+
 static
 void validate_retcode_range_table() {
    int ndx = 0;
@@ -106,12 +107,14 @@ void validate_retcode_range_table() {
    }
 }
 
+
 // n. this is called from source file initialization functions, which are called
 // from main before the command line is parsed, so trace control not yet configured
 void register_retcode_desc_finder(
         Retcode_Range_Id           id,
         Retcode_Description_Finder finder_func,
-        bool                       finder_arg_is_modulated) {
+        bool                       finder_arg_is_modulated)
+{
    bool debug = false;
    if (debug)
       printf("(%s) registering callback description finder for range id %d, finder_func=%p, finder_arg_is_modulated=%s\n",
@@ -166,10 +169,11 @@ Retcode_Range_Id get_modulation(int rc) {
    return range_id;
 }
 
+
 Global_Status_Code modulate_base_errno_ddc_to_global(Base_Status_Errno_DDC rc) {
    Global_Status_Code gsc =
          (get_modulation(rc) == RR_BASE)
-             ? gsc = modulate_rc(rc, RR_ERRNO)
+             ? modulate_rc(rc, RR_ERRNO)
              : rc;
    return gsc;
 }
