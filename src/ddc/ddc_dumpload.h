@@ -41,15 +41,15 @@
 
 typedef
 struct {
-   time_t timestamp_millis;
-   Byte   edidbytes[128];
-   char   edidstr[257];       // 128 byte edid as hex string (for future use)
-   char   mfg_id[4];
-   char   model[14];
-   char   serial_ascii[14];
-   Version_Spec vcp_version;
-   int    vcp_value_ct;
-   Vcp_Value_Set vcp_values;
+   time_t         timestamp_millis;
+   Byte           edidbytes[128];
+   char           edidstr[257];       // 128 byte edid as hex string (for future use)
+   char           mfg_id[4];
+   char           model[14];
+   char           serial_ascii[14];
+   Version_Spec   vcp_version;
+   int            vcp_value_ct;
+   Vcp_Value_Set  vcp_values;
 } Dumpload_Data;
 
 void report_dumpload_data(Dumpload_Data * data, int depth);

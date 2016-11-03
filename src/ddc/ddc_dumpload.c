@@ -171,7 +171,9 @@ create_dumpload_data_from_g_ptr_array(GPtrArray * garray) {
             }
             else if (streq(s0, "VCP_VERSION")) {
                data->vcp_version = parse_vspec(s1);
-               if (data->vcp_version.major == -1) {
+               // using VCP_SPEC_UNKNOWN as value when invalid,
+               // what if monitor had no version, so 0.0 was output?
+               if ( vcp_version_eq( data->vcp_version, VCP_SPEC_UNKNOWN) ) {
                   f0printf(FERR, "Invalid VCP VERSION at line %d: %s\n", linectr, line);
                   valid_data = false;
                }
@@ -226,6 +228,7 @@ create_dumpload_data_from_g_ptr_array(GPtrArray * garray) {
                                  feature_id,
                                  ba,
                                  bytect);
+                           free(ba);
                         }
                      }
                      else {   // non-table feature
@@ -262,9 +265,10 @@ create_dumpload_data_from_g_ptr_array(GPtrArray * garray) {
    }          // one line of file
 
    if (!valid_data) {
-      if (data)
+      if (data) {
          free_dumpload_data(data);
-      data = NULL;
+         data = NULL;
+      }
    }
    return data;
 }
@@ -687,8 +691,10 @@ GPtrArray * convert_dumpload_data_to_string_array(Dumpload_Data * data) {
    snprintf(buf, bufsz, "EDID    %s", hexbuf);
    g_ptr_array_add(strings, strdup(buf));
 
-   snprintf(buf, bufsz, "VCP_VERSION %d.%d", data->vcp_version.major, data->vcp_version.minor);
-   g_ptr_array_add(strings, strdup(buf));
+   if (! vcp_version_eq(data->vcp_version, VCP_SPEC_UNKNOWN)) {
+      snprintf(buf, bufsz, "VCP_VERSION %d.%d", data->vcp_version.major, data->vcp_version.minor);
+      g_ptr_array_add(strings, strdup(buf));
+   }
 
    for (int ndx=0; ndx < data->vcp_values->len; ndx++) {
       // n. get_formatted_value_for_feature_table_entry() also has code for table type values
@@ -729,6 +735,7 @@ dumpvcp_as_string(Display_Handle * dh, char ** pstring) {
    if (gsc == 0) {
       GPtrArray * strings = convert_dumpload_data_to_string_array(data);
       *pstring = join_string_g_ptr_array(strings, ";");
+      free_dumpload_data(data);
    }
    DBGMSF(debug, "Returning: %s, *pstring=|%s|", gsc_desc(gsc), *pstring);
    return gsc;
