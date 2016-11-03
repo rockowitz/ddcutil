@@ -315,8 +315,6 @@ static GPtrArray * get_usb_monitor_list() {
          // Declare variables here and initialize them to NULL so that code at label close: works
          struct hiddev_devinfo *   devinfo     = NULL;
          char *                    cgname      = NULL;
-         // struct edid_report *      pedid       = NULL;
-         Buffer *                  pedid       = NULL;
          Parsed_Edid *             parsed_edid = NULL;
          GPtrArray *               vcp_reports = NULL;
          Usb_Monitor_Info *        moninfo =     NULL;
@@ -341,7 +339,6 @@ static GPtrArray * get_usb_monitor_list() {
          moninfo = calloc(1,sizeof(Usb_Monitor_Info));
          moninfo-> hiddev_device_name = strdup(hiddev_fn);
          moninfo->edid = parsed_edid;
-         parsed_edid = NULL;
          moninfo->hiddev_devinfo = devinfo;
          devinfo = NULL;        // so that struct not freed
 
@@ -368,14 +365,8 @@ static GPtrArray * get_usb_monitor_list() {
             free(devinfo);
          if (cgname)
             free(cgname);
-         if (pedid)
-            free(pedid);
-         if (parsed_edid)
-            free(parsed_edid);
          usb_close_device(fd, hiddev_fn, CALLOPT_NONE); // return error if failure
       }  // monitor opened
-
-
    } // loop over device names
 
    g_ptr_array_set_free_func(hiddev_names, free);
