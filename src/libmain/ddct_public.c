@@ -288,6 +288,7 @@ DDCT_Status ddct_repr_display_identifier(DDCT_Display_Identifier ddct_did, char 
             char * hs = hexstring(pdid->edidbytes, 128);
             snprintf(did_work_buf, 100,
                      "Display Id Type: %s, edid=%8s...%8s", did_type_name, hs, hs+248);
+            free(hs);
             break;
       }
       case(DISP_ID_DISPNO):

@@ -658,7 +658,7 @@ void test_hhs_to_byte() {
  *   pointer to hex string
  *
  * The value returned by this funtion has been malloc'd.   It is the
- * responsiblity of the caller to free the memory.
+ * responsibility of the caller to free the memory.
  */
 char * hexstring(unsigned char * bytes, int len) {
    int alloc_size = 3*len + 1;
