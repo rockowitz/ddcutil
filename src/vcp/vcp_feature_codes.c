@@ -914,6 +914,8 @@ VCP_Feature_Table_Entry * vcp_create_table_dummy_feature_for_hexid(Byte id) {
  *
  * Returns:
  *    VCP_Feature_Table_Entry, NULL if not found
+ *    Note this is a pointer into the VCP feature data structures.
+ *    It should NOT be freed by the caller.
  */
 VCP_Feature_Table_Entry * vcp_find_feature_by_hexid(Byte id) {
    // DBGMSG("Starting. id=0x%02x ", id );

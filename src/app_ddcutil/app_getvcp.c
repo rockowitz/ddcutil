@@ -98,8 +98,10 @@ app_show_single_vcp_value_by_feature_table_entry(
                true,       /* prefix_value_with_feature_code */
                &formatted_value,
                stdout);    /* msg_fh */
-      if (formatted_value)
+      if (formatted_value) {
          printf("%s\n", formatted_value);
+         free(formatted_value);
+      }
    }
 
    DBGMSF(debug, "Done.  Returning: %s", gsc_desc(gsc));
