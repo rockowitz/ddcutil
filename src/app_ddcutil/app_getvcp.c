@@ -40,6 +40,7 @@
 #include "base/core.h"
 #include "base/ddc_errno.h"
 #include "base/sleep.h"
+#include "base/vcp_version.h"
 
 #include "vcp/vcp_feature_codes.h"
 
@@ -73,9 +74,9 @@ app_show_single_vcp_value_by_feature_table_entry(
    DBGMSF(debug, "Starting. Getting feature 0x%02x for %s",
                  entry->code, display_handle_repr(dh) );
 
-   Version_Spec vspec = get_vcp_version_by_display_handle(dh);
-   Global_Status_Code         gsc = 0;
-   Byte                       feature_id = entry->code;
+   Version_Spec        vspec = get_vcp_version_by_display_handle(dh);
+   Global_Status_Code  gsc = 0;
+   Byte                feature_id = entry->code;
 
    if (!is_feature_readable_by_vcp_version(entry, vspec)) {
       char * feature_name =  get_version_sensitive_feature_name(entry, vspec);

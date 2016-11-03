@@ -29,6 +29,7 @@
 
 #include <config.h>
 
+#include <assert.h>
 #include <stdbool.h>
 
 #include "base/core.h"
@@ -66,13 +67,12 @@ Version_Spec get_vcp_version_by_display_handle(Display_Handle * dh) {
    // TMI
    // DBGMSF(debug, "Starting. dh=%p, dh->vcp_version =  %d.%d",
    //               dh, dh->vcp_version.major, dh->vcp_version.minor);
-   if (is_version_unqueried(dh->vcp_version)) {
+   if (is_vcp_version_unqueried(dh->vcp_version)) {
       if (debug) {
          DBGMSG("Starting.  vcp_version not set");
          report_display_handle(dh, /*msg=*/ NULL, 1);
       }
-      dh->vcp_version.major = 0;
-      dh->vcp_version.minor = 0;
+      dh->vcp_version = VCP_SPEC_UNKNOWN;
 
       if (dh->io_mode == USB_IO) {
 #ifdef USE_USB
@@ -115,6 +115,7 @@ Version_Spec get_vcp_version_by_display_handle(Display_Handle * dh) {
       DBGMSF(debug, "Non-cache lookup returning: %d.%d", dh->vcp_version.major, dh->vcp_version.minor);
    }
    // DBGMSF(debug, "Returning: %d.%d", dh->vcp_version.major, dh->vcp_version.minor);
+   assert( !vcp_version_eq(dh->vcp_version, VCP_SPEC_UNQUERIED) );
    return dh->vcp_version;
 }
 
@@ -135,13 +136,14 @@ Version_Spec get_vcp_version_by_display_ref(Display_Ref * dref) {
    // printf("(%s) Starting. dref=%p, dref->vcp_version =  %d.%d\n",
    //        __func__, dref, dref->vcp_version.major, dref->vcp_version.minor);
 
-   if (is_version_unqueried(dref->vcp_version)) {
+   if (is_vcp_version_unqueried(dref->vcp_version)) {
       Display_Handle * dh = ddc_open_display(dref, CALLOPT_ERR_MSG | CALLOPT_ERR_ABORT);
       dref->vcp_version = get_vcp_version_by_display_handle(dh);
       ddc_close_display(dh);
    }
 
    // DBGMSG("Returning: %d.%d", dref->vcp_version.major, vspec.minor);
+   assert( !vcp_version_eq(dref->vcp_version, VCP_SPEC_UNQUERIED) );
    return dref->vcp_version;
 }
 

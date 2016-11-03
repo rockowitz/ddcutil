@@ -32,11 +32,8 @@
 
 #include "base/core.h"
 #include "base/displays.h"
+#include "base/vcp_version.h"
 
-#include "vcp/vcp_base.h"
-
-
-// TODO: replace GArray with GPtrArray for vcp_features
 
 #define PARSED_CAPABILITIES_MARKER "CAPA"
 typedef struct {

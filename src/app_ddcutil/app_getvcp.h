@@ -27,9 +27,8 @@
 #include <stdbool.h>
 
 #include "base/displays.h"
+#include "base/feature_sets.h"
 #include "base/status_code_mgt.h"
-
-#include "vcp/vcp_feature_set.h"
 
 
 Global_Status_Code

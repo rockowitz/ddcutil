@@ -139,12 +139,12 @@ base/core.c \
 base/ddc_errno.c \
 base/ddc_packets.c \
 base/displays.c \
-util/edid.c \
 base/execution_stats.c \
 base/linux_errno.c \
 base/status_code_mgt.c \
 base/sleep.c \
-vcp/vcp_base.c \
+base/vcp_version.c \
+base/feature_sets.c \
 vcp/vcp_feature_values.c \
 vcp/ddc_command_codes.c \
 ddc/ddc_displays.c      \
@@ -167,6 +167,7 @@ i2c/i2c_bus_core.c \
 i2c/i2c_do_io.c \
 ddc/ddc_dumpload.c \
 util/data_structures.c \
+util/edid.c \
 util/file_util.c  \
 util/glib_util.c \
 util/multi_level_map.c \

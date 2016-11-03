@@ -40,36 +40,17 @@
 #include "base/core.h"
 #include "base/ddc_errno.h"
 #include "base/ddc_packets.h"
+#include "base/vcp_version.h"
 
 #include "i2c/i2c_bus_core.h"
 
-#include "ddc/ddc_dumpload.h"
 #include "ddc/ddc_displays.h"
+#include "ddc/ddc_dumpload.h"
 #include "ddc/ddc_edid.h"
 #include "ddc/ddc_output.h"
 #include "ddc/ddc_packet_io.h"
 #include "ddc/ddc_read_capabilities.h"
 #include "ddc/ddc_vcp.h"
-
-
-// belongs with vspec code:
-
-char * format_vspec(Version_Spec vspec) {
-   static char private_buffer[20];
-   snprintf(private_buffer, 20, "%d.%d", vspec.major, vspec.minor);
-   return private_buffer;
-}
-
-
-Version_Spec parse_vspec(char * s) {
-   Version_Spec vspec;
-   int ct = sscanf(s, "%hhd . %hhd", &vspec.major, &vspec.minor);
-   if (ct != 2 || vspec.major < 0 || vspec.major > 3 || vspec.minor < 0 || vspec.minor > 2) {
-      vspec.major = -1;
-      vspec.minor = -1;
-   }
-   return vspec;
-}
 
 
 /* Free a Dumpload_Data struct.  The underlying Vcp_Value_set is also freed.

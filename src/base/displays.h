@@ -32,8 +32,8 @@
 #include "util/edid.h"
 
 #include "base/core.h"
-
-#include "vcp/vcp_base.h"
+#include "base/feature_sets.h"
+#include "base/vcp_version.h"
 
 
 /*
@@ -92,9 +92,6 @@ Display_Identifier* create_model_sn_display_identifier(const char* model_name, c
 Display_Identifier* create_usb_display_identifier(int bus, int device);
 void                report_display_identifier(Display_Identifier * pdid, int depth);
 void                free_display_identifier(Display_Identifier * pdid);
-
-//  Display_Ref, potentially also Display_Handle:
-bool is_version_unqueried(Version_Spec vspec);
 
 
 // *** Display_Ref ***

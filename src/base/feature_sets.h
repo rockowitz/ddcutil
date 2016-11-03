@@ -1,4 +1,4 @@
-/* ddc_base.h
+/* feature_sets.h
  *
  * <copyright>
  * Copyright (C) 2014-2016 Sanford Rockowitz <rockowitz@minsoft.com>
@@ -21,30 +21,16 @@
  * </endcopyright>
  */
 
-#ifndef DDC_BASE_H_
-#define DDC_BASE_H_
+#ifndef FEATURE_SETS_H_
+#define FEATURE_SETS_H_
 
 #include <stdbool.h>
 
 #include "util/coredefs.h"
 
-// Standard printf format strings for reporting feature codes values.
-extern const char* FMT_CODE_NAME_DETAIL_W_NL;
-extern const char* FMT_CODE_NAME_DETAIL_WO_NL;
+// so all references still work with version spec declarations moved to vcp_version_spec.h
+#include "base/vcp_version.h"
 
-
-typedef struct {
-    Byte  major;
-    Byte  minor;
-} Version_Spec;
-
-extern const Version_Spec VCP_SPEC_V20;
-extern const Version_Spec VCP_SPEC_V21;
-extern const Version_Spec VCP_SPEC_V30;
-extern const Version_Spec VCP_SPEC_V22;
-
-bool vcp_version_le(Version_Spec val, Version_Spec max);
-bool vcp_version_gt(Version_Spec val, Version_Spec min);
 
 
 // If this enum is changed, be sure to change the corresponding
@@ -95,4 +81,4 @@ typedef struct {
 void report_feature_set_ref(Feature_Set_Ref * fsref, int depth);
 
 
-#endif /* DDC_BASE_H_ */
+#endif /* FEATURE_SETS_H_ */

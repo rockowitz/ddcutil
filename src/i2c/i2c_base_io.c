@@ -32,12 +32,13 @@
 #include <string.h>
 #include <sys/ioctl.h>
 #include <unistd.h>
-#include <vcp/vcp_base.h>
+
 #include "util/string_util.h"
 
 #include "base/core.h"
 #include "base/ddc_errno.h"
 #include "base/execution_stats.h"
+#include "base/feature_sets.h"
 #include "base/linux_errno.h"
 
 #include "i2c/wrap_i2c-dev.h"

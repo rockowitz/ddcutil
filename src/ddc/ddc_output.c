@@ -60,6 +60,11 @@
 // Trace class for this file
 static Trace_Group TRACE_GROUP = TRC_DDC;
 
+
+// Standard format strings for reporting feature codes.
+const char* FMT_CODE_NAME_DETAIL_WO_NL = "VCP code 0x%02x (%-30s): %s";
+const char* FMT_CODE_NAME_DETAIL_W_NL  = "VCP code 0x%02x (%-30s): %s\n";
+
 //
 // VCP Feature Table inquiry
 //

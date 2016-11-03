@@ -26,7 +26,7 @@
 
 #include <assert.h>
 #include <stdio.h>
-#include <vcp/vcp_base.h>
+
 #include "util/string_util.h"
 
 #include "base/core.h"

@@ -1,4 +1,4 @@
-/* ddc_base.c
+/* vcp_base.c
  *
  * <copyright>
  * Copyright (C) 2014-2016 Sanford Rockowitz <rockowitz@minsoft.com>
@@ -21,9 +21,6 @@
  * </endcopyright>
  */
 
-// Putting these definitions and functions into subdirectory base
-// so that subdirectory cmdline is not dependent on ddc
-
 #include <assert.h>
 #include <stddef.h>
 
@@ -31,54 +28,7 @@
 
 #include "base/core.h"
 
-#include "vcp_base.h"
-
-
-// Standard format strings for reporting feature codes.
-const char* FMT_CODE_NAME_DETAIL_WO_NL = "VCP code 0x%02x (%-30s): %s";
-const char* FMT_CODE_NAME_DETAIL_W_NL  = "VCP code 0x%02x (%-30s): %s\n";
-
-
-//
-// MCCS version constants and utilities
-//
-
-const Version_Spec VCP_SPEC_V20 = {2,0};
-const Version_Spec VCP_SPEC_V21 = {2,1};
-const Version_Spec VCP_SPEC_V30 = {3,0};
-const Version_Spec VCP_SPEC_V22 = {2,2};
-
-// addresses the fact that v3.0 spec is not a direct superset of 2.2
-// both are greater than 2.1
-// will require modification if a new spec appears
-bool vcp_version_le(Version_Spec val, Version_Spec max) {
-   bool result = false;
-   assert (val.major <= 3);
-   assert (max.major == 2 || max.major == 3);
-
-   if (max.major == 2) {
-      if (val.major < 2)
-         result = true;
-      else
-         result = (val.minor <= max.minor);
-   }
-   else if (max.major == 3) {
-      if (val.major < 2)
-         result = true;
-      else if (val.major == 2)
-         result = (val.minor <= 1);
-      else
-         result = (val.minor <= max.minor);
-   }
-   else
-      PROGRAM_LOGIC_ERROR("Unsupported max val = %d.%d", max.major, max.minor);
-
-   return result;
-}
-
-bool vcp_version_gt(Version_Spec val, Version_Spec min) {
-   return !vcp_version_le(val,min);
-}
+#include "base/feature_sets.h"
 
 
 //

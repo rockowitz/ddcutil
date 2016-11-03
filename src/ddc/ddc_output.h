@@ -24,7 +24,7 @@
 #ifndef DDC_OUTPUT_H_
 #define DDC_OUTPUT_H_
 
-// #include <glib.h>
+#include <glib.h>
 #include <stdio.h>
 #include <time.h>
 
@@ -35,6 +35,12 @@
 #include "vcp/vcp_feature_codes.h"
 #include "vcp/vcp_feature_set.h"
 #include "vcp/vcp_feature_values.h"
+
+// TODO: Should probably be in a more general location
+// Standard printf format strings for reporting feature codes values.
+extern const char* FMT_CODE_NAME_DETAIL_W_NL;
+extern const char* FMT_CODE_NAME_DETAIL_WO_NL;
+
 
 
 #ifdef FUTURE

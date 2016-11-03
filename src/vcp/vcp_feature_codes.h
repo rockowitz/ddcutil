@@ -30,8 +30,8 @@
 
 #include "base/core.h"
 #include "base/ddc_packets.h"
+#include "base/feature_sets.h"
 
-#include "vcp/vcp_base.h"
 #include "vcp/vcp_feature_values.h"
 
 

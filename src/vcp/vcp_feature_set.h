@@ -29,8 +29,9 @@
 
 #include "util/coredefs.h"
 
+#include "base/feature_sets.h"
+
 #include "vcp/vcp_feature_codes.h"
-#include "vcp/vcp_base.h"
 
 
 typedef void * VCP_Feature_Set;
