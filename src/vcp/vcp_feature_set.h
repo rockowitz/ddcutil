@@ -34,7 +34,9 @@
 #include "vcp/vcp_feature_codes.h"
 
 
-typedef void * VCP_Feature_Set;
+typedef void * VCP_Feature_Set;  // make underlying data structure opaque
+
+void free_vcp_feature_set(VCP_Feature_Set fset);
 
 VCP_Feature_Set
 create_feature_set(VCP_Feature_Subset subset, Version_Spec vcp_version);

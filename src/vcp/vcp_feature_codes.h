@@ -136,9 +136,10 @@ extern Feature_Value_Entry * pxc8_display_controller_type_values;
 //    Feature_Value_Entry *  sl_values;
 // } Version_Specific_Info;
 
-
+#define VCP_FEATURE_TABLE_ENTRY_MARKER "VFTE"
 typedef
 struct {
+   char                                  marker[4];
    Byte                                  code;
    char *                                desc;
    Format_Normal_Feature_Detail_Function nontable_formatter;
@@ -162,6 +163,9 @@ struct {
 
 int
 vcp_get_feature_code_count();
+
+void
+free_synthetic_vcp_entry(VCP_Feature_Table_Entry * pfte);
 
 void
 report_vcp_feature_table_entry(VCP_Feature_Table_Entry * entry, int depth);

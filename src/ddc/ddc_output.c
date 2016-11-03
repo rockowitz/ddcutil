@@ -347,6 +347,7 @@ collect_raw_subset_values(
    gsc = collect_raw_feature_set_values(
             dh, feature_set, vset,
             ignore_unsupported, msg_fh);
+   free_vcp_feature_set(feature_set);
    DBGMSF(debug, "Done");
    return gsc;
 }
@@ -522,6 +523,7 @@ show_feature_set_values(
                g_ptr_array_add(collector, formatted_value);
             else
                f0printf(FOUT, "%s\n", formatted_value);
+            free(formatted_value);
          }
          else {
             // or should I check features_ct == 1?
@@ -572,6 +574,7 @@ show_vcp_values(
 
    gsc = show_feature_set_values(
             dh, feature_set, collector, force_show_unsupported);
+   free_vcp_feature_set(feature_set);
    DBGMSF(debug, "Done");
    return gsc;
 }

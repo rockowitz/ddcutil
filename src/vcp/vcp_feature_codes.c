@@ -847,6 +847,13 @@ bool vcp_format_feature_detail(
 // Functions that return a VCP_Feature_Table_Entry
 //
 
+
+static VCP_Feature_Table_Entry * vcp_new_feature_table_entry(Byte id) {
+   VCP_Feature_Table_Entry* pentry = calloc(1, sizeof(VCP_Feature_Table_Entry) );
+   pentry->code = id;
+   return pentry;
+}
+
 /* Returns an entry in the VCP feature table based on its index in the table.
  *
  * Arguments:
@@ -873,8 +880,10 @@ VCP_Feature_Table_Entry * vcp_get_feature_table_entry(int ndx) {
  */
 VCP_Feature_Table_Entry * vcp_create_dummy_feature_for_hexid(Byte id) {
    // memory leak
-   VCP_Feature_Table_Entry* pentry = calloc(1, sizeof(VCP_Feature_Table_Entry) );
-   pentry->code = id;
+   // VCP_Feature_Table_Entry* pentry = calloc(1, sizeof(VCP_Feature_Table_Entry) );
+   // pentry->code = id;
+   VCP_Feature_Table_Entry * pentry = vcp_new_feature_table_entry(id);
+
    if (id >= 0xe0) {
       pentry->v20_name = "Manufacturer Specific";
    }
@@ -890,8 +899,9 @@ VCP_Feature_Table_Entry * vcp_create_dummy_feature_for_hexid(Byte id) {
 
 VCP_Feature_Table_Entry * vcp_create_table_dummy_feature_for_hexid(Byte id) {
    // memory leak
-   VCP_Feature_Table_Entry* pentry = calloc(1, sizeof(VCP_Feature_Table_Entry) );
-   pentry->code = id;
+   // VCP_Feature_Table_Entry* pentry = calloc(1, sizeof(VCP_Feature_Table_Entry) );
+   // pentry->code = id;
+   VCP_Feature_Table_Entry * pentry = vcp_new_feature_table_entry(id);
    if (id >= 0xe0) {
       pentry->v20_name = "Manufacturer Specific";
    }
@@ -3657,6 +3667,29 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
 int vcp_feature_code_count = sizeof(vcp_code_table)/sizeof(VCP_Feature_Table_Entry);
 
 
+
+
+/* Free only synthetic VCP_Feature_Table_Entrys,
+ * not ones in the permanent data structure.
+ */
+void free_synthetic_vcp_entry(VCP_Feature_Table_Entry * pfte) {
+   assert(memcmp(pfte->marker, VCP_FEATURE_TABLE_ENTRY_MARKER, 4) == 0);
+   if (pfte->vcp_global_flags & VCP2_SYNTHETIC) {
+      if (pfte->desc)
+         free(pfte->desc);
+      if (pfte->v20_name)
+         free(pfte->v20_name);
+      if (pfte->v21_name)
+          free(pfte->v21_name);
+      if (pfte->v30_name)
+          free(pfte->v30_name);
+      if (pfte->v22_name)
+          free(pfte->v22_name);
+      free(pfte);
+   }
+}
+
+
 //
 // Functions for validating vcp_code_table[]
 //
@@ -3807,6 +3840,9 @@ void validate_vcp_feature_table() {
 
 void init_vcp_feature_codes() {
    validate_vcp_feature_table();
+   for (int ndx=0; ndx < vcp_feature_code_count; ndx++) {
+      memcpy( vcp_code_table[ndx].marker, VCP_FEATURE_TABLE_ENTRY_MARKER, 4);
+   }
 }
 
 

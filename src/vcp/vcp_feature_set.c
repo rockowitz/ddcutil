@@ -34,12 +34,40 @@
 
 
 #define VCP_FEATURE_SET_MARKER "FSET"
-struct VCP_Feature_Set {
+struct vcp_feature_set {
    char                marker[4];
    VCP_Feature_Subset  subset;
    GPtrArray *         members;
 };
 
+
+
+/* Free only synthetic VCP_Feature_Table_Entrys,
+ * not ones in the permanent data structure.
+ */
+void free_transient_vcp_entry(gpointer ptr) {
+   // free only dynamically created entries, not entries in permanent data structures
+
+   VCP_Feature_Table_Entry * pfte = (VCP_Feature_Table_Entry *) ptr;
+   assert(memcmp(pfte->marker, VCP_FEATURE_TABLE_ENTRY_MARKER, 4) == 0);
+   if (pfte->vcp_global_flags & VCP2_SYNTHETIC) {
+      free_synthetic_vcp_entry(pfte);
+   }
+}
+
+
+void free_vcp_feature_set(VCP_Feature_Set fset) {
+   if (fset) {
+      struct vcp_feature_set * pset = (struct vcp_feature_set *) fset;
+      assert( memcmp(pset->marker, VCP_FEATURE_SET_MARKER, 4) == 0);
+
+      if (pset->members) {
+         g_ptr_array_set_free_func(pset->members, free_transient_vcp_entry);
+         g_ptr_array_free(pset->members, true);
+      }
+      free(pset);
+   }
+}
 
 VCP_Feature_Set
 create_feature_set(VCP_Feature_Subset subset_id, Version_Spec vcp_version) {
@@ -47,7 +75,7 @@ create_feature_set(VCP_Feature_Subset subset_id, Version_Spec vcp_version) {
    bool debug = false;
    DBGMSF(debug, "Starting. subset_id=%s(0x%04x), vcp_version=%d.%d",
                  feature_subset_name(subset_id), subset_id, vcp_version.major, vcp_version.minor);
-   struct VCP_Feature_Set * fset = calloc(1,sizeof(struct VCP_Feature_Set));
+   struct vcp_feature_set * fset = calloc(1,sizeof(struct vcp_feature_set));
    memcpy(fset->marker, VCP_FEATURE_SET_MARKER, 4);
    fset->subset = subset_id;
    fset->members = g_ptr_array_sized_new(30);
@@ -58,6 +86,7 @@ create_feature_set(VCP_Feature_Subset subset_id, Version_Spec vcp_version) {
       for (; ndx < 256; ndx++) {
          Byte id = ndx;
          // DBGMSF(debug, "examining id 0x%02x", id);
+         // n. this is a pointer into permanent data structures, should not be freed:
          VCP_Feature_Table_Entry* vcp_entry = vcp_find_feature_by_hexid(id);
          // original code looks at VCP2_READABLE, output level
          if (vcp_entry)
@@ -123,7 +152,7 @@ create_feature_set(VCP_Feature_Subset subset_id, Version_Spec vcp_version) {
 VCP_Feature_Set
 create_single_feature_set_by_vcp_entry(VCP_Feature_Table_Entry * vcp_entry) {
    // bool debug = true;
-   struct VCP_Feature_Set * fset = calloc(1,sizeof(struct VCP_Feature_Set));
+   struct vcp_feature_set * fset = calloc(1,sizeof(struct vcp_feature_set));
    memcpy(fset->marker, VCP_FEATURE_SET_MARKER, 4);
    fset->members = g_ptr_array_sized_new(1);
    fset->subset = VCP_SUBSET_SINGLE_FEATURE;
@@ -144,7 +173,7 @@ create_single_feature_set_by_vcp_entry(VCP_Feature_Table_Entry * vcp_entry) {
  */
 VCP_Feature_Set
 create_single_feature_set_by_hexid(Byte id, bool force) {
-   struct VCP_Feature_Set * fset = NULL;
+   struct vcp_feature_set * fset = NULL;
    VCP_Feature_Table_Entry* vcp_entry = NULL;
    if (force)
       vcp_entry = vcp_find_feature_by_hexid_w_default(id);
@@ -174,7 +203,7 @@ create_feature_set_from_feature_set_ref(
    Version_Spec      vcp_version,
    bool              force)
 {
-    struct VCP_Feature_Set * fset = NULL;
+    struct vcp_feature_set * fset = NULL;
     if (fsref->subset == VCP_SUBSET_SINGLE_FEATURE)
        fset = create_single_feature_set_by_hexid(fsref->specific_feature, force);
     else
@@ -188,16 +217,16 @@ VCP_Feature_Set create_single_feature_set_by_charid(Byte id, bool force) {
    return NULL;
 }
 
-static inline struct VCP_Feature_Set *
+static inline struct vcp_feature_set *
 unopaque_feature_set(VCP_Feature_Set feature_set) {
-   struct VCP_Feature_Set * fset = (struct VCP_Feature_Set *) feature_set;
+   struct vcp_feature_set * fset = (struct vcp_feature_set *) feature_set;
    assert( fset && memcmp(fset->marker, VCP_FEATURE_SET_MARKER, 4) == 0);
    return fset;
 }
 
 
 void free_feature_set(VCP_Feature_Set feature_set) {
-   struct VCP_Feature_Set * fset = (struct VCP_Feature_Set *) feature_set;
+   struct vcp_feature_set * fset = (struct vcp_feature_set *) feature_set;
    assert( fset && memcmp(fset->marker, VCP_FEATURE_SET_MARKER, 4) == 0);
    int ndx = 0;
    // free all generated members
@@ -213,7 +242,7 @@ void free_feature_set(VCP_Feature_Set feature_set) {
 }
 
 VCP_Feature_Table_Entry * get_feature_set_entry(VCP_Feature_Set feature_set, int index) {
-   struct VCP_Feature_Set * fset = (struct VCP_Feature_Set *) feature_set;
+   struct vcp_feature_set * fset = (struct vcp_feature_set *) feature_set;
    assert( fset && memcmp(fset->marker, VCP_FEATURE_SET_MARKER, 4) == 0);
    VCP_Feature_Table_Entry * ventry = NULL;
    if (index >= 0 || index < fset->members->len)
@@ -222,19 +251,19 @@ VCP_Feature_Table_Entry * get_feature_set_entry(VCP_Feature_Set feature_set, int
 }
 
 int get_feature_set_size(VCP_Feature_Set feature_set) {
-   struct VCP_Feature_Set * fset = (struct VCP_Feature_Set *) feature_set;
+   struct vcp_feature_set * fset = (struct vcp_feature_set *) feature_set;
    assert( fset && memcmp(fset->marker, VCP_FEATURE_SET_MARKER, 4) == 0);
    return fset->members->len;
 }
 
 VCP_Feature_Subset get_feature_set_subset_id(VCP_Feature_Set feature_set) {
-   struct VCP_Feature_Set * fset = (struct VCP_Feature_Set *) feature_set;
+   struct vcp_feature_set * fset = (struct vcp_feature_set *) feature_set;
    assert( fset && memcmp(fset->marker, VCP_FEATURE_SET_MARKER, 4) == 0);
    return fset->subset;
 }
 
 void report_feature_set(VCP_Feature_Set feature_set, int depth) {
-   struct VCP_Feature_Set * fset = (struct VCP_Feature_Set *) feature_set;
+   struct vcp_feature_set * fset = (struct vcp_feature_set *) feature_set;
    assert( fset && memcmp(fset->marker, VCP_FEATURE_SET_MARKER, 4) == 0);
    int ndx = 0;
    for (; ndx < fset->members->len; ndx++) {
