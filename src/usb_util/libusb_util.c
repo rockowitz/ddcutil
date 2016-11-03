@@ -71,6 +71,32 @@ struct possible_monitor_device * new_possible_monitor_device() {
    return cur;
 }
 
+#ifdef UNTESTED
+void free_possible_monitor_device(struct possible_monitor_device * mondev) {
+   if (mondev) {
+      if (mondev->manufacturer_name)
+         free(mondev->manufacturer_name);
+      if (mondev->product_name)
+         free(mondev->product_name);
+      if (mondev->serial_number)
+         free(mondev->serial_number);
+      // n. do not free libusb_device
+      // if (mondev->libusb_device)
+      //    libusb_unref_device(mondev->libusb_device);    // ???
+      free(mondev);
+   }
+}
+
+void free_possible_monitor_device_list(struct possible_monitor_device * head) {
+   struct possible_monitor_device * cur  = head;
+   while (cur) {
+      struct possible_monitor_device * next = cur->next;
+      free_possible_monitor_device(cur);
+      cur = next;
+   }
+}
+#endif
+
 
 void report_possible_monitor_device(struct possible_monitor_device * mondev, int depth) {
    int d1 = depth+1;
@@ -355,6 +381,7 @@ alt_possible_monitor_dev(
             if (idesc->bInterfaceProtocol != 1 && idesc->bInterfaceProtocol != 2)
             {
                // TO ADDRESS: WHAT IF MULTIPLE altsettings?  what if they conflict?
+               // TEMP
 
                new_node = new_possible_monitor_device();
                libusb_ref_device(dev);
