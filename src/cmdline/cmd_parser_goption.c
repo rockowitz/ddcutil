@@ -125,6 +125,7 @@ gboolean stats_arg_func(const    gchar* option_name,
       }
       else
          ok = false;
+      free(v2);
    }
    else {
       stats_work = STATS_ALL;
