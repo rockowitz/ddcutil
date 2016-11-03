@@ -610,6 +610,7 @@ void report_report_descriptors_for_report_type(int fd, __u32 report_type, int de
                      rpt_vstring(d2, "Retrieving values using multiple HIDIOCGUSAGE calls");
                      rpt_hex_dump(buf->bytes, buf->len, d2);
                      usage_values_reported = true;
+                     buffer_free(buf, __func__);
                   }
                }
             } // common_ucode == true

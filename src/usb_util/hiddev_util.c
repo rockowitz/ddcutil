@@ -341,8 +341,8 @@ __u32 get_identical_ucode(int fd, struct hiddev_field_info * finfo, __u32 field_
  *
  * Returns:   Buffer with accumulated value,
  *            NULL if multiple usage codes or some usage value is > 0xff
+ *            It is the responsibility of the caller to free the returned buffer.
  */
-
 Buffer * collect_single_byte_usage_values(
             int                         fd,
             struct hiddev_field_info *  finfo,
