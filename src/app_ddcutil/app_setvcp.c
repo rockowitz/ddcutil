@@ -177,5 +177,8 @@ app_set_vcp_value(
    }
 
 bye:
+   if (entry && (entry->vcp_global_flags & VCP2_SYNTHETIC) ) {
+      free_synthetic_vcp_entry(entry);
+   }
    return gsc;
 }
