@@ -473,6 +473,8 @@ get_possible_monitors(
 
    struct possible_monitor_device * true_head;
    true_head = head_device->next;
+   free(head_device);
+
    if (debug)
       printf("(%s) Returning: %p\n", __func__, true_head);
    return true_head;
@@ -569,32 +571,34 @@ void probe_libusb(bool possible_monitors_only, int depth) {
       return;
    }
 
-   libusb_device **devs;
-   // libusb_context *ctx = NULL; //a libusb session
-   int rc;
-   ssize_t cnt;   // number of devices in list
+   libusb_device ** devs;
+   int              rc;
+   ssize_t          cnt;   // number of devices in list
 
-   // rc = libusb_init(&ctx);   // initialize a library session
    rc = libusb_init(NULL);      // initialize a library session, use default context
    CHECK_LIBUSB_RC("libusb_init", rc, LIBUSB_EXIT);
-   // libusb_set_debug(ctx,3);
    libusb_set_debug(NULL /*default context*/, LIBUSB_LOG_LEVEL_INFO);
 
-   // cnt = libusb_get_device_list(ctx, &devs);
    cnt = libusb_get_device_list(NULL /* default context */, &devs);
    CHECK_LIBUSB_RC("libusb_get_device_list", (int) cnt, LIBUSB_EXIT);
 
    libusb_device ** devs_to_show = devs;
-   if (possible_monitors_only)
+   libusb_device ** filtered_devs_to_show = NULL;
+   if (possible_monitors_only) {
       devs_to_show = filter_possible_monitor_devs(devs);
+      filtered_devs_to_show = devs_to_show;     // note newly allocated memory
+   }
    report_libusb_devices(devs_to_show,
                          false,         // show_hubs
                          depth);
 
+   if (filtered_devs_to_show)
+      free(filtered_devs_to_show);
+
    libusb_free_device_list(devs, 1 /* unref the devices in the list */);
 
-   // libusb_exit(ctx);
    libusb_exit(NULL);
+
    if (debug)
       printf("(%s) Done\n", __func__);
 
