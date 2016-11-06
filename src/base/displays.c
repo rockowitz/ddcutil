@@ -35,6 +35,7 @@
 #include "util/report_util.h"
 
 #include "base/displays.h"
+#include "base/vcp_version.h"
 
 
 // *** DisplayIdentifier ***
@@ -292,7 +293,8 @@ void report_display_ref(Display_Ref * dref, int depth) {
 
    }
 
-   rpt_vstring(d1, "vcp_version:  %d.%d\n", dref->vcp_version.major, dref->vcp_version.minor );
+   // rpt_vstring(d1, "vcp_version:  %d.%d\n", dref->vcp_version.major, dref->vcp_version.minor );
+   rpt_vstring(d1, "vcp_version:  %s\n", format_vspec(dref->vcp_version) );
 }
 
 
