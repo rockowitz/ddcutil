@@ -23,6 +23,9 @@
 
 #include <assert.h>
 #include <stdio.h>
+#include <string.h>
+
+#include "util/string_util.h"
 
 #include "base/core.h"
 
@@ -84,7 +87,12 @@ bool is_vcp_version_unqueried(Version_Spec vspec) {
 
 char * format_vspec(Version_Spec vspec) {
    static char private_buffer[20];
-   snprintf(private_buffer, 20, "%d.%d", vspec.major, vspec.minor);
+   if ( vcp_version_eq(vspec, VCP_SPEC_UNQUERIED) )
+      SAFE_STRNCPY(private_buffer,  "Unqueried", sizeof(private_buffer));
+   else if ( vcp_version_eq(vspec, VCP_SPEC_UNKNOWN) )
+      strcpy(private_buffer,  "Unknown");     // will coverity flag this?
+   else
+      snprintf(private_buffer, 20, "%d.%d", vspec.major, vspec.minor);
    return private_buffer;
 }
 
