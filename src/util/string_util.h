@@ -40,6 +40,13 @@
 char * bool_repr(int value);
 
 
+#define SAFE_STRNCPY(dest, src, buflen) \
+   do { \
+      strncpy(dest, src, (buflen) ); \
+      if (buflen > 0) \
+         dest[buflen-1] = '\0'; \
+   } while(0)
+
 //
 // String functions (other than hex)
 //
