@@ -1,11 +1,5 @@
 ## Process this file with automake to produce Makefile.in
 
-# AM_CFLAGS = -Wall -Werror
-AM_CFLAGS = -Wall
-if ENABLE_CALLGRAPH_COND
-  AM_CFLAGS += -fdump-rtl-expand
-endif
-
 # Is this really necessary?   Don't want to push these files to github.
 # there ought to be a cleaner way
 # MOSTLYCLEANFILES =    \
@@ -53,6 +47,9 @@ clean-local:
 	rm -rf swig/ddct_public_wrap.c ddct_public.py ddct_public.pyc
 
 
+#
+# Execuatables 
+#
 
 bin_PROGRAMS = \
 ddcutil  
@@ -61,20 +58,30 @@ if ENABLE_SHARED_LIB_COND
 # Sample client program for shared library:
 bin_PROGRAMS += \
 laclient 
-
 endif
 
 
+#
+# Intermediate Libraries
+#
 
 # Convenience library containing code shared between ddcutil and libddcutil
-noinst_LTLIBRARIES = libcommon.la  libsharedbase.la
+noinst_LTLIBRARIES = libcommon.la 
+# noinst_LTLIBRARIES = libcommon.la  libsharedbase.la
+
+
+#
+# Public Shared Libraries
+#
 
 if ENABLE_SHARED_LIB_COND
-# Shared library
 lib_LTLIBRARIES = libddcutil.la
 endif
 
-# Files only in ddcutil:
+
+#
+# Files only in ddcutil executable:
+#
 ddcutil_SOURCES = \
 cmdline/cmd_parser_aux.c \
 cmdline/cmd_parser_goption.c \
@@ -85,7 +92,6 @@ app_ddcutil/query_sysenv.c \
 app_ddcutil/app_setvcp.c \
 app_ddcutil/app_getvcp.c \
 app_ddcutil/testcases.c 
-
 
 if INCLUDE_TESTCASES_COND
 ddcutil_SOURCES += \
@@ -100,21 +106,23 @@ ddcutil_SOURCES += \
 endif
 
 
-
-
-# files only in libddcutil:
-libsharedbase_la_SOURCES = \
-libmain/ddct_public.c  
-
-
-
-# files only in laclient:
+#
+# Files only in laclient executable:
+#
 laclient_SOURCES = \
 sample_clients/clmain.c
 
 
+# files only in libddcutil:
+libddcutil_la_SOURCES = \
+libmain/ddct_public.c  
+
+
+
+
 # Despite what the Autotools book says, all-local is executed aftar all, not before 
 # So this ensures that the NEXT execution of all will compile build_info.c 
+
 all-local:
 	@echo "Executing hook all-local..."
 	touch base/build_info.c
@@ -132,54 +140,51 @@ all-local:
 
 # libcommon contains the source files that are 
 # shared between ddcutil and libddcutil: 
-libcommon_la_SOURCES = \
-base/build_info.c \
-base/base_services.c \
-base/core.c \
-base/ddc_errno.c \
-base/ddc_packets.c \
-base/displays.c \
-base/execution_stats.c \
-base/linux_errno.c \
-base/status_code_mgt.c \
-base/sleep.c \
-base/vcp_version.c \
-base/feature_sets.c \
-vcp/vcp_feature_values.c \
-vcp/ddc_command_codes.c \
-ddc/ddc_displays.c      \
-ddc/ddc_edid.c          \
-ddc/ddc_multi_part_io.c \
-ddc/ddc_packet_io.c \
-ddc/ddc_read_capabilities.c \
-ddc/ddc_output.c \
-ddc/ddc_services.c \
-ddc/ddc_strategy.c \
-ddc/ddc_vcp.c \
-vcp/parse_capabilities.c \
-ddc/try_stats.c \
-vcp/vcp_feature_codes.c \
+libcommon_la_SOURCES =      	\
+base/base_services.c        	\
+base/build_info.c           	\
+base/core.c                 	\
+base/ddc_errno.c            	\
+base/ddc_packets.c          	\
+base/displays.c             	\
+base/execution_stats.c      	\
+base/feature_sets.c         	\
+base/linux_errno.c          	\
+base/sleep.c                	\
+base/status_code_mgt.c      	\
+base/vcp_version.c          	\
+ddc/ddc_displays.c          	\
+ddc/ddc_dumpload.c          	\
+ddc/ddc_edid.c              	\
+ddc/ddc_multi_part_io.c     	\
+ddc/ddc_output.c            	\
+ddc/ddc_packet_io.c         	\
+ddc/ddc_read_capabilities.c 	\
+ddc/ddc_services.c          	\
+ddc/ddc_strategy.c          	\
+ddc/ddc_vcp.c               	\
+ddc/ddc_vcp_version.c       	\
+ddc/try_stats.c             	\
+i2c/i2c_base_io.c          	\
+i2c/i2c_bus_core.c          	\
+i2c/i2c_do_io.c    		\
+util/data_structures.c		\
+util/device_id_util.c       	\
+util/edid.c 			\
+util/file_util.c 		\
+util/glib_util.c		\
+util/multi_level_map.c 		\
+util/output_sink.c 		\
+util/report_util.c 		\
+util/string_util.c 		\
+util/subprocess_util.c		\
+util/x11_util.c 		\
+vcp/ddc_command_codes.c		\
+vcp/parse_capabilities.c 	\
 vcp/parsed_capabilities_feature.c \
-vcp/vcp_feature_set.c \
-ddc/ddc_vcp_version.c \
-i2c/i2c_base_io.c \
-i2c/i2c_bus_core.c \
-i2c/i2c_do_io.c \
-ddc/ddc_dumpload.c \
-util/data_structures.c \
-util/edid.c \
-util/file_util.c  \
-util/glib_util.c \
-util/multi_level_map.c \
-util/output_sink.c \
-util/device_id_util.c \
-util/report_util.c \
-util/string_util.c \
-util/x11_util.c \
-util/subprocess_util.c
-
-# libcommon_la_SOURCES += \
-# util/libusb_reports.c
+vcp/vcp_feature_codes.c 	\
+vcp/vcp_feature_set.c 		\
+vcp/vcp_feature_values.c 	
 
 if HAVE_ADL_COND
 libcommon_la_SOURCES += \
@@ -232,6 +237,11 @@ dist-hook:
 # -I/usr/include 
 # trying to get i2c-dev.h from /usr/include/linux causes errors
 
+
+#
+# C Pre-Processor Flags
+#
+
 # GLIB_CFLAGS contains output of pkgconfig --cflags glib-2.0
 AM_CPPFLAGS= \
 $(GLIB_CFLAGS) \
@@ -239,56 +249,61 @@ $(XRANDR_CFLAGS) \
 $(LIBUSB_CFLAGS) \
 -I$(top_srcdir) 
 
-
 # AM_CPPFLAGS += \
 # $(HIDAPI_CFLAGS)
 
-# Compiler flags
-ddcutil_CFLAGS          = $(AM_CFLAGS)
-laclient_CFLAGS         = $(AM_CFLAGS)
-libcommon_la_CFLAGS     = $(AM_CFLAGS)
-libsharedbase_la_CFLAGS = $(AM_CFLAGS)
-libddcutil_la_CFLAGS    = $(AM_CFLAGS)
-
-  
 if HAVE_ADL_COND
 AM_CPPFLAGS +=               \
-   -I@ADL_HEADER_DIR@  
+-I@ADL_HEADER_DIR@  
 endif
 
 
-# Link the libraries 
-# $(GLIB_LIBS) contains output of pkgconfig --libs glib-2.0
+#
+# Compiler flags
+#
 
+# AM_CFLAGS = -Wall -Werror
+AM_CFLAGS = -Wall
+if ENABLE_CALLGRAPH_COND
+  AM_CFLAGS += -fdump-rtl-expand
+endif
+
+ddcutil_CFLAGS          = $(AM_CFLAGS)
+laclient_CFLAGS         = $(AM_CFLAGS)
+libcommon_la_CFLAGS     = $(AM_CFLAGS)
+# libsharedbase_la_CFLAGS = $(AM_CFLAGS)
+libddcutil_la_CFLAGS    = $(AM_CFLAGS)
+
+  
+#
+# Link the libraries 
+#
 # Be careful about library ordering 
 # library must be listed after any libraries that depend on it
+#
 
 # deleted $(HIDAPI_LIBS)
-# Link the shared library
-libsharedbase_la_LIBADD =  \
+libddcutil_la_LIBADD = -lz
+libddcutil_la_LIBADD +=  \
    libcommon.la   \
    $(X11_LIBS) \
    $(XRANDR_LIBS) \
    $(GLIB_LIBS) 
 
 if ENABLE_USB_COND
-libsharedbase_la_LIBADD += \
+libddcutil_la_LIBADD += \
    $(UDEV_LIBS) \
    $(LIBUSB_LIBS)
 endif
 
-
-libddcutil_la_LIBADD = -lz
-libddcutil_la_SOURCES =
-# libsharedbase_la_SOURCES =
-libddcutil_la_LIBADD += libsharedbase.la
-
-libddcutil_la_LDFLAGS = -export_symbols-regex '^ddc[tg]_[^_]'
+libddcutil_la_LDFLAGS = -export_symbols-regex '^ddc[tgs]_[^_]'
 # libddcutil_la_LDFLAGS += -version-info '0:1:1'
 
 
+#
 # Link the executables
-
+#
+#
 ddcutil_LDADD = \
    libcommon.la \
    $(XRANDR_LIBS) \
@@ -300,9 +315,6 @@ ddcutil_LDADD += \
    $(LIBUSB_LIBS) \
    $(UDEV_LIBS) 
 endif
-
-
-
 
 
 # Fails if not linked with libxrandr - why?

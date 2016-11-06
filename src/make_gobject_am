@@ -1,17 +1,14 @@
 # File to included in src/Makefile.am for GObject introspection
 
-
 CLEANFILES += \
 gobject_api/*expand
 
 
-
 if ENABLE_SHARED_LIB_COND
 if ENABLE_GOBJECT_COND
+
 bin_PROGRAMS += \
 goclient
-endif
-endif
 
 
 # Files implementing GObject API for introspection: 
@@ -34,26 +31,22 @@ gobject_api_headers = \
   gobject_api/ddcg_display_ref.h \
   gobject_api/ddcg_types.h
 
-if ENABLE_GOBJECT_COND
-   libsharedbase_la_SOURCES += $(gobject_api_sources)
-endif
 
+libddcutil_la_SOURCES += $(gobject_api_sources)
 
-
-
-if ENABLE_GOBJECT_COND
 # files only in goclient:
 goclient_SOURCES = \
   sample_clients/gomain.c
-endif
 
-# GLIB_CFLAGS contains output of pkgconfig --cflags glib-2.0
+#
+# C Pre-Processor Flags:
+#
 AM_CPPFLAGS += \
   $(GOBJECT_CFLAGS) 
 
-
-
+#
 # Compiler flags
+#
 goclient_CFLAGS       = $(AM_CFLAGS)
 
 
@@ -61,12 +54,9 @@ libddcutil_la_LIBADD +=  \
 	$(GOBJECT_LIBS) 
 
 
-
 goclient_LDADD = \
   libddcutil.la \
     $(GOBJECT_LIBS)
-
-
 
 
 
@@ -140,9 +130,8 @@ goclient_LDADD = \
 #   By default the names in the PACKAGES variable will be used.
 
 
-if HAVE_INTROSPECTION
-if ENABLE_GOBJECT_COND
-   -include $(INTROSPECTION_MAKEFILE)
+-include $(INTROSPECTION_MAKEFILE)
+
    INTROSPECTION_GIRS =
    # INTROSPECTION_SCANNER_ARGS = --add-include-path=$(srcdir) --warn-all --verbose --identifier-prefix=Ddcg --symbol-prefix=ddcg
    # INTROSPECTION_COMPILER_ARGS = --includedir=$(srcdir) --verbose
@@ -197,6 +186,7 @@ if ENABLE_GOBJECT_COND
 
    CLEANFILES += $(gir_DATA) $(typelib_DATA)
    # CLEANFILES += $(gir_DATA) $(typelib_DATA) *.log *.trs *.test
+   
 endif
 endif
 
