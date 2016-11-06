@@ -27,6 +27,7 @@
 #include "util/report_util.h"
 #include "util/string_util.h"
 
+#include "base/build_info.h"
 #include "base/core.h"
 #include "base/ddc_errno.h"
 #include "base/ddc_packets.h"
@@ -84,6 +85,11 @@
    } while(0);
 
 
+
+const char * ddct_ddcutil_version_string() {
+   return BUILD_VERSION;
+}
+
 void ddct_set_fout(FILE * fout) {
    set_fout(fout);
 }
@@ -103,6 +109,7 @@ void ddct_init() {
       // DBGMSG("Calling init_ddc_services...");
       init_base_services();
       init_ddc_services();
+      show_recoverable_errors = false;
       library_initialized = true;
       DBGMSG("library initialization executed");
    }
@@ -114,6 +121,30 @@ void ddct_init() {
 bool ddct_built_with_adl() {
    return adlshim_is_available();
 }
+
+
+DDCT_Output_Level ddct_get_output_level() {
+   return get_output_level();
+}
+void         ddct_set_output_level(DDCT_Output_Level newval) {
+      set_output_level(newval);
+}
+
+char *       ddct_output_level_name(DDCT_Output_Level val) {
+   return output_level_name(val);
+}
+
+void ddct_set_report_ddc_errors(bool onoff) {
+   // global variable in core.c:
+   show_recoverable_errors = onoff;
+}
+
+bool ddct_get_report_ddc_errors() {
+   return show_recoverable_errors;
+}
+
+
+
 
 
 char * ddct_status_code_name(DDCT_Status status_code) {
@@ -171,6 +202,11 @@ DDCT_Status ddct_set_max_tries(DDCT_Retry_Type retry_type, int max_tries) {
    return rc;
 }
 
+
+
+int ddct_report_active_displays(int depth) {
+   return ddc_report_active_displays(depth);
+}
 
 
 DDCT_Status ddct_create_dispno_display_identifier(int dispno, DDCT_Display_Identifier* pdid) {
@@ -415,7 +451,7 @@ static char dh_work_buf[100];
 
 DDCT_Status ddct_repr_display_handle(DDCT_Display_Handle ddct_dh, char ** repr) {
    DDCT_Status rc = 0;
-   Display_Ref * dh = (Display_Ref *) ddct_dh;
+   Display_Handle * dh = (Display_Handle *) ddct_dh;
    if (dh == NULL || memcmp(dh->marker, DISPLAY_HANDLE_MARKER, 4) != 0 )  {
       rc = DDCL_ARG;
       *repr = "invalid display handle";
@@ -425,15 +461,18 @@ DDCT_Status ddct_repr_display_handle(DDCT_Display_Handle ddct_dh, char ** repr) 
       switch (dh->io_mode) {
       case(DISP_ID_BUSNO):
          snprintf(dh_work_buf, 100,
-                  "Display Handle Type: %s, bus=/dev/i2c-%d", dh_type_name, dh->busno);
+                  "Display Handle Type: %s, bus=/dev/i2c-%d",
+                  dh_type_name, dh->busno);
          break;
       case(DISP_ID_ADL):
          snprintf(dh_work_buf, 100,
-                  "Display Handle Type: %s, adlno=%d.%d", dh_type_name, dh->iAdapterIndex, dh->iDisplayIndex);
+                  "Display Handle Type: %s, adlno=%d.%d",
+                  dh_type_name, dh->iAdapterIndex, dh->iDisplayIndex);
          break;
       case USB_IO:
          snprintf(dh_work_buf, 100,
-                  "(%s) case USB_IO unimplemented", __func__);
+                  "Display Handle Type: %s, bus=%d, device=%d",
+                  dh_type_name, dh->usb_bus, dh->usb_device);
          break;
       }
       *repr = dh_work_buf;
@@ -456,7 +495,7 @@ DDCT_Status ddct_get_mccs_version(DDCT_Display_Handle ddct_dh, DDCT_MCCS_Version
       pspec->minor = 0;
    }
    else {
-      // no: need to call function, may not yet be set
+      // need to call function, may not yet be set
       Version_Spec vspec = get_vcp_version_by_display_handle(dh);
       pspec->major = vspec.major;
       pspec->minor = vspec.minor;
@@ -483,52 +522,77 @@ DDCT_Status ddct_get_edid_by_display_ref(DDCT_Display_Ref ddct_dref, Byte** pbyt
 }
 
 
+
+
+
 // or return a struct?
-DDCT_Status ddct_get_feature_info(
+DDCT_Status ddct_get_feature_info_by_vcp_version(
+      VCP_Feature_Code        feature_code,
+      DDCT_MCCS_Version_Spec  vspec,
+      unsigned long *         flags)
+{
+   DDCT_Status rc = 0;
+
+   VCP_Feature_Table_Entry * pentry = vcp_find_feature_by_hexid(feature_code);
+   if (!pentry) {
+      *flags = 0;
+      rc = DDCL_ARG;
+   }
+   else {
+      Version_Spec vspec2 = {vspec.major, vspec.minor};
+      Version_Feature_Flags vflags = get_version_specific_feature_flags(pentry, vspec2);
+      *flags = 0;
+      // TODO handle subvariants REWORK
+      if (vflags & VCP2_RO)
+         *flags |= DDCT_RO;
+      if (vflags & VCP2_WO)
+         *flags |= DDCT_WO;
+      if (vflags & VCP2_RW)
+         *flags |= DDCT_RW;
+      if (vflags & VCP2_CONT)
+         *flags |= DDCT_CONTINUOUS;
+#ifdef OLD
+      if (pentry->flags & VCP_TYPE_V2NC_V3T) {
+         if (vspec.major < 3)
+            *flags |= DDCT_SIMPLE_NC;
+         else
+            *flags |= DDCT_TABLE;
+      }
+#endif
+      else if (vflags & VCP2_TABLE)
+         *flags |= DDCT_TABLE;
+      else if (vflags & VCP2_NC) {
+         if (vspec.major < 3)
+            *flags |= DDCT_SIMPLE_NC;
+         else {
+            // TODO: In V3, some features use combination of high and low bytes
+            // for now, mark all as simple
+            *flags |= DDCT_SIMPLE_NC;
+            // alt: DDCT_COMPLEX_NC
+         }
+      }
+   }
+   return rc;
+}
+
+
+
+
+
+// or return a struct?
+DDCT_Status ddct_get_feature_info_by_display(
       DDCT_Display_Handle ddct_dh,    // needed because in rare cases feature info is MCCS version dependent
       VCP_Feature_Code feature_code,
-      unsigned long * flags)
+      unsigned long * pflags)
 {
    WITH_DH(
       ddct_dh,
       {
-         VCP_Feature_Table_Entry * pentry = vcp_find_feature_by_hexid(feature_code);
-         if (!pentry)
-            *flags = 0;
-         else {
-            Version_Spec vspec = get_vcp_version_by_display_handle(dh);
-            Version_Feature_Flags vflags = get_version_specific_feature_flags(pentry, vspec);
-            *flags = 0;
-            // TODO handle subvariants REWORK
-            if (vflags & VCP2_RO)
-               *flags |= DDCT_RO;
-            if (vflags & VCP2_WO)
-               *flags |= DDCT_WO;
-            if (vflags & VCP2_RW)
-               *flags |= DDCT_RW;
-            if (vflags & VCP2_CONT)
-               *flags |= DDCT_CONTINUOUS;
-#ifdef OLD
-            if (pentry->flags & VCP_TYPE_V2NC_V3T) {
-               if (vspec.major < 3)
-                  *flags |= DDCT_SIMPLE_NC;
-               else
-                  *flags |= DDCT_TABLE;
-            }
-#endif
-            else if (vflags & VCP2_TABLE)
-               *flags |= DDCT_TABLE;
-            else if (vflags & VCP2_NC) {
-               if (vspec.major < 3)
-                  *flags |= DDCT_SIMPLE_NC;
-               else {
-                  // TODO: In V3, some features use combination of high and low bytes
-                  // for now, mark all as simple
-                  *flags |= DDCT_SIMPLE_NC;
-                  // alt: DDCT_COMPLEX_NC
-               }
-            }
-         }
+         Version_Spec vspec = get_vcp_version_by_display_handle(dh);
+         DDCT_MCCS_Version_Spec vspec2;           // = {vspec.major, vspec.minor};
+         vspec2.major = vspec.major;
+         vspec2.minor = vspec.minor;
+         rc = ddct_get_feature_info_by_vcp_version(feature_code, vspec2, pflags);
       }
    );
 }
@@ -581,7 +645,7 @@ DDCT_Status ddct_get_nc_feature_value_name(
    );
 }
 
-
+// n.b. filles in the response buffer provided by the caller, does not allocate
 DDCT_Status ddct_get_nontable_vcp_value(
                DDCT_Display_Handle             ddct_dh,
                VCP_Feature_Code                feature_code,

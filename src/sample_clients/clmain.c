@@ -82,7 +82,7 @@ void test_get_single_feature_info(DDCT_Display_Handle dh, Byte feature_code) {
    printf("Getting metadata for feature 0x%02x\n", feature_code);
    printf("Feature name: %s\n", ddct_get_feature_name(feature_code));
    unsigned long feature_flags;
-     DDCT_Status rc = ddct_get_feature_info(
+     DDCT_Status rc = ddct_get_feature_info_by_display(
              dh,    // needed because in rare cases feature info is MCCS version dependent
              feature_code,
              &feature_flags);
@@ -109,7 +109,7 @@ bool test_cont_value(DDCT_Display_Handle dh, Byte feature_code) {
    char * feature_name = ddct_get_feature_name(feature_code);
 
    unsigned long feature_flags;
-   rc = ddct_get_feature_info(
+   rc = ddct_get_feature_info_by_display(
            dh,    // needed because in rare cases feature info is MCCS version dependent
            feature_code,
            &feature_flags);

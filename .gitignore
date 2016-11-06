@@ -14,6 +14,7 @@ perf.data
 *.la
 *.expand
 *.swp
+*.pyc
 .deps
 .dirstamp
 aclocal.m4

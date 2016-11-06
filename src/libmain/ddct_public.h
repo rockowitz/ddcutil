@@ -35,6 +35,11 @@
 // #include "base/displays.h"
 // #include "base/ddc_packets.h"      // temp, for Interpreted_Vcp_Code
 
+
+//
+// General
+//
+
 typedef struct {
    int    major;
    int    minor;
@@ -47,39 +52,9 @@ typedef struct {
 } DDCT_MCCS_Version_Spec;
 
 
-typedef struct {
-   Byte  mh;
-   Byte  ml;
-   Byte  sh;
-   Byte  sl;
-   int   max_value;
-   int   cur_value;
-} DDCT_Non_Table_Value_Response;
-
-
-typedef struct {
-   int   bytect;
-   Byte  bytes[];     // or Byte * ?
-} DDCT_Table_Value_Response;
-
-typedef void * DDCT_Display_Identifier;
-
-void ddct_free_table_value_response(DDCT_Table_Value_Response * table_value_response);
-
-void ddct_set_fout(FILE * fout);
-
-void ddct_set_ferr(FILE * ferr);
-
 void ddct_init(void);
 
-
-typedef int DDCT_Status;    // for now
-
-char * ddct_status_code_name(DDCT_Status status_code);
-char * ddct_status_code_desc(DDCT_Status status_code);
-
-typedef Byte VCP_Feature_Code;
-
+const char * ddct_ddcutil_version_string();
 #ifdef UNIMPLEMENTED
 DDCT_Version_Spec ddct_get_version(void);       // ddcutil version
 #endif
@@ -91,14 +66,24 @@ unsigned long ddct_get_global_flags(void);
 // or: more generalizable: return a byte of flags, one of which is DDCT_SUPPORTS_ADL
 #endif
 
+
+void ddct_set_fout(FILE * fout);
+void ddct_set_ferr(FILE * ferr);
+
+
+typedef int DDCT_Status;    // for now
+char * ddct_status_code_name(DDCT_Status status_code);
+char * ddct_status_code_desc(DDCT_Status status_code);
+
+typedef Byte VCP_Feature_Code;
+
+
 // Get and set max retries
-// Get and set timeouts
-
 typedef enum{DDCT_WRITE_ONLY_TRIES, DDCT_WRITE_READ_TRIES, DDCT_MULTI_PART_TRIES} DDCT_Retry_Type;
-
 int  ddct_get_max_tries(DDCT_Retry_Type retry_type);
 DDCT_Status ddct_set_max_tries(DDCT_Retry_Type retry_type, int max_tries);
 
+// Get and set timeouts
 typedef enum{DDCT_TIMEOUT_STANDARD, DDCT_TIMEOUT_TABLE_RETRY} DDCT_Timeout_Type;
 #ifdef UNIMPLEMENTED
 // Unimplemented:
@@ -107,73 +92,40 @@ void ddct_set_timeout_millis(DDCT_Timeout_Type timeout_type, int millisec);
 #endif
 
 
+//
+// Message level control
+//
 
-// Display_Info_List ddct_get_displays();
+// Values assigned to constants allow them to be or'd in bit flags
+// Values are ascending in order of verbosity, except for OL_DEFAULT
+// matches enum Output_Level in core.h
+typedef enum {DDCT_OL_DEFAULT=0x01,
+              DDCT_OL_PROGRAM=0x02,
+              DDCT_OL_TERSE  =0x04,
+              DDCT_OL_NORMAL =0x08,
+              DDCT_OL_VERBOSE=0x10
+} DDCT_Output_Level;
+
+DDCT_Output_Level ddct_get_output_level();
+void         ddct_set_output_level(DDCT_Output_Level newval);
+char *       ddct_output_level_name(DDCT_Output_Level val);
+
+// DDC Error reporting
+void ddct_set_report_ddc_errors(bool onoff);
+bool ddct_get_report_ddc_errors();
 
 
-// if want Display_Identifier to be opaque, need to return pointer
-#ifdef NO
-Display_Identifier create_dispno_display_indentifier(int dispno);
-Display_Identifier create_bus_display_identifier(int busno);
-Display_Identifier create_adl_display_identifier(int iAdapterIndex, int iDisplayIndex);
-Display_Identifier create_model_sn_display_identifier(char * model, char * sn);
-#endif
+//
+// Reports
+//
 
-DDCT_Status ddct_create_dispno_display_identifier(
-               int dispno,
-               DDCT_Display_Identifier* pdid);
-DDCT_Status ddct_create_adlno_display_identifier(
-               int iAdapterIndex,
-               int iDisplayIndex,
-               DDCT_Display_Identifier* pdid);
-DDCT_Status ddct_create_busno_display_identifier(
-               int busno,
-               DDCT_Display_Identifier* pdid);
-DDCT_Status ddct_create_model_sn_display_identifier(
-               const char * model,
-               const char * sn,
-               DDCT_Display_Identifier* pdid);
-DDCT_Status ddct_create_edid_display_identifier(
-               const Byte * edid,
-               DDCT_Display_Identifier * pdid);      // 128 byte edid
-DDCT_Status ddct_create_usb_display_identifier(
-               int bus,
-               int device,
-               DDCT_Display_Identifier* pdid);
-DDCT_Status ddct_free_display_identifier(DDCT_Display_Identifier ddct_did);
-
-DDCT_Status ddct_repr_display_identifier(DDCT_Display_Identifier ddct_did, char** repr);
+int ddct_report_active_displays(int depth);
 
 
 
-typedef void * DDCT_Display_Ref;
-typedef void * DDCT_Display_Handle;
-
-DDCT_Status ddct_get_display_ref(DDCT_Display_Identifier did, DDCT_Display_Ref* ddct_dref);
-DDCT_Status ddct_free_display_ref(DDCT_Display_Ref ddct_ref);
-DDCT_Status ddct_repr_display_ref(DDCT_Display_Ref ddct_dref, char** repr);
-void        ddct_report_display_ref(DDCT_Display_Ref ddct_dref, int depth);
-
-DDCT_Status ddct_open_display(DDCT_Display_Ref dref, DDCT_Display_Handle * pdh);
-
-DDCT_Status ddct_close_display(DDCT_Display_Handle ddct_dh);
-
-DDCT_Status ddct_repr_display_handle(DDCT_Display_Handle ddct_dh, char** repr);
-
-DDCT_Status ddct_get_mccs_version(DDCT_Display_Handle ddct_dh, DDCT_MCCS_Version_Spec* pspec);
-
-
-
-// DDCT_Status ddct_get_edid(DDCT_Display_Handle * dh, Byte * edid_buffer);    // edid_buffer must be >= 128 bytes
-DDCT_Status ddct_get_edid_by_display_ref(DDCT_Display_Ref ddct_dref, Byte ** pbytes);   // pointer into ddcutil data structures, do not free
-
-DDCT_Status ddct_get_nontable_vcp_value(
-               DDCT_Display_Handle             ddct_dh,
-               VCP_Feature_Code                feature_code,
-               DDCT_Non_Table_Value_Response * response);
-
-
-
+//
+// VCP Feature Description
+//
 
 // flags for ddct_get_feature_info():
 #define DDCT_CONTINUOUS   0x4000
@@ -188,11 +140,10 @@ DDCT_Status ddct_get_nontable_vcp_value(
 #define DDCT_READABLE     (DDCT_RO | DDCT_RW)
 #define DDCT_WRITABLE     (DDCT_WO | DDCT_RW)
 
-// or return a struct?
-DDCT_Status ddct_get_feature_info(
-               DDCT_Display_Handle ddct_dh,
-               VCP_Feature_Code    feature_code,
-               unsigned long *     flags);
+DDCT_Status ddct_get_feature_info_by_vcp_version(
+      VCP_Feature_Code feature_code,
+      DDCT_MCCS_Version_Spec     vspec,
+      unsigned long *  flags);
 
 char *      ddct_get_feature_name(VCP_Feature_Code feature_code);
 
@@ -222,26 +173,138 @@ DDCT_Status ddct_is_feature_supported(
 #endif
 
 
+
+// ===
+
+
+
+
+
+// Display_Info_List ddct_get_displays();
+
+
+//
+// Display Identifiers
+//
+
+typedef void * DDCT_Display_Identifier;      // opaque
+DDCT_Status ddct_create_dispno_display_identifier(
+               int dispno,
+               DDCT_Display_Identifier* pdid);
+DDCT_Status ddct_create_adlno_display_identifier(
+               int iAdapterIndex,
+               int iDisplayIndex,
+               DDCT_Display_Identifier* pdid);
+DDCT_Status ddct_create_busno_display_identifier(
+               int busno,
+               DDCT_Display_Identifier* pdid);
+DDCT_Status ddct_create_model_sn_display_identifier(
+               const char * model,
+               const char * sn,
+               DDCT_Display_Identifier* pdid);
+DDCT_Status ddct_create_edid_display_identifier(
+               const Byte * edid,
+               DDCT_Display_Identifier * pdid);      // 128 byte edid
+DDCT_Status ddct_create_usb_display_identifier(
+               int bus,
+               int device,
+               DDCT_Display_Identifier* pdid);
+DDCT_Status ddct_free_display_identifier(DDCT_Display_Identifier ddct_did);
+DDCT_Status ddct_repr_display_identifier(DDCT_Display_Identifier ddct_did, char** repr);
+
+
+//
+// Display References
+//
+
+typedef void * DDCT_Display_Ref;
+DDCT_Status ddct_get_display_ref(DDCT_Display_Identifier did, DDCT_Display_Ref* ddct_dref);
+DDCT_Status ddct_free_display_ref(DDCT_Display_Ref ddct_ref);
+DDCT_Status ddct_repr_display_ref(DDCT_Display_Ref ddct_dref, char** repr);
+void        ddct_report_display_ref(DDCT_Display_Ref ddct_dref, int depth);
+
+
+//
+// Display Handles
+//
+
+typedef void * DDCT_Display_Handle;
+DDCT_Status ddct_open_display(DDCT_Display_Ref dref, DDCT_Display_Handle * pdh);
+DDCT_Status ddct_close_display(DDCT_Display_Handle ddct_dh);
+DDCT_Status ddct_repr_display_handle(DDCT_Display_Handle ddct_dh, char** repr);
+
+
+//
+//  Miscellaneous Monitor Specific Functions
+//
+
+DDCT_Status ddct_get_mccs_version(DDCT_Display_Handle ddct_dh, DDCT_MCCS_Version_Spec* pspec);
+
+// DDCT_Status ddct_get_edid(DDCT_Display_Handle * dh, Byte * edid_buffer);    // edid_buffer must be >= 128 bytes
+DDCT_Status ddct_get_edid_by_display_ref(DDCT_Display_Ref ddct_dref, Byte ** pbytes);   // pointer into ddcutil data structures, do not free
+
+// or return a struct?
+DDCT_Status ddct_get_feature_info_by_display(
+               DDCT_Display_Handle ddct_dh,
+               VCP_Feature_Code    feature_code,
+               unsigned long *     flags);
+
+
+
+
+//
+// Monitor Capabilities
+//
+
+DDCT_Status ddct_get_capabilities_string(DDCT_Display_Handle ddct_dh, char** buffer);
+
+#ifdef UNIMPLEMENTED
+// Unimplemented.  Parsed capabilities has a complex data structure.  How to make visible?
+typedef void DDCT_Parsed_Capabilities;    // TEMP
+DDCT_Status ddct_parse_capabilities_string(char * capabilities_string, DDCT_Parsed_Capabilities ** parsed_capabilities);
+#endif
+
+
+//
+// Get and Set VCP Feature Values
+//
+
+typedef struct {
+   Byte  mh;
+   Byte  ml;
+   Byte  sh;
+   Byte  sl;
+   int   max_value;
+   int   cur_value;
+} DDCT_Non_Table_Value_Response;
+
+typedef struct {
+   int   bytect;
+   Byte  bytes[];     // or Byte * ?
+} DDCT_Table_Value_Response;
+
+void ddct_free_table_value_response(DDCT_Table_Value_Response * table_value_response);
+
+DDCT_Status ddct_get_nontable_vcp_value(
+               DDCT_Display_Handle             ddct_dh,
+               VCP_Feature_Code                feature_code,
+               DDCT_Non_Table_Value_Response * response);
+
 DDCT_Status ddct_set_continuous_vcp_value(
                DDCT_Display_Handle  ddct_dh,
                VCP_Feature_Code     feature_code,
                int                  new_value);
-
 
 DDCT_Status ddct_set_simple_nc_vcp_value(
                DDCT_Display_Handle  ddct_dh,
                VCP_Feature_Code     feature_code,
                Byte                 new_value);
 
-
 DDCT_Status ddct_set_raw_vcp_value(
                DDCT_Display_Handle  ddct_dh,
                VCP_Feature_Code     feature_code,
                Byte                 hi_byte,
                Byte                 lo_byte);
-
-
-
 
 // Implemented, but untested
 DDCT_Status ddct_get_table_vcp_value(
@@ -257,15 +320,6 @@ DDCT_Status ddct_set_table_vcp_value(
                VCP_Feature_Code     feature_code,
                int                  value_len,
                Byte *               value_bytes);
-#endif
-
-DDCT_Status ddct_get_capabilities_string(DDCT_Display_Handle ddct_dh, char** buffer);
-
-
-#ifdef UNIMPLEMENTED
-// Unimplemented.  Parsed capabilities has a complex data structure.  How to make visible?
-typedef void DDCT_Parsed_Capabilities;    // TEMP
-DDCT_Status ddct_parse_capabilities_string(char * capabilities_string, DDCT_Parsed_Capabilities ** parsed_capabilities);
 #endif
 
 DDCT_Status ddct_get_profile_related_values(DDCT_Display_Handle ddct_dh, char** pprofile_values_string);
