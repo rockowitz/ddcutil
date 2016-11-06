@@ -69,7 +69,7 @@ Null_Terminated_String_Array g_ptr_array_to_ntsa(GPtrArray * garray) {
  *     joined string
  */
 char * join_string_g_ptr_array(GPtrArray* strings, char * sepstr) {
-   bool debug = true;
+   bool debug = false;
 
    int ct = strings->len;
    if (debug)
