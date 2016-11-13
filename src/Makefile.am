@@ -1,5 +1,7 @@
 ## Process this file with automake to produce Makefile.in
 
+SUBDIRS = . swig
+
 # Is this really necessary?   Don't want to push these files to github.
 # there ought to be a cleaner way
 # MOSTLYCLEANFILES =    \
@@ -16,35 +18,38 @@
 # adl/adl_impl/.deps/*  \
 # adl/adl_mock_impl/.deps/*  
 
-CLEANFILES =\
-adl/*expand               \
-adl/adl_impl/*expand      \
-adl/adl_mock_impl/*expand \
-app_ddcutil/*expand       \
-base/*expand              \
-cmdline/*expand           \
-ddc/*expand               \
-i2c/*expand               \
-libmain/*expand           \
-sample_clients/*expand    \
-test/*expand              \
-test/adl/*expand          \
-test/ddc/*expand          \
-test/i2c/*expand          \
-usb/*expand               \
-usb_util/*expand          \
-util/*expand              \
-vcp/*expand
+CLEANFILES =
+# adl/*expand               \
+# adl/adl_impl/*expand      \
+# adl/adl_mock_impl/*expand \
+# app_ddcutil/*expand       \
+# base/*expand              \
+# cmdline/*expand           \
+# ddc/*expand               \
+# i2c/*expand               \
+# libmain/*expand           \
+# sample_clients/*expand    \
+# test/*expand              \
+# test/adl/*expand          \
+#  test/ddc/*expand          \
+# test/i2c/*expand          \
+# usb/*expand               \
+# usb_util/*expand          \
+# util/*expand              \
+# vcp/*expand
 
 
 # todo: factor out swig 
+# todo: fails if swig/.libs doesn't exist
+# rm -rf swig/ddc_swig_wrap.c swig/ddc_swig.py swig/ddc_swig.pyc
+# Plo files in deps directories are automatically included in generated Makefiles for some reason
+# test -z `find . -name ".deps"   -type d` || rm -rf `find . -name ".deps"   -type d`
 clean-local: 
-	@echo "(clean-local)"
+	@echo "(src/clean-local)"
 	find . -name "*plist" -type d  -exec ls -ld {} \;
 	rm -rf `find . -name "*plist" -type d`
-	find . -name ".libs"  -type d  -exec ls -ld {} \;
-	find . -name ".libs"  -type d  -exec rm -rf {} \;
-	rm -rf swig/ddct_public_wrap.c ddct_public.py ddct_public.pyc
+	find . -name ".libs"   -type d  -exec ls -ld {} \;
+	test -z `find . -name "*expand" -type f` || rm `find . -name "*expand" -type f`
 
 
 #
@@ -55,7 +60,7 @@ bin_PROGRAMS = \
 ddcutil  
 
 if ENABLE_SHARED_LIB_COND
-# Sample client program for shared library:
+# Sample C client program for shared library:
 bin_PROGRAMS += \
 laclient 
 endif
@@ -243,11 +248,16 @@ dist-hook:
 #
 
 # GLIB_CFLAGS contains output of pkgconfig --cflags glib-2.0
-AM_CPPFLAGS= \
-$(GLIB_CFLAGS) \
+AM_CPPFLAGS=     \
+$(GLIB_CFLAGS)   \
 $(XRANDR_CFLAGS) \
 $(LIBUSB_CFLAGS) \
--I$(top_srcdir) 
+-I$(srcdir) 
+
+# # temporarily hardcode PYTHON_CPPFLAGS here
+# AM_CPPFLAGS += \
+# $(PYTHON_CPPGLAGS)
+
 
 # AM_CPPFLAGS += \
 # $(HIDAPI_CFLAGS)
@@ -267,6 +277,8 @@ AM_CFLAGS = -Wall
 if ENABLE_CALLGRAPH_COND
   AM_CFLAGS += -fdump-rtl-expand
 endif
+
+AM_CFLAGS += $(PYTHON_CPPFLAGS)
 
 ddcutil_CFLAGS          = $(AM_CFLAGS)
 laclient_CFLAGS         = $(AM_CFLAGS)
@@ -296,6 +308,9 @@ libddcutil_la_LIBADD += \
    $(LIBUSB_LIBS)
 endif
 
+# temp
+libddcutil_la_LIBADD += $(PYTHON_LIBS) -lpython2.7
+
 libddcutil_la_LDFLAGS = -export_symbols-regex '^ddc[tgs]_[^_]'
 # libddcutil_la_LDFLAGS += -version-info '0:1:1'
 
@@ -323,6 +338,12 @@ laclient_LDADD = \
   $(XRANDR_LIBS) 
 
 
+install-exec-hook:
+	@echo "(install-exec-hook) Executing..." 
+	@echo "  pythondir       = $(pythondir)"
+	@echo "  pyexecdir       = $(pyexecdir)"
+
+
 # These includes are at the Makefile.am level:
-include make_swig_am
-include make_gobject_am
+# include make_swig.am
+include make_gobject.am

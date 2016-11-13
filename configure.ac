@@ -34,6 +34,7 @@ AC_CONFIG_MACRO_DIR([m4])
 AC_CONFIG_FILES([
 	Makefile 
 	src/Makefile 
+  src/swig/Makefile 
 	man/Makefile 
 	data/Makefile 
 	package/Makefile 
@@ -103,14 +104,106 @@ LT_INIT
 
 AC_PROG_RANLIB
 
+###
+### GObject
+###
+
 m4_ifdef([GOBJECT_INTROSPECTION_CHECK], [GOBJECT_INTROSPECTION_CHECK([1.30.0])])
 AM_CONDITIONAL(HAVE_INTROSPECTION, test "x$found_introspection" = xyes)
 
-#check for swig
-AC_CHECK_PROG( [swig_var], [swig], [swig], [noswig] )
-AC_MSG_NOTICE( [yada yada swig_var = $swig_var] )
+###
+### Notes
+###
+
+dnl Notes on AC_CHECK_PROG(), AC_PROG_PATH(): 
+dnl   AC_CHECK_PROG(var,prog-to-check-for, val-if-found, val-if-no-found)
+dnl     checks for prog-to-check-for in PATH
+dnl     does nothing if variable already set
+dnl     calls AC_SUBST for variable
+dnl   AC_CHECK_PATH(variable, prog-to-check-for [, value-if-not-found])
+dnl     search PATH for prog-to-check-for, sets variable to entire path of prog-to-check-for if found
+dnl     BUT, unlike AC_CHECK_PROG, still checks even if variable already set, so no real benefit to using
 
 
+###
+### Locate SWIG and PYTHON in case we need them
+###
+
+AC_MSG_NOTICE( [Calling am_path_python...] )
+AM_PATH_PYTHON(2.6, [python_found=yes], [python_found=no]) 
+AC_MSG_NOTICE( [Set by am_path_python:] )
+AC_MSG_NOTICE( [  python_found        = $python_found] )
+AC_MSG_NOTICE( [  PYTHON              = $PYTHON] )
+AC_MSG_NOTICE( [  PYTHON_VERSION      = $PYTHON_VERSION] )
+AC_MSG_NOTICE( [  PYTHON_PREFIX       = $PYTHON_PREFIX] )
+AC_MSG_NOTICE( [  PYTHON_EXEC_PREFIX  = $PYTHON_EXEC_PREFIX] )
+AC_MSG_NOTICE( [  pythondir           = $pythondir] )
+AC_MSG_NOTICE( [  pkgpythondir        = $pkgpythondir] )
+AC_MSG_NOTICE( [  pyexecdir           = $pyexecdir] )
+AC_MSG_NOTICE( [  pkgpyexecdir        = $pkgpyexecdir] )
+
+dnl AX_PYTHON_DEVEL Calls AC_PATH_PROG() to find $PYTHON, fails if python not found
+dnl PYTHON_SITE_PKG_EXEC set only in _alt version:
+AS_IF( [test "x$python_found" == "xyes" ], [
+   AC_MSG_NOTICE( [Calling ax_python_devel...])
+   AX_PYTHON_DEVEL
+
+   AC_MSG_NOTICE( [From ax_python_devel or ac_python_devel_alt..  ] )
+   AC_MSG_NOTICE( [  PYTHON_CPPFLAGS      = $PYTHON_CPPFLAGS      ] )
+   AC_MSG_NOTICE( [  PYTHON_SITE_PKG      = $PYTHON_SITE_PKG    ] )
+
+   AC_MSG_NOTICE( [From ax_python_devel only ...  ] )
+   AC_MSG_NOTICE( [  PYTHON_LIBS          = $PYTHON_LIBS          ] )
+   AC_MSG_NOTICE( [  PYTHON_EXTRA_LDFLAGS = $PYTHON_EXTRA_LDFLAGS    ] )
+   AC_MSG_NOTICE( [  PYTHON_EXTRA_LIBS    = $PYTHON_EXTRA_LIBS    ] )
+
+   AC_MSG_NOTICE( [From ax_python_devel_alt only ...  ] )
+   AC_MSG_NOTICE( [  PYTHON_LDFLAGS       = $PYTHON_LDFLAGS       ] )
+   AC_MSG_NOTICE( [  PYTHON_SITE_PKG_EXEC = $PYTHON_SITE_PKG_EXEC    ] )
+   AC_MSG_NOTICE( [  PYTHON_CFLAGS       = $PYTHON_CFLAGS] )
+])
+
+ 
+
+dnl AC_MSG_NOTICE( [----------------------])
+dnl dnl swig is not known to pkg-config, so either it exists in PATH or it doesn't exist
+dnl AC_ARG_VAR(SWIG2, [swig executable])
+dnl AC_MSG_NOTICE( [before ac_check_prog: SWIG2: $SWIG2] )
+dnl AC_CHECK_PROG( [SWIG2], [swig], [swig] )
+dnl AC_MSG_NOTICE( [after ac_check_prog: SWIG2 = $SWIG2] )
+dnl AS_IF( [test "x$SWIG2" != "x"],
+dnl           AC_MSG_NOTICE( [swig found] ),
+dnl           AC_MSG_NOTICE( [swig NOT found] )
+dnl     )
+
+dnl aclocal doesn't find AX_PKG_SWIG if inside AS_IF, so execute it whether or not we need it
+AC_MSG_NOTICE( [Calling ax_pkg_swig...] )
+dnl ax_pkg_swig respects SWIG_LIB, but overrides SWIG, so don't expose the possibility of overriding
+dnl AC_ARG_VAR(SWIG, [swig executable])
+dnl AC_ARG_VAR(SWIG_LIB, [linker flags for swig])
+dnl AC_MSG_NOTICE( [Before ax_pkg_swig:] )
+dnl AC_MSG_NOTICE( [  SWIG                    = $SWIG ] )
+dnl AC_MSG_NOTICE( [  SWIG_LIB                = $SWIG_LIB ])
+
+AX_PKG_SWIG(1.3.21, [swig_found=yes], [swig_found=no])
+AC_MSG_NOTICE( [Set by ax_pkg_swig:] )
+AC_MSG_NOTICE( [  swig_found              = $swig_found] )
+AC_MSG_NOTICE( [  SWIG                    = $SWIG ] )
+AC_MSG_NOTICE( [  SWIG_LIB                = $SWIG_LIB ])
+
+dnl AC_MSG_NOTICE( [Calling AX .. SWIG .. MULTI .. MODULE .. SUPPORT...] )
+dnl AX_SWIG_MULTI_MODULE_SUPPORT
+dnl AC_MSG_NOTICE( [Set by AX..SWIG..MULTI..MODULE..SUPPORT: ] )
+dnl AC_MSG_NOTICE( [  AX_SWIG_PYTHON_LIBS     = $AX_SWIG_PYTHON_LIBS ])
+
+dnl n. AX_SWIG_PYTHON does AC_REQUIRE of AX_PKG_SWIG, AX_PYTHON_DEVEL
+AC_MSG_NOTICE( [Calling ax_swig_python...] )
+AX_SWIG_PYTHON
+AC_MSG_NOTICE([ Set by AX .. SWIG _ PYTHON:])
+AC_MSG_NOTICE( [   AX_SWIG_PYTHON_CPPFLAGS = $AX_SWIG_PYTHON_CPPFLAGS ])
+AC_MSG_NOTICE( [   AX_SWIG_PYTHON_OPT      = $AX_SWIG_PYTHON_OPT ] )
+
+AC_MSG_NOTICE( [  AX_SWIG_PYTHON_LIBS     = $AX_SWIG_PYTHON_LIBS ])
 
 ###
 ### Checks for libraries.
@@ -289,6 +382,10 @@ AS_IF([test "x$enable_lib" == "xyes"],
      )
 
 
+dnl If we were building SWIG support for more than Python, there would need to be 2 configuration option, 
+dnl one to control SWIG and one to enable the Python bindings.   
+dnl Since that day is far off, we have just 1 option to enable SWIG for Python
+
 dnl *** configure option: --enable-swig
 AC_ARG_ENABLE([swig],
               [ AS_HELP_STRING( [--enable-swig=@<:@no/yes@:>@], [Build SWIG interface@<:@default=no@:>@] )],
@@ -308,8 +405,7 @@ AS_IF([test "x$enable_swig" == "xyes"],
      )
 
 dnl Alternative, copied from somewhere
-#present configure with a command-line option to disable the python bindings
-AC_ARG_ENABLE([python],[AS_HELP_STRING([--disable-python],[build without the python bindings])],[enable_python=$enableval],[enable_python=check])
+
 #default behavior is to install the python bindings into subfolders of $prefix
 #however, this may require the user to set the PYTHONPATH environment variable
 #in order to avoid this, invoke configure with the --enable-python-integration option
@@ -404,86 +500,30 @@ AS_IF([test "x$enable_gobject" == "xyes"],
      )
 
 
-AS_IF([test "x$enable_swig" == "xyes"],
-      [ AM_PATH_PYTHON(2.3) ],
+AS_IF([ test "x$swig_found" == "xyes" -a "x$python_found" == "xyes"],
+      [ python_and_swig="yes"],
+      [ python_and_swig="no"]
      )
-AC_MSG_NOTICE( [pyexecdir = $pyexecdir] )
+AC_MSG_NOTICE( [python_and_swig  = $python_and_swig ])
+
+AS_IF([test "x$enable_swig" == "xyes" -a  "x$python_and_swig" != "xyes" ] ,
+      AC_MSG_ERROR( [--enable-swig requires that both Python and SWIG be installed] ) 
+     )
 
 
-dnl aclocal doesn't find AX_PKG_SWIG if inside AS_IF, so execute it whether or not we need it
-AX_PKG_SWIG(1.3.21, [swig_found=yes], [swig_found=no])
-
-AC_MSG_NOTICE([swig_found = $swig_found])
-
-dnl outside of if test for now
-AX_SWIG_PYTHON
-dnl AC_MSG_NOTICE([ Set by AX..SWIG_PYTHON:])
-AC_MSG_NOTICE( [AX_SWIG_PYTHON_CPPFLAGS = $AX_SWIG_PYTHON_CPPFLAGS ])
-AC_MSG_NOTICE(  AX_SWIG_PYTHON_OPT      = $AX_SWIG_PYTHON_OPT  )
-
-
-dnl AX_PKG_SWIG within AS_IF causes newline error at execution time.
-dnl so test instead vs swig_found
-dnl AS_IF([test "x$enable_swig" == "xyes"],
-dnl       [ AX_PKG_SWIG(1.3.21, [AC_MSG_NOTICE( [SWIG found] ) ], [AC_MSG_ERROR(  [SWIG installation not found] ) ]  ],
-dnl       [ AC_MSG_NOTICE( [No need to check for SWIG] ) ]
-dnl      )
-
-AS_IF( [test "x$enable_swig" == "xyes" -a "x$swig_found" == "xno"],
-          [ AC_MSG_ERROR( [--enable-swig requires that SWIG be installed])],
-         )
-
-AC_MSG_NOTICE( [yada2 swig_var = $swig_var] )
-
-
-VALID_PYTHON=
-
-if test "x$swig_var" = xnoswig && test "x$enable_python" = xyes ; then
-        #don't even bother when swig is not found
-        AC_MSG_ERROR([--enable-python was given as an option but swig was not found on the system])
-elif test "x$swig_var" = xswig && test "x$enable_python" != xno ; then
-        #verify the python installation
-        AM_PATH_PYTHON(,[PYTHON_FOUND=true],[PYTHON_FOUND=false])
-        if test "x$PYTHON_FOUND" = xtrue ; then
-                PYTHON_CPPFLAGS=
-                PYTHON_LDFLAGS=
-                AX_PYTHON_DEVEL
-                if test "x$PYTHON" = x ; then
-                        if test "x$enable_python" = xyes ; then
-                                AC_MSG_ERROR([Incomplete python development package])
-                        else
-                                AC_MSG_WARN([Incomplete python development package])
-                        fi
-                        VALID_PYTHON=no
-                else
-                        VALID_PYTHON=yes
-                fi
-
-        fi
-fi
-
-dnl if put "AX_PYTHON_DEVEL" inside string,  autoconf expands it, resulting in error
-AC_MSG_NOTICE( [From .._PYTHON_DEVEL                         ] )
-AC_MSG_NOTICE( [  PYTHON_CPPFLAGS      = $PYTHON_CPPFLAGS      ] )
-AC_MSG_NOTICE( [  PYTHON_LIBS          = $PYTHON_LIBS          ] )
-AC_MSG_NOTICE( [  PYTHON_EXTRA_LIBS    = $PYTHON_EXTRA_LIBS    ] )
-AC_MSG_NOTICE( [  PYTHON_EXTRA_LDFLAGS = $PYTHON_EXTRA_LDFLAGS ] )
-
-
-if test "x$VALID_PYTHON" = xyes ; then
+if test "x$enable_swig" = "xyes" ; then
   AC_MSG_NOTICE([Building with Python bindings])
 
+  dnl if test "x$enable_python_integration" = xyes ; then
+  dnl         pythondir=$PYTHON_SITE_PKG
+  dnl         pyexecdir=$PYTHON_SITE_PKG_EXEC
+  dnl fi
 
-  if test "x$enable_python_integration" = xyes ; then
-          pythondir=$PYTHON_SITE_PKG
-          pyexecdir=$PYTHON_SITE_PKG_EXEC
-  fi
 
-
-  AC_SUBST(PYTHONDIR,$pythondir)
-  AC_SUBST(PKGPYTHONDIR,$pkgpythondir)
-  AC_SUBST(PYEXECDIR,$pyexecdir)
-  AC_SUBST(PKGPYEXECDIR,$pkgpyexecdir)
+  dnl AC_SUBST(PYTHONDIR,$pythondir)
+  dnl AC_SUBST(PKGPYTHONDIR,$pkgpythondir)
+  dnl AC_SUBST(PYEXECDIR,$pyexecdir)
+  dnl AC_SUBST(PKGPYEXECDIR,$pkgpyexecdir)
 
   AC_MSG_NOTICE( [pythondir=$pythondir])
   AC_MSG_NOTICE( [pkgpythondir=$pkgpythondir])
@@ -492,7 +532,7 @@ if test "x$VALID_PYTHON" = xyes ; then
 
 fi
 
-AM_CONDITIONAL([ENABLE_PYTHON],[test x$VALID_PYTHON = xyes])
+AM_CONDITIONAL([ENABLE_PYTHON],[test x$enable_swig = xyes])
 
 
 

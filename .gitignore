@@ -43,6 +43,7 @@ Makefile.in
 /src/fixit
 stamp-h1
 src/.libs
+src/swig/.libs
 /fedora_gcc_paths.txt
 /ubuntu_gcc_paths.txt
 monitors/
