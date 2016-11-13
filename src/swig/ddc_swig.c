@@ -21,6 +21,9 @@
  * </endcopyright>
  */
 
+#include <Python.h>   // must be before stdio.h
+// #include <fileobject.h>
+
 #include <stdio.h>
 #include <string.h>
 
@@ -79,6 +82,14 @@ bool ddcs_built_with_adl(void) {
    return ddct_built_with_adl();
 }
 
+
+// #ifdef FUTURE
+void ddc_set_fout( /* PyFileObject */ void *fpy) {
+   printf("(%s) fpy = %p\n", __func__, fpy);
+   int is_pyfile = PyFile_Check(fpy);
+   printf("(%s) is_pyfile=%d\n", __func__, is_pyfile);
+}
+// #endif
 
 //
 // Reports

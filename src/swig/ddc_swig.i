@@ -71,6 +71,9 @@ char *       ddct_output_level_name(DDCT_Output_Level val);
 void ddct_set_report_ddc_errors(bool onoff);
 bool ddct_get_report_ddc_errors();
 
+ void ddc_set_fout(void  *fpy);
+ // void ddc_set_fout(PyFileObject *fpy);
+
 
 //
 // Reports

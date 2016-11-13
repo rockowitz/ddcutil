@@ -24,6 +24,8 @@
 #ifndef DDC_SWIG_H_
 #define DDC_SWIG_H_
 
+#include <Python.h>
+
 #include "libmain/ddct_public.h"
 
 
@@ -42,6 +44,9 @@ char * check_exception();
 const char * ddcutil_version(void);
 bool ddcs_built_with_adl(void);
 
+
+// void ddc_set_fout(PyFileObject *fpy);
+void ddc_set_fout(void *fpy);
 
 //
 // Reports
