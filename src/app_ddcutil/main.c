@@ -46,6 +46,7 @@
 #include "base/sleep.h"
 #include "base/status_code_mgt.h"
 
+
 #include "vcp/parse_capabilities.h"
 #include "vcp/vcp_feature_codes.h"
 
@@ -301,8 +302,11 @@ int main(int argc, char *argv[]) {
                                  parsed_cmd->pdid, true /* emit_error_msg */);
          if (!dref)
             ok = false;
-         else
-            dh = ddc_open_display(dref, CALLOPT_ERR_ABORT | CALLOPT_ERR_MSG);
+         else {
+            ddc_open_display(dref, CALLOPT_ERR_ABORT | CALLOPT_ERR_MSG, &dh);  // rc == 0 iff dh
+            if (!dh)
+               ok = false;
+         }
       }
       if (ok)
          ok = loadvcp_by_file(fn, dh);
@@ -361,17 +365,25 @@ int main(int argc, char *argv[]) {
          if (!dref) {
             PROGRAM_LOGIC_ERROR("get_display_ref_for_display_identifier() failed for display %d", dispno);
          }
-         Display_Handle * dh = ddc_open_display(dref, CALLOPT_ERR_MSG | CALLOPT_ERR_ABORT);
-         // not needed, causes confusing messages if get_vcp_version fails but get_capabilities succeeds
-         // Version_Spec vspec = get_vcp_version_by_display_handle(dh);
-         // if (vspec.major < 2) {
-         //    printf("VCP (aka MCCS) version for display is less than 2.0. Output may not be accurate.\n");
-         // }
-         perform_get_capabilities_by_display_handle(dh);
 
-         printf("\n\nScanning all VCP feature codes for display %d\n", dispno);
-         app_show_vcp_subset_values_by_display_handle(dh, VCP_SUBSET_SCAN, true);
-         ddc_close_display(dh);
+         Display_Handle * dh = NULL;
+         Global_Status_Code gsc = ddc_open_display(dref, CALLOPT_ERR_MSG, &dh);
+         if (gsc != 0) {
+            printf("Unable to open display %s, status code %d (%s)",
+                   dref_short_name(dref), gsc, gsc_name(gsc) );
+         }
+         else {
+            // not needed, causes confusing messages if get_vcp_version fails but get_capabilities succeeds
+            // Version_Spec vspec = get_vcp_version_by_display_handle(dh);
+            // if (vspec.major < 2) {
+            //    printf("VCP (aka MCCS) version for display is less than 2.0. Output may not be accurate.\n");
+            // }
+            perform_get_capabilities_by_display_handle(dh);
+
+            printf("\n\nScanning all VCP feature codes for display %d\n", dispno);
+            app_show_vcp_subset_values_by_display_handle(dh, VCP_SUBSET_SCAN, true);
+            ddc_close_display(dh);
+         }
       }
       printf("\nDisplay scanning complete.\n");
 
@@ -386,81 +398,85 @@ int main(int argc, char *argv[]) {
       Display_Ref * dref = get_display_ref_for_display_identifier(
                               parsed_cmd->pdid, true /* emit_error_msg */);
       if (dref) {
-         Display_Handle * dh = ddc_open_display(dref, CALLOPT_ERR_ABORT | CALLOPT_ERR_MSG);
+         Display_Handle * dh = NULL;
+         ddc_open_display(dref, CALLOPT_ERR_ABORT | CALLOPT_ERR_MSG, &dh);
 
-         if (// parsed_cmd->cmd_id == CMDID_CAPABILITIES ||
-             parsed_cmd->cmd_id == CMDID_GETVCP       ||
-             parsed_cmd->cmd_id == CMDID_READCHANGES
-            )
-         {
-            Version_Spec vspec = get_vcp_version_by_display_handle(dh);
-            if (vspec.major < 2) {
-               printf("VCP (aka MCCS) version for display is undetected or less than 2.0. "
-                     "Output may not be accurate.\n");
-            }
-         }
+         if (dh) {
 
-         switch(parsed_cmd->cmd_id) {
-
-         case CMDID_CAPABILITIES:
+            if (// parsed_cmd->cmd_id == CMDID_CAPABILITIES ||
+                parsed_cmd->cmd_id == CMDID_GETVCP       ||
+                parsed_cmd->cmd_id == CMDID_READCHANGES
+               )
             {
-               bool ok = perform_get_capabilities_by_display_handle(dh);
-               main_rc = (ok) ? EXIT_SUCCESS : EXIT_FAILURE;
-               break;
-            }
-
-         case CMDID_GETVCP:
-            {
-               Global_Status_Code gsc = app_show_feature_set_values_by_display_handle(
-                     dh,
-                     parsed_cmd->fref,
-                     parsed_cmd->show_unsupported,
-                     parsed_cmd->force);
-               main_rc = (gsc==0) ? EXIT_SUCCESS : EXIT_FAILURE;
-            }
-            break;
-
-         case CMDID_SETVCP:
-            if (parsed_cmd->argct % 2 != 0) {
-               printf("SETVCP command requires even number of arguments");
-               main_rc = EXIT_FAILURE;
-            }
-            else {
-               main_rc = EXIT_SUCCESS;
-               int argNdx;
-               Global_Status_Code rc = 0;
-               for (argNdx=0; argNdx < parsed_cmd->argct; argNdx+= 2) {
-                  rc = app_set_vcp_value(
-                          dh,
-                          parsed_cmd->args[argNdx],
-                          parsed_cmd->args[argNdx+1],
-                          parsed_cmd->force);
-                  if (rc != 0) {
-                     main_rc = EXIT_FAILURE;   // ???
-                     break;
-                  }
+               Version_Spec vspec = get_vcp_version_by_display_handle(dh);
+               if (vspec.major < 2) {
+                  printf("VCP (aka MCCS) version for display is undetected or less than 2.0. "
+                        "Output may not be accurate.\n");
                }
             }
-            break;
 
-         case CMDID_DUMPVCP:
-            {
-               Global_Status_Code gsc = dumpvcp_as_file(dh, (parsed_cmd->argct > 0) ? parsed_cmd->args[0] : NULL );
-               main_rc = (gsc==0) ? EXIT_SUCCESS : EXIT_FAILURE;
+            switch(parsed_cmd->cmd_id) {
+
+            case CMDID_CAPABILITIES:
+               {
+                  bool ok = perform_get_capabilities_by_display_handle(dh);
+                  main_rc = (ok) ? EXIT_SUCCESS : EXIT_FAILURE;
+                  break;
+               }
+
+            case CMDID_GETVCP:
+               {
+                  Global_Status_Code gsc = app_show_feature_set_values_by_display_handle(
+                        dh,
+                        parsed_cmd->fref,
+                        parsed_cmd->show_unsupported,
+                        parsed_cmd->force);
+                  main_rc = (gsc==0) ? EXIT_SUCCESS : EXIT_FAILURE;
+               }
                break;
+
+            case CMDID_SETVCP:
+               if (parsed_cmd->argct % 2 != 0) {
+                  printf("SETVCP command requires even number of arguments");
+                  main_rc = EXIT_FAILURE;
+               }
+               else {
+                  main_rc = EXIT_SUCCESS;
+                  int argNdx;
+                  Global_Status_Code rc = 0;
+                  for (argNdx=0; argNdx < parsed_cmd->argct; argNdx+= 2) {
+                     rc = app_set_vcp_value(
+                             dh,
+                             parsed_cmd->args[argNdx],
+                             parsed_cmd->args[argNdx+1],
+                             parsed_cmd->force);
+                     if (rc != 0) {
+                        main_rc = EXIT_FAILURE;   // ???
+                        break;
+                     }
+                  }
+               }
+               break;
+
+            case CMDID_DUMPVCP:
+               {
+                  Global_Status_Code gsc = dumpvcp_as_file(dh, (parsed_cmd->argct > 0) ? parsed_cmd->args[0] : NULL );
+                  main_rc = (gsc==0) ? EXIT_SUCCESS : EXIT_FAILURE;
+                  break;
+               }
+
+            case CMDID_READCHANGES:
+               // DBGMSG("Case CMDID_READCHANGES");
+               // report_parsed_cmd(parsed_cmd,0);
+               app_read_changes_forever(dh);
+               break;
+
+            default:
+              break;
             }
 
-         case CMDID_READCHANGES:
-            // DBGMSG("Case CMDID_READCHANGES");
-            // report_parsed_cmd(parsed_cmd,0);
-            app_read_changes_forever(dh);
-            break;
-
-         default:
-           break;
+            ddc_close_display(dh);
          }
-
-         ddc_close_display(dh);
       }
    }
 

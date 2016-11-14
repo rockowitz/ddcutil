@@ -57,7 +57,7 @@ void probe_get_capabilities(int busno, char* write_mode, char* read_mode, Byte a
 
    file = i2c_open_bus(busno, CALLOPT_ERR_ABORT);
    printf("Setting addr to %02x\n", addr);
-   i2c_set_addr(file, addr);
+   i2c_set_addr(file, addr,CALLOPT_ERR_MSG | CALLOPT_ERR_ABORT);
    // usleep(TIMEOUT);
    sleep_millis_with_trace(DDC_TIMEOUT_MILLIS_DEFAULT, __func__, NULL);
 

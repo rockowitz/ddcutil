@@ -1388,6 +1388,10 @@ void query_sysenv() {
       execute_shell_cmd("xrandr|grep connected", 1 /* depth */);
       puts("");
 
+      printf("Checking for possibly conflicting programs...\n");
+      execute_shell_cmd("ps aux | grep ddccontrol | grep -v grep", 1);
+      puts("");
+
       query_using_i2cdetect();
 
       query_x11();
