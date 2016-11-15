@@ -182,6 +182,8 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
    gint     dispwork       = -1;
    char *   maxtrywork      = NULL;
    gint     sleep_strategy_work = -1;
+   char *   failsim_fn_work = NULL;
+   gboolean enable_failsim_flag = false;
 
    GOptionEntry option_entries[] = {
    //  long_name short flags option-type          gpointer           description                    arg description
@@ -216,6 +218,9 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
 //    {"myhelp", '\0', 0,  G_OPTION_ARG_NONE,     &myhelp_flag,      "Show usage", NULL},
       {"sleep-strategy",
                   'y', 0,  G_OPTION_ARG_INT,      &sleep_strategy_work, "Set sleep strategy", "strategy number" },
+      {"failsim", '\0', G_OPTION_FLAG_FILENAME,
+                           G_OPTION_ARG_STRING,   &failsim_fn_work, "Enable simulation", "control file name"},
+
       {G_OPTION_REMAINING,
                  '\0', 0,  G_OPTION_ARG_STRING_ARRAY, &cmd_and_args, "ARGUMENTS description",   "command [arguments...]"},
       { NULL }
@@ -275,6 +280,15 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
    parsed_cmd->stats_types      = stats_work;
    parsed_cmd->sleep_strategy   = sleep_strategy_work;
    parsed_cmd->timestamp_trace  = timestamp_trace_flag;
+   if (failsim_fn_work) {
+#ifdef ENABLE_FAILSIM
+      parsed_cmd->enable_failure_simulation = true;
+      parsed_cmd->failsim_control_fn = failsim_fn_work;
+#else
+      fprintf(stderr, "ddcutil not built with failure simulation support.  --failsim option invalid.\n");
+      ok = false;
+#endif
+   }
 
    if (adlwork) {
 #ifdef HAVE_ADL
@@ -504,6 +518,11 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
       printf("Built with support for USB connected displays.\n");
 #else
       printf("Built without support for USB connected displays.\n");
+#endif
+#ifdef ENABLE_FAILSIM
+      printf("Built with support for function failure simulation.\n");
+#else
+      printf("Built without support for function failure simulation.\n");
 #endif
       puts("");
       // if no command specified, include license in version information and terminate

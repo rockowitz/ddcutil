@@ -77,6 +77,8 @@ struct {
    bool                force;
    bool                timestamp_trace;    // prepend trace and debug msgs with elapsed time
    bool                show_unsupported;
+   bool                enable_failure_simulation;
+   char *              failsim_control_fn;
    Display_Identifier* pdid;
    Trace_Group         trace;
    Output_Level        output_level;   // new, to replace msg_level and programmatic_output

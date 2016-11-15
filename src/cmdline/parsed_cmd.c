@@ -86,6 +86,8 @@ void report_parsed_cmd(Parsed_Cmd * parsed_cmd, int depth) {
    snprintf(buf,20, "%d,%d,%d", parsed_cmd->max_tries[0], parsed_cmd->max_tries[1], parsed_cmd->max_tries[2] );
    rpt_str("max_retries",  NULL, buf, d1);
    rpt_int("sleep_stragegy", NULL, parsed_cmd->sleep_strategy,       d1);
+   rpt_bool("enable_failure_simulation", NULL, parsed_cmd->enable_failure_simulation, d1);
+   rpt_str("failsim_control_fn", NULL, parsed_cmd->failsim_control_fn, d1);
 }
 
 
