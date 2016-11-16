@@ -93,43 +93,49 @@ bool is_ddc_null_message(Byte * packet) {
  *
  * Arguments:
  *    dref            display reference
- *    failure_action  if open fails, return error or exit program?
+ *    callopts
+ *    pdh             address at which to return display handle
  *
  * Returns:
- *    Display_Handle of opened display, or NULL if open failed and
- *       failure_action == RETURN_ERROR_IF_FAILURE
+ *    status code
+ *
+ * Notes:
+ *    Will abort if open fails and CALLOPT_ERR_ABORT set
  */
-// NB: calls i2c_set_addr() if I2C bus.  this call is valid
-// only for opening bus for VCP, not EDID
-Display_Handle* ddc_open_display(Display_Ref * dref,  Byte open_flags) {
-   bool debug = false;
+Global_Status_Code ddc_open_display(Display_Ref * dref,  Byte callopts, Display_Handle** pdh) {
+   bool debug = true;
    DBGMSF(debug,"Opening display %s",dref_short_name(dref));
    Display_Handle * pDispHandle = NULL;
+   Global_Status_Code gsc = 0;
+
    switch (dref->io_mode) {
 
    case DDC_IO_DEVI2C:
       {
-         int fd = i2c_open_bus(dref->busno, open_flags);
-         // Parsed_Edid * pedid2 = i2c_get_parsed_edid_by_fd(fd);
-         // TODO: handle open failure, when failure_action = return error
-         // all callers currently EXIT_IF_FAILURE
-         if (fd >= 0) {    // will be < 0 if open_i2c_bus failed and failure_action = RETURN_ERROR_IF_FAILURE
-            DBGMSF(debug, "Calling set_addr(,0x37) for dref=%p %s", dref, dref_repr(dref));
-            i2c_set_addr(fd, 0x37);
-
-            // Is this needed?
-            // 10/24/15, try disabling:
-            // sleepMillisWithTrace(DDC_TIMEOUT_MILLIS_DEFAULT, __func__, NULL);
-
-            pDispHandle = create_bus_display_handle_from_display_ref(fd, dref);
-            Bus_Info * bus_info = i2c_get_bus_info(dref->busno, DISPSEL_VALID_ONLY);   // or DISPSEL_NONE?
-            pDispHandle->pedid = bus_info->edid;
+         int fd = i2c_open_bus(dref->busno, callopts);
+         if (fd < 0) {    // will be < 0 if open_i2c_bus failed and CALLOPT_ERR_ABORT not set
+            gsc = modulate_rc(fd, RR_ERRNO);
+            log_status_code( gsc, __func__);
+            goto bye;
          }
-      else {
-         log_status_code(modulate_rc(fd, RR_ERRNO), __func__);
+         DBGMSF(debug, "Calling set_addr(0x37) for dref=%p %s", dref, dref_repr(dref));
+         int rc =  i2c_set_addr(fd, 0x37, callopts);
+         if (rc != 0) {
+            close(fd);
+            gsc = modulate_rc(rc, RR_ERRNO);
+            goto bye;
+         }
+
+         // Is this needed?
+         // 10/24/15, try disabling:
+         // sleepMillisWithTrace(DDC_TIMEOUT_MILLIS_DEFAULT, __func__, NULL);
+
+         pDispHandle = create_bus_display_handle_from_display_ref(fd, dref);
+         Bus_Info * bus_info = i2c_get_bus_info(dref->busno, DISPSEL_VALID_ONLY);   // or DISPSEL_NONE?
+         pDispHandle->pedid = bus_info->edid;
+
       }
       break;
-   }
 
    case DDC_IO_ADL:
       pDispHandle = create_adl_display_handle_from_display_ref(dref);
@@ -146,14 +152,15 @@ Display_Handle* ddc_open_display(Display_Ref * dref,  Byte open_flags) {
          //    DBGMSG("HACK FIXUP.  dref->usb_hiddev_name");
          //    dref->usb_hiddev_name = get_hiddev_devname_by_display_ref(dref);
          // }
-         int fd = usb_open_hiddev_device(dref->usb_hiddev_name, open_flags);
+         int fd = usb_open_hiddev_device(dref->usb_hiddev_name, callopts);
          if (fd < 0) {
-            log_status_code(modulate_rc(fd,RR_ERRNO),__func__);
+            gsc = modulate_rc(fd, RR_ERRNO);
+            log_status_code(gsc,__func__);
+            close(fd);
+            goto bye;
          }
-         else {
-            pDispHandle = create_usb_display_handle_from_display_ref(fd, dref);
-            pDispHandle->pedid = usb_get_parsed_edid_by_display_handle(pDispHandle);
-         }
+         pDispHandle = create_usb_display_handle_from_display_ref(fd, dref);
+         pDispHandle->pedid = usb_get_parsed_edid_by_display_handle(pDispHandle);
       }
 #else
       PROGRAM_LOGIC_ERROR("ddcutil not built with USB support");
@@ -166,7 +173,9 @@ Display_Handle* ddc_open_display(Display_Ref * dref,  Byte open_flags) {
    if (dref->io_mode != USB_IO)
       call_tuned_sleep_i2c(SE_POST_OPEN);
    // report_display_handle(pDispHandle, __func__);
-   return pDispHandle;
+bye:
+   *pdh = pDispHandle;
+   return gsc;
 }
 
 

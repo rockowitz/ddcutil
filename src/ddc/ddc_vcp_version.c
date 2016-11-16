@@ -133,17 +133,20 @@ Version_Spec get_vcp_version_by_display_handle(Display_Handle * dh) {
  *    could not be retrieved (pre MCCS v2)
  */
 Version_Spec get_vcp_version_by_display_ref(Display_Ref * dref) {
-   // printf("(%s) Starting. dref=%p, dref->vcp_version =  %d.%d\n",
-   //        __func__, dref, dref->vcp_version.major, dref->vcp_version.minor);
+   bool debug = true;
+   DBGMSF(debug, "Starting. dref=%p, dref->vcp_version =  %d.%d\n",
+                 dref, dref->vcp_version.major, dref->vcp_version.minor);
 
    if (is_vcp_version_unqueried(dref->vcp_version)) {
-      Display_Handle * dh = ddc_open_display(dref, CALLOPT_ERR_MSG | CALLOPT_ERR_ABORT);
+      Display_Handle * dh = NULL;
+      // no need to check return code since aborting
+      ddc_open_display(dref, CALLOPT_ERR_MSG | CALLOPT_ERR_ABORT, &dh);
       dref->vcp_version = get_vcp_version_by_display_handle(dh);
       ddc_close_display(dh);
    }
 
-   // DBGMSG("Returning: %d.%d", dref->vcp_version.major, vspec.minor);
    assert( !vcp_version_eq(dref->vcp_version, VCP_SPEC_UNQUERIED) );
+   DBGMSF(debug, "Returning: %d.%d", dref->vcp_version.major, dref->vcp_version.minor);
    return dref->vcp_version;
 }
 

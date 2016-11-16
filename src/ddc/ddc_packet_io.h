@@ -34,8 +34,9 @@
 #include "base/displays.h"
 
 
-Display_Handle* ddc_open_display(Display_Ref * dref,  Byte calloptions);
-void            ddc_close_display(Display_Handle * dh);
+
+Global_Status_Code ddc_open_display(Display_Ref * dref,  Byte callopts, Display_Handle** pdh);
+void               ddc_close_display(Display_Handle * dh);
 
 
 // Retry management

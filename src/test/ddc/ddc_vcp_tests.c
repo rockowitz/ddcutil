@@ -239,7 +239,7 @@ void probe_get_luminosity(int busno, char * write_mode, char * read_mode) {
    // dump_packet(request_packet_ptr);
 
    file = i2c_open_bus(busno, CALLOPT_ERR_ABORT);
-   i2c_set_addr(file, 0x37);
+   i2c_set_addr(file, 0x37, CALLOPT_ERR_MSG|CALLOPT_ERR_ABORT);
    // usleep(DEFAULT_TIMEOUT);
    sleep_millis_with_trace(DDC_TIMEOUT_MILLIS_DEFAULT, __func__, NULL);
 

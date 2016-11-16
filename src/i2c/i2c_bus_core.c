@@ -62,9 +62,19 @@ void report_businfo(Bus_Info * bus_info, int depth);
 // Basic I2C bus operations
 //
 
-int i2c_open_bus(int busno, Byte calloptions) {
+/* Open an I2C bus device.
+ *
+ * Arguments:
+ *   busno      bus number
+ *   callopts  call option flags, controlling failure action
+ *
+ * Returns:
+ *    0 if success
+ *    -errno if close fails and CALLOPT_ERR_ABORT not set in callopts
+ */
+int i2c_open_bus(int busno, Byte callopts) {
    bool debug = false;
-   DBGMSF(debug, "busno=%d, calloptions=0x%02x", busno, calloptions);
+   DBGMSF(debug, "busno=%d, callopts=0x%02x", busno, callopts);
 
    char filename[20];
    int  file;
@@ -72,18 +82,18 @@ int i2c_open_bus(int busno, Byte calloptions) {
    snprintf(filename, 19, "/dev/i2c-%d", busno);
    RECORD_IO_EVENT(
          IE_OPEN,
-         ( file = open(filename, (calloptions & CALLOPT_RDONLY) ? O_RDONLY : O_RDWR) )
+         ( file = open(filename, (callopts & CALLOPT_RDONLY) ? O_RDONLY : O_RDWR) )
          );
    // per man open:
    // returns file descriptor if successful
    // -1 if error, and errno is set
    int errsv = errno;
    if (file < 0) {
-      if (calloptions & CALLOPT_ERR_ABORT) {
+      if (callopts & CALLOPT_ERR_ABORT) {
          TERMINATE_EXECUTION_ON_ERROR("Open failed for %s. errno=%s\n",
                                       filename, linux_errno_desc(errsv));
       }
-      if (calloptions & CALLOPT_ERR_MSG) {
+      if (callopts & CALLOPT_ERR_MSG) {
          f0printf(FERR, "Open failed for %s: errno=%s\n",
                         filename, linux_errno_desc(errsv));
       }
@@ -98,18 +108,17 @@ int i2c_open_bus(int busno, Byte calloptions) {
 /* Closes an open I2C bus device.
  *
  * Arguments:
- *   fd     file descriptor
- *   busno  bus number (for error messages)
- *          if -1, ignore
- *   failure_action  if true, exit if close fails
+ *   fd         file descriptor
+ *   busno      bus number (for error messages), if -1, ignore
+ *   callopts  call option flags, controlling failure action
  *
  * Returns:
  *    0 if success
- *    -errno if close fails and exit on failure was not specified
+ *    -errno if close fails and CALLOPT_ERR_ABORT not set in callopts
  */
-int i2c_close_bus(int fd, int busno, Byte calloptions) {
+int i2c_close_bus(int fd, int busno, Byte callopts) {
    bool debug = false;
-   DBGMSF(debug, "Starting. fd=%d, calloptions=0x%02x", fd, calloptions);
+   DBGMSF(debug, "Starting. fd=%d, callopts=0x%02x", fd, callopts);
 
    errno = 0;
    int rc = 0;
@@ -129,10 +138,10 @@ int i2c_close_bus(int fd, int busno, Byte calloptions) {
                   "Bus device close failed. errno=%s",
                   linux_errno_desc(errsv));
 
-      if (calloptions & CALLOPT_ERR_ABORT)
+      if (callopts & CALLOPT_ERR_ABORT)
          TERMINATE_EXECUTION_ON_ERROR(workbuf);
 
-      if (calloptions & CALLOPT_ERR_MSG)
+      if (callopts & CALLOPT_ERR_MSG)
          f0printf(FERR, "%s\n", workbuf);
 
       rc = errsv;
@@ -146,20 +155,36 @@ int i2c_close_bus(int fd, int busno, Byte calloptions) {
  * Arguments:
  *   fd    file descriptor for open /dev/i2c-n
  *   addr  slave address
+ *   callopts  call option flags, controlling failure action
  *
- * Should never fail.  Terminates execution if there's an error.
+ * Returns:
+ *    0 if success
+ *    -errno if ioctl call fails and CALLOPT_ERR_ABORT not set in callopts
  */
-void i2c_set_addr(int file, int addr) {
-   bool debug = false;
-   DBGMSF(debug, "file=%d, addr=0x%02x", file, addr);
+int i2c_set_addr(int file, int addr, Byte callopts) {
+   bool debug = true;
+   DBGMSF(debug, "file=%d, addr=0x%02x, callopts=0x%02x", file, addr, callopts);
    int rc = 0;
+   int errsv = 0;
+   bool simulate_failure = false;
    RECORD_IO_EVENT(
          IE_OTHER,
          ( rc = ioctl(file, I2C_SLAVE, addr) )
         );
-   if (rc < 0){
-      report_ioctl_error(errno, __func__, __LINE__-2, __FILE__, true /*fatal*/);
+   if (simulate_failure) {
+      rc = -1;               // *** SIMULATE ERROR ***
+      errno = EBUSY;
    }
+   if (rc < 0) {
+      errsv = errno;
+      if ( callopts & CALLOPT_ERR_MSG)
+         report_ioctl_error(errsv, __func__, __LINE__-9, __FILE__,
+                            /*fatal=*/ callopts&CALLOPT_ERR_ABORT);
+      else if (callopts & CALLOPT_ERR_ABORT)
+         ddc_abort(DDCL_INTERNAL_ERROR);
+      errsv = -errsv;
+   }
+   return errsv;
 }
 
 
@@ -195,7 +220,7 @@ bool * detect_all_addrs_by_fd(int fd) {
 
    for (addr = 3; addr < BUS_ADDR_MAX; addr++) {
       int rc;
-      i2c_set_addr(fd, addr);
+      i2c_set_addr(fd, addr, CALLOPT_ERR_ABORT || CALLOPT_ERR_MSG);
       rc = invoke_i2c_reader(fd, 1, &byte_to_write);
       if (rc >= 0)
          addrmap[addr] = true;
@@ -240,14 +265,18 @@ bool * detect_all_addrs(int busno) {
  *
  * Arguments:
  *   fd   file descriptor for open i2c device
+ *   presult
  *
  * Returns:
  *   Returns byte with flags possibly set:
  *    I2C_BUS_ADDR_0x50        true if addr x50 responds (EDID)
  *    I2C_BUS_ADDR_0x37        true if addr x37 responds (DDC commands)
+ *
+ * Returns:
+ *    if < 0, status code from i2c_set_addr()
  */
-Byte detect_ddc_addrs_by_fd(int fd) {
-   bool debug = false;
+static int detect_ddc_addrs_by_fd(int fd, Byte * presult) {
+   bool debug = true;
    DBGMSF(debug, "Starting. fd=%d", fd);
    assert(fd >= 0);
    unsigned char result = 0x00;
@@ -255,20 +284,29 @@ Byte detect_ddc_addrs_by_fd(int fd) {
    Byte    readbuf;  //  1 byte buffer
    int rc;
 
-   i2c_set_addr(fd, 0x50);
+   rc = i2c_set_addr(fd, 0x50, CALLOPT_ERR_MSG);   // CALLOPT_ERR_MSG temporary
+   if (rc < 0)
+      goto bye;
    rc = invoke_i2c_reader(fd, 1, &readbuf);
    if (rc >= 0)
       result |= I2C_BUS_ADDR_0X50;
 
-   i2c_set_addr(fd, 0x37);
+   rc = i2c_set_addr(fd, 0x37, CALLOPT_ERR_MSG);   // CALLOPT_ERR_MSG temporary
+   if (rc < 0)
+      goto bye;
    rc = invoke_i2c_reader(fd, 1, &readbuf);
    // DBGMSG("call_read() returned %d", rc);
    // 11/2015: DDCRC_READ_ALL_ZERO currently set only in ddc_packet_io.c:
    if (rc >= 0 || rc == DDCRC_READ_ALL_ZERO)
       result |= I2C_BUS_ADDR_0X37;
 
-   DBGMSF(debug, "Done.  Returning 0x%02x", result);
-   return result;
+bye:
+   if (rc != 0)
+      result = 0x00;
+
+   *presult = result;
+   DBGMSF(debug, "Done.  Returning rc=%d, *presult = 0x%02x", *presult);
+   return rc;
 }
 
 
@@ -424,15 +462,20 @@ char * i2c_interpret_functionality_into_buffer(unsigned long functionality, Buff
  *   <0       error
  */
 Global_Status_Code i2c_get_raw_edid_by_fd(int fd, Buffer * rawedid) {
-   bool debug = false;
+   bool debug = true;
    DBGMSF(debug, "Getting EDID for file %d", fd);
 
    bool conservative = false;
 
    assert(rawedid->buffer_size >= 128);
    Global_Status_Code gsc;
+   int rc;
 
-   i2c_set_addr(fd, 0x50);
+   rc = i2c_set_addr(fd, 0x50, CALLOPT_ERR_MSG);
+   if (rc < 0) {
+      gsc = modulate_rc(rc, RR_ERRNO);
+      goto bye;
+   }
    // 10/23/15, try disabling sleep before write
    if (conservative)
       sleep_millis_with_trace(DDC_TIMEOUT_MILLIS_DEFAULT, __func__, "before write");
@@ -462,6 +505,7 @@ Global_Status_Code i2c_get_raw_edid_by_fd(int fd, Buffer * rawedid) {
       }
    }
 
+bye:
    if (gsc < 0)
       rawedid->len = 0;
 
@@ -480,8 +524,6 @@ Global_Status_Code i2c_get_raw_edid_by_fd(int fd, Buffer * rawedid) {
  *
  * Returns:
  *   Parsed_Edid, NULL if get_raw_edid_by_fd() fails
- *
- * Terminates execution if open or close of bus fails
  */
 Parsed_Edid * i2c_get_parsed_edid_by_fd(int fd) {
    bool debug = false;
@@ -522,20 +564,27 @@ Parsed_Edid * i2c_get_parsed_edid_by_fd(int fd) {
  *    bus_info value passed as argument
  */
 Bus_Info * i2c_check_bus(Bus_Info * bus_info) {
-   bool debug = false;
+   bool debug = true;
    DBGMSF(debug, "Starting. busno=%d, buf_info=%p", bus_info->busno, bus_info );
 
    assert(bus_info != NULL);
    char * marker = bus_info->marker;  // mcmcmp(bus_info->marker... causes compile error
    assert( memcmp(marker,"BINF",4) == 0);
+   int file = 0;
 
    if (!(bus_info->flags & I2C_BUS_PROBED)) {
       bus_info->flags |= I2C_BUS_PROBED;
-      int file = i2c_open_bus(bus_info->busno, CALLOPT_ERR_MSG);  // returns if failure
+      file = i2c_open_bus(bus_info->busno, CALLOPT_ERR_MSG);  // returns if failure
 
       if (file >= 0) {
          bus_info->flags |= I2C_BUS_ACCESSIBLE;
-         bus_info->flags |= detect_ddc_addrs_by_fd(file);
+         Byte ddc_addr_flags = 0x00;
+         int rc = detect_ddc_addrs_by_fd(file, &ddc_addr_flags);
+         if (rc != 0) {
+            DBGMSF(debug, "detect_ddc_addrs_by_fd() returned %d", rc);
+            goto bye;
+         }
+         bus_info->flags |= ddc_addr_flags;
          bus_info->functionality = i2c_get_functionality_flags_by_fd(file);
          if (bus_info->flags & I2C_BUS_ADDR_0X50) {
             // Have seen case of nouveau driver with Quadro card where
@@ -545,9 +594,13 @@ Bus_Info * i2c_check_bus(Bus_Info * bus_info) {
             bus_info->edid = i2c_get_parsed_edid_by_fd(file);
             // bus_info->flags |= I2C_BUS_EDID_CHECKED;
          }
-         i2c_close_bus(file, bus_info->busno,  CALLOPT_ERR_ABORT);
+
       }
    }
+
+bye:
+   if (file)
+      i2c_close_bus(file, bus_info->busno,  CALLOPT_ERR_ABORT);
 
    DBGMSF(debug, "Returning %p, flags=0x%02x", bus_info, bus_info->flags );
    return bus_info;

@@ -363,7 +363,8 @@ Global_Status_Code loadvcp_by_dumpload_data(Dumpload_Data* pdata, Display_Handle
          goto bye;
       }
 
-      dh = ddc_open_display(dref, CALLOPT_ERR_MSG);
+      // return code == 0 iff dh set
+      ddc_open_display(dref, CALLOPT_ERR_MSG, &dh);
       if (!dh) {
          gsc = DDCRC_INVALID_DISPLAY;
          goto bye;
