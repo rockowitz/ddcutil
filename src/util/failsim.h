@@ -30,6 +30,15 @@
 
 // Issue:  Where to send error messages?
 
+//
+// Initialization
+//
+
+typedef bool (*Fsim_Name_To_Number_Func)(const char * name, int * p_number);
+
+void fsim_set_name_to_number_funcs(Fsim_Name_To_Number_Func func, Fsim_Name_To_Number_Func  unmodulated_func);
+
+
 
 typedef enum {FSIM_CALL_OCC_RECURRING, FSIM_CALL_OCC_SINGLE} Fsim_Call_Occ_Type;
 

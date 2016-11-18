@@ -35,6 +35,18 @@
 
 
 
+
+// typedef bool (*Fsim_Name_To_Number_Func)(const char * name, int * p_number);
+static Fsim_Name_To_Number_Func name_to_number_func = NULL;
+static Fsim_Name_To_Number_Func unmodulated_name_to_number_func = NULL;
+
+void fsim_set_name_to_number_funcs(Fsim_Name_To_Number_Func func, Fsim_Name_To_Number_Func unmodulated_func) {
+   name_to_number_func = func;
+   unmodulated_name_to_number_func = unmodulated_func;
+}
+
+
+
 static GHashTable * fst = NULL;
 
 
@@ -42,6 +54,7 @@ typedef struct fsim_call_occ_rec {
    Fsim_Call_Occ_Type   call_occ_type;
    int                  occno;
    int                  rc;
+   bool                 modulated;
 } Fsim_Call_Occ_Rec;
 
 
@@ -123,7 +136,7 @@ void fsim_add_error(
        int                  occno,
        int                  rc)
 {
-   bool debug = true;
+   bool debug = false;
    if (debug)
       printf("(%s) funcname=|%s|, call_occ_type=%d, occ type: %s, occno=%d, fsim_rc=%d\n", __func__,
               funcname,
@@ -188,14 +201,31 @@ void fsim_report_error_table(int depth) {
 bool eval_fsim_rc(char * rc_string, int * evaluated_rc) {
    char * end;
    bool ok = false;
+   *evaluated_rc = 0;
    long int answer = strtol(rc_string, &end, 10);
    if (*end == '\0') {
       *evaluated_rc = (int) answer;
       ok = true;
    }
-   // to do: add else case for string
-   else
-      ok = false;
+   else {
+      bool is_modulated = true;
+      if (str_starts_with(rc_string, "modulated:")) {
+         is_modulated = true;
+         rc_string = rc_string + strlen("modulated:");
+      }
+      else if (str_starts_with(rc_string, "base:")) {
+         is_modulated = false;
+         rc_string = rc_string + strlen("base:");
+      }
+      if (strlen(rc_string) == 0)
+         ok = false;
+      else if (is_modulated && name_to_number_func)
+         ok = name_to_number_func(rc_string, evaluated_rc);
+      else if (!is_modulated && unmodulated_name_to_number_func)
+         ok = unmodulated_name_to_number_func(rc_string, evaluated_rc);
+      else
+         ok = false;
+   }
 
    return ok;
 }
@@ -271,7 +301,7 @@ bool fsim_load_control_from_gptrarray(GPtrArray * lines) {
       fsim_add_error("i2c_set_addr", FSIM_CALL_OCC_RECURRING, 2, -EBUSY);
    }
 
-   fsim_report_error_table(1);
+   fsim_report_error_table(0);
 
    if (debug)
       printf("(%s) Returnind: %s\n", __func__, bool_repr(ok));
@@ -285,7 +315,7 @@ bool fsim_load_control_string(char * s) {
 }
 
 bool fsim_load_control_file(char * fn) {
-   bool debug = true;
+   bool debug = false;
    if (debug)
       printf("(%s) fn=%s\n", __func__, fn);
    bool verbose = true;   // should this be argument?
@@ -335,10 +365,12 @@ int fsim_check_failure(const char * fn, const char * funcname) {
                }
             }
          }
+         if (result)
+            printf("Simulating failure for call %d of function %s, returning %d\n", frec->callct, funcname, result);
+
       }
    }
-   if (result)
-      printf("Simulating failure for function %s, returning %d\n", funcname, result);
+
    if (debug)
       printf("(%s) funcname=%s, returning %d\n", __func__, funcname, result);
    return result;

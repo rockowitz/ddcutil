@@ -191,6 +191,7 @@ int main(int argc, char *argv[]) {
       dbgtrc_show_time = true;              // extern in core.h
    set_trace_levels(parsed_cmd->trace);
 #ifdef ENABLE_FAILSIM
+   fsim_set_name_to_number_funcs(gsc_name_to_modulated_number, gsc_name_to_unmodulated_number);
    if (parsed_cmd->failsim_control_fn) {
       bool ok = fsim_load_control_file(parsed_cmd->failsim_control_fn);
       if (!ok) {
