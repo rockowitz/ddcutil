@@ -35,6 +35,7 @@
 #include <string.h>
 
 #include "util/data_structures.h"
+#include "util/failsim.h"
 
 #include "base/core.h"
 #include "base/base_services.h"
@@ -189,6 +190,16 @@ int main(int argc, char *argv[]) {
    if (parsed_cmd->timestamp_trace)         // timestamps on debug and trace messages?
       dbgtrc_show_time = true;              // extern in core.h
    set_trace_levels(parsed_cmd->trace);
+#ifdef ENABLE_FAILSIM
+   if (parsed_cmd->failsim_control_fn) {
+      bool ok = fsim_load_control_file(parsed_cmd->failsim_control_fn);
+      if (!ok) {
+         fprintf(stderr, "Error loading failure simulation control file %s.\n",
+                         parsed_cmd->failsim_control_fn);
+         exit(EXIT_FAILURE);
+      }
+   }
+#endif
 
    init_ddc_services();
    // overrides setting in init_ddc_services():

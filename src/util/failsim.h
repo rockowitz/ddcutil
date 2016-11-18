@@ -31,6 +31,31 @@
 // Issue:  Where to send error messages?
 
 
+typedef enum {FSIM_CALL_OCC_RECURRING, FSIM_CALL_OCC_SINGLE} Fsim_Call_Occ_Type;
+
+//
+// Error table manipulation
+//
+
+void fsim_add_error(
+       char *               funcname,
+       Fsim_Call_Occ_Type   call_occ_type,
+       int                  occno,
+       int                  rc);
+
+void fsim_reset_callct(char * funcname);
+
+void fsim_clear_errors_for_func(char * funcname);
+
+void fsim_clear_error_table();
+
+void fsim_report_error_table(int depth);
+
+
+//
+// Bulk load error table
+//
+
 // cf load dumpload load variants
 
 bool fsim_load_control_from_gptrarray(GPtrArray * lines);
@@ -39,25 +64,28 @@ bool fsim_load_control_string(char * s);
 
 bool fsim_load_control_file(char * fn);
 
-int fsim_check_failure(char * fn, char * funcname);
 
-#define FAILSIM() \
+//
+// Runtime error check
+//
+
+int fsim_check_failure(const char * fn, const char * funcname);
+
+#define FAILSIM \
    do { \
-      int __rcsim = fsim_check_failure(__FILE__, __FUNC__); \
+      int __rcsim = fsim_check_failure(__FILE__, __func__); \
       if (__rcsim)        \
          return __rcsim;  \
-   } while{0};
+   } while(0);
 
 
 #define FAILSIM_EXT(__addl_cmds) \
    do { \
-      int __rcsim = fsim_check_failure(__FILE__, __FUNC__); \
+      int __rcsim = fsim_check_failure(__FILE__, __func__); \
       if (__rcsim) {      \
          __addl_cmds;     \
          return __rcsim;  \
       } \
-   } while{0};
-
-
+   } while(0);
 
 #endif /* FAILSIM_H_ */
