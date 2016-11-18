@@ -41,8 +41,8 @@ Monitors are specified in different ways in different contexts:
 
 1) Display_Identifier contains the identifiers specified on the command line.
 
-2) Display_Ref is a logical display identifier.   It can be either an I2C identifier,
-or an ADL identifier.
+2) Display_Ref is a logical display identifier.   It can be an I2C identifier,
+an ADL identifier, or a USB identifier.
 
 For Display_Identifiers containing either busno (for I2C) or ADL
 adapter.display numbers the translation from Display_Identier to Display_Ref

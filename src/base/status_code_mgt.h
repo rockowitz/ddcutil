@@ -51,8 +51,8 @@ Status_Code_Info * (*Retcode_Description_Finder)(int rc);
 typedef int Global_Status_Code;
 // Global_Status_Code subranges:
 typedef int Global_Status_ADL;    // subrange of Global_Status_Code containing modulated ADL return codes
-typedef int Global_Status_DDC;
-typedef int Global_Status_Errno;
+typedef int Global_Status_DDC;    // subrange of Global_Status_Code containing (always modulated) DDC return codes
+typedef int Global_Status_Errno;  // subrange of Global_Status_Code containing modulated Linux return codes
 
 // typedef int Rc_Raw_DDC_t;
 typedef int Base_Status_ADL;
