@@ -32,7 +32,7 @@ nodist__ddc_swig_la_SOURCES    = ddc_swig_wrap.c
 # -export-dynamic  add all symbols to dynamic symbol table, needed for dlopen
 # -avoid-version   ??
 # -version-info
-_ddc_swig_la_LDFLAGS    = -avoid-version -module -shared -export-dynamic -static
+_ddc_swig_la_LDFLAGS    = -avoid-version -module -shared -export-dynamic -static 
 
 
 #

@@ -102,7 +102,8 @@ dnl AC_PROG_LIBTOOL, AM_PROG_LIBTOOL are deprecated names for older versions of 
 dnl adds support for --enable/disable -static/shared, -with/without-pic configure flags
 LT_INIT
 
-AC_PROG_RANLIB
+dnl replaced by LT_INIT
+dnl AC_PROG_RANLIB
 
 ###
 ### GObject
@@ -462,6 +463,31 @@ AS_IF([test "x$enable_usb" == "xyes"],
       AC_MSG_NOTICE( [usb... enabled]  ),
       AC_MSG_NOTICE( [usb... disabled] )
      )
+
+dnl *** configure option: --enable-failsim
+AC_ARG_ENABLE([failsim],
+              [ AS_HELP_STRING( [--enable-failsim=@<:@no/yes@:>@], [Build with failure simulation@<:@default=no@:>@] )],
+              [enable_failsim=${enableval}],
+              [enable_failsim=no] )
+AM_CONDITIONAL([ENABLE_FAILSIM_COND], [test "x$enable_failsim" == "xyes"] )
+dnl Defines $(ENABLE_FAILSIM_FLAG) in Makefile.in 
+AS_IF([test "x$enable_failsim" == "xyes"],
+      [ AC_SUBST([ENABLE_FAILSIM_FLAG], [1] )
+        AC_DEFINE( [ENABLE_FAILSIM], [1], [If defined, enable failsim.])
+        AC_MSG_NOTICE( [failsim..... enabled] )
+      ],
+      [ AC_SUBST([ENABLE_FAILSIM_FLAG], [0]  )
+        AC_MSG_NOTICE( [failsim..... disabled] )
+      ]
+     )
+dnl Define ENABLE_FAILSIM in config.h:
+AS_IF([test "x$enable_failsim" == "xyes"],
+     AC_DEFINE_UNQUOTED( [ENABLE_FAILSIM], [1], [If defined, enable failsim.]),
+     [])
+dnl AS_IF([test "x$enable_failsim" == "xyes"],
+dnl      AC_MSG_NOTICE( [failsim... enabled]  ),
+dnl       AC_MSG_NOTICE( [failsim... disabled] )
+dnl     )
 
 
 ### Conditional library tests 

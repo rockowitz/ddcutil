@@ -70,9 +70,8 @@ endif
 # Intermediate Libraries
 #
 
-# Convenience library containing code shared between ddcutil and libddcutil
+# Convenience library containing code shared between ddcutil executable and libddcutil shared library
 noinst_LTLIBRARIES = libcommon.la 
-# noinst_LTLIBRARIES = libcommon.la  libsharedbase.la
 
 
 #
@@ -170,25 +169,26 @@ ddc/ddc_strategy.c          	\
 ddc/ddc_vcp.c               	\
 ddc/ddc_vcp_version.c       	\
 ddc/try_stats.c             	\
-i2c/i2c_base_io.c          	\
+i2c/i2c_base_io.c          	    \
 i2c/i2c_bus_core.c          	\
-i2c/i2c_do_io.c    		\
-util/data_structures.c		\
+i2c/i2c_do_io.c    	        	\
+util/data_structures.c	    	\
+util/debug_util.c               \
 util/device_id_util.c       	\
-util/edid.c 			\
-util/file_util.c 		\
-util/glib_util.c		\
-util/multi_level_map.c 		\
-util/output_sink.c 		\
-util/report_util.c 		\
-util/string_util.c 		\
-util/subprocess_util.c		\
-util/x11_util.c 		\
-vcp/ddc_command_codes.c		\
-vcp/parse_capabilities.c 	\
+util/edid.c 		        	\
+util/file_util.c				\
+util/glib_util.c		        \
+util/multi_level_map.c 		    \
+util/output_sink.c 				\
+util/report_util.c 				\
+util/string_util.c 				\
+util/subprocess_util.c			\
+util/x11_util.c 				\
+vcp/ddc_command_codes.c			\
+vcp/parse_capabilities.c 		\
 vcp/parsed_capabilities_feature.c \
-vcp/vcp_feature_codes.c 	\
-vcp/vcp_feature_set.c 		\
+vcp/vcp_feature_codes.c 		\
+vcp/vcp_feature_set.c 			\
 vcp/vcp_feature_values.c 	
 
 if HAVE_ADL_COND
@@ -223,6 +223,10 @@ libcommon_la_SOURCES += \
   util/udev_util.c 
 endif
 
+if ENABLE_FAILSIM_COND
+libcommon_la_SOURCES += \
+  util/failsim.c        
+endif
 
 # EXTRA_DIST = \
 # util/string_util.h \
@@ -283,7 +287,6 @@ AM_CFLAGS += $(PYTHON_CPPFLAGS)
 ddcutil_CFLAGS          = $(AM_CFLAGS)
 laclient_CFLAGS         = $(AM_CFLAGS)
 libcommon_la_CFLAGS     = $(AM_CFLAGS)
-# libsharedbase_la_CFLAGS = $(AM_CFLAGS)
 libddcutil_la_CFLAGS    = $(AM_CFLAGS)
 
   
@@ -313,7 +316,10 @@ libddcutil_la_LIBADD += $(PYTHON_LIBS) -lpython2.7
 
 libddcutil_la_LDFLAGS = -export_symbols-regex '^ddc[tgs]_[^_]'
 # libddcutil_la_LDFLAGS += -version-info '0:1:1'
+libddcutil_la_LDFLAGS += -export-dynamic 
 
+# needed?
+libcommon_la_LDFLAGS = -export-dynamic 
 
 #
 # Link the executables
@@ -331,6 +337,9 @@ ddcutil_LDADD += \
    $(UDEV_LIBS) 
 endif
 
+
+#needed?
+ddcutil_LDFLAGS = -export-dynamic
 
 # Fails if not linked with libxrandr - why?
 laclient_LDADD = \
