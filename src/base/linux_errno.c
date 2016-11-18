@@ -21,10 +21,13 @@
  * </endcopyright>
  */
 
+#include <assert.h>
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
+#include "util/string_util.h"
 
 #include "base/linux_errno.h"
 
@@ -196,3 +199,37 @@ static Status_Code_Info * get_negative_errno_info(int errnum) {
    return get_errno_info(-errnum);
 }
 
+
+/* Gets the Linux error number for a symbolic name.
+ *
+ * Arguments:
+ *    errno_name    symbolic name, e.g. EBUSY
+ *    perrno        where to return error number
+ *
+ * Returns:         true if found, false if not
+ */
+bool errno_name_to_number(const char * errno_name, int * perrno) {
+   int found = false;
+   *perrno = 0;
+   for (int ndx = 0; ndx < errno_desc_ct; ndx++) {
+       if ( streq(errno_desc[ndx].name, errno_name) ) {
+          *perrno = -errno_desc[ndx].code;
+          found = true;
+          break;
+       }
+   }
+   return found;
+}
+
+
+bool errno_name_to_modulated_number(const char * errno_name, Global_Status_Code * p_error_number) {
+   int result = 0;
+   bool found = errno_name_to_number(errno_name, &result);
+   assert(result >= 0);
+   if (result != 0) {
+      result = modulate_rc(result, RR_ERRNO);
+      assert(result <= 0);
+   }
+   *p_error_number = result;
+   return found;
+}

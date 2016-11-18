@@ -28,6 +28,7 @@
 
 #include "util/string_util.h"
 
+#include "adl/adl_errors.h"
 #include "base/ddc_errno.h"
 #include "base/linux_errno.h"
 
@@ -38,34 +39,27 @@
 
 Notes on status code management.
 
-Status codes in the DCC application have multiple sources:
+Status codes in the ddcutil have multiple sources:
 
 1) Linux system calls.  
+- In general, functions return 0 or a positive value to indicate success.
+- Values greater than 0 indicate something about a successful call, such as the number of bytes read.
+- Negative values indicate that an error occurred. In that case the special variable errno is
+  typically the "error code", though some packages set the return code to -errno.
+- Errno values, listed in errno.h, are positive numbers ranging from 1 to apparently
+  less than 200.
 
-In general, status codes returned by functions use positive values or 0 to indicate 
-something about a successful call, such as the number of bytes read.  Negative values
-indicate that something bad occurred; in that case the special variable errno is the 
-"error code".  
+2) ADL
+- ADL functions return status codes, listed in file adl_defines.h
+- The value of these codes ranges from 4 to -21.  0 indicates normal success.
+- Positive values appear to be "ok, but".  Not clear when these values occur or what to do about them.
+- Negative values indicate errors, some of which may reflect programming errors.
 
-Errno values, listed in errno.h, are positive numbers ranging from 1 to apparently 
-less than 200. 
+3) ddcutil  specific status codes.
 
-2) ADL functions return status codes, listed in file ...
-The value of these codes ranges from 4 to -nn. 
-0 indicates normal success.  Positive values appear to be "ok, but".  Not clear 
-when these values occur or what to do about them.  Negative values indicate errors, 
-some of which may reflect programming errors. 
 
-3) DDC specific status codes.    
-
- Linux system calls.  Generally special variable errno is set if an error occurs.
-
- ADL
-
-Status codes specific to this application.
-
-Problem:   Linux and ADL error numbers conflict.
-DCC error numbers can be assigned to a range out of conflict.
+Problem: Linux and ADL error numbers conflict.
+ddcutil error numbers can be assigned to a range out of conflict.
 
 Solution.
 
@@ -82,6 +76,8 @@ typedef struct {
    int                         max;
    Retcode_Description_Finder  desc_finder;
    bool                        finder_arg_is_modulated;
+   Retcode_Number_Finder       number_finder;
+   Retcode_Number_Finder       base_number_finder;
 } Retcode_Range_Table_Entry;
 
 
@@ -90,10 +86,31 @@ typedef struct {
 // can be filled in statically.  For other files, register_retcode_desc_finder()
 // is called by the initializer function in those files.
 Retcode_Range_Table_Entry retcode_range_table[] = {
-      {RR_BASE,   RCRANGE_BASE_START,   RCRANGE_BASE_MAX,  NULL,  false },     // should this be entry in table?
-      {RR_ERRNO,  RCRANGE_ERRNO_START,  RCRANGE_ERRNO_MAX, NULL,  false },
-      {RR_ADL,    RCRANGE_ADL_START,    RCRANGE_ADL_MAX,   NULL,  false },
-      {RR_DDC,    RCRANGE_DDC_START,    RCRANGE_DDC_MAX,   ddcrc_find_status_code_info,  true },
+      {RR_BASE,
+       RCRANGE_BASE_START,   RCRANGE_BASE_MAX,
+       NULL,                        false,
+       NULL,
+       NULL
+      },     // should this be entry in table?
+      {RR_ERRNO,
+       RCRANGE_ERRNO_START,  RCRANGE_ERRNO_MAX,
+       NULL,                        false,
+       errno_name_to_modulated_number,
+       errno_name_to_number
+      },
+      {RR_ADL,
+       RCRANGE_ADL_START,    RCRANGE_ADL_MAX,
+       NULL,                        false,
+       adl_errno_name_to_modulated_number,
+       adl_error_name_to_number
+      },
+      {RR_DDC,
+       RCRANGE_DDC_START,
+       RCRANGE_DDC_MAX,
+       ddcrc_find_status_code_info, true,
+       ddc_error_name_to_modulated_number,
+       ddc_error_name_to_number
+      },
 };
 int retcode_range_ct = sizeof(retcode_range_table)/sizeof(Retcode_Range_Table_Entry);
 
@@ -236,6 +253,44 @@ char * gsc_name(Global_Status_Code status_code) {
    char * result = (pdesc) ? pdesc->name : "";
    return result;
 }
+
+
+
+bool gsc_name_to_unmodulated_number(const char * status_code_name, int * p_error_number) {
+   int  status_code = 0;
+   bool found = false;
+
+   for (int ndx = 1; ndx < retcode_range_ct; ndx++) {
+      // printf("ndx=%d, id=%d, base=%d\n", ndx, retcode_range_table[ndx].id, retcode_range_table[ndx].base);
+      if (retcode_range_table[ndx].base_number_finder) {
+         found = retcode_range_table[ndx].base_number_finder(status_code_name, &status_code);
+         if (found)
+            break;
+      }
+   }
+
+   *p_error_number = status_code;
+   return found;
+}
+
+
+bool gsc_name_to_modulated_number(const char * status_code_name, Global_Status_Code * p_error_number) {
+   Global_Status_Code gsc = 0;
+   bool found = false;
+
+   for (int ndx = 1; ndx < retcode_range_ct; ndx++) {
+      // printf("ndx=%d, id=%d, base=%d\n", ndx, retcode_range_table[ndx].id, retcode_range_table[ndx].base);
+      if (retcode_range_table[ndx].number_finder) {
+         found = retcode_range_table[ndx].number_finder(status_code_name, &gsc);
+         if (found)
+            break;
+      }
+   }
+
+   *p_error_number = gsc;
+   return found;
+}
+
 
 
 //

@@ -21,7 +21,10 @@
  * </endcopyright>
  */
 
+#include <assert.h>
 #include <stdio.h>
+
+#include "util/string_util.h"
 
 #include "base/ddc_errno.h"
 
@@ -145,3 +148,34 @@ char * ddcrc_desc(int rc) {
    return result;
 }
 
+
+/* Gets the ddcutil error number for a symbolic name.
+ *
+ * Arguments:
+ *    errno_name    symbolic name, e.g. EBUSY
+ *    perrno        where to return error number
+ *
+ * Returns:         true if found, false if not
+ */
+bool ddc_error_name_to_number(const char * errno_name, Global_Status_Code * perrno) {
+   int found = false;
+   *perrno = 0;
+   for (int ndx = 0; ndx < ddcrc_desc_ct; ndx++) {
+       if ( streq(ddcrc_info[ndx].name, errno_name) ) {
+          *perrno = ddcrc_info[ndx].code;
+          found = true;
+          break;
+       }
+   }
+   return found;
+}
+
+
+bool ddc_error_name_to_modulated_number(const char * errno_name, Global_Status_Code * p_error_number) {
+   int result = 0;
+   bool found = ddc_error_name_to_number(errno_name, &result);
+   assert(result <= 0);
+   // ddcutil error numbers are already modulated
+   *p_error_number = result;
+   return found;
+}

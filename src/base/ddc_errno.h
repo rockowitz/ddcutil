@@ -84,6 +84,9 @@
 
 Status_Code_Info * ddcrc_find_status_code_info(int rc);
 
+bool ddc_error_name_to_number(const char * errno_name, Global_Status_Code * perrno);
+bool ddc_error_name_to_modulated_number(const char * errno_name, Global_Status_Code * p_error_number);
+
 // Returns status code description:
 char * ddcrc_desc(int rc);   // must be freed after use
 

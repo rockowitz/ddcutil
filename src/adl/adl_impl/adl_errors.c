@@ -27,6 +27,8 @@
 
 #include <adl_defines.h>
 
+#include "util/string_util.h"
+
 #include "base/status_code_mgt.h"
 
 
@@ -99,4 +101,37 @@ void init_adl_errors() {
    register_retcode_desc_finder(RR_ADL,
                                 get_adl_status_description,
                                 false);                     // finder_arg_is_modulated
+}
+
+
+/* Gets the ADL error number for a symbolic name.
+ *
+ * Arguments:
+ *    adl_error_name    symbolic name, e.g. ADL_ERR_NOT_SUPPORTED
+ *
+ * Returns:         error number, 0 if not found
+ */
+bool adl_error_name_to_number(const char * adl_error_name, int * adl_error_number) {
+   int result = 0;
+   bool found = false;
+   for (int ndx = 0; ndx < adl_status_desc_ct; ndx++) {
+       if ( streq(adl_status_desc[ndx].name, adl_error_name) ) {
+          result = adl_status_desc[ndx].code;
+          found = true;
+          break;
+       }
+   }
+   *adl_error_number = result;
+   return found;
+}
+
+
+bool adl_errno_name_to_modulated_number(const char * error_name, Global_Status_Code * p_error_number) {
+   int result = 0;
+   bool found = adl_error_name_to_number(error_name, &result);
+   if (found) {
+      result = modulate_rc(result, RR_ADL);
+   }
+   *p_error_number = result;
+   return found;
 }

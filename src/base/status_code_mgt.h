@@ -41,9 +41,6 @@ struct {
 // debugging function:
 void report_status_code_info(Status_Code_Info * pdesc);
 
-typedef
-Status_Code_Info * (*Retcode_Description_Finder)(int rc);
-
 
 // For distinguishing types of return codes.
 // C does not enforce type checking, but useful for documentation
@@ -60,6 +57,14 @@ typedef int Base_Status_Errno;
 // would make it simpler for low level I2C functions to be incorporated into sample code
 typedef int Base_Status_Errno_DDC;   // union(Base_Status_Errno, Global_Status_DDC)
 typedef int Base_Status_ADL_DDC;     // union(Base_Status_ADL, Global_Status_DDC)
+
+typedef
+Status_Code_Info * (*Retcode_Description_Finder)(int rc);
+
+typedef
+bool (*Retcode_Number_Finder)(const char * name, Global_Status_Code * p_number);
+
+
 
 Global_Status_Code modulate_base_errno_ddc_to_global(Base_Status_Errno_DDC rc);
 
@@ -96,6 +101,9 @@ Status_Code_Info * find_global_status_code_info(Global_Status_Code rc);
 // Returns status code description:
 char * gsc_desc(Global_Status_Code rc);   // must be freed after use
 char * gsc_name(Global_Status_Code status_code);   // do not free after use
+
+bool gsc_name_to_unmodulated_number(const char * status_code_name, int * p_error_number);
+bool gsc_name_to_modulated_number(const char * status_code_name, Global_Status_Code * p_error_number);
 
 
 #endif /* STATUS_CODE_MGT_H_ */
