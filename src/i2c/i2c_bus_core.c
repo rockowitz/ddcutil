@@ -31,6 +31,8 @@
 #include <sys/types.h>
 #include <unistd.h>
 
+#include "util/debug_util.h"
+#include "util/failsim.h"
 #include "util/report_util.h"
 #include "util/string_util.h"
 
@@ -162,8 +164,12 @@ int i2c_close_bus(int fd, int busno, Byte callopts) {
  *    -errno if ioctl call fails and CALLOPT_ERR_ABORT not set in callopts
  */
 int i2c_set_addr(int file, int addr, Byte callopts) {
-   bool debug = true;
+   bool debug = false;
    DBGMSF(debug, "file=%d, addr=0x%02x, callopts=0x%02x", file, addr, callopts);
+   // if (debug)
+   //    show_backtrace(1);
+   FAILSIM_EXT( ( show_backtrace(1) ) )
+
    int rc = 0;
    int errsv = 0;
    bool simulate_failure = false;
@@ -171,10 +177,12 @@ int i2c_set_addr(int file, int addr, Byte callopts) {
          IE_OTHER,
          ( rc = ioctl(file, I2C_SLAVE, addr) )
         );
+
    if (simulate_failure) {
       rc = -1;               // *** SIMULATE ERROR ***
       errno = EBUSY;
    }
+
    if (rc < 0) {
       errsv = errno;
       if ( callopts & CALLOPT_ERR_MSG)
@@ -184,6 +192,12 @@ int i2c_set_addr(int file, int addr, Byte callopts) {
          ddc_abort(DDCL_INTERNAL_ERROR);
       errsv = -errsv;
    }
+
+   if (errsv || debug) {
+      printf("(%s) addr = 0x%02x. Returning %d\n", __func__, addr, errsv);
+      show_backtrace(1);
+   }
+
    return errsv;
 }
 
@@ -273,40 +287,46 @@ bool * detect_all_addrs(int busno) {
  *    I2C_BUS_ADDR_0x37        true if addr x37 responds (DDC commands)
  *
  * Returns:
- *    if < 0, status code from i2c_set_addr()
+ *    if < 0, modulated status code from i2c_set_addr()
  */
-static int detect_ddc_addrs_by_fd(int fd, Byte * presult) {
-   bool debug = true;
+static Global_Status_Code detect_ddc_addrs_by_fd(int fd, Byte * presult) {
+   bool debug = false;
    DBGMSF(debug, "Starting. fd=%d", fd);
    assert(fd >= 0);
    unsigned char result = 0x00;
 
    Byte    readbuf;  //  1 byte buffer
-   int rc;
+   int base_rc = 0;
+   Global_Status_Code gsc = 0;
 
-   rc = i2c_set_addr(fd, 0x50, CALLOPT_ERR_MSG);   // CALLOPT_ERR_MSG temporary
-   if (rc < 0)
+   base_rc = i2c_set_addr(fd, 0x50, CALLOPT_ERR_MSG);   // CALLOPT_ERR_MSG temporary
+   if (base_rc < 0) {
+      gsc = modulate_rc(base_rc, RR_ERRNO);
       goto bye;
-   rc = invoke_i2c_reader(fd, 1, &readbuf);
-   if (rc >= 0)
+   }
+   gsc = invoke_i2c_reader(fd, 1, &readbuf);
+   if (gsc >= 0)
       result |= I2C_BUS_ADDR_0X50;
 
-   rc = i2c_set_addr(fd, 0x37, CALLOPT_ERR_MSG);   // CALLOPT_ERR_MSG temporary
-   if (rc < 0)
+   base_rc = i2c_set_addr(fd, 0x37, CALLOPT_ERR_MSG);   // CALLOPT_ERR_MSG temporary
+   if (base_rc < 0) {
+      gsc = modulate_rc(base_rc,RR_ERRNO);
       goto bye;
-   rc = invoke_i2c_reader(fd, 1, &readbuf);
+   }
+   gsc = invoke_i2c_reader(fd, 1, &readbuf);
    // DBGMSG("call_read() returned %d", rc);
    // 11/2015: DDCRC_READ_ALL_ZERO currently set only in ddc_packet_io.c:
-   if (rc >= 0 || rc == DDCRC_READ_ALL_ZERO)
+   if (gsc >= 0 || base_rc == DDCRC_READ_ALL_ZERO)
       result |= I2C_BUS_ADDR_0X37;
+   gsc = 0;
 
 bye:
-   if (rc != 0)
+   if (gsc != 0)
       result = 0x00;
 
    *presult = result;
-   DBGMSF(debug, "Done.  Returning rc=%d, *presult = 0x%02x", *presult);
-   return rc;
+   DBGMSF(debug, "Done.  Returning gsc=%d, *presult = 0x%02x", *presult);
+   return gsc;
 }
 
 
@@ -462,7 +482,7 @@ char * i2c_interpret_functionality_into_buffer(unsigned long functionality, Buff
  *   <0       error
  */
 Global_Status_Code i2c_get_raw_edid_by_fd(int fd, Buffer * rawedid) {
-   bool debug = true;
+   bool debug = false;
    DBGMSF(debug, "Getting EDID for file %d", fd);
 
    bool conservative = false;
@@ -564,7 +584,7 @@ Parsed_Edid * i2c_get_parsed_edid_by_fd(int fd) {
  *    bus_info value passed as argument
  */
 Bus_Info * i2c_check_bus(Bus_Info * bus_info) {
-   bool debug = true;
+   bool debug = false;
    DBGMSF(debug, "Starting. busno=%d, buf_info=%p", bus_info->busno, bus_info );
 
    assert(bus_info != NULL);
@@ -579,9 +599,14 @@ Bus_Info * i2c_check_bus(Bus_Info * bus_info) {
       if (file >= 0) {
          bus_info->flags |= I2C_BUS_ACCESSIBLE;
          Byte ddc_addr_flags = 0x00;
-         int rc = detect_ddc_addrs_by_fd(file, &ddc_addr_flags);
-         if (rc != 0) {
-            DBGMSF(debug, "detect_ddc_addrs_by_fd() returned %d", rc);
+         Global_Status_Code gsc = detect_ddc_addrs_by_fd(file, &ddc_addr_flags);
+         if (gsc != 0) {
+            DBGMSF(debug, "detect_ddc_addrs_by_fd() returned %d", gsc);
+
+            f0printf(FERR, "Failure detecting bus addresses for /dev/i2c-%d: status code=%s\n",
+                           bus_info->busno, gsc_desc(gsc));
+
+
             goto bye;
          }
          bus_info->flags |= ddc_addr_flags;
@@ -591,6 +616,8 @@ Bus_Info * i2c_check_bus(Bus_Info * bus_info) {
             // there's a bus that has no monitor but responds to the X50 probe
             // of detect_ddc_addrs_by_fd() and then returns a garbage EDID
             // when the bytes are read in i2c_get_parsed_edid_by_fd()
+            // TODO: handle case of i2c_get_parsed_edid_by_fd() returning NULL
+            // but should never fail if detect_ddc_addrs_by_fd() succeeds
             bus_info->edid = i2c_get_parsed_edid_by_fd(file);
             // bus_info->flags |= I2C_BUS_EDID_CHECKED;
          }

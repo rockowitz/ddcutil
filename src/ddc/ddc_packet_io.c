@@ -103,7 +103,7 @@ bool is_ddc_null_message(Byte * packet) {
  *    Will abort if open fails and CALLOPT_ERR_ABORT set
  */
 Global_Status_Code ddc_open_display(Display_Ref * dref,  Byte callopts, Display_Handle** pdh) {
-   bool debug = true;
+   bool debug = false;
    DBGMSF(debug,"Opening display %s",dref_short_name(dref));
    Display_Handle * pDispHandle = NULL;
    Global_Status_Code gsc = 0;
@@ -119,10 +119,10 @@ Global_Status_Code ddc_open_display(Display_Ref * dref,  Byte callopts, Display_
             goto bye;
          }
          DBGMSF(debug, "Calling set_addr(0x37) for dref=%p %s", dref, dref_repr(dref));
-         int rc =  i2c_set_addr(fd, 0x37, callopts);
-         if (rc != 0) {
+         int base_rc =  i2c_set_addr(fd, 0x37, callopts);
+         if (base_rc != 0) {
             close(fd);
-            gsc = modulate_rc(rc, RR_ERRNO);
+            gsc = modulate_rc(base_rc, RR_ERRNO);
             goto bye;
          }
 
@@ -133,6 +133,14 @@ Global_Status_Code ddc_open_display(Display_Ref * dref,  Byte callopts, Display_
          pDispHandle = create_bus_display_handle_from_display_ref(fd, dref);
          Bus_Info * bus_info = i2c_get_bus_info(dref->busno, DISPSEL_VALID_ONLY);   // or DISPSEL_NONE?
          pDispHandle->pedid = bus_info->edid;
+
+         if (!pDispHandle->pedid) {
+            // How is this even possible?
+            close(fd);
+            DBGMSG("No EDID for device on bus /dev/i2c-%d", dref->busno);
+            gsc = DDCRC_EDID;
+            goto bye;
+         }
 
       }
       break;

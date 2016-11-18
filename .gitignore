@@ -120,4 +120,4 @@ clang-report/
 cov-int/
 ddcutil-coverity.tgz
 *.diff
-
+fsctl

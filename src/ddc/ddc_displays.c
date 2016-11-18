@@ -496,8 +496,7 @@ ddc_report_active_display(Display_Info * curinfo, int depth) {
    if (output_level >= OL_NORMAL  && ddc_is_valid_display_ref(curinfo->dref, false)) {
       // n. requires write access since may call get_vcp_value(), which does a write
       Display_Handle * dh = NULL;
-      Global_Status_Code gsc = ddc_open_display(curinfo->dref,
-                                             CALLOPT_ERR_MSG, &dh);
+      Global_Status_Code gsc = ddc_open_display(curinfo->dref, CALLOPT_ERR_MSG, &dh);
       if (gsc != 0) {
          rpt_vstring(depth, "Error opening display %s, error = %d (%s)",
                             dref_short_name(curinfo->dref), gsc, gsc_name(gsc));

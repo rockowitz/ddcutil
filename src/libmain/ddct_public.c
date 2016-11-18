@@ -414,20 +414,22 @@ DDCT_Status ddct_open_display(DDCT_Display_Ref ddct_dref, DDCT_Display_Handle * 
    if (!library_initialized)
       return DDCL_UNINITIALIZED;
    DDCT_Status rc = 0;
+   *pdh = NULL;        // in case of error
    Display_Ref * dref = (Display_Ref *) ddct_dref;
    if (dref == NULL || memcmp(dref->marker, DISPLAY_REF_MARKER, 4) != 0 )  {
       rc = DDCL_ARG;
    }
    else {
-     // TODO: fix ddc_open_display for RETURN_ERROR_IF_FAILURE
-     Display_Handle* dh = ddc_open_display(dref,  CALLOPT_ERR_MSG);
-     if (dh)
+     Display_Handle* dh = NULL;
+     rc = ddc_open_display(dref,  CALLOPT_ERR_MSG, &dh);
+     if (rc == 0)
         *pdh = dh;
      else
         rc = DDCL_ARG;     //  TEMP, need a proper status code
    }
    return rc;
 }
+
 
 DDCT_Status ddct_close_display(DDCT_Display_Handle ddct_dh) {
    if (!library_initialized)
