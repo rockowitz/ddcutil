@@ -184,7 +184,7 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
    char *   maxtrywork      = NULL;
    gint     sleep_strategy_work = -1;
    char *   failsim_fn_work = NULL;
-   gboolean enable_failsim_flag = false;
+   // gboolean enable_failsim_flag = false;
 
    GOptionEntry option_entries[] = {
    //  long_name short flags option-type          gpointer           description                    arg description
@@ -219,8 +219,8 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
 //    {"myhelp", '\0', 0,  G_OPTION_ARG_NONE,     &myhelp_flag,      "Show usage", NULL},
       {"sleep-strategy",
                   'y', 0,  G_OPTION_ARG_INT,      &sleep_strategy_work, "Set sleep strategy", "strategy number" },
-      {"failsim", '\0', G_OPTION_FLAG_FILENAME,
-                           G_OPTION_ARG_STRING,   &failsim_fn_work, "Enable simulation", "control file name"},
+      {"failsim", '\0', 0,
+                           G_OPTION_ARG_FILENAME,   &failsim_fn_work, "Enable simulation", "control file name"},
 
       {G_OPTION_REMAINING,
                  '\0', 0,  G_OPTION_ARG_STRING_ARRAY, &cmd_and_args, "ARGUMENTS description",   "command [arguments...]"},
