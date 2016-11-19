@@ -484,8 +484,6 @@ bool is_field_edid(int fd, struct hiddev_report_info * rinfo, int field_index) {
 
 void free_hid_field_locator(struct hid_field_locator * location) {
    if (location) {
-      // if (location->rinfo)
-      //    free(location->rinfo);
       if (location->finfo)
          free(location->finfo);
       free(location);
@@ -655,7 +653,7 @@ find_report(int fd, __u32 report_type, __u32 ucode, bool match_all_ucodes) {
       result = calloc(1, sizeof(struct hid_field_locator));
       // result->rinfo = calloc(1, sizeof(struct hiddev_report_info));
       // memcpy(result->rinfo, &rinfo, sizeof(struct hiddev_report_info));
-      result->finfo = finfo_found;   // returned by is_field_edid() or test_field_ucode()
+      result->finfo       = finfo_found;   // returned by is_field_edid() or test_field_ucode()
       result->report_type = rinfo.report_type;
       result->report_id   = report_id_found;
       result->field_index = field_index_found;    // finfo.field_index may have been changed by HIDIOGREPORTINFO
