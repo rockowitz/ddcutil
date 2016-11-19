@@ -1244,16 +1244,21 @@ void i2c_report_active_display(Bus_Info * businfo, int depth) {
    Output_Level output_level = get_output_level();
    rpt_vstring(depth, "I2C bus:             /dev/i2c-%d", businfo->busno);
 
-   if (output_level >= OL_VERBOSE)
+   if (output_level >= OL_NORMAL)
    rpt_vstring(depth, "Supports DDC:        %s", bool_repr(businfo->flags & I2C_BUS_ADDR_0X37));
+
+   if (output_level >= OL_VERBOSE) {
+      rpt_vstring(depth+1, "Address 0x37 present: %s  (DDC)",  bool_repr(businfo->flags & I2C_BUS_ADDR_0X37));
+      rpt_vstring(depth+1, "Address 0x50 present: %s  (EDID)", bool_repr(businfo->flags & I2C_BUS_ADDR_0X50));
+   }
 
    if (output_level == OL_TERSE || output_level == OL_PROGRAM)
    rpt_vstring(depth, "Monitor:             %s:%s:%s",  businfo->edid->mfg_id,
                                                businfo->edid->model_name,
                                                businfo->edid->serial_ascii);
-   if (output_level >= OL_NORMAL) {
-      bool dump_edid = (output_level >= OL_VERBOSE && businfo->edid);
-      report_parsed_edid(businfo->edid, dump_edid /* verbose */, depth);
+   if (output_level >= OL_NORMAL && businfo->edid) {
+      bool verbose = (output_level >= OL_VERBOSE);
+      report_parsed_edid(businfo->edid, verbose, depth);
    }
 }
 
