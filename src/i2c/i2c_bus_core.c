@@ -1248,8 +1248,8 @@ void i2c_report_active_display(Bus_Info * businfo, int depth) {
    rpt_vstring(depth, "Supports DDC:        %s", bool_repr(businfo->flags & I2C_BUS_ADDR_0X37));
 
    if (output_level >= OL_VERBOSE) {
-      rpt_vstring(depth+1, "Address 0x37 present: %s  (DDC)",  bool_repr(businfo->flags & I2C_BUS_ADDR_0X37));
-      rpt_vstring(depth+1, "Address 0x50 present: %s  (EDID)", bool_repr(businfo->flags & I2C_BUS_ADDR_0X50));
+      rpt_vstring(depth+1, "I2C address 0x37 present: %-5s  (DDC)",  bool_repr(businfo->flags & I2C_BUS_ADDR_0X37));
+      rpt_vstring(depth+1, "I2C address 0x50 present: %-5s  (EDID)", bool_repr(businfo->flags & I2C_BUS_ADDR_0X50));
    }
 
    if (output_level == OL_TERSE || output_level == OL_PROGRAM)
