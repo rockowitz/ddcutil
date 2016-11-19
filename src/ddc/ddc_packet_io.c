@@ -164,7 +164,6 @@ Global_Status_Code ddc_open_display(Display_Ref * dref,  Byte callopts, Display_
          if (fd < 0) {
             gsc = modulate_rc(fd, RR_ERRNO);
             log_status_code(gsc,__func__);
-            close(fd);
             goto bye;
          }
          pDispHandle = create_usb_display_handle_from_display_ref(fd, dref);
