@@ -16,8 +16,7 @@ dnl   AC_PATH_PROG(XSLTPROC, xsltproc)
 
 m4_define([ddcutil_major_version], [0])
 m4_define([ddcutil_minor_version], [6])
-dnl micro version 3 set 7/30/16 - development version
-m4_define([ddcutil_micro_version], [0])
+m4_define([ddcutil_micro_version], [1])
 m4_define([ddcutil_version],
           [ddcutil_major_version.ddcutil_minor_version.ddcutil_micro_version])
 
@@ -164,7 +163,6 @@ AS_IF( [test "x$python_found" == "xyes" ], [
    AC_MSG_NOTICE( [  PYTHON_CFLAGS       = $PYTHON_CFLAGS] )
 ])
 
- 
 
 dnl AC_MSG_NOTICE( [----------------------])
 dnl dnl swig is not known to pkg-config, so either it exists in PATH or it doesn't exist
@@ -200,11 +198,11 @@ dnl AC_MSG_NOTICE( [  AX_SWIG_PYTHON_LIBS     = $AX_SWIG_PYTHON_LIBS ])
 dnl n. AX_SWIG_PYTHON does AC_REQUIRE of AX_PKG_SWIG, AX_PYTHON_DEVEL
 AC_MSG_NOTICE( [Calling ax_swig_python...] )
 AX_SWIG_PYTHON
-AC_MSG_NOTICE([ Set by AX .. SWIG _ PYTHON:])
-AC_MSG_NOTICE( [   AX_SWIG_PYTHON_CPPFLAGS = $AX_SWIG_PYTHON_CPPFLAGS ])
+AC_MSG_NOTICE( [ Set by ax_swig_python:] )
+AC_MSG_NOTICE( [   AX_SWIG_PYTHON_CPPFLAGS = $AX_SWIG_PYTHON_CPPFLAGS ] )
 AC_MSG_NOTICE( [   AX_SWIG_PYTHON_OPT      = $AX_SWIG_PYTHON_OPT ] )
+AC_MSG_NOTICE( [   AX_SWIG_PYTHON_LIBS     = $AX_SWIG_PYTHON_LIBS ] )
 
-AC_MSG_NOTICE( [  AX_SWIG_PYTHON_LIBS     = $AX_SWIG_PYTHON_LIBS ])
 
 ###
 ### Checks for libraries.
@@ -234,19 +232,18 @@ PKG_CHECK_MODULES([UDEV], [libudev],
    ])
  ])
 
-
-dnl do not use
+dnl Commented out because no longer using hidapi
 dnl TODO: allow for either hidapi-libusb or hidapi-hidraw
 dnl PKG_CHECK_MODULES(HIDAPI, hidapi-hidraw)
 dnl PKG_CHECK_MODULES(HIDAPI, hidapi-libusb)
+
 
 ###
 ### Checks for header files.
 ###
 
-dnl AC_MSG_NOTICE( [*** Before first header checks] )
 AC_CHECK_HEADERS([fcntl.h langinfo.h libintl.h limits.h stdint.h stdlib.h string.h sys/ioctl.h termios.h unistd.h wchar.h  dlfcn.h])
-dnl is2c-dev.h is in linux-headers
+dnl i2c-dev.h is in linux-headers
 dnl i2c-dev.h not found:
 dnl AC_CHECK_HEADERS([i2c-dev.h])
 
@@ -322,9 +319,6 @@ AC_SUBST([ADL_HEADER_DIR], [$adl_header_dir])
 dnl Makefile.am/.in variable: 
 AM_CONDITIONAL([HAVE_ADL_COND], [test "x$adl_header_dir" != "x"] )
 
-dnl AC_MSG_NOTICE([adl_header_dir2 = $adl_header_dir2])
-dnl AC_DEFINE_UNQUOTED([HAVE_ADL3], [$HAVE_ADL])
-dnl AC_DEFINE( [HAVE_ADL2], [1])
 
 dnl *** configure option: --enable-testcases
 AC_ARG_ENABLE([testcases],
@@ -344,6 +338,7 @@ AS_IF([test "x$include_testcases" == "xyes"],
       AC_MSG_NOTICE( [testcases... disabled] )
      )
 
+
 dnl *** configure option: --enable-callgraph
 AC_ARG_ENABLE([callgraph],
               [ AS_HELP_STRING( [--enable-callgraph=@<:@no/yes@:>@], [Create .expand files for static call graph@<:@default=no@:>@] )],
@@ -358,17 +353,12 @@ AS_IF([test "x$enable_callgraph" == "xyes"],
       AC_MSG_NOTICE( [callgraph... disabled] )
      )
 
+
 dnl *** configure option: --enable-lib
 AC_ARG_ENABLE([lib],
               [ AS_HELP_STRING( [--enable-lib=@<:@no/yes@:>@], [Build shared library and clients@<:@default=no@:>@] )],
               [enable_lib=${enableval}],
               [enable_lib=no] )
-dnl disable after testing:
-dnl AC_MSG_NOTICE([enable_lib = $enable_lib])
-dnl Define INCLUDE_SHARED_LIB in config.h: (not needed)
-dnl AS_IF([test "x$enable_lib" == "xyes"],
-dnl       AC_DEFINE_UNQUOTED( [INCLUDE_SHARED_LIB], [1], [If defined, build shared lib and clients.]),
-dnl       [])
 dnl Set flag for automake.am:
 AM_CONDITIONAL([ENABLE_SHARED_LIB_COND], [test "x$enable_lib" == "xyes"] )
 AS_IF([test "x$enable_lib" == "xyes"],
@@ -383,7 +373,7 @@ AS_IF([test "x$enable_lib" == "xyes"],
      )
 
 
-dnl If we were building SWIG support for more than Python, there would need to be 2 configuration option, 
+dnl Were we building SWIG support for more than Python, there would need to be 2 configuration option, 
 dnl one to control SWIG and one to enable the Python bindings.   
 dnl Since that day is far off, we have just 1 option to enable SWIG for Python
 
@@ -490,7 +480,9 @@ dnl       AC_MSG_NOTICE( [failsim... disabled] )
 dnl     )
 
 
+###
 ### Conditional library tests 
+###
 
 dnl know that 1.0.8 fails, 1.0.20  works
 AS_IF([test "x$enable_usb" == "xyes"],
@@ -527,12 +519,12 @@ AS_IF([test "x$enable_gobject" == "xyes"],
 
 
 AS_IF([ test "x$swig_found" == "xyes" -a "x$python_found" == "xyes"],
-      [ python_and_swig="yes"],
-      [ python_and_swig="no"]
+      [ python_and_swig_found="yes"],
+      [ python_and_swig_found="no"]
      )
-AC_MSG_NOTICE( [python_and_swig  = $python_and_swig ])
+AC_MSG_NOTICE( [python_and_swig_found  = $python_and_swig_found ])
 
-AS_IF([test "x$enable_swig" == "xyes" -a  "x$python_and_swig" != "xyes" ] ,
+AS_IF([test "x$enable_swig" == "xyes" -a  "x$python_and_swig_found" != "xyes" ] ,
       AC_MSG_ERROR( [--enable-swig requires that both Python and SWIG be installed] ) 
      )
 
@@ -559,8 +551,6 @@ if test "x$enable_swig" = "xyes" ; then
 fi
 
 AM_CONDITIONAL([ENABLE_PYTHON],[test x$enable_swig = xyes])
-
-
 
 
 ### 
