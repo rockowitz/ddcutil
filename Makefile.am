@@ -57,8 +57,23 @@ clang:
 	        -o clang-report make
 
 
-# 	$(foreach v, $(.VARIABLES), @echo "$v = $$v")
+# Copied and adapted from colord
+#	export COVERITY_EMAIL=`cat ~/.coverity | grep EMAIL | cut -f2`; \
+#	export COVERITY_PASSWORD=`cat ~/.coverity | grep PASSWORD_ddcutil | cut -f2`; \
+coverity:
+	(MAKE) clean                    \
+	cov-build --dir cov-int $(MAKE);        \
+	tar czvf ddcutil-coverity.tgz cov-int;       \
+	export COVERITY_EMAIL=`cat ~/.coverity | grep EMAIL | cut -f2`; \
+	export COVERITY_PASSWORD=`cat ~/.coverity | grep PASSWORD_colord | cut -f2`; \
+	curl --form file=@ddcutil-coverity.tgz       \
+	     --form project=ddcutil   \
+	     --form password=${COVERITY_PASSWORD}   \
+	     --form email=${COVERITY_EMAIL}     \
+	     http://scan5.coverity.com/cgi-bin/upload.py
 
+
+# 	$(foreach v, $(.VARIABLES), @echo "$v = $$v")
 show:
 	@echo "---> Show variables"
 	@echo "Set by AM_PATH_PYTHON:"
