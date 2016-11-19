@@ -290,6 +290,11 @@ void get_luminosity_sample_code(int busno) {
    snprintf(devname, 11, "/dev/i2c-%d", busno);
 
    int fh = open(devname,   O_NONBLOCK|O_RDWR);
+   if (fh < 0) {
+      perror("Unable to open device");
+      return;
+   }
+
    ioctl(fh, I2C_SLAVE, 0x37);
 
    // try a read:
@@ -427,6 +432,10 @@ void get_luminosity_using_single_ioctl(int busno) {
    snprintf(devname, 11, "/dev/i2c-%d", busno);
 
    int fh = open(devname, O_RDWR);
+   if (fh < 0) {
+      perror("Unable to open device");
+      return;
+   }
    ioctl(fh, I2C_SLAVE, 0x37);
 
 
@@ -537,6 +546,10 @@ void demo_nvidia_bug_sample_code(int busno) {
    snprintf(devname, 11, "/dev/i2c-%d", busno);
 
    int fh = open(devname,   O_NONBLOCK|O_RDWR);
+   if (fh < 0) {
+      perror("Unable to open device");
+      return;
+   }
    ioctl(fh, I2C_SLAVE, 0x37);
 
    // try a read, it succeeds

@@ -156,7 +156,7 @@ void probe_read_edid(int busno, char * write_mode, char * read_mode) {
 #endif
             rc = -1;  // hack
             errsv = errno;
-            if (errno != 0 || rc == -1)
+            if (errno != 0 || rc == -1) {
                printf("i2c_smbus_read_byte_data returned %d (0x%x), errno=%d\n", rc, rc, errsv);
                if (rc == -1) break;
                byte = rc & 0xff;
@@ -165,7 +165,7 @@ void probe_read_edid(int busno, char * write_mode, char * read_mode) {
             printf("Reading edid using i2c_smbus_read_byte_data() returning buffer of length %d\n", ndx);
             rc = ndx;
          }
-
+      }
       else if ( streq(read_mode, "i2c_smbus_read_i2c_block_data") ) {
 #ifdef WONT_COMPILE_ON_FEDORA
          rc = do_i2c_smbus_read_i2c_block_data(fd, 32, edidbuf, DDC_TIMEOUT_USE_DEFAULT);
