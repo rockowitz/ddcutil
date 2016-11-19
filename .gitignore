@@ -17,6 +17,7 @@ perf.data
 *.pyc
 .deps
 .dirstamp
+.libs
 aclocal.m4
 autom4te.cache
 autoscan.log
@@ -42,8 +43,8 @@ Makefile.in
 /src/laclient
 /src/fixit
 stamp-h1
-src/.libs
-src/swig/.libs
+* src/.libs
+* src/swig/.libs
 /fedora_gcc_paths.txt
 /ubuntu_gcc_paths.txt
 monitors/

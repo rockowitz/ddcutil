@@ -1,2 +1,7 @@
 *
 !.gitignore
+!ax_*
+ax_python_devel_alt.m4
+*~
+!introspection.m4
+
