@@ -1,10 +1,7 @@
 /* debug_util.c
  *
- * Created on: Nov 15, 2016
- *     Author: rock
- *
  * <copyright>
- * Copyright (C) 2014-2015 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2016 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -24,7 +21,6 @@
  * </endcopyright>
  */
 
-
 #include <execinfo.h>
 #include <stdbool.h>
 #include <stdio.h>
@@ -35,7 +31,14 @@
 #include "util/debug_util.h"
 
 
-
+/* Extracts the function name and offset from a backtrace line
+ *
+ * Arguments:
+ *   bt_line   line returned by backtrace()
+ *
+ * Returns:    string of form "name+offset".  It is the
+ *             resposibility of the caller to free this string.
+ */
 static char * extract_function(char * bt_line) {
    bool debug = false;
    if (debug)
@@ -43,8 +46,7 @@ static char * extract_function(char * bt_line) {
    char * result = NULL;
    char * start = strchr(bt_line, '(');
    if (!start) {
-      result = malloc(4);
-      strncpy(result, "???", 3);
+      result = strdup("???");
    }
    else {
       start++;          // character after paren
@@ -67,6 +69,16 @@ static char * extract_function(char * bt_line) {
 }
 
 
+/* Show the call stack.
+ *
+ * Arguments:
+ *   stack_adjust    number of initial stack frames to ignore, to
+ *                   hide this function and possibly some number of immediate
+ *                   callers
+ *
+ * Note that the call stack is approximate.  The underlying system function, backtrace()
+ * relies on external symbols, so static functions will not be properly shown.
+ */
 void show_backtrace(int stack_adjust)
 {
    bool debug = false;
@@ -74,17 +86,13 @@ void show_backtrace(int stack_adjust)
       printf("(%s) Starting.  stack_adjust = %d\n", __func__, stack_adjust);
 
    int j, nptrs;
-   const int BUF_SIZE = 100;
-// #define BUF_SIZE 100
-   void *buffer[BUF_SIZE];
+   const int MAX_ADDRS = 100;
+   void *buffer[MAX_ADDRS];
    char **strings;
 
-   nptrs = backtrace(buffer, BUF_SIZE);
+   nptrs = backtrace(buffer, MAX_ADDRS);
    if (debug)
       printf("(%s) backtrace() returned %d addresses\n", __func__, nptrs);
-
-   /* The call backtrace_symbols_fd(buffer, nptrs, STDOUT_FILENO)
-       would produce similar output to the following: */
 
    strings = backtrace_symbols(buffer, nptrs);
    if (strings == NULL) {
