@@ -101,8 +101,13 @@ Retcode_Range_Table_Entry retcode_range_table[] = {
       {RR_ADL,
        RCRANGE_ADL_START,    RCRANGE_ADL_MAX,
        NULL,                        false,
-       adl_errno_name_to_modulated_number,
+// #ifdef HAVE_ADL
+       adl_errno_name_to_modulated_number,   // get mock implementation if not HAVE_ADL
        adl_error_name_to_number
+// #else
+//        NULL,
+//        NULL
+// #endif
       },
       {RR_DDC,
        RCRANGE_DDC_START,

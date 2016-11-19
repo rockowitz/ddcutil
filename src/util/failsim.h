@@ -80,6 +80,7 @@ bool fsim_load_control_file(char * fn);
 
 int fsim_check_failure(const char * fn, const char * funcname);
 
+#ifdef ENABLE_FAILSIM
 #define FAILSIM \
    do { \
       int __rcsim = fsim_check_failure(__FILE__, __func__); \
@@ -96,5 +97,13 @@ int fsim_check_failure(const char * fn, const char * funcname);
          return __rcsim;  \
       } \
    } while(0);
+
+#else
+
+#define FAILSIM
+
+#define FAILSIM_EXT(__addl_cmds)
+
+#endif
 
 #endif /* FAILSIM_H_ */

@@ -30,3 +30,13 @@ void init_adl_errors() {}
 Status_Code_Info * get_adl_status_description(int errnum) {
    return NULL;
 }
+
+bool adl_error_name_to_number(const char * adl_error_name, int * adl_error_number) {
+   *adl_error_number = 0;
+   return false;
+}
+
+bool adl_errno_name_to_modulated_number(const char * error_name, Global_Status_Code * p_error_number) {
+   *p_error_number = 0;
+   return false;
+}
