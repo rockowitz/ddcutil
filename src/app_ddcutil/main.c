@@ -409,7 +409,7 @@ int main(int argc, char *argv[]) {
                Byte_Bit_Flags features_declared =
                      parsed_capabilities_feature_ids(pcaps, /*readable_only=*/true);
                char * s0 = bbf_to_string(features_declared, NULL, 0);
-               printf("\nReadable features declared in capabilities string: %s", s0);
+               printf("\nReadable features declared in capabilities string: %s\n", s0);
                free(s0);
 
                Byte_Bit_Flags caps_not_seen = bbf_subtract(features_declared, features_seen);
