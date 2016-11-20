@@ -44,13 +44,29 @@ CLEANFILES =
 # rm -rf swig/ddc_swig_wrap.c swig/ddc_swig.py swig/ddc_swig.pyc
 # Plo files in deps directories are automatically included in generated Makefiles for some reason
 # test -z `find . -name ".deps"   -type d` || rm -rf `find . -name ".deps"   -type d`
+# For conditionally included files, e.g. those in usb_util, make clean does not delete 
+# the .lo files.  Hence the instructions here to delete all of them
+# Fails: test: too many arguments:
+# test -z `find . -name "*lo" -type f` || rm `find . -name "*lo" -type f`
+
 clean-local: 
-	@echo "(src/clean-local)"
+	@echo "(src/Makefile) clean-local"
 	find . -name "*plist" -type d  -exec ls -ld {} \;
 	rm -rf `find . -name "*plist" -type d`
 	find . -name ".libs"   -type d  -exec ls -ld {} \;
 	test -z `find . -name "*expand" -type f` || rm `find . -name "*expand" -type f`
+	find . -name "*.lo" -type f -exec ls -l {} \;
+	find . -name "*.lo" -type f -exec rm -f {} \;
 
+
+mostlyclean-local:
+	@echo "(src/Makefile) mostlyclean-local"
+
+distclean-local:
+	@echo "(src/Makefile) distclean-local"
+
+maintainerclean-local:
+	@echo "(src/Makefile) maintainerclean-local"
 
 #
 # Execuatables 
