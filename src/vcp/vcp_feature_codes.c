@@ -566,16 +566,19 @@ Version_Spec get_highest_non_deprecated_version(VCP_Feature_Table_Entry * pentry
    return vspec;
 }
 
+
 // convenience function
 bool is_feature_readable_by_vcp_version(
        VCP_Feature_Table_Entry * pvft_entry,
        Version_Spec vcp_version)
 {
+   bool debug = false;
    bool result = (get_version_sensitive_feature_flags(pvft_entry, vcp_version) & VCP2_READABLE );
-   // DBGMSG("code=0x%02x, vcp_version=%d.%d, returning %d",
-   //        pvft_entry->code, vcp_version.major, vcp_version.minor, result);
+   DBGMSF(debug, "code=0x%02x, vcp_version=%d.%d, returning %d",
+                 pvft_entry->code, vcp_version.major, vcp_version.minor, result);
    return result;
 }
+
 
 // convenience function
 bool is_feature_writable_by_vcp_version(
@@ -585,6 +588,7 @@ bool is_feature_writable_by_vcp_version(
    return (get_version_sensitive_feature_flags(pvft_entry, vcp_version) & VCP2_WRITABLE );
 }
 
+
 // convenience function
 bool is_feature_table_by_vcp_version(
        VCP_Feature_Table_Entry * pvft_entry,
@@ -592,6 +596,7 @@ bool is_feature_table_by_vcp_version(
 {
    return (get_version_sensitive_feature_flags(pvft_entry, vcp_version) & VCP2_TABLE );
 }
+
 
 // Checks if the table/non-table choice for a feature is version sensitive
 
@@ -851,8 +856,11 @@ bool vcp_format_feature_detail(
 static VCP_Feature_Table_Entry * vcp_new_feature_table_entry(Byte id) {
    VCP_Feature_Table_Entry* pentry = calloc(1, sizeof(VCP_Feature_Table_Entry) );
    pentry->code = id;
+   memcpy(pentry->marker, VCP_FEATURE_TABLE_ENTRY_MARKER, 4);
+   // DBGMSG("id=0x%02x.  Returning: %p", id, pentry);
    return pentry;
 }
+
 
 /* Returns an entry in the VCP feature table based on its index in the table.
  *
@@ -882,6 +890,7 @@ VCP_Feature_Table_Entry * vcp_create_dummy_feature_for_hexid(Byte id) {
    // memory leak
    // VCP_Feature_Table_Entry* pentry = calloc(1, sizeof(VCP_Feature_Table_Entry) );
    // pentry->code = id;
+   // DBGMSG("Starting. id=0x%02x", id);
    VCP_Feature_Table_Entry * pentry = vcp_new_feature_table_entry(id);
 
    if (id >= 0xe0) {
@@ -3673,8 +3682,18 @@ int vcp_feature_code_count = sizeof(vcp_code_table)/sizeof(VCP_Feature_Table_Ent
  * not ones in the permanent data structure.
  */
 void free_synthetic_vcp_entry(VCP_Feature_Table_Entry * pfte) {
+   // DBGMSG("pfte = %p", pfte);
    assert(memcmp(pfte->marker, VCP_FEATURE_TABLE_ENTRY_MARKER, 4) == 0);
+   // DBGMSG("code=0x%02x", pfte->code);
+   // report_vcp_feature_table_entry(pfte, 1);
    if (pfte->vcp_global_flags & VCP2_SYNTHETIC) {
+#ifdef NO
+      // if synthetic, strings were not malloed
+      DBGMSG("pfte->desc=%p", pfte->desc);
+      DBGMSG("pfte->v20_name=%p", pfte->v20_name);
+      DBGMSG("pfte->v21_name=%p", pfte->v21_name);
+      DBGMSG("pfte->v30_name=%p", pfte->v30_name);
+      DBGMSG("pfte->v22_name=%p", pfte->v22_name);
       if (pfte->desc)
          free(pfte->desc);
       if (pfte->v20_name)
@@ -3685,6 +3704,7 @@ void free_synthetic_vcp_entry(VCP_Feature_Table_Entry * pfte) {
           free(pfte->v30_name);
       if (pfte->v22_name)
           free(pfte->v22_name);
+#endif
       free(pfte);
    }
 }
