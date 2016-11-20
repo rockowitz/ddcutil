@@ -405,18 +405,17 @@ int main(int argc, char *argv[]) {
                   dh, VCP_SUBSET_SCAN, /* show_unsupported */ true, features_seen);
 
             if (pcaps) {
-               // Compare features_seen to pcaps
+               printf("\n\nComparing declared capabilities to observed features...\n");
                Byte_Bit_Flags features_declared =
                      parsed_capabilities_feature_ids(pcaps, /*readable_only=*/true);
                char * s0 = bbf_to_string(features_declared, NULL, 0);
-               printf("Readable features listed in capabilities: %s", s0);
+               printf("\nReadable features declared in capabilities string: %s", s0);
                free(s0);
 
                Byte_Bit_Flags caps_not_seen = bbf_subtract(features_declared, features_seen);
                Byte_Bit_Flags seen_not_caps = bbf_subtract(features_seen, features_declared);
 
-               printf("\nComparing declared capabilities to observed features...\n");
-               printf("MCCS (VCP) version reported by capabilities: %s\n",
+               printf("\nMCCS (VCP) version reported by capabilities: %s\n",
                         format_vspec(pcaps->parsed_mccs_version));
                printf("MCCS (VCP) version reported by feature 0xDf: %s\n",
                         format_vspec(vspec));
@@ -434,7 +433,7 @@ int main(int argc, char *argv[]) {
                   }
                }
                else
-                  printf("\nAll readable features reported in capabilities were found by scanning.\n");
+                  printf("\nAll readable features declared in capabilities were found by scanning.\n");
 
                if (bbf_count_set(seen_not_caps) > 0) {
                   printf("\nFeatures found by scanning but not declared as capabilities:\n");
@@ -447,7 +446,7 @@ int main(int argc, char *argv[]) {
                   }
                }
                else
-                  printf("\nAll features found by scanning were reported in capabilities.\n");
+                  printf("\nAll features found by scanning were declared in capabilities.\n");
 
                bbf_free(features_declared);
                bbf_free(features_seen);
