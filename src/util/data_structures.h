@@ -53,6 +53,7 @@ Byte_Bit_Flags bbf_create();
 void   bbf_free(Byte_Bit_Flags flags);
 void   bbf_set(Byte_Bit_Flags flags, Byte val);
 bool   bbf_is_set(Byte_Bit_Flags flags, Byte val);
+Byte_Bit_Flags bbf_subtract(Byte_Bit_Flags bbflags1, Byte_Bit_Flags bbflags2);
 char * bbf_repr(Byte_Bit_Flags flags, char * buffer, int buflen);
 int    bbf_count_set(Byte_Bit_Flags flags);  // number of bits set
 char * bbf_to_string(Byte_Bit_Flags flags, char * buffer, int buflen);

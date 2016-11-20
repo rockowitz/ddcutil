@@ -145,10 +145,16 @@ typedef struct {
 // typedef _ByteBitFlags* PByteBitFlags;
 
 
-Byte_Bit_Flags bbf_create() {
+static _ByteBitFlags * bbf_create_internal() {
    _ByteBitFlags* flags = calloc(1, sizeof(_ByteBitFlags));
    memcpy(flags->marker, BYTE_BIT_MARKER, 4);
    return flags;
+}
+
+
+
+Byte_Bit_Flags bbf_create() {
+   return bbf_create_internal();
 }
 
 
@@ -187,6 +193,20 @@ bool bbf_is_set(Byte_Bit_Flags bbflags, Byte val) {
    //        __func__, hexstring(flags->byte,32), val, result);
    return result;
 }
+
+
+Byte_Bit_Flags bbf_subtract(Byte_Bit_Flags bbflags1, Byte_Bit_Flags bbflags2) {
+   BYTE_BIT_UNOPAQUE(flags1, bbflags1);
+   BYTE_BIT_VALIDATE(flags1);
+   BYTE_BIT_UNOPAQUE(flags2, bbflags2);
+   BYTE_BIT_VALIDATE(flags2);
+   _ByteBitFlags *  result = bbf_create();
+   for (int ndx = 0; ndx < BYTE_BIT_BYTE_CT; ndx++) {
+      result->byte[ndx] = flags1->byte[ndx] & ~flags2->byte[ndx];
+   }
+   return result;
+}
+
 
 
 /* Returns a 64 character long hex string representing the data structure.
