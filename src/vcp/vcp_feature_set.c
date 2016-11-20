@@ -46,9 +46,11 @@ struct vcp_feature_set {
  * not ones in the permanent data structure.
  */
 void free_transient_vcp_entry(gpointer ptr) {
-   // free only dynamically created entries, not entries in permanent data structures
+   // DBGMSG("Starting.  ptr=%p", ptr);
+   assert(ptr);
 
    VCP_Feature_Table_Entry * pfte = (VCP_Feature_Table_Entry *) ptr;
+   // DBGMSG("pfte=%p, marker = %.4s   %s", pfte, pfte->marker, hexstring(pfte->marker,4));
    assert(memcmp(pfte->marker, VCP_FEATURE_TABLE_ENTRY_MARKER, 4) == 0);
    if (pfte->vcp_global_flags & VCP2_SYNTHETIC) {
       free_synthetic_vcp_entry(pfte);
