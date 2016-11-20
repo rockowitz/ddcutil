@@ -119,8 +119,12 @@ void report_stats(Stats_Type stats) {
 }
 
 
-bool perform_get_capabilities_by_display_handle(Display_Handle * dh) {
-   bool ok = true;
+// TODO: refactor
+//       originally just displayed capabilities, now returns parsed capabilities as weel
+//       these actions should be separated
+Parsed_Capabilities * perform_get_capabilities_by_display_handle(Display_Handle * dh) {
+   bool debug = false;
+   Parsed_Capabilities * pcap = NULL;
    char * capabilities_string;
    int rc = get_capabilities_string(dh, &capabilities_string);
 
@@ -139,10 +143,11 @@ bool perform_get_capabilities_by_display_handle(Display_Handle * dh) {
                 __func__, display_handle_repr(dh));
          DBGMSG("Unexpected status code: %s", gsc_desc(rc));
       }
-      ok = false;
    }
    else {
       assert(capabilities_string);
+      // pcap is always set, but may be damaged if there was a parsing error
+      pcap = parse_capabilities_string(capabilities_string);
       Output_Level output_level = get_output_level();
       if (output_level <= OL_TERSE) {
          printf("%s capabilities string: %s\n",
@@ -150,17 +155,15 @@ bool perform_get_capabilities_by_display_handle(Display_Handle * dh) {
                capabilities_string);
       }
       else {
-         // pcap is always set, but may be damaged if there was a parsing error
-         Parsed_Capabilities * pcap = parse_capabilities_string(capabilities_string);
          if (dh->io_mode == USB_IO)
             pcap->raw_value_synthesized = true;
          // report_parsed_capabilities(pcap, dh->io_mode);    // io_mode no longer needed
          report_parsed_capabilities(pcap);
-         free_parsed_capabilities(pcap);
+         // free_parsed_capabilities(pcap);
       }
-      ok = true;
    }
-   return ok;
+   DBGMSF(debug, "Returning: %p", pcap);
+   return pcap;
 }
 
 
@@ -371,8 +374,9 @@ int main(int argc, char *argv[]) {
 #endif
       printf("\nDetected displays:\n");
       int display_ct = ddc_report_active_displays(1 /* logical depth */);
-      int dispno;
-      for (dispno=1; dispno <= display_ct; dispno++) {
+      int dispno = 1;
+      // dispno = 2;      // TEMP FOR TESTING
+      for (; dispno <= display_ct; dispno++) {
          printf("\nCapabilities for display %d\n", dispno);
          Display_Identifier * did = create_dispno_display_identifier(dispno);
          Display_Ref * dref = get_display_ref_for_display_identifier(did, true /* emit_error_msg */);
@@ -388,14 +392,69 @@ int main(int argc, char *argv[]) {
          }
          else {
             // not needed, causes confusing messages if get_vcp_version fails but get_capabilities succeeds
-            // Version_Spec vspec = get_vcp_version_by_display_handle(dh);
+            Version_Spec vspec = get_vcp_version_by_display_handle(dh);
             // if (vspec.major < 2) {
             //    printf("VCP (aka MCCS) version for display is less than 2.0. Output may not be accurate.\n");
             // }
-            perform_get_capabilities_by_display_handle(dh);
+            // reports capabilities, and if successful returns Parsed_Capabilities
+            Parsed_Capabilities * pcaps = perform_get_capabilities_by_display_handle(dh);
 
             printf("\n\nScanning all VCP feature codes for display %d\n", dispno);
-            app_show_vcp_subset_values_by_display_handle(dh, VCP_SUBSET_SCAN, true);
+            Byte_Bit_Flags features_seen = bbf_create();
+            app_show_vcp_subset_values_by_display_handle(
+                  dh, VCP_SUBSET_SCAN, /* show_unsupported */ true, features_seen);
+
+            if (pcaps) {
+               // Compare features_seen to pcaps
+               Byte_Bit_Flags features_declared =
+                     parsed_capabilities_feature_ids(pcaps, /*readable_only=*/true);
+               char * s0 = bbf_to_string(features_declared, NULL, 0);
+               printf("Readable features listed in capabilities: %s", s0);
+               free(s0);
+
+               Byte_Bit_Flags caps_not_seen = bbf_subtract(features_declared, features_seen);
+               Byte_Bit_Flags seen_not_caps = bbf_subtract(features_seen, features_declared);
+
+               printf("\nComparing declared capabilities to observed features...\n");
+               printf("MCCS (VCP) version reported by capabilities: %s\n",
+                        format_vspec(pcaps->parsed_mccs_version));
+               printf("MCCS (VCP) version reported by feature 0xDf: %s\n",
+                        format_vspec(vspec));
+               if (!vcp_version_eq(pcaps->parsed_mccs_version, vspec))
+                  printf("Versions do not match!!!\n");
+
+               if (bbf_count_set(caps_not_seen) > 0) {
+                  printf("\nFeatures declared as readable capabilities but not found by scanning:\n");
+                  for (int code = 0; code < 256; code++) {
+                     if (bbf_is_set(caps_not_seen, code)) {
+                        VCP_Feature_Table_Entry * vfte = vcp_find_feature_by_hexid_w_default(code);
+                        char * feature_name = get_version_sensitive_feature_name(vfte, pcaps->parsed_mccs_version);
+                        printf("   Feature x%02x - %s\n", code, feature_name);
+                     }
+                  }
+               }
+               else
+                  printf("\nAll readable features reported in capabilities were found by scanning.\n");
+
+               if (bbf_count_set(seen_not_caps) > 0) {
+                  printf("\nFeatures found by scanning but not declared as capabilities:\n");
+                  for (int code = 0; code < 256; code++) {
+                     if (bbf_is_set(seen_not_caps, code)) {
+                        VCP_Feature_Table_Entry * vfte = vcp_find_feature_by_hexid_w_default(code);
+                        char * feature_name = get_version_sensitive_feature_name(vfte, vspec);
+                        printf("   Feature x%02x - %s\n", code, feature_name);
+                     }
+                  }
+               }
+               else
+                  printf("\nAll features found by scanning were reported in capabilities.\n");
+
+               bbf_free(features_declared);
+               bbf_free(features_seen);
+               bbf_free(caps_not_seen);
+               bbf_free(seen_not_caps);
+               free_parsed_capabilities(pcaps);
+            }
             ddc_close_display(dh);
          }
       }
@@ -433,8 +492,9 @@ int main(int argc, char *argv[]) {
 
             case CMDID_CAPABILITIES:
                {
-                  bool ok = perform_get_capabilities_by_display_handle(dh);
-                  main_rc = (ok) ? EXIT_SUCCESS : EXIT_FAILURE;
+                  Parsed_Capabilities * pcaps = perform_get_capabilities_by_display_handle(dh);
+                  main_rc = (pcaps) ? EXIT_SUCCESS : EXIT_FAILURE;
+                  free(pcaps);
                   break;
                }
 

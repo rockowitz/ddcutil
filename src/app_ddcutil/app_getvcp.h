@@ -46,7 +46,8 @@ Global_Status_Code
 app_show_vcp_subset_values_by_display_handle(
       Display_Handle *   dh,
       VCP_Feature_Subset subset,
-      bool               show_unsupported);
+      bool               show_unsupported,
+      Byte_Bit_Flags     features_seen);
 
 #ifdef OLD
 Global_Status_Code

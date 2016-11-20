@@ -159,6 +159,7 @@ app_show_single_vcp_value_by_feature_id(
  *    dh                display handle
  *    subset_id         feature subset
  *    show_unsupported  report unsupported values
+ *    features_seen     if non-null, collect list of features found
  *
  * Returns:
  *    status code       from show_vcp_values()
@@ -167,12 +168,13 @@ Global_Status_Code
 app_show_vcp_subset_values_by_display_handle(
         Display_Handle *    dh,
         VCP_Feature_Subset  subset_id,
-        bool                show_unsupported)
+        bool                show_unsupported,
+        Byte_Bit_Flags      features_seen)
 {
    // DBGMSG("Starting.  subset=%d   ", subset );
 
    GPtrArray * collector = NULL;
-   return show_vcp_values(dh, subset_id, collector, show_unsupported);
+   return show_vcp_values(dh, subset_id, collector, show_unsupported, features_seen);
 }
 
 
@@ -253,7 +255,8 @@ app_show_feature_set_values_by_display_handle(
       gsc = app_show_vcp_subset_values_by_display_handle(
             dh,
             fsref->subset,
-            show_unsupported);
+            show_unsupported,
+            NULL);
    }
    return gsc;
 }

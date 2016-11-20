@@ -472,7 +472,8 @@ show_feature_set_values(
       Display_Handle *      dh,
       VCP_Feature_Set       feature_set,
       GPtrArray *           collector,     // if null, write to FOUT
-      bool                  force_show_unsupported)
+      bool                  force_show_unsupported,
+      Byte_Value_Array      features_seen)     // if non-null, collect list of features seen
 {
    Global_Status_Code master_status_code = 0;
    bool debug = false;
@@ -524,6 +525,8 @@ show_feature_set_values(
             else
                f0printf(FOUT, "%s\n", formatted_value);
             free(formatted_value);
+            if (features_seen)
+               bbf_set(features_seen, entry->code);  // note that feature was read
          }
          else {
             // or should I check features_ct == 1?
@@ -550,8 +553,9 @@ show_feature_set_values(
  * Arguments:
  *    dh         display handle for open display
  *    subset     feature subset id
- *    collector  accumulates output    // if null, write to stdout
+ *    collector  accumulates output    // if null, write to FOUT
  *    force_show_unsupported
+ *    features_seen   if non-null, collect ids of features that exist
  *
  * Returns:
  *    status code
@@ -561,7 +565,8 @@ show_vcp_values(
         Display_Handle *    dh,
         VCP_Feature_Subset  subset,
         GPtrArray *         collector,    // not used
-        bool                force_show_unsupported)
+        bool                force_show_unsupported,
+        Byte_Bit_Flags      features_seen)
 {
    Global_Status_Code gsc = 0;
    bool debug = false;
@@ -573,7 +578,7 @@ show_vcp_values(
       report_feature_set(feature_set, 0);
 
    gsc = show_feature_set_values(
-            dh, feature_set, collector, force_show_unsupported);
+            dh, feature_set, collector, force_show_unsupported, features_seen);
    free_vcp_feature_set(feature_set);
    DBGMSF(debug, "Done");
    return gsc;

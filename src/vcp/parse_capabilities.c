@@ -37,6 +37,7 @@
 
 #include "vcp/ddc_command_codes.h"
 #include "vcp/parsed_capabilities_feature.h"
+#include "vcp/vcp_feature_codes.h"
 
 #include "vcp/parse_capabilities.h"
 
@@ -476,6 +477,10 @@ Parsed_Capabilities * parse_capabilities(char * buf_start, int buf_len) {
               vcp_features);
 
    DBGMSF(debug, "Returning %p", pcaps);
+   if (pcaps) {
+      DBGMSF(debug, "vcp_features.len = %d", vcp_features->len);
+      DBGMSF(debug, "pcaps->vcp_features.len = %d", pcaps->vcp_features->len);
+   }
    return pcaps;
 }
 
@@ -512,6 +517,37 @@ Parsed_Capabilities* parse_capabilities_buffer(Buffer * capabilities) {
 Parsed_Capabilities* parse_capabilities_string(char * caps) {
     return parse_capabilities(caps, strlen(caps));
 }
+
+
+/* Returns list of feature ids in a Parsed_Capabilities structure.
+ *
+ * Arguments:
+ *   pcaps
+ *
+ * Returns:   Byte_Bit_Flags indicating features found
+ */
+Byte_Bit_Flags parsed_capabilities_feature_ids(Parsed_Capabilities * pcaps, bool readable_only) {
+   assert(pcaps);
+   bool debug = false;
+   DBGMSF(debug, "Starting. readable_only=%s, feature count=%d",
+                 bool_repr(readable_only), pcaps->vcp_features->len);
+   Byte_Bit_Flags flags = bbf_create();
+   for (int ndx = 0; ndx < pcaps->vcp_features->len; ndx++) {
+      Capabilities_Feature_Record * frec = g_ptr_array_index(pcaps->vcp_features, ndx);
+      // DBGMSG("Feature 0x%02x", frec->feature_id);
+
+      if (readable_only) {
+         VCP_Feature_Table_Entry * vfte = vcp_find_feature_by_hexid_w_default(frec->feature_id);
+         if (!is_feature_readable_by_vcp_version(vfte, pcaps->parsed_mccs_version))
+            continue;
+      }
+      bbf_set(flags, frec->feature_id);
+   }
+
+   DBGMSF(debug, "Returning Byte_Bit_Flags: %s", bbf_to_string(flags, NULL, 0));
+   return flags;
+}
+
 
 
 //
