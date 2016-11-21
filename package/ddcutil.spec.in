@@ -153,6 +153,15 @@ License: GPLv2+
 URL: http://github.com/rockowitz/ddctool
 # BuildRequires: gcc  glib2 glib2-devel 
 BuildRequires: gcc  pkgconfig(glib-2.0) i2c-tools libXrandr-devel
+
+
+%if %{defined fedora}
+BuildRequires: python2-devel
+%endif
+%if %{defined suse_version}
+BuildRequires: python-devel
+%endif
+
 # Works on Fedora, fails on OBS with message 
 # "nothing provides libudev-devel, nothing provides or, nothing provides systemd-devel", 
 # whether or not a version is included
