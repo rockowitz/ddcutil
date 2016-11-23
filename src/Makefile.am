@@ -1,6 +1,6 @@
 ## Process this file with automake to produce Makefile.in
 
-SUBDIRS = . swig
+SUBDIRS = . gobject_api swig 
 
 # Is this really necessary?   Don't want to push these files to github.
 # there ought to be a cleaner way
@@ -371,4 +371,4 @@ install-exec-hook:
 
 # These includes are at the Makefile.am level:
 # include make_swig.am
-include make_gobject.am
+# include make_gobject.am

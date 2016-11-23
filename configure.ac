@@ -34,6 +34,7 @@ AC_CONFIG_FILES([
 	Makefile 
 	src/Makefile 
   src/swig/Makefile 
+  src/gobject_api/Makefile 
 	man/Makefile 
 	data/Makefile 
 	package/Makefile 
@@ -404,7 +405,8 @@ dnl Alternative, copied from somewhere
 AC_ARG_ENABLE([python-integration],[AS_HELP_STRING([--enable-python-integration],[install the python bindings in the interpreters site-packages folder])],[enable_python_integration=$enableval],[enable_python_integration=check])
 
 
-
+dnl GObject implementation has been mothballed.  
+dnl TODO: delete or comment out this section
 dnl *** configure option: --enable-gobject-api
 AC_ARG_ENABLE([gobject-api],
               [ AS_HELP_STRING( [--enable-gobject-api=@<:@no/yes@:>@], [Build gobject related files, typelib@<:@default=no@:>@] )],
@@ -415,25 +417,6 @@ AS_IF([test "x$enable_gobject" == "xyes"],
       AC_MSG_NOTICE( [gobject-api... enabled]  ),
       AC_MSG_NOTICE( [gobject-api... disabled] )
      )
-
-dnl dnl *** configure option: --enable-libudev
-dnl AC_ARG_ENABLE([libudev],
-dnl               [ AS_HELP_STRING( [--enable-libudev=@<:@yes/no@:>@], [Support USB connected monitors@<:@default=yes@:>@] )],
-dnl               [enable_libudev=${enableval}],
-dnl               [enable_libudev=yes] )
-dnl AM_CONDITIONAL([ENABLE_LIBUDEV_COND], [test "x$enable_libudev" == "xyes"] )
-dnl AS_IF([test "x$enable_libudev" == "xyes"],
-dnl       AC_SUBST([ENABLE_LIBUDEV_FLAG], [1] ),
-dnl       AC_SUBST([ENABLE_LIBUDEV_FLAG], [0]  )
-dnl      )
-dnl dnl Define USE_LIBUDEV in config.h:
-dnl AS_IF([test "x$enable_libudev" == "xyes"],
-dnl       AC_DEFINE_UNQUOTED( [USE_LIBUDEV], [1], [If defined, use libudev.]),
-dnl      [])
-dnl AS_IF([test "x$enable_libudev" == "xyes"],
-dnl       AC_MSG_NOTICE( [libudev... enabled]  ),
-dnl      AC_MSG_NOTICE( [libudev... disabled] )
-dnl      )
 
 dnl *** configure option: --enable-usb
 AC_ARG_ENABLE([usb],

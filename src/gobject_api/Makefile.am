@@ -1,62 +1,80 @@
-# File to included in src/Makefile.am for GObject introspection
+# Makefile for GObject introspection
+# Adapted from that for colord by Richard Hughes
 
-CLEANFILES += \
-gobject_api/*expand
+CLEANFILES = \
+*expand
+
+clean-local:
+	echo "(src/gobject_api/Makefile) clean-local"
 
 
 if ENABLE_SHARED_LIB_COND
 if ENABLE_GOBJECT_COND
 
-bin_PROGRAMS += \
-goclient
 
+# The library that exposes the ddcutil GObject API
+lib_LTLIBRARIES = libddcgobj.la
 
 # Files implementing GObject API for introspection: 
 gobject_api_sources = \
-  gobject_api/ddcg_cont_response.c \
-  gobject_api/ddcg_context.c \
-  gobject_api/ddcg_display_handle.c \
-  gobject_api/ddcg_display_identifier.c \
-  gobject_api/ddcg_display_ref.c
+  ddcg_cont_response.c \
+  ddcg_context.c \
+  ddcg_display_handle.c \
+  ddcg_display_identifier.c \
+  ddcg_display_ref.c
 
 # if use ddcg_gobjects.h to pull in all the .h files, get strange errors re unexpected semicolons
 # gobject_api_headers = \
 # gobject_api/ddcg_gobjects.h
  
 gobject_api_headers = \
-  gobject_api/ddcg_cont_response.h \
-  gobject_api/ddcg_context.h \
-  gobject_api/ddcg_display_handle.h \
-  gobject_api/ddcg_display_identifier.h \
-  gobject_api/ddcg_display_ref.h \
-  gobject_api/ddcg_types.h
+  ddcg_cont_response.h \
+  ddcg_context.h \
+  ddcg_display_handle.h \
+  ddcg_display_identifier.h \
+  ddcg_display_ref.h \
+  ddcg_types.h
 
-
-libddcutil_la_SOURCES += $(gobject_api_sources)
+libddcgobj_la_SOURCES = $(gobject_api_sources)
 
 # files only in goclient:
+# Normally, sample code would be in a separate directory. 
+# gomain.c has been moved here to consolidate the mothballed GObject introspection code.
 goclient_SOURCES = \
-  sample_clients/gomain.c
+  gomain.c
 
 #
 # C Pre-Processor Flags:
 #
-AM_CPPFLAGS += \
+AM_CPPFLAGS = \
+  -I..        \
   $(GOBJECT_CFLAGS) 
 
-#
-# Compiler flags
-#
-goclient_CFLAGS       = $(AM_CFLAGS)
-
-
-libddcutil_la_LIBADD +=  \
+# Be careful about library ordering
+# A library must be listed AFTER any libraries that depend on it.
+libddcgobj_la_LIBADD =  \
+    ../libddcutil.la    \
 	$(GOBJECT_LIBS) 
 
+libddcgobj_la_LDFLAGS = -export_symbols-regex '^ddc[tgs]_[^_]'
+# libddcgobj_la_LDFLAGS += -version-info '0:1:1'
+libddcgobj_la_LDFLAGS += -export-dynamic 
 
+
+# 
+# Sample client program.  
+# 
+bin_PROGRAMS = \
+goclient
+
+# Compiler flags
+goclient_CFLAGS       = $(AM_CFLAGS)
+
+# libddcutil is in the list because goclient uses function dbgtrc() 
 goclient_LDADD = \
-  libddcutil.la \
-    $(GOBJECT_LIBS)
+ 	libddcgobj.la \
+	../libddcutil.la \
+ 	$(GOBJECT_LIBS)
 
 
 
@@ -143,8 +161,7 @@ goclient_LDADD = \
       $(gobject_api_headers)
 
    # add the target:
-   ddcutil-1.0.gir: libddcutil.la
-   # Colord-1.0.gir: libcolord.la libcolordprivate.la
+   ddcutil-1.0.gir: libddcgobj.la ../libddcutil.la
 
    ddcutil_1_0_gir_INCLUDES = GObject-2.0
    ddcutil_1_0_gir_CFLAGS = $(AM_CPPFLAGS)
@@ -166,16 +183,10 @@ goclient_LDADD = \
 
   
    ddcutil_1_0_gir_EXPORT_PACKAGES  = ddcutil
-   ddcutil_1_0_gir_LIBS             = libddcutil.la
+   ddcutil_1_0_gir_LIBS             = ../libddcutil.la libddcgobj.la
    ddcutil_1_0_gir_FILES            = $(introspection_sources)
-   # Colord_1_0_gir_EXPORT_PACKAGES = colord
-   # Colord_1_0_gir_LIBS            = libcolord.la libcolordprivate.la
-   # Colord_1_0_gir_FILES           = $(introspection_sources)
-
 
    INTROSPECTION_GIRS += ddcutil-1.0.gir
-   # INTROSPECTION_GIRS += Colord-1.0.gir
-
 
    girdir = $(datadir)/gir-1.0
    # dist_gir_DATA=$(INTROSPECTION_GIRS)
