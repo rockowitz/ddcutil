@@ -97,12 +97,12 @@ typedef enum {
 } Vcp_Spec_Ids;
 
 
-// set these bits in a flag to indicate which MCCS versions the feature is valid for
+// Set these bits in a flag byte to indicate the MCCS versions for which a feature is valid
 #define MCCS_V10          0x80
 #define MCCS_V20          0x40
 #define MCCS_V21          0x20
-#define MCCS_V30          0x01
-#define MCCS_V22          0x80
+#define MCCS_V30          0x10
+#define MCCS_V22          0x08
 
 
 typedef

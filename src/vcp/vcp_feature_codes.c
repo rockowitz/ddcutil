@@ -145,6 +145,14 @@ void vcp_list_feature_codes(FILE * fh) {
 }
 
 
+/* Returns a byte of flags indicating those MCCS versions for which the
+ * specified VCP feature is defined.
+ *
+ * Arguments:
+ *   pentry      pointer to VCP_Feature_Table_Entry for VCP feature
+ *
+ * Returns:      byte of flags
+ */
 Byte valid_versions(VCP_Feature_Table_Entry * pentry) {
    Byte result = 0x00;
 
@@ -178,7 +186,23 @@ Byte valid_versions(VCP_Feature_Table_Entry * pentry) {
 }
 
 
-char * valid_version_names_r(Byte valid_version_flags, char * version_name_buf, int bufsz) {
+/* Given a byte of flags indicating MCCS versions, return a string a
+ * comma delimited list of MCCS version names.
+ *
+ * Arguments:
+ *   valid_version_flags
+ *   version_name_buf      buffer in which to return string
+ *   bufsz                 buffer size
+ *
+ * Returns:                version_name_buf
+ *
+ * Note: MCCS 1.0 is not reported
+ */
+static char * valid_version_names_r(
+      Byte valid_version_flags,
+      char *             version_name_buf,
+      int                bufsz)
+{
    assert(bufsz >= (4*5));        // max 4 version names, 5 chars/name
    *version_name_buf = '\0';
 
@@ -204,6 +228,19 @@ char * valid_version_names_r(Byte valid_version_flags, char * version_name_buf, 
 }
 
 
+/* Appends a string to an existing string in a buffer.
+ * If the length of the existing string is greater than 0,
+ * append ", " first.
+ *
+ * Arguments:
+ *   val       value to append
+ *   buf       start of buffer
+ *   bufsz     buffer size
+ *
+ * Returns:    buf
+ *
+ * Note: No check is made that buf contains a valid string.
+ */
 char * str_comma_cat_r(char * val, char * buf, int bufsz) {
    int cursz = strlen(buf);
    assert(cursz + 2 + strlen(val) + 1 <= bufsz);

@@ -67,7 +67,7 @@ Version_Spec get_vcp_version_by_display_handle(Display_Handle * dh) {
    // TMI
    // DBGMSF(debug, "Starting. dh=%p, dh->vcp_version =  %d.%d",
    //               dh, dh->vcp_version.major, dh->vcp_version.minor);
-   if (is_vcp_version_unqueried(dh->vcp_version)) {
+   if (vcp_version_is_unqueried(dh->vcp_version)) {
       if (debug) {
          DBGMSG("Starting.  vcp_version not set");
          report_display_handle(dh, /*msg=*/ NULL, 1);
@@ -137,7 +137,7 @@ Version_Spec get_vcp_version_by_display_ref(Display_Ref * dref) {
    DBGMSF(debug, "Starting. dref=%p, dref->vcp_version =  %d.%d\n",
                  dref, dref->vcp_version.major, dref->vcp_version.minor);
 
-   if (is_vcp_version_unqueried(dref->vcp_version)) {
+   if (vcp_version_is_unqueried(dref->vcp_version)) {
       Display_Handle * dh = NULL;
       // no need to check return code since aborting
       ddc_open_display(dref, CALLOPT_ERR_MSG | CALLOPT_ERR_ABORT, &dh);
