@@ -30,6 +30,7 @@
 #include <time.h>
 
 #include "util/file_util.h"
+#include "util/report_util.h"
 #include "util/string_util.h"
 
 #include "base/ddc_errno.h"
@@ -48,6 +49,12 @@ FILE * FERR = NULL;
 
 bool dbgtrc_show_time = false;    // include elapsed time in debug/trace output
 
+#ifdef OVERKILL
+#define FOUT_STACK_SIZE 8
+
+static FILE* fout_stack[FOUT_STACK_SIZE];
+static int   fout_stack_pos = -1;
+#endif
 
 //
 // Global SDTOUT and STDERR redirection, for controlling message output in API
@@ -58,13 +65,61 @@ void init_msg_control() {
    FERR = stderr;
 }
 
+
+// issue: how to specify that output should be discarded vs reset to stdout?
+// issue will resetting report dest cause conflicts?
+// To reset to STDOUT, use constant stdout in stdio.h  - NO - screws up rpt_util
+// problem:
 void set_fout(FILE * fout) {
+   bool debug = true;
+   DBGMSF(debug, "fout = %p", fout);
    FOUT = fout;
+   rpt_change_output_dest(fout);
+}
+
+void set_fout_to_default() {
+   FOUT = stdout;
+   rpt_change_output_dest(stdout);
 }
 
 void set_ferr(FILE * ferr) {
    FERR = ferr;
 }
+
+void set_ferr_to_default() {
+   FERR = stderr;
+   rpt_change_output_dest(stderr);
+}
+
+
+#ifdef OVERKILL
+
+// Functions that allow for temporarily changing the output destination.
+
+
+void push_fout(FILE* new_dest) {
+   assert(fout_stack_pos < FOUT_STACK_SIZE-1);
+   fout_stack[++fout_stack_pos] = new_dest;
+}
+
+
+void pop_fout() {
+   if (fout_stack_pos >= 0)
+      fout_stack_pos--;
+}
+
+
+void reset_fout_stack() {
+   fout_stack_pos = 0;
+}
+
+
+FILE * cur_fout() {
+   // special handling for unpushed case because can't statically initialize
+   // output_dest_stack[0] to stdout
+   return (fout_stack_pos < 0) ? stdout : fout_stack[fout_stack_pos];
+}
+#endif
 
 
 //
