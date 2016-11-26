@@ -70,10 +70,10 @@ static bool is_known_vcp_spec(Version_Spec vspec) {
 // Both v3.0 and v2.2 are successors to v2.1.
 //
 //                      -- v3.0
-//                     /
+//                     |
 //   v1.0---v2.0---- v2.1
-//                    \
-//                     -- v2.2
+//                     |
+//                      -- v2.2
 
 
 /* Compares two version numbers.
