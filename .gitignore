@@ -71,6 +71,7 @@ junk*
 *.typelib
 *.gir
 src/goclient
+src/gobject_api/goclient
 playdir/
 call_egypt
 .settings/
@@ -122,3 +123,9 @@ cov-int/
 ddcutil-coverity.tgz
 *.diff
 fsctl
+docs/doxygen/doxyfile
+docs/doxygen/doxygen.stamp
+docs/doxygen/doxywarn.txt
+docs/doxygen/html/
+docs/doxygen/latex/
+
