@@ -37,10 +37,12 @@ extern "C"
 #endif
 
 
-/** @file ddct_public.h
+/** @file ddcutil_c_api.h
  *  @brief ddcutil public C API
  *
- *  Function names in public API begin with "ddca_"
+ *  Function names in the public C API begin with "ddca_"
+ *
+ *  Function ddca_init() must be called before all others.
  */
 
 //
@@ -113,13 +115,40 @@ char * ddca_status_code_desc(DDCA_Status status_code);
 // Global Settings
 
 // Get and set timeouts
-typedef enum{DDCA_TIMEOUT_STANDARD, DDCA_TIMEOUT_TABLE_RETRY} DDCA_Timeout_Type;
+typedef enum{
+   DDCA_TIMEOUT_STANDARD,      /**< Normal retry interval */
+   DDCA_TIMEOUT_TABLE_RETRY    /**< Special timeout for Table reads and writes */
+} DDCA_Timeout_Type;
+
+/** Gets the I2C timeout in milliseconds for the specified timeout class.
+ * @param timeout_type timeout type
+ * @return timeout in milliseconds
+ */
 int  ddca_get_timeout_millis(DDCA_Timeout_Type timeout_type);
+
+/** Sets the I2C timeout in milliseconds for the specified timeout class
+ * @param timeout_type  timeout class
+ * @param millisec      timeout to set, in milliseconds
+ */
 void ddca_set_timeout_millis(DDCA_Timeout_Type timeout_type, int millisec);
 
 // Get and set max retries
-typedef enum{DDCA_WRITE_ONLY_TRIES, DDCA_WRITE_READ_TRIES, DDCA_MULTI_PART_TRIES} DDCA_Retry_Type;
+typedef enum{
+   DDCA_WRITE_ONLY_TRIES,     /**< Maximum write-only operation tries */
+   DDCA_WRITE_READ_TRIES,     /**< Maximum read-write operation tries */
+   DDCA_MULTI_PART_TRIES      /**< Maximum multi-part operation tries */
+} DDCA_Retry_Type;
+
+/** Gets the maximum number of I2C retries the specified operation type.
+ * @param  retry_type   I2C operation type
+ * @return maximum number of retries
+ */
 int         ddca_get_max_tries(DDCA_Retry_Type retry_type);
+
+/** Sets the maximum number of I2C retries for the specified operation type
+ * @param retry_type    I2C operation type
+ * @param max_tries     maximum count to set
+ */
 DDCA_Status ddca_set_max_tries(DDCA_Retry_Type retry_type, int max_tries);
 
 
@@ -261,7 +290,9 @@ DDCA_Status ddca_repr_display_identifier(DDCA_Display_Identifier ddca_did, char*
 // Display References
 //
 
+/** Opaque handle to display reference */
 typedef void * DDCT_Display_Ref;
+
 DDCA_Status ddca_create_display_ref(DDCA_Display_Identifier did, DDCT_Display_Ref* ddct_dref);
 DDCA_Status ddca_free_display_ref(DDCT_Display_Ref ddct_ref);
 DDCA_Status ddca_repr_display_ref(DDCT_Display_Ref ddct_dref, char** repr);
