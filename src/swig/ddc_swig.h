@@ -29,24 +29,56 @@
 #include "libmain/ddct_public.h"
 
 
+void ddcs_init(void);
+
+
 //
 // Convert ddcutil status codes to Python exceptions
 //
 
 void   clear_exception();
 char * check_exception();
+bool   check_exception2();
+
+
+
+
+
+
+
+//  Build Information
+
+const char * ddcs_ddcutil_version_string();
+
+
+typedef Byte FlagsByte;
+
+bool ddcs_built_with_adl(void);
+bool ddcs_built_with_usb(void);
+
+
+// #define DDCS_BUILT_WITH_ADL     DDCA_BUILT_WITH_ADL
+// #define DDCS_BUILT_WITH_USB     DDCA_BUILT_WITH_USB
+// #define DDCS_BUILT_WITH_FAILSIM DDCA_BUILT_WITH_FAILSIM
+
+typedef enum {DDCA_HAS_ADL      = DDCA_BUILT_WITH_ADL,
+              DDCA_HAS_USB      = DDCA_BUILT_WITH_USB,
+              DDCA_HAS_FAILSIM  = DDCA_BUILT_WITH_FAILSIM} DDCS_Build_Flags;
+FlagsByte ddcs_get_build_options(void);
 
 
 //
 // Global Settings
 //
 
-const char * ddcutil_version(void);
-bool ddcs_built_with_adl(void);
 
 
 // void ddc_set_fout(PyFileObject *fpy);
-void ddc_set_fout(void *fpy);
+void ddcs_set_fout(FILE * fout);
+// void ddcs_set_fout(void * fpy);
+
+void save_current_python_fout(PyFileObject * pfy);
+PyFileObject * get_current_python_fout();
 
 //
 // Reports
@@ -72,7 +104,7 @@ typedef DDCT_MCCS_Version_Spec DDCS_MCCS_Version_Spec;
 
 unsigned long ddcs_get_feature_info_by_vcp_version(
                DDCS_VCP_Feature_Code    feature_code,
-               DDCS_MCCS_Version_Spec   vspec);
+               DDCA_MCCS_Version_Id     version_id);
 char *        ddcs_get_feature_name(DDCS_VCP_Feature_Code feature_code);
 
 
@@ -93,7 +125,8 @@ DDCS_Display_Identifier_p ddcs_create_model_sn_display_identifier(
                const char * model,
                const char * sn);
 DDCS_Display_Identifier_p ddcs_create_edid_display_identifier(
-               const Byte * edid);
+               const Byte * byte_buffer,
+               int bytect);
 DDCS_Display_Identifier_p ddcs_create_usb_display_identifier(
                int bus,
                int device);

@@ -27,6 +27,8 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "base/core.h"
+
 #include "swig/ddc_swig.h"
 
 
@@ -37,7 +39,7 @@
 #define ERROR_CHECK(impl) \
    do { \
       clear_exception();        \
-      DDCT_Status rc = impl;    \
+      DDCA_Status rc = impl;    \
       if (rc != 0)              \
          throw_exception_from_status_code(rc); \
    } while(0);
@@ -47,49 +49,109 @@
 // Convert ddcutil status codes to exceptions
 //
 
-static DDCT_Status error_status = 0;
+static DDCA_Status ddcutil_error_status = 0;
 static char error_msg[256];
+static PyObject * PyExc_DDCUtilError = NULL;
+
 
 void clear_exception() {
-   error_status = 0;
+   ddcutil_error_status = 0;
 }
 
-static void throw_exception_from_status_code(DDCT_Status rc) {
-   error_status = rc;
+static void throw_exception_from_status_code(DDCA_Status rc) {
+   ddcutil_error_status = rc;
    snprintf(error_msg, sizeof(error_msg),
             "%s (%d): %s",
-            ddct_status_code_name(rc), rc, ddct_status_code_desc(rc)
+            ddca_status_code_name(rc), rc, ddca_status_code_desc(rc)
            );
 }
 
+
+// Called from %exception handler in ddc_swig.i
 char * check_exception() {
    char * result = NULL;
-   if (error_status)
+   if (ddcutil_error_status)
       result = error_msg;
    return result;
 }
+
+
+bool check_exception2() {
+   bool debug = true;
+    bool result = false;
+    if (ddcutil_error_status) {
+       PyErr_SetString( PyExc_RuntimeError, error_msg);
+       // PyErr_SetString( PyExc_DDCUtilError, emsg);   // future
+       DBGMSF(debug, "throwing exception\n");
+       result = true;
+    }
+   return result;
+}
+
 
 
 //
 // General
 //
 
-const char * ddcutil_version(void) {
-   return ddct_ddcutil_version_string();
+
+
+
+void ddcs_init(void) {
+   ddca_init();
+   PyExc_DDCUtilError = PyErr_NewException(
+                            "ddc_swig.PyExc_DDCUtilError",
+                            NULL,                   // PyObject* base
+                            NULL);                  // PyObject* dict
+   assert(PyExc_DDCUtilError);
+}
+
+
+const char * ddcs_ddcutil_version_string(void) {
+   return ddca_ddcutil_version_string();
 }
 
 bool ddcs_built_with_adl(void) {
-   return ddct_built_with_adl();
+   return ddca_built_with_adl();
+}
+
+bool ddcs_built_with_usb(void) {
+   return ddca_built_with_usb();
+}
+
+FlagsByte ddcs_get_build_options(void) {
+   unsigned long feature_bits = ddca_get_build_options();
+   return feature_bits;
 }
 
 
-// #ifdef FUTURE
-void ddc_set_fout( /* PyFileObject */ void *fpy) {
+
+#ifdef NO
+void ddcs_set_fout(void * fpy) {
    printf("(%s) fpy = %p\n", __func__, fpy);
    int is_pyfile = PyFile_Check(fpy);
    printf("(%s) is_pyfile=%d\n", __func__, is_pyfile);
+   FILE * extracted = PyFile_AsFile((PyObject *)fpy);
+   ddca_set_fout(extracted);
 }
-// #endif
+#endif
+void ddcs_set_fout(FILE * f) {
+   // DBGMSG("f = %p", f);
+   ddca_set_fout(f);
+}
+
+static PyFileObject * current_python_fout;
+
+void save_current_python_fout(PyFileObject * pfy) {
+   DBGMSG("pfy = %p", pfy);
+   current_python_fout = pfy;
+}
+
+PyFileObject * get_current_python_fout() {
+   return current_python_fout;
+}
+
+
 
 //
 // Reports
@@ -97,7 +159,7 @@ void ddc_set_fout( /* PyFileObject */ void *fpy) {
 
 int ddcs_report_active_displays(int depth) {
    clear_exception();
-   return ddct_report_active_displays(depth);
+   return ddca_report_active_displays(depth);
 }
 
 
@@ -107,15 +169,16 @@ int ddcs_report_active_displays(int depth) {
 
 unsigned long ddcs_get_feature_info_by_vcp_version(
                DDCS_VCP_Feature_Code    feature_code,
-               DDCS_MCCS_Version_Spec   vspec)
+               DDCA_MCCS_Version_Id     version_id)
+  //             DDCS_MCCS_Version_Spec   vspec)
 {
    unsigned long result = 0;
-   ERROR_CHECK( ddct_get_feature_info_by_vcp_version(feature_code, vspec, &result) );
+   ERROR_CHECK( ddca_get_feature_info_by_vcp_version(feature_code, version_id, &result) );
    return result;
 }
 
 char *      ddcs_get_feature_name(DDCS_VCP_Feature_Code feature_code) {
-   return ddct_get_feature_name(feature_code);
+   return ddca_get_feature_name(feature_code);
 }
 
 
@@ -125,8 +188,8 @@ char *      ddcs_get_feature_name(DDCS_VCP_Feature_Code feature_code) {
 
 DDCS_Display_Identifier_p
 ddcs_create_dispno_display_identifier(int dispno){
-   DDCT_Display_Identifier pdid = NULL;
-   DDCT_Status rc = ddct_create_dispno_display_identifier(dispno, &pdid);
+   DDCA_Display_Identifier pdid = NULL;
+   DDCA_Status rc = ddca_create_dispno_display_identifier(dispno, &pdid);
    clear_exception();
    if (rc != 0)
       throw_exception_from_status_code(rc);
@@ -137,43 +200,46 @@ DDCS_Display_Identifier_p ddcs_create_adlno_display_identifier(
                int iAdapterIndex,
                int iDisplayIndex)
 {
-   DDCT_Display_Identifier pdid = NULL;
-   ERROR_CHECK( ddct_create_adlno_display_identifier(iAdapterIndex, iDisplayIndex, &pdid) );
+   DDCA_Display_Identifier pdid = NULL;
+   ERROR_CHECK( ddca_create_adlno_display_identifier(iAdapterIndex, iDisplayIndex, &pdid) );
    return pdid;
 }
 
 DDCS_Display_Identifier_p
 ddcs_create_busno_display_identifier(int busno)
 {
-   DDCT_Display_Identifier pdid = NULL;
-   ERROR_CHECK( ddct_create_busno_display_identifier(busno, &pdid) );
+   DDCA_Display_Identifier pdid = NULL;
+   ERROR_CHECK( ddca_create_busno_display_identifier(busno, &pdid) );
    return pdid;
 }
 
 DDCS_Display_Identifier_p
 ddcs_create_model_sn_display_identifier(const char * model, const char * sn)
 {
-   DDCT_Display_Identifier pdid = NULL;
-   ERROR_CHECK( ddct_create_model_sn_display_identifier(model, sn, &pdid) );
+   DDCA_Display_Identifier pdid = NULL;
+   DBGMSG("model=%s, sn=%s", model, sn);
+   ERROR_CHECK( ddca_create_model_sn_display_identifier(model, sn, &pdid) );
    return pdid;
 }
 
-DDCS_Display_Identifier_p ddcs_create_edid_display_identifier(const Byte * edid)
+DDCS_Display_Identifier_p ddcs_create_edid_display_identifier(const Byte * edid, int bytect)
 {
-   DDCT_Display_Identifier pdid = NULL;
+   DDCA_Display_Identifier pdid = NULL;
+   DBGMSG("edid addr = %p, bytect = %d", edid, bytect);
+   ERROR_CHECK( ddca_create_edid_display_identifier(edid, &pdid) );
    return pdid;
 }
 
 DDCS_Display_Identifier_p ddcs_create_usb_display_identifier(int bus,int device)
 {
-   DDCT_Display_Identifier pdid = NULL;
-   ERROR_CHECK( ddct_create_usb_display_identifier(bus, device, &pdid) );
+   DDCA_Display_Identifier pdid = NULL;
+   ERROR_CHECK( ddca_create_usb_display_identifier(bus, device, &pdid) );
    return pdid;
 }
 
 void ddcs_free_display_identifier(DDCS_Display_Identifier_p ddcs_did){
    clear_exception();
-   DDCT_Status rc = ddct_free_display_identifier(ddcs_did);
+   DDCA_Status rc = ddca_free_display_identifier(ddcs_did);
    if (rc != 0)
       throw_exception_from_status_code(rc);
 }
@@ -181,7 +247,7 @@ void ddcs_free_display_identifier(DDCS_Display_Identifier_p ddcs_did){
 char * ddcs_repr_display_identifier(DDCS_Display_Identifier_p ddcs_did){
    clear_exception();
    char * result = NULL;
-   DDCT_Status  rc = ddct_repr_display_identifier(ddcs_did, &result);
+   DDCA_Status  rc = ddca_repr_display_identifier(ddcs_did, &result);
    if (rc != 0)
       throw_exception_from_status_code(rc);
    return result;
@@ -194,7 +260,7 @@ char * ddcs_repr_display_identifier(DDCS_Display_Identifier_p ddcs_did){
 
 DDCS_Display_Ref_p ddcs_get_display_ref(DDCS_Display_Identifier_p did){
    DDCS_Display_Ref_p result = NULL;
-   DDCT_Status rc = ddct_get_display_ref(did, &result);
+   DDCA_Status rc = ddca_create_display_ref(did, &result);
    clear_exception();
    if (rc != 0)
       throw_exception_from_status_code(rc);
@@ -203,7 +269,7 @@ DDCS_Display_Ref_p ddcs_get_display_ref(DDCS_Display_Identifier_p did){
 
 void ddcs_free_display_ref(DDCS_Display_Ref_p dref) {
    clear_exception();
-   DDCT_Status rc = ddct_free_display_ref(dref);
+   DDCA_Status rc = ddca_free_display_ref(dref);
    if (rc != 0)
       throw_exception_from_status_code(rc);
 }
@@ -211,7 +277,7 @@ void ddcs_free_display_ref(DDCS_Display_Ref_p dref) {
 char *  ddcs_repr_display_ref(DDCS_Display_Ref_p dref) {
    clear_exception();
    char * result = NULL;
-   DDCT_Status  rc = ddct_repr_display_ref(dref, &result);
+   DDCA_Status  rc = ddca_repr_display_ref(dref, &result);
    if (rc != 0)
       throw_exception_from_status_code(rc);
    return result;
@@ -229,7 +295,7 @@ void        ddcs_report_display_ref(DDCS_Display_Ref_p dref, int depth) {
 
 DDCS_Display_Handle_p ddcs_open_display(DDCS_Display_Ref_p dref) {
    DDCS_Display_Handle_p result = NULL;
-   DDCT_Status rc = ddct_open_display(dref, &result);
+   DDCA_Status rc = ddct_open_display(dref, &result);
    clear_exception();
    if (rc != 0)
       throw_exception_from_status_code(rc);
@@ -238,7 +304,7 @@ DDCS_Display_Handle_p ddcs_open_display(DDCS_Display_Ref_p dref) {
 
 void ddcs_close_display(DDCS_Display_Handle_p dh) {
    clear_exception();
-   DDCT_Status rc = ddct_close_display(dh);
+   DDCA_Status rc = ddct_close_display(dh);
    if (rc != 0)
       throw_exception_from_status_code(rc);
 }
@@ -246,7 +312,7 @@ void ddcs_close_display(DDCS_Display_Handle_p dh) {
 char * ddcs_repr_display_handle(DDCS_Display_Handle_p dh) {
    clear_exception();
    char * result = NULL;
-   DDCT_Status  rc = ddct_repr_display_handle(dh, &result);
+   DDCA_Status  rc = ddct_repr_display_handle(dh, &result);
    if (rc != 0)
       throw_exception_from_status_code(rc);
    return result;
@@ -269,7 +335,7 @@ unsigned long ddcs_get_feature_info_by_display(
                DDCS_VCP_Feature_Code    feature_code)
 {
    unsigned long result = 0;
-   ERROR_CHECK( ddct_get_feature_info_by_display(dh, feature_code, &result) );
+   ERROR_CHECK( ddca_get_feature_info_by_display(dh, feature_code, &result) );
    return result;
 }
 
@@ -281,7 +347,7 @@ unsigned long ddcs_get_feature_info_by_display(
 char * ddcs_get_capabilities_string(DDCS_Display_Handle_p dh){
    clear_exception();
    char * result = NULL;
-   DDCT_Status  rc = ddct_get_capabilities_string(dh, &result);
+   DDCA_Status  rc = ddct_get_capabilities_string(dh, &result);
    if (rc != 0)
       throw_exception_from_status_code(rc);
    return result;
@@ -298,7 +364,7 @@ DDCS_Non_Table_Value_Response ddcs_get_nontable_vcp_value(
 
    clear_exception();
    DDCT_Non_Table_Value_Response resp = {0};
-   DDCT_Status  rc = ddct_get_nontable_vcp_value(dh, feature_code, &resp);
+   DDCA_Status  rc = ddct_get_nontable_vcp_value(dh, feature_code, &resp);
    if (rc != 0)
       throw_exception_from_status_code(rc);
    DDCS_Non_Table_Value_Response result;
@@ -313,7 +379,7 @@ void ddcs_set_nontable_vcp_value(
                int                  new_value)
 {
    clear_exception();
-   DDCT_Status  rc = ddct_set_continuous_vcp_value(dh, feature_code, new_value);
+   DDCA_Status  rc = ddct_set_continuous_vcp_value(dh, feature_code, new_value);
    if (rc != 0)
       throw_exception_from_status_code(rc);
 }
@@ -322,7 +388,7 @@ void ddcs_set_nontable_vcp_value(
 char * ddcs_get_profile_related_values(DDCS_Display_Handle_p dh){
    clear_exception();
    char * result = NULL;
-   DDCT_Status  rc = ddct_get_profile_related_values(dh, &result);
+   DDCA_Status  rc = ddct_get_profile_related_values(dh, &result);
    if (rc != 0)
       throw_exception_from_status_code(rc);
    return result;
@@ -330,7 +396,7 @@ char * ddcs_get_profile_related_values(DDCS_Display_Handle_p dh){
 
 void ddcs_set_profile_related_values(char * profile_values_string) {
    clear_exception();
-   DDCT_Status  rc = ddct_set_profile_related_values(profile_values_string);
+   DDCA_Status  rc = ddct_set_profile_related_values(profile_values_string);
    if (rc != 0)
       throw_exception_from_status_code(rc);
 }
