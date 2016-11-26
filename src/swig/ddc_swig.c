@@ -295,7 +295,7 @@ void        ddcs_report_display_ref(DDCS_Display_Ref_p dref, int depth) {
 
 DDCS_Display_Handle_p ddcs_open_display(DDCS_Display_Ref_p dref) {
    DDCS_Display_Handle_p result = NULL;
-   DDCA_Status rc = ddct_open_display(dref, &result);
+   DDCA_Status rc = ddca_open_display(dref, &result);
    clear_exception();
    if (rc != 0)
       throw_exception_from_status_code(rc);
@@ -304,7 +304,7 @@ DDCS_Display_Handle_p ddcs_open_display(DDCS_Display_Ref_p dref) {
 
 void ddcs_close_display(DDCS_Display_Handle_p dh) {
    clear_exception();
-   DDCA_Status rc = ddct_close_display(dh);
+   DDCA_Status rc = ddca_close_display(dh);
    if (rc != 0)
       throw_exception_from_status_code(rc);
 }
@@ -312,7 +312,7 @@ void ddcs_close_display(DDCS_Display_Handle_p dh) {
 char * ddcs_repr_display_handle(DDCS_Display_Handle_p dh) {
    clear_exception();
    char * result = NULL;
-   DDCA_Status  rc = ddct_repr_display_handle(dh, &result);
+   DDCA_Status  rc = ddca_repr_display_handle(dh, &result);
    if (rc != 0)
       throw_exception_from_status_code(rc);
    return result;

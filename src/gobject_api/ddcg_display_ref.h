@@ -60,14 +60,14 @@ ddcg_display_ref_report(
       DdcgDisplayRef *        ddcg_dref,
       int                     depth);
 
-DDCT_Display_Ref
+DDCA_Display_Ref
 _ddcg_display_ref_get_ddct_object(
       DdcgDisplayRef *        ddcg_dref);
 
 void
 _ddcg_display_ref_set_ddct_object(
       DdcgDisplayRef *        ddcg_dref,
-      DDCT_Display_Ref        ddct_dref);
+      DDCA_Display_Ref        ddct_dref);
 
 G_END_DECLS
 

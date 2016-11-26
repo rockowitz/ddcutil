@@ -113,7 +113,7 @@ ddcg_context_create_display_ref(
    DDCA_Display_Identifier ddct_did = NULL;   // extract from DdcgDisplayIdentifier
    ddct_did = _ddcg_display_identifier_get_ddct_object(ddcg_did);
    DdcgDisplayRef * ddcg_dref = NULL;
-   DDCT_Display_Ref ddct_dref = NULL;     // is pointer
+   DDCA_Display_Ref ddct_dref = NULL;     // is pointer
    DDCA_Status ddct_status = ddca_create_display_ref(ddct_did, &ddct_dref);
    if (ddct_status == 0) {
       DdcgDisplayRef * ddcg_dref = ddcg_display_ref_new();

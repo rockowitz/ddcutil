@@ -461,7 +461,7 @@ DDCA_Status ddca_repr_display_identifier(DDCA_Display_Identifier ddct_did, char 
 // Display References
 //
 
-DDCA_Status ddca_create_display_ref(DDCA_Display_Identifier did, DDCT_Display_Ref* ddct_dref) {
+DDCA_Status ddca_create_display_ref(DDCA_Display_Identifier did, DDCA_Display_Ref* ddct_dref) {
    bool debug = false;
    if (!library_initialized)
       return DDCL_UNINITIALIZED;
@@ -483,7 +483,7 @@ DDCA_Status ddca_create_display_ref(DDCA_Display_Identifier did, DDCT_Display_Re
 }
 
 
-DDCA_Status ddca_free_display_ref(DDCT_Display_Ref ddct_dref) {
+DDCA_Status ddca_free_display_ref(DDCA_Display_Ref ddct_dref) {
    WITH_DR(ddct_dref,
          {
          free_display_ref(dref);
@@ -494,7 +494,7 @@ DDCA_Status ddca_free_display_ref(DDCT_Display_Ref ddct_dref) {
 
 // static char dref_work_buf[100];
 
-DDCA_Status ddca_repr_display_ref(DDCT_Display_Ref ddct_dref, char** repr){
+DDCA_Status ddca_repr_display_ref(DDCA_Display_Ref ddct_dref, char** repr){
    DDCA_Status rc = 0;
    Display_Ref * dref = (Display_Ref *) ddct_dref;
    if (dref == NULL || memcmp(dref->marker, DISPLAY_REF_MARKER, 4) != 0 )  {
@@ -521,14 +521,14 @@ DDCA_Status ddca_repr_display_ref(DDCT_Display_Ref ddct_dref, char** repr){
    return rc;
 }
 
-void        ddct_report_display_ref(DDCT_Display_Ref ddct_dref, int depth) {
+void        ddct_report_display_ref(DDCA_Display_Ref ddct_dref, int depth) {
    Display_Ref * dref = (Display_Ref *) ddct_dref;
    rpt_vstring(depth, "DDCT_Display_Ref at %p:", dref);
    report_display_ref(dref, depth+1);
 }
 
 
-DDCA_Status ddct_open_display(DDCT_Display_Ref ddct_dref, DDCT_Display_Handle * pdh) {
+DDCA_Status ddca_open_display(DDCA_Display_Ref ddct_dref, DDCA_Display_Handle * pdh) {
    if (!library_initialized)
       return DDCL_UNINITIALIZED;
    DDCA_Status rc = 0;
@@ -549,7 +549,7 @@ DDCA_Status ddct_open_display(DDCT_Display_Ref ddct_dref, DDCT_Display_Handle * 
 }
 
 
-DDCA_Status ddct_close_display(DDCT_Display_Handle ddct_dh) {
+DDCA_Status ddca_close_display(DDCA_Display_Handle ddct_dh) {
    if (!library_initialized)
       return DDCL_UNINITIALIZED;
    DDCA_Status rc = 0;
@@ -569,7 +569,7 @@ DDCA_Status ddct_close_display(DDCT_Display_Handle ddct_dh) {
 
 static char dh_work_buf[100];
 
-DDCA_Status ddct_repr_display_handle(DDCT_Display_Handle ddct_dh, char ** repr) {
+DDCA_Status ddca_repr_display_handle(DDCA_Display_Handle ddct_dh, char ** repr) {
    DDCA_Status rc = 0;
    Display_Handle * dh = (Display_Handle *) ddct_dh;
    if (dh == NULL || memcmp(dh->marker, DISPLAY_HANDLE_MARKER, 4) != 0 )  {
@@ -604,7 +604,7 @@ DDCA_Status ddct_repr_display_handle(DDCT_Display_Handle ddct_dh, char ** repr) 
 }
 
 
-DDCA_Status ddct_get_mccs_version(DDCT_Display_Handle ddct_dh, DDCT_MCCS_Version_Spec* pspec) {
+DDCA_Status ddct_get_mccs_version(DDCA_Display_Handle ddct_dh, DDCT_MCCS_Version_Spec* pspec) {
    if (!library_initialized)
       return DDCL_UNINITIALIZED;
    DDCA_Status rc = 0;
@@ -625,7 +625,7 @@ DDCA_Status ddct_get_mccs_version(DDCT_Display_Handle ddct_dh, DDCT_MCCS_Version
 }
 
 
-DDCA_Status ddct_get_edid_by_display_ref(DDCT_Display_Ref ddct_dref, Byte** pbytes) {
+DDCA_Status ddct_get_edid_by_display_ref(DDCA_Display_Ref ddct_dref, Byte** pbytes) {
    if (!library_initialized)
       return DDCL_UNINITIALIZED;
    DDCA_Status rc = 0;
@@ -756,7 +756,7 @@ DDCA_Status ddca_get_feature_info_by_vcp_version(
 
 // or return a struct?
 DDCA_Status ddca_get_feature_info_by_display(
-      DDCT_Display_Handle ddct_dh,    // needed because in rare cases feature info is MCCS version dependent
+      DDCA_Display_Handle ddct_dh,    // needed because in rare cases feature info is MCCS version dependent
       VCP_Feature_Code    feature_code,
       unsigned long *     pflags)
 {
@@ -798,7 +798,7 @@ int ddca_report_active_displays(int depth) {
 typedef void * Feature_Value_Table;   // temp
 
 DDCA_Status ddct_get_feature_sl_value_table(
-               DDCT_Display_Handle   ddct_dh,
+               DDCA_Display_Handle   ddct_dh,
                VCP_Feature_Code      feature_code,
                Feature_Value_Table * value_table)
 {
@@ -807,7 +807,7 @@ DDCA_Status ddct_get_feature_sl_value_table(
 
 // or:
 DDCA_Status ddct_get_nc_feature_value_name(
-               DDCT_Display_Handle ddct_dh,    // needed because value lookup mccs version dependent
+               DDCA_Display_Handle ddct_dh,    // needed because value lookup mccs version dependent
                VCP_Feature_Code    feature_code,
                Byte                feature_value,
                char**              pfeature_name)
@@ -833,7 +833,7 @@ DDCA_Status ddct_get_nc_feature_value_name(
 
 // n.b. filles in the response buffer provided by the caller, does not allocate
 DDCA_Status ddct_get_nontable_vcp_value(
-               DDCT_Display_Handle             ddct_dh,
+               DDCA_Display_Handle             ddct_dh,
                VCP_Feature_Code                feature_code,
                DDCT_Non_Table_Value_Response * response)
 {
@@ -856,7 +856,7 @@ DDCA_Status ddct_get_nontable_vcp_value(
 
 // untested
 DDCA_Status ddct_get_table_vcp_value(
-               DDCT_Display_Handle ddct_dh,
+               DDCA_Display_Handle ddct_dh,
                VCP_Feature_Code    feature_code,
                int *               value_len,
                Byte**              value_bytes)
@@ -879,7 +879,7 @@ DDCA_Status ddct_get_table_vcp_value(
 
 
 DDCA_Status ddct_set_continuous_vcp_value(
-               DDCT_Display_Handle ddct_dh,
+               DDCA_Display_Handle ddct_dh,
                VCP_Feature_Code feature_code,
                int              new_value)
 {
@@ -891,7 +891,7 @@ DDCA_Status ddct_set_continuous_vcp_value(
 
 
 DDCA_Status ddct_set_simple_nc_vcp_value(
-               DDCT_Display_Handle  ddct_dh,
+               DDCA_Display_Handle  ddct_dh,
                VCP_Feature_Code     feature_code,
                Byte                 new_value)
 {
@@ -900,7 +900,7 @@ DDCA_Status ddct_set_simple_nc_vcp_value(
 
 
 DDCA_Status ddct_set_raw_vcp_value(
-               DDCT_Display_Handle  ddct_dh,
+               DDCA_Display_Handle  ddct_dh,
                VCP_Feature_Code     feature_code,
                Byte                 hi_byte,
                Byte                 lo_byte)
@@ -920,7 +920,7 @@ DDCA_Status ddct_set_raw_vcp_value(
  * Returns:
  *   status code
  */
-DDCA_Status ddct_get_capabilities_string(DDCT_Display_Handle ddct_dh, char** pcaps)
+DDCA_Status ddct_get_capabilities_string(DDCA_Display_Handle ddct_dh, char** pcaps)
 {
    WITH_DH(ddct_dh,
       {
@@ -931,7 +931,7 @@ DDCA_Status ddct_get_capabilities_string(DDCT_Display_Handle ddct_dh, char** pca
 }
 
 
-DDCA_Status ddct_get_profile_related_values(DDCT_Display_Handle ddct_dh, char** pprofile_values_string)
+DDCA_Status ddct_get_profile_related_values(DDCA_Display_Handle ddct_dh, char** pprofile_values_string)
 {
    WITH_DH(ddct_dh,
       {

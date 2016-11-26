@@ -216,7 +216,19 @@ bool ddca_is_report_ddc_errors_enabled();
 // Display Identifiers
 //
 
-/** Opaque handle to display identifier */
+/** Opaque display identifier
+ *
+ * A display identifier holds the criteria for selecting a display,
+ * typically as specified by the user.
+ *
+ * It can take several forms:
+ * - the display number assigned by dccutil
+ * - an I2C bus number
+ * - an ADL (adapter index, display index) pair
+ * - a  USB (bus number, device number) pair
+ * - an EDID
+ * - model and serial number strings
+ * */
 typedef void * DDCA_Display_Identifier;
 
 /** Creates a display identifier using the display number assigned by ddcutil
@@ -280,41 +292,87 @@ DDCA_Status ddca_create_usb_display_identifier(
                DDCA_Display_Identifier* pdid);
 
 /** Release the memory of a display identifier */
-DDCA_Status ddca_free_display_identifier(DDCA_Display_Identifier ddca_did);
+DDCA_Status ddca_free_display_identifier(DDCA_Display_Identifier did);
 
 /** Returns a string representation of a display identifier */
-DDCA_Status ddca_repr_display_identifier(DDCA_Display_Identifier ddca_did, char** repr);
+DDCA_Status ddca_repr_display_identifier(DDCA_Display_Identifier did, char** prepr);
 
 
 //
 // Display References
 //
 
-/** Opaque handle to display reference */
-typedef void * DDCT_Display_Ref;
+/** Opaque display reference.
+ *
+ * A display reference is a reference to a display.  It takes
+ * one of three forms:
+ * - an I2C bus number
+ * - an ADL (adapter index, display index) pair
+ * - a  USB (bus number, device number pair)
+ *
+ */
+typedef void * DDCA_Display_Ref;
 
-DDCA_Status ddca_create_display_ref(DDCA_Display_Identifier did, DDCT_Display_Ref* ddct_dref);
-DDCA_Status ddca_free_display_ref(DDCT_Display_Ref ddct_ref);
-DDCA_Status ddca_repr_display_ref(DDCT_Display_Ref ddct_dref, char** repr);
-void        ddct_report_display_ref(DDCT_Display_Ref ddct_dref, int depth);
+/** Creates a display reference from a display identifier.
+ * @param[in]  did display identifier
+ * @param[out] pdref where to return display reference
+ * @return     status code
+ */
+DDCA_Status ddca_create_display_ref(DDCA_Display_Identifier did, DDCA_Display_Ref* pdref);
+
+/** Frees a display reference.
+ * @param dref  display reference to free
+ * @return status code
+ */
+DDCA_Status ddca_free_display_ref(DDCA_Display_Ref dref);
+
+/** Returns a string representation of a display reference
+ * @param[in]   dref display reference
+ * @@param[out] prepr where to return pointer to string representation of the display reference
+ * @return      status code
+ * */
+DDCA_Status ddca_repr_display_ref(DDCA_Display_Ref dref, char** prepr);
+
+/** Writes a report on the specified display reference to the current FOUT device
+ * @param dref   display reference
+ * @param depth  logical indentation depth
+ */
+void        ddct_report_display_ref(DDCA_Display_Ref dref, int depth);
 
 
 //
 // Display Handles
 //
 
-typedef void * DDCT_Display_Handle;
-DDCA_Status ddct_open_display(DDCT_Display_Ref dref, DDCT_Display_Handle * pdh);
-DDCA_Status ddct_close_display(DDCT_Display_Handle ddct_dh);
-DDCA_Status ddct_repr_display_handle(DDCT_Display_Handle ddct_dh, char** repr);
+/** Opaque display handle
+ *
+ * A display handle represents an open display on which actions can be performed.
+ */
+typedef void * DDCA_Display_Handle;
+
+/** Open a display
+ * @param[in]  dref display reference for display to open
+ * @param[out] pdh where to return display handle
+ * @return     status code
+ */
+DDCA_Status ddca_open_display(DDCA_Display_Ref dref, DDCA_Display_Handle * pdh);
+
+/** Close an open display
+ * @param[in] dh   display handle
+ * @return     status code
+ */
+DDCA_Status ddca_close_display(DDCA_Display_Handle dh);
+
+/** Writes a report on the specified display handle to the current FOUT device
+ * @param dh     display handle
+ * @param depth  logical indentation depth
+ */
+DDCA_Status ddca_repr_display_handle(DDCA_Display_Handle dh, char** prepr);
 
 
-
-
-
-
-
+//
 // VCP Feature Information
+//
 
 typedef struct {
    Byte    major;
@@ -368,19 +426,19 @@ typedef void * Feature_Value_Table;   // temp
 
 // Unimplemented
 DDCA_Status ddct_get_feature_sl_value_table(
-               DDCT_Display_Handle   ddct_dh,
+               DDCA_Display_Handle   ddct_dh,
                VCP_Feature_Code      feature_code,
                Feature_Value_Table * value_table);
 
 // Unimplemented
 DDCA_Status ddct_get_supported_feature_sl_value_table(
-               DDCT_Display_Handle   ddct_dh,
+               DDCA_Display_Handle   ddct_dh,
                VCP_Feature_Code      feature_code,
                Feature_Value_Table * value_table);
 
 // Unimplemented
 DDCA_Status ddct_is_feature_supported(
-      DDCT_Display_Handle   ddct_dh,
+      DDCA_Display_Handle   ddct_dh,
       VCP_Feature_Code      feature_code,
       bool *                answer);
 
@@ -392,14 +450,14 @@ DDCA_Status ddct_is_feature_supported(
 //  Miscellaneous Monitor Specific Functions
 //
 
-DDCA_Status ddct_get_mccs_version(DDCT_Display_Handle ddct_dh, DDCT_MCCS_Version_Spec* pspec);
+DDCA_Status ddct_get_mccs_version(DDCA_Display_Handle ddct_dh, DDCT_MCCS_Version_Spec* pspec);
 
-// DDCT_Status ddct_get_edid(DDCT_Display_Handle * dh, Byte * edid_buffer);    // edid_buffer must be >= 128 bytes
-DDCA_Status ddct_get_edid_by_display_ref(DDCT_Display_Ref ddct_dref, Byte ** pbytes);   // pointer into ddcutil data structures, do not free
+// DDCT_Status ddct_get_edid(DDCA_Display_Handle * dh, Byte * edid_buffer);    // edid_buffer must be >= 128 bytes
+DDCA_Status ddct_get_edid_by_display_ref(DDCA_Display_Ref ddct_dref, Byte ** pbytes);   // pointer into ddcutil data structures, do not free
 
 // or return a struct?
 DDCA_Status ddca_get_feature_info_by_display(
-               DDCT_Display_Handle ddct_dh,
+               DDCA_Display_Handle ddct_dh,
                VCP_Feature_Code    feature_code,
                unsigned long *     flags);
 
@@ -424,7 +482,7 @@ int ddca_report_active_displays(int depth);
 // Monitor Capabilities
 //
 
-DDCA_Status ddct_get_capabilities_string(DDCT_Display_Handle ddct_dh, char** buffer);
+DDCA_Status ddct_get_capabilities_string(DDCA_Display_Handle ddct_dh, char** buffer);
 
 #ifdef UNIMPLEMENTED
 // Unimplemented.  Parsed capabilities has a complex data structure.  How to make visible?
@@ -454,29 +512,29 @@ typedef struct {
 void ddct_free_table_value_response(DDCT_Table_Value_Response * table_value_response);
 
 DDCA_Status ddct_get_nontable_vcp_value(
-               DDCT_Display_Handle             ddct_dh,
+               DDCA_Display_Handle             ddct_dh,
                VCP_Feature_Code                feature_code,
                DDCT_Non_Table_Value_Response * response);
 
 DDCA_Status ddct_set_continuous_vcp_value(
-               DDCT_Display_Handle  ddct_dh,
+               DDCA_Display_Handle  ddct_dh,
                VCP_Feature_Code     feature_code,
                int                  new_value);
 
 DDCA_Status ddct_set_simple_nc_vcp_value(
-               DDCT_Display_Handle  ddct_dh,
+               DDCA_Display_Handle  ddct_dh,
                VCP_Feature_Code     feature_code,
                Byte                 new_value);
 
 DDCA_Status ddct_set_raw_vcp_value(
-               DDCT_Display_Handle  ddct_dh,
+               DDCA_Display_Handle  ddct_dh,
                VCP_Feature_Code     feature_code,
                Byte                 hi_byte,
                Byte                 lo_byte);
 
 // Implemented, but untested
 DDCA_Status ddct_get_table_vcp_value(
-               DDCT_Display_Handle ddct_dh,
+               DDCA_Display_Handle ddct_dh,
                VCP_Feature_Code    feature_code,
                int *               value_len,
                Byte**              value_bytes);
@@ -484,13 +542,13 @@ DDCA_Status ddct_get_table_vcp_value(
 #ifdef UNIMPLEMENTED
 // Unimplemented
 DDCA_Status ddct_set_table_vcp_value(
-               DDCT_Display_Handle  ddct_dh,
+               DDCA_Display_Handle  ddct_dh,
                VCP_Feature_Code     feature_code,
                int                  value_len,
                Byte *               value_bytes);
 #endif
 
-DDCA_Status ddct_get_profile_related_values(DDCT_Display_Handle ddct_dh, char** pprofile_values_string);
+DDCA_Status ddct_get_profile_related_values(DDCA_Display_Handle ddct_dh, char** pprofile_values_string);
 
 DDCA_Status ddct_set_profile_related_values(char * profile_values_string);
 

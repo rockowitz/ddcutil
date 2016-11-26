@@ -78,7 +78,7 @@ void report_feature_flags(Byte feature_code, unsigned long feature_flags) {
 }
 
 
-void test_get_single_feature_info(DDCT_Display_Handle dh, Byte feature_code) {
+void test_get_single_feature_info(DDCA_Display_Handle dh, Byte feature_code) {
    printf("Getting metadata for feature 0x%02x\n", feature_code);
    printf("Feature name: %s\n", ddca_get_feature_name(feature_code));
    unsigned long feature_flags;
@@ -93,7 +93,7 @@ void test_get_single_feature_info(DDCT_Display_Handle dh, Byte feature_code) {
      }
 }
 
-void test_get_feature_info(DDCT_Display_Handle dh) {
+void test_get_feature_info(DDCA_Display_Handle dh) {
    Byte feature_codes[] = {0x02, 0x03, 0x10, 0x43, 0x60};
    int feature_code_ct = sizeof(feature_codes)/sizeof(Byte);
    int ndx = 0;
@@ -102,7 +102,7 @@ void test_get_feature_info(DDCT_Display_Handle dh) {
 }
 
 
-bool test_cont_value(DDCT_Display_Handle dh, Byte feature_code) {
+bool test_cont_value(DDCA_Display_Handle dh, Byte feature_code) {
 
    DDCA_Status rc;
    bool ok = true;
@@ -179,7 +179,7 @@ bool test_cont_value(DDCT_Display_Handle dh, Byte feature_code) {
    return ( (rc == 0) && ok);
 }
 
-bool test_get_capabilities_string(DDCT_Display_Handle dh) {
+bool test_get_capabilities_string(DDCA_Display_Handle dh) {
    char * capabilities = NULL;
    DDCA_Status rc =  ddct_get_capabilities_string(dh, &capabilities);
    if (rc != 0)
@@ -202,8 +202,8 @@ int main(int argc, char** argv) {
 
    DDCA_Status rc;
    DDCA_Display_Identifier did;
-   DDCT_Display_Ref dref;
-   DDCT_Display_Handle dh = NULL;  // initialize to avoid clang analyzer warning
+   DDCA_Display_Ref dref;
+   DDCA_Display_Handle dh = NULL;  // initialize to avoid clang analyzer warning
 
 
    ddca_init();
@@ -244,13 +244,13 @@ int main(int argc, char** argv) {
       assert(rc == 0);
       printf("(%s) dref=%s\n", __func__, dref_repr);
 
-      rc = ddct_open_display(dref, &dh);
+      rc = ddca_open_display(dref, &dh);
       if (rc != 0) {
          FUNCTION_ERRMSG("ddct_open_display", rc);
       }
       else {
          char * dh_repr;
-         /* rc = */  ddct_repr_display_handle(dh, &dh_repr);
+         /* rc = */  ddca_repr_display_handle(dh, &dh_repr);
          printf("(%s) display handle: %s\n", __func__, dh_repr);
 
          DDCT_MCCS_Version_Spec vspec;
@@ -291,7 +291,7 @@ int main(int argc, char** argv) {
 
 
    if (dh) {
-      rc = ddct_close_display(dh);
+      rc = ddca_close_display(dh);
       if (rc != 0)
          FUNCTION_ERRMSG("ddct_close_display", rc);
    }

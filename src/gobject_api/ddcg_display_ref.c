@@ -32,7 +32,7 @@
 
 
 typedef struct {
-   DDCT_Display_Ref ddct_dref;
+   DDCA_Display_Ref ddct_dref;
 } DdcgDisplayRefPrivate;
 
 
@@ -80,7 +80,7 @@ ddcg_display_ref_new(void) {
 void
 _ddcg_display_ref_set_ddct_object(
       DdcgDisplayRef * ddcg_dref,
-      DDCT_Display_Ref ddct_dref)
+      DDCA_Display_Ref ddct_dref)
 {
    g_return_if_fail( DDCG_IS_DISPLAY_REF(ddcg_dref) );
    ddcg_dref->priv->ddct_dref = ddct_dref;
@@ -88,7 +88,7 @@ _ddcg_display_ref_set_ddct_object(
 
 
 
-DDCT_Display_Ref
+DDCA_Display_Ref
 _ddcg_display_ref_get_ddct_object(DdcgDisplayRef * ddcg_dref) {
    g_return_val_if_fail( DDCG_IS_DISPLAY_REF(ddcg_dref), NULL);
    return ddcg_dref->priv->ddct_dref;
@@ -109,7 +109,7 @@ ddcg_display_ref_get(DdcgDisplayIdentifier * ddcg_did, GError ** error) {
    g_return_val_if_fail (error == NULL || *error == NULL, NULL);
 
    DdcgDisplayRef * ddcg_dref = NULL;
-   DDCT_Display_Ref ddct_dref = NULL;
+   DDCA_Display_Ref ddct_dref = NULL;
    DDCA_Display_Identifier ddct_did = _ddcg_display_identifier_get_ddct_object(ddcg_did);
    assert(ddcg_did);
    DDCA_Status ddct_status = ddca_create_display_ref( ddct_did, &ddct_dref);
