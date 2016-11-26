@@ -37,6 +37,8 @@ AC_CONFIG_FILES([
   src/gobject_api/Makefile 
 	man/Makefile 
 	data/Makefile 
+  docs/Makefile
+  docs/doxygen/Makefile
 	package/Makefile 
 	package/ddcutil.spec 
 	package/upload_obsrpm
@@ -104,6 +106,38 @@ LT_INIT
 
 dnl replaced by LT_INIT
 dnl AC_PROG_RANLIB
+
+dnl checks for doxygen program, sets or uses environment variable DOXYGEN
+
+FLM_PROG_TRY_DOXYGEN
+AS_IF( [test  "x$DOXYGEN" != "x"], [
+   AC_MSG_NOTICE( [!!! Found doxygen...])   
+   AC_MSG_NOTICE([  DOXYGEN:             $DOXYGEN            ])
+  ],
+  [
+   AC_MSG_NOTICE( [!!! doxygen not found])
+  ])
+
+AC_MSG_NOTICE([Calling dx_init_doxygen...])
+DX_PDF_FEATURE(ON)
+DX_HTML_FEATURE(ON)
+DX_INIT_DOXYGEN(ddcutil)
+AC_MSG_NOTICE([  DOXYGEN:             $DOXYGEN            ])
+AC_MSG_NOTICE([  dx_DOT_FEATURE:      $DX_DOT_FEATURE     ])
+AC_MSG_NOTICE([  dx_FEATURE_doc       $DX_FEATURE_doc     ])
+AC_MSG_NOTICE([  dx_DOXYGEN_FEATURE:  $DX_DOXYGEN_FEATURE ])
+AC_MSG_NOTICE([  dx_HTML_FEATURE:     $DX_HTML_FEATURE    ])
+AC_MSG_NOTICE([  dx_FLAG_html:        $DX_FLAG_HTML       ])
+AC_MSG_NOTICE([  dx_PDF_FEATURE:      $DX_PDF_FEATURE     ])
+AC_MSG_NOTICE([  DX_PROJECT:          $DX_PROJECT         ])
+AC_MSG_NOTICE([  DX_CONFIG:           $DX_CONFIG          ])
+AC_MSG_NOTICE([  DX_DOCDIR:           $DX_DOCDIR          ])
+
+AM_CONDITIONAL( [HAVE_DOXYGEN], [test -n "$DOXYGEN"])
+dnl AM_COND_IF( [HAVE_DOXYGEN], [AC_CONFIG_FILES([dox/doxyfile])])
+AS_IF( [test -n "$DOXYGEN"],    [AC_CONFIG_FILES([docs/doxygen/doxyfile])])
+
+
 
 ###
 ### GObject
