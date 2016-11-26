@@ -98,11 +98,11 @@ typedef enum {
 
 
 // Set these bits in a flag byte to indicate the MCCS versions for which a feature is valid
-#define MCCS_V10          0x80
-#define MCCS_V20          0x40
-#define MCCS_V21          0x20
-#define MCCS_V30          0x10
-#define MCCS_V22          0x08
+#define MCCS_V10          0x01
+#define MCCS_V20          0x02
+#define MCCS_V21          0x04
+#define MCCS_V30          0x08
+#define MCCS_V22          0x10
 
 
 typedef
