@@ -1,11 +1,19 @@
 # Adapted from code by tschoonj
 
-if ENABLE_PYTHON
+# BUILT_SOURCES =    \
+# ddc_swig_wrap.c    \
+# ddc_swig_py        \
+# ddc_swig.pyc	\
+# ddc_swig.pyo	
+
+# CLEANFILES = $(BUILT_SOURCES)
 
 clean-local:
 	@echo "(src/swig/clean-local)"
 	rm -rf ddc_swig_wrap.c ddc_swig.py ddc_swig.pyc  ddc_swig.pyo
 
+
+if ENABLE_PYTHON
 
 # Python extension module, installed in $(pyexecdir)
 pyexec_LTLIBRARIES = _ddc_swig.la
