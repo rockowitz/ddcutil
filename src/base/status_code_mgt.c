@@ -146,6 +146,15 @@ void register_retcode_desc_finder(
 }
 
 
+/* Shifts a status code in the RR_BASE range to a specified range.
+ *
+ * Arguments:
+ *   rc        base status code to modulate
+ *   range_id  range to which status code should be modulated
+ *
+ * Returns:
+ *   modulated status code
+ */
 int modulate_rc(int rc, Retcode_Range_Id range_id){
    bool debug = false;
    if (debug)
@@ -164,7 +173,17 @@ int modulate_rc(int rc, Retcode_Range_Id range_id){
 }
 
 
+/* Shifts a status code from the specified modulation range to the base range
+ *
+ * Arguments:
+ *    rc        status code to demodulate
+ *    range_id  a modulation range
+ *
+ * Returns:
+ *   demodulated status code
+ */
 int demodulate_rc(int rc, Retcode_Range_Id range_id) {
+   // TODO: check that rc is in the specified modulation range
    assert( abs(rc) > RCRANGE_BASE_MAX );
    int base = retcode_range_table[range_id].base;
    if (rc != 0) {
@@ -176,6 +195,15 @@ int demodulate_rc(int rc, Retcode_Range_Id range_id) {
    return rc;
 }
 
+/* Determines the modulation range for a status code.
+ * Can be either the base range or a modulation range
+ *
+ * Arguments:
+ *   rc     status code to check
+ *
+ * Returns:
+ *   range identifier
+ */
 Retcode_Range_Id get_modulation(int rc) {
    int ndx = 0;
    int abs_rc = abs(rc);
@@ -199,6 +227,24 @@ Global_Status_Code modulate_base_errno_ddc_to_global(Base_Status_Errno_DDC rc) {
              : rc;
    return gsc;
 }
+
+Public_Status_Code global_to_public_status_code(Global_Status_Code gsc){
+   Public_Status_Code psc =
+         (get_modulation(gsc) == RR_ERRNO)
+            ? demodulate_rc(gsc, RR_ERRNO)
+            : gsc;
+   return psc;
+}
+
+Global_Status_Code public_to_global_status_code(Public_Status_Code psc) {
+   Global_Status_Code gsc =
+         (get_modulation(psc) == RR_BASE)
+             ? modulate_rc(psc, RR_ERRNO)
+             : gsc;
+   return gsc;
+}
+
+
 
 
 static Status_Code_Info ok_status_code_info = {0, "OK", "success"};

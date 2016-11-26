@@ -58,6 +58,8 @@ typedef int Base_Status_Errno;
 typedef int Base_Status_Errno_DDC;   // union(Base_Status_Errno, Global_Status_DDC)
 typedef int Base_Status_ADL_DDC;     // union(Base_Status_ADL, Global_Status_DDC)
 
+typedef int Public_Status_Code;      // union(unmodulated Linux codes, modulated ADL codes, (always modulaed) DDC return codes
+
 typedef
 Status_Code_Info * (*Retcode_Description_Finder)(int rc);
 
@@ -95,6 +97,9 @@ int modulate_rc(int unmodulated_rc, Retcode_Range_Id range_id);
 int demodulate_rc(int modulated_rc, Retcode_Range_Id range_id);
 Retcode_Range_Id get_modulation(int rc);
 // int demodulate_any_rc(int modulated_rc);   // unimplemented
+
+Public_Status_Code global_to_public_status_code(Global_Status_Code gsc);
+Global_Status_Code publit_to_global_status_code(Public_Status_Code);
 
 Status_Code_Info * find_global_status_code_info(Global_Status_Code rc);
 
