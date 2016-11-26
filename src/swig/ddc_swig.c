@@ -375,7 +375,7 @@ DDCS_Non_Table_Value_Response ddcs_get_nontable_vcp_value(
 
 void ddcs_set_nontable_vcp_value(
                DDCS_Display_Handle_p  dh,
-               VCP_Feature_Code     feature_code,
+               DDCA_VCP_Feature_Code     feature_code,
                int                  new_value)
 {
    clear_exception();

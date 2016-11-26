@@ -391,8 +391,9 @@ typedef enum {DDCA_VANY = 0,          /**< Match any MCCS version */
 
 #define DDCA_VUNK DDCA_VANY
 
+/** MCCS VCP Feature Id */
+typedef Byte DDCA_VCP_Feature_Code;
 
-typedef Byte VCP_Feature_Code;
 
 //
 // VCP Feature Description
@@ -411,13 +412,28 @@ typedef Byte VCP_Feature_Code;
 #define DDCA_READABLE     (DDCA_RO | DDCA_RW)  /**< Feature is either RW or RO */
 #define DDCA_WRITABLE     (DDCA_WO | DDCA_RW)  /**< Feature is either RW or WO */
 
+/** Gets information for a VCP feature.
+ *
+ * VCP characteristics (C vs NC, RW vs RO, etc) can vary by MCCS version.
+ *
+ * @param[in] feature_code    VCP feature code
+ * @param[in] mccs_version_id MCCS version id, may be DDCA_VCP_VANY??
+ * @param[out] pflags         where to return byte of flags
+ */
 DDCA_Status ddca_get_feature_info_by_vcp_version(
-      VCP_Feature_Code           feature_code,
+      DDCA_VCP_Feature_Code           feature_code,
       // DDCT_MCCS_Version_Spec     vspec,
       DDCA_MCCS_Version_Id       mccs_version_id,
       unsigned long *            flags);
 
-char *      ddca_get_feature_name(VCP_Feature_Code feature_code);
+/** Gets the VCP feature name.  If different MCCS version use different names
+ * for the feature, this function makes a best guess.
+ *
+ * @param[in]  feature_code
+ * @return     pointer to feature name(do not free), NULL if unknown feature code
+ */
+char *      ddca_get_feature_name(DDCA_VCP_Feature_Code feature_code);
+
 
 typedef void * Feature_Value_Table;   // temp
 
@@ -426,20 +442,20 @@ typedef void * Feature_Value_Table;   // temp
 
 // Unimplemented
 DDCA_Status ddct_get_feature_sl_value_table(
-               DDCA_Display_Handle   ddct_dh,
-               VCP_Feature_Code      feature_code,
-               Feature_Value_Table * value_table);
+               DDCA_Display_Handle    ddct_dh,
+               DDCA_VCP_Feature_Code  feature_code,
+               Feature_Value_Table *  value_table);
 
 // Unimplemented
 DDCA_Status ddct_get_supported_feature_sl_value_table(
                DDCA_Display_Handle   ddct_dh,
-               VCP_Feature_Code      feature_code,
+               DDCA_VCP_Feature_Code      feature_code,
                Feature_Value_Table * value_table);
 
 // Unimplemented
 DDCA_Status ddct_is_feature_supported(
       DDCA_Display_Handle   ddct_dh,
-      VCP_Feature_Code      feature_code,
+      DDCA_VCP_Feature_Code      feature_code,
       bool *                answer);
 
 #endif
@@ -458,7 +474,7 @@ DDCA_Status ddct_get_edid_by_display_ref(DDCA_Display_Ref ddct_dref, Byte ** pby
 // or return a struct?
 DDCA_Status ddca_get_feature_info_by_display(
                DDCA_Display_Handle ddct_dh,
-               VCP_Feature_Code    feature_code,
+               DDCA_VCP_Feature_Code    feature_code,
                unsigned long *     flags);
 
 
@@ -513,29 +529,29 @@ void ddct_free_table_value_response(DDCT_Table_Value_Response * table_value_resp
 
 DDCA_Status ddct_get_nontable_vcp_value(
                DDCA_Display_Handle             ddct_dh,
-               VCP_Feature_Code                feature_code,
+               DDCA_VCP_Feature_Code                feature_code,
                DDCT_Non_Table_Value_Response * response);
 
 DDCA_Status ddct_set_continuous_vcp_value(
                DDCA_Display_Handle  ddct_dh,
-               VCP_Feature_Code     feature_code,
+               DDCA_VCP_Feature_Code     feature_code,
                int                  new_value);
 
 DDCA_Status ddct_set_simple_nc_vcp_value(
                DDCA_Display_Handle  ddct_dh,
-               VCP_Feature_Code     feature_code,
+               DDCA_VCP_Feature_Code     feature_code,
                Byte                 new_value);
 
 DDCA_Status ddct_set_raw_vcp_value(
                DDCA_Display_Handle  ddct_dh,
-               VCP_Feature_Code     feature_code,
+               DDCA_VCP_Feature_Code     feature_code,
                Byte                 hi_byte,
                Byte                 lo_byte);
 
 // Implemented, but untested
 DDCA_Status ddct_get_table_vcp_value(
                DDCA_Display_Handle ddct_dh,
-               VCP_Feature_Code    feature_code,
+               DDCA_VCP_Feature_Code    feature_code,
                int *               value_len,
                Byte**              value_bytes);
 
@@ -543,7 +559,7 @@ DDCA_Status ddct_get_table_vcp_value(
 // Unimplemented
 DDCA_Status ddct_set_table_vcp_value(
                DDCA_Display_Handle  ddct_dh,
-               VCP_Feature_Code     feature_code,
+               DDCA_VCP_Feature_Code     feature_code,
                int                  value_len,
                Byte *               value_bytes);
 #endif
