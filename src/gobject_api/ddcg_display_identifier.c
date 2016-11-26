@@ -32,7 +32,7 @@
 
 
 typedef struct {
-   DDCT_Display_Identifier ddct_did;
+   DDCA_Display_Identifier ddct_did;
 } DdcgDisplayIdentifierPrivate;
 
 struct _DdcgDisplayIdentifier {
@@ -65,7 +65,7 @@ ddcg_display_identifier_init(DdcgDisplayIdentifier * ddcg_did) {
 
 // End of boilerplate
 
-DDCT_Display_Identifier
+DDCA_Display_Identifier
 _ddcg_display_identifier_get_ddct_object(DdcgDisplayIdentifier * ddcg_did) {
    g_return_val_if_fail( DDCG_IS_DISPLAY_IDENTIFIER(ddcg_did), NULL);
    return ddcg_did->priv->ddct_did;
@@ -114,8 +114,8 @@ ddcg_display_identifier_create_busno_identifier(
    g_return_val_if_fail (error == NULL || *error == NULL, NULL);
 
    DdcgDisplayIdentifier * ddcg_did = NULL;
-   DDCT_Display_Identifier ddct_did = NULL;
-   DDCT_Status ddct_status = ddct_create_busno_display_identifier(busno, &ddct_did);
+   DDCA_Display_Identifier ddct_did = NULL;
+   DDCA_Status ddct_status = ddca_create_busno_display_identifier(busno, &ddct_did);
    if (ddct_status == 0) {
       ddcg_did = g_object_new(DDCG_TYPE_DISPLAY_IDENTIFIER, NULL);
       ddcg_did->priv->ddct_did = ddct_did;
@@ -150,8 +150,8 @@ ddcg_display_identifier_create_adlno_identifier(
    g_return_val_if_fail (error == NULL || *error == NULL, NULL);
 
    DdcgDisplayIdentifier * ddcg_did = NULL;
-   DDCT_Display_Identifier ddct_did = NULL;
-   DDCT_Status ddct_status = ddct_create_adlno_display_identifier(adapter_index, display_index, &ddct_did);
+   DDCA_Display_Identifier ddct_did = NULL;
+   DDCA_Status ddct_status = ddca_create_adlno_display_identifier(adapter_index, display_index, &ddct_did);
    if (ddct_status == 0) {
       ddcg_did = g_object_new(DDCG_TYPE_DISPLAY_IDENTIFIER, NULL);
       ddcg_did->priv->ddct_did = ddct_did;
@@ -185,8 +185,8 @@ ddcg_display_identifier_create_usb_identifier(
    g_return_val_if_fail (error == NULL || *error == NULL, NULL);
 
    DdcgDisplayIdentifier * ddcg_did = NULL;
-   DDCT_Display_Identifier ddct_did = NULL;
-   DDCT_Status ddct_status = ddct_create_usb_display_identifier(bus, device, &ddct_did);
+   DDCA_Display_Identifier ddct_did = NULL;
+   DDCA_Status ddct_status = ddca_create_usb_display_identifier(bus, device, &ddct_did);
    if (ddct_status == 0) {
       ddcg_did = g_object_new(DDCG_TYPE_DISPLAY_IDENTIFIER, NULL);
       ddcg_did->priv->ddct_did = ddct_did;
@@ -220,8 +220,8 @@ ddcg_display_identifier_create_model_sn_identifier(
    g_return_val_if_fail (error == NULL || *error == NULL, NULL);
 
    DdcgDisplayIdentifier * ddcg_did = NULL;
-   DDCT_Display_Identifier ddct_did = NULL;
-   DDCT_Status ddct_status = ddct_create_model_sn_display_identifier(model, sn, &ddct_did);
+   DDCA_Display_Identifier ddct_did = NULL;
+   DDCA_Status ddct_status = ddca_create_model_sn_display_identifier(model, sn, &ddct_did);
    if (ddct_status == 0) {
       ddcg_did = g_object_new(DDCG_TYPE_DISPLAY_IDENTIFIER, NULL);
       ddcg_did->priv->ddct_did = ddct_did;
@@ -256,8 +256,8 @@ ddcg_display_identifier_create_dispno_identifier(
    g_return_val_if_fail (error == NULL || *error == NULL, NULL);
 
    DdcgDisplayIdentifier * ddcg_did = NULL;
-   DDCT_Display_Identifier ddct_did = NULL;
-   DDCT_Status ddct_status = ddct_create_dispno_display_identifier(dispno, &ddct_did);
+   DDCA_Display_Identifier ddct_did = NULL;
+   DDCA_Status ddct_status = ddca_create_dispno_display_identifier(dispno, &ddct_did);
    if (ddct_status == 0) {
       ddcg_did = g_object_new(DDCG_TYPE_DISPLAY_IDENTIFIER, NULL);
       ddcg_did->priv->ddct_did = ddct_did;
@@ -291,7 +291,7 @@ ddcg_display_identifier_repr(
    g_return_val_if_fail( DDCG_IS_DISPLAY_IDENTIFIER(ddcg_did), NULL);
 
    char * repr = NULL;
-   DDCT_Status ddct_status = ddct_repr_display_identifier(
+   DDCA_Status ddct_status = ddca_repr_display_identifier(
               ddcg_did->priv->ddct_did, &repr);
    if (ddct_status != 0) {
       GQuark domain = g_quark_from_string("DDCTOOL_DDCG");

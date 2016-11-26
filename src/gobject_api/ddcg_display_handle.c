@@ -97,7 +97,7 @@ ddcg_display_handle_open0(DdcgDisplayRef * ddcg_dref, DdcgDisplayHandle ** pddcg
    DdcgStatusCode result = 0;
    DDCT_Display_Ref ddct_dref = _ddcg_display_ref_get_ddct_object(ddcg_dref);
    DDCT_Display_Handle ddct_dh = NULL;
-   DDCT_Status ddct_status = ddct_open_display(ddct_dref, &ddct_dh);
+   DDCA_Status ddct_status = ddct_open_display(ddct_dref, &ddct_dh);
    if (ddct_status == 0) {
       DdcgDisplayHandle * ddcg_dh = ddcg_display_handle_new();
       ddcg_dh->priv->ddct_dh = ddct_dh;
@@ -127,7 +127,7 @@ ddcg_display_handle_open(DdcgDisplayRef * ddcg_dref, GError ** error) {
    DdcgDisplayHandle * ddcg_dh = NULL;
    DDCT_Display_Handle ddct_dh = NULL;
    DDCT_Display_Ref ddct_dref = _ddcg_display_ref_get_ddct_object(ddcg_dref);
-   DDCT_Status ddct_status = ddct_open_display(ddct_dref, &ddct_dh);
+   DDCA_Status ddct_status = ddct_open_display(ddct_dref, &ddct_dh);
    if (ddct_status == 0) {
       ddcg_dh = ddcg_display_handle_new();
       ddcg_dh->priv->ddct_dh = ddct_dh;
@@ -151,7 +151,7 @@ ddcg_display_handle_open(DdcgDisplayRef * ddcg_dref, GError ** error) {
  */
 DdcgStatusCode
 ddcg_display_handle_close(DdcgDisplayHandle * ddcg_dh) {
-   DDCT_Status ddct_status  = ddct_close_display(ddcg_dh->priv->ddct_dh);
+   DDCA_Status ddct_status  = ddct_close_display(ddcg_dh->priv->ddct_dh);
    DdcgStatusCode ddcg_status = ddct_status;     // TODO: replace with function
    return ddcg_status;
 }
@@ -176,7 +176,7 @@ ddcg_display_handle_get_nontable_vcp_value(
    DdcgContResponse * ddcg_response = NULL;
    DDCT_Non_Table_Value_Response ddct_response;
 
-   DDCT_Status ddct_status =  ddct_get_nontable_vcp_value(
+   DDCA_Status ddct_status =  ddct_get_nontable_vcp_value(
                   ddcg_dh->priv->ddct_dh,
                   feature_code,
                   &ddct_response);
@@ -221,7 +221,7 @@ ddcg_display_handle_repr(
    g_return_val_if_fail( DDCG_IS_DISPLAY_HANDLE(ddcg_dh), NULL);
 
    gchar * repr = NULL;
-   DDCT_Status ddct_status = ddct_repr_display_handle(
+   DDCA_Status ddct_status = ddct_repr_display_handle(
               ddcg_dh->priv->ddct_dh, &repr);
    // DBGMSG("repr=%p", repr);
    // DBGMSG("repr = %s", repr);
@@ -240,7 +240,7 @@ ddcg_display_handle_repr(
 #ifdef REF
 TO IMPLEMENT:
 
-DDCT_Status ddct_get_mccs_version(DDCT_Display_Handle ddct_dh, DDCT_MCCS_Version_Spec* pspec);
+DDCA_Status ddct_get_mccs_version(DDCT_Display_Handle ddct_dh, DDCT_MCCS_Version_Spec* pspec);
 
 
 #endif

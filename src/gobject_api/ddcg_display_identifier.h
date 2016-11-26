@@ -86,7 +86,7 @@ ddcg_display_identifier_report(
       DdcgDisplayIdentifier * ddcg_did,
       int                     depth);
 
-DDCT_Display_Identifier
+DDCA_Display_Identifier
 _ddcg_display_identifier_get_ddct_object(
       DdcgDisplayIdentifier * ddcg_did);
 

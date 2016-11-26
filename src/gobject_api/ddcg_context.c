@@ -68,7 +68,7 @@ static void ddcg_context_class_init(DdcgContextClass * cls) {
    GObjectClass * object_class = G_OBJECT_CLASS(cls);
    object_class->constructed = ddcg_context_constructed;
 #endif
-   ddct_init();
+   ddca_init();
    // cls->class_initialized = true;  // no member named class_initialized
 
 }
@@ -111,11 +111,11 @@ ddcg_context_create_display_ref(
 {
    g_return_val_if_fail (error == NULL || *error == NULL, NULL);
 
-   DDCT_Display_Identifier ddct_did = NULL;   // extract from DdcgDisplayIdentifier
+   DDCA_Display_Identifier ddct_did = NULL;   // extract from DdcgDisplayIdentifier
    ddct_did = _ddcg_display_identifier_get_ddct_object(ddcg_did);
    DdcgDisplayRef * ddcg_dref = NULL;
    DDCT_Display_Ref ddct_dref = NULL;     // is pointer
-   DDCT_Status ddct_status = ddct_get_display_ref(ddct_did, &ddct_dref);
+   DDCA_Status ddct_status = ddca_create_display_ref(ddct_did, &ddct_dref);
    if (ddct_status == 0) {
       DdcgDisplayRef * ddcg_dref = ddcg_display_ref_new();
       _ddcg_display_ref_set_ddct_object(ddcg_dref, ddct_dref);
