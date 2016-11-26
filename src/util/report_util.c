@@ -49,6 +49,10 @@ static int indent_spaces_stack_pos = -1;
 static FILE* output_dest_stack[OUTPUT_DEST_STACK_SIZE];
 static int   output_dest_stack_pos = -1;
 
+// work around for fact that can't initialize the initial stack entry to stdout
+static FILE* alt_initial_output_dest = NULL;
+static bool  initial_output_dest_changed = false;
+
 
 //
 // Indentation
@@ -101,13 +105,30 @@ void rpt_pop_output_dest() {
 
 
 void rpt_reset_output_dest_stack() {
-   output_dest_stack_pos = 0;
+   output_dest_stack_pos = -1;
 }
+
 
 FILE * rpt_cur_output_dest() {
    // special handling for unpushed case because can't statically initialize
    // output_dest_stack[0] to stdout
-   return (output_dest_stack_pos < 0) ? stdout : output_dest_stack[output_dest_stack_pos];
+   FILE * result = NULL;
+   if (output_dest_stack_pos < 0)
+      result = (initial_output_dest_changed) ? alt_initial_output_dest : stdout;
+   else
+      result = output_dest_stack[output_dest_stack_pos];
+   return result;
+}
+
+
+// needed for set_fout() in core.c
+void rpt_change_output_dest(FILE* new_dest) {
+   if (output_dest_stack_pos >= 0)
+      output_dest_stack[output_dest_stack_pos] = new_dest;
+   else {
+      initial_output_dest_changed = true;
+      alt_initial_output_dest = new_dest;
+   }
 }
 
 
@@ -117,7 +138,11 @@ FILE * rpt_cur_output_dest() {
  * The output is indented per the specified indentation depth.
  */
 void rpt_title(char * title, int depth) {
-   fprintf(rpt_cur_output_dest(), "%*s%s\n", rpt_indent(depth), "", title);
+   bool debug = false;
+   if (debug)
+      printf("(%s) Writing to %p\n", __func__, rpt_cur_output_dest());
+   // Use f0printf() instead?
+   f0printf(rpt_cur_output_dest(), "%*s%s\n", rpt_indent(depth), "", title);
 }
 
 
@@ -152,13 +177,8 @@ void rpt_vstring(int depth, char * format, ...) {
  * The output is indented per the specified indentation depth.
  */
 void rpt_structure_loc(const char * name, const void * ptr, int depth) {
-   // printf("(%s) Starting\n", __func__);
-   // printf("(%s) stdout=%p\n", __func__, stdout);
-   // printf("(%s) output_dest_stack_pos=%d, on stack=%p\n",
-   //        __func__, output_dest_stack_pos, output_dest_stack[output_dest_stack_pos]);
-   // printf("(%s) curOutputDest() =%p\n", __func__, curOutputDest() );
-   // fprintf(stdout, "%*s%s at: %p\n", rptIndent(depth), "", name, ptr);
-   fprintf(rpt_cur_output_dest(), "%*s%s at: %p\n", rpt_indent(depth), "", name, ptr);
+   // fprintf(rpt_cur_output_dest(), "%*s%s at: %p\n", rpt_indent(depth), "", name, ptr);
+   rpt_vstring(depth, "%s at: %p", name, ptr);
 }
 
 
@@ -169,13 +189,19 @@ void rpt_structure_loc(const char * name, const void * ptr, int depth) {
  * Optionally, a description string can be specified along with the name.
  */
 void rpt_str(const char * name, char * info, const char * val, int depth) {
+   bool debug = false;
+   if (debug)
+      printf("(%s) Writing to %p\n", __func__, rpt_cur_output_dest());
+
    char infobuf[100];
    if (info)
       snprintf(infobuf, 99, "(%s)", info);
    else
       infobuf[0] = '\0';
-   fprintf(rpt_cur_output_dest(),
-           "%*s%-25s %30s : %s\n", rpt_indent(depth), "", name, infobuf, val);
+
+   // fprintf(rpt_cur_output_dest(),
+   //         "%*s%-25s %30s : %s\n", rpt_indent(depth), "", name, infobuf, val);
+   rpt_vstring(depth, "%-25s %30s : %s", name, infobuf, val);
 }
 
 
@@ -184,10 +210,10 @@ void rpt_2col(char * s1,  char * s2,  int col2offset, bool offset_absolute, int 
    int indentct = rpt_indent(depth);
    if (offset_absolute)
       col1sz = col1sz - indentct;
-   fprintf(rpt_cur_output_dest(), "%*s%-*s%s", indentct, "", col1sz, s1, s2 );
+
+   // fprintf(rpt_cur_output_dest(), "%*s%-*s%s", indentct, "", col1sz, s1, s2 );
+   rpt_vstring(depth, "%-*s%s", col1sz, s1, s2 );
 }
-
-
 
 
 /* Writes a string to the current output destination, describing a named integer value.
