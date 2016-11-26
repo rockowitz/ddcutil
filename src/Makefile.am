@@ -135,7 +135,7 @@ sample_clients/clmain.c
 
 # files only in libddcutil:
 libddcutil_la_SOURCES = \
-libmain/ddct_public.c  
+libmain/ddcutil_c_api.c  
 
 
 

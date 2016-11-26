@@ -26,7 +26,7 @@
 
 #include <Python.h>
 
-#include ".libmain/ddcutil_c_api.h"
+#include "libmain/ddcutil_c_api.h"
 
 
 void ddcs_init(void);
