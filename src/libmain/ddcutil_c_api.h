@@ -1,6 +1,6 @@
-/* ddct_public.h
+/* ddcutil_c_api.h
  *
- * Initial cut at a public library API.
+ * Public C APi for ddcutil. .
  *
  * <copyright>
  * Copyright (C) 2014-2016 Sanford Rockowitz <rockowitz@minsoft.com>
@@ -23,8 +23,8 @@
  * </endcopyright>
  */
 
-#ifndef DDCT_PUBLIC_H_
-#define DDCT_PUBLIC_H_
+#ifndef DDCUTIL_C_API_H_
+#define DDCUTIL_C_API_H_
 
 #include <stdbool.h>
 #include <stdio.h>
@@ -459,4 +459,4 @@ DDCA_Status ddct_get_profile_related_values(DDCT_Display_Handle ddct_dh, char** 
 DDCA_Status ddct_set_profile_related_values(char * profile_values_string);
 
 
-#endif /* DDCT_PUBLIC_H_ */
+#endif /* DDCUTIL_C_API_H_ */

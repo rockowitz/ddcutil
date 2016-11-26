@@ -1,4 +1,4 @@
-/* ddct_public.c
+/* ddcutil_c_api.c
  *
  * <copyright>
  * Copyright (C) 2015-2016 Sanford Rockowitz <rockowitz@minsoft.com>
@@ -52,7 +52,7 @@
 #include "ddc/ddc_vcp_version.h"
 #include "ddc/ddc_vcp.h"
 
-#include "libmain/ddct_public.h"
+#include "libmain/ddcutil_c_api.h"
 
 
 #define WITH_DR(ddct_dref, action) \

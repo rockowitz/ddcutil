@@ -26,9 +26,9 @@
 
 #include "base/core.h"
 
-#include "ddc/ddc_dumpload.h"         // loadvcp.h should be elsewhere, should not be including in main
+#include "ddc/ddc_dumpload.h"     // loadvcp.h should be elsewhere, should not be including in main
 
-#include "libmain/ddct_public.h"
+#include "libmain/ddcutil_c_api.h"
 
 
 #define FUNCTION_ERRMSG(function_name,status_code) \

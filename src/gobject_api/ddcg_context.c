@@ -23,9 +23,8 @@
 
 #include "base/core.h"
 
-#include "libmain/ddct_public.h"
-
 #include "gobject_api/ddcg_context.h"
+#include "../libmain/ddcutil_c_api.h"
 
 
 

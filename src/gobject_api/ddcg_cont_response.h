@@ -26,7 +26,7 @@
 
 #include <glib-object.h>
 
-#include "libmain/ddct_public.h"
+#include "../libmain/ddcutil_c_api.h"
 
 G_BEGIN_DECLS
 

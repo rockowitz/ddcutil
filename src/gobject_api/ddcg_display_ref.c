@@ -25,10 +25,9 @@
 #include <errno.h>
 #include <string.h>
 
+#include "../libmain/ddcutil_c_api.h"
 #include "util/report_util.h"
 #include "base/core.h"
-#include "libmain/ddct_public.h"
-
 #include "gobject_api/ddcg_gobjects.h"
 
 

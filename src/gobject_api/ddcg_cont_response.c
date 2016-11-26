@@ -25,9 +25,8 @@
 
 #include "base/core.h"
 
-#include "libmain/ddct_public.h"
-
 #include "gobject_api/ddcg_cont_response.h"
+#include "../libmain/ddcutil_c_api.h"
 
 
 typedef struct {
