@@ -34,17 +34,17 @@
 #define FUNCTION_ERRMSG(function_name,status_code) \
    printf("(%s) %s() returned %d (%s): %s\n",      \
           __func__, function_name, status_code,    \
-          ddct_status_code_name(status_code),      \
-          ddct_status_code_desc(status_code))
+          ddca_status_code_name(status_code),      \
+          ddca_status_code_desc(status_code))
 
 
 char * interpret_feature_flags_readwrite(unsigned long feature_flags) {
    char * result = NULL;
-   if (feature_flags & DDCT_RW)
+   if (feature_flags & DDCA_RW)
       result = "read write";
-   else if (feature_flags & DDCT_RO)
+   else if (feature_flags & DDCA_RO)
       result = "read only";
-   else if (feature_flags & DDCT_WO)
+   else if (feature_flags & DDCA_WO)
       result = "write only";
    else
       result = "unknown readwritability";
@@ -53,13 +53,13 @@ char * interpret_feature_flags_readwrite(unsigned long feature_flags) {
 
 char * interpret_feature_flags_type(unsigned long feature_flags) {
    char * result = NULL;
-   if (feature_flags & DDCT_CONTINUOUS)
+   if (feature_flags & DDCA_CONTINUOUS)
       result = "continuous";
-   else if (feature_flags & DDCT_TABLE)
+   else if (feature_flags & DDCA_TABLE)
       result = "table";
-   else if (feature_flags & DDCT_SIMPLE_NC)
+   else if (feature_flags & DDCA_SIMPLE_NC)
       result = "simple non-continuous";
-   else if (feature_flags & DDCT_COMPLEX_NC)
+   else if (feature_flags & DDCA_COMPLEX_NC)
       result = "complex non-continuous";
    else
       result = "unknown type";
@@ -67,7 +67,7 @@ char * interpret_feature_flags_type(unsigned long feature_flags) {
 }
 
 void report_feature_flags(Byte feature_code, unsigned long feature_flags) {
-   if ( !(feature_flags & DDCT_KNOWN) )
+   if ( !(feature_flags & DDCA_KNOWN) )
       printf("Feature: %02x: unknown\n", feature_code);
    else
       printf("Feature: %02x: %s, %s\n",
@@ -80,9 +80,9 @@ void report_feature_flags(Byte feature_code, unsigned long feature_flags) {
 
 void test_get_single_feature_info(DDCT_Display_Handle dh, Byte feature_code) {
    printf("Getting metadata for feature 0x%02x\n", feature_code);
-   printf("Feature name: %s\n", ddct_get_feature_name(feature_code));
+   printf("Feature name: %s\n", ddca_get_feature_name(feature_code));
    unsigned long feature_flags;
-     DDCT_Status rc = ddct_get_feature_info_by_display(
+     DDCA_Status rc = ddca_get_feature_info_by_display(
              dh,    // needed because in rare cases feature info is MCCS version dependent
              feature_code,
              &feature_flags);
@@ -104,12 +104,12 @@ void test_get_feature_info(DDCT_Display_Handle dh) {
 
 bool test_cont_value(DDCT_Display_Handle dh, Byte feature_code) {
 
-   DDCT_Status rc;
+   DDCA_Status rc;
    bool ok = true;
-   char * feature_name = ddct_get_feature_name(feature_code);
+   char * feature_name = ddca_get_feature_name(feature_code);
 
    unsigned long feature_flags;
-   rc = ddct_get_feature_info_by_display(
+   rc = ddca_get_feature_info_by_display(
            dh,    // needed because in rare cases feature info is MCCS version dependent
            feature_code,
            &feature_flags);
@@ -181,7 +181,7 @@ bool test_cont_value(DDCT_Display_Handle dh, Byte feature_code) {
 
 bool test_get_capabilities_string(DDCT_Display_Handle dh) {
    char * capabilities = NULL;
-   DDCT_Status rc =  ddct_get_capabilities_string(dh, &capabilities);
+   DDCA_Status rc =  ddct_get_capabilities_string(dh, &capabilities);
    if (rc != 0)
       FUNCTION_ERRMSG("ddct_get_capabilities_string", rc);
    else
@@ -200,47 +200,47 @@ bool test_get_capabilities_string(DDCT_Display_Handle dh) {
 int main(int argc, char** argv) {
    printf("(%s) Starting.\n", __func__);
 
-   DDCT_Status rc;
-   DDCT_Display_Identifier did;
+   DDCA_Status rc;
+   DDCA_Display_Identifier did;
    DDCT_Display_Ref dref;
    DDCT_Display_Handle dh = NULL;  // initialize to avoid clang analyzer warning
 
 
-   ddct_init();
+   ddca_init();
 
-   printf("(%s) Built with ADL support: %s\n", __func__, (ddct_built_with_adl()) ? "yes" : "no");
+   printf("(%s) Built with ADL support: %s\n", __func__, (ddca_built_with_adl()) ? "yes" : "no");
 
-   rc = ddct_set_max_tries(DDCT_WRITE_READ_TRIES, 16);
+   rc = ddca_set_max_tries(DDCA_WRITE_READ_TRIES, 16);
    printf("(%s) ddct_set_max_tries(..,16) returned: %d\n", __func__, rc);
-   rc = ddct_set_max_tries(DDCT_WRITE_READ_TRIES, 15);
+   rc = ddca_set_max_tries(DDCA_WRITE_READ_TRIES, 15);
    if (rc != 0)
       FUNCTION_ERRMSG("DDCT_WRITE_READ_TRIES:ddct_set_max_tries", rc);
-   rc = ddct_set_max_tries(DDCT_MULTI_PART_TRIES, 15);
+   rc = ddca_set_max_tries(DDCA_MULTI_PART_TRIES, 15);
    if (rc != 0)
       FUNCTION_ERRMSG("DDCT_MULTI_PART_TRIES:ddct_set_max_tries", rc);
 
 
-   printf("(%s) max write only tries: %d\n", __func__, ddct_get_max_tries(DDCT_WRITE_ONLY_TRIES));
-   printf("(%s) max write read tries: %d\n", __func__, ddct_get_max_tries(DDCT_WRITE_READ_TRIES));
-   printf("(%s) max multi part tries: %d\n", __func__, ddct_get_max_tries(DDCT_MULTI_PART_TRIES));
+   printf("(%s) max write only tries: %d\n", __func__, ddca_get_max_tries(DDCA_WRITE_ONLY_TRIES));
+   printf("(%s) max write read tries: %d\n", __func__, ddca_get_max_tries(DDCA_WRITE_READ_TRIES));
+   printf("(%s) max multi part tries: %d\n", __func__, ddca_get_max_tries(DDCA_MULTI_PART_TRIES));
 
 
-   rc = ddct_create_dispno_display_identifier(2, &did);
+   rc = ddca_create_dispno_display_identifier(2, &did);
    assert(rc == 0);
    char * did_repr = NULL;
-   rc = ddct_repr_display_identifier(did, &did_repr);
+   rc = ddca_repr_display_identifier(did, &did_repr);
    assert(rc == 0);
    printf("(%s) did=%s\n", __func__, did_repr);
 
-   rc = ddct_get_display_ref(did, &dref);
+   rc = ddca_create_display_ref(did, &dref);
 
    if (rc != 0) {
       printf("(%s) ddct_get_display_ref() returned %d (%s): %s\n",
-             __func__, rc, ddct_status_code_name(rc), ddct_status_code_desc(rc));
+             __func__, rc, ddca_status_code_name(rc), ddca_status_code_desc(rc));
    }
    else {
       char * dref_repr;
-      rc = ddct_repr_display_ref(dref, &dref_repr);
+      rc = ddca_repr_display_ref(dref, &dref_repr);
       assert(rc == 0);
       printf("(%s) dref=%s\n", __func__, dref_repr);
 
@@ -296,11 +296,11 @@ int main(int argc, char** argv) {
          FUNCTION_ERRMSG("ddct_close_display", rc);
    }
    if (dref) {
-      rc = ddct_free_display_ref(dref);
+      rc = ddca_free_display_ref(dref);
       printf("(%s) ddct_free_display_ref() returned %d\n", __func__, rc);
    }
    if (did) {
-      rc = ddct_free_display_identifier(did);
+      rc = ddca_free_display_identifier(did);
       printf("(%s) ddct_free_display_identifier() returned %d\n", __func__, rc);
    }
    return 0;
