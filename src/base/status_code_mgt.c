@@ -240,7 +240,7 @@ Global_Status_Code public_to_global_status_code(Public_Status_Code psc) {
    Global_Status_Code gsc =
          (get_modulation(psc) == RR_BASE)
              ? modulate_rc(psc, RR_ERRNO)
-             : gsc;
+             : psc;
    return gsc;
 }
 
