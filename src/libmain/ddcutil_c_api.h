@@ -31,6 +31,11 @@
 
 #include "util/coredefs.h"
 
+// is this the right location?
+#ifdef __cplusplus
+extern "C"
+#endif
+
 
 /** @file ddct_public.h
  *  @brief ddcutil public C API
@@ -458,5 +463,7 @@ DDCA_Status ddct_get_profile_related_values(DDCT_Display_Handle ddct_dh, char** 
 
 DDCA_Status ddct_set_profile_related_values(char * profile_values_string);
 
-
+#ifdef __cplusplus
+}
+#endif
 #endif /* DDCUTIL_C_API_H_ */
