@@ -96,7 +96,7 @@ Version_Spec get_vcp_version_by_display_handle(Display_Handle * dh) {
 
          // verbose output is distracting since this function is called when
          // querying for other things
-         Output_Level olev = get_output_level();
+         DDCA_Output_Level olev = get_output_level();
          if (olev == OL_VERBOSE)
             set_output_level(OL_NORMAL);
          Global_Status_Code gsc = get_vcp_value(dh, 0xdf, NON_TABLE_VCP_VALUE, &pvalrec);

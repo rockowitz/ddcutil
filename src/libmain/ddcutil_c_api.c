@@ -604,7 +604,7 @@ DDCA_Status ddca_repr_display_handle(DDCA_Display_Handle ddct_dh, char ** repr) 
 }
 
 
-DDCA_Status ddct_get_mccs_version(DDCA_Display_Handle ddct_dh, DDCT_MCCS_Version_Spec* pspec) {
+DDCA_Status ddct_get_mccs_version(DDCA_Display_Handle ddct_dh, DDCA_MCCS_Version_Spec* pspec) {
    if (!library_initialized)
       return DDCL_UNINITIALIZED;
    DDCA_Status rc = 0;
@@ -644,7 +644,7 @@ DDCA_Status ddct_get_edid_by_display_ref(DDCA_Display_Ref ddct_dref, Byte** pbyt
 
 
 
-static DDCT_MCCS_Version_Spec mccs_version_id_to_spec(DDCA_MCCS_Version_Id id) {
+static DDCA_MCCS_Version_Spec mccs_version_id_to_spec(DDCA_MCCS_Version_Id id) {
    Version_Spec vspec = VCP_SPEC_ANY;
    // use table instead?
    switch(id) {
@@ -655,7 +655,7 @@ static DDCT_MCCS_Version_Spec mccs_version_id_to_spec(DDCA_MCCS_Version_Id id) {
    case DDCA_V30:    vspec = VCP_SPEC_V30;    break;
    case DDCA_V22:    vspec = VCP_SPEC_V22;    break;
    }
-   DDCT_MCCS_Version_Spec converted;
+   DDCA_MCCS_Version_Spec converted;
    converted.major = vspec.major;
    converted.minor = vspec.minor;
 
@@ -665,15 +665,15 @@ static DDCT_MCCS_Version_Spec mccs_version_id_to_spec(DDCA_MCCS_Version_Id id) {
 
 // DUH? just use a cast
 
-static DDCT_MCCS_Version_Spec version_spec_to_mccs_version_spec(Version_Spec vspec) {
-   DDCT_MCCS_Version_Spec converted;
+static DDCA_MCCS_Version_Spec version_spec_to_mccs_version_spec(Version_Spec vspec) {
+   DDCA_MCCS_Version_Spec converted;
 
    converted.major = vspec.major;
    converted.minor = vspec.minor;
    return converted;
 }
 
-static DDCA_MCCS_Version_Id mccs_version_spec_to_id(DDCT_MCCS_Version_Spec vspec) {
+static DDCA_MCCS_Version_Id mccs_version_spec_to_id(DDCA_MCCS_Version_Spec vspec) {
    DDCA_MCCS_Version_Id result = DDCA_VUNK;    // initialize to avoid compiler warning
 
    if (vspec.major == 1 && vspec.minor == 0)
@@ -707,7 +707,7 @@ DDCA_Status ddca_get_feature_info_by_vcp_version(
       unsigned long *         flags)
 {
    DDCA_Status rc = 0;
-   DDCT_MCCS_Version_Spec vspec = mccs_version_id_to_spec(mccs_version_id);
+   DDCA_MCCS_Version_Spec vspec = mccs_version_id_to_spec(mccs_version_id);
 
    VCP_Feature_Table_Entry * pentry = vcp_find_feature_by_hexid(feature_code);
    if (!pentry) {
@@ -768,7 +768,7 @@ DDCA_Status ddca_get_feature_info_by_display(
          // DDCT_MCCS_Version_Spec vspec2;           // = {vspec.major, vspec.minor};
          // vspec2.major = vspec.major;
          // vspec2.minor = vspec.minor;
-         DDCT_MCCS_Version_Spec vspec2     = version_spec_to_mccs_version_spec(vspec);
+         DDCA_MCCS_Version_Spec vspec2     = version_spec_to_mccs_version_spec(vspec);
       // DDCT_MCCS_Version_Spec vspec2     = (DDCT_MCCS_Version_Spec) vspec;
          DDCA_MCCS_Version_Id   version_id = mccs_version_spec_to_id(vspec2);
 
@@ -803,7 +803,7 @@ DDCA_Status ddca_get_simple_sl_value_table(
 {
    DDCA_Status rc = 0;
    *pvalue_table = NULL;
-   DDCT_MCCS_Version_Spec vspec = mccs_version_id_to_spec(mccs_version_id);
+   DDCA_MCCS_Version_Spec vspec = mccs_version_id_to_spec(mccs_version_id);
 
    VCP_Feature_Table_Entry * pentry = vcp_find_feature_by_hexid(feature_code);
    if (!pentry) {

@@ -30,6 +30,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "ddcutil_types.h"
+
 #include "util/coredefs.h"
 
 
@@ -128,17 +130,10 @@ void set_ferr_to_default();
 // Message level control
 //
 
-// Values assigned to constants allow them to be or'd in bit flags
-// Values are ascending in order of verbosity, except for OL_DEFAULT
-typedef enum {OL_DEFAULT=0x01,
-              OL_PROGRAM=0x02,
-              OL_TERSE  =0x04,
-              OL_NORMAL =0x08,
-              OL_VERBOSE=0x10
-} Output_Level;
-Output_Level get_output_level();
-void         set_output_level(Output_Level newval);
-char *       output_level_name(Output_Level val);
+
+DDCA_Output_Level get_output_level();
+void         set_output_level(DDCA_Output_Level newval);
+char *       output_level_name(DDCA_Output_Level val);
 
 
 // Debug trace message control

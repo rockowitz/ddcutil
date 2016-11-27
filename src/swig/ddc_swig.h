@@ -100,7 +100,7 @@ typedef struct {
 } DDCS_MCCS_Version_Spec;
 #endif
 
-typedef DDCT_MCCS_Version_Spec DDCS_MCCS_Version_Spec;
+typedef DDCA_MCCS_Version_Spec DDCS_MCCS_Version_Spec;
 
 unsigned long ddcs_get_feature_info_by_vcp_version(
                DDCS_VCP_Feature_Code    feature_code,

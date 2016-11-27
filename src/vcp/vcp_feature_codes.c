@@ -153,7 +153,7 @@ void vcp_list_feature_codes(FILE * fh) {
  *
  * Returns:      byte of flags
  */
-Byte valid_versions(VCP_Feature_Table_Entry * pentry) {
+static Byte valid_versions(VCP_Feature_Table_Entry * pentry) {
    Byte result = 0x00;
 
    if (pentry->v20_flags)
@@ -375,7 +375,7 @@ void report_vcp_feature_table_entry(VCP_Feature_Table_Entry * pentry, int depth)
    char workbuf[200];
 
    int d1 = depth+1;
-   Output_Level output_level = get_output_level();
+   DDCA_Output_Level output_level = get_output_level();
    Version_Spec vspec = get_highest_non_deprecated_version(pentry);
    Version_Feature_Flags vflags = get_version_specific_feature_flags(pentry, vspec);
    char * feature_name = get_non_version_specific_feature_name(pentry);

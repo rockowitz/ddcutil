@@ -272,7 +272,8 @@ AM_CPPFLAGS=     \
 $(GLIB_CFLAGS)   \
 $(XRANDR_CFLAGS) \
 $(LIBUSB_CFLAGS) \
--I$(srcdir) 
+-I$(srcdir)      \
+-I$(srcdir)/public
 
 # # temporarily hardcode PYTHON_CPPFLAGS here
 # AM_CPPFLAGS += \

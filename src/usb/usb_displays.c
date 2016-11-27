@@ -295,7 +295,7 @@ static char * usb_synthesize_capabilities_string(Usb_Monitor_Info * moninfo) {
 static GPtrArray * get_usb_monitor_list() {
    bool debug = false;
    DBGMSF(debug, "Starting...");
-   Output_Level ol = get_output_level();
+   DDCA_Output_Level ol = get_output_level();
 
    if (usb_monitors)      // already initialized?
       return usb_monitors;
@@ -576,7 +576,7 @@ bool usb_is_valid_display_ref(Display_Ref * dref, bool emit_error_msg) {
 
 
 void usb_show_active_display_by_display_ref(Display_Ref * dref, int depth) {
-   Output_Level output_level = get_output_level();
+   DDCA_Output_Level output_level = get_output_level();
    rpt_vstring(depth, "USB bus:device:      %d:%d", dref->usb_bus, dref->usb_device);
 
    Usb_Monitor_Info * moninfo = usb_find_monitor_by_display_ref(dref);
@@ -655,7 +655,7 @@ char * usb_get_capabilities_string_by_display_handle(Display_Handle * dh) {
 bool check_usb_monitor( char * device_name ) {
    assert(device_name);
    bool debug = false;
-   Output_Level ol = get_output_level();
+   DDCA_Output_Level ol = get_output_level();
    if (debug)
       ol = OL_VERBOSE;
 

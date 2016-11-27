@@ -253,7 +253,7 @@ int main(int argc, char** argv) {
          /* rc = */  ddca_repr_display_handle(dh, &dh_repr);
          printf("(%s) display handle: %s\n", __func__, dh_repr);
 
-         DDCT_MCCS_Version_Spec vspec;
+         DDCA_MCCS_Version_Spec vspec;
          rc = ddct_get_mccs_version(dh, &vspec);
          if (rc != 0) {
             FUNCTION_ERRMSG("ddct_get_mccs_version_spec", rc);

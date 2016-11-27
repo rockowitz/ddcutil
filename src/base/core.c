@@ -309,18 +309,18 @@ print_simple_title_value(int    offset_start_to_title,
 // Message level control for normal output
 //
 
-static Output_Level output_level;
+static DDCA_Output_Level output_level;
 
-Output_Level get_output_level() {
+DDCA_Output_Level get_output_level() {
    return output_level;
 }
 
-void set_output_level(Output_Level newval) {
+void set_output_level(DDCA_Output_Level newval) {
    // printf("(%s) newval=%s  \n", __func__, msgLevelName(newval) );
    output_level = newval;
 }
 
-char * output_level_name(Output_Level val) {
+char * output_level_name(DDCA_Output_Level val) {
    char * result = NULL;
    switch (val) {
       case OL_DEFAULT:

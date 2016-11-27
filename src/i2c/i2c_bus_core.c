@@ -1161,7 +1161,7 @@ Display_Info_List i2c_get_displays() {
  */
 void report_businfo(Bus_Info * bus_info, int depth) {
    bool debug = false;
-   Output_Level output_level = get_output_level();
+   DDCA_Output_Level output_level = get_output_level();
    DBGMSF(debug, "bus_info=%p, output_level=%s", bus_info, output_level_name(output_level));
    assert(bus_info);
 
@@ -1241,7 +1241,7 @@ void report_businfo(Bus_Info * bus_info, int depth) {
  * Returns: nothing
  */
 void i2c_report_active_display(Bus_Info * businfo, int depth) {
-   Output_Level output_level = get_output_level();
+   DDCA_Output_Level output_level = get_output_level();
    rpt_vstring(depth, "I2C bus:             /dev/i2c-%d", businfo->busno);
 
    if (output_level >= OL_NORMAL)
@@ -1324,7 +1324,7 @@ int i2c_report_buses(bool report_all, int depth) {
    // TRCMSGTG(tg, "Starting. report_all=%s\n", bool_repr(report_all));
    DBGTRC(debug, TRACE_GROUP, "Starting. report_all=%s\n", bool_repr(report_all));
 
-   Output_Level output_level = get_output_level();
+   DDCA_Output_Level output_level = get_output_level();
    int busct = i2c_get_busct();
    int reported_ct = 0;
    if (output_level != OL_PROGRAM) {

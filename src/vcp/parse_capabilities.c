@@ -77,7 +77,7 @@ void report_parsed_capabilities(
    assert(pcaps && memcmp(pcaps->marker, PARSED_CAPABILITIES_MARKER, 4) == 0);
    DBGMSF(debug, "Starting. pcaps->raw_cmds_segment_seen=%s, pcaps->commands=%p, pcaps->vcp_features=%p",
           bool_repr(pcaps->raw_cmds_segment_seen), pcaps->commands, pcaps->vcp_features);
-   Output_Level output_level = get_output_level();
+   DDCA_Output_Level output_level = get_output_level();
    if (output_level >= OL_VERBOSE) {
       printf("%s capabilities string: %s\n",
             (pcaps->raw_value_synthesized) ? "Synthesized unparsed" : "Unparsed",

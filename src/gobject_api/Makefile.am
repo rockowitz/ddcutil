@@ -48,6 +48,7 @@ goclient_SOURCES = \
 #
 AM_CPPFLAGS = \
   -I..        \
+  -I../public  \
   $(GOBJECT_CFLAGS) 
 
 # Be careful about library ordering

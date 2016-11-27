@@ -148,7 +148,7 @@ Parsed_Capabilities * perform_get_capabilities_by_display_handle(Display_Handle 
       assert(capabilities_string);
       // pcap is always set, but may be damaged if there was a parsing error
       pcap = parse_capabilities_string(capabilities_string);
-      Output_Level output_level = get_output_level();
+      DDCA_Output_Level output_level = get_output_level();
       if (output_level <= OL_TERSE) {
          printf("%s capabilities string: %s\n",
                (dh->io_mode == USB_IO) ? "Synthesized unparsed" : "Unparsed",

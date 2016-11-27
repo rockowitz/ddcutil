@@ -613,7 +613,7 @@ DisplayIdInfo* get_adl_display_id_info(int iAdapterIndex, int iDisplayIndex) {
  * Returns:      nothing
  */
 void adl_report_active_display(ADL_Display_Rec * pdisp, int depth) {
-   Output_Level output_level = get_output_level();
+   DDCA_Output_Level output_level = get_output_level();
    rpt_vstring(depth, "ADL Adapter number:   %d", pdisp->iAdapterIndex);
    rpt_vstring(depth, "ADL Display number:   %d", pdisp->iDisplayIndex);
    // Can be true even if doesn't support DDC, e.g. Dell 1905FP

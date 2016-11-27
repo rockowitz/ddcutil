@@ -49,7 +49,7 @@
 // Variables used by callback functions
 static char *       adlwork       = NULL;
 static char *       usbwork       = NULL;
-static Output_Level output_level  = OL_DEFAULT;
+static DDCA_Output_Level output_level  = OL_DEFAULT;
 static int          iAdapterIndex = -1;
 static int          iDisplayIndex = -1;
 static Stats_Type   stats_work    = STATS_NONE;

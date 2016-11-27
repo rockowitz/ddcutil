@@ -156,7 +156,7 @@ void show_capabilities_feature(Capabilities_Feature_Record * vfr, Version_Spec v
    // if (vfr->values)
    //    report_id_array(vfr->values, "Feature values:");
    char * buf0 = NULL;
-   Output_Level ol = get_output_level();
+   DDCA_Output_Level ol = get_output_level();
    if (ol >= OL_VERBOSE && vfr->value_string) {
       printf("    Values (unparsed): %s\n", vfr->value_string);
    }

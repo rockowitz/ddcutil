@@ -90,7 +90,7 @@ static bool verify_adl_display_ref(Display_Ref * dref) {
    // that supports DDC allows for for brightness adjustment.
 
    // verbose output is distracting since this function is called whenquerying for other things
-   Output_Level olev = get_output_level();
+   DDCA_Output_Level olev = get_output_level();
    if (olev == OL_VERBOSE)
       set_output_level(OL_NORMAL);
    gsc = get_vcp_value(dh, 0x10, NON_TABLE_VCP_VALUE, &pvalrec);
@@ -492,7 +492,7 @@ ddc_report_active_display(Display_Info * curinfo, int depth) {
       break;
    }
 
-   Output_Level output_level = get_output_level();
+   DDCA_Output_Level output_level = get_output_level();
    if (output_level >= OL_NORMAL  && ddc_is_valid_display_ref(curinfo->dref, false)) {
       // n. requires write access since may call get_vcp_value(), which does a write
       Display_Handle * dh = NULL;

@@ -175,7 +175,7 @@ get_raw_value_for_feature_table_entry(
    Byte feature_code = frec->code;
    bool is_table_feature = is_table_feature_by_display_handle(frec, dh);
    Vcp_Value_Type feature_type = (is_table_feature) ? TABLE_VCP_VALUE : NON_TABLE_VCP_VALUE;
-   Output_Level output_level = get_output_level();
+   DDCA_Output_Level output_level = get_output_level();
    Single_Vcp_Value * valrec = NULL;
    if (dh->io_mode == USB_IO) {
 #ifdef USE_USB
@@ -379,7 +379,7 @@ get_formatted_value_for_feature_table_entry(
    char * feature_name = get_version_sensitive_feature_name(vcp_entry, vspec);
    bool is_table_feature = is_table_feature_by_display_handle(vcp_entry, dh);
    Vcp_Value_Type feature_type = (is_table_feature) ? TABLE_VCP_VALUE : NON_TABLE_VCP_VALUE;
-   Output_Level output_level = get_output_level();
+   DDCA_Output_Level output_level = get_output_level();
    if (output_level >= OL_VERBOSE) {
       fprintf(msg_fh, "\nGetting data for %s VCP code 0x%02x - %s:\n",
                             (is_table_feature) ? "table" : "non-table",
@@ -480,7 +480,7 @@ show_feature_set_values(
    DBGMSF(debug, "Starting.  collector=%p", collector);
 
    VCP_Feature_Subset subset_id = get_feature_set_subset_id(feature_set);
-   Output_Level output_level = get_output_level();
+   DDCA_Output_Level output_level = get_output_level();
    bool show_unsupported = false;
    if ( force_show_unsupported     ||
         output_level >= OL_VERBOSE ||

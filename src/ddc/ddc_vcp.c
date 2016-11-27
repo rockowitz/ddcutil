@@ -292,7 +292,7 @@ Global_Status_Code get_table_vcp_value(
    DBGTRC(debug, TRACE_GROUP, "Starting. Reading feature 0x%02x", feature_code);
 
    Global_Status_Code gsc = 0;
-   Output_Level output_level = get_output_level();
+   DDCA_Output_Level output_level = get_output_level();
    Buffer * paccumulator =  NULL;
 
    gsc = multi_part_read_with_retry(

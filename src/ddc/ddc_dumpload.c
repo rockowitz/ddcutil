@@ -392,7 +392,7 @@ bye:
 Global_Status_Code loadvcp_by_ntsa(Null_Terminated_String_Array ntsa, Display_Handle * dh) {
    bool debug = false;
 
-   Output_Level output_level = get_output_level();
+   DDCA_Output_Level output_level = get_output_level();
    bool verbose = (output_level >= OL_VERBOSE);
    // DBGMSG("output_level=%d, verbose=%d", output_level, verbose);
    if (debug) {

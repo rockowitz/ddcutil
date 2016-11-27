@@ -29,6 +29,8 @@
 #include <stdbool.h>
 #include <stdio.h>
 
+#include "ddcutil_types.h"
+
 #include "util/coredefs.h"
 
 // is this the right location?
@@ -114,11 +116,6 @@ char * ddca_status_code_desc(DDCA_Status status_code);
 
 // Global Settings
 
-// Get and set timeouts
-typedef enum{
-   DDCA_TIMEOUT_STANDARD,      /**< Normal retry interval */
-   DDCA_TIMEOUT_TABLE_RETRY    /**< Special timeout for Table reads and writes */
-} DDCA_Timeout_Type;
 
 /** Gets the I2C timeout in milliseconds for the specified timeout class.
  * @param timeout_type timeout type
@@ -132,14 +129,8 @@ int  ddca_get_timeout_millis(DDCA_Timeout_Type timeout_type);
  */
 void ddca_set_timeout_millis(DDCA_Timeout_Type timeout_type, int millisec);
 
-// Get and set max retries
-typedef enum{
-   DDCA_WRITE_ONLY_TRIES,     /**< Maximum write-only operation tries */
-   DDCA_WRITE_READ_TRIES,     /**< Maximum read-write operation tries */
-   DDCA_MULTI_PART_TRIES      /**< Maximum multi-part operation tries */
-} DDCA_Retry_Type;
 
-/** Gets the maximum number of I2C retries the specified operation type.
+/** Gets the maximum number of I2C retries for the specified operation type.
  * @param  retry_type   I2C operation type
  * @return maximum number of retries
  */
@@ -174,18 +165,8 @@ void ddca_set_ferr(
 /**
  * Redirect output that normally goes to STDERR back to STDERR
  */
+void ddca_set_ferr_to_default();
 
-/** Output Level
- *
- * Values assigned to constants allow them to be or'd in bit flags.
- */
- // matches enum Output_Level in core.h
-typedef enum {DDCA_OL_DEFAULT=0x01,   /**< used how? */
-              DDCA_OL_PROGRAM=0x02,   /**< Special level for programmatic use */
-              DDCA_OL_TERSE  =0x04,   /**< Brief   output  */
-              DDCA_OL_NORMAL =0x08,   /**< Normal  output */
-              DDCA_OL_VERBOSE=0x10    /**< Verbose output */
-} DDCA_Output_Level;
 
 /** Gets the current output level */
 DDCA_Output_Level ddca_get_output_level();
@@ -215,21 +196,6 @@ bool ddca_is_report_ddc_errors_enabled();
 //
 // Display Identifiers
 //
-
-/** Opaque display identifier
- *
- * A display identifier holds the criteria for selecting a display,
- * typically as specified by the user.
- *
- * It can take several forms:
- * - the display number assigned by dccutil
- * - an I2C bus number
- * - an ADL (adapter index, display index) pair
- * - a  USB (bus number, device number) pair
- * - an EDID
- * - model and serial number strings
- * */
-typedef void * DDCA_Display_Identifier;
 
 /** Creates a display identifier using the display number assigned by ddcutil
  * @param[in]  dispno  display number
@@ -302,17 +268,6 @@ DDCA_Status ddca_repr_display_identifier(DDCA_Display_Identifier did, char** pre
 // Display References
 //
 
-/** Opaque display reference.
- *
- * A display reference is a reference to a display.  It takes
- * one of three forms:
- * - an I2C bus number
- * - an ADL (adapter index, display index) pair
- * - a  USB (bus number, device number pair)
- *
- */
-typedef void * DDCA_Display_Ref;
-
 /** Creates a display reference from a display identifier.
  * @param[in]  did display identifier
  * @param[out] pdref where to return display reference
@@ -344,12 +299,6 @@ void        ddct_report_display_ref(DDCA_Display_Ref dref, int depth);
 // Display Handles
 //
 
-/** Opaque display handle
- *
- * A display handle represents an open display on which actions can be performed.
- */
-typedef void * DDCA_Display_Handle;
-
 /** Open a display
  * @param[in]  dref display reference for display to open
  * @param[out] pdh where to return display handle
@@ -374,44 +323,6 @@ DDCA_Status ddca_repr_display_handle(DDCA_Display_Handle dh, char** prepr);
 // VCP Feature Information
 //
 
-typedef struct {
-   Byte    major;
-   Byte    minor;
-} DDCT_MCCS_Version_Spec;
-
-// in sync w constants MCCS_V.. in vcp_feature_codes.c
-/** MCCS (VCP) Feature Version IDs */
-typedef enum {DDCA_VANY = 0,          /**< Match any MCCS version */
-              DDCA_V10  = 1,          /**< MCCS v1.0 */
-              DDCA_V20  = 2,          /**< MCCS v2.0 */
-              DDCA_V21  = 4,          /**< MCCS v2.1 */
-              DDCA_V30  = 8,          /**< MCCS v3.0 */
-              DDCA_V22  =16           /**< MCCS v2.2 */
-} DDCA_MCCS_Version_Id;
-
-#define DDCA_VUNK DDCA_VANY
-
-/** MCCS VCP Feature Id */
-typedef Byte DDCA_VCP_Feature_Code;
-
-
-//
-// VCP Feature Description
-//
-
-// flags for ddca_get_feature_info():
-#define DDCA_CONTINUOUS   0x4000    /**< Continuous feature */
-#define DDCA_SIMPLE_NC    0x2000    /**< Non-continuous feature, having a define list of values in byte SL */
-#define DDCA_COMPLEX_NC   0x1000    /**< Non-continuous feature, having a complex interpretation using one or more of SL, SH, ML, MH */
-#define DDCA_NC           (DDCA_SIMPLE_NC | DDCA_COMPLEX_NC)  /**< Non-continous feature, of any type */
-#define DDCA_TABLE        0x0800    /**< Table type feature */
-#define DDCA_KNOWN        (DDCA_CONTINUOUS | DDCA_NC | DDCA_TABLE)
-#define DDCA_RO           0x0400    /**< Read only feature */
-#define DDCA_WO           0x0200    /**< Write only feature */
-#define DDCA_RW           0x0100    /**< Feature is both readable and writable */
-#define DDCA_READABLE     (DDCA_RO | DDCA_RW)  /**< Feature is either RW or RO */
-#define DDCA_WRITABLE     (DDCA_WO | DDCA_RW)  /**< Feature is either RW or WO */
-
 /** Gets information for a VCP feature.
  *
  * VCP characteristics (C vs NC, RW vs RO, etc) can vary by MCCS version.
@@ -435,19 +346,12 @@ DDCA_Status ddca_get_feature_info_by_vcp_version(
 char *      ddca_get_feature_name(DDCA_VCP_Feature_Code feature_code);
 
 
-typedef
-struct {
-   Byte   value_code;
-   char * value_name;
-} DDCA_Feature_Value_Entry;              // identical to Feature_Value_Entry
-
-typedef void * Feature_Value_Table;   // temp
-
 
 DDCA_Status ddca_get_simple_sl_value_table(
                DDCA_VCP_Feature_Code      feature_code,
                DDCA_MCCS_Version_Id       mccs_version_id,
-               DDCA_Feature_Value_Entry ** pvalue_table);
+          //     DDCA_Feature_Value_Entry ** pvalue_table);
+               DDCA_Feature_Value_Table *  pvalue_table);
 
 
 #ifdef UNIMPLEMENTED
@@ -474,16 +378,16 @@ DDCA_Status ddct_is_feature_supported(
 //  Miscellaneous Monitor Specific Functions
 //
 
-DDCA_Status ddct_get_mccs_version(DDCA_Display_Handle ddct_dh, DDCT_MCCS_Version_Spec* pspec);
+DDCA_Status ddct_get_mccs_version(DDCA_Display_Handle ddct_dh, DDCA_MCCS_Version_Spec* pspec);
 
 // DDCT_Status ddct_get_edid(DDCA_Display_Handle * dh, Byte * edid_buffer);    // edid_buffer must be >= 128 bytes
 DDCA_Status ddct_get_edid_by_display_ref(DDCA_Display_Ref ddct_dref, Byte ** pbytes);   // pointer into ddcutil data structures, do not free
 
 // or return a struct?
 DDCA_Status ddca_get_feature_info_by_display(
-               DDCA_Display_Handle ddct_dh,
-               DDCA_VCP_Feature_Code    feature_code,
-               unsigned long *     flags);
+               DDCA_Display_Handle    dh,
+               DDCA_VCP_Feature_Code  feature_code,
+               unsigned long *        pflags);
 
 
 
@@ -506,7 +410,7 @@ int ddca_report_active_displays(int depth);
 // Monitor Capabilities
 //
 
-DDCA_Status ddct_get_capabilities_string(DDCA_Display_Handle ddct_dh, char** buffer);
+DDCA_Status ddct_get_capabilities_string(DDCA_Display_Handle dh, char** buffer);
 
 #ifdef UNIMPLEMENTED
 // Unimplemented.  Parsed capabilities has a complex data structure.  How to make visible?
@@ -518,20 +422,6 @@ DDCA_Status ddct_parse_capabilities_string(char * capabilities_string, DDCT_Pars
 //
 // Get and Set VCP Feature Values
 //
-
-typedef struct {
-   Byte  mh;
-   Byte  ml;
-   Byte  sh;
-   Byte  sl;
-   int   max_value;
-   int   cur_value;
-} DDCT_Non_Table_Value_Response;
-
-typedef struct {
-   int   bytect;
-   Byte  bytes[];     // or Byte * ?
-} DDCT_Table_Value_Response;
 
 void ddct_free_table_value_response(DDCT_Table_Value_Response * table_value_response);
 

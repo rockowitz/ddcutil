@@ -120,11 +120,11 @@ DDCA_Status  ddca_set_max_tries(DDCA_Retry_Type retry_type, int max_tries);
 // Message Control
 //
 
-typedef enum {DDCA_OL_DEFAULT=0x01,
-              DDCA_OL_PROGRAM=0x02,
-              DDCA_OL_TERSE  =0x04,
-              DDCA_OL_NORMAL =0x08,
-              DDCA_OL_VERBOSE=0x10
+typedef enum {OL_DEFAULT=0x01,
+              OL_PROGRAM=0x02,
+              OL_TERSE  =0x04,
+              OL_NORMAL =0x08,
+              OL_VERBOSE=0x10
 } DDCA_Output_Level;
 
 DDCA_Output_Level ddca_get_output_level();

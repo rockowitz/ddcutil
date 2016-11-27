@@ -332,7 +332,7 @@ static void check_i2c_devices(struct driver_name_node * driver_list) {
    // bool have_i2c_devices = false;
 
    printf("\nChecking /dev/i2c-* devices...\n");
-   Output_Level output_level = get_output_level();
+   DDCA_Output_Level output_level = get_output_level();
 
    bool just_fglrx = only_fglrx(driver_list);
    if (just_fglrx){
@@ -606,7 +606,7 @@ static bool is_module_builtin(char * module_name) {
 static void check_i2c_dev_module(struct driver_name_node * video_driver_list) {
    printf("\nChecking for module i2c_dev...\n");
 
-   Output_Level output_level = get_output_level();
+   DDCA_Output_Level output_level = get_output_level();
 
    bool module_required = !only_nvidia_or_fglrx(video_driver_list);
    if (!module_required) {
@@ -1279,7 +1279,7 @@ static void probe_hiddev(int depth) {
 static void query_usb_monitors() {
    printf("\nChecking for USB connected monitors...\n");
 
-   Output_Level output_level = get_output_level();
+   DDCA_Output_Level output_level = get_output_level();
 
    puts("");
    rpt_vstring(1, "Using lsusb to summarize USB devices...");
@@ -1386,7 +1386,7 @@ void query_sysenv() {
    query_loaded_modules_using_sysfs();
    query_i2c_bus_using_sysfs();
 
-   Output_Level output_level = get_output_level();
+   DDCA_Output_Level output_level = get_output_level();
    if (output_level >= OL_VERBOSE) {
       puts("");
       query_proc_driver_nvidia();
