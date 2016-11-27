@@ -161,6 +161,28 @@ struct {
    Feature_Value_Entry *                 v22_sl_values;
 } VCP_Feature_Table_Entry;
 
+
+// new, better way to return version specific feature information as 1 struct
+// perhaps push this out to public_c_api.h
+
+#define VCP_VERSION_SPECIFIC_FEATURE_INFO_MARKER "VSFI"
+typedef
+struct {
+   char                                  marker[4];
+   Byte                                  feature_code;
+   Version_Spec                          vspec;            // ???
+   char *                                desc;
+   Format_Normal_Feature_Detail_Function nontable_formatter;
+   Format_Table_Feature_Detail_Function  table_formatter;
+   Feature_Value_Entry *                 sl_values;
+   Byte                                  global_flags;
+   ushort                                vcp_spec_groups;
+   VCP_Feature_Subset                    vcp_subsets;
+   char *                                feature_name;
+   Version_Feature_Flags                 feature_flags;
+} Version_Specific_Feature_Info;
+
+
 int
 vcp_get_feature_code_count();
 
