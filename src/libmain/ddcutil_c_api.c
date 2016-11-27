@@ -694,7 +694,6 @@ static DDCA_MCCS_Version_Id mccs_version_spec_to_id(DDCT_MCCS_Version_Spec vspec
    else
       PROGRAM_LOGIC_ERROR("Unexpected version spec value %d.%d", vspec.major, vspec.minor);
 
-
    return result;
 }
 
@@ -758,14 +757,14 @@ DDCA_Status ddca_get_feature_info_by_vcp_version(
 
 // or return a struct?
 DDCA_Status ddca_get_feature_info_by_display(
-      DDCA_Display_Handle ddct_dh,    // needed because in rare cases feature info is MCCS version dependent
-      DDCA_VCP_Feature_Code    feature_code,
-      unsigned long *     pflags)
+      DDCA_Display_Handle     ddca_dh,    // needed because in rare cases feature info is MCCS version dependent
+      DDCA_VCP_Feature_Code   feature_code,
+      unsigned long *         pflags)
 {
    WITH_DH(
-      ddct_dh,
+      ddca_dh,
       {
-         Version_Spec vspec = get_vcp_version_by_display_handle(ddct_dh);
+         Version_Spec vspec = get_vcp_version_by_display_handle(ddca_dh);
          // DDCT_MCCS_Version_Spec vspec2;           // = {vspec.major, vspec.minor};
          // vspec2.major = vspec.major;
          // vspec2.minor = vspec.minor;
@@ -797,16 +796,42 @@ int ddca_report_active_displays(int depth) {
 }
 
 
+DDCA_Status ddca_get_simple_sl_value_table(
+               DDCA_VCP_Feature_Code      feature_code,
+               DDCA_MCCS_Version_Id       mccs_version_id,
+               DDCA_Feature_Value_Entry ** pvalue_table)
+{
+   DDCA_Status rc = 0;
+   *pvalue_table = NULL;
+   DDCT_MCCS_Version_Spec vspec = mccs_version_id_to_spec(mccs_version_id);
+
+   VCP_Feature_Table_Entry * pentry = vcp_find_feature_by_hexid(feature_code);
+   if (!pentry) {
+        *pvalue_table = NULL;
+        rc = DDCL_ARG;
+  }
+  else {
+     Version_Spec vspec2 = {vspec.major, vspec.minor};
+     Version_Feature_Flags vflags = get_version_specific_feature_flags(pentry, vspec2);
+     if (!(vflags & VCP2_SIMPLE_NC)) {
+        *pvalue_table = NULL;
+        rc = DDCL_ARG;    // need better code
+     }
+     else  {
+        Feature_Value_Entry * table = get_version_specific_sl_values(pentry, vspec2);
+        DDCA_Feature_Value_Entry * table2 = (DDCA_Feature_Value_Entry*) table;    // identical definitions
+        *pvalue_table = table2;
+        rc = 0;
+     }
+  }
+   return rc;
+}
+
+
 
 typedef void * Feature_Value_Table;   // temp
 
-DDCA_Status ddct_get_feature_sl_value_table(
-               DDCA_Display_Handle   ddct_dh,
-               DDCA_VCP_Feature_Code      feature_code,
-               Feature_Value_Table * value_table)
-{
-   return DDCL_UNIMPLEMENTED;
-}
+
 
 // or:
 DDCA_Status ddct_get_nc_feature_value_name(

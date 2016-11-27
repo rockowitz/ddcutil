@@ -435,16 +435,24 @@ DDCA_Status ddca_get_feature_info_by_vcp_version(
 char *      ddca_get_feature_name(DDCA_VCP_Feature_Code feature_code);
 
 
+typedef
+struct {
+   Byte   value_code;
+   char * value_name;
+} DDCA_Feature_Value_Entry;              // identical to Feature_Value_Entry
+
 typedef void * Feature_Value_Table;   // temp
+
+
+DDCA_Status ddca_get_simple_sl_value_table(
+               DDCA_VCP_Feature_Code      feature_code,
+               DDCA_MCCS_Version_Id       mccs_version_id,
+               DDCA_Feature_Value_Entry ** pvalue_table);
 
 
 #ifdef UNIMPLEMENTED
 
-// Unimplemented
-DDCA_Status ddct_get_feature_sl_value_table(
-               DDCA_Display_Handle    ddct_dh,
-               DDCA_VCP_Feature_Code  feature_code,
-               Feature_Value_Table *  value_table);
+
 
 // Unimplemented
 DDCA_Status ddct_get_supported_feature_sl_value_table(
