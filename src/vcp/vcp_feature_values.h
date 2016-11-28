@@ -26,39 +26,14 @@
 
 #include <glib.h>
 
+#include "ddcutil_types.h"
+
 #include "util/coredefs.h"
 #include "util/data_structures.h"
 
 #include "base/ddc_packets.h"
 
 
-typedef struct {
-   Byte          opcode;
-   Vcp_Value_Type value_type;      // probably a different type would be better
-   union {
-      struct {
-         Byte *  bytes;
-         ushort  bytect;
-      }          t;
-      struct {
-         ushort max_val;
-         ushort cur_val;
-      }         c;
-      struct {
-#ifdef WORDS_BIGENDIAN
-         Byte mh;
-         Byte ml;
-         Byte sh;
-         Byte sl;
-#else
-         Byte ml;
-         Byte mh;
-         Byte sl;
-         Byte sh;
-#endif
-      }         nc;
-   }            val;
-} Single_Vcp_Value;
 
 
 Single_Vcp_Value *

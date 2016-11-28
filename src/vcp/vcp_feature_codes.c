@@ -42,27 +42,27 @@
 // Forward references
 int vcp_feature_code_count;
 VCP_Feature_Table_Entry vcp_code_table[];
-static Feature_Value_Entry x14_color_preset_absolute_values[];
-       Feature_Value_Entry xc8_display_controller_type_values[];
-static Feature_Value_Entry x8d_tv_audio_mute_source_values[];
-static Feature_Value_Entry x8d_sh_blank_screen_values[];
+static DDCA_Feature_Value_Entry x14_color_preset_absolute_values[];
+       DDCA_Feature_Value_Entry xc8_display_controller_type_values[];
+static DDCA_Feature_Value_Entry x8d_tv_audio_mute_source_values[];
+static DDCA_Feature_Value_Entry x8d_sh_blank_screen_values[];
 bool default_table_feature_detail_function(
         Buffer *              data,
-        Version_Spec          vcp_version,
+        DDCA_MCCS_Version_Spec          vcp_version,
         char**                presult);
 bool format_feature_detail_debug_continuous(
         Nontable_Vcp_Value *  code_info,
-        Version_Spec          vcp_version,
+        DDCA_MCCS_Version_Spec          vcp_version,
         char *                buffer,
         int                   bufsz);
 bool format_feature_detail_standard_continuous(
         Nontable_Vcp_Value *  code_info,
-        Version_Spec          vcp_version,
+        DDCA_MCCS_Version_Spec          vcp_version,
         char *                buffer,
         int                   bufsz);
 bool format_feature_detail_sl_lookup(
         Nontable_Vcp_Value *  code_info,
-        Version_Spec          vcp_version,
+        DDCA_MCCS_Version_Spec          vcp_version,
         char *                buffer,
         int                   bufsz);
 
@@ -127,7 +127,7 @@ void vcp_list_feature_codes(FILE * fh) {
    for (;ndx < vcp_feature_code_count; ndx++) {
       VCP_Feature_Table_Entry entry = vcp_code_table[ndx];
       // DBGMSG("code=0x%02x, flags: 0x%04x", entry.code, entry.flags);
-      Version_Spec vspec = get_highest_non_deprecated_version(&entry);
+      DDCA_MCCS_Version_Spec vspec = get_highest_non_deprecated_version(&entry);
       Version_Feature_Flags vflags = get_version_specific_feature_flags(&entry, vspec);
       vcp_interpret_version_feature_flags(vflags, buf, sizeof(buf));
       char * vermsg = "";
@@ -311,7 +311,7 @@ char * subset_names_r(VCP_Feature_Table_Entry * pentry, char * buf, int bufsz) {
 }
 
 
-void report_sl_values(Feature_Value_Entry * sl_values, int depth) {
+void report_sl_values(DDCA_Feature_Value_Entry * sl_values, int depth) {
    while (sl_values->value_name != NULL) {
       rpt_vstring(depth, "0x%02x: %s", sl_values->value_code, sl_values->value_name);
       sl_values++;
@@ -359,7 +359,7 @@ char * interpret_feature_flags_r(Version_Feature_Flags vflags, char * workbuf, i
 // report function specifically for use by report_vcp_feature_table_entry()
 void report_feature_table_entry_flags(
         VCP_Feature_Table_Entry * pentry,
-        Version_Spec              vcp_version,
+        DDCA_MCCS_Version_Spec              vcp_version,
         int                       depth)
 {
    char workbuf[200];
@@ -376,7 +376,7 @@ void report_vcp_feature_table_entry(VCP_Feature_Table_Entry * pentry, int depth)
 
    int d1 = depth+1;
    DDCA_Output_Level output_level = get_output_level();
-   Version_Spec vspec = get_highest_non_deprecated_version(pentry);
+   DDCA_MCCS_Version_Spec vspec = get_highest_non_deprecated_version(pentry);
    Version_Feature_Flags vflags = get_version_specific_feature_flags(pentry, vspec);
    char * feature_name = get_non_version_specific_feature_name(pentry);
    rpt_vstring(depth, "VCP code %02X: %s", pentry->code, feature_name);
@@ -425,7 +425,7 @@ char * get_feature_name_by_id_only(Byte feature_id) {
 }
 
 
-char * get_feature_name_by_id_and_vcp_version(Byte feature_id, Version_Spec vspec) {
+char * get_feature_name_by_id_and_vcp_version(Byte feature_id, DDCA_MCCS_Version_Spec vspec) {
    char * result = NULL;
    VCP_Feature_Table_Entry * vcp_entry = vcp_find_feature_by_hexid(feature_id);
    if (vcp_entry) {
@@ -459,7 +459,7 @@ int vcp_get_feature_code_count() {
 Version_Feature_Flags
 get_version_specific_feature_flags(
        VCP_Feature_Table_Entry * pvft_entry,
-       Version_Spec              vcp_version)
+       DDCA_MCCS_Version_Spec              vcp_version)
 {
    bool debug = false;
    Version_Feature_Flags result = 0;
@@ -479,7 +479,7 @@ get_version_specific_feature_flags(
 #ifdef NO
    // this is what get_version_sensisitve_feature_flags() is for
    if (!result) {
-      Version_Spec version_used = {0,0};
+      DDCA_MCCS_Version_Spec version_used = {0,0};
       result = pvft_entry->v21_flags;
       if (result) {
          version_used.major = 2;
@@ -520,7 +520,7 @@ get_version_specific_feature_flags(
 
 bool is_feature_supported_in_version(
       VCP_Feature_Table_Entry * pvft_entry,
-      Version_Spec              vcp_version)
+      DDCA_MCCS_Version_Spec              vcp_version)
 {
    bool debug = false;
    bool result = false;
@@ -545,7 +545,7 @@ bool is_feature_supported_in_version(
 Version_Feature_Flags
 get_version_sensitive_feature_flags(
        VCP_Feature_Table_Entry * pvft_entry,
-       Version_Spec              vcp_version)
+       DDCA_MCCS_Version_Spec              vcp_version)
 {
    bool debug = false;
    Version_Feature_Flags result = get_version_specific_feature_flags(pvft_entry, vcp_version);
@@ -582,8 +582,8 @@ bool has_version_specific_features(VCP_Feature_Table_Entry * pentry) {
    return (ct > 1);
 }
 
-Version_Spec get_highest_non_deprecated_version(VCP_Feature_Table_Entry * pentry) {
-   Version_Spec vspec = {0,0};
+DDCA_MCCS_Version_Spec get_highest_non_deprecated_version(VCP_Feature_Table_Entry * pentry) {
+   DDCA_MCCS_Version_Spec vspec = {0,0};
    if ( pentry->v22_flags && !(pentry->v22_flags & VCP2_DEPRECATED) ) {
       vspec.major = 2;
       vspec.minor = 2;
@@ -607,7 +607,7 @@ Version_Spec get_highest_non_deprecated_version(VCP_Feature_Table_Entry * pentry
 // convenience function
 bool is_feature_readable_by_vcp_version(
        VCP_Feature_Table_Entry * pvft_entry,
-       Version_Spec vcp_version)
+       DDCA_MCCS_Version_Spec vcp_version)
 {
    bool debug = false;
    bool result = (get_version_sensitive_feature_flags(pvft_entry, vcp_version) & VCP2_READABLE );
@@ -620,7 +620,7 @@ bool is_feature_readable_by_vcp_version(
 // convenience function
 bool is_feature_writable_by_vcp_version(
        VCP_Feature_Table_Entry * pvft_entry,
-       Version_Spec vcp_version)
+       DDCA_MCCS_Version_Spec vcp_version)
 {
    return (get_version_sensitive_feature_flags(pvft_entry, vcp_version) & VCP2_WRITABLE );
 }
@@ -629,7 +629,7 @@ bool is_feature_writable_by_vcp_version(
 // convenience function
 bool is_feature_table_by_vcp_version(
        VCP_Feature_Table_Entry * pvft_entry,
-       Version_Spec vcp_version)
+       DDCA_MCCS_Version_Spec vcp_version)
 {
    return (get_version_sensitive_feature_flags(pvft_entry, vcp_version) & VCP2_TABLE );
 }
@@ -653,12 +653,12 @@ bool is_version_conditional_vcp_type(VCP_Feature_Table_Entry * pvft_entry) {
 }
 
 
-Feature_Value_Entry * get_version_specific_sl_values(
+DDCA_Feature_Value_Entry * get_version_specific_sl_values(
        VCP_Feature_Table_Entry * pvft_entry,
-       Version_Spec              vcp_version)
+       DDCA_MCCS_Version_Spec              vcp_version)
 {
    bool debug = false;
-   Feature_Value_Entry * result = NULL;
+   DDCA_Feature_Value_Entry * result = NULL;
    if (vcp_version.major >= 3)
       result = pvft_entry->v30_sl_values;
    else if (vcp_version.major == 2 && vcp_version.minor >= 2)
@@ -680,7 +680,7 @@ Feature_Value_Entry * get_version_specific_sl_values(
 
 char * get_version_sensitive_feature_name(
        VCP_Feature_Table_Entry * pvft_entry,
-       Version_Spec              vcp_version)
+       DDCA_MCCS_Version_Spec              vcp_version)
 {
    bool debug = false;
    char * result = NULL;
@@ -722,7 +722,7 @@ char * get_version_sensitive_feature_name(
 
 // for use when we don't know the version
 char * get_non_version_specific_feature_name(VCP_Feature_Table_Entry * pvft_entry) {
-   Version_Spec vspec = {2,2};
+   DDCA_MCCS_Version_Spec vspec = {2,2};
    return get_version_sensitive_feature_name(pvft_entry, vspec);
 }
 
@@ -737,7 +737,7 @@ char * get_non_version_specific_feature_name(VCP_Feature_Table_Entry * pvft_entr
 Format_Normal_Feature_Detail_Function
 get_nontable_feature_detail_function(
    VCP_Feature_Table_Entry * pvft_entry,
-   Version_Spec vcp_version)
+   DDCA_MCCS_Version_Spec vcp_version)
 {
    assert(pvft_entry);
    bool debug = false;
@@ -766,7 +766,7 @@ get_nontable_feature_detail_function(
 
 
 Format_Table_Feature_Detail_Function
-get_table_feature_detail_function( VCP_Feature_Table_Entry * pvft_entry, Version_Spec vcp_version) {
+get_table_feature_detail_function( VCP_Feature_Table_Entry * pvft_entry, DDCA_MCCS_Version_Spec vcp_version) {
    assert(pvft_entry);
 
    // TODO:
@@ -785,7 +785,7 @@ get_table_feature_detail_function( VCP_Feature_Table_Entry * pvft_entry, Version
 
 bool vcp_format_nontable_feature_detail(
         VCP_Feature_Table_Entry * vcp_entry,
-        Version_Spec              vcp_version,
+        DDCA_MCCS_Version_Spec              vcp_version,
         Nontable_Vcp_Value *      code_info,
         char *                    buffer,
         int                       bufsz)
@@ -802,7 +802,7 @@ bool vcp_format_nontable_feature_detail(
 
 bool vcp_format_table_feature_detail(
        VCP_Feature_Table_Entry * vcp_entry,
-       Version_Spec              vcp_version,
+       DDCA_MCCS_Version_Spec              vcp_version,
        Buffer *                  accumulated_value,
        char * *                  aformatted_data
      )
@@ -830,7 +830,7 @@ bool vcp_format_table_feature_detail(
  */
 bool vcp_format_feature_detail(
        VCP_Feature_Table_Entry * vcp_entry,
-       Version_Spec              vcp_version,
+       DDCA_MCCS_Version_Spec              vcp_version,
        Single_Vcp_Value *        valrec,
 #ifdef OLD
        Parsed_Vcp_Response *     raw_data,
@@ -1015,7 +1015,7 @@ VCP_Feature_Table_Entry * vcp_find_feature_by_hexid_w_default(Byte id) {
 // understand how to interpret the values for a feature.
 //
 
-bool default_table_feature_detail_function(Buffer * data, Version_Spec vcp_version, char ** presult) {
+bool default_table_feature_detail_function(Buffer * data, DDCA_MCCS_Version_Spec vcp_version, char ** presult) {
    // DBGMSG("vcp_version=%d.%d, data length=%d", vcp_version.major, vcp_version.minor, data->len);
    // int hexbufsize = buffer_length(data) * 3;
    // if (buffer_length(data) == 0)
@@ -1044,7 +1044,7 @@ bool default_table_feature_detail_function(Buffer * data, Version_Spec vcp_versi
 // x73
 bool format_feature_detail_x73_lut_size(
         Buffer *      data_bytes,
-        Version_Spec  vcp_version,
+        DDCA_MCCS_Version_Spec  vcp_version,
         char **       pformatted_result)
 {
    bool ok = true;
@@ -1087,11 +1087,11 @@ bool format_feature_detail_x73_lut_size(
  * Returns:
  *   pointer to feature value table, NULL if not found
  */
-Feature_Value_Entry * find_feature_values(Byte feature_code, Version_Spec vcp_version) {
+DDCA_Feature_Value_Entry * find_feature_values(Byte feature_code, DDCA_MCCS_Version_Spec vcp_version) {
    bool debug = false;
    if (debug)
       DBGMSG("Starting. feature_code=0x%02x", feature_code);
-   Feature_Value_Entry * result = NULL;
+   DDCA_Feature_Value_Entry * result = NULL;
    VCP_Feature_Table_Entry * pentry = vcp_find_feature_by_hexid(feature_code);
    // may not be found if called for capabilities and it's a mfg specific code
    if (pentry) {
@@ -1111,14 +1111,14 @@ Feature_Value_Entry * find_feature_values(Byte feature_code, Version_Spec vcp_ve
 
 
 // hack to handle x14, where the sl values are not stored in the vcp feature table
-Feature_Value_Entry * find_feature_values_for_capabilities(Byte feature_code, Version_Spec vcp_version) {
+DDCA_Feature_Value_Entry * find_feature_values_for_capabilities(Byte feature_code, DDCA_MCCS_Version_Spec vcp_version) {
    bool debug = false;
    if (debug)
       DBGMSG("Starting. feature_code=0x%02x", feature_code);
    // ugh .. need to know the version number here
    // for now just assume vcp version < 3, return the table for v2
 
-   Feature_Value_Entry * result = NULL;
+   DDCA_Feature_Value_Entry * result = NULL;
    if (feature_code == 0x14) {
       if (vcp_version.major < 3)
          result = x14_color_preset_absolute_values;
@@ -1149,10 +1149,10 @@ Feature_Value_Entry * find_feature_values_for_capabilities(Byte feature_code, Ve
  *    explanation string from the Feature_Value_Entry found,
  *    NULL if not found
  */
-char * get_feature_value_name(Feature_Value_Entry * value_entries, Byte value_id) {
+char * get_feature_value_name(DDCA_Feature_Value_Entry * value_entries, Byte value_id) {
    // DBGMSG("Starting. pvalues_for_feature=%p, value_id=0x%02x", pvalues_for_feature, value_id);
    char * result = NULL;
-   Feature_Value_Entry *  cur_value = value_entries;
+   DDCA_Feature_Value_Entry *  cur_value = value_entries;
    while (cur_value->value_name != NULL) {
       // DBGMSG("value_code=0x%02x, value_name = %s", cur_value->value_code, cur_value->value_name);
       if (cur_value->value_code == value_id) {
@@ -1183,9 +1183,9 @@ char * get_feature_value_name(Feature_Value_Entry * value_entries, Byte value_id
  */
 char * lookup_value_name(
           Byte          feature_code,
-          Version_Spec  vcp_version,
+          DDCA_MCCS_Version_Spec  vcp_version,
           Byte          sl_value) {
-   Feature_Value_Entry * values_for_feature = find_feature_values(feature_code, vcp_version);
+   DDCA_Feature_Value_Entry * values_for_feature = find_feature_values(feature_code, vcp_version);
    assert(values_for_feature);
    char * name = get_feature_value_name(values_for_feature, sl_value);
    if (!name)
@@ -1202,7 +1202,7 @@ char * lookup_value_name(
 // used when the value is calculated using the SL and SH bytes, but we haven't
 // written a full interpretation function
 bool format_feature_detail_debug_sl_sh(
-        Nontable_Vcp_Value * code_info,  Version_Spec vcp_version, char * buffer, int bufsz)
+        Nontable_Vcp_Value * code_info,  DDCA_MCCS_Version_Spec vcp_version, char * buffer, int bufsz)
 {
     snprintf(buffer, bufsz,
              "SL: 0x%02x ,  SH: 0x%02x",
@@ -1215,7 +1215,7 @@ bool format_feature_detail_debug_sl_sh(
 // For debugging features marked as Continuous
 // Outputs both the byte fields and calculated cur and max values
 bool format_feature_detail_debug_continuous(
-        Nontable_Vcp_Value * code_info,  Version_Spec vcp_version, char * buffer, int bufsz)
+        Nontable_Vcp_Value * code_info,  DDCA_MCCS_Version_Spec vcp_version, char * buffer, int bufsz)
 {
    snprintf(buffer, bufsz,
             "mh=0x%02x, ml=0x%02x, sh=0x%02x, sl=0x%02x, max value = %5d, cur value = %5d",
@@ -1227,7 +1227,7 @@ bool format_feature_detail_debug_continuous(
 
 
 bool format_feature_detail_debug_bytes(
-        Nontable_Vcp_Value * code_info, Version_Spec vcp_version, char * buffer, int bufsz)
+        Nontable_Vcp_Value * code_info, DDCA_MCCS_Version_Spec vcp_version, char * buffer, int bufsz)
 {
    snprintf(buffer, bufsz,
             "mh=0x%02x, ml=0x%02x, sh=0x%02x, sl=0x%02x",
@@ -1243,7 +1243,7 @@ bool format_feature_detail_debug_bytes(
 // used when the value is just the SL byte, but we haven't
 // written a full interpretation function
 bool format_feature_detail_sl_byte(
-        Nontable_Vcp_Value * code_info, Version_Spec vcp_version, char * buffer, int bufsz)
+        Nontable_Vcp_Value * code_info, DDCA_MCCS_Version_Spec vcp_version, char * buffer, int bufsz)
 {
     snprintf(buffer, bufsz,
              "Value: 0x%02x" ,
@@ -1267,7 +1267,7 @@ bool format_feature_detail_sl_byte(
  */
 bool format_feature_detail_sl_lookup(
         Nontable_Vcp_Value *  code_info,
-        Version_Spec          vcp_version,
+        DDCA_MCCS_Version_Spec          vcp_version,
         char *                buffer,
         int                   bufsz)
 {
@@ -1290,7 +1290,7 @@ bool format_feature_detail_sl_lookup(
  *    true
  */
 bool format_feature_detail_standard_continuous(
-        Nontable_Vcp_Value * code_info, Version_Spec vcp_version, char * buffer, int bufsz)
+        Nontable_Vcp_Value * code_info, DDCA_MCCS_Version_Spec vcp_version, char * buffer, int bufsz)
 {
    // TODO: calculate cv, mv here from bytes
    int cv = code_info->cur_value;
@@ -1320,7 +1320,7 @@ bool format_feature_detail_standard_continuous(
  */
 bool format_feature_detail_ushort(
         Nontable_Vcp_Value * code_info,
-        Version_Spec                   vcp_version,
+        DDCA_MCCS_Version_Spec                   vcp_version,
         char *                         buffer,
         int bufsz)
 {
@@ -1336,7 +1336,7 @@ bool format_feature_detail_ushort(
 
 // 0x02
 bool format_feature_detail_new_control_value(    // 0x02
-        Nontable_Vcp_Value * code_info, Version_Spec vcp_version, char * buffer, int bufsz)
+        Nontable_Vcp_Value * code_info, DDCA_MCCS_Version_Spec vcp_version, char * buffer, int bufsz)
 {
    char * name = NULL;
    switch(code_info->sl) {
@@ -1355,7 +1355,7 @@ bool format_feature_detail_new_control_value(    // 0x02
 // 0x0b
 bool x0b_format_feature_detail_color_temperature_increment(
       Nontable_Vcp_Value * code_info,
-      Version_Spec                        vcp_version,
+      DDCA_MCCS_Version_Spec                        vcp_version,
       char *                              buffer,
       int                                 bufsz)
 {
@@ -1372,7 +1372,7 @@ bool x0b_format_feature_detail_color_temperature_increment(
 // 0x0c
 bool x0c_format_feature_detail_color_temperature_request(
       Nontable_Vcp_Value * code_info,
-      Version_Spec                        vcp_version,
+      DDCA_MCCS_Version_Spec                        vcp_version,
       char *                              buffer,
       int                                 bufsz)
 {
@@ -1386,7 +1386,7 @@ bool x0c_format_feature_detail_color_temperature_request(
 
 // 0x14
 bool format_feature_detail_select_color_preset(
-      Nontable_Vcp_Value * code_info, Version_Spec vcp_version, char * buffer, int bufsz)
+      Nontable_Vcp_Value * code_info, DDCA_MCCS_Version_Spec vcp_version, char * buffer, int bufsz)
 {
    bool debug = false;
    if (debug)
@@ -1474,7 +1474,7 @@ bool format_feature_detail_select_color_preset(
 
 // 0x62
 bool format_feature_detail_audio_speaker_volume_v30(
-      Nontable_Vcp_Value * code_info, Version_Spec vcp_version, char * buffer, int bufsz)
+      Nontable_Vcp_Value * code_info, DDCA_MCCS_Version_Spec vcp_version, char * buffer, int bufsz)
 {
   assert (code_info->vcp_code == 0x62);
   // Continous in 2.0, 2,2, assume 2.1 is same
@@ -1499,7 +1499,7 @@ bool format_feature_detail_audio_speaker_volume_v30(
 
 bool format_feature_detail_x8d_v22_mute_audio_blank_screen(
         Nontable_Vcp_Value * code_info,
-        Version_Spec                   vcp_version,
+        DDCA_MCCS_Version_Spec                   vcp_version,
         char *                         buffer,
         int                            bufsz)
 {
@@ -1508,8 +1508,8 @@ bool format_feature_detail_x8d_v22_mute_audio_blank_screen(
 
    // As of v2.2, SH byte contains screen blank settings
 
-   Feature_Value_Entry * sl_values = x8d_tv_audio_mute_source_values;
-   Feature_Value_Entry * sh_values = x8d_sh_blank_screen_values;
+   DDCA_Feature_Value_Entry * sl_values = x8d_tv_audio_mute_source_values;
+   DDCA_Feature_Value_Entry * sh_values = x8d_sh_blank_screen_values;
 
    char * sl_name = get_feature_value_name(sl_values, code_info->sl);
    char * sh_name = get_feature_value_name(sh_values, code_info->sh);
@@ -1526,7 +1526,7 @@ bool format_feature_detail_x8d_v22_mute_audio_blank_screen(
 
 // 0x8f, 0x91
 bool format_feature_detail_audio_treble_bass_v30(
-      Nontable_Vcp_Value * code_info, Version_Spec vcp_version, char * buffer, int bufsz)
+      Nontable_Vcp_Value * code_info, DDCA_MCCS_Version_Spec vcp_version, char * buffer, int bufsz)
 {
   assert (code_info->vcp_code == 0x8f || code_info->vcp_code == 0x91);
   // Continous in 2.0, assume 2.1 same as 2.0,
@@ -1560,7 +1560,7 @@ bool format_feature_detail_audio_treble_bass_v30(
 
 // 0x93
 bool format_feature_detail_audio_balance_v30(
-      Nontable_Vcp_Value * code_info, Version_Spec vcp_version, char * buffer, int bufsz)
+      Nontable_Vcp_Value * code_info, DDCA_MCCS_Version_Spec vcp_version, char * buffer, int bufsz)
 {
   assert (code_info->vcp_code == 0x93);
   // Continous in 2.0, NC in 3.0, 2.2, assume 2.1 same as 2.0
@@ -1593,7 +1593,7 @@ bool format_feature_detail_audio_balance_v30(
 
 // 0xac
 bool format_feature_detail_xac_horizontal_frequency(
-      Nontable_Vcp_Value * code_info, Version_Spec vcp_version, char * buffer, int bufsz)
+      Nontable_Vcp_Value * code_info, DDCA_MCCS_Version_Spec vcp_version, char * buffer, int bufsz)
 {
   assert (code_info->vcp_code == 0xac);
   // this is R/O field, so max value is irrelevant
@@ -1624,7 +1624,7 @@ bool format_feature_detail_xac_horizontal_frequency(
 // 0x9b..0xa0
 bool format_feature_detail_6_axis_hue(
       Nontable_Vcp_Value * code_info,
-      Version_Spec                   vcp_version,
+      DDCA_MCCS_Version_Spec                   vcp_version,
       char *                         buffer,
       int                            bufsz)
 {
@@ -1666,7 +1666,7 @@ bool format_feature_detail_6_axis_hue(
 
 // 0xae
 bool format_feature_detail_xae_vertical_frequency(
-      Nontable_Vcp_Value * code_info, Version_Spec vcp_version, char * buffer, int bufsz)
+      Nontable_Vcp_Value * code_info, DDCA_MCCS_Version_Spec vcp_version, char * buffer, int bufsz)
 {
   assert (code_info->vcp_code == 0xae);
   if (code_info->mh == 0xff &&
@@ -1690,7 +1690,7 @@ bool format_feature_detail_xae_vertical_frequency(
 // 0xbe
 bool format_feature_detail_xbe_link_control(
         Nontable_Vcp_Value * code_info,
-        Version_Spec vcp_version,
+        DDCA_MCCS_Version_Spec vcp_version,
         char * buffer,
         int bufsz)
 {
@@ -1707,7 +1707,7 @@ bool format_feature_detail_xbe_link_control(
 
 // 0xc0
 bool format_feature_detail_xc0_display_usage_time(
-        Nontable_Vcp_Value * code_info, Version_Spec vcp_version, char * buffer, int bufsz)
+        Nontable_Vcp_Value * code_info, DDCA_MCCS_Version_Spec vcp_version, char * buffer, int bufsz)
 {
    assert (code_info->vcp_code == 0xc0);
    uint usage_time;
@@ -1734,7 +1734,7 @@ bool format_feature_detail_xc0_display_usage_time(
 // 0xc6
 bool format_feature_detail_application_enable_key(
         Nontable_Vcp_Value * code_info,
-        Version_Spec vcp_version,
+        DDCA_MCCS_Version_Spec vcp_version,
         char * buffer,
         int bufsz)
 {
@@ -1746,7 +1746,7 @@ bool format_feature_detail_application_enable_key(
 
 // 0xc8
 bool format_feature_detail_display_controller_type(
-        Nontable_Vcp_Value * info,  Version_Spec vcp_version, char * buffer, int bufsz)
+        Nontable_Vcp_Value * info,  DDCA_MCCS_Version_Spec vcp_version, char * buffer, int bufsz)
 {
    assert(info->vcp_code == 0xc8);
    bool ok = true;
@@ -1769,7 +1769,7 @@ bool format_feature_detail_display_controller_type(
 
 // xc9, xdf
 bool format_feature_detail_version(
-        Nontable_Vcp_Value * code_info, Version_Spec vcp_version, char * buffer, int bufsz)
+        Nontable_Vcp_Value * code_info, DDCA_MCCS_Version_Spec vcp_version, char * buffer, int bufsz)
 {
    int version_number  = code_info->sh;
    int revision_number = code_info->sl;
@@ -1780,7 +1780,7 @@ bool format_feature_detail_version(
 // 0xce
 bool format_feature_detail_xce_aux_display_size(
         Nontable_Vcp_Value * code_info,
-        Version_Spec                   vcp_version,
+        DDCA_MCCS_Version_Spec                   vcp_version,
         char *                         buffer,
         int                            bufsz)
 {
@@ -1802,7 +1802,7 @@ bool format_feature_detail_xce_aux_display_size(
 // {0x00,NULL} is the end of list marker. 0x00 might be a valid value, but NULL never is
 
 // 0x02
-static Feature_Value_Entry x02_new_control_values[] = {
+static DDCA_Feature_Value_Entry x02_new_control_values[] = {
       // values identical in 2.0, 3.0, 2.2 specs
       {0x01, "No new control values"},
       {0x02, "One or more new control values have been saved"},
@@ -1810,7 +1810,7 @@ static Feature_Value_Entry x02_new_control_values[] = {
       {0x00, NULL}
 };
 
-static Feature_Value_Entry x03_soft_controls_values[] = {
+static DDCA_Feature_Value_Entry x03_soft_controls_values[] = {
       // values identical in 2.0, 3.0, 2.2 specs
       {0x00, "No button active"},
       {0x01, "Button 1 active"},
@@ -1825,7 +1825,7 @@ static Feature_Value_Entry x03_soft_controls_values[] = {
 };
 
 // 0x14
-static Feature_Value_Entry x14_color_preset_absolute_values[] = {
+static DDCA_Feature_Value_Entry x14_color_preset_absolute_values[] = {
      {0x01, "sRGB"},
      {0x02, "Display Native"},
      {0x03, "4000 K"},
@@ -1843,7 +1843,7 @@ static Feature_Value_Entry x14_color_preset_absolute_values[] = {
 };
 
 // 0x1e, 0x1f
-static Feature_Value_Entry x1e_x1f_auto_setup_values[] = {
+static DDCA_Feature_Value_Entry x1e_x1f_auto_setup_values[] = {
       {0x00, "Auto setup not active"},
       {0x01, "Performing auto setup"},
       // end of values for 0x1e, v2.0
@@ -1853,7 +1853,7 @@ static Feature_Value_Entry x1e_x1f_auto_setup_values[] = {
 
 // 0x60: These are MCCS V2 values.   In V3, x60 is type table.
 // see also EloView Remote Mgt Local Cmd Set document
-Feature_Value_Entry x60_v2_input_source_values[] = {
+DDCA_Feature_Value_Entry x60_v2_input_source_values[] = {
       {0x01,  "VGA-1"},    // aka Analog video (R/G/B) 1
       {0x02,  "VGA-2"},
       {0x03,  "DVI-1"},
@@ -1878,7 +1878,7 @@ Feature_Value_Entry x60_v2_input_source_values[] = {
 };
 
 // 0x63
-Feature_Value_Entry x63_speaker_select_values[] = {
+DDCA_Feature_Value_Entry x63_speaker_select_values[] = {
       {0x00,  "Front L/R"},
       {0x01,  "Side L/R"},
       {0x02,  "Rear L/R"},
@@ -1887,49 +1887,49 @@ Feature_Value_Entry x63_speaker_select_values[] = {
 };
 
 // 0x66
-Feature_Value_Entry x66_ambient_light_sensor_values[] = {
+DDCA_Feature_Value_Entry x66_ambient_light_sensor_values[] = {
       {0x01,  "Disabled"},
       {0x02,  "Enabled"},
       {0x00,  NULL}
 };
 
 // 0x82: Horizontal Mirror
-Feature_Value_Entry x82_horizontal_flip_values[] = {
+DDCA_Feature_Value_Entry x82_horizontal_flip_values[] = {
       {0x00, "Normal mode"},
       {0x01, "Mirrored horizontally mode"},
       {0x00,  NULL}
 };
 
 // 0x84: Horizontal Mirror
-Feature_Value_Entry x84_vertical_flip_values[] = {
+DDCA_Feature_Value_Entry x84_vertical_flip_values[] = {
       {0x00, "Normal mode"},
       {0x01, "Mirrored vertically mode"},
       {0x00,  NULL}
 };
 
 // 0x8b
-Feature_Value_Entry x8b_tv_channel_values[] = {
+DDCA_Feature_Value_Entry x8b_tv_channel_values[] = {
       {0x01, "Increment channel"},
       {0x02, "Decrement channel"},
       {0x00, NULL}
 };
 
 // 0x8d: Audio Mute
-static Feature_Value_Entry x8d_tv_audio_mute_source_values[] = {
+static DDCA_Feature_Value_Entry x8d_tv_audio_mute_source_values[] = {
       {0x01, "Mute the audio"},
       {0x02, "Unmute the audio"},
       {0x00,  NULL}
 };
 
 // 0x8d: SH byte values only apply in v2.2
-static Feature_Value_Entry x8d_sh_blank_screen_values[] = {
+static DDCA_Feature_Value_Entry x8d_sh_blank_screen_values[] = {
       {0x01, "Blank the screen"},
       {0x02, "Unblank the screen"},
       {0x00,  NULL}
 };
 
 // 0x86: Display Scaling
-Feature_Value_Entry x86_display_scaling_values[] = {
+DDCA_Feature_Value_Entry x86_display_scaling_values[] = {
       {0x01, "No scaling"},
       {0x02, "Max image, no aspect ration distortion"},
       {0x03, "Max vertical image, no aspect ratio distortion"},
@@ -1945,7 +1945,7 @@ Feature_Value_Entry x86_display_scaling_values[] = {
 };
 
 // 0x87: Sharpness algorithm  - used only for v2.0
-Feature_Value_Entry x87_sharpness_values[] = {
+DDCA_Feature_Value_Entry x87_sharpness_values[] = {
       {0x01,  "Filter function 1"},
       {0x02,  "Filter function 2"},
       {0x03,  "Filter function 3"},
@@ -1954,7 +1954,7 @@ Feature_Value_Entry x87_sharpness_values[] = {
 };
 
 // 0x94
-Feature_Value_Entry x94_audio_stereo_mode_values[] = {
+DDCA_Feature_Value_Entry x94_audio_stereo_mode_values[] = {
       {0x00,  "Speaker off/Audio not supported"},
       {0x01,  "Mono"},
       {0x02,  "Stereo"},
@@ -1989,7 +1989,7 @@ Feature_Value_Entry x94_audio_stereo_mode_values[] = {
 };
 
 // 0x99
-Feature_Value_Entry x99_window_control_values[] = {
+DDCA_Feature_Value_Entry x99_window_control_values[] = {
       {0x00,  "No effect"},
       {0x01,  "Off"},
       {0x02,  "On"},
@@ -1997,14 +1997,14 @@ Feature_Value_Entry x99_window_control_values[] = {
 };
 
 // 0xa2
-Feature_Value_Entry xa2_auto_setup_values[] = {
+DDCA_Feature_Value_Entry xa2_auto_setup_values[] = {
       {0x01,  "Off"},
       {0x02,  "On"},
       {0x00,  NULL}
 };
 
 // 0xa5
-static Feature_Value_Entry xa5_window_select_values[] = {
+static DDCA_Feature_Value_Entry xa5_window_select_values[] = {
       {0x00, "Full display image area selected except active windows"},
       {0x01, "Window 1 selected"},
       {0x02, "Window 2 selected"},
@@ -2017,7 +2017,7 @@ static Feature_Value_Entry xa5_window_select_values[] = {
 };
 
 // 0xaa
-static Feature_Value_Entry xaa_screen_orientation_values[] = {
+static DDCA_Feature_Value_Entry xaa_screen_orientation_values[] = {
       {0x01, "0 degrees"},
       {0x02, "90 degrees"},
       {0x03, "180 degrees"},
@@ -2027,7 +2027,7 @@ static Feature_Value_Entry xaa_screen_orientation_values[] = {
 };
 
 // 0xb0
-static  Feature_Value_Entry xb0_settings_values[] =
+static  DDCA_Feature_Value_Entry xb0_settings_values[] =
    {
      {0x01, "Store current settings in the monitor"},
      {0x02, "Restore factory defaults for current mode"},
@@ -2035,7 +2035,7 @@ static  Feature_Value_Entry xb0_settings_values[] =
 };
 
 // 0xb2
-static Feature_Value_Entry xb2_flat_panel_subpixel_layout_values[] = {
+static DDCA_Feature_Value_Entry xb2_flat_panel_subpixel_layout_values[] = {
       {0x00, "Sub-pixel layout not defined"},
       {0x01, "Red/Green/Blue vertical stripe"},
       {0x02, "Red/Green/Blue horizontal stripe"},
@@ -2050,7 +2050,7 @@ static Feature_Value_Entry xb2_flat_panel_subpixel_layout_values[] = {
 };
 
 // 0xb6
-static Feature_Value_Entry xb6_v20_display_technology_type_values[] = {
+static DDCA_Feature_Value_Entry xb6_v20_display_technology_type_values[] = {
           { 0x01, "CRT (shadow mask)"},
           { 0x02, "CRT (aperture grill)"},
           { 0x03, "LCD (active matrix)"},   // TFT in 2.0
@@ -2063,7 +2063,7 @@ static Feature_Value_Entry xb6_v20_display_technology_type_values[] = {
 };
 
 // 0xb6
-static Feature_Value_Entry xb6_display_technology_type_values[] = {
+static DDCA_Feature_Value_Entry xb6_display_technology_type_values[] = {
           { 0x01, "CRT (shadow mask)"},
           { 0x02, "CRT (aperture grill)"},
           { 0x03, "LCD (active matrix)"},   // TFT in 2.0
@@ -2077,7 +2077,7 @@ static Feature_Value_Entry xb6_display_technology_type_values[] = {
 };
 
 // 0xc8
-Feature_Value_Entry xc8_display_controller_type_values[] = {
+DDCA_Feature_Value_Entry xc8_display_controller_type_values[] = {
    {0x01,  "Conexant"},
    {0x02,  "Genesis"},
    {0x03,  "Macronix"},
@@ -2112,10 +2112,10 @@ Feature_Value_Entry xc8_display_controller_type_values[] = {
    {0xff,  "Not defined - a manufacturer designed controller"},
    {0xff, NULL}     // terminator
 };
-Feature_Value_Entry * pxc8_display_controller_type_values = xc8_display_controller_type_values;
+DDCA_Feature_Value_Entry * pxc8_display_controller_type_values = xc8_display_controller_type_values;
 
 // 0xca
-static Feature_Value_Entry xca_osd_values[] = {
+static DDCA_Feature_Value_Entry xca_osd_values[] = {
       {0x01, "OSD Disabled"},
       {0x02, "OSD Enabled"},
       {0xff, "Display cannot supply this information"},
@@ -2127,7 +2127,7 @@ static Feature_Value_Entry xca_osd_values[] = {
 //   Typo in Version 2.1.  10h should read 0Ah.  If a parser
 //   encounters a display with MCCS v2.1 using 10h it should
 //   auto-correct to 0Ah.
-static Feature_Value_Entry xcc_osd_language_values[] = {
+static DDCA_Feature_Value_Entry xcc_osd_language_values[] = {
           {0x00, "Reserved value, must be ignored"},
           {0x01, "Chinese (traditional, Hantai)"},
           {0x02, "English"},
@@ -2172,7 +2172,7 @@ static Feature_Value_Entry xcc_osd_language_values[] = {
 
 // TODO: consolidate with x60_v2_input_source_values
 // 0xd0: These are MCCS V2 values.   need to check V3
-Feature_Value_Entry xd0_v2_output_select_values[] = {
+DDCA_Feature_Value_Entry xd0_v2_output_select_values[] = {
       {0x01,  "Analog video (R/G/B) 1"},
       {0x02,  "Analog video (R/G/B) 2"},
       {0x03,  "Digital video (TDMS) 1"},
@@ -2197,7 +2197,7 @@ Feature_Value_Entry xd0_v2_output_select_values[] = {
 };
 
 // 0xd6
-static  Feature_Value_Entry xd6_power_mode_values[] =
+static  DDCA_Feature_Value_Entry xd6_power_mode_values[] =
    { {0x01, "DPM: On,  DPMS: Off"},
      {0x02, "CPM: Off, DPMS: Standby"},
      {0x03, "DPM: Off, DPMS: Suspend"},
@@ -2207,14 +2207,14 @@ static  Feature_Value_Entry xd6_power_mode_values[] =
 };
 
 // 0xd7
-static  Feature_Value_Entry xd7_aux_power_output_values[] =
+static  DDCA_Feature_Value_Entry xd7_aux_power_output_values[] =
    { {0x01, "Disable auxiliary power"},
      {0x02, "Enable Auxiliary power"},
      {0x00, NULL}    // termination entry
 };
 
 // 0xda
-static  Feature_Value_Entry xda_scan_mode_values[] =
+static  DDCA_Feature_Value_Entry xda_scan_mode_values[] =
    { {0x00, "Normal operation"},
      {0x01, "Underscan"},
      {0x02, "Overscan"},
@@ -2223,7 +2223,7 @@ static  Feature_Value_Entry xda_scan_mode_values[] =
 };
 
 // 0xdb
-static  Feature_Value_Entry xdb_image_mode_values[] =
+static  DDCA_Feature_Value_Entry xdb_image_mode_values[] =
    { {0x00, "No effect"},
      {0x01, "Full mode"},
      {0x02, "Zoom mode"},
@@ -2232,7 +2232,7 @@ static  Feature_Value_Entry xdb_image_mode_values[] =
      {0x00, NULL}    // termination entry
 };
 
-static Feature_Value_Entry xdc_display_application_values[] = {
+static DDCA_Feature_Value_Entry xdc_display_application_values[] = {
    {0x00, "Standard/Default mode"},
    {0x01, "Productivity"},
    {0x02, "Mixed"},
@@ -2253,7 +2253,7 @@ static Feature_Value_Entry xdc_display_application_values[] = {
 // not suppressing warning, why?, but removing static does avoid warning
 #pragma GCC diagnostic ignored "-Wunused-variable"
 // 0xde         // write-only feature
-Feature_Value_Entry xde_wo_operation_mode_values[] =
+DDCA_Feature_Value_Entry xde_wo_operation_mode_values[] =
    { {0x01, "Stand alone"},
      {0x02, "Slave (full PC control)"},
      {0x00, NULL}    // termination entry

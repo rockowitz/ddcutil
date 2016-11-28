@@ -36,14 +36,14 @@
 // MCCS version constants and utilities
 //
 
-const Version_Spec VCP_SPEC_V10       = {1,0};
-const Version_Spec VCP_SPEC_V20       = {2,0};
-const Version_Spec VCP_SPEC_V21       = {2,1};
-const Version_Spec VCP_SPEC_V30       = {3,0};
-const Version_Spec VCP_SPEC_V22       = {2,2};
-const Version_Spec VCP_SPEC_UNKNOWN   = {0,0};    // value for monitor has been queried unsuccessfully
-const Version_Spec VCP_SPEC_ANY       = {0,0};    // used as query specifier
-const Version_Spec VCP_SPEC_UNQUERIED = {0xff, 0xff};
+const DDCA_MCCS_Version_Spec VCP_SPEC_V10       = {1,0};
+const DDCA_MCCS_Version_Spec VCP_SPEC_V20       = {2,0};
+const DDCA_MCCS_Version_Spec VCP_SPEC_V21       = {2,1};
+const DDCA_MCCS_Version_Spec VCP_SPEC_V30       = {3,0};
+const DDCA_MCCS_Version_Spec VCP_SPEC_V22       = {2,2};
+const DDCA_MCCS_Version_Spec VCP_SPEC_UNKNOWN   = {0,0};    // value for monitor has been queried unsuccessfully
+const DDCA_MCCS_Version_Spec VCP_SPEC_ANY       = {0,0};    // used as query specifier
+const DDCA_MCCS_Version_Spec VCP_SPEC_UNQUERIED = {0xff, 0xff};
 
 
 /* Tests if a Version_Spec value represents a valid MCCS version,
@@ -54,7 +54,7 @@ const Version_Spec VCP_SPEC_UNQUERIED = {0xff, 0xff};
  *
  * Returns:       true/false
  */
-static bool is_known_vcp_spec(Version_Spec vspec) {
+static bool is_known_vcp_spec(DDCA_MCCS_Version_Spec vspec) {
    bool result = vcp_version_eq(vspec, VCP_SPEC_V10) ||
                  vcp_version_eq(vspec, VCP_SPEC_V20) ||
                  vcp_version_eq(vspec, VCP_SPEC_V21) ||
@@ -81,7 +81,7 @@ static bool is_known_vcp_spec(Version_Spec vspec) {
  * Aborts if an attempt is made to compare v2.2 with v3.0
  * Note: Will require modification if a new spec appears
  */
-bool vcp_version_le(Version_Spec v1, Version_Spec v2) {
+bool vcp_version_le(DDCA_MCCS_Version_Spec v1, DDCA_MCCS_Version_Spec v2) {
    bool result = false;
    assert( is_known_vcp_spec(v1) && is_known_vcp_spec(v2) );
    assert( !(vcp_version_eq(v1, VCP_SPEC_V22) && vcp_version_eq(v2, VCP_SPEC_V30)) &&
@@ -120,20 +120,20 @@ bool vcp_version_le(Version_Spec v1, Version_Spec v2) {
    return result;
 }
 
-bool vcp_version_gt(Version_Spec val, Version_Spec min) {
+bool vcp_version_gt(DDCA_MCCS_Version_Spec val, DDCA_MCCS_Version_Spec min) {
    return !vcp_version_le(val,min);
 }
 
-bool vcp_version_eq(Version_Spec v1,  Version_Spec v2){
+bool vcp_version_eq(DDCA_MCCS_Version_Spec v1,  DDCA_MCCS_Version_Spec v2){
    return (v1.major == v2.major) && (v1.minor == v2.minor);
 }
 
-bool vcp_version_is_unqueried(Version_Spec vspec) {
+bool vcp_version_is_unqueried(DDCA_MCCS_Version_Spec vspec) {
    return (vspec.major == 0xff && vspec.minor == 0xff);
 }
 
 
-char * format_vspec(Version_Spec vspec) {
+char * format_vspec(DDCA_MCCS_Version_Spec vspec) {
    static char private_buffer[20];
    if ( vcp_version_eq(vspec, VCP_SPEC_UNQUERIED) )
       SAFE_STRNCPY(private_buffer,  "Unqueried", sizeof(private_buffer));
@@ -145,8 +145,8 @@ char * format_vspec(Version_Spec vspec) {
 }
 
 
-Version_Spec parse_vspec(char * s) {
-   Version_Spec vspec;
+DDCA_MCCS_Version_Spec parse_vspec(char * s) {
+   DDCA_MCCS_Version_Spec vspec;
    int ct = sscanf(s, "%hhd . %hhd", &vspec.major, &vspec.minor);
    if (ct != 2 || vspec.major > 3 || vspec.minor > 2) {
       vspec = VCP_SPEC_UNKNOWN;

@@ -175,7 +175,7 @@ ddcg_display_ref_report(
 {
    g_return_if_fail( DDCG_IS_DISPLAY_REF(ddcg_dref) );
    rpt_vstring(depth, "DdcgDisplayRef at %p:", ddcg_dref);
-   ddct_report_display_ref(ddcg_dref->priv->ddct_dref, depth+1);
+   ddca_report_display_ref(ddcg_dref->priv->ddct_dref, depth+1);
 }
 
 

@@ -91,7 +91,7 @@ is_table_feature_by_display_handle(
 {
    // bool debug = false;
    bool result = false;
-   Version_Spec vcp_version = get_vcp_version_by_display_handle(dh);
+   DDCA_MCCS_Version_Spec vcp_version = get_vcp_version_by_display_handle(dh);
    Version_Feature_Flags feature_flags = get_version_sensitive_feature_flags(frec, vcp_version);
    assert(feature_flags);
    result = (feature_flags & VCP2_ANY_TABLE);
@@ -104,7 +104,7 @@ is_table_feature_by_display_handle(
 Global_Status_Code
 check_valid_operation_by_feature_rec_and_version(
       VCP_Feature_Table_Entry * frec,
-      Version_Spec              vcp_version,
+      DDCA_MCCS_Version_Spec              vcp_version,
       Version_Feature_Flags     operation_flags)
 {
    Version_Feature_Flags feature_flags
@@ -130,7 +130,7 @@ check_valid_operation_by_feature_id_and_dh(
    if (!frec)
       result = DDCL_UNKNOWN_FEATURE;
    else {
-      Version_Spec vcp_version = get_vcp_version_by_display_handle(dh);
+      DDCA_MCCS_Version_Spec vcp_version = get_vcp_version_by_display_handle(dh);
       result = check_valid_operation_by_feature_rec_and_version(frec, vcp_version, operation_flags);
    }
    return result;
@@ -169,7 +169,7 @@ get_raw_value_for_feature_table_entry(
    DBGTRC(debug, TRACE_GROUP, "Starting");
 
    Global_Status_Code gsc = 0;
-   Version_Spec vspec = get_vcp_version_by_display_handle(dh);
+   DDCA_MCCS_Version_Spec vspec = get_vcp_version_by_display_handle(dh);
    char * feature_name = get_version_sensitive_feature_name(frec, vspec);
 
    Byte feature_code = frec->code;
@@ -338,7 +338,7 @@ collect_raw_subset_values(
    Global_Status_Code gsc = 0;
    bool debug = false;
    DBGMSF(debug, "Starting.  subset=%d  dh=%s", subset, display_handle_repr(dh) );
-   Version_Spec vcp_version = get_vcp_version_by_display_handle(dh);
+   DDCA_MCCS_Version_Spec vcp_version = get_vcp_version_by_display_handle(dh);
    // DBGMSG("VCP version = %d.%d", vcp_version.major, vcp_version.minor);
    VCP_Feature_Set feature_set = create_feature_set(subset, vcp_version);
    if (debug)
@@ -374,7 +374,7 @@ get_formatted_value_for_feature_table_entry(
    Global_Status_Code gsc = 0;
    *pformatted_value = NULL;
 
-   Version_Spec vspec = get_vcp_version_by_display_handle(dh);
+   DDCA_MCCS_Version_Spec vspec = get_vcp_version_by_display_handle(dh);
    Byte feature_code = vcp_entry->code;
    char * feature_name = get_version_sensitive_feature_name(vcp_entry, vspec);
    bool is_table_feature = is_table_feature_by_display_handle(vcp_entry, dh);
@@ -489,7 +489,7 @@ show_feature_set_values(
        show_unsupported = true;
    bool suppress_unsupported = !show_unsupported;
 
-   Version_Spec vcp_version = get_vcp_version_by_display_handle(dh);
+   DDCA_MCCS_Version_Spec vcp_version = get_vcp_version_by_display_handle(dh);
    bool prefix_value_with_feature_code = true;    // TO FIX
    FILE * msg_fh = FOUT;                        // TO FIX
    int features_ct = get_feature_set_size(feature_set);
@@ -571,7 +571,7 @@ show_vcp_values(
    Global_Status_Code gsc = 0;
    bool debug = false;
    DBGMSF(debug, "Starting.  subset=%d  dh=%s", subset, display_handle_repr(dh) );
-   Version_Spec vcp_version = get_vcp_version_by_display_handle(dh);
+   DDCA_MCCS_Version_Spec vcp_version = get_vcp_version_by_display_handle(dh);
    // DBGMSG("VCP version = %d.%d", vcp_version.major, vcp_version.minor);
    VCP_Feature_Set feature_set = create_feature_set(subset, vcp_version);
    if (debug)

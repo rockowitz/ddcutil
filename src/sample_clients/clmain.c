@@ -119,8 +119,8 @@ bool test_cont_value(DDCA_Display_Handle dh, Byte feature_code) {
       report_feature_flags(feature_code, feature_flags);
    }
 
-   DDCT_Non_Table_Value_Response non_table_response;
-   rc = ddct_get_nontable_vcp_value(dh, feature_code, &non_table_response);
+   DDCA_Non_Table_Value_Response non_table_response;
+   rc = ddca_get_nontable_vcp_value(dh, feature_code, &non_table_response);
 
    if (rc != 0)
       FUNCTION_ERRMSG("ddct_set_continuous_vcp_value", rc);
@@ -131,13 +131,13 @@ bool test_cont_value(DDCA_Display_Handle dh, Byte feature_code) {
              non_table_response.max_value);
       int cur_value = non_table_response.cur_value;
       int new_value = cur_value/2;
-      rc = ddct_set_continuous_vcp_value(dh, feature_code, new_value);
+      rc = ddca_set_continuous_vcp_value(dh, feature_code, new_value);
       if (rc != 0) {
          FUNCTION_ERRMSG("ddct_set_continuous_vcp_value", rc);
       }
       else {
          printf("(%s) Setting new value succeeded.\n", __func__);
-         rc = ddct_get_nontable_vcp_value(dh, feature_code, &non_table_response);
+         rc = ddca_get_nontable_vcp_value(dh, feature_code, &non_table_response);
          if (rc != 0) {
             FUNCTION_ERRMSG("ddct_get_continuous_vcp_value", rc);
          }
@@ -148,18 +148,18 @@ bool test_cont_value(DDCA_Display_Handle dh, Byte feature_code) {
             }
          }
          // reset original value
-         rc = ddct_set_continuous_vcp_value(dh, feature_code, cur_value);
+         rc = ddca_set_continuous_vcp_value(dh, feature_code, cur_value);
          if (rc != 0) {
             FUNCTION_ERRMSG("ddct_set_continuous_vcp_value", rc);
          }
          else {
             printf("(%s) Resetting original value succeeded.\n", __func__);
-            rc = ddct_get_nontable_vcp_value(dh, feature_code, &non_table_response);
+            rc = ddca_get_nontable_vcp_value(dh, feature_code, &non_table_response);
             if (rc != 0) {
                FUNCTION_ERRMSG("ddct_get_continuous_vcp_value", rc);
             }
             else {
-               rc = ddct_get_nontable_vcp_value(dh, feature_code, &non_table_response);
+               rc = ddca_get_nontable_vcp_value(dh, feature_code, &non_table_response);
                if (rc != 0) {
                   FUNCTION_ERRMSG("ddct_get_continuous_vcp_value", rc);
                }
@@ -181,13 +181,13 @@ bool test_cont_value(DDCA_Display_Handle dh, Byte feature_code) {
 
 bool test_get_capabilities_string(DDCA_Display_Handle dh) {
    char * capabilities = NULL;
-   DDCA_Status rc =  ddct_get_capabilities_string(dh, &capabilities);
+   DDCA_Status rc =  ddca_get_capabilities_string(dh, &capabilities);
    if (rc != 0)
       FUNCTION_ERRMSG("ddct_get_capabilities_string", rc);
    else
       printf("(%s) Capabilities: %s\n", __func__, capabilities);
    printf("(%s) Second call should be fast\n", __func__);
-   rc =  ddct_get_capabilities_string(dh, &capabilities);
+   rc =  ddca_get_capabilities_string(dh, &capabilities);
    if (rc != 0)
       FUNCTION_ERRMSG("ddct_get_capabilities_string", rc);
    else
@@ -254,7 +254,7 @@ int main(int argc, char** argv) {
          printf("(%s) display handle: %s\n", __func__, dh_repr);
 
          DDCA_MCCS_Version_Spec vspec;
-         rc = ddct_get_mccs_version(dh, &vspec);
+         rc = ddca_get_mccs_version(dh, &vspec);
          if (rc != 0) {
             FUNCTION_ERRMSG("ddct_get_mccs_version_spec", rc);
          }
@@ -272,7 +272,7 @@ int main(int argc, char** argv) {
    if (dh) {
       char * profile_values_string;
       DBGMSG("&profile_values_string=%p", &profile_values_string);
-      rc = ddct_get_profile_related_values(dh, &profile_values_string);
+      rc = ddca_get_profile_related_values(dh, &profile_values_string);
       if (rc != 0) {
          FUNCTION_ERRMSG("ddct_get_profile_related_values", rc);
       }
@@ -281,7 +281,7 @@ int main(int argc, char** argv) {
       }
 
       printf("(%s) Calling ddct_set_profile_related_values()\n", __func__);
-      rc = ddct_set_profile_related_values( profile_values_string);
+      rc = ddca_set_profile_related_values( profile_values_string);
       if (rc != 0) {
          FUNCTION_ERRMSG("ddct_set_profile_related_values", rc);
       }

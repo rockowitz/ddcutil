@@ -74,7 +74,7 @@ app_show_single_vcp_value_by_feature_table_entry(
    DBGMSF(debug, "Starting. Getting feature 0x%02x for %s",
                  entry->code, display_handle_repr(dh) );
 
-   Version_Spec        vspec = get_vcp_version_by_display_handle(dh);
+   DDCA_MCCS_Version_Spec        vspec = get_vcp_version_by_display_handle(dh);
    Global_Status_Code  gsc = 0;
    Byte                feature_id = entry->code;
 
@@ -299,7 +299,7 @@ app_read_changes(Display_Handle * dh) {
    Parsed_Nontable_Vcp_Response * p_nontable_response = NULL;
 
 
-   Version_Spec vspec = get_vcp_version_by_display_handle(dh);
+   DDCA_MCCS_Version_Spec vspec = get_vcp_version_by_display_handle(dh);
    gsc = get_nontable_vcp_value(dh, 0x02, &p_nontable_response);
    if (gsc != 0) {
       DBGMSG("get_nontable_vcp_value() returned %s", gsc_desc(gsc));

@@ -147,7 +147,7 @@ void free_capabilities_feature(Capabilities_Feature_Record * pfeat) {
 }
 
 
-void show_capabilities_feature(Capabilities_Feature_Record * vfr, Version_Spec vcp_version) {
+void show_capabilities_feature(Capabilities_Feature_Record * vfr, DDCA_MCCS_Version_Spec vcp_version) {
    // DBGMSG("Starting. vfr=%p", vfr);
    printf("  Feature: %02X (%s)\n", vfr->feature_id,
           get_feature_name_by_id_and_vcp_version(vfr->feature_id, vcp_version));
@@ -162,7 +162,7 @@ void show_capabilities_feature(Capabilities_Feature_Record * vfr, Version_Spec v
    }
 
    if (vfr->values) {
-      Feature_Value_Entry * feature_values = find_feature_values_for_capabilities(vfr->feature_id, vcp_version);
+      DDCA_Feature_Value_Entry * feature_values = find_feature_values_for_capabilities(vfr->feature_id, vcp_version);
       // if (feature_values)
       //    DBGMSG("Feature values found for feature 0x%02x", vfr->feature_id);
       // else

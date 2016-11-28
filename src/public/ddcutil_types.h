@@ -141,6 +141,8 @@ typedef struct {
    uint8_t    minor;
 } DDCA_MCCS_Version_Spec;
 
+
+
 // in sync w constants MCCS_V.. in vcp_feature_codes.c
 /** MCCS (VCP) Feature Version IDs */
 typedef enum {DDCA_VANY = 0,          /**< Match any MCCS version */
@@ -171,22 +173,84 @@ typedef uint8_t DDCA_VCP_Feature_Code;
 #define DDCA_WRITABLE     (DDCA_WO | DDCA_RW)  /**< Feature is either RW or WO */
 
 
+
+typedef uint16_t Version_Feature_Flags;
+// Bits in Version_Feature_Flags:
+
+// Exactly 1 of the following 3 bits must be set
+#define  VCP2_RO             0x0400
+#define  VCP2_WO             0x0200
+#define  VCP2_RW             0x0100
+#define  VCP2_READABLE       (VCP2_RO | VCP2_RW)
+#define  VCP2_WRITABLE       (VCP2_WO | VCP2_RW)
+
+// Further refine the MCCS C/NC/TABLE categorization
+#define VCP2_STD_CONT        0x80
+#define VCP2_COMPLEX_CONT    0x40
+#define VCP2_CONT            (VCP2_STD_CONT|VCP2_COMPLEX_CONT)
+#define VCP2_SIMPLE_NC       0x20
+#define VCP2_COMPLEX_NC      0x10
+// For WO NC features.  There's no interpretation function or lookup table
+// Used to mark that the feature is defined for a version
+#define VCP2_WO_NC           0x08
+#define VCP2_NC              (VCP2_SIMPLE_NC|VCP2_COMPLEX_NC|VCP2_WO_NC)
+#define VCP2_NON_TABLE       (VCP2_CONT | VCP2_NC)
+#define VCP2_TABLE           0x04
+#define VCP2_WO_TABLE        0x02
+#define VCP2_ANY_TABLE       (VCP2_TABLE | VCP2_WO_TABLE)
+
+// Additional bits:
+#define VCP2_DEPRECATED      0x01
+
+
+// Bits in vcp_global_flags:
+#define VCP2_SYNTHETIC       0x80
+
+
 /** One entry in array listing defined simple NC values.
  *
  * An entry of {0x00,NULL} terminates the list.
  */
 typedef
 struct {
-   uint8_t  value_code;
-   char *   value_name;
-} DDCA_Feature_Value_Entry;              // identical to Feature_Value_Entry
+   uint8_t   value_code;
+   char *    value_name;
+} DDCA_Feature_Value_Entry;
+
+
+
 
 typedef DDCA_Feature_Value_Entry * DDCA_Feature_Value_Table;
+
+
+
+
+// new, better way to return version specific feature information as 1 struct
+// perhaps push this out to public_c_api.h
+
+#define VCP_VERSION_SPECIFIC_FEATURE_INFO_MARKER "VSFI"
+typedef
+struct {
+   char                                  marker[4];
+   DDCA_VCP_Feature_Code                 feature_code;
+   DDCA_MCCS_Version_Spec                vspec;            // ???
+   DDCA_MCCS_Version_Id                  version_id;       // which ?
+   char *                                desc;
+   // Format_Normal_Feature_Detail_Function nontable_formatter;
+   // Format_Table_Feature_Detail_Function  table_formatter;
+    DDCA_Feature_Value_Table              sl_values;
+   // DDCA_Feature_Value_Entry *            sl_values;
+   uint8_t                               global_flags;
+   // VCP_Feature_Subset                    vcp_subsets;   // Need it?
+   char *                                feature_name;
+   Version_Feature_Flags                 feature_flags;
+} Version_Specific_Feature_Info;
 
 
 //
 // Get and set VCP feature values
 //
+
 
 // include interpreted string?
 typedef struct {
@@ -196,13 +260,48 @@ typedef struct {
    uint8_t  sl;
    int      max_value;
    int      cur_value;
-   char *   formatted_value;
-} DDCT_Non_Table_Value_Response;
+} DDCA_Non_Table_Value_Response;
 
 typedef struct {
    int      bytect;
    uint8_t  bytes[];     // or uint8_t * ?
-} DDCT_Table_Value_Response;
+} DDCA_Table_Value_Response;
+
+
+typedef enum {
+   NON_TABLE_VCP_VALUE,
+   TABLE_VCP_VALUE,
+} Vcp_Value_Type;
+
+
+typedef struct {
+   uint8_t          opcode;
+   Vcp_Value_Type value_type;      // probably a different type would be better
+   union {
+      struct {
+         uint8_t *  bytes;
+         uint16_t  bytect;
+      }          t;
+      struct {
+         uint16_t max_val;
+         uint16_t cur_val;
+      }         c;
+      struct {
+#ifdef WORDS_BIGENDIAN
+         uint8_t mh;
+         uint8_t ml;
+         uint8_t sh;
+         uint8_t sl;
+#else
+         uint8_t ml;
+         uint8_t mh;
+         uint8_t sl;
+         uint8_t sh;
+#endif
+      }         nc;
+   }            val;
+} Single_Vcp_Value;
+
 
 
 #endif /* DDCUTIL_TYPES_H_ */

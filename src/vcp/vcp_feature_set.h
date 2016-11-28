@@ -39,7 +39,7 @@ typedef void * VCP_Feature_Set;  // make underlying data structure opaque
 void free_vcp_feature_set(VCP_Feature_Set fset);
 
 VCP_Feature_Set
-create_feature_set(VCP_Feature_Subset subset, Version_Spec vcp_version);
+create_feature_set(VCP_Feature_Subset subset, DDCA_MCCS_Version_Spec vcp_version);
 
 VCP_Feature_Set
 create_single_feature_set_by_vcp_entry(VCP_Feature_Table_Entry * vcp_entry);
@@ -61,7 +61,7 @@ void report_feature_set(VCP_Feature_Set feature_set, int depth);
 VCP_Feature_Set
 create_feature_set_from_feature_set_ref(
    Feature_Set_Ref * fsref,
-   Version_Spec      vcp_version,
+   DDCA_MCCS_Version_Spec      vcp_version,
    bool              force);
 
 #endif /* VCP_FEATURE_SET_H_ */

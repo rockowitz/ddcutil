@@ -28,7 +28,7 @@
 #include "base/vcp_version.h"
 
 
-Version_Spec get_vcp_version_by_display_handle(Display_Handle * dh);
-Version_Spec get_vcp_version_by_display_ref(   Display_Ref *    dref);
+DDCA_MCCS_Version_Spec get_vcp_version_by_display_handle(Display_Handle * dh);
+DDCA_MCCS_Version_Spec get_vcp_version_by_display_ref(   Display_Ref *    dref);
 
 #endif /* DDC_VCP_VERSION_H_ */

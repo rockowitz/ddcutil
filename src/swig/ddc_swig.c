@@ -173,7 +173,7 @@ unsigned long ddcs_get_feature_info_by_vcp_version(
   //             DDCS_MCCS_Version_Spec   vspec)
 {
    unsigned long result = 0;
-   ERROR_CHECK( ddca_get_feature_info_by_vcp_version(feature_code, version_id, &result) );
+   ERROR_CHECK( ddca_get_feature_flags_by_vcp_version(feature_code, version_id, &result) );
    return result;
 }
 
@@ -285,7 +285,7 @@ char *  ddcs_repr_display_ref(DDCS_Display_Ref_p dref) {
 
 void        ddcs_report_display_ref(DDCS_Display_Ref_p dref, int depth) {
    clear_exception();
-   ddct_report_display_ref(dref, depth);
+   ddca_report_display_ref(dref, depth);
 }
 
 
@@ -325,7 +325,7 @@ char * ddcs_repr_display_handle(DDCS_Display_Handle_p dh) {
 
 DDCS_MCCS_Version_Spec ddcs_get_mccs_version(DDCS_Display_Handle_p dh) {
    DDCS_MCCS_Version_Spec result = {0};
-   ERROR_CHECK( ddct_get_mccs_version(dh, &result) );
+   ERROR_CHECK( ddca_get_mccs_version(dh, &result) );
    return result;
 }
 
@@ -347,7 +347,7 @@ unsigned long ddcs_get_feature_info_by_display(
 char * ddcs_get_capabilities_string(DDCS_Display_Handle_p dh){
    clear_exception();
    char * result = NULL;
-   DDCA_Status  rc = ddct_get_capabilities_string(dh, &result);
+   DDCA_Status  rc = ddca_get_capabilities_string(dh, &result);
    if (rc != 0)
       throw_exception_from_status_code(rc);
    return result;
@@ -358,13 +358,14 @@ char * ddcs_get_capabilities_string(DDCS_Display_Handle_p dh){
 // Get and Set VCP Feature Values
 //
 
+// n. returning entire value, not pointer to value
 DDCS_Non_Table_Value_Response ddcs_get_nontable_vcp_value(
-               DDCS_Display_Handle_p           dh,
-               DDCS_VCP_Feature_Code                feature_code) {
+               DDCS_Display_Handle_p    dh,
+               DDCS_VCP_Feature_Code    feature_code) {
 
    clear_exception();
-   DDCT_Non_Table_Value_Response resp = {0};
-   DDCA_Status  rc = ddct_get_nontable_vcp_value(dh, feature_code, &resp);
+   DDCA_Non_Table_Value_Response resp = {0};
+   DDCA_Status  rc = ddca_get_nontable_vcp_value(dh, feature_code, &resp);
    if (rc != 0)
       throw_exception_from_status_code(rc);
    DDCS_Non_Table_Value_Response result;
@@ -379,7 +380,7 @@ void ddcs_set_nontable_vcp_value(
                int                  new_value)
 {
    clear_exception();
-   DDCA_Status  rc = ddct_set_continuous_vcp_value(dh, feature_code, new_value);
+   DDCA_Status  rc = ddca_set_continuous_vcp_value(dh, feature_code, new_value);
    if (rc != 0)
       throw_exception_from_status_code(rc);
 }
@@ -388,7 +389,7 @@ void ddcs_set_nontable_vcp_value(
 char * ddcs_get_profile_related_values(DDCS_Display_Handle_p dh){
    clear_exception();
    char * result = NULL;
-   DDCA_Status  rc = ddct_get_profile_related_values(dh, &result);
+   DDCA_Status  rc = ddca_get_profile_related_values(dh, &result);
    if (rc != 0)
       throw_exception_from_status_code(rc);
    return result;
@@ -396,7 +397,7 @@ char * ddcs_get_profile_related_values(DDCS_Display_Handle_p dh){
 
 void ddcs_set_profile_related_values(char * profile_values_string) {
    clear_exception();
-   DDCA_Status  rc = ddct_set_profile_related_values(profile_values_string);
+   DDCA_Status  rc = ddca_set_profile_related_values(profile_values_string);
    if (rc != 0)
       throw_exception_from_status_code(rc);
 }

@@ -173,9 +173,9 @@ ddcg_display_handle_get_nontable_vcp_value(
                GError **             error)
 {
    DdcgContResponse * ddcg_response = NULL;
-   DDCT_Non_Table_Value_Response ddct_response;
+   DDCA_Non_Table_Value_Response ddct_response;
 
-   DDCA_Status ddct_status =  ddct_get_nontable_vcp_value(
+   DDCA_Status ddct_status =  ddca_get_nontable_vcp_value(
                   ddcg_dh->priv->ddct_dh,
                   feature_code,
                   &ddct_response);

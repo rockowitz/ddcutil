@@ -62,7 +62,7 @@
  *    Version_Spec struct containing version, contains 0.0 if version
  *    could not be retrieved (pre MCCS v2)
  */
-Version_Spec get_vcp_version_by_display_handle(Display_Handle * dh) {
+DDCA_MCCS_Version_Spec get_vcp_version_by_display_handle(Display_Handle * dh) {
    bool debug = false;
    // TMI
    // DBGMSF(debug, "Starting. dh=%p, dh->vcp_version =  %d.%d",
@@ -132,7 +132,7 @@ Version_Spec get_vcp_version_by_display_handle(Display_Handle * dh) {
  *    Version_Spec struct containing version, contains 0.0 if version
  *    could not be retrieved (pre MCCS v2)
  */
-Version_Spec get_vcp_version_by_display_ref(Display_Ref * dref) {
+DDCA_MCCS_Version_Spec get_vcp_version_by_display_ref(Display_Ref * dref) {
    bool debug = true;
    DBGMSF(debug, "Starting. dref=%p, dref->vcp_version =  %d.%d\n",
                  dref, dref->vcp_version.major, dref->vcp_version.minor);

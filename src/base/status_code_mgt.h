@@ -99,7 +99,7 @@ Retcode_Range_Id get_modulation(int rc);
 // int demodulate_any_rc(int modulated_rc);   // unimplemented
 
 Public_Status_Code global_to_public_status_code(Global_Status_Code gsc);
-Global_Status_Code publit_to_global_status_code(Public_Status_Code);
+Global_Status_Code public_to_global_status_code(Public_Status_Code);
 
 Status_Code_Info * find_global_status_code_info(Global_Status_Code rc);
 

@@ -46,6 +46,6 @@ Capabilities_Feature_Record * new_capabilities_feature(
                         char * value_string_start,
                         int    value_string_len);
 void free_capabilities_feature(Capabilities_Feature_Record * pfeat);
-void show_capabilities_feature(Capabilities_Feature_Record * vfr, Version_Spec vcp_version);
+void show_capabilities_feature(Capabilities_Feature_Record * vfr, DDCA_MCCS_Version_Spec vcp_version);
 
 #endif /* PARSED_CAPABILITIES_H */

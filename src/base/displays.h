@@ -114,7 +114,7 @@ typedef struct {
    int          usb_bus;
    int          usb_device;
    char *       usb_hiddev_name;
-   Version_Spec vcp_version;
+   DDCA_MCCS_Version_Spec vcp_version;
 } Display_Ref;
 
 // n. works for both Display_Ref and Display_Handle
@@ -151,7 +151,7 @@ typedef struct {
    int          usb_bus;
    int          usb_device;
    char *       hiddev_device_name;
-   Version_Spec vcp_version;
+   DDCA_MCCS_Version_Spec vcp_version;
    char *       capabilities_string;
    Parsed_Edid* pedid;                             // added 7/2016
 } Display_Handle;

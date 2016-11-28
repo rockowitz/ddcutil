@@ -55,35 +55,35 @@
 #include "libmain/ddcutil_c_api.h"
 
 
-#define WITH_DR(ddct_dref, action) \
+#define WITH_DR(ddca_dref, action) \
    do { \
       if (!library_initialized) \
          return DDCL_UNINITIALIZED; \
-      DDCA_Status rc = 0; \
-      Display_Ref * dref = (Display_Ref *) ddct_dref; \
+      DDCA_Status psc = 0; \
+      Display_Ref * dref = (Display_Ref *) ddca_dref; \
       if (dref == NULL || memcmp(dref->marker, DISPLAY_REF_MARKER, 4) != 0 )  { \
-         rc = DDCL_ARG; \
+         psc = DDCL_ARG; \
       } \
       else { \
          (action); \
       } \
-      return rc; \
+      return psc; \
    } while(0);
 
 
-#define WITH_DH(_ddct_dh_, _action_) \
+#define WITH_DH(_ddca_dh_, _action_) \
    do { \
       if (!library_initialized) \
          return DDCL_UNINITIALIZED; \
-      DDCA_Status rc = 0; \
-      Display_Handle * dh = (Display_Handle *) _ddct_dh_; \
+      DDCA_Status psc = 0; \
+      Display_Handle * dh = (Display_Handle *) _ddca_dh_; \
       if (dh == NULL || memcmp(dh->marker, DISPLAY_HANDLE_MARKER, 4) != 0 )  { \
-         rc = DDCL_ARG; \
+         psc = DDCL_ARG; \
       } \
       else { \
          (_action_); \
       } \
-      return rc; \
+      return psc; \
    } while(0);
 
 
@@ -172,7 +172,8 @@ static Global_Status_Code ddca_to_global_status_code(DDCA_Status ddca_status) {
 }
 
 
-static DDCA_Status global_to_ddca_status_code(Global_Status_Code gsc) {
+// should be static, but not currently used, if static get warning
+DDCA_Status global_to_ddca_status_code(Global_Status_Code gsc) {
    return global_to_public_status_code(gsc);
 }
 
@@ -521,7 +522,7 @@ DDCA_Status ddca_repr_display_ref(DDCA_Display_Ref ddct_dref, char** repr){
    return rc;
 }
 
-void        ddct_report_display_ref(DDCA_Display_Ref ddct_dref, int depth) {
+void        ddca_report_display_ref(DDCA_Display_Ref ddct_dref, int depth) {
    Display_Ref * dref = (Display_Ref *) ddct_dref;
    rpt_vstring(depth, "DDCT_Display_Ref at %p:", dref);
    report_display_ref(dref, depth+1);
@@ -604,75 +605,6 @@ DDCA_Status ddca_repr_display_handle(DDCA_Display_Handle ddct_dh, char ** repr) 
 }
 
 
-DDCA_Status ddct_get_mccs_version(DDCA_Display_Handle ddct_dh, DDCA_MCCS_Version_Spec* pspec) {
-   if (!library_initialized)
-      return DDCL_UNINITIALIZED;
-   DDCA_Status rc = 0;
-   Display_Handle * dh = (Display_Handle *) ddct_dh;
-   if (dh == NULL || memcmp(dh->marker, DISPLAY_HANDLE_MARKER, 4) != 0 )  {
-      rc = DDCL_ARG;
-      pspec->major = 0;
-      pspec->minor = 0;
-   }
-   else {
-      // need to call function, may not yet be set
-      Version_Spec vspec = get_vcp_version_by_display_handle(dh);
-      pspec->major = vspec.major;
-      pspec->minor = vspec.minor;
-      rc = 0;
-   }
-   return rc;
-}
-
-
-DDCA_Status ddct_get_edid_by_display_ref(DDCA_Display_Ref ddct_dref, Byte** pbytes) {
-   if (!library_initialized)
-      return DDCL_UNINITIALIZED;
-   DDCA_Status rc = 0;
-   Display_Ref * dref = (Display_Ref *) ddct_dref;
-   if (dref == NULL || memcmp(dref->marker, DISPLAY_REF_MARKER, 4) != 0 )  {
-      rc = DDCL_ARG;
-   }
-   else {
-      Parsed_Edid*  edid = ddc_get_parsed_edid_by_display_ref(dref);
-      *pbytes = edid->bytes;
-   }
-   return rc;
-
-}
-
-
-
-
-static DDCA_MCCS_Version_Spec mccs_version_id_to_spec(DDCA_MCCS_Version_Id id) {
-   Version_Spec vspec = VCP_SPEC_ANY;
-   // use table instead?
-   switch(id) {
-   case DDCA_VANY:   vspec = VCP_SPEC_ANY;    break;
-   case DDCA_V10:    vspec = VCP_SPEC_V10;    break;
-   case DDCA_V20:    vspec = VCP_SPEC_V20;    break;
-   case DDCA_V21:    vspec = VCP_SPEC_V21;    break;
-   case DDCA_V30:    vspec = VCP_SPEC_V30;    break;
-   case DDCA_V22:    vspec = VCP_SPEC_V22;    break;
-   }
-   DDCA_MCCS_Version_Spec converted;
-   converted.major = vspec.major;
-   converted.minor = vspec.minor;
-
-   return converted;
-}
-
-
-// DUH? just use a cast
-
-static DDCA_MCCS_Version_Spec version_spec_to_mccs_version_spec(Version_Spec vspec) {
-   DDCA_MCCS_Version_Spec converted;
-
-   converted.major = vspec.major;
-   converted.minor = vspec.minor;
-   return converted;
-}
-
 static DDCA_MCCS_Version_Id mccs_version_spec_to_id(DDCA_MCCS_Version_Spec vspec) {
    DDCA_MCCS_Version_Id result = DDCA_VUNK;    // initialize to avoid compiler warning
 
@@ -699,10 +631,93 @@ static DDCA_MCCS_Version_Id mccs_version_spec_to_id(DDCA_MCCS_Version_Spec vspec
 
 
 
+DDCA_Status ddca_get_mccs_version(
+               DDCA_Display_Handle     ddca_dh,
+               DDCA_MCCS_Version_Spec* pspec) {
+   if (!library_initialized)
+      return DDCL_UNINITIALIZED;
+   DDCA_Status rc = 0;
+   Display_Handle * dh = (Display_Handle *) ddca_dh;
+   if (dh == NULL || memcmp(dh->marker, DISPLAY_HANDLE_MARKER, 4) != 0 )  {
+      rc = DDCL_ARG;
+      pspec->major = 0;
+      pspec->minor = 0;
+   }
+   else {
+      // need to call function, may not yet be set
+      DDCA_MCCS_Version_Spec vspec = get_vcp_version_by_display_handle(dh);
+      pspec->major = vspec.major;
+      pspec->minor = vspec.minor;
+      rc = 0;
+   }
+   return rc;
+}
+
+
+DDCA_Status ddca_get_mccs_version_id(
+               DDCA_Display_Handle   ddca_dh,
+               DDCA_MCCS_Version_Id*  p_id)
+{
+   DDCA_MCCS_Version_Spec vspec;
+   DDCA_Status rc = ddca_get_mccs_version(ddca_dh, &vspec);
+   if (rc == 0) {
+      DDCA_MCCS_Version_Id  version_id = mccs_version_spec_to_id(vspec);
+      *p_id = version_id;
+   }
+   else {
+      *p_id = 0;
+   }
+   return rc;
+}
+
+
+
+DDCA_Status ddca_get_edid_by_display_ref(DDCA_Display_Ref ddca_dref, uint8_t** pbytes) {
+   if (!library_initialized)
+      return DDCL_UNINITIALIZED;
+   DDCA_Status rc = 0;
+   Display_Ref * dref = (Display_Ref *) ddca_dref;
+   if (dref == NULL || memcmp(dref->marker, DISPLAY_REF_MARKER, 4) != 0 )  {
+      rc = DDCL_ARG;
+   }
+   else {
+      Parsed_Edid*  edid = ddc_get_parsed_edid_by_display_ref(dref);
+      *pbytes = edid->bytes;
+   }
+   return rc;
+
+}
+
+
+
+
+static DDCA_MCCS_Version_Spec mccs_version_id_to_spec(DDCA_MCCS_Version_Id id) {
+   DDCA_MCCS_Version_Spec vspec = VCP_SPEC_ANY;
+   // use table instead?
+   switch(id) {
+   case DDCA_VANY:   vspec = VCP_SPEC_ANY;    break;
+   case DDCA_V10:    vspec = VCP_SPEC_V10;    break;
+   case DDCA_V20:    vspec = VCP_SPEC_V20;    break;
+   case DDCA_V21:    vspec = VCP_SPEC_V21;    break;
+   case DDCA_V30:    vspec = VCP_SPEC_V30;    break;
+   case DDCA_V22:    vspec = VCP_SPEC_V22;    break;
+   }
+   DDCA_MCCS_Version_Spec converted;
+   converted.major = vspec.major;
+   converted.minor = vspec.minor;
+
+   return converted;
+}
+
+
+
+
+
+
 
 // or return a struct?
-DDCA_Status ddca_get_feature_info_by_vcp_version(
-      DDCA_VCP_Feature_Code        feature_code,
+DDCA_Status ddca_get_feature_flags_by_vcp_version(
+      DDCA_VCP_Feature_Code   feature_code,
       DDCA_MCCS_Version_Id    mccs_version_id,
       unsigned long *         flags)
 {
@@ -715,8 +730,7 @@ DDCA_Status ddca_get_feature_info_by_vcp_version(
       rc = DDCL_ARG;
    }
    else {
-      Version_Spec vspec2 = {vspec.major, vspec.minor};
-      Version_Feature_Flags vflags = get_version_specific_feature_flags(pentry, vspec2);
+      Version_Feature_Flags vflags = get_version_specific_feature_flags(pentry, vspec);
       *flags = 0;
       // TODO handle subvariants REWORK
       if (vflags & VCP2_RO)
@@ -752,8 +766,48 @@ DDCA_Status ddca_get_feature_info_by_vcp_version(
 }
 
 
+DDCA_Status ddca_get_feature_info_by_vcp_version(
+      DDCA_VCP_Feature_Code      feature_code,
+      // DDCT_MCCS_Version_Spec  vspec,
+      DDCA_MCCS_Version_Id       mccs_version_id,
+      Version_Specific_Feature_Info  ** p_info)
+{
+   DDCA_Status psc = 0;
+   *p_info = NULL;
+   DDCA_MCCS_Version_Spec vspec = mccs_version_id_to_spec(mccs_version_id);
 
+   VCP_Feature_Table_Entry * pentry = vcp_find_feature_by_hexid(feature_code);
+   if (!pentry) {
+      psc = DDCL_ARG;
+   }
+   else {
+      Version_Specific_Feature_Info * info = calloc(1, sizeof(Version_Specific_Feature_Info));
+      memcpy(info->marker, VCP_VERSION_SPECIFIC_FEATURE_INFO_MARKER , 4);
+      info->feature_code = feature_code;
+      info->version_id   = mccs_version_id;
+      info->vspec        = vspec;
 
+      // kludgy, for now
+      unsigned long flags;
+      DDCA_Status rc2 =  ddca_get_feature_flags_by_vcp_version(
+            feature_code,
+            mccs_version_id,
+            &flags);
+      assert(rc2 == 0);
+      info->feature_flags = flags;    // need to cast?
+      info->desc = pentry->desc;
+      // TODO: use varaint that respsects version
+      info->feature_name = get_version_sensitive_feature_name(
+                                  pentry, vspec);
+
+      info->global_flags = pentry->vcp_global_flags;
+      info->sl_values = get_version_specific_sl_values(pentry, vspec);
+
+      *p_info = info;
+   }
+   return psc;
+
+}
 
 // or return a struct?
 DDCA_Status ddca_get_feature_info_by_display(
@@ -764,15 +818,13 @@ DDCA_Status ddca_get_feature_info_by_display(
    WITH_DH(
       ddca_dh,
       {
-         Version_Spec vspec = get_vcp_version_by_display_handle(ddca_dh);
+         DDCA_MCCS_Version_Spec vspec = get_vcp_version_by_display_handle(ddca_dh);
          // DDCT_MCCS_Version_Spec vspec2;           // = {vspec.major, vspec.minor};
          // vspec2.major = vspec.major;
          // vspec2.minor = vspec.minor;
-         DDCA_MCCS_Version_Spec vspec2     = version_spec_to_mccs_version_spec(vspec);
-      // DDCT_MCCS_Version_Spec vspec2     = (DDCT_MCCS_Version_Spec) vspec;
-         DDCA_MCCS_Version_Id   version_id = mccs_version_spec_to_id(vspec2);
+         DDCA_MCCS_Version_Id   version_id = mccs_version_spec_to_id(vspec);
 
-         rc = ddca_get_feature_info_by_vcp_version(feature_code, version_id, pflags);
+         psc = ddca_get_feature_flags_by_vcp_version(feature_code, version_id, pflags);
       }
    );
 }
@@ -789,17 +841,15 @@ char * ddca_get_feature_name(DDCA_VCP_Feature_Code feature_code) {
 }
 
 
+//
 // Display Inquiry
-
-int ddca_report_active_displays(int depth) {
-   return ddc_report_active_displays(depth);
-}
+//
 
 
 DDCA_Status ddca_get_simple_sl_value_table(
                DDCA_VCP_Feature_Code      feature_code,
                DDCA_MCCS_Version_Id       mccs_version_id,
-               DDCA_Feature_Value_Entry ** pvalue_table)
+               DDCA_Feature_Value_Entry** pvalue_table)
 {
    DDCA_Status rc = 0;
    *pvalue_table = NULL;
@@ -811,14 +861,14 @@ DDCA_Status ddca_get_simple_sl_value_table(
         rc = DDCL_ARG;
   }
   else {
-     Version_Spec vspec2 = {vspec.major, vspec.minor};
+     DDCA_MCCS_Version_Spec vspec2 = {vspec.major, vspec.minor};
      Version_Feature_Flags vflags = get_version_specific_feature_flags(pentry, vspec2);
      if (!(vflags & VCP2_SIMPLE_NC)) {
         *pvalue_table = NULL;
         rc = DDCL_ARG;    // need better code
      }
      else  {
-        Feature_Value_Entry * table = get_version_specific_sl_values(pentry, vspec2);
+        DDCA_Feature_Value_Entry * table = get_version_specific_sl_values(pentry, vspec2);
         DDCA_Feature_Value_Entry * table2 = (DDCA_Feature_Value_Entry*) table;    // identical definitions
         *pvalue_table = table2;
         rc = 0;
@@ -835,23 +885,23 @@ typedef void * Feature_Value_Table;   // temp
 
 // or:
 DDCA_Status ddct_get_nc_feature_value_name(
-               DDCA_Display_Handle ddct_dh,    // needed because value lookup mccs version dependent
-               DDCA_VCP_Feature_Code    feature_code,
-               Byte                feature_value,
-               char**              pfeature_name)
+               DDCA_Display_Handle     ddct_dh,    // needed because value lookup mccs version dependent
+               DDCA_VCP_Feature_Code   feature_code,
+               Byte                    feature_value,
+               char**                  pfeature_name)
 {
    WITH_DH(ddct_dh,  {
          // this should be a function in vcp_feature_codes:
          char * feature_name = NULL;
-         Version_Spec vspec = dh->vcp_version;
-         Feature_Value_Entry * feature_value_entries = find_feature_values(feature_code, vspec);
+         DDCA_MCCS_Version_Spec vspec = dh->vcp_version;
+         DDCA_Feature_Value_Entry * feature_value_entries = find_feature_values(feature_code, vspec);
          if (feature_value_entries == NULL) {
-            rc = DDCL_ARG;
+            psc = DDCL_ARG;
          }
          else {
             feature_name = get_feature_value_name(feature_value_entries, feature_value);
             if (feature_name == NULL)
-               rc = DDCL_ARG;               // correct handling for value not found?
+               psc = DDCL_ARG;               // correct handling for value not found?
             else
                *pfeature_name = feature_name;
          }
@@ -859,11 +909,11 @@ DDCA_Status ddct_get_nc_feature_value_name(
    );
 }
 
-// n.b. filles in the response buffer provided by the caller, does not allocate
-DDCA_Status ddct_get_nontable_vcp_value(
+// n.b. fills in the response buffer provided by the caller, does not allocate
+DDCA_Status ddca_get_nontable_vcp_value(
                DDCA_Display_Handle             ddct_dh,
                DDCA_VCP_Feature_Code                feature_code,
-               DDCT_Non_Table_Value_Response * response)
+               DDCA_Non_Table_Value_Response * response)
 {
    WITH_DH(ddct_dh,  {
        Parsed_Nontable_Vcp_Response * code_info;
@@ -877,23 +927,47 @@ DDCA_Status ddct_get_nontable_vcp_value(
           response->sh        = code_info->sh;
           response->sl        = code_info->sl;
        }
-       else rc = gsc;    // ??
+       else psc = global_to_public_status_code(gsc);
     } );
 }
 
+// Partial code for getting formatted value
+//
+//Parsed_Vcp_Response pvr;
+//pvr.response_type = NON_TABLE_VCP_VALUE;
+//pvr.non_table_response = response;
+//
+//Single_Vcp_Value * valrec =
+// create_single_vcp_value_by_parsed_vcp_response(
+//       feature_code,
+//       *pvr);
+//
+//bool ok = vcp_format_feature_detail(
+//       VCP_Feature_Table_Entry * vcp_entry,
+//       DDCA_MCCS_Version_Spec              vcp_version,
+//       Single_Vcp_Value *        valrec,
+//#ifdef OLD
+//       Parsed_Vcp_Response *     raw_data,
+//#endif
+//       char * *                  aformatted_data
+//     )
+//
+
+
 
 // untested
-DDCA_Status ddct_get_table_vcp_value(
-               DDCA_Display_Handle ddct_dh,
+DDCA_Status ddca_get_table_vcp_value(
+               DDCA_Display_Handle ddca_dh,
                DDCA_VCP_Feature_Code    feature_code,
                int *               value_len,
                Byte**              value_bytes)
 {
-   WITH_DH(ddct_dh,
+   WITH_DH(ddca_dh,
       {
          Buffer * p_table_bytes = NULL;
-         rc =  get_table_vcp_value(dh, feature_code, &p_table_bytes);
-         if (rc == 0) {
+         Global_Status_Code gsc;
+         gsc =  get_table_vcp_value(dh, feature_code, &p_table_bytes);
+         if (gsc == 0) {
             assert(p_table_bytes);  // avoid coverity warning
             int len = p_table_bytes->len;
             *value_len = len;
@@ -901,39 +975,114 @@ DDCA_Status ddct_get_table_vcp_value(
             memcpy(*value_bytes, p_table_bytes->bytes, len);
             buffer_free(p_table_bytes, __func__);
          }
+         psc = global_to_public_status_code(gsc);
       }
      );
 }
 
 
-DDCA_Status ddct_set_continuous_vcp_value(
-               DDCA_Display_Handle ddct_dh,
-               DDCA_VCP_Feature_Code feature_code,
-               int              new_value)
+// alt
+
+DDCA_Status ddca_get_vcp_value(
+       DDCA_Display_Handle *     ddca_dh,
+       DDCA_VCP_Feature_Code     feature_code,
+       Vcp_Value_Type            call_type,   // why is this needed?   look it up from dh and feature_code
+       Single_Vcp_Value **       pvalrec)
 {
-   WITH_DH(ddct_dh,  {
+   WITH_DH(ddca_dh,
+         {
+               *pvalrec = NULL;
+               Global_Status_Code gsc = get_vcp_value(dh, feature_code, call_type, pvalrec);
+               psc = global_to_public_status_code(gsc);
+         }
+   );
+}
+
+
+DDCA_Status ddca_get_formatted_vcp_value(
+       DDCA_Display_Handle *     ddca_dh,
+       DDCA_VCP_Feature_Code     feature_code,
+       char**                    p_formatted_value)
+{
+   WITH_DH(ddca_dh,
+         {
+               *p_formatted_value = NULL;
+               DDCA_MCCS_Version_Spec vspec      = get_vcp_version_by_display_handle(dh);
+               // DDCA_MCCS_Version_Id   version_id = mccs_version_spec_to_id(vspec);
+
+               // use with_default() variant?
+               VCP_Feature_Table_Entry * pentry = vcp_find_feature_by_hexid(feature_code);
+               if (!pentry) {
+                  psc = DDCL_ARG;
+               }
+               else {
+                  // TODO: fix to get version sensitive flags
+                  unsigned long flags = pentry->v20_flags;    // TO FIX!
+                   // n. will default to NON_TABLE_VCP_VALUE if not a known code
+                   Vcp_Value_Type call_type = (flags & DDCA_TABLE) ?  TABLE_VCP_VALUE : NON_TABLE_VCP_VALUE;
+                   Single_Vcp_Value * pvalrec;
+                   Global_Status_Code gsc = get_vcp_value(dh, feature_code, call_type, &pvalrec);
+                   if (gsc == 0) {
+                      if (call_type == NON_TABLE_VCP_VALUE) {
+                         Nontable_Vcp_Value * code_info = NULL;   // *** NEED CONVERSION FUNCTION ***
+                         char * buffer = calloc(1,1000);
+                         int bufsz = 1000;
+                         if (pentry->nontable_formatter) {
+                            Format_Normal_Feature_Detail_Function func = pentry->nontable_formatter;
+                            bool ok = func(code_info, vspec, buffer, bufsz);
+                            if (ok) {
+                               free(buffer);
+                               gsc = DDCL_UNIMPLEMENTED;   // *** TEMP ***
+                            }
+                            else {
+                               *p_formatted_value = buffer;
+                            }
+                         }
+                         else {    // use default formatter
+                         }
+                      }
+                      else {         // call_type == TABLE_VCP_VALUE
+                         gsc = DDCL_UNIMPLEMENTED;
+
+                      }
+
+                   }
+
+                   psc = global_to_public_status_code(gsc);
+               }
+         }
+   )
+}
+
+
+DDCA_Status ddca_set_continuous_vcp_value(
+               DDCA_Display_Handle   ddca_dh,
+               DDCA_VCP_Feature_Code feature_code,
+               int                   new_value)
+{
+   WITH_DH(ddca_dh,  {
          Global_Status_Code gsc = set_nontable_vcp_value(dh, feature_code, new_value);
-         rc = gsc;
+         psc = global_to_public_status_code(gsc);
       } );
 }
 
 
-DDCA_Status ddct_set_simple_nc_vcp_value(
-               DDCA_Display_Handle  ddct_dh,
-               DDCA_VCP_Feature_Code     feature_code,
-               Byte                 new_value)
+DDCA_Status ddca_set_simple_nc_vcp_value(
+               DDCA_Display_Handle     ddca_dh,
+               DDCA_VCP_Feature_Code   feature_code,
+               Byte                    new_value)
 {
-   return ddct_set_continuous_vcp_value(ddct_dh, feature_code, new_value);
+   return ddca_set_continuous_vcp_value(ddca_dh, feature_code, new_value);
 }
 
 
-DDCA_Status ddct_set_raw_vcp_value(
-               DDCA_Display_Handle  ddct_dh,
-               DDCA_VCP_Feature_Code     feature_code,
-               Byte                 hi_byte,
-               Byte                 lo_byte)
+DDCA_Status ddca_set_raw_vcp_value(
+               DDCA_Display_Handle    ddca_dh,
+               DDCA_VCP_Feature_Code  feature_code,
+               Byte                   hi_byte,
+               Byte                   lo_byte)
 {
-   return ddct_set_continuous_vcp_value(ddct_dh, feature_code, hi_byte << 8 | lo_byte);
+   return ddca_set_continuous_vcp_value(ddca_dh, feature_code, hi_byte << 8 | lo_byte);
 }
 
 
@@ -948,36 +1097,48 @@ DDCA_Status ddct_set_raw_vcp_value(
  * Returns:
  *   status code
  */
-DDCA_Status ddct_get_capabilities_string(DDCA_Display_Handle ddct_dh, char** pcaps)
+DDCA_Status ddca_get_capabilities_string(DDCA_Display_Handle ddct_dh, char** pcaps)
 {
    WITH_DH(ddct_dh,
       {
          Global_Status_Code gsc = get_capabilities_string(dh, pcaps);
-         rc = gsc;
+         psc = public_to_global_status_code(gsc);
       }
    );
 }
 
 
-DDCA_Status ddct_get_profile_related_values(DDCA_Display_Handle ddct_dh, char** pprofile_values_string)
+DDCA_Status ddca_get_profile_related_values(
+               DDCA_Display_Handle ddca_dh,
+               char**              pprofile_values_string)
 {
-   WITH_DH(ddct_dh,
+   WITH_DH(ddca_dh,
       {
          bool debug = false;
          set_output_level(OL_PROGRAM);  // not needed for _new() variant
          DBGMSF(debug, "Before dumpvcp_to_string_by_display_handle(), pprofile_values_string=%p, *pprofile_values_string=%p",
                pprofile_values_string, *pprofile_values_string);
-         rc = dumpvcp_as_string(dh, pprofile_values_string);
+         Global_Status_Code gsc = dumpvcp_as_string(dh, pprofile_values_string);
          DBGMSF(debug, "After dumpvcp_to_string_by_display_handle(), pprofile_values_string=%p, *pprofile_values_string=%p",
                pprofile_values_string, *pprofile_values_string);
          DBGMSF(debug, "*pprofile_values_string = |%s|", *pprofile_values_string);
+         psc = public_to_global_status_code(gsc);
       }
    );
 }
 
 
 // TODO: handle display as optional argument
-DDCA_Status ddct_set_profile_related_values(char * profile_values_string) {
+DDCA_Status ddca_set_profile_related_values(char * profile_values_string) {
    Global_Status_Code gsc = loadvcp_by_string(profile_values_string, NULL);
    return gsc;
+}
+
+
+//
+// Reports
+//
+
+int ddca_report_active_displays(int depth) {
+   return ddc_report_active_displays(depth);
 }

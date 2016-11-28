@@ -57,7 +57,7 @@ void report_commands(Byte_Value_Array cmd_ids) {
 }
 
 
-void report_features(GPtrArray* features, Version_Spec vcp_version) {
+void report_features(GPtrArray* features, DDCA_MCCS_Version_Spec vcp_version) {
    printf("VCP Features:\n");
    int ct = features->len;
    int ndx;
@@ -138,7 +138,7 @@ Parsed_Capabilities * new_parsed_capabilities(
    pcaps->commands     = commands;
    pcaps->vcp_features = vcp_features;
 
-   Version_Spec parsed_vcp_version = {0.0};
+   DDCA_MCCS_Version_Spec parsed_vcp_version = {0.0};
    if (mccs_ver) {
       int vmajor;
       int vminor;
@@ -388,7 +388,7 @@ GPtrArray * parse_vcp_segment(char * start, int len) {
       if (valid_feature) {
          Capabilities_Feature_Record * vfr = new_capabilities_feature(cur_feature_id, value_start, value_len);
          if (debug) {
-            Version_Spec dummy_version = {0,0};
+            DDCA_MCCS_Version_Spec dummy_version = {0,0};
             show_capabilities_feature(vfr, dummy_version);
          }
          g_ptr_array_add(vcp_array, vfr);

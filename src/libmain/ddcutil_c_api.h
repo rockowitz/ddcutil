@@ -192,7 +192,6 @@ void ddca_enable_report_ddc_errors(bool onoff);
 bool ddca_is_report_ddc_errors_enabled();
 
 
-
 //
 // Display Identifiers
 //
@@ -292,7 +291,7 @@ DDCA_Status ddca_repr_display_ref(DDCA_Display_Ref dref, char** prepr);
  * @param dref   display reference
  * @param depth  logical indentation depth
  */
-void        ddct_report_display_ref(DDCA_Display_Ref dref, int depth);
+void        ddca_report_display_ref(DDCA_Display_Ref dref, int depth);
 
 
 //
@@ -320,7 +319,7 @@ DDCA_Status ddca_repr_display_handle(DDCA_Display_Handle dh, char** prepr);
 
 
 //
-// VCP Feature Information
+// VCP Feature Information, Monitor Independent
 //
 
 /** Gets information for a VCP feature.
@@ -331,11 +330,20 @@ DDCA_Status ddca_repr_display_handle(DDCA_Display_Handle dh, char** prepr);
  * @param[in] mccs_version_id MCCS version id, may be DDCA_VCP_VANY??
  * @param[out] pflags         where to return byte of flags
  */
-DDCA_Status ddca_get_feature_info_by_vcp_version(
-      DDCA_VCP_Feature_Code           feature_code,
-      // DDCT_MCCS_Version_Spec     vspec,
+DDCA_Status ddca_get_feature_flags_by_vcp_version(
+      DDCA_VCP_Feature_Code      feature_code,
+      // DDCT_MCCS_Version_Spec  vspec,
       DDCA_MCCS_Version_Id       mccs_version_id,
       unsigned long *            flags);
+
+DDCA_Status ddca_get_feature_info_by_vcp_version(
+      DDCA_VCP_Feature_Code      feature_code,
+      // DDCT_MCCS_Version_Spec  vspec,
+      DDCA_MCCS_Version_Id       mccs_version_id,
+      Version_Specific_Feature_Info  ** p_info);
+
+
+
 
 /** Gets the VCP feature name.  If different MCCS version use different names
  * for the feature, this function makes a best guess.
@@ -352,6 +360,36 @@ DDCA_Status ddca_get_simple_sl_value_table(
                DDCA_MCCS_Version_Id       mccs_version_id,
           //     DDCA_Feature_Value_Entry ** pvalue_table);
                DDCA_Feature_Value_Table *  pvalue_table);
+
+
+
+//
+// VCP Feature Information, Monitor Dependent
+//
+
+DDCA_Status ddca_get_mccs_version(DDCA_Display_Handle dh, DDCA_MCCS_Version_Spec* pspec);
+
+DDCA_Status ddca_get_mccs_version_id(
+               DDCA_Display_Handle   ddca_dh,
+               DDCA_MCCS_Version_Id*  p_id);
+
+DDCA_Status ddca_get_capabilities_string(DDCA_Display_Handle dh, char** buffer);
+
+#ifdef UNIMPLEMENTED
+// Unimplemented.  Parsed capabilities has a complex data structure.  How to make visible?
+typedef void DDCT_Parsed_Capabilities;    // TEMP
+DDCA_Status ddct_parse_capabilities_string(char * capabilities_string, DDCT_Parsed_Capabilities ** parsed_capabilities);
+#endif
+
+// or return a struct?
+DDCA_Status ddca_get_feature_info_by_display(
+               DDCA_Display_Handle    dh,
+               DDCA_VCP_Feature_Code  feature_code,
+               unsigned long *        pflags);
+
+
+
+
 
 
 #ifdef UNIMPLEMENTED
@@ -378,26 +416,13 @@ DDCA_Status ddct_is_feature_supported(
 //  Miscellaneous Monitor Specific Functions
 //
 
-DDCA_Status ddct_get_mccs_version(DDCA_Display_Handle ddct_dh, DDCA_MCCS_Version_Spec* pspec);
 
 // DDCT_Status ddct_get_edid(DDCA_Display_Handle * dh, Byte * edid_buffer);    // edid_buffer must be >= 128 bytes
-DDCA_Status ddct_get_edid_by_display_ref(DDCA_Display_Ref ddct_dref, Byte ** pbytes);   // pointer into ddcutil data structures, do not free
-
-// or return a struct?
-DDCA_Status ddca_get_feature_info_by_display(
-               DDCA_Display_Handle    dh,
-               DDCA_VCP_Feature_Code  feature_code,
-               unsigned long *        pflags);
+DDCA_Status ddca_get_edid_by_display_ref(DDCA_Display_Ref ddct_dref, uint8_t ** pbytes);   // pointer into ddcutil data structures, do not free
 
 
 
 
-
-//
-// Reports
-//
-
-int ddca_report_active_displays(int depth);
 
 
 
@@ -410,48 +435,58 @@ int ddca_report_active_displays(int depth);
 // Monitor Capabilities
 //
 
-DDCA_Status ddct_get_capabilities_string(DDCA_Display_Handle dh, char** buffer);
-
-#ifdef UNIMPLEMENTED
-// Unimplemented.  Parsed capabilities has a complex data structure.  How to make visible?
-typedef void DDCT_Parsed_Capabilities;    // TEMP
-DDCA_Status ddct_parse_capabilities_string(char * capabilities_string, DDCT_Parsed_Capabilities ** parsed_capabilities);
-#endif
-
 
 //
 // Get and Set VCP Feature Values
 //
 
-void ddct_free_table_value_response(DDCT_Table_Value_Response * table_value_response);
+void ddct_free_table_value_response(DDCA_Table_Value_Response * table_value_response);
 
-DDCA_Status ddct_get_nontable_vcp_value(
-               DDCA_Display_Handle             ddct_dh,
-               DDCA_VCP_Feature_Code                feature_code,
-               DDCT_Non_Table_Value_Response * response);
+DDCA_Status ddca_get_nontable_vcp_value(
+       DDCA_Display_Handle             dh,
+       DDCA_VCP_Feature_Code           feature_code,
+       DDCA_Non_Table_Value_Response * response);
 
-DDCA_Status ddct_set_continuous_vcp_value(
-               DDCA_Display_Handle  ddct_dh,
-               DDCA_VCP_Feature_Code     feature_code,
-               int                  new_value);
 
-DDCA_Status ddct_set_simple_nc_vcp_value(
+// Implemented, but untested
+DDCA_Status ddca_get_table_vcp_value(
+       DDCA_Display_Handle     ddct_dh,
+       DDCA_VCP_Feature_Code   feature_code,
+       int *                   value_len,
+       Byte**                  value_bytes);
+
+DDCA_Status ddca_get_vcp_value(
+       DDCA_Display_Handle *     ddca_dh,
+       DDCA_VCP_Feature_Code     feature_code,
+       Vcp_Value_Type            call_type,   // TODO: elminate
+       Single_Vcp_Value **       pvalrec);
+
+
+DDCA_Status ddca_get_formatted_vcp_value(
+       DDCA_Display_Handle *     ddca_dh,
+       DDCA_VCP_Feature_Code     feature_code,
+       char**                    p_formatted_value);
+
+
+
+
+
+DDCA_Status ddca_set_continuous_vcp_value(
+               DDCA_Display_Handle             dh,
+               DDCA_VCP_Feature_Code           feature_code,
+               int                             new_value);
+
+DDCA_Status ddca_set_simple_nc_vcp_value(
                DDCA_Display_Handle  ddct_dh,
                DDCA_VCP_Feature_Code     feature_code,
                Byte                 new_value);
 
-DDCA_Status ddct_set_raw_vcp_value(
+DDCA_Status ddca_set_raw_vcp_value(
                DDCA_Display_Handle  ddct_dh,
                DDCA_VCP_Feature_Code     feature_code,
                Byte                 hi_byte,
                Byte                 lo_byte);
 
-// Implemented, but untested
-DDCA_Status ddct_get_table_vcp_value(
-               DDCA_Display_Handle ddct_dh,
-               DDCA_VCP_Feature_Code    feature_code,
-               int *               value_len,
-               Byte**              value_bytes);
 
 #ifdef UNIMPLEMENTED
 // Unimplemented
@@ -462,9 +497,19 @@ DDCA_Status ddct_set_table_vcp_value(
                Byte *               value_bytes);
 #endif
 
-DDCA_Status ddct_get_profile_related_values(DDCA_Display_Handle ddct_dh, char** pprofile_values_string);
+DDCA_Status ddca_get_profile_related_values(DDCA_Display_Handle ddct_dh, char** pprofile_values_string);
 
-DDCA_Status ddct_set_profile_related_values(char * profile_values_string);
+DDCA_Status ddca_set_profile_related_values(char * profile_values_string);
+
+
+//
+// Reports
+//
+
+int ddca_report_active_displays(int depth);
+
+
+
 
 #ifdef __cplusplus
 }

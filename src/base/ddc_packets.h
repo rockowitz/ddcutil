@@ -28,6 +28,8 @@
 
 #include <stdbool.h>
 
+#include "ddcutil_types.h"
+
 #include "util/data_structures.h"
 
 #include "base/status_code_mgt.h"
@@ -114,10 +116,6 @@ struct {
 
 
 
-typedef enum {
-   NON_TABLE_VCP_VALUE,
-   TABLE_VCP_VALUE,
-} Vcp_Value_Type;
 
 
 typedef

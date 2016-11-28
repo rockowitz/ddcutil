@@ -44,7 +44,7 @@ typedef struct {
    bool              raw_value_synthesized;
    Byte_Value_Array  commands;        // each stored byte is command id
    GPtrArray *       vcp_features;    // entries are VCP_Feature_Record*
-   Version_Spec      parsed_mccs_version;
+   DDCA_MCCS_Version_Spec      parsed_mccs_version;
 } Parsed_Capabilities;
 
 

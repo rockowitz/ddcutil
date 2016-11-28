@@ -72,7 +72,7 @@ void free_vcp_feature_set(VCP_Feature_Set fset) {
 }
 
 VCP_Feature_Set
-create_feature_set(VCP_Feature_Subset subset_id, Version_Spec vcp_version) {
+create_feature_set(VCP_Feature_Subset subset_id, DDCA_MCCS_Version_Spec vcp_version) {
    assert(subset_id);
    bool debug = false;
    DBGMSF(debug, "Starting. subset_id=%s(0x%04x), vcp_version=%d.%d",
@@ -202,7 +202,7 @@ create_single_feature_set_by_hexid(Byte id, bool force) {
 VCP_Feature_Set
 create_feature_set_from_feature_set_ref(
    Feature_Set_Ref * fsref,
-   Version_Spec      vcp_version,
+   DDCA_MCCS_Version_Spec      vcp_version,
    bool              force)
 {
     struct vcp_feature_set * fset = NULL;

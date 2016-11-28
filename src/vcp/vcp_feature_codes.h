@@ -26,6 +26,8 @@
 
 #include <stdio.h>
 
+#include "ddcutil_types.h"
+
 #include "util/string_util.h"
 
 #include "base/core.h"
@@ -47,38 +49,6 @@
 // xdf: VCP Version:
 //    NC, uses both high and low bytes
 
-
-typedef ushort Version_Feature_Flags;
-// Bits in Version_Feature_Flags:
-
-// Exactly 1 of the following 3 bits must be set
-#define  VCP2_RO             0x0400
-#define  VCP2_WO             0x0200
-#define  VCP2_RW             0x0100
-#define  VCP2_READABLE       (VCP2_RO | VCP2_RW)
-#define  VCP2_WRITABLE       (VCP2_WO | VCP2_RW)
-
-// Further refine the MCCS C/NC/TABLE categorization
-#define VCP2_STD_CONT        0x80
-#define VCP2_COMPLEX_CONT    0x40
-#define VCP2_CONT            (VCP2_STD_CONT|VCP2_COMPLEX_CONT)
-#define VCP2_SIMPLE_NC       0x20
-#define VCP2_COMPLEX_NC      0x10
-// For WO NC features.  There's no interpretation function or lookup table
-// Used to mark that the feature is defined for a version
-#define VCP2_WO_NC           0x08
-#define VCP2_NC              (VCP2_SIMPLE_NC|VCP2_COMPLEX_NC|VCP2_WO_NC)
-#define VCP2_NON_TABLE       (VCP2_CONT | VCP2_NC)
-#define VCP2_TABLE           0x04
-#define VCP2_WO_TABLE        0x02
-#define VCP2_ANY_TABLE       (VCP2_TABLE | VCP2_WO_TABLE)
-
-// Additional bits:
-#define VCP2_DEPRECATED      0x01
-
-
-// Bits in vcp_global_flags:
-#define VCP2_SYNTHETIC       0x80
 
 
 // MCCS specification group to which feature belongs
@@ -108,24 +78,19 @@ typedef enum {
 typedef
 bool (*Format_Normal_Feature_Detail_Function) (
           Nontable_Vcp_Value*  code_info,
-          Version_Spec         vcp_version,
+          DDCA_MCCS_Version_Spec         vcp_version,
           char *               buffer,
           int                  bufsz);
 
 typedef
 bool (*Format_Table_Feature_Detail_Function) (
           Buffer *            data_bytes,
-          Version_Spec        vcp_version,
+          DDCA_MCCS_Version_Spec        vcp_version,
           char **             presult_buffer);
 
-// Describes one simple NC feature value
-typedef
-struct {
-   Byte   value_code;
-   char * value_name;
-} Feature_Value_Entry;
 
-extern Feature_Value_Entry * pxc8_display_controller_type_values;
+
+extern DDCA_Feature_Value_Entry * pxc8_display_controller_type_values;
 
 // To consider:
 // In retrospect this is probably better, but not worth redoing
@@ -144,7 +109,7 @@ struct {
    char *                                desc;
    Format_Normal_Feature_Detail_Function nontable_formatter;
    Format_Table_Feature_Detail_Function  table_formatter;
-   Feature_Value_Entry *                 default_sl_values;
+   DDCA_Feature_Value_Entry *            default_sl_values;
    Byte                                  vcp_global_flags;
    ushort                                vcp_spec_groups;
    VCP_Feature_Subset                    vcp_subsets;
@@ -156,31 +121,12 @@ struct {
    Version_Feature_Flags                 v21_flags;
    Version_Feature_Flags                 v30_flags;
    Version_Feature_Flags                 v22_flags;
-   Feature_Value_Entry *                 v21_sl_values;
-   Feature_Value_Entry *                 v30_sl_values;
-   Feature_Value_Entry *                 v22_sl_values;
+   DDCA_Feature_Value_Entry *                 v21_sl_values;
+   DDCA_Feature_Value_Entry *                 v30_sl_values;
+   DDCA_Feature_Value_Entry *                 v22_sl_values;
 } VCP_Feature_Table_Entry;
 
 
-// new, better way to return version specific feature information as 1 struct
-// perhaps push this out to public_c_api.h
-
-#define VCP_VERSION_SPECIFIC_FEATURE_INFO_MARKER "VSFI"
-typedef
-struct {
-   char                                  marker[4];
-   Byte                                  feature_code;
-   Version_Spec                          vspec;            // ???
-   char *                                desc;
-   Format_Normal_Feature_Detail_Function nontable_formatter;
-   Format_Table_Feature_Detail_Function  table_formatter;
-   Feature_Value_Entry *                 sl_values;
-   Byte                                  global_flags;
-   ushort                                vcp_spec_groups;
-   VCP_Feature_Subset                    vcp_subsets;
-   char *                                feature_name;
-   Version_Feature_Flags                 feature_flags;
-} Version_Specific_Feature_Info;
 
 
 int
@@ -207,65 +153,65 @@ vcp_find_feature_by_hexid(Byte id);
 VCP_Feature_Table_Entry *
 vcp_find_feature_by_hexid_w_default(Byte id);
 
-Feature_Value_Entry *
-find_feature_values(Byte feature_code, Version_Spec vcp_version);
+DDCA_Feature_Value_Entry *
+find_feature_values(Byte feature_code, DDCA_MCCS_Version_Spec vcp_version);
 
-Feature_Value_Entry *
-find_feature_values_for_capabilities(Byte feature_code, Version_Spec vcp_version);
+DDCA_Feature_Value_Entry *
+find_feature_values_for_capabilities(Byte feature_code, DDCA_MCCS_Version_Spec vcp_version);
 
 char *
-get_feature_value_name(Feature_Value_Entry * value_entries, Byte value_id);
+get_feature_value_name(DDCA_Feature_Value_Entry * value_entries, Byte value_id);
 
 bool
 has_version_specific_features(
       VCP_Feature_Table_Entry * pvft_entry);
 
-Version_Spec
+DDCA_MCCS_Version_Spec
 get_highest_non_deprecated_version(
       VCP_Feature_Table_Entry * pvft_entry);
 
 Version_Feature_Flags
 get_version_specific_feature_flags(
        VCP_Feature_Table_Entry * pvft_entry,
-       Version_Spec              vcp_version);
+       DDCA_MCCS_Version_Spec              vcp_version);
 
 Version_Feature_Flags
 get_version_sensitive_feature_flags(
        VCP_Feature_Table_Entry * pvft_entry,
-       Version_Spec              vcp_version);
+       DDCA_MCCS_Version_Spec              vcp_version);
 
 bool
 is_feature_supported_in_version(
       VCP_Feature_Table_Entry * pvft_entry,
-      Version_Spec              vcp_version);
+      DDCA_MCCS_Version_Spec              vcp_version);
 
 bool
 is_feature_readable_by_vcp_version(
       VCP_Feature_Table_Entry * pvft_entry,
-      Version_Spec              vcp_version);
+      DDCA_MCCS_Version_Spec              vcp_version);
 
 bool
 is_feature_writable_by_vcp_version(
       VCP_Feature_Table_Entry * pvft_entry,
-      Version_Spec              vcp_version);
+      DDCA_MCCS_Version_Spec              vcp_version);
 
 bool
 is_feature_table_by_vcp_version(
        VCP_Feature_Table_Entry * pvft_entry,
-       Version_Spec vcp_version);
+       DDCA_MCCS_Version_Spec vcp_version);
 
 bool
 is_version_conditional_vcp_type(VCP_Feature_Table_Entry * pvft_entry);
 
-Feature_Value_Entry *
+DDCA_Feature_Value_Entry *
 get_version_specific_sl_values(
        VCP_Feature_Table_Entry * pvft_entry,
-       Version_Spec              vcp_version);
+       DDCA_MCCS_Version_Spec              vcp_version);
 
 char *
 get_version_sensitive_feature_name(
        VCP_Feature_Table_Entry * pvft_entry,
-       Version_Spec              vcp_version);
+       DDCA_MCCS_Version_Spec              vcp_version);
 
 char *
 get_non_version_specific_feature_name(
@@ -274,7 +220,7 @@ get_non_version_specific_feature_name(
 bool
 vcp_format_feature_detail(
        VCP_Feature_Table_Entry * vcp_entry,
-       Version_Spec              vcp_version,
+       DDCA_MCCS_Version_Spec              vcp_version,
        Single_Vcp_Value *        valrec,
        char * *                  aformatted_data
      );
@@ -283,7 +229,7 @@ char*
 get_feature_name_by_id_only(Byte feature_code);
 
 char*
-get_feature_name_by_id_and_vcp_version(Byte feature_code, Version_Spec vspec);
+get_feature_name_by_id_and_vcp_version(Byte feature_code, DDCA_MCCS_Version_Spec vspec);
 
 void
 vcp_list_feature_codes(FILE * fh);

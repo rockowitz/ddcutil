@@ -41,7 +41,7 @@ struct _DdcgContResponse {
    GObject   parent_instance;
 
    // class instance variables:
-   DDCT_Non_Table_Value_Response *  presp;
+   DDCA_Non_Table_Value_Response *  presp;
 
    guint8   mh;
    guint8   ml;

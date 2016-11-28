@@ -248,7 +248,7 @@ int main(int argc, char *argv[]) {
    else if (parsed_cmd->cmd_id == CMDID_VCPINFO) {
       bool ok = true;
 
-      Version_Spec vcp_version_any = {0,0};
+      DDCA_MCCS_Version_Spec vcp_version_any = {0,0};
       VCP_Feature_Set fset = create_feature_set_from_feature_set_ref(
          // &feature_set_ref,
          parsed_cmd->fref,
@@ -392,7 +392,7 @@ int main(int argc, char *argv[]) {
          }
          else {
             // not needed, causes confusing messages if get_vcp_version fails but get_capabilities succeeds
-            Version_Spec vspec = get_vcp_version_by_display_handle(dh);
+            DDCA_MCCS_Version_Spec vspec = get_vcp_version_by_display_handle(dh);
             // if (vspec.major < 2) {
             //    printf("VCP (aka MCCS) version for display is less than 2.0. Output may not be accurate.\n");
             // }
@@ -480,7 +480,7 @@ int main(int argc, char *argv[]) {
                 parsed_cmd->cmd_id == CMDID_READCHANGES
                )
             {
-               Version_Spec vspec = get_vcp_version_by_display_handle(dh);
+               DDCA_MCCS_Version_Spec vspec = get_vcp_version_by_display_handle(dh);
                if (vspec.major < 2) {
                   printf("VCP (aka MCCS) version for display is undetected or less than 2.0. "
                         "Output may not be accurate.\n");

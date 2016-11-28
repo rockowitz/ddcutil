@@ -510,7 +510,7 @@ ddc_report_active_display(Display_Info * curinfo, int depth) {
          if (output_level >= OL_VERBOSE)
             set_output_level(OL_NORMAL);
 
-         Version_Spec vspec = get_vcp_version_by_display_handle(dh);
+         DDCA_MCCS_Version_Spec vspec = get_vcp_version_by_display_handle(dh);
 
          // printf("VCP version:   %d.%d\n", vspec.major, vspec.minor);
          if (vspec.major == 0)
@@ -540,7 +540,7 @@ ddc_report_active_display(Display_Info * curinfo, int depth) {
                rpt_vstring(depth, "Controller mfg:      Unspecified");
             }
             else {
-               Feature_Value_Entry * vals = pxc8_display_controller_type_values;
+               DDCA_Feature_Value_Entry * vals = pxc8_display_controller_type_values;
                mfg_name =  get_feature_value_name(
                                      vals,
                                      valrec->val.nc.sl);

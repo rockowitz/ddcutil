@@ -47,7 +47,7 @@ struct {
    char           mfg_id[4];
    char           model[14];
    char           serial_ascii[14];
-   Version_Spec   vcp_version;
+   DDCA_MCCS_Version_Spec   vcp_version;
    int            vcp_value_ct;
    Vcp_Value_Set  vcp_values;
 } Dumpload_Data;
