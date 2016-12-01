@@ -223,6 +223,8 @@ bool parse_feature_id_or_subset(char * val, int cmd_id, Feature_Set_Ref * fsref)
 }
 
 
+// n. this function used to set the default output level based on the command
+// this is no longer necessary
 bool validate_output_level(Parsed_Cmd* parsed_cmd) {
    // printf("(%s) parsed_cmd->cmdid = %d, parsed_cmd->output_level = %s\n",
    //        __func__, parsed_cmd->cmd_id,
@@ -230,8 +232,9 @@ bool validate_output_level(Parsed_Cmd* parsed_cmd) {
    bool ok = true;
    // check that output_level consistent with cmd_id
    Byte valid_output_levels;
-   Byte default_output_level = OL_NORMAL;
+   // Byte default_output_level = OL_NORMAL;
    switch(parsed_cmd->cmd_id) {
+#ifdef OLD
       case (CMDID_DETECT):
          valid_output_levels = OL_PROGRAM | OL_TERSE | OL_NORMAL | OL_VERBOSE;
          break;
@@ -242,14 +245,22 @@ bool validate_output_level(Parsed_Cmd* parsed_cmd) {
          valid_output_levels = OL_PROGRAM;
          default_output_level = OL_PROGRAM;
          break;
+#else
+      case (CMDID_DETECT):
+         valid_output_levels = OL_TERSE | OL_NORMAL | OL_VERBOSE;
+         break;
+      case (CMDID_GETVCP):
+         valid_output_levels = OL_TERSE | OL_NORMAL | OL_VERBOSE;
+         break;
+#endif
       default:
-         default_output_level = OL_NORMAL;
+         // default_output_level = OL_NORMAL;
          valid_output_levels = OL_TERSE | OL_NORMAL | OL_VERBOSE;
    }
 
-   if (parsed_cmd->output_level == OL_DEFAULT) {
-      parsed_cmd->output_level = default_output_level;
-   }
+   // if (parsed_cmd->output_level == OL_DEFAULT) {
+   //    parsed_cmd->output_level = default_output_level;
+   // }
    if (!(parsed_cmd->output_level & valid_output_levels)) {
       printf("Output level invalid for command %s: %s\n",
              get_command(parsed_cmd->cmd_id)->cmd_name,

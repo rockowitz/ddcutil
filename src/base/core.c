@@ -323,12 +323,14 @@ void set_output_level(DDCA_Output_Level newval) {
 char * output_level_name(DDCA_Output_Level val) {
    char * result = NULL;
    switch (val) {
+#ifdef OLD
       case OL_DEFAULT:
          result = "Default";
          break;
       case OL_PROGRAM:
          result = "Program";
          break;
+#endif
       case OL_TERSE:
          result = "Terse";
          break;

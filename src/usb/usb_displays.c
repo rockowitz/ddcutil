@@ -581,7 +581,11 @@ void usb_show_active_display_by_display_ref(Display_Ref * dref, int depth) {
 
    Usb_Monitor_Info * moninfo = usb_find_monitor_by_display_ref(dref);
 
+#ifdef OLD
    if (output_level == OL_TERSE || output_level == OL_PROGRAM)
+#else
+   if (output_level == OL_TERSE)
+#endif
       rpt_vstring(depth, "Monitor:             %s:%s:%s",
                          moninfo->edid->mfg_id,
                          moninfo->edid->model_name,

@@ -26,7 +26,7 @@
 
 #include <stdio.h>
 
-#include "ddcutil_types.h"
+#include "public/ddcutil_types.h"
 
 #include "util/string_util.h"
 
@@ -68,11 +68,12 @@ typedef enum {
 
 
 // Set these bits in a flag byte to indicate the MCCS versions for which a feature is valid
-#define MCCS_V10          0x01
-#define MCCS_V20          0x02
-#define MCCS_V21          0x04
-#define MCCS_V30          0x08
-#define MCCS_V22          0x10
+// #define MCCS_V10          0x01
+// #define MCCS_V20          0x02
+// #define MCCS_V21          0x04
+// #define MCCS_V30          0x08
+// #define MCCS_V22          0x10
+
 
 
 typedef
@@ -137,6 +138,9 @@ free_synthetic_vcp_entry(VCP_Feature_Table_Entry * pfte);
 
 void
 report_vcp_feature_table_entry(VCP_Feature_Table_Entry * entry, int depth);
+
+void report_version_specific_feature_info(
+      Version_Specific_Feature_Info * info, int depth);
 
 VCP_Feature_Table_Entry *
 vcp_get_feature_table_entry(int ndx);
@@ -230,6 +234,13 @@ get_feature_name_by_id_only(Byte feature_code);
 
 char*
 get_feature_name_by_id_and_vcp_version(Byte feature_code, DDCA_MCCS_Version_Spec vspec);
+
+Version_Specific_Feature_Info *
+get_version_specific_feature_info(
+      DDCA_VCP_Feature_Code      feature_code,
+      bool                       with_default,
+      // DDCT_MCCS_Version_Spec  vspec,
+      DDCA_MCCS_Version_Id       mccs_version_id);
 
 void
 vcp_list_feature_codes(FILE * fh);

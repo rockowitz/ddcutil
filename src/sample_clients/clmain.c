@@ -28,6 +28,8 @@
 
 #include "ddc/ddc_dumpload.h"     // loadvcp.h should be elsewhere, should not be including in main
 
+#include "vcp/vcp_feature_codes.h"
+
 #include "libmain/ddcutil_c_api.h"
 
 
@@ -37,8 +39,9 @@
           ddca_status_code_name(status_code),      \
           ddca_status_code_desc(status_code))
 
+#ifdef MOVED
 
-char * interpret_feature_flags_readwrite(unsigned long feature_flags) {
+char * interpret_ddca_version_feature_flags_readwrite(DDCA_Version_Feature_Flags feature_flags) {
    char * result = NULL;
    if (feature_flags & DDCA_RW)
       result = "read write";
@@ -51,7 +54,7 @@ char * interpret_feature_flags_readwrite(unsigned long feature_flags) {
    return result;
 }
 
-char * interpret_feature_flags_type(unsigned long feature_flags) {
+char * interpret_ddca_version_feature_flags_type(DDCA_Version_Feature_Flags feature_flags) {
    char * result = NULL;
    if (feature_flags & DDCA_CONTINUOUS)
       result = "continuous";
@@ -66,30 +69,33 @@ char * interpret_feature_flags_type(unsigned long feature_flags) {
    return result;
 }
 
-void report_feature_flags(Byte feature_code, unsigned long feature_flags) {
+void report_ddca_version_feature_flags(Byte feature_code, DDCA_Version_Feature_Flags feature_flags) {
    if ( !(feature_flags & DDCA_KNOWN) )
       printf("Feature: %02x: unknown\n", feature_code);
    else
       printf("Feature: %02x: %s, %s\n",
             feature_code,
-             interpret_feature_flags_readwrite(feature_flags),
-             interpret_feature_flags_type(feature_flags)
+             interpret_ddca_version_feature_flags_readwrite(feature_flags),
+             interpret_ddca_version_feature_flags_type(feature_flags)
             );
 }
-
+#endif
 
 void test_get_single_feature_info(DDCA_Display_Handle dh, Byte feature_code) {
    printf("Getting metadata for feature 0x%02x\n", feature_code);
    printf("Feature name: %s\n", ddca_get_feature_name(feature_code));
-   unsigned long feature_flags;
+   // DDCA_Version_Feature_Flags feature_flags;
+   Version_Specific_Feature_Info * info;
      DDCA_Status rc = ddca_get_feature_info_by_display(
              dh,    // needed because in rare cases feature info is MCCS version dependent
              feature_code,
-             &feature_flags);
+             &info);
      if (rc != 0)
         FUNCTION_ERRMSG("ddct_get_feature_info", rc);
      else {
-        report_feature_flags(feature_code, feature_flags);
+        // TODO: Version_Specific_Feature_Info needs a report function
+       //  report_ddca_version_feature_flags(feature_code, info->feature_flags);
+        report_version_specific_feature_info(info, 1);
      }
 }
 
@@ -108,15 +114,17 @@ bool test_cont_value(DDCA_Display_Handle dh, Byte feature_code) {
    bool ok = true;
    char * feature_name = ddca_get_feature_name(feature_code);
 
-   unsigned long feature_flags;
+   // DDCA_Version_Feature_Flags feature_flags;
+   Version_Specific_Feature_Info * info;
    rc = ddca_get_feature_info_by_display(
            dh,    // needed because in rare cases feature info is MCCS version dependent
            feature_code,
-           &feature_flags);
+           &info);
    if (rc != 0)
       FUNCTION_ERRMSG("ddct_get_feature_info", rc);
    else {
-      report_feature_flags(feature_code, feature_flags);
+     //  report_ddca_version_feature_flags(feature_code, info->feature_flags);
+      report_version_specific_feature_info(info, 1);
    }
 
    DDCA_Non_Table_Value_Response non_table_response;

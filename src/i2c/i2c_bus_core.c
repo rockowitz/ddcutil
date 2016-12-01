@@ -1169,6 +1169,7 @@ void report_businfo(Bus_Info * bus_info, int depth) {
 
    switch (output_level) {
 
+#ifdef OLD
       case OL_PROGRAM:
          if ( bus_info->flags & I2C_BUS_ADDR_0X50 ) {
             rpt_vstring(
@@ -1180,6 +1181,7 @@ void report_businfo(Bus_Info * bus_info, int depth) {
                     bus_info->edid->serial_ascii);
          }
          break;
+#endif
 
       case OL_VERBOSE:
          puts("");
@@ -1252,7 +1254,11 @@ void i2c_report_active_display(Bus_Info * businfo, int depth) {
       rpt_vstring(depth+1, "I2C address 0x50 (EDID) present: %-5s", bool_repr(businfo->flags & I2C_BUS_ADDR_0X50));
    }
 
+#ifdef OLD
    if (output_level == OL_TERSE || output_level == OL_PROGRAM)
+#else
+   if (output_level == OL_TERSE)
+#endif
    rpt_vstring(depth, "Monitor:             %s:%s:%s",  businfo->edid->mfg_id,
                                                businfo->edid->model_name,
                                                businfo->edid->serial_ascii);
@@ -1324,16 +1330,22 @@ int i2c_report_buses(bool report_all, int depth) {
    // TRCMSGTG(tg, "Starting. report_all=%s\n", bool_repr(report_all));
    DBGTRC(debug, TRACE_GROUP, "Starting. report_all=%s\n", bool_repr(report_all));
 
+#ifdef OLD
    DDCA_Output_Level output_level = get_output_level();
+#endif
    int busct = i2c_get_busct();
    int reported_ct = 0;
+#ifdef OLD
    if (output_level != OL_PROGRAM) {
+#endif
       puts("");
       if (report_all)
          rpt_vstring(depth,"Detected I2C buses:");
       else
          rpt_vstring(depth, "I2C buses with monitors detected at address 0x50:");
+#ifdef OLD
    }
+#endif
    int busno = 0;
    for (busno=0; busno < busct; busno++) {
       Bus_Info * busInfo = i2c_get_bus_info(busno, DISPSEL_NONE);

@@ -366,7 +366,7 @@ get_formatted_value_for_feature_table_entry(
       char **                    pformatted_value,
       FILE *                     msg_fh)
 {
-   bool debug = false;
+   bool debug = true;
    // Trace_Group tg = (debug) ? 0xff : TRACE_GROUP;
    // TRCMSGTG(tg, "Starting");
    DBGTRC(debug, TRACE_GROUP, "Starting");
@@ -403,6 +403,7 @@ get_formatted_value_for_feature_table_entry(
          rpt_pop_output_dest();
       }
 
+#ifdef OLD
       if (output_level == OL_PROGRAM) {
          if (is_table_feature) {                // OL_PROGRAM, is table feature
             // output VCP code  hex values of bytes
@@ -423,7 +424,8 @@ get_formatted_value_for_feature_table_entry(
             *pformatted_value = strdup(buf);
          }
       }
-      else  {          // normal (non OL_PROGRAM) output
+      else  {
+#endif// normal (non OL_PROGRAM) output
          bool ok;
          char * formatted_data = NULL;
 
@@ -452,7 +454,9 @@ get_formatted_value_for_feature_table_entry(
                 *pformatted_value = formatted_data;
              }
          }
-      }     // normal (non OL_PROGRAM) output
+#ifdef OLD
+      }         // normal (non OL_PROGRAM) output
+#endif
 
    }
 

@@ -26,6 +26,7 @@
 
 #include <Python.h>
 
+#include "public/ddcutil_types.h"
 #include "libmain/ddcutil_c_api.h"
 
 
@@ -102,7 +103,7 @@ typedef struct {
 
 typedef DDCA_MCCS_Version_Spec DDCS_MCCS_Version_Spec;
 
-unsigned long ddcs_get_feature_info_by_vcp_version(
+DDCA_Version_Feature_Flags ddcs_get_feature_info_by_vcp_version(
                DDCS_VCP_Feature_Code    feature_code,
                DDCA_MCCS_Version_Id     version_id);
 char *        ddcs_get_feature_name(DDCS_VCP_Feature_Code feature_code);
@@ -163,10 +164,12 @@ char * ddcs_repr_display_handle(DDCS_Display_Handle_p dh);
 
 DDCS_MCCS_Version_Spec ddcs_get_mccs_version(DDCS_Display_Handle_p dh);
 
+#ifdef OLD
 // DEPRECATED
 unsigned long ddcs_get_feature_info_by_display(
                DDCS_Display_Handle_p    dh,
                DDCS_VCP_Feature_Code    feature_code);
+#endif
 
 
 //

@@ -77,7 +77,7 @@
          return DDCL_UNINITIALIZED; \
       DDCA_Status psc = 0; \
       Display_Handle * dh = (Display_Handle *) _ddca_dh_; \
-      if (dh == NULL || memcmp(dh->marker, DISPLAY_HANDLE_MARKER, 4) != 0 )  { \
+      if ( !dh || memcmp(dh->marker, DISPLAY_HANDLE_MARKER, 4) != 0 )  { \
          psc = DDCL_ARG; \
       } \
       else { \
@@ -153,6 +153,7 @@ void ddca_init() {
    if (!library_initialized) {
       init_base_services();
       init_ddc_services();
+      set_output_level(OL_NORMAL);
       show_recoverable_errors = false;
       library_initialized = true;
       DBGMSF(debug, "library initialization executed");
@@ -605,30 +606,6 @@ DDCA_Status ddca_repr_display_handle(DDCA_Display_Handle ddct_dh, char ** repr) 
 }
 
 
-static DDCA_MCCS_Version_Id mccs_version_spec_to_id(DDCA_MCCS_Version_Spec vspec) {
-   DDCA_MCCS_Version_Id result = DDCA_VUNK;    // initialize to avoid compiler warning
-
-   if (vspec.major == 1 && vspec.minor == 0)
-      result = DDCA_V10;
-   else if (vspec.major == 2 && vspec.minor == 0)
-      result = DDCA_V20;
-   else if (vspec.major == 2 && vspec.minor == 1)
-      result = DDCA_V21;
-   else if (vspec.major == 3 && vspec.minor == 0)
-      result = DDCA_V30;
-   else if (vspec.major == 2 && vspec.minor == 2)
-      result = DDCA_V22;
-   else if (vspec.major == 2 && vspec.minor == 1)
-      result = DDCA_V21;
-   else if (vspec.major == 0 && vspec.minor == 0)
-      result = DDCA_VUNK;
-   // case UNQUERIED should never arise
-   else
-      PROGRAM_LOGIC_ERROR("Unexpected version spec value %d.%d", vspec.major, vspec.minor);
-
-   return result;
-}
-
 
 
 DDCA_Status ddca_get_mccs_version(
@@ -689,37 +666,12 @@ DDCA_Status ddca_get_edid_by_display_ref(DDCA_Display_Ref ddca_dref, uint8_t** p
 }
 
 
-
-
-static DDCA_MCCS_Version_Spec mccs_version_id_to_spec(DDCA_MCCS_Version_Id id) {
-   DDCA_MCCS_Version_Spec vspec = VCP_SPEC_ANY;
-   // use table instead?
-   switch(id) {
-   case DDCA_VANY:   vspec = VCP_SPEC_ANY;    break;
-   case DDCA_V10:    vspec = VCP_SPEC_V10;    break;
-   case DDCA_V20:    vspec = VCP_SPEC_V20;    break;
-   case DDCA_V21:    vspec = VCP_SPEC_V21;    break;
-   case DDCA_V30:    vspec = VCP_SPEC_V30;    break;
-   case DDCA_V22:    vspec = VCP_SPEC_V22;    break;
-   }
-   DDCA_MCCS_Version_Spec converted;
-   converted.major = vspec.major;
-   converted.minor = vspec.minor;
-
-   return converted;
-}
-
-
-
-
-
-
-
+#ifdef OLD
 // or return a struct?
 DDCA_Status ddca_get_feature_flags_by_vcp_version(
-      DDCA_VCP_Feature_Code   feature_code,
-      DDCA_MCCS_Version_Id    mccs_version_id,
-      unsigned long *         flags)
+      DDCA_VCP_Feature_Code         feature_code,
+      DDCA_MCCS_Version_Id          mccs_version_id,
+      DDCA_Version_Feature_Flags *  flags)
 {
    DDCA_Status rc = 0;
    DDCA_MCCS_Version_Spec vspec = mccs_version_id_to_spec(mccs_version_id);
@@ -764,6 +716,7 @@ DDCA_Status ddca_get_feature_flags_by_vcp_version(
    }
    return rc;
 }
+#endif
 
 
 DDCA_Status ddca_get_feature_info_by_vcp_version(
@@ -774,37 +727,16 @@ DDCA_Status ddca_get_feature_info_by_vcp_version(
 {
    DDCA_Status psc = 0;
    *p_info = NULL;
-   DDCA_MCCS_Version_Spec vspec = mccs_version_id_to_spec(mccs_version_id);
+   // DDCA_MCCS_Version_Spec vspec = mccs_version_id_to_spec(mccs_version_id);
 
-   VCP_Feature_Table_Entry * pentry = vcp_find_feature_by_hexid(feature_code);
-   if (!pentry) {
+   Version_Specific_Feature_Info * info =  get_version_specific_feature_info(
+         feature_code,
+         false,                        // with_default
+         mccs_version_id);
+   if (!info)
       psc = DDCL_ARG;
-   }
-   else {
-      Version_Specific_Feature_Info * info = calloc(1, sizeof(Version_Specific_Feature_Info));
-      memcpy(info->marker, VCP_VERSION_SPECIFIC_FEATURE_INFO_MARKER , 4);
-      info->feature_code = feature_code;
-      info->version_id   = mccs_version_id;
-      info->vspec        = vspec;
-
-      // kludgy, for now
-      unsigned long flags;
-      DDCA_Status rc2 =  ddca_get_feature_flags_by_vcp_version(
-            feature_code,
-            mccs_version_id,
-            &flags);
-      assert(rc2 == 0);
-      info->feature_flags = flags;    // need to cast?
-      info->desc = pentry->desc;
-      // TODO: use varaint that respsects version
-      info->feature_name = get_version_sensitive_feature_name(
-                                  pentry, vspec);
-
-      info->global_flags = pentry->vcp_global_flags;
-      info->sl_values = get_version_specific_sl_values(pentry, vspec);
-
+   else
       *p_info = info;
-   }
    return psc;
 
 }
@@ -813,7 +745,7 @@ DDCA_Status ddca_get_feature_info_by_vcp_version(
 DDCA_Status ddca_get_feature_info_by_display(
       DDCA_Display_Handle     ddca_dh,    // needed because in rare cases feature info is MCCS version dependent
       DDCA_VCP_Feature_Code   feature_code,
-      unsigned long *         pflags)
+      Version_Specific_Feature_Info **         p_info)
 {
    WITH_DH(
       ddca_dh,
@@ -824,7 +756,7 @@ DDCA_Status ddca_get_feature_info_by_display(
          // vspec2.minor = vspec.minor;
          DDCA_MCCS_Version_Id   version_id = mccs_version_spec_to_id(vspec);
 
-         psc = ddca_get_feature_flags_by_vcp_version(feature_code, version_id, pflags);
+         psc = ddca_get_feature_info_by_vcp_version(feature_code, version_id, p_info);
       }
    );
 }
@@ -1115,7 +1047,7 @@ DDCA_Status ddca_get_profile_related_values(
    WITH_DH(ddca_dh,
       {
          bool debug = false;
-         set_output_level(OL_PROGRAM);  // not needed for _new() variant
+         // set_output_level(OL_PROGRAM);  // not needed for _new() variant
          DBGMSF(debug, "Before dumpvcp_to_string_by_display_handle(), pprofile_values_string=%p, *pprofile_values_string=%p",
                pprofile_values_string, *pprofile_values_string);
          Global_Status_Code gsc = dumpvcp_as_string(dh, pprofile_values_string);

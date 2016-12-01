@@ -26,12 +26,9 @@
 
 #include <stdbool.h>
 
-#include "ddcutil_types.h"
+#include "public/ddcutil_types.h"
 
 #include "util/coredefs.h"
-
-
-
 
 
 extern const DDCA_MCCS_Version_Spec VCP_SPEC_V10;
@@ -51,5 +48,8 @@ bool vcp_version_is_unqueried(DDCA_MCCS_Version_Spec vspec);
 
 char * format_vspec(DDCA_MCCS_Version_Spec vspec);
 DDCA_MCCS_Version_Spec parse_vspec(char * s);
+
+DDCA_MCCS_Version_Spec mccs_version_id_to_spec(DDCA_MCCS_Version_Id id);
+DDCA_MCCS_Version_Id mccs_version_spec_to_id(DDCA_MCCS_Version_Spec vspec);
 
 #endif /* VCP_VERSION_H_ */

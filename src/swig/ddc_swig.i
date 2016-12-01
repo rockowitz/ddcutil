@@ -120,8 +120,8 @@ DDCA_Status  ddca_set_max_tries(DDCA_Retry_Type retry_type, int max_tries);
 // Message Control
 //
 
-typedef enum {OL_DEFAULT=0x01,
-              OL_PROGRAM=0x02,
+typedef enum {// OL_DEFAULT=0x01,
+              // OL_PROGRAM=0x02,
               OL_TERSE  =0x04,
               OL_NORMAL =0x08,
               OL_VERBOSE=0x10
@@ -194,9 +194,10 @@ char *                ddcs_repr_display_handle(DDCS_Display_Handle_p dh);
 // Miscellaneous Display Specific Functions
 //
 
-unsigned long ddcs_get_feature_info_by_display(
-               DDCS_Display_Handle_p  dh,
-               DDCS_VCP_Feature_Code  feature_code);
+
+// unsigned long ddcs_get_feature_info_by_display(
+//                DDCS_Display_Handle_p  dh,
+//                DDCS_VCP_Feature_Code  feature_code);
 
 
 

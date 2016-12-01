@@ -82,7 +82,7 @@ show_vars:
 # swig/ddct_public_wrap.c: swig/ddct_public.i 
 # 	$(swig_var)   -I${top_srcdir} -I/usr/lib/gcc/x86_64-linux-gnu/5/include -I/usr/include -includeall -o swig/ddct_public_wrap.c -python swig/ddct_public.i
 	                     
-ddc_swig_wrap.c: ddc_swig.i ddc_swig.c ddc_swig.h show_vars
+ddc_swig_wrap.c: ddc_swig.i ddc_swig.c ddc_swig.h show_vars  
 	@echo "Executing target ddc_swig_wrap.c"
 	$(SWIG)   -I${top_srcdir}/src -I$(top_srcdir)/src/public  -includeall -o ddc_swig_wrap.c -python ddc_swig.i
 			     

@@ -153,3 +153,52 @@ DDCA_MCCS_Version_Spec parse_vspec(char * s) {
    }
    return vspec;
 }
+
+
+
+DDCA_MCCS_Version_Id mccs_version_spec_to_id(DDCA_MCCS_Version_Spec vspec) {
+   DDCA_MCCS_Version_Id result = DDCA_VUNK;    // initialize to avoid compiler warning
+
+   if (vspec.major == 1 && vspec.minor == 0)
+      result = DDCA_V10;
+   else if (vspec.major == 2 && vspec.minor == 0)
+      result = DDCA_V20;
+   else if (vspec.major == 2 && vspec.minor == 1)
+      result = DDCA_V21;
+   else if (vspec.major == 3 && vspec.minor == 0)
+      result = DDCA_V30;
+   else if (vspec.major == 2 && vspec.minor == 2)
+      result = DDCA_V22;
+   else if (vspec.major == 2 && vspec.minor == 1)
+      result = DDCA_V21;
+   else if (vspec.major == 0 && vspec.minor == 0)
+      result = DDCA_VUNK;
+   // case UNQUERIED should never arise
+   else
+      PROGRAM_LOGIC_ERROR("Unexpected version spec value %d.%d", vspec.major, vspec.minor);
+
+   return result;
+}
+
+
+DDCA_MCCS_Version_Spec mccs_version_id_to_spec(DDCA_MCCS_Version_Id id) {
+   DDCA_MCCS_Version_Spec vspec = VCP_SPEC_ANY;
+   // use table instead?
+   switch(id) {
+   case DDCA_VANY:   vspec = VCP_SPEC_ANY;    break;
+   case DDCA_V10:    vspec = VCP_SPEC_V10;    break;
+   case DDCA_V20:    vspec = VCP_SPEC_V20;    break;
+   case DDCA_V21:    vspec = VCP_SPEC_V21;    break;
+   case DDCA_V30:    vspec = VCP_SPEC_V30;    break;
+   case DDCA_V22:    vspec = VCP_SPEC_V22;    break;
+   }
+   DDCA_MCCS_Version_Spec converted;
+   converted.major = vspec.major;
+   converted.minor = vspec.minor;
+
+   return converted;
+}
+
+
+
+

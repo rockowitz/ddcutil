@@ -167,12 +167,12 @@ int ddcs_report_active_displays(int depth) {
 // VCP Feature Information
 //
 
-unsigned long ddcs_get_feature_info_by_vcp_version(
+DDCA_Version_Feature_Flags ddcs_get_feature_info_by_vcp_version(
                DDCS_VCP_Feature_Code    feature_code,
                DDCA_MCCS_Version_Id     version_id)
   //             DDCS_MCCS_Version_Spec   vspec)
 {
-   unsigned long result = 0;
+   DDCA_Version_Feature_Flags result = 0;
    ERROR_CHECK( ddca_get_feature_flags_by_vcp_version(feature_code, version_id, &result) );
    return result;
 }
@@ -329,15 +329,17 @@ DDCS_MCCS_Version_Spec ddcs_get_mccs_version(DDCS_Display_Handle_p dh) {
    return result;
 }
 
+#ifdef OLD
 // DEPRECATED
 unsigned long ddcs_get_feature_info_by_display(
                DDCS_Display_Handle_p dh,
                DDCS_VCP_Feature_Code    feature_code)
 {
-   unsigned long result = 0;
+   DDCA_Version_Feature_Flags result = 0;
    ERROR_CHECK( ddca_get_feature_info_by_display(dh, feature_code, &result) );
    return result;
 }
+#endif
 
 
 //
