@@ -164,18 +164,19 @@ typedef uint16_t DDCA_Version_Feature_Flags;
 #define DDCA_READABLE     (DDCA_RO | DDCA_RW)  /**< Feature is either RW or RO */
 #define DDCA_WRITABLE     (DDCA_WO | DDCA_RW)  /**< Feature is either RW or WO */
 
-
 // Moved from vcp_feature_codes.h, either merge with DDCA_Version_Feature_Flags or move back
 
 typedef uint16_t Version_Feature_Flags;
 // Bits in Version_Feature_Flags:
 
+#ifdef OLD
 // Exactly 1 of the following 3 bits must be set
 #define  VCP2_RO             0x0400
 #define  VCP2_WO             0x0200
 #define  VCP2_RW             0x0100
 #define  VCP2_READABLE       (VCP2_RO | VCP2_RW)
 #define  VCP2_WRITABLE       (VCP2_WO | VCP2_RW)
+#endif
 
 // Further refine the MCCS C/NC/TABLE categorization
 #define VCP2_STD_CONT        0x80

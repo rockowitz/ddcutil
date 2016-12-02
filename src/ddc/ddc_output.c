@@ -110,7 +110,7 @@ check_valid_operation_by_feature_rec_and_version(
    Version_Feature_Flags feature_flags
       = get_version_sensitive_feature_flags(frec, vcp_version);
    assert(feature_flags);
-   ushort rwflags   = operation_flags & VCP2_RW;
+   ushort rwflags   = operation_flags & DDCA_RW;
    ushort typeflags = operation_flags & (VCP2_TABLE | VCP2_CONT | VCP2_NC);
    Global_Status_Code result = DDCL_INVALID_OPERATION;
    if ( (feature_flags & rwflags) && (feature_flags & typeflags) )
