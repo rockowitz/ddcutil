@@ -97,13 +97,13 @@ static char * vcp_interpret_version_feature_flags(DDCA_Version_Feature_Flags fla
    // NEED TO ALSO HANDLE TABLE TYPE
    if (flags & DDCA_CONT)
       typemsg = "Continuous";
-   else if (flags & VCP2_NC)
+   else if (flags & DDCA_NC)
       typemsg = "Non-continuous";
-   else if (flags & VCP2_READABLE_TABLE)
+   else if (flags & DDCA_READABLE_TABLE)
       typemsg = "Table";
    // else if (flags & VCP_TYPE_V2NC_V3T)
    //    typemsg = "V2:NC, V3:Table";
-   else if (flags & VCP2_DEPRECATED)
+   else if (flags & DDCA_DEPRECATED)
       typemsg = "Deprecated";
    else
       typemsg = "Type not set";
@@ -166,7 +166,7 @@ static Byte valid_versions(VCP_Feature_Table_Entry * pentry) {
    if (pentry->v20_flags)
       result |= DDCA_V20;
    if (pentry->v21_flags) {
-      if ( !(pentry->v21_flags & VCP2_DEPRECATED) )
+      if ( !(pentry->v21_flags & DDCA_DEPRECATED) )
          result |= DDCA_V21;
    }
    else {
@@ -174,7 +174,7 @@ static Byte valid_versions(VCP_Feature_Table_Entry * pentry) {
          result |= DDCA_V21;
    }
    if (pentry->v30_flags) {
-      if ( !(pentry->v30_flags & VCP2_DEPRECATED) )
+      if ( !(pentry->v30_flags & DDCA_DEPRECATED) )
          result |= DDCA_V30;
    }
    else {
@@ -182,7 +182,7 @@ static Byte valid_versions(VCP_Feature_Table_Entry * pentry) {
          result |= DDCA_V30;
    }
    if (pentry->v22_flags) {
-      if ( !(pentry->v22_flags & VCP2_DEPRECATED) )
+      if ( !(pentry->v22_flags & DDCA_DEPRECATED) )
          result |= DDCA_V22;
    }
    else {
@@ -327,15 +327,57 @@ static void report_sl_values(DDCA_Feature_Value_Entry * sl_values, int depth) {
 }
 
 
+char * interpret_ddca_version_feature_flags_readwrite(DDCA_Version_Feature_Flags feature_flags) {
+   char * result = NULL;
+   if (feature_flags & DDCA_RW)
+      result = "Read Write";
+   else if (feature_flags & DDCA_RO)
+      result = "Read Only";
+   else if (feature_flags & DDCA_WO)
+      result = "Write Only";
+   else
+      PROGRAM_LOGIC_ERROR("No read/write bits set");
+      // result = "None of DDCA_RW, DDCA_RO, DDCA_WO set";
+   return result;
+}
+
+
+char * interpret_ddca_version_feature_flags_type(DDCA_Version_Feature_Flags feature_flags) {
+   char * result = NULL;
+   if (feature_flags & DDCA_STD_CONT)
+      result = "Continuous (normal)";
+   else if (feature_flags & DDCA_COMPLEX_CONT)
+      result = "Continuous (complex)";
+   else if (feature_flags & DDCA_SIMPLE_NC)
+      result = "Non-Continuous (simple)";
+   else if (feature_flags & DDCA_COMPLEX_NC)
+      result = "Non-Continuous (complex)";
+   else if (feature_flags & DDCA_WO_NC)
+      result = "Non-Continuous (write-only)";
+   else if (feature_flags & DDCA_READABLE_TABLE)
+      result = "Table (normal)";
+   else if (feature_flags & DDCA_WO_TABLE)
+      result = "Table (write-only)";
+   else
+      // result = "unknown type";
+      PROGRAM_LOGIC_ERROR("No C/NC/T subtype bit set");
+   return result;
+}
+
+
 static char * interpret_feature_flags_r(DDCA_Version_Feature_Flags vflags, char * workbuf, int bufsz) {
    bool debug = false;
    DBGMSF(debug, "vflags=0x%04x", vflags);
    assert(bufsz >= 50);     //  bigger than we'll need
    *workbuf = '\0';
-   if (vflags & VCP2_DEPRECATED) {
+   if (vflags & DDCA_DEPRECATED) {
       strcpy(workbuf, "Deprecated");
    }
    else {
+     strcpy(workbuf, interpret_ddca_version_feature_flags_readwrite(vflags));
+     strcat(workbuf, ", ");
+     strcat(workbuf, interpret_ddca_version_feature_flags_type(vflags));
+#ifdef OLD
      if (vflags & DDCA_RO)
         strcpy(workbuf, "Read Only, ");
      else if (vflags & DDCA_WO)
@@ -344,21 +386,24 @@ static char * interpret_feature_flags_r(DDCA_Version_Feature_Flags vflags, char 
         strcpy(workbuf, "Read Write, ");
      else
         PROGRAM_LOGIC_ERROR("No read/write bits set");
+#endif
 
+#ifdef OLD
      if (vflags & DDCA_STD_CONT)
         strcat(workbuf, "Continuous (standard)");
      else if (vflags & DDCA_COMPLEX_CONT)
         strcat(workbuf, "Continuous (complex)");
-     else if (vflags & VCP2_SIMPLE_NC)
+     else if (vflags & DDCA_SIMPLE_NC)
         strcat(workbuf, "Non-Continuous (simple)");
-     else if (vflags & VCP2_COMPLEX_NC)
+     else if (vflags & DDCA_COMPLEX_NC)
         strcat(workbuf, "Non-Continuous (complex)");
-     else if (vflags & VCP2_WO_NC)
+     else if (vflags & DDCA_WO_NC)
         strcat(workbuf, "Non-Continuous (write-only)");
-     else if (vflags & VCP2_TABLE)
+     else if (vflags & DDCA_TABLE)
         strcat(workbuf, "Table");
      else
         PROGRAM_LOGIC_ERROR("No type bits set");
+#endif
    }
    return workbuf;
 }
@@ -423,36 +468,6 @@ void report_vcp_feature_table_entry(VCP_Feature_Table_Entry * pentry, int depth)
 // End of VCPINFO related functions
 
 
-#ifdef TRANSITIONAL
-char * interpret_ddca_version_feature_flags_readwrite(DDCA_Version_Feature_Flags feature_flags) {
-   char * result = NULL;
-   if (feature_flags & DDCA_RW)
-      result = "read write";
-   else if (feature_flags & DDCA_RO)
-      result = "read only";
-   else if (feature_flags & DDCA_WO)
-      result = "write only";
-   else
-      result = "unknown readwritability";
-   return result;
-}
-
-char * interpret_ddca_version_feature_flags_type(DDCA_Version_Feature_Flags feature_flags) {
-   char * result = NULL;
-   if (feature_flags & DDCA_CONTINUOUS)
-      result = "continuous";
-   else if (feature_flags & DDCA_TABLE)
-      result = "table";
-   else if (feature_flags & DDCA_SIMPLE_NC)
-      result = "simple non-continuous";
-   else if (feature_flags & DDCA_COMPLEX_NC)
-      result = "complex non-continuous";
-   else
-      result = "unknown type";
-   return result;
-}
-#endif
-
 
 /* Emits a report on a Version_Specific_Feature_Info struct.  This is a
  * debugging report.  The report is written to the current report destination.
@@ -473,23 +488,11 @@ void report_version_specific_feature_info(
    rpt_vstring(d1, "Version spec: %d.%d", info->vspec.major, info->vspec.minor);
    rpt_vstring(d1, "Version id:   %d", info->version_id);   // to do: need repr_mccs_version_id() function
 
-   rpt_vstring(d1, "Description: %s", info->desc);
-#ifdef TRANSITIONAL
-   DDCA_Version_Feature_Flags feature_flags = info->feature_flags;
-#endif
-   DDCA_Version_Feature_Flags  vflags = info->internal_feature_flags;
+   rpt_vstring(d1, "Description:  %s", info->desc);
+   DDCA_Version_Feature_Flags  vflags = info->feature_flags;
    interpret_feature_flags_r(vflags, workbuf, sizeof(workbuf));
-   rpt_vstring(d1, "Attributes: %s", workbuf);
-
-#ifdef TRANSITIONAL
-   rpt_vstring(d1, "feature_flags:   0x%04x: %s %s",
-         feature_flags,
-         interpret_ddca_version_feature_flags_readwrite(feature_flags),
-         interpret_ddca_version_feature_flags_type(feature_flags)
-         );
-#endif
-
-   rpt_vstring(d1, "global_flags:    0x%02x",  info->global_flags);  // TODO: interpretation function
+   rpt_vstring(d1, "Attributes:   %s", workbuf);
+   rpt_vstring(d1, "Global_flags: 0x%02x",  info->global_flags);  // TODO: interpretation function
 
    if(info->sl_values) {
       rpt_vstring(d1, "Simple NC values:");
@@ -616,7 +619,7 @@ bool is_feature_supported_in_version(
    bool debug = false;
    bool result = false;
    DDCA_Version_Feature_Flags vflags = get_version_specific_feature_flags(pvft_entry, vcp_version);
-   result = (vflags && !(vflags&VCP2_DEPRECATED));
+   result = (vflags && !(vflags&DDCA_DEPRECATED));
    DBGMSF(debug, "Feature = 0x%02x, vcp versinon=%d.%d, returning %s",
                  pvft_entry->code, vcp_version.major, vcp_version.minor, bool_repr(result) );
    return result;
@@ -676,19 +679,19 @@ bool has_version_specific_features(VCP_Feature_Table_Entry * pentry) {
 /* Returns the highest version number for which a feature is not deprecated, or {0,0} if  */
 DDCA_MCCS_Version_Spec get_highest_non_deprecated_version(VCP_Feature_Table_Entry * pentry) {
    DDCA_MCCS_Version_Spec vspec = {0,0};
-   if ( pentry->v22_flags && !(pentry->v22_flags & VCP2_DEPRECATED) ) {
+   if ( pentry->v22_flags && !(pentry->v22_flags & DDCA_DEPRECATED) ) {
       vspec.major = 2;
       vspec.minor = 2;
    }
-   else if ( pentry->v30_flags && !(pentry->v30_flags & VCP2_DEPRECATED) ) {
+   else if ( pentry->v30_flags && !(pentry->v30_flags & DDCA_DEPRECATED) ) {
        vspec.major = 3;
        vspec.minor = 0;
     }
-   else if ( pentry->v21_flags && !(pentry->v21_flags & VCP2_DEPRECATED) ) {
+   else if ( pentry->v21_flags && !(pentry->v21_flags & DDCA_DEPRECATED) ) {
        vspec.major = 2;
        vspec.minor = 1;
     }
-   else if ( pentry->v20_flags && !(pentry->v20_flags & VCP2_DEPRECATED) ) {
+   else if ( pentry->v20_flags && !(pentry->v20_flags & DDCA_DEPRECATED) ) {
        vspec.major = 2;
        vspec.minor = 0;
     }
@@ -723,7 +726,7 @@ bool is_feature_table_by_vcp_version(
        VCP_Feature_Table_Entry * pvft_entry,
        DDCA_MCCS_Version_Spec vcp_version)
 {
-   return (get_version_sensitive_feature_flags(pvft_entry, vcp_version) & VCP2_READABLE_TABLE );
+   return (get_version_sensitive_feature_flags(pvft_entry, vcp_version) & DDCA_READABLE_TABLE );
 }
 
 
@@ -737,8 +740,8 @@ bool is_version_conditional_vcp_type(VCP_Feature_Table_Entry * pvft_entry) {
                    pvft_entry->v21_flags |
                    pvft_entry->v20_flags;
 
-   bool some_nontable = allflags & (DDCA_CONT | VCP2_NC);
-   bool some_table    = allflags & VCP2_READABLE_TABLE;
+   bool some_nontable = allflags & (DDCA_CONT | DDCA_NC);
+   bool some_table    = allflags & DDCA_READABLE_TABLE;
    result = some_nontable && some_table;
 
    return result;
@@ -821,51 +824,6 @@ char * get_non_version_specific_feature_name(VCP_Feature_Table_Entry * pvft_entr
 
 
 
-// transitional function
-#ifdef TRANSITIONAL
-DDCA_Version_Feature_Flags extract_ddca_version_feature_flags(
-      VCP_Feature_Table_Entry * pentry,
-      DDCA_MCCS_Version_Spec vspec
-      )
-{
-   DDCA_Version_Feature_Flags result = 0;
-
-   DDCA_Version_Feature_Flags vflags = get_version_specific_feature_flags(pentry, vspec);
-    result = 0;
-    // TODO handle subvariants REWORK
-    if (vflags & DDCA_RO)
-       result |= DDCA_RO;
-    if (vflags & DDCA_WO)
-       result |= DDCA_WO;
-    if (vflags & DDCA_RW)
-       result |= DDCA_RW;
-    if (vflags & DDCA_CONT)
-       result |= DDCA_CONTINUOUS;
-#ifdef OLD
-    if (pentry->flags & VCP_TYPE_V2NC_V3T) {
-       if (vspec.major < 3)
-          result |= DDCA_SIMPLE_NC;
-       else
-          result |= DDCA_TABLE;
-    }
-#endif
-    else if (vflags & VCP2_READABLE_TABLE)
-       result |= DDCA_TABLE;
-    else if (vflags & VCP2_NC) {
-       if (vspec.major < 3)
-          result |= DDCA_SIMPLE_NC;
-       else {
-          // TODO: In V3, some features use combination of high and low bytes
-          // for now, mark all as simple
-          result |= DDCA_SIMPLE_NC;
-          // alt: DDCT_COMPLEX_NC
-       }
-    }
-    return result;
-}
-#endif
-
-
 Version_Specific_Feature_Info *  extract_version_specific_feature_info(
       VCP_Feature_Table_Entry *        pentry,
       DDCA_MCCS_Version_Spec           vspec)
@@ -881,10 +839,7 @@ Version_Specific_Feature_Info *  extract_version_specific_feature_info(
    info->version_id   = mccs_version_spec_to_id(vspec);
    info->vspec        = vspec;
 
-   info->internal_feature_flags = get_version_specific_feature_flags(pentry, vspec);
-#ifdef NO
-   info->feature_flags = extract_ddca_version_feature_flags(pentry, vspec);
-#endif
+   info->feature_flags = get_version_specific_feature_flags(pentry, vspec);
 
    info->desc = pentry->desc;
    // TODO: use varaint that respects version
@@ -939,16 +894,16 @@ get_nontable_feature_detail_function(
    DDCA_Version_Feature_Flags version_specific_flags =
          get_version_sensitive_feature_flags(pvft_entry, vcp_version);
    assert(version_specific_flags);
-   assert(version_specific_flags & VCP2_NON_TABLE);
+   assert(version_specific_flags & DDCA_NON_TABLE);
    Format_Normal_Feature_Detail_Function func = NULL;
    if (version_specific_flags & DDCA_STD_CONT)
       func = format_feature_detail_standard_continuous;
-   else if (version_specific_flags & VCP2_SIMPLE_NC)
+   else if (version_specific_flags & DDCA_SIMPLE_NC)
       func = format_feature_detail_sl_lookup;
-   else if (version_specific_flags & VCP2_WO_NC)
+   else if (version_specific_flags & DDCA_WO_NC)
       func = NULL;      // but should never be called for this case
    else {
-      assert(version_specific_flags & (DDCA_COMPLEX_CONT | VCP2_COMPLEX_NC));
+      assert(version_specific_flags & (DDCA_COMPLEX_CONT | DDCA_COMPLEX_NC));
       func = pvft_entry->nontable_formatter;
       assert(func);
    }
@@ -1131,7 +1086,7 @@ VCP_Feature_Table_Entry * vcp_create_dummy_feature_for_hexid(Byte id) {
    }
    pentry->nontable_formatter = format_feature_detail_debug_continuous;
    pentry->v20_flags = DDCA_RW | DDCA_COMPLEX_CONT;
-   pentry->vcp_global_flags = VCP2_SYNTHETIC;   // indicates caller should free
+   pentry->vcp_global_flags = DDCA_SYNTHETIC;   // indicates caller should free
    return pentry;
 }
 
@@ -1148,8 +1103,8 @@ VCP_Feature_Table_Entry * vcp_create_table_dummy_feature_for_hexid(Byte id) {
       pentry->v20_name = "Unknown feature";
    }
    pentry->table_formatter = default_table_feature_detail_function,
-   pentry->v20_flags = DDCA_RW | VCP2_READABLE_TABLE;
-   pentry->vcp_global_flags = VCP2_SYNTHETIC;   // indicates caller should free
+   pentry->v20_flags = DDCA_RW | DDCA_READABLE_TABLE;
+   pentry->vcp_global_flags = DDCA_SYNTHETIC;   // indicates caller should free
    return pentry;
 }
 
@@ -1293,7 +1248,7 @@ DDCA_Feature_Value_Entry * find_feature_values(Byte feature_code, DDCA_MCCS_Vers
     	//   feature_flags = DDCA_RW | VCP2_SIMPLE_NC;
       assert(feature_flags);
 
-      if (feature_flags & VCP2_SIMPLE_NC) {
+      if (feature_flags & DDCA_SIMPLE_NC) {
          result = get_version_specific_sl_values(pentry, vcp_version);
       }
    }
@@ -2469,7 +2424,7 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
       .vcp_spec_groups = VCP_SPEC_MISC,
       .vcp_subsets = VCP_SUBSET_CRT,
       .desc = "Causes a CRT to perform a degauss cycle",
-      .v20_flags = DDCA_WO |VCP2_WO_NC,
+      .v20_flags = DDCA_WO |DDCA_WO_NC,
       .v20_name = "Degauss",
    },
    {  .code=0x02,
@@ -2479,14 +2434,14 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
       .default_sl_values = x02_new_control_values,
       .desc = "Indicates that a display user control (other than power) has been "
               "used to change and save (or autosave) a new value.",
-      .v20_flags = DDCA_RW | VCP2_COMPLEX_NC,
+      .v20_flags = DDCA_RW | DDCA_COMPLEX_NC,
       .v20_name = "New control value",
    },
    {  .code=0x03,                        // defined in 2.0, identical in 3.0
       .vcp_spec_groups = VCP_SPEC_MISC,
       .default_sl_values = x03_soft_controls_values,
       .desc = "Allows display controls to be used as soft keys",
-      .v20_flags =  DDCA_RW | VCP2_SIMPLE_NC,
+      .v20_flags =  DDCA_RW | DDCA_SIMPLE_NC,
       .v20_name = "Soft controls",
    },
    {  .code=0x04,                        // Defined in 2.0, identical in 3.0
@@ -2494,34 +2449,34 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
       .desc = "Restore all factor presets including brightness/contrast, "
               "geometry, color, and TV defaults.",
       .vcp_subsets = VCP_SUBSET_COLOR,                // but note WO
-      .v20_flags =  DDCA_WO | VCP2_WO_NC,
+      .v20_flags =  DDCA_WO | DDCA_WO_NC,
       .v20_name = "Restore factory defaults",
    },
    {  .code=0x05,                        // Defined in 2.0, identical in 3.0
       .vcp_spec_groups = VCP_SPEC_PRESET,
       .vcp_subsets = VCP_SUBSET_COLOR,                // but note WO
       .desc = "Restore factory defaults for brightness and contrast",
-      .v20_flags =  DDCA_WO | VCP2_WO_NC,
+      .v20_flags =  DDCA_WO | DDCA_WO_NC,
       .v20_name = "Restore factory brightness/contrast defaults",
    },
    {  .code=0x06,                        // Defined in 2.0, identical in 3.0
       .vcp_spec_groups = VCP_SPEC_PRESET,
       .desc = "Restore factory defaults for geometry adjustments",
-      .v20_flags =  DDCA_WO | VCP2_WO_NC,
+      .v20_flags =  DDCA_WO | DDCA_WO_NC,
       .v20_name = "Restore factory geometry defaults",
    },
    {  .code=0x08,                        // Defined in 2.0, identical in 3.0
       .vcp_spec_groups = VCP_SPEC_PRESET,
       .vcp_subsets = VCP_SUBSET_COLOR,                   // but note WO
       .desc = "Restore factory defaults for color settings.",
-      .v20_flags =  DDCA_WO | VCP2_WO_NC,
+      .v20_flags =  DDCA_WO | DDCA_WO_NC,
       .v20_name = "Restore color defaults",
    },
    {  .code=0x0A,                        // Defined in 2.0, identical in 3.0
       .vcp_spec_groups = VCP_SPEC_PRESET,
       .vcp_subsets = VCP_SUBSET_TV,
       .desc = "Restore factory defaults for TV functions.",
-      .v20_flags =  DDCA_WO | VCP2_WO_NC,
+      .v20_flags =  DDCA_WO | DDCA_WO_NC,
       .v20_name = "Restore factory TV defaults",
    },
    {  .code=0x0b,
@@ -2534,7 +2489,7 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
       // simpler:
       .desc="Color temperature increment used by feature 0Ch Color Temperature Request",
       .vcp_subsets = VCP_SUBSET_COLOR,
-      .v20_flags =  DDCA_RO | VCP2_COMPLEX_NC,
+      .v20_flags =  DDCA_RO | DDCA_COMPLEX_NC,
       .v20_name="Color temperature increment",
    },
    {  .code=0x0c,
@@ -2569,7 +2524,7 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
       .nontable_formatter=format_feature_detail_debug_bytes,
       .desc = "Select contrast enhancement algorithm respecting flesh tone region",
       .vcp_subsets = VCP_SUBSET_COLOR,
-      .v21_flags = DDCA_RW | VCP2_COMPLEX_NC,
+      .v21_flags = DDCA_RW | DDCA_COMPLEX_NC,
       .v21_name = "Flesh tone enhancement",
    },
    {  .code=0x12,
@@ -2589,7 +2544,7 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
       .vcp_subsets = VCP_SUBSET_COLOR | VCP_SUBSET_PROFILE,
       .v21_flags = DDCA_RW | DDCA_COMPLEX_CONT,
       .v21_name  = "Backlight control",
-      .v22_flags = VCP2_DEPRECATED,
+      .v22_flags = DDCA_DEPRECATED,
    },
    {  .code=0x14,
       .vcp_spec_groups = VCP_SPEC_IMAGE,
@@ -2600,10 +2555,10 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
       .default_sl_values= x14_color_preset_absolute_values,
       .desc="Select a specified color temperature",
       .vcp_subsets = VCP_SUBSET_COLOR | VCP_SUBSET_PROFILE,
-      .v20_flags = DDCA_RW | VCP2_SIMPLE_NC,
+      .v20_flags = DDCA_RW | DDCA_SIMPLE_NC,
       .v20_name  = "Select color preset",
-      .v30_flags = DDCA_RW | VCP2_COMPLEX_NC,
-      .v22_flags = DDCA_RW | VCP2_COMPLEX_NC,
+      .v30_flags = DDCA_RW | DDCA_COMPLEX_NC,
+      .v22_flags = DDCA_RW | DDCA_COMPLEX_NC,
    },
    {  .code=0x16,
       .vcp_spec_groups = VCP_SPEC_IMAGE,
@@ -2647,7 +2602,7 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
       .default_sl_values = x1e_x1f_auto_setup_values,
       .desc="Perform autosetup function (H/V position, clock, clock phase, "
             "A/D converter, etc.",
-      .v20_flags = DDCA_RW | VCP2_SIMPLE_NC,
+      .v20_flags = DDCA_RW | DDCA_SIMPLE_NC,
       .v20_name = "Auto setup",
    },
    {  .code=0x1f,                                               // Done
@@ -2656,7 +2611,7 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
       .default_sl_values = x1e_x1f_auto_setup_values,
       .desc="Perform color autosetup function (R/G/B gain and offset, A/D setup, etc. ",
       .vcp_subsets = VCP_SUBSET_COLOR,
-      .v21_flags = DDCA_RW | VCP2_SIMPLE_NC,
+      .v21_flags = DDCA_RW | DDCA_SIMPLE_NC,
       .v21_name = "Auto color setup",
    },
    {  .code=0x20,        // Done
@@ -2743,7 +2698,7 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
       .vcp_subsets = VCP_SUBSET_COLOR,
       .nontable_formatter=format_feature_detail_debug_bytes,
       .desc = "Gray Scale Expansion",
-      .v21_flags = DDCA_RW |  VCP2_COMPLEX_NC,
+      .v21_flags = DDCA_RW |  DDCA_COMPLEX_NC,
       .v21_name = "Gray scale expansion",
    },
    {  .code=0x30,                // Done
@@ -2945,7 +2900,7 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
       // defined in 2.0, 3.0 has extended consistent explanation
       .nontable_formatter = format_feature_detail_sl_byte, // TODO: write proper function
       .desc= "Read id of one feature that has changed, 0x00 indicates no more",  // my desc
-      .v20_flags = DDCA_RO |  VCP2_COMPLEX_NC,
+      .v20_flags = DDCA_RO |  DDCA_COMPLEX_NC,
       .v20_name  = "Active control",
    },
    {  .code= 0x54,
@@ -2953,7 +2908,7 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
       // not defined in 2.0, defined in 3.0, 2.2 identical to 3.0, assume new in 2.1
       .nontable_formatter=format_feature_detail_debug_bytes,    // TODO: write formatter
       .desc = "Controls features aimed at preserving display performance",
-      .v21_flags =  DDCA_RW | VCP2_COMPLEX_NC,
+      .v21_flags =  DDCA_RW | DDCA_COMPLEX_NC,
       .v21_name = "Performance Preservation",
    },
    {  .code=0x56,
@@ -3050,10 +3005,10 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
       // MCCS 2.0, 2.2: NC, MCCS 3.0: T
       .default_sl_values = x60_v2_input_source_values,     // used for all but v3.0
       .desc = "Selects active video source",
-      .v20_flags =  DDCA_RW | VCP2_SIMPLE_NC,
+      .v20_flags =  DDCA_RW | DDCA_SIMPLE_NC,
       .v20_name = "Input Source",
-      .v30_flags = DDCA_RW | VCP2_READABLE_TABLE,
-      .v22_flags = DDCA_RW | VCP2_SIMPLE_NC
+      .v30_flags = DDCA_RW | DDCA_READABLE_TABLE,
+      .v22_flags = DDCA_RW | DDCA_SIMPLE_NC
    },
    {  .code=0x62,
       .vcp_spec_groups = VCP_SPEC_AUDIO,
@@ -3073,7 +3028,7 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
       // not in 2.0, is in 3.0, assume new as of 2.1
       .vcp_subsets = VCP_SUBSET_AUDIO,
       .desc="Selects a group of speakers",
-      .v21_flags = DDCA_RW | VCP2_SIMPLE_NC,
+      .v21_flags = DDCA_RW | DDCA_SIMPLE_NC,
       .default_sl_values = x63_speaker_select_values,
       .v21_name = "Speaker Select",
    },
@@ -3091,7 +3046,7 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
       // however, seen on NEC PA241W, which reports VCP version as 2.0
       .nontable_formatter=format_feature_detail_debug_bytes,
       .desc = "Enable/Disable ambient light sensor",
-      .v21_flags = DDCA_RW | VCP2_SIMPLE_NC,
+      .v21_flags = DDCA_RW | DDCA_SIMPLE_NC,
       .v21_name = "Ambient light sensor",
       .default_sl_values = x66_ambient_light_sensor_values,
    },
@@ -3160,7 +3115,7 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
       .vcp_subsets = VCP_SUBSET_COLOR,
       .desc="Select relative or absolute gamma",
       .nontable_formatter=format_feature_detail_debug_sl_sh,
-      .v21_flags = DDCA_RW | VCP2_COMPLEX_NC,    // TODO implement function
+      .v21_flags = DDCA_RW | DDCA_COMPLEX_NC,    // TODO implement function
       .v21_name = "Gamma",
    },
    {  .code=0x73,
@@ -3170,7 +3125,7 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
       .table_formatter=format_feature_detail_x73_lut_size,
       .desc = "Provides the size (number of entries and number of bits/entry) "
               "for the Red, Green, and Blue LUT in the display.",
-      .v20_flags = DDCA_RO| VCP2_READABLE_TABLE,
+      .v20_flags = DDCA_RO| DDCA_READABLE_TABLE,
       .v20_name  = "LUT Size",
    },
    {  .code=0x74,
@@ -3179,7 +3134,7 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
       .vcp_subsets = VCP_SUBSET_LUT,
       .table_formatter = default_table_feature_detail_function,
       .desc = "Writes a single point within the display's LUT, reads a single point from the LUT",
-      .v20_flags = DDCA_RW | VCP2_READABLE_TABLE,
+      .v20_flags = DDCA_RW | DDCA_READABLE_TABLE,
       .v20_name = "Single point LUT operation",
    },
    {  .code=0x75,
@@ -3188,7 +3143,7 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
       .vcp_subsets = VCP_SUBSET_LUT,
       .table_formatter = default_table_feature_detail_function,
       .desc = "Load (read) multiple values into (from) the display's LUT",
-      .v20_flags = DDCA_RW | VCP2_READABLE_TABLE,
+      .v20_flags = DDCA_RW | DDCA_READABLE_TABLE,
       .v20_name = "Block LUT operation",
    },
    {  .code=0x76,
@@ -3196,7 +3151,7 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
       .vcp_spec_groups = VCP_SPEC_MISC,
       .vcp_subsets = VCP_SUBSET_LUT,
       .desc = "Initiates a routine resident in the display",
-      .v20_flags = DDCA_WO | VCP2_WO_TABLE,
+      .v20_flags = DDCA_WO | DDCA_WO_TABLE,
       .v20_name = "Remote Procedure Call",
    },
    {  .code=0x78,
@@ -3207,11 +3162,11 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
       .desc = "Causes a selected 128 byte block of Display Identification Data "
               "(EDID or Display ID) to be read",
 
-      .v21_flags =  DDCA_RO | VCP2_READABLE_TABLE,
+      .v21_flags =  DDCA_RO | DDCA_READABLE_TABLE,
       .v21_name  = "EDID operation",
-      .v30_flags = DDCA_RO | VCP2_READABLE_TABLE,
+      .v30_flags = DDCA_RO | DDCA_READABLE_TABLE,
       .v30_name  = "EDID operation",
-      .v22_flags = DDCA_RO | VCP2_READABLE_TABLE,
+      .v22_flags = DDCA_RO | DDCA_READABLE_TABLE,
       .v22_name = "Display Identification Operation",
    },
    {  .code=0x7a,
@@ -3220,8 +3175,8 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
       .desc="Increase/decrease the distance to the focal plane of the image",
       .v20_flags = DDCA_RW | DDCA_STD_CONT,
       .v20_name = "Adjust Focal Plane",
-      .v30_flags = VCP2_DEPRECATED,
-      .v22_flags = VCP2_DEPRECATED,
+      .v30_flags = DDCA_DEPRECATED,
+      .v22_flags = DDCA_DEPRECATED,
    },
    {  .code=0x7c,
       .vcp_spec_groups = VCP_SPEC_IMAGE,
@@ -3240,8 +3195,8 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
       // when was it deleted?  v3.0 or v2.1?   For safety assume 3.0
       .desc = "Increase/decrease the trapezoid distortion in the image",
       .v20_flags= DDCA_RW | DDCA_STD_CONT,
-      .v30_flags=VCP2_DEPRECATED,
-      .v22_flags=VCP2_DEPRECATED,
+      .v30_flags=DDCA_DEPRECATED,
+      .v22_flags=DDCA_DEPRECATED,
       .v20_name="Trapezoid",
    },
    {  .code=0x80,                                    // TODO: CHECK 2.2 SPEC
@@ -3255,7 +3210,7 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
       .desc="Increase/decrease the keystone distortion in the image.",
       .v20_flags= DDCA_RW | DDCA_STD_CONT,
       .v20_name="Keystone",
-      .v21_flags = VCP2_DEPRECATED,
+      .v21_flags = DDCA_DEPRECATED,
    },
    {  .code=0x82,
       .vcp_spec_groups = VCP_SPEC_IMAGE | VCP_SPEC_GEOMETRY,   // 2.0: Image, 3.0: Geometry
@@ -3264,10 +3219,10 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
       // DESIGN ISSUE!!!
       // This feature is WO in 2.0 spec, RW in 3.0, what is it in 2.2
       // implies cannot use global_flags to store RO/RW/WO
-      .v20_flags =  DDCA_WO | VCP2_WO_NC,
+      .v20_flags =  DDCA_WO | DDCA_WO_NC,
       .v20_name = "HorFlip",
       .v21_name = "Horizontal Mirror (Flip)",
-      .v21_flags =  DDCA_RW | VCP2_SIMPLE_NC,
+      .v21_flags =  DDCA_RW | DDCA_SIMPLE_NC,
       .v21_sl_values = x82_horizontal_flip_values,
    },
    {  .code=0x84,
@@ -3277,10 +3232,10 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
       // This feature is WO in 2.0 spec, RW in 3.0, what is it in 2.2
       // implies cannot use global_flags to store RO/RW/WO
       .desc="Flip picture vertically",
-      .v20_flags =  DDCA_WO | VCP2_WO_NC,
+      .v20_flags =  DDCA_WO | DDCA_WO_NC,
       .v20_name = "VertFlip",
       .v21_name = "Vertical Mirror (Flip)",
-      .v21_flags =  DDCA_RW | VCP2_SIMPLE_NC,
+      .v21_flags =  DDCA_RW | DDCA_SIMPLE_NC,
       .v21_sl_values = x84_vertical_flip_values,
    },
    {  .code=0x86,                                              // Done
@@ -3290,7 +3245,7 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
       //.flags = VCP_RW | VCP_NON_CONT,
       .default_sl_values = x86_display_scaling_values,
       .desc = "Control the scaling (input vs output) of the display",
-      .v20_flags = DDCA_RW | VCP2_SIMPLE_NC,
+      .v20_flags = DDCA_RW | DDCA_SIMPLE_NC,
       .v20_name = "Display Scaling",
    },
    {  .code=0x87,                                                 // Done
@@ -3301,7 +3256,7 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
       .desc = "Selects one of a range of algorithms. "
               "Increasing (decreasing) the value must increase (decrease) "
               "the edge sharpness of image features.",
-      .v20_flags=DDCA_RW | VCP2_SIMPLE_NC,
+      .v20_flags=DDCA_RW | DDCA_SIMPLE_NC,
       .v20_name="Sharpness",
       .v21_flags=DDCA_RW | DDCA_STD_CONT,
    },
@@ -3329,7 +3284,7 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
       .vcp_spec_groups = VCP_SPEC_MISC,   // 2.0
       .vcp_subsets = VCP_SUBSET_TV,
       .desc = "Increment (1) or decrement (2) television channel",
-      .v20_flags=DDCA_WO | VCP2_WO_NC,
+      .v20_flags=DDCA_WO | DDCA_WO_NC,
       .v20_name="TV Channel Up/Down",
       .default_sl_values=x8b_tv_channel_values,
    },
@@ -3349,9 +3304,9 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
       .desc = "Mute/unmute audio, and (v2.2) screen blank",
       .nontable_formatter=format_feature_detail_x8d_v22_mute_audio_blank_screen,
       .default_sl_values = x8d_tv_audio_mute_source_values,
-      .v20_flags = DDCA_RW | VCP2_SIMPLE_NC,
+      .v20_flags = DDCA_RW | DDCA_SIMPLE_NC,
       .v20_name = "Audio Mute",
-      .v22_flags = DDCA_RW | VCP2_COMPLEX_NC,
+      .v22_flags = DDCA_RW | DDCA_COMPLEX_NC,
       .v22_name = "Audio mute/Screen blank",
    },
    {  .code=0x8e,
@@ -3372,8 +3327,8 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
       // requires special handling for V3, mix of C and NC, SL byte only
       .nontable_formatter=format_feature_detail_audio_treble_bass_v30,
       .v20_flags = DDCA_RW | DDCA_STD_CONT,
-      .v30_flags = DDCA_RW | VCP2_COMPLEX_NC,
-      .v22_flags = DDCA_RW | VCP2_COMPLEX_NC,
+      .v30_flags = DDCA_RW | DDCA_COMPLEX_NC,
+      .v22_flags = DDCA_RW | DDCA_COMPLEX_NC,
    },
    {  .code=0x90,
       .vcp_spec_groups = VCP_SPEC_MISC,     // 2.0
@@ -3391,8 +3346,8 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
       // requires special handling for V3.0 and v2.2: mix of C and NC, SL byte only
       .nontable_formatter=format_feature_detail_audio_treble_bass_v30,
       .v20_flags = DDCA_RW | DDCA_STD_CONT,
-      .v30_flags = DDCA_RW | VCP2_COMPLEX_NC,
-      .v22_flags = DDCA_RW | VCP2_COMPLEX_NC,
+      .v30_flags = DDCA_RW | DDCA_COMPLEX_NC,
+      .v22_flags = DDCA_RW | DDCA_COMPLEX_NC,
    },
    {  .code=0x92,
       .vcp_spec_groups = VCP_SPEC_MISC,   // 2.0
@@ -3410,8 +3365,8 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
       // requires special handling for V3 and v2.2, mix of C and NC, SL byte only
       .nontable_formatter=format_feature_detail_audio_treble_bass_v30,
       .v20_flags = DDCA_RW | DDCA_STD_CONT,
-      .v30_flags = DDCA_RW | VCP2_COMPLEX_NC,
-      .v22_flags = DDCA_RW | VCP2_COMPLEX_NC,
+      .v30_flags = DDCA_RW | DDCA_COMPLEX_NC,
+      .v22_flags = DDCA_RW | DDCA_COMPLEX_NC,
    },
    {  .code=0x94,
       .vcp_spec_groups = VCP_SPEC_AUDIO,    // v2.0
@@ -3420,7 +3375,7 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
       .desc="Select audio mode",
       .v20_name="Audio Stereo Mode",
       .v21_name="Audio Processor Mode",
-      .v20_flags = DDCA_RW | VCP2_SIMPLE_NC,
+      .v20_flags = DDCA_RW | DDCA_SIMPLE_NC,
       .default_sl_values=x94_audio_stereo_mode_values,
    },
    {  .code=0x95,                               // Done
@@ -3458,10 +3413,10 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
       .default_sl_values = x99_window_control_values,
       .desc="Enables the brightness and color within a window to be different "
             "from the desktop.",
-      .v20_flags= DDCA_RW | VCP2_SIMPLE_NC,
+      .v20_flags= DDCA_RW | DDCA_SIMPLE_NC,
       .v20_name="Window control on/off",
-      .v30_flags = VCP2_DEPRECATED,
-      .v30_flags = VCP2_DEPRECATED,
+      .v30_flags = DDCA_DEPRECATED,
+      .v30_flags = DDCA_DEPRECATED,
    },
    {  .code=0x9a,
       .vcp_spec_groups = VCP_SPEC_IMAGE | VCP_SPEC_WINDOW,   // 2.0: WINDOW, 3.0, 2.2: IMAGE
@@ -3552,7 +3507,7 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
       .vcp_spec_groups = VCP_SPEC_IMAGE,
       .desc="Turn on/off an auto setup function",
       .default_sl_values=xa2_auto_setup_values,
-      .v20_flags = DDCA_WO | VCP2_WO_NC,
+      .v20_flags = DDCA_WO | DDCA_WO_NC,
       .v20_name = "Auto setup on/off",
    },
    {  .code=0xa4,                                 // Complex interpretation, to be implemented
@@ -3566,9 +3521,9 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
       .nontable_formatter = format_feature_detail_debug_sl_sh,   // TODO: write proper function
       .table_formatter = default_table_feature_detail_function,  // TODO: write proper function
       .desc = "Turn selected window operation on/off, window mask",
-      .v20_flags = DDCA_RW | VCP2_COMPLEX_NC,
-      .v30_flags = DDCA_RW | VCP2_READABLE_TABLE,
-      .v22_flags = DDCA_RW | VCP2_READABLE_TABLE,
+      .v20_flags = DDCA_RW | DDCA_COMPLEX_NC,
+      .v30_flags = DDCA_RW | DDCA_READABLE_TABLE,
+      .v22_flags = DDCA_RW | DDCA_READABLE_TABLE,
       .v20_name = "Turn the selected window operation on/off",
       .v30_name = "Window mask control",
       .v22_name = "Window mask control",
@@ -3582,14 +3537,14 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
       // v3.0 appears to be identical
       .default_sl_values = xa5_window_select_values,
       .desc = "Change selected window (as defined by 95h..98h)",
-      .v20_flags = DDCA_RW | VCP2_SIMPLE_NC,
+      .v20_flags = DDCA_RW | DDCA_SIMPLE_NC,
       .v20_name = "Change the selected window",
    },
    {  .code=0xaa,                                          // Done
       .vcp_spec_groups = VCP_SPEC_IMAGE | VCP_SPEC_GEOMETRY,    // 3.0: IMAGE, 2.0: GEOMETRY
       .default_sl_values=xaa_screen_orientation_values,
       .desc="Indicates screen orientation",
-      .v20_flags=DDCA_RO | VCP2_SIMPLE_NC,
+      .v20_flags=DDCA_RO | DDCA_SIMPLE_NC,
       .v20_name="Screen Orientation",
    },
    {  .code=0xac,
@@ -3615,14 +3570,14 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
       //.name="(Re)Store user saved values for cur mode",   // this was my name from the explanation
       .default_sl_values = xb0_settings_values,
       .desc = "Store/restore the user saved values for the current mode.",
-      .v20_flags = DDCA_WO | VCP2_WO_NC,
+      .v20_flags = DDCA_WO | DDCA_WO_NC,
       .v20_name = "Settings",
    },
    {  .code=0xb2,
       .vcp_spec_groups = VCP_SPEC_MISC,   // 2.0
       .default_sl_values=xb2_flat_panel_subpixel_layout_values,
       .desc = "LCD sub-pixel structure",
-      .v20_flags = DDCA_RO | VCP2_SIMPLE_NC,
+      .v20_flags = DDCA_RO | DDCA_SIMPLE_NC,
       .v20_name = "Flat panel sub-pixel layout",
    },
    {  .code = 0xb4,
@@ -3637,9 +3592,9 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
       // supported opcode is set
       .v21_name = "Source Timing Mode",
       .nontable_formatter = format_feature_detail_debug_bytes,
-      .v21_flags = DDCA_RW | VCP2_COMPLEX_NC,
-      .v30_flags = DDCA_RW | VCP2_READABLE_TABLE,
-      .v22_flags = DDCA_RW | VCP2_READABLE_TABLE,
+      .v21_flags = DDCA_RW | DDCA_COMPLEX_NC,
+      .v30_flags = DDCA_RW | DDCA_READABLE_TABLE,
+      .v22_flags = DDCA_RW | DDCA_READABLE_TABLE,
    },
    {  .code=0xb6,                                               // DONE
       .vcp_spec_groups = VCP_SPEC_MISC,     // 2.0, 3.0
@@ -3647,7 +3602,7 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
       .desc = "Indicates the base technology type",
       .default_sl_values=xb6_v20_display_technology_type_values,
       .v21_sl_values = xb6_display_technology_type_values,
-      .v20_flags = DDCA_RO | VCP2_SIMPLE_NC,
+      .v20_flags = DDCA_RO | DDCA_SIMPLE_NC,
       .v20_name = "Display technology type",
    },
    {  .code=0xb7,
@@ -3655,7 +3610,7 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
       .vcp_subsets = VCP_SUBSET_DPVL,
       .desc = "Video mode and status of a DPVL capable monitor",
       .v20_name = "Monitor status",
-      .v20_flags = DDCA_RO | VCP2_COMPLEX_NC,
+      .v20_flags = DDCA_RO | DDCA_COMPLEX_NC,
       .nontable_formatter = format_feature_detail_sl_byte,    //TODO: implement proper function
    },
    {  .code=0xb8,
@@ -3711,7 +3666,7 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
       .vcp_subsets = VCP_SUBSET_DPVL,
       .desc = "Indicates status of the DVI link",
       .v20_name = "Link control",
-      .v20_flags = DDCA_RW | VCP2_COMPLEX_NC,
+      .v20_flags = DDCA_RW | DDCA_COMPLEX_NC,
       .nontable_formatter = format_feature_detail_xbe_link_control,
    },
    {  .code=0xc0,
@@ -3735,7 +3690,7 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
       .table_formatter = default_table_feature_detail_function,
       .desc="Reads (writes) a display descriptor from (to) non-volatile storage "
             "in the display.",
-      .v20_flags = DDCA_RW | VCP2_READABLE_TABLE,
+      .v20_flags = DDCA_RW | DDCA_READABLE_TABLE,
       .v20_name = "Transmit display descriptor",
    },
    {  .code = 0xc4,
@@ -3743,7 +3698,7 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
       .nontable_formatter=format_feature_detail_debug_bytes,
       .desc = "If enabled, the display descriptor shall be displayed when no video "
               "is being received.",
-      .v20_flags = DDCA_RW | VCP2_COMPLEX_NC,
+      .v20_flags = DDCA_RW | DDCA_COMPLEX_NC,
       // need to handle "All other values.  The display descriptor shall not be displayed"
       .v20_name = "Enable display of \'display descriptor\'",
    },
@@ -3751,7 +3706,7 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
       .vcp_spec_groups = VCP_SPEC_MISC, // 2.0
       .nontable_formatter=format_feature_detail_application_enable_key,
       .desc = "A 2 byte value used to allow an application to only operate with known products.",
-      .v20_flags = DDCA_RO | VCP2_COMPLEX_NC,
+      .v20_flags = DDCA_RO | DDCA_COMPLEX_NC,
       .v20_name = "Application enable key",
    },
    {  .code=0xc8,
@@ -3759,14 +3714,14 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
       .nontable_formatter=format_feature_detail_display_controller_type,
       .default_sl_values=xc8_display_controller_type_values,
       .desc = "Mfg id of controller and 2 byte manufacturer-specific controller type",
-      .v20_flags = DDCA_RW | VCP2_COMPLEX_NC,
+      .v20_flags = DDCA_RW | DDCA_COMPLEX_NC,
       .v20_name = "Display controller type",
    },
    {  .code=0xc9,
       .vcp_spec_groups = VCP_SPEC_MISC | VCP_SPEC_CONTROL,    // 2.: MISC, 3.0: CONTROL
       .nontable_formatter=format_feature_detail_version,
       .desc = "2 byte firmware level",
-      .v20_flags = DDCA_RO | VCP2_COMPLEX_NC,
+      .v20_flags = DDCA_RO | DDCA_COMPLEX_NC,
       .v20_name = "Display firmware level",
    },
    {  .code=0xca,
@@ -3776,9 +3731,9 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
       .default_sl_values=xca_osd_values,
       // .desc = "Indicates whether On Screen Display is enabled",
       .desc = "Sets and indicates the current operational state of OSD (and buttons in v2.2)",
-      .v20_flags = DDCA_RW | VCP2_SIMPLE_NC,
+      .v20_flags = DDCA_RW | DDCA_SIMPLE_NC,
       .v20_name = "OSD",
-      .v22_flags = DDCA_RW | VCP2_COMPLEX_NC,
+      .v22_flags = DDCA_RW | DDCA_COMPLEX_NC,
       // for v3.0:
       .nontable_formatter = format_feature_detail_debug_sl_sh,   // TODO: write proper function for v3.0
       .v22_name = "OSD/Button Control"
@@ -3787,7 +3742,7 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
       .vcp_spec_groups = VCP_SPEC_MISC | VCP_SPEC_CONTROL,   // 2.0: MISC, 3.0: CONTROL
       .default_sl_values=xcc_osd_language_values,
       .desc = "On Screen Display language",
-      .v20_flags  = DDCA_RW | VCP2_SIMPLE_NC,
+      .v20_flags  = DDCA_RW | DDCA_SIMPLE_NC,
       .v20_name = "OSD Language",
    },
    {  .code=0xcd,
@@ -3795,59 +3750,59 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
       // not in 2.0, is in 3.0, assume exists in 2.1
       .desc = "Control up to 16 LED (or similar) indicators to indicate system status",
       .nontable_formatter = format_feature_detail_debug_sl_sh,
-      .v21_flags = DDCA_RW | VCP2_COMPLEX_NC,
+      .v21_flags = DDCA_RW | DDCA_COMPLEX_NC,
       .v21_name = "Status Indicators",
    },
    {  .code=0xce,
       .vcp_spec_groups = VCP_SPEC_MISC,   // 2.0
       .desc = "Rows and characters/row of auxiliary display",
-      .v20_flags  = DDCA_RO | VCP2_COMPLEX_NC,
+      .v20_flags  = DDCA_RO | DDCA_COMPLEX_NC,
       .v20_name = "Auxiliary display size",
       .nontable_formatter =  format_feature_detail_xce_aux_display_size,
    },
    {  .code=0xcf,
       .vcp_spec_groups = VCP_SPEC_MISC,   // 2.0
       .desc = "Sets contents of auxiliary display device",
-      .v20_flags  = DDCA_WO | VCP2_WO_TABLE,
+      .v20_flags  = DDCA_WO | DDCA_WO_TABLE,
       .v20_name = "Auxiliary display data",
    },
    {  .code=0xd0,
       .vcp_spec_groups = VCP_SPEC_MISC,
       .desc = "Selects the active output",
       .v20_name = "Output select",
-      .v20_flags = DDCA_RW | VCP2_SIMPLE_NC,
+      .v20_flags = DDCA_RW | DDCA_SIMPLE_NC,
       .default_sl_values = xd0_v2_output_select_values,
       .table_formatter = default_table_feature_detail_function,  // TODO: implement proper function
-      .v30_flags = DDCA_RW | VCP2_READABLE_TABLE,
-      .v22_flags = DDCA_RW | VCP2_SIMPLE_NC,
+      .v30_flags = DDCA_RW | DDCA_READABLE_TABLE,
+      .v22_flags = DDCA_RW | DDCA_SIMPLE_NC,
    },
    {  .code=0xd2,
       // exists in 3.0, not in 2.0, assume exists in 2.1
       .vcp_spec_groups = VCP_SPEC_MISC,
       .desc = "Read an Asset Tag to/from the display",
       .v21_name = "Asset Tag",
-      .v21_flags = DDCA_RW | VCP2_READABLE_TABLE,
+      .v21_flags = DDCA_RW | DDCA_READABLE_TABLE,
       .table_formatter = default_table_feature_detail_function,
    },
    {  .code=0xd4,
       .vcp_spec_groups = VCP_SPEC_MISC | VCP_SPEC_IMAGE,        // 2.0: MISC, 3.0: IMAGE
       .desc="Stereo video mode",
       .v20_name = "Stereo video mode",
-      .v20_flags = DDCA_RW | VCP2_COMPLEX_NC,
+      .v20_flags = DDCA_RW | DDCA_COMPLEX_NC,
       .nontable_formatter = format_feature_detail_sl_byte,     // TODO: implement proper function
    },
    {  .code=0xd6,                           // DONE
       .vcp_spec_groups = VCP_SPEC_MISC | VCP_SPEC_CONTROL,   // 2.0: MISC, 3.0: CONTROL
       .default_sl_values = xd6_power_mode_values,
       .desc = "DPM and DPMS status",
-      .v20_flags = DDCA_RW | VCP2_SIMPLE_NC,
+      .v20_flags = DDCA_RW | DDCA_SIMPLE_NC,
       .v20_name = "Power mode",
    },
    {  .code=0xd7,                          // DONE - identical in 2.0, 3.0, 2.2
       .vcp_spec_groups = VCP_SPEC_MISC,    // 2.0, 3.0, 2.2
       .default_sl_values = xd7_aux_power_output_values,
       .desc="Controls an auxiliary power output from a display to a host device",
-      .v20_flags = DDCA_RW | VCP2_SIMPLE_NC,
+      .v20_flags = DDCA_RW | DDCA_SIMPLE_NC,
       .v20_name = "Auxiliary power output",
    },
    {  .code=0xda,                                                   // DONE
@@ -3855,7 +3810,7 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
       .vcp_subsets = VCP_SUBSET_CRT,
       .desc = "Controls scan characteristics (aka format)",
       .default_sl_values = xda_scan_mode_values,
-      .v20_flags = DDCA_RW | VCP2_SIMPLE_NC,
+      .v20_flags = DDCA_RW | DDCA_SIMPLE_NC,
       .v20_name  = "Scan format",
       // name differs in 3.0, assume changed as of 2.1
       .v21_name  = "Scan mode",
@@ -3866,7 +3821,7 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
       .vcp_subsets = VCP_SUBSET_TV,
       .desc = "Controls aspects of the displayed image (TV applications)",
       .default_sl_values = xdb_image_mode_values,
-      .v21_flags = DDCA_RW | VCP2_SIMPLE_NC,
+      .v21_flags = DDCA_RW | DDCA_SIMPLE_NC,
       .v21_name  = "Image Mode",
    },
    {  .code=0xdc,
@@ -3875,7 +3830,7 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
       //.name="Display application",
       .default_sl_values=xdc_display_application_values,
       .desc="Type of application used on display",  // my desc
-      .v20_flags = DDCA_RW | VCP2_SIMPLE_NC,
+      .v20_flags = DDCA_RW | DDCA_SIMPLE_NC,
       .v20_name = "Display Mode",
       .v30_name = "Display Application",
    },
@@ -3889,16 +3844,16 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
       .vcp_spec_groups = VCP_SPEC_MISC,   // 2.0, 3.0, 2.2
       .desc = "Operation mode (2.0) or scratch pad (3.0/2.2)",
       .nontable_formatter = format_feature_detail_debug_sl_sh,
-      .v20_flags = DDCA_WO | VCP2_WO_NC,
+      .v20_flags = DDCA_WO | DDCA_WO_NC,
       .v20_name  = "Operation Mode",
-      .v21_flags = DDCA_RW | VCP2_COMPLEX_NC,
+      .v21_flags = DDCA_RW | DDCA_COMPLEX_NC,
       .v21_name  = "Scratch Pad",
    },
    {  .code=0xdf,
       .vcp_spec_groups = VCP_SPEC_MISC,   // 2.0
       .nontable_formatter=format_feature_detail_version,
       .desc = "MCCS version",
-      .v20_flags = DDCA_RO | VCP2_COMPLEX_NC,
+      .v20_flags = DDCA_RO | DDCA_COMPLEX_NC,
       .v20_name  = "VCP Version",
    }
 };
@@ -3916,7 +3871,7 @@ void free_synthetic_vcp_entry(VCP_Feature_Table_Entry * pfte) {
    assert(memcmp(pfte->marker, VCP_FEATURE_TABLE_ENTRY_MARKER, 4) == 0);
    // DBGMSG("code=0x%02x", pfte->code);
    // report_vcp_feature_table_entry(pfte, 1);
-   if (pfte->vcp_global_flags & VCP2_SYNTHETIC) {
+   if (pfte->vcp_global_flags & DDCA_SYNTHETIC) {
 #ifdef NO
       // if synthetic, strings were not malloed
       DBGMSG("pfte->desc=%p", pfte->desc);
@@ -3950,14 +3905,14 @@ int check_one_version_flags(
       VCP_Feature_Table_Entry * pentry)
 {
    int ct = 0;
-   if (vflags && !(vflags & VCP2_DEPRECATED))  {
+   if (vflags && !(vflags & DDCA_DEPRECATED))  {
       if (vflags & DDCA_STD_CONT)     ct++;
       if (vflags & DDCA_COMPLEX_CONT) ct++;
-      if (vflags & VCP2_SIMPLE_NC)    ct++;
-      if (vflags & VCP2_COMPLEX_NC)   ct++;
-      if (vflags & VCP2_WO_NC)        ct++;
-      if (vflags & VCP2_READABLE_TABLE)        ct++;
-      if (vflags & VCP2_WO_TABLE)     ct++;
+      if (vflags & DDCA_SIMPLE_NC)    ct++;
+      if (vflags & DDCA_COMPLEX_NC)   ct++;
+      if (vflags & DDCA_WO_NC)        ct++;
+      if (vflags & DDCA_READABLE_TABLE)        ct++;
+      if (vflags & DDCA_WO_TABLE)     ct++;
       if (ct != 1) {
           fprintf(
              stderr,
@@ -3968,7 +3923,7 @@ int check_one_version_flags(
        }
 
 
-      if (vflags & VCP2_SIMPLE_NC) {
+      if (vflags & DDCA_SIMPLE_NC) {
          if (!pentry->default_sl_values) {
             fprintf(
                stderr,
@@ -3979,7 +3934,7 @@ int check_one_version_flags(
       }
       else
 
-      if (vflags & VCP2_COMPLEX_NC) {
+      if (vflags & DDCA_COMPLEX_NC) {
          if (!pentry->nontable_formatter) {
             fprintf(
                stderr,
@@ -4025,7 +3980,7 @@ int check_version_rw_flags(
       VCP_Feature_Table_Entry * entry)
 {
    int ct = 0;
-   if (vflags && !(vflags & VCP2_DEPRECATED))  {
+   if (vflags && !(vflags & DDCA_DEPRECATED))  {
         if (vflags & DDCA_RO) ct++;
         if (vflags & DDCA_WO) ct++;
         if (vflags & DDCA_RW) ct++;

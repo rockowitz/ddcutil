@@ -701,7 +701,7 @@ DDCA_Status ddca_get_feature_flags_by_vcp_version(
             *flags |= DDCA_TABLE;
       }
 #endif
-      else if (vflags & VCP2_TABLE)
+      else if (vflags & DDCA_TABLE)
          *flags |= DDCA_TABLE;
       else if (vflags & VCP2_NC) {
          if (vspec.major < 3)
@@ -795,7 +795,7 @@ DDCA_Status ddca_get_simple_sl_value_table(
   else {
      DDCA_MCCS_Version_Spec vspec2 = {vspec.major, vspec.minor};
      DDCA_Version_Feature_Flags vflags = get_version_specific_feature_flags(pentry, vspec2);
-     if (!(vflags & VCP2_SIMPLE_NC)) {
+     if (!(vflags & DDCA_SIMPLE_NC)) {
         *pvalue_table = NULL;
         rc = DDCL_ARG;    // need better code
      }
@@ -960,7 +960,7 @@ DDCA_Status ddca_get_formatted_vcp_value(
                   DDCA_Version_Feature_Flags flags = get_version_specific_feature_flags(pentry, vspec);
                   // Version_Feature_Flags flags = feature_info->internal_feature_flags;
                    // n. will default to NON_TABLE_VCP_VALUE if not a known code
-                   Vcp_Value_Type call_type = (flags & VCP2_TABLE) ?  TABLE_VCP_VALUE : NON_TABLE_VCP_VALUE;
+                   Vcp_Value_Type call_type = (flags & DDCA_TABLE) ?  TABLE_VCP_VALUE : NON_TABLE_VCP_VALUE;
                    Single_Vcp_Value * pvalrec;
                    Global_Status_Code gsc = get_vcp_value(dh, feature_code, call_type, &pvalrec);
                    if (gsc == 0) {

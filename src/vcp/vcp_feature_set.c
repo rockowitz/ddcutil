@@ -52,7 +52,7 @@ void free_transient_vcp_entry(gpointer ptr) {
    VCP_Feature_Table_Entry * pfte = (VCP_Feature_Table_Entry *) ptr;
    // DBGMSG("pfte=%p, marker = %.4s   %s", pfte, pfte->marker, hexstring(pfte->marker,4));
    assert(memcmp(pfte->marker, VCP_FEATURE_TABLE_ENTRY_MARKER, 4) == 0);
-   if (pfte->vcp_global_flags & VCP2_SYNTHETIC) {
+   if (pfte->vcp_global_flags & DDCA_SYNTHETIC) {
       free_synthetic_vcp_entry(pfte);
    }
 }
@@ -117,7 +117,7 @@ create_feature_set(VCP_Feature_Subset subset_id, DDCA_MCCS_Version_Spec vcp_vers
             break;
          case VCP_SUBSET_TABLE:
             vflags = get_version_specific_feature_flags(vcp_entry, vcp_version);
-            showit = vflags & VCP2_TABLE;
+            showit = vflags & DDCA_TABLE;
             break;
          case VCP_SUBSET_KNOWN:
          case VCP_SUBSET_ALL:
@@ -235,7 +235,7 @@ void free_feature_set(VCP_Feature_Set feature_set) {
    for (; ndx < fset->members->len; ndx++) {
       VCP_Feature_Table_Entry * vcp_entry = NULL;
       vcp_entry = g_ptr_array_index(fset->members,ndx);
-      if (vcp_entry->vcp_global_flags & VCP2_SYNTHETIC) {
+      if (vcp_entry->vcp_global_flags & DDCA_SYNTHETIC) {
          // free_vcp_feature_table_entry(vcp_entry);    // UNIMPLEMENTED
       }
    }
