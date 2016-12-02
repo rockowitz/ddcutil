@@ -146,7 +146,7 @@ typedef enum {
 /** MCCS VCP Feature Id */
 typedef uint8_t DDCA_VCP_Feature_Code;
 
-
+#ifdef OLD
 typedef uint16_t DDCA_Version_Feature_Flags;
 
 // flags for ddca_get_feature_info():
@@ -156,7 +156,7 @@ typedef uint16_t DDCA_Version_Feature_Flags;
 #define DDCA_NC           (DDCA_SIMPLE_NC | DDCA_COMPLEX_NC)  /**< Non-continous feature, of any type */
 #define DDCA_TABLE        0x0800    /**< Table type feature */
 #define DDCA_KNOWN        (DDCA_CONTINUOUS | DDCA_NC | DDCA_TABLE)
-
+#endif
 // Exactly 1 of the following 3 bits must be set
 #define DDCA_RO           0x0400               /**< Read only feature */
 #define DDCA_WO           0x0200               /**< Write only feature */
@@ -179,19 +179,20 @@ typedef uint16_t Version_Feature_Flags;
 #endif
 
 // Further refine the MCCS C/NC/TABLE categorization
-#define VCP2_STD_CONT        0x80
-#define VCP2_COMPLEX_CONT    0x40
-#define VCP2_CONT            (VCP2_STD_CONT|VCP2_COMPLEX_CONT)
+#define DDCA_STD_CONT        0x80
+#define DDCA_COMPLEX_CONT    0x40
+#define DDCA_CONT            (DDCA_STD_CONT|DDCA_COMPLEX_CONT)
 #define VCP2_SIMPLE_NC       0x20
 #define VCP2_COMPLEX_NC      0x10
 // For WO NC features.  There's no interpretation function or lookup table
 // Used to mark that the feature is defined for a version
 #define VCP2_WO_NC           0x08
 #define VCP2_NC              (VCP2_SIMPLE_NC|VCP2_COMPLEX_NC|VCP2_WO_NC)
-#define VCP2_NON_TABLE       (VCP2_CONT | VCP2_NC)
+#define VCP2_NON_TABLE       (DDCA_CONT | VCP2_NC)
 #define VCP2_READABLE_TABLE  0x04
 #define VCP2_WO_TABLE        0x02
 #define VCP2_TABLE           (VCP2_READABLE_TABLE | VCP2_WO_TABLE)
+#define DDCA_KNOWN           (DDCA_CONT | VCP2_NC | VCP2_TABLE)
 
 // Additional bits:
 #define VCP2_DEPRECATED      0x01
@@ -235,7 +236,9 @@ struct {
    // VCP_Feature_Subset                 vcp_subsets;   // Need it?
    char *                                feature_name;
    // *** Temporarily include both until figure out how to converge
+#ifdef TRANSITIONAL
    DDCA_Version_Feature_Flags            feature_flags;
+#endif
    Version_Feature_Flags                 internal_feature_flags;
 } Version_Specific_Feature_Info;
 

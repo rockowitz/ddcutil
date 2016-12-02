@@ -95,7 +95,7 @@ static char * vcp_interpret_version_feature_flags(Version_Feature_Flags flags, c
 
    char * typemsg = "";
    // NEED TO ALSO HANDLE TABLE TYPE
-   if (flags & VCP2_CONT)
+   if (flags & DDCA_CONT)
       typemsg = "Continuous";
    else if (flags & VCP2_NC)
       typemsg = "Non-continuous";
@@ -345,9 +345,9 @@ static char * interpret_feature_flags_r(Version_Feature_Flags vflags, char * wor
      else
         PROGRAM_LOGIC_ERROR("No read/write bits set");
 
-     if (vflags & VCP2_STD_CONT)
+     if (vflags & DDCA_STD_CONT)
         strcat(workbuf, "Continuous (standard)");
-     else if (vflags & VCP2_COMPLEX_CONT)
+     else if (vflags & DDCA_COMPLEX_CONT)
         strcat(workbuf, "Continuous (complex)");
      else if (vflags & VCP2_SIMPLE_NC)
         strcat(workbuf, "Non-Continuous (simple)");
@@ -423,7 +423,7 @@ void report_vcp_feature_table_entry(VCP_Feature_Table_Entry * pentry, int depth)
 // End of VCPINFO related functions
 
 
-
+#ifdef TRANSITIONAL
 char * interpret_ddca_version_feature_flags_readwrite(DDCA_Version_Feature_Flags feature_flags) {
    char * result = NULL;
    if (feature_flags & DDCA_RW)
@@ -451,7 +451,7 @@ char * interpret_ddca_version_feature_flags_type(DDCA_Version_Feature_Flags feat
       result = "unknown type";
    return result;
 }
-
+#endif
 
 
 /* Emits a report on a Version_Specific_Feature_Info struct.  This is a
@@ -474,16 +474,20 @@ void report_version_specific_feature_info(
    rpt_vstring(d1, "Version id:   %d", info->version_id);   // to do: need repr_mccs_version_id() function
 
    rpt_vstring(d1, "Description: %s", info->desc);
+#ifdef TRANSITIONAL
    DDCA_Version_Feature_Flags feature_flags = info->feature_flags;
+#endif
    Version_Feature_Flags  vflags = info->internal_feature_flags;
    interpret_feature_flags_r(vflags, workbuf, sizeof(workbuf));
    rpt_vstring(d1, "Attributes: %s", workbuf);
 
+#ifdef TRANSITIONAL
    rpt_vstring(d1, "feature_flags:   0x%04x: %s %s",
          feature_flags,
          interpret_ddca_version_feature_flags_readwrite(feature_flags),
          interpret_ddca_version_feature_flags_type(feature_flags)
          );
+#endif
 
    rpt_vstring(d1, "global_flags:    0x%02x",  info->global_flags);  // TODO: interpretation function
 
@@ -733,7 +737,7 @@ bool is_version_conditional_vcp_type(VCP_Feature_Table_Entry * pvft_entry) {
                    pvft_entry->v21_flags |
                    pvft_entry->v20_flags;
 
-   bool some_nontable = allflags & (VCP2_CONT | VCP2_NC);
+   bool some_nontable = allflags & (DDCA_CONT | VCP2_NC);
    bool some_table    = allflags & VCP2_READABLE_TABLE;
    result = some_nontable && some_table;
 
@@ -818,7 +822,7 @@ char * get_non_version_specific_feature_name(VCP_Feature_Table_Entry * pvft_entr
 
 
 // transitional function
-
+#ifdef TRANSITIONAL
 DDCA_Version_Feature_Flags extract_ddca_version_feature_flags(
       VCP_Feature_Table_Entry * pentry,
       DDCA_MCCS_Version_Spec vspec
@@ -835,7 +839,7 @@ DDCA_Version_Feature_Flags extract_ddca_version_feature_flags(
        result |= DDCA_WO;
     if (vflags & DDCA_RW)
        result |= DDCA_RW;
-    if (vflags & VCP2_CONT)
+    if (vflags & DDCA_CONT)
        result |= DDCA_CONTINUOUS;
 #ifdef OLD
     if (pentry->flags & VCP_TYPE_V2NC_V3T) {
@@ -859,7 +863,7 @@ DDCA_Version_Feature_Flags extract_ddca_version_feature_flags(
     }
     return result;
 }
-
+#endif
 
 
 Version_Specific_Feature_Info *  extract_version_specific_feature_info(
@@ -878,7 +882,9 @@ Version_Specific_Feature_Info *  extract_version_specific_feature_info(
    info->vspec        = vspec;
 
    info->internal_feature_flags = get_version_specific_feature_flags(pentry, vspec);
+#ifdef NO
    info->feature_flags = extract_ddca_version_feature_flags(pentry, vspec);
+#endif
 
    info->desc = pentry->desc;
    // TODO: use varaint that respects version
@@ -935,14 +941,14 @@ get_nontable_feature_detail_function(
    assert(version_specific_flags);
    assert(version_specific_flags & VCP2_NON_TABLE);
    Format_Normal_Feature_Detail_Function func = NULL;
-   if (version_specific_flags & VCP2_STD_CONT)
+   if (version_specific_flags & DDCA_STD_CONT)
       func = format_feature_detail_standard_continuous;
    else if (version_specific_flags & VCP2_SIMPLE_NC)
       func = format_feature_detail_sl_lookup;
    else if (version_specific_flags & VCP2_WO_NC)
       func = NULL;      // but should never be called for this case
    else {
-      assert(version_specific_flags & (VCP2_COMPLEX_CONT | VCP2_COMPLEX_NC));
+      assert(version_specific_flags & (DDCA_COMPLEX_CONT | VCP2_COMPLEX_NC));
       func = pvft_entry->nontable_formatter;
       assert(func);
    }
@@ -1124,7 +1130,7 @@ VCP_Feature_Table_Entry * vcp_create_dummy_feature_for_hexid(Byte id) {
       pentry->v20_name = "Unknown feature";
    }
    pentry->nontable_formatter = format_feature_detail_debug_continuous;
-   pentry->v20_flags = DDCA_RW | VCP2_COMPLEX_CONT;
+   pentry->v20_flags = DDCA_RW | DDCA_COMPLEX_CONT;
    pentry->vcp_global_flags = VCP2_SYNTHETIC;   // indicates caller should free
    return pentry;
 }
@@ -2538,13 +2544,13 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
       .nontable_formatter=x0c_format_feature_detail_color_temperature_request,
       .desc="Specifies a color temperature (degrees Kelvin)",   // my desc
       .vcp_subsets = VCP_SUBSET_COLOR,
-      .v20_flags = DDCA_RW | VCP2_COMPLEX_CONT,
+      .v20_flags = DDCA_RW | DDCA_COMPLEX_CONT,
       .v20_name="Color temperature request",
    },
    {  .code=0x0e,                              // Defined in 2.0
       .vcp_spec_groups = VCP_SPEC_IMAGE,
       .desc="Increase/decrease the sampling clock frequency.",
-      .v20_flags =  DDCA_RW | VCP2_STD_CONT,
+      .v20_flags =  DDCA_RW | DDCA_STD_CONT,
       .v20_name="Clock",
    },
    {  .code=0x10,
@@ -2553,7 +2559,7 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
       //.name="Luminosity",
      .desc="Increase/decrease the brightness of the image.",
      .vcp_subsets = VCP_SUBSET_COLOR | VCP_SUBSET_PROFILE,
-     .v20_flags =  DDCA_RW | VCP2_STD_CONT,
+     .v20_flags =  DDCA_RW | DDCA_STD_CONT,
      .v20_name = "Brightness",
      .v30_name = "Luminosity",
    },
@@ -2571,7 +2577,7 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
       // Defined in 2.0, identical in 3.0
       .desc="Increase/decrease the contrast of the image.",
       .vcp_subsets = VCP_SUBSET_COLOR | VCP_SUBSET_PROFILE,
-      .v20_flags = DDCA_RW | VCP2_STD_CONT,
+      .v20_flags = DDCA_RW | DDCA_STD_CONT,
       .v20_name = "Contrast",
    },
    {  .code=0x13,
@@ -2581,7 +2587,7 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
       .nontable_formatter=format_feature_detail_debug_bytes,
       .desc = "Increase/decrease the specified backlight control value",
       .vcp_subsets = VCP_SUBSET_COLOR | VCP_SUBSET_PROFILE,
-      .v21_flags = DDCA_RW | VCP2_COMPLEX_CONT,
+      .v21_flags = DDCA_RW | DDCA_COMPLEX_CONT,
       .v21_name  = "Backlight control",
       .v22_flags = VCP2_DEPRECATED,
    },
@@ -2603,7 +2609,7 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
       .vcp_spec_groups = VCP_SPEC_IMAGE,
       .desc="Increase/decrease the luminesence of red pixels",   // my simplification
       .vcp_subsets = VCP_SUBSET_COLOR | VCP_SUBSET_PROFILE,
-      .v20_flags = DDCA_RW | VCP2_STD_CONT,
+      .v20_flags = DDCA_RW | DDCA_STD_CONT,
       .v20_name = "Video gain: Red",
    },
    {  .code=0x17,
@@ -2611,28 +2617,28 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
       // not in 2.0, is in 3.0 and 2.2, assume valid for 2.1
       .desc="Increase/decrease the degree of compensation",   // my simplification
       .vcp_subsets = VCP_SUBSET_COLOR,
-      .v21_flags = DDCA_RW | VCP2_STD_CONT,
+      .v21_flags = DDCA_RW | DDCA_STD_CONT,
       .v21_name = "User color vision compensation",
    },
    {  .code=0x18,
       .vcp_spec_groups = VCP_SPEC_IMAGE,
       .desc="Increase/decrease the luminesence of green pixels",   // my simplification
       .vcp_subsets = VCP_SUBSET_COLOR | VCP_SUBSET_PROFILE,
-      .v20_flags = DDCA_RW | VCP2_STD_CONT,
+      .v20_flags = DDCA_RW | DDCA_STD_CONT,
       .v20_name = "Video gain: Green",
    },
    {  .code=0x1a,
       .vcp_spec_groups = VCP_SPEC_IMAGE,
       .desc="Increase/decrease the luminesence of blue pixels",   // my simplification
       .vcp_subsets = VCP_SUBSET_COLOR | VCP_SUBSET_PROFILE,
-      .v20_flags = DDCA_RW | VCP2_STD_CONT,
+      .v20_flags = DDCA_RW | DDCA_STD_CONT,
       .v20_name = "Video gain: Blue",
    },
    {  .code=0x1c,
       .vcp_spec_groups = VCP_SPEC_IMAGE,
       // defined in 2.0, identical in 3.0
       .desc="Increase/decrease the focus of the image",  // my simplification
-      .v20_flags = DDCA_RW | VCP2_STD_CONT,
+      .v20_flags = DDCA_RW | DDCA_STD_CONT,
       .v20_name = "Focus",
    },
    {  .code=0x1e,                                                // Done
@@ -2660,7 +2666,7 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
       .vcp_subsets = VCP_SUBSET_CRT,
       .desc = "Increasing (decreasing) this value moves the image toward "
               "the right (left) of the display.",
-      .v20_flags = DDCA_RW | VCP2_STD_CONT,
+      .v20_flags = DDCA_RW | DDCA_STD_CONT,
       .v20_name="Horizontal Position",
       .v21_name="Horizontal Position (Phase)",
    },
@@ -2670,7 +2676,7 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
       .vcp_subsets = VCP_SUBSET_CRT,
       .desc = "Increase/decrease the width of the image.",
       .v20_name="Horizontal Size",
-      .v20_flags = DDCA_RW | VCP2_STD_CONT,
+      .v20_flags = DDCA_RW | DDCA_STD_CONT,
    },
    {  .code=0x24,       // Done
       // Group 8.4 Geometry, identical in 2.0, 3.0, 2.2
@@ -2678,7 +2684,7 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
       .vcp_subsets = VCP_SUBSET_CRT,
       .desc = "Increasing (decreasing) this value causes the right and left "
               "sides of the image to become more (less) convex.",
-      .v20_flags = DDCA_RW | VCP2_STD_CONT,
+      .v20_flags = DDCA_RW | DDCA_STD_CONT,
       .v20_name="Horizontal Pincushion",
    },
    {  .code=0x26,              // Done
@@ -2687,7 +2693,7 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
       .vcp_subsets = VCP_SUBSET_CRT,
       .desc = "Increasing (decreasing) this value moves the center section "
               "of the image toward the right (left) side of the display.",
-      .v20_flags = DDCA_RW | VCP2_STD_CONT,
+      .v20_flags = DDCA_RW | DDCA_STD_CONT,
       .v20_name="Horizontal Pincushion Balance",
    },
    {  .code=0x28,            // Done
@@ -2699,7 +2705,7 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
       .desc = "Increasing (decreasing) this value shifts the red pixels to "
               "the right (left) and the blue pixels left (right) across the "
               "image with respect to the green pixels.",
-      .v20_flags = DDCA_RW | VCP2_STD_CONT,
+      .v20_flags = DDCA_RW | DDCA_STD_CONT,
       .v20_name="Horizontal Convergence",
       .v21_name="Horizontal Convergence R/B",
    },
@@ -2711,14 +2717,14 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
               "the right (left) and the green pixels left (right) across the "
               "image with respect to the magenta (sic) pixels.",
       .v21_name="Horizontal Convergence M/G",
-      .v21_flags=DDCA_RW | VCP2_STD_CONT,
+      .v21_flags=DDCA_RW | DDCA_STD_CONT,
    },
    {  .code = 0x2a,           // Done
       .vcp_spec_groups = VCP_SPEC_GEOMETRY,
       .vcp_subsets = VCP_SUBSET_CRT,
       // Group 8.4 Geometry, identical in 3.0, 2.2
       .desc = "Increase/decrease the density of pixels in the image center.",
-      .v20_flags = DDCA_RW | VCP2_STD_CONT,
+      .v20_flags = DDCA_RW | DDCA_STD_CONT,
       .v20_name="Horizontal Linearity",
    },
    {  .code = 0x2c,               // Done
@@ -2727,7 +2733,7 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
       .vcp_subsets = VCP_SUBSET_CRT,
       .desc = "Increasing (decreasing) this value shifts the density of pixels "
               "from the left (right) side to the right (left) side of the image.",
-      .v20_flags = DDCA_RW | VCP2_STD_CONT,
+      .v20_flags = DDCA_RW | DDCA_STD_CONT,
       .v20_name = "Horizontal Linearity Balance",
    },
    {  .code=0x2e,
@@ -2745,7 +2751,7 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
       .vcp_subsets = VCP_SUBSET_CRT,
       .desc = "Increasing (decreasing) this value moves the image toward "
               "the top (bottom) edge of the display.",
-      .v20_flags = DDCA_RW | VCP2_STD_CONT,
+      .v20_flags = DDCA_RW | DDCA_STD_CONT,
       .v20_name="Vertical Position",
       .v21_name="Vertical Position (Phase)",
    },
@@ -2754,7 +2760,7 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
       .vcp_subsets = VCP_SUBSET_CRT,
       // Group 8.4 Geometry.  Did name change with 2.1 or 3.0/2.2? - assuming 2.1
       .desc = "Increase/decreasing the height of the image.",
-      .v20_flags=DDCA_RW |  VCP2_STD_CONT,
+      .v20_flags=DDCA_RW |  DDCA_STD_CONT,
       .v20_name="Vertical Size",
    },
    {  .code=0x34,                                  // Done
@@ -2763,7 +2769,7 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
       // Group 8.4 Geometry.  Identical in 2.0, 3.0, 2.2
       .desc = "Increasing (decreasing) this value will cause the top and "
               "bottom edges of the image to become more (less) convex.",
-      .v20_flags =  DDCA_RW | VCP2_STD_CONT,
+      .v20_flags =  DDCA_RW | DDCA_STD_CONT,
       .v20_name = "Vertical Pincushion",
    },
    {  .code=0x36,                                 // Done
@@ -2771,7 +2777,7 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
       .vcp_subsets = VCP_SUBSET_CRT,
       .desc = "Increasing (decreasing) this value will move the center "
               "section of the image toward the top (bottom) edge of the display.",
-      .v20_flags =  DDCA_RW | VCP2_STD_CONT,
+      .v20_flags =  DDCA_RW | DDCA_STD_CONT,
       .v20_name = "Vertical Pincushion Balance",
    },
    {  .code=0x38,                                 // Done
@@ -2781,7 +2787,7 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
       .desc = "Increasing (decreasing) this value shifts the red pixels up (down) "
               "across the image and the blue pixels down (up) across the image "
               "with respect to the green pixels.",
-      .v20_flags= DDCA_RW | VCP2_STD_CONT,
+      .v20_flags= DDCA_RW | DDCA_STD_CONT,
       .v20_name="Vertical Convergence",
       .v21_name="Vertical Convergence R/B",
    },
@@ -2793,14 +2799,14 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
               "across the image and the green pixels down (up) across the image "
               "with respect to the magenta (sic) pixels.",
       .v21_name="Vertical Convergence M/G",
-      .v21_flags= DDCA_RW | VCP2_STD_CONT,
+      .v21_flags= DDCA_RW | DDCA_STD_CONT,
    },
    {  .code=0x3a,                                  // Done
       .vcp_spec_groups = VCP_SPEC_GEOMETRY,
       .vcp_subsets = VCP_SUBSET_CRT,
       // Group 8.4 Geometry
       .desc = "Increase/decease the density of scan lines in the image center.",
-      .v20_flags= DDCA_RW | VCP2_STD_CONT,
+      .v20_flags= DDCA_RW | DDCA_STD_CONT,
       .v20_name = "Vertical Linearity",
    },
    {  .code=0x3c,                                       // Done
@@ -2808,14 +2814,14 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
       .vcp_subsets = VCP_SUBSET_CRT,
       // Group 8.4 Geometry
       .desc = "Increase/decrease the density of scan lines in the image center.",
-      .v20_flags= DDCA_RW | VCP2_STD_CONT,
+      .v20_flags= DDCA_RW | DDCA_STD_CONT,
       .v20_name = "Vertical Linearity Balance",
    },
    {  .code=0x3e,
       .vcp_spec_groups = VCP_SPEC_IMAGE | VCP_SPEC_MISC,     // 2.0: MISC
       // Defined in 2.0, identical in 3.0
       .desc="Increase/decrease the sampling clock phase shift",
-      .v20_flags =  DDCA_RW | VCP2_STD_CONT,
+      .v20_flags =  DDCA_RW | DDCA_STD_CONT,
       .v20_name = "Clock phase",
    },
    {  .code=0x40,                                   // Done
@@ -2826,7 +2832,7 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
       .desc = "Increasing (decreasing) this value shifts the top section of "
               "the image to the right (left) with respect to the bottom section "
               "of the image.",
-      .v20_flags= DDCA_RW | VCP2_STD_CONT,
+      .v20_flags= DDCA_RW | DDCA_STD_CONT,
       .v20_name="Key Balance",  // 2.0
       .v21_name="Horizontal Parallelogram",
    },
@@ -2839,7 +2845,7 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
       .desc = "Increasing (decreasing) this value shifts the top section of "
               "the image to the right (left) with respect to the bottom section "
               "of the image. (sic)",
-      .v21_flags= DDCA_RW | VCP2_STD_CONT,
+      .v21_flags= DDCA_RW | DDCA_STD_CONT,
       .v21_name="Vertical Parallelogram",
    },
    {  .code=0x42,                                  // Done
@@ -2849,7 +2855,7 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
       .desc = "Increasing (decreasing) this value will increase (decrease) the "
               "ratio between the horizontal size at the top of the image and the "
               "horizontal size at the bottom of the image.",
-      .v20_flags= DDCA_RW | VCP2_STD_CONT,
+      .v20_flags= DDCA_RW | DDCA_STD_CONT,
       .v20_name="Horizontal Trapezoid",
       .v21_name="Horizontal Keystone",   // ??
    },
@@ -2861,7 +2867,7 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
       .desc = "Increasing (decreasing) this value will increase (decrease) the "
               "ratio between the vertical size at the left of the image and the "
               "vertical size at the right of the image.",
-      .v20_flags= DDCA_RW | VCP2_STD_CONT,
+      .v20_flags= DDCA_RW | DDCA_STD_CONT,
       .v20_name="Vertical Trapezoid",
       .v21_name="Vertical Keystone",   // ??
    },
@@ -2872,7 +2878,7 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
       // When did name change from 2.0?   assume 2.1
       .desc = "Increasing (decreasing) this value rotates the image (counter) "
               "clockwise around the center point of the screen.",
-      .v20_flags= DDCA_RW | VCP2_STD_CONT,
+      .v20_flags= DDCA_RW | DDCA_STD_CONT,
       .v20_name="Tilt (rotation)",
       .v21_name="Rotation",   // ??
    },
@@ -2883,7 +2889,7 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
       // When did name change from 2.0?   assume 2.1
       .desc = "Increase/decrease the distance between the left and right sides "
               "at the top of the image.",
-      .v20_flags= DDCA_RW | VCP2_STD_CONT,
+      .v20_flags= DDCA_RW | DDCA_STD_CONT,
       .v20_name="Top Corner",
       .v21_name="Top Corner Flare",   // ??
    },
@@ -2897,7 +2903,7 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
 
       .desc = "Increasing (decreasing) this value moves the top of the "
             "image to the right (left).",
-      .v20_flags= DDCA_RW | VCP2_STD_CONT,
+      .v20_flags= DDCA_RW | DDCA_STD_CONT,
       .v20_name="Top Corner Balance",
       .v21_name="Top Corner Hook",
    },
@@ -2908,7 +2914,7 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
       // When did name change from 2.0?   assume 2.1
       .desc = "Increase/decrease the distance between the left "
               "and right sides at the bottom of the image.",
-      .v20_flags= DDCA_RW | VCP2_STD_CONT,
+      .v20_flags= DDCA_RW | DDCA_STD_CONT,
       .v20_name="Bottom Corner",
       .v21_name="Bottom Corner Flare",   // ??
    },
@@ -2918,7 +2924,7 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
       // name is different in 3.0, assume changed in 2.1
       .desc = "Increasing (decreasing) this value moves the bottom end of the "
               "image to the right (left).",
-      .v20_flags= DDCA_RW | VCP2_STD_CONT,
+      .v20_flags= DDCA_RW | DDCA_STD_CONT,
       .v20_name="Bottom Corner Balance",
       .v21_name="Bottom Corner Hook",
    },
@@ -2959,14 +2965,14 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
 
       .desc="Increase/decrease horizontal moire cancellation.",  // my simplification
       //.global_flags = VCP_RW,
-      .v20_flags = DDCA_RW |  VCP2_STD_CONT,
+      .v20_flags = DDCA_RW |  DDCA_STD_CONT,
       .v20_name="Horizontal Moire",
    },
    {  .code=0x58,
       .vcp_spec_groups = VCP_SPEC_IMAGE,
       // defined in 2.0
       .desc="Increase/decrease vertical moire cancellation.",  // my simplification
-      .v20_flags = DDCA_RW |  VCP2_STD_CONT,
+      .v20_flags = DDCA_RW |  DDCA_STD_CONT,
       .v20_name="Vertical Moire",
    },
    {  .code=0x59,                                                    // DONE
@@ -2981,7 +2987,7 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
       //.desc = "Value < 127 decreases red saturation, 127 nominal (default) value, "
       //          "> 127 increases red saturation",
       .desc="Increase/decrease red saturation",
-      .v21_flags = DDCA_RW | VCP2_STD_CONT,
+      .v21_flags = DDCA_RW | DDCA_STD_CONT,
       .v21_name = "6 axis saturation: Red",
    },
    {  .code=0x5a,                                                    // DONE
@@ -2992,7 +2998,7 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
       // .desc = "Value < 127 decreases yellow saturation, 127 nominal (default) value, "
       //         "> 127 increases yellow saturation",
       .desc="Increase/decrease yellow saturation",
-      .v21_flags = DDCA_RW | VCP2_STD_CONT,
+      .v21_flags = DDCA_RW | DDCA_STD_CONT,
       .v21_name = "6 axis saturation: Yellow",
    },
    {  .code=0x5b,                                                   // DONE
@@ -3003,7 +3009,7 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
       // .desc = "Value < 127 decreases green saturation, 127 nominal (default) value, "
       //           "> 127 increases green saturation",
       .desc="Increase/decrease green saturation",
-      .v21_flags = DDCA_RW | VCP2_STD_CONT,
+      .v21_flags = DDCA_RW | DDCA_STD_CONT,
       .v21_name = "6 axis saturation: Green",
    },
    {  .code=0x5c,                                                   // DONE
@@ -3014,7 +3020,7 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
       // .desc = "Value < 127 decreases cyan saturation, 127 nominal (default) value, "
       //          "> 127 increases cyan saturation",
       .desc="Increase/decrease cyan saturation",
-      .v21_flags = DDCA_RW | VCP2_STD_CONT,
+      .v21_flags = DDCA_RW | DDCA_STD_CONT,
       .v21_name = "6 axis saturation: Cyan",
    },
    {  .code=0x5d,                                                   // DONE
@@ -3025,7 +3031,7 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
       // .desc = "Value < 127 decreases blue saturation, 127 nominal (default) value, "
       //          "> 127 increases blue saturation",
       .desc="Increase/decrease blue saturation",
-      .v21_flags = DDCA_RW | VCP2_STD_CONT,
+      .v21_flags = DDCA_RW | DDCA_STD_CONT,
       .v21_name = "6 axis saturation: Blue",
    },
    {  .code=0x5e,                                                  // DONE
@@ -3036,7 +3042,7 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
       // .desc = "Value < 127 decreases magenta saturation, 127 nominal (default) value, "
       //            "> 127 increases magenta saturation",
       .desc="Increase/decrease magenta saturation",
-      .v21_flags = DDCA_RW | VCP2_STD_CONT,
+      .v21_flags = DDCA_RW | DDCA_STD_CONT,
       .v21_name = "6 axis saturation: Magenta",
    },
    {  .code=0x60,
@@ -3057,9 +3063,9 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
       .nontable_formatter=format_feature_detail_audio_speaker_volume_v30,
       // requires special handling for V3, mix of C and NC, SL byte only
       .desc = "Adjusts speaker volume",
-      .v20_flags = DDCA_RW | VCP2_STD_CONT,
-      .v30_flags = DDCA_RW | VCP2_COMPLEX_CONT,
-      .v22_flags = DDCA_RW | VCP2_STD_CONT,
+      .v20_flags = DDCA_RW | DDCA_STD_CONT,
+      .v30_flags = DDCA_RW | DDCA_COMPLEX_CONT,
+      .v22_flags = DDCA_RW | DDCA_STD_CONT,
       .v20_name = "Audio speaker volume",
    },
    {  .code=0x63,
@@ -3076,7 +3082,7 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
       // is in 2.0, n. unlike x62, this code is identically defined in 2.0, 30
       .vcp_subsets = VCP_SUBSET_AUDIO,
       .desc = "Increase/decrease microphone gain",
-      .v20_flags = DDCA_RW | VCP2_STD_CONT,
+      .v20_flags = DDCA_RW | DDCA_STD_CONT,
       .v20_name = "Audio: Microphone Volume",
    },
    {  .code=0x66,
@@ -3095,7 +3101,7 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
       .desc="Increase/decrease the white backlight level",
       .vcp_subsets = VCP_SUBSET_COLOR | VCP_SUBSET_PROFILE,
       .v22_name = "Backlight Level: White",
-      .v22_flags = DDCA_RW | VCP2_STD_CONT,
+      .v22_flags = DDCA_RW | DDCA_STD_CONT,
    },
    { .code=0x6c,
      .vcp_spec_groups = VCP_SPEC_IMAGE,
@@ -3104,7 +3110,7 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
      //.name="Video black level: Red",
      // .nontable_formatter=format_feature_detail_standard_continuous,
      .desc="Increase/decrease the black level of red pixels",  // my simplification
-     .v20_flags =  DDCA_RW |VCP2_STD_CONT,
+     .v20_flags =  DDCA_RW |DDCA_STD_CONT,
      .v20_name = "Video black level: Red",
    },
    {  .code=0x6d,
@@ -3113,14 +3119,14 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
       .vcp_subsets = VCP_SUBSET_COLOR | VCP_SUBSET_PROFILE,
       .desc="Increase/decrease the red backlight level",
       .v22_name = "Backlight Level: Red",
-      .v22_flags = DDCA_RW | VCP2_STD_CONT,
+      .v22_flags = DDCA_RW | DDCA_STD_CONT,
    },
    { .code=0x6e,
       .vcp_spec_groups = VCP_SPEC_IMAGE,
       .vcp_subsets = VCP_SUBSET_COLOR | VCP_SUBSET_PROFILE,
       // Defined in 2.0, name change in ?
       .desc="Increase/decrease the black level of green pixels",  // my simplification
-      .v20_flags =  DDCA_RW |VCP2_STD_CONT,
+      .v20_flags =  DDCA_RW |DDCA_STD_CONT,
       .v20_name = "Video black level: Green",
    },
    {  .code=0x6f,
@@ -3130,14 +3136,14 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
       // .nontable_formatter=format_feature_detail_standard_continuous,
       .v22_name = "Backlight Level: Green",
       .vcp_subsets = VCP_SUBSET_COLOR | VCP_SUBSET_PROFILE,
-      .v22_flags = DDCA_RW | VCP2_STD_CONT,
+      .v22_flags = DDCA_RW | DDCA_STD_CONT,
    },
    {  .code=0x70,
       .vcp_spec_groups = VCP_SPEC_IMAGE,
       // Defined in 2.0, name change in ?
       .desc="Increase/decrease the black level of blue pixels",  // my simplification
       .vcp_subsets = VCP_SUBSET_COLOR | VCP_SUBSET_PROFILE,
-      .v20_flags =  DDCA_RW |VCP2_STD_CONT,
+      .v20_flags =  DDCA_RW |DDCA_STD_CONT,
       .v20_name = "Video black level: Blue",
    },
    {  .code=0x71,
@@ -3146,7 +3152,7 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
       .desc="Increase/decrease the blue backlight level",
       .v22_name = "Backlight Level: Blue",
       .vcp_subsets = VCP_SUBSET_COLOR | VCP_SUBSET_PROFILE,
-      .v22_flags = DDCA_RW | VCP2_STD_CONT,
+      .v22_flags = DDCA_RW | DDCA_STD_CONT,
    },
    {  .code=0x72,
       // 2.0: undefined, 3.0 & 2.2: defined, assume defined in 2.1
@@ -3212,7 +3218,7 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
       .vcp_spec_groups = VCP_SPEC_IMAGE,      // v2.0
       // defined in 2.0, not in 3.0 or 2.2, what to do for 2.1?
       .desc="Increase/decrease the distance to the focal plane of the image",
-      .v20_flags = DDCA_RW | VCP2_STD_CONT,
+      .v20_flags = DDCA_RW | DDCA_STD_CONT,
       .v20_name = "Adjust Focal Plane",
       .v30_flags = VCP2_DEPRECATED,
       .v22_flags = VCP2_DEPRECATED,
@@ -3222,7 +3228,7 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
       // defined in 2.0, is in 3.0
       // my simplification, merger of 2.0 and 3.0 descriptions:
       .desc="Increase/decrease the distance to the zoom function of the projection lens (optics)",
-      .v20_flags =  DDCA_RW | VCP2_STD_CONT,
+      .v20_flags =  DDCA_RW | DDCA_STD_CONT,
       .v20_name = "Adjust Zoom",
    },
    {  .code=0x7e,                                    // TODO: CHECK 2.2 SPEC
@@ -3233,7 +3239,7 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
       // data from v2.0 spec, not in v3.0 spec
       // when was it deleted?  v3.0 or v2.1?   For safety assume 3.0
       .desc = "Increase/decrease the trapezoid distortion in the image",
-      .v20_flags= DDCA_RW | VCP2_STD_CONT,
+      .v20_flags= DDCA_RW | DDCA_STD_CONT,
       .v30_flags=VCP2_DEPRECATED,
       .v22_flags=VCP2_DEPRECATED,
       .v20_name="Trapezoid",
@@ -3247,7 +3253,7 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
       // in 2.0 spec, not in 3.0, or 2.2
       // assume not in 2.1
       .desc="Increase/decrease the keystone distortion in the image.",
-      .v20_flags= DDCA_RW | VCP2_STD_CONT,
+      .v20_flags= DDCA_RW | DDCA_STD_CONT,
       .v20_name="Keystone",
       .v21_flags = VCP2_DEPRECATED,
    },
@@ -3297,7 +3303,7 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
               "the edge sharpness of image features.",
       .v20_flags=DDCA_RW | VCP2_SIMPLE_NC,
       .v20_name="Sharpness",
-      .v21_flags=DDCA_RW | VCP2_STD_CONT,
+      .v21_flags=DDCA_RW | DDCA_STD_CONT,
    },
    {  .code=0x88,
       // 2.0 cross ref lists this as IMAGE, but defined in MISC table
@@ -3306,7 +3312,7 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
       .vcp_subsets = VCP_SUBSET_CRT,    // ???
       .desc = "Increase (decrease) the velocity modulation of the horizontal "
               "scan as a function of the change in luminescence level",
-      .v20_flags = DDCA_RW | VCP2_STD_CONT,
+      .v20_flags = DDCA_RW | DDCA_STD_CONT,
       .v20_name = "Velocity Scan Modulation",
    },
    {  .code=0x8a,
@@ -3315,7 +3321,7 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
       .vcp_subsets = VCP_SUBSET_TV | VCP_SUBSET_COLOR,
       .desc = "Increase/decrease the amplitude of the color difference "
               "components of the video signal",
-      .v20_flags =DDCA_RW |  VCP2_STD_CONT,
+      .v20_flags =DDCA_RW |  DDCA_STD_CONT,
       .v20_name  = "TV Color Saturation",
       .v21_name  = "Color Saturation",
    },
@@ -3332,7 +3338,7 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
       .vcp_subsets = VCP_SUBSET_TV,
       .desc = "Increase/decrease the amplitude of the high frequency components  "
               "of the video signal",
-      .v20_flags = DDCA_RW | VCP2_STD_CONT,
+      .v20_flags = DDCA_RW | DDCA_STD_CONT,
       .v20_name = "TV Sharpness",
    },
    {  .code=0x8d,
@@ -3352,7 +3358,7 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
       .vcp_spec_groups = VCP_SPEC_MISC,   // 2.0
       .vcp_subsets = VCP_SUBSET_TV,
       .desc = "Increase/decrease the ratio between blacks and whites in the image",
-      .v20_flags = DDCA_RW | VCP2_STD_CONT,
+      .v20_flags = DDCA_RW | DDCA_STD_CONT,
       .v20_name = "TV Contrast",
    },
    {  .code=0x8f,
@@ -3365,7 +3371,7 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
       .v20_name="Audio Treble",
       // requires special handling for V3, mix of C and NC, SL byte only
       .nontable_formatter=format_feature_detail_audio_treble_bass_v30,
-      .v20_flags = DDCA_RW | VCP2_STD_CONT,
+      .v20_flags = DDCA_RW | DDCA_STD_CONT,
       .v30_flags = DDCA_RW | VCP2_COMPLEX_NC,
       .v22_flags = DDCA_RW | VCP2_COMPLEX_NC,
    },
@@ -3374,7 +3380,7 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
       .vcp_subsets = VCP_SUBSET_TV | VCP_SUBSET_COLOR,
       .desc = "Increase/decrease the wavelength of the color component of the video signal. "
               "AKA tint.  Applies to currently active interface",
-      .v20_flags = DDCA_RW | VCP2_STD_CONT,
+      .v20_flags = DDCA_RW | DDCA_STD_CONT,
       .v20_name = "Hue",
    },
    {  .code=0x91,
@@ -3384,7 +3390,7 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
       .v20_name="Audio Bass",
       // requires special handling for V3.0 and v2.2: mix of C and NC, SL byte only
       .nontable_formatter=format_feature_detail_audio_treble_bass_v30,
-      .v20_flags = DDCA_RW | VCP2_STD_CONT,
+      .v20_flags = DDCA_RW | DDCA_STD_CONT,
       .v30_flags = DDCA_RW | VCP2_COMPLEX_NC,
       .v22_flags = DDCA_RW | VCP2_COMPLEX_NC,
    },
@@ -3392,7 +3398,7 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
       .vcp_spec_groups = VCP_SPEC_MISC,   // 2.0
       .vcp_subsets = VCP_SUBSET_TV,
       .desc = "Increase/decrease the black level of the video",
-      .v20_flags = DDCA_RW | VCP2_STD_CONT,
+      .v20_flags = DDCA_RW | DDCA_STD_CONT,
       .v20_name = "TV Black level/Brightness",
       .v21_name = "TV Black level/Luminesence",
    },
@@ -3403,7 +3409,7 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
       .v20_name="Audio Balance L/R",
       // requires special handling for V3 and v2.2, mix of C and NC, SL byte only
       .nontable_formatter=format_feature_detail_audio_treble_bass_v30,
-      .v20_flags = DDCA_RW | VCP2_STD_CONT,
+      .v20_flags = DDCA_RW | DDCA_STD_CONT,
       .v30_flags = DDCA_RW | VCP2_COMPLEX_NC,
       .v22_flags = DDCA_RW | VCP2_COMPLEX_NC,
    },
@@ -3421,28 +3427,28 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
       .vcp_spec_groups = VCP_SPEC_WINDOW | VCP_SPEC_GEOMETRY,  // 2.0: WINDOW, 3.0: GEOMETRY
       .vcp_subsets = VCP_SUBSET_WINDOW,
       .desc="Top left X pixel of an area of the image",
-      .v20_flags= DDCA_RW | VCP2_STD_CONT,
+      .v20_flags= DDCA_RW | DDCA_STD_CONT,
       .v20_name="Window Position(TL_X)",
    },
    {  .code=0x96,                                             // Done
       .vcp_spec_groups = VCP_SPEC_WINDOW | VCP_SPEC_GEOMETRY,  // 2.0: WINDOW, 3.0: GEOMETRY
       .vcp_subsets = VCP_SUBSET_WINDOW,
       .desc="Top left Y pixel of an area of the image",
-      .v20_flags= DDCA_RW | VCP2_STD_CONT,
+      .v20_flags= DDCA_RW | DDCA_STD_CONT,
       .v20_name="Window Position(TL_Y)",
    },
    {  .code=0x97,                                            // Done
       .vcp_spec_groups = VCP_SPEC_WINDOW | VCP_SPEC_GEOMETRY,  // 2.0: WINDOW, 3.0: GEOMETRY
       .vcp_subsets = VCP_SUBSET_WINDOW,
       .desc="Bottom right X pixel of an area of the image",
-      .v20_flags= DDCA_RW | VCP2_STD_CONT,
+      .v20_flags= DDCA_RW | DDCA_STD_CONT,
       .v20_name="Window Position(BR_X)",
    },
    {  .code=0x98,                                                    // Done
       .vcp_spec_groups = VCP_SPEC_WINDOW | VCP_SPEC_GEOMETRY,  // 2.0: WINDOW, 3.0: GEOMETRY
       .vcp_subsets = VCP_SUBSET_WINDOW,
       .desc="Bottom right Y pixel of an area of the image",
-      .v20_flags= DDCA_RW | VCP2_STD_CONT,
+      .v20_flags= DDCA_RW | DDCA_STD_CONT,
       .v20_name="Window Position(BR_Y)",
    },
    {  .code=0x99,
@@ -3465,7 +3471,7 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
       // 2) Not recommended for new designs, see A5h for alternate
       .desc="Changes the contrast ratio between the area of the window and the "
             "rest of the desktop",
-      .v20_flags= DDCA_RW | VCP2_STD_CONT,
+      .v20_flags= DDCA_RW | DDCA_STD_CONT,
       .v20_name="Window background",
    },
    {  .code=0x9b,                                             // in 2.0, same in 3.0
@@ -3479,7 +3485,7 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
       // .v20_flags =DDCA_RW |  VCP2_COMPLEX_CONT,
       .desc = "Decrease shifts toward magenta, "
               "increase shifts toward yellow",
-      .v20_flags = DDCA_RW | VCP2_STD_CONT,
+      .v20_flags = DDCA_RW | DDCA_STD_CONT,
       .v20_name = "6 axis hue control: Red",
    },
    {  .code=0x9c,                                             // in 2.0, same in 3.0
@@ -3491,7 +3497,7 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
       // .v20_flags = DDCA_RW | VCP2_COMPLEX_CONT,
       .desc = "Decrease shifts toward green, "
               "increase shifts toward red",
-      .v20_flags = DDCA_RW | VCP2_STD_CONT,
+      .v20_flags = DDCA_RW | DDCA_STD_CONT,
       .v20_name = "6 axis hue control: Yellow",
    },
    {  .code=0x9d,                                             // in 2.0, same in 3.0
@@ -3503,7 +3509,7 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
       // .v20_flags =DDCA_RW |  VCP2_COMPLEX_CONT,
       .desc = "Decrease shifts toward yellow, "
               "increase shifts toward cyan",
-      .v20_flags = DDCA_RW | VCP2_STD_CONT,
+      .v20_flags = DDCA_RW | DDCA_STD_CONT,
       .v20_name = "6 axis hue control: Green",
    },
    {  .code=0x9e,                                             // in 2.0, same in 3.0
@@ -3515,7 +3521,7 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
       // .v20_flags = DDCA_RW | VCP2_COMPLEX_CONT,               // VCP_SUBSET_COLORMGT?
       .desc = "Decrease shifts toward green, "
               "increase shifts toward blue",
-      .v20_flags = DDCA_RW | VCP2_STD_CONT,
+      .v20_flags = DDCA_RW | DDCA_STD_CONT,
       .v20_name = "6 axis hue control: Cyan",
    },
    {  .code=0x9f,
@@ -3527,7 +3533,7 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
       // .v20_flags =DDCA_RW |  VCP2_COMPLEX_CONT,
       .desc = "Decrease shifts toward cyan, "
               "increase shifts toward magenta",
-      .v20_flags = DDCA_RW | VCP2_STD_CONT,
+      .v20_flags = DDCA_RW | DDCA_STD_CONT,
       .v20_name = "6 axis hue control: Blue",
    },
    {  .code=0xa0,
@@ -3537,7 +3543,7 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
       // .desc = "Value < 127 shifts toward blue, 127 no effect, "
       //         "> 127 shifts toward red",
       // .v20_flags = DDCA_RW | VCP2_COMPLEX_CONT,
-      .v20_flags = DDCA_RW | VCP2_STD_CONT,
+      .v20_flags = DDCA_RW | DDCA_STD_CONT,
       .desc = "Decrease shifts toward blue, 127 no effect, "
               "increase shifts toward red",
       .v20_name = "6 axis hue control: Magenta",
@@ -3591,7 +3597,7 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
       .nontable_formatter=format_feature_detail_xac_horizontal_frequency,
       .desc = "Horizontal sync signal frequency as determined by the display",
       // 2.0: 0xff 0xff 0xff indicates the display cannot supply this info
-      .v20_flags = DDCA_RO | VCP2_COMPLEX_CONT,
+      .v20_flags = DDCA_RO | DDCA_COMPLEX_CONT,
       .v20_name  = "Horizontal frequency",
    },
    {  .code=0xae,
@@ -3600,7 +3606,7 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
       .desc = "Vertical sync signal frequency as determined by the display, "
               "in .01 hz",
       // 2.0: 0xff 0xff indicates the display cannot supply this info
-      .v20_flags =DDCA_RO |  VCP2_COMPLEX_CONT,
+      .v20_flags =DDCA_RO |  DDCA_COMPLEX_CONT,
       .v20_name  = "Vertical frequency",
    },
    {  .code=0xb0,
@@ -3657,7 +3663,7 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
       .vcp_subsets = VCP_SUBSET_DPVL,
       .v20_name = "Packet count",
       .desc = "Counter for DPVL packets received",
-      .v20_flags = DDCA_RW | VCP2_COMPLEX_CONT,
+      .v20_flags = DDCA_RW | DDCA_COMPLEX_CONT,
       .nontable_formatter = format_feature_detail_ushort,
    },
    {  .code=0xb9,
@@ -3665,7 +3671,7 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
       .vcp_subsets = VCP_SUBSET_DPVL,
       .v20_name = "Monitor X origin",
       .desc = "X origin of the monitor in the vertical screen",
-      .v20_flags = DDCA_RW | VCP2_COMPLEX_CONT,
+      .v20_flags = DDCA_RW | DDCA_COMPLEX_CONT,
       .nontable_formatter = format_feature_detail_ushort,
    },
    {  .code=0xba,
@@ -3673,7 +3679,7 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
       .vcp_subsets = VCP_SUBSET_DPVL,
       .v20_name = "Monitor Y origin",
       .desc = "Y origin of the monitor in the vertical screen",
-      .v20_flags = DDCA_RW | VCP2_COMPLEX_CONT,
+      .v20_flags = DDCA_RW | DDCA_COMPLEX_CONT,
       .nontable_formatter = format_feature_detail_ushort,
    },
    {  .code=0xbb,
@@ -3681,7 +3687,7 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
       .vcp_subsets = VCP_SUBSET_DPVL,
       .desc = "Error counter for the DPVL header",
       .v20_name = "Header error count",
-      .v20_flags = DDCA_RW | VCP2_COMPLEX_CONT,
+      .v20_flags = DDCA_RW | DDCA_COMPLEX_CONT,
       .nontable_formatter = format_feature_detail_ushort,
    },
    {  .code=0xbc,
@@ -3689,7 +3695,7 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
       .vcp_subsets = VCP_SUBSET_DPVL,
       .desc = "CRC error counter for the DPVL body",
       .v20_name = "Body CRC error count",
-      .v20_flags = DDCA_RW | VCP2_COMPLEX_CONT,
+      .v20_flags = DDCA_RW | DDCA_COMPLEX_CONT,
       .nontable_formatter = format_feature_detail_ushort,
    },
    {  .code=0xbd,
@@ -3697,7 +3703,7 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
       .vcp_subsets = VCP_SUBSET_DPVL,
       .desc = "Assigned identification number for the monitor",
       .v20_name = "Client ID",
-      .v20_flags = DDCA_RW | VCP2_COMPLEX_CONT,
+      .v20_flags = DDCA_RW | DDCA_COMPLEX_CONT,
       .nontable_formatter = format_feature_detail_ushort,
    },
    {  .code=0xbe,
@@ -3712,14 +3718,14 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
       .vcp_spec_groups = VCP_SPEC_MISC,
       .nontable_formatter=format_feature_detail_xc0_display_usage_time,
       .desc = "Active power on time in hours",
-      .v20_flags =DDCA_RO |  VCP2_COMPLEX_CONT,
+      .v20_flags =DDCA_RO |  DDCA_COMPLEX_CONT,
       .v20_name = "Display usage time",
    },
    {  .code=0xc2,
       .vcp_spec_groups = VCP_SPEC_MISC,    // 2.0
       .desc = "Length in bytes of non-volatile storage in the display available "
               "for writing a display descriptor, max 256",
-      .v20_flags = DDCA_RO | VCP2_STD_CONT,
+      .v20_flags = DDCA_RO | DDCA_STD_CONT,
       // should there be a different flag when we know value uses only SL?
       // or could this value be exactly 256?
       .v20_name = "Display descriptor length",
@@ -3945,8 +3951,8 @@ int check_one_version_flags(
 {
    int ct = 0;
    if (vflags && !(vflags & VCP2_DEPRECATED))  {
-      if (vflags & VCP2_STD_CONT)     ct++;
-      if (vflags & VCP2_COMPLEX_CONT) ct++;
+      if (vflags & DDCA_STD_CONT)     ct++;
+      if (vflags & DDCA_COMPLEX_CONT) ct++;
       if (vflags & VCP2_SIMPLE_NC)    ct++;
       if (vflags & VCP2_COMPLEX_NC)   ct++;
       if (vflags & VCP2_WO_NC)        ct++;
@@ -3982,7 +3988,7 @@ int check_one_version_flags(
             ct = -2;
          }
       }
-      else if (vflags & VCP2_COMPLEX_CONT) {
+      else if (vflags & DDCA_COMPLEX_CONT) {
          if (!pentry->nontable_formatter) {
             fprintf(
                stderr,

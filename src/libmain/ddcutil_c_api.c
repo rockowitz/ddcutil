@@ -942,42 +942,39 @@ DDCA_Status ddca_get_formatted_vcp_value(
                DDCA_MCCS_Version_Spec vspec      = get_vcp_version_by_display_handle(dh);
                // DDCA_MCCS_Version_Id   version_id = mccs_version_spec_to_id(vspec);
 
-               // use with_default() variant?
                VCP_Feature_Table_Entry * pentry = vcp_find_feature_by_hexid(feature_code);
                if (!pentry) {
+#ifdef ALT
+               Version_Specific_Feature_Info * feature_info =
+               get_version_specific_feature_info(
+                     feature_code,
+                     true,                    //    with_default
+                     version_id);
+               assert(feature_info);
+               if (!feature_info) {
+#endif
                   psc = DDCL_ARG;
                }
                else {
                   // TODO: fix to get version sensitive flags
-                  unsigned long flags = pentry->v20_flags;    // TO FIX!
+                  Version_Feature_Flags flags = get_version_specific_feature_flags(pentry, vspec);
+                  // Version_Feature_Flags flags = feature_info->internal_feature_flags;
                    // n. will default to NON_TABLE_VCP_VALUE if not a known code
-                   Vcp_Value_Type call_type = (flags & DDCA_TABLE) ?  TABLE_VCP_VALUE : NON_TABLE_VCP_VALUE;
+                   Vcp_Value_Type call_type = (flags & VCP2_TABLE) ?  TABLE_VCP_VALUE : NON_TABLE_VCP_VALUE;
                    Single_Vcp_Value * pvalrec;
                    Global_Status_Code gsc = get_vcp_value(dh, feature_code, call_type, &pvalrec);
                    if (gsc == 0) {
-                      if (call_type == NON_TABLE_VCP_VALUE) {
-                         Nontable_Vcp_Value * code_info = NULL;   // *** NEED CONVERSION FUNCTION ***
-                         char * buffer = calloc(1,1000);
-                         int bufsz = 1000;
-                         if (pentry->nontable_formatter) {
-                            Format_Normal_Feature_Detail_Function func = pentry->nontable_formatter;
-                            bool ok = func(code_info, vspec, buffer, bufsz);
-                            if (ok) {
-                               free(buffer);
-                               gsc = DDCL_UNIMPLEMENTED;   // *** TEMP ***
-                            }
-                            else {
-                               *p_formatted_value = buffer;
-                            }
-                         }
-                         else {    // use default formatter
-                         }
+                      bool ok =
+                      vcp_format_feature_detail(
+                             pentry,
+                             vspec,
+                             pvalrec,
+                             p_formatted_value
+                           );
+                      if (!ok) {
+                         gsc = DDCL_ARG;    // ** WRONG CODE ***
+                         assert(!p_formatted_value);
                       }
-                      else {         // call_type == TABLE_VCP_VALUE
-                         gsc = DDCL_UNIMPLEMENTED;
-
-                      }
-
                    }
 
                    psc = global_to_public_status_code(gsc);

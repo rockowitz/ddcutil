@@ -78,16 +78,16 @@ typedef enum {
 
 typedef
 bool (*Format_Normal_Feature_Detail_Function) (
-          Nontable_Vcp_Value*  code_info,
-          DDCA_MCCS_Version_Spec         vcp_version,
-          char *               buffer,
-          int                  bufsz);
+          Nontable_Vcp_Value*     code_info,
+          DDCA_MCCS_Version_Spec  vcp_version,
+          char *                  buffer,
+          int                     bufsz);
 
 typedef
 bool (*Format_Table_Feature_Detail_Function) (
-          Buffer *            data_bytes,
-          DDCA_MCCS_Version_Spec        vcp_version,
-          char **             presult_buffer);
+          Buffer *                data_bytes,
+          DDCA_MCCS_Version_Spec  vcp_version,
+          char **                 p_result_buffer);
 
 
 
@@ -224,7 +224,7 @@ get_non_version_specific_feature_name(
 bool
 vcp_format_feature_detail(
        VCP_Feature_Table_Entry * vcp_entry,
-       DDCA_MCCS_Version_Spec              vcp_version,
+       DDCA_MCCS_Version_Spec    vcp_version,
        Single_Vcp_Value *        valrec,
        char * *                  aformatted_data
      );

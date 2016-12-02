@@ -221,9 +221,10 @@ typedef struct {
 
 char *      ddcs_get_feature_name(DDCS_VCP_Feature_Code feature_code);
 
-unsigned long ddcs_get_feature_info_by_vcp_version(
-               DDCS_VCP_Feature_Code    feature_code, 
-               DDCA_MCCS_Version_Id     version_id);
+
+// unsigned long ddcs_get_feature_info_by_vcp_version(
+//                DDCS_VCP_Feature_Code    feature_code, 
+//                DDCA_MCCS_Version_Id     version_id);
 
 
 //

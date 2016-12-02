@@ -330,11 +330,13 @@ DDCA_Status ddca_repr_display_handle(DDCA_Display_Handle dh, char** prepr);
  * @param[in] mccs_version_id MCCS version id, may be DDCA_VCP_VANY??
  * @param[out] pflags         where to return byte of flags
  */
+#ifdef TRANSITIONAL
 DDCA_Status ddca_get_feature_flags_by_vcp_version(
       DDCA_VCP_Feature_Code         feature_code,
       // DDCT_MCCS_Version_Spec     vspec,
       DDCA_MCCS_Version_Id          mccs_version_id,
       DDCA_Version_Feature_Flags *  flags);
+#endif
 
 DDCA_Status ddca_get_feature_info_by_vcp_version(
       DDCA_VCP_Feature_Code         feature_code,
