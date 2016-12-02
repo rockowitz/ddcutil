@@ -83,7 +83,7 @@ bool format_feature_detail_sl_lookup(
  *
  * Returns:   buf
  */
-static char * vcp_interpret_version_feature_flags(Version_Feature_Flags flags, char* buf, int buflen) {
+static char * vcp_interpret_version_feature_flags(DDCA_Version_Feature_Flags flags, char* buf, int buflen) {
    // DBGMSG("flags: 0x%04x", flags);
    char * rwmsg = "";
    if (flags & DDCA_RO)
@@ -135,7 +135,7 @@ void vcp_list_feature_codes(FILE * fh) {
       VCP_Feature_Table_Entry entry = vcp_code_table[ndx];
       // DBGMSG("code=0x%02x, flags: 0x%04x", entry.code, entry.flags);
       DDCA_MCCS_Version_Spec vspec = get_highest_non_deprecated_version(&entry);
-      Version_Feature_Flags vflags = get_version_specific_feature_flags(&entry, vspec);
+      DDCA_Version_Feature_Flags vflags = get_version_specific_feature_flags(&entry, vspec);
       vcp_interpret_version_feature_flags(vflags, buf, sizeof(buf));
       char * vermsg = "";
       if (has_version_specific_features(&entry))
@@ -327,7 +327,7 @@ static void report_sl_values(DDCA_Feature_Value_Entry * sl_values, int depth) {
 }
 
 
-static char * interpret_feature_flags_r(Version_Feature_Flags vflags, char * workbuf, int bufsz) {
+static char * interpret_feature_flags_r(DDCA_Version_Feature_Flags vflags, char * workbuf, int bufsz) {
    bool debug = false;
    DBGMSF(debug, "vflags=0x%04x", vflags);
    assert(bufsz >= 50);     //  bigger than we'll need
@@ -371,7 +371,7 @@ static void report_feature_table_entry_flags(
         int                       depth)
 {
    char workbuf[200];
-   Version_Feature_Flags vflags = get_version_specific_feature_flags(pentry, vcp_version);
+   DDCA_Version_Feature_Flags vflags = get_version_specific_feature_flags(pentry, vcp_version);
    if (vflags) {
       interpret_feature_flags_r(vflags, workbuf, sizeof(workbuf));
       rpt_vstring(depth, "Attributes (v%d.%d): %s", vcp_version.major, vcp_version.minor, workbuf);
@@ -392,7 +392,7 @@ void report_vcp_feature_table_entry(VCP_Feature_Table_Entry * pentry, int depth)
    int d1 = depth+1;
    DDCA_Output_Level output_level = get_output_level();
    DDCA_MCCS_Version_Spec vspec = get_highest_non_deprecated_version(pentry);
-   Version_Feature_Flags vflags = get_version_specific_feature_flags(pentry, vspec);
+   DDCA_Version_Feature_Flags vflags = get_version_specific_feature_flags(pentry, vspec);
    char * feature_name = get_non_version_specific_feature_name(pentry);
    rpt_vstring(depth, "VCP code %02X: %s", pentry->code, feature_name);
    rpt_vstring(d1, "%s", pentry->desc);
@@ -477,7 +477,7 @@ void report_version_specific_feature_info(
 #ifdef TRANSITIONAL
    DDCA_Version_Feature_Flags feature_flags = info->feature_flags;
 #endif
-   Version_Feature_Flags  vflags = info->internal_feature_flags;
+   DDCA_Version_Feature_Flags  vflags = info->internal_feature_flags;
    interpret_feature_flags_r(vflags, workbuf, sizeof(workbuf));
    rpt_vstring(d1, "Attributes: %s", workbuf);
 
@@ -547,13 +547,13 @@ int vcp_get_feature_code_count() {
  * Returns:
  *   flags, 0 if feature is not defined for version
  */
-Version_Feature_Flags
+DDCA_Version_Feature_Flags
 get_version_specific_feature_flags(
        VCP_Feature_Table_Entry *  pvft_entry,
        DDCA_MCCS_Version_Spec     vcp_version)
 {
    bool debug = false;
-   Version_Feature_Flags result = 0;
+   DDCA_Version_Feature_Flags result = 0;
    if (vcp_version.major >= 3)
       result = pvft_entry->v30_flags;
    else if (vcp_version.major == 2 && vcp_version.minor >= 2)
@@ -615,7 +615,7 @@ bool is_feature_supported_in_version(
 {
    bool debug = false;
    bool result = false;
-   Version_Feature_Flags vflags = get_version_specific_feature_flags(pvft_entry, vcp_version);
+   DDCA_Version_Feature_Flags vflags = get_version_specific_feature_flags(pvft_entry, vcp_version);
    result = (vflags && !(vflags&VCP2_DEPRECATED));
    DBGMSF(debug, "Feature = 0x%02x, vcp versinon=%d.%d, returning %s",
                  pvft_entry->code, vcp_version.major, vcp_version.minor, bool_repr(result) );
@@ -633,13 +633,13 @@ bool is_feature_supported_in_version(
  * Returns:
  *   flags
  */
-Version_Feature_Flags
+DDCA_Version_Feature_Flags
 get_version_sensitive_feature_flags(
        VCP_Feature_Table_Entry * pvft_entry,
        DDCA_MCCS_Version_Spec              vcp_version)
 {
    bool debug = false;
-   Version_Feature_Flags result = get_version_specific_feature_flags(pvft_entry, vcp_version);
+   DDCA_Version_Feature_Flags result = get_version_specific_feature_flags(pvft_entry, vcp_version);
 
    if (!result) {
       // vcp_version is lower than the first version level at which the field
@@ -830,7 +830,7 @@ DDCA_Version_Feature_Flags extract_ddca_version_feature_flags(
 {
    DDCA_Version_Feature_Flags result = 0;
 
-   Version_Feature_Flags vflags = get_version_specific_feature_flags(pentry, vspec);
+   DDCA_Version_Feature_Flags vflags = get_version_specific_feature_flags(pentry, vspec);
     result = 0;
     // TODO handle subvariants REWORK
     if (vflags & DDCA_RO)
@@ -936,7 +936,7 @@ get_nontable_feature_detail_function(
    bool debug = false;
    DBGMSF(debug, "Starting");
 
-   Version_Feature_Flags version_specific_flags =
+   DDCA_Version_Feature_Flags version_specific_flags =
          get_version_sensitive_feature_flags(pvft_entry, vcp_version);
    assert(version_specific_flags);
    assert(version_specific_flags & VCP2_NON_TABLE);
@@ -1288,7 +1288,7 @@ DDCA_Feature_Value_Entry * find_feature_values(Byte feature_code, DDCA_MCCS_Vers
    VCP_Feature_Table_Entry * pentry = vcp_find_feature_by_hexid(feature_code);
    // may not be found if called for capabilities and it's a mfg specific code
    if (pentry) {
-      Version_Feature_Flags feature_flags = get_version_sensitive_feature_flags(pentry, vcp_version);
+      DDCA_Version_Feature_Flags feature_flags = get_version_sensitive_feature_flags(pentry, vcp_version);
       // if (feature_code == 0x66)                           // *** TEMP ***
     	//   feature_flags = DDCA_RW | VCP2_SIMPLE_NC;
       assert(feature_flags);
@@ -3945,7 +3945,7 @@ void free_synthetic_vcp_entry(VCP_Feature_Table_Entry * pfte) {
 //
 
 int check_one_version_flags(
-      Version_Feature_Flags     vflags,
+      DDCA_Version_Feature_Flags     vflags,
       char *                    which_flags,
       VCP_Feature_Table_Entry * pentry)
 {
@@ -4020,7 +4020,7 @@ int check_one_version_flags(
  *          more than 1 value set
  */
 int check_version_rw_flags(
-      Version_Feature_Flags vflags,
+      DDCA_Version_Feature_Flags vflags,
       char * which_flags,
       VCP_Feature_Table_Entry * entry)
 {

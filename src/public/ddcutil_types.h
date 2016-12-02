@@ -146,53 +146,36 @@ typedef enum {
 /** MCCS VCP Feature Id */
 typedef uint8_t DDCA_VCP_Feature_Code;
 
-#ifdef OLD
+/** Flags specifying VCP feature attributes, which can be VCP version dependent. */
 typedef uint16_t DDCA_Version_Feature_Flags;
 
-// flags for ddca_get_feature_info():
-#define DDCA_CONTINUOUS   0x4000    /**< Continuous feature */
-#define DDCA_SIMPLE_NC    0x2000    /**< Non-continuous feature, having a defined list of values in byte SL */
-#define DDCA_COMPLEX_NC   0x1000    /**< Non-continuous feature, having a complex interpretation using one or more of SL, SH, ML, MH */
-#define DDCA_NC           (DDCA_SIMPLE_NC | DDCA_COMPLEX_NC)  /**< Non-continous feature, of any type */
-#define DDCA_TABLE        0x0800    /**< Table type feature */
-#define DDCA_KNOWN        (DDCA_CONTINUOUS | DDCA_NC | DDCA_TABLE)
-#endif
-// Exactly 1 of the following 3 bits must be set
+// Bits in DDCA_Version_Feature_Flags:
+
+// Exactly 1 of DDCA_RO, DDCA_WO, DDCA_RW is set
 #define DDCA_RO           0x0400               /**< Read only feature */
 #define DDCA_WO           0x0200               /**< Write only feature */
 #define DDCA_RW           0x0100               /**< Feature is both readable and writable */
 #define DDCA_READABLE     (DDCA_RO | DDCA_RW)  /**< Feature is either RW or RO */
 #define DDCA_WRITABLE     (DDCA_WO | DDCA_RW)  /**< Feature is either RW or WO */
 
-// Moved from vcp_feature_codes.h, either merge with DDCA_Version_Feature_Flags or move back
-
-typedef uint16_t Version_Feature_Flags;
-// Bits in Version_Feature_Flags:
-
-#ifdef OLD
-// Exactly 1 of the following 3 bits must be set
-#define  VCP2_RO             0x0400
-#define  VCP2_WO             0x0200
-#define  VCP2_RW             0x0100
-#define  VCP2_READABLE       (VCP2_RO | VCP2_RW)
-#define  VCP2_WRITABLE       (VCP2_WO | VCP2_RW)
-#endif
-
-// Further refine the MCCS C/NC/TABLE categorization
-#define DDCA_STD_CONT        0x80
-#define DDCA_COMPLEX_CONT    0x40
-#define DDCA_CONT            (DDCA_STD_CONT|DDCA_COMPLEX_CONT)
-#define VCP2_SIMPLE_NC       0x20
-#define VCP2_COMPLEX_NC      0x10
+// Further refine the C/NC/TABLE categorization of the MCCS spec
+// Exactly 1 of the following 7 bits is set
+#define DDCA_STD_CONT        0x80       /**< Normal continuous feature */
+#define DDCA_COMPLEX_CONT    0x40       /**< Continuous feature with special interpretation */
+#define VCP2_SIMPLE_NC       0x20       /**< Non-continuous feature, having a defined list of values in byte SL */
+#define VCP2_COMPLEX_NC      0x10       /**< Non-continuous feature, having a complex interpretation using one or more of SL, SH, ML, MH */
 // For WO NC features.  There's no interpretation function or lookup table
 // Used to mark that the feature is defined for a version
-#define VCP2_WO_NC           0x08
-#define VCP2_NC              (VCP2_SIMPLE_NC|VCP2_COMPLEX_NC|VCP2_WO_NC)
-#define VCP2_NON_TABLE       (DDCA_CONT | VCP2_NC)
-#define VCP2_READABLE_TABLE  0x04
-#define VCP2_WO_TABLE        0x02
-#define VCP2_TABLE           (VCP2_READABLE_TABLE | VCP2_WO_TABLE)
-#define DDCA_KNOWN           (DDCA_CONT | VCP2_NC | VCP2_TABLE)
+#define VCP2_WO_NC           0x08       // TODO: CHECK USAGE
+#define VCP2_READABLE_TABLE  0x04       /**< Normal table type feature */
+#define VCP2_WO_TABLE        0x02       /**< Write only table feature */
+
+#define DDCA_CONT            (DDCA_STD_CONT|DDCA_COMPLEX_CONT)            /**< Continuous feature, of any subtype */
+#define VCP2_NC              (VCP2_SIMPLE_NC|VCP2_COMPLEX_NC|VCP2_WO_NC)  /**< Non-continuous feature of any subtype */
+#define VCP2_NON_TABLE       (DDCA_CONT | VCP2_NC)                        /**< Non-table feature of any type */
+
+#define VCP2_TABLE           (VCP2_READABLE_TABLE | VCP2_WO_TABLE)        /**< Table type feature, of any subtype */
+#define DDCA_KNOWN           (DDCA_CONT | VCP2_NC | VCP2_TABLE)           // TODO: Usage??? Check
 
 // Additional bits:
 #define VCP2_DEPRECATED      0x01
@@ -216,9 +199,6 @@ struct {
 typedef DDCA_Feature_Value_Entry * DDCA_Feature_Value_Table;
 
 
-// new, better way to return version specific feature information as 1 struct
-// perhaps push this out to public_c_api.h
-
 #define VCP_VERSION_SPECIFIC_FEATURE_INFO_MARKER "VSFI"
 /** Describes a VCP feature code, tailored for a specific VCP version */
 typedef
@@ -239,7 +219,7 @@ struct {
 #ifdef TRANSITIONAL
    DDCA_Version_Feature_Flags            feature_flags;
 #endif
-   Version_Feature_Flags                 internal_feature_flags;
+   DDCA_Version_Feature_Flags                 internal_feature_flags;
 } Version_Specific_Feature_Info;
 
 

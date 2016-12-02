@@ -118,10 +118,10 @@ struct {
    char *                                v21_name;
    char *                                v30_name;
    char *                                v22_name;
-   Version_Feature_Flags                 v20_flags;
-   Version_Feature_Flags                 v21_flags;
-   Version_Feature_Flags                 v30_flags;
-   Version_Feature_Flags                 v22_flags;
+   DDCA_Version_Feature_Flags                 v20_flags;
+   DDCA_Version_Feature_Flags                 v21_flags;
+   DDCA_Version_Feature_Flags                 v30_flags;
+   DDCA_Version_Feature_Flags                 v22_flags;
    DDCA_Feature_Value_Entry *                 v21_sl_values;
    DDCA_Feature_Value_Entry *                 v30_sl_values;
    DDCA_Feature_Value_Entry *                 v22_sl_values;
@@ -174,12 +174,12 @@ DDCA_MCCS_Version_Spec
 get_highest_non_deprecated_version(
       VCP_Feature_Table_Entry * pvft_entry);
 
-Version_Feature_Flags
+DDCA_Version_Feature_Flags
 get_version_specific_feature_flags(
        VCP_Feature_Table_Entry * pvft_entry,
        DDCA_MCCS_Version_Spec              vcp_version);
 
-Version_Feature_Flags
+DDCA_Version_Feature_Flags
 get_version_sensitive_feature_flags(
        VCP_Feature_Table_Entry * pvft_entry,
        DDCA_MCCS_Version_Spec              vcp_version);

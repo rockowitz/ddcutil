@@ -80,7 +80,7 @@ app_show_single_vcp_value_by_feature_table_entry(
 
    if (!is_feature_readable_by_vcp_version(entry, vspec)) {
       char * feature_name =  get_version_sensitive_feature_name(entry, vspec);
-      Version_Feature_Flags vflags = get_version_sensitive_feature_flags(entry, vspec);
+      DDCA_Version_Feature_Flags vflags = get_version_sensitive_feature_flags(entry, vspec);
       if (vflags & VCP2_DEPRECATED)
          printf("Feature %02x (%s) is deprecated in MCCS %d.%d\n",
                 feature_id, feature_name, vspec.major, vspec.minor);

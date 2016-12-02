@@ -109,7 +109,7 @@ create_feature_set(VCP_Feature_Subset subset_id, DDCA_MCCS_Version_Spec vcp_vers
       for (ndx=0; ndx < known_feature_ct; ndx++) {
          VCP_Feature_Table_Entry * vcp_entry = vcp_get_feature_table_entry(ndx);
          assert(vcp_entry);
-         Version_Feature_Flags vflags = 0;
+         DDCA_Version_Feature_Flags vflags = 0;
          bool showit = false;
          switch(subset_id) {
          case VCP_SUBSET_PRESET:

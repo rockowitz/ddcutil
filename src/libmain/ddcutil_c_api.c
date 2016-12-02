@@ -682,7 +682,7 @@ DDCA_Status ddca_get_feature_flags_by_vcp_version(
       rc = DDCL_ARG;
    }
    else {
-      Version_Feature_Flags vflags = get_version_specific_feature_flags(pentry, vspec);
+      DDCA_Version_Feature_Flags vflags = get_version_specific_feature_flags(pentry, vspec);
       *flags = 0;
       // TODO handle subvariants REWORK
       if (vflags & VCP2_RO)
@@ -794,7 +794,7 @@ DDCA_Status ddca_get_simple_sl_value_table(
   }
   else {
      DDCA_MCCS_Version_Spec vspec2 = {vspec.major, vspec.minor};
-     Version_Feature_Flags vflags = get_version_specific_feature_flags(pentry, vspec2);
+     DDCA_Version_Feature_Flags vflags = get_version_specific_feature_flags(pentry, vspec2);
      if (!(vflags & VCP2_SIMPLE_NC)) {
         *pvalue_table = NULL;
         rc = DDCL_ARG;    // need better code
@@ -957,7 +957,7 @@ DDCA_Status ddca_get_formatted_vcp_value(
                }
                else {
                   // TODO: fix to get version sensitive flags
-                  Version_Feature_Flags flags = get_version_specific_feature_flags(pentry, vspec);
+                  DDCA_Version_Feature_Flags flags = get_version_specific_feature_flags(pentry, vspec);
                   // Version_Feature_Flags flags = feature_info->internal_feature_flags;
                    // n. will default to NON_TABLE_VCP_VALUE if not a known code
                    Vcp_Value_Type call_type = (flags & VCP2_TABLE) ?  TABLE_VCP_VALUE : NON_TABLE_VCP_VALUE;

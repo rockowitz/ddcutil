@@ -92,7 +92,7 @@ is_table_feature_by_display_handle(
    // bool debug = false;
    bool result = false;
    DDCA_MCCS_Version_Spec vcp_version = get_vcp_version_by_display_handle(dh);
-   Version_Feature_Flags feature_flags = get_version_sensitive_feature_flags(frec, vcp_version);
+   DDCA_Version_Feature_Flags feature_flags = get_version_sensitive_feature_flags(frec, vcp_version);
    assert(feature_flags);
    result = (feature_flags & VCP2_TABLE);
    // DBGMSF(debug, "returning: %d", result);
@@ -105,9 +105,9 @@ Global_Status_Code
 check_valid_operation_by_feature_rec_and_version(
       VCP_Feature_Table_Entry * frec,
       DDCA_MCCS_Version_Spec              vcp_version,
-      Version_Feature_Flags     operation_flags)
+      DDCA_Version_Feature_Flags     operation_flags)
 {
-   Version_Feature_Flags feature_flags
+   DDCA_Version_Feature_Flags feature_flags
       = get_version_sensitive_feature_flags(frec, vcp_version);
    assert(feature_flags);
    ushort rwflags   = operation_flags & DDCA_RW;
@@ -123,7 +123,7 @@ Global_Status_Code
 check_valid_operation_by_feature_id_and_dh(
       Byte                  feature_id,
       Display_Handle *      dh,
-      Version_Feature_Flags operation_flags)
+      DDCA_Version_Feature_Flags operation_flags)
 {
    Global_Status_Code result = 0;
    VCP_Feature_Table_Entry * frec = vcp_find_feature_by_hexid(feature_id);
@@ -506,7 +506,7 @@ show_feature_set_values(
          // confuses the output if suppressing unsupported
          if (show_unsupported) {
             char * feature_name =  get_version_sensitive_feature_name(entry, vcp_version);
-            Version_Feature_Flags vflags = get_version_sensitive_feature_flags(entry, vcp_version);
+            DDCA_Version_Feature_Flags vflags = get_version_sensitive_feature_flags(entry, vcp_version);
             char * msg = (vflags & VCP2_DEPRECATED) ? "Deprecated" : "Write-only feature";
             f0printf(FOUT, FMT_CODE_NAME_DETAIL_W_NL,
                           entry->code, feature_name, msg);
