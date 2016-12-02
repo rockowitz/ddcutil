@@ -466,7 +466,7 @@ void report_version_specific_feature_info(
    char workbuf[200];
 
    int d1 = depth+1;
-   DDCA_Output_Level output_level = get_output_level();
+   // DDCA_Output_Level output_level = get_output_level();
 
    rpt_vstring(depth, "VCP code %02X: %s", info->feature_code, info->feature_name);
 

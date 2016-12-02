@@ -366,7 +366,7 @@ get_formatted_value_for_feature_table_entry(
       char **                    pformatted_value,
       FILE *                     msg_fh)
 {
-   bool debug = true;
+   bool debug = false;
    // Trace_Group tg = (debug) ? 0xff : TRACE_GROUP;
    // TRCMSGTG(tg, "Starting");
    DBGTRC(debug, TRACE_GROUP, "Starting");
