@@ -189,9 +189,9 @@ typedef uint16_t Version_Feature_Flags;
 #define VCP2_WO_NC           0x08
 #define VCP2_NC              (VCP2_SIMPLE_NC|VCP2_COMPLEX_NC|VCP2_WO_NC)
 #define VCP2_NON_TABLE       (VCP2_CONT | VCP2_NC)
-#define VCP2_TABLE           0x04
+#define VCP2_READABLE_TABLE  0x04
 #define VCP2_WO_TABLE        0x02
-#define VCP2_ANY_TABLE       (VCP2_TABLE | VCP2_WO_TABLE)
+#define VCP2_TABLE           (VCP2_READABLE_TABLE | VCP2_WO_TABLE)
 
 // Additional bits:
 #define VCP2_DEPRECATED      0x01

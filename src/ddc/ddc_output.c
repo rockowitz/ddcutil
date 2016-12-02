@@ -94,7 +94,7 @@ is_table_feature_by_display_handle(
    DDCA_MCCS_Version_Spec vcp_version = get_vcp_version_by_display_handle(dh);
    Version_Feature_Flags feature_flags = get_version_sensitive_feature_flags(frec, vcp_version);
    assert(feature_flags);
-   result = (feature_flags & VCP2_ANY_TABLE);
+   result = (feature_flags & VCP2_TABLE);
    // DBGMSF(debug, "returning: %d", result);
    return result;
 }
@@ -111,7 +111,7 @@ check_valid_operation_by_feature_rec_and_version(
       = get_version_sensitive_feature_flags(frec, vcp_version);
    assert(feature_flags);
    ushort rwflags   = operation_flags & DDCA_RW;
-   ushort typeflags = operation_flags & (VCP2_TABLE | VCP2_CONT | VCP2_NC);
+   ushort typeflags = operation_flags & (VCP2_READABLE_TABLE | VCP2_CONT | VCP2_NC);
    Global_Status_Code result = DDCL_INVALID_OPERATION;
    if ( (feature_flags & rwflags) && (feature_flags & typeflags) )
       result = 0;

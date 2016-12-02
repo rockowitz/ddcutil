@@ -117,7 +117,7 @@ create_feature_set(VCP_Feature_Subset subset_id, DDCA_MCCS_Version_Spec vcp_vers
             break;
          case VCP_SUBSET_TABLE:
             vflags = get_version_specific_feature_flags(vcp_entry, vcp_version);
-            showit = vflags & VCP2_ANY_TABLE;
+            showit = vflags & VCP2_TABLE;
             break;
          case VCP_SUBSET_KNOWN:
          case VCP_SUBSET_ALL:
