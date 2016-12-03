@@ -96,11 +96,8 @@ void                free_display_identifier(Display_Identifier * pdid);
 
 // *** Display_Ref ***
 
-typedef enum {
-   DDC_IO_DEVI2C,
-   DDC_IO_ADL,
-   USB_IO
-}MCCS_IO_Mode;
+// moved MCCS_IO_Mode to ddcutil_types.h
+
 
 char * mccs_io_mode_name(MCCS_IO_Mode val);
 

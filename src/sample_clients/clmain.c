@@ -23,6 +23,7 @@
 
 #include <assert.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 #include "base/core.h"
 
@@ -85,7 +86,7 @@ void test_get_single_feature_info(DDCA_Display_Handle dh, Byte feature_code) {
    printf("Getting metadata for feature 0x%02x\n", feature_code);
    printf("Feature name: %s\n", ddca_get_feature_name(feature_code));
    // DDCA_Version_Feature_Flags feature_flags;
-   Version_Specific_Feature_Info * info;
+   Version_Feature_Info * info;
      DDCA_Status rc = ddca_get_feature_info_by_display(
              dh,    // needed because in rare cases feature info is MCCS version dependent
              feature_code,
@@ -95,7 +96,7 @@ void test_get_single_feature_info(DDCA_Display_Handle dh, Byte feature_code) {
      else {
         // TODO: Version_Specific_Feature_Info needs a report function
        //  report_ddca_version_feature_flags(feature_code, info->feature_flags);
-        report_version_specific_feature_info(info, 1);
+        report_version_feature_info(info, 1);
      }
 }
 
@@ -115,7 +116,7 @@ bool test_cont_value(DDCA_Display_Handle dh, Byte feature_code) {
    char * feature_name = ddca_get_feature_name(feature_code);
 
    // DDCA_Version_Feature_Flags feature_flags;
-   Version_Specific_Feature_Info * info;
+   Version_Feature_Info * info;
    rc = ddca_get_feature_info_by_display(
            dh,    // needed because in rare cases feature info is MCCS version dependent
            feature_code,
@@ -124,7 +125,7 @@ bool test_cont_value(DDCA_Display_Handle dh, Byte feature_code) {
       FUNCTION_ERRMSG("ddct_get_feature_info", rc);
    else {
      //  report_ddca_version_feature_flags(feature_code, info->feature_flags);
-      report_version_specific_feature_info(info, 1);
+      report_version_feature_info(info, 1);
    }
 
    DDCA_Non_Table_Value_Response non_table_response;
@@ -205,6 +206,14 @@ bool test_get_capabilities_string(DDCA_Display_Handle dh) {
 
 
 
+
+void my_abort_func(Public_Status_Code psc) {
+   fprintf(stderr, "(%s) Aborting. Internal status code = %d\n", __func__, psc);
+   exit(EXIT_FAILURE);
+}
+
+
+
 int main(int argc, char** argv) {
    printf("(%s) Starting.\n", __func__);
 
@@ -215,14 +224,25 @@ int main(int argc, char** argv) {
 
 
    ddca_init();
+   ddca_register_abort_func(my_abort_func);
+
+   // TO DO: register callback for longjmp
+
 
    printf("(%s) Built with ADL support: %s\n", __func__, (ddca_built_with_adl()) ? "yes" : "no");
 
+   rc = ddca_set_max_tries(DDCA_WRITE_READ_TRIES, 15);
+   printf("(%s) ddca_set_max_tries(DDCA_WRITE_READ_TRIES,15) returned: %d (%s)\n",
+          __func__, rc, ddca_status_code_name(rc) );
+
    rc = ddca_set_max_tries(DDCA_WRITE_READ_TRIES, 16);
-   printf("(%s) ddct_set_max_tries(..,16) returned: %d\n", __func__, rc);
+   printf("(%s) ddca_set_max_tries(DDCA_WRITE_READ_TRIES,16) returned: %d (%s)\n",
+          __func__, rc, ddca_status_code_name(rc) );
+
    rc = ddca_set_max_tries(DDCA_WRITE_READ_TRIES, 15);
    if (rc != 0)
       FUNCTION_ERRMSG("DDCT_WRITE_READ_TRIES:ddct_set_max_tries", rc);
+
    rc = ddca_set_max_tries(DDCA_MULTI_PART_TRIES, 15);
    if (rc != 0)
       FUNCTION_ERRMSG("DDCT_MULTI_PART_TRIES:ddct_set_max_tries", rc);
@@ -231,6 +251,13 @@ int main(int argc, char** argv) {
    printf("(%s) max write only tries: %d\n", __func__, ddca_get_max_tries(DDCA_WRITE_ONLY_TRIES));
    printf("(%s) max write read tries: %d\n", __func__, ddca_get_max_tries(DDCA_WRITE_READ_TRIES));
    printf("(%s) max multi part tries: %d\n", __func__, ddca_get_max_tries(DDCA_MULTI_PART_TRIES));
+
+
+   DDCA_Display_Info_List * dlist = ddca_get_displays();
+   ddca_report_display_info_list(dlist, 0);
+
+
+   ddca_report_active_displays(0);
 
 
    rc = ddca_create_dispno_display_identifier(2, &did);

@@ -200,7 +200,7 @@ DDCS_Non_Table_Value_Response ddcs_get_nontable_vcp_value(
 
 void ddcs_set_nontable_vcp_value(
                DDCS_Display_Handle_p   dh,
-               DDCA_VCP_Feature_Code        feature_code,
+               VCP_Feature_Code        feature_code,
                int                     new_value);
 
 char * ddcs_get_profile_related_values(DDCS_Display_Handle_p dh);

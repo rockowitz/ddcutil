@@ -164,6 +164,26 @@ void ddca_init() {
 }
 
 
+
+static DDCA_Abort_Func  abort_func = NULL;
+static jmp_buf abort_buf;
+
+void ddca_register_abort_func(DDCA_Abort_Func func) {
+   abort_func = func;
+
+   int jmprc = setjmp(abort_buf);
+   if (jmprc) {
+      fprintf(stderr, "Aborting. Internal status code = %d\n", jmprc);
+      Public_Status_Code psc = global_to_public_status_code(jmprc);
+      abort_func(psc);
+      // exit(EXIT_FAILURE);
+   }
+   register_jmp_buf(&abort_buf);
+}
+
+
+
+
 //
 // Status Code Management
 //
@@ -278,7 +298,10 @@ bool ddca_is_report_ddc_errors_enabled() {
 // Global Settings
 //
 
-// typedef enum{DDCT_WRITE_ONLY_TRIES, DDCT_WRITE_READ_TRIES, DDCT_MULTIPART_TRIES} DDCT_Retry_Type;
+int
+ddca_get_max_max_tries() {
+   return MAX_MAX_TRIES;
+}
 
 int  ddca_get_max_tries(DDCA_Retry_Type retry_type) {
    int result = 0;
@@ -299,7 +322,7 @@ int  ddca_get_max_tries(DDCA_Retry_Type retry_type) {
 
 DDCA_Status ddca_set_max_tries(DDCA_Retry_Type retry_type, int max_tries) {
    DDCA_Status rc = 0;
-   if (max_tries > MAX_MAX_TRIES)
+   if (max_tries < 1 || max_tries > MAX_MAX_TRIES)
       rc = DDCL_ARG;
    else {
       switch(retry_type) {
@@ -648,8 +671,90 @@ DDCA_Status ddca_get_mccs_version_id(
 }
 
 
+DDCA_Display_Info_List *
+ddca_get_displays()
+{
+   Display_Info_List * info_list = ddc_get_valid_displays();
+   int true_ct = 0;
+   for (int ndx = 0; ndx < info_list->ct; ndx++) {
+      Display_Info drec = info_list->info_recs[ndx];
+      if (drec.dispno != -1)    // ignore invalid displays
+         true_ct++;
+   }
 
-DDCA_Status ddca_get_edid_by_display_ref(DDCA_Display_Ref ddca_dref, uint8_t** pbytes) {
+   int reqd_size =   offsetof(DDCA_Display_Info_List,info) + true_ct * sizeof(DDCA_Display_Info);
+   DDCA_Display_Info_List * result_list = calloc(1,reqd_size);
+   result_list->ct = true_ct;
+   // DBGMSG("sizeof(DDCA_Display_Info) = %d, sizeof(Display_Info_List) = %d, reqd_size=%d, true_ct=%d, offsetof(DDCA_Display_Info_List,info) = %d",
+   //       sizeof(DDCA_Display_Info), sizeof(DDCA_Display_Info_List), reqd_size, true_ct, offsetof(DDCA_Display_Info_List,info));
+
+   int true_ctr = 0;
+   for (int ndx = 0; ndx < info_list->ct; ndx++) {
+      Display_Info drec = info_list->info_recs[ndx];
+      if (drec.dispno != -1) {
+         DDCA_Display_Info * curinfo = &result_list->info[true_ctr++];
+         memcpy(curinfo->marker, DDCA_DISPLAY_INFO_MARKER, 4);
+         curinfo->dispno        = drec.dispno;
+         Display_Ref * dref     = drec.dref;
+         curinfo->io_mode       = dref->io_mode;
+         curinfo->i2c_busno     = dref->busno;
+         curinfo->iAdapterIndex = dref->iAdapterIndex;
+         curinfo->iDisplayIndex = dref->iDisplayIndex;
+         curinfo->usb_bus       = dref->usb_bus;
+         curinfo->usb_device    = dref->usb_device;
+         curinfo->edid_bytes    = drec.edid->bytes;
+         // or should these be memcpy'd instead of just pointers, can edid go away?
+         curinfo->mfg_id        = drec.edid->mfg_id;
+         curinfo->model_name    = drec.edid->model_name;
+         curinfo->sn            = drec.edid->serial_ascii;
+      }
+   }
+
+   return result_list;
+}
+
+void ddca_report_display_info(DDCA_Display_Info * dinfo, int depth) {
+   assert(dinfo);
+   assert(memcmp(dinfo->marker, DDCA_DISPLAY_INFO_MARKER, 4) == 0);
+   int d0 = depth;
+   int d1 = depth+1;
+   rpt_vstring(d0, "Display number:  %d", dinfo->dispno);
+   rpt_vstring(d1, "IO mode:         %s", mccs_io_mode_name(dinfo->io_mode));
+   switch(dinfo->io_mode) {
+   case (DDC_IO_DEVI2C):
+         rpt_vstring(d1, "I2C bus number:     %d", dinfo->i2c_busno);
+         break;
+   case (DDC_IO_ADL):
+         rpt_vstring(d1, "ADL adapter.display:  %d.%d", dinfo->iAdapterIndex, dinfo->iDisplayIndex);
+         break;
+   case (USB_IO):
+         rpt_vstring(d1, "USB bus.device:       %d.%d", dinfo->usb_bus, dinfo->usb_device);
+         break;
+   }
+   rpt_vstring(d1, "Mfg Id:         %s", dinfo->mfg_id);
+   rpt_vstring(d1, "Model:          %s", dinfo->model_name);
+   rpt_vstring(d1, "Serial number:  %s", dinfo->sn);
+   rpt_vstring(d1, "EDID:           %s", hexstring(dinfo->edid_bytes, 128));
+}
+
+
+void ddca_report_display_info_list(DDCA_Display_Info_List * dlist, int depth) {
+   int d1 = depth+1;
+   rpt_vstring(depth, "Found %d displays", dlist->ct);
+   for (int ndx=0; ndx<dlist->ct; ndx++) {
+      ddca_report_display_info(&dlist->info[ndx], d1);
+   }
+}
+
+
+
+
+
+DDCA_Status
+ddca_get_edid_by_display_ref(
+      DDCA_Display_Ref ddca_dref,
+      uint8_t** pbytes)
+{
    if (!library_initialized)
       return DDCL_UNINITIALIZED;
    DDCA_Status rc = 0;
@@ -669,7 +774,7 @@ DDCA_Status ddca_get_edid_by_display_ref(DDCA_Display_Ref ddca_dref, uint8_t** p
 #ifdef OLD
 // or return a struct?
 DDCA_Status ddca_get_feature_flags_by_vcp_version(
-      DDCA_VCP_Feature_Code         feature_code,
+      VCP_Feature_Code         feature_code,
       DDCA_MCCS_Version_Id          mccs_version_id,
       DDCA_Version_Feature_Flags *  flags)
 {
@@ -720,16 +825,16 @@ DDCA_Status ddca_get_feature_flags_by_vcp_version(
 
 
 DDCA_Status ddca_get_feature_info_by_vcp_version(
-      DDCA_VCP_Feature_Code      feature_code,
+      VCP_Feature_Code      feature_code,
       // DDCT_MCCS_Version_Spec  vspec,
       DDCA_MCCS_Version_Id       mccs_version_id,
-      Version_Specific_Feature_Info  ** p_info)
+      Version_Feature_Info  ** p_info)
 {
    DDCA_Status psc = 0;
    *p_info = NULL;
    // DDCA_MCCS_Version_Spec vspec = mccs_version_id_to_spec(mccs_version_id);
 
-   Version_Specific_Feature_Info * info =  get_version_specific_feature_info(
+   Version_Feature_Info * info =  get_version_specific_feature_info(
          feature_code,
          false,                        // with_default
          mccs_version_id);
@@ -744,8 +849,8 @@ DDCA_Status ddca_get_feature_info_by_vcp_version(
 // or return a struct?
 DDCA_Status ddca_get_feature_info_by_display(
       DDCA_Display_Handle     ddca_dh,    // needed because in rare cases feature info is MCCS version dependent
-      DDCA_VCP_Feature_Code   feature_code,
-      Version_Specific_Feature_Info **         p_info)
+      VCP_Feature_Code   feature_code,
+      Version_Feature_Info **         p_info)
 {
    WITH_DH(
       ddca_dh,
@@ -764,7 +869,7 @@ DDCA_Status ddca_get_feature_info_by_display(
 
 
 // static char  default_feature_name_buffer[40];
-char * ddca_get_feature_name(DDCA_VCP_Feature_Code feature_code) {
+char * ddca_get_feature_name(VCP_Feature_Code feature_code) {
    // do we want get_feature_name()'s handling of mfg specific and unrecognized codes?
    char * result = get_feature_name_by_id_only(feature_code);
    // snprintf(default_feature_name_buffer, sizeof(default_feature_name_buffer), "VCP Feature 0x%02x", feature_code);
@@ -779,7 +884,7 @@ char * ddca_get_feature_name(DDCA_VCP_Feature_Code feature_code) {
 
 
 DDCA_Status ddca_get_simple_sl_value_table(
-               DDCA_VCP_Feature_Code      feature_code,
+               VCP_Feature_Code      feature_code,
                DDCA_MCCS_Version_Id       mccs_version_id,
                DDCA_Feature_Value_Entry** pvalue_table)
 {
@@ -817,8 +922,8 @@ typedef void * Feature_Value_Table;   // temp
 
 // or:
 DDCA_Status ddct_get_nc_feature_value_name(
-               DDCA_Display_Handle     ddct_dh,    // needed because value lookup mccs version dependent
-               DDCA_VCP_Feature_Code   feature_code,
+               DDCA_Display_Handle    ddct_dh,    // needed because value lookup mccs version dependent
+               VCP_Feature_Code   feature_code,
                Byte                    feature_value,
                char**                  pfeature_name)
 {
@@ -844,7 +949,7 @@ DDCA_Status ddct_get_nc_feature_value_name(
 // n.b. fills in the response buffer provided by the caller, does not allocate
 DDCA_Status ddca_get_nontable_vcp_value(
                DDCA_Display_Handle             ddct_dh,
-               DDCA_VCP_Feature_Code                feature_code,
+               VCP_Feature_Code                feature_code,
                DDCA_Non_Table_Value_Response * response)
 {
    WITH_DH(ddct_dh,  {
@@ -890,7 +995,7 @@ DDCA_Status ddca_get_nontable_vcp_value(
 // untested
 DDCA_Status ddca_get_table_vcp_value(
                DDCA_Display_Handle ddca_dh,
-               DDCA_VCP_Feature_Code    feature_code,
+               VCP_Feature_Code    feature_code,
                int *               value_len,
                Byte**              value_bytes)
 {
@@ -916,10 +1021,10 @@ DDCA_Status ddca_get_table_vcp_value(
 // alt
 
 DDCA_Status ddca_get_vcp_value(
-       DDCA_Display_Handle *     ddca_dh,
-       DDCA_VCP_Feature_Code     feature_code,
-       Vcp_Value_Type            call_type,   // why is this needed?   look it up from dh and feature_code
-       Single_Vcp_Value **       pvalrec)
+       DDCA_Display_Handle  ddca_dh,
+       VCP_Feature_Code     feature_code,
+       Vcp_Value_Type       call_type,   // why is this needed?   look it up from dh and feature_code
+       Single_Vcp_Value **  pvalrec)
 {
    WITH_DH(ddca_dh,
          {
@@ -933,7 +1038,7 @@ DDCA_Status ddca_get_vcp_value(
 
 DDCA_Status ddca_get_formatted_vcp_value(
        DDCA_Display_Handle *     ddca_dh,
-       DDCA_VCP_Feature_Code     feature_code,
+       VCP_Feature_Code     feature_code,
        char**                    p_formatted_value)
 {
    WITH_DH(ddca_dh,
@@ -945,7 +1050,7 @@ DDCA_Status ddca_get_formatted_vcp_value(
                VCP_Feature_Table_Entry * pentry = vcp_find_feature_by_hexid(feature_code);
                if (!pentry) {
 #ifdef ALT
-               Version_Specific_Feature_Info * feature_info =
+               Version_Feature_Info * feature_info =
                get_version_specific_feature_info(
                      feature_code,
                      true,                    //    with_default
@@ -986,7 +1091,7 @@ DDCA_Status ddca_get_formatted_vcp_value(
 
 DDCA_Status ddca_set_continuous_vcp_value(
                DDCA_Display_Handle   ddca_dh,
-               DDCA_VCP_Feature_Code feature_code,
+               VCP_Feature_Code feature_code,
                int                   new_value)
 {
    WITH_DH(ddca_dh,  {
@@ -998,7 +1103,7 @@ DDCA_Status ddca_set_continuous_vcp_value(
 
 DDCA_Status ddca_set_simple_nc_vcp_value(
                DDCA_Display_Handle     ddca_dh,
-               DDCA_VCP_Feature_Code   feature_code,
+               VCP_Feature_Code   feature_code,
                Byte                    new_value)
 {
    return ddca_set_continuous_vcp_value(ddca_dh, feature_code, new_value);
@@ -1007,7 +1112,7 @@ DDCA_Status ddca_set_simple_nc_vcp_value(
 
 DDCA_Status ddca_set_raw_vcp_value(
                DDCA_Display_Handle    ddca_dh,
-               DDCA_VCP_Feature_Code  feature_code,
+               VCP_Feature_Code  feature_code,
                Byte                   hi_byte,
                Byte                   lo_byte)
 {

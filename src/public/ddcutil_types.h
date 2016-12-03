@@ -112,11 +112,49 @@ typedef void * DDCA_Display_Identifier;
  */
 typedef void * DDCA_Display_Ref;
 
+
 /** Opaque display handle
  *
  * A display handle represents an open display on which actions can be performed.
  */
 typedef void * DDCA_Display_Handle;
+
+
+//
+// Display Information
+//
+
+typedef enum {
+   DDC_IO_DEVI2C,
+   DDC_IO_ADL,
+   USB_IO
+} MCCS_IO_Mode;
+
+// Or make this DDCA_Display_Info  ??, with DDCA_Display_Ref as field?
+#define DDCA_DISPLAY_INFO_MARKER "DDIN"
+typedef struct {
+   char             marker[4];
+   int              dispno;
+   MCCS_IO_Mode     io_mode;
+   int              i2c_busno;
+   int              iAdapterIndex;
+   int              iDisplayIndex;
+   int              usb_bus;
+   int              usb_device;
+
+   // or should these be actual character/byte arrays instead of pointers?
+   const char *     mfg_id;
+   const char *     model_name;
+   const char *     sn;
+   const uint8_t *  edid_bytes;
+   DDCA_Display_Ref ddca_dref;
+} DDCA_Display_Info;
+
+
+typedef struct {
+   int                ct;
+   DDCA_Display_Info  info[];   // array whose size is determined by ct
+} DDCA_Display_Info_List;
 
 
 //
@@ -144,7 +182,7 @@ typedef enum {
 #define DDCA_VANY  DDCA_VNONE    /**< For use on responses, indicates version unknown   */
 
 /** MCCS VCP Feature Id */
-typedef uint8_t DDCA_VCP_Feature_Code;
+typedef uint8_t VCP_Feature_Code;
 
 /** Flags specifying VCP feature attributes, which can be VCP version dependent. */
 typedef uint16_t DDCA_Version_Feature_Flags;
@@ -204,7 +242,7 @@ typedef DDCA_Feature_Value_Entry * DDCA_Feature_Value_Table;
 typedef
 struct {
    char                                  marker[4];      /**< equals VCP_VERSION_SPECIFIC_FEATURE_INFO_MARKER */
-   DDCA_VCP_Feature_Code                 feature_code;   /**< VCP Feature code */
+   VCP_Feature_Code                 feature_code;   /**< VCP Feature code */
    DDCA_MCCS_Version_Spec                vspec;            // ???
    DDCA_MCCS_Version_Id                  version_id;       // which ?
    char *                                desc;
@@ -215,7 +253,7 @@ struct {
    // VCP_Feature_Subset                 vcp_subsets;   // Need it?
    char *                                feature_name;
    DDCA_Version_Feature_Flags            feature_flags;
-} Version_Specific_Feature_Info;
+} Version_Feature_Info;
 
 
 //
