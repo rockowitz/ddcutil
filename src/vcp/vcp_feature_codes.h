@@ -1,5 +1,8 @@
 /* vcp_feature_codes.h
  *
+ * Contains tables describing VCP feature codes, and functions to interpret
+ * those tables.
+ *
  * <copyright>
  * Copyright (C) 2014-2016 Sanford Rockowitz <rockowitz@minsoft.com>
  *
@@ -110,7 +113,6 @@ struct {
    char *                                desc;
    Format_Normal_Feature_Detail_Function nontable_formatter;
    Format_Table_Feature_Detail_Function  table_formatter;
-   DDCA_Feature_Value_Entry *            default_sl_values;
    Byte                                  vcp_global_flags;
    ushort                                vcp_spec_groups;
    VCP_Feature_Subset                    vcp_subsets;
@@ -118,108 +120,180 @@ struct {
    char *                                v21_name;
    char *                                v30_name;
    char *                                v22_name;
-   DDCA_Version_Feature_Flags                 v20_flags;
-   DDCA_Version_Feature_Flags                 v21_flags;
-   DDCA_Version_Feature_Flags                 v30_flags;
-   DDCA_Version_Feature_Flags                 v22_flags;
-   DDCA_Feature_Value_Entry *                 v21_sl_values;
-   DDCA_Feature_Value_Entry *                 v30_sl_values;
-   DDCA_Feature_Value_Entry *                 v22_sl_values;
+   DDCA_Version_Feature_Flags            v20_flags;
+   DDCA_Version_Feature_Flags            v21_flags;
+   DDCA_Version_Feature_Flags            v30_flags;
+   DDCA_Version_Feature_Flags            v22_flags;
+   DDCA_Feature_Value_Entry *            default_sl_values;
+   DDCA_Feature_Value_Entry *            v21_sl_values;
+   DDCA_Feature_Value_Entry *            v30_sl_values;
+   DDCA_Feature_Value_Entry *            v22_sl_values;
 } VCP_Feature_Table_Entry;
 
 
-
-
-int
-vcp_get_feature_code_count();
-
-void
-free_synthetic_vcp_entry(VCP_Feature_Table_Entry * pfte);
+//
+// Functions that return or destroy a VCP_Feature_Table_Entry
+//
 
 void
-report_vcp_feature_table_entry(VCP_Feature_Table_Entry * entry, int depth);
-
-void report_version_specific_feature_info(
-      Version_Specific_Feature_Info * info, int depth);
+free_synthetic_vcp_entry(
+      VCP_Feature_Table_Entry * vfte);
 
 VCP_Feature_Table_Entry *
 vcp_get_feature_table_entry(int ndx);
 
 VCP_Feature_Table_Entry *
-vcp_create_dummy_feature_for_hexid(Byte id);
+vcp_create_dummy_feature_for_hexid(
+      VCP_Feature_Code id);
 
 VCP_Feature_Table_Entry *
-vcp_create_table_dummy_feature_for_hexid(Byte id);
+vcp_create_table_dummy_feature_for_hexid(
+      VCP_Feature_Code id);
 
 VCP_Feature_Table_Entry *
-vcp_find_feature_by_hexid(Byte id);
+vcp_find_feature_by_hexid(
+      VCP_Feature_Code id);
 
 VCP_Feature_Table_Entry *
-vcp_find_feature_by_hexid_w_default(Byte id);
+vcp_find_feature_by_hexid_w_default(
+      VCP_Feature_Code id);
 
-DDCA_Feature_Value_Entry *
-find_feature_values(Byte feature_code, DDCA_MCCS_Version_Spec vcp_version);
-
-DDCA_Feature_Value_Entry *
-find_feature_values_for_capabilities(Byte feature_code, DDCA_MCCS_Version_Spec vcp_version);
-
-char *
-get_feature_value_name(DDCA_Feature_Value_Entry * value_entries, Byte value_id);
+//
+// Functions to extract information from a VCP_Feature_Table_Entry
+//
 
 bool
 has_version_specific_features(
-      VCP_Feature_Table_Entry * pvft_entry);
+       VCP_Feature_Table_Entry *  vfte);
 
 DDCA_MCCS_Version_Spec
 get_highest_non_deprecated_version(
-      VCP_Feature_Table_Entry * pvft_entry);
+      VCP_Feature_Table_Entry *  vfte);
 
-DDCA_Version_Feature_Flags
-get_version_specific_feature_flags(
-       VCP_Feature_Table_Entry * pvft_entry,
-       DDCA_MCCS_Version_Spec              vcp_version);
-
-DDCA_Version_Feature_Flags
-get_version_sensitive_feature_flags(
-       VCP_Feature_Table_Entry * pvft_entry,
-       DDCA_MCCS_Version_Spec              vcp_version);
+bool
+is_version_conditional_vcp_type(
+      VCP_Feature_Table_Entry * vfte);
 
 bool
 is_feature_supported_in_version(
-      VCP_Feature_Table_Entry * pvft_entry,
-      DDCA_MCCS_Version_Spec              vcp_version);
+      VCP_Feature_Table_Entry *  vfte,
+      DDCA_MCCS_Version_Spec     vcp_version);
 
 bool
 is_feature_readable_by_vcp_version(
-      VCP_Feature_Table_Entry * pvft_entry,
-      DDCA_MCCS_Version_Spec              vcp_version);
+      VCP_Feature_Table_Entry *  vfte,
+      DDCA_MCCS_Version_Spec     vcp_version);
 
 bool
 is_feature_writable_by_vcp_version(
-      VCP_Feature_Table_Entry * pvft_entry,
-      DDCA_MCCS_Version_Spec              vcp_version);
+      VCP_Feature_Table_Entry *  vfte,
+      DDCA_MCCS_Version_Spec     vcp_version);
 
 bool
 is_feature_table_by_vcp_version(
-       VCP_Feature_Table_Entry * pvft_entry,
-       DDCA_MCCS_Version_Spec vcp_version);
+      VCP_Feature_Table_Entry *  vfte,
+      DDCA_MCCS_Version_Spec     vcp_version);
 
-bool
-is_version_conditional_vcp_type(VCP_Feature_Table_Entry * pvft_entry);
+
+DDCA_Version_Feature_Flags
+get_version_specific_feature_flags(
+      VCP_Feature_Table_Entry *  vfte,
+      DDCA_MCCS_Version_Spec     vcp_version);
+
+DDCA_Version_Feature_Flags
+get_version_sensitive_feature_flags(
+      VCP_Feature_Table_Entry *  vfte,
+      DDCA_MCCS_Version_Spec     vcp_version);
+
 
 DDCA_Feature_Value_Entry *
 get_version_specific_sl_values(
-       VCP_Feature_Table_Entry * pvft_entry,
-       DDCA_MCCS_Version_Spec              vcp_version);
+      VCP_Feature_Table_Entry * vfte,
+      DDCA_MCCS_Version_Spec    vcp_version);
+
+DDCA_Feature_Value_Entry *
+get_version_sensitive_sl_values(
+      VCP_Feature_Table_Entry * vfte,
+      DDCA_MCCS_Version_Spec    vcp_version);
 
 char *
 get_version_sensitive_feature_name(
-       VCP_Feature_Table_Entry * pvft_entry,
-       DDCA_MCCS_Version_Spec              vcp_version);
+      VCP_Feature_Table_Entry * vfte,
+      DDCA_MCCS_Version_Spec    vcp_version);
+
+
+char *
+get_version_specific_feature_name(
+      VCP_Feature_Table_Entry * vfte,
+      DDCA_MCCS_Version_Spec    vcp_version);
 
 char *
 get_non_version_specific_feature_name(
        VCP_Feature_Table_Entry * pvft_entry);
+
+//
+// Functions that query the feature table by VCP feature code
+//
+
+char*
+get_feature_name_by_id_only(
+      VCP_Feature_Code           feature_code);
+
+char*
+get_feature_name_by_id_and_vcp_version(
+      VCP_Feature_Code           feature_code,
+      DDCA_MCCS_Version_Spec     vspec);
+
+Version_Feature_Info *
+get_version_specific_feature_info(
+      VCP_Feature_Code           feature_code,
+      bool                       with_default,
+      // DDCT_MCCS_Version_Spec  vspec,
+      DDCA_MCCS_Version_Id       mccs_version_id);
+
+Version_Feature_Info *
+get_version_sensitive_feature_info(
+      VCP_Feature_Code       feature_code,
+      bool                   with_default,
+   // DDCT_MCCS_Version_Spec vspec,
+      DDCA_MCCS_Version_Id   mccs_version_id);
+
+DDCA_Feature_Value_Entry *
+find_feature_values(
+      VCP_Feature_Code       feature_code,
+      DDCA_MCCS_Version_Spec vcp_version);
+
+DDCA_Feature_Value_Entry *
+find_feature_values_for_capabilities(
+      VCP_Feature_Code       feature_code,
+      DDCA_MCCS_Version_Spec vcp_version);
+
+//
+// Report Functions
+//
+
+void
+report_vcp_feature_table_entry(
+      VCP_Feature_Table_Entry * vfte,
+      int                       depth);
+
+void report_version_feature_info(
+      Version_Feature_Info * info, int depth);
+
+void
+vcp_list_feature_codes(FILE * fh);
+
+
+//
+// Miscellaneous Functions
+//
+
+
+char *
+get_feature_value_name(
+      DDCA_Feature_Value_Entry * value_entries,
+      Byte                       value_id);
+
 
 bool
 vcp_format_feature_detail(
@@ -229,21 +303,9 @@ vcp_format_feature_detail(
        char * *                  aformatted_data
      );
 
-char*
-get_feature_name_by_id_only(Byte feature_code);
+int
+vcp_get_feature_code_count();
 
-char*
-get_feature_name_by_id_and_vcp_version(Byte feature_code, DDCA_MCCS_Version_Spec vspec);
-
-Version_Specific_Feature_Info *
-get_version_specific_feature_info(
-      DDCA_VCP_Feature_Code      feature_code,
-      bool                       with_default,
-      // DDCT_MCCS_Version_Spec  vspec,
-      DDCA_MCCS_Version_Id       mccs_version_id);
-
-void
-vcp_list_feature_codes(FILE * fh);
 
 void
 init_vcp_feature_codes();
