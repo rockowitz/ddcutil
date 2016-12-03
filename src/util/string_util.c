@@ -657,18 +657,21 @@ void test_hhs_to_byte() {
  * Returns:
  *   pointer to hex string
  *
- * The value returned by this funtion has been malloc'd.   It is the
+ * The value returned by this function has been malloc'd.   It is the
  * responsibility of the caller to free the memory.
  */
-char * hexstring(unsigned char * bytes, int len) {
+char * hexstring(const unsigned char * bytes, int len) {
    int alloc_size = 3*len + 1;
    char* str_buf = malloc(alloc_size);
 
    int i;
    for (i = 0; i < len; i++) {
+      // printf("(%s) 3*i = %d, alloc_size-3*i = %d\n", __func__, 3*i, alloc_size-3*i);
       snprintf(str_buf+3*i, alloc_size-3*i, "%02x ", bytes[i]);
    }
+   // printf ("(%s) Final null offset: %d\n", __func__, 3*len-1);
    str_buf[3*len-1] = 0x00;
+   // printf("(%s) Returning: |%s|\n", __func__, str_buf);
    return str_buf;
 }
 

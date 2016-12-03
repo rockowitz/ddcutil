@@ -91,7 +91,7 @@ Byte hhc_to_byte(char * hh);                          // converts 2 characters a
 void test_hhs_to_byte() ;
 int  hhs_to_byte_array(char * hhs, Byte** pBa);
 
-char * hexstring(Byte * bytes, int size);  // buffer returned must be freed
+char * hexstring(const Byte * bytes, int size);  // buffer returned must be freed
 char * hexstring2(
           const unsigned char * bytes,      // bytes to convert
           int                   len,        // number of bytes
