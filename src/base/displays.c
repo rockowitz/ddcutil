@@ -175,7 +175,9 @@ static char * MCCS_IO_Mode_Names[] = {
 
 
 char * mccs_io_mode_name(MCCS_IO_Mode val) {
-   return MCCS_IO_Mode_Names[val];
+   return (val >= 0 && val < 3)            // protect against bad arg
+         ? MCCS_IO_Mode_Names[val]
+         : NULL;
 }
 
 
