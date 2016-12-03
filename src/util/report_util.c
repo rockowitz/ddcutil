@@ -159,7 +159,7 @@ void rpt_vstring(int depth, char * format, ...) {
       // printf("(%s) Allocating temp buffer, reqd_size=%d\n", __func__, reqd_size);
       buf = malloc(reqd_size+1);
       va_start(args, format);
-      vsnprintf(buf, reqd_size, format, args);
+      vsnprintf(buf, reqd_size+1, format, args);
    }
    va_end(args);
 
