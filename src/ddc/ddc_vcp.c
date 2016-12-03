@@ -198,8 +198,8 @@ set_vcp_value(
  *   status code
  */
 Global_Status_Code get_nontable_vcp_value(
-       Display_Handle *       dh,
-       Byte                   feature_code,
+       Display_Handle *               dh,
+       Byte                           feature_code,
        Parsed_Nontable_Vcp_Response** ppInterpretedCode)
 {
    bool debug = false;
