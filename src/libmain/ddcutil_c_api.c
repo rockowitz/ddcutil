@@ -52,7 +52,7 @@
 #include "ddc/ddc_vcp_version.h"
 #include "ddc/ddc_vcp.h"
 
-#include "libmain/ddcutil_c_api.h"
+#include "public/ddcutil_c_api.h"
 
 
 #define WITH_DR(ddca_dref, action) \

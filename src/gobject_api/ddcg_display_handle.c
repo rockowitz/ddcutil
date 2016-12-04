@@ -23,7 +23,7 @@
 
 #include <errno.h>
 
-#include "../libmain/ddcutil_c_api.h"
+#include "public/ddcutil_c_api.h"
 #include "base/core.h"
 
 #include "gobject_api/ddcg_gobjects.h"

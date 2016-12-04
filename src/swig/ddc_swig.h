@@ -27,30 +27,22 @@
 #include <Python.h>
 
 #include "public/ddcutil_types.h"
-#include "libmain/ddcutil_c_api.h"
+#include "public/ddcutil_c_api.h"
 
+// Initialization
 
 void ddcs_init(void);
 
 
-//
 // Convert ddcutil status codes to Python exceptions
-//
 
 void   clear_exception();
 char * check_exception();
 bool   check_exception2();
 
-
-
-
-
-
-
 //  Build Information
 
 const char * ddcs_ddcutil_version_string();
-
 
 typedef Byte FlagsByte;
 
@@ -67,12 +59,9 @@ typedef enum {DDCA_HAS_ADL      = DDCA_BUILT_WITH_ADL,
               DDCA_HAS_FAILSIM  = DDCA_BUILT_WITH_FAILSIM} DDCS_Build_Flags;
 FlagsByte ddcs_get_build_options(void);
 
-
 //
 // Global Settings
 //
-
-
 
 // void ddc_set_fout(PyFileObject *fpy);
 void ddcs_set_fout(FILE * fout);
@@ -81,9 +70,8 @@ void ddcs_set_fout(FILE * fout);
 void save_current_python_fout(PyFileObject * pfy);
 PyFileObject * get_current_python_fout();
 
-//
+
 // Reports
-//
 
 int ddcs_report_active_displays(int depth);
 

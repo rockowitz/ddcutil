@@ -31,7 +31,7 @@
 
 #include "vcp/vcp_feature_codes.h"
 
-#include "libmain/ddcutil_c_api.h"
+#include "public/ddcutil_c_api.h"
 
 
 #define FUNCTION_ERRMSG(function_name,status_code) \

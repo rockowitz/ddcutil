@@ -30,7 +30,7 @@
 // #include <gio/gio.h>
 
 
-#include "../libmain/ddcutil_c_api.h"   // for ddcg_display_identifier_get_ddct_object()
+#include "public/ddcutil_c_api.h"   // for ddcg_display_identifier_get_ddct_object()
 
 G_BEGIN_DECLS
 
