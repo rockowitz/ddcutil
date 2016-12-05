@@ -37,14 +37,14 @@
 
 #define PARSED_CAPABILITIES_MARKER "CAPA"
 typedef struct {
-   char              marker[4];       // always "CAPA"
-   char *            raw_value;
-   char *            mccs_ver;
-   bool              raw_cmds_segment_seen;
-   bool              raw_value_synthesized;
-   Byte_Value_Array  commands;        // each stored byte is command id
-   GPtrArray *       vcp_features;    // entries are VCP_Feature_Record*
-   DDCA_MCCS_Version_Spec      parsed_mccs_version;
+   char                    marker[4];       // always "CAPA"
+   char *                  raw_value;
+   char *                  mccs_version_string;
+   bool                    raw_cmds_segment_seen;
+   bool                    raw_value_synthesized;
+   Byte_Value_Array        commands;        // each stored byte is command id
+   GPtrArray *             vcp_features;    // entries are Capabilities_Feature_Record *
+   DDCA_MCCS_Version_Spec  parsed_mccs_version;
 } Parsed_Capabilities;
 
 

@@ -58,12 +58,14 @@ void report_commands(Byte_Value_Array cmd_ids) {
 
 
 void report_features(GPtrArray* features, DDCA_MCCS_Version_Spec vcp_version) {
+   bool debug = false;
    printf("VCP Features:\n");
    int ct = features->len;
    int ndx;
    for (ndx=0; ndx < ct; ndx++) {
       Capabilities_Feature_Record * vfr =
           g_ptr_array_index(features, ndx);
+      DBGMSF(debug, "vfr = %p", vfr);
       show_capabilities_feature(vfr, vcp_version);
    }
 }
@@ -84,7 +86,7 @@ void report_parsed_capabilities(
             pcaps->raw_value);
    }
    bool damaged = false;
-   printf("MCCS version: %s\n", (pcaps->mccs_ver) ? pcaps->mccs_ver : "not present");
+   printf("MCCS version: %s\n", (pcaps->mccs_version_string) ? pcaps->mccs_version_string : "not present");
 
    if (pcaps->commands)
       report_commands(pcaps->commands);
@@ -115,7 +117,11 @@ void report_parsed_capabilities(
  * the newly created Parsed_Capabilties record.
  *
  * Arguments:
- *     ...
+ *    raw_value
+ *    mccs_ver
+ *    raw_cmds_segment_seen
+ *    commands
+ *    vcp_features
  *
  * Returns:
  *    Parsed_Capaibilities record
@@ -132,11 +138,11 @@ Parsed_Capabilities * new_parsed_capabilities(
    DBGMSF(debug, "raw_cmds_segment_seen=%s, commands=%p", bool_repr(raw_cmds_segment_seen), commands);
    Parsed_Capabilities* pcaps = calloc(1, sizeof(Parsed_Capabilities));
    memcpy(pcaps->marker, PARSED_CAPABILITIES_MARKER, 4);
-   pcaps->raw_value    = raw_value;
-   pcaps->mccs_ver     = mccs_ver;
+   pcaps->raw_value             = raw_value;
+   pcaps->mccs_version_string   = mccs_ver;
    pcaps->raw_cmds_segment_seen = raw_cmds_segment_seen,
-   pcaps->commands     = commands;
-   pcaps->vcp_features = vcp_features;
+   pcaps->commands              = commands;
+   pcaps->vcp_features          = vcp_features;
 
    DDCA_MCCS_Version_Spec parsed_vcp_version = {0.0};
    if (mccs_ver) {
@@ -167,20 +173,20 @@ Parsed_Capabilities * new_parsed_capabilities(
  *   nothing
  */
 void free_parsed_capabilities(Parsed_Capabilities * pcaps) {
+   bool debug = false;
+   DBGMSF(debug, "Starting. pcaps=%p", pcaps);
+
    assert( pcaps );
    assert( memcmp(pcaps->marker, PARSED_CAPABILITIES_MARKER, 4) == 0);
 
-   if (pcaps->raw_value)
-      free(pcaps->raw_value);
-
-   if (pcaps->mccs_ver)
-      free(pcaps->mccs_ver);
+   free(pcaps->raw_value);
+   free(pcaps->mccs_version_string);
 
    if (pcaps->commands)
       bva_free(pcaps->commands);
 
    if (pcaps->vcp_features) {
-      // DBGMSG("vcp_features->len = %d", pcaps->vcp_features->len);
+      DBGMSF(debug, "vcp_features->len = %d", pcaps->vcp_features->len);
       int ndx;
       for (ndx=pcaps->vcp_features->len-1; ndx >=0; ndx--) {
          Capabilities_Feature_Record * vfr =
@@ -338,7 +344,7 @@ char * find_closing_paren(char * start, char * end) {
  *    len
  *
  * Returns:
- *    GPtrArray of VCP_Feature_Records
+ *    GPtrArray of Capabilities_Feature_Record *
  */
 GPtrArray * parse_vcp_segment(char * start, int len) {
    bool debug = false;
@@ -419,7 +425,7 @@ Parsed_Capabilities * parse_capabilities(char * buf_start, int buf_len) {
    // Make a copy of the unparsed value
    char * raw_value = chars_to_string(buf_start, buf_len);
 
-   char * mccs_ver  = NULL;
+   char * mccs_ver_string  = NULL;
    // Version_Spec parsed_vcp_version = {0.0};
    Byte_Value_Array commands = NULL;
    GPtrArray * vcp_features = NULL;
@@ -455,10 +461,10 @@ Parsed_Capabilities * parse_capabilities(char * buf_start, int buf_len) {
       {
          vcp_features = parse_vcp_segment(seg->value_start, seg->value_len);
       }
-      else if (memcmp(seg->name_start, "mccs_ver", seg->name_len) == 0) {
+      else if (memcmp(seg->name_start, "mccs_version_string", seg->name_len) == 0) {
          DBGMSF(debug, "MCCS version: %.*s", seg->value_len, seg->value_start);
          // n. pointer will be stored in pcaps
-         mccs_ver = chars_to_string(seg->value_start, seg->value_len);
+         mccs_ver_string = chars_to_string(seg->value_start, seg->value_len);
       }
       else {
          // additional segment names seen: asset_eep, mpu, mswhql
@@ -468,12 +474,12 @@ Parsed_Capabilities * parse_capabilities(char * buf_start, int buf_len) {
    }
 
    // n. may be damaged
-   Parsed_Capabilities * pcaps = NULL;
-   pcaps = new_parsed_capabilities(
+   Parsed_Capabilities * pcaps
+         = new_parsed_capabilities(
               raw_value,
-              mccs_ver,          // this pointer is saved in returned struct
+              mccs_ver_string,          // this pointer is saved in returned struct
               raw_cmds_segment_seen,
-              commands,         // each stored byte is command id
+              commands,                 // each stored byte is command id
               vcp_features);
 
    DBGMSF(debug, "Returning %p", pcaps);
@@ -523,10 +529,15 @@ Parsed_Capabilities* parse_capabilities_string(char * caps) {
  *
  * Arguments:
  *   pcaps
+ *   readable_only
  *
  * Returns:   Byte_Bit_Flags indicating features found
  */
-Byte_Bit_Flags parsed_capabilities_feature_ids(Parsed_Capabilities * pcaps, bool readable_only) {
+Byte_Bit_Flags
+parsed_capabilities_feature_ids(
+      Parsed_Capabilities * pcaps,
+      bool                  readable_only)
+{
    assert(pcaps);
    bool debug = false;
    DBGMSF(debug, "Starting. readable_only=%s, feature count=%d",

@@ -38,10 +38,11 @@
 // static TraceGroup TRACE_GROUP = TRC_DDC;   // currently unused, commented out to avoid warning
 
 
-Capabilities_Feature_Record * new_capabilities_feature(
-                                 Byte   feature_id,
-                                 char * value_string_start,
-                                 int    value_string_len)
+Capabilities_Feature_Record *
+new_capabilities_feature(
+      Byte   feature_id,
+      char * value_string_start,
+      int    value_string_len)
 {
    bool debug = false;
    if (debug) {
@@ -126,7 +127,10 @@ Capabilities_Feature_Record * new_capabilities_feature(
 }
 
 
-void free_capabilities_feature(Capabilities_Feature_Record * pfeat) {
+void
+free_capabilities_feature(
+      Capabilities_Feature_Record * pfeat)
+{
    // DBGMSG("Starting. pfeat=%p", pfeat);
    assert(pfeat);
    assert(memcmp(pfeat->marker, CAPABILITIES_FEATURE_MARKER, 4) == 0);
@@ -147,8 +151,15 @@ void free_capabilities_feature(Capabilities_Feature_Record * pfeat) {
 }
 
 
-void show_capabilities_feature(Capabilities_Feature_Record * vfr, DDCA_MCCS_Version_Spec vcp_version) {
-   // DBGMSG("Starting. vfr=%p", vfr);
+void
+show_capabilities_feature(
+      Capabilities_Feature_Record *  vfr,
+      DDCA_MCCS_Version_Spec         vcp_version)
+{
+   bool debug = false;
+   DBGMSF(debug, "Starting. vfr=%p, vcp_version=%d.%d", vfr, vcp_version.major, vcp_version.minor);
+   assert(vfr);
+   assert(memcmp(vfr->marker, CAPABILITIES_FEATURE_MARKER, 4) == 0);
    printf("  Feature: %02X (%s)\n", vfr->feature_id,
           get_feature_name_by_id_and_vcp_version(vfr->feature_id, vcp_version));
 
@@ -157,16 +168,20 @@ void show_capabilities_feature(Capabilities_Feature_Record * vfr, DDCA_MCCS_Vers
    //    report_id_array(vfr->values, "Feature values:");
    char * buf0 = NULL;
    DDCA_Output_Level ol = get_output_level();
+   DBGMSF(debug,  "vfr->value_string=%p", vfr->value_string);
    if (ol >= OL_VERBOSE && vfr->value_string) {
+
       printf("    Values (unparsed): %s\n", vfr->value_string);
    }
 
+   DBGMSF(debug, "vfr->values=%p", vfr->values);
    if (vfr->values) {
-      DDCA_Feature_Value_Entry * feature_values = find_feature_values_for_capabilities(vfr->feature_id, vcp_version);
-      // if (feature_values)
-      //    DBGMSG("Feature values found for feature 0x%02x", vfr->feature_id);
-      // else
-      //    DBGMSG("Feature values NOT found for feature 0x%02x", vfr->feature_id);
+      DDCA_Feature_Value_Entry * feature_values =
+            find_feature_values_for_capabilities(vfr->feature_id, vcp_version);
+
+      DBGMSF(debug, "Feature values %sfound for feature 0x%02x",
+                    (feature_values) ? "" : "NOT ",
+                    vfr->feature_id);
 
       int ct = bva_length(vfr->values);
       if (feature_values) {
@@ -206,4 +221,5 @@ void show_capabilities_feature(Capabilities_Feature_Record * vfr, DDCA_MCCS_Vers
    // assert( streq(buf0, vfr->value_string));
    if (buf0)
       free(buf0);
+   DBGMSF(debug, "Done.");
 }
