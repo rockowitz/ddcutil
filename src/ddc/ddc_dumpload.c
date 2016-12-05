@@ -385,11 +385,16 @@ bye:
  *
  * Arguments:
  *    ntsa    null terminated array of strings
+ *    dh      display handle
  *
  * Returns:
  *    0 if success, status code if not
  */
-Global_Status_Code loadvcp_by_ntsa(Null_Terminated_String_Array ntsa, Display_Handle * dh) {
+Global_Status_Code
+loadvcp_by_ntsa(
+      Null_Terminated_String_Array ntsa,
+      Display_Handle *             dh)
+{
    bool debug = false;
 
    DDCA_Output_Level output_level = get_output_level();
@@ -430,12 +435,17 @@ Global_Status_Code loadvcp_by_ntsa(Null_Terminated_String_Array ntsa, Display_Ha
  *
  * Arguments:
  *    catenated    data string
+ *    dh           display handle
  *
  * Returns:
  *    0 if success, status code if not
  */
 // n. called from ddct_public:
-Global_Status_Code loadvcp_by_string(char * catenated, Display_Handle * dh) {
+Global_Status_Code
+loadvcp_by_string(
+      char *           catenated,
+      Display_Handle * dh)
+{
    Null_Terminated_String_Array nta = strsplit(catenated, ";");
    Global_Status_Code gsc = loadvcp_by_ntsa(nta, dh);
    null_terminated_string_array_free(nta);
