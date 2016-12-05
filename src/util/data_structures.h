@@ -41,6 +41,7 @@ int  bva_length(Byte_Value_Array bva);
 void bva_append(Byte_Value_Array bva, Byte item);
 Byte bva_get(Byte_Value_Array bva, int ndx);
 bool bva_contains(Byte_Value_Array bva, Byte item);
+Byte * bva_bytes(Byte_Value_Array bva);
 void bva_free(Byte_Value_Array bva);
 void bva_report(Byte_Value_Array ids, char * title);
 bool bva_store_bytehex_list(Byte_Value_Array bva, char * start, int len);

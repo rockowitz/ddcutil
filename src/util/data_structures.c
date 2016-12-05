@@ -76,6 +76,13 @@ bool bva_contains(Byte_Value_Array bva, Byte item) {
    return result;
 }
 
+Byte * bva_bytes(Byte_Value_Array bva) {
+   GByteArray* ga = (GByteArray*) bva;
+   Byte * result = calloc(ga->len, sizeof(guint8));
+   memcpy(result, ga->data, ga->len);
+   return result;
+}
+
 void bva_free(Byte_Value_Array bva) {
    GByteArray* ga = (GByteArray*) bva;
    g_byte_array_free(ga,TRUE);
