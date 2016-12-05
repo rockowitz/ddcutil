@@ -242,18 +242,40 @@ typedef DDCA_Feature_Value_Entry * DDCA_Feature_Value_Table;
 typedef
 struct {
    char                                  marker[4];      /**< equals VCP_VERSION_SPECIFIC_FEATURE_INFO_MARKER */
-   VCP_Feature_Code                 feature_code;   /**< VCP Feature code */
+   VCP_Feature_Code                      feature_code;   /**< VCP feature code */
    DDCA_MCCS_Version_Spec                vspec;            // ???
    DDCA_MCCS_Version_Id                  version_id;       // which ?
-   char *                                desc;
+   char *                                desc;           /**< feature description */
    // Format_Normal_Feature_Detail_Function nontable_formatter;
    // Format_Table_Feature_Detail_Function  table_formatter;
     DDCA_Feature_Value_Table             sl_values;     /**< valid when DDCA_SIMPLE_NC set */
    uint8_t                               global_flags;
    // VCP_Feature_Subset                 vcp_subsets;   // Need it?
-   char *                                feature_name;
+   char *                                feature_name;  /**< feature name */
    DDCA_Version_Feature_Flags            feature_flags;
 } Version_Feature_Info;
+
+
+
+#define DDCA_CAP_VCP_MARKER  "DCVP"
+typedef
+struct {
+   char                                 marker[4];
+   VCP_Feature_Code                     feature_code;
+   int                                  value_ct;
+   uint8_t *                            values;
+} DDCA_Cap_Vcp;
+
+
+#define DDCA_CAPABILITIES_MARKER   "DCAP"
+typedef
+struct {
+   char                                 marker[4];
+   char *                               unparsed_string;
+   DDCA_MCCS_Version_Spec               version_spec;
+   int                                  vcp_code_ct;
+   DDCA_Cap_Vcp *                       vcp_codes;
+} DDCA_Capabilities;
 
 
 //

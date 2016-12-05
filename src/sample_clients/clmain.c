@@ -109,8 +109,11 @@ void test_get_feature_info(DDCA_Display_Handle dh) {
 }
 
 
-bool test_cont_value(DDCA_Display_Handle dh, Byte feature_code) {
-
+bool
+test_cont_value(
+      DDCA_Display_Handle  dh,
+      Byte                 feature_code)
+{
    DDCA_Status rc;
    bool ok = true;
    char * feature_name = ddca_get_feature_name(feature_code);
@@ -192,7 +195,7 @@ bool test_get_capabilities_string(DDCA_Display_Handle dh) {
    char * capabilities = NULL;
    DDCA_Status rc =  ddca_get_capabilities_string(dh, &capabilities);
    if (rc != 0)
-      FUNCTION_ERRMSG("ddct_get_capabilities_string", rc);
+      FUNCTION_ERRMSG("ddca_get_capabilities_string", rc);
    else
       printf("(%s) Capabilities: %s\n", __func__, capabilities);
    printf("(%s) Second call should be fast\n", __func__);
@@ -201,6 +204,20 @@ bool test_get_capabilities_string(DDCA_Display_Handle dh) {
       FUNCTION_ERRMSG("ddct_get_capabilities_string", rc);
    else
       printf("(%s) Capabilities: %s\n", __func__, capabilities);
+
+   if (capabilities) {
+      // ddca_set_output_level(OL_VERBOSE);
+      DDCA_Capabilities * pcaps = NULL;
+      rc = ddca_parse_capabilities_string(
+             capabilities,
+             &pcaps);
+      if (rc != 0)
+         FUNCTION_ERRMSG("ddca_parse_capabilities_string", rc);
+      else {
+         ddca_report_parsed_capabilities(pcaps, 1);
+         ddca_free_parsed_capabilities(pcaps);
+      }
+   }
    return false;
 }
 
@@ -291,7 +308,7 @@ int main(int argc, char** argv) {
          DDCA_MCCS_Version_Spec vspec;
          rc = ddca_get_mccs_version(dh, &vspec);
          if (rc != 0) {
-            FUNCTION_ERRMSG("ddct_get_mccs_version_spec", rc);
+            FUNCTION_ERRMSG("ddca_get_mccs_version_spec", rc);
          }
          else {
             printf("(%s) VCP version: %d.%d\n", __func__, vspec.major, vspec.minor);
@@ -315,10 +332,10 @@ int main(int argc, char** argv) {
          printf("(%s) profile values string = %s\n", __func__, profile_values_string);
       }
 
-      printf("(%s) Calling ddct_set_profile_related_values()\n", __func__);
+      printf("(%s) Calling ddca_set_profile_related_values()\n", __func__);
       rc = ddca_set_profile_related_values( profile_values_string);
       if (rc != 0) {
-         FUNCTION_ERRMSG("ddct_set_profile_related_values", rc);
+         FUNCTION_ERRMSG("ddca_set_profile_related_values", rc);
       }
 
 
@@ -328,15 +345,15 @@ int main(int argc, char** argv) {
    if (dh) {
       rc = ddca_close_display(dh);
       if (rc != 0)
-         FUNCTION_ERRMSG("ddct_close_display", rc);
+         FUNCTION_ERRMSG("ddca_close_display", rc);
    }
    if (dref) {
       rc = ddca_free_display_ref(dref);
-      printf("(%s) ddct_free_display_ref() returned %d\n", __func__, rc);
+      printf("(%s) ddca_free_display_ref() returned %d\n", __func__, rc);
    }
    if (did) {
       rc = ddca_free_display_identifier(did);
-      printf("(%s) ddct_free_display_identifier() returned %d\n", __func__, rc);
+      printf("(%s) ddca_free_display_identifier() returned %d\n", __func__, rc);
    }
    return 0;
 }

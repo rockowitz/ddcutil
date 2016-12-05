@@ -26,6 +26,7 @@
 #include <assert.h>
 #include <string.h>
 
+#include "util/data_structures.h"
 #include "util/report_util.h"
 #include "util/string_util.h"
 
@@ -38,6 +39,8 @@
 #include "base/base_services.h"
 
 #include "vcp/vcp_feature_codes.h"
+#include "vcp/parse_capabilities.h"
+#include "vcp/parsed_capabilities_feature.h"
 
 #include "adl/adl_shim.h"
 
@@ -1120,31 +1123,127 @@ DDCA_Status ddca_set_raw_vcp_value(
 }
 
 
-/* Retrieves the capabilities string for the monitor.
- *
- * Arguments:
- *   ddct_dh     display handle
- *   pcaps       address at which to return pointer to capabilities string.
- *               This string is in an internal DDC data structure and should
- *               not be freed by the caller.
- *
- * Returns:
- *   status code
- */
-DDCA_Status ddca_get_capabilities_string(DDCA_Display_Handle ddct_dh, char** pcaps)
+//
+// Monitor Capabilities
+//
+
+DDCA_Status
+ddca_get_capabilities_string(
+      DDCA_Display_Handle  ddca_dh,
+      char**               pcaps)
 {
-   WITH_DH(ddct_dh,
+   WITH_DH(ddca_dh,
       {
-         Global_Status_Code gsc = get_capabilities_string(dh, pcaps);
+         char * p_cap_string = NULL;
+         Global_Status_Code gsc = get_capabilities_string(dh, &p_cap_string);
+         if (gsc == 0) {
+            // make copy to ensure caller does not muck around in ddcutil's
+            // internal data structures
+            *pcaps = strdup(p_cap_string);
+         }
          psc = public_to_global_status_code(gsc);
       }
    );
 }
 
 
-DDCA_Status ddca_get_profile_related_values(
-               DDCA_Display_Handle ddca_dh,
-               char**              pprofile_values_string)
+DDCA_Status
+ddca_parse_capabilities_string(
+      char *                   capabilities_string,
+      DDCA_Capabilities **     p_parsed_capabilities)
+{
+   bool debug = true;
+   DBGMSF(debug, "Starting. capabilities_string: |%s|", capabilities_string);
+   DDCA_Status psc = DDCL_OTHER;       // DDCL_BAD_DATA?
+   DDCA_Capabilities * result = NULL;
+
+   // need to control messages?
+   Parsed_Capabilities * pcaps = parse_capabilities_string(capabilities_string);
+   if (pcaps) {
+      report_parsed_capabilities(pcaps);
+      result = calloc(1, sizeof(DDCA_Capabilities));
+      memcpy(result->marker, DDCA_CAPABILITIES_MARKER, 4);
+      result->unparsed_string= strdup(capabilities_string);     // needed?
+      result->version_spec = pcaps->parsed_mccs_version;
+      // n. needen't set vcp_code_ct if !pcaps, calloc() has done it
+      if (pcaps->vcp_features) {
+         result->vcp_code_ct = pcaps->vcp_features->len;
+         result->vcp_codes = calloc(result->vcp_code_ct, sizeof(DDCA_Cap_Vcp));
+         // DBGMSF(debug, "allocate %d bytes at %p", result->vcp_code_ct * sizeof(DDCA_Cap_Vcp), result->vcp_codes);
+         for (int ndx = 0; ndx < result->vcp_code_ct; ndx++) {
+            DDCA_Cap_Vcp * cur_cap_vcp = &result->vcp_codes[ndx];
+            // DBGMSF(debug, "cur_cap_vcp = %p", &result->vcp_codes[ndx]);
+            memcpy(cur_cap_vcp->marker, DDCA_CAP_VCP_MARKER, 4);
+            Capabilities_Feature_Record * cur_cfr = g_ptr_array_index(pcaps->vcp_features, ndx);
+            // DBGMSF(debug, "Capabilities_Feature_Record * cur_cfr = %p", cur_cfr);
+            assert(memcmp(cur_cfr->marker, CAPABILITIES_FEATURE_MARKER, 4) == 0);
+            // if (debug)
+            //    show_capabilities_feature(cur_cfr, result->version_spec);
+            cur_cap_vcp->feature_code = cur_cfr->feature_id;
+            // DBGMSF(debug, "cur_cfr = %p, feature_code - 0x%02x", cur_cfr, cur_cfr->feature_id);
+
+            // cur_cap_vcp->raw_values = strdup(cur_cfr->value_string);
+            Byte_Value_Array bva = cur_cfr->values;
+            if (bva) {
+               cur_cap_vcp->value_ct = bva_length(bva);
+               cur_cap_vcp->values = bva_bytes(bva);     // makes copy of bytes
+            }
+         }
+      }
+   }
+
+   *p_parsed_capabilities = result;
+   DBGMSF(debug, "Done. Returning: %d", psc);
+   return psc;
+}
+
+
+void
+ddca_free_parsed_capabilities(DDCA_Capabilities * pcaps) {
+   if (pcaps) {
+      assert(memcmp(pcaps->marker, DDCA_CAPABILITIES_MARKER, 4) == 0);
+      free(pcaps->unparsed_string);
+
+      for (int ndx = 0; ndx < pcaps->vcp_code_ct; ndx++) {
+         assert(memcmp(pcaps->marker, DDCA_CAP_VCP_MARKER, 4) == 0);
+         DDCA_Cap_Vcp * cur_vcp = &pcaps->vcp_codes[ndx];
+         free(cur_vcp->values);
+         cur_vcp->marker[3] = 'x';
+      }
+
+      pcaps->marker[3] = 'x';
+      free(pcaps);
+   }
+}
+
+
+void ddca_report_parsed_capabilities(DDCA_Capabilities * pcaps, int depth) {
+   bool debug = true;
+   DBGMSF(debug, "Starting");
+   assert(pcaps && memcmp(pcaps->marker, DDCA_CAPABILITIES_MARKER, 4) == 0);
+   int d1 = depth+1;
+   int d2 = depth+2;
+
+   rpt_structure_loc("DDCA_Capabilities", pcaps, depth);
+   rpt_vstring(d1, "unparsed string: %s", pcaps->unparsed_string);
+   rpt_vstring(d1, "VCP version:     %d.%d", pcaps->version_spec.major, pcaps->version_spec.minor);
+   rpt_vstring(d1, "VCP codes:");
+   for (int code_ndx = 0; code_ndx < pcaps->vcp_code_ct; code_ndx++) {
+      DDCA_Cap_Vcp * cur_vcp = &pcaps->vcp_codes[code_ndx];
+      assert( memcmp(cur_vcp->marker, DDCA_CAP_VCP_MARKER, 4) == 0);
+      rpt_vstring(d2, "Feature code:  0x%02x", cur_vcp->feature_code);
+      if (cur_vcp->value_ct > 0) {
+         rpt_vstring(d2, "Values:     %s", hexstring(cur_vcp->values, cur_vcp->value_ct));
+      }
+   }
+
+}
+
+
+DDCA_Status
+ddca_get_profile_related_values(
+      DDCA_Display_Handle ddca_dh,
+      char**              pprofile_values_string)
 {
    WITH_DH(ddca_dh,
       {
@@ -1163,7 +1262,10 @@ DDCA_Status ddca_get_profile_related_values(
 
 
 // TODO: handle display as optional argument
-DDCA_Status ddca_set_profile_related_values(char * profile_values_string) {
+DDCA_Status
+ddca_set_profile_related_values(
+      char * profile_values_string)
+{
    Global_Status_Code gsc = loadvcp_by_string(profile_values_string, NULL);
    return gsc;
 }

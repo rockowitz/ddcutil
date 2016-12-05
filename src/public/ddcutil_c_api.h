@@ -391,17 +391,109 @@ ddca_repr_display_handle(
 
 
 //
-// Display Inventory
+// Display Descriptions
 //
 
+/** Gets a list of the detected displays.
+ *
+ *  Displays that do not support DDC are not included.
+ *
+ *  @return list of display summaries
+ */
 DDCA_Display_Info_List *
 ddca_get_displays();
 
-void ddca_report_display_info(DDCA_Display_Info * dinfo, int depth);
+/** Presents a report on a single display.
+ *  The report is written to the current FOUT device.
+ *
+ *  @param[in]  dinfo  pointer to a DDCA_Display_Info struct
+ *  @param[in]  depth  logical indentation depth
+ */
+void
+ddca_report_display_info(
+      DDCA_Display_Info * dinfo,
+      int                 depth);
+
+/** Reports on all displays in a list of displays.
+ *  The report is written to the current FOUT device
+ *
+ *  @param[in]  dlist  pointer to a DDCA_Display_Info_List
+ *  @param[in]  depth  logical indentation depth
+ */
+void
+ddca_report_display_info_list(
+      DDCA_Display_Info_List * dlist,
+      int                      depth);
 
 
-void ddca_report_display_info_list(DDCA_Display_Info_List * dlist, int depth);
+/** Reports on all active displays.
+ *  This function hooks into the code used by command "ddcutil detect"
+ *
+ *  @param[in] depth  logical indentation depth
+ *  @return    number of MCCS capable displays
+ */
+int
+ddca_report_active_displays(
+      int depth);
 
+
+//
+// Monitor Capabilities
+//
+
+/** Retrieves the capabilities string for a monitor.
+ *
+ *  @param[in]  ddca_dh     display handle
+ *  @param[out] pcaps       address at which to return pointer to capabilities string.
+ *  @return     status code
+ *
+ *  It is the responsibility of the caller to free the returned string.
+ */
+DDCA_Status
+ddca_get_capabilities_string(
+      DDCA_Display_Handle     ddca_dh,
+      char**                  buffer);
+
+/** Parse the capabilities string.
+ *
+ *  @param[in] capabilities_string
+ *  @param[out] address at which to return pointer to newly allocated
+ *              DDCA_Capabilities struct
+ *  @return     status code
+ *
+ *  It is the responsibility of the caller to free the returned struct
+ *  using ddca_free_parsed_capabilities().
+ *
+ *  This function currently parses the VCP feature codes and MCCS version.
+ *  It could be extended to parse additional information such as cmds if necessary.
+ */
+DDCA_Status
+ddca_parse_capabilities_string(
+      char *                   capabilities_string,
+      DDCA_Capabilities **     p_parsed_capabilities);
+
+/** Frees a DDCA_Capabilities struct
+ *
+ *  @param[in]  pcaps  pointer to struct to free.
+ *                     Does nothing if NULL.
+ */
+void
+ddca_free_parsed_capabilities(
+      DDCA_Capabilities *      pcaps);
+
+/** Reports the contents of a DDCA_Capabilities struct.
+ *
+ *  The report is written to the current FOUT location.
+ *
+ *  This function is intended for debugging use.
+ *
+ *  @param[in]  pcaps  pointer to DDCA_Capabilities struct
+ *  @param[in]  depth  logical indentation depth
+ */
+void
+ddca_report_parsed_capabilities(
+      DDCA_Capabilities *      pcaps,
+      int                      depth);
 
 
 //
@@ -423,6 +515,7 @@ ddca_get_feature_info_by_vcp_version(
    // DDCT_MCCS_Version_Spec    vspec,
       DDCA_MCCS_Version_Id      mccs_version_id,
       Version_Feature_Info**    p_info);
+
 
 /** Gets the VCP feature name.  If different MCCS versions use different names
  * for the feature, this function makes a best guess.
@@ -451,7 +544,6 @@ ddca_get_simple_sl_value_table(
 // VCP Feature Information, Monitor Dependent
 //
 
-
 // TODO: keep only 1 of the 2 get_mccs_version() variants
 
 DDCA_Status
@@ -463,24 +555,6 @@ DDCA_Status
 ddca_get_mccs_version_id(
       DDCA_Display_Handle     ddca_dh,
       DDCA_MCCS_Version_Id*   p_id);
-
-DDCA_Status
-ddca_get_capabilities_string(
-      DDCA_Display_Handle     ddca_dh,
-      char**                  buffer);
-
-#ifdef UNIMPLEMENTED
-// Unimplemented.  Parsed capabilities has a complex data structure.  How to make visible?
-typedef void DDCT_Parsed_Capabilities;    // TEMP
-DDCA_Status ddct_parse_capabilities_string(char * capabilities_string, DDCT_Parsed_Capabilities ** parsed_capabilities);
-#endif
-
-DDCA_Status
-ddca_get_feature_info_by_display(
-      DDCA_Display_Handle      ddca_dh,
-      VCP_Feature_Code         feature_code,
-      Version_Feature_Info **  p_info);
-
 
 #ifdef UNIMPLEMENTED
 
@@ -494,6 +568,15 @@ DDCA_Status ddct_is_feature_supported(
 #endif
 
 
+// This is a convenience function. Keep?
+DDCA_Status
+ddca_get_feature_info_by_display(
+      DDCA_Display_Handle      ddca_dh,
+      VCP_Feature_Code         feature_code,
+      Version_Feature_Info **  p_info);
+
+
+
 
 //
 //  Miscellaneous Monitor Specific Functions
@@ -501,25 +584,13 @@ DDCA_Status ddct_is_feature_supported(
 
 
 // DDCT_Status ddct_get_edid(DDCA_Display_Handle * dh, Byte * edid_buffer);    // edid_buffer must be >= 128 bytes
+// Keep?   Can get from
 DDCA_Status
 ddca_get_edid_by_display_ref(
       DDCA_Display_Ref ddca_dref,
       uint8_t **       pbytes);   // pointer into ddcutil data structures, do not free
 
 
-
-
-
-
-
-// Display_Info_List ddct_get_displays();
-
-
-
-
-//
-// Monitor Capabilities
-//
 
 
 //
@@ -601,14 +672,6 @@ ddca_get_profile_related_values(
 DDCA_Status
 ddca_set_profile_related_values(char *
       profile_values_string);
-
-
-//
-// Reports
-//
-
-int ddca_report_active_displays(int depth);
-
 
 
 
