@@ -665,7 +665,7 @@ DDCA_Status ddca_get_mccs_version_id(
 }
 
 
-char * ddca_repr_mcca_version_id(DDCA_MCCS_Version_Id version_id) {
+char * ddca_repr_mccs_version_id(DDCA_MCCS_Version_Id version_id) {
    return vcp_version_id_name(version_id);
 }
 

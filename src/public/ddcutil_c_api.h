@@ -571,7 +571,7 @@ ddca_get_mccs_version_id(
       DDCA_Display_Handle     ddca_dh,
       DDCA_MCCS_Version_Id*   p_id);
 
-char * ddca_repr_mcca_version_id(DDCA_MCCS_Version_Id version_id);
+char * ddca_repr_mccs_version_id(DDCA_MCCS_Version_Id version_id);
 char * ddca_mccs_version_id_string(DDCA_MCCS_Version_Id version_id);
 
 #ifdef UNIMPLEMENTED

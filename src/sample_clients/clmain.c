@@ -59,7 +59,7 @@ void test_get_single_feature_info(DDCA_MCCS_Version_Id version_id, Byte feature_
 }
 
 void test_get_feature_info(DDCA_MCCS_Version_Id version_id) {
-   printf("\n(%s) Starting.  version_id = %s\n", __func__, ddca_repr_mcca_version_id(version_id));
+   printf("\n(%s) Starting.  version_id = %s\n", __func__, ddca_repr_mccs_version_id(version_id));
    Byte feature_codes[] = {0x02, 0x03, 0x10, 0x43, 0x60};
    int feature_code_ct = sizeof(feature_codes)/sizeof(Byte);
    int ndx = 0;
