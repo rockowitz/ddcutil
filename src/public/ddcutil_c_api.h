@@ -150,6 +150,19 @@ ddca_set_timeout_millis(
       int               millisec);
 
 
+// I2C is an inherently unreliable protocol.  The application is responsible for
+// retry management.
+// The maximum number of retries can be tuned.
+// There are 3 retry contexts:
+// - An i2C write followed by a read.  Most DDC operations are of this form.
+// - An I2C write without a subsequent read.  DDC operations to set a VCP feature value
+//   are in this category.
+// - Some DDC operations, such as reading the capabilities string, require multiple
+//   write/read exchanges.  These multi -part exchanges have a separate retry count
+//   for the entire operation.
+
+
+
 /** Gets the upper limit on a max tries value that can be set.
  *
  * @return maximum max tries value allowed on set_max_tries()
@@ -309,11 +322,13 @@ DDCA_Status
 ddca_free_display_identifier(
       DDCA_Display_Identifier did);
 
-/** Returns a string representation of a display identifier */
-DDCA_Status
+/** Returns a string representation of a display identifier
+ *  @param[in]  did    display indentifier
+ *  @return     string representation of display identifier, NULL if invalid
+ */
+char *
 ddca_repr_display_identifier(
-      DDCA_Display_Identifier did,
-      char**                  prepr);
+      DDCA_Display_Identifier did);
 
 
 //
@@ -340,13 +355,11 @@ ddca_free_display_ref(
 
 /** Returns a string representation of a display reference
  * @param[in]   dref display reference
- * @@param[out] prepr where to return pointer to string representation of the display reference
- * @return      status code
+ * @return      string representation of display reference, NULL if invalid
  * */
-DDCA_Status
+char *
 ddca_repr_display_ref(
-      DDCA_Display_Ref dref,
-      char**           prepr);
+      DDCA_Display_Ref dref);
 
 /** Writes a report on the specified display reference to the current FOUT device
  * @param dref   display reference
@@ -380,14 +393,16 @@ DDCA_Status
 ddca_close_display(
       DDCA_Display_Handle   ddca_dh);
 
-/** Writes a report on the specified display handle to the current FOUT device
- * @param dh     display handle
- * @param depth  logical indentation depth
+/** Returns a string representation of a display handle.
+ *  The string is valid until the next call to this function.
+ *
+ * @param ddca_dh  display handle
+ * @return string  representation of display handle, NULL if
+ *                 argument is NULL or not a display handle
  */
-DDCA_Status
+char *
 ddca_repr_display_handle(
-      DDCA_Display_Handle   ddca_dh,
-      char**                prepr);
+      DDCA_Display_Handle   ddca_dh);
 
 
 //
@@ -555,6 +570,9 @@ DDCA_Status
 ddca_get_mccs_version_id(
       DDCA_Display_Handle     ddca_dh,
       DDCA_MCCS_Version_Id*   p_id);
+
+char * ddca_repr_mcca_version_id(DDCA_MCCS_Version_Id version_id);
+char * ddca_mccs_version_id_string(DDCA_MCCS_Version_Id version_id);
 
 #ifdef UNIMPLEMENTED
 

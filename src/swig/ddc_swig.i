@@ -75,9 +75,13 @@ ddcs_init();
 %apply(char * STRING, int LENGTH) { (char * byte_buffer, int bytect) };
 
 
+//
 // Library Build Information
+//
 
 const char * ddcs_ddcutil_version_string(void);
+
+// which variant to keep?
 
 bool ddcs_built_with_adl(void);
 bool ddcs_built_with_usb(void);
@@ -105,6 +109,7 @@ typedef int DDCA_Status;    // for now
 // need to handle illegal status_code 
 char * ddca_status_code_name(DDCA_Status status_code);
 char * ddca_status_code_desc(DDCA_Status status_code);
+
 
  //
  // Global Settings

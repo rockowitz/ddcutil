@@ -25,6 +25,7 @@
 
 #include "public/ddcutil_c_api.h"
 #include "base/core.h"
+#include "base/ddc_errno.h"
 
 #include "gobject_api/ddcg_gobjects.h"
 
@@ -219,16 +220,14 @@ ddcg_display_handle_repr(
 {
    g_return_val_if_fail( DDCG_IS_DISPLAY_HANDLE(ddcg_dh), NULL);
 
-   gchar * repr = NULL;
-   DDCA_Status ddct_status = ddca_repr_display_handle(
-              ddcg_dh->priv->ddct_dh, &repr);
+   gchar * repr = ddca_repr_display_handle(ddcg_dh->priv->ddct_dh);
    // DBGMSG("repr=%p", repr);
    // DBGMSG("repr = %s", repr);
-   if (ddct_status == 0) {
+   if ( !repr) {
    }
    else {
       GQuark domain = g_quark_from_string("DDCTOOL_DDCG");
-      g_set_error(error,  domain, ddct_status, "ddct_repr_display_handle() returned ddct_status=%d", ddct_status);
+      g_set_error(error,  domain, DDCL_ARG, "ddct_repr_display_handle() returned ddct_status=%d", DDCL_ARG);
    }
 
    return g_strdup(repr);

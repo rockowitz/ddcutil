@@ -28,6 +28,7 @@
 #include <string.h>
 
 #include "base/core.h"
+#include "base/ddc_errno.h"
 
 #include "swig/ddc_swig.h"
 
@@ -89,12 +90,9 @@ bool check_exception2() {
 }
 
 
-
 //
 // General
 //
-
-
 
 
 void ddcs_init(void) {
@@ -150,7 +148,6 @@ void save_current_python_fout(PyFileObject * pfy) {
 PyFileObject * get_current_python_fout() {
    return current_python_fout;
 }
-
 
 
 //
@@ -248,10 +245,9 @@ void ddcs_free_display_identifier(DDCS_Display_Identifier_p ddcs_did){
 
 char * ddcs_repr_display_identifier(DDCS_Display_Identifier_p ddcs_did){
    clear_exception();
-   char * result = NULL;
-   DDCA_Status  rc = ddca_repr_display_identifier(ddcs_did, &result);
-   if (rc != 0)
-      throw_exception_from_status_code(rc);
+   char * result = ddca_repr_display_identifier(ddcs_did);
+   if (!result)
+      throw_exception_from_status_code(DDCL_ARG);   // TODO: Python ValueError
    return result;
 }
 
@@ -278,10 +274,9 @@ void ddcs_free_display_ref(DDCS_Display_Ref_p dref) {
 
 char *  ddcs_repr_display_ref(DDCS_Display_Ref_p dref) {
    clear_exception();
-   char * result = NULL;
-   DDCA_Status  rc = ddca_repr_display_ref(dref, &result);
-   if (rc != 0)
-      throw_exception_from_status_code(rc);
+   char * result =  ddca_repr_display_ref(dref);
+   if (!result)
+      throw_exception_from_status_code(DDCL_ARG);     // TODO: Python ValueError
    return result;
 }
 
@@ -313,10 +308,9 @@ void ddcs_close_display(DDCS_Display_Handle_p dh) {
 
 char * ddcs_repr_display_handle(DDCS_Display_Handle_p dh) {
    clear_exception();
-   char * result = NULL;
-   DDCA_Status  rc = ddca_repr_display_handle(dh, &result);
-   if (rc != 0)
-      throw_exception_from_status_code(rc);
+   char * result = ddca_repr_display_handle(dh);
+   if (!result)
+      throw_exception_from_status_code(DDCL_OTHER);   // should just be Python ValueError
    return result;
 }
 

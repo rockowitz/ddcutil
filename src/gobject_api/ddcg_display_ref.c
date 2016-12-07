@@ -26,8 +26,12 @@
 #include <string.h>
 
 #include "public/ddcutil_c_api.h"
+
 #include "util/report_util.h"
+
 #include "base/core.h"
+#include "base/ddc_errno.h"
+
 #include "gobject_api/ddcg_gobjects.h"
 
 
@@ -146,12 +150,11 @@ ddcg_display_ref_repr(
    g_return_val_if_fail (error == NULL || *error == NULL, NULL);
    g_return_val_if_fail( DDCG_IS_DISPLAY_REF(ddcg_dref), NULL);
 
-   gchar * repr = NULL;
-   DDCA_Status ddcg_status = ddca_repr_display_ref(
-                                ddcg_dref->priv->ddct_dref, &repr);
-   if (ddcg_status != 0) {
+   gchar * repr =
+      ddca_repr_display_ref( ddcg_dref->priv->ddct_dref);
+   if (!repr) {
       GQuark domain = g_quark_from_string("DDCTOOL_DDCG");
-      g_set_error(error,  domain, ddcg_status, "ddcg_display_ref_repr() returned %d=ddcg_status", ddcg_status);
+      g_set_error(error,  domain, DDCL_ARG, "ddcg_display_ref_repr() returned %d=ddcg_status",DDCL_ARG);
    }
    return g_strdup(repr);  // w/o g_strdup get free(): invalid pointer in Python
 }

@@ -91,7 +91,7 @@
 
 
 //
-// Build information
+// Library Build Information
 //
 
 /*  Returns the ddcutil version as a string in the form "major.minor.micro".
@@ -185,8 +185,6 @@ void ddca_register_abort_func(DDCA_Abort_Func func) {
 }
 
 
-
-
 //
 // Status Code Management
 //
@@ -239,13 +237,12 @@ void ddca_set_fout(
    set_fout(fout);
 }
 
+
 void ddca_set_fout_to_default() {
    if (!library_initialized)
       ddca_init();
    set_fout_to_default();
 }
-
-
 
 
 /* Redirects output that normally would go to STDERR
@@ -259,6 +256,7 @@ void ddca_set_ferr(
 
    set_ferr(ferr);
 }
+
 
 void ddca_set_ferr_to_default() {
    if (!library_initialized)
@@ -286,6 +284,7 @@ char * ddca_output_level_name(
 {
    return output_level_name(val);
 }
+
 
 void ddca_enable_report_ddc_errors(bool onoff) {
    // global variable in core.c:
@@ -439,14 +438,10 @@ DDCA_Status ddca_free_display_identifier(DDCA_Display_Identifier did) {
 
 static char did_work_buf[100];
 
-DDCA_Status ddca_repr_display_identifier(DDCA_Display_Identifier ddct_did, char **repr) {
-   DDCA_Status rc = 0;
+char * ddca_repr_display_identifier(DDCA_Display_Identifier ddct_did) {
+   char * result = NULL;
    Display_Identifier * pdid = (Display_Identifier *) ddct_did;
-   if (pdid == NULL || memcmp(pdid->marker, DISPLAY_IDENTIFIER_MARKER, 4) != 0 )  {
-     rc = DDCL_ARG;
-     *repr = "invalid display identifier";
-   }
-   else {
+   if (pdid != NULL && memcmp(pdid->marker, DISPLAY_IDENTIFIER_MARKER, 4) == 0 )  {
       char * did_type_name = display_id_type_name(pdid->id_type);
       switch (pdid->id_type) {
       case(DISP_ID_BUSNO):
@@ -479,9 +474,9 @@ DDCA_Status ddca_repr_display_identifier(DDCA_Display_Identifier ddct_did, char 
             break;
 
       } // switch
-      *repr = did_work_buf;
+      result = did_work_buf;
    }
-   return rc;
+   return result;
 }
 
 
@@ -522,14 +517,11 @@ DDCA_Status ddca_free_display_ref(DDCA_Display_Ref ddct_dref) {
 
 // static char dref_work_buf[100];
 
-DDCA_Status ddca_repr_display_ref(DDCA_Display_Ref ddct_dref, char** repr){
-   DDCA_Status rc = 0;
-   Display_Ref * dref = (Display_Ref *) ddct_dref;
-   if (dref == NULL || memcmp(dref->marker, DISPLAY_REF_MARKER, 4) != 0 )  {
-      rc = DDCL_ARG;
-      *repr = "invalid display reference";
-   }
-   else {
+char *
+ddca_repr_display_ref(DDCA_Display_Ref ddca_dref){
+   char * result = NULL;
+   Display_Ref * dref = (Display_Ref *) ddca_dref;
+   if (dref != NULL && memcmp(dref->marker, DISPLAY_REF_MARKER, 4) == 0 )  {
 #ifdef TOO_MUCH_WORK
       char * dref_type_name = mccs_io_mode_name(dref->ddc_io_mode);
       switch (dref->ddc_io_mode) {
@@ -544,9 +536,9 @@ DDCA_Status ddca_repr_display_ref(DDCA_Display_Ref ddct_dref, char** repr){
       }
       *repr = did_work_buf;
 #endif
-      *repr = dref_short_name(dref);
+      result = dref_short_name(dref);
    }
-   return rc;
+   return result;
 }
 
 void        ddca_report_display_ref(DDCA_Display_Ref ddct_dref, int depth) {
@@ -597,12 +589,11 @@ DDCA_Status ddca_close_display(DDCA_Display_Handle ddct_dh) {
 
 static char dh_work_buf[100];
 
-DDCA_Status ddca_repr_display_handle(DDCA_Display_Handle ddct_dh, char ** repr) {
-   DDCA_Status rc = 0;
-   Display_Handle * dh = (Display_Handle *) ddct_dh;
+char * ddca_repr_display_handle(DDCA_Display_Handle ddca_dh) {
+   char * repr = NULL;
+   Display_Handle * dh = (Display_Handle *) ddca_dh;
    if (dh == NULL || memcmp(dh->marker, DISPLAY_HANDLE_MARKER, 4) != 0 )  {
-      rc = DDCL_ARG;
-      *repr = "invalid display handle";
+      repr = NULL;
    }
    else {
       char * dh_type_name = mccs_io_mode_name(dh->io_mode);
@@ -623,12 +614,12 @@ DDCA_Status ddca_repr_display_handle(DDCA_Display_Handle ddct_dh, char ** repr) 
                   dh_type_name, dh->usb_bus, dh->usb_device);
          break;
       }
-      *repr = dh_work_buf;
+      repr = dh_work_buf;
    }
    // DBGMSG("repr=%p, *repr=%p, dh_work_buf=%p", repr, *repr, dh_work_buf);
    // DBGMSG("dh_work_buf=|%s|", dh_work_buf);
    // DBGMSG("Returning rc=%d, *repr=%s", rc, *repr);
-   return rc;
+   return repr;
 }
 
 
@@ -672,6 +663,16 @@ DDCA_Status ddca_get_mccs_version_id(
    }
    return rc;
 }
+
+
+char * ddca_repr_mcca_version_id(DDCA_MCCS_Version_Id version_id) {
+   return vcp_version_id_name(version_id);
+}
+
+char * ddca_mccs_version_id_string(DDCA_MCCS_Version_Id version_id) {
+   return format_vcp_version_id(version_id);
+}
+
 
 
 DDCA_Display_Info_List *
@@ -1155,12 +1156,17 @@ ddca_parse_capabilities_string(
    bool debug = true;
    DBGMSF(debug, "Starting. capabilities_string: |%s|", capabilities_string);
    DDCA_Status psc = DDCL_OTHER;       // DDCL_BAD_DATA?
+   DBGMSF(debug, "psc initialized to %d", psc);
    DDCA_Capabilities * result = NULL;
 
    // need to control messages?
    Parsed_Capabilities * pcaps = parse_capabilities_string(capabilities_string);
    if (pcaps) {
-      report_parsed_capabilities(pcaps);
+      if (debug) {
+         DBGMSG("Parsing succeeded. ");
+         report_parsed_capabilities(pcaps);
+         DBGMSG("Convert to DDCA_Capabilities...");
+      }
       result = calloc(1, sizeof(DDCA_Capabilities));
       memcpy(result->marker, DDCA_CAPABILITIES_MARKER, 4);
       result->unparsed_string= strdup(capabilities_string);     // needed?
@@ -1190,6 +1196,7 @@ ddca_parse_capabilities_string(
             }
          }
       }
+      psc = 0;
    }
 
    *p_parsed_capabilities = result;
@@ -1200,13 +1207,15 @@ ddca_parse_capabilities_string(
 
 void
 ddca_free_parsed_capabilities(DDCA_Capabilities * pcaps) {
+   bool debug = false;
    if (pcaps) {
       assert(memcmp(pcaps->marker, DDCA_CAPABILITIES_MARKER, 4) == 0);
       free(pcaps->unparsed_string);
 
+      DBGMSF(debug, "vcp_code_ct = %d", pcaps->vcp_code_ct);
       for (int ndx = 0; ndx < pcaps->vcp_code_ct; ndx++) {
-         assert(memcmp(pcaps->marker, DDCA_CAP_VCP_MARKER, 4) == 0);
          DDCA_Cap_Vcp * cur_vcp = &pcaps->vcp_codes[ndx];
+         assert(memcmp(cur_vcp->marker, DDCA_CAP_VCP_MARKER, 4) == 0);
          free(cur_vcp->values);
          cur_vcp->marker[3] = 'x';
       }
