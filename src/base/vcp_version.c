@@ -145,6 +145,33 @@ char * format_vspec(DDCA_MCCS_Version_Spec vspec) {
 }
 
 
+char * format_vcp_version_id(DDCA_MCCS_Version_Id version_id) {
+   char * result = NULL;
+   switch (version_id) {
+   case DDCA_V10:    result = "1.0";     break;
+   case DDCA_V20:    result = "2.0";     break;
+   case DDCA_V21:    result = "2.1";     break;
+   case DDCA_V30:    result = "3.0";     break;
+   case DDCA_V22:    result = "2.2";     break;
+   case DDCA_VNONE:  result = "unknown"; break;
+   }
+   return result;
+}
+
+char * vcp_version_id_name(DDCA_MCCS_Version_Id version_id) {
+   char * result = NULL;
+   switch (version_id) {
+   case DDCA_V10:    result = "DDCA_V10";     break;
+   case DDCA_V20:    result = "DDCA_V20";     break;
+   case DDCA_V21:    result = "DDCA_V21";     break;
+   case DDCA_V30:    result = "DDCA_V30";     break;
+   case DDCA_V22:    result = "DDCA_V22";     break;
+   case DDCA_VNONE:  result = "DDCA_VNONE";   break;
+   }
+   return result;
+}
+
+
 DDCA_MCCS_Version_Spec parse_vspec(char * s) {
    DDCA_MCCS_Version_Spec vspec;
    int ct = sscanf(s, "%hhd . %hhd", &vspec.major, &vspec.minor);
