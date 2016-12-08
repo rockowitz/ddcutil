@@ -24,6 +24,7 @@
 #ifndef BASE_CORE_H_
 #define BASE_CORE_H_
 
+#include <linux/limits.h>
 #include <setjmp.h>
 #include <stdarg.h>
 #include <stdbool.h>
@@ -45,7 +46,22 @@ extern bool dbgtrc_show_time;  // include elapsed time in debug/trace timestamps
 // For aborting out of shared library
 //
 void register_jmp_buf(jmp_buf* jb);
-void ddc_abort(int status);
+
+void ddc_abort(
+      const char * funcname,
+      const int    lineno,
+      const char * fn,
+      int          status);
+
+#define DDC_ABORT(status) \
+   ddc_abort(__func__, __LINE__, __FILE__, status)
+
+
+extern DDCA_Global_Failure_Information global_failure_information;
+
+
+
+
 
 //
 // Generic data structure and function for creating string representation of named bits

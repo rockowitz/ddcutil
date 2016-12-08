@@ -126,17 +126,37 @@ FILE * cur_fout() {
 // Global error return
 //
 
-static jmp_buf* global_abort_loc = NULL;
+static jmp_buf* global_abort_jmp_buf_ptr = NULL;
+
+// It's an error handler.  Do not dynamically allocate
+DDCA_Global_Failure_Information global_failure_information = {0};
 
 
 void register_jmp_buf(jmp_buf* jb) {
-   global_abort_loc = jb;
+   DBGMSG("setting global_abort_jmp_buf_ptr = %p", jb);
+   global_abort_jmp_buf_ptr = jb;
 }
 
-void ddc_abort(int status) {
-   if (global_abort_loc)
-      longjmp(*global_abort_loc, status);
+void ddc_abort(
+      const char * funcname,
+      const int    lineno,
+      const char * fn,
+      int          status)
+{
+   DBGMSG("global_abort_jmp_buf_ptr = %p", global_abort_jmp_buf_ptr);
+   if (global_abort_jmp_buf_ptr) {
+
+      // save failure information in case it's of use at longjmp() return
+      global_failure_information.info_set_fg = true;
+      global_failure_information.status = status;
+      SAFE_STRNCPY(global_failure_information.funcname, funcname, sizeof(global_failure_information.funcname));
+      global_failure_information.lineno = lineno;
+      SAFE_STRNCPY(global_failure_information.fn, fn, sizeof(global_failure_information.fn));
+
+      longjmp(*global_abort_jmp_buf_ptr, status);
+   }
    else {
+      // no point setting global_failure_information, we're outta here
       f0puts("Terminating execution.\n", FERR);
       exit(EXIT_FAILURE);     // or return status?
    }
@@ -650,7 +670,7 @@ void report_ioctl_error(
    // not worth the linkage issues:
    // fprintf(stderr, "  %s\n", explain_errno_ioctl(errnum, filedes, request, data));
    if (fatal) {
-      ddc_abort(DDCL_INTERNAL_ERROR);
+      ddc_abort(funcname, lineno, filename, DDCL_INTERNAL_ERROR);
       // exit(EXIT_FAILURE);
    }
    errno = errsv;
@@ -724,7 +744,7 @@ void program_logic_error(
   f0puts("\n",   FERR);
 
   // fputs("Terminating execution.\n", stderr);
-  ddc_abort(DDCL_INTERNAL_ERROR);
+  ddc_abort(funcname, lineno, fn, DDCL_INTERNAL_ERROR);
   // exit(EXIT_FAILURE);
 }
 
@@ -753,6 +773,6 @@ void terminate_execution_on_error(
 
    f0puts(finalBuffer, FERR);
 
-   ddc_abort(DDCL_INTERNAL_ERROR);
+   ddc_abort(funcname, lineno, fn, DDCL_INTERNAL_ERROR);
 }
 

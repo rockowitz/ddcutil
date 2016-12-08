@@ -26,6 +26,7 @@
 #ifndef DDCUTIL_C_API_H_
 #define DDCUTIL_C_API_H_
 
+#include <setjmp.h>
 #include <stdbool.h>
 #include <stdio.h>
 
@@ -80,7 +81,7 @@ bool ddca_built_with_usb(void);
  *
  * @return  flags
  */
-unsigned long ddca_get_build_options(void);
+uint8_t ddca_get_build_options(void);
 
 // TODO: Bit ids for ddca_get_build_options() - how to make connection in doxygen?
 /** @brief ddcutil was built with support for AMD Display Library connected monitors */
@@ -88,6 +89,10 @@ unsigned long ddca_get_build_options(void);
 /** ddcutil was built with support for USB connected monitors */
 #define DDCA_BUILT_WITH_USB     0x02
 #define DDCA_BUILT_WITH_FAILSIM 0x04  /**< @brief ddcutil was built with support for failure simulation */
+
+
+
+
 
 
 //
@@ -125,12 +130,24 @@ char * ddca_status_code_desc(DDCA_Status status_code);
 /** Template for callback function registered with ddca_register_abort_func() */
 typedef void (*DDCA_Abort_Func)(DDCA_Status psc);
 
+#ifdef WRONG
 /** Register a function to be called when an internal abort occurs in libddcutil.
  *
  *  @param[in]   func callback function
  */
 void
 ddca_register_abort_func(DDCA_Abort_Func func);
+#endif
+
+/** To capture certain rare fatal errors in library.
+ *  If not set, library aborts
+ */
+void ddca_register_jmp_buf(jmp_buf* jb);
+
+
+
+DDCA_Global_Failure_Information * ddca_get_global_failure_information();
+
 
 /** Gets the I2C timeout in milliseconds for the specified timeout class.
  * @param timeout_type timeout type

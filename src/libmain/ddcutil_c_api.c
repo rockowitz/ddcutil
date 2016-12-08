@@ -124,8 +124,8 @@ bool ddca_built_with_usb() {
 /** Queries ddcutil library build options.
  *
  */
-unsigned long ddca_get_build_options() {
-   Byte result = 0x00;
+uint8_t ddca_get_build_options() {
+   uint8_t result = 0x00;
 #ifdef HAVE_ADL
    result |= DDCA_BUILT_WITH_ADL;
 #endif
@@ -137,6 +137,8 @@ unsigned long ddca_get_build_options() {
 #endif
    return result;
 }
+
+
 
 
 //
@@ -168,21 +170,49 @@ void ddca_init() {
 
 
 
-static DDCA_Abort_Func  abort_func = NULL;
+#ifdef WRONG
+
 static jmp_buf abort_buf;
 
+static DDCA_Abort_Func  abort_func = NULL;
+
+// PROBLEM: If abort_func() returns, some function gets 0 as it's return value,
+// which causes unpredictable behavior
+
+
 void ddca_register_abort_func(DDCA_Abort_Func func) {
+   DBGMSG("func=%p", func);
    abort_func = func;
 
    int jmprc = setjmp(abort_buf);
    if (jmprc) {
-      fprintf(stderr, "Aborting. Internal status code = %d\n", jmprc);
+
       Public_Status_Code psc = global_to_public_status_code(jmprc);
-      abort_func(psc);
-      // exit(EXIT_FAILURE);
+      if (abort_func)
+         abort_func(psc);
+      fprintf(stderr, "Aborting. Internal status code = %d\n", jmprc);
+      exit(EXIT_FAILURE);
    }
+   DBGMSG("Calling register_jmp_buf()...");
    register_jmp_buf(&abort_buf);
 }
+#endif
+
+
+void ddca_register_jmp_buf(jmp_buf* jb) {
+   register_jmp_buf(jb);
+}
+
+
+DDCA_Global_Failure_Information * ddca_get_global_failure_information() {
+   // return NULL if !global_failure_information.info_set_fg, or always return pointer
+   // i.e. is it better if caller checks for NULL or checks info_set_fg?
+   // return &global_failure_information;
+   return (global_failure_information.info_set_fg)
+                  ? &global_failure_information
+                  : NULL;
+}
+
 
 
 //
@@ -674,10 +704,11 @@ char * ddca_mccs_version_id_string(DDCA_MCCS_Version_Id version_id) {
 }
 
 
-
+// or should this return status code?
 DDCA_Display_Info_List *
 ddca_get_displays()
 {
+   // PROGRAM_LOGIC_ERROR("---> pseudo failure");
    Display_Info_List * info_list = ddc_get_valid_displays();
    int true_ct = 0;
    for (int ndx = 0; ndx < info_list->ct; ndx++) {
@@ -714,6 +745,7 @@ ddca_get_displays()
       }
    }
 
+   // DBGMSG("Returning %p", result_list);
    return result_list;
 }
 

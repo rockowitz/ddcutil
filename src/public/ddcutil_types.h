@@ -26,6 +26,8 @@
 #ifndef DDCUTIL_TYPES_H_
 #define DDCUTIL_TYPES_H_
 
+#include <linux/limits.h>
+#include <stdbool.h>
 #include <stdint.h>
 
 /** @file ddcutil_types.h
@@ -43,6 +45,17 @@ typedef struct {
    uint8_t    minor;
    uint8_t    build;
 } DDCA_Ddcutil_Version_Spec;
+
+
+// Other
+
+typedef struct {
+   bool       info_set_fg;
+   char       funcname[64];
+   int        lineno;
+   char       fn[PATH_MAX];
+   int        status;
+} DDCA_Global_Failure_Information;
 
 
 //

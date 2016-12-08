@@ -105,7 +105,7 @@ int usb_open_hiddev_device(char * hiddev_devname, Byte calloptions) {
          REPORT_IOCTL_ERROR("HIDIOCGREPORT", rc);
          close(file);
          if (calloptions & CALLOPT_ERR_ABORT)
-            ddc_abort(errsv);
+            DDC_ABORT(errsv);
          file = rc;
       }
    }
@@ -174,7 +174,7 @@ int hid_get_device_info(int fd, struct hiddev_devinfo * dev_info, Byte calloptio
          REPORT_IOCTL_ERROR("HIDIOCGDEVINFO", rc);
 
       if (calloptions & CALLOPT_ERR_ABORT)
-         ddc_abort(errsv);
+         DDC_ABORT(errsv);
   }
 
   return rc;
@@ -191,7 +191,7 @@ int hid_get_report_info(int fd, struct hiddev_report_info * rinfo, Byte callopti
          REPORT_IOCTL_ERROR("HIDIOCGREPORTINFO", rc);
 
       if (calloptions & CALLOPT_ERR_ABORT)
-         ddc_abort(errsv);
+         DDC_ABORT(errsv);
   }
 
   return rc;
@@ -207,7 +207,7 @@ int hid_get_field_info(int fd, struct hiddev_field_info * finfo, Byte calloption
          REPORT_IOCTL_ERROR("HIDIOCGFIELDINFO", rc);
 
       if (calloptions & CALLOPT_ERR_ABORT)
-         ddc_abort(errsv);
+         DDC_ABORT(errsv);
    }
    assert(rc == 0);
    if (finfo->field_index != saved_field_index && (calloptions & CALLOPT_WARN_FINDEX)) {
@@ -229,7 +229,7 @@ int hid_get_usage_code(int fd, struct hiddev_usage_ref * uref, Byte calloptions)
          REPORT_IOCTL_ERROR("HIDIOCGUCODE", rc);
 
       if (calloptions & CALLOPT_ERR_ABORT)
-         ddc_abort(errsv);
+         DDC_ABORT(errsv);
    }
 
    return rc;
@@ -244,7 +244,7 @@ int hid_get_usage_value(int fd, struct hiddev_usage_ref * uref, Byte calloptions
          REPORT_IOCTL_ERROR("HIDIOCGUSAGE", rc);
 
       if (calloptions & CALLOPT_ERR_ABORT)
-         ddc_abort(errsv);
+         DDC_ABORT(errsv);
    }
 
    return rc;
@@ -259,7 +259,7 @@ int hid_get_report(int fd, struct hiddev_report_info * rinfo, Byte calloptions) 
          REPORT_IOCTL_ERROR("HIDIOCGREPORT", rc);
 
       if (calloptions & CALLOPT_ERR_ABORT)
-         ddc_abort(errsv);
+         DDC_ABORT(errsv);
    }
 
    return rc;

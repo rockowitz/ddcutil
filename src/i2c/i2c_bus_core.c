@@ -36,6 +36,7 @@
 #include "util/report_util.h"
 #include "util/string_util.h"
 
+#include "base/core.h"
 #include "base/ddc_errno.h"
 #include "base/linux_errno.h"
 #include "base/parms.h"
@@ -189,7 +190,7 @@ int i2c_set_addr(int file, int addr, Byte callopts) {
          report_ioctl_error(errsv, __func__, __LINE__-9, __FILE__,
                             /*fatal=*/ callopts&CALLOPT_ERR_ABORT);
       else if (callopts & CALLOPT_ERR_ABORT)
-         ddc_abort(DDCL_INTERNAL_ERROR);
+         DDC_ABORT(DDCL_INTERNAL_ERROR);
       errsv = -errsv;
    }
 

@@ -207,11 +207,13 @@ DDCA_Status test_get_set_profile_related_values(DDCA_Display_Handle dh) {
 
 
 
-
+#ifdef WRONG
 void my_abort_func(Public_Status_Code psc) {
    fprintf(stderr, "(%s) Aborting. Internal status code = %d\n", __func__, psc);
-   exit(EXIT_FAILURE);
+   printf("(%s)!!! returning instead\n", __func__);
+   // exit(EXIT_FAILURE);
 }
+#endif
 
 
 int main(int argc, char** argv) {
@@ -225,11 +227,27 @@ int main(int argc, char** argv) {
    // Initialize libddcutil.   Must be called first
    ddca_init();
 
+#ifdef WRONG
    // Register an abort function.
    // If libddcutil encounters an unexpected, unrecoverable error, it will
    // normally exit, causing the calling program to fail.  If the caller registers an
    // abort function, that function will be called instead.
    ddca_register_abort_func(my_abort_func);
+#endif
+
+   // For aborting out of shared library
+   jmp_buf abort_buf;
+   int jmprc = setjmp(abort_buf);
+   if (jmprc) {
+      DDCA_Global_Failure_Information * finfo = ddca_get_global_failure_information();
+      if (finfo)
+         fprintf(stderr, "(%s) Error %d (%s) in function %s at line %d in file %s\n",
+                         __func__, finfo->status, gsc_name(finfo->status), finfo->funcname, finfo->lineno, finfo->fn);
+      fprintf(stderr, "(%s) Aborting. Internal status code = %d\n", __func__, jmprc);
+      exit(EXIT_FAILURE);
+   }
+   ddca_register_jmp_buf(&abort_buf);
+
 
    printf("Probe static build information...\n");
    // Get the ddcutil version as a string in the form "major.minor.micro".
@@ -285,6 +303,7 @@ int main(int argc, char** argv) {
    printf("\nCheck for monitors using ddca_get_displays()...\n");
    // Inquire about detected monitors.
    DDCA_Display_Info_List * dlist = ddca_get_displays();
+   printf("ddca_get_displays() returned %p\n", dlist);
 
    // A convenience function to report the result of ddca_get_displays()
    printf("Report the result using ddca_report_display_info_list()...\n");
@@ -292,7 +311,8 @@ int main(int argc, char** argv) {
 
    // A similar function that hooks directly into the "ddcutil detect" command.
    printf("\nCalling ddca_report_active_displays()...\n");
-   ddca_report_active_displays(0);
+   int displayct = ddca_report_active_displays(0);
+   printf("ddca_report_active_displays() found %d displays\n", displayct);
 
 
    printf("\nCreate a Display Identifier for display 2...\n");
