@@ -49,24 +49,24 @@ static DDCA_Feature_Value_Entry x14_color_preset_absolute_values[];
 static DDCA_Feature_Value_Entry x8d_tv_audio_mute_source_values[];
 static DDCA_Feature_Value_Entry x8d_sh_blank_screen_values[];
 bool default_table_feature_detail_function(
-        Buffer *              data,
-        DDCA_MCCS_Version_Spec          vcp_version,
-        char**                presult);
+        Buffer *                data,
+        DDCA_MCCS_Version_Spec  vcp_version,
+        char**                  presult);
 bool format_feature_detail_debug_continuous(
-        Nontable_Vcp_Value *  code_info,
-        DDCA_MCCS_Version_Spec          vcp_version,
-        char *                buffer,
-        int                   bufsz);
+        Nontable_Vcp_Value *    code_info,
+        DDCA_MCCS_Version_Spec  vcp_version,
+        char *                  buffer,
+        int                     bufsz);
 bool format_feature_detail_standard_continuous(
-        Nontable_Vcp_Value *  code_info,
-        DDCA_MCCS_Version_Spec          vcp_version,
-        char *                buffer,
-        int                   bufsz);
+        Nontable_Vcp_Value *    code_info,
+        DDCA_MCCS_Version_Spec  vcp_version,
+        char *                  buffer,
+        int                     bufsz);
 bool format_feature_detail_sl_lookup(
-        Nontable_Vcp_Value *  code_info,
-        DDCA_MCCS_Version_Spec          vcp_version,
-        char *                buffer,
-        int                   bufsz);
+        Nontable_Vcp_Value *    code_info,
+        DDCA_MCCS_Version_Spec  vcp_version,
+        char *                  buffer,
+        int                     bufsz);
 
 
 //
