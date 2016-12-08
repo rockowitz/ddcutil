@@ -599,6 +599,7 @@ ddc_report_active_display(Display_Info * curinfo, int depth) {
  */
 int
 ddc_report_active_displays(int depth) {
+   // PROGRAM_LOGIC_ERROR("---> pseudo failure <-----");
    Display_Info_List * display_list = ddc_get_valid_displays();
    int ndx;
    int valid_display_ct = 0;
@@ -616,6 +617,7 @@ ddc_report_active_displays(int depth) {
    if (valid_display_ct == 0)
       rpt_vstring(depth, "No active displays found");
    free_display_info_list(display_list);
+   // DBGMSG("Returning %d", valid_display_ct);
    return valid_display_ct;
 }
 
