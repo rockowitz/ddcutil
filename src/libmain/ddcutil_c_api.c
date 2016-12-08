@@ -171,6 +171,8 @@ void ddca_init() {
 
 
 #ifdef WRONG
+/** Template for callback function registered with ddca_register_abort_func() */
+typedef void (*DDCA_Abort_Func)(DDCA_Status psc);
 
 static jmp_buf abort_buf;
 
@@ -180,6 +182,10 @@ static DDCA_Abort_Func  abort_func = NULL;
 // which causes unpredictable behavior
 
 
+/** Register a function to be called when an internal abort occurs in libddcutil.
+ *
+ *  @param[in]   func callback function
+ */
 void ddca_register_abort_func(DDCA_Abort_Func func) {
    DBGMSG("func=%p", func);
    abort_func = func;

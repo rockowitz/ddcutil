@@ -47,7 +47,9 @@ typedef struct {
 } DDCA_Ddcutil_Version_Spec;
 
 
-// Other
+//
+// Global Settings
+//
 
 typedef struct {
    bool       info_set_fg;
@@ -99,6 +101,31 @@ typedef enum {
 //
 //  Display Specification
 //
+
+/**
+Monitors are specified in different ways in different contexts:
+
+1) DDCA_Display_Identifier contains criteria for selecting a monitor.
+These may directly identify a monitor (e.g. by I2C bus number), or entail a
+search (e.g. EDID).
+
+2) DDCA_Display_Ref is a logical display identifier.   It can be an I2C identifier,
+an ADL identifier, or a USB identifier.
+
+For Display_Identifiers containing an I2C bus number, ADL adapter.display numbers,
+or USB b.device numbers,  the translation from DDCA_Display_Identifier
+to DDCA_Display_Ref is direct.  Otherwise, a search of some sort must be performed.
+
+3) A DDCA_Display_Handle references a display that has been "opened".  This is used
+for most function calls performing an operation on a display.
+
+For I2C and USB connected displays, an operating system open is performed when
+creating DDCA_Display_Handle from a DDCA_Display_Ref.
+DDCA_Display_Handle then contains the open file handle.
+
+For ADL displays, no actual open is performed when creating a DDCA_Display_Handle from
+a DDCA_Display_Ref.  The adapter number.device number pair are simply copied.
+*/
 
 /** Opaque display identifier
  *
@@ -173,6 +200,12 @@ typedef struct {
 //
 // VCP Feature Information
 //
+
+// Both DDCA_MCCS_Version_Spec and DDCA_MCCS_Version_Id exist for historical reasons.
+// DDCA_MCCS_Version_Spec reflects how the version number is returned from a
+// GETVCP of feature xDF.  This form is used throughout much of ddcutil.
+// DDCA_MCCS_Version_Id reflects the fact that there are a small number of versions
+// and simplifies program logic that varies among versions.
 
 /** MCCS Version in binary form */
 typedef struct {

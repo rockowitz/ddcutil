@@ -45,7 +45,8 @@ extern "C"
  *
  *  Function names in the public C API begin with "ddca_"
  *
- *  Function ddca_init() must be called before all others.
+ *  Function ddca_init() must be called before all others
+ *  (except for library build information).
  */
 
 //
@@ -68,12 +69,16 @@ DDCA_Version_Spec ddct_get_version(void);       // ddcutil version
 const char * ddca_ddcutil_version_string();
 
 /**
- * Indicates whether the ddcutil library was built with ADL support. .
+ * Indicates whether the ddcutil library was built with ADL support.
+ *
+ * (May be removed.)
  */
 bool ddca_built_with_adl(void);
 
 /**
  * Indicates whether the ddcutil library was built with support for USB connected monitors. .
+ *
+ * (May be removed.)
  */
 bool ddca_built_with_usb(void);
 
@@ -89,10 +94,6 @@ uint8_t ddca_get_build_options(void);
 /** ddcutil was built with support for USB connected monitors */
 #define DDCA_BUILT_WITH_USB     0x02
 #define DDCA_BUILT_WITH_FAILSIM 0x04  /**< @brief ddcutil was built with support for failure simulation */
-
-
-
-
 
 
 //
@@ -127,26 +128,26 @@ char * ddca_status_code_desc(DDCA_Status status_code);
 // Global Settings
 //
 
-/** Template for callback function registered with ddca_register_abort_func() */
-typedef void (*DDCA_Abort_Func)(DDCA_Status psc);
-
-#ifdef WRONG
-/** Register a function to be called when an internal abort occurs in libddcutil.
+/** To capture certain rare fatal errors in library.
+ *  If not set, library aborts.
  *
- *  @param[in]   func callback function
+ *  @param[in] jb pointer to setjmp()/longjmp() saved registers
+ *
+ *  Call this library function if the program using libddcutil
+ *  uses setjmp() to register a longjmp() target.  The library needs
+ *  to know what it is.
  */
 void
-ddca_register_abort_func(DDCA_Abort_Func func);
-#endif
+ddca_register_jmp_buf(jmp_buf* jb);
 
-/** To capture certain rare fatal errors in library.
- *  If not set, library aborts
+
+/** libddcutil's internal abort function fills in this data structure
+ *  when a fatal error occurs.   If a jmp_buf has been registered by
+ *  ddca_register_jmp_buf(), the caller can examine this data structure
+ *  after an "error" return from setjmp()
  */
-void ddca_register_jmp_buf(jmp_buf* jb);
-
-
-
-DDCA_Global_Failure_Information * ddca_get_global_failure_information();
+DDCA_Global_Failure_Information *
+ddca_get_global_failure_information();
 
 
 /** Gets the I2C timeout in milliseconds for the specified timeout class.
@@ -209,26 +210,23 @@ ddca_set_max_tries(
 // Message Control
 //
 
-/**
- * Redirects output that normally would go to STDOUT
+/** Redirects output that normally would go to STDOUT
  */
 void
 ddca_set_fout(
       FILE * fout);   /**< where to write normal messages, if NULL, suppress  */
 
-/** Redirect output that normally goes to STDOUT back to STDOUT */
+/** Redirects output that normally goes to STDOUT back to STDOUT */
 void
 ddca_set_fout_to_default();
 
-/**
- * Redirects output that normally would go to STDERR
+/** Redirects output that normally would go to STDERR
  */
 void
 ddca_set_ferr(
       FILE * ferr);   /**< where to write error messages, If NULL, suppress */
 
-/**
- * Redirect output that normally goes to STDERR back to STDERR
+/** Redirects output that normally goes to STDERR back to STDERR
  */
 void
 ddca_set_ferr_to_default();
@@ -251,8 +249,7 @@ char *
 ddca_output_level_name(
       DDCA_Output_Level val);     /**< output level id */
 
-// DDC Error reporting
-/** Control messages describing DDC protocol errors
+/** Controls whether messages describing DDC protocol errors are output
  * @param onoff    if true, errors will be issued
  * */
 void
