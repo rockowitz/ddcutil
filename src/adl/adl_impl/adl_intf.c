@@ -620,7 +620,7 @@ void adl_report_active_display(ADL_Display_Rec * pdisp, int depth) {
    // avoid confusion - do not display
    // if (output_level >= OL_VERBOSE)
    //    rpt_vstring(depth, "Supports DDC:         %s", (pdisp->supports_ddc) ?  "true" : "false");
-   if (output_level == OL_TERSE || output_level == OL_PROGRAM)
+   if (output_level == OL_TERSE)
    rpt_vstring(depth, "Monitor:              %s:%s:%s", pdisp->mfg_id, pdisp->model_name, pdisp->serial_ascii);
    rpt_vstring(depth, "Xrandr name:          %s", pdisp->xrandr_name);
    if (output_level >= OL_NORMAL) {
