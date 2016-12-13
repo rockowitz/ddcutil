@@ -515,7 +515,8 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
 
    if (version_flag) {
       printf("ddcutil %s\n", BUILD_VERSION);
-      printf("Built %s at %s\n", BUILD_DATE, BUILD_TIME);
+      // TODO: patch values at link time
+      // printf("Built %s at %s\n", BUILD_DATE, BUILD_TIME);
 #ifdef HAVE_ADL
       printf("Built with support for AMD Display Library (AMD proprietary driver).\n");
 #else

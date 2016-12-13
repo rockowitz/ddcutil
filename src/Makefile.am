@@ -147,9 +147,12 @@ libmain/ddcutil_c_api.c
 # Despite what the Autotools book says, all-local is executed aftar all, not before 
 # So this ensures that the NEXT execution of all will compile build_info.c 
 
+# removed from all-local:
+# 	touch base/build_info.c
+
+
 all-local:
 	@echo "Executing hook all-local..."
-	touch base/build_info.c
 
 # Never executed:
 # all-hook:

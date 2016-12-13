@@ -28,5 +28,8 @@
 #include "base/build_info.h"
 
 const char * BUILD_VERSION = VERSION;
-const char * BUILD_DATE = __DATE__;
-const char * BUILD_TIME = __TIME__;
+// TODO: patch dummy values at link time
+// const char * BUILD_DATE = __DATE__;
+const char * BUILD_DATE = "mmm dd yyyy";
+// const char * BUILD_TIME = __TIME__;
+const char * BUILD_TIME = "hh:mm:ss";
