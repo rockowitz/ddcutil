@@ -170,8 +170,27 @@ typedef enum {
    USB_IO
 } MCCS_IO_Mode;
 
+
+// Not currently used.  Would this make the API and data structures clearer or more obscure?
+typedef struct {
+   MCCS_IO_Mode io_mode;
+   union {
+      int   i2c_busno;
+      struct {
+         int    iAdapterIndex;
+         int    iDisplayIndex;
+      } adl;
+      struct {
+         int    usb_bus;
+         int    usb_device;
+      } usb;
+   };
+} DDCA_Display_Locator;
+
+
 // Or make this DDCA_Display_Info  ??, with DDCA_Display_Ref as field?
 #define DDCA_DISPLAY_INFO_MARKER "DDIN"
+/** DDCA_Display_Info describes one monitor detected by ddcutil. */
 typedef struct {
    char             marker[4];
    int              dispno;
@@ -181,6 +200,8 @@ typedef struct {
    int              iDisplayIndex;
    int              usb_bus;
    int              usb_device;
+   // alternatively to above 6 fields:
+   // DDCA_Display_Locator locator;
 
    // or should these be actual character/byte arrays instead of pointers?
    const char *     mfg_id;
@@ -304,23 +325,25 @@ struct {
 
 
 #define DDCA_CAP_VCP_MARKER  "DCVP"
+/** Represents one feature code in the vcp() section of the capabilities string. */
 typedef
 struct {
-   char                                 marker[4];
-   VCP_Feature_Code                     feature_code;
-   int                                  value_ct;
-   uint8_t *                            values;
+   char                                 marker[4];     /**< Always DDCA_CAP_VCP_MARKER */
+   VCP_Feature_Code                     feature_code;  /**< VCP feature code */
+   int                                  value_ct;      /**< number of values declared */
+   uint8_t *                            values;        /**< array of declared values */
 } DDCA_Cap_Vcp;
 
 
 #define DDCA_CAPABILITIES_MARKER   "DCAP"
+/** Represents a monitor capabilities string */
 typedef
 struct {
-   char                                 marker[4];
-   char *                               unparsed_string;
-   DDCA_MCCS_Version_Spec               version_spec;
-   int                                  vcp_code_ct;
-   DDCA_Cap_Vcp *                       vcp_codes;
+   char                                 marker[4];       /**< always DDCA_CAPABILITIES_MARKER */
+   char *                               unparsed_string; /**< unparsed capabilities string */
+   DDCA_MCCS_Version_Spec               version_spec;    /**< parsed mccs_ver() field */
+   int                                  vcp_code_ct;     /**< number of features in vcp() field */
+   DDCA_Cap_Vcp *                       vcp_codes;       /**< array of pointers to structs describing each vcp code */
 } DDCA_Capabilities;
 
 
@@ -350,31 +373,33 @@ typedef enum {
 } Vcp_Value_Type;
 
 
+/** Represents a single VCP value of any type */
 typedef struct {
-   uint8_t        opcode;
-   Vcp_Value_Type value_type;      // probably a different type would be better
+   VCP_Feature_Code  opcode;         /**< VCP feature code */
+   Vcp_Value_Type    value_type;      // probably a different type would be better
    union {
       struct {
-         uint8_t *  bytes;
-         uint16_t   bytect;
-      }         t;
+         uint8_t *  bytes;          /**< pointer to bytes of table value */
+         uint16_t   bytect;         /**< number of bytes in table value */
+      }         t;                  /**< table value */
       struct {
-         uint16_t   max_val;
-         uint16_t   cur_val;
-      }         c;
+         uint16_t   max_val;        /**< maximum value (mh, ml bytes) for continuous value */
+         uint16_t   cur_val;        /**< current value (sh, sl bytes) for continuous value */
+      }         c;                  /**< continuous (C) value */
       struct {
+// WORDS_BIGENDIAN ifdef ensures proper overlay of ml/mh on max_val, sl/sh on cur_val
 #ifdef WORDS_BIGENDIAN
          uint8_t    mh;
          uint8_t    ml;
          uint8_t    sh;
          uint8_t    sl;
 #else
-         uint8_t    ml;
-         uint8_t    mh;
-         uint8_t    sl;
-         uint8_t    sh;
+         uint8_t    ml;            /**< ML byte for NC value */
+         uint8_t    mh;            /**< MH byte for NC value */
+         uint8_t    sl;            /**< SL byte for NC value */
+         uint8_t    sh;            /**< SH byte for NC value */
 #endif
-      }         nc;
+      }         nc;                /**< non-continuous (NC) value */
    }       val;
 } Single_Vcp_Value;
 
