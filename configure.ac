@@ -43,6 +43,7 @@ AC_CONFIG_FILES([
 	package/ddcutil.spec 
 	package/upload_obsrpm
   package/build_dpkg
+  ddcutil.pc
   ],
  )
 dnl cannot chmod on build_dpkg, upload_obsrpm, since they will not exist within dpkg build environment
@@ -137,6 +138,15 @@ AM_CONDITIONAL( [HAVE_DOXYGEN], [test -n "$DOXYGEN"])
 dnl AM_COND_IF( [HAVE_DOXYGEN], [AC_CONFIG_FILES([dox/doxyfile])])
 AS_IF( [test -n "$DOXYGEN"],    [AC_CONFIG_FILES([docs/doxygen/doxyfile])])
 
+
+dnl doc-base doesn't have pc file.
+AC_CHECK_PROGS( [DOCBASE_INSTALL_DOCS], [install-docs])
+AS_IF( [test -n "$DOCBASE_INSTALL_DOCS"], 
+          AC_MSG_NOTICE([doc-base execuable found])
+          AC_CONFIG_FILES([docs/ddcutil-c-api]), 
+          AC_MSG_WARN([doc-base not installed - continuing without doc-base support])
+     )
+AM_CONDITIONAL( [HAVE_DOCBASE], [test -n "$DOCBASE_INSTALL_DOCS"])
 
 
 ###
@@ -392,9 +402,9 @@ AS_IF([test "x$enable_callgraph" == "xyes"],
 
 dnl *** configure option: --enable-lib
 AC_ARG_ENABLE([lib],
-              [ AS_HELP_STRING( [--enable-lib=@<:@no/yes@:>@], [Build shared library and clients@<:@default=no@:>@] )],
+              [ AS_HELP_STRING( [--enable-lib=@<:@no/yes@:>@], [Build shared library and clients@<:@default=yes@:>@] )],
               [enable_lib=${enableval}],
-              [enable_lib=no] )
+              [enable_lib=yes] )
 dnl Set flag for automake.am:
 AM_CONDITIONAL([ENABLE_SHARED_LIB_COND], [test "x$enable_lib" == "xyes"] )
 AS_IF([test "x$enable_lib" == "xyes"],
@@ -404,8 +414,9 @@ AS_IF([test "x$enable_lib" == "xyes"],
 dnl AC_SUBST([ENABLE_SHARED_LIB_FLAG], [test "x$enable_lib" == "xyes"; $?])
 dnl AC_SUBST([ENABLE_SHARED_LIB_FLAG], [xy])
 AS_IF([test "x$enable_lib" == "xyes"],
-      AC_SUBST([ENABLE_SHARED_LIB_FLAG], [1] ),
-      AC_SUBST([ENABLE_SHARED_LIB_FLAG], [0]  )
+      AC_SUBST( [ENABLE_SHARED_LIB_FLAG], [1] )
+      AC_DEFINE( [ENABLE_SHARED_LIB], [1], [If defined, build shared library.] ),
+      AC_SUBST( [ENABLE_SHARED_LIB_FLAG], [0]  )
      )
 
 
@@ -488,10 +499,11 @@ AS_IF([test "x$enable_failsim" == "xyes"],
         AC_MSG_NOTICE( [failsim..... disabled] )
       ]
      )
-dnl Define ENABLE_FAILSIM in config.h:
-AS_IF([test "x$enable_failsim" == "xyes"],
-     AC_DEFINE_UNQUOTED( [ENABLE_FAILSIM], [1], [If defined, enable failsim.]),
-     [])
+dnl duplicatative
+dnl dnl Define ENABLE_FAILSIM in config.h:
+dnl AS_IF([test "x$enable_failsim" == "xyes"],
+dnl      AC_DEFINE_UNQUOTED( [ENABLE_FAILSIM], [1], [If defined, enable failsim.]),
+dnl      [])
 dnl AS_IF([test "x$enable_failsim" == "xyes"],
 dnl      AC_MSG_NOTICE( [failsim... enabled]  ),
 dnl       AC_MSG_NOTICE( [failsim... disabled] )

@@ -7,7 +7,8 @@ resfiles = \
 # resdir = $(datadir)/ddcutil/data
 ddcutildir = $(datadir)/ddcutil/data
 # ddcutil_DATA requires ddcutildir
-# Causes files (w/o directory structure) to be installed in /usr/local/sare/ddcutil/data:
+# Causes files (w/o directory structure) to be installed in /usr/local/share/ddcutil/data:
+# or /usr/share/ddcutil/data
 ddcutil_DATA = $(resfiles)
 
 # Causes files (with directory structure) to be included in tarball:

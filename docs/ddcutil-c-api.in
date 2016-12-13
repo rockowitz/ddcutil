@@ -1,0 +1,11 @@
+Document: ddcutil-c-api
+Title: ddcutil C API
+Author: Sanford Rockowitz 
+Abstract: This doxgygen generated manual documents the ddcutil C API. 
+  Your're probably better off just looking at the header files and sample code.
+Section: System/Hardware
+								     
+Format: HTML
+Index: @prefix@/share/doc/ddcutil/html/index.html
+Files: @prefix@/share/doc/ddcutil/html/*
+

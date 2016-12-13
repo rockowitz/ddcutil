@@ -222,8 +222,7 @@ applied.
 
 
 %package devel
-Summary: Library to query and update of monitor settings
-
+Summary: Header files for Library to query and update of monitor settings
 
 %description devel
 Long descripton of development library
@@ -283,8 +282,9 @@ rm -rf %{buildroot}
 
 
 %files devel
-# %%{_libdir}/libddcutil.a
-# %%{_includedir}/flaim.h
+%{_libdir}/libddcutil.a
+%{_includedir}/ddcutil_types.h
+%{_includedir}/ddcutil_c_api.h
 
 
 %doc
@@ -293,6 +293,10 @@ rm -rf %{buildroot}
 
 
 %changelog
+
+* Fri Dec 09 2016 Sanford Rockowitz <rockowitz@minsoft.com> 0.6.9-1
+
+- pseudo release for next branch
 
 * Fri May 20 2016 Sanford Rockowitz <rockowitz@minsoft.com> 0.4.1-1
 

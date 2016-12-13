@@ -128,4 +128,6 @@ docs/doxygen/doxygen.stamp
 docs/doxygen/doxywarn.txt
 docs/doxygen/html/
 docs/doxygen/latex/
+ddcutil.pc
+docs/ddcutil-c-api
 

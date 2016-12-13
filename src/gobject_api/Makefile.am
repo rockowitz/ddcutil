@@ -65,7 +65,7 @@ libddcgobj_la_LDFLAGS += -export-dynamic
 # 
 # Sample client program.  
 # 
-bin_PROGRAMS = \
+check_PROGRAMS = \
 goclient
 
 # Compiler flags

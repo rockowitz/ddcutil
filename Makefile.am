@@ -19,10 +19,15 @@ endif
 
 SUBDIRS = src man data package $(DOXYDIR)
 
+pkgconfigdir = $(libdir)/pkgconfig
+pkgconfig_DATA = ddcutil.pc
+
+
+
 RPM = rpm
 
 rpms srcrpm: dist
-	echo "----> Makefile: rps srcrpm"
+	@echo "----> Makefile: rpms srcrpm"
 	(cd package && $(MAKE) $(AM_MAKEFLAGS) $@) || exit 1
 
 obsrpm:  

@@ -57,6 +57,8 @@ clean-local:
 	test -z `find . -name "*expand" -type f` || rm `find . -name "*expand" -type f`
 	find . -name "*.lo" -type f -exec ls -l {} \;
 	find . -name "*.lo" -type f -exec rm -f {} \;
+	find . -name "*.o" -type f -exec ls -l {} \;
+	find . -name "*.o" -type f -exec rm -f {} \;
 
 
 mostlyclean-local:
@@ -75,9 +77,11 @@ maintainerclean-local:
 bin_PROGRAMS = \
 ddcutil  
 
+check_PROGRAMS =
+
 if ENABLE_SHARED_LIB_COND
 # Sample C client program for shared library:
-bin_PROGRAMS += \
+check_PROGRAMS += \
 laclient 
 endif
 
@@ -243,6 +247,13 @@ if ENABLE_FAILSIM_COND
 libcommon_la_SOURCES += \
   util/failsim.c        
 endif
+
+
+include_HEADERS = \
+public/ddcutil_types.h \
+public/ddcutil_c_api.h 
+
+
 
 # EXTRA_DIST = \
 # util/string_util.h \
