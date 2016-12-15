@@ -499,7 +499,7 @@ AS_IF([test "x$enable_failsim" == "xyes"],
         AC_MSG_NOTICE( [failsim..... disabled] )
       ]
      )
-dnl duplicatative
+dnl duplicative
 dnl dnl Define ENABLE_FAILSIM in config.h:
 dnl AS_IF([test "x$enable_failsim" == "xyes"],
 dnl      AC_DEFINE_UNQUOTED( [ENABLE_FAILSIM], [1], [If defined, enable failsim.]),
