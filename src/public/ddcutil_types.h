@@ -36,6 +36,35 @@
 
 
 //
+// Status Code
+//
+
+/** ddcutil status code
+ *
+ *  Most public ddcutil functions return a status code.
+ *  These status codes have 3 sources:
+ *
+ *  - Linux
+ *  - ADL (AMD Display Library)
+ *  - ddcutil itself
+ *
+ *  These multiple status code sources are combined by "modulating"
+ *  the raw values into non-overlapping ranges.
+ *
+ *  - Linux errno values are returned as negative numbers (e.g. -EIO)
+ *  - ADL values are modulated by 2000 (i.e., 2000 subtracted from negative ADL status codes,
+ *         or added to positive ADL status codes)
+ *  - ddcutil errors are always in the -3000 range
+ *
+ *  In summary:
+ *  - 0 always indicates a normal successful status
+ *  - Positive values (possible with ADL) represent qualified success of some sort
+ *  - Negative values indicate an error condition.
+ */
+typedef int DDCA_Status;
+
+
+//
 // Build Information
 //
 
@@ -351,7 +380,8 @@ struct {
 // Get and set VCP feature values
 //
 
-// include interpreted string?
+
+#ifdef OLD
 typedef struct {
    uint8_t  mh;
    uint8_t  ml;
@@ -359,12 +389,40 @@ typedef struct {
    uint8_t  sl;
    int      max_value;
    int      cur_value;
+   // include interpreted string?
 } DDCA_Non_Table_Value_Response;
+#endif
+
+
+typedef struct {
+   VCP_Feature_Code  feature_code;
+   union {
+      struct {
+         uint16_t   max_val;        /**< maximum value (mh, ml bytes) for continuous value */
+         uint16_t   cur_val;        /**< current value (sh, sl bytes) for continuous value */
+      }         c;                  /**< continuous (C) value */
+      struct {
+   // WORDS_BIGENDIAN ifdef ensures proper overlay of ml/mh on max_val, sl/sh on cur_val
+   #ifdef WORDS_BIGENDIAN
+         uint8_t    mh;
+         uint8_t    ml;
+         uint8_t    sh;
+         uint8_t    sl;
+   #else
+         uint8_t    ml;            /**< ML byte for NC value */
+         uint8_t    mh;            /**< MH byte for NC value */
+         uint8_t    sl;            /**< SL byte for NC value */
+         uint8_t    sh;            /**< SH byte for NC value */
+   #endif
+      }         nc;                /**< non-continuous (NC) value */
+   };
+} DDCA_Non_Table_Value_Response;
+
 
 typedef struct {
    int      bytect;
    uint8_t  bytes[];     // or uint8_t * ?
-} DDCA_Table_Value_Response;
+} DDCA_Table_Value;
 
 
 typedef enum {

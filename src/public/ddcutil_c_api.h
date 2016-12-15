@@ -49,6 +49,25 @@ extern "C"
  *  (except for library build information).
  */
 
+
+/* Note on "report" functions.
+ *
+ * Various functions with "report" in the name, e.g. ddca_report_display_ref(),
+ * ddca_report_display_info_list(), write formatted reports to (normally) the
+ * terminal. Sometimes, these are intended to display data structures for
+ * debugging.  Other times, they are used to format output for the ddcutil
+ * command line program.
+ *
+ * The operation of these functions can be tweaked in two ways.
+ * - The "depth" parameter is a logical indentation depth.  This allows
+ *   reports that invoke other reports to perform indent the subreports
+ *   sensibly.  At the level of the ddcutil_c_api(), one unit of
+ *   logical indentation depth translates to 3 spaces.
+ * - The destination of reports is normally the STDOUT device.  This can
+ *   be changed by calling set_fout().
+ */
+
+
 //
 // Library build information
 //
@@ -111,11 +130,8 @@ void ddca_init(void);
 
 
 //
-// Status Code Management
+// Status Codes
 //
-
-/** ddcutil status code */
-typedef int DDCA_Status;
 
 /** Returns the name for a ddcutil status code */
 char * ddca_status_code_name(DDCA_Status status_code);
@@ -128,7 +144,7 @@ char * ddca_status_code_desc(DDCA_Status status_code);
 // Global Settings
 //
 
-/** To capture certain rare fatal errors in library.
+/** To capture certain rare fatal errors in libddcutil. .
  *  If not set, library aborts.
  *
  *  @param[in] jb pointer to setjmp()/longjmp() saved registers
@@ -150,24 +166,6 @@ DDCA_Global_Failure_Information *
 ddca_get_global_failure_information();
 
 
-/** Gets the I2C timeout in milliseconds for the specified timeout class.
- * @param timeout_type timeout type
- * @return timeout in milliseconds
- */
-int
-ddca_get_timeout_millis(
-      DDCA_Timeout_Type timeout_type);
-
-/** Sets the I2C timeout in milliseconds for the specified timeout class
- * @param timeout_type  timeout class
- * @param millisec      timeout to set, in milliseconds
- */
-void
-ddca_set_timeout_millis(
-      DDCA_Timeout_Type timeout_type,
-      int               millisec);
-
-
 // I2C is an inherently unreliable protocol.  The application is responsible for
 // retry management.
 // The maximum number of retries can be tuned.
@@ -178,8 +176,6 @@ ddca_set_timeout_millis(
 // - Some DDC operations, such as reading the capabilities string, require multiple
 //   write/read exchanges.  These multi -part exchanges have a separate retry count
 //   for the entire operation.
-
-
 
 /** Gets the upper limit on a max tries value that can be set.
  *
@@ -248,6 +244,7 @@ ddca_set_output_level(
 char *
 ddca_output_level_name(
       DDCA_Output_Level val);     /**< output level id */
+
 
 /** Controls whether messages describing DDC protocol errors are output
  * @param onoff    if true, errors will be issued
@@ -608,15 +605,14 @@ ddca_get_feature_info_by_display(
       Version_Feature_Info **  p_info);
 
 
-
-
 //
 //  Miscellaneous Monitor Specific Functions
 //
 
 
 // DDCT_Status ddct_get_edid(DDCA_Display_Handle * dh, Byte * edid_buffer);    // edid_buffer must be >= 128 bytes
-// Keep?   Can get from
+// Keep?   Can get from ddca_get_edid_by_display_ref()
+
 DDCA_Status
 ddca_get_edid_by_display_ref(
       DDCA_Display_Ref ddca_dref,
@@ -631,7 +627,7 @@ ddca_get_edid_by_display_ref(
 
 void
 ddct_free_table_value_response(
-      DDCA_Table_Value_Response * table_value_response);
+      DDCA_Table_Value * table_value_response);
 
 
 // TODO: Choose between ddca_get_nontable_vcp_value()/ddca_get_table_vcp_value() vs ddca_get_vcp_value()

@@ -186,12 +186,21 @@ ddcg_display_handle_get_nontable_vcp_value(
       ddcg_response = g_object_new(DDCG_TYPE_CONT_RESPONSE, NULL);
 
       // or set properties?
+#ifdef OLD
       ddcg_response->mh = ddct_response.mh;
       ddcg_response->ml = ddct_response.ml;
       ddcg_response->sh = ddct_response.sh;
       ddcg_response->sl = ddct_response.sl;
       ddcg_response->cur_value = ddct_response.cur_value;
       ddcg_response->max_value = ddct_response.max_value;
+#endif
+      ddcg_response->mh = ddct_response.nc.mh;
+      ddcg_response->ml = ddct_response.nc.ml;
+      ddcg_response->sh = ddct_response.nc.sh;
+      ddcg_response->sl = ddct_response.nc.sl;
+      ddcg_response->cur_value = ddct_response.c.cur_val;
+      ddcg_response->max_value = ddct_response.c.max_val;
+
       // ddcg_cont_response_report(ddcg_response, 1);
    }
    else {

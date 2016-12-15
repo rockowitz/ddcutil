@@ -367,7 +367,15 @@ DDCS_Non_Table_Value_Response ddcs_get_nontable_vcp_value(
    if (rc != 0)
       throw_exception_from_status_code(rc);
    DDCS_Non_Table_Value_Response result;
-   memcpy(&result, &resp, sizeof(resp));
+   // memcpy(&result, &resp, sizeof(resp));
+   // How best to handle union in swig?
+   result.mh = resp.nc.mh;
+   result.ml = resp.nc.ml;
+   result.sh = resp.nc.sh;
+   result.sl = resp.nc.sl;
+   result.cur_value = resp.c.cur_val;
+   result.max_value = resp.c.max_val;
+
    return result;
 }
 

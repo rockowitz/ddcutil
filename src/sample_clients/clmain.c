@@ -98,9 +98,9 @@ test_cont_value(
    else {
       printf("(%s) Feature 0x%02x (%s) current value = %d, max value = %d\n",
              __func__, feature_code, feature_name,
-             non_table_response.cur_value,
-             non_table_response.max_value);
-      int cur_value = non_table_response.cur_value;
+             non_table_response.c.cur_val,
+             non_table_response.c.max_val);
+      int cur_value = non_table_response.c.cur_val;
       int new_value = cur_value/2;
       rc = ddca_set_continuous_vcp_value(dh, feature_code, new_value);
       if (rc != 0) {
@@ -113,8 +113,9 @@ test_cont_value(
             FUNCTION_ERRMSG("ddct_get_continuous_vcp_value", rc);
          }
          else {
-            if ( non_table_response.cur_value != new_value) {
-               printf("(%s) Current value %d does not match new value set %d", __func__, non_table_response.cur_value, new_value);
+            if ( non_table_response.c.cur_val != new_value) {
+               printf("(%s) Current value %d does not match new value set %d",
+                      __func__, non_table_response.c.cur_val, new_value);
                ok = false;
             }
          }
@@ -135,9 +136,9 @@ test_cont_value(
                   FUNCTION_ERRMSG("ddct_get_continuous_vcp_value", rc);
                }
                else {
-                  if ( non_table_response.cur_value != cur_value) {
+                  if ( non_table_response.c.cur_val != cur_value) {
                      printf("(%s) Current value %d does not match original current value %d", __func__,
-                            non_table_response.cur_value, cur_value);
+                            non_table_response.c.cur_val, cur_value);
                      ok = false;
                   }
                }
@@ -225,6 +226,7 @@ int main(int argc, char** argv) {
    DDCA_Display_Handle dh = NULL;  // initialize to avoid clang analyzer warning
 
    // Initialize libddcutil.   Must be called first
+   printf("(%s) Calling ddca_init()...\n", __func__);
    ddca_init();
 
 #ifdef WRONG
@@ -257,7 +259,7 @@ int main(int argc, char** argv) {
    printf("(%s) Built with ADL support: %s\n", __func__, (ddca_built_with_adl()) ? "yes" : "no");
    printf("(%s) Built with USB support: %s\n", __func__, (ddca_built_with_usb()) ? "yes" : "no");
 
-   unsigned long build_options = ddca_get_build_options();
+   uint8_t build_options = ddca_get_build_options();
    printf("(%s) Built with ADL support: %s\n", __func__, (build_options & DDCA_BUILT_WITH_ADL) ? "yes" : "no");
    printf("(%s) Built with USB support: %s\n", __func__, (build_options & DDCA_BUILT_WITH_USB) ? "yes" : "no");
 
@@ -296,8 +298,6 @@ int main(int argc, char** argv) {
    printf("(%s) max write only tries: %d\n", __func__, ddca_get_max_tries(DDCA_WRITE_ONLY_TRIES));
    printf("(%s) max write read tries: %d\n", __func__, ddca_get_max_tries(DDCA_WRITE_READ_TRIES));
    printf("(%s) max multi part tries: %d\n", __func__, ddca_get_max_tries(DDCA_MULTI_PART_TRIES));
-
-   // TODO: Add functions to access ddcutil's runtime statistics.
 
 
    printf("\nCheck for monitors using ddca_get_displays()...\n");
