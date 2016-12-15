@@ -18,9 +18,11 @@ a monitor is calibrated, and then restored when the calibration is applied.
 For detailed instructions on building and using ddcutil, see the website: 
 www.ddcutil.com. 
 
+In particular, for information on building ddcutil, see www.ddcutil.com/building. 
+
 Once ddcutil is installed, online help is also available.  
 Use the --help option or see the man page:
-~~~
+~~~:
 ddcutil --help
 man 1 ddcutil
 ~~~
