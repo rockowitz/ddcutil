@@ -39,5 +39,16 @@ override_dh_auto_configure:
 	dh_auto_configure -- ${config_args}
 
 
+# WHERE DOES THIS GO?
+
+# sed snippit that can be included in the debian/rules file of an affected
+# package at the end of the install target (aka after the upstream make
+# invocation has completed):
+
+# sed -i "/dependency_libs/ s/'.*'/''/"
+# "$(CURDIR)/debian/<pkg>/usr/lib/<la-file>"
+
+
+
 # --enable-lib=yes
 
