@@ -324,8 +324,8 @@ libddcutil_la_CFLAGS    = $(AM_CFLAGS)
 #
 # Link the libraries 
 #
-# Be careful about library ordering 
-# library must be listed after any libraries that depend on it
+# Be careful about library ordering. 
+# A library must be listed after any libraries that depend on it
 #
 
 # deleted $(HIDAPI_LIBS)
@@ -347,7 +347,9 @@ libddcutil_la_LIBADD += $(PYTHON_LIBS) -lpython2.7
 
 libddcutil_la_LDFLAGS = -export_symbols-regex '^ddc[tgs]_[^_]'
 # libddcutil_la_LDFLAGS += -version-info '0:1:1'
-libddcutil_la_LDFLAGS += -export-dynamic 
+libddcutil_la_LDFLAGS += -export-dynamic  
+# doesn't cause ddca_init() to be executed:
+# libddcutil_la_LDFLAGS += -init=ddca_init
 
 # needed?
 libcommon_la_LDFLAGS = -export-dynamic 
