@@ -42,6 +42,16 @@
 #include "vcp/parse_capabilities.h"
 
 
+// not made static to avoid warning about unused variable
+char* test_cap_strings[] = {
+      // GSM LG Ultra HD
+      "(prot(monitor)type(LED)model(25UM65)cmds(01 02 03 0C E3 F3)"
+      "vcp(0203(10 00)0405080B0C101214(05 07 08 0B) 16181A5260(03 04)6C6E70"
+      "87ACAEB6C0C6C8C9D6(01 04)DFE4E5E6E7E8E9EAEBED(00 10 20 40)EE(00 01)"
+      "FE(01 02 03)FF)mswhql(1)mccs_ver(2.1))",
+};
+
+
 //
 // Report parsed data structures
 //
@@ -358,21 +368,28 @@ GPtrArray * parse_vcp_segment(char * start, int len) {
    char * value_start = NULL;    // ditto
    while (pos < end) {
       valid_feature = false;
+      // strip leading blanks
       while(*pos == ' ' && pos < end) pos++;
       if (pos == end)
          break;
+
       char * st = pos;
       while (*pos != ' ' && *pos != '(' && pos < end) pos++;
-      int ln = pos-st;
-      // printf("Found: Feature: %.*s\n", ln, st);
-      if (ln == 2) {
-         cur_feature_id = hhc_to_byte(st);
+      int len = pos-st;
+      DBGMSF(debug, "Found: Feature code subsegment: %.*s\n", len, st);
+      // If len > 2, feature codes not separated by blanks.  Take just the first 2 characters
+      if (len > 2) {
+         pos = st + 2;
+         len = 2;
+      }
+      if (len == 2) {
+         cur_feature_id = hhc_to_byte(st);   // what if invalid hex?
          valid_feature = true;
          value_start = NULL;
          value_len   = 0;
       }
       else {
-         printf("Feature: %.*s (invalid code)\n", ln, st);
+         printf("Feature: %.*s (invalid code)\n", 1, st);
       }
 
       if (*pos == '(') {
@@ -415,6 +432,10 @@ bye:
  *   pointer to newly allocated ParsedCapabilities structure
  */
 Parsed_Capabilities * parse_capabilities(char * buf_start, int buf_len) {
+   // DBGMSG("Substituting test capabilities string");
+   // buf_start = test_cap_strings[0];
+   // buf_len = strlen(test_cap_strings[0]);
+
    bool debug = false;
    if (debug) {
       DBGMSG("Starting. len=%d", buf_len);
