@@ -374,6 +374,8 @@ int main(int argc, char *argv[]) {
 #endif
       printf("\nDetected displays:\n");
       int display_ct = ddc_report_active_displays(1 /* logical depth */);
+      // added 12/17/16, user log displayed 1 less than reported displays, why?
+      printf("Detected: %d displays\n", display_ct);
       int dispno = 1;
       // dispno = 2;      // TEMP FOR TESTING
       for (; dispno <= display_ct; dispno++) {
@@ -453,6 +455,10 @@ int main(int argc, char *argv[]) {
                bbf_free(caps_not_seen);
                bbf_free(seen_not_caps);
                free_parsed_capabilities(pcaps);
+            }
+            else {
+               printf("\n\nUnable to read or parse capabilities.\n");
+               printf("Skipping comparison of declared capabilities to observed features\n");
             }
             ddc_close_display(dh);
          }
