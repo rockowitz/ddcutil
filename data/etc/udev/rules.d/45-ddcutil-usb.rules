@@ -4,11 +4,11 @@
 # to users in that group.  Alternatively, you can give everyone RW permission for monitor devices by 
 # changing 'MODE="0660", GROUP="video"' to 'MODE="0666"'. 
 
-# Use ddctool to check if a USB Human Interface Device appears to be a monitor. 
-# Note this rule will have to be adjusted to reflect the actual path where ddctool is installed. 
+# Use ddcutil to check if a USB Human Interface Device appears to be a monitor. 
+# Note this rule will have to be adjusted to reflect the actual path where ddcutil is installed. 
 # The -v option produces informational messages.  These are lost when the rule is normally executed 
 # udev, but can be helpful when rules are tested using the "udevadm test" command. 
-SUBSYSTEM=="usbmisc",  KERNEL=="hiddev*", PROGRAM="/usr/local/bin/ddctool chkusbmon $env{DEVNAME} -v", MODE="0660", GROUP="video"
+SUBSYSTEM=="usbmisc",  KERNEL=="hiddev*", PROGRAM="/usr/local/bin/ddcutil chkusbmon $env{DEVNAME} -v", MODE="0660", GROUP="video"
 
 # Identifies a particular monitor device by its vid/pid.
 # The values in this example are for an Apple Cinema Display, model A1082. 
