@@ -22,7 +22,6 @@ aclocal.m4
 autom4te.cache
 autoscan.log
 build-config2
-configure
 config.cache
 /config.h
 /config.h.in
@@ -34,6 +33,7 @@ config.cache
 /configure
 /configure.lineno
 /configure.scan
+/configure.ac.notes
 /install.sh
 /libtool
 Makefile

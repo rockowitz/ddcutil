@@ -13,7 +13,7 @@ clean-local:
 	rm -rf ddc_swig_wrap.c ddc_swig.py ddc_swig.pyc  ddc_swig.pyo
 
 
-if ENABLE_PYTHON
+if ENABLE_PYTHON_SWIG
 
 # Python extension module, installed in $(pyexecdir)
 pyexec_LTLIBRARIES = _ddc_swig.la
