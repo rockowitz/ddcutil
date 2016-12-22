@@ -192,10 +192,12 @@ set_vcp_value(
  * Arguments:
  *   dh                 handle for open display
  *   feature_code
- *   ppInterpretedCode  where to return result
+ *   ppInterpretedCode  where to return parsed response
  *
  * Returns:
  *   status code
+ *
+ * It is the responsibility of the caller to free the parsed response.
  */
 Global_Status_Code get_nontable_vcp_value(
        Display_Handle *               dh,
