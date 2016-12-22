@@ -72,7 +72,7 @@ bool              adlshim_is_valid_display_ref(Display_Ref * dref, bool emit_err
    return false;
 }
 
-Display_Ref * adlshim_find_display_by_model_sn(const char * model, const char * sn) {
+Display_Ref * adlshim_find_display_by_mfg_model_sn(const char * mfg_id, const char * model, const char * sn) {
    return NULL;
 }
 

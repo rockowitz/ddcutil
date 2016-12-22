@@ -63,7 +63,11 @@ Display_Info_List i2c_get_displays();
 
 Bus_Info * i2c_get_bus_info(int busno, Byte findopts);
 Bus_Info * i2c_check_bus(Bus_Info * bus_info);
-Bus_Info * i2c_find_bus_info_by_model_sn(const char * model, const char * sn, Byte findopts);
+Bus_Info * i2c_find_bus_info_by_mfg_model_sn(
+              const char * mfg_id,
+              const char * model,
+              const char * sn,
+              Byte findopts);
 Bus_Info * i2c_find_bus_info_by_edid(const Byte * pEdidBytes, Byte findopts);
 // void report_businfo(Bus_Info * bus_info);
 bool i2c_is_valid_bus(int busno, bool emit_error_msg);

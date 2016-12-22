@@ -93,7 +93,7 @@ Base_Status_ADL adl_get_video_card_info_by_adlno(
 
 bool              adl_is_valid_adlno(int iAdapterIndex, int iDisplayIndex, bool emit_error_msg);
 ADL_Display_Rec * adl_get_display_by_adlno(int iAdapterIndex, int iDisplayIndex, bool emit_error_msg);
-ADL_Display_Rec * adl_find_display_by_model_sn(const char * model, const char * sn);
+ADL_Display_Rec * adl_find_display_by_mfg_model_sn(const char * mfg_id, const char * model, const char * sn);
 ADL_Display_Rec * adl_find_display_by_edid(const Byte * pEdidBytes);
 
 Display_Info_List adl_get_valid_displays();

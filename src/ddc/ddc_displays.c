@@ -67,6 +67,9 @@ Display_Ref * ddc_find_display_by_usb_busnum_devnum(int   busnum, int   devnum);
 //  Display Specification
 //
 
+// problem:  this function is doing 2 things:
+//   reading brightness as a sanity check
+//   looking up and saving vcp version
 
 static bool verify_adl_display_ref(Display_Ref * dref) {
    bool debug = false;
@@ -89,7 +92,7 @@ static bool verify_adl_display_ref(Display_Ref * dref) {
    // As a heuristic check, try reading the brightness.  Observationally, any monitor
    // that supports DDC allows for for brightness adjustment.
 
-   // verbose output is distracting since this function is called whenquerying for other things
+   // verbose output is distracting since this function is called when querying for other things
    DDCA_Output_Level olev = get_output_level();
    if (olev == OL_VERBOSE)
       set_output_level(OL_NORMAL);
@@ -105,6 +108,49 @@ static bool verify_adl_display_ref(Display_Ref * dref) {
  bye:
    return result;
 }
+
+
+
+//  duplicative of verify_adl_display_ref()
+
+/* Verify that a bus actually supports DDC by trying to read brightness
+ *
+ * SEE ALSO above function verify_adl_display_ref()
+ *
+ * PROBLEM: Can't Distinguish between display that really doesn't support DDC and
+ * one buggy monitor like P2411 that may fail because of timeout.
+ *
+ * Arguments:
+ *    dref             display reference
+ *
+ * Returns:
+ *    true if brighness read successfull, false if not
+ */
+bool ddc_verify(Display_Ref * dref) {
+   bool debug = true;
+   bool result = false;
+   DBGMSF("Starting.  dref=%s", dref_repr(dref));
+
+   Display_Handle * dh;
+   Global_Status_Code gsc = ddc_open_display(dref,  CALLOPT_NONE, &dh);
+   if (gsc == 0) {
+      Parsed_Nontable_Vcp_Response * presp = NULL;
+      // or could use get_vcp_value()
+      gsc = get_nontable_vcp_value(dh,
+                             0x10,    // brightness
+                             &presp);
+      DBGMSF(debug, "get_nontable_vcp_value() returned %s", gsc_desc( gsc));
+      if (gsc == 0) {
+         free(presp);
+         result = true;
+      }
+      ddc_close_display(dh);
+   }
+
+   DBGMSF(debug, "Returning: %s", bool_repr(result));
+   return result;
+}
+
 
 
 /* Tests if a Display_Ref identifies an attached display.
@@ -125,6 +171,13 @@ static bool ddc_is_valid_display_ref(Display_Ref * dref, bool emit_error_msg) {
    switch(dref->io_mode) {
    case DDC_IO_DEVI2C:
       result = i2c_is_valid_bus(dref->busno, emit_error_msg );
+#ifdef NO
+      if (result) {
+         // have seen case where I2C bus for laptop display reports x37 active, but
+         // in fact it doesn't support DDC
+         result = ddc_verify(dref);
+      }
+#endif
       break;
    case DDC_IO_ADL:
       result = adlshim_is_valid_display_ref(dref, emit_error_msg);
@@ -179,7 +232,7 @@ Display_Ref* get_display_ref_for_display_identifier(Display_Identifier* pdid, bo
       validated = false;
       break;
    case DISP_ID_MONSER:
-      dref = ddc_find_display_by_model_and_sn(pdid->model_name, pdid->serial_ascii, DISPSEL_VALID_ONLY);
+      dref = ddc_find_display_by_mfg_model_sn(pdid->mfg_id, pdid->model_name, pdid->serial_ascii, DISPSEL_VALID_ONLY);
       if (!dref && emit_error_msg) {
          f0printf(FERR, "Unable to find monitor with the specified model and serial number\n");
       }
@@ -388,7 +441,8 @@ Display_Ref* ddc_find_display_by_dispno(int dispno) {
  *    NULL if not found
  */
 Display_Ref*
-ddc_find_display_by_model_and_sn(
+ddc_find_display_by_mfg_model_sn(
+   const char * mfg_id,
    const char * model,
    const char * sn,
    Byte         findopts)
@@ -397,17 +451,17 @@ ddc_find_display_by_model_and_sn(
    DBGMSF(debug, "Starting.  model=%s, sn=%s, findopts=0x%02x", model, sn, findopts );
 
    Display_Ref * result = NULL;
-   Bus_Info * businfo = i2c_find_bus_info_by_model_sn(model, sn, findopts);
+   Bus_Info * businfo = i2c_find_bus_info_by_mfg_model_sn(mfg_id, model, sn, findopts);
    if (businfo) {
       result = create_bus_display_ref(businfo->busno);
    }
 
    if (!result)
-      result = adlshim_find_display_by_model_sn(model, sn);
+      result = adlshim_find_display_by_mfg_model_sn(mfg_id, model, sn);
 
 #ifdef USE_USB
    if (!result)
-      result = usb_find_display_by_model_sn(model, sn);
+      result = usb_find_display_by_mfg_model_sn(mfg_id, model, sn);
 #endif
 
    DBGMSF(debug, "Returning: %p  %s", result, (result)?dref_repr(result):"" );

@@ -478,7 +478,9 @@ ddca_create_model_sn_display_identifier(
       *p_did = NULL;
    }
    else {
-      *p_did = create_model_sn_display_identifier(model_name, serial_ascii);
+      *p_did = create_mfg_model_sn_display_identifier(
+                     NULL,     // *** TEMP ***
+                     model_name, serial_ascii);
    }
    return rc;
 }
@@ -548,7 +550,8 @@ ddca_repr_display_identifier(DDCA_Display_Identifier ddca_did) {
             break;
       case(DISP_ID_MONSER):
             snprintf(did_work_buf, 100,
-                     "Display Id Type: %s, model=%s, sn=%s", did_type_name, pdid->model_name, pdid->serial_ascii);
+                     "Display Id Type: %s, mfg=%s, model=%s, sn=%s",
+                     did_type_name, pdid->mfg_id, pdid->model_name, pdid->serial_ascii);
             break;
       case(DISP_ID_EDID):
       {

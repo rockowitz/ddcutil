@@ -306,7 +306,11 @@ Parsed_Edid * get_fallback_hiddev_edid(int fd, struct hiddev_devinfo * dev_info)
 
       if (model_sn) {
          // Should there be a ddc level function to find non-usb EDID?
-         Bus_Info * bus_info = i2c_find_bus_info_by_model_sn(model_sn->model, model_sn->sn, DISPSEL_NONE);
+         Bus_Info * bus_info = i2c_find_bus_info_by_mfg_model_sn(
+                                  NULL,               // mfg_id
+                                  model_sn->model,
+                                  model_sn->sn,
+                                  DISPSEL_NONE);
          if (bus_info) {
             printf("(%s) Using EDID for /dev/i2c-%d\n", __func__, bus_info->busno);
             parsed_edid = bus_info->edid;
@@ -314,7 +318,10 @@ Parsed_Edid * get_fallback_hiddev_edid(int fd, struct hiddev_devinfo * dev_info)
             // result = NULL;   // for testing - both i2c and X11 methods work
          }
          else {    // ADL
-            Display_Ref * dref = adlshim_find_display_by_model_sn(model_sn->model, model_sn->sn);
+            Display_Ref * dref = adlshim_find_display_by_mfg_model_sn(
+                                    NULL,              // mfg_id
+                                    model_sn->model,
+                                    model_sn->sn);
             parsed_edid = adlshim_get_parsed_edid_by_display_ref(dref);
             parsed_edid->edid_source = "ADL";
             // memory leak: not freeing dref because don't want to clobber parsed_edid

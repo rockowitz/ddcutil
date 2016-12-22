@@ -45,7 +45,7 @@ bool usb_is_valid_display_ref(Display_Ref * dref, bool emit_error_msg);
 
 void usb_show_active_display_by_display_ref(Display_Ref * dref, int depth);
 
-Display_Ref * usb_find_display_by_model_sn(const char * model, const char * sn);
+Display_Ref * usb_find_display_by_mfg_model_sn(const char * mfg_id, const char * model, const char * sn);
 Display_Ref * usb_find_display_by_edid(const Byte * edidbytes);
 Display_Ref * usb_find_display_by_busnum_devnum(int busnum, int devnum);
 

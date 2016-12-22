@@ -622,6 +622,16 @@ Bus_Info * i2c_check_bus(Bus_Info * bus_info) {
             bus_info->edid = i2c_get_parsed_edid_by_fd(file);
             // bus_info->flags |= I2C_BUS_EDID_CHECKED;
          }
+#ifdef NO
+         // test is being made in ddc_displays.c
+         if (bus_info->flags & I2C_BUS_ADDR_0X37) {
+            // have seen case where laptop display reports addr 37 active, but
+            // it doesn't responsd to DDC
+            // TODO: sanity check for DDC goes here
+            // or make this check at a higher level, since I2c doesn't understand DDC
+
+         }
+#endif
 
       }
    }
@@ -790,6 +800,7 @@ Bus_Info * i2c_get_bus_info_by_index(int busndx) {
 
 typedef struct {
    int           busno;
+   const char *  mfg_id;
    const char *  model_name;
    const char *  serial_ascii;
    const Byte *  edidbytes;
@@ -801,8 +812,9 @@ void report_i2c_bus_selector(I2C_Bus_Selector * sel, int depth) {
    int d1 = depth+1;
    int d2 = depth+2;
    rpt_structure_loc("I2C_Bus_Selector", sel, depth);
-   rpt_int("busno", NULL, sel->busno, d1);
-   rpt_str("model_name", NULL, sel->model_name, d1);
+   rpt_int("busno",        NULL, sel->busno, d1);
+   rpt_str("mfg_id",       NULL, sel->mfg_id, d1);
+   rpt_str("model_name",   NULL, sel->model_name, d1);
    rpt_str("serial_ascii", NULL, sel->serial_ascii, d1);
    rpt_structure_loc("edidbytes", sel->edidbytes, d1);
    if (sel->edidbytes)
@@ -837,6 +849,7 @@ bool bus_info_matches_selector(Bus_Info * bus_info, I2C_Bus_Selector * sel) {
 
    assert( bus_info && sel);
    assert( sel->busno >= 0   ||
+           sel->mfg_id       ||
            sel->model_name   ||
            sel->serial_ascii ||
            sel->edidbytes);
@@ -861,14 +874,21 @@ bool bus_info_matches_selector(Bus_Info * bus_info, I2C_Bus_Selector * sel) {
 
    Parsed_Edid * edid = bus_info->edid;  // will be NULL for I2C bus with no monitor
 
-   if (sel->model_name) {
+   if (sel->mfg_id && strlen(sel->mfg_id) > 0) {
+      if ((!edid) || strlen(edid->mfg_id) == 0 || !streq(sel->mfg_id, edid->mfg_id) ) {
+         result = false;
+         goto bye;
+      }
+      some_test_passed = true;
+   }
+   if (sel->model_name && strlen(sel->model_name) > 0) {
       if ((!edid) || strlen(edid->model_name) == 0 || !streq(sel->model_name, edid->model_name) ) {
          result = false;
          goto bye;
       }
       some_test_passed = true;
    }
-   if (sel->serial_ascii) {
+   if (sel->serial_ascii && strlen(sel->serial_ascii) > 0) {
       if ((!edid) || strlen(edid->serial_ascii) == 0 || !streq(sel->serial_ascii, edid->serial_ascii) ) {
          result = false;
          goto bye;
@@ -985,13 +1005,20 @@ Bus_Info * i2c_get_bus_info(int busno, Byte findopts) {
  *    pointer to Bus_Info struct for the bus,
  *    NULL if not found
  */
-Bus_Info * i2c_find_bus_info_by_model_sn(const char * model, const char * sn, Byte findopts) {
+Bus_Info *
+i2c_find_bus_info_by_mfg_model_sn(
+      const char * mfg_id,
+      const char * model,
+      const char * sn,
+      Byte findopts)
+{
    bool debug = false;
-   DBGMSF(debug, "Starting. model=|%s|, sn=|%s|", model, sn );
-   assert(model || sn);    // loosen the requirements
+   DBGMSF(debug, "Starting. mfg_id=|%s|, model=|%s|, sn=|%s|", mfg_id, model, sn );
+   assert(mfg_id || model || sn);    // loosen the requirements
 
    I2C_Bus_Selector sel;
    init_i2c_bus_selector(&sel);
+   sel.mfg_id       = mfg_id;
    sel.model_name   = model;
    sel.serial_ascii = sn;
    sel.options      = findopts;

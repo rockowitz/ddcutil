@@ -386,7 +386,10 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
 
    if (modelwork && snwork) {
       // free(parsed_cmd->pdid);
-      parsed_cmd->pdid = create_model_sn_display_identifier(modelwork, snwork);  // new way
+      parsed_cmd->pdid = create_mfg_model_sn_display_identifier(
+                          NULL,       // *** TEMP ***
+                          modelwork,
+                          snwork);
       explicit_display_spec_ct++;
    }
    else if (modelwork || snwork) {

@@ -75,7 +75,7 @@ typedef struct {
    int             busno;
    int             iAdapterIndex;
    int             iDisplayIndex;
-// char            mfg_id[EDID_MFG_ID_FIELD_SIZE];   // not used
+   char            mfg_id[EDID_MFG_ID_FIELD_SIZE];
    char            model_name[EDID_MODEL_NAME_FIELD_SIZE];
    char            serial_ascii[EDID_SERIAL_ASCII_FIELD_SIZE];
    int             usb_bus;
@@ -88,10 +88,43 @@ Display_Identifier* create_dispno_display_identifier(int dispno);
 Display_Identifier* create_busno_display_identifier(int busno);
 Display_Identifier* create_adlno_display_identifier(int iAdapterIndex, int iDisplayIndex);
 Display_Identifier* create_edid_display_identifier(const Byte* edidbytes);
-Display_Identifier* create_model_sn_display_identifier(const char* model_name, const char* serial_ascii);
+Display_Identifier* create_mfg_model_sn_display_identifier(const char* mfg_code, const char* model_name, const char* serial_ascii);
 Display_Identifier* create_usb_display_identifier(int bus, int device);
 void                report_display_identifier(Display_Identifier * pdid, int depth);
 void                free_display_identifier(Display_Identifier * pdid);
+
+
+// new way
+#ifdef FUTURE
+#define DISPLAY_SELECTOR_MARKER "DSEL"
+typedef struct {
+   char            marker[4];         // always "DSEL"
+   int             dispno;
+   int             busno;
+   int             iAdapterIndex;
+   int             iDisplayIndex;
+   char *          mfg_id;
+   char *          model_name;
+   char *          serial_ascii;
+   int             usb_bus;
+   int             usb_device;
+   Byte *          edidbytes;   // always 128 bytes
+} Display_Selector;
+
+Display_Selector * dsel_new();
+void               dsel_free(              Display_Selector * dsel);
+Display_Selector * dsel_set_display_number(Display_Selector* dsel, int dispno);
+Display_Selector * dsel_set_i2c_busno(     Display_Selector* dsel, int busno);
+Display_Selector * dsel_set_adl_numbers(   Display_Selector* dsel, int iAdapterIndex, int iDisplayIndex);
+Display_Selector * dsel_set_usb_numbers(   Display_Selector* dsel, int bus, int device);
+Display_Selector * dsel_set_mfg_id(        Display_Selector* dsel, char*  mfg_id);
+Display_Selector * dsel_set_model_name(    Display_Selector* dsel, char* model_name);
+Display_Selector * dsel_set_sn(            Display_Selector* dsel, char * serial_ascii);
+Display_Selector * dsel_set_edid_bytes(    Display_Selector* dsel, Byte * edidbytes);
+Display_Selector * dsel_set_edid_hex(      Display_Selector* dsel, char * hexstring);
+bool               dsel_validate(          Display_Selector * dsel);
+#endif
+
 
 
 // *** Display_Ref ***

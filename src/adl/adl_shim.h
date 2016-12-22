@@ -66,7 +66,7 @@ void adlshim_report_active_display_by_display_ref(Display_Ref * dref, int depth)
 // bool              adlshim_is_valid_adlno(int iAdapterIndex, int iDisplayIndex, bool emit_error_msg);
 bool              adlshim_is_valid_display_ref(Display_Ref * dref, bool emit_error_msg);
 // ADL_Display_Rec * adl_get_display_by_adlno(int iAdapterIndex, int iDisplayIndex, bool emit_error_msg);
-Display_Ref * adlshim_find_display_by_model_sn(const char * model, const char * sn);
+Display_Ref * adlshim_find_display_by_mfg_model_sn(const char * mfg_id, const char * model, const char * sn);
 Display_Ref * adlshim_find_display_by_edid(const Byte * pEdidBytes);
 
 Display_Info_List adlshim_get_valid_displays();

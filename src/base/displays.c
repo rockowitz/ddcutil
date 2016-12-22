@@ -104,16 +104,32 @@ Display_Identifier* create_edid_display_identifier(
    return pIdent;
 }
 
-Display_Identifier* create_model_sn_display_identifier(
+Display_Identifier* create_mfg_model_sn_display_identifier(
+      const char* mfg_id,
       const char* model_name,
       const char* serial_ascii
       )
 {
-   assert(model_name && strlen(model_name) > 0 && strlen(model_name) < EDID_MODEL_NAME_FIELD_SIZE);
-   assert(serial_ascii && strlen(serial_ascii) > 0 && strlen(serial_ascii) < EDID_SERIAL_ASCII_FIELD_SIZE);
+   assert(!mfg_id       || strlen(mfg_id)       < EDID_MFG_ID_FIELD_SIZE);
+   assert(!model_name   || strlen(model_name)   < EDID_MODEL_NAME_FIELD_SIZE);
+   assert(!serial_ascii || strlen(serial_ascii) < EDID_SERIAL_ASCII_FIELD_SIZE);
+
    Display_Identifier* pIdent = common_create_display_identifier(DISP_ID_MONSER);
-   strcpy(pIdent->model_name, model_name);
-   strcpy(pIdent->serial_ascii, serial_ascii);
+   if (mfg_id)
+      strcpy(pIdent->mfg_id, mfg_id);
+   else
+      pIdent->model_name[0] = '\0';
+   if (model_name)
+      strcpy(pIdent->model_name, model_name);
+   else
+      pIdent->model_name[0] = '\0';
+   if (serial_ascii)
+      strcpy(pIdent->serial_ascii, serial_ascii);
+   else
+      pIdent->serial_ascii[0] = '\0';
+
+   assert( strlen(pIdent->mfg_id) + strlen(pIdent->model_name) + strlen(pIdent->serial_ascii) > 0);
+
    return pIdent;
 }
 
@@ -139,6 +155,7 @@ void report_display_identifier(Display_Identifier * pdid, int depth) {
    rpt_int( "iDisplayIndex", NULL, pdid->iDisplayIndex, d1);
    rpt_int( "usb_bus",       NULL, pdid->usb_bus,       d1);
    rpt_int( "usb_device",    NULL, pdid->usb_device,    d1);
+   rpt_str( "mfg_id",        NULL, pdid->mfg_id,        d1);
    rpt_str( "model_name",    NULL, pdid->model_name,    d1);
    rpt_str( "serial_ascii",  NULL, pdid->serial_ascii,  d1);
 
@@ -163,6 +180,33 @@ void free_display_identifier(Display_Identifier * pdid) {
    pdid->marker[3] = 'x';
    free(pdid);
 }
+
+
+#ifdef FUTURE
+// *** Display Selector *** (future)
+
+Display_Selector * dsel_new() {
+   Display_Selector * dsel = calloc(1, sizeof(Display_Selector));
+   memcpy(dsel->marker, DISPLAY_SELECTOR_MARKER, 4);
+   dsel->dispno        = -1;
+   dsel->busno         = -1;
+   dsel->iAdapterIndex = -1;
+   dsel->iDisplayIndex = -1;
+   dsel->usb_bus       = -1;
+   dsel->usb_device    = -1;
+   return dsel;
+}
+
+void dsel_free(Display_Selector * dsel) {
+   if (dsel) {
+      assert(memcmp(dsel->marker, DISPLAY_SELECTOR_MARKER, 4) == 0);
+      free(dsel->mfg_id);
+      free(dsel->model_name);
+      free(dsel->serial_ascii);
+      free(dsel->edidbytes);
+   }
+}
+#endif
 
 
 // *** DisplayRef ***

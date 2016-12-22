@@ -836,14 +836,41 @@ ADL_Display_Rec * adl_get_display_by_adlno(int iAdapterIndex, int iDisplayIndex,
 /* Find display by model name and serial number
  *
  */
-ADL_Display_Rec * adl_find_display_by_model_sn(const char * model, const char * sn) {
+ADL_Display_Rec * adl_find_display_by_mfg_model_sn(
+                     const char * mfg_id,
+                     const char * model,
+                     const char * sn)
+{
    // DBGMSG("Starting. mode=%s, sn=%s   ", model, sn );
    ADL_Display_Rec * result = NULL;
+   bool some_test_passed = false;
+   bool some_test_failed = false;
    int ndx;
    for (ndx = 0; ndx < active_display_ct; ndx++) {
       ADL_Display_Rec * pdisp = &active_displays[ndx];
-      if (streq(model,pdisp->model_name) &&
-          streq(sn, pdisp->serial_ascii) )
+      if ( mfg_id && strlen(mfg_id) > 0) {
+         if ( streq(mfg_id, pdisp->mfg_id) )
+            some_test_passed = true;
+         else
+            some_test_failed = true;
+      }
+      if ( model && strlen(model) > 0) {
+         if ( streq(model, pdisp->model_name) )
+            some_test_passed = true;
+         else
+            some_test_failed = true;
+      }
+      if ( sn && strlen(sn) > 0) {
+         if ( streq(sn, pdisp->serial_ascii) )
+            some_test_passed = true;
+         else
+            some_test_failed = true;
+      }
+
+      if (some_test_passed && !some_test_failed)
+
+      // if (streq(model,pdisp->model_name) &&
+      //     streq(sn, pdisp->serial_ascii) )
       {
          result = pdisp;
          break;

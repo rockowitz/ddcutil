@@ -355,8 +355,11 @@ Global_Status_Code loadvcp_by_dumpload_data(Dumpload_Data* pdata, Display_Handle
    else {
      // no Display_Ref passed as argument, just use the identifiers in the
      // data to pick the display
-      Display_Ref * dref = ddc_find_display_by_model_and_sn(
-                              pdata->model, pdata->serial_ascii, DISPSEL_VALID_ONLY);
+      Display_Ref * dref = ddc_find_display_by_mfg_model_sn(
+                              NULL,    // mfg_id
+                              pdata->model,
+                              pdata->serial_ascii,
+                              DISPSEL_VALID_ONLY);
       if (!dref) {
          f0printf(FERR, "Monitor not connected: %s - %s   \n", pdata->model, pdata->serial_ascii );
          gsc = DDCRC_INVALID_DISPLAY;

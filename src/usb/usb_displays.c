@@ -499,16 +499,41 @@ create_display_ref_from_usb_monitor_info(Usb_Monitor_Info * moninfo) {
 
 
 Display_Ref *
-usb_find_display_by_model_sn(const char * model, const char * sn) {
+usb_find_display_by_mfg_model_sn(const char * mfg_id, const char * model, const char * sn) {
    Display_Ref * result = NULL;
 
    Usb_Monitor_Info * found_monitor = NULL;
    GPtrArray * all_usb_monitors = get_usb_monitor_list();
    for (int ndx=0; ndx<all_usb_monitors->len; ndx++) {
       Usb_Monitor_Info * curmon = g_ptr_array_index(all_usb_monitors, ndx);
-      if ( strcmp(model, curmon->edid->model_name)   == 0 &&
-           strcmp(sn,    curmon->edid->serial_ascii) == 0
-         )
+      bool some_test_passed = false;
+      bool some_test_failed = false;
+
+      if (mfg_id && strlen(mfg_id) > 0) {
+         if ( streq(mfg_id, curmon->edid->mfg_id) )
+            some_test_passed = true;
+         else
+            some_test_failed = false;
+      }
+
+      if (model && strlen(model) > 0) {
+         if ( streq(model, curmon->edid->model_name) )
+            some_test_passed = true;
+         else
+            some_test_failed = false;
+      }
+
+      if (sn && strlen(sn) > 0) {
+         if ( streq(sn, curmon->edid->serial_ascii) )
+            some_test_passed = true;
+         else
+            some_test_failed = false;
+      }
+
+      // if ( strcmp(model, curmon->edid->model_name)   == 0 &&
+      //      strcmp(sn,    curmon->edid->serial_ascii) == 0
+      //    )
+      if (some_test_passed && !some_test_failed)
       {
           found_monitor = curmon;
           break;
