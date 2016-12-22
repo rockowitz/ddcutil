@@ -397,11 +397,15 @@ get_formatted_value_for_feature_table_entry(
             msg_fh);
    assert( (gsc==0 && (feature_type == pvalrec->value_type)) || (gsc!=0 && !pvalrec) );
    if (gsc == 0) {
-      if (!is_table_feature && output_level >= OL_VERBOSE) {
+      // if (!is_table_feature && output_level >= OL_VERBOSE) {
+      // if (!is_table_feature && debug) {
+      if (output_level >= OL_VERBOSE || debug) {
          rpt_push_output_dest(msg_fh);
-         report_single_vcp_value(pvalrec, 0);
+         // report_single_vcp_value(pvalrec, 0);
+         rpt_vstring(0, "Raw value: %s", summarize_single_vcp_value(pvalrec));
          rpt_pop_output_dest();
       }
+
 
 #ifdef OLD
       if (output_level == OL_PROGRAM) {
