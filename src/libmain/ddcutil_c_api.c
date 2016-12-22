@@ -460,7 +460,8 @@ ddca_create_adlno_display_identifier(
 
 
 DDCA_Status
-ddca_create_model_sn_display_identifier(
+ddca_create_mfg_model_sn_display_identifier(
+      const char*              mfg_id,
       const char*              model_name,
       const char*              serial_ascii,
       DDCA_Display_Identifier* p_did
@@ -468,19 +469,24 @@ ddca_create_model_sn_display_identifier(
 {
    *p_did = NULL;
    DDCA_Status rc = 0;
-   if (model_name == NULL  ||
-       strlen(model_name) >= EDID_MODEL_NAME_FIELD_SIZE ||
-       serial_ascii == NULL ||
-       strlen(serial_ascii) >= EDID_SERIAL_ASCII_FIELD_SIZE
+   // break up the invalid argument tests for clarity
+   // at least 1 argument must be specified
+   if (  ( !mfg_id       || strlen(mfg_id)       == 0)  &&
+         ( !model_name   || strlen(model_name)   == 0)  &&
+         ( !serial_ascii || strlen(serial_ascii) == 0)
       )
-   {
       rc = DDCL_ARG;
-      *p_did = NULL;
-   }
+
+   // check that no arguments are too long
+   if ( (model_name   && strlen(model_name)   >= EDID_MODEL_NAME_FIELD_SIZE)  ||
+        (mfg_id       && strlen(mfg_id)       >= EDID_MFG_ID_FIELD_SIZE)      ||
+        (serial_ascii && strlen(serial_ascii) >= EDID_SERIAL_ASCII_FIELD_SIZE)
+      )
+      rc = DDCL_ARG;
+
    else {
       *p_did = create_mfg_model_sn_display_identifier(
-                     NULL,     // *** TEMP ***
-                     model_name, serial_ascii);
+                     mfg_id, model_name, serial_ascii);
    }
    return rc;
 }

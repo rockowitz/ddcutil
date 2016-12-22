@@ -112,7 +112,8 @@ DDCS_Display_Identifier_p ddcs_create_adlno_display_identifier(
                int iDisplayIndex);
 DDCS_Display_Identifier_p ddcs_create_busno_display_identifier(
                int busno);
-DDCS_Display_Identifier_p ddcs_create_model_sn_display_identifier(
+DDCS_Display_Identifier_p ddcs_create_mfg_model_sn_display_identifier(
+               const char * mfg_id,
                const char * model,
                const char * sn);
 DDCS_Display_Identifier_p ddcs_create_edid_display_identifier(

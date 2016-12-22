@@ -60,7 +60,8 @@ ddcg_display_identifier_create_adlno_identifier(
       GError **   error);
 
 DdcgDisplayIdentifier*
-ddcg_display_identifier_create_model_sn_identifier(
+ddcg_display_identifier_create_mfg_model_sn_identifier(
+      const gchar *  mfg_id,
       const gchar *  model,
       const gchar *  sn,
       GError **      error);

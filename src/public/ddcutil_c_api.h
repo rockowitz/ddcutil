@@ -301,7 +301,8 @@ ddca_create_busno_display_identifier(
  * @return       status code
  */
 DDCA_Status
-ddca_create_model_sn_display_identifier(
+ddca_create_mfg_model_sn_display_identifier(
+      const char *             mfg_id,
       const char *             model,
       const char *             sn,
       DDCA_Display_Identifier* pdid);

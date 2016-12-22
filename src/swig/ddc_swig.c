@@ -213,11 +213,11 @@ ddcs_create_busno_display_identifier(int busno)
 }
 
 DDCS_Display_Identifier_p
-ddcs_create_model_sn_display_identifier(const char * model, const char * sn)
+ddcs_create_mfg_model_sn_display_identifier(const char * mfg_id, const char * model, const char * sn)
 {
    DDCA_Display_Identifier pdid = NULL;
-   DBGMSG("model=%s, sn=%s", model, sn);
-   ERROR_CHECK( ddca_create_model_sn_display_identifier(model, sn, &pdid) );
+   DBGMSG("mfg_id=%s, model=%s, sn=%s", model, sn);
+   ERROR_CHECK( ddca_create_mfg_model_sn_display_identifier(mfg_id, model, sn, &pdid) );
    return pdid;
 }
 

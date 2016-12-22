@@ -213,7 +213,8 @@ ddcg_display_identifier_create_usb_identifier(
  *  Returns: (transfer full): newly created #DdcgDisplayIdentifier
  */
 DdcgDisplayIdentifier*
-ddcg_display_identifier_create_model_sn_identifier(
+ddcg_display_identifier_create_mfg_model_sn_identifier(
+      const gchar *  mfg_id,
       const gchar *  model,
       const gchar *  sn,
       GError **      error)
@@ -222,7 +223,7 @@ ddcg_display_identifier_create_model_sn_identifier(
 
    DdcgDisplayIdentifier * ddcg_did = NULL;
    DDCA_Display_Identifier ddct_did = NULL;
-   DDCA_Status ddct_status = ddca_create_model_sn_display_identifier(model, sn, &ddct_did);
+   DDCA_Status ddct_status = ddca_create_mfg_model_sn_display_identifier(mfg_id, model, sn, &ddct_did);
    if (ddct_status == 0) {
       ddcg_did = g_object_new(DDCG_TYPE_DISPLAY_IDENTIFIER, NULL);
       ddcg_did->priv->ddct_did = ddct_did;
