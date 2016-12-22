@@ -232,9 +232,13 @@ Display_Ref* get_display_ref_for_display_identifier(Display_Identifier* pdid, bo
       validated = false;
       break;
    case DISP_ID_MONSER:
-      dref = ddc_find_display_by_mfg_model_sn(pdid->mfg_id, pdid->model_name, pdid->serial_ascii, DISPSEL_VALID_ONLY);
+      dref = ddc_find_display_by_mfg_model_sn(
+                pdid->mfg_id,
+                pdid->model_name,
+                pdid->serial_ascii,
+                DISPSEL_VALID_ONLY);
       if (!dref && emit_error_msg) {
-         f0printf(FERR, "Unable to find monitor with the specified model and serial number\n");
+         f0printf(FERR, "Unable to find monitor with the specified manufacturer id/model/serial number\n");
       }
       break;
    case DISP_ID_EDID:

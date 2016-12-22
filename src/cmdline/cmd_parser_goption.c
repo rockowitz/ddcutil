@@ -177,6 +177,7 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
    gboolean timestamp_trace_flag = false;
 // gboolean myhelp_flag    = false;
 // gboolean myusage_flag   = false;
+   char *   mfg_id_work    = NULL;
    char *   modelwork      = NULL;
    char *   snwork         = NULL;
    char *   edidwork       = NULL;
@@ -212,6 +213,7 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
       {"show-unsupported",
                   'u',  0, G_OPTION_ARG_NONE,     &show_unsupported_flag, "Report unsupported features", NULL},
       {"force",   'f',  0, G_OPTION_ARG_NONE,     &force_flag,       "Do not check certain parms",     NULL},
+      {"mfg",     'g',  0, G_OPTION_ARG_STRING,   &mfg_id_work,      "Monitor manufacturer code",      "mfg_id"},
       {"model",   'l',  0, G_OPTION_ARG_STRING,   &modelwork,        "Monitor model",                     "model name"},
       {"sn",      'n',  0, G_OPTION_ARG_STRING,   &snwork,           "Monitor serial number",          "serial number"},
       {"edid",    'e',  0, G_OPTION_ARG_STRING,   &edidwork,         "Monitor EDID",            "256 char hex string" },
@@ -384,17 +386,13 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
       explicit_display_spec_ct++;
    }
 
-   if (modelwork && snwork) {
+   if (mfg_id_work || modelwork || snwork) {
       // free(parsed_cmd->pdid);
       parsed_cmd->pdid = create_mfg_model_sn_display_identifier(
-                          NULL,       // *** TEMP ***
+                          mfg_id_work,
                           modelwork,
                           snwork);
       explicit_display_spec_ct++;
-   }
-   else if (modelwork || snwork) {
-      fprintf(stderr, "--model and --sn must be specified together\n");
-      ok = false;
    }
 
    if (maxtrywork) {

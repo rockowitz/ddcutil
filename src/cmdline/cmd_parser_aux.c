@@ -341,6 +341,7 @@ char * monitor_selection_option_help =
 #endif
        "  --edid <hex string>, where <hex string> is a 256 hex character representation of the\n"
        "          128 byte first block of the EDID\n"
+       "  --mfg <mfg_id>, where <mfg_id> is the 3 character manufacturer id reported by the EDID\n"
        "  --model <model_name>, where <model name> is as reported by the EDID\n"
        "  --sn <serial_number>, where <serial_number> is the string form of the serial number\n"
        "          reported by the EDID\n"

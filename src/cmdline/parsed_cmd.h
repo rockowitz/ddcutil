@@ -81,7 +81,7 @@ struct {
    char *              failsim_control_fn;
    Display_Identifier* pdid;
    Trace_Group         trace;
-   DDCA_Output_Level        output_level;   // new, to replace msg_level and programmatic_output
+   DDCA_Output_Level   output_level;
    int                 max_tries[3];
    int                 sleep_strategy;
 } Parsed_Cmd;
