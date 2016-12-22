@@ -35,6 +35,8 @@
 
 
 
+char * vcp_value_type_name(Vcp_Value_Type value_type);
+
 
 Single_Vcp_Value *
 create_nontable_vcp_value(
@@ -89,6 +91,11 @@ Nontable_Vcp_Value * single_vcp_value_to_nontable_vcp_value(Single_Vcp_Value * v
 void free_single_vcp_value(Single_Vcp_Value * vcp_value);
 
 void report_single_vcp_value(Single_Vcp_Value * val, int depth);
+
+
+extern const int summzrize_single_vcp_value_buffer_size;
+char * summarize_single_vcp_value_r(Single_Vcp_Value * valrec, char * buffer, int bufsz);
+char * summarize_single_vcp_value(Single_Vcp_Value * valrec);
 
 
 typedef GPtrArray *  Vcp_Value_Set;

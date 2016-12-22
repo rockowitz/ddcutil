@@ -28,17 +28,35 @@
 
 #include "util/data_structures.h"
 #include "util/report_util.h"
+#include "util/string_util.h"
 
 #include "base/ddc_packets.h"
 
 #include "vcp/vcp_feature_values.h"
 
 
+
+char * vcp_value_type_name(Vcp_Value_Type value_type) {
+   char * result = NULL;
+   switch (value_type) {
+   case NON_TABLE_VCP_VALUE:
+      result = "Non Table";
+      break;
+   case TABLE_VCP_VALUE:
+      result = "Table";
+      break;
+   }
+   return result;
+}
+
+
+
+
 void report_single_vcp_value(Single_Vcp_Value * valrec, int depth) {
    int d1 = depth+1;
    rpt_vstring(depth, "Single_Vcp_Value at %p:", valrec);
-   rpt_vstring(d1, "opcode=0x%02x, value_type=0x%02x",
-                   valrec->opcode, valrec->value_type);
+   rpt_vstring(d1, "opcode=0x%02x, value_type=%s (0x%02x)",
+                   valrec->opcode, vcp_value_type_name(valrec->value_type), valrec->value_type);
    if (valrec->value_type == NON_TABLE_VCP_VALUE) {
       rpt_vstring(d1, "mh=0x%02x, ml=0x%02x, sh=0x%02x, sl=0x%02x",
                       valrec->val.nc.mh, valrec->val.nc.ml, valrec->val.nc.sh, valrec->val.nc.sl);
@@ -50,8 +68,73 @@ void report_single_vcp_value(Single_Vcp_Value * valrec, int depth) {
    }
    else {
       assert(valrec->value_type == TABLE_VCP_VALUE);
-      // TODO: complete
+      rpt_hex_dump(valrec->val.t.bytes, valrec->val.t.bytect, d1);
    }
+}
+
+
+// must be #define, not const int, since used in buffer declaration
+#define SUMMARIZE_SINGLE_VCP_VALUE_BUFFER_SIZE  101
+// to expose an int rather than a define in the header file
+const int summzrize_single_vcp_value_buffer_size = SUMMARIZE_SINGLE_VCP_VALUE_BUFFER_SIZE;
+char * summarize_single_vcp_value_r(Single_Vcp_Value * valrec, char * buffer, int bufsz) {
+   bool debug = false;
+   DBGMSF(debug, "Starting.  buffer=%p, bufsz=%d", buffer, bufsz);
+   if (buffer) {
+      assert(bufsz >= SUMMARIZE_SINGLE_VCP_VALUE_BUFFER_SIZE);
+      *buffer = '\0';
+      if (valrec) {
+         if (valrec->value_type == NON_TABLE_VCP_VALUE) {
+            snprintf(buffer, bufsz,
+                  "opcode=0x%02x, "
+                  "mh=0x%02x, ml=0x%02x, sh=0x%02x, sl=0x%02x, "
+                  "max_val=%d (0x%04x), cur_val=%d (0x%04x)",
+                  valrec->opcode,
+                  valrec->val.nc.mh, valrec->val.nc.ml, valrec->val.nc.sh, valrec->val.nc.sl,
+                  valrec->val.c.max_val,
+                  valrec->val.c.max_val,
+                  valrec->val.c.cur_val,
+                  valrec->val.c.cur_val
+                  );
+            // should never happen, but in case of string too long
+            buffer[bufsz-1] = '\0';
+         }
+         else {
+            assert(valrec->value_type == TABLE_VCP_VALUE);
+            snprintf(buffer, bufsz,
+                     "opcode=0x%02x, value_type=Table, bytect=%d, ...",
+                     valrec->opcode,
+                     valrec->val.t.bytect
+                     );
+            // easier just to convert the whole byte array then take what can fit
+            char * buf0 =    hexstring2(
+                               valrec->val.t.bytes,
+                               valrec->val.t.bytect,
+                               NULL,                  //   sepstr,
+                               true,                  //   uppercase,
+                               NULL,                 // allocate buffer,
+                               0);                   //    bufsz
+
+            int space_remaining = bufsz - strlen(buffer);
+            if ( strlen(buf0) < space_remaining )
+               strcat(buffer, buf0);
+            else {
+               strncat(buffer, buf0, space_remaining-4);
+               strcat(buffer, "...");
+            }
+            free(buf0);
+
+         }
+
+      }
+   }
+   return buffer;
+}
+
+
+char * summarize_single_vcp_value(Single_Vcp_Value * valrec) {
+   static char buffer[SUMMARIZE_SINGLE_VCP_VALUE_BUFFER_SIZE];
+   return summarize_single_vcp_value_r(valrec, buffer, sizeof(buffer));
 }
 
 // ignoring Buffer * since it only exists temporarily for transition
