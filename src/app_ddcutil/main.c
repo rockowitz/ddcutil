@@ -372,10 +372,9 @@ int main(int argc, char *argv[]) {
 #ifdef USE_USB
       query_usbenv();
 #endif
-      printf("\nDetected displays:\n");
-      int display_ct = ddc_report_active_displays(1 /* logical depth */);
-      // added 12/17/16, user log displayed 1 less than reported displays, why?
-      printf("Detected: %d displays\n", display_ct);
+      printf("\n*** Detected Displays ***\n");
+      int display_ct = ddc_report_active_displays(0 /* logical depth */);
+      // printf("Detected: %d displays\n", display_ct);   // not needed
       int dispno = 1;
       // dispno = 2;      // TEMP FOR TESTING
       for (; dispno <= display_ct; dispno++) {

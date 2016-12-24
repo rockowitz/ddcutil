@@ -214,7 +214,7 @@ static bool show_one_file(char * dir_name, char * simple_fn, bool verbose, int d
 
 
 static bool query_proc_driver_nvidia() {
-   bool debug = true;
+   bool debug = false;
    bool result = false;
    char * dn = "/proc/driver/nvidia/";
    if ( directory_exists(dn) ) {
@@ -941,15 +941,15 @@ static void driver_specific_tests(struct driver_name_node * driver_list) {
         set_output_level(OL_VERBOSE);  // force error msg that names missing dll
         bool ok = adlshim_initialize();
         if (!ok)
-           printf("WARNING: Using AMD proprietary video driver fglrx but unable to load ADL library");
+           printf("WARNING: Using AMD proprietary video driver fglrx but unable to load ADL library\n");
      }
 #else
-     printf("WARNING: Using AMD proprietary video driver fglrx but ddcutil built without ADL support");
+     printf("WARNING: Using AMD proprietary video driver fglrx but ddcutil built without ADL support\n");
 #endif
    }
 
    if (!found_driver_specific_checks)
-      printf("No driver specific checks apply.");
+      printf("No driver specific checks apply.\n");
 }
 
 
@@ -1365,6 +1365,7 @@ void query_sysenv() {
    printf("\n*** Primary Check 4: Driver specific checks ***\n");
    driver_specific_tests(driver_list);
 
+   // Free the driver list
    struct driver_name_node * cur_node = driver_list;
    while (cur_node) {
       struct driver_name_node * next_node = cur_node->next;
