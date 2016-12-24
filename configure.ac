@@ -159,8 +159,6 @@ AC_SUBST(DEBIAN_DISTRIBUTION)
 ### Recognize command options for configure script
 ### 
 
-dnl TODO: Clean up tests, use consistent pattern
-
 ### Documented options
 
 AC_MSG_NOTICE( [Checking configure command options...] )
@@ -171,19 +169,14 @@ AC_ARG_WITH([adl-headers],
             [adl_header_dir=$withval],
             [adl_header_dir=[]])
 AC_MSG_NOTICE([adl_header_dir = $adl_header_dir])
-
-AS_IF([test "x$adl_header_dir" != "x"],
-      HAVE_ADL=1,
-      HAVE_ADL=0)
-
-dnl this is the way to do it
-AS_IF([test "x$adl_header_dir" != "x"],
-      AC_DEFINE_UNQUOTED( [HAVE_ADL], [1], [If defined, ADL headers are present.  Build with ADL support.]),
-      [])
-dnl AC_MSG_NOTICE([HAVE_ADL = $HAVE_ADL])
+AS_IF( [test -n "$adl_header_dir"],
+         AC_DEFINE( [HAVE_ADL], [1], [If defined, ADL headers are present.  Build with ADL support.])
+         AC_MSG_NOTICE( [adl... enabled]  )
+        ,
+         AC_MSG_NOTICE( [adl... disabled] )
+     )
+AM_CONDITIONAL([HAVE_ADL_COND], [test -n "$adl_header_dir"] )
 AC_SUBST([ADL_HEADER_DIR], [$adl_header_dir])
-dnl Makefile.am/.in variable: 
-AM_CONDITIONAL([HAVE_ADL_COND], [test "x$adl_header_dir" != "x"] )
 
 
 dnl *** configure option: --enable-lib
@@ -197,13 +190,7 @@ AS_IF([test "x$enable_lib" == "xyes"],
       AC_MSG_NOTICE( [lib... enabled]  ),
       AC_MSG_NOTICE( [lib... disabled] )
      )
-dnl AC_SUBST([ENABLE_SHARED_LIB_FLAG], [test "x$enable_lib" == "xyes"; $?])
-dnl AC_SUBST([ENABLE_SHARED_LIB_FLAG], [xy])
-AS_IF([test "x$enable_lib" == "xyes"],
-      AC_SUBST( [ENABLE_SHARED_LIB_FLAG], [1] )
-      AC_DEFINE( [ENABLE_SHARED_LIB], [1], [If defined, build shared library.] ),
-      AC_SUBST( [ENABLE_SHARED_LIB_FLAG], [0]  )
-     )
+
 
 dnl Were we building SWIG support for more than Python, there would need to be 2 configuration option, 
 dnl one to control SWIG and one to enable the Python bindings.   
@@ -220,13 +207,9 @@ AS_IF([test "x$enable_swig" == "xyes"],
       AC_MSG_NOTICE( [swig... enabled]  ),
       AC_MSG_NOTICE( [swig... disabled] )
      )
-dnl AC_SUBST([ENABLE_SWIG_FLAG], [test "x$enable_swig" == "xyes"; $?])
-dnl AC_SUBST([ENABLE_SWIG_FLAG], [xy])
-AS_IF([test "x$enable_swig" == "xyes"],
-      AC_SUBST([ENABLE_SWIG_FLAG], [1] ),
-      AC_SUBST([ENABLE_SWIG_FLAG], [0]  )
-     )
 
+
+dnl TODO: Review
 dnl Alternative, copied from somewhere
 
 #default behavior is to install the python bindings into subfolders of $prefix
@@ -243,16 +226,10 @@ AC_ARG_ENABLE([usb],
               [enable_usb=yes] )
 AM_CONDITIONAL([ENABLE_USB_COND], [test "x$enable_usb" == "xyes"] )
 AS_IF([test "x$enable_usb" == "xyes"],
-      AC_SUBST([ENABLE_USB_FLAG], [1] ),
-      AC_SUBST([ENABLE_USB_FLAG], [0]  )
-     )
-dnl Define USE_USB in config.h:
-AS_IF([test "x$enable_usb" == "xyes"],
-      AC_DEFINE_UNQUOTED( [USE_USB], [1], [If defined, use usb.]),
-      [])
-AS_IF([test "x$enable_usb" == "xyes"],
-      AC_MSG_NOTICE( [usb... enabled]  ),
-      AC_MSG_NOTICE( [usb... disabled] )
+        AC_DEFINE( [USE_USB], [1], [If defined, use usb.])
+        AC_MSG_NOTICE( [usb... enabled]  )
+      ,
+        AC_MSG_NOTICE( [usb... disabled] )
      )
 
 
@@ -263,16 +240,11 @@ AC_ARG_ENABLE([testcases],
               [ AS_HELP_STRING( [--enable-testcases=@<:@no/yes@:>@], [Include test cases @<:@default=no@:>@] )],
               [include_testcases=${enableval}],
               [include_testcases=no] )
-dnl disable after testing:
-dnl AC_MSG_NOTICE([include_testcases = $include_testcases])
-dnl Set flag for automake.am:
 AM_CONDITIONAL([INCLUDE_TESTCASES_COND], [test "x$include_testcases" == "xyes"] )
-dnl Define INCLUDE_TESTCASES in config.h:
 AS_IF([test "x$include_testcases" == "xyes"],
-      AC_DEFINE_UNQUOTED( [INCLUDE_TESTCASES], [1], [If defined, build with test cases.]),
-      [])
-AS_IF([test "x$include_testcases" == "xyes"],
-      AC_MSG_NOTICE( [testcases... enabled]  ),
+      AC_DEFINE( [INCLUDE_TESTCASES], [1], [If defined, build with test cases.]) 
+      AC_MSG_NOTICE( [testcases... enabled]  )
+      ,
       AC_MSG_NOTICE( [testcases... disabled] )
      )
 
@@ -281,9 +253,6 @@ AC_ARG_ENABLE([callgraph],
               [ AS_HELP_STRING( [--enable-callgraph=@<:@no/yes@:>@], [Create .expand files for static call graph@<:@default=no@:>@] )],
               [enable_callgraph=${enableval}],
               [enable_callgraph=no] )
-dnl disable after testing:
-dnl AC_MSG_NOTICE([enable_callgraph = $enable_callgraph])
-dnl Set flag for automake.am:
 AM_CONDITIONAL([ENABLE_CALLGRAPH_COND], [test "x$enable_callgraph" == "xyes"] )
 AS_IF([test "x$enable_callgraph" == "xyes"],
       AC_MSG_NOTICE( [callgraph... enabled]  ),
@@ -309,17 +278,12 @@ AC_ARG_ENABLE([failsim],
               [enable_failsim=${enableval}],
               [enable_failsim=no] )
 AM_CONDITIONAL([ENABLE_FAILSIM_COND], [test "x$enable_failsim" == "xyes"] )
-dnl Defines $(ENABLE_FAILSIM_FLAG) in Makefile.in 
-AS_IF([test "x$enable_failsim" == "xyes"],
-      [ AC_SUBST([ENABLE_FAILSIM_FLAG], [1] )
-        AC_DEFINE( [ENABLE_FAILSIM], [1], [If defined, enable failsim.])
-        AC_MSG_NOTICE( [failsim..... enabled] )
-      ],
-      [ AC_SUBST([ENABLE_FAILSIM_FLAG], [0]  )
-        AC_MSG_NOTICE( [failsim..... disabled] )
-      ]
+AS_IF( [test "x$enable_failsim" == "xyes"],
+         AC_DEFINE( [ENABLE_FAILSIM], [1], [If defined, enable failsim.])
+         AC_MSG_NOTICE( [failsim..... enabled] )
+      ,
+         AC_MSG_NOTICE( [failsim..... disabled] )
      )
-
 
 ###
 ### Checks for typedefs, structures, and compiler characteristics.
