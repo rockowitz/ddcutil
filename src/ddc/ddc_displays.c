@@ -196,9 +196,9 @@ static bool ddc_is_valid_display_ref(Display_Ref * dref, bool emit_error_msg) {
 
 
 /* Converts display identifier passed on the command line to a logical
- * identifier for an I2C or ADL display.  If a bus number or ADL adapter.display
- * number is specified, the translation is direct.  If a model name/serial number
- * pair, an EDID, or a display number is specified, the attached displays are searched.
+ * reference to an I2C, ADL, or USB display.  If an I2C bus number, ADL adapter.display
+ * number, or usb bus/device number is specified, the translation is direct.
+ * Otherwise, the discovered displays are searched.
  *
  * Arguments:
  *    pdid      display identifiers
@@ -207,10 +207,13 @@ static bool ddc_is_valid_display_ref(Display_Ref * dref, bool emit_error_msg) {
  * OLD             ADL number does in fact reference an attached display
  *
  * Returns:
- *    DisplayRef instance specifying the display using either an I2C bus number
+ *    Display_Ref instance specifying the display using either an I2C bus number
  *    or an ADL adapter.display number, NULL if display not found
  */
-Display_Ref* get_display_ref_for_display_identifier(Display_Identifier* pdid, bool emit_error_msg) {
+Display_Ref* get_display_ref_for_display_identifier(
+                Display_Identifier* pdid,
+                bool                emit_error_msg)
+{
    bool debug = false;
    Display_Ref* dref = NULL;
    bool validated = true;
@@ -238,7 +241,9 @@ Display_Ref* get_display_ref_for_display_identifier(Display_Identifier* pdid, bo
                 pdid->serial_ascii,
                 DISPSEL_VALID_ONLY);
       if (!dref && emit_error_msg) {
-         f0printf(FERR, "Unable to find monitor with the specified manufacturer id/model/serial number\n");
+         f0printf(
+            FERR,
+            "Unable to find monitor with the specified manufacturer id/model/serial number\n");
       }
       break;
    case DISP_ID_EDID:
