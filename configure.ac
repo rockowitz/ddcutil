@@ -210,13 +210,13 @@ AS_IF([test "x$enable_swig" == "xyes"],
 
 
 dnl TODO: Review
-dnl Alternative, copied from somewhere
+dnl copied from somewhere
 
-#default behavior is to install the python bindings into subfolders of $prefix
-#however, this may require the user to set the PYTHONPATH environment variable
-#in order to avoid this, invoke configure with the --enable-python-integration option
+dnl #default behavior is to install the python bindings into subfolders of $prefix
+dnl #however, this may require the user to set the PYTHONPATH environment variable
+dnl #in order to avoid this, invoke configure with the --enable-python-integration option
 
-AC_ARG_ENABLE([python-integration],[AS_HELP_STRING([--enable-python-integration],[install the python bindings in the interpreters site-packages folder])],[enable_python_integration=$enableval],[enable_python_integration=check])
+dnl AC_ARG_ENABLE([python-integration],[AS_HELP_STRING([--enable-python-integration],[install the python bindings in the interpreters site-packages folder])],[enable_python_integration=$enableval],[enable_python_integration=check])
 
 
 dnl *** configure option: --enable-usb
