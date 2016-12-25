@@ -291,7 +291,7 @@ bool is_hiddev_monitor(int fd) {
  *
  * Returns:        usage code if all are identical, 0 if not
  */
-__u32 get_identical_ucode(int fd, struct hiddev_field_info * finfo, __u32 field_index) {
+__u32 hiddev_get_identical_ucode(int fd, struct hiddev_field_info * finfo, __u32 field_index) {
    // assert(finfo->flags & HID_FIELD_BUFFERED_BYTE);
    __u32 result = 0;
 
@@ -343,7 +343,7 @@ __u32 get_identical_ucode(int fd, struct hiddev_field_info * finfo, __u32 field_
  *            NULL if multiple usage codes or some usage value is > 0xff
  *            It is the responsibility of the caller to free the returned buffer.
  */
-Buffer * collect_single_byte_usage_values(
+Buffer * hiddev_collect_single_byte_usage_values(
             int                         fd,
             struct hiddev_field_info *  finfo,
             __u32                       field_index)
@@ -436,7 +436,7 @@ Buffer * collect_single_byte_usage_values(
  * The field must have at least 128 usages, and the usage code for each must
  * be USB Monitor/EDID information
  */
-bool is_field_edid(int fd, struct hiddev_report_info * rinfo, int field_index) {
+bool hiddev_is_field_edid(int fd, struct hiddev_report_info * rinfo, int field_index) {
    bool debug = false;
    if (debug)
       printf("(%s) report_type=%d, report_id=%d, field index = %d\n",
@@ -466,7 +466,7 @@ bool is_field_edid(int fd, struct hiddev_report_info * rinfo, int field_index) {
    }
 
    if (finfo.maxusage >= 128)
-      all_usages_edid = ( get_identical_ucode(fd, &finfo, field_index) == 0x00800002 );
+      all_usages_edid = ( hiddev_get_identical_ucode(fd, &finfo, field_index) == 0x00800002 );
 
    if (debug)
       printf("(%s) Returning: %s", __func__, bool_repr(all_usages_edid));
@@ -555,7 +555,7 @@ test_field_ucode(
 
    bool is_matched = false;
    if (require_all_match) {
-      __u32 ucode_found = get_identical_ucode(fd, &finfo, field_index);
+      __u32 ucode_found = hiddev_get_identical_ucode(fd, &finfo, field_index);
 
       if (ucode_found == ucode)
          is_matched = true;
@@ -610,7 +610,7 @@ bye:
  * Returns:            record identifying the report and field
  */
 struct hid_field_locator*
-find_report(int fd, __u32 report_type, __u32 ucode, bool match_all_ucodes) {
+hiddev_find_report(int fd, __u32 report_type, __u32 ucode, bool match_all_ucodes) {
    bool debug = false;
 
    struct hid_field_locator * result = NULL;
@@ -690,7 +690,7 @@ locate_edid_report(int fd) {
    bool debug = false;
 
    struct hid_field_locator* result = NULL;
-   result = find_report(fd, HID_REPORT_TYPE_FEATURE, 0x00800002, /*match_all_ucodes=*/true);
+   result = hiddev_find_report(fd, HID_REPORT_TYPE_FEATURE, 0x00800002, /*match_all_ucodes=*/true);
    if (result) {
       // find_report() should have parm specifying minimum number of usages
       if (result->finfo->maxusage < 128) {
@@ -783,7 +783,7 @@ bye:
  *
  * It is the responsibility of the caller to free the returned buffer.
  */
-Buffer * get_multibyte_report_value_by_hid_field_locator(
+Buffer * hiddev_get_multibyte_report_value_by_hid_field_locator(
       int                        fd,
       struct hid_field_locator * loc)
 {
@@ -839,7 +839,7 @@ bye:
  * It is the responsibility of the caller to free the returned buffer.
  */
 Buffer *
-get_multibyte_value_by_report_type_and_ucode(
+hiddev_get_multibyte_value_by_report_type_and_ucode(
       int   fd,
       __u32 report_type,
       __u32 usage_code,
@@ -886,11 +886,11 @@ get_multibyte_value_by_report_type_and_ucode(
  * It is the responsibility of the caller to free the returned buffer.
  */
 Buffer *
-get_multibyte_value_by_ucode(int fd,__u32 usage_code, __u32 num_values) {
-   Buffer * result = get_multibyte_value_by_report_type_and_ucode(
+hiddev_get_multibyte_value_by_ucode(int fd,__u32 usage_code, __u32 num_values) {
+   Buffer * result = hiddev_get_multibyte_value_by_report_type_and_ucode(
                         fd, HID_REPORT_TYPE_FEATURE, usage_code, num_values);
     if (!result)
-            result = get_multibyte_value_by_report_type_and_ucode(
+            result = hiddev_get_multibyte_value_by_report_type_and_ucode(
                         fd, HID_REPORT_TYPE_INPUT, usage_code, num_values);
     return result;
 }
@@ -914,7 +914,7 @@ Buffer * get_hiddev_edid(int fd)  {
    Buffer * result = NULL;
    struct hid_field_locator * loc = locate_edid_report(fd);
    if (loc) {
-      result = get_multibyte_report_value_by_hid_field_locator(fd, loc);
+      result = hiddev_get_multibyte_report_value_by_hid_field_locator(fd, loc);
       free_hid_field_locator(loc);
    }
 

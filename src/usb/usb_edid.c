@@ -124,7 +124,7 @@ struct hid_field_locator * find_eizo_model_sn_report(int fd) {
       goto bye;
 
    if (dev_info.vendor == 0x056d && dev_info.product == 0x0002)  {
-      loc = find_report(fd, HID_REPORT_TYPE_FEATURE, 0xff000035, /*match_all_ucodes=*/false);
+      loc = hiddev_find_report(fd, HID_REPORT_TYPE_FEATURE, 0xff000035, /*match_all_ucodes=*/false);
    }
 
 bye:
@@ -180,8 +180,8 @@ struct model_sn_pair *  get_eizo_model_sn_by_report(int fd) {
    struct hid_field_locator * loc = find_eizo_model_sn_report(fd);
    // DBGMSF(debug, "find_eizo_model_sn_report() returned: %p", loc);
    if (loc)
-      modelsn = get_multibyte_report_value_by_hid_field_locator(fd, loc);
-   modelsn2 = get_multibyte_value_by_ucode(
+      modelsn = hiddev_get_multibyte_report_value_by_hid_field_locator(fd, loc);
+   modelsn2 = hiddev_get_multibyte_value_by_ucode(
                          fd,
                          0xff000035,  // usage code
                          16);         // num_values
@@ -363,7 +363,7 @@ Parsed_Edid * get_hiddev_edid_with_fallback(int fd, struct hiddev_devinfo * dev_
 
    Buffer * edid_buffer = get_hiddev_edid(fd);    // in hiddev_util.c
    // try alternative - both work, pick one
-   Buffer * edid_buf2   = get_multibyte_value_by_ucode(fd, 0x00800002, 128);
+   Buffer * edid_buf2   = hiddev_get_multibyte_value_by_ucode(fd, 0x00800002, 128);
    if (edid_buffer && edid_buffer->len > 128)
       buffer_set_length(edid_buffer,128);
    // printf("edid_buffer:\n");

@@ -542,7 +542,7 @@ void report_report_descriptors_for_report_type(int fd, __u32 report_type, int de
          rpt_vstring(d1, "Scanning fields of report %s", hiddev_interpret_report_id(rinfo.report_id));
       for (fndx = 0; fndx < rinfo.num_fields; fndx++) {
          // printf("(%s) field index = %d\n", __func__, i);
-         bool edidfg = is_field_edid(fd, &rinfo, fndx);
+         bool edidfg = hiddev_is_field_edid(fd, &rinfo, fndx);
          if (edidfg) {
             rpt_vstring(d2, "Report id: %d, Field index: %d contains EDID:",
                             rinfo.report_id, fndx);
@@ -570,7 +570,7 @@ void report_report_descriptors_for_report_type(int fd, __u32 report_type, int de
          bool usage_values_reported = false;
          __u32 common_ucode = 0;
          if (finfo.maxusage > 1)
-            common_ucode = get_identical_ucode(fd, &finfo, fndx);
+            common_ucode = hiddev_get_identical_ucode(fd, &finfo, fndx);
          if (common_ucode) {
             rpt_vstring(d2, "Identical ucode for all usages: 0x%08x  %s",
                             common_ucode, hiddev_interpret_usage_code(common_ucode));
@@ -604,7 +604,7 @@ void report_report_descriptors_for_report_type(int fd, __u32 report_type, int de
                   usage_values_reported = true;
                }
                else {
-                  Buffer * buf = collect_single_byte_usage_values(fd, &finfo, fndx);
+                  Buffer * buf = hiddev_collect_single_byte_usage_values(fd, &finfo, fndx);
                   if (buf) {
                      // printf("(%s) Values retrieved by collect_single_byte_usage_values()\n", __func__);
                      rpt_vstring(d2, "Retrieving values using multiple HIDIOCGUSAGE calls");
