@@ -132,12 +132,12 @@ bool               dsel_validate(          Display_Selector * dsel);
 // moved MCCS_IO_Mode to ddcutil_types.h
 
 
-char * mccs_io_mode_name(MCCS_IO_Mode val);
+char * mccs_io_mode_name(DDCA_IO_Mode val);
 
 #define DISPLAY_REF_MARKER "DREF"
 typedef struct {
    char         marker[4];
-   MCCS_IO_Mode io_mode;
+   DDCA_IO_Mode io_mode;
    int          busno;
    int          iAdapterIndex;
    int          iDisplayIndex;
@@ -171,7 +171,7 @@ bool dreq(Display_Ref* this, Display_Ref* that);
 #define DISPLAY_HANDLE_MARKER "DSPH"
 typedef struct {
    char         marker[4];
-   MCCS_IO_Mode  io_mode;
+   DDCA_IO_Mode  io_mode;
    // include pointer to Display_Ref?
    Display_Ref* dref;                               // added 4/2016
    int          busno;  // used for messages

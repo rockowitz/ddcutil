@@ -197,12 +197,12 @@ typedef enum {
    DDC_IO_DEVI2C,
    DDC_IO_ADL,
    USB_IO
-} MCCS_IO_Mode;
+} DDCA_IO_Mode;
 
 
 // Not currently used.  Would this make the API and data structures clearer or more obscure?
 typedef struct {
-   MCCS_IO_Mode io_mode;
+   DDCA_IO_Mode io_mode;
    union {
       int   i2c_busno;
       struct {
@@ -223,7 +223,7 @@ typedef struct {
 typedef struct {
    char             marker[4];
    int              dispno;
-   MCCS_IO_Mode     io_mode;
+   DDCA_IO_Mode     io_mode;
    int              i2c_busno;
    int              iAdapterIndex;
    int              iDisplayIndex;

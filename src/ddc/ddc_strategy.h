@@ -39,7 +39,7 @@ typedef Global_Status_Code (*DDC_Raw_Writer)(Display_Handle * dh, int bytect, By
 typedef Global_Status_Code (*DDC_Raw_Reader)(Display_Handle * dh, int bufsize, Byte * buffer);
 
 typedef struct {
-   MCCS_IO_Mode     io_mode;
+   DDCA_IO_Mode     io_mode;
    DDC_Raw_Writer  writer;
    DDC_Raw_Reader  reader;
 }  DDC_Strategy;
