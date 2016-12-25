@@ -126,14 +126,14 @@ typedef struct parsed_hid_descriptor {
 
 void free_parsed_hid_descriptor(Parsed_Hid_Descriptor * phd);
 
-Parsed_Hid_Descriptor * parse_report_desc_from_item_list(Hid_Report_Descriptor_Item * items_head);
-Parsed_Hid_Descriptor * parse_report_desc(Byte * b, int desclen);
+Parsed_Hid_Descriptor * parse_hid_report_desc_from_item_list(Hid_Report_Descriptor_Item * items_head);
+Parsed_Hid_Descriptor * parse_hid_report_desc(Byte * b, int desclen);
 
 void report_parsed_hid_report(Parsed_Hid_Report * hr, int depth);
 void summarize_parsed_hid_report(Parsed_Hid_Report * hr, int depth);
 void report_parsed_hid_descriptor(Parsed_Hid_Descriptor * pdesc, int depth);
 
-bool is_monitor_by_parsed_report_descriptor(Parsed_Hid_Descriptor * phd);
+bool is_monitor_by_parsed_hid_report_descriptor(Parsed_Hid_Descriptor * phd);
 
 // TODO: use same bit values as item type?   will that work?
 // TODO: poor names
@@ -145,7 +145,7 @@ typedef enum hid_report_type_enum {
    HIDF_REPORT_TYPE_ANY     = 0xff
 } Hid_Report_Type_Enum;
 
-GPtrArray * select_parsed_report_descriptors(Parsed_Hid_Descriptor * phd, Byte report_type_flags);
+GPtrArray * select_parsed_hid_report_descriptors(Parsed_Hid_Descriptor * phd, Byte report_type_flags);
 
 typedef struct vcp_code_report {
    uint8_t vcp_code;

@@ -231,7 +231,7 @@ void probe_hidraw_device(char * devname, bool show_monitors_only,  int depth) {
 
    if (is_monitor) {
       puts("");
-      phd =  parse_report_desc(rpt_desc.value, rpt_desc.size);
+      phd =  parse_hid_report_desc(rpt_desc.value, rpt_desc.size);
       Parsed_Hid_Report * edid_report = find_edid_report_descriptor(phd);
       if (edid_report) {
          rpt_title("Report descriptor for EDID:", d1);
@@ -249,7 +249,7 @@ void probe_hidraw_device(char * devname, bool show_monitors_only,  int depth) {
       else
          rpt_title("No VCP Feature report descriptors found!!!", d1);
 
-      GPtrArray * reports = select_parsed_report_descriptors(phd, HIDF_REPORT_TYPE_FEATURE);
+      GPtrArray * reports = select_parsed_hid_report_descriptors(phd, HIDF_REPORT_TYPE_FEATURE);
       if (reports->len == 0) {
          puts("");
          rpt_title("No HID reports exist of type HIDF_REPORT_TYPE_FEATURE.", d1);

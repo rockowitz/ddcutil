@@ -1101,7 +1101,7 @@ static void report_retrieved_report_descriptor_and_probe(
    Hid_Report_Descriptor_Item* item_list = tokenize_hid_report_descriptor(dbuf, dbufct);
    report_hid_report_item_list(item_list, d1);
    puts("");
-   Parsed_Hid_Descriptor* phd = parse_report_desc_from_item_list(item_list);
+   Parsed_Hid_Descriptor* phd = parse_hid_report_desc_from_item_list(item_list);
    if (phd) {
       rpt_vstring(depth, "Parsed report descriptor:");
       report_parsed_hid_descriptor(phd, d1);

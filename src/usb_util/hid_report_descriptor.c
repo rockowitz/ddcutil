@@ -403,7 +403,7 @@ static void accumulate_report_descriptors_for_collection(
  * Returns:              array of pointers to Hid_Report
  */
 GPtrArray *
-select_parsed_report_descriptors(Parsed_Hid_Descriptor * phd, Byte report_type_flags) {
+select_parsed_hid_report_descriptors(Parsed_Hid_Descriptor * phd, Byte report_type_flags) {
    GPtrArray * selected_reports = g_ptr_array_new();
    accumulate_report_descriptors_for_collection(
       phd->root_collection, report_type_flags, selected_reports);
@@ -619,7 +619,7 @@ static int32_t maybe_signed_data(uint32_t data, int bytect) {
  * Returns:         parsed report descriptor
  */
 // TODO: Should this function return NULL in case of invalid data (e.g. more end than start collections)?
-Parsed_Hid_Descriptor * parse_report_desc_from_item_list(Hid_Report_Descriptor_Item * items_head) {
+Parsed_Hid_Descriptor * parse_hid_report_desc_from_item_list(Hid_Report_Descriptor_Item * items_head) {
    bool debug = false;
    if (debug)
       printf("(%s) Starting.\n", __func__);
@@ -987,14 +987,14 @@ Parsed_Hid_Descriptor * parse_report_desc_from_item_list(Hid_Report_Descriptor_I
  *
  * Returns:         parsed report descriptor
  */
-Parsed_Hid_Descriptor * parse_report_desc(Byte * b, int desclen) {
+Parsed_Hid_Descriptor * parse_hid_report_desc(Byte * b, int desclen) {
    bool debug = false;
    if (debug)
       printf("(%s) Starting. b=%p, desclen=%d\n", __func__, b, desclen);
 
    Hid_Report_Descriptor_Item * item_list = tokenize_hid_report_descriptor(b, desclen) ;
 
-   Parsed_Hid_Descriptor * result = parse_report_desc_from_item_list(item_list);
+   Parsed_Hid_Descriptor * result = parse_hid_report_desc_from_item_list(item_list);
    free_hid_report_item_list(item_list);
    return result;
 }
@@ -1019,7 +1019,7 @@ Parsed_Hid_Descriptor * parse_report_desc(Byte * b, int desclen) {
  * i.e. Usage page = 0x80  USB monitor
  *      Usage id   = 0x01  Monitor Control
  */
-bool is_monitor_by_parsed_report_descriptor(Parsed_Hid_Descriptor * phd) {
+bool is_monitor_by_parsed_hid_report_descriptor(Parsed_Hid_Descriptor * phd) {
    bool is_monitor = false;
 
    Parsed_Hid_Collection * root_collection = phd->root_collection;
