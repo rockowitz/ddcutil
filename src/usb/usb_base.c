@@ -164,7 +164,7 @@ int usb_close_device(int fd, char * device_fn, Byte calloptions) {
 // Wrapper hiddev ioctl calls
 //
 
-int hid_get_device_info(int fd, struct hiddev_devinfo * dev_info, Byte calloptions) {
+int hiddev_get_device_info(int fd, struct hiddev_devinfo * dev_info, Byte calloptions) {
    assert(dev_info);
 
    int rc = ioctl(fd, HIDIOCGDEVINFO, dev_info);
@@ -181,7 +181,7 @@ int hid_get_device_info(int fd, struct hiddev_devinfo * dev_info, Byte calloptio
 }
 
 
-int hid_get_report_info(int fd, struct hiddev_report_info * rinfo, Byte calloptions) {
+int hiddev_get_report_info(int fd, struct hiddev_report_info * rinfo, Byte calloptions) {
    assert(rinfo);
 
    int rc = ioctl(fd, HIDIOCGREPORTINFO, rinfo);
@@ -198,7 +198,7 @@ int hid_get_report_info(int fd, struct hiddev_report_info * rinfo, Byte callopti
 }
 
 
-int hid_get_field_info(int fd, struct hiddev_field_info * finfo, Byte calloptions) {
+int hiddev_get_field_info(int fd, struct hiddev_field_info * finfo, Byte calloptions) {
    int saved_field_index = finfo->field_index;
    int rc = ioctl(fd, HIDIOCGFIELDINFO, finfo);
    if (rc != 0) {
@@ -221,7 +221,7 @@ int hid_get_field_info(int fd, struct hiddev_field_info * finfo, Byte calloption
 }
 
 
-int hid_get_usage_code(int fd, struct hiddev_usage_ref * uref, Byte calloptions) {
+int hiddev_get_usage_code(int fd, struct hiddev_usage_ref * uref, Byte calloptions) {
    int rc = ioctl(fd, HIDIOCGUCODE, uref);    // Fills in usage code
    if (rc != 0) {
       int errsv = errno;
@@ -236,7 +236,7 @@ int hid_get_usage_code(int fd, struct hiddev_usage_ref * uref, Byte calloptions)
 }
 
 
-int hid_get_usage_value(int fd, struct hiddev_usage_ref * uref, Byte calloptions) {
+int hiddev_get_usage_value(int fd, struct hiddev_usage_ref * uref, Byte calloptions) {
    int rc = ioctl(fd, HIDIOCGUSAGE, uref);
    if (rc != 0) {
       int errsv = errno;
@@ -251,7 +251,7 @@ int hid_get_usage_value(int fd, struct hiddev_usage_ref * uref, Byte calloptions
 }
 
 
-int hid_get_report(int fd, struct hiddev_report_info * rinfo, Byte calloptions) {
+int hiddev_get_report(int fd, struct hiddev_report_info * rinfo, Byte calloptions) {
    int rc = ioctl(fd, HIDIOCGUCODE, rinfo);
    if (rc != 0) {
       int errsv = errno;

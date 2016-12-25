@@ -46,12 +46,12 @@
 int usb_open_hiddev_device(char * hiddev_devname, Byte calloptions);
 int usb_close_device(int fd, char * device_fn, Byte calloptions);
 
-int hid_get_device_info(int fd, struct hiddev_devinfo *     dinfo, Byte calloptions);
-int hid_get_report_info(int fd, struct hiddev_report_info * rinfo, Byte calloptions);
-int hid_get_field_info( int fd, struct hiddev_field_info *  finfo, Byte calloptions);
-int hid_get_usage_code( int fd, struct hiddev_usage_ref *   uref,  Byte calloptions);
-int hid_get_usage_value(int fd, struct hiddev_usage_ref *   uref,  Byte calloptions);
-int hid_get_report(     int fd, struct hiddev_report_info * rinfo, Byte calloptions);
+int hiddev_get_device_info(int fd, struct hiddev_devinfo *     dinfo, Byte calloptions);
+int hiddev_get_report_info(int fd, struct hiddev_report_info * rinfo, Byte calloptions);
+int hiddev_get_field_info( int fd, struct hiddev_field_info *  finfo, Byte calloptions);
+int hiddev_get_usage_code( int fd, struct hiddev_usage_ref *   uref,  Byte calloptions);
+int hiddev_get_usage_value(int fd, struct hiddev_usage_ref *   uref,  Byte calloptions);
+int hiddev_get_report(     int fd, struct hiddev_report_info * rinfo, Byte calloptions);
 
 
 #endif /* USB_BASE_H_ */

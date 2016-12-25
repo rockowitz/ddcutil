@@ -119,7 +119,7 @@ struct hid_field_locator * find_eizo_model_sn_report(int fd) {
    struct hid_field_locator * loc = NULL;
    struct hiddev_devinfo dev_info;
 
-   int rc = hid_get_device_info(fd, &dev_info, CALLOPT_ERR_MSG);
+   int rc = hiddev_get_device_info(fd, &dev_info, CALLOPT_ERR_MSG);
    if (rc != 0)
       goto bye;
 

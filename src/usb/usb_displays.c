@@ -56,7 +56,7 @@ void usb_core_unused_function_to_avoid_unused_variable_warning() {
 }
 
 // Forward declarations
-static GPtrArray * get_usb_monitor_list();
+static GPtrArray * get_usb_monitor_list();  // returns array of Usb_Monitor_Info
 
 // Global variables
 static GPtrArray * usb_monitors;    // array of Usb_Monitor_Info
@@ -175,7 +175,7 @@ GPtrArray * collect_vcp_reports(int fd) {
            //       __func__, rptct, rinfo.report_id, interpret_report_id(rinfo.report_id));
 
           errno = 0;
-          reportinfo_rc = hid_get_report_info(fd, &rinfo, CALLOPT_ERR_MSG | CALLOPT_ERR_ABORT);
+          reportinfo_rc = hiddev_get_report_info(fd, &rinfo, CALLOPT_ERR_MSG | CALLOPT_ERR_ABORT);
           // reportinfo_rc = ioctl(fd, HIDIOCGREPORTINFO, &rinfo);
           if (reportinfo_rc != 0) {    // no more reports
              assert( reportinfo_rc == -1);
@@ -197,7 +197,7 @@ GPtrArray * collect_vcp_reports(int fd) {
              Byte callopts = CALLOPT_ERR_MSG | CALLOPT_ERR_ABORT;
              if (debug)
                 callopts |= CALLOPT_WARN_FINDEX;
-             hid_get_field_info(fd, &finfo, callopts);
+             hiddev_get_field_info(fd, &finfo, callopts);
              if (finfo.application != 0x00800001) // USB Monitor Page/Monitor Control
                 continue;
 
@@ -208,7 +208,7 @@ GPtrArray * collect_vcp_reports(int fd) {
                        .field_index = fndx,
                        .usage_index = undx
                 };
-                hid_get_usage_code(fd, &uref, CALLOPT_ERR_MSG|CALLOPT_ERR_ABORT);
+                hiddev_get_usage_code(fd, &uref, CALLOPT_ERR_MSG|CALLOPT_ERR_ABORT);
                 if ( (uref.usage_code & 0xffff0000) != 0x00820000)  // Monitor VESA Virtual Controls page
                    continue;
                 Byte vcp_feature = uref.usage_code & 0xff;
@@ -321,7 +321,7 @@ static GPtrArray * get_usb_monitor_list() {
 
          cgname = get_hiddev_name(fd);               // HIDIOCGNAME
          devinfo = calloc(1,sizeof(struct hiddev_devinfo));
-         if ( hid_get_device_info(fd, devinfo, CALLOPT_ERR_MSG) != 0 )
+         if ( hiddev_get_device_info(fd, devinfo, CALLOPT_ERR_MSG) != 0 )
             goto close;
          if (!is_hiddev_monitor(fd))
             goto close;
@@ -453,15 +453,16 @@ char * get_hiddev_devname_by_display_ref(Display_Ref * dref) {
  * Returns:      Display_Info_List of Display_Refs
  */
 Display_Info_List usb_get_valid_displays() {
+   // static GPtrArray * usb_monitors;    // array of Usb_Monitor_Info
    bool debug = false;
-   get_usb_monitor_list();
+   GPtrArray * all_usb_monitors = get_usb_monitor_list();
 
    Display_Info_List info_list = {0,NULL};
    Display_Info info_recs[256];
 
    DBGMSF(debug, "Found %d USB displays", __func__, usb_monitors->len);
    info_list.info_recs = calloc(usb_monitors->len,sizeof(Display_Info));
-   for (int ndx=0; ndx<usb_monitors->len; ndx++) {
+   for (int ndx=0; ndx<all_usb_monitors->len; ndx++) {
       Usb_Monitor_Info  * curmon = g_ptr_array_index(usb_monitors,ndx);
       Display_Ref * dref = create_usb_display_ref(
                               curmon->hiddev_devinfo->busnum,

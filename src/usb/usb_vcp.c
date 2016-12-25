@@ -89,7 +89,7 @@ usb_get_usage_value_by_report_type_and_ucode(
    uref.report_id   = HID_REPORT_ID_UNKNOWN;
    uref.usage_code  = usage_code;
 
-   rc = hid_get_usage_value(fd, &uref, CALLOPT_NONE);
+   rc = hiddev_get_usage_value(fd, &uref, CALLOPT_NONE);
    // rc = ioctl(fd, HIDIOCGUSAGE, &uref);  // Fills in usage value
    if (rc != 0) {
       int errsv = errno;
@@ -269,7 +269,7 @@ set_usage_value_by_report_type_and_ucode(
    // }
 
    // need to get the actual report_id - HIDIOCSREPORT failes if HID_REPORT_ID_UNKNOWN
-   hid_get_usage_value(fd, &uref, CALLOPT_ERR_ABORT|CALLOPT_ERR_MSG);   // should never fail
+   hiddev_get_usage_value(fd, &uref, CALLOPT_ERR_ABORT|CALLOPT_ERR_MSG);   // should never fail
    // if (debug) {
    //    DBGMSG("After get_hid_usage_value()");
    //    report_hiddev_usage_ref(&uref, 1);
@@ -330,7 +330,7 @@ usb_get_usage_value_by_vcprec(int fd, Usb_Monitor_Vcp_Rec * vcprec, __s32 * maxv
                  vcprec->report_id,
                  vcprec->field_index,
                  vcprec->usage_index);
-   hid_get_report(fd, vcprec->rinfo, CALLOPT_ERR_MSG|CALLOPT_ERR_ABORT);
+   hiddev_get_report(fd, vcprec->rinfo, CALLOPT_ERR_MSG|CALLOPT_ERR_ABORT);
    __s32 maxval1 = vcprec->finfo->logical_maximum;
    __s32 maxval2 = vcprec->finfo->physical_maximum;
    DBGMSF(debug, "logical_maximum: %d", maxval1);
@@ -350,7 +350,7 @@ usb_get_usage_value_by_vcprec(int fd, Usb_Monitor_Vcp_Rec * vcprec, __s32 * maxv
    if (debug)
       report_hiddev_usage_ref(uref, 1);
 
-   rc  = hid_get_usage_value(fd, uref, CALLOPT_ERR_MSG);
+   rc  = hiddev_get_usage_value(fd, uref, CALLOPT_ERR_MSG);
    // rc = ioctl(fd, HIDIOCGUSAGE, uref);  // Fills in usage value
    if (rc != 0) {
       int errsv = errno;
