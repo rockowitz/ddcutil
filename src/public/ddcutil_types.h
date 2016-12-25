@@ -212,12 +212,12 @@ typedef struct {
       struct {
          int    usb_bus;
          int    usb_device;
+         char * hiddev_device_name;
       } usb;
    };
-} DDCA_Display_Locator;
+} DDCA_Display_Location;
 
 
-// Or make this DDCA_Display_Info  ??, with DDCA_Display_Ref as field?
 #define DDCA_DISPLAY_INFO_MARKER "DDIN"
 /** DDCA_Display_Info describes one monitor detected by ddcutil. */
 typedef struct {
@@ -230,7 +230,7 @@ typedef struct {
    int              usb_bus;
    int              usb_device;
    // alternatively to above 6 fields:
-   // DDCA_Display_Locator locator;
+   // DDCA_Display_Location location;
 
    // or should these be actual character/byte arrays instead of pointers?
    const char *     mfg_id;
