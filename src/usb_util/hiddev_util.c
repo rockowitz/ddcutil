@@ -76,7 +76,6 @@ const char * hiddev_report_type_name(__u32 report_type) {
 }
 
 
-
 //
 // *** Functions to identify hiddev devices representing monitors ***
 //
@@ -111,13 +110,12 @@ gint g_ptr_scomp(gconstpointer a, gconstpointer b) {
 
 /* Find hiddev device names using udev.
  *
- * Slightly more robust since doesn't make assumptions as to where
- * hiddev devices are found in the /dev tree.
+ * Slightly more robust than get_hiddev_device_names_using_filesys() since doesn't
+ * make assumptions as to where hiddev devices are found in the /dev tree.
  *
  * Arguments:     none
  * Returns:       array of hiddev path names in /dev
  */
-
 GPtrArray *
 get_hiddev_device_names_using_udev() {
    bool debug = false;
@@ -125,7 +123,6 @@ get_hiddev_device_names_using_udev() {
 
    GPtrArray * dev_names = g_ptr_array_sized_new(10);
    g_ptr_array_set_free_func(dev_names, free);
-   // Null_Terminated_String_Array result = NULL;
 
    struct udev *udev;
    struct udev_enumerate *enumerate;
@@ -139,7 +136,6 @@ get_hiddev_device_names_using_udev() {
     if (!udev) {
        printf("Can't create udev\n");
        goto bye;
-       // return NULL;   // exit(1);
     }
 
     /* Create a list of the devices in the subsystem. */
@@ -157,7 +153,6 @@ get_hiddev_device_names_using_udev() {
        /* Get the filename of the /sys entry for the device
           and create a udev_device object (dev) representing it */
        path = udev_list_entry_get_name(dev_list_entry);
-       // printf("path: %s\n", path);
        dev = udev_device_new_from_syspath(udev, path);
        const char * sysname = udev_device_get_sysname(dev);
        if (str_starts_with(sysname, "hiddev")) {
@@ -165,42 +160,27 @@ get_hiddev_device_names_using_udev() {
        }
        udev_device_unref(dev);
     }
-
     g_ptr_array_sort(dev_names, g_ptr_scomp);
-    // result = g_ptr_array_to_ntsa(dev_names);
-
-
-#ifdef OLD
-   if (debug) {
-      printf("(%s) Returning:\n", __func__);
-      int ndx=0;
-      // char * curname = result[0];
-      while (result[ndx]) {
-         printf("   %p -> %s\n", result[ndx], result[ndx]);
-         ndx++;
-      }
-   }
-#endif
-
-   /* Free the enumerator object */
-    udev_enumerate_unref(enumerate);
-
+    udev_enumerate_unref(enumerate);        // free the enumerator object
     udev_unref(udev);
 
 bye:
-   // g_ptr_array_free(dev_names, false);   // or true?
-   // return result;
    return dev_names;
 }
 
 
+/* Find hiddev device names.
+ *
+ * Arguments:     none
+ * Returns:       array of hiddev path names in /dev
+ *
+ * Allows for easily switching between alternative implementation.
+ */
 GPtrArray * get_hiddev_device_names() {
 
    return get_hiddev_device_names_using_udev();
    // return get_hiddev_device_names_using_filesys();
 }
-
-
 
 
 /* Check for specific USB devices that should be treated as
@@ -251,8 +231,8 @@ bool is_hiddev_monitor(int fd) {
    bool debug = false;
    if (debug)
       printf("(%s) Starting\n", __func__);
-   int monitor_collection_index = -1;
 
+   int monitor_collection_index = -1;
    int cndx = 0;   // indexes start at 0
    int ioctl_rc = 0;
    for (cndx=0; ioctl_rc != -1; cndx++) {
@@ -272,7 +252,6 @@ bool is_hiddev_monitor(int fd) {
          break;
       }
    }
-
    bool result = (monitor_collection_index >= 0);
 
    // FOR TESTING

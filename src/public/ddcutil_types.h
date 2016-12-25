@@ -141,9 +141,9 @@ search (e.g. EDID).
 2) DDCA_Display_Ref is a logical display identifier.   It can be an I2C identifier,
 an ADL identifier, or a USB identifier.
 
-For Display_Identifiers containing an I2C bus number, ADL adapter.display numbers,
-or USB b.device numbers,  the translation from DDCA_Display_Identifier
-to DDCA_Display_Ref is direct.  Otherwise, a search of some sort must be performed.
+For Display_Identifiers containing an I2C bus number or ADL adapter.display numbers,
+the translation from DDCA_Display_Identifier to DDCA_Display_Ref is direct.  
+Otherwise, a search of some sort must be performed.
 
 3) A DDCA_Display_Handle references a display that has been "opened".  This is used
 for most function calls performing an operation on a display.
