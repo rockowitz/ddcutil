@@ -38,8 +38,8 @@ void report_hiddev_usage_ref_multi(struct hiddev_usage_ref_multi * uref_multi, i
 void report_hiddev_report_info(struct hiddev_report_info * rinfo, int depth);
 void report_hiddev_field_info(struct hiddev_field_info * finfo, int depth);
 
-char * interpret_report_id(__u32 report_id);
+char * hiddev_interpret_report_id(__u32 report_id);
 
-char * interpret_usage_code(int usage_code );
+char * hiddev_interpret_usage_code(int usage_code );
 
 #endif /* UTIL_HIDDEV_REPORTS_H_ */

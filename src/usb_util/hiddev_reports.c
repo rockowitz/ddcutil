@@ -180,7 +180,7 @@ void report_hiddev_collection_info(struct hiddev_collection_info * cinfo, int de
    rpt_structure_loc("hiddev_collection_info", cinfo, depth);
    rpt_vstring(d1, "%-20s: %u",        "index", cinfo->index);
    rpt_vstring(d1, "%-20s: %u  %s",    "type",  cinfo->type, interpret_collection_type(cinfo->type));
-   rpt_vstring(d1, "%-20s: 0x%08x %s", "usage", cinfo->usage, interpret_usage_code(cinfo->usage));
+   rpt_vstring(d1, "%-20s: 0x%08x %s", "usage", cinfo->usage, hiddev_interpret_usage_code(cinfo->usage));
    rpt_vstring(d1, "%-20s: %u",        "level", cinfo->level);
 }
 
@@ -264,7 +264,7 @@ void report_hiddev_report_info(struct hiddev_report_info * rinfo, int depth) {
    rpt_structure_loc("hiddev_report_info", rinfo, depth);
    rpt_vstring(d1, "%-20s: %u %s", "report_type", rinfo->report_type,
                                                   report_type_name(rinfo->report_type));
-   rpt_vstring(d1, "%-20s: %s  0x%08x", "report_id", interpret_report_id(rinfo->report_id), rinfo->report_id);   // may have next flag set in high order bit
+   rpt_vstring(d1, "%-20s: %s  0x%08x", "report_id", hiddev_interpret_report_id(rinfo->report_id), rinfo->report_id);   // may have next flag set in high order bit
    rpt_vstring(d1, "%-20s: %u", "num_fields", rinfo->num_fields);
 }
 
@@ -287,7 +287,7 @@ void report_hiddev_report_info(struct hiddev_report_info * rinfo, int depth) {
  * The value is built in an internal buffer and is valid
  * until the next call of this function.
  */
-char * interpret_report_id(__u32 report_id) {
+char * hiddev_interpret_report_id(__u32 report_id) {
    static char report_id_buffer[100];
    report_id_buffer[0] = '\0';
    if (report_id == HID_REPORT_ID_UNKNOWN)
@@ -314,7 +314,7 @@ char * interpret_report_id(__u32 report_id) {
  * The value is built in an internal buffer and is valid
  * until the next call of this function.
  */
-char * interpret_usage_code(int usage_code ) {
+char * hiddev_interpret_usage_code(int usage_code ) {
    static char usage_buffer[100];
    usage_buffer[0] = '\0';
    if (usage_code == 0) {
@@ -374,7 +374,7 @@ void report_hiddev_field_info(struct hiddev_field_info * finfo, int depth) {
    // const char * s1 = names_huts(finfo->physical>>16);
    // const char * s2 = names_hutus(finfo->physical);
    rpt_vstring(d1, "%-20s: %s (0x%08x)", "report_id",
-                   interpret_report_id(finfo->report_id), finfo->report_id);
+                   hiddev_interpret_report_id(finfo->report_id), finfo->report_id);
    rpt_vstring(d1, "%-20s: %u",     "field_index", finfo->field_index);
    rpt_vstring(d1, "%-20s: %u",     "maxusage",    finfo->maxusage);
    rpt_vstring(d1, "%-20s: 0x%08x  %s", "flags",
@@ -382,11 +382,11 @@ void report_hiddev_field_info(struct hiddev_field_info * finfo, int depth) {
    // rpt_vstring(d1, "%-20s: %u 0x%08x huts=|%s|, hutus=|%s| (physical usage for this field)", "physical",
    //                 finfo->physical, finfo->physical, s1, s2);
    rpt_vstring(d1, "%-20s: 0x%08x  %s",     "physical (usage)",
-                   finfo->physical, interpret_usage_code(finfo->physical) );
+                   finfo->physical, hiddev_interpret_usage_code(finfo->physical) );
    rpt_vstring(d1, "%-20s: 0x%08x  %s",     "logical (usage)",
-                   finfo->logical,  interpret_usage_code(finfo->logical) );
+                   finfo->logical,  hiddev_interpret_usage_code(finfo->logical) );
    rpt_vstring(d1, "%-20s: 0x%08x  %s",     "application (usage)",
-                   finfo->application, interpret_usage_code(finfo->application) );
+                   finfo->application, hiddev_interpret_usage_code(finfo->application) );
    rpt_vstring(d1, "%-20s: %d",     "logical_minimum",  finfo->logical_minimum);
    rpt_vstring(d1, "%-20s: %d",     "logical_maximum",  finfo->logical_maximum);
    rpt_vstring(d1, "%-20s: %d",     "physical_minimum", finfo->physical_minimum);
@@ -413,13 +413,13 @@ void report_hiddev_usage_ref(struct hiddev_usage_ref * uref, int depth) {
    // char * s1 = names_huts(uref->usage_code>>16);
    // char * s2 = names_hutus(uref->usage_code);
    rpt_vstring(d1, "%-20s: %u  %s",     "report_id",
-               uref->report_id, interpret_report_id(uref->report_id));
+               uref->report_id, hiddev_interpret_report_id(uref->report_id));
    rpt_vstring(d1, "%-20s: %u",     "field_index",  uref->field_index);
    rpt_vstring(d1, "%-20s: %u",     "usage_index",  uref->usage_index);
    // rpt_vstring(d1, "%-20s: 0x%08x huts=|%s|, hutus=|%s|", "usage_code",   uref->usage_code, s1, s2);
    // rpt_usage_code("usage_code", NULL, uref->usage_code, d1);
    rpt_vstring(d1, "%-20s: 0x%08x  %s", "usage_code", uref->usage_code,
-                   interpret_usage_code(uref->usage_code) );
+                   hiddev_interpret_usage_code(uref->usage_code) );
    rpt_vstring(d1, "%-20s: %d", "value", uref->value);
 }
 
@@ -466,7 +466,7 @@ void report_field_usage(
    // assert(rc == 0);
    if (rc == 0) {
      rpt_vstring(d1, "Usage code = 0x%08x  %s",
-                     uref.usage_code, interpret_usage_code(uref.usage_code));
+                     uref.usage_code, hiddev_interpret_usage_code(uref.usage_code));
      int collection_index = ioctl(fd, HIDIOCGCOLLECTIONINDEX, &uref);
      rpt_vstring(d1, "Collection index for usage code: %d", collection_index);
 
@@ -523,7 +523,7 @@ void report_report_descriptors_for_report_type(int fd, __u32 report_type, int de
       // printf("(%s) Report counter %d, report_id = 0x%08x %s\n",
       //       __func__, rptct, rinfo.report_id, interpret_report_id(rinfo.report_id));
       puts("");
-      rpt_vstring(d0, "Report %s:", interpret_report_id(rinfo.report_id));
+      rpt_vstring(d0, "Report %s:", hiddev_interpret_report_id(rinfo.report_id));
       report_hiddev_report_info(&rinfo, d1);
       rptct++;
 
@@ -539,7 +539,7 @@ void report_report_descriptors_for_report_type(int fd, __u32 report_type, int de
 
       int fndx, undx;
       if (rinfo.num_fields > 0)
-         rpt_vstring(d1, "Scanning fields of report %s", interpret_report_id(rinfo.report_id));
+         rpt_vstring(d1, "Scanning fields of report %s", hiddev_interpret_report_id(rinfo.report_id));
       for (fndx = 0; fndx < rinfo.num_fields; fndx++) {
          // printf("(%s) field index = %d\n", __func__, i);
          bool edidfg = is_field_edid(fd, &rinfo, fndx);
@@ -573,7 +573,7 @@ void report_report_descriptors_for_report_type(int fd, __u32 report_type, int de
             common_ucode = get_identical_ucode(fd, &finfo, fndx);
          if (common_ucode) {
             rpt_vstring(d2, "Identical ucode for all usages: 0x%08x  %s",
-                            common_ucode, interpret_usage_code(common_ucode));
+                            common_ucode, hiddev_interpret_usage_code(common_ucode));
          }
 
          // Get values for Feature or Input report
@@ -744,7 +744,7 @@ void report_hiddev_device_by_fd(int fd, int depth) {
             continue;
          }
          rpt_vstring(d1, "Application %d:  Usage code: 0x%08x  %s",
-                         ndx, usage, interpret_usage_code(usage));
+                         ndx, usage, hiddev_interpret_usage_code(usage));
       }
    }
    puts("");
