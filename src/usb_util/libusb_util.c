@@ -1,5 +1,7 @@
 /* libusb_util.c
  *
+ * libusb is not currently used by ddcutil.  This code is retained for reference.
+ *
  * <copyright>
  * Copyright (C) 2016 Sanford Rockowitz <rockowitz@minsoft.com>
  *
@@ -20,8 +22,6 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  * </endcopyright>
  */
-
-// Adapted from usbplay2 file libusb_util.c
 
 #include <stdio.h>
 #include <stdlib.h>

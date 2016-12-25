@@ -1,5 +1,7 @@
 /* libusb_reports.h
  *
+ * libusb is not currently used by ddcutil.  This code is retained for reference.
+ *
  * <copyright>
  * Copyright (C) 2016 Sanford Rockowitz <rockowitz@minsoft.com>
  *
@@ -83,7 +85,7 @@ wchar_t * lookup_libusb_string_wide(struct libusb_device_handle * dh, int string
 
 // Report functions for libusb data structures
 
-void report_endpoint_descriptor(
+void report_libusb_endpoint_descriptor(
         const struct libusb_endpoint_descriptor *  epdesc,
         libusb_device_handle *                     dh,    // may be null
         int                                        depth);

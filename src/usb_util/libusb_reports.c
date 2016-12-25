@@ -2,6 +2,8 @@
  *
  * Report libusb data structures
  *
+ * libusb is not currently used by ddcutil.  This code is retained for reference.
+ *
  * <copyright>
  * Copyright (C) 2016 Sanford Rockowitz <rockowitz@minsoft.com>
  *
@@ -297,7 +299,7 @@ typesafe_control_msg(
 // Report functions for libusb data structures
 //
 
-void report_endpoint_descriptor(
+void report_libusb_endpoint_descriptor(
         const struct libusb_endpoint_descriptor * epdesc,
         libusb_device_handle *                    dh,    // may be null
         int                                       depth)
@@ -637,7 +639,7 @@ void report_libusb_interface_descriptor(
    int ndx = 0;
    for (ndx=0; ndx<inter->bNumEndpoints; ndx++) {
       const struct libusb_endpoint_descriptor *epdesc = &(inter->endpoint[ndx]);
-      report_endpoint_descriptor(epdesc, dh, d1);
+      report_libusb_endpoint_descriptor(epdesc, dh, d1);
    }
 
    /** Extra descriptors. If libusb encounters unknown interface descriptors,
