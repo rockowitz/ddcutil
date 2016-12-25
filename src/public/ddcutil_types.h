@@ -143,7 +143,7 @@ an ADL identifier, or a USB identifier.
 
 For Display_Identifiers containing an I2C bus number or ADL adapter.display numbers,
 the translation from DDCA_Display_Identifier to DDCA_Display_Ref is direct.  
-Otherwise, a search of some sort must be performed.
+Otherwise, a search of detected monitors must be performed.
 
 3) A DDCA_Display_Handle references a display that has been "opened".  This is used
 for most function calls performing an operation on a display.
@@ -193,14 +193,16 @@ typedef void * DDCA_Display_Handle;
 // Display Information
 //
 
+/** Indicates how a display is accessed */
 typedef enum {
-   DDC_IO_DEVI2C,
-   DDC_IO_ADL,
-   USB_IO
+   DDC_IO_DEVI2C,         /**< Using DDC to a /dev/i2c-n device */
+   DDC_IO_ADL,            /**< Using ADL API */
+   USB_IO                 /**< Using USB reports for a USB connected monitor */
 } DDCA_IO_Mode;
 
 
-// Not currently used.  Would this make the API and data structures clearer or more obscure?
+// Does this make the API and data structures clearer or more obscure?
+/** Describes a display's access mode and the location identifiers for that mode */
 typedef struct {
    DDCA_IO_Mode io_mode;
    union {
@@ -223,14 +225,15 @@ typedef struct {
 typedef struct {
    char             marker[4];
    int              dispno;
+#ifdef OLD
    DDCA_IO_Mode     io_mode;
    int              i2c_busno;
    int              iAdapterIndex;
    int              iDisplayIndex;
    int              usb_bus;
    int              usb_device;
-   // alternatively to above 6 fields:
-   // DDCA_Display_Location location;
+#endif
+   DDCA_Display_Location loc;
 
    // or should these be actual character/byte arrays instead of pointers?
    const char *     mfg_id;
@@ -252,7 +255,7 @@ typedef struct {
 //
 
 // Both DDCA_MCCS_Version_Spec and DDCA_MCCS_Version_Id exist for historical reasons.
-// DDCA_MCCS_Version_Spec reflects how the version number is returned from a
+// DDCA_MCCS_Version_Spec is the form in which the version number is returned from a
 // GETVCP of feature xDF.  This form is used throughout much of ddcutil.
 // DDCA_MCCS_Version_Id reflects the fact that there are a small number of versions
 // and simplifies program logic that varies among versions.
@@ -394,6 +397,7 @@ typedef struct {
 #endif
 
 
+
 typedef struct {
    VCP_Feature_Code  feature_code;
    union {
@@ -424,7 +428,12 @@ typedef struct {
    uint8_t  bytes[];     // or uint8_t * ?
 } DDCA_Table_Value;
 
-
+/** Indicates the physical data type.  At the DDC level, continuous (C) and
+ *  non-continuous (NC) features are treated identically.  They share the same
+ *  DDC commands (Get VCP Feature and VCP Feature Reply) and data structure.
+ *  Table (T) features use DDC commands Table Write and Table Read, which take
+ *  different data structures.
+ */
 typedef enum {
    NON_TABLE_VCP_VALUE,
    TABLE_VCP_VALUE,

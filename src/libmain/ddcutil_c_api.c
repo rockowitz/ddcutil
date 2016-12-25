@@ -819,12 +819,29 @@ ddca_get_displays()
          memcpy(curinfo->marker, DDCA_DISPLAY_INFO_MARKER, 4);
          curinfo->dispno        = drec.dispno;
          Display_Ref * dref     = drec.dref;
+#ifdef OLD
          curinfo->io_mode       = dref->io_mode;
          curinfo->i2c_busno     = dref->busno;
          curinfo->iAdapterIndex = dref->iAdapterIndex;
          curinfo->iDisplayIndex = dref->iDisplayIndex;
          curinfo->usb_bus       = dref->usb_bus;
          curinfo->usb_device    = dref->usb_device;
+#endif
+         curinfo->loc.io_mode = dref->io_mode;
+         switch (dref->io_mode) {
+         case DDC_IO_DEVI2C:
+            curinfo->loc.i2c_busno = dref->busno;
+            break;
+         case DDC_IO_ADL:
+            curinfo->loc.adl.iAdapterIndex = dref->iAdapterIndex;
+            curinfo->loc.adl.iDisplayIndex = dref->iDisplayIndex;
+            break;
+         case USB_IO:
+            curinfo->loc.usb.usb_bus    = dref->usb_bus;
+            curinfo->loc.usb.usb_device = dref->usb_device;
+            curinfo->loc.usb.hiddev_device_name = strdup(dref->usb_hiddev_name);
+            break;
+         }
          curinfo->edid_bytes    = drec.edid->bytes;
          // or should these be memcpy'd instead of just pointers, can edid go away?
          curinfo->mfg_id        = drec.edid->mfg_id;
@@ -848,6 +865,7 @@ ddca_report_display_info(
    int d0 = depth;
    int d1 = depth+1;
    rpt_vstring(d0, "Display number:  %d", dinfo->dispno);
+#ifdef OLD
    rpt_vstring(d1, "IO mode:         %s", mccs_io_mode_name(dinfo->io_mode));
    switch(dinfo->io_mode) {
    case (DDC_IO_DEVI2C):
@@ -860,6 +878,24 @@ ddca_report_display_info(
          rpt_vstring(d1, "USB bus.device:       %d.%d", dinfo->usb_bus, dinfo->usb_device);
          break;
    }
+#endif
+
+   rpt_vstring(d1, "IO mode:         %s", mccs_io_mode_name(dinfo->loc.io_mode));
+   switch(dinfo->loc.io_mode) {
+   case (DDC_IO_DEVI2C):
+         rpt_vstring(d1, "I2C bus number:     %d", dinfo->loc.i2c_busno);
+         break;
+   case (DDC_IO_ADL):
+         rpt_vstring(d1, "ADL adapter.display:  %d.%d",
+                         dinfo->loc.adl.iAdapterIndex, dinfo->loc.adl.iDisplayIndex);
+         break;
+   case (USB_IO):
+         rpt_vstring(d1, "USB bus.device:       %d.%d",
+                         dinfo->loc.usb.usb_bus, dinfo->loc.usb.usb_device);
+         rpt_vstring(d1, "USB device name:      %s", dinfo->loc.usb.hiddev_device_name);
+         break;
+   }
+
    rpt_vstring(d1, "Mfg Id:         %s", dinfo->mfg_id);
    rpt_vstring(d1, "Model:          %s", dinfo->model_name);
    rpt_vstring(d1, "Serial number:  %s", dinfo->sn);
