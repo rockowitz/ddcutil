@@ -459,7 +459,7 @@ void report_hid_report_item_list(Hid_Report_Descriptor_Item * head, int depth) {
  * i.e. Usage page = 0x80  USB monitor
  *      Usage id   = 0x01  Monitor Control
  */
-bool is_monitor_by_tokenized_report_descriptor(Hid_Report_Descriptor_Item * report_item_list) {
+bool is_monitor_by_tokenized_hid_report_descriptor(Hid_Report_Descriptor_Item * report_item_list) {
    bool is_monitor = false;
 
    Hid_Report_Descriptor_Item * cur_item = report_item_list;

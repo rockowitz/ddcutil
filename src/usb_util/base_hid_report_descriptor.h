@@ -57,6 +57,6 @@ typedef struct hid_report_item {
 void report_hid_report_item_list(Hid_Report_Descriptor_Item * head, int depth);
 void free_hid_report_item_list(Hid_Report_Descriptor_Item * head);
 Hid_Report_Descriptor_Item * tokenize_hid_report_descriptor(Byte * b, int l) ;
-bool is_monitor_by_tokenized_report_descriptor(Hid_Report_Descriptor_Item * report_item_list);
+bool is_monitor_by_tokenized_hid_report_descriptor(Hid_Report_Descriptor_Item * report_item_list);
 
 #endif /* BASE_HID_REPORT_DESCRIPTOR_H_ */

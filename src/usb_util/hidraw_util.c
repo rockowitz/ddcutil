@@ -199,7 +199,7 @@ void probe_hidraw_device(char * devname, bool show_monitors_only,  int depth) {
    }
    Hid_Report_Descriptor_Item * report_item_list = tokenize_hid_report_descriptor(rpt_desc.value, rpt_desc.size) ;
    // report_hid_report_item_list(report_item_list, d2);
-   bool is_monitor = is_monitor_by_tokenized_report_descriptor(report_item_list);
+   bool is_monitor = is_monitor_by_tokenized_hid_report_descriptor(report_item_list);
 
 #ifdef OLD
    Hid_Report_Descriptor_Item * cur_item = report_item_list;
@@ -337,7 +337,7 @@ bool hidraw_is_monitor_device(char * devname) {
    Hid_Report_Descriptor_Item * report_item_list =
          tokenize_hid_report_descriptor(rpt_desc.value, rpt_desc.size) ;
    // report_hid_report_item_list(report_item_list, 2);
-   is_monitor = is_monitor_by_tokenized_report_descriptor(report_item_list);
+   is_monitor = is_monitor_by_tokenized_hid_report_descriptor(report_item_list);
    free_hid_report_item_list(report_item_list);
 
 bye:
