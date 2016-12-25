@@ -326,7 +326,7 @@ usb_get_usage_value_by_vcprec(int fd, Usb_Monitor_Vcp_Rec * vcprec, __s32 * maxv
 
    DBGMSF(debug, "report_type=%d (%s), report_id=%d, field_index=%d, usage_index=%d",
                  vcprec->report_type,
-                 report_type_name(vcprec->report_type),
+                 hiddev_report_type_name(vcprec->report_type),
                  vcprec->report_id,
                  vcprec->field_index,
                  vcprec->usage_index);
@@ -393,7 +393,7 @@ usb_set_usage_value_by_vcprec(int fd, Usb_Monitor_Vcp_Rec * vcprec, __s32 new_va
 
    DBGMSF(debug, "report_type=%d (%s), report_id=%d, field_index=%d, usage_index=%d, new_value=%d",
                  vcprec->report_type,
-                 report_type_name(vcprec->report_type),
+                 hiddev_report_type_name(vcprec->report_type),
                  vcprec->report_id,
                  vcprec->field_index,
                  vcprec->usage_index,
@@ -701,7 +701,7 @@ __s32 usb_get_vesa_version_by_report_type(int fd, __u32 report_type) {
                                fd, report_type, 0x00800004, &maxval, &curval);
    if (gsc != 0 && debug) {
       DBGMSG("report_type=%s, usb_get_usage_alt() status code %d (%s)",
-             report_type_name(report_type), gsc, gsc_name(gsc) );
+             hiddev_report_type_name(report_type), gsc, gsc_name(gsc) );
    }
 
    // DBGMSF(debug, "report_type=%s, returning: 0x%08x", report_type_name(report_type), curval);

@@ -59,13 +59,17 @@ static const char* report_type_id_table[] = {
 };
 
 
+// To do: converge with similar function hid_report_type_name()
+// name hid_report_type_name() is more appropriate since there is nothing hiddev
+// specific about this function
+
 /* Returns a string representation of a report type id
  *
  * Arguments:  report_type
  *
  * Returns:  string representation of id
  */
-const char * report_type_name(__u32 report_type) {
+const char * hiddev_report_type_name(__u32 report_type) {
    if (report_type < HID_REPORT_TYPE_MIN || report_type > HID_REPORT_TYPE_MAX)
       report_type = 0;
    return report_type_id_table[report_type];

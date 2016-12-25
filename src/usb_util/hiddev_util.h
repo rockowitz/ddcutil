@@ -77,7 +77,7 @@ Buffer * hiddev_get_multibyte_value_by_report_type_and_ucode(int fd, __u32 repor
 Buffer * hiddev_get_multibyte_value_by_ucode(int fd, __u32 usage_code, __u32 num_values);
 
 
-const char * report_type_name(__u32 report_type);
+const char * hiddev_report_type_name(__u32 report_type);
 
 bool force_hiddev_monitor(int fd);
 

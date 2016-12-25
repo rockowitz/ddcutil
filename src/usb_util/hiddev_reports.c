@@ -263,7 +263,7 @@ void report_hiddev_report_info(struct hiddev_report_info * rinfo, int depth) {
    int d1 = depth+1;
    rpt_structure_loc("hiddev_report_info", rinfo, depth);
    rpt_vstring(d1, "%-20s: %u %s", "report_type", rinfo->report_type,
-                                                  report_type_name(rinfo->report_type));
+                                                  hiddev_report_type_name(rinfo->report_type));
    rpt_vstring(d1, "%-20s: %s  0x%08x", "report_id", hiddev_interpret_report_id(rinfo->report_id), rinfo->report_id);   // may have next flag set in high order bit
    rpt_vstring(d1, "%-20s: %u", "num_fields", rinfo->num_fields);
 }
@@ -369,7 +369,7 @@ void report_hiddev_field_info(struct hiddev_field_info * finfo, int depth) {
    int d1 = depth+1;
    rpt_structure_loc("hiddev_field_info", finfo, depth);
    rpt_vstring(d1, "%-20s: %u %s", "report_type", finfo->report_type,
-                                                  report_type_name(finfo->report_type));
+                                                  hiddev_report_type_name(finfo->report_type));
    // const char * s0 = names_reporttag(finfo->report_id);
    // const char * s1 = names_huts(finfo->physical>>16);
    // const char * s2 = names_hutus(finfo->physical);
@@ -408,7 +408,7 @@ void report_hiddev_usage_ref(struct hiddev_usage_ref * uref, int depth) {
    int d1 = depth+1;
    rpt_structure_loc("hiddev_usage_ref", uref, depth);
    rpt_vstring(d1, "%-20s: %u %s", "report_type", uref->report_type,
-                                                  report_type_name(uref->report_type));
+                                                  hiddev_report_type_name(uref->report_type));
    // const char * s0 = names_reporttag(uref->report_id);
    // char * s1 = names_huts(uref->usage_code>>16);
    // char * s2 = names_hutus(uref->usage_code);
@@ -508,7 +508,7 @@ void report_report_descriptors_for_report_type(int fd, __u32 report_type, int de
    rinfo.report_id   = HID_REPORT_ID_FIRST;
 
    puts("");
-   rpt_vstring(d0, "Getting descriptors for report_type=%s", report_type_name(report_type));
+   rpt_vstring(d0, "Getting descriptors for report_type=%s", hiddev_report_type_name(report_type));
 
    ret = ioctl(fd, HIDIOCGREPORTINFO, &rinfo);
    if (ret != 0) {    // no more reports
