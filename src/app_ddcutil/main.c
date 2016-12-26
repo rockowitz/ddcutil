@@ -173,7 +173,7 @@ void probe_display_by_dh(Display_Handle * dh)
    DBGMSF(debug, "Starting. dh=%s", display_handle_repr(dh));
    Global_Status_Code gsc = 0;
 
-
+   printf("\nCapabilities for display %s\n", display_handle_repr(dh) );
       // not needed, causes confusing messages if get_vcp_version fails but get_capabilities succeeds
       DDCA_MCCS_Version_Spec vspec = get_vcp_version_by_display_handle(dh);
       // if (vspec.major < 2) {
@@ -184,7 +184,7 @@ void probe_display_by_dh(Display_Handle * dh)
 
       // how to pass this information down into app_show_vcp_subset_values_by_display_handle()?
       bool table_reads_possible = parsed_capabilities_may_support_table_commands(pcaps);
-      printf("May support table reads:   %s\n", bool_repr(table_reads_possible));
+      printf("\nMay support table reads:   %s\n", bool_repr(table_reads_possible));
 
 
       // *** VCP Feature Scan ***
@@ -285,20 +285,16 @@ void probe_display_by_dh(Display_Handle * dh)
          }
       }
       if (gsc != 0)
-         printf("Unable to calculate culor temperature from VCP features x0B and X0C\n");
-
+         printf("Unable to calculate color temperature from VCP features x0B and x0C\n");
 
       // get VCP 14
       // report color preset
-
-
 
    DBGMSF(debug, "Done.");
 }
 
 
 void probe_display_by_dref(Display_Ref * dref) {
-
    Display_Handle * dh = NULL;
    Global_Status_Code gsc = ddc_open_display(dref, CALLOPT_ERR_MSG, &dh);
    if (gsc != 0) {
@@ -524,7 +520,7 @@ int main(int argc, char *argv[]) {
       int dispno = 1;
       // dispno = 2;      // TEMP FOR TESTING
       for (; dispno <= display_ct; dispno++) {
-         printf("\nCapabilities for display %d\n", dispno);
+         printf("\nProbing display %d\n", dispno);
          Display_Identifier * did = create_dispno_display_identifier(dispno);
          Display_Ref * dref = get_display_ref_for_display_identifier(did, true /* emit_error_msg */);
          if (!dref) {
