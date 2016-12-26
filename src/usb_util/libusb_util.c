@@ -1,6 +1,6 @@
 /* libusb_util.c
  *
- * libusb is not currently used by ddcutil.  This code is retained for reference.
+ * libusb is currently used only within query_sysenv.c
  *
  * <copyright>
  * Copyright (C) 2016 Sanford Rockowitz <rockowitz@minsoft.com>
