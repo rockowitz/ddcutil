@@ -1,8 +1,8 @@
-if HAVE_DOXYGEN
+if USE_DOXYGEN
   SUBDIRS = doxygen
 endif
 
-if HAVE_DOXYGEN
+if USE_DOXYGEN
 if HAVE_DOCBASE
 
 docbasedir = $(datadir)/doc-base

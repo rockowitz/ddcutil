@@ -13,7 +13,7 @@ ACLOCAL_AMFLAGS = -I m4 ${ACLOCAL_FLAGS}
 DISTCHECK_CONFIGURE_FLAGS = --enable-introspection
 EXTRA_DIST = m4/introspection.m4 README.md
 
-if HAVE_DOXYGEN
+if USE_DOXYGEN
 DOXYDIR = docs
 endif
 

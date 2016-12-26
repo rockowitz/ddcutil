@@ -232,6 +232,19 @@ AS_IF([test "x$enable_usb" == "xyes"],
         AC_MSG_NOTICE( [usb... disabled] )
      )
 
+dnl *** configure option: --enable-doxygen
+AC_ARG_ENABLE([doxygen],
+              [ AS_HELP_STRING( [--enable-doxygen=@<:@no/yes@:>@], [Build API documentation using Doxygen (if it is installed)@<:@default=no@:>@] )],
+              [enable_doxygen=${enableval}],
+              [enable_doxygen=no] )
+AM_CONDITIONAL([ENABLE_DOXYGEN_COND], [test "x$enable_doxygen" == "xyes"] )
+AS_IF([test "x$enable_doxygen" == "xyes"],
+        AC_MSG_NOTICE( [doxygen... enabled]  )
+      ,
+        AC_MSG_NOTICE( [doxygen... disabled] )
+     )
+
+
 
 ### Private options
 
@@ -376,30 +389,64 @@ AS_IF( [test 0$DBG -ne 0],
 
 ### DOXYGEN
 
-dnl checks for doxygen program, sets or uses environment variable DOXYGEN
-FLM_PROG_TRY_DOXYGEN
+dnl AC_MSG_NOTICE([Start of DOXYGEN])
+dnl AS_IF( [test "x$enable_doxygen" == "xyes"],
+dnl         AC_MSG_NOTICE( [doxygen... enabled]  )
+dnl       ,
+dnl         AC_MSG_NOTICE( [doxygen... disabled] )
+dnl      )
 
-AS_IF( [test -n $DOXYGEN], [
-  AC_MSG_NOTICE([Calling dx_init_doxygen...])
-  DX_PDF_FEATURE(ON)
-  DX_HTML_FEATURE(ON)
-  DX_INIT_DOXYGEN(ddcutil)
-  AS_IF( [test 0$DBG -ne 0], [
-    AC_MSG_NOTICE([Set by dx_init_doxygen:])
-    dnl AC_MSG_NOTICE([  DOXYGEN:             $DOXYGEN            ])
-    AC_MSG_NOTICE([  dx_DOT_FEATURE:      $DX_DOT_FEATURE     ])
-    AC_MSG_NOTICE([  dx_FEATURE_doc       $DX_FEATURE_doc     ])
-    AC_MSG_NOTICE([  dx_DOXYGEN_FEATURE:  $DX_DOXYGEN_FEATURE ])
-    AC_MSG_NOTICE([  dx_HTML_FEATURE:     $DX_HTML_FEATURE    ])
-    AC_MSG_NOTICE([  dx_FLAG_html:        $DX_FLAG_HTML       ])
-    AC_MSG_NOTICE([  dx_PDF_FEATURE:      $DX_PDF_FEATURE     ])
-    AC_MSG_NOTICE([  DX_PROJECT:          $DX_PROJECT         ])
-    AC_MSG_NOTICE([  DX_CONFIG:           $DX_CONFIG          ])
-    AC_MSG_NOTICE([  DX_DOCDIR:           $DX_DOCDIR          ])
-  ])
-  AC_CONFIG_FILES( [docs/doxygen/doxyfile] )
-] )
-AM_CONDITIONAL( [HAVE_DOXYGEN], [test -n "$DOXYGEN"])
+AS_IF([test "x$enable_doxygen" == "xyes"], 
+      [
+        dnl checks for doxygen program, sets or uses environment variable DOXYGEN
+        AC_MSG_NOTICE([Checking for Doxygen...])
+        FLM_PROG_TRY_DOXYGEN
+
+        AS_IF( [test -n $DOXYGEN], 
+          [
+            AC_MSG_NOTICE([Calling dx_init_doxygen...])
+            DX_PDF_FEATURE(ON)
+            DX_HTML_FEATURE(ON)
+            DX_INIT_DOXYGEN(ddcutil)
+            AS_IF( [test 0$DBG -ne 0], 
+               [
+                  AC_MSG_NOTICE([Set by dx_init_doxygen:])
+                  AC_MSG_NOTICE([  DOXYGEN:             $DOXYGEN            ])
+                  AC_MSG_NOTICE([  dx_DOT_FEATURE:      $DX_DOT_FEATURE     ])
+                  AC_MSG_NOTICE([  dx_FEATURE_doc       $DX_FEATURE_doc     ])
+                  AC_MSG_NOTICE([  dx_DOXYGEN_FEATURE:  $DX_DOXYGEN_FEATURE ])
+                  AC_MSG_NOTICE([  dx_HTML_FEATURE:     $DX_HTML_FEATURE    ])
+                  AC_MSG_NOTICE([  dx_FLAG_html:        $DX_FLAG_HTML       ])
+                  AC_MSG_NOTICE([  dx_PDF_FEATURE:      $DX_PDF_FEATURE     ])
+                  AC_MSG_NOTICE([  DX_PROJECT:          $DX_PROJECT         ])
+                  AC_MSG_NOTICE([  DX_CONFIG:           $DX_CONFIG          ])
+                  AC_MSG_NOTICE([  DX_DOCDIR:           $DX_DOCDIR          ])
+               ])
+            AC_CONFIG_FILES( [docs/doxygen/doxyfile] )
+          ]
+          ,
+          [
+             AC_MSG_NOTICE([doxygen not found]) 
+             enable_doxygen=no
+          ]
+        )
+      ]
+      ,
+      [
+        AC_MSG_NOTICE([doxygen disabled, not checking for Doxygen]) 
+      ]
+    )
+dnl AC_MSG_NOTICE([enable_doxygen = ${enable_doxygen}])
+dnl AM_CONDITIONAL( [HAVE_DOXYGEN], [test -n "$DOXYGEN"] )
+
+dnl AM_CONDITIONAL( [USE_DOXYGEN], [test -n "$DOXYGEN" -a "x$enable_doxygen" == "xyes"])
+AM_CONDITIONAL( [USE_DOXYGEN], [test "x$enable_doxygen" == "xyes"])
+
+AM_COND_IF([USE_DOXYGEN], 
+    AC_MSG_NOTICE([USE_DOXYGEN is set])
+    ,
+    AC_MSG_NOTICE([USE_DOXYGEN not set])
+    )
 
 
 ### DOC-BASE
@@ -560,6 +607,7 @@ AC_MSG_RESULT([
 	enable_lib:             ${enable_lib}
 	enable_swig:            ${enable_swig}
 	enable_usb:             ${enable_usb}
+	enable_doxygen          ${enable_doxygen}
 
 	compiler:               ${CC}
 	cflags:                 ${CFLAGS}
