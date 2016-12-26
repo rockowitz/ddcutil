@@ -355,6 +355,9 @@ struct {
 } Version_Feature_Info;
 
 
+//
+// Represent the Capabilities string returned by a monitor
+//
 
 #define DDCA_CAP_VCP_MARKER  "DCVP"
 /** Represents one feature code in the vcp() section of the capabilities string. */
@@ -365,7 +368,6 @@ struct {
    int                                  value_ct;      /**< number of values declared */
    uint8_t *                            values;        /**< array of declared values */
 } DDCA_Cap_Vcp;
-
 
 #define DDCA_CAPABILITIES_MARKER   "DCAP"
 /** Represents a monitor capabilities string */
@@ -383,6 +385,17 @@ struct {
 // Get and set VCP feature values
 //
 
+/** Indicates the physical data type.  At the DDC level, continuous (C) and
+ *  non-continuous (NC) features are treated identically.  They share the same
+ *  DDC commands (Get VCP Feature and VCP Feature Reply) and data structure.
+ *  Table (T) features use DDC commands Table Write and Table Read, which take
+ *  different data structures.
+ */
+typedef enum {
+   NON_TABLE_VCP_VALUE,
+   TABLE_VCP_VALUE,
+} Vcp_Value_Type;
+
 
 #ifdef OLD
 typedef struct {
@@ -397,7 +410,7 @@ typedef struct {
 #endif
 
 
-
+/** Represents a single non-table VCP value */
 typedef struct {
    VCP_Feature_Code  feature_code;
    union {
@@ -422,23 +435,11 @@ typedef struct {
    };
 } DDCA_Non_Table_Value_Response;
 
-
+/** Represents a single table VCP value.   Consists of a count, followed by the bytes */
 typedef struct {
-   int      bytect;
-   uint8_t  bytes[];     // or uint8_t * ?
+   uint16_t bytect;        /**< Number of bytes in value */
+   uint8_t  bytes[];       /**< Bytes of the value */
 } DDCA_Table_Value;
-
-/** Indicates the physical data type.  At the DDC level, continuous (C) and
- *  non-continuous (NC) features are treated identically.  They share the same
- *  DDC commands (Get VCP Feature and VCP Feature Reply) and data structure.
- *  Table (T) features use DDC commands Table Write and Table Read, which take
- *  different data structures.
- */
-typedef enum {
-   NON_TABLE_VCP_VALUE,
-   TABLE_VCP_VALUE,
-} Vcp_Value_Type;
-
 
 /** Represents a single VCP value of any type */
 typedef struct {
@@ -469,7 +470,5 @@ typedef struct {
       }         nc;                /**< non-continuous (NC) value */
    }       val;
 } Single_Vcp_Value;
-
-
 
 #endif /* DDCUTIL_TYPES_H_ */

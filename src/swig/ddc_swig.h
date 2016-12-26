@@ -44,7 +44,7 @@ bool   check_exception2();
 
 const char * ddcs_ddcutil_version_string();
 
-typedef Byte FlagsByte;
+typedef uint8_t FlagsByte;
 
 bool ddcs_built_with_adl(void);
 bool ddcs_built_with_usb(void);
@@ -117,7 +117,7 @@ DDCS_Display_Identifier_p ddcs_create_mfg_model_sn_display_identifier(
                const char * model,
                const char * sn);
 DDCS_Display_Identifier_p ddcs_create_edid_display_identifier(
-               const Byte * byte_buffer,
+               const uint8_t * byte_buffer,
                int bytect);
 DDCS_Display_Identifier_p ddcs_create_usb_display_identifier(
                int bus,
@@ -175,10 +175,10 @@ char * ddcs_get_capabilities_string(DDCS_Display_Handle_p dh);
 //
 
 typedef struct {
-   Byte  mh;
-   Byte  ml;
-   Byte  sh;
-   Byte  sl;
+   uint8_t  mh;
+   uint8_t  ml;
+   uint8_t  sh;
+   uint8_t  sl;
    int   max_value;
    int   cur_value;
 } DDCS_Non_Table_Value_Response;

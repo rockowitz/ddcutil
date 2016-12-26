@@ -32,7 +32,7 @@
 
 #include "ddcutil_types.h"
 
-#include "util/coredefs.h"
+// #include "util/coredefs.h"
 
 // is this the right location?
 #ifdef __cplusplus
@@ -315,7 +315,7 @@ ddca_create_mfg_model_sn_display_identifier(
  */
 DDCA_Status
 ddca_create_edid_display_identifier(
-      const Byte *              edid,
+      const uint8_t*              edid,
       DDCA_Display_Identifier * pdid);      // 128 byte edid
 
 /** Creates a display identifier using a USB bus number and device number
@@ -612,7 +612,7 @@ ddca_get_feature_info_by_display(
 //
 
 
-// DDCT_Status ddct_get_edid(DDCA_Display_Handle * dh, Byte * edid_buffer);    // edid_buffer must be >= 128 bytes
+// DDCT_Status ddct_get_edid(DDCA_Display_Handle * dh, uint8_t* edid_buffer);    // edid_buffer must be >= 128 bytes
 // Keep?   Can get from ddca_get_edid_by_display_ref()
 
 DDCA_Status
@@ -644,45 +644,52 @@ ddca_get_nontable_vcp_value(
 // Implemented, but untested
 DDCA_Status
 ddca_get_table_vcp_value(
-       DDCA_Display_Handle     ddca_dh,
-       VCP_Feature_Code        feature_code,
+       DDCA_Display_Handle     ddca_dh,       /**< display handle     */
+       VCP_Feature_Code        feature_code,  /**< VCP feature code   */
        int *                   value_len,
-       Byte**                  value_bytes);
+       uint8_t**               value_bytes);
 
 DDCA_Status
 ddca_get_vcp_value(
-       DDCA_Display_Handle     ddca_dh,
-       VCP_Feature_Code        feature_code,
-       Vcp_Value_Type          call_type,   // TODO: elminate
+       DDCA_Display_Handle     ddca_dh,        /**< display handle     */
+       VCP_Feature_Code        feature_code,   /**< VCP feature code   */
+       Vcp_Value_Type          call_type,   // TODO: eliminate
        Single_Vcp_Value **     pvalrec);
 
-
+/** Returns a string containing a formatted representation of the VCP value
+ *  of a feature.  It is the responsiblity of the caller to free this value.
+ *  @param[in] ddca_dh            Display handle
+ *  @param[in] feature_code       VCP feature code
+ *  @param[out] p_formatted_value Address at which to return the formatted value
+ *  @return                       status code, 0 if success
+ */
 DDCA_Status
 ddca_get_formatted_vcp_value(
        DDCA_Display_Handle *   ddca_dh,
        VCP_Feature_Code        feature_code,
        char**                  p_formatted_value);
 
-
+/** Sets a continuous VCP value. */
 DDCA_Status
 ddca_set_continuous_vcp_value(
-      DDCA_Display_Handle      ddca_dh,
-      VCP_Feature_Code         feature_code,
-      int                      new_value);
+      DDCA_Display_Handle      ddca_dh,         /**< display handle     */
+      VCP_Feature_Code         feature_code,    /**< VCP feature code   */
+      int                      new_value);      /**< value to set       */    // sign?
 
+/** Sets a simple NC value, which is a single byte.. */
 DDCA_Status
 ddca_set_simple_nc_vcp_value(
-      DDCA_Display_Handle      ddca_dh,
-      VCP_Feature_Code         feature_code,
-      Byte                     new_value);
+      DDCA_Display_Handle      ddca_dh,         /**< display handle     */
+      VCP_Feature_Code         feature_code,    /**< VCP feature code   */
+      uint8_t                  new_value);      /**< Value to set       */
 
+/** Sets a non-table VCP value by directly specifying its bytes. */
 DDCA_Status
 ddca_set_raw_vcp_value(
-      DDCA_Display_Handle      ddca_dh,
-      VCP_Feature_Code         feature_code,
-      Byte                     hi_byte,
-      Byte                     lo_byte);
-
+      DDCA_Display_Handle      ddca_dh,         /**< Display handle     */
+      VCP_Feature_Code         feature_code,    /**< VCP feature code   */
+      uint8_t                  hi_byte,         /**< High byte of value */
+      uint8_t                  lo_byte);        /**< Low byte of value  */
 
 #ifdef UNIMPLEMENTED
 // Unimplemented
@@ -691,7 +698,7 @@ ddct_set_table_vcp_value(
       DDCA_Display_Handle  ddct_dh,
       VCP_Feature_Code     feature_code,
       int                  value_len,
-      Byte *               value_bytes);
+      uint8_t*             value_bytes);
 #endif
 
 DDCA_Status
@@ -702,7 +709,6 @@ ddca_get_profile_related_values(
 DDCA_Status
 ddca_set_profile_related_values(char *
       profile_values_string);
-
 
 
 #ifdef __cplusplus
