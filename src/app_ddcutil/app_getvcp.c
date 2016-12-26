@@ -74,9 +74,9 @@ app_show_single_vcp_value_by_feature_table_entry(
    DBGMSF(debug, "Starting. Getting feature 0x%02x for %s",
                  entry->code, display_handle_repr(dh) );
 
-   DDCA_MCCS_Version_Spec        vspec = get_vcp_version_by_display_handle(dh);
-   Global_Status_Code  gsc = 0;
-   Byte                feature_id = entry->code;
+   DDCA_MCCS_Version_Spec vspec      = get_vcp_version_by_display_handle(dh);
+   Global_Status_Code     gsc        = 0;
+   Byte                   feature_id = entry->code;
 
    if (!is_feature_readable_by_vcp_version(entry, vspec)) {
       char * feature_name =  get_version_sensitive_feature_name(entry, vspec);
@@ -86,7 +86,6 @@ app_show_single_vcp_value_by_feature_table_entry(
                 feature_id, feature_name, vspec.major, vspec.minor);
       else
          printf("Feature %02x (%s) is not readable\n", feature_id, feature_name);
-      // gsc = modulate_rc(-EINVAL, RR_ERRNO);    // TEMP - what is appropriate?
       gsc = DDCL_INVALID_OPERATION;
    }
 
