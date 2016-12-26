@@ -48,6 +48,8 @@
 #include "usb/usb_vcp.h"
 #endif
 
+#include "vcp/parse_capabilities.h"
+
 #include "ddc/ddc_edid.h"
 #include "ddc/ddc_multi_part_io.h"
 #include "ddc/ddc_packet_io.h"
@@ -556,6 +558,24 @@ show_feature_set_values(
    return master_status_code;
 }
 
+#ifdef FUTURE
+//typedef bool (*VCP_Feature_Set_Filter_Func)(VCP_Feature_Table_Entry * ventry);
+bool hack42(VCP_Feature_Table_Entry * ventry) {
+   bool debug = true;
+   bool result = true;
+
+   // if (ventry->code >= 0xe0)  {     // is everything promoted to int before comparison?
+   if ( (ventry->vcp_global_flags & DDCA_SYNTHETIC) &&
+        (ventry->v20_flags & DDCA_READABLE_TABLE)
+      )
+   {
+      result = false;
+      DBGMSF(debug, "Returning false for vcp code 0x%02x", ventry->code);
+   }
+   return result;
+}
+#endif
+
 
 /* Shows the VCP values for all features in a VCP feature subset.
  *
@@ -580,9 +600,20 @@ show_vcp_values(
    Global_Status_Code gsc = 0;
    bool debug = false;
    DBGMSF(debug, "Starting.  subset=%d  dh=%s", subset, display_handle_repr(dh) );
+
    DDCA_MCCS_Version_Spec vcp_version = get_vcp_version_by_display_handle(dh);
    // DBGMSG("VCP version = %d.%d", vcp_version.major, vcp_version.minor);
    VCP_Feature_Set feature_set = create_feature_set(subset, vcp_version);
+#ifdef FUTURE
+   Parsed_Capabilities * pcaps = NULL;   // TODO: HOW TO GET Parsed_Capabilities?, will only be set for probe/interrogate
+   // special case, if scanning, don't try to do a table read of manufacturer specific
+   // features if it's clear that table read commands are unavailable
+
+   // convoluted solution to avoid passing additional argument to create_feature_set()
+   if (subset == VCP_SUBSET_SCAN && !parsed_capabilities_may_support_table_commands(pcaps)) {
+      filter_feature_set(feature_set, hack42);
+   }
+#endif
    if (debug)
       report_feature_set(feature_set, 0);
 
