@@ -581,6 +581,30 @@ parsed_capabilities_feature_ids(
 }
 
 
+/* Checks if it's possible that a monitor support table reads.
+ *
+ * Alternatively stated, checks the parsed capabilities to see if table
+ * reads can definitely be ruled out.
+ *
+ * Arguments:
+ *    pcaps        pointer to Parsed_Capabilities (may be null)
+ *
+ * Returns:        false if pcaps is non-null and a capabilities segment was
+ *                 parsed and neither Table Read Request nor Table Read Reply
+ *                 was parsed, false otherwise
+ */
+bool parsed_capabilities_may_support_table_commands(Parsed_Capabilities * pcaps) {
+   bool result = true;
+   if (pcaps && pcaps->raw_cmds_segment_seen && pcaps->commands) {
+      if ( !bva_contains(pcaps->commands, 0xe2)  &&      // Table Read Request
+           !bva_contains(pcaps->commands, 0xe4)          // Table Read Reply
+         )
+         result = false;
+   }
+   return result;
+}
+
+
 
 //
 // Tests

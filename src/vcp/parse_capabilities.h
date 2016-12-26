@@ -54,6 +54,11 @@ void report_parsed_capabilities(Parsed_Capabilities* pcaps);
 void free_parsed_capabilities(Parsed_Capabilities * pcaps);
 Byte_Bit_Flags parsed_capabilities_feature_ids(Parsed_Capabilities * pcaps, bool readable_only);
 
+bool parsed_capabilities_may_support_table_commands(Parsed_Capabilities * pcaps);
+
+
+
+
 
 // Tests
 
