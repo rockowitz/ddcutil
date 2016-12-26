@@ -36,6 +36,8 @@
 
 typedef void * VCP_Feature_Set;  // make underlying data structure opaque
 
+typedef bool (*VCP_Feature_Set_Filter_Func)(VCP_Feature_Table_Entry * ventry);
+
 void free_vcp_feature_set(VCP_Feature_Set fset);
 
 VCP_Feature_Set
@@ -60,8 +62,11 @@ void report_feature_set(VCP_Feature_Set feature_set, int depth);
 
 VCP_Feature_Set
 create_feature_set_from_feature_set_ref(
-   Feature_Set_Ref * fsref,
-   DDCA_MCCS_Version_Spec      vcp_version,
-   bool              force);
+   Feature_Set_Ref *       fsref,
+   DDCA_MCCS_Version_Spec  vcp_version,
+   bool                    force);
+
+void filter_feature_set(VCP_Feature_Set fset, VCP_Feature_Set_Filter_Func func);
+
 
 #endif /* VCP_FEATURE_SET_H_ */

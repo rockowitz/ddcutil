@@ -279,3 +279,17 @@ void report_feature_set(VCP_Feature_Set feature_set, int depth) {
    }
 }
 
+void filter_feature_set(VCP_Feature_Set feature_set, VCP_Feature_Set_Filter_Func func) {
+   struct vcp_feature_set * fset = (struct vcp_feature_set *) feature_set;
+   assert( fset && memcmp(fset->marker, VCP_FEATURE_SET_MARKER, 4) == 0);
+
+   for (int ndx = fset->members->len -1; ndx >= 0; ndx--) {
+      VCP_Feature_Table_Entry * vcp_entry = NULL;
+      vcp_entry = g_ptr_array_index(fset->members,ndx);
+      if (!func(vcp_entry)) {
+         // memory leak?
+         g_ptr_array_remove_index(fset->members, ndx);
+      }
+
+   }
+}
