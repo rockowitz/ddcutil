@@ -63,6 +63,7 @@ static Cmd_Desc cmdinfo[] = {
 #ifdef USE_USB
    {CMDID_CHKUSBMON,    "chkusbmon",      3,  1,       1},
 #endif
+   {CMDID_PROBE,        "probe",          5,  0,       0},
 };
 static int cmdct = sizeof(cmdinfo)/sizeof(Cmd_Desc);
 
@@ -295,6 +296,7 @@ char * commands_list_help =
        "   chkusbmon                            Check if USB device is monitor (for UDEV)\n"
 #endif
        "   watch                                Watch display for reported changes (under development)\n"
+       "   probe                                probe monitor facilities\n"
        "\n";
 
 char * command_argument_help =

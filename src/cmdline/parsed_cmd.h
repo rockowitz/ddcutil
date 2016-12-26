@@ -48,6 +48,7 @@ typedef enum {
    CMDID_VCPINFO      = 0x1000,
    CMDID_READCHANGES  = 0x2000,
    CMDID_CHKUSBMON    = 0x4000,
+   CMDID_PROBE        = 0x8000,
 } Cmd_Id_Type;
 
 
