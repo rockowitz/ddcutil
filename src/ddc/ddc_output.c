@@ -549,6 +549,7 @@ show_feature_set_values(
             }
          }
       }
+      DBGMSF(debug,"ndx=%d, feature = 0x%02x Done", ndx, entry->code);
    }   // loop over features
 
    DBGMSF(debug, "Returning: %s", gsc_desc(master_status_code));
