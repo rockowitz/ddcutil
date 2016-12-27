@@ -222,17 +222,17 @@ ddcg_display_identifier_create_mfg_model_sn_identifier(
    g_return_val_if_fail (error == NULL || *error == NULL, NULL);
 
    DdcgDisplayIdentifier * ddcg_did = NULL;
-   DDCA_Display_Identifier ddct_did = NULL;
-   DDCA_Status ddct_status = ddca_create_mfg_model_sn_display_identifier(mfg_id, model, sn, &ddct_did);
-   if (ddct_status == 0) {
+   DDCA_Display_Identifier ddca_did = NULL;
+   DDCA_Status ddca_status = ddca_create_mfg_model_sn_display_identifier(mfg_id, model, sn, &ddca_did);
+   if (ddca_status == 0) {
       ddcg_did = g_object_new(DDCG_TYPE_DISPLAY_IDENTIFIER, NULL);
-      ddcg_did->priv->ddct_did = ddct_did;
+      ddcg_did->priv->ddct_did = ddca_did;
       // ddcg_display_identifier_report(ddcg_did, 0);
    }
    else {
       GQuark domain = g_quark_from_string("DDCTOOL_DDCG");
-      g_set_error(error,  domain, ddct_status,
-                  "ddct_create_model_sn_identifier() returned %d=ddct_status", ddct_status);
+      g_set_error(error,  domain, ddca_status,
+                  "ddca_create_model_sn_identifier() returned %d=ddct_status", ddca_status);
    }
    return ddcg_did;
 }
