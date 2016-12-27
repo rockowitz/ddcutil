@@ -239,7 +239,6 @@ void probe_display_by_dh(Display_Handle * dh)
             printf("\nAll features found by scanning were declared in capabilities.\n");
 
          bbf_free(features_declared);
-         bbf_free(features_seen);
          bbf_free(caps_not_seen);
          bbf_free(seen_not_caps);
          free_parsed_capabilities(pcaps);
@@ -248,6 +247,7 @@ void probe_display_by_dh(Display_Handle * dh)
          printf("\n\nUnable to read or parse capabilities.\n");
          printf("Skipping comparison of declared capabilities to observed features\n");
       }
+      bbf_free(features_seen);
 
 
       puts("");
