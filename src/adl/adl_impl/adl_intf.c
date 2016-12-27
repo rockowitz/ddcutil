@@ -146,13 +146,14 @@ bool adl_is_available() {
  *  -1 error loading function
  */
 static int link_adl(Adl_Procs** pLocAdl_Procs, bool verbose) {
-   // DBGMSG("Staring." );
+   bool debug = false;
+   DBGMSF(debug, "Starting." );
    Adl_Procs* adl =  calloc(1, sizeof(Adl_Procs));
    int result = 0;
 
 #define LOADFUNC(_n_) \
    do { \
-   /* DBGMSG("Loading function %s", #_n_);  */  \
+   DBGMSF(debug, "Loading function %s", #_n_);    \
    adl->_n_ = dlsym(adl->hDLL, #_n_); \
    if (!adl->_n_) { \
        SEVEREMSG("ADL error: loading symbol %s\n", #_n_); \
@@ -164,7 +165,7 @@ static int link_adl(Adl_Procs** pLocAdl_Procs, bool verbose) {
    adl->hDLL = dlopen("libatiadlxx.so", RTLD_LAZY|RTLD_GLOBAL);
    if (!adl->hDLL) {
       if (verbose)
-         printf("ADL library libatiadlxx.so not found." );   // this is a user error msg
+         printf("ADL library libatiadlxx.so not found.\n" );   // this is a user error msg
       result = 1;
    }
    else {
@@ -206,11 +207,15 @@ static int link_adl(Adl_Procs** pLocAdl_Procs, bool verbose) {
        LOADFUNC( ADL_Display_XrandrDisplayName_Get );
 
    }
-   // DBGMSG("adl->ADL_Main_Control_Create = %p   ", adl->ADL_Main_Control_Create );
+   DBGMSF(debug, "adl->ADL_Main_Control_Create = %p   ", adl->ADL_Main_Control_Create );
    if (result == 0) {
       *pLocAdl_Procs = adl;
    }
-   // DBGMSG("Returning %d, *pLocAdl_Procs=%p   ", result, *pLocAdl_Procs ) ;
+   else {
+      free(adl);
+      *pLocAdl_Procs = NULL;
+   }
+   DBGMSF(debug, "Returning %d, *pLocAdl_Procs=%p   ", result, *pLocAdl_Procs ) ;
    return result;
 
 #undef LOADFUNC
