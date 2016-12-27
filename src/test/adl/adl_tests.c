@@ -166,7 +166,7 @@ void get_luminosity_amd_sample(int adapterNdx, int displayNdx, int how, int send
       Byte readbuf2[MAXREADSIZE];
       int rcvCt = MAXREADSIZE;
 
-      rc = adl_ddc_write_read_with_retry(
+      /* rc = */  adl_ddc_write_read_with_retry(
               adapterNdx,
               displayNdx,
               ddc_cmd_bytes+sendOffset,
