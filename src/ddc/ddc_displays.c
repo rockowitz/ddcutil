@@ -585,41 +585,31 @@ ddc_report_active_display(Display_Info * curinfo, int depth) {
             // display controller mfg, firmware version
             char mfg_name_buf[100];
             char * mfg_name         = "Unspecified";
+
             // char * firmware_version = "Unspecified";
-            // old way: Parsed_Nontable_Vcp_Response* code_info;
-            /* works only for non-USB
-            Global_Status_Code gsc = get_nontable_vcp_value(
-                   dh,
-                   0xc8,         // controller manufacturer
-                   &code_info);
-            */
-            // bump it up to get_nontable_vcp_value()'s caller, which does know how to handle USB
+
+            // n. get_nontable_vcp_value() does not know how to handle USB devices, but its
+            // caller, get_vcp_value() does
             Single_Vcp_Value *   valrec;
             Global_Status_Code  gsc = get_vcp_value(dh, 0xc8, NON_TABLE_VCP_VALUE, &valrec);
 
             if (gsc != 0) {
                if (gsc != DDCRC_REPORTED_UNSUPPORTED && gsc != DDCRC_DETERMINED_UNSUPPORTED)
                    DBGMSG("get_nontable_vcp_value(0xc8) returned %s", gsc_desc(gsc));
-               rpt_vstring(depth, "Controller mfg:      Unspecified");
+               // n. keeping msg_name == "Unspecified"
             }
             else {
                DDCA_Feature_Value_Entry * vals = pxc8_display_controller_type_values;
                mfg_name =  get_feature_value_name(
                                      vals,
                                      valrec->val.nc.sl);
-    //                               code_info->sl);
                if (!mfg_name) {
-                  // vsnprintf(mfg_name_buf, 100, "Unrecognized manufacturer code 0x%02x", code_info->sl);
-                  rpt_vstring(depth, "Controller mfg:       Unrecognized manufacturer code 0x%02x",
-                                     valrec->val.nc.sl);
-                            //       code_info->sl);
+                  snprintf(mfg_name_buf, 100, "Unrecognized manufacturer code 0x%02x", valrec->val.nc.sl);
                   mfg_name = mfg_name_buf;
                }
-               else {
-                  // rpt_vstring(depth, "Controller mfg:      %s", (mfg_name) ? mfg_name : "not set");
-                  rpt_vstring(depth,    "Controller mfg:      %s", mfg_name);
-               }
             }
+            rpt_vstring(depth,    "Controller mfg:      %s", mfg_name);
+
    #ifdef OLD
             gsc = get_nontable_vcp_value(
                         dh,
