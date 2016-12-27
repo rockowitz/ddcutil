@@ -549,8 +549,8 @@ Parsed_Capabilities* parse_capabilities_string(char * caps) {
 /* Returns list of feature ids in a Parsed_Capabilities structure.
  *
  * Arguments:
- *   pcaps
- *   readable_only
+ *   pcaps           pointer to Parsed_Capabilities
+ *   readable_only   restrict returned list to readable features
  *
  * Returns:   Byte_Bit_Flags indicating features found
  */
@@ -568,12 +568,16 @@ parsed_capabilities_feature_ids(
       Capabilities_Feature_Record * frec = g_ptr_array_index(pcaps->vcp_features, ndx);
       // DBGMSG("Feature 0x%02x", frec->feature_id);
 
+      bool add_feature_to_list = true;
       if (readable_only) {
          VCP_Feature_Table_Entry * vfte = vcp_find_feature_by_hexid_w_default(frec->feature_id);
          if (!is_feature_readable_by_vcp_version(vfte, pcaps->parsed_mccs_version))
-            continue;
+            add_feature_to_list = false;
+         if (vfte->vcp_global_flags & DDCA_SYNTHETIC)
+            free_synthetic_vcp_entry(vfte);
       }
-      bbf_set(flags, frec->feature_id);
+      if (add_feature_to_list)
+         bbf_set(flags, frec->feature_id);
    }
 
    DBGMSF(debug, "Returning Byte_Bit_Flags: %s", bbf_to_string(flags, NULL, 0));
