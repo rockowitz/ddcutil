@@ -1011,10 +1011,12 @@ ddca_get_feature_info_by_vcp_version(
    *p_info = NULL;
    // DDCA_MCCS_Version_Spec vspec = mccs_version_id_to_spec(mccs_version_id);
 
-   Version_Feature_Info * info =  get_version_specific_feature_info(
+   // or should this be a version sensitive call?
+   Version_Feature_Info * info =  get_version_feature_info(
          feature_code,
          false,                        // with_default
-         mccs_version_id);
+         mccs_version_id,
+         false);                       // false => version_specific
    if (!info)
       psc = DDCL_ARG;
    else
