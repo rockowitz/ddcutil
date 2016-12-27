@@ -781,19 +781,25 @@ char *                pstrDisplayName;
 #endif
 
 
-Base_Status_ADL adl_get_video_card_info_by_adlno(
-                      int  iAdapterIndex,
-                      int  iDisplayIndex,
-                      Video_Card_Info * card_info) {
+Base_Status_ADL
+adl_get_video_card_info_by_adlno(
+      int               iAdapterIndex,
+      int               iDisplayIndex,
+      Video_Card_Info * card_info)
+{
    assert( card_info != NULL && memcmp(card_info->marker, VIDEO_CARD_INFO_MARKER, 4) == 0);
    int rc = 0;
    ADL_Display_Rec * pAdlRec = adl_get_display_by_adlno(iAdapterIndex, iDisplayIndex, true /* emit_error_msg */);
    if (!pAdlRec) {
       PROGRAM_LOGIC_ERROR("%s called with invalid Display_Handle");
    }
-   card_info->vendor_id = pAdlRec->iVendorID;
-   card_info->adapter_name = strdup(pAdlRec->pstrAdapterName);
-   card_info->driver_name  = "AMD proprietary driver";
+   // assignments wrapped in unnecessary else{} clause to avoid clang warning
+   // about possible null dereference in case pAdlRec is NULL
+   else {
+      card_info->vendor_id    = pAdlRec->iVendorID;
+      card_info->adapter_name = strdup(pAdlRec->pstrAdapterName);
+      card_info->driver_name  = "AMD proprietary driver";
+   }
    return rc;
 }
 
