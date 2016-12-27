@@ -798,7 +798,7 @@ ddca_get_displays()
 {
    // PROGRAM_LOGIC_ERROR("---> pseudo failure");
    Display_Info_List * info_list = ddc_get_valid_displays();
-   int true_ct = 0;
+   int true_ct = 0;         // number of valid displays
    for (int ndx = 0; ndx < info_list->ct; ndx++) {
       Display_Info drec = info_list->info_recs[ndx];
       if (drec.dispno != -1)    // ignore invalid displays
@@ -849,6 +849,7 @@ ddca_get_displays()
          curinfo->sn            = drec.edid->serial_ascii;
       }
    }
+   free_display_info_list(info_list);
 
    // DBGMSG("Returning %p", result_list);
    return result_list;
@@ -896,10 +897,12 @@ ddca_report_display_info(
          break;
    }
 
+   char * edidstr = hexstring(dinfo->edid_bytes, 128);
    rpt_vstring(d1, "Mfg Id:         %s", dinfo->mfg_id);
    rpt_vstring(d1, "Model:          %s", dinfo->model_name);
    rpt_vstring(d1, "Serial number:  %s", dinfo->sn);
-   rpt_vstring(d1, "EDID:           %s", hexstring(dinfo->edid_bytes, 128));
+   rpt_vstring(d1, "EDID:           %s", edidstr);
+   free(edidstr);
 }
 
 
@@ -1378,6 +1381,7 @@ ddca_parse_capabilities_string(
          }
       }
       psc = 0;
+      free_parsed_capabilities(pcaps);
    }
 
    *p_parsed_capabilities = result;
@@ -1429,7 +1433,9 @@ ddca_report_parsed_capabilities(
       assert( memcmp(cur_vcp->marker, DDCA_CAP_VCP_MARKER, 4) == 0);
       rpt_vstring(d2, "Feature code:  0x%02x", cur_vcp->feature_code);
       if (cur_vcp->value_ct > 0) {
-         rpt_vstring(d2, "Values:     %s", hexstring(cur_vcp->values, cur_vcp->value_ct));
+         char * hs =  hexstring(cur_vcp->values, cur_vcp->value_ct);
+         rpt_vstring(d2, "Values:     %s", hs);
+         free(hs);
       }
    }
 

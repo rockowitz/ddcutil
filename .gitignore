@@ -130,4 +130,5 @@ docs/doxygen/html/
 docs/doxygen/latex/
 ddcutil.pc
 docs/ddcutil-c-api
+/run_coverity
 
