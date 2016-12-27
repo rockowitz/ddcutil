@@ -894,6 +894,7 @@ Buffer * get_hiddev_edid(int fd)  {
    bool debug = false;
    if (debug)
       printf("(%s) Starting\n", __func__);
+
    Buffer * result = NULL;
    struct hid_field_locator * loc = locate_edid_report(fd);
    if (loc) {
