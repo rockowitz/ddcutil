@@ -37,6 +37,12 @@
 
 #include "usb_util/libusb_util.h"
 
+
+// Note on function naming:
+// Since libusb.h uses "libusb_" as a prefix to function and struct names, it
+// would be confusing for this file to use the same convention.
+
+
 //
 // Utility functions
 //
