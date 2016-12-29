@@ -2,21 +2,7 @@
 
 SUBDIRS = . gobject_api swig 
 
-# Is this really necessary?   Don't want to push these files to github.
-# there ought to be a cleaner way
-# MOSTLYCLEANFILES =    \
-# base/.deps/*          \
-# cmdline/.deps/*       \
-# ddc/.deps/*.Po        \
-# i2c/.deps/*           \
-# ddcutil_app/.deps/*          \
-# test/ddc/.deps/*      \
-# test/i2c/.deps/*      \
-# test/.deps/*          
-# util/.deps/*          \
-# adl/.deps/*           \
-# adl/adl_impl/.deps/*  \
-# adl/adl_mock_impl/.deps/*  
+MOSTLYCLEANFILES =   
 
 CLEANFILES =
 # adl/*expand               \
@@ -70,19 +56,20 @@ distclean-local:
 maintainerclean-local:
 	@echo "(src/Makefile) maintainerclean-local"
 
+
 #
 # Execuatables 
 #
 
 bin_PROGRAMS = \
-ddcutil  
+  ddcutil  
 
 check_PROGRAMS =
 
 if ENABLE_SHARED_LIB_COND
 # Sample C client program for shared library:
 check_PROGRAMS += \
-laclient 
+  laclient 
 endif
 
 
@@ -104,7 +91,7 @@ endif
 
 
 #
-# Files only in ddcutil executable:
+# Files only in ddcutil executable
 #
 ddcutil_SOURCES = \
 cmdline/cmd_parser_aux.c \
@@ -131,13 +118,14 @@ endif
 
 
 #
-# Files only in laclient executable:
+# Files only in laclient executable
 #
 laclient_SOURCES = \
 sample_clients/clmain.c
 
-
-# files only in libddcutil:
+#
+# Files only in libddcutil
+#
 libddcutil_la_SOURCES = \
 libmain/ddcutil_c_api.c  
 
@@ -165,8 +153,10 @@ all-local:
 #	touch base/built_info.c
 
 
+#
 # libcommon contains the source files that are 
 # shared between ddcutil and libddcutil: 
+#
 libcommon_la_SOURCES =      	\
 base/base_services.c        	\
 base/build_info.c           	\
@@ -257,12 +247,8 @@ public/ddcutil_types.h \
 public/ddcutil_c_api.h 
 
 
-
-# EXTRA_DIST = \
-# util/string_util.h \
-# util/subprocess_util.h
-
 dist-hook:
+	@echo "Executing hook dist-hook..."
 	find .  -type f | grep  \.h$ | xargs -i cp --parents "{}" $(distdir)
     
 
@@ -289,14 +275,6 @@ $(LIBUSB_CFLAGS) \
 -I$(srcdir)      \
 -I$(srcdir)/public
 
-# # temporarily hardcode PYTHON_CPPFLAGS here
-# AM_CPPFLAGS += \
-# $(PYTHON_CPPGLAGS)
-
-
-# AM_CPPFLAGS += \
-# $(HIDAPI_CFLAGS)
-
 if HAVE_ADL_COND
 AM_CPPFLAGS +=               \
 -I@ADL_HEADER_DIR@  
@@ -313,7 +291,7 @@ if ENABLE_CALLGRAPH_COND
   AM_CFLAGS += -fdump-rtl-expand
 endif
 
-AM_CFLAGS += $(PYTHON_CPPFLAGS)
+# AM_CFLAGS += $(PYTHON_CPPFLAGS)
 
 ddcutil_CFLAGS          = $(AM_CFLAGS)
 laclient_CFLAGS         = $(AM_CFLAGS)
@@ -328,7 +306,6 @@ libddcutil_la_CFLAGS    = $(AM_CFLAGS)
 # A library must be listed after any libraries that depend on it
 #
 
-# deleted $(HIDAPI_LIBS)
 libddcutil_la_LIBADD = -lz
 libddcutil_la_LIBADD +=  \
    libcommon.la   \
@@ -342,22 +319,17 @@ libddcutil_la_LIBADD += \
    $(LIBUSB_LIBS)
 endif
 
-# temp
-libddcutil_la_LIBADD += $(PYTHON_LIBS) -lpython2.7
 
-libddcutil_la_LDFLAGS = -export_symbols-regex '^ddc[tgs]_[^_]'
-# libddcutil_la_LDFLAGS += -version-info '0:1:1'
-libddcutil_la_LDFLAGS += -export-dynamic  
-# doesn't cause ddca_init() to be executed:
-# libddcutil_la_LDFLAGS += -init=ddca_init
+libddcutil_la_LDFLAGS = 
+libddcutil_la_LDFLAGS += -export-symbols-regex '^ddc[ags]_[^_]'
+libddcutil_la_LDFLAGS += -version-info '@LT_CURRENT@:@LT_REVISION@:@LT_AGE@' 
+# libddcutil_la_LDFLAGS += -init _ddca_init
 
-# needed?
-libcommon_la_LDFLAGS = -export-dynamic 
 
 #
 # Link the executables
 #
-#
+
 ddcutil_LDADD = \
    libcommon.la \
    $(XRANDR_LIBS) \
@@ -385,7 +357,3 @@ install-exec-hook:
 	@echo "  pythondir       = $(pythondir)"
 	@echo "  pyexecdir       = $(pyexecdir)"
 
-
-# These includes are at the Makefile.am level:
-# include make_swig.am
-# include make_gobject.am
