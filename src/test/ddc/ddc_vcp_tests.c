@@ -286,7 +286,7 @@ void get_luminosity_sample_code(int busno) {
    DDC_Packet * response_packet_ptr = NULL;
    // Byte luminosity_op_code = 0x10;
    int rc;
-   char * devname = malloc(12);
+   char devname[12];
    snprintf(devname, 11, "/dev/i2c-%d", busno);
 
    int fh = open(devname,   O_NONBLOCK|O_RDWR);
@@ -428,7 +428,8 @@ void get_luminosity_using_single_ioctl(int busno) {
    // Byte luminosity_op_code = 0x10;
    int rc;
    int errsv;
-   char * devname = malloc(12);
+   // char * devname = malloc(12);
+   char devname[12];
    snprintf(devname, 11, "/dev/i2c-%d", busno);
 
    int fh = open(devname, O_RDWR);
