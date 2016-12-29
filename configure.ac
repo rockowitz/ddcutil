@@ -140,9 +140,16 @@ AC_SUBST([LIBTOOL_DEPS])
 #     then set age to 0.
 #
 
+# The LT_... values are used to create the argument for the --version-info parm. 
+# Note that this parm is processed differently depending on operating system.  
+# For Linux, the second and third fields in the shared object name's suffix are
+# taken directly from the command line, while the first is calculated as current-age.  
+# For example, if LT_CURRENT=13, LT_REVISION=4, LT_AGE=4, the geneated parm 
+# is --version-info "13:1:4", and the generated SO name looks like xxx.so.9.4.1
 
+dnl Temporarily leave all fields 0 until first public release.
 LT_CURRENT=0
-LT_REVISION=1
+LT_REVISION=0
 LT_AGE=0
 AC_SUBST(LT_CURRENT)
 AC_SUBST(LT_REVISION)
