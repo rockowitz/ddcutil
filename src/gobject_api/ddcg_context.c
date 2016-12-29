@@ -67,7 +67,7 @@ static void ddcg_context_class_init(DdcgContextClass * cls) {
    GObjectClass * object_class = G_OBJECT_CLASS(cls);
    object_class->constructed = ddcg_context_constructed;
 #endif
-   ddca_init();
+   // ddca_init();
    // cls->class_initialized = true;  // no member named class_initialized
 
 }

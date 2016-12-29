@@ -126,7 +126,7 @@ uint8_t ddca_get_build_options(void);
  *
  * It is not an error if this function is called more than once.
  */
-void ddca_init(void);
+// void __attribute__ ((constructor)) ddca_init(void);
 
 
 //

@@ -96,7 +96,7 @@ bool check_exception2() {
 
 
 void ddcs_init(void) {
-   ddca_init();
+   // ddca_init();
    PyExc_DDCUtilError = PyErr_NewException(
                             "ddc_swig.PyExc_DDCUtilError",
                             NULL,                   // PyObject* base

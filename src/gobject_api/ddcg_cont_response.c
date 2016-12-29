@@ -87,7 +87,7 @@ static void ddcg_cont_response_class_init(DdcgContResponseClass * cls) {
    GObjectClass * object_class = G_OBJECT_CLASS(cls);
    object_class->constructed = ddcg_cont_response_constructed;
 #endif
-   ddca_init();
+   // ddca_init();
    // cls->class_initialized = true;  // no member named class_initialized
 
 }

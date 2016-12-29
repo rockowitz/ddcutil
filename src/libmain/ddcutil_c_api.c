@@ -160,7 +160,8 @@ static bool library_initialized = false;
  *
  * It is not an error if this function is called more than once.
  */
-void ddca_init() {
+void __attribute__ ((constructor))
+_ddca_init() {
    // Note: Until init_msg_control() is called within init_base_services(),
    // FOUT is null, so DBGMSG() causes a segfault
    bool debug = true;
@@ -278,8 +279,8 @@ ddca_status_code_desc(DDCA_Status status_code) {
 void
 ddca_set_fout(FILE * fout) {
    // DBGMSG("Starting. fout=%p", fout);
-   if (!library_initialized)
-      ddca_init();
+   // if (!library_initialized)
+   //    _ddca_init();
 
    set_fout(fout);
 }
@@ -287,24 +288,24 @@ ddca_set_fout(FILE * fout) {
 
 void
 ddca_set_fout_to_default() {
-   if (!library_initialized)
-      ddca_init();
+   // if (!library_initialized)
+   //    _ddca_init();
    set_fout_to_default();
 }
 
 
 // Redirects output that normally would go to STDERR
 void ddca_set_ferr(FILE * ferr) {
-   if (!library_initialized)
-      ddca_init();
+   // if (!library_initialized)
+   //    _ddca_init();
 
    set_ferr(ferr);
 }
 
 
 void ddca_set_ferr_to_default() {
-   if (!library_initialized)
-      ddca_init();
+   // if (!library_initialized)
+   //    _ddca_init();
    set_ferr_to_default();
 }
 
@@ -1007,6 +1008,9 @@ ddca_get_feature_info_by_vcp_version(
       DDCA_MCCS_Version_Id   mccs_version_id,
       Version_Feature_Info** p_info)
 {
+   bool debug = false;
+   DBGMSF(debug, "Starting. feature_code=0x%02x, mccs_version_id=%d", feature_code, mccs_version_id);
+
    DDCA_Status psc = 0;
    *p_info = NULL;
    // DDCA_MCCS_Version_Spec vspec = mccs_version_id_to_spec(mccs_version_id);
@@ -1014,13 +1018,15 @@ ddca_get_feature_info_by_vcp_version(
    // or should this be a version sensitive call?
    Version_Feature_Info * info =  get_version_feature_info(
          feature_code,
-         false,                        // with_default
          mccs_version_id,
-         false);                       // false => version_specific
+         false,                       // with_default
+         true);                       // false => version specific, true=> version sensitive
    if (!info)
       psc = DDCL_ARG;
    else
       *p_info = info;
+
+   DBGMSF(debug, "Returning:%d, *p_info=%p", psc, *p_info);
    return psc;
 
 }
