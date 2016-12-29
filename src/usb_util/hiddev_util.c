@@ -595,6 +595,9 @@ bye:
 struct hid_field_locator*
 hiddev_find_report(int fd, __u32 report_type, __u32 ucode, bool match_all_ucodes) {
    bool debug = false;
+   if (debug)
+      printf("(%s) Starting.  report_type=%d, ucode=0x%08x, match_all_ucodes=%s\n",
+            __func__, report_type, ucode, bool_repr(match_all_ucodes));
 
    struct hid_field_locator * result = NULL;
 
@@ -607,7 +610,8 @@ hiddev_find_report(int fd, __u32 report_type, __u32 ucode, bool match_all_ucodes
    int field_index_found = -1;
    struct hiddev_field_info * finfo_found = NULL;
    int reportinfo_rc = 0;
-   while (reportinfo_rc >= 0 && report_id_found == -1) {
+   //while (reportinfo_rc == 0 && report_id_found == -1) {
+   while (reportinfo_rc == 0 && !finfo_found) {
       // printf("(%s) Report counter %d, report_id = 0x%08x %s\n",
       //       __func__, rptct, rinfo.report_id, interpret_report_id(rinfo.report_id));
 
@@ -626,13 +630,19 @@ hiddev_find_report(int fd, __u32 report_type, __u32 ucode, bool match_all_ucodes
          if (finfo_found) {
             report_id_found    = rinfo.report_id;
             field_index_found  = fndx;
+            break;
          }
       }
 
       rinfo.report_id |= HID_REPORT_ID_NEXT;
    }  // loop over reports
 
-   if (report_id_found >= 0) {
+
+   // assert( (report_id_found >=  0 && finfo_found  ) ||
+   //         (report_id_found == -1 && !finfo_found ) );
+
+   if (finfo_found) {
+   // if (report_id_found >= 0) {
       result = calloc(1, sizeof(struct hid_field_locator));
       // result->rinfo = calloc(1, sizeof(struct hiddev_report_info));
       // memcpy(result->rinfo, &rinfo, sizeof(struct hiddev_report_info));
