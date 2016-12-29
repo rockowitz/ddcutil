@@ -53,13 +53,18 @@ AM_CPPFLAGS = \
 
 # Be careful about library ordering
 # A library must be listed AFTER any libraries that depend on it.
+# libcommon.la included because gobject code directly calls 
+# dbgtrc and rpt_str, which are not exported by libddcutil
 libddcgobj_la_LIBADD =  \
+	../libcommon.la \
     ../libddcutil.la    \
 	$(GOBJECT_LIBS) 
 
-libddcgobj_la_LDFLAGS = -export_symbols-regex '^ddc[tgs]_[^_]'
+
+libddcgobj_la_LDFLAGS =
+libddcgobj_la_LDFLAGS += -export_symbols-regex '^ddc[tgs]_[^_]'
 # libddcgobj_la_LDFLAGS += -version-info '0:1:1'
-libddcgobj_la_LDFLAGS += -export-dynamic 
+# libddcgobj_la_LDFLAGS += -export-dynamic 
 
 
 # 
