@@ -38,7 +38,6 @@ typedef struct {
  * @presp:
  * @depth:  logical indentation depth
  *
- * Returns: nothing
  */
 void ddcg_cont_response_report(DdcgContResponse * presp, int depth) {
    // g_return_if_fail( DDCG_IS_CONT_RESPONSE(presp) );   // flags failure, why?
