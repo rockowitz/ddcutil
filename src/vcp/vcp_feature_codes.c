@@ -898,6 +898,9 @@ extract_version_feature_info(
       DDCA_MCCS_Version_Spec     vspec,
       bool                       version_sensitive)
 {
+   bool debug = false;
+   DBGMSF(debug, "vspec=%d.%d, version_sensitive=%s",
+                 vspec.major, vspec.minor, bool_repr(version_sensitive));
    assert(vfte);
    // DDCA_MCCS_Version_Id version_id = mccs_version_spec_to_id(vspec);
 
@@ -905,7 +908,7 @@ extract_version_feature_info(
    memcpy(info->marker, VCP_VERSION_SPECIFIC_FEATURE_INFO_MARKER , 4);
    info->feature_code = vfte->code;
 
-   // redudant, for now
+   // redundant, for now
    info->version_id   = mccs_version_spec_to_id(vspec);
    info->vspec        = vspec;
 
@@ -914,7 +917,6 @@ extract_version_feature_info(
          : get_version_specific_feature_flags(vfte, vspec);
 
    info->desc = vfte->desc;
-   // TODO: use varaint that respects version
    info->feature_name = (version_sensitive)
            ? get_version_sensitive_feature_name(vfte, vspec)
            : get_version_specific_feature_name(vfte, vspec);
@@ -925,7 +927,6 @@ extract_version_feature_info(
          : get_version_specific_sl_values(vfte, vspec);
 
    return info;
-
 }
 
 #ifdef OLD
@@ -984,17 +985,26 @@ get_version_feature_info(
       bool                    with_default,
       bool                    version_sensitive)
 {
+   bool debug = false;
+   DBGMSF(debug, "feature_code=0x%02x, mccs_version_id=%d(%s), with_default=%s, version_sensitive=%s",
+         feature_code,
+         mccs_version_id,
+         vcp_version_id_name(mccs_version_id),
+         bool_repr(with_default),
+         bool_repr(version_sensitive));
+
    Version_Feature_Info* info = NULL;
    DDCA_MCCS_Version_Spec vspec = mccs_version_id_to_spec(mccs_version_id);
 
    VCP_Feature_Table_Entry * pentry =
          (with_default) ? vcp_find_feature_by_hexid_w_default(feature_code)
                         : vcp_find_feature_by_hexid(feature_code);
-   if (pentry)
+   if (pentry) {
       info = extract_version_feature_info(pentry, vspec, version_sensitive);
 
-   if (pentry->vcp_global_flags & DDCA_SYNTHETIC)
-      free_synthetic_vcp_entry(pentry);
+      if (pentry->vcp_global_flags & DDCA_SYNTHETIC)
+         free_synthetic_vcp_entry(pentry);
+   }
 
    return info;
 
