@@ -203,7 +203,8 @@ ddcg_display_identifier_create_usb_identifier(
 
 
 /**
- *  ddcg_display_identifier_create_model_sn_identifier: (constructor):
+ *  ddcg_display_identifier_create_mfg_model_sn_identifier: (constructor):
+ *  @mfg_id:       3 character manufacturer id
  *  @model:        model name
  *  @sn:           serial number string
  *  @error: (out): location where to return #GError if failure
