@@ -387,18 +387,8 @@ alt_possible_monitor_dev(
             if (idesc->bInterfaceProtocol != 1 && idesc->bInterfaceProtocol != 2)
             {
                // TO ADDRESS: WHAT IF MULTIPLE altsettings?  what if they conflict?
-               // TEMP
 
-               new_node = new_possible_monitor_device();
                libusb_ref_device(dev);
-               new_node->libusb_device = dev;
-               new_node->bus = bus;
-               new_node->device_address = device_address;
-               new_node->alt_setting = altset_no;
-               new_node->interface = inter_no;
-               new_node->vid = vid;
-               new_node->pid = pid;
-
                // if (debug)
                //    report_dev(dev, NULL, false, 0);
 
@@ -413,28 +403,42 @@ alt_possible_monitor_dev(
                   rc = libusb_set_auto_detach_kernel_driver(dh, 1);
                   if (rc < 0)
                      REPORT_LIBUSB_ERROR("libusb_set_auto_detach_kernel_driver", rc, LIBUSB_CONTINUE);
-               }
 
-               if (dh) {
-                  if (true) {     // TEMP - should be debug
-                  printf("Manufacturer:  %d - %s\n",
-                            desc.iManufacturer,
-                            lookup_libusb_string(dh, desc.iManufacturer) );
-                  printf("Product:  %d - %s\n",
-                            desc.iProduct,
-                            lookup_libusb_string(dh, desc.iProduct) );
-                  printf("Serial number:  %d - %s\n",
-                                       desc.iSerialNumber,
-                                       lookup_libusb_string(dh, desc.iSerialNumber) );
+                  if (new_node) {
+                     printf("(%s) Found additional possible monitor device on altset_no %d.  Ignoring.\n",
+                            __func__, altset_no);
                   }
-                  new_node->manufacturer_name = strdup(lookup_libusb_string(dh, desc.iManufacturer));
-                  new_node->product_name      = strdup(lookup_libusb_string(dh, desc.iProduct));
-                  new_node->serial_number     = strdup(lookup_libusb_string(dh, desc.iSerialNumber));
-               // new_node->serial_number_wide = wcsdup(lookup_libusb_string_wide(dh, desc.iSerialNumber));
-                  // printf("(%s) serial_number_wide = |%S|\n", __func__, new_node->serial_number_wide);
+                  else {
+                     new_node = new_possible_monitor_device();
+                     new_node->libusb_device = dev;
+                     new_node->bus = bus;
+                     new_node->device_address = device_address;
+                     new_node->alt_setting = altset_no;
+                     new_node->interface = inter_no;
+                     new_node->vid = vid;
+                     new_node->pid = pid;
 
-                  // report_device_descriptor(&desc, NULL, d1);
-                  // report_open_libusb_device(dh, 1);
+                     if (debug) {
+                        printf("Manufacturer:  %d - %s\n",
+                                  desc.iManufacturer,
+                                  lookup_libusb_string(dh, desc.iManufacturer) );
+                        printf("Product:  %d - %s\n",
+                                  desc.iProduct,
+                                  lookup_libusb_string(dh, desc.iProduct) );
+                        printf("Serial number:  %d - %s\n",
+                                             desc.iSerialNumber,
+                                             lookup_libusb_string(dh, desc.iSerialNumber) );
+                     }
+
+                     new_node->manufacturer_name = strdup(lookup_libusb_string(dh, desc.iManufacturer));
+                     new_node->product_name      = strdup(lookup_libusb_string(dh, desc.iProduct));
+                     new_node->serial_number     = strdup(lookup_libusb_string(dh, desc.iSerialNumber));
+                  // new_node->serial_number_wide = wcsdup(lookup_libusb_string_wide(dh, desc.iSerialNumber));
+                     // printf("(%s) serial_number_wide = |%S|\n", __func__, new_node->serial_number_wide);
+
+                     // report_device_descriptor(&desc, NULL, d1);
+                     // report_open_libusb_device(dh, 1);
+                  }
                   libusb_close(dh);
                }
             }
