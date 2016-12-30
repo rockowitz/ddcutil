@@ -76,11 +76,19 @@ int single_getvcp_call(int busno, unsigned char vcp_feature_code) {
    int ndx;
    unsigned char checksum;
    int rc;
-   char * devname = malloc(12);
+   char devname[12];
    snprintf(devname, 11, "/dev/i2c-%d", busno);
 
    int fh = open(devname, O_RDWR);
-   ioctl(fh, I2C_SLAVE, 0x37);
+   if (fh < 0) {
+      perror("Open failed");
+      return -1;
+   }
+   rc = ioctl(fh, I2C_SLAVE, 0x37);
+   if (rc < 0) {
+      perror("ioctl(I2C_SLAVE, 0x37) failed");
+      return -1;
+   }
 
 #ifdef NO
    // write seems to be necessary to reset monitor state
@@ -134,11 +142,14 @@ int single_getvcp_call(int busno, unsigned char vcp_feature_code) {
    }
    else if (rc != readct) {
       printf("(%s) read() returned %d, should be %d  \n", __func__, rc, readct );
+      close(fh);
       return -1;
    }
 
    // printf("(%s) read() returned %s\n", __func__, hexstring(ddc_response_bytes+1, readct) );
-   printf("(%s) read() returned %s\n", __func__, hexstring0(ddc_response_bytes+1, readct) );
+   char * hs = hexstring0(ddc_response_bytes+1, readct);
+   printf("(%s) read() returned %s\n", __func__, hs );
+   free(hs);
    // hex_dump(ddc_response_bytes,1+rc);
 
 
@@ -239,7 +250,8 @@ void probe_get_luminosity(int busno, char * write_mode, char * read_mode) {
    // dump_packet(request_packet_ptr);
 
    file = i2c_open_bus(busno, CALLOPT_ERR_ABORT);
-   i2c_set_addr(file, 0x37, CALLOPT_ERR_MSG|CALLOPT_ERR_ABORT);
+   rc = i2c_set_addr(file, 0x37, CALLOPT_ERR_MSG|CALLOPT_ERR_ABORT);
+   assert(rc == 0);    // CALLOPT_ERR_ABORT was set
    // usleep(DEFAULT_TIMEOUT);
    sleep_millis_with_trace(DDC_TIMEOUT_MILLIS_DEFAULT, __func__, NULL);
 
@@ -252,6 +264,8 @@ void probe_get_luminosity(int busno, char * write_mode, char * read_mode) {
          DDC_TIMEOUT_USE_DEFAULT);
    // rc = perform_i2c_write(file, write_mode, get_packet_len(request_packet_ptr)-1, get_packet_start(request_packet_ptr)+1);
    // TODO free the request packet
+   free_ddc_packet(request_packet_ptr);
+
    if (rc >= 0) {
       Byte * readbuf = (Byte *)calloc(sizeof(unsigned char),256);
       // Byte cmd_byte = 0x6e;
@@ -269,6 +283,7 @@ void probe_get_luminosity(int busno, char * write_mode, char * read_mode) {
             rc2 = get_interpreted_vcp_code(response_packet_ptr, false, &interpretation_ptr);
             if (rc2 == 0)
                report_interpreted_nontable_vcp_response(interpretation_ptr, 0);
+            free_ddc_packet(response_packet_ptr);
          }
       } // read_ok
    } // write_ok
@@ -295,7 +310,11 @@ void get_luminosity_sample_code(int busno) {
       return;
    }
 
-   ioctl(fh, I2C_SLAVE, 0x37);
+   rc = ioctl(fh, I2C_SLAVE, 0x37);
+   if (rc < 0) {
+      perror("ioctl(I2C_SLAVE, 0x37) failed");
+      return;
+   }
 
    // try a read:
    unsigned char * readbuf = calloc(sizeof(unsigned char), 256);
@@ -417,6 +436,7 @@ void get_luminosity_sample_code(int busno) {
 
      if (response_packet_ptr)
         free_ddc_packet(response_packet_ptr);
+     free(readbuf);
 }
 
 
@@ -437,7 +457,11 @@ void get_luminosity_using_single_ioctl(int busno) {
       perror("Unable to open device");
       return;
    }
-   ioctl(fh, I2C_SLAVE, 0x37);
+   rc = ioctl(fh, I2C_SLAVE, 0x37);
+   if (rc < 0) {
+      perror("ioctl(I2C_SLAVE, 0x37) failed");
+      return;
+   }
 
 
    unsigned char readbuf[256];
@@ -551,7 +575,12 @@ void demo_nvidia_bug_sample_code(int busno) {
       perror("Unable to open device");
       return;
    }
-   ioctl(fh, I2C_SLAVE, 0x37);
+   rc = ioctl(fh, I2C_SLAVE, 0x37);
+   if (rc < 0) {
+      printf("(%s) ioctl(I2C_SLAVE, 0x37) returned %d, errno=%s. Terminating execution  \n",
+             __func__, rc, linux_errno_desc(errno) );
+      exit(1);
+   }
 
    // try a read, it succeeds
    unsigned char * readbuf = calloc(sizeof(unsigned char), 256);
@@ -605,6 +634,7 @@ void demo_nvidia_bug_sample_code(int busno) {
       else
          printf("(%s) bytect=%d, Truly weird. rc=%d\n", __func__, bytect, rc);
    }
+   free(readbuf);
    close(fh);
 
 }
