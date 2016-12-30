@@ -50,7 +50,11 @@ _ddc_swig_la_LDFLAGS += -version-info '@LT_CURRENT@:@LT_REVISION@:@LT_AGE@'
 all-local:
 	@echo "(src/swig/Makefile) Executing."
 	chmod a+x pylocal
-	ln -s .libs/_ddc_swig.so _ddc_swig.so
+	if [ -e _ddc_swig.so ]; then \
+	  echo "Link to _ddc_swig.so already exists";\
+	else \
+	  ln -s .libs/_ddc_swig.so _ddc_swig.so ; \
+	fi;
 
 
 #
