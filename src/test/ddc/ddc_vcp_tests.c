@@ -263,7 +263,6 @@ void probe_get_luminosity(int busno, char * write_mode, char * read_mode) {
          get_packet_start(request_packet_ptr)+1,
          DDC_TIMEOUT_USE_DEFAULT);
    // rc = perform_i2c_write(file, write_mode, get_packet_len(request_packet_ptr)-1, get_packet_start(request_packet_ptr)+1);
-   // TODO free the request packet
    free_ddc_packet(request_packet_ptr);
 
    if (rc >= 0) {
