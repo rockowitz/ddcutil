@@ -431,10 +431,12 @@ void show_trace_groups() {
    int ndx;
    for (ndx=0; ndx< trace_group_ct; ndx++) {
       if ( trace_levels & trace_group_ids[ndx]) {
-         // TODO: guard against buffer overflow
-         if (strlen(buf) > 0)
-            strcat(buf, ", ");
-         strcat(buf, trace_group_names[ndx]);
+         // buffer is sufficiently large, but make coverity happy by guarding against buffer overflow:
+         if ( (strlen(buf) + 2 + strlen(trace_group_names[ndx]) ) < bufsz) {
+            if (strlen(buf) > 0)
+               strcat(buf, ", ");
+            strcat(buf, trace_group_names[ndx]);
+         }
       }
    }
    if (strlen(buf) == 0)
