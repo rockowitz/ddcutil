@@ -47,6 +47,11 @@ _ddc_swig_la_LDFLAGS +=  -module -shared -export-dynamic -static
 _ddc_swig_la_LDFLAGS += -version-info '@LT_CURRENT@:@LT_REVISION@:@LT_AGE@'
 
 
+all-local:
+	@echo "(src/swig/Makefile) Executing."
+	chmod a+x pylocal
+	ln -s .libs/_ddc_swig.so _ddc_swig.so
+
 
 #
 # Run swig

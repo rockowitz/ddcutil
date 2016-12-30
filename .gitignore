@@ -131,4 +131,7 @@ docs/doxygen/latex/
 ddcutil.pc
 docs/ddcutil-c-api
 /run_coverity
+*.so
+src/swig/set_pylocal_exec
+src/swig/pylocal
 

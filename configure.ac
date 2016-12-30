@@ -585,6 +585,11 @@ if test "x$enable_swig" = "xyes" ; then
 	  AC_MSG_NOTICE( [pkgpythondir = $pkgpythondir] )
 	  AC_MSG_NOTICE( [pyexecdir    = $pyexecdir]    )
 	  AC_MSG_NOTICE( [pkgpyexecdir = $pkgpyexecdir] )
+
+    AC_SUBST(PYEXECDIR,$pyexecdir)
+    AC_CONFIG_FILES( [src/swig/pylocal] )
+    AC_CONFIG_FILES( [src/swig/set_pylocal_exec] )
+
 	)
 
 fi
