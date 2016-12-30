@@ -600,6 +600,7 @@ void report_report_descriptors_for_report_type(int fd, __u32 report_type, int de
                      for (int ndx=0; ndx<finfo.maxusage; ndx++)
                         buf[ndx] = uref_multi.values[ndx] & 0xff;
                      rpt_hex_dump(buf, finfo.maxusage, d2);
+                     free(buf);
                   }
                   usage_values_reported = true;
                }

@@ -1172,6 +1172,7 @@ static void report_retrieved_report_descriptor_and_probe(
          rpt_vstring(d2, "Not found");
          puts("");
       }
+      free_parsed_hid_descriptor(phd);
    }
    free_hid_report_item_list(item_list);
 }
