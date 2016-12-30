@@ -86,6 +86,10 @@ const char * ddcs_ddcutil_version_string(void);
 bool ddcs_built_with_adl(void);
 bool ddcs_built_with_usb(void);
 
+%rename(DDCS_HAS_ADL)  DDCA_HAS_ADL;
+%rename(DDCS_HAS_USB)  DDCA_HAS_USB;
+%rename(DDCS_HAS_FAILSIM) DDCA_HAS_FAILSIM;
+
 typedef enum {DDCA_HAS_ADL=DDCA_BUILT_WITH_ADL,
               DDCA_HAS_USB=DDCA_BUILT_WITH_USB,
               DDCA_HAS_FAILSIM=DDCA_BUILT_WITH_FAILSIM
@@ -105,6 +109,8 @@ FlagsByte ddcs_get_build_options();
 // Status Code Management
 //
 
+%rename(ddcs_status_code_name) ddca_status_code_name;
+%rename(ddcs_status_code_desc) ddca_status_code_desc;
 typedef int DDCA_Status;    // for now
 // need to handle illegal status_code 
 char * ddca_status_code_name(DDCA_Status status_code);
@@ -115,7 +121,16 @@ char * ddca_status_code_desc(DDCA_Status status_code);
  // Global Settings
  //
 
+
+
+
 // DDC Retry Control
+%rename(DDCS_Retry_Type) DDCA_Retry_Type;
+%rename(ddcs_get_max_tries) ddca_get_max_tries;
+%rename(ddcs_set_max_tries) ddca_set_max_tries;
+%rename(DDCS_WRITE_ONLY_TRIES)  DDCA_WRITE_ONLY_TRIES;
+%rename(DDCS_WRITE_READ_TRIES)  DDCA_WRITE_READ_TRIES;
+%rename(DDCS_MULTI_PART_TRIES)  DDCA_MULTI_PART_TRIES;
 typedef enum{DDCA_WRITE_ONLY_TRIES, DDCA_WRITE_READ_TRIES, DDCA_MULTI_PART_TRIES} DDCA_Retry_Type;
 int          ddca_get_max_tries(DDCA_Retry_Type retry_type);
 DDCA_Status  ddca_set_max_tries(DDCA_Retry_Type retry_type, int max_tries);
@@ -125,6 +140,13 @@ DDCA_Status  ddca_set_max_tries(DDCA_Retry_Type retry_type, int max_tries);
 // Message Control
 //
 
+%rename(DDCS_OL_TERSE)   OL_TERSE;
+%rename(DDCS_OL_NORMAL)  OL_NORMAL;
+%rename(DDCS_OL_VERBOSE) OL_VERBOSE;
+%rename(DDCS_Output_Level) DDCA_Output_Level;
+%rename(ddcs_get_output_level) ddca_get_output_level;
+%rename(ddcs_set_output_level) ddca_set_output_level;
+%rename(ddcs_output_level_name) ddca_output_level_name;
 typedef enum {// OL_DEFAULT=0x01,
               // OL_PROGRAM=0x02,
               OL_TERSE  =0x04,
@@ -136,9 +158,12 @@ DDCA_Output_Level ddca_get_output_level();
 void              ddca_set_output_level(DDCA_Output_Level newval);
 char *            ddca_output_level_name(DDCA_Output_Level val);
 
+%rename(ddcs_enable_report_ddc_errors) ddca_enable_report_ddc_errors;
+%rename(ddcs_is_report_ddc_errors_enabled) ddca_is_report_ddc_errors_enabled;
 void ddca_enable_report_ddc_errors(bool onoff);
 bool ddca_is_report_ddc_errors_enabled();
 
+%feature("docstring", "Additional doc for ddcs_set_fout()") ddcs_set_fout;
 void ddcs_set_fout(FILE * fout);
 // void ddcs_set_fout(PyFileObject * fpy);
 // void ddcs_set_fout(void * fpy);
