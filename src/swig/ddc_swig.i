@@ -3,7 +3,7 @@
 %header %{
 // Start of copy block
 #include "swig/ddc_swig.h"
-void ddca_init(void);
+//  void ddca_init(void);
 bool ddcs_built_with_adl(void);
 const char * ddcutil_version(void);
 // enum Retries{DDCT_WRITE_ONLY_TRIES3, DDCT_WRITE_READ_TRIES3, DDCT_MULTI_PART_TRIES3};
@@ -98,7 +98,7 @@ FlagsByte ddcs_get_build_options();
 // Initialization
 //
 
-void ddca_init(void);
+// void ddca_init(void);
 
 
 //
