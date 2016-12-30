@@ -605,6 +605,8 @@ AC_MSG_RESULT([
 	ddcutil $VERSION
 	=============
 
+	libtool version  	${LT_CURRENT}:${LT_REVISION}:${LT_AGE}
+
 	prefix:                 ${prefix}
 	datarootdir:            ${datarootdir}
 	datadir:                ${datadir}
