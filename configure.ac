@@ -188,7 +188,7 @@ AC_SUBST([ADL_HEADER_DIR], [$adl_header_dir])
 
 dnl *** configure option: --enable-lib
 AC_ARG_ENABLE([lib],
-              [ AS_HELP_STRING( [--enable-lib=@<:@no/yes@:>@], [Build shared library and clients@<:@default=yes@:>@] )],
+              [ AS_HELP_STRING([--enable-lib=@<:@yes/no@:>@], [Build shared library and clients@<:@default=yes@:>@] )],
               [enable_lib=${enableval}],
               [enable_lib=yes] )
 dnl Set flag for automake.am:
@@ -228,7 +228,7 @@ dnl AC_ARG_ENABLE([python-integration],[AS_HELP_STRING([--enable-python-integrat
 
 dnl *** configure option: --enable-usb
 AC_ARG_ENABLE([usb],
-              [ AS_HELP_STRING( [--enable-usb=@<:@yes/no@:>@], [Use usb to probe devices@<:@default=yes@:>@] )],
+              [ AS_HELP_STRING( [--enable-usb=@<:@yes/no@:>@], [Support USB connected displays@<:@default=yes@:>@] )],
               [enable_usb=${enableval}],
               [enable_usb=yes] )
 AM_CONDITIONAL([ENABLE_USB_COND], [test "x$enable_usb" == "xyes"] )
