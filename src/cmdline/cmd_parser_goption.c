@@ -193,42 +193,50 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
 
    GOptionEntry option_entries[] = {
    //  long_name short flags option-type          gpointer           description                    arg description
+   //  monitor selection options
       {"display", 'd',  0, G_OPTION_ARG_INT,      &dispwork,         "Display number",              "number"},
       {"dis",    '\0',  0, G_OPTION_ARG_INT,      &dispwork,         "Display number",              "number"},
       {"bus",     'b',  0, G_OPTION_ARG_INT,      &buswork,          "I2C bus number",              "busnum" },
 //    {"adl",     'a',  0, G_OPTION_ARG_CALLBACK, adl_arg_func,      "ADL adapter and display indexes", "adapterIndex.displayIndex"},
       {"adl",     'a',  0, G_OPTION_ARG_STRING,   &adlwork,          "ADL adapter and display indexes", "adapterIndex.displayIndex"},
       {"usb",     'U',  0, G_OPTION_ARG_STRING,   &usbwork,          "USB bus and device numbers", "busnum.devicenum"},
-      {"stats",   's',  G_OPTION_FLAG_OPTIONAL_ARG,
-                           G_OPTION_ARG_CALLBACK, stats_arg_func,    "Show retry statistics",    "stats type"},
+      {"mfg",     'g',  0, G_OPTION_ARG_STRING,   &mfg_id_work,      "Monitor manufacturer code",      "mfg_id"},
+      {"model",   'l',  0, G_OPTION_ARG_STRING,   &modelwork,        "Monitor model",                     "model name"},
+      {"sn",      'n',  0, G_OPTION_ARG_STRING,   &snwork,           "Monitor serial number",          "serial number"},
+      {"edid",    'e',  0, G_OPTION_ARG_STRING,   &edidwork,         "Monitor EDID",            "256 char hex string" },
+
+      // output control
+
       {"ddc",     '\0', 0, G_OPTION_ARG_NONE,     &ddc_flag,         "Report DDC protocol and data errors", NULL},
       {"verbose", 'v',  G_OPTION_FLAG_NO_ARG,
                            G_OPTION_ARG_CALLBACK, output_arg_func,   "Show extended detail",           NULL},
       {"terse",   't',  G_OPTION_FLAG_NO_ARG,
                            G_OPTION_ARG_CALLBACK, output_arg_func,   "Show brief detail",              NULL},
-#ifdef OLD
-      {"program", 'p',  G_OPTION_FLAG_NO_ARG,
-                           G_OPTION_ARG_CALLBACK, output_arg_func,   "Machine readable output",        NULL},
-#endif
       {"show-unsupported",
                   'u',  0, G_OPTION_ARG_NONE,     &show_unsupported_flag, "Report unsupported features", NULL},
+
+      // tuning
+      {"maxtries",'\0', 0, G_OPTION_ARG_STRING,   &maxtrywork,       "Max try adjustment",  "comma separated list" },
+      {"stats",   's',  G_OPTION_FLAG_OPTIONAL_ARG,
+                           G_OPTION_ARG_CALLBACK, stats_arg_func,    "Show retry statistics",    "stats type"},
       {"force",   'f',  0, G_OPTION_ARG_NONE,     &force_flag,       "Do not check certain parms",     NULL},
-      {"mfg",     'g',  0, G_OPTION_ARG_STRING,   &mfg_id_work,      "Monitor manufacturer code",      "mfg_id"},
-      {"model",   'l',  0, G_OPTION_ARG_STRING,   &modelwork,        "Monitor model",                     "model name"},
-      {"sn",      'n',  0, G_OPTION_ARG_STRING,   &snwork,           "Monitor serial number",          "serial number"},
-      {"edid",    'e',  0, G_OPTION_ARG_STRING,   &edidwork,         "Monitor EDID",            "256 char hex string" },
+
+      // debugging
       {"trace",   '\0', 0, G_OPTION_ARG_STRING_ARRAY, &trace_classes, "Trace classes",         "trace class name" },
 //    {"trace",   '\0', 0, G_OPTION_ARG_STRING,   &tracework,        "Trace classes",          "comma separated list" },
       {"timestamp",'\0',  0, G_OPTION_ARG_NONE,   &timestamp_trace_flag, "Prepend trace msgs with elapsed time",  NULL},
       {"ts",      '\0',   0, G_OPTION_ARG_NONE,   &timestamp_trace_flag, "Prepend trace msgs with elapsed time",  NULL},
-      {"maxtries",'\0', 0, G_OPTION_ARG_STRING,   &maxtrywork,       "Max try adjustment",  "comma separated list" },
-      {"version", 'V',  0, G_OPTION_ARG_NONE,     &version_flag,     "Show version information", NULL},
+
+
 //    {"myusage", '\0', 0, G_OPTION_ARG_NONE,     &myusage_flag,     "Show usage", NULL},
 //    {"myhelp", '\0', 0,  G_OPTION_ARG_NONE,     &myhelp_flag,      "Show usage", NULL},
       {"sleep-strategy",
                   'y', 0,  G_OPTION_ARG_INT,      &sleep_strategy_work, "Set sleep strategy", "strategy number" },
       {"failsim", '\0', 0,
                            G_OPTION_ARG_FILENAME,   &failsim_fn_work, "Enable simulation", "control file name"},
+
+      // other
+      {"version", 'V',  0, G_OPTION_ARG_NONE,     &version_flag,     "Show version information", NULL},
 
       {G_OPTION_REMAINING,
                  '\0', 0,  G_OPTION_ARG_STRING_ARRAY, &cmd_and_args, "ARGUMENTS description",   "command [arguments...]"},

@@ -291,12 +291,12 @@ char * commands_list_help =
 #ifdef USE_USB
        "   usbenv                               Probe for USB connected monitors\n"
 #endif
+       "   probe                                Probe monitor abilities\n"
        "   interrogate                          Report everything possible\n"
 #ifdef USE_USB
        "   chkusbmon                            Check if USB device is monitor (for UDEV)\n"
 #endif
        "   watch                                Watch display for reported changes (under development)\n"
-       "   probe                                probe monitor facilities\n"
        "\n";
 
 char * command_argument_help =
@@ -329,8 +329,7 @@ char * command_argument_help =
 
 char * monitor_selection_option_help =
        "Monitor Selection\n"
-       "  The monitor to be communicated with can be specified using any of the options:\n"
-       "  --display, --bus, --adl, --model and --sn, --edid\n"
+       "  The monitor to be communicated with can be specified using the following options:\n"
        "  --display <display_number>, where <display_number> ranges from 1 to the number of\n"
        "    displays detected\n"
        "  --bus <bus number>, for /dev/i2c-<bus number>\n"
@@ -347,7 +346,7 @@ char * monitor_selection_option_help =
        "  --model <model_name>, where <model name> is as reported by the EDID\n"
        "  --sn <serial_number>, where <serial_number> is the string form of the serial number\n"
        "          reported by the EDID\n"
-       "  Options --model and --sn must be specified together.\n"
+       "  Options --mfg, --model and --sn may be combined.\n"
        "\n"
       ;
 
