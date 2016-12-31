@@ -237,12 +237,14 @@ load_simple_id_segment(
       char   atag[40];
       ushort acode;
       char*   aname;
-      /* int ct = */ sscanf(a_line, "%s %hx %m[^\n]",
+      int ct = sscanf(a_line, "%s %hx %m[^\n]",
                           atag,
                           &acode,
                           &aname);
       // printf("(%s) ct = %d, atag=|%s|, acode=0x%08x, aname=|%s|\n",
       //        __func__, ct, atag, acode, aname);
+      // do something with return code to avoid coverity warning
+      assert(ct >= 0);
       if (!streq(atag, segment_tag)) {
          // printf("(%s) Tag doesn't match\n", __func__);
          break;
@@ -396,10 +398,13 @@ int find_next_segment_start(GPtrArray* lines, int cur_ndx, char* segment_tag) {
          if (tabct == 0) {
             char   atag[40];
             char*  rest;
-            /* int ct = */ sscanf(a_line, "%s %m[^\n]",
+            int ct = sscanf(a_line, "%s %m[^\n]",
                              atag,
                              &rest);
             // printf("(%s) ct = %d\n", __func__, ct);
+            // coverity scan gets unhappy if nothing sscanf's return code is not checked.
+            // this does something trivial with it.
+            assert(ct >= 0);
             if (!streq(atag,segment_tag)) {
                strcpy(segment_tag, atag);
                free(rest);
