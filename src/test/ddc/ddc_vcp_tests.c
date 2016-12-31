@@ -128,6 +128,7 @@ int single_getvcp_call(int busno, unsigned char vcp_feature_code) {
    }
    else if (rc != writect) {
       printf("(%s) write() returned %d, expected %d   \n", __func__, rc, writect );
+      close(fh);
       return -1;
    }
    usleep(50000);
@@ -138,6 +139,7 @@ int single_getvcp_call(int busno, unsigned char vcp_feature_code) {
    rc = read(fh, ddc_response_bytes+1, readct);
    if (rc < 0) {
       printf("(%s) read() returned %d, errno=%d.\n", __func__, rc, errno );
+      close(fh);
       return -1;
    }
    else if (rc != readct) {
@@ -312,6 +314,7 @@ void get_luminosity_sample_code(int busno) {
    rc = ioctl(fh, I2C_SLAVE, 0x37);
    if (rc < 0) {
       perror("ioctl(I2C_SLAVE, 0x37) failed");
+      close(fh);
       return;
    }
 
@@ -459,6 +462,7 @@ void get_luminosity_using_single_ioctl(int busno) {
    rc = ioctl(fh, I2C_SLAVE, 0x37);
    if (rc < 0) {
       perror("ioctl(I2C_SLAVE, 0x37) failed");
+      close(fh);
       return;
    }
 
