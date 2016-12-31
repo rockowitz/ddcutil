@@ -698,7 +698,9 @@ void report_hiddev_device_by_fd(int fd, int depth) {
    struct hiddev_devinfo dev_info;
    int rc;
    int version;
-   ioctl(fd, HIDIOCGVERSION, &version);   // no need to test return code, always succeeds
+   rc = ioctl(fd, HIDIOCGVERSION, &version);   // no need to test return code, always succeeds
+   // ioctl(HIDIOCGVERSION) never fails, but add check of return code to avoid coverity flagging a problem
+   assert(rc == 0);
    rpt_vstring(depth, "hiddev driver version (reported by HIDIOCGVERSION): %d.%d.%d",
           version>>16, (version >> 8) & 0xff, version & 0xff);
 
