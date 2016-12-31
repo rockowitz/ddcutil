@@ -19,7 +19,7 @@
 ddcutil \- Query and change monitor settings
 .SH SYNOPSIS
 .B ddcutil
-.RB [ "--display|-d"
+.RB [ "--display|--dis|-d"
 .IR dispno ]
 .RB [ "--bus|-b"
 .IR busno ]
@@ -29,6 +29,8 @@ ddcutil \- Query and change monitor settings
 .IR "busnum.devicenum" ]
 .RB [ "--edid" 
 .IR "256 hex character EDID" ]
+.RB [ "--mfg" | "-g"
+.IR "manufacturer code" ]
 .RB [ "--model" | "-l"
 .IR "model name" ]
 .RB [ "--sn" | "-n" 
@@ -41,9 +43,12 @@ ddcutil \- Query and change monitor settings
 .RB [ "-s" | "--stats" ]
 .RB [ --trace 
 .IR  trace-class ]
+.RB [ --timestamp | --ts]
+.RB [ --maxtries 
+.IR  comma separated list ]
 .RB [ "-V" | "--version" ]
 .RB [ "h"  | "--help" ]
-.BR detect " |  " listvcp  " | " capabilities " | " getvcp 
+.BR detect " |  " listvcp  " | " capabilities " | " getvcp " | " probe 
 .RI [ "feature-code" | "feature-group" ]
 .RB | setvcp 
 .I  feature-code new-value
@@ -55,8 +60,7 @@ ddcutil \- Query and change monitor settings
 |
 .BI "loadvcp " filename
 ] |
-.BR environment " | " interrogate 
-
+.BR environment " | " usbenvironment ' | " interrogate 
 
 
 .\" ALT USING .SY .OP
@@ -71,10 +75,12 @@ ddcutil \- Query and change monitor settings
 .SH DESCRIPTION
 \fBddcutil\fP is used to query and change monitor settings.  
 
-\fBddcutil\fP communicates with monitors implementing MCCS (Monitor Control Command Set) using the DDC/CI protocol on the I2C bus.  Normally, the video driver for the monitor exposes the I2C bus as devices named /dev/i2c-n.  
+\fBddcutil\fP communicates with monitors implementing MCCS (Monitor Control Command Set) using the DDC/CI protocol on the I2C bus.  
+Normally, the video driver for the monitor exposes the I2C bus as devices named /dev/i2c-n.  
+Alternatively, \fBddcutil\fP can communicate with USB connected monitors implementing the USB Monitor Control Class Specification.
 
-
-Discussion of I2C, MCCS goes here.  Define VCP.
+The Monitor Control Command Set describes a collection of Virtual Control Panel (VCP) features that a monitor can implement.
+Each feature is identified using a single byte.  For example, feature x10 is the brightness control. 
 
 
 A particular use case for \fBddcutil\fP is as part of color profile management.  
@@ -123,6 +129,12 @@ If the monitor is not attached, nothing happens.
 .TP
 .B "environment "
 Probe the \fBddcutil\fP installation environment.
+.TP
+.B "usbenv "
+Probe USB aspects of the \fBddcutil\fP installation environment.
+.TP
+.B "probe "
+Explore the capabilities and features of a sing monitor. 
 .TP
 .B "interrogate "
 Collect maximum information for problem diagnosis.
@@ -187,6 +199,9 @@ ADL adapter and display indexes
 .BI "-U,--usb " "busnum.devicenum"
 USB bus and device numbers
 .TQ
+.B -g,--mfg
+3 letter manufacturer code
+.TQ
 .B -l,--model
 model name
 .TQ
@@ -208,9 +223,6 @@ Show brief detail
 .TQ
 .B -v, --verbose
 Show extended detail
-.TQ
-.BR "-p" , "--program"
-Machine readable output format.  Not normally used.
 .PP
 Options for diagnostic output.
 .TQ
@@ -230,6 +242,9 @@ Enable debug tracing for a trace class.  Valid values are: \fIbase\fP, i2c, adl,
 Some trace classes are more useful than others.
 .br
 Specify this option multiple times to enable multiple trace classes.
+.TQ
+.B --timestamp, --ts
+Prepend trace messages with elapsed time
 .PP
 Options for program information.
 .TQ
@@ -287,7 +302,8 @@ ADL identifies monitors using an adapter-number/display-number pair.  To select 
 
 .SH VIRTUAL MACHINES
 
-VirtualBox and VMware do not provide i2c emulation.  (qemu?)
+Virtualized video drivers in VMWare and VirtualBox do not provide I2C emulation.  Use of normal video drivers with PCI passthrough 
+in a virtual machine has not been tested.
 
 
 .SH EXAMPLES
