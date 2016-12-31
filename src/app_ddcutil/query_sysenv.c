@@ -1258,9 +1258,8 @@ static void probe_hiddev(int depth) {
                    report_hiddev_device_by_fd(fd, d1);
                 }
              }
-             free(cgname);
           }
-
+          free(cgname);
           close(fd);
       }
    }
