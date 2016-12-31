@@ -66,6 +66,14 @@ clang:
 	        -o clang-report make
 
 
+coverity:
+	$(MAKE) clean                    \
+	cov-build --dir cov-int $(MAKE);        \
+	tar czvf ddcutil-coverity.tgz cov-int
+	@echo "Now upload file ddcutil-coverity.tzg to https://scan.coverity.com"
+
+
+
 # 	$(foreach v, $(.VARIABLES), @echo "$v = $$v")
 show:
 	@echo "---> Show variables"
