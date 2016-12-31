@@ -628,10 +628,12 @@ void dbgtrc(
       va_start(args, format);
       int ct = vsnprintf(buffer, bufsz, format, args);
       if (ct >= bufsz) {   // if buffer too small, reallocate
-         // printf("(dbgtrc) Reallocating buffer, new size = %d\n", ct+1);
+         printf("(dbgtrc) Reallocating buffer, new size = %d\n", ct+1);
          // buffer too small, reallocate and try again
          free(buffer);
          free(buf2);
+         va_end(args);
+
          bufsz = ct+1;
          buffer = calloc(bufsz, sizeof(char));
          buf2   = calloc(bufsz+50, sizeof(char));
