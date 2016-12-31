@@ -608,7 +608,7 @@ void report_report_descriptors_for_report_type(int fd, __u32 report_type, int de
                   Buffer * buf = hiddev_collect_single_byte_usage_values(fd, &finfo, fndx);
                   if (buf) {
                      // printf("(%s) Values retrieved by collect_single_byte_usage_values()\n", __func__);
-                     rpt_vstring(d2, "Retrieving values using multiple HIDIOCGUSAGE calls");
+                     rpt_vstring(d2, "Values retrieved by collect_single_byte_usage_values()");
                      rpt_hex_dump(buf->bytes, buf->len, d2);
                      usage_values_reported = true;
                      buffer_free(buf, __func__);
