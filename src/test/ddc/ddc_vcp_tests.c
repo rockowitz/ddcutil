@@ -159,6 +159,7 @@ int single_getvcp_call(int busno, unsigned char vcp_feature_code) {
    // some monitors return a DDC null response to indicate an invalid request:
    if (ddc_response_bytes[1] == 0x6e && ddc_data_length == 0 && ddc_response_bytes[3] == 0xbe) {    // 0xbe == checksum
       printf("(%s) Received DDC null response\n", __func__ );
+      close(fh);
       return -1;
    }
 
