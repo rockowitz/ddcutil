@@ -137,6 +137,7 @@ void register_jmp_buf(jmp_buf* jb) {
    global_abort_jmp_buf_ptr = jb;
 }
 
+/* coverity [+kill] avoid coverity memory leak warnings */
 void ddc_abort(
       const char * funcname,
       const int    lineno,
