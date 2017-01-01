@@ -56,11 +56,7 @@ void ddc_abort(
 #define DDC_ABORT(status) \
    ddc_abort(__func__, __LINE__, __FILE__, status)
 
-
 extern DDCA_Global_Failure_Information global_failure_information;
-
-
-
 
 
 //

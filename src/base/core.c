@@ -137,6 +137,20 @@ void register_jmp_buf(jmp_buf* jb) {
    global_abort_jmp_buf_ptr = jb;
 }
 
+
+/* Primary function for terminating ddcutil execution
+ * due to an internal error.
+ *
+ * If a longjump jump buffer has been registered, basic error information
+ * is stored in buffer global_failure_information, and longjmp() is called.
+ * Otherwise, exit() is called.
+ *
+ * Arguments:
+ *   funcname  function name of error
+ *   lineno    line number of error
+ *   fn        file name of error
+ *   status    status code
+ */
 /* coverity [+kill] avoid coverity memory leak warnings */
 void ddc_abort(
       const char * funcname,
