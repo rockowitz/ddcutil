@@ -124,6 +124,7 @@ int single_getvcp_call(int busno, unsigned char vcp_feature_code) {
    rc = write(fh, ddc_cmd_bytes+1, writect);
    if (rc < 0) {
       printf("(%s) write() returned %d, errno=%d. \n", __func__, rc, errno);
+      close(fh);
       return -1;
    }
    else if (rc != writect) {
