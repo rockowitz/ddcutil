@@ -642,12 +642,13 @@ void dbgtrc(
       va_list(args);
       va_start(args, format);
       int ct = vsnprintf(buffer, bufsz, format, args);
+      va_end(args);
       if (ct >= bufsz) {   // if buffer too small, reallocate
          printf("(dbgtrc) Reallocating buffer, new size = %d\n", ct+1);
          // buffer too small, reallocate and try again
          free(buffer);
          free(buf2);
-         va_end(args);
+         // va_end(args);
 
          bufsz = ct+1;
          buffer = calloc(bufsz, sizeof(char));
@@ -656,6 +657,7 @@ void dbgtrc(
          va_start(args, format);
          ct = vsnprintf(buffer, bufsz, format, args);
          assert(ct < bufsz);
+         va_end(args);
       }
 
       if (dbgtrc_show_time)
@@ -664,7 +666,7 @@ void dbgtrc(
          snprintf(buf2, bufsz+60, "(%s) %s\n", funcname, buffer);
       // puts(buf2);        // automatic terminating null
       f0puts(buf2, FOUT);    // no automatic terminating null
-      va_end(args);
+      // va_end(args);
    }
 }
 
@@ -674,6 +676,17 @@ void dbgtrc(
 // error messages and possible program termination.
 //
 
+/* Report an IOCTL error and possibly terminate execution.
+ *
+ * Arguments:
+ *    errnum         errno value
+ *    funcname       function name of error
+ *    lineno         line number of error
+ *    filename       file name of error
+ *    fatal          if true, terminate execution
+ *
+ *  Returns:         nothing
+ */
 void report_ioctl_error(
       int   errnum,
       const char* funcname,   // const to avoid warning msg on references at compile time
