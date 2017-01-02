@@ -10,8 +10,13 @@ LIBTOOL_DEPS = @LIBTOOL_DEPS@
 # Introspection does this. 
 ACLOCAL_AMFLAGS = -I m4 ${ACLOCAL_FLAGS}
 
+
+EXTRA_DIST =  README.md 
+
+# if ENABLE_GOBJECT_COND
 DISTCHECK_CONFIGURE_FLAGS = --enable-introspection
-EXTRA_DIST = m4/introspection.m4 README.md
+EXTRA_DIST += m4/introspection.m4 
+# endif
 
 if USE_DOXYGEN
 DOXYDIR = docs

@@ -8,6 +8,8 @@
 
 # CLEANFILES = $(BUILT_SOURCES)
 
+EXTRA_DIST = ddc_swig.i
+
 clean-local:
 	@echo "(src/swig/clean-local)"
 	rm -rf ddc_swig_wrap.c ddc_swig.py ddc_swig.pyc  ddc_swig.pyo

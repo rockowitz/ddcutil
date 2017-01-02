@@ -1,0 +1,5 @@
+/usr/lib
+/usr/include
+# /usr/lib/x86_64-linux-gnu/libexec
+/usr/lib/python2.7/dist-packages
+/usr/lib/x86_64-linux-gnu/pkgconfig

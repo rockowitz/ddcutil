@@ -35,23 +35,19 @@ rpms: rpmcheck $(rpmspec)
 obsrpm:
 	echo "--------------------------> package/Makefile: target obsrpm"
 	echo "ver --> ${ver}"
-	chmod +x upload_obsrpm
 	./upload_obsrpm ${ver}
 
 dpkg:
 	echo "--------------------------> obs/Makefile: target dpkg"
-	chmod +x build_dpkg
 	./build_dpkg debuild
 
 pdebuild:
 	echo "--------------------------> obs/Makefile: target pdebuild"
-	chmod +x build_dpkg
 	./build_dpkg pdebuild
 
 
 obsdeb:
 	echo "--------------------------> package/Makefile: target obsdeb"
-	chmod +x build_dpkg upload_obsdeb
 	./build_dpkg obsdeb 
 	./upload_obsdeb ${ver} ${rlse}
 

@@ -52,6 +52,7 @@ mostlyclean-local:
 
 distclean-local:
 	@echo "(src/Makefile) distclean-local"
+	find . -name ".libs"   -type d  -exec ls -ld {} \;
 
 maintainerclean-local:
 	@echo "(src/Makefile) maintainerclean-local"
@@ -293,10 +294,12 @@ endif
 
 # AM_CFLAGS += $(PYTHON_CPPFLAGS)
 
-ddcutil_CFLAGS          = $(AM_CFLAGS)
-laclient_CFLAGS         = $(AM_CFLAGS)
-libcommon_la_CFLAGS     = $(AM_CFLAGS)
-libddcutil_la_CFLAGS    = $(AM_CFLAGS)
+ddcutil_CFLAGS          = $(AM_CFLAGS)  -fPIC
+laclient_CFLAGS         = $(AM_CFLAGS)  -fPIC
+
+# unneessary, will use AM_CFLAGS if xxx_CFLAGS undefined
+# libcommon_la_CFLAGS     = $(AM_CFLAGS)
+# libddcutil_la_CFLAGS    = $(AM_CFLAGS)
 
   
 #
@@ -324,16 +327,20 @@ libddcutil_la_LDFLAGS =
 libddcutil_la_LDFLAGS += -export-symbols-regex '^ddc[ags]_[^_]'
 libddcutil_la_LDFLAGS += -version-info '@LT_CURRENT@:@LT_REVISION@:@LT_AGE@' 
 # libddcutil_la_LDFLAGS += -init _ddca_init
+libddcutil_la_LDFLAGS += -pie
 
 
 #
 # Link the executables
 #
 
-ddcutil_LDADD = \
-   libcommon.la \
+# ddcutil statically links libcommon, rather than using libddcutil.so
+# so it needs LDADD references to external libraries as well
+
+ddcutil_LDADD =   \
+   libcommon.la   \
    $(XRANDR_LIBS) \
-   $(X11_LIBS) \
+   $(X11_LIBS)    \
    $(GLIB_LIBS)
 
 if ENABLE_USB_COND
@@ -344,16 +351,25 @@ endif
 
 
 #needed?
-ddcutil_LDFLAGS = -export-dynamic
+ddcutil_LDFLAGS =  
+ddcutil_LDFLAGS += -pie
+# ddccutil_LDFLAGS += -export-dynamic 
 
 # Fails if not linked with libxrandr - why?
 laclient_LDADD = \
-  libddcutil.la \
-  $(XRANDR_LIBS) 
+  libddcutil.la 
+#laclient_LDADD += $(XRANDR_LIBS) 
 
+laclient_LDFLAGS = -pie
 
 install-exec-hook:
 	@echo "(install-exec-hook) Executing..." 
 	@echo "  pythondir       = $(pythondir)"
 	@echo "  pyexecdir       = $(pyexecdir)"
+	@echo  $(DESTDIR)$(libdir)
+	ls -ld $(DESTDIR)$(libdir)
+	ls -l $(DESTDIR)$(libdir)/*la
+	sed -i "/dependency_libs/ s/'.*'/''/" $(DESTDIR)$(libdir)/libddcutil.la
+
+# objdump -p $(DESTDIR)$(libdir)/libddcutil.so | sed -n -e's/^[[:space:]]*SONAME[[:space:]]*//p' |  sed -r -e's/([0-9])\.so\./\1-/; s/\.so(\.|$)//; y/_/-/; s/(.*)/\L&/'
 

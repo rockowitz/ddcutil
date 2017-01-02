@@ -28,8 +28,8 @@ dnl Macro names in comments are written in lower case to avoid processing as act
 AC_PREREQ([2.69])
 
 m4_define([ddcutil_major_version], [0])
-m4_define([ddcutil_minor_version], [6])
-m4_define([ddcutil_micro_version], [1])
+m4_define([ddcutil_minor_version], [7])
+m4_define([ddcutil_micro_version], [0])
 m4_define([ddcutil_version],
           [ddcutil_major_version.ddcutil_minor_version.ddcutil_micro_version])
 
@@ -68,11 +68,11 @@ AC_CONFIG_FILES([
   docs/doxygen/Makefile
 	package/Makefile 
 	package/ddcutil.spec 
-	package/upload_obsrpm
-  package/build_dpkg
   ddcutil.pc
   ],
  )
+AC_CONFIG_FILES(package/upload_obsrpm, [chmod +x package/upload_obsrpm] )
+AC_CONFIG_FILES(package/build_dpkg, [chmod +x package/build_dpkg] )
 dnl cannot chmod on build_dpkg, upload_obsrpm, since they will not exist within dpkg build environment
 
 dnl removed -Werror from AM_INIT_AUTOMAKE to allow compilation to proceed
@@ -157,7 +157,7 @@ AC_SUBST(LT_AGE)
 
 dnl for debian/changelog - should do it some other way
 DEBIAN_RELEASE=1
-DEBIAN_DISTRIBUTION=wily
+DEBIAN_DISTRIBUTION=xenial
 AC_SUBST(DEBIAN_RELEASE)
 AC_SUBST(DEBIAN_DISTRIBUTION)
 
@@ -193,9 +193,13 @@ AC_ARG_ENABLE([lib],
               [enable_lib=yes] )
 dnl Set flag for automake.am:
 AM_CONDITIONAL([ENABLE_SHARED_LIB_COND], [test "x$enable_lib" == "xyes"] )
+dnl ENABLE_SHARED_LIB_FLAG used in package/ddcutil_spec.in
 AS_IF([test "x$enable_lib" == "xyes"],
-      AC_MSG_NOTICE( [lib... enabled]  ),
+      AC_MSG_NOTICE( [lib... enabled] )
+      AC_SUBST(ENABLE_SHARED_LIB_FLAG, 1) 
+     ,
       AC_MSG_NOTICE( [lib... disabled] )
+      AC_SUBST(ENABLE_SHARED_LIB_FLAG, 0)
      )
 
 
@@ -232,10 +236,13 @@ AC_ARG_ENABLE([usb],
               [enable_usb=${enableval}],
               [enable_usb=yes] )
 AM_CONDITIONAL([ENABLE_USB_COND], [test "x$enable_usb" == "xyes"] )
+dnl ENABLE_USB_FLAG used in package/ddcutil.apec.in
 AS_IF([test "x$enable_usb" == "xyes"],
         AC_DEFINE( [USE_USB], [1], [If defined, use usb.])
+        AC_SUBST(  ENABLE_USB_FLAG, [1] )
         AC_MSG_NOTICE( [usb... enabled]  )
       ,
+        AC_SUBST( ENABLE_USB_FLAG, [0] )
         AC_MSG_NOTICE( [usb... disabled] )
      )
 

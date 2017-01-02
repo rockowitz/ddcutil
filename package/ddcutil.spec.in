@@ -221,13 +221,12 @@ applied.
 
 
 
-%package devel
-Summary: Header files for Library to query and update of monitor settings
+%package libs
+Summary: Shared library to query and update monitor settings 
 
-%description devel
-Long descripton of development library
-
-Contains a basic C API, and a primitive GOBject API.
+%description libs
+Shared library version of ddcutil, exposing a C API.  
+Also contains header files.
 
 
 %prep
@@ -269,6 +268,11 @@ rm -rf %{buildroot}
 # %%doc %%{_datadir}/doc/%%{name}/README
 %{_datadir}/%{name}/
 %{_mandir}/man1/ddcutil.1*
+%{_bindir}/ddcutil
+
+
+
+%files libs
 %if %{build_libs} == 1
 %{echo: ============================> files: building libraries, }
 %{_libdir}/libddcutil.a
@@ -277,14 +281,10 @@ rm -rf %{buildroot}
 %else
 %{echo: ============================> files: NOT building libraries, }
 %endif
-%{_bindir}/ddcutil
-
-
-
-%files devel
-%{_libdir}/libddcutil.a
 %{_includedir}/ddcutil_types.h
 %{_includedir}/ddcutil_c_api.h
+%{_libdir}/pkgconfig/ddcutil.pc
+
 
 
 %doc
@@ -293,6 +293,8 @@ rm -rf %{buildroot}
 
 
 %changelog
+
+* Mon Jan 02 2017 Sanford Rockowitz <rockowitz@minsoft.com> 0.7.0-1
 
 * Fri Dec 09 2016 Sanford Rockowitz <rockowitz@minsoft.com> 0.6.9-1
 
