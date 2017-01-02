@@ -87,6 +87,7 @@ int single_getvcp_call(int busno, unsigned char vcp_feature_code) {
    rc = ioctl(fh, I2C_SLAVE, 0x37);
    if (rc < 0) {
       perror("ioctl(I2C_SLAVE, 0x37) failed");
+      close(fh);
       return -1;
    }
 
@@ -326,6 +327,7 @@ void get_luminosity_sample_code(int busno) {
    if (rc < 0) {
       printf("(%s) Initial read() returned %d, errno=%s. Terminating execution\n",
              __func__, rc, linux_errno_desc(errno) );
+      close(fh);
       exit(1);
    }
    printf("(%s) Initial read succeeded\n", __func__);
@@ -413,6 +415,7 @@ void get_luminosity_sample_code(int busno) {
         if (rc < 0) {
            printf("(%s) %s() returned %d, errno=%s. Terminating execution\n",
                   __func__, readfunc, rc, linux_errno_desc(errno) );
+           close(fh);
            exit(1);
         }
         printf("(%s) %s() returned %d\n", __func__, readfunc, rc);
@@ -584,6 +587,7 @@ void demo_nvidia_bug_sample_code(int busno) {
    if (rc < 0) {
       printf("(%s) ioctl(I2C_SLAVE, 0x37) returned %d, errno=%s. Terminating execution  \n",
              __func__, rc, linux_errno_desc(errno) );
+      close(fh);
       exit(1);
    }
 
@@ -593,6 +597,7 @@ void demo_nvidia_bug_sample_code(int busno) {
    if (rc < 0) {
       printf("(%s) read() returned %d, errno=%s. Terminating execution  \n",
              __func__, rc, linux_errno_desc(errno) );
+      close(fh);
       exit(1);
    }
    printf("(%s) read succeeded.  Address 0x37 active on %s\n", __func__, devname);
