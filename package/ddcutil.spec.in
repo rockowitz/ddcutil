@@ -94,7 +94,6 @@ Version: @PACKAGE_VERSION@
 %{echo:any_suse2    is %{?any_suse2}, }
 
 
-
 %if %{is_obs_build}
    %{echo:Executing in Open Build Service, }
    %if 0%{?suse_version}
@@ -149,7 +148,13 @@ Release: 1%{?distro}
 
 
 Summary: Query and update monitor settings
+%if %{defined fedora}
 License: GPLv2+
+%endif
+%if %{defined suse_version}
+License: GPL-2.0+
+%endif
+
 URL: http://github.com/rockowitz/ddctool
 # BuildRequires: gcc  glib2 glib2-devel 
 BuildRequires: gcc  pkgconfig(glib-2.0) i2c-tools libXrandr-devel
@@ -221,12 +226,21 @@ applied.
 
 
 
-%package libs
+%package -n libddcutil0
 Summary: Shared library to query and update monitor settings 
+Group: System Environment/Libraries
 
-%description libs
+%description -n libddcutil0 
 Shared library version of ddcutil, exposing a C API.  
 Also contains header files.
+
+
+%package -n libddcutil-devel
+Summary: Header files
+Group: Development/Libraries
+
+%description -n libddcutil-devel
+Header files, pkgconfig control file, maybe some doc
 
 
 %prep
@@ -259,7 +273,7 @@ rm -rf %{buildroot}%{_datadir}/doc/%{name}/html
 rm -rf %{buildroot}
 
 %files
-%defattr(-,root,root)
+%defattr(664,root,root)
 # %%doc %%{_datadir}/doc/%%{name}/AUTHORS
 # %%doc %%{_datadir}/doc/%%{name}/ChangeLog
 # %%doc %%{_datadir}/doc/%%{name}/COPYING
@@ -268,27 +282,38 @@ rm -rf %{buildroot}
 # %%doc %%{_datadir}/doc/%%{name}/README
 %{_datadir}/%{name}/
 %{_mandir}/man1/ddcutil.1*
-%{_bindir}/ddcutil
+%attr(775,root,root)%{_bindir}/ddcutil
 
 
 
-%files libs
+%files -n libddcutil0
 %if %{build_libs} == 1
 %{echo: ============================> files: building libraries, }
-%{_libdir}/libddcutil.a
-%{_libdir}/libddcutil.la
-%{_libdir}/libddcutil.so*
+%defattr(-,root,root)
+%{_libdir}/libddcutil.so.*
 %else
 %{echo: ============================> files: NOT building libraries, }
 %endif
+
+
+
+%files -n libddcutil-devel
+%defattr(-,root,root)
+%{_libdir}/libddcutil.a
+%{_libdir}/libddcutil.la
 %{_includedir}/ddcutil_types.h
 %{_includedir}/ddcutil_c_api.h
 %{_libdir}/pkgconfig/ddcutil.pc
 
 
+# %%doc -n ddcutil
 
-%doc
+# %%doc -n libddcutil-0
 
+# %%doc -n libddcutil-devel
+
+%post   -n libddcutil0 -p /sbin/ldconfig
+%postun -n libddcutil0 -p /sbin/ldconfig
 
 
 
@@ -296,9 +321,9 @@ rm -rf %{buildroot}
 
 * Mon Jan 02 2017 Sanford Rockowitz <rockowitz@minsoft.com> 0.7.0-1
 
-* Fri Dec 09 2016 Sanford Rockowitz <rockowitz@minsoft.com> 0.6.9-1
+- Release 0.7.0
 
-- pseudo release for next branch
+- Added packages libddcutil0 and libddcutil-devel
 
 * Fri May 20 2016 Sanford Rockowitz <rockowitz@minsoft.com> 0.4.1-1
 

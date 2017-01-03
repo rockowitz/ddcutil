@@ -1,7 +1,6 @@
 Source: ddcutil
-# Graphics?  Utils? ddccontrol is in Utilities
-Section: utils
 Priority: optional
+Section: utils
 Maintainer: Sanford Rockowitz <rockowitz@minsoft.com>
 # Build-Depends: debhelper (>= 9), autotools-dev,  libc6 (>= 2.2.4), pkg-config, gobject-introspection, libglib2.0-0, libglib2.0-dev, libi2c-dev
 Build-Depends: debhelper (>= 9), 
@@ -21,7 +20,7 @@ Vcs-Git: https://www.github.com/rockowitz/ddcutil.git
 #Vcs-Browser: http://anonscm.debian.org/?p=collab-maint/ddcutil.git;a=summary
 
 Package: ddcutil
-Architecture: any
+Architecture:any
 Depends: ${shlibs:Depends}, 
          ${misc:Depends}, 
          i2c-tools, 
@@ -47,8 +46,9 @@ Description: Query and update monitor settings
  is applied.
 
 
-Package: libddcutil
-Architecture: any
+Package: libddcutil0
+Section: libs
+Architecture:any
 Depends: ${shlibs:Depends}, 
          ${misc:Depends}, 
          i2c-tools, 
@@ -56,12 +56,31 @@ Depends: ${shlibs:Depends},
          libxrandr2, 
          libudev1,
          libudev-dev
-Description: ddcutil shared libraries and header files
- A second line.
+Description: Shared library version of ddcutil 
+ This is the shared library version of ddcutil. 
  .
- These are the shared libraries for ddcutil.   Since the development files 
- (i.e. header files) are small they are included in this package rather than 
- a separate development package.
+ ddcutil  communicates  with monitors implementing MCCS (Monitor Control 
+ Command Set) using the DDC/CI protocol on the I2C bus.  Normally, the video
+ driver for the monitor exposes the I2C bus as devices named /dev/i2c-n.
+
+
+Package: libddcutil-dev
+Architecture: any
+# Architecture:amd64 
+Section: libdevel
+Depends: ${shlibs:Depends}, 
+         ${misc:Depends}, 
+         i2c-tools, 
+         libglib2.0-0, 
+         libxrandr2, 
+         libudev1,
+         libudev-dev
+Description: ddcutil C development files
+ These are the static libraries and development files for ddcutil.   
+ .
+ ddcutil  communicates  with monitors implementing MCCS (Monitor Control 
+ Command Set) using the DDC/CI protocol on the I2C bus.  Normally, the video
+ driver for the monitor exposes the I2C bus as devices named /dev/i2c-n.
 
 
 # Package libddcutil-python
