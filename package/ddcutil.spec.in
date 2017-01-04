@@ -225,22 +225,21 @@ the time a monitor is calibrated, and then restored when the calibration is
 applied.
 
 
-
 %package -n libddcutil0
 Summary: Shared library to query and update monitor settings 
 Group: System Environment/Libraries
 
 %description -n libddcutil0 
 Shared library version of ddcutil, exposing a C API.  
-Also contains header files.
 
 
 %package -n libddcutil-devel
-Summary: Header files
+Summary: Development files for libddcutil
 Group: Development/Libraries
 
 %description -n libddcutil-devel
-Header files, pkgconfig control file, maybe some doc
+Header files, pkgconfig control file, static libraries, 
+maybe some doc for libddcutil.
 
 
 %prep
@@ -282,8 +281,7 @@ rm -rf %{buildroot}
 # %%doc %%{_datadir}/doc/%%{name}/README
 %{_datadir}/%{name}/
 %{_mandir}/man1/ddcutil.1*
-%attr(775,root,root)%{_bindir}/ddcutil
-
+%attr(755,root,root)%{_bindir}/ddcutil
 
 
 %files -n libddcutil0
@@ -296,7 +294,6 @@ rm -rf %{buildroot}
 %endif
 
 
-
 %files -n libddcutil-devel
 %defattr(-,root,root)
 %{_libdir}/libddcutil.a
@@ -307,14 +304,11 @@ rm -rf %{buildroot}
 
 
 # %%doc -n ddcutil
-
 # %%doc -n libddcutil-0
-
 # %%doc -n libddcutil-devel
 
 %post   -n libddcutil0 -p /sbin/ldconfig
 %postun -n libddcutil0 -p /sbin/ldconfig
-
 
 
 %changelog
