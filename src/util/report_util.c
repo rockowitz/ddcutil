@@ -133,7 +133,9 @@ void rpt_change_output_dest(FILE* new_dest) {
 
 
 
-/* Writes a string to the current output destination.
+/* Writes a constant string to the current output destination.
+ *
+ * A newline is appended to the string specified.
  *
  * The output is indented per the specified indentation depth.
  */
@@ -141,12 +143,21 @@ void rpt_title(char * title, int depth) {
    bool debug = false;
    if (debug)
       printf("(%s) Writing to %p\n", __func__, rpt_cur_output_dest());
-   // Use f0printf() instead?
    f0printf(rpt_cur_output_dest(), "%*s%s\n", rpt_indent(depth), "", title);
 }
 
 
-// n. depth parm is first on this function because of variable args
+/* Writes a formatted string to the current output destination.
+ *
+ * A newline is appended to the string specified
+ *
+ * Arguments:
+ *   depth    logical indentation depth
+ *   format   format string (normal printf)
+ *   ...      arguments
+ *
+ * Note that the depth parm is first on this function because of variable args
+ */
 void rpt_vstring(int depth, char * format, ...) {
    int buffer_size = 200;
    char buffer[buffer_size];
