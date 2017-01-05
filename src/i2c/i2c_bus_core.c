@@ -48,7 +48,7 @@
 #include "i2c/i2c_bus_core.h"
 
 
-// maximum number of i2c buses this code supports,
+// maximum number of i2c buses this code supports
 #define I2C_BUS_MAX 32
 
 // Addresses on an I2C bus are 7 bits in size

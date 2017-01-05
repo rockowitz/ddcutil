@@ -134,6 +134,8 @@ bool               dsel_validate(          Display_Selector * dsel);
 
 char * mccs_io_mode_name(DDCA_IO_Mode val);
 
+#define DREF_DDC_COMMUNICATION_CHECKED 0x80
+#define DREF_DDC_COMMUNICATION_WORKING 0x40
 #define DISPLAY_REF_MARKER "DREF"
 typedef struct {
    char         marker[4];
@@ -145,6 +147,7 @@ typedef struct {
    int          usb_device;
    char *       usb_hiddev_name;
    DDCA_MCCS_Version_Spec vcp_version;
+   Byte         flags;
 } Display_Ref;
 
 // n. works for both Display_Ref and Display_Handle

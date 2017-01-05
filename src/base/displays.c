@@ -319,6 +319,7 @@ bool dreq(Display_Ref* this, Display_Ref* that) {
 void report_display_ref(Display_Ref * dref, int depth) {
    rpt_structure_loc("DisplayRef", dref, depth );
    int d1 = depth+1;
+   int d2 = depth+2;
    rpt_mapped_int("ddc_io_mode", NULL, dref->io_mode, (Value_To_Name_Function) mccs_io_mode_name, d1);
 
    switch (dref->io_mode) {
@@ -340,7 +341,10 @@ void report_display_ref(Display_Ref * dref, int depth) {
    }
 
    // rpt_vstring(d1, "vcp_version:  %d.%d\n", dref->vcp_version.major, dref->vcp_version.minor );
-   rpt_vstring(d1, "vcp_version:  %s\n", format_vspec(dref->vcp_version) );
+   rpt_vstring(d1, "vcp_version:  %s", format_vspec(dref->vcp_version) );
+   rpt_vstring(d1, "flags:        0x%02x", dref->flags);
+   rpt_vstring(d2, "DDC communication checked:  %s", (dref->flags & DREF_DDC_COMMUNICATION_CHECKED) ? "true" : "false");
+   rpt_vstring(d2, "DDC communication working:  %s", (dref->flags & DREF_DDC_COMMUNICATION_WORKING) ? "true" : "false");
 }
 
 

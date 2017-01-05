@@ -100,7 +100,7 @@ static bool verify_adl_display_ref(Display_Ref * dref) {
    if (olev == OL_VERBOSE)
       set_output_level(olev);
 
-   if (gsc != 0) {
+   if (gsc != 0 && gsc != DDCRC_REPORTED_UNSUPPORTED && gsc != DDCRC_DETERMINED_UNSUPPORTED) {
       result = false;
       DBGMSF(debug, "Error getting value for brightness VCP feature 0x10. gsc=%s\n", gsc_desc(gsc) );
    }
@@ -127,9 +127,9 @@ static bool verify_adl_display_ref(Display_Ref * dref) {
  *    true if brighness read successfull, false if not
  */
 bool ddc_verify(Display_Ref * dref) {
-   bool debug = true;
+   bool debug = false;
    bool result = false;
-   DBGMSF("Starting.  dref=%s", dref_repr(dref));
+   DBGMSF(debug, "Starting.  dref=%s", dref_repr(dref));
 
    Display_Handle * dh;
    Global_Status_Code gsc = ddc_open_display(dref,  CALLOPT_NONE, &dh);
@@ -142,8 +142,10 @@ bool ddc_verify(Display_Ref * dref) {
       DBGMSF(debug, "get_nontable_vcp_value() returned %s", gsc_desc( gsc));
       if (gsc == 0) {
          free(presp);
-         result = true;
+         // result = true;
       }
+      if (gsc == 0 || gsc == DDCRC_REPORTED_UNSUPPORTED || gsc == DDCRC_DETERMINED_UNSUPPORTED)
+         result = true;
       ddc_close_display(dh);
    }
 
@@ -170,26 +172,83 @@ static bool ddc_is_valid_display_ref(Display_Ref * dref, bool emit_error_msg) {
    bool result = false;
    switch(dref->io_mode) {
    case DDC_IO_DEVI2C:
-      result = i2c_is_valid_bus(dref->busno, emit_error_msg );
-#ifdef NO
+      result = i2c_is_valid_bus(dref->busno, /* emit_error_msg */ false );
+
       if (result) {
          // have seen case where I2C bus for laptop display reports x37 active, but
          // in fact it doesn't support DDC
-         result = ddc_verify(dref);
+
+         if (!(dref->flags & DREF_DDC_COMMUNICATION_CHECKED)) {
+            dref->flags |= DREF_DDC_COMMUNICATION_CHECKED;
+            bool ddc_working = ddc_verify(dref);
+            if (ddc_working)
+               dref->flags |= DREF_DDC_COMMUNICATION_WORKING;
+         }
+         result = (dref->flags & DREF_DDC_COMMUNICATION_WORKING);
       }
-#endif
+
       break;
    case DDC_IO_ADL:
-      result = adlshim_is_valid_display_ref(dref, emit_error_msg);
-      if (result)
-         result = verify_adl_display_ref(dref);   // is it really a valid monitor?
+      result = adlshim_is_valid_display_ref(dref, /* emit_error_msg */ false);
+      if (result) {
+         if (!(dref->flags & DREF_DDC_COMMUNICATION_CHECKED)) {
+            dref->flags |= DREF_DDC_COMMUNICATION_CHECKED;
+            bool ddc_working =  verify_adl_display_ref(dref);   // is it really a valid monitor?
+            if (ddc_working)
+               dref->flags |= DREF_DDC_COMMUNICATION_WORKING;
+         }
+         result = (dref->flags & DREF_DDC_COMMUNICATION_WORKING);
+
+      }
       break;
    case USB_IO:
 #ifdef USE_USB
-      result = usb_is_valid_display_ref(dref, emit_error_msg);
+      result = usb_is_valid_display_ref(dref, /* emit_error_msg */ false);
 #endif
       break;
    }
+
+   // Turned off emit_erro_msg in lower level routines, so issue message here.
+   // This is an intermediate step in removing messages from lower level functions.
+   if (emit_error_msg) {
+      char workbuf[100] = {'\0'};
+      if (!result) {
+         switch(dref->io_mode) {
+         case DDC_IO_DEVI2C:
+            snprintf(workbuf, 100, "I2C display /dev/i2c-%d not found.\n",dref->busno);
+            break;
+         case DDC_IO_ADL:
+            snprintf(workbuf, 100, "ADL display %d.%d not found.\n",dref->iAdapterIndex, dref->iDisplayIndex);
+            break;
+         case USB_IO:
+             snprintf(workbuf, 100, "USB connected display %d.%d not found.\n",dref->usb_bus, dref->usb_device);
+             break;
+         }
+      }
+
+      else if (!(dref->flags & DREF_DDC_COMMUNICATION_WORKING) ) {
+         switch(dref->io_mode) {
+         case DDC_IO_DEVI2C:
+            snprintf(workbuf, 100, "I2C display /dev/i2c-%d does not support DDC.\n",dref->busno);
+            break;
+         case DDC_IO_ADL:
+            snprintf(workbuf, 100, "ADL display %d.%d does not support DDC.\n",dref->iAdapterIndex, dref->iDisplayIndex);
+            break;
+         case USB_IO:
+              // n. flags not currently used for USB IO
+             // snprintf(workbuf, 100, "USB connected display %d.%d does not support DDC.\n",dref->usb_bus, dref->usb_device);
+             break;
+         }
+      }
+
+      if (strlen(workbuf) > 0)
+         f0printf(FERR, workbuf);
+   }
+
+   // n. flags not current used for USB_IO
+   if (result && dref->io_mode != USB_IO  && !(dref->flags & DREF_DDC_COMMUNICATION_WORKING))
+      result = false;
+
    DBGMSF(debug, "Returning %s", bool_repr(result));
    return result;
 }
@@ -556,85 +615,88 @@ ddc_report_active_display(Display_Info * curinfo, int depth) {
    }
 
    DDCA_Output_Level output_level = get_output_level();
-   if (output_level >= OL_NORMAL  && ddc_is_valid_display_ref(curinfo->dref, false)) {
-      // n. requires write access since may call get_vcp_value(), which does a write
-      Display_Handle * dh = NULL;
-      Global_Status_Code gsc = ddc_open_display(curinfo->dref, CALLOPT_ERR_MSG, &dh);
-      if (gsc != 0) {
-         rpt_vstring(depth, "Error opening display %s, error = %d (%s)",
-                            dref_short_name(curinfo->dref), gsc, gsc_name(gsc));
+   if (output_level >= OL_NORMAL) {
+      if (!ddc_is_valid_display_ref(curinfo->dref, false)) {
+         rpt_vstring(depth, "DDC communication failed");
       }
       else {
-             // char * short_name = dref_short_name(curinfo->dref);
-             // printf("Display:       %s\n", short_name);
-             // works, but TMI
-             // printf("Mfg:           %s\n", cur_info->edid->mfg_id);
-         // don't want debugging  output if OL_VERBOSE
-         if (output_level >= OL_VERBOSE)
-            set_output_level(OL_NORMAL);
+         // n. requires write access since may call get_vcp_value(), which does a write
+         Display_Handle * dh = NULL;
+         Global_Status_Code gsc = ddc_open_display(curinfo->dref, CALLOPT_ERR_MSG, &dh);
+         if (gsc != 0) {
+            rpt_vstring(depth, "Error opening display %s, error = %d (%s)",
+                               dref_short_name(curinfo->dref), gsc, gsc_name(gsc));
+         }
+         else {
+                // char * short_name = dref_short_name(curinfo->dref);
+                // printf("Display:       %s\n", short_name);
+                // works, but TMI
+                // printf("Mfg:           %s\n", cur_info->edid->mfg_id);
+            // don't want debugging  output if OL_VERBOSE
+            if (output_level >= OL_VERBOSE)
+               set_output_level(OL_NORMAL);
 
-         DDCA_MCCS_Version_Spec vspec = get_vcp_version_by_display_handle(dh);
+            DDCA_MCCS_Version_Spec vspec = get_vcp_version_by_display_handle(dh);
 
-         // printf("VCP version:   %d.%d\n", vspec.major, vspec.minor);
-         if (vspec.major == 0)
-            rpt_vstring(depth, "VCP version:         Detection failed");
-         else
-            rpt_vstring(depth, "VCP version:         %d.%d", vspec.major, vspec.minor);
+            // printf("VCP version:   %d.%d\n", vspec.major, vspec.minor);
+            if (vspec.major == 0)
+               rpt_vstring(depth, "VCP version:         Detection failed");
+            else
+               rpt_vstring(depth, "VCP version:         %d.%d", vspec.major, vspec.minor);
 
-         if (output_level >= OL_VERBOSE) {
-            // display controller mfg, firmware version
-            char mfg_name_buf[100];
-            char * mfg_name         = "Unspecified";
+            if (output_level >= OL_VERBOSE) {
+               // display controller mfg, firmware version
+               char mfg_name_buf[100];
+               char * mfg_name         = "Unspecified";
 
-            // char * firmware_version = "Unspecified";
+               // char * firmware_version = "Unspecified";
 
-            // n. get_nontable_vcp_value() does not know how to handle USB devices, but its
-            // caller, get_vcp_value() does
-            Single_Vcp_Value *   valrec;
-            Global_Status_Code  gsc = get_vcp_value(dh, 0xc8, NON_TABLE_VCP_VALUE, &valrec);
+               // n. get_nontable_vcp_value() does not know how to handle USB devices, but its
+               // caller, get_vcp_value() does
+               Single_Vcp_Value *   valrec;
+               Global_Status_Code  gsc = get_vcp_value(dh, 0xc8, NON_TABLE_VCP_VALUE, &valrec);
 
-            if (gsc != 0) {
-               if (gsc != DDCRC_REPORTED_UNSUPPORTED && gsc != DDCRC_DETERMINED_UNSUPPORTED)
-                   DBGMSG("get_nontable_vcp_value(0xc8) returned %s", gsc_desc(gsc));
-               // n. keeping msg_name == "Unspecified"
-            }
-            else {
-               DDCA_Feature_Value_Entry * vals = pxc8_display_controller_type_values;
-               mfg_name =  get_feature_value_name(
-                                     vals,
-                                     valrec->val.nc.sl);
-               if (!mfg_name) {
-                  snprintf(mfg_name_buf, 100, "Unrecognized manufacturer code 0x%02x", valrec->val.nc.sl);
-                  mfg_name = mfg_name_buf;
+               if (gsc != 0) {
+                  if (gsc != DDCRC_REPORTED_UNSUPPORTED && gsc != DDCRC_DETERMINED_UNSUPPORTED) {
+                      DBGMSG("get_nontable_vcp_value(0xc8) returned %s", gsc_desc(gsc));
+                      mfg_name = "DDC communication failed";
+                  }
                }
-            }
-            rpt_vstring(depth,    "Controller mfg:      %s", mfg_name);
+               else {
+                  DDCA_Feature_Value_Entry * vals = pxc8_display_controller_type_values;
+                  mfg_name =  get_feature_value_name(
+                                        vals,
+                                        valrec->val.nc.sl);
+                  if (!mfg_name) {
+                     snprintf(mfg_name_buf, 100, "Unrecognized manufacturer code 0x%02x", valrec->val.nc.sl);
+                     mfg_name = mfg_name_buf;
+                  }
+               }
+               rpt_vstring(depth,    "Controller mfg:      %s", mfg_name);
 
-   #ifdef OLD
-            gsc = get_nontable_vcp_value(
-                        dh,
-                        0xc9,         // firmware version
-                        &code_info);
-   #endif
-            gsc = get_vcp_value(dh, 0xc9, NON_TABLE_VCP_VALUE, &valrec);  // new way
-            if (gsc != 0) {
-               if (gsc != DDCRC_REPORTED_UNSUPPORTED && gsc != DDCRC_DETERMINED_UNSUPPORTED)
-                  DBGMSG("get_vcp_value(0xc9) returned %s", gsc_desc(gsc));
-               rpt_vstring(depth, "Firmware version:    Unspecified");
-            }
-            else if (gsc == 0) {
-               rpt_vstring(depth, "Firmware version:    %d.%d",
-                     // code_info->sh, code_info->sl);
-                     valrec->val.nc.sh, valrec->val.nc.sl);
+               gsc = get_vcp_value(dh, 0xc9, NON_TABLE_VCP_VALUE, &valrec);  // xc9 = firmware version
+               if (gsc != 0) {
+                  char * version = "Unspecified";
+                  if (gsc != DDCRC_REPORTED_UNSUPPORTED && gsc != DDCRC_DETERMINED_UNSUPPORTED) {
+                     DBGMSG("get_vcp_value(0xc9) returned %s", gsc_desc(gsc));
+                     version = "DDC communication failed";
+                  }
+                  rpt_vstring(depth, "Firmware version:    %s", version);
+               }
+               else if (gsc == 0) {
+                  rpt_vstring(depth, "Firmware version:    %d.%d",
+                        // code_info->sh, code_info->sl);
+                        valrec->val.nc.sh, valrec->val.nc.sl);
+               }
+
             }
 
+            if (output_level >= OL_VERBOSE)
+               set_output_level(output_level);
          }
 
-         if (output_level >= OL_VERBOSE)
-            set_output_level(output_level);
+         ddc_close_display(dh);
       }
-
-      ddc_close_display(dh);
    }
 }
 
