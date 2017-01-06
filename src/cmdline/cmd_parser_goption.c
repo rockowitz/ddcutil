@@ -199,7 +199,7 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
       {"bus",     'b',  0, G_OPTION_ARG_INT,      &buswork,          "I2C bus number",              "busnum" },
 //    {"adl",     'a',  0, G_OPTION_ARG_CALLBACK, adl_arg_func,      "ADL adapter and display indexes", "adapterIndex.displayIndex"},
       {"adl",     'a',  0, G_OPTION_ARG_STRING,   &adlwork,          "ADL adapter and display indexes", "adapterIndex.displayIndex"},
-      {"usb",     'U',  0, G_OPTION_ARG_STRING,   &usbwork,          "USB bus and device numbers", "busnum.devicenum"},
+      {"usb",     'u',  0, G_OPTION_ARG_STRING,   &usbwork,          "USB bus and device numbers", "busnum.devicenum"},
       {"mfg",     'g',  0, G_OPTION_ARG_STRING,   &mfg_id_work,      "Monitor manufacturer code",      "mfg_id"},
       {"model",   'l',  0, G_OPTION_ARG_STRING,   &modelwork,        "Monitor model",                     "model name"},
       {"sn",      'n',  0, G_OPTION_ARG_STRING,   &snwork,           "Monitor serial number",          "serial number"},
@@ -213,13 +213,13 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
       {"terse",   't',  G_OPTION_FLAG_NO_ARG,
                            G_OPTION_ARG_CALLBACK, output_arg_func,   "Show brief detail",              NULL},
       {"show-unsupported",
-                  'u',  0, G_OPTION_ARG_NONE,     &show_unsupported_flag, "Report unsupported features", NULL},
+                  'U',  0, G_OPTION_ARG_NONE,     &show_unsupported_flag, "Report unsupported features", NULL},
 
       // tuning
       {"maxtries",'\0', 0, G_OPTION_ARG_STRING,   &maxtrywork,       "Max try adjustment",  "comma separated list" },
       {"stats",   's',  G_OPTION_FLAG_OPTIONAL_ARG,
                            G_OPTION_ARG_CALLBACK, stats_arg_func,    "Show retry statistics",    "stats type"},
-      {"force",   'f',  0, G_OPTION_ARG_NONE,     &force_flag,       "Do not check certain parms",     NULL},
+      {"force",   'f',  0, G_OPTION_ARG_NONE,     &force_flag,       "Ignore certain checks",     NULL},
 
       // debugging
       {"trace",   '\0', 0, G_OPTION_ARG_STRING_ARRAY, &trace_classes, "Trace classes",         "trace class name" },

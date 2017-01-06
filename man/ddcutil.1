@@ -25,7 +25,7 @@ ddcutil \- Query and change monitor settings
 .IR busno ]
 .RB [ "--adl" | "-a " 
 .IR "adapter-index.display-index" ]
-.RB [ "--usb" | "-U"
+.RB [ "--usb" | "-u"
 .IR "busnum.devicenum" ]
 .RB [ "--edid" 
 .IR "256 hex character EDID" ]
@@ -37,8 +37,7 @@ ddcutil \- Query and change monitor settings
 .IR "serial number" ]
 .RB [ "-v|--verbose" ]
 .RB [ -t | --terse ]
-.RB [ "-p" | "--program" ]
-.RB [ "-u" | "--show-unsupported" ]
+.RB [ "-U" | "--show-unsupported" ]
 .RB [ --ddc ]
 .RB [ "-s" | "--stats" ]
 .RB [ --trace 
@@ -196,7 +195,7 @@ I2C bus number
 .BI "-a,--adl " "adapterIndex.displayIndex"
 ADL adapter and display indexes
 .TQ
-.BI "-U,--usb " "busnum.devicenum"
+.BI "-u,--usb " "busnum.devicenum"
 USB bus and device numbers
 .TQ
 .B -g,--mfg
@@ -215,7 +214,7 @@ serial number.  (This is the "serial ascii" field from the EDID, not the binary 
 
 Options to control the amount and form of output.
 .TQ
-.B "-u, --show-unsupported"
+.B "-U, --show-unsupported"
 Normally, \fBgetvcp\fP does not report unsupported features when querying a feature-group.  This option forces output. 
 .TQ
 .B "-t, --terse"
