@@ -102,9 +102,14 @@ bool is_ddc_null_message(Byte * packet) {
  * Notes:
  *    Will abort if open fails and CALLOPT_ERR_ABORT set
  */
-Global_Status_Code ddc_open_display(Display_Ref * dref,  Byte callopts, Display_Handle** pdh) {
+Global_Status_Code ddc_open_display(
+      Display_Ref *    dref,
+      Call_Options     callopts,
+      Display_Handle** pdh)
+{
    bool debug = false;
-   DBGMSF(debug,"Opening display %s",dref_short_name(dref));
+   DBGMSF(debug,"Opening display %s, callopts=%s",
+                 dref_short_name(dref), interpret_call_options(callopts));
    Display_Handle * pDispHandle = NULL;
    Global_Status_Code gsc = 0;
 
@@ -118,7 +123,7 @@ Global_Status_Code ddc_open_display(Display_Ref * dref,  Byte callopts, Display_
             log_status_code( gsc, __func__);
             goto bye;
          }
-         DBGMSF(debug, "Calling set_addr(0x37) for dref=%p %s", dref, dref_repr(dref));
+         DBGMSF(debug, "Calling set_addr(0x37) for %s", dref_repr(dref));
          int base_rc =  i2c_set_addr(fd, 0x37, callopts);
          if (base_rc != 0) {
             close(fd);
@@ -136,10 +141,17 @@ Global_Status_Code ddc_open_display(Display_Ref * dref,  Byte callopts, Display_
 
          if (!pDispHandle->pedid) {
             // How is this even possible?
-            close(fd);
+            // 1/2017:  see with x260 laptop and Ultradock, See ddcutil user report.
+            //          close(fd) fails
             DBGMSG("No EDID for device on bus /dev/i2c-%d", dref->busno);
-            gsc = DDCRC_EDID;
-            goto bye;
+            if (!(callopts & CALLOPT_FORCE)) {
+               close(fd);
+
+               gsc = DDCRC_EDID;
+               goto bye;
+            }
+            else
+               DBGMSG("Continuing");
          }
 
       }

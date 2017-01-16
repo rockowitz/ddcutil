@@ -70,7 +70,7 @@ Bus_Info * i2c_find_bus_info_by_mfg_model_sn(
               Byte findopts);
 Bus_Info * i2c_find_bus_info_by_edid(const Byte * pEdidBytes, Byte findopts);
 // void report_businfo(Bus_Info * bus_info);
-bool i2c_is_valid_bus(int busno, bool emit_error_msg);
+bool i2c_is_valid_bus(int busno, Call_Options callopts);
 
 void i2c_report_active_display(Bus_Info * businfo, int depth);
 void i2c_report_active_display_by_busno(int busno, int depth);

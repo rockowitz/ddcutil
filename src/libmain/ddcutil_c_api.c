@@ -598,7 +598,7 @@ DDCA_Status ddca_create_display_ref(DDCA_Display_Identifier did, DDCA_Display_Re
      rc = DDCL_ARG;
    }
    else {
-      Display_Ref* dref = get_display_ref_for_display_identifier(pdid, true /* emit_error_msg */);
+      Display_Ref* dref = get_display_ref_for_display_identifier(pdid, CALLOPT_ERR_MSG);
       if (debug)
          DBGMSG("get_display_ref_for_display_identifier() returned %p", dref);
       if (dref)

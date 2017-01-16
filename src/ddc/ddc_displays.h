@@ -36,7 +36,7 @@ ddc_report_active_displays(int depth);
 Display_Ref*
 get_display_ref_for_display_identifier(
    Display_Identifier* pdid,
-   bool                emit_error_msg);
+   Call_Options           callopts);
 
 Display_Ref*
 ddc_find_display_by_dispno(

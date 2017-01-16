@@ -29,6 +29,8 @@
 #include <string.h>
 #include <time.h>
 
+#include "util/debug_util.h"
+#include "util/failsim.h"
 #include "util/report_util.h"
 
 #include "base/ddc_errno.h"
@@ -118,18 +120,21 @@ static bool verify_adl_display_ref(Display_Ref * dref) {
  * SEE ALSO above function verify_adl_display_ref()
  *
  * PROBLEM: Can't Distinguish between display that really doesn't support DDC and
- * one buggy monitor like P2411 that may fail because of timeout.
+ * a buggy monitor like Dell P2411 that may fail because of timeout.
  *
  * Arguments:
  *    dref             display reference
  *
  * Returns:
- *    true if brighness read successfull, false if not
+ *    true if brightness read successful, false if not
  */
 bool ddc_verify(Display_Ref * dref) {
    bool debug = false;
    bool result = false;
    DBGMSF(debug, "Starting.  dref=%s", dref_repr(dref));
+   // FAILSIM_BOOL_EXT is wrongly coded
+   // FAILSIM_EXT( ( show_backtrace(1) ) );
+   FAILSIM;
 
    Display_Handle * dh;
    Global_Status_Code gsc = ddc_open_display(dref,  CALLOPT_NONE, &dh);
@@ -164,15 +169,25 @@ bool ddc_verify(Display_Ref * dref) {
  * Returns:
  *    true if dref identifies a valid Display_Ref, false if not
  */
-static bool ddc_is_valid_display_ref(Display_Ref * dref, bool emit_error_msg) {
+// eliminate static to allow backtrace to find symbol
+// static
+bool ddc_is_valid_display_ref(Display_Ref * dref, Call_Options callopts) {
+   bool emit_error_msg = callopts & CALLOPT_ERR_MSG;
    bool debug = false;
    assert( dref );
    // char buf[100];
-   // DBGMSG("Starting.  %s   ", displayRefShortName(pdisp, buf, 100) );
+   DBGMSF(debug, "Starting. dref= %s, callopts=%s",
+                 dref_short_name(dref), interpret_call_options(callopts) );
    bool result = false;
    switch(dref->io_mode) {
    case DDC_IO_DEVI2C:
-      result = i2c_is_valid_bus(dref->busno, /* emit_error_msg */ false );
+   {
+      Call_Options callopts2;
+      if (callopts & CALLOPT_FORCE)
+         callopts2 = CALLOPT_ERR_MSG | CALLOPT_FORCE;
+      else
+         callopts2 = CALLOPT_NONE;
+      result = i2c_is_valid_bus(dref->busno, callopts2 );
 
       if (result) {
          // have seen case where I2C bus for laptop display reports x37 active, but
@@ -186,7 +201,7 @@ static bool ddc_is_valid_display_ref(Display_Ref * dref, bool emit_error_msg) {
          }
          result = (dref->flags & DREF_DDC_COMMUNICATION_WORKING);
       }
-
+   }
       break;
    case DDC_IO_ADL:
       result = adlshim_is_valid_display_ref(dref, /* emit_error_msg */ false);
@@ -271,9 +286,11 @@ static bool ddc_is_valid_display_ref(Display_Ref * dref, bool emit_error_msg) {
  */
 Display_Ref* get_display_ref_for_display_identifier(
                 Display_Identifier* pdid,
-                bool                emit_error_msg)
+                Call_Options        callopts)
 {
+   bool emit_error_msg = (callopts & CALLOPT_ERR_MSG);
    bool debug = false;
+   DBGMSF(debug, "Starting. callopts=%s", interpret_call_options(callopts));
    Display_Ref* dref = NULL;
    bool validated = true;
 
@@ -327,10 +344,15 @@ Display_Ref* get_display_ref_for_display_identifier(
 
    if (dref) {
       if (!validated)      // DISP_ID_BUSNO or DISP_ID_ADL
-        validated = ddc_is_valid_display_ref(dref, emit_error_msg);
+        validated = ddc_is_valid_display_ref(dref, callopts | CALLOPT_ERR_MSG);
       if (!validated) {
-         free(dref);
-         dref = NULL;
+         if (callopts & CALLOPT_FORCE) {
+            f0printf(FERR, "Monitor validation failed.  Continuing.\n");
+         }
+         else {
+            free(dref);
+            dref = NULL;
+         }
       }
    }
 
@@ -440,7 +462,7 @@ Display_Info_List * ddc_get_valid_displays() {
    int displayctr = 1;
    for (ndx = 0; ndx < displayct; ndx++) {
       // report_display_info(&all_displays->info_recs[ndx],1);
-      if (ddc_is_valid_display_ref(all_displays->info_recs[ndx].dref, false /* emit msgs */)) {
+      if (ddc_is_valid_display_ref(all_displays->info_recs[ndx].dref, CALLOPT_NONE)) {
          all_displays->info_recs[ndx].dispno = displayctr++;  // displays are numbered from 1, not 0
       }
       else {
@@ -616,7 +638,7 @@ ddc_report_active_display(Display_Info * curinfo, int depth) {
 
    DDCA_Output_Level output_level = get_output_level();
    if (output_level >= OL_NORMAL) {
-      if (!ddc_is_valid_display_ref(curinfo->dref, false)) {
+      if (!ddc_is_valid_display_ref(curinfo->dref, CALLOPT_NONE)) {
          rpt_vstring(depth, "DDC communication failed");
       }
       else {

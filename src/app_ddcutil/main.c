@@ -458,7 +458,7 @@ int main(int argc, char *argv[]) {
       bool ok = true;
       if (parsed_cmd->pdid) {
          Display_Ref * dref = get_display_ref_for_display_identifier(
-                                 parsed_cmd->pdid, true /* emit_error_msg */);
+                                 parsed_cmd->pdid, CALLOPT_ERR_MSG);
          if (!dref)
             ok = false;
          else {
@@ -522,7 +522,7 @@ int main(int argc, char *argv[]) {
       for (; dispno <= display_ct; dispno++) {
          printf("\nProbing display %d\n", dispno);
          Display_Identifier * did = create_dispno_display_identifier(dispno);
-         Display_Ref * dref = get_display_ref_for_display_identifier(did, true /* emit_error_msg */);
+         Display_Ref * dref = get_display_ref_for_display_identifier(did, CALLOPT_ERR_MSG);
          if (!dref) {
             PROGRAM_LOGIC_ERROR("get_display_ref_for_display_identifier() failed for display %d", dispno);
          }
@@ -539,11 +539,15 @@ int main(int argc, char *argv[]) {
          parsed_cmd->pdid = create_dispno_display_identifier(1);   // default monitor
       // assert(parsed_cmd->pdid);
       // returns NULL if not a valid display:
+      Call_Options callopts = CALLOPT_ERR_MSG;        // emit error messages
+      if (parsed_cmd->force)
+         callopts |= CALLOPT_FORCE;
       Display_Ref * dref = get_display_ref_for_display_identifier(
-                              parsed_cmd->pdid, true /* emit_error_msg */);
+                              parsed_cmd->pdid, callopts);
       if (dref) {
          Display_Handle * dh = NULL;
-         ddc_open_display(dref, CALLOPT_ERR_ABORT | CALLOPT_ERR_MSG, &dh);
+         callopts = CALLOPT_ERR_ABORT | CALLOPT_ERR_MSG;
+         ddc_open_display(dref, callopts, &dh);
 
          if (dh) {
 

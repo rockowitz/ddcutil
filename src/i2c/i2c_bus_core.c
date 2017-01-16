@@ -128,9 +128,9 @@ int i2c_close_bus(int fd, int busno, Byte callopts) {
    RECORD_IO_EVENT(IE_CLOSE, ( rc = close(fd) ) );
    int errsv = errno;
    if (rc < 0) {
-      // EBADF  fd isn't a valid open file descriptor
-      // EINTR  close() interrupted by a signal
-      // EIO    I/O error
+      // EBADF (9)  fd isn't a valid open file descriptor
+      // EINTR (4)  close() interrupted by a signal
+      // EIO   (5)  I/O error
       char workbuf[80];
       if (busno >= 0)
          snprintf(workbuf, 80,
@@ -164,12 +164,13 @@ int i2c_close_bus(int fd, int busno, Byte callopts) {
  *    0 if success
  *    -errno if ioctl call fails and CALLOPT_ERR_ABORT not set in callopts
  */
-int i2c_set_addr(int file, int addr, Byte callopts) {
+int i2c_set_addr(int file, int addr, Call_Options callopts) {
    bool debug = false;
-   DBGMSF(debug, "file=%d, addr=0x%02x, callopts=0x%02x", file, addr, callopts);
+   DBGMSF(debug, "file=%d, addr=0x%02x, callopts=%s", file, addr, interpret_call_options(callopts));
    // if (debug)
    //    show_backtrace(1);
-   FAILSIM_EXT( ( show_backtrace(1) ) )
+   // FAILSIM_EXT( ( show_backtrace(1) ) )
+   FAILSIM;
 
    int rc = 0;
    int errsv = 0;
@@ -196,7 +197,7 @@ int i2c_set_addr(int file, int addr, Byte callopts) {
 
    if (errsv || debug) {
       printf("(%s) addr = 0x%02x. Returning %d\n", __func__, addr, errsv);
-      show_backtrace(1);
+      // show_backtrace(1);
    }
 
    return errsv;
@@ -290,7 +291,8 @@ bool * detect_all_addrs(int busno) {
  * Returns:
  *    if < 0, modulated status code from i2c_set_addr()
  */
-static Global_Status_Code detect_ddc_addrs_by_fd(int fd, Byte * presult) {
+// static
+Global_Status_Code detect_ddc_addrs_by_fd(int fd, Byte * presult) {
    bool debug = false;
    DBGMSF(debug, "Starting. fd=%d", fd);
    assert(fd >= 0);
@@ -603,11 +605,8 @@ Bus_Info * i2c_check_bus(Bus_Info * bus_info) {
          Global_Status_Code gsc = detect_ddc_addrs_by_fd(file, &ddc_addr_flags);
          if (gsc != 0) {
             DBGMSF(debug, "detect_ddc_addrs_by_fd() returned %d", gsc);
-
             f0printf(FERR, "Failure detecting bus addresses for /dev/i2c-%d: status code=%s\n",
                            bus_info->busno, gsc_desc(gsc));
-
-
             goto bye;
          }
          bus_info->flags |= ddc_addr_flags;
@@ -953,6 +952,7 @@ Bus_Info * find_bus_info_by_selector(I2C_Bus_Selector * sel) {
  *
  * Arguments:
  *    busno    bus number
+ *    findopts
  *
  * Returns:
  *    pointer to Bus_Info struct for the bus,
@@ -1069,9 +1069,10 @@ Bus_Info * i2c_find_bus_info_by_edid(const Byte * edidbytes, Byte findopts) {
  * Returns:
  *    true or false
  */
-bool i2c_is_valid_bus(int busno, bool emit_error_msg) {
+bool i2c_is_valid_bus(int busno, Call_Options callopts) {
+   bool emit_error_msg = callopts & CALLOPT_ERR_MSG;
    bool debug = false;
-   DBGMSF(debug, "Starting. busno=%d, emit_error_msg=%d", busno, emit_error_msg);
+   DBGMSF(debug, "Starting. busno=%d, callopts=%s", busno, interpret_call_options(callopts) );
    bool result = false;
    char * complaint = NULL;
 
@@ -1079,22 +1080,30 @@ bool i2c_is_valid_bus(int busno, bool emit_error_msg) {
    if (debug && businfo)
       report_businfo(businfo, 1);
 
+   bool overridable = false;
    if (!businfo)
       complaint = "I2C bus not found:";
    else if (!(businfo->flags & I2C_BUS_EXISTS))
       complaint = "I2C bus not found: /dev/i2c-%d\n";
    else if (!(businfo->flags & I2C_BUS_ACCESSIBLE))
       complaint = "Inaccessible I2C bus:";
-   else if (!(businfo->flags & I2C_BUS_ADDR_0X50))
+   else if (!(businfo->flags & I2C_BUS_ADDR_0X50)) {
       complaint = "No monitor found on bus";
+      overridable = true;
+   }
    else if (!(businfo->flags & I2C_BUS_ADDR_0X37))
-      complaint = "Cannot communicate DDC on bus address 0x37 for I2C bus";
+      complaint = "Cannot communicate DDC on I2C bus slave address 0x37";
    else
       result = true;
 
    if (complaint && emit_error_msg) {
       f0printf(FERR, "%s /dev/i2c-%d\n", complaint, busno);
    }
+   if (complaint && overridable && (callopts & CALLOPT_FORCE)) {
+      f0printf(FERR, "Continuing.  --force option was specified.\n");
+      result = true;
+   }
+
    DBGMSF(debug, "Returning %s", bool_repr(result));
    return result;
 }
