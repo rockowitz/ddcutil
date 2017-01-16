@@ -232,6 +232,10 @@ Group: System Environment/Libraries
 %description -n libddcutil0 
 Shared library version of ddcutil, exposing a C API.  
 
+ddcutil communicates with monitors implementing MCCS (Monitor Control Command
+Set), using either the DDC/CI protocol on the I2C bus or as a Human Interface
+Device on USB.
+
 
 %package -n libddcutil-devel
 Summary: Development files for libddcutil

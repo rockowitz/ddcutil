@@ -1,0 +1,53 @@
+sys.path:
+/shared/playproj/i2c/src/swig
+/usr/lib/python27.zip
+/usr/lib64/python2.7
+/usr/lib64/python2.7/plat-linux2
+/usr/lib64/python2.7/lib-tk
+/usr/lib64/python2.7/lib-old
+/usr/lib64/python2.7/lib-dynload
+/usr/lib64/python2.7/site-packages
+/usr/lib64/python2.7/site-packages/gst-0.10
+/usr/lib64/python2.7/site-packages/gtk-2.0
+/usr/lib64/python2.7/site-packages/wx-3.0-gtk3
+/usr/lib/python2.7/site-packages
+
+site.getsitepackages():
+/usr/lib64/python2.7/site-packages
+/usr/lib/python2.7/site-packages
+/usr/lib/site-python
+
+site.getusersitepackages():
+/home/rock/.local/lib/python2.7/site-packages
+
+platform independent library directory - distutils.sysconfig.get_python_lib(0)
+/usr/lib/python2.7/site-packages
+
+platform specific library directory - distutils.sysconfig.get_python_lib(1)
+/usr/lib64/python2.7/site-packages
+
+platform independent include directory - distutils.sysconfig.get_python_inc(0)
+/usr/include/python2.7
+
+platform specific include directory - distutils.sysconfig.get_python_inc(1)
+/usr/include/python2.7
+
+distutils.sysconfig.get_config_vars(): 
+  CPPFLAGS: -I. -IInclude -I/builddir/build/BUILD/Python-2.7.12/Include
+  CFLAGS: -fno-strict-aliasing -O2 -g -pipe -Wall -Werror=format-security -Wp,-D_FORTIFY_SOURCE=2 -fexceptions -fstack-protector-strong --param=ssp-buffer-size=4 -grecord-gcc-switches -specs=/usr/lib/rpm/redhat/redhat-hardened-cc1 -m64 -mtune=generic -D_GNU_SOURCE -fPIC -fwrapv  -DNDEBUG -O2 -g -pipe -Wall -Werror=format-security -Wp,-D_FORTIFY_SOURCE=2 -fexceptions -fstack-protector-strong --param=ssp-buffer-size=4 -grecord-gcc-switches -specs=/usr/lib/rpm/redhat/redhat-hardened-cc1 -m64 -mtune=generic -D_GNU_SOURCE -fPIC -fwrapv
+  CFLAGSFORSHARED: -fPIC
+  INCLUDEDIR: /usr/include
+  INCLUDEPY: /usr/include/python2.7
+  INSTSONAME: libpython2.7.so.1.0
+  LDFLAGS: -Wl,-z,relro -specs=/usr/lib/rpm/redhat/redhat-hardened-ld
+  LDLIBRARY: libpython2.7.so
+  LDSHARED: gcc -pthread -shared -Wl,-z,relro -specs=/usr/lib/rpm/redhat/redhat-hardened-ld
+  LIBS: -lpthread -ldl  -lutil
+  LINKFORSHARED: -Xlinker -export-dynamic
+  PY_CFLAGS: -fno-strict-aliasing -O2 -g -pipe -Wall -Werror=format-security -Wp,-D_FORTIFY_SOURCE=2 -fexceptions -fstack-protector-strong --param=ssp-buffer-size=4 -grecord-gcc-switches -specs=/usr/lib/rpm/redhat/redhat-hardened-cc1 -m64 -mtune=generic -D_GNU_SOURCE -fPIC -fwrapv  -DNDEBUG -O2 -g -pipe -Wall -Werror=format-security -Wp,-D_FORTIFY_SOURCE=2 -fexceptions -fstack-protector-strong --param=ssp-buffer-size=4 -grecord-gcc-switches -specs=/usr/lib/rpm/redhat/redhat-hardened-cc1 -m64 -mtune=generic -D_GNU_SOURCE -fPIC -fwrapv -I. -IInclude -I/builddir/build/BUILD/Python-2.7.12/Include -fPIC -DPy_BUILD_CORE
+  PY_CORE_CFLAGS: None
+  PY_CPPFLAGS: None
+  PY_LDFLAGS: None
+  SHLIBS: -lpthread -ldl  -lutil
+  SITEPATH: 
+  SYSLIBS: -lm

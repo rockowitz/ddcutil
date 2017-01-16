@@ -1,0 +1,48 @@
+sys.path:
+/shared/playproj/i2c/src/swig
+/usr/lib/python35.zip
+/usr/lib/python3.5
+/usr/lib/python3.5/plat-x86_64-linux-gnu
+/usr/lib/python3.5/lib-dynload
+/usr/local/lib/python3.5/dist-packages
+/usr/lib/python3/dist-packages
+
+site.getsitepackages():
+/usr/local/lib/python3.5/dist-packages
+/usr/lib/python3/dist-packages
+/usr/lib/python3.5/dist-packages
+
+site.getusersitepackages():
+/home/rock/.local/lib/python3.5/site-packages
+
+platform independent library directory - distutils.sysconfig.get_python_lib(0)
+/usr/lib/python3/dist-packages
+
+platform specific library directory - distutils.sysconfig.get_python_lib(1)
+/usr/lib/python3/dist-packages
+
+platform independent include directory - distutils.sysconfig.get_python_inc(0)
+/usr/include/python3.5m
+
+platform specific include directory - distutils.sysconfig.get_python_inc(1)
+/usr/include/python3.5m
+
+distutils.sysconfig.get_config_vars(): 
+  CPPFLAGS: -I. -IInclude -I../Include -Wdate-time -D_FORTIFY_SOURCE=2
+  CFLAGS: -Wno-unused-result -Wsign-compare -DNDEBUG -g -fwrapv -O2 -Wall -Wstrict-prototypes -g -fstack-protector-strong -Wformat -Werror=format-security  -g -flto -fuse-linker-plugin -ffat-lto-objects
+  CFLAGSFORSHARED: -fPIC
+  INCLUDEDIR: /usr/include
+  INCLUDEPY: /usr/include/python3.5m
+  INSTSONAME: libpython3.5m.so.1.0
+  LDFLAGS: -Wl,-Bsymbolic-functions -Wl,-z,relro
+  LDLIBRARY: libpython3.5m.so
+  LDSHARED: x86_64-linux-gnu-gcc -pthread -shared -Wl,-O1 -Wl,-Bsymbolic-functions -Wl,-Bsymbolic-functions -Wl,-z,relro
+  LIBS: -lpthread -ldl  -lutil
+  LINKFORSHARED: -Xlinker -export-dynamic -Wl,-O1 -Wl,-Bsymbolic-functions
+  PY_CFLAGS: -Wno-unused-result -Wsign-compare -DNDEBUG -g -fwrapv -O2 -Wall -Wstrict-prototypes -g -fstack-protector-strong -Wformat -Werror=format-security  -g -flto -fuse-linker-plugin -ffat-lto-objects
+  PY_CORE_CFLAGS: -Wno-unused-result -Wsign-compare -DNDEBUG -g -fwrapv -O2 -Wall -Wstrict-prototypes -g -fstack-protector-strong -Wformat -Werror=format-security  -g -flto -fuse-linker-plugin -ffat-lto-objects -Werror=declaration-after-statement -I. -IInclude -I../Include -Wdate-time -D_FORTIFY_SOURCE=2 -fPIC -DPy_BUILD_CORE
+  PY_CPPFLAGS: -I. -IInclude -I../Include -Wdate-time -D_FORTIFY_SOURCE=2
+  PY_LDFLAGS: -Wl,-Bsymbolic-functions -Wl,-z,relro
+  SHLIBS: -lpthread -ldl  -lutil
+  SITEPATH: 
+  SYSLIBS: -lm

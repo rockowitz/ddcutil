@@ -1,0 +1,57 @@
+sys.path:
+/shared/playproj/i2c/src/swig
+/usr/lib/python27.zip
+/usr/lib64/python2.7
+/usr/lib64/python2.7/plat-linux2
+/usr/lib64/python2.7/lib-tk
+/usr/lib64/python2.7/lib-old
+/usr/lib64/python2.7/lib-dynload
+/usr/lib64/python2.7/site-packages
+/usr/lib64/python2.7/site-packages/PIL
+/usr/local/lib64/python2.7/site-packages
+/usr/local/lib/python2.7/site-packages
+/usr/lib64/python2.7/site-packages/gst-0.10
+/usr/lib64/python2.7/site-packages/gtk-2.0
+/usr/lib/python2.7/site-packages
+/usr/lib64/python2.7/site-packages/wx-2.8-gtk2-unicode
+
+site.getsitepackages():
+/usr/lib64/python2.7/site-packages
+/usr/lib64/site-python
+/usr/lib/python2.7/site-packages
+/usr/lib/site-python
+
+site.getusersitepackages():
+/home/rock/.local/lib/python2.7/site-packages
+
+platform independent library directory - distutils.sysconfig.get_python_lib(0)
+/usr/lib/python2.7/site-packages
+
+platform specific library directory - distutils.sysconfig.get_python_lib(1)
+/usr/lib64/python2.7/site-packages
+
+platform independent include directory - distutils.sysconfig.get_python_inc(0)
+/usr/include/python2.7
+
+platform specific include directory - distutils.sysconfig.get_python_inc(1)
+/usr/include/python2.7
+
+distutils.sysconfig.get_config_vars(): 
+  CPPFLAGS: -I. -IInclude -I./Include
+  CFLAGS: -fno-strict-aliasing -fmessage-length=0 -grecord-gcc-switches -O2 -Wall -D_FORTIFY_SOURCE=2 -fstack-protector -funwind-tables -fasynchronous-unwind-tables -g -DNDEBUG -fmessage-length=0 -grecord-gcc-switches -O2 -Wall -D_FORTIFY_SOURCE=2 -fstack-protector -funwind-tables -fasynchronous-unwind-tables -g -DOPENSSL_LOAD_CONF
+  CFLAGSFORSHARED: -fPIC
+  INCLUDEDIR: /usr/include
+  INCLUDEPY: /usr/include/python2.7
+  INSTSONAME: libpython2.7.so.1.0
+  LDFLAGS: 
+  LDLIBRARY: libpython2.7.so
+  LDSHARED: gcc -pthread -shared
+  LIBS: -lpthread -ldl  -lutil
+  LINKFORSHARED: -Xlinker -export-dynamic
+  PY_CFLAGS: -fno-strict-aliasing -fmessage-length=0 -grecord-gcc-switches -O2 -Wall -D_FORTIFY_SOURCE=2 -fstack-protector -funwind-tables -fasynchronous-unwind-tables -g -DNDEBUG -fmessage-length=0 -grecord-gcc-switches -O2 -Wall -D_FORTIFY_SOURCE=2 -fstack-protector -funwind-tables -fasynchronous-unwind-tables -g -DOPENSSL_LOAD_CONF -I. -IInclude -I./Include -fPIC -DPy_BUILD_CORE
+  PY_CORE_CFLAGS: None
+  PY_CPPFLAGS: None
+  PY_LDFLAGS: None
+  SHLIBS: -lpthread -ldl  -lutil
+  SITEPATH: 
+  SYSLIBS: -lm
