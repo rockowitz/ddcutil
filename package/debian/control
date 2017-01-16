@@ -35,9 +35,10 @@ Depends: ${shlibs:Depends},
 Description: Query and update monitor settings
  ddcutil is used to query and change monitor settings.
  .
- ddcutil  communicates  with monitors implementing MCCS (Monitor Control 
- Command Set) using the DDC/CI protocol on the I2C bus.  Normally, the video
- driver for the monitor exposes the I2C bus as devices named /dev/i2c-n.
+ ddcutil communicates with monitors implementing MCCS (Monitor Control Command
+ Set). Normally, communication is performed using the DDC/CI protocol on the 
+ I2C bus.  Alternatively, communication can be performed over USB as per the 
+ USB Monitor Control Class Specification. 
  .
  A particular use case for ddcutil is as part of color profile management.  
  Monitor calibration is relative to the monitor color settings currently in  
@@ -59,9 +60,10 @@ Depends: ${shlibs:Depends},
 Description: Shared library version of ddcutil 
  This is the shared library version of ddcutil. 
  .
- ddcutil  communicates  with monitors implementing MCCS (Monitor Control 
- Command Set) using the DDC/CI protocol on the I2C bus.  Normally, the video
- driver for the monitor exposes the I2C bus as devices named /dev/i2c-n.
+ ddcutil communicates with monitors implementing MCCS (Monitor Control Command
+ Set). Normally, communication is performed using the DDC/CI protocol on the 
+ I2C bus.  Alternatively, communication can be performed over USB as per the 
+ USB Monitor Control Class Specification. 
 
 
 Package: libddcutil-dev
@@ -75,12 +77,13 @@ Depends: ${shlibs:Depends},
          libxrandr2, 
          libudev1,
          libudev-dev
-Description: ddcutil C development files
- These are the static libraries and development files for ddcutil.   
+Description: libddcutil C development files
+ These are the static libraries and development files for libddcutil.   
  .
- ddcutil  communicates  with monitors implementing MCCS (Monitor Control 
- Command Set) using the DDC/CI protocol on the I2C bus.  Normally, the video
- driver for the monitor exposes the I2C bus as devices named /dev/i2c-n.
+ ddcutil communicates with monitors implementing MCCS (Monitor Control Command
+ Set). Normally, communication is performed using the DDC/CI protocol on the 
+ I2C bus.  Alternatively, communication can be performed over USB as per the 
+ USB Monitor Control Class Specification.
 
 
 # Package libddcutil-python
