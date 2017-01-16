@@ -220,6 +220,16 @@ char * lsub(char * s, int ct) {
 }
 
 
+// a simple function to force a string to upper case that assumes ascii characters
+char * force_upstr(char * s) {
+   assert(s);
+   char * p = s;
+   while(*p)
+      *p = toupper(*p);
+   return s;
+}
+
+
 
 /* Joins an array of strings into a single string, using a separator string.
  *
@@ -306,7 +316,8 @@ Null_Terminated_String_Array strsplit(const char * str_to_split, const char * de
    token = strsep(&rest, delims);      // n. overwrites character found
    while (token) {
       // printf("(%s) token: |%s|\n", __func__, token);
-      workstruct[piecect++] = strdup(token);
+      if (strlen(token) > 0)
+         workstruct[piecect++] = strdup(token);
       token = strsep(&rest, delims);
    }
    if (debug)

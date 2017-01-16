@@ -63,6 +63,7 @@ char * strtrim_r(const char * s, char * buffer, int bufsz);
 char * rtrim_in_place(char * s);
 char * substr(char * s, int startpos, int ct);
 char * lsub(char * s, int ct);
+char * force_upstr(char * s);
 char * strdup_uc(char* s);
 char * str_replace_char(char * s, char old_char, char new_char);
 char * strcat_new(char * s1, char * s2);
