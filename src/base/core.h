@@ -80,22 +80,24 @@ char * bitflags_to_string(
 //
 // Standard flags to indicate behavior if a system call fails
 //
+typedef Byte Call_Options;
 #define CALLOPT_NONE      0x00
 #define CALLOPT_ERR_MSG   0x80      // issue message
 #define CALLOPT_ERR_ABORT 0x40      // terminate execution
 #define CALLOPT_RDONLY    0x20      // open read-only
 #define CALLOPT_WARN_FINDEX 0x01    // issue warning msg re hiddev_field_info.field_index change
+#define CALLOPT_FORCE       0x02    // ignore various validity checks
 
 // Return string interpretation of CALLOPT_ flag byte
-char * interpret_calloptions_r(Byte calloptions, char * buffer, int bufsize);
-char * interpret_calloptions(Byte calloptions);
+char * interpret_call_options_r(Byte calloptions, char * buffer, int bufsize);
+char * interpret_call_options(Byte calloptions);
 
 //
 // Timestamp Generation
 //
-long cur_realtime_nanosec();   // Returns the current value of the realtime clock in nanoseconds
-void show_timestamp_history(); // For debugging
-long elapsed_time_nanaosec();  // nanoseconds since start of program, first call initializes
+long   cur_realtime_nanosec();   // Returns the current value of the realtime clock in nanoseconds
+void   show_timestamp_history(); // For debugging
+long   elapsed_time_nanaosec();  // nanoseconds since start of program, first call initializes
 char * formatted_elapsed_time();
 
 
@@ -116,11 +118,11 @@ typedef struct {
 #endif
 
 
+#ifdef OLD
 // For defining boolean "exit if failure" function arguments, allowing
 // functions to be called with more comprehensible parameter values than
 // "true" and "false".
 // deprecated in favor of options byte using CALLOPT_ flags
-#ifdef OLD
 typedef bool Failure_Action;
 static const Failure_Action EXIT_IF_FAILURE = true;
 static const Failure_Action RETURN_ERROR_IF_FAILURE = false;

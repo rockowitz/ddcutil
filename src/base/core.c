@@ -199,7 +199,8 @@ char * bitflags_to_string(
    bool first = true;
    Bitname_Table_Entry * cur_entry = bitname_table;
    while (cur_entry->bitvalue) {
-      if (flags_val & bitname_table->bitvalue) {
+      // DBGMSG("Comparing flags_val=0x%08x vs cur_entry->bitvalue = 0x%08x", flags_val, cur_entry->bitvalue);
+      if (flags_val & cur_entry->bitvalue) {
          if (first)
             first = false;
          else
@@ -210,7 +211,7 @@ char * bitflags_to_string(
    }
    if (!flags_val && cur_entry->bitname)
       char_buf_append(buffer, bufsize, cur_entry->bitname);
-   // printf("(%s) Returning |%s|\n", __func__, buffer );
+   // printf("(%s) flags_val = 0x%08x, Returning |%s|\n", __func__, flags_val, buffer );
    return buffer;
 }
 
@@ -224,19 +225,22 @@ Bitname_Table callopt_bitname_table = {
       {CALLOPT_ERR_ABORT,   "CALLOPT_ERR_ABORT"},
       {CALLOPT_RDONLY,      "CALLOPT_RDONLY"},
       {CALLOPT_WARN_FINDEX, "CALLOPT_WARN_FINDEX"},
+      {CALLOPT_FORCE,       "CALLOPT_FORCE"},
       {CALLOPT_NONE,        "CALLOPT_NONE"},
 };
 
 
 
-char * interpret_calloptions_r(Byte calloptions, char * buffer, int bufsize) {
+char * interpret_call_options_r(Call_Options calloptions, char * buffer, int bufsize) {
    bitflags_to_string(calloptions, callopt_bitname_table, "|", buffer, bufsize);
    return buffer;
 }
 
-char * interpret_calloptions(Byte calloptions) {
-   static char buffer[100];
-   return interpret_calloptions_r(calloptions, buffer, 100);
+char * interpret_call_options(Call_Options calloptions) {
+   static char buffer[120];
+   char * result = interpret_call_options_r(calloptions, buffer, 100);
+   // DBGMSG("calloptions = 0x%02x, returning %s", calloptions, result);
+   return result;
 }
 
 
