@@ -133,10 +133,14 @@ void ddcs_set_fout(void * fpy) {
    ddca_set_fout(extracted);
 }
 #endif
+
+#ifndef PYTHON3
+
 void ddcs_set_fout(FILE * f) {
    // DBGMSG("f = %p", f);
    ddca_set_fout(f);
 }
+
 
 static PyFileObject * current_python_fout;
 
@@ -149,6 +153,7 @@ PyFileObject * get_current_python_fout() {
    return current_python_fout;
 }
 
+#endif
 
 //
 // Reports

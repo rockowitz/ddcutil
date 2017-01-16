@@ -1,4 +1,8 @@
+#ifndef PYTHON3
 %module ddc_swig
+#else
+%module ddc_swig3
+#endif
 
 %header %{
 // Start of copy block
@@ -51,6 +55,8 @@ ddcs_init();
    $result = pyset;
 }
 
+
+#ifndef PYTHON3
 %typemap(in) FILE * {
    FILE * result = NULL;
    printf("(%s) input = %p\n", __func__, $input);
@@ -70,6 +76,7 @@ ddcs_init();
    printf("(%s) Converted value: %p\n", __func__, result);
    $1 = result;
 }
+#endif
    
    
 %apply(char * STRING, int LENGTH) { (char * byte_buffer, int bytect) };
@@ -163,10 +170,12 @@ char *            ddca_output_level_name(DDCA_Output_Level val);
 void ddca_enable_report_ddc_errors(bool onoff);
 bool ddca_is_report_ddc_errors_enabled();
 
+#ifndef PYTHON3
 %feature("docstring", "Additional doc for ddcs_set_fout()") ddcs_set_fout;
 void ddcs_set_fout(FILE * fout);
 // void ddcs_set_fout(PyFileObject * fpy);
 // void ddcs_set_fout(void * fpy);
+#endif
 
 //
 // Display Identifiers

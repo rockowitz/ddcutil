@@ -63,13 +63,15 @@ FlagsByte ddcs_get_build_options(void);
 // Global Settings
 //
 
+#ifndef PYTHON3
+// PyFileObject not defined in Python 3, how to handle?
 // void ddc_set_fout(PyFileObject *fpy);
 void ddcs_set_fout(FILE * fout);
 // void ddcs_set_fout(void * fpy);
 
 void save_current_python_fout(PyFileObject * pfy);
 PyFileObject * get_current_python_fout();
-
+#endif
 
 // Reports
 
