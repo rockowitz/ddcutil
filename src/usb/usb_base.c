@@ -71,7 +71,7 @@ static Trace_Group TRACE_GROUP = TRC_USB;
 int usb_open_hiddev_device(char * hiddev_devname, Byte calloptions) {
    bool debug = false;
    DBGMSF(debug, "hiddev_devname=%s, calloptions=0x%02x (%s)",
-                 hiddev_devname, calloptions, interpret_calloptions(calloptions));
+                 hiddev_devname, calloptions, interpret_call_options(calloptions));
 
    int  file;
    int mode = (calloptions & CALLOPT_RDONLY) ? O_RDONLY : O_RDWR;
