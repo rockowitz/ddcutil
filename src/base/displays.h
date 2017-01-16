@@ -94,8 +94,8 @@ void                report_display_identifier(Display_Identifier * pdid, int dep
 void                free_display_identifier(Display_Identifier * pdid);
 
 
-// new way
 #ifdef FUTURE
+// new way
 #define DISPLAY_SELECTOR_MARKER "DSEL"
 typedef struct {
    char            marker[4];         // always "DSEL"
@@ -134,6 +134,7 @@ bool               dsel_validate(          Display_Selector * dsel);
 
 char * mccs_io_mode_name(DDCA_IO_Mode val);
 
+typedef Byte Dref_Flags;
 #define DREF_DDC_COMMUNICATION_CHECKED 0x80
 #define DREF_DDC_COMMUNICATION_WORKING 0x40
 #define DISPLAY_REF_MARKER "DREF"
@@ -147,7 +148,7 @@ typedef struct {
    int          usb_device;
    char *       usb_hiddev_name;
    DDCA_MCCS_Version_Spec vcp_version;
-   Byte         flags;
+   Dref_Flags   flags;
 } Display_Ref;
 
 // n. works for both Display_Ref and Display_Handle
@@ -174,8 +175,7 @@ bool dreq(Display_Ref* this, Display_Ref* that);
 #define DISPLAY_HANDLE_MARKER "DSPH"
 typedef struct {
    char         marker[4];
-   DDCA_IO_Mode  io_mode;
-   // include pointer to Display_Ref?
+   DDCA_IO_Mode io_mode;
    Display_Ref* dref;                               // added 4/2016
    int          busno;  // used for messages
    int          fh;     // file handle if ddc_io_mode == DDC_IO_DEVI2C or USB_IO
@@ -242,7 +242,6 @@ void free_display_info_list(Display_Info_List * pinfo_list);
 #define DISPSEL_USB        0x10
 #define DISPSEL_ANY        (DISPSEL_I2C | DISPSEL_ADL | DISPSEL_USB)
 #endif
-
 
 
 #endif /* DISPLAYS_H_ */
