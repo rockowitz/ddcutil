@@ -324,7 +324,12 @@ endif
 
 
 libddcutil_la_LDFLAGS = 
+# -export-dynamic not required for failsim: 
+# if ENABLE_FAILSIM_COND
+# libddcutil_la_LDFLAGS += -export-dynamic
+# else
 libddcutil_la_LDFLAGS += -export-symbols-regex '^ddc[ags]_[^_]'
+# endif
 libddcutil_la_LDFLAGS += -version-info '@LT_CURRENT@:@LT_REVISION@:@LT_AGE@' 
 # libddcutil_la_LDFLAGS += -init _ddca_init
 libddcutil_la_LDFLAGS += -pie
@@ -353,7 +358,8 @@ endif
 #needed?
 ddcutil_LDFLAGS =  
 ddcutil_LDFLAGS += -pie
-# ddccutil_LDFLAGS += -export-dynamic 
+# -export-dynamic needed for failsim
+ddcutil_LDFLAGS += -export-dynamic 
 
 # Fails if not linked with libxrandr - why?
 laclient_LDADD = \
