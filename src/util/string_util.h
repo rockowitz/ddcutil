@@ -56,6 +56,7 @@ bool   is_abbrev(const char * value, const char * longname, int minchars);
 bool   str_starts_with(const char * value_to_test, const char * start_part);
 bool   str_ends_with(const char * value_to_test, const char * end_part);
 char * strupper(char * s);
+char * strdup_uc(char* s);
 char * strjoin( const char ** pieces, const int ct, const char * sepstr);
 char * chars_to_string(char * start, int len);
 char * strtrim(const char * s);
@@ -63,8 +64,6 @@ char * strtrim_r(const char * s, char * buffer, int bufsz);
 char * rtrim_in_place(char * s);
 char * substr(char * s, int startpos, int ct);
 char * lsub(char * s, int ct);
-char * force_upstr(char * s);
-char * strdup_uc(char* s);
 char * str_replace_char(char * s, char old_char, char new_char);
 char * strcat_new(char * s1, char * s2);
 
@@ -79,6 +78,13 @@ int  null_terminated_string_array_length(Null_Terminated_String_Array string_arr
 void null_terminated_string_array_show(  Null_Terminated_String_Array string_array);
 
 Null_Terminated_String_Array strsplit(const char * str_to_split, const char* delims);
+
+//
+// Integer conversion
+//
+
+bool str_to_int(const char * nptr, int * ival);
+
 
 //
 // Hex value conversion.

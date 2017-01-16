@@ -220,15 +220,6 @@ char * lsub(char * s, int ct) {
 }
 
 
-// a simple function to force a string to upper case that assumes ascii characters
-char * force_upstr(char * s) {
-   assert(s);
-   char * p = s;
-   while(*p)
-      *p = toupper(*p);
-   return s;
-}
-
 
 
 /* Joins an array of strings into a single string, using a separator string.
@@ -393,6 +384,7 @@ char * strupper(char * s) {
 }
 
 
+
 /* Creates an upper case copy of a string
  *
  * Arguments:
@@ -463,6 +455,33 @@ char * chars_to_string(char * start, int len) {
    }
    return strbuf;
 }
+
+
+//
+// Integer conversion
+//
+
+bool str_to_int(const char * nptr, int * ival) {
+   char * endptr;
+   bool ok = false;
+   if ( *nptr != '\0') {
+      long result = strtol(nptr, &endptr, 10);
+      if (*endptr != '\0') {
+         *ival = result;
+         ok = true;
+      }
+   }
+
+   // if (ok)
+   //   printf("(%s) nptr=%s, Returning: %s, *ival = %d\n", __func__, nptr, bool_repr(ok), *ival);
+   // else
+   //   printf("(%s) nptr=%s, Returning: %s\n", __func__, nptr, bool_repr(ok));
+
+   return ok;
+}
+
+
+
 
 
 
