@@ -27,6 +27,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "util/debug_util.h"
 #include "util/file_util.h"
 #include "util/report_util.h"
 #include "string_util.h"
@@ -196,15 +197,24 @@ void fsim_report_error_table(int depth) {
 }
 
 
-
-
 bool eval_fsim_rc(char * rc_string, int * evaluated_rc) {
+   bool debug = true;
+   if (debug)
+      printf("(%s) Starting.  rc_string=%s\n", __func__, rc_string);
    char * end;
    bool ok = false;
    *evaluated_rc = 0;
    long int answer = strtol(rc_string, &end, 10);
    if (*end == '\0') {
       *evaluated_rc = (int) answer;
+      ok = true;
+   }
+   else if (streq(rc_string, "true")) {
+      *evaluated_rc = true;
+      ok = true;
+   }
+   else if (streq(rc_string, "false")) {
+      *evaluated_rc = false;
       ok = true;
    }
    else {
@@ -227,6 +237,9 @@ bool eval_fsim_rc(char * rc_string, int * evaluated_rc) {
          ok = false;
    }
 
+   if (debug)
+      printf("(%s) Starting.  rc_string=%s. Returning: %s, *evaluated_rc=%d\n",
+             __func__, rc_string, bool_repr(ok), *evaluated_rc);
    return ok;
 }
 
@@ -235,6 +248,9 @@ bool eval_fsim_rc(char * rc_string, int * evaluated_rc) {
 
 bool fsim_load_control_from_gptrarray(GPtrArray * lines) {
    bool debug = false;
+   if (debug)
+      printf("(%s) lines.len = %d\n", __func__, lines->len);
+
    bool ok = true;
    bool dummy_data_flag = false;
    fst = g_hash_table_new(g_str_hash, g_str_equal);
@@ -339,9 +355,11 @@ bool fsim_load_control_file(char * fn) {
 //
 
 
-int fsim_check_failure(const char * fn, const char * funcname) {
+// relies on rc 0 being no error, breaks down if trying to force a boolean test
+
+Failsim_Result fsim_check_failure(const char * fn, const char * funcname) {
    bool debug = false;
-   int result = 0;
+   Failsim_Result result = {false, 0};
    if (fst) {
       Fsim_Func_Rec * frec = g_hash_table_lookup(fst, funcname);
       if (frec) {
@@ -354,24 +372,32 @@ int fsim_check_failure(const char * fn, const char * funcname) {
             if (occ_rec->call_occ_type == FSIM_CALL_OCC_RECURRING) {
 
                if ( frec->callct % occ_rec->occno == 0) {
-                  result = occ_rec->rc;
+                  result.force_failure = true;
+                  result.failure_value = occ_rec->rc;
                   break;
                }
             }
             else {
                if (frec->callct == occ_rec->occno) {
-                  result = occ_rec->rc;
+                  result.force_failure = true;
+                  result.failure_value = occ_rec->rc;
                   break;
                }
             }
          }
-         if (result)
-            printf("Simulating failure for call %d of function %s, returning %d\n", frec->callct, funcname, result);
+         if (result.force_failure) {
+            printf("Simulating failure for call %d of function %s, returning %d\n",
+                   frec->callct, funcname, result.failure_value);
+            // printf("Call stack:\n");
+            // why wasn't this here in the original version?
+            show_backtrace(2);
+         }
 
       }
    }
 
    if (debug)
-      printf("(%s) funcname=%s, returning %d\n", __func__, funcname, result);
+      printf("(%s) funcname=%s, returning (%d,%d)\n",
+             __func__, funcname, result.force_failure, result.failure_value);
    return result;
 }

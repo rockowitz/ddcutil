@@ -24,6 +24,8 @@
 #ifndef FAILSIM_H_
 #define FAILSIM_H_
 
+#include "config.h"
+
 #include <stdbool.h>
 #include <glib.h>
 
@@ -78,31 +80,56 @@ bool fsim_load_control_file(char * fn);
 // Runtime error check
 //
 
-int fsim_check_failure(const char * fn, const char * funcname);
+// int fsim_check_failure(const char * fn, const char * funcname);
+
+typedef struct {
+   bool   force_failure;
+   int    failure_value;
+} Failsim_Result;
+
+Failsim_Result fsim_check_failure(const char * fn, const char * funcname);
+
 
 #ifdef ENABLE_FAILSIM
 #define FAILSIM \
    do { \
-      int __rcsim = fsim_check_failure(__FILE__, __func__); \
-      if (__rcsim)        \
-         return __rcsim;  \
+      Failsim_Result __rcsim = fsim_check_failure(__FILE__, __func__); \
+      if (__rcsim.force_failure)        \
+         return __rcsim.failure_value;  \
    } while(0);
 
 
 #define FAILSIM_EXT(__addl_cmds) \
    do { \
-      int __rcsim = fsim_check_failure(__FILE__, __func__); \
-      if (__rcsim) {      \
+      Failsim_Result __rcsim = fsim_check_failure(__FILE__, __func__); \
+      if (__rcsim.force_failure) {      \
          __addl_cmds;     \
-         return __rcsim;  \
+         return __rcsim.failure_value;  \
       } \
    } while(0);
+
+#ifdef WRONG
+#define FAILSIM_BOOL_EXT(__addl_cmds) \
+   do { \
+      int __rcsim = fsim_check_failure(__FILE__, __func__); \
+      if (!__rcsim) {      \
+         printf("Simulating failure for call of function %s, returning false\n", __func__); \
+         __addl_cmds;     \
+         return false;  \
+      } \
+   } while(0);
+#else
+#define FAILSIM_BOOL_EXT(__addl_cmds)
+#endif
+
 
 #else
 
 #define FAILSIM
 
 #define FAILSIM_EXT(__addl_cmds)
+
+#define FAILSIM_BOOL_EXT(__addl_cmds)
 
 #endif
 
