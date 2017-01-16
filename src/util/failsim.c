@@ -355,8 +355,6 @@ bool fsim_load_control_file(char * fn) {
 //
 
 
-// relies on rc 0 being no error, breaks down if trying to force a boolean test
-
 Failsim_Result fsim_check_failure(const char * fn, const char * funcname) {
    bool debug = false;
    Failsim_Result result = {false, 0};
