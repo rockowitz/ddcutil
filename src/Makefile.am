@@ -375,7 +375,10 @@ install-exec-hook:
 	@echo  $(DESTDIR)$(libdir)
 	ls -ld $(DESTDIR)$(libdir)
 	ls -l $(DESTDIR)$(libdir)/*la
-	sed -i "/dependency_libs/ s/'.*'/''/" $(DESTDIR)$(libdir)/libddcutil.la
+	@if [ -f $(DESTDIR)$(libdir)/libddcutil.la ] ; then \
+	  echo "(install-exec-hook) Stripping dependency_libs from libddcutil.la" ; \
+	  sed -i "/dependency_libs/ s/'.*'/''/" $(DESTDIR)$(libdir)/libddcutil.la ; \
+	fi
 
 # objdump -p $(DESTDIR)$(libdir)/libddcutil.so | sed -n -e's/^[[:space:]]*SONAME[[:space:]]*//p' |  sed -r -e's/([0-9])\.so\./\1-/; s/\.so(\.|$)//; y/_/-/; s/(.*)/\L&/'
 
