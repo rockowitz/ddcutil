@@ -223,10 +223,13 @@ Status_Code_Counts * new_status_code_counts(char * name) {
 
 int log_any_status_code(Status_Code_Counts * pcounts, int rc, const char * caller_name) {
    bool debug = false;
-   if (debug)
-      DBGMSG("caller=%s, rc=%d", caller_name, rc);
+   DBGMSF(debug, "caller=%s, rc=%d", caller_name, rc);
    assert(pcounts->error_counts_hash);
    pcounts->total_status_counts++;
+
+   if (rc == 0) {
+      DBGMSG("Called with rc = 0, from function %s", caller_name);
+   }
 
    // n. if key rc not found, returns NULL, which is 0
    int ct = GPOINTER_TO_INT(g_hash_table_lookup(pcounts->error_counts_hash,  GINT_TO_POINTER(rc)) );
@@ -264,6 +267,8 @@ int compare( const void* a, const void* b)
 
 
 void show_specific_status_counts(Status_Code_Counts * pcounts) {
+   bool debug = true;
+   DBGMSF(debug, "Starting");
    if (pcounts->name)
       printf("%s:\n", pcounts->name);
    assert(pcounts->error_counts_hash);
@@ -274,7 +279,13 @@ void show_specific_status_counts(Status_Code_Counts * pcounts) {
    // gpointer * keysp = g_hash_table_get_keys_as_array(pcounts->error_counts_hash, &keyct);
    GList * glist = g_hash_table_get_keys(pcounts->error_counts_hash);
    gpointer * keysp = g_list_to_g_array(glist, &keyct);
-
+   if (debug) {
+      DBGMSG("Keys.  keyct=%d", keyct);
+      for (int ndx = 0; ndx < keyct; ndx++) {
+         DBGMSG( "keysp[%d]:  %d   %p  %d",
+                 ndx,  keysp[ndx], keysp[ndx], GPOINTER_TO_INT(keysp[ndx]) );
+      }
+   }
    int summed_ct = 0;
    // fprintf(stdout, "DDC packet error status codes with non-zero counts:  %s\n",
    fprintf(stdout, "DDC Related Errors:  %s\n",
@@ -285,8 +296,15 @@ void show_specific_status_counts(Status_Code_Counts * pcounts) {
       int ndx;
       for (ndx=0; ndx<keyct; ndx++) {
          gpointer keyp = keysp[ndx];
-         int key = GPOINTER_TO_INT(keyp);
-         int ct  = GPOINTER_TO_INT(g_hash_table_lookup(pcounts->error_counts_hash,GINT_TO_POINTER(key)));
+         long key = GPOINTER_TO_INT(keyp);
+         // DBGMSF(debug, "key:  %d   %p", key, keyp);
+         if (key == 0) {
+            DBGMSG("=====> Invalid status code key = %d", key);
+            break;
+         }
+         assert( GINT_TO_POINTER(key) == keyp);
+
+         int ct  = GPOINTER_TO_INT(g_hash_table_lookup(pcounts->error_counts_hash,keyp));
          summed_ct += ct;
          // fprintf(stdout, "%4d    %6d\n", ct, key);
 
@@ -298,7 +316,7 @@ void show_specific_status_counts(Status_Code_Counts * pcounts) {
             aux_msg = " (derived)";
          else if (ddcrc_is_not_error(key))
             aux_msg = " (not an error)";
-         fprintf(stdout, "%5d   %-28s (%5d) %s %s\n",
+         fprintf(stdout, "%5d   %-28s (%5ld) %s %s\n",
               ct,
               desc->name,
               key,
@@ -311,6 +329,7 @@ void show_specific_status_counts(Status_Code_Counts * pcounts) {
    assert(summed_ct == pcounts->total_status_counts);
    g_free(keysp);
    // fprintf(stdout,"\n");
+   DBGMSF(debug, "Done");
 }
 
 
