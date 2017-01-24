@@ -81,12 +81,13 @@ char * bitflags_to_string(
 // Standard flags to indicate behavior if a system call fails
 //
 typedef Byte Call_Options;
-#define CALLOPT_NONE      0x00
-#define CALLOPT_ERR_MSG   0x80      // issue message
-#define CALLOPT_ERR_ABORT 0x40      // terminate execution
-#define CALLOPT_RDONLY    0x20      // open read-only
-#define CALLOPT_WARN_FINDEX 0x01    // issue warning msg re hiddev_field_info.field_index change
-#define CALLOPT_FORCE       0x02    // ignore various validity checks
+#define CALLOPT_NONE         0x00
+#define CALLOPT_ERR_MSG      0x80    // issue message
+#define CALLOPT_ERR_ABORT    0x40    // terminate execution
+#define CALLOPT_RDONLY       0x20    // open read-only
+#define CALLOPT_WARN_FINDEX  0x10    // issue warning msg re hiddev_field_info.field_index change
+#define CALLOPT_FORCE        0x08    // ignore various validity checks
+#define CALLOPT_FORCE_SLAVE  0x04    // use ioctl I2C_FORCE_SLAVE
 
 // Return string interpretation of CALLOPT_ flag byte
 char * interpret_call_options_r(Byte calloptions, char * buffer, int bufsize);
