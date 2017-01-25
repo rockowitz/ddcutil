@@ -1,7 +1,7 @@
 /* i2c_bus_core.c
  *
  * <copyright>
- * Copyright (C) 2014-2016 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2014-2017 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -180,7 +180,7 @@ int i2c_set_addr(int file, int addr, Call_Options callopts) {
    uint16_t op = I2C_SLAVE;
    // if (callopts & CALLOPT_FORCE_SLAVE) {
    if (i2c_force_slave_addr_flag) {
-      DBGMSG("Using IOCTL op I2C_SLAVE_FORCE");
+      DBGMSG("Using IOCTL op I2C_SLAVE_FORCE for address 0x%02x", addr );
       op = I2C_SLAVE_FORCE;
    }
 
