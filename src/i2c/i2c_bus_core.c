@@ -159,6 +159,8 @@ int i2c_close_bus(int fd, int busno, Byte callopts) {
  *   fd    file descriptor for open /dev/i2c-n
  *   addr  slave address
  *   callopts  call option flags, controlling failure action
+ *         if CALLOPT_FORCE set, use IOCTL op I2C_SLAVE_FORCE
+ *         to take control even if address is in use by another driver
  *
  * Returns:
  *    0 if success
@@ -167,23 +169,21 @@ int i2c_close_bus(int fd, int busno, Byte callopts) {
 int i2c_set_addr(int file, int addr, Call_Options callopts) {
    bool debug = false;
    DBGMSF(debug, "file=%d, addr=0x%02x, callopts=%s", file, addr, interpret_call_options(callopts));
-   // if (debug)
-   //    show_backtrace(1);
    // FAILSIM_EXT( ( show_backtrace(1) ) )
    FAILSIM;
 
    int rc = 0;
    int errsv = 0;
-   bool simulate_failure = false;
+   uint16_t op = I2C_SLAVE;
+   if (callopts & CALLOPT_FORCE_SLAVE) {
+      DBGMSG("Using IOCTL op I2C_SLAVE_FORCE");
+      op = I2C_SLAVE_FORCE;
+   }
+
    RECORD_IO_EVENT(
          IE_OTHER,
-         ( rc = ioctl(file, I2C_SLAVE, addr) )
+         ( rc = ioctl(file, op, addr) )
         );
-
-   if (simulate_failure) {
-      rc = -1;               // *** SIMULATE ERROR ***
-      errno = EBUSY;
-   }
 
    if (rc < 0) {
       errsv = errno;
@@ -486,9 +486,9 @@ char * i2c_interpret_functionality_into_buffer(unsigned long functionality, Buff
  */
 Global_Status_Code i2c_get_raw_edid_by_fd(int fd, Buffer * rawedid) {
    bool debug = false;
-   DBGMSF(debug, "Getting EDID for file %d", fd);
+   DBGTRC(debug, TRACE_GROUP, "Getting EDID for file %d", fd);
 
-   bool conservative = false;
+   bool conservative = true;
 
    assert(rawedid->buffer_size >= 128);
    Global_Status_Code gsc;
@@ -505,35 +505,42 @@ Global_Status_Code i2c_get_raw_edid_by_fd(int fd, Buffer * rawedid) {
 
    Byte byte_to_write = 0x00;
 
-   gsc = invoke_i2c_writer(fd, 1, &byte_to_write);
-   if (gsc == 0) {
-      gsc = invoke_i2c_reader(fd, 128, rawedid->bytes);
-      assert(gsc <= 0);
+   int max_tries = 3;
+   for (int tryctr = 0; tryctr < max_tries; tryctr++) {
+      gsc = invoke_i2c_writer(fd, 1, &byte_to_write);
       if (gsc == 0) {
-         rawedid->len = 128;
-         if (debug) {
-            DBGMSG("call_read returned:");
-            buffer_dump(rawedid);
-            DBGMSG("edid checksum = %d", edid_checksum(rawedid->bytes) );
+         gsc = invoke_i2c_reader(fd, 128, rawedid->bytes);
+         assert(gsc <= 0);
+         if (gsc == 0) {
+            rawedid->len = 128;
+            if (debug) {
+               DBGMSG("call_read returned:");
+               buffer_dump(rawedid);
+               DBGMSG("edid checksum = %d", edid_checksum(rawedid->bytes) );
+            }
+            Byte checksum = edid_checksum(rawedid->bytes);
+            if (checksum != 0) {
+               // possible if successfully read bytes from i2c bus with no monitor
+               // attached - the bytes will be junk.
+               // e.g. nouveau driver, Quadro card, on blackrock
+               DBGTRC(debug, TRACE_GROUP, "Invalid EDID checksum %d, expected 0.", checksum);
+               rawedid->len = 0;
+               gsc = DDCRC_EDID;
+            }
          }
-         Byte checksum = edid_checksum(rawedid->bytes);
-         if (checksum != 0) {
-            // possible if successfully read bytes from i2c bus with no monitor
-            // attached - the bytes will be junk.
-            // e.g. nouveau driver, Quadro card, on blackrock
-            DBGMSF(debug, "Invalid EDID checksum %d, expected 0.\n", checksum);
-            rawedid->len = 0;
-            gsc = DDCRC_EDID;
-         }
+         if (gsc == 0)
+            break;
       }
+      if (tryctr < max_tries)
+         DBGTRC(debug, TRACE_GROUP, "Retrying EDID read.  tryctr=%d, max_tries=%d", tryctr, max_tries);
    }
 
 bye:
    if (gsc < 0)
       rawedid->len = 0;
 
-   if (debug) {
-      DBGMSG("Returning %s.  edidbuf contents:", gsc_desc(gsc));
+   DBGTRC(debug, TRACE_GROUP, "Returning %s.  edidbuf contents:", gsc_desc(gsc));
+   if (debug || IS_TRACING()) {
       buffer_dump(rawedid);
    }
    return gsc;
@@ -550,7 +557,7 @@ bye:
  */
 Parsed_Edid * i2c_get_parsed_edid_by_fd(int fd) {
    bool debug = false;
-   DBGMSF(debug, "Starting. fd=%d\n", fd);
+   DBGTRC(debug, TRACE_GROUP, "Starting. fd=%d\n", fd);
    Parsed_Edid * edid = NULL;
    Buffer * rawedidbuf = buffer_new(128, NULL);
 
@@ -565,11 +572,11 @@ Parsed_Edid * i2c_get_parsed_edid_by_fd(int fd) {
       }
    }
    else if (rc == DDCRC_EDID) {
-      DBGMSF(debug, "i2c_get_raw_edid_by_fd() returned %s", gsc_desc(rc));
+      DBGTRC(debug, TRACE_GROUP, "i2c_get_raw_edid_by_fd() returned %s", gsc_desc(rc));
 
    }
    buffer_free(rawedidbuf, NULL);
-   DBGMSF(debug, "Returning %p", edid);
+   DBGTRC(debug, TRACE_GROUP, "Returning %p", edid);
    return edid;
 }
 
@@ -588,7 +595,7 @@ Parsed_Edid * i2c_get_parsed_edid_by_fd(int fd) {
  */
 Bus_Info * i2c_check_bus(Bus_Info * bus_info) {
    bool debug = false;
-   DBGMSF(debug, "Starting. busno=%d, buf_info=%p", bus_info->busno, bus_info );
+   DBGTRC(debug, TRACE_GROUP, "Starting. busno=%d, buf_info=%p", bus_info->busno, bus_info );
 
    assert(bus_info != NULL);
    char * marker = bus_info->marker;  // mcmcmp(bus_info->marker... causes compile error
@@ -639,7 +646,7 @@ bye:
    if (file)
       i2c_close_bus(file, bus_info->busno,  CALLOPT_ERR_ABORT);
 
-   DBGMSF(debug, "Returning %p, flags=0x%02x", bus_info, bus_info->flags );
+   DBGTRC(debug, TRACE_GROUP, "Returning %p, flags=0x%02x", bus_info, bus_info->flags );
    return bus_info;
 }
 
@@ -1359,30 +1366,21 @@ void i2c_report_bus(int busno) {
  * Returns:
  *    count of reported buses
  *
- * The format of the output is determined by get_output_level().
+ * Used by query-sysenv.c
  */
 int i2c_report_buses(bool report_all, int depth) {
    bool debug = false;
-   // Trace_Group tg = (debug) ? 0xff : TRACE_GROUP;
-   // TRCMSGTG(tg, "Starting. report_all=%s\n", bool_repr(report_all));
    DBGTRC(debug, TRACE_GROUP, "Starting. report_all=%s\n", bool_repr(report_all));
 
-#ifdef OLD
-   DDCA_Output_Level output_level = get_output_level();
-#endif
    int busct = i2c_get_busct();
    int reported_ct = 0;
-#ifdef OLD
-   if (output_level != OL_PROGRAM) {
-#endif
-      puts("");
-      if (report_all)
-         rpt_vstring(depth,"Detected I2C buses:");
-      else
-         rpt_vstring(depth, "I2C buses with monitors detected at address 0x50:");
-#ifdef OLD
-   }
-#endif
+
+   puts("");
+   if (report_all)
+      rpt_vstring(depth,"Detected I2C buses:");
+   else
+      rpt_vstring(depth, "I2C buses with monitors detected at address 0x50:");
+
    int busno = 0;
    for (busno=0; busno < busct; busno++) {
       Bus_Info * busInfo = i2c_get_bus_info(busno, DISPSEL_NONE);
@@ -1394,7 +1392,6 @@ int i2c_report_buses(bool report_all, int depth) {
    if (reported_ct == 0)
       rpt_vstring(depth, "   No buses\n");
 
-   // TRCMSGTG(tg, "Done. Returning %d\n", reported_ct);
    DBGTRC(debug, TRACE_GROUP, "Done. Returning %d\n", reported_ct);
    return reported_ct;
 }
