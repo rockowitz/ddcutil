@@ -172,7 +172,8 @@ bool i2c_force_slave_addr_flag = false;
 int i2c_set_addr(int file, int addr, Call_Options callopts) {
    bool debug = false;
    callopts |= CALLOPT_ERR_MSG;    // temporary
-   DBGMSF(debug, "file=%d, addr=0x%02x, callopts=%s", file, addr, interpret_call_options(callopts));
+   DBGMSF(debug, "file=%d, addr=0x%02x, i2c_force_slave_addr_flag=%s, callopts=%s",
+                 file, addr, bool_repr(i2c_force_slave_addr_flag), interpret_call_options(callopts));
    // FAILSIM_EXT( ( show_backtrace(1) ) )
    FAILSIM;
 
@@ -186,19 +187,24 @@ retry:
          IE_OTHER,
          ( rc = ioctl(file, op, addr) )
         );
+   // if (op == I2C_SLAVE) {
+   //    DBGMSG("Forcing pseudo failure");
+   //    rc = -1;
+   //    errno=EBUSY;
+   // }
+   errsv = errno;
 
    if (rc < 0) {
-      errsv = errno;
       if ( callopts & CALLOPT_ERR_MSG)
-         report_ioctl_error(errsv, __func__, __LINE__-9, __FILE__,
+         report_ioctl_error(errsv, __func__, __LINE__-11, __FILE__,
                             /*fatal=*/ callopts&CALLOPT_ERR_ABORT);
       else if (callopts & CALLOPT_ERR_ABORT)
          DDC_ABORT(DDCL_INTERNAL_ERROR);
 
-
       if (errsv == EBUSY && i2c_force_slave_addr_flag && op == I2C_SLAVE) {
          DBGMSG("Retrying using IOCTL op I2C_SLAVE_FORCE for address 0x%02x", addr );
          op = I2C_SLAVE_FORCE;
+         debug = true;   // force final message for clarity
          goto retry;
       }
 
