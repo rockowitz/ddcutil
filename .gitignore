@@ -116,6 +116,7 @@ ddctool-0.4.3.tar.gz
 ddctool-0.5.0.tar.gz
 ddcutil*tar.gz
 src/swig/ddc_swig.py
+src/swig/ddc_swig3.py
 src/swig/*_wrap.c
 *plist/
 clang-report/
@@ -136,3 +137,6 @@ src/swig/set_pylocal_exec
 src/swig/pylocal
 run_coverity_fragment
 ddcutil-coverity.tgz.0
+src/swig/pyenv
+bug_reports
+m4/archived/

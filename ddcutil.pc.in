@@ -7,7 +7,7 @@ Name: @PACKAGE@
 Description: Control display settings
 URL: http://www.ddcutil.com
 Version: @VERSION@
-# Requires:  ??
+Requires: @REQUIRED_PACKAGES@ 
 # Libs and Cflags not needed since using default locations
 Libs: -L${libdir} 
 Cflags: -I${includedir}

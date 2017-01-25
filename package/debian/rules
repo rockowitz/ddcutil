@@ -20,6 +20,7 @@ include /usr/share/dpkg/default.mk
 
 config_args=
 # config_args="--enable-lib=yes"
+config_args=--enable-lib=yes --enable-swig=yes
 
 # echo "(debian/rules) config_args=${config_args}"
 

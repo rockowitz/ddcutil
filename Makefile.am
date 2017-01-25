@@ -24,9 +24,10 @@ endif
 
 SUBDIRS = src man data package $(DOXYDIR)
 
+if ENABLE_SHARED_LIB_COND
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = ddcutil.pc
-
+endif
 
 
 RPM = rpm

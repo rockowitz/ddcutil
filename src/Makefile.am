@@ -242,10 +242,11 @@ libcommon_la_SOURCES += \
   util/failsim.c        
 endif
 
-
+if ENABLE_SHARED_LIB_COND
 include_HEADERS = \
 public/ddcutil_types.h \
 public/ddcutil_c_api.h 
+endif
 
 
 dist-hook:
@@ -368,13 +369,15 @@ laclient_LDADD = \
 
 laclient_LDFLAGS = -pie
 
+# debug-install-hook:
+#  	ls -ld $(DESTDIR)$(libdir)
+# 	ls -l $(DESTDIR)$(libdir)/*la
+# 	@echo "  pythondir       = $(pythondir)"
+# 	@echo "  pyexecdir       = $(pyexecdir)"
+# 	@echo  $(DESTDIR)$(libdir)
+
 install-exec-hook:
 	@echo "(install-exec-hook) Executing..." 
-	@echo "  pythondir       = $(pythondir)"
-	@echo "  pyexecdir       = $(pyexecdir)"
-	@echo  $(DESTDIR)$(libdir)
-	ls -ld $(DESTDIR)$(libdir)
-	ls -l $(DESTDIR)$(libdir)/*la
 	@if [ -f $(DESTDIR)$(libdir)/libddcutil.la ] ; then \
 	  echo "(install-exec-hook) Stripping dependency_libs from libddcutil.la" ; \
 	  sed -i "/dependency_libs/ s/'.*'/''/" $(DESTDIR)$(libdir)/libddcutil.la ; \

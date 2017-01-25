@@ -84,6 +84,7 @@ AM_PROG_AR
 
 dnl explicitly initialize pkg-config in case first call to pkg_check_modules is within an if test:
 PKG_PROG_PKG_CONFIG
+required_packages= 
 
 AC_PROG_CC
 
@@ -222,7 +223,7 @@ AS_IF([test "x$enable_swig" == "xyes"],
 
 
 dnl TODO: Review
-dnl copied from somewhere
+dnl copied from tschoonj configure.ac snippet: https://gist.github.com/tschoonj/6441999
 
 dnl #default behavior is to install the python bindings into subfolders of $prefix
 dnl #however, this may require the user to set the PYTHONPATH environment variable
@@ -363,6 +364,7 @@ dnl 2) if no action-if-false branch defined, pkg_check_modules terminates execut
 
 dnl was 2.36, can we drop this to 2.14 to allow for Debian 7.0
 PKG_CHECK_MODULES(GLIB,  glib-2.0 >= 2.14) 
+required_packages="$required_packages glib-2.0 >= 2.14"
 
 dnl Not currently used
 dnl PKG_CHECK_MODULES(OSINFO, libosinfo-1.0 >= 0.1, [libosinfo_found=yes], [libosinfo_found=no])
@@ -377,6 +379,8 @@ PKG_CHECK_MODULES(UDEV,   libudev,
       AC_MSG_NOTICE( [or it may be part of systemd, e.g systemd-devel] )
       AC_MSG_ERROR( [libudev not found] )
      ] )
+required_packages="$required_packages xrandr x11"
+dnl how to handle libudev?   punt for now
 
 
 ###
@@ -493,86 +497,252 @@ AS_IF([test "x$enable_gobject" == "xyes"],
 
 dnl Locate SWIG and PYTHON in case we need them
 
-AC_MSG_NOTICE( [Calling am_path_python...] )
-AM_PATH_PYTHON(2.6, [python_found=yes], [python_found=no]) 
-AS_IF( [test 0$DBG -ne 0], [
-  AC_MSG_NOTICE( [Set by am_path_python:] )
-  AC_MSG_NOTICE( [  python_found        = $python_found] )
-  AC_MSG_NOTICE( [  PYTHON              = $PYTHON] )
-  AC_MSG_NOTICE( [  PYTHON_VERSION      = $PYTHON_VERSION] )
-  AC_MSG_NOTICE( [  PYTHON_PREFIX       = $PYTHON_PREFIX] )
-  AC_MSG_NOTICE( [  PYTHON_EXEC_PREFIX  = $PYTHON_EXEC_PREFIX] )
-  AC_MSG_NOTICE( [  pythondir           = $pythondir] )
-  AC_MSG_NOTICE( [  pkgpythondir        = $pkgpythondir] )
-  AC_MSG_NOTICE( [  pyexecdir           = $pyexecdir] )
-  AC_MSG_NOTICE( [  pkgpyexecdir        = $pkgpyexecdir] )
-])
+dnl Python integration is a mess.   See for example:
+dnl   https://tschoonj.github.io/blog/2013/09/04/building-libtool-modules-python-bindings/
+dnl   https://gist.github.com/tschoonj/6441999
+dnl   https://lists.ubuntu.com/archives/ubuntu-devel/2009-February/027439.html
+dnl   https://bugzilla.redhat.com/show_bug.cgi?id=533920
 
-dnl AX_PYTHON_DEVEL Calls AC_PATH_PROG() to find $PYTHON, fails if python not found
-dnl PYTHON_SITE_PKG_EXEC set only in _alt version:
-AS_IF( [test "x$python_found" == "xyes" ], [
-   AC_MSG_NOTICE( [Calling ax_python_devel...])
-   AX_PYTHON_DEVEL
+dnl Some of the issues: 
+dnl - Python 3 is a distint language from Python 2, yet AM_PYTHON treats it as an upwardly 
+dnl   compatible version Python 2. 
+dnl - How to build for multiple version fo Python 2 and Python 3? 
+dnl - Debian (and derivatives such as Ubuntu) have modified the directory scheme. 
+dnl   Directory names end with dist-packags instead of site-packages.  
+dnl   But this is incompletely implemented.   sysconfig.get_path() returns names
+dnl   ending with site-package on python 3
+dnl - sys.path is built using calls to site.get_site_packages().  But this function 
+dnl   hardcodes the paths.  There is no reference to sysconfig.get_path() or 
+dnl   distusils.sysconfig_get_python_lib().  So code that relies on the latter functions
+dnl   can return a library that is not in sys.path
+dnl - Where do local extensions to the distribution version of Python belong? 
+dnl   In a ditrectory under /usr/local or under /usr? 
+dnl - pkg-config names can vary. 
+dnl   Fedora 25:  python and python2 refer to current Python2 
+dnl               python3, python-3.5, python-3.5m refer to current Python 3
+dnl   openSUSE 42.2:  
+dnl            python3 not defined, python-3.4 refers to current Python 3 
+dnl   So need to know the version number of Python 3 to construct a name
+dnl   to pass to pkg-config
 
-   AS_IF( [test 0$DBG -ne 0], [
-     AC_MSG_NOTICE( [From ax_python_devel or ac_python_devel_alt..  ] )
-     AC_MSG_NOTICE( [  PYTHON_CPPFLAGS      = $PYTHON_CPPFLAGS      ] )
-     AC_MSG_NOTICE( [  PYTHON_SITE_PKG      = $PYTHON_SITE_PKG    ] )
 
-     AC_MSG_NOTICE( [From ax_python_devel only ...  ] )
-     AC_MSG_NOTICE( [  PYTHON_LIBS          = $PYTHON_LIBS          ] )
-     AC_MSG_NOTICE( [  PYTHON_EXTRA_LDFLAGS = $PYTHON_EXTRA_LDFLAGS    ] )
-     AC_MSG_NOTICE( [  PYTHON_EXTRA_LIBS    = $PYTHON_EXTRA_LIBS    ] )
+AS_IF( [ test "x$enable_swig" == "xyes" ], [
+   AC_MSG_NOTICE( [SWIG enabled, checking for Python and SWIG...] )
 
-     AC_MSG_NOTICE( [From ax_python_devel_alt only ...  ] )
-     AC_MSG_NOTICE( [  PYTHON_LDFLAGS       = $PYTHON_LDFLAGS       ] )
-     AC_MSG_NOTICE( [  PYTHON_SITE_PKG_EXEC = $PYTHON_SITE_PKG_EXEC    ] )
-     AC_MSG_NOTICE( [  PYTHON_CFLAGS       = $PYTHON_CFLAGS] )
+   # Python 3 
+
+	 AC_MSG_NOTICE( [Calling ax_path_python3 for Python 3...] )
+	 AX_PATH_PYTHON3(3.1, [python3_found=yes], [python_found3=no]) 
+	 AS_IF( [test 0$DBG -ne 0], [
+      AC_MSG_NOTICE( [Set by ax_path_python3 for python3:] )
+      AC_MSG_NOTICE( [  python3_found        = $python3_found] )
+	    AC_MSG_NOTICE( [  PYTHON3              = $PYTHON3] )
+	    AC_MSG_NOTICE( [  PYTHON3_VERSION      = $PYTHON3_VERSION] )
+      AC_MSG_NOTICE( [  PYTHON3_PREFIX       = $PYTHON3_PREFIX] )
+      AC_MSG_NOTICE( [  PYTHON3_EXEC_PREFIX  = $PYTHON3_EXEC_PREFIX] )
+	    AC_MSG_NOTICE( [  python3dir           = $python3dir] )
+	    AC_MSG_NOTICE( [  pkgpython3dir        = $pkgpython3dir] )
+	    AC_MSG_NOTICE( [  py3execdir           = $py3execdir] )
+	    AC_MSG_NOTICE( [  pkgpy3execdir        = $pkgpy3execdir] )
+	 ])
+
+   AS_IF( [test "x$python3_found" == "xyes" ], [
+      AC_MSG_NOTICE( [Looking for Python 3 pkgconfig information...] )
+
+      PKG_CHECK_MODULES([PY3], [python-$PYTHON3_VERSION], [
+         enable_py3="yes"
+         AS_IF( [test 0$DBG -ne 0], [
+            AC_MSG_NOTICE( [  PY3_CFLAGS    = $PY3_CFLAGS ])
+            AC_MSG_NOTICE( [  PY3_LIBS      = $PY3_LIBS   ])
+         ])
+         dnl PY3_CFLAGS and PY3_LIBS are precious, no need to AC_SUBST() 
+         AC_SUBST(PY3_CFLAGS)
+         AC_SUBST(PY3_LIBS)
+      ],[
+         AC_MSG_WARN([Building without Python 3 support])
+         python3_found="no"
+         enable_py3="no"
+      ])
+   ],[
+      AC_MSG_NOTICE( [Skipping check for Python3 pkgconfig] )
    ])
+
+   AS_IF( [test "x$enable_py3" == "xyes" ], [
+      AX_PYTHON_ENV($PYTHON3)
+      AC_MSG_NOTICE([PY3_EXTRA_LDFLAGS:  $PY3_EXTRA_LDFLAGS])   
+      AC_MSG_NOTICE([PY3_EXTRA_LIBS      $PY3_EXTRA_LIBS])
+      AC_MSG_NOTICE([usr_py3execdir:     $usr_py3execdir])
+
+      dnl AC_SUBST() unnecessary, precious variables
+      AC_SUBST(PY3_EXTRA_LDFLAGS)
+      AC_SUBST(PY3_EXTRA_LIBS)
+   ])
+
+
+   # Python 2
+
+   AC_MSG_NOTICE( [Calling am_path_python for Python 2...] )
+	 AM_PATH_PYTHON(2.6, [python_found=yes], [python_found=no]) 
+	 AS_IF( [test 0$DBG -ne 0], [
+      AC_MSG_NOTICE( [Set by am_path_python:] )
+	    AC_MSG_NOTICE( [  python_found        = $python_found] )
+	    AC_MSG_NOTICE( [  PYTHON              = $PYTHON] )
+  	  AC_MSG_NOTICE( [  PYTHON_VERSION      = $PYTHON_VERSION] )
+	    AC_MSG_NOTICE( [  PYTHON_PREFIX       = $PYTHON_PREFIX] )
+      AC_MSG_NOTICE( [  PYTHON_EXEC_PREFIX  = $PYTHON_EXEC_PREFIX] )
+	    AC_MSG_NOTICE( [  pythondir           = $pythondir] )
+	    AC_MSG_NOTICE( [  pkgpythondir        = $pkgpythondir] )
+	    AC_MSG_NOTICE( [  pyexecdir           = $pyexecdir] )
+	    AC_MSG_NOTICE( [  pkgpyexecdir        = $pkgpyexecdir] )
+   ])
+
+   AS_IF( [ test "x$python_found" == "xyes"], [
+	   AM_PYTHON_CHECK_VERSION($PYTHON, [3.0], [
+	      AC_MSG_NOTICE( [No Python 2.x found])
+	      python_found = "no"
+      ])
+   ])
+
+   AS_IF( [test "x$python_found" == "xyes" ], [
+      AC_MSG_NOTICE( [Looking for Python2 pkgconfig information...] )
+
+      PKG_CHECK_MODULES([PY2], [python-$PYTHON_VERSION], [
+         enable_py2="yes"
+         AS_IF( [test 0$DBG -ne 0], [
+            AC_MSG_NOTICE( [Set by pkg_check_modules:   ] )
+            AC_MSG_NOTICE( [  PY2_CFLAGS  = $PY2_CFLAGS ] )
+            AC_MSG_NOTICE( [  PY2_LIBS    = $PY2_LIBS   ] )
+         ])
+         dnl unnecessary, precious
+         AC_SUBST(PY2_CFLAGS, $PY2_CFLAGS)
+         AC_SUBST(PY2_LIBS,     $PY2_LIBS)
+      ],[
+         AC_MSG_WARN([Building without Python 2 support])
+         python2_found="no"
+         enable_py2="no"
+     ])
+   ],[
+      AC_MSG_NOTICE( [Skipping check for Python2 pkgconfig] )
+   ])
+
+
+   AS_IF( [test "x$enable_py2" == "xyes" ], [
+      AX_PYTHON_ENV($PYTHON)
+      AC_MSG_NOTICE([PY2_EXTRA_LDFLAGS:  $PY2_EXTRA_LDFLAGS])   
+      AC_MSG_NOTICE([PY2_EXTRA_LIBS      $PY3_EXTRA_LIBS])
+      AC_MSG_NOTICE([usr_py2execdir:     $usr_py2execdir])
+      AC_MSG_NOTICE([alt_py2execdir:     $alt_py2execdir])
+
+      dnl precious variables
+      AC_SUBST(PY2_EXTRA_LDFLAGS)
+      AC_SUBST(PY2_EXTRA_LIBS)
+   ])
+
+
+   # SWIG 
+
+   dnl enable_py2=no
+   dnl enable_py3=no
+   dnl AC_MSG_NOTICE( [enable_py2:    $enable_py2" ])
+   dnl AC_MSG_NOTICE( [enable_py3:    $enable_py3" ])
+   AS_IF( [ test "x$enable_py2" == "xyes" -o  "x$enable_py3" == "xyes"], 
+     enable_some_python="yes"
+   )
+   AC_MSG_NOTICE( [ enable_some_python:   $enable_some_python ])
+
+   AS_IF( [test "x$enable_some_python" == "xyes"], [
+
+      AC_MSG_NOTICE( [Calling ax_pkg_swig...] )
+
+      dnl ax_pkg_swig respects SWIG_LIB, but overrides SWIG, so don't expose the possibility of overriding
+      dnl AC_ARG_VAR(SWIG, [swig executable])
+      dnl AC_ARG_VAR(SWIG_LIB, [linker flags for swig])
+      dnl AC_MSG_NOTICE( [Before ax_pkg_swig:] )
+      dnl AC_MSG_NOTICE( [  SWIG                    = $SWIG ] )
+      dnl AC_MSG_NOTICE( [  SWIG_LIB                = $SWIG_LIB ])
+
+      AX_PKG_SWIG(1.3.21, [swig_found=yes], [swig_found=no])
+      AS_IF( [test 0$DBG -ne 0], [
+         AC_MSG_NOTICE( [Set by ax_pkg_swig:] )
+         AC_MSG_NOTICE( [  swig_found              = $swig_found] )
+         AC_MSG_NOTICE( [  SWIG                    = $SWIG ] )
+         AC_MSG_NOTICE( [  SWIG_LIB                = $SWIG_LIB ])
+      ])
+
+      dnl AX_SWIG_MULTI_MODULE_SUPPORT
+
+      dnl dnl n.b. will fail if python2 not installed
+      dnl dnl AX_PYTHON_DEVEL Calls AC_PATH_PROG() to find $PYTHON, fails if python not found
+      dnl dnl PYTHON_SITE_PKG_EXEC set only in _alt version:
+      dnl AS_IF( [test "x$python_found" == "xyes" ], [
+      dnl    AC_MSG_NOTICE( [Calling ax_python_devel for informational purposes...])
+      dnl    AX_PYTHON_DEVEL
+
+      dnl    AS_IF( [test 0$DBG -ne 0], [
+      dnl       AC_MSG_NOTICE( [From ax_python_devel or ac_python_devel_alt..  ] )
+		  dnl       AC_MSG_NOTICE( [  PYTHON_CPPFLAGS      = $PYTHON_CPPFLAGS      ] )
+		  dnl       AC_MSG_NOTICE( [  PYTHON_SITE_PKG      = $PYTHON_SITE_PKG    ] )
+
+		  dnl       AC_MSG_NOTICE( [From ax_python_devel only ...  ] )
+		  dnl       AC_MSG_NOTICE( [  PYTHON_LIBS          = $PYTHON_LIBS          ] )
+		  dnl       AC_MSG_NOTICE( [  PYTHON_EXTRA_LDFLAGS = $PYTHON_EXTRA_LDFLAGS    ] )
+		  dnl       AC_MSG_NOTICE( [  PYTHON_EXTRA_LIBS    = $PYTHON_EXTRA_LIBS    ] )
+
+		  dnl       AC_MSG_NOTICE( [From ax_python_devel_alt only ...  ] )
+		  dnl       AC_MSG_NOTICE( [  PYTHON_LDFLAGS       = $PYTHON_LDFLAGS       ] )
+		  dnl       AC_MSG_NOTICE( [  PYTHON_SITE_PKG_EXEC = $PYTHON_SITE_PKG_EXEC    ] )
+		  dnl       AC_MSG_NOTICE( [  PYTHON_CFLAGS       = $PYTHON_CFLAGS] )
+		  dnl    ])
+		  dnl ])
+
+      dnl dnl n. AX_SWIG_PYTHON does AC_REQUIRE of AX_PKG_SWIG, AX_PYTHON_DEVEL
+      dnl dnl AC_MSG_NOTICE( [Calling ax_swig_python...] )
+      dnl AX_SWIG_PYTHON
+      dnl AS_IF( [test 0$DBG -ne 0], [
+      dnl    AC_MSG_NOTICE( [ Set by ax_swig_python:] )
+      dnl    AC_MSG_NOTICE( [   AX_SWIG_PYTHON_CPPFLAGS = $AX_SWIG_PYTHON_CPPFLAGS ] )
+      dnl    AC_MSG_NOTICE( [   AX_SWIG_PYTHON_OPT      = $AX_SWIG_PYTHON_OPT ] )
+      dnl    AC_MSG_NOTICE( [   AX_SWIG_PYTHON_LIBS     = $AX_SWIG_PYTHON_LIBS ] )
+      dnl ])
+
+      AS_IF([ test "x$swig_found" == "xyes" -a "x$enable_some_python" == "xyes"],
+            [ python_and_swig_found="yes"],
+            [ python_and_swig_found="no"]
+           )
+      AC_MSG_NOTICE( [python_and_swig_found  = $python_and_swig_found ])
+
+      AS_IF([test "x$enable_swig" == "xyes" -a  "x$python_and_swig_found" != "xyes" ] ,
+            AC_MSG_ERROR( [--enable-swig requires some version of Python, its development package, and SWIG] ) 
+        )
+
+   ],[
+     AC_MSG_NOTICE([Skipping SWIG check])
+   ])
+
+],
+[
+   AC_MSG_NOTICE( [SWIG disabled, skipping checks for Python and SWIG...])
 ])
 
+AM_CONDITIONAL([ENABLE_PY2], [test x"$enable_py2" = xyes])
+AM_COND_IF([ENABLE_PY2], [AC_DEFINE([ENABLE_PY2], [1], [Python2 is enabled])])
 
-dnl aclocal doesn't find AX_PKG_SWIG if inside AS_IF, so execute it whether or not we need it
-AC_MSG_NOTICE( [Calling ax_pkg_swig...] )
-dnl ax_pkg_swig respects SWIG_LIB, but overrides SWIG, so don't expose the possibility of overriding
-dnl AC_ARG_VAR(SWIG, [swig executable])
-dnl AC_ARG_VAR(SWIG_LIB, [linker flags for swig])
-dnl AC_MSG_NOTICE( [Before ax_pkg_swig:] )
-dnl AC_MSG_NOTICE( [  SWIG                    = $SWIG ] )
-dnl AC_MSG_NOTICE( [  SWIG_LIB                = $SWIG_LIB ])
+AM_CONDITIONAL([ENABLE_PY3], [test x"$enable_py3" = xyes])
+AM_COND_IF([ENABLE_PY3], [AC_DEFINE([ENABLE_PY3], [1], [Python3 is enabled])])
 
-AX_PKG_SWIG(1.3.21, [swig_found=yes], [swig_found=no])
-AS_IF( [test 0$DBG -ne 0], [
-  AC_MSG_NOTICE( [Set by ax_pkg_swig:] )
-  AC_MSG_NOTICE( [  swig_found              = $swig_found] )
-  AC_MSG_NOTICE( [  SWIG                    = $SWIG ] )
-  AC_MSG_NOTICE( [  SWIG_LIB                = $SWIG_LIB ])
-])
 
-dnl AC_MSG_NOTICE( [Calling ax_swig_multi_module_support...] )
-dnl AX_SWIG_MULTI_MODULE_SUPPORT
-dnl AC_MSG_NOTICE( [Set by AX..SWIG..MULTI..MODULE..SUPPORT: ] )
-dnl AC_MSG_NOTICE( [  AX_SWIG_PYTHON_LIBS     = $AX_SWIG_PYTHON_LIBS ])
 
-dnl n. AX_SWIG_PYTHON does AC_REQUIRE of AX_PKG_SWIG, AX_PYTHON_DEVEL
-dnl AC_MSG_NOTICE( [Calling ax_swig_python...] )
-AX_SWIG_PYTHON
-AS_IF( [test 0$DBG -ne 0], [
-  AC_MSG_NOTICE( [ Set by ax_swig_python:] )
-  AC_MSG_NOTICE( [   AX_SWIG_PYTHON_CPPFLAGS = $AX_SWIG_PYTHON_CPPFLAGS ] )
-  AC_MSG_NOTICE( [   AX_SWIG_PYTHON_OPT      = $AX_SWIG_PYTHON_OPT ] )
-  AC_MSG_NOTICE( [   AX_SWIG_PYTHON_LIBS     = $AX_SWIG_PYTHON_LIBS ] )
-])
+AC_MSG_NOTICE("=== END OF NEW CODE ===")
 
-AS_IF([ test "x$swig_found" == "xyes" -a "x$python_found" == "xyes"],
-      [ python_and_swig_found="yes"],
-      [ python_and_swig_found="no"]
-     )
-AC_MSG_NOTICE( [python_and_swig_found  = $python_and_swig_found ])
 
-AS_IF([test "x$enable_swig" == "xyes" -a  "x$python_and_swig_found" != "xyes" ] ,
-      AC_MSG_ERROR( [--enable-swig requires that both Python and SWIG be installed] ) 
-     )
+dnl AC_MSG_NOTICE([prefix = ${prefix}])
+dnl AC_MSG_NOTICE(ac_default_[prefix = ${ac_default_prefix}])
+dnl AX_FIX_PYTHON_PATH($PYTHON, [pyexecdir], $pyexecdir, $prefix)
+
+
+
+ dnl === AC_PKG_SWIG call was here
+
 
 if test "x$enable_swig" = "xyes" ; then
   AC_MSG_NOTICE([Building with Python bindings])
@@ -583,17 +753,17 @@ if test "x$enable_swig" = "xyes" ; then
   dnl fi
 
 
-  dnl AC_SUBST(PYTHONDIR,$pythondir)
-  dnl AC_SUBST(PKGPYTHONDIR,$pkgpythondir)
-  dnl AC_SUBST(PYEXECDIR,$pyexecdir)
-  dnl AC_SUBST(PKGPYEXECDIR,$pkgpyexecdir)
+  dnl AC_SUBST(PYTHONDIR,    $pythondir)
+  dnl AC_SUBST(PKGPYTHONDIR, $pkgpythondir)
+  dnl AC_SUBST(PYEXECDIR,    $pyexecdir)
+  dnl AC_SUBST(PKGPYEXECDIR, $pkgpyexecdir)
 
 	AS_IF([ test "x$swig_found" == "xyes" -a "x$python_found" == "xyes"],
 	  AC_MSG_NOTICE( [pythondir    = $pythondir]    )
 	  AC_MSG_NOTICE( [pkgpythondir = $pkgpythondir] )
 	  AC_MSG_NOTICE( [pyexecdir    = $pyexecdir]    )
 	  AC_MSG_NOTICE( [pkgpyexecdir = $pkgpyexecdir] )
-
+:
     AC_SUBST(PYEXECDIR,$pyexecdir)
     AC_CONFIG_FILES( [src/swig/pylocal] )
     AC_CONFIG_FILES( [src/swig/set_pylocal_exec] )
@@ -602,9 +772,44 @@ if test "x$enable_swig" = "xyes" ; then
 
 fi
 
-AM_CONDITIONAL([ENABLE_PYTHON_SWIG],[test x$enable_swig = xyes])
 
-dnl m4_include([m4/ax_pkg_swig.m4])
+AC_ARG_VAR([PY2_EXECDIR], [Python 2 C extension directory])
+AC_ARG_VAR([PY3_EXECDIR], [Python 3 C extension directory])
+
+
+AC_MSG_NOTICE( [====================== Wolf 7])
+AC_MSG_NOTICE( [PY2_EXECDIR    = $PY2_EXECDIR])
+AC_MSG_NOTICE( [PY3_EXECDIR    = $PY3_EXECDIR])
+AC_MSG_NOTICE( [py2execdir     = $py2execdir])
+AC_MSG_NOTICE( [py3execdir     = $py3execdir])
+AC_MSG_NOTICE( [usr_py2execdir     = $usr_py2execdir])
+AC_MSG_NOTICE( [usr_py3execdir     = $usr_py3execdir])
+
+AS_IF( [ test -z "$PY2_EXECDIR" ], [
+   PY2_EXECDIR=${usr_py2execdir}
+] )
+AS_IF( [ test -z "$PY3_EXECDIR" ], [
+   PY3_EXECDIR=${usr_py3execdir}
+] )
+py2execdir=$PY2_EXECDIR
+py3execdir=$PY3_EXECDIR
+
+AC_MSG_NOTICE( [====================== Wolf 8])
+AC_MSG_NOTICE( [py2execdir     = $py2execdir])
+AC_MSG_NOTICE( [py3execdir     = $py3execdir])
+
+AC_SUBST(py2execdir,   $py2execdir)
+AC_SUBST(py3execdir,   $py3execdir)
+
+AC_MSG_NOTICE( [Wolf 9])
+
+AM_CONDITIONAL([ENABLE_PYTHON_SWIG],[test x$enable_swig   == xyes])
+dnl temporary crude flag:
+AM_CONDITIONAL([HAVE_PYTHON3],      [test x$enable_py3 == xyes])
+
+
+dnl AC_MSG_NOTICE([======================== required_packages:   $required_packages])
+AC_SUBST(REQUIRED_PACKAGES,$required_packages)
 
 
 ###
@@ -629,7 +834,9 @@ AC_MSG_RESULT([
 	enable_lib:             ${enable_lib}
 	enable_swig:            ${enable_swig}
 	enable_usb:             ${enable_usb}
-	enable_doxygen          ${enable_doxygen}
+	enable_doxygen:         ${enable_doxygen}
+
+	enable_failsim:         ${enable_failsim}
 
 	compiler:               ${CC}
 	cflags:                 ${CFLAGS}
