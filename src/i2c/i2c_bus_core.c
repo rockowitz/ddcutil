@@ -171,6 +171,7 @@ bool i2c_force_slave_addr_flag = false;
  */
 int i2c_set_addr(int file, int addr, Call_Options callopts) {
    bool debug = false;
+   callopts |= CALLOPT_ERR_MSG;    // temporary
    DBGMSF(debug, "file=%d, addr=0x%02x, callopts=%s", file, addr, interpret_call_options(callopts));
    // FAILSIM_EXT( ( show_backtrace(1) ) )
    FAILSIM;
@@ -178,12 +179,9 @@ int i2c_set_addr(int file, int addr, Call_Options callopts) {
    int rc = 0;
    int errsv = 0;
    uint16_t op = I2C_SLAVE;
-   // if (callopts & CALLOPT_FORCE_SLAVE) {
-   if (i2c_force_slave_addr_flag) {
-      DBGMSG("Using IOCTL op I2C_SLAVE_FORCE for address 0x%02x", addr );
-      op = I2C_SLAVE_FORCE;
-   }
 
+retry:
+   errno = 0;
    RECORD_IO_EVENT(
          IE_OTHER,
          ( rc = ioctl(file, op, addr) )
@@ -196,6 +194,14 @@ int i2c_set_addr(int file, int addr, Call_Options callopts) {
                             /*fatal=*/ callopts&CALLOPT_ERR_ABORT);
       else if (callopts & CALLOPT_ERR_ABORT)
          DDC_ABORT(DDCL_INTERNAL_ERROR);
+
+
+      if (errsv == EBUSY && i2c_force_slave_addr_flag && op == I2C_SLAVE) {
+         DBGMSG("Retrying using IOCTL op I2C_SLAVE_FORCE for address 0x%02x", addr );
+         op = I2C_SLAVE_FORCE;
+         goto retry;
+      }
+
       errsv = -errsv;
    }
 
