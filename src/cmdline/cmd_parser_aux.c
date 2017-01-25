@@ -235,25 +235,12 @@ bool validate_output_level(Parsed_Cmd* parsed_cmd) {
    Byte valid_output_levels;
    // Byte default_output_level = OL_NORMAL;
    switch(parsed_cmd->cmd_id) {
-#ifdef OLD
-      case (CMDID_DETECT):
-         valid_output_levels = OL_PROGRAM | OL_TERSE | OL_NORMAL | OL_VERBOSE;
-         break;
-      case (CMDID_GETVCP):
-         valid_output_levels = OL_PROGRAM | OL_TERSE | OL_NORMAL | OL_VERBOSE;
-         break;
-      case (CMDID_DUMPVCP):
-         valid_output_levels = OL_PROGRAM;
-         default_output_level = OL_PROGRAM;
-         break;
-#else
       case (CMDID_DETECT):
          valid_output_levels = OL_TERSE | OL_NORMAL | OL_VERBOSE;
          break;
       case (CMDID_GETVCP):
          valid_output_levels = OL_TERSE | OL_NORMAL | OL_VERBOSE;
          break;
-#endif
       default:
          // default_output_level = OL_NORMAL;
          valid_output_levels = OL_TERSE | OL_NORMAL | OL_VERBOSE;
