@@ -185,20 +185,13 @@ Base_Status_Errno_DDC ioctl_writer(int fh, int bytect, Byte * pbytes) {
    int rc = ioctl(fh, I2C_RDWR, &msgset);
    if (rc < 0) {
       if (debug) {
-#ifdef USE_LIBEXPLAIN
-         report_ioctl_error2(errno, fh, I2C_RDWR, &msgset, __func__, __LINE__-4, __FILE__, false /* fatal */ );
-#endif
-#ifndef USE_LIBEXPLAIN
          report_ioctl_error(errno, __func__, __LINE__-7, __FILE__, false /* fatal */ );
-#endif
-         // fprintf(stderr, "%s\n", explain_ioctl(fh, I2C_RDWR, &msgset));
       }
    }
    // DBGMSG("ioctl(..I2C_RDWR..) returned %d", rc);
 
    if (rc > 0) {
       // what should a positive value be equal to?  not bytect
-      // if (debug)
       if (rc != 1)
          DBGMSG("ioctl() write returned %d", rc);
       rc = 0;
@@ -207,8 +200,8 @@ Base_Status_Errno_DDC ioctl_writer(int fh, int bytect, Byte * pbytes) {
       // rc = modulate_rc(-errno, RR_ERRNO);
       rc = -errno;
    }
-   // if (debug)
-   //    DBGMSG("Returning %d", rc);
+
+   DBGMSF(debug, "Returning %d", rc);
    return rc;
 }
 
@@ -254,12 +247,7 @@ Base_Status_Errno_DDC ioctl_reader(int fh, int bytect, Byte * readbuf) {
    int rc =  ioctl(fh, I2C_RDWR, &msgset);
    if (rc < 0) {
       if (debug) {
-#ifdef USE_LIBEXPLAIN
-         report_ioctl_error2(errno, fh, I2C_RDWR, &msgset, __func__, __LINE__-4, __FILE__, false /* fatal */ );
-#endif
-#ifndef USE_LIBEXPLAIN
          report_ioctl_error(errno, __func__, __LINE__-7, __FILE__, false /* fatal */ );
-#endif
       }
    }
    // DBGMSG("ioctl(..I2C_RDWR..) returned %d", rc);
