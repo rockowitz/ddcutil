@@ -1,7 +1,7 @@
 /* query_sysenv.c
  *
  * <copyright>
- * Copyright (C) 2014-2016 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2014-2017 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -1413,6 +1413,34 @@ void query_sysenv() {
       char * subsys_name = "i2c-dev";
       printf("\nProbing I2C devices using udev, susbsystem %s...\n", subsys_name);
       probe_udev_subsystem(subsys_name, /*show_usb_parent=*/ false, 1);
+
+      GPtrArray * summaries = summarize_udev_subsystem_devices(subsys_name);
+      printf("\nSummary of udev I2C devices:\n");
+      if (!summaries || summaries->len == 0)
+         printf("No devices detected\n");
+      else {
+#ifdef REFERENCE
+#define UDEV_DEVICE_SUMMARY_MARKER "UDSM"
+typedef struct udev_device_summary {
+   char   marker[4];
+   const char * sysname;
+   const char * devpath;
+   const char * sysattr_name;
+} Udev_Device_Summary;
+#endif
+         printf("%-15s %-35s %s\n", "Sysname", "Sysattr Name", "Devpath");
+         for (int ndx = 0; ndx < summaries->len; ndx++) {
+            Udev_Device_Summary * summary = g_ptr_array_index(summaries, ndx);
+            assert( memcmp(summary->marker, UDEV_DEVICE_SUMMARY_MARKER, 4) == 0);
+            printf("%-15s %-35s %s\n",
+                   summary->sysname, summary->sysattr_name, summary->devpath);
+
+
+         }
+      }
+      free_udev_device_summaries(summaries);   // ok if summaries == NULL
+
+
 #endif
    }
 
