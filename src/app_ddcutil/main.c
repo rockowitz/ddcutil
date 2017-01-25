@@ -360,6 +360,12 @@ int main(int argc, char *argv[]) {
 
    int main_rc = EXIT_FAILURE;
 
+   Call_Options callopts = CALLOPT_NONE;
+   if (parsed_cmd->force_slave_addr)
+      callopts |= CALLOPT_FORCE_SLAVE;
+   if (parsed_cmd->force)
+      callopts |= CALLOPT_FORCE;
+
    set_output_level(parsed_cmd->output_level);
    show_recoverable_errors = parsed_cmd->ddcdata;
    // TMI:
@@ -458,11 +464,11 @@ int main(int argc, char *argv[]) {
       bool ok = true;
       if (parsed_cmd->pdid) {
          Display_Ref * dref = get_display_ref_for_display_identifier(
-                                 parsed_cmd->pdid, CALLOPT_ERR_MSG);
+                                 parsed_cmd->pdid, callopts | CALLOPT_ERR_MSG);
          if (!dref)
             ok = false;
          else {
-            ddc_open_display(dref, CALLOPT_ERR_ABORT | CALLOPT_ERR_MSG, &dh);  // rc == 0 iff dh
+            ddc_open_display(dref, callopts | CALLOPT_ERR_ABORT | CALLOPT_ERR_MSG, &dh);  // rc == 0 iff dh
             if (!dh)
                ok = false;
          }
@@ -546,7 +552,7 @@ int main(int argc, char *argv[]) {
                               parsed_cmd->pdid, callopts);
       if (dref) {
          Display_Handle * dh = NULL;
-         callopts = CALLOPT_ERR_ABORT | CALLOPT_ERR_MSG;
+         callopts |= CALLOPT_ERR_ABORT | CALLOPT_ERR_MSG;
          ddc_open_display(dref, callopts, &dh);
 
          if (dh) {
