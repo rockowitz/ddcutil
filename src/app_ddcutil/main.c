@@ -361,8 +361,10 @@ int main(int argc, char *argv[]) {
    int main_rc = EXIT_FAILURE;
 
    Call_Options callopts = CALLOPT_NONE;
-   if (parsed_cmd->force_slave_addr)
-      callopts |= CALLOPT_FORCE_SLAVE;
+   // TODO: remove CALLOPT_FORCE_SLAVE from callopts
+   // if (parsed_cmd->force_slave_addr)
+   //    callopts |= CALLOPT_FORCE_SLAVE;
+   i2c_force_slave_addr_flag = parsed_cmd->force_slave_addr;
    if (parsed_cmd->force)
       callopts |= CALLOPT_FORCE;
 

@@ -82,6 +82,7 @@ int  i2c_open_bus(int busno, Byte callopts);
 int  i2c_close_bus(int fd, int busno, Byte callopts);
 int  i2c_set_addr(int fd, int addr, Byte callopts);
 
+extern bool i2c_force_slave_addr_flag;
 
 // Bus functionality flags
 

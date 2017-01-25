@@ -226,7 +226,7 @@ Bitname_Table callopt_bitname_table = {
       {CALLOPT_RDONLY,      "CALLOPT_RDONLY"},
       {CALLOPT_WARN_FINDEX, "CALLOPT_WARN_FINDEX"},
       {CALLOPT_FORCE,       "CALLOPT_FORCE"},
-      {CALLOPT_FORCE_SLAVE, "CALLOPT_FORCE_SLAVE"},
+//      {CALLOPT_FORCE_SLAVE, "CALLOPT_FORCE_SLAVE"},
       {CALLOPT_NONE,        "CALLOPT_NONE"},
 };
 

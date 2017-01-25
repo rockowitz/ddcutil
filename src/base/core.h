@@ -87,7 +87,7 @@ typedef Byte Call_Options;
 #define CALLOPT_RDONLY       0x20    // open read-only
 #define CALLOPT_WARN_FINDEX  0x10    // issue warning msg re hiddev_field_info.field_index change
 #define CALLOPT_FORCE        0x08    // ignore various validity checks
-#define CALLOPT_FORCE_SLAVE  0x04    // use ioctl I2C_FORCE_SLAVE
+// #define CALLOPT_FORCE_SLAVE  0x04    // use ioctl I2C_FORCE_SLAVE
 
 // Return string interpretation of CALLOPT_ flag byte
 char * interpret_call_options_r(Byte calloptions, char * buffer, int bufsize);

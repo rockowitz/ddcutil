@@ -153,6 +153,9 @@ int i2c_close_bus(int fd, int busno, Byte callopts) {
 }
 
 
+bool i2c_force_slave_addr_flag = false;
+
+
 /* Sets I2C slave address to be used on subsequent calls
  *
  * Arguments:
@@ -175,7 +178,8 @@ int i2c_set_addr(int file, int addr, Call_Options callopts) {
    int rc = 0;
    int errsv = 0;
    uint16_t op = I2C_SLAVE;
-   if (callopts & CALLOPT_FORCE_SLAVE) {
+   // if (callopts & CALLOPT_FORCE_SLAVE) {
+   if (i2c_force_slave_addr_flag) {
       DBGMSG("Using IOCTL op I2C_SLAVE_FORCE");
       op = I2C_SLAVE_FORCE;
    }
