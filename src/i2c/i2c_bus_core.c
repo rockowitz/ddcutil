@@ -41,6 +41,7 @@
 #include "base/linux_errno.h"
 #include "base/parms.h"
 #include "base/sleep.h"
+#include "base/status_code_mgt.h"
 
 #include "i2c/i2c_do_io.h"
 #include "i2c/wrap_i2c-dev.h"
@@ -72,7 +73,7 @@ void report_businfo(Bus_Info * bus_info, int depth);
  *   callopts  call option flags, controlling failure action
  *
  * Returns:
- *    0 if success
+ *    file descriptor if success
  *    -errno if close fails and CALLOPT_ERR_ABORT not set in callopts
  */
 int i2c_open_bus(int busno, Byte callopts) {
@@ -119,13 +120,14 @@ int i2c_open_bus(int busno, Byte callopts) {
  *    0 if success
  *    -errno if close fails and CALLOPT_ERR_ABORT not set in callopts
  */
-int i2c_close_bus(int fd, int busno, Byte callopts) {
+Base_Status_Errno i2c_close_bus(int fd, int busno, Byte callopts) {
    bool debug = false;
    DBGMSF(debug, "Starting. fd=%d, callopts=0x%02x", fd, callopts);
 
-   errno = 0;
+   Base_Status_Errno result = 0;
    int rc = 0;
    RECORD_IO_EVENT(IE_CLOSE, ( rc = close(fd) ) );
+   assert( rc == 0 || rc == -1);   // per documentation
    int errsv = errno;
    if (rc < 0) {
       // EBADF (9)  fd isn't a valid open file descriptor
@@ -147,9 +149,10 @@ int i2c_close_bus(int fd, int busno, Byte callopts) {
       if (callopts & CALLOPT_ERR_MSG)
          f0printf(FERR, "%s\n", workbuf);
 
-      rc = errsv;
+      result = -errsv;
    }
-   return rc;
+   assert(result <= 0);
+   return result;
 }
 
 
@@ -169,14 +172,16 @@ bool i2c_force_slave_addr_flag = false;
  *    0 if success
  *    -errno if ioctl call fails and CALLOPT_ERR_ABORT not set in callopts
  */
-int i2c_set_addr(int file, int addr, Call_Options callopts) {
+Base_Status_Errno i2c_set_addr(int file, int addr, Call_Options callopts) {
    bool debug = false;
+   bool force_i2c_slave_failure = false;
    callopts |= CALLOPT_ERR_MSG;    // temporary
    DBGMSF(debug, "file=%d, addr=0x%02x, i2c_force_slave_addr_flag=%s, callopts=%s",
                  file, addr, bool_repr(i2c_force_slave_addr_flag), interpret_call_options(callopts));
    // FAILSIM_EXT( ( show_backtrace(1) ) )
    FAILSIM;
 
+   Base_Status_Errno result = 0;
    int rc = 0;
    int errsv = 0;
    uint16_t op = I2C_SLAVE;
@@ -187,36 +192,41 @@ retry:
          IE_OTHER,
          ( rc = ioctl(file, op, addr) )
         );
-   // if (op == I2C_SLAVE) {
-   //    DBGMSG("Forcing pseudo failure");
-   //    rc = -1;
-   //    errno=EBUSY;
-   // }
+   if (force_i2c_slave_failure) {
+      if (op == I2C_SLAVE) {
+         DBGMSG("Forcing pseudo failure");
+         rc = -1;
+         errno=EBUSY;
+      }
+   }
    errsv = errno;
 
    if (rc < 0) {
       if ( callopts & CALLOPT_ERR_MSG)
-         report_ioctl_error(errsv, __func__, __LINE__-11, __FILE__,
+         report_ioctl_error(errsv, __func__, __LINE__-13, __FILE__,
                             /*fatal=*/ callopts&CALLOPT_ERR_ABORT);
       else if (callopts & CALLOPT_ERR_ABORT)
          DDC_ABORT(DDCL_INTERNAL_ERROR);
 
       if (errsv == EBUSY && i2c_force_slave_addr_flag && op == I2C_SLAVE) {
          DBGMSG("Retrying using IOCTL op I2C_SLAVE_FORCE for address 0x%02x", addr );
+         // normally errors counted at higher level, but in this case it would be lost because of retry
+         COUNT_STATUS_CODE( modulate_rc(-errsv, RR_ERRNO));
          op = I2C_SLAVE_FORCE;
          debug = true;   // force final message for clarity
          goto retry;
       }
 
-      errsv = -errsv;
+      result = -errsv;
    }
 
-   if (errsv || debug) {
-      printf("(%s) addr = 0x%02x. Returning %d\n", __func__, addr, errsv);
+   if (result || debug) {
+      printf("(%s) addr = 0x%02x. Returning %d\n", __func__, addr, result);
       // show_backtrace(1);
    }
 
-   return errsv;
+   assert(result <= 0);
+   return result;
 }
 
 
@@ -296,16 +306,17 @@ bool * detect_all_addrs(int busno) {
  * The bus device has already been opened.
  *
  * Arguments:
- *   fd   file descriptor for open i2c device
- *   presult
+ *   fd       file descriptor for open i2c device
+ *   presult  where to return result byte
  *
- * Returns:
+ * Sets:
  *   Returns byte with flags possibly set:
  *    I2C_BUS_ADDR_0x50        true if addr x50 responds (EDID)
  *    I2C_BUS_ADDR_0x37        true if addr x37 responds (DDC commands)
  *
  * Returns:
- *    if < 0, modulated status code from i2c_set_addr()
+ *    0    success
+ *    < 0, modulated status code
  */
 // static
 Global_Status_Code detect_ddc_addrs_by_fd(int fd, Byte * presult) {
@@ -345,6 +356,7 @@ bye:
 
    *presult = result;
    DBGMSF(debug, "Done.  Returning gsc=%d, *presult = 0x%02x", *presult);
+   assert(gsc <= 0);
    return gsc;
 }
 

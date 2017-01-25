@@ -120,13 +120,14 @@ Global_Status_Code ddc_open_display(
          int fd = i2c_open_bus(dref->busno, callopts);
          if (fd < 0) {    // will be < 0 if open_i2c_bus failed and CALLOPT_ERR_ABORT not set
             gsc = modulate_rc(fd, RR_ERRNO);
-            // log_status_code( gsc, __func__);
+            // COUNT_STATUS_CODE(gsc);
             goto bye;
          }
 
          DBGMSF(debug, "Calling set_addr(0x37) for %s", dref_repr(dref));
-         int base_rc =  i2c_set_addr(fd, 0x37, callopts);
+         Base_Status_Errno base_rc =  i2c_set_addr(fd, 0x37, callopts);
          if (base_rc != 0) {
+            assert(base_rc < 0);
             close(fd);
             gsc = modulate_rc(base_rc, RR_ERRNO);
             goto bye;
@@ -195,8 +196,9 @@ Global_Status_Code ddc_open_display(
    // report_display_handle(pDispHandle, __func__);
 bye:
    if (gsc != 0)
-      log_status_code(gsc, __func__);
+      COUNT_STATUS_CODE(gsc);
    *pdh = pDispHandle;
+   assert(gsc <= 0);
    return gsc;
 }
 
@@ -218,10 +220,11 @@ void ddc_close_display(Display_Handle * dh) {
    switch(dh->io_mode) {
    case DDC_IO_DEVI2C:
       {
-         int rc = i2c_close_bus(dh->fh, dh->busno,  CALLOPT_NONE);    // return error if failure
+         Base_Status_Errno rc = i2c_close_bus(dh->fh, dh->busno,  CALLOPT_NONE);    // return error if failure
          if (rc != 0) {
+            assert(rc < 0);
             DBGMSG("close_i2c_bus returned %d", rc);
-            log_status_code(modulate_rc(rc, RR_ERRNO), __func__);
+            COUNT_STATUS_CODE(modulate_rc(rc, RR_ERRNO) );
          }
          dh->fh = -1;    // indicate invalid, in case we try to continue using dh
          break;
@@ -232,10 +235,11 @@ void ddc_close_display(Display_Handle * dh) {
    case USB_IO:
 #ifdef USE_USB
       {
-         int rc = usb_close_device(dh->fh, dh->hiddev_device_name, CALLOPT_NONE); // return error if failure
+         Base_Status_Errno rc = usb_close_device(dh->fh, dh->hiddev_device_name, CALLOPT_NONE); // return error if failure
          if (rc != 0) {
-            DBGMSG("usb_closedevice returned %d", rc);
-            log_status_code(modulate_rc(rc, RR_ERRNO), __func__);
+            assert(rc < 0);
+            DBGMSG("usb_close_device returned %d", rc);
+            COUNT_STATUS_CODE(modulate_rc(rc, RR_ERRNO));
          }
          dh->fh = -1;
          break;

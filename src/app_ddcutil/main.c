@@ -470,7 +470,7 @@ int main(int argc, char *argv[]) {
          if (!dref)
             ok = false;
          else {
-            ddc_open_display(dref, callopts | CALLOPT_ERR_ABORT | CALLOPT_ERR_MSG, &dh);  // rc == 0 iff dh
+            ddc_open_display(dref, callopts | CALLOPT_ERR_MSG, &dh);  // rc == 0 iff dh, removed CALLOPT_ERR_ABORT
             if (!dh)
                ok = false;
          }
@@ -554,7 +554,7 @@ int main(int argc, char *argv[]) {
                               parsed_cmd->pdid, callopts);
       if (dref) {
          Display_Handle * dh = NULL;
-         callopts |= CALLOPT_ERR_ABORT | CALLOPT_ERR_MSG;
+         callopts |=  CALLOPT_ERR_MSG;    // removed CALLOPT_ERR_ABORT
          ddc_open_display(dref, callopts, &dh);
 
          if (dh) {

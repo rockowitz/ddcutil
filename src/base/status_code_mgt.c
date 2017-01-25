@@ -261,15 +261,17 @@ Status_Code_Info * find_global_status_code_info(Global_Status_Code rc) {
    if (rc == 0)
       pinfo = &ok_status_code_info;
    else {
-   Retcode_Range_Id modulation = get_modulation(rc);
-   if (debug)
-      printf("(%s) modulation=%d\n", __func__, modulation);
+      Retcode_Range_Id modulation = get_modulation(rc);
+      if (debug)
+         printf("(%s) modulation=%d\n", __func__, modulation);
 
-   Retcode_Description_Finder finder_func = retcode_range_table[modulation].desc_finder;
-   assert(finder_func != NULL);
-   bool finder_arg_is_modulated = retcode_range_table[modulation].finder_arg_is_modulated;
-   int rawrc = (finder_arg_is_modulated) ? rc : demodulate_rc(rc, modulation);
-   pinfo = finder_func(rawrc);
+      Retcode_Description_Finder finder_func = retcode_range_table[modulation].desc_finder;
+      assert(finder_func != NULL);
+      bool finder_arg_is_modulated = retcode_range_table[modulation].finder_arg_is_modulated;
+      int rawrc = (finder_arg_is_modulated) ? rc : demodulate_rc(rc, modulation);
+      if (debug)
+         printf("(%s) rawrc = %d\n", __func__, rawrc);
+      pinfo = finder_func(rawrc);
    }
    if (debug) {
       printf("(%s) Done.  Returning %p", __func__, pinfo);

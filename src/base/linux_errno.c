@@ -1,7 +1,7 @@
 /* linux_errno.c
  *
  * <copyright>
- * Copyright (C) 2014-2016 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2014-2017 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -122,6 +122,7 @@ static Status_Code_Info dummy_errno_desc;
  */
 
 char * linux_errno_desc(int error_number) {
+   assert(error_number >= 0);
    Status_Code_Info * pdesc = find_errno_description(error_number);
    if (pdesc) {
       snprintf(workbuf, WORKBUF_SIZE, "%s(%d): %s",
@@ -154,6 +155,9 @@ char * linux_errno_name(int error_number) {
  * by calling strerror()
  */
 Status_Code_Info * find_errno_description(int errnum) {
+   bool debug = false;
+   if (debug)
+      printf("(%s) errnum=%d\n", __func__, errnum);
    Status_Code_Info * result = NULL;
    int ndx;
    for (ndx=0; ndx < errno_desc_ct; ndx++) {
@@ -167,6 +171,8 @@ Status_Code_Info * find_errno_description(int errnum) {
       result->description  = malloc(strlen(desc)+1);
       strcpy(result->description, desc);
    }
+   if (debug)
+      printf("(%s) Returning %p\n", __func__, result);
    return result;
 }
 
@@ -195,7 +201,11 @@ Status_Code_Info * get_errno_info(int errnum) {
 }
 
 
+// returns NULL if not found
 static Status_Code_Info * get_negative_errno_info(int errnum) {
+   bool debug = false;
+   if (debug)
+      printf("(%s) errnum=%d\n", __func__, errnum);
    return get_errno_info(-errnum);
 }
 

@@ -29,6 +29,7 @@
 #include <string.h>
 #include <time.h>
 
+#include "util/debug_util.h"
 #include "util/file_util.h"
 #include "util/report_util.h"
 #include "util/string_util.h"
@@ -158,6 +159,7 @@ void ddc_abort(
       const char * fn,
       int          status)
 {
+   show_backtrace(2);
    DBGMSG("global_abort_jmp_buf_ptr = %p", global_abort_jmp_buf_ptr);
    if (global_abort_jmp_buf_ptr) {
 

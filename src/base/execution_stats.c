@@ -267,7 +267,7 @@ int compare( const void* a, const void* b)
 
 
 void show_specific_status_counts(Status_Code_Counts * pcounts) {
-   bool debug = true;
+   bool debug = false;
    DBGMSF(debug, "Starting");
    if (pcounts->name)
       printf("%s:\n", pcounts->name);
@@ -298,10 +298,11 @@ void show_specific_status_counts(Status_Code_Counts * pcounts) {
          gpointer keyp = keysp[ndx];
          long key = GPOINTER_TO_INT(keyp);
          // DBGMSF(debug, "key:  %d   %p", key, keyp);
-         if (key == 0) {
-            DBGMSG("=====> Invalid status code key = %d", key);
-            break;
-         }
+         // wrong hunch about bug
+         // if (key == 0) {
+         //    DBGMSG("=====> Invalid status code key = %d", key);
+         //    break;
+         // }
          assert( GINT_TO_POINTER(key) == keyp);
 
          int ct  = GPOINTER_TO_INT(g_hash_table_lookup(pcounts->error_counts_hash,keyp));
@@ -318,9 +319,9 @@ void show_specific_status_counts(Status_Code_Counts * pcounts) {
             aux_msg = " (not an error)";
          fprintf(stdout, "%5d   %-28s (%5ld) %s %s\n",
               ct,
-              desc->name,
+              (desc) ? desc->name : "",
               key,
-              desc->description,
+              (desc) ? desc->description : "",
               aux_msg
              );
       }

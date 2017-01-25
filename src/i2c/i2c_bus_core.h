@@ -78,9 +78,9 @@ void i2c_report_active_display_by_busno(int busno, int depth);
 
 // Basic bus operations
 
-int  i2c_open_bus(int busno, Byte callopts);
-int  i2c_close_bus(int fd, int busno, Byte callopts);
-int  i2c_set_addr(int fd, int addr, Byte callopts);
+int                i2c_open_bus(int busno, Byte callopts);
+Base_Status_Errno  i2c_close_bus(int fd, int busno, Byte callopts);
+Base_Status_Errno  i2c_set_addr(int fd, int addr, Byte callopts);
 
 extern bool i2c_force_slave_addr_flag;
 

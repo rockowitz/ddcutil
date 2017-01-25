@@ -126,7 +126,7 @@ int usb_open_hiddev_device(char * hiddev_devname, Byte calloptions) {
  *    0 if success
  *    -errno if close fails and exit on failure was not specified
  */
-int usb_close_device(int fd, char * device_fn, Byte calloptions) {
+Base_Status_Errno usb_close_device(int fd, char * device_fn, Byte calloptions) {
    bool debug = false;
    DBGMSF(debug, "Starting. fd=%d, device_fn=%s, calloptions=0x%02x", fd, device_fn, calloptions);
 
@@ -134,6 +134,7 @@ int usb_close_device(int fd, char * device_fn, Byte calloptions) {
    int rc = 0;
    RECORD_IO_EVENT(IE_CLOSE, ( rc = close(fd) ) );
    int errsv = errno;
+   assert(rc<=0);
    if (rc < 0) {
       // EBADF  fd isn't a valid open file descriptor
       // EINTR  close() interrupted by a signal
@@ -154,8 +155,9 @@ int usb_close_device(int fd, char * device_fn, Byte calloptions) {
       if (calloptions & CALLOPT_ERR_MSG)
          fprintf(stderr, "%s\n", workbuf);
 
-      rc = errsv;
+      rc = -errsv;
    }
+   assert(rc <= 0);
    return rc;
 }
 
@@ -164,7 +166,11 @@ int usb_close_device(int fd, char * device_fn, Byte calloptions) {
 // Wrapper hiddev ioctl calls
 //
 
-int hiddev_get_device_info(int fd, struct hiddev_devinfo * dev_info, Byte calloptions) {
+Base_Status_Errno
+hiddev_get_device_info(
+      int                      fd,
+      struct hiddev_devinfo *  dev_info,
+      Byte                     calloptions) {
    assert(dev_info);
 
    int rc = ioctl(fd, HIDIOCGDEVINFO, dev_info);
@@ -175,8 +181,10 @@ int hiddev_get_device_info(int fd, struct hiddev_devinfo * dev_info, Byte callop
 
       if (calloptions & CALLOPT_ERR_ABORT)
          DDC_ABORT(errsv);
+      rc = -errsv;
   }
 
+  assert(rc <= 0);
   return rc;
 }
 
