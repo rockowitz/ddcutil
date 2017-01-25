@@ -120,9 +120,10 @@ Global_Status_Code ddc_open_display(
          int fd = i2c_open_bus(dref->busno, callopts);
          if (fd < 0) {    // will be < 0 if open_i2c_bus failed and CALLOPT_ERR_ABORT not set
             gsc = modulate_rc(fd, RR_ERRNO);
-            log_status_code( gsc, __func__);
+            // log_status_code( gsc, __func__);
             goto bye;
          }
+
          DBGMSF(debug, "Calling set_addr(0x37) for %s", dref_repr(dref));
          int base_rc =  i2c_set_addr(fd, 0x37, callopts);
          if (base_rc != 0) {
@@ -175,7 +176,7 @@ Global_Status_Code ddc_open_display(
          int fd = usb_open_hiddev_device(dref->usb_hiddev_name, callopts);
          if (fd < 0) {
             gsc = modulate_rc(fd, RR_ERRNO);
-            log_status_code(gsc,__func__);
+            // log_status_code(gsc,__func__);
             goto bye;
          }
          pDispHandle = create_usb_display_handle_from_display_ref(fd, dref);
@@ -193,6 +194,8 @@ Global_Status_Code ddc_open_display(
       call_tuned_sleep_i2c(SE_POST_OPEN);
    // report_display_handle(pDispHandle, __func__);
 bye:
+   if (gsc != 0)
+      log_status_code(gsc, __func__);
    *pdh = pDispHandle;
    return gsc;
 }
@@ -211,7 +214,7 @@ void ddc_close_display(Display_Handle * dh) {
       DBGMSG("Starting.");
       report_display_handle(dh, __func__, 1);
    }
-   // bool failure_action = RETURN_ERROR_IF_FAILURE;
+
    switch(dh->io_mode) {
    case DDC_IO_DEVI2C:
       {
