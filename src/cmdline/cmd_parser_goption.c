@@ -172,6 +172,7 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
 // gboolean stats_flag     = false;
    gboolean ddc_flag       = false;
    gboolean force_flag     = false;
+   gboolean force_slave_flag = false;
    gboolean show_unsupported_flag = false;
    gboolean version_flag   = false;
    gboolean timestamp_trace_flag = false;
@@ -219,6 +220,8 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
       {"maxtries",'\0', 0, G_OPTION_ARG_STRING,   &maxtrywork,       "Max try adjustment",  "comma separated list" },
       {"stats",   's',  G_OPTION_FLAG_OPTIONAL_ARG,
                            G_OPTION_ARG_CALLBACK, stats_arg_func,    "Show retry statistics",    "stats type"},
+      {"force-slave-address",
+                  '\0', 0, G_OPTION_ARG_NONE,     &force_slave_flag, "Force I2C slave address",     NULL},
       {"force",   'f',  0, G_OPTION_ARG_NONE,     &force_flag,       "Ignore certain checks",     NULL},
 
       // debugging
@@ -292,6 +295,7 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
 
    parsed_cmd->ddcdata          = ddc_flag;
    parsed_cmd->force            = force_flag;
+   parsed_cmd->force_slave_addr = force_slave_flag;
    parsed_cmd->show_unsupported = show_unsupported_flag;
    parsed_cmd->output_level     = output_level;
    parsed_cmd->stats_types      = stats_work;

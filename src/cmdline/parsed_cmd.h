@@ -76,6 +76,7 @@ struct {
    bool                programmatic_output;
 #endif
    bool                force;
+   bool                force_slave_addr;
    bool                timestamp_trace;    // prepend trace and debug msgs with elapsed time
    bool                show_unsupported;
    bool                enable_failure_simulation;

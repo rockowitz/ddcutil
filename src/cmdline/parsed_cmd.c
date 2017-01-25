@@ -74,6 +74,7 @@ void report_parsed_cmd(Parsed_Cmd * parsed_cmd, int depth) {
 #endif
    rpt_str( "output_level",NULL,  output_level_name(parsed_cmd->output_level), d1);
    rpt_bool("force",       NULL,  parsed_cmd->force,                  d1);
+   rpt_bool("force_slave_addr", NULL, parsed_cmd->force_slave_addr,   d1);
    rpt_bool("show_unsupported", NULL, parsed_cmd->show_unsupported,   d1);
    rpt_bool("timestamp_trace", NULL,  parsed_cmd->timestamp_trace,    d1);
    rpt_int_as_hex(
