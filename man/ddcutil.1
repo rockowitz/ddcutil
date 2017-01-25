@@ -45,6 +45,8 @@ ddcutil \- Query and change monitor settings
 .RB [ --timestamp | --ts]
 .RB [ --maxtries 
 .IR  comma separated list ]
+.RB [ "--force-slave-address" ]
+.RB [ "-f" | "--force" ]
 .RB [ "-V" | "--version" ]
 .RB [ "h"  | "--help" ]
 .BR detect " |  " listvcp  " | " capabilities " | " getvcp " | " probe 
@@ -257,6 +259,9 @@ Options to tune execution:
 .TQ
 .BI "--maxtries " "(max-read-tries, max-write-read-tries, max-multi-part-read-tries)"
 Adjust the number of retries
+.TQ
+.B "--force-slave-address"
+Take control of slave addresses on the I2C bus even they are in use.
 .TQ
 .B "-f, --force"
 Do not check certain parameters. 
