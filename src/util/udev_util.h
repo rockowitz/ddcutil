@@ -1,7 +1,7 @@
 /* udev_util.h
  *
  * <copyright>
- * Copyright (C) 2016 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2016-2017 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -24,8 +24,20 @@
 #ifndef UDEV_UTIL_H_
 #define UDEV_UTIL_H_
 
+#include <glib.h>
 #include <libudev.h>
 #include <stdint.h>
+
+#define UDEV_DEVICE_SUMMARY_MARKER "UDSM"
+typedef struct udev_device_summary {
+   char   marker[4];
+   const char * sysname;
+   const char * devpath;
+   const char * sysattr_name;
+} Udev_Device_Summary;
+
+void free_udev_device_summaries(GPtrArray* summaries);
+GPtrArray * summarize_udev_subsystem_devices(char * subsystem);
 
 void report_udev_device(struct udev_device * dev, int depth);
 void probe_udev_subsystem(char * udev_class, bool show_usb_parent, int depth);

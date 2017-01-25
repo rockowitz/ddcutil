@@ -1,7 +1,7 @@
 /* udev_util.c
  *
  * <copyright>
- * Copyright (C) 2016 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2016-2017 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -24,6 +24,7 @@
 // Adapted from source code at http://www.signal11.us/oss/udev/
 
 #include <assert.h>
+#include <glib.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -32,6 +33,73 @@
 #include "util/string_util.h"
 
 #include "util/udev_util.h"
+
+
+
+
+void free_udev_device_summary(gpointer data) {
+   if (data) {
+      Udev_Device_Summary * summary = (Udev_Device_Summary *) data;
+      assert(memcmp(summary->marker, UDEV_DEVICE_SUMMARY_MARKER, 4) == 0);
+      // no need to free strings, they are consts
+   free(summary);
+   }
+}
+
+void free_udev_device_summaries(GPtrArray* summaries) {
+   g_ptr_array_set_free_func(summaries, free_udev_device_summary);
+   g_ptr_array_free(summaries, true);
+}
+
+Udev_Device_Summary * get_udev_device_summary(struct udev_device * dev) {
+  Udev_Device_Summary * summary = calloc(1,sizeof(struct udev_device_summary));
+  memcpy(summary->marker, UDEV_DEVICE_SUMMARY_MARKER, 4);
+  // n. all strings returned are chonst char *
+  summary->devpath      = udev_device_get_devpath(dev);
+  summary->sysname      = udev_device_get_sysname(dev);
+  summary->sysattr_name = udev_device_get_sysattr_value(dev, "name");
+  return summary;
+}
+
+
+GPtrArray * summarize_udev_subsystem_devices(char * subsystem) {
+
+   struct udev *udev;
+   struct udev_enumerate *enumerate;
+   struct udev_list_entry *devices, *dev_list_entry;
+   struct udev_device *dev;
+
+   /* Create the udev object */
+   udev = udev_new();
+   if (!udev) {
+      printf("(%s) Can't create udev\n", __func__);
+      return NULL;   // exit(1);
+   }
+
+   GPtrArray * summaries = g_ptr_array_sized_new(10);
+
+   /* Create a list of the devices in the specified subsystem. */
+   enumerate = udev_enumerate_new(udev);
+   udev_enumerate_add_match_subsystem(enumerate, subsystem);
+   udev_enumerate_scan_devices(enumerate);
+   devices = udev_enumerate_get_list_entry(enumerate);
+   /* For each item enumerated, print out its information.
+      udev_list_entry_foreach is a macro which expands to
+      a loop. The loop will be executed for each member in
+      devices, setting dev_list_entry to a list entry
+      which contains the device's path in /sys. */
+   udev_list_entry_foreach(dev_list_entry, devices) {
+      const char *path;
+
+      /* Get the filename of the /sys entry for the device
+         and create a udev_device object (dev) representing it */
+      path = udev_list_entry_get_name(dev_list_entry);
+      dev = udev_device_new_from_syspath(udev, path);
+
+      g_ptr_array_add(summaries, get_udev_device_summary(dev));
+   }
+   return summaries;
+}
 
 
 /* Report on a single udev device
