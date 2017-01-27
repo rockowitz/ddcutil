@@ -4,7 +4,8 @@ $(GLIB_CFLAGS) \
 
 
 
-AM_CFLAGS = -Wall -Werror
+AM_CFLAGS = -Wall 
+AM_CFLAGS += -Werror
 
 if ENABLE_CALLGRAPH_COND
 AM_CFLAGS += -fdump-rtl-expand
