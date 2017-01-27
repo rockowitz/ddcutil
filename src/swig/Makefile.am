@@ -5,9 +5,16 @@ ddc_swig_wrap.c    \
 ddc_swig_py
 # ddc_swig.pyc       \
 # ddc_swig.pyo	
-# CLEANFILES = ${generated_source_files}
+CLEANFILES = ${generated_source_files}
 
 EXTRA_DIST = ddc_swig.i 
+
+# deleting files from distribution fails if done here
+# needs to be done from src/Makefile.am - why?
+
+dist-hook:
+	@echo "(src/swig/Makefile) dist-hook.  distdir=$(distdir) top_distdir=$(top_distdir)"
+
 
 # For some reason, if ddc_swig.py is in CLEANFILES, it is not deleted.   
 # Just do the work in clean-local
@@ -15,7 +22,7 @@ EXTRA_DIST = ddc_swig.i
 clean-local:
 	@echo "(src/swig/clean-local)"
 	@echo "  CLEANFILES = |$(CLEANFILES)|"
-	rm -rf ddc_swig_wrap.c ddc_swig.py *.pyc *.pyo ddc_swig3_wrap.c ddc_swig3.py
+	rm -f ddc_swig_wrap.c ddc_swig.py *.pyc *.pyo ddc_swig3_wrap.c ddc_swig3.py
 
 
 if ENABLE_PYTHON_SWIG
@@ -27,8 +34,8 @@ py3exec_LTLIBRARIES = _ddc_swig3.la
 # Corresponding extension module Python files
 # Files in PYTHON primary are byte-compiled into .pyc and .pyo at install time.
 # Uses pyexec_ prefix so it will be installed in same site-packages exec directory as the extension module
-py2exec_PYTHON = ddc_swig.py
-py3exec_PYTHON = ddc_swig3.py
+nodist_py2exec_PYTHON = ddc_swig.py
+nodist_py3exec_PYTHON = ddc_swig3.py
 
 # Flags when compiling files in _ddc_swig_la_SOURCES
 _ddc_swig_la_CFLAGS = $(PYTHON_CFLAGS) 
@@ -181,8 +188,10 @@ show_vars:
 
 # hack, how to look up compile include directory?   BUT NO LONGER NEEDED 
 # swig_incs=-I/usr/lib/gcc/x86_64-linux-gnu/5/include -I/usr/include 
-	                     
-ddc_swig_wrap.c: ddc_swig.i ddc_swig.c ddc_swig.h show_vars  
+	                    
+# add show_vars to dependencies for debugging
+
+ddc_swig_wrap.c: ddc_swig.i ddc_swig.c ddc_swig.h   
 	@echo "===> (src/swig/Makefile) Executing target ddc_swig_wrap.c"
 	$(SWIG)   -I${top_srcdir}/src -I$(top_srcdir)/src/public  -includeall -o ddc_swig_wrap.c -python ddc_swig.i
 			     
@@ -190,7 +199,7 @@ ddc_swig.py: ddc_swig_wrap.c
 	@echo "===> (src/swig/Makefile) Executing target ddc_swig.py"
 
 	                     
-ddc_swig3_wrap.c: ddc_swig.i ddc_swig.c ddc_swig.h show_vars  
+ddc_swig3_wrap.c: ddc_swig.i ddc_swig.c ddc_swig.h  
 	@echo "===> (src/swig/Makefile) Executing target ddc_swig3_wrap.c"
 	$(SWIG)   -I${top_srcdir}/src -DPYTHON3 -I$(top_srcdir)/src/public  -includeall -o ddc_swig3_wrap.c -python ddc_swig.i 
 			     

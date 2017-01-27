@@ -61,6 +61,8 @@ AC_CONFIG_MACRO_DIR([m4])
 AC_CONFIG_FILES([
 	Makefile 
 	src/Makefile 
+  src/util/Makefile
+  src/usb_util/Makefile
   src/swig/Makefile 
   src/gobject_api/Makefile 
 	man/Makefile 
@@ -731,18 +733,9 @@ AM_CONDITIONAL([ENABLE_PY3], [test x"$enable_py3" = xyes])
 AM_COND_IF([ENABLE_PY3], [AC_DEFINE([ENABLE_PY3], [1], [Python3 is enabled])])
 
 
-
-AC_MSG_NOTICE("=== END OF NEW CODE ===")
-
-
 dnl AC_MSG_NOTICE([prefix = ${prefix}])
 dnl AC_MSG_NOTICE(ac_default_[prefix = ${ac_default_prefix}])
 dnl AX_FIX_PYTHON_PATH($PYTHON, [pyexecdir], $pyexecdir, $prefix)
-
-
-
- dnl === AC_PKG_SWIG call was here
-
 
 if test "x$enable_swig" = "xyes" ; then
   AC_MSG_NOTICE([Building with Python bindings])
@@ -770,38 +763,39 @@ if test "x$enable_swig" = "xyes" ; then
 
 	)
 
+
+  AC_ARG_VAR([PY2_EXECDIR], [Python 2 C extension directory])
+  AC_ARG_VAR([PY3_EXECDIR], [Python 3 C extension directory])
+
+  AS_IF( [test 0$DBG -ne 0], [
+     AC_MSG_NOTICE( [PY2_EXECDIR    = $PY2_EXECDIR])
+     AC_MSG_NOTICE( [PY3_EXECDIR    = $PY3_EXECDIR])
+     AC_MSG_NOTICE( [py2execdir     = $py2execdir])
+     AC_MSG_NOTICE( [py3execdir     = $py3execdir])
+     AC_MSG_NOTICE( [usr_py2execdir     = $usr_py2execdir])
+     AC_MSG_NOTICE( [usr_py3execdir     = $usr_py3execdir])
+  ])
+
+  AS_IF( [ test -z "$PY2_EXECDIR" ], [
+     PY2_EXECDIR=${usr_py2execdir}
+  ] )
+  AS_IF( [ test -z "$PY3_EXECDIR" ], [
+     PY3_EXECDIR=${usr_py3execdir}
+  ] )
+
+  py2execdir=$PY2_EXECDIR
+  py3execdir=$PY3_EXECDIR
+
+  AS_IF( [test 0$DBG -ne 0], [
+     AC_MSG_NOTICE( [====================== Wolf 8])
+     AC_MSG_NOTICE( [py2execdir     = $py2execdir])
+     AC_MSG_NOTICE( [py3execdir     = $py3execdir])
+  ])
+
+  AC_SUBST(py2execdir,   $py2execdir)
+  AC_SUBST(py3execdir,   $py3execdir)
+
 fi
-
-
-AC_ARG_VAR([PY2_EXECDIR], [Python 2 C extension directory])
-AC_ARG_VAR([PY3_EXECDIR], [Python 3 C extension directory])
-
-
-AC_MSG_NOTICE( [====================== Wolf 7])
-AC_MSG_NOTICE( [PY2_EXECDIR    = $PY2_EXECDIR])
-AC_MSG_NOTICE( [PY3_EXECDIR    = $PY3_EXECDIR])
-AC_MSG_NOTICE( [py2execdir     = $py2execdir])
-AC_MSG_NOTICE( [py3execdir     = $py3execdir])
-AC_MSG_NOTICE( [usr_py2execdir     = $usr_py2execdir])
-AC_MSG_NOTICE( [usr_py3execdir     = $usr_py3execdir])
-
-AS_IF( [ test -z "$PY2_EXECDIR" ], [
-   PY2_EXECDIR=${usr_py2execdir}
-] )
-AS_IF( [ test -z "$PY3_EXECDIR" ], [
-   PY3_EXECDIR=${usr_py3execdir}
-] )
-py2execdir=$PY2_EXECDIR
-py3execdir=$PY3_EXECDIR
-
-AC_MSG_NOTICE( [====================== Wolf 8])
-AC_MSG_NOTICE( [py2execdir     = $py2execdir])
-AC_MSG_NOTICE( [py3execdir     = $py3execdir])
-
-AC_SUBST(py2execdir,   $py2execdir)
-AC_SUBST(py3execdir,   $py3execdir)
-
-AC_MSG_NOTICE( [Wolf 9])
 
 AM_CONDITIONAL([ENABLE_PYTHON_SWIG],[test x$enable_swig   == xyes])
 dnl temporary crude flag:

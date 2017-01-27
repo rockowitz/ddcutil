@@ -1,6 +1,6 @@
 ## Process this file with automake to produce Makefile.in
 
-SUBDIRS = . gobject_api swig 
+SUBDIRS = util usb_util  . gobject_api swig 
 
 MOSTLYCLEANFILES =   
 
@@ -45,6 +45,10 @@ clean-local:
 	find . -name "*.lo" -type f -exec rm -f {} \;
 	find . -name "*.o" -type f -exec ls -l {} \;
 	find . -name "*.o" -type f -exec rm -f {} \;
+	find . -name ".deps" -type d 
+	find . -name ".deps" -type d -exec ls -ld  {} \;
+	find . -path "*/.deps/*" -exec ls -l {} \;    
+
 
 
 mostlyclean-local:
@@ -186,18 +190,6 @@ ddc/try_stats.c             	\
 i2c/i2c_base_io.c          	    \
 i2c/i2c_bus_core.c          	\
 i2c/i2c_do_io.c    	        	\
-util/data_structures.c	    	\
-util/debug_util.c               \
-util/device_id_util.c       	\
-util/edid.c 		        	\
-util/file_util.c				\
-util/glib_util.c		        \
-util/multi_level_map.c 		    \
-util/output_sink.c 				\
-util/report_util.c 				\
-util/string_util.c 				\
-util/subprocess_util.c			\
-util/x11_util.c 				\
 vcp/ddc_command_codes.c			\
 vcp/parse_capabilities.c 		\
 vcp/parsed_capabilities_feature.c \
@@ -225,22 +217,9 @@ libcommon_la_SOURCES += \
   usb/usb_base.c \
   usb/usb_edid.c \
   usb/usb_displays.c  \
-  usb/usb_vcp.c  \
-  usb_util/usb_hid_common.c \
-  usb_util/hiddev_reports.c \
-  usb_util/hiddev_util.c \
-  usb_util/hidraw_util.c \
-  usb_util/libusb_reports.c \
-  usb_util/libusb_util.c \
-  usb_util/base_hid_report_descriptor.c \
-  usb_util/hid_report_descriptor.c \
-  util/udev_util.c 
+  usb/usb_vcp.c  
 endif
 
-if ENABLE_FAILSIM_COND
-libcommon_la_SOURCES += \
-  util/failsim.c        
-endif
 
 if ENABLE_SHARED_LIB_COND
 include_HEADERS = \
@@ -249,10 +228,25 @@ public/ddcutil_c_api.h
 endif
 
 
+# Notes: 
+# 1) Following line fails because list of file is archived internally, get file not found errors after remove
+#	find $(top_distdir) -name ".deps" -exec rm -rf {} \;
+#   Use pipe to xargs rm -rf instead 
+# 2) Why explicit copy of .h files?
+# 3) find statements in src/usb_util/Makefile.am find nothing, but those here work.  why?
+
+
 dist-hook:
-	@echo "Executing hook dist-hook..."
+	@echo "(src/Makefile) Executing hook dist-hook.top_distdir=$(top_distdir) distdir=$(distdir).."
 	find .  -type f | grep  \.h$ | xargs -i cp --parents "{}" $(distdir)
-    
+	find $(distdir) -name ".deps" | xargs rm -rf 
+	find $(distdir) -name ".libs" | xargs rm -rf 
+	find $(distdir) -name "*.lo"  | xargs rm 
+	find $(distdir) -name "*.o"   | xargs rm
+	rm -rf $(distdir)/swig/pyenv
+	rm -rf $(distdir)/swig/__pycache__
+
+
 
 
 # Header files
@@ -309,6 +303,14 @@ laclient_CFLAGS         = $(AM_CFLAGS)  -fPIC
 # Be careful about library ordering. 
 # A library must be listed after any libraries that depend on it
 #
+
+libcommon_la_LIBADD = \
+util/libutil.la 
+
+if ENABLE_USB_COND
+libcommon_la_LIBADD += usb_util/libusbutil.la
+endif
+
 
 libddcutil_la_LIBADD = -lz
 libddcutil_la_LIBADD +=  \
