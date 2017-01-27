@@ -1,5 +1,5 @@
 #!/bin/sh
-echo "build_dpkg executing"
+echo "(build_dpkg) executing"
 echo $1
 echo $2
 
@@ -61,4 +61,4 @@ obsdeb)  echo "case obsdeb"
 
 esac
 
-echo "WOLF "
+echo "(build_dpkg) Done"
