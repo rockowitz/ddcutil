@@ -83,7 +83,7 @@ char * join_string_g_ptr_array(GPtrArray* strings, char * sepstr) {
    }
    char * catenated = strjoin((const char**) pieces, ct, sepstr);
    if (debug)
-      fprintf(stdout, "(%s) strlen(catenated)=%ld, catenated=%p, catenated=|%s|\n",
+      fprintf(stdout, "(%s) strlen(catenated)=%zd, catenated=%p, catenated=|%s|\n",
                       __func__, strlen(catenated), catenated, catenated);
 
 #ifdef GLIB_VARIANT
