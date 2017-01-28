@@ -61,7 +61,7 @@
 static Trace_Group TRACE_GROUP = TRC_DDC;
 
 // Tests if a range of bytes is entirely 0
-static bool all_zero(Byte * bytes, int bytect) {
+bool all_zero(Byte * bytes, int bytect) {
    bool result = true;
    int ndx = 0;
    for (; ndx < bytect; ndx++) {

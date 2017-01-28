@@ -49,12 +49,6 @@
 #include "i2c/i2c_bus_core.h"
 
 
-// maximum number of i2c buses this code supports
-#define I2C_BUS_MAX 32
-
-// Addresses on an I2C bus are 7 bits in size
-#define BUS_ADDR_MAX 128
-
 // Trace class for this file
 static Trace_Group TRACE_GROUP = TRC_I2C;
 
@@ -257,10 +251,10 @@ bool * detect_all_addrs_by_fd(int fd) {
 
    unsigned char byte_to_write = 0x00;
    int addr;
-   addrmap = calloc(BUS_ADDR_MAX, sizeof(bool));
+   addrmap = calloc(I2C_SLAVE_ADDR_MAX, sizeof(bool));
    //bool addrmap[128] = {0};
 
-   for (addr = 3; addr < BUS_ADDR_MAX; addr++) {
+   for (addr = 3; addr < I2C_SLAVE_ADDR_MAX; addr++) {
       int rc;
       i2c_set_addr(fd, addr, CALLOPT_ERR_ABORT || CALLOPT_ERR_MSG);
       rc = invoke_i2c_reader(fd, 1, &byte_to_write);

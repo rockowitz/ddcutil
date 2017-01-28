@@ -36,6 +36,13 @@
 #include "base/status_code_mgt.h"
 
 
+// maximum number of i2c buses this code supports
+#define I2C_BUS_MAX 32
+
+// Addresses on an I2C bus are 7 bits in size
+#define I2C_SLAVE_ADDR_MAX 128
+
+
 // Retrieve and inspect bus information
 
 #define I2C_BUS_EXISTS        0x80

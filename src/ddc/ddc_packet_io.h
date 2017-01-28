@@ -34,6 +34,8 @@
 #include "base/displays.h"
 
 
+bool all_zero(Byte * bytes, int bytec);
+
 Global_Status_Code ddc_open_display(
       Display_Ref *    dref,
       Call_Options     callopts,
