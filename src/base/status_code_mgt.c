@@ -286,7 +286,8 @@ Status_Code_Info * find_global_status_code_info(Global_Status_Code rc) {
 static char workbuf[WORKBUF_SIZE];
 
 // Returns status code description:
-char * gsc_desc(Global_Status_Code status_code) { // must be freed after use
+char * gsc_desc(Global_Status_Code status_code) {
+   // printf("(%s) status_code=%d\n", __func__, status_code);
    Status_Code_Info * pdesc = find_global_status_code_info(status_code);
    if (pdesc) {
       snprintf(workbuf, WORKBUF_SIZE, "%s(%d): %s",
@@ -343,6 +344,7 @@ bool gsc_name_to_modulated_number(const char * status_code_name, Global_Status_C
    *p_error_number = gsc;
    return found;
 }
+
 
 
 
