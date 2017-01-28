@@ -97,6 +97,23 @@ static Status_Code_Info errno_desc[] = {
       EDENTRY(ERANGE,   "Math result not representable"),        // 34
       // break in seq
       EDENTRY(EPROTO,   "Protocol error"),                       // 71
+
+
+      EDENTRY(ENOTSOCK,              "Socket operation on non-socket"),    // 88
+      EDENTRY(EDESTADDRREQ,          "Destination address required"),      // 89
+      EDENTRY(EMSGSIZE,              "Message too long"),                  // 90
+      EDENTRY(EPROTOTYPE,            "Protocol wrong type for socket"),    // 91
+      EDENTRY(ENOPROTOOPT,           "Protocol not available"),            // 92
+      EDENTRY(EPROTONOSUPPORT,       "Protocol not supported"),            // 93
+      EDENTRY(ESOCKTNOSUPPORT,       "Socket type not supported"),         // 94
+      EDENTRY(EOPNOTSUPP,            "Operation not supported on transport endpoint"),   //95
+      EDENTRY(EPFNOSUPPORT,          "Protocol family not supported"),     // 96
+      EDENTRY(EAFNOSUPPORT,          "Address family not supported by protocol"),   //97
+      EDENTRY(EADDRINUSE,            "Address already in use"),            // 98
+      EDENTRY(EADDRNOTAVAIL,         "Cannot assign requested address"),   // 99
+
+
+
 };
 #undef EDENTRY
 static const int errno_desc_ct = sizeof(errno_desc)/sizeof(Status_Code_Info);
@@ -122,6 +139,9 @@ static Status_Code_Info dummy_errno_desc;
  */
 
 char * linux_errno_desc(int error_number) {
+   bool debug = false;
+   if (debug)
+      printf("(%s) error_number = %d\n", __func__, error_number);
    assert(error_number >= 0);
    Status_Code_Info * pdesc = find_errno_description(error_number);
    if (pdesc) {
