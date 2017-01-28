@@ -332,6 +332,59 @@ Null_Terminated_String_Array strsplit(const char * str_to_split, const char * de
 }
 
 
+Null_Terminated_String_Array
+strsplit_maxlength(
+      const char * str_to_split,
+      uint16_t max_piece_length,
+      const char * delims)
+{
+   bool debug = false;
+   if (debug)
+      printf("(%s) max_piece_length=%u, delims=|%s|, str_to_split=|%s|\n",
+             __func__, max_piece_length, delims, str_to_split);
+   GPtrArray * pieces = g_ptr_array_sized_new(20);
+   char * str_to_split2 = strdup(str_to_split);   // work around constness
+   char * start = str_to_split2;
+   char * str_to_split2_end = str_to_split2 + strlen(str_to_split);
+   if (debug)
+      printf("(%s)x start=%p, str_to_split2_end=%p\n", __func__, start, str_to_split2_end);
+   while (start < str_to_split2_end) {
+      if (debug)
+         printf("(%s) start=%p, str_to_split2_end=%p\n", __func__, start, str_to_split2_end);
+      char * end = start + max_piece_length;
+      if (end > str_to_split2_end)
+         end = str_to_split2_end;
+      if (delims) {
+         char * last = end-1;
+         while(last >= start) {
+            // printf("(%s) last = %p\n", __func__, last);
+            if (strchr(delims, *last)) {
+               end = last+1;
+               break;
+            }
+            last--;
+         }
+      }
+      char * piece = strndup(start, end-start);
+      g_ptr_array_add(pieces, piece);
+      start = start + strlen(piece);
+   }
+
+   Null_Terminated_String_Array result =
+          g_ptr_array_to_ntsa(pieces);
+   g_ptr_array_free(pieces, false);
+   free(str_to_split2);
+   if (debug)
+      null_terminated_string_array_show(result);
+   return result;
+
+}
+
+
+
+
+
+
 void null_terminated_string_array_free(Null_Terminated_String_Array string_array) {
    assert(string_array);
    int ndx = 0;
@@ -362,6 +415,36 @@ void null_terminated_string_array_show(Null_Terminated_String_Array string_array
    }
    printf("Total entries: %d\n", ndx);
 }
+
+
+/* Converts a Null_Terminated_String_Array to a GPtrArry.
+ * The underlying strings are referenced, not duplicated.
+ */
+GPtrArray * ntsa_to_g_ptr_array(Null_Terminated_String_Array ntsa) {
+   int len = null_terminated_string_array_length(ntsa);
+   GPtrArray * garray = g_ptr_array_sized_new(len);
+   int ndx;
+   for (ndx=0; ndx<len; ndx++) {
+      g_ptr_array_add(garray, ntsa[ndx]);
+   }
+   return garray;
+}
+
+
+/* Converts a GPtrArray to a Null_Terminated_String_Array.
+ * The underlying strings are referenced, not duplicated.
+ */
+Null_Terminated_String_Array g_ptr_array_to_ntsa(GPtrArray * garray) {
+   assert(garray);
+   Null_Terminated_String_Array ntsa = calloc(garray->len+1, sizeof(char *));
+   int ndx = 0;
+   for (;ndx < garray->len; ndx++) {
+      ntsa[ndx] = g_ptr_array_index(garray,ndx);
+   }
+   return ntsa;
+}
+
+
 
 
 /* Converts string to upper case.  The original string is converted in place.

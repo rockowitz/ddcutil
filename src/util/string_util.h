@@ -27,9 +27,11 @@
 #define STRINGUTIL_H_
 
 #include <stdbool.h>
+#include <stdint.h>
 #include <stdio.h>
 
 #include "util/coredefs.h"
+#include "util/glib_util.h"
 
 
 //
@@ -78,6 +80,13 @@ int  null_terminated_string_array_length(Null_Terminated_String_Array string_arr
 void null_terminated_string_array_show(  Null_Terminated_String_Array string_array);
 
 Null_Terminated_String_Array strsplit(const char * str_to_split, const char* delims);
+Null_Terminated_String_Array strsplit_maxlength(
+                                      const char * str_to_split, uint16_t max_piece_length, const char * delims);
+
+GPtrArray * ntsa_to_g_ptr_array(Null_Terminated_String_Array ntsa);
+
+Null_Terminated_String_Array g_ptr_array_to_ntsa(GPtrArray * garray);
+
 
 //
 // Integer conversion

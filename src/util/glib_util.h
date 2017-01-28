@@ -26,11 +26,8 @@
 
 #include <glib.h>
 
-#include "util/string_util.h"
 
-GPtrArray * ntsa_to_g_ptr_array(Null_Terminated_String_Array ntsa);
 
-Null_Terminated_String_Array g_ptr_array_to_ntsa(GPtrArray * garray);
 
 char * join_string_g_ptr_array(GPtrArray* strings, char * sepstr);
 
