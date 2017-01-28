@@ -75,10 +75,14 @@
 #include "usb_util/usb_hid_common.h"
 #endif
 
+#include "base/ddc_errno.h"
 #include "base/core.h"
 #include "base/linux_errno.h"
 
 #include "i2c/i2c_bus_core.h"
+
+#include "ddc/ddc_packet_io.h"
+
 #include "adl/adl_shim.h"
 #ifdef USE_USB
 #include "usb/usb_displays.h"
@@ -111,6 +115,7 @@ static char * prefix_matches[] = {
 };
 
 static char * other_driver_modules[] = {
+      "eeprom",
       "i2c_dev",
       "i2c_algo_bit",
       "i2c_piix4",
@@ -322,6 +327,289 @@ static void query_base_env() {
       printf("   System information unavailable\n");
 }
 
+
+bool is_i2c_device_rw(int busno) {
+   bool debug = false;
+   DBGMSF(debug, "Starting. busno=%d", busno);
+
+   bool result = true;
+
+   char fnbuf[PATH_MAX];
+   snprintf(fnbuf, sizeof(fnbuf), "/dev/i2c-%d", busno);
+
+   int rc;
+   int errsv;
+   DBGMSF(debug, "Calling access() for %s", fnbuf);
+   rc = access(fnbuf, R_OK|W_OK);
+   if (rc < 0) {
+      errsv = errno;
+      printf("Device %s is not readable and writable.  Error = %s\n",
+             fnbuf, linux_errno_desc(errsv) );
+      result = false;
+   }
+
+   DBGMSF(debug, "Returning: %s", bool_repr(result));
+   return result;
+}
+
+
+
+// adapted from ddc_vcp_tests
+
+Global_Status_Code try_single_getvcp_call(int fh, unsigned char vcp_feature_code) {
+   bool debug = false;
+   DBGMSF(debug, "Starting. vcp_feature_code=0x%02x", vcp_feature_code );
+
+   int ndx;
+   unsigned char checksum;
+   int rc;
+   Global_Status_Errno gsc = 0;
+
+#ifdef NO
+   // write seems to be necessary to reset monitor state
+   unsigned char zeroByte = 0x00;  // 0x00;
+   rc = write(fh, &zeroByte, 1);
+   if (rc < 0) {
+      printf("(%s) Bus reset failed. rc=%d, errno=%d. \n", __func__, rc, errno );
+      return -1;
+   }
+#endif
+   // without this or 0 byte write, read() sometimes returns all 0 on P2411H
+   usleep(50000);
+
+   unsigned char ddc_cmd_bytes[] = {
+      0x6e,              // address 0x37, shifted left 1 bit
+      0x51,              // source address
+      0x02 | 0x80,       // number of DDC data bytes, with high bit set
+      0x01,              // DDC Get Feature Command
+      vcp_feature_code,  //
+      0x00,              // checksum, to be set
+   };
+   // unsigned char checksum0 = xor_bytes(ddc_cmd_bytes,5);
+   checksum = ddc_checksum(ddc_cmd_bytes, 5, false);    // calculate DDC checksum on all bytes
+   // assert(checksum==checksum0);
+   ddc_cmd_bytes[5] = ddc_cmd_bytes[0];
+   for (ndx=1; ndx < 5; ndx++) ddc_cmd_bytes[5] ^= ddc_cmd_bytes[ndx];    // calculate checksum
+   // printf("(%s) ddc_cmd_bytes = %s   \n", __func__ , hexstring(ddc_cmd_bytes,6) );
+   // printf("(%s) checksum=0x%02x, ddc_cmd_bytes[5]=0x%02x   \n", __func__, checksum, ddc_cmd_bytes[5] );
+   // assert(ddc_cmd_bytes[5] == 0xac);
+   assert(checksum == ddc_cmd_bytes[5]);
+
+   int writect = sizeof(ddc_cmd_bytes)-1;
+   rc = write(fh, ddc_cmd_bytes+1, writect);
+   if (rc < 0) {
+      int errsv = errno;
+      // printf("(%s) write() returned %d, errno=%d. \n", __func__, rc, errno);
+      DBGMSF(debug, "write() failed, errno=%s", linux_errno_desc(errsv));
+      gsc = modulate_rc(-errsv, RR_ERRNO);
+      goto bye;
+   }
+   if (rc != writect) {
+      printf("(%s) write() returned %d, expected %d   \n", __func__, rc, writect );
+      gsc = DDCRC_BAD_BYTECT;
+      goto bye;
+   }
+   usleep(50000);
+
+   unsigned char ddc_response_bytes[12];
+   int readct = sizeof(ddc_response_bytes)-1;
+
+   rc = read(fh, ddc_response_bytes+1, readct);
+   if (rc < 0) {
+      // printf("(%s) read() returned %d, errno=%d.\n", __func__, rc, errno );
+      int errsv = errno;
+      DBGMSG("read() failed, errno=%s", linux_errno_desc(errsv));
+      gsc = modulate_rc( -errsv, RR_ERRNO);
+      goto bye;
+   }
+
+   if (rc != readct) {
+      printf("(%s) read() returned %d, should be %d  \n", __func__, rc, readct );
+      gsc = DDCRC_BAD_BYTECT;
+      goto bye;
+   }
+
+   // printf("(%s) read() returned %s\n", __func__, hexstring(ddc_response_bytes+1, readct) );
+   if (debug) {
+      char * hs = hexstring(ddc_response_bytes+1, readct);
+      DBGMSG("read() returned %s", hs );
+      free(hs);
+      // hex_dump(ddc_response_bytes,1+rc);
+   }
+
+   if ( all_zero( ddc_response_bytes+1, readct) ) {
+      DBGMSF(debug, "All bytes zero");
+      gsc = DDCRC_READ_ALL_ZERO;
+      goto bye;
+   }
+
+
+   int ddc_data_length = ddc_response_bytes[2] & 0x7f;
+   // some monitors return a DDC null response to indicate an invalid request:
+   if (ddc_response_bytes[1] == 0x6e && ddc_data_length == 0 && ddc_response_bytes[3] == 0xbe) {    // 0xbe == checksum
+      DBGMSF(debug, "Received DDC null response");
+      gsc = DDCRC_NULL_RESPONSE;
+      goto bye;
+   }
+
+   if (ddc_response_bytes[1] != 0x6e) {
+      // assert(ddc_response_bytes[1] == 0x6e);
+      printf("(%s) Invalid address byte in response, expected 06e, actual 0x%02x\n", __func__, ddc_response_bytes[1] );
+      gsc = DDCRC_INVALID_DATA;
+      goto bye;
+   }
+
+   if (ddc_data_length != 8) {
+      printf("(%s) Invalid query VCP response length: %d\n", __func__, ddc_data_length );
+      gsc = DDCRC_BAD_BYTECT;
+      goto bye;
+   }
+
+   if (ddc_response_bytes[3] != 0x02) {       // get feature response
+      printf("(%s) Expected 0x02 in feature response field, actual value 0x%02x\n", __func__, ddc_response_bytes[3] );
+      gsc = DDCRC_INVALID_DATA;
+      goto bye;
+   }
+
+   ddc_response_bytes[0] = 0x50;   // for calculating DDC checksum
+   // checksum0 = xor_bytes(ddc_response_bytes, sizeof(ddc_response_bytes)-1);
+   unsigned char calculated_checksum = ddc_response_bytes[0];
+   for (ndx=1; ndx < 11; ndx++) calculated_checksum ^= ddc_response_bytes[ndx];
+   // printf("(%s) checksum0=0x%02x, calculated_checksum=0x%02x\n", __func__, checksum0, calculated_checksum );
+   if (ddc_response_bytes[11] != calculated_checksum) {
+      printf("(%s) Unexpected checksum.  actual=0x%02x, calculated=0x%02x  \n", __func__,
+             ddc_response_bytes[11], calculated_checksum );
+      gsc = DDCRC_CHECKSUM;
+      goto bye;
+   }
+
+      if (ddc_response_bytes[4] == 0x00) {         // valid VCP code
+         // The interpretation for most VCP codes:
+         int max_val = (ddc_response_bytes[7] << 8) + ddc_response_bytes[8];
+         int cur_val = (ddc_response_bytes[9] << 8) + ddc_response_bytes[10];
+         DBGMSF(debug, "cur_val = %d, max_val = %d", cur_val, max_val );
+      }
+      else if (ddc_response_bytes[4] == 0x01) {    // unsupported VCP code
+         printf("(%s) Unsupported VCP code: 0x%02x\n", __func__ , vcp_feature_code);
+         gsc = DDCRC_REPORTED_UNSUPPORTED;
+      }
+      else {
+         printf("(%s) Unexpected value in supported VCP code field: 0x%02x  \n", __func__, ddc_response_bytes[4] );
+         gsc = DDCRC_INVALID_DATA;
+      }
+
+bye:
+   DBGMSF(debug, "Returning: %s",  gsc_desc(gsc));
+   return gsc;
+}
+
+
+
+
+
+/* This function largely uses direct coding to probe the I2C buses.
+ *
+ */
+
+void raw_scan_i2c_devices() {
+   puts("");
+   rpt_title("Performing basic scan of I2C devices",0);
+   bool debug = false;
+   DBGMSF(debug, "Starting");
+
+   Buffer * buf0 = buffer_new(1000, __func__);
+   int  busct = 0;
+   Global_Status_Code gsc;
+   Base_Status_Errno rc;
+   bool saved_i2c_force_slave_addr_flag = i2c_force_slave_addr_flag;
+
+   for (int busno=0; busno < I2C_BUS_MAX; busno++) {
+      if (i2c_bus_exists(busno)) {
+         busct++;
+         puts("");
+         rpt_vstring(0, "Examining device /dev/i2c-%d...", busno);
+
+         if (!is_i2c_device_rw(busno))
+            continue;
+
+         int fd = i2c_open_bus(busno, CALLOPT_ERR_MSG);
+         if (fd < 0)
+            continue;
+
+         unsigned long functionality = i2c_get_functionality_flags_by_fd(fd);
+         i2c_interpret_functionality_into_buffer(functionality, buf0);
+         // rpt_vstring(1, "Functionality:  %s", buf0->bytes);
+
+         Null_Terminated_String_Array ntsa = strsplit_maxlength( (char *) buf0->bytes, 65, " ");
+         int ntsa_ndx = 0;
+         bool first_piece = true;
+         while (true) {
+            char * s = ntsa[ntsa_ndx++];
+            if (!s)
+               break;
+            char * header = "";
+            if (first_piece){
+               header = "Functionality: ";
+               first_piece = false;
+            }
+            // printf("(%s) header=|%s|, s=|%s|\n", __func__, header, s);
+            rpt_vstring(1, "%-*s%s", strlen("Functionality: "), header, s);
+            // printf("(%s) s = %p\n", __func__, s);
+
+         }
+
+         //  Base_Status_Errno rc = i2c_set_addr(fd, 0x50, CALLOPT_ERR_MSG);
+         // TODO save force slave addr setting, set it for duration of call - do it outside loop
+         gsc = i2c_get_raw_edid_by_fd(fd, buf0);
+         if (gsc != 0) {
+            rpt_vstring(1, "Unable to read EDID, gsc=%s", gsc_desc(gsc));
+         }
+         else {
+            rpt_vstring(1, "Raw EDID:");
+            rpt_hex_dump(buf0->bytes, buf0->len, 1);
+            Parsed_Edid *  edid = create_parsed_edid(buf0->bytes);
+            if (edid)
+              report_parsed_edid(edid, false /* dump hex */, 1);
+            else
+               rpt_vstring(1, "Unable to parse EDID");
+         }
+
+         puts("");
+         rpt_vstring(1, "Trying simple VCP read of feature 0x10...");
+         rc = i2c_set_addr(fd, 0x37, CALLOPT_ERR_MSG);
+         if (rc == 0) {
+            int maxtries = 3;
+            gsc = -1;
+            for (int tryctr=0; tryctr<maxtries && gsc < 0; tryctr++) {
+               gsc = try_single_getvcp_call(fd, 0x10);
+               if (gsc == 0 || gsc == DDCRC_NULL_RESPONSE || gsc == DDCRC_REPORTED_UNSUPPORTED) {
+                  rpt_vstring(1, "Attempt %d to read feature succeeded.", tryctr+1);
+                  gsc = 0;
+                  break;
+               }
+               rpt_vstring(1, "Attempt %d to read feature failed. status = %s.  %s",
+                             tryctr+1, gsc_desc(gsc), (tryctr < maxtries-1) ? "Retrying..." : "");
+            }
+            if (gsc == 0)
+               rpt_vstring(1, "DDC communication succeeded");
+            else {
+               rpt_vstring(1, "DDC communication failed.");
+            }
+         }
+
+         i2c_close_bus(fd, busno, CALLOPT_ERR_MSG);
+      }
+   }
+
+   if (busct == 0) {
+      rpt_vstring(1, "No /dev/i2c-* devices found\n");
+   }
+
+   i2c_force_slave_addr_flag = saved_i2c_force_slave_addr_flag;
+   buffer_free(buf0, __func__);
+
+   DBGMSF(debug, "Done" );
+}
 
 
 static void check_i2c_devices(struct driver_name_node * driver_list) {
@@ -1405,6 +1693,8 @@ void query_sysenv() {
       puts("");
 
       query_using_i2cdetect();
+
+      raw_scan_i2c_devices();
 
       query_x11();
 
