@@ -537,7 +537,7 @@ void show_reporting() {
    show_output_level();
    show_ddcmsg();
    show_trace_groups();
-   f0puts("", FOUT);
+   // f0puts("", FOUT);
 }
 
 

@@ -374,8 +374,14 @@ int main(int argc, char *argv[]) {
    // if (show_recoverable_errors)
    //    parsed_cmd->stats = true;
 
-   if (parsed_cmd->output_level >= OL_VERBOSE)
+   if (parsed_cmd->output_level >= OL_VERBOSE) {
       show_reporting();
+      f0printf( FOUT, "%.*s%-*s%s\n",
+                0,"",
+                28, "Force I2C slave address:",
+                bool_repr(i2c_force_slave_addr_flag));
+      f0puts("\n", FOUT);
+   }
 
    // n. MAX_MAX_TRIES checked during command line parsing
    if (parsed_cmd->max_tries[0] > 0) {
@@ -515,6 +521,8 @@ int main(int argc, char *argv[]) {
       printf("Setting maximum retries...\n");
       printf("Forcing --stats...\n");
       parsed_cmd->stats_types = STATS_ALL;
+      printf("Forcing --force-slave-address..\n");
+      i2c_force_slave_addr_flag = true;
       printf("This command will take a while to run...\n\n");
       ddc_set_max_write_read_exchange_tries(MAX_MAX_TRIES);
       ddc_set_max_multi_part_read_tries(MAX_MAX_TRIES);

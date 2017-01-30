@@ -91,10 +91,6 @@
 #include "app_ddcutil/query_sysenv.h"
 
 
-#ifndef MAX_PATH
-#define MAX_PATH 256
-#endif
-
 
 static char * known_video_driver_modules[] = {
       "amdgpu",
@@ -133,7 +129,7 @@ struct driver_name_node {
 
 
 char * read_sysfs_attr(char * dirname, char * attrname, bool verbose) {
-   char fn[MAX_PATH];
+   char fn[PATH_MAX];
    sprintf(fn, "%s/%s", dirname, attrname);
    return file_get_first_line(fn, verbose);
 }
@@ -201,11 +197,11 @@ static int query_proc_modules_for_video() {
 
 static bool show_one_file(char * dir_name, char * simple_fn, bool verbose, int depth) {
    bool result = false;
-   char fqfn[MAX_PATH+2];
+   char fqfn[PATH_MAX+2];
    strcpy(fqfn,dir_name);
    if (!str_ends_with(dir_name, "/"))
       strcat(fqfn,"/");
-   assert(strlen(fqfn) + strlen(simple_fn) <= MAX_PATH);   // for Coverity
+   assert(strlen(fqfn) + strlen(simple_fn) <= PATH_MAX);   // for Coverity
    strncat(fqfn,simple_fn, sizeof(fqfn)-(strlen(fqfn)+1));  // use strncat to make Coverity happy
    if (regular_file_exists(fqfn)) {
       rpt_vstring(depth, "%s:", fqfn);
@@ -1442,7 +1438,7 @@ static void probe_uhid(int depth) {
    else {
       while ( (ep = readdir(dp))) {
          // puts(ep->d_name);
-         char fqfn[MAX_PATH];
+         char fqfn[PATH_MAX];
          if (!streq(ep->d_name, ".") && !streq(ep->d_name, "..") ) {
             // file names look like: "0003:0424:3328:004D"
             // field 1:    ?
@@ -1450,7 +1446,7 @@ static void probe_uhid(int depth) {
             // field 3:    pid
             // field 4:    appears to be a sequence number of some sort
             //             increases with each call to ddcutil env -v
-            snprintf(fqfn, MAX_PATH, "%s%s/rdesc", dirname, ep->d_name);
+            snprintf(fqfn, PATH_MAX, "%s%s/rdesc", dirname, ep->d_name);
             // puts(fqfn);
 #ifdef FAILS
             puts(ep->d_name);
