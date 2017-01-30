@@ -33,6 +33,7 @@
 
 #include "util/debug_util.h"
 #include "util/failsim.h"
+#include "util/file_util.h"
 #include "util/report_util.h"
 #include "util/string_util.h"
 
@@ -1318,6 +1319,12 @@ void i2c_report_active_display(Bus_Info * businfo, int depth) {
    if (output_level >= OL_VERBOSE) {
       rpt_vstring(depth+1, "I2C address 0x37 (DDC)  present: %-5s", bool_repr(businfo->flags & I2C_BUS_ADDR_0X37));
       rpt_vstring(depth+1, "I2C address 0x50 (EDID) present: %-5s", bool_repr(businfo->flags & I2C_BUS_ADDR_0X50));
+
+      char fn[PATH_MAX];     // yes, PATH_MAX is dangerous, but not as used here
+      sprintf(fn, "/sys/bus/i2c/devices/i2c-%d/name", businfo->busno);
+      char * sysattr_name = file_get_first_line(fn, /* verbose*/ false);
+      rpt_vstring(depth+1, "%s: %s", fn, sysattr_name);
+      free(sysattr_name);
    }
 
 #ifdef OLD
