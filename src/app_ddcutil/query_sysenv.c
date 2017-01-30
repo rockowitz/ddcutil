@@ -1378,12 +1378,13 @@ void query_x11() {
  */
 static void query_using_i2cdetect() {
    printf("Examining I2C buses using i2cdetect: \n");
-   GPtrArray * busnames = execute_shell_cmd_collect("ls /dev/i2c*");
+   // GPtrArray * busnames = execute_shell_cmd_collect("ls /dev/i2c*");
+   GPtrArray * busnames = execute_shell_cmd_collect("ls /dev/i2c* | cut -c 10- | sort -n");
    for (int ndx = 0; ndx < busnames->len; ndx++) {
       // printf("ndx=%d, value=|%s|\n", ndx, (char *) g_ptr_array_index(busnames, ndx));
       char cmd[80];
       char * busname = (char *) g_ptr_array_index(busnames, ndx);
-      busname+=9;   // strip off "/dev/i2c-"
+      // busname+=9;   // strip off "/dev/i2c-"
       snprintf(cmd, 80, "i2cdetect -y %s", busname);
       printf("\nProbing bus /dev/i2c-%d using command \"%s\"\n", ndx, cmd);
       // DBGMSG("Executing command: |%s|\n", cmd);
