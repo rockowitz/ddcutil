@@ -99,21 +99,37 @@ static Status_Code_Info errno_desc[] = {
       EDENTRY(EPROTO,   "Protocol error"),                       // 71
 
 
-      EDENTRY(ENOTSOCK,              "Socket operation on non-socket"),    // 88
-      EDENTRY(EDESTADDRREQ,          "Destination address required"),      // 89
-      EDENTRY(EMSGSIZE,              "Message too long"),                  // 90
-      EDENTRY(EPROTOTYPE,            "Protocol wrong type for socket"),    // 91
-      EDENTRY(ENOPROTOOPT,           "Protocol not available"),            // 92
-      EDENTRY(EPROTONOSUPPORT,       "Protocol not supported"),            // 93
-      EDENTRY(ESOCKTNOSUPPORT,       "Socket type not supported"),         // 94
-      EDENTRY(EOPNOTSUPP,            "Operation not supported on transport endpoint"),   //95
-      EDENTRY(EPFNOSUPPORT,          "Protocol family not supported"),     // 96
-      EDENTRY(EAFNOSUPPORT,          "Address family not supported by protocol"),   //97
-      EDENTRY(EADDRINUSE,            "Address already in use"),            // 98
-      EDENTRY(EADDRNOTAVAIL,         "Cannot assign requested address"),   // 99
+      EDENTRY(ENOTSOCK,          "Socket operation on non-socket"),               //  88
+      EDENTRY(EDESTADDRREQ,      "Destination address required"),                 //  89
+      EDENTRY(EMSGSIZE,          "Message too long"),                             //  90
+      EDENTRY(EPROTOTYPE,        "Protocol wrong type for socket"),               //  91
+      EDENTRY(ENOPROTOOPT,       "Protocol not available"),                       //  92
+      EDENTRY(EPROTONOSUPPORT,   "Protocol not supported"),                       //  93
+      EDENTRY(ESOCKTNOSUPPORT,   "Socket type not supported"),                    //  94
+      EDENTRY(EOPNOTSUPP,        "Operation not supported on transport endpoint"),//  95
+      EDENTRY(EPFNOSUPPORT,      "Protocol family not supported"),                //  96
+      EDENTRY(EAFNOSUPPORT,      "Address family not supported by protocol"),     //  97
+      EDENTRY(EADDRINUSE,        "Address already in use"),                       //  98
+      EDENTRY(EADDRNOTAVAIL,     "Cannot assign requested address"),              //  99
 
-
-
+      EDENTRY(ENETDOWN,          "Network is down"),                              // 100
+      EDENTRY(ENETUNREACH,       "Network is unreachable"),                       // 101
+      EDENTRY(ENETRESET,         "Network dropped connection because of reset"),  // 102
+      EDENTRY(ECONNABORTED,      "Software caused connection abort"),             // 103
+      EDENTRY(ECONNRESET,        "Connection reset by peer"),                     // 104
+      EDENTRY(ENOBUFS,           "No buffer space available"),                    // 105
+      EDENTRY(EISCONN,           "Transport endpoint is already connected"),      // 106
+      EDENTRY(ENOTCONN,          "Transport endpoint is not connected"),          // 107
+      EDENTRY(ESHUTDOWN,         "Cannot send after transport endpoint shutdown"),// 108
+      EDENTRY(ETOOMANYREFS,      "Too many references: cannot splice"),           // 109
+      EDENTRY(ETIMEDOUT,         "Connection timed out"),                         // 110
+      EDENTRY(ECONNREFUSED,      "Connection refused"),                           // 111
+      EDENTRY(EHOSTDOWN,         "Host is down"),                                 // 112
+      EDENTRY(EHOSTUNREACH,      "No route to host"),                             // 113
+      EDENTRY(EALREADY,          "Operation already in progress"),                // 114
+      EDENTRY(EINPROGRESS,       "Operation now in progress"),                    // 115
+      EDENTRY(ESTALE,            "Stale file handle"),                            // 116
+      EDENTRY(EUCLEAN,           "Structure needs cleaning"),                     // 111
 };
 #undef EDENTRY
 static const int errno_desc_ct = sizeof(errno_desc)/sizeof(Status_Code_Info);
