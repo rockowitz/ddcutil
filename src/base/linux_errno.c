@@ -129,7 +129,7 @@ static Status_Code_Info errno_desc[] = {
       EDENTRY(EALREADY,          "Operation already in progress"),                // 114
       EDENTRY(EINPROGRESS,       "Operation now in progress"),                    // 115
       EDENTRY(ESTALE,            "Stale file handle"),                            // 116
-      EDENTRY(EUCLEAN,           "Structure needs cleaning"),                     // 111
+      EDENTRY(EUCLEAN,           "Structure needs cleaning"),                     // 117
 };
 #undef EDENTRY
 static const int errno_desc_ct = sizeof(errno_desc)/sizeof(Status_Code_Info);
