@@ -545,21 +545,28 @@ char * chars_to_string(char * start, int len) {
 //
 
 bool str_to_int(const char * nptr, int * ival) {
+   bool debug = false;
+   if (debug)
+      printf("(%s) nptr->|%s|\n", __func__, nptr);
+
    char * endptr;
    bool ok = false;
    if ( *nptr != '\0') {
       long result = strtol(nptr, &endptr, 10);
-      if (*endptr != '\0') {
+      // printf("(%s) nptr=%p, endptr=%p, *endptr=|%c| (0x%02x), result=%ld\n",
+      //        __func__, nptr, endptr, *endptr, *endptr, result);
+      if (*endptr == '\0') {
          *ival = result;
          ok = true;
       }
    }
 
-   // if (ok)
-   //   printf("(%s) nptr=%s, Returning: %s, *ival = %d\n", __func__, nptr, bool_repr(ok), *ival);
-   // else
-   //   printf("(%s) nptr=%s, Returning: %s\n", __func__, nptr, bool_repr(ok));
-
+   if (debug) {
+      if (ok)
+        printf("(%s) nptr=%s, Returning: %s, *ival = %d\n", __func__, nptr, bool_repr(ok), *ival);
+      else
+        printf("(%s) nptr=%s, Returning: %s\n", __func__, nptr, bool_repr(ok));
+   }
    return ok;
 }
 
