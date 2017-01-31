@@ -29,6 +29,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/stat.h>
+#include <unistd.h>
 
 #include "util/report_util.h"
 #include "util/string_util.h"
@@ -216,5 +217,38 @@ GPtrArray * get_filenames_by_filter(const char * dirnames[], Dirent_Filter filte
          printf("   %s\n", (char *) g_ptr_array_index(devnames, ndx) );
    }
    return devnames;
+}
+
+
+/* Gets the file name for a file descriptor
+ *
+ * Arguments:
+ *   fd    file descriptor
+ *   pfn   where to return a pointer to the file name
+ *         The daller is responsible for freeing this memory
+ *
+ * Returns:
+ *   0 if success
+ *   -errno if error (see readlink() doc for possible error numbers
+ */
+int filename_for_fd(int fd, char** pfn) {
+   char * result = calloc(1, PATH_MAX+1);
+   char workbuf[40];
+   int rc = 0;
+   snprintf(workbuf, 40, "/proc/self/fd/%d", fd);
+   ssize_t ct = readlink(workbuf, result, PATH_MAX);
+   if (ct < 0) {
+      rc = -errno;
+      free(result);
+      *pfn = NULL;
+   }
+   else {
+      assert(ct <= PATH_MAX);
+      result[ct] = '\0';
+      *pfn = result;
+   }
+   // printf("(%s) fd=%d, returning: %d, *pfn=%p -> |%s|\n",
+   //        __func__, fd, rc, *pfn, *pfn);
+   return rc;
 }
 
