@@ -1628,6 +1628,42 @@ static void query_usb_monitors() {
 #endif  // USE_USB
 
 
+#ifdef USE_USB
+int udev_i2c_device_summary_busno(Udev_Device_Summary * summary) {
+   int result = -1;
+   if (str_starts_with(summary->sysname, "i2c-")) {
+     const char * sbusno = summary->sysname+4;
+     // DBGMSG("sbusno = |%s|", sbusno);
+
+     int ibusno;
+     bool ok = str_to_int(sbusno, &ibusno);
+     if (ok)
+        result = ibusno;
+   }
+   // DBGMSG("Returning: %d", result);
+   return result;
+}
+
+
+int compare_udev_i2c_device_summary(const void * a, const void * b) {
+   Udev_Device_Summary * p1 = *(Udev_Device_Summary**) a;
+   Udev_Device_Summary * p2 = *(Udev_Device_Summary**) b;
+
+   assert( p1 && (memcmp(p1->marker, UDEV_DEVICE_SUMMARY_MARKER, 4) == 0));
+   assert( p2 && (memcmp(p2->marker, UDEV_DEVICE_SUMMARY_MARKER, 4) == 0));
+
+   int v1 = udev_i2c_device_summary_busno(p1);
+   int v2 = udev_i2c_device_summary_busno(p2);
+
+   int result = (v1 == v2) ? 0 :
+                    (v1 < v2) ? -1 : 1;
+   // DBGMSG("v1=%d, v2=%d, returning: %d", v1, v2, result);
+   return result;
+}
+
+#endif
+
+
 /* Master function to query the system environment
  *
  * Arguments:    none
@@ -1715,10 +1751,13 @@ typedef struct udev_device_summary {
    const char * sysattr_name;
 } Udev_Device_Summary;
 #endif
+
+         g_ptr_array_sort(summaries, compare_udev_i2c_device_summary);
          printf("%-15s %-35s %s\n", "Sysname", "Sysattr Name", "Devpath");
          for (int ndx = 0; ndx < summaries->len; ndx++) {
             Udev_Device_Summary * summary = g_ptr_array_index(summaries, ndx);
             assert( memcmp(summary->marker, UDEV_DEVICE_SUMMARY_MARKER, 4) == 0);
+            udev_i2c_device_summary_busno(summary);
             printf("%-15s %-35s %s\n",
                    summary->sysname, summary->sysattr_name, summary->devpath);
 

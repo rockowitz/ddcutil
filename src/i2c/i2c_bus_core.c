@@ -73,7 +73,7 @@ void report_businfo(Bus_Info * bus_info, int depth);
  */
 int i2c_open_bus(int busno, Byte callopts) {
    bool debug = false;
-   DBGMSF(debug, "busno=%d, callopts=0x%02x", busno, callopts);
+   DBGTRC(debug, TRACE_GROUP, "busno=%d, callopts=0x%02x", busno, callopts);
 
    char filename[20];
    int  file;
@@ -99,7 +99,7 @@ int i2c_open_bus(int busno, Byte callopts) {
       file = -errsv;
    }
 
-   DBGMSF(debug, "Returning file descriptor: %d", file);
+   DBGTRC(debug, TRACE_GROUP, "Returning file descriptor: %d", file);
    return file;
 }
 
@@ -107,20 +107,31 @@ int i2c_open_bus(int busno, Byte callopts) {
 /* Closes an open I2C bus device.
  *
  * Arguments:
- *   fd         file descriptor
- *   busno      bus number (for error messages), if -1, ignore
+ *   fd        file descriptor
+ *   busno     bus number (for error messages), if -1, ignore
  *   callopts  call option flags, controlling failure action
  *
  * Returns:
  *    0 if success
  *    -errno if close fails and CALLOPT_ERR_ABORT not set in callopts
  */
-Base_Status_Errno i2c_close_bus(int fd, int busno, Byte callopts) {
+Base_Status_Errno i2c_close_bus(int fd, int busno, Call_Options callopts) {
    bool debug = false;
-   DBGMSF(debug, "Starting. fd=%d, callopts=0x%02x", fd, callopts);
+   DBGTRC(debug, TRACE_GROUP, "Starting. fd=%d, busno=%d, callopts=%s",
+          fd, busno, interpret_call_options(callopts));
 
    Base_Status_Errno result = 0;
    int rc = 0;
+
+#ifdef ALTERNATIVE
+   // get file name from descriptor instead of requiring busno parm
+   char * i2c_fn;
+   rc = filename_for_fd(fd, &i2c_fn);
+   assert(rc == 0);
+   DBGMSG("i2c_fn = %s", i2c_fn);
+   free(i2c_fn);
+#endif
+
    RECORD_IO_EVENT(IE_CLOSE, ( rc = close(fd) ) );
    assert( rc == 0 || rc == -1);   // per documentation
    int errsv = errno;
@@ -147,21 +158,22 @@ Base_Status_Errno i2c_close_bus(int fd, int busno, Byte callopts) {
       result = -errsv;
    }
    assert(result <= 0);
+   DBGTRC(debug, TRACE_GROUP, "Returning: %d", result);
    return result;
 }
 
-
+// global variable
 bool i2c_force_slave_addr_flag = false;
 
 
 /* Sets I2C slave address to be used on subsequent calls
  *
  * Arguments:
- *   fd    file descriptor for open /dev/i2c-n
- *   addr  slave address
+ *   fd        file descriptor for open /dev/i2c-n
+ *   addr      slave address
  *   callopts  call option flags, controlling failure action
- *         if CALLOPT_FORCE set, use IOCTL op I2C_SLAVE_FORCE
- *         to take control even if address is in use by another driver
+ *             if CALLOPT_FORCE set, use IOCTL op I2C_SLAVE_FORCE
+ *             to take control even if address is in use by another driver
  *
  * Returns:
  *    0 if success
@@ -425,7 +437,7 @@ static bool is_function_supported(int busno, char * funcname) {
       }
       assert(func_table_entry);   // suppresses clang analyzer warning re dereference of possibly null func_table_entry
       if (busno < 0 || busno >= i2c_get_busct() ) {
-         TERMINATE_EXECUTION_ON_ERROR("Invalid bus: /dev/i2c-%d\n", busno);
+         TERMINATE_EXECUTION_ON_ERROR("Invalid bus: /dev/i2c-%d", busno);
       }
 
       // DBGMSG("functionality=0x%lx, func_table_entry->bit=-0x%lx", bus_infos[busno].functionality, func_table_entry->bit);
@@ -666,8 +678,8 @@ Bus_Info * i2c_check_bus(Bus_Info * bus_info) {
    }
 
 bye:
-   if (file)
-      i2c_close_bus(file, bus_info->busno,  CALLOPT_ERR_ABORT);
+   if (file > 0)
+      i2c_close_bus(file, bus_info->busno,  CALLOPT_ERR_MSG);
 
    DBGTRC(debug, TRACE_GROUP, "Returning %p, flags=0x%02x", bus_info, bus_info->flags );
    return bus_info;

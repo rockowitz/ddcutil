@@ -87,7 +87,7 @@ int usb_open_hiddev_device(char * hiddev_devname, Byte calloptions) {
    if (file < 0) {
       if (calloptions & CALLOPT_ERR_ABORT)
          TERMINATE_EXECUTION_ON_ERROR(
-               "Open failed for %s: errno=%s\n", hiddev_devname, linux_errno_desc(errsv));
+               "Open failed for %s: errno=%s", hiddev_devname, linux_errno_desc(errsv));
 
       if (calloptions & CALLOPT_ERR_MSG)
          f0printf(FERR, "Open failed for %s: errno=%s\n", hiddev_devname, linux_errno_desc(errsv));
