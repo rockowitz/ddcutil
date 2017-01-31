@@ -811,6 +811,7 @@ void terminate_execution_on_error(
    }
 
    f0puts(finalBuffer, FERR);
+   f0puts("\n", FERR);
 
    ddc_abort(funcname, lineno, fn, DDCL_INTERNAL_ERROR);
 }

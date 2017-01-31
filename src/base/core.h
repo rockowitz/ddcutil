@@ -90,8 +90,8 @@ typedef Byte Call_Options;
 // #define CALLOPT_FORCE_SLAVE  0x04    // use ioctl I2C_FORCE_SLAVE
 
 // Return string interpretation of CALLOPT_ flag byte
-char * interpret_call_options_r(Byte calloptions, char * buffer, int bufsize);
-char * interpret_call_options(Byte calloptions);
+char * interpret_call_options_r(Call_Options calloptions, char * buffer, int bufsize);
+char * interpret_call_options(Call_Options calloptions);
 
 //
 // Timestamp Generation
