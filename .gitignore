@@ -140,3 +140,5 @@ ddcutil-coverity.tgz.0
 src/swig/pyenv
 bug_reports
 m4/archived/
+release_steps.txt
+
