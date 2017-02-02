@@ -90,6 +90,7 @@ struct {
    ushort       rx, ry;
    ushort       gx, gy;
    ushort       bx, by;
+   bool         is_digital_input;      // from byte 20 (x14), but 7
    char *       edid_source;
 } Parsed_Edid;
 

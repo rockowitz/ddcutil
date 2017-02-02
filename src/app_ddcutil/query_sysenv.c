@@ -502,11 +502,13 @@ bye:
 
 
 
-
-/* This function largely uses direct coding to probe the I2C buses.
+/* Check each I2C device.
  *
+ * This function largely uses direct coding to probe the I2C buses.
+ * Allows for trying to read x37 even if X50 fails, and provides
+ * clearer diagnostic messages than relying entirely on normal code
+ * path.
  */
-
 void raw_scan_i2c_devices() {
    puts("");
    rpt_title("Performing basic scan of I2C devices",0);
@@ -1351,7 +1353,7 @@ void query_x11() {
       rpt_hex_dump(prec->edidbytes, 128, 2);
       Parsed_Edid * parsed_edid = create_parsed_edid(prec->edidbytes);
       if (parsed_edid) {
-         report_parsed_edid(parsed_edid, false /* verbose */, 2 /* depth */);
+         report_parsed_edid(parsed_edid, true /* verbose */, 2 /* depth */);
          free_parsed_edid(parsed_edid);
       }
       else {
