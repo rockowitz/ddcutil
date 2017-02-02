@@ -130,6 +130,14 @@ static Status_Code_Info errno_desc[] = {
       EDENTRY(EINPROGRESS,       "Operation now in progress"),                    // 115
       EDENTRY(ESTALE,            "Stale file handle"),                            // 116
       EDENTRY(EUCLEAN,           "Structure needs cleaning"),                     // 117
+
+      EDENTRY(ENOTNAM          , "Not a XENIX named type file"),                  // 118
+      EDENTRY(ENAVAIL          , "No XENIX semaphores available"),                // 119
+      EDENTRY(EISNAM           , "Is a named type file"),                         // 120
+      EDENTRY(EREMOTEIO        , "Remote I/O error"),                             // 121
+      EDENTRY(EDQUOT           , "Quota exceeded"),                               // 122
+
+
 };
 #undef EDENTRY
 static const int errno_desc_ct = sizeof(errno_desc)/sizeof(Status_Code_Info);
