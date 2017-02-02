@@ -96,6 +96,7 @@ extern bool i2c_force_slave_addr_flag;
 unsigned long i2c_get_functionality_flags_by_fd(int fd);
 unsigned long i2c_get_functionality_flags_by_busno(int busno);
 char * i2c_interpret_functionality_into_buffer(unsigned long functionality, Buffer * buf);
+void i2c_report_functionality_flags(long functionality, int maxline, int depth);
 bool i2c_verify_functions_supported(int busno, char * write_func_name, char * read_func_name);
 
 

@@ -505,6 +505,34 @@ char * i2c_interpret_functionality_into_buffer(unsigned long functionality, Buff
 }
 
 
+void i2c_report_functionality_flags(long functionality, int maxline, int depth) {
+   Buffer * buf0 = buffer_new(1000, __func__);
+   i2c_interpret_functionality_into_buffer(functionality, buf0);
+   // rpt_vstring(1, "Functionality:  %s", buf0->bytes);
+
+   char * header = "Functionality: ";
+   int hdrlen = strlen(header);
+   int maxpiece = maxline - ( rpt_indent(depth) + hdrlen);
+
+   Null_Terminated_String_Array ntsa = strsplit_maxlength( (char *) buf0->bytes, maxpiece, " ");
+   int ntsa_ndx = 0;
+   while (true) {
+      char * s = ntsa[ntsa_ndx++];
+      if (!s)
+         break;
+      // printf("(%s) header=|%s|, s=|%s|\n", __func__, header, s);
+      rpt_vstring(depth, "%-*s%s", hdrlen, header, s);
+      // printf("(%s) s = %p\n", __func__, s);
+      if (strlen(header) > 0)
+         header = "";
+
+   }
+
+}
+
+
+
+
 //
 // EDID Retrieval
 //
@@ -1270,7 +1298,8 @@ void report_businfo(Bus_Info * bus_info, int depth) {
             rpt_vstring(depth, "Address 0x37 present:    %s", bool_repr(bus_info->flags & I2C_BUS_ADDR_0X37));
             rpt_vstring(depth, "Address 0x50 present:    %s", bool_repr(bus_info->flags & I2C_BUS_ADDR_0X50));
             i2c_interpret_functionality_into_buffer(bus_info->functionality, buf0);
-            rpt_vstring(depth, "Bus functionality:    %.*s",  buf0->len, buf0->bytes /* buf */);
+            // rpt_vstring(depth, "Bus functionality:    %.*s",  buf0->len, buf0->bytes /* buf */);
+            i2c_report_functionality_flags(bus_info->functionality, /* maxline */ 90, depth);
             if ( bus_info->flags & I2C_BUS_ADDR_0X50) {
                if (bus_info->edid) {
                   report_parsed_edid(bus_info->edid, true /* verbose */, depth);

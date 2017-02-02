@@ -63,16 +63,8 @@
 #include "util/string_util.h"
 #include "util/subprocess_util.h"
 #include "util/x11_util.h"
-
 #ifdef USE_USB
 #include "util/udev_util.h"
-// #include "usb_util/hiddev_reports.h"
-// #include "usb_util/hiddev_util.h"
-// // #include "usb_util/hidapi_util.h"
-// #include "usb_util/hidraw_util.h"
-// // #include "util/libusb_reports.h"
-// #include "usb_util/libusb_util.h"
-// #include "usb_util/usb_hid_common.h"
 #endif
 
 #include "base/ddc_errno.h"
@@ -127,6 +119,7 @@ struct driver_name_node {
 };
 
 
+// Utilities
 
 char * read_sysfs_attr(char * dirname, char * attrname, bool verbose) {
    char fn[PATH_MAX];
@@ -145,6 +138,26 @@ ushort h2ushort(char * hval) {
       DBGMSG("hhhh = |%s|, returning 0x%04x", hval, ival);
    return ival;
 }
+
+
+/* Reports basic system information
+ */
+static void query_base_env() {
+   printf("\nSystem information\n");
+   // uname response:
+   printf("uname:\n");
+   char * version_line = file_get_first_line("/proc/version", true /* verbose */);
+   if (version_line)
+      printf("   %s\n", version_line);
+   else
+      printf("   System version cannot be read from /proc/version\n");
+
+   printf("/etc/os-release...\n");
+   bool ok = execute_shell_cmd("grep PRETTY_NAME /etc/os-release", 1 /* depth */);
+   if (!ok)
+      printf("   Unable to read PRETTY_NAME from /etc/os-release\n");
+}
+
 
 
 static int query_proc_modules_for_video() {
@@ -310,23 +323,6 @@ static bool found_driver(struct driver_name_node * driver_list, char * driver_na
    }
    // DBGMSG("driver_name=%s, returning %d", driver_name, found);
    return found;
-}
-
-
-static void query_base_env() {
-   printf("\nSystem information\n");
-   // uname response:
-   printf("uname:\n");
-   char * version_line = file_get_first_line("/proc/version", true /* verbose */);
-   if (version_line)
-      printf("   %s\n", version_line);
-   else
-      printf("   System version cannot be read from /proc/version\n");
-
-   printf("/etc/os-release...\n");
-   bool ok = execute_shell_cmd("grep PRETTY_NAME /etc/os-release", 1 /* depth */);
-   if (!ok)
-      printf("   Unable to read PRETTY_NAME from /etc/os-release\n");
 }
 
 
@@ -507,7 +503,6 @@ bye:
 
 
 
-
 /* Check each I2C device.
  *
  * This function largely uses direct coding to probe the I2C buses.
@@ -541,26 +536,7 @@ void raw_scan_i2c_devices() {
             continue;
 
          unsigned long functionality = i2c_get_functionality_flags_by_fd(fd);
-         i2c_interpret_functionality_into_buffer(functionality, buf0);
-         // rpt_vstring(1, "Functionality:  %s", buf0->bytes);
-
-         Null_Terminated_String_Array ntsa = strsplit_maxlength( (char *) buf0->bytes, 65, " ");
-         int ntsa_ndx = 0;
-         bool first_piece = true;
-         while (true) {
-            char * s = ntsa[ntsa_ndx++];
-            if (!s)
-               break;
-            char * header = "";
-            if (first_piece){
-               header = "Functionality: ";
-               first_piece = false;
-            }
-            // printf("(%s) header=|%s|, s=|%s|\n", __func__, header, s);
-            rpt_vstring(1, "%-*s%s", strlen("Functionality: "), header, s);
-            // printf("(%s) s = %p\n", __func__, s);
-
-         }
+         i2c_report_functionality_flags(functionality, 90, 1);
 
          //  Base_Status_Errno rc = i2c_set_addr(fd, 0x50, CALLOPT_ERR_MSG);
          // TODO save force slave addr setting, set it for duration of call - do it outside loop
