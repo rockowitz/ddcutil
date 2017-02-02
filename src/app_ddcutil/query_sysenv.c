@@ -314,13 +314,19 @@ static bool found_driver(struct driver_name_node * driver_list, char * driver_na
 
 
 static void query_base_env() {
-   printf("\nSystem information (uname):\n");
+   printf("\nSystem information\n");
    // uname response:
+   printf("uname:\n");
    char * version_line = file_get_first_line("/proc/version", true /* verbose */);
    if (version_line)
       printf("   %s\n", version_line);
    else
-      printf("   System information unavailable\n");
+      printf("   System version cannot be read from /proc/version\n");
+
+   printf("/etc/os-release...\n");
+   bool ok = execute_shell_cmd("grep PRETTY_NAME /etc/os-release", 1 /* depth */);
+   if (!ok)
+      printf("   Unable to read PRETTY_NAME from /etc/os-release\n");
 }
 
 
