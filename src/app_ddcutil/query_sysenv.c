@@ -66,13 +66,13 @@
 
 #ifdef USE_USB
 #include "util/udev_util.h"
-#include "usb_util/hiddev_reports.h"
-#include "usb_util/hiddev_util.h"
-// #include "usb_util/hidapi_util.h"
-#include "usb_util/hidraw_util.h"
-// #include "util/libusb_reports.h"
-#include "usb_util/libusb_util.h"
-#include "usb_util/usb_hid_common.h"
+// #include "usb_util/hiddev_reports.h"
+// #include "usb_util/hiddev_util.h"
+// // #include "usb_util/hidapi_util.h"
+// #include "usb_util/hidraw_util.h"
+// // #include "util/libusb_reports.h"
+// #include "usb_util/libusb_util.h"
+// #include "usb_util/usb_hid_common.h"
 #endif
 
 #include "base/ddc_errno.h"
@@ -1347,15 +1347,17 @@ void query_x11() {
       // printf(" Output name: %s -> %p\n", prec->output_name, prec->edid);
       // hex_dump(prec->edid, 128);
       rpt_vstring(1, "xrandr output: %s", prec->output_name);
+      rpt_vstring(2, "Raw EDID:");
+      rpt_hex_dump(prec->edidbytes, 128, 2);
       Parsed_Edid * parsed_edid = create_parsed_edid(prec->edidbytes);
       if (parsed_edid) {
-         bool verbose_edid = false;
-         report_parsed_edid(parsed_edid, verbose_edid, 2 /* depth */);
+         report_parsed_edid(parsed_edid, false /* verbose */, 2 /* depth */);
          free_parsed_edid(parsed_edid);
       }
       else {
-         printf(" Unparsable EDID for output name: %s -> %p\n", prec->output_name, prec->edidbytes);
-         hex_dump(prec->edidbytes, 128);
+         rpt_vstring(2, "Unable to parse EDID");
+         // printf(" Unparsable EDID for output name: %s -> %p\n", prec->output_name, prec->edidbytes);
+         // hex_dump(prec->edidbytes, 128);
       }
    }
    free_x11_edids(edid_recs);
@@ -1426,6 +1428,41 @@ int compare_udev_i2c_device_summary(const void * a, const void * b) {
                     (v1 < v2) ? -1 : 1;
    // DBGMSG("v1=%d, v2=%d, returning: %d", v1, v2, result);
    return result;
+}
+
+
+void probe_i2c_devices_using_udev() {
+   char * subsys_name = "i2c-dev";
+   printf("\nProbing I2C devices using udev, susbsystem %s...\n", subsys_name);
+   // probe_udev_subsystem() is in udev_util.c, which is only linked in if USE_USB
+   probe_udev_subsystem(subsys_name, /*show_usb_parent=*/ false, 1);
+
+   GPtrArray * summaries = summarize_udev_subsystem_devices(subsys_name);
+   printf("\nSummary of udev I2C devices:\n");
+   if (!summaries || summaries->len == 0)
+      printf("No devices detected\n");
+   else {
+#ifdef REFERENCE
+#define UDEV_DEVICE_SUMMARY_MARKER "UDSM"
+typedef struct udev_device_summary {
+char   marker[4];
+const char * sysname;
+const char * devpath;
+const char * sysattr_name;
+} Udev_Device_Summary;
+#endif
+
+      g_ptr_array_sort(summaries, compare_udev_i2c_device_summary);
+      printf("%-15s %-35s %s\n", "Sysname", "Sysattr Name", "Devpath");
+      for (int ndx = 0; ndx < summaries->len; ndx++) {
+         Udev_Device_Summary * summary = g_ptr_array_index(summaries, ndx);
+         assert( memcmp(summary->marker, UDEV_DEVICE_SUMMARY_MARKER, 4) == 0);
+         udev_i2c_device_summary_busno(summary);
+         printf("%-15s %-35s %s\n",
+                summary->sysname, summary->sysattr_name, summary->devpath);
+      }
+   }
+   free_udev_device_summaries(summaries);   // ok if summaries == NULL
 }
 
 #endif
@@ -1500,40 +1537,7 @@ void query_sysenv() {
 
 #ifdef USE_USB
       // probe_udev_subsystem() is in udev_util.c, which is only linked in if USE_USB
-      char * subsys_name = "i2c-dev";
-      printf("\nProbing I2C devices using udev, susbsystem %s...\n", subsys_name);
-      probe_udev_subsystem(subsys_name, /*show_usb_parent=*/ false, 1);
-
-      GPtrArray * summaries = summarize_udev_subsystem_devices(subsys_name);
-      printf("\nSummary of udev I2C devices:\n");
-      if (!summaries || summaries->len == 0)
-         printf("No devices detected\n");
-      else {
-#ifdef REFERENCE
-#define UDEV_DEVICE_SUMMARY_MARKER "UDSM"
-typedef struct udev_device_summary {
-   char   marker[4];
-   const char * sysname;
-   const char * devpath;
-   const char * sysattr_name;
-} Udev_Device_Summary;
-#endif
-
-         g_ptr_array_sort(summaries, compare_udev_i2c_device_summary);
-         printf("%-15s %-35s %s\n", "Sysname", "Sysattr Name", "Devpath");
-         for (int ndx = 0; ndx < summaries->len; ndx++) {
-            Udev_Device_Summary * summary = g_ptr_array_index(summaries, ndx);
-            assert( memcmp(summary->marker, UDEV_DEVICE_SUMMARY_MARKER, 4) == 0);
-            udev_i2c_device_summary_busno(summary);
-            printf("%-15s %-35s %s\n",
-                   summary->sysname, summary->sysattr_name, summary->devpath);
-
-
-         }
-      }
-      free_udev_device_summaries(summaries);   // ok if summaries == NULL
-
-
+      probe_i2c_devices_using_udev();
 #endif
    }
 
