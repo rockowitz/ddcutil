@@ -3,7 +3,7 @@
  * Program mainline
  *
  * <copyright>
- * Copyright (C) 2014-2016 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2014-2017 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -77,6 +77,9 @@
 #include "app_ddcutil/app_getvcp.h"
 #include "app_ddcutil/app_setvcp.h"
 #include "app_ddcutil/query_sysenv.h"
+#ifdef USE_USB
+#include "app_ddcutil/query_usb_sysenv.h"
+#endif
 #include "app_ddcutil/testcases.h"
 
 

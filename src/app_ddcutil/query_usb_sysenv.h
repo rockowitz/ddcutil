@@ -1,4 +1,4 @@
-/* query_sysenv.h
+/* query_usb_sysenv.h
  *
  * <copyright>
  * Copyright (C) 2014-2017 Sanford Rockowitz <rockowitz@minsoft.com>
@@ -21,16 +21,16 @@
  * </endcopyright>
  */
 
-#ifndef QUERY_SYSENV_H_
-#define QUERY_SYSENV_H_
+#ifndef QUERY_USB_SYSENV_H_
+#define QUERY_USB_SYSENV_H_
 
 #include <config.h>
 
 #include <stdbool.h>
 
-bool is_module_loaded_using_sysfs(char * module_name);
-void query_sysenv();
+#ifdef USE_USB
+void query_usbenv();
+#endif
 
 
-
-#endif /* QUERY_SYSENV_H_ */
+#endif /* QUERY_USB_SYSENV_H_ */

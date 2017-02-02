@@ -109,6 +109,11 @@ app_ddcutil/app_setvcp.c \
 app_ddcutil/app_getvcp.c \
 app_ddcutil/testcases.c 
 
+if ENABLE_USB_COND
+ddcutil_SOURCES += \
+   app_ddcutil/query_usb_sysenv.c
+endif
+
 if INCLUDE_TESTCASES_COND
 ddcutil_SOURCES += \
    test/ddc/ddc_capabilities_tests.c \
