@@ -24,8 +24,6 @@
  * </endcopyright>
  */
 
-
-
 #include <config.h>
 
 #define _GNU_SOURCE 1       // for function group_member
@@ -54,19 +52,13 @@
 #include <time.h>
 #include <unistd.h>
 
-#include <X11/Xlib.h>
-#include <X11/Xatom.h>
-#include <X11/extensions/Xrandr.h>
-
 #include "util/device_id_util.h"
 #include "util/edid.h"
 #include "util/file_util.h"
 #include "util/report_util.h"
 #include "util/string_util.h"
 #include "util/subprocess_util.h"
-#include "util/x11_util.h"
 
-#ifdef USE_USB
 #include "util/udev_util.h"
 #include "usb_util/hiddev_reports.h"
 #include "usb_util/hiddev_util.h"
@@ -75,26 +67,16 @@
 // #include "util/libusb_reports.h"
 #include "usb_util/libusb_util.h"
 #include "usb_util/usb_hid_common.h"
-#endif
 
 #include "base/ddc_errno.h"
 #include "base/core.h"
 #include "base/linux_errno.h"
 
-#include "i2c/i2c_bus_core.h"
-
-#include "ddc/ddc_packet_io.h"
-
-#include "adl/adl_shim.h"
-#ifdef USE_USB
 #include "usb/usb_displays.h"
-#endif
 
 #include "app_ddcutil/query_usb_sysenv.h"
 
 
-
-#ifdef USE_USB
 
 static bool is_hid_monitor_rdesc(const char * fn) {
    bool debug = false;
@@ -180,6 +162,7 @@ static void probe_uhid(int depth) {
 
    DBGMSF(debug, "Done");
 }
+
 
 static void probe_hiddev(int depth) {
    int d1 = depth+1;
@@ -324,13 +307,7 @@ static void query_usb_monitors() {
    probe_uhid(1);
 }
 
-#endif  // USE_USB
 
-
-
-
-
-#ifdef USE_USB
 /* Master function to query USB aspects of the system environment
  *
  * Arguments:    none
@@ -340,4 +317,3 @@ static void query_usb_monitors() {
 void query_usbenv() {
    query_usb_monitors();
 }
-#endif
