@@ -28,32 +28,32 @@
 
 #define _GNU_SOURCE 1       // for function group_member
 
-#include <assert.h>
-#include <ctype.h>
+// #include <assert.h>
+// #include <ctype.h>
 #include <dirent.h>
 #include <errno.h>
-#include <fcntl.h>
+// #include <fcntl.h>
 #include <glib.h>
-#include <grp.h>
-#include <limits.h>
+// #include <grp.h>
+// #include <limits.h>
 // #include <libosinfo-1.0/osinfo/osinfo.h>
 // #include <libudev.h>        // not yet used
-#include <linux/hiddev.h>
-#include <linux/limits.h>
-#include <pwd.h>
-#include <stdarg.h>
+// #include <linux/hiddev.h>
+// #include <linux/limits.h>
+// #include <pwd.h>
+// #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/ioctl.h>
-#include <sys/stat.h>
+// #include <sys/stat.h>
 #include <sys/types.h>
-#include <sys/utsname.h>
-#include <time.h>
+// #include <sys/utsname.h>
+// #include <time.h>
 #include <unistd.h>
 
-#include "util/device_id_util.h"
-#include "util/edid.h"
+// #include "util/device_id_util.h"
+// #include "util/edid.h"
 #include "util/file_util.h"
 #include "util/report_util.h"
 #include "util/string_util.h"
@@ -70,7 +70,7 @@
 
 #include "base/ddc_errno.h"
 #include "base/core.h"
-#include "base/linux_errno.h"
+// #include "base/linux_errno.h"
 
 #include "usb/usb_displays.h"
 
@@ -164,6 +164,13 @@ static void probe_uhid(int depth) {
 }
 
 
+/* Probe using the hiddev API
+ *
+ * Arguments:
+ *    depth     logical indentation depth
+ *
+ * Returns:     nothing
+ */
 static void probe_hiddev(int depth) {
    int d1 = depth+1;
    int rc;
