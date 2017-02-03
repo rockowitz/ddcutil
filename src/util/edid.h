@@ -90,7 +90,9 @@ struct {
    ushort       rx, ry;
    ushort       gx, gy;
    ushort       bx, by;
-   bool         is_digital_input;      // from byte 20 (x14), but 7
+   Byte         video_input_definition;  // byte 20 (x14)
+   // bool         is_digital_input;      // from byte 20 (x14), but 7
+   uint8_t      extension_flag;        // number of optional extension blocks
    char *       edid_source;
 } Parsed_Edid;
 

@@ -1343,6 +1343,7 @@ void query_x11() {
          // printf(" Unparsable EDID for output name: %s -> %p\n", prec->output_name, prec->edidbytes);
          // hex_dump(prec->edidbytes, 128);
       }
+      f0printf(FOUT, "\n");
    }
    free_x11_edids(edid_recs);
 
