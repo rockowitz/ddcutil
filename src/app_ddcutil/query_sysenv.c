@@ -21,7 +21,6 @@
  * </endcopyright>
  */
 
-
 // #include <base/parms.h>    // put first for USE_LIBEXPLAIN
 
 #include <config.h>
@@ -143,19 +142,19 @@ ushort h2ushort(char * hval) {
 /* Reports basic system information
  */
 static void query_base_env() {
-   printf("\nSystem information\n");
-   // uname response:
-   printf("uname:\n");
+   rpt_nl();
+   rpt_vstring(0,"System information");
+   rpt_vstring(0, "uname:");
    char * version_line = file_get_first_line("/proc/version", true /* verbose */);
    if (version_line)
-      printf("   %s\n", version_line);
+      rpt_vstring(0,"   %s", version_line);
    else
-      printf("   System version cannot be read from /proc/version\n");
+      rpt_vstring(0,"   System version cannot be read from /proc/version");
 
-   printf("/etc/os-release...\n");
+   rpt_vstring(0,"/etc/os-release...");
    bool ok = execute_shell_cmd_rpt("grep PRETTY_NAME /etc/os-release", 1 /* depth */);
    if (!ok)
-      printf("   Unable to read PRETTY_NAME from /etc/os-release\n");
+      rpt_vstring(0,"   Unable to read PRETTY_NAME from /etc/os-release");
 }
 
 
@@ -165,7 +164,7 @@ static int query_proc_modules_for_video() {
 
    GPtrArray * garray = g_ptr_array_sized_new(300);
 
-   printf("Scanning /proc/modules for driver environment...\n");
+   rpt_vstring(0,"Scanning /proc/modules for driver environment...");
    int ct = file_getlines("/proc/modules", garray, true);
    if (ct < 0)
       rc = ct;
@@ -190,16 +189,16 @@ static int query_proc_modules_for_video() {
             DBGMSG("Unexpected error parsing /proc/modules.  sscanf returned %d", piece_ct);
          }
          if (streq(mod_name, "drm") ) {
-            printf("   Loaded drm module depends on: %s\n", mod_dependencies);
+            rpt_vstring(0,"   Loaded drm module depends on: %s", mod_dependencies);
          }
          else if (streq(mod_name, "video") ) {
-            printf("   Loaded video module depends on: %s\n", mod_dependencies);
+            rpt_vstring(0,"   Loaded video module depends on: %s", mod_dependencies);
          }
          else if (exactly_matches_any(mod_name, known_video_driver_modules) >= 0 ) {
-            printf("   Found video driver module: %s\n", mod_name);
+            rpt_vstring(0,"   Found video driver module: %s", mod_name);
          }
          else if ( starts_with_any(mod_name, prefix_matches) >= 0 ) {
-            printf("   Found other loaded module: %s\n", mod_name);
+            rpt_vstring(0,"   Found other loaded module: %s", mod_name);
          }
       }
    }
@@ -232,7 +231,7 @@ static bool query_proc_driver_nvidia() {
    bool result = false;
    char * dn = "/proc/driver/nvidia/";
    if ( directory_exists(dn) ) {
-      printf("Examining /proc/driver/nvidia:\n");
+      rpt_vstring(0,"Examining /proc/driver/nvidia:");
       result = true;
       show_one_file(dn, "version",  debug, 1);
       show_one_file(dn, "registry", debug, 1);
@@ -341,7 +340,7 @@ bool is_i2c_device_rw(int busno) {
    rc = access(fnbuf, R_OK|W_OK);
    if (rc < 0) {
       errsv = errno;
-      printf("Device %s is not readable and writable.  Error = %s\n",
+      rpt_vstring(0,"Device %s is not readable and writable.  Error = %s",
              fnbuf, linux_errno_desc(errsv) );
       result = false;
    }
@@ -368,7 +367,7 @@ Global_Status_Code try_single_getvcp_call(int fh, unsigned char vcp_feature_code
    unsigned char zeroByte = 0x00;  // 0x00;
    rc = write(fh, &zeroByte, 1);
    if (rc < 0) {
-      printf("(%s) Bus reset failed. rc=%d, errno=%d. \n", __func__, rc, errno );
+      rpt_vstring(0,"(%s) Bus reset failed. rc=%d, errno=%d. ", __func__, rc, errno );
       return -1;
    }
 #endif
@@ -403,7 +402,7 @@ Global_Status_Code try_single_getvcp_call(int fh, unsigned char vcp_feature_code
       goto bye;
    }
    if (rc != writect) {
-      printf("(%s) write() returned %d, expected %d   \n", __func__, rc, writect );
+      rpt_vstring(0,"(%s) write() returned %d, expected %d   ", __func__, rc, writect );
       gsc = DDCRC_BAD_BYTECT;
       goto bye;
    }
@@ -422,7 +421,7 @@ Global_Status_Code try_single_getvcp_call(int fh, unsigned char vcp_feature_code
    }
 
    if (rc != readct) {
-      printf("(%s) read() returned %d, should be %d  \n", __func__, rc, readct );
+      rpt_vstring(0,"(%s) read() returned %d, should be %d  ", __func__, rc, readct );
       gsc = DDCRC_BAD_BYTECT;
       goto bye;
    }
@@ -452,19 +451,19 @@ Global_Status_Code try_single_getvcp_call(int fh, unsigned char vcp_feature_code
 
    if (ddc_response_bytes[1] != 0x6e) {
       // assert(ddc_response_bytes[1] == 0x6e);
-      printf("(%s) Invalid address byte in response, expected 06e, actual 0x%02x\n", __func__, ddc_response_bytes[1] );
+      rpt_vstring(0,"(%s) Invalid address byte in response, expected 06e, actual 0x%02x", __func__, ddc_response_bytes[1] );
       gsc = DDCRC_INVALID_DATA;
       goto bye;
    }
 
    if (ddc_data_length != 8) {
-      printf("(%s) Invalid query VCP response length: %d\n", __func__, ddc_data_length );
+      rpt_vstring(0,"(%s) Invalid query VCP response length: %d", __func__, ddc_data_length );
       gsc = DDCRC_BAD_BYTECT;
       goto bye;
    }
 
    if (ddc_response_bytes[3] != 0x02) {       // get feature response
-      printf("(%s) Expected 0x02 in feature response field, actual value 0x%02x\n", __func__, ddc_response_bytes[3] );
+      rpt_vstring(0,"(%s) Expected 0x02 in feature response field, actual value 0x%02x", __func__, ddc_response_bytes[3] );
       gsc = DDCRC_INVALID_DATA;
       goto bye;
    }
@@ -475,7 +474,7 @@ Global_Status_Code try_single_getvcp_call(int fh, unsigned char vcp_feature_code
    for (ndx=1; ndx < 11; ndx++) calculated_checksum ^= ddc_response_bytes[ndx];
    // printf("(%s) checksum0=0x%02x, calculated_checksum=0x%02x\n", __func__, checksum0, calculated_checksum );
    if (ddc_response_bytes[11] != calculated_checksum) {
-      printf("(%s) Unexpected checksum.  actual=0x%02x, calculated=0x%02x  \n", __func__,
+      rpt_vstring(0,"(%s) Unexpected checksum.  actual=0x%02x, calculated=0x%02x  ", __func__,
              ddc_response_bytes[11], calculated_checksum );
       gsc = DDCRC_CHECKSUM;
       goto bye;
@@ -488,11 +487,11 @@ Global_Status_Code try_single_getvcp_call(int fh, unsigned char vcp_feature_code
          DBGMSF(debug, "cur_val = %d, max_val = %d", cur_val, max_val );
       }
       else if (ddc_response_bytes[4] == 0x01) {    // unsupported VCP code
-         printf("(%s) Unsupported VCP code: 0x%02x\n", __func__ , vcp_feature_code);
+         rpt_vstring(0,"(%s) Unsupported VCP code: 0x%02x", __func__ , vcp_feature_code);
          gsc = DDCRC_REPORTED_UNSUPPORTED;
       }
       else {
-         printf("(%s) Unexpected value in supported VCP code field: 0x%02x  \n", __func__, ddc_response_bytes[4] );
+         rpt_vstring(0,"(%s) Unexpected value in supported VCP code field: 0x%02x  ", __func__, ddc_response_bytes[4] );
          gsc = DDCRC_INVALID_DATA;
       }
 
@@ -599,31 +598,36 @@ static void check_i2c_devices(struct driver_name_node * driver_list) {
    char *uname = NULL;
    // bool have_i2c_devices = false;
 
-   printf("\nChecking /dev/i2c-* devices...\n");
+   rpt_nl();
+   rpt_vstring(0,"Checking /dev/i2c-* devices...");
    DDCA_Output_Level output_level = get_output_level();
 
    bool just_fglrx = only_fglrx(driver_list);
    if (just_fglrx){
-      printf("\nApparently using only the AMD proprietary driver fglrx.\n"
-             "Devices /dev/i2c-* are not required.\n");
-      if (output_level >= OL_VERBOSE)
-         printf("/dev/i2c device detail is purely informational.\n");
-      else
+      rpt_nl();
+      rpt_vstring(0,"Apparently using only the AMD proprietary driver fglrx.");
+      rpt_vstring(0,"Devices /dev/i2c-* are not required.");
+      if (output_level < OL_VERBOSE)
          return;
+      rpt_vstring(0, "/dev/i2c device detail is purely informational.");
    }
 
-   printf("\nUnless the system is using the AMD proprietary driver fglrx, devices /dev/i2c-*\n"
-          "must exist and the logged on user must have read/write permission for those\n"
-          "devices (or at least those devices associated with monitors).\n"
-          "Typically, this access is enabled by:\n"
-          "  - setting the group for /dev/i2c-* to i2c\n"
-          "  - setting group RW permissions for /dev/i2c-*\n"
-          "  - making the current user a member of group i2c\n"
-          "Alternatively, this could be enabled by just giving everyone RW permission\n"
-          "The following tests probe for these conditions.\n"
+   rpt_nl();
+   rpt_multiline(0,
+          "Unless the system is using the AMD proprietary driver fglrx, devices /dev/i2c-*",
+          "must exist and the logged on user must have read/write permission for those",
+          "devices (or at least those devices associated with monitors).",
+          "Typically, this access is enabled by:",
+          "  - setting the group for /dev/i2c-* to i2c",
+          "  - setting group RW permissions for /dev/i2c-*",
+          "  - making the current user a member of group i2c",
+          "Alternatively, this could be enabled by just giving everyone RW permission",
+          "The following tests probe for these conditions.",
+          NULL
          );
 
-   printf("\nChecking for /dev/i2c-* devices...\n");
+   rpt_nl();
+   rpt_vstring(0,"Checking for /dev/i2c-* devices...");
    execute_shell_cmd_rpt("ls -l /dev/i2c-*", 1);
 
 #ifdef OLD
@@ -644,13 +648,14 @@ static void check_i2c_devices(struct driver_name_node * driver_list) {
    // uid_t euid = geteuid();
    // printf("(%s) uid=%u, euid=%u\n", __func__, uid, euid);
    struct passwd *  pwd = getpwuid(uid);
-   printf("\nCurrent user: %s (%u)\n\n", pwd->pw_name, uid);
+   rpt_nl();
+   rpt_vstring(0,"Current user: %s (%u)\n", pwd->pw_name, uid);
    uname = strdup(pwd->pw_name);
 
    bool all_i2c_rw = false;
    int busct = i2c_get_busct();   // Consider replacing with local code
    if (busct == 0 && !just_fglrx) {
-      printf("WARNING: No /dev/i2c-* devices found\n");
+      rpt_vstring(0,"WARNING: No /dev/i2c-* devices found");
    }
    else {
       all_i2c_rw = true;
@@ -666,7 +671,7 @@ static void check_i2c_devices(struct driver_name_node * driver_list) {
             rc = access(fnbuf, R_OK|W_OK);
             if (rc < 0) {
                errsv = errno;
-               printf("Device %s is not readable and writable.  Error = %s\n",
+               rpt_vstring(0,"Device %s is not readable and writable.  Error = %s",
                       fnbuf, linux_errno_desc(errsv) );
                all_i2c_rw = false;
             }
@@ -674,18 +679,19 @@ static void check_i2c_devices(struct driver_name_node * driver_list) {
       }
 
       if (!all_i2c_rw) {
-         printf("WARNING: Current user (%s) does not have RW access to all /dev/i2c-* devices.\n",
+         rpt_vstring(0,"WARNING: Current user (%s) does not have RW access to all /dev/i2c-* devices.",
  //               username);
                 uname);
       }
       else
-         printf("Current user (%s) has RW access to all /dev/i2c-* devices.\n",
+         rpt_vstring(0,"Current user (%s) has RW access to all /dev/i2c-* devices.",
                // username);
                uname);
    }
 
    if (!all_i2c_rw || output_level >= OL_VERBOSE) {
-      printf("\nChecking for group i2c...\n");
+      rpt_nl();
+      rpt_vstring(0,"Checking for group i2c...");
       // replaced by C code
       // execute_shell_cmd("grep i2c /etc/group", 1);
 
@@ -693,7 +699,7 @@ static void check_i2c_devices(struct driver_name_node * driver_list) {
       // gid_t gid_i2c;
       struct group * pgi2c = getgrnam("i2c");
       if (pgi2c) {
-         printf("   Group i2c exists\n");
+         rpt_vstring(0,"   Group i2c exists");
          group_i2c_exists = true;
          // gid_i2c = pgi2c->gr_gid;
          // DBGMSG("getgrnam returned gid=%d for group i2c", gid_i2c);
@@ -710,15 +716,15 @@ static void check_i2c_devices(struct driver_name_node * driver_list) {
             ndx++;
          }
          if (found_curuser) {
-            printf("   Current user %s is a member of group i2c\n", uname  /* username */);
+            rpt_vstring(0,"   Current user %s is a member of group i2c", uname  /* username */);
          }
          else {
-            printf("   WARNING: Current user %s is NOT a member of group i2c\n", uname /*username*/);
+            rpt_vstring(0,"   WARNING: Current user %s is NOT a member of group i2c", uname /*username*/);
 
          }
       }
       if (!group_i2c_exists) {
-         printf("   Group i2c does not exist\n");
+         rpt_vstring(0,"   Group i2c does not exist");
       }
       free(uname);
    #ifdef BAD
@@ -775,9 +781,11 @@ static void check_i2c_devices(struct driver_name_node * driver_list) {
       }
    #endif
 
-      printf("\nLooking for udev nodes files that reference i2c:\n");
+      rpt_nl();
+      rpt_vstring(0,"Looking for udev nodes files that reference i2c:");
       execute_shell_cmd_rpt("grep -H i2c /etc/udev/makedev.d/*", 1);
-      printf("\nLooking for udev rules files that reference i2c:\n");
+      rpt_nl();
+      rpt_vstring(0,"Looking for udev rules files that reference i2c:");
       execute_shell_cmd_rpt("grep -H i2c "
                         "/lib/udev/rules.d/*rules "
                         "/run/udev/rules.d/*rules "
@@ -872,34 +880,36 @@ static bool is_module_builtin(char * module_name) {
  * Returns:              nothing
  */
 static void check_i2c_dev_module(struct driver_name_node * video_driver_list) {
-   printf("\nChecking for module i2c_dev...\n");
+   rpt_nl();
+   rpt_vstring(0,"Checking for module i2c_dev...");
 
    DDCA_Output_Level output_level = get_output_level();
 
    bool module_required = !only_nvidia_or_fglrx(video_driver_list);
    if (!module_required) {
-      printf("Using only proprietary nvidia or fglrx driver. Module i2c_dev not required.\n");
+      rpt_vstring(0,"Using only proprietary nvidia or fglrx driver. Module i2c_dev not required.");
       if (output_level < OL_VERBOSE)
          return;
-      printf("Remaining i2c_dev detail is purely informational.\n");
+      rpt_vstring(0,"Remaining i2c_dev detail is purely informational.");
    }
 
    bool is_builtin = is_module_builtin("i2c-dev");
-   printf("   Module %-16s is %sbuilt into kernel\n", "i2c_dev", (is_builtin) ? "" : "NOT ");
+   rpt_vstring(0,"   Module %-16s is %sbuilt into kernel", "i2c_dev", (is_builtin) ? "" : "NOT ");
    if (is_builtin) {
       if (output_level < OL_VERBOSE)
          return;
       if (module_required)  // no need for duplicate message
-         printf("Remaining i2c_dev detail is purely informational.\n");
+         rpt_vstring(0,"Remaining i2c_dev detail is purely informational.");
    }
 
    bool is_loaded = is_module_loaded_using_sysfs("i2c_dev");
       // DBGMSF(debug, "is_loaded=%d", is_loaded);
    if (!is_builtin)
-      printf("   Module %-16s is %sloaded\n", "i2c_dev", (is_loaded) ? "" : "NOT ");
+      rpt_vstring(0,"   Module %-16s is %sloaded", "i2c_dev", (is_loaded) ? "" : "NOT ");
 
    if ( (!is_loaded && !is_builtin) || output_level >= OL_VERBOSE) {
-      printf("\nCheck that kernel module i2c_dev is being loaded by examining files where this would be specified...\n");
+      rpt_nl();
+      rpt_vstring(0,"Check that kernel module i2c_dev is being loaded by examining files where this would be specified...");
       execute_shell_cmd_rpt("grep -H i2c[-_]dev "
                         "/etc/modules "
                         "/etc/modules-load.d/*conf "
@@ -907,7 +917,8 @@ static void check_i2c_dev_module(struct driver_name_node * video_driver_list) {
                         "/usr/lib/modules-load.d/*conf "
                         , 1);
 
-      printf("\nCheck for any references to i2c_dev in /etc/modprobe.d ...\n");
+      rpt_nl();
+      rpt_vstring(0,"Check for any references to i2c_dev in /etc/modprobe.d ...");
       execute_shell_cmd_rpt("grep -H i2c[-_]dev "
                         "/etc/modprobe.d/*conf "
                         "/run/modprobe.d/*conf "
@@ -917,34 +928,40 @@ static void check_i2c_dev_module(struct driver_name_node * video_driver_list) {
 
 
 static void query_packages() {
-   printf("\nddcutil requiries package i2c-tools.  Use both dpkg and rpm to look for it.\n"
-          "While we're at it, check for package libi2c-dev which is used for building\n"
-          "ddcutil.\n"
+   rpt_nl();
+   rpt_multiline(0,
+         "ddcutil requiries package i2c-tools.  Use both dpkg and rpm to look for it.",
+          "While we're at it, check for package libi2c-dev which is used for building",
+          "ddcutil.",
+          NULL
          );
 
    bool ok;
    // n. apt show produces warning msg that format of output may change.
    // better to use dpkg
-   ok = printf("\nUsing dpkg to look for package i2c-tools...\n");
-   execute_shell_cmd_rpt("dpkg --status i2c-tools", 1);
+   rpt_nl();
+   rpt_vstring(0,"Using dpkg to look for package i2c-tools...");
+   ok = execute_shell_cmd_rpt("dpkg --status i2c-tools", 1);
    if (!ok)
-      printf("dpkg command not found\n");
+      rpt_vstring(0,"dpkg command not found");
    else {
       execute_shell_cmd_rpt("dpkg --listfiles i2c-tools", 1);
    }
 
-   ok = printf("\nUsing dpkg to look for package libi2c-dev...\n");
-   execute_shell_cmd_rpt("dpkg --status libi2c-dev", 1);
+   rpt_nl();
+   rpt_vstring(0,"Using dpkg to look for package libi2c-dev...");
+   ok = execute_shell_cmd_rpt("dpkg --status libi2c-dev", 1);
    if (!ok)
-      printf("dpkg command not found\n");
+      rpt_vstring(0,"dpkg command not found");
    else {
       execute_shell_cmd_rpt("dpkg --listfiles libi2c-dev", 1);
    }
 
-   printf("\nUsing rpm to look for package i2c-tools...\n");
+   rpt_nl();
+   rpt_vstring(0,"Using rpm to look for package i2c-tools...");
    ok = execute_shell_cmd_rpt("rpm -q -l --scripts i2c-tools", 1);
    if (!ok)
-      printf("rpm command not found\n");
+      rpt_vstring(0,"rpm command not found");
 }
 
 
@@ -953,11 +970,11 @@ static bool query_card_and_driver_using_lspci() {
    bool ok = true;
    FILE * fp;
 
-   printf("Using lspci to examine driver environment...\n");
+   rpt_vstring(0,"Using lspci to examine driver environment...");
    fp = popen("lspci", "r");
    if (!fp) {
       // int errsv = errno;
-      printf("Unable to execute command lspci: %s\n", strerror(errno));
+      rpt_vstring(0,"Unable to execute command lspci: %s", strerror(errno));
 
       printf("lspci command unavailable\n");       // why doesn't this print?
       printf("lspci command really unavailable\n");  // or this?
@@ -995,9 +1012,9 @@ static bool query_card_and_driver_using_lspci() {
                // printf("Video controller 0: %s\n", device_name);
                char * colonpos = strchr(a_line + strlen(pci_addr), ':');
                if (colonpos)
-                  printf("Video controller: %s\n", colonpos+1);
+                  rpt_vstring(0,"Video controller: %s", colonpos+1);
                else
-                  printf("colon not found\n");
+                  rpt_vstring(0,"colon not found");
             }
          }
       }
@@ -1010,7 +1027,7 @@ static bool query_card_and_driver_using_lspci() {
 
 static struct driver_name_node * query_card_and_driver_using_sysfs() {
    // bool debug = true;
-   printf("Obtaining card and driver information from /sys...\n");
+   rpt_vstring(0,"Obtaining card and driver information from /sys...");
 
    // also of possible interest:
    // /sys/class/i2c-dev/i2c-*/name
@@ -1036,7 +1053,7 @@ static struct driver_name_node * query_card_and_driver_using_sysfs() {
    char * d0 = "/sys/bus/pci/devices";
    d = opendir(d0);
    if (!d) {
-      printf("Unable to open directory %s: %s\n", d0, strerror(errno));
+      rpt_vstring(0,"Unable to open directory %s: %s", d0, strerror(errno));
    }
    else {
       while ((dent = readdir(d)) != NULL) {
@@ -1063,7 +1080,8 @@ static struct driver_name_node * query_card_and_driver_using_sysfs() {
                char * modalias = read_sysfs_attr(cur_dir_name, "modalias", true);
                // printf("modalias: %s\n", modalias);
 
-               printf("\nDetermining driver name and possibly version...\n");
+               rpt_nl();
+               rpt_vstring(0,"Determining driver name and possibly version...");
                // DBGMSG("cur_dir_name: %s", cur_dir_name);
                char workfn[PATH_MAX];
                sprintf(workfn, "%s/%s", cur_dir_name, "driver");
@@ -1073,7 +1091,7 @@ static struct driver_name_node * query_card_and_driver_using_sysfs() {
                   int errsv = errno;
                   if (errsv == ENOENT) {
                      // fail in virtual environment?
-                     printf("Cannot determine driver name\n");
+                     rpt_vstring(0,"Cannot determine driver name");
                   }
                   else {
                      DBGMSG("realpath(%s) returned NULL, errno=%d (%s)", workfn, errsv, linux_errno_name(errsv));
@@ -1098,9 +1116,9 @@ static struct driver_name_node * query_card_and_driver_using_sysfs() {
                   // printf("driver_module_dir: %s\n", driver_module_dir);
                   char * driver_version = read_sysfs_attr(driver_module_dir, "version", false);
                   if (driver_version)
-                      printf("   Driver version: %s\n", driver_version);
+                      rpt_vstring(0,"   Driver version: %s", driver_version);
                   else
-                     printf( "   Unable to determine driver version\n");
+                     rpt_vstring(0,"   Unable to determine driver version");
                }
 
 
@@ -1144,7 +1162,8 @@ static struct driver_name_node * query_card_and_driver_using_sysfs() {
                ushort xsubdevice_id = h2ushort(subsystem_device);
 
                // printf("\nLooking up names in pci.ids...\n");
-               printf("\nVideo card identification:\n");
+               rpt_nl();
+               rpt_vstring(0,"Video card identification:");
                bool pci_ids_ok = devid_ensure_initialized();
                if (pci_ids_ok) {
                   Pci_Usb_Id_Names names = devid_get_pci_names(
@@ -1158,16 +1177,16 @@ static struct driver_name_node * query_card_and_driver_using_sysfs() {
                   if (!names.device_name)
                      names.device_name = "unknown device";
 
-                  printf("   Vendor:              %04x       %s\n", xvendor_id, names.vendor_name);
-                  printf("   Device:              %04x       %s\n", xdevice_id, names.device_name);
+                  rpt_vstring(0,"   Vendor:              %04x       %s", xvendor_id, names.vendor_name);
+                  rpt_vstring(0,"   Device:              %04x       %s", xdevice_id, names.device_name);
                   if (names.subsys_or_interface_name)
-                  printf("   Subvendor/Subdevice: %04x/%04x  %s\n", xsubvendor_id, xsubdevice_id, names.subsys_or_interface_name);
+                  rpt_vstring(0,"   Subvendor/Subdevice: %04x/%04x  %s", xsubvendor_id, xsubdevice_id, names.subsys_or_interface_name);
                }
                else {
-                  printf("Unable to find pci.ids file for name lookup.\n");
-                  printf("   Vendor:              %04x       \n", xvendor_id);
-                  printf("   Device:              %04x       \n", xdevice_id);
-                  printf("   Subvendor/Subdevice: %04x/%04x  \n", xsubvendor_id, xsubdevice_id);
+                  rpt_vstring(0,"Unable to find pci.ids file for name lookup.");
+                  rpt_vstring(0,"   Vendor:              %04x       ", xvendor_id);
+                  rpt_vstring(0,"   Device:              %04x       ", xdevice_id);
+                  rpt_vstring(0,"   Subvendor/Subdevice: %04x/%04x  ", xsubvendor_id, xsubdevice_id);
                }
                free(vendor_id);
                free(device_id);
@@ -1191,19 +1210,22 @@ static struct driver_name_node * query_card_and_driver_using_sysfs() {
  * Returns:          nothing
  */
 static void driver_specific_tests(struct driver_name_node * driver_list) {
-   printf("\nPerforming driver specific checks...\n");
+   rpt_nl();
+   rpt_vstring(0,"Performing driver specific checks...");
    bool found_driver_specific_checks = false;
 
    if (found_driver(driver_list, "nvidia")) {
       found_driver_specific_checks = true;
-      printf("\nChecking for special settings for proprietary Nvidia driver \n");
-      printf("(needed for some newer Nvidia cards).\n");
+      rpt_nl();
+      rpt_vstring(0,"Checking for special settings for proprietary Nvidia driver ");
+      rpt_vstring(0,"(needed for some newer Nvidia cards).");
       execute_shell_cmd_rpt("grep -iH i2c /etc/X11/xorg.conf /etc/X11/xorg.conf.d/*", 1);
    }
 
    if (found_driver(driver_list, "fglrx")) {
       found_driver_specific_checks = true;
-      printf("\nPerforming ADL specific checks...\n");
+      rpt_nl();
+      rpt_vstring(0,"Performing ADL specific checks...");
 #ifdef HAVE_ADL
      if (!adlshim_is_available()) {
         set_output_level(OL_VERBOSE);  // force error msg that names missing dll
@@ -1212,17 +1234,18 @@ static void driver_specific_tests(struct driver_name_node * driver_list) {
            printf("WARNING: Using AMD proprietary video driver fglrx but unable to load ADL library\n");
      }
 #else
-     printf("WARNING: Using AMD proprietary video driver fglrx but ddcutil built without ADL support\n");
+     rpt_vstring(0,"WARNING: Using AMD proprietary video driver fglrx but ddcutil built without ADL support");
 #endif
    }
 
    if (!found_driver_specific_checks)
-      printf("No driver specific checks apply.\n");
+      rpt_vstring(0,"No driver specific checks apply.");
 }
 
 
 static void query_loaded_modules_using_sysfs() {
-   printf("\nTesting if modules are loaded using /sys...\n");
+   rpt_nl();
+   rpt_vstring(0,"Testing if modules are loaded using /sys...");
    // known_video_driver_modules
    // other_driver_modules
 
@@ -1232,12 +1255,12 @@ static void query_loaded_modules_using_sysfs() {
    for (ndx=0; (curmodule=pmodule_name[ndx]) != NULL; ndx++) {
       bool is_loaded = is_module_loaded_using_sysfs(curmodule);
       // DBGMSF(debug, "is_loaded=%d", is_loaded);
-      printf("   Module %-16s is %sloaded\n", curmodule, (is_loaded) ? "" : "NOT ");
+      rpt_vstring(0,"   Module %-16s is %sloaded", curmodule, (is_loaded) ? "" : "NOT ");
    }
    pmodule_name = other_driver_modules;
    for (ndx=0; (curmodule=pmodule_name[ndx]) != NULL; ndx++) {
       bool is_loaded = is_module_loaded_using_sysfs(curmodule);
-      printf("   Module %-16s is %sloaded\n", curmodule, (is_loaded) ? "" : "NOT ");
+      rpt_vstring(0,"   Module %-16s is %sloaded", curmodule, (is_loaded) ? "" : "NOT ");
    }
 }
 
@@ -1247,7 +1270,8 @@ static void query_i2c_bus_using_sysfs() {
    DIR           *d;
    char          *dname;
 
-   printf("\nExamining /sys/bus/i2c/devices...\n");
+   rpt_nl();
+   rpt_vstring(0,"Examining /sys/bus/i2c/devices...");
    dname = "/sys/bus/i2c";
    d = opendir(dname);
    if (!d) {
@@ -1309,7 +1333,8 @@ static bool query_card_and_driver_using_osinfo() {
 
 
 static void query_i2c_buses() {
-   printf("\nExamining i2c buses...\n");
+   rpt_nl();
+   rpt_vstring(0,"Examining i2c buses...");
    i2c_report_buses(true, 1 /* indentation depth */);
 }
 
@@ -1323,7 +1348,7 @@ static void query_i2c_buses() {
 void query_x11() {
    GPtrArray* edid_recs = get_x11_edids();
    puts("");
-   printf("EDIDs reported by X11 for connected xrandr outputs:\n");
+   rpt_vstring(0,"EDIDs reported by X11 for connected xrandr outputs:");
    // DBGMSG("Got %d X11_Edid_Recs\n", edid_recs->len);
 
    for (int ndx=0; ndx < edid_recs->len; ndx++) {
@@ -1343,7 +1368,7 @@ void query_x11() {
          // printf(" Unparsable EDID for output name: %s -> %p\n", prec->output_name, prec->edidbytes);
          // hex_dump(prec->edidbytes, 128);
       }
-      f0printf(FOUT, "\n");
+      rpt_nl();
    }
    free_x11_edids(edid_recs);
 
@@ -1360,7 +1385,7 @@ void query_x11() {
  * Returns:      nothing
  */
 static void query_using_i2cdetect() {
-   printf("Examining I2C buses using i2cdetect: \n");
+   rpt_vstring(0,"Examining I2C buses using i2cdetect: ");
    // GPtrArray * busnames = execute_shell_cmd_collect("ls /dev/i2c*");
    GPtrArray * busnames = execute_shell_cmd_collect("ls /dev/i2c* | cut -c 10- | sort -n");
    for (int ndx = 0; ndx < busnames->len; ndx++) {
@@ -1369,12 +1394,13 @@ static void query_using_i2cdetect() {
       char * busname = (char *) g_ptr_array_index(busnames, ndx);
       // busname+=9;   // strip off "/dev/i2c-"
       snprintf(cmd, 80, "i2cdetect -y %s", busname);
-      printf("\nProbing bus /dev/i2c-%d using command \"%s\"\n", ndx, cmd);
+      rpt_nl();
+      rpt_vstring(0,"Probing bus /dev/i2c-%d using command \"%s\"", ndx, cmd);
       // DBGMSG("Executing command: |%s|\n", cmd);
       int rc = execute_shell_cmd_rpt(cmd, 1 /* depth */);
       // DBGMSG("execute_shell_cmd(\"%s\") returned %d", cmd, rc);
       if (rc != 1) {
-         printf("i2cdetect command unavailable\n");
+         rpt_vstring(0,"i2cdetect command unavailable");
          break;
       }
    }
@@ -1418,14 +1444,16 @@ int compare_udev_i2c_device_summary(const void * a, const void * b) {
 
 void probe_i2c_devices_using_udev() {
    char * subsys_name = "i2c-dev";
-   printf("\nProbing I2C devices using udev, susbsystem %s...\n", subsys_name);
+   rpt_nl();
+   rpt_vstring(0,"Probing I2C devices using udev, susbsystem %s...", subsys_name);
    // probe_udev_subsystem() is in udev_util.c, which is only linked in if USE_USB
    probe_udev_subsystem(subsys_name, /*show_usb_parent=*/ false, 1);
 
    GPtrArray * summaries = summarize_udev_subsystem_devices(subsys_name);
-   printf("\nSummary of udev I2C devices:\n");
+   rpt_nl();
+   rpt_vstring(0,"Summary of udev I2C devices:");
    if (!summaries || summaries->len == 0)
-      printf("No devices detected\n");
+      rpt_vstring(0,"No devices detected");
    else {
 #ifdef REFERENCE
 #define UDEV_DEVICE_SUMMARY_MARKER "UDSM"
@@ -1438,12 +1466,12 @@ const char * sysattr_name;
 #endif
 
       g_ptr_array_sort(summaries, compare_udev_i2c_device_summary);
-      printf("%-15s %-35s %s\n", "Sysname", "Sysattr Name", "Devpath");
+      rpt_vstring(0,"%-15s %-35s %s", "Sysname", "Sysattr Name", "Devpath");
       for (int ndx = 0; ndx < summaries->len; ndx++) {
          Udev_Device_Summary * summary = g_ptr_array_index(summaries, ndx);
          assert( memcmp(summary->marker, UDEV_DEVICE_SUMMARY_MARKER, 4) == 0);
          udev_i2c_device_summary_busno(summary);
-         printf("%-15s %-35s %s\n",
+         rpt_vstring(0,"%-15s %-35s %s",
                 summary->sysname, summary->sysattr_name, summary->devpath);
       }
    }
@@ -1462,16 +1490,20 @@ const char * sysattr_name;
 void query_sysenv() {
    query_base_env();
 
-   printf("\n*** Primary Check 1: Identify video card and driver ***\n");
+   rpt_nl();
+   rpt_vstring(0,"*** Primary Check 1: Identify video card and driver ***");
    struct driver_name_node * driver_list = query_card_and_driver_using_sysfs();
 
-   printf("\n*** Primary Check 2: Check that /dev/i2c-* exist and writable ***\n");
+   rpt_nl();
+   rpt_vstring(0,"*** Primary Check 2: Check that /dev/i2c-* exist and writable ***");
    check_i2c_devices(driver_list);
 
-   printf("\n*** Primary Check 3: Check that module i2c_dev is loaded ***\n");
+   rpt_nl();
+   rpt_vstring(0,"*** Primary Check 3: Check that module i2c_dev is loaded ***");
    check_i2c_dev_module(driver_list);
 
-   printf("\n*** Primary Check 4: Driver specific checks ***\n");
+   rpt_nl();
+   rpt_vstring(0,"*** Primary Check 4: Driver specific checks ***");
    driver_specific_tests(driver_list);
 
    // Free the driver list
@@ -1482,11 +1514,13 @@ void query_sysenv() {
       cur_node = next_node;
    }
 
-   printf("\n*** Primary Check 5: Installed packages ***\n");
+   rpt_nl();
+   rpt_vstring(0,"*** Primary Check 5: Installed packages ***");
    query_packages();
    puts("");
 
-   printf("\n*** Additional probes ***\n");
+   rpt_nl();
+   rpt_vstring(0,"*** Additional probes ***");
    // printf("Gathering card and driver information...\n");
    puts("");
    query_proc_modules_for_video();
@@ -1506,11 +1540,11 @@ void query_sysenv() {
       query_i2c_buses();
 
       puts("");
-      printf("xrandr connection report:\n");
+      rpt_vstring(0,"xrandr connection report:");
       execute_shell_cmd_rpt("xrandr|grep connected", 1 /* depth */);
       puts("");
 
-      printf("Checking for possibly conflicting programs...\n");
+      rpt_vstring(0,"Checking for possibly conflicting programs...");
       execute_shell_cmd_rpt("ps aux | grep ddccontrol | grep -v grep", 1);
       puts("");
 
