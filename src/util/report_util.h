@@ -24,6 +24,7 @@
 #ifndef REPORT_UTIL_H_
 #define REPORT_UTIL_H_
 
+#include <glib.h>
 #include <stdio.h>
 #include <stdbool.h>
 
@@ -80,5 +81,8 @@ void rpt_ifval2(char * name,
                 int    depth);
 
 void rpt_hex_dump(const Byte * data, int size, int depth);
+
+void rpt_multiline(int depth, ...);
+void rpt_g_ptr_array(int depth, GPtrArray * strings);
 
 #endif /* REPORT_UTIL_H_ */

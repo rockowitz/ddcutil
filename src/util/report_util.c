@@ -187,6 +187,38 @@ void rpt_vstring(int depth, char * format, ...) {
 }
 
 
+/* Convenience function that writes multiple constant strings.
+ *
+ * Arguments:
+ *   depth    logical indentation depth
+ *   ...      pointers to constant strings,
+ *            last pointer is NULL to terminate list
+ */
+void rpt_multiline(int depth, ...) {
+   va_list args;
+   va_start(args, depth);
+   char * s = NULL;
+   while( (s = va_arg(args, char *)) != NULL) {
+      rpt_title(s, depth);
+   }
+   va_end(args);
+}
+
+
+/* Writes all strings in a GPtrArray to the current report destination
+ *
+ * Arguments:
+ *   depth   logical indentation depth
+ *   strings pointer to GPtrArray of strings
+ */
+void rpt_g_ptr_array(int depth, GPtrArray * strings) {
+   for (int ndx = 0; ndx < strings->len; ndx++) {
+      char * s = g_ptr_array_index(strings, ndx);
+      rpt_title(s, depth);
+   }
+}
+
+
 
 /* Writes a string to the current output destination, describing a pointer
  * to a named data structure.
