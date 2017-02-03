@@ -114,7 +114,7 @@ static void probe_uhid(int depth) {
    dp = opendir(dirname);
    if (!dp) {
       int errsv = errno;
-      printf("Unable to open directory %s: %s\n", dirname, strerror(errsv));
+      rpt_vstring(depth, "Unable to open directory %s: %s", dirname, strerror(errsv));
    }
    else {
       while ( (ep = readdir(dp))) {
@@ -151,7 +151,7 @@ static void probe_uhid(int depth) {
                is_monitor = force_hid_monitor_by_vid_pid(vid, pid);
             }
             if (is_monitor) {
-               puts("");
+               rpt_nl();
                rpt_vstring(d1, "%s:", fqfn);
                rpt_file_contents(fqfn, d2);
             }
@@ -179,7 +179,7 @@ static void probe_hiddev(int depth) {
    GPtrArray * hiddev_devices = get_hiddev_device_names();
    rpt_vstring(depth, "Found %d USB HID devices.", hiddev_devices->len);
    for (int devndx=0; devndx<hiddev_devices->len; devndx++) {
-      puts("");
+      rpt_nl();
       errno=0;
       char * curfn = g_ptr_array_index(hiddev_devices,devndx);
       int fd = usb_open_hiddev_device(curfn, CALLOPT_RDONLY);    // do not emit error msg
@@ -250,47 +250,56 @@ static void probe_hiddev(int depth) {
  * Returns:      nothing
  */
 static void query_usb_monitors() {
-   printf("\nChecking for USB connected monitors...\n");
+   rpt_nl();
+   rpt_vstring(0, "Checking for USB connected monitors...");
 
    DDCA_Output_Level output_level = get_output_level();
 
-   puts("");
+   rpt_nl();
    rpt_vstring(1, "Using lsusb to summarize USB devices...");
    execute_shell_cmd("lsusb|sort", 2);
-   puts("");
+   rpt_nl();
+
    rpt_vstring(1, "USB device toplogy...");
    execute_shell_cmd("lsusb -t", 2);
-   puts("");
+   rpt_nl();
 
    rpt_vstring(1, "Listing /dev/usb...");
    execute_shell_cmd("ls -l /dev/usb", 2);
-   puts("");
+   rpt_nl();
+
    rpt_vstring(1, "Listing /dev/hiddev*...");
    execute_shell_cmd("ls -l /dev/hiddev*", 2);
-   puts("");
+   rpt_nl();
+
    rpt_vstring(1, "Listing /dev/bus/usb...");
    execute_shell_cmd("ls -l /dev/bus/usb", 2);
-   puts("");
+   rpt_nl();
+
    rpt_vstring(1, "Listing /dev/hidraw*...");
    execute_shell_cmd("ls -l /dev/hidraw*", 2);
-   puts("");
+   rpt_nl();
 
    if (output_level >= OL_VERBOSE) {
       char * subsys_name = "usbmisc";
-      printf("\nProbing USB HID devices using udev, susbsystem %s...\n", subsys_name);
+      rpt_nl();
+      rpt_vstring(0, "Probing USB HID devices using udev, susbsystem %s...", subsys_name);
       probe_udev_subsystem(subsys_name, /*show_usb_parent=*/ true, 1);
       subsys_name = "hidraw";
-      printf("\nProbing USB HID devices using udev, susbsystem %s...\n", subsys_name);
+      rpt_nl();
+      rpt_vstring(0, "Probing USB HID devices using udev, susbsystem %s...", subsys_name);
       probe_udev_subsystem(subsys_name, /*show_usb_parent=*/ true, 1);
    }
 
    if (output_level >= OL_VERBOSE) {
       // currently an overwhelming amount of information - need to display
       // only possible HID connected monitors
-      printf("\nProbing possible HID monitors using libusb...\n");
+      rpt_nl();
+      rpt_vstring(0, "Probing possible HID monitors using libusb...");
       probe_libusb(/*possible_monitors_only=*/ true, /*depth=*/ 1);
 
-      printf("\nChecking for USB connected monitors on /dev/hidraw* ...\n");
+      rpt_nl();
+      rpt_vstring(0, "Checking for USB connected monitors on /dev/hidraw* ...");
       probe_hidraw(
             true,    // possible_monitors_only
             1);      // logical indentation depth
@@ -305,11 +314,11 @@ static void query_usb_monitors() {
        // probe_hidapi(1);
    }
 
-   puts("");
+   rpt_nl();
    rpt_vstring(0, "Checking for USB HID devices using hiddev...");
    probe_hiddev(1);
 
-   puts("");
+   rpt_nl();
    rpt_vstring(0, "Checking for USB HID Report Descriptors in /sys/kernel/debug/hid...");
    probe_uhid(1);
 }
