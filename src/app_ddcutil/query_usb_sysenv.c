@@ -257,27 +257,27 @@ static void query_usb_monitors() {
 
    rpt_nl();
    rpt_vstring(1, "Using lsusb to summarize USB devices...");
-   execute_shell_cmd("lsusb|sort", 2);
+   execute_shell_cmd_rpt("lsusb|sort", 2);
    rpt_nl();
 
    rpt_vstring(1, "USB device toplogy...");
-   execute_shell_cmd("lsusb -t", 2);
+   execute_shell_cmd_rpt("lsusb -t", 2);
    rpt_nl();
 
    rpt_vstring(1, "Listing /dev/usb...");
-   execute_shell_cmd("ls -l /dev/usb", 2);
+   execute_shell_cmd_rpt("ls -l /dev/usb", 2);
    rpt_nl();
 
    rpt_vstring(1, "Listing /dev/hiddev*...");
-   execute_shell_cmd("ls -l /dev/hiddev*", 2);
+   execute_shell_cmd_rpt("ls -l /dev/hiddev*", 2);
    rpt_nl();
 
    rpt_vstring(1, "Listing /dev/bus/usb...");
-   execute_shell_cmd("ls -l /dev/bus/usb", 2);
+   execute_shell_cmd_rpt("ls -l /dev/bus/usb", 2);
    rpt_nl();
 
    rpt_vstring(1, "Listing /dev/hidraw*...");
-   execute_shell_cmd("ls -l /dev/hidraw*", 2);
+   execute_shell_cmd_rpt("ls -l /dev/hidraw*", 2);
    rpt_nl();
 
    if (output_level >= OL_VERBOSE) {

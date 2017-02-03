@@ -153,7 +153,7 @@ static void query_base_env() {
       printf("   System version cannot be read from /proc/version\n");
 
    printf("/etc/os-release...\n");
-   bool ok = execute_shell_cmd("grep PRETTY_NAME /etc/os-release", 1 /* depth */);
+   bool ok = execute_shell_cmd_rpt("grep PRETTY_NAME /etc/os-release", 1 /* depth */);
    if (!ok)
       printf("   Unable to read PRETTY_NAME from /etc/os-release\n");
 }
@@ -624,7 +624,7 @@ static void check_i2c_devices(struct driver_name_node * driver_list) {
          );
 
    printf("\nChecking for /dev/i2c-* devices...\n");
-   execute_shell_cmd("ls -l /dev/i2c-*", 1);
+   execute_shell_cmd_rpt("ls -l /dev/i2c-*", 1);
 
 #ifdef OLD
    rc = getlogin_r(username, sizeof(username));
@@ -636,7 +636,7 @@ static void check_i2c_devices(struct driver_name_node * driver_list) {
    printf("(%s) getlogin() returned |%s|\n", __func__, getlogin());
    char * cmd = "echo $LOGNAME";
    printf("(%s) executing command: %s\n", __func__, cmd);
-   bool ok = execute_shell_cmd(cmd, 0);
+   bool ok = execute_shell_cmd_rpt(cmd, 0);
    printf("(%s) execute_shell_cmd() returned %s\n", __func__, bool_repr(ok));
 
 #endif
@@ -776,9 +776,9 @@ static void check_i2c_devices(struct driver_name_node * driver_list) {
    #endif
 
       printf("\nLooking for udev nodes files that reference i2c:\n");
-      execute_shell_cmd("grep -H i2c /etc/udev/makedev.d/*", 1);
+      execute_shell_cmd_rpt("grep -H i2c /etc/udev/makedev.d/*", 1);
       printf("\nLooking for udev rules files that reference i2c:\n");
-      execute_shell_cmd("grep -H i2c "
+      execute_shell_cmd_rpt("grep -H i2c "
                         "/lib/udev/rules.d/*rules "
                         "/run/udev/rules.d/*rules "
                         "/etc/udev/rules.d/*rules", 1 );
@@ -900,7 +900,7 @@ static void check_i2c_dev_module(struct driver_name_node * video_driver_list) {
 
    if ( (!is_loaded && !is_builtin) || output_level >= OL_VERBOSE) {
       printf("\nCheck that kernel module i2c_dev is being loaded by examining files where this would be specified...\n");
-      execute_shell_cmd("grep -H i2c[-_]dev "
+      execute_shell_cmd_rpt("grep -H i2c[-_]dev "
                         "/etc/modules "
                         "/etc/modules-load.d/*conf "
                         "/run/modules-load.d/*conf "
@@ -908,7 +908,7 @@ static void check_i2c_dev_module(struct driver_name_node * video_driver_list) {
                         , 1);
 
       printf("\nCheck for any references to i2c_dev in /etc/modprobe.d ...\n");
-      execute_shell_cmd("grep -H i2c[-_]dev "
+      execute_shell_cmd_rpt("grep -H i2c[-_]dev "
                         "/etc/modprobe.d/*conf "
                         "/run/modprobe.d/*conf "
                         , 1);
@@ -926,23 +926,23 @@ static void query_packages() {
    // n. apt show produces warning msg that format of output may change.
    // better to use dpkg
    ok = printf("\nUsing dpkg to look for package i2c-tools...\n");
-   execute_shell_cmd("dpkg --status i2c-tools", 1);
+   execute_shell_cmd_rpt("dpkg --status i2c-tools", 1);
    if (!ok)
       printf("dpkg command not found\n");
    else {
-      execute_shell_cmd("dpkg --listfiles i2c-tools", 1);
+      execute_shell_cmd_rpt("dpkg --listfiles i2c-tools", 1);
    }
 
    ok = printf("\nUsing dpkg to look for package libi2c-dev...\n");
-   execute_shell_cmd("dpkg --status libi2c-dev", 1);
+   execute_shell_cmd_rpt("dpkg --status libi2c-dev", 1);
    if (!ok)
       printf("dpkg command not found\n");
    else {
-      execute_shell_cmd("dpkg --listfiles libi2c-dev", 1);
+      execute_shell_cmd_rpt("dpkg --listfiles libi2c-dev", 1);
    }
 
    printf("\nUsing rpm to look for package i2c-tools...\n");
-   ok = execute_shell_cmd("rpm -q -l --scripts i2c-tools", 1);
+   ok = execute_shell_cmd_rpt("rpm -q -l --scripts i2c-tools", 1);
    if (!ok)
       printf("rpm command not found\n");
 }
@@ -1198,7 +1198,7 @@ static void driver_specific_tests(struct driver_name_node * driver_list) {
       found_driver_specific_checks = true;
       printf("\nChecking for special settings for proprietary Nvidia driver \n");
       printf("(needed for some newer Nvidia cards).\n");
-      execute_shell_cmd("grep -iH i2c /etc/X11/xorg.conf /etc/X11/xorg.conf.d/*", 1);
+      execute_shell_cmd_rpt("grep -iH i2c /etc/X11/xorg.conf /etc/X11/xorg.conf.d/*", 1);
    }
 
    if (found_driver(driver_list, "fglrx")) {
@@ -1371,7 +1371,7 @@ static void query_using_i2cdetect() {
       snprintf(cmd, 80, "i2cdetect -y %s", busname);
       printf("\nProbing bus /dev/i2c-%d using command \"%s\"\n", ndx, cmd);
       // DBGMSG("Executing command: |%s|\n", cmd);
-      int rc = execute_shell_cmd(cmd, 1 /* depth */);
+      int rc = execute_shell_cmd_rpt(cmd, 1 /* depth */);
       // DBGMSG("execute_shell_cmd(\"%s\") returned %d", cmd, rc);
       if (rc != 1) {
          printf("i2cdetect command unavailable\n");
@@ -1507,11 +1507,11 @@ void query_sysenv() {
 
       puts("");
       printf("xrandr connection report:\n");
-      execute_shell_cmd("xrandr|grep connected", 1 /* depth */);
+      execute_shell_cmd_rpt("xrandr|grep connected", 1 /* depth */);
       puts("");
 
       printf("Checking for possibly conflicting programs...\n");
-      execute_shell_cmd("ps aux | grep ddccontrol | grep -v grep", 1);
+      execute_shell_cmd_rpt("ps aux | grep ddccontrol | grep -v grep", 1);
       puts("");
 
       query_using_i2cdetect();

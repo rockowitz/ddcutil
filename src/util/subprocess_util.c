@@ -31,7 +31,7 @@
 #include "util/subprocess_util.h"
 
 
-/* Executes a shell command and writes the output to the terminal
+/* Executes a shell command and writes the output to the current report destination
  *
  * Arguments:
  *    shell_cmd      command to execute
@@ -41,7 +41,7 @@
  *    true           command succeeded
  *    false          failed, e.g. command not found
  */
-bool execute_shell_cmd(char * shell_cmd, int depth) {
+bool execute_shell_cmd_rpt(char * shell_cmd, bool dest_rpt, int depth) {
    bool debug = false;
    if (debug)
       printf("(%s) Starting. shell_cmd = |%s|", __func__, shell_cmd);
@@ -73,6 +73,7 @@ bool execute_shell_cmd(char * shell_cmd, int depth) {
              }
              first_line = false;
           }
+          // n. output will be sent to current rpt_ dest !
           rpt_title(a_line, depth);
           // fputs(a_line, stdout);
           // free(a_line);

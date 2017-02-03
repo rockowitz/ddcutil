@@ -27,7 +27,7 @@
 #include <glib.h>
 #include <stdbool.h>
 
-bool execute_shell_cmd(char * shell_cmd, int depth);
+bool execute_shell_cmd_rpt(char * shell_cmd, int depth);
 GPtrArray * execute_shell_cmd_collect(char * shell_cmd);
 
 #endif /* SUBPROCESS_UTIL_H_ */
