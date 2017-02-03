@@ -134,7 +134,7 @@ void rpt_change_output_dest(FILE* new_dest) {
 
 /* Writes a newline to the current output destination.
  */
-void rpt_newline() {
+void rpt_nl() {
    f0printf(rpt_cur_output_dest(), "\n");
 }
 

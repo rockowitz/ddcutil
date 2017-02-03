@@ -37,7 +37,7 @@ void rpt_change_output_dest(FILE* new_dest);
 
 int rpt_indent(int depth);
 
-void rpt_newline();
+void rpt_nl();
 void rpt_title(char * title, int depth);
 void rpt_vstring(int depth, char * format, ...) ;
 void rpt_structure_loc(const char * name, const void * ptr, int depth);
