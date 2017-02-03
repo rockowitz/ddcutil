@@ -41,7 +41,7 @@
  *    true           command succeeded
  *    false          failed, e.g. command not found
  */
-bool execute_shell_cmd_rpt(char * shell_cmd, bool dest_rpt, int depth) {
+bool execute_shell_cmd_rpt(char * shell_cmd, int depth) {
    bool debug = false;
    if (debug)
       printf("(%s) Starting. shell_cmd = |%s|", __func__, shell_cmd);
