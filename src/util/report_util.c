@@ -5,7 +5,7 @@
  * This source file maintains state in static variables so is not thread safe.
  *
  * <copyright>
- * Copyright (C) 2014-2016 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2014-2017 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -131,6 +131,12 @@ void rpt_change_output_dest(FILE* new_dest) {
    }
 }
 
+
+/* Writes a newline to the current output destination.
+ */
+void rpt_newline() {
+   f0printf(rpt_cur_output_dest(), "\n");
+}
 
 
 /* Writes a constant string to the current output destination.

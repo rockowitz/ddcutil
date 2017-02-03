@@ -1,7 +1,7 @@
 /* report_util.h
  *
  * <copyright>
- * Copyright (C) 2014-2016 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2014-2017 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -35,27 +35,22 @@ FILE * rpt_cur_output_dest();
 void rpt_reset_output_dest_stack();
 void rpt_change_output_dest(FILE* new_dest);
 
+int rpt_indent(int depth);
+
+void rpt_newline();
 void rpt_title(char * title, int depth);
-
 void rpt_vstring(int depth, char * format, ...) ;
-
 void rpt_structure_loc(const char * name, const void * ptr, int depth);
-
 void rpt_str(const char * name, char * info, const char * val, int depth);
-
 void rpt_int(char * name, char * info, int val, int depth);
-
 void rpt_2col(char * s1,  char * s2,  int col2offset, bool offset_absolute, int depth);
-
+void rpt_bool(char * name, char * info, bool val, int depth);
 
 typedef char * (*Value_To_Name_Function)(int val);
-
-
 void rpt_mapped_int(char * name, char * info, int val, Value_To_Name_Function func, int depth);
 
 void rpt_int_as_hex(char * name, char * info, int val, int depth);
 void rpt_uint8_as_hex(char * name, char * info, unsigned char val, int depth) ;
-
 void rpt_bytes_as_hex(const char * name, char * info, Byte * bytes, int ct, bool hex_prefix_flag, int depth);
 
 typedef
@@ -65,20 +60,17 @@ struct {
    int    flag_val;
 } Flag_Info;
 
-
 typedef
 struct {
    int         flag_info_ct;
    Flag_Info * flag_info_recs;
 } Flag_Dictionary;
 
-
 typedef
 struct {
    int     flag_name_ct;
    char ** flag_names;
 } Flag_Name_Set;
-
 
 void rpt_ifval2(char * name,
                 char * info,
@@ -87,11 +79,6 @@ void rpt_ifval2(char * name,
                 Flag_Dictionary * pDict,
                 int    depth);
 
-
-void rpt_bool(char * name, char * info, bool val, int depth);
-
 void rpt_hex_dump(const Byte * data, int size, int depth);
-
-int rpt_indent(int depth);
 
 #endif /* REPORT_UTIL_H_ */
