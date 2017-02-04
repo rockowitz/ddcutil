@@ -42,6 +42,7 @@
 #include <unistd.h>
 #include <wchar.h>
 
+#include "util/data_structures.h"
 #include "util/string_util.h"
 #include "util/report_util.h"
 #include "util/device_id_util.h"
@@ -56,22 +57,6 @@
 // Identifier to name tables
 //
 
-#define VALUE_NAME(v) {v,#v}
-#define VALUE_NAME_END {0xff,NULL}
-
-#define VN2(v,t) {v,#v,t}
-#define VN_END2 {0xff,NULL,NULL}
-
-typedef struct {
-   Byte   value;
-   char * name;
-} Value_Name;
-
-typedef struct {
-   Byte   value;
-   char * name;
-   char * title;
-} Value_Name_Title;
 
 Value_Name class_id_table[] = {
       {LIBUSB_CLASS_PER_INTERFACE, "LIBUSB_CLASS_PER_INTERFACE"},
@@ -186,18 +171,7 @@ Value_Name_Title transfer_type_table[] = {
 
 
 
-char * vn_title(Value_Name_Title* table, Byte val) {
-   char * result = NULL;
 
-   Value_Name_Title * cur = table;
-   for (; cur->name; cur++) {
-      if (val == cur->value) {
-         result = cur->title;
-         break;
-      }
-   }
-   return result;
-}
 
 char * descriptor_title(Byte val) {
    return vn_title(descriptor_type_table, val);
@@ -214,6 +188,7 @@ char * transfer_type_title(Byte val) {
 char * class_code_title(Byte val) {
    return vn_title(class_code_table, val);
 }
+
 
 
 //

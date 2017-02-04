@@ -106,5 +106,31 @@ void     buffer_add(Buffer * buffer, Byte byte);
 void     buffer_dump(Buffer * buffer);
 bool     buffer_eq(Buffer* buf1, Buffer* buf2);
 
+
+//
+// Identifier id to name and description lookup
+//
+
+
+#define VALUE_NAME(v) {v,#v}
+#define VALUE_NAME_END {0xff,NULL}
+
+#define VN2(v,t) {v,#v,t}
+#define VN_END2 {0xff,NULL,NULL}
+
+typedef struct {
+   Byte   value;
+   char * name;
+} Value_Name;
+
+typedef struct {
+   Byte   value;
+   char * name;
+   char * title;
+} Value_Name_Title;
+
+char * vn_title(Value_Name_Title* table, Byte val);
+char * vn_name(Value_Name* table, Byte val);
+
 #endif /* DATA_STRUCTURES_H */
 

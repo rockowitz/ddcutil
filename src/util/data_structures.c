@@ -619,3 +619,36 @@ void buffer_dump(Buffer * buffer) {
       hex_dump(buffer->bytes, buffer->len);
 }
 
+
+//
+// Identifier id to name and description lookup
+//
+
+
+char * vn_title(Value_Name_Title* table, Byte val) {
+   char * result = NULL;
+
+   Value_Name_Title * cur = table;
+   for (; cur->name; cur++) {
+      if (val == cur->value) {
+         result = cur->title;
+         break;
+      }
+   }
+   return result;
+}
+
+
+
+char * vn_name(Value_Name* table, Byte val) {
+   char * result = NULL;
+
+   Value_Name * cur = table;
+   for (; cur->name; cur++) {
+      if (val == cur->value) {
+         result = cur->name;
+         break;
+      }
+   }
+   return result;
+}
