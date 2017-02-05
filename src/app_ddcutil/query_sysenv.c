@@ -66,6 +66,7 @@
 #include "util/udev_util.h"
 #endif
 
+
 #include "base/ddc_errno.h"
 #include "base/core.h"
 #include "base/linux_errno.h"
@@ -79,6 +80,7 @@
 #include "usb/usb_displays.h"
 #endif
 
+#include "query_drm_sysenv.h"
 #include "app_ddcutil/query_sysenv.h"
 
 
@@ -510,7 +512,7 @@ bye:
  * path.
  */
 void raw_scan_i2c_devices() {
-   puts("");
+   rpt_nl();
    rpt_title("Performing basic scan of I2C devices",0);
    bool debug = false;
    DBGMSF(debug, "Starting");
@@ -524,7 +526,7 @@ void raw_scan_i2c_devices() {
    for (int busno=0; busno < I2C_BUS_MAX; busno++) {
       if (i2c_bus_exists(busno)) {
          busct++;
-         puts("");
+         rpt_nl();
          rpt_vstring(0, "Examining device /dev/i2c-%d...", busno);
 
          if (!is_i2c_device_rw(busno))
@@ -553,7 +555,7 @@ void raw_scan_i2c_devices() {
                rpt_vstring(1, "Unable to parse EDID");
          }
 
-         puts("");
+         rpt_nl();
          rpt_vstring(1, "Trying simple VCP read of feature 0x10...");
          rc = i2c_set_addr(fd, 0x37, CALLOPT_ERR_MSG);
          if (rc == 0) {
@@ -1347,7 +1349,7 @@ static void query_i2c_buses() {
  */
 void query_x11() {
    GPtrArray* edid_recs = get_x11_edids();
-   puts("");
+   rpt_nl();
    rpt_vstring(0,"EDIDs reported by X11 for connected xrandr outputs:");
    // DBGMSG("Got %d X11_Edid_Recs\n", edid_recs->len);
 
@@ -1517,36 +1519,36 @@ void query_sysenv() {
    rpt_nl();
    rpt_vstring(0,"*** Primary Check 5: Installed packages ***");
    query_packages();
-   puts("");
+   rpt_nl();
 
    rpt_nl();
    rpt_vstring(0,"*** Additional probes ***");
    // printf("Gathering card and driver information...\n");
-   puts("");
+   rpt_nl();
    query_proc_modules_for_video();
-   puts("");
+   rpt_nl();
    query_card_and_driver_using_lspci();
-   puts("");
+   rpt_nl();
    query_loaded_modules_using_sysfs();
    query_i2c_bus_using_sysfs();
 
    DDCA_Output_Level output_level = get_output_level();
    if (output_level >= OL_VERBOSE) {
-      puts("");
+      rpt_nl();
       query_proc_driver_nvidia();
    }
 
    if (output_level >= OL_VERBOSE) {
       query_i2c_buses();
 
-      puts("");
+      rpt_nl();
       rpt_vstring(0,"xrandr connection report:");
       execute_shell_cmd_rpt("xrandr|grep connected", 1 /* depth */);
-      puts("");
+      rpt_nl();
 
       rpt_vstring(0,"Checking for possibly conflicting programs...");
       execute_shell_cmd_rpt("ps aux | grep ddccontrol | grep -v grep", 1);
-      puts("");
+      rpt_nl();
 
       query_using_i2cdetect();
 
@@ -1557,6 +1559,13 @@ void query_sysenv() {
 #ifdef USE_USB
       // probe_udev_subsystem() is in udev_util.c, which is only linked in if USE_USB
       probe_i2c_devices_using_udev();
+#endif
+
+      rpt_nl();
+#ifdef USE_LIBDRM
+      probe_using_libdrm();
+#else
+      rpt_vstring(0, "Not built with libdrm support.  Skipping DRM related checks");
 #endif
    }
 

@@ -407,6 +407,19 @@ AS_IF( [test 0$DBG -ne 0],
           AC_MSG_NOTICE( [LIBUSB_LIBS:      $LIBUSB_LIBS] )
        ]) 
 
+### libdrm 
+
+PKG_CHECK_MODULES(LIBDRM, libdrm, [
+      use_libdrm=yes
+      AC_DEFINE([USE_LIBDRM], [1], [libdrm is available])
+   ],
+   [
+      use_libdrm=no
+      AC_MSG_NOTICE([libdrm not found, DRM will not be used in diagnostics])
+   ])
+   AM_CONDITIONAL( [USE_LIBDRM_COND], [test "x$use_libdrm" == "xyes"])
+   dnl AM_COND_IF([USE_LIBDRM_COND], [AC_DEFINE([USE_LIBDRM2], [1], [use libdrm (2)])])
+
 
 ### DOXYGEN
 
@@ -831,6 +844,8 @@ AC_MSG_RESULT([
 	enable_doxygen:         ${enable_doxygen}
 
 	enable_failsim:         ${enable_failsim}
+
+	use libdrm:             ${use_libdrm}   
 
 	compiler:               ${CC}
 	cflags:                 ${CFLAGS}
