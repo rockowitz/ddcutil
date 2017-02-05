@@ -26,11 +26,10 @@
 
 #include <glib.h>
 
-
-
-
 char * join_string_g_ptr_array(GPtrArray* strings, char * sepstr);
 
 gpointer * g_list_to_g_array(GList * glist, guint * length);
+
+gint g_ptr_scomp(gconstpointer a, gconstpointer b);
 
 #endif /* GLIB_UTIL_H_ */

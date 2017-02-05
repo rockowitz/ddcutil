@@ -96,18 +96,6 @@ GPtrArray * get_hiddev_device_names_using_filesys() {
 }
 
 
-/* Comparison function used by g_ptr_array_sort() in function
- * find_hiddev_devices()
- */
-gint g_ptr_scomp(gconstpointer a, gconstpointer b) {
-   char ** ap = (char **) a;
-   char ** bp = (char **) b;
-   // printf("(%s) ap = %p -> -> %p -> |%s|\n", __func__, ap, *ap, *ap);
-   // printf("(%s) bp = %p -> -> %p -> |%s|\n", __func__, bp, *bp, *bp);
-   return g_ascii_strcasecmp(*ap,*bp);
-}
-
-
 /* Find hiddev device names using udev.
  *
  * Slightly more robust than get_hiddev_device_names_using_filesys() since doesn't

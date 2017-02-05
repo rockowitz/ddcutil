@@ -145,3 +145,14 @@ gpointer * g_list_to_g_array(GList * glist, guint * length) {
    *length = len;
    return result;
 }
+
+
+/* String comparison function used by g_ptr_array_sort()
+ */
+gint g_ptr_scomp(gconstpointer a, gconstpointer b) {
+   char ** ap = (char **) a;
+   char ** bp = (char **) b;
+   // printf("(%s) ap = %p -> -> %p -> |%s|\n", __func__, ap, *ap, *ap);
+   // printf("(%s) bp = %p -> -> %p -> |%s|\n", __func__, bp, *bp, *bp);
+   return g_ascii_strcasecmp(*ap,*bp);
+}
