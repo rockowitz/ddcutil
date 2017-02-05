@@ -27,6 +27,7 @@
 #define DATA_STRUCTURES_H
 
 #include <stdbool.h>
+#include <stdint.h>
 
 #include "util/coredefs.h"   // for Byte
 
@@ -129,8 +130,17 @@ typedef struct {
    char * title;
 } Value_Name_Title;
 
-char * vn_title(Value_Name_Title* table, Byte val);
-char * vn_name(Value_Name* table, Byte val);
+char * vn_title(Value_Name_Title* table, uint32_t val);
+char * vn_name(Value_Name* table, uint32_t val);
+
+bool sbuf_append(char * buf, int bufsz, char * sepstr, char * nextval) ;
+char * interpret_named_flags(
+      Value_Name * table,
+      uint32_t     val,
+      char *       buffer,
+      int          bufsz,
+      char *       sepstr);
+
 
 #endif /* DATA_STRUCTURES_H */
 

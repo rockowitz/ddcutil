@@ -625,7 +625,7 @@ void buffer_dump(Buffer * buffer) {
 //
 
 
-char * vn_title(Value_Name_Title* table, Byte val) {
+char * vn_title(Value_Name_Title* table, uint32_t val) {
    char * result = NULL;
 
    Value_Name_Title * cur = table;
@@ -640,7 +640,7 @@ char * vn_title(Value_Name_Title* table, Byte val) {
 
 
 
-char * vn_name(Value_Name* table, Byte val) {
+char * vn_name(Value_Name* table, uint32_t val) {
    char * result = NULL;
 
    Value_Name * cur = table;
@@ -651,4 +651,47 @@ char * vn_name(Value_Name* table, Byte val) {
       }
    }
    return result;
+}
+
+
+bool sbuf_append(char * buf, int bufsz, char * sepstr, char * nextval) {
+   assert(buf && (bufsz > 4) );   //avoid handling pathological case
+   bool truncated = false;
+   int seplen = (sepstr) ? strlen(sepstr) : 0;
+   int maxchars = bufsz-1;
+   int newlen = ( strlen(buf) == 0 )
+                     ? strlen(nextval)
+                     : ( strlen(buf) + seplen + strlen(nextval));
+   if (newlen <= maxchars) {
+      if (strlen(buf) > 0 && sepstr)
+         strcat(buf, sepstr);
+      strcat(buf, nextval);
+   }
+   else {
+      if ( strlen(buf) < (maxchars-3) )
+         strcat(buf, "...");
+      else
+         strcpy(buf+(maxchars-3), "...");
+      truncated = true;
+   }
+   return truncated;
+}
+
+char * interpret_named_flags(
+      Value_Name * table,
+      uint32_t     val,
+      char *       buffer,
+      int          bufsz,
+      char *       sepstr)
+{
+   assert(buffer);
+   buffer[0] = '\0';
+   Value_Name * cur = table;
+   for (; cur->name; cur++) {
+      if (val & cur->value) {
+         if (sbuf_append(buffer, bufsz, sepstr, cur->name) )   //  truncated?
+            break;
+      }
+   }
+   return buffer;
 }
