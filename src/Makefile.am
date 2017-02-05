@@ -126,6 +126,11 @@ ddcutil_SOURCES += \
    app_ddcutil/testcase_mock_table.c
 endif
 
+if USE_LIBDRM_COND
+ddcutil_SOURCES += \
+  util/libdrm_util.c \
+  app_ddcutil/query_drm_sysenv.c
+endif
 
 #
 # Files only in laclient executable
@@ -276,6 +281,10 @@ $(LIBUSB_CFLAGS) \
 -I$(srcdir)      \
 -I$(srcdir)/public
 
+AM_CPPFLAGS += \
+$(LIBDRM_CFLAGS)
+
+
 if HAVE_ADL_COND
 AM_CPPFLAGS +=               \
 -I@ADL_HEADER_DIR@  
@@ -362,6 +371,8 @@ ddcutil_LDADD += \
    $(UDEV_LIBS) 
 endif
 
+ddcutil_LDADD += \
+  $(LIBDRM_LIBS)
 
 #needed?
 ddcutil_LDFLAGS =  
