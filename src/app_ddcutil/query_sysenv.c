@@ -98,15 +98,17 @@ static char * known_video_driver_modules[] = {
 
 static char * prefix_matches[] = {
       "amdgpu",
+      "drm",
       "i2c",
       "video",
       NULL
 };
 
 static char * other_driver_modules[] = {
+      "drm",
       "eeprom",
-      "i2c_dev",
       "i2c_algo_bit",
+      "i2c_dev",
       "i2c_piix4",
       NULL
 };
@@ -141,24 +143,39 @@ ushort h2ushort(char * hval) {
 }
 
 
+static void wrap_get_first_line(char * fn, char * title, int depth) {
+   int d1 = depth+1;
+   if (title)
+      rpt_title(title, depth);
+   else
+      rpt_vstring(depth, "%s:", fn);
+
+   char * s = file_get_first_line(fn, true /* verbose */);
+   if (s)
+      rpt_title(s, d1);
+   else
+      rpt_vstring(d1, "Unable to read %s", fn);
+}
+
+
 /* Reports basic system information
  */
 static void query_base_env() {
    rpt_nl();
-   rpt_vstring(0,"System information");
-   rpt_vstring(0, "uname:");
-   char * version_line = file_get_first_line("/proc/version", true /* verbose */);
-   if (version_line)
-      rpt_vstring(0,"   %s", version_line);
-   else
-      rpt_vstring(0,"   System version cannot be read from /proc/version");
+   rpt_vstring(0,"*** Basic System Information ***");
+   rpt_nl();
+   wrap_get_first_line("/proc/version", NULL, 0);
 
+   rpt_nl();
    rpt_vstring(0,"/etc/os-release...");
    bool ok = execute_shell_cmd_rpt("grep PRETTY_NAME /etc/os-release", 1 /* depth */);
    if (!ok)
-      rpt_vstring(0,"   Unable to read PRETTY_NAME from /etc/os-release");
-}
+      rpt_vstring(1,"Unable to read PRETTY_NAME from /etc/os-release");
 
+   rpt_nl();
+   wrap_get_first_line("/proc/cmdline", NULL, 0);
+
+}
 
 
 static int query_proc_modules_for_video() {
@@ -1494,6 +1511,7 @@ void query_sysenv() {
 
    rpt_nl();
    rpt_vstring(0,"*** Primary Check 1: Identify video card and driver ***");
+   rpt_nl();
    struct driver_name_node * driver_list = query_card_and_driver_using_sysfs();
 
    rpt_nl();
