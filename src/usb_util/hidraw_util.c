@@ -103,7 +103,6 @@ bus_str(int bus)
 // Probe hidraw devices
 //
 
-
 void probe_hidraw_device(char * devname, bool show_monitors_only,  int depth) {
    bool debug = false;
    puts("");
@@ -130,6 +129,16 @@ void probe_hidraw_device(char * devname, bool show_monitors_only,  int depth) {
 
    if (fd < 0) {
       rpt_vstring(depth, "Unable to open device %s: %s", devname, strerror(errno));
+      Usb_Detailed_Device_Summary * devsum = lookup_udev_usb_device_by_devname(devname);
+      // report_usb_detailed_device_summary(devsum, 2);
+      rpt_vstring(d1, "USB bus %s, device %s, vid:pid: %s:%s - %s:%s",
+                      devsum->busnum_s,
+                      devsum->devnum_s,
+                      devsum->vendor_id,
+                      devsum->product_id,
+                      devsum->vendor_name,
+                      devsum->product_name);
+      free_usb_detailed_device_summary(devsum);
       goto bye;
    }
 
