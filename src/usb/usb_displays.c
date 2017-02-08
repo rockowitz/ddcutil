@@ -323,8 +323,6 @@ static GPtrArray * get_usb_monitor_list() {
                         devsum->product_id,
                         devsum->vendor_name,
                         devsum->product_name);
-
-
          free_usb_detailed_device_summary(devsum);
       }
       else if (fd > 1) {     // fd == 0 should never occur
