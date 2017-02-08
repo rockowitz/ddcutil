@@ -161,9 +161,6 @@ static void wrap_get_first_line(char * fn, char * title, int depth) {
 /* Reports basic system information
  */
 static void query_base_env() {
-   rpt_nl();
-   rpt_vstring(0,"*** Basic System Information ***");
-   rpt_nl();
    wrap_get_first_line("/proc/version", NULL, 0);
 
    rpt_nl();
@@ -617,7 +614,6 @@ static void check_i2c_devices(struct driver_name_node * driver_list) {
    char *uname = NULL;
    // bool have_i2c_devices = false;
 
-   rpt_nl();
    rpt_vstring(0,"Checking /dev/i2c-* devices...");
    DDCA_Output_Level output_level = get_output_level();
 
@@ -899,7 +895,6 @@ static bool is_module_builtin(char * module_name) {
  * Returns:              nothing
  */
 static void check_i2c_dev_module(struct driver_name_node * video_driver_list) {
-   rpt_nl();
    rpt_vstring(0,"Checking for module i2c_dev...");
 
    DDCA_Output_Level output_level = get_output_level();
@@ -947,7 +942,6 @@ static void check_i2c_dev_module(struct driver_name_node * video_driver_list) {
 
 
 static void query_packages() {
-   rpt_nl();
    rpt_multiline(0,
          "ddcutil requiries package i2c-tools.  Use both dpkg and rpm to look for it.",
           "While we're at it, check for package libi2c-dev which is used for building",
@@ -1229,7 +1223,6 @@ static struct driver_name_node * query_card_and_driver_using_sysfs() {
  * Returns:          nothing
  */
 static void driver_specific_tests(struct driver_name_node * driver_list) {
-   rpt_nl();
    rpt_vstring(0,"Performing driver specific checks...");
    bool found_driver_specific_checks = false;
 
@@ -1507,6 +1500,9 @@ const char * sysattr_name;
  * Returns:      nothing
  */
 void query_sysenv() {
+   rpt_nl();
+   rpt_vstring(0,"*** Basic System Information ***");
+   rpt_nl();
    query_base_env();
 
    rpt_nl();
@@ -1516,14 +1512,17 @@ void query_sysenv() {
 
    rpt_nl();
    rpt_vstring(0,"*** Primary Check 2: Check that /dev/i2c-* exist and writable ***");
+   rpt_nl();
    check_i2c_devices(driver_list);
 
    rpt_nl();
    rpt_vstring(0,"*** Primary Check 3: Check that module i2c_dev is loaded ***");
+   rpt_nl();
    check_i2c_dev_module(driver_list);
 
    rpt_nl();
    rpt_vstring(0,"*** Primary Check 4: Driver specific checks ***");
+   rpt_nl();
    driver_specific_tests(driver_list);
 
    // Free the driver list
@@ -1536,6 +1535,7 @@ void query_sysenv() {
 
    rpt_nl();
    rpt_vstring(0,"*** Primary Check 5: Installed packages ***");
+   rpt_nl();
    query_packages();
    rpt_nl();
 
