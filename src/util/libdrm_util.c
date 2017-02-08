@@ -46,18 +46,6 @@
 // Identifier name tables
 //
 
-#ifdef EXAMPLE
-
-Value_Name_Title descriptor_type_table[] = {
-      VNT( LIBUSB_DT_DEVICE,                "Device"),            // 0x01
-      VNT( LIBUSB_DT_HUB,                   "Hub"),               // 0x29,
-      VNT( LIBUSB_DT_SUPERSPEED_HUB,        "SuperSpeed Hub"),    // 0x2a,
-      VNT( LIBUSB_DT_SS_ENDPOINT_COMPANION, "SuperSpeed Endpoint Companion"),  // 0x30
-      VNT_END
-};
-
-#endif
-
 Value_Name connector_type_table[] = {
    VN(DRM_MODE_CONNECTOR_Unknown   ), //   0
    VN(DRM_MODE_CONNECTOR_VGA       ), //   1
@@ -79,9 +67,14 @@ Value_Name connector_type_table[] = {
    VN_END
 };
 
+
+char * connector_type_name(Byte val) {
+   return vn_name(connector_type_table, val);
+}
+
+
 // from libdrm/drm.h
 #define DRM_MODE_PROP_BITMASK   (1<<5) /* bitmask of enumerated types */
-// #define DRM_MODE_PROP_ATOMIC        0x80000000
 
 /* extended-types: rather than continue to consume a bit per type,
  * grab a chunk of the bits to use as integer type id.
@@ -90,8 +83,6 @@ Value_Name connector_type_table[] = {
 #define DRM_MODE_PROP_TYPE(n)           ((n) << 6)
 // #define DRM_MODE_PROP_OBJECT            (DRM_MODE_PROP_TYPE(1))
 // #define DRM_MODE_PROP_SIGNED_RANGE      (DRM_MODE_PROP_TYPE(2))
-
-
 
 
 Value_Name drm_property_flag_table[] = {
@@ -106,10 +97,6 @@ Value_Name drm_property_flag_table[] = {
 };
 
 
-
-char * connector_type_name(Byte val) {
-   return vn_name(connector_type_table, val);
-}
 
 // doesn't handle extended property types, inc DRM_MODE_PROP_OOBJECT, DRM_MODE_PROP_SIGNED_RANGE
 // see libdrm/drm.h
@@ -143,32 +130,16 @@ char * interpret_property_flags(uint32_t flags) {
 }
 
 
+Value_Name drmModeConnection_table[] = {
+   VN(DRM_MODE_CONNECTED   ),      //   1
+   VN(DRM_MODE_DISCONNECTED ),     //   2
+   VN(DRM_MODE_UNKNOWNCONNECTION), //   2
+   VN_END
+};
 
-#ifdef EXAMPLE
-char * endpoint_direction_title(Byte val) {
-   return vnt_title(endpoint_direction_table, val);
+char * connector_status_name(drmModeConnection val) {
+   return vn_name(drmModeConnection_table, val);
 }
-#endif
-
-#ifdef REF
-typedef enum {
-   DRM_MODE_CONNECTED         = 1,
-   DRM_MODE_DISCONNECTED      = 2,
-   DRM_MODE_UNKNOWNCONNECTION = 3
-} drmModeConnection;
-#endif
-
-
-   Value_Name drmModeConnection_table[] = {
-      VN(DRM_MODE_CONNECTED   ), //   1
-      VN(DRM_MODE_DISCONNECTED ), //   2
-      VN(DRM_MODE_UNKNOWNCONNECTION), //   2
-      VN_END
-   };
-
-  char * connector_status_name(drmModeConnection val) {
-      return vn_name(drmModeConnection_table, val);
-  }
 
 
 Value_Name_Title drm_encoder_type_table[] = {
@@ -282,7 +253,7 @@ void summarize_drmmModeModeInfo(drmModeModeInfo * p, int depth) {
 
 
 
-#ifdef NO
+#ifdef FOR_DRM_H
 // For struct in drm.h
 
 void report_drm_mode_card_res(struct drm_mode_card_res * res, int depth) {
@@ -299,9 +270,7 @@ void report_drm_mode_card_res(struct drm_mode_card_res * res, int depth) {
    rpt_vstring(d1, "%-20s, %d",             "max_height", res->max_height);
 
 }
-#endif
 
-#ifdef NO
 // This is struct in drm.h, not wrapper libdrm.h
 
 #ifdef REF
@@ -421,22 +390,11 @@ void report_drmModeConnector( int fd, drmModeConnector * p, int depth) {
       // p->nodes is a pointer to an array of struct _drmModeModeInfo, not an array of pointers
       summarize_drmmModeModeInfo(  p->modes+ndx, d2);
    }
-#ifdef NO
-   buf[0] = '\0';
-   if (p->count_modes > 0) {
-      strncpy(buf,  " -> ", bufsz);
-      for (int ndx = 0; ndx < p->count_modes; ndx++) {
-         snprintf(buf+strlen(buf), bufsz-strlen(buf), "%p  ", p->modes[ndx]);
-      }
-   }
-   rpt_vstring(d1, "%-20s %p%s",  "modes", p->modes, buf);
-#endif
 
    rpt_vstring(d1, "%-20s %d - %s",  "connection:", p->connection, connector_status_name(p->connection));
    rpt_vstring(d1, "%-20s %d",       "mm_width:", p->mmWidth);
    rpt_vstring(d1, "%-20s %d",       "mm_height:", p->mmHeight);
    rpt_vstring(d1, "%-20s %d",       "subpixel:", p->subpixel);
-
    rpt_nl();
 }
 
@@ -482,6 +440,7 @@ void report_property_value(
          }
       }
    }
+
    else if (prop_ptr->flags & DRM_MODE_PROP_BITMASK) {
       char buf[200] = "";  int bufsz=200;
       bool not_truncated = true;
@@ -494,7 +453,7 @@ void report_property_value(
       rpt_vstring(d1, "Property value(bitmask) = 0x%04x - %s", prop_value, buf);
    }
 
-   if (prop_ptr->flags & DRM_MODE_PROP_RANGE) {
+   else if (prop_ptr->flags & DRM_MODE_PROP_RANGE) {
       if (prop_ptr->count_values != 2) {
          printf("Missing min or max value\n");
          rpt_vstring(d1, "Property value = %d, Missing range", prop_value);
@@ -505,7 +464,8 @@ void report_property_value(
       }
    }
 
-   if (prop_ptr->flags & DRM_MODE_PROP_BLOB) {
+   // if (prop_ptr->flags & DRM_MODE_PROP_BLOB) {
+   else if (drm_property_type_is(prop_ptr, DRM_MODE_PROP_BLOB)) {
       drmModePropertyBlobPtr blob_ptr = drmModeGetPropertyBlob(fd, prop_value);
       if (!blob_ptr) {
          printf("Blob not found\n");
@@ -517,32 +477,28 @@ void report_property_value(
       }
    }
 
-   else if (prop_ptr->flags & DRM_MODE_PROP_EXTENDED_TYPE) {
-      uint32_t extended_type = prop_ptr->flags & DRM_MODE_PROP_EXTENDED_TYPE;
-      if (extended_type == DRM_MODE_PROP_OBJECT) {
-         rpt_vstring(d1, "Object type, name = %s, value=%d",
-                         prop_ptr->name, prop_value);
-      }
-      else if (extended_type == DRM_MODE_PROP_SIGNED_RANGE) {
+   else if (drm_property_type_is(prop_ptr, DRM_MODE_PROP_OBJECT)) {
+      rpt_vstring(d1, "Object type, name = %s, value=%d",
+                      prop_ptr->name, prop_value);
+   }
+
+   else if (drm_property_type_is(prop_ptr, DRM_MODE_PROP_SIGNED_RANGE)) {
          if (prop_ptr->count_values != 2) {
             printf("Missing min or max value\n");
             rpt_vstring(d1, "Signed property value = %d, Missing range", prop_value);
          }
-         else {
-            rpt_vstring(d1, "Property value(range) = %d, min=%d, max=%d",
-                            (int64_t) prop_value, (int64_t) prop_ptr->values[0], (int64_t) prop_ptr->values[1]);
-         }
+        else {
+           rpt_vstring(d1, "Property value(range) = %d, min=%d, max=%d",
+                           (int64_t) prop_value, (int64_t) prop_ptr->values[0], (int64_t) prop_ptr->values[1]);
+        }
+   }
 
-      }
-      else {
-         rpt_vstring(d1, "Other extended type %d, value=%d",
-                         extended_type, prop_value);
-      }
+   else {
+      rpt_vstring(d1, "Unrecognized type flags=0x%08x, value = %d", prop_ptr->flags, prop_value);
    }
 }
 
 #ifdef UGH
-
 
 // this belongs in property description, not in value dump
 
@@ -565,8 +521,6 @@ void report_property_value(
 #endif
 
 
-
-
 void report_drm_modeProperty(drmModePropertyRes * p, int depth) {
    rpt_structure_loc("drmModePropertyRes", p, depth);
    int d1 = depth+1;
@@ -587,6 +541,7 @@ void report_drm_modeProperty(drmModePropertyRes * p, int depth) {
       rpt_vstring(d2, "blob_ids[%d] = %u", ndx, p->blob_ids[ndx]);
    }
 }
+
 
 void summarize_drm_modeProperty(drmModePropertyRes * p, int depth) {
    rpt_vstring(depth, "Property %2d:  %-20s flags: 0x%08x - %s",
