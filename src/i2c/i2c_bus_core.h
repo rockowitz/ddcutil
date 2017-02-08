@@ -49,6 +49,7 @@
 #define I2C_BUS_ACCESSIBLE    0x40
 #define I2C_BUS_ADDR_0X50     0x20
 #define I2C_BUS_ADDR_0X37     0x10
+#define I2C_BUS_ADDR_0X30     0x08      // write-only addr to specify EDID block number
 #define I2C_BUS_PROBED        0x01      // has bus been checked?
 
 #define BUS_INFO_MARKER "BINF"

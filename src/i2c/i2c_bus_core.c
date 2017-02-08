@@ -333,8 +333,21 @@ Global_Status_Code detect_ddc_addrs_by_fd(int fd, Byte * presult) {
    unsigned char result = 0x00;
 
    Byte    readbuf;  //  1 byte buffer
+   Byte    writebuf = {0x00};
    int base_rc = 0;
    Global_Status_Code gsc = 0;
+
+
+   base_rc = i2c_set_addr(fd, 0x30, CALLOPT_ERR_MSG);   // CALLOPT_ERR_MSG temporary
+   if (base_rc < 0) {
+      gsc = modulate_rc(base_rc, RR_ERRNO);
+      goto bye;
+   }
+   gsc = invoke_i2c_writer(fd, 1, &writebuf);
+   // DBGMSG("invoke_i2c_writer() returned %s", gsc_desc(gsc));
+   if (gsc >= 0)
+      result |= I2C_BUS_ADDR_0X30;
+
 
    base_rc = i2c_set_addr(fd, 0x50, CALLOPT_ERR_MSG);   // CALLOPT_ERR_MSG temporary
    if (base_rc < 0) {
@@ -1295,6 +1308,7 @@ void report_businfo(Bus_Info * bus_info, int depth) {
          rpt_vstring(depth, "Bus /dev/i2c-%d found:    %s", bus_info->busno, bool_repr(bus_info->flags&I2C_BUS_EXISTS));
          rpt_vstring(depth, "Bus /dev/i2c-%d probed:   %s", bus_info->busno, bool_repr(bus_info->flags&I2C_BUS_PROBED ));
          if ( bus_info->flags & I2C_BUS_PROBED ) {
+            rpt_vstring(depth, "Address 0x30 present:    %s", bool_repr(bus_info->flags & I2C_BUS_ADDR_0X30));
             rpt_vstring(depth, "Address 0x37 present:    %s", bool_repr(bus_info->flags & I2C_BUS_ADDR_0X37));
             rpt_vstring(depth, "Address 0x50 present:    %s", bool_repr(bus_info->flags & I2C_BUS_ADDR_0X50));
             i2c_interpret_functionality_into_buffer(bus_info->functionality, buf0);
@@ -1358,8 +1372,9 @@ void i2c_report_active_display(Bus_Info * businfo, int depth) {
    rpt_vstring(depth, "Supports DDC:        %s", bool_repr(businfo->flags & I2C_BUS_ADDR_0X37));
 
    if (output_level >= OL_VERBOSE) {
-      rpt_vstring(depth+1, "I2C address 0x37 (DDC)  present: %-5s", bool_repr(businfo->flags & I2C_BUS_ADDR_0X37));
-      rpt_vstring(depth+1, "I2C address 0x50 (EDID) present: %-5s", bool_repr(businfo->flags & I2C_BUS_ADDR_0X50));
+      rpt_vstring(depth+1, "I2C address 0x30 (EDID block#)  present: %-5s", bool_repr(businfo->flags & I2C_BUS_ADDR_0X30));
+      rpt_vstring(depth+1, "I2C address 0x37 (DDC)          present: %-5s", bool_repr(businfo->flags & I2C_BUS_ADDR_0X37));
+      rpt_vstring(depth+1, "I2C address 0x50 (EDID)         present: %-5s", bool_repr(businfo->flags & I2C_BUS_ADDR_0X50));
 
       char fn[PATH_MAX];     // yes, PATH_MAX is dangerous, but not as used here
       sprintf(fn, "/sys/bus/i2c/devices/i2c-%d/name", businfo->busno);
