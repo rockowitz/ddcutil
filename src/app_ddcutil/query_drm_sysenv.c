@@ -192,7 +192,7 @@ static void probe_open_device_using_libdrm(int fd, int depth) {
       int errsv = errno;
       rpt_vstring(d1, "Failure retrieving DRM resources, errno=%s", linux_errno_desc(errno));
       if (errsv == EINVAL)
-         rpt_vstring(d1,"Driver apparently does not support DRM");
+         rpt_vstring(d1,"Driver apparently does not provide needed DRM ioctl calls");
       goto bye;
    }
    if (debug)
@@ -258,6 +258,18 @@ static void probe_open_device_using_libdrm(int fd, int depth) {
       rpt_vstring(d2, "%-20s %d - %s",  "connector_type:",    conn->connector_type,  connector_type_name(conn->connector_type));
       rpt_vstring(d2, "%-20s %d",       "connector_type_id:", conn->connector_type_id);
       rpt_vstring(d2, "%-20s %d - %s",  "connection:", conn->connection, connector_status_name(conn->connection));
+      uint32_t encoder_id = conn->encoder_id;     // current encoder
+      rpt_vstring(d2, "%-20s %d",       "encoder:", encoder_id);
+
+      drmModeEncoderPtr penc =  drmModeGetEncoder(fd, encoder_id);
+      if (penc) {
+         rpt_vstring(d3, "%-20s %d - %s",    "encoder type (signal format):",
+                          penc->encoder_type,  encoder_type_title(penc->encoder_type));
+      }
+      else {
+         rpt_vstring(d2, "Encoder with id %d not found", encoder_id);
+      }
+
 
       for (int ndx = 0; ndx < conn->count_props; ndx++) {
          if (conn->props[ndx] == edid_prop_id) {
