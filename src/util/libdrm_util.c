@@ -33,6 +33,15 @@
 
 #include "util/libdrm_util.h"
 
+
+// /usr/include/libdrm and /usr/include/drm may both contain copies
+// drm.h amd drm_mode.h,
+// DRM_MODE_PROP_ATOMIC is found in the libdrm/drm_mode.h, but not in drm/drm_mode.h
+// In case we've picked up drm/drm_mode.h:
+#ifndef DRM_MODE_PROP_ATOMIC
+#define DRM_MODE_PROP_ATOMIC        0x80000000
+#endif
+
 //
 // Identifier name tables
 //
@@ -160,6 +169,24 @@ typedef enum {
   char * connector_status_name(drmModeConnection val) {
       return vn_name(drmModeConnection_table, val);
   }
+
+
+Value_Name_Title drm_encoder_type_table[] = {
+   VN2(DRM_MODE_ENCODER_NONE,   "None"),      //  0
+   VN2(DRM_MODE_ENCODER_DAC,    "DAC"),       //  1
+   VN2(DRM_MODE_ENCODER_TMDS,   "TDMS"),      //  2
+   VN2(DRM_MODE_ENCODER_LVDS,   "LVDS"),      //  3
+   VN2(DRM_MODE_ENCODER_TVDAC,  "TVDAC"),     //  4
+   VN2(DRM_MODE_ENCODER_VIRTUAL, "Virtual"),  //  5
+   VN2(DRM_MODE_ENCODER_DSI,     "DSI"),      //  6
+   VN_END2
+};
+
+
+char * encoder_type_title(uint32_t encoder_type) {
+    return vn_title(drm_encoder_type_table, encoder_type);
+}
+
 
 
 //
@@ -431,7 +458,7 @@ typedef struct _drmModeProperty {
 
 
 void report_drmModePropertyBlob(drmModePropertyBlobPtr blob_ptr, int depth) {
-   rpt_vstring(depth, "blob id: %u\n", blob_ptr->id);
+   rpt_vstring(depth, "blob id: %u", blob_ptr->id);
    rpt_hex_dump(blob_ptr->data, blob_ptr->length, depth);
 }
 
