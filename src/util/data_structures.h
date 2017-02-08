@@ -112,12 +112,11 @@ bool     buffer_eq(Buffer* buf1, Buffer* buf2);
 // Identifier id to name and description lookup
 //
 
+#define VN(v) {v,#v}
+#define VN_END {0xff,NULL}
 
-#define VALUE_NAME(v) {v,#v}
-#define VALUE_NAME_END {0xff,NULL}
-
-#define VN2(v,t) {v,#v,t}
-#define VN_END2 {0xff,NULL,NULL}
+#define VNT(v,t) {v,#v,t}
+#define VNT_END {0xff,NULL,NULL}
 
 typedef struct {
    Byte   value;
@@ -130,8 +129,13 @@ typedef struct {
    char * title;
 } Value_Name_Title;
 
-char * vn_title(Value_Name_Title* table, uint32_t val);
 char * vn_name(Value_Name* table, uint32_t val);
+char * vnt_name(Value_Name_Title* table, uint32_t val);
+char * vnt_title(Value_Name_Title* table, uint32_t val);
+
+//
+// Misc
+//
 
 bool sbuf_append(char * buf, int bufsz, char * sepstr, char * nextval) ;
 char * interpret_named_flags(

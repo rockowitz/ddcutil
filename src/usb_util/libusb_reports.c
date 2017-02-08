@@ -60,9 +60,9 @@
 
 Value_Name class_id_table[] = {
       {LIBUSB_CLASS_PER_INTERFACE, "LIBUSB_CLASS_PER_INTERFACE"},
-      VALUE_NAME(LIBUSB_CLASS_AUDIO),
-      {0xff,NULL},
-      VALUE_NAME_END
+      VN(LIBUSB_CLASS_AUDIO),
+ //   {0xff,NULL},
+      VN_END
 };
 
 Value_Name_Title class_code_table[] = {
@@ -70,42 +70,42 @@ Value_Name_Title class_code_table[] = {
        * LIBUSB_CLASS_PER_INSTANCE indicates that each interface specifies its
        * own class information and all interfaces operate independently.
        */
-      VN2( LIBUSB_CLASS_PER_INTERFACE,       "Per interface"),          // 0
-      VN2( LIBUSB_CLASS_AUDIO,               "Audio"),                  // 1
-      VN2( LIBUSB_CLASS_COMM,                "Communications"),         // 2
-      VN2( LIBUSB_CLASS_HID,                 "Human Interface Device"), // 3
-      VN2( LIBUSB_CLASS_PHYSICAL,            "Physical device"),        // 5
-      VN2( LIBUSB_CLASS_PRINTER,             "Printer"),                // 7
-      VN2( LIBUSB_CLASS_IMAGE,               "Image"),                  // 6
-      VN2( LIBUSB_CLASS_MASS_STORAGE,        "Mass storage"),           // 8
-      VN2( LIBUSB_CLASS_HUB,                 "Hub"),                    // 9
-      VN2( LIBUSB_CLASS_DATA,                "Data"),                   // 10
-      VN2( LIBUSB_CLASS_SMART_CARD,          "Smart card"),             // 0x0b
-      VN2( LIBUSB_CLASS_CONTENT_SECURITY,    "Content security"),       // 0x0d
-      VN2( LIBUSB_CLASS_VIDEO,               "Video"),                  // 0x0e
-      VN2( LIBUSB_CLASS_PERSONAL_HEALTHCARE, "Personal healthcare"),    // 0x0f
-      VN2( LIBUSB_CLASS_DIAGNOSTIC_DEVICE,   "Diagnostic device"),      // 0xdc
-      VN2( LIBUSB_CLASS_WIRELESS,            "Wireless"),               // 0xe0
-      VN2( LIBUSB_CLASS_APPLICATION,         "Application"),            // 0xfe
-      VN2( LIBUSB_CLASS_VENDOR_SPEC,         "Vendor specific"),        // 0xff
-      VN_END2
+      VNT( LIBUSB_CLASS_PER_INTERFACE,       "Per interface"),          // 0
+      VNT( LIBUSB_CLASS_AUDIO,               "Audio"),                  // 1
+      VNT( LIBUSB_CLASS_COMM,                "Communications"),         // 2
+      VNT( LIBUSB_CLASS_HID,                 "Human Interface Device"), // 3
+      VNT( LIBUSB_CLASS_PHYSICAL,            "Physical device"),        // 5
+      VNT( LIBUSB_CLASS_PRINTER,             "Printer"),                // 7
+      VNT( LIBUSB_CLASS_IMAGE,               "Image"),                  // 6
+      VNT( LIBUSB_CLASS_MASS_STORAGE,        "Mass storage"),           // 8
+      VNT( LIBUSB_CLASS_HUB,                 "Hub"),                    // 9
+      VNT( LIBUSB_CLASS_DATA,                "Data"),                   // 10
+      VNT( LIBUSB_CLASS_SMART_CARD,          "Smart card"),             // 0x0b
+      VNT( LIBUSB_CLASS_CONTENT_SECURITY,    "Content security"),       // 0x0d
+      VNT( LIBUSB_CLASS_VIDEO,               "Video"),                  // 0x0e
+      VNT( LIBUSB_CLASS_PERSONAL_HEALTHCARE, "Personal healthcare"),    // 0x0f
+      VNT( LIBUSB_CLASS_DIAGNOSTIC_DEVICE,   "Diagnostic device"),      // 0xdc
+      VNT( LIBUSB_CLASS_WIRELESS,            "Wireless"),               // 0xe0
+      VNT( LIBUSB_CLASS_APPLICATION,         "Application"),            // 0xfe
+      VNT( LIBUSB_CLASS_VENDOR_SPEC,         "Vendor specific"),        // 0xff
+      VNT_END
 };
 
 Value_Name_Title descriptor_type_table[] = {
-      VN2( LIBUSB_DT_DEVICE,                "Device"),            // 0x01
-      VN2( LIBUSB_DT_CONFIG,                "Configuration"),     // 0x02
-      VN2( LIBUSB_DT_STRING,                "String"),            // 0x03
-      VN2( LIBUSB_DT_INTERFACE,             "Interface"),         // 0x04
-      VN2( LIBUSB_DT_ENDPOINT,              "Endpoint"),          // 0x05
-      VN2( LIBUSB_DT_BOS,                   "BOS" ),              // 0x0f,
-      VN2( LIBUSB_DT_DEVICE_CAPABILITY,     "Device Capability"), // 0x10,
-      VN2( LIBUSB_DT_HID,                   "HID"),               // 0x21,
-      VN2( LIBUSB_DT_REPORT,                "HID report"),        // 0x22,
-      VN2( LIBUSB_DT_PHYSICAL,              "Physical"),          // 0x23,
-      VN2( LIBUSB_DT_HUB,                   "Hub"),               // 0x29,
-      VN2( LIBUSB_DT_SUPERSPEED_HUB,        "SuperSpeed Hub"),    // 0x2a,
-      VN2( LIBUSB_DT_SS_ENDPOINT_COMPANION, "SuperSpeed Endpoint Companion"),  // 0x30
-      VN_END2
+      VNT( LIBUSB_DT_DEVICE,                "Device"),            // 0x01
+      VNT( LIBUSB_DT_CONFIG,                "Configuration"),     // 0x02
+      VNT( LIBUSB_DT_STRING,                "String"),            // 0x03
+      VNT( LIBUSB_DT_INTERFACE,             "Interface"),         // 0x04
+      VNT( LIBUSB_DT_ENDPOINT,              "Endpoint"),          // 0x05
+      VNT( LIBUSB_DT_BOS,                   "BOS" ),              // 0x0f,
+      VNT( LIBUSB_DT_DEVICE_CAPABILITY,     "Device Capability"), // 0x10,
+      VNT( LIBUSB_DT_HID,                   "HID"),               // 0x21,
+      VNT( LIBUSB_DT_REPORT,                "HID report"),        // 0x22,
+      VNT( LIBUSB_DT_PHYSICAL,              "Physical"),          // 0x23,
+      VNT( LIBUSB_DT_HUB,                   "Hub"),               // 0x29,
+      VNT( LIBUSB_DT_SUPERSPEED_HUB,        "SuperSpeed Hub"),    // 0x2a,
+      VNT( LIBUSB_DT_SS_ENDPOINT_COMPANION, "SuperSpeed Endpoint Companion"),  // 0x30
+      VNT_END
 };
 
 
@@ -125,9 +125,9 @@ enum libusb_endpoint_direction {
 
 
 Value_Name_Title endpoint_direction_table[] = {
-      VN2( LIBUSB_ENDPOINT_IN, "IN"),
-      VN2( LIBUSB_ENDPOINT_OUT, "OUT"),
-      VN_END2
+      VNT( LIBUSB_ENDPOINT_IN, "IN"),
+      VNT( LIBUSB_ENDPOINT_OUT, "OUT"),
+      VNT_END
       };
 
 #ifdef REF
@@ -161,12 +161,12 @@ enum libusb_transfer_type {
 
 
 Value_Name_Title transfer_type_table[] = {
-      VN2(LIBUSB_TRANSFER_TYPE_CONTROL,     "Control"),          // 0
-      VN2(LIBUSB_TRANSFER_TYPE_ISOCHRONOUS, "Isochronous"),      // 1
-      VN2(LIBUSB_TRANSFER_TYPE_BULK,        "Bulk"),             // 2
-      VN2(LIBUSB_TRANSFER_TYPE_INTERRUPT,   "Interrupt"),        // 3
-      VN2(LIBUSB_TRANSFER_TYPE_BULK_STREAM_LOCAL, "Bulk Stream"),      // 4
-      VN_END2
+      VNT(LIBUSB_TRANSFER_TYPE_CONTROL,     "Control"),          // 0
+      VNT(LIBUSB_TRANSFER_TYPE_ISOCHRONOUS, "Isochronous"),      // 1
+      VNT(LIBUSB_TRANSFER_TYPE_BULK,        "Bulk"),             // 2
+      VNT(LIBUSB_TRANSFER_TYPE_INTERRUPT,   "Interrupt"),        // 3
+      VNT(LIBUSB_TRANSFER_TYPE_BULK_STREAM_LOCAL, "Bulk Stream"),      // 4
+      VNT_END
 };
 
 
@@ -174,19 +174,19 @@ Value_Name_Title transfer_type_table[] = {
 
 
 char * descriptor_title(Byte val) {
-   return vn_title(descriptor_type_table, val);
+   return vnt_title(descriptor_type_table, val);
 }
 
 char * endpoint_direction_title(Byte val) {
-   return vn_title(endpoint_direction_table, val);
+   return vnt_title(endpoint_direction_table, val);
 }
 
 char * transfer_type_title(Byte val) {
-   return vn_title(transfer_type_table, val);
+   return vnt_title(transfer_type_table, val);
 }
 
 char * class_code_title(Byte val) {
-   return vn_title(class_code_table, val);
+   return vnt_title(class_code_table, val);
 }
 
 

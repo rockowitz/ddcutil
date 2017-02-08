@@ -49,34 +49,34 @@
 #ifdef EXAMPLE
 
 Value_Name_Title descriptor_type_table[] = {
-      VN2( LIBUSB_DT_DEVICE,                "Device"),            // 0x01
-      VN2( LIBUSB_DT_HUB,                   "Hub"),               // 0x29,
-      VN2( LIBUSB_DT_SUPERSPEED_HUB,        "SuperSpeed Hub"),    // 0x2a,
-      VN2( LIBUSB_DT_SS_ENDPOINT_COMPANION, "SuperSpeed Endpoint Companion"),  // 0x30
-      VN_END2
+      VNT( LIBUSB_DT_DEVICE,                "Device"),            // 0x01
+      VNT( LIBUSB_DT_HUB,                   "Hub"),               // 0x29,
+      VNT( LIBUSB_DT_SUPERSPEED_HUB,        "SuperSpeed Hub"),    // 0x2a,
+      VNT( LIBUSB_DT_SS_ENDPOINT_COMPANION, "SuperSpeed Endpoint Companion"),  // 0x30
+      VNT_END
 };
 
 #endif
 
 Value_Name connector_type_table[] = {
-   VALUE_NAME(DRM_MODE_CONNECTOR_Unknown   ), //   0
-   VALUE_NAME(DRM_MODE_CONNECTOR_VGA       ), //   1
-   VALUE_NAME(DRM_MODE_CONNECTOR_DVII      ), //   2
-   VALUE_NAME(DRM_MODE_CONNECTOR_DVID      ), //   3
-   VALUE_NAME(DRM_MODE_CONNECTOR_DVIA       ), //  4
-   VALUE_NAME(DRM_MODE_CONNECTOR_Composite   ), // 5
-   VALUE_NAME(DRM_MODE_CONNECTOR_SVIDEO     ), //  6
-   VALUE_NAME(DRM_MODE_CONNECTOR_LVDS      ), //   7
-   VALUE_NAME(DRM_MODE_CONNECTOR_Component ), //   8
-   VALUE_NAME(DRM_MODE_CONNECTOR_9PinDIN    ), //  9
-   VALUE_NAME(DRM_MODE_CONNECTOR_DisplayPort ), // 10
-   VALUE_NAME(DRM_MODE_CONNECTOR_HDMIA      ), //  11
-   VALUE_NAME(DRM_MODE_CONNECTOR_HDMIB      ), //  12
-   VALUE_NAME(DRM_MODE_CONNECTOR_TV   ), // 13
-   VALUE_NAME(DRM_MODE_CONNECTOR_eDP     ), // 14
-   VALUE_NAME(DRM_MODE_CONNECTOR_VIRTUAL    ), //  15
-   VALUE_NAME(DRM_MODE_CONNECTOR_DSI      ), //    16
-   VALUE_NAME_END
+   VN(DRM_MODE_CONNECTOR_Unknown   ), //   0
+   VN(DRM_MODE_CONNECTOR_VGA       ), //   1
+   VN(DRM_MODE_CONNECTOR_DVII      ), //   2
+   VN(DRM_MODE_CONNECTOR_DVID      ), //   3
+   VN(DRM_MODE_CONNECTOR_DVIA       ), //  4
+   VN(DRM_MODE_CONNECTOR_Composite   ), // 5
+   VN(DRM_MODE_CONNECTOR_SVIDEO     ), //  6
+   VN(DRM_MODE_CONNECTOR_LVDS      ), //   7
+   VN(DRM_MODE_CONNECTOR_Component ), //   8
+   VN(DRM_MODE_CONNECTOR_9PinDIN    ), //  9
+   VN(DRM_MODE_CONNECTOR_DisplayPort ), // 10
+   VN(DRM_MODE_CONNECTOR_HDMIA      ), //  11
+   VN(DRM_MODE_CONNECTOR_HDMIB      ), //  12
+   VN(DRM_MODE_CONNECTOR_TV   ), // 13
+   VN(DRM_MODE_CONNECTOR_eDP     ), // 14
+   VN(DRM_MODE_CONNECTOR_VIRTUAL    ), //  15
+   VN(DRM_MODE_CONNECTOR_DSI      ), //    16
+   VN_END
 };
 
 // from libdrm/drm.h
@@ -95,14 +95,14 @@ Value_Name connector_type_table[] = {
 
 
 Value_Name drm_property_flag_table[] = {
-   VALUE_NAME(DRM_MODE_PROP_PENDING),    // (1<<0) == x01
-   VALUE_NAME(DRM_MODE_PROP_RANGE),      // (1<<1) == x02
-   VALUE_NAME(DRM_MODE_PROP_IMMUTABLE),  // (1<<2) == x04
-   VALUE_NAME(DRM_MODE_PROP_ENUM),       // (1<<3) == x88 /* enumerated type with text strings */
-   VALUE_NAME(DRM_MODE_PROP_BLOB),       // (1<<4) == x10
-   VALUE_NAME(DRM_MODE_PROP_BITMASK),   // defined in libdrm/drm.h
+   VN(DRM_MODE_PROP_PENDING),    // (1<<0) == x01
+   VN(DRM_MODE_PROP_RANGE),      // (1<<1) == x02
+   VN(DRM_MODE_PROP_IMMUTABLE),  // (1<<2) == x04
+   VN(DRM_MODE_PROP_ENUM),       // (1<<3) == x88 /* enumerated type with text strings */
+   VN(DRM_MODE_PROP_BLOB),       // (1<<4) == x10
+   VN(DRM_MODE_PROP_BITMASK),   // defined in libdrm/drm.h
 //   VALUE_NAME(DRM_MODE_PROP_ATOMIC), // defined in libdrm/drm.h   64 bit value
-   VALUE_NAME_END
+   VN_END
 };
 
 
@@ -146,7 +146,7 @@ char * interpret_property_flags(uint32_t flags) {
 
 #ifdef EXAMPLE
 char * endpoint_direction_title(Byte val) {
-   return vn_title(endpoint_direction_table, val);
+   return vnt_title(endpoint_direction_table, val);
 }
 #endif
 
@@ -160,10 +160,10 @@ typedef enum {
 
 
    Value_Name drmModeConnection_table[] = {
-      VALUE_NAME(DRM_MODE_CONNECTED   ), //   1
-      VALUE_NAME(DRM_MODE_DISCONNECTED ), //   2
-      VALUE_NAME(DRM_MODE_UNKNOWNCONNECTION), //   2
-      VALUE_NAME_END
+      VN(DRM_MODE_CONNECTED   ), //   1
+      VN(DRM_MODE_DISCONNECTED ), //   2
+      VN(DRM_MODE_UNKNOWNCONNECTION), //   2
+      VN_END
    };
 
   char * connector_status_name(drmModeConnection val) {
@@ -172,19 +172,19 @@ typedef enum {
 
 
 Value_Name_Title drm_encoder_type_table[] = {
-   VN2(DRM_MODE_ENCODER_NONE,   "None"),      //  0
-   VN2(DRM_MODE_ENCODER_DAC,    "DAC"),       //  1
-   VN2(DRM_MODE_ENCODER_TMDS,   "TDMS"),      //  2
-   VN2(DRM_MODE_ENCODER_LVDS,   "LVDS"),      //  3
-   VN2(DRM_MODE_ENCODER_TVDAC,  "TVDAC"),     //  4
-   VN2(DRM_MODE_ENCODER_VIRTUAL, "Virtual"),  //  5
-   VN2(DRM_MODE_ENCODER_DSI,     "DSI"),      //  6
-   VN_END2
+   VNT(DRM_MODE_ENCODER_NONE,   "None"),      //  0
+   VNT(DRM_MODE_ENCODER_DAC,    "DAC"),       //  1
+   VNT(DRM_MODE_ENCODER_TMDS,   "TDMS"),      //  2
+   VNT(DRM_MODE_ENCODER_LVDS,   "LVDS"),      //  3
+   VNT(DRM_MODE_ENCODER_TVDAC,  "TVDAC"),     //  4
+   VNT(DRM_MODE_ENCODER_VIRTUAL, "Virtual"),  //  5
+   VNT(DRM_MODE_ENCODER_DSI,     "DSI"),      //  6
+   VNT_END
 };
 
 
 char * encoder_type_title(uint32_t encoder_type) {
-    return vn_title(drm_encoder_type_table, encoder_type);
+    return vnt_title(drm_encoder_type_table, encoder_type);
 }
 
 

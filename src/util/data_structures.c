@@ -633,7 +633,22 @@ void debug_vnt_table(Value_Name_Title * table) {
    }
 }
 
-char * vn_title(Value_Name_Title* table, uint32_t val) {
+char * vnt_name(Value_Name_Title* table, uint32_t val) {
+   // printf("(%s) val=%d\n", __func__, val);
+   // debug_vnt_table(table);
+   char * result = NULL;
+
+   Value_Name_Title * cur = table;
+   for (; cur->name; cur++) {
+      if (val == cur->value) {
+         result = cur->name;
+         break;
+      }
+   }
+   return result;
+}
+
+char * vnt_title(Value_Name_Title* table, uint32_t val) {
    // printf("(%s) val=%d\n", __func__, val);
    // debug_vnt_table(table);
    char * result = NULL;
