@@ -185,6 +185,156 @@ void report_udev_device(struct udev_device * dev, int depth) {
 }
 
 
+Usb_Detailed_Device_Summary * new_usb_detailed_device_summary() {
+   Usb_Detailed_Device_Summary * devsum = calloc(1, sizeof(Usb_Detailed_Device_Summary));
+   memcpy(devsum->marker, UDEV_DETAILED_DEVICE_SUMMARY_MARKER, 4);
+   return devsum;
+}
+
+
+
+void free_usb_detailed_device_summary(Usb_Detailed_Device_Summary * devsum) {
+   if (devsum) {
+      assert( memcmp(devsum->marker, UDEV_DETAILED_DEVICE_SUMMARY_MARKER, 4) == 0);
+      free(devsum->devname);
+      free(devsum->vendor_id);
+      free(devsum->product_id);
+      free(devsum->vendor_name);
+      free(devsum->product_name);
+      free(devsum->busnum_s);
+      free(devsum->devnum_s);
+      free(devsum);
+   }
+}
+
+
+void report_usb_detailed_device_summary(Usb_Detailed_Device_Summary * devsum, int depth) {
+   assert( devsum && (memcmp(devsum->marker, UDEV_DETAILED_DEVICE_SUMMARY_MARKER, 4) == 0));
+   rpt_structure_loc("Usb_Detailed_Device_Summary", devsum, depth);
+   int d1 = depth+1;
+
+   rpt_str("devname",    NULL, devsum->devname,    d1);
+   // rpt_int("usb_busnum", NULL, devsum->usb_busnum, d1);
+   // rpt_int("usb_devnum", NULL, devsum->usb_devnum, d1);
+   // rpt_int("vid",        NULL, devsum->vid, d1);
+   // rpt_int("pid",        NULL, devsum->pid, d1);
+   rpt_str("vendor_id",  NULL, devsum->vendor_id, d1);
+   rpt_str("product_id",  "", devsum->product_id, d1);
+   rpt_str("vendor_name", NULL,  devsum->vendor_name, d1);
+   rpt_str("product_name",  NULL, devsum->product_name, d1);
+   rpt_str("busnum_s",  NULL, devsum->busnum_s, d1);
+   rpt_str("devnum_s",  NULL, devsum->devnum_s, d1);
+
+}
+
+
+/* Look up information for a device name.
+ * The expected use in in error messages.
+ *
+ * Arguments:
+ *   devname       device name, e.g. /dev/usb/hiddev3
+ *
+ * Returns:        pointer to newly allocated Usb_Detailed_Device_Summary stuct,
+ *                 NULL if not found
+ */
+Usb_Detailed_Device_Summary * lookup_udev_usb_device_by_devname(char * devname) {
+   int depth = 0;
+   // int d1 = depth+1;
+   struct udev *udev;
+   struct udev_enumerate *enumerate;
+   struct udev_list_entry *devices, *dev_list_entry;
+   struct udev_device *dev;
+
+   /* Create the udev object */
+   udev = udev_new();
+   if (!udev) {
+      printf("(%s) Can't create udev\n", __func__);
+      return NULL;   // exit(1);
+   }
+
+   Usb_Detailed_Device_Summary * devsum = new_usb_detailed_device_summary();
+   devsum->devname = strdup(devname);
+
+   /* Create a list of matching devices. */
+   enumerate = udev_enumerate_new(udev);
+   udev_enumerate_add_match_property(enumerate, "DEVNAME", devname);
+   udev_enumerate_scan_devices(enumerate);
+   devices = udev_enumerate_get_list_entry(enumerate);
+   int devct = 0;
+   /*  udev_list_entry_foreach is a macro which expands to
+      a loop. The loop will be executed for each member in
+      devices, setting dev_list_entry to a list entry
+      which contains the device's path in /sys. */
+   udev_list_entry_foreach(dev_list_entry, devices) {
+      const char *path;
+
+      /* Get the filename of the /sys entry for the device
+         and create a udev_device object (dev) representing it */
+      path = udev_list_entry_get_name(dev_list_entry);
+      // rpt_vstring(depth, "path: %s", path);
+      dev = udev_device_new_from_syspath(udev, path);
+
+      /* udev_device_get_devnode() returns the path to the device node
+         itself in /dev. */
+      // rpt_vstring(depth, "Device Node Path: %s", udev_device_get_devnode(dev));
+
+      // report_udev_device(dev, d1);
+
+      /* The device pointed to by dev contains information about
+         the named device. In order to get information about the
+         USB device, get the parent device with the
+         subsystem/devtype pair of "usb"/"usb_device". This will
+         be several levels up the tree, but the function will find
+         it.*/
+      dev = udev_device_get_parent_with_subsystem_devtype(
+             dev,
+             "usb",
+             "usb_device");
+      if (!dev) {
+         rpt_vstring(depth, "Unable to find parent USB device.");
+         continue;   // exit(1);   // TODO: fix
+      }
+
+      // puts("");
+      // rpt_vstring(depth, "Parent device:");
+
+      /* From here, we can call get_sysattr_value() for each file
+         in the device's /sys entry. The strings passed into these
+         functions (idProduct, idVendor, serial, etc.) correspond
+         directly to the files in the directory which represents
+         the USB device. Note that USB strings are Unicode, UCS2
+         encoded, but the strings returned from
+         udev_device_get_sysattr_value() are UTF-8 encoded. */
+
+      devsum->vendor_id    = strdup( udev_device_get_sysattr_value(dev,"idVendor") );
+      devsum->product_id   = strdup( udev_device_get_sysattr_value(dev,"idProduct") );
+      devsum->vendor_name  = strdup( udev_device_get_sysattr_value(dev,"manufacturer") );
+      devsum->product_name = strdup( udev_device_get_sysattr_value(dev,"product") );
+      devsum->busnum_s     = strdup( udev_device_get_sysattr_value(dev,"busnum") );
+      devsum->devnum_s     = strdup( udev_device_get_sysattr_value(dev,"devnum") );
+      // report_udev_device(dev, d1);
+
+      udev_device_unref(dev);
+      devct++;
+   }
+   /* Free the enumerator object */
+   udev_enumerate_unref(enumerate);
+
+   udev_unref(udev);
+
+   if (devct != 1)
+      printf("(%s) Unexpectedly found %d matching devices for %s\n", __func__, devct, devname);
+   if (devct == 0)
+      free_usb_detailed_device_summary(devsum);
+
+
+   // report_usb_device_summary(devsum, 0);
+   return devsum;
+
+
+}
+
+
 /* Reports on all devices in a udev subsystem
  *
  * Arguments:

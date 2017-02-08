@@ -32,6 +32,7 @@
 #include "util/device_id_util.h"
 #include "util/report_util.h"
 #include "util/string_util.h"
+#include "util/udev_util.h"
 
 #include "usb_util/hiddev_reports.h"
 #include "usb_util/hiddev_util.h"
@@ -311,7 +312,22 @@ static GPtrArray * get_usb_monitor_list() {
       if (ol >= OL_VERBOSE)
          calloptions |= CALLOPT_ERR_MSG;
       int fd = usb_open_hiddev_device(hiddev_fn, calloptions);
-      if (fd > 0) {
+      if (fd < 0) {
+         Usb_Detailed_Device_Summary * devsum =
+         lookup_udev_usb_device_by_devname(hiddev_fn);
+         // report_usb_detailed_device_summary(devsum, 2);
+         f0printf(FERR, "  USB bus %s, device %s, vid:pid: %s:%s - %s:%s\n",
+                        devsum->busnum_s,
+                        devsum->devnum_s,
+                        devsum->vendor_id,
+                        devsum->product_id,
+                        devsum->vendor_name,
+                        devsum->product_name);
+
+
+         free_usb_detailed_device_summary(devsum);
+      }
+      else if (fd > 1) {     // fd == 0 should never occur
          // Declare variables here and initialize them to NULL so that code at label close: works
          struct hiddev_devinfo *   devinfo     = NULL;
          char *                    cgname      = NULL;

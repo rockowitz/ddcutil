@@ -42,6 +42,30 @@ GPtrArray * summarize_udev_subsystem_devices(char * subsystem);
 void report_udev_device(struct udev_device * dev, int depth);
 void probe_udev_subsystem(char * udev_class, bool show_usb_parent, int depth);
 
+
+// Used for informational messages.
+// Unless additional uses found, no need to convert from strings to integers
+#define UDEV_DETAILED_DEVICE_SUMMARY_MARKER "UDDS"
+typedef struct {
+   char      marker[4];
+   char *    devname;          // e.g. /dev/usb/hiddev2
+   // int       usb_busnum;
+   // int       usb_devnum;
+   // uint16_t  vid;
+   // uint16_t  pid;
+   char *    vendor_id;
+   char *    product_id;
+   char *    vendor_name;
+   char *    product_name;
+   char *    busnum_s;
+   char *    devnum_s;
+} Usb_Detailed_Device_Summary;
+
+void free_usb_detailed_device_summary(Usb_Detailed_Device_Summary * devsum);
+void report_usb_detailed_device_summary(Usb_Detailed_Device_Summary * devsum, int depth);
+Usb_Detailed_Device_Summary * lookup_udev_usb_device_by_devname(char * devname);
+
+
 typedef struct udev_usb_devinfo {
    uint16_t busno;
    uint16_t devno;
