@@ -625,7 +625,17 @@ void buffer_dump(Buffer * buffer) {
 //
 
 
+void debug_vnt_table(Value_Name_Title * table) {
+   printf("Value_Name_Title table:\n");
+   Value_Name_Title * cur = table;
+   for (; cur->name; cur++) {
+      printf("   %2d %-30s %s\n",  cur->value, cur->name, cur->title);
+   }
+}
+
 char * vn_title(Value_Name_Title* table, uint32_t val) {
+   // printf("(%s) val=%d\n", __func__, val);
+   // debug_vnt_table(table);
    char * result = NULL;
 
    Value_Name_Title * cur = table;
