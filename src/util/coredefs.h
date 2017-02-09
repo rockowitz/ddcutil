@@ -28,4 +28,8 @@
 
 typedef unsigned char Byte;
 
+#ifndef ARRAY_SIZE
+#define ARRAY_SIZE(a) (sizeof(a) / sizeof((a)[0]))
+#endif
+
 #endif /* COREDEFS_H_ */
