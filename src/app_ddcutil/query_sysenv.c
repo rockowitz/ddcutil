@@ -1580,6 +1580,16 @@ void query_sysenv() {
 #endif
 
       rpt_nl();
+      rpt_vstring(0,"Checking dmesg for drm related lines...");
+      if ( !execute_shell_cmd_rpt("dmesg | grep drm", 1 /* depth */) )
+         rpt_vstring(1,"Unable to process dmesg");
+      rpt_nl();
+
+      rpt_vstring(0,"Checking Xorg.0.log for drm related lines...");
+      if ( !execute_shell_cmd_rpt("grep drm /var/log/Xorg.0.log", 1 /* depth */) )
+         rpt_vstring(1,"Unable to read Xorg.0.log");
+      rpt_nl();
+
 #ifdef USE_LIBDRM
       probe_using_libdrm();
 #else
