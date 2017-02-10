@@ -22,7 +22,8 @@
  */
 
 // ??
-// define GNU_SOURCE
+#define _GNU_SOURCE
+#define __USE_GNU
 
 #include <errno.h>
 #include <glib.h>
@@ -88,6 +89,30 @@ extern int drmGetDevice(int fd, drmDevicePtr *device);
 extern void drmFreeDevice(drmDevicePtr *device);
 #endif
 
+
+// can't find basename, roll our own
+char * basename0(char * fn) {
+   char * result = NULL;
+   if (fn) {
+      int l = strlen(fn);
+      if (l == 0)
+         result = fn;
+      else {
+         char * p = fn+(l-1);
+         while (*p != '/') {
+            if (p == fn) {
+               break;
+            }
+            p--;
+         }
+         result = (p == fn) ? p : p+1;;
+      }
+   }
+   return result;
+}
+
+
+
 char * drm_bus_type_name(uint8_t bus) {
    char * result = NULL;
    if (bus == DRM_BUS_PCI)
@@ -113,9 +138,24 @@ static void probe_open_device_using_libdrm(int fd, int depth) {
    int d3 = depth+3;
    bool debug = false;
    int rc;
+   char * busid = NULL;
+   // int errsv;
 
    rpt_nl();
 
+   // succeeds if run as root, fails w errno=EACCES(13) if not
+   // but no effect on subsequent failures for nvidia
+// #ifdef NO
+   // fails on suse
+   // rc is ioctl() return code, i.e. 0 or -1 for failure)
+   // if -1, errno is set
+   rc = drmSetMaster(fd);
+   if (rc < 0)
+      rpt_vstring(d1, "drmSetMaster() failed, errno=%s", linux_errno_desc(errno));
+   rpt_nl();
+// #endif
+
+   // if returns NULL, errno is as set from the underlying ioctl()
    drmVersionPtr vp = drmGetVersion(fd);
    if (vp) {
       rpt_vstring(d1, "Driver version information:");
@@ -125,31 +165,42 @@ static void probe_open_device_using_libdrm(int fd, int depth) {
    else {
       rpt_vstring(d1, "Error calling drmGetVersion().  errno=%s", linux_errno_desc(errno));
    }
+   rpt_nl();
 
+   // fills in a hardcoded version number (currently 1.3.0), never fails
+   // only fills in the major, minor, and patchLevel fields, others are always 0
    vp = drmGetLibVersion(fd);
-   if (vp) {
-      rpt_vstring(d1, "DRM library version information:");
-      report_drmVersion(vp, d2);
-      drmFreeVersion(vp);
-   }
-   else {
-      rpt_vstring(d1, "Error calling drmGetLibVersion().  errno=%s", linux_errno_desc(errno));
-   }
+   // rpt_vstring(d1, "DRM library version information:");
+   // report_drmVersion(vp, d2);
+   rpt_vstring(d1, "DRM library version: %d.%d.%d.",
+                    vp->version_major, vp->version_minor, vp->version_patchlevel);
+   drmFreeVersion(vp);
+   rpt_nl();
 
-   char * bufid = drmGetBusid(fd);
-   if (bufid) {
+
+   // returns null string if open() instead of drmOpen(,busid) used to to open
+   // uses successive DRM_IOCTL_GET_UNIQUE calls
+   busid = drmGetBusid(fd);
+   if (busid) {
       rpt_vstring(d1, "DRM Busid:  %s");
-      drmFreeBusid(bufid);
+      // drmFreeBusid(busid);
    }
    else {
       rpt_vstring(d1, "Error calling drmGetBusid().  errno=%s", linux_errno_desc(errno));
    }
 
+
+   char busid2[30] = "";
+
+
    rpt_nl();
    struct _drmDevice * ddev;
+   // gets information about the opened DRM device
+   // returns 0 on success, negative error code otherwise
    rc = drmGetDevice(fd, &ddev);
    if (rc < 0) {
-      rpt_vstring(depth, "Error calling drmGetDevice, errno=%s", linux_errno_desc(errno));
+      rpt_vstring(depth, "drmGetDevice() returned %d, interpreted as error code: %s",
+                         rc, linux_errno_desc(-rc));
    }
    else {
       rpt_vstring(d1, "Device information:");
@@ -162,6 +213,12 @@ static void probe_open_device_using_libdrm(int fd, int depth) {
             ddev->businfo.pci->domain,
             ddev->businfo.pci->func);
 #endif
+      snprintf(busid2, sizeof(busid2), "%s:%04x:%02x:%02x.%d",
+            drm_bus_type_name(ddev->bustype),
+            ddev->businfo.pci->domain,
+            ddev->businfo.pci->bus,
+            ddev->businfo.pci->dev,
+            ddev->businfo.pci->func);
       rpt_vstring(d2, "domain:bus:device.func: %04x:%02x:%02x.%d",
             ddev->businfo.pci->domain,
             ddev->businfo.pci->bus,
@@ -176,6 +233,46 @@ static void probe_open_device_using_libdrm(int fd, int depth) {
       rpt_vstring(d2, "revision id:            0x%04x",
             ddev->deviceinfo.pci->revision_id);
       drmFreeDevice(&ddev);
+   }
+
+
+   if (strlen(busid2) > 0) {
+      rpt_nl();
+
+
+   // Checks if a modesetting capable driver has been attached to the pci id
+    // !! drmCheckModesettingSupport() takes a busid string as argument, not filename
+    // Checked the code:
+    // returns 0 if modesetting both are true
+    // -EINVAL if invalid bus id
+    // -ENOSYS if no modesetting support
+    // does not set errno
+
+    // parses busid using sscanf(busid, "pci:%04x:%02x:%02x.%d", &domain, &bus, &dev, &func);
+    rc = drmCheckModesettingSupported(busid2);
+    // DBGMSG("drmCheckModesettingSupported(\"%s\") returned %d", busid, rc);
+    // if (rc < 0) {
+    //    DBGMSG("result as errno: %s", linux_errno_desc(-rc));
+    // }
+    rpt_vstring(d1, "Checking if a modesetting capable driver is attached to bus %s ...", busid2);
+    // rpt_vstring(d1, "drmCheckModesettingSupported() called to check if a modsetting capable driver");
+    // rpt_vstring(d1, "is attached to bus id %s", busid);
+    switch (rc) {
+    case (0):
+          rpt_vstring(d2, "Yes");
+          break;
+    case (-EINVAL):
+          rpt_vstring(d2, "Invalid bus id (-EINVAL)");
+          break;
+    case (-ENOSYS):
+          rpt_vstring(d2, "Modesetting not supported (-ENOSYS)");
+          break;
+    default:
+       rpt_vstring(d2, "drmCheckModesettingSupported() returned undocumented status code %d", rc);
+    }
+
+
+
    }
 
 
@@ -351,18 +448,65 @@ bye:
 
 
 static void probe_one_device_using_libdrm(char * devname, int depth) {
+   // int errsv;
+
    rpt_vstring(depth, "Probing device %s...", devname);
 
-   int supported = drmCheckModesettingSupported(devname);
-   DBGMSG("drmCheckModesettingSupported() returned %d", supported);
+   // char * busid = "pci:0000:01:00.0";
 
-   int fd  = open(devname,O_RDWR | O_CLOEXEC);
+   // char * bname = basename(devname);
+   // int fd  = open(devname,O_RDWR | O_CLOEXEC);
+
+   // drmOpen returns a file descriptor if successful,
+   // if < 0, its an errno value
+   // n. errno = -fd if a passthru, but will not be set if generated interally
+   // within drmOpen  (examined the code)
+   // can also return DRM_ERR_NOT_ROOT (-1003)
+   // DRM specific error numbers are in range -1001..-1005, conflicts with
+   // our Global_Status_Code mapping
+
+#ifdef FAIL
+   int fd = drmOpen(bname, NULL);
    if (fd < 0) {
-      rpt_vstring(depth, "Error opening device %s, errno=%s",
-                         devname, linux_errno_desc(errno));
-      // perror("Error opening %s\n");
+      rpt_vstring(depth, "Error opening device %s using drmOpen(), fd=%s",
+                         bname, linux_errno_desc(-fd));
    }
-   else {
+   if (fd < 0) {
+      fd = drmOpen(devname, NULL);
+      if (fd < 0) {
+         rpt_vstring(depth, "Error opening device %s using drmOpen(), fd=%s",
+                            devname, linux_errno_desc(-fd));
+      }
+   }
+#endif
+
+// open succeeeds using hardcoded busid, but doesn't solve problem of
+// driver not modesetting
+// but .. if this isn't used, drmGetBusid() fails
+#ifdef WORKS_BUT_NOT_HELPFUL
+   if (fd < 0) {
+      fd = drmOpen(NULL, busid);
+      if (fd < 0) {
+         rpt_vstring(depth, "Error opening busid %s using drmOpen(), fd=%s",
+                            busid, linux_errno_desc(-fd));
+      }
+   }
+#endif
+
+   int fd = 0;
+   // if (fd < 0) {
+      errno = 0;
+      fd  = open(devname,O_RDWR | O_CLOEXEC);
+      if (fd < 0) {
+         rpt_vstring(depth+1, "Error opening device %s using open(), errno=%s",
+                            devname, linux_errno_desc(errno));
+      }
+      else
+         rpt_vstring(depth+1, "Open succeeded for device: %s", devname);
+   // }
+
+
+   if (fd > 0) {
       probe_open_device_using_libdrm(fd, depth);
       close(fd);
    }
@@ -397,8 +541,10 @@ GPtrArray * get_dri_device_names_using_filesys() {
 void probe_using_libdrm() {
    rpt_title("Probing connected monitors using libdrm...",0);
 
+   // returns 1 if the DRM driver is loaded, 0 otherwise
    int drm_available = drmAvailable();
-   rpt_vstring(0, "drmAvailable() returned %d", drm_available);
+   // rpt_vstring(0, "drmAvailable() returned %d", drm_available);
+   rpt_vstring(0, "DRM kernel driver has been loaded (drmAvailable()): %s", bool_repr(drm_available));
 
    GPtrArray * dev_names = get_dri_device_names_using_filesys();
    for (int ndx = 0; ndx < dev_names->len; ndx++) {
