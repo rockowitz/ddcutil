@@ -10,6 +10,7 @@ Build-Depends: debhelper (>= 9),
                gobject-introspection, 
                libglib2.0-0, 
                libglib2.0-dev, 
+               libdrm-dev,
                libxrandr-dev, 
                libudev-dev, 
                libusb-1.0-0-dev, 
@@ -26,6 +27,7 @@ Depends: ${shlibs:Depends},
          ${misc:Depends}, 
          i2c-tools, 
          libglib2.0-0, 
+         libdrm2,
          libxrandr2, 
          libudev1,
          libudev-dev
@@ -33,7 +35,7 @@ Depends: ${shlibs:Depends},
 # Long description should be a paragraph which gives more details about the package. 
 # Column 1 of each line should be empty. There must be no blank lines, but you can put a single . (dot) 
 # in a column to simulate that. Also, there must be no more than one blank line after the long description. 
-Description: Query and update monitor settings
+Description: ddcutil - Standalone command line version
  ddcutil is used to query and change monitor settings.
  .
  ddcutil communicates with monitors implementing MCCS (Monitor Control Command
@@ -58,7 +60,7 @@ Depends: ${shlibs:Depends},
          libxrandr2, 
          libudev1,
          libudev-dev
-Description: Shared library version of ddcutil 
+Description: ddcutil - Shared libraries
  This is the shared library version of ddcutil. 
  .
  ddcutil communicates with monitors implementing MCCS (Monitor Control Command
@@ -78,7 +80,7 @@ Depends: ${shlibs:Depends},
          libxrandr2, 
          libudev1,
          libudev-dev
-Description: libddcutil C development files
+Description: ddcutil - C development files
  These are the static libraries and development files for libddcutil.   
  .
  ddcutil communicates with monitors implementing MCCS (Monitor Control Command
