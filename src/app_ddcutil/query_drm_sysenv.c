@@ -204,7 +204,7 @@ static void probe_open_device_using_libdrm(int fd, int depth) {
    }
    else {
       rpt_vstring(d1, "Device information:");
-      rpt_vstring(d2, "bustype:             %d - %s",
+      rpt_vstring(d2, "bustype:                %d - %s",
             ddev->bustype, drm_bus_type_name(ddev->bustype));
 #ifdef OLD
       rpt_vstring(d2, "bus,dev,domain,func: %d, %d, %d, %d",
@@ -254,7 +254,9 @@ static void probe_open_device_using_libdrm(int fd, int depth) {
     // if (rc < 0) {
     //    DBGMSG("result as errno: %s", linux_errno_desc(-rc));
     // }
-    rpt_vstring(d1, "Checking if a modesetting capable driver is attached to bus %s ...", busid2);
+    rpt_vstring(d1,
+          "Is a modesetting capable driver is attached to bus %s? (drmCheckModesettingAvailable())...",
+          busid2);
     // rpt_vstring(d1, "drmCheckModesettingSupported() called to check if a modsetting capable driver");
     // rpt_vstring(d1, "is attached to bus id %s", busid);
     switch (rc) {
@@ -270,12 +272,7 @@ static void probe_open_device_using_libdrm(int fd, int depth) {
     default:
        rpt_vstring(d2, "drmCheckModesettingSupported() returned undocumented status code %d", rc);
     }
-
-
-
    }
-
-
 
 #ifdef REF
    extern drmModePropertyPtr drmModeGetProperty(int fd, uint32_t propertyId);
@@ -352,11 +349,15 @@ static void probe_open_device_using_libdrm(int fd, int depth) {
          report_drmModeConnector(fd, conn, d1) ;
 
       rpt_vstring(d1, "%-20s %u",       "connector_id:",      conn->connector_id);
-      rpt_vstring(d2, "%-20s %d - %s",  "connector_type:",    conn->connector_type,  connector_type_name(conn->connector_type));
+      rpt_vstring(d2, "%-20s %s-%u",    "connector name",     connector_type_title(conn->connector_type),
+                                                              conn->connector_type_id);
+      rpt_vstring(d2, "%-20s %d - %s",  "connector_type:",    conn->connector_type,
+                                                              connector_type_title(conn->connector_type));
       rpt_vstring(d2, "%-20s %d",       "connector_type_id:", conn->connector_type_id);
-      rpt_vstring(d2, "%-20s %d - %s",  "connection:", conn->connection, connector_status_name(conn->connection));
+      rpt_vstring(d2, "%-20s %d - %s",  "connection:",        conn->connection,
+                                                              connector_status_title(conn->connection));
       uint32_t encoder_id = conn->encoder_id;     // current encoder
-      rpt_vstring(d2, "%-20s %d",       "encoder:", encoder_id);
+      rpt_vstring(d2, "%-20s %d",       "encoder:",           encoder_id);
 
       drmModeEncoderPtr penc =  drmModeGetEncoder(fd, encoder_id);
       if (penc) {
