@@ -27,9 +27,11 @@
 #include <xf86drm.h>
 #include <xf86drmMode.h>
 
-char * connector_type_name(Byte val);
-  char * connector_status_name(drmModeConnection val);
-  char * encoder_type_title(uint32_t encoder_type);
+char * connector_type_name( Byte val);
+char * connector_type_title(Byte val);
+char * connector_status_name( drmModeConnection val);
+char * connector_status_title(drmModeConnection val);
+char * encoder_type_title(uint32_t encoder_type);
 
 void report_drmModeRes(          drmModeResPtr  res,              int depth);
 void report_drmModePropertyBlob( drmModePropertyBlobPtr blob_ptr, int depth);

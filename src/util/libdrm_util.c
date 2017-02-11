@@ -46,31 +46,37 @@
 // Identifier name tables
 //
 
-Value_Name connector_type_table[] = {
-   VN(DRM_MODE_CONNECTOR_Unknown   ), //   0
-   VN(DRM_MODE_CONNECTOR_VGA       ), //   1
-   VN(DRM_MODE_CONNECTOR_DVII      ), //   2
-   VN(DRM_MODE_CONNECTOR_DVID      ), //   3
-   VN(DRM_MODE_CONNECTOR_DVIA       ), //  4
-   VN(DRM_MODE_CONNECTOR_Composite   ), // 5
-   VN(DRM_MODE_CONNECTOR_SVIDEO     ), //  6
-   VN(DRM_MODE_CONNECTOR_LVDS      ), //   7
-   VN(DRM_MODE_CONNECTOR_Component ), //   8
-   VN(DRM_MODE_CONNECTOR_9PinDIN    ), //  9
-   VN(DRM_MODE_CONNECTOR_DisplayPort ), // 10
-   VN(DRM_MODE_CONNECTOR_HDMIA      ), //  11
-   VN(DRM_MODE_CONNECTOR_HDMIB      ), //  12
-   VN(DRM_MODE_CONNECTOR_TV   ), // 13
-   VN(DRM_MODE_CONNECTOR_eDP     ), // 14
-   VN(DRM_MODE_CONNECTOR_VIRTUAL    ), //  15
-   VN(DRM_MODE_CONNECTOR_DSI      ), //    16
-   VN_END
+Value_Name_Title connector_type_table[] = {
+   VNT(DRM_MODE_CONNECTOR_Unknown     , "unknown"    ), //  0
+   VNT(DRM_MODE_CONNECTOR_VGA         , "VGA"        ), //  1
+   VNT(DRM_MODE_CONNECTOR_DVII        , "DVI-I"      ), //  2
+   VNT(DRM_MODE_CONNECTOR_DVID        , "DVI-D"      ), //  3
+   VNT(DRM_MODE_CONNECTOR_DVIA        , "DVI-A"      ), //  4
+   VNT(DRM_MODE_CONNECTOR_Composite   , "Composite"  ), //  5
+   VNT(DRM_MODE_CONNECTOR_SVIDEO      , "S-video"    ), //  6
+   VNT(DRM_MODE_CONNECTOR_LVDS        , "LVDS"       ), //  7
+   VNT(DRM_MODE_CONNECTOR_Component   , "Component"  ), //  8
+   VNT(DRM_MODE_CONNECTOR_9PinDIN     , "DIN"        ), //  9
+   VNT(DRM_MODE_CONNECTOR_DisplayPort , "DP"         ), // 10
+   VNT(DRM_MODE_CONNECTOR_HDMIA       , "HDMI"       ), // 11
+   VNT(DRM_MODE_CONNECTOR_HDMIB       , "HDMI-B"     ), // 12
+   VNT(DRM_MODE_CONNECTOR_TV          , "TV"         ), // 13
+   VNT(DRM_MODE_CONNECTOR_eDP         , "eDP"        ), // 14
+   VNT(DRM_MODE_CONNECTOR_VIRTUAL     , "Virtual"    ), // 15
+   VNT(DRM_MODE_CONNECTOR_DSI         , "DSI"        ), // 16  Display Signal Interface, used on Raspberry Pi
+   VNT_END
 };
 
 
 char * connector_type_name(Byte val) {
-   return vn_name(connector_type_table, val);
+   return vnt_name(connector_type_table, val);
 }
+
+char * connector_type_title(Byte val) {
+   return vnt_title(connector_type_table, val);
+}
+
+
 
 
 // from libdrm/drm.h
@@ -130,24 +136,28 @@ char * interpret_property_flags(uint32_t flags) {
 }
 
 
-Value_Name drmModeConnection_table[] = {
-   VN(DRM_MODE_CONNECTED   ),      //   1
-   VN(DRM_MODE_DISCONNECTED ),     //   2
-   VN(DRM_MODE_UNKNOWNCONNECTION), //   2
-   VN_END
+Value_Name_Title drmModeConnection_table[] = {
+   VNT(DRM_MODE_CONNECTED,         "connected"    ), //   1
+   VNT(DRM_MODE_DISCONNECTED,      "disconnected" ), //   2
+   VNT(DRM_MODE_UNKNOWNCONNECTION, "unknown"      ), //   3
+   VNT_END
 };
 
 char * connector_status_name(drmModeConnection val) {
-   return vn_name(drmModeConnection_table, val);
+   return vnt_name(drmModeConnection_table, val);
+}
+
+char * connector_status_title(drmModeConnection val) {
+   return vnt_title(drmModeConnection_table, val);
 }
 
 
 Value_Name_Title drm_encoder_type_table[] = {
-   VNT(DRM_MODE_ENCODER_NONE,   "None"),      //  0
-   VNT(DRM_MODE_ENCODER_DAC,    "DAC"),       //  1
-   VNT(DRM_MODE_ENCODER_TMDS,   "TDMS"),      //  2
-   VNT(DRM_MODE_ENCODER_LVDS,   "LVDS"),      //  3
-   VNT(DRM_MODE_ENCODER_TVDAC,  "TVDAC"),     //  4
+   VNT(DRM_MODE_ENCODER_NONE,    "None"),     //  0
+   VNT(DRM_MODE_ENCODER_DAC,     "DAC"),      //  1
+   VNT(DRM_MODE_ENCODER_TMDS,    "TDMS"),     //  2
+   VNT(DRM_MODE_ENCODER_LVDS,    "LVDS"),     //  3
+   VNT(DRM_MODE_ENCODER_TVDAC,   "TVDAC"),    //  4
    VNT(DRM_MODE_ENCODER_VIRTUAL, "Virtual"),  //  5
    VNT(DRM_MODE_ENCODER_DSI,     "DSI"),      //  6
    VNT_END
