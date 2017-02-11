@@ -9,12 +9,17 @@ name=ddcutil
 ver=$1
 rlse=$2
 
+echo "(upload_obsdeb) parm 0 = $0"
 echo "(upload_obsdeb) parm 1 = $1, ver=${ver}"
 echo "(upload_obsdeb) parm 2 = $2, rlse=${rlse}"
-
+echo "(upload_obsdeb) parm 3 = $3"
 
 obs_proj="home:rockowitz"
 obs_pkg=ddcutil
+
+[ $# -ge 3 ] && obs_pkg=$3
+
+echo "(upload_obsdeb) obs_pkg=${obs_pkg}"
 
 srcdir=${PWD}/..
 curdir=${PWD}
@@ -27,10 +32,10 @@ echo workdir=$workdir
 # TODO: error if workdir exists but not a directory
 
 if [ ! -d $workdir ]; then
-  echo creating $workdir
+	echo "(upload_obsdeb) creating $workdir"
   mkdir $workdir
 else
-  echo clearing $workdir
+	echo "(upload_obsdeb) clearing $workdir"
   rm -r $workdir/*
   rm -r $workdir/.osc
 fi
@@ -72,12 +77,12 @@ cd $workdir
 # delfiles ddcutil_*.orig.tar.gz
 
 for f in ddcutil_*.orig.tar.gz; do
-   echo "Deleting file: $f"
+	echo "(upload_obsdeb) Deleting file: $f"
    rm $f
 done
 
 for f in ddcutil_*.debian.tar.xz; do
-   echo "Deleting file: $f"
+	echo "(upload_obsdeb) Deleting file: $f"
    rm $f
 done
 
@@ -97,7 +102,7 @@ cp -p $debdir/$fn2  .
 echo "Adding file: ${fn3}" 
 cp -p $debdir/$fn3  .
 
-osc addremove ddcutil
+osc addremove
 
 # echo "fn1=${fn1}"
 # echo "fn2=${fn2}"

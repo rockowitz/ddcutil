@@ -40,6 +40,10 @@ obsrpm:
 	echo "---> Makefile: obsrpm"
 	(cd package && $(MAKE) $(AM_MAKEFLAGS) $@) || exit 1
 
+obsrpmtest:  
+	echo "---> Makefile: obsrpmtest"
+	(cd package && $(MAKE) $(AM_MAKEFLAGS) $@) || exit 1
+
 dpkg:  dist
 	echo "---> Makefile: dpkg"
 	(cd package && $(MAKE) $(AM_MAKEFLAGS) $@) || exit 1
@@ -50,6 +54,10 @@ pdebuild:  dist
 
 
 obsdeb:  
+	echo "---> Makefile: obsdeb"
+	(cd package && $(MAKE) $(AM_MAKEFLAGS) $@) || exit 1
+
+obsdebtest:  
 	echo "---> Makefile: obsdeb"
 	(cd package && $(MAKE) $(AM_MAKEFLAGS) $@) || exit 1
 

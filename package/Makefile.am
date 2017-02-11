@@ -35,7 +35,12 @@ rpms: rpmcheck $(rpmspec)
 obsrpm:
 	echo "--------------------------> package/Makefile: target obsrpm"
 	echo "ver --> ${ver}"
-	./upload_obsrpm ${ver}
+	./upload_obsrpm ${ver} ddcutil 
+
+obsrpmtest:
+	echo "--------------------------> package/Makefile: target obsrpmtest"
+	echo "ver --> ${ver}"
+	./upload_obsrpm ${ver} ddcutil-test 
 
 dpkg:
 	echo "--------------------------> obs/Makefile: target dpkg"
@@ -50,6 +55,12 @@ obsdeb:
 	echo "--------------------------> package/Makefile: target obsdeb"
 	./build_dpkg obsdeb 
 	./upload_obsdeb ${ver} ${rlse}
+
+
+obsdebtest:
+	echo "--------------------------> package/Makefile: target obsdeb"
+	./build_dpkg obsdeb 
+	./upload_obsdeb ${ver} ${rlse} ddcutil-test
 
 
 ppa:

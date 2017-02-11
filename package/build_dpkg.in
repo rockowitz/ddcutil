@@ -37,7 +37,7 @@ cd ${basename}-${ver}
 cp -pr ${rootdir}/package/debian .
 # debuild
 
-echo "Before debuild"
+echo "(build_dpkg) Before debuild"
 
 case "$1" in
 

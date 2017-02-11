@@ -3,13 +3,20 @@
 # srcdir=/shared/playproj/i2c
 # workdir=.
 
-
 name=@PACKAGE_TARNAME@ 
 ver="@PACKAGE_VERSION@"
 
-
 obs_proj="home:rockowitz"
 obs_pkg=ddcutil
+
+echo "arg 0: $0"
+echo "arg 1: $1"
+echo "arg 2: $2"
+echo "number of arguments: $#"
+
+if [[ $# -ge 2 ]]; then 
+	obs_pkg=$2
+fi
 
 srcdir=${PWD}/..
 curdir=${PWD}
@@ -17,6 +24,7 @@ workdir=${PWD}/obswork
 
 echo srcdir=$srcdir
 echo workdir=$workdir
+echo obs_pkg=$obs_pkg
 
 # TODO: error if workdir exists but not a directory
 
@@ -49,7 +57,7 @@ cp -p $curdir/ddcutil.spec $workdir
 
 cd obswork
 
-osc addremove ddcutil
+osc addremove 
 
 
 
