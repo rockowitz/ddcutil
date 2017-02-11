@@ -541,9 +541,14 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
       printf("Built without support for USB connected displays.\n");
 #endif
 #ifdef ENABLE_FAILSIM
-      printf("Built with support for function failure simulation.\n");
+      printf("Built with function failure simulation.\n");
 #else
-      printf("Built without support for function failure simulation.\n");
+      printf("Built without function failure simulation.\n");
+#endif
+#ifdef USE_LIBDRM
+      printf("Built with libdrm services.\n");
+#else
+      printf("Built without libdrm services.\n");
 #endif
       puts("");
       // if no command specified, include license in version information and terminate
