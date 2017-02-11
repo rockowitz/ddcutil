@@ -1505,18 +1505,19 @@ void probe_logs() {
 
    strncpy(gbuf, "egrep", gbufsz);
    char ** p = known_video_driver_modules;
+   char * src = NULL;
    while (*p) {
-      strncat(gbuf, " -e \"", gbufsz);
-      strncat(gbuf, *p,       gbufsz);
-      strncat(gbuf, "\"",     gbufsz);
+      src = " -e\""; strncat(gbuf, src, gbufsz - (strlen(src)+1));
+                     strncat(gbuf, *p,  gbufsz - (strlen(*p)+1) );
+      src = "\"";    strncat(gbuf, src, gbufsz - (strlen(src)+1));
       p++;
    }
 
    p = prefix_matches;
    while (*p) {
-      strncat(gbuf, " -e \"", gbufsz);
-      strncat(gbuf, *p,       gbufsz);
-      strncat(gbuf, "\"",     gbufsz);
+      src = " -e\""; strncat(gbuf, src, gbufsz - (strlen(src)+1));
+                     strncat(gbuf, *p,  gbufsz - (strlen(*p)+1) );
+      src = "\"";    strncat(gbuf, src, gbufsz - (strlen(src)+1));
       p++;
    }
    // printf("(%s) assembled command: |%s|\n", __func__, gbuf);
