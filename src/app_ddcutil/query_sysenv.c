@@ -259,7 +259,7 @@ static bool query_proc_driver_nvidia() {
 
          while ( (ep = readdir(dp)) ) {
             if ( !streq(ep->d_name,".") && !streq(ep->d_name, "..") ) {
-               // puts(ep->d_name);
+               rpt_vstring(1, "PCI bus id: %s", ep->d_name);
                char dirbuf[400];
                strcpy(dirbuf, dn_gpus);
                strcat(dirbuf, ep->d_name);
@@ -1493,6 +1493,53 @@ const char * sysattr_name;
 #endif
 
 
+
+void probe_logs() {
+   char gbuf[500];
+   char cbuf[550];
+   int  gbufsz = sizeof(gbuf);
+   int  cbufsz = sizeof(cbuf);
+
+   rpt_nl();
+   rpt_vstring(0, "Examining system logs...");
+
+   strncpy(gbuf, "egrep", gbufsz);
+   char ** p = known_video_driver_modules;
+   while (*p) {
+      strncat(gbuf, " -e \"", gbufsz);
+      strncat(gbuf, *p,       gbufsz);
+      strncat(gbuf, "\"",     gbufsz);
+      p++;
+   }
+
+   p = prefix_matches;
+   while (*p) {
+      strncat(gbuf, " -e \"", gbufsz);
+      strncat(gbuf, *p,       gbufsz);
+      strncat(gbuf, "\"",     gbufsz);
+      p++;
+   }
+   // printf("(%s) assembled command: |%s|\n", __func__, gbuf);
+
+   snprintf(cbuf, cbufsz, "dmesg | %s", gbuf);
+   // printf("(%s) cbuf: |%s|\n", __func__, cbuf);
+   rpt_nl();
+   rpt_vstring(1,"Checking dmesg for video and I2C related lines...");
+   if ( !execute_shell_cmd_rpt(cbuf, 2 /* depth */) )
+      rpt_vstring(2,"Unable to process dmesg");
+   rpt_nl();
+
+   snprintf(cbuf, cbufsz, "%s /var/log/Xorg.0.log", gbuf);
+   // printf("(%s) cbuf: |%s|\n", __func__, cbuf);
+
+   rpt_vstring(1,"Checking Xorg.0.log for video and I2C related lines...");
+   if ( !execute_shell_cmd_rpt(cbuf, 2 /* depth */) )
+      rpt_vstring(2,"Unable to read Xorg.0.log");
+   rpt_nl();
+}
+
+
+
 /* Master function to query the system environment
  *
  * Arguments:    none
@@ -1579,16 +1626,7 @@ void query_sysenv() {
       probe_i2c_devices_using_udev();
 #endif
 
-      rpt_nl();
-      rpt_vstring(0,"Checking dmesg for drm related lines...");
-      if ( !execute_shell_cmd_rpt("dmesg | grep drm", 1 /* depth */) )
-         rpt_vstring(1,"Unable to process dmesg");
-      rpt_nl();
-
-      rpt_vstring(0,"Checking Xorg.0.log for drm related lines...");
-      if ( !execute_shell_cmd_rpt("grep drm /var/log/Xorg.0.log", 1 /* depth */) )
-         rpt_vstring(1,"Unable to read Xorg.0.log");
-      rpt_nl();
+      probe_logs();
 
 #ifdef USE_LIBDRM
       probe_using_libdrm();
