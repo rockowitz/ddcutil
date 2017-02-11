@@ -409,7 +409,7 @@ AS_IF( [test 0$DBG -ne 0],
 
 ### libdrm 
 
-PKG_CHECK_MODULES(LIBDRM, libdrm, [
+PKG_CHECK_MODULES(LIBDRM, libdrm >= 2.4.68, [
       use_libdrm=yes
       AC_DEFINE([USE_LIBDRM], [1], [libdrm is available])
    ],
