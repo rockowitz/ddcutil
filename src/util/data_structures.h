@@ -91,9 +91,11 @@ struct {
    Byte *     bytes;
    int        buffer_size;
    int        len;
+   uint16_t   size_increment;
 } Buffer;
 
 Buffer * buffer_new(int size, const char * trace_msg);
+void     buffer_set_size_increment(Buffer * buffer, uint16_t increment);
 Buffer * buffer_dup(Buffer * srcbuf, const char * trace_msg);
 Buffer * buffer_new_with_value(Byte * bytes, int bytect, const char * trace_msg);
 int      buffer_length(Buffer * buffer);
@@ -103,9 +105,11 @@ void     buffer_put(Buffer * buffer, Byte * bytes, int bytect);
 void     buffer_set_byte(Buffer * buffer, int offset, Byte byte);
 void     buffer_set_bytes(Buffer * buffer, int offset, Byte * bytes, int bytect);
 void     buffer_append(Buffer * buffer, Byte * bytes, int bytect);
+void     buffer_strcat(Buffer * buffer, char * str);
 void     buffer_add(Buffer * buffer, Byte byte);
 void     buffer_dump(Buffer * buffer);
 bool     buffer_eq(Buffer* buf1, Buffer* buf2);
+void     buffer_extend(Buffer* buf, int addl_bytes);
 
 
 //

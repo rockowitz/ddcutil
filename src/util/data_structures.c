@@ -28,6 +28,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/param.h>     // for MIN, MAX
 
 #include "util/string_util.h"
 
@@ -412,6 +413,7 @@ bool bbf_store_bytehex_list(Byte_Bit_Flags bbf, char * start, int len) {
 
 bool trace_buffer_malloc_free = false;
 bool trace_buffer = false;    // controls buffer tracing
+bool trace_buffer_resize = false;
 
 
 // Allocates a Buffer instance
@@ -430,10 +432,16 @@ Buffer * buffer_new(int size, const char * trace_msg) {
    buffer->bytes = (Byte *) calloc(1, hacked_size);    // hack
    buffer->buffer_size = size;
    buffer->len = 0;
+   buffer->size_increment = 0;
    if (trace_buffer_malloc_free)
       printf("(%s) Allocated buffer.  buffer=%p, buffer->bytes=%p, &buffer->bytes=%p, %s\n",
              __func__, buffer, buffer->bytes, &(buffer->bytes), trace_msg);
    return buffer;
+}
+
+
+void buffer_set_size_increment(Buffer * buf, uint16_t size_increment) {
+   buf->size_increment = size_increment;
 }
 
 
@@ -479,7 +487,6 @@ void buffer_free(Buffer * buffer, const char * trace_msg) {
       free(buffer);
       if (trace_buffer_malloc_free)
          printf("(%s) Done\n", __func__);
-
 }
 
 
@@ -552,7 +559,7 @@ void buffer_set_bytes(Buffer * buf, int offset, Byte * bytes, int bytect) {
 }
 
 
-// Appends a string of bytes to the current value in the buffer.
+// Appends a sequence of bytes to the current value in the buffer.
 // The buffer length is updated.
 //
 // Arguments:
@@ -569,6 +576,16 @@ void buffer_append(Buffer * buffer, Byte * bytes, int bytect) {
              __func__, buffer->bytes+buffer->len, bytes, bytect);
    }
    //  buffer->len + 2 + bytect  .. why the  + 2?
+
+   int required_size = buffer->len + 2 + bytect;
+   if (required_size > buffer->buffer_size && buffer->size_increment > 0) {
+      int new_size = MAX(required_size, buffer->buffer_size + buffer->size_increment);
+      if (trace_buffer_resize)
+         printf("(%s) Resizing. old size = %d, new size = %d\n",
+                __func__, buffer->buffer_size, new_size);
+      buffer_extend(buffer, new_size - buffer->buffer_size);
+   }
+
    assert(buffer->len + 2 + bytect <= buffer->buffer_size);
 
    memcpy(buffer->bytes + buffer->len, bytes, bytect);
@@ -576,6 +593,24 @@ void buffer_append(Buffer * buffer, Byte * bytes, int bytect) {
 
    // printf("(%s) Returning.  cur len = %d\n", __func__, buffer->len);
 }
+
+
+// Appends a string to the current string in the buffer.
+
+
+void buffer_strcat(Buffer * buffer, char * str) {
+   assert( memcmp(buffer->marker, BUFFER_MARKER, 4) == 0);
+   if (buffer->len == 0) {
+      buffer_append(buffer, (Byte *) str, strlen(str)+1);
+   }
+   else {
+      assert(buffer->bytes[buffer->len - 1] == '\0');
+      buffer_set_length(buffer, buffer->len - 1);     // truncate trailing \0
+      buffer_append(buffer, (Byte *) str, strlen(str) + 1);
+   }
+}
+
+
 
 
 // Appends a single byte to the current value in the buffer.
@@ -604,6 +639,14 @@ bool     buffer_eq(Buffer* buf1, Buffer* buf2) {
       result = true;
    return result;
 }
+
+
+void     buffer_extend(Buffer* buf, int addl_bytes) {
+   int new_size = buf->buffer_size + addl_bytes;
+   buf->bytes = realloc(buf->bytes, new_size);
+   buf->buffer_size = new_size;
+}
+
 
 
 // Debugging method.  Displays all fields of the Buffer.
