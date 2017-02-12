@@ -448,12 +448,75 @@ bye:
 }
 
 
+#ifdef NO
+// modified from libdrm test code kms.c
+
+static const char * const modules[] = {
+   "i915",
+   "radeon",
+   "nouveau",
+#ifdef SKIP
+   "vmwgfx",
+   "omapdrm",
+   "exynos",
+   "tilcdc",
+   "msm",
+   "sti",
+   "tegra",
+   "imx-drm",
+   "rockchip",
+   "atmel-hlcdc",
+   "fsl-dcu-drm",
+   "vc4",
+#endif
+   "nvidia_drm",
+   "nvidia_modeset",
+   "nvidia",
+   NULL,
+};
+
+int util_open(const char *device, const char *module)
+{
+   int fd;
+
+   if (module) {
+      fd = drmOpen(module, device);
+      if (fd < 0) {
+         fprintf(stderr, "failed to open device '%s': %s\n",
+            module, strerror(errno));
+         return -errno;
+      }
+   } else {
+      unsigned int i;
+
+      for (i = 0; i < ARRAY_SIZE(modules); i++) {
+         printf("trying to open device %s using'%s'...", device, modules[i]);
+
+         fd = drmOpen(modules[i], device);
+         if (fd < 0) {
+            printf("failed\n");
+         } else {
+            printf("done\n");
+            break;
+         }
+      }
+
+      if (fd < 0) {
+         fprintf(stderr, "no device found\n");
+         return -ENODEV;
+      }
+   }
+
+   return fd;
+}
+#endif
+
+
+
 static void probe_one_device_using_libdrm(char * devname, int depth) {
    // int errsv;
 
    rpt_vstring(depth, "Probing device %s...", devname);
-
-   // char * busid = "pci:0000:01:00.0";
 
    // char * bname = basename(devname);
    // int fd  = open(devname,O_RDWR | O_CLOEXEC);
@@ -481,21 +544,33 @@ static void probe_one_device_using_libdrm(char * devname, int depth) {
    }
 #endif
 
-// open succeeeds using hardcoded busid, but doesn't solve problem of
+   int fd = -1;
+#ifdef NO
+   char * busid = "pci:0000:01:00.0";
+// open succeeds using hardcoded busid, but doesn't solve problem of
 // driver not modesetting
 // but .. if this isn't used, drmGetBusid() fails
-#ifdef WORKS_BUT_NOT_HELPFUL
+// #ifdef WORKS_BUT_NOT_HELPFUL
    if (fd < 0) {
       fd = drmOpen(NULL, busid);
       if (fd < 0) {
          rpt_vstring(depth, "Error opening busid %s using drmOpen(), fd=%s",
                             busid, linux_errno_desc(-fd));
       }
+      else {
+         rpt_vstring(depth, "Successfully opened using drmOpen(NULL, \"%s\")\n",
+                            busid);
+      }
+   }
+// #endif
+
+   if (fd < 0) {
+      fd = util_open(busid, NULL);
    }
 #endif
 
-   int fd = 0;
-   // if (fd < 0) {
+   // int fd = 0;
+   if (fd < 0) {
       errno = 0;
       fd  = open(devname,O_RDWR | O_CLOEXEC);
       if (fd < 0) {
@@ -504,7 +579,7 @@ static void probe_one_device_using_libdrm(char * devname, int depth) {
       }
       else
          rpt_vstring(depth+1, "Open succeeded for device: %s", devname);
-   // }
+   }
 
 
    if (fd > 0) {
