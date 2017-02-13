@@ -120,7 +120,7 @@ bool str_ends_with(const char * value_to_test, const char * end_part) {
  * Returns:
  *   true/false   will be true if s== NULL
  */
-bool str_is_printable(char * s) {
+bool str_all_printable(char * s) {
    bool result = true;
    if (s) {
       for (int ndx = 0; ndx < strlen(s); ndx++) {

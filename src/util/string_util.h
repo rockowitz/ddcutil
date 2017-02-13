@@ -57,7 +57,7 @@ bool   streq(const char * s1, const char * s2);
 bool   is_abbrev(const char * value, const char * longname, int minchars);
 bool   str_starts_with(const char * value_to_test, const char * start_part);
 bool   str_ends_with(const char * value_to_test, const char * end_part);
-bool   str_is_printable(char * s);
+bool   str_all_printable(char * s);
 char * strupper(char * s);
 char * strdup_uc(char* s);
 char * strjoin( const char ** pieces, const int ct, const char * sepstr);
