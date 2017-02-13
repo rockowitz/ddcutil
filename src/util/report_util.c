@@ -120,6 +120,13 @@ FILE * rpt_cur_output_dest() {
    return result;
 }
 
+void debug_output_dest() {
+    FILE * dest = rpt_cur_output_dest();
+    char * addl = (dest == stdout) ? " (stdout)" : "";
+    printf("(%s) output_dest_stack[%d] = %p %s\n",
+          __func__, output_dest_stack_pos, dest, addl);
+}
+
 
 // needed for set_fout() in core.c
 void rpt_change_output_dest(FILE* new_dest) {
@@ -129,6 +136,12 @@ void rpt_change_output_dest(FILE* new_dest) {
       initial_output_dest_changed = true;
       alt_initial_output_dest = new_dest;
    }
+}
+
+
+// should not be needed, for diagnosing a problem
+void rpt_flush() {
+   fflush(rpt_cur_output_dest());
 }
 
 
