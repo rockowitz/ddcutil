@@ -536,10 +536,15 @@ bye:
  * path.
  */
 void raw_scan_i2c_devices() {
-   rpt_nl();
-   rpt_title("Performing basic scan of I2C devices",0);
    bool debug = false;
    DBGMSF(debug, "Starting");
+
+   int depth = 0;
+   int d1 = depth+1;
+   int d2 = depth+2;
+
+   rpt_nl();
+   rpt_title("Performing basic scan of I2C devices",depth);
 
    Buffer * buf0 = buffer_new(1000, __func__);
    int  busct = 0;
@@ -551,7 +556,7 @@ void raw_scan_i2c_devices() {
       if (i2c_bus_exists(busno)) {
          busct++;
          rpt_nl();
-         rpt_vstring(0, "Examining device /dev/i2c-%d...", busno);
+         rpt_vstring(d1, "Examining device /dev/i2c-%d...", busno);
 
          if (!is_i2c_device_rw(busno))
             continue;
@@ -561,30 +566,30 @@ void raw_scan_i2c_devices() {
             continue;
 
          unsigned long functionality = i2c_get_functionality_flags_by_fd(fd);
-         i2c_report_functionality_flags(functionality, 90, 1);
+         i2c_report_functionality_flags(functionality, 90, d2);
 
          //  Base_Status_Errno rc = i2c_set_addr(fd, 0x50, CALLOPT_ERR_MSG);
          // TODO save force slave addr setting, set it for duration of call - do it outside loop
          gsc = i2c_get_raw_edid_by_fd(fd, buf0);
          if (gsc != 0) {
-            rpt_vstring(1, "Unable to read EDID, gsc=%s", gsc_desc(gsc));
+            rpt_vstring(d2, "Unable to read EDID, gsc=%s", gsc_desc(gsc));
          }
          else {
-            rpt_vstring(1, "Raw EDID:");
-            rpt_hex_dump(buf0->bytes, buf0->len, 1);
+            rpt_vstring(d2, "Raw EDID:");
+            rpt_hex_dump(buf0->bytes, buf0->len, d2);
             Parsed_Edid *  edid = create_parsed_edid(buf0->bytes);
             if (edid)
               report_parsed_edid_base(
                     edid,
                     true,     // verbose
                     false,    // show_edid
-                    1);
+                    d2);
             else
-               rpt_vstring(1, "Unable to parse EDID");
+               rpt_vstring(d2, "Unable to parse EDID");
          }
 
          rpt_nl();
-         rpt_vstring(1, "Trying simple VCP read of feature 0x10...");
+         rpt_vstring(d2, "Trying simple VCP read of feature 0x10...");
          rc = i2c_set_addr(fd, 0x37, CALLOPT_ERR_MSG);
          if (rc == 0) {
             int maxtries = 3;
@@ -592,17 +597,17 @@ void raw_scan_i2c_devices() {
             for (int tryctr=0; tryctr<maxtries && gsc < 0; tryctr++) {
                gsc = try_single_getvcp_call(fd, 0x10);
                if (gsc == 0 || gsc == DDCRC_NULL_RESPONSE || gsc == DDCRC_REPORTED_UNSUPPORTED) {
-                  rpt_vstring(1, "Attempt %d to read feature succeeded.", tryctr+1);
+                  rpt_vstring(d2, "Attempt %d to read feature succeeded.", tryctr+1);
                   gsc = 0;
                   break;
                }
-               rpt_vstring(1, "Attempt %d to read feature failed. status = %s.  %s",
+               rpt_vstring(d2, "Attempt %d to read feature failed. status = %s.  %s",
                              tryctr+1, gsc_desc(gsc), (tryctr < maxtries-1) ? "Retrying..." : "");
             }
             if (gsc == 0)
-               rpt_vstring(1, "DDC communication succeeded");
+               rpt_vstring(d2, "DDC communication succeeded");
             else {
-               rpt_vstring(1, "DDC communication failed.");
+               rpt_vstring(d2, "DDC communication failed.");
             }
          }
 
@@ -611,7 +616,7 @@ void raw_scan_i2c_devices() {
    }
 
    if (busct == 0) {
-      rpt_vstring(1, "No /dev/i2c-* devices found\n");
+      rpt_vstring(d2, "No /dev/i2c-* devices found\n");
    }
 
    i2c_force_slave_addr_flag = saved_i2c_force_slave_addr_flag;
@@ -1360,7 +1365,7 @@ static bool query_card_and_driver_using_osinfo() {
 
 static void query_i2c_buses() {
    rpt_nl();
-   rpt_vstring(0,"Examining i2c buses...");
+   rpt_vstring(0,"Examining I2C buses, as detected by I2C layer...");
    i2c_report_buses(true, 1 /* indentation depth */);
 }
 
