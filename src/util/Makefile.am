@@ -47,9 +47,9 @@ if ENABLE_FAILSIM_COND
 libutil_la_SOURCES += failsim.c
 endif
 
-if ENABLE_USB_COND
+# if ENABLE_USB_COND
 libutil_la_SOURCES += udev_util.c                
-endif
+# endif
 
 dist-hook:
 	@echo "(src/util/Makefile) dist-hook"

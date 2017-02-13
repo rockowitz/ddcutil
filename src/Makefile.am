@@ -365,10 +365,12 @@ ddcutil_LDADD =   \
    $(X11_LIBS)    \
    $(GLIB_LIBS)
 
+ddcutil_LDADD += \
+   $(UDEV_LIBS)
+
 if ENABLE_USB_COND
 ddcutil_LDADD += \
-   $(LIBUSB_LIBS) \
-   $(UDEV_LIBS) 
+   $(LIBUSB_LIBS)
 endif
 
 ddcutil_LDADD += \

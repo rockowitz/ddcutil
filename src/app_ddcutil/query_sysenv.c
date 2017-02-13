@@ -27,6 +27,8 @@
 
 #define _GNU_SOURCE 1       // for function group_member
 
+// #define USE_USB
+
 #include <assert.h>
 #include <ctype.h>
 #include <dirent.h>
@@ -62,9 +64,9 @@
 #include "util/string_util.h"
 #include "util/subprocess_util.h"
 #include "util/x11_util.h"
-#ifdef USE_USB
+// #ifdef USE_USB
 #include "util/udev_util.h"
-#endif
+// #endif
 
 
 #include "base/ddc_errno.h"
@@ -76,20 +78,20 @@
 #include "ddc/ddc_packet_io.h"
 
 #include "adl/adl_shim.h"
-#ifdef USE_USB
+// #ifdef USE_USB
 //#include "usb/usb_displays.h"
-#endif
+// #endif
 
 #include "query_drm_sysenv.h"
 #include "app_ddcutil/query_sysenv.h"
 
 
 // Forward references
-#ifdef USE_USB
+// #ifdef USE_USB
 GPtrArray * get_i2c_devices_using_udev();
 // GPtrArray * get_i2c_smbus_devices_using_udev();
 bool is_smbus_device_summary(GPtrArray * summaries, char * sbusno);
-#endif
+// #endif
 
 
 
@@ -1424,10 +1426,10 @@ static void query_using_i2cdetect() {
 
    // calling i2cdetect for an SMBUs device fills dmesg with error messages
    // avoid this if possible
-#ifdef USE_USB
+// #ifdef USE_USB
    // GPtrArray * summaries = get_i2c_smbus_devices_using_udev();
    GPtrArray * summaries = get_i2c_devices_using_udev();
-#endif
+// #endif
 
    // GPtrArray * busnames = execute_shell_cmd_collect("ls /dev/i2c*");
    GPtrArray * busnames = execute_shell_cmd_collect("ls /dev/i2c* | cut -c 10- | sort -n");
@@ -1437,13 +1439,13 @@ static void query_using_i2cdetect() {
       char * busname = (char *) g_ptr_array_index(busnames, ndx);
       // busname+=9;   // strip off "/dev/i2c-"
 
-#ifdef USE_USB
+// #ifdef USE_USB
       if (is_smbus_device_summary(summaries, busname) ) {
          rpt_nl();
          rpt_vstring(0, "Device /dev/i2c-%s is a SMBus device.  Skipping i2cdetect.", busname);
          continue;
       }
-#endif
+// #endif
 
       snprintf(cmd, 80, "i2cdetect -y %s", busname);
       rpt_nl();
@@ -1460,7 +1462,7 @@ static void query_using_i2cdetect() {
 }
 
 
-#ifdef USE_USB
+// #ifdef USE_USB
 
 /* Extract the i2c bus number from a device summary.
  * (auxiliary sort function)
@@ -1684,7 +1686,7 @@ const char * sysattr_name;
 
 #endif
 
-#endif
+// #endif
 
 
 
@@ -1872,13 +1874,13 @@ void query_sysenv() {
 
       query_x11();
 
-#ifdef USE_USB
+// #ifdef USE_USB
       // probe_udev_subsystem() is in udev_util.c, which is only linked in if USE_USB
       probe_i2c_devices_using_udev();
 
       // temp
       // get_i2c_smbus_devices_using_udev();
-#endif
+// #endif
 
       probe_logs();
 
