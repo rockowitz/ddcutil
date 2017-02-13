@@ -77,11 +77,19 @@
 
 #include "adl/adl_shim.h"
 #ifdef USE_USB
-#include "usb/usb_displays.h"
+//#include "usb/usb_displays.h"
 #endif
 
 #include "query_drm_sysenv.h"
 #include "app_ddcutil/query_sysenv.h"
+
+
+// Forward references
+#ifdef USE_USB
+GPtrArray * get_i2c_devices_using_udev();
+// GPtrArray * get_i2c_smbus_devices_using_udev();
+bool is_smbus_device_summary(GPtrArray * summaries, char * sbusno);
+#endif
 
 
 
@@ -564,7 +572,11 @@ void raw_scan_i2c_devices() {
             rpt_hex_dump(buf0->bytes, buf0->len, 1);
             Parsed_Edid *  edid = create_parsed_edid(buf0->bytes);
             if (edid)
-              report_parsed_edid(edid, false /* dump hex */, 1);
+              report_parsed_edid_base(
+                    edid,
+                    true,     // verbose
+                    false,    // show_edid
+                    1);
             else
                rpt_vstring(1, "Unable to parse EDID");
          }
@@ -1232,6 +1244,12 @@ static void driver_specific_tests(struct driver_name_node * driver_list) {
       rpt_vstring(0,"Checking for special settings for proprietary Nvidia driver ");
       rpt_vstring(0,"(needed for some newer Nvidia cards).");
       execute_shell_cmd_rpt("grep -iH i2c /etc/X11/xorg.conf /etc/X11/xorg.conf.d/*", 1);
+
+      rpt_nl();
+      rpt_vstring(0,"Checking Nvidia options to see if kernel modesetting enabled:");
+      char * cmd = "modprobe -c | grep \"^options nvidia\"";
+      rpt_vstring(0, "Executing command: %s", cmd);
+      execute_shell_cmd_rpt(cmd, 1 /* depth */);
    }
 
    if (found_driver(driver_list, "fglrx")) {
@@ -1372,7 +1390,11 @@ void query_x11() {
       rpt_hex_dump(prec->edidbytes, 128, 2);
       Parsed_Edid * parsed_edid = create_parsed_edid(prec->edidbytes);
       if (parsed_edid) {
-         report_parsed_edid(parsed_edid, true /* verbose */, 2 /* depth */);
+         report_parsed_edid_base(
+               parsed_edid,
+               true,   // verbose
+               false,  // show_hex
+               2);     // depth
          free_parsed_edid(parsed_edid);
       }
       else {
@@ -1390,6 +1412,7 @@ void query_x11() {
 }
 
 
+
 /* Uses i2cdetect to probe active addresses on I2C buses
  *
  * Arguments:    none
@@ -1398,6 +1421,14 @@ void query_x11() {
  */
 static void query_using_i2cdetect() {
    rpt_vstring(0,"Examining I2C buses using i2cdetect: ");
+
+   // calling i2cdetect for an SMBUs device fills dmesg with error messages
+   // avoid this if possible
+#ifdef USE_USB
+   // GPtrArray * summaries = get_i2c_smbus_devices_using_udev();
+   GPtrArray * summaries = get_i2c_devices_using_udev();
+#endif
+
    // GPtrArray * busnames = execute_shell_cmd_collect("ls /dev/i2c*");
    GPtrArray * busnames = execute_shell_cmd_collect("ls /dev/i2c* | cut -c 10- | sort -n");
    for (int ndx = 0; ndx < busnames->len; ndx++) {
@@ -1405,6 +1436,15 @@ static void query_using_i2cdetect() {
       char cmd[80];
       char * busname = (char *) g_ptr_array_index(busnames, ndx);
       // busname+=9;   // strip off "/dev/i2c-"
+
+#ifdef USE_USB
+      if (is_smbus_device_summary(summaries, busname) ) {
+         rpt_nl();
+         rpt_vstring(0, "Device /dev/i2c-%s is a SMBus device.  Skipping i2cdetect.", busname);
+         continue;
+      }
+#endif
+
       snprintf(cmd, 80, "i2cdetect -y %s", busname);
       rpt_nl();
       rpt_vstring(0,"Probing bus /dev/i2c-%d using command \"%s\"", ndx, cmd);
@@ -1421,6 +1461,10 @@ static void query_using_i2cdetect() {
 
 
 #ifdef USE_USB
+
+/* Extract the i2c bus number from a device summary.
+ * (auxiliary sort function)
+ */
 int udev_i2c_device_summary_busno(Udev_Device_Summary * summary) {
    int result = -1;
    if (str_starts_with(summary->sysname, "i2c-")) {
@@ -1437,6 +1481,9 @@ int udev_i2c_device_summary_busno(Udev_Device_Summary * summary) {
 }
 
 
+/* Compare 2 Udev device summaries by thir bus numer.
+ * (auxiliary sort function)
+ */
 int compare_udev_i2c_device_summary(const void * a, const void * b) {
    Udev_Device_Summary * p1 = *(Udev_Device_Summary**) a;
    Udev_Device_Summary * p2 = *(Udev_Device_Summary**) b;
@@ -1454,7 +1501,152 @@ int compare_udev_i2c_device_summary(const void * a, const void * b) {
 }
 
 
+/* Returns array of Udev_Device_Summary for I2C devices,
+ * sorted by bus number.
+ */
+GPtrArray * get_i2c_devices_using_udev() {
+   char * subsys_name = "i2c-dev";
+   GPtrArray * summaries = summarize_udev_subsystem_devices(subsys_name);
+
+   if (summaries) {
+      if ( summaries->len == 0) {
+         free_udev_device_summaries(summaries);   // ok if summaries == NULL
+         summaries = NULL;
+      }
+      else {
+         g_ptr_array_sort(summaries, compare_udev_i2c_device_summary);
+      }
+   }
+   return summaries;
+}
+
+
+#ifdef REFERENCE
+#define UDEV_DEVICE_SUMMARY_MARKER "UDSM"
+typedef struct udev_device_summary {
+char   marker[4];
+const char * sysname;
+const char * devpath;
+const char * sysattr_name;
+} Udev_Device_Summary;
+#endif
+
+void report_i2c_device_summaries(GPtrArray * summaries, char * title, int depth) {
+   rpt_vstring(0,title);
+   if (!summaries || summaries->len == 0)
+      rpt_vstring(depth,"No devices detected");
+   else {
+      rpt_vstring(depth,"%-15s %-35s %s", "Sysname", "Sysattr Name", "Devpath");
+      for (int ndx = 0; ndx < summaries->len; ndx++) {
+         Udev_Device_Summary * summary = g_ptr_array_index(summaries, ndx);
+         assert( memcmp(summary->marker, UDEV_DEVICE_SUMMARY_MARKER, 4) == 0);
+         udev_i2c_device_summary_busno(summary);   // ???
+         rpt_vstring(depth,"%-15s %-35s %s",
+                summary->sysname, summary->sysattr_name, summary->devpath);
+      }
+   }
+}
+
+
+#ifdef NOT_WORTH_IT
+GPtrArray * get_i2c_smbus_devices_using_udev() {
+   bool debug = false;
+   GPtrArray * summaries = get_i2c_devices_using_udev();
+   if (summaries) {
+      for (int ndx = summaries->len-1; ndx >= 0; ndx--) {
+         Udev_Device_Summary * summary = g_ptr_array_index(summaries, ndx);
+         assert(memcmp(summary->marker, UDEV_DEVICE_SUMMARY_MARKER, 4) == 0);
+         if ( !str_starts_with(summary->sysattr_name, "SMBus") ) {
+            // TODO: g_ptr_array_set_free_function() must already have been called
+            g_ptr_array_remove_index(summaries, ndx);
+         }
+      }
+   }
+
+   if (debug)
+      report_i2c_device_summaries(summaries, "I2C SMBus Devices:", 0);
+
+
+   return summaries;
+}
+#endif
+
+
+bool is_smbus_device_summary(GPtrArray * summaries, char * sbusno) {
+   bool debug = false;
+   char devname [10];
+   snprintf(devname, sizeof(devname), "i2c-%s", sbusno);
+   DBGMSF(debug, "sbusno=|%s|, devname=|%s|", sbusno, devname);
+   bool result = false;
+   for (int ndx = 0; ndx < summaries->len; ndx++) {
+      Udev_Device_Summary * summary = g_ptr_array_index(summaries, ndx);
+      if ( streq(summary->sysname, devname) &&
+           str_starts_with(summary->sysattr_name, "SMBus") )
+      {
+         result = true;
+         break;
+      }
+   }
+   DBGMSF(debug, "Returning: %s", bool_repr(result), result);
+   return result;
+}
+
+
 void probe_i2c_devices_using_udev() {
+   char * subsys_name = "i2c-dev";
+   rpt_nl();
+   rpt_vstring(0,"Probing I2C devices using udev, susbsystem %s...", subsys_name);
+   // probe_udev_subsystem() is in udev_util.c, which is only linked in if USE_USB
+
+   probe_udev_subsystem(subsys_name, /*show_usb_parent=*/ false, 1);
+
+   GPtrArray * summaries = get_i2c_devices_using_udev();
+
+   rpt_nl();
+   report_i2c_device_summaries(summaries, "Summary of udev I2C devices",1);
+
+   free_udev_device_summaries(summaries);   // ok if summaries == NULL
+}
+
+#ifdef OLD
+void probe_i2c_devices_using_udev1() {
+   char * subsys_name = "i2c-dev";
+   rpt_nl();
+   rpt_vstring(0,"Probing I2C devices using udev, susbsystem %s...", subsys_name);
+   // probe_udev_subsystem() is in udev_util.c, which is only linked in if USE_USB
+
+   probe_udev_subsystem(subsys_name, /*show_usb_parent=*/ false, 1);
+
+   GPtrArray * summaries = get_i2c_devices_using_udev();
+   rpt_nl();
+   rpt_vstring(0,"Summary of udev I2C devices:");
+   if (!summaries || summaries->len == 0)
+      rpt_vstring(0,"No devices detected");
+   else {
+#ifdef REFERENCE
+#define UDEV_DEVICE_SUMMARY_MARKER "UDSM"
+typedef struct udev_device_summary {
+char   marker[4];
+const char * sysname;
+const char * devpath;
+const char * sysattr_name;
+} Udev_Device_Summary;
+#endif
+
+      rpt_vstring(0,"%-15s %-35s %s", "Sysname", "Sysattr Name", "Devpath");
+      for (int ndx = 0; ndx < summaries->len; ndx++) {
+         Udev_Device_Summary * summary = g_ptr_array_index(summaries, ndx);
+         assert( memcmp(summary->marker, UDEV_DEVICE_SUMMARY_MARKER, 4) == 0);
+         udev_i2c_device_summary_busno(summary);
+         rpt_vstring(0,"%-15s %-35s %s",
+                summary->sysname, summary->sysattr_name, summary->devpath);
+      }
+   }
+   free_udev_device_summaries(summaries);   // ok if summaries == NULL
+}
+
+
+void probe_i2c_devices_using_udev0() {
    char * subsys_name = "i2c-dev";
    rpt_nl();
    rpt_vstring(0,"Probing I2C devices using udev, susbsystem %s...", subsys_name);
@@ -1492,18 +1684,48 @@ const char * sysattr_name;
 
 #endif
 
+#endif
+
+
+
+void probe_one_log(char * pre_grep, char * grep_cmd, char * post_grep, char * title, int depth) {
+   bool debug = false;
+   assert(grep_cmd);
+   assert(title);
+   int l1 = (pre_grep) ? strlen(pre_grep) : 0;
+   int l2 = strlen(grep_cmd);
+   int l3 = (post_grep) ? strlen(post_grep) : 0;
+   char * buf = malloc(l1 + l2 + l3 + 1);
+   buf[0] = '\0';
+   if (pre_grep)
+      strcpy(buf, pre_grep);
+   strcat(buf, grep_cmd);
+   if (post_grep)
+      strcat(buf, post_grep);
+
+   rpt_vstring(depth,"Checking %s for video and I2C related lines...", title);
+   DBGMSF(debug, "Shell command: \"%s\"", buf);
+   if ( !execute_shell_cmd_rpt(buf, depth+1) )
+      rpt_vstring(depth+1,"Unable to process %s", title);
+   rpt_nl();
+}
+
+
 
 
 void probe_logs() {
    char gbuf[500];
-   char cbuf[550];
+   // char cbuf[550];
    int  gbufsz = sizeof(gbuf);
-   int  cbufsz = sizeof(cbuf);
+   // int  cbufsz = sizeof(cbuf);
+   int depth = 0;
+   // DBGMSG("Starting");
+   // debug_output_dest();
 
    rpt_nl();
-   rpt_vstring(0, "Examining system logs...");
+   rpt_title("Examining system logs...", depth);
 
-   strncpy(gbuf, "egrep", gbufsz);
+   strncpy(gbuf, "egrep -i", gbufsz);
    char ** p = known_video_driver_modules;
    char * src = NULL;
    while (*p) {
@@ -1513,7 +1735,21 @@ void probe_logs() {
       p++;
    }
 
+#ifdef NO
+   // problem: dmesg is can be filled w i2c errors from i2cdetect trying to
+   // read an SMBus device
+   // disable prefix_matches until filter out SMBUS devices
    p = prefix_matches;
+#endif
+   char * addl_matches[] = {
+         "drm",
+         "video",
+         "eeprom",
+         "i2c_",
+         NULL
+   };
+
+   p = addl_matches;
    while (*p) {
       src = " -e\""; strncat(gbuf, src, gbufsz - (strlen(src)+1));
                      strncat(gbuf, *p,  gbufsz - (strlen(*p)+1) );
@@ -1522,6 +1758,7 @@ void probe_logs() {
    }
    // printf("(%s) assembled command: |%s|\n", __func__, gbuf);
 
+#ifdef OLD
    snprintf(cbuf, cbufsz, "dmesg | %s", gbuf);
    // printf("(%s) cbuf: |%s|\n", __func__, cbuf);
    rpt_nl();
@@ -1537,6 +1774,18 @@ void probe_logs() {
    if ( !execute_shell_cmd_rpt(cbuf, 2 /* depth */) )
       rpt_vstring(2,"Unable to read Xorg.0.log");
    rpt_nl();
+#endif
+
+   rpt_nl();
+   // first few lines of dmesg are lost.  turning on any sort of debugging causes
+   // them to reappear.  apparently a NL in the stream does the trick.  why?
+   // it's a heisenbug.  Just use the more verbose journalctl output
+   probe_one_log("dmesg |",      gbuf, NULL,                   "dmesg",      depth+1);
+   // no, it's journalctl that's the offender.  With just journalctl, earlier
+   // messages re Summary of Udev devices is screwed up
+   // probe_one_log("journalctl |", gbuf, NULL,                   "journalctl", depth+1);
+   probe_one_log(NULL,           gbuf, " /var/log/Xorg.0.log", "Xorg.0.log", depth+1);
+
 }
 
 
@@ -1625,6 +1874,9 @@ void query_sysenv() {
 #ifdef USE_USB
       // probe_udev_subsystem() is in udev_util.c, which is only linked in if USE_USB
       probe_i2c_devices_using_udev();
+
+      // temp
+      // get_i2c_smbus_devices_using_udev();
 #endif
 
       probe_logs();
