@@ -49,6 +49,7 @@
 #include "util/libdrm_util.h"
 #include "util/report_util.h"
 #include "util/string_util.h"
+#include "util/subprocess_util.h"
 
 #include "base/core.h"
 #include "base/linux_errno.h"
@@ -621,12 +622,21 @@ GPtrArray * get_dri_device_names_using_filesys() {
 void probe_using_libdrm() {
    rpt_title("Probing connected monitors using libdrm...",0);
 
+   if ( directory_exists("/proc/driver/nvidia/") ) {
+      rpt_nl();
+      rpt_vstring(1,"Checking Nvidia options to see if experimental kernel modesetting enabled:");
+      char * cmd = "modprobe -c | grep \"^options nvidia\"";
+      rpt_vstring(1, "Executing command: %s", cmd);
+      execute_shell_cmd_rpt(cmd, 2 /* depth */);
+   }
+
+
    // Examining the implementation in xf86drm.c, we see that
    // drmAvailable first calls drmOpenMinor(), then if that
    // succeeds calls drmGetVersion().  If both succeed, returns true.
    // n. drmOpenMinor() is static
 
-
+   rpt_nl();
    // returns 1 if the DRM driver is loaded, 0 otherwise
    int drm_available = drmAvailable();
    // rpt_vstring(0, "drmAvailable() returned %d", drm_available);

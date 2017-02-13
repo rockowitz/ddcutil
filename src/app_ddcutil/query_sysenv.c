@@ -1246,12 +1246,6 @@ static void driver_specific_tests(struct driver_name_node * driver_list) {
       rpt_vstring(0,"Checking for special settings for proprietary Nvidia driver ");
       rpt_vstring(0,"(needed for some newer Nvidia cards).");
       execute_shell_cmd_rpt("grep -iH i2c /etc/X11/xorg.conf /etc/X11/xorg.conf.d/*", 1);
-
-      rpt_nl();
-      rpt_vstring(0,"Checking Nvidia options to see if kernel modesetting enabled:");
-      char * cmd = "modprobe -c | grep \"^options nvidia\"";
-      rpt_vstring(0, "Executing command: %s", cmd);
-      execute_shell_cmd_rpt(cmd, 1 /* depth */);
    }
 
    if (found_driver(driver_list, "fglrx")) {
