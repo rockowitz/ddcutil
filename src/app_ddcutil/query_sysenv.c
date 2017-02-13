@@ -1784,7 +1784,8 @@ void probe_logs() {
    // no, it's journalctl that's the offender.  With just journalctl, earlier
    // messages re Summary of Udev devices is screwed up
    // probe_one_log("journalctl |", gbuf, NULL,                   "journalctl", depth+1);
-   probe_one_log(NULL,           gbuf, " /var/log/Xorg.0.log", "Xorg.0.log", depth+1);
+   rpt_vstring(depth+1, "Limiting output to 200 lines...");
+   probe_one_log(NULL,           gbuf, " /var/log/Xorg.0.log | head -n 200", "Xorg.0.log", depth+1);
 
 }
 
