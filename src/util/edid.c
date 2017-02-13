@@ -337,10 +337,11 @@ void free_parsed_edid(Parsed_Edid * parsed_edid) {
  *
  * Arguments:
  *    edid       pointer to parsed edid struct
- *    verbose    include hex dump of EDID
+ *    verbose    show additional detail
+ *    show_raw   include hex dump of EDID
  *    depth      logical indentation depth
  */
-void report_parsed_edid(Parsed_Edid * edid, bool verbose, int depth) {
+void report_parsed_edid_base(Parsed_Edid * edid, bool verbose, bool show_raw, int depth) {
    int d1 = depth+1;
    // verbose = true;
    if (edid) {
@@ -403,15 +404,27 @@ void report_parsed_edid(Parsed_Edid * edid, bool verbose, int depth) {
 
       if (verbose) {
          if (edid->edid_source)
-         rpt_vstring(depth,"EDID source: %s",        edid->edid_source);
-         rpt_vstring(depth,"EDID hex dump:");
-         // FILE * fh = rpt_cur_output_dest();
-         // fhex_dump(fh, edid->bytes, 128);
-         rpt_hex_dump(edid->bytes, 128, d1);
+            rpt_vstring(depth,"EDID source: %s",        edid->edid_source);
+         if (show_raw) {
+            rpt_vstring(depth,"EDID hex dump:");
+            rpt_hex_dump(edid->bytes, 128, d1);
+         }
       }
    }
    else {
       // if (verbose)
          rpt_vstring(d1,"No EDID");
    }
+}
+
+/* Writes EDID summary to the current report output destination.
+ * (normally stdout, but may be changed by rpt_push_output_dest())
+ *
+ * Arguments:
+ *    edid       pointer to parsed edid struct
+ *    verbose    include hex dump of EDID
+ *    depth      logical indentation depth
+ */
+void report_parsed_edid(Parsed_Edid * edid, bool verbose, int depth) {
+   report_parsed_edid_base(edid, verbose, verbose, depth);
 }
