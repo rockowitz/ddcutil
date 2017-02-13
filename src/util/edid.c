@@ -405,11 +405,12 @@ void report_parsed_edid_base(Parsed_Edid * edid, bool verbose, bool show_raw, in
       if (verbose) {
          if (edid->edid_source)
             rpt_vstring(depth,"EDID source: %s",        edid->edid_source);
-         if (show_raw) {
-            rpt_vstring(depth,"EDID hex dump:");
-            rpt_hex_dump(edid->bytes, 128, d1);
-         }
       }
+      if (show_raw) {
+         rpt_vstring(depth,"EDID hex dump:");
+         rpt_hex_dump(edid->bytes, 128, d1);
+      }
+
    }
    else {
       // if (verbose)
