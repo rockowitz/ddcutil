@@ -385,7 +385,11 @@ static void probe_open_device_using_libdrm(int fd, int depth) {
                if (blob_ptr->length >= 128) {
                   Parsed_Edid * parsed_edid = create_parsed_edid(blob_ptr->data);
                   if (parsed_edid)
-                     report_parsed_edid(parsed_edid, true /* verbose */ , d3);
+                     report_parsed_edid_base(
+                           parsed_edid,
+                           true,    // verbose
+                           false,   // show_raw
+                           d3);
                }
 
                drmModeFreePropertyBlob(blob_ptr);
@@ -617,16 +621,44 @@ GPtrArray * get_dri_device_names_using_filesys() {
 void probe_using_libdrm() {
    rpt_title("Probing connected monitors using libdrm...",0);
 
+   // Examining the implementation in xf86drm.c, we see that
+   // drmAvailable first calls drmOpenMinor(), then if that
+   // succeeds calls drmGetVersion().  If both succeed, returns true.
+   // n. drmOpenMinor() is static
+
+
    // returns 1 if the DRM driver is loaded, 0 otherwise
    int drm_available = drmAvailable();
    // rpt_vstring(0, "drmAvailable() returned %d", drm_available);
-   rpt_vstring(0, "DRM kernel driver has been loaded (drmAvailable()): %s", bool_repr(drm_available));
+   rpt_vstring(1, "Has a DRM kernel driver has been loaded? (drmAvailable()): %s", bool_repr(drm_available));
+
+#ifdef DOESNT_WORK
+   // function drmOpenMinor() is static
+   if (!drm_available) {
+      // try the functions that drmAvailable() calls to see where the failure is
+      int fd = drmOpenMinor(0, 1, DRM_MODE_PRIMARY);
+      if (fd < 0) {
+         rpt_vstring(1, "drmOpenMinor() failed, errno=%s", linux_errno_desc(-fd));
+      }
+      else {
+         rpt_vstring(1, "drmOpenMinor() succeeded");
+         drmVersionPtr ver = drmGetVersion(fd);
+         if (ver) {
+            rpt_vstring(1, "drmGetVersion() succeeded");
+            drmFreeVersion(ver);
+         }
+         else {
+            rpt_vstring(1, "drmGetVersion() failed");
+         }
+      }
+   }
+#endif
 
    GPtrArray * dev_names = get_dri_device_names_using_filesys();
    for (int ndx = 0; ndx < dev_names->len; ndx++) {
       char * dev_name = g_ptr_array_index(dev_names, ndx);
       rpt_nl();
-      probe_one_device_using_libdrm( dev_name, 0);
+      probe_one_device_using_libdrm( dev_name, 1);
    }
    g_ptr_array_free(dev_names, true);
 }
