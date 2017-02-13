@@ -112,6 +112,30 @@ bool str_ends_with(const char * value_to_test, const char * end_part) {
 }
 
 
+/* Are all characters in the string printable?
+ *
+ * Arguments:
+ *   s   string to test
+ *
+ * Returns:
+ *   true/false   will be true if s== NULL
+ */
+bool str_is_printable(char * s) {
+   bool result = true;
+   if (s) {
+      for (int ndx = 0; ndx < strlen(s); ndx++) {
+         if (!isprint(s[ndx])) {
+            result = false;
+            break;
+         }
+      }
+   }
+   return result;
+}
+
+
+
+
 int matches_by_func(char * word, char ** null_terminated_list, String_Comp_Func comp_func) {
    int result = -1;
    int ndx = 0;
@@ -1009,6 +1033,7 @@ int f0puts(const char * msg, FILE * stream) {
  */
 int f0printf(FILE * stream, const char * format, ...) {
    int rc = 0;
+   // printf("(%s) stream=%p\n", __func__, stream);
    if (stream) {
       va_list(args);
       va_start(args, format);
