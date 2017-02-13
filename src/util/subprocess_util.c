@@ -44,7 +44,7 @@
 bool execute_shell_cmd_rpt(char * shell_cmd, int depth) {
    bool debug = false;
    if (debug)
-      printf("(%s) Starting. shell_cmd = |%s|", __func__, shell_cmd);
+      printf("(%s) Starting. shell_cmd = |%s|\n", __func__, shell_cmd);
    bool ok = true;
    FILE * fp;
    char cmdbuf[200];
@@ -63,8 +63,18 @@ bool execute_shell_cmd_rpt(char * shell_cmd, int depth) {
        ssize_t read;
        bool first_line = true;
        while ( (read=getline(&a_line, &len, fp)) != -1) {
-          if (strlen(a_line) > 0)
+          if (strlen(a_line) > 0) {
+             int ch = a_line[strlen(a_line)-1];
+             if (debug) {
+                if (ch != '\n')
+                   printf("(%s) Truncating character '%c' (0x%02x)\n", __func__, ch, ch);
+                // else
+                //    printf("(%s) Truncating expected NL (0x%02x)\n", __func__, ch);
+             }
              a_line[strlen(a_line)-1] = '\0';
+          }
+          else
+             printf("(%s) Zero length line\n", __func__);
           if (first_line) {
              if (str_ends_with(a_line, "not found")) {
                 // printf("(%s) found \"not found\"\n", __func__);
@@ -73,11 +83,19 @@ bool execute_shell_cmd_rpt(char * shell_cmd, int depth) {
              }
              first_line = false;
           }
+          // fputs(a_line, stdout); fputs("\n", stdout);
           // n. output will be sent to current rpt_ dest !
+          if (debug && !str_all_printable(a_line)) {
+             printf("(%s) String contains non-printable character!\n", __func__);
+             // fflush(stdout);
+          }
+          // rpt_flush();
+          // printf("%s", "\n");   // solves the missing line problem, but why?
           rpt_title(a_line, depth);
-          // fputs(a_line, stdout);
+
           // free(a_line);
        }
+       // rpt_flush();
        int pclose_rc = pclose(fp);
        if (debug)
           printf("(%s) plose() rc = %d\n", __func__, pclose_rc);
