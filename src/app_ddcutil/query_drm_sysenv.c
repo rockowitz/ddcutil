@@ -241,25 +241,21 @@ static void probe_open_device_using_libdrm(int fd, int depth) {
       rpt_nl();
 
 
+   // Notes from examining the code for drmCheckModesettingAvailable()
+   //
    // Checks if a modesetting capable driver has been attached to the pci id
-    // !! drmCheckModesettingSupport() takes a busid string as argument, not filename
-    // Checked the code:
-    // returns 0 if modesetting both are true
-    // -EINVAL if invalid bus id
-    // -ENOSYS if no modesetting support
-    // does not set errno
+   // n.b. drmCheckModesettingSupport() takes a busid string as argument, not filename
+   //
+   // Returns 0       if bus id valid and modesetting supported
+   //         -EINVAL if invalid bus id
+   //         -ENOSYS if no modesetting support
+   // does not set errno
 
     // parses busid using sscanf(busid, "pci:%04x:%02x:%02x.%d", &domain, &bus, &dev, &func);
+
+    rpt_vstring(d1, "Is a modesetting capable driver attached to bus %s...?", busid2);
+    rpt_vstring(d1,"(Calling drmCheckModesettingAvailable())");
     rc = drmCheckModesettingSupported(busid2);
-    // DBGMSG("drmCheckModesettingSupported(\"%s\") returned %d", busid, rc);
-    // if (rc < 0) {
-    //    DBGMSG("result as errno: %s", linux_errno_desc(-rc));
-    // }
-    rpt_vstring(d1,
-          "Is a modesetting capable driver is attached to bus %s? (drmCheckModesettingAvailable())...",
-          busid2);
-    // rpt_vstring(d1, "drmCheckModesettingSupported() called to check if a modsetting capable driver");
-    // rpt_vstring(d1, "is attached to bus id %s", busid);
     switch (rc) {
     case (0):
           rpt_vstring(d2, "Yes");
