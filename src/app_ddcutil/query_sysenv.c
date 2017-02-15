@@ -124,15 +124,9 @@ static char * other_driver_modules[] = {
 };
 
 
-struct driver_name_node;
-
-struct driver_name_node {
-   char * driver_name;
-   struct driver_name_node * next;
-};
-
-
+//
 // Utilities
+//
 
 char * read_sysfs_attr(char * dirname, char * attrname, bool verbose) {
    char fn[PATH_MAX];
@@ -168,6 +162,296 @@ static void wrap_get_first_line(char * fn, char * title, int depth) {
 }
 
 
+static bool show_one_file(char * dir_name, char * simple_fn, bool verbose, int depth) {
+   bool result = false;
+   char fqfn[PATH_MAX+2];
+   strcpy(fqfn,dir_name);
+   if (!str_ends_with(dir_name, "/"))
+      strcat(fqfn,"/");
+   assert(strlen(fqfn) + strlen(simple_fn) <= PATH_MAX);   // for Coverity
+   strncat(fqfn,simple_fn, sizeof(fqfn)-(strlen(fqfn)+1));  // use strncat to make Coverity happy
+   if (regular_file_exists(fqfn)) {
+      rpt_vstring(depth, "%s:", fqfn);
+      rpt_file_contents(fqfn, depth+1);
+      result = true;
+   }
+   else if (verbose)
+      rpt_vstring(depth, "File not found: %s", fqfn);
+   return result;
+}
+
+
+//
+// Functions to query and free the driver name list.  The list is created by
+// executing function query_card_and_driver_using_sysfs(), which is grouped
+// with the sysfs functions.
+//
+
+struct driver_name_node;
+
+struct driver_name_node {
+   char * driver_name;
+   struct driver_name_node * next;
+};
+
+
+/* Frees the driver name list created by query_card_and_driver_using_sysfs()
+ *
+ * Arguments:
+ *    driver_list     pointer to head of linked list of driver names
+ *
+ * Returns:           nothing
+ */
+static void free_driver_name_list(struct driver_name_node * driver_list) {
+   // Free the driver list
+   struct driver_name_node * cur_node = driver_list;
+   while (cur_node) {
+      struct driver_name_node * next_node = cur_node->next;
+      free(cur_node);
+      cur_node = next_node;
+   }
+}
+
+
+/* Checks the list of detected drivers to see if AMD's proprietary
+ * driver fglrx is the only driver.
+ *
+ * Arguments:
+ *   driver_list     linked list of driver names
+ *
+ * Returns:          true/false
+ */
+bool only_fglrx(struct driver_name_node * driver_list) {
+   int driverct = 0;
+   bool fglrx_seen = false;
+   struct driver_name_node * curnode = driver_list;
+   while (curnode) {
+      driverct++;
+      if (str_starts_with(curnode->driver_name, "fglrx"))
+         fglrx_seen = true;
+      curnode = curnode->next;
+   }
+   bool result = (driverct == 1 && fglrx_seen);
+   // DBGMSG("driverct = %d, returning %d", driverct, result);
+   return result;
+}
+
+
+/* Checks the list of detected drivers to see if the proprietary
+ * AMD and Nvidia drivers are the only ones.
+ *
+ * Arguments:
+ *   driver list        linked list of driver names
+ *
+ * Returns:             true if both nvidia and fglrx are present
+ *                       and there are no other drivers, false otherwise
+ */
+static bool only_nvidia_or_fglrx(struct driver_name_node * driver_list) {
+   int driverct = 0;
+   bool other_driver_seen = false;
+   struct driver_name_node * curnode = driver_list;
+   while (curnode) {
+      driverct++;
+      if (!str_starts_with(curnode->driver_name, "fglrx") &&
+          !streq(curnode->driver_name, "nvidia")
+         )
+      {
+         other_driver_seen = true;
+      }
+      curnode = curnode->next;
+   }
+   bool result = (!other_driver_seen && driverct > 0);
+   // DBGMSG("driverct = %d, returning %d", driverct, result);
+   return result;
+}
+
+
+/* Checks if any driver name in the list of detected drivers starts with
+ * the specified string.
+ *
+ * Arguments:
+ *   driver list        linked list of driver names
+ *
+ * Returns:             true if the driver is found
+ */
+static bool found_driver(struct driver_name_node * driver_list, char * driver_name) {
+   bool found = false;
+   struct driver_name_node * curnode = driver_list;
+   while (curnode) {
+      if ( str_starts_with(curnode->driver_name, driver_name) ) {
+         found = true;
+         break;
+      }
+      curnode = curnode->next;
+   }
+   // DBGMSG("driver_name=%s, returning %d", driver_name, found);
+   return found;
+}
+
+
+//
+// UDEV Inquiry
+//
+// Create, report, query, and destroy a list of summaries of UDEV I2C devices
+//
+
+// #ifdef USE_USB
+
+/* Extract the i2c bus number from a device summary.
+ *
+ * Helper function for get_i2c_devices_using_udev()
+ */
+int udev_i2c_device_summary_busno(Udev_Device_Summary * summary) {
+   int result = -1;
+   if (str_starts_with(summary->sysname, "i2c-")) {
+     const char * sbusno = summary->sysname+4;
+     // DBGMSG("sbusno = |%s|", sbusno);
+
+     int ibusno;
+     bool ok = str_to_int(sbusno, &ibusno);
+     if (ok)
+        result = ibusno;
+   }
+   // DBGMSG("Returning: %d", result);
+   return result;
+}
+
+
+/* Compare 2 Udev device summaries by their bus number
+ *
+ * Helper function for get_i2c_devices_using_udev(
+ */
+int compare_udev_i2c_device_summary(const void * a, const void * b) {
+   Udev_Device_Summary * p1 = *(Udev_Device_Summary**) a;
+   Udev_Device_Summary * p2 = *(Udev_Device_Summary**) b;
+
+   assert( p1 && (memcmp(p1->marker, UDEV_DEVICE_SUMMARY_MARKER, 4) == 0));
+   assert( p2 && (memcmp(p2->marker, UDEV_DEVICE_SUMMARY_MARKER, 4) == 0));
+
+   int v1 = udev_i2c_device_summary_busno(p1);
+   int v2 = udev_i2c_device_summary_busno(p2);
+
+   int result = (v1 == v2) ? 0 :
+                    (v1 < v2) ? -1 : 1;
+   // DBGMSG("v1=%d, v2=%d, returning: %d", v1, v2, result);
+   return result;
+}
+
+
+/* Returns array of Udev_Device_Summary for I2C devices,
+ * sorted by bus number.
+ */
+GPtrArray * get_i2c_devices_using_udev() {
+   GPtrArray * summaries = summarize_udev_subsystem_devices("i2c-dev");
+
+   if (summaries) {
+      if ( summaries->len == 0) {
+         free_udev_device_summaries(summaries);   // ok if summaries == NULL
+         summaries = NULL;
+      }
+      else {
+         g_ptr_array_sort(summaries, compare_udev_i2c_device_summary);
+      }
+   }
+   return summaries;
+}
+
+
+#ifdef REFERENCE
+#define UDEV_DEVICE_SUMMARY_MARKER "UDSM"
+typedef struct udev_device_summary {
+char   marker[4];
+const char * sysname;
+const char * devpath;
+const char * sysattr_name;
+} Udev_Device_Summary;
+#endif
+
+
+/* Reports a collection of device summaries in table form.
+ *
+ * summaries       array of Udev_Device_Summary
+ * title           title line
+ * depth           logical indentation depth
+ */
+void report_i2c_device_summaries(GPtrArray * summaries, char * title, int depth) {
+   rpt_vstring(0,title);
+   if (!summaries || summaries->len == 0)
+      rpt_vstring(depth,"No devices detected");
+   else {
+      rpt_vstring(depth,"%-15s %-35s %s", "Sysname", "Sysattr Name", "Devpath");
+      for (int ndx = 0; ndx < summaries->len; ndx++) {
+         Udev_Device_Summary * summary = g_ptr_array_index(summaries, ndx);
+         assert( memcmp(summary->marker, UDEV_DEVICE_SUMMARY_MARKER, 4) == 0);
+         udev_i2c_device_summary_busno(summary);   // ???
+         rpt_vstring(depth,"%-15s %-35s %s",
+                summary->sysname, summary->sysattr_name, summary->devpath);
+      }
+   }
+}
+
+
+#ifdef NOT_WORTH_IT
+GPtrArray * get_i2c_smbus_devices_using_udev() {
+   bool debug = false;
+   GPtrArray * summaries = get_i2c_devices_using_udev();
+   if (summaries) {
+      for (int ndx = summaries->len-1; ndx >= 0; ndx--) {
+         Udev_Device_Summary * summary = g_ptr_array_index(summaries, ndx);
+         assert(memcmp(summary->marker, UDEV_DEVICE_SUMMARY_MARKER, 4) == 0);
+         if ( !str_starts_with(summary->sysattr_name, "SMBus") ) {
+            // TODO: g_ptr_array_set_free_function() must already have been called
+            g_ptr_array_remove_index(summaries, ndx);
+         }
+      }
+   }
+
+   if (debug)
+      report_i2c_device_summaries(summaries, "I2C SMBus Devices:", 0);
+
+
+   return summaries;
+}
+#endif
+
+
+/* Given a specified I2C bus number, checks the list of I2C device
+ * summaries to see if it is the bus number of a SMBUS device.
+ *
+ * Arguments;
+ *    summaries    array of Udev_Device_Summary
+ *    sbusno       I2C bus number, as string
+ *
+ * Returns:
+ *    true if the number is that of an SMBUS device, false otherwise
+ */
+bool is_smbus_device_summary(GPtrArray * summaries, char * sbusno) {
+   bool debug = false;
+   char devname [10];
+   snprintf(devname, sizeof(devname), "i2c-%s", sbusno);
+   DBGMSF(debug, "sbusno=|%s|, devname=|%s|", sbusno, devname);
+   bool result = false;
+   for (int ndx = 0; ndx < summaries->len; ndx++) {
+      Udev_Device_Summary * summary = g_ptr_array_index(summaries, ndx);
+      if ( streq(summary->sysname, devname) &&
+           str_starts_with(summary->sysattr_name, "SMBus") )
+      {
+         result = true;
+         break;
+      }
+   }
+   DBGMSF(debug, "Returning: %s", bool_repr(result), result);
+   return result;
+}
+
+
+
+
+//
+// Higher level functions
+//
+
+
 /* Reports basic system information
  */
 static void query_base_env() {
@@ -185,6 +469,8 @@ static void query_base_env() {
 }
 
 
+/* Scans /proc/modules for information on loaded drivers of interest
+ */
 static int query_proc_modules_for_video() {
    int rc = 0;
 
@@ -233,25 +519,9 @@ static int query_proc_modules_for_video() {
 }
 
 
-static bool show_one_file(char * dir_name, char * simple_fn, bool verbose, int depth) {
-   bool result = false;
-   char fqfn[PATH_MAX+2];
-   strcpy(fqfn,dir_name);
-   if (!str_ends_with(dir_name, "/"))
-      strcat(fqfn,"/");
-   assert(strlen(fqfn) + strlen(simple_fn) <= PATH_MAX);   // for Coverity
-   strncat(fqfn,simple_fn, sizeof(fqfn)-(strlen(fqfn)+1));  // use strncat to make Coverity happy
-   if (regular_file_exists(fqfn)) {
-      rpt_vstring(depth, "%s:", fqfn);
-      rpt_file_contents(fqfn, depth+1);
-      result = true;
-   }
-   else if (verbose)
-      rpt_vstring(depth, "File not found: %s", fqfn);
-   return result;
-}
-
-
+/* Report nvidia proprietary driver information by examining
+ * /proc/driver/nvidia.
+ */
 static bool query_proc_driver_nvidia() {
    bool debug = false;
    bool result = false;
@@ -302,55 +572,7 @@ static bool query_proc_driver_nvidia() {
 }
 
 
-bool only_fglrx(struct driver_name_node * driver_list) {
-   int driverct = 0;
-   bool fglrx_seen = false;
-   struct driver_name_node * curnode = driver_list;
-   while (curnode) {
-      driverct++;
-      if (str_starts_with(curnode->driver_name, "fglrx"))
-         fglrx_seen = true;
-      curnode = curnode->next;
-   }
-   bool result = (driverct == 1 && fglrx_seen);
-   // DBGMSG("driverct = %d, returning %d", driverct, result);
-   return result;
-}
-
-
-static bool only_nvidia_or_fglrx(struct driver_name_node * driver_list) {
-   int driverct = 0;
-   bool other_driver_seen = false;
-   struct driver_name_node * curnode = driver_list;
-   while (curnode) {
-      driverct++;
-      if (!str_starts_with(curnode->driver_name, "fglrx") &&
-          !streq(curnode->driver_name, "nvidia")
-         )
-      {
-         other_driver_seen = true;
-      }
-      curnode = curnode->next;
-   }
-   bool result = (!other_driver_seen && driverct > 0);
-   // DBGMSG("driverct = %d, returning %d", driverct, result);
-   return result;
-}
-
-
-static bool found_driver(struct driver_name_node * driver_list, char * driver_name) {
-   bool found = false;
-   struct driver_name_node * curnode = driver_list;
-   while (curnode) {
-      if ( str_starts_with(curnode->driver_name, driver_name) )
-         found = true;
-      curnode = curnode->next;
-   }
-   // DBGMSG("driver_name=%s, returning %d", driver_name, found);
-   return found;
-}
-
-
+// Auxiliary function for raw_scan_i2c_devices()
 bool is_i2c_device_rw(int busno) {
    bool debug = false;
    DBGMSF(debug, "Starting. busno=%d", busno);
@@ -377,6 +599,7 @@ bool is_i2c_device_rw(int busno) {
 
 
 
+// Auxiliary function for raw_scan_i2c_devices()
 // adapted from ddc_vcp_tests
 
 Global_Status_Code try_single_getvcp_call(int fh, unsigned char vcp_feature_code) {
@@ -469,7 +692,10 @@ Global_Status_Code try_single_getvcp_call(int fh, unsigned char vcp_feature_code
 
    int ddc_data_length = ddc_response_bytes[2] & 0x7f;
    // some monitors return a DDC null response to indicate an invalid request:
-   if (ddc_response_bytes[1] == 0x6e && ddc_data_length == 0 && ddc_response_bytes[3] == 0xbe) {    // 0xbe == checksum
+   if (ddc_response_bytes[1] == 0x6e &&
+       ddc_data_length == 0          &&
+       ddc_response_bytes[3] == 0xbe)     // 0xbe == checksum
+   {
       DBGMSF(debug, "Received DDC null response");
       gsc = DDCRC_NULL_RESPONSE;
       goto bye;
@@ -477,7 +703,8 @@ Global_Status_Code try_single_getvcp_call(int fh, unsigned char vcp_feature_code
 
    if (ddc_response_bytes[1] != 0x6e) {
       // assert(ddc_response_bytes[1] == 0x6e);
-      rpt_vstring(0,"(%s) Invalid address byte in response, expected 06e, actual 0x%02x", __func__, ddc_response_bytes[1] );
+      rpt_vstring(0,"(%s) Invalid address byte in response, expected 06e, actual 0x%02x",
+                    __func__, ddc_response_bytes[1] );
       gsc = DDCRC_INVALID_DATA;
       goto bye;
    }
@@ -489,7 +716,8 @@ Global_Status_Code try_single_getvcp_call(int fh, unsigned char vcp_feature_code
    }
 
    if (ddc_response_bytes[3] != 0x02) {       // get feature response
-      rpt_vstring(0,"(%s) Expected 0x02 in feature response field, actual value 0x%02x", __func__, ddc_response_bytes[3] );
+      rpt_vstring(0,"(%s) Expected 0x02 in feature response field, actual value 0x%02x",
+                    __func__, ddc_response_bytes[3] );
       gsc = DDCRC_INVALID_DATA;
       goto bye;
    }
@@ -517,7 +745,8 @@ Global_Status_Code try_single_getvcp_call(int fh, unsigned char vcp_feature_code
          gsc = DDCRC_REPORTED_UNSUPPORTED;
       }
       else {
-         rpt_vstring(0,"(%s) Unexpected value in supported VCP code field: 0x%02x  ", __func__, ddc_response_bytes[4] );
+         rpt_vstring(0,"(%s) Unexpected value in supported VCP code field: 0x%02x  ",
+                       __func__, ddc_response_bytes[4] );
          gsc = DDCRC_INVALID_DATA;
       }
 
@@ -626,6 +855,22 @@ void raw_scan_i2c_devices() {
 }
 
 
+/* Checks on the existence and accessibility of  /dev/i2c devices.
+ *
+ * Arguments:
+ *   driver_list   singly linked list of names of video drivers detected
+ *
+ * Returns:        nothing
+ *
+ * Checks that user has RW access to all /dev/i2c devices.
+ * Checks if group i2c exists and whether the current user is a member.
+ * Checks for references to i2c in /etc/udev/makedev.d
+ *
+ * If the only driver in driver_list is fglrx, the tests are
+ * skipped (or if verbose output, purely informational).
+ *
+ * TODO: ignore i2c smbus devices
+ */
 static void check_i2c_devices(struct driver_name_node * driver_list) {
    bool debug = false;
    // int rc;
@@ -960,6 +1205,8 @@ static void check_i2c_dev_module(struct driver_name_node * video_driver_list) {
 }
 
 
+/* Checks for installed packages i2c-tools and libi2c-dev
+ */
 static void query_packages() {
    rpt_multiline(0,
          "ddcutil requiries package i2c-tools.  Use both dpkg and rpm to look for it.",
@@ -1057,6 +1304,13 @@ static bool query_card_and_driver_using_lspci() {
 
 
 
+/* Scans /sys/bus/pci/devices for video devices.
+ * Reports on the devices, and returns a singly linked list of driver names.
+ *
+ * Arguments:   none
+ *
+ * Returns:     singly linked list of video driver names
+ */
 static struct driver_name_node * query_card_and_driver_using_sysfs() {
    // bool debug = true;
    rpt_vstring(0,"Obtaining card and driver information from /sys...");
@@ -1274,6 +1528,11 @@ static void driver_specific_tests(struct driver_name_node * driver_list) {
 }
 
 
+//
+// Using sysfs
+//
+
+
 static void query_loaded_modules_using_sysfs() {
    rpt_nl();
    rpt_vstring(0,"Testing if modules are loaded using /sys...");
@@ -1363,12 +1622,20 @@ static bool query_card_and_driver_using_osinfo() {
 #endif
 
 
+//
+// Using internal i2c API
+//
+
 static void query_i2c_buses() {
    rpt_nl();
    rpt_vstring(0,"Examining I2C buses, as detected by I2C layer...");
-   i2c_report_buses(true, 1 /* indentation depth */);
+   i2c_report_buses(true, 1 /* indentation depth */);    // in i2c_bus_core.c
 }
 
+
+//
+// Using X11 API
+//
 
 /* Reports EDIDs known to X11
  *
@@ -1413,6 +1680,9 @@ void query_x11() {
 }
 
 
+//
+// i2cdetect
+//
 
 /* Uses i2cdetect to probe active addresses on I2C buses
  *
@@ -1461,137 +1731,6 @@ static void query_using_i2cdetect() {
 }
 
 
-// #ifdef USE_USB
-
-/* Extract the i2c bus number from a device summary.
- * (auxiliary sort function)
- */
-int udev_i2c_device_summary_busno(Udev_Device_Summary * summary) {
-   int result = -1;
-   if (str_starts_with(summary->sysname, "i2c-")) {
-     const char * sbusno = summary->sysname+4;
-     // DBGMSG("sbusno = |%s|", sbusno);
-
-     int ibusno;
-     bool ok = str_to_int(sbusno, &ibusno);
-     if (ok)
-        result = ibusno;
-   }
-   // DBGMSG("Returning: %d", result);
-   return result;
-}
-
-
-/* Compare 2 Udev device summaries by thir bus numer.
- * (auxiliary sort function)
- */
-int compare_udev_i2c_device_summary(const void * a, const void * b) {
-   Udev_Device_Summary * p1 = *(Udev_Device_Summary**) a;
-   Udev_Device_Summary * p2 = *(Udev_Device_Summary**) b;
-
-   assert( p1 && (memcmp(p1->marker, UDEV_DEVICE_SUMMARY_MARKER, 4) == 0));
-   assert( p2 && (memcmp(p2->marker, UDEV_DEVICE_SUMMARY_MARKER, 4) == 0));
-
-   int v1 = udev_i2c_device_summary_busno(p1);
-   int v2 = udev_i2c_device_summary_busno(p2);
-
-   int result = (v1 == v2) ? 0 :
-                    (v1 < v2) ? -1 : 1;
-   // DBGMSG("v1=%d, v2=%d, returning: %d", v1, v2, result);
-   return result;
-}
-
-
-/* Returns array of Udev_Device_Summary for I2C devices,
- * sorted by bus number.
- */
-GPtrArray * get_i2c_devices_using_udev() {
-   char * subsys_name = "i2c-dev";
-   GPtrArray * summaries = summarize_udev_subsystem_devices(subsys_name);
-
-   if (summaries) {
-      if ( summaries->len == 0) {
-         free_udev_device_summaries(summaries);   // ok if summaries == NULL
-         summaries = NULL;
-      }
-      else {
-         g_ptr_array_sort(summaries, compare_udev_i2c_device_summary);
-      }
-   }
-   return summaries;
-}
-
-
-#ifdef REFERENCE
-#define UDEV_DEVICE_SUMMARY_MARKER "UDSM"
-typedef struct udev_device_summary {
-char   marker[4];
-const char * sysname;
-const char * devpath;
-const char * sysattr_name;
-} Udev_Device_Summary;
-#endif
-
-void report_i2c_device_summaries(GPtrArray * summaries, char * title, int depth) {
-   rpt_vstring(0,title);
-   if (!summaries || summaries->len == 0)
-      rpt_vstring(depth,"No devices detected");
-   else {
-      rpt_vstring(depth,"%-15s %-35s %s", "Sysname", "Sysattr Name", "Devpath");
-      for (int ndx = 0; ndx < summaries->len; ndx++) {
-         Udev_Device_Summary * summary = g_ptr_array_index(summaries, ndx);
-         assert( memcmp(summary->marker, UDEV_DEVICE_SUMMARY_MARKER, 4) == 0);
-         udev_i2c_device_summary_busno(summary);   // ???
-         rpt_vstring(depth,"%-15s %-35s %s",
-                summary->sysname, summary->sysattr_name, summary->devpath);
-      }
-   }
-}
-
-
-#ifdef NOT_WORTH_IT
-GPtrArray * get_i2c_smbus_devices_using_udev() {
-   bool debug = false;
-   GPtrArray * summaries = get_i2c_devices_using_udev();
-   if (summaries) {
-      for (int ndx = summaries->len-1; ndx >= 0; ndx--) {
-         Udev_Device_Summary * summary = g_ptr_array_index(summaries, ndx);
-         assert(memcmp(summary->marker, UDEV_DEVICE_SUMMARY_MARKER, 4) == 0);
-         if ( !str_starts_with(summary->sysattr_name, "SMBus") ) {
-            // TODO: g_ptr_array_set_free_function() must already have been called
-            g_ptr_array_remove_index(summaries, ndx);
-         }
-      }
-   }
-
-   if (debug)
-      report_i2c_device_summaries(summaries, "I2C SMBus Devices:", 0);
-
-
-   return summaries;
-}
-#endif
-
-
-bool is_smbus_device_summary(GPtrArray * summaries, char * sbusno) {
-   bool debug = false;
-   char devname [10];
-   snprintf(devname, sizeof(devname), "i2c-%s", sbusno);
-   DBGMSF(debug, "sbusno=|%s|, devname=|%s|", sbusno, devname);
-   bool result = false;
-   for (int ndx = 0; ndx < summaries->len; ndx++) {
-      Udev_Device_Summary * summary = g_ptr_array_index(summaries, ndx);
-      if ( streq(summary->sysname, devname) &&
-           str_starts_with(summary->sysattr_name, "SMBus") )
-      {
-         result = true;
-         break;
-      }
-   }
-   DBGMSF(debug, "Returning: %s", bool_repr(result), result);
-   return result;
-}
-
 
 void probe_i2c_devices_using_udev() {
    char * subsys_name = "i2c-dev";
@@ -1599,13 +1738,12 @@ void probe_i2c_devices_using_udev() {
    rpt_vstring(0,"Probing I2C devices using udev, susbsystem %s...", subsys_name);
    // probe_udev_subsystem() is in udev_util.c, which is only linked in if USE_USB
 
+   // Detailed scan of I2C device information
    probe_udev_subsystem(subsys_name, /*show_usb_parent=*/ false, 1);
+   rpt_nl();
 
    GPtrArray * summaries = get_i2c_devices_using_udev();
-
-   rpt_nl();
    report_i2c_device_summaries(summaries, "Summary of udev I2C devices",1);
-
    free_udev_device_summaries(summaries);   // ok if summaries == NULL
 }
 
@@ -1688,7 +1826,19 @@ const char * sysattr_name;
 // #endif
 
 
+//
+// Log files
+//
 
+/* Helper function that scans a single log file
+ *
+ * Arguments:
+ *   pre_grep     portion of command before the grep command
+ *   grep_cmd     grep command
+ *   post_grep    portion of command after the grep command
+ *   title        describes what is being scanned
+ *   depth        logical indentation depth
+ */
 void probe_one_log(char * pre_grep, char * grep_cmd, char * post_grep, char * title, int depth) {
    bool debug = false;
    assert(grep_cmd);
@@ -1712,8 +1862,12 @@ void probe_one_log(char * pre_grep, char * grep_cmd, char * post_grep, char * ti
 }
 
 
-
-
+/* Scan log files for lines of interest.
+ *
+ * The following logs are checked:
+ *    dmesg
+ *    Xorg.0.log
+ */
 void probe_logs() {
    char gbuf[500];
    // char cbuf[550];
@@ -1791,6 +1945,9 @@ void probe_logs() {
 }
 
 
+//
+// Mainline
+//
 
 /* Master function to query the system environment
  *
@@ -1824,13 +1981,9 @@ void query_sysenv() {
    rpt_nl();
    driver_specific_tests(driver_list);
 
-   // Free the driver list
-   struct driver_name_node * cur_node = driver_list;
-   while (cur_node) {
-      struct driver_name_node * next_node = cur_node->next;
-      free(cur_node);
-      cur_node = next_node;
-   }
+   // Free the driver list created by query_card_and_driver_using_sysfs()
+   free_driver_name_list(driver_list);
+   driver_list = NULL;
 
    rpt_nl();
    rpt_vstring(0,"*** Primary Check 5: Installed packages ***");
