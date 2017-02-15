@@ -35,8 +35,12 @@
 #include "util/udev_util.h"
 
 
-
-
+/* GDestroyNotify() function to be called when a data element in a GPtrRrray of
+ * Udev_Device_Summary is destroyed.
+ *
+ * Arguments:
+ *    data    pointer to Udev_Device_Summary
+ */
 void free_udev_device_summary(gpointer data) {
    if (data) {
       Udev_Device_Summary * summary = (Udev_Device_Summary *) data;
@@ -46,8 +50,10 @@ void free_udev_device_summary(gpointer data) {
    }
 }
 
+
+/* Destroys a GPtrArray of Udev_Device_Summary
+ */
 void free_udev_device_summaries(GPtrArray* summaries) {
-   g_ptr_array_set_free_func(summaries, free_udev_device_summary);
    g_ptr_array_free(summaries, true);
 }
 
@@ -62,8 +68,15 @@ Udev_Device_Summary * get_udev_device_summary(struct udev_device * dev) {
 }
 
 
-GPtrArray * summarize_udev_subsystem_devices(char * subsystem) {
+/* Queries udev to obtain summaries of each device in a subsystem.
+ *
+ * Arguments:
+ *   subsystem    subsystem name, e.g. "i2c-dev"
+ *
+ * Returns:  array of Udev_Device_Summary
+ */
 
+GPtrArray * summarize_udev_subsystem_devices(char * subsystem) {
    struct udev *udev;
    struct udev_enumerate *enumerate;
    struct udev_list_entry *devices, *dev_list_entry;
@@ -76,7 +89,9 @@ GPtrArray * summarize_udev_subsystem_devices(char * subsystem) {
       return NULL;   // exit(1);
    }
 
+
    GPtrArray * summaries = g_ptr_array_sized_new(10);
+   g_ptr_array_set_free_func(summaries, free_udev_device_summary);
 
    /* Create a list of the devices in the specified subsystem. */
    enumerate = udev_enumerate_new(udev);
