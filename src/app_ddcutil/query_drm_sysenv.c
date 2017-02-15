@@ -253,8 +253,8 @@ static void probe_open_device_using_libdrm(int fd, int depth) {
 
     // parses busid using sscanf(busid, "pci:%04x:%02x:%02x.%d", &domain, &bus, &dev, &func);
 
-    rpt_vstring(d1, "Is a modesetting capable driver attached to bus %s...?", busid2);
-    rpt_vstring(d1,"(Calling drmCheckModesettingAvailable())");
+    rpt_vstring(d1, "Is a modesetting capable driver attached to bus id: %s?", busid2);
+    rpt_vstring(d1,"(calling drmCheckModesettingAvailable())");
     rc = drmCheckModesettingSupported(busid2);
     switch (rc) {
     case (0):
@@ -630,13 +630,13 @@ void probe_using_libdrm() {
    // Examining the implementation in xf86drm.c, we see that
    // drmAvailable first calls drmOpenMinor(), then if that
    // succeeds calls drmGetVersion().  If both succeed, returns true.
-   // n. drmOpenMinor() is static
+   // n. drmOpenMinor() is a static function
 
    rpt_nl();
    // returns 1 if the DRM driver is loaded, 0 otherwise
    int drm_available = drmAvailable();
-   // rpt_vstring(0, "drmAvailable() returned %d", drm_available);
-   rpt_vstring(1, "Has a DRM kernel driver has been loaded? (drmAvailable()): %s", bool_repr(drm_available));
+   rpt_vstring(1, "Has a DRM kernel driver been loaded? (drmAvailable()): %s",
+                  bool_repr(drm_available));
 
 #ifdef DOESNT_WORK
    // function drmOpenMinor() is static
