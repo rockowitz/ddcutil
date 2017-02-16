@@ -162,3 +162,21 @@ execute_shell_cmd_collect(char * shell_cmd) {
     }
     return result;
  }
+
+
+// enhancements:  check that actually executable,
+// i.e. could be in /sbin and not running privileged
+
+bool is_command_in_path(char * cmd) {
+   bool result = false;
+   char shell_cmd[100];
+   snprintf(shell_cmd, sizeof(shell_cmd), "which %s", cmd);
+   GPtrArray * resp = execute_shell_cmd_collect(shell_cmd);
+   if (resp) {
+      if (resp->len > 0)
+         result = true;
+      g_ptr_array_free(resp, true);
+   }
+   return result;
+}
+

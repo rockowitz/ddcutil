@@ -29,5 +29,6 @@
 
 bool execute_shell_cmd_rpt(char * shell_cmd, int depth);
 GPtrArray * execute_shell_cmd_collect(char * shell_cmd);
+bool is_command_in_path(char * cmd);
 
 #endif /* SUBPROCESS_UTIL_H_ */

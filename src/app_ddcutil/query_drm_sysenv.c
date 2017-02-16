@@ -190,9 +190,7 @@ static void probe_open_device_using_libdrm(int fd, int depth) {
       rpt_vstring(d1, "Error calling drmGetBusid().  errno=%s", linux_errno_desc(errno));
    }
 
-
    char busid2[30] = "";
-
 
    rpt_nl();
    struct _drmDevice * ddev;
@@ -235,7 +233,6 @@ static void probe_open_device_using_libdrm(int fd, int depth) {
             ddev->deviceinfo.pci->revision_id);
       drmFreeDevice(&ddev);
    }
-
 
    if (strlen(busid2) > 0) {
       rpt_nl();
@@ -624,6 +621,31 @@ void probe_using_libdrm() {
       char * cmd = "modprobe -c | grep \"^options nvidia\"";
       rpt_vstring(1, "Executing command: %s", cmd);
       execute_shell_cmd_rpt(cmd, 2 /* depth */);
+   }
+
+   // Check libdrm version, since there seems to be some sensitivity
+   rpt_nl();
+   if (is_command_in_path("pkg-config")) {
+      rpt_vstring(1, "Checking libdrm version using pkg-config...");
+      char * cmd = "pkg-config --modversion libdrm";
+      execute_shell_cmd_rpt(cmd, 2);
+   }
+
+   else {
+      // try the most common distribution specific tools
+
+      if (is_command_in_path("dpkg-query")) {
+         char * cmd = "dpkg-query -l libdrm2 | grep ii";
+         rpt_vstring(1, "Checking libdrm version using dpkg-query...");
+         execute_shell_cmd_rpt(cmd, 2);
+      }
+
+      rpt_nl();
+      if (is_command_in_path("rpm")) {
+         char * cmd = "rpm -qa | grep libdrm";
+         rpt_vstring(1, "Checking libdrm version using rpm...");
+         execute_shell_cmd_rpt(cmd, 2);
+      }
    }
 
 
