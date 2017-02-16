@@ -35,6 +35,7 @@
 
 #include "util/file_util.h"
 #include "util/glib_util.h"
+#include "util/glib_string_util.h"
 #include "util/report_util.h"
 
 #include "base/core.h"

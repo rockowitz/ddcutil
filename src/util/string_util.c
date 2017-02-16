@@ -53,7 +53,7 @@ char * bool_repr(int value) {
 
 //
 // String functions (other than hex)
-//
+//Fjo
 
 // Compares 2 strings for equality, handling nulls
 //
@@ -242,8 +242,6 @@ char * substr(char * s, int startpos, int ct) {
 char * lsub(char * s, int ct) {
    return substr(s, 0, ct);
 }
-
-
 
 
 /* Joins an array of strings into a single string, using a separator string.

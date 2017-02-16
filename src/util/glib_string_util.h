@@ -1,7 +1,10 @@
-/* glib_util.h
+/* glib_string_util.h
+ *
+ k Functions that depend on both glib_util.c and string_util.c 
+ * blib_string_util.c/h exists to avoid circular dependencies.
  *
  * <copyright>
- * Copyright (C) 2014-2016 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2014-2017 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -21,13 +24,11 @@
  * </endcopyright>
  */
 
-#ifndef GLIB_UTIL_H_
-#define GLIB_UTIL_H_
-
 #include <glib.h>
 
-gpointer * g_list_to_g_array(GList * glist, guint * length);
+#ifndef GLIB_STRING_UTIL_H_
+#define GLIB_STRING_UTIL_H_
 
-gint g_ptr_scomp(gconstpointer a, gconstpointer b);
+char * join_string_g_ptr_array(GPtrArray* strings, char * sepstr);
 
-#endif /* GLIB_UTIL_H_ */
+#endif /* GLIB_STRING_UTIL_H_ */

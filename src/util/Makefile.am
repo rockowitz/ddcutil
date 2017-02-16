@@ -36,6 +36,7 @@ device_id_util.c           \
 edid.c                     \
 file_util.c                \
 glib_util.c                \
+glib_string_util.c         \
 multi_level_map.c          \
 output_sink.c              \
 report_util.c              \
