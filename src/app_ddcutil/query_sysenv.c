@@ -1936,9 +1936,12 @@ void probe_logs() {
    // them to reappear.  apparently a NL in the stream does the trick.  why?
    // it's a heisenbug.  Just use the more verbose journalctl output
    probe_one_log("dmesg |",      gbuf, NULL,                   "dmesg",      depth+1);
+
    // no, it's journalctl that's the offender.  With just journalctl, earlier
    // messages re Summary of Udev devices is screwed up
-   // probe_one_log("journalctl |", gbuf, NULL,                   "journalctl", depth+1);
+   // --no-pager solves the problem
+   probe_one_log("journalctl --no-pager --boot |", gbuf, NULL,                   "journalctl", depth+1);
+
    rpt_vstring(depth+1, "Limiting output to 200 lines...");
    probe_one_log(NULL,           gbuf, " /var/log/Xorg.0.log | head -n 200", "Xorg.0.log", depth+1);
 
