@@ -1,10 +1,7 @@
 /* debug_util.h
  *
- * Created on: Nov 15, 2016
- *     Author: rock
- *
  * <copyright>
- * Copyright (C) 2014-2015 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2016 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -28,6 +25,5 @@
 #define DEBUG_UTIL_H_
 
 void show_backtrace(int stack_adjust);
-
 
 #endif /* DEBUG_UTIL_H_ */
