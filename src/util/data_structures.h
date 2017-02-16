@@ -3,7 +3,7 @@
  * General purpose data structures
  *
  * <copyright>
- * Copyright (C) 2014-2016 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2014-2017 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -38,28 +38,28 @@
 typedef void * Byte_Value_Array;
 
 Byte_Value_Array bva_create();
-int  bva_length(Byte_Value_Array bva);
-void bva_append(Byte_Value_Array bva, Byte item);
-Byte bva_get(Byte_Value_Array bva, int ndx);
-bool bva_contains(Byte_Value_Array bva, Byte item);
-Byte * bva_bytes(Byte_Value_Array bva);
-void bva_free(Byte_Value_Array bva);
-void bva_report(Byte_Value_Array ids, char * title);
-bool bva_store_bytehex_list(Byte_Value_Array bva, char * start, int len);
+int              bva_length(Byte_Value_Array bva);
+void             bva_append(Byte_Value_Array bva, Byte item);
+Byte             bva_get(Byte_Value_Array bva, int ndx);
+bool             bva_contains(Byte_Value_Array bva, Byte item);
+Byte *           bva_bytes(Byte_Value_Array bva);
+void             bva_free(Byte_Value_Array bva);
+void             bva_report(Byte_Value_Array ids, char * title);
+bool             bva_store_bytehex_list(Byte_Value_Array bva, char * start, int len);
 
 
 // An opaque data structure containing 256 flags
 typedef void * Byte_Bit_Flags;
 
 Byte_Bit_Flags bbf_create();
-void   bbf_free(Byte_Bit_Flags flags);
-void   bbf_set(Byte_Bit_Flags flags, Byte val);
-bool   bbf_is_set(Byte_Bit_Flags flags, Byte val);
+void           bbf_free(Byte_Bit_Flags flags);
+void           bbf_set(Byte_Bit_Flags flags, Byte val);
+bool           bbf_is_set(Byte_Bit_Flags flags, Byte val);
 Byte_Bit_Flags bbf_subtract(Byte_Bit_Flags bbflags1, Byte_Bit_Flags bbflags2);
-char * bbf_repr(Byte_Bit_Flags flags, char * buffer, int buflen);
-int    bbf_count_set(Byte_Bit_Flags flags);  // number of bits set
-char * bbf_to_string(Byte_Bit_Flags flags, char * buffer, int buflen);
-bool   bbf_store_bytehex_list(Byte_Bit_Flags flags, char * start, int len);
+char *         bbf_repr(Byte_Bit_Flags flags, char * buffer, int buflen);
+int            bbf_count_set(Byte_Bit_Flags flags);  // number of bits set
+char *         bbf_to_string(Byte_Bit_Flags flags, char * buffer, int buflen);
+bool           bbf_store_bytehex_list(Byte_Bit_Flags flags, char * start, int len);
 
 
 //
@@ -130,12 +130,13 @@ typedef struct {
 typedef struct {
    Byte   value;
    char * name;
-   char * title;
+   char * title;        // aka description
 } Value_Name_Title;
 
-char * vn_name(Value_Name* table, uint32_t val);
-char * vnt_name(Value_Name_Title* table, uint32_t val);
+char * vn_name(  Value_Name*       table, uint32_t val);
+char * vnt_name( Value_Name_Title* table, uint32_t val);
 char * vnt_title(Value_Name_Title* table, uint32_t val);
+
 
 //
 // Misc

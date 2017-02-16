@@ -35,6 +35,12 @@
 #include "util/data_structures.h"
 
 
+// baa - Byte Value Array
+//
+// An opaque structure containing an array of bytes that
+// can grow dynamically.  Note that the same byte can
+// appear multiple times.
+
 Byte_Value_Array bva_create() {
    GByteArray * ga = g_byte_array_new();
    return (Byte_Value_Array) ga;
@@ -77,6 +83,7 @@ bool bva_contains(Byte_Value_Array bva, Byte item) {
    return result;
 }
 
+// n. caller must free() result
 Byte * bva_bytes(Byte_Value_Array bva) {
    GByteArray* ga = (GByteArray*) bva;
    Byte * result = calloc(ga->len, sizeof(guint8));
@@ -137,7 +144,9 @@ void test_value_array() {
 
 
 //
-// 256 bit flags
+// bbf - ByteBitFlags -
+//
+// An opaque data structure containing 256 flags
 //
 
 #define BYTE_BIT_MARKER  "BBFG"
@@ -325,7 +334,7 @@ char * bbf_to_string(Byte_Bit_Flags bbflags, char * buffer, int buflen) {
 
 
 //
-// Cross functions
+// Cross functions bba <-> bbf
 //
 
 bool bva_bbf_same_values( Byte_Value_Array bva , Byte_Bit_Flags bbflags) {
@@ -364,7 +373,7 @@ bool store_bytehex_list(char * start, int len, void * data_struct, Byte_Appender
 
    char * curpos = buf;
    char * nexttok;
-   Byte   byteVal = 0x00;    // logically not needed, bug makes compiler happy
+   Byte   byteVal = 0x00;    // initialization logically unnecessary, but makes compiler happy
    while ( (nexttok = strtok(curpos, " ")) != NULL) {
       if (curpos)
          curpos = NULL;     // for all calls after first
@@ -404,7 +413,6 @@ bool bva_store_bytehex_list(Byte_Value_Array bva, char * start, int len) {
 bool bbf_store_bytehex_list(Byte_Bit_Flags bbf, char * start, int len) {
    return store_bytehex_list(start, len, bbf, bbf_appender);
 }
-
 
 
 //
@@ -652,7 +660,7 @@ void     buffer_extend(Buffer* buf, int addl_bytes) {
 // Debugging method.  Displays all fields of the Buffer.
 //
 // Arguments:
-//   buffer   point to Buffer instance
+//   buffer   pointer to Buffer instance
 
 void buffer_dump(Buffer * buffer) {
    printf("Buffer at %p,  bytes addr=%p, len=%d, max_size=%d\n",
@@ -667,7 +675,6 @@ void buffer_dump(Buffer * buffer) {
 // Identifier id to name and description lookup
 //
 
-
 void debug_vnt_table(Value_Name_Title * table) {
    printf("Value_Name_Title table:\n");
    Value_Name_Title * cur = table;
@@ -675,6 +682,7 @@ void debug_vnt_table(Value_Name_Title * table) {
       printf("   %2d %-30s %s\n",  cur->value, cur->name, cur->title);
    }
 }
+
 
 char * vnt_name(Value_Name_Title* table, uint32_t val) {
    // printf("(%s) val=%d\n", __func__, val);
@@ -690,6 +698,7 @@ char * vnt_name(Value_Name_Title* table, uint32_t val) {
    }
    return result;
 }
+
 
 char * vnt_title(Value_Name_Title* table, uint32_t val) {
    // printf("(%s) val=%d\n", __func__, val);
@@ -707,7 +716,6 @@ char * vnt_title(Value_Name_Title* table, uint32_t val) {
 }
 
 
-
 char * vn_name(Value_Name* table, uint32_t val) {
    char * result = NULL;
 
@@ -721,6 +729,10 @@ char * vn_name(Value_Name* table, uint32_t val) {
    return result;
 }
 
+
+// string_util.h is a more natural location for this function, but
+// that would create a dependency of data_structures.c on string_util.c ,
+// which we'd like to avoid if possible in these basic packages
 
 bool sbuf_append(char * buf, int bufsz, char * sepstr, char * nextval) {
    assert(buf && (bufsz > 4) );   //avoid handling pathological case
@@ -744,6 +756,7 @@ bool sbuf_append(char * buf, int bufsz, char * sepstr, char * nextval) {
    }
    return truncated;
 }
+
 
 char * interpret_named_flags(
       Value_Name * table,
