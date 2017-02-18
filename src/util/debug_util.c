@@ -1,7 +1,7 @@
 /* debug_util.c
  *
  * <copyright>
- * Copyright (C) 2016 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2016-2017 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -111,7 +111,6 @@ void show_backtrace(int stack_adjust)
             printf("   %s\n", s);
             free(s);
          }
-
       }
 
       free(strings);

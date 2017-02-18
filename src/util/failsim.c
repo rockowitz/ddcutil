@@ -355,6 +355,16 @@ bool fsim_load_control_file(char * fn) {
 //
 
 
+/* Function that is called at runtime to check if a failure should be
+ * simulated.
+ *
+ * Arguments:
+ *   fn         name of file from which check is performed
+ *   funcname   name of function for which check is performed
+ *
+ * Returns:     struct indicating whether failure should be simulated
+ *              and if so what the status code should be
+ */
 Failsim_Result fsim_check_failure(const char * fn, const char * funcname) {
    bool debug = false;
    Failsim_Result result = {false, 0};
