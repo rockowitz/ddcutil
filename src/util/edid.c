@@ -164,17 +164,30 @@ char * get_edid_descriptor_string(Byte * edidbytes, Byte tag) {
 #endif
 
 
-/* Extracts the ASCII model name and serial number from an EDID.
+/* Extracts the non-timing descriptors from an EDID, i.e.
+ * ASCII model name, serial number, and other descriptor.
+ * The extracted values are returned as null-terminated strings.
  *
  * Note that the maximum length of these strings is 13 bytes.
  *
+ * Arguments:
+ *   edidbytes        pointer to 128 byte EDID
+ *   namebuf          pointer to buffer where model name will be returned.
+ *   namebuf_len      size of namebuf, must be >= 14
+ *   snbuf            pointer to buffere where serial number will be returned
+ *   snbuf_len        size of snbuf, must be >= 14
+ *   otherbuf         pointer to buffer where addl descriptor will be returned
+ *   otherbuf_len     size of otherbuf, must be >= 14
+ *
  * Returns: nothing
-
+ *
+ * Buffers will be set to "Unspecified" for descriptors that are not found.
  */
 
 // Use Buffer instead of pointers and lengths?
+// or Buffer for edidbytes, and just return pointers to newly allocated memory for found strings
 
-void get_edid_descriptor_strings(
+static void get_edid_descriptor_strings(
         Byte* edidbytes,
         char* namebuf,
         int   namebuf_len,
@@ -312,7 +325,6 @@ Parsed_Edid * create_parsed_edid(Byte* edidbytes) {
    // parsed_edid->is_digital_input = (parsed_edid->video_input_definition & 0x80) ? true : false;
    parsed_edid->extension_flag = edidbytes[0x7e];
 
-
    if (!ok) {
       free(parsed_edid);
       parsed_edid = NULL;
@@ -417,6 +429,7 @@ void report_parsed_edid_base(Parsed_Edid * edid, bool verbose, bool show_raw, in
          rpt_vstring(d1,"No EDID");
    }
 }
+
 
 /* Writes EDID summary to the current report output destination.
  * (normally stdout, but may be changed by rpt_push_output_dest())
