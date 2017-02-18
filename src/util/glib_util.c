@@ -1,7 +1,7 @@
 /* glib_util.c
  *
  * <copyright>
- * Copyright (C) 2014-2016 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2014-2017 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -79,6 +79,23 @@ g_hash_table_get_keys_as_array_local (GHashTable *hash_table,
 }
 */
 
+
+/* Converts a doubly linked list of pointers into a null-terminated array
+ * of pointers.
+ *
+ * Arguments:
+ *   glist     pointer to doubly linked list
+ *   length    where to return number of items in the allocated array,
+ *             (not including the final NULL terminating entry
+ *
+ * Returns:    pointer to the array
+ *
+ * Notes:
+ * 1) The pointers in the linked list are copied to the newly allocated array.
+ *    The data pointed to is not duplicated.
+ * 2) This function is needed because glib function g_hash_table_get_keys_as_array()
+ *    does not exist in glib versions less than 2.40
+ */
 gpointer * g_list_to_g_array(GList * glist, guint * length) {
    int len = 0;
    gpointer * result = NULL;
