@@ -3,7 +3,7 @@
  * * Adapted from file randr-edid.c from libCEC.    How to properly handle copyright?
  *
  * <copyright>
- * Copyright (C) 2016 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2016-2917 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -71,9 +71,10 @@
 #include <glib.h>
 #include <stdbool.h>
 
+#include "util/string_util.h"
 
 #include "util/x11_util.h"
-#include "util/string_util.h"
+
 
 static const char * const edid_names[] =
 {
@@ -103,6 +104,8 @@ void edid_recs_free_func(gpointer voidptr) {
 // It is the responsibility of the caller to free the returned data structure
 
 GPtrArray * get_x11_edids() {
+   bool debug = false;
+
    GPtrArray * edid_recs = g_ptr_array_new();
    g_ptr_array_set_free_func(edid_recs, edid_recs_free_func);
   //uint16_t physical_address = 0;
@@ -186,7 +189,14 @@ GPtrArray * get_x11_edids() {
                       unsigned char *data;
                       int status;
 
-                      status = XRRGetOutputProperty(disp, rr_output_id, edid_atoms[atom_count], 0, 128, False, False,
+                      status = XRRGetOutputProperty(
+                                  disp,
+                                  rr_output_id,
+                                  edid_atoms[atom_count],
+                                  0,
+                                  128,
+                                  False,
+                                  False,
                             AnyPropertyType, &actual_type, &actual_format,
                             &nitems, &bytes_after, &data);
                       if( Success == status )
@@ -201,7 +211,6 @@ GPtrArray * get_x11_edids() {
                            memcpy(edidrec->output_name, output_info->name, output_info->nameLen);
                            g_ptr_array_add(edid_recs, edidrec);
                            edid_found = true;
-
 
                           // physical_address = CEDIDParser::GetPhysicalAddressFromEDID(data, nitems);
                         }
@@ -223,7 +232,7 @@ GPtrArray * get_x11_edids() {
     XCloseDisplay(disp);
   }
 
-#ifdef NO
+if (debug) {
   int ndx = 0;
   printf("Returning %d X11_Edid_Recs\n", edid_recs->len);
   for (; ndx < edid_recs->len; ndx++) {
@@ -231,9 +240,11 @@ GPtrArray * get_x11_edids() {
      printf(" Output name: %s -> %p\n", prec->output_name, prec->edidbytes);
      hex_dump(prec->edidbytes, 128);
   }
-#endif
+}
+
   return edid_recs;
 }
+
 
 void free_x11_edids(GPtrArray * edidrecs) {
    g_ptr_array_free(edidrecs, true);
