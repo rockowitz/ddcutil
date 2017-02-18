@@ -1,7 +1,9 @@
 /* failsim.h
  *
+ * Functions to enable runtime error simulation
+ *
  * <copyright>
- * Copyright (C) 2016 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2017 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -38,11 +40,12 @@
 
 typedef bool (*Fsim_Name_To_Number_Func)(const char * name, int * p_number);
 
-void fsim_set_name_to_number_funcs(Fsim_Name_To_Number_Func func, Fsim_Name_To_Number_Func  unmodulated_func);
-
-
+void fsim_set_name_to_number_funcs(
+      Fsim_Name_To_Number_Func  func,
+      Fsim_Name_To_Number_Func  unmodulated_func);
 
 typedef enum {FSIM_CALL_OCC_RECURRING, FSIM_CALL_OCC_SINGLE} Fsim_Call_Occ_Type;
+
 
 //
 // Error table manipulation
@@ -54,24 +57,21 @@ void fsim_add_error(
        int                  occno,
        int                  rc);
 
-void fsim_reset_callct(char * funcname);
-
 void fsim_clear_errors_for_func(char * funcname);
 
 void fsim_clear_error_table();
 
 void fsim_report_error_table(int depth);
 
+void fsim_reset_callct(char * funcname);
 
 //
 // Bulk load error table
 //
 
-// cf load dumpload load variants
-
 bool fsim_load_control_from_gptrarray(GPtrArray * lines);
 
-bool fsim_load_control_string(char * s);
+// bool fsim_load_control_string(char * s);         // unimplemented
 
 bool fsim_load_control_file(char * fn);
 
@@ -89,8 +89,8 @@ typedef struct {
 
 Failsim_Result fsim_check_failure(const char * fn, const char * funcname);
 
-
 #ifdef ENABLE_FAILSIM
+
 #define FAILSIM \
    do { \
       Failsim_Result __rcsim = fsim_check_failure(__FILE__, __func__); \
@@ -108,28 +108,11 @@ Failsim_Result fsim_check_failure(const char * fn, const char * funcname);
       } \
    } while(0);
 
-#ifdef WRONG
-#define FAILSIM_BOOL_EXT(__addl_cmds) \
-   do { \
-      int __rcsim = fsim_check_failure(__FILE__, __func__); \
-      if (!__rcsim) {      \
-         printf("Simulating failure for call of function %s, returning false\n", __func__); \
-         __addl_cmds;     \
-         return false;  \
-      } \
-   } while(0);
-#else
-#define FAILSIM_BOOL_EXT(__addl_cmds)
-#endif
-
-
 #else
 
 #define FAILSIM
 
 #define FAILSIM_EXT(__addl_cmds)
-
-#define FAILSIM_BOOL_EXT(__addl_cmds)
 
 #endif
 

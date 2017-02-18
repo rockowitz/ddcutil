@@ -35,13 +35,13 @@
 #include "util/failsim.h"
 
 
-
-
-// typedef bool (*Fsim_Name_To_Number_Func)(const char * name, int * p_number);
-static Fsim_Name_To_Number_Func name_to_number_func = NULL;
+static Fsim_Name_To_Number_Func name_to_number_func             = NULL;
 static Fsim_Name_To_Number_Func unmodulated_name_to_number_func = NULL;
 
-void fsim_set_name_to_number_funcs(Fsim_Name_To_Number_Func func, Fsim_Name_To_Number_Func unmodulated_func) {
+void fsim_set_name_to_number_funcs(
+      Fsim_Name_To_Number_Func func,
+      Fsim_Name_To_Number_Func unmodulated_func)
+{
    name_to_number_func = func;
    unmodulated_name_to_number_func = unmodulated_func;
 }
@@ -51,6 +51,7 @@ void fsim_set_name_to_number_funcs(Fsim_Name_To_Number_Func func, Fsim_Name_To_N
 static GHashTable * fst = NULL;
 
 
+// Describes a call occurrence for which an error is to be simulated
 typedef struct fsim_call_occ_rec {
    Fsim_Call_Occ_Type   call_occ_type;
    int                  occno;
@@ -59,12 +60,15 @@ typedef struct fsim_call_occ_rec {
 } Fsim_Call_Occ_Rec;
 
 
+// This struct describes the failure simulation state of a function. It
+// a) contains an array of FsimCall_Occ_Rec defining the simulated errors
+// b) a counter updated at runtime of the number of times the function has been called.
 #define FSIM_FUNC_REC_MARKER "FSFR"
 typedef struct fsim_func_rec {
    char     marker[4];
    char *   func_name;
    int      callct;
-   GArray * call_occ_recs;
+   GArray * call_occ_recs;   // array of Fsim_Call_Occ_Rec
 } Fsim_Func_Rec;
 
 
@@ -73,6 +77,7 @@ char * fsim_call_occ_type_names[] = {"FSIM_CALL_OCC_RECURRING",
 };
 
 
+// GHashTable destroy function for hash value (i.e. pointer to Fsim_Func_Rec)
 static void fsim_destroy_func_rec(gpointer data) {
    Fsim_Func_Rec * frec = (Fsim_Func_Rec *) data;
    assert(memcmp(frec->marker, FSIM_FUNC_REC_MARKER, 4) == 0);
@@ -81,18 +86,34 @@ static void fsim_destroy_func_rec(gpointer data) {
    free(data);
 }
 
+
+// GHashTable destroy function for hash key (i.e. pointer to string)
 void fsim_destroy_key(gpointer data) {
    free(data);
 }
 
-static void report_error_table_entry(gpointer key_ptr, gpointer value_ptr, gpointer user_data_ptr) {
+
+/* Reports a single entry in the error simulation table,
+ * i.e. the conditions under which an error will be simulated
+ * for the function and the error value for the function to return.
+ *
+ * Arguments:
+ *   key_ptr         pointer to function name
+ *   value_ptr       pointer to GArray of Fsim_Call_Occ_Rec's
+ *   user_data_ptr   pointer to logical indentation depth
+ */
+static void report_error_table_entry(
+      gpointer key_ptr,
+      gpointer value_ptr,
+      gpointer user_data_ptr)
+{
    bool debug = false;
    if (debug)
       printf("(%s) Starting.  value_ptr=%p, user_data_ptr=%p\n", __func__, value_ptr, user_data_ptr);
-    char * key = (char *) key_ptr;
+    char * key           = (char *) key_ptr;
     Fsim_Func_Rec * frec = (Fsim_Func_Rec *) value_ptr;
-    int * depth_ptr = (int *) user_data_ptr;
-    int depth = *depth_ptr;
+    int * depth_ptr      = (int *) user_data_ptr;
+    int depth            = *depth_ptr;
 
     rpt_vstring(depth, "function:      %s", key);
     for (int ndx = 0; ndx < frec->call_occ_recs->len; ndx++) {
@@ -106,13 +127,33 @@ static void report_error_table_entry(gpointer key_ptr, gpointer value_ptr, gpoin
 }
 
 
+/* Returns the failure simulation table.
+ * If the table does not already exist it is created.
+ *
+ * Arguments:    none
+ *
+ * Returns:      pointer to failure simulation table
+ */
 static GHashTable * fsim_get_or_create_failsim_table() {
    if (!fst) {
-      fst = g_hash_table_new_full(g_str_hash, g_str_equal, fsim_destroy_key, fsim_destroy_func_rec);
+      fst = g_hash_table_new_full(
+               g_str_hash,
+               g_str_equal,
+               fsim_destroy_key,
+               fsim_destroy_func_rec);
    }
    return fst;
 }
 
+
+/* Gets the record for a function in the failure simulation table.
+ * If a record does not already exist, a new one is created.
+ *
+ * Arguments:
+ *   funcname     function mame
+ *
+ * Returns:       pointer to Fsim_Func_Rec for the function
+ */
 static Fsim_Func_Rec * fsim_get_or_create_func_rec(char * funcname) {
    GHashTable * fst = fsim_get_or_create_failsim_table();
    Fsim_Func_Rec * frec = g_hash_table_lookup(fst, funcname);
@@ -131,6 +172,14 @@ static Fsim_Func_Rec * fsim_get_or_create_func_rec(char * funcname) {
 }
 
 
+/* Adds an error record to the failure simulation table entry for a function.
+ *
+ * Arguments:
+ *   funcname       function name
+ *   call_occ_type  recurring or single
+ *   occno          occurrence number
+ *   rc             return code to simulate
+ */
 void fsim_add_error(
        char *               funcname,
        Fsim_Call_Occ_Type   call_occ_type,
@@ -156,6 +205,12 @@ void fsim_add_error(
    g_array_append_val(frec->call_occ_recs, callocc_rec);
 }
 
+
+/* Reset the call counter in a failure simulation table entry
+ *
+ * Arguments:
+ *   funcname   function name
+ */
 void fsim_reset_callct(char * funcname) {
    if (fst) {
       Fsim_Func_Rec * frec = g_hash_table_lookup(fst, funcname);
@@ -244,17 +299,27 @@ bool eval_fsim_rc(char * rc_string, int * evaluated_rc) {
 }
 
 
-// cf load dumpload load variants
+//
+// Bulk load the failure simulation table
+//
+// cf dumpload load variants
+//
 
 bool fsim_load_control_from_gptrarray(GPtrArray * lines) {
    bool debug = false;
    if (debug)
       printf("(%s) lines.len = %d\n", __func__, lines->len);
 
-   bool ok = true;
    bool dummy_data_flag = false;
-   fst = g_hash_table_new(g_str_hash, g_str_equal);
+   // Dummy data for development
+   if (dummy_data_flag) {
+      printf("(%s) Loading mock data\n", __func__);
+      fsim_add_error("i2c_set_addr", FSIM_CALL_OCC_RECURRING, 2, -EBUSY);
+      return true;
+   }
 
+   bool ok = true;
+   fst = g_hash_table_new(g_str_hash, g_str_equal);
    for (int ndx = 0; ndx < lines->len; ndx++) {
       char * aline = g_ptr_array_index(lines, ndx);
       if (debug)
@@ -309,26 +374,21 @@ bool fsim_load_control_from_gptrarray(GPtrArray * lines) {
       free(trimmed_line);
    }
 
-
-
-   // Dummy data for now:
-   if (dummy_data_flag) {
-      printf("(%s) Ignoring failure simulation control file, loading mock data\n", __func__);
-      fsim_add_error("i2c_set_addr", FSIM_CALL_OCC_RECURRING, 2, -EBUSY);
-   }
-
-   fsim_report_error_table(0);
+   // fsim_report_error_table(0);
 
    if (debug)
       printf("(%s) Returnind: %s\n", __func__, bool_repr(ok));
    return ok;
 }
 
+
+// TODO: implement
 bool fsim_load_control_string(char * s) {
    bool ok = false;
 
    return ok;
 }
+
 
 bool fsim_load_control_file(char * fn) {
    bool debug = false;
@@ -353,7 +413,6 @@ bool fsim_load_control_file(char * fn) {
 //
 // Execution time error check
 //
-
 
 /* Function that is called at runtime to check if a failure should be
  * simulated.

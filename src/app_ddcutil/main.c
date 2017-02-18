@@ -347,6 +347,7 @@ int main(int argc, char *argv[]) {
                          parsed_cmd->failsim_control_fn);
          exit(EXIT_FAILURE);
       }
+      fsim_report_error_table(0);
    }
 #endif
 
