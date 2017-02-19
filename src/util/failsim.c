@@ -172,7 +172,7 @@ static Fsim_Func_Rec * fsim_get_or_create_func_rec(char * funcname) {
 }
 
 
-/* Adds an error record to the failure simulation table entry for a function.
+/* Adds a pseudo-error description to the failure simulation table entry for a function.
  *
  * Arguments:
  *   funcname       function name
@@ -220,6 +220,11 @@ void fsim_reset_callct(char * funcname) {
 }
 
 
+/* Delete all pseudo-error descriptors for a function.
+ *
+ * Arguments:
+ *   funcname    function name
+ */
 void fsim_clear_errors_for_func(char * funcname) {
    if (fst) {
       // not an error if key doesn't exist
@@ -228,6 +233,8 @@ void fsim_clear_errors_for_func(char * funcname) {
 }
 
 
+/* Clear the entire failure simulation table.
+ */
 void fsim_clear_error_table() {
    if (fst) {
       g_hash_table_destroy(fst);
@@ -236,7 +243,11 @@ void fsim_clear_error_table() {
 }
 
 
-
+/* Report the failure simulation table.
+ *
+ * Arguments:
+ *   depth       logical indentation depth
+ */
 void fsim_report_error_table(int depth) {
    bool debug = false;
    int d1 = depth+1;
@@ -252,6 +263,26 @@ void fsim_report_error_table(int depth) {
 }
 
 
+/* Evaluates a string status code expression.
+ *
+ * The string can take the following forms:
+ *     integer   e.g.     "-42"
+ *     boolean   i.e.  "true" or "false"
+ *     a symbolic status code name, optionally prefixed by
+ *     "modulated:" or "base:".
+ *     If neither "modulated" nor "vase" is specified, "modulated" is assumed
+ *     e.g. "DDC_RC_ALL_ZERO", "base:EBUSY"
+ *
+ * Arguments:
+ *   rc_string      string to evaluate
+ *   evaluated_rc   where to return evaluated value
+ *
+ * Returns:         true if evaluation successful, false if error
+ */
+
+// Issue: should unmodulated values be negative, or should
+// an optional minus sign be recognized?
+// e.g. should we specify -EBUSY for -22?
 bool eval_fsim_rc(char * rc_string, int * evaluated_rc) {
    bool debug = true;
    if (debug)
@@ -305,6 +336,27 @@ bool eval_fsim_rc(char * rc_string, int * evaluated_rc) {
 // cf dumpload load variants
 //
 
+/* Load the failure simulation table from an array of strings.
+ * Each string describes one simulated error for a function, and has
+ * the form:
+ *
+ *   function_name  status_code occurrence_descriptor
+ *
+ *   where:
+ *      status_code has a form documented for eval_fsim_rc
+ *      occurrence_descriptor has the form [*]integer,
+ *        examples:
+ *          *7   every 7th call fails
+ *          7    the 7th call fails
+ *          *1   every call fails
+ *
+ * Examples:
+ *   i2c_set_addr  base:EBUSY 6
+ *   ddc_verify    false      *1
+ *
+ * Arguments:
+ *    lines     array of lines
+ */
 bool fsim_load_control_from_gptrarray(GPtrArray * lines) {
    bool debug = false;
    if (debug)
@@ -390,6 +442,11 @@ bool fsim_load_control_string(char * s) {
 }
 
 
+/* Loads the failure simulation table from a control file.
+ *
+ * Arguments:
+ *   fn   file name
+ */
 bool fsim_load_control_file(char * fn) {
    bool debug = false;
    if (debug)
