@@ -35,7 +35,7 @@ void rpt_pop_output_dest();
 FILE * rpt_cur_output_dest();
 void rpt_reset_output_dest_stack();
 void rpt_change_output_dest(FILE* new_dest);
-void debug_output_dest();
+void rpt_debug_output_dest();
 
 int rpt_indent(int depth);
 

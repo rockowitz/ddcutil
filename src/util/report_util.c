@@ -1,6 +1,7 @@
 /* report_util.c
  *
- * Functions for creating report messages for tracing data structures.
+ * Functions for creating messages in a stardardized format, with flexible
+ * indentation.  It is particularly used for tracing data structures.
  *
  * This source file maintains state in static variables so is not thread safe.
  *
@@ -35,6 +36,7 @@
 
 #include "util/coredefs.h"
 #include "util/string_util.h"
+
 #include "util/report_util.h"
 
 
@@ -78,6 +80,7 @@ void rpt_reset_indent_stack() {
    indent_spaces_stack_pos = -1;
 }
 
+
 /* Given a logical indentation depth, returns the number of spaces
  * of indentation to be used.
  */
@@ -90,7 +93,6 @@ int rpt_indent(int depth) {
 
 
 // Functions that allow for temporarily changing the output destination.
-
 
 void rpt_push_output_dest(FILE* new_dest) {
    assert(output_dest_stack_pos < OUTPUT_DEST_STACK_SIZE-1);
@@ -109,6 +111,12 @@ void rpt_reset_output_dest_stack() {
 }
 
 
+/* Gets the current output destination.
+ *
+ * Arguments:     none
+ *
+ * Returns:       current output destination
+ */
 FILE * rpt_cur_output_dest() {
    // special handling for unpushed case because can't statically initialize
    // output_dest_stack[0] to stdout
@@ -120,7 +128,9 @@ FILE * rpt_cur_output_dest() {
    return result;
 }
 
-void debug_output_dest() {
+
+// Debugging function
+void rpt_debug_output_dest() {
     FILE * dest = rpt_cur_output_dest();
     char * addl = (dest == stdout) ? " (stdout)" : "";
     printf("(%s) output_dest_stack[%d] = %p %s\n",
@@ -232,7 +242,6 @@ void rpt_g_ptr_array(int depth, GPtrArray * strings) {
 }
 
 
-
 /* Writes a string to the current output destination, describing a pointer
  * to a named data structure.
  *
@@ -321,6 +330,7 @@ void rpt_int_as_hex(char * name, char * info, int val, int depth) {
    rpt_str(name, info, buf, depth);
 }
 
+
 void rpt_uint8_as_hex(char * name, char * info, unsigned char val, int depth) {
    char buf[16];
    snprintf(buf, 15, "0x%02x", val);
@@ -405,6 +415,7 @@ Flag_Info * find_flag_info_in_dictionary(char * flag_name, Flag_Dictionary * pdi
    // printf("(%s) Returning: %p  \n", __func__, result );
    return result;
 }
+
 
 // Local function
 static void char_buf_append(char * buffer, int bufsize, char * val_to_append) {
