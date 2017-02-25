@@ -146,7 +146,9 @@ static void probe_open_device_using_libdrm(int fd, int depth) {
 
    // succeeds if run as root, fails w errno=EACCES(13) if not
    // but no effect on subsequent failures for nvidia
-// #ifdef NO
+   // reviewed code in drm_ioctl.c.  ioctl calls would fail with EACCES
+   // if lack of master access were the cause
+#ifdef NO
    // fails on suse
    // rc is ioctl() return code, i.e. 0 or -1 for failure)
    // if -1, errno is set
@@ -154,12 +156,12 @@ static void probe_open_device_using_libdrm(int fd, int depth) {
    if (rc < 0)
       rpt_vstring(d1, "drmSetMaster() failed, errno=%s", linux_errno_desc(errno));
    rpt_nl();
-// #endif
+#endif
 
    // if returns NULL, errno is as set from the underlying ioctl()
    drmVersionPtr vp = drmGetVersion(fd);
    if (vp) {
-      rpt_vstring(d1, "Driver version information:");
+      rpt_vstring(d1, "Drm driver version information:");
       report_drmVersion(vp, d2);
       drmFreeVersion(vp);
    }
