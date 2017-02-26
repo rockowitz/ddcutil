@@ -250,6 +250,21 @@ AS_IF([test "x$enable_usb" == "xyes"],
         AC_MSG_NOTICE( [usb... disabled] )
      )
 
+
+dnl *** configure option: --enable-drm
+AC_ARG_ENABLE([drm],
+              [ AS_HELP_STRING( [--enable-drm=@<:@yes/no@:>@], [Use DRM in diagnostics@<:@default=yes@:>@] )],
+              [enable_drm=${enableval}],
+              [enable_drm=yes] )
+AM_CONDITIONAL([USE_LIBDRM_COND], [test "x$enable_drm" == "xyes"] )
+AS_IF([test "x$enable_drm" == "xyes"],
+        AC_DEFINE([USE_LIBDRM], [1], [Use libdrm])
+        AC_MSG_NOTICE( [drm... enabled]  )
+      ,
+        AC_MSG_NOTICE( [drm... disabled] )
+     )
+
+
 dnl *** configure option: --enable-doxygen
 AC_ARG_ENABLE([doxygen],
               [ AS_HELP_STRING( [--enable-doxygen=@<:@no/yes@:>@], [Build API documentation using Doxygen (if it is installed)@<:@default=no@:>@] )],
@@ -409,16 +424,17 @@ AS_IF( [test 0$DBG -ne 0],
 
 ### libdrm 
 
-PKG_CHECK_MODULES(LIBDRM, libdrm >= 2.4.67, [
-      use_libdrm=yes
-      AC_DEFINE([USE_LIBDRM], [1], [libdrm is available])
-   ],
-   [
-      use_libdrm=no
-      AC_MSG_NOTICE([libdrm not found, DRM will not be used in diagnostics])
-   ])
-   AM_CONDITIONAL( [USE_LIBDRM_COND], [test "x$use_libdrm" == "xyes"])
-   dnl AM_COND_IF([USE_LIBDRM_COND], [AC_DEFINE([USE_LIBDRM2], [1], [use libdrm (2)])])
+AS_IF([test "x$enable_usb" == "xyes"],
+         [ PKG_CHECK_MODULES(LIBDRM, libdrm >= 2.4.67, [libdrm_found=yes] ) ],
+         [ AC_MSG_NOTICE( [drm disabled, not checking for libdrm] ) ]
+     )
+
+AS_IF( [test 0$DBG -ne 0], 
+       [
+          AC_MSG_NOTICE( [LIBDRM_CFLAGS:    $LIBDRM_CFLAGS] )
+          AC_MSG_NOTICE( [LIBDRM_LIBS:      $LIBDRM_LIBS] )
+       ]) 
+
 
 
 ### DOXYGEN
@@ -841,11 +857,9 @@ AC_MSG_RESULT([
 	enable_lib:             ${enable_lib}
 	enable_swig:            ${enable_swig}
 	enable_usb:             ${enable_usb}
+	enable_drm:             ${enable_drm}   
 	enable_doxygen:         ${enable_doxygen}
-
 	enable_failsim:         ${enable_failsim}
-
-	use libdrm:             ${use_libdrm}   
 
 	compiler:               ${CC}
 	cflags:                 ${CFLAGS}
