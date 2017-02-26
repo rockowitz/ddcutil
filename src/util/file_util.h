@@ -1,7 +1,7 @@
 /* file_util.h
  *
  * <copyright>
- * Copyright (C) 2014-2016 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2014-2017 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -28,9 +28,7 @@
 #include <glib.h>
 #include <stdbool.h>
 
-
 int file_getlines(const char * fn, GPtrArray* line_array, bool verbose);
-
 char * file_get_first_line(const char * fn, bool verbose);
 
 bool regular_file_exists(const char * fqfn);

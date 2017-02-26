@@ -7,7 +7,7 @@
  * structure of the EDID.
  *
  * <copyright>
- * Copyright (C) 2014-2016 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2014-2017 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -51,7 +51,7 @@ static inline bool all_bytes_zero(Byte * bytes, int len) {
 
 /* Calculates checksum for a 128 byte EDID
  *
- * Note that the checksum byte itself (byte 127) is itself
+ * Note that the checksum byte (byte 127) is itself
  * included in the checksum calculation.
  */
 Byte edid_checksum(Byte * edid) {
