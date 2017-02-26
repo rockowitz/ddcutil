@@ -424,7 +424,7 @@ AS_IF( [test 0$DBG -ne 0],
 
 ### libdrm 
 
-AS_IF([test "x$enable_usb" == "xyes"],
+AS_IF([test "x$enable_drm" == "xyes"],
          [ PKG_CHECK_MODULES(LIBDRM, libdrm >= 2.4.67, [libdrm_found=yes] ) ],
          [ AC_MSG_NOTICE( [drm disabled, not checking for libdrm] ) ]
      )
