@@ -233,13 +233,14 @@ static void get_edid_descriptor_strings(
          if (nameslot) {
             Byte * textstart = descriptor+5;
             // DBGMSF(debug, "String in descriptor: %s", hexstring(textstart, 14));
-            int    textlen = 0;
-            while (*(textstart+textlen) != 0x0a && textlen < 14) {
+            int    offset = 0;
+            while (*(textstart+offset) != 0x0a && offset < 13) {
                // DBGMSG("textlen=%d, char=0x%02x", textlen, *(textstart+textlen));
-               textlen++;
+               nameslot[offset] = *(textstart+offset);
+               offset++;
             }
-            memcpy(nameslot, textstart, textlen);
-            nameslot[textlen] = '\0';
+            // memcpy(nameslot, textstart, offset);
+            nameslot[offset] = '\0';
             if (debug)
                printf("(%s) name = %s\n", __func__, nameslot);
 
