@@ -826,7 +826,17 @@ void raw_scan_i2c_devices() {
             for (int tryctr=0; tryctr<maxtries && gsc < 0; tryctr++) {
                gsc = try_single_getvcp_call(fd, 0x10);
                if (gsc == 0 || gsc == DDCRC_NULL_RESPONSE || gsc == DDCRC_REPORTED_UNSUPPORTED) {
-                  rpt_vstring(d2, "Attempt %d to read feature succeeded.", tryctr+1);
+                  switch (gsc) {
+                  case 0:
+                     rpt_vstring(d2, "Attempt %d to read feature succeeded.", tryctr+1);
+                     break;
+                  case DDCRC_REPORTED_UNSUPPORTED:
+                     rpt_vstring(d2, "Attempt %d to read feature returned DDCRC_REPORTED_UNSUPPORTED");
+                     break;
+                  case DDCRC_NULL_RESPONSE:
+                     rpt_vstring(d2, "Attempt %d to read feature returned DDCRC_NULL_RESPONSE");
+                     break;
+                  }
                   gsc = 0;
                   break;
                }
