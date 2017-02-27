@@ -93,75 +93,15 @@ void parse_mfg_id_in_buffer(Byte * mfg_id_bytes, char * result, int bufsize) {
 // Extracts the 3 character manufacturer id from an EDID byte array.
 // The id is returned with a trailing null in a buffer provided by the caller.
 void get_edid_mfg_id_in_buffer(Byte* edidbytes, char * result, int bufsize) {
-   parse_mfg_id_in_buffer(&edidbytes[8], result, bufsize);
+   // parse_mfg_id_in_buffer(&edidbytes[8], result, bufsize);
+   parse_mfg_id_in_buffer(edidbytes+8, result, bufsize);
 }
-
-
-#ifdef OLD
-
-// Extracts the 3 character manufacturer id from an EDID byte array.
-//
-// Note it is the caller's responsibility to free the buffer returned.
-
-char * get_edid_mfg_id(Byte * edidbytes) {
-   char * result = call_malloc(4, "get_mfg_id");
-
-   get_edid_mfg_id_in_buffer(edidbytes, result);
-   return result;
-}
-
-#endif
 
 
 #define EDID_DESCRIPTORS_BLOCKS_START 54
 #define EDID_DESCRIPTOR_BLOCK_SIZE    18
 #define EDID_DESCRIPTOR_DATA_SIZE     13
 #define EDID_DESCRIPTOR_BLOCK_CT       4
-
-
-#ifdef UNUSED
-char * get_edid_descriptor_string(Byte * edidbytes, Byte tag) {
-   assert( tag==0xff || tag==0xfe || tag==0xfc);     // valid string tags
-   bool debug = true;
-
-   static char stringbuf[EDID_DESCRIPTOR_DATA_SIZE+1];   // +1 for terminating null
-   stringbuf[0] = '\0';
-
-   // 4 descriptor blocks beginning at offset 54.  Each block is 18 bytes.
-   // In each block, bytes 0-3 indicates the contents.
-   int descriptor_ndx = 0;
-   for (descriptor_ndx = 0; descriptor_ndx < EDID_DESCRIPTOR_BLOCK_CT; descriptor_ndx++) {
-      Byte * descriptor = edidbytes +
-                          EDID_DESCRIPTORS_BLOCKS_START +
-                          descriptor_ndx * EDID_DESCRIPTOR_BLOCK_SIZE;
-      if (debug) {
-         DBGMSG("full descriptor: %s",    hexstring(descriptor, EDID_DESCRIPTOR_BLOCK_SIZE));
-      }
-      // test if a string descriptor
-      if ( descriptor[0] == 0x00 &&       // 0x00 if not a timing descriptor
-           descriptor[1] == 0x00 &&       // 0x00 if not a timing descriptor
-           descriptor[2] == 0x00 &&       // &&       // 0x00 for all descriptors
-           descriptor[4] == 0x00
-          // (descriptor[3] == 0xff || descriptor[3] == 0xfc || descriptor[3] == 0xfe)  // 0xff: serial number, 0xfc: model name
-         )
-      {
-         // char * nameslot = (descriptor[3] == 0xff) ? snbuf : namebuf;
-         Byte * textstart = descriptor+5;
-         // DBGMSF(debug, "String in descriptor: %s", hexstring(textstart, 14));
-         int    textlen = 0;
-         while (*(textstart+textlen) != 0x0a && textlen < 14) {
-            // DBGMSG("textlen=%d, char=0x%02x", textlen, *(textstart+textlen));
-            textlen++;
-         }
-         memcpy(stringbuf, textstart, textlen);
-         stringbuf[textlen] = '\0';
-      }
-   }
-
-   DBGMSF(debug, "tag=0x%02x, returning: %s", tag, stringbuf);
-   return stringbuf;
-}
-#endif
 
 
 /* Extracts the non-timing descriptors from an EDID, i.e.
@@ -197,7 +137,6 @@ static void get_edid_descriptor_strings(
         int   otherbuf_len)
 {
    bool debug = false;
-   // bool edid_ok = true;
    assert(namebuf_len >= 14 && snbuf_len >= 14 && otherbuf_len >= 14);
    strcpy(namebuf,  "Unspecified");
    strcpy(snbuf,    "Unspecified");
@@ -248,9 +187,6 @@ static void get_edid_descriptor_strings(
          }
       }
    }
-
-// bye:
-   return;
 }
 
 
