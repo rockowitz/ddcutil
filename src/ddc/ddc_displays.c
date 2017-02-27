@@ -640,6 +640,9 @@ ddc_report_active_display(Display_Info * curinfo, int depth) {
    if (output_level >= OL_NORMAL) {
       if (!ddc_is_valid_display_ref(curinfo->dref, CALLOPT_NONE)) {
          rpt_vstring(depth, "DDC communication failed");
+         if (output_level >= OL_VERBOSE) {
+            rpt_vstring(depth, "Is DDC/CI enabled in the monitor's on-screen display?");
+         }
       }
       else {
          // n. requires write access since may call get_vcp_value(), which does a write
