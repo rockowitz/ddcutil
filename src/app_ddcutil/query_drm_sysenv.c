@@ -114,7 +114,6 @@ char * basename0(char * fn) {
 }
 
 
-
 char * drm_bus_type_name(uint8_t bus) {
    char * result = NULL;
    if (bus == DRM_BUS_PCI)
@@ -134,6 +133,14 @@ void report_drmVersion(drmVersion * vp, int depth) {
 }
 
 
+/* Examines a single open DRM device.
+ *
+ * Arguments:
+ *   fd      file handle of open DRM device
+ *   depth   logical indentation depth
+ *
+ * Returns:  nothing
+ */
 static void probe_open_device_using_libdrm(int fd, int depth) {
    int d1 = depth+1;
    int d2 = depth+2;
@@ -320,7 +327,6 @@ static void probe_open_device_using_libdrm(int fd, int depth) {
          }
       }
    }
-
 
 #ifdef REF
    extern drmModePropertyBlobPtr drmModeGetPropertyBlob(int fd, uint32_t blob_id);
@@ -516,25 +522,29 @@ int util_open(const char *device, const char *module)
 #endif
 
 
-
+/* Examines a single DRM device, specified by name.
+ *
+ * Arguments:
+ *   devname device name
+ *   depth   logical indentation depth
+ *
+ * Returns:  nothing
+ */
 static void probe_one_device_using_libdrm(char * devname, int depth) {
-   // int errsv;
-
    rpt_vstring(depth, "Probing device %s...", devname);
 
-   // char * bname = basename(devname);
-   // int fd  = open(devname,O_RDWR | O_CLOEXEC);
+   int fd = -1;
 
-   // drmOpen returns a file descriptor if successful,
+   // drmOpen() returns a file descriptor if successful,
    // if < 0, its an errno value
-   // n. errno = -fd if a passthru, but will not be set if generated interally
-   // within drmOpen  (examined the code)
-   // can also return DRM_ERR_NOT_ROOT (-1003)
-   // DRM specific error numbers are in range -1001..-1005, conflicts with
-   // our Global_Status_Code mapping
+   // n. errno = -fd if a passthru, but will not be set if generated internally
+   //                               within drmOpen  (examined the code)
+   // drmOopen() can also return DRM_ERR_NOT_ROOT (-1003)
+   // DRM specific error numbers are in range -1001..-1005,
+   // conflicts with our Global_Status_Code mapping
 
 #ifdef FAIL
-   int fd = drmOpen(bname, NULL);
+   fd = drmOpen(bname, NULL);
    if (fd < 0) {
       rpt_vstring(depth, "Error opening device %s using drmOpen(), fd=%s",
                          bname, linux_errno_desc(-fd));
@@ -548,7 +558,6 @@ static void probe_one_device_using_libdrm(char * devname, int depth) {
    }
 #endif
 
-   int fd = -1;
 #ifdef NO
    char * busid = "pci:0000:01:00.0";
 // open succeeds using hardcoded busid, but doesn't solve problem of
@@ -573,7 +582,6 @@ static void probe_one_device_using_libdrm(char * devname, int depth) {
    }
 #endif
 
-   // int fd = 0;
    if (fd < 0) {
       errno = 0;
       fd  = open(devname,O_RDWR | O_CLOEXEC);
@@ -696,4 +704,3 @@ void probe_using_libdrm() {
    }
    g_ptr_array_free(dev_names, true);
 }
-
