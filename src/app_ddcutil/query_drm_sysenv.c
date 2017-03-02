@@ -25,6 +25,7 @@
 #define _GNU_SOURCE
 #define __USE_GNU
 
+#include <assert.h>
 #include <errno.h>
 #include <glib.h>
 #include <fcntl.h>
@@ -364,7 +365,6 @@ static void probe_open_device_using_libdrm(int fd, int depth) {
          rpt_vstring(d2, "Encoder with id %d not found", encoder_id);
       }
 
-
       for (int ndx = 0; ndx < conn->count_props; ndx++) {
          if (conn->props[ndx] == edid_prop_id) {
             rpt_vstring(d2, "EDID property");
@@ -380,18 +380,21 @@ static void probe_open_device_using_libdrm(int fd, int depth) {
 
                if (blob_ptr->length >= 128) {
                   Parsed_Edid * parsed_edid = create_parsed_edid(blob_ptr->data);
-                  if (parsed_edid)
+                  if (parsed_edid) {
                      report_parsed_edid_base(
                            parsed_edid,
                            true,    // verbose
                            false,   // show_raw
                            d3);
+                     free_parsed_edid(parsed_edid);
+                  }
                }
 
                drmModeFreePropertyBlob(blob_ptr);
             }
          }
          else if (conn->props[ndx] == subconnector_prop_id) {
+            assert(subconn_prop_ptr);   // if subconnector_prop_id found, subconn_prop_ptr must have been set
             uint32_t enum_value = conn->prop_values[ndx];
             // printf("subconnector value: %d\n", enum_value);
 
@@ -402,7 +405,8 @@ static void probe_open_device_using_libdrm(int fd, int depth) {
                bool found = false;
                 for (int i = 0; i < subconn_prop_ptr->count_enums && !found; i++) {
                    if (subconn_prop_ptr->enums[i].value == enum_value) {
-                      rpt_vstring(d2, "Subconnector value = %d - %s", enum_value, subconn_prop_ptr->enums[i].name);
+                      rpt_vstring(d2, "Subconnector value = %d - %s",
+                                      enum_value, subconn_prop_ptr->enums[i].name);
                       found = true;
                    }
                 }
@@ -582,7 +586,7 @@ static void probe_one_device_using_libdrm(char * devname, int depth) {
    }
 
 
-   if (fd > 0) {
+   if (fd >= 0) {
       probe_open_device_using_libdrm(fd, depth);
       close(fd);
    }
