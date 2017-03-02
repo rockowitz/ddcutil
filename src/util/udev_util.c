@@ -339,11 +339,13 @@ Usb_Detailed_Device_Summary * lookup_udev_usb_device_by_devname(char * devname) 
 
    if (devct != 1)
       printf("(%s) Unexpectedly found %d matching devices for %s\n", __func__, devct, devname);
-   if (devct == 0)
+   if (devct == 0) {
       free_usb_detailed_device_summary(devsum);
+      devsum = NULL;
+   }
 
-
-   // report_usb_device_summary(devsum, 0);
+   // if (devsum)
+   //    report_usb_device_summary(devsum, 0);
    return devsum;
 
 
