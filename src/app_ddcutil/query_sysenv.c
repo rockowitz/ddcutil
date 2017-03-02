@@ -771,6 +771,7 @@ void raw_scan_i2c_devices() {
    int depth = 0;
    int d1 = depth+1;
    int d2 = depth+2;
+   Parsed_Edid * edid = NULL;
 
    rpt_nl();
    rpt_title("Performing basic scan of I2C devices",depth);
@@ -806,7 +807,7 @@ void raw_scan_i2c_devices() {
          else {
             rpt_vstring(d2, "Raw EDID:");
             rpt_hex_dump(buf0->bytes, buf0->len, d2);
-            Parsed_Edid *  edid = create_parsed_edid(buf0->bytes);
+            edid = create_parsed_edid(buf0->bytes);
             if (edid)
               report_parsed_edid_base(
                     edid,
@@ -832,12 +833,12 @@ void raw_scan_i2c_devices() {
                      break;
                   case DDCRC_REPORTED_UNSUPPORTED:
                      rpt_vstring(d2, "Attempt %d to read feature returned DDCRC_REPORTED_UNSUPPORTED");
+                     gsc = 0;
                      break;
                   case DDCRC_NULL_RESPONSE:
                      rpt_vstring(d2, "Attempt %d to read feature returned DDCRC_NULL_RESPONSE");
                      break;
                   }
-                  gsc = 0;
                   break;
                }
                rpt_vstring(d2, "Attempt %d to read feature failed. status = %s.  %s",
@@ -847,9 +848,15 @@ void raw_scan_i2c_devices() {
                rpt_vstring(d2, "DDC communication succeeded");
             else {
                rpt_vstring(d2, "DDC communication failed.");
+               if (edid)
+                  rpt_vstring(d2, "Is DDC/CI enabled in the monitor's on-screen display?");
             }
          }
 
+         if (edid) {
+            free_parsed_edid(edid);
+            edid = NULL;
+         }
          i2c_close_bus(fd, busno, CALLOPT_ERR_MSG);
       }
    }
@@ -1869,6 +1876,7 @@ void probe_one_log(char * pre_grep, char * grep_cmd, char * post_grep, char * ti
    if ( !execute_shell_cmd_rpt(buf, depth+1) )
       rpt_vstring(depth+1,"Unable to process %s", title);
    rpt_nl();
+   free(buf);
 }
 
 
@@ -1894,9 +1902,9 @@ void probe_logs() {
    char ** p = known_video_driver_modules;
    char * src = NULL;
    while (*p) {
-      src = " -e\""; strncat(gbuf, src, gbufsz - (strlen(src)+1));
-                     strncat(gbuf, *p,  gbufsz - (strlen(*p)+1) );
-      src = "\"";    strncat(gbuf, src, gbufsz - (strlen(src)+1));
+      src = " -e\""; strncat(gbuf, src, gbufsz - (strlen(gbuf)+1));
+                     strncat(gbuf, *p,  gbufsz - (strlen(gbuf)+1) );
+      src = "\"";    strncat(gbuf, src, gbufsz - (strlen(gbuf)+1));
       p++;
    }
 
@@ -1916,9 +1924,9 @@ void probe_logs() {
 
    p = addl_matches;
    while (*p) {
-      src = " -e\""; strncat(gbuf, src, gbufsz - (strlen(src)+1));
-                     strncat(gbuf, *p,  gbufsz - (strlen(*p)+1) );
-      src = "\"";    strncat(gbuf, src, gbufsz - (strlen(src)+1));
+      src = " -e\""; strncat(gbuf, src, gbufsz - (strlen(gbuf)+1));
+                     strncat(gbuf, *p,  gbufsz - (strlen(gbuf)+1) );
+      src = "\"";    strncat(gbuf, src, gbufsz - (strlen(gbuf)+1));
       p++;
    }
    // printf("(%s) assembled command: |%s|\n", __func__, gbuf);
