@@ -540,7 +540,8 @@ void i2c_report_functionality_flags(long functionality, int maxline, int depth) 
          header = "";
 
    }
-
+   free(buf0);
+   null_terminated_string_array_free(ntsa);
 }
 
 
@@ -719,7 +720,7 @@ Bus_Info * i2c_check_bus(Bus_Info * bus_info) {
    }
 
 bye:
-   if (file > 0)
+   if (file >= 0)
       i2c_close_bus(file, bus_info->busno,  CALLOPT_ERR_MSG);
 
    DBGTRC(debug, TRACE_GROUP, "Returning %p, flags=0x%02x", bus_info, bus_info->flags );
