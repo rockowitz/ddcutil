@@ -57,6 +57,7 @@ void free_udev_device_summaries(GPtrArray* summaries) {
    g_ptr_array_free(summaries, true);
 }
 
+
 Udev_Device_Summary * get_udev_device_summary(struct udev_device * dev) {
   Udev_Device_Summary * summary = calloc(1,sizeof(struct udev_device_summary));
   memcpy(summary->marker, UDEV_DEVICE_SUMMARY_MARKER, 4);
@@ -75,7 +76,6 @@ Udev_Device_Summary * get_udev_device_summary(struct udev_device * dev) {
  *
  * Returns:  array of Udev_Device_Summary
  */
-
 GPtrArray * summarize_udev_subsystem_devices(char * subsystem) {
    struct udev *udev;
    struct udev_enumerate *enumerate;
@@ -88,7 +88,6 @@ GPtrArray * summarize_udev_subsystem_devices(char * subsystem) {
       printf("(%s) Can't create udev\n", __func__);
       return NULL;   // exit(1);
    }
-
 
    GPtrArray * summaries = g_ptr_array_sized_new(10);
    g_ptr_array_set_free_func(summaries, free_udev_device_summary);
@@ -193,9 +192,9 @@ void report_udev_device(struct udev_device * dev, int depth) {
       //    should display as hex, but how to determine length?
       // for example of reading, see http://fossies.org/linux/systemd/src/udev/udev-builtin-usb_id.c
       // not worth pursuing
-      else
+      else {
          rpt_vstring(d2, "%s -> %s", attr_name, attr_value2);
-
+      }
    }
 }
 
@@ -205,7 +204,6 @@ Usb_Detailed_Device_Summary * new_usb_detailed_device_summary() {
    memcpy(devsum->marker, UDEV_DETAILED_DEVICE_SUMMARY_MARKER, 4);
    return devsum;
 }
-
 
 
 void free_usb_detailed_device_summary(Usb_Detailed_Device_Summary * devsum) {
@@ -239,7 +237,6 @@ void report_usb_detailed_device_summary(Usb_Detailed_Device_Summary * devsum, in
    rpt_str("product_name",  NULL, devsum->product_name, d1);
    rpt_str("busnum_s",  NULL, devsum->busnum_s, d1);
    rpt_str("devnum_s",  NULL, devsum->devnum_s, d1);
-
 }
 
 
@@ -585,4 +582,3 @@ bye:
 
    return result;
 }
-
