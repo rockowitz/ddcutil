@@ -1,10 +1,9 @@
 /* libdrm_util.c
  *
- * Created on: Feb 4, 2017
- *     Author: rock
+ * Utilities for interpreting libdrm data structures.
  *
  * <copyright>
- * Copyright (C) 2014-2015 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2017 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -119,7 +118,7 @@ char * interpret_property_flags_r(uint32_t flags, char * buffer, int bufsz) {
       char * extended_name = "other extended type";
       if (extended_type == DRM_MODE_PROP_OBJECT)
          extended_name = "DRM_MODE_PROP_OBJECT";
-      else if (extended_type == DRM_MODE_PROP_OBJECT)
+      else if (extended_type == DRM_MODE_PROP_SIGNED_RANGE)
          extended_name = "DRM_MODE_PROP_SIGNED_RANGE";
       sbuf_append(buffer, bufsz, ", ", extended_name);
    }
@@ -128,6 +127,7 @@ char * interpret_property_flags_r(uint32_t flags, char * buffer, int bufsz) {
    return buffer;
 
 }
+
 
 char * interpret_property_flags(uint32_t flags) {
    int bufsz = 150;
@@ -352,6 +352,14 @@ typedef struct _drmModeConnector {
 
 #endif
 
+
+/* Reports a drmModeConnector struct
+ *
+ * Arguments:
+ *   fd          file descriptor
+ *   p           pointer to drmModeConnector struct
+ *   depth       logical identation depth
+ */
 void report_drmModeConnector( int fd, drmModeConnector * p, int depth) {
    int d1 = depth+1;
    int d2 = depth+2;
@@ -424,12 +432,26 @@ typedef struct _drmModeProperty {
 #endif
 
 
-
+/* Reports the raw bytes of a blob.
+ *
+ * Arguments:
+ *   blob_ptr    pointer to a drmModePropertyBlobRes
+ *   depth       logical indentation depth
+ */
 void report_drmModePropertyBlob(drmModePropertyBlobPtr blob_ptr, int depth) {
    rpt_vstring(depth, "blob id: %u", blob_ptr->id);
    rpt_hex_dump(blob_ptr->data, blob_ptr->length, depth);
 }
 
+
+/* Reports a property value
+ *
+ * Arguments:
+ *   fd          file descriptor
+ *   prop_ptr    pointer to struct containing property metadata
+ *   prop_value  property value
+ *   depth       logical indentation depth
+ */
 void report_property_value(
         int                  fd,
         drmModePropertyRes * prop_ptr,
@@ -439,7 +461,8 @@ void report_property_value(
    int d1 = depth+1;
    rpt_vstring(depth, "Property id:   %d", prop_ptr->prop_id);
    rpt_vstring(d1, "Name:          %s", prop_ptr->name);
-   rpt_vstring(d1, "Flags:         0x%04x - %s", prop_ptr->flags, interpret_property_flags(prop_ptr->flags) );
+   rpt_vstring(d1, "Flags:         0x%04x - %s", prop_ptr->flags,
+                                                 interpret_property_flags(prop_ptr->flags) );
    rpt_vstring(d1, "prop_value:    %d  0x%08x", prop_value, prop_value);
 
    if (prop_ptr->flags & DRM_MODE_PROP_ENUM) {
@@ -457,7 +480,6 @@ void report_property_value(
       for (int i = 0; i < prop_ptr->count_enums && not_truncated; i++) {
            if (prop_ptr->enums[i].value & prop_value) {
               not_truncated = sbuf_append(buf, bufsz, ", ", prop_ptr->enums[i].name);
-
            }
         }
       rpt_vstring(d1, "Property value(bitmask) = 0x%04x - %s", prop_value, buf);
@@ -465,8 +487,7 @@ void report_property_value(
 
    else if (prop_ptr->flags & DRM_MODE_PROP_RANGE) {
       if (prop_ptr->count_values != 2) {
-         printf("Missing min or max value\n");
-         rpt_vstring(d1, "Property value = %d, Missing range", prop_value);
+         rpt_vstring(d1, "Property value = %d, Missing min or max value", prop_value);
       }
       else {
          rpt_vstring(d1, "Property value(range) = %d, min=%d, max=%d",
@@ -478,11 +499,10 @@ void report_property_value(
    else if (drm_property_type_is(prop_ptr, DRM_MODE_PROP_BLOB)) {
       drmModePropertyBlobPtr blob_ptr = drmModeGetPropertyBlob(fd, prop_value);
       if (!blob_ptr) {
-         printf("Blob not found\n");
+         rpt_vstring(d1, "Blob not found");
       }
       else {
-        report_drmModePropertyBlob(blob_ptr, d1);
-
+         report_drmModePropertyBlob(blob_ptr, d1);
          drmModeFreePropertyBlob(blob_ptr);
       }
    }
@@ -494,12 +514,12 @@ void report_property_value(
 
    else if (drm_property_type_is(prop_ptr, DRM_MODE_PROP_SIGNED_RANGE)) {
          if (prop_ptr->count_values != 2) {
-            printf("Missing min or max value\n");
-            rpt_vstring(d1, "Signed property value = %d, Missing range", prop_value);
+            rpt_vstring(d1, "Signed property value = %d, Missing min or max value", prop_value);
          }
         else {
            rpt_vstring(d1, "Property value(range) = %d, min=%d, max=%d",
-                           (int64_t) prop_value, (int64_t) prop_ptr->values[0], (int64_t) prop_ptr->values[1]);
+                           (int64_t) prop_value,
+                           (int64_t) prop_ptr->values[0], (int64_t) prop_ptr->values[1]);
         }
    }
 
