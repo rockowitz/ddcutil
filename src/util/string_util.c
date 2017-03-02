@@ -356,14 +356,15 @@ Null_Terminated_String_Array strsplit(const char * str_to_split, const char * de
 
 Null_Terminated_String_Array
 strsplit_maxlength(
-      const char * str_to_split,
-      uint16_t max_piece_length,
-      const char * delims)
+      const char *  str_to_split,
+      uint16_t      max_piece_length,
+      const char *  delims)
 {
    bool debug = false;
    if (debug)
       printf("(%s) max_piece_length=%u, delims=|%s|, str_to_split=|%s|\n",
              __func__, max_piece_length, delims, str_to_split);
+
    GPtrArray * pieces = g_ptr_array_sized_new(20);
    char * str_to_split2 = strdup(str_to_split);   // work around constness
    char * start = str_to_split2;
@@ -399,7 +400,6 @@ strsplit_maxlength(
    if (debug)
       null_terminated_string_array_show(result);
    return result;
-
 }
 
 
