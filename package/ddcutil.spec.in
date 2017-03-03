@@ -294,6 +294,7 @@ rm -rf %{buildroot}
 %{echo: ============================> files: building libraries, }
 %defattr(-,root,root)
 %{_libdir}/libddcutil.so.*
+%(_libdir)/libddcutil.so
 %else
 %{echo: ============================> files: NOT building libraries, }
 %endif
