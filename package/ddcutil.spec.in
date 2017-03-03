@@ -319,12 +319,13 @@ rm -rf %{buildroot}
 
 %changelog
 
+* Fri Mar 03 2017 Sanford Rockowitz <rockowitz@minsoft.com> 0.7.3-1
+
+  Release 0.7.3
+
 * Mon Jan 02 2017 Sanford Rockowitz <rockowitz@minsoft.com> 0.7.0-1
 
 - Release 0.7.0
 
 - Added packages libddcutil0 and libddcutil-devel
 
-* Fri May 20 2016 Sanford Rockowitz <rockowitz@minsoft.com> 0.4.1-1
-
-- dummy change log 
