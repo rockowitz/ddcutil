@@ -35,7 +35,7 @@ Depends: ${shlibs:Depends},
 # Long description should be a paragraph which gives more details about the package. 
 # Column 1 of each line should be empty. There must be no blank lines, but you can put a single . (dot) 
 # in a column to simulate that. Also, there must be no more than one blank line after the long description. 
-Description: ddcutil - Standalone command line version
+Description: Control monitor settings - Standalone command line version
  ddcutil is used to query and change monitor settings.
  .
  ddcutil communicates with monitors implementing MCCS (Monitor Control Command
@@ -70,11 +70,10 @@ Description: ddcutil - Shared libraries
 
 
 Package: libddcutil-dev
-Architecture: any
 # Architecture:amd64 
 Section: libdevel
-Depends: ${shlibs:Depends}, 
-         ${misc:Depends}, 
+Architecture: any
+Depends: ${misc:Depends}, 
          i2c-tools, 
          libglib2.0-0, 
          libxrandr2, 
