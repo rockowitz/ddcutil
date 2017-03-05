@@ -144,14 +144,11 @@ libddcutil_la_SOURCES = \
 libmain/ddcutil_c_api.c  
 
 
-
-
 # Despite what the Autotools book says, all-local is executed aftar all, not before 
 # So this ensures that the NEXT execution of all will compile build_info.c 
 
 # removed from all-local:
 # 	touch base/build_info.c
-
 
 all-local:
 	@echo "Executing hook all-local..."
@@ -229,7 +226,6 @@ libcommon_la_SOURCES += \
   usb/usb_vcp.c  
 endif
 
-
 if ENABLE_SHARED_LIB_COND
 include_HEADERS = \
 public/ddcutil_types.h \
@@ -256,15 +252,7 @@ dist-hook:
 	rm -rf $(distdir)/swig/__pycache__
 
 
-
-
 # Header files
-
-# -I/usr/src/linux-headers-4.2.0-18/include/linux 
-# -I/usr/include/x86_64-linux-gnu 
-# -I/usr/include/linux
-# -I/shared/linsrc/i2c-tools/i2c-tools-3.1.1/include/linux 
-# -I/usr/include 
 # trying to get i2c-dev.h from /usr/include/linux causes errors
 
 
@@ -337,18 +325,6 @@ libcommon_la_LIBADD += \
 libddcutil_la_LIBADD = -lz
 libddcutil_la_LIBADD += libcommon.la
 
-# libddcutil_la_LIBADD +=  \
-#   libcommon.la   \
-#    $(X11_LIBS) \
-#    $(XRANDR_LIBS) \
-#    $(GLIB_LIBS) 
-
-# if ENABLE_USB_COND
-# libddcutil_la_LIBADD += \
-#    $(UDEV_LIBS) \
-#    $(LIBUSB_LIBS)
-# endif
-
 
 libddcutil_la_LDFLAGS = 
 # -export-dynamic not required for failsim: 
@@ -371,21 +347,7 @@ libddcutil_la_LDFLAGS += -pie
 
 ddcutil_LDADD =   \
    libcommon.la
-# ddcutil_LIBADD += \
-#    $(XRANDR_LIBS) \
-#    $(X11_LIBS)    \
-#    $(GLIB_LIBS)
 
-# ddcutil_LDADD += \
-#    $(UDEV_LIBS)
-
-# if ENABLE_USB_COND
-# ddcutil_LDADD += \
-#   $(LIBUSB_LIBS)
-# endif
-
-# ddcutil_LDADD += \
-#   $(LIBDRM_LIBS)
 
 #needed?
 ddcutil_LDFLAGS =  
@@ -393,11 +355,8 @@ ddcutil_LDFLAGS += -pie
 # -export-dynamic needed for failsim
 ddcutil_LDFLAGS += -export-dynamic 
 
-# Fails if not linked with libxrandr - why?
 laclient_LDADD = \
   libddcutil.la 
-#laclient_LDADD += $(XRANDR_LIBS) 
-# laclient_LDADD += $(LIBDRM_LIBS)
 
 laclient_LDFLAGS = -pie
 
