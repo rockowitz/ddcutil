@@ -250,20 +250,16 @@ AS_IF([test "x$enable_usb" == "xyes"],
         AC_MSG_NOTICE( [usb... disabled] )
      )
 
-
 dnl *** configure option: --enable-drm
 AC_ARG_ENABLE([drm],
               [ AS_HELP_STRING( [--enable-drm=@<:@yes/no@:>@], [Use DRM in diagnostics@<:@default=yes@:>@] )],
               [enable_drm=${enableval}],
               [enable_drm=yes] )
-AM_CONDITIONAL([USE_LIBDRM_COND], [test "x$enable_drm" == "xyes"] )
 AS_IF([test "x$enable_drm" == "xyes"],
-        AC_DEFINE([USE_LIBDRM], [1], [Use libdrm])
-        AC_MSG_NOTICE( [drm... enabled]  )
+        AC_MSG_NOTICE( [drm... enabled (provisional) ]  )
       ,
         AC_MSG_NOTICE( [drm... disabled] )
      )
-
 
 dnl *** configure option: --enable-doxygen
 AC_ARG_ENABLE([doxygen],
@@ -276,7 +272,6 @@ AS_IF([test "x$enable_doxygen" == "xyes"],
       ,
         AC_MSG_NOTICE( [doxygen... disabled] )
      )
-
 
 
 ### Private options
@@ -425,9 +420,26 @@ AS_IF( [test 0$DBG -ne 0],
 ### libdrm 
 
 AS_IF([test "x$enable_drm" == "xyes"],
-         [ PKG_CHECK_MODULES(LIBDRM, libdrm >= 2.4.67, [libdrm_found=yes] ) ],
+         [ PKG_CHECK_MODULES(LIBDRM, libdrm >= 2.4.67, 
+             [libdrm_found=yes], 
+             [libdrm_found=no
+              AC_MSG_WARN( [libdrm >= 2.4.67 not found. Forcing --disable-drm])
+              enable_drm=no
+             ]
+           ) 
+         ],
          [ AC_MSG_NOTICE( [drm disabled, not checking for libdrm] ) ]
      )
+
+AM_CONDITIONAL([USE_LIBDRM_COND], [test "x$enable_drm" == "xyes"] )
+AS_IF([test "x$enable_drm" == "xyes"],
+        AC_DEFINE([USE_LIBDRM], [1], [Use libdrm])
+        AC_MSG_NOTICE( [drm... enabled]  )
+      ,
+        AC_MSG_NOTICE( [drm... disabled] )
+     )
+
+
 
 AS_IF( [test 0$DBG -ne 0], 
        [
