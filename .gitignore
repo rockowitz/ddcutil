@@ -143,4 +143,7 @@ m4/archived/
 release_steps.txt
 xorg-devel-post1.txt
 *.txt
+*.csv
+*.csv#
+package/debian/rules.in.0
 
