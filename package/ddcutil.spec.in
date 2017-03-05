@@ -93,6 +93,12 @@ Version: @PACKAGE_VERSION@
 %{echo:any_suse     is %{?any_suse}, }
 %{echo:any_suse2    is %{?any_suse2}, }
 
+%{echo:suse_version is %{?suse_version}, }
+# ?leap version is documented at https://en.opensuse.org/openSUSE:Build_Service_cross_distribution_howto
+# but in fact does not appear to be set
+# %%{echo:leap_version is %%{?leap_version}, }
+%{echo:sle_version  is %{?sle_version}, }
+
 
 %if %{is_obs_build}
    %{echo:Executing in Open Build Service, }
@@ -191,11 +197,11 @@ BuildRequires: libz1 zlib-devel
 # OBS complains for SuSE:
 # ddctool.x86_64: W: explicit-lib-dependency glib2
 # ddctool.x86_64: W: explicit-lib-dependency libXrandr
+# ddctool.x86_64: W: explicit-lib-dependency libdrm2
 # You must let rpm find the library dependencies by itself. Do not put unneeded
 # explicit Requires: tags.
 # %%if %%{defined suse_version}
 Requires: i2c-tools 
-Requires: libdrm2
 # %%else
 # Requires: i2c-tools 
 # Requires: glib2 libXrandr
@@ -241,6 +247,7 @@ Device on USB.
 %package -n libddcutil-devel
 Summary: Development files for libddcutil
 Group: Development/Libraries
+Requires: libddcutil0 >= %{version}
 
 %description -n libddcutil-devel
 Header files, pkgconfig control file, static libraries, 
@@ -256,11 +263,48 @@ rpmbuild --version
 %build
 %if %{build_libs} == 1
 %{echo: =================================> building libraries, }
-%configure -enable-lib=yes
+#%%configure -enable-lib=yes
+%define conf_lib_parm yes
 %else
 %{echo: =================================> NOT building libraries, }
-%configure -enable-lib=no
+#%%configure -enable-lib=no
+%define conf_lib_parm no
 %endif
+
+%define conf_usb_parm yes
+%define conf_drm_parm no
+%if %{is_obs_build}
+   %if 0%{?suse_version}
+      %if 0%{?suse_version} <= 1310
+        %define conf_usb_parm no
+      %endif
+      # suse_version == 1315 if Leap, check sle_version for Leap version, sle_version == 120200 for Leap 42.2
+      # suse_version == 1330 if Tumbleweed
+      %if 0%{?suse_version} == 1315
+         %{echo: conf_drm_parm: Leap, }
+         %if 0%{?sle_version} >= 120200
+            %{echo: conf_drm_parm: Leap ge 42.1, }
+            %define conf_drm_parm yes
+	 %endif
+      %endif
+      %if 0%{?suse_version} == 1330
+         %{echo: conf_drm_parm: Tumbleweed, }
+         %define conf_drm_parm yes
+      %endif
+   %endif
+   %if 0%{?fedora_version} >= 24
+      %define conf_drm_parm yes 
+   %endif
+%else
+   %define conf_drm_parm yes 
+%endif
+
+
+%{echo:conf_usb_parm  is %{?conf_usb_parm}, }
+%{echo:conf_drm_parm  is %{?conf_drm_parm}, }
+         
+
+%configure --enable-lib=%{conf_lib_parm} --enable-drm=%{conf_drm_parm} --enable-usb=%{conf_usb_parm}
 make V=1
 
 %check
@@ -294,7 +338,6 @@ rm -rf %{buildroot}
 %{echo: ============================> files: building libraries, }
 %defattr(-,root,root)
 %{_libdir}/libddcutil.so.*
-%(_libdir)/libddcutil.so
 %else
 %{echo: ============================> files: NOT building libraries, }
 %endif
@@ -307,7 +350,7 @@ rm -rf %{buildroot}
 %{_includedir}/ddcutil_types.h
 %{_includedir}/ddcutil_c_api.h
 %{_libdir}/pkgconfig/ddcutil.pc
-
+%{_libdir}/libddcutil.so
 
 # %%doc -n ddcutil
 # %%doc -n libddcutil-0
@@ -319,7 +362,7 @@ rm -rf %{buildroot}
 
 %changelog
 
-* Fri Mar 03 2017 Sanford Rockowitz <rockowitz@minsoft.com> 0.7.3-1
+* Sun Mar 05 2017 Sanford Rockowitz <rockowitz@minsoft.com> 0.7.3-1
 
   Release 0.7.3
 
