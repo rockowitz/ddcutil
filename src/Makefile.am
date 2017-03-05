@@ -128,7 +128,6 @@ endif
 
 if USE_LIBDRM_COND
 ddcutil_SOURCES += \
-  util/libdrm_util.c \
   app_ddcutil/query_drm_sysenv.c
 endif
 
@@ -325,19 +324,30 @@ if ENABLE_USB_COND
 libcommon_la_LIBADD += usb_util/libusbutil.la
 endif
 
+libcommon_la_LIBADD += \
+  $(X11_LIBS) \
+  $(XRANDR_LIBS) \
+  $(GLIB_LIBS)   \
+  $(UDEV_LIBS)   \
+  $(LIBUSB_LIBS) \
+  $(LIBDRM_LIBS)
+
+
 
 libddcutil_la_LIBADD = -lz
-libddcutil_la_LIBADD +=  \
-   libcommon.la   \
-   $(X11_LIBS) \
-   $(XRANDR_LIBS) \
-   $(GLIB_LIBS) 
+libddcutil_la_LIBADD += libcommon.la
 
-if ENABLE_USB_COND
-libddcutil_la_LIBADD += \
-   $(UDEV_LIBS) \
-   $(LIBUSB_LIBS)
-endif
+# libddcutil_la_LIBADD +=  \
+#   libcommon.la   \
+#    $(X11_LIBS) \
+#    $(XRANDR_LIBS) \
+#    $(GLIB_LIBS) 
+
+# if ENABLE_USB_COND
+# libddcutil_la_LIBADD += \
+#    $(UDEV_LIBS) \
+#    $(LIBUSB_LIBS)
+# endif
 
 
 libddcutil_la_LDFLAGS = 
@@ -360,21 +370,22 @@ libddcutil_la_LDFLAGS += -pie
 # so it needs LDADD references to external libraries as well
 
 ddcutil_LDADD =   \
-   libcommon.la   \
-   $(XRANDR_LIBS) \
-   $(X11_LIBS)    \
-   $(GLIB_LIBS)
+   libcommon.la
+# ddcutil_LIBADD += \
+#    $(XRANDR_LIBS) \
+#    $(X11_LIBS)    \
+#    $(GLIB_LIBS)
 
-ddcutil_LDADD += \
-   $(UDEV_LIBS)
+# ddcutil_LDADD += \
+#    $(UDEV_LIBS)
 
-if ENABLE_USB_COND
-ddcutil_LDADD += \
-   $(LIBUSB_LIBS)
-endif
+# if ENABLE_USB_COND
+# ddcutil_LDADD += \
+#   $(LIBUSB_LIBS)
+# endif
 
-ddcutil_LDADD += \
-  $(LIBDRM_LIBS)
+# ddcutil_LDADD += \
+#   $(LIBDRM_LIBS)
 
 #needed?
 ddcutil_LDFLAGS =  
@@ -386,6 +397,7 @@ ddcutil_LDFLAGS += -export-dynamic
 laclient_LDADD = \
   libddcutil.la 
 #laclient_LDADD += $(XRANDR_LIBS) 
+# laclient_LDADD += $(LIBDRM_LIBS)
 
 laclient_LDFLAGS = -pie
 

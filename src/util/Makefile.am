@@ -1,8 +1,7 @@
-AM_CPPFLAGS = \
-$(GLIB_CFLAGS) \
--I$(top_srcdir)/src
-
-
+AM_CPPFLAGS =        \
+  $(GLIB_CFLAGS)     \
+  $(LIBDRM_CFLAGS)   \
+  -I$(top_srcdir)/src
 
 AM_CFLAGS = -Wall 
 AM_CFLAGS += -Werror
@@ -42,15 +41,17 @@ output_sink.c              \
 report_util.c              \
 string_util.c              \
 subprocess_util.c          \
+udev_util.c                \
 x11_util.c                 
 
 if ENABLE_FAILSIM_COND
 libutil_la_SOURCES += failsim.c
 endif
 
-# if ENABLE_USB_COND
-libutil_la_SOURCES += udev_util.c                
-# endif
+if USE_LIBDRM_COND
+libutil_la_SOURCES += libdrm_util.c
+endif
+
 
 dist-hook:
 	@echo "(src/util/Makefile) dist-hook"
