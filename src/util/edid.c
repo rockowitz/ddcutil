@@ -34,7 +34,7 @@
 #include "report_util.h"
 #include "string_util.h"
 
-#include <util/edid.h>
+#include "edid.h"
 
 
 // Direct writes to stdout/stderr: NO
