@@ -28,7 +28,7 @@
 #include <stdio.h>
 #include <stdbool.h>
 
-#include "util/coredefs.h"
+#include "coredefs.h"
 
 void rpt_push_output_dest(FILE* new_dest);
 void rpt_pop_output_dest();

@@ -29,10 +29,10 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "util/report_util.h"
-#include "util/string_util.h"
+#include "report_util.h"
+#include "string_util.h"
 
-#include "util/udev_util.h"
+#include "udev_util.h"
 
 
 /* GDestroyNotify() function to be called when a data element in a GPtrRrray of

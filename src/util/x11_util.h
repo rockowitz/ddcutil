@@ -26,7 +26,7 @@
 
 #include <glib.h>
 
-#include "util/coredefs.h"
+#include "coredefs.h"
 
 
 typedef struct {

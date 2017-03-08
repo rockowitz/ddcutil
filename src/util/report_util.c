@@ -34,10 +34,10 @@
 #include <string.h>
 #include <unistd.h>
 
-#include "util/coredefs.h"
-#include "util/string_util.h"
+#include "coredefs.h"
+#include "string_util.h"
 
-#include "util/report_util.h"
+#include "report_util.h"
 
 
 #define DEFAULT_INDENT_SPACES_PER_DEPTH 3

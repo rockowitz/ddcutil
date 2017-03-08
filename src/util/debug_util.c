@@ -28,7 +28,7 @@
 #include <string.h>
 #include <unistd.h>
 
-#include "util/debug_util.h"
+#include "debug_util.h"
 
 
 /* Extracts the function name and offset from a backtrace line

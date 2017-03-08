@@ -71,9 +71,9 @@
 #include <glib.h>
 #include <stdbool.h>
 
-#include "util/string_util.h"
+#include "string_util.h"
 
-#include "util/x11_util.h"
+#include "x11_util.h"
 
 
 static const char * const edid_names[] =

@@ -26,11 +26,11 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "util/data_structures.h"
-#include "util/report_util.h"
-#include "util/string_util.h"
+#include "data_structures.h"
+#include "report_util.h"
+#include "string_util.h"
 
-#include "util/libdrm_util.h"
+#include "libdrm_util.h"
 
 
 // /usr/include/libdrm and /usr/include/drm may both contain copies

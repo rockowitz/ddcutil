@@ -36,12 +36,12 @@
 #include <time.h>
 #include <unistd.h>
 
-#include "util/file_util.h"
-#include "util/multi_level_map.h"
-#include "util/report_util.h"
-#include "util/string_util.h"
+#include "file_util.h"
+#include "multi_level_map.h"
+#include "report_util.h"
+#include "string_util.h"
 
-#include "util/device_id_util.h"
+#include "device_id_util.h"
 
 #ifndef MAX_PATH
 #define MAX_PATH 256

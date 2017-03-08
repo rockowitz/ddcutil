@@ -32,7 +32,7 @@
 #include <string.h>
 #include <stdarg.h>
 
-#include "util/string_util.h"
+#include "string_util.h"
 
 
 // Direct writes to stdout/stderr:

@@ -28,7 +28,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "util/glib_util.h"
+#include "glib_util.h"
 
 
 /**

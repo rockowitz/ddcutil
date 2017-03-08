@@ -25,10 +25,10 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "util/report_util.h"
-#include "util/string_util.h"
+#include "report_util.h"
+#include "string_util.h"
 
-#include "util/subprocess_util.h"
+#include "subprocess_util.h"
 
 
 /* Executes a shell command and writes the output to the current report destination

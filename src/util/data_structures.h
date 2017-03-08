@@ -29,7 +29,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-#include "util/coredefs.h"   // for Byte
+#include "coredefs.h"   // for Byte
 
 
 // An opaque structure containing an array of bytes that

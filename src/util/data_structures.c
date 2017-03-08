@@ -30,9 +30,9 @@
 #include <string.h>
 #include <sys/param.h>     // for MIN, MAX
 
-#include "util/string_util.h"
+#include "string_util.h"
 
-#include "util/data_structures.h"
+#include "data_structures.h"
 
 
 // baa - Byte Value Array

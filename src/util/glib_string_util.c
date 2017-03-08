@@ -28,9 +28,9 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "util/string_util.h"
+#include "string_util.h"
 
-#include "util/glib_string_util.h"
+#include "glib_string_util.h"
 
 
 /** Joins a GPtrArray containing pointers to character strings

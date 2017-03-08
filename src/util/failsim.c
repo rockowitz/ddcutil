@@ -27,12 +27,12 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "util/debug_util.h"
-#include "util/file_util.h"
-#include "util/report_util.h"
+#include "debug_util.h"
+#include "file_util.h"
+#include "report_util.h"
 #include "string_util.h"
 
-#include "util/failsim.h"
+#include "failsim.h"
 
 
 static Fsim_Name_To_Number_Func name_to_number_func             = NULL;

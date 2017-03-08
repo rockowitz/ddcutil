@@ -31,8 +31,8 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "util/report_util.h"
-#include "util/string_util.h"
+#include "report_util.h"
+#include "string_util.h"
 
 #include <util/edid.h>
 

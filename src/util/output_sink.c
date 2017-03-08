@@ -29,7 +29,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "util/output_sink.h"
+#include "output_sink.h"
 
 
 #define OUTPUT_SINK_MARKER "SINK"

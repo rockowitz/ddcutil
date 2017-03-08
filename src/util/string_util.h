@@ -30,8 +30,8 @@
 #include <stdint.h>
 #include <stdio.h>
 
-#include "util/coredefs.h"
-#include "util/glib_util.h"
+#include "coredefs.h"
+#include "glib_util.h"
 
 
 //

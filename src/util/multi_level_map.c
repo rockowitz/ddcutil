@@ -30,9 +30,9 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "util/report_util.h"
+#include "report_util.h"
 
-#include "util/multi_level_map.h"
+#include "multi_level_map.h"
 
 
 //

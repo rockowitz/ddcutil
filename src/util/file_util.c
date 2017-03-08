@@ -31,10 +31,10 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
-#include "util/report_util.h"
-#include "util/string_util.h"
+#include "report_util.h"
+#include "string_util.h"
 
-#include "util/file_util.h"
+#include "file_util.h"
 
 
 /* Reads the lines of a text file into a GPtrArray.
