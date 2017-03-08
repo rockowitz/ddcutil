@@ -41,13 +41,15 @@
 // Returns "true" or "false":
 char * bool_repr(int value);
 
-
+#ifdef DEPRECATED
+// use library function g_strlcpy() instead
 #define SAFE_STRNCPY(dest, src, buflen) \
    do { \
       strncpy(dest, src, (buflen) ); \
       if (buflen > 0) \
          dest[buflen-1] = '\0'; \
    } while(0)
+#endif
 
 //
 // String functions (other than hex)
@@ -82,10 +84,11 @@ void ntsa_show(  Null_Terminated_String_Array string_array);
 
 Null_Terminated_String_Array strsplit(const char * str_to_split, const char* delims);
 Null_Terminated_String_Array strsplit_maxlength(
-                                      const char * str_to_split, uint16_t max_piece_length, const char * delims);
+                                      const char * str_to_split,
+                                      uint16_t     max_piece_length,
+                                      const char * delims);
 
 GPtrArray * ntsa_to_g_ptr_array(Null_Terminated_String_Array ntsa);
-
 Null_Terminated_String_Array g_ptr_array_to_ntsa(GPtrArray * garray);
 
 

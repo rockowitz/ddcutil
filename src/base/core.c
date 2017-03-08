@@ -22,6 +22,7 @@
  */
 
 #include <assert.h>
+#include <glib.h>
 #include <errno.h>
 #include <setjmp.h>
 #include <stdio.h>
@@ -166,9 +167,9 @@ void ddc_abort(
       // save failure information in case it's of use at longjmp() return
       global_failure_information.info_set_fg = true;
       global_failure_information.status = status;
-      SAFE_STRNCPY(global_failure_information.funcname, funcname, sizeof(global_failure_information.funcname));
+      g_strlcpy(global_failure_information.funcname, funcname, sizeof(global_failure_information.funcname));
       global_failure_information.lineno = lineno;
-      SAFE_STRNCPY(global_failure_information.fn, fn, sizeof(global_failure_information.fn));
+      g_strlcpy(global_failure_information.fn, fn, sizeof(global_failure_information.fn));
 
       longjmp(*global_abort_jmp_buf_ptr, status);
    }

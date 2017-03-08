@@ -22,6 +22,7 @@
  */
 
 #include <assert.h>
+#include <glib.h>
 #include <stdio.h>
 #include <string.h>
 
@@ -136,7 +137,7 @@ bool vcp_version_is_unqueried(DDCA_MCCS_Version_Spec vspec) {
 char * format_vspec(DDCA_MCCS_Version_Spec vspec) {
    static char private_buffer[20];
    if ( vcp_version_eq(vspec, VCP_SPEC_UNQUERIED) )
-      SAFE_STRNCPY(private_buffer,  "Unqueried", sizeof(private_buffer));
+      g_strlcpy(private_buffer,  "Unqueried", sizeof(private_buffer));  // g_strlcpy() to quiet covrity
    else if ( vcp_version_eq(vspec, VCP_SPEC_UNKNOWN) )
       strcpy(private_buffer,  "Unknown");     // will coverity flag this?
    else
