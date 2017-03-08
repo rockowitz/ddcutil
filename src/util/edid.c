@@ -51,7 +51,7 @@ static inline bool all_bytes_zero(Byte * bytes, int len) {
 
 /* Calculates checksum for a 128 byte EDID
  *
- * Note that the checksum byte (byte 127) is itself
+ * Note that the checksum byte (offset 127) is itself
  * included in the checksum calculation.
  */
 Byte edid_checksum(Byte * edid) {
