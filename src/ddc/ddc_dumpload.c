@@ -452,7 +452,7 @@ loadvcp_by_string(
 {
    Null_Terminated_String_Array nta = strsplit(catenated, ";");
    Global_Status_Code gsc = loadvcp_by_ntsa(nta, dh);
-   null_terminated_string_array_free(nta);
+   ntsa_free(nta);
    return gsc;
 }
 

@@ -76,9 +76,9 @@ int exactly_matches_any(char * word, char ** null_terminated_string_array);
 int starts_with_any(    char * word, char ** null_terminated_string_array);
 
 typedef char** Null_Terminated_String_Array;
-void null_terminated_string_array_free(  Null_Terminated_String_Array string_array);
-int  null_terminated_string_array_length(Null_Terminated_String_Array string_array);
-void null_terminated_string_array_show(  Null_Terminated_String_Array string_array);
+void ntsa_free(  Null_Terminated_String_Array string_array);
+int  ntsa_length(Null_Terminated_String_Array string_array);
+void ntsa_show(  Null_Terminated_String_Array string_array);
 
 Null_Terminated_String_Array strsplit(const char * str_to_split, const char* delims);
 Null_Terminated_String_Array strsplit_maxlength(

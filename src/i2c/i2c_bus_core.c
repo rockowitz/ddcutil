@@ -541,7 +541,7 @@ void i2c_report_functionality_flags(long functionality, int maxline, int depth) 
 
    }
    free(buf0);
-   null_terminated_string_array_free(ntsa);
+   ntsa_free(ntsa);
 }
 
 

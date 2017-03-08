@@ -398,7 +398,7 @@ strsplit_maxlength(
    g_ptr_array_free(pieces, false);
    free(str_to_split2);
    if (debug)
-      null_terminated_string_array_show(result);
+      ntsa_show(result);
    return result;
 }
 
@@ -407,7 +407,7 @@ strsplit_maxlength(
 
 
 
-void null_terminated_string_array_free(Null_Terminated_String_Array string_array) {
+void ntsa_free(Null_Terminated_String_Array string_array) {
    assert(string_array);
    int ndx = 0;
    while (string_array[ndx] != NULL)
@@ -415,7 +415,7 @@ void null_terminated_string_array_free(Null_Terminated_String_Array string_array
    free(string_array);
 }
 
-int null_terminated_string_array_length(Null_Terminated_String_Array string_array) {
+int ntsa_length(Null_Terminated_String_Array string_array) {
    assert(string_array);
    int ndx = 0;
    while (string_array[ndx] != NULL) {
@@ -427,7 +427,7 @@ int null_terminated_string_array_length(Null_Terminated_String_Array string_arra
 
 // not a report function since having string_util depend on report_util would
 // create a circular dependency
-void null_terminated_string_array_show(Null_Terminated_String_Array string_array) {
+void ntsa_show(Null_Terminated_String_Array string_array) {
    assert(string_array);
    printf("Null_Terminated_String_Array at %p:\n", string_array);
    int ndx = 0;
@@ -443,7 +443,7 @@ void null_terminated_string_array_show(Null_Terminated_String_Array string_array
  * The underlying strings are referenced, not duplicated.
  */
 GPtrArray * ntsa_to_g_ptr_array(Null_Terminated_String_Array ntsa) {
-   int len = null_terminated_string_array_length(ntsa);
+   int len = ntsa_length(ntsa);
    GPtrArray * garray = g_ptr_array_sized_new(len);
    int ndx;
    for (ndx=0; ndx<len; ndx++) {

@@ -163,7 +163,7 @@ void report_udev_device(struct udev_device * dev, int depth) {
       // if (streq(attr_name, "uevent")) {
          // output is annoying to visually scan since it contains newlines
          Null_Terminated_String_Array ntsa = strsplit(attr_value2, "\n");
-         if (null_terminated_string_array_length(ntsa) == 0)
+         if (ntsa_length(ntsa) == 0)
             rpt_vstring(d2, "%s -> %s", attr_name, "");
          else {
             rpt_vstring(d2, "%s -> %s", attr_name, ntsa[0]);
@@ -173,7 +173,7 @@ void report_udev_device(struct udev_device * dev, int depth) {
                ndx++;
             }
          }
-         null_terminated_string_array_free(ntsa);
+         ntsa_free(ntsa);
 
 #ifdef ALTERNATIVE
          // simpler, works

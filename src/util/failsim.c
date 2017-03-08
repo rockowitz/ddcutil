@@ -380,13 +380,13 @@ bool fsim_load_control_from_gptrarray(GPtrArray * lines) {
       if (strlen(trimmed_line) > 0 && trimmed_line[0] != '#' && trimmed_line[0] != '*') {
          Null_Terminated_String_Array pieces = strsplit(trimmed_line, " ");
          if (debug)
-            null_terminated_string_array_show(pieces);
+            ntsa_show(pieces);
          bool valid_line = true;
          char * funcname = NULL;
          int    fsim_rc  = 0;
          Fsim_Call_Occ_Type occtype = FSIM_CALL_OCC_SINGLE;
          int  occno = 0;
-         if (null_terminated_string_array_length(pieces) != 3)
+         if (ntsa_length(pieces) != 3)
             valid_line = false;
          else {
             funcname = pieces[0];
@@ -421,7 +421,7 @@ bool fsim_load_control_from_gptrarray(GPtrArray * lines) {
             ok = false;
          }
 
-         null_terminated_string_array_free(pieces);
+         ntsa_free(pieces);
       }
       free(trimmed_line);
    }

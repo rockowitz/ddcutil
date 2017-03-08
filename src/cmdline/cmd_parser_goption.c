@@ -413,9 +413,9 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
        DBGMSF(debug, "retrywork, argument = |%s|", maxtrywork );
 
        Null_Terminated_String_Array pieces = strsplit(maxtrywork, ",");
-       int ntsal = null_terminated_string_array_length(pieces);
+       int ntsal = ntsa_length(pieces);
        DBGMSF(debug, "ntsal=%d", ntsal );
-       if (null_terminated_string_array_length(pieces) != 3) {
+       if (ntsa_length(pieces) != 3) {
           fprintf(stderr, "--retries requires 3 values\n");
           ok = false;
        }
@@ -443,7 +443,7 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
           }
           assert(ndx == ntsal);
        }
-       null_terminated_string_array_free(pieces);
+       ntsa_free(pieces);
 
        DBGMSF(debug, "retries = %d,%d,%d", parsed_cmd->max_tries[0], parsed_cmd->max_tries[1], parsed_cmd->max_tries[2]);
        debug = saved_debug;
@@ -480,9 +480,9 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
           }
        }
        DBGMSG("ndx=%d", ndx);
-       DBGMSG("ntsal=%d", null_terminated_string_array_length(pieces) );
-       assert(ndx == null_terminated_string_array_length(pieces));
-       null_terminated_string_array_free(pieces);
+       DBGMSG("ntsal=%d", ntsa_length(pieces) );
+       assert(ndx == ntsa_length(pieces));
+       ntsa_free(pieces);
 
        DBGMSG("traceClasses = 0x%02x", traceClasses);
        parsed_cmd->trace = traceClasses;
