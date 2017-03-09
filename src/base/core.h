@@ -129,6 +129,7 @@ static const Failure_Action EXIT_IF_FAILURE = true;
 static const Failure_Action RETURN_ERROR_IF_FAILURE = false;
 #endif
 
+
 //
 // Global redirection for messages that normally go to stdout and stderr,
 // used within functions that are part of the shared library.
@@ -141,14 +142,14 @@ void set_ferr(FILE * ferr);
 void set_fout_to_default();
 void set_ferr_to_default();
 
+
 //
 // Message level control
 //
 
-
 DDCA_Output_Level get_output_level();
-void         set_output_level(DDCA_Output_Level newval);
-char *       output_level_name(DDCA_Output_Level val);
+void              set_output_level(DDCA_Output_Level newval);
+char *            output_level_name(DDCA_Output_Level val);
 
 
 // Debug trace message control
@@ -202,14 +203,6 @@ void severemsg(
         char *       format,
         ...);
 
-#ifdef OLD
-void dbgmsg(
-        const char * funcname,
-        const int    lineno,
-        const char * fn,
-        char *       format,
-        ...);
-#endif
 void dbgtrc(
         Trace_Group  trace_group,
         const char * funcname,
@@ -221,12 +214,7 @@ void dbgtrc(
 
 #define SEVEREMSG(          format, ...) \
    severemsg(          __func__, __LINE__, __FILE__, format, ##__VA_ARGS__)
-#ifdef OLD
-#define DBGMSG(             format, ...) \
-   dbgmsg(             __func__, __LINE__, __FILE__, format, ##__VA_ARGS__)
-#define DBGMSF(debug_flag,  format, ...) \
-   do { if (debug_flag) dbgmsg(  __func__, __LINE__, __FILE__, format, ##__VA_ARGS__); }  while(0)
-#endif
+
 
 // cannot map to dbgtrc, writes to stderr, not stdout
 // #define SEVEREMSG(format, ...) dbgtrc(0xff,       __func__, __LINE__, __FILE__, format, ##__VA_ARGS__)
@@ -252,6 +240,7 @@ void dbgtrc(
 // if a debug flag is set.
 #define DBGTRC(debug_flag, trace_group, format, ...) \
     dbgtrc( ( (debug_flag) ) ? 0xff : (trace_group), __func__, __LINE__, __FILE__, format, ##__VA_ARGS__)
+
 
 //
 // Error handling
