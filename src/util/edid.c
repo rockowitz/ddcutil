@@ -39,7 +39,7 @@
 
 // Direct writes to stdout/stderr: NO
 
-
+#ifdef UNUSED
 static inline bool all_bytes_zero(Byte * bytes, int len) {
    for (int ndx = 0; ndx < len; ndx++) {
       if (bytes[ndx])
@@ -47,6 +47,7 @@ static inline bool all_bytes_zero(Byte * bytes, int len) {
    }
    return true;
 }
+#endif
 
 
 /* Calculates checksum for a 128 byte EDID
@@ -56,8 +57,7 @@ static inline bool all_bytes_zero(Byte * bytes, int len) {
  */
 Byte edid_checksum(Byte * edid) {
    Byte checksum = 0;
-   int ndx = 0;
-   for (ndx = 0; ndx < 128; ndx++) {
+   for (int ndx = 0; ndx < 128; ndx++) {
       checksum += edid[ndx];
    }
    return checksum;
@@ -90,8 +90,14 @@ void parse_mfg_id_in_buffer(Byte * mfg_id_bytes, char * result, int bufsize) {
 }
 
 
-// Extracts the 3 character manufacturer id from an EDID byte array.
-// The id is returned with a trailing null in a buffer provided by the caller.
+/* Extracts the 3 character manufacturer id from an EDID byte array.
+ * The id is returned with a trailing null in a buffer provided by the caller.
+ *
+ * Arguments:
+ *   edidbytes    pointer to start of EDID
+ *   result       buffer  in which to return manufacturer ID
+ *   bufsize      buffer size (must be >= 4)
+ */
 void get_edid_mfg_id_in_buffer(Byte* edidbytes, char * result, int bufsize) {
    // parse_mfg_id_in_buffer(&edidbytes[8], result, bufsize);
    parse_mfg_id_in_buffer(edidbytes+8, result, bufsize);
@@ -190,6 +196,16 @@ static void get_edid_descriptor_strings(
 }
 
 
+/* Parses an EDID.
+ *
+ * Arguments:
+ *   edidbytes   pointer to EDID
+ *
+ * Returns:      pointer to newly allocated Parsed_Edid struct,
+ *               or NULL if the bytes could not be parsed.
+ *               It is the responsiblity of the caller to free
+ *               this memory.
+ */
 Parsed_Edid * create_parsed_edid(Byte* edidbytes) {
    assert(edidbytes);
    bool debug = true;
@@ -272,6 +288,11 @@ bye:
 }
 
 
+/* Frees a Parsed_Edid struct.
+ *
+ * Arguments:
+ *   parsed_edid  pointer to Parsed_Edid struct
+ */
 void free_parsed_edid(Parsed_Edid * parsed_edid) {
    assert( parsed_edid );
    assert( memcmp(parsed_edid->marker, EDID_MARKER_NAME, 4)==0 );
