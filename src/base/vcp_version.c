@@ -96,28 +96,6 @@ bool vcp_version_le(DDCA_MCCS_Version_Spec v1, DDCA_MCCS_Version_Spec v2) {
          result = true;
    }
 
-#ifdef OLD
-   assert (v1.major <= 3);
-   assert (v2.major == 2 || v2.major == 3);
-
-   if (v2.major == 2) {
-      if (v1.major < 2)
-         result = true;
-      else
-         result = (v1.minor <= v2.minor);
-   }
-   else if (v2.major == 3) {
-      if (v1.major < 2)
-         result = true;
-      else if (v1.major == 2)
-         result = (v1.minor <= 1);
-      else
-         result = (v1.minor <= v2.minor);
-   }
-   else
-      PROGRAM_LOGIC_ERROR("Unsupported v2 v1 = %d.%d", v2.major, v2.minor);
-#endif
-
    return result;
 }
 
