@@ -35,7 +35,7 @@ char * encoder_type_title(uint32_t encoder_type);
 
 void report_drmModeRes(          drmModeResPtr  res,              int depth);
 void report_drmModePropertyBlob( drmModePropertyBlobPtr blob_ptr, int depth);
-void report_drmModeConnector(int fd,    drmModeConnector * p,            int depth);
+void report_drmModeConnector(    int fd,  drmModeConnector * p,   int depth);
 void report_drm_modeProperty(    drmModePropertyRes * p,          int depth);
 
 void summarize_drm_modeProperty(drmModePropertyRes * p, int depth);
