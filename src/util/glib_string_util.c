@@ -1,8 +1,5 @@
 /* glib_string_util.c
  *
- k Functions that depend on both glib_util.c and string_util.c
- * blib_string_util.c/h exists to avoid circular dependencies.
- *
  * <copyright>
  * Copyright (C) 2014-2017 Sanford Rockowitz <rockowitz@minsoft.com>
  *
@@ -24,7 +21,15 @@
  * </endcopyright>
  */
 
+/** @f glib_string_util.c
+ * Functions that depend on both glib_util.c and string_util.c.
+ *
+ * glib_string_util.c/h exists to avoid circular dependencies within
+ * directory util.
+ */
+
 #include <stdbool.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -36,12 +41,10 @@
 /** Joins a GPtrArray containing pointers to character strings
  *  into a single string,
  *
- *  Arguments:
- *     string   GPtrArray of strings
- *     sepstr   if non-null, separator to insert between joined strings
+ *  @param strings   GPtrArray of strings
+ *  @param sepstr   if non-null, separator to insert between joined strings
  *
- *  Returns:
- *     joined string
+ *  @return joined string
  */
 char * join_string_g_ptr_array(GPtrArray* strings, char * sepstr) {
    bool debug = false;

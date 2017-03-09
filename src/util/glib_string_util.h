@@ -1,7 +1,7 @@
 /* glib_string_util.h
  *
- k Functions that depend on both glib_util.c and string_util.c 
-
+ * Functions that depend on both glib_util.c and string_util.c
+ *
  * glib_string_util.c/h exists to avoid circular dependencies.
  *
  * <copyright>

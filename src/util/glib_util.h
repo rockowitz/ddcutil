@@ -1,5 +1,7 @@
 /* glib_util.h
  *
+ * Utility functions for glib.
+ *
  * <copyright>
  * Copyright (C) 2014-2016 Sanford Rockowitz <rockowitz@minsoft.com>
  *

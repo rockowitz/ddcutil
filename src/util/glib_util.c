@@ -21,6 +21,11 @@
  * </endcopyright>
  */
 
+/** @file glib_util.c
+ *
+ *  Functions for use with glib.
+ */
+
 #include <assert.h>
 // #include <glib-2.0/glib.h>
 #include <stdbool.h>
@@ -83,12 +88,11 @@ g_hash_table_get_keys_as_array_local (GHashTable *hash_table,
 /* Converts a doubly linked list of pointers into a null-terminated array
  * of pointers.
  *
- * Arguments:
- *   glist     pointer to doubly linked list
- *   length    where to return number of items in the allocated array,
- *             (not including the final NULL terminating entry
+ * @param  glist     pointer to doubly linked list
+ * @param  length    where to return number of items in the allocated array,
+ *                   (not including the final NULL terminating entry
  *
- * Returns:    pointer to the array
+ * @return pointer to the newly allocated gpointer array
  *
  * Notes:
  * 1) The pointers in the linked list are copied to the newly allocated array.
@@ -115,6 +119,10 @@ gpointer * g_list_to_g_array(GList * glist, guint * length) {
 
 
 /* String comparison function used by g_ptr_array_sort()
+ *
+ * @param a pointer to first string
+ * @param b pointer to second string
+ * @return -1, 0, +1 in the usual way
  */
 gint g_ptr_scomp(gconstpointer a, gconstpointer b) {
    char ** ap = (char **) a;
