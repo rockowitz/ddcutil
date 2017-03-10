@@ -382,13 +382,17 @@ GPtrArray * parse_vcp_segment(char * start, int len) {
          pos = st + 2;
          len = 2;
       }
+      bool value_ok = false;
       if (len == 2) {
-         cur_feature_id = hhc_to_byte(st);   // what if invalid hex?
-         valid_feature = true;
-         value_start = NULL;
-         value_len   = 0;
+         // cur_feature_id = hhc_to_byte(st);   // what if invalid hex?
+         value_ok = hhc_to_byte_in_buf(st, &cur_feature_id);
+         if (value_ok) {
+            valid_feature = true;
+            value_start = NULL;
+            value_len   = 0;
+         }
       }
-      else {
+      if (!value_ok) {
          printf("Feature: %.*s (invalid code)\n", 1, st);
       }
 

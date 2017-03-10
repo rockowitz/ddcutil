@@ -378,8 +378,11 @@ bool store_bytehex_list(char * start, int len, void * data_struct, Byte_Appender
       if (curpos)
          curpos = NULL;     // for all calls after first
       int ln = strlen(nexttok);
-      if (ln == 2)                // normal case
-         byteVal = hhc_to_byte(nexttok);
+      bool hexok = false;
+      if (ln == 2) {                // normal case
+         // byteVal = hhc_to_byte(nexttok);
+         hexok = hhc_to_byte_in_buf(nexttok, &byteVal);
+      }
       else if (ln == 1) {
          // on old ultrasharp connected to blackrock (pre v2), values in capabilities
          // string are single digits.  Not clear whether to regard them as decimal or hex,
@@ -388,14 +391,15 @@ bool store_bytehex_list(char * start, int len, void * data_struct, Byte_Appender
          char buf[2];
          buf[0] = '0';
          buf[1] = *nexttok;
-         byteVal = hhc_to_byte(buf);
+         // byteVal = hhc_to_byte(buf);
+         hexok = hhc_to_byte_in_buf(buf, &byteVal);
       }
-      else {
+      if (!hexok) {
          printf("(%s) Invalid hex value in list: %s\n", __func__, nexttok);
          ok = false;
       }
       // printf("(%s) byteVal=0x%02x  \n", __func__, byteVal );
-      if (ok)
+      if (hexok)
          appender(data_struct, byteVal);
    }
 

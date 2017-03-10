@@ -44,7 +44,11 @@
 // General
 //
 
-// Returns a boolean value as a string "true" or "false"
+/** Returns a character string representation of an integer as a boolean value.
+ *
+ * @param value value to represent
+ * @return "true" or "false"
+ */
 char * bool_repr(int value) {
    char * answer = (value) ? "true" : "false";
    return answer;
@@ -53,11 +57,14 @@ char * bool_repr(int value) {
 
 //
 // String functions (other than hex)
-//Fjo
-
-// Compares 2 strings for equality, handling nulls
 //
-// Returns true if the strings match, false if not
+
+/** Compares 2 strings for equality, handling nulls
+ *
+ *  @param s1  first string
+ *  @param s2  second string
+ *  @return true if the strings match, false if not
+ */
 bool streq(const char * s1, const char * s2) {
    bool result = false;
    if ( (s1 == NULL && s2 == NULL) ||
@@ -68,15 +75,12 @@ bool streq(const char * s1, const char * s2) {
 }
 
 
-/* Tests if one string is a valid abbreviation of another.
+/** Tests if one string is a valid abbreviation of another.
  *
- * Arguments:
- *   value     is this string an abbreviation?
- *   longname  unabbreviated value
- *   minchars  minimum number of characters that must match
- *
- * Returns:
- *   true/false
+ * @param  value     is this string an abbreviation?
+ * @param  longname  unabbreviated value
+ * @param  minchars  minimum number of characters that must match
+ * @return true/false
  */
 bool is_abbrev(const char * value, const char * longname, int minchars) {
    bool result = false;
@@ -91,10 +95,27 @@ bool is_abbrev(const char * value, const char * longname, int minchars) {
    return result;
 }
 
-bool str_starts_with(const char * value_to_test, const char * start_part) {
-   return is_abbrev(start_part, value_to_test, strlen(start_part));
+
+/** Tests if string starts with a string.
+ *
+ * @param  value_to_test  value to examine
+ * @param  prefix         prefix to check for
+ * @return true/flase
+ *
+ * @remark Consider using lib function g_str_prefix() ?? instead
+ */
+bool str_starts_with(const char * value_to_test, const char * prefix) {
+   return is_abbrev(prefix, value_to_test, strlen(prefix));
 }
 
+/** Tests if string ends with a string.
+ *
+ * @param  value_to_test  value to examine
+ * @param  suffix         substring to check for
+ * @return true/flase
+ *
+ * @remark Consider using lib function g_str_suffix() ?? instead
+ */
 bool str_ends_with(const char * value_to_test, const char * end_part) {
    bool debug = false;
    if (debug)
@@ -112,13 +133,10 @@ bool str_ends_with(const char * value_to_test, const char * end_part) {
 }
 
 
-/* Are all characters in the string printable?
+/** Are all characters in the string printable?
  *
- * Arguments:
- *   s   string to test
- *
- * Returns:
- *   true/false   will be true if s== NULL
+ * @param s   string to test
+ * @return    true/false  (true if s==NULL)
  */
 bool str_all_printable(char * s) {
    bool result = true;
@@ -134,8 +152,15 @@ bool str_all_printable(char * s) {
 }
 
 
-
-
+/** Compares a string to a null-terminated array of strings, using a specified
+ *  comparison function.
+ *
+ *  @param s  string to test
+ *  @param null_terminated_list array of strings to test against
+ *  @param comp_func comparison function
+ *  @return index of first entry in list for which the comparison function succeeds,
+ *          -1 if no match
+ */
 int matches_by_func(char * word, char ** null_terminated_list, String_Comp_Func comp_func) {
    int result = -1;
    int ndx = 0;
@@ -149,18 +174,31 @@ int matches_by_func(char * word, char ** null_terminated_list, String_Comp_Func 
 }
 
 
-int exactly_matches_any(char * word, char ** null_terminated_list) {
-   return matches_by_func(word, null_terminated_list, streq);
+/** Tests if a string exactly matches any string in a null-terminated
+ *  array of strings.  (Null_Terminated_String_Array).
+ *
+ *  @param  s  string to test for
+ *  @param  null_terminated_list array of pointers to strings
+ *  @return index of matching array entry, -1 if no match
+ */
+int exactly_matches_any(char * s, char ** null_terminated_list) {
+   return matches_by_func(s, null_terminated_list, streq);
 }
 
-int starts_with_any(char * word, char ** list) {
-   return matches_by_func(word, list, str_starts_with);
+
+/** Finds the first entry in a null terminated array of strings
+ *  that is the initial portion of a specified string.
+ *
+ *  @param  s     string to test against
+ *  @param  list  array of prefix strings (null-terminated)
+ *  @return index of prefix, -1 if not found
+ */
+int starts_with_any(char * s, char ** list) {
+   return matches_by_func(s, list, str_starts_with);
 }
 
 
-
-
-/* Trims leading and trailing whitespace from a string and
+/** Trims leading and trailing whitespace from a string and
  * returns the result in a buffer provided by the caller.
  * If the buffer is insufficiently large, the result string
  * is truncated.
@@ -168,12 +206,10 @@ int starts_with_any(char * word, char ** list) {
  * The result is always null terminated.
  *
  * Arguments:
- *   s      string to trim (not modified)
- *   buffer where to return result
- *   bufsz  buffer size
- *
- * Returns:
- *   pointer to truncated string (i.e. buffer)
+ * @param  s      string to trim (not modified)
+ * @param  buffer where to return result
+ * @param  bufsz  buffer size
+ * @return pointer to truncated string (i.e. buffer)
  */
 char * strtrim_r(const char * s, char * buffer, int bufsz) {
    bool debug = false;
@@ -200,6 +236,12 @@ char * strtrim_r(const char * s, char * buffer, int bufsz) {
    return buffer;
 }
 
+
+/** Trims trailing whitespace from a string.
+ *
+ * @param s string to trim
+ * @return s
+ */
 char * rtrim_in_place(char * s) {
    int len = strlen(s);
    while(len > 0 && isspace(s[len-1])) {
@@ -210,16 +252,13 @@ char * rtrim_in_place(char * s) {
 }
 
 
-/* Trims leading and trailing whitespace from a string and
+/** Trims leading and trailing whitespace from a string and
  * returns the result in newly allocated memory.
  * It is the caller's responsibility to free this memory.
  * The result string is null terminated.
  *
- * Arguments:
- *   s      string to trim (not modified)
- *
- * Returns:
- *   truncated string
+ * @param  s      string to trim (not modified)
+ * @return truncated string in newly allocated memory
  */
 char * strtrim(const char * s) {
    int bufsz = strlen(s)+1;
@@ -229,7 +268,16 @@ char * strtrim(const char * s) {
 }
 
 
-char * substr(char * s, int startpos, int ct) {
+/** Extracts a substring from a string
+ *
+ * @param s         string to process
+ * @param startpos  starting position (0 based)
+ * @param ct        number of characters; if ct + startpos is greater than
+ *                  the string length, ct is reduced accordingly
+ * @return extracted substring, in newly allocated memory
+ */
+char * substr(const char * s, int startpos, int ct) {
+   assert(startpos >= 0);
    assert(ct>=0);
    if (startpos + ct > strlen(s))
       ct = strlen(s) - startpos;
@@ -239,20 +287,25 @@ char * substr(char * s, int startpos, int ct) {
    return result;
 }
 
-char * lsub(char * s, int ct) {
+/** Returns the initial portion of a string
+ *
+ * @param s         string to process
+ * @param ct        number of characters; if ct is greater than
+ *                  the string length, ct is reduced accordingly
+ * @return extracted substring, in newly allocated memory
+ */
+char * lsub(const char * s, int ct) {
    return substr(s, 0, ct);
 }
 
 
-/* Joins an array of strings into a single string, using a separator string.
+/** Joins an array of strings into a single string, using a separator string.
  *
- * Arguments:
- *   pieces   array of strings
- *   ct       number of strings
- *   sepstr   separator string
+ * @param  pieces   array of strings
+ * @param  ct       number of strings
+ * @param  sepstr   separator string, if NULL then no separator string
  *
- * Returns:
- *   joined string (null terminated)
+ * @return joined string (null terminated)
  *
  * The returned string has been malloc'd.  It is the responsibility of
  * the caller to free it.
@@ -301,13 +354,11 @@ String_Array* new_string_array(int size) {
 #endif
 
 
-/* Splits a string based on a list of delimiter characters.
+/** Splits a string based on a list of delimiter characters.
  *
- * Arguments:
- *    str_to_split     string to be split
- *    delims           string of delimiter characters
- *
- * Returns:            null terminated array of pieces
+ *  @param  str_to_split     string to be split
+ *  @param  delims           string of delimiter characters
+ *  @return null terminated array of pieces
  *
  * Note: Each character in delims is used as an individual test.
  * The full string is NOT a delimiter string.
@@ -354,6 +405,17 @@ Null_Terminated_String_Array strsplit(const char * str_to_split, const char * de
 }
 
 
+/** Splits a string based on a list of delimiter characters.
+ *  However, no piece is longer than a specified number of characters.
+ *
+ *  @param  str_to_split     string to be split
+ *  @param  max_piece_length maximum length of each segment
+ *  @param  delims           string of delimiter characters
+ *  @return null terminated array of pieces
+ *
+ * Note: Each character in delims is used as an individual test.
+ * The full string is NOT a delimiter string.
+ */
 Null_Terminated_String_Array
 strsplit_maxlength(
       const char *  str_to_split,
@@ -403,10 +465,11 @@ strsplit_maxlength(
 }
 
 
-
-
-
-
+/** Frees a null terminated array of strings.
+ *  Each string in the array is freed.
+ *
+ *  @param string_array null terminated array of pointers to strings
+ */
 void ntsa_free(Null_Terminated_String_Array string_array) {
    assert(string_array);
    int ndx = 0;
@@ -415,6 +478,12 @@ void ntsa_free(Null_Terminated_String_Array string_array) {
    free(string_array);
 }
 
+
+/** Returns the number of strings in a null terminated array of strings.
+ *
+ * @param  string_array null terminated array of pointers to strings
+ * @return number of strings in the array
+ */
 int ntsa_length(Null_Terminated_String_Array string_array) {
    assert(string_array);
    int ndx = 0;
@@ -425,8 +494,13 @@ int ntsa_length(Null_Terminated_String_Array string_array) {
 }
 
 
-// not a report function since having string_util depend on report_util would
-// create a circular dependency
+/* Reports the contents of a Null_Terminated_String_Array.
+ *
+ * @param string_array null-terminated string array
+ *
+ * @remark This is not a **report** function as that would make string_util
+ * depend on report_util, creating a circular dependency within util
+ */
 void ntsa_show(Null_Terminated_String_Array string_array) {
    assert(string_array);
    printf("Null_Terminated_String_Array at %p:\n", string_array);
@@ -439,8 +513,11 @@ void ntsa_show(Null_Terminated_String_Array string_array) {
 }
 
 
-/* Converts a Null_Terminated_String_Array to a GPtrArry.
+/** Converts a Null_Terminated_String_Array to a GPtrArray of pointers to strings.
  * The underlying strings are referenced, not duplicated.
+ *
+ * @param  ntsa  null-terminated array of strings
+ * @return newly allocate GPtrArray
  */
 GPtrArray * ntsa_to_g_ptr_array(Null_Terminated_String_Array ntsa) {
    int len = ntsa_length(ntsa);
@@ -453,29 +530,27 @@ GPtrArray * ntsa_to_g_ptr_array(Null_Terminated_String_Array ntsa) {
 }
 
 
-/* Converts a GPtrArray to a Null_Terminated_String_Array.
+/** Converts a GPtrArray if pointers to strings to a Null_Terminated_String_Array.
  * The underlying strings are referenced, not duplicated.
+ *
+ * @param gparray pointer to GPtrArray
+ * @return null-terminated array of string pointers
  */
-Null_Terminated_String_Array g_ptr_array_to_ntsa(GPtrArray * garray) {
-   assert(garray);
-   Null_Terminated_String_Array ntsa = calloc(garray->len+1, sizeof(char *));
-   int ndx = 0;
-   for (;ndx < garray->len; ndx++) {
-      ntsa[ndx] = g_ptr_array_index(garray,ndx);
+Null_Terminated_String_Array g_ptr_array_to_ntsa(GPtrArray * gparray) {
+   assert(gparray);
+   Null_Terminated_String_Array ntsa = calloc(gparray->len+1, sizeof(char *));
+   for (int ndx=0; ndx < gparray->len; ndx++) {
+      ntsa[ndx] = g_ptr_array_index(gparray,ndx);
    }
    return ntsa;
 }
 
 
-
-
-/* Converts string to upper case.  The original string is converted in place.
+/** Converts an ASCII string to upper case.  The original string is converted in place.
  *
- * Arguments:
- *   s   string to force to upper case
+ * @param  s string to force to upper case
  *
- * Returns:
- *   s   converted string
+ * @return converted string
  */
 char * strupper(char * s) {
    if (s) {     // check s not a null pointer
@@ -489,14 +564,11 @@ char * strupper(char * s) {
 }
 
 
-
-/* Creates an upper case copy of a string
+/** Creates an upper case copy of an ASCII string
  *
  * Arguments:
- *    s      string to copy
- *
- * Returns:
- *    newly allocated string, NULL if s is NULL
+ * @param  s  string to copy
+ * @return newly allocated string, NULL if s is NULL
  */
 char * strdup_uc(char* s) {
    if (!s)
@@ -540,15 +612,13 @@ char * strcat_new(char * s1, char * s2) {
 }
 
 
-/* Converts a sequence of characters into a (null-terminated) string.
+/** Converts a sequence of characters into a (null-terminated) string.
  *
- * Arguments:
- *    start   pointer to first character
- *    len     number of characters
+ *  @param start   pointer to first character
+ *  @param len     number of characters
  *
- * Returns:
- *    newly allocated string
- *    NULL if start was NULL (is this the most useful behavior?)
+ *  @return newly allocated string,
+ *          NULL if start was NULL (is this the most useful behavior?)
  */
 char * chars_to_string(char * start, int len) {
    assert(len >= 0);
@@ -566,35 +636,39 @@ char * chars_to_string(char * start, int len) {
 // Integer conversion
 //
 
-bool str_to_int(const char * nptr, int * ival) {
+/** Converts a string representing an integer to an integer value.
+ *
+ * @param sval string representing an integer
+ * @param ival address at which to store integer value
+ * @return true if conversion succeeded, false if it failed
+ *
+ * @remark This function wraps system function strtol(), hiding the ugly details.
+ */
+bool str_to_int(const char * sval, int * p_ival) {
    bool debug = false;
    if (debug)
-      printf("(%s) nptr->|%s|\n", __func__, nptr);
+      printf("(%s) sval->|%s|\n", __func__, sval);
 
    char * endptr;
    bool ok = false;
-   if ( *nptr != '\0') {
-      long result = strtol(nptr, &endptr, 10);
-      // printf("(%s) nptr=%p, endptr=%p, *endptr=|%c| (0x%02x), result=%ld\n",
-      //        __func__, nptr, endptr, *endptr, *endptr, result);
+   if ( *sval != '\0') {
+      long result = strtol(sval, &endptr, 10);
+      // printf("(%s) sval=%p, endptr=%p, *endptr=|%c| (0x%02x), result=%ld\n",
+      //        __func__, sval, endptr, *endptr, *endptr, result);
       if (*endptr == '\0') {
-         *ival = result;
+         *p_ival = result;
          ok = true;
       }
    }
 
    if (debug) {
       if (ok)
-        printf("(%s) nptr=%s, Returning: %s, *ival = %d\n", __func__, nptr, bool_repr(ok), *ival);
+        printf("(%s) sval=%s, Returning: %s, *ival = %d\n", __func__, sval, bool_repr(ok), *p_ival);
       else
-        printf("(%s) nptr=%s, Returning: %s\n", __func__, nptr, bool_repr(ok));
+        printf("(%s) sval=%s, Returning: %s\n", __func__, sval, bool_repr(ok));
    }
    return ok;
 }
-
-
-
-
 
 
 //
@@ -602,17 +676,15 @@ bool str_to_int(const char * nptr, int * ival) {
 //
 
 
-/* Converts a (null terminated) string of 2 hex characters to
+/** Converts a (null terminated) string of 2 hex characters to
  * its byte value.
  *
- * Arguments:
- *   s       pointer to hex string
- *   result  pointer to byte in which result will be returned
+ * @param  s       pointer to hex string
+ * @param  result  pointer to byte in which converted value will be returned
  *
- * Returns:
- *   true if successful conversion, false if string does not
- *   consist of hex characters, or is not 2 characters in length.
- *
+ * @return true  if successful conversion,
+ *         false if string does not consist of hex characters,
+ *               or is not 2 characters in length.
  */
 bool hhs_to_byte_in_buf(char * s, Byte * result) {
    // printf("(%s) Starting s=%s, strlen(s)=%zd\n", __func__, s, strlen(s) );
@@ -642,7 +714,18 @@ bool hhs_to_byte_in_buf(char * s, Byte * result) {
    return ok;
 }
 
-// be very lenient
+
+/** Converts a hex string representing a single byte into its byte value.
+ *  This is a more lenient version of hhs_to_byte_in_buf(), allowing
+ *  the value to begin with "0x" or "x", or end with "h".  The allowed
+ *  prefix or suffix is case-insensitive.
+ *
+ *  @param  s       pointer to hex string
+ *  @param  result  pointer to byte in which result will be returned
+ *
+ *  @return true  if successful conversion,
+ *          false if not
+ */
 bool any_one_byte_hex_string_to_byte_in_buf(char * s, Byte * result) {
    // printf("(%s) s = |%s|\n", __func__, s);
    char * suc = strdup_uc(s);
@@ -653,22 +736,20 @@ bool any_one_byte_hex_string_to_byte_in_buf(char * s, Byte * result) {
    else if (str_ends_with(suc, "H"))
          *(suc+strlen(suc)-1) = '\0';
    bool ok = hhs_to_byte_in_buf(suc, result);
+   free(suc);
    // printf("(%s) returning %d, *result=0x%02x\n", __func__, ok, *result);
    return ok;
 }
 
 
-
-/* Converts 2 hex characters to their corresponding byte value.
- * The characters need not be null terminated.
+/** Converts 2 hex characters to their corresponding byte value.
+ *  The characters need not be null terminated.
  *
- * Arguments:
- *   s       pointer to hex characters.
- *   result  pointer go byte in which result will be returned
+ *  @param s         pointer to hex characters.
+ *  @param converted pointer go byte in which converted value will be returned
  *
- * Returns:
- *   true if successful conversion, false if string does not
- *   consist of hex characters.
+ *  @return true if successful conversion, false if s does not point
+ *          to hex characters
  */
 bool hhc_to_byte_in_buf(char * hh, Byte * converted) {
    // printf("(%s) Starting hh=%.2s   \n", __func__, hh );
@@ -681,6 +762,7 @@ bool hhc_to_byte_in_buf(char * hh, Byte * converted) {
 }
 
 
+#ifdef DEPRECATED
 /* Converts a (null terminated) string of 2 hex characters to
  * its byte value.
  *
@@ -705,8 +787,9 @@ Byte hhs_to_byte(char * s) {
    }
    return converted;
 }
+#endif
 
-
+#ifdef DEPRECATED
 /* Converts 2 hex characters to a single byte.
  *
  * Arguments:
@@ -726,17 +809,15 @@ Byte hhc_to_byte(char * hh) {
    hhs[2] = '\0';
    return hhs_to_byte(hhs);
 }
+#endif
 
 
-/* Converts a string of hex characters (null terminated) to an array of bytes.
+/** Converts a string of hex characters (null terminated) to an array of bytes.
  *
- * Arguments:
- *    hhs     string of hex characters
- *    pBa     address at which to return pointer to byte array
- *
- * Returns:
- *    number of bytes in array
- *    -1 if string could not be converted
+ *  @param   hhs     string of hex characters
+ *  @param   pBa     address at which to return pointer to byte array
+ *  @return  number of bytes in array,
+ *           -1 if string could not be converted
  *
  * If successful, the byte array whose address is returned in pBa has
  * been malloc'd.  It is the responsibility of the caller to free it.
@@ -774,7 +855,7 @@ int hhs_to_byte_array(char * hhs, Byte** pBa) {
    return bytect;
 }
 
-
+#ifdef DEPRECATED
 void test_one_hhs2Byte(char * hhs) {
    printf("(%s) Starting.  hhs=%s  \n", __func__, hhs );
    Byte b1 = hhs_to_byte(hhs);
@@ -788,16 +869,15 @@ void test_hhs_to_byte() {
    test_one_hhs2Byte("ZZ");
    // test_one_hhs2Byte("123");
 }
+#endif
 
 
-/* Converts a sequence of bytes to its representation as a string of hex characters.
+/** Converts a sequence of bytes to its representation as a string of hex characters.
  *
- * Arguments:
- *    bytes     pointer to bytes
- *    len       number of bytes
+ *  @param  bytes     pointer to bytes
+ *  @param  len       number of bytes
  *
- * Returns:
- *   pointer to hex string
+ *  @return pointer to newly allocated hex string
  *
  * The value returned by this function has been malloc'd.   It is the
  * responsibility of the caller to free the memory.
@@ -818,22 +898,20 @@ char * hexstring(const unsigned char * bytes, int len) {
 }
 
 
-/* Converts a sequence of bytes to its representation as a string of hex characters.
+/** Converts a sequence of bytes to its representation as a string of hex characters.
  *
- * Arguments:
- *    bytes    pointer to bytes
- *    len      number of bytes
- *    sepstr   string to separate each 2 hex character pairs representing a byte,
- *             if NULL then no separators will be inserted
- *    uppercase if true, use uppercase hex characters,
- *              if false, use lower case hex characters
- *    buffer    pointer to buffer in which hex string will be returned,
- *              if NULL, then a buffer will be allocated
- *    bufsz     size of buffer
- *              if 0, then a buffer will be allocated
+ * @param   bytes    pointer to bytes
+ * @param   len      number of bytes
+ * @param   sepstr   string to separate each 2 hex character pairs representing a byte,
+ *                  if NULL then no separators will be inserted
+ * @param   uppercase if true, use uppercase hex characters,
+ *                    if false, use lower case hex characters
+ * @param   buffer    pointer to buffer in which hex string will be returned,
+ *                    if NULL, then a buffer will be allocated
+ * @param   bufsz     size of buffer
+ *                    if 0, then a buffer will be allocated
  *
- * Returns:
- *   pointer to hex string
+ * @return  pointer to hex string
  *
  * If this function allocates a buffer, it is the responsibility of the caller
  * to free the memory.
@@ -890,17 +968,13 @@ char * hexstring2(
 }
 
 
-/* Dump a region of memory as hex characters and their ASCII values.
- * The output is indented by the specified number of spaces.
+/** Dump a region of memory as hex characters and their ASCII values.
+ *  The output is indented by the specified number of spaces.
  *
- * Arguments:
- *    fh       where to write output, if NULL, write nothing
- *    data     start of region to show
- *    size     length of region
- *    indents  number of spaces to indent the output
- *
- * Returns:
- *    nothing
+ *  @param fh       where to write output, if NULL, write nothing
+ *  @param data     start of region to show
+ *  @param size     length of region
+ *  @param indents  number of spaces to indent the output
  */
 void fhex_dump_indented(FILE * fh, const Byte* data, int size, int indents)
 {
@@ -952,15 +1026,12 @@ void fhex_dump_indented(FILE * fh, const Byte* data, int size, int indents)
 }
 
 
-/* Dump a region of memory as hex characters and their ASCII values.
+/** Dump a region of memory as hex characters and their ASCII values.
+ *  Output is written to the location specified by parameter fh.
  *
- * Arguments:
- *    data     start of region to show
- *    size     length of region
- *    fh       where to write output
- *
- * Returns:
- *    nothing
+ * @param   fh       where to write output
+ * @param   data     start of region to show
+ * @param   size     length of region
  */
 void fhex_dump(FILE * fh, const Byte* data, int size)
 {
@@ -968,29 +1039,24 @@ void fhex_dump(FILE * fh, const Byte* data, int size)
 }
 
 
-/* Dump a region of memory as hex characters and their ASCII values.
+/** Dump a region of memory as hex characters and their ASCII values.
+ *  Output is written to stdout.
  *
- * Arguments:
- *    data     start of region to show
- *    size     length of region
- *
- * Returns:
- *    nothing
+ * @param   data     start of region to show
+ * @param   size     length of region
  */
 void hex_dump(const Byte* data, int size) {
    fhex_dump(stdout, data, size);
 }
 
 
-/* Version of fputc() that allows a NULL stream argument,
+/** Version of fputc() that allows a NULL stream argument,
  * in which case no output is written.
  *
- * Arguments:
- *    c          character to write
- *    stream     if null do nothing
+ *  @param  c          character to write
+ *  @param  stream     if null do nothing
  *
- * Returns:
- *    result of fputs(), or 0 if stream is NULL
+ *  @return result of underlying fputs(), or 0 if stream is NULL
  */
 int f0putc(int c, FILE * stream) {
    int rc = 0;
@@ -1000,15 +1066,13 @@ int f0putc(int c, FILE * stream) {
 }
 
 
-/* Version of fputs() that allows a NULL stream argument,
+/** Version of fputs() that allows a NULL stream argument,
  * in which case no output is written.
  *
- * Arguments:
- *    msg        text to write
- *    stream     if null do nothing
+ * @param   msg        text to write
+ * @param   stream     if null do nothing
  *
- * Returns:
- *    result of fputs(), or 0 if stream is NULL
+ * @return   result of underlying fputs(), or 0 if stream is NULL
  */
 int f0puts(const char * msg, FILE * stream) {
    int rc = 0;
@@ -1018,16 +1082,14 @@ int f0puts(const char * msg, FILE * stream) {
 }
 
 
-/* Version of fprintf() that allows a NULL stream argument,
+/** Version of fprintf() that allows a NULL stream argument,
  * in which case no output is written.
  *
- * Arguments:
- *    stream     if null do nothing
- *    format     format string
- *    ...        variable argument list
+ * @param stream     if null do nothing
+ * @param  format     format string
+ * @param ...        variable argument list
  *
- * Returns:
- *    result of fprintf(), or 0 if stream is NULL
+ * @param  result of underlying vfprintf(), or 0 if stream is NULL
  */
 int f0printf(FILE * stream, const char * format, ...) {
    int rc = 0;
@@ -1042,16 +1104,14 @@ int f0printf(FILE * stream, const char * format, ...) {
 }
 
 
-/* Version of vfprintf() that allows a NULL stream argument,
+/** Version of vfprintf() that allows a NULL stream argument,
  * in which case no output is written.
  *
- * Arguments:
- *    stream     if null do nothing
- *    format     format string
- *    ...        variable argument list
+ * @param stream     if null do nothing
+ * @param format     format string
+ * @param ...        variable argument list
  *
- * Returns:
- *    result of vfprintf(), or 0 if stream is NULL
+ * @return result of underlying vfprintf(), or 0 if stream is NULL
  */
 int vf0printf(FILE * stream, const char * format, va_list ap) {
    int rc = 0;

@@ -1,9 +1,9 @@
 /* string_util.h
  *
- * String and hex conversion functions
+ * String and hex utility functions
  *
  * <copyright>
- * Copyright (C) 2014-2015 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2014-2017 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -67,8 +67,8 @@ char * chars_to_string(char * start, int len);
 char * strtrim(const char * s);
 char * strtrim_r(const char * s, char * buffer, int bufsz);
 char * rtrim_in_place(char * s);
-char * substr(char * s, int startpos, int ct);
-char * lsub(char * s, int ct);
+char * substr(const char * s, int startpos, int ct);
+char * lsub(const char * s, int ct);
 char * str_replace_char(char * s, char old_char, char new_char);
 char * strcat_new(char * s1, char * s2);
 
