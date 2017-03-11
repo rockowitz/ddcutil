@@ -102,7 +102,7 @@ bool execute_shell_cmd_rpt(char * shell_cmd, int depth) {
              rpt_title(a_line, depth);
           }
 
-          free(a_line);
+          // free(a_line);
        }
        int pclose_rc = pclose(fp);
        if (debug)
