@@ -21,6 +21,10 @@
  * </endcopyright>
  */
 
+/** @file debug_util.c
+ * Functions for debugging
+ */
+
 #include <execinfo.h>
 #include <stdbool.h>
 #include <stdio.h>
@@ -29,7 +33,6 @@
 #include <unistd.h>
 
 #include "debug_util.h"
-
 
 /* Extracts the function name and offset from a backtrace line
  *
@@ -69,13 +72,12 @@ static char * extract_function(char * bt_line) {
 }
 
 
-/* Show the call stack.
+/** Show the call stack.
  *
- * Arguments:
- *   stack_adjust    number of initial stack frames to ignore, to
- *                   hide this function and possibly some number of immediate
- *                   callers
+ * @param  stack_adjust  number of initial stack frames to ignore, to hide this
+ *                       function and possibly some number of immediate callers
  *
+ * @remark
  * Note that the call stack is approximate.  The underlying system function, backtrace()
  * relies on external symbols, so static functions will not be properly shown.
  */

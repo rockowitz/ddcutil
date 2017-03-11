@@ -1,7 +1,7 @@
 /* x11_util.h
  *
  * <copyright>
- * Copyright (C) 2014-2016 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2014-2017 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -21,6 +21,10 @@
  * </endcopyright>
  */
 
+/** @file x11_util.h
+ * Utilities for X11
+ */
+
 #ifndef X11_UTIL_H_
 #define X11_UTIL_H_
 
@@ -28,7 +32,7 @@
 
 #include "coredefs.h"
 
-
+/** Represents 1 EDID known to X11 */
 typedef struct {
    char * output_name;
    Byte * edidbytes;

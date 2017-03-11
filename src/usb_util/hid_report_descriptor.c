@@ -270,7 +270,7 @@ void report_parsed_hid_report(Parsed_Hid_Report * hr, int depth) {
    int d1 = depth+1;
    // int d2 = depth+2;
    // rpt_structure_loc("Hid_Report", hr,depth);
-   rpt_vstring(depth, "%-20s:%*s 0x%02x  %d", "Report id",   rpt_indent(1), "", hr->report_id, hr->report_id);
+   rpt_vstring(depth, "%-20s:%*s 0x%02x  %d", "Report id",   rpt_get_indent(1), "", hr->report_id, hr->report_id);
    rpt_vstring(d1, "%-20s: 0x%02x  %s", "Report type",
                    hr->report_type, hid_report_type_name(hr->report_type) );
    if (hr->hid_fields && hr->hid_fields->len > 0) {

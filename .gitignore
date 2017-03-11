@@ -146,4 +146,5 @@ xorg-devel-post1.txt
 *.csv
 *.csv#
 package/debian/rules.in.0
-
+doxydoc/html
+doxydoc/latex

@@ -26,6 +26,15 @@
  * </endcopyright>
  */
 
+/** @file report_util.c
+ * Report utility functions
+ *
+ * TODO: describe
+ * - indentation depth
+ *     - indentation stack
+ * - destination stack
+ */
+
 #include <assert.h>
 #include <stdarg.h>
 #include <stdbool.h>
@@ -35,6 +44,7 @@
 #include <unistd.h>
 
 #include "coredefs.h"
+#include "file_util.h"
 #include "string_util.h"
 
 #include "report_util.h"
@@ -81,10 +91,13 @@ void rpt_reset_indent_stack() {
 }
 
 
-/* Given a logical indentation depth, returns the number of spaces
+/** Given a logical indentation depth, returns the number of spaces
  * of indentation to be used.
+ *
+ * @param depth logical indentation depth
+ * @return number of indentation spaces
  */
-int rpt_indent(int depth) {
+int rpt_get_indent(int depth) {
    int spaces_ct = DEFAULT_INDENT_SPACES_PER_DEPTH;
    if (indent_spaces_stack_pos >= 0)
       spaces_ct = indent_spaces_stack[indent_spaces_stack_pos];
@@ -94,28 +107,37 @@ int rpt_indent(int depth) {
 
 // Functions that allow for temporarily changing the output destination.
 
+/** Sets the output destination to be used for report functions.
+ *  The current output destination is saved on the output destination stack.
+ *
+ *  @param new_dest  new output destination
+ */
 void rpt_push_output_dest(FILE* new_dest) {
    assert(output_dest_stack_pos < OUTPUT_DEST_STACK_SIZE-1);
    output_dest_stack[++output_dest_stack_pos] = new_dest;
 }
 
 
+/** Pops the output destination stack, and sets the output destination
+ *  to be used for report functions to the new top of the stack.
+ */
 void rpt_pop_output_dest() {
    if (output_dest_stack_pos >= 0)
       output_dest_stack_pos--;
 }
 
 
+/** Clears the output destination stack.
+ * The output destination to be used for report functions to the default (stdout).
+ */
 void rpt_reset_output_dest_stack() {
    output_dest_stack_pos = -1;
 }
 
 
-/* Gets the current output destination.
+/** Gets the current output destination.
  *
- * Arguments:     none
- *
- * Returns:       current output destination
+ * @return current output destination
  */
 FILE * rpt_cur_output_dest() {
    // special handling for unpushed case because can't statically initialize
@@ -129,7 +151,8 @@ FILE * rpt_cur_output_dest() {
 }
 
 
-// Debugging function
+/** Debugging function to show output destination.
+ */
 void rpt_debug_output_dest() {
     FILE * dest = rpt_cur_output_dest();
     char * addl = (dest == stdout) ? " (stdout)" : "";
@@ -137,8 +160,13 @@ void rpt_debug_output_dest() {
           __func__, output_dest_stack_pos, dest, addl);
 }
 
-
-// needed for set_fout() in core.c
+/** Changes the current output destination, without saving
+ * the current output destination on the destination stack.
+ *
+ * @param new_dest new output destination
+ *
+ * @remark Needed for set_fout() in core.c
+ */
 void rpt_change_output_dest(FILE* new_dest) {
    if (output_dest_stack_pos >= 0)
       output_dest_stack[output_dest_stack_pos] = new_dest;
@@ -155,7 +183,7 @@ void rpt_flush() {
 }
 
 
-/* Writes a newline to the current output destination.
+/** Writes a newline to the current output destination.
  */
 void rpt_nl() {
    f0printf(rpt_cur_output_dest(), "\n");
@@ -167,25 +195,29 @@ void rpt_nl() {
  * A newline is appended to the string specified.
  *
  * The output is indented per the specified indentation depth.
+ *
+ * @param title string to write
+ * @param depth logical indentation depth.
+ *
+ * @remark This is the core function through which all output is funneled.
  */
 void rpt_title(char * title, int depth) {
    bool debug = false;
    if (debug)
       printf("(%s) Writing to %p\n", __func__, rpt_cur_output_dest());
-   f0printf(rpt_cur_output_dest(), "%*s%s\n", rpt_indent(depth), "", title);
+   f0printf(rpt_cur_output_dest(), "%*s%s\n", rpt_get_indent(depth), "", title);
 }
 
 
-/* Writes a formatted string to the current output destination.
+/** Writes a formatted string to the current output destination.
  *
  * A newline is appended to the string specified
  *
- * Arguments:
- *   depth    logical indentation depth
- *   format   format string (normal printf)
- *   ...      arguments
+ * @param  depth    logical indentation depth
+ * @param  format   format string (normal printf)
+ * @param  ...      arguments
  *
- * Note that the depth parm is first on this function because of variable args
+ * @remark Note that the depth parm is first on this function because of variable args
  */
 void rpt_vstring(int depth, char * format, ...) {
    int buffer_size = 200;
@@ -210,12 +242,11 @@ void rpt_vstring(int depth, char * format, ...) {
 }
 
 
-/* Convenience function that writes multiple constant strings.
+/** Convenience function that writes multiple constant strings.
  *
- * Arguments:
- *   depth    logical indentation depth
- *   ...      pointers to constant strings,
- *            last pointer is NULL to terminate list
+ *   @param depth    logical indentation depth
+ *   @param ...      pointers to constant strings,
+ *                   last pointer is NULL to terminate list
  */
 void rpt_multiline(int depth, ...) {
    va_list args;
@@ -228,11 +259,10 @@ void rpt_multiline(int depth, ...) {
 }
 
 
-/* Writes all strings in a GPtrArray to the current report destination
+/** Writes all strings in a GPtrArray to the current report destination
  *
- * Arguments:
- *   depth   logical indentation depth
- *   strings pointer to GPtrArray of strings
+ * @param  depth   logical indentation depth
+ * @param  strings pointer to GPtrArray of strings
  */
 void rpt_g_ptr_array(int depth, GPtrArray * strings) {
    for (int ndx = 0; ndx < strings->len; ndx++) {
@@ -242,22 +272,96 @@ void rpt_g_ptr_array(int depth, GPtrArray * strings) {
 }
 
 
-/* Writes a string to the current output destination, describing a pointer
+/** Writes a hex dump with indentation.
+ *  Output is written to the current report destination
+ *
+ * @param data  start of bytes to dump
+ * @param size  number of bytes to dump
+ * @param depth logical indentation depth
+ */
+void rpt_hex_dump(const Byte * data, int size, int depth) {
+   fhex_dump_indented(rpt_cur_output_dest(), data, size, rpt_get_indent(depth));
+}
+
+
+/** Writes a string to the current output destination, describing a pointer
  * to a named data structure.
  *
  * The output is indented per the specified indentation depth.
+ *
+ * @param name  struct name
+ * @param ptr   pointer to struc
+ * @param depth logical indentation depth
  */
 void rpt_structure_loc(const char * name, const void * ptr, int depth) {
    // fprintf(rpt_cur_output_dest(), "%*s%s at: %p\n", rpt_indent(depth), "", name, ptr);
    rpt_vstring(depth, "%s at: %p", name, ptr);
 }
 
+/** Writes a pair of strings to the current output destination.
+ *
+ * If offset_absolute is true, then the s2 value will start in the same column,
+ * irrespective of the line indentation.   This may make some reports easier to read.
+ *
+ * @param s1 first string
+ * @param s2 second string
+ * @param col2offset  offset from start of line where s2 starts
+ * @param offset_absolute  if true,  col2offset is relative to the start of the line, before indentation
+ *                         if false, col2offset is relative to the indented start of s1
+ * @param depth logical indentation depth
+ */
+void rpt_2col(char * s1,  char * s2,  int col2offset, bool offset_absolute, int depth) {
+   int col1sz = col2offset;
+   int indentct = rpt_get_indent(depth);
+   if (offset_absolute)
+      col1sz = col1sz - indentct;
+   rpt_vstring(depth, "%-*s%s", col1sz, s1, s2 );
+}
 
-/* Writes a string to the current output destination describing a named character string value.
+/* Reports the contents of a file.
+ *
+ * @param fn  name of file
+ * @depth depth logical indentation depth
+ */
+int rpt_file_contents(const char * fn, int depth) {
+   GPtrArray * line_array = g_ptr_array_new();
+   int rc = file_getlines(fn, line_array, false);
+   if (rc < 0) {
+      rpt_vstring(depth, "Error reading file %s: %s", fn, strerror(-rc));
+   }
+   else if (rc > 0) {
+      int ndx = 0;
+      for (; ndx < line_array->len; ndx++) {
+         char * curline = g_ptr_array_index(line_array, ndx);
+         rtrim_in_place(curline);     // strip trailing newline
+         rpt_title(curline, depth);
+      }
+   }
+   return rc;
+}
+
+
+/* The remaining rpt_ functions various data types share a common formatting so that they can
+ * be use together.  All channel their output through rpt_str().
+ *
+ * Depending on whether the info parm is null, output takes one of the following forms:
+ *    name       (info) : value
+ *    name              : value
+ */
+
+/** Writes a string to the current output destination describing a named character string value.
  *
  * The output is indented per the specified indentation depth.
  *
  * Optionally, a description string can be specified along with the name.
+ * The description string will be surrounded by parentheses.
+ *
+ * The string value is prefixed with a colon.
+ *
+ * @param name  name of value
+ * @param info  if non-null, description of value
+ * @param val   string value
+ * @param depth logical indentation depth
  */
 void rpt_str(const char * name, char * info, const char * val, int depth) {
    bool debug = false;
@@ -269,29 +373,45 @@ void rpt_str(const char * name, char * info, const char * val, int depth) {
       snprintf(infobuf, 99, "(%s)", info);
    else
       infobuf[0] = '\0';
-
-   // fprintf(rpt_cur_output_dest(),
-   //         "%*s%-25s %30s : %s\n", rpt_indent(depth), "", name, infobuf, val);
    rpt_vstring(depth, "%-25s %30s : %s", name, infobuf, val);
 }
 
 
-void rpt_2col(char * s1,  char * s2,  int col2offset, bool offset_absolute, int depth) {
-   int col1sz = col2offset;
-   int indentct = rpt_indent(depth);
-   if (offset_absolute)
-      col1sz = col1sz - indentct;
-
-   // fprintf(rpt_cur_output_dest(), "%*s%-*s%s", indentct, "", col1sz, s1, s2 );
-   rpt_vstring(depth, "%-*s%s", col1sz, s1, s2 );
+/** Writes a string to the current output destination describing a boolean value.
+ *
+ * The value is displayed as "true" or "false".
+ *
+ * The output is indented per the specified indentation depth.
+ * The description string will be surrounded by parentheses.
+ *
+ * The value is prefixed with a colon.
+ *
+ * @param name  name of value
+ * @param info  if non-null, description of value
+ * @param val   value to show
+ * @param depth logical indentation depth
+ *
+ * The value is formatted as "true" or "false".
+ */
+void rpt_bool(char * name, char * info, bool val, int depth) {
+   char * valName = (val) ? "true" : "false";
+   rpt_str(name, info, valName, depth);
 }
 
 
-/* Writes a string to the current output destination, describing a named integer value.
+/** Writes a string to the current output destination, describing a named integer value.
  *
  * The output is indented per the specified indentation depth.
  *
  * Optionally, a description string can be specified along with the name.
+ * The description string will be surrounded by parentheses.
+ *
+ * The value is prefixed with a colon.
+ *
+ * @param name  name of value
+ * @param info  if non-null, description of value
+ * @param val   integer value
+ * @param depth logical indentation depth
  */
 void rpt_int(char * name, char * info, int val, int depth) {
    char buf[10];
@@ -300,7 +420,51 @@ void rpt_int(char * name, char * info, int val, int depth) {
 }
 
 
-/* Writes a string to the current output destination describing a named integer
+/** Writes a string to the current output destination describing a 4 byte integer value,
+ * indented per the specified indentation depth.
+ *
+ * The integer value is formatted as printable hex.
+ *
+ * Optionally, a description string can be specified along with the name.
+ * The description string will be surrounded by parentheses.
+ *
+ * The value is prefixed with a colon.
+ *
+ * @param name  name of value
+ * @param info  if non-null, description of value
+ * @param val   integer value
+ * @param depth logical indentation depth
+ */
+void rpt_int_as_hex(char * name, char * info, int val, int depth) {
+   char buf[16];
+   snprintf(buf, 15, "0x%08x", val);
+   rpt_str(name, info, buf, depth);
+}
+
+
+/** Writes a string to the current output destination describing a single byte value,
+ * indented per the specified indentation depth.
+ *
+ * The value is formatted as printable hex.
+ *
+ * Optionally, a description string can be specified along with the name.
+ * The description string will be surrounded by parentheses.
+ *
+ * The value is prefixed with a colon.
+ *
+ * @param name  name of value
+ * @param info  if non-null, description of value
+ * @param val   value
+ * @param depth logical indentation depth
+ */
+void rpt_uint8_as_hex(char * name, char * info, unsigned char val, int depth) {
+   char buf[16];
+   snprintf(buf, 15, "0x%02x", val);
+   rpt_str(name, info, buf, depth);
+}
+
+
+/** Writes a string to the current output destination describing a named integer
  * value having a symbolic string representation.
  *
  * The output is indented per the specified indentation depth.
@@ -308,6 +472,15 @@ void rpt_int(char * name, char * info, int val, int depth) {
  * The integer value is converted to a string using the specified function.
  *
  * Optionally, a description string can be specified along with the name.
+ * The description string will be surrounded by parentheses.
+ *
+ * The value is prefixed with a colon.
+ *
+ * @param name  name of value
+ * @param info  if non-null, description of value
+ * @param val   integer value
+ * @param func  interpretation function
+ * @param depth logical indentation depth
  */
 void rpt_mapped_int(char * name, char * info, int val, Value_To_Name_Function func, int depth)  {
    char * valueName = func(val);
@@ -317,33 +490,22 @@ void rpt_mapped_int(char * name, char * info, int val, Value_To_Name_Function fu
 }
 
 
-/* Writes a string to the current output destination describing a named integer value,
+/** Writes a string to the current output destination describing a sequence of bytes,
  * indented per the specified indentation depth.
  *
- * Optionally, a description string can be specified along with the name.
- *
- * The integer value is formatted as printable hex.
- */
-void rpt_int_as_hex(char * name, char * info, int val, int depth) {
-   char buf[16];
-   snprintf(buf, 15, "0x%08x", val);
-   rpt_str(name, info, buf, depth);
-}
-
-
-void rpt_uint8_as_hex(char * name, char * info, unsigned char val, int depth) {
-   char buf[16];
-   snprintf(buf, 15, "0x%02x", val);
-   rpt_str(name, info, buf, depth);
-}
-
-
-/* Writes a string to the current output destination describing a sequence of bytes,
- * indented per the specified indentation depth.
+ * The value is formatted as printable hex.
  *
  * Optionally, a description string can be specified along with the name.
+ * The description string will be surrounded by parentheses.
  *
- * The output is formatted as printable hex.
+ * The value is prefixed with a colon.
+ *
+ * @param name  name of value
+ * @param info  if non-null, description of value
+ * @param bytes pointer to start of bytes to show
+ * @param ct    number of bytes to show
+ * @param hex_prefix_flag if true, the printable hex value will begin with "0x"
+ * @param depth logical indentation depth
  */
 void rpt_bytes_as_hex(
         const char *   name,
@@ -368,6 +530,9 @@ void rpt_bytes_as_hex(
 }
 
 
+//  Functions for reporting integers that are collections of named bits
+
+#ifdef DEBUG
 static
 void report_flag_info( Flag_Info* pflag_info, int depth) {
    assert(pflag_info);
@@ -383,7 +548,7 @@ void report_flag_info( Flag_Info* pflag_info, int depth) {
  *
  * Reports the contents of a FlagDictionay record.
  */
-// making it static causes a warning which causes review
+static
 void report_flag_info_dictionary(Flag_Dictionary* pDict, int depth) {
    assert(pDict);
    rpt_structure_loc("Flag_Dictionary", pDict, depth);
@@ -394,6 +559,8 @@ void report_flag_info_dictionary(Flag_Dictionary* pDict, int depth) {
       report_flag_info(&pDict->flag_info_recs[ndx], d1);
    }
 }
+#endif
+
 
 static
 Flag_Info * find_flag_info_in_dictionary(char * flag_name, Flag_Dictionary * pdict) {
@@ -417,13 +584,13 @@ Flag_Info * find_flag_info_in_dictionary(char * flag_name, Flag_Dictionary * pdi
 }
 
 
-// Local function
-static void char_buf_append(char * buffer, int bufsize, char * val_to_append) {
+static
+void char_buf_append(char * buffer, int bufsize, char * val_to_append) {
    assert(strlen(buffer) + strlen(val_to_append) < bufsize);
    strcat(buffer, val_to_append);
 }
 
-// Local function
+
 static
 void flag_val_to_string_using_dictionary(
         int                flags_val,
@@ -454,40 +621,32 @@ void flag_val_to_string_using_dictionary(
 }
 
 
-/* Writes a string to the current output destination describing an integer
+/** Writes a string to the current output destination describing an integer
  * that is to be interpreted as a named collection of named bits.
  *
  * Output is indented per the specified indentation depth.
+ * The description string will be surrounded by parentheses.
+ *
+ * The value is prefixed with a colon.
+ *
+ * @param name  name of value
+ * @param info  if non-null, description of value
+ * @param val   value to interpret
+ * @param p_flag_name_set
+ * @param p_dict
+ * @param depth logical indentation depth
  */
 void rpt_ifval2(char*           name,
                char*            info,
                int              val,
-               Flag_Name_Set*   pflag_name_set,
-               Flag_Dictionary* pDict,
+               Flag_Name_Set*   p_flag_name_set,
+               Flag_Dictionary* p_dict,
                int              depth)
 {
    char buf[1000];
    buf[0] = '\0';
    snprintf(buf, 7, "0x%04x", val);
    char_buf_append(buf, sizeof(buf), " - ");
-   flag_val_to_string_using_dictionary(val, pflag_name_set, pDict, buf, sizeof(buf));
+   flag_val_to_string_using_dictionary(val, p_flag_name_set, p_dict, buf, sizeof(buf));
    rpt_str(name, info, buf, depth);
-}
-
-
-/* Writes a string to the current output destination describing a possibly
- * named boolean value.
- *
- * The output is indented per the specified indentation depth.
- *
- * The value is formatted as "true" or "false".
- */
-void rpt_bool(char * name, char * info, bool val, int depth) {
-   char * valName = (val) ? "true" : "false";
-   rpt_str(name, info, valName, depth);
-}
-
-
-void rpt_hex_dump(const Byte * data, int size, int depth) {
-   fhex_dump_indented(rpt_cur_output_dest(), data, size, rpt_indent(depth));
 }

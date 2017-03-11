@@ -525,7 +525,7 @@ void i2c_report_functionality_flags(long functionality, int maxline, int depth) 
 
    char * header = "Functionality: ";
    int hdrlen = strlen(header);
-   int maxpiece = maxline - ( rpt_indent(depth) + hdrlen);
+   int maxpiece = maxline - ( rpt_get_indent(depth) + hdrlen);
 
    Null_Terminated_String_Array ntsa = strsplit_maxlength( (char *) buf0->bytes, maxpiece, " ");
    int ntsa_ndx = 0;

@@ -1,7 +1,7 @@
 /* failsim.c
  *
  * <copyright>
- * Copyright (C) 2016 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2017 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -21,6 +21,10 @@
  * </endcopyright>
  */
 
+/** @file failsim.c
+ * Functions that provide a simple failure simulation framework.
+ */
+
 #include <assert.h>
 #include <errno.h>
 #include <stdbool.h>
@@ -38,6 +42,9 @@
 static Fsim_Name_To_Number_Func name_to_number_func             = NULL;
 static Fsim_Name_To_Number_Func unmodulated_name_to_number_func = NULL;
 
+/** Sets the functions to bu used to interpret a symbolic value
+ *  in a control file.
+ */
 void fsim_set_name_to_number_funcs(
       Fsim_Name_To_Number_Func func,
       Fsim_Name_To_Number_Func unmodulated_func)
@@ -47,7 +54,7 @@ void fsim_set_name_to_number_funcs(
 }
 
 
-
+// singleton
 static GHashTable * fst = NULL;
 
 
@@ -172,13 +179,12 @@ static Fsim_Func_Rec * fsim_get_or_create_func_rec(char * funcname) {
 }
 
 
-/* Adds a pseudo-error description to the failure simulation table entry for a function.
+/** Adds an error description to the failure simulation table entry for a function.
  *
- * Arguments:
- *   funcname       function name
- *   call_occ_type  recurring or single
- *   occno          occurrence number
- *   rc             return code to simulate
+ * @param  funcname       function name
+ * @param  call_occ_type  recurring or single
+ * @param  occno          occurrence number
+ * @param  rc             return code to simulate
  */
 void fsim_add_error(
        char *               funcname,
@@ -206,10 +212,9 @@ void fsim_add_error(
 }
 
 
-/* Reset the call counter in a failure simulation table entry
+/** Resets the call counter in a failure simulation table entry
  *
- * Arguments:
- *   funcname   function name
+ *  @param  funcname   function name
  */
 void fsim_reset_callct(char * funcname) {
    if (fst) {
@@ -220,10 +225,9 @@ void fsim_reset_callct(char * funcname) {
 }
 
 
-/* Delete all pseudo-error descriptors for a function.
+/** Delete all error descriptors for a function.
  *
- * Arguments:
- *   funcname    function name
+ *  @param funcname    function name
  */
 void fsim_clear_errors_for_func(char * funcname) {
    if (fst) {
@@ -233,7 +237,7 @@ void fsim_clear_errors_for_func(char * funcname) {
 }
 
 
-/* Clear the entire failure simulation table.
+/* Clears the entire failure simulation table.
  */
 void fsim_clear_error_table() {
    if (fst) {
@@ -243,10 +247,9 @@ void fsim_clear_error_table() {
 }
 
 
-/* Report the failure simulation table.
+/** Report the failure simulation table.
  *
- * Arguments:
- *   depth       logical indentation depth
+ *  @param depth       logical indentation depth
  */
 void fsim_report_error_table(int depth) {
    bool debug = false;
@@ -336,9 +339,9 @@ bool eval_fsim_rc(char * rc_string, int * evaluated_rc) {
 // cf dumpload load variants
 //
 
-/* Load the failure simulation table from an array of strings.
- * Each string describes one simulated error for a function, and has
- * the form:
+/** Load the failure simulation table from an array of strings.
+ *  Each string describes one simulated error for a function, and has
+ *  the form:
  *
  *   function_name  status_code occurrence_descriptor
  *
@@ -354,8 +357,7 @@ bool eval_fsim_rc(char * rc_string, int * evaluated_rc) {
  *   i2c_set_addr  base:EBUSY 6
  *   ddc_verify    false      *1
  *
- * Arguments:
- *    lines     array of lines
+ * @param lines     array of lines
  */
 bool fsim_load_control_from_gptrarray(GPtrArray * lines) {
    bool debug = false;
@@ -442,10 +444,11 @@ bool fsim_load_control_string(char * s) {
 }
 
 
-/* Loads the failure simulation table from a control file.
+/** Loads the failure simulation table from a control file.
  *
- * Arguments:
- *   fn   file name
+ *  @param fn   file name
+ *
+ *  @return true if success, fails if error
  */
 bool fsim_load_control_file(char * fn) {
    bool debug = false;
@@ -471,15 +474,16 @@ bool fsim_load_control_file(char * fn) {
 // Execution time error check
 //
 
-/* Function that is called at runtime to check if a failure should be
+/** This function is called at runtime to check if a failure should be
  * simulated.
  *
- * Arguments:
- *   fn         name of file from which check is performed
- *   funcname   name of function for which check is performed
+ * @param  fn         name of file from which check is performed
+ * @param  funcname   name of function for which check is performed
  *
- * Returns:     struct indicating whether failure should be simulated
- *              and if so what the status code should be
+ * @return  struct indicating whether failure should be simulated
+ *          and if so what the status code should be.
+ *          Note that the entire struct is returned on the stack, not
+ *          a pointer to the struct.
  */
 Failsim_Result fsim_check_failure(const char * fn, const char * funcname) {
    bool debug = false;

@@ -23,6 +23,10 @@
  * </endcopyright>
  */
 
+/** @file data_structures.h
+ *  Generic data structures
+ */
+
 #ifndef DATA_STRUCTURES_H
 #define DATA_STRUCTURES_H
 
@@ -32,9 +36,10 @@
 #include "coredefs.h"   // for Byte
 
 
-// An opaque structure containing an array of bytes that
-// can grow dynamically.  Note that the same byte can
-// appear multiple times.
+/** An opaque structure containing an array of bytes that
+ *  can grow dynamically.  Note that the same byte value can
+ * appear multiple times.
+ */
 typedef void * Byte_Value_Array;
 
 Byte_Value_Array bva_create();
@@ -48,7 +53,7 @@ void             bva_report(Byte_Value_Array ids, char * title);
 bool             bva_store_bytehex_list(Byte_Value_Array bva, char * start, int len);
 
 
-// An opaque data structure containing 256 flags
+/* An opaque data structure containing 256 flags */
 typedef void * Byte_Bit_Flags;
 
 Byte_Bit_Flags bbf_create();
@@ -85,6 +90,7 @@ void test_value_array();
 //
 
 #define BUFFER_MARKER "BUFR"
+/** Buffer with length management */
 typedef
 struct {
    char       marker[4];      // "BUFR"
@@ -116,17 +122,40 @@ void     buffer_extend(Buffer* buf, int addl_bytes);
 // Identifier id to name and description lookup
 //
 
+/** Creates a Value_Name table entry by specifying its symbolic name.
+ *
+ *  @param v symbolic name
+ */
 #define VN(v) {v,#v}
+/** Terminating entry for a Value_Name table. */
 #define VN_END {0xff,NULL}
 
+/** Creates a Value_Name_Title table entry by specifying its symbolic name
+ *  and description
+ *
+ *  @param v symbolic name
+ *  @param t symbol description
+ */
 #define VNT(v,t) {v,#v,t}
+/** Terminating entry for a Value_Name table. */
 #define VNT_END {0xff,NULL,NULL}
 
+/** A Value_Name table is used to map byte values to their
+ * symbolic names.  Each entry is a value/name pair.
+ *
+ * The table is terminated by an entry whose name field is NULL.
+ */
 typedef struct {
    Byte   value;
    char * name;
 } Value_Name;
 
+/** A Value_Name_Title table is used to map byte values to their
+ * symbolic names and description (title).
+ * Each entry is a value/name/description triple..
+ *
+ * The table is terminated by an entry whose name and description fields are NULL.
+ */
 typedef struct {
    Byte   value;
    char * name;

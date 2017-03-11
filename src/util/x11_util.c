@@ -57,6 +57,10 @@
  *     http://www.pulse-eight.net/
  */
 
+/** @file x11_util.c
+ * X11 related utility functions
+ */
+
 // #include "env.h"
 // #include "randr-edid.h"
 #include <X11/Xlib.h>
@@ -92,6 +96,7 @@ static const char * const edid_names[] =
 
 // GPtrArray callback function
 // typedef: void (*GDestroyNotify)(gpointer data)
+static
 void edid_recs_free_func(gpointer voidptr) {
    X11_Edid_Rec * prec = voidptr;
    free(prec->edidbytes);
@@ -99,10 +104,12 @@ void edid_recs_free_func(gpointer voidptr) {
 }
 
 
-
-// Returns GPtrArray of X11_Edid_Rec
-// It is the responsibility of the caller to free the returned data structure
-
+/** Obtains all the EDIDs known to X11.
+ *
+ * @return GPtrArray of X11_Edid_Rec
+ *
+ * It is the responsibility of the caller to free the returned data structure
+ */
 GPtrArray * get_x11_edids() {
    bool debug = false;
 
@@ -246,6 +253,10 @@ if (debug) {
 }
 
 
+/** Frees the data structure returned by get_x11_edids()
+ *
+ * @param edidrecs pointer to GPtrArray of pointers to X11_Edid_Rec
+ */
 void free_x11_edids(GPtrArray * edidrecs) {
    g_ptr_array_free(edidrecs, true);
 

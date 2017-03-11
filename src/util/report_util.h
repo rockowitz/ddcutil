@@ -21,6 +21,10 @@
  * </endcopyright>
  */
 
+/** @file report_util.h
+ * Report utility package
+ */
+
 #ifndef REPORT_UTIL_H_
 #define REPORT_UTIL_H_
 
@@ -37,18 +41,27 @@ void rpt_reset_output_dest_stack();
 void rpt_change_output_dest(FILE* new_dest);
 void rpt_debug_output_dest();
 
-int rpt_indent(int depth);
+int rpt_get_indent(int depth);
 
 void rpt_flush();
+
 void rpt_nl();
 void rpt_title(char * title, int depth);
+void rpt_multiline(int depth, ...);
+void rpt_g_ptr_array(int depth, GPtrArray * strings);
+
 void rpt_vstring(int depth, char * format, ...) ;
+void rpt_2col(char * s1,  char * s2,  int col2offset, bool offset_absolute, int depth);
 void rpt_structure_loc(const char * name, const void * ptr, int depth);
+void rpt_hex_dump(const Byte * data, int size, int depth);
+int rpt_file_contents(const char * fn, int depth);
+
+// Remaining rpt_ functions share common formatting
 void rpt_str(const char * name, char * info, const char * val, int depth);
 void rpt_int(char * name, char * info, int val, int depth);
-void rpt_2col(char * s1,  char * s2,  int col2offset, bool offset_absolute, int depth);
 void rpt_bool(char * name, char * info, bool val, int depth);
 
+/** Interpretation function used by rpt_mapped_int() */
 typedef char * (*Value_To_Name_Function)(int val);
 void rpt_mapped_int(char * name, char * info, int val, Value_To_Name_Function func, int depth);
 
@@ -81,10 +94,5 @@ void rpt_ifval2(char * name,
                 Flag_Name_Set *   pflagNameSet,
                 Flag_Dictionary * pDict,
                 int    depth);
-
-void rpt_hex_dump(const Byte * data, int size, int depth);
-
-void rpt_multiline(int depth, ...);
-void rpt_g_ptr_array(int depth, GPtrArray * strings);
 
 #endif /* REPORT_UTIL_H_ */

@@ -1,7 +1,7 @@
 /* subprocess_util.h
  *
  * <copyright>
- * Copyright (C) 2014-2016 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2014-2017 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -21,12 +21,17 @@
  * </endcopyright>
  */
 
+/** @file subprocess_util.h
+* Functions to execute shell commands
+*/
+
 #ifndef SUBPROCESS_UTIL_H_
 #define SUBPROCESS_UTIL_H_
 
 #include <glib.h>
 #include <stdbool.h>
 
+bool execute_shell_cmd(char * shell_cmd);
 bool execute_shell_cmd_rpt(char * shell_cmd, int depth);
 GPtrArray * execute_shell_cmd_collect(char * shell_cmd);
 bool is_command_in_path(char * cmd);

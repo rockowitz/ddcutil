@@ -21,6 +21,10 @@
  * </endcopyright>
  */
 
+/** @file multi_level_map.h
+ * Multi_Level_Map data structure
+ */
+
 #ifndef MULTI_LEVEL_TABLE_H_
 #define MULTI_LEVEL_TABLE_H_
 
@@ -47,7 +51,9 @@ typedef struct {
    GPtrArray * children;
 } MLM_Node;
 
-// Used to both describe a level in a table, and maintain data about that level
+/* Used to both describe a level in a **Multi_Level_Map** table,
+ * /and maintain data about that level
+ */
 typedef struct {
    char *      name;
    int         initial_size;

@@ -21,6 +21,10 @@
  * </endcopyright>
  */
 
+/** @file multi_level_map.c
+ * Multi_Level_Map data structure
+ */
+
 #include <assert.h>
 #include <glib.h>
 #include <stdarg.h>
@@ -39,6 +43,12 @@
 // Data structure creation
 //
 
+/** Creates a new **Multi_Level_Map instance.
+ *
+ *  @param  table_name   name of table
+ *  @param  levels       number of levels
+ *  @param  level_detail pointer to array if **MLM_Level** descriptors
+ */
 Multi_Level_Map * mlm_create(char * table_name, int levels, MLM_Level* level_detail) {
    // printf("(%s) level_detail=%p\n", __func__, level_detail);
    // for (int lvlndx=0; lvlndx < levels; lvlndx++) {
@@ -56,6 +66,15 @@ Multi_Level_Map * mlm_create(char * table_name, int levels, MLM_Level* level_det
    return mlm;
 }
 
+
+/** Adds a node to a **Multi_Level_Map**.
+ *
+ * @param map    pointer to **Multi_Level_Map** table
+ * @param parent pointer to parent node
+ *               if NULL, this node is a child of the root
+ * @param key    key of node
+ * @param value  value of node
+ */
 MLM_Node * mlm_add_node(Multi_Level_Map * map, MLM_Node * parent, uint key, char * value) {
    // printf("(%s) parent=%p, key=0x%04x, value=|%s|\n", __func__, parent, key, value);
    MLM_Node * new_node = calloc(1,sizeof(MLM_Node));
@@ -84,6 +103,10 @@ MLM_Node * mlm_add_node(Multi_Level_Map * map, MLM_Node * parent, uint key, char
 // Debug data structure
 //
 
+/** Reports on a **Multi_Level_Map** level descriptor.
+ *  @param  level_desc pointer to level descriptor
+ *  @param  depth      logical indentation depth
+ */
 void report_mlm_level(MLM_Level * level_desc, int depth) {
    int d1 = depth+1;
    rpt_structure_loc("MLM_Level", level_desc, depth);
@@ -92,8 +115,9 @@ void report_mlm_level(MLM_Level * level_desc, int depth) {
    rpt_int("total_entries", NULL, level_desc->total_entries, d1);
 }
 
+
 // Debugging function
-void mlt_cur_entries(Multi_Level_Map * mlt) {
+void mlm_cur_entries(Multi_Level_Map * mlt) {
    int d1 = 1;
    rpt_vstring(0, "Multi_Level_Table.  levels=%d", mlt->levels);
    for (int ndx=0; ndx < mlt->levels; ndx++) {
@@ -103,13 +127,14 @@ void mlt_cur_entries(Multi_Level_Map * mlt) {
 }
 
 
+static
 void report_mlm_node(
         Multi_Level_Map * header,
         int               level,
         MLM_Node *        entry,
         int               depth)
 {
-   // MLT_Level level_detail = header->level_detail[level];
+   // MLM_Level level_detail = header->level_detail[level];
    rpt_vstring(depth, "%04x  %s", entry->code, entry->name);
    if (entry->children) {
       for (int ndx=0; ndx<entry->children->len; ndx++) {
@@ -123,6 +148,11 @@ void report_mlm_node(
 }
 
 
+/** Reports the contents of a **Multi_Level_Map**.
+ *
+ * @param header pointer to MLM instance
+ * @param depth  logical indentation depth
+ */
 void report_multi_level_map(Multi_Level_Map * header, int depth) {
       // bool debug = true;
    int d1 = depth+1;
@@ -146,6 +176,7 @@ void report_multi_level_map(Multi_Level_Map * header, int depth) {
 // Data structure query
 //
 
+static
 MLM_Node * mlm_find_child(GPtrArray * nodelist, uint id) {
    bool debug = false;
    if (debug)
@@ -168,7 +199,8 @@ MLM_Node * mlm_find_child(GPtrArray * nodelist, uint id) {
 }
 
 
-static void report_multi_level_names(Multi_Level_Names * mln, int depth) {
+static
+void report_multi_level_names(Multi_Level_Names * mln, int depth) {
    int d1 = depth+1;
    rpt_structure_loc("Multi_Level_Names", mln, depth);
    rpt_int("levels", NULL, mln->levels, d1);
@@ -178,6 +210,15 @@ static void report_multi_level_names(Multi_Level_Names * mln, int depth) {
 }
 
 
+/** Gets the names associated with the levels of a **Multi_Level_Map** path.
+ *
+ * @param mlm      pointer to **Multi_Level_Map** table
+ * @param levelct  number of ids
+ * @param ids      pointer to array of **levelct** node ids
+ *
+ * @return pointer to **Multi_Level_Names** struct containing the
+ *         names for the ids at each level
+ */
 Multi_Level_Names mlm_get_names2(Multi_Level_Map * mlm, int levelct, uint* ids) {
    bool debug = false;
    assert(levelct >= 1 && levelct <= MLT_MAX_LEVELS);
@@ -216,8 +257,16 @@ Multi_Level_Names mlm_get_names2(Multi_Level_Map * mlm, int levelct, uint* ids) 
 }
 
 
-// Implement using varargs
-// variable arguments are of type uint
+/** Variant of **mlm_get_names2()** that uses a variable argument list for
+ *  the level ids.
+ *
+ * @param table    pointer  to **Multi_Level_Map** table
+ * @param argct    number of ids
+ * @param ..       node ids, of type uint
+ *
+ * @return pointer to **Multi_Level_Names** struct containing the
+ *         names for the ids at each level
+ */
 Multi_Level_Names mlm_get_names(Multi_Level_Map * table, int argct, ...) {
   // bool debug = false;
   assert(argct >= 1 && argct <= MLT_MAX_LEVELS);
@@ -238,6 +287,8 @@ Multi_Level_Names mlm_get_names(Multi_Level_Map * table, int argct, ...) {
 }
 
 
+#ifdef OLD
+// new implementation wrappers mlm_get_names2()
 // Implement using varargs
 // variable arguments are of type uint
 Multi_Level_Names mlm_get_names_old(Multi_Level_Map * table, int argct, ...) {
@@ -279,5 +330,6 @@ Multi_Level_Names mlm_get_names_old(Multi_Level_Map * table, int argct, ...) {
   }
   return result;
 }
+#endif
 
 

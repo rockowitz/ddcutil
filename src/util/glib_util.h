@@ -23,6 +23,10 @@
  * </endcopyright>
  */
 
+/** @file glib_util.h
+ *  Functions for use with glib
+ */
+
 #ifndef GLIB_UTIL_H_
 #define GLIB_UTIL_H_
 

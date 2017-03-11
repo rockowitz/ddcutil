@@ -1,7 +1,7 @@
 /* subprocess_util.c
  *
  * <copyright>
- * Copyright (C) 2014-2016 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2014-2017 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -21,8 +21,13 @@
  * </endcopyright>
  */
 
+/** @file subprocess_util.c
+* Functions to execute shell commands
+*/
+
 #include <errno.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 #include "report_util.h"
@@ -31,15 +36,15 @@
 #include "subprocess_util.h"
 
 
-/* Executes a shell command and writes the output to the current report destination
+/** Executes a shell command and writes the output to the current report destination
+ * or to stdout.
  *
- * Arguments:
- *    shell_cmd      command to execute
- *    depth          logical report indentation depth
+ * @param   shell_cmd      command to execute
+ * @param   depth          logical report indentation depth,
+ *                         if < 0, write to stdout
  *
- * Returns:
- *    true           command succeeded
- *    false          failed, e.g. command not found
+ * @return   true           command succeeded
+ *           false          failed, e.g. command not found
  */
 bool execute_shell_cmd_rpt(char * shell_cmd, int depth) {
    bool debug = false;
@@ -83,19 +88,22 @@ bool execute_shell_cmd_rpt(char * shell_cmd, int depth) {
              }
              first_line = false;
           }
-          // fputs(a_line, stdout); fputs("\n", stdout);
-          // n. output will be sent to current rpt_ dest !
+
           if (debug && !str_all_printable(a_line)) {
              printf("(%s) String contains non-printable character!\n", __func__);
-             // fflush(stdout);
           }
-          // rpt_flush();
           // printf("%s", "\n");   // solves the missing line problem, but why?
-          rpt_title(a_line, depth);
+          if (depth < 0) {
+             fputs(a_line, stdout);
+             fputs("\n", stdout);
+          }
+          else {
+             // n. output will be sent to current rpt_ dest !
+             rpt_title(a_line, depth);
+          }
 
-          // free(a_line);
+          free(a_line);
        }
-       // rpt_flush();
        int pclose_rc = pclose(fp);
        if (debug)
           printf("(%s) plose() rc = %d\n", __func__, pclose_rc);
@@ -104,19 +112,26 @@ bool execute_shell_cmd_rpt(char * shell_cmd, int depth) {
  }
 
 
-
-/* Executes a shell command and returns the output as an array
- * of strings.
+/** Executes a shell command and writes the output to stdout.
  *
- * Arguments:
- *    shell_cmd      command to execute
+ * @param shell_cmd      command to execute
  *
- * Returns:
- *    GPtrArray of response lines if command succeeded
- *    NULL                        if command failed, e.g. command not found
+ * @return  true           command succeeded
+ *          false          failed, e.g. command not found
  */
-GPtrArray *
-execute_shell_cmd_collect(char * shell_cmd) {
+bool execute_shell_cmd(char * shell_cmd) {
+   return execute_shell_cmd_rpt(shell_cmd, -1);
+}
+
+
+/** Executes a shell command and returns the output as an array of strings.
+ *
+ *  @param shell_cmd      command to execute
+ *
+ *  @return :GPtrArray of response lines if command succeeded
+ *           NULL                        if command failed, e.g. command not found
+ */
+GPtrArray * execute_shell_cmd_collect(char * shell_cmd) {
    bool debug = false;
    GPtrArray * result = g_ptr_array_new();
    // TO DO: set free func
@@ -164,9 +179,15 @@ execute_shell_cmd_collect(char * shell_cmd) {
  }
 
 
-// enhancements:  check that actually executable,
-// i.e. could be in /sbin and not running privileged
-
+/** Tests if a command is found in path
+ *
+ *  @param cmd command name
+ *
+ *  @return true/false
+ *
+ *  TODO: Check that actually executable,
+ *        e.g. could be in /sbin and not running privileged
+ */
 bool is_command_in_path(char * cmd) {
    bool result = false;
    char shell_cmd[100];

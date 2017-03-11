@@ -21,7 +21,7 @@
  * </endcopyright>
  */
 
-/** @f glib_string_util.c
+/** @file glib_string_util.c
  * Functions that depend on both glib_util.c and string_util.c.
  *
  * glib_string_util.c/h exists to avoid circular dependencies within

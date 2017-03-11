@@ -520,7 +520,7 @@ void report_adl_ADLDisplayEDIDData(ADLDisplayEDIDData * pEDIDData, int depth) {
       rpt_int_as_hex("iFlag",       "",                  pEDIDData->iFlag,       d);
       rpt_int( "iEDIDSize",   "size of cEDIDData", pEDIDData->iEDIDSize,   d);
       rpt_int( "iBlockIndex", "0,1,2",             pEDIDData->iBlockIndex, d);
-      printf("%*scEDIDData:\n", rpt_indent(d), "");
+      printf("%*scEDIDData:\n", rpt_get_indent(d), "");
       hex_dump((unsigned char *) pEDIDData->cEDIDData, ADL_MAX_EDIDDATA_SIZE);
    }
 }

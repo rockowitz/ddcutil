@@ -90,7 +90,6 @@ void set_ferr(FILE * ferr) {
 
 void set_ferr_to_default() {
    FERR = stderr;
-   rpt_change_output_dest(stderr);
 }
 
 

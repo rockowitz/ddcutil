@@ -1,7 +1,7 @@
 /* output_sink.h
  *
  * <copyright>
- * Copyright (C) 2014-2016 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2014-2017 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -21,6 +21,11 @@
  * </endcopyright>
  */
 
+/** @file output_sink.h
+ *  Alternative mechanism for output redirecton.
+ *  Not currently used (3/2017)
+ */
+
 #ifndef UTIL_OUTPUT_SINK_H_
 #define UTIL_OUTPUT_SINK_H_
 
@@ -28,8 +33,10 @@
 #include <glib.h>
 #include <stdio.h>
 
-
+/** Type of output sink */
 typedef enum {SINK_STDOUT, SINK_FILE, SINK_MEMORY} Output_Sink_Type;
+
+/** Opaque handle to output sink instance */
 typedef void * Output_Sink;
 
 Output_Sink create_terminal_sink();

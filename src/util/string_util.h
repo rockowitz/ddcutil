@@ -1,7 +1,5 @@
 /* string_util.h
  *
- * String and hex utility functions
- *
  * <copyright>
  * Copyright (C) 2014-2017 Sanford Rockowitz <rockowitz@minsoft.com>
  *
@@ -21,6 +19,10 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  * </endcopyright>
+ */
+
+/** @file string_util.h
+ *  String utility functions header file
  */
 
 #ifndef STRINGUTIL_H_

@@ -24,6 +24,10 @@
  * </endcopyright>
  */
 
+/** @file edid.h
+ * Functions to interpret EDID
+ */
+
 #ifndef EDID_H_
 #define EDID_H_
 
@@ -46,17 +50,15 @@
 //Calculates checksum for a 128 byte EDID
 Byte edid_checksum(Byte * edid);
 
-
 void parse_mfg_id_in_buffer(Byte * mfgIdBytes, char * buffer, int bufsize);
-
 
 // Extracts the 3 character manufacturer id from an EDID byte array.
 // The id is returned, with a trailing null character, in a buffer provided by the caller.
 void get_edid_mfg_id_in_buffer(Byte* edidbytes, char * result, int bufsize);
 
 
-
 #define EDID_MARKER_NAME "EDID"
+/** Represents a parsed EDID */
 typedef
 struct {
    char         marker[4];          // always "EDID"

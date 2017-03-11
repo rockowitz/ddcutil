@@ -23,6 +23,10 @@
  * </endcopyright>
  */
 
+/** @file failsim.h
+ * Functions that provide a simple failure simulation framework.
+ */
+
 #ifndef FAILSIM_H_
 #define FAILSIM_H_
 
@@ -44,6 +48,7 @@ void fsim_set_name_to_number_funcs(
       Fsim_Name_To_Number_Func  func,
       Fsim_Name_To_Number_Func  unmodulated_func);
 
+/** Indicates whether a failure should occur exactly one or be recurring */
 typedef enum {FSIM_CALL_OCC_RECURRING, FSIM_CALL_OCC_SINGLE} Fsim_Call_Occ_Type;
 
 
@@ -56,14 +61,11 @@ void fsim_add_error(
        Fsim_Call_Occ_Type   call_occ_type,
        int                  occno,
        int                  rc);
-
 void fsim_clear_errors_for_func(char * funcname);
-
 void fsim_clear_error_table();
-
 void fsim_report_error_table(int depth);
-
 void fsim_reset_callct(char * funcname);
+
 
 //
 // Bulk load error table
@@ -82,6 +84,10 @@ bool fsim_load_control_file(char * fn);
 
 // int fsim_check_failure(const char * fn, const char * funcname);
 
+/* Return value for fsim_check_failure().
+ * Indicates whether a failure should be forced and if so the
+ * simulated status code the function should return.
+ */
 typedef struct {
    bool   force_failure;
    int    failure_value;

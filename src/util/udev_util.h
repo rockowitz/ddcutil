@@ -21,6 +21,10 @@
  * </endcopyright>
  */
 
+/** @file udev_util.h
+ * UDEV utility functions
+ */
+
 #ifndef UDEV_UTIL_H_
 #define UDEV_UTIL_H_
 
@@ -29,6 +33,7 @@
 #include <stdint.h>
 
 #define UDEV_DEVICE_SUMMARY_MARKER "UDSM"
+/** Summary information for one UDEV device */
 typedef struct udev_device_summary {
    char   marker[4];
    const char * sysname;
@@ -43,9 +48,13 @@ void report_udev_device(struct udev_device * dev, int depth);
 void probe_udev_subsystem(char * udev_class, bool show_usb_parent, int depth);
 
 
-// Used for informational messages.
-// Unless additional uses found, no need to convert from strings to integers
 #define UDEV_DETAILED_DEVICE_SUMMARY_MARKER "UDDS"
+/** Identifying information for UDEV device
+ *
+ * @remark
+ * Currently (3/2017) used solely for informational messages,
+ * so no need to convert from strings to integers.
+ */
 typedef struct {
    char      marker[4];
    char *    devname;          // e.g. /dev/usb/hiddev2

@@ -27,6 +27,13 @@
  * </endcopyright>
  */
 
+/** @file edid.c
+ * Functions to interpret EDID.
+ * While the code here is generic to all EDIDs, only fields of use
+ * to **ddcutil** are interpreted.
+ */
+
+
 #include <assert.h>
 #include <stdio.h>
 #include <string.h>
@@ -50,7 +57,10 @@ static inline bool all_bytes_zero(Byte * bytes, int len) {
 #endif
 
 
-/* Calculates checksum for a 128 byte EDID
+/** Calculates checksum for a 128 byte EDID
+ *
+ * @param edid pointer to 128 byte EDID block
+ * @return checksum byte
  *
  * Note that the checksum byte (offset 127) is itself
  * included in the checksum calculation.
@@ -64,16 +74,16 @@ Byte edid_checksum(Byte * edid) {
 }
 
 
-/* Unpacks the 2 byte manufacturer id field from the EDID into a 3 character
+/** Unpacks the 2 byte manufacturer id field from the EDID into a 3 character
  * string.
  *
- * Arguments:
- *    mfg_id_bytes  address of first byte
- *    result        address of buffer in which to return result
- *    bufsize       buffer size; must be >= 4
+ * @param   mfg_id_bytes  address of first byte
+ * @param   result        address of buffer in which to return result
+ * @param   bufsize       buffer size; must be >= 4
  *
- * Returns:
- *    nothing
+ * @remark
+ * Since the unpacked value is 4 bytes in length (3 characters plus a trailing '\0')
+ * it could easily be returned on the stack.  Consider.
  */
 void parse_mfg_id_in_buffer(Byte * mfg_id_bytes, char * result, int bufsize) {
       assert(bufsize >= 4);
@@ -90,13 +100,12 @@ void parse_mfg_id_in_buffer(Byte * mfg_id_bytes, char * result, int bufsize) {
 }
 
 
-/* Extracts the 3 character manufacturer id from an EDID byte array.
- * The id is returned with a trailing null in a buffer provided by the caller.
+/** Extracts the 3 character manufacturer id from an EDID byte array.
+ *  The id is returned with a trailing null in a buffer provided by the caller.
  *
- * Arguments:
- *   edidbytes    pointer to start of EDID
- *   result       buffer  in which to return manufacturer ID
- *   bufsize      buffer size (must be >= 4)
+ *  @param  edidbytes    pointer to start of EDID
+ *  @param  result       buffer  in which to return manufacturer ID
+ *  @param  bufsize      buffer size (must be >= 4)
  */
 void get_edid_mfg_id_in_buffer(Byte* edidbytes, char * result, int bufsize) {
    // parse_mfg_id_in_buffer(&edidbytes[8], result, bufsize);
@@ -110,29 +119,26 @@ void get_edid_mfg_id_in_buffer(Byte* edidbytes, char * result, int bufsize) {
 #define EDID_DESCRIPTOR_BLOCK_CT       4
 
 
-/* Extracts the non-timing descriptors from an EDID, i.e.
- * ASCII model name, serial number, and other descriptor.
- * The extracted values are returned as null-terminated strings.
+/** Extracts the non-timing descriptors from an EDID, i.e.
+ *  ASCII model name, serial number, and other descriptor.
+ *  The extracted values are returned as null-terminated strings.
  *
- * Note that the maximum length of these strings is 13 bytes.
+ *  Note that the maximum length of these strings is 13 bytes.
  *
- * Arguments:
- *   edidbytes        pointer to 128 byte EDID
- *   namebuf          pointer to buffer where model name will be returned.
- *   namebuf_len      size of namebuf, must be >= 14
- *   snbuf            pointer to buffere where serial number will be returned
- *   snbuf_len        size of snbuf, must be >= 14
- *   otherbuf         pointer to buffer where addl descriptor will be returned
- *   otherbuf_len     size of otherbuf, must be >= 14
- *
- * Returns: nothing
+ *  @param  edidbytes        pointer to 128 byte EDID
+ *  @param  namebuf          pointer to buffer where model name will be returned.
+ *  @param  namebuf_len      size of namebuf, must be >= 14
+ *  @param  snbuf            pointer to buffer where serial number will be returned
+ *  @param  snbuf_len        size of snbuf, must be >= 14
+ *  @param  otherbuf         pointer to buffer where addl descriptor will be returned
+ *  @param  otherbuf_len     size of otherbuf, must be >= 14
  *
  * Buffers will be set to "Unspecified" for descriptors that are not found.
+ *
+ * @remark
+ * - Use Buffers as parms instead of pointers and lengths?
+ * - Buffer for edidbytes, and just return pointers to newly allocated memory for found strings
  */
-
-// Use Buffer instead of pointers and lengths?
-// or Buffer for edidbytes, and just return pointers to newly allocated memory for found strings
-
 static void get_edid_descriptor_strings(
         Byte* edidbytes,
         char* namebuf,
@@ -196,15 +202,13 @@ static void get_edid_descriptor_strings(
 }
 
 
-/* Parses an EDID.
+/** Parses an EDID.
  *
- * Arguments:
- *   edidbytes   pointer to EDID
+ * @param edidbytes   pointer to 128 byte EDID block
  *
- * Returns:      pointer to newly allocated Parsed_Edid struct,
- *               or NULL if the bytes could not be parsed.
- *               It is the responsiblity of the caller to free
- *               this memory.
+ * @return pointer to newly allocated Parsed_Edid struct,
+ *         or NULL if the bytes could not be parsed.
+ *         It is the responsiblity of the caller to free this memory.
  */
 Parsed_Edid * create_parsed_edid(Byte* edidbytes) {
    assert(edidbytes);
@@ -288,10 +292,9 @@ bye:
 }
 
 
-/* Frees a Parsed_Edid struct.
+/** Frees a Parsed_Edid struct.
  *
- * Arguments:
- *   parsed_edid  pointer to Parsed_Edid struct
+ * @param  parsed_edid  pointer to Parsed_Edid struct to free
  */
 void free_parsed_edid(Parsed_Edid * parsed_edid) {
    assert( parsed_edid );
@@ -302,14 +305,16 @@ void free_parsed_edid(Parsed_Edid * parsed_edid) {
 
 
 
-/* Writes EDID summary to the current report output destination.
+/** Writes EDID summary to the current report output destination.
  * (normally stdout, but may be changed by rpt_push_output_dest())
  *
- * Arguments:
- *    edid       pointer to parsed edid struct
- *    verbose    show additional detail
- *    show_raw   include hex dump of EDID
- *    depth      logical indentation depth
+ *  @param  edid       pointer to parsed edid struct
+ *  @param  verbose    show additional detail
+ *  @param  show_raw   include hex dump of EDID
+ *  @param  depth      logical indentation depth
+ *
+ *  @remark
+ *  Output is written using rpt_ functions.
  */
 void report_parsed_edid_base(Parsed_Edid * edid, bool verbose, bool show_raw, int depth) {
    int d1 = depth+1;
@@ -389,13 +394,12 @@ void report_parsed_edid_base(Parsed_Edid * edid, bool verbose, bool show_raw, in
 }
 
 
-/* Writes EDID summary to the current report output destination.
+/** Writes a summary of an EDID to the current report output destination.
  * (normally stdout, but may be changed by rpt_push_output_dest())
  *
- * Arguments:
- *    edid       pointer to parsed edid struct
- *    verbose    include hex dump of EDID
- *    depth      logical indentation depth
+ *  @param  edid       pointer to parsed edid struct
+ *  @param  verbose    include hex dump of EDID
+ *  @param  depth      logical indentation depth
  */
 void report_parsed_edid(Parsed_Edid * edid, bool verbose, int depth) {
    report_parsed_edid_base(edid, verbose, verbose, depth);

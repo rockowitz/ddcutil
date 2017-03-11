@@ -35,6 +35,9 @@
 
 #include "glib_util.h"
 
+#ifdef ALTERNATIVE
+
+// create private copy of g_hash_table_get_keys_as_array()
 
 /**
  * g_hash_table_get_keys_as_array:
@@ -60,7 +63,7 @@
  *
  * Since: 2.40
  **/
-/*
+
 gpointer *
 g_hash_table_get_keys_as_array_local (GHashTable *hash_table,
                                       guint      *length)
@@ -82,10 +85,13 @@ g_hash_table_get_keys_as_array_local (GHashTable *hash_table,
 
   return result;
 }
-*/
 
 
-/* Converts a doubly linked list of pointers into a null-terminated array
+#endif
+
+
+
+/** Converts a doubly linked list of pointers into a null-terminated array
  * of pointers.
  *
  * @param  glist     pointer to doubly linked list
@@ -118,7 +124,7 @@ gpointer * g_list_to_g_array(GList * glist, guint * length) {
 }
 
 
-/* String comparison function used by g_ptr_array_sort()
+/** String comparison function used by g_ptr_array_sort()
  *
  * @param a pointer to first string
  * @param b pointer to second string

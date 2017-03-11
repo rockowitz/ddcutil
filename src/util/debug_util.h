@@ -24,6 +24,10 @@
 #ifndef DEBUG_UTIL_H_
 #define DEBUG_UTIL_H_
 
+/** @file debug_util.h
+ * Functions for debugging
+ */
+
 void show_backtrace(int stack_adjust);
 
 #endif /* DEBUG_UTIL_H_ */

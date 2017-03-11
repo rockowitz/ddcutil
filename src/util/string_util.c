@@ -1,8 +1,5 @@
 /* string_util.c
  *
- * Basic utility functions for basic data types,
- * particularly strings and hex values.
- *
  * <copyright>
  * Copyright (C) 2014-2016 Sanford Rockowitz <rockowitz@minsoft.com>
  *
@@ -22,6 +19,10 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  * </endcopyright>
+ */
+
+/** @file string_util.c
+ *  String utility functions
  */
 
 #include <assert.h>
@@ -116,16 +117,16 @@ bool str_starts_with(const char * value_to_test, const char * prefix) {
  *
  * @remark Consider using lib function g_str_suffix() ?? instead
  */
-bool str_ends_with(const char * value_to_test, const char * end_part) {
+bool str_ends_with(const char * value_to_test, const char * suffix) {
    bool debug = false;
    if (debug)
-      printf("(%s) value_to_test=|%s|, end_part=|%s|\n", __func__, value_to_test, end_part);
+      printf("(%s) value_to_test=|%s|, end_part=|%s|\n", __func__, value_to_test, suffix);
    int value_len = strlen(value_to_test);
-   int end_part_len = strlen(end_part);
+   int end_part_len = strlen(suffix);
    bool result = false;
    if (end_part_len <=value_len) {
       int startpos = value_len-end_part_len;
-      result = streq(value_to_test+startpos, end_part);
+      result = streq(value_to_test+startpos, suffix);
    }
    if (debug)
       printf("(%s) returning: %d\n", __func__, result);
@@ -161,11 +162,11 @@ bool str_all_printable(char * s) {
  *  @return index of first entry in list for which the comparison function succeeds,
  *          -1 if no match
  */
-int matches_by_func(char * word, char ** null_terminated_list, String_Comp_Func comp_func) {
+int matches_by_func(char * s, char ** null_terminated_list, String_Comp_Func comp_func) {
    int result = -1;
    int ndx = 0;
    for (ndx=0; null_terminated_list[ndx] != NULL; ndx++) {
-      if ( (*comp_func)(word, null_terminated_list[ndx])) {
+      if ( (*comp_func)(s, null_terminated_list[ndx])) {
          result = ndx;
          break;
       }
@@ -638,8 +639,8 @@ char * chars_to_string(char * start, int len) {
 
 /** Converts a string representing an integer to an integer value.
  *
- * @param sval string representing an integer
- * @param ival address at which to store integer value
+ * @param sval   string representing an integer
+ * @param p_ival address at which to store integer value
  * @return true if conversion succeeded, false if it failed
  *
  * @remark This function wraps system function strtol(), hiding the ugly details.
@@ -745,18 +746,18 @@ bool any_one_byte_hex_string_to_byte_in_buf(char * s, Byte * result) {
 /** Converts 2 hex characters to their corresponding byte value.
  *  The characters need not be null terminated.
  *
- *  @param s         pointer to hex characters.
+ *  @param p_hh      pointer to hex characters.
  *  @param converted pointer go byte in which converted value will be returned
  *
  *  @return true if successful conversion, false if s does not point
  *          to hex characters
  */
-bool hhc_to_byte_in_buf(char * hh, Byte * converted) {
-   // printf("(%s) Starting hh=%.2s   \n", __func__, hh );
+bool hhc_to_byte_in_buf(char * p_hh, Byte * converted) {
+   // printf("(%s) Starting p_hh=%.2s   \n", __func__, hh );
    char hhs[3];
-   hhs[0] = hh[0];
+   hhs[0] = p_hh[0];
    // hhs[1] = cc[1];   // why does compiler complain?
-   hhs[1] = *(hh+1);
+   hhs[1] = *(p_hh+1);
    hhs[2] = '\0';
    return  hhs_to_byte_in_buf(hhs, converted);
 }
@@ -1087,9 +1088,8 @@ int f0puts(const char * msg, FILE * stream) {
  *
  * @param stream     if null do nothing
  * @param  format     format string
- * @param ...        variable argument list
  *
- * @param  result of underlying vfprintf(), or 0 if stream is NULL
+ * @return  result of underlying vfprintf(), or 0 if stream is NULL
  */
 int f0printf(FILE * stream, const char * format, ...) {
    int rc = 0;
@@ -1109,7 +1109,7 @@ int f0printf(FILE * stream, const char * format, ...) {
  *
  * @param stream     if null do nothing
  * @param format     format string
- * @param ...        variable argument list
+ * @param ap         pointer to variable argument list
  *
  * @return result of underlying vfprintf(), or 0 if stream is NULL
  */

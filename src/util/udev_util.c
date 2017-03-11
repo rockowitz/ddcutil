@@ -23,6 +23,10 @@
 
 // Adapted from source code at http://www.signal11.us/oss/udev/
 
+/** @file udev_util.c
+ * UDEV utility functions
+ */
+
 #include <assert.h>
 #include <glib.h>
 #include <stdio.h>
@@ -51,7 +55,9 @@ void free_udev_device_summary(gpointer data) {
 }
 
 
-/* Destroys a GPtrArray of Udev_Device_Summary
+/** Destroys a GPtrArray of Udev_Device_Summary
+ *
+ * @param summaries  pointer to GPtrArray of summaries
  */
 void free_udev_device_summaries(GPtrArray* summaries) {
    g_ptr_array_free(summaries, true);
@@ -69,12 +75,10 @@ Udev_Device_Summary * get_udev_device_summary(struct udev_device * dev) {
 }
 
 
-/* Queries udev to obtain summaries of each device in a subsystem.
+/** Queries udev to obtain summaries of each device in a subsystem.
  *
- * Arguments:
- *   subsystem    subsystem name, e.g. "i2c-dev"
- *
- * Returns:  array of Udev_Device_Summary
+ * @param  subsystem    subsystem name, e.g. "i2c-dev"
+ * @return GPtrArray of Udev_Device_Summary
  */
 GPtrArray * summarize_udev_subsystem_devices(char * subsystem) {
    struct udev *udev;
@@ -116,13 +120,10 @@ GPtrArray * summarize_udev_subsystem_devices(char * subsystem) {
 }
 
 
-/* Report on a single udev device
+/** Report on a single UDEV device
  *
- * Arguments:
- *   dev           pointer to struct_udev_device to report
- *   depth         logical indentation depth
- *
- * Returns:        nothing
+ * @param  dev           pointer to struct **udev_device** to report
+ * @param  depth         logical indentation depth
  */
 void report_udev_device(struct udev_device * dev, int depth) {
    int d1 = depth+1;
@@ -206,6 +207,11 @@ Usb_Detailed_Device_Summary * new_usb_detailed_device_summary() {
 }
 
 
+/** Frees a Usb_Detailed_Device_Summary.
+ *  All underlying memory is released.
+ *
+ * @param devsum pointer to **Usb_Detailed_Device_Summary**
+ */
 void free_usb_detailed_device_summary(Usb_Detailed_Device_Summary * devsum) {
    if (devsum) {
       assert( memcmp(devsum->marker, UDEV_DETAILED_DEVICE_SUMMARY_MARKER, 4) == 0);
@@ -221,6 +227,11 @@ void free_usb_detailed_device_summary(Usb_Detailed_Device_Summary * devsum) {
 }
 
 
+/** Reports a Usb_Detailed_Device_Summary instance.
+ *
+ * @param devsum pointer to **Usb_Detailed_Device_Summary**
+ * @param depth  logical indentation depth
+ */
 void report_usb_detailed_device_summary(Usb_Detailed_Device_Summary * devsum, int depth) {
    assert( devsum && (memcmp(devsum->marker, UDEV_DETAILED_DEVICE_SUMMARY_MARKER, 4) == 0));
    rpt_structure_loc("Usb_Detailed_Device_Summary", devsum, depth);
@@ -240,14 +251,12 @@ void report_usb_detailed_device_summary(Usb_Detailed_Device_Summary * devsum, in
 }
 
 
-/* Look up information for a device name.
+/** Look up information for a device name.
  * The expected use in in error messages.
  *
- * Arguments:
- *   devname       device name, e.g. /dev/usb/hiddev3
- *
- * Returns:        pointer to newly allocated Usb_Detailed_Device_Summary stuct,
- *                 NULL if not found
+ * @param  devname       device name, e.g. /dev/usb/hiddev3
+ * @return pointer to newly allocated **Usb_Detailed_Device_Summary** struct,
+ *         NULL if not found
  */
 Usb_Detailed_Device_Summary * lookup_udev_usb_device_by_devname(char * devname) {
    int depth = 0;
@@ -349,14 +358,13 @@ Usb_Detailed_Device_Summary * lookup_udev_usb_device_by_devname(char * devname) 
 }
 
 
-/* Reports on all devices in a udev subsystem
+/** Reports on all devices in a UDEV subsystem
  *
- * Arguments:
- *   subsystem      subsystem name, e.g. "usbmisc"
- *   depth          logical indentation depth
+ * @param  subsystem        subsystem name, e.g. "usbmisc"
+ * @param  show_usb_parent  include reports on parent devices
+ * @param  depth            logical indentation depth
  *
- * Returns:         nothing
- *
+ * @remark
  * Adapted from USB sample code
  */
 void probe_udev_subsystem(char * subsystem, bool show_usb_parent, int depth) {
@@ -452,6 +460,11 @@ void probe_udev_subsystem(char * subsystem, bool show_usb_parent, int depth) {
 }
 
 
+/** Reports on a struct **udev_usb_devinfo**.
+ *
+ * @param dinfo pointer to struct
+ * @param depth logical indentation depth
+ */
 void report_udev_usb_devinfo(struct udev_usb_devinfo * dinfo, int depth) {
    rpt_structure_loc("udev_usb_devinfo", dinfo, depth);
    int d1 = depth+1;
@@ -460,14 +473,13 @@ void report_udev_usb_devinfo(struct udev_usb_devinfo * dinfo, int depth) {
 }
 
 
-/* Use udev to get the bus and device numbers for a USB device
+/** Use UDEV to get the bus and device numbers for a USB device
  *
- * Arguments:
- *    subsystem        device subsystem,   e.g. "usbmisc"
- *    simple_devname   simple device name, e.g. "hiddev"
+ *  @param   subsystem        device subsystem,   e.g. "usbmisc"
+ *  @param   simple_devname   simple device name, e.g. "hiddev"
  *
- * Returns:            pointer to Udev_Usb_Devinfo containing result
- *                     NULL if not found
+ *  @return  pointer to Udev_Usb_Devinfo containing result
+ *           NULL if not found
  *
  * Adapted from UDEV sample code.
  */

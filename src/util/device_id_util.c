@@ -1,7 +1,7 @@
 /* device_id_util.c
  *
  * <copyright>
- * Copyright (C) 2014-2016 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2014-2017 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -19,6 +19,10 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  * </endcopyright>
+ */
+
+/** @file device_id_util.c
+ * Lookup PCI and USB device ids
  */
 
 #include <assert.h>
@@ -47,29 +51,30 @@
 #define MAX_PATH 256
 #endif
 
-
+/** Indicates ID type */
 typedef enum {
    ID_TYPE_PCI,
    ID_TYPE_USB
 } Device_Id_Type;
 
 // keep in order with enum Device_Id_Type
-static char * simple_device_fn[] = {
+static
+char * simple_device_fn[] = {
       "pci.ids",
       "usb.ids"
 };
 
 
-/* Finds the pci.ids or usb.ids file.
+/** Finds the pci.ids or usb.ids file.
  *
- * Arguments:
- *    id_type     ID_TYPE_PCI or ID_TYPE_USB
+ *  @param  id_type     ID_TYPE_PCI or ID_TYPE_USB
+ *  @return fully qualified file name of device id file,
+ *          NULL if not found
  *
- * Returns:   fully qualified file name of device id file,
- *            NULL if not found
- *            It is the responsibility of the caller to free
- *            this value
+ *  @remark
+ *  It is the responsibility of the caller to free the returned value.
  */
+static
 char * devid_find_file(Device_Id_Type id_type) {
    bool debug = false;
 
@@ -757,14 +762,29 @@ void report_device_ids_mlm(Device_Id_Type id_type) {
 // *** Name Lookup ***
 //
 
-// sadly, both 0000 and ffff are used as ids, so can't use them as special arguments for "not set"
 
+/** Gets the names associated with a PCI device.
+ *
+ *  @param  vendor_id
+ *  @param  device_id
+ *  @param  subvendor_id
+ *  @param  subdevice_id
+ *  @param  argct   if 1, vendor_id is set
+ *                  if 2, vendor_id and device_id are set
+ *                  if 4, vendor_id, device_id, subvendor_id, and subdevice_id are set
+ *
+ *  @return names for the ids
+ *
+ *  @remark
+ *  Unfortunately, both 0000 and ffff are used as ids, so these can't use them as special
+ *  arguments to indicate "not set".  Hence the argct parm.
+ */
 Pci_Usb_Id_Names devid_get_pci_names(
                 ushort vendor_id,
                 ushort device_id,
                 ushort subvendor_id,
                 ushort subdevice_id,
-                int argct)
+                int    argct)
 {
    bool debug = false;
    if (debug) {
@@ -800,11 +820,22 @@ Pci_Usb_Id_Names devid_get_pci_names(
 }
 
 
+/** Gets the names associated with a USB device.
+ *
+ *  @param  vendor_id
+ *  @param  device_id
+ *  @param  interface_id
+ *  @param  argct   if 1, vendor_id is set
+ *                  if 2, vendor_id and device_id are set
+ *                  if 4, vendor_id, device_id, and interface_id are set
+ *
+ *  @return names for the ids
+ */
 Pci_Usb_Id_Names devid_get_usb_names(
                 ushort vendor_id,
                 ushort device_id,
                 ushort interface_id,
-                int argct)
+                int     argct)
 {
    bool debug = false;
    if (debug) {
@@ -831,11 +862,16 @@ Pci_Usb_Id_Names devid_get_usb_names(
 }
 
 
-/* Gets the page name for a usage page code
+/** Gets the page name for a USB usage page code
  *
- * Corresponds to names_huts() in names.c
- * Is top level field in HUT entry of usb.ids
-*/
+ * @param usage_page_code
+ *
+ * @return page name, NULL if invalid code
+ *
+ * @remark
+ * - Is top level field in HUT entry of usb.ids
+ * - Corresponds to names_huts() in names.c
+ */
 char * devid_usage_code_page_name(ushort usage_page_code) {
    devid_ensure_initialized();
    // Per USB HID Usage Tables spec v1.12, section 3.0,
@@ -860,8 +896,17 @@ char * devid_usage_code_page_name(ushort usage_page_code) {
 }
 
 
-// corresponds to names_hutus() in names
-// first and second fields of HUT entry in usb.ids
+/** Gets the name of a HID usage code
+ *
+ * @param usage_page_code   usage page
+ * @param usage_simple_id   id within page
+ *
+ * @return usage id name, NULL if not found
+ *
+ * @remark
+ * - First and second fields of HUT entry in usb.ids
+ * - Corresponds to names_hutus() in names.c
+ */
 char * devid_usage_code_id_name(ushort usage_page_code, ushort usage_simple_id) {
    static char resultbuf[12] = {0};
    bool debug = false;
@@ -885,15 +930,30 @@ char * devid_usage_code_id_name(ushort usage_page_code, ushort usage_simple_id) 
 }
 
 
+/** Gets the name of a HID usage code, specified as a single value containing
+ *  the page id in the upper 16 bits and the simple id it in the lower 16 bits.
+ *
+ * @param extended_usage   usage value
+ *
+ * @return usage id name, NULL if not found
+ */
 char * devid_usage_code_name_by_extended_id(uint32_t extended_usage) {
    return devid_usage_code_id_name( extended_usage >> 16, extended_usage & 0xffff );
 }
 
 
-// HID documentation refers to this as item tag
-// usb.ids file refers to this as item type
-// is actually 1 byte
-// corresponds to names.c function names_reporttag()
+/** Returns the name of USB HID descriptor item tag.
+ *
+ * @param id item tag id
+ *
+ * @return name of item tag, NULL if not found
+ *
+ * @remark
+ * - HID documentation refers to this as item tag.
+ *   usb.ids file refers to this as item type
+ * - The value is actually 1 byte.
+ * - This function corresponds to names.c function names_reporttag()
+ */
 char * devid_hid_descriptor_item_type(ushort id) {
    devid_ensure_initialized();
    char * result = NULL;
@@ -906,6 +966,9 @@ char * devid_hid_descriptor_item_type(ushort id) {
 // *** Initialization ***
 //
 
+/** Initializes the PCI and USB id tables.
+ *  If the tables are already initialized, does nothing.
+ */
 bool devid_ensure_initialized() {
    bool debug = false;
    if (debug)

@@ -25,6 +25,10 @@
  * </endcopyright>
  */
 
+/** @file glib_string_util.h
+ * Functions that depend on both glib_util.c and string_util.c
+ */
+
 #include <glib.h>
 
 #ifndef GLIB_STRING_UTIL_H_

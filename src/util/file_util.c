@@ -31,23 +31,22 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
-#include "report_util.h"
 #include "string_util.h"
 
 #include "file_util.h"
 
+/** @file file_util.c
+ * File utility functions
+ */
 
-/* Reads the lines of a text file into a GPtrArray.
+/** Reads the lines of a text file into a GPtrArray.
  *
- * Arguments:
- *    fn          file name
- *    line_array  pointer to GPtrArray where lines will be saved
- *    verbose     if true, write message to stderr if unable to open file
- *                or other error
+ *  @param   fn          file name
+ *  @param  line_array  pointer to GPtrArray where lines will be saved
+ *  @param  verbose     if true, write message to stderr if unable to open file or other error
  *
- *  Returns:
- *    if >=0:  number of lines added to line_array
- *    <0       -errno
+ *  @return if >=0:  number of lines added to line_array
+ *          if <0    -errno
  *
  *  The caller is responsible for freeing the lines added to line_array.
  */
@@ -98,15 +97,13 @@ int file_getlines(const char * fn,  GPtrArray* line_array, bool verbose) {
 }
 
 
-/* Reads the first line of a file.
+/** Reads the first line of a file.
  *
- * Arguments:
- *    fn          file name
- *    verbose     if true, write message to stderr if unable to open file
+ *  @param  fn          file name
+ *  @param  verbose     if true, write message to stderr if unable to open file
  *
- *  Returns:
- *    pointer to line read, caller responsible for freeing
- *    NULL if error or no lines in file
+ *  @return pointer to line read, caller responsible for freeing
+ *          or NULL if error or no lines in file
  */
 char * file_get_first_line(const char * fn, bool verbose) {
    FILE * fp = fopen(fn, "r");
@@ -135,24 +132,11 @@ char * file_get_first_line(const char * fn, bool verbose) {
 }
 
 
-int rpt_file_contents(const char * fn, int depth) {
-   GPtrArray * line_array = g_ptr_array_new();
-   int rc = file_getlines(fn, line_array, false);
-   if (rc < 0) {
-      rpt_vstring(depth, "Error reading file %s: %s", fn, strerror(-rc));
-   }
-   else if (rc > 0) {
-      int ndx = 0;
-      for (; ndx < line_array->len; ndx++) {
-         char * curline = g_ptr_array_index(line_array, ndx);
-         rtrim_in_place(curline);     // strip trailing newline
-         rpt_title(curline, depth);
-      }
-   }
-   return rc;
-}
-
-
+/** Checks if a regular file exists.
+ *
+ * @param fqfn fully qualified file name
+ * @return true/false
+ */
 bool regular_file_exists(const char * fqfn) {
    bool result = false;
    struct stat stat_buf;
@@ -164,6 +148,11 @@ bool regular_file_exists(const char * fqfn) {
 }
 
 
+/** Checks if a directory exists.
+ *
+ * @param fqfn fully qualified directory name
+ * @return true/false
+ */
 bool directory_exists(const char * fqfn) {
    bool result = false;
    struct stat stat_buf;
@@ -175,15 +164,15 @@ bool directory_exists(const char * fqfn) {
 }
 
 
-/* Scans list of directories to obtain file names matching a criterion
+/** Scans list of directories to obtain file names matching a criterion
  *
- * Arguments:
- *   dirnames     null terminated array of pointers to directory names
- *   filter_func  tests directory entry
+ *  @param dirnames     null terminated array of pointers to directory names
+ *  @param filter_func  tests directory entry
  *
- * Returns:   GPtrArray of fully qualified file names
- *            A free function is set on the array, so g_ptr_array_free() releases
- *            all the pointers
+ *  @return  GPtrArray of fully qualified file names
+ *
+ *  A free function is set on the returned GPtrArray, so g_ptr_array_free() releases
+ *  all the file names
  *
  * Adapted from usbmonctl
  */
@@ -220,18 +209,15 @@ GPtrArray * get_filenames_by_filter(const char * dirnames[], Dirent_Filter filte
 }
 
 
-/* Gets the file name for a file descriptor
+/** Gets the file name for a file descriptor
  *
- * Arguments:
- *   fd    file descriptor
- *   pfn   where to return a pointer to the file name
- *         The daller is responsible for freeing this memory
+ * @param  fd    file descriptor
+ * @param  p_fn  where to return a pointer to the file name
+ *               The caller is responsible for freeing this memory
  *
- * Returns:
- *   0 if success
- *   -errno if error (see readlink() doc for possible error numbers
+ * @return 0 if success, -errno if error (see readlink() doc for possible error numbers
  */
-int filename_for_fd(int fd, char** pfn) {
+int filename_for_fd(int fd, char** p_fn) {
    char * result = calloc(1, PATH_MAX+1);
    char workbuf[40];
    int rc = 0;
@@ -240,12 +226,12 @@ int filename_for_fd(int fd, char** pfn) {
    if (ct < 0) {
       rc = -errno;
       free(result);
-      *pfn = NULL;
+      *p_fn = NULL;
    }
    else {
       assert(ct <= PATH_MAX);
       result[ct] = '\0';
-      *pfn = result;
+      *p_fn = result;
    }
    // printf("(%s) fd=%d, returning: %d, *pfn=%p -> |%s|\n",
    //        __func__, fd, rc, *pfn, *pfn);

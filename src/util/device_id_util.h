@@ -1,7 +1,7 @@
 /* device_id_util.h
  *
  * <copyright>
- * Copyright (C) 2014-2016 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2014-2017 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -21,6 +21,10 @@
  * </endcopyright>
  */
 
+/** @file device_id_util.h
+ * Lookup PCI and USB device ids
+ */
+
 #ifndef DEVICE_ID_UTIL_H_
 #define DEVICE_ID_UTIL_H_
 
@@ -29,13 +33,16 @@
 #include <stdint.h>
 #include <stdlib.h>
 
-
 // *** Initialization ***
 bool devid_ensure_initialized();
 
 
 // *** Device ID lookup ***
 
+/** Return value for devid_get_pci_names() and devid_usb_names().
+ *  Depending on the number of arguments to those functions,
+ *  device_name and subsys_or_interface_name may or may not be set.
+ */
 typedef struct {
    char * vendor_name;
    char * device_name;
@@ -63,7 +70,7 @@ char * devid_hid_descriptor_item_type(ushort id);  // R entry in usb.ids, corres
 
 // *** HID Descriptor Type ***
 // declared here but not defined
-char * devid_hid_descriptor_type(ushort id);       // HID   entry in usb.ids
+// char * devid_hid_descriptor_type(ushort id);       // HID   entry in usb.ids
 
 
 // *** HUT table ***

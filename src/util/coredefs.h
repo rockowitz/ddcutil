@@ -23,12 +23,20 @@
  * </endcopyright>
  */
 
+/** @file coredefs.h
+ * Basic definitions.
+ */
+
 #ifndef COREDEFS_H_
 #define COREDEFS_H_
 
+/** Raw byte
+ */
 typedef unsigned char Byte;
 
 #ifndef ARRAY_SIZE
+/** Number of entries in array
+ */
 #define ARRAY_SIZE(a) (sizeof(a) / sizeof((a)[0]))
 #endif
 

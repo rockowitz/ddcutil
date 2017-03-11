@@ -1,7 +1,7 @@
 /* output_sink.c
  *
  * <copyright>
- * Copyright (C) 2014-2016 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2014-2017 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -20,6 +20,12 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  * </endcopyright>
  */
+
+/** @file output_sink.c
+ *  Alternative mechanism for output redirecton.
+ *  Not currently used (3/2017)
+ */
+
 
 #include <assert.h>
 #include <errno.h>
@@ -43,7 +49,10 @@ struct Output_Sink{
 };
 
 
-
+/** Creates an output sink representing stdout.
+ *
+ * @return output sink handle
+ */
 Output_Sink create_terminal_sink() {
     struct Output_Sink * psink = calloc(1, sizeof(struct Output_Sink));
     memcpy(psink->marker, OUTPUT_SINK_MARKER, 4);
@@ -53,6 +62,11 @@ Output_Sink create_terminal_sink() {
 }
 
 
+/** Creates an output sink representing a file.
+ *
+ * @param fp pointer to open file stream
+ * @return output sink handle
+ */
 Output_Sink create_file_sink(FILE * fp) {
    struct Output_Sink * psink = calloc(1, sizeof(struct Output_Sink));
    memcpy(psink->marker, OUTPUT_SINK_MARKER, 4);
@@ -62,17 +76,30 @@ Output_Sink create_file_sink(FILE * fp) {
 }
 
 
+/** Creates an in-memory output sink.
+ *
+ * @param initial_line_ct      initially allocate space for this many lines
+ * @param estimated_max_chars  estimated maximum line length
+ * @return output sink handle
+ */
 Output_Sink create_memory_sink(int initial_line_ct, int estimated_max_chars) {
    struct Output_Sink * psink = calloc(1, sizeof(struct Output_Sink));
    memcpy(psink->marker, OUTPUT_SINK_MARKER, 4);
    psink->sink_type = SINK_MEMORY;
    psink->line_array = g_ptr_array_sized_new(initial_line_ct);
+   g_ptr_array_set_free_func(psink->line_array, free);
    psink->cur_max_chars = estimated_max_chars;
    psink->workbuf = calloc(estimated_max_chars+1, sizeof(char));
    return psink;
 }
 
 
+/** Writes to an output sink in a printf() like manner.
+ *
+ * @param sink   Output_Sink handle
+ * @param format printf() format string
+ * @param ...    printf() arguments
+ */
 int printf_sink(Output_Sink sink, const char * format, ...) {
    struct Output_Sink * psink = (struct Output_Sink*) sink;
    assert(psink && memcmp(psink->marker, OUTPUT_SINK_MARKER, 4) == 0);
@@ -114,6 +141,14 @@ int printf_sink(Output_Sink sink, const char * format, ...) {
 }
 
 
+/** Reads the current contents of an in-memory Output_Sink.
+ *
+ * @param sink Output_Sink handle
+ * @return pointer to GPtrArray of strings
+ *
+ * @remark
+ * Note thsi returns a pointer into the Output_Sink data structure.
+ */
 GPtrArray *  read_sink(Output_Sink sink) {
    struct Output_Sink * psink = (struct Output_Sink *) sink;
    assert(psink && memcmp(psink->marker, OUTPUT_SINK_MARKER, 4) == 0);
@@ -122,6 +157,19 @@ GPtrArray *  read_sink(Output_Sink sink) {
 }
 
 
+/** Closes an Output_Sink.
+ *
+ * If a file output sink, the underlying file is closed.
+ *
+ * If an in-memory output sink, all memory associated with the
+ * sink is freed.  (UNIMPLEMENTED)
+ *
+ * @param sink handle to Output_Sink
+ *
+ * @remark
+ * - For symmetry, if this function closes a file sink,
+ *   create_sink should probably open the file.
+ */
 int close_sink(Output_Sink sink) {
    struct Output_Sink * psink = (struct Output_Sink *) sink;
    assert(psink && memcmp(psink->marker, OUTPUT_SINK_MARKER, 4) == 0);
@@ -136,11 +184,11 @@ int close_sink(Output_Sink sink) {
             rc = -errno;
          break;
    case (SINK_MEMORY):
-      {
-         // TODO: destroy psink->line_array
+         g_ptr_array_free(psink->line_array, true);
+         psink->line_array = NULL;
          break;
-      }
    }
+   psink->marker[3] = 'x';
    free(psink);
    return rc;
 }

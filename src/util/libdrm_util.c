@@ -23,6 +23,10 @@
  * </endcopyright>
  */
 
+/** @file libdrm_util.c
+ * Utilities for use with libdrm
+ */
+
 #include <stdio.h>
 #include <string.h>
 
@@ -67,15 +71,22 @@ Value_Name_Title connector_type_table[] = {
 };
 
 
+/** Returns the symbolic name of a connector type.
+ * @param val connector type
+ * @return symbolic name
+ */
 char * connector_type_name(Byte val) {
    return vnt_name(connector_type_table, val);
 }
 
+
+/** Returns the description string for a connector type.
+ * @param val connector type
+ * @return descriptive string
+ */
 char * connector_type_title(Byte val) {
    return vnt_title(connector_type_table, val);
 }
-
-
 
 
 // from libdrm/drm.h
@@ -143,10 +154,19 @@ Value_Name_Title drmModeConnection_table[] = {
    VNT_END
 };
 
+/** Returns the symbolic name of a drmModeConnection value.
+ * @param val connection state
+ * @return symbolic name
+ */
 char * connector_status_name(drmModeConnection val) {
    return vnt_name(drmModeConnection_table, val);
 }
 
+
+/** Returns a description string for a drmModeConnection value.
+ * @param val connection state
+ * @return descriptive string
+ */
 char * connector_status_title(drmModeConnection val) {
    return vnt_title(drmModeConnection_table, val);
 }
@@ -164,6 +184,10 @@ Value_Name_Title drm_encoder_type_table[] = {
 };
 
 
+/** Returns a description string for an encoder type
+ * @param encoder_type encolder type
+ * @return descriptive string
+ */
 char * encoder_type_title(uint32_t encoder_type) {
     return vnt_title(drm_encoder_type_table, encoder_type);
 }
@@ -209,6 +233,11 @@ char * join_ids(char * buf, int bufsz, uint32_t* vals, int ct) {
 }
 
 
+/** Reports a drmModeRes struct.
+ *
+ * @param  res   pointer to drmModeRes instance
+ * @param  depth logical indentation depth
+ */
 void report_drmModeRes(drmModeResPtr  res, int depth) {
    int d1 = depth+1;
    char buf[200]; int bufsz=200;
@@ -432,11 +461,10 @@ typedef struct _drmModeProperty {
 #endif
 
 
-/* Reports the raw bytes of a blob.
+/** Reports the raw bytes of a blob.
  *
- * Arguments:
- *   blob_ptr    pointer to a drmModePropertyBlobRes
- *   depth       logical indentation depth
+ * @param  blob_ptr    pointer to a drmModePropertyBlobRes
+ * @param  depth       logical indentation depth
  */
 void report_drmModePropertyBlob(drmModePropertyBlobPtr blob_ptr, int depth) {
    rpt_vstring(depth, "blob id: %u", blob_ptr->id);
@@ -444,13 +472,12 @@ void report_drmModePropertyBlob(drmModePropertyBlobPtr blob_ptr, int depth) {
 }
 
 
-/* Reports a property value
+/** Reports a property value
  *
- * Arguments:
- *   fd          file descriptor
- *   prop_ptr    pointer to struct containing property metadata
- *   prop_value  property value
- *   depth       logical indentation depth
+ * @param  fd          file descriptor of open DRM device
+ * @param  prop_ptr    pointer to struct containing property metadata
+ * @param  prop_value  property value
+ * @param  depth       logical indentation depth
  */
 void report_property_value(
         int                  fd,
@@ -551,6 +578,11 @@ void report_property_value(
 #endif
 
 
+/** Reports a **drmModePropertyRes struct
+ *
+ * @param p     pointer to drmModePropertyRes
+ * @param depth logical indentation deptn
+ */
 void report_drm_modeProperty(drmModePropertyRes * p, int depth) {
    rpt_structure_loc("drmModePropertyRes", p, depth);
    int d1 = depth+1;
@@ -573,6 +605,11 @@ void report_drm_modeProperty(drmModePropertyRes * p, int depth) {
 }
 
 
+/** Emits a summary report for a **drmModePropertyRes struct
+ *
+ * @param p     pointer to drmModePropertyRes
+ * @param depth logical indentation deptn
+ */
 void summarize_drm_modeProperty(drmModePropertyRes * p, int depth) {
    rpt_vstring(depth, "Property %2d:  %-20s flags: 0x%08x - %s",
                       p->prop_id,

@@ -21,6 +21,10 @@
  * </endcopyright>
  */
 
+/** @file libdrm_util.h
+ * Utilities for use with libdrm
+ */
+
 #ifndef LIBDRM_UTIL_H_
 #define LIBDRM_UTIL_H_
 
