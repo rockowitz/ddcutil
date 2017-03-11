@@ -34,10 +34,10 @@
 
 // To consider:  use libexplain.
 
-
 // Forward declarations
 static Status_Code_Info * get_negative_errno_info(int errnum);
 Status_Code_Info * find_errno_description(int errnum);
+void show_errno_desc_table();
 
 // Initialization
 // n. called from main before command line parsed, trace control not yet established
@@ -46,6 +46,7 @@ void init_linux_errno() {
               RR_ERRNO,
               get_negative_errno_info,
               false);                // finder_arg_is_modulated
+   // show_errno_desc_table();
 }
 
 
@@ -57,6 +58,9 @@ void init_linux_errno() {
 // Known system error numbers
 //
 
+// Because macro EDENTRY ignores the description value supplied and sets
+// the description field to NULL, find_eerno_description(), called by
+// linux_errno_desc(), will lookup the description using strerror().
 #define EDENTRY(id,desc) {id, #id, NULL}
 
 static Status_Code_Info errno_desc[] = {
@@ -98,7 +102,6 @@ static Status_Code_Info errno_desc[] = {
       // break in seq
       EDENTRY(EPROTO,   "Protocol error"),                       // 71
 
-
       EDENTRY(ENOTSOCK,          "Socket operation on non-socket"),               //  88
       EDENTRY(EDESTADDRREQ,      "Destination address required"),                 //  89
       EDENTRY(EMSGSIZE,          "Message too long"),                             //  90
@@ -136,17 +139,22 @@ static Status_Code_Info errno_desc[] = {
       EDENTRY(EISNAM           , "Is a named type file"),                         // 120
       EDENTRY(EREMOTEIO        , "Remote I/O error"),                             // 121
       EDENTRY(EDQUOT           , "Quota exceeded"),                               // 122
-
-
 };
 #undef EDENTRY
 static const int errno_desc_ct = sizeof(errno_desc)/sizeof(Status_Code_Info);
-
 
 #define WORKBUF_SIZE 300
 static char workbuf[WORKBUF_SIZE];
 static char dummy_errno_description[WORKBUF_SIZE];
 static Status_Code_Info dummy_errno_desc;
+
+void show_errno_desc_table() {
+   printf("(%s) errno_desc table:\n", __func__);
+   for (int ndx=0; ndx < errno_desc_ct; ndx++) {
+      Status_Code_Info cur = errno_desc[ndx];
+      printf("(%3d, %-20s, %s\n", cur.code, cur.name, cur.description);
+   }
+}
 
 
 /* Simple call to get a description string for a Linux errno value.
@@ -176,6 +184,8 @@ char * linux_errno_desc(int error_number) {
       snprintf(workbuf, WORKBUF_SIZE, "%d: %s",
                error_number, strerror(error_number));
    }
+   if (debug)
+      printf("(%s) error_number=%d, returning: |%s|\n", __func__, error_number, workbuf);
    return workbuf;
 }
 
@@ -184,7 +194,6 @@ char * linux_errno_name(int error_number) {
    Status_Code_Info * pdesc = find_errno_description(error_number);
    return pdesc->name;
 }
-
 
 
 /* Returns the Status_Code_Info record for the specified error number
@@ -211,9 +220,10 @@ Status_Code_Info * find_errno_description(int errnum) {
        }
    }
    if (result && !result->description) {
-      char * desc = strerror(errnum);
-      result->description  = malloc(strlen(desc)+1);
-      strcpy(result->description, desc);
+      // char * desc = strerror(errnum);
+      // result->description  = malloc(strlen(desc)+1);
+      // strcpy(result->description, desc);
+      result->description = strdup(strerror(errnum));
    }
    if (debug)
       printf("(%s) Returning %p\n", __func__, result);
