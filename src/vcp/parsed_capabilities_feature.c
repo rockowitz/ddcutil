@@ -63,13 +63,7 @@ new_capabilities_feature(
       memcpy(vfr->value_string, value_string_start, value_string_len);
       vfr->value_string[value_string_len] = '\0';
 
-      // single digit values or true integer values in string?
-#ifdef OLD
-      vfr->values = parse_id_list(value_string_start, value_string_len);
-      if (debug)
-         report_bva_array(vfr->values, "Feature values (array):");
-#endif
-
+// #ifdef OLD_WAY
       Byte_Value_Array bva_values = bva_create();
       bool ok1 = store_bytehex_list(value_string_start, value_string_len, bva_values, bva_appender);
       if (!ok1) {
@@ -77,6 +71,7 @@ new_capabilities_feature(
                  "Error processing VCP feature value list into bva_values: %.*s\n",
                  value_string_len, value_string_start);
       }
+// #endif
       Byte_Bit_Flags bbf_values = bbf_create();
       bool ok2 = store_bytehex_list(value_string_start, value_string_len, bbf_values, bbf_appender);
       if (!ok2) {
@@ -85,23 +80,14 @@ new_capabilities_feature(
                   value_string_len, value_string_start);
        }
       if (debug) {
+// #ifdef OLD_WAY
           DBGMSG("store_bytehex_list for bva returned %d", ok1);
+// #endif
           DBGMSG("store_bytehex_list for bbf returned %d", ok2);
           //DBGMSG("Comparing Byte_value_Array vs ByteBitFlags");
       }
 
-#ifdef OLD
-      bool compok =  bva_bbf_same_values(vfr->values, bbf_values);
-      if (compok) {
-         DBGMSG("Byte_Value_Array and ByteBitFlags equivalent");
-      }
-      else {
-         DBGMSG("Byte_Value_Array and ByteBitFlags DO NOT MATCH");
-         report_bva_array(vfr->values, "Byte_Value_Array contents:");
-         DBGMSG("ByteBitFlags as list: %s", bbf_to_string(bbf_values));
-      }
-#endif
-
+#ifdef OLD_WAY
       bool compok =  bva_bbf_same_values(bva_values, bbf_values);
       if (compok) {
          if (debug)
@@ -113,9 +99,13 @@ new_capabilities_feature(
          char buf[768];
          DBGMSG("ByteBitFlags as list: %s", bbf_to_string(bbf_values, buf, 768));
       }
+#endif
+
+// #ifdef OLD_WAY
       vfr->values = bva_values;
       if (debug)
          bva_report(vfr->values, "Feature values (array):");
+// #endif
       vfr->bbflags = bbf_values;
       if (debug) {
          char buf[768];
@@ -175,6 +165,7 @@ show_capabilities_feature(
    }
 
    DBGMSF(debug, "vfr->values=%p", vfr->values);
+   // TODO: convert to use vfr->bbflags (Byte_Bit_Flags)
    if (vfr->values) {
       DDCA_Feature_Value_Entry * feature_values =
             find_feature_values_for_capabilities(vfr->feature_id, vcp_version);

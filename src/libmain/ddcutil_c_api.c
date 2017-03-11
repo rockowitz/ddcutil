@@ -1381,6 +1381,7 @@ ddca_parse_capabilities_string(
             // DBGMSF(debug, "cur_cfr = %p, feature_code - 0x%02x", cur_cfr, cur_cfr->feature_id);
 
             // cur_cap_vcp->raw_values = strdup(cur_cfr->value_string);
+            // TODO: get values from Byte_Bit_Flags cur_cfr->bbflags
             Byte_Value_Array bva = cur_cfr->values;
             if (bva) {
                cur_cap_vcp->value_ct = bva_length(bva);
