@@ -117,12 +117,22 @@ Value_Name drm_property_flag_table[] = {
 // doesn't handle extended property types, inc DRM_MODE_PROP_OOBJECT, DRM_MODE_PROP_SIGNED_RANGE
 // see libdrm/drm.h
 char * interpret_property_flags_r(uint32_t flags, char * buffer, int bufsz) {
-   interpret_named_flags(
+#ifdef OLD
+   interpret_named_flags_old(
             drm_property_flag_table,
             flags,
             buffer,
             bufsz,
             ", ");      //        sepstr);
+#endif
+
+   interpret_named_flags(
+             flags,
+             drm_property_flag_table,
+             ", ",              // sepstr
+             buffer,
+             bufsz );
+
 
    uint32_t extended_type = flags & DRM_MODE_PROP_EXTENDED_TYPE;
    if (extended_type) {
@@ -219,6 +229,7 @@ typedef struct _drmModeRes {
 #endif
 
 
+static
 char * join_ids(char * buf, int bufsz, uint32_t* vals, int ct) {
    buf[0] = '\0';
    if (ct > 0 && vals) {
