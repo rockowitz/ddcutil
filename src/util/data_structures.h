@@ -129,10 +129,16 @@ Buffer * bbf_to_buffer(Byte_Bit_Flags flags);
  *
  *  @param v symbolic name
  */
+#ifdef OLD
 #define VN(v) {v,#v}
+#endif
+#define VN(v) {v,#v,NULL}
 /** \def VN_END
  * Terminating entry for a Value_Name table. */
+#ifdef OLD
 #define VN_END {0xff,NULL}
+#endif
+#define VN_END {0xff,NULL,NULL}
 
 /** \def VNT(v,t)
  *  Creates a Value_Name_Title table entry by specifying its symbolic name
@@ -148,10 +154,12 @@ Buffer * bbf_to_buffer(Byte_Bit_Flags flags);
 /** A Value_Name struct struct is a pair containing
  *  value and its symbolic name.
  */
+#ifdef OLD
 typedef struct {
    Byte   value;   ///< byte value
    char * name;    ///< symbolic name
 } Value_Name;
+#endif
 
 /** A Value_Name table is an array of Value_Name structs.
  *  It is used to map byte values to their symbolic names.
@@ -159,7 +167,9 @@ typedef struct {
  *
  * The table is terminated by an entry whose name field is NULL.
  */
+#ifdef OLD
 typedef Value_Name Value_Name_Table[];
+#endif
 
 /** A Value_Name_Title table is used to map byte values to their
  * symbolic names and description (title).
@@ -175,8 +185,15 @@ typedef struct {
 
 typedef Value_Name_Title Value_Name_Title_Table[];
 
+typedef Value_Name_Title       Value_Name;
+typedef Value_Name_Title_Table Value_Name_Table;
+
+
+#ifdef OLD
 char * vn_name(  Value_Name*       table, uint32_t val);
+#endif
 char * vnt_name( Value_Name_Title* table, uint32_t val);
+#define vn_name vnt_name
 char * vnt_title(Value_Name_Title* table, uint32_t val);
 
 

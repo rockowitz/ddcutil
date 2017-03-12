@@ -946,6 +946,7 @@ uint32_t vnt_id_by_title(Value_Name_Title_Table table,
 }
 
 
+#ifdef OLD
 /* Returns the name of an entry in a Value_Nmme table.
  *
  * @param table  pointer to table
@@ -965,6 +966,7 @@ char * vn_name(Value_Name* table, uint32_t val) {
    }
    return result;
 }
+#endif
 
 
 /** Appends a value to a string in a buffer.
