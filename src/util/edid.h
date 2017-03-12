@@ -61,27 +61,30 @@ void get_edid_mfg_id_in_buffer(Byte* edidbytes, char * result, int bufsize);
 /** Represents a parsed EDID */
 typedef
 struct {
-   char         marker[4];          // always "EDID"
-   Byte         bytes[128];
-   char         mfg_id[EDID_MFG_ID_FIELD_SIZE];
-   ushort       model_hex;
-   char         model_name[EDID_MODEL_NAME_FIELD_SIZE];                   // tag 0xfc
-   uint32_t     serial_binary;
-   char         serial_ascii[EDID_SERIAL_ASCII_FIELD_SIZE];               // tag 0xff
-   char         extra_descriptor_string[EDID_EXTRA_STRING_FIELD_SIZE];    // tag 0xfe
-   int          year;    // can be year of manufacture or model
-   bool         is_model_year;   // if true, year is model year, if false, is manufacture year
-   Byte         edid_version_major;
-   Byte         edid_version_minor;
-   ushort       wx;
-   ushort       wy;
-   ushort       rx, ry;
-   ushort       gx, gy;
-   ushort       bx, by;
-   Byte         video_input_definition;  // byte 20 (x14)
+   char         marker[4];                                    ///< always "EDID"
+   Byte         bytes[128];                                  ///< raw bytes of EDID
+   char         mfg_id[EDID_MFG_ID_FIELD_SIZE];              ///< 3 character mfg id, null terminated
+   ushort       model_hex;                                   ///< model hex field
+   char         model_name[EDID_MODEL_NAME_FIELD_SIZE];      ///< model name (tag 0xfc)
+   uint32_t     serial_binary;                               ///< binary serial number
+   char         serial_ascii[EDID_SERIAL_ASCII_FIELD_SIZE];  ///< serial number string (tag 0xff)
+   char         extra_descriptor_string[EDID_EXTRA_STRING_FIELD_SIZE];  ///< (tag 0xfe)
+   int          year;                    ///< can be year of manufacture or model
+   bool         is_model_year;           ///< if true, year is model year, if false, is manufacture year
+   Byte         edid_version_major;      ///< EDID major version number
+   Byte         edid_version_minor;      ///< EDID minor version number
+   ushort       wx;                      ///< whitepoint x coordinate
+   ushort       wy;                      ///< whitepoint y coordinate
+   ushort       rx;                      ///< red   x coordinate
+   ushort       ry;                      ///< red   y coordinate
+   ushort       gx;                      ///< green x coordinate
+   ushort       gy;                      ///< green y coordinate
+   ushort       bx;                      ///< blue  x coordinate
+   ushort       by;                      ///< blue  y coordinate
+   Byte         video_input_definition;  /// EDID byte 20 (x14)
    // bool         is_digital_input;      // from byte 20 (x14), but 7
-   uint8_t      extension_flag;        // number of optional extension blocks
-   char *       edid_source;
+   uint8_t      extension_flag;        ///< number of optional extension blocks
+   char *       edid_source;           ///< describes source of EDID
 } Parsed_Edid;
 
 
