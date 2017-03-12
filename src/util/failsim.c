@@ -342,20 +342,22 @@ bool eval_fsim_rc(char * rc_string, int * evaluated_rc) {
 /** Load the failure simulation table from an array of strings.
  *  Each string describes one simulated error for a function, and has
  *  the form:
- *
- *   function_name  status_code occurrence_descriptor
- *
- *   where:
- *      status_code has a form documented for eval_fsim_rc
- *      occurrence_descriptor has the form [*]integer,
- *        examples:
- *          *7   every 7th call fails
- *          7    the 7th call fails
- *          *1   every call fails
+ * @verbatim
+   function_name  status_code occurrence_descriptor
+ @endverbatim
+ * where:
+ * - **status_code** has a form documented for eval_fsim_rc()
+ * - **occurrence_descriptor** has the form "[*]integer"\n
+ *   examples:
+ *     - *7   every 7th call fails
+ *     - 7    the 7th call fails
+ *     - *1   every call fails
  *
  * Examples:
- *   i2c_set_addr  base:EBUSY 6
- *   ddc_verify    false      *1
+ * \verbatim
+   i2c_set_addr  base:EBUSY 6
+   ddc_verify    false      *1
+ \endverbatim
  *
  * @param lines     array of lines
  */
