@@ -1097,7 +1097,7 @@ static void check_i2c_devices(struct driver_name_node * driver_list) {
  *
  * Returns:         true if the module is loaded, false if not
  */
-bool is_module_loaded_using_sysfs(char * module_name) {
+bool is_module_loaded_using_sysfs(const char * module_name) {
    bool debug = false;
    struct stat statbuf;
    char   module_fn[100];
