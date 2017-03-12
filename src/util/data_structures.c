@@ -417,6 +417,30 @@ char * bbf_to_string(Byte_Bit_Flags bbflags, char * buffer, int buflen) {
 }
 
 
+/** Converts a **Byte_Bit_Flags** instance to a sequence of bytes whose values
+ *  correspond to the bits that are set.
+ *  The byte sequence is returned in a newly allocated **Buffer**.
+ *
+ * @param  bbflags  instance handle
+ * @return pointer to newly allocated **Buffer**
+ */
+Buffer * bbf_to_buffer(Byte_Bit_Flags bbflags) {
+   BYTE_BIT_UNOPAQUE(flags, bbflags);
+   BYTE_BIT_VALIDATE(flags);
+   int bit_set_ct = bbf_count_set(flags);
+   Buffer * buf = buffer_new(bit_set_ct, __func__);
+   for (unsigned int flagno = 0; flagno < 256; flagno++) {
+      Byte flg = (Byte) flagno;
+      // printf("(%s) flagno=%d, flg=0x%02x\n", __func__, flagno, flg);
+      if (bbf_is_set(flags, flg)) {
+         buffer_add(buf, flg);
+      }
+   }
+   // printf("(%s) Done.  Returning: %s\n", __func__, buffer);
+   return buf;
+}
+
+
 //
 // Cross functions bba <-> bbf
 //
@@ -899,6 +923,24 @@ char * vnt_title(Value_Name_Title* table, uint32_t val) {
    return result;
 }
 
+uint32_t vnt_id_by_title(Value_Name_Title_Table table,
+                         const char * title,
+                         bool ignore_case,
+                         uint32_t default_id) {
+   uint32_t result = default_id;
+   Value_Name_Title * cur = table;
+   for (; cur->name; cur++) {
+      int comprc = (ignore_case)
+                       ? strcasecmp(title, cur->title)
+                       : strcmp(title, cur->title);
+      if (comprc == 0) {
+         result = cur->value;
+         break;
+      }
+   }
+   return result;
+}
+
 
 /* Returns the name of an entry in a Value_Nmme table.
  *
@@ -928,6 +970,9 @@ char * vn_name(Value_Name* table, uint32_t val) {
  * @param sepstr  if non-null, separator string to insert
  * @param nextval value to append
  *
+ * @retval true   string was truncated
+ * @retval false  normal append
+ *
  * @remark
  * string_util.h is a more natural location for this function, but
  * that would create a dependency of data_structures.c on string_util.c ,
@@ -956,7 +1001,7 @@ bool sbuf_append(char * buf, int bufsz, char * sepstr, char * nextval) {
    return truncated;
 }
 
-
+#ifdef OLD
 /** Interprets an integer whose bits represent named flags.
  *  The interpretation is returned in the buffer provided.
  *
@@ -971,7 +1016,7 @@ bool sbuf_append(char * buf, int bufsz, char * sepstr, char * nextval) {
  * @remark
  * Consider using Buffer instead
  */
-char * interpret_named_flags(
+char * interpret_named_flags_old(
       Value_Name * table,
       uint32_t     val,
       char *       buffer,
@@ -986,6 +1031,69 @@ char * interpret_named_flags(
          if (sbuf_append(buffer, bufsz, sepstr, cur->name) )   //  truncated?
             break;
       }
+   }
+   return buffer;
+}
+#endif
+
+/** Interprets an integer whose bits represent named flags.
+ *  The interpretation is returned in the buffer provided.
+ *
+ * @param flags_val     value to interpret
+ * @param bitname_table   pointer to Value_Name table
+ * @param sepstr  if non-NULL, separator string to insert between values
+ * @param buffer  pointer to character buffer in which to return result
+ * @param bufsz   buffer size
+ *
+ * @return buffer
+ *
+ * @remark
+ * Consider using Buffer instead
+ */
+char * interpret_named_flags(
+          uint32_t       flags_val,
+          Value_Name *   bitname_table,
+          char *         sepstr,
+          char *         buffer,
+          int            bufsz )
+{
+   assert(buffer && bufsz > 1);
+   buffer[0] = '\0';
+   Value_Name * cur_entry = bitname_table;
+   while (cur_entry->name) {
+      // DBGMSG("Comparing flags_val=0x%08x vs cur_entry->bitvalue = 0x%08x", flags_val, cur_entry->bitvalue);
+      if (!flags_val && cur_entry->value == flags_val) {
+         sbuf_append(buffer, bufsz, sepstr, cur_entry->name);
+         break;
+      }
+      if (flags_val & cur_entry->value) {
+         sbuf_append(buffer, bufsz, sepstr, cur_entry->name);
+      }
+      cur_entry++;
+   }
+   return buffer;
+}
+
+char * interpret_vnt_flags_by_title(
+          uint32_t       flags_val,
+          Value_Name_Title_Table   bitname_table,
+          char *         sepstr,
+          char *         buffer,
+          int            bufsz )
+{
+   assert(buffer && bufsz > 1);
+   buffer[0] = '\0';
+   Value_Name_Title * cur_entry = bitname_table;
+   while (cur_entry->name) {
+      // DBGMSG("Comparing flags_val=0x%08x vs cur_entry->bitvalue = 0x%08x", flags_val, cur_entry->bitvalue);
+      if (!flags_val && cur_entry->value == flags_val) {
+         sbuf_append(buffer, bufsz, sepstr, cur_entry->title);
+         break;
+      }
+      if (flags_val & cur_entry->value) {
+         sbuf_append(buffer, bufsz, sepstr, cur_entry->title);
+      }
+      cur_entry++;
    }
    return buffer;
 }

@@ -93,11 +93,11 @@ void test_value_array();
 /** Buffer with length management */
 typedef
 struct {
-   char       marker[4];      // "BUFR"
-   Byte *     bytes;
-   int        buffer_size;
-   int        len;
-   uint16_t   size_increment;
+   char       marker[4];      ///< always "BUFR"
+   Byte *     bytes;          ///< pointer to internal buffer
+   int        buffer_size;    ///< size of internal buffer
+   int        len;            ///< number of bytes in buffer
+   uint16_t   size_increment; ///< if > 0, auto-extend increment
 } Buffer;
 
 Buffer * buffer_new(int size, const char * trace_msg);
@@ -117,38 +117,49 @@ void     buffer_dump(Buffer * buffer);
 bool     buffer_eq(Buffer* buf1, Buffer* buf2);
 void     buffer_extend(Buffer* buf, int addl_bytes);
 
+Buffer * bbf_to_buffer(Byte_Bit_Flags flags);
+
 
 //
 // Identifier id to name and description lookup
 //
 
-/** Creates a Value_Name table entry by specifying its symbolic name.
+/** \def VN(v)
+ * Creates a Value_Name table entry by specifying its symbolic name.
  *
  *  @param v symbolic name
  */
 #define VN(v) {v,#v}
-/** Terminating entry for a Value_Name table. */
+/** \def VN_END
+ * Terminating entry for a Value_Name table. */
 #define VN_END {0xff,NULL}
 
-/** Creates a Value_Name_Title table entry by specifying its symbolic name
+/** \def VNT(v,t)
+ *  Creates a Value_Name_Title table entry by specifying its symbolic name
  *  and description
  *
  *  @param v symbolic name
  *  @param t symbol description
  */
 #define VNT(v,t) {v,#v,t}
-/** Terminating entry for a Value_Name table. */
+/** Terminating entry for a Value_Name_Title table. */
 #define VNT_END {0xff,NULL,NULL}
 
-/** A Value_Name table is used to map byte values to their
- * symbolic names.  Each entry is a value/name pair.
+/** A Value_Name struct struct is a pair containing
+ *  value and its symbolic name.
+ */
+typedef struct {
+   Byte   value;   ///< byte value
+   char * name;    ///< symbolic name
+} Value_Name;
+
+/** A Value_Name table is an array of Value_Name structs.
+ *  It is used to map byte values to their symbolic names.
+ *  Each Value_Name struct contains a value/name pair.
  *
  * The table is terminated by an entry whose name field is NULL.
  */
-typedef struct {
-   Byte   value;
-   char * name;
-} Value_Name;
+typedef Value_Name Value_Name_Table[];
 
 /** A Value_Name_Title table is used to map byte values to their
  * symbolic names and description (title).
@@ -157,28 +168,53 @@ typedef struct {
  * The table is terminated by an entry whose name and description fields are NULL.
  */
 typedef struct {
-   Byte   value;
-   char * name;
-   char * title;        // aka description
+   Byte   value;         ///< byte value
+   char * name;          ///< symbolic name
+   char * title;         ///< value description
 } Value_Name_Title;
+
+typedef Value_Name_Title Value_Name_Title_Table[];
 
 char * vn_name(  Value_Name*       table, uint32_t val);
 char * vnt_name( Value_Name_Title* table, uint32_t val);
 char * vnt_title(Value_Name_Title* table, uint32_t val);
 
 
+uint32_t vnt_id_by_title(Value_Name_Title_Table table,
+                         const char * title,
+                         bool ignore_case,
+                         uint32_t default_id);
+
+
+
+
 //
 // Misc
 //
 
-bool sbuf_append(char * buf, int bufsz, char * sepstr, char * nextval) ;
-char * interpret_named_flags(
+bool sbuf_append(char * buf, int bufsz, char * sepstr, char * nextval);
+
+#ifdef OLD
+char * interpret_named_flags_old(
       Value_Name * table,
       uint32_t     val,
       char *       buffer,
       int          bufsz,
       char *       sepstr);
+#endif
 
+char * interpret_named_flags(
+          uint32_t       flags_val,
+          Value_Name *   bitname_table,
+          char *         sepstr,
+          char *         buffer,
+          int            bufsize );
+
+char * interpret_vnt_flags_by_title(
+          uint32_t       flags_val,
+          Value_Name_Title_Table   bitname_table,
+          char *         sepstr,
+          char *         buffer,
+          int            bufsz );
 
 #endif /* DATA_STRUCTURES_H */
-
