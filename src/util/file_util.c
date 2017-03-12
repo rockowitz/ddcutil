@@ -42,11 +42,11 @@
 /** Reads the lines of a text file into a GPtrArray.
  *
  *  @param   fn          file name
- *  @param  line_array  pointer to GPtrArray where lines will be saved
+ *  @param  line_array  pointer to GPtrArray of strings where lines will be saved
  *  @param  verbose     if true, write message to stderr if unable to open file or other error
  *
- *  @return if >=0:  number of lines added to line_array
- *          if <0    -errno
+ *  @retval >=0:  number of lines added to line_array
+ *  @retval <0    -errno
  *
  *  The caller is responsible for freeing the lines added to line_array.
  */
@@ -102,8 +102,8 @@ int file_getlines(const char * fn,  GPtrArray* line_array, bool verbose) {
  *  @param  fn          file name
  *  @param  verbose     if true, write message to stderr if unable to open file
  *
- *  @return pointer to line read, caller responsible for freeing
- *          or NULL if error or no lines in file
+ *  @retval non-NULL pointer to line read (caller responsible for freeing)
+ *  @retval NULL     if error or no lines in file
  */
 char * file_get_first_line(const char * fn, bool verbose) {
    FILE * fp = fopen(fn, "r");
@@ -215,7 +215,8 @@ GPtrArray * get_filenames_by_filter(const char * dirnames[], Dirent_Filter filte
  * @param  p_fn  where to return a pointer to the file name
  *               The caller is responsible for freeing this memory
  *
- * @return 0 if success, -errno if error (see readlink() doc for possible error numbers
+ * @retval 0      success
+ * @retval -errno if error (see readlink() doc for possible error numbers
  */
 int filename_for_fd(int fd, char** p_fn) {
    char * result = calloc(1, PATH_MAX+1);
