@@ -139,7 +139,7 @@ bool str_ends_with(const char * value_to_test, const char * suffix) {
  * @param s   string to test
  * @return    true/false  (true if s==NULL)
  */
-bool str_all_printable(char * s) {
+bool str_all_printable(const char * s) {
    bool result = true;
    if (s) {
       for (int ndx = 0; ndx < strlen(s); ndx++) {
@@ -156,17 +156,18 @@ bool str_all_printable(char * s) {
 /** Compares a string to a null-terminated array of strings, using a specified
  *  comparison function.
  *
- *  @param s  string to test
- *  @param null_terminated_list array of strings to test against
- *  @param comp_func comparison function
- *  @return index of first entry in list for which the comparison function succeeds,
- *          -1 if no match
+ *  @param s          string to test
+ *  @param match_list null terminated array of strings to test against
+ *  @param comp_func  comparison function
+ *
+ *  @retval >= 0 index of first entry in list for which the comparison function succeeds
+ *  @retval -1   no match
  */
-int matches_by_func(char * s, char ** null_terminated_list, String_Comp_Func comp_func) {
+int matches_by_func(const char * s, char ** match_list, String_Comp_Func comp_func) {
    int result = -1;
    int ndx = 0;
-   for (ndx=0; null_terminated_list[ndx] != NULL; ndx++) {
-      if ( (*comp_func)(s, null_terminated_list[ndx])) {
+   for (ndx=0; match_list[ndx] != NULL; ndx++) {
+      if ( (*comp_func)(s, match_list[ndx])) {
          result = ndx;
          break;
       }
@@ -178,12 +179,14 @@ int matches_by_func(char * s, char ** null_terminated_list, String_Comp_Func com
 /** Tests if a string exactly matches any string in a null-terminated
  *  array of strings.  (Null_Terminated_String_Array).
  *
- *  @param  s  string to test for
- *  @param  null_terminated_list array of pointers to strings
- *  @return index of matching array entry, -1 if no match
+ *  @param  s           string to test for
+ *  @param  match_list  null terminated array of pointers to strings
+ *
+ *  @retval >= 0  index of matching array entry
+ *  @retval -1    no match
  */
-int exactly_matches_any(char * s, char ** null_terminated_list) {
-   return matches_by_func(s, null_terminated_list, streq);
+int exactly_matches_any(const char * s, char ** match_list) {
+   return matches_by_func(s, match_list, streq);
 }
 
 
@@ -191,11 +194,13 @@ int exactly_matches_any(char * s, char ** null_terminated_list) {
  *  that is the initial portion of a specified string.
  *
  *  @param  s     string to test against
- *  @param  list  array of prefix strings (null-terminated)
- *  @return index of prefix, -1 if not found
+ *  @param  match_list  array of prefix strings (null-terminated)
+ *
+ *  @retval >= 0 index of matching prefix
+ *  @retval -1   not found
  */
-int starts_with_any(char * s, char ** list) {
-   return matches_by_func(s, list, str_starts_with);
+int starts_with_any(const char * s, char ** match_list) {
+   return matches_by_func(s, match_list, str_starts_with);
 }
 
 
@@ -206,10 +211,10 @@ int starts_with_any(char * s, char ** list) {
  *
  * The result is always null terminated.
  *
- * Arguments:
  * @param  s      string to trim (not modified)
  * @param  buffer where to return result
  * @param  bufsz  buffer size
+ *
  * @return pointer to truncated string (i.e. buffer)
  */
 char * strtrim_r(const char * s, char * buffer, int bufsz) {
@@ -571,7 +576,7 @@ char * strupper(char * s) {
  * @param  s  string to copy
  * @return newly allocated string, NULL if s is NULL
  */
-char * strdup_uc(char* s) {
+char * strdup_uc(const char* s) {
    if (!s)
       return NULL;
    char * us = strdup( s );
@@ -621,7 +626,7 @@ char * strcat_new(char * s1, char * s2) {
  *  @return newly allocated string,
  *          NULL if start was NULL (is this the most useful behavior?)
  */
-char * chars_to_string(char * start, int len) {
+char * chars_to_string(const char * start, int len) {
    assert(len >= 0);
    char * strbuf = NULL;
    if (start) {
@@ -687,7 +692,7 @@ bool str_to_int(const char * sval, int * p_ival) {
  *         false if string does not consist of hex characters,
  *               or is not 2 characters in length.
  */
-bool hhs_to_byte_in_buf(char * s, Byte * result) {
+bool hhs_to_byte_in_buf(const char * s, Byte * result) {
    // printf("(%s) Starting s=%s, strlen(s)=%zd\n", __func__, s, strlen(s) );
    // consider changing to fail if len != 2, or perhaps len != 1,2
    //assert(strlen(s) == 2);
@@ -724,10 +729,10 @@ bool hhs_to_byte_in_buf(char * s, Byte * result) {
  *  @param  s       pointer to hex string
  *  @param  result  pointer to byte in which result will be returned
  *
- *  @return true  if successful conversion,
- *          false if not
+ *  @return **true**  if successful conversion,
+ *          **false** if not
  */
-bool any_one_byte_hex_string_to_byte_in_buf(char * s, Byte * result) {
+bool any_one_byte_hex_string_to_byte_in_buf(const char * s, Byte * result) {
    // printf("(%s) s = |%s|\n", __func__, s);
    char * suc = strdup_uc(s);
    if (str_starts_with(suc, "0X"))
@@ -752,7 +757,7 @@ bool any_one_byte_hex_string_to_byte_in_buf(char * s, Byte * result) {
  *  @return true if successful conversion, false if s does not point
  *          to hex characters
  */
-bool hhc_to_byte_in_buf(char * p_hh, Byte * converted) {
+bool hhc_to_byte_in_buf(const char * p_hh, Byte * converted) {
    // printf("(%s) Starting p_hh=%.2s   \n", __func__, hh );
    char hhs[3];
    hhs[0] = p_hh[0];
@@ -817,13 +822,14 @@ Byte hhc_to_byte(char * hh) {
  *
  *  @param   hhs     string of hex characters
  *  @param   pBa     address at which to return pointer to byte array
- *  @return  number of bytes in array,
- *           -1 if string could not be converted
+ *
+ *  @retval  >= 0 number of bytes in array,
+ *  @retval  -1   string could not be converted
  *
  * If successful, the byte array whose address is returned in pBa has
  * been malloc'd.  It is the responsibility of the caller to free it.
  */
-int hhs_to_byte_array(char * hhs, Byte** pBa) {
+int hhs_to_byte_array(const char * hhs, Byte** pBa) {
    if ( strlen(hhs) % 2)     // if odd number of characters
       return -1;
    char xlate[] = "0123456789ABCDEF";
@@ -831,7 +837,7 @@ int hhs_to_byte_array(char * hhs, Byte** pBa) {
    Byte * ba = malloc(bytect);
    bool ok = true;
 
-   char * h = hhs;
+   const char * h = hhs;
    Byte * b = ba;
    for (;  *h && ok; b++) {
       char ch0 = toupper(*h++);
@@ -1051,7 +1057,7 @@ void hex_dump(const Byte* data, int size) {
 }
 
 
-/** Version of fputc() that allows a NULL stream argument,
+/** Extension of fputc() that allows a NULL stream argument,
  * in which case no output is written.
  *
  *  @param  c          character to write
@@ -1067,7 +1073,7 @@ int f0putc(int c, FILE * stream) {
 }
 
 
-/** Version of fputs() that allows a NULL stream argument,
+/** Extension of fputs() that allows a NULL stream argument,
  * in which case no output is written.
  *
  * @param   msg        text to write
@@ -1083,7 +1089,7 @@ int f0puts(const char * msg, FILE * stream) {
 }
 
 
-/** Version of fprintf() that allows a NULL stream argument,
+/** Extension of fprintf() that allows a NULL stream argument,
  * in which case no output is written.
  *
  * @param stream     if null do nothing
@@ -1104,7 +1110,7 @@ int f0printf(FILE * stream, const char * format, ...) {
 }
 
 
-/** Version of vfprintf() that allows a NULL stream argument,
+/** Extension of vfprintf() that allows a NULL stream argument,
  * in which case no output is written.
  *
  * @param stream     if null do nothing
