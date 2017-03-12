@@ -498,8 +498,9 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
          char * token = trace_classes[ndx];
          strupper(token);
          // DBGMSG("token=|%s|", token);
-         if (streq(token, "ALL") || streq(token, "*"))
-            traceClasses = 0xff;
+         if (streq(token, "ALL") || streq(token, "*")) {
+            traceClasses = TRC_ALWAYS;   // 0xff
+         }
          else {
             // DBGMSG("token: |%s|", token);
             Trace_Group tg = trace_class_name_to_value(token);
