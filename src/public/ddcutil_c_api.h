@@ -296,7 +296,8 @@ ddca_create_adlno_display_identifier(
 
 /** Creates a display identifier using some combination of the manufacturer id,
  * model name string and serial number string.  At least 1 of the 3 must be specified.
- * @param model  model name string
+ * @param mfg_id  3 letter manufacturer id
+ * @param model   model name string
  * @param sn     serial number string
  * @param pdid   where to return display identifier handle
  * @return       status code
@@ -389,8 +390,8 @@ ddca_report_display_ref(
 //
 
 /** Open a display
- * @param[in]  dref display reference for display to open
- * @param[out] pdh where to return display handle
+ * @param[in]  ddca_dref  display reference for display to open
+ * @param[out] p_ddca_dh  where to return display handle
  * @return     status code
  */
 DDCA_Status
@@ -399,8 +400,8 @@ ddca_open_display(
       DDCA_Display_Handle * p_ddca_dh);
 
 /** Close an open display
- * @param[in] dh   display handle
- * @return     status code
+ * @param[in]  ddca_dh   display handle
+ * @return     DDCA status code
  */
 DDCA_Status
 ddca_close_display(
@@ -472,7 +473,7 @@ ddca_report_active_displays(
 /** Retrieves the capabilities string for a monitor.
  *
  *  @param[in]  ddca_dh     display handle
- *  @param[out] pcaps       address at which to return pointer to capabilities string.
+ *  @param[out] p_caps      address at which to return pointer to capabilities string.
  *  @return     status code
  *
  *  It is the responsibility of the caller to free the returned string.
@@ -480,12 +481,12 @@ ddca_report_active_displays(
 DDCA_Status
 ddca_get_capabilities_string(
       DDCA_Display_Handle     ddca_dh,
-      char**                  buffer);
+      char**                  p_caps);
 
 /** Parse the capabilities string.
  *
- *  @param[in] capabilities_string
- *  @param[out] address at which to return pointer to newly allocated
+ *  @param[in] capabilities_string unparsed capabilities string
+ *  @param[out] p_parsed_capabilities address at which to return pointer to newly allocated
  *              DDCA_Capabilities struct
  *  @return     status code
  *
@@ -565,7 +566,7 @@ DDCA_Status
 ddca_get_simple_sl_value_table(
       VCP_Feature_Code            feature_code,
       DDCA_MCCS_Version_Id        mccs_version_id,
-      DDCA_Feature_Value_Table *  pvalue_table);   // DDCA_Feature_Value_Entry **
+      DDCA_Feature_Value_Table *  p_value_table);   // DDCA_Feature_Value_Entry **
 
 
 //
@@ -634,6 +635,15 @@ ddct_free_table_value_response(
 
 // TODO: Choose between ddca_get_nontable_vcp_value()/ddca_get_table_vcp_value() vs ddca_get_vcp_value()
 
+/** Gets the value of a non-table VCP feature.
+ *
+ * @param ddca_dh       display handle
+ * @param feature_code  VCP feature code
+ * @param response      pointer to response buffer provided by the caller,
+ *                      which will be filled in
+ *
+ * @return external status code
+ */
 DDCA_Status
 ddca_get_nontable_vcp_value(
        DDCA_Display_Handle             ddca_dh,
@@ -641,20 +651,43 @@ ddca_get_nontable_vcp_value(
        DDCA_Non_Table_Value_Response * response);
 
 
-// Implemented, but untested
+/** Gets the value of a table VCP feature.
+ *
+ * @param ddca_dh       display handle
+ * @param feature_code  VCP feature code
+ * @param value_len     address at which to return the value length
+ * @param value_bytes   address at which to return a pointer to the value bytes
+ *
+ * @return external status code
+ *
+ * @note
+ * Implemented, but untested
+ */
 DDCA_Status
 ddca_get_table_vcp_value(
-       DDCA_Display_Handle     ddca_dh,       /**< display handle     */
-       VCP_Feature_Code        feature_code,  /**< VCP feature code   */
+       DDCA_Display_Handle     ddca_dh,
+       VCP_Feature_Code        feature_code,
        int *                   value_len,
        uint8_t**               value_bytes);
 
+
+/** Gets the value of a VCP feature.
+ *
+ * @param ddca_dh       display handle
+ * @param feature_code  VCP feature code
+ * @param call_type     to be eliminated
+ * @param pvalrec       address at which to return a pointer to a newly
+ *                      allocated Single_Vcp_Value
+ *
+ * @return external status code
+ */
 DDCA_Status
 ddca_get_vcp_value(
-       DDCA_Display_Handle     ddca_dh,        /**< display handle     */
-       VCP_Feature_Code        feature_code,   /**< VCP feature code   */
+       DDCA_Display_Handle     ddca_dh,
+       VCP_Feature_Code        feature_code,
        Vcp_Value_Type          call_type,   // TODO: eliminate
        Single_Vcp_Value **     pvalrec);
+
 
 /** Returns a string containing a formatted representation of the VCP value
  *  of a feature.  It is the responsiblity of the caller to free this value.
@@ -669,19 +702,33 @@ ddca_get_formatted_vcp_value(
        VCP_Feature_Code        feature_code,
        char**                  p_formatted_value);
 
-/** Sets a continuous VCP value. */
+/** Sets a continuous VCP value.
+ *
+ *  @param ddca_dh        display_handle
+ *  @param feature_code   VCP feature code
+ *  @param new_value      value to set (sign?)
+ *
+ *  @return status code
+ */
 DDCA_Status
 ddca_set_continuous_vcp_value(
-      DDCA_Display_Handle      ddca_dh,         /**< display handle     */
-      VCP_Feature_Code         feature_code,    /**< VCP feature code   */
-      int                      new_value);      /**< value to set       */    // sign?
+      DDCA_Display_Handle      ddca_dh,
+      VCP_Feature_Code         feature_code,
+      int                      new_value);
 
-/** Sets a simple NC value, which is a single byte.. */
+/** Sets a simple NC value, which is a single byte.
+ *
+ *  @param ddca_dh        display_handle
+ *  @param feature_code   VCP feature code
+ *  @param new_value      value to set
+ *
+ *  @return status code
+ * */
 DDCA_Status
 ddca_set_simple_nc_vcp_value(
-      DDCA_Display_Handle      ddca_dh,         /**< display handle     */
-      VCP_Feature_Code         feature_code,    /**< VCP feature code   */
-      uint8_t                  new_value);      /**< Value to set       */
+      DDCA_Display_Handle      ddca_dh,
+      VCP_Feature_Code         feature_code,
+      uint8_t                  new_value);
 
 /** Sets a non-table VCP value by directly specifying its bytes. */
 DDCA_Status
@@ -689,7 +736,8 @@ ddca_set_raw_vcp_value(
       DDCA_Display_Handle      ddca_dh,         /**< Display handle     */
       VCP_Feature_Code         feature_code,    /**< VCP feature code   */
       uint8_t                  hi_byte,         /**< High byte of value */
-      uint8_t                  lo_byte);        /**< Low byte of value  */
+      uint8_t                  lo_byte          /**< Low byte of value  */
+     );
 
 #ifdef UNIMPLEMENTED
 // Unimplemented
