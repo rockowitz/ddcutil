@@ -21,6 +21,9 @@
  * </endcopyright>
  */
 
+/** @file core.h
+ */
+
 #ifndef BASE_CORE_H_
 #define BASE_CORE_H_
 
@@ -31,10 +34,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "ddcutil_types.h"
+#include "public/ddcutil_types.h"
 
 #include "util/coredefs.h"
 
+// /** @addtogroup abnormal_termination
+//  */
 
 //
 // Initialization
@@ -59,9 +64,11 @@ void ddc_abort(
 extern DDCA_Global_Failure_Information global_failure_information;
 
 
+#ifdef OLD
 //
 // Generic data structure and function for creating string representation of named bits
 //
+
 typedef struct {
    unsigned int  bitvalue;
    char *        bitname;
@@ -76,17 +83,20 @@ char * bitflags_to_string(
           char *         sepstr,
           char *         buffer,
           int            bufsize );
+#endif
 
 //
 // Standard flags to indicate behavior if a system call fails
 //
+
+/** Byte of standard call options */
 typedef Byte Call_Options;
-#define CALLOPT_NONE         0x00
-#define CALLOPT_ERR_MSG      0x80    // issue message
-#define CALLOPT_ERR_ABORT    0x40    // terminate execution
-#define CALLOPT_RDONLY       0x20    // open read-only
-#define CALLOPT_WARN_FINDEX  0x10    // issue warning msg re hiddev_field_info.field_index change
-#define CALLOPT_FORCE        0x08    // ignore various validity checks
+#define CALLOPT_NONE         0x00    ///< no options
+#define CALLOPT_ERR_MSG      0x80    ///< issue message if error
+#define CALLOPT_ERR_ABORT    0x40    ///< terminate execution if error
+#define CALLOPT_RDONLY       0x20    ///< open read-only
+#define CALLOPT_WARN_FINDEX  0x10    ///< issue warning msg re hiddev_field_info.field_index change
+#define CALLOPT_FORCE        0x08    ///< ignore various validity checks
 // #define CALLOPT_FORCE_SLAVE  0x04    // use ioctl I2C_FORCE_SLAVE
 
 // Return string interpretation of CALLOPT_ flag byte
@@ -167,9 +177,10 @@ typedef Byte Trace_Group;
 
 Trace_Group trace_class_name_to_value(char * name);
 void set_trace_levels(Trace_Group trace_flags);
-extern const char * trace_group_names[];
-extern const int    trace_group_ct;
+// extern const char * trace_group_names[];
+// extern const int    trace_group_ct;
 
+char * get_active_trace_group_names();
 void show_trace_groups();
 
 bool is_tracing(Trace_Group trace_group, const char * filename);
@@ -273,6 +284,12 @@ void program_logic_error(
       char *       format,
       ...);
 
+/** @def PROGRAM_LOGIC_ERROR(format,...)
+ *  Wraps call to program_logic_error()
+ *
+ *  Reports an error in program logic and terminates execution.
+ * @ingroup abnormal_termination
+ */
 #define PROGRAM_LOGIC_ERROR(format, ...) \
    program_logic_error(__func__, __LINE__, __FILE__, format, ##__VA_ARGS__)
 
@@ -285,6 +302,10 @@ void terminate_execution_on_error(
         char *       format,
         ...);
 
+/** @def TERMINATE_EXECUTION_ON_ERROR(format,...)
+ *  Wraps call to terminate_execution_on_error()
+ * @ingroup abnormal_termination
+ */
 #define TERMINATE_EXECUTION_ON_ERROR(format, ...) \
    terminate_execution_on_error(TRACE_GROUP, __func__, __LINE__, __FILE__, format, ##__VA_ARGS__)
 

@@ -21,6 +21,18 @@
  * </endcopyright>
  */
 
+/** @file
+ * Core functions and global variables.
+ *
+ * Core services, including:
+ * - message destination redirection
+ * - abnormal termination
+ * - standard function call options
+ * - timestamp generation
+ * - message level control
+ * - debug and trace messages
+ */
+
 #include <assert.h>
 #include <glib.h>
 #include <errno.h>
@@ -30,6 +42,7 @@
 #include <string.h>
 #include <time.h>
 
+#include "util/data_structures.h"
 #include "util/debug_util.h"
 #include "util/file_util.h"
 #include "util/report_util.h"
@@ -44,12 +57,30 @@
 // Externally visible variables
 //
 
-// n.b. will be NULL until init_msg_control() is called
-// be careful about referencing during initialization
+/** @defgroup output_redirection Basic Output Redirection
+ */
+
+/** Current stream for normal output.
+ *
+ * @remark
+ * Will be NULL until init_msg_control() is called.
+ * Be careful during program initialization.
+ *
+ * @ingroup output_redirection
+ */
 FILE * FOUT = NULL;
+
+/** Current stream for error messages.
+ *
+ * @remark
+ * Will be NULL until init_msg_control() is called.
+ * Be careful during program initialization.
+ *
+ * @ingroup output_redirection
+ */
 FILE * FERR = NULL;
 
-bool dbgtrc_show_time = false;    // include elapsed time in debug/trace output
+bool dbgtrc_show_time = false;    ///< include elapsed time in debug/trace output
 
 #ifdef OVERKILL
 #define FOUT_STACK_SIZE 8
@@ -58,10 +89,17 @@ static FILE* fout_stack[FOUT_STACK_SIZE];
 static int   fout_stack_pos = -1;
 #endif
 
+
 //
 // Global SDTOUT and STDERR redirection, for controlling message output in API
 //
 
+/** Initialize **stdout** and **stderr** redirection.
+ *
+ * Must be called during program initialization.
+ *
+ * @ingroup output_redirection
+ */
 void init_msg_control() {
    FOUT = stdout;
    FERR = stderr;
@@ -72,6 +110,13 @@ void init_msg_control() {
 // issue will resetting report dest cause conflicts?
 // To reset to STDOUT, use constant stdout in stdio.h  - NO - screws up rpt_util
 // problem:
+
+/** Redirect output that would normally go to **stdout**.
+ *
+ *  @param fout pointer to output stream
+ *
+ * @ingroup output_redirection
+ */
 void set_fout(FILE * fout) {
    bool debug = true;
    DBGMSF(debug, "fout = %p", fout);
@@ -79,15 +124,26 @@ void set_fout(FILE * fout) {
    rpt_change_output_dest(fout);
 }
 
+/** Redirect output that would normally go to **stdout** back to **stdout**.
+ * @ingroup output_redirection
+ */
 void set_fout_to_default() {
    FOUT = stdout;
    rpt_change_output_dest(stdout);
 }
 
+/** Redirect output that would normally go to **stderr**..
+ *
+ *  @param ferr pointer to output stream
+ * @ingroup output_redirection
+ */
 void set_ferr(FILE * ferr) {
    FERR = ferr;
 }
 
+/** Redirect output that would normally go to **stderr** back to **stderr**.
+ * @ingroup output_redirection
+ */
 void set_ferr_to_default() {
    FERR = stderr;
 }
@@ -127,30 +183,40 @@ FILE * cur_fout() {
 // Global error return
 //
 
+/** @defgroup abnormal_termination Abnormal Termination
+ *
+ */
+
 static jmp_buf* global_abort_jmp_buf_ptr = NULL;
 
 // It's an error handler.  Do not dynamically allocate
 DDCA_Global_Failure_Information global_failure_information = {0};
 
-
+/** Registers the longjmp() target with the **ddcutil** library.
+ *
+ * @param jb  pointer to jmp_buf
+ *
+ * @ingroup abnormal_termination
+ */
 void register_jmp_buf(jmp_buf* jb) {
    DBGMSG("setting global_abort_jmp_buf_ptr = %p", jb);
    global_abort_jmp_buf_ptr = jb;
 }
 
 
-/* Primary function for terminating ddcutil execution
+/** Primary function for terminating **ddcutil** execution
  * due to an internal error.
  *
  * If a longjump jump buffer has been registered, basic error information
  * is stored in buffer global_failure_information, and longjmp() is called.
  * Otherwise, exit() is called.
  *
- * Arguments:
- *   funcname  function name of error
- *   lineno    line number of error
- *   fn        file name of error
- *   status    status code
+ *  @param funcname  function name of error
+ *  @param lineno    line number of error
+ *  @param fn        file name of error
+ *  @param status    status code
+ *
+ *  @ingroup abnormal_termination
  */
 /* coverity [+kill] avoid coverity memory leak warnings */
 void ddc_abort(
@@ -184,6 +250,7 @@ void ddc_abort(
 // For interpreting field of named bits
 //
 
+#ifdef OLD
 static void char_buf_append(char * buffer, int bufsize, char * val_to_append) {
    assert(strlen(buffer) + strlen(val_to_append) < bufsize);
    strcat(buffer, val_to_append);
@@ -202,6 +269,7 @@ char * bitflags_to_string(
    Bitname_Table_Entry * cur_entry = bitname_table;
    while (cur_entry->bitvalue) {
       // DBGMSG("Comparing flags_val=0x%08x vs cur_entry->bitvalue = 0x%08x", flags_val, cur_entry->bitvalue);
+
       if (flags_val & cur_entry->bitvalue) {
          if (first)
             first = false;
@@ -216,12 +284,13 @@ char * bitflags_to_string(
    // printf("(%s) flags_val = 0x%08x, Returning |%s|\n", __func__, flags_val, buffer );
    return buffer;
 }
-
+#endif
 
 //
 // Standard call options
 //
 
+#ifdef OLD
 Bitname_Table callopt_bitname_table = {
       {CALLOPT_ERR_MSG,     "CALLOPT_ERR_MSG"},
       {CALLOPT_ERR_ABORT,   "CALLOPT_ERR_ABORT"},
@@ -231,14 +300,61 @@ Bitname_Table callopt_bitname_table = {
 //      {CALLOPT_FORCE_SLAVE, "CALLOPT_FORCE_SLAVE"},
       {CALLOPT_NONE,        "CALLOPT_NONE"},
 };
+#endif
 
 
+Value_Name_Table callopt_bitname_table2 = {
+      VN(CALLOPT_ERR_MSG),
+      VN(CALLOPT_ERR_ABORT),
+      VN(CALLOPT_RDONLY),
+      VN(CALLOPT_WARN_FINDEX),
+      VN(CALLOPT_FORCE),
+      VN(CALLOPT_NONE),                // special entry
+      VN_END
+};
 
-char * interpret_call_options_r(Call_Options calloptions, char * buffer, int bufsize) {
+
+#ifdef OLD
+char * interpret_call_options_r_old(Call_Options calloptions, char * buffer, int bufsize) {
    bitflags_to_string(calloptions, callopt_bitname_table, "|", buffer, bufsize);
    return buffer;
 }
+#endif
 
+/** Interprets a **Call_Options** byte as a printable string, returning the
+ *  result in the buffer provided.
+ *
+ *  @param calloptions  **Call_Options** byte
+ *  @param buffer       buffer in which to return result
+ *  @param bufsize      buffer size
+ *
+ *  @return buffer
+ *
+ *  @remark
+ *  If the buffer is insufficiently large, the interpretation is truncated.
+ */
+char * interpret_call_options_r(Call_Options calloptions, char * buffer, int bufsize) {
+   // bitflags_to_string(calloptions, callopt_bitname_table, "|", buffer, bufsize);
+   interpret_named_flags(calloptions, callopt_bitname_table2, "|", buffer, bufsize);
+   return buffer;
+}
+
+#ifdef OLD
+char * interpret_call_options_old(Call_Options calloptions) {
+   static char buffer[120];
+   char * result = interpret_call_options_r(calloptions, buffer, 100);
+   // DBGMSG("calloptions = 0x%02x, returning %s", calloptions, result);
+   return result;
+}
+#endif
+
+/** Interprets a **Call_Options** byte as a printable string.
+ *  The returned value is valid until the next call of this function.
+ *
+ *  @param calloptions  **Call_Options** byte
+ *
+ *  @return interpreted value
+ */
 char * interpret_call_options(Call_Options calloptions) {
    static char buffer[120];
    char * result = interpret_call_options_r(calloptions, buffer, 100);
@@ -251,18 +367,19 @@ char * interpret_call_options(Call_Options calloptions) {
 // Timestamp Generation
 //
 
-// For debugging timestamp generation, maintain a timestamp history.
+/** For debugging timestamp generation, maintain a timestamp history. */
 bool  tracking_timestamps = false;    // set true to enable timestamp history
 #define MAX_TIMESTAMPS 1000
 static long  timestamp[MAX_TIMESTAMPS];
 static int   timestamp_ct = 0;
 
 
-/* Returns the current value of the realtime clock in nanoseconds.
- * If debugging timestamp generation, remember the timestamp as well.
+/** Returns the current value of the realtime clock in nanoseconds.
  *
- * Arguments:   none
- * Returns:     timestamp, in nanoseconds
+ * @return timestamp, in nanoseconds
+ *
+ * @remark
+ * If debugging timestamp generation, the timestamp is remembered.
  */
 long cur_realtime_nanosec() {
    struct timespec tvNow;
@@ -277,7 +394,10 @@ long cur_realtime_nanosec() {
 }
 
 
-/* Reports history of generated timestamps
+/** Reports history of generated timestamps
+ *
+ * @remark
+ * This is a debugging function.
  */
 void show_timestamp_history() {
    if (tracking_timestamps) {
@@ -300,7 +420,15 @@ void show_timestamp_history() {
 
 
 static long initial_timestamp_nanos = 0;
-// nanoseconds since start of program, first call initializes
+
+/** Returns the elapsed time in nanoseconds since the start of
+ *  program execution.
+ *
+ *  The first call to this function marks the start of program
+ *  execution and returns 0.
+ *
+ *  @return nonoseconds since start of program execution
+ */
 long elapsed_time_nanosec() {
    // printf("(%s) initial_timestamp_nanos=%ld\n", __func__, initial_timestamp_nanos);
    long cur_nanos = cur_realtime_nanosec();
@@ -312,6 +440,14 @@ long elapsed_time_nanosec() {
 }
 
 
+/** Returns the elapsed time since start of program execution
+ *  as a formatted, printable string.
+ *
+ *  The string is built in an internal buffer and is valid until
+ *  the next call of this function.
+ *
+ *  @return formatted elapsed time
+ */
 char * formatted_elapsed_time() {
    // static char elapsed_buf1[40];
    static char elapsed_buf2[40];
@@ -351,17 +487,41 @@ print_simple_title_value(int    offset_start_to_title,
 // Message level control for normal output
 //
 
+/** \defgroup msglevel Message Level Management
+ *
+ * Functions and variables to manage and query output level settings.
+ */
+
 static DDCA_Output_Level output_level;
 
+/** Gets the current output level.
+ *
+ * @return output level
+ *
+ * \ingroup msglevel
+ */
 DDCA_Output_Level get_output_level() {
    return output_level;
 }
 
+/** Sets the output level.
+ *
+ * @param newval output level to set
+ *
+ *  \ingroup msglevel
+ */
 void set_output_level(DDCA_Output_Level newval) {
    // printf("(%s) newval=%s  \n", __func__, msgLevelName(newval) );
    output_level = newval;
 }
 
+/** Gets the printable name of an output level.
+ *
+ * @param val  output level
+ * @return printable name for output level
+ *
+ *  \ingroup msglevel
+ */
 char * output_level_name(DDCA_Output_Level val) {
    char * result = NULL;
    switch (val) {
@@ -382,13 +542,19 @@ char * output_level_name(DDCA_Output_Level val) {
       case OL_VERBOSE:
          result = "Verbose";
          break;
-      default:
-         PROGRAM_LOGIC_ERROR("Invalid Output_Level value: %d", val);
+      // default unnecessary, case exhauts enum
+      // default:
+      //    PROGRAM_LOGIC_ERROR("Invalid Output_Level value: %d", val);
    }
    // printf("(%s) val=%d 0x%02x, returning: %s\n", __func__, val, val, result);
    return result;
 }
 
+
+/** Reports the current output level to the current FOUT device.
+ *
+ *  \ingroup msglevel
+ */
 void show_output_level() {
    // printf("Output level:           %s\n", output_level_name(output_level));
    print_simple_title_value(SHOW_REPORTING_TITLE_START,
@@ -402,6 +568,10 @@ void show_output_level() {
 // Debug trace message control
 //
 
+/** defgroup dbgtrace Debug and Trace Messages
+ *
+ */
+
 #ifdef REFERENCE
 typedef Byte Trace_Group;
 #define TRC_BASE 0x80
@@ -413,11 +583,27 @@ typedef Byte Trace_Group;
 #endif
 
 // same order as flags in TraceGroup
+#ifdef OLD
 const Byte   trace_group_ids[]   = {TRC_BASE, TRC_I2C, TRC_ADL, TRC_DDC, TRC_USB, TRC_TOP};
 const char * trace_group_names[] = {"BASE",   "I2C",   "ADL",   "DDC",   "USB",   "TOP"};
 const int    trace_group_ct = sizeof(trace_group_names)/sizeof(char *);
+#endif
 
-Trace_Group trace_class_name_to_value(char * name) {
+// new way:
+
+Value_Name_Title_Table trace_group_table = {
+      VNT(TRC_BASE, "BASE"),
+      VNT(TRC_I2C, "I2C"),
+      VNT(TRC_ADL, "ADL"),
+      VNT(TRC_DDC, "DDC"),
+      VNT(TRC_USB, "USB"),
+      VNT(TRC_TOP, "TOP"),
+      VNT_END
+};
+const int trace_group_ct = ARRAY_SIZE(trace_group_table)-1;
+
+#ifdef OLD
+Trace_Group trace_class_name_to_value_old(char * name) {
    Trace_Group trace_group = 0x00;
    int ndx = 0;
    for (; ndx < trace_group_ct; ndx++) {
@@ -429,6 +615,15 @@ Trace_Group trace_class_name_to_value(char * name) {
 
    return trace_group;
 }
+#endif
+
+Trace_Group trace_class_name_to_value(char * name) {
+   return (Trace_Group) vnt_id_by_title(trace_group_table,
+                                        name,
+                                        true,      // ignore-case
+                                        TRC_NEVER);
+}
+
 
 static Byte trace_levels = 0x00;
 
@@ -446,7 +641,8 @@ bool is_tracing(Trace_Group trace_group, const char * filename) {
    return result;
 }
 
-void show_trace_groups() {
+#ifdef OLD
+void show_trace_groups_old() {
    const int bufsz = 200;
    char buf[bufsz];
    buf[0] = '\0';
@@ -469,7 +665,37 @@ void show_trace_groups() {
                               SHOW_REPORTING_MIN_TITLE_SIZE,
                               buf);
 }
+#endif
 
+char * get_active_trace_group_names_in_buffer(char * buf, int bufsz) {
+        interpret_vnt_flags_by_title(
+           trace_levels,
+           trace_group_table,
+           ", ",
+           buf,
+           bufsz);
+   return buf;
+}
+
+char * get_active_trace_group_names() {
+   const int bufsz = 200;
+   char buf[bufsz];
+   return strdup(get_active_trace_group_names_in_buffer(buf, bufsz));
+}
+
+
+void show_trace_groups() {
+   const int bufsz = 200;
+   char buf[bufsz];
+   get_active_trace_group_names_in_buffer(buf, bufsz);
+   if (strlen(buf) == 0)
+      strcpy(buf,"none");
+   // printf("Trace groups active:      %s\n", buf);
+   print_simple_title_value(SHOW_REPORTING_TITLE_START,
+                              "Trace groups active: ",
+                              SHOW_REPORTING_MIN_TITLE_SIZE,
+                              buf);
+}
 
 //
 // Report DDC data errors
@@ -743,21 +969,18 @@ void report_ioctl_error2(
 
 
 
-/* Called when a condition that should be impossible has been detected.
- * Issues messages to stderr and terminates execution.
+/** Called when a condition that should be impossible has been detected.
+ * Issues messages to **stderr** and terminates execution.
  *
- * This function is normally invoked using macro PROGRAM_LOGIC_ERROR
- * defined in util.h.
+ * This function is normally invoked using macro PROGRAM_LOGIC_ERROR()
  *
- * Arguments:
- *    funcname    function name
- *    lineno      line number in source file
- *    fn          source file name
- *    format      format string, as in printf()
- *    ...         or or more substitution values for the format string
+ *  @param  funcname    function name
+ *  @param  lineno      line number in source file
+ *  @param  fn          source file name
+ *  @param  format      format string, as in printf()
+ *  @param  ...         one or more substitution values for the format string
  *
- * Returns:
- *    nothing (terminates execution)
+ * @ingroup output_redirection
  */
 void program_logic_error(
       const char * funcname,
@@ -788,8 +1011,19 @@ void program_logic_error(
 }
 
 
-
-// normally wrapped in macro TERMINATE_EXECUTION_ON_ERROR
+/** This function is called to terminate execution on a fatal error.
+ *
+ *  It is normally wrapped in macro TERMINATE_EXECUTION_ON_ERROR(format,...)
+ *
+ *  @param  trace_group trace group for function where error occurred
+ *  @param  funcname    function name
+ *  @param  lineno      line number
+ *  @param  fn          file name
+ *  @param  format      printf() style format string
+ *  @param  ...         arguments for format string
+ *
+ *  @ingroup output_redirection
+ */
 void terminate_execution_on_error(
         Trace_Group   trace_group,
         const char * funcname,
