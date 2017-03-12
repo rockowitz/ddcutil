@@ -32,15 +32,13 @@
 
 #include "coredefs.h"
 
-/** Represents 1 EDID known to X11 */
+/** Represents one EDID known to X11 */
 typedef struct {
-   char * output_name;
-   Byte * edidbytes;
+   char * output_name;   ///< RandR output name
+   Byte * edidbytes;     ///< pointer to 128 byte EDID
 } X11_Edid_Rec;
 
-
 GPtrArray * get_x11_edids();   // returns array of X11_Edid_Rec
-
 void free_x11_edids(GPtrArray * edidrecs);
 
 #endif /* X11_UTIL_H_ */
