@@ -869,6 +869,10 @@ void buffer_dump(Buffer * buffer) {
 // Identifier id to name and description lookup
 //
 
+// TODO: Consider using a Value_Name_Title_Table with
+// NULL title field instead of Value_Name_Table.
+// would eliminate duplicative code.
+
 void debug_vnt_table(Value_Name_Title * table) {
    printf("Value_Name_Title table:\n");
    Value_Name_Title * cur = table;
@@ -977,6 +981,9 @@ char * vn_name(Value_Name* table, uint32_t val) {
  * string_util.h is a more natural location for this function, but
  * that would create a dependency of data_structures.c on string_util.c ,
  * which we'd like to avoid if possible in these basic packages
+ * @remark
+ * Consider allowing the truncation maker, currently "..." to be
+ * specified as a parameter.
  */
 bool sbuf_append(char * buf, int bufsz, char * sepstr, char * nextval) {
    assert(buf && (bufsz > 4) );   //avoid handling pathological case
@@ -1000,6 +1007,7 @@ bool sbuf_append(char * buf, int bufsz, char * sepstr, char * nextval) {
    }
    return truncated;
 }
+
 
 #ifdef OLD
 /** Interprets an integer whose bits represent named flags.
@@ -1074,6 +1082,22 @@ char * interpret_named_flags(
    return buffer;
 }
 
+
+/** Interprets an integer whose bits represent named flags,
+ *  using the **title** field of a **Value_Name_Title** table.
+ *  The interpretation is returned in the buffer provided.
+ *
+ * @param flags_val     value to interpret
+ * @param bitname_table   pointer to Value_Name table
+ * @param sepstr  if non-NULL, separator string to insert between values
+ * @param buffer  pointer to character buffer in which to return result
+ * @param bufsz   buffer size
+ *
+ * @return buffer
+ *
+ * @remark
+ * - Consider using Buffer instead
+ */
 char * interpret_vnt_flags_by_title(
           uint32_t       flags_val,
           Value_Name_Title_Table   bitname_table,
