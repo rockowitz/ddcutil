@@ -33,12 +33,13 @@
 #include <stdint.h>
 
 #define UDEV_DEVICE_SUMMARY_MARKER "UDSM"
-/** Summary information for one UDEV device */
+/** Summary information for one UDEV device
+ */
 typedef struct udev_device_summary {
-   char   marker[4];
-   const char * sysname;
-   const char * devpath;
-   const char * sysattr_name;
+   char         marker[4];        ///< always "UDSM"
+   const char * sysname;          ///< e.g. i2c-3
+   const char * devpath;          ///< device path
+   const char * sysattr_name;     ///< sysattr name
 } Udev_Device_Summary;
 
 void free_udev_device_summaries(GPtrArray* summaries);
@@ -56,28 +57,28 @@ void probe_udev_subsystem(char * udev_class, bool show_usb_parent, int depth);
  * so no need to convert from strings to integers.
  */
 typedef struct {
-   char      marker[4];
-   char *    devname;          // e.g. /dev/usb/hiddev2
+   char      marker[4];        ///< always "UDDS"
+   char *    devname;          ///< e.g. /dev/usb/hiddev2
    // int       usb_busnum;
    // int       usb_devnum;
    // uint16_t  vid;
    // uint16_t  pid;
-   char *    vendor_id;
-   char *    product_id;
-   char *    vendor_name;
-   char *    product_name;
-   char *    busnum_s;
-   char *    devnum_s;
+   char *    vendor_id;       ///< vendor id, as 4 hex characters
+   char *    product_id;      ///< product id, as 4 hex characters
+   char *    vendor_name;     ///< vendor name
+   char *    product_name;    ///< product name
+   char *    busnum_s;        ///< bus number, as a string
+   char *    devnum_s;        ///< device number, as a string
 } Usb_Detailed_Device_Summary;
 
 void free_usb_detailed_device_summary(Usb_Detailed_Device_Summary * devsum);
 void report_usb_detailed_device_summary(Usb_Detailed_Device_Summary * devsum, int depth);
 Usb_Detailed_Device_Summary * lookup_udev_usb_device_by_devname(char * devname);
 
-
+/** USB bus number/device number pair */
 typedef struct udev_usb_devinfo {
-   uint16_t busno;
-   uint16_t devno;
+   uint16_t busno;   ///< USB bus number
+   uint16_t devno;   ///< device number on USB bus
 } Udev_Usb_Devinfo;
 
 void report_udev_usb_devinfo(struct udev_usb_devinfo * dinfo, int depth);

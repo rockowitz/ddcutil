@@ -75,7 +75,7 @@ Udev_Device_Summary * get_udev_device_summary(struct udev_device * dev) {
 }
 
 
-/** Queries udev to obtain summaries of each device in a subsystem.
+/** Queries UDEV to obtain summaries of each device in a subsystem.
  *
  * @param  subsystem    subsystem name, e.g. "i2c-dev"
  * @return GPtrArray of Udev_Device_Summary
@@ -478,7 +478,7 @@ void report_udev_usb_devinfo(struct udev_usb_devinfo * dinfo, int depth) {
  *  @param   subsystem        device subsystem,   e.g. "usbmisc"
  *  @param   simple_devname   simple device name, e.g. "hiddev"
  *
- *  @return  pointer to Udev_Usb_Devinfo containing result
+ *  @return  pointer to Udev_Usb_Devinfo containing result\n
  *           NULL if not found
  *
  * Adapted from UDEV sample code.
