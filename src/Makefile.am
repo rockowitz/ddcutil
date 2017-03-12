@@ -169,7 +169,7 @@ all-local:
 # shared between ddcutil and libddcutil: 
 #
 libcommon_la_SOURCES =      	\
-base/base_services.c        	\
+base/base_services_initialization.c        	\
 base/build_info.c           	\
 base/core.c                 	\
 base/ddc_errno.c            	\

@@ -36,8 +36,6 @@
 #include "base/ddc_packets.h"
 #include "base/displays.h"
 #include "base/parms.h"
-#include "base/base_services.h"
-
 #include "vcp/vcp_feature_codes.h"
 #include "vcp/parse_capabilities.h"
 #include "vcp/parsed_capabilities_feature.h"
@@ -56,6 +54,7 @@
 #include "ddc/ddc_vcp.h"
 
 #include "public/ddcutil_c_api.h"
+#include "../base/base_services_initialization.h"
 
 
 #define WITH_DR(ddca_dref, action) \

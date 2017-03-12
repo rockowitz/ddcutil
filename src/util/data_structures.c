@@ -1117,7 +1117,7 @@ char * interpret_vnt_flags_by_title(
          break;
       }
       if (flags_val & cur_entry->value) {
-         sbuf_append(buffer, bufsz, sepstr, cur_entry->title);
+         sbuf_append(buffer, bufsz, sepstr, (cur_entry->title) ? cur_entry->title : "missing");
       }
       cur_entry++;
    }

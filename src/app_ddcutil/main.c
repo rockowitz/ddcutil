@@ -34,11 +34,11 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "../base/base_services_initialization.h"
 #include "util/data_structures.h"
 #include "util/failsim.h"
 
 #include "base/core.h"
-#include "base/base_services.h"
 #include "base/ddc_errno.h"
 #include "base/ddc_packets.h"
 #include "base/displays.h"

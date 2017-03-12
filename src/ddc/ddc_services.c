@@ -21,9 +21,9 @@
  * </endcopyright>
  */
 
+#include <base/base_services_initialization.h>
 #include <stdio.h>
 
-#include "base/base_services.h"
 #include "base/parms.h"
 
 #include "vcp/vcp_feature_codes.h"
