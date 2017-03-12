@@ -44,9 +44,9 @@ bool devid_ensure_initialized();
  *  device_name and subsys_or_interface_name may or may not be set.
  */
 typedef struct {
-   char * vendor_name;
-   char * device_name;
-   char * subsys_or_interface_name;
+   char * vendor_name;               ///< vendor name
+   char * device_name;               ///< device name (may be NULL)
+   char * subsys_or_interface_name;  ///< subsystem or interface name (may be NULL)
 } Pci_Usb_Id_Names;
 
 Pci_Usb_Id_Names devid_get_pci_names(
