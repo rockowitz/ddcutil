@@ -27,7 +27,9 @@
  * Utilities for use with libdrm
  */
 
+#include <glib.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 #include "data_structures.h"
@@ -113,9 +115,7 @@ Value_Name drm_property_flag_table[] = {
 };
 
 
-
-// doesn't handle extended property types, inc DRM_MODE_PROP_OOBJECT, DRM_MODE_PROP_SIGNED_RANGE
-// see libdrm/drm.h
+#ifdef OLD
 char * interpret_property_flags_r(uint32_t flags, char * buffer, int bufsz) {
 #ifdef OLD
    interpret_named_flags_old(
@@ -133,7 +133,6 @@ char * interpret_property_flags_r(uint32_t flags, char * buffer, int bufsz) {
              buffer,
              bufsz );
 
-
    uint32_t extended_type = flags & DRM_MODE_PROP_EXTENDED_TYPE;
    if (extended_type) {
       char * extended_name = "other extended type";
@@ -148,13 +147,57 @@ char * interpret_property_flags_r(uint32_t flags, char * buffer, int bufsz) {
    return buffer;
 
 }
+#endif
 
-
-char * interpret_property_flags(uint32_t flags) {
+#ifdef OLD
+char * interpret_property_flags_old(uint32_t flags) {
    int bufsz = 150;
    static char property_flags_string[150];
    return interpret_property_flags_r(flags, property_flags_string, bufsz);
 }
+#endif
+
+#ifdef FRAGMENT
+
+char * vnt_interpret_flags(
+      uint32_t                flags_val,
+      Value_Name_Title_Table  bitname_table,
+      bool                    use_title,
+      char *                  sepstr)
+
+#endif
+
+char * interpret_property_flags(uint32_t flags) {
+   static char * buf = NULL;
+   if (buf)
+      free(buf);
+   buf = vnt_interpret_flags(
+            flags,
+            drm_property_flag_table,
+            false,          // use name field, not title field
+            ", ");
+   int bufsz = strlen(buf) + 100;
+   buf = realloc(buf, bufsz);  // in case we need to append
+
+   uint32_t extended_type = flags & DRM_MODE_PROP_EXTENDED_TYPE;
+   if (extended_type) {
+      if (strlen(buf) > 0)
+         g_strlcat(buf, ", ", bufsz);
+      char * extended_name = "other extended type";
+      if (extended_type == DRM_MODE_PROP_OBJECT)
+         extended_name = "DRM_MODE_PROP_OBJECT";
+      else if (extended_type == DRM_MODE_PROP_SIGNED_RANGE)
+         extended_name = "DRM_MODE_PROP_SIGNED_RANGE";
+      g_strlcat(buf, extended_name, bufsz);
+   }
+   if (flags & DRM_MODE_PROP_ATOMIC) {
+      if (strlen(buf) > 0)
+         g_strlcat(buf, ", ", bufsz);
+      g_strlcat(buf,  "DRM_MODE_PROP_ATOMIC", bufsz);
+   }
+   return buf;
+}
+
 
 
 Value_Name_Title drmModeConnection_table[] = {

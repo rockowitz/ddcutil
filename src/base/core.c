@@ -325,6 +325,7 @@ char * interpret_call_options_r_old(Call_Options calloptions, char * buffer, int
 }
 #endif
 
+#ifdef OLD
 /** Interprets a **Call_Options** byte as a printable string, returning the
  *  result in the buffer provided.
  *
@@ -343,6 +344,11 @@ char * interpret_call_options_r(Call_Options calloptions, char * buffer, int buf
    return buffer;
 }
 
+char * interpret_call_options_r2(Call_Options callopts) {
+   return vnt_interpret_flags(callopts, callopt_bitname_table2, false, "|");
+}
+#endif
+
 #ifdef OLD
 char * interpret_call_options_old(Call_Options calloptions) {
    static char buffer[120];
@@ -352,6 +358,7 @@ char * interpret_call_options_old(Call_Options calloptions) {
 }
 #endif
 
+
 /** Interprets a **Call_Options** byte as a printable string.
  *  The returned value is valid until the next call of this function.
  *
@@ -359,11 +366,21 @@ char * interpret_call_options_old(Call_Options calloptions) {
  *
  *  @return interpreted value
  */
-char * interpret_call_options(Call_Options calloptions) {
+#ifdef OLD
+char * interpret_call_options_old(Call_Options calloptions) {
    static char buffer[120];
    char * result = interpret_call_options_r(calloptions, buffer, 100);
    // DBGMSG("calloptions = 0x%02x, returning %s", calloptions, result);
    return result;
+}
+#endif
+
+char * interpret_call_options(Call_Options calloptions) {
+   static char * buffer = NULL;
+   if (buffer)
+      free(buffer);
+   buffer = vnt_interpret_flags(calloptions, callopt_bitname_table2, false, "|");
+   return buffer;
 }
 
 // Local definitions and functions shared by all message control categories
@@ -493,10 +510,13 @@ const int    trace_group_ct = sizeof(trace_group_names)/sizeof(char *);
 
 // new way:
 
+static
 Value_Name_Title_Table trace_group_table = {
       VNT(TRC_BASE, "BASE"),
       VNT(TRC_I2C, "I2C"),
+#ifdef HAVE_ADL
       VNT(TRC_ADL, "ADL"),
+#endif
       VNT(TRC_DDC, "DDC"),
       VNT(TRC_USB, "USB"),
       VNT(TRC_TOP, "TOP"),
@@ -519,23 +539,64 @@ Trace_Group trace_class_name_to_value_old(char * name) {
 }
 #endif
 
+/** Given a trace group name, return its identifier.
+ *  Case is ignored.
+ *
+ *  @param name trace group name
+ *  @return trace group identifier
+ *  @retval  TRC_NEVER unrecognized name
+ *
+ *  /ingroup dbgtrace
+ */
 Trace_Group trace_class_name_to_value(char * name) {
+#ifdef OLD
    return (Trace_Group) vnt_id_by_title(trace_group_table,
                                         name,
+                                        true,      // ignore-case
+                                        TRC_NEVER);
+#endif
+   return (Trace_Group) vnt_find_id(trace_group_table,
+                                        name,
+                                        true,      // search title field
                                         true,      // ignore-case
                                         TRC_NEVER);
 }
 
 
-static Byte trace_levels = 0x00;
+static Byte trace_levels = TRC_NEVER;   // 0x00
 
+/** Specify the trace groups to be traced.
+ *
+ * @param trace_flags bit flags indicating groups to trace
+ *
+ * @ingroup dbgtrace
+ */
 void set_trace_levels(Trace_Group trace_flags) {
    bool debug = false;
    DBGMSF(debug, "trace_flags=0x%02x\n", trace_flags);
+
    trace_levels = trace_flags;
 }
 
-// n. takes filename parm but used only in debug message, not result calculation
+/** Checks if a group is being traced
+ *
+ * @param trace_group group to check
+ * @param filename    file from which check is occurring (not currently used)
+ *
+ * @return **true** if tracing enabled, **false** if not
+ *
+ * @remark
+ * - Multiple trace group bits can be set in **trace_group**.  If any of those
+ *   group are currently being traced, the function returns **true**. That is,
+ *   a given trace location in the code can be activated by multiple trace groups.
+ * - If trace_group == TRC_ALWAYS (0xff), the function returns **true**.
+ *   Commonly, if debugging is active in a given location, the trace_group value
+ *   being checked can be set to TRC_ALWAYS, so a site can have a single debug/trace
+ *   function call.
+ *
+ * @ingroup dbgtrace
+ *
+ */
 bool is_tracing(Trace_Group trace_group, const char * filename) {
    bool result =  (trace_group == 0xff) || (trace_levels & trace_group); // is trace_group being traced?
    // printf("(%s) traceGroup = %02x, filename=%s, traceLevels=0x%02x, returning %d\n",
@@ -569,6 +630,7 @@ void show_trace_groups_old() {
 }
 #endif
 
+#ifdef OLD
 char * get_active_trace_group_names_in_buffer(char * buf, int bufsz) {
         interpret_vnt_flags_by_title(
            trace_levels,
@@ -583,20 +645,24 @@ char * get_active_trace_group_names() {
    const int bufsz = 200;
    char buf[bufsz];
    return strdup(get_active_trace_group_names_in_buffer(buf, bufsz));
-}
 
+}
+#endif
 
 void show_trace_groups() {
-   const int bufsz = 200;
-   char buf[bufsz];
-   get_active_trace_group_names_in_buffer(buf, bufsz);
-   if (strlen(buf) == 0)
-      strcpy(buf,"none");
+   // const int bufsz = 200;
+   // char buf[bufsz];
+   // get_active_trace_group_names_in_buffer(buf, bufsz);
+   char * buf = vnt_interpret_flags(trace_levels, trace_group_table, true /* use title */, ", ");
+   // if (strlen(buf) == 0)
+   //    strcpy(buf,"none");
    // printf("Trace groups active:      %s\n", buf);
    print_simple_title_value(SHOW_REPORTING_TITLE_START,
                               "Trace groups active: ",
                               SHOW_REPORTING_MIN_TITLE_SIZE,
-                              buf);
+                              (strlen(buf) == 0) ? "none" : buf);
+                              // buf);
+   free(buf);
 }
 
 //

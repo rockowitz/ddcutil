@@ -178,7 +178,10 @@ typedef Value_Name Value_Name_Table[];
  * The table is terminated by an entry whose name and description fields are NULL.
  */
 typedef struct {
+#ifdef OLD
    Byte   value;         ///< byte value
+#endif
+   uint32_t value;       ///< value
    char * name;          ///< symbolic name
    char * title;         ///< value description
 } Value_Name_Title;
@@ -196,20 +199,22 @@ char * vnt_name( Value_Name_Title* table, uint32_t val);
 #define vn_name vnt_name
 char * vnt_title(Value_Name_Title* table, uint32_t val);
 
+uint32_t vnt_find_id(
+           Value_Name_Title_Table table,
+           const char * s,
+           bool use_title,       // if false, search by symbolic name, if true, search by title
+           bool ignore_case,
+           uint32_t default_id);
 
+#ifdef OLD
 uint32_t vnt_id_by_title(Value_Name_Title_Table table,
                          const char * title,
                          bool ignore_case,
                          uint32_t default_id);
+#endif
 
 
 
-
-//
-// Misc
-//
-
-bool sbuf_append(char * buf, int bufsz, char * sepstr, char * nextval);
 
 #ifdef OLD
 char * interpret_named_flags_old(
@@ -227,11 +232,21 @@ char * interpret_named_flags(
           char *         buffer,
           int            bufsize );
 
+#ifdef OLD
 char * interpret_vnt_flags_by_title(
           uint32_t       flags_val,
           Value_Name_Title_Table   bitname_table,
           char *         sepstr,
           char *         buffer,
           int            bufsz );
+#endif
+
+#define INTERPRET_VNT_FLAGS_BY_NAME false
+#define INTERPRET VNT_FLAGS_BY_TITLE true
+char * vnt_interpret_flags(
+      uint32_t                flags_val,
+      Value_Name_Title_Table  bitname_table,
+      bool                    use_title,
+      char *                  sepstr);
 
 #endif /* DATA_STRUCTURES_H */

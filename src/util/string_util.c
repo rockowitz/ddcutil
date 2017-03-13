@@ -607,7 +607,12 @@ char * str_replace_char(char * s, char old_char, char new_char) {
    return s;
 }
 
-
+/** Concatenates 2 strings into a newly allocated buffer.
+ *
+ * @param s1 first string
+ * @param s2 second string
+ * @return newly allocated string
+ */
 char * strcat_new(char * s1, char * s2) {
     assert(s1);
     assert(s2);
@@ -635,6 +640,44 @@ char * chars_to_string(const char * start, int len) {
       *(strbuf + len) = '\0';
    }
    return strbuf;
+}
+
+
+/** Appends a value to a string in a buffer.
+ *
+ * @param buf     pointer to character buffer
+ * @param bufsz   buffer size
+ * @param sepstr  if non-null, separator string to insert
+ * @param nextval value to append
+ *
+ * @retval true   string was truncated
+ * @retval false  normal append
+ *
+ * @remark
+ * Consider allowing the truncation maker, currently "..." to be
+ * specified as a parameter.
+ */
+bool sbuf_append(char * buf, int bufsz, char * sepstr, char * nextval) {
+   assert(buf && (bufsz > 4) );   //avoid handling pathological case
+   bool truncated = false;
+   int seplen = (sepstr) ? strlen(sepstr) : 0;
+   int maxchars = bufsz-1;
+   int newlen = ( strlen(buf) == 0 )
+                     ? strlen(nextval)
+                     : ( strlen(buf) + seplen + strlen(nextval));
+   if (newlen <= maxchars) {
+      if (strlen(buf) > 0 && sepstr)
+         strcat(buf, sepstr);
+      strcat(buf, nextval);
+   }
+   else {
+      if ( strlen(buf) < (maxchars-3) )
+         strcat(buf, "...");
+      else
+         strcpy(buf+(maxchars-3), "...");
+      truncated = true;
+   }
+   return truncated;
 }
 
 

@@ -873,16 +873,9 @@ void buffer_dump(Buffer * buffer) {
 // NULL title field instead of Value_Name_Table.
 // would eliminate duplicative code.
 
-void debug_vnt_table(Value_Name_Title * table) {
-   printf("Value_Name_Title table:\n");
-   Value_Name_Title * cur = table;
-   for (; cur->name; cur++) {
-      printf("   %2d %-30s %s\n",  cur->value, cur->name, cur->title);
-   }
-}
 
 
-/* Returns the name of an entry in a Value_Nmme_Title table.
+/** Returns the name of an entry in a Value_Nmme_Title table.
  *
  * @param table  pointer to table
  * @param val    value to lookup
@@ -905,7 +898,9 @@ char * vnt_name(Value_Name_Title* table, uint32_t val) {
 }
 
 
-/* Returns the title (description field) of an entry in a Value_Nmme_Title table.
+
+
+/** Returns the title (description field) of an entry in a Value_Nmme_Title table.
  *
  * @param table  pointer to table
  * @param val    value to lookup
@@ -927,10 +922,61 @@ char * vnt_title(Value_Name_Title* table, uint32_t val) {
    return result;
 }
 
+
+/** Searches a Value_Name_Title_Table for a specified name or title,
+ *  and returns its id value.
+ *
+ *  @param table a      Value_Name_Title table
+ *  @param s            string to search for
+ *  @param use_title    if false, search name  field\n
+ *                      if true,  search title field
+ *  @param ignore_case  if true, search is case-insensitive
+ *  @param default_id   value to return if not found
+ *
+ *  @result value id
+ */
+uint32_t vnt_find_id(
+           Value_Name_Title_Table table,
+           const char * s,
+           bool use_title,       // if false, search by symbolic name, if true, search by title
+           bool ignore_case,
+           uint32_t default_id)
+{
+   assert(s);
+   uint32_t result = default_id;
+   Value_Name_Title * cur = table;
+   for (; cur->name; cur++) {
+      char * comparand = (use_title) ? cur->title : cur->name;
+      if (comparand) {
+         int comprc = (ignore_case)
+                         ? strcasecmp(s, comparand)
+                         : strcmp(    s, comparand);
+         if (comprc == 0) {
+            result = cur->value;
+            break;
+         }
+      }
+   }
+   return result;
+}
+
+
+#ifdef OLD
+/** Searches a Value_Name_Title_Table for a specified title,
+ *  and returns its id value.
+ *
+ *  @param table a Value_Name_Title table
+ *  @param title string to search for
+ *  @param ignore_case  if true, search is case-insensitive
+ *  @param default_id   value to return if not found
+ *
+ *  @result value id
+ */
 uint32_t vnt_id_by_title(Value_Name_Title_Table table,
                          const char * title,
                          bool ignore_case,
                          uint32_t default_id) {
+#ifdef OLD
    uint32_t result = default_id;
    Value_Name_Title * cur = table;
    for (; cur->name; cur++) {
@@ -943,7 +989,10 @@ uint32_t vnt_id_by_title(Value_Name_Title_Table table,
       }
    }
    return result;
+#endif
+   return vnt_find_id(table, title, true /* use_title */, ignore_case, default_id);
 }
+#endif
 
 
 #ifdef OLD
@@ -968,47 +1017,6 @@ char * vn_name(Value_Name* table, uint32_t val) {
 }
 #endif
 
-
-/** Appends a value to a string in a buffer.
- *
- * @param buf     pointer to character buffer
- * @param bufsz   buffer size
- * @param sepstr  if non-null, separator string to insert
- * @param nextval value to append
- *
- * @retval true   string was truncated
- * @retval false  normal append
- *
- * @remark
- * string_util.h is a more natural location for this function, but
- * that would create a dependency of data_structures.c on string_util.c ,
- * which we'd like to avoid if possible in these basic packages
- * @remark
- * Consider allowing the truncation maker, currently "..." to be
- * specified as a parameter.
- */
-bool sbuf_append(char * buf, int bufsz, char * sepstr, char * nextval) {
-   assert(buf && (bufsz > 4) );   //avoid handling pathological case
-   bool truncated = false;
-   int seplen = (sepstr) ? strlen(sepstr) : 0;
-   int maxchars = bufsz-1;
-   int newlen = ( strlen(buf) == 0 )
-                     ? strlen(nextval)
-                     : ( strlen(buf) + seplen + strlen(nextval));
-   if (newlen <= maxchars) {
-      if (strlen(buf) > 0 && sepstr)
-         strcat(buf, sepstr);
-      strcat(buf, nextval);
-   }
-   else {
-      if ( strlen(buf) < (maxchars-3) )
-         strcat(buf, "...");
-      else
-         strcpy(buf+(maxchars-3), "...");
-      truncated = true;
-   }
-   return truncated;
-}
 
 
 #ifdef OLD
@@ -1046,6 +1054,7 @@ char * interpret_named_flags_old(
 }
 #endif
 
+#ifdef OLD
 /** Interprets an integer whose bits represent named flags.
  *  The interpretation is returned in the buffer provided.
  *
@@ -1083,8 +1092,9 @@ char * interpret_named_flags(
    }
    return buffer;
 }
+#endif
 
-
+#ifdef OLD
 /** Interprets an integer whose bits represent named flags,
  *  using the **title** field of a **Value_Name_Title** table.
  *  The interpretation is returned in the buffer provided.
@@ -1113,7 +1123,7 @@ char * interpret_vnt_flags_by_title(
    while (cur_entry->name) {
       // DBGMSG("Comparing flags_val=0x%08x vs cur_entry->bitvalue = 0x%08x", flags_val, cur_entry->bitvalue);
       if (!flags_val && cur_entry->value == flags_val) {
-         sbuf_append(buffer, bufsz, sepstr, cur_entry->title);
+         sbuf_append(buffer, bufsz, sepstr, (cur_entry->title)? cur_entry->title : "missing" );
          break;
       }
       if (flags_val & cur_entry->value) {
@@ -1123,3 +1133,70 @@ char * interpret_vnt_flags_by_title(
    }
    return buffer;
 }
+#endif
+
+
+/** Interprets an integer whose bits represent named flags.
+ *
+ * @param flags_val      value to interpret
+ * @param bitname_table  pointer to Value_Name table
+ * @param use_title      if **true**, use the **title** field of the table,\n
+ *                       if **false**, use the **name** field of the table
+ * @param sepstr  if non-NULL, separator string to insert between values
+ *
+ * @return newly allocated character string
+ *
+ * @remark
+ * - It is the responsibility of the caller to free the returned string
+ * - If a referenced **title** field is NULL, "missing" is used as the value
+ */
+char * vnt_interpret_flags(
+      uint32_t                flags_val,
+      Value_Name_Title_Table  bitname_table,
+      bool                    use_title,
+      char *                  sepstr)
+{
+   GString * sbuf = g_string_sized_new(200);
+   bool first = true;
+   Value_Name_Title * cur_entry = bitname_table;
+     while (cur_entry->name) {
+        // DBGMSG("Comparing flags_val=0x%08x vs cur_entry->bitvalue = 0x%08x", flags_val, cur_entry->bitvalue);
+        if (!flags_val && cur_entry->value == flags_val) { // special value for no bit set
+           char * sval = (use_title) ? cur_entry->title : cur_entry->name;
+           if (!sval)
+              sval = "missing";
+           g_string_append(sbuf, sval);
+           break;
+        }
+        if (flags_val & cur_entry->value) {
+           if (first)
+              first = false;
+           else
+              g_string_append(sbuf, ", ");
+
+           char * sval = (use_title) ? cur_entry->title : cur_entry->name;
+           if (!sval)
+              sval = "missing";
+           g_string_append(sbuf, sval);
+        }
+        cur_entry++;
+     }
+     char * result = strdup(sbuf->str);
+     g_string_free(sbuf, true);
+     return result;
+
+}
+
+/** Shows the contents of a **Value_Name_Title table.
+ *  Output is written to stdout.
+ *
+ * @param table pointer to table
+ */
+void vnt_debug_table(Value_Name_Title * table) {
+   printf("Value_Name_Title table:\n");
+   Value_Name_Title * cur = table;
+   for (; cur->name; cur++) {
+      printf("   %2d %-30s %s\n",  cur->value, cur->name, cur->title);
+   }
+}
+

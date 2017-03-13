@@ -73,6 +73,7 @@ char * substr(const char * s, int startpos, int ct);
 char * lsub(const char * s, int ct);
 char * str_replace_char(char * s, char old_char, char new_char);
 char * strcat_new(char * s1, char * s2);
+bool   sbuf_append(char * buf, int bufsz, char * sepstr, char * nextval);
 
 typedef bool (*String_Comp_Func)(const char * a, const char * b);
 int matches_by_func(    const char * word, char ** match_list, String_Comp_Func  comp_func);

@@ -389,6 +389,7 @@ bye:
 // They are overly complex for production use.  They were created during development
 // to facilitate exploratory programming.
 
+#ifdef OLD
 typedef
 struct {
         unsigned long bit;
@@ -420,8 +421,32 @@ I2C_Func_Table_Entry functionality_table[] = {
    {I2C_FUNC_SMBUS_WRITE_I2C_BLOCK  , "I2C_FUNC_SMBUS_WRITE_I2C_BLOCK",  "i2c_smbus_write_i2c_block_data"}
 };
 int bit_name_ct = sizeof(functionality_table) / sizeof(I2C_Func_Table_Entry);
+#endif
 
+// Note 2 entries for I2C_FUNC_I2C.  Usage must take this into account.
+Value_Name_Title_Table functionality_table2 = {
+      //  flag                              I2C function name
+      VNT(I2C_FUNC_I2C                    , "ioctl_write"),
+      VNT(I2C_FUNC_I2C                    , "ioctl_read"),
+      VNT(I2C_FUNC_10BIT_ADDR             , NULL),
+      VNT(I2C_FUNC_PROTOCOL_MANGLING      , NULL),
+      VNT(I2C_FUNC_SMBUS_PEC              , "i2c_smbus_pec"),
+      VNT(I2C_FUNC_SMBUS_BLOCK_PROC_CALL  , "i2c_smbus_block_proc_call"),
+      VNT(I2C_FUNC_SMBUS_QUICK            , "i2c_smbus_quick"),
+      VNT(I2C_FUNC_SMBUS_READ_BYTE        , "i2c_smbus_read_byte"),
+      VNT(I2C_FUNC_SMBUS_WRITE_BYTE       , "i2c_smbus_write_byte"),
+      VNT(I2C_FUNC_SMBUS_READ_BYTE_DATA   , "i2c_smbus_read_byte_data"),
+      VNT(I2C_FUNC_SMBUS_WRITE_BYTE_DATA  , "i2c_smbus_write_byte_data"),
+      VNT(I2C_FUNC_SMBUS_READ_WORD_DATA   , "i2c_smbus_read_word_data"),
+      VNT(I2C_FUNC_SMBUS_WRITE_WORD_DATA  , "i2c_smbus_write_word_data"),
+      VNT(I2C_FUNC_SMBUS_PROC_CALL        , "i2c_smbus_proc_call"),
+      VNT(I2C_FUNC_SMBUS_READ_BLOCK_DATA  , "i2c_smbus_read_block_data"),
+      VNT(I2C_FUNC_SMBUS_WRITE_BLOCK_DATA , "i2c_smbus_write_block_data"),
+      VNT(I2C_FUNC_SMBUS_READ_I2C_BLOCK   , "i2c_smbus_read_i2c_block_data"),
+      VNT(I2C_FUNC_SMBUS_WRITE_I2C_BLOCK  , "i2c_smbus_write_i2c_block_data")
+};
 
+#ifdef OLD
 static I2C_Func_Table_Entry * find_func_table_entry_by_funcname(char * funcname) {
    // DBGMSG("Starting.  funcname=%s", funcname);
    int ndx = 0;
@@ -438,8 +463,10 @@ static I2C_Func_Table_Entry * find_func_table_entry_by_funcname(char * funcname)
    // DBGMSG("funcname=%s, returning %s", funcname, (result) ? result->name : "NULL");
    return result;
 }
+#endif
 
 
+#ifdef OLD
 static bool is_function_supported(int busno, char * funcname) {
    // DBGMSG("Starting. busno=%d, funcname=%s", busno, funcname);
    bool result = true;
@@ -460,6 +487,34 @@ static bool is_function_supported(int busno, char * funcname) {
    // DBGMSG("busno=%d, funcname=%s, returning %d", busno, funcname, result);
    return result;
 }
+#endif
+
+static bool is_function_supported(int busno, char * funcname) {
+   // DBGMSG("Starting. busno=%d, funcname=%s", busno, funcname);
+   bool result = true;
+   if ( !streq(funcname, "read") &&  !streq(funcname, "write") ) {
+      uint32_t func_bit = vnt_find_id(
+                               functionality_table2,
+                               funcname,
+                               true,      //  search title field
+                               false,     //  ignore_case,
+                               0x00);     //   default_id);
+
+      if (!func_bit) {
+         TERMINATE_EXECUTION_ON_ERROR("Unrecognized function name: %s", funcname);
+      }
+      if (busno < 0 || busno >= i2c_get_busct() ) {
+         TERMINATE_EXECUTION_ON_ERROR("Invalid bus: /dev/i2c-%d", busno);
+      }
+
+      // DBGMSG("functionality=0x%lx, func_table_entry->bit=-0x%lx", bus_infos[busno].functionality, func_table_entry->bit);
+      Bus_Info * bus_info = i2c_get_bus_info(busno, DISPSEL_NONE);
+      result = (bus_info->functionality & func_bit) != 0;
+   }
+   // DBGMSG("busno=%d, funcname=%s, returning %d", busno, funcname, result);
+   return result;
+}
+
 
 
 bool i2c_verify_functions_supported(int busno, char * write_func_name, char * read_func_name) {
@@ -492,7 +547,7 @@ unsigned long i2c_get_functionality_flags_by_fd(int fd) {
    return funcs;
 }
 
-
+#ifdef OLD
 char * i2c_interpret_functionality_into_buffer(unsigned long functionality, Buffer * buf) {
    char * result = "--";
 
@@ -516,9 +571,18 @@ char * i2c_interpret_functionality_into_buffer(unsigned long functionality, Buff
    result = (char *) buf->bytes;
    return result;
 }
+#endif
 
+char * i2c_interpret_functionality_flags(unsigned long functionality) {
+   // HACK ALERT: There are 2 entries for bit I2C_FUNC_I2C in functionality_table,
+   // one for function name ioctl_read and another for function name ioctl_write
+   // These are at indexes 0 and 1.   For our purposes here we only want to check
+   // each bit once, so we start at index 1 instead of 0.
+   return vnt_interpret_flags(functionality, functionality_table2+1, false, ", ");
+}
 
-void i2c_report_functionality_flags(long functionality, int maxline, int depth) {
+#ifdef OLD
+void i2c_report_functionality_flags_old(long functionality, int maxline, int depth) {
    Buffer * buf0 = buffer_new(1000, __func__);
    i2c_interpret_functionality_into_buffer(functionality, buf0);
    // rpt_vstring(1, "Functionality:  %s", buf0->bytes);
@@ -543,7 +607,32 @@ void i2c_report_functionality_flags(long functionality, int maxline, int depth) 
    free(buf0);
    ntsa_free(ntsa);
 }
+#endif
 
+void i2c_report_functionality_flags(long functionality, int maxline, int depth) {
+   char * buf0 = i2c_interpret_functionality_flags(functionality);
+   // rpt_vstring(1, "Functionality:  %s", buf0->bytes);
+
+   char * header = "Functionality: ";
+   int hdrlen = strlen(header);
+   int maxpiece = maxline - ( rpt_get_indent(depth) + hdrlen);
+
+   Null_Terminated_String_Array ntsa = strsplit_maxlength( buf0, maxpiece, " ");
+   int ntsa_ndx = 0;
+   while (true) {
+      char * s = ntsa[ntsa_ndx++];
+      if (!s)
+         break;
+      // printf("(%s) header=|%s|, s=|%s|\n", __func__, header, s);
+      rpt_vstring(depth, "%-*s%s", hdrlen, header, s);
+      // printf("(%s) s = %p\n", __func__, s);
+      if (strlen(header) > 0)
+         header = "";
+
+   }
+   free(buf0);
+   ntsa_free(ntsa);
+}
 
 
 
@@ -1269,16 +1358,13 @@ Display_Info_List i2c_get_displays() {
 // Bus Reports
 //
 
-/* Reports on a single I2C bus.
+/** Reports on a single I2C bus.
  *
- * Arguments:
- *    bus_info    pointer to Bus_Info structure describing bus
- *    depth       logical indentation depth
+ * \param   bus_info    pointer to Bus_Info structure describing bus
+ * \param   depth       logical indentation depth
  *
- * Returns:  nothing
- *
- * The format of the output as well as its extent is controlled by
- * getGlobalMessageLevel().
+ * \remark
+ * The format of the output as well as its extent is controlled by get_output_level().
  */
 void report_businfo(Bus_Info * bus_info, int depth) {
    bool debug = false;
@@ -1312,7 +1398,7 @@ void report_businfo(Bus_Info * bus_info, int depth) {
             rpt_vstring(depth, "Address 0x30 present:    %s", bool_repr(bus_info->flags & I2C_BUS_ADDR_0X30));
             rpt_vstring(depth, "Address 0x37 present:    %s", bool_repr(bus_info->flags & I2C_BUS_ADDR_0X37));
             rpt_vstring(depth, "Address 0x50 present:    %s", bool_repr(bus_info->flags & I2C_BUS_ADDR_0X50));
-            i2c_interpret_functionality_into_buffer(bus_info->functionality, buf0);
+            // i2c_interpret_functionality_into_buffer(bus_info->functionality, buf0);
             // rpt_vstring(depth, "Bus functionality:    %.*s",  buf0->len, buf0->bytes /* buf */);
             i2c_report_functionality_flags(bus_info->functionality, /* maxline */ 90, depth);
             if ( bus_info->flags & I2C_BUS_ADDR_0X50) {
