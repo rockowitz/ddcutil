@@ -21,10 +21,16 @@
  * </endcopyright>
  */
 
+/** \file
+ * Status Code Management
+ */
+
 #ifndef STATUS_CODE_MGT_H_
 #define STATUS_CODE_MGT_H_
 
+/** \cond */
 #include <stdbool.h>
+/** \endcond */
 
 
 // Called from the mainline to perform initialization
