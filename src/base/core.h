@@ -103,13 +103,6 @@ typedef Byte Call_Options;
 char * interpret_call_options_r(Call_Options calloptions, char * buffer, int bufsize);
 char * interpret_call_options(Call_Options calloptions);
 
-//
-// Timestamp Generation
-//
-long   cur_realtime_nanosec();   // Returns the current value of the realtime clock in nanoseconds
-void   show_timestamp_history(); // For debugging
-long   elapsed_time_nanaosec();  // nanoseconds since start of program, first call initializes
-char * formatted_elapsed_time();
 
 
 //

@@ -40,6 +40,7 @@ output_sink.c              \
 report_util.c              \
 string_util.c              \
 subprocess_util.c          \
+timestamp.c                \
 udev_util.c                \
 x11_util.c                 
 

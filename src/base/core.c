@@ -24,7 +24,10 @@
 /** @file
  * Core functions and global variables.
  *
- * Core services, including:
+ * File core.c provides a collection of inter-dependent services at the core
+ * of the **ddcutil** application.
+ *
+ * These include
  * - message destination redirection
  * - abnormal termination
  * - standard function call options
@@ -40,13 +43,14 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <time.h>
+
 
 #include "util/data_structures.h"
 #include "util/debug_util.h"
 #include "util/file_util.h"
 #include "util/report_util.h"
 #include "util/string_util.h"
+#include "util/timestamp.h"
 
 #include "base/ddc_errno.h"
 #include "base/linux_errno.h"
@@ -361,108 +365,6 @@ char * interpret_call_options(Call_Options calloptions) {
    // DBGMSG("calloptions = 0x%02x, returning %s", calloptions, result);
    return result;
 }
-
-
-//
-// Timestamp Generation
-//
-
-/** For debugging timestamp generation, maintain a timestamp history. */
-bool  tracking_timestamps = false;    // set true to enable timestamp history
-#define MAX_TIMESTAMPS 1000
-static long  timestamp[MAX_TIMESTAMPS];
-static int   timestamp_ct = 0;
-
-
-/** Returns the current value of the realtime clock in nanoseconds.
- *
- * @return timestamp, in nanoseconds
- *
- * @remark
- * If debugging timestamp generation, the timestamp is remembered.
- */
-long cur_realtime_nanosec() {
-   struct timespec tvNow;
-   clock_gettime(CLOCK_REALTIME, &tvNow);
-   // long result = (tvNow.tv_sec * 1000) + (tvNow.tv_nsec / (1000 * 1000) );  // milliseconds
-   // long result = (tvNow.tv_sec * 1000 * 1000) + (tvNow.tv_nsec / 1000);     // microseconds
-   long result = tvNow.tv_sec * (1000 * 1000 * 1000) + tvNow.tv_nsec;          // NANOSEC
-   if (tracking_timestamps && timestamp_ct < MAX_TIMESTAMPS)
-      timestamp[timestamp_ct++] = result;
-   // printf("(%s) Returning: %ld\n", result);
-   return result;
-}
-
-
-/** Reports history of generated timestamps
- *
- * @remark
- * This is a debugging function.
- */
-void show_timestamp_history() {
-   if (tracking_timestamps) {
-      // n. DBGMSG writes to FOUT
-      DBGMSG("total timestamps: %d", timestamp_ct);
-      bool monotonic = true;
-      int ctr = 0;
-      for (; ctr < timestamp_ct; ctr++) {
-         f0printf(FOUT, "  timestamp[%d] =  %15ld\n", ctr, timestamp[ctr] );
-         if (ctr > 0 && timestamp[ctr] <= timestamp[ctr-1]) {
-            f0printf(FOUT, "   !!! NOT STRICTLY MONOTONIC !!!\n");
-            monotonic = false;
-         }
-      }
-      f0printf(FOUT, "Timestamps are%s strictly monotonic\n", (monotonic) ? "" : " NOT");
-   }
-   else
-      DBGMSG("Not tracking timestamps");
-}
-
-
-static long initial_timestamp_nanos = 0;
-
-/** Returns the elapsed time in nanoseconds since the start of
- *  program execution.
- *
- *  The first call to this function marks the start of program
- *  execution and returns 0.
- *
- *  @return nonoseconds since start of program execution
- */
-long elapsed_time_nanosec() {
-   // printf("(%s) initial_timestamp_nanos=%ld\n", __func__, initial_timestamp_nanos);
-   long cur_nanos = cur_realtime_nanosec();
-   if (initial_timestamp_nanos == 0)
-      initial_timestamp_nanos = cur_nanos;
-   long result = cur_nanos - initial_timestamp_nanos;
-   // printf("(%s) Returning: %ld\n", __func__, result);
-   return result;
-}
-
-
-/** Returns the elapsed time since start of program execution
- *  as a formatted, printable string.
- *
- *  The string is built in an internal buffer and is valid until
- *  the next call of this function.
- *
- *  @return formatted elapsed time
- */
-char * formatted_elapsed_time() {
-   // static char elapsed_buf1[40];
-   static char elapsed_buf2[40];
-   long et_nanos = elapsed_time_nanosec();
-   // double secs = et_nanos/(1000.0 * 1000.0 * 1000.0);
-   // snprintf(elapsed_buf1, 40, "%7.3f", secs);
-   long    isecs   = et_nanos/ (1000 * 1000 * 1000);
-   long    imillis = et_nanos/ (1000 * 1000);
-   // printf("(%s) et_nanos=%ld, isecs=%ld, imillis=%ld\n", __func__,  et_nanos, isecs, imillis);
-   snprintf(elapsed_buf2, 40, "%3ld.%03ld", isecs, imillis - (isecs*1000) );
-   // printf("(%s) %s, %s\n", __func__, elapsed_buf1, elapsed_buf2);
-   // printf("(%s) %s\n", __func__, elapsed_buf2);
-   return elapsed_buf2;
-}
-
 
 // Local definitions and functions shared by all message control categories
 

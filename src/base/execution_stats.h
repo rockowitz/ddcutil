@@ -28,6 +28,8 @@
 
 #include <stdbool.h>
 
+#include "util/timestamp.h"
+
 #include "base/displays.h"
 #include "base/status_code_mgt.h"
 
