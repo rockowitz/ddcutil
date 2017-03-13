@@ -42,17 +42,15 @@
 /* Master initialization function
  */
 void init_ddc_services() {
-   // DBGMSG("Executing");
-
-   // base:
-   // init_base_services();
+   bool debug = false;
+   DBGMSF(debug, "Executing");
 
    // i2c:
    i2c_set_io_strategy(DEFAULT_I2C_IO_STRATEGY);
 
    // adl:
    init_adl_errors();
-   // adl_debug = true;      // turn on adl initialization tracing
+   adl_debug = debug;      // turn on adl initialization tracing
    adlshim_initialize();
 
    // ddc:
