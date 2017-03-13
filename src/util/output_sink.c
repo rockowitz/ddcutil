@@ -26,7 +26,7 @@
  *  Not currently used (3/2017)
  */
 
-
+/** \cond */
 #include <assert.h>
 #include <errno.h>
 #include <glib.h>
@@ -34,6 +34,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+/** \endcond */
 
 #include "output_sink.h"
 

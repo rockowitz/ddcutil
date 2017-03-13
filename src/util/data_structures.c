@@ -23,20 +23,24 @@
  * </endcopyright>
  */
 
+/** @file data_structures.c
+ *  Generic data structures
+ */
+
+
+/** \cond */
 #include <assert.h>
 #include <glib.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/param.h>     // for MIN, MAX
+/** \endcond */
 
 #include "string_util.h"
 
 #include "data_structures.h"
 
-/** @file data_structures.c
- *  Generic data structures
- */
 
 
 // bva - Byte Value Array

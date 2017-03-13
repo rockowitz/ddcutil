@@ -25,12 +25,14 @@
  * Functions for debugging
  */
 
+/** \cond */
 #include <execinfo.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+/** \endcond */
 
 #include "debug_util.h"
 

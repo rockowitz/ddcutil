@@ -25,6 +25,7 @@
  * Lookup PCI and USB device ids
  */
 
+/** \cond */
 #include <assert.h>
 #include <ctype.h>
 #include <dirent.h>
@@ -39,6 +40,7 @@
 #include <sys/stat.h>
 #include <time.h>
 #include <unistd.h>
+/** \endcond */
 
 #include "file_util.h"
 #include "multi_level_map.h"

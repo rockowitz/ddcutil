@@ -61,19 +61,21 @@
  * X11 related utility functions
  */
 
-// #include "env.h"
-// #include "randr-edid.h"
-#include <X11/Xlib.h>
-#include <X11/Xatom.h>
-#include <X11/extensions/Xrandr.h>
-#include <stdlib.h>
-#include <stddef.h>
-#include <stdio.h>
-#include <string.h>
+/** \cond */
 #include <assert.h>
-
 #include <glib.h>
 #include <stdbool.h>
+#include <stddef.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <X11/extensions/Xrandr.h>
+#include <X11/Xatom.h>
+#include <X11/Xlib.h>
+/** \endcond */
+
+// #include "env.h"
+// #include "randr-edid.h"
 
 #include "string_util.h"
 

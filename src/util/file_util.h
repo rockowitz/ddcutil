@@ -28,9 +28,11 @@
 #ifndef FILE_UTIL_H_
 #define FILE_UTIL_H_
 
+/** \cond */
 #include <dirent.h>
 #include <glib.h>
 #include <stdbool.h>
+/** \endcond */
 
 int    file_getlines(const char * fn, GPtrArray* line_array, bool verbose);
 char * file_get_first_line(const char * fn, bool verbose);

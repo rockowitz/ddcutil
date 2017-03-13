@@ -28,8 +28,10 @@
 #ifndef SUBPROCESS_UTIL_H_
 #define SUBPROCESS_UTIL_H_
 
+/** \cond */
 #include <glib.h>
 #include <stdbool.h>
+/** \endcond */
 
 bool execute_shell_cmd(char * shell_cmd);
 bool execute_shell_cmd_rpt(char * shell_cmd, int depth);

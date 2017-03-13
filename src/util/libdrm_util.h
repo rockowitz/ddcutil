@@ -28,8 +28,10 @@
 #ifndef LIBDRM_UTIL_H_
 #define LIBDRM_UTIL_H_
 
+/** \cond */
 #include <xf86drm.h>
 #include <xf86drmMode.h>
+/** \endcond */
 
 char * connector_type_name( Byte val);
 char * connector_type_title(Byte val);

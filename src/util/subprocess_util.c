@@ -25,10 +25,12 @@
 * Functions to execute shell commands
 */
 
+/** \cond */
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+/** \endcond */
 
 #include "report_util.h"
 #include "string_util.h"

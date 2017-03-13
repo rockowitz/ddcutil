@@ -29,9 +29,10 @@
 #ifndef UTIL_OUTPUT_SINK_H_
 #define UTIL_OUTPUT_SINK_H_
 
-
+/** \cond */
 #include <glib.h>
 #include <stdio.h>
+/** \endcond */
 
 /** Type of output sink */
 typedef enum {SINK_STDOUT, SINK_FILE, SINK_MEMORY} Output_Sink_Type;

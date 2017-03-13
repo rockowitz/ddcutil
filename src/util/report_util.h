@@ -28,9 +28,11 @@
 #ifndef REPORT_UTIL_H_
 #define REPORT_UTIL_H_
 
+/** \cond */
 #include <glib.h>
 #include <stdio.h>
 #include <stdbool.h>
+/** \endcond */
 
 #include "coredefs.h"
 

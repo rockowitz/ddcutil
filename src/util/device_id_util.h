@@ -28,10 +28,12 @@
 #ifndef DEVICE_ID_UTIL_H_
 #define DEVICE_ID_UTIL_H_
 
+/** \cond */
 #include <glib.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdlib.h>
+/** \endcond */
 
 // *** Initialization ***
 bool devid_ensure_initialized();

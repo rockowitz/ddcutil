@@ -32,8 +32,10 @@
 
 #include "config.h"
 
+/** \cond */
 #include <stdbool.h>
 #include <glib.h>
+/** \endcond */
 
 
 // Issue:  Where to send error messages?

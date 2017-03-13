@@ -30,7 +30,9 @@
 #ifndef GLIB_UTIL_H_
 #define GLIB_UTIL_H_
 
+/** \cond */
 #include <glib.h>
+/** \endcond */
 
 gpointer * g_list_to_g_array(GList * glist, guint * length);
 

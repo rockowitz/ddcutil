@@ -21,6 +21,7 @@
  * </endcopyright>
  */
 
+/** \cond */
 #include <assert.h>
 #include <errno.h>
 #include <glib.h>
@@ -30,6 +31,7 @@
 #include <string.h>
 #include <sys/stat.h>
 #include <unistd.h>
+/** \endcond */
 
 #include "string_util.h"
 

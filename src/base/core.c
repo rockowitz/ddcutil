@@ -36,6 +36,7 @@
  * - debug and trace messages
  */
 
+//* \cond */
 #include <assert.h>
 #include <glib.h>
 #include <errno.h>
@@ -43,7 +44,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
+/** \endcond */
 
 #include "util/data_structures.h"
 #include "util/debug_util.h"

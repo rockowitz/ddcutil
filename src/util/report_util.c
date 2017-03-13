@@ -35,6 +35,7 @@
  * - destination stack
  */
 
+/** \cond */
 #include <assert.h>
 #include <stdarg.h>
 #include <stdbool.h>
@@ -42,6 +43,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+/** \endcond */
 
 #include "coredefs.h"
 #include "file_util.h"

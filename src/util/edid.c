@@ -33,10 +33,11 @@
  * to **ddcutil** are interpreted.
  */
 
-
+/** \cond */
 #include <assert.h>
 #include <stdio.h>
 #include <string.h>
+/** \endcond */
 
 #include "report_util.h"
 #include "string_util.h"

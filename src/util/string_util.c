@@ -25,6 +25,7 @@
  *  String utility functions
  */
 
+/** \cond */
 #include <assert.h>
 #include <ctype.h>
 #include <errno.h>
@@ -32,6 +33,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdarg.h>
+/** \endcond */
 
 #include "string_util.h"
 

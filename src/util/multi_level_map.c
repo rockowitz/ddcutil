@@ -25,6 +25,7 @@
  * Multi_Level_Map data structure
  */
 
+/** \cond */
 #include <assert.h>
 #include <glib.h>
 #include <stdarg.h>
@@ -33,6 +34,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+/** \endcond */
 
 #include "report_util.h"
 

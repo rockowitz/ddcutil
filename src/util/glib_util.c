@@ -26,12 +26,14 @@
  *  Functions for use with glib.
  */
 
+/** \cond */
 #include <assert.h>
 // #include <glib-2.0/glib.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+/** \endcond */
 
 #include "glib_util.h"
 

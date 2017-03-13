@@ -27,10 +27,12 @@
  * Utilities for use with libdrm
  */
 
+/** \cond */
 #include <glib.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+/** \endcond */
 
 #include "data_structures.h"
 #include "report_util.h"

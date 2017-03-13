@@ -28,9 +28,11 @@
 #ifndef STRINGUTIL_H_
 #define STRINGUTIL_H_
 
+/** \cond */
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
+/** \endcond */
 
 #include "coredefs.h"
 #include "glib_util.h"

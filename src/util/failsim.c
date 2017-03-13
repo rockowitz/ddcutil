@@ -25,11 +25,13 @@
  * Functions that provide a simple failure simulation framework.
  */
 
+/** \cond */
 #include <assert.h>
 #include <errno.h>
 #include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
+/** \endcond */
 
 #include "debug_util.h"
 #include "file_util.h"

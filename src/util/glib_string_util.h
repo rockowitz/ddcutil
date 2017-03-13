@@ -29,7 +29,9 @@
  * Functions that depend on both glib_util.c and string_util.c
  */
 
+/** \cond */
 #include <glib.h>
+/** \endcond */
 
 #ifndef GLIB_STRING_UTIL_H_
 #define GLIB_STRING_UTIL_H_

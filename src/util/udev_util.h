@@ -28,9 +28,11 @@
 #ifndef UDEV_UTIL_H_
 #define UDEV_UTIL_H_
 
+/** \cond */
 #include <glib.h>
 #include <libudev.h>
 #include <stdint.h>
+/** \endcond */
 
 #define UDEV_DEVICE_SUMMARY_MARKER "UDSM"
 /** Summary information for one UDEV device

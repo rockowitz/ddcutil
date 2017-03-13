@@ -28,7 +28,9 @@
 #ifndef MULTI_LEVEL_TABLE_H_
 #define MULTI_LEVEL_TABLE_H_
 
+/** \cond */
 #include <glib.h>
+/** \endcond */
 
 
 #define MLT_MAX_LEVELS 4

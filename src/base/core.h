@@ -27,12 +27,14 @@
 #ifndef BASE_CORE_H_
 #define BASE_CORE_H_
 
+/** \cond */
 #include <linux/limits.h>
 #include <setjmp.h>
 #include <stdarg.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
+/** \endcond */
 
 #include "public/ddcutil_types.h"
 

@@ -31,10 +31,12 @@
 #ifndef EDID_H_
 #define EDID_H_
 
+/** \cond */
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
+/** \endcond */
 
 #include "coredefs.h"
 

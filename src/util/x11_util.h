@@ -28,7 +28,9 @@
 #ifndef X11_UTIL_H_
 #define X11_UTIL_H_
 
+/** \cond */
 #include <glib.h>
+/** \endcond */
 
 #include "coredefs.h"
 
