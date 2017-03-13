@@ -3,7 +3,7 @@
  * For recording and reporting the count and elapsed time of system calls.
  *
  * <copyright>
- * Copyright (C) 2014-2016 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2014-2017 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -23,11 +23,17 @@
  * </endcopyright>
  */
 
+/** \file
+ * Record execution statistics, namely the count and elapsed time of system calls.
+ */
+
+/** \cond */
 #include <assert.h>
 #include <glib.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+/** \cond */
 
 #include "util/glib_util.h"
 #include "util/report_util.h"

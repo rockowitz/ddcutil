@@ -1,10 +1,7 @@
 /* sleep.c
  *
- * Created on: May 10, 2016
- *     Author: rock
- *
  * <copyright>
- * Copyright (C) 2014-2016 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2014-2017 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -24,12 +21,22 @@
  * </endcopyright>
  */
 
+/** \file sleep.h
+ * Sleep Management
+ *
+ * Sleeps are integral to the DDC protocol.  Most of **ddcutil's** elapsed
+ * time is spent in sleeps mandated by the DDC protocol.
+ * Sleep invocation is centralized here to keep statistics and facilitate
+ * future tuning.
+ */
+
+/** \cond */
 #include <stdbool.h>
 #include <stdio.h>
 #include <unistd.h>
+/** \cond */
 
 #include "util/report_util.h"
-
 #include "base/core.h"
 #include "base/sleep.h"
 
