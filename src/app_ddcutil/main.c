@@ -23,8 +23,13 @@
  * </endcopyright>
  */
 
+/** \file
+ * ddcutil standalone application mainline
+ */
+
 #include <config.h>
 
+/** \cond */
 #include <assert.h>
 #include <ctype.h>
 #include <errno.h>
@@ -33,11 +38,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+/** \endcond */
 
 
 #include "util/data_structures.h"
 #include "util/failsim.h"
 
+#include "base/adl_errors.h"
 #include "base/base_init.h"
 #include "base/core.h"
 #include "base/ddc_errno.h"
@@ -55,7 +62,6 @@
 #include "i2c/i2c_bus_core.h"
 #include "i2c/i2c_do_io.h"
 
-#include "adl/adl_errors.h"
 #include "adl/adl_shim.h"
 
 #include "usb/usb_displays.h"

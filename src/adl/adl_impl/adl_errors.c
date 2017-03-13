@@ -3,7 +3,7 @@
  *  Interpret ADL error codes
  *
  * <copyright>
- * Copyright (C) 2014-2016 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2014-2017 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -23,12 +23,18 @@
  * </endcopyright>
  */
 
-#include <stdio.h>    // for NULL
+/** \file
+ * ADL Error Number Services
+ */
 
+/** \cond */
+#include <stdio.h>    // for NULL
 #include <adl_defines.h>
+/** \cond */
 
 #include "util/string_util.h"
 
+#include "base/adl_errors.h"
 #include "base/status_code_mgt.h"
 
 

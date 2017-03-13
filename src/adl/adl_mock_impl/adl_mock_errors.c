@@ -1,7 +1,7 @@
 /* adl_mock_errors.c
  *
  * <copyright>
- * Copyright (C) 2014-2016 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2014-2017 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -21,9 +21,16 @@
  * </endcopyright>
  */
 
-#include <stddef.h>
+/** \file
+ * Mock ADL Error Number Services
+ */
 
-#include "adl/adl_errors.h"
+/** \cond */
+#include <stdbool.h>
+#include <stddef.h>
+/** \endcond */
+
+#include "base/adl_errors.h"
 
 void init_adl_errors() {}
 

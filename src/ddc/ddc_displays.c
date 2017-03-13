@@ -1,7 +1,7 @@
 /* ddc_displays.c
  *
  * <copyright>
- * Copyright (C) 2014-2016 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2014-2017 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -21,18 +21,25 @@
  * </endcopyright>
  */
 
+/** \file
+ * Access displays, whether DDC, ADL, or USB
+ */
+
 #include <config.h>
 
+/** \cond */
 #include <assert.h>
 #include <errno.h>
 #include <glib.h>
 #include <string.h>
 #include <time.h>
+/** \cond */
 
 #include "util/debug_util.h"
 #include "util/failsim.h"
 #include "util/report_util.h"
 
+#include "base/adl_errors.h"
 #include "base/ddc_errno.h"
 #include "base/ddc_packets.h"
 #include "base/linux_errno.h"
@@ -43,7 +50,6 @@
 #include "i2c/i2c_bus_core.h"
 #include "i2c/i2c_do_io.h"
 
-#include "adl/adl_errors.h"
 #include "adl/adl_shim.h"
 
 #ifdef USE_USB

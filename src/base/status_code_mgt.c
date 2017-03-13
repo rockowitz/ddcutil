@@ -27,6 +27,7 @@
 
 /** \cond */
 #include <assert.h>
+#include <base/adl_errors.h>
 #include <glib.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -34,7 +35,6 @@
 
 #include "util/string_util.h"
 
-#include "adl/adl_errors.h"
 #include "base/ddc_errno.h"
 #include "base/linux_errno.h"
 

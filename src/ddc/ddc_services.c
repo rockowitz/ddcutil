@@ -1,7 +1,7 @@
 /* ddc_services.c
  *
  * <copyright>
- * Copyright (C) 2014-2016 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2014-2017 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -21,16 +21,22 @@
  * </endcopyright>
  */
 
-#include <base/base_init.h>
-#include <stdio.h>
+/** \file
+ *  DDC initialization and configuration
+ */
 
+/** \cond */
+#include <stdio.h>
+/** \endcond */
+
+#include "base/adl_errors.h"
+#include "base/base_init.h"
 #include "base/parms.h"
 
 #include "vcp/vcp_feature_codes.h"
 
 #include "i2c/i2c_do_io.h"
 
-#include "adl/adl_errors.h"
 #include "adl/adl_shim.h"
 
 #include "ddc/ddc_multi_part_io.h"
