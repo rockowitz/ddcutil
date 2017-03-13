@@ -24,7 +24,7 @@
  * </endcopyright>
  */
 
-/* \file
+/** \file
  * Timestamp Management
  */
 
