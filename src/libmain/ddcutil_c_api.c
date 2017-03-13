@@ -54,7 +54,8 @@
 #include "ddc/ddc_vcp.h"
 
 #include "public/ddcutil_c_api.h"
-#include "../base/base_services_initialization.h"
+
+#include "../base/base_init.h"
 
 
 #define WITH_DR(ddca_dref, action) \

@@ -21,7 +21,7 @@
  * </endcopyright>
  */
 
-#include <base/base_services_initialization.h>
+#include <base/base_init.h>
 #include <stdio.h>
 
 #include "base/parms.h"

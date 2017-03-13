@@ -1,5 +1,8 @@
-/* base_services_initialization.h
- *
+/** @file base_init.c
+ * Master base services initialization
+ */
+
+/*
  * <copyright>
  * Copyright (C) 2014-2017 Sanford Rockowitz <rockowitz@minsoft.com>
  *
@@ -21,11 +24,22 @@
  * </endcopyright>
  */
 
-/** \file base_services_initialization.h" */
+#include "base/core.h"
+#include "base/ddc_packets.h"
+#include "base/execution_stats.h"
+#include "base/linux_errno.h"
+#include "base/sleep.h"
 
-#ifndef BASE_SERVICES_H_
-#define BASE_SERVICES_H_
+#include "base_init.h"
 
-void init_base_services();
 
-#endif /* BASE_SERVICES_H_ */
+
+/** Master initialization function for files in subdirectory base
+ */
+void init_base_services() {
+   init_msg_control();
+   init_sleep_stats();
+   init_execution_stats();
+   init_status_code_mgt();
+   init_linux_errno();
+}
