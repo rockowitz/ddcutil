@@ -1463,11 +1463,10 @@ ddca_get_profile_related_values(
          // set_output_level(OL_PROGRAM);  // not needed for _new() variant
          DBGMSF(debug, "Before dumpvcp_to_string_by_display_handle(), pprofile_values_string=%p, *pprofile_values_string=%p",
                pprofile_values_string, *pprofile_values_string);
-         Global_Status_Code gsc = dumpvcp_as_string(dh, pprofile_values_string);
+         psc = dumpvcp_as_string(dh, pprofile_values_string);
          DBGMSF(debug, "After dumpvcp_to_string_by_display_handle(), pprofile_values_string=%p, *pprofile_values_string=%p",
                pprofile_values_string, *pprofile_values_string);
          DBGMSF(debug, "*pprofile_values_string = |%s|", *pprofile_values_string);
-         psc = public_to_global_status_code(gsc);
       }
    );
 }
@@ -1478,8 +1477,8 @@ DDCA_Status
 ddca_set_profile_related_values(
       char * profile_values_string)
 {
-   Global_Status_Code gsc = loadvcp_by_string(profile_values_string, NULL);
-   return gsc;
+   Public_Status_Code psc = loadvcp_by_string(profile_values_string, NULL);
+   return psc;
 }
 
 

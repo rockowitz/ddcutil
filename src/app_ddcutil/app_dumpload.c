@@ -116,10 +116,10 @@ dumpvcp_as_file(Display_Handle * dh, char * filename) {
    DBGMSF(debug, "Starting");
    char               fqfn[PATH_MAX] = {0};
 
-   Global_Status_Code gsc = 0;
+   Public_Status_Code psc = 0;
    Dumpload_Data * data = NULL;
-   gsc = dumpvcp_as_dumpload_data(dh, &data);
-   if (gsc == 0) {
+   psc = dumpvcp_as_dumpload_data(dh, &data);
+   if (psc == 0) {
       GPtrArray * strings = convert_dumpload_data_to_string_array(data);
 
       if (!filename) {
@@ -142,7 +142,7 @@ dumpvcp_as_file(Display_Handle * dh, char * filename) {
       if (!output_fp) {
          int errsv = errno;
          f0printf(FERR, "Unable to open %s for writing: %s\n", fqfn, strerror(errno));
-         gsc = modulate_rc(errsv, RR_ERRNO);
+         psc = -errsv;
       }
       else {
          int ct = strings->len;
@@ -154,6 +154,7 @@ dumpvcp_as_file(Display_Handle * dh, char * filename) {
          fclose(output_fp);
       }
    }
+   Global_Status_Code gsc = public_to_global_status_code(psc);
    return gsc;
 }
 
@@ -197,7 +198,7 @@ bool loadvcp_by_file(const char * fn, Display_Handle * dh) {
    DDCA_Output_Level output_level = get_output_level();
    bool verbose = (output_level >= OL_VERBOSE);
    bool ok = false;
-   Global_Status_Code gsc = 0;
+   Public_Status_Code psc = 0;
 
    Dumpload_Data * pdata = read_vcp_file(fn);
    if (!pdata) {
@@ -212,9 +213,9 @@ bool loadvcp_by_file(const char * fn, Display_Handle * dh) {
            report_dumpload_data(pdata, 0);
            rpt_pop_output_dest();
       }
-      gsc = loadvcp_by_dumpload_data(pdata, dh);
+      psc = loadvcp_by_dumpload_data(pdata, dh);
       free_dumpload_data(pdata);
-      ok = (gsc == 0);
+      ok = (psc == 0);
    }
 
    DBGMSF(debug, "Returning: %s", bool_repr(ok));

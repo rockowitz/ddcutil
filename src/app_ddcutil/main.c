@@ -132,14 +132,15 @@ void report_stats(Stats_Type stats) {
 // TODO: refactor
 //       originally just displayed capabilities, now returns parsed capabilities as weel
 //       these actions should be separated
-Parsed_Capabilities * perform_get_capabilities_by_display_handle(Display_Handle * dh) {
+Parsed_Capabilities *
+perform_get_capabilities_by_display_handle(Display_Handle * dh) {
    bool debug = false;
    Parsed_Capabilities * pcap = NULL;
    char * capabilities_string;
-   int rc = get_capabilities_string(dh, &capabilities_string);
+   Public_Status_Code psc = get_capabilities_string(dh, &capabilities_string);
 
-   if (rc < 0) {
-      switch(rc) {
+   if (psc < 0) {
+      switch(psc) {
       case DDCRC_REPORTED_UNSUPPORTED:       // should not happen
       case DDCRC_DETERMINED_UNSUPPORTED:
          printf("Unsupported request\n");
@@ -151,7 +152,7 @@ Parsed_Capabilities * perform_get_capabilities_by_display_handle(Display_Handle 
       default:
          printf("(%s) !!! Unable to get capabilities for monitor on %s\n",
                 __func__, display_handle_repr(dh));
-         DBGMSG("Unexpected status code: %s", gsc_desc(rc));
+         DBGMSG("Unexpected status code: %s", psc_desc(psc));
       }
    }
    else {

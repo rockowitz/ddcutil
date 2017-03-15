@@ -105,7 +105,6 @@ try_multi_part_read(
           "Starting. request_type=0x%02x, request_subtype=x%02x, accumulator=%p",
           request_type, request_subtype, accumulator);
 
-   // Global_Status_Code gsc = 0;
    Public_Status_Code psc = 0;
    const int MAX_FRAGMENT_SIZE = 32;
    const int readbuf_size = 6 + MAX_FRAGMENT_SIZE + 1;
@@ -309,8 +308,6 @@ try_multi_part_write(
           "Starting. request_type=0x%02x, request_subtype=x%02x, accumulator=%p",
           request_type, request_subtype, value_to_set);
 
-
-   // Global_Status_Code gsc = 0;
    Public_Status_Code psc = 0;
    int MAX_FRAGMENT_SIZE = 32;
    int max_fragment_size = MAX_FRAGMENT_SIZE - 4;    // hack
@@ -341,8 +338,6 @@ try_multi_part_write(
       }
    }
 
-   // gsc = public_to_global_status_code(psc);
-   // TRCMSGTG(tg, "Returning %s", gsc_desc(rc));
    DBGTRC(force_debug, TRACE_GROUP, "Returning %s", psc_desc(psc));
    return psc;
 }

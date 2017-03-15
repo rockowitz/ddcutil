@@ -75,7 +75,7 @@ app_show_single_vcp_value_by_feature_table_entry(
                  entry->code, display_handle_repr(dh) );
 
    DDCA_MCCS_Version_Spec vspec      = get_vcp_version_by_display_handle(dh);
-   Global_Status_Code     gsc        = 0;
+   Public_Status_Code     psc        = 0;
    Byte                   feature_id = entry->code;
 
    if (!is_feature_readable_by_vcp_version(entry, vspec)) {
@@ -86,12 +86,12 @@ app_show_single_vcp_value_by_feature_table_entry(
                 feature_id, feature_name, vspec.major, vspec.minor);
       else
          printf("Feature %02x (%s) is not readable\n", feature_id, feature_name);
-      gsc = DDCL_INVALID_OPERATION;
+      psc = DDCL_INVALID_OPERATION;
    }
 
-   if (gsc == 0) {
+   if (psc == 0) {
       char * formatted_value = NULL;
-      gsc = get_formatted_value_for_feature_table_entry(
+      psc = get_formatted_value_for_feature_table_entry(
                dh,
                entry,
                false,      /* suppress_unsupported */
@@ -104,8 +104,8 @@ app_show_single_vcp_value_by_feature_table_entry(
       }
    }
 
-   DBGMSF(debug, "Done.  Returning: %s", gsc_desc(gsc));
-   return gsc;
+   DBGMSF(debug, "Done.  Returning: %s", psc_desc(psc));
+   return public_to_global_status_code(psc);
 }
 
 
@@ -173,7 +173,8 @@ app_show_vcp_subset_values_by_display_handle(
    // DBGMSG("Starting.  subset=%d   ", subset );
 
    GPtrArray * collector = NULL;
-   return show_vcp_values(dh, subset_id, collector, show_unsupported, features_seen);
+   Public_Status_Code psc = show_vcp_values(dh, subset_id, collector, show_unsupported, features_seen);
+   return public_to_global_status_code(psc);
 }
 
 

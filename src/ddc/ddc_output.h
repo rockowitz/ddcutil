@@ -45,14 +45,14 @@ extern const char* FMT_CODE_NAME_DETAIL_WO_NL;
 
 #ifdef FUTURE
 // not currently used
-Global_Status_Code
+Public_Status_Code
 check_valid_operation_by_feature_rec_and_version(
       VCP_Feature_Table_Entry * feature_rec,
       Version_Spec              vcp_version,
       Version_Feature_Flags     operation_flags);
 
 // not currently used
-Global_Status_Code
+Public_Status_Code
 check_valid_operation_by_feature_id_and_dh(
       Byte                  feature_id,
       Display_Handle *      dh,
@@ -60,7 +60,7 @@ check_valid_operation_by_feature_id_and_dh(
 #endif
 
 
-Global_Status_Code
+Public_Status_Code
 collect_raw_subset_values(
       Display_Handle *    dh,
       VCP_Feature_Subset  subset,
@@ -68,7 +68,7 @@ collect_raw_subset_values(
       bool                ignore_unsupported,
       FILE *              msg_fh);
 
-Global_Status_Code
+Public_Status_Code
 get_formatted_value_for_feature_table_entry(
       Display_Handle *           dh,
       VCP_Feature_Table_Entry *  vcp_entry,
@@ -77,7 +77,7 @@ get_formatted_value_for_feature_table_entry(
       char **                    pformatted_value,
       FILE *                     msg_fh);
 
-Global_Status_Code
+Public_Status_Code
 show_vcp_values(
       Display_Handle *    dh,
       VCP_Feature_Subset  subset,

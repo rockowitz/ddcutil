@@ -67,12 +67,11 @@
  * Returns:
  *   status code
  */
-Global_Status_Code
+static Public_Status_Code
 get_capabilities_buffer(
       Display_Handle * dh,
       Buffer**         ppCapabilitiesBuffer)
 {
-   Global_Status_Code gsc;
    Public_Status_Code psc;
 
    psc = multi_part_read_with_retry(
@@ -82,7 +81,7 @@ get_capabilities_buffer(
                false,                      // !all_zero_response_ok
                ppCapabilitiesBuffer);
    Buffer * cap_buffer = *ppCapabilitiesBuffer;
-   assert(gsc <= 0);
+   assert(psc <= 0);
    if (psc == 0) {
       // trim trailing blanks and nulls
       int len = buffer_length(*ppCapabilitiesBuffer);
@@ -97,8 +96,7 @@ get_capabilities_buffer(
       buffer_set_byte(cap_buffer, len, '\0');
       buffer_set_length(cap_buffer, len+1);
    }
-   gsc = public_to_global_status_code(psc);
-   return gsc;
+   return psc;
 }
 
 
@@ -117,9 +115,9 @@ get_capabilities_buffer(
  * The returned pointer points to a string that is part of the
  * display handle.  It should NOT be freed by the caller.
  */
-Global_Status_Code
+Public_Status_Code
 get_capabilities_string(Display_Handle * dh, char** pcaps) {
-   Global_Status_Code gsc = 0;
+   Public_Status_Code psc = 0;
    if (!dh->capabilities_string) {
       if (dh->io_mode == USB_IO) {
 #ifdef USE_USB
@@ -131,14 +129,14 @@ get_capabilities_string(Display_Handle * dh, char** pcaps) {
       }
       else {
          Buffer * pcaps_buffer;
-         gsc = get_capabilities_buffer(dh, &pcaps_buffer);
-         if (gsc == 0) {
+         psc = get_capabilities_buffer(dh, &pcaps_buffer);
+         if (psc == 0) {
             dh->capabilities_string = strdup((char *) pcaps_buffer->bytes);
             buffer_free(pcaps_buffer,__func__);
          }
       }
    }
    *pcaps = dh->capabilities_string;
-   return gsc;
+   return psc;
 }
 

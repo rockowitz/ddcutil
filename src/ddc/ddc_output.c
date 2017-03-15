@@ -109,31 +109,31 @@ is_table_feature_by_display_handle(
 
 
 // For possible future use - currently unused
-Global_Status_Code
+Public_Status_Code
 check_valid_operation_by_feature_rec_and_version(
-      VCP_Feature_Table_Entry * frec,
-      DDCA_MCCS_Version_Spec              vcp_version,
-      DDCA_Version_Feature_Flags     operation_flags)
+      VCP_Feature_Table_Entry *   frec,
+      DDCA_MCCS_Version_Spec      vcp_version,
+      DDCA_Version_Feature_Flags  operation_flags)
 {
    DDCA_Version_Feature_Flags feature_flags
       = get_version_sensitive_feature_flags(frec, vcp_version);
    assert(feature_flags);
    ushort rwflags   = operation_flags & DDCA_RW;
    ushort typeflags = operation_flags & (DDCA_READABLE_TABLE | DDCA_CONT | DDCA_NC);
-   Global_Status_Code result = DDCL_INVALID_OPERATION;
+   Public_Status_Code result = DDCL_INVALID_OPERATION;
    if ( (feature_flags & rwflags) && (feature_flags & typeflags) )
       result = 0;
    return result;
 }
 
 
-Global_Status_Code
+Public_Status_Code
 check_valid_operation_by_feature_id_and_dh(
       Byte                  feature_id,
       Display_Handle *      dh,
       DDCA_Version_Feature_Flags operation_flags)
 {
-   Global_Status_Code result = 0;
+   Public_Status_Code result = 0;
    VCP_Feature_Table_Entry * frec = vcp_find_feature_by_hexid(feature_id);
    if (!frec)
       result = DDCL_UNKNOWN_FEATURE;
@@ -163,7 +163,7 @@ check_valid_operation_by_feature_id_and_dh(
  * Returns:
  *    status code
  */
-Global_Status_Code
+Public_Status_Code
 get_raw_value_for_feature_table_entry(
       Display_Handle *           dh,
       VCP_Feature_Table_Entry *  frec,
@@ -263,7 +263,7 @@ get_raw_value_for_feature_table_entry(
    // TRCMSGTG(tg, "Done.  Returning: %s, *pvalrec=%p", gsc_desc(gsc), *pvalrec);
    DBGTRC(debug, TRACE_GROUP, "Done.  Returning: %s, *pvalrec=%p", psc_desc(psc), *pvalrec);
    assert( (psc == 0 && *pvalrec) || (psc != 0 && !*pvalrec) );
-   return public_to_global_status_code(psc);
+   return psc;
 }
 
 
@@ -279,7 +279,7 @@ get_raw_value_for_feature_table_entry(
  * Returns:
  *    status code
  */
-Global_Status_Code
+Public_Status_Code
 collect_raw_feature_set_values(
       Display_Handle *      dh,
       VCP_Feature_Set       feature_set,
@@ -287,7 +287,7 @@ collect_raw_feature_set_values(
       bool                  ignore_unsupported,  // if false, is error if unsupported
       FILE *                msg_fh)
 {
-   Global_Status_Code master_status_code = 0;
+   Public_Status_Code master_status_code = 0;
    bool debug = false;
    DBGMSF(debug, "Starting.");
    // Version_Spec vcp_version = get_vcp_version_by_display_handle(dh);
@@ -297,7 +297,7 @@ collect_raw_feature_set_values(
       VCP_Feature_Table_Entry * entry = get_feature_set_entry(feature_set, ndx);
       DBGMSF(debug,"ndx=%d, feature = 0x%02x", ndx, entry->code);
       Single_Vcp_Value *    pvalrec;
-      Global_Status_Code cur_status_code =
+      Public_Status_Code cur_status_code =
        get_raw_value_for_feature_table_entry(
          dh,
          entry,
@@ -336,7 +336,7 @@ collect_raw_feature_set_values(
  * Returns:
  *    status code
  */
-Global_Status_Code
+Public_Status_Code
 collect_raw_subset_values(
         Display_Handle *    dh,
         VCP_Feature_Subset  subset,
@@ -344,7 +344,7 @@ collect_raw_subset_values(
         bool                ignore_unsupported,
         FILE *              msg_fh)
 {
-   Global_Status_Code gsc = 0;
+   Public_Status_Code psc = 0;
    bool debug = false;
    DBGMSF(debug, "Starting.  subset=%d  dh=%s", subset, display_handle_repr(dh) );
    DDCA_MCCS_Version_Spec vcp_version = get_vcp_version_by_display_handle(dh);
@@ -353,12 +353,12 @@ collect_raw_subset_values(
    if (debug)
       report_feature_set(feature_set, 0);
 
-   gsc = collect_raw_feature_set_values(
+   psc = collect_raw_feature_set_values(
             dh, feature_set, vset,
             ignore_unsupported, msg_fh);
    free_vcp_feature_set(feature_set);
    DBGMSF(debug, "Done");
-   return gsc;
+   return psc;
 }
 
 
@@ -366,7 +366,7 @@ collect_raw_subset_values(
 // Get formatted feature values
 //
 
-Global_Status_Code
+Public_Status_Code
 get_formatted_value_for_feature_table_entry(
       Display_Handle *           dh,
       VCP_Feature_Table_Entry *  vcp_entry,
@@ -380,7 +380,7 @@ get_formatted_value_for_feature_table_entry(
    // TRCMSGTG(tg, "Starting");
    DBGTRC(debug, TRACE_GROUP, "Starting");
 
-   Global_Status_Code gsc = 0;
+   Public_Status_Code psc = 0;
    *pformatted_value = NULL;
 
    DDCA_MCCS_Version_Spec vspec = get_vcp_version_by_display_handle(dh);
@@ -398,14 +398,14 @@ get_formatted_value_for_feature_table_entry(
 
    Single_Vcp_Value *    pvalrec = NULL;
    bool ignore_unsupported = !(output_level >= OL_NORMAL && !suppress_unsupported);
-   gsc = get_raw_value_for_feature_table_entry(
+   psc = get_raw_value_for_feature_table_entry(
             dh,
             vcp_entry,
             ignore_unsupported,
             &pvalrec,
             msg_fh);
-   assert( (gsc==0 && (feature_type == pvalrec->value_type)) || (gsc!=0 && !pvalrec) );
-   if (gsc == 0) {
+   assert( (psc==0 && (feature_type == pvalrec->value_type)) || (psc!=0 && !pvalrec) );
+   if (psc == 0) {
       // if (!is_table_feature && output_level >= OL_VERBOSE) {
       // if (!is_table_feature && debug) {
       if (output_level >= OL_VERBOSE || debug) {
@@ -451,7 +451,7 @@ get_formatted_value_for_feature_table_entry(
          if (!ok) {
             f0printf(msg_fh, FMT_CODE_NAME_DETAIL_WO_NL,
                             feature_code, feature_name, "!!! UNABLE TO FORMAT OUTPUT");
-            gsc = DDCRC_INTERPRETATION_FAILED;
+            psc = DDCRC_INTERPRETATION_FAILED;
             // TODO: retry with default output function
          }
 
@@ -479,12 +479,12 @@ get_formatted_value_for_feature_table_entry(
    // TRCMSGTG(tg, "Done.  Returning: %s, *pformatted_value=|%s|", gsc_desc(gsc), *pformatted_value);
    DBGTRC(debug, TRACE_GROUP,
           "Done.  Returning: %s, *pformatted_value=|%s|",
-          gsc_desc(gsc), *pformatted_value);
-   return gsc;
+          psc_desc(psc), *pformatted_value);
+   return psc;
 }
 
 
-Global_Status_Code
+Public_Status_Code
 show_feature_set_values(
       Display_Handle *      dh,
       VCP_Feature_Set       feature_set,
@@ -492,7 +492,7 @@ show_feature_set_values(
       bool                  force_show_unsupported,
       Byte_Value_Array      features_seen)     // if non-null, collect list of features seen
 {
-   Global_Status_Code master_status_code = 0;
+   Public_Status_Code master_status_code = 0;
    bool debug = false;
    DBGMSF(debug, "Starting.  collector=%p", collector);
 
@@ -527,7 +527,7 @@ show_feature_set_values(
       }
       else {
          char * formatted_value = NULL;
-         Global_Status_Code gsc =
+         Public_Status_Code psc =
          get_formatted_value_for_feature_table_entry(
                dh,
                entry,
@@ -535,8 +535,8 @@ show_feature_set_values(
                prefix_value_with_feature_code,
                &formatted_value,
                msg_fh);
-         assert( (gsc==0 && formatted_value) || (gsc!=0 && !formatted_value) );
-         if (gsc == 0) {
+         assert( (psc==0 && formatted_value) || (psc!=0 && !formatted_value) );
+         if (psc == 0) {
             if (collector)
                g_ptr_array_add(collector, formatted_value);
             else
@@ -549,11 +549,11 @@ show_feature_set_values(
             // or should I check features_ct == 1?
             VCP_Feature_Subset subset_id = get_feature_set_subset_id(feature_set);
             if (subset_id == VCP_SUBSET_SINGLE_FEATURE)
-               master_status_code = gsc;
+               master_status_code = psc;
             else {
-               if ( (gsc != DDCRC_REPORTED_UNSUPPORTED) && (gsc != DDCRC_DETERMINED_UNSUPPORTED) ) {
+               if ( (psc != DDCRC_REPORTED_UNSUPPORTED) && (psc != DDCRC_DETERMINED_UNSUPPORTED) ) {
                   if (master_status_code == 0)
-                     master_status_code = gsc;
+                     master_status_code = psc;
                }
             }
          }
@@ -596,7 +596,7 @@ bool hack42(VCP_Feature_Table_Entry * ventry) {
  * Returns:
  *    status code
  */
-Global_Status_Code
+Public_Status_Code
 show_vcp_values(
         Display_Handle *    dh,
         VCP_Feature_Subset  subset,
@@ -604,7 +604,7 @@ show_vcp_values(
         bool                force_show_unsupported,
         Byte_Bit_Flags      features_seen)
 {
-   Global_Status_Code gsc = 0;
+   Public_Status_Code psc = 0;
    bool debug = false;
    DBGMSF(debug, "Starting.  subset=%d  dh=%s", subset, display_handle_repr(dh) );
 
@@ -624,10 +624,10 @@ show_vcp_values(
    if (debug)
       report_feature_set(feature_set, 0);
 
-   gsc = show_feature_set_values(
+   psc = show_feature_set_values(
             dh, feature_set, collector, force_show_unsupported, features_seen);
    free_vcp_feature_set(feature_set);
    DBGMSF(debug, "Done");
-   return gsc;
+   return psc;
 }
 

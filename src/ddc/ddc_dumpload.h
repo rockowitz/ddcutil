@@ -59,10 +59,10 @@ void free_dumpload_data(Dumpload_Data * pdata);
 char *
 format_timestamp(time_t time_millis, char * buf, int bufsz);
 
-Global_Status_Code
+Public_Status_Code
 loadvcp_by_dumpload_data(Dumpload_Data* pdata, Display_Handle * dh);
 
-Global_Status_Code
+Public_Status_Code
 loadvcp_by_string(char * catenated, Display_Handle * dh);
 
 Dumpload_Data*
@@ -71,12 +71,12 @@ create_dumpload_data_from_g_ptr_array(GPtrArray * garray);
 GPtrArray *
 convert_dumpload_data_to_string_array(Dumpload_Data * data);
 
-Global_Status_Code
+Public_Status_Code
 dumpvcp_as_dumpload_data(
       Display_Handle * dh,
       Dumpload_Data**  pdumpload_data);
 
-Global_Status_Code
+Public_Status_Code
 dumpvcp_as_string(
       Display_Handle * dh,
       char**           result);

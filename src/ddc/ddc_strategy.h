@@ -35,8 +35,8 @@
 void init_ddc_strategies();
 
 
-typedef Global_Status_Code (*DDC_Raw_Writer)(Display_Handle * dh, int bytect, Byte * bytes);
-typedef Global_Status_Code (*DDC_Raw_Reader)(Display_Handle * dh, int bufsize, Byte * buffer);
+typedef Public_Status_Code (*DDC_Raw_Writer)(Display_Handle * dh, int bytect, Byte * bytes);
+typedef Public_Status_Code (*DDC_Raw_Reader)(Display_Handle * dh, int bufsize, Byte * buffer);
 
 typedef struct {
    DDCA_IO_Mode     io_mode;

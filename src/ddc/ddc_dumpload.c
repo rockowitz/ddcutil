@@ -41,6 +41,7 @@
 #include "base/core.h"
 #include "base/ddc_errno.h"
 #include "base/ddc_packets.h"
+#include "base/status_code_mgt.h"
 #include "base/vcp_version.h"
 
 #include "i2c/i2c_bus_core.h"
@@ -288,8 +289,7 @@ create_dumpload_data_from_g_ptr_array(GPtrArray * garray) {
  * This function stops applying values on the first error encountered, and
  * returns the value of that error as its status code.
  */
-Global_Status_Code  ddc_set_multiple(Display_Handle* dh, Vcp_Value_Set vset) {
-   Global_Status_Code gsc = 0;
+Public_Status_Code  ddc_set_multiple(Display_Handle* dh, Vcp_Value_Set vset) {
    Public_Status_Code psc = 0;
    int value_ct = vcp_value_set_size(vset);
 
@@ -301,7 +301,6 @@ Global_Status_Code  ddc_set_multiple(Display_Handle* dh, Vcp_Value_Set vset) {
       assert(vrec->value_type == NON_TABLE_VCP_VALUE);     // Table not yet implemented
       ushort new_value    = vrec->val.c.cur_val;
       psc = set_nontable_vcp_value(dh, feature_code, new_value);
-      gsc = public_to_global_status_code(psc);
       if (psc != 0) {
          f0printf(FERR, "Error setting value %d for VCP feature code 0x%02x: %s\n",
                          new_value, feature_code, psc_desc(psc) );
@@ -310,7 +309,7 @@ Global_Status_Code  ddc_set_multiple(Display_Handle* dh, Vcp_Value_Set vset) {
       }
    } // for loop
 
-   return gsc;
+   return psc;
 }
 
 
@@ -323,7 +322,11 @@ Global_Status_Code  ddc_set_multiple(Display_Handle* dh, Vcp_Value_Set vset) {
  * Returns:
  *    status code
  */
-Global_Status_Code loadvcp_by_dumpload_data(Dumpload_Data* pdata, Display_Handle * dh) {
+Public_Status_Code
+loadvcp_by_dumpload_data(
+      Dumpload_Data* pdata,
+      Display_Handle * dh)
+{
    bool debug = false;
    if (debug) {
         DBGMSG("Loading VCP settings for monitor \"%s\", sn \"%s\", dh=%p \n",
@@ -332,7 +335,7 @@ Global_Status_Code loadvcp_by_dumpload_data(Dumpload_Data* pdata, Display_Handle
         report_dumpload_data(pdata, 0);
    }
 
-   Global_Status_Code gsc = 0;
+   Public_Status_Code psc = 0;
 
    if (dh) {
       // If explicit display specified, check that the data is valid for it
@@ -351,7 +354,7 @@ Global_Status_Code loadvcp_by_dumpload_data(Dumpload_Data* pdata, Display_Handle
          ok = false;
       }
       if (!ok) {
-         gsc = DDCRC_INVALID_DISPLAY;
+         psc = DDCRC_INVALID_DISPLAY;
          goto bye;
       }
    }
@@ -365,24 +368,24 @@ Global_Status_Code loadvcp_by_dumpload_data(Dumpload_Data* pdata, Display_Handle
                               DISPSEL_VALID_ONLY);
       if (!dref) {
          f0printf(FERR, "Monitor not connected: %s - %s   \n", pdata->model, pdata->serial_ascii );
-         gsc = DDCRC_INVALID_DISPLAY;
+         psc = DDCRC_INVALID_DISPLAY;
          goto bye;
       }
 
       // return code == 0 iff dh set
       ddc_open_display(dref, CALLOPT_ERR_MSG, &dh);
       if (!dh) {
-         gsc = DDCRC_INVALID_DISPLAY;
+         psc = DDCRC_INVALID_DISPLAY;
          goto bye;
       }
    }
 
-   gsc = ddc_set_multiple(dh, pdata->vcp_values);
+   psc = ddc_set_multiple(dh, pdata->vcp_values);
    ddc_close_display(dh);
 
 bye:
-   DBGMSF(debug, "Returning: %s", gsc_desc(gsc));
-   return gsc;
+   DBGMSF(debug, "Returning: %s", psc_desc(psc));
+   return psc;
 }
 
 
@@ -396,7 +399,7 @@ bye:
  * Returns:
  *    0 if success, status code if not
  */
-Global_Status_Code
+Public_Status_Code
 loadvcp_by_ntsa(
       Null_Terminated_String_Array ntsa,
       Display_Handle *             dh)
@@ -410,7 +413,7 @@ loadvcp_by_ntsa(
       DBGMSG("Starting.  ntsa=%p", ntsa);
       verbose = true;
    }
-   Global_Status_Code gsc = 0;
+   Public_Status_Code psc = 0;
 
    GPtrArray * garray = ntsa_to_g_ptr_array(ntsa);
 
@@ -418,7 +421,7 @@ loadvcp_by_ntsa(
    DBGMSF(debug, "create_dumpload_data_from_g_ptr_array() returned %p", pdata);
    if (!pdata) {
       f0printf(FERR, "Unable to load VCP data from string\n");
-      gsc = DDCRC_INVALID_DATA;
+      psc = DDCRC_INVALID_DATA;
    }
    else {
       if (verbose) {
@@ -428,10 +431,10 @@ loadvcp_by_ntsa(
            report_dumpload_data(pdata, 0);
            rpt_pop_output_dest();
       }
-      gsc = loadvcp_by_dumpload_data(pdata, dh);
+      psc = loadvcp_by_dumpload_data(pdata, dh);
       free_dumpload_data(pdata);
    }
-   return gsc;
+   return psc;
 }
 
 
@@ -447,15 +450,15 @@ loadvcp_by_ntsa(
  *    0 if success, status code if not
  */
 // n. called from ddct_public:
-Global_Status_Code
+Public_Status_Code
 loadvcp_by_string(
       char *           catenated,
       Display_Handle * dh)
 {
    Null_Terminated_String_Array nta = strsplit(catenated, ";");
-   Global_Status_Code gsc = loadvcp_by_ntsa(nta, dh);
+   Public_Status_Code psc = loadvcp_by_ntsa(nta, dh);
    ntsa_free(nta);
-   return gsc;
+   return psc;
 }
 
 
@@ -572,7 +575,7 @@ void collect_machine_readable_timestamp(time_t time_millis, GPtrArray* vals) {
  * It is the responsibility of the caller to free the newly allocated
  * GPtrArray.
  */
-Global_Status_Code
+Public_Status_Code
 collect_profile_related_values(
       Display_Handle*  dh,
       time_t           timestamp_millis,
@@ -581,12 +584,12 @@ collect_profile_related_values(
    bool debug = false;
    DBGMSF(debug, "Starting");
    assert( get_output_level() == OL_PROGRAM);
-   Global_Status_Code gsc = 0;
+   Public_Status_Code psc = 0;
    GPtrArray * vals = g_ptr_array_sized_new(50);
 
    collect_machine_readable_timestamp(timestamp_millis, vals);
    collect_machine_readable_monitor_id(dh, vals);
-   gsc = show_vcp_values(
+   psc = show_vcp_values(
             dh,
             VCP_SUBSET_PROFILE,
             vals,
@@ -599,7 +602,7 @@ collect_profile_related_values(
          DBGMSG("  |%s|", g_ptr_array_index(vals,ndx) );
       }
    }
-   return gsc;
+   return psc;
 }
 #endif
 
@@ -617,14 +620,14 @@ collect_profile_related_values(
  * Returns:
  *    status code
  */
-Global_Status_Code
+Public_Status_Code
 dumpvcp_as_dumpload_data(
       Display_Handle * dh,
       Dumpload_Data** pdumpload_data)
 {
    bool debug = false;
    DBGMSF(debug, "Starting");
-   Global_Status_Code gsc = 0;
+   Public_Status_Code psc = 0;
    Dumpload_Data * dumped_data = calloc(1, sizeof(Dumpload_Data));
 
    // timestamp:
@@ -646,27 +649,27 @@ dumpvcp_as_dumpload_data(
 
    // VCP values
    Vcp_Value_Set vset = vcp_value_set_new(50);
-   gsc = collect_raw_subset_values(
+   psc = collect_raw_subset_values(
              dh,
              VCP_SUBSET_PROFILE,
              vset,
 
              true,               //  ignore_unsupported
              FERR);
-   if (gsc == 0) {
+   if (psc == 0) {
       dumped_data->vcp_values = vset;             // NOTE REFERENCE, BE CAREFUL WHEN FREE
       dumped_data->vcp_value_ct = vcp_value_set_size(vset);
    }
 
-   if (gsc != 0 && dumped_data)
+   if (psc != 0 && dumped_data)
       free(dumped_data);
    else
       *pdumpload_data = dumped_data;
    if (debug) {
-      DBGMSG("Returning: %s, *pdumpload_data=%p", gsc_desc(gsc), *pdumpload_data);
+      DBGMSG("Returning: %s, *pdumpload_data=%p", psc_desc(psc), *pdumpload_data);
       report_dumpload_data(*pdumpload_data, 1);
    }
-   return gsc;
+   return psc;
 }
 
 
@@ -739,21 +742,21 @@ GPtrArray * convert_dumpload_data_to_string_array(Dumpload_Data * data) {
  */
 // n. called from ddct_public.c
 // move to glib_util.c?
-Global_Status_Code
+Public_Status_Code
 dumpvcp_as_string(Display_Handle * dh, char ** pstring) {
    bool debug = false;
    DBGMSF(debug, "Starting");
 
-   Global_Status_Code gsc    = 0;
+   Public_Status_Code psc    = 0;
    Dumpload_Data *    data   = NULL;
    *pstring = NULL;
 
-   gsc = dumpvcp_as_dumpload_data(dh, &data);
-   if (gsc == 0) {
+   psc = dumpvcp_as_dumpload_data(dh, &data);
+   if (psc == 0) {
       GPtrArray * strings = convert_dumpload_data_to_string_array(data);
       *pstring = join_string_g_ptr_array(strings, ";");
       free_dumpload_data(data);
    }
-   DBGMSF(debug, "Returning: %s, *pstring=|%s|", gsc_desc(gsc), *pstring);
-   return gsc;
+   DBGMSF(debug, "Returning: %s, *pstring=|%s|", psc_desc(psc), *pstring);
+   return psc;
 }

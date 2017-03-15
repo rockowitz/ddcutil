@@ -34,8 +34,8 @@
 
 // Get capability string for monitor.
 #ifdef NOT_USED
-Global_Status_Code get_capabilities_buffer(Display_Handle * dh, Buffer** ppCapabilitiesBuffer);
+Public_Status_Code get_capabilities_buffer(Display_Handle * dh, Buffer** ppCapabilitiesBuffer);
 #endif
-Global_Status_Code get_capabilities_string(Display_Handle * dh, char** pcaps);
+Public_Status_Code get_capabilities_string(Display_Handle * dh, char** pcaps);
 
 #endif /* DDC_READ_CAPABILITIES_H_ */
