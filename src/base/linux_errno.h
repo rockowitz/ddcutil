@@ -1,7 +1,7 @@
 /* linux_errno.h
  *
  * <copyright>
- * Copyright (C) 2014-2016 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2014-2017 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -21,6 +21,10 @@
  * </endcopyright>
  */
 
+/** \file
+ * Linux errno descriptions
+ */
+
 #ifndef BASE_LINUX_ERRNO_H_
 #define BASE_LINUX_ERRNO_H_
 
@@ -34,6 +38,7 @@ char * linux_errno_name(int error_number);
 char * linux_errno_desc(int error_number);
 
 Status_Code_Info * get_errno_info(int errnum);
+Status_Code_Info * get_negative_errno_info(int errnum);
 
 bool errno_name_to_number(const char * errno_name, int * perrno);
 bool errno_name_to_modulated_number(const char * errno_name, Global_Status_Code * p_error_number);

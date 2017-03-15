@@ -21,11 +21,17 @@
  * </endcopyright>
  */
 
+/** \file
+ * Linux errno descriptions
+ */
+
+/** \cond */
 #include <assert.h>
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+/** \endcond */
 
 #include "util/string_util.h"
 
@@ -35,17 +41,20 @@
 // To consider:  use libexplain.
 
 // Forward declarations
-static Status_Code_Info * get_negative_errno_info(int errnum);
+// static Status_Code_Info * get_negative_errno_info(int errnum);
 Status_Code_Info * find_errno_description(int errnum);
 void show_errno_desc_table();
 
-// Initialization
+/**  Initialize linux_errno.c
+ */
 // n. called from main before command line parsed, trace control not yet established
 void init_linux_errno() {
+#ifdef OLD
    register_retcode_desc_finder(
               RR_ERRNO,
               get_negative_errno_info,
               false);                // finder_arg_is_modulated
+#endif
    // show_errno_desc_table();
 }
 
@@ -148,6 +157,8 @@ static char workbuf[WORKBUF_SIZE];
 static char dummy_errno_description[WORKBUF_SIZE];
 static Status_Code_Info dummy_errno_desc;
 
+/** Debugging function that displays the errno description table.
+ */
 void show_errno_desc_table() {
    printf("(%s) errno_desc table:\n", __func__);
    for (int ndx=0; ndx < errno_desc_ct; ndx++) {
@@ -198,13 +209,12 @@ char * linux_errno_name(int error_number) {
 
 /* Returns the Status_Code_Info record for the specified error number
  *
- * Arguments:
- *   errnum    linux error number
+ * @param  errnum    linux error number, in positive, unmodulated form
  *
- * Returns:
- *   Status_Code_Description record, NULL if not found
+ * @return Status_Code_Description record, NULL if not found
  *
- * If the description field of the Status_Code_Info struct is NULL, it is set
+ * @remark
+ * If the description field of the found Status_Code_Info struct is NULL, it is set
  * by calling strerror()
  */
 Status_Code_Info * find_errno_description(int errnum) {
@@ -256,7 +266,7 @@ Status_Code_Info * get_errno_info(int errnum) {
 
 
 // returns NULL if not found
-static Status_Code_Info * get_negative_errno_info(int errnum) {
+Status_Code_Info * get_negative_errno_info(int errnum) {
    bool debug = false;
    if (debug)
       printf("(%s) errnum=%d\n", __func__, errnum);
@@ -264,13 +274,13 @@ static Status_Code_Info * get_negative_errno_info(int errnum) {
 }
 
 
-/* Gets the Linux error number for a symbolic name.
+/** Gets the Linux error number for a symbolic name.
+ * The value is returned as a negative number.
  *
- * Arguments:
- *    errno_name    symbolic name, e.g. EBUSY
- *    perrno        where to return error number
+ * @param   errno_name    symbolic name, e.g. EBUSY
+ * @param   perrno        where to return error number
  *
- * Returns:         true if found, false if not
+ * @return  true if found, false if not
  */
 bool errno_name_to_number(const char * errno_name, int * perrno) {
    int found = false;
@@ -285,8 +295,18 @@ bool errno_name_to_number(const char * errno_name, int * perrno) {
    return found;
 }
 
-
-bool errno_name_to_modulated_number(const char * errno_name, Global_Status_Code * p_error_number) {
+/** Gets the Linux error number for a symbolic name.
+ * The value is returned as a negative, modulated number.
+ *
+ * @param   errno_name      symbolic name, e.g. EBUSY
+ * @param   p_error_number  where to return error number
+ *
+ * @return  true if found, false if not
+ */
+bool errno_name_to_modulated_number(
+        const char *         errno_name,
+        Global_Status_Code * p_error_number)
+{
    int result = 0;
    bool found = errno_name_to_number(errno_name, &result);
    assert(result >= 0);
