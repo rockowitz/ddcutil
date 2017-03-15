@@ -107,12 +107,12 @@ adlshim_get_video_card_info(
 
 // Read from and write to the display
 
-Global_Status_Code adlshim_ddc_write_only(
+Modulated_Status_ADL adlshim_ddc_write_only(
       Display_Handle* dh,
       Byte *  pSendMsgBuf,
       int     sendMsgLen);
 
-Global_Status_Code adlshim_ddc_read_only(
+Modulated_Status_ADL adlshim_ddc_read_only(
       Display_Handle * dh,
       Byte *  pRcvMsgBuf,
       int *   pRcvBytect);
