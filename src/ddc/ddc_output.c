@@ -187,11 +187,12 @@ get_raw_value_for_feature_table_entry(
    Single_Vcp_Value * valrec = NULL;
    if (dh->io_mode == USB_IO) {
 #ifdef USE_USB
-      gsc = usb_get_vcp_value(
+     Public_Status_Code psc = usb_get_vcp_value(
               dh,
               feature_code,
               feature_type,
               &valrec);
+      gsc = public_to_global_status_code(psc);
 #else
       PROGRAM_LOGIC_ERROR("ddcutil not build with USB support");
 #endif

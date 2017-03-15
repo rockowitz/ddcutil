@@ -67,7 +67,7 @@ static Trace_Group TRACE_GROUP = TRC_USB;
  *
  * Returns:       status code
  */
-Global_Status_Code
+Public_Status_Code
 usb_get_usage_value_by_report_type_and_ucode(
       int     fd,
       __u32   report_type,
@@ -76,7 +76,7 @@ usb_get_usage_value_by_report_type_and_ucode(
       __s32 * curval) {
    bool debug = false;
    DBGMSF(debug, "Starting. fd=%d, report_type=%d, usage_code=0x%08x", fd, report_type, usage_code);
-   Global_Status_Code gsc = 0;
+   Public_Status_Code psc = 0;
    int rc;
    *curval = 0;  // so there's a definite value in case of failure ...
    *maxval = 0;  // avoids complaints by clang analyzer
@@ -98,12 +98,13 @@ usb_get_usage_value_by_report_type_and_ucode(
       if (errsv == EINVAL) {
          if (debug)
             REPORT_IOCTL_ERROR("HIDIOCGUSAGE", rc);
-         gsc = DDCRC_DETERMINED_UNSUPPORTED;
+         psc = DDCRC_DETERMINED_UNSUPPORTED;
       }
       else {
          REPORT_IOCTL_ERROR("HIDIOCGUSAGE", rc);
          // occasionally see -1, errno = 22 invalid argument - for Battery System Page: Run Time to Empty
-         gsc = modulate_rc(-errsv, RR_ERRNO);
+         // gsc = modulate_rc(-errsv, RR_ERRNO);
+         psc = -errsv;
       }
       if (debug) {
          DBGMSG("After hid_get_usage_value():");
@@ -127,7 +128,8 @@ usb_get_usage_value_by_report_type_and_ucode(
       int errsv = errno;
       REPORT_IOCTL_ERROR("HIDIOCGFIELDINFO", rc);
       // occasionally see -1, errno = 22 invalid argument - for Battery System Page: Run Time to Empty
-      gsc = modulate_rc(-errsv, RR_ERRNO);
+      // gsc = modulate_rc(-errsv, RR_ERRNO);
+      psc = -errsv;
       // printf("(%s) errsv=%d, gsc=%d\n", __func__, errsv, gsc);
       goto bye;
    }
@@ -151,11 +153,11 @@ usb_get_usage_value_by_report_type_and_ucode(
    if (finfo.logical_minimum < 0) {
       DBGMSG("Unexpected: logical_minimum (%d) for field is < 0", finfo.logical_minimum);
    }
-   gsc = 0;
+   psc = 0;
 
 bye:
-   DBGMSF(debug, "Returning: %d (%s)", gsc, gsc_name(gsc));
-   return gsc;
+   DBGMSF(debug, "Returning: %s",  psc_desc(psc));
+   return psc;
 }
 
 
@@ -234,7 +236,7 @@ bye:
  *
  * Returns:       status code
  */
-Global_Status_Code
+Public_Status_Code
 set_usage_value_by_report_type_and_ucode(
                   int   fd,
                   __u32 report_type,
@@ -245,8 +247,7 @@ set_usage_value_by_report_type_and_ucode(
    DBGMSF(debug, "Starting. fd=%d, report_type=%d, usage_code=0x%08x, value=%d",
                  fd, report_type, usage_code, value);
    int rc;
-   Base_Status_Errno result = 0;
-   Global_Status_Code gsc = 0;
+   Public_Status_Code psc = 0;
 
    struct hiddev_usage_ref uref = {
       .report_type = report_type,
@@ -259,7 +260,7 @@ set_usage_value_by_report_type_and_ucode(
       report_hiddev_usage_ref(&uref, 1);
    }
    if ((rc=ioctl(fd, HIDIOCSUSAGE, &uref)) < 0) {
-      result = -errno;
+      psc = -errno;
       REPORT_IOCTL_ERROR("HIDIOCSUSAGE", rc);
       goto bye;
    }
@@ -282,17 +283,15 @@ set_usage_value_by_report_type_and_ucode(
    };
 
    if ((rc=ioctl(fd, HIDIOCSREPORT, &rinfo)) < 0) {
-      result = -errno;
+      psc = -errno;
       REPORT_IOCTL_ERROR("HIDIOCSREPORT", rc);
       goto bye;
    }
-   result = 0;
+   psc = 0;
 
 bye:
-   if (result != 0)
-      gsc = modulate_rc(result, RR_ERRNO);
-   DBGMSF(debug, "Returning: %d", gsc);
-   return gsc;
+   DBGMSF(debug, "Returning: %s", psc_desc(psc) );
+   return psc;
 }
 
 
@@ -312,11 +311,16 @@ bye:
  *
  * Calls to this function are valid only for Feature or Input reports.
  */
-Global_Status_Code
-usb_get_usage_value_by_vcprec(int fd, Usb_Monitor_Vcp_Rec * vcprec, __s32 * maxval, __s32 * curval) {
+Public_Status_Code
+usb_get_usage_value_by_vcprec(
+      int                   fd,
+      Usb_Monitor_Vcp_Rec * vcprec,
+      __s32 *               maxval,
+      __s32 *               curval)
+{
    bool debug = false;
    DBGMSF(debug, "Starting. fd=%d, vcprec=%p", fd, vcprec);
-   Global_Status_Code gsc = 0;
+   Public_Status_Code psc = 0;
    int rc;
 
    assert(vcprec->rinfo->report_type == vcprec->report_type);
@@ -356,16 +360,17 @@ usb_get_usage_value_by_vcprec(int fd, Usb_Monitor_Vcp_Rec * vcprec, __s32 * maxv
       int errsv = errno;
       // REPORT_IOCTL_ERROR("HIDIOCGUSAGE", rc);
       // occasionally see -1, errno = 22 invalid argument - for Battery System Page: Run Time to Empty
-      gsc = modulate_rc(-errsv, RR_ERRNO);
+      // gsc = modulate_rc(-errsv, RR_ERRNO);
+      psc = -errsv;
    }
    else {
       DBGMSF(debug, "usage_index=%d, value = 0x%08x",uref->usage_index, uref->value);
       *curval = uref->value;
-      gsc = 0;
+      psc = 0;
    }
 
-   DBGMSF(debug, "Returning: %d", gsc);
-   return gsc;
+   DBGMSF(debug, "Returning: %s", psc_desc(psc) );
+   return psc;
 }
 
 
@@ -380,11 +385,15 @@ usb_get_usage_value_by_vcprec(int fd, Usb_Monitor_Vcp_Rec * vcprec, __s32 * maxv
  *
  * Calls to this function are valid only for Feature or Output reports.
  */
-Global_Status_Code
-usb_set_usage_value_by_vcprec(int fd, Usb_Monitor_Vcp_Rec * vcprec, __s32 new_value) {
+Public_Status_Code
+usb_set_usage_value_by_vcprec(
+      int                   fd,
+      Usb_Monitor_Vcp_Rec * vcprec,
+      __s32                 new_value)
+{
    bool debug = false;
    DBGMSF(debug, "Starting. fd=%d, vcprec=%p", fd, vcprec);
-   Global_Status_Code gsc = 0;
+   Public_Status_Code psc = 0;
 
    assert(vcprec->rinfo->report_type == vcprec->report_type);
    assert(vcprec->report_type == HID_REPORT_TYPE_FEATURE ||
@@ -406,10 +415,11 @@ usb_set_usage_value_by_vcprec(int fd, Usb_Monitor_Vcp_Rec * vcprec, __s32 new_va
                                             vcprec->usage_index,
                                             new_value);
    if (rc < 0)
-      gsc = modulate_rc(rc, RR_ERRNO);
+      psc = rc;     // to simplify
+ //     gsc = modulate_rc(rc, RR_ERRNO);
 
-   DBGMSF(debug, "Returning: %d", gsc);
-   return gsc;
+   DBGMSF(debug, "Returning: %s", psc_desc(psc));
+   return psc;
 }
 
 
@@ -427,7 +437,8 @@ usb_set_usage_value_by_vcprec(int fd, Usb_Monitor_Vcp_Rec * vcprec, __s32 new_va
  * Returns:
  *   status code
  */
-Global_Status_Code usb_get_nontable_vcp_value(
+Public_Status_Code
+usb_get_nontable_vcp_value(
        Display_Handle *       dh,
        Byte                   feature_code,
        Parsed_Nontable_Vcp_Response** ppInterpretedCode)
@@ -444,7 +455,7 @@ Global_Status_Code usb_get_nontable_vcp_value(
    //    ---
    // }
 
-   Global_Status_Code gsc =  DDCRC_REPORTED_UNSUPPORTED;  // = 0;
+   Public_Status_Code psc =  DDCRC_REPORTED_UNSUPPORTED;  // = 0;
    // Output_Level output_level = get_output_level();
    Parsed_Nontable_Vcp_Response * parsed_response = NULL;
 
@@ -459,10 +470,10 @@ Global_Status_Code usb_get_nontable_vcp_value(
 
    if (use_alt_method) {
       __u32 usage_code = 0x0082 << 16 | feature_code;
-      gsc = usb_get_usage_value_by_report_type_and_ucode(
+      psc = usb_get_usage_value_by_report_type_and_ucode(
                   dh->fh, HID_REPORT_TYPE_FEATURE, usage_code, &maxval, &curval);
-      if (gsc != 0)
-         gsc = usb_get_usage_value_by_report_type_and_ucode(
+      if (psc != 0)
+         psc = usb_get_usage_value_by_report_type_and_ucode(
                   dh->fh, HID_REPORT_TYPE_INPUT,   usage_code, &maxval, &curval);
    }
    else {
@@ -471,7 +482,7 @@ Global_Status_Code usb_get_nontable_vcp_value(
 
       if (!vcp_recs) {
          DBGMSF(debug, "Unrecognized feature code 0x%02x", feature_code);
-         gsc = DDCRC_REPORTED_UNSUPPORTED;
+         psc = DDCRC_REPORTED_UNSUPPORTED;
       }
       else {
          // DBGMSF(debug, "reading value");
@@ -486,16 +497,16 @@ Global_Status_Code usb_get_nontable_vcp_value(
 
             if (vcprec->report_type == HID_REPORT_TYPE_OUTPUT)
                continue;
-            gsc = usb_get_usage_value_by_vcprec(dh->fh,  vcprec, &maxval, &curval);
+            psc = usb_get_usage_value_by_vcprec(dh->fh,  vcprec, &maxval, &curval);
             DBGMSF(debug, "usb_get_usage() usage index: %d returned %d, maxval=%d, curval=%d",
-                          vcprec->usage_index, gsc, maxval, curval);
-            if (gsc == 0)
+                          vcprec->usage_index, psc, maxval, curval);
+            if (psc == 0)
                break;
          }
       }
    }
 
-   if (gsc == 0) {
+   if (psc == 0) {
       parsed_response = calloc(1, sizeof(Parsed_Nontable_Vcp_Response));
       parsed_response->vcp_code = feature_code;
       parsed_response->valid_response = true;
@@ -509,9 +520,9 @@ Global_Status_Code usb_get_nontable_vcp_value(
    }
 
    DBGTRC(debug, TRACE_GROUP,
-             "Returning %s, *ppinterpreted_code=%p", gsc_name(gsc), parsed_response);
+             "Returning %s, *ppinterpreted_code=%p", psc_desc(psc), parsed_response);
    *ppInterpretedCode = parsed_response;
-   return gsc;
+   return psc;
 }
 
 
@@ -529,7 +540,7 @@ Global_Status_Code usb_get_nontable_vcp_value(
  * The caller is responsible for freeing the value result returned.
  */
 // only changes from get_vcp_value are function names
-Global_Status_Code usb_get_vcp_value(
+Public_Status_Code usb_get_vcp_value(
        Display_Handle *          dh,
        Byte                      feature_code,
        Vcp_Value_Type            call_type,
@@ -538,7 +549,7 @@ Global_Status_Code usb_get_vcp_value(
    bool debug = false;
    DBGTRC(debug, TRACE_GROUP, "Starting. Reading feature 0x%02x", feature_code);
 
-   Global_Status_Code gsc = 0;
+   Public_Status_Code psc = 0;
 
 #ifdef FUTURE
    Buffer * buffer = NULL;
@@ -548,11 +559,11 @@ Global_Status_Code usb_get_vcp_value(
    switch (call_type) {
 
    case (NON_TABLE_VCP_VALUE):
-         gsc = usb_get_nontable_vcp_value(
+         psc = usb_get_nontable_vcp_value(
                   dh,
                   feature_code,
                   &parsed_nontable_response);
-         if (gsc == 0) {
+         if (psc == 0) {
             valrec = create_nontable_vcp_value(
                         feature_code,
                         parsed_nontable_response->mh,
@@ -565,26 +576,26 @@ Global_Status_Code usb_get_vcp_value(
 
    case (TABLE_VCP_VALUE):
 #ifdef FUTURE
-         gsc = usb_get_table_vcp_value(
+         psc = usb_get_table_vcp_value(
                  dh,
                  feature_code,
                  &buffer);
-         if (gsc == 0) {
+         if (psc == 0) {
             valrec = create_table_vcp_value_by_buffer(feature_code, buffer);
             buffer_free(buffer, __func__);
          }
 #endif
-         gsc = DDCRC_REPORTED_UNSUPPORTED;  // TEMP - should test known features first
+         psc = DDCRC_REPORTED_UNSUPPORTED;  // TEMP - should test known features first
          break;
    }
 
    *pvalrec = valrec;
 
-   DBGTRC(debug, TRACE_GROUP, "Done.  Returning: %s", gsc_desc(gsc) );
-   if (gsc == 0 && debug)
+   DBGTRC(debug, TRACE_GROUP, "Done.  Returning: %s", psc_desc(psc) );
+   if (psc == 0 && debug)
       report_single_vcp_value(valrec,1);
-   assert( (gsc == 0 && *pvalrec) || (gsc != 0 && !*pvalrec) );
-   return gsc;
+   assert( (psc == 0 && *pvalrec) || (psc != 0 && !*pvalrec) );
+   return psc;
 }
 
 
@@ -598,7 +609,8 @@ Global_Status_Code usb_get_vcp_value(
  * Returns:
  *   status code
  */
-Global_Status_Code usb_set_nontable_vcp_value(
+Public_Status_Code
+usb_set_nontable_vcp_value(
        Display_Handle *       dh,
        Byte                   feature_code,
        int                    new_value)
@@ -608,7 +620,7 @@ Global_Status_Code usb_set_nontable_vcp_value(
           "Setting feature 0x%02x, dh=%p, dh->dref=%p, new_value=%d",
           feature_code, dh, dh->dref, new_value);
 
-   Global_Status_Code gsc =  DDCRC_REPORTED_UNSUPPORTED;  // = 0;
+   Public_Status_Code psc =  DDCRC_REPORTED_UNSUPPORTED;  // = 0;
    assert(dh->io_mode == USB_IO);
    Usb_Monitor_Info * moninfo = usb_find_monitor_by_display_handle(dh);
    assert(moninfo);
@@ -616,12 +628,14 @@ Global_Status_Code usb_set_nontable_vcp_value(
    bool use_alt = true;
    if (use_alt) {
       __u32 usage_code = 0x0082 << 16 | feature_code;
-      gsc = set_usage_value_by_report_type_and_ucode(
+      psc = set_usage_value_by_report_type_and_ucode(
                dh->fh, HID_REPORT_TYPE_FEATURE, usage_code, new_value);
       // if (gsc != 0)
       //    gsc = set_usage_value_by_report_type_and_ucode(dh->fh, HID_REPORT_TYPE_OUTPUT, usage_code, new_value);
-      if (gsc == modulate_rc(EINVAL, RR_ERRNO))
-         gsc = DDCRC_REPORTED_UNSUPPORTED;
+      // if (gsc == modulate_rc(EINVAL, RR_ERRNO))
+      //   gsc = DDCRC_REPORTED_UNSUPPORTED;
+      if (psc == -EINVAL)
+         psc = DDCRC_REPORTED_UNSUPPORTED;
 
    }
    else {
@@ -629,7 +643,7 @@ Global_Status_Code usb_set_nontable_vcp_value(
       GPtrArray * vcp_recs = moninfo->vcp_codes[feature_code];
       if (!vcp_recs) {
          DBGMSF(debug, "Unrecognized feature code 0x%02x", feature_code);
-         gsc = DDCRC_REPORTED_UNSUPPORTED;
+         psc = DDCRC_REPORTED_UNSUPPORTED;
       }
       else {
          DBGMSF(debug, "setting value");
@@ -645,17 +659,17 @@ Global_Status_Code usb_set_nontable_vcp_value(
             if (vcprec->report_type == HID_REPORT_TYPE_INPUT)
                continue;
 
-            gsc = usb_set_usage_value_by_vcprec(dh->fh,  vcprec, new_value);
-            DBGMSF(debug, "usb_set_usage() usage index: %d returned %d",
-                          vcprec->usage_index, gsc);
-            if (gsc == 0)
+            psc = usb_set_usage_value_by_vcprec(dh->fh,  vcprec, new_value);
+            DBGMSF(debug, "usb_set_usage() usage index: %d returned %s",
+                          vcprec->usage_index, psc_desc(psc) );
+            if (psc == 0)
                break;
          }
       }
    }
 
-   DBGTRC(debug, TRACE_GROUP, "Returning %s", gsc_name(gsc));
-   return gsc;
+   DBGTRC(debug, TRACE_GROUP, "Returning %s", psc_desc(psc));
+   return psc;
 }
 
 
@@ -668,22 +682,22 @@ Global_Status_Code usb_set_nontable_vcp_value(
  *  Returns:
  *     status code
  */
-Global_Status_Code
+Public_Status_Code
 usb_set_vcp_value(                               // changed from set_vcp_value()
       Display_Handle *   dh,
       Single_Vcp_Value * vrec)
 {
-   Global_Status_Code gsc = 0;
+   Public_Status_Code psc = 0;
    if (vrec->value_type == NON_TABLE_VCP_VALUE) {
-      gsc = usb_set_nontable_vcp_value(dh, vrec->opcode, vrec->val.c.cur_val);  // function name changed
+      psc = usb_set_nontable_vcp_value(dh, vrec->opcode, vrec->val.c.cur_val);  // function name changed
    }
    else {
       assert(vrec->value_type == TABLE_VCP_VALUE);
       // gsc = usb_set_table_vcp_value(dh, vrec->opcode, vrec->val.t.bytes, vrec->val.t.bytect);
-      gsc = DDCL_UNIMPLEMENTED;
+      psc = DDCL_UNIMPLEMENTED;
    }
 
-   return gsc;
+   return psc;
 }
 
 
@@ -697,11 +711,11 @@ __s32 usb_get_vesa_version_by_report_type(int fd, __u32 report_type) {
    bool debug = false;
    __s32 maxval;
    __s32 curval;
-   Global_Status_Code gsc = usb_get_usage_value_by_report_type_and_ucode(
+   Public_Status_Code psc = usb_get_usage_value_by_report_type_and_ucode(
                                fd, report_type, 0x00800004, &maxval, &curval);
-   if (gsc != 0 && debug) {
-      DBGMSG("report_type=%s, usb_get_usage_alt() status code %d (%s)",
-             hiddev_report_type_name(report_type), gsc, gsc_name(gsc) );
+   if (psc != 0 && debug) {
+      DBGMSG("report_type=%s, usb_get_usage_alt() status code %s",
+             hiddev_report_type_name(report_type), psc_desc(psc)  );
    }
 
    // DBGMSF(debug, "report_type=%s, returning: 0x%08x", report_type_name(report_type), curval);

@@ -36,7 +36,7 @@
 #include "vcp/vcp_feature_values.h"
 
 
-Global_Status_Code
+Public_Status_Code
 usb_get_usage_value_by_report_type_and_ucode(
       int fd,
       __u32 report_type,
@@ -44,23 +44,23 @@ usb_get_usage_value_by_report_type_and_ucode(
       __s32 * maxval,
       __s32 * curval);
 
-Global_Status_Code usb_get_nontable_vcp_value(
+Public_Status_Code usb_get_nontable_vcp_value(
       Display_Handle *               dh,
       Byte                           feature_code,
       Parsed_Nontable_Vcp_Response** ppInterpretedCode);
 
-Global_Status_Code usb_get_vcp_value(
+Public_Status_Code usb_get_vcp_value(
       Display_Handle *          dh,
       Byte                      feature_code,
       Vcp_Value_Type            call_type,
       Single_Vcp_Value **       pvalrec);
 
-Global_Status_Code usb_set_nontable_vcp_value(
+Public_Status_Code usb_set_nontable_vcp_value(
       Display_Handle *          dh,
       Byte                      feature_code,
       int                       new_value);
 
-Global_Status_Code usb_set_vcp_value(
+Public_Status_Code usb_set_vcp_value(
       Display_Handle *           dh,
       Single_Vcp_Value *         valrec);
 
