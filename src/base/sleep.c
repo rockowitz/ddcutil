@@ -34,9 +34,11 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include <unistd.h>
-/** \cond */
+/** \endcond */
 
 #include "util/report_util.h"
+#include "util/timestamp.h"
+
 #include "base/core.h"
 #include "base/sleep.h"
 
