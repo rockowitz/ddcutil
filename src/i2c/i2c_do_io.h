@@ -63,7 +63,7 @@ Base_Status_Errno_DDC invoke_i2c_reader(
        Byte *     readbuf);
 
 #ifdef TEST_THAT_DIDNT_WORK
-Global_Status_Code invoke_single_byte_i2c_reader(
+Base_Status_Errno_DDC invoke_single_byte_i2c_reader(
        int        fh,
        int        bytect,
        Byte *     readbuf);

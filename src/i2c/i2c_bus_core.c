@@ -327,7 +327,7 @@ bool * detect_all_addrs(int busno) {
  *    < 0, modulated status code
  */
 // static
-Global_Status_Code detect_ddc_addrs_by_fd(int fd, Byte * presult) {
+Base_Status_Errno_DDC detect_ddc_addrs_by_fd(int fd, Byte * presult) {
    bool debug = false;
    DBGMSF(debug, "Starting. fd=%d", fd);
    assert(fd >= 0);
@@ -336,7 +336,6 @@ Global_Status_Code detect_ddc_addrs_by_fd(int fd, Byte * presult) {
    Byte    readbuf;  //  1 byte buffer
    Byte    writebuf = {0x00};
    Base_Status_Errno_DDC base_rc = 0;
-   // Global_Status_Code gsc = 0;
 
    base_rc = i2c_set_addr(fd, 0x30, CALLOPT_ERR_MSG);   // CALLOPT_ERR_MSG temporary
    if (base_rc < 0) {
@@ -376,11 +375,11 @@ bye:
       result = 0x00;
 
    *presult = result;
-   Global_Status_Code gsc = modulate_base_errno_ddc_to_global(base_rc);
 
-   DBGMSF(debug, "Done.  Returning gsc=%d, *presult = 0x%02x", *presult);
-   assert(gsc <= 0);
-   return gsc;
+   DBGMSF(debug, "Done.  Returning base_rc=%d, *presult = 0x%02x",
+                 base_rc, *presult);
+   assert(base_rc <= 0);
+   return base_rc;
 }
 
 
@@ -687,7 +686,6 @@ Public_Status_Code i2c_get_raw_edid_by_fd(int fd, Buffer * rawedid) {
    bool conservative = true;
 
    assert(rawedid->buffer_size >= 128);
-   // Global_Status_Code gsc;
    Public_Status_Code rc;
 
    rc = i2c_set_addr(fd, 0x50, CALLOPT_ERR_MSG);
@@ -801,11 +799,11 @@ Bus_Info * i2c_check_bus(Bus_Info * bus_info) {
       if (file >= 0) {
          bus_info->flags |= I2C_BUS_ACCESSIBLE;
          Byte ddc_addr_flags = 0x00;
-         Global_Status_Code gsc = detect_ddc_addrs_by_fd(file, &ddc_addr_flags);
-         if (gsc != 0) {
-            DBGMSF(debug, "detect_ddc_addrs_by_fd() returned %d", gsc);
+         Base_Status_Errno_DDC psc = detect_ddc_addrs_by_fd(file, &ddc_addr_flags);
+         if (psc != 0) {
+            DBGMSF(debug, "detect_ddc_addrs_by_fd() returned %d", psc);
             f0printf(FERR, "Failure detecting bus addresses for /dev/i2c-%d: status code=%s\n",
-                           bus_info->busno, gsc_desc(gsc));
+                           bus_info->busno, psc_desc(psc));
             goto bye;
          }
          bus_info->flags |= ddc_addr_flags;
@@ -838,7 +836,8 @@ bye:
    if (file >= 0)
       i2c_close_bus(file, bus_info->busno,  CALLOPT_ERR_MSG);
 
-   DBGTRC(debug, TRACE_GROUP, "Returning %p, flags=0x%02x", bus_info, bus_info->flags );
+   DBGTRC(debug, TRACE_GROUP, "Returning %p, flags=0x%02x",
+                              bus_info, bus_info->flags );
    return bus_info;
 }
 

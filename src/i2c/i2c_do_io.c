@@ -101,10 +101,8 @@ Base_Status_Errno_DDC invoke_i2c_writer(
       DBGMSG("writer() function returned %d", rc);
    assert (rc <= 0);
 
-   // Global_Status_Code gsc = modulate_base_errno_ddc_to_global(rc);
-   // if (debug)
-   //    DBGMSG("Returning gsc=%s", gsc_desc(gsc));
-   // return gsc;
+   if (debug)
+      DBGMSG("Returning rc=%d", rc);
    return rc;
 }
 
@@ -132,31 +130,29 @@ Base_Status_Errno_DDC invoke_i2c_reader(
      DBGMSF(debug, "reader() function returned %d", rc);
      assert (rc <= 0);
 
-     // Global_Status_Code gsc = modulate_base_errno_ddc_to_global(rc);
-     // DBGMSF(debug, "Returning gsc=%s", gsc_desc(gsc));
-     // return gsc;
+     DBGMSF(debug, "Returning rc=%d", rc);
      return rc;
 }
 
 #ifdef TEST_THAT_DIDNT_WORK
 // fails
-Global_Status_Code invoke_single_byte_i2c_reader(
+Base_Status_Errno_DDC invoke_single_byte_i2c_reader(
       int        fh,
       int        bytect,
       Byte *     readbuf)
 {
    bool debug = true;
    DBGMSF(debug, "bytect=%d", bytect);
-   Global_Status_Code gsc = 0;
+   Base_Status_Errno_DDC psc = 0;
    int ndx = 0;
    for (;ndx < bytect; ndx++) {
-      gsc = invoke_i2c_reader(fh, 1, readbuf+ndx);
-      if (gsc != 0)
+      psc = invoke_i2c_reader(fh, 1, readbuf+ndx);
+      if (psc != 0)
          break;
       // call_tuned_sleep_i2c(SE_POST_READ);
    }
-   DBGMSF(debug, "Returning gsc=%s", gsc_desc(gsc));
-   return gsc;
+   DBGMSF(debug, "Returning psc=%s", psc_desc(psc));
+   return psc;
 }
 #endif
 
