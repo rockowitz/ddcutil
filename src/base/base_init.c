@@ -41,5 +41,5 @@ void init_base_services() {
    init_sleep_stats();
    init_execution_stats();
    init_status_code_mgt();
-   init_linux_errno();
+   // init_linux_errno();
 }
