@@ -114,12 +114,12 @@ typedef enum {
           RR_DDC       ///< range id for modulated ddcutil-specific error codes
 } Retcode_Range_Id;
 
-
+#ifdef OLD
 void register_retcode_desc_finder(
         Retcode_Range_Id           id,
         Retcode_Description_Finder finder_func,
         bool                       finder_arg_is_modulated);
-
+#endif
 
 int modulate_rc(int unmodulated_rc, Retcode_Range_Id range_id);
 int demodulate_rc(int modulated_rc, Retcode_Range_Id range_id);

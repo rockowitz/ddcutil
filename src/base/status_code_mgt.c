@@ -141,7 +141,7 @@ void validate_retcode_range_table() {
    }
 }
 
-
+#ifdef OLD
 /** This function is called by modules for specific status code ranges
  *  to register the explanation routines for their
  *  status codes.  It exists to avoid circular dependencies of includes.
@@ -169,7 +169,7 @@ void register_retcode_desc_finder(
    retcode_range_table[id].desc_finder = finder_func;
    retcode_range_table[id].finder_arg_is_modulated = finder_arg_is_modulated;
 }
-
+#endif
 
 /** Shifts a status code in the RR_BASE range to a specified range.
  *
