@@ -1,6 +1,6 @@
 /* build_info.c
  *
- * This file is recompiled every time ddcutil is built.
+ * This file is recompiled every time **ddcutil** is built.
  *
  * <copyright>
  * Copyright (C) 2014-2015 Sanford Rockowitz <rockowitz@minsoft.com>
@@ -23,13 +23,19 @@
  * </endcopyright>
  */
 
+/** \file
+ * Build Information
+ *
+ * Version, built timestamp, etc.
+ */
+
 #include <config.h>
 
 #include "base/build_info.h"
 
-const char * BUILD_VERSION = VERSION;
+const char * BUILD_VERSION = VERSION;       /**< ddcutil version */
 // TODO: patch dummy values at link time
 // const char * BUILD_DATE = __DATE__;
-const char * BUILD_DATE = "mmm dd yyyy";
+const char * BUILD_DATE = "mmm dd yyyy";   /**<  build date, to be patched at link time */
 // const char * BUILD_TIME = __TIME__;
-const char * BUILD_TIME = "hh:mm:ss";
+const char * BUILD_TIME = "hh:mm:ss";      /**< build time, to be patched at link time */
