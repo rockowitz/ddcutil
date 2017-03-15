@@ -1,7 +1,7 @@
 /* vcp_version_spec.h
  *
  * <copyright>
- * Copyright (C) 2014-2016 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2014-2017 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -21,10 +21,17 @@
  * </endcopyright>
  */
 
+/** \file
+ * VCP Version Specification
+ */
+
+
 #ifndef VCP_VERSION_H_
 #define VCP_VERSION_H_
 
+/** \cond */
 #include <stdbool.h>
+/** \endcond */
 
 #include "public/ddcutil_types.h"
 

@@ -1,7 +1,7 @@
 /* vcp_version.c
  *
  * <copyright>
- * Copyright (C) 2014-2016 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2014-2017 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -21,11 +21,19 @@
  * </endcopyright>
  */
 
+/** \file
+ * VCP/MCCS Version Specification
+ *
+ */
+
+/** \cond */
 #include <assert.h>
 #include <glib.h>
 #include <stdio.h>
 #include <string.h>
+/** \endcond */
 
+#include "util/data_structures.h"
 #include "util/string_util.h"
 
 #include "base/core.h"
@@ -47,13 +55,12 @@ const DDCA_MCCS_Version_Spec VCP_SPEC_ANY       = {0,0};    // used as query spe
 const DDCA_MCCS_Version_Spec VCP_SPEC_UNQUERIED = {0xff, 0xff};
 
 
-/* Tests if a Version_Spec value represents a valid MCCS version,
+/* Tests if a #DDCA_MCCS_Version_Spec value represents a valid MCCS version,
  * i.e. 1.0, 2.0, 2.1, 3.0, or 2.2.
  *
- * Arguments:
- *    vspec       value to test
+ *  @param   vspec       value to test
  *
- * Returns:       true/false
+ *  @return  true/false
  */
 static bool is_known_vcp_spec(DDCA_MCCS_Version_Spec vspec) {
    bool result = vcp_version_eq(vspec, VCP_SPEC_V10) ||
@@ -64,23 +71,34 @@ static bool is_known_vcp_spec(DDCA_MCCS_Version_Spec vspec) {
    return result;
 }
 
-
-// Note that MCCS (VCP) versioning forms a directed graph, not a linear ordering.
-//
-// The v3.0 spec is an extension of v2.1, not v2.2.
-// Both v3.0 and v2.2 are successors to v2.1.
-//
-//                      -- v3.0
-//                     |
-//   v1.0---v2.0---- v2.1
-//                     |
-//                      -- v2.2
-
-
-/* Compares two version numbers.
+/** \file
+* Note that MCCS (VCP) versioning forms a directed graph, not a linear ordering.
+*
+* The v3.0 spec is an extension of v2.1, not v2.2.
+* Both v3.0 and v2.2 are successors to v2.1.
+*
+*                      -- v3.0
+*                     |
+*   v1.0---v2.0---- v2.1
+*                     |
+*                      -- v2.2
  *
+ */
+
+
+/** Checks if one #DDCA_MCCS_Version_Spec is less than or equal
+ *  to another.
+ *
+ *  @param v1  first version spec
+ *  @param v2  second version spec
+ *
+ *  @retval true  v1 is <= v2
+ *  @retval false v1 > v2
+ *
+ *  @remark
  * Aborts if an attempt is made to compare v2.2 with v3.0
- * Note: Will require modification if a new spec appears
+ * @remark
+ * Will require modification if a new spec appears
  */
 bool vcp_version_le(DDCA_MCCS_Version_Spec v1, DDCA_MCCS_Version_Spec v2) {
    bool result = false;
@@ -124,6 +142,26 @@ char * format_vspec(DDCA_MCCS_Version_Spec vspec) {
 }
 
 
+// new way:
+
+Value_Name_Title_Table version_id_table = {
+      VNT(DDCA_V10,   "1.0"),
+      VNT(DDCA_V20,   "2.0"),
+      VNT(DDCA_V21,   "2.1"),
+      VNT(DDCA_V30,   "3.0"),
+      VNT(DDCA_V22,   "2.2"),
+      VNT(DDCA_VNONE, "unknown"),
+      VNT_END
+};
+
+
+
+/** Returns a #DDCA_MCCS_Version_Id in a form suitable for display,
+ *  e.g. "2.0".
+ *
+ * @param version_id version id value
+ * @return value in external form.
+ */
 char * format_vcp_version_id(DDCA_MCCS_Version_Id version_id) {
    char * result = NULL;
    switch (version_id) {
@@ -134,11 +172,13 @@ char * format_vcp_version_id(DDCA_MCCS_Version_Id version_id) {
    case DDCA_V22:    result = "2.2";     break;
    case DDCA_VNONE:  result = "unknown"; break;
    }
+   char * result2 = vnt_title(version_id_table, version_id);
+   assert(streq(result, result2));
    return result;
 }
 
-char * vcp_version_id_name(DDCA_MCCS_Version_Id version_id) {
-   bool debug = false;
+char * vcp_version_id_name0(DDCA_MCCS_Version_Id version_id) {
+   bool debug = true;
    DBGMSF(debug, "Starting. version_id=%d", version_id);
 
    char * result = NULL;
@@ -151,9 +191,14 @@ char * vcp_version_id_name(DDCA_MCCS_Version_Id version_id) {
    case DDCA_VNONE:  result = "DDCA_VNONE";   break;
    }
 
+   char * result2 = vnt_name(version_id_table, version_id);
+   assert(streq(result, result2));
+
    DBGMSF(debug, "Returning: %s", result);
    return result;
 }
+
+
 
 
 DDCA_MCCS_Version_Spec parse_vspec(char * s) {
