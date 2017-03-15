@@ -3,7 +3,7 @@
  * Display specification
  *
  * <copyright>
- * Copyright (C) 2014-2016 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2014-2017 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -23,10 +23,14 @@
  * </endcopyright>
  */
 
+
+
 #ifndef DISPLAYS_H_
 #define DISPLAYS_H_
 
+/** \cond **/
 #include <stdbool.h>
+/** \endcond */
 
 #include "util/coredefs.h"
 #include "util/edid.h"
@@ -36,7 +40,9 @@
 #include "base/vcp_version.h"
 
 
-/*
+/** \file
+Display Specification
+
 Monitors are specified in different ways in different contexts:
 
 1) Display_Identifier contains the identifiers specified on the command line.
@@ -173,6 +179,7 @@ bool dreq(Display_Ref* this, Display_Ref* that);
 // TODO: simplify, remove redundant fields for values obtainable from dref
 
 #define DISPLAY_HANDLE_MARKER "DSPH"
+/** Describes and open display device. */
 typedef struct {
    char         marker[4];
    DDCA_IO_Mode io_mode;
@@ -197,6 +204,7 @@ char * display_handle_repr_r(Display_Handle * dh, char * buf, int bufsize);
 char * display_handle_repr(Display_Handle * dh);
 
 #define VIDEO_CARD_INFO_MARKER "VIDC"
+/** Video card information */
 typedef struct {
    char     marker[4];
    int      vendor_id;
@@ -207,9 +215,12 @@ typedef struct {
 Video_Card_Info * create_video_card_info();
 
 
-// for surfacing display information at higher levels than i2c and adl, without creating
-// circular dependencies
+
 #define DISPLAY_INFO_MARKER "DINF"
+/**
+ * For surfacing display information at higher levels than i2c and adl, without creating
+ * circular dependencies
+ */
 typedef struct {
    char          marker[4];
    int           dispno;
@@ -219,6 +230,7 @@ typedef struct {
 
 
 // #define DISPLAY_INFO_LIST_MARKER "DINL"
+/** List of #Display_Info */
 typedef struct {
    // char           marker[4];   // complicates an otherwise simple initialization, not worth it
    int            ct;
