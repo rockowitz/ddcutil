@@ -3,7 +3,7 @@
  * Publicly visible type definitions.
  *
  * <copyright>
- * Copyright (C) 2014-2016 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2014-2017 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -26,9 +26,11 @@
 #ifndef DDCUTIL_TYPES_H_
 #define DDCUTIL_TYPES_H_
 
+/** \cond */
 #include <linux/limits.h>
 #include <stdbool.h>
 #include <stdint.h>
+/** \endcond */
 
 /** @file ddcutil_types.h
  *  @brief ddcutil public types
@@ -39,18 +41,18 @@
 // Status Code
 //
 
-/** ddcutil status code
+/**
  *
- *  Most public ddcutil functions return a status code.
+ * **ddcutil** Status Code
+ *
+ *  Most public **ddcutil** functions return a status code.
  *  These status codes have 3 sources:
- *
  *  - Linux
  *  - ADL (AMD Display Library)
- *  - ddcutil itself
+ *  - **ddcutil** itself
  *
- *  These multiple status code sources are combined by "modulating"
+ *  These multiple status code sources are consolidated by "modulating"
  *  the raw values into non-overlapping ranges.
- *
  *  - Linux errno values are returned as negative numbers (e.g. -EIO)
  *  - ADL values are modulated by 2000 (i.e., 2000 subtracted from negative ADL status codes,
  *         or added to positive ADL status codes)
@@ -131,7 +133,7 @@ typedef enum {
 //  Display Specification
 //
 
-/**
+/** \defgroup api_display_spec API Display Specification
 Monitors are specified in different ways in different contexts:
 
 1) DDCA_Display_Identifier contains criteria for selecting a monitor.
@@ -158,33 +160,39 @@ a DDCA_Display_Ref.  The adapter number.device number pair are simply copied.
 
 /** Opaque display identifier
  *
- * A display identifier holds the criteria for selecting a display,
+ * A **DDCA_Display_Identifier** holds the criteria for selecting a display,
  * typically as specified by the user.
  *
  * It can take several forms:
- * - the display number assigned by dccutil
+ * - the display number assigned by **dccutil**
  * - an I2C bus number
  * - an ADL (adapter index, display index) pair
  * - a  USB (bus number, device number) pair
  * - an EDID
- * - model and serial number strings
+ * - manufacturer, model, and serial number strings
+ *
+ * \ingroup api_display_spec
  * */
 typedef void * DDCA_Display_Identifier;
 
 /** Opaque display reference.
  *
- * A display reference references a display using the identifiers by which it is accessed
+ * A **DDCA_Display_Ref** references a display using the identifiers by which it is accessed
  * in Linux.  It takes one of three forms:
  * - an I2C bus number
  * - an ADL (adapter index, display index) pair
  * - a  USB (bus number, device number pair)
+ *
+ *  \ingroup api_display_spec
  */
 typedef void * DDCA_Display_Ref;
 
 
 /** Opaque display handle
  *
- * A display handle represents an open display on which actions can be performed.
+ * A **DDCA_Display_Handle** represents an open display on which actions can be performed.
+ *
+ *  \ingroup api_display_spec
  */
 typedef void * DDCA_Display_Handle;
 
@@ -193,16 +201,22 @@ typedef void * DDCA_Display_Handle;
 // Display Information
 //
 
-/** Indicates how a display is accessed */
+/** Indicates how a display is accessed
+ *
+ *  \ingroup api_display_spec
+ */
 typedef enum {
-   DDC_IO_DEVI2C,         /**< Using DDC to a /dev/i2c-n device */
+   DDC_IO_DEVI2C,         /**< Using DDC to communicate with a /dev/i2c-n device */
    DDC_IO_ADL,            /**< Using ADL API */
    USB_IO                 /**< Using USB reports for a USB connected monitor */
 } DDCA_IO_Mode;
 
 
 // Does this make the API and data structures clearer or more obscure?
-/** Describes a display's access mode and the location identifiers for that mode */
+/** Describes a display's access mode and the location identifiers for that mode
+ *
+ *  \ingroup api_display_spec
+ */
 typedef struct {
    DDCA_IO_Mode io_mode;
    union {
@@ -221,7 +235,10 @@ typedef struct {
 
 
 #define DDCA_DISPLAY_INFO_MARKER "DDIN"
-/** DDCA_Display_Info describes one monitor detected by ddcutil. */
+/** DDCA_Display_Info describes one monitor detected by ddcutil.
+ *
+ * \ingroup api_display_spec
+ */
 typedef struct {
    char             marker[4];
    int              dispno;
@@ -262,8 +279,8 @@ typedef struct {
 
 /** MCCS Version in binary form */
 typedef struct {
-   uint8_t    major;
-   uint8_t    minor;
+   uint8_t    major;           /**< major version number */
+   uint8_t    minor;           /*** minor version number */
 } DDCA_MCCS_Version_Spec;
 
 // in sync w constants MCCS_V.. in vcp_feature_codes.c
