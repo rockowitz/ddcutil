@@ -36,6 +36,13 @@
 // Called from the mainline to perform initialization
 void init_status_code_mgt();
 
+/** Describes one status code.
+ *
+ * @remark
+ * Code could be simplified by using a #Value_Name_Title table
+ * instead, but left as is because we might want to add additional
+ * fields.
+ */
 typedef
 struct {
    int    code;
@@ -51,11 +58,16 @@ void report_status_code_info(Status_Code_Info * pdesc);
 // For distinguishing types of return codes.
 // C does not enforce type checking, but useful for documentation
 // trying different styles for readability, consistency w standards
+
+/** Fully modulated status code */
 typedef int Global_Status_Code;
 // Global_Status_Code subranges:
-typedef int Global_Status_ADL;    // subrange of Global_Status_Code containing modulated ADL return codes
+
+// typedef int Global_Status_ADL;    // subrange of Global_Status_Code containing modulated ADL return codes
 typedef int Global_Status_DDC;    // subrange of Global_Status_Code containing (always modulated) DDC return codes
 typedef int Global_Status_Errno;  // subrange of Global_Status_Code containing modulated Linux return codes
+
+typedef int Modulated_Status_ADL; // modulated ADL return codes only, same as Global_Status_ADL
 
 // typedef int Rc_Raw_DDC_t;
 typedef int Base_Status_ADL;
@@ -66,6 +78,7 @@ typedef int Base_Status_ADL_DDC;     // union(Base_Status_ADL, Global_Status_DDC
 
 typedef int Public_Status_Code;      // union(unmodulated Linux codes, modulated ADL codes, (always modulaed) DDC return codes
 
+/** typedef of function used to return a #Status_Code_Info for a status code */
 typedef
 Status_Code_Info * (*Retcode_Description_Finder)(int rc);
 
@@ -88,16 +101,25 @@ Global_Status_Code modulate_base_errno_ddc_to_global(Base_Status_Errno_DDC rc);
 #define RCRANGE_DDC_START    3000
 #define RCRANGE_DDC_MAX      3999
 
-// must be kept consistent with table in status_code_mgt.c
-// should RR_BASE be in this enum?
-typedef enum {RR_BASE, RR_ERRNO, RR_ADL, RR_DDC} Retcode_Range_Id;
+/** Status code range identifiers
+ *
+ * @remark
+ * - must be kept consistent with table in status_code_mgt.c
+ * - should RR_BASE be in this enum?
+ */
+typedef enum {
+          RR_BASE,     ///< indicates unmodulated status code
+          RR_ERRNO,    ///< range id for modulated Linux errno values
+          RR_ADL,      ///< range id for modulated ADL error codes
+          RR_DDC       ///< range id for modulated ddcutil-specific error codes
+} Retcode_Range_Id;
 
-// for modules to register the explanation routine for their
-// status codes, to avoid circular dependencies of includes
+
 void register_retcode_desc_finder(
         Retcode_Range_Id           id,
         Retcode_Description_Finder finder_func,
         bool                       finder_arg_is_modulated);
+
 
 int modulate_rc(int unmodulated_rc, Retcode_Range_Id range_id);
 int demodulate_rc(int modulated_rc, Retcode_Range_Id range_id);

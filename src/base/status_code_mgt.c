@@ -75,7 +75,7 @@ Mulitplexing.
 
 
 
-
+// Describes a status code range
 typedef struct {
    Retcode_Range_Id            id;
    int                         base;
@@ -91,36 +91,42 @@ typedef struct {
 // For explainers in files that are included by this file, the explainer
 // can be filled in statically.  For other files, register_retcode_desc_finder()
 // is called by the initializer function in those files.
+
 Retcode_Range_Table_Entry retcode_range_table[] = {
-      {RR_BASE,
-       RCRANGE_BASE_START,   RCRANGE_BASE_MAX,
-       NULL,                        false,
-       NULL,
-       NULL
+      { .id = RR_BASE,
+        .base = RCRANGE_BASE_START,
+        .max  = RCRANGE_BASE_MAX,
+      //  NULL,                        false,
+      //  NULL,
+      //  NULL
       },     // should this be entry in table?
-      {RR_ERRNO,
-       RCRANGE_ERRNO_START,  RCRANGE_ERRNO_MAX,
-       NULL,                        false,
-       errno_name_to_modulated_number,
-       errno_name_to_number
+      {.id = RR_ERRNO,
+       .base = RCRANGE_ERRNO_START,
+       .max = RCRANGE_ERRNO_MAX,
+    // .desc_finder        = NULL,                    // will be filled in by call to ...
+    // .finder_arg_is_modulated = false,              //    ... register_retcode_desc_finder()
+       .desc_finder = get_negative_errno_info,
+       .finder_arg_is_modulated = false,                // finder_arg_is_modulated
+       .number_finder      = errno_name_to_modulated_number,
+       .base_number_finder = errno_name_to_number
       },
-      {RR_ADL,
-       RCRANGE_ADL_START,    RCRANGE_ADL_MAX,
-       NULL,                        false,
-// #ifdef HAVE_ADL
-       adl_errno_name_to_modulated_number,   // get mock implementation if not HAVE_ADL
-       adl_error_name_to_number
-// #else
-//        NULL,
-//        NULL
-// #endif
+      {.id                 = RR_ADL,
+       .base               = RCRANGE_ADL_START,
+       .max                = RCRANGE_ADL_MAX,
+    // .desc_finder        = NULL,                    // will be filled in by call to ...
+    // .finder_arg_is_modulated = false,              //    ... register_retcode_desc_finder()
+       .desc_finder = get_adl_status_description,
+       .finder_arg_is_modulated = false,                     // finder_arg_is_modulated
+       .number_finder      = adl_error_name_to_modulated_number,   // mock implementation if not HAVE_ADL
+       .base_number_finder = adl_error_name_to_number              // mock implementation if not HAVE_ADL
       },
-      {RR_DDC,
-       RCRANGE_DDC_START,
-       RCRANGE_DDC_MAX,
-       ddcrc_find_status_code_info, true,
-       ddc_error_name_to_modulated_number,
-       ddc_error_name_to_number
+      {.id                 = RR_DDC,
+       .base               = RCRANGE_DDC_START,
+       .max                = RCRANGE_DDC_MAX,
+       .desc_finder        = ddcrc_find_status_code_info,
+       .finder_arg_is_modulated = true,
+       .number_finder      = ddc_error_name_to_modulated_number,
+       .base_number_finder = ddc_error_name_to_number
       },
 };
 int retcode_range_ct = sizeof(retcode_range_table)/sizeof(Retcode_Range_Table_Entry);
@@ -136,8 +142,21 @@ void validate_retcode_range_table() {
 }
 
 
-// n. this is called from source file initialization functions, which are called
-// from main before the command line is parsed, so trace control not yet configured
+/** This function is called by modules for specific status code ranges
+ *  to register the explanation routines for their
+ *  status codes.  It exists to avoid circular dependencies of includes.
+ *
+ *  @param  id           status code range id
+ *  @param  finder_func  function to return #Status_Code_Info struct for a status code,
+ *                       of type #Retcode_Description_Finder
+ *  @param  finder_arg_is_modulated  if true, **finder_func** takes a modulated
+ *                                   status code as an argument.  If false, it
+ *                                   takes an unmodualted value.
+ *
+ * @remark
+ * This function will be executed from module initialization functions, which are called
+ * from main before the command line is parsed, so trace control not yet configured
+ */
 void register_retcode_desc_finder(
         Retcode_Range_Id           id,
         Retcode_Description_Finder finder_func,
@@ -152,14 +171,16 @@ void register_retcode_desc_finder(
 }
 
 
-/* Shifts a status code in the RR_BASE range to a specified range.
+/** Shifts a status code in the RR_BASE range to a specified range.
  *
- * Arguments:
- *   rc        base status code to modulate
- *   range_id  range to which status code should be modulated
+ * @param  rc        base status code to modulate
+ * @param  range_id  range to which status code should be modulated
  *
- * Returns:
- *   modulated status code
+ * @return  modulated status code
+ *
+ * @remark
+ * It is an error to pass an already modulated status code as an argument to
+ * this function.
  */
 int modulate_rc(int rc, Retcode_Range_Id range_id){
    bool debug = false;
@@ -179,14 +200,16 @@ int modulate_rc(int rc, Retcode_Range_Id range_id){
 }
 
 
-/* Shifts a status code from the specified modulation range to the base range
+/** Shifts a status code from the specified modulation range to the base range
  *
- * Arguments:
- *    rc        status code to demodulate
- *    range_id  a modulation range
+ *  @param  rc        status code to demodulate
+ *  @param  range_id  a modulation range
  *
- * Returns:
- *   demodulated status code
+ * @return  demodulated status code
+ *
+ * @remark
+ * It is an error to pass an unmodulated status code as an
+ * argument to this funtion.
  */
 int demodulate_rc(int rc, Retcode_Range_Id range_id) {
    // TODO: check that rc is in the specified modulation range
@@ -201,14 +224,12 @@ int demodulate_rc(int rc, Retcode_Range_Id range_id) {
    return rc;
 }
 
-/* Determines the modulation range for a status code.
+/** Determines the modulation range for a status code.
  * Can be either the base range or a modulation range
  *
- * Arguments:
- *   rc     status code to check
+ * @param  rc     status code to check
  *
- * Returns:
- *   range identifier
+ * @return range identifier
  */
 Retcode_Range_Id get_modulation(int rc) {
    int ndx = 0;
@@ -255,26 +276,30 @@ Global_Status_Code public_to_global_status_code(Public_Status_Code psc) {
 
 static Status_Code_Info ok_status_code_info = {0, "OK", "success"};
 
-
-Status_Code_Info * find_global_status_code_info(Global_Status_Code rc) {
+/** Given a Global_Status_Code, returns a pointer to its #Status_Code_Info struct.
+ *
+ * @param   gsc global (modulated) status code
+ * @return  pointer to #Status_Code_Info for staus code, NULL if not found
+ */
+Status_Code_Info * find_global_status_code_info(Global_Status_Code gsc) {
    bool debug = false;
    // use don't use DBGMSG to avoid circular includes
    if (debug)
-      printf("(%s) Starting.  rc = %d\n", __func__, rc);
+      printf("(%s) Starting.  rc = %d\n", __func__, gsc);
 
    Status_Code_Info * pinfo = NULL;
 
-   if (rc == 0)
+   if (gsc == 0)
       pinfo = &ok_status_code_info;
    else {
-      Retcode_Range_Id modulation = get_modulation(rc);
+      Retcode_Range_Id modulation = get_modulation(gsc);
       if (debug)
          printf("(%s) modulation=%d\n", __func__, modulation);
 
       Retcode_Description_Finder finder_func = retcode_range_table[modulation].desc_finder;
       assert(finder_func != NULL);
       bool finder_arg_is_modulated = retcode_range_table[modulation].finder_arg_is_modulated;
-      int rawrc = (finder_arg_is_modulated) ? rc : demodulate_rc(rc, modulation);
+      int rawrc = (finder_arg_is_modulated) ? gsc : demodulate_rc(gsc, modulation);
       if (debug)
          printf("(%s) rawrc = %d\n", __func__, rawrc);
       pinfo = finder_func(rawrc);
@@ -288,26 +313,41 @@ Status_Code_Info * find_global_status_code_info(Global_Status_Code rc) {
    return pinfo;
 }
 
-#define WORKBUF_SIZE 300
-static char workbuf[WORKBUF_SIZE];
 
-// Returns status code description:
+
+#define GSC_WORKBUF_SIZE 300
+
+/** Returns a description string for a #Global_Status_Code.
+ *  Synthesizes a description if information for the status code cannot be found.
+ *
+ *  @param  status_code  global (modulated) status code
+ *  @return string description of status code
+ *
+ *  @remark
+ *  The value returned is valid unti the next call of this function.
+ */
 char * gsc_desc(Global_Status_Code status_code) {
+   static char workbuf[GSC_WORKBUF_SIZE];
    // printf("(%s) status_code=%d\n", __func__, status_code);
    Status_Code_Info * pdesc = find_global_status_code_info(status_code);
    if (pdesc) {
-      snprintf(workbuf, WORKBUF_SIZE, "%s(%d): %s",
+      snprintf(workbuf, GSC_WORKBUF_SIZE, "%s(%d): %s",
                pdesc->name, status_code, pdesc->description);
    }
    else {
-      snprintf(workbuf, WORKBUF_SIZE, "%d",
+      snprintf(workbuf, GSC_WORKBUF_SIZE, "%d",
                status_code );
    }
    return workbuf;
 }
+#undef GSC_WORKBUF_SIZE
 
-#undef WORKBUF_SIZE
 
+/** Returns the symbolic name of a #Global_Status_Code
+ *
+ * @param status_code global (modulated) status code
+ * @return symbolic name, or "" if not found
+ */
 char * gsc_name(Global_Status_Code status_code) {
    Status_Code_Info * pdesc = find_global_status_code_info(status_code);
    char * result = (pdesc) ? pdesc->name : "";
@@ -315,7 +355,14 @@ char * gsc_name(Global_Status_Code status_code) {
 }
 
 
-
+/** Given a status code name, convert it to a unmodulated base status code
+ *  Valid only for those status code ranges which ...
+ *
+ *
+ * @param  status_code_name
+ * @param p_error_number  where to return status code number
+ * @return true if conversion successful, false if unrecognized status code
+ */
 bool gsc_name_to_unmodulated_number(const char * status_code_name, int * p_error_number) {
    int  status_code = 0;
    bool found = false;
@@ -334,6 +381,12 @@ bool gsc_name_to_unmodulated_number(const char * status_code_name, int * p_error
 }
 
 
+/** Given a status code name, convert it to a modulated #Global_Status_Code.
+ *
+ * @param  status_code_name
+ * @param p_error_number  where to return status code number
+ * @return true if conversion successful, false if unrecognized status code
+ */
 bool gsc_name_to_modulated_number(const char * status_code_name, Global_Status_Code * p_error_number) {
    Global_Status_Code gsc = 0;
    bool found = false;
@@ -358,8 +411,10 @@ bool gsc_name_to_modulated_number(const char * status_code_name, Global_Status_C
 // Initialization and debugging
 //
 
-// N.B called before command line parsed, so command line trace control not in effect
+/** Initialize this module.
+ */
 void init_status_code_mgt() {
+   // N.B called before command line parsed, so command line trace control not in effect
    // printf("(%s) Starting\n", __func__);
    validate_retcode_range_table();                         // uses asserts to check consistency
    // error_counts_hash = g_hash_table_new(NULL,NULL);
@@ -368,7 +423,11 @@ void init_status_code_mgt() {
 }
 
 
-// Debugging function for Status_Code_Info structure
+/** Display the contents of a #Status_Code_Info struct.
+ *  This is a debugging function.
+ *
+ * @param pdesc  pointer to #Status_Code_Info struct
+ */
 void report_status_code_info(Status_Code_Info * pdesc) {
    printf("Status_Code_Info struct at %p\n", pdesc);
    if (pdesc) {
