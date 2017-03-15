@@ -42,7 +42,7 @@ void ddc_set_max_multi_part_read_tries(int ct);
 int ddc_get_max_multi_part_read_tries();
 
 
-Global_Status_Code
+Public_Status_Code
 multi_part_read_with_retry(
    Display_Handle * dh,
    Byte             request_type,
@@ -50,7 +50,7 @@ multi_part_read_with_retry(
    bool             all_zero_response_ok,
    Buffer**         ppbuffer);
 
-Global_Status_Code
+Public_Status_Code
 multi_part_write_with_retry(
      Display_Handle * dh,
      Byte             vcp_code,

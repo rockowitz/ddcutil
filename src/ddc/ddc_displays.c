@@ -83,10 +83,11 @@ static bool verify_adl_display_ref(Display_Ref * dref) {
    bool debug = false;
    bool result = true;
    Display_Handle * dh = NULL;
+   Public_Status_Code psc = 0;
    Global_Status_Code gsc = 0;
 
-   gsc = ddc_open_display(dref, CALLOPT_ERR_MSG | CALLOPT_ERR_ABORT, &dh);
-   if (gsc != 0)  {
+   psc = ddc_open_display(dref, CALLOPT_ERR_MSG | CALLOPT_ERR_ABORT, &dh);
+   if (psc != 0)  {
       result = false;
       goto bye;
    }
@@ -105,12 +106,13 @@ static bool verify_adl_display_ref(Display_Ref * dref) {
    if (olev == OL_VERBOSE)
       set_output_level(OL_NORMAL);
    gsc = get_vcp_value(dh, 0x10, NON_TABLE_VCP_VALUE, &pvalrec);
+   psc = global_to_public_status_code(gsc);
    if (olev == OL_VERBOSE)
       set_output_level(olev);
 
-   if (gsc != 0 && gsc != DDCRC_REPORTED_UNSUPPORTED && gsc != DDCRC_DETERMINED_UNSUPPORTED) {
+   if (psc != 0 && psc != DDCRC_REPORTED_UNSUPPORTED && psc != DDCRC_DETERMINED_UNSUPPORTED) {
       result = false;
-      DBGMSF(debug, "Error getting value for brightness VCP feature 0x10. gsc=%s\n", gsc_desc(gsc) );
+      DBGMSF(debug, "Error getting value for brightness VCP feature 0x10. gsc=%s\n", gsc_desc(psc) );
    }
 
  bye:
@@ -143,19 +145,22 @@ bool ddc_verify(Display_Ref * dref) {
    FAILSIM;
 
    Display_Handle * dh;
-   Global_Status_Code gsc = ddc_open_display(dref,  CALLOPT_NONE, &dh);
-   if (gsc == 0) {
+   Global_Status_Code gsc = 0;
+
+   Public_Status_Code psc = ddc_open_display(dref,  CALLOPT_NONE, &dh);
+   if (psc == 0) {
       Parsed_Nontable_Vcp_Response * presp = NULL;
       // or could use get_vcp_value()
       gsc = get_nontable_vcp_value(dh,
                              0x10,    // brightness
                              &presp);
-      DBGMSF(debug, "get_nontable_vcp_value() returned %s", gsc_desc( gsc));
-      if (gsc == 0) {
+      psc = global_to_public_status_code(gsc);
+      DBGMSF(debug, "get_nontable_vcp_value() returned %s", psc_desc( psc));
+      if (psc == 0) {
          free(presp);
          // result = true;
       }
-      if (gsc == 0 || gsc == DDCRC_REPORTED_UNSUPPORTED || gsc == DDCRC_DETERMINED_UNSUPPORTED)
+      if (psc == 0 || psc == DDCRC_REPORTED_UNSUPPORTED || psc == DDCRC_DETERMINED_UNSUPPORTED)
          result = true;
       ddc_close_display(dh);
    }
@@ -653,10 +658,10 @@ ddc_report_active_display(Display_Info * curinfo, int depth) {
       else {
          // n. requires write access since may call get_vcp_value(), which does a write
          Display_Handle * dh = NULL;
-         Global_Status_Code gsc = ddc_open_display(curinfo->dref, CALLOPT_ERR_MSG, &dh);
-         if (gsc != 0) {
-            rpt_vstring(depth, "Error opening display %s, error = %d (%s)",
-                               dref_short_name(curinfo->dref), gsc, gsc_name(gsc));
+         Public_Status_Code psc = ddc_open_display(curinfo->dref, CALLOPT_ERR_MSG, &dh);
+         if (psc != 0) {
+            rpt_vstring(depth, "Error opening display %s, error = %s",
+                               dref_short_name(curinfo->dref), psc_desc(psc));
          }
          else {
                 // char * short_name = dref_short_name(curinfo->dref);

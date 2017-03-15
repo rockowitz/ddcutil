@@ -139,7 +139,7 @@ DDCA_MCCS_Version_Spec get_vcp_version_by_display_ref(Display_Ref * dref) {
 
    if (vcp_version_is_unqueried(dref->vcp_version)) {
       Display_Handle * dh = NULL;
-      // no need to check return code since aborting
+      // no need to check return code since aborting if error
       ddc_open_display(dref, CALLOPT_ERR_MSG | CALLOPT_ERR_ABORT, &dh);
       dref->vcp_version = get_vcp_version_by_display_handle(dh);
       ddc_close_display(dh);

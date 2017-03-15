@@ -36,7 +36,7 @@
 
 bool all_zero(Byte * bytes, int bytec);
 
-Global_Status_Code ddc_open_display(
+Public_Status_Code ddc_open_display(
       Display_Ref *    dref,
       Call_Options     callopts,
       Display_Handle** pdh);
@@ -59,7 +59,7 @@ Public_Status_Code ddc_write_only(
       Display_Handle * dh,
       DDC_Packet *     request_packet_ptr);
 
-Global_Status_Code ddc_write_only_with_retry(
+Public_Status_Code ddc_write_only_with_retry(
       Display_Handle * dh,
       DDC_Packet *     request_packet_ptr);
 
@@ -72,7 +72,7 @@ Public_Status_Code ddc_write_read(
       DDC_Packet **    response_packet_ptr_loc
      );
 
-Global_Status_Code ddc_write_read_with_retry(
+Public_Status_Code ddc_write_read_with_retry(
       Display_Handle * dh,
       DDC_Packet *     request_packet_ptr,
       int              max_read_bytes,

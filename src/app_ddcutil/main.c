@@ -306,10 +306,10 @@ void probe_display_by_dh(Display_Handle * dh)
 
 void probe_display_by_dref(Display_Ref * dref) {
    Display_Handle * dh = NULL;
-   Global_Status_Code gsc = ddc_open_display(dref, CALLOPT_ERR_MSG, &dh);
-   if (gsc != 0) {
-      printf("Unable to open display %s, status code %d (%s)",
-             dref_short_name(dref), gsc, gsc_name(gsc) );
+   Public_Status_Code psc = ddc_open_display(dref, CALLOPT_ERR_MSG, &dh);
+   if (psc != 0) {
+      printf("Unable to open display %s, status code %s",
+             dref_short_name(dref), psc_desc(psc) );
    }
    else {
       probe_display_by_dh(dh);
@@ -577,7 +577,6 @@ int main(int argc, char *argv[]) {
          ddc_open_display(dref, callopts, &dh);
 
          if (dh) {
-
             if (// parsed_cmd->cmd_id == CMDID_CAPABILITIES ||
                 parsed_cmd->cmd_id == CMDID_GETVCP       ||
                 parsed_cmd->cmd_id == CMDID_READCHANGES

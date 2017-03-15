@@ -83,6 +83,7 @@ set_nontable_vcp_value(
           "Writing feature 0x%02x , new value = %d, dh=%s\n",
           feature_code, new_value, display_handle_repr(dh));
    Global_Status_Code gsc = 0;
+   Public_Status_Code psc = 0;
 
    if (dh->io_mode == USB_IO) {
 #ifdef USE_USB
@@ -97,13 +98,14 @@ set_nontable_vcp_value(
       // DBGMSG("create_ddc_getvcp_request_packet returned packet_ptr=%p", request_packet_ptr);
       // dump_packet(request_packet_ptr);
 
-      gsc = ddc_write_only_with_retry(dh, request_packet_ptr);
+      psc = ddc_write_only_with_retry(dh, request_packet_ptr);
 
       if (request_packet_ptr)
          free_ddc_packet(request_packet_ptr);
    }
 
    // TRCMSGTG(tg, "Returning %s", gsc_desc(gsc));
+   gsc = public_to_global_status_code(psc);
    DBGTRC(debug, TRACE_GROUP, "Returning %s", gsc_desc(gsc));
    return gsc;
 }
@@ -210,6 +212,7 @@ Global_Status_Code get_nontable_vcp_value(
    DBGTRC(debug, TRACE_GROUP, "Reading feature 0x%02x", feature_code);
 
    Global_Status_Code rc = 0;
+   Public_Status_Code psc = 0;
    // Output_Level output_level = get_output_level();
    Parsed_Nontable_Vcp_Response * parsed_response = NULL;
 
@@ -222,7 +225,7 @@ Global_Status_Code get_nontable_vcp_value(
    Byte expected_subtype = feature_code;
    int max_read_bytes  = 20;    // actually 3 + 8 + 1, or is it 2 + 8 + 1?
 
-   rc = ddc_write_read_with_retry(
+   psc = ddc_write_read_with_retry(
            dh,
            request_packet_ptr,
            max_read_bytes,
@@ -231,9 +234,10 @@ Global_Status_Code get_nontable_vcp_value(
            false,                       // all_zero_response_ok
            &response_packet_ptr
         );
-   // TRCMSGTG(tg, "perform_ddc_write_read_with_retry() returned %s", gsc_desc(rc));
+   rc = public_to_global_status_code(psc);
+   // TRCMSGTG(tg, "perform_ddc_write_read_with_retry() returned %s", psc_desc(psc));
    if (debug || rc != 0 ) {
-      DBGTRC(debug, TRACE_GROUP, "perform_ddc_write_read_with_retry() returned %s", gsc_desc(rc));
+      DBGTRC(debug, TRACE_GROUP, "perform_ddc_write_read_with_retry() returned %s", psc_desc(psc));
    }
 
    if (rc == 0) {
@@ -294,18 +298,19 @@ Global_Status_Code get_table_vcp_value(
    DBGTRC(debug, TRACE_GROUP, "Starting. Reading feature 0x%02x", feature_code);
 
    Global_Status_Code gsc = 0;
+   Public_Status_Code psc = 0;
    DDCA_Output_Level output_level = get_output_level();
    Buffer * paccumulator =  NULL;
 
-   gsc = multi_part_read_with_retry(
+   psc = multi_part_read_with_retry(
             dh,
             DDC_PACKET_TYPE_TABLE_READ_REQUEST,
             feature_code,
             true,                      // all_zero_response_ok
             &paccumulator);
-   if (debug || gsc != 0) {
+   if (debug || psc != 0) {
       DBGTRC(debug, TRACE_GROUP,
-             "perform_ddc_write_read_with_retry() returned %s", gsc_desc(gsc));
+             "perform_ddc_write_read_with_retry() returned %s", psc_desc(psc));
    }
 
    if (gsc == 0) {
@@ -316,6 +321,7 @@ Global_Status_Code get_table_vcp_value(
       }
    }
 
+   gsc = public_to_global_status_code(psc);
    // TRCMSGTG(tg, "Done. Returning rc=%s, *pp_table_bytes=%p", gsc_desc(gsc), *pp_table_bytes);
    DBGTRC(debug, TRACE_GROUP,
           "Done. Returning rc=%s, *pp_table_bytes=%p", gsc_desc(gsc), *pp_table_bytes);

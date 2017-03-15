@@ -73,8 +73,9 @@ get_capabilities_buffer(
       Buffer**         ppCapabilitiesBuffer)
 {
    Global_Status_Code gsc;
+   Public_Status_Code psc;
 
-   gsc = multi_part_read_with_retry(
+   psc = multi_part_read_with_retry(
                dh,
                DDC_PACKET_TYPE_CAPABILITIES_REQUEST,
                0x00,                       // no subtype for capabilities
@@ -82,7 +83,7 @@ get_capabilities_buffer(
                ppCapabilitiesBuffer);
    Buffer * cap_buffer = *ppCapabilitiesBuffer;
    assert(gsc <= 0);
-   if (gsc == 0) {
+   if (psc == 0) {
       // trim trailing blanks and nulls
       int len = buffer_length(*ppCapabilitiesBuffer);
       while ( len > 0) {
@@ -96,6 +97,7 @@ get_capabilities_buffer(
       buffer_set_byte(cap_buffer, len, '\0');
       buffer_set_length(cap_buffer, len+1);
    }
+   gsc = public_to_global_status_code(psc);
    return gsc;
 }
 

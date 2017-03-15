@@ -780,6 +780,7 @@ INPUT = . /shared/playproj/i2c/src/util \
           /shared/playproj/i2c/src/base   \
           /shared/playproj/i2c/src/i2c   \
           /shared/playproj/i2c/src/ddc   \
+          /shared/playproj/i2c/src/usb   \
           /shared/playproj/i2c/src/adl
 
 # This tag can be used to specify the character encoding of the source files

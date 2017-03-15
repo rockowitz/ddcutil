@@ -92,7 +92,7 @@ int ddc_get_max_multi_part_read_tries() {
 *
 * Returns:         status code
 */
-Global_Status_Code
+Public_Status_Code
 try_multi_part_read(
       Display_Handle * dh,
       Byte             request_type,
@@ -105,7 +105,8 @@ try_multi_part_read(
           "Starting. request_type=0x%02x, request_subtype=x%02x, accumulator=%p",
           request_type, request_subtype, accumulator);
 
-   Global_Status_Code rc = 0;
+   // Global_Status_Code gsc = 0;
+   Public_Status_Code psc = 0;
    const int MAX_FRAGMENT_SIZE = 32;
    const int readbuf_size = 6 + MAX_FRAGMENT_SIZE + 1;
 
@@ -116,7 +117,7 @@ try_multi_part_read(
    buffer_set_length(accumulator,0);
    int  cur_offset = 0;
    bool complete   = false;
-   while (!complete && rc == 0) {         // loop over fragments
+   while (!complete && psc == 0) {         // loop over fragments
       DBGMSF(force_debug, "Top of fragment loop");
 
       int fragment_size;
@@ -126,7 +127,7 @@ try_multi_part_read(
                                        ? DDC_PACKET_TYPE_CAPABILITIES_RESPONSE
                                        : DDC_PACKET_TYPE_TABLE_READ_RESPONSE;
       Byte expected_subtype = request_subtype;     // 0x00 for capabilities, VCP feature code for table read
-      rc = ddc_write_read_with_retry(
+      psc = ddc_write_read_with_retry(
            dh,
            request_packet_ptr,
            readbuf_size,
@@ -137,9 +138,9 @@ try_multi_part_read(
           );
       DBGMSF(force_debug,
              "ddc_write_read_with_retry() request_type=0x%02x, request_subtype=0x%02x, returned %s",
-             request_type, request_subtype, gsc_desc( rc));
+             request_type, request_subtype, psc_desc( psc));
 
-      if (rc != 0) {
+      if (psc != 0) {
          if (response_packet_ptr)
             free_ddc_packet(response_packet_ptr);
          continue;
@@ -156,8 +157,8 @@ try_multi_part_read(
       if (display_current_offset != cur_offset) {
          DBGMSF(force_debug, "display_current_offset %d != cur_offset %d",
                 display_current_offset, cur_offset);
-         rc = DDCRC_MULTI_PART_READ_FRAGMENT;
-         COUNT_STATUS_CODE(rc);
+         psc = DDCRC_MULTI_PART_READ_FRAGMENT;
+         COUNT_STATUS_CODE(psc);
          free_ddc_packet(response_packet_ptr);
          continue;
       }
@@ -183,10 +184,10 @@ try_multi_part_read(
 
    free_ddc_packet(request_packet_ptr);
 
-   if (rc > 0)
-      rc = 0;
-   DBGTRC(force_debug, TRACE_GROUP, "Returning %s", gsc_desc(rc));
-   return rc;
+   if (psc > 0)
+      psc = 0;
+   DBGTRC(force_debug, TRACE_GROUP, "Returning %s", psc_desc(psc));
+   return psc;
 }
 
 
@@ -203,7 +204,7 @@ try_multi_part_read(
 *   DDCRC_UNSUPPORTED   monitor does not support get capabilities request
 *   DDCRC_TRIES         maximum retries exceeded
 */
-Global_Status_Code
+Public_Status_Code
 multi_part_read_with_retry(
       Display_Handle * dh,
       Byte             request_type,
@@ -221,7 +222,7 @@ multi_part_read_with_retry(
    // TODO: fix:
    // TRCMSGTG(tg, "Starting. pdisp = %s", display_ref_short_name(pdisp, buf, 100) );
 
-   Global_Status_Code rc = -1;   // dummy value for first call of while loop
+   Public_Status_Code rc = -1;   // dummy value for first call of while loop
 
    int try_ctr = 0;
    bool can_retry = true;
@@ -290,7 +291,7 @@ multi_part_read_with_retry(
 *
 * Returns:         status code
 */
-Global_Status_Code
+Public_Status_Code
 try_multi_part_write(
       Display_Handle * dh,
       Byte             vcp_code,
@@ -309,8 +310,8 @@ try_multi_part_write(
           request_type, request_subtype, value_to_set);
 
 
-
-   Global_Status_Code rc = 0;
+   // Global_Status_Code gsc = 0;
+   Public_Status_Code psc = 0;
    int MAX_FRAGMENT_SIZE = 32;
    int max_fragment_size = MAX_FRAGMENT_SIZE - 4;    // hack
    // const int writebbuf_size = 6 + MAX_FRAGMENT_SIZE + 1;
@@ -318,7 +319,7 @@ try_multi_part_write(
    DDC_Packet * request_packet_ptr  = NULL;
    int bytes_remaining = value_to_set->len;
    int offset = 0;
-   while (bytes_remaining >= 0 && rc == 0) {
+   while (bytes_remaining >= 0 && psc == 0) {
       int bytect_to_write = (bytes_remaining <= max_fragment_size)
                                     ? bytes_remaining
                                     : max_fragment_size;
@@ -329,10 +330,10 @@ try_multi_part_write(
                    value_to_set->bytes+offset,
                    bytect_to_write,
                    __func__);
-      rc = ddc_write_only_with_retry(dh, request_packet_ptr);
+      psc = ddc_write_only_with_retry(dh, request_packet_ptr);
       free_ddc_packet(request_packet_ptr);
 
-      if (rc == 0) {
+      if (psc == 0) {
          if (bytect_to_write == 0)   // if just wrote fine empty segment to indicate done
             break;
          offset += bytect_to_write;
@@ -340,13 +341,14 @@ try_multi_part_write(
       }
    }
 
+   // gsc = public_to_global_status_code(psc);
    // TRCMSGTG(tg, "Returning %s", gsc_desc(rc));
-   DBGTRC(force_debug, TRACE_GROUP, "Returning %s", gsc_desc(rc));
-   return rc;
+   DBGTRC(force_debug, TRACE_GROUP, "Returning %s", psc_desc(psc));
+   return psc;
 }
 
 
-Global_Status_Code
+Public_Status_Code
 multi_part_write_with_retry(
      Display_Handle * dh,
      Byte             vcp_code,
@@ -362,7 +364,7 @@ multi_part_write_with_retry(
    // TODO: fix:
    // TRCMSGTG(tg, "Starting. pdisp = %s", display_ref_short_name(pdisp, buf, 100) );
 
-   Global_Status_Code rc = -1;   // dummy value for first call of while loop
+   Public_Status_Code rc = -1;   // dummy value for first call of while loop
 
    int try_ctr = 0;
    bool can_retry = true;
