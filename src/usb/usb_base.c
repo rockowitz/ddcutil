@@ -64,11 +64,14 @@ static Trace_Group TRACE_GROUP = TRC_USB;
  *   emit_error_msg   if true, output message if error
  *
  * Returns:
- *   file descriptor ( > 0) if success
+ *   file descriptor ( >= 0) if success
  *   -errno if failure
  *
  */
-int usb_open_hiddev_device(char * hiddev_devname, Byte calloptions) {
+int usb_open_hiddev_device(
+      char *       hiddev_devname,
+      Call_Options calloptions)
+{
    bool debug = false;
    DBGMSF(debug, "hiddev_devname=%s, calloptions=0x%02x (%s)",
                  hiddev_devname, calloptions, interpret_call_options(calloptions));
@@ -91,22 +94,23 @@ int usb_open_hiddev_device(char * hiddev_devname, Byte calloptions) {
 
       if (calloptions & CALLOPT_ERR_MSG)
          f0printf(FERR, "Open failed for %s: errno=%s\n", hiddev_devname, linux_errno_desc(errsv));
-      file = -errno;
+      file = -errsv;
    }
    DBGMSF(debug, "open() finished, file=%d", file);
 
-   if (file > 0)
+   if (file >= 0)
    {
       // Solves problem of ddc detect not getting edid unless ddcutil env called first
       errsv = errno;
       int rc = ioctl(file, HIDIOCINITREPORT);
-      if (rc != 0) {
+      if (rc < 0) {
+         errsv = errno;
          // call should never fail.  always wrote an error message
          REPORT_IOCTL_ERROR("HIDIOCGREPORT", rc);
          close(file);
          if (calloptions & CALLOPT_ERR_ABORT)
             DDC_ABORT(errsv);
-         file = rc;
+         file = -errsv;
       }
    }
    DBGMSF(debug, "Returning file descriptor: %d", file);
@@ -126,7 +130,12 @@ int usb_open_hiddev_device(char * hiddev_devname, Byte calloptions) {
  *    0 if success
  *    -errno if close fails and exit on failure was not specified
  */
-Base_Status_Errno usb_close_device(int fd, char * device_fn, Byte calloptions) {
+Base_Status_Errno
+usb_close_device(
+      int           fd,
+      char *        device_fn,
+      Call_Options  calloptions)
+{
    bool debug = false;
    DBGMSF(debug, "Starting. fd=%d, device_fn=%s, calloptions=0x%02x", fd, device_fn, calloptions);
 
@@ -200,6 +209,8 @@ int hiddev_get_report_info(int fd, struct hiddev_report_info * rinfo, Byte callo
 
       if (calloptions & CALLOPT_ERR_ABORT)
          DDC_ABORT(errsv);
+
+      rc = -errsv;
   }
 
   return rc;
@@ -238,6 +249,7 @@ int hiddev_get_usage_code(int fd, struct hiddev_usage_ref * uref, Byte calloptio
 
       if (calloptions & CALLOPT_ERR_ABORT)
          DDC_ABORT(errsv);
+      rc = -errsv;
    }
 
    return rc;
@@ -253,6 +265,7 @@ int hiddev_get_usage_value(int fd, struct hiddev_usage_ref * uref, Byte callopti
 
       if (calloptions & CALLOPT_ERR_ABORT)
          DDC_ABORT(errsv);
+      rc = -errsv;
    }
 
    return rc;
@@ -268,6 +281,7 @@ int hiddev_get_report(int fd, struct hiddev_report_info * rinfo, Byte calloption
 
       if (calloptions & CALLOPT_ERR_ABORT)
          DDC_ABORT(errsv);
+      rc = -errsv;
    }
 
    return rc;
