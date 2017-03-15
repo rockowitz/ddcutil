@@ -334,47 +334,49 @@ Global_Status_Code detect_ddc_addrs_by_fd(int fd, Byte * presult) {
 
    Byte    readbuf;  //  1 byte buffer
    Byte    writebuf = {0x00};
-   int base_rc = 0;
-   Global_Status_Code gsc = 0;
-
+   Base_Status_Errno_DDC base_rc = 0;
+   // Global_Status_Code gsc = 0;
 
    base_rc = i2c_set_addr(fd, 0x30, CALLOPT_ERR_MSG);   // CALLOPT_ERR_MSG temporary
    if (base_rc < 0) {
-      gsc = modulate_rc(base_rc, RR_ERRNO);
+      // gsc = modulate_rc(base_rc, RR_ERRNO);
       goto bye;
    }
-   gsc = invoke_i2c_writer(fd, 1, &writebuf);
+   base_rc = invoke_i2c_writer(fd, 1, &writebuf);
    // DBGMSG("invoke_i2c_writer() returned %s", gsc_desc(gsc));
-   if (gsc >= 0)
+   if (base_rc == 0)
       result |= I2C_BUS_ADDR_0X30;
-
 
    base_rc = i2c_set_addr(fd, 0x50, CALLOPT_ERR_MSG);   // CALLOPT_ERR_MSG temporary
    if (base_rc < 0) {
-      gsc = modulate_rc(base_rc, RR_ERRNO);
+      // gsc = modulate_rc(base_rc, RR_ERRNO);
       goto bye;
    }
-   gsc = invoke_i2c_reader(fd, 1, &readbuf);
-   if (gsc >= 0)
+   base_rc = invoke_i2c_reader(fd, 1, &readbuf);
+   if (base_rc == 0)
       result |= I2C_BUS_ADDR_0X50;
 
    base_rc = i2c_set_addr(fd, 0x37, CALLOPT_ERR_MSG);   // CALLOPT_ERR_MSG temporary
    if (base_rc < 0) {
-      gsc = modulate_rc(base_rc,RR_ERRNO);
+      // gsc = modulate_rc(base_rc,RR_ERRNO);
       goto bye;
    }
-   gsc = invoke_i2c_reader(fd, 1, &readbuf);
+   base_rc = invoke_i2c_reader(fd, 1, &readbuf);
    // DBGMSG("call_read() returned %d", rc);
    // 11/2015: DDCRC_READ_ALL_ZERO currently set only in ddc_packet_io.c:
-   if (gsc >= 0 || base_rc == DDCRC_READ_ALL_ZERO)
+   if (base_rc == 0 || base_rc == DDCRC_READ_ALL_ZERO)
       result |= I2C_BUS_ADDR_0X37;
-   gsc = 0;
+   base_rc = 0;
+   // gsc = 0;
 
 bye:
-   if (gsc != 0)
+   // if (gsc != 0)
+   if (base_rc != 0)
       result = 0x00;
 
    *presult = result;
+   Global_Status_Code gsc = modulate_base_errno_ddc_to_global(base_rc);
+
    DBGMSF(debug, "Done.  Returning gsc=%d, *presult = 0x%02x", *presult);
    assert(gsc <= 0);
    return gsc;

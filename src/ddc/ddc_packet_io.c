@@ -324,7 +324,7 @@ int ddc_get_max_write_read_exchange_tries() {
 
 
 typedef
-Global_Status_Code (*Write_Read_Raw_Function)(
+Public_Status_Code (*Write_Read_Raw_Function)(
          Display_Handle * dh,
          DDC_Packet *     request_packet_ptr,
          int              max_read_bytes,
@@ -353,7 +353,7 @@ Global_Status_Code (*Write_Read_Raw_Function)(
  *   modulated(-errno) if error in write
  *   DDCRC_READ_ALL_ZERO
  */
-Global_Status_Code ddc_i2c_write_read_raw(
+Public_Status_Code ddc_i2c_write_read_raw(
          Display_Handle * dh,
          DDC_Packet *     request_packet_ptr,
          int              max_read_bytes,
@@ -376,7 +376,7 @@ Global_Status_Code ddc_i2c_write_read_raw(
    bool single_byte_reads = false;   // doesn't work
 #endif
 
-   Global_Status_Code rc =
+   Base_Status_Errno_DDC rc =
          invoke_i2c_writer(
                            dh->fh,
                            get_packet_len(request_packet_ptr)-1,
@@ -406,8 +406,10 @@ Global_Status_Code ddc_i2c_write_read_raw(
       COUNT_STATUS_CODE(rc);
    }
 
+   // Global_Status_Code gsc = modulate_base_errno_ddc_to_global(rc);
    // TRCMSGTG(tg, "Done. gsc=%s", gsc_desc(rc));
-   DBGTRC(debug, TRACE_GROUP, "Done. gsc=%s", gsc_desc(rc));
+   // DBGTRC(debug, TRACE_GROUP, "Done. gsc=%s", gsc_desc(rc));
+   // return gsc;
    return rc;
 }
 
@@ -431,7 +433,7 @@ Global_Status_Code ddc_i2c_write_read_raw(
  *   additional information.  Never seen.  How to handle?
  */
 
-Global_Status_Code ddc_adl_write_read_raw(
+Public_Status_Code ddc_adl_write_read_raw(
       Display_Handle * dh,
       DDC_Packet *     request_packet_ptr,
       int              max_read_bytes,
@@ -449,55 +451,55 @@ Global_Status_Code ddc_adl_write_read_raw(
           display_handle_repr(dh));
    ASSERT_DISPLAY_IO_MODE(dh, DDC_IO_ADL);
 
-   Global_Status_Code gsc = adlshim_ddc_write_only(
+   Public_Status_Code psc = adlshim_ddc_write_only(
                                dh,
                                get_packet_start(request_packet_ptr),   // n. no adjustment, unlike i2c version
                                get_packet_len(request_packet_ptr)
                               );
-   if (gsc < 0) {
+   if (psc < 0) {
       // TRCMSGTF(tf, "adl_ddc_write_only() returned gsc=%d\n", gsc);
-      DBGTRC(debug, TRACE_GROUP, "adl_ddc_write_only() returned gsc=%d\n", gsc);
+      DBGTRC(debug, TRACE_GROUP, "adl_ddc_write_only() returned gsc=%d\n", psc);
    }
    else {
       call_tuned_sleep_adl(SE_WRITE_TO_READ);
-      gsc = adlshim_ddc_read_only(
+      psc = adlshim_ddc_read_only(
             dh,
             readbuf,
             pbytes_received);
       // note_io_event(IE_READ_AFTER_WRITE, __func__);
-      if (gsc < 0) {
+      if (psc < 0) {
          // TRCMSGTF(tf, "adl_ddc_read_only() returned adlrc=%d\n", gsc);
-         DBGTRC(debug, TRACE_GROUP, "adl_ddc_read_only() returned adlrc=%d\n", gsc);
+         DBGTRC(debug, TRACE_GROUP, "adl_ddc_read_only() returned %d\n", psc);
       }
       else {
          if ( all_zero(readbuf+1, max_read_bytes-1)) {
-                 gsc = DDCRC_READ_ALL_ZERO;
+                 psc = DDCRC_READ_ALL_ZERO;
                  DBGTRC(debug, TRACE_GROUP, "All zero response.");
                  DDCMSG("All zero response.");
-                 COUNT_STATUS_CODE(gsc);
+                 COUNT_STATUS_CODE(psc);
          }
          else if (memcmp(get_packet_start(request_packet_ptr), readbuf, get_packet_len(request_packet_ptr)) == 0) {
             // DBGMSG("Bytes read same as bytes written." );
             // is this a DDC error or a programming bug?
             DDCMSG("Bytes read same as bytes written.", __func__ );
-            gsc = DDCRC_READ_EQUALS_WRITE;
-            COUNT_STATUS_CODE(gsc);
+            psc = DDCRC_READ_EQUALS_WRITE;
+            COUNT_STATUS_CODE(psc);
          }
          else {
-            gsc = 0;
+            psc = 0;
          }
       }
    }
 
-   if (gsc < 0)
-      log_status_code(gsc, __func__);
+   if (psc < 0)
+      log_status_code(psc, __func__);
    // TRCMSGTF(tf, "Done. rc=%s\n", gsc_desc(gsc));
-   DBGTRC(debug, TRACE_GROUP, "Done. rc=%s\n", gsc_desc(gsc));
-   return gsc;
+   DBGTRC(debug, TRACE_GROUP, "Done. rc=%s\n", psc_desc(psc));
+   return psc;
 }
 
 
-Global_Status_Code ddc_write_read_raw(
+Public_Status_Code ddc_write_read_raw(
       Display_Handle * dh,
       DDC_Packet *     request_packet_ptr,
       int              max_read_bytes,
@@ -508,7 +510,7 @@ Global_Status_Code ddc_write_read_raw(
    bool debug = false;
    DBGTRC(debug, TRACE_GROUP, "Starting. dh=%s, readbuf=%p",
                               display_handle_repr(dh), readbuf);
-   Global_Status_Code rc;
+   Public_Status_Code rc;
 
    assert(dh->io_mode == DDC_IO_DEVI2C || dh->io_mode == DDC_IO_ADL);
    if (dh->io_mode == DDC_IO_DEVI2C) {
@@ -530,7 +532,7 @@ Global_Status_Code ddc_write_read_raw(
        );
    }
 
-   DBGMSF(debug, "Done, returning: %s", gsc_desc(rc));
+   DBGTRC(debug, TRACE_GROUP, "Done, returning: %s", psc_desc(rc));
    return rc;
 }
 
@@ -555,7 +557,7 @@ Global_Status_Code ddc_write_read_raw(
  *
  *   Issue: positive ADL codes, need to handle?
  */
-Global_Status_Code ddc_write_read(
+Public_Status_Code ddc_write_read(
       Display_Handle * dh,
       DDC_Packet *  request_packet_ptr,
       int           max_read_bytes,
@@ -564,15 +566,12 @@ Global_Status_Code ddc_write_read(
       DDC_Packet ** response_packet_ptr_loc
      )
 {
-   bool debug = false;  // override
-   // bool tf = IS_TRACING();
-   // if (debug) tf = 0xff;
-   // TRCMSGTF(tf, "Starting. io dh=%s", display_handle_repr(dh) );
+   bool debug = true;
    DBGTRC(debug, TRACE_GROUP, "Starting. io dh=%s", display_handle_repr(dh) );
 
    Byte * readbuf = calloc(1, max_read_bytes);
    int    bytes_received = max_read_bytes;
-   Global_Status_Code    rc;
+   Public_Status_Code    rc;
    *response_packet_ptr_loc = NULL;
 
    rc =  ddc_write_read_raw(
@@ -586,7 +585,7 @@ Global_Status_Code ddc_write_read(
    if (rc >= 0) {
        // readbuf[0] = 0x6e;
        // hex_dump(readbuf, bytes_received+1);
-       rc = create_ddc_typed_response_packet(
+       rc = create_ddc_typed_response_packet(   // returns Global_Status_DDC
               readbuf,
               bytes_received,
               expected_response_type,
@@ -612,7 +611,7 @@ Global_Status_Code ddc_write_read(
    //    COUNT_STATUS_CODE(rc);
    // }
    // TRCMSGTF(tf, "Done. rc=%d: %s\n", rc, gsc_desc(rc) );
-   DBGTRC(debug, TRACE_GROUP, "Done. rc=%d: %s\n", rc, gsc_desc(rc) );
+   DBGTRC(debug, TRACE_GROUP, "Done. rc=%s\n", psc_desc(rc) );
    // if (rc == 0 && tf)
    if (rc == 0 && (IS_TRACING() || debug) )
       dump_packet(*response_packet_ptr_loc);
@@ -656,20 +655,20 @@ Global_Status_Code ddc_write_read_with_retry(
    DBGTRC(debug, TRACE_GROUP, "Starting. dh=%s", display_handle_repr(dh)  );
    assert(dh->io_mode != USB_IO);
 
-   Global_Status_Code  gsc;
+   Public_Status_Code  psc;
    int  tryctr;
    bool retryable;
    int  ddcrc_read_all_zero_ct = 0;
 
-   for (tryctr=0, gsc=-999, retryable=true;
-        tryctr < max_write_read_exchange_tries && gsc < 0 && retryable;
+   for (tryctr=0, psc=-999, retryable=true;
+        tryctr < max_write_read_exchange_tries && psc < 0 && retryable;
         tryctr++)
    {
       DBGMSF(debug,
            "Start of try loop, tryctr=%d, max_write_read_echange_tries=%d, rc=%d, retryable=%d",
-           tryctr, max_write_read_exchange_tries, gsc, retryable );
+           tryctr, max_write_read_exchange_tries, psc, retryable );
 
-      gsc = ddc_write_read(
+      psc = ddc_write_read(
                 dh,
                 request_packet_ptr,
                 max_read_bytes,
@@ -677,21 +676,21 @@ Global_Status_Code ddc_write_read_with_retry(
                 expected_subtype,
                 response_packet_ptr_loc);
 
-      if (gsc < 0) {     // n. ADL status codes have been modulated
-         DBGMSF(debug, "perform_ddc_write_read() returned %d", gsc );
+      if (psc < 0) {     // n. ADL status codes have been modulated
+         DBGMSF(debug, "perform_ddc_write_read() returned %d", psc );
          if (dh->io_mode == DDC_IO_DEVI2C) {
-            if (gsc == DDCRC_NULL_RESPONSE)
+            if (psc == DDCRC_NULL_RESPONSE)
                retryable = false;
             // when is DDCRC_READ_ALL_ZERO actually an error vs the response of the monitor instead of NULL response?
             // On Dell monitors (P2411, U3011) all zero response occurs on unsupported Table features
             // But also seen as a bad response
-            else if ( gsc == DDCRC_READ_ALL_ZERO)
+            else if ( psc == DDCRC_READ_ALL_ZERO)
                retryable = (all_zero_response_ok) ? false : true;
 
-            else if (gsc == modulate_rc(-EIO, RR_ERRNO))
+            else if (psc == modulate_rc(-EIO, RR_ERRNO))
                 retryable = true;
 
-            else if (gsc == modulate_rc(-EBADF, RR_ERRNO))
+            else if (psc == modulate_rc(-EBADF, RR_ERRNO))
                retryable = false;
 
             else
@@ -699,32 +698,33 @@ Global_Status_Code ddc_write_read_with_retry(
          }
          else {   // DDC_IO_ADL
             // TODO more detailed tests
-            if (gsc == DDCRC_NULL_RESPONSE)
+            if (psc == DDCRC_NULL_RESPONSE)
                retryable = false;
-            else if (gsc == DDCRC_READ_ALL_ZERO)
+            else if (psc == DDCRC_READ_ALL_ZERO)
                retryable = true;
             else
                retryable = false;
          }
-         if (gsc == DDCRC_READ_ALL_ZERO)
+         if (psc == DDCRC_READ_ALL_ZERO)
             ddcrc_read_all_zero_ct++;
       }    // rc < 0
    }
    // n. rc is now the value from the last pass through the loop
    // set it to a DDC status code indicating max tries exceeded
-   if ( gsc < 0 && retryable ) {
-      gsc = DDCRC_RETRIES;
+   if ( psc < 0 && retryable ) {
+      psc = DDCRC_RETRIES;
       if (ddcrc_read_all_zero_ct == max_write_read_exchange_tries) {
-         gsc = DDCRC_ALL_TRIES_ZERO;
+         psc = DDCRC_ALL_TRIES_ZERO;
          // printf("(%s) All tries zero ddcrc_read_all_zero_ct=%d, max_write_read_exchange_tries=%d, tryctr=%d\n",
          //        __func__, ddcrc_read_all_zero_ct, max_write_read_exchange_tries, tryctr);
       }
-      COUNT_STATUS_CODE(gsc);
+      COUNT_STATUS_CODE(psc);
    }
-   try_data_record_tries(write_read_stats_rec, gsc, tryctr);
+   try_data_record_tries(write_read_stats_rec, psc, tryctr);
    // TRCMSGTF(tf, "Done. rc=%s\n", gsc_desc(gsc));
-   DBGTRC(debug, TRACE_GROUP, "Done. gsc=%s\n", gsc_desc(gsc));
-   return gsc;
+   Global_Status_Code gsc2 = modulate_base_errno_ddc_to_global(psc);
+   DBGTRC(debug, TRACE_GROUP, "Done. gsc=%s\n", gsc_desc(gsc2));
+   return psc;
 }
 
 
@@ -749,14 +749,17 @@ Global_Status_Code ddc_i2c_write_only(
    // TRCMSGTF(tf, "Starting.");
    DBGTRC(debug, TRACE_GROUP, "Starting.");
 
-   Global_Status_Code rc = invoke_i2c_writer(fh,
-                              get_packet_len(request_packet_ptr)-1,
-                              get_packet_start(request_packet_ptr)+1 );
+   Base_Status_Errno_DDC rc =
+         invoke_i2c_writer(fh,
+                           get_packet_len(request_packet_ptr)-1,
+                           get_packet_start(request_packet_ptr)+1 );
    if (rc < 0)
       log_status_code(rc, __func__);
    call_tuned_sleep_i2c(SE_POST_WRITE);
    // TRCMSGTF(tf, "Done. rc=%d\n", rc);
-   DBGTRC(debug, TRACE_GROUP, "Done. rc=%d\n", rc);
+   // Global_Status_Code gsc = modulate_base_errno_ddc_to_global(rc);
+   // DBGTRC(debug, TRACE_GROUP, "Done. gsc=%d\n", gsc);
+   // return gsc;
    return rc;
 }
 
@@ -771,14 +774,14 @@ Global_Status_Code ddc_i2c_write_only(
  *   0 if success
  *   < 0 if error
  */
-Global_Status_Code ddc_write_only( Display_Handle * dh, DDC_Packet *   request_packet_ptr) {
+Public_Status_Code ddc_write_only( Display_Handle * dh, DDC_Packet *   request_packet_ptr) {
    bool debug = false;
    // bool tf = IS_TRACING();
    // tf = true;
    // TRCMSGTF(tf, "Starting.");
    DBGTRC(debug, TRACE_GROUP, "Starting.");
 
-   Global_Status_Code rc = 0;
+   Public_Status_Code rc = 0;
    assert(dh->io_mode != USB_IO);
    if (dh->io_mode == DDC_IO_DEVI2C) {
       rc = ddc_i2c_write_only(dh->fh, request_packet_ptr);
@@ -822,7 +825,7 @@ ddc_write_only_with_retry( Display_Handle * dh, DDC_Packet *   request_packet_pt
 
    assert(dh->io_mode != USB_IO);
 
-   Global_Status_Code rc;
+   Public_Status_Code rc;
    int  tryctr;
    bool retryable;
 
@@ -858,6 +861,8 @@ ddc_write_only_with_retry( Display_Handle * dh, DDC_Packet *   request_packet_pt
 
    // TRCMSGTF(tf, "Done. rc=%d", rc);
    DBGTRC(debug, TRACE_GROUP, "Done. rc=%d", rc);
-   return rc;
+   Global_Status_Code gsc = public_to_global_status_code(rc);
+   DBGTRC(debug, TRACE_GROUP, "Done. rc=%s", gsc_desc(gsc));
+   return gsc;
 }
 

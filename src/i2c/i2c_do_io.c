@@ -74,7 +74,7 @@ void i2c_set_io_strategy(I2C_IO_Strategy_Id strategy_id) {
  *    bytes_to_write  pointer to bytes to be written
  *    sleep_millisec  delay after writing to bus
  */
-Global_Status_Code invoke_i2c_writer(
+Base_Status_Errno_DDC invoke_i2c_writer(
       int    fh,
       int    bytect,
       Byte * bytes_to_write)
@@ -95,10 +95,11 @@ Global_Status_Code invoke_i2c_writer(
       DBGMSG("writer() function returned %d", rc);
    assert (rc <= 0);
 
-   Global_Status_Code gsc = modulate_base_errno_ddc_to_global(rc);
-   if (debug)
-      DBGMSG("Returning gsc=%s", gsc_desc(gsc));
-   return gsc;
+   // Global_Status_Code gsc = modulate_base_errno_ddc_to_global(rc);
+   // if (debug)
+   //    DBGMSG("Returning gsc=%s", gsc_desc(gsc));
+   // return gsc;
+   return rc;
 }
 
 
@@ -110,7 +111,7 @@ Global_Status_Code invoke_i2c_writer(
  *    bytect          number of bytes to read
  *    bytes_to_write  location where bytes will be read to
  */
-Global_Status_Code invoke_i2c_reader(
+Base_Status_Errno_DDC invoke_i2c_reader(
        int        fh,
        int        bytect,
        Byte *     readbuf)
@@ -126,9 +127,10 @@ Global_Status_Code invoke_i2c_reader(
      DBGMSF(debug, "reader() function returned %d", rc);
      assert (rc <= 0);
 
-     Global_Status_Code gsc = modulate_base_errno_ddc_to_global(rc);
-     DBGMSF(debug, "Returning gsc=%s", gsc_desc(gsc));
-     return gsc;
+     // Global_Status_Code gsc = modulate_base_errno_ddc_to_global(rc);
+     // DBGMSF(debug, "Returning gsc=%s", gsc_desc(gsc));
+     // return gsc;
+     return rc;
 }
 
 #ifdef TEST_THAT_DIDNT_WORK

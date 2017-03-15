@@ -55,7 +55,7 @@ void ddc_report_write_only_stats();
 void ddc_reset_write_read_stats();
 void ddc_report_write_read_stats();
 
-Global_Status_Code ddc_write_only(
+Public_Status_Code ddc_write_only(
       Display_Handle * dh,
       DDC_Packet *     request_packet_ptr);
 
@@ -63,7 +63,7 @@ Global_Status_Code ddc_write_only_with_retry(
       Display_Handle * dh,
       DDC_Packet *     request_packet_ptr);
 
-Global_Status_Code ddc_write_read(
+Public_Status_Code ddc_write_read(
       Display_Handle * dh,
       DDC_Packet *     request_packet_ptr,
       int              max_read_bytes,
