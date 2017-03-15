@@ -47,9 +47,13 @@ void init_execution_stats();
 
 // IO Event Tracking
 
+/** IO Event type.
+ * Statistics for each event type are recorded separately.
+ */
 typedef enum {IE_WRITE, IE_READ, IE_WRITE_READ, IE_OPEN, IE_CLOSE, IE_OTHER} IO_Event_Type;
 
 const char * io_event_name(IO_Event_Type event_type);
+
 
 void log_io_call(
         const IO_Event_Type  event_type,

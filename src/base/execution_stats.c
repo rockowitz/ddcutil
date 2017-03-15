@@ -33,7 +33,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-/** \cond */
+/** \endcond */
 
 #include "util/glib_util.h"
 #include "util/report_util.h"
@@ -58,12 +58,20 @@ typedef struct {
 } IO_Event_Type_Stats;
 
 
+
+// struct that accumulates status code occurrence statistics
+// The design allows for multiple Status_Code_Counts instances
+// used for different purposes (e.g. derived status codes),
+// hence the name field.
+// But currently there is only 1 instance.
+
 #define STATUS_CODE_COUNTS_MARKER "SCCT"
 typedef struct {
    char marker[4];
-   GHashTable * error_counts_hash;
-   int total_status_counts;
-   char * name;
+   GHashTable * error_counts_hash;  // hash table whose key is a status code, and whose
+                                    // value is the number of occurrences of that status code
+   int          total_status_counts;
+   char *       name;
 } Status_Code_Counts;
 
 
@@ -91,13 +99,17 @@ IO_Event_Type_Stats io_event_stats[] = {
 };
 #define IO_EVENT_TYPE_CT (sizeof(io_event_stats)/sizeof(IO_Event_Type_Stats))
 
-
+/** Returns type symbolic name of an even type.
+ *
+ * @param event_type
+ * @return symbolic name
+ */
 const char * io_event_name(IO_Event_Type event_type) {
    // return io_event_names[event_type];
    return io_event_stats[event_type].name;
 }
 
-
+// unused
 int max_event_name_length() {
    int result = 0;
    int ndx = 0;
@@ -110,7 +122,7 @@ int max_event_name_length() {
 }
 
 
-int total_io_event_count() {
+static int total_io_event_count() {
    int total = 0;
    int ndx = 0;
    for (;ndx < IO_EVENT_TYPE_CT; ndx++)
@@ -118,7 +130,7 @@ int total_io_event_count() {
    return total;
 }
 
-
+// unused
 long total_io_event_nanosec() {
    long total = 0;
    int ndx = 0;
@@ -134,7 +146,7 @@ long normalize_timestamp(long timestamp) {
 }
 
 
-/* Called immediately after an I2C IO call, this function updates
+/** Called immediately after an I2C IO call, this function updates
  * two sets of data:
  *
  * 1) Updates the total number of calls and elapsed time for
@@ -144,14 +156,10 @@ long normalize_timestamp(long timestamp) {
  * most recent I2C call.  This information is used to determine
  * the required time for the next sleep call.
  *
- * Arguments:
- *    event_type
- *    location          function name
- *    start_time_nanos
- *    end_time_nanos
- *
- * Returns:
- *    nothing
+ *  @param  event_type        e.g. IE_WRITE
+ *  @param  location          function name
+ *  @param  start_time_nanos  starting time of the event in nanoseconds
+ *  @param  end_time_nanos    ending time of the event in nanoseconds
  */
 void log_io_call(
         const IO_Event_Type  event_type,
@@ -172,6 +180,10 @@ void log_io_call(
 }
 
 
+/** Reports the accumulated execution statistics
+ *
+ * @param depth logical indentation depth
+ */
 void report_io_call_stats(int depth) {
    int d1 = depth+1;
    rpt_title("Call Stats:", depth);
@@ -216,6 +228,7 @@ void report_io_call_stats(int depth) {
 //
 // BUT: status codes are not noted until they are modulated to Global_Status_Code
 
+static
 Status_Code_Counts * new_status_code_counts(char * name) {
    Status_Code_Counts * pcounts = calloc(1,sizeof(Status_Code_Counts));
    memcpy(pcounts->marker, STATUS_CODE_COUNTS_MARKER, 4);
@@ -227,6 +240,7 @@ Status_Code_Counts * new_status_code_counts(char * name) {
 }
 
 
+static
 int log_any_status_code(Status_Code_Counts * pcounts, int rc, const char * caller_name) {
    bool debug = false;
    DBGMSF(debug, "caller=%s, rc=%d", caller_name, rc);
@@ -251,6 +265,11 @@ int log_any_status_code(Status_Code_Counts * pcounts, int rc, const char * calle
 }
 
 
+/** Log a status code occurrence
+ *
+ * @param rc           status code
+ * @param caller_name  function logging the event
+ */
 int log_status_code(int rc, const char * caller_name) {
    Status_Code_Counts * pcounts = primary_error_code_counts;
    // if ( ddcrc_is_derived_status_code(rc) )
@@ -261,6 +280,7 @@ int log_status_code(int rc, const char * caller_name) {
 
 
 // Used by qsort in show_specific_status_counts()
+static
 int compare( const void* a, const void* b)
 {
      int int_a = * ( (int*) (a) );
@@ -272,6 +292,7 @@ int compare( const void* a, const void* b)
 }
 
 
+static
 void show_specific_status_counts(Status_Code_Counts * pcounts) {
    bool debug = false;
    DBGMSF(debug, "Starting");
@@ -339,13 +360,15 @@ void show_specific_status_counts(Status_Code_Counts * pcounts) {
    DBGMSF(debug, "Done");
 }
 
-
+/** Master function to display status counts
+ */
 void show_all_status_counts() {
    show_specific_status_counts(primary_error_code_counts);
    // show_specific_status_counts(secondary_status_code_counts);    // not used
 }
 
 
+static
 int get_true_io_error_count(Status_Code_Counts * pcounts) {
    assert(pcounts->error_counts_hash);
      unsigned int keyct;
@@ -397,6 +420,10 @@ static int sleep_strategy = 0;
 
 // TODO: create table of sleep strategy number, description
 
+
+/** Rudimentary mechanism for changing the sleep strategy.
+ *
+ */
 bool set_sleep_strategy(int strategy) {
    if (strategy == -1)    // if unset
       strategy = 0;       // use default strategy
@@ -408,6 +435,8 @@ bool set_sleep_strategy(int strategy) {
    return result;
 }
 
+/** Gets the current sleep strategy number
+ */
 int get_sleep_strategy() {
    return sleep_strategy;
 }
@@ -431,21 +460,26 @@ char * sleep_strategy_desc(int sleep_strategy) {
 }
 
 
-// Convenience functions
-void call_tuned_sleep_i2c(Sleep_Event_Type event_type) {
-   call_tuned_sleep(DDC_IO_DEVI2C, event_type);
-}
-void call_tuned_sleep_adl(Sleep_Event_Type event_type) {
-   call_tuned_sleep(DDC_IO_ADL, event_type);
-}
-void call_tuned_sleep_dh(Display_Handle* dh, Sleep_Event_Type event_type) {
-   call_tuned_sleep(dh->io_mode, event_type);
-}
 
 
-// TODO: Extend to take account of actual time since return from
-// last system call, previous error rate, etc.
-
+/** Sleep for a period required by the DDC protocol.
+ *
+ *  This function allows for tuning the actual sleep time.
+ *
+ *  This function does 3 things:
+ *  1.  Determine the sleep period based on the communication
+ *      mechanism, call type, sleep strategy in effect,
+ *      and potentially other information.
+ *  2. Record the sleep event.
+ *  3. Sleep for period determined.
+ *
+ * @param io_mode     communication mechanism
+ * @param event_type  reason for sleep
+ *
+ * @todo
+ * Extend to take account of actual time since return from
+ * last system call, previous error rate, etc.
+ */
 void call_tuned_sleep(DDCA_IO_Mode io_mode, Sleep_Event_Type event_type) {
    int sleep_time_millis = 0;    // should be a default
    switch(io_mode) {
@@ -523,16 +557,53 @@ void call_tuned_sleep(DDCA_IO_Mode io_mode, Sleep_Event_Type event_type) {
 }
 
 
+// Convenience functions
+
+/** Convenience function that invokes call_tuned_sleep() for
+ *  /dev/i2c devices.
+ *
+ *  @param event_type sleep event type
+ */
+void call_tuned_sleep_i2c(Sleep_Event_Type event_type) {
+   call_tuned_sleep(DDC_IO_DEVI2C, event_type);
+}
+
+
+/** Convenience function that invokes call_tuned_sleep() for
+ *  ADL devices.
+ *
+ *  @param event_type sleep event type
+ */
+void call_tuned_sleep_adl(Sleep_Event_Type event_type) {
+   call_tuned_sleep(DDC_IO_ADL, event_type);
+}
+
+/** Convenience function that determines the device type from the
+ *  #Display_Handle before invoking all_tuned_sleep().
+ *  @param dh         display handle of open device
+ *  @param event_type sleep event type
+ */
+void call_tuned_sleep_dh(Display_Handle* dh, Sleep_Event_Type event_type) {
+   call_tuned_sleep(dh->io_mode, event_type);
+}
+
+
+
+
+/** Reports sleep strategy statistics.
+ *
+ * @param depth logical indentation depth
+ */
 void report_sleep_strategy_stats(int depth) {
-   // TODO: implement depth
-   printf("Sleep Strategy Stats:\n");
-   printf("   Total IO events:     %5d\n", total_io_event_count());
-   printf("   IO error count:      %5d\n", get_true_io_error_count(primary_error_code_counts));
-   printf("   Total sleep events:  %5d\n", total_sleep_event_ct);
-   puts("");
-   printf("   Sleep Event type     Count\n");
+   int d1 = depth+1;
+   rpt_title("Sleep Strategy Stats:", depth);
+   rpt_vstring(d1, "Total IO events:     %5d", total_io_event_count());
+   rpt_vstring(d1, "IO error count:      %5d", get_true_io_error_count(primary_error_code_counts));
+   rpt_vstring(d1, "Total sleep events:  %5d", total_sleep_event_ct);
+   rpt_nl();
+   rpt_title("Sleep Event type     Count", d1);
    for (int id=0; id < SLEEP_EVENT_ID_CT; id++) {
-      printf("   %-20s  %4d\n", sleep_event_names[id], sleep_event_cts_by_id[id]);
+      rpt_vstring(d1, "%-20s  %4d", sleep_event_names[id], sleep_event_cts_by_id[id]);
    }
 }
 
@@ -541,6 +612,8 @@ void report_sleep_strategy_stats(int depth) {
 // Module initialization
 //
 
+/** Initialize execution stats module
+ */
 void init_execution_stats() {
    primary_error_code_counts = new_status_code_counts(NULL);
    // secondary_status_code_counts = new_status_code_counts("Derived and Other Errors");
