@@ -4,7 +4,7 @@
  *  using alternative mechanisms.
  *
  * <copyright>
- * Copyright (C) 2014-2016 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2014-2017 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -24,6 +24,12 @@
  * </endcopyright>
  */
 
+/** \file
+ * Basic functions for writing to and reading from the I2C bus using
+ * alternative mechanisms.
+ */
+
+/** \cond */
 #include <assert.h>
 #include <errno.h>
 #include <fcntl.h>
@@ -32,6 +38,7 @@
 #include <string.h>
 #include <sys/ioctl.h>
 #include <unistd.h>
+/** \endcond */
 
 #include "util/string_util.h"
 
@@ -50,18 +57,15 @@
 // Basic functions for reading and writing to I2C bus.
 //
 
-/* Write to i2c bus using write()
+/** Writes to i2c bus using write()
  *
- * Arguments:
- *   fh      file handle
- *   bytect  number of bytes to write
- *   pbytes  pointer to bytes to write
+ * @param  fh      file handle
+ * @param  bytect  number of bytes to write
+ * @param  pbytes  pointer to bytes to write
  *
- * Returns:
- *   0 if success
- *   if error:
- *      -errno
- *      DDCRC_BAD_BYTECT
+ * @retval 0                 success
+ * @retval DDCRC_BAD_BYTECT  incorrect number of bytes written
+ * @retval -errno            negative Linux error number
  */
 Base_Status_Errno_DDC  write_writer(int fh, int bytect, Byte * pbytes) {
    bool debug = false;
@@ -84,18 +88,15 @@ Base_Status_Errno_DDC  write_writer(int fh, int bytect, Byte * pbytes) {
 }
 
 
-/* Read from I2C bus using read()
+/** Reads from I2C bus using read()
  *
- * Arguments:
- *   fh        file handle
- *   bytect
- *   readbuf
+ * @param  fh        file handle
+ * @param  bytect    number of bytes to read
+ * @param  readbuf   read bytes into this buffer
  *
- * Returns:
- *   0 if success
- *   if error:
- *      -errno
- *      DDCRC_BAD_BYTECT
+ * @retval 0                success
+ * @retval DDCRC_BAD_BYTECT incorrect number of bytes read
+ * @retval -errno           negative Linux errno value
  */
 Base_Status_Errno_DDC read_reader(int fh, int bytect, Byte * readbuf) {
    bool debug = false;
@@ -137,17 +138,14 @@ Base_Status_Errno_DDC read_reader(int fh, int bytect, Byte * readbuf) {
 #endif
 
 
-/* Write to I2C bus using ioctl I2C_RDWR
+/** Writes to I2C bus using ioctl(I2C_RDWR)
  *
- * Arguments:
- *   fh      file handle
- *   bytect  number of bytes to write
- *   pbytes  pointer to bytes to write
+ * @param  fh      file handle
+ * @param  bytect  number of bytes to write
+ * @param  pbytes  pointer to bytes to write
  *
- * Returns:
- *   0 if success
- *   if error:
- *      -errno
+ * @retval 0       success
+ * @retval <0      negative Linux errno value
  */
 Base_Status_Errno_DDC ioctl_writer(int fh, int bytect, Byte * pbytes) {
    bool debug = false;
@@ -206,17 +204,14 @@ Base_Status_Errno_DDC ioctl_writer(int fh, int bytect, Byte * pbytes) {
 }
 
 
-/* Read from I2C bus using ioctl I2C_RDWR
+/** Reads from I2C bus using ioctl(I2C_RDWR)
  *
- * Arguments:
- *   fh      file handle
- *   bytect  number of bytes to read
- *   readbuf pointer to buffer in which to return bytes read
+ * @param  fh        file handle
+ * @param  bytect    number of bytes to read
+ * @param  readbuf   read bytes into this buffer
  *
- * Returns:
- *   0 if success
- *   if error:
- *      -errno
+ * @retval 0         success
+ * @retval <0        negative Linux errno value
  */
 Base_Status_Errno_DDC ioctl_reader(int fh, int bytect, Byte * readbuf) {
    bool debug = true;

@@ -21,6 +21,11 @@
  * </endcopyright>
  */
 
+/** \file
+ *
+ */
+
+/** \cond */
 #include <assert.h>
 #include <errno.h>
 #include <fcntl.h>
@@ -30,6 +35,7 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
+/** \endcond */
 
 #include "util/debug_util.h"
 #include "util/failsim.h"
@@ -61,15 +67,13 @@ void report_businfo(Bus_Info * bus_info, int depth);
 // Basic I2C bus operations
 //
 
-/* Open an I2C bus device.
+/** Open an I2C bus device.
  *
- * Arguments:
- *   busno      bus number
- *   callopts  call option flags, controlling failure action
+ *  @param busno      bus number
+ *  @param callopts  call option flags, controlling failure action
  *
- * Returns:
- *    file descriptor if success
- *    -errno if close fails and CALLOPT_ERR_ABORT not set in callopts
+ *  @retval >=0  file descriptor
+ *  @retval -errno  negative Linux errno if open fails and CALLOPT_ERR_ABORT not set in callopts
  */
 int i2c_open_bus(int busno, Byte callopts) {
    bool debug = false;
@@ -104,16 +108,14 @@ int i2c_open_bus(int busno, Byte callopts) {
 }
 
 
-/* Closes an open I2C bus device.
+/** Closes an open I2C bus device.
  *
- * Arguments:
- *   fd        file descriptor
- *   busno     bus number (for error messages), if -1, ignore
- *   callopts  call option flags, controlling failure action
+ * @param  fd        file descriptor
+ * @param  busno     bus number (for error messages), if -1, ignore
+ * @param  callopts  call option flags, controlling failure action
  *
- * Returns:
- *    0 if success
- *    -errno if close fails and CALLOPT_ERR_ABORT not set in callopts
+ * @retval 0  success
+ * @retval <0 negative Linux errno value close*( fails and CALLOPT_ERR_ABORT not set in callopts
  */
 Base_Status_Errno i2c_close_bus(int fd, int busno, Call_Options callopts) {
    bool debug = false;
@@ -166,18 +168,16 @@ Base_Status_Errno i2c_close_bus(int fd, int busno, Call_Options callopts) {
 bool i2c_force_slave_addr_flag = false;
 
 
-/* Sets I2C slave address to be used on subsequent calls
+/** Sets I2C slave address to be used on subsequent calls
  *
- * Arguments:
- *   fd        file descriptor for open /dev/i2c-n
- *   addr      slave address
- *   callopts  call option flags, controlling failure action
- *             if CALLOPT_FORCE set, use IOCTL op I2C_SLAVE_FORCE
- *             to take control even if address is in use by another driver
+ * @param  file      file descriptor for open /dev/i2c-n
+ * @param  addr      slave address
+ * @param  callopts  call option flags, controlling failure action\n
+ *                   if CALLOPT_FORCE set, use IOCTL op I2C_SLAVE_FORCE\n
+ *                   to take control even if address is in use by another driver
  *
- * Returns:
- *    0 if success
- *    -errno if ioctl call fails and CALLOPT_ERR_ABORT not set in callopts
+ * @retval  0 if success
+ * @retval <0 negative Linux errno, if ioctl call fails and CALLOPT_ERR_ABORT not set in callopts
  */
 Base_Status_Errno i2c_set_addr(int file, int addr, Call_Options callopts) {
    bool debug = false;
@@ -256,6 +256,7 @@ retry:
  *
  * TODO: exclude reserved I2C bus addresses from check
  */
+static
 bool * detect_all_addrs_by_fd(int fd) {
    bool debug = false;
    DBGMSF(debug, "Starting. fd=%d", fd);
@@ -518,7 +519,16 @@ static bool is_function_supported(int busno, char * funcname) {
 }
 
 
-
+/** Verify that the specified I2C write and read functions are supported.
+ *
+ *  This function is used in test management.
+ *
+ *  @param  busno   I2C bus number
+ *  @param  write_func_name  write function name
+ *  @param  read_func_name   read function name
+ *
+ *  @return true/false
+ */
 bool i2c_verify_functions_supported(int busno, char * write_func_name, char * read_func_name) {
    // printf("(%s) Starting. busno=%d, write_func_name=%s, read_func_name=%s\n",
    //        __func__, busno, write_func_name, read_func_name);
@@ -536,6 +546,12 @@ bool i2c_verify_functions_supported(int busno, char * write_func_name, char * re
 }
 
 
+/** Gets the I2C functionaity flags for an open I2C bus,
+ *  specified by its file descriptor.
+ *
+ *  @param fd  file descriptor
+ *  @return functionality flags
+ */
 unsigned long i2c_get_functionality_flags_by_fd(int fd) {
    unsigned long funcs;
    int rc;
@@ -575,6 +591,11 @@ char * i2c_interpret_functionality_into_buffer(unsigned long functionality, Buff
 }
 #endif
 
+/** Returns a string representation of functionality flags.
+ *
+ * @param functionality  long int of flags
+ * @return string representation of flags
+ */
 char * i2c_interpret_functionality_flags(unsigned long functionality) {
    // HACK ALERT: There are 2 entries for bit I2C_FUNC_I2C in functionality_table,
    // one for function name ioctl_read and another for function name ioctl_write
@@ -611,6 +632,15 @@ void i2c_report_functionality_flags_old(long functionality, int maxline, int dep
 }
 #endif
 
+
+/** Reports functionality flags.
+ *
+ *  The output is multiline.
+ *
+ *  @param  functionality  flags to report
+ *  @param  maxline        maximum length of 1 line
+ *  @param  depth          logical indentation depth
+ */
 void i2c_report_functionality_flags(long functionality, int maxline, int depth) {
    char * buf0 = i2c_interpret_functionality_flags(functionality);
    // rpt_vstring(1, "Functionality:  %s", buf0->bytes);
@@ -642,29 +672,27 @@ void i2c_report_functionality_flags(long functionality, int maxline, int depth) 
 // EDID Retrieval
 //
 
-/* Gets EDID bytes of a monitor on an open I2C device.
+/** Gets EDID bytes of a monitor on an open I2C device.
  *
- * Arguments:
- *   fd        file descriptor for open /dev/i2c-n
- *   rawedid   buffer in which to return first 128 bytes of EDID
+ * @param  fd        file descriptor for open /dev/i2c-n
+ * @param  rawedid   buffer in which to return first 128 bytes of EDID
  *
- * Returns:
- *   0        success
- *   <0       error
+ * @retval  0        success
+ * @retval  <0       error
  */
-Global_Status_Code i2c_get_raw_edid_by_fd(int fd, Buffer * rawedid) {
+Public_Status_Code i2c_get_raw_edid_by_fd(int fd, Buffer * rawedid) {
    bool debug = false;
    DBGTRC(debug, TRACE_GROUP, "Getting EDID for file %d", fd);
 
    bool conservative = true;
 
    assert(rawedid->buffer_size >= 128);
-   Global_Status_Code gsc;
-   int rc;
+   // Global_Status_Code gsc;
+   Public_Status_Code rc;
 
    rc = i2c_set_addr(fd, 0x50, CALLOPT_ERR_MSG);
    if (rc < 0) {
-      gsc = modulate_rc(rc, RR_ERRNO);
+      // gsc = modulate_rc(rc, RR_ERRNO);
       goto bye;
    }
    // 10/23/15, try disabling sleep before write
@@ -675,11 +703,11 @@ Global_Status_Code i2c_get_raw_edid_by_fd(int fd, Buffer * rawedid) {
 
    int max_tries = 3;
    for (int tryctr = 0; tryctr < max_tries; tryctr++) {
-      gsc = invoke_i2c_writer(fd, 1, &byte_to_write);
-      if (gsc == 0) {
-         gsc = invoke_i2c_reader(fd, 128, rawedid->bytes);
-         assert(gsc <= 0);
-         if (gsc == 0) {
+      rc = invoke_i2c_writer(fd, 1, &byte_to_write);
+      if (rc == 0) {
+         rc = invoke_i2c_reader(fd, 128, rawedid->bytes);
+         assert(rc <= 0);
+         if (rc == 0) {
             rawedid->len = 128;
             if (debug) {
                DBGMSG("call_read returned:");
@@ -693,10 +721,10 @@ Global_Status_Code i2c_get_raw_edid_by_fd(int fd, Buffer * rawedid) {
                // e.g. nouveau driver, Quadro card, on blackrock
                DBGTRC(debug, TRACE_GROUP, "Invalid EDID checksum %d, expected 0.", checksum);
                rawedid->len = 0;
-               gsc = DDCRC_EDID;
+               rc = DDCRC_EDID;
             }
          }
-         if (gsc == 0)
+         if (rc == 0)
             break;
       }
       if (tryctr < max_tries)
@@ -704,24 +732,22 @@ Global_Status_Code i2c_get_raw_edid_by_fd(int fd, Buffer * rawedid) {
    }
 
 bye:
-   if (gsc < 0)
+   if (rc < 0)
       rawedid->len = 0;
 
-   DBGTRC(debug, TRACE_GROUP, "Returning %s.  edidbuf contents:", gsc_desc(gsc));
+   DBGTRC(debug, TRACE_GROUP, "Returning %s.  edidbuf contents:", psc_desc(rc));
    if (debug || IS_TRACING()) {
       buffer_dump(rawedid);
    }
-   return gsc;
+   return rc;
 }
 
 
-/* Returns a parsed EDID record for the monitor on an I2C bus.
+/** Returns a parsed EDID record for the monitor on an I2C bus.
  *
- * Arguments:
- *   fd          file descriptor for open /dev/i2c-n
+ *  @param fd      file descriptor for open /dev/i2c-n
  *
- * Returns:
- *   Parsed_Edid, NULL if get_raw_edid_by_fd() fails
+ * @return  Parsed_Edid, NULL if get_raw_edid_by_fd() failed
  */
 Parsed_Edid * i2c_get_parsed_edid_by_fd(int fd) {
    bool debug = false;
@@ -729,7 +755,7 @@ Parsed_Edid * i2c_get_parsed_edid_by_fd(int fd) {
    Parsed_Edid * edid = NULL;
    Buffer * rawedidbuf = buffer_new(128, NULL);
 
-   int rc = i2c_get_raw_edid_by_fd(fd, rawedidbuf);
+   Public_Status_Code rc = i2c_get_raw_edid_by_fd(fd, rawedidbuf);
    if (rc == 0) {
       edid = create_parsed_edid(rawedidbuf->bytes);
       if (debug) {
@@ -740,7 +766,7 @@ Parsed_Edid * i2c_get_parsed_edid_by_fd(int fd) {
       }
    }
    else if (rc == DDCRC_EDID) {
-      DBGTRC(debug, TRACE_GROUP, "i2c_get_raw_edid_by_fd() returned %s", gsc_desc(rc));
+      DBGTRC(debug, TRACE_GROUP, "i2c_get_raw_edid_by_fd() returned %s", psc_desc(rc));
 
    }
    buffer_free(rawedidbuf, NULL);
@@ -753,13 +779,11 @@ Parsed_Edid * i2c_get_parsed_edid_by_fd(int fd) {
 // I2C Bus Inspection
 //
 
-/* Inspects an I2C bus.
+/** Inspects an I2C bus.
  *
- * Arguments:
- *    bus_info  pointer to Bus_Info struct in which information will be set
+ *  @param  bus_info  pointer to Bus_Info struct in which information will be set
  *
- * Returns:
- *    bus_info value passed as argument
+ * @return  bus_info value passed as argument, filled in
  */
 Bus_Info * i2c_check_bus(Bus_Info * bus_info) {
    bool debug = false;
@@ -827,12 +851,11 @@ static int _busct = -1;                // number of i2c buses found, -1 if not y
 static Bus_Info * _bus_infos = NULL;
 
 
-/* Checks if an I2C bus with a given number exists.
+/** Checks if an I2C bus with a given number exists.
  *
- * Arguments:
- *    busno     bus number
+ * @param   busno     bus number
  *
- * Returns:     true/false
+ * @return  true/false
  */
 bool i2c_bus_exists(int busno) {
    bool result = false;
@@ -929,7 +952,7 @@ static void init_i2c_bus_information() {
 }
 
 
-/* Returns the number of /dev/i2c-n devices found on the system.
+/** Returns the number of /dev/i2c-n devices found on the system.
  *
  * As a side effect, data structures for storing information about
  * the devices are initialized if not already initialized.
@@ -948,6 +971,7 @@ int i2c_get_busct() {
 // Bus_Info retrieval
 //
 
+static
 Bus_Info * i2c_get_bus_info_by_index(int busndx) {
    assert(busndx >= 0);
    bool debug = false;
@@ -995,7 +1019,7 @@ void report_i2c_bus_selector(I2C_Bus_Selector * sel, int depth) {
       rpt_hex_dump(sel->edidbytes, 128, d2);
 }
 
-
+static
 void init_i2c_bus_selector(I2C_Bus_Selector* sel) {
    assert(sel);
    memset(sel, 0, sizeof(I2C_Bus_Selector));
@@ -1014,6 +1038,7 @@ void init_i2c_bus_selector(I2C_Bus_Selector* sel) {
  *
  * Returns:      true/false
  */
+static
 bool bus_info_matches_selector(Bus_Info * bus_info, I2C_Bus_Selector * sel) {
    bool debug = false;
    if (debug) {
@@ -1092,6 +1117,7 @@ bye:
  *
  * Returns:    pointer to Bus_Info instance if found, NULL if not
  */
+static
 Bus_Info * find_bus_info_by_selector(I2C_Bus_Selector * sel) {
    assert(sel);
    bool debug = false;
@@ -1120,18 +1146,16 @@ Bus_Info * find_bus_info_by_selector(I2C_Bus_Selector * sel) {
  }
 
 
-/* Retrieves bus information by I2C bus number.
+/** Retrieves bus information by I2C bus number.
  *
  * If the bus information does not already exist in the Bus_Info struct for the
  * bus, it is calculated by calling check_i2c_bus()
  *
- * Arguments:
- *    busno    bus number
- *    findopts
+ * @param   busno    bus number
+ * @param   findopts
  *
- * Returns:
- *    pointer to Bus_Info struct for the bus,
- *    NULL if busno is greater than the highest bus number
+ * @return  pointer to Bus_Info struct for the bus,\n
+ *          NULL if invalid bus number
  */
 Bus_Info * i2c_get_bus_info(int busno, Byte findopts) {
    bool debug = false;
@@ -1169,16 +1193,16 @@ Bus_Info * i2c_get_bus_info(int busno, Byte findopts) {
 }
 
 
-/* Retrieves bus information by model name and serial number
- * for the monitor.
+/** Retrieves bus information by some combination of the monitor's
+ * mfg id, model name and/or serial number.
  *
- * Arguments:
- *    model     monitor model (as listed in the EDID)
- *    sn        monitor ascii serial number (as listed in the EDID)
+ *  @param  mfg_id  3 character manufacturer id
+ *  @param  model     monitor model (as listed in the EDID)
+ *  @param  sn        monitor ascii serial number (as listed in the EDID)
+ *  @param  findopts  selector options
  *
- * Returns:
- *    pointer to Bus_Info struct for the bus,
- *    NULL if not found
+ * @return pointer to Bus_Info struct for the bus,\n
+ *         NULL if not found
  */
 Bus_Info *
 i2c_find_bus_info_by_mfg_model_sn(
@@ -1204,14 +1228,13 @@ i2c_find_bus_info_by_mfg_model_sn(
 }
 
 
-/* Retrieves bus information using the 128 byte EDID of the monitor on the bus.
+/** Retrieves bus information using the 128 byte EDID of the monitor on the bus.
  *
- * Arguments:
- *    pEdidBytes  pointer to 128 byte EDID
+ *  @param  edidbytes  pointer to 128 byte EDID
+ *  @param  findopts   selector options
  *
- * Returns:
- *    pointer to Bus_Info struct for the bus,
- *    NULL if not found
+ *  @return pointer to Bus_Info struct for the bus,
+ *          NULL if not found
  */
 Bus_Info * i2c_find_bus_info_by_edid(const Byte * edidbytes, Byte findopts) {
    bool debug = false;
@@ -1233,16 +1256,12 @@ Bus_Info * i2c_find_bus_info_by_edid(const Byte * edidbytes, Byte findopts) {
 // I2C Bus Inquiry
 //
 
-/* Checks whether an I2C bus supports DDC.
+/** Checks whether an I2C bus supports DDC.
  *
- * Issues messages if not.
+ *  @param  busno      I2C bus number
+ *  @param  callopts   standard call options, used to control error messages
  *
- * Arguments:
- *    busno      I2C bus number
- *    emit_error_msg  if true, write message if error
- *
- * Returns:
- *    true or false
+ *  @return  true or false
  */
 bool i2c_is_valid_bus(int busno, Call_Options callopts) {
    bool emit_error_msg = callopts & CALLOPT_ERR_MSG;
@@ -1284,13 +1303,12 @@ bool i2c_is_valid_bus(int busno, Call_Options callopts) {
 }
 
 
-/* Gets the parsed EDID record for the monitor on an I2C bus
+/** Gets the parsed EDID record for the monitor on an I2C bus
  * specified by its bus number.
  *
- * Arguments:
- *   busno        I2C bus number
+ * @param  busno        I2C bus number
  *
- * Returns:       Parsed_Edid record, NULL if not found
+ * @return      Parsed_Edid record, NULL if not found
  */
 Parsed_Edid * i2c_get_parsed_edid_by_busno(int busno) {
    bool debug = false;
@@ -1320,14 +1338,12 @@ typedef struct {
 #endif
 
 
-/* Gets list of I2C connected displays in the form expected by
+/** Gets list of I2C connected displays in the form expected by
  * higher levels of the program.
  *
  * Note this list may contain displays that do not support DDC.
  *
- * Arguments:   none
- *
- * Returns:     list of displays
+ * @return list of displays
  */
 Display_Info_List i2c_get_displays() {
    Display_Info_List info_list = {0,NULL};
@@ -1443,15 +1459,12 @@ void report_businfo(Bus_Info * bus_info, int depth) {
 }
 
 
-/* Reports a single active display.
+/** Reports a single active display.
  *
  * Output is written to the current report destination.
  *
- * Arguments:
- *    businfo     bus record
- *    depth       logical indentation depth
- *
- * Returns: nothing
+ * @param   businfo     bus record
+ * @param   depth       logical indentation depth
  */
 void i2c_report_active_display(Bus_Info * businfo, int depth) {
    DDCA_Output_Level output_level = get_output_level();
@@ -1487,15 +1500,12 @@ void i2c_report_active_display(Bus_Info * businfo, int depth) {
 }
 
 
-/* Reports a single active display, specified by its bus number.
+/** Reports a single active display, specified by its bus number.
  *
  * Output is written to the current report destination.
  *
- * Arguments:
- *    busno       bus number (must be valid)
- *    depth       logical indentation depth
- *
- * Returns: nothing
+ * @param busno       bus number (must be valid)
+ * @param depth       logical indentation depth
  */
 void i2c_report_active_display_by_busno(int busno, int depth) {
    Bus_Info * curinfo = i2c_get_bus_info(busno, DISPSEL_NONE);
@@ -1504,13 +1514,11 @@ void i2c_report_active_display_by_busno(int busno, int depth) {
 }
 
 
-/* Reports on a single I2C bus.
+/** Reports on a single I2C bus.
  *
- * Arguments:
- *    busno       bus number
+ *  @param   busno       bus number
  *
- * Returns:  nothing
- *
+ * @remark
  * The format of the output is determined by a call to getOutputFormat().
  */
 void i2c_report_bus(int busno) {
@@ -1530,16 +1538,15 @@ void i2c_report_bus(int busno) {
 }
 
 
-/* Reports I2C buses.
+/** Reports I2C buses.
  *
- * Arguments:
- *    report_all    if false, only reports buses with monitors
- *                  if true, reports all detected buses
- *    depth         logical indentation depth
+ * @param report_all    if false, only reports buses with monitors,\n
+ *                      if true, reports all detected buses
+ * @param depth         logical indentation depth
  *
- * Returns:
- *    count of reported buses
+ * @return count of reported buses
  *
+ * @remark
  * Used by query-sysenv.c
  */
 int i2c_report_buses(bool report_all, int depth) {

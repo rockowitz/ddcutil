@@ -33,7 +33,7 @@
 #include <glib.h>
 #include <string.h>
 #include <time.h>
-/** \cond */
+/** \endcond */
 
 #include "util/debug_util.h"
 #include "util/failsim.h"

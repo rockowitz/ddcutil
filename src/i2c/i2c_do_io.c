@@ -1,8 +1,5 @@
 /* i2c_do_io.c
  *
- * Created on: Nov 17, 2015
- *     Author: rock
- *
  * <copyright>
  * Copyright (C) 2014-2015 Sanford Rockowitz <rockowitz@minsoft.com>
  *
@@ -24,8 +21,14 @@
  * </endcopyright>
  */
 
+/** \file
+ * Allows for alternative mechanisms to read and write to the IC2 bus.
+ */
+
+/** \cond */
 #include <assert.h>
 #include <stdio.h>
+/** \endcond */
 
 #include "util/string_util.h"
 
@@ -51,8 +54,13 @@ I2C_IO_Strategy i2c_ioctl_io_strategy = {
       "ioctl_reader"
 };
 
-static I2C_IO_Strategy * i2c_io_strategy = &i2c_file_io_strategy;
 
+static I2C_IO_Strategy * i2c_io_strategy = &i2c_file_io_strategy;  // default strategy
+
+/** Sets an alternative I2C IO strategy.
+ *
+ * @param strategy_id  I2C IO strategy id
+ */
 void i2c_set_io_strategy(I2C_IO_Strategy_Id strategy_id) {
    switch (strategy_id) {
    case (I2C_IO_STRATEGY_FILEIO):
@@ -65,14 +73,12 @@ void i2c_set_io_strategy(I2C_IO_Strategy_Id strategy_id) {
 };
 
 
-/* Write to the I2C bus, using the function specified in the
+/** Writes to the I2C bus, using the function specified in the
  * currently active strategy.
  *
- * Arguments:
- *    fh              file handle for open /dev/i2c bus
- *    bytect          number of bytes to write
- *    bytes_to_write  pointer to bytes to be written
- *    sleep_millisec  delay after writing to bus
+ * @param   fh              file handle for open /dev/i2c bus
+ * @param   bytect          number of bytes to write
+ * @param   bytes_to_write  pointer to bytes to be written
  */
 Base_Status_Errno_DDC invoke_i2c_writer(
       int    fh,
@@ -103,13 +109,12 @@ Base_Status_Errno_DDC invoke_i2c_writer(
 }
 
 
-/* Read from the I2C bus, using the function specified in the
+/** Reads from the I2C bus, using the function specified in the
  * currently active strategy.
  *
- * Arguments:
- *    fh              file handle for open /dev/i2c bus
- *    bytect          number of bytes to read
- *    bytes_to_write  location where bytes will be read to
+ * @param   fh              file handle for open /dev/i2c bus
+ * @param   bytect          number of bytes to read
+ * @param   readbuf         location where bytes will be read to
  */
 Base_Status_Errno_DDC invoke_i2c_reader(
        int        fh,

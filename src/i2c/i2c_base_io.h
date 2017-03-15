@@ -4,7 +4,7 @@
  *  using various mechanisms.
  *
  * <copyright>
- * Copyright (C) 2014-2016 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2014-2017 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -24,6 +24,11 @@
  * </endcopyright>
  */
 
+/** \file
+ *  Low level functions for writing to and reading from the I2C bus,
+ *  using various mechanisms.
+ */
+
 #ifndef I2C_BASE_IO_H_
 #define I2C_BASE_IO_H_
 
@@ -32,11 +37,9 @@
 #include "base/status_code_mgt.h"
 
 
-// void init_i2c_io_stats(I2C_Call_Stats* pStats);
-
-// extern I2C_Call_Stats * timing_stats;   // product of refactoring
-
+/** Function template for I2C write function */
 typedef Base_Status_Errno_DDC (*I2C_Writer)(int fh, int bytect, Byte * bytes_to_write);
+/** Function template for I2C read function */
 typedef Base_Status_Errno_DDC (*I2C_Reader)(int fh, int bytect, Byte * readbuf);
 
 Base_Status_Errno_DDC write_writer(int fh, int bytect, Byte * pbytes);

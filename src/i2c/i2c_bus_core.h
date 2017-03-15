@@ -21,11 +21,17 @@
  * </endcopyright>
  */
 
+/** \file
+ *
+ */
+
 #ifndef I2C_BUS_CORE_H_
 #define I2C_BUS_CORE_H_
 
+/** \cond */
 #include <stdbool.h>
 #include <stdio.h>
+/** \endcond */
 
 #include "util/edid.h"
 #include "util/data_structures.h"
@@ -36,10 +42,10 @@
 #include "base/status_code_mgt.h"
 
 
-// maximum number of i2c buses this code supports
+/** \def I2C_BUS_MAX maximum number of i2c buses this code supports */
 #define I2C_BUS_MAX 32
 
-// Addresses on an I2C bus are 7 bits in size
+/** \def I2C_SLAVE_ADDR_MAX Addresses on an I2C bus are 7 bits in size */
 #define I2C_SLAVE_ADDR_MAX 128
 
 
@@ -47,7 +53,7 @@
 
 #define I2C_BUS_EXISTS        0x80
 #define I2C_BUS_ACCESSIBLE    0x40
-#define I2C_BUS_ADDR_0X50     0x20
+#define I2C_BUS_ADDR_0X50     0x20      ///< detected I2C bus address 0x50
 #define I2C_BUS_ADDR_0X37     0x10
 #define I2C_BUS_ADDR_0X30     0x08      // write-only addr to specify EDID block number
 #define I2C_BUS_PROBED        0x01      // has bus been checked?
@@ -103,7 +109,7 @@ bool i2c_verify_functions_supported(int busno, char * write_func_name, char * re
 
 // Retrieve EDID
 
-Global_Status_Code i2c_get_raw_edid_by_fd( int fd,      Buffer * rawedidbuf);
+Public_Status_Code i2c_get_raw_edid_by_fd( int fd,      Buffer * rawedidbuf);
 Parsed_Edid * i2c_get_parsed_edid_by_fd(int fd);
 Parsed_Edid * i2c_get_parsed_edid_by_busno(int busno);
 

@@ -779,6 +779,7 @@ void raw_scan_i2c_devices() {
    Buffer * buf0 = buffer_new(1000, __func__);
    int  busct = 0;
    Global_Status_Code gsc;
+   Public_Status_Code psc;
    Base_Status_Errno rc;
    bool saved_i2c_force_slave_addr_flag = i2c_force_slave_addr_flag;
 
@@ -800,9 +801,9 @@ void raw_scan_i2c_devices() {
 
          //  Base_Status_Errno rc = i2c_set_addr(fd, 0x50, CALLOPT_ERR_MSG);
          // TODO save force slave addr setting, set it for duration of call - do it outside loop
-         gsc = i2c_get_raw_edid_by_fd(fd, buf0);
-         if (gsc != 0) {
-            rpt_vstring(d2, "Unable to read EDID, gsc=%s", gsc_desc(gsc));
+         psc = i2c_get_raw_edid_by_fd(fd, buf0);
+         if (psc != 0) {
+            rpt_vstring(d2, "Unable to read EDID, psc=%s", psc_desc(psc));
          }
          else {
             rpt_vstring(d2, "Raw EDID:");

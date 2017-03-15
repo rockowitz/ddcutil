@@ -1,7 +1,7 @@
 /* i2c_do_io.h
  *
  * <copyright>
- * Copyright (C) 2014-2016 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2014-2017 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -21,6 +21,10 @@
  * </endcopyright>
  */
 
+/** \file
+ *
+ */
+
 #ifndef I2C_DO_IO_H_
 #define I2C_DO_IO_H_
 
@@ -31,16 +35,20 @@
 
 #include "i2c/i2c_base_io.h"
 
-
+/** Describes one I2C IO strategy */
 typedef struct {
-   I2C_Writer i2c_writer;
-   I2C_Reader i2c_reader;
-   char *     i2c_writer_name;
-   char *     i2c_reader_name;
+   I2C_Writer i2c_writer;          ///< writer function
+   I2C_Reader i2c_reader;          ///< read function
+   char *     i2c_writer_name;     ///< write function name
+   char *     i2c_reader_name;     ///< read function name
 } I2C_IO_Strategy;
 
 // may need to move this definition to base
-typedef enum {I2C_IO_STRATEGY_FILEIO, I2C_IO_STRATEGY_IOCTL} I2C_IO_Strategy_Id;
+/** I2C IO strategy ids */
+typedef enum {
+   I2C_IO_STRATEGY_FILEIO,    ///< use file write() and read()
+   I2C_IO_STRATEGY_IOCTL}     ///< use ioctl(I2C_RDWR)
+I2C_IO_Strategy_Id;
 
 void i2c_set_io_strategy(I2C_IO_Strategy_Id strategy_id);
 
