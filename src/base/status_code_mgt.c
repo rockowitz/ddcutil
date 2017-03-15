@@ -340,8 +340,25 @@ char * gsc_desc(Global_Status_Code status_code) {
    }
    return workbuf;
 }
-#undef GSC_WORKBUF_SIZE
 
+
+char * psc_desc(Public_Status_Code psc) {
+   Global_Status_Code gsc = public_to_global_status_code(psc);
+
+   static char workbuf[GSC_WORKBUF_SIZE];
+   // printf("(%s) status_code=%d\n", __func__, status_code);
+   Status_Code_Info * pdesc = find_global_status_code_info(gsc);
+   if (pdesc) {
+      snprintf(workbuf, GSC_WORKBUF_SIZE, "%s(%d): %s",
+               pdesc->name, psc, pdesc->description);
+   }
+   else {
+      snprintf(workbuf, GSC_WORKBUF_SIZE, "%d",
+               psc );
+   }
+   return workbuf;
+}
+#undef GSC_WORKBUF_SIZE
 
 /** Returns the symbolic name of a #Global_Status_Code
  *

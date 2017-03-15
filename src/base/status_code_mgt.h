@@ -67,14 +67,17 @@ typedef int Global_Status_Code;
 typedef int Global_Status_DDC;    // subrange of Global_Status_Code containing (always modulated) DDC return codes
 typedef int Global_Status_Errno;  // subrange of Global_Status_Code containing modulated Linux return codes
 
-typedef int Modulated_Status_ADL; // modulated ADL return codes only, same as Global_Status_ADL
+typedef int Modulated_Status_ADL; ///< modulated ADL return codes only, same as Global_Status_ADL
 
 // typedef int Rc_Raw_DDC_t;
 typedef int Base_Status_ADL;
-typedef int Base_Status_Errno;
+typedef int Base_Status_Errno;    //< negative Linux errno values, unmodulated
+
 // would make it simpler for low level I2C functions to be incorporated into sample code
-typedef int Base_Status_Errno_DDC;   // union(Base_Status_Errno, Global_Status_DDC)
-typedef int Base_Status_ADL_DDC;     // union(Base_Status_ADL, Global_Status_DDC)
+typedef int Base_Status_Errno_DDC;   ///< union(Base_Status_Errno, modulated DDC)
+
+// unused
+//typedef int Base_Status_ADL_DDC;     // union(Base_Status_ADL, Global_Status_DDC)
 
 typedef int Public_Status_Code;      // union(unmodulated Linux codes, modulated ADL codes, (always modulaed) DDC return codes
 
@@ -133,6 +136,7 @@ Status_Code_Info * find_global_status_code_info(Global_Status_Code rc);
 
 // Returns status code description:
 char * gsc_desc(Global_Status_Code rc);   // must be freed after use
+char * psc_desc(Public_Status_Code rc);
 char * gsc_name(Global_Status_Code status_code);   // do not free after use
 
 bool gsc_name_to_unmodulated_number(const char * status_code_name, int * p_error_number);
