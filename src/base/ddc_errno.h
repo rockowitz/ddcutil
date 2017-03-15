@@ -4,7 +4,7 @@
  * primarily ddcutil related.
  *
  * <copyright>
- * Copyright (C) 2014-2015 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2014-2017 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -23,6 +23,11 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  * </endcopyright>
  */
+
+/** \file
+ * Error codes internal to **ddcutil**.
+ */
+
 
 #ifndef DDC_ERRNO_H_
 #define DDC_ERRNO_H_
@@ -100,7 +105,5 @@ char * ddcrc_desc(int rc);   // must be freed after use
 bool ddcrc_is_derived_status_code(Global_Status_Code gsc);
 
 bool ddcrc_is_not_error(Global_Status_Code gsc);
-
-
 
 #endif /* APP_ERRNO_H_ */

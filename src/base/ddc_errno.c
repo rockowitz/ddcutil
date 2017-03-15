@@ -1,7 +1,7 @@
 /* ddc_errno.c
  *
  * <copyright>
- * Copyright (C) 2014-2016 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2014-2017 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -21,8 +21,14 @@
  * </endcopyright>
  */
 
+/** \file
+ * Error codes internal to **ddcutil**.
+ */
+
+/** \cond */
 #include <assert.h>
 #include <stdio.h>
+/** \endcond */
 
 #include "util/string_util.h"
 
@@ -31,6 +37,9 @@
 //
 // DDCRC status code descriptions
 //
+
+
+// TODO: Consider modifying EDENTRY generate doxygen comment as well using description field
 
 #define EDENTRY(id,desc) {id, #id, desc}
 
@@ -73,7 +82,17 @@ static Status_Code_Info ddcrc_info[] = {
 #undef EDENTRY
 static int ddcrc_desc_ct = sizeof(ddcrc_info)/sizeof(Status_Code_Info);
 
-
+/** Returns the #Status_Code_Info struct for a **ddcutil** status code.
+ *
+ * @param  rc   ddcutil status code
+ * @return pointer to #Status_Code_Info, NULL if not found
+ *
+ * @remark
+ * Returns a pointer into a struct compiled into the executable.
+ * Do not deallocate.
+ * @remark
+ * **ddcutil** status codes are always modulated.
+ */
 Status_Code_Info * ddcrc_find_status_code_info(int rc) {
    Status_Code_Info * result = NULL;
 
@@ -117,6 +136,14 @@ Status_Code_Info * ddcrc_find_status_code_info(int rc) {
  *
  */
 
+/** Certain **ddcutil** status codes (e.g. DDCRC_DETERMINED_UNSUPPORTED)
+ *  are "derived" at higher levels from primary **ddcutil** status codes
+ *  in lower level routines.  These should be excluded from certain error
+ *  counts as otherwise an error would be double counted.
+ *
+ *  @param gsc status code
+ *  @return true/false
+ */
 bool ddcrc_is_derived_status_code(Global_Status_Code gsc) {
    return (gsc == DDCRC_ALL_TRIES_ZERO         ||
            gsc == DDCRC_RETRIES                ||
@@ -124,19 +151,29 @@ bool ddcrc_is_derived_status_code(Global_Status_Code gsc) {
           );
 }
 
+/** Certain **ddcutil** status codes, (e.g. DDCRC_REPORTED_UNSUPPORTED)
+ *  report states that should not be considered to be DDC protocol errors.
+ */
 bool ddcrc_is_not_error(Global_Status_Code gsc) {
    return (gsc == DDCRC_REPORTED_UNSUPPORTED);
 }
 
-static char workbuf[200];
 
-/*
+/* Returns a sting description of a **ddcutil** status code that is
+ * intended for use in error messages.
  *
+ * @param rc  ddcutil status code
+ * @return status code description
  *
- * Caller should NOT free memory
+ * @remark
+ * The result is built in an internal buffer.  The contents will be
+ * valid until the next call to this function.
+ * @remark
+ * A generic message is returned if the status code is unrecognized.
  */
 char * ddcrc_desc(int rc) {
-   char * result = NULL;
+   static char workbuf[200];
+   // char * result = NULL;
    Status_Code_Info * pdesc = ddcrc_find_status_code_info(rc);
    if (pdesc) {
       snprintf(workbuf, 200,
@@ -145,25 +182,30 @@ char * ddcrc_desc(int rc) {
    else {
       snprintf(workbuf, 200, "Unexpected status code %d", rc);
    }
-   result = workbuf;
-   return result;
+   // result = workbuf;
+   // return result;
+   return workbuf;
 }
 
 
-/* Gets the ddcutil error number for a symbolic name.
+/** Gets the (unmodulated) ddcutil error number for a symbolic name.
  *
- * Arguments:
- *    errno_name    symbolic name, e.g. EBUSY
- *    perrno        where to return error number
+ * @param   error_name   symbolic name, e.g. DDCRC_CHECKSUM
+ * @param   p_errnum     where to return error number
  *
  * Returns:         true if found, false if not
+ *
+ * @remark
+ * Since **ddcutil** specific error numbers are always modulated,
+ * the return value for this function is always identical to
+ * ddc_error_name_to_modulated_number().
  */
-bool ddc_error_name_to_number(const char * errno_name, Global_Status_Code * perrno) {
+bool ddc_error_name_to_number(const char * error_name, Global_Status_Code * p_errnum) {
    int found = false;
-   *perrno = 0;
+   *p_errnum = 0;
    for (int ndx = 0; ndx < ddcrc_desc_ct; ndx++) {
-       if ( streq(ddcrc_info[ndx].name, errno_name) ) {
-          *perrno = ddcrc_info[ndx].code;
+       if ( streq(ddcrc_info[ndx].name, error_name) ) {
+          *p_errnum = ddcrc_info[ndx].code;
           found = true;
           break;
        }
@@ -171,12 +213,26 @@ bool ddc_error_name_to_number(const char * errno_name, Global_Status_Code * perr
    return found;
 }
 
-
-bool ddc_error_name_to_modulated_number(const char * errno_name, Global_Status_Code * p_error_number) {
+/** Gets the (modulated) ddcutil error number for a symbolic name.
+ *
+ * @param   error_name   symbolic name, e.g. DDCRC_CHECKSUM
+ * @param   p_errnum     where to return error number
+ *
+ * Returns:         true if found, false if not
+ *
+ * @remark
+ * Since **ddcutil** specific error numbers are always modulated,
+ * the return value for this function is always identical to
+ * ddc_error_name_to_number().
+ */
+bool ddc_error_name_to_modulated_number(
+        const char *          error_name,
+        Global_Status_Code *  p_errnum)
+{
    int result = 0;
-   bool found = ddc_error_name_to_number(errno_name, &result);
+   bool found = ddc_error_name_to_number(error_name, &result);
    assert(result <= 0);
    // ddcutil error numbers are already modulated
-   *p_error_number = result;
+   *p_errnum = result;
    return found;
 }
