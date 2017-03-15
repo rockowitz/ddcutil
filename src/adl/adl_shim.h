@@ -1,10 +1,7 @@
 /* adl_shim.h
  *
- * Created on: Nov 28, 2015
- *     Author: rock
- *
  * <copyright>
- * Copyright (C) 2014-2015 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2014-2017 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -24,11 +21,19 @@
  * </endcopyright>
  */
 
+/** \file
+ *  Interface to ADL services
+ *
+ *  Will be implemented by either adl/adl_impl/adl_shim.c or adl/adl_mock_impl/adl_mock_shim.c
+ */
+
 #ifndef ADL_SHIM_H_
 #define ADL_SHIM_H_
 
+/** \cond */
 #include <stdlib.h>     // wchar_t, needed by adl_structures.h
 #include <stdbool.h>
+/** \endcond */
 
 #include "util/edid.h"
 
@@ -48,14 +53,23 @@ bool adlshim_initialize();
 
 // Report on active displays
 
-Parsed_Edid* adlshim_get_parsed_edid_by_display_handle(Display_Handle * dh);
+Parsed_Edid*
+adlshim_get_parsed_edid_by_display_handle(
+      Display_Handle * dh);
 
-Parsed_Edid* adlshim_get_parsed_edid_by_display_ref(Display_Ref * dref);
+Parsed_Edid*
+adlshim_get_parsed_edid_by_display_ref(
+      Display_Ref * dref);
 
 // void adl_show_active_display(ADL_Display_Rec * pdisp, int depth);
 // void adl_show_active_display_by_index(int ndx, int depth);
 // void adlshim_show_active_display_by_adlno(int iAdapterIndex, int iDisplayIndex, int depth);
-void adlshim_report_active_display_by_display_ref(Display_Ref * dref, int depth);
+
+void
+adlshim_report_active_display_by_display_ref(
+      Display_Ref * dref,
+      int           depth);
+
 // int  adl_show_active_displays();   // returns number of active displays
 
 // void report_adl_display_rec(ADL_Display_Rec * pRec, bool verbose, int depth);
@@ -64,16 +78,31 @@ void adlshim_report_active_display_by_display_ref(Display_Ref * dref, int depth)
 // Find and validate display
 
 // bool              adlshim_is_valid_adlno(int iAdapterIndex, int iDisplayIndex, bool emit_error_msg);
-bool              adlshim_is_valid_display_ref(Display_Ref * dref, bool emit_error_msg);
+
+bool
+adlshim_is_valid_display_ref(
+      Display_Ref * dref,
+      bool          emit_error_msg);
+
 // ADL_Display_Rec * adl_get_display_by_adlno(int iAdapterIndex, int iDisplayIndex, bool emit_error_msg);
-Display_Ref * adlshim_find_display_by_mfg_model_sn(const char * mfg_id, const char * model, const char * sn);
-Display_Ref * adlshim_find_display_by_edid(const Byte * pEdidBytes);
 
-Display_Info_List adlshim_get_valid_displays();
+Display_Ref *
+adlshim_find_display_by_mfg_model_sn(
+      const char * mfg_id,
+      const char * model,
+      const char * sn);
 
-Global_Status_Code adlshim_get_video_card_info(
-                      Display_Handle * dh,
-                      Video_Card_Info * card_info);
+Display_Ref *
+adlshim_find_display_by_edid(
+      const Byte * pEdidBytes);
+
+Display_Info_List
+adlshim_get_valid_displays();
+
+Modulated_Status_ADL
+adlshim_get_video_card_info(
+      Display_Handle * dh,
+      Video_Card_Info * card_info);
 
 
 // Read from and write to the display

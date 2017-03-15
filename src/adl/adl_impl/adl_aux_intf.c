@@ -1,8 +1,12 @@
 /* adl_aux_intf.c
- *
+ */
+
+/** \file
  *  Functions in this file were originally part of adl_inf.c,
  *  but with code refactoring are now only called from tests.
- *
+ */
+
+/*
  * <copyright>
  * Copyright (C) 2014-2016 Sanford Rockowitz <rockowitz@minsoft.com>
  *
@@ -24,10 +28,12 @@
  * </endcopyright>
  */
 
+/** \cond */
 #include <assert.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <string.h>
+/** \endcond */
 
 #include "util/string_util.h"
 
@@ -41,8 +47,9 @@
 
 #include "adl/adl_impl/adl_aux_intf.h"
 
-
-// 10/2015: only used in adl_tests.c
+/**
+ * @remark 10/2015: only used in adl_tests.c
+ */
 Base_Status_ADL adl_ddc_write_only_with_retry(
       int     iAdapterIndex,
       int     iDisplayIndex,
@@ -76,7 +83,9 @@ Base_Status_ADL adl_ddc_write_only_with_retry(
 }
 
 
-// 10/2015: only used in adl_tests.c
+/**
+ * @remark 10/2015: only used in adl_tests.c
+ */
 Base_Status_ADL adl_ddc_write_read_with_retry(
       int     iAdapterIndex,
       int     iDisplayIndex,
@@ -112,7 +121,10 @@ Base_Status_ADL adl_ddc_write_read_with_retry(
    return rc;
 }
 
-// 10/2015: unused
+
+/**
+ * @remark 10/2015: unused
+ */
 Base_Status_ADL adl_ddc_write_read_with_retry_onecall(
       int     iAdapterIndex,
       int     iDisplayIndex,
@@ -161,7 +173,9 @@ struct {
 } Raw_GetVCP_Response_Data;
 
 
-// 10/2015 unused
+/**
+ * @remark 10/2015: unused
+ */
 Base_Status_ADL adl_ddc_get_vcp(int iAdapterIndex, int iDisplayIndex, Byte vcp_feature_code, bool onecall) {
    if (adl_debug) {
       DBGMSG("Starting adapterNdx=%d, displayNdx=%d, vcp_feature_code=0x%02x", 
@@ -224,7 +238,9 @@ Base_Status_ADL adl_ddc_get_vcp(int iAdapterIndex, int iDisplayIndex, Byte vcp_f
    return rc;
 }
 
-// 10/2015: only used in tests
+/**
+ * @remark 10/2015: only used in adl_tests.c
+ */
 Base_Status_ADL adl_ddc_set_vcp(int iAdapterIndex, int iDisplayIndex, Byte vcp_feature_code, int newval) {
    if (adl_debug)
       DBGMSG("Starting adapterNdx=%d, displayNdx=%d, vcp_feature_code=0x%02x", 

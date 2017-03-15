@@ -1,7 +1,7 @@
 /* adl_shim.c
  *
  * <copyright>
- * Copyright (C) 2014-2016 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2014-2017 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -21,16 +21,25 @@
  * </endcopyright>
  */
 
+/** \file
+ * Implementation of interface in adl/adl_shim.h for use when building
+ * **ddcutil** with ADL support.
+ */
+
+/** \cond */
 #include <assert.h>
 #include <stdlib.h>     // wchar_t, needed by adl_structures.h
 #include <stdbool.h>
 #include <string.h>
+/** \endcond */
+
+#include "public/ddcutil_types.h"
 
 #include "util/edid.h"
 
-#include "base/execution_stats.h"
 #include "base/core.h"
 #include "base/displays.h"
+#include "base/execution_stats.h"
 #include "base/status_code_mgt.h"
 
 #include "adl/adl_impl/adl_intf.h"
@@ -39,13 +48,27 @@
 
 // Initialization
 
+/** Wrappers adl_intf function adl_is_available().
+ *
+ * @return true if ADL interface has been initialized, false if not
+ */
 bool adlshim_is_available() {
    return adl_is_available();
 }
-// must be called before any other function (except is_adl_available()):
+
+
+/** Initialize the ADL subsystem. Wrappers function adl_initialize().
+ *
+ * Must be called before any other function (except adlshim_is_available()):
+ *
+ * @retval true  success
+ * @retval false failure
+ */
 bool adlshim_initialize() {
    return adl_initialize();
 }
+
+
 void adlshim_release() {
    adl_release();
 }
@@ -53,14 +76,20 @@ void adlshim_release() {
 
 // Report on active displays
 
-Parsed_Edid* adlshim_get_parsed_edid_by_display_handle(Display_Handle * dh) {
+Parsed_Edid*
+adlshim_get_parsed_edid_by_display_handle(
+      Display_Handle * dh)
+{
    ASSERT_DISPLAY_IO_MODE(dh, DDC_IO_ADL);
    // assert(dh->io_mode == DDC_IO_ADL);
    return adl_get_parsed_edid_by_adlno(dh->iAdapterIndex, dh->iDisplayIndex);
 }
 
 
-Parsed_Edid* adlshim_get_parsed_edid_by_display_ref(Display_Ref * dref) {
+Parsed_Edid*
+adlshim_get_parsed_edid_by_display_ref(
+      Display_Ref * dref)
+{
    // assert(dref->io_mode == DDC_IO_ADL);
    ASSERT_DISPLAY_IO_MODE(dref, DDC_IO_ADL);
    return adl_get_parsed_edid_by_adlno(dref->iAdapterIndex, dref->iDisplayIndex);
@@ -109,36 +138,61 @@ Display_Info_List adlshim_get_valid_displays() {
 }
 
 
-
-Global_Status_Code adlshim_get_video_card_info(
-                      Display_Handle * dh,
-                      Video_Card_Info * card_info) {
-   Base_Status_ADL adlrc = adl_get_video_card_info_by_adlno(dh->iAdapterIndex, dh->iDisplayIndex, card_info);
+/** Get video card information for an ADL display.
+ *
+ * @param  dh  display handle
+ * @param  card_info pointer to Video_Card_Info struct to be filled in
+ * @return modulated ADL status code
+ */
+Modulated_Status_ADL
+adlshim_get_video_card_info(
+      Display_Handle *  dh,
+      Video_Card_Info * card_info)
+{
+   Base_Status_ADL adlrc = adl_get_video_card_info_by_adlno(
+                              dh->iAdapterIndex,
+                              dh->iDisplayIndex,
+                              card_info);
    return modulate_rc(adlrc, RR_ADL);
 }
 
 // Read from and write to the display
 
-Global_Status_Code adlshim_ddc_write_only(
+/** Issues a DDC write through ADL.
+ *
+ * @param  dh            display handle
+ * @param  pSendMsgBuf   pointer to bytes to send
+ * @param  sendMsgLen    number of bytes to send
+ *
+ * @return modulated ADL status code
+ */
+Modulated_Status_ADL
+adlshim_ddc_write_only(
       Display_Handle* dh,
       Byte *  pSendMsgBuf,
       int     sendMsgLen)
 {
    assert(dh->io_mode == DDC_IO_ADL);
    Base_Status_ADL adlrc = adl_ddc_write_only(dh->iAdapterIndex, dh->iDisplayIndex, pSendMsgBuf, sendMsgLen);
-   Global_Status_Code gsc = modulate_rc(adlrc, RR_ADL);
-   return gsc;
+   return modulate_rc(adlrc, RR_ADL);
 }
 
-Global_Status_Code adlshim_ddc_read_only(
+/** Issues a DDC read through ADL.
+ *
+ * @param  dh            display handle
+ * @param  pRcvMsgBuf    pointer to buffer in which to return data read
+ * @param  pRcvBytect    pointer to location where number of bytes read is stored
+ *
+ * @return modulated ADL status code
+ */
+Modulated_Status_ADL adlshim_ddc_read_only(
       Display_Handle* dh,
       Byte *  pRcvMsgBuf,
       int *   pRcvBytect)
 {
    assert(dh->io_mode == DDC_IO_ADL);
    Base_Status_ADL adlrc = adl_ddc_read_only(dh->iAdapterIndex, dh->iDisplayIndex, pRcvMsgBuf, pRcvBytect);
-   Global_Status_Code gsc = modulate_rc(adlrc, RR_ADL);
-   return gsc;
+   return modulate_rc(adlrc, RR_ADL);
 }
 
 //Base_Status_ADL adl_ddc_write_read(

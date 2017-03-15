@@ -23,10 +23,17 @@
  * </endcopyright>
  */
 
+/** \file
+ * Reports on data structures in ADL SDK.
+ *
+ * Used only for development and debugging.
+ */
 #ifndef ADL_REPORT_H_
 #define ADL_REPORT_H_
 
+/** \cond */
 #include <stdbool.h>
+/** \endcond */
 
 #include "util/report_util.h"
 

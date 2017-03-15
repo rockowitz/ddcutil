@@ -1,7 +1,11 @@
 /* adl_sdk_includes.h
- *
+ */
+
+/** \file
  * Includes all header files from the ADL SDK, setting defines appropriately
- *
+ */
+
+/*
  * <copyright>
  * Copyright (C) 2014-2016 Sanford Rockowitz <rockowitz@minsoft.com>
  *
@@ -26,12 +30,15 @@
 #ifndef ADL_SDK_INCLUDES_H_
 #define ADL_SDK_INCLUDES_H_
 
+/** \cond */
 #include <stdlib.h>     // wchar_t, needed by adl_structures.h
+/** \endcond */
 
 #include <adl_defines.h>
 #define LINUX
 #include <adl_structures.h>
 #include <adl_sdk.h>
+
 #include "adl/adl_impl/adl_wrapmccs.h"
 
 #endif /* ADL_SDK_INCLUDES_H_ */

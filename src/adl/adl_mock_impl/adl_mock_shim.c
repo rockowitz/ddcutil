@@ -22,9 +22,17 @@
  * </endcopyright>
  */
 
+/** \file
+ * Mock implementation of ADL functions for use when **ddcutil**
+ * is built without ADL support.  Thse functions satisfy the
+ * dynamic linker.
+ */
+
+/** \cond */
 #include <assert.h>
 #include <stdbool.h>
 #include <stdlib.h>     // wchar_t, needed by adl_structures.h
+/** \endcond */
 
 #include "util/edid.h"
 
@@ -39,11 +47,23 @@
 
 bool            adl_debug;
 
-bool adlshim_is_available() {
+/** Indicates if ADL support is available.
+ *  Always returns **false**, since this is a mock
+ *  implementation to satisfy the dynamic linker.
+ *
+ *  @retval false
+ */
+bool
+adlshim_is_available()
+{
    return false;
 }
 
-// must be called before any other function (except is_adl_available()):
+/** Mock implementation of ADL Initialization.
+ * Always returns **false** to indicate failure.
+ *
+ * @retval false
+ */
 bool adlshim_initialize() {
    return false;
 }
@@ -52,42 +72,85 @@ bool adlshim_initialize() {
 
 // Report on active displays
 
-Parsed_Edid* adlshim_get_parsed_edid_by_display_handle(Display_Handle * dh) {
+/** Mock implementation.
+ * @retval NULL
+ */
+Parsed_Edid*
+adlshim_get_parsed_edid_by_display_handle(
+      Display_Handle * dh)
+{
    return NULL;
 }
 
 
-Parsed_Edid* adlshim_get_parsed_edid_by_display_ref(Display_Ref * dref) {
+/** Mock implementation.
+ * @retval NULL
+ */
+Parsed_Edid*
+adlshim_get_parsed_edid_by_display_ref(
+      Display_Ref * dref)
+{
    return NULL;
 }
 
 
-void adlshim_report_active_display_by_display_ref(Display_Ref * dref, int depth) {
+/** Mock implemention.  Does nothing. */
+void
+adlshim_report_active_display_by_display_ref(
+      Display_Ref * dref,
+      int depth) {
 }
 
 
 // Find and validate display
 
-bool              adlshim_is_valid_display_ref(Display_Ref * dref, bool emit_error_msg) {
+/** Mock implementation.
+ * @retval false
+ */
+bool
+adlshim_is_valid_display_ref(
+      Display_Ref * dref,
+      bool emit_error_msg)
+{
    return false;
 }
 
-Display_Ref * adlshim_find_display_by_mfg_model_sn(const char * mfg_id, const char * model, const char * sn) {
+/** Mock implementation.
+ * @retval false
+ */
+Display_Ref *
+adlshim_find_display_by_mfg_model_sn(
+      const char * mfg_id,
+      const char * model,
+      const char * sn)
+{
    return NULL;
 }
 
+/** Mock implementation to satisfy dynamic linker.
+ *
+ * @param pEdidBytes  pointer to 128 byte EDID
+ * @retval NULL
+ */
 Display_Ref * adlshim_find_display_by_edid(const Byte * pEdidBytes) {
    return NULL;
 }
 
+/** Mock implementation to satisfy dynamic linker.
+ * @return empty list
+ */
 Display_Info_List adlshim_get_valid_displays() {
    Display_Info_List info_list = {0,NULL};
    return info_list;
 }
 
-Global_Status_Code adlshim_get_video_card_info(
-                      Display_Handle * dh,
-                      Video_Card_Info * card_info) {
+/** Mock implementation to satisfy dynamic linker.  Never called. */
+Modulated_Status_ADL
+adlshim_get_video_card_info(
+      Display_Handle * dh,
+      Video_Card_Info * card_info)
+{
+   assert(false);
    return 0;
 }
 
@@ -95,7 +158,9 @@ Global_Status_Code adlshim_get_video_card_info(
 
 // Read from and write to the display
 
-Global_Status_Code adlshim_ddc_write_only(
+/** Mock implementation to satisfy dynamic linker.  Never called. */
+Modulated_Status_ADL
+adlshim_ddc_write_only(
       Display_Handle* dh,
       Byte *  pSendMsgBuf,
       int     sendMsgLen) {
@@ -103,7 +168,9 @@ Global_Status_Code adlshim_ddc_write_only(
    return 0;      // return code to avoid compile warning
 }
 
-Global_Status_Code adlshim_ddc_read_only(
+/** Mock implementation to satisfy dynamic linker.  Never called. */
+Modulated_Status_ADL
+adlshim_ddc_read_only(
       Display_Handle* dh,
       Byte *  pRcvMsgBuf,
       int *   pRcvBytect) {

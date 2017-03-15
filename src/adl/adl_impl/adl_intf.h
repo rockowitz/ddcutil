@@ -1,7 +1,7 @@
 /* adl_intf.h
  *
  * <copyright>
- * Copyright (C) 2014-2016 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2014-2017 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -21,14 +21,21 @@
  * </endcopyright>
  */
 
+/** \file
+ *
+ */
+
 #ifndef ADL_INTF_H_
 #define ADL_INTF_H_
 
+/** \cond */
 #include <config.h>
 #include <stdbool.h>
 #include <stdlib.h>     // wchar_t, needed by adl_structures.h
+/** \endcond */
 
-#include "../../util/edid.h"
+#include "util/edid.h"
+
 #include "base/core.h"
 #include "base/displays.h"
 #include "base/execution_stats.h"
@@ -36,6 +43,10 @@
 
 #include "adl/adl_impl/adl_sdk_includes.h"
 
+/** Describes an ADL display.
+ *
+ * Used only winin ADL implementation code and tests
+ */
 typedef
 struct {
    int                   iAdapterIndex;

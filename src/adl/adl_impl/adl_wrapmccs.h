@@ -1,9 +1,13 @@
 /* adl_wrapmccs.h
- *
+ */
+
+/* \file
  *  File mccs.h from the ADL SDK lacks ifdef tests, which
  *  can cause double inclusion resulting in errors.  This
  *  file should be included wherever mccs.h is needed.
- *
+ */
+
+/*
  * <copyright>
  * Copyright (C) 2014-2016 Sanford Rockowitz <rockowitz@minsoft.com>
  *

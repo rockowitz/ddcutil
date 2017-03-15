@@ -3,7 +3,7 @@
  * Interface to ADL (AMD Display Library) for fglrx
  *
  * <copyright>
- * Copyright (C) 2014-2016 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2014-2017 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -23,11 +23,17 @@
  * </endcopyright>
  */
 
+/** \file
+ *
+ */
+
+/** \cond */
 #include <assert.h>
 #include <dlfcn.h>            // dyopen, dysym, dyclose
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
+/** \endcond */
 
 #include "util/device_id_util.h"
 #include "util/report_util.h"
@@ -123,11 +129,9 @@ void init_adl_call_stats(ADL_Call_Stats * pstats) {
 // Module initialization
 //
 
-/* Checks if the ADL environment has been initialized.
+/** Checks if the ADL environment has been initialized.
  *
- * Returns:
- *   true  if initialied
- *   false if not
+ * @return true/false
  */
 bool adl_is_available() {
    return (module_initialized);
@@ -520,11 +524,20 @@ static bool scan_for_displays() {
 
 
 
-/* This is the main function for initializing the ADL environment.
+/** This is the main function for initializing the ADL environment.
  *
  * Must be called before any function other than is_adl_available().
  *
- * Arguments:  none
+ * It is not an error if this function is called multiple times.
+ *
+ * Performs the following steps:
+ * - checks if ADL tracing is in effect
+ * - dynamically links the ADL library
+ * - initializes the framework
+ * - scans for ADL monitors
+ *
+ * @retval true  if initialization succeeded, or already initialized
+ * @retval false initialization failed
  *
  * Returns:
  *   true if initialization successful, false if not
@@ -559,7 +572,8 @@ bool adl_initialize() {
    return ok;
 }
 
-
+/** Releases the ADL framework
+ */
 void adl_release() {
    RECORD_IO_EVENT(
       IE_OTHER,
@@ -578,10 +592,22 @@ void adl_release() {
 // Report on active displays
 //
 
-
-Parsed_Edid* adl_get_parsed_edid_by_adlno(int iAdapterIndex, int iDisplayIndex) {
+/** Returns a #Parsed_Edid for an ADL display
+ *
+ * @param  iAdapterIndex  adapter number
+ * @param  iDisplayIndex  display number
+ * @return pointer to #Parsed_Edid, NULL if display not found
+ */
+Parsed_Edid*
+adl_get_parsed_edid_by_adlno(
+      int iAdapterIndex,
+      int iDisplayIndex)
+{
    Parsed_Edid* parsedEdid = NULL;
-   ADL_Display_Rec * pAdlRec = adl_get_display_by_adlno(iAdapterIndex, iDisplayIndex, false);
+   ADL_Display_Rec * pAdlRec = adl_get_display_by_adlno(
+                                   iAdapterIndex,
+                                   iDisplayIndex,
+                                   false);
    if (pAdlRec) {
       parsedEdid = pAdlRec->pEdid;
    }
@@ -607,15 +633,13 @@ DisplayIdInfo* get_adl_display_id_info(int iAdapterIndex, int iDisplayIndex) {
 #endif
 
 
-/* Describes the specified display using report functions.
+/** Describes a display, specified by a pointer to its ADL_Display_Rec,
+ *  using report functions.
  *
  * Output is written to the currently active report destination.
  *
- * Arguments:
- *    pdisp      points to ADL_Display_Rec for the display
- *    depth      logical indentation depth
- *
- * Returns:      nothing
+ * @param   pdisp      points to ADL_Display_Rec for the display
+ * @param   depth      logical indentation depth
  */
 void adl_report_active_display(ADL_Display_Rec * pdisp, int depth) {
    DDCA_Output_Level output_level = get_output_level();
@@ -646,33 +670,32 @@ void adl_report_active_display(ADL_Display_Rec * pdisp, int depth) {
 }
 
 
-/* Describes the specified display using report functions.
+/** Describes a display, specified by its index in the list of displays,
+ * using report functions.
  *
  * Output is written to the currently active report destination.
  *
- * Arguments:
- *    ndx        index into array of active ADL displays
- *    depth      logical indentation depth
- *
- * Returns:      nothing
+ * @param   ndx        index into array of active ADL displays
+ * @param   depth      logical indentation depth
  */
-void adl_report_active_display_by_index(int ndx, int depth) {
+void adl_report_active_display_by_index(
+        int ndx,
+        int depth)
+{
    assert(ndx >= 0 && ndx < active_display_ct);
    ADL_Display_Rec * pdisp = &active_displays[ndx];
    adl_report_active_display(pdisp, depth);
 }
 
 
-/* Describes the specified display using report functions.
+/* Describes a display, sepecified by an adapter number/display number pair,
+ * using report functions.
  *
  * Output is written to the currently active report destination.
  *
- * Arguments:
- *    iAdapterIndex  adapter number
- *    iDisplayIndex  display number for adapter
- *    depth          logical indentation depth
- *
- * Returns:      nothing
+ * @param   iAdapterIndex  adapter number
+ * @param   iDisplayIndex  display number for adapter
+ * @param   depth          logical indentation depth
  */
 void adl_report_active_display_by_adlno(
         int iAdapterIndex,
@@ -687,16 +710,16 @@ void adl_report_active_display_by_adlno(
 }
 
 
-/* Show information about attached displays.
+/** Show information about attached ADL displays.
  *
  * Output is written using report functions.
  *
- * Returns:
- *   number of active displays
+ * @return number of active displays
  */
 int adl_report_active_displays() {
    if (adl_linked) {
-      rpt_vstring(0, "\nDisplays connected to AMD proprietary driver: %s", (active_display_ct == 0) ? "None" : "");
+      rpt_vstring(0, "\nDisplays connected to AMD proprietary driver: %s",
+                     (active_display_ct == 0) ? "None" : "");
       rpt_vstring(0, "");
       if (active_display_ct > 0) {
          int ndx;
@@ -711,7 +734,10 @@ int adl_report_active_displays() {
 }
 
 
-
+/** Returns a #Display_Info_List describing the detected ADL displays.
+ *
+ *  @return #Display_Info_List
+ */
 Display_Info_List adl_get_valid_displays() {
    Display_Info_List info_list = {0,NULL};
    Display_Info * info_recs = calloc(active_display_ct, sizeof(Display_Info));
@@ -745,19 +771,20 @@ typedef struct {
 #endif
 
 
-/* Report on a single active display
+/* Reports the contents of a #ADL_Display_Rec, describing a single active display.
+ * This is a debugging functions.
  *
  * Output is written using report functions.
  *
- * Arguments:
- *   pRec   pointer to display record
- *   verbose  if true, show additional detail
- *   depth    logical indentation depth
- *
- * Returns:
- *   nothing
+ * @param  pRec     pointer to display record
+ * @param  verbose  if true, show additional detail
+ * @param  depth    logical indentation depth
  */
-void report_adl_display_rec(ADL_Display_Rec * pRec, bool verbose, int depth) {
+void report_adl_display_rec(
+        ADL_Display_Rec * pRec,
+        bool              verbose,
+        int               depth)
+{
    verbose=false;
 
    rpt_structure_loc("AdlDisplayRec", pRec, depth);
@@ -786,6 +813,19 @@ char *                pstrDisplayName;
 #endif
 
 
+/** Gets video card information for the specified adapter number/display number pair.
+ *
+ *  @param  iAdapterIndex  adapter number
+ *  @param  iDisplayIndex  display number
+ *  @param  card_info      pointer to existing #Video_Card_Info struct where
+ *                         information is returned
+ *
+ *  @return ADL status code
+ *
+ *  @todo
+ *  A pointer to a newly allocated string for the adapter name is returned
+ *  in card_info.  This is a memory leak.
+ */
 Base_Status_ADL
 adl_get_video_card_info_by_adlno(
       int               iAdapterIndex,
@@ -815,10 +855,21 @@ adl_get_video_card_info_by_adlno(
 // Find display
 //
 
-/* Find display by adapter number/display number
+/** Finds ADL display by adapter number/display number
  *
+ *  @param  iAdapterIndex   ADL adapter number
+ *  @param  iDisplayIndex   ADLdisplay number
+ *  @param  emit_error_msg  if true, emit messages for errors
+ *
+ *  @return pointer to #ADL_Display_Rec describing the display,
+ *          NULL if not found
  */
-ADL_Display_Rec * adl_get_display_by_adlno(int iAdapterIndex, int iDisplayIndex, bool emit_error_msg) {
+ADL_Display_Rec *
+adl_get_display_by_adlno(
+      int  iAdapterIndex,
+      int  iDisplayIndex,
+      bool emit_error_msg)
+{
    ADL_Display_Rec * result = NULL;
 
    if (active_display_ct == 0) {
@@ -844,13 +895,20 @@ ADL_Display_Rec * adl_get_display_by_adlno(int iAdapterIndex, int iDisplayIndex,
 }
 
 
-/* Find display by model name and serial number
+/** Finds ADL display by some combination of manufacturer id, model name and serial number
  *
+ * @param  mfg_id   3 character manufacturer id
+ * @param  model    model name string
+ * @param  sn       serial number string
+ *
+ *  @return pointer to #ADL_Display_Rec describing the display,
+ *          NULL if not found
  */
-ADL_Display_Rec * adl_find_display_by_mfg_model_sn(
-                     const char * mfg_id,
-                     const char * model,
-                     const char * sn)
+ADL_Display_Rec *
+adl_find_display_by_mfg_model_sn(
+      const char * mfg_id,
+      const char * model,
+      const char * sn)
 {
    // DBGMSG("Starting. mode=%s, sn=%s   ", model, sn );
    ADL_Display_Rec * result = NULL;
@@ -892,10 +950,17 @@ ADL_Display_Rec * adl_find_display_by_mfg_model_sn(
 }
 
 
-/* Find display by EDID
+/** Finds ADL display by EDID
  *
+ *  @param  pEdidBytes pointer to 128 byte EDID
+ *
+ *  @return pointer to #ADL_Display_Rec describing the display,
+ *          NULL if not found
  */
-ADL_Display_Rec * adl_find_display_by_edid(const Byte * pEdidBytes) {
+ADL_Display_Rec *
+adl_find_display_by_edid(
+      const Byte * pEdidBytes)
+{
    // DBGMSG("Starting. mode=%s, sn=%s   ", model, sn );
    ADL_Display_Rec * result = NULL;
    int ndx;
@@ -913,16 +978,20 @@ ADL_Display_Rec * adl_find_display_by_edid(const Byte * pEdidBytes) {
 }
 
 
-/* Verify that an ( adapter number,display number) pair specifies an active display
+/** Verifies that an ( adapter number,display number) pair specifies an active ADL display
  *
- * Arguments:
- *   iAdapterNumber
- *   iDisplayNumber
+ *  @param  iAdapterIndex  ADL adapter number
+ *  @param  iDisplayIndex  ADL display number
+ *  @param  emit_error_msg if true, emit error messages
  *
- * Returns:
- *   true if an active display, false if not
+ *  @return true if an active display, false if not
  */
-bool adl_is_valid_adlno(int iAdapterIndex, int iDisplayIndex, bool emit_error_msg) {
+bool
+adl_is_valid_adlno(
+      int iAdapterIndex,
+      int iDisplayIndex,
+      bool emit_error_msg)
+{
    return (adl_get_display_by_adlno(iAdapterIndex, iDisplayIndex, emit_error_msg) != NULL);
 }
 
@@ -936,8 +1005,12 @@ bool adl_is_valid_adlno(int iAdapterIndex, int iDisplayIndex, bool emit_error_ms
 // Use ADL_Display_DDCBlockAccess_Get() to write and read DDC packets
 //
 
-// used locally and in ADL tests
-Base_Status_ADL call_ADL_Display_DDCBlockAccess_Get(
+/** Wrapper for ADL_Display_DDCBlockAccess_Get().
+ *
+ *  Used locally and in ADL tests
+ */
+Base_Status_ADL
+call_ADL_Display_DDCBlockAccess_Get(
       int    iAdapterIndex,
       int    iDisplayIndex,
       int    iOption,
@@ -989,8 +1062,19 @@ Base_Status_ADL call_ADL_Display_DDCBlockAccess_Get(
 }
 
 
-// 10/2015: called locally and from ddc_packet_io.c
-Base_Status_ADL adl_ddc_write_only(
+/** Writes a DDC packet to the specified ADL display
+ *
+ * @param  iAdapterIndex ADL adapter number
+ * @param  iDisplayIndex ADL display number
+ * @param  pSendMsgBuf   pointer to bytes to write
+ * @param  sendMsgLen    number of bytes to write
+ *
+ * @return ADL status code
+ *
+ * @remark 10/2015: called locally and from ddc_packet_io.c
+ */
+Base_Status_ADL
+adl_ddc_write_only(
       int     iAdapterIndex,
       int     iDisplayIndex,
       Byte *  pSendMsgBuf,
@@ -1011,8 +1095,15 @@ Base_Status_ADL adl_ddc_write_only(
    return rc;
 }
 
-
-// only called within this file
+/** Reads a DDC packet from the specified ADL display
+ *
+ * @param  iAdapterIndex ADL adapter number
+ * @param  iDisplayIndex ADL display number
+ * @param  pRcvMsgBuf    pointer to buffer in which to return packet
+ * @param  pRcvBytect    pointer to integer in which packet length returned
+ *
+ * @return ADL status code
+ */
 Base_Status_ADL adl_ddc_read_only(
       int     iAdapterIndex,
       int     iDisplayIndex,
@@ -1049,7 +1140,19 @@ Base_Status_ADL adl_ddc_read_only(
 }
 
 
-// 10/2015: called from adl_services.c and ddc_packet_io.c
+/**  Performs and DDC write followed by a DDC read.
+ *
+ *  @param  iAdapterIndex  ADL adapter number
+ *  @param  iDisplayIndex  ADL display number
+ *  @param  pSendMsgBuf    buffer containing bytes to send
+ *  @param  sendMsgLen     number of bytes to send
+ *  @param  pRcvMsgBuf     where to return bytes read
+ *  @param  pRcvBytect     where to return number of bytes read
+ *
+ *  @return ADL status code
+ *
+ * @remark 10/2015: called from adl_services.c and ddc_packet_io.c
+ */
 Base_Status_ADL adl_ddc_write_read(
       int     iAdapterIndex,
       int     iDisplayIndex,
@@ -1086,8 +1189,24 @@ Base_Status_ADL adl_ddc_write_read(
 }
 
 
-// 10/2015: only called in adl_aux_intf.c
-// appears to simply return the bytes written
+/**  Attempts to perform a DDC write followed by a DDC read using
+ *   a single call to ADL_Display_DDCBlockAccess_Get(().
+ *
+ *   However, appears to just return the bytes written.
+ *
+ *   DO NOT USE
+ *
+ *  @param  iAdapterIndex  ADL adapter number
+ *  @param  iDisplayIndex  ADL display number
+ *  @param  pSendMsgBuf    buffer containing bytes to send
+ *  @param  sendMsgLen     number of bytes to send
+ *  @param  pRcvMsgBuf     where to return bytes read
+ *  @param  pRcvBytect     where to return number of bytes read
+ *
+ *  @return ADL status code
+ *
+ * @remark 10/2015: only called in adl_aux_intf.c
+ */
 Base_Status_ADL adl_ddc_write_read_onecall(
       int     iAdapterIndex,
       int     iDisplayIndex,

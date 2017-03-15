@@ -34,16 +34,45 @@
 
 void init_adl_errors() {}
 
-Status_Code_Info * get_adl_status_description(int errnum) {
+/** Mock implementation if **get_adl_status_description()**.
+ *
+ *  @param  errnum   unmodulated ADL status code
+ *  @retval NULL
+ */
+Status_Code_Info *
+get_adl_status_description(
+      Base_Status_ADL errnum)
+{
    return NULL;
 }
 
-bool adl_error_name_to_number(const char * adl_error_name, int * adl_error_number) {
-   *adl_error_number = 0;
+/** Mock implementation of **adl_error_name_to_number()**.
+ *
+ *  @param  adl_error_name     symbolic name, e.g. ADL_ERR_NOT_SUPPORTED
+ *  @param  p_adl_error_number where to return error number
+ *  @retval false
+ */
+bool
+adl_error_name_to_number(
+      const char *      adl_error_name,
+      Base_Status_ADL * p_adl_error_number)
+{
+   *p_adl_error_number = 0;
    return false;
 }
 
-bool adl_errno_name_to_modulated_number(const char * error_name, Global_Status_Code * p_error_number) {
-   *p_error_number = 0;
+
+/** Mock implementation of **adl_error_name_to_modulated_number()**.
+ *
+ *  @param  adl_error_name    symbolic name, e.g. ADL_ERR_NOT_SUPPORTED
+ *  @param  p_adl_error_number where to return error number
+ *  @retval false
+ */
+bool
+adl_error_name_to_modulated_number(
+        const char *           adl_error_name,
+        Modulated_Status_ADL * p_adl_error_number)
+{
+   *p_adl_error_number = 0;
    return false;
 }

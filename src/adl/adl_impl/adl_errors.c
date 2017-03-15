@@ -30,7 +30,7 @@
 /** \cond */
 #include <stdio.h>    // for NULL
 #include <adl_defines.h>
-/** \cond */
+/** \endcond */
 
 #include "util/string_util.h"
 
@@ -69,8 +69,14 @@ static char workbuf[WORKBUF_SIZE];
 static Status_Code_Info dummy_adl_status_desc;
 static char buf2[20];
 
-
-Status_Code_Info * find_adl_status_description(int errnum) {
+/** Given an unmodulated ADL status code, return its
+ *  Status_Code_Info struct.
+ *
+ *  @param errnum   unmodulated ADL status code
+ *  @return pointer to #Status_Code_Info struct describing the code.
+ *                  NULL if code not found
+ */
+Status_Code_Info * find_adl_status_description(Base_Status_ADL errnum) {
    Status_Code_Info * result = NULL;
 
    int ndx;
@@ -83,7 +89,18 @@ Status_Code_Info * find_adl_status_description(int errnum) {
    return result;
 }
 
-Status_Code_Info * get_adl_status_description(int errnum) {
+
+/** Given an unmodulated ADL status code, return its
+ *  Status_Code_Info struct.
+ *
+ *  If the error code is unrecognized, a dummy struct is initializaed and
+ *  returmed.  The contents of this struct are valid until the next call
+ *  to this function.
+ *
+ *  @param errnum   unmodulated ADL status code
+ *  @return pointer to #Status_Code_Info struct describing the code
+ */
+Status_Code_Info * get_adl_status_description(Base_Status_ADL errnum) {
    Status_Code_Info * result = NULL;
 
    result = find_adl_status_description(errnum);
@@ -102,22 +119,27 @@ Status_Code_Info * get_adl_status_description(int errnum) {
    return result;
 }
 
+
 // n. called from main before command line parsed, trace control not yet set up
 void init_adl_errors() {
+#ifdef OLD
    register_retcode_desc_finder(RR_ADL,
                                 get_adl_status_description,
                                 false);                     // finder_arg_is_modulated
+#endif
 }
 
 
-/* Gets the ADL error number for a symbolic name.
+/** Gets the (unmodulated) ADL error number for a symbolic name.
  *
- * Arguments:
- *    adl_error_name    symbolic name, e.g. ADL_ERR_NOT_SUPPORTED
- *
- * Returns:         error number, 0 if not found
+ *  @param  adl_error_name    symbolic name, e.g. ADL_ERR_NOT_SUPPORTED
+ *  @param  p_adl_error_number where to return error number
+ *  @return true if symbolic name found, false if not
  */
-bool adl_error_name_to_number(const char * adl_error_name, int * adl_error_number) {
+bool adl_error_name_to_number(
+        const char *      adl_error_name,
+        Base_Status_ADL * p_adl_error_number)
+{
    int result = 0;
    bool found = false;
    for (int ndx = 0; ndx < adl_status_desc_ct; ndx++) {
@@ -127,17 +149,26 @@ bool adl_error_name_to_number(const char * adl_error_name, int * adl_error_numbe
           break;
        }
    }
-   *adl_error_number = result;
+   *p_adl_error_number = result;
    return found;
 }
 
 
-bool adl_errno_name_to_modulated_number(const char * error_name, Global_Status_Code * p_error_number) {
+/** Gets the (modulated) ADL error number for a symbolic name.
+ *
+ *  @param  adl_error_name   symbolic name, e.g. ADL_ERR_NOT_SUPPORTED
+ *  @param  p_adl_error_number   where to return error number
+ *  @return true if symbolic name found, false if not
+ */
+bool adl_error_name_to_modulated_number(
+        const char *            adl_error_name,
+        Modulated_Status_ADL *  p_adl_error_number)
+{
    int result = 0;
-   bool found = adl_error_name_to_number(error_name, &result);
+   bool found = adl_error_name_to_number(adl_error_name, &result);
    if (found) {
       result = modulate_rc(result, RR_ADL);
    }
-   *p_error_number = result;
+   *p_adl_error_number = result;
    return found;
 }

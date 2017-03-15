@@ -23,10 +23,18 @@
  * </endcopyright>
  */
 
+/** \file
+ * Reports on data structures in ADL SDK.
+ *
+ * Used only for development and debugging.
+ */
+
+/** \cond */
 #include <assert.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+/** \endcond */
 
 #include "util/edid.h"
 #include "util/string_util.h"
@@ -91,6 +99,7 @@
 
 #define FLAG_INFO(name,info) {#name, info, name}
 
+// TODO: If code is cleaned up, replace with a Value_Name_Title table.
 
 Flag_Info all_flags[] = {
    // ulDDCInfoFlag
@@ -238,7 +247,7 @@ typedef struct AdapterInfo
 
 
 
-
+/** */
 void report_adl_AdapterInfo(AdapterInfo * pAdapterInfo, int depth) {
    rpt_structure_loc("AdapterInfo", pAdapterInfo, depth);
    printf("     iSize (size of structure): %d\n",                         pAdapterInfo->iSize);
@@ -294,6 +303,7 @@ typedef struct ADLDisplayID
 
 #endif
 
+/** */
 void report_adl_ADLDisplayID(ADLDisplayID * pADLDisplayID, int depth) {
    rpt_structure_loc("ADLDisplayID", pADLDisplayID, depth);
    int d = depth + 1;
@@ -449,23 +459,26 @@ static char * displayConnectorTypeNames[] = {
 static int displayConnectorTypeNamesCt = sizeof(displayConnectorTypeNames) / sizeof(char *);
 
 
-
+/** */
 char * displayTypeName(int iDisplayType) {
    assert(0 <= iDisplayType && iDisplayType < displayTypeNameCt);
    return displayTypeNames[iDisplayType];
 }
 
+/** */
 char * displayOutputTypeName(int iDisplayOutputType) {
    assert(0 <= iDisplayOutputType && iDisplayOutputType < displayOutputTypeNameCt);
    return displayOutputTypeNames[iDisplayOutputType];
 
 }
 
+/** */
 char * displayConnectorTypeName(int iDisplayConnector) {
    assert(0 <= iDisplayConnector && iDisplayConnector < displayConnectorTypeNamesCt);
    return displayConnectorTypeNames[iDisplayConnector];
 }
 
+/** */
 void report_adl_ADLDisplayInfo(ADLDisplayInfo * pADLDisplayInfo, int depth) {
    rpt_structure_loc("ADLDisplayInfo", pADLDisplayInfo, depth);
    if (pADLDisplayInfo) {
@@ -511,7 +524,7 @@ typedef struct ADLDisplayEDIDData
 }ADLDisplayEDIDData;
 #endif
 
-
+/** */
 void report_adl_ADLDisplayEDIDData(ADLDisplayEDIDData * pEDIDData, int depth) {
    rpt_structure_loc("ADLDisplayEDIDData", pEDIDData, depth);
    if (pEDIDData) {
@@ -573,7 +586,7 @@ typedef struct ADLDDCInfo2
 
 #endif
 
-
+/** */
 void report_adl_ADLDDCInfo2( ADLDDCInfo2 * pStruct, bool verbose, int depth) {
    rpt_structure_loc("ADLDDCInfo2", pStruct, depth);
    int d = depth+1;

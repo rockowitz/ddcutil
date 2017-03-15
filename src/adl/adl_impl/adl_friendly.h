@@ -1,8 +1,12 @@
 /* adl_friendly.h
- *
+ */
+
+/** \file
  * Type definitions, function declarations, etc that should be private to adl_intf.c,
  * but need to be visible to other ADL related files, particularly tests.
- *
+ */
+
+/*
  * <copyright>
  * Copyright (C) 2014-2016 Sanford Rockowitz <rockowitz@minsoft.com>
  *
@@ -27,7 +31,7 @@
 #ifndef ADL_FRIENDLY_H_
 #define ADL_FRIENDLY_H_
 
-#include <base/core.h>
+#include "base/core.h"
 
 #include "adl/adl_impl/adl_intf.h"
 #include "adl/adl_impl/adl_sdk_includes.h"

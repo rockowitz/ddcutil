@@ -1,8 +1,12 @@
 /* adl_aux_intf.h
- *
+ */
+
+/** \file
  * Functions in this file were originally part of adl_inf.c,
  * but with code refactoring are now only called from tests.
- *
+ */
+
+/*
  * <copyright>
  * Copyright (C) 2014-2016 Sanford Rockowitz <rockowitz@minsoft.com>
  *
@@ -27,8 +31,8 @@
 #ifndef ADL_AUX_INTF_H_
 #define ADL_AUX_INTF_H_
 
-#include <base/core.h>
-#include <base/status_code_mgt.h>
+#include "base/core.h"
+#include "base/status_code_mgt.h"
 
 
 Base_Status_ADL adl_ddc_write_only_with_retry(
