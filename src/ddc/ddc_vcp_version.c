@@ -99,17 +99,17 @@ DDCA_MCCS_Version_Spec get_vcp_version_by_display_handle(Display_Handle * dh) {
          DDCA_Output_Level olev = get_output_level();
          if (olev == OL_VERBOSE)
             set_output_level(OL_NORMAL);
-         Global_Status_Code gsc = get_vcp_value(dh, 0xdf, NON_TABLE_VCP_VALUE, &pvalrec);
+         Public_Status_Code psc = get_vcp_value(dh, 0xdf, NON_TABLE_VCP_VALUE, &pvalrec);
          if (olev == OL_VERBOSE)
             set_output_level(olev);
 
-         if (gsc == 0) {
+         if (psc == 0) {
             dh->vcp_version.major = pvalrec->val.nc.sh;
             dh->vcp_version.minor = pvalrec->val.nc.sl;
          }
          else {
             // happens for pre MCCS v2 monitors
-            DBGMSF(debug, "Error detecting VCP version using VCP feature 0xdf. gsc=%s\n", gsc_desc(gsc) );
+            DBGMSF(debug, "Error detecting VCP version using VCP feature 0xdf. psc=%s\n", psc_desc(psc) );
          }
       }
       DBGMSF(debug, "Non-cache lookup returning: %d.%d", dh->vcp_version.major, dh->vcp_version.minor);

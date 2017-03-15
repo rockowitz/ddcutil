@@ -282,7 +282,7 @@ app_read_changes(Display_Handle * dh) {
    int MAX_CHANGES = 20;
    // bool new_values_found = false;
 
-   Global_Status_Code gsc = 0;
+   Public_Status_Code psc = 0;
 
    // read 02h
    // xff: no user controls
@@ -299,9 +299,9 @@ app_read_changes(Display_Handle * dh) {
 
 
    DDCA_MCCS_Version_Spec vspec = get_vcp_version_by_display_handle(dh);
-   gsc = get_nontable_vcp_value(dh, 0x02, &p_nontable_response);
-   if (gsc != 0) {
-      DBGMSG("get_nontable_vcp_value() returned %s", gsc_desc(gsc));
+   psc = get_nontable_vcp_value(dh, 0x02, &p_nontable_response);
+   if (psc != 0) {
+      DBGMSG("get_nontable_vcp_value() returned %s", psc_desc(psc));
    }
    else if (p_nontable_response->sl == 0x01) {
       DBGMSF(debug, "No new control values found");
@@ -313,9 +313,9 @@ app_read_changes(Display_Handle * dh) {
 
       // new_values_found = true;
       if ( vcp_version_le(vspec, VCP_SPEC_V21) ) {
-         gsc = get_nontable_vcp_value(dh, 0x52, &p_nontable_response);
-         if (gsc != 0) {
-             DBGMSG("get_nontable_vcp_value() returned %s", gsc_desc(gsc));
+         psc = get_nontable_vcp_value(dh, 0x52, &p_nontable_response);
+         if (psc != 0) {
+             DBGMSG("get_nontable_vcp_value() returned %s", psc_desc(psc));
              return;
           }
           Byte changed_feature = p_nontable_response->sl;
@@ -324,9 +324,9 @@ app_read_changes(Display_Handle * dh) {
       else {  // x52 is a FIFO
          int ctr = 0;
          for (;ctr < MAX_CHANGES; ctr++) {
-            gsc = get_nontable_vcp_value(dh, 0x52, &p_nontable_response);
-            if (gsc != 0) {
-                DBGMSG("get_nontable_vcp_value() returned %s", gsc_desc(gsc));
+            psc = get_nontable_vcp_value(dh, 0x52, &p_nontable_response);
+            if (psc != 0) {
+                DBGMSG("get_nontable_vcp_value() returned %s", psc_desc(psc));
                 return;
              }
              Byte changed_feature = p_nontable_response->sl;
@@ -340,10 +340,10 @@ app_read_changes(Display_Handle * dh) {
          }
       }
 
-      if (gsc == 0) {
-         gsc = set_nontable_vcp_value(dh, 0x02, 0x01);
-         if (gsc != 0)
-            DBGMSG("set_nontable_vcp_value_by_display_handle() returned %s", gsc_desc(gsc));
+      if (psc == 0) {
+         psc = set_nontable_vcp_value(dh, 0x02, 0x01);
+         if (psc != 0)
+            DBGMSG("set_nontable_vcp_value_by_display_handle() returned %s", psc_desc(psc));
          else
             DBGMSG("reset new control value successful");
       }
@@ -354,6 +354,7 @@ app_read_changes(Display_Handle * dh) {
       p_nontable_response = NULL;
    }
 }
+
 
 #ifdef USE_USB
 void

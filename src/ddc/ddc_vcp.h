@@ -33,30 +33,30 @@
 #include "vcp/vcp_feature_values.h"
 
 
-Global_Status_Code
+Public_Status_Code
 set_nontable_vcp_value(
       Display_Handle *          dh,
       Byte                      feature_code,
       int                       new_value);
 
-Global_Status_Code
+Public_Status_Code
 set_vcp_value(
       Display_Handle *   dh,
       Single_Vcp_Value * vrec);
 
-Global_Status_Code
+Public_Status_Code
 get_table_vcp_value(
       Display_Handle *          dh,
       Byte                      feature_code,
       Buffer**                  pp_table_bytes);
 
-Global_Status_Code
+Public_Status_Code
 get_nontable_vcp_value(
       Display_Handle *          dh,
       Byte                      feature_code,
       Parsed_Nontable_Vcp_Response** pp_parsed_response);
 
-Global_Status_Code
+Public_Status_Code
 get_vcp_value(
       Display_Handle *          dh,
       Byte                      feature_code,

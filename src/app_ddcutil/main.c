@@ -181,7 +181,8 @@ void probe_display_by_dh(Display_Handle * dh)
 {
    bool debug = false;
    DBGMSF(debug, "Starting. dh=%s", display_handle_repr(dh));
-   Global_Status_Code gsc = 0;
+   // Global_Status_Code gsc = 0;
+   Public_Status_Code psc = 0;
 
    printf("\nCapabilities for display %s\n", display_handle_repr(dh) );
       // not needed, causes confusing messages if get_vcp_version fails but get_capabilities succeeds
@@ -265,22 +266,22 @@ void probe_display_by_dh(Display_Handle * dh)
       Single_Vcp_Value * valrec;
       int color_temp_increment = 0;
       int color_temp_units = 0;
-      gsc =  get_vcp_value(
+      psc =  get_vcp_value(
                dh,
              0x0b,              // color temperature increment,
              NON_TABLE_VCP_VALUE,
              &valrec);
-      if (gsc == 0) {
+      if (psc == 0) {
          if (debug)
             printf("Value returned for feature x0b: %s\n", summarize_single_vcp_value(valrec) );
          color_temp_increment = valrec->val.c.cur_val;
 
-         gsc =  get_vcp_value(
+         psc =  get_vcp_value(
                dh,
              0x0c,              // color temperature request
              NON_TABLE_VCP_VALUE,
              &valrec);
-         if (gsc == 0) {
+         if (psc == 0) {
             if (debug)
                printf("Value returned for feature x0c: %s\n", summarize_single_vcp_value(valrec) );
             color_temp_units = valrec->val.c.cur_val;
@@ -294,7 +295,7 @@ void probe_display_by_dh(Display_Handle * dh)
                   color_temp);
          }
       }
-      if (gsc != 0)
+      if (psc != 0)
          printf("Unable to calculate color temperature from VCP features x0B and x0C\n");
 
       // get VCP 14

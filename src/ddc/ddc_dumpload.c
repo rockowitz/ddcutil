@@ -290,6 +290,7 @@ create_dumpload_data_from_g_ptr_array(GPtrArray * garray) {
  */
 Global_Status_Code  ddc_set_multiple(Display_Handle* dh, Vcp_Value_Set vset) {
    Global_Status_Code gsc = 0;
+   Public_Status_Code psc = 0;
    int value_ct = vcp_value_set_size(vset);
 
    int ndx;
@@ -299,10 +300,11 @@ Global_Status_Code  ddc_set_multiple(Display_Handle* dh, Vcp_Value_Set vset) {
       Byte   feature_code = vrec->opcode;
       assert(vrec->value_type == NON_TABLE_VCP_VALUE);     // Table not yet implemented
       ushort new_value    = vrec->val.c.cur_val;
-      gsc = set_nontable_vcp_value(dh, feature_code, new_value);
-      if (gsc != 0) {
+      psc = set_nontable_vcp_value(dh, feature_code, new_value);
+      gsc = public_to_global_status_code(psc);
+      if (psc != 0) {
          f0printf(FERR, "Error setting value %d for VCP feature code 0x%02x: %s\n",
-                         new_value, feature_code, gsc_desc(gsc) );
+                         new_value, feature_code, psc_desc(psc) );
          f0printf(FERR, "Terminating.");
          break;
       }

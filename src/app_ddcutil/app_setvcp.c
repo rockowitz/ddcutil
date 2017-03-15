@@ -110,6 +110,7 @@ app_set_vcp_value(
       bool             force)
 {
    Global_Status_Code         gsc = 0;
+   Public_Status_Code         psc = 0;
    long                       longtemp;
    Byte                       hexid;
    VCP_Feature_Table_Entry *  entry = NULL;
@@ -170,10 +171,11 @@ app_set_vcp_value(
       goto bye;
    }
 
-   gsc = set_vcp_value(dh, &vrec);
-   if (gsc != 0)  {
+   psc = set_vcp_value(dh, &vrec);
+   gsc = public_to_global_status_code(psc);
+   if (psc != 0)  {
       // Is this proper error message?
-      printf("Setting value failed. rc=%d: %s\n", gsc , gsc_desc(gsc));
+      printf("Setting value failed. rc=%s\n", psc_desc(psc));
    }
 
 bye:

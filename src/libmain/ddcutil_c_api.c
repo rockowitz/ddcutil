@@ -1144,9 +1144,9 @@ ddca_get_nontable_vcp_value(
 {
    WITH_DH(ddct_dh,  {
        Parsed_Nontable_Vcp_Response * code_info;
-       Global_Status_Code gsc = get_nontable_vcp_value(dh, feature_code,&code_info);
+       psc = get_nontable_vcp_value(dh, feature_code,&code_info);
        // DBGMSG(" get_nontable_vcp_value() returned %s", gsc_desc(gsc));
-       if (gsc == 0) {
+       if (psc == 0) {
           response->feature_code = code_info->vcp_code;
           // response->cur_value = code_info->cur_value;
           // response->max_value = code_info->max_value;
@@ -1155,9 +1155,10 @@ ddca_get_nontable_vcp_value(
           response->nc.sh        = code_info->sh;
           response->nc.sl        = code_info->sl;
        }
-       else psc = global_to_public_status_code(gsc);
+       // else psc = global_to_public_status_code(gsc);
     } );
 }
+
 
 // Partial code for getting formatted value
 //
@@ -1194,9 +1195,9 @@ ddca_get_table_vcp_value(
    WITH_DH(ddca_dh,
       {
          Buffer * p_table_bytes = NULL;
-         Global_Status_Code gsc;
-         gsc =  get_table_vcp_value(dh, feature_code, &p_table_bytes);
-         if (gsc == 0) {
+         // Global_Status_Code gsc;
+         psc =  get_table_vcp_value(dh, feature_code, &p_table_bytes);
+         if (psc == 0) {
             assert(p_table_bytes);  // avoid coverity warning
             int len = p_table_bytes->len;
             *value_len = len;
@@ -1204,7 +1205,7 @@ ddca_get_table_vcp_value(
             memcpy(*value_bytes, p_table_bytes->bytes, len);
             buffer_free(p_table_bytes, __func__);
          }
-         psc = global_to_public_status_code(gsc);
+         //psc = global_to_public_status_code(gsc);
       }
      );
 }
@@ -1222,8 +1223,8 @@ ddca_get_vcp_value(
    WITH_DH(ddca_dh,
          {
                *pvalrec = NULL;
-               Global_Status_Code gsc = get_vcp_value(dh, feature_code, call_type, pvalrec);
-               psc = global_to_public_status_code(gsc);
+               psc = get_vcp_value(dh, feature_code, call_type, pvalrec);
+               //psc = global_to_public_status_code(gsc);
          }
    );
 }
@@ -1260,8 +1261,8 @@ ddca_get_formatted_vcp_value(
                    // n. will default to NON_TABLE_VCP_VALUE if not a known code
                    Vcp_Value_Type call_type = (flags & DDCA_TABLE) ?  TABLE_VCP_VALUE : NON_TABLE_VCP_VALUE;
                    Single_Vcp_Value * pvalrec;
-                   Global_Status_Code gsc = get_vcp_value(dh, feature_code, call_type, &pvalrec);
-                   if (gsc == 0) {
+                   psc = get_vcp_value(dh, feature_code, call_type, &pvalrec);
+                   if (psc == 0) {
                       bool ok =
                       vcp_format_feature_detail(
                              pentry,
@@ -1270,12 +1271,12 @@ ddca_get_formatted_vcp_value(
                              p_formatted_value
                            );
                       if (!ok) {
-                         gsc = DDCL_OTHER;    // ** WRONG CODE ***
+                         psc = DDCL_OTHER;    // ** WRONG CODE ***
                          assert(!p_formatted_value);
                       }
                    }
 
-                   psc = global_to_public_status_code(gsc);
+                   // psc = global_to_public_status_code(gsc);
                }
          }
    )
@@ -1289,8 +1290,8 @@ ddca_set_continuous_vcp_value(
       int                   new_value)
 {
    WITH_DH(ddca_dh,  {
-         Global_Status_Code gsc = set_nontable_vcp_value(dh, feature_code, new_value);
-         psc = global_to_public_status_code(gsc);
+         psc = set_nontable_vcp_value(dh, feature_code, new_value);
+         // psc = global_to_public_status_code(gsc);
       } );
 }
 

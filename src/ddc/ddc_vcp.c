@@ -70,7 +70,7 @@ static Trace_Group TRACE_GROUP = TRC_DDC;
  *  Returns:
  *     status code from ddc_write_only_with_retry()
  */
-Global_Status_Code
+Public_Status_Code
 set_nontable_vcp_value(
       Display_Handle * dh,
       Byte             feature_code,
@@ -82,12 +82,11 @@ set_nontable_vcp_value(
    DBGTRC(debug, TRACE_GROUP,
           "Writing feature 0x%02x , new value = %d, dh=%s\n",
           feature_code, new_value, display_handle_repr(dh));
-   Global_Status_Code gsc = 0;
    Public_Status_Code psc = 0;
 
    if (dh->io_mode == USB_IO) {
 #ifdef USE_USB
-      gsc = usb_set_nontable_vcp_value(dh, feature_code, new_value);
+      psc = usb_set_nontable_vcp_value(dh, feature_code, new_value);
 #else
       PROGRAM_LOGIC_ERROR("ddcutil not build with USB support");
 #endif
@@ -105,9 +104,8 @@ set_nontable_vcp_value(
    }
 
    // TRCMSGTG(tg, "Returning %s", gsc_desc(gsc));
-   gsc = public_to_global_status_code(psc);
-   DBGTRC(debug, TRACE_GROUP, "Returning %s", gsc_desc(gsc));
-   return gsc;
+   DBGTRC(debug, TRACE_GROUP, "Returning %s", psc_desc(psc));
+   return psc;
 }
 
 
@@ -122,7 +120,7 @@ set_nontable_vcp_value(
  *  Returns:
  *     status code (currently DDCL_UNIMPLEMENTED)
  */
-Global_Status_Code
+Public_Status_Code
 set_table_vcp_value(
       Display_Handle *  dh,
       Byte              feature_code,
@@ -133,12 +131,12 @@ set_table_vcp_value(
    // Trace_Group tg = (debug) ? 0xFF : TRACE_GROUP;
    // TRCMSGTG(tg, "Writing feature 0x%02x , bytect = %d\n", feature_code, bytect);
    DBGTRC(debug, TRACE_GROUP, "Writing feature 0x%02x , bytect = %d\n", feature_code, bytect);
-   Global_Status_Code gsc = 0;
+   Public_Status_Code psc = 0;
 
 
    if (dh->io_mode == USB_IO) {
 #ifdef USE_USB
-      gsc = DDCL_UNIMPLEMENTED;
+      psc = DDCL_UNIMPLEMENTED;
 #else
       PROGRAM_LOGIC_ERROR("ddcutil not build with USB support");
 #endif
@@ -148,13 +146,13 @@ set_table_vcp_value(
       // pointless wrapping in a Buffer just to unwrap
       Buffer * new_value = buffer_new_with_value(bytes, bytect, __func__);
 
-      gsc = multi_part_write_with_retry(dh, feature_code, new_value);
+      psc = multi_part_write_with_retry(dh, feature_code, new_value);
 
       buffer_free(new_value, __func__);
    }
    // TRCMSGTG(tg, "Returning: %s", gsc_desc(gsc));
-   DBGTRC(debug, TRACE_GROUP, "Returning: %s", gsc_desc(gsc));
-   return gsc;
+   DBGTRC(debug, TRACE_GROUP, "Returning: %s", psc_desc(psc));
+   return psc;
 }
 
 
@@ -167,21 +165,21 @@ set_table_vcp_value(
  *  Returns:
  *     status code
  */
-Global_Status_Code
+Public_Status_Code
 set_vcp_value(
       Display_Handle *   dh,
       Single_Vcp_Value * vrec)
 {
-   Global_Status_Code gsc = 0;
+   Public_Status_Code psc = 0;
    if (vrec->value_type == NON_TABLE_VCP_VALUE) {
-      gsc = set_nontable_vcp_value(dh, vrec->opcode, vrec->val.c.cur_val);
+      psc = set_nontable_vcp_value(dh, vrec->opcode, vrec->val.c.cur_val);
    }
    else {
       assert(vrec->value_type == TABLE_VCP_VALUE);
-      gsc = set_table_vcp_value(dh, vrec->opcode, vrec->val.t.bytes, vrec->val.t.bytect);
+      psc = set_table_vcp_value(dh, vrec->opcode, vrec->val.t.bytes, vrec->val.t.bytect);
    }
 
-   return gsc;
+   return psc;
 }
 
 
@@ -201,7 +199,7 @@ set_vcp_value(
  *
  * It is the responsibility of the caller to free the parsed response.
  */
-Global_Status_Code get_nontable_vcp_value(
+Public_Status_Code get_nontable_vcp_value(
        Display_Handle *               dh,
        Byte                           feature_code,
        Parsed_Nontable_Vcp_Response** ppInterpretedCode)
@@ -211,7 +209,6 @@ Global_Status_Code get_nontable_vcp_value(
    // TRCMSGTG(tg, "Reading feature 0x%02x", feature_code);
    DBGTRC(debug, TRACE_GROUP, "Reading feature 0x%02x", feature_code);
 
-   Global_Status_Code rc = 0;
    Public_Status_Code psc = 0;
    // Output_Level output_level = get_output_level();
    Parsed_Nontable_Vcp_Response * parsed_response = NULL;
@@ -234,30 +231,30 @@ Global_Status_Code get_nontable_vcp_value(
            false,                       // all_zero_response_ok
            &response_packet_ptr
         );
-   rc = public_to_global_status_code(psc);
+   // rc = public_to_global_status_code(psc);
    // TRCMSGTG(tg, "perform_ddc_write_read_with_retry() returned %s", psc_desc(psc));
-   if (debug || rc != 0 ) {
+   if (debug || psc != 0 ) {
       DBGTRC(debug, TRACE_GROUP, "perform_ddc_write_read_with_retry() returned %s", psc_desc(psc));
    }
 
-   if (rc == 0) {
+   if (psc == 0) {
       // ??? why is this allocated?  it's discarded by get_interpreted_vcp_code()?
       parsed_response = (Parsed_Nontable_Vcp_Response *) calloc(1, sizeof(Parsed_Nontable_Vcp_Response));
 
-      rc = get_interpreted_vcp_code(response_packet_ptr, true /* make_copy */, &parsed_response);   // ???
+      psc = get_interpreted_vcp_code(response_packet_ptr, true /* make_copy */, &parsed_response);   // ???
       //if (msgLevel >= VERBOSE)
       // if (output_level >= OL_VERBOSE)
       //    report_interpreted_nontable_vcp_response(interpretation_ptr);
    }
 
-   if (rc == 0) {
+   if (psc == 0) {
       if (!parsed_response->valid_response)  {
-         rc = DDCRC_INVALID_DATA;
+         psc = DDCRC_INVALID_DATA;
       }
       else if (!parsed_response->supported_opcode) {
-         rc = DDCRC_REPORTED_UNSUPPORTED;
+         psc = DDCRC_REPORTED_UNSUPPORTED;
       }
-      if (rc != 0) {
+      if (psc != 0) {
          free(parsed_response);
          parsed_response = NULL;
       }
@@ -270,9 +267,9 @@ Global_Status_Code get_nontable_vcp_value(
 
    // TRCMSGTG(tg, "Returning %s, *ppinterpreted_code=%p", gsc_name(rc), parsed_response);
    DBGTRC(debug, TRACE_GROUP,
-          "Returning %s, *ppinterpreted_code=%p", gsc_name(rc), parsed_response);
+          "Returning %s, *ppinterpreted_code=%p", psc_desc(psc), parsed_response);
    *ppInterpretedCode = parsed_response;
-   return rc;
+   return psc;
 }
 
 
@@ -287,7 +284,7 @@ Global_Status_Code get_nontable_vcp_value(
  * Returns:
  *    status code
  */
-Global_Status_Code get_table_vcp_value(
+Public_Status_Code get_table_vcp_value(
        Display_Handle *       dh,
        Byte                   feature_code,
        Buffer**               pp_table_bytes)
@@ -297,7 +294,6 @@ Global_Status_Code get_table_vcp_value(
    // TRCMSGTG(tg, "Starting. Reading feature 0x%02x", feature_code);
    DBGTRC(debug, TRACE_GROUP, "Starting. Reading feature 0x%02x", feature_code);
 
-   Global_Status_Code gsc = 0;
    Public_Status_Code psc = 0;
    DDCA_Output_Level output_level = get_output_level();
    Buffer * paccumulator =  NULL;
@@ -313,7 +309,7 @@ Global_Status_Code get_table_vcp_value(
              "perform_ddc_write_read_with_retry() returned %s", psc_desc(psc));
    }
 
-   if (gsc == 0) {
+   if (psc == 0) {
       *pp_table_bytes = paccumulator;
       if (output_level >= OL_VERBOSE) {
          printf("Bytes returned on table read:");
@@ -321,11 +317,10 @@ Global_Status_Code get_table_vcp_value(
       }
    }
 
-   gsc = public_to_global_status_code(psc);
    // TRCMSGTG(tg, "Done. Returning rc=%s, *pp_table_bytes=%p", gsc_desc(gsc), *pp_table_bytes);
    DBGTRC(debug, TRACE_GROUP,
-          "Done. Returning rc=%s, *pp_table_bytes=%p", gsc_desc(gsc), *pp_table_bytes);
-   return gsc;
+          "Done. Returning rc=%s, *pp_table_bytes=%p", psc_desc(psc), *pp_table_bytes);
+   return psc;
 }
 
 
@@ -342,7 +337,8 @@ Global_Status_Code get_table_vcp_value(
  *
  * The caller is responsible for freeing the value result returned.
  */
-Global_Status_Code get_vcp_value(
+Public_Status_Code
+get_vcp_value(
        Display_Handle *          dh,
        Byte                      feature_code,
        Vcp_Value_Type            call_type,
@@ -354,7 +350,7 @@ Global_Status_Code get_vcp_value(
    DBGTRC(debug, TRACE_GROUP, "Starting. Reading feature 0x%02x, dh=%s, dh->fh=%d",
             feature_code, display_handle_repr(dh), dh->fh);
 
-   Global_Status_Code gsc = 0;
+   Public_Status_Code psc = 0;
 
    Buffer * buffer = NULL;
    Parsed_Nontable_Vcp_Response * parsed_nontable_response = NULL;  // vs interpreted ..
@@ -368,11 +364,11 @@ Global_Status_Code get_vcp_value(
       switch (call_type) {
 
           case (NON_TABLE_VCP_VALUE):
-                gsc = usb_get_nontable_vcp_value(
+                psc = usb_get_nontable_vcp_value(
                       dh,
                       feature_code,
                       &parsed_nontable_response);    //
-                if (gsc == 0) {
+                if (psc == 0) {
                    valrec = create_nontable_vcp_value(
                                feature_code,
                                parsed_nontable_response->mh,
@@ -384,7 +380,7 @@ Global_Status_Code get_vcp_value(
                 break;
 
           case (TABLE_VCP_VALUE):
-                gsc = DDCRC_REPORTED_UNSUPPORTED;
+                psc = DDCRC_REPORTED_UNSUPPORTED;
                 break;
           }
 #else
@@ -395,11 +391,11 @@ Global_Status_Code get_vcp_value(
       switch (call_type) {
 
       case (NON_TABLE_VCP_VALUE):
-            gsc = get_nontable_vcp_value(
+            psc = get_nontable_vcp_value(
                      dh,
                      feature_code,
                      &parsed_nontable_response);
-            if (gsc == 0) {
+            if (psc == 0) {
                valrec = create_nontable_vcp_value(
                            feature_code,
                            parsed_nontable_response->mh,
@@ -411,11 +407,11 @@ Global_Status_Code get_vcp_value(
             break;
 
       case (TABLE_VCP_VALUE):
-            gsc = get_table_vcp_value(
+            psc = get_table_vcp_value(
                     dh,
                     feature_code,
                     &buffer);
-            if (gsc == 0) {
+            if (psc == 0) {
                valrec = create_table_vcp_value_by_buffer(feature_code, buffer);
                buffer_free(buffer, __func__);
             }
@@ -427,10 +423,10 @@ Global_Status_Code get_vcp_value(
    *pvalrec = valrec;
 
    // TRCMSGTG(tg, "Done.  Returning: %s", gsc_desc(gsc) );
-   DBGTRC(debug, TRACE_GROUP, "Done.  Returning: %s", gsc_desc(gsc) );
-   if (gsc == 0 && debug)
+   DBGTRC(debug, TRACE_GROUP, "Done.  Returning: %s", psc_desc(psc) );
+   if (psc == 0 && debug)
       report_single_vcp_value(valrec,1);
-   assert( (gsc == 0 && *pvalrec) || (gsc != 0 && !*pvalrec) );
-   return gsc;
+   assert( (psc == 0 && *pvalrec) || (psc != 0 && !*pvalrec) );
+   return psc;
 }
 

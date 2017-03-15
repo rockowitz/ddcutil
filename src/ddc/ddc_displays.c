@@ -84,7 +84,6 @@ static bool verify_adl_display_ref(Display_Ref * dref) {
    bool result = true;
    Display_Handle * dh = NULL;
    Public_Status_Code psc = 0;
-   Global_Status_Code gsc = 0;
 
    psc = ddc_open_display(dref, CALLOPT_ERR_MSG | CALLOPT_ERR_ABORT, &dh);
    if (psc != 0)  {
@@ -105,8 +104,7 @@ static bool verify_adl_display_ref(Display_Ref * dref) {
    DDCA_Output_Level olev = get_output_level();
    if (olev == OL_VERBOSE)
       set_output_level(OL_NORMAL);
-   gsc = get_vcp_value(dh, 0x10, NON_TABLE_VCP_VALUE, &pvalrec);
-   psc = global_to_public_status_code(gsc);
+   psc = get_vcp_value(dh, 0x10, NON_TABLE_VCP_VALUE, &pvalrec);
    if (olev == OL_VERBOSE)
       set_output_level(olev);
 
@@ -145,16 +143,14 @@ bool ddc_verify(Display_Ref * dref) {
    FAILSIM;
 
    Display_Handle * dh;
-   Global_Status_Code gsc = 0;
 
    Public_Status_Code psc = ddc_open_display(dref,  CALLOPT_NONE, &dh);
    if (psc == 0) {
       Parsed_Nontable_Vcp_Response * presp = NULL;
       // or could use get_vcp_value()
-      gsc = get_nontable_vcp_value(dh,
+      psc = get_nontable_vcp_value(dh,
                              0x10,    // brightness
                              &presp);
-      psc = global_to_public_status_code(gsc);
       DBGMSF(debug, "get_nontable_vcp_value() returned %s", psc_desc( psc));
       if (psc == 0) {
          free(presp);
@@ -690,11 +686,11 @@ ddc_report_active_display(Display_Info * curinfo, int depth) {
                // n. get_nontable_vcp_value() does not know how to handle USB devices, but its
                // caller, get_vcp_value() does
                Single_Vcp_Value *   valrec;
-               Global_Status_Code  gsc = get_vcp_value(dh, 0xc8, NON_TABLE_VCP_VALUE, &valrec);
+               psc = get_vcp_value(dh, 0xc8, NON_TABLE_VCP_VALUE, &valrec);
 
-               if (gsc != 0) {
-                  if (gsc != DDCRC_REPORTED_UNSUPPORTED && gsc != DDCRC_DETERMINED_UNSUPPORTED) {
-                      DBGMSG("get_nontable_vcp_value(0xc8) returned %s", gsc_desc(gsc));
+               if (psc != 0) {
+                  if (psc != DDCRC_REPORTED_UNSUPPORTED && psc != DDCRC_DETERMINED_UNSUPPORTED) {
+                      DBGMSG("get_nontable_vcp_value(0xc8) returned %s", psc_desc(psc));
                       mfg_name = "DDC communication failed";
                   }
                }
@@ -710,16 +706,16 @@ ddc_report_active_display(Display_Info * curinfo, int depth) {
                }
                rpt_vstring(depth,    "Controller mfg:      %s", mfg_name);
 
-               gsc = get_vcp_value(dh, 0xc9, NON_TABLE_VCP_VALUE, &valrec);  // xc9 = firmware version
-               if (gsc != 0) {
+               psc = get_vcp_value(dh, 0xc9, NON_TABLE_VCP_VALUE, &valrec);  // xc9 = firmware version
+               if (psc != 0) {
                   char * version = "Unspecified";
-                  if (gsc != DDCRC_REPORTED_UNSUPPORTED && gsc != DDCRC_DETERMINED_UNSUPPORTED) {
-                     DBGMSG("get_vcp_value(0xc9) returned %s", gsc_desc(gsc));
+                  if (psc != DDCRC_REPORTED_UNSUPPORTED && psc != DDCRC_DETERMINED_UNSUPPORTED) {
+                     DBGMSG("get_vcp_value(0xc9) returned %s", psc_desc(psc));
                      version = "DDC communication failed";
                   }
                   rpt_vstring(depth, "Firmware version:    %s", version);
                }
-               else if (gsc == 0) {
+               else if (psc == 0) {
                   rpt_vstring(depth, "Firmware version:    %d.%d",
                         // code_info->sh, code_info->sl);
                         valrec->val.nc.sh, valrec->val.nc.sl);

@@ -176,7 +176,7 @@ get_raw_value_for_feature_table_entry(
    // TRCMSGTG(tg, "Starting");
    DBGTRC(debug, TRACE_GROUP, "Starting");
 
-   Global_Status_Code gsc = 0;
+   Public_Status_Code psc = 0;
    DDCA_MCCS_Version_Spec vspec = get_vcp_version_by_display_handle(dh);
    char * feature_name = get_version_sensitive_feature_name(frec, vspec);
 
@@ -187,26 +187,26 @@ get_raw_value_for_feature_table_entry(
    Single_Vcp_Value * valrec = NULL;
    if (dh->io_mode == USB_IO) {
 #ifdef USE_USB
-     Public_Status_Code psc = usb_get_vcp_value(
+     psc = usb_get_vcp_value(
               dh,
               feature_code,
               feature_type,
               &valrec);
-      gsc = public_to_global_status_code(psc);
+      // gsc = public_to_global_status_code(psc);
 #else
       PROGRAM_LOGIC_ERROR("ddcutil not build with USB support");
 #endif
    }
    else {
-      gsc = get_vcp_value(
+      psc = get_vcp_value(
               dh,
               feature_code,
               feature_type,
               &valrec);
    }
-   assert ( (gsc==0 && valrec) || (gsc!=0 && !valrec) );
+   assert ( (psc==0 && valrec) || (psc!=0 && !valrec) );
 
-   switch(gsc) {
+   switch(psc) {
    case 0:
       break;
 
@@ -224,7 +224,7 @@ get_raw_value_for_feature_table_entry(
                         feature_code, feature_name, "Unsupported feature code (Null response)");
       }
       COUNT_STATUS_CODE(DDCRC_DETERMINED_UNSUPPORTED);
-      gsc = DDCRC_DETERMINED_UNSUPPORTED;
+      psc = DDCRC_DETERMINED_UNSUPPORTED;
       break;
 
    case DDCRC_READ_ALL_ZERO:
@@ -233,7 +233,7 @@ get_raw_value_for_feature_table_entry(
          f0printf(msg_fh, FMT_CODE_NAME_DETAIL_W_NL,
                         feature_code, feature_name, "Unsupported feature code (All zero response)");
       }
-      gsc = DDCRC_DETERMINED_UNSUPPORTED;
+      psc = DDCRC_DETERMINED_UNSUPPORTED;
       COUNT_STATUS_CODE(DDCRC_DETERMINED_UNSUPPORTED);
       break;
 
@@ -253,7 +253,7 @@ get_raw_value_for_feature_table_entry(
    default:
    {
       char buf[200];
-      snprintf(buf, 200, "Invalid response. status code=%s", gsc_desc(gsc));
+      snprintf(buf, 200, "Invalid response. status code=%s", psc_desc(psc));
       f0printf(msg_fh, FMT_CODE_NAME_DETAIL_W_NL,
                        feature_code, feature_name, buf);
    }
@@ -261,9 +261,9 @@ get_raw_value_for_feature_table_entry(
 
    *pvalrec = valrec;
    // TRCMSGTG(tg, "Done.  Returning: %s, *pvalrec=%p", gsc_desc(gsc), *pvalrec);
-   DBGTRC(debug, TRACE_GROUP, "Done.  Returning: %s, *pvalrec=%p", gsc_desc(gsc), *pvalrec);
-   assert( (gsc == 0 && *pvalrec) || (gsc != 0 && !*pvalrec) );
-   return gsc;
+   DBGTRC(debug, TRACE_GROUP, "Done.  Returning: %s, *pvalrec=%p", psc_desc(psc), *pvalrec);
+   assert( (psc == 0 && *pvalrec) || (psc != 0 && !*pvalrec) );
+   return public_to_global_status_code(psc);
 }
 
 
