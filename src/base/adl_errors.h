@@ -34,7 +34,11 @@ void init_adl_errors() ;
 
 Status_Code_Info * get_adl_status_description(int errnum);
 
-bool adl_error_name_to_number(const char * adl_error_name, int * adl_error_number);
-bool adl_errno_name_to_modulated_number(const char * error_name, Global_Status_Code * p_error_number);
+bool adl_error_name_to_number(
+        const char *           adl_error_name,
+        Base_Status_ADL *      p_adl_error_number);
+bool adl_error_name_to_modulated_number(
+        const char *           adl_error_name,
+        Modulated_Status_ADL * p_adl_error_number);
 
 #endif /* ADL_ERRORS_H_ */
