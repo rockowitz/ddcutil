@@ -1,7 +1,7 @@
 /* ddc_multi_part_io.h
  *
  * <copyright>
- * Copyright (C) 2014-2016 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2014-2017 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -21,12 +21,19 @@
  * </endcopyright>
  */
 
+/** \file
+ * Cpabilities aread and Table feature read/write that require multiple
+ * reads and writes for completion.
+ */
+
 #ifndef DDC_MULTI_PART_IO_H_
 #define DDC_MULTI_PART_IO_H_
 
+/** \cond */
 #include <stdbool.h>
+/** \endcond */
 
-#include "util/coredefs.h"
+// #include "util/coredefs.h"
 #include "util/data_structures.h"
 
 #include "base/status_code_mgt.h"

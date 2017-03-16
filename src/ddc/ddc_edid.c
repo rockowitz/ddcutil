@@ -6,7 +6,7 @@
  * #include dependencies within the ddc source directory.
  *
  * <copyright>
- * Copyright (C) 2014-2016 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2014-20167 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -26,6 +26,13 @@
  * </endcopyright>
  */
 
+/** \file ddc_edid.c
+ * Functions to obtain EDID information for a display.
+ *
+ * These functions are in a separate source file to avoid circular
+ * include dependencies within the ddc source directory.
+ */
+
 #include "base/core.h"
 #include "util/edid.h"
 #include "i2c/i2c_bus_core.h"
@@ -39,7 +46,12 @@
 // Trace class for this file
 static Trace_Group TRACE_GROUP = TRC_DDC;
 
-
+/** Gets a #Parsed_Edid for an open display.
+ *
+ * @param dh  display handle
+ *
+ * @return pointer to newly allocated #Parsed_Edid
+ */
 Parsed_Edid*
 ddc_get_parsed_edid_by_display_handle(Display_Handle * dh) {
    Parsed_Edid* pEdid = NULL;
@@ -64,6 +76,13 @@ ddc_get_parsed_edid_by_display_handle(Display_Handle * dh) {
    return pEdid;
 }
 
+
+/** Gets a #Parsed_Edid for a #Display_Ref
+ *
+ * @param dref  display reference
+ *
+ * @return pointer to newly allocated #Parsed_Edid
+ */
 
 Parsed_Edid*
 ddc_get_parsed_edid_by_display_ref(Display_Ref * dref) {

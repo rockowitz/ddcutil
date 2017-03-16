@@ -97,8 +97,7 @@
 static long start_time_nanos;
 
 
-
-
+static
 void report_stats(Stats_Type stats) {
    if (stats & STATS_TRIES) {
       puts("");
@@ -324,6 +323,14 @@ void probe_display_by_dref(Display_Ref * dref) {
 // Mainline
 //
 
+/** **ddcutil** program mainline.
+  *
+  * @param argc   number of command line arguments
+  * @param argv   pointer to array of argument strings
+  *
+  * @retval  EXIT_SUCCESS normal exit
+  * @retval  EXIT_FAILURE an error occurred
+  */
 int main(int argc, char *argv[]) {
    start_time_nanos = cur_realtime_nanosec();
 
@@ -347,7 +354,9 @@ int main(int argc, char *argv[]) {
       dbgtrc_show_time = true;              // extern in core.h
    set_trace_levels(parsed_cmd->trace);
 #ifdef ENABLE_FAILSIM
-   fsim_set_name_to_number_funcs(status_name_to_modulated_number, status_name_to_unmodulated_number);
+   fsim_set_name_to_number_funcs(
+         status_name_to_modulated_number,
+         status_name_to_unmodulated_number);
    if (parsed_cmd->failsim_control_fn) {
       bool ok = fsim_load_control_file(parsed_cmd->failsim_control_fn);
       if (!ok) {

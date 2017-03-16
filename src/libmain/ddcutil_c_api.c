@@ -255,7 +255,7 @@ ddca_status_code_name(DDCA_Status status_code) {
    char * result = NULL;
    // Global_ Status_Code gsc = ddca_to_global_ status_code(status_code);
    // Status_Code_Info * code_info = find_global_status_code_info(gsc);
-   Status_Code_Info * code_info = find_global_status_code_info(status_code);
+   Status_Code_Info * code_info = find_status_code_info(status_code);
    if (code_info)
       result = code_info->name;
    return result;
@@ -267,7 +267,7 @@ ddca_status_code_desc(DDCA_Status status_code) {
    char * result = "unknown status code";
    // Global_ Status_Code gsc = ddca_to_global_status_code(status_code);
    // Status_Code_Info * code_info = find_global_status_code_info(gsc);
-   Status_Code_Info * code_info = find_global_status_code_info(status_code);
+   Status_Code_Info * code_info = find_status_code_info(status_code);
    if (code_info)
       result = code_info->description;
    return result;

@@ -44,8 +44,12 @@
 static Fsim_Name_To_Number_Func name_to_number_func             = NULL;
 static Fsim_Name_To_Number_Func unmodulated_name_to_number_func = NULL;
 
-/** Sets the functions to bu used to interpret a symbolic value
- *  in a control file.
+
+/** Sets the functions to be used to interpret a symbolic value
+ *  in a failure simulation control file.
+ *
+ *  @param func   normal function to use
+ *  @param unmodulated_func function to use when an unmodulated value is looked up
  */
 void fsim_set_name_to_number_funcs(
       Fsim_Name_To_Number_Func func,
@@ -56,7 +60,7 @@ void fsim_set_name_to_number_funcs(
 }
 
 
-// singleton
+// singleton failure simulation table
 static GHashTable * fst = NULL;
 
 

@@ -233,13 +233,12 @@ int demodulate_rc(int rc, Retcode_Range_Id range_id) {
 }
 
 /** Determines the modulation range for a status code.
- * Can be either the base range or a modulation range
  *
  * @param  rc     status code to check
  *
- * @return range identifier
+ * @return range identifier (#Retcode_Range_Id)
  */
-Retcode_Range_Id get_modulation(int rc) {
+Retcode_Range_Id get_modulation(Public_Status_Code rc) {
    int ndx = 0;
    int abs_rc = abs(rc);
    Retcode_Range_Id range_id;
@@ -291,12 +290,13 @@ static Status_Code_Info ok_status_code_info = {0, "OK", "success"};
 // Public_Status_Code.  get_modulaetion() figures things out
 
 
-/** Given a Global_Status_Code, returns a pointer to its #Status_Code_Info struct.
+/** Given a #Public_Status_Code, returns a pointer to the #Status_Code_Info struct.
+ *  desribing it.
  *
- * @param   gsc global (modulated) status code
+ * @param   status_code global (modulated) status code
  * @return  pointer to #Status_Code_Info for staus code, NULL if not found
  */
-Status_Code_Info * find_global_status_code_info(int status_code) {
+Status_Code_Info * find_status_code_info(Public_Status_Code status_code) {
    bool debug = true;
    // use don't use DBGMSG to avoid circular includes
    if (debug)
@@ -322,7 +322,6 @@ Status_Code_Info * find_global_status_code_info(int status_code) {
       Retcode_Description_Finder finder_func = retcode_range_table[modulation].desc_finder;
       assert(finder_func != NULL);
       bool finder_arg_is_modulated = retcode_range_table[modulation].finder_arg_is_modulated;
-      // TODO: ???
       int rawrc = (finder_arg_is_modulated) ? status_code : demodulate_rc(status_code, modulation);
       if (debug)
          printf("(%s) rawrc = %d\n", __func__, rawrc);
@@ -336,9 +335,6 @@ Status_Code_Info * find_global_status_code_info(int status_code) {
 
    return pinfo;
 }
-
-
-
 
 
 
@@ -357,7 +353,7 @@ Status_Code_Info * find_global_status_code_info(int status_code) {
 char * gsc_desc(Global_Status_Code status_code) {
    static char workbuf[GSC_WORKBUF_SIZE];
    // printf("(%s) status_code=%d\n", __func__, status_code);
-   Status_Code_Info * pdesc = find_global_status_code_info(status_code);
+   Status_Code_Info * pdesc = find_status_code_info(status_code);
    if (pdesc) {
       snprintf(workbuf, GSC_WORKBUF_SIZE, "%s(%d): %s",
                pdesc->name, status_code, pdesc->description);
@@ -376,7 +372,7 @@ char * psc_desc(Public_Status_Code psc) {
 
    static char workbuf[GSC_WORKBUF_SIZE];
    // printf("(%s) status_code=%d\n", __func__, status_code);
-   Status_Code_Info * pdesc = find_global_status_code_info(gsc);
+   Status_Code_Info * pdesc = find_status_code_info(gsc);
    if (pdesc) {
       snprintf(workbuf, GSC_WORKBUF_SIZE, "%s(%d): %s",
                pdesc->name, psc, pdesc->description);
@@ -389,13 +385,23 @@ char * psc_desc(Public_Status_Code psc) {
 }
 #endif
 
+
+/** Returns a description string for a #Public_Status_Code.
+ *  Synthesizes a description if information for the status code cannot be found.
+ *
+ *  @param  psc  status code number
+ *  @return string description of status code
+ *
+ *  @remark
+ *  The value returned is valid until the next call of this function.
+ */
 char * psc_desc(Public_Status_Code psc) {
    static char workbuf[GSC_WORKBUF_SIZE];
    // printf("(%s) status_code=%d\n", __func__, status_code);
-   Status_Code_Info * pdesc = find_global_status_code_info(psc);
-   if (pdesc) {
+   Status_Code_Info * pinfo = find_status_code_info(psc);
+   if (pinfo) {
       snprintf(workbuf, GSC_WORKBUF_SIZE, "%s(%d): %s",
-               pdesc->name, psc, pdesc->description);
+               pinfo->name, psc, pinfo->description);
    }
    else {
       snprintf(workbuf, GSC_WORKBUF_SIZE, "%d",
@@ -406,21 +412,28 @@ char * psc_desc(Public_Status_Code psc) {
 
 #undef GSC_WORKBUF_SIZE
 
+#ifdef OLD
 /** Returns the symbolic name of a #Global_Status_Code
  *
  * @param status_code global (modulated) status code
  * @return symbolic name, or "" if not found
  */
-#ifdef OLD
+
 char * gsc_name(Global_Status_Code status_code) {
-   Status_Code_Info * pdesc = find_global_status_code_info(status_code);
+   Status_Code_Info * pdesc = find_status_code_info(status_code);
    char * result = (pdesc) ? pdesc->name : "";
    return result;
 }
 #endif
 
+/** Returns the symbolic name of a #Public_Status_Code
+ *
+ * @param status_code status code value
+ * @return symbolic name, or "" if not found
+ */
+
 char * psc_name(Public_Status_Code status_code) {
-   Status_Code_Info * pdesc = find_global_status_code_info(status_code);
+   Status_Code_Info * pdesc = find_status_code_info(status_code);
    char * result = (pdesc) ? pdesc->name : "";
    return result;
 }
@@ -434,7 +447,10 @@ char * psc_name(Public_Status_Code status_code) {
  * @param p_error_number  where to return status code number
  * @return true if conversion successful, false if unrecognized status code
  */
-bool status_name_to_unmodulated_number(const char * status_code_name, int * p_error_number) {
+bool status_name_to_unmodulated_number(
+        const char * status_code_name,
+        int *        p_error_number)
+{
    int  status_code = 0;
    bool found = false;
 
@@ -452,13 +468,18 @@ bool status_name_to_unmodulated_number(const char * status_code_name, int * p_er
 }
 
 
-/** Given a status code name, convert it to a modulated #Global_Status_Code.
+/** Given a status code symbolic name, convert it to #Public_Status_Code value.
+ *
+ * If the name is for an ADL status code, the value is modulated.
  *
  * @param  status_code_name
- * @param p_error_number  where to return status code number
+ * @param  p_error_number  where to return status code number
  * @return true if conversion successful, false if unrecognized status code
  */
-bool status_name_to_modulated_number(const char * status_code_name, Public_Status_Code * p_error_number) {
+bool
+status_name_to_modulated_number(
+      const char *          status_code_name,
+      Public_Status_Code *  p_error_number) {
    Public_Status_Code psc = 0;
    bool found = false;
 
@@ -474,8 +495,6 @@ bool status_name_to_modulated_number(const char * status_code_name, Public_Statu
    *p_error_number = psc;
    return found;
 }
-
-
 
 
 //

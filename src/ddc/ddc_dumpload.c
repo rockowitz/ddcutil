@@ -3,7 +3,7 @@
  * Load/store VCP settings from/to file.
  *
  * <copyright>
- * Copyright (C) 2014-2016 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2014-2017 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -23,6 +23,11 @@
  * </endcopyright>
  */
 
+/** \file
+ *
+ */
+
+/** \cond */
 #include <assert.h>
 #include <errno.h>
 #include <fcntl.h>
@@ -32,6 +37,7 @@
 #include <string.h>
 #include <time.h>
 #include <unistd.h>
+/** \endcond */
 
 #include "util/file_util.h"
 #include "util/glib_util.h"
@@ -55,12 +61,10 @@
 #include "ddc/ddc_vcp.h"
 
 
-/* Free a Dumpload_Data struct.  The underlying Vcp_Value_set is also freed.
+/** Frees a #Dumpload_Data struct.  The underlying Vcp_Value_set is also freed.
  *
- * Arguments:   data    pointer to Dumpload_Data struct to free
- *                      if NULL, do nothing
- *
- * Returns:     nothing
+ * @param data    pointer to #Dumpload_Data struct to free,\n
+ *                if NULL, do nothing
  */
 void free_dumpload_data(Dumpload_Data * data) {
    if (data) {
@@ -71,14 +75,11 @@ void free_dumpload_data(Dumpload_Data * data) {
 }
 
 
-/* Report the contents of a Dumpload_Data struct
+/** Reports the contents of a #Dumpload_Data struct
  *
  * Arguments:
- *    data     pointer to Dumpload_Data struct
+ *    data     pointer to #Dumpload_Data struct
  *    depth    logical indentation depth
- *
- * Returns:
- *    nothing
  */
 void report_dumpload_data(Dumpload_Data * data, int depth) {
    int d1 = depth+1;
@@ -99,12 +100,11 @@ void report_dumpload_data(Dumpload_Data * data, int depth) {
 
 
 /* Given an array of strings stored in a GPtrArray,
- * convert it a Dumpload_Data structure.
+ * convert it a #Dumpload_Data struct.
  *
- * Arguments:
- *    garray      array of strings
+ * @param   garray      array of strings
  *
- * Returns:       pointer to newly allocated Dumpload_Data struct, or
+ * @return  pointer to newly allocated Dumpload_Data struct, or
  *                NULL if the data is not valid.
  *                It is the responsibility of the caller to free this struct.
  */
@@ -276,20 +276,21 @@ create_dumpload_data_from_g_ptr_array(GPtrArray * garray) {
 }
 
 
-/* Sets multiple VCP values.
+/** Sets multiple VCP values.
  *
- * Arguments:
- *    dh      display handle
- *    vset    values to set
+ * @param   dh      display handle
+ * @param   vset    values to set
  *
- * Returns:
- *    0 if success
- *    status code of first error
+ * @return status code of first error, or 0 if no errors
  *
  * This function stops applying values on the first error encountered, and
  * returns the value of that error as its status code.
  */
-Public_Status_Code  ddc_set_multiple(Display_Handle* dh, Vcp_Value_Set vset) {
+Public_Status_Code
+ddc_set_multiple(
+      Display_Handle* dh,
+      Vcp_Value_Set   vset)
+{
    Public_Status_Code psc = 0;
    int value_ct = vcp_value_set_size(vset);
 
@@ -313,19 +314,18 @@ Public_Status_Code  ddc_set_multiple(Display_Handle* dh, Vcp_Value_Set vset) {
 }
 
 
-/* Apply VCP settings from a Dumpload_Data struct to
- * the monitor specified in that data structure.
+/** Applies VCP settings from a #Dumpload_Data struct to
+ *  the monitor specified in that data structure.
  *
- * Arguments:
- *    pdata      pointer to Dumpload_Data instance
+ * @param  pdata      pointer to #Dumpload_Data instance
+ * @param  dh         display handle for open display
  *
- * Returns:
- *    status code
+ * @return   status code
  */
 Public_Status_Code
 loadvcp_by_dumpload_data(
-      Dumpload_Data* pdata,
-      Display_Handle * dh)
+      Dumpload_Data *   pdata,
+      Display_Handle *  dh)
 {
    bool debug = false;
    if (debug) {

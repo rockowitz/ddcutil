@@ -63,15 +63,26 @@ typedef int Status_Errno;          ///< negative Linux errno values
 typedef int Status_DDC;            ///< DDC specific status codes
 typedef int Status_Errno_DDC;      ///< union(Status_Errno,Status_DDC)
 typedef int Base_Status_ADL;       ///< unmodulated ADL status codes
-typedef int Modulated_Status_ADL;  ///< modulated ADL return codes
+typedef int Modulated_Status_ADL;  ///< modulated ADL status codes
 typedef int Public_Status_Code;    ///< union(Status_Errno, Status_DDC, Modulated_Status_ADL)
 
-/** typedef of function used to return a #Status_Code_Info for a status code */
+/** Pointer to function that finds the #Status_Code_Info for a status code
+ * @param rc status code
+ * @return ponter to #Status_Code_Info for the code, NULL if not found
+ * */
 typedef
 Status_Code_Info * (*Retcode_Description_Finder)(int rc);
 
+
+/** Pointer to a function that converts a symbolic status code name
+ *  to its integer value
+ *
+ * \param name status code symbolic name
+ * @param p_number where to return status code
+ * @return true if conversion succeeded, false if name not found
+ */
 typedef
-bool (*Retcode_Number_Finder)(const char * name, Status_Errno_DDC * p_number);
+bool (*Retcode_Number_Finder)(const char * name, int * p_number);
 
 
 #ifdef OLD
@@ -95,13 +106,12 @@ Status_Errno_DDC modulate_base_errno_ddc_to_global(Status_Errno_DDC rc);
  *
  * @remark
  * - must be kept consistent with table in status_code_mgt.c
- * - should RR_BASE be in this enum?
  */
 typedef enum {
  //       RR_BASE,     ///< indicates unmodulated status code
-          RR_ERRNO,    ///< range id for modulated Linux errno values
+          RR_ERRNO,    ///< range id for Linux errno values
           RR_ADL,      ///< range id for modulated ADL error codes
-          RR_DDC       ///< range id for modulated ddcutil-specific error codes
+          RR_DDC       ///< range id for **ddcutil**-specific error codes
 } Retcode_Range_Id;
 
 #ifdef OLD
@@ -121,7 +131,7 @@ Public_Status_Code global_to_public_status_code(Status_Errno_DDC gsc);
 Status_Errno_DDC public_to_Base_Status_Errno_DDC(Public_Status_Code);
 #endif
 
-Status_Code_Info * find_global_status_code_info(int status_code);
+Status_Code_Info * find_status_code_info(Public_Status_Code status_code);
 
 // Returns status code description:
 #ifdef OLD

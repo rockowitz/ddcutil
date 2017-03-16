@@ -4,7 +4,7 @@
  * Capabilities.
  *
  * <copyright>
- * Copyright (C) 2014-2016 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2014-2017 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -24,11 +24,19 @@
  * </endcopyright>
  */
 
+/** \file
+ * Multi-part DDC reads and writes used for Table features and
+ * Capabilities retrieval.
+ */
+
+
+/** \cond */
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+/** \endcond */
 
 #include "base/core.h"
 #include "base/ddc_errno.h"
@@ -49,14 +57,17 @@ static Trace_Group TRACE_GROUP = TRC_DDC;
 
 // Retry management and statistics
 
-// Maximum value to which maximum number of capabilities exchange tries can be set
+/** \def MAX_MAX_MULTI_EXCHANGE_TRIES
+ * Maximum value to which maximum number of capabilities exchange tries can be set
+ */
 #define MAX_MAX_MULTI_EXCHANGE_TRIES  MAX_MAX_TRIES     /* from parms.h */
 
-// Maximum number of capabilities exchange tries allowed. Can be adjusted.
+/** \def Maximum number of capabilities exchange tries allowed. Can be adjusted. */
 static int max_multi_part_read_tries = MAX_MULTI_EXCHANGE_TRIES;
 
 static void * multi_part_read_stats_rec = NULL;
 
+/** Rests the statistics for multi-part reads */
 void ddc_reset_multi_part_read_stats() {
    if (multi_part_read_stats_rec)
       try_data_reset(multi_part_read_stats_rec);
@@ -64,13 +75,16 @@ void ddc_reset_multi_part_read_stats() {
       multi_part_read_stats_rec = try_data_create("multi-part exchange", max_multi_part_read_tries);
 }
 
+/** Reports the statisics for multi-part reads */
 void ddc_report_multi_part_read_stats() {
    assert(multi_part_read_stats_rec);
    try_data_report(multi_part_read_stats_rec);
 }
 
 
-// Resets the maximum number of capabilities exchange tries allowed
+/** Resets the maximum number of multi-part read exchange tries allowed.
+ *  @param ct new maximum number, must be <= #MAX_MAX_MULTI_EXCHANGE_TRIES
+ */
 void ddc_set_max_multi_part_read_tries(int ct) {
    assert(ct > 0 && ct <= MAX_MAX_MULTI_EXCHANGE_TRIES);
    max_multi_part_read_tries = ct;
@@ -78,19 +92,25 @@ void ddc_set_max_multi_part_read_tries(int ct) {
          try_data_set_max_tries(multi_part_read_stats_rec, ct);
 }
 
-// Gets the maximum number of capabilities exchange tries allowed
+
+/** Gets the current maximum number of multi-part read exchange tries allowed
+  * @return maximum number of tries
+  */
 int ddc_get_max_multi_part_read_tries() {
    return max_multi_part_read_tries;
 }
 
 
-/* Makes one attempt to read the entire capabilities string or table feature value
+/** Makes one attempt to read the entire capabilities string or table feature value
 *
-* Arguments:
-*   dh             display handle for open i2c or adl device
-*   capabilities   address of buffer in which to return response
+* @param  dh             display handle for open i2c or adl device
+* @param  request_type   DDC_PACKET_TYPE_CAPABILITIES_REQUEST or DDC_PACKET_TYPE_TABLE_REQD_REQUEST
+* @param  request_subtype  VCP feature code for table read, ignore for capabilities
+* @param  all_zero_response_ok  if true, an all zero response is not regarded
+*         as an error
+* @param  accumulator    buffer in which to return result
 *
-* Returns:         status code
+* @return status code
 */
 Public_Status_Code
 try_multi_part_read(
@@ -190,18 +210,18 @@ try_multi_part_read(
 }
 
 
-/* Gets the DDC capabilities string for a monitor, performing retries if necessary.
+/** Gets the DDC capabilities string for a monitor, performing retries if necessary.
 *
-* Arguments:
-*   pdisp                display reference
-*   ppCapabilitesBuffer  address at which to return address of newly created
-*                        response buffer if successful,
-*                        set to NULL if unsuccessful
+*  @param  dh handle of open display
+*  @param  request_type
+*  @param  request_subtype  VCP function code for table read, ignore for capabilities
+*  @param  all_zero_response_ok   if true, zero response is not an error
+*  @param  pp_buffer  address at which to return newly allocated #Buffer in which
+*                   result is returned
 *
-* Returns:
-*   0 if success
-*   DDCRC_UNSUPPORTED   monitor does not support get capabilities request
-*   DDCRC_TRIES         maximum retries exceeded
+*  @retval  0    success
+*  @retval  DDCRC_UNSUPPORTD does not support Capabilities Request
+*  @retval  DDCRC_TRIES  maximum retries exceeded:
 */
 Public_Status_Code
 multi_part_read_with_retry(
@@ -209,13 +229,9 @@ multi_part_read_with_retry(
       Byte             request_type,
       Byte             request_subtype,   // VCP feature code for table read, ignore for capabilities
       bool             all_zero_response_ok,
-      Buffer**         ppbuffer)
+      Buffer**         pp_buffer)
 {
    bool debug = false;
-   // Trace_Group tg = TRACE_GROUP;
-   // if (debug)
-   //    tg = 0xFF;
-   // char buf[100];
    if (IS_TRACING())
       puts("");
    // TODO: fix:
@@ -277,18 +293,18 @@ multi_part_read_with_retry(
 
    // if counts for DDCRC_ALL_TRIES_ZERO?
    try_data_record_tries(multi_part_read_stats_rec, rc, try_ctr);
-   *ppbuffer = accumulator;
+   *pp_buffer = accumulator;
    return rc;
 }
 
 
-/* Makes one attempt to write an entire table value
+/** Makes one attempt to write an entire VCP Table value
 *
-* Arguments:
-*   dh             display handle for open i2c or adl device
-*   capabilities   address of buffer in which to return response
+*   @param dh             display handle for open i2c or adl device
+*   @param vcp_code       VCP feature code
+*   @param value_to_set   Table feature value
 *
-* Returns:         status code
+*   @return status code
 */
 Public_Status_Code
 try_multi_part_write(
@@ -343,6 +359,13 @@ try_multi_part_write(
 }
 
 
+/** Writes a VCP table feature, with retry.
+ *
+ * @param  dh display handle
+ * @param vcp_code  VCP feature code to write
+ * @param value_to_set bytes of Table feature
+ * @return  status code
+ */
 Public_Status_Code
 multi_part_write_with_retry(
      Display_Handle * dh,

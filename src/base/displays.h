@@ -23,8 +23,6 @@
  * </endcopyright>
  */
 
-
-
 #ifndef DISPLAYS_H_
 #define DISPLAYS_H_
 
@@ -62,6 +60,7 @@ For I2C displays, the device must be opened.  Display_Handle then contains the o
 
 // *** DisplayIdentifier ***
 
+/** Display_Identifier type */
 typedef enum {
    DISP_ID_BUSNO,
    DISP_ID_ADL,
@@ -74,6 +73,7 @@ typedef enum {
 char * display_id_type_name(Display_Id_Type val);
 
 #define DISPLAY_IDENTIFIER_MARKER "DPID"
+/** Specifies the identifiers to be used to select a display. */
 typedef struct {
    char            marker[4];         // always "DPID"
    Display_Id_Type id_type;
@@ -144,6 +144,10 @@ typedef Byte Dref_Flags;
 #define DREF_DDC_COMMUNICATION_CHECKED 0x80
 #define DREF_DDC_COMMUNICATION_WORKING 0x40
 #define DISPLAY_REF_MARKER "DREF"
+/** A **Display_Ref** is a logical display identifier.
+ * It can be an I2C bus number, and ADL adapter/display number pair,
+ * or a USB bus number/device number pair.
+ */
 typedef struct {
    char         marker[4];
    DDCA_IO_Mode io_mode;
@@ -179,7 +183,7 @@ bool dreq(Display_Ref* this, Display_Ref* that);
 // TODO: simplify, remove redundant fields for values obtainable from dref
 
 #define DISPLAY_HANDLE_MARKER "DSPH"
-/** Describes and open display device. */
+/** Describes an open display device. */
 typedef struct {
    char         marker[4];
    DDCA_IO_Mode io_mode;
@@ -255,5 +259,7 @@ void free_display_info_list(Display_Info_List * pinfo_list);
 #define DISPSEL_ANY        (DISPSEL_I2C | DISPSEL_ADL | DISPSEL_USB)
 #endif
 
+//* Option flags for display selection functions */
+typedef Byte Display_Selection_Options;
 
 #endif /* DISPLAYS_H_ */

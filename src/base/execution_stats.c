@@ -323,7 +323,7 @@ void show_specific_status_counts(Status_Code_Counts * pcounts) {
       int ndx;
       for (ndx=0; ndx<keyct; ndx++) {
          gpointer keyp = keysp[ndx];
-         long key = GPOINTER_TO_INT(keyp);
+         long key = GPOINTER_TO_INT(keyp);                  // Public_Status_Code
          // DBGMSF(debug, "key:  %d   %p", key, keyp);
          // wrong hunch about bug
          // if (key == 0) {
@@ -336,7 +336,7 @@ void show_specific_status_counts(Status_Code_Counts * pcounts) {
          summed_ct += ct;
          // fprintf(stdout, "%4d    %6d\n", ct, key);
 
-         Status_Code_Info * desc = find_global_status_code_info(key);
+         Status_Code_Info * desc = find_status_code_info(key);
 
          // or consider flags in Status_Code_Info with this information
          char * aux_msg = "";

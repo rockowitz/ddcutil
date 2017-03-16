@@ -3,7 +3,7 @@
  * Load/store VCP settings from/to file.
  *
  * <copyright>
- * Copyright (C) 2014-2016 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2014-2017 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -23,10 +23,16 @@
  * </endcopyright>
  */
 
+/** \file
+ * Load/store VCP settings to/from file.
+ */
+
 #ifndef DDC_DUMPLOAD_H_
 #define DDC_DUMPLOAD_H_
 
+/** \cond */
 #include <stdio.h>
+/** \endcond */
 
 #include "base/displays.h"
 #include "base/status_code_mgt.h"
@@ -34,22 +40,24 @@
 #include "vcp/vcp_feature_values.h"
 
 
-// Dumpload_Data is the internal form data structure used to
-// hold data being loaded.  Whatever the external form: a
-// file or a string, it is converted to Dumpload_Data and then
-// written to the monitor.
+/**
+Internal form data structure used to
+hold data being loaded.
 
+Whatever the external form, a file or a string, it is converted to
+**Dumpload_Data** and then written to the monitor.
+*/
 typedef
 struct {
-   time_t         timestamp_millis;
-   Byte           edidbytes[128];
-   char           edidstr[257];       // 128 byte edid as hex string (for future use)
-   char           mfg_id[4];
-   char           model[14];
-   char           serial_ascii[14];
-   DDCA_MCCS_Version_Spec   vcp_version;
-   int            vcp_value_ct;
-   Vcp_Value_Set  vcp_values;
+   time_t         timestamp_millis;       ///< creation timestamp
+   Byte           edidbytes[128];         ///< 128 byte EDID,
+   char           edidstr[257];           ///< 128 byte EDID as hex string (for future use)
+   char           mfg_id[4];              ///< 3 character manufacturer id (from EDID)
+   char           model[14];              ///< model string (from EDID)
+   char           serial_ascii[14];       ///< serial number string (from EDID)
+   DDCA_MCCS_Version_Spec   vcp_version;  ///< monitor VCP/MCCS version
+   int            vcp_value_ct;           ///< number of VCP values
+   Vcp_Value_Set  vcp_values;             ///< VCP values
 } Dumpload_Data;
 
 void report_dumpload_data(Dumpload_Data * data, int depth);

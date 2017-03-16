@@ -79,7 +79,8 @@ Display_Ref * ddc_find_display_by_usb_busnum_devnum(int   busnum, int   devnum);
 //   reading brightness as a sanity check
 //   looking up and saving vcp version
 
-static bool verify_adl_display_ref(Display_Ref * dref) {
+static bool
+verify_adl_display_ref(Display_Ref * dref) {
    bool debug = false;
    bool result = true;
    Display_Handle * dh = NULL;
@@ -134,7 +135,8 @@ static bool verify_adl_display_ref(Display_Ref * dref) {
  * Returns:
  *    true if brightness read successful, false if not
  */
-bool ddc_verify(Display_Ref * dref) {
+bool
+ddc_verify(Display_Ref * dref) {
    bool debug = false;
    bool result = false;
    DBGMSF(debug, "Starting.  dref=%s", dref_repr(dref));
@@ -167,18 +169,17 @@ bool ddc_verify(Display_Ref * dref) {
 
 
 
-/* Tests if a Display_Ref identifies an attached display.
+/** Tests if a Display_Ref identifies an attached display.
  *
- * Arguments:
- *    dref     display reference
- *    emit_error_msg emit error message if not valid
+ * @param   dref     display reference
+ * @param   callopts standard call options
  *
- * Returns:
- *    true if dref identifies a valid Display_Ref, false if not
+ * @return true if **dref** identifies a valid Display_Ref, false if not
  */
 // eliminate static to allow backtrace to find symbol
 // static
-bool ddc_is_valid_display_ref(Display_Ref * dref, Call_Options callopts) {
+bool
+ddc_is_valid_display_ref(Display_Ref * dref, Call_Options callopts) {
    bool emit_error_msg = callopts & CALLOPT_ERR_MSG;
    bool debug = false;
    assert( dref );
@@ -276,22 +277,24 @@ bool ddc_is_valid_display_ref(Display_Ref * dref, Call_Options callopts) {
 }
 
 
-/* Converts display identifier passed on the command line to a logical
+/**  Converts display identifier passed on the command line to a logical
  * reference to an I2C, ADL, or USB display.  If an I2C bus number, ADL adapter.display
  * number, or usb bus/device number is specified, the translation is direct.
  * Otherwise, the discovered displays are searched.
  *
- * Arguments:
- *    pdid      display identifiers
- *    emit_error_msg
- * OLD   validate  if searching was not necessary, validate that that bus number or
- * OLD             ADL number does in fact reference an attached display
+ * @param   pdid      display identifiers
+ * @param   callopts  standard call options
  *
- * Returns:
- *    Display_Ref instance specifying the display using either an I2C bus number
- *    or an ADL adapter.display number, NULL if display not found
+ * @return #Display_Ref specifying the display using either an I2C bus number
+ *    an ADL adapter/display number, or a USB bud/device number.\n
+ *    NULL if display not found
  */
-Display_Ref* get_display_ref_for_display_identifier(
+
+// OLD   validate  if searching was not necessary, validate that that bus number or
+// OLD             ADL number does in fact reference an attached displ
+
+Display_Ref*
+get_display_ref_for_display_identifier(
                 Display_Identifier* pdid,
                 Call_Options        callopts)
 {
@@ -393,7 +396,7 @@ void report_display_info(Display_Info * dinfo, int depth) {
 // Functions to get display information
 //
 
-/* Creates a list of all displays found.  The list first contains displays
+/** Creates a list of all displays found.  The list first contains displays
  * on /dev/i2c-n buses, then ADL displays, then USB connected displays.
  *
  * The displays are assigned a display number (starting from 1) based on the
@@ -401,10 +404,10 @@ void report_display_info(Display_Info * dinfo, int depth) {
  *
  * Arguments: none
  *
- * Returns:
- *    pointer to newly allocated Display_Info_List struct
+ * @return pointer to newly allocated #Display_Info_List struct
  */
-Display_Info_List * ddc_get_valid_displays() {
+Display_Info_List *
+ddc_get_valid_displays() {
    bool debug = false;
    DBGMSF(debug, "Starting");
    int ndx;
@@ -487,16 +490,15 @@ Display_Info_List * ddc_get_valid_displays() {
 }
 
 
-/* Returns a Display_Ref for the nth display.
+/*8 Returns a #Display_Ref for the nth display.
  *
- * Arguments:
- *    dispno     display number
+ * @param dispno     display number
  *
- * Returns:
- *    Display_Ref for the dispno'th display,
- *    NULL if dispno < 1 or dispno > number of actual displays
+ * @return  #Display_Ref for the dispno'th display,\n
+ *          NULL if dispno < 1 or dispno > number of actual displays
  */
-Display_Ref* ddc_find_display_by_dispno(int dispno) {
+Display_Ref*
+ddc_find_display_by_dispno(int dispno) {
    bool debug = false;
    DBGMSF(debug, "Starting.  dispno=%d", dispno);
 
@@ -527,11 +529,14 @@ Display_Ref* ddc_find_display_by_dispno(int dispno) {
 }
 
 
-/* Returns a Display_Ref for a display identified by its model name and serial number.
+/** Returns a Display_Ref for a display identified by its manufacturer id,
+ * model name and/or serial number.
  *
  * Arguments:
+ *    mfg_id   manufacturer id
  *    model    model name
  *    sn       serial number (character string)
+ *    findopts selection options
  *
  * Returns:
  *    Display_Ref for the specified monitor
@@ -542,7 +547,7 @@ ddc_find_display_by_mfg_model_sn(
    const char * mfg_id,
    const char * model,
    const char * sn,
-   Byte         findopts)
+   Display_Selection_Options findopts)
 {
    bool debug = false;
    DBGMSF(debug, "Starting.  model=%s, sn=%s, findopts=0x%02x", model, sn, findopts );
@@ -733,16 +738,14 @@ ddc_report_active_display(Display_Info * curinfo, int depth) {
 }
 
 
-/* Reports all displays found.
+/** Reports all displays found.
  *
  * Output is written to the current report destination using
  * report functions.
  *
- * Arguments:
- *    depth       logical indentation depth
+ * @param   depth       logical indentation depth
  *
- * Returns:
- *    number of displays
+ * @return number of displays
  */
 int
 ddc_report_active_displays(int depth) {
