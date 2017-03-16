@@ -236,7 +236,8 @@ ddca_get_global_failure_information()
 // Status Code Management
 //
 
-static Global_Status_Code
+#ifdef OLD
+static Global_Status_ Code
 ddca_to_global_status_code(DDCA_Status ddca_status) {
    return global_to_public_status_code(ddca_status);
 }
@@ -244,16 +245,17 @@ ddca_to_global_status_code(DDCA_Status ddca_status) {
 
 // should be static, but not currently used, if static get warning
 DDCA_Status
-global_to_ddca_status_code(Global_Status_Code gsc) {
+global_to_ddca_status_code(Global_Status_ Code gsc) {
    return global_to_public_status_code(gsc);
 }
-
+#endif
 
 char *
 ddca_status_code_name(DDCA_Status status_code) {
    char * result = NULL;
-   Global_Status_Code gsc = ddca_to_global_status_code(status_code);
-   Status_Code_Info * code_info = find_global_status_code_info(gsc);
+   // Global_ Status_Code gsc = ddca_to_global_ status_code(status_code);
+   // Status_Code_Info * code_info = find_global_status_code_info(gsc);
+   Status_Code_Info * code_info = find_global_status_code_info(status_code);
    if (code_info)
       result = code_info->name;
    return result;
@@ -263,8 +265,9 @@ ddca_status_code_name(DDCA_Status status_code) {
 char *
 ddca_status_code_desc(DDCA_Status status_code) {
    char * result = "unknown status code";
-   Global_Status_Code gsc = ddca_to_global_status_code(status_code);
-   Status_Code_Info * code_info = find_global_status_code_info(gsc);
+   // Global_ Status_Code gsc = ddca_to_global_status_code(status_code);
+   // Status_Code_Info * code_info = find_global_status_code_info(gsc);
+   Status_Code_Info * code_info = find_global_status_code_info(status_code);
    if (code_info)
       result = code_info->description;
    return result;
@@ -1195,7 +1198,6 @@ ddca_get_table_vcp_value(
    WITH_DH(ddca_dh,
       {
          Buffer * p_table_bytes = NULL;
-         // Global_Status_Code gsc;
          psc =  get_table_vcp_value(dh, feature_code, &p_table_bytes);
          if (psc == 0) {
             assert(p_table_bytes);  // avoid coverity warning
@@ -1205,7 +1207,6 @@ ddca_get_table_vcp_value(
             memcpy(*value_bytes, p_table_bytes->bytes, len);
             buffer_free(p_table_bytes, __func__);
          }
-         //psc = global_to_public_status_code(gsc);
       }
      );
 }
@@ -1329,13 +1330,13 @@ ddca_get_capabilities_string(
    WITH_DH(ddca_dh,
       {
          char * p_cap_string = NULL;
-         Global_Status_Code gsc = get_capabilities_string(dh, &p_cap_string);
-         if (gsc == 0) {
+         psc = get_capabilities_string(dh, &p_cap_string);
+         if (psc == 0) {
             // make copy to ensure caller does not muck around in ddcutil's
             // internal data structures
             *pcaps = strdup(p_cap_string);
          }
-         psc = public_to_global_status_code(gsc);
+         // psc = public_to_global_ status_code(gsc);
       }
    );
 }
