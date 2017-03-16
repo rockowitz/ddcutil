@@ -182,7 +182,6 @@ void probe_display_by_dh(Display_Handle * dh)
 {
    bool debug = false;
    DBGMSF(debug, "Starting. dh=%s", display_handle_repr(dh));
-   // Global_Status_Code gsc = 0;
    Public_Status_Code psc = 0;
 
    printf("\nCapabilities for display %s\n", display_handle_repr(dh) );
@@ -603,12 +602,12 @@ int main(int argc, char *argv[]) {
 
             case CMDID_GETVCP:
                {
-                  Global_Status_Code gsc = app_show_feature_set_values_by_display_handle(
+                  Public_Status_Code psc = app_show_feature_set_values_by_display_handle(
                         dh,
                         parsed_cmd->fref,
                         parsed_cmd->show_unsupported,
                         parsed_cmd->force);
-                  main_rc = (gsc==0) ? EXIT_SUCCESS : EXIT_FAILURE;
+                  main_rc = (psc==0) ? EXIT_SUCCESS : EXIT_FAILURE;
                }
                break;
 
@@ -620,7 +619,7 @@ int main(int argc, char *argv[]) {
                else {
                   main_rc = EXIT_SUCCESS;
                   int argNdx;
-                  Global_Status_Code rc = 0;
+                  Public_Status_Code rc = 0;
                   for (argNdx=0; argNdx < parsed_cmd->argct; argNdx+= 2) {
                      rc = app_set_vcp_value(
                              dh,
@@ -637,8 +636,11 @@ int main(int argc, char *argv[]) {
 
             case CMDID_DUMPVCP:
                {
-                  Global_Status_Code gsc = dumpvcp_as_file(dh, (parsed_cmd->argct > 0) ? parsed_cmd->args[0] : NULL );
-                  main_rc = (gsc==0) ? EXIT_SUCCESS : EXIT_FAILURE;
+                  Public_Status_Code psc =
+                        dumpvcp_as_file(dh, (parsed_cmd->argct > 0)
+                                               ? parsed_cmd->args[0]
+                                               : NULL );
+                  main_rc = (psc==0) ? EXIT_SUCCESS : EXIT_FAILURE;
                   break;
                }
 

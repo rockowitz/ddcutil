@@ -110,7 +110,7 @@ char * create_simple_vcp_fn_by_display_handle(
  * Returns:
  *    status code
  */
-Global_Status_Code
+Public_Status_Code
 dumpvcp_as_file(Display_Handle * dh, char * filename) {
    bool debug = false;
    DBGMSF(debug, "Starting");
@@ -154,8 +154,7 @@ dumpvcp_as_file(Display_Handle * dh, char * filename) {
          fclose(output_fp);
       }
    }
-   Global_Status_Code gsc = public_to_global_status_code(psc);
-   return gsc;
+   return psc;
 }
 
 
@@ -190,7 +189,7 @@ Dumpload_Data * read_vcp_file(const char * fn) {
  *
  * Returns:  true if load succeeded, false if not
  */
-// TODO: convert to Global_Status_Code
+// TODO: convert to Public_Status_Code
 bool loadvcp_by_file(const char * fn, Display_Handle * dh) {
    bool debug = false;
    DBGMSF(debug, "Starting. fn=%s, dh=%p %s", fn, dh, (dh) ? display_handle_repr(dh):"");

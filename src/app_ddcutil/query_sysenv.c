@@ -602,14 +602,13 @@ bool is_i2c_device_rw(int busno) {
 // Auxiliary function for raw_scan_i2c_devices()
 // adapted from ddc_vcp_tests
 
-Global_Status_Code try_single_getvcp_call(int fh, unsigned char vcp_feature_code) {
+Public_Status_Code try_single_getvcp_call(int fh, unsigned char vcp_feature_code) {
    bool debug = false;
    DBGMSF(debug, "Starting. vcp_feature_code=0x%02x", vcp_feature_code );
 
    int ndx;
    unsigned char checksum;
-   int rc;
-   Global_Status_Errno gsc = 0;
+   Base_Status_Errno rc = 0;
 
 #ifdef NO
    // write seems to be necessary to reset monitor state
@@ -647,12 +646,12 @@ Global_Status_Code try_single_getvcp_call(int fh, unsigned char vcp_feature_code
       int errsv = errno;
       // printf("(%s) write() returned %d, errno=%d. \n", __func__, rc, errno);
       DBGMSF(debug, "write() failed, errno=%s", linux_errno_desc(errsv));
-      gsc = modulate_rc(-errsv, RR_ERRNO);
+      rc = -errsv;
       goto bye;
    }
    if (rc != writect) {
       rpt_vstring(0,"(%s) write() returned %d, expected %d   ", __func__, rc, writect );
-      gsc = DDCRC_BAD_BYTECT;
+      rc = DDCRC_BAD_BYTECT;
       goto bye;
    }
    usleep(50000);
@@ -665,13 +664,13 @@ Global_Status_Code try_single_getvcp_call(int fh, unsigned char vcp_feature_code
       // printf("(%s) read() returned %d, errno=%d.\n", __func__, rc, errno );
       int errsv = errno;
       DBGMSG("read() failed, errno=%s", linux_errno_desc(errsv));
-      gsc = modulate_rc( -errsv, RR_ERRNO);
+      rc = -errsv;
       goto bye;
    }
 
    if (rc != readct) {
       rpt_vstring(0,"(%s) read() returned %d, should be %d  ", __func__, rc, readct );
-      gsc = DDCRC_BAD_BYTECT;
+      rc = DDCRC_BAD_BYTECT;
       goto bye;
    }
 
@@ -685,7 +684,7 @@ Global_Status_Code try_single_getvcp_call(int fh, unsigned char vcp_feature_code
 
    if ( all_zero( ddc_response_bytes+1, readct) ) {
       DBGMSF(debug, "All bytes zero");
-      gsc = DDCRC_READ_ALL_ZERO;
+      rc = DDCRC_READ_ALL_ZERO;
       goto bye;
    }
 
@@ -697,7 +696,7 @@ Global_Status_Code try_single_getvcp_call(int fh, unsigned char vcp_feature_code
        ddc_response_bytes[3] == 0xbe)     // 0xbe == checksum
    {
       DBGMSF(debug, "Received DDC null response");
-      gsc = DDCRC_NULL_RESPONSE;
+      rc = DDCRC_NULL_RESPONSE;
       goto bye;
    }
 
@@ -705,20 +704,20 @@ Global_Status_Code try_single_getvcp_call(int fh, unsigned char vcp_feature_code
       // assert(ddc_response_bytes[1] == 0x6e);
       rpt_vstring(0,"(%s) Invalid address byte in response, expected 06e, actual 0x%02x",
                     __func__, ddc_response_bytes[1] );
-      gsc = DDCRC_INVALID_DATA;
+      rc = DDCRC_INVALID_DATA;
       goto bye;
    }
 
    if (ddc_data_length != 8) {
       rpt_vstring(0,"(%s) Invalid query VCP response length: %d", __func__, ddc_data_length );
-      gsc = DDCRC_BAD_BYTECT;
+      rc = DDCRC_BAD_BYTECT;
       goto bye;
    }
 
    if (ddc_response_bytes[3] != 0x02) {       // get feature response
       rpt_vstring(0,"(%s) Expected 0x02 in feature response field, actual value 0x%02x",
                     __func__, ddc_response_bytes[3] );
-      gsc = DDCRC_INVALID_DATA;
+      rc = DDCRC_INVALID_DATA;
       goto bye;
    }
 
@@ -730,7 +729,7 @@ Global_Status_Code try_single_getvcp_call(int fh, unsigned char vcp_feature_code
    if (ddc_response_bytes[11] != calculated_checksum) {
       rpt_vstring(0,"(%s) Unexpected checksum.  actual=0x%02x, calculated=0x%02x  ", __func__,
              ddc_response_bytes[11], calculated_checksum );
-      gsc = DDCRC_CHECKSUM;
+      rc = DDCRC_CHECKSUM;
       goto bye;
    }
 
@@ -742,17 +741,17 @@ Global_Status_Code try_single_getvcp_call(int fh, unsigned char vcp_feature_code
       }
       else if (ddc_response_bytes[4] == 0x01) {    // unsupported VCP code
          rpt_vstring(0,"(%s) Unsupported VCP code: 0x%02x", __func__ , vcp_feature_code);
-         gsc = DDCRC_REPORTED_UNSUPPORTED;
+         rc = DDCRC_REPORTED_UNSUPPORTED;
       }
       else {
          rpt_vstring(0,"(%s) Unexpected value in supported VCP code field: 0x%02x  ",
                        __func__, ddc_response_bytes[4] );
-         gsc = DDCRC_INVALID_DATA;
+         rc = DDCRC_INVALID_DATA;
       }
 
 bye:
-   DBGMSF(debug, "Returning: %s",  gsc_desc(gsc));
-   return gsc;
+   DBGMSF(debug, "Returning: %s",  psc_desc(rc));
+   return rc;
 }
 
 
@@ -778,7 +777,6 @@ void raw_scan_i2c_devices() {
 
    Buffer * buf0 = buffer_new(1000, __func__);
    int  busct = 0;
-   Global_Status_Code gsc;
    Public_Status_Code psc;
    Base_Status_Errno rc;
    bool saved_i2c_force_slave_addr_flag = i2c_force_slave_addr_flag;
@@ -824,17 +822,17 @@ void raw_scan_i2c_devices() {
          rc = i2c_set_addr(fd, 0x37, CALLOPT_ERR_MSG);
          if (rc == 0) {
             int maxtries = 3;
-            gsc = -1;
-            for (int tryctr=0; tryctr<maxtries && gsc < 0; tryctr++) {
-               gsc = try_single_getvcp_call(fd, 0x10);
-               if (gsc == 0 || gsc == DDCRC_NULL_RESPONSE || gsc == DDCRC_REPORTED_UNSUPPORTED) {
-                  switch (gsc) {
+            psc = -1;
+            for (int tryctr=0; tryctr<maxtries && psc < 0; tryctr++) {
+               psc = try_single_getvcp_call(fd, 0x10);
+               if (psc == 0 || psc == DDCRC_NULL_RESPONSE || psc == DDCRC_REPORTED_UNSUPPORTED) {
+                  switch (psc) {
                   case 0:
                      rpt_vstring(d2, "Attempt %d to read feature succeeded.", tryctr+1);
                      break;
                   case DDCRC_REPORTED_UNSUPPORTED:
                      rpt_vstring(d2, "Attempt %d to read feature returned DDCRC_REPORTED_UNSUPPORTED");
-                     gsc = 0;
+                     psc = 0;
                      break;
                   case DDCRC_NULL_RESPONSE:
                      rpt_vstring(d2, "Attempt %d to read feature returned DDCRC_NULL_RESPONSE");
@@ -843,9 +841,9 @@ void raw_scan_i2c_devices() {
                   break;
                }
                rpt_vstring(d2, "Attempt %d to read feature failed. status = %s.  %s",
-                             tryctr+1, gsc_desc(gsc), (tryctr < maxtries-1) ? "Retrying..." : "");
+                             tryctr+1, psc_desc(psc), (tryctr < maxtries-1) ? "Retrying..." : "");
             }
-            if (gsc == 0)
+            if (psc == 0)
                rpt_vstring(d2, "DDC communication succeeded");
             else {
                rpt_vstring(d2, "DDC communication failed.");

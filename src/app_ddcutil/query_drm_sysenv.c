@@ -541,7 +541,7 @@ static void probe_one_device_using_libdrm(char * devname, int depth) {
    //                               within drmOpen  (examined the code)
    // drmOopen() can also return DRM_ERR_NOT_ROOT (-1003)
    // DRM specific error numbers are in range -1001..-1005,
-   // conflicts with our Global_Status_Code mapping
+   // conflicts with our Global _Status_Code mapping
 
 #ifdef FAIL
    fd = drmOpen(bname, NULL);

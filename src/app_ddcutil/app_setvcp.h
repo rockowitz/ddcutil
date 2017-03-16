@@ -27,7 +27,7 @@
 #include "base/displays.h"
 #include "base/status_code_mgt.h"
 
-Global_Status_Code app_set_vcp_value(
+Public_Status_Code app_set_vcp_value(
         Display_Handle * dh,
         char *           feature,
         char *           new_value,

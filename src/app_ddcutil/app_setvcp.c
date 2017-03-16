@@ -102,14 +102,13 @@ bool parse_vcp_value(char * string_value, long* parsed_value) {
  *   from put_vcp_by_display_ref()
  */
 // TODO: consider moving value parsing to command parser
-Global_Status_Code
+Public_Status_Code
 app_set_vcp_value(
       Display_Handle * dh,
       char *           feature,
       char *           new_value,
       bool             force)
 {
-   Global_Status_Code         gsc = 0;
    Public_Status_Code         psc = 0;
    long                       longtemp;
    Byte                       hexid;
@@ -121,7 +120,7 @@ app_set_vcp_value(
    bool ok = any_one_byte_hex_string_to_byte_in_buf(feature, &hexid);
    if (!ok) {
       printf("Unrecognized VCP feature code: %s\n", feature);
-      gsc = DDCL_UNKNOWN_FEATURE;
+      psc = DDCL_UNKNOWN_FEATURE;
       goto bye;
    }
    entry = vcp_find_feature_by_hexid(hexid);
@@ -130,14 +129,14 @@ app_set_vcp_value(
    if (!entry) {
       printf("Unrecognized VCP feature code: %s\n", feature);
       // gsc = modulate_rc(-EINVAL, RR_ERRNO);
-      gsc = DDCL_UNKNOWN_FEATURE;
+      psc = DDCL_UNKNOWN_FEATURE;
       goto bye;
    }
 
    if (!is_feature_writable_by_vcp_version(entry, vspec)) {
       char * feature_name =  get_version_sensitive_feature_name(entry, vspec);
       printf("Feature %s (%s) is not writable\n", feature, feature_name);
-      gsc = DDCL_INVALID_OPERATION;
+      psc = DDCL_INVALID_OPERATION;
       goto bye;
    }
 
@@ -167,12 +166,11 @@ app_set_vcp_value(
    if (!good_value) {
       printf("Invalid VCP value: %s\n", new_value);
       // what is better status code?
-      gsc = modulate_rc(-EINVAL, RR_ERRNO);
+      psc = -EINVAL;
       goto bye;
    }
 
    psc = set_vcp_value(dh, &vrec);
-   gsc = public_to_global_status_code(psc);
    if (psc != 0)  {
       // Is this proper error message?
       printf("Setting value failed. rc=%s\n", psc_desc(psc));
@@ -182,5 +180,5 @@ bye:
    if (entry && (entry->vcp_global_flags & DDCA_SYNTHETIC) ) {
       free_synthetic_vcp_entry(entry);
    }
-   return gsc;
+   return psc;
 }

@@ -29,7 +29,7 @@
 
 bool loadvcp_by_file(const char * fn, Display_Handle * dh);
 
-Global_Status_Code dumpvcp_as_file(Display_Handle * dh, char * optional_filename);
+Public_Status_Code dumpvcp_as_file(Display_Handle * dh, char * optional_filename);
 
 #ifdef OLD
 bool dumpvcp_as_file_old(Display_Handle * dh, char * optional_filename);

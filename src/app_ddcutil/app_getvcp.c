@@ -65,7 +65,7 @@
  *                DDCL_INVALID_OPERATION - feature is deprecated or write-only
  *                from get_formatted_value_for_feature_table_entry()
  */
-Global_Status_Code
+Public_Status_Code
 app_show_single_vcp_value_by_feature_table_entry(
       Display_Handle *           dh,
       VCP_Feature_Table_Entry *  entry)
@@ -105,7 +105,7 @@ app_show_single_vcp_value_by_feature_table_entry(
    }
 
    DBGMSF(debug, "Done.  Returning: %s", psc_desc(psc));
-   return public_to_global_status_code(psc);
+   return psc;
 }
 
 
@@ -121,7 +121,7 @@ app_show_single_vcp_value_by_feature_table_entry(
  *                DDCL_UNKNOWN_FEATURE  feature_id not in feature table and !force
  *                from app_show_single_vcp_value_by_feature_table_entry()
  */
-Global_Status_Code
+Public_Status_Code
 app_show_single_vcp_value_by_feature_id(
       Display_Handle * dh,
       Byte feature_id,
@@ -131,7 +131,7 @@ app_show_single_vcp_value_by_feature_id(
    DBGMSF(debug, "Starting. Getting feature 0x%02x for %s, force=%s",
                  feature_id, display_handle_repr(dh), bool_repr(force) );
 
-   Global_Status_Code         gsc = 0;
+   Public_Status_Code         psc = 0;
    VCP_Feature_Table_Entry *  entry = NULL;
 
    entry = vcp_find_feature_by_hexid(feature_id);
@@ -141,14 +141,14 @@ app_show_single_vcp_value_by_feature_id(
    if (!entry) {
       printf("Unrecognized VCP feature code: 0x%02x\n", feature_id);
       // gsc = modulate_rc(-EINVAL, RR_ERRNO);
-      gsc = DDCL_UNKNOWN_FEATURE;
+      psc = DDCL_UNKNOWN_FEATURE;
    }
    else {
-      gsc = app_show_single_vcp_value_by_feature_table_entry(dh, entry);
+      psc = app_show_single_vcp_value_by_feature_table_entry(dh, entry);
    }
 
-   DBGMSF(debug, "Done.  Returning: %s", gsc_desc(gsc));
-   return gsc;
+   DBGMSF(debug, "Done.  Returning: %s", psc_desc(psc));
+   return psc;
 }
 
 
@@ -163,7 +163,7 @@ app_show_single_vcp_value_by_feature_id(
  * Returns:
  *    status code       from show_vcp_values()
  */
-Global_Status_Code
+Public_Status_Code
 app_show_vcp_subset_values_by_display_handle(
         Display_Handle *    dh,
         VCP_Feature_Subset  subset_id,
@@ -174,7 +174,7 @@ app_show_vcp_subset_values_by_display_handle(
 
    GPtrArray * collector = NULL;
    Public_Status_Code psc = show_vcp_values(dh, subset_id, collector, show_unsupported, features_seen);
-   return public_to_global_status_code(psc);
+   return psc;
 }
 
 
@@ -232,7 +232,7 @@ void app_show_vcp_subset_values_by_display_ref(
  *    status code       from app_show_single_vcp_value_by_feature_id() or
  *                           app_show_subset_values_by_display_handle()
  */
-Global_Status_Code
+Public_Status_Code
 app_show_feature_set_values_by_display_handle(
       Display_Handle *     dh,
       Feature_Set_Ref *    fsref,
@@ -246,19 +246,19 @@ app_show_feature_set_values_by_display_handle(
       report_feature_set_ref(fsref,1);
    }
 
-   Global_Status_Code gsc = 0;
+   Public_Status_Code psc = 0;
    if (fsref->subset == VCP_SUBSET_SINGLE_FEATURE) {
-      gsc = app_show_single_vcp_value_by_feature_id(
+      psc = app_show_single_vcp_value_by_feature_id(
             dh, fsref->specific_feature, force);
    }
    else {
-      gsc = app_show_vcp_subset_values_by_display_handle(
+      psc = app_show_vcp_subset_values_by_display_handle(
             dh,
             fsref->subset,
             show_unsupported,
             NULL);
    }
-   return gsc;
+   return psc;
 }
 
 
