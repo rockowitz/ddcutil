@@ -276,30 +276,41 @@ Global_Status_Code public_to_global_status_code(Public_Status_Code psc) {
 
 static Status_Code_Info ok_status_code_info = {0, "OK", "success"};
 
+
+// N.B. Works equally well whether argument is a Global_Status_Code or a
+// Public_Status_Code.  get_modulaetion() figures things out
+
+
 /** Given a Global_Status_Code, returns a pointer to its #Status_Code_Info struct.
  *
  * @param   gsc global (modulated) status code
  * @return  pointer to #Status_Code_Info for staus code, NULL if not found
  */
-Status_Code_Info * find_global_status_code_info(Global_Status_Code gsc) {
+Status_Code_Info * find_global_status_code_info(int status_code) {
    bool debug = false;
    // use don't use DBGMSG to avoid circular includes
    if (debug)
-      printf("(%s) Starting.  rc = %d\n", __func__, gsc);
+      printf("(%s) Starting.  rc = %d\n", __func__, status_code);
 
    Status_Code_Info * pinfo = NULL;
 
-   if (gsc == 0)
+   if (status_code == 0)
       pinfo = &ok_status_code_info;
    else {
-      Retcode_Range_Id modulation = get_modulation(gsc);
+      Retcode_Range_Id modulation = get_modulation(status_code);
       if (debug)
          printf("(%s) modulation=%d\n", __func__, modulation);
+
+      // Hack for transition
+      if (modulation == RR_BASE) {
+         status_code = modulate_rc(status_code, RR_ERRNO);
+         modulation = RR_ERRNO;
+      }
 
       Retcode_Description_Finder finder_func = retcode_range_table[modulation].desc_finder;
       assert(finder_func != NULL);
       bool finder_arg_is_modulated = retcode_range_table[modulation].finder_arg_is_modulated;
-      int rawrc = (finder_arg_is_modulated) ? gsc : demodulate_rc(gsc, modulation);
+      int rawrc = (finder_arg_is_modulated) ? status_code : demodulate_rc(status_code, modulation);
       if (debug)
          printf("(%s) rawrc = %d\n", __func__, rawrc);
       pinfo = finder_func(rawrc);
@@ -312,6 +323,9 @@ Status_Code_Info * find_global_status_code_info(Global_Status_Code gsc) {
 
    return pinfo;
 }
+
+
+
 
 
 

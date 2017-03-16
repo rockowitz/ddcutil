@@ -132,7 +132,7 @@ Retcode_Range_Id get_modulation(int rc);
 Public_Status_Code global_to_public_status_code(Global_Status_Code gsc);
 Global_Status_Code public_to_global_status_code(Public_Status_Code);
 
-Status_Code_Info * find_global_status_code_info(Global_Status_Code rc);
+Status_Code_Info * find_global_status_code_info(int status_code);
 
 // Returns status code description:
 char * gsc_desc(Global_Status_Code rc);   // must be freed after use
