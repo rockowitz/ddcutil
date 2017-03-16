@@ -38,17 +38,17 @@
 
 
 /** Function template for I2C write function */
-typedef Base_Status_Errno_DDC (*I2C_Writer)(int fh, int bytect, Byte * bytes_to_write);
+typedef Status_Errno_DDC (*I2C_Writer)(int fh, int bytect, Byte * bytes_to_write);
 /** Function template for I2C read function */
-typedef Base_Status_Errno_DDC (*I2C_Reader)(int fh, int bytect, Byte * readbuf);
+typedef Status_Errno_DDC (*I2C_Reader)(int fh, int bytect, Byte * readbuf);
 
-Base_Status_Errno_DDC write_writer(int fh, int bytect, Byte * pbytes);
-Base_Status_Errno_DDC read_reader (int fh, int bytect, Byte * readbuf);
-Base_Status_Errno_DDC ioctl_writer(int fh, int bytect, Byte * pbytes);
-Base_Status_Errno_DDC ioctl_reader(int fh, int bytect, Byte * readbuf);
+Status_Errno_DDC write_writer(int fh, int bytect, Byte * pbytes);
+Status_Errno_DDC read_reader (int fh, int bytect, Byte * readbuf);
+Status_Errno_DDC ioctl_writer(int fh, int bytect, Byte * pbytes);
+Status_Errno_DDC ioctl_reader(int fh, int bytect, Byte * readbuf);
 
 // Don't work:
-Base_Status_Errno_DDC i2c_smbus_write_i2c_block_data_writer(int fh, int bytect, Byte * bytes_to_write);
-Base_Status_Errno_DDC i2c_smbus_read_i2c_block_data_reader(int fh, int bytect, Byte * readbuf);
+Status_Errno_DDC i2c_smbus_write_i2c_block_data_writer(int fh, int bytect, Byte * bytes_to_write);
+Status_Errno_DDC i2c_smbus_read_i2c_block_data_reader(int fh, int bytect, Byte * readbuf);
 
 #endif /* I2C_BASE_IO_H_ */

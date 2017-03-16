@@ -153,14 +153,14 @@ struct {
 
 void   free_ddc_packet(DDC_Packet * packet);
 
-Global_Status_DDC
+Status_DDC
 create_ddc_base_response_packet(
       Byte *        i2c_response_bytes,
       int           response_bytes_buffer_size,
       const char *  tag,
       DDC_Packet ** packet_ptr);
 
-Global_Status_DDC
+Status_DDC
 create_ddc_typed_response_packet(
       Byte *        i2c_response_bytes,
       int           response_bytes_buffer_size,
@@ -200,14 +200,14 @@ update_ddc_multi_part_read_request_packet_offset(
       DDC_Packet *  packet,
       int           offset);
 
-Global_Status_DDC
+Status_DDC
 create_ddc_capabilities_response_packet(
       Byte *        i2c_response_bytes,
       int           response_bytes_buffer_size,
       const char *  tag,
       DDC_Packet ** packet_ptr);
 
-Global_Status_DDC
+Status_DDC
 interpret_capabilities_response(
       Byte *        data_bytes,
       int           bytect,
@@ -219,7 +219,7 @@ create_ddc_getvcp_request_packet(
       Byte          vcp_code,
       const char *  tag);
 
-Global_Status_DDC
+Status_DDC
 create_ddc_getvcp_response_packet(
       Byte *        i2c_response_bytes,
       int           response_bytes_buffer_size,
@@ -233,7 +233,7 @@ create_ddc_setvcp_request_packet(
       int           new_value,
       const char *  tag);
 
-Global_Status_DDC
+Status_DDC
 get_interpreted_vcp_code(
       DDC_Packet *  packet,
       bool          make_copy,

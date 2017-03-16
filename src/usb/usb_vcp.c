@@ -175,7 +175,7 @@ bye:
  *
  * Adapted from usbmonctl
  */
-Base_Status_Errno
+Status_Errno
 set_control_value(int fd,
                   int report_type,
                   int report_id,
@@ -188,7 +188,7 @@ set_control_value(int fd,
          "Starting. fd=%d, report_type=%d, report_id=%d, field_ndx=%d, usage_ndx=%d, value=%d",
          fd, report_type, report_type, field_ndx, usage_ndx, value);
    int rc;
-   Base_Status_Errno result = 0;
+   Status_Errno result = 0;
 
    struct hiddev_report_info rinfo = {
       .report_type = report_type,
@@ -408,7 +408,7 @@ usb_set_usage_value_by_vcprec(
                  vcprec->usage_index,
                  new_value);
 
-   Base_Status_Errno rc = set_control_value(fd,
+   Status_Errno rc = set_control_value(fd,
                                             vcprec->report_type,
                                             vcprec->report_id,
                                             vcprec->field_index,

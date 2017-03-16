@@ -303,6 +303,7 @@ bool errno_name_to_number(const char * errno_name, int * perrno) {
  *
  * @return  true if found, false if not
  */
+#ifdef OLD
 bool errno_name_to_modulated_number(
         const char *         errno_name,
         Global_Status_Code * p_error_number)
@@ -317,3 +318,15 @@ bool errno_name_to_modulated_number(
    *p_error_number = result;
    return found;
 }
+#endif
+
+#ifdef OLD
+bool errno_name_to_modulated_number(
+        const char *         errno_name,
+        Public_Status_Code * p_error_number)
+{
+   return  errno_name_to_number(errno_name, p_error_number);
+}
+#endif
+
+

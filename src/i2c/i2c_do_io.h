@@ -52,18 +52,18 @@ I2C_IO_Strategy_Id;
 
 void i2c_set_io_strategy(I2C_IO_Strategy_Id strategy_id);
 
-Base_Status_Errno_DDC invoke_i2c_writer(
+Status_Errno_DDC invoke_i2c_writer(
       int    fh,
       int    bytect,
       Byte * bytes_to_write);
 
-Base_Status_Errno_DDC invoke_i2c_reader(
+Status_Errno_DDC invoke_i2c_reader(
        int        fh,
        int        bytect,
        Byte *     readbuf);
 
 #ifdef TEST_THAT_DIDNT_WORK
-Base_Status_Errno_DDC invoke_single_byte_i2c_reader(
+Status_Errno_DDC invoke_single_byte_i2c_reader(
        int        fh,
        int        bytect,
        Byte *     readbuf);

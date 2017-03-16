@@ -130,7 +130,7 @@ int usb_open_hiddev_device(
  *    0 if success
  *    -errno if close fails and exit on failure was not specified
  */
-Base_Status_Errno
+Status_Errno
 usb_close_device(
       int           fd,
       char *        device_fn,
@@ -175,7 +175,7 @@ usb_close_device(
 // Wrapper hiddev ioctl calls
 //
 
-Base_Status_Errno
+Status_Errno
 hiddev_get_device_info(
       int                      fd,
       struct hiddev_devinfo *  dev_info,

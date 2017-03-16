@@ -80,7 +80,7 @@ void i2c_set_io_strategy(I2C_IO_Strategy_Id strategy_id) {
  * @param   bytect          number of bytes to write
  * @param   bytes_to_write  pointer to bytes to be written
  */
-Base_Status_Errno_DDC invoke_i2c_writer(
+Status_Errno_DDC invoke_i2c_writer(
       int    fh,
       int    bytect,
       Byte * bytes_to_write)
@@ -92,7 +92,7 @@ Base_Status_Errno_DDC invoke_i2c_writer(
       free(hs);
    }
 
-   Base_Status_Errno_DDC rc;
+   Status_Errno_DDC rc;
    RECORD_IO_EVENT(
       IE_WRITE,
       ( rc = i2c_io_strategy->i2c_writer(fh, bytect, bytes_to_write ) )
@@ -114,7 +114,7 @@ Base_Status_Errno_DDC invoke_i2c_writer(
  * @param   bytect          number of bytes to read
  * @param   readbuf         location where bytes will be read to
  */
-Base_Status_Errno_DDC invoke_i2c_reader(
+Status_Errno_DDC invoke_i2c_reader(
        int        fh,
        int        bytect,
        Byte *     readbuf)
@@ -122,7 +122,7 @@ Base_Status_Errno_DDC invoke_i2c_reader(
      bool debug = false;
      DBGMSF(debug, "reader=%s, bytect=%d", i2c_io_strategy->i2c_reader_name, bytect);
 
-     Base_Status_Errno_DDC rc;
+     Status_Errno_DDC rc;
      RECORD_IO_EVENT(
         IE_READ,
         ( rc = i2c_io_strategy->i2c_reader(fh, bytect, readbuf) )
@@ -136,14 +136,14 @@ Base_Status_Errno_DDC invoke_i2c_reader(
 
 #ifdef TEST_THAT_DIDNT_WORK
 // fails
-Base_Status_Errno_DDC invoke_single_byte_i2c_reader(
+Status_Errno_DDC invoke_single_byte_i2c_reader(
       int        fh,
       int        bytect,
       Byte *     readbuf)
 {
    bool debug = true;
    DBGMSF(debug, "bytect=%d", bytect);
-   Base_Status_Errno_DDC psc = 0;
+   Status_Errno_DDC psc = 0;
    int ndx = 0;
    for (;ndx < bytect; ndx++) {
       psc = invoke_i2c_reader(fh, 1, readbuf+ndx);

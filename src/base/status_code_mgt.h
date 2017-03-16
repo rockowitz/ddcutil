@@ -59,45 +59,32 @@ void report_status_code_info(Status_Code_Info * pdesc);
 // C does not enforce type checking, but useful for documentation
 // trying different styles for readability, consistency w standards
 
-/** Fully modulated status code */
-typedef int Global_Status_Code;
-// Global_Status_Code subranges:
-
-// typedef int Global_Status_ADL;    // subrange of Global_Status_Code containing modulated ADL return codes
-typedef int Global_Status_DDC;    // subrange of Global_Status_Code containing (always modulated) DDC return codes
-typedef int Global_Status_Errno;  // subrange of Global_Status_Code containing modulated Linux return codes
-
-typedef int Modulated_Status_ADL; ///< modulated ADL return codes only, same as Global_Status_ADL
-
-// typedef int Rc_Raw_DDC_t;
-typedef int Base_Status_ADL;
-typedef int Base_Status_Errno;    //< negative Linux errno values, unmodulated
-
-// would make it simpler for low level I2C functions to be incorporated into sample code
-typedef int Base_Status_Errno_DDC;   ///< union(Base_Status_Errno, modulated DDC)
-
-// unused
-//typedef int Base_Status_ADL_DDC;     // union(Base_Status_ADL, Global_Status_DDC)
-
-typedef int Public_Status_Code;      // union(unmodulated Linux codes, modulated ADL codes, (always modulaed) DDC return codes
+typedef int Status_Errno;          ///< negative Linux errno values
+typedef int Status_DDC;            ///< DDC specific status codes
+typedef int Status_Errno_DDC;      ///< union(Status_Errno,Status_DDC)
+typedef int Base_Status_ADL;       ///< unmodulated ADL status codes
+typedef int Modulated_Status_ADL;  ///< modulated ADL return codes
+typedef int Public_Status_Code;    ///< union(Status_Errno, Status_DDC, Modulated_Status_ADL)
 
 /** typedef of function used to return a #Status_Code_Info for a status code */
 typedef
 Status_Code_Info * (*Retcode_Description_Finder)(int rc);
 
 typedef
-bool (*Retcode_Number_Finder)(const char * name, Global_Status_Code * p_number);
+bool (*Retcode_Number_Finder)(const char * name, Status_Errno_DDC * p_number);
 
 
-
-Global_Status_Code modulate_base_errno_ddc_to_global(Base_Status_Errno_DDC rc);
+#ifdef OLD
+Status_Errno_DDC modulate_base_errno_ddc_to_global(Status_Errno_DDC rc);
+#endif
 
 //
 // Status codes ranges
 //
-#define RCRANGE_BASE_START      0
-#define RCRANGE_BASE_MAX      999
-#define RCRANGE_ERRNO_START  1000
+// #define RCRANGE_BASE_START      0
+// #define RCRANGE_BASE_MAX      999
+// #define RCRANGE_ERRNO_START  1000
+#define RCRANGE_ERRNO_START     0
 #define RCRANGE_ERRNO_MAX    1999
 #define RCRANGE_ADL_START    2000
 #define RCRANGE_ADL_MAX      2999
@@ -111,7 +98,7 @@ Global_Status_Code modulate_base_errno_ddc_to_global(Base_Status_Errno_DDC rc);
  * - should RR_BASE be in this enum?
  */
 typedef enum {
-          RR_BASE,     ///< indicates unmodulated status code
+ //       RR_BASE,     ///< indicates unmodulated status code
           RR_ERRNO,    ///< range id for modulated Linux errno values
           RR_ADL,      ///< range id for modulated ADL error codes
           RR_DDC       ///< range id for modulated ddcutil-specific error codes
@@ -124,23 +111,36 @@ void register_retcode_desc_finder(
         bool                       finder_arg_is_modulated);
 #endif
 
-int modulate_rc(int unmodulated_rc, Retcode_Range_Id range_id);
-int demodulate_rc(int modulated_rc, Retcode_Range_Id range_id);
+int modulate_rc(  int unmodulated_rc, Retcode_Range_Id range_id);
+int demodulate_rc(int   modulated_rc, Retcode_Range_Id range_id);
 Retcode_Range_Id get_modulation(int rc);
 // int demodulate_any_rc(int modulated_rc);   // unimplemented
 
-Public_Status_Code global_to_public_status_code(Global_Status_Code gsc);
-Global_Status_Code public_to_global_status_code(Public_Status_Code);
+#ifdef OLD
+Public_Status_Code global_to_public_status_code(Status_Errno_DDC gsc);
+Status_Errno_DDC public_to_Base_Status_Errno_DDC(Public_Status_Code);
+#endif
 
 Status_Code_Info * find_global_status_code_info(int status_code);
 
 // Returns status code description:
-char * gsc_desc(Global_Status_Code rc);   // must be freed after use
+#ifdef OLD
+char * gsc_desc(Status_Errno_DDC rc);   // must be freed after use
+#endif
 char * psc_desc(Public_Status_Code rc);
-char * gsc_name(Global_Status_Code status_code);   // do not free after use
+#ifdef OLD
+char * gsc_name(Status_Errno_DDC status_code);   // do not free after use
+#endif
 
-bool gsc_name_to_unmodulated_number(const char * status_code_name, int * p_error_number);
-bool gsc_name_to_modulated_number(const char * status_code_name, Global_Status_Code * p_error_number);
+char * psc_name(Public_Status_Code status_code);   // do not free after us
 
+
+bool status_name_to_unmodulated_number(const char * status_code_name, int * p_error_number);
+bool status_name_to_modulated_number(const char * status_code_name, Public_Status_Code * p_error_number);
+
+// new    ???
+bool status_code_name_to_psc_number(
+      const char * status_code_name,
+      Public_Status_Code * p_error_number);
 
 #endif /* STATUS_CODE_MGT_H_ */

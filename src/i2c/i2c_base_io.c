@@ -67,7 +67,7 @@
  * @retval DDCRC_BAD_BYTECT  incorrect number of bytes written
  * @retval -errno            negative Linux error number
  */
-Base_Status_Errno_DDC  write_writer(int fh, int bytect, Byte * pbytes) {
+Status_Errno_DDC  write_writer(int fh, int bytect, Byte * pbytes) {
    bool debug = false;
    int rc = write(fh, pbytes, bytect);
    // per write() man page:
@@ -98,7 +98,7 @@ Base_Status_Errno_DDC  write_writer(int fh, int bytect, Byte * pbytes) {
  * @retval DDCRC_BAD_BYTECT incorrect number of bytes read
  * @retval -errno           negative Linux errno value
  */
-Base_Status_Errno_DDC read_reader(int fh, int bytect, Byte * readbuf) {
+Status_Errno_DDC read_reader(int fh, int bytect, Byte * readbuf) {
    bool debug = false;
    int rc = read(fh, readbuf, bytect);
    // per read() man page:
@@ -147,7 +147,7 @@ Base_Status_Errno_DDC read_reader(int fh, int bytect, Byte * readbuf) {
  * @retval 0       success
  * @retval <0      negative Linux errno value
  */
-Base_Status_Errno_DDC ioctl_writer(int fh, int bytect, Byte * pbytes) {
+Status_Errno_DDC ioctl_writer(int fh, int bytect, Byte * pbytes) {
    bool debug = false;
    DBGMSF(debug, "Starting. fh=%d, bytect=%d, pbytes=%p", fh, bytect, pbytes);
 
@@ -213,7 +213,7 @@ Base_Status_Errno_DDC ioctl_writer(int fh, int bytect, Byte * pbytes) {
  * @retval 0         success
  * @retval <0        negative Linux errno value
  */
-Base_Status_Errno_DDC ioctl_reader(int fh, int bytect, Byte * readbuf) {
+Status_Errno_DDC ioctl_reader(int fh, int bytect, Byte * readbuf) {
    bool debug = true;
    // DBGMSG("Starting");
 
@@ -267,7 +267,7 @@ Base_Status_Errno_DDC ioctl_reader(int fh, int bytect, Byte * readbuf) {
 // Write to I2C bus using i2c_smbus_write_i2c_block_data()
 
 // 11/2015:    fails:
-Base_Status_Errno_DDC i2c_smbus_write_i2c_block_data_writer(int fh, int bytect, Byte * bytes_to_write) {
+Status_Errno_DDC i2c_smbus_write_i2c_block_data_writer(int fh, int bytect, Byte * bytes_to_write) {
    bool debug = true;
    int rc = i2c_smbus_write_i2c_block_data(fh,
                                            bytes_to_write[0],   // cmd
@@ -289,7 +289,7 @@ Base_Status_Errno_DDC i2c_smbus_write_i2c_block_data_writer(int fh, int bytect, 
 
 // i2c_smbus_read_i2c_block_data can't handle capabilities fragments 32 bytes in size, since with
 // "envelope" the packet exceeds the i2c_smbus_read_i2c_block_data 32 byte limit
-Base_Status_Errno_DDC i2c_smbus_read_i2c_block_data_reader(int fh, int bytect, Byte * readbuf) {
+Status_Errno_DDC i2c_smbus_read_i2c_block_data_reader(int fh, int bytect, Byte * readbuf) {
    bool debug = true;
    const int MAX_BYTECT = 256;
    assert(bytect <= MAX_BYTECT);

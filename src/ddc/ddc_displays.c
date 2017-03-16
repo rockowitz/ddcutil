@@ -110,7 +110,7 @@ static bool verify_adl_display_ref(Display_Ref * dref) {
 
    if (psc != 0 && psc != DDCRC_REPORTED_UNSUPPORTED && psc != DDCRC_DETERMINED_UNSUPPORTED) {
       result = false;
-      DBGMSF(debug, "Error getting value for brightness VCP feature 0x10. gsc=%s\n", gsc_desc(psc) );
+      DBGMSF(debug, "Error getting value for brightness VCP feature 0x10. gsc=%s\n", psc_desc(psc) );
    }
 
  bye:

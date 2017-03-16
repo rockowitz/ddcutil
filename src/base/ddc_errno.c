@@ -144,7 +144,7 @@ Status_Code_Info * ddcrc_find_status_code_info(int rc) {
  *  @param gsc status code
  *  @return true/false
  */
-bool ddcrc_is_derived_status_code(Global_Status_Code gsc) {
+bool ddcrc_is_derived_status_code(Public_Status_Code gsc) {
    return (gsc == DDCRC_ALL_TRIES_ZERO         ||
            gsc == DDCRC_RETRIES                ||
            gsc == DDCRC_DETERMINED_UNSUPPORTED
@@ -154,7 +154,7 @@ bool ddcrc_is_derived_status_code(Global_Status_Code gsc) {
 /** Certain **ddcutil** status codes, (e.g. DDCRC_REPORTED_UNSUPPORTED)
  *  report states that should not be considered to be DDC protocol errors.
  */
-bool ddcrc_is_not_error(Global_Status_Code gsc) {
+bool ddcrc_is_not_error(Public_Status_Code gsc) {
    return (gsc == DDCRC_REPORTED_UNSUPPORTED);
 }
 
@@ -200,7 +200,7 @@ char * ddcrc_desc(int rc) {
  * the return value for this function is always identical to
  * ddc_error_name_to_modulated_number().
  */
-bool ddc_error_name_to_number(const char * error_name, Global_Status_Code * p_errnum) {
+bool ddc_error_name_to_number(const char * error_name, Status_DDC * p_errnum) {
    int found = false;
    *p_errnum = 0;
    for (int ndx = 0; ndx < ddcrc_desc_ct; ndx++) {
@@ -213,6 +213,7 @@ bool ddc_error_name_to_number(const char * error_name, Global_Status_Code * p_er
    return found;
 }
 
+#ifdef OLD
 /** Gets the (modulated) ddcutil error number for a symbolic name.
  *
  * @param   error_name   symbolic name, e.g. DDCRC_CHECKSUM
@@ -236,3 +237,4 @@ bool ddc_error_name_to_modulated_number(
    *p_errnum = result;
    return found;
 }
+#endif

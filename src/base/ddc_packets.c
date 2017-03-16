@@ -518,7 +518,7 @@ create_ddc_setvcp_request_packet(Byte vcp_code, int new_value, const char * tag)
 // Response Packets
 //
 
-Global_Status_DDC
+Status_DDC
 create_ddc_base_response_packet(
    Byte *        i2c_response_bytes,
    int           response_bytes_buffer_size,
@@ -614,7 +614,7 @@ create_ddc_base_response_packet(
 }
 
 
-Global_Status_DDC
+Status_DDC
 create_ddc_response_packet(
        Byte *         i2c_response_bytes,
        int            response_bytes_buffer_size,
@@ -677,7 +677,7 @@ void report_interpreted_capabilities(Interpreted_Capabilities_Fragment * interpr
 }
 
 
-Global_Status_DDC
+Status_DDC
 interpret_multi_part_read_response(
        Byte   response_type,
        Byte * data_bytes,
@@ -773,7 +773,7 @@ typedef
  *   otherwise well constructed response.
  */
 
-Global_Status_DDC
+Status_DDC
 interpret_vcp_feature_response_std(
        Byte*                 vcp_data_bytes,
        int                   bytect,
@@ -856,7 +856,7 @@ interpret_vcp_feature_response_std(
 
 
 #ifdef OLD
-Global_Status_DDC
+Status_DDC
 interpret_vcp_feature_response(
    Byte *                              vcp_data_bytes,
    int                                 bytect,
@@ -969,7 +969,7 @@ void   report_parsed_vcp_response(Parsed_Vcp_Response * response, int depth) {
 // Response packets 
 //
 
-Global_Status_DDC create_ddc_typed_response_packet(
+Status_DDC create_ddc_typed_response_packet(
       Byte*        i2c_response_bytes,
       int          response_bytes_buffer_size,
       Byte         expected_type,
@@ -989,7 +989,7 @@ Global_Status_DDC create_ddc_typed_response_packet(
 
    // DBGMSG("before create_ddc_response_packet(), *packet_ptr_addr=%p", *packet_ptr_addr);
    // n. may return DDC_NULL_RESPONSE??   (old note)
-   Global_Status_DDC rc = create_ddc_response_packet(
+   Status_DDC rc = create_ddc_response_packet(
                i2c_response_bytes,
                response_bytes_buffer_size,
                expected_type,
@@ -1058,14 +1058,14 @@ Global_Status_DDC create_ddc_typed_response_packet(
 }
 
 
-Global_Status_DDC create_ddc_multi_part_read_response_packet(
+Status_DDC create_ddc_multi_part_read_response_packet(
                      Byte           response_type,
                      Byte *         i2c_response_bytes,
                      int            response_bytes_buffer_size,
                      const char *   tag,
                      DDC_Packet **  packet_ptr) {
    DDC_Packet * packet = NULL;
-   Global_Status_DDC rc = create_ddc_response_packet(i2c_response_bytes,
+   Status_DDC rc = create_ddc_response_packet(i2c_response_bytes,
                                                      response_bytes_buffer_size,
                                                      DDC_PACKET_TYPE_TABLE_READ_RESPONSE,
                                                      tag,
@@ -1108,7 +1108,7 @@ Global_Status_DDC create_ddc_multi_part_read_response_packet(
 
 // VCP Feature response
 
-Global_Status_DDC
+Status_DDC
 create_ddc_getvcp_response_packet(
        Byte *         i2c_response_bytes,
        int            response_bytes_buffer_size,
@@ -1117,7 +1117,7 @@ create_ddc_getvcp_response_packet(
        DDC_Packet **  packet_ptr)
 {
    DDC_Packet * packet = NULL;
-   Global_Status_DDC rc = create_ddc_response_packet(
+   Status_DDC rc = create_ddc_response_packet(
                i2c_response_bytes,
                response_bytes_buffer_size,
                DDC_PACKET_TYPE_QUERY_VCP_RESPONSE,
@@ -1165,13 +1165,13 @@ create_ddc_getvcp_response_packet(
 // Capabilities 
 
 #ifdef OLD
-Global_Status_DDC get_interpreted_capabilities_fragment(
+Status_DDC get_interpreted_capabilities_fragment(
                      DDC_Packet *  packet,
                      bool          make_copy,
                      Interpreted_Capabilities_Fragment ** interpreted_ptr)
 {
    // DBGMSG("Starting");
-   Global_Status_DDC rc = DDCRC_OK;
+   Status_DDC rc = DDCRC_OK;
    if (packet->type != DDC_PACKET_TYPE_CAPABILITIES_RESPONSE)
       rc = COUNT_STATUS_CODE(DDCRC_RESPONSE_TYPE);
    else {
@@ -1221,13 +1221,13 @@ int get_capabilities_fragment(DDC_Packet * packet, char ** fragment_ptr) {
 
 #ifdef UNUSED
 
-Global_Status_DDC get_interpreted_table_read_fragment(
+Status_DDC get_interpreted_table_read_fragment(
                      DDC_Packet *  packet,
                      bool          make_copy,
                      Interpreted_Table_Read_Fragment ** interpreted_ptr)
 {
    // DBGMSG("Starting");
-   Global_Status_DDC rc = DDCRC_OK;
+   Status_DDC rc = DDCRC_OK;
    if (packet->type != DDC_PACKET_TYPE_TABLE_READ_RESPONSE)
       rc = COUNT_STATUS_CODE(DDCRC_RESPONSE_TYPE);
    else {
@@ -1245,7 +1245,7 @@ Global_Status_DDC get_interpreted_table_read_fragment(
 }
 
 
-Global_Status_DDC get_table_read_offset(DDC_Packet * packet, int * offset_ptr) {
+Status_DDC get_table_read_offset(DDC_Packet * packet, int * offset_ptr) {
    Interpreted_Table_Read_Fragment * aux_ptr;
    int rc = get_interpreted_table_read_fragment(packet, false, &aux_ptr );
    if (rc == 0) {
@@ -1258,7 +1258,7 @@ Global_Status_DDC get_table_read_offset(DDC_Packet * packet, int * offset_ptr) {
 
 // VCP Feature Code
 
-Global_Status_DDC get_interpreted_vcp_code(
+Status_DDC get_interpreted_vcp_code(
        DDC_Packet *            packet,
        bool                    make_copy,
        Parsed_Nontable_Vcp_Response ** interpreted_ptr)
@@ -1266,7 +1266,7 @@ Global_Status_DDC get_interpreted_vcp_code(
    bool debug = false;
    if (debug)
       DBGMSG("Starting");
-   Global_Status_DDC rc = DDCRC_OK;
+   Status_DDC rc = DDCRC_OK;
    if (packet->type != DDC_PACKET_TYPE_QUERY_VCP_RESPONSE) {
       COUNT_STATUS_CODE(DDCRC_RESPONSE_TYPE);
       rc = DDCRC_RESPONSE_TYPE;
@@ -1283,14 +1283,14 @@ Global_Status_DDC get_interpreted_vcp_code(
       }
    }
    if (debug)
-      DBGMSG("Returning %d: %s\n", rc, gsc_desc(rc) );
+      DBGMSG("Returning %d: %s\n", rc, psc_desc(rc) );
    return rc;
 }
 
 // 12/23/2015: not currently used
-Global_Status_DDC get_vcp_cur_value(DDC_Packet * packet, int * value_ptr) {
+Status_DDC get_vcp_cur_value(DDC_Packet * packet, int * value_ptr) {
    Parsed_Nontable_Vcp_Response * aux_ptr;
-   Global_Status_DDC rc = get_interpreted_vcp_code(packet, false, &aux_ptr);
+   Status_DDC rc = get_interpreted_vcp_code(packet, false, &aux_ptr);
    if (rc == 0) {
       *value_ptr = aux_ptr->cur_value;
    }

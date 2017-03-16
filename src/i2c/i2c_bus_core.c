@@ -117,12 +117,12 @@ int i2c_open_bus(int busno, Byte callopts) {
  * @retval 0  success
  * @retval <0 negative Linux errno value close*( fails and CALLOPT_ERR_ABORT not set in callopts
  */
-Base_Status_Errno i2c_close_bus(int fd, int busno, Call_Options callopts) {
+Status_Errno i2c_close_bus(int fd, int busno, Call_Options callopts) {
    bool debug = false;
    DBGTRC(debug, TRACE_GROUP, "Starting. fd=%d, busno=%d, callopts=%s",
           fd, busno, interpret_call_options(callopts));
 
-   Base_Status_Errno result = 0;
+   Status_Errno result = 0;
    int rc = 0;
 
 #ifdef ALTERNATIVE
@@ -179,7 +179,7 @@ bool i2c_force_slave_addr_flag = false;
  * @retval  0 if success
  * @retval <0 negative Linux errno, if ioctl call fails and CALLOPT_ERR_ABORT not set in callopts
  */
-Base_Status_Errno i2c_set_addr(int file, int addr, Call_Options callopts) {
+Status_Errno i2c_set_addr(int file, int addr, Call_Options callopts) {
    bool debug = false;
    bool force_i2c_slave_failure = false;
    callopts |= CALLOPT_ERR_MSG;    // temporary
@@ -188,7 +188,7 @@ Base_Status_Errno i2c_set_addr(int file, int addr, Call_Options callopts) {
    // FAILSIM_EXT( ( show_backtrace(1) ) )
    FAILSIM;
 
-   Base_Status_Errno result = 0;
+   Status_Errno result = 0;
    int rc = 0;
    int errsv = 0;
    uint16_t op = I2C_SLAVE;
@@ -218,7 +218,8 @@ retry:
       if (errsv == EBUSY && i2c_force_slave_addr_flag && op == I2C_SLAVE) {
          DBGMSG("Retrying using IOCTL op I2C_SLAVE_FORCE for address 0x%02x", addr );
          // normally errors counted at higher level, but in this case it would be lost because of retry
-         COUNT_STATUS_CODE( modulate_rc(-errsv, RR_ERRNO));
+         // COUNT_STATUS_CODE( modulate_rc(-errsv, RR_ERRNO));
+         COUNT_STATUS_CODE(-errsv);
          op = I2C_SLAVE_FORCE;
          debug = true;   // force final message for clarity
          goto retry;
@@ -327,7 +328,7 @@ bool * detect_all_addrs(int busno) {
  *    < 0, modulated status code
  */
 // static
-Base_Status_Errno_DDC detect_ddc_addrs_by_fd(int fd, Byte * presult) {
+Status_Errno_DDC detect_ddc_addrs_by_fd(int fd, Byte * presult) {
    bool debug = false;
    DBGMSF(debug, "Starting. fd=%d", fd);
    assert(fd >= 0);
@@ -335,7 +336,7 @@ Base_Status_Errno_DDC detect_ddc_addrs_by_fd(int fd, Byte * presult) {
 
    Byte    readbuf;  //  1 byte buffer
    Byte    writebuf = {0x00};
-   Base_Status_Errno_DDC base_rc = 0;
+   Status_Errno_DDC base_rc = 0;
 
    base_rc = i2c_set_addr(fd, 0x30, CALLOPT_ERR_MSG);   // CALLOPT_ERR_MSG temporary
    if (base_rc < 0) {
@@ -799,7 +800,7 @@ Bus_Info * i2c_check_bus(Bus_Info * bus_info) {
       if (file >= 0) {
          bus_info->flags |= I2C_BUS_ACCESSIBLE;
          Byte ddc_addr_flags = 0x00;
-         Base_Status_Errno_DDC psc = detect_ddc_addrs_by_fd(file, &ddc_addr_flags);
+         Status_Errno_DDC psc = detect_ddc_addrs_by_fd(file, &ddc_addr_flags);
          if (psc != 0) {
             DBGMSF(debug, "detect_ddc_addrs_by_fd() returned %d", psc);
             f0printf(FERR, "Failure detecting bus addresses for /dev/i2c-%d: status code=%s\n",

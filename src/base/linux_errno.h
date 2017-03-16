@@ -41,6 +41,6 @@ Status_Code_Info * get_errno_info(int errnum);
 Status_Code_Info * get_negative_errno_info(int errnum);
 
 bool errno_name_to_number(const char * errno_name, int * perrno);
-bool errno_name_to_modulated_number(const char * errno_name, Global_Status_Code * p_error_number);
+bool errno_name_to_modulated_number(const char * errno_name, Public_Status_Code * p_error_number);
 
 #endif /* BASE_LINUX_ERRNO_H_ */

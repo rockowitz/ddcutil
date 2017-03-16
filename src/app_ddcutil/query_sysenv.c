@@ -608,7 +608,7 @@ Public_Status_Code try_single_getvcp_call(int fh, unsigned char vcp_feature_code
 
    int ndx;
    unsigned char checksum;
-   Base_Status_Errno rc = 0;
+   Status_Errno rc = 0;
 
 #ifdef NO
    // write seems to be necessary to reset monitor state
@@ -778,7 +778,7 @@ void raw_scan_i2c_devices() {
    Buffer * buf0 = buffer_new(1000, __func__);
    int  busct = 0;
    Public_Status_Code psc;
-   Base_Status_Errno rc;
+   Status_Errno rc;
    bool saved_i2c_force_slave_addr_flag = i2c_force_slave_addr_flag;
 
    for (int busno=0; busno < I2C_BUS_MAX; busno++) {

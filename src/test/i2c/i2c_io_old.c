@@ -124,7 +124,7 @@ void set_i2c_read_mode(char* mode) {
 
 
 
-Global_Status_Code call_i2c_writer(
+Public_Status_Code call_i2c_writer(
       I2C_Writer writer,
       char * writer_name,
       int    fh,
@@ -140,7 +140,7 @@ Global_Status_Code call_i2c_writer(
       free(hs);
    }
 
-   Global_Status_Code rc;
+   Public_Status_Code rc;
 
    RECORD_IO_EVENT(IE_WRITE,
       ( rc = writer(fh, bytect, bytes_to_write ) )
@@ -158,13 +158,13 @@ Global_Status_Code call_i2c_writer(
          sleep_millis_with_trace(sleep_millisec, __func__, "after write");
    }
 
-   rc = modulate_base_errno_ddc_to_global(rc);
+   // rc = modulate_base_errno_ddc_to_global(rc);
    if (debug)  printf("(%s) Returning rc=%d\n", __func__, rc);
    return rc;
 }
 
 
-Global_Status_Code call_i2c_reader(
+Public_Status_Code call_i2c_reader(
        I2C_Reader reader,
        char *     reader_name,
        int        fh,
@@ -177,7 +177,7 @@ Global_Status_Code call_i2c_reader(
    if (debug)
       printf("(%s) reader=%s, bytect=%d\n", __func__, reader_name, bytect);
 
-   Global_Status_Code rc;
+   Public_Status_Code rc;
 
    RECORD_IO_EVENT(
       IE_READ,
@@ -196,19 +196,19 @@ Global_Status_Code call_i2c_reader(
          sleep_millis_with_trace(sleep_millisec, __func__, "after read");
    }
 
-   rc = modulate_base_errno_ddc_to_global(rc);
+   // rc = modulate_base_errno_ddc_to_global(rc);
    if (debug ) printf("(%s) Returning rc=%d\n",__func__, rc);
    return rc;
 }
 
 
 
-Global_Status_Code do_i2c_file_write(int fh, int bytect, Byte * bytes_to_write, int sleep_millisec) {
+Public_Status_Code do_i2c_file_write(int fh, int bytect, Byte * bytes_to_write, int sleep_millisec) {
    return call_i2c_writer(write_writer, "write_writer", fh, bytect, bytes_to_write, sleep_millisec);
 }
 
 #ifdef WONT_COMPILE_ON_FEDORA
-Global_Status_Code do_i2c_smbus_write_i2c_block_data(int fh, int bytect, Byte * bytes_to_write, int sleep_millisec) {
+Public_Status_Code do_i2c_smbus_write_i2c_block_data(int fh, int bytect, Byte * bytes_to_write, int sleep_millisec) {
    return call_i2c_writer(
               i2c_smbus_write_i2c_block_data_writer,
               "i2c_smbus_write_i2c_block_data_writer",
@@ -220,17 +220,17 @@ Global_Status_Code do_i2c_smbus_write_i2c_block_data(int fh, int bytect, Byte * 
 #endif
 
 
-Global_Status_Code do_i2c_ioctl_write(int fh, int bytect, Byte * bytes_to_write, int sleep_millisec) {
+Public_Status_Code do_i2c_ioctl_write(int fh, int bytect, Byte * bytes_to_write, int sleep_millisec) {
    return call_i2c_writer(ioctl_writer, "ioctl_writer", fh, bytect, bytes_to_write, sleep_millisec);
 }
 
 
-Global_Status_Code do_i2c_file_read(int fh, int bytect, Byte * readbuf, int sleep_millisec) {
+Public_Status_Code do_i2c_file_read(int fh, int bytect, Byte * readbuf, int sleep_millisec) {
    return call_i2c_reader(read_reader, "read_reader", fh, bytect, readbuf, sleep_millisec);
 }
 
 #ifdef WONT_COMPILE_ON_FEDORA
-Global_Status_Code do_i2c_smbus_read_i2c_block_data(int fh, int bytect, Byte * readbuf, int sleep_millisec) {
+Public_Status_Code do_i2c_smbus_read_i2c_block_data(int fh, int bytect, Byte * readbuf, int sleep_millisec) {
    return call_i2c_reader(
              i2c_smbus_read_i2c_block_data_reader,
              "i2c_smbus_read_i2c_block_data_reader",
@@ -242,14 +242,14 @@ Global_Status_Code do_i2c_smbus_read_i2c_block_data(int fh, int bytect, Byte * r
 #endif
 
 
-Global_Status_Code do_i2c_ioctl_read(int fh, int bytect, Byte * readbuf, int sleep_millisec) {
+Public_Status_Code do_i2c_ioctl_read(int fh, int bytect, Byte * readbuf, int sleep_millisec) {
    return call_i2c_reader(ioctl_reader, "ioctl_reader", fh, bytect, readbuf, sleep_millisec);
 }
 
 
 
 
-Global_Status_Code perform_i2c_write(int fh, char * write_mode, int bytect, Byte * bytes_to_write, int sleep_millisec) {
+Public_Status_Code perform_i2c_write(int fh, char * write_mode, int bytect, Byte * bytes_to_write, int sleep_millisec) {
    // bool debug = i2c_write_trace_level;
    bool debug = false;
    if (debug) printf("(%s) Starting. write_mode=%s\n", __func__, write_mode);
@@ -276,14 +276,14 @@ Global_Status_Code perform_i2c_write(int fh, char * write_mode, int bytect, Byte
 }
 
 
-Global_Status_Code perform_i2c_write2(int fh, int bytect, Byte * bytes_to_write, int sleep_millisec) {
+Public_Status_Code perform_i2c_write2(int fh, int bytect, Byte * bytes_to_write, int sleep_millisec) {
    return perform_i2c_write(fh, write_mode, bytect, bytes_to_write, sleep_millisec);
 }
 
 
 // Returns:  -errno, DDCRC_BAD_BYTECT, DDCRC_INVALID_MODE (if invalid read mode)
 
-Global_Status_Code perform_i2c_read(int    fh, char * read_mode, int bytect, Byte * readbuf, int sleep_millisec) {
+Public_Status_Code perform_i2c_read(int    fh, char * read_mode, int bytect, Byte * readbuf, int sleep_millisec) {
    // bool debug = i2c_read_trace_level;
    bool debug = false;
    if (debug) printf("(%s) Starting. read_mode=%s\n", __func__, read_mode);
@@ -324,7 +324,7 @@ Global_Status_Code perform_i2c_read(int    fh, char * read_mode, int bytect, Byt
  *     9 if success
  *     modulated error number if error
  */
-Global_Status_Code perform_i2c_read2(int    fh, int bytect, Byte * readbuf, int sleep_millisec) {
+Public_Status_Code perform_i2c_read2(int    fh, int bytect, Byte * readbuf, int sleep_millisec) {
    return perform_i2c_read(fh, read_mode, bytect, readbuf, sleep_millisec);
 }
 

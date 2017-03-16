@@ -44,7 +44,7 @@
 
 
 int usb_open_hiddev_device(char * hiddev_devname, Byte calloptions);
-Base_Status_Errno usb_close_device(int fd, char * device_fn, Byte calloptions);
+Status_Errno usb_close_device(int fd, char * device_fn, Byte calloptions);
 
 int hiddev_get_device_info(int fd, struct hiddev_devinfo *     dinfo, Byte calloptions);
 int hiddev_get_report_info(int fd, struct hiddev_report_info * rinfo, Byte calloptions);

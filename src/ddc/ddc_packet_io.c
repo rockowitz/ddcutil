@@ -126,7 +126,7 @@ Public_Status_Code ddc_open_display(
          }
 
          DBGMSF(debug, "Calling set_addr(0x37) for %s", dref_repr(dref));
-         Base_Status_Errno base_rc =  i2c_set_addr(fd, 0x37, callopts);
+         Status_Errno base_rc =  i2c_set_addr(fd, 0x37, callopts);
          if (base_rc != 0) {
             assert(base_rc < 0);
             close(fd);
@@ -223,11 +223,12 @@ void ddc_close_display(Display_Handle * dh) {
    switch(dh->io_mode) {
    case DDC_IO_DEVI2C:
       {
-         Base_Status_Errno rc = i2c_close_bus(dh->fh, dh->busno,  CALLOPT_NONE);    // return error if failure
+         Status_Errno rc = i2c_close_bus(dh->fh, dh->busno,  CALLOPT_NONE);    // return error if failure
          if (rc != 0) {
             assert(rc < 0);
             DBGMSG("close_i2c_bus returned %d", rc);
-            COUNT_STATUS_CODE(modulate_rc(rc, RR_ERRNO) );
+            // COUNT_STATUS_CODE(modulate_rc(rc, RR_ERRNO) );
+            COUNT_STATUS_CODE(rc);
          }
          dh->fh = -1;    // indicate invalid, in case we try to continue using dh
          break;
@@ -238,11 +239,12 @@ void ddc_close_display(Display_Handle * dh) {
    case USB_IO:
 #ifdef USE_USB
       {
-         Base_Status_Errno rc = usb_close_device(dh->fh, dh->hiddev_device_name, CALLOPT_NONE); // return error if failure
+         Status_Errno rc = usb_close_device(dh->fh, dh->hiddev_device_name, CALLOPT_NONE); // return error if failure
          if (rc != 0) {
             assert(rc < 0);
             DBGMSG("usb_close_device returned %d", rc);
-            COUNT_STATUS_CODE(modulate_rc(rc, RR_ERRNO));
+            // COUNT_STATUS_CODE(modulate_rc(rc, RR_ERRNO));
+            COUNT_STATUS_CODE(rc);
          }
          dh->fh = -1;
          break;
@@ -379,7 +381,7 @@ Public_Status_Code ddc_i2c_write_read_raw(
    bool single_byte_reads = false;   // doesn't work
 #endif
 
-   Base_Status_Errno_DDC rc =
+   Status_Errno_DDC rc =
          invoke_i2c_writer(
                            dh->fh,
                            get_packet_len(request_packet_ptr)-1,
@@ -687,10 +689,12 @@ Public_Status_Code ddc_write_read_with_retry(
             else if ( psc == DDCRC_READ_ALL_ZERO)
                retryable = (all_zero_response_ok) ? false : true;
 
-            else if (psc == modulate_rc(-EIO, RR_ERRNO))
+            //else if (psc == modulate_rc(-EIO, RR_ERRNO))
+            else if (psc == -EIO)
                 retryable = true;
 
-            else if (psc == modulate_rc(-EBADF, RR_ERRNO))
+            // else if (psc == modulate_rc(-EBADF, RR_ERRNO))
+            else if (psc == -EBADF)
                retryable = false;
 
             else
@@ -748,7 +752,7 @@ ddc_i2c_write_only(
    // TRCMSGTF(tf, "Starting.");
    DBGTRC(debug, TRACE_GROUP, "Starting.");
 
-   Base_Status_Errno_DDC rc =
+   Status_Errno_DDC rc =
          invoke_i2c_writer(fh,
                            get_packet_len(request_packet_ptr)-1,
                            get_packet_start(request_packet_ptr)+1 );
@@ -838,7 +842,8 @@ ddc_write_only_with_retry( Display_Handle * dh, DDC_Packet *   request_packet_pt
       if (psc < 0) {
          if (dh->io_mode == DDC_IO_DEVI2C) {
             if (psc < 0) {
-               if (psc != modulate_rc(-EIO, RR_ERRNO) )
+               // if (psc != modulate_rc(-EIO, RR_ERRNO) )
+               if (psc != -EIO)
                    retryable = false;
             }
          }
