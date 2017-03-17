@@ -484,7 +484,7 @@ void call_tuned_sleep(DDCA_IO_Mode io_mode, Sleep_Event_Type event_type) {
    int sleep_time_millis = 0;    // should be a default
    switch(io_mode) {
 
-   case DDC_IO_DEVI2C:
+   case DDCA_IO_DEVI2C:
       switch(event_type) {
       case (SE_WRITE_TO_READ):
             sleep_time_millis = DDC_TIMEOUT_MILLIS_DEFAULT;
@@ -523,7 +523,7 @@ void call_tuned_sleep(DDCA_IO_Mode io_mode, Sleep_Event_Type event_type) {
       }  // switch within DDC_IO_DEVI2C
       break;
 
-   case DDC_IO_ADL:
+   case DDCA_IO_ADL:
       switch(event_type) {
       case (SE_WRITE_TO_READ):
             sleep_time_millis = DDC_TIMEOUT_MILLIS_DEFAULT;
@@ -539,7 +539,7 @@ void call_tuned_sleep(DDCA_IO_Mode io_mode, Sleep_Event_Type event_type) {
       }
       break;
 
-   case USB_IO:
+   case DDCA_IO_USB:
       printf("(%s) call_tuned_sleep() called for USB_IO\n", __func__);
       break;
 
@@ -565,7 +565,7 @@ void call_tuned_sleep(DDCA_IO_Mode io_mode, Sleep_Event_Type event_type) {
  *  @param event_type sleep event type
  */
 void call_tuned_sleep_i2c(Sleep_Event_Type event_type) {
-   call_tuned_sleep(DDC_IO_DEVI2C, event_type);
+   call_tuned_sleep(DDCA_IO_DEVI2C, event_type);
 }
 
 
@@ -575,7 +575,7 @@ void call_tuned_sleep_i2c(Sleep_Event_Type event_type) {
  *  @param event_type sleep event type
  */
 void call_tuned_sleep_adl(Sleep_Event_Type event_type) {
-   call_tuned_sleep(DDC_IO_ADL, event_type);
+   call_tuned_sleep(DDCA_IO_ADL, event_type);
 }
 
 /** Convenience function that determines the device type from the

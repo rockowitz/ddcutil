@@ -115,7 +115,7 @@ Public_Status_Code ddc_open_display(
 
    switch (dref->io_mode) {
 
-   case DDC_IO_DEVI2C:
+   case DDCA_IO_DEVI2C:
       {
          int fd = i2c_open_bus(dref->busno, callopts);
          if (fd < 0) {    // will be < 0 if open_i2c_bus failed and CALLOPT_ERR_ABORT not set
@@ -161,12 +161,12 @@ Public_Status_Code ddc_open_display(
       }
       break;
 
-   case DDC_IO_ADL:
+   case DDCA_IO_ADL:
       pDispHandle = create_adl_display_handle_from_display_ref(dref);
       pDispHandle->pedid = adlshim_get_parsed_edid_by_display_handle(pDispHandle);
       break;
 
-   case USB_IO:
+   case DDCA_IO_USB:
 #ifdef USE_USB
       {
          // bool emit_error_msg = true;
@@ -194,7 +194,7 @@ Public_Status_Code ddc_open_display(
    assert(!pDispHandle || pDispHandle->pedid);
    // needed?  for both or just I2C?
    // sleep_millis_with_trace(DDC_TIMEOUT_MILLIS_DEFAULT, __func__, NULL);
-   if (dref->io_mode != USB_IO)
+   if (dref->io_mode != DDCA_IO_USB)
       call_tuned_sleep_i2c(SE_POST_OPEN);
    // report_display_handle(pDispHandle, __func__);
 bye:
@@ -221,7 +221,7 @@ void ddc_close_display(Display_Handle * dh) {
    }
 
    switch(dh->io_mode) {
-   case DDC_IO_DEVI2C:
+   case DDCA_IO_DEVI2C:
       {
          Status_Errno rc = i2c_close_bus(dh->fh, dh->busno,  CALLOPT_NONE);    // return error if failure
          if (rc != 0) {
@@ -233,10 +233,10 @@ void ddc_close_display(Display_Handle * dh) {
          dh->fh = -1;    // indicate invalid, in case we try to continue using dh
          break;
       }
-   case DDC_IO_ADL:
+   case DDCA_IO_ADL:
       break;           // nothing to do
 
-   case USB_IO:
+   case DDCA_IO_USB:
 #ifdef USE_USB
       {
          Status_Errno rc = usb_close_device(dh->fh, dh->hiddev_device_name, CALLOPT_NONE); // return error if failure
@@ -375,7 +375,7 @@ Public_Status_Code ddc_i2c_write_read_raw(
                               display_handle_repr(dh), readbuf);
    // DBGMSG("request_packet_ptr=%p", request_packet_ptr);
    // dump_packet(request_packet_ptr);
-   ASSERT_DISPLAY_IO_MODE(dh, DDC_IO_DEVI2C);
+   ASSERT_DISPLAY_IO_MODE(dh, DDCA_IO_DEVI2C);
 
 #ifdef TEST_THAT_DIDNT_WORK
    bool single_byte_reads = false;   // doesn't work
@@ -451,7 +451,7 @@ Public_Status_Code ddc_adl_write_read_raw(
    DBGTRC(debug, TRACE_GROUP,
           "Starting. Using adl_ddc_write_only() and adl_ddc_read_only() dh=%s",
           display_handle_repr(dh));
-   ASSERT_DISPLAY_IO_MODE(dh, DDC_IO_ADL);
+   ASSERT_DISPLAY_IO_MODE(dh, DDCA_IO_ADL);
 
    Public_Status_Code psc = adlshim_ddc_write_only(
                                dh,
@@ -514,8 +514,8 @@ Public_Status_Code ddc_write_read_raw(
                               display_handle_repr(dh), readbuf);
    Public_Status_Code psc;
 
-   assert(dh->io_mode == DDC_IO_DEVI2C || dh->io_mode == DDC_IO_ADL);
-   if (dh->io_mode == DDC_IO_DEVI2C) {
+   assert(dh->io_mode == DDCA_IO_DEVI2C || dh->io_mode == DDCA_IO_ADL);
+   if (dh->io_mode == DDCA_IO_DEVI2C) {
         psc =  ddc_i2c_write_read_raw(
               dh,
               request_packet_ptr,
@@ -655,7 +655,7 @@ Public_Status_Code ddc_write_read_with_retry(
    // if (debug) tf = 0xff;
    // TRCMSGTF(tf, "Starting. dh=%s", display_handle_repr(dh)  );
    DBGTRC(debug, TRACE_GROUP, "Starting. dh=%s", display_handle_repr(dh)  );
-   assert(dh->io_mode != USB_IO);
+   assert(dh->io_mode != DDCA_IO_USB);
 
    Public_Status_Code  psc;
    int  tryctr;
@@ -680,7 +680,7 @@ Public_Status_Code ddc_write_read_with_retry(
 
       if (psc < 0) {     // n. ADL status codes have been modulated
          DBGMSF(debug, "perform_ddc_write_read() returned %d", psc );
-         if (dh->io_mode == DDC_IO_DEVI2C) {
+         if (dh->io_mode == DDCA_IO_DEVI2C) {
             if (psc == DDCRC_NULL_RESPONSE)
                retryable = false;
             // when is DDCRC_READ_ALL_ZERO actually an error vs the response of the monitor instead of NULL response?
@@ -782,8 +782,8 @@ Public_Status_Code ddc_write_only( Display_Handle * dh, DDC_Packet *   request_p
    DBGTRC(debug, TRACE_GROUP, "Starting.");
 
    Public_Status_Code psc = 0;
-   assert(dh->io_mode != USB_IO);
-   if (dh->io_mode == DDC_IO_DEVI2C) {
+   assert(dh->io_mode != DDCA_IO_USB);
+   if (dh->io_mode == DDCA_IO_DEVI2C) {
       psc = ddc_i2c_write_only(dh->fh, request_packet_ptr);
    }
    else {
@@ -823,7 +823,7 @@ ddc_write_only_with_retry( Display_Handle * dh, DDC_Packet *   request_packet_pt
    // TRCMSGTF(tf, "Starting.");
    DBGTRC(debug, TRACE_GROUP, "Starting.");
 
-   assert(dh->io_mode != USB_IO);
+   assert(dh->io_mode != DDCA_IO_USB);
 
    Public_Status_Code psc;
    int  tryctr;
@@ -840,7 +840,7 @@ ddc_write_only_with_retry( Display_Handle * dh, DDC_Packet *   request_packet_pt
       psc = ddc_write_only(dh, request_packet_ptr);
 
       if (psc < 0) {
-         if (dh->io_mode == DDC_IO_DEVI2C) {
+         if (dh->io_mode == DDCA_IO_DEVI2C) {
             if (psc < 0) {
                // if (psc != modulate_rc(-EIO, RR_ERRNO) )
                if (psc != -EIO)

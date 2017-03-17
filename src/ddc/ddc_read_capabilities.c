@@ -119,7 +119,7 @@ Public_Status_Code
 get_capabilities_string(Display_Handle * dh, char** pcaps) {
    Public_Status_Code psc = 0;
    if (!dh->capabilities_string) {
-      if (dh->io_mode == USB_IO) {
+      if (dh->io_mode == DDCA_IO_USB) {
 #ifdef USE_USB
          // newly created string, can just  reference
          dh->capabilities_string = usb_get_capabilities_string_by_display_handle(dh);

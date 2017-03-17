@@ -57,14 +57,14 @@ ddc_get_parsed_edid_by_display_handle(Display_Handle * dh) {
    Parsed_Edid* pEdid = NULL;
 
    switch (dh->io_mode) {
-   case DDC_IO_DEVI2C:
+   case DDCA_IO_DEVI2C:
       pEdid = i2c_get_parsed_edid_by_busno(dh->busno);
       break;
-   case DDC_IO_ADL:
+   case DDCA_IO_ADL:
       pEdid = adlshim_get_parsed_edid_by_display_handle(dh);
       break;
 
-   case USB_IO:
+   case DDCA_IO_USB:
 #ifdef USE_USB
       pEdid = usb_get_parsed_edid_by_display_handle(dh);
       break;
@@ -89,13 +89,13 @@ ddc_get_parsed_edid_by_display_ref(Display_Ref * dref) {
    Parsed_Edid* pEdid = NULL;
 
    switch(dref->io_mode) {
-   case DDC_IO_DEVI2C:
+   case DDCA_IO_DEVI2C:
       pEdid = i2c_get_parsed_edid_by_busno(dref->busno);
       break;
-   case DDC_IO_ADL:
+   case DDCA_IO_ADL:
       pEdid = adlshim_get_parsed_edid_by_display_ref(dref);
       break;
-   case USB_IO:
+   case DDCA_IO_USB:
 #ifdef USE_USB
       pEdid = usb_get_parsed_edid_by_display_ref(dref);
       break;

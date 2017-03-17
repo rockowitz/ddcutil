@@ -74,7 +74,7 @@ DDCA_MCCS_Version_Spec get_vcp_version_by_display_handle(Display_Handle * dh) {
       }
       dh->vcp_version = VCP_SPEC_UNKNOWN;
 
-      if (dh->io_mode == USB_IO) {
+      if (dh->io_mode == DDCA_IO_USB) {
 #ifdef USE_USB
          // DBGMSG("Trying to get VESA version...");
          __s32 vesa_ver =  usb_get_vesa_version(dh->fh);

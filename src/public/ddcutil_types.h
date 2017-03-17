@@ -205,9 +205,9 @@ typedef void * DDCA_Display_Handle;
  *  \ingroup api_display_spec
  */
 typedef enum {
-   DDC_IO_DEVI2C,         /**< Using DDC to communicate with a /dev/i2c-n device */
-   DDC_IO_ADL,            /**< Using ADL API */
-   USB_IO                 /**< Using USB reports for a USB connected monitor */
+   DDCA_IO_DEVI2C,     /**< Using DDC to communicate with a /dev/i2c-n device */
+   DDCA_IO_ADL,        /**< Using ADL API */
+   DDCA_IO_USB         /**< Using USB reports for a USB connected monitor */
 } DDCA_IO_Mode;
 
 

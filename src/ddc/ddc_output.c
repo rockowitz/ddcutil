@@ -185,7 +185,7 @@ get_raw_value_for_feature_table_entry(
    Vcp_Value_Type feature_type = (is_table_feature) ? TABLE_VCP_VALUE : NON_TABLE_VCP_VALUE;
    DDCA_Output_Level output_level = get_output_level();
    Single_Vcp_Value * valrec = NULL;
-   if (dh->io_mode == USB_IO) {
+   if (dh->io_mode == DDCA_IO_USB) {
 #ifdef USE_USB
      psc = usb_get_vcp_value(
               dh,

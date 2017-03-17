@@ -188,7 +188,7 @@ ddc_is_valid_display_ref(Display_Ref * dref, Call_Options callopts) {
                  dref_short_name(dref), interpret_call_options(callopts) );
    bool result = false;
    switch(dref->io_mode) {
-   case DDC_IO_DEVI2C:
+   case DDCA_IO_DEVI2C:
    {
       Call_Options callopts2;
       if (callopts & CALLOPT_FORCE)
@@ -211,7 +211,7 @@ ddc_is_valid_display_ref(Display_Ref * dref, Call_Options callopts) {
       }
    }
       break;
-   case DDC_IO_ADL:
+   case DDCA_IO_ADL:
       result = adlshim_is_valid_display_ref(dref, /* emit_error_msg */ false);
       if (result) {
          if (!(dref->flags & DREF_DDC_COMMUNICATION_CHECKED)) {
@@ -224,7 +224,7 @@ ddc_is_valid_display_ref(Display_Ref * dref, Call_Options callopts) {
 
       }
       break;
-   case USB_IO:
+   case DDCA_IO_USB:
 #ifdef USE_USB
       result = usb_is_valid_display_ref(dref, /* emit_error_msg */ false);
 #endif
@@ -237,13 +237,13 @@ ddc_is_valid_display_ref(Display_Ref * dref, Call_Options callopts) {
       char workbuf[100] = {'\0'};
       if (!result) {
          switch(dref->io_mode) {
-         case DDC_IO_DEVI2C:
+         case DDCA_IO_DEVI2C:
             snprintf(workbuf, 100, "I2C display /dev/i2c-%d not found.\n",dref->busno);
             break;
-         case DDC_IO_ADL:
+         case DDCA_IO_ADL:
             snprintf(workbuf, 100, "ADL display %d.%d not found.\n",dref->iAdapterIndex, dref->iDisplayIndex);
             break;
-         case USB_IO:
+         case DDCA_IO_USB:
              snprintf(workbuf, 100, "USB connected display %d.%d not found.\n",dref->usb_bus, dref->usb_device);
              break;
          }
@@ -251,13 +251,13 @@ ddc_is_valid_display_ref(Display_Ref * dref, Call_Options callopts) {
 
       else if (!(dref->flags & DREF_DDC_COMMUNICATION_WORKING) ) {
          switch(dref->io_mode) {
-         case DDC_IO_DEVI2C:
+         case DDCA_IO_DEVI2C:
             snprintf(workbuf, 100, "I2C display /dev/i2c-%d does not support DDC.\n",dref->busno);
             break;
-         case DDC_IO_ADL:
+         case DDCA_IO_ADL:
             snprintf(workbuf, 100, "ADL display %d.%d does not support DDC.\n",dref->iAdapterIndex, dref->iDisplayIndex);
             break;
-         case USB_IO:
+         case DDCA_IO_USB:
               // n. flags not currently used for USB IO
              // snprintf(workbuf, 100, "USB connected display %d.%d does not support DDC.\n",dref->usb_bus, dref->usb_device);
              break;
@@ -269,7 +269,7 @@ ddc_is_valid_display_ref(Display_Ref * dref, Call_Options callopts) {
    }
 
    // n. flags not current used for USB_IO
-   if (result && dref->io_mode != USB_IO  && !(dref->flags & DREF_DDC_COMMUNICATION_WORKING))
+   if (result && dref->io_mode != DDCA_IO_USB  && !(dref->flags & DREF_DDC_COMMUNICATION_WORKING))
       result = false;
 
    DBGMSF(debug, "Returning %s", bool_repr(result));
@@ -633,13 +633,13 @@ void
 ddc_report_active_display(Display_Info * curinfo, int depth) {
    assert(memcmp(curinfo->marker, DISPLAY_INFO_MARKER, 4) == 0);
    switch(curinfo->dref->io_mode) {
-   case DDC_IO_DEVI2C:
+   case DDCA_IO_DEVI2C:
       i2c_report_active_display_by_busno(curinfo->dref->busno, depth);
       break;
-   case DDC_IO_ADL:
+   case DDCA_IO_ADL:
       adlshim_report_active_display_by_display_ref(curinfo->dref, depth);
       break;
-   case USB_IO:
+   case DDCA_IO_USB:
 #ifdef USE_USB
       usb_show_active_display_by_display_ref(curinfo->dref, depth);
 #else

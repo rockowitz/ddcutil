@@ -727,7 +727,7 @@ ddca_repr_display_handle(DDCA_Display_Handle ddca_dh) {
                   "Display Handle Type: %s, adlno=%d.%d",
                   dh_type_name, dh->iAdapterIndex, dh->iDisplayIndex);
          break;
-      case USB_IO:
+      case DDCA_IO_USB:
          snprintf(dh_work_buf, 100,
                   "Display Handle Type: %s, bus=%d, device=%d",
                   dh_type_name, dh->usb_bus, dh->usb_device);
@@ -833,14 +833,14 @@ ddca_get_displays()
 #endif
          curinfo->loc.io_mode = dref->io_mode;
          switch (dref->io_mode) {
-         case DDC_IO_DEVI2C:
+         case DDCA_IO_DEVI2C:
             curinfo->loc.i2c_busno = dref->busno;
             break;
-         case DDC_IO_ADL:
+         case DDCA_IO_ADL:
             curinfo->loc.adl.iAdapterIndex = dref->iAdapterIndex;
             curinfo->loc.adl.iDisplayIndex = dref->iDisplayIndex;
             break;
-         case USB_IO:
+         case DDCA_IO_USB:
             curinfo->loc.usb.usb_bus    = dref->usb_bus;
             curinfo->loc.usb.usb_device = dref->usb_device;
             curinfo->loc.usb.hiddev_device_name = strdup(dref->usb_hiddev_name);
@@ -873,13 +873,13 @@ ddca_report_display_info(
 #ifdef OLD
    rpt_vstring(d1, "IO mode:         %s", mccs_io_mode_name(dinfo->io_mode));
    switch(dinfo->io_mode) {
-   case (DDC_IO_DEVI2C):
+   case (DDCA_IO_DEVI2C):
          rpt_vstring(d1, "I2C bus number:     %d", dinfo->i2c_busno);
          break;
-   case (DDC_IO_ADL):
+   case (DDCA_IO_ADL):
          rpt_vstring(d1, "ADL adapter.display:  %d.%d", dinfo->iAdapterIndex, dinfo->iDisplayIndex);
          break;
-   case (USB_IO):
+   case (DDCA_IO_USB):
          rpt_vstring(d1, "USB bus.device:       %d.%d", dinfo->usb_bus, dinfo->usb_device);
          break;
    }
@@ -887,14 +887,14 @@ ddca_report_display_info(
 
    rpt_vstring(d1, "IO mode:         %s", mccs_io_mode_name(dinfo->loc.io_mode));
    switch(dinfo->loc.io_mode) {
-   case (DDC_IO_DEVI2C):
+   case (DDCA_IO_DEVI2C):
          rpt_vstring(d1, "I2C bus number:     %d", dinfo->loc.i2c_busno);
          break;
-   case (DDC_IO_ADL):
+   case (DDCA_IO_ADL):
          rpt_vstring(d1, "ADL adapter.display:  %d.%d",
                          dinfo->loc.adl.iAdapterIndex, dinfo->loc.adl.iDisplayIndex);
          break;
-   case (USB_IO):
+   case (DDCA_IO_USB):
          rpt_vstring(d1, "USB bus.device:       %d.%d",
                          dinfo->loc.usb.usb_bus, dinfo->loc.usb.usb_device);
          rpt_vstring(d1, "USB device name:      %s", dinfo->loc.usb.hiddev_device_name);

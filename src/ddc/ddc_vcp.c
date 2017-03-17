@@ -84,7 +84,7 @@ set_nontable_vcp_value(
           feature_code, new_value, display_handle_repr(dh));
    Public_Status_Code psc = 0;
 
-   if (dh->io_mode == USB_IO) {
+   if (dh->io_mode == DDCA_IO_USB) {
 #ifdef USE_USB
       psc = usb_set_nontable_vcp_value(dh, feature_code, new_value);
 #else
@@ -134,7 +134,7 @@ set_table_vcp_value(
    Public_Status_Code psc = 0;
 
 
-   if (dh->io_mode == USB_IO) {
+   if (dh->io_mode == DDCA_IO_USB) {
 #ifdef USE_USB
       psc = DDCL_UNIMPLEMENTED;
 #else
@@ -357,7 +357,7 @@ get_vcp_value(
    Single_Vcp_Value * valrec = NULL;
 
    // why are we coming here for USB?
-   if (dh->io_mode == USB_IO) {
+   if (dh->io_mode == DDCA_IO_USB) {
 #ifdef USE_USB
       DBGMSF(debug, "USB case");
 

@@ -364,7 +364,7 @@ app_read_changes_usb(Display_Handle * dh) {
    DBGMSF(debug, "Starting");
    // bool new_values_found = false;
 
-   assert(dh->io_mode == USB_IO);
+   assert(dh->io_mode == DDCA_IO_USB);
    int fd = dh->fh;
    int flaguref = HIDDEV_FLAG_UREF;
    struct hiddev_usage_ref uref;
@@ -413,7 +413,7 @@ app_read_changes_forever(Display_Handle * dh) {
    printf("Type ^C to exit...\n");
    while(true) {
 #ifdef USE_USB
-      if (dh->io_mode == USB_IO)
+      if (dh->io_mode == DDCA_IO_USB)
          app_read_changes_usb(dh);
       else
 #endif

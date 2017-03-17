@@ -229,7 +229,7 @@ char * mccs_io_mode_name(DDCA_IO_Mode val) {
 Display_Ref * create_bus_display_ref(int busno) {
    Display_Ref * dref = calloc(1, sizeof(Display_Ref));
    memcpy(dref->marker, DISPLAY_REF_MARKER, 4);
-   dref->io_mode = DDC_IO_DEVI2C;
+   dref->io_mode = DDCA_IO_DEVI2C;
    dref->busno       = busno;
    dref->vcp_version = VCP_SPEC_UNQUERIED;
    // DBGMSG("Done.  Constructed bus display ref: ");
@@ -240,7 +240,7 @@ Display_Ref * create_bus_display_ref(int busno) {
 Display_Ref * create_adl_display_ref(int iAdapterIndex, int iDisplayIndex) {
    Display_Ref * dref = calloc(1, sizeof(Display_Ref));
    memcpy(dref->marker, DISPLAY_REF_MARKER, 4);
-   dref->io_mode   = DDC_IO_ADL;
+   dref->io_mode   = DDCA_IO_ADL;
    dref->iAdapterIndex = iAdapterIndex;
    dref->iDisplayIndex = iDisplayIndex;
    dref->vcp_version   = VCP_SPEC_UNQUERIED;
@@ -252,7 +252,7 @@ Display_Ref * create_usb_display_ref(int usb_bus, int usb_device, char * hiddev_
    assert(hiddev_devname);
    Display_Ref * dref = calloc(1, sizeof(Display_Ref));
    memcpy(dref->marker, DISPLAY_REF_MARKER, 4);
-   dref->io_mode     = USB_IO;
+   dref->io_mode     = DDCA_IO_USB;
    dref->usb_bus     = usb_bus;
    dref->usb_device  = usb_device;
    dref->usb_hiddev_name = strdup(hiddev_devname);
@@ -295,16 +295,16 @@ bool dreq(Display_Ref* this, Display_Ref* that) {
       if (this->io_mode == that->io_mode) {
          switch (this->io_mode) {
 
-         case DDC_IO_DEVI2C:
+         case DDCA_IO_DEVI2C:
             result = (this->busno == that->busno);
             break;
 
-         case DDC_IO_ADL:
+         case DDCA_IO_ADL:
             result = (this->iAdapterIndex == that->iAdapterIndex &&
                       this->iDisplayIndex == that->iDisplayIndex);
             break;
 
-         case USB_IO:
+         case DDCA_IO_USB:
             result = (this->usb_bus    == that->usb_bus  &&
                       this->usb_device == that->usb_device);
             break;
@@ -324,16 +324,16 @@ void report_display_ref(Display_Ref * dref, int depth) {
 
    switch (dref->io_mode) {
 
-   case DDC_IO_DEVI2C:
+   case DDCA_IO_DEVI2C:
       rpt_int("busno", NULL, dref->busno, d1);
       break;
 
-   case DDC_IO_ADL:
+   case DDCA_IO_ADL:
       rpt_int("iAdapterIndex", NULL, dref->iAdapterIndex, d1);
       rpt_int("iDisplayIndex", NULL, dref->iDisplayIndex, d1);
       break;
 
-   case USB_IO:
+   case DDCA_IO_USB:
       rpt_int("usb_bus",    NULL, dref->usb_bus,    d1);
       rpt_int("usb_device", NULL, dref->usb_device, d1);
       break;
@@ -351,15 +351,15 @@ void report_display_ref(Display_Ref * dref, int depth) {
 char * dref_short_name_r(Display_Ref * dref, char * buf, int bufsize) {
    switch (dref->io_mode) {
 
-   case DDC_IO_DEVI2C:
+   case DDCA_IO_DEVI2C:
       snprintf(buf, bufsize, "bus /dev/i2c-%d", dref->busno);
       break;
 
-   case DDC_IO_ADL:
+   case DDCA_IO_ADL:
       snprintf(buf, bufsize, "adl display %d.%d", dref->iAdapterIndex, dref->iDisplayIndex);
       break;
 
-   case USB_IO:
+   case DDCA_IO_USB:
       snprintf(buf, bufsize, "usb %d:%d", dref->usb_bus, dref->usb_device);
       break;
 
@@ -388,7 +388,7 @@ char * dref_repr(Display_Ref * dref) {
 static Display_Handle * create_bus_display_handle_from_busno(int fh, int busno) {
    Display_Handle * dh = calloc(1, sizeof(Display_Handle));
    memcpy(dh->marker, DISPLAY_HANDLE_MARKER, 4);
-   dh->io_mode = DDC_IO_DEVI2C;
+   dh->io_mode = DDCA_IO_DEVI2C;
    dh->fh = fh;
    dh->busno = busno;
    dh->vcp_version = VCP_SPEC_UNQUERIED;
@@ -400,7 +400,7 @@ static Display_Handle * create_bus_display_handle_from_busno(int fh, int busno) 
 
 // hacky implementation for transition
 Display_Handle * create_bus_display_handle_from_display_ref(int fh, Display_Ref * dref) {
-   assert(dref->io_mode == DDC_IO_DEVI2C);
+   assert(dref->io_mode == DDCA_IO_DEVI2C);
    Display_Handle * dh = create_bus_display_handle_from_busno(fh, dref->busno);
    dh->dref = dref;
    return dh;
@@ -410,7 +410,7 @@ Display_Handle * create_bus_display_handle_from_display_ref(int fh, Display_Ref 
 static Display_Handle * create_adl_display_handle_from_adlno(int iAdapterIndex, int iDisplayIndex) {
    Display_Handle * dh = calloc(1, sizeof(Display_Handle));
    memcpy(dh->marker, DISPLAY_HANDLE_MARKER, 4);
-   dh->io_mode = DDC_IO_ADL;
+   dh->io_mode = DDCA_IO_ADL;
    dh->iAdapterIndex = iAdapterIndex;
    dh->iDisplayIndex = iDisplayIndex;
    dh->vcp_version = VCP_SPEC_UNQUERIED;
@@ -420,7 +420,7 @@ static Display_Handle * create_adl_display_handle_from_adlno(int iAdapterIndex, 
 
 // hacky implementation for transition
 Display_Handle * create_adl_display_handle_from_display_ref(Display_Ref * dref) {
-   assert(dref->io_mode == DDC_IO_ADL);
+   assert(dref->io_mode == DDCA_IO_ADL);
    Display_Handle * dh = create_adl_display_handle_from_adlno(dref->iAdapterIndex, dref->iDisplayIndex);
    dh->dref = dref;
    return dh;
@@ -428,10 +428,10 @@ Display_Handle * create_adl_display_handle_from_display_ref(Display_Ref * dref) 
 
 #ifdef USE_USB
 Display_Handle * create_usb_display_handle_from_display_ref(int fh, Display_Ref * dref) {
-   assert(dref->io_mode == USB_IO);
+   assert(dref->io_mode == DDCA_IO_USB);
    Display_Handle * dh = calloc(1, sizeof(Display_Handle));
    memcpy(dh->marker, DISPLAY_HANDLE_MARKER, 4);
-   dh->io_mode = USB_IO;
+   dh->io_mode = DDCA_IO_USB;
    dh->fh = fh;
    dh->dref = dref;
    dh->hiddev_device_name = dref->usb_hiddev_name;
@@ -467,17 +467,17 @@ void report_display_handle(Display_Handle * dh, const char * msg, int depth) {
          rpt_vstring(d1, "dref:                 %p", dh->dref);
          rpt_vstring(d1, "ddc_io_mode:          %s",  display_id_type_name(dh->io_mode) );
          switch (dh->io_mode) {
-         case (DDC_IO_DEVI2C):
+         case (DDCA_IO_DEVI2C):
             // rpt_vstring(d1, "ddc_io_mode = DDC_IO_DEVI2C");
             rpt_vstring(d1, "fh:                  %d", dh->fh);
             rpt_vstring(d1, "busno:               %d", dh->busno);
             break;
-         case (DDC_IO_ADL):
+         case (DDCA_IO_ADL):
             // rpt_vstring(d1, "ddc_io_mode = DDC_IO_ADL");
             rpt_vstring(d1, "iAdapterIndex:       %d", dh->iAdapterIndex);
             rpt_vstring(d1, "iDisplayIndex:       %d", dh->iDisplayIndex);
             break;
-         case (USB_IO):
+         case (DDCA_IO_USB):
             // rpt_vstring(d1, "ddc_io_mode = USB_IO");
             rpt_vstring(d1, "fh:                  %d", dh->fh);
             rpt_vstring(d1, "usb_bus:             %d", dh->usb_bus);
@@ -508,19 +508,19 @@ char * display_handle_repr_r(Display_Handle * dref, char * buf, int bufsz) {
 
    switch (dref->io_mode) {
 
-   case DDC_IO_DEVI2C:
+   case DDCA_IO_DEVI2C:
       snprintf(buf, bufsz,
                "Display_Handle[i2c: fh=%d, busno=%d]",
                dref->fh, dref->busno);
       break;
 
-   case DDC_IO_ADL:
+   case DDCA_IO_ADL:
       snprintf(buf, bufsz,
                "Display_Handle[adl: display %d.%d]",
                dref->iAdapterIndex, dref->iDisplayIndex);
       break;
 
-   case USB_IO:
+   case DDCA_IO_USB:
       snprintf(buf, bufsz,
                "Display_Handle[usb: %d:%d]",
                dref->usb_bus, dref->usb_device);
