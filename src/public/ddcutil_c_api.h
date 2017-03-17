@@ -26,24 +26,25 @@
 #ifndef DDCUTIL_C_API_H_
 #define DDCUTIL_C_API_H_
 
+/** \cond */
 #include <setjmp.h>
 #include <stdbool.h>
 #include <stdio.h>
-
-#include "ddcutil_types.h"
-
-// #include "util/coredefs.h"
+/** \endcond */
 
 // is this the right location?
 #ifdef __cplusplus
-extern "C"
+extern "C" {
 #endif
+
+#include "ddcutil_types.h"
 
 
 /** @file ddcutil_c_api.h
  *  @brief ddcutil public C API
  *
- *  Function names in the public C API begin with "ddca_"
+ *  Function names in the public C API begin with "ddca_"\n
+ *  Typedefs, constants, etc. begin with "DDCA_".
  *
  *  Function ddca_init() must be called before all others
  *  (except for library build information).
@@ -60,7 +61,7 @@ extern "C"
  *
  * The operation of these functions can be tweaked in two ways.
  * - The "depth" parameter is a logical indentation depth.  This allows
- *   reports that invoke other reports to perform indent the subreports
+ *   reports that invoke other reports to indent the subreports
  *   sensibly.  At the level of the ddcutil_c_api(), one unit of
  *   logical indentation depth translates to 3 spaces.
  * - The destination of reports is normally the STDOUT device.  This can
