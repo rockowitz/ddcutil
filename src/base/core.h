@@ -40,6 +40,10 @@
 
 #include "util/coredefs.h"
 
+// Map API names to shorter names used internally.
+
+
+
 // /** @addtogroup abnormal_termination
 //  */
 

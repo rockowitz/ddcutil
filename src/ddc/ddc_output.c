@@ -211,7 +211,7 @@ get_raw_value_for_feature_table_entry(
       break;
 
    case DDCRC_INVALID_DATA:
-      if (output_level >= OL_NORMAL)
+      if (output_level >= DDCA_OL_NORMAL)
          f0printf(msg_fh, FMT_CODE_NAME_DETAIL_W_NL,
                          feature_code, feature_name, "Invalid response");
       break;
@@ -389,7 +389,7 @@ get_formatted_value_for_feature_table_entry(
    bool is_table_feature = is_table_feature_by_display_handle(vcp_entry, dh);
    Vcp_Value_Type feature_type = (is_table_feature) ? TABLE_VCP_VALUE : NON_TABLE_VCP_VALUE;
    DDCA_Output_Level output_level = get_output_level();
-   if (output_level >= OL_VERBOSE) {
+   if (output_level >= DDCA_OL_VERBOSE) {
       fprintf(msg_fh, "\nGetting data for %s VCP code 0x%02x - %s:\n",
                             (is_table_feature) ? "table" : "non-table",
                             feature_code,
@@ -397,7 +397,7 @@ get_formatted_value_for_feature_table_entry(
    }
 
    Single_Vcp_Value *    pvalrec = NULL;
-   bool ignore_unsupported = !(output_level >= OL_NORMAL && !suppress_unsupported);
+   bool ignore_unsupported = !(output_level >= DDCA_OL_NORMAL && !suppress_unsupported);
    psc = get_raw_value_for_feature_table_entry(
             dh,
             vcp_entry,
@@ -408,7 +408,7 @@ get_formatted_value_for_feature_table_entry(
    if (psc == 0) {
       // if (!is_table_feature && output_level >= OL_VERBOSE) {
       // if (!is_table_feature && debug) {
-      if (output_level >= OL_VERBOSE || debug) {
+      if (output_level >= DDCA_OL_VERBOSE || debug) {
          rpt_push_output_dest(msg_fh);
          // report_single_vcp_value(pvalrec, 0);
          rpt_vstring(0, "Raw value: %s", summarize_single_vcp_value(pvalrec));
@@ -500,7 +500,7 @@ show_feature_set_values(
    DDCA_Output_Level output_level = get_output_level();
    bool show_unsupported = false;
    if ( force_show_unsupported     ||
-        output_level >= OL_VERBOSE ||
+        output_level >= DDCA_OL_VERBOSE ||
         subset_id == VCP_SUBSET_SINGLE_FEATURE
        )
        show_unsupported = true;

@@ -453,13 +453,13 @@ char * output_level_name(DDCA_Output_Level val) {
          result = "Program";
          break;
 #endif
-      case OL_TERSE:
+      case DDCA_OL_TERSE:
          result = "Terse";
          break;
-      case OL_NORMAL:
+      case DDCA_OL_NORMAL:
          result = "Normal";
          break;
-      case OL_VERBOSE:
+      case DDCA_OL_VERBOSE:
          result = "Verbose";
          break;
       // default unnecessary, case exhauts enum

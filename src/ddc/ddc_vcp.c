@@ -311,7 +311,7 @@ Public_Status_Code get_table_vcp_value(
 
    if (psc == 0) {
       *pp_table_bytes = paccumulator;
-      if (output_level >= OL_VERBOSE) {
+      if (output_level >= DDCA_OL_VERBOSE) {
          printf("Bytes returned on table read:");
          buffer_dump(paccumulator);
       }

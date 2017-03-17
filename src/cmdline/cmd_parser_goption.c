@@ -51,7 +51,7 @@ static char *       adlwork       = NULL;
 static char *       usbwork       = NULL;
 // no longer need to vary default output level based on command
 // static DDCA_Output_Level output_level  = OL_DEFAULT;
-static DDCA_Output_Level output_level  = OL_NORMAL;
+static DDCA_Output_Level output_level  = DDCA_OL_NORMAL;
 static int          iAdapterIndex = -1;
 static int          iDisplayIndex = -1;
 static Stats_Type   stats_work    = STATS_NONE;
@@ -89,9 +89,9 @@ gboolean output_arg_func(const gchar* option_name,
    DBGMSF(debug, "option_name=|%s|, value|%s|, data=%p", option_name, value, data);
 
    if (streq(option_name, "-v") || streq(option_name, "--verbose") )
-      output_level = OL_VERBOSE;
+      output_level = DDCA_OL_VERBOSE;
    else if (streq(option_name, "-t")  || streq(option_name, "--terse"))
-      output_level = OL_TERSE;
+      output_level = DDCA_OL_TERSE;
 #ifdef OLD
    else if (streq(option_name, "-p") || streq(option_name, "--program"))
       output_level = OL_PROGRAM;

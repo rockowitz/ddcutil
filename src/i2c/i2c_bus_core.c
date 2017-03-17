@@ -1408,7 +1408,7 @@ void report_businfo(Bus_Info * bus_info, int depth) {
          break;
 #endif
 
-      case OL_VERBOSE:
+      case DDCA_OL_VERBOSE:
          puts("");
          rpt_vstring(depth, "Bus /dev/i2c-%d found:    %s", bus_info->busno, bool_repr(bus_info->flags&I2C_BUS_EXISTS));
          rpt_vstring(depth, "Bus /dev/i2c-%d probed:   %s", bus_info->busno, bool_repr(bus_info->flags&I2C_BUS_PROBED ));
@@ -1427,7 +1427,7 @@ void report_businfo(Bus_Info * bus_info, int depth) {
          }
          break;
 
-      case OL_NORMAL:
+      case DDCA_OL_NORMAL:
          puts("");
          rpt_vstring(depth, "Bus:              /dev/i2c-%d", bus_info->busno);
          rpt_vstring(depth, "Supports DDC:     %s", bool_repr(bus_info->flags & I2C_BUS_ADDR_0X37));
@@ -1437,7 +1437,7 @@ void report_businfo(Bus_Info * bus_info, int depth) {
          break;
 
       default:    // OL_TERSE
-         assert (output_level == OL_TERSE);
+         assert (output_level == DDCA_OL_TERSE);
          puts("");
          rpt_vstring(depth, "Bus:                     /dev/i2c-%d\n", bus_info->busno);
          if ( (bus_info->flags & I2C_BUS_PROBED)     &&
@@ -1470,10 +1470,10 @@ void i2c_report_active_display(Bus_Info * businfo, int depth) {
    DDCA_Output_Level output_level = get_output_level();
    rpt_vstring(depth, "I2C bus:             /dev/i2c-%d", businfo->busno);
 
-   if (output_level >= OL_NORMAL)
+   if (output_level >= DDCA_OL_NORMAL)
    rpt_vstring(depth, "Supports DDC:        %s", bool_repr(businfo->flags & I2C_BUS_ADDR_0X37));
 
-   if (output_level >= OL_VERBOSE) {
+   if (output_level >= DDCA_OL_VERBOSE) {
       rpt_vstring(depth+1, "I2C address 0x30 (EDID block#)  present: %-5s", bool_repr(businfo->flags & I2C_BUS_ADDR_0X30));
       rpt_vstring(depth+1, "I2C address 0x37 (DDC)          present: %-5s", bool_repr(businfo->flags & I2C_BUS_ADDR_0X37));
       rpt_vstring(depth+1, "I2C address 0x50 (EDID)         present: %-5s", bool_repr(businfo->flags & I2C_BUS_ADDR_0X50));
@@ -1486,15 +1486,15 @@ void i2c_report_active_display(Bus_Info * businfo, int depth) {
    }
 
 #ifdef OLD
-   if (output_level == OL_TERSE || output_level == OL_PROGRAM)
+   if (output_level == DDCA_OL_TERSE || output_level == OL_PROGRAM)
 #else
-   if (output_level == OL_TERSE)
+   if (output_level == DDCA_OL_TERSE)
 #endif
    rpt_vstring(depth, "Monitor:             %s:%s:%s",  businfo->edid->mfg_id,
                                                businfo->edid->model_name,
                                                businfo->edid->serial_ascii);
-   if (output_level >= OL_NORMAL && businfo->edid) {
-      bool verbose = (output_level >= OL_VERBOSE);
+   if (output_level >= DDCA_OL_NORMAL && businfo->edid) {
+      bool verbose = (output_level >= DDCA_OL_VERBOSE);
       report_parsed_edid(businfo->edid, verbose, depth);
    }
 }

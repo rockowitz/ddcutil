@@ -220,7 +220,7 @@ static void probe_hiddev(int depth) {
              else
                 rpt_vstring(d1, "Not a USB HID monitor");
 
-             if (get_output_level() >= OL_VERBOSE) {
+             if (get_output_level() >= DDCA_OL_VERBOSE) {
                 if (!b0) {
                    b0 = force_hiddev_monitor(fd);
                    if (b0)
@@ -290,7 +290,7 @@ static void query_usb_monitors() {
    execute_shell_cmd_rpt("ls -l /dev/hidraw*", 2);
    rpt_nl();
 
-   if (output_level >= OL_VERBOSE) {
+   if (output_level >= DDCA_OL_VERBOSE) {
       char * subsys_name = "usbmisc";
       rpt_nl();
       rpt_vstring(0, "Probing USB HID devices using udev, susbsystem %s...", subsys_name);
@@ -301,7 +301,7 @@ static void query_usb_monitors() {
       probe_udev_subsystem(subsys_name, /*show_usb_parent=*/ true, 1);
    }
 
-   if (output_level >= OL_VERBOSE) {
+   if (output_level >= DDCA_OL_VERBOSE) {
       // currently an overwhelming amount of information - need to display
       // only possible HID connected monitors
       rpt_nl();

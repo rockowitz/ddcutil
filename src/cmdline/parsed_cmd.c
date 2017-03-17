@@ -44,7 +44,7 @@ Parsed_Cmd *  new_parsed_cmd() {
    memcpy(parsed_cmd->marker, PARSED_CMD_MARKER, 4);
    // n. all flags are false, byte values 0, integers 0, pointers NULL because of calloc
    // parsed_cmd->output_level = OL_DEFAULT;
-   parsed_cmd->output_level = OL_NORMAL;
+   parsed_cmd->output_level = DDCA_OL_NORMAL;
    parsed_cmd->sleep_strategy = -1;    // use default
    return parsed_cmd;
 }

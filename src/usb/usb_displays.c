@@ -309,10 +309,10 @@ static GPtrArray * get_usb_monitor_list() {
       DBGMSF(debug, "Examining device: %s", hiddev_fn);
       // will need better message handling for API
       Byte calloptions = CALLOPT_RDONLY;
-      if (ol >= OL_VERBOSE)
+      if (ol >= DDCA_OL_VERBOSE)
          calloptions |= CALLOPT_ERR_MSG;
       int fd = usb_open_hiddev_device(hiddev_fn, calloptions);
-      if (fd < 0 && ol >= OL_VERBOSE) {
+      if (fd < 0 && ol >= DDCA_OL_VERBOSE) {
          Usb_Detailed_Device_Summary * devsum =
          lookup_udev_usb_device_by_devname(hiddev_fn);
          // report_usb_detailed_device_summary(devsum, 2);
@@ -622,9 +622,9 @@ void usb_show_active_display_by_display_ref(Display_Ref * dref, int depth) {
    Usb_Monitor_Info * moninfo = usb_find_monitor_by_display_ref(dref);
 
 #ifdef OLD
-   if (output_level == OL_TERSE || output_level == OL_PROGRAM)
+   if (output_level == DDCA_OL_TERSE || output_level == OL_PROGRAM)
 #else
-   if (output_level == OL_TERSE)
+   if (output_level == DDCA_OL_TERSE)
 #endif
       rpt_vstring(depth, "Monitor:             %s:%s:%s",
                          moninfo->edid->mfg_id,
@@ -641,13 +641,13 @@ void usb_show_active_display_by_display_ref(Display_Ref * dref, int depth) {
       snprintf(vname, 80, "(%s)", usb_names.vendor_name);
    if (usb_names.device_name)
       snprintf(dname, 80, "(%s)", usb_names.device_name);
-   if (output_level >= OL_NORMAL) {
+   if (output_level >= DDCA_OL_NORMAL) {
       rpt_vstring(depth, "Device name:         %s",    dref->usb_hiddev_name);
       rpt_vstring(depth, "Vendor id:           %04x  %s",
                          moninfo->hiddev_devinfo->vendor  & 0xffff, vname);
       rpt_vstring(depth, "Product id:          %04x  %s",
                          moninfo->hiddev_devinfo->product & 0xffff, dname);
-      bool dump_edid = (output_level >= OL_VERBOSE);
+      bool dump_edid = (output_level >= DDCA_OL_VERBOSE);
 
       report_parsed_edid(moninfo->edid, dump_edid /* verbose */, depth);
    }
@@ -701,14 +701,14 @@ bool check_usb_monitor( char * device_name ) {
    bool debug = false;
    DDCA_Output_Level ol = get_output_level();
    if (debug)
-      ol = OL_VERBOSE;
+      ol = DDCA_OL_VERBOSE;
 
    DBGMSF(debug, "Examining device: %s", device_name);
    bool result = false;
 
    int fd = open(device_name, O_RDONLY);
    if (fd < 1) {
-      if (ol >= OL_VERBOSE)
+      if (ol >= DDCA_OL_VERBOSE)
          printf("Unable to open device %s: %s\n", device_name, strerror(errno));
       goto exit;
    }
@@ -717,7 +717,7 @@ bool check_usb_monitor( char * device_name ) {
 
    close(fd);
 
-   if (ol >= OL_VERBOSE) {
+   if (ol >= DDCA_OL_VERBOSE) {
       if (result)
          printf("Device %s appears to be a USB HID compliant monitor.\n", device_name);
       else

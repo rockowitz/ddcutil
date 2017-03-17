@@ -159,7 +159,7 @@ perform_get_capabilities_by_display_handle(Display_Handle * dh) {
       // pcap is always set, but may be damaged if there was a parsing error
       pcap = parse_capabilities_string(capabilities_string);
       DDCA_Output_Level output_level = get_output_level();
-      if (output_level <= OL_TERSE) {
+      if (output_level <= DDCA_OL_TERSE) {
          printf("%s capabilities string: %s\n",
                (dh->io_mode == USB_IO) ? "Synthesized unparsed" : "Unparsed",
                capabilities_string);
@@ -395,7 +395,7 @@ int main(int argc, char *argv[]) {
    // if (show_recoverable_errors)
    //    parsed_cmd->stats = true;
 
-   if (parsed_cmd->output_level >= OL_VERBOSE) {
+   if (parsed_cmd->output_level >= DDCA_OL_VERBOSE) {
       show_reporting();
       f0printf( FOUT, "%.*s%-*s%s\n",
                 0,"",
@@ -435,7 +435,7 @@ int main(int argc, char *argv[]) {
          ok = false;
       }
       else {
-         if (parsed_cmd->output_level <= OL_TERSE)
+         if (parsed_cmd->output_level <= DDCA_OL_TERSE)
             report_feature_set(fset, 0);
          else {
             int ct =  get_feature_set_size(fset);
@@ -538,7 +538,7 @@ int main(int argc, char *argv[]) {
 
    else if (parsed_cmd->cmd_id == CMDID_INTERROGATE) {
       printf("Setting output level verbose...\n");
-      set_output_level(OL_VERBOSE);
+      set_output_level(DDCA_OL_VERBOSE);
       printf("Setting maximum retries...\n");
       printf("Forcing --stats...\n");
       parsed_cmd->stats_types = STATS_ALL;

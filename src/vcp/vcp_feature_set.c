@@ -95,7 +95,7 @@ create_feature_set(VCP_Feature_Subset subset_id, DDCA_MCCS_Version_Spec vcp_vers
             g_ptr_array_add(fset->members, vcp_entry);
          else {
             g_ptr_array_add(fset->members, vcp_create_dummy_feature_for_hexid(id));
-            if (ndx >= 0xe0 && (get_output_level() >= OL_VERBOSE) ) {
+            if (ndx >= 0xe0 && (get_output_level() >= DDCA_OL_VERBOSE) ) {
                // for manufacturer specific features, probe as both table and non-table
                // Only probe table if --verbose, output is confusing otherwise
                g_ptr_array_add(fset->members, vcp_create_table_dummy_feature_for_hexid(id));

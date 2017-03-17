@@ -120,12 +120,11 @@ typedef enum{
  * Values are ascending in order of verbosity
  */
 typedef enum {
-   // TODO: prefix constants with DDCA_ ??
    // OL_DEFAULT=0x01,    // used only within command line parser
    // OL_PROGRAM=0x02,
-   OL_TERSE  =0x04,         /**< Brief   output  */
-   OL_NORMAL =0x08,         /**< Normal  output */
-   OL_VERBOSE=0x10          /**< Verbose output */
+   DDCA_OL_TERSE  =0x04,         /**< Brief   output  */
+   DDCA_OL_NORMAL =0x08,         /**< Normal  output */
+   DDCA_OL_VERBOSE=0x10          /**< Verbose output */
 } DDCA_Output_Level;
 
 

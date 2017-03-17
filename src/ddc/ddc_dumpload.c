@@ -407,7 +407,7 @@ loadvcp_by_ntsa(
    bool debug = false;
 
    DDCA_Output_Level output_level = get_output_level();
-   bool verbose = (output_level >= OL_VERBOSE);
+   bool verbose = (output_level >= DDCA_OL_VERBOSE);
    // DBGMSG("output_level=%d, verbose=%d", output_level, verbose);
    if (debug) {
       DBGMSG("Starting.  ntsa=%p", ntsa);

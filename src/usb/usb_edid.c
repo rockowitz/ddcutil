@@ -268,7 +268,7 @@ Parsed_Edid * get_x11_edid_by_model_sn(char * model_name, char * sn_ascii) {
          free_parsed_edid(parsed_edid);
       }
       else {
-         if (debug || get_output_level() >= OL_VERBOSE) {
+         if (debug || get_output_level() >= DDCA_OL_VERBOSE) {
             DBGMSG("Unparsable EDID for output name: %s -> %p\n",
                    prec->output_name, prec->edidbytes);
             rpt_hex_dump(prec->edidbytes, 128, /*depth=*/ 1);

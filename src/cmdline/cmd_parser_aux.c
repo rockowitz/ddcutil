@@ -236,14 +236,14 @@ bool validate_output_level(Parsed_Cmd* parsed_cmd) {
    // Byte default_output_level = OL_NORMAL;
    switch(parsed_cmd->cmd_id) {
       case (CMDID_DETECT):
-         valid_output_levels = OL_TERSE | OL_NORMAL | OL_VERBOSE;
+         valid_output_levels = DDCA_OL_TERSE | DDCA_OL_NORMAL | DDCA_OL_VERBOSE;
          break;
       case (CMDID_GETVCP):
-         valid_output_levels = OL_TERSE | OL_NORMAL | OL_VERBOSE;
+         valid_output_levels = DDCA_OL_TERSE | DDCA_OL_NORMAL | DDCA_OL_VERBOSE;
          break;
       default:
          // default_output_level = OL_NORMAL;
-         valid_output_levels = OL_TERSE | OL_NORMAL | OL_VERBOSE;
+         valid_output_levels = DDCA_OL_TERSE | DDCA_OL_NORMAL | DDCA_OL_VERBOSE;
    }
 
    // if (parsed_cmd->output_level == OL_DEFAULT) {

@@ -97,10 +97,10 @@ DDCA_MCCS_Version_Spec get_vcp_version_by_display_handle(Display_Handle * dh) {
          // verbose output is distracting since this function is called when
          // querying for other things
          DDCA_Output_Level olev = get_output_level();
-         if (olev == OL_VERBOSE)
-            set_output_level(OL_NORMAL);
+         if (olev == DDCA_OL_VERBOSE)
+            set_output_level(DDCA_OL_NORMAL);
          Public_Status_Code psc = get_vcp_value(dh, 0xdf, NON_TABLE_VCP_VALUE, &pvalrec);
-         if (olev == OL_VERBOSE)
+         if (olev == DDCA_OL_VERBOSE)
             set_output_level(olev);
 
          if (psc == 0) {

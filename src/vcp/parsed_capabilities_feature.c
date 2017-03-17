@@ -159,7 +159,7 @@ show_capabilities_feature(
    char * buf0 = NULL;
    DDCA_Output_Level ol = get_output_level();
    DBGMSF(debug,  "vfr->value_string=%p", vfr->value_string);
-   if (ol >= OL_VERBOSE && vfr->value_string) {
+   if (ol >= DDCA_OL_VERBOSE && vfr->value_string) {
 
       printf("    Values (unparsed): %s\n", vfr->value_string);
    }
@@ -176,7 +176,7 @@ show_capabilities_feature(
 
       int ct = bva_length(vfr->values);
       if (feature_values) {
-         if (ol >= OL_VERBOSE)
+         if (ol >= DDCA_OL_VERBOSE)
             printf("    Values (  parsed):\n");
          else
             printf("    Values:\n");
@@ -202,7 +202,7 @@ show_capabilities_feature(
             pos = pos+3;
          }
          *(pos-1) = '\0';
-         if (ol >= OL_VERBOSE)
+         if (ol >= DDCA_OL_VERBOSE)
             printf("    Values (  parsed): %s (interpretation unavailable)\n", buf0);
          else
             printf("    Values: %s (interpretation unavailable)\n", buf0);

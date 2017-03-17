@@ -464,7 +464,7 @@ void report_vcp_feature_table_entry(VCP_Feature_Table_Entry * pentry, int depth)
       rpt_vstring(d1, "Attributes: %s", workbuf);
    }
 
-   if (pentry->default_sl_values && output_level >= OL_VERBOSE) {
+   if (pentry->default_sl_values && output_level >= DDCA_OL_VERBOSE) {
       rpt_vstring(d1, "Simple NC values:");
       report_sl_values(pentry->default_sl_values, d1+1);
    }

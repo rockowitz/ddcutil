@@ -103,10 +103,10 @@ verify_adl_display_ref(Display_Ref * dref) {
 
    // verbose output is distracting since this function is called when querying for other things
    DDCA_Output_Level olev = get_output_level();
-   if (olev == OL_VERBOSE)
-      set_output_level(OL_NORMAL);
+   if (olev == DDCA_OL_VERBOSE)
+      set_output_level(DDCA_OL_NORMAL);
    psc = get_vcp_value(dh, 0x10, NON_TABLE_VCP_VALUE, &pvalrec);
-   if (olev == OL_VERBOSE)
+   if (olev == DDCA_OL_VERBOSE)
       set_output_level(olev);
 
    if (psc != 0 && psc != DDCRC_REPORTED_UNSUPPORTED && psc != DDCRC_DETERMINED_UNSUPPORTED) {
@@ -649,10 +649,10 @@ ddc_report_active_display(Display_Info * curinfo, int depth) {
    }
 
    DDCA_Output_Level output_level = get_output_level();
-   if (output_level >= OL_NORMAL) {
+   if (output_level >= DDCA_OL_NORMAL) {
       if (!ddc_is_valid_display_ref(curinfo->dref, CALLOPT_NONE)) {
          rpt_vstring(depth, "DDC communication failed");
-         if (output_level >= OL_VERBOSE) {
+         if (output_level >= DDCA_OL_VERBOSE) {
             rpt_vstring(depth, "Is DDC/CI enabled in the monitor's on-screen display?");
          }
       }
@@ -670,8 +670,8 @@ ddc_report_active_display(Display_Info * curinfo, int depth) {
                 // works, but TMI
                 // printf("Mfg:           %s\n", cur_info->edid->mfg_id);
             // don't want debugging  output if OL_VERBOSE
-            if (output_level >= OL_VERBOSE)
-               set_output_level(OL_NORMAL);
+            if (output_level >= DDCA_OL_VERBOSE)
+               set_output_level(DDCA_OL_NORMAL);
 
             DDCA_MCCS_Version_Spec vspec = get_vcp_version_by_display_handle(dh);
 
@@ -681,7 +681,7 @@ ddc_report_active_display(Display_Info * curinfo, int depth) {
             else
                rpt_vstring(depth, "VCP version:         %d.%d", vspec.major, vspec.minor);
 
-            if (output_level >= OL_VERBOSE) {
+            if (output_level >= DDCA_OL_VERBOSE) {
                // display controller mfg, firmware version
                char mfg_name_buf[100];
                char * mfg_name         = "Unspecified";
@@ -728,7 +728,7 @@ ddc_report_active_display(Display_Info * curinfo, int depth) {
 
             }
 
-            if (output_level >= OL_VERBOSE)
+            if (output_level >= DDCA_OL_VERBOSE)
                set_output_level(output_level);
          }
 

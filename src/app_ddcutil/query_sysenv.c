@@ -902,7 +902,7 @@ static void check_i2c_devices(struct driver_name_node * driver_list) {
       rpt_nl();
       rpt_vstring(0,"Apparently using only the AMD proprietary driver fglrx.");
       rpt_vstring(0,"Devices /dev/i2c-* are not required.");
-      if (output_level < OL_VERBOSE)
+      if (output_level < DDCA_OL_VERBOSE)
          return;
       rpt_vstring(0, "/dev/i2c device detail is purely informational.");
    }
@@ -984,7 +984,7 @@ static void check_i2c_devices(struct driver_name_node * driver_list) {
                uname);
    }
 
-   if (!all_i2c_rw || output_level >= OL_VERBOSE) {
+   if (!all_i2c_rw || output_level >= DDCA_OL_VERBOSE) {
       rpt_nl();
       rpt_vstring(0,"Checking for group i2c...");
       // replaced by C code
@@ -1182,7 +1182,7 @@ static void check_i2c_dev_module(struct driver_name_node * video_driver_list) {
    bool module_required = !only_nvidia_or_fglrx(video_driver_list);
    if (!module_required) {
       rpt_vstring(0,"Using only proprietary nvidia or fglrx driver. Module i2c_dev not required.");
-      if (output_level < OL_VERBOSE)
+      if (output_level < DDCA_OL_VERBOSE)
          return;
       rpt_vstring(0,"Remaining i2c_dev detail is purely informational.");
    }
@@ -1190,7 +1190,7 @@ static void check_i2c_dev_module(struct driver_name_node * video_driver_list) {
    bool is_builtin = is_module_builtin("i2c-dev");
    rpt_vstring(0,"   Module %-16s is %sbuilt into kernel", "i2c_dev", (is_builtin) ? "" : "NOT ");
    if (is_builtin) {
-      if (output_level < OL_VERBOSE)
+      if (output_level < DDCA_OL_VERBOSE)
          return;
       if (module_required)  // no need for duplicate message
          rpt_vstring(0,"Remaining i2c_dev detail is purely informational.");
@@ -1201,7 +1201,7 @@ static void check_i2c_dev_module(struct driver_name_node * video_driver_list) {
    if (!is_builtin)
       rpt_vstring(0,"   Module %-16s is %sloaded", "i2c_dev", (is_loaded) ? "" : "NOT ");
 
-   if ( (!is_loaded && !is_builtin) || output_level >= OL_VERBOSE) {
+   if ( (!is_loaded && !is_builtin) || output_level >= DDCA_OL_VERBOSE) {
       rpt_nl();
       rpt_vstring(0,"Check that kernel module i2c_dev is being loaded by examining files where this would be specified...");
       execute_shell_cmd_rpt("grep -H i2c[-_]dev "
@@ -1529,7 +1529,7 @@ static void driver_specific_tests(struct driver_name_node * driver_list) {
       rpt_vstring(0,"Performing ADL specific checks...");
 #ifdef HAVE_ADL
      if (!adlshim_is_available()) {
-        set_output_level(OL_VERBOSE);  // force error msg that names missing dll
+        set_output_level(DDCA_OL_VERBOSE);  // force error msg that names missing dll
         bool ok = adlshim_initialize();
         if (!ok)
            printf("WARNING: Using AMD proprietary video driver fglrx but unable to load ADL library\n");
@@ -2023,12 +2023,12 @@ void query_sysenv() {
    query_i2c_bus_using_sysfs();
 
    DDCA_Output_Level output_level = get_output_level();
-   if (output_level >= OL_VERBOSE) {
+   if (output_level >= DDCA_OL_VERBOSE) {
       rpt_nl();
       query_proc_driver_nvidia();
    }
 
-   if (output_level >= OL_VERBOSE) {
+   if (output_level >= DDCA_OL_VERBOSE) {
       query_i2c_buses();
 
       rpt_nl();

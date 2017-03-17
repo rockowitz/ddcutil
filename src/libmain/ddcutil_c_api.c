@@ -168,7 +168,7 @@ _ddca_init() {
    if (!library_initialized) {
       init_base_services();
       init_ddc_services();
-      set_output_level(OL_NORMAL);
+      set_output_level(DDCA_OL_NORMAL);
       show_recoverable_errors = false;
       library_initialized = true;
       DBGMSF(debug, "library initialization executed");

@@ -195,7 +195,7 @@ bool loadvcp_by_file(const char * fn, Display_Handle * dh) {
    DBGMSF(debug, "Starting. fn=%s, dh=%p %s", fn, dh, (dh) ? display_handle_repr(dh):"");
 
    DDCA_Output_Level output_level = get_output_level();
-   bool verbose = (output_level >= OL_VERBOSE);
+   bool verbose = (output_level >= DDCA_OL_VERBOSE);
    bool ok = false;
    Public_Status_Code psc = 0;
 
