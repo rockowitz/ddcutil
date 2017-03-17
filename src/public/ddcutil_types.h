@@ -357,7 +357,7 @@ typedef DDCA_Feature_Value_Entry * DDCA_Feature_Value_Table;
 typedef
 struct {
    char                                  marker[4];      /**< equals VCP_VERSION_SPECIFIC_FEATURE_INFO_MARKER */
-   DDCA_VCP_Feature_Code                      feature_code;   /**< VCP feature code */
+   DDCA_VCP_Feature_Code                 feature_code;   /**< VCP feature code */
    DDCA_MCCS_Version_Spec                vspec;            // ???
    DDCA_MCCS_Version_Id                  version_id;       // which ?
    char *                                desc;           /**< feature description */
@@ -380,7 +380,7 @@ struct {
 typedef
 struct {
    char                                 marker[4];     /**< Always DDCA_CAP_VCP_MARKER */
-   DDCA_VCP_Feature_Code                     feature_code;  /**< VCP feature code */
+   DDCA_VCP_Feature_Code                feature_code;  /**< VCP feature code */
    int                                  value_ct;      /**< number of values declared */
    uint8_t *                            values;        /**< array of declared values */
 } DDCA_Cap_Vcp;
@@ -485,6 +485,6 @@ typedef struct {
 #endif
       }         nc;                /**< non-continuous (NC) value */
    }       val;
-} Single_Vcp_Value;
+} DDCA_Single_Vcp_Value;
 
 #endif /* DDCUTIL_TYPES_H_ */
