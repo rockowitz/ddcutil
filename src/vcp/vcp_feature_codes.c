@@ -932,7 +932,7 @@ extract_version_feature_info(
 #ifdef OLD
 DDCA_Version_Feature_Info *
 get_version_specific_feature_info(
-      VCP_Feature_Code        feature_code,
+      DDCA_VCP_Feature_Code        feature_code,
       bool                    with_default,
    // DDCT_MCCS_Version_Spec  vspec,
       DDCA_MCCS_Version_Id    mccs_version_id)
@@ -956,7 +956,7 @@ get_version_specific_feature_info(
 
 DDCA_Version_Feature_Info *
 get_version_sensitive_feature_info(
-      VCP_Feature_Code        feature_code,
+      DDCA_VCP_Feature_Code        feature_code,
       bool                    with_default,
    // DDCT_MCCS_Version_Spec  vspec,
       DDCA_MCCS_Version_Id    mccs_version_id)
@@ -980,7 +980,7 @@ get_version_sensitive_feature_info(
 
 DDCA_Version_Feature_Info *
 get_version_feature_info(
-      VCP_Feature_Code        feature_code,
+      DDCA_VCP_Feature_Code        feature_code,
       DDCA_MCCS_Version_Id    mccs_version_id,
       bool                    with_default,
       bool                    version_sensitive)
@@ -1216,7 +1216,7 @@ void free_synthetic_vcp_entry(VCP_Feature_Table_Entry * pfte) {
 
 
 static VCP_Feature_Table_Entry *
-vcp_new_feature_table_entry(VCP_Feature_Code id) {
+vcp_new_feature_table_entry(DDCA_VCP_Feature_Code id) {
    VCP_Feature_Table_Entry* pentry = calloc(1, sizeof(VCP_Feature_Table_Entry) );
    pentry->code = id;
    memcpy(pentry->marker, VCP_FEATURE_TABLE_ENTRY_MARKER, 4);
@@ -1251,7 +1251,7 @@ vcp_get_feature_table_entry(int ndx) {
  *   created VCP_Feature_Table_Entry
  */
 VCP_Feature_Table_Entry *
-vcp_create_dummy_feature_for_hexid(VCP_Feature_Code id) {
+vcp_create_dummy_feature_for_hexid(DDCA_VCP_Feature_Code id) {
    // DBGMSG("Starting. id=0x%02x", id);
    VCP_Feature_Table_Entry * pentry = vcp_new_feature_table_entry(id);
 
@@ -1278,7 +1278,7 @@ vcp_create_dummy_feature_for_hexid(VCP_Feature_Code id) {
  *   created VCP_Feature_Table_Entry
  */
 VCP_Feature_Table_Entry *
-vcp_create_table_dummy_feature_for_hexid(VCP_Feature_Code id) {
+vcp_create_table_dummy_feature_for_hexid(DDCA_VCP_Feature_Code id) {
    VCP_Feature_Table_Entry * pentry = vcp_new_feature_table_entry(id);
    if (id >= 0xe0) {
       pentry->v20_name = "Manufacturer Specific";
@@ -1305,7 +1305,7 @@ vcp_create_table_dummy_feature_for_hexid(VCP_Feature_Code id) {
  *    It should NOT be freed by the caller.
  */
 VCP_Feature_Table_Entry *
-vcp_find_feature_by_hexid(VCP_Feature_Code id) {
+vcp_find_feature_by_hexid(DDCA_VCP_Feature_Code id) {
    // DBGMSG("Starting. id=0x%02x ", id );
    int ndx = 0;
    VCP_Feature_Table_Entry * result = NULL;
@@ -1333,7 +1333,7 @@ vcp_find_feature_by_hexid(VCP_Feature_Code id) {
  *    VCP_Feature_Table_Entry
  */
 VCP_Feature_Table_Entry *
-vcp_find_feature_by_hexid_w_default(VCP_Feature_Code id) {
+vcp_find_feature_by_hexid_w_default(DDCA_VCP_Feature_Code id) {
    // DBGMSG("Starting. id=0x%02x ", id );
    VCP_Feature_Table_Entry * result = vcp_find_feature_by_hexid(id);
    if (!result)
@@ -1431,7 +1431,7 @@ bool format_feature_detail_x73_lut_size(
  */
 DDCA_Feature_Value_Entry *
 find_feature_values(
-      VCP_Feature_Code        feature_code,
+      DDCA_VCP_Feature_Code        feature_code,
       DDCA_MCCS_Version_Spec  vcp_version)
 {
    bool debug = false;
@@ -1460,7 +1460,7 @@ find_feature_values(
 // used by CAPABILITIES command
 DDCA_Feature_Value_Entry *
 find_feature_values_for_capabilities(
-      VCP_Feature_Code        feature_code,
+      DDCA_VCP_Feature_Code        feature_code,
       DDCA_MCCS_Version_Spec  vcp_version)
 {
    bool debug = false;
@@ -1533,7 +1533,7 @@ char * get_feature_value_name(DDCA_Feature_Value_Entry * value_entries, Byte val
  *    explanation string, or "Invalid value" if value_id not found
  */
 char * lookup_value_name(
-          VCP_Feature_Code        feature_code,
+          DDCA_VCP_Feature_Code        feature_code,
           DDCA_MCCS_Version_Spec  vcp_version,
           Byte                    sl_value)
 {

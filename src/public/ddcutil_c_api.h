@@ -541,7 +541,7 @@ ddca_report_parsed_capabilities(
  */
 DDCA_Status
 ddca_get_feature_info_by_vcp_version(
-      VCP_Feature_Code          feature_code,
+      DDCA_VCP_Feature_Code          feature_code,
    // DDCT_MCCS_Version_Spec    vspec,
       DDCA_MCCS_Version_Id      mccs_version_id,
       DDCA_Version_Feature_Info**    p_info);
@@ -554,7 +554,7 @@ ddca_get_feature_info_by_vcp_version(
  * @return     pointer to feature name(do not free), NULL if unknown feature code
  */
 char *
-ddca_get_feature_name(VCP_Feature_Code feature_code);
+ddca_get_feature_name(DDCA_VCP_Feature_Code feature_code);
 
 /** Gets the value id/name table of the allowed values for a simple NC feature.
  *
@@ -565,7 +565,7 @@ ddca_get_feature_name(VCP_Feature_Code feature_code);
  */
 DDCA_Status
 ddca_get_simple_sl_value_table(
-      VCP_Feature_Code            feature_code,
+      DDCA_VCP_Feature_Code            feature_code,
       DDCA_MCCS_Version_Id        mccs_version_id,
       DDCA_Feature_Value_Table *  p_value_table);   // DDCA_Feature_Value_Entry **
 
@@ -595,7 +595,7 @@ char * ddca_mccs_version_id_string(DDCA_MCCS_Version_Id version_id);
 // alt: can check status code for ddca_get_feature_info_by_display()
 DDCA_Status ddct_is_feature_supported(
       DDCA_Display_Handle   dh,
-      VCP_Feature_Code      feature_code,
+      DDCA_VCP_Feature_Code      feature_code,
       bool *                answer);
 
 #endif
@@ -605,7 +605,7 @@ DDCA_Status ddct_is_feature_supported(
 DDCA_Status
 ddca_get_feature_info_by_display(
       DDCA_Display_Handle      ddca_dh,
-      VCP_Feature_Code         feature_code,
+      DDCA_VCP_Feature_Code         feature_code,
       DDCA_Version_Feature_Info **  p_info);
 
 
@@ -648,7 +648,7 @@ ddct_free_table_value_response(
 DDCA_Status
 ddca_get_nontable_vcp_value(
        DDCA_Display_Handle             ddca_dh,
-       VCP_Feature_Code                feature_code,
+       DDCA_VCP_Feature_Code                feature_code,
        DDCA_Non_Table_Value_Response * response);
 
 
@@ -667,7 +667,7 @@ ddca_get_nontable_vcp_value(
 DDCA_Status
 ddca_get_table_vcp_value(
        DDCA_Display_Handle     ddca_dh,
-       VCP_Feature_Code        feature_code,
+       DDCA_VCP_Feature_Code        feature_code,
        int *                   value_len,
        uint8_t**               value_bytes);
 
@@ -685,7 +685,7 @@ ddca_get_table_vcp_value(
 DDCA_Status
 ddca_get_vcp_value(
        DDCA_Display_Handle     ddca_dh,
-       VCP_Feature_Code        feature_code,
+       DDCA_VCP_Feature_Code        feature_code,
        Vcp_Value_Type          call_type,   // TODO: eliminate
        Single_Vcp_Value **     pvalrec);
 
@@ -700,7 +700,7 @@ ddca_get_vcp_value(
 DDCA_Status
 ddca_get_formatted_vcp_value(
        DDCA_Display_Handle *   ddca_dh,
-       VCP_Feature_Code        feature_code,
+       DDCA_VCP_Feature_Code        feature_code,
        char**                  p_formatted_value);
 
 /** Sets a continuous VCP value.
@@ -714,7 +714,7 @@ ddca_get_formatted_vcp_value(
 DDCA_Status
 ddca_set_continuous_vcp_value(
       DDCA_Display_Handle      ddca_dh,
-      VCP_Feature_Code         feature_code,
+      DDCA_VCP_Feature_Code         feature_code,
       int                      new_value);
 
 /** Sets a simple NC value, which is a single byte.
@@ -728,14 +728,14 @@ ddca_set_continuous_vcp_value(
 DDCA_Status
 ddca_set_simple_nc_vcp_value(
       DDCA_Display_Handle      ddca_dh,
-      VCP_Feature_Code         feature_code,
+      DDCA_VCP_Feature_Code         feature_code,
       uint8_t                  new_value);
 
 /** Sets a non-table VCP value by directly specifying its bytes. */
 DDCA_Status
 ddca_set_raw_vcp_value(
       DDCA_Display_Handle      ddca_dh,         /**< Display handle     */
-      VCP_Feature_Code         feature_code,    /**< VCP feature code   */
+      DDCA_VCP_Feature_Code         feature_code,    /**< VCP feature code   */
       uint8_t                  hi_byte,         /**< High byte of value */
       uint8_t                  lo_byte          /**< Low byte of value  */
      );
@@ -745,7 +745,7 @@ ddca_set_raw_vcp_value(
 DDCA_Status
 ddct_set_table_vcp_value(
       DDCA_Display_Handle  ddct_dh,
-      VCP_Feature_Code     feature_code,
+      DDCA_VCP_Feature_Code     feature_code,
       int                  value_len,
       uint8_t*             value_bytes);
 #endif

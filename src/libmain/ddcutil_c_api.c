@@ -954,7 +954,7 @@ bye:
 #ifdef OLD
 // or return a struct?
 DDCA_Status ddca_get_feature_flags_by_vcp_version(
-      VCP_Feature_Code         feature_code,
+      DDCA_VCP_Feature_Code         feature_code,
       DDCA_MCCS_Version_Id          mccs_version_id,
       DDCA_Version_Feature_Flags *  flags)
 {
@@ -1006,7 +1006,7 @@ DDCA_Status ddca_get_feature_flags_by_vcp_version(
 
 DDCA_Status
 ddca_get_feature_info_by_vcp_version(
-      VCP_Feature_Code       feature_code,
+      DDCA_VCP_Feature_Code       feature_code,
    // DDCT_MCCS_Version_Spec vspec,
       DDCA_MCCS_Version_Id   mccs_version_id,
       DDCA_Version_Feature_Info** p_info)
@@ -1038,7 +1038,7 @@ ddca_get_feature_info_by_vcp_version(
 DDCA_Status
 ddca_get_feature_info_by_display(
       DDCA_Display_Handle      ddca_dh,    // needed because in rare cases feature info is MCCS version dependent
-      VCP_Feature_Code         feature_code,
+      DDCA_VCP_Feature_Code         feature_code,
       DDCA_Version_Feature_Info **  p_info)
 {
    WITH_DH(
@@ -1058,7 +1058,7 @@ ddca_get_feature_info_by_display(
 
 // static char  default_feature_name_buffer[40];
 char *
-ddca_get_feature_name(VCP_Feature_Code feature_code) {
+ddca_get_feature_name(DDCA_VCP_Feature_Code feature_code) {
    // do we want get_feature_name()'s handling of mfg specific and unrecognized codes?
    char * result = get_feature_name_by_id_only(feature_code);
    // snprintf(default_feature_name_buffer, sizeof(default_feature_name_buffer), "VCP Feature 0x%02x", feature_code);
@@ -1074,7 +1074,7 @@ ddca_get_feature_name(VCP_Feature_Code feature_code) {
 
 DDCA_Status
 ddca_get_simple_sl_value_table(
-      VCP_Feature_Code           feature_code,
+      DDCA_VCP_Feature_Code           feature_code,
       DDCA_MCCS_Version_Id       mccs_version_id,
       DDCA_Feature_Value_Entry** pvalue_table)
 {
@@ -1114,7 +1114,7 @@ ddca_get_simple_sl_value_table(
 DDCA_Status
 ddct_get_nc_feature_value_name(
       DDCA_Display_Handle  ddct_dh,    // needed because value lookup mccs version dependent
-      VCP_Feature_Code     feature_code,
+      DDCA_VCP_Feature_Code     feature_code,
       Byte                 feature_value,
       char**               p_feature_name)
 {
@@ -1142,7 +1142,7 @@ ddct_get_nc_feature_value_name(
 DDCA_Status
 ddca_get_nontable_vcp_value(
       DDCA_Display_Handle             ddct_dh,
-      VCP_Feature_Code                feature_code,
+      DDCA_VCP_Feature_Code                feature_code,
       DDCA_Non_Table_Value_Response * response)
 {
    WITH_DH(ddct_dh,  {
@@ -1191,7 +1191,7 @@ ddca_get_nontable_vcp_value(
 DDCA_Status
 ddca_get_table_vcp_value(
       DDCA_Display_Handle ddca_dh,
-      VCP_Feature_Code    feature_code,
+      DDCA_VCP_Feature_Code    feature_code,
       int *               value_len,
       Byte**              value_bytes)
 {
@@ -1217,7 +1217,7 @@ ddca_get_table_vcp_value(
 DDCA_Status
 ddca_get_vcp_value(
       DDCA_Display_Handle  ddca_dh,
-      VCP_Feature_Code     feature_code,
+      DDCA_VCP_Feature_Code     feature_code,
       Vcp_Value_Type       call_type,   // why is this needed?   look it up from dh and feature_code
       Single_Vcp_Value **  pvalrec)
 {
@@ -1234,7 +1234,7 @@ ddca_get_vcp_value(
 DDCA_Status
 ddca_get_formatted_vcp_value(
       DDCA_Display_Handle *   ddca_dh,
-      VCP_Feature_Code        feature_code,
+      DDCA_VCP_Feature_Code        feature_code,
       char**                  p_formatted_value)
 {
    WITH_DH(ddca_dh,
@@ -1287,7 +1287,7 @@ ddca_get_formatted_vcp_value(
 DDCA_Status
 ddca_set_continuous_vcp_value(
       DDCA_Display_Handle   ddca_dh,
-      VCP_Feature_Code      feature_code,
+      DDCA_VCP_Feature_Code      feature_code,
       int                   new_value)
 {
    WITH_DH(ddca_dh,  {
@@ -1300,7 +1300,7 @@ ddca_set_continuous_vcp_value(
 DDCA_Status
 ddca_set_simple_nc_vcp_value(
       DDCA_Display_Handle   ddca_dh,
-      VCP_Feature_Code      feature_code,
+      DDCA_VCP_Feature_Code      feature_code,
       Byte                  new_value)
 {
    return ddca_set_continuous_vcp_value(ddca_dh, feature_code, new_value);
@@ -1310,7 +1310,7 @@ ddca_set_simple_nc_vcp_value(
 DDCA_Status
 ddca_set_raw_vcp_value(
       DDCA_Display_Handle   ddca_dh,
-      VCP_Feature_Code      feature_code,
+      DDCA_VCP_Feature_Code      feature_code,
       Byte                  hi_byte,
       Byte                  lo_byte)
 {

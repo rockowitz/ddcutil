@@ -155,7 +155,7 @@ void my_report_version_feature_info(DDCA_Version_Feature_Info * info) {
 
 
 
-void test_get_single_feature_info(DDCA_MCCS_Version_Id version_id, VCP_Feature_Code feature_code) {
+void test_get_single_feature_info(DDCA_MCCS_Version_Id version_id, DDCA_VCP_Feature_Code feature_code) {
    printf("\n(%s) Getting metadata for feature 0x%02x, mccs version = %s\n", __func__,
           feature_code, ddca_mccs_version_id_string(version_id));
    printf("Feature name: %s\n", ddca_get_feature_name(feature_code));
@@ -174,8 +174,8 @@ void test_get_single_feature_info(DDCA_MCCS_Version_Id version_id, VCP_Feature_C
 
 void test_get_feature_info(DDCA_MCCS_Version_Id version_id) {
    printf("\n(%s) Starting.  version_id = %s\n", __func__, ddca_repr_mccs_version_id(version_id));
-   VCP_Feature_Code feature_codes[] = {0x02, 0x03, 0x10, 0x43, 0x60};
-   int feature_code_ct = sizeof(feature_codes)/sizeof(VCP_Feature_Code);
+   DDCA_VCP_Feature_Code feature_codes[] = {0x02, 0x03, 0x10, 0x43, 0x60};
+   int feature_code_ct = sizeof(feature_codes)/sizeof(DDCA_VCP_Feature_Code);
    int ndx = 0;
    for (; ndx < feature_code_ct; ndx++)
       test_get_single_feature_info(version_id, feature_codes[ndx]);
@@ -185,7 +185,7 @@ void test_get_feature_info(DDCA_MCCS_Version_Id version_id) {
 bool
 test_cont_value(
       DDCA_Display_Handle  dh,
-      VCP_Feature_Code     feature_code)
+      DDCA_VCP_Feature_Code     feature_code)
 {
    DDCA_Status rc;
    bool ok = true;
