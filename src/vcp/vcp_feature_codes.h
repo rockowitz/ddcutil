@@ -245,7 +245,7 @@ get_feature_name_by_id_and_vcp_version(
       DDCA_MCCS_Version_Spec     vspec);
 
 #ifdef OLD
-Version_Feature_Info *
+DDCA_Version_Feature_Info *
 get_version_specific_feature_info(
       VCP_Feature_Code           feature_code,
       bool                       with_default,
@@ -253,7 +253,7 @@ get_version_specific_feature_info(
       DDCA_MCCS_Version_Id       mccs_version_id);
 
 
-Version_Feature_Info *
+DDCA_Version_Feature_Info *
 get_version_sensitive_feature_info(
       VCP_Feature_Code       feature_code,
       bool                   with_default,
@@ -261,7 +261,7 @@ get_version_sensitive_feature_info(
       DDCA_MCCS_Version_Id   mccs_version_id);
 #endif
 
-Version_Feature_Info *
+DDCA_Version_Feature_Info *
 get_version_feature_info(
       VCP_Feature_Code       feature_code,
       DDCA_MCCS_Version_Id   mccs_version_id,
@@ -290,7 +290,7 @@ report_vcp_feature_table_entry(
       int                       depth);
 
 void report_version_feature_info(
-      Version_Feature_Info * info, int depth);
+      DDCA_Version_Feature_Info * info, int depth);
 
 void
 vcp_list_feature_codes(FILE * fh);

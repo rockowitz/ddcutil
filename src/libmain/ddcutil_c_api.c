@@ -1009,7 +1009,7 @@ ddca_get_feature_info_by_vcp_version(
       VCP_Feature_Code       feature_code,
    // DDCT_MCCS_Version_Spec vspec,
       DDCA_MCCS_Version_Id   mccs_version_id,
-      Version_Feature_Info** p_info)
+      DDCA_Version_Feature_Info** p_info)
 {
    bool debug = false;
    DBGMSF(debug, "Starting. feature_code=0x%02x, mccs_version_id=%d", feature_code, mccs_version_id);
@@ -1019,7 +1019,7 @@ ddca_get_feature_info_by_vcp_version(
    // DDCA_MCCS_Version_Spec vspec = mccs_version_id_to_spec(mccs_version_id);
 
    // or should this be a version sensitive call?
-   Version_Feature_Info * info =  get_version_feature_info(
+   DDCA_Version_Feature_Info * info =  get_version_feature_info(
          feature_code,
          mccs_version_id,
          false,                       // with_default
@@ -1039,7 +1039,7 @@ DDCA_Status
 ddca_get_feature_info_by_display(
       DDCA_Display_Handle      ddca_dh,    // needed because in rare cases feature info is MCCS version dependent
       VCP_Feature_Code         feature_code,
-      Version_Feature_Info **  p_info)
+      DDCA_Version_Feature_Info **  p_info)
 {
    WITH_DH(
       ddca_dh,
@@ -1246,7 +1246,7 @@ ddca_get_formatted_vcp_value(
                VCP_Feature_Table_Entry * pentry = vcp_find_feature_by_hexid(feature_code);
                if (!pentry) {
 #ifdef ALT
-               Version_Feature_Info * feature_info =
+               DDCA_Version_Feature_Info * feature_info =
                get_version_specific_feature_info(
                      feature_code,
                      true,                    //    with_default

@@ -544,7 +544,7 @@ ddca_get_feature_info_by_vcp_version(
       VCP_Feature_Code          feature_code,
    // DDCT_MCCS_Version_Spec    vspec,
       DDCA_MCCS_Version_Id      mccs_version_id,
-      Version_Feature_Info**    p_info);
+      DDCA_Version_Feature_Info**    p_info);
 
 
 /** Gets the VCP feature name.  If different MCCS versions use different names
@@ -606,7 +606,7 @@ DDCA_Status
 ddca_get_feature_info_by_display(
       DDCA_Display_Handle      ddca_dh,
       VCP_Feature_Code         feature_code,
-      Version_Feature_Info **  p_info);
+      DDCA_Version_Feature_Info **  p_info);
 
 
 //

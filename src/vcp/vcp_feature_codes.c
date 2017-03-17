@@ -482,7 +482,7 @@ void report_vcp_feature_table_entry(VCP_Feature_Table_Entry * pentry, int depth)
  *    depth    logical indentation depth
  */
 void report_version_feature_info(
-      Version_Feature_Info * info, int depth) {
+      DDCA_Version_Feature_Info * info, int depth) {
    char workbuf[200];
 
    int d1 = depth+1;
@@ -892,7 +892,7 @@ get_non_version_specific_feature_name(
 
 
 
-Version_Feature_Info *
+DDCA_Version_Feature_Info *
 extract_version_feature_info(
       VCP_Feature_Table_Entry *  vfte,
       DDCA_MCCS_Version_Spec     vspec,
@@ -904,7 +904,7 @@ extract_version_feature_info(
    assert(vfte);
    // DDCA_MCCS_Version_Id version_id = mccs_version_spec_to_id(vspec);
 
-   Version_Feature_Info * info = calloc(1, sizeof(Version_Feature_Info));
+   DDCA_Version_Feature_Info * info = calloc(1, sizeof(DDCA_Version_Feature_Info));
    memcpy(info->marker, VCP_VERSION_SPECIFIC_FEATURE_INFO_MARKER , 4);
    info->feature_code = vfte->code;
 
@@ -930,14 +930,14 @@ extract_version_feature_info(
 }
 
 #ifdef OLD
-Version_Feature_Info *
+DDCA_Version_Feature_Info *
 get_version_specific_feature_info(
       VCP_Feature_Code        feature_code,
       bool                    with_default,
    // DDCT_MCCS_Version_Spec  vspec,
       DDCA_MCCS_Version_Id    mccs_version_id)
 {
-   Version_Feature_Info* info = NULL;
+   DDCA_Version_Feature_Info* info = NULL;
    DDCA_MCCS_Version_Spec vspec = mccs_version_id_to_spec(mccs_version_id);
 
    VCP_Feature_Table_Entry * pentry =
@@ -954,14 +954,14 @@ get_version_specific_feature_info(
 }
 
 
-Version_Feature_Info *
+DDCA_Version_Feature_Info *
 get_version_sensitive_feature_info(
       VCP_Feature_Code        feature_code,
       bool                    with_default,
    // DDCT_MCCS_Version_Spec  vspec,
       DDCA_MCCS_Version_Id    mccs_version_id)
 {
-   Version_Feature_Info* info = NULL;
+   DDCA_Version_Feature_Info* info = NULL;
    DDCA_MCCS_Version_Spec vspec = mccs_version_id_to_spec(mccs_version_id);
 
    VCP_Feature_Table_Entry * pentry =
@@ -978,7 +978,7 @@ get_version_sensitive_feature_info(
 }
 #endif
 
-Version_Feature_Info *
+DDCA_Version_Feature_Info *
 get_version_feature_info(
       VCP_Feature_Code        feature_code,
       DDCA_MCCS_Version_Id    mccs_version_id,
@@ -993,7 +993,7 @@ get_version_feature_info(
          bool_repr(with_default),
          bool_repr(version_sensitive));
 
-   Version_Feature_Info* info = NULL;
+   DDCA_Version_Feature_Info* info = NULL;
    DDCA_MCCS_Version_Spec vspec = mccs_version_id_to_spec(mccs_version_id);
 
    VCP_Feature_Table_Entry * pentry =

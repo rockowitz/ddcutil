@@ -368,7 +368,7 @@ struct {
    // VCP_Feature_Subset                 vcp_subsets;   // Need it?
    char *                                feature_name;  /**< feature name */
    DDCA_Version_Feature_Flags            feature_flags;
-} Version_Feature_Info;
+} DDCA_Version_Feature_Info;
 
 
 //

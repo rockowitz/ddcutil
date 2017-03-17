@@ -125,7 +125,7 @@ char * interpret_global_feature_flags_r(uint8_t flags, char * buffer, int bufsz)
 
 
 
-void my_report_version_feature_info(Version_Feature_Info * info) {
+void my_report_version_feature_info(DDCA_Version_Feature_Info * info) {
    printf("\nVersion Sensitive Feature Information for VCP Feature: 0x%02x - %s\n",  info->feature_code, info->feature_name);
    printf("VCP version:          %d.%d\n",   info->vspec.major, info->vspec.minor);
    printf("VCP version id:       %d (%s)\n",
@@ -160,7 +160,7 @@ void test_get_single_feature_info(DDCA_MCCS_Version_Id version_id, VCP_Feature_C
           feature_code, ddca_mccs_version_id_string(version_id));
    printf("Feature name: %s\n", ddca_get_feature_name(feature_code));
    // DDCA_Version_Feature_Flags feature_flags;
-   Version_Feature_Info * info;
+   DDCA_Version_Feature_Info * info;
      DDCA_Status rc = ddca_get_feature_info_by_vcp_version(feature_code, version_id, &info);
      if (rc != 0)
         FUNCTION_ERRMSG("ddct_get_feature_info", rc);
@@ -192,7 +192,7 @@ test_cont_value(
    char * feature_name = ddca_get_feature_name(feature_code);
 
    // DDCA_Version_Feature_Flags feature_flags;
-   Version_Feature_Info * info;
+   DDCA_Version_Feature_Info * info;
    rc = ddca_get_feature_info_by_display(
            dh,    // needed because in rare cases feature info is MCCS version dependent
            feature_code,
