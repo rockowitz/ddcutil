@@ -120,7 +120,7 @@ struct {
 
 typedef
 struct {
-   Vcp_Value_Type                  response_type;
+   DDCA_Vcp_Value_Type                  response_type;
    Parsed_Nontable_Vcp_Response *  non_table_response;
    Buffer *                        table_response;
 } Parsed_Vcp_Response;

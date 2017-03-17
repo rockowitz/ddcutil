@@ -408,9 +408,9 @@ struct {
  *  different data structures.
  */
 typedef enum {
-   NON_TABLE_VCP_VALUE,
-   TABLE_VCP_VALUE,
-} Vcp_Value_Type;
+   DDCA_NON_TABLE_VCP_VALUE,
+   DDCA_TABLE_VCP_VALUE,
+} DDCA_Vcp_Value_Type;
 
 
 #ifdef OLD
@@ -460,7 +460,7 @@ typedef struct {
 /** Represents a single VCP value of any type */
 typedef struct {
    DDCA_VCP_Feature_Code  opcode;         /**< VCP feature code */
-   Vcp_Value_Type    value_type;      // probably a different type would be better
+   DDCA_Vcp_Value_Type    value_type;      // probably a different type would be better
    union {
       struct {
          uint8_t *  bytes;          /**< pointer to bytes of table value */

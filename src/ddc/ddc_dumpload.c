@@ -299,7 +299,7 @@ ddc_set_multiple(
       // new way
       DDCA_Single_Vcp_Value * vrec = vcp_value_set_get(vset, ndx);
       Byte   feature_code = vrec->opcode;
-      assert(vrec->value_type == NON_TABLE_VCP_VALUE);     // Table not yet implemented
+      assert(vrec->value_type == DDCA_NON_TABLE_VCP_VALUE);     // Table not yet implemented
       ushort new_value    = vrec->val.c.cur_val;
       psc = set_nontable_vcp_value(dh, feature_code, new_value);
       if (psc != 0) {

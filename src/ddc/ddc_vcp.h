@@ -60,7 +60,7 @@ Public_Status_Code
 get_vcp_value(
       Display_Handle *          dh,
       Byte                      feature_code,
-      Vcp_Value_Type            call_type,
+      DDCA_Vcp_Value_Type            call_type,
       DDCA_Single_Vcp_Value **       pvalrec);
 
 #endif /* DDC_VCP_H_ */

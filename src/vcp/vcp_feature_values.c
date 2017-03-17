@@ -36,13 +36,13 @@
 
 
 
-char * vcp_value_type_name(Vcp_Value_Type value_type) {
+char * vcp_value_type_name(DDCA_Vcp_Value_Type value_type) {
    char * result = NULL;
    switch (value_type) {
-   case NON_TABLE_VCP_VALUE:
+   case DDCA_NON_TABLE_VCP_VALUE:
       result = "Non Table";
       break;
-   case TABLE_VCP_VALUE:
+   case DDCA_TABLE_VCP_VALUE:
       result = "Table";
       break;
    }
@@ -57,7 +57,7 @@ void report_single_vcp_value(DDCA_Single_Vcp_Value * valrec, int depth) {
    rpt_vstring(depth, "Single_Vcp_Value at %p:", valrec);
    rpt_vstring(d1, "opcode=0x%02x, value_type=%s (0x%02x)",
                    valrec->opcode, vcp_value_type_name(valrec->value_type), valrec->value_type);
-   if (valrec->value_type == NON_TABLE_VCP_VALUE) {
+   if (valrec->value_type == DDCA_NON_TABLE_VCP_VALUE) {
       rpt_vstring(d1, "mh=0x%02x, ml=0x%02x, sh=0x%02x, sl=0x%02x",
                       valrec->val.nc.mh, valrec->val.nc.ml, valrec->val.nc.sh, valrec->val.nc.sl);
       rpt_vstring(d1, "max_val=%d (0x%04x), cur_val=%d (0x%04x)",
@@ -67,7 +67,7 @@ void report_single_vcp_value(DDCA_Single_Vcp_Value * valrec, int depth) {
                       valrec->val.c.cur_val);
    }
    else {
-      assert(valrec->value_type == TABLE_VCP_VALUE);
+      assert(valrec->value_type == DDCA_TABLE_VCP_VALUE);
       rpt_hex_dump(valrec->val.t.bytes, valrec->val.t.bytect, d1);
    }
 }
@@ -84,7 +84,7 @@ char * summarize_single_vcp_value_r(DDCA_Single_Vcp_Value * valrec, char * buffe
       assert(bufsz >= SUMMARIZE_SINGLE_VCP_VALUE_BUFFER_SIZE);
       *buffer = '\0';
       if (valrec) {
-         if (valrec->value_type == NON_TABLE_VCP_VALUE) {
+         if (valrec->value_type == DDCA_NON_TABLE_VCP_VALUE) {
             snprintf(buffer, bufsz,
                   "opcode=0x%02x, "
                   "mh=0x%02x, ml=0x%02x, sh=0x%02x, sl=0x%02x, "
@@ -100,7 +100,7 @@ char * summarize_single_vcp_value_r(DDCA_Single_Vcp_Value * valrec, char * buffe
             buffer[bufsz-1] = '\0';
          }
          else {
-            assert(valrec->value_type == TABLE_VCP_VALUE);
+            assert(valrec->value_type == DDCA_TABLE_VCP_VALUE);
             snprintf(buffer, bufsz,
                      "opcode=0x%02x, value_type=Table, bytect=%d, ...",
                      valrec->opcode,
@@ -139,7 +139,7 @@ char * summarize_single_vcp_value(DDCA_Single_Vcp_Value * valrec) {
 
 // ignoring Buffer * since it only exists temporarily for transition
 void free_single_vcp_value(DDCA_Single_Vcp_Value * vcp_value) {
-   if (vcp_value->value_type == TABLE_VCP_VALUE) {
+   if (vcp_value->value_type == DDCA_TABLE_VCP_VALUE) {
       if (vcp_value->val.t.bytes)
          free(vcp_value->val.t.bytes);
    }
@@ -160,7 +160,7 @@ create_nontable_vcp_value(
       Byte sl)
 {
    DDCA_Single_Vcp_Value * valrec = calloc(1,sizeof(DDCA_Single_Vcp_Value));
-   valrec->value_type = NON_TABLE_VCP_VALUE;
+   valrec->value_type = DDCA_NON_TABLE_VCP_VALUE;
    valrec->opcode = feature_code;
    valrec->val.nc.mh = mh;
    valrec->val.nc.ml = ml;
@@ -179,7 +179,7 @@ create_cont_vcp_value(
       ushort cur_val)
 {
    DDCA_Single_Vcp_Value * valrec = calloc(1,sizeof(DDCA_Single_Vcp_Value));
-   valrec->value_type = NON_TABLE_VCP_VALUE;
+   valrec->value_type = DDCA_NON_TABLE_VCP_VALUE;
    valrec->opcode = feature_code;
    // not needed thanks to overlay
    // valrec->val.nc.mh = max_val >> 8;
@@ -198,7 +198,7 @@ create_table_vcp_value_by_bytes(
       ushort bytect)
 {
    DDCA_Single_Vcp_Value * valrec = calloc(1,sizeof(DDCA_Single_Vcp_Value));
-   valrec->value_type = TABLE_VCP_VALUE;
+   valrec->value_type = DDCA_TABLE_VCP_VALUE;
    valrec->opcode = feature_code;
    valrec->val.t.bytect = bytect;
    valrec->val.t.bytes = malloc(bytect);
@@ -220,7 +220,7 @@ create_single_vcp_value_by_parsed_vcp_response(
 {
    DDCA_Single_Vcp_Value * valrec = NULL;
 
-   if (presp->response_type == NON_TABLE_VCP_VALUE) {
+   if (presp->response_type == DDCA_NON_TABLE_VCP_VALUE) {
       assert(presp->non_table_response->valid_response);
       assert(presp->non_table_response->supported_opcode);
       assert(feature_id == presp->non_table_response->vcp_code);
@@ -237,7 +237,7 @@ create_single_vcp_value_by_parsed_vcp_response(
       // assert(valrec->val.c.cur_val == presp->non_table_response->cur_value);
    }
    else {
-      assert(presp->response_type == TABLE_VCP_VALUE);
+      assert(presp->response_type == DDCA_TABLE_VCP_VALUE);
       valrec = create_table_vcp_value_by_buffer(feature_id, presp->table_response);
    }
    return valrec;
@@ -247,7 +247,7 @@ create_single_vcp_value_by_parsed_vcp_response(
 Parsed_Vcp_Response * single_vcp_value_to_parsed_vcp_response(DDCA_Single_Vcp_Value * valrec) {
    Parsed_Vcp_Response * presp = calloc(1, sizeof(Parsed_Vcp_Response));
    presp->response_type = valrec->value_type;
-   if (valrec->value_type == NON_TABLE_VCP_VALUE) {
+   if (valrec->value_type == DDCA_NON_TABLE_VCP_VALUE) {
       presp->non_table_response = calloc(1, sizeof(Parsed_Nontable_Vcp_Response));
       presp->non_table_response->cur_value = valrec->val.c.cur_val;
       presp->non_table_response->max_value = valrec->val.c.max_val;
@@ -261,7 +261,7 @@ Parsed_Vcp_Response * single_vcp_value_to_parsed_vcp_response(DDCA_Single_Vcp_Va
 
    }
    else {
-      assert(valrec->value_type == TABLE_VCP_VALUE);
+      assert(valrec->value_type == DDCA_TABLE_VCP_VALUE);
       Buffer * buf2 = buffer_new(valrec->val.t.bytect, __func__);
       buffer_put(buf2, valrec->val.t.bytes, valrec->val.t.bytect);
       buffer_free(buf2,__func__);
@@ -271,7 +271,7 @@ Parsed_Vcp_Response * single_vcp_value_to_parsed_vcp_response(DDCA_Single_Vcp_Va
 
 Nontable_Vcp_Value * single_vcp_value_to_nontable_vcp_value(DDCA_Single_Vcp_Value * valrec) {
    Nontable_Vcp_Value * non_table_response = calloc(1, sizeof(Nontable_Vcp_Value));
-   assert (valrec->value_type == NON_TABLE_VCP_VALUE);
+   assert (valrec->value_type == DDCA_NON_TABLE_VCP_VALUE);
 
    non_table_response->cur_value = valrec->val.c.cur_val;
    non_table_response->max_value = valrec->val.c.max_val;

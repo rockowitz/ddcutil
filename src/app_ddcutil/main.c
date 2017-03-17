@@ -268,7 +268,7 @@ void probe_display_by_dh(Display_Handle * dh)
       psc =  get_vcp_value(
                dh,
              0x0b,              // color temperature increment,
-             NON_TABLE_VCP_VALUE,
+             DDCA_NON_TABLE_VCP_VALUE,
              &valrec);
       if (psc == 0) {
          if (debug)
@@ -278,7 +278,7 @@ void probe_display_by_dh(Display_Handle * dh)
          psc =  get_vcp_value(
                dh,
              0x0c,              // color temperature request
-             NON_TABLE_VCP_VALUE,
+             DDCA_NON_TABLE_VCP_VALUE,
              &valrec);
          if (psc == 0) {
             if (debug)

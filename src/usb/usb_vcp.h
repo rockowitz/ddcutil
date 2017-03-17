@@ -52,7 +52,7 @@ Public_Status_Code usb_get_nontable_vcp_value(
 Public_Status_Code usb_get_vcp_value(
       Display_Handle *          dh,
       Byte                      feature_code,
-      Vcp_Value_Type            call_type,
+      DDCA_Vcp_Value_Type            call_type,
       DDCA_Single_Vcp_Value **       pvalrec);
 
 Public_Status_Code usb_set_nontable_vcp_value(

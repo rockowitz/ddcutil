@@ -35,7 +35,7 @@
 
 
 
-char * vcp_value_type_name(Vcp_Value_Type value_type);
+char * vcp_value_type_name(DDCA_Vcp_Value_Type value_type);
 
 
 DDCA_Single_Vcp_Value *

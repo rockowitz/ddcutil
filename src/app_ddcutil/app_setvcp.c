@@ -149,7 +149,7 @@ app_set_vcp_value(
       else {
          good_value = true;
          vrec.opcode  = entry->code;
-         vrec.value_type = TABLE_VCP_VALUE;
+         vrec.value_type = DDCA_TABLE_VCP_VALUE;
          vrec.val.t.bytect = bytect;
          vrec.val.t.bytes  = value_bytes;
       }
@@ -158,7 +158,7 @@ app_set_vcp_value(
       good_value = parse_vcp_value(new_value, &longtemp);
       if (good_value) {
          vrec.opcode        = entry->code;
-         vrec.value_type    = NON_TABLE_VCP_VALUE;
+         vrec.value_type    = DDCA_NON_TABLE_VCP_VALUE;
          vrec.val.c.cur_val = longtemp;
       }
    }

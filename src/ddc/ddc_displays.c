@@ -105,7 +105,7 @@ verify_adl_display_ref(Display_Ref * dref) {
    DDCA_Output_Level olev = get_output_level();
    if (olev == DDCA_OL_VERBOSE)
       set_output_level(DDCA_OL_NORMAL);
-   psc = get_vcp_value(dh, 0x10, NON_TABLE_VCP_VALUE, &pvalrec);
+   psc = get_vcp_value(dh, 0x10, DDCA_NON_TABLE_VCP_VALUE, &pvalrec);
    if (olev == DDCA_OL_VERBOSE)
       set_output_level(olev);
 
@@ -691,7 +691,7 @@ ddc_report_active_display(Display_Info * curinfo, int depth) {
                // n. get_nontable_vcp_value() does not know how to handle USB devices, but its
                // caller, get_vcp_value() does
                DDCA_Single_Vcp_Value *   valrec;
-               psc = get_vcp_value(dh, 0xc8, NON_TABLE_VCP_VALUE, &valrec);
+               psc = get_vcp_value(dh, 0xc8, DDCA_NON_TABLE_VCP_VALUE, &valrec);
 
                if (psc != 0) {
                   if (psc != DDCRC_REPORTED_UNSUPPORTED && psc != DDCRC_DETERMINED_UNSUPPORTED) {
@@ -711,7 +711,7 @@ ddc_report_active_display(Display_Info * curinfo, int depth) {
                }
                rpt_vstring(depth,    "Controller mfg:      %s", mfg_name);
 
-               psc = get_vcp_value(dh, 0xc9, NON_TABLE_VCP_VALUE, &valrec);  // xc9 = firmware version
+               psc = get_vcp_value(dh, 0xc9, DDCA_NON_TABLE_VCP_VALUE, &valrec);  // xc9 = firmware version
                if (psc != 0) {
                   char * version = "Unspecified";
                   if (psc != DDCRC_REPORTED_UNSUPPORTED && psc != DDCRC_DETERMINED_UNSUPPORTED) {

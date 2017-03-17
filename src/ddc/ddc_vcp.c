@@ -171,11 +171,11 @@ set_vcp_value(
       DDCA_Single_Vcp_Value * vrec)
 {
    Public_Status_Code psc = 0;
-   if (vrec->value_type == NON_TABLE_VCP_VALUE) {
+   if (vrec->value_type == DDCA_NON_TABLE_VCP_VALUE) {
       psc = set_nontable_vcp_value(dh, vrec->opcode, vrec->val.c.cur_val);
    }
    else {
-      assert(vrec->value_type == TABLE_VCP_VALUE);
+      assert(vrec->value_type == DDCA_TABLE_VCP_VALUE);
       psc = set_table_vcp_value(dh, vrec->opcode, vrec->val.t.bytes, vrec->val.t.bytect);
    }
 
@@ -341,7 +341,7 @@ Public_Status_Code
 get_vcp_value(
        Display_Handle *          dh,
        Byte                      feature_code,
-       Vcp_Value_Type            call_type,
+       DDCA_Vcp_Value_Type            call_type,
        DDCA_Single_Vcp_Value **       pvalrec)
 {
    bool debug = false;
@@ -363,7 +363,7 @@ get_vcp_value(
 
       switch (call_type) {
 
-          case (NON_TABLE_VCP_VALUE):
+          case (DDCA_NON_TABLE_VCP_VALUE):
                 psc = usb_get_nontable_vcp_value(
                       dh,
                       feature_code,
@@ -379,7 +379,7 @@ get_vcp_value(
                 }
                 break;
 
-          case (TABLE_VCP_VALUE):
+          case (DDCA_TABLE_VCP_VALUE):
                 psc = DDCRC_REPORTED_UNSUPPORTED;
                 break;
           }
@@ -390,7 +390,7 @@ get_vcp_value(
    else {
       switch (call_type) {
 
-      case (NON_TABLE_VCP_VALUE):
+      case (DDCA_NON_TABLE_VCP_VALUE):
             psc = get_nontable_vcp_value(
                      dh,
                      feature_code,
@@ -406,7 +406,7 @@ get_vcp_value(
             }
             break;
 
-      case (TABLE_VCP_VALUE):
+      case (DDCA_TABLE_VCP_VALUE):
             psc = get_table_vcp_value(
                     dh,
                     feature_code,
