@@ -297,7 +297,7 @@ typedef enum {
 #define DDCA_VANY  DDCA_VNONE    /**< For use on responses, indicates version unknown   */
 
 /** MCCS VCP Feature Id */
-typedef uint8_t DDCA_VCP_Feature_Code;
+typedef uint8_t DDCA_Vcp_Feature_Code;
 
 /** Flags specifying VCP feature attributes, which can be VCP version dependent. */
 typedef uint16_t DDCA_Version_Feature_Flags;
@@ -357,7 +357,7 @@ typedef DDCA_Feature_Value_Entry * DDCA_Feature_Value_Table;
 typedef
 struct {
    char                                  marker[4];      /**< equals VCP_VERSION_SPECIFIC_FEATURE_INFO_MARKER */
-   DDCA_VCP_Feature_Code                 feature_code;   /**< VCP feature code */
+   DDCA_Vcp_Feature_Code                 feature_code;   /**< VCP feature code */
    DDCA_MCCS_Version_Spec                vspec;            // ???
    DDCA_MCCS_Version_Id                  version_id;       // which ?
    char *                                desc;           /**< feature description */
@@ -380,7 +380,7 @@ struct {
 typedef
 struct {
    char                                 marker[4];     /**< Always DDCA_CAP_VCP_MARKER */
-   DDCA_VCP_Feature_Code                feature_code;  /**< VCP feature code */
+   DDCA_Vcp_Feature_Code                feature_code;  /**< VCP feature code */
    int                                  value_ct;      /**< number of values declared */
    uint8_t *                            values;        /**< array of declared values */
 } DDCA_Cap_Vcp;
@@ -408,8 +408,8 @@ struct {
  *  different data structures.
  */
 typedef enum {
-   DDCA_NON_TABLE_VCP_VALUE,
-   DDCA_TABLE_VCP_VALUE,
+   DDCA_NON_TABLE_VCP_VALUE,   /**< Continuous (C) or Non-Continuous (NC) value */
+   DDCA_TABLE_VCP_VALUE,       /**< Table (T) value */
 } DDCA_Vcp_Value_Type;
 
 
@@ -428,7 +428,7 @@ typedef struct {
 
 /** Represents a single non-table VCP value */
 typedef struct {
-   DDCA_VCP_Feature_Code  feature_code;
+   DDCA_Vcp_Feature_Code  feature_code;
    union {
       struct {
          uint16_t   max_val;        /**< maximum value (mh, ml bytes) for continuous value */
@@ -459,7 +459,7 @@ typedef struct {
 
 /** Represents a single VCP value of any type */
 typedef struct {
-   DDCA_VCP_Feature_Code  opcode;         /**< VCP feature code */
+   DDCA_Vcp_Feature_Code  opcode;         /**< VCP feature code */
    DDCA_Vcp_Value_Type    value_type;      // probably a different type would be better
    union {
       struct {

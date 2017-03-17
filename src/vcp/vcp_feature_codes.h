@@ -144,19 +144,19 @@ vcp_get_feature_table_entry(int ndx);
 
 VCP_Feature_Table_Entry *
 vcp_create_dummy_feature_for_hexid(
-      DDCA_VCP_Feature_Code id);
+      DDCA_Vcp_Feature_Code id);
 
 VCP_Feature_Table_Entry *
 vcp_create_table_dummy_feature_for_hexid(
-      DDCA_VCP_Feature_Code id);
+      DDCA_Vcp_Feature_Code id);
 
 VCP_Feature_Table_Entry *
 vcp_find_feature_by_hexid(
-      DDCA_VCP_Feature_Code id);
+      DDCA_Vcp_Feature_Code id);
 
 VCP_Feature_Table_Entry *
 vcp_find_feature_by_hexid_w_default(
-      DDCA_VCP_Feature_Code id);
+      DDCA_Vcp_Feature_Code id);
 
 //
 // Functions to extract information from a VCP_Feature_Table_Entry
@@ -237,17 +237,17 @@ get_non_version_specific_feature_name(
 
 char*
 get_feature_name_by_id_only(
-      DDCA_VCP_Feature_Code           feature_code);
+      DDCA_Vcp_Feature_Code           feature_code);
 
 char*
 get_feature_name_by_id_and_vcp_version(
-      DDCA_VCP_Feature_Code           feature_code,
+      DDCA_Vcp_Feature_Code           feature_code,
       DDCA_MCCS_Version_Spec     vspec);
 
 #ifdef OLD
 DDCA_Version_Feature_Info *
 get_version_specific_feature_info(
-      DDCA_VCP_Feature_Code           feature_code,
+      DDCA_Vcp_Feature_Code           feature_code,
       bool                       with_default,
       // DDCT_MCCS_Version_Spec  vspec,
       DDCA_MCCS_Version_Id       mccs_version_id);
@@ -255,7 +255,7 @@ get_version_specific_feature_info(
 
 DDCA_Version_Feature_Info *
 get_version_sensitive_feature_info(
-      DDCA_VCP_Feature_Code       feature_code,
+      DDCA_Vcp_Feature_Code       feature_code,
       bool                   with_default,
    // DDCT_MCCS_Version_Spec vspec,
       DDCA_MCCS_Version_Id   mccs_version_id);
@@ -263,7 +263,7 @@ get_version_sensitive_feature_info(
 
 DDCA_Version_Feature_Info *
 get_version_feature_info(
-      DDCA_VCP_Feature_Code       feature_code,
+      DDCA_Vcp_Feature_Code       feature_code,
       DDCA_MCCS_Version_Id   mccs_version_id,
       bool                   with_default,
       bool                   version_sensitive);
@@ -272,12 +272,12 @@ get_version_feature_info(
 
 DDCA_Feature_Value_Entry *
 find_feature_values(
-      DDCA_VCP_Feature_Code       feature_code,
+      DDCA_Vcp_Feature_Code       feature_code,
       DDCA_MCCS_Version_Spec vcp_version);
 
 DDCA_Feature_Value_Entry *
 find_feature_values_for_capabilities(
-      DDCA_VCP_Feature_Code       feature_code,
+      DDCA_Vcp_Feature_Code       feature_code,
       DDCA_MCCS_Version_Spec vcp_version);
 
 //
