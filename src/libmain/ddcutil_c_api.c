@@ -1219,7 +1219,7 @@ ddca_get_vcp_value(
       DDCA_Display_Handle  ddca_dh,
       DDCA_VCP_Feature_Code     feature_code,
       Vcp_Value_Type       call_type,   // why is this needed?   look it up from dh and feature_code
-      Single_Vcp_Value **  pvalrec)
+      DDCA_Single_Vcp_Value **  pvalrec)
 {
    WITH_DH(ddca_dh,
          {
@@ -1261,7 +1261,7 @@ ddca_get_formatted_vcp_value(
                   // Version_Feature_Flags flags = feature_info->internal_feature_flags;
                    // n. will default to NON_TABLE_VCP_VALUE if not a known code
                    Vcp_Value_Type call_type = (flags & DDCA_TABLE) ?  TABLE_VCP_VALUE : NON_TABLE_VCP_VALUE;
-                   Single_Vcp_Value * pvalrec;
+                   DDCA_Single_Vcp_Value * pvalrec;
                    psc = get_vcp_value(dh, feature_code, call_type, &pvalrec);
                    if (psc == 0) {
                       bool ok =

@@ -262,7 +262,7 @@ void probe_display_by_dh(Display_Handle * dh)
 
       puts("");
       // get VCP 0B
-      Single_Vcp_Value * valrec;
+      DDCA_Single_Vcp_Value * valrec;
       int color_temp_increment = 0;
       int color_temp_units = 0;
       psc =  get_vcp_value(

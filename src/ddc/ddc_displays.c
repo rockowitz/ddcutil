@@ -94,7 +94,7 @@ verify_adl_display_ref(Display_Ref * dref) {
    dref->vcp_version = get_vcp_version_by_display_handle(dh);
    ddc_close_display(dh);
 
-   Single_Vcp_Value * pvalrec;
+   DDCA_Single_Vcp_Value * pvalrec;
 
    // Problem: ADL does not notice that a display doesn't support DDC,
    // e.g. Dell 1905FP
@@ -690,7 +690,7 @@ ddc_report_active_display(Display_Info * curinfo, int depth) {
 
                // n. get_nontable_vcp_value() does not know how to handle USB devices, but its
                // caller, get_vcp_value() does
-               Single_Vcp_Value *   valrec;
+               DDCA_Single_Vcp_Value *   valrec;
                psc = get_vcp_value(dh, 0xc8, NON_TABLE_VCP_VALUE, &valrec);
 
                if (psc != 0) {

@@ -38,7 +38,7 @@
 char * vcp_value_type_name(Vcp_Value_Type value_type);
 
 
-Single_Vcp_Value *
+DDCA_Single_Vcp_Value *
 create_nontable_vcp_value(
       Byte     feature_code,
       Byte     mh,
@@ -46,29 +46,29 @@ create_nontable_vcp_value(
       Byte     sh,
       Byte     sl);
 
-Single_Vcp_Value *
+DDCA_Single_Vcp_Value *
 create_cont_vcp_value(
       Byte     feature_code,
       ushort   max_val,
       ushort   cur_val);
 
-Single_Vcp_Value *
+DDCA_Single_Vcp_Value *
 create_table_vcp_value_by_bytes(
       Byte     feature_code,
       Byte *   bytes,
       ushort   bytect);
 
-Single_Vcp_Value *
+DDCA_Single_Vcp_Value *
 create_table_vcp_value_by_buffer(
       Byte     feature_code,
       Buffer*  buffer);
 
-Single_Vcp_Value *
+DDCA_Single_Vcp_Value *
 create_single_vcp_value_by_parsed_vcp_response(
       Byte feature_id,
       Parsed_Vcp_Response * presp);
 
-Parsed_Vcp_Response * single_vcp_value_to_parsed_vcp_response(Single_Vcp_Value * valrec);
+Parsed_Vcp_Response * single_vcp_value_to_parsed_vcp_response(DDCA_Single_Vcp_Value * valrec);
 
 
 // Simple stripped-down version of Parsed_Nontable_Vcp_Response
@@ -86,16 +86,16 @@ struct {
    Byte   sl;
 } Nontable_Vcp_Value;
 
-Nontable_Vcp_Value * single_vcp_value_to_nontable_vcp_value(Single_Vcp_Value * valrec);
+Nontable_Vcp_Value * single_vcp_value_to_nontable_vcp_value(DDCA_Single_Vcp_Value * valrec);
 
-void free_single_vcp_value(Single_Vcp_Value * vcp_value);
+void free_single_vcp_value(DDCA_Single_Vcp_Value * vcp_value);
 
-void report_single_vcp_value(Single_Vcp_Value * val, int depth);
+void report_single_vcp_value(DDCA_Single_Vcp_Value * val, int depth);
 
 
 extern const int summzrize_single_vcp_value_buffer_size;
-char * summarize_single_vcp_value_r(Single_Vcp_Value * valrec, char * buffer, int bufsz);
-char * summarize_single_vcp_value(Single_Vcp_Value * valrec);
+char * summarize_single_vcp_value_r(DDCA_Single_Vcp_Value * valrec, char * buffer, int bufsz);
+char * summarize_single_vcp_value(DDCA_Single_Vcp_Value * valrec);
 
 
 typedef GPtrArray *  Vcp_Value_Set;
@@ -104,11 +104,11 @@ Vcp_Value_Set vcp_value_set_new(int initial_size);
 
 void free_vcp_value_set(Vcp_Value_Set vset);
 
-void vcp_value_set_add(Vcp_Value_Set vset,  Single_Vcp_Value * pval);
+void vcp_value_set_add(Vcp_Value_Set vset,  DDCA_Single_Vcp_Value * pval);
 
 int vcp_value_set_size(Vcp_Value_Set vset);
 
-Single_Vcp_Value * vcp_value_set_get(Vcp_Value_Set vset, int ndx);
+DDCA_Single_Vcp_Value * vcp_value_set_get(Vcp_Value_Set vset, int ndx);
 
 
 void report_vcp_value_set(Vcp_Value_Set vset, int depth);

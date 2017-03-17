@@ -311,7 +311,7 @@ bool
 vcp_format_feature_detail(
        VCP_Feature_Table_Entry * vcp_entry,
        DDCA_MCCS_Version_Spec    vcp_version,
-       Single_Vcp_Value *        valrec,
+       DDCA_Single_Vcp_Value *        valrec,
        char * *                  aformatted_data
      );
 

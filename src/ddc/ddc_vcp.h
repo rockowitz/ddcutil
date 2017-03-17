@@ -42,7 +42,7 @@ set_nontable_vcp_value(
 Public_Status_Code
 set_vcp_value(
       Display_Handle *   dh,
-      Single_Vcp_Value * vrec);
+      DDCA_Single_Vcp_Value * vrec);
 
 Public_Status_Code
 get_table_vcp_value(
@@ -61,6 +61,6 @@ get_vcp_value(
       Display_Handle *          dh,
       Byte                      feature_code,
       Vcp_Value_Type            call_type,
-      Single_Vcp_Value **       pvalrec);
+      DDCA_Single_Vcp_Value **       pvalrec);
 
 #endif /* DDC_VCP_H_ */

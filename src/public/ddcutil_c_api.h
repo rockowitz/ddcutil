@@ -687,7 +687,7 @@ ddca_get_vcp_value(
        DDCA_Display_Handle     ddca_dh,
        DDCA_VCP_Feature_Code        feature_code,
        Vcp_Value_Type          call_type,   // TODO: eliminate
-       Single_Vcp_Value **     pvalrec);
+       DDCA_Single_Vcp_Value **     pvalrec);
 
 
 /** Returns a string containing a formatted representation of the VCP value

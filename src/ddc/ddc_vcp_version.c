@@ -92,7 +92,7 @@ DDCA_MCCS_Version_Spec get_vcp_version_by_display_handle(Display_Handle * dh) {
 #endif
       }
       else {    // normal case, not USB
-         Single_Vcp_Value * pvalrec;
+         DDCA_Single_Vcp_Value * pvalrec;
 
          // verbose output is distracting since this function is called when
          // querying for other things

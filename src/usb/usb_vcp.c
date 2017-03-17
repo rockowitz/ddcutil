@@ -544,7 +544,7 @@ Public_Status_Code usb_get_vcp_value(
        Display_Handle *          dh,
        Byte                      feature_code,
        Vcp_Value_Type            call_type,
-       Single_Vcp_Value **       pvalrec)
+       DDCA_Single_Vcp_Value **       pvalrec)
 {
    bool debug = false;
    DBGTRC(debug, TRACE_GROUP, "Starting. Reading feature 0x%02x", feature_code);
@@ -555,7 +555,7 @@ Public_Status_Code usb_get_vcp_value(
    Buffer * buffer = NULL;
 #endif
    Parsed_Nontable_Vcp_Response * parsed_nontable_response = NULL;
-   Single_Vcp_Value * valrec = NULL;
+   DDCA_Single_Vcp_Value * valrec = NULL;
    switch (call_type) {
 
    case (NON_TABLE_VCP_VALUE):
@@ -685,7 +685,7 @@ usb_set_nontable_vcp_value(
 Public_Status_Code
 usb_set_vcp_value(                               // changed from set_vcp_value()
       Display_Handle *   dh,
-      Single_Vcp_Value * vrec)
+      DDCA_Single_Vcp_Value * vrec)
 {
    Public_Status_Code psc = 0;
    if (vrec->value_type == NON_TABLE_VCP_VALUE) {

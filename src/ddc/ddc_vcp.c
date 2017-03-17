@@ -168,7 +168,7 @@ set_table_vcp_value(
 Public_Status_Code
 set_vcp_value(
       Display_Handle *   dh,
-      Single_Vcp_Value * vrec)
+      DDCA_Single_Vcp_Value * vrec)
 {
    Public_Status_Code psc = 0;
    if (vrec->value_type == NON_TABLE_VCP_VALUE) {
@@ -342,7 +342,7 @@ get_vcp_value(
        Display_Handle *          dh,
        Byte                      feature_code,
        Vcp_Value_Type            call_type,
-       Single_Vcp_Value **       pvalrec)
+       DDCA_Single_Vcp_Value **       pvalrec)
 {
    bool debug = false;
    // Trace_Group tg = TRACE_GROUP;  if (debug) tg = 0xFF;
@@ -354,7 +354,7 @@ get_vcp_value(
 
    Buffer * buffer = NULL;
    Parsed_Nontable_Vcp_Response * parsed_nontable_response = NULL;  // vs interpreted ..
-   Single_Vcp_Value * valrec = NULL;
+   DDCA_Single_Vcp_Value * valrec = NULL;
 
    // why are we coming here for USB?
    if (dh->io_mode == DDCA_IO_USB) {
