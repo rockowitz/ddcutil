@@ -1,7 +1,5 @@
 /* ddcutil_types.h
  *
- * Publicly visible type definitions.
- *
  * <copyright>
  * Copyright (C) 2014-2017 Sanford Rockowitz <rockowitz@minsoft.com>
  *
@@ -23,6 +21,12 @@
  * </endcopyright>
  */
 
+
+/** @file ddcutil_types.h
+ *  @brief Publicly visible **ddcutil**c type definitions
+ */
+
+
 #ifndef DDCUTIL_TYPES_H_
 #define DDCUTIL_TYPES_H_
 
@@ -31,10 +35,6 @@
 #include <stdbool.h>
 #include <stdint.h>
 /** \endcond */
-
-/** @file ddcutil_types.h
- *  @brief ddcutil public types
- */
 
 
 //
