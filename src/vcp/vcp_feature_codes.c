@@ -104,7 +104,7 @@ vcp_interpret_version_feature_flags(
       typemsg = "Continuous";
    else if (flags & DDCA_NC)
       typemsg = "Non-continuous";
-   else if (flags & DDCA_READABLE_TABLE)
+   else if (flags & DDCA_NORMAL_TABLE)
       typemsg = "Table";
    // else if (flags & VCP_TYPE_V2NC_V3T)
    //    typemsg = "V2:NC, V3:Table";
@@ -359,7 +359,7 @@ char * interpret_ddca_version_feature_flags_type(DDCA_Version_Feature_Flags feat
       result = "Non-Continuous (complex)";
    else if (feature_flags & DDCA_WO_NC)
       result = "Non-Continuous (write-only)";
-   else if (feature_flags & DDCA_READABLE_TABLE)
+   else if (feature_flags & DDCA_NORMAL_TABLE)
       result = "Table (normal)";
    else if (feature_flags & DDCA_WO_TABLE)
       result = "Table (write-only)";
@@ -741,7 +741,7 @@ bool is_feature_table_by_vcp_version(
        VCP_Feature_Table_Entry *  vfte,
        DDCA_MCCS_Version_Spec     vcp_version)
 {
-   return (get_version_sensitive_feature_flags(vfte, vcp_version) & DDCA_READABLE_TABLE );
+   return (get_version_sensitive_feature_flags(vfte, vcp_version) & DDCA_NORMAL_TABLE );
 }
 
 
@@ -756,7 +756,7 @@ bool is_version_conditional_vcp_type(VCP_Feature_Table_Entry * vfte) {
                    vfte->v20_flags;
 
    bool some_nontable = allflags & (DDCA_CONT | DDCA_NC);
-   bool some_table    = allflags & DDCA_READABLE_TABLE;
+   bool some_table    = allflags & DDCA_NORMAL_TABLE;
    result = some_nontable && some_table;
 
    return result;
@@ -1287,7 +1287,7 @@ vcp_create_table_dummy_feature_for_hexid(DDCA_Vcp_Feature_Code id) {
       pentry->v20_name = "Unknown feature";
    }
    pentry->table_formatter = default_table_feature_detail_function,
-   pentry->v20_flags = DDCA_RW | DDCA_READABLE_TABLE;
+   pentry->v20_flags = DDCA_RW | DDCA_NORMAL_TABLE;
    pentry->vcp_global_flags = DDCA_SYNTHETIC;   // indicates caller should free
    return pentry;
 }
@@ -3239,7 +3239,7 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
       .desc = "Selects active video source",
       .v20_flags =  DDCA_RW | DDCA_SIMPLE_NC,
       .v20_name = "Input Source",
-      .v30_flags = DDCA_RW | DDCA_READABLE_TABLE,
+      .v30_flags = DDCA_RW | DDCA_NORMAL_TABLE,
       .v22_flags = DDCA_RW | DDCA_SIMPLE_NC
    },
    {  .code=0x62,
@@ -3357,7 +3357,7 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
       .table_formatter=format_feature_detail_x73_lut_size,
       .desc = "Provides the size (number of entries and number of bits/entry) "
               "for the Red, Green, and Blue LUT in the display.",
-      .v20_flags = DDCA_RO| DDCA_READABLE_TABLE,
+      .v20_flags = DDCA_RO| DDCA_NORMAL_TABLE,
       .v20_name  = "LUT Size",
    },
    {  .code=0x74,
@@ -3366,7 +3366,7 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
       .vcp_subsets = VCP_SUBSET_LUT,
       .table_formatter = default_table_feature_detail_function,
       .desc = "Writes a single point within the display's LUT, reads a single point from the LUT",
-      .v20_flags = DDCA_RW | DDCA_READABLE_TABLE,
+      .v20_flags = DDCA_RW | DDCA_NORMAL_TABLE,
       .v20_name = "Single point LUT operation",
    },
    {  .code=0x75,
@@ -3375,7 +3375,7 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
       .vcp_subsets = VCP_SUBSET_LUT,
       .table_formatter = default_table_feature_detail_function,
       .desc = "Load (read) multiple values into (from) the display's LUT",
-      .v20_flags = DDCA_RW | DDCA_READABLE_TABLE,
+      .v20_flags = DDCA_RW | DDCA_NORMAL_TABLE,
       .v20_name = "Block LUT operation",
    },
    {  .code=0x76,
@@ -3394,11 +3394,11 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
       .desc = "Causes a selected 128 byte block of Display Identification Data "
               "(EDID or Display ID) to be read",
 
-      .v21_flags =  DDCA_RO | DDCA_READABLE_TABLE,
+      .v21_flags =  DDCA_RO | DDCA_NORMAL_TABLE,
       .v21_name  = "EDID operation",
-      .v30_flags = DDCA_RO | DDCA_READABLE_TABLE,
+      .v30_flags = DDCA_RO | DDCA_NORMAL_TABLE,
       .v30_name  = "EDID operation",
-      .v22_flags = DDCA_RO | DDCA_READABLE_TABLE,
+      .v22_flags = DDCA_RO | DDCA_NORMAL_TABLE,
       .v22_name = "Display Identification Operation",
    },
    {  .code=0x7a,
@@ -3754,8 +3754,8 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
       .table_formatter = default_table_feature_detail_function,  // TODO: write proper function
       .desc = "Turn selected window operation on/off, window mask",
       .v20_flags = DDCA_RW | DDCA_COMPLEX_NC,
-      .v30_flags = DDCA_RW | DDCA_READABLE_TABLE,
-      .v22_flags = DDCA_RW | DDCA_READABLE_TABLE,
+      .v30_flags = DDCA_RW | DDCA_NORMAL_TABLE,
+      .v22_flags = DDCA_RW | DDCA_NORMAL_TABLE,
       .v20_name = "Turn the selected window operation on/off",
       .v30_name = "Window mask control",
       .v22_name = "Window mask control",
@@ -3825,8 +3825,8 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
       .v21_name = "Source Timing Mode",
       .nontable_formatter = format_feature_detail_debug_bytes,
       .v21_flags = DDCA_RW | DDCA_COMPLEX_NC,
-      .v30_flags = DDCA_RW | DDCA_READABLE_TABLE,
-      .v22_flags = DDCA_RW | DDCA_READABLE_TABLE,
+      .v30_flags = DDCA_RW | DDCA_NORMAL_TABLE,
+      .v22_flags = DDCA_RW | DDCA_NORMAL_TABLE,
    },
    {  .code=0xb6,                                               // DONE
       .vcp_spec_groups = VCP_SPEC_MISC,     // 2.0, 3.0
@@ -3922,7 +3922,7 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
       .table_formatter = default_table_feature_detail_function,
       .desc="Reads (writes) a display descriptor from (to) non-volatile storage "
             "in the display.",
-      .v20_flags = DDCA_RW | DDCA_READABLE_TABLE,
+      .v20_flags = DDCA_RW | DDCA_NORMAL_TABLE,
       .v20_name = "Transmit display descriptor",
    },
    {  .code = 0xc4,
@@ -4005,7 +4005,7 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
       .v20_flags = DDCA_RW | DDCA_SIMPLE_NC,
       .default_sl_values = xd0_v2_output_select_values,
       .table_formatter = default_table_feature_detail_function,  // TODO: implement proper function
-      .v30_flags = DDCA_RW | DDCA_READABLE_TABLE,
+      .v30_flags = DDCA_RW | DDCA_NORMAL_TABLE,
       .v22_flags = DDCA_RW | DDCA_SIMPLE_NC,
    },
    {  .code=0xd2,
@@ -4013,7 +4013,7 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
       .vcp_spec_groups = VCP_SPEC_MISC,
       .desc = "Read an Asset Tag to/from the display",
       .v21_name = "Asset Tag",
-      .v21_flags = DDCA_RW | DDCA_READABLE_TABLE,
+      .v21_flags = DDCA_RW | DDCA_NORMAL_TABLE,
       .table_formatter = default_table_feature_detail_function,
    },
    {  .code=0xd4,
@@ -4109,7 +4109,7 @@ int check_one_version_flags(
       if (vflags & DDCA_SIMPLE_NC)    ct++;
       if (vflags & DDCA_COMPLEX_NC)   ct++;
       if (vflags & DDCA_WO_NC)        ct++;
-      if (vflags & DDCA_READABLE_TABLE)        ct++;
+      if (vflags & DDCA_NORMAL_TABLE)        ct++;
       if (vflags & DDCA_WO_TABLE)     ct++;
       if (ct != 1) {
           fprintf(

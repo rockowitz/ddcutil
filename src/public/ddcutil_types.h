@@ -23,7 +23,12 @@
 
 
 /** @file ddcutil_types.h
- *  @brief Publicly visible **ddcutil**c type definitions
+ *  @brief File ddcutil_types.h contains type declarations for the C API.
+ *
+ *  API function declarations are specified in a separate file, ddcutil_c_api.h.
+ *  The reason for this split is that the type declarations are used throughout the
+ *  **ddcutil** implementation, whereas the function declarations are used only
+ *  within the code that implements the API.
  */
 
 
@@ -42,7 +47,6 @@
 //
 
 /**
- *
  * **ddcutil** Status Code
  *
  *  Most public **ddcutil** functions return a status code.
@@ -132,21 +136,30 @@ typedef enum {
 //  Display Specification
 //
 
-/** \defgroup api_display_spec API Display Specification
-Monitors are specified in different ways in different contexts:
+/** \defgroup api_display_spec API Display Specification */
 
-1) DDCA_Display_Identifier contains criteria for selecting a monitor.
+
+/** @name Display Specification
+
+Monitors are referenced in 3 different ways depending on contexts:
+
+1) A #DDCA_Display_Identifier contains criteria for selecting a monitor,
+typically as entered by a user.
 These may directly identify a monitor (e.g. by I2C bus number), or entail a
 search (e.g. EDID).
 
-2) DDCA_Display_Ref is a logical display identifier.   It can be an I2C identifier,
-an ADL identifier, or a USB identifier.
+Resolving a #DDCA_Display_Identifier resolves to a #DDCA_Display_Ref.
+
+2) #DDCA_Display_Ref indicates the operating system path to a display.
+It can be an I2C identifier,an ADL identifier, or a USB identifier.
 
 For Display_Identifiers containing an I2C bus number or ADL adapter.display numbers,
 the translation from DDCA_Display_Identifier to DDCA_Display_Ref is direct.  
 Otherwise, a search of detected monitors must be performed.
 
-3) A DDCA_Display_Handle references a display that has been "opened".  This is used
+Opening a #DDCA_Display_Ref results in a #DDCA_Display_Handle.
+
+3) A #DDCA_Display_Handle references a display that has been "opened".  This is used
 for most function calls performing an operation on a display.
 
 For I2C and USB connected displays, an operating system open is performed when
@@ -155,7 +168,10 @@ DDCA_Display_Handle then contains the open file handle.
 
 For ADL displays, no actual open is performed when creating a DDCA_Display_Handle from
 a DDCA_Display_Ref.  The adapter number.device number pair are simply copied.
+
+\ingroup api_display_spec
 */
+///@{
 
 /** Opaque display identifier
  *
@@ -182,7 +198,7 @@ typedef void * DDCA_Display_Identifier;
  * - an ADL (adapter index, display index) pair
  * - a  USB (bus number, device number pair)
  *
- *  \ingroup api_display_spec
+ * \ingroup api_display_spec
  */
 typedef void * DDCA_Display_Ref;
 
@@ -191,9 +207,11 @@ typedef void * DDCA_Display_Ref;
  *
  * A **DDCA_Display_Handle** represents an open display on which actions can be performed.
  *
- *  \ingroup api_display_spec
+ * \ingroup api_display_spec
  */
 typedef void * DDCA_Display_Handle;
+
+///}
 
 
 //
@@ -202,7 +220,6 @@ typedef void * DDCA_Display_Handle;
 
 /** Indicates how a display is accessed
  *
- *  \ingroup api_display_spec
  */
 typedef enum {
    DDCA_IO_DEVI2C,     /**< Using DDC to communicate with a /dev/i2c-n device */
@@ -214,7 +231,6 @@ typedef enum {
 // Does this make the API and data structures clearer or more obscure?
 /** Describes a display's access mode and the location identifiers for that mode
  *
- *  \ingroup api_display_spec
  */
 typedef struct {
    DDCA_IO_Mode io_mode;
@@ -236,7 +252,6 @@ typedef struct {
 #define DDCA_DISPLAY_INFO_MARKER "DDIN"
 /** DDCA_Display_Info describes one monitor detected by ddcutil.
  *
- * \ingroup api_display_spec
  */
 typedef struct {
    char             marker[4];
@@ -266,6 +281,7 @@ typedef struct {
 } DDCA_Display_Info_List;
 
 
+
 //
 // VCP Feature Information
 //
@@ -282,6 +298,13 @@ typedef struct {
    uint8_t    minor;           /*** minor version number */
 } DDCA_MCCS_Version_Spec;
 
+
+/** @name version_id
+ *  Ids for MCCS/VCP versions, reflecting the fact that
+ *  there is a smaill set of valid version values.
+ */
+///@{
+
 // in sync w constants MCCS_V.. in vcp_feature_codes.c
 /** MCCS (VCP) Feature Version IDs */
 typedef enum {
@@ -293,11 +316,26 @@ typedef enum {
    DDCA_V22   = 16      /**< MCCS v2.2 */
 } DDCA_MCCS_Version_Id;
 
-#define DDCA_VUNK  DDCA_VNONE    /**< For use on queries,   indicates match any version */
-#define DDCA_VANY  DDCA_VNONE    /**< For use on responses, indicates version unknown   */
+#define DDCA_VANY  DDCA_VNONE    /**< For use on queries,   indicates match any version */
+#define DDCA_VUNK  DDCA_VNONE    /**< For use on responses, indicates version unknown   */
+
+///@}
 
 /** MCCS VCP Feature Id */
 typedef uint8_t DDCA_Vcp_Feature_Code;
+
+/** @name Version Feature Flags
+ *
+ * #DDCA_Version_Feature_Flags is a byte of flags describing attributes of a
+ * VCP feature that can vary by MCCS version.
+ *
+ * Exactly 1 of #DDCA_RO, #DDCA_WO, #DDCA_RW is set.
+ *
+ * Flags #DDCA_STD_CONT, #DDCA_COMPLEX_CONT, #DDCA_SIMPLE_NC, #DDCA_COMPLEX_NC,
+ * #DDCA_WO_NC, #DDCA_NORMAL_TABLE, #DDCA_WO_TABLE refine  the C/NC/TABLE categorization
+ * of the VESA MCCS specification.  Exactly 1 of these bits is st.
+ */
+///@{
 
 /** Flags specifying VCP feature attributes, which can be VCP version dependent. */
 typedef uint16_t DDCA_Version_Feature_Flags;
@@ -319,19 +357,21 @@ typedef uint16_t DDCA_Version_Feature_Flags;
 #define DDCA_COMPLEX_NC     0x10       /**< Non-continuous feature, having a complex interpretation using one or more of SL, SH, ML, MH */
 // For WO NC features.  There's no interpretation function or lookup table
 // Used to mark that the feature is defined for a version
-#define DDCA_WO_NC          0x08       // TODO: CHECK USAGE
-#define DDCA_READABLE_TABLE 0x04       /**< Normal table type feature */
+#define DDCA_WO_NC          0x08       /**< Used internally for write-only non-continuous features */
+#define DDCA_NORMAL_TABLE   0x04       /**< Normal RW table type feature */
 #define DDCA_WO_TABLE       0x02       /**< Write only table feature */
 
 #define DDCA_CONT           (DDCA_STD_CONT|DDCA_COMPLEX_CONT)            /**< Continuous feature, of any subtype */
 #define DDCA_NC             (DDCA_SIMPLE_NC|DDCA_COMPLEX_NC|DDCA_WO_NC)  /**< Non-continuous feature of any subtype */
 #define DDCA_NON_TABLE      (DDCA_CONT | DDCA_NC)                        /**< Non-table feature of any type */
 
-#define DDCA_TABLE          (DDCA_READABLE_TABLE | DDCA_WO_TABLE)        /**< Table type feature, of any subtype */
-#define DDCA_KNOWN          (DDCA_CONT | DDCA_NC | DDCA_TABLE)           // TODO: Usage??? Check
+#define DDCA_TABLE          (DDCA_NORMAL_TABLE | DDCA_WO_TABLE)        /**< Table type feature, of any subtype */
+// #define DDCA_KNOWN          (DDCA_CONT | DDCA_NC | DDCA_TABLE)           // *** unused ***
 
 // Additional bits:
 #define DDCA_DEPRECATED     0x01     /**< Feature is deprecated in the specified VCP version */
+
+///@}
 
 
 // Bits in vcp_global_flags:

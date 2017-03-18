@@ -119,7 +119,7 @@ check_valid_operation_by_feature_rec_and_version(
       = get_version_sensitive_feature_flags(frec, vcp_version);
    assert(feature_flags);
    ushort rwflags   = operation_flags & DDCA_RW;
-   ushort typeflags = operation_flags & (DDCA_READABLE_TABLE | DDCA_CONT | DDCA_NC);
+   ushort typeflags = operation_flags & (DDCA_NORMAL_TABLE | DDCA_CONT | DDCA_NC);
    Public_Status_Code result = DDCL_INVALID_OPERATION;
    if ( (feature_flags & rwflags) && (feature_flags & typeflags) )
       result = 0;
@@ -573,7 +573,7 @@ bool hack42(VCP_Feature_Table_Entry * ventry) {
 
    // if (ventry->code >= 0xe0)  {     // is everything promoted to int before comparison?
    if ( (ventry->vcp_global_flags & DDCA_SYNTHETIC) &&
-        (ventry->v20_flags & DDCA_READABLE_TABLE)
+        (ventry->v20_flags & DDCA_NORMAL_TABLE)
       )
    {
       result = false;

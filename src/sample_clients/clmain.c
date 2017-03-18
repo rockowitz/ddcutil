@@ -53,14 +53,14 @@
 // For WO NC features.  There's no interpretation function or lookup table
 // Used to mark that the feature is defined for a version
 #define DDCA_WO_NC          0x08       // TODO: CHECK USAGE
-#define DDCA_READABLE_TABLE 0x04       /**< Normal table type feature */
+#define DDCA_NORMAL_TABLE 0x04       /**< Normal table type feature */
 #define DDCA_WO_TABLE       0x02       /**< Write only table feature */
 
 #define DDCA_CONT           (DDCA_STD_CONT|DDCA_COMPLEX_CONT)            /**< Continuous feature, of any subtype */
 #define DDCA_NC             (DDCA_SIMPLE_NC|DDCA_COMPLEX_NC|DDCA_WO_NC)  /**< Non-continuous feature of any subtype */
 #define DDCA_NON_TABLE      (DDCA_CONT | DDCA_NC)                        /**< Non-table feature of any type */
 
-#define DDCA_TABLE          (DDCA_READABLE_TABLE | DDCA_WO_TABLE)        /**< Table type feature, of any subtype */
+#define DDCA_TABLE          (DDCA_NORMAL_TABLE | DDCA_WO_TABLE)        /**< Table type feature, of any subtype */
 #define DDCA_KNOWN          (DDCA_CONT | DDCA_NC | DDCA_TABLE)           // TODO: Usage??? Check
 
 // Additional bits:
@@ -93,7 +93,7 @@ char * interpret_version_feature_flags_r(DDCA_Version_Feature_Flags flags, char 
        flags & DDCA_SIMPLE_NC      ? "Non-Continuous (simple), "     : "",
        flags & DDCA_COMPLEX_NC     ? "Non-Continuous (complex), "    : "",
        flags & DDCA_WO_NC          ? "Non-Continuous (write-only), " : "",
-       flags & DDCA_READABLE_TABLE ? "Table (readable), "            : "",
+       flags & DDCA_NORMAL_TABLE ? "Table (readable), "            : "",
        flags & DDCA_WO_TABLE       ? "Table (write-only), "          : "",
        flags & DDCA_DEPRECATED     ? "Deprecated, "                  : ""
        );

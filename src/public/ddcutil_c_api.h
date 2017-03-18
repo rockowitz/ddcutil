@@ -267,6 +267,8 @@ ddca_is_report_ddc_errors_enabled();
  * @param[in]  dispno  display number
  * @param[out] pdid    where to return display identifier handle
  * @return status code
+ *
+ * \ingroup api_display_spec
  * */
 DDCA_Status
 ddca_create_dispno_display_identifier(
@@ -277,7 +279,9 @@ ddca_create_dispno_display_identifier(
  * @param[in]  busno  I2C bus number
  * @param[out] pdid   where to return display identifier handle
  * @return            status code
- * */
+ *
+ * \ingroup api_display_spec
+ */
 DDCA_Status
 ddca_create_busno_display_identifier(
       int                      busno,
@@ -288,6 +292,8 @@ ddca_create_busno_display_identifier(
  * @param[in]  iDisplayIndex ADL display index
  * @param[out] pdid          where to return display identifier handle
  * @return     status code
+ *
+ * \ingroup api_display_spec
  */
 DDCA_Status
 ddca_create_adlno_display_identifier(
@@ -302,6 +308,8 @@ ddca_create_adlno_display_identifier(
  * @param sn     serial number string
  * @param pdid   where to return display identifier handle
  * @return       status code
+ *
+ * \ingroup api_display_spec
  */
 DDCA_Status
 ddca_create_mfg_model_sn_display_identifier(
@@ -314,6 +322,8 @@ ddca_create_mfg_model_sn_display_identifier(
  * @param edid  pointer to 128 byte EDID
  * @param pdid  where to return display identifier handle
  * @return      status code
+ *
+ * \ingroup api_display_spec
  */
 DDCA_Status
 ddca_create_edid_display_identifier(
@@ -325,6 +335,8 @@ ddca_create_edid_display_identifier(
  * @param device USB device number
  * @param pdid   where to return display identifier handle
  * @return       status code
+ *
+ *  \ingroup api_display_spec
  */
 DDCA_Status
 ddca_create_usb_display_identifier(
@@ -340,6 +352,8 @@ ddca_free_display_identifier(
 /** Returns a string representation of a display identifier
  *  @param[in]  did    display indentifier
  *  @return     string representation of display identifier, NULL if invalid
+ *
+ *  \ingroup api_display_spec
  */
 char *
 ddca_repr_display_identifier(
@@ -354,6 +368,8 @@ ddca_repr_display_identifier(
  * @param[in]  did display identifier
  * @param[out] pdref where to return display reference
  * @return     status code
+ *
+ * \ingroup api_display_spec
  */
 DDCA_Status
 ddca_create_display_ref(
@@ -363,6 +379,8 @@ ddca_create_display_ref(
 /** Frees a display reference.
  * @param dref  display reference to free
  * @return status code
+ *
+ * \ingroup api_display_spec
  */
 DDCA_Status
 ddca_free_display_ref(
@@ -379,6 +397,8 @@ ddca_repr_display_ref(
 /** Writes a report on the specified display reference to the current FOUT device
  * @param dref   display reference
  * @param depth  logical indentation depth
+ *
+ * \ingroup api_display_spec
  */
 void
 ddca_report_display_ref(
@@ -394,6 +414,8 @@ ddca_report_display_ref(
  * @param[in]  ddca_dref  display reference for display to open
  * @param[out] p_ddca_dh  where to return display handle
  * @return     status code
+ *
+ * \ingroup api_display_spec
  */
 DDCA_Status
 ddca_open_display(
@@ -403,6 +425,8 @@ ddca_open_display(
 /** Close an open display
  * @param[in]  ddca_dh   display handle
  * @return     DDCA status code
+ *
+ * \ingroup api_display_spec
  */
 DDCA_Status
 ddca_close_display(
@@ -414,6 +438,8 @@ ddca_close_display(
  * @param ddca_dh  display handle
  * @return string  representation of display handle, NULL if
  *                 argument is NULL or not a display handle
+ *
+ *  \ingroup api_display_spec
  */
 char *
 ddca_repr_display_handle(

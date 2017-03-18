@@ -45,14 +45,14 @@
 // MCCS version constants and utilities
 //
 
-const DDCA_MCCS_Version_Spec VCP_SPEC_V10       = {1,0};
-const DDCA_MCCS_Version_Spec VCP_SPEC_V20       = {2,0};
-const DDCA_MCCS_Version_Spec VCP_SPEC_V21       = {2,1};
-const DDCA_MCCS_Version_Spec VCP_SPEC_V30       = {3,0};
-const DDCA_MCCS_Version_Spec VCP_SPEC_V22       = {2,2};
-const DDCA_MCCS_Version_Spec VCP_SPEC_UNKNOWN   = {0,0};    // value for monitor has been queried unsuccessfully
-const DDCA_MCCS_Version_Spec VCP_SPEC_ANY       = {0,0};    // used as query specifier
-const DDCA_MCCS_Version_Spec VCP_SPEC_UNQUERIED = {0xff, 0xff};
+const DDCA_MCCS_Version_Spec VCP_SPEC_V10       = {1,0};   ///< MCCS version 1.0
+const DDCA_MCCS_Version_Spec VCP_SPEC_V20       = {2,0};   ///< MCCS version 2.0
+const DDCA_MCCS_Version_Spec VCP_SPEC_V21       = {2,1};   ///< MCCS version 2.1
+const DDCA_MCCS_Version_Spec VCP_SPEC_V30       = {3,0};   ///< MCCS version 3.0
+const DDCA_MCCS_Version_Spec VCP_SPEC_V22       = {2,2};   ///< MCCS version 2.2
+const DDCA_MCCS_Version_Spec VCP_SPEC_UNKNOWN   = {0,0};   ///< value for monitor has been queried unsuccessfully
+const DDCA_MCCS_Version_Spec VCP_SPEC_ANY       = {0,0};   ///< used as query specifier
+const DDCA_MCCS_Version_Spec VCP_SPEC_UNQUERIED = {0xff, 0xff}; ///< indicates version not queried
 
 
 /* Tests if a #DDCA_MCCS_Version_Spec value represents a valid MCCS version,
@@ -117,19 +117,50 @@ bool vcp_version_le(DDCA_MCCS_Version_Spec v1, DDCA_MCCS_Version_Spec v2) {
    return result;
 }
 
+
+/** CHecks if one #DDCA_MCCS_Version_Spec is greater than another.
+ *
+ * See \see vcp_version_le for discussion of version comparison
+ *
+ * @param val  first version
+ * @param min  second version
+ * @return true/false
+ */
 bool vcp_version_gt(DDCA_MCCS_Version_Spec val, DDCA_MCCS_Version_Spec min) {
    return !vcp_version_le(val,min);
 }
 
+
+/** Test if two DDCA_MCCS_VersionSpec values are identical.
+ * @param v1 first version
+ * @param v2 second version
+ * @return true/false
+ */
 bool vcp_version_eq(DDCA_MCCS_Version_Spec v1,  DDCA_MCCS_Version_Spec v2){
    return (v1.major == v2.major) && (v1.minor == v2.minor);
 }
 
+
+/** Tests if a #DDCA_MCCS_Version_Spec represents "unqueried".
+ *
+ *  Encapsulates the use of a magic number.
+ *
+ *  @param vspec  version spec to test
+ *  @result true/false
+ */
 bool vcp_version_is_unqueried(DDCA_MCCS_Version_Spec vspec) {
    return (vspec.major == 0xff && vspec.minor == 0xff);
 }
 
 
+/** Converts a #DDCA_MCCS_Version_Spec to a printable string,
+ *  handling the special values for unqueried and unknown.
+ *
+ *  @param vspec version spec
+ *  @return string in the form "2.0"
+ *  @retval "unqueried" for VCP_SPEC_UNQUERIED
+ *  @retval "Unknown" for VCP_SPEC_UNKNOWN
+ */
 char * format_vspec(DDCA_MCCS_Version_Spec vspec) {
    static char private_buffer[20];
    if ( vcp_version_eq(vspec, VCP_SPEC_UNQUERIED) )
@@ -177,6 +208,7 @@ char * format_vcp_version_id(DDCA_MCCS_Version_Id version_id) {
    return result;
 }
 
+#ifdef OLD
 char * vcp_version_id_name0(DDCA_MCCS_Version_Id version_id) {
    bool debug = true;
    DBGMSF(debug, "Starting. version_id=%d", version_id);
@@ -197,10 +229,16 @@ char * vcp_version_id_name0(DDCA_MCCS_Version_Id version_id) {
    DBGMSF(debug, "Returning: %s", result);
    return result;
 }
+#endif
 
 
-
-
+/** Converts a string representation of an MCCS version, e.g. "2.2"
+ *  to a version spec (integer pair).
+ *
+ *  @param s  string to convert
+ *  @return integer pair of major and minor versions
+ *  retval DDCA_UNK if invalid string
+ */
 DDCA_MCCS_Version_Spec parse_vspec(char * s) {
    DDCA_MCCS_Version_Spec vspec;
    int ct = sscanf(s, "%hhd . %hhd", &vspec.major, &vspec.minor);
@@ -211,7 +249,12 @@ DDCA_MCCS_Version_Spec parse_vspec(char * s) {
 }
 
 
-
+/** Converts a MCCS version spec (integer pair) to a version id (enumeration).
+ *
+ * @param vspec version spec
+ * @return version id
+ * @retval #DDCA_VUNK if vspec does not represent a valid MCCS version
+ */
 DDCA_MCCS_Version_Id mccs_version_spec_to_id(DDCA_MCCS_Version_Spec vspec) {
    DDCA_MCCS_Version_Id result = DDCA_VUNK;    // initialize to avoid compiler warning
 
@@ -237,6 +280,12 @@ DDCA_MCCS_Version_Id mccs_version_spec_to_id(DDCA_MCCS_Version_Spec vspec) {
 }
 
 
+/** Converts a MCCS version id (enumerated value) to
+ *  a version spec (integer pair).
+ *
+ *  @param id version id
+ *  @return version spec
+ */
 DDCA_MCCS_Version_Spec mccs_version_id_to_spec(DDCA_MCCS_Version_Id id) {
    bool debug = false;
    DBGMSF(debug, "Starting.  id=%d", id);
@@ -258,7 +307,3 @@ DDCA_MCCS_Version_Spec mccs_version_id_to_spec(DDCA_MCCS_Version_Id id) {
    DBGMSF(debug, "Returning: %d.%d", debug, vspec.major, vspec.minor);
    return vspec;
 }
-
-
-
-
