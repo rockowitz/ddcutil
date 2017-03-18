@@ -36,6 +36,7 @@
 #include "public/ddcutil_types.h"
 
 #include "util/edid.h"
+#include "util/string_util.h"
 
 #include "base/core.h"
 #include "base/displays.h"
@@ -53,7 +54,9 @@
  * @return true if ADL interface has been initialized, false if not
  */
 bool adlshim_is_available() {
-   return adl_is_available();
+   bool result = adl_is_available();
+   // DBGMSG("Returning: %s", bool_repr(result));
+   return result;
 }
 
 
@@ -65,7 +68,9 @@ bool adlshim_is_available() {
  * @retval false failure
  */
 bool adlshim_initialize() {
-   return adl_initialize();
+   bool result = adl_initialize();
+   // DBGMSG("Returning: %s", bool_repr(result));
+   return result;
 }
 
 
