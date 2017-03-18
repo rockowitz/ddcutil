@@ -126,11 +126,14 @@ char * interpret_global_feature_flags_r(uint8_t flags, char * buffer, int bufsz)
 
 
 void my_report_version_feature_info(DDCA_Version_Feature_Info * info) {
-   printf("\nVersion Sensitive Feature Information for VCP Feature: 0x%02x - %s\n",  info->feature_code, info->feature_name);
+   printf("\nVersion Sensitive Feature Information for VCP Feature: 0x%02x - %s\n",
+           info->feature_code, info->feature_name);
    printf("VCP version:          %d.%d\n",   info->vspec.major, info->vspec.minor);
-   printf("VCP version id:       %d (%s)\n",
+   printf("VCP version id:       %d (%s) - %s \n",
                info->version_id,
-               ddca_repr_mccs_version_id(info->version_id) );
+               ddca_mccs_version_id_name(info->version_id),
+               ddca_mccs_version_id_desc(info->version_id)
+             );
    printf("Description:          %s\n",  info->desc);
    // printf("info->sl_values = %p\n", info->sl_values);
 #define WORKBUF_SZ 100
@@ -157,7 +160,7 @@ void my_report_version_feature_info(DDCA_Version_Feature_Info * info) {
 
 void test_get_single_feature_info(DDCA_MCCS_Version_Id version_id, DDCA_Vcp_Feature_Code feature_code) {
    printf("\n(%s) Getting metadata for feature 0x%02x, mccs version = %s\n", __func__,
-          feature_code, ddca_mccs_version_id_string(version_id));
+          feature_code, ddca_mccs_version_id_desc(version_id));
    printf("Feature name: %s\n", ddca_get_feature_name(feature_code));
    // DDCA_Version_Feature_Flags feature_flags;
    DDCA_Version_Feature_Info * info;
@@ -173,7 +176,7 @@ void test_get_single_feature_info(DDCA_MCCS_Version_Id version_id, DDCA_Vcp_Feat
 }
 
 void test_get_feature_info(DDCA_MCCS_Version_Id version_id) {
-   printf("\n(%s) Starting.  version_id = %s\n", __func__, ddca_repr_mccs_version_id(version_id));
+   printf("\n(%s) Starting.  version_id = %s\n", __func__, ddca_mccs_version_id_name(version_id));
    DDCA_Vcp_Feature_Code feature_codes[] = {0x02, 0x03, 0x10, 0x43, 0x60};
    int feature_code_ct = sizeof(feature_codes)/sizeof(DDCA_Vcp_Feature_Code);
    int ndx = 0;
@@ -473,7 +476,7 @@ int main(int argc, char** argv) {
             FUNCTION_ERRMSG("ddca_get_mccs_version_id", rc);
          }
          else {
-            printf("(%s) VCP version id: %s\n", __func__, ddca_mccs_version_id_string(version_id));
+            printf("(%s) VCP version id: %s\n", __func__, ddca_mccs_version_id_desc(version_id));
          }
 
          test_get_feature_info(version_id);
