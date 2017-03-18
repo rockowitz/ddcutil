@@ -1,7 +1,7 @@
 /* ddcutil_c_api.c
  *
  * <copyright>
- * Copyright (C) 2015-2016 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2015-2017 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -21,10 +21,16 @@
  * </endcopyright>
  */
 
+/** \file
+ * **ddcutil** C API implementation
+ */
+
 #include <config.h>
 
+/** \cond */
 #include <assert.h>
 #include <string.h>
+/** \endcond */
 
 #include "util/data_structures.h"
 #include "util/report_util.h"
@@ -35,6 +41,7 @@
 #include "base/ddc_errno.h"
 #include "base/ddc_packets.h"
 #include "base/displays.h"
+#include "base/base_init.h"
 #include "base/parms.h"
 #include "vcp/vcp_feature_codes.h"
 #include "vcp/parse_capabilities.h"
@@ -54,8 +61,6 @@
 #include "ddc/ddc_vcp.h"
 
 #include "public/ddcutil_c_api.h"
-
-#include "../base/base_init.h"
 
 
 #define WITH_DR(ddca_dref, action) \
@@ -116,7 +121,12 @@ ddca_ddcutil_version_string() {
  */
 bool
 ddca_built_with_adl() {
-   return adlshim_is_available();
+#ifdef HAVE_ADL
+   return true;
+#else
+   return false;
+#endif
+
 }
 
 /* Indicates whether the ddcutil library was built with support for USB connected monitors. .
@@ -129,6 +139,17 @@ ddca_built_with_usb() {
    return false;
 #endif
 }
+
+/* Indicates whether ADL successfully initialized.
+ * (e.g. fglrx driver not found)
+ *
+ * @return true/false
+ */
+bool
+ddca_adl_is_available() {
+   return adlshim_is_available();
+}
+
 
 // Alternative to individual ddca_built_with...() functions.
 // conciseness vs documentatbility
@@ -156,7 +177,7 @@ ddca_get_build_options() {
 
 static bool library_initialized = false;
 
-/* Initializes the ddcutil library module.
+/** Initializes the ddcutil library module.
  *
  * It is not an error if this function is called more than once.
  */
@@ -786,12 +807,12 @@ ddca_get_mccs_version_id(
 
 
 char *
-ddca_repr_mccs_version_id(DDCA_MCCS_Version_Id version_id) {
+ddca_mccs_version_id_name(DDCA_MCCS_Version_Id version_id) {
    return vcp_version_id_name(version_id);
 }
 
 char *
-ddca_mccs_version_id_string(DDCA_MCCS_Version_Id version_id) {
+ddca_mccs_version_id_desc(DDCA_MCCS_Version_Id version_id) {
    return format_vcp_version_id(version_id);
 }
 

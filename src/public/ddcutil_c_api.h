@@ -102,11 +102,27 @@ bool ddca_built_with_adl(void);
  */
 bool ddca_built_with_usb(void);
 
-/** Queries ddcutil library build options.
+/** Queries the options with which the **ddcutil** library was built.
  *
- * @return  flags
+ * @return  flags byte
+ *
+ *
+ * | Defined Bit  | |
+ * |:-------| :--------------
+ * |#DDCA_BUILT_WITH_ADL  | built with ADL support
+ * |#DDCA_BUILT_WITH_USB  | built with USB support
+ * |#DDCA_BUILT_WITH_FAILSIM | built with failure simulation
+ *
+ * Defined Bits
+ * <table>
+ * <tr><td>#DDCA_BUILT_WITH_ADL</td><td>built with ADL support</td>
+ * <tr><td>#DDCA_BUILT_WITH_USB</td><td>built with USB support
+ * <tr><td>#DDCA_BUILT_WITH_FAILSIM</td><td> built with failure simulation
+ * </table>
+ *
  */
 uint8_t ddca_get_build_options(void);
+
 
 // TODO: Bit ids for ddca_get_build_options() - how to make connection in doxygen?
 /** @brief ddcutil was built with support for AMD Display Library connected monitors */
@@ -114,7 +130,6 @@ uint8_t ddca_get_build_options(void);
 /** ddcutil was built with support for USB connected monitors */
 #define DDCA_BUILT_WITH_USB     0x02
 #define DDCA_BUILT_WITH_FAILSIM 0x04  /**< @brief ddcutil was built with support for failure simulation */
-
 
 //
 // Initialization
@@ -567,10 +582,10 @@ ddca_report_parsed_capabilities(
  */
 DDCA_Status
 ddca_get_feature_info_by_vcp_version(
-      DDCA_Vcp_Feature_Code          feature_code,
-   // DDCT_MCCS_Version_Spec    vspec,
-      DDCA_MCCS_Version_Id      mccs_version_id,
-      DDCA_Version_Feature_Info**    p_info);
+      DDCA_Vcp_Feature_Code         feature_code,
+   // DDCT_MCCS_Version_Spec        vspec,
+      DDCA_MCCS_Version_Id          mccs_version_id,
+      DDCA_Version_Feature_Info**   p_info);
 
 
 /** Gets the VCP feature name.  If different MCCS versions use different names
@@ -591,7 +606,7 @@ ddca_get_feature_name(DDCA_Vcp_Feature_Code feature_code);
  */
 DDCA_Status
 ddca_get_simple_sl_value_table(
-      DDCA_Vcp_Feature_Code            feature_code,
+      DDCA_Vcp_Feature_Code       feature_code,
       DDCA_MCCS_Version_Id        mccs_version_id,
       DDCA_Feature_Value_Table *  p_value_table);   // DDCA_Feature_Value_Entry **
 
@@ -612,8 +627,25 @@ ddca_get_mccs_version_id(
       DDCA_Display_Handle     ddca_dh,
       DDCA_MCCS_Version_Id*   p_id);
 
-char * ddca_repr_mccs_version_id(DDCA_MCCS_Version_Id version_id);
-char * ddca_mccs_version_id_string(DDCA_MCCS_Version_Id version_id);
+/** Returns the symbolic name of a #DDCA_MCCS_Version_Id,
+ *  e.g. "DDCA_V20."
+ *
+ *  @param  version_id  version id value
+ *  @return symbolic name
+ */
+char *
+ddca_mccs_version_id_name(
+      DDCA_MCCS_Version_Id  version_id);
+
+/** Returns the describptive name of a #DDCA_MCCS_Version_Id,
+ *  e.g. "2.0".
+ *
+ *  @param  version_id  version id value
+ *  @return descriptive name
+ */
+char *
+ddca_mccs_version_id_desc(
+      DDCA_MCCS_Version_Id  version_id);
 
 #ifdef UNIMPLEMENTED
 
@@ -630,7 +662,7 @@ DDCA_Status ddct_is_feature_supported(
 // This is a convenience function. Keep?
 DDCA_Status
 ddca_get_feature_info_by_display(
-      DDCA_Display_Handle      ddca_dh,
+      DDCA_Display_Handle           ddca_dh,
       DDCA_Vcp_Feature_Code         feature_code,
       DDCA_Version_Feature_Info **  p_info);
 
@@ -674,7 +706,7 @@ ddct_free_table_value_response(
 DDCA_Status
 ddca_get_nontable_vcp_value(
        DDCA_Display_Handle             ddca_dh,
-       DDCA_Vcp_Feature_Code                feature_code,
+       DDCA_Vcp_Feature_Code           feature_code,
        DDCA_Non_Table_Value_Response * response);
 
 
@@ -693,7 +725,7 @@ ddca_get_nontable_vcp_value(
 DDCA_Status
 ddca_get_table_vcp_value(
        DDCA_Display_Handle     ddca_dh,
-       DDCA_Vcp_Feature_Code        feature_code,
+       DDCA_Vcp_Feature_Code   feature_code,
        int *                   value_len,
        uint8_t**               value_bytes);
 
