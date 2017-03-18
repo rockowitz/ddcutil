@@ -297,7 +297,7 @@ static Status_Code_Info ok_status_code_info = {0, "OK", "success"};
  * @return  pointer to #Status_Code_Info for staus code, NULL if not found
  */
 Status_Code_Info * find_status_code_info(Public_Status_Code status_code) {
-   bool debug = true;
+   bool debug = false;
    // use don't use DBGMSG to avoid circular includes
    if (debug)
       printf("(%s) Starting.  rc = %d\n", __func__, status_code);

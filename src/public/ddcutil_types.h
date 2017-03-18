@@ -211,7 +211,7 @@ typedef void * DDCA_Display_Ref;
  */
 typedef void * DDCA_Display_Handle;
 
-///}
+///@}
 
 
 //
@@ -222,9 +222,9 @@ typedef void * DDCA_Display_Handle;
  *
  */
 typedef enum {
-   DDCA_IO_DEVI2C,     /**< Using DDC to communicate with a /dev/i2c-n device */
-   DDCA_IO_ADL,        /**< Using ADL API */
-   DDCA_IO_USB         /**< Using USB reports for a USB connected monitor */
+   DDCA_IO_DEVI2C,     /**< Use DDC to communicate with a /dev/i2c-n device */
+   DDCA_IO_ADL,        /**< Use ADL API */
+   DDCA_IO_USB         /**< Use USB reports for a USB connected monitor */
 } DDCA_IO_Mode;
 
 
@@ -329,8 +329,9 @@ typedef uint8_t DDCA_Vcp_Feature_Code;
  * #DDCA_Version_Feature_Flags is a byte of flags describing attributes of a
  * VCP feature that can vary by MCCS version.
  *
+ * @remark
  * Exactly 1 of #DDCA_RO, #DDCA_WO, #DDCA_RW is set.
- *
+ * @remark
  * Flags #DDCA_STD_CONT, #DDCA_COMPLEX_CONT, #DDCA_SIMPLE_NC, #DDCA_COMPLEX_NC,
  * #DDCA_WO_NC, #DDCA_NORMAL_TABLE, #DDCA_WO_TABLE refine  the C/NC/TABLE categorization
  * of the VESA MCCS specification.  Exactly 1 of these bits is st.

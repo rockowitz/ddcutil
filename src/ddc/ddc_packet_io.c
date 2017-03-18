@@ -568,7 +568,7 @@ Public_Status_Code ddc_write_read(
       DDC_Packet ** response_packet_ptr_loc
      )
 {
-   bool debug = true;
+   bool debug = false;
    DBGTRC(debug, TRACE_GROUP, "Starting. io dh=%s", display_handle_repr(dh) );
 
    Byte * readbuf = calloc(1, max_read_bytes);

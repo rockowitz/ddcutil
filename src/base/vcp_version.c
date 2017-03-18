@@ -231,6 +231,18 @@ char * vcp_version_id_name0(DDCA_MCCS_Version_Id version_id) {
 }
 #endif
 
+char * vcp_version_id_name(DDCA_MCCS_Version_Id version_id) {
+   bool debug = false;
+   DBGMSF(debug, "Starting. version_id=%d", version_id);
+
+   char * result = vnt_name(version_id_table, version_id);
+
+   DBGMSF(debug, "Returning: %s", result);
+   return result;
+}
+
+
+
 
 /** Converts a string representation of an MCCS version, e.g. "2.2"
  *  to a version spec (integer pair).
