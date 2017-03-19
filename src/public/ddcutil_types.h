@@ -86,6 +86,9 @@ typedef struct {
 // Global Settings
 //
 
+/** Failure information filled in at the time of a program abort,
+ *  before longjmp() is called.
+ */
 typedef struct {
    bool       info_set_fg;
    char       funcname[64];

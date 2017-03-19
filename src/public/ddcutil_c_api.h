@@ -124,10 +124,10 @@ bool ddca_built_with_usb(void);
 uint8_t ddca_get_build_options(void);
 
 
-// TODO: Bit ids for ddca_get_build_options() - how to make connection in doxygen?
+// Bit ids for ddca_get_build_options() - how to make connection in doxygen?
 /** @brief ddcutil was built with support for AMD Display Library connected monitors */
 #define DDCA_BUILT_WITH_ADL     0x01
-/** ddcutil was built with support for USB connected monitors */
+/** @brief ddcutil was built with support for USB connected monitors */
 #define DDCA_BUILT_WITH_USB     0x02
 #define DDCA_BUILT_WITH_FAILSIM 0x04  /**< @brief ddcutil was built with support for failure simulation */
 
@@ -149,10 +149,16 @@ uint8_t ddca_get_build_options(void);
 // Status Codes
 //
 
-/** Returns the name for a ddcutil status code */
+/** Returns the symbolic name for a ddcutil status code
+ * @param status_code numeric status code
+ * @return symbolic name, e.g. EBUSY, DDCRC-INVALID_DATA
+ *  */
 char * ddca_status_code_name(DDCA_Status status_code);
 
-/** Returns a description of a ddcutil status code */
+/** Returns a description of a ddcutil status code
+ * @param status_code numeric status code
+ * @return explanation of status code, e.g. "device or resource busy"
+ */
 char * ddca_status_code_desc(DDCA_Status status_code);
 
 
@@ -177,22 +183,25 @@ ddca_register_jmp_buf(jmp_buf* jb);
  *  when a fatal error occurs.   If a jmp_buf has been registered by
  *  ddca_register_jmp_buf(), the caller can examine this data structure
  *  after an "error" return from setjmp()
+ *
+ *  @return pointer to #DDCA_Global_Failure_Information struct
  */
 DDCA_Global_Failure_Information *
 ddca_get_global_failure_information();
 
-
-// I2C is an inherently unreliable protocol.  The application is responsible for
-// retry management.
-// The maximum number of retries can be tuned.
-// There are 3 retry contexts:
-// - An i2C write followed by a read.  Most DDC operations are of this form.
-// - An I2C write without a subsequent read.  DDC operations to set a VCP feature value
-//   are in this category.
-// - Some DDC operations, such as reading the capabilities string, require multiple
-//   write/read exchanges.  These multi -part exchanges have a separate retry count
-//   for the entire operation.
-
+/***
+I2C is an inherently unreliable protocol.  The application is responsible for
+retry management.
+The maximum number of retries can be tuned.
+There are 3 retry contexts:
+- An i2C write followed by a read.  Most DDC operations are of this form.
+- An I2C write without a subsequent read.  DDC operations to set a VCP feature value
+  are in this category.
+- Some DDC operations, such as reading the capabilities string, require multiple
+  write/read exchanges.  These multi -part exchanges have a separate retry count
+  for the entire operation.
+*/
+///@{
 /** Gets the upper limit on a max tries value that can be set.
  *
  * @return maximum max tries value allowed on set_max_tries()
@@ -216,7 +225,7 @@ DDCA_Status
 ddca_set_max_tries(
       DDCA_Retry_Type retry_type,
       int             max_tries);
-
+///@}
 
 //
 // Message Control
@@ -245,7 +254,7 @@ ddca_set_ferr_to_default();
 
 
 /** Gets the current output level */
-DDCA_Output_Level
+DDCA_Output_Level                   /**< current output level */
 ddca_get_output_level();
 
 /** Sets the output level */
