@@ -29,6 +29,8 @@
 #include <glib-2.0/glib-object.h>
 // #include <gio/gio.h>
 
+// #include "gobject_api/ddcg_gobjects.h"
+
 
 #include "public/ddcutil_c_api.h"   // for ddcg_display_identifier_get_ddct_object()
 

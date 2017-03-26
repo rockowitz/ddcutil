@@ -85,6 +85,8 @@ DDCA_Version_Spec ddct_get_version(void);       // ddcutil version
 
 /**
  * Returns the ddcutil version as a string in the form "major.minor.micro".
+ *
+ * @return version string.
  */
 const char * ddca_ddcutil_version_string();
 
@@ -92,13 +94,17 @@ const char * ddca_ddcutil_version_string();
  * Indicates whether the ddcutil library was built with ADL support.
  *
  * (May be removed.)
+ *
+ * @return true/false
  */
 bool ddca_built_with_adl(void);
 
 /**
- * Indicates whether the ddcutil library was built with support for USB connected monitors. .
+ * Indicates whether the ddcutil library was built with support for USB connected monitors.
  *
  * (May be removed.)
+ *
+ * @return true/false
  */
 bool ddca_built_with_usb(void);
 
@@ -166,7 +172,7 @@ char * ddca_status_code_desc(DDCA_Status status_code);
 // Global Settings
 //
 
-/** To capture certain rare fatal errors in libddcutil. .
+/** To capture certain rare fatal errors in libddcutil.
  *  If not set, library aborts.
  *
  *  @param[in] jb pointer to setjmp()/longjmp() saved registers
