@@ -978,9 +978,22 @@ get_version_sensitive_feature_info(
 }
 #endif
 
+
+/** Gets information about a VCP feature.
+ *
+ *  @param feature_code
+ *  @param mccs_version_id
+ *  @param with_default   if feature code not recognized, return dummy information,
+ *                        otherwise return NULL
+ *  @param version_sensitive
+ *
+ *  @retval pointer to DDCA_Version_Feature_Info
+ *  @retval NULL if feature not found and with_default == false
+ */
+
 DDCA_Version_Feature_Info *
 get_version_feature_info(
-      DDCA_Vcp_Feature_Code        feature_code,
+      DDCA_Vcp_Feature_Code   feature_code,
       DDCA_MCCS_Version_Id    mccs_version_id,
       bool                    with_default,
       bool                    version_sensitive)

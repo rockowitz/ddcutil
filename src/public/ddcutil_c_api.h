@@ -129,13 +129,30 @@ bool ddca_built_with_usb(void);
  */
 uint8_t ddca_get_build_options(void);
 
-
+#ifdef OLD
 // Bit ids for ddca_get_build_options() - how to make connection in doxygen?
 /** @brief ddcutil was built with support for AMD Display Library connected monitors */
 #define DDCA_BUILT_WITH_ADL     0x01
 /** @brief ddcutil was built with support for USB connected monitors */
 #define DDCA_BUILT_WITH_USB     0x02
 #define DDCA_BUILT_WITH_FAILSIM 0x04  /**< @brief ddcutil was built with support for failure simulation */
+#endif
+
+
+// Bit ids for ddca_get_build_options() - how to make connection in doxygen?
+/** Build option flags
+ *
+ * Bit field definitions
+ */
+typedef enum {
+   /** @brief ddcutil was built with support for AMD Display Library connected monitors */
+   DDCA_BUILT_WITH_ADL     = 0x01,
+   /** @brief ddcutil was built with support for USB connected monitors */
+   DDCA_BUILT_WITH_USB     = 0x02,
+  /** @brief ddcutil was built with support for failure simulation */
+   DDCA_BUILT_WITH_FAILSIM = 0x04
+} DDCA_Build_Option_Flags;
+
 
 //
 // Initialization
