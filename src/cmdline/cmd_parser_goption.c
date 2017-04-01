@@ -56,6 +56,7 @@ static int          iAdapterIndex = -1;
 static int          iDisplayIndex = -1;
 static Stats_Type   stats_work    = STATS_NONE;
 
+
 // not currently used
 // Callback function for processing an --adl argument
 gboolean adl_arg_func(const gchar* option_name,
@@ -90,7 +91,7 @@ gboolean output_arg_func(const gchar* option_name,
 
    if (streq(option_name, "-v") || streq(option_name, "--verbose") )
       output_level = DDCA_OL_VERBOSE;
-   else if (streq(option_name, "-t")  || streq(option_name, "--terse"))
+   else if (streq(option_name, "-t")  || streq(option_name, "--terse") || streq(option_name, "--brief") )
       output_level = DDCA_OL_TERSE;
 #ifdef OLD
    else if (streq(option_name, "-p") || streq(option_name, "--program"))
@@ -176,6 +177,7 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
    gboolean show_unsupported_flag = false;
    gboolean version_flag   = false;
    gboolean timestamp_trace_flag = false;
+   gboolean verify_flag    = false;
 // gboolean myhelp_flag    = false;
 // gboolean myusage_flag   = false;
    char *   mfg_id_work    = NULL;
@@ -213,6 +215,8 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
                            G_OPTION_ARG_CALLBACK, output_arg_func,   "Show extended detail",           NULL},
       {"terse",   't',  G_OPTION_FLAG_NO_ARG,
                            G_OPTION_ARG_CALLBACK, output_arg_func,   "Show brief detail",              NULL},
+      {"brief",   '\0', G_OPTION_FLAG_NO_ARG,
+                           G_OPTION_ARG_CALLBACK, output_arg_func,   "Show brief detail",              NULL},
       {"show-unsupported",
                   'U',  0, G_OPTION_ARG_NONE,     &show_unsupported_flag, "Report unsupported features", NULL},
 
@@ -223,6 +227,7 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
       {"force-slave-address",
                   '\0', 0, G_OPTION_ARG_NONE,     &force_slave_flag, "Force I2C slave address",     NULL},
       {"force",   'f',  0, G_OPTION_ARG_NONE,     &force_flag,       "Ignore certain checks",     NULL},
+      {"verify",  '\0', 0, G_OPTION_ARG_NONE,     &verify_flag,      "Read VCP value after setting it", NULL},
 
       // debugging
       {"trace",   '\0', 0, G_OPTION_ARG_STRING_ARRAY, &trace_classes, "Trace classes",         "trace class name" },
@@ -301,6 +306,7 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
    parsed_cmd->stats_types      = stats_work;
    parsed_cmd->sleep_strategy   = sleep_strategy_work;
    parsed_cmd->timestamp_trace  = timestamp_trace_flag;
+   parsed_cmd->verify_setvcp      = verify_flag;
    if (failsim_fn_work) {
 #ifdef ENABLE_FAILSIM
       parsed_cmd->enable_failure_simulation = true;
