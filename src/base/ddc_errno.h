@@ -83,6 +83,7 @@
 #define DDCRC_INVALID_DISPLAY        (-(RCRANGE_DDC_START+25) ) // monitor not found, can't open, no DDC support, etc
 #define DDCL_INTERNAL_ERROR          (-(RCRANGE_DDC_START+26) ) // error that triggers program failure
 #define DDCL_OTHER                   (-(RCRANGE_DDC_START+27) ) // other error (for use during development)
+#define DDCRC_VERIFY                 (-(RCRANGE_DDC_START+28) ) // read after VCP write failed or wrong value
 
 
 // TODO: consider replacing DDCRC_EDID by more generic DDCRC_BAD_DATA, could be used for e.g. invalid capabilities string
