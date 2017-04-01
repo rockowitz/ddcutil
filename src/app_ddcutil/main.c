@@ -372,6 +372,8 @@ int main(int argc, char *argv[]) {
    // overrides setting in init_ddc_services():
    i2c_set_io_strategy(DEFAULT_I2C_IO_STRATEGY);
 
+   set_verify_setvcp(parsed_cmd->verify_setvcp);
+
 #ifndef HAVE_ADL
    if ( is_module_loaded_using_sysfs("fglrx") ) {
       fprintf(stdout, "WARNING: AMD proprietary video driver fglrx is loaded,");
