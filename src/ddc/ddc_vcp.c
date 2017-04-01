@@ -33,6 +33,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "util/report_util.h"
+
 #include "base/ddc_errno.h"
 #include "base/ddc_packets.h"
 #include "base/displays.h"
@@ -45,6 +47,8 @@
 #include "usb/usb_displays.h"
 #include "usb/usb_vcp.h"
 #endif
+
+#include "vcp/vcp_feature_codes.h"
 
 #include "ddc/ddc_multi_part_io.h"
 #include "ddc/ddc_packet_io.h"
@@ -156,6 +160,89 @@ set_table_vcp_value(
 }
 
 
+static bool verify_setvcp = false;
+
+void set_verify_setvcp(bool onoff) {
+   bool debug = false;
+   DBGMSF(debug, "Setging verify_setvcp = %s", bool_repr(onoff));
+   verify_setvcp = onoff;
+}
+
+bool get_verify_setvcp() {
+   return verify_setvcp;
+}
+
+
+bool
+is_rereadable_feature(
+      Display_Handle * dh,
+      DDCA_Vcp_Feature_Code opcode)
+{
+   bool debug = false;
+   DBGMSF(debug, "Starting opcode = 0x%02x", opcode);
+   bool result = false;
+
+   // readable features that should not be read after write
+   DDCA_Vcp_Feature_Code unrereadable_features[] = {
+         0x02,        // new control value
+         0x03,        // soft controls
+         0x60,        // input source ???
+   };
+
+   VCP_Feature_Table_Entry * vfte =
+   vcp_find_feature_by_hexid( opcode);
+   if (vfte) {
+      assert(opcode < 0xe0);
+      DDCA_MCCS_Version_Spec vspec = dh->vcp_version;
+      if ( !vcp_version_eq(dh->vcp_version, VCP_SPEC_UNKNOWN) &&
+           !vcp_version_eq(dh->vcp_version, VCP_SPEC_UNQUERIED ))
+      {
+         result = is_feature_readable_by_vcp_version(vfte, vspec);
+         DBGMSF(debug, "vspec=%d.%d, readable feature = %s", vspec.major, vspec.minor, bool_repr(result));
+      }
+   }
+   if (result) {
+      for (int ndx = 0; ndx < ARRAY_SIZE(unrereadable_features); ndx++) {
+         if ( unrereadable_features[ndx] == opcode ) {
+            result = false;
+            DBGMSF(debug, "Unreadable opcode");
+            break;
+         }
+      }
+   }
+
+   DBGMSF(debug, "Returning: %s", bool_repr(result));
+   return result;
+}
+
+
+bool single_vcp_value_equal(
+      DDCA_Single_Vcp_Value * vrec1,
+      DDCA_Single_Vcp_Value * vrec2)
+{
+   bool debug = false;
+
+   bool result = false;
+   if (vrec1->opcode     == vrec2->opcode &&
+       vrec1->value_type == vrec2->value_type)
+   {
+      switch(vrec1->value_type) {
+      case(DDCA_NON_TABLE_VCP_VALUE):
+            // only check SL byte which would be set for any VCP, monitor
+            result = (vrec1->val.nc.sl == vrec2->val.nc.sl);
+            break;
+      case(DDCA_TABLE_VCP_VALUE):
+            result = (vrec1->val.t.bytect == vrec2->val.t.bytect) &&
+                     (memcmp(vrec1->val.t.bytes, vrec2->val.t.bytes, vrec1->val.t.bytect) == 0 );
+      }
+   }
+   DBGMSF(debug, "Returning: %s", bool_repr(result));
+   return result;
+}
+
+
+
+
 /* Sets a VCP feature value.
  *
  * Arguments:
@@ -170,6 +257,9 @@ set_vcp_value(
       Display_Handle *   dh,
       DDCA_Single_Vcp_Value * vrec)
 {
+   bool debug = false;
+   DBGMSF(debug, "Starting");
+
    Public_Status_Code psc = 0;
    if (vrec->value_type == DDCA_NON_TABLE_VCP_VALUE) {
       psc = set_nontable_vcp_value(dh, vrec->opcode, vrec->val.c.cur_val);
@@ -179,6 +269,38 @@ set_vcp_value(
       psc = set_table_vcp_value(dh, vrec->opcode, vrec->val.t.bytes, vrec->val.t.bytect);
    }
 
+   if (psc == 0 && verify_setvcp) {
+      if (is_rereadable_feature(dh, vrec->opcode) ) {
+         fprintf(FOUT, "Verifying that value of feature 0x%02x successfully set...\n", vrec->opcode);
+         DDCA_Single_Vcp_Value * newval = NULL;
+         psc = get_vcp_value(
+             dh,
+             vrec->opcode,
+             vrec->value_type,
+             &newval);
+         if (psc != 0) {
+            f0printf(FOUT, "Read after write failed. get_vcp_value() returned: %s", psc_desc(psc));
+            psc = DDCRC_VERIFY;
+         }
+         else {
+            if (! single_vcp_value_equal(vrec,newval)) {
+               psc = DDCRC_VERIFY;
+               f0printf(FOUT, "Current value does not match value set.\n");
+            }
+            else {
+               f0printf(FOUT, "Verification succeeded\n");
+            }
+         }
+      }
+      else {
+         fprintf(FOUT, "Feature 0x%02x does not support verification\n", vrec->opcode);
+         // rpt_vstring(0, "Feature 0x%02x does not support verification", vrec->opcode);
+      }
+
+
+   }
+
+   DBGMSF(debug, "Returning: %s", psc_desc(psc));
    return psc;
 }
 

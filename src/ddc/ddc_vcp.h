@@ -33,6 +33,10 @@
 #include "vcp/vcp_feature_values.h"
 
 
+void set_verify_setvcp(bool onoff);
+bool get_verify_setvcp();
+
+
 Public_Status_Code
 set_nontable_vcp_value(
       Display_Handle *          dh,
