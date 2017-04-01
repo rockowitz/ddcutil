@@ -60,6 +60,18 @@ typedef enum {
    STATS_ALL      = 0xFF
 } Stats_Type;
 
+#ifdef FUTURE
+typedef enum {
+   CMD_FLAG_DDCDATA          = 0x01,
+   CMD_FLAG_FORCE            = 0x02,
+   CMD_FLAG_FORCE_SLAVE_ADDR = 0x04,
+   CMD_FLAG_TIMESTAMP_TRACE  = 0x08,
+   CMD_FLAG_SHOW_UNSUPPORTED = 0x10,
+   CMD_FLAG_ENABLE_FAILSIM   = 0x20,
+   CMD_FLAG_VERIFY           = 0x40
+} Parsed_Cmd_Flags;
+#endif
+
 
 #define PARSED_CMD_MARKER  "PCMD"
 typedef
@@ -80,12 +92,16 @@ struct {
    bool                timestamp_trace;    // prepend trace and debug msgs with elapsed time
    bool                show_unsupported;
    bool                enable_failure_simulation;
+   bool                verify_setvcp;
    char *              failsim_control_fn;
    Display_Identifier* pdid;
    Trace_Group         trace;
    DDCA_Output_Level   output_level;
    int                 max_tries[3];
    int                 sleep_strategy;
+#ifdef FUTURE
+   uint16_t            flags;      // Parsed_Cmd_Flags
+#endif
 } Parsed_Cmd;
 
 Parsed_Cmd *  new_parsed_cmd();

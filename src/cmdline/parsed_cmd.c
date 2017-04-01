@@ -25,6 +25,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "util/data_structures.h"
 #include "util/report_util.h"
 
 #include "cmdline/parsed_cmd.h"
@@ -32,6 +33,20 @@
 //
 // Parsed_Cmd data structure
 //
+
+
+#ifdef FUTURE
+Value_Name_Table cmd_flag_table = {
+      VNT(CMD_FLAG_DDCDATA,          "report DDC errors"),
+      VNT(CMD_FLAG_FORCE,            "ignore certain errors"),
+      VNT(CMD_FLAG_FORCE_SLAVE_ADDR, "force slave address setting"),
+      VNT(CMD_FLAG_TIMESTAMP_TRACE,  "include timestamp on trace messages"),
+      VNT(CMD_FLAG_SHOW_UNSUPPORTED, "show unsupported VCP features"),
+      VNT(CMD_FLAG_ENABLE_FAILSIM,   "enable failure simulation"),
+      VNT(CMD_FLAG_VERIFY,           "read VCP features after setting them"),
+};
+#endif
+
 
 /* Allocates new Parsed_Cmd data structure, sets default values.
  *
@@ -76,7 +91,8 @@ void report_parsed_cmd(Parsed_Cmd * parsed_cmd, int depth) {
    rpt_bool("force",       NULL,  parsed_cmd->force,                  d1);
    rpt_bool("force_slave_addr", NULL, parsed_cmd->force_slave_addr,   d1);
    rpt_bool("show_unsupported", NULL, parsed_cmd->show_unsupported,   d1);
-   rpt_bool("timestamp_trace", NULL,  parsed_cmd->timestamp_trace,    d1);
+   rpt_bool("verify_setvcp",    NULL, parsed_cmd->verify_setvcp,       d1);
+   rpt_bool("timestamp_trace",  NULL, parsed_cmd->timestamp_trace,    d1);
    rpt_int_as_hex(
             "trace",       NULL,  parsed_cmd->trace,                  d1);
    rpt_int( "argct",       NULL,  parsed_cmd->argct,                  d1);
@@ -90,6 +106,13 @@ void report_parsed_cmd(Parsed_Cmd * parsed_cmd, int depth) {
    rpt_int("sleep_stragegy", NULL, parsed_cmd->sleep_strategy,       d1);
    rpt_bool("enable_failure_simulation", NULL, parsed_cmd->enable_failure_simulation, d1);
    rpt_str("failsim_control_fn", NULL, parsed_cmd->failsim_control_fn, d1);
+
+#ifdef FUTURE
+   char * interpreted_flags = vnt_interpret_flags(parsed_cmd->flags, cmd_flag_table, false, ", ");
+   rpt_str("flags", NULL, interpreted_flags, d1);
+   free(interpreted_flags);
+#endif
+
 }
 
 
