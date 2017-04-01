@@ -47,6 +47,7 @@
 #include "base/core.h"
 #include "base/ddc_errno.h"
 #include "base/ddc_packets.h"
+#include "base/parms.h"
 #include "base/status_code_mgt.h"
 #include "base/vcp_version.h"
 
@@ -296,9 +297,10 @@ ddc_set_multiple(
 
    int ndx;
    for (ndx=0; ndx < value_ct; ndx++) {
-      // new way
       DDCA_Single_Vcp_Value * vrec = vcp_value_set_get(vset, ndx);
       Byte   feature_code = vrec->opcode;
+
+#ifdef OLD
       assert(vrec->value_type == DDCA_NON_TABLE_VCP_VALUE);     // Table not yet implemented
       ushort new_value    = vrec->val.c.cur_val;
       psc = set_nontable_vcp_value(dh, feature_code, new_value);
@@ -308,6 +310,23 @@ ddc_set_multiple(
          f0printf(FERR, "Terminating.");
          break;
       }
+#endif
+
+      // HACK: will this affect intermittent error of silently failing sets?
+      // pointless, ddc_it2_write_only) calls call_tuned_sleep() after write
+      // if (ndx > 0) {
+      //    sleep_millis_with_trace(DDC_TIMEOUT_MILLIS_DEFAULT, __func__, "before set_vcp_value()");
+      // }
+
+
+      psc = set_vcp_value(dh, vrec);
+      if (psc != 0) {
+         f0printf(FERR, "Error setting value for VCP feature code 0x%02x: %s\n",
+                         feature_code, psc_desc(psc) );
+         f0printf(FERR, "Terminating.");
+         break;
+      }
+
    } // for loop
 
    return psc;
