@@ -416,6 +416,17 @@ ddca_set_max_tries(
 }
 
 
+
+void ddca_set_verify_setvcp(bool onoff) {
+   set_verify_setvcp(onoff);
+}
+
+bool ddca_get_verify_setvcp() {
+   return get_verify_setvcp();
+}
+
+
+
 // TODO: Add functions to access ddcutil's runtime error statistics
 
 

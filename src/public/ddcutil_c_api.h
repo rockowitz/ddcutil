@@ -250,6 +250,11 @@ ddca_set_max_tries(
       int             max_tries);
 ///@}
 
+
+void ddca_set_verify_setvcp(bool onoff);
+bool ddca_get_verify_setvcp();
+
+
 //
 // Message Control
 //
