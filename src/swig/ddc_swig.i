@@ -43,9 +43,10 @@ ddcs_init();
 
 
 %typemap(out) FlagsByte {
-   printf("(typemap:FlagsByte) Starting\n");
+   printf("(typemap:FlagsByte) Starting. Value=0x%02x\n", $1);
    PyObject * pyset = PySet_New(NULL);
    for (int ndx = 0; ndx < 8; ndx++) {
+      printf("(typemap:FlagsByte) testing bit %d, hexval 0x%02x\n", ndx, (1<<ndx) );
       if ($1 & (1<<ndx)) {
          PyObject * iobj = PyInt_FromLong( 1<<ndx);
          int rc = PySet_Add(pyset, iobj);
@@ -147,19 +148,21 @@ DDCA_Status  ddca_set_max_tries(DDCA_Retry_Type retry_type, int max_tries);
 // Message Control
 //
 
-%rename(DDCS_OL_TERSE)   OL_TERSE;
-%rename(DDCS_OL_NORMAL)  OL_NORMAL;
-%rename(DDCS_OL_VERBOSE) OL_VERBOSE;
+%rename(DDCS_Output_Level)  DDCA_Output_Level;
+%rename(DDCS_OL_TERSE)   DDCA_OL_TERSE;
+%rename(DDCS_OL_NORMAL)  DDCA_OL_NORMAL;
+%rename(DDCS_OL_VERBOSE) DDCA_OL_VERBOSE;
 %rename(DDCS_Output_Level) DDCA_Output_Level;
 %rename(ddcs_get_output_level) ddca_get_output_level;
 %rename(ddcs_set_output_level) ddca_set_output_level;
 %rename(ddcs_output_level_name) ddca_output_level_name;
 typedef enum {// OL_DEFAULT=0x01,
               // OL_PROGRAM=0x02,
-              OL_TERSE  =0x04,
-              OL_NORMAL =0x08,
-              OL_VERBOSE=0x10
+              DDCA_OL_TERSE  =0x04,
+              DDCA_OL_NORMAL =0x08,
+              DDCA_OL_VERBOSE=0x10
 } DDCA_Output_Level;
+
 
 DDCA_Output_Level ddca_get_output_level();
 void              ddca_set_output_level(DDCA_Output_Level newval);
@@ -181,31 +184,31 @@ void ddcs_set_fout(FILE * fout);
 // Display Identifiers
 //
 
-typedef void * DDCS_Display_Identifier_p;
+typedef void * DDCS_Display_Identifier;
 
 %feature("autodoc", "0");
-DDCS_Display_Identifier_p ddcs_create_dispno_display_identifier(
+DDCS_Display_Identifier ddcs_create_dispno_display_identifier(
                int dispno);
                
 %feature("autodoc", "1");
-DDCS_Display_Identifier_p ddcs_create_adlno_display_identifier(
+DDCS_Display_Identifier ddcs_create_adlno_display_identifier(
                int iAdapterIndex,
                int iDisplayIndex);
 %feature("autodoc", "sample feature autodoc docstring");
-DDCS_Display_Identifier_p ddcs_create_busno_display_identifier(
+DDCS_Display_Identifier ddcs_create_busno_display_identifier(
                int busno);
-DDCS_Display_Identifier_p ddcs_create_mfg_model_sn_display_identifier(
+DDCS_Display_Identifier ddcs_create_mfg_model_sn_display_identifier(
                const char * mfg_id,
                const char * model,
                const char * sn);
-DDCS_Display_Identifier_p ddcs_create_edid_display_identifier(
+DDCS_Display_Identifier ddcs_create_edid_display_identifier(
                const uint8_t * byte_buffer, 
                int bytect);
-DDCS_Display_Identifier_p ddcs_create_usb_display_identifier(
+DDCS_Display_Identifier ddcs_create_usb_display_identifier(
                int bus,
                int device);
-void ddcs_free_display_identifier(DDCS_Display_Identifier_p ddcs_did);
-char * ddcs_repr_display_identifier(DDCS_Display_Identifier_p ddcs_did);
+void ddcs_free_display_identifier(DDCS_Display_Identifier ddcs_did);
+char * ddcs_repr_display_identifier(DDCS_Display_Identifier ddcs_did);
 
 
 %feature("feature docstring");
@@ -213,21 +216,21 @@ char * ddcs_repr_display_identifier(DDCS_Display_Identifier_p ddcs_did);
 //
 // Display References
 //
-typedef void * DDCS_Display_Ref_p;
-DDCS_Display_Ref_p ddcs_get_display_ref(   DDCS_Display_Identifier_p did);
-void               ddcs_free_display_ref(  DDCS_Display_Ref_p dref);
-char *             ddcs_repr_display_ref(  DDCS_Display_Ref_p dref);
-void               ddcs_report_display_ref(DDCS_Display_Ref_p dref, int depth);
+typedef void * DDCS_Display_Ref;
+DDCS_Display_Ref ddcs_get_display_ref(   DDCS_Display_Identifier did);
+void               ddcs_free_display_ref(  DDCS_Display_Ref dref);
+char *             ddcs_repr_display_ref(  DDCS_Display_Ref dref);
+void               ddcs_report_display_ref(DDCS_Display_Ref dref, int depth);
 
 
 //
 // Display Handles
 //
 
-typedef void * DDCS_Display_Handle_p;
-DDCS_Display_Handle_p ddcs_open_display(DDCS_Display_Ref_p dref);
-void                  ddcs_close_display(DDCS_Display_Handle_p dh);
-char *                ddcs_repr_display_handle(DDCS_Display_Handle_p dh);
+typedef void * DDCS_Display_Handle;
+DDCS_Display_Handle ddcs_open_display(DDCS_Display_Ref dref);
+void                  ddcs_close_display(DDCS_Display_Handle dh);
+char *                ddcs_repr_display_handle(DDCS_Display_Handle dh);
 
 
 //
@@ -236,7 +239,7 @@ char *                ddcs_repr_display_handle(DDCS_Display_Handle_p dh);
 
 
 // unsigned long ddcs_get_feature_info_by_display(
-//                DDCS_Display_Handle_p  dh,
+//                DDCS_Display_Handle  dh,
 //                DDCS_VCP_Feature_Code  feature_code);
 
 
@@ -271,7 +274,7 @@ char *      ddcs_get_feature_name(DDCS_VCP_Feature_Code feature_code);
 // Monitor Capabilities
 //
 
-char * ddcs_get_capabilities_string(DDCS_Display_Handle_p dh);
+char * ddcs_get_capabilities_string(DDCS_Display_Handle dh);
 
 
 //
@@ -289,15 +292,15 @@ typedef struct {
 
 
 DDCS_Non_Table_Value_Response ddcs_get_nontable_vcp_value(
-               DDCS_Display_Handle_p   dh,
+               DDCS_Display_Handle   dh,
                DDCS_VCP_Feature_Code   feature_code);
 
 void ddcs_set_nontable_vcp_value(
-               DDCS_Display_Handle_p   dh,
+               DDCS_Display_Handle   dh,
                DDCS_VCP_Feature_Code   feature_code,
                int                     new_value);
 
-char * ddcs_get_profile_related_values(DDCS_Display_Handle_p dh);
+char * ddcs_get_profile_related_values(DDCS_Display_Handle dh);
 
 void ddcs_set_profile_related_values(char * profile_values_string);
 

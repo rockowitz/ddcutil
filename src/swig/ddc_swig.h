@@ -59,6 +59,16 @@ typedef enum {DDCA_HAS_ADL      = DDCA_BUILT_WITH_ADL,
               DDCA_HAS_FAILSIM  = DDCA_BUILT_WITH_FAILSIM} DDCS_Build_Flags;
 FlagsByte ddcs_get_build_options(void);
 
+#ifdef NO
+// use this to get something that SWIG understands?  correct order?  ugly
+typedef struct {
+   unsigned int pad:                5;
+   unsigned int build_with_failsim: 1;
+   unsigned int built_with_usb:     1;
+   unsigned int built_with_adl:     1;
+} DDCS_Build_Flags_Struct;
+#endif
+
 //
 // Global Settings
 //
@@ -105,62 +115,62 @@ char *        ddcs_get_feature_name(DDCS_VCP_Feature_Code feature_code);
 // Display Identifiers
 //
 
-typedef void * DDCS_Display_Identifier_p;       // opaque
+typedef void * DDCS_Display_Identifier;       // opaque
 
-DDCS_Display_Identifier_p ddcs_create_dispno_display_identifier(
+DDCS_Display_Identifier ddcs_create_dispno_display_identifier(
                int dispno);
-DDCS_Display_Identifier_p ddcs_create_adlno_display_identifier(
+DDCS_Display_Identifier ddcs_create_adlno_display_identifier(
                int iAdapterIndex,
                int iDisplayIndex);
-DDCS_Display_Identifier_p ddcs_create_busno_display_identifier(
+DDCS_Display_Identifier ddcs_create_busno_display_identifier(
                int busno);
-DDCS_Display_Identifier_p ddcs_create_mfg_model_sn_display_identifier(
+DDCS_Display_Identifier ddcs_create_mfg_model_sn_display_identifier(
                const char * mfg_id,
                const char * model,
                const char * sn);
-DDCS_Display_Identifier_p ddcs_create_edid_display_identifier(
+DDCS_Display_Identifier ddcs_create_edid_display_identifier(
                const uint8_t * byte_buffer,
                int bytect);
-DDCS_Display_Identifier_p ddcs_create_usb_display_identifier(
+DDCS_Display_Identifier ddcs_create_usb_display_identifier(
                int bus,
                int device);
-void ddcs_free_display_identifier(DDCS_Display_Identifier_p ddcs_did);
-char * ddcs_repr_display_identifier(DDCS_Display_Identifier_p ddcs_did);
+void   ddcs_free_display_identifier(DDCS_Display_Identifier ddcs_did);
+char * ddcs_repr_display_identifier(DDCS_Display_Identifier ddcs_did);
 
 
 //
 // Display References
 //
 
-typedef void * DDCS_Display_Ref_p;     // opaque
+typedef void * DDCS_Display_Ref;     // opaque
 
-DDCS_Display_Ref_p ddcs_get_display_ref(   DDCS_Display_Identifier_p did);
-void               ddcs_free_display_ref(  DDCS_Display_Ref_p dref);
-char *             ddcs_repr_display_ref(  DDCS_Display_Ref_p dref);
-void               ddcs_report_display_ref(DDCS_Display_Ref_p dref, int depth);
+DDCS_Display_Ref ddcs_get_display_ref(   DDCS_Display_Identifier did);
+void             ddcs_free_display_ref(  DDCS_Display_Ref dref);
+char *           ddcs_repr_display_ref(  DDCS_Display_Ref dref);
+void             ddcs_report_display_ref(DDCS_Display_Ref dref, int depth);
 
 
 //
 // Display Handles
 //
 
-typedef void * DDCS_Display_Handle_p;   // opaque
+typedef void * DDCS_Display_Handle;   // opaque
 
-DDCS_Display_Handle_p ddcs_open_display(DDCS_Display_Ref_p dref);
-void ddcs_close_display(DDCS_Display_Handle_p dh);
-char * ddcs_repr_display_handle(DDCS_Display_Handle_p dh);
+DDCS_Display_Handle ddcs_open_display(DDCS_Display_Ref dref);
+void                ddcs_close_display(DDCS_Display_Handle dh);
+char *              ddcs_repr_display_handle(DDCS_Display_Handle dh);
 
 
 //
 // Miscellaneous Display Specific Functions
 //
 
-DDCS_MCCS_Version_Spec ddcs_get_mccs_version(DDCS_Display_Handle_p dh);
+DDCS_MCCS_Version_Spec ddcs_get_mccs_version(DDCS_Display_Handle dh);
 
 #ifdef OLD
 // DEPRECATED
 unsigned long ddcs_get_feature_info_by_display(
-               DDCS_Display_Handle_p    dh,
+               DDCS_Display_Handle    dh,
                DDCS_VCP_Feature_Code    feature_code);
 #endif
 
@@ -169,7 +179,7 @@ unsigned long ddcs_get_feature_info_by_display(
 // Capabilities
 //
 
-char * ddcs_get_capabilities_string(DDCS_Display_Handle_p dh);
+char * ddcs_get_capabilities_string(DDCS_Display_Handle dh);
 
 
 //
@@ -186,15 +196,15 @@ typedef struct {
 } DDCS_Non_Table_Value_Response;
 
 DDCS_Non_Table_Value_Response ddcs_get_nontable_vcp_value(
-               DDCS_Display_Handle_p   dh,
+               DDCS_Display_Handle   dh,
                DDCS_VCP_Feature_Code   feature_code);
 
 void ddcs_set_nontable_vcp_value(
-               DDCS_Display_Handle_p   dh,
+               DDCS_Display_Handle   dh,
                DDCA_Vcp_Feature_Code        feature_code,
                int                     new_value);
 
-char * ddcs_get_profile_related_values(DDCS_Display_Handle_p dh);
+char * ddcs_get_profile_related_values(DDCS_Display_Handle dh);
 
 void ddcs_set_profile_related_values(char * profile_values_string);
 

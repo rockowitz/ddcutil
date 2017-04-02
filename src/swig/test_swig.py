@@ -5,6 +5,25 @@ import ddc_swig
 # print dir(ddc_swig)
 from ddc_swig import *
 
+def get_build_information():
+   ddcutil_version = ddcs_ddcutil_version_string()
+   print('ddcutil version:   %s' % ddcutil_version)
+   build_flags = ddcs_get_build_options()
+   print( 'build_flags: %s' % repr(build_flags))
+   # for v in build_flags:
+   #    print v
+   # print( 'len(build_flags) = %d' % len(build_flags))
+   # print( 'DDCS_HAS_ADL:  %s' % DDCS_HAS_ADL)
+   # print( 'DDCS_HAS_USB:  %s' % DDCS_HAS_USB)
+   # print( 'DDCS_HAS_FAILSIM: %s' % DDCS_HAS_FAILSIM)
+   # n. requires parentheses around ( .. in ..)
+   print( "Built with USB support:         %s" % (DDCS_HAS_USB     in build_flags))
+   print( "Built with ADL support:         %s" % (DDCS_HAS_ADL     in build_flags))
+   print( "Built with failure simulation:  %s" % (DDCS_HAS_FAILSIM in build_flags))
+
+
+
+
 def test1():
    print "Default output level: %d" % ddcs_get_output_level()
    ddcs_set_output_level(DDCS_OL_VERBOSE);
@@ -51,5 +70,9 @@ def test1():
 if __name__ == "__main__":
    print "(test_swig)"
    print dir(ddc_swig)
-   test1()
+   print 
+   get_build_information()
+   print
+   # test1()
+
 
