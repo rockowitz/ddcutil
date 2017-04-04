@@ -43,6 +43,7 @@
 #include "base/ddc_packets.h"
 #include "base/linux_errno.h"
 #include "base/parms.h"
+#include "base/sleep.h"
 
 #include "i2c/i2c_bus_core.h"
 #include "i2c/i2c_do_io.h"
@@ -172,8 +173,6 @@ get_raw_value_for_feature_table_entry(
       FILE *                     msg_fh)
 {
    bool debug = false;
-   // Trace_Group tg = (debug) ? 0xff : TRACE_GROUP;
-   // TRCMSGTG(tg, "Starting");
    DBGTRC(debug, TRACE_GROUP, "Starting");
 
    Public_Status_Code psc = 0;
@@ -290,8 +289,10 @@ collect_raw_feature_set_values(
    Public_Status_Code master_status_code = 0;
    bool debug = false;
    DBGMSF(debug, "Starting.");
-   // Version_Spec vcp_version = get_vcp_version_by_display_handle(dh);
    int features_ct = get_feature_set_size(feature_set);
+   // needed when called from C API, o.w. get get NULL response for first feature
+   // DBGMSG("Inserting sleep() before first call to get_raw_value_for_feature_table_entry()");
+   // sleep_millis_with_trace(DDC_TIMEOUT_MILLIS_DEFAULT, __func__, "initial");
    int ndx;
    for (ndx=0; ndx< features_ct; ndx++) {
       VCP_Feature_Table_Entry * entry = get_feature_set_entry(feature_set, ndx);
