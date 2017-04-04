@@ -561,11 +561,11 @@ Public_Status_Code ddc_write_read_raw(
  */
 Public_Status_Code ddc_write_read(
       Display_Handle * dh,
-      DDC_Packet *  request_packet_ptr,
-      int           max_read_bytes,
-      Byte          expected_response_type,
-      Byte          expected_subtype,
-      DDC_Packet ** response_packet_ptr_loc
+      DDC_Packet *     request_packet_ptr,
+      int              max_read_bytes,
+      Byte             expected_response_type,
+      Byte             expected_subtype,
+      DDC_Packet **    response_packet_ptr_loc
      )
 {
    bool debug = false;
@@ -651,9 +651,6 @@ Public_Status_Code ddc_write_read_with_retry(
         )
 {
    bool debug = false;
-   // bool tf = IS_TRACING();
-   // if (debug) tf = 0xff;
-   // TRCMSGTF(tf, "Starting. dh=%s", display_handle_repr(dh)  );
    DBGTRC(debug, TRACE_GROUP, "Starting. dh=%s", display_handle_repr(dh)  );
    assert(dh->io_mode != DDCA_IO_USB);
 
@@ -661,6 +658,8 @@ Public_Status_Code ddc_write_read_with_retry(
    int  tryctr;
    bool retryable;
    int  ddcrc_read_all_zero_ct = 0;
+   int  ddcrc_null_response_ct = 0;
+   int  ddcrc_null_response_max = 2;
 
    for (tryctr=0, psc=-999, retryable=true;
         tryctr < max_write_read_exchange_tries && psc < 0 && retryable;
@@ -681,8 +680,12 @@ Public_Status_Code ddc_write_read_with_retry(
       if (psc < 0) {     // n. ADL status codes have been modulated
          DBGMSF(debug, "perform_ddc_write_read() returned %d", psc );
          if (dh->io_mode == DDCA_IO_DEVI2C) {
-            if (psc == DDCRC_NULL_RESPONSE)
-               retryable = false;
+            if (psc == DDCRC_NULL_RESPONSE) {
+               // retryable = false;
+               retryable = (ddcrc_null_response_ct++ < ddcrc_null_response_max);
+               if (retryable)
+                  DBGMSG("DDCRC_NULL_RESPONSE, retrying...");
+            }
             // when is DDCRC_READ_ALL_ZERO actually an error vs the response of the monitor instead of NULL response?
             // On Dell monitors (P2411, U3011) all zero response occurs on unsupported Table features
             // But also seen as a bad response
