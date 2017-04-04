@@ -457,7 +457,7 @@ void report_display_handle(Display_Handle * dh, const char * msg, int depth) {
    int d1 = depth+1;
    if (msg)
       rpt_vstring(depth, "%s", msg);
-   rpt_vstring(d1, "Display_Handle: %p\n", dh);
+   rpt_vstring(d1, "Display_Handle: %p", dh);
    if (dh) {
       if (memcmp(dh->marker, DISPLAY_HANDLE_MARKER, 4) != 0) {
          rpt_vstring(d1, "Invalid marker in struct: 0x%08x, |%.4s|\n",
@@ -486,7 +486,7 @@ void report_display_handle(Display_Handle * dh, const char * msg, int depth) {
             break;
          }
       }
-      rpt_vstring(d1, "   vcp_version:         %d.%d", dh->vcp_version.major, dh->vcp_version.minor);
+      rpt_vstring(d1, "vcp_version:         %d.%d", dh->vcp_version.major, dh->vcp_version.minor);
    }
 }
 
