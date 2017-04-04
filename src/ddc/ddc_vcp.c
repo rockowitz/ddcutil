@@ -52,6 +52,7 @@
 
 #include "ddc/ddc_multi_part_io.h"
 #include "ddc/ddc_packet_io.h"
+#include "ddc/ddc_vcp_version.h"
 
 #include "ddc/ddc_vcp.h"
 
@@ -189,13 +190,13 @@ is_rereadable_feature(
          0x60,        // input source ???
    };
 
-   VCP_Feature_Table_Entry * vfte =
-   vcp_find_feature_by_hexid( opcode);
+   VCP_Feature_Table_Entry * vfte = vcp_find_feature_by_hexid(opcode);
+   // DBGMSF(debug, "vfte=%p", vfte);
    if (vfte) {
       assert(opcode < 0xe0);
-      DDCA_MCCS_Version_Spec vspec = dh->vcp_version;
-      if ( !vcp_version_eq(dh->vcp_version, VCP_SPEC_UNKNOWN) &&
-           !vcp_version_eq(dh->vcp_version, VCP_SPEC_UNQUERIED ))
+      DDCA_MCCS_Version_Spec vspec = get_vcp_version_by_display_handle(dh);  // ensure dh->vcp_version set
+      if ( !vcp_version_eq(vspec, VCP_SPEC_UNKNOWN) &&
+           !vcp_version_eq(vspec, VCP_SPEC_UNQUERIED ))
       {
          result = is_feature_readable_by_vcp_version(vfte, vspec);
          DBGMSF(debug, "vspec=%d.%d, readable feature = %s", vspec.major, vspec.minor, bool_repr(result));
@@ -327,8 +328,6 @@ Public_Status_Code get_nontable_vcp_value(
        Parsed_Nontable_Vcp_Response** ppInterpretedCode)
 {
    bool debug = false;
-   // Trace_Group tg = TRACE_GROUP;  if (debug) tg = 0xFF;
-   // TRCMSGTG(tg, "Reading feature 0x%02x", feature_code);
    DBGTRC(debug, TRACE_GROUP, "Reading feature 0x%02x", feature_code);
 
    Public_Status_Code psc = 0;
@@ -463,12 +462,10 @@ Public_Status_Code
 get_vcp_value(
        Display_Handle *          dh,
        Byte                      feature_code,
-       DDCA_Vcp_Value_Type            call_type,
-       DDCA_Single_Vcp_Value **       pvalrec)
+       DDCA_Vcp_Value_Type       call_type,
+       DDCA_Single_Vcp_Value **  pvalrec)
 {
    bool debug = false;
-   // Trace_Group tg = TRACE_GROUP;  if (debug) tg = 0xFF;
-   // TRCMSGTG(tg, "Starting. Reading feature 0x%02x", feature_code);
    DBGTRC(debug, TRACE_GROUP, "Starting. Reading feature 0x%02x, dh=%s, dh->fh=%d",
             feature_code, display_handle_repr(dh), dh->fh);
 

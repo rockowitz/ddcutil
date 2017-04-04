@@ -1253,6 +1253,8 @@ ddca_get_vcp_value(
       DDCA_Vcp_Value_Type       call_type,   // why is this needed?   look it up from dh and feature_code
       DDCA_Single_Vcp_Value **  pvalrec)
 {
+
+
    WITH_DH(ddca_dh,
          {
                *pvalrec = NULL;
@@ -1379,10 +1381,10 @@ ddca_parse_capabilities_string(
       char *                   capabilities_string,
       DDCA_Capabilities **     p_parsed_capabilities)
 {
-   bool debug = true;
+   bool debug = false;
    DBGMSF(debug, "Starting. capabilities_string: |%s|", capabilities_string);
    DDCA_Status psc = DDCL_OTHER;       // DDCL_BAD_DATA?
-   DBGMSF(debug, "psc initialized to %d", psc);
+   DBGMSF(debug, "psc initialized to %s", psc_desc(psc));
    DDCA_Capabilities * result = NULL;
 
    // need to control messages?
@@ -1416,10 +1418,17 @@ ddca_parse_capabilities_string(
 
             // cur_cap_vcp->raw_values = strdup(cur_cfr->value_string);
             // TODO: get values from Byte_Bit_Flags cur_cfr->bbflags
+#ifdef OLD_BVA
             Byte_Value_Array bva = cur_cfr->values;
             if (bva) {
                cur_cap_vcp->value_ct = bva_length(bva);
                cur_cap_vcp->values = bva_bytes(bva);     // makes copy of bytes
+            }
+#endif
+            if (cur_cfr->bbflags) {
+               cur_cap_vcp->value_ct = bbf_count_set(cur_cfr->bbflags);
+               cur_cap_vcp->values   = calloc(1, cur_cap_vcp->value_ct);
+               bbf_to_bytes(cur_cfr->bbflags, cur_cap_vcp->values, cur_cap_vcp->value_ct);
             }
          }
       }
@@ -1461,7 +1470,7 @@ ddca_report_parsed_capabilities(
       DDCA_Capabilities * pcaps,
       int                 depth)
 {
-   bool debug = true;
+   bool debug = false;
    DBGMSF(debug, "Starting");
    assert(pcaps && memcmp(pcaps->marker, DDCA_CAPABILITIES_MARKER, 4) == 0);
    int d1 = depth+1;
@@ -1493,7 +1502,6 @@ ddca_get_profile_related_values(
    WITH_DH(ddca_dh,
       {
          bool debug = false;
-         // set_output_level(OL_PROGRAM);  // not needed for _new() variant
          DBGMSF(debug, "Before dumpvcp_to_string_by_display_handle(), pprofile_values_string=%p, *pprofile_values_string=%p",
                pprofile_values_string, *pprofile_values_string);
          psc = dumpvcp_as_string(dh, pprofile_values_string);

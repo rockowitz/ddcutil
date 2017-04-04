@@ -128,26 +128,26 @@ char * interpret_global_feature_flags_r(uint8_t flags, char * buffer, int bufsz)
 void my_report_version_feature_info(DDCA_Version_Feature_Info * info) {
    printf("\nVersion Sensitive Feature Information for VCP Feature: 0x%02x - %s\n",
            info->feature_code, info->feature_name);
-   printf("VCP version:          %d.%d\n",   info->vspec.major, info->vspec.minor);
-   printf("VCP version id:       %d (%s) - %s \n",
-               info->version_id,
-               ddca_mccs_version_id_name(info->version_id),
-               ddca_mccs_version_id_desc(info->version_id)
+   printf("   VCP version:          %d.%d\n",   info->vspec.major, info->vspec.minor);
+   printf("   VCP version id:       %d (%s) - %s \n",
+                  info->version_id,
+                  ddca_mccs_version_id_name(info->version_id),
+                  ddca_mccs_version_id_desc(info->version_id)
              );
-   printf("Description:          %s\n",  info->desc);
+   printf("   Description:          %s\n",  info->desc);
    // printf("info->sl_values = %p\n", info->sl_values);
 #define WORKBUF_SZ 100
    char workbuf[WORKBUF_SZ];
-   printf("Version insensitive flags: %s\n",
+   printf("   Version insensitive flags: %s\n",
           interpret_global_feature_flags_r(info->global_flags, workbuf, WORKBUF_SZ));
-   printf("Version sensitive flags: %s\n",
+   printf("   Version sensitive flags: %s\n",
           interpret_version_feature_flags_r(info->feature_flags, workbuf, WORKBUF_SZ));
 #undef WORKBUF_SZ
    if (info->sl_values) {
-      printf("SL values: \n");
+      printf("   SL values: \n");
       DDCA_Feature_Value_Entry * cur_entry = info->sl_values;
       while (cur_entry->value_name) {
-         printf("   0x%02x - %s\n", cur_entry->value_code,  cur_entry->value_name);
+         printf("      0x%02x - %s\n", cur_entry->value_code,  cur_entry->value_name);
          cur_entry++;
          // printf("cur_entry=%p\n", cur_entry);
       }
@@ -164,44 +164,53 @@ void test_get_single_feature_info(DDCA_MCCS_Version_Id version_id, DDCA_Vcp_Feat
    printf("Feature name: %s\n", ddca_get_feature_name(feature_code));
    // DDCA_Version_Feature_Flags feature_flags;
    DDCA_Version_Feature_Info * info;
-     DDCA_Status rc = ddca_get_feature_info_by_vcp_version(feature_code, version_id, &info);
-     if (rc != 0)
-        FUNCTION_ERRMSG("ddct_get_feature_info", rc);
-     else {
-        // TODO: Version_Specific_Feature_Info needs a report function
-       //  report_ddca_version_feature_flags(feature_code, info->feature_flags);
-        // report_version_feature_info(info, 1);
-        my_report_version_feature_info(info);
-     }
+  DDCA_Status rc = ddca_get_feature_info_by_vcp_version(feature_code, version_id, &info);
+  if (rc != 0)
+     FUNCTION_ERRMSG("ddct_get_feature_info", rc);
+  else {
+     // TODO: Version_Specific_Feature_Info needs a report function
+    //  report_ddca_version_feature_flags(feature_code, info->feature_flags);
+     // report_version_feature_info(info, 1);
+     my_report_version_feature_info(info);
+  }
+  printf("%s) Done.\n", __func__);
 }
 
+
 void test_get_feature_info(DDCA_MCCS_Version_Id version_id) {
-   printf("\n(%s) Starting.  version_id = %s\n", __func__, ddca_mccs_version_id_name(version_id));
+   printf("\n(%s) ===> Starting.  version_id = %s\n", __func__, ddca_mccs_version_id_name(version_id));
+
    DDCA_Vcp_Feature_Code feature_codes[] = {0x02, 0x03, 0x10, 0x43, 0x60};
    int feature_code_ct = sizeof(feature_codes)/sizeof(DDCA_Vcp_Feature_Code);
    int ndx = 0;
    for (; ndx < feature_code_ct; ndx++)
       test_get_single_feature_info(version_id, feature_codes[ndx]);
+
+   printf("%s) Done.\n", __func__);
 }
 
 
-bool
+int
 test_cont_value(
-      DDCA_Display_Handle  dh,
-      DDCA_Vcp_Feature_Code     feature_code)
+      DDCA_Display_Handle     dh,
+      DDCA_Vcp_Feature_Code   feature_code)
 {
+   printf("\n(%s) ===> Starting. dh=%s, feature_code=0x%02x\n",
+          __func__, ddca_repr_display_handle(dh), feature_code);
    DDCA_Status rc;
    bool ok = true;
    char * feature_name = ddca_get_feature_name(feature_code);
+   printf("(%s) Feature name: %s\n", __func__, feature_name);
 
-   // DDCA_Version_Feature_Flags feature_flags;
    DDCA_Version_Feature_Info * info;
    rc = ddca_get_feature_info_by_display(
            dh,    // needed because in rare cases feature info is MCCS version dependent
            feature_code,
            &info);
-   if (rc != 0)
+   if (rc != 0) {
       FUNCTION_ERRMSG("ddct_get_feature_info", rc);
+      ok = false;
+   }
    else {
      //  report_ddca_version_feature_flags(feature_code, info->feature_flags);
       // report_version_feature_info(info, 1);
@@ -209,26 +218,38 @@ test_cont_value(
    }
 
    DDCA_Non_Table_Value_Response non_table_response;
-   rc = ddca_get_nontable_vcp_value(dh, feature_code, &non_table_response);
+   // rc = ddca_get_nontable_vcp_value(dh, feature_code, &non_table_response);
 
-   if (rc != 0)
-      FUNCTION_ERRMSG("ddct_set_continuous_vcp_value", rc);
+   DDCA_Single_Vcp_Value * valrec;
+   rc =
+   ddca_get_vcp_value(
+         dh,
+         feature_code,
+         DDCA_NON_TABLE_VCP_VALUE,   // why is this needed?   look it up from dh and feature_code
+         &valrec);
+   if (rc != 0) {
+      FUNCTION_ERRMSG("ddca_get_vcp_value", rc);
+      ok = false;
+   }
    else {
       printf("(%s) Feature 0x%02x (%s) current value = %d, max value = %d\n",
              __func__, feature_code, feature_name,
-             non_table_response.c.cur_val,
-             non_table_response.c.max_val);
-      int cur_value = non_table_response.c.cur_val;
-      int new_value = cur_value/2;
+             valrec->val.c.cur_val,
+             valrec->val.c.max_val);
+      int old_value = valrec->val.c.cur_val;
+      int new_value = old_value/2;
+      printf("(%s) Setting new value %d,,,\n", __func__, new_value);
       rc = ddca_set_continuous_vcp_value(dh, feature_code, new_value);
       if (rc != 0) {
-         FUNCTION_ERRMSG("ddct_set_continuous_vcp_value", rc);
+         FUNCTION_ERRMSG("ddca_set_continuous_vcp_value", rc);
+         ok = false;
       }
       else {
-         printf("(%s) Setting new value succeeded.\n", __func__);
+         printf("(%s) Setting new value succeeded.  Reading the current value...\n", __func__);
          rc = ddca_get_nontable_vcp_value(dh, feature_code, &non_table_response);
          if (rc != 0) {
-            FUNCTION_ERRMSG("ddct_get_continuous_vcp_value", rc);
+            ok = false;
+            FUNCTION_ERRMSG("ddca_get_nontable_vcp_value", rc);
          }
          else {
             if ( non_table_response.c.cur_val != new_value) {
@@ -236,27 +257,34 @@ test_cont_value(
                       __func__, non_table_response.c.cur_val, new_value);
                ok = false;
             }
+            else {
+               printf("(%s) New current value matches value set\n", __func__);
+            }
          }
+         printf("(%s) Resetting original value %d...\n", __func__, old_value);
          // reset original value
-         rc = ddca_set_continuous_vcp_value(dh, feature_code, cur_value);
+         rc = ddca_set_continuous_vcp_value(dh, feature_code, old_value);
          if (rc != 0) {
-            FUNCTION_ERRMSG("ddct_set_continuous_vcp_value", rc);
+            FUNCTION_ERRMSG("ddca_set_continuous_vcp_value", rc);
+            ok = false;
          }
          else {
             printf("(%s) Resetting original value succeeded.\n", __func__);
             rc = ddca_get_nontable_vcp_value(dh, feature_code, &non_table_response);
             if (rc != 0) {
+               ok = false;
                FUNCTION_ERRMSG("ddct_get_continuous_vcp_value", rc);
             }
             else {
                rc = ddca_get_nontable_vcp_value(dh, feature_code, &non_table_response);
                if (rc != 0) {
+                  ok = false;
                   FUNCTION_ERRMSG("ddct_get_continuous_vcp_value", rc);
                }
                else {
-                  if ( non_table_response.c.cur_val != cur_value) {
+                  if ( non_table_response.c.cur_val != old_value) {
                      printf("(%s) Current value %d does not match original current value %d", __func__,
-                            non_table_response.c.cur_val, cur_value);
+                            non_table_response.c.cur_val, old_value);
                      ok = false;
                   }
                }
@@ -266,11 +294,13 @@ test_cont_value(
 
       }
    }
-   return ( (rc == 0) && ok);
+   printf("(%s) Done. Returning: %d\n", __func__, ok);
+   return ok;
 }
 
-bool test_get_capabilities(DDCA_Display_Handle dh) {
-   printf("\n(%s) Starting.  dh = %s\n", __func__, ddca_repr_display_handle(dh));
+
+void test_get_capabilities(DDCA_Display_Handle dh) {
+   printf("\n(%s) ===> Starting.  dh = %s\n", __func__, ddca_repr_display_handle(dh));
    char * capabilities = NULL;
    DDCA_Status rc =  ddca_get_capabilities_string(dh, &capabilities);
    if (rc != 0)
@@ -300,27 +330,33 @@ bool test_get_capabilities(DDCA_Display_Handle dh) {
          ddca_free_parsed_capabilities(pcaps);
       }
    }
-   return false;
+   printf("(%s) Done.\n", __func__);
 }
 
 
 
 DDCA_Status test_get_set_profile_related_values(DDCA_Display_Handle dh) {
-   printf("\n(%s) Calling ddca_get_profile_related_values()...\n", __func__);
+   printf("\n(%s) ===> Starting.  dh = %s\n", __func__, ddca_repr_display_handle(dh));
+   printf("(%s) Calling ddca_get_profile_related_values()...\n", __func__);
    DDCA_Status psc = 0;
    char* profile_values_string;
    // DBGMSG("&profile_values_string=%p", &profile_values_string);
    psc = ddca_get_profile_related_values(dh, &profile_values_string);
    if (psc != 0) {
       FUNCTION_ERRMSG("ddct_get_profile_related_values", psc);
-   } else {
-      printf("(%s) profile values string = %s\n", __func__, profile_values_string);
+      return psc;
    }
+
+   printf("(%s) profile values string = %s\n", __func__, profile_values_string);
+
+   bool saved_verify_setvcp = ddca_get_verify_setvcp();
+   ddca_set_verify_setvcp(true);
    printf("(%s) Calling ddca_set_profile_related_values()...\n", __func__);
    psc = ddca_set_profile_related_values(profile_values_string);
    if (psc != 0) {
       FUNCTION_ERRMSG("ddca_set_profile_related_values", psc);
    }
+   ddca_set_verify_setvcp(saved_verify_setvcp);
    return psc;
 }
 
@@ -333,6 +369,78 @@ void my_abort_func(Public_Status_Code psc) {
    // exit(EXIT_FAILURE);
 }
 #endif
+
+
+void test_build_information() {
+   printf("\n(%s) ===> Starting. \n", __func__);
+   printf("Probe static build information...\n");
+   // Get the ddcutil version as a string in the form "major.minor.micro".
+   printf("ddcutil version: %s\n", ddca_ddcutil_version_string() );
+
+
+   // old way
+   // printf("(%s) Built with ADL support: %s\n", __func__, (ddca_built_with_adl()) ? "yes" : "no");
+   // printf("(%s) Built with USB support: %s\n", __func__, (ddca_built_with_usb()) ? "yes" : "no");
+
+   uint8_t build_options = ddca_get_build_options();
+   printf("(%s) Built with ADL support: %s\n", __func__, (build_options & DDCA_BUILT_WITH_ADL) ? "yes" : "no");
+   printf("(%s) Built with USB support: %s\n", __func__, (build_options & DDCA_BUILT_WITH_USB) ? "yes" : "no");
+}
+
+
+void test_retry_management() {
+
+  printf("\n(%s) ===> Starting. Exercise retry management functions...\n", __func__);
+
+  int rc = 0;
+
+  // The maximum retry number that can be specified on ddca_set_max_tries().
+  // Any larger number will case the call to fail.
+  int max_max_tries = ddca_get_max_max_tries();
+  printf("Maximum retry count that can be set: %d\n", max_max_tries);
+
+  rc = ddca_set_max_tries(DDCA_WRITE_READ_TRIES, 15);
+  printf("(%s) ddca_set_max_tries(DDCA_WRITE_READ_TRIES,15) returned: %d (%s)\n",
+         __func__, rc, ddca_status_code_name(rc) );
+
+  printf("Calling ddca_set_max_tries() with a retry count that's too large...\n");
+  int badct = max_max_tries + 1;
+  rc = ddca_set_max_tries(DDCA_WRITE_READ_TRIES, badct);
+  printf("(%s) ddca_set_max_tries(DDCA_WRITE_READ_TRIES, %d) returned: %d (%s)\n",
+         __func__, badct, rc, ddca_status_code_name(rc) );
+
+  printf("Setting the count to exactly max_max_tries works...\n");
+  rc = ddca_set_max_tries(DDCA_WRITE_READ_TRIES, max_max_tries);
+  printf("(%s) ddca_set_max_tries(DDCA_WRITE_READ_TRIES, %d) returned: %d (%s)\n",
+         __func__, max_max_tries, rc, ddca_status_code_name(rc) );
+
+  rc = ddca_set_max_tries(DDCA_MULTI_PART_TRIES, 15);
+  if (rc != 0)
+     FUNCTION_ERRMSG("DDCT_MULTI_PART_TRIES:ddct_set_max_tries", rc);
+
+
+  printf("(%s) max write only tries: %d\n", __func__, ddca_get_max_tries(DDCA_WRITE_ONLY_TRIES));
+  printf("(%s) max write read tries: %d\n", __func__, ddca_get_max_tries(DDCA_WRITE_READ_TRIES));
+  printf("(%s) max multi part tries: %d\n", __func__, ddca_get_max_tries(DDCA_MULTI_PART_TRIES));
+}
+
+int test_monitor_detection() {
+   printf("\n(%s) ===> Starting.\n", __func__);
+   printf("Check for monitors using ddca_get_displays()...\n");
+   // Inquire about detected monitors.
+   DDCA_Display_Info_List * dlist = ddca_get_displays();
+   printf("ddca_get_displays() returned %p\n", dlist);
+
+   // A convenience function to report the result of ddca_get_displays()
+   printf("Report the result using ddca_report_display_info_list()...\n");
+   ddca_report_display_info_list(dlist, 0);
+
+   // A similar function that hooks directly into the "ddcutil detect" command.
+   printf("\nCalling ddca_report_active_displays()...\n");
+   int displayct = ddca_report_active_displays(0);
+   printf("ddca_report_active_displays() found %d displays\n", displayct);
+   return displayct;
+}
 
 
 int main(int argc, char** argv) {
@@ -368,73 +476,24 @@ int main(int argc, char** argv) {
    }
    ddca_register_jmp_buf(&abort_buf);
 
-
-   printf("Probe static build information...\n");
-   // Get the ddcutil version as a string in the form "major.minor.micro".
-   printf("ddcutil version: %s\n", ddca_ddcutil_version_string() );
-
    // Query library build settings.
-   printf("(%s) Built with ADL support: %s\n", __func__, (ddca_built_with_adl()) ? "yes" : "no");
-   printf("(%s) Built with USB support: %s\n", __func__, (ddca_built_with_usb()) ? "yes" : "no");
+   // test_build_information();
 
-   uint8_t build_options = ddca_get_build_options();
-   printf("(%s) Built with ADL support: %s\n", __func__, (build_options & DDCA_BUILT_WITH_ADL) ? "yes" : "no");
-   printf("(%s) Built with USB support: %s\n", __func__, (build_options & DDCA_BUILT_WITH_USB) ? "yes" : "no");
-
-
-   //
    // Retry management
-   //
+   // test_retry_management();
 
-   printf("\nExercise retry management functions...\n");
+   // Monitor detection
+   int displayct = test_monitor_detection();
 
-   // The maximum retry number that can be specified on ddca_set_max_tries().
-   // Any larger number will case the call to fail.
-   int max_max_tries = ddca_get_max_max_tries();
-   printf("Maximum retry count that can be set: %d\n", max_max_tries);
+   // printf("\nCreate a Display Identifier for display 2...\n");
+   // rc = ddca_create_dispno_display_identifier(2, &did);
 
-   rc = ddca_set_max_tries(DDCA_WRITE_READ_TRIES, 15);
-   printf("(%s) ddca_set_max_tries(DDCA_WRITE_READ_TRIES,15) returned: %d (%s)\n",
-          __func__, rc, ddca_status_code_name(rc) );
+   printf("\nCreate a Display Identifier for bus 7...\n");
+   rc = ddca_create_busno_display_identifier(7, &did);
 
-   printf("Calling ddca_set_max_tries() with a retry count that's too large...\n");
-   int badct = max_max_tries + 1;
-   rc = ddca_set_max_tries(DDCA_WRITE_READ_TRIES, badct);
-   printf("(%s) ddca_set_max_tries(DDCA_WRITE_READ_TRIES, %d) returned: %d (%s)\n",
-          __func__, badct, rc, ddca_status_code_name(rc) );
+   // printf("\nCreate a Display Identifier for mfg HWP...\n");
+   // rc = ddca_create_mfg_model_sn_display_identifier("HWP", NULL, NULL, &did);
 
-   printf("Setting the count to exactly max_max_tries works...\n");
-   rc = ddca_set_max_tries(DDCA_WRITE_READ_TRIES, max_max_tries);
-   printf("(%s) ddca_set_max_tries(DDCA_WRITE_READ_TRIES, %d) returned: %d (%s)\n",
-          __func__, max_max_tries, rc, ddca_status_code_name(rc) );
-
-   rc = ddca_set_max_tries(DDCA_MULTI_PART_TRIES, 15);
-   if (rc != 0)
-      FUNCTION_ERRMSG("DDCT_MULTI_PART_TRIES:ddct_set_max_tries", rc);
-
-
-   printf("(%s) max write only tries: %d\n", __func__, ddca_get_max_tries(DDCA_WRITE_ONLY_TRIES));
-   printf("(%s) max write read tries: %d\n", __func__, ddca_get_max_tries(DDCA_WRITE_READ_TRIES));
-   printf("(%s) max multi part tries: %d\n", __func__, ddca_get_max_tries(DDCA_MULTI_PART_TRIES));
-
-
-   printf("\nCheck for monitors using ddca_get_displays()...\n");
-   // Inquire about detected monitors.
-   DDCA_Display_Info_List * dlist = ddca_get_displays();
-   printf("ddca_get_displays() returned %p\n", dlist);
-
-   // A convenience function to report the result of ddca_get_displays()
-   printf("Report the result using ddca_report_display_info_list()...\n");
-   ddca_report_display_info_list(dlist, 0);
-
-   // A similar function that hooks directly into the "ddcutil detect" command.
-   printf("\nCalling ddca_report_active_displays()...\n");
-   int displayct = ddca_report_active_displays(0);
-   printf("ddca_report_active_displays() found %d displays\n", displayct);
-
-
-   printf("\nCreate a Display Identifier for display 2...\n");
-   rc = ddca_create_dispno_display_identifier(2, &did);
    assert(rc == 0);
    char * did_repr = ddca_repr_display_identifier(did);
    assert(did_repr);
@@ -479,12 +538,46 @@ int main(int argc, char** argv) {
             printf("(%s) VCP version id: %s\n", __func__, ddca_mccs_version_id_desc(version_id));
          }
 
-         test_get_feature_info(version_id);
+         // test_get_feature_info(version_id);
          test_cont_value(dh, 0x10);
-         test_get_capabilities(dh);
+         // test_get_capabilities(dh);
          test_get_set_profile_related_values(dh);
 
+         rc = ddca_close_display(dh);
+         if (rc != 0)
+            FUNCTION_ERRMSG("ddca_close_display", rc);
+
+
       }
+   }
+
+   for (int dispno = 1; dispno <= displayct; dispno++) {
+      printf("\n(%s) ===> Test loop for display %d\n", __func__, dispno);
+
+      printf("Create a Display Identifier for display %d...\n", dispno);
+      rc = ddca_create_dispno_display_identifier(dispno, &did);
+
+      printf("Create a display reference from the display identifier...\n");
+      rc = ddca_create_display_ref(did, &dref);
+      assert(rc == 0);
+
+      printf("Open the display reference, creating a display handle...\n");
+      rc = ddca_open_display(dref, &dh);
+      if (rc != 0) {
+         FUNCTION_ERRMSG("ddct_open_display", rc);
+         continue;
+      }
+      char * dh_repr = ddca_repr_display_handle(dh);
+      printf("(%s) Opened display handle: %s\n", __func__, dh_repr);
+
+      test_cont_value(dh, 0x10);
+
+
+      rc = ddca_close_display(dh);
+      if (rc != 0)
+         FUNCTION_ERRMSG("ddca_close_display", rc);
+
+
    }
 
 

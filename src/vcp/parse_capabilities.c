@@ -3,7 +3,7 @@
  * Parse the capabilities string
  *
  * <copyright>
- * Copyright (C) 2014-2016 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2014-2017 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -23,12 +23,17 @@
  * </endcopyright>
  */
 
-#include <assert.h>
+/** \file
+ *  Parse the capabilities string returned by DDC, query the parsed data structure.
+ */
 
+/** \cond */
+#include <assert.h>
 #include <glib.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <string.h>
+/** \endcond */
 
 #include "util/string_util.h"
 
@@ -42,6 +47,7 @@
 #include "vcp/parse_capabilities.h"
 
 
+#ifdef TESTS
 // not made static to avoid warning about unused variable
 char* test_cap_strings[] = {
       // GSM LG Ultra HD
@@ -50,26 +56,31 @@ char* test_cap_strings[] = {
       "87ACAEB6C0C6C8C9D6(01 04)DFE4E5E6E7E8E9EAEBED(00 10 20 40)EE(00 01)"
       "FE(01 02 03)FF)mswhql(1)mccs_ver(2.1))",
 };
+#endif
 
 
 //
 // Report parsed data structures
 //
 
-void report_commands(Byte_Value_Array cmd_ids) {
+static void report_commands(Byte_Value_Array cmd_ids) {
    printf("Commands:\n");
    int ct = bva_length(cmd_ids);
    int ndx = 0;
    for (; ndx < ct; ndx++) {
       Byte hval = bva_get(cmd_ids, ndx);
-      printf("  Command: %02x (%s)\n", hval, ddc_cmd_code_name(hval));
+      f0printf(FOUT, "  Command: %02x (%s)\n", hval, ddc_cmd_code_name(hval));
    }
 }
 
 
-void report_features(GPtrArray* features, DDCA_MCCS_Version_Spec vcp_version) {
+static void
+report_features(
+      GPtrArray*             features,     // GPtrArray of Capabilities_Feature_Record
+      DDCA_MCCS_Version_Spec vcp_version)
+{
    bool debug = false;
-   printf("VCP Features:\n");
+   f0printf(FOUT, "VCP Features:\n");
    int ct = features->len;
    int ndx;
    for (ndx=0; ndx < ct; ndx++) {
@@ -81,22 +92,28 @@ void report_features(GPtrArray* features, DDCA_MCCS_Version_Spec vcp_version) {
 }
 
 
-void report_parsed_capabilities(
-        Parsed_Capabilities* pcaps)
-     //   MCCS_IO_Mode io_mode)       // needed for proper error message  -- NO LONGER NEEDED
+/** Reports the Parsed_Capabilities struct for human consumption.
+ *
+ * @param pcaps pointer to ***Parsed_Capabilities***
+ *
+ * Output is written to the current FOUT device.
+ */
+void report_parsed_capabilities(Parsed_Capabilities* pcaps)
 {
    bool debug = false;
    assert(pcaps && memcmp(pcaps->marker, PARSED_CAPABILITIES_MARKER, 4) == 0);
    DBGMSF(debug, "Starting. pcaps->raw_cmds_segment_seen=%s, pcaps->commands=%p, pcaps->vcp_features=%p",
           bool_repr(pcaps->raw_cmds_segment_seen), pcaps->commands, pcaps->vcp_features);
+
    DDCA_Output_Level output_level = get_output_level();
    if (output_level >= DDCA_OL_VERBOSE) {
-      printf("%s capabilities string: %s\n",
+      f0printf(FOUT, "%s capabilities string: %s\n",
             (pcaps->raw_value_synthesized) ? "Synthesized unparsed" : "Unparsed",
             pcaps->raw_value);
    }
    bool damaged = false;
-   printf("MCCS version: %s\n", (pcaps->mccs_version_string) ? pcaps->mccs_version_string : "not present");
+   f0printf(FOUT, "MCCS version: %s\n",
+                  (pcaps->mccs_version_string) ? pcaps->mccs_version_string : "not present");
 
    if (pcaps->commands)
       report_commands(pcaps->commands);
@@ -105,15 +122,17 @@ void report_parsed_capabilities(
       // synthesized and does not include a commands segment
       // also, HP LP2480zx does not have cmds segment
       if (pcaps->raw_cmds_segment_seen)
-      // if (io_mode != USB_IO)
          damaged = true;
    }
    if (pcaps->vcp_features)
       report_features(pcaps->vcp_features, pcaps->parsed_mccs_version);
-   else
-      damaged = true;
+   else {
+      // handle pathological case of 0 length capabilities stirng, e.g. Samsung S32D850T
+      if (pcaps->raw_vcp_features_seen)
+         damaged = true;
+   }
    if (damaged)
-      fprintf(stderr, "Capabilities string not completely parsed\n");
+      f0printf(FOUT, "Capabilities string not completely parsed\n");
 }
 
 
@@ -121,7 +140,7 @@ void report_parsed_capabilities(
 // Lifecycle
 //
 
-/* Create a Parsed_Capabilities record.
+/* Creates a Parsed_Capabilities record.
  *
  * The data structures passed to this function become owned by
  * the newly created Parsed_Capabilties record.
@@ -136,13 +155,15 @@ void report_parsed_capabilities(
  * Returns:
  *    Parsed_Capaibilities record
  */
-Parsed_Capabilities * new_parsed_capabilities(
-                         char *            raw_value,
-                         char *            mccs_ver,
-                         bool              raw_cmds_segment_seen,
-                         Byte_Value_Array  commands,         // each stored byte is command id
-                         GPtrArray *       vcp_features
-                        )
+Parsed_Capabilities *
+new_parsed_capabilities(
+      char *            raw_value,
+      char *            mccs_ver,
+      bool              raw_cmds_segment_seen,
+      bool              raw_vcp_features_seen,
+      Byte_Value_Array  commands,         // each stored byte is command id
+      GPtrArray *       vcp_features
+     )
 {
    bool debug = false;
    DBGMSF(debug, "raw_cmds_segment_seen=%s, commands=%p", bool_repr(raw_cmds_segment_seen), commands);
@@ -174,13 +195,9 @@ Parsed_Capabilities * new_parsed_capabilities(
 }
 
 
-/* Free a Parsed_Capabilities record
+/** Frees a Parsed_Capabilities record
  *
- * Arguments:
- *   pcaps  pointer to Parsed_Capabilities struct
- *
- * Returns:
- *   nothing
+ * @param pcaps  pointer to #Parsed_Capabilities struct
  */
 void free_parsed_capabilities(Parsed_Capabilities * pcaps) {
    bool debug = false;
@@ -295,6 +312,7 @@ Capabilities_Segment * next_capabilities_segment(char * start, int len) {
  */
 //  Alternatively, return a ByteBitFlag instance,
 //  or pass a preallocted instances
+static
 Byte_Value_Array parse_cmds_segment(char * start, int len) {
    bool debug = false;
    DBGMSF(debug, "Starting. start=%p, len=%d", start, len);
@@ -302,7 +320,7 @@ Byte_Value_Array parse_cmds_segment(char * start, int len) {
    Byte_Value_Array cmd_ids2 = bva_create();
    bool ok = store_bytehex_list(start, len, cmd_ids2, bva_appender);
    if (!ok) {
-      fprintf(stderr, "Error processing commands list: %.*s\n", len, start);
+      f0printf(FERR, "Error processing commands list: %.*s\n", len, start);
    }
    // report_id_array(cmd_ids, "Command ids found:");
    if (debug) {
@@ -356,6 +374,7 @@ char * find_closing_paren(char * start, char * end) {
  * Returns:
  *    GPtrArray of Capabilities_Feature_Record *
  */
+static
 GPtrArray * parse_vcp_segment(char * start, int len) {
    bool debug = false;
    GPtrArray* vcp_array = g_ptr_array_sized_new(40);              // initial size
@@ -393,7 +412,7 @@ GPtrArray * parse_vcp_segment(char * start, int len) {
          }
       }
       if (!value_ok) {
-         printf("Feature: %.*s (invalid code)\n", 1, st);
+         f0printf(FOUT, "Feature: %.*s (invalid code)\n", 1, st);
       }
 
       if (*pos == '(') {
@@ -413,7 +432,8 @@ GPtrArray * parse_vcp_segment(char * start, int len) {
       }
 
       if (valid_feature) {
-         Capabilities_Feature_Record * vfr = new_capabilities_feature(cur_feature_id, value_start, value_len);
+         Capabilities_Feature_Record * vfr =
+               new_capabilities_feature(cur_feature_id, value_start, value_len);
          if (debug) {
             DDCA_MCCS_Version_Spec dummy_version = {0,0};
             show_capabilities_feature(vfr, dummy_version);
@@ -426,14 +446,12 @@ bye:
 }
 
 
-/* Parse the entire capabilities string
+/** Parses the entire capabilities string
  *
- * Arguments:
- *    buf_start   starting address of string
- *    buf_len     length of string (not including trailing null)
+ *  @param  buf_start   starting address of string
+ *  @param  buf_len     length of string (not including trailing null)
  *
- * Returns:
- *   pointer to newly allocated ParsedCapabilities structure
+ *  @return pointer to newly allocated ParsedCapabilities structure
  */
 Parsed_Capabilities * parse_capabilities(char * buf_start, int buf_len) {
    // DBGMSG("Substituting test capabilities string");
@@ -455,6 +473,7 @@ Parsed_Capabilities * parse_capabilities(char * buf_start, int buf_len) {
    Byte_Value_Array commands = NULL;
    GPtrArray * vcp_features = NULL;
    bool  raw_cmds_segment_seen = false;
+   bool  raw_vcp_features_seen = false;
 
    // Apple Cinema display violates spec, does not surround capabilities string with parens
    if (buf_start[0] == '(') {
@@ -485,6 +504,7 @@ Parsed_Capabilities * parse_capabilities(char * buf_start, int buf_len) {
               )
       {
          vcp_features = parse_vcp_segment(seg->value_start, seg->value_len);
+         raw_vcp_features_seen = true;
       }
       else if (memcmp(seg->name_start, "mccs_version_string", seg->name_len) == 0) {
          DBGMSF(debug, "MCCS version: %.*s", seg->value_len, seg->value_start);
@@ -504,6 +524,7 @@ Parsed_Capabilities * parse_capabilities(char * buf_start, int buf_len) {
               raw_value,
               mccs_ver_string,          // this pointer is saved in returned struct
               raw_cmds_segment_seen,
+              raw_vcp_features_seen,
               commands,                 // each stored byte is command id
               vcp_features);
 
@@ -516,15 +537,14 @@ Parsed_Capabilities * parse_capabilities(char * buf_start, int buf_len) {
 }
 
 
-/* Parse a capabilities string passed in a Buffer object.
+/** Parses a capabilities string passed in a #Buffer object.
  *
- * Arguments:
- *    capabilities   pointer to Buffer
+ *  @param  capabilities   pointer to #Buffer
  *
- * Returns:
- *   pointer to newly allocated ParsedCapabilities structure
+ *  @return pointer to newly allocated #Parsed_Capabilities structure
  */
-Parsed_Capabilities* parse_capabilities_buffer(Buffer * capabilities) {
+Parsed_Capabilities*
+parse_capabilities_buffer(Buffer * capabilities) {
    // dump_buffer(capabilities);
    int len = capabilities->len - 1;
    while (capabilities->bytes[len] == '\0')  {
@@ -537,26 +557,24 @@ Parsed_Capabilities* parse_capabilities_buffer(Buffer * capabilities) {
 }
 
 
-/* Parse a capabilities string passed as a character string.
+/** Parses a capabilities string passed as a character string.
  *
- * Arguments:
- *    caps     null terminated capabilities string
+ *  @param  caps   null terminated capabilities string
  *
- * Returns:
- *   pointer to newly allocated ParsedCapabilities structure
+ *  @return pointer to newly allocated #Parsed_Capabilities structure
  */
-Parsed_Capabilities* parse_capabilities_string(char * caps) {
+Parsed_Capabilities*
+parse_capabilities_string(char * caps) {
     return parse_capabilities(caps, strlen(caps));
 }
 
 
-/* Returns list of feature ids in a Parsed_Capabilities structure.
+/** Returns list of feature ids in a #Parsed_Capabilities structure.
  *
- * Arguments:
- *   pcaps           pointer to Parsed_Capabilities
- *   readable_only   restrict returned list to readable features
+ *  @param pcaps           pointer to #Parsed_Capabilities
+ *  @param readable_only   restrict returned list to readable features
  *
- * Returns:   Byte_Bit_Flags indicating features found
+ *  @return  #Byte_Bit_Flags indicating features found
  */
 Byte_Bit_Flags
 parsed_capabilities_feature_ids(
@@ -567,21 +585,24 @@ parsed_capabilities_feature_ids(
    bool debug = false;
    DBGMSF(debug, "Starting. readable_only=%s, feature count=%d",
                  bool_repr(readable_only), pcaps->vcp_features->len);
-   Byte_Bit_Flags flags = bbf_create();
-   for (int ndx = 0; ndx < pcaps->vcp_features->len; ndx++) {
-      Capabilities_Feature_Record * frec = g_ptr_array_index(pcaps->vcp_features, ndx);
-      // DBGMSG("Feature 0x%02x", frec->feature_id);
 
-      bool add_feature_to_list = true;
-      if (readable_only) {
-         VCP_Feature_Table_Entry * vfte = vcp_find_feature_by_hexid_w_default(frec->feature_id);
-         if (!is_feature_readable_by_vcp_version(vfte, pcaps->parsed_mccs_version))
-            add_feature_to_list = false;
-         if (vfte->vcp_global_flags & DDCA_SYNTHETIC)
-            free_synthetic_vcp_entry(vfte);
+   Byte_Bit_Flags flags = bbf_create();
+   if (pcaps->vcp_features) {    // pathological case of 0 length capabilities string
+      for (int ndx = 0; ndx < pcaps->vcp_features->len; ndx++) {
+         Capabilities_Feature_Record * frec = g_ptr_array_index(pcaps->vcp_features, ndx);
+         // DBGMSG("Feature 0x%02x", frec->feature_id);
+
+         bool add_feature_to_list = true;
+         if (readable_only) {
+            VCP_Feature_Table_Entry * vfte = vcp_find_feature_by_hexid_w_default(frec->feature_id);
+            if (!is_feature_readable_by_vcp_version(vfte, pcaps->parsed_mccs_version))
+               add_feature_to_list = false;
+            if (vfte->vcp_global_flags & DDCA_SYNTHETIC)
+               free_synthetic_vcp_entry(vfte);
+         }
+         if (add_feature_to_list)
+            bbf_set(flags, frec->feature_id);
       }
-      if (add_feature_to_list)
-         bbf_set(flags, frec->feature_id);
    }
 
    DBGMSF(debug, "Returning Byte_Bit_Flags: %s", bbf_to_string(flags, NULL, 0));
@@ -589,17 +610,16 @@ parsed_capabilities_feature_ids(
 }
 
 
-/* Checks if it's possible that a monitor support table reads.
+/** Checks if it's possible that a monitor support table reads.
  *
  * Alternatively stated, checks the parsed capabilities to see if table
  * reads can definitely be ruled out.
  *
- * Arguments:
- *    pcaps        pointer to Parsed_Capabilities (may be null)
+ * @param   pcaps  pointer to #Parsed_Capabilities (may be null)
  *
- * Returns:        false if pcaps is non-null and a capabilities segment was
- *                 parsed and neither Table Read Request nor Table Read Reply
- *                 was parsed, false otherwise
+ * @return **false** if  **pcaps** is non-null and a commands segment was
+ *         parsed and neither Table Read Request nor Table Read Reply was found,
+ *         **true** otherwise
  */
 bool parsed_capabilities_may_support_table_commands(Parsed_Capabilities * pcaps) {
    bool result = true;
@@ -614,6 +634,7 @@ bool parsed_capabilities_may_support_table_commands(Parsed_Capabilities * pcaps)
 
 
 
+#ifdef TESTS
 //
 // Tests
 //
@@ -638,3 +659,4 @@ void test_parse_caps() {
    report_parsed_capabilities(pcaps);
    free_parsed_capabilities(pcaps);
 }
+#endif

@@ -60,6 +60,7 @@
 #include "ddc/ddc_packet_io.h"
 #include "ddc/ddc_read_capabilities.h"
 #include "ddc/ddc_vcp.h"
+#include "ddc/ddc_vcp_version.h"
 
 
 /** Frees a #Dumpload_Data struct.  The underlying Vcp_Value_set is also freed.
@@ -652,7 +653,7 @@ dumpvcp_as_dumpload_data(
    // timestamp:
    dumped_data->timestamp_millis = time(NULL);
 
-   dumped_data->vcp_version = dh->vcp_version;   // ??? NEED TO USE FUNCTION TO ENSURE SET?
+   dumped_data->vcp_version = get_vcp_version_by_display_handle(dh);  // use function to ensure set
 
    // identification information from edid:
    Parsed_Edid * edid = ddc_get_parsed_edid_by_display_handle(dh);
@@ -672,7 +673,6 @@ dumpvcp_as_dumpload_data(
              dh,
              VCP_SUBSET_PROFILE,
              vset,
-
              true,               //  ignore_unsupported
              FERR);
    if (psc == 0) {
@@ -730,7 +730,7 @@ GPtrArray * convert_dumpload_data_to_string_array(Dumpload_Data * data) {
    snprintf(buf, bufsz, "EDID    %s", hexbuf);
    g_ptr_array_add(strings, strdup(buf));
 
-   if (! vcp_version_eq(data->vcp_version, VCP_SPEC_UNKNOWN)) {
+   if (!vcp_version_eq(data->vcp_version, VCP_SPEC_UNKNOWN)) {
       snprintf(buf, bufsz, "VCP_VERSION %d.%d", data->vcp_version.major, data->vcp_version.minor);
       g_ptr_array_add(strings, strdup(buf));
    }
