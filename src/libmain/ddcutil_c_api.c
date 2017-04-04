@@ -1531,4 +1531,3 @@ int
 ddca_report_active_displays(int depth) {
    return ddc_report_active_displays(depth);
 }
-
