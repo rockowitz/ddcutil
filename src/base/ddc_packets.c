@@ -977,12 +977,10 @@ Status_DDC create_ddc_typed_response_packet(
       const char*  tag,
       DDC_Packet** packet_ptr_addr)
 {
-   // bool debug = adjust_debug_level(true, ddc_packets_trace_level);
+   bool debug = false;
 
-   // if (debug)
-   //    DBGMSG("Starting. i2c_response_bytes=%s", hexstring(i2c_response_bytes,20));
    char * hs =  hexstring(i2c_response_bytes,20);
-   TRCMSG("Starting. i2c_response_bytes=%s", hs );
+   DBGTRC(debug, TRACE_GROUP, "Starting. i2c_response_bytes=%s", hs );
    free(hs);
 
    void * aux_data;
@@ -995,8 +993,8 @@ Status_DDC create_ddc_typed_response_packet(
                expected_type,
                tag,
                packet_ptr_addr);
-   // printf("(%s) create_ddc_response_packet() returned %d, *packet_ptr_addr=%p\n",
-   //       __func__, rc, *packet_ptr_addr);
+   DBGTRC(debug, TRACE_GROUP, "create_ddc_response_packet() returned %s, *packet_ptr_addr=%p",
+                               __func__, psc_desc(rc), *packet_ptr_addr);
    if (rc == 0) {
       DDC_Packet * packet = *packet_ptr_addr;
       switch (expected_type) {
@@ -1049,8 +1047,8 @@ Status_DDC create_ddc_typed_response_packet(
    //    if (rc >= 0)
    //       dump_packet(*packet_ptr_addr);
    // }
-   TRCMSG("returning %s, *packet_ptr=%p", ddcrc_desc(rc), *packet_ptr_addr);
-   if ( IS_TRACING() ) {
+   DBGTRC(debug, TRACE_GROUP, "Returning %s, *packet_ptr=%p", ddcrc_desc(rc), *packet_ptr_addr);
+   if ( debug || IS_TRACING() ) {
       if (rc >= 0)
          dump_packet(*packet_ptr_addr);
    }
