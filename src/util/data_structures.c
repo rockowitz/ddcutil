@@ -286,7 +286,8 @@ bool bbf_is_set(Byte_Bit_Flags bbflags, Byte val) {
    //        __func__, val, flagndx, shiftct, flagbit);
    bool result = flags->byte[flagndx] & flagbit;
    // printf("(%s) bbflags=0x%s, val=0x%02x, returning: %d\n",
-   //        __func__, hexstring(flags->byte,32), val, result);
+   //        __func__, hexstring( (unsigned char *)flags->byte,32), val, result);
+   // printf("(%s) val = 0x%02x, returning %s\n",  __func__, val, bool_repr(result));
    return result;
 }
 
@@ -421,6 +422,31 @@ char * bbf_to_string(Byte_Bit_Flags bbflags, char * buffer, int buflen) {
 }
 
 
+int bbf_to_bytes(Byte_Bit_Flags bbflags, Byte * buffer, int buflen) {
+   // printf("(%s) Starting\n", __func__);
+   BYTE_BIT_UNOPAQUE(flags, bbflags);
+   BYTE_BIT_VALIDATE(flags);
+
+   int bit_set_ct = bbf_count_set(flags);
+   assert(buflen >= bit_set_ct);
+
+   unsigned int bufpos = 0;
+   unsigned int flagno = 0;
+   // printf("(%s) bbflags->byte=0x%s\n", __func__, hexstring(flags->byte,32));
+   for (flagno = 0; flagno < 256; flagno++) {
+      Byte flg = (Byte) flagno;
+      // printf("(%s) flagno=%d, flg=0x%02x\n", __func__, flagno, flg);
+      if (bbf_is_set(flags, flg)) {
+         // printf("(%s) Flag is set: %d, 0x%02x\n", __func__, flagno, flg);
+         buffer[bufpos++] = flg;
+      }
+   }
+   // printf("(%s) Done.  Returning: %d\n", __func__, bupos);
+   return bufpos;
+}
+
+
+
 /** Converts a **Byte_Bit_Flags** instance to a sequence of bytes whose values
  *  correspond to the bits that are set.
  *  The byte sequence is returned in a newly allocated **Buffer**.
@@ -444,6 +470,78 @@ Buffer * bbf_to_buffer(Byte_Bit_Flags bbflags) {
    return buf;
 }
 
+
+#define BBF_ITER_MARKER "BBFI"
+typedef struct {
+   char  marker[4];
+   Byte_Bit_Flags bbflags;
+   int   lastpos;
+} _Byte_Bit_Flags_Iterator;
+
+
+/** Creates an iterator for a #Byte_Bit_Flags instance.
+ *  The iterator is an opaque object.
+ *
+ * \param bbflags handle to #Byte_Bit_Flags instance
+ * \return iterator
+ */
+Byte_Bit_Flags_Iterator bbf_iter_new(Byte_Bit_Flags bbflags) {
+   _Byte_Bit_Flags_Iterator * result = malloc(sizeof(Byte_Bit_Flags_Iterator));
+   memcpy(result->marker, BBF_ITER_MARKER, 4);
+   result->bbflags = bbflags;   // TODO: save pointer to unopaque _BitByteFlags
+   result->lastpos = -1;
+   return result;
+}
+
+
+/** Free a #Byte_Bit_Flags_Iterator.
+ *
+ * \param bbf_iter handle to iterator (may be NULL)
+ */
+void bbf_iter_free(Byte_Bit_Flags_Iterator bbf_iter) {
+   _Byte_Bit_Flags_Iterator * iter = (_Byte_Bit_Flags_Iterator *) bbf_iter;
+
+   if (bbf_iter) {
+      assert(memcmp(iter->marker, BBF_ITER_MARKER, 4) == 0);
+      iter->marker[3] = 'x';
+      free(iter);
+   }
+}
+
+/** Reinitializes an iterator.  Sets the current position before the first
+ *  value.
+ *
+ * \param bbf_iter handle to iterator
+ */
+void bbf_iter_reset(Byte_Bit_Flags_Iterator bbf_iter) {
+   _Byte_Bit_Flags_Iterator * iter = (_Byte_Bit_Flags_Iterator *) bbf_iter;
+   assert(iter && memcmp(iter->marker, BBF_ITER_MARKER, 4) == 0);
+
+   iter->lastpos = -1;
+}
+
+
+/** Returns the number of the next bit that is set.
+ *
+ * \param bbf_iter handle to iterator
+ * \return number of next bit that is set
+ */
+int bbf_iter_next(Byte_Bit_Flags_Iterator bbf_iter) {
+   _Byte_Bit_Flags_Iterator * iter = (_Byte_Bit_Flags_Iterator *) bbf_iter;
+   assert( iter && memcmp(iter->marker, BBF_ITER_MARKER, 4) == 0);
+   // printf("(%s) Starting. lastpos = %d\n", __func__, iter->lastpos);
+
+   int result = -1;
+   for (int ndx = iter->lastpos + 1; ndx < 256; ndx++) {
+      if (bbf_is_set(iter->bbflags, ndx)) {
+         result = ndx;
+         iter->lastpos = ndx;
+         break;
+      }
+   }
+   // printf("(%s) Returning: %d\n", __func__, result);
+   return result;
+}
 
 //
 // Cross functions bba <-> bbf

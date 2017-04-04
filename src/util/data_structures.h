@@ -55,7 +55,7 @@ void             bva_report(Byte_Value_Array ids, char * title);
 bool             bva_store_bytehex_list(Byte_Value_Array bva, char * start, int len);
 
 
-/* An opaque data structure containing 256 flags */
+/** An opaque data structure containing 256 flags */
 typedef void * Byte_Bit_Flags;
 
 Byte_Bit_Flags bbf_create();
@@ -65,8 +65,18 @@ bool           bbf_is_set(Byte_Bit_Flags flags, Byte val);
 Byte_Bit_Flags bbf_subtract(Byte_Bit_Flags bbflags1, Byte_Bit_Flags bbflags2);
 char *         bbf_repr(Byte_Bit_Flags flags, char * buffer, int buflen);
 int            bbf_count_set(Byte_Bit_Flags flags);  // number of bits set
+int            bbf_to_bytes(Byte_Bit_Flags  flags, Byte * buffer, int buflen);
 char *         bbf_to_string(Byte_Bit_Flags flags, char * buffer, int buflen);
 bool           bbf_store_bytehex_list(Byte_Bit_Flags flags, char * start, int len);
+
+/** Opaque iterator for #Byte_Bit_Flags */
+typedef void * Byte_Bit_Flags_Iterator;
+
+Byte_Bit_Flags_Iterator
+               bbf_iter_new(Byte_Bit_Flags bbflags);
+void           bbf_iter_free(Byte_Bit_Flags_Iterator bbf_iter);
+void           bbf_iter_reset(Byte_Bit_Flags_Iterator bbf_iter);
+int            bbf_iter_next(Byte_Bit_Flags_Iterator bbf_iter);
 
 
 //
