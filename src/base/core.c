@@ -846,7 +846,7 @@ void dbgtrc(
       int ct = vsnprintf(buffer, bufsz, format, args);
       va_end(args);
       if (ct >= bufsz) {   // if buffer too small, reallocate
-         printf("(dbgtrc) Reallocating buffer, new size = %d\n", ct+1);
+         // printf("(dbgtrc) Reallocating buffer, new size = %d\n", ct+1);
          // buffer too small, reallocate and try again
          free(buffer);
          free(buf2);
