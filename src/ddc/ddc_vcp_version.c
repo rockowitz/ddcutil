@@ -116,6 +116,10 @@ DDCA_MCCS_Version_Spec get_vcp_version_by_display_handle(Display_Handle * dh) {
    }
    // DBGMSF(debug, "Returning: %d.%d", dh->vcp_version.major, dh->vcp_version.minor);
    assert( !vcp_version_eq(dh->vcp_version, VCP_SPEC_UNQUERIED) );
+   // if (debug) {
+   //    DBGMSG("Done.");
+   //    report_display_handle(dh, /*msg=*/ NULL, 1);
+   // }
    return dh->vcp_version;
 }
 
