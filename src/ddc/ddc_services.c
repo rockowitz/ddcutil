@@ -45,7 +45,15 @@
 #include "ddc/ddc_services.h"
 
 
-/* Master initialization function
+/** Resets all DDC level statistics */
+void ddc_reset_stats() {
+   ddc_reset_write_only_stats();
+   ddc_reset_write_read_stats();
+   ddc_reset_multi_part_read_stats();
+}
+
+
+/** Master initialization function for DDC services
  */
 void init_ddc_services() {
    bool debug = false;
@@ -60,14 +68,17 @@ void init_ddc_services() {
    adlshim_initialize();
 
    // ddc:
-   ddc_reset_write_only_stats();
-   ddc_reset_write_read_stats();
-   ddc_reset_multi_part_read_stats();
+   ddc_reset_stats();
    init_vcp_feature_codes();
    init_ddc_packets();   // 11/2015: does nothing
 }
 
+
 // Located here because this function doesn't really belong anywhere else.
+/** Reports the current max try settings.
+ *
+ *  \param fh where to write output
+ */
 void ddc_show_max_tries(FILE * fh) {
    fprintf(fh, "Maximum Try Settings:\n");
    fprintf(fh, "Operation Type             Current  Default\n");
