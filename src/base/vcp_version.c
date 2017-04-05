@@ -169,6 +169,7 @@ char * format_vspec(DDCA_MCCS_Version_Spec vspec) {
       strcpy(private_buffer,  "Unknown");     // will coverity flag this?
    else
       snprintf(private_buffer, 20, "%d.%d", vspec.major, vspec.minor);
+   // DBGMSG("Returning: |%s|", private_buffer);
    return private_buffer;
 }
 
