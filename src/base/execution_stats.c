@@ -75,6 +75,7 @@ typedef struct {
 } Status_Code_Counts;
 
 
+
 //
 // Global Variables
 //
@@ -85,11 +86,14 @@ static long                 program_start_timestamp;
 static Status_Code_Counts * primary_error_code_counts;
 
 
+
+
 //
 // IO Event Tracking
 //
 
 IO_Event_Type_Stats io_event_stats[] = {
+      // id           name             desc             count  nanosec
       {IE_WRITE,      "IE_WRITE",      "write calls",       0, 0},
       {IE_READ,       "IE_READ",       "read calls",        0, 0},
       {IE_WRITE_READ, "IE_WRITE_READ", "write/read calls",  0, 0},
@@ -98,6 +102,14 @@ IO_Event_Type_Stats io_event_stats[] = {
       {IE_OTHER,      "IE_OTHER",      "other I/O calls",   0, 0},
 };
 #define IO_EVENT_TYPE_CT (sizeof(io_event_stats)/sizeof(IO_Event_Type_Stats))
+
+static
+void reset_io_event_stats() {
+   for (int ndx = 0; ndx < IO_EVENT_TYPE_CT; ndx++) {
+      io_event_stats[ndx].call_count   = 0;
+      io_event_stats[ndx].call_nanosec = 0;
+   }
+}
 
 /** Returns type symbolic name of an even type.
  *
@@ -222,7 +234,7 @@ void report_io_call_stats(int depth) {
 // Status Code Occurrence Tracking
 //
 
-// Design: IO errors are noted in the function that sets gsc negative,
+// Design: IO errors are noted in the function that sets psc negative,
 // do not leave it to caller to set.  That way do not need to keep track
 // if a called function has already set.
 //
@@ -238,6 +250,22 @@ Status_Code_Counts * new_status_code_counts(char * name) {
       pcounts->name = strdup(name);
    return pcounts;
 }
+
+static void
+reset_status_code_counts_struct(Status_Code_Counts * pcounts) {
+   assert(pcounts);
+   if (pcounts->error_counts_hash)
+      g_hash_table_remove_all(pcounts->error_counts_hash);
+   pcounts->total_status_counts = 0;
+}
+
+
+
+static void
+reset_status_code_counts() {
+   reset_status_code_counts_struct(primary_error_code_counts);
+}
+
 
 
 static
@@ -417,6 +445,13 @@ const char * sleep_event_name(Sleep_Event_Type event_type) {
 static int sleep_event_cts_by_id[SLEEP_EVENT_ID_CT];
 static int total_sleep_event_ct = 0;
 static int sleep_strategy = 0;
+
+static
+void reset_sleep_event_counts() {
+   for (int ndx = 0; ndx < SLEEP_EVENT_ID_CT; ndx++) {
+      sleep_event_cts_by_id[ndx] = 0;
+   }
+}
 
 // TODO: create table of sleep strategy number, description
 
@@ -619,4 +654,11 @@ void init_execution_stats() {
    // secondary_status_code_counts = new_status_code_counts("Derived and Other Errors");
    program_start_timestamp = cur_realtime_nanosec();
 }
+
+void reset_execution_stats() {
+   reset_sleep_event_counts();
+   reset_status_code_counts();
+   reset_io_event_stats();
+}
+
 

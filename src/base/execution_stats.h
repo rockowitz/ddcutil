@@ -44,6 +44,8 @@
 
 void init_execution_stats();
 
+void reset_execution_stats();
+
 
 // IO Event Tracking
 
@@ -80,8 +82,8 @@ void show_all_status_counts();
 
 // Sleep Strategy
 
-bool set_sleep_strategy(int strategy);
-int get_sleep_strategy();
+bool   set_sleep_strategy(int strategy);
+int    get_sleep_strategy();
 char * sleep_strategy_desc(int sleep_strategy);
 
 typedef enum {SE_WRITE_TO_READ, SE_POST_OPEN, SE_POST_WRITE, SE_POST_READ } Sleep_Event_Type;
