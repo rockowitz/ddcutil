@@ -98,6 +98,14 @@ static long start_time_nanos;
 
 
 static
+void reset_stats() {
+   ddc_reset_stats();
+   reset_execution_stats();
+}
+
+
+
+static
 void report_stats(Stats_Type stats) {
    if (stats & STATS_TRIES) {
       puts("");
@@ -183,6 +191,9 @@ void probe_display_by_dh(Display_Handle * dh)
    DBGMSF(debug, "Starting. dh=%s", display_handle_repr(dh));
    Public_Status_Code psc = 0;
 
+   printf("\nMfg id: %s, model: %s, sn: %s\n",
+          dh->pedid->mfg_id, dh->pedid->model_name, dh->pedid->serial_ascii);
+
    printf("\nCapabilities for display %s\n", display_handle_repr(dh) );
       // not needed, causes confusing messages if get_vcp_version fails but get_capabilities succeeds
       DDCA_MCCS_Version_Spec vspec = get_vcp_version_by_display_handle(dh);
@@ -199,7 +210,7 @@ void probe_display_by_dh(Display_Handle * dh)
 
       // *** VCP Feature Scan ***
       // printf("\n\nScanning all VCP feature codes for display %d\n", dispno);
-      printf("\n\nScanning all VCP feature codes for display %s\n", display_handle_repr(dh) );
+      printf("\nScanning all VCP feature codes for display %s\n", display_handle_repr(dh) );
       Byte_Bit_Flags features_seen = bbf_create();
       app_show_vcp_subset_values_by_display_handle(
             dh, VCP_SUBSET_SCAN, /* show_unsupported */ true, features_seen);
@@ -553,9 +564,20 @@ int main(int argc, char *argv[]) {
 #ifdef USE_USB
       query_usbenv();
 #endif
+      printf("\nStatistics for environment exploration:\n");
+      report_stats(STATS_ALL);
+      reset_stats();
+
       printf("\n*** Detected Displays ***\n");
       int display_ct = ddc_report_active_displays(0 /* logical depth */);
       // printf("Detected: %d displays\n", display_ct);   // not needed
+      printf("\nStatistics for display detection:\n");
+      report_stats(STATS_ALL);
+      reset_stats();
+
+      printf("Setting output level normal  Table features will be skipped...\n");
+      set_output_level(DDCA_OL_NORMAL);
+
       int dispno = 1;
       // dispno = 2;      // TEMP FOR TESTING
       for (; dispno <= display_ct; dispno++) {
@@ -567,6 +589,9 @@ int main(int argc, char *argv[]) {
          }
 
          probe_display_by_dref(dref);
+         printf("\nStatistics for probe of display %d:\n", dispno);
+         report_stats(STATS_ALL);
+         reset_stats();
       }
       printf("\nDisplay scanning complete.\n");
 
@@ -674,7 +699,7 @@ int main(int argc, char *argv[]) {
       }
    }
 
-   if (parsed_cmd->stats_types != STATS_NONE) {
+   if (parsed_cmd->stats_types != STATS_NONE && parsed_cmd->cmd_id != CMDID_INTERROGATE) {
       report_stats(parsed_cmd->stats_types);
       // report_timestamp_history();  // debugging function
    }
