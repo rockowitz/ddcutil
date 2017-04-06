@@ -51,9 +51,9 @@ int  ddc_get_max_write_read_exchange_tries();
 
 // Retry statistics
 void ddc_reset_write_only_stats();
-void ddc_report_write_only_stats();
+void ddc_report_write_only_stats(int depth);
 void ddc_reset_write_read_stats();
-void ddc_report_write_read_stats();
+void ddc_report_write_read_stats(int depth);
 
 Public_Status_Code ddc_write_only(
       Display_Handle * dh,
@@ -79,6 +79,7 @@ Public_Status_Code ddc_write_read_with_retry(
       Byte             expected_response_type,
       Byte             expected_subtype,
       bool             all_zero_response_ok,
+  //  bool             retry_null_response,
       DDC_Packet **    response_packet_ptr_loc
      );
 

@@ -26,6 +26,7 @@
 
 #include <config.h>
 
+/** \cond */
 #include <assert.h>
 #include <errno.h>
 #include <fcntl.h>
@@ -35,12 +36,15 @@
 #include <string.h>
 #include <sys/ioctl.h>
 #include <unistd.h>
+/** \endcond */
 
+#include "util/debug_util.h"
 #include "util/string_util.h"
 
 #include "base/ddc_errno.h"
 #include "base/displays.h"
 #include "base/parms.h"
+#include "base/sleep.h"
 #include "base/status_code_mgt.h"
 
 #include "i2c/i2c_bus_core.h"
@@ -52,7 +56,7 @@
 #include "usb/usb_displays.h"
 #endif
 
-#include "ddc/try_stats.h"
+#include "ddc/ddc_try_stats.h"
 
 #include "ddc/ddc_packet_io.h"
 
@@ -277,9 +281,9 @@ void ddc_reset_write_read_stats() {
 }
 
 
-void ddc_report_write_read_stats() {
+void ddc_report_write_read_stats(int depth) {
    assert(write_read_stats_rec);
-   try_data_report(write_read_stats_rec);
+   try_data_report(write_read_stats_rec, depth);
 }
 
 
@@ -291,9 +295,9 @@ void ddc_reset_write_only_stats() {
 }
 
 
-void ddc_report_write_only_stats() {
+void ddc_report_write_only_stats(int depth) {
    assert(write_only_stats_rec);
-   try_data_report(write_only_stats_rec);
+   try_data_report(write_only_stats_rec, depth);
 }
 
 
@@ -647,19 +651,27 @@ Public_Status_Code ddc_write_read_with_retry(
          Byte          expected_response_type,
          Byte          expected_subtype,
          bool          all_zero_response_ok,
+     //  bool          retry_null_response,
          DDC_Packet ** response_packet_ptr_loc
         )
 {
    bool debug = false;
-   DBGTRC(debug, TRACE_GROUP, "Starting. dh=%s", display_handle_repr(dh)  );
+   DBGTRC(debug, TRACE_GROUP, "Starting. dh=%s, all_zero_response_ok=%s",
+          display_handle_repr(dh), bool_repr(all_zero_response_ok)  );
    assert(dh->io_mode != DDCA_IO_USB);
+   // show_backtrace(1);
+
+   // will be false on initial call to verify DDC communication
+   // bool null_response_checked = dh->dref->flags & DREF_DDC_NULL_RESPONSE_CHECKED;   // unused
+   bool retry_null_response = !(dh->dref->flags & DREF_DDC_USES_NULL_RESPONSE_FOR_UNSUPPORTED);
 
    Public_Status_Code  psc;
    int  tryctr;
    bool retryable;
    int  ddcrc_read_all_zero_ct = 0;
    int  ddcrc_null_response_ct = 0;
-   int  ddcrc_null_response_max = 2;
+   int  ddcrc_null_response_max = (retry_null_response) ? 3 : 0;
+   // DDCA_Output_Level output_level = get_output_level();    // unused
 
    for (tryctr=0, psc=-999, retryable=true;
         tryctr < max_write_read_exchange_tries && psc < 0 && retryable;
@@ -677,14 +689,40 @@ Public_Status_Code ddc_write_read_with_retry(
                 expected_subtype,
                 response_packet_ptr_loc);
 
+      if (psc == 0 && ddcrc_null_response_ct > 0) {
+         DBGMSG("ddc_write_read() succeeded after %d sleep and retry", ddcrc_null_response_ct);
+      }
+
       if (psc < 0) {     // n. ADL status codes have been modulated
-         DBGMSF(debug, "perform_ddc_write_read() returned %d", psc );
+         DBGMSF(debug, "perform_ddc_write_read() returned %s", psc_desc(psc) );
          if (dh->io_mode == DDCA_IO_DEVI2C) {
+            // The problem: Does NULL response indicate an error condition, or
+            // is the monitor using NULL response to indicate unsupported?
+            // Acer monitor uses NULL response instead of setting the unsupported
+            // flag in a valid response
+
             if (psc == DDCRC_NULL_RESPONSE) {
                // retryable = false;
+// #ifdef WORKS
                retryable = (ddcrc_null_response_ct++ < ddcrc_null_response_max);
-               if (retryable)
-                  DBGMSG("DDCRC_NULL_RESPONSE, retrying...");
+               DBGMSF(debug, "DDCRC_NULL_RESPONSE, retryable=%s", bool_repr(retryable));
+               if (retryable) {
+                  int retry_millisec = ddcrc_null_response_ct * 100;
+                  // if (debug || output_level >= DDCA_OL_VERBOSE)
+                     DBGMSG("DDCRC_NULL_RESPONSE, Sleeping for %d milliseconds, then retrying...",
+                           retry_millisec);
+                  sleep_millis(retry_millisec);
+               }
+// #endif
+#ifdef DOESNT_WORK
+               retryable = true;
+               if ( (dh->dref->flags & DREF_DDC_NULL_RESPONSE_CHECKED) &&
+                    (dh->dref->flags & DREF_DDC_USES_NULL_RESPONSE_FOR_UNSUPPORTED) )
+               {
+                  retryable = false;
+               }
+#endif
+               DBGMSG("DDCRC_NULL_RESPONSE, retryable = %s", bool_repr(retryable) );
             }
             // when is DDCRC_READ_ALL_ZERO actually an error vs the response of the monitor instead of NULL response?
             // On Dell monitors (P2411, U3011) all zero response occurs on unsupported Table features
@@ -728,7 +766,7 @@ Public_Status_Code ddc_write_read_with_retry(
       COUNT_STATUS_CODE(psc);
    }
    try_data_record_tries(write_read_stats_rec, psc, tryctr);
-   DBGTRC(debug, TRACE_GROUP, "Done. psc=%s\n", psc_desc(psc));
+   DBGTRC(debug, TRACE_GROUP, "Done. psc=%s", psc_desc(psc));
    return psc;
 }
 
