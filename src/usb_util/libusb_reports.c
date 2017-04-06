@@ -913,7 +913,7 @@ void report_open_dev(
       bool                    show_hubs,
       int                     depth)
 {
-   bool debug = true;
+   bool debug = false;
    if (debug)
       printf("(%s) Starting.  dev=%p, dh=%p, show_hubs=%s\n", __func__, dev, dh, bool_repr(show_hubs));
 
@@ -1064,9 +1064,8 @@ static void report_retrieved_report_descriptor_and_probe(
                libusb_device_handle* dh,
                Byte *                dbuf,
                int                   dbufct,
-               int                   depth) {
-   // bool debug = true;
-
+               int                   depth)
+{
    int d1 = depth+1;
    int d2 = depth+2;
    // int d3 = depth+3;

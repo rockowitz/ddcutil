@@ -345,7 +345,7 @@ alt_possible_monitor_dev(
       libusb_device *  dev,
       bool             check_forced_monitor)   // NOT CURRENTLY USED!
 {
-   bool debug = true;
+   bool debug = false;
    if (debug)
       printf("(%s) Starting. dev=%p, check_forced_monitor=%s\n",
              __func__, dev, bool_repr(check_forced_monitor));
@@ -464,7 +464,7 @@ get_possible_monitors(
        libusb_device **devs      // null terminated list
       )
 {
-   bool debug = true;
+   bool debug = false;
    if (debug)
       printf("(%s) Starting\n", __func__);
 
@@ -616,7 +616,7 @@ void probe_libusb(bool possible_monitors_only, int depth) {
 
 
 bool libusb_is_monitor_by_path(ushort busno, ushort devno, ushort intfno) {
-   bool debug = true;
+   bool debug = false;
    printf("(%s) Starting. busno=%d 0x%04x, devno=%d 0x%04x, intfno=%d 0x%02x\n",
          __func__, busno, busno, devno, devno, intfno, intfno);
    bool result = false;
