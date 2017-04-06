@@ -202,12 +202,12 @@ is_rereadable_feature(
            vcp_version_eq(vspec, VCP_SPEC_UNQUERIED ))
          vspec = VCP_SPEC_V22;
 
-      if ( !vcp_version_eq(vspec, VCP_SPEC_UNKNOWN) &&
-           !vcp_version_eq(vspec, VCP_SPEC_UNQUERIED ))
-      {
+      // if ( !vcp_version_eq(vspec, VCP_SPEC_UNKNOWN) &&
+      //      !vcp_version_eq(vspec, VCP_SPEC_UNQUERIED ))
+      // {
          result = is_feature_readable_by_vcp_version(vfte, vspec);
          DBGMSF(debug, "vspec=%d.%d, readable feature = %s", vspec.major, vspec.minor, bool_repr(result));
-      }
+      // }
    }
    if (result) {
       for (int ndx = 0; ndx < ARRAY_SIZE(unrereadable_features); ndx++) {
