@@ -719,8 +719,6 @@ static void load_id_file(Device_Id_Type id_type){
  * Returns:    nothing
  */
 void report_device_ids_mlm(Device_Id_Type id_type) {
-   // bool debug = true;
-
    Multi_Level_Map * all_devices = (id_type == ID_TYPE_PCI) ? pci_vendors_mlm : usb_vendors_mlm;
    GPtrArray * top_level_nodes = all_devices->root;
    int total_vendors = 0;
