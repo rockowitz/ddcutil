@@ -192,7 +192,7 @@ ddc/ddc_services.c          	\
 ddc/ddc_strategy.c          	\
 ddc/ddc_vcp.c               	\
 ddc/ddc_vcp_version.c       	\
-ddc/try_stats.c             	\
+ddc/ddc_try_stats.c             	\
 i2c/i2c_base_io.c          	    \
 i2c/i2c_bus_core.c          	\
 i2c/i2c_do_io.c    	        	\

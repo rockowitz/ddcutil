@@ -29,7 +29,6 @@
  * Capabilities retrieval.
  */
 
-
 /** \cond */
 #include <assert.h>
 #include <stdio.h>
@@ -45,7 +44,7 @@
 #include "base/parms.h"
 
 #include "ddc/ddc_packet_io.h"
-#include "ddc/try_stats.h"
+#include "ddc/ddc_try_stats.h"
 
 #include "ddc/ddc_multi_part_io.h"
 

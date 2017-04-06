@@ -1,9 +1,9 @@
-/* try_stats.c
+/* ddc_try_stats.c
  *
  * Maintains statistics on DDC retries.
  *
  * <copyright>
- * Copyright (C) 2014-2016 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2014-2017 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -23,15 +23,17 @@
  * </endcopyright>
  */
 
+/** \cond */
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+/** \endcond */
 
 #include "base/ddc_errno.h"
 #include "base/parms.h"
 
-#include "ddc/try_stats.h"
+#include "ddc/ddc_try_stats.h"
 
 #define MAX_STAT_NAME_LENGTH  31
 
