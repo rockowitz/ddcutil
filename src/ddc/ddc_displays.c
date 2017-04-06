@@ -152,6 +152,7 @@ ddc_verify(Display_Ref * dref) {
       // or could use get_vcp_value()
       psc = get_nontable_vcp_value(dh,
                              0x10,    // brightness
+                        //     true,    // retry null response
                              &presp);
       DBGMSF(debug, "get_nontable_vcp_value() returned %s", psc_desc( psc));
       if (psc == 0) {
@@ -159,6 +160,38 @@ ddc_verify(Display_Ref * dref) {
          // result = true;
       }
       if (psc == 0 || psc == DDCRC_REPORTED_UNSUPPORTED || psc == DDCRC_DETERMINED_UNSUPPORTED)
+         result = true;
+      ddc_close_display(dh);
+   }
+
+   DBGMSF(debug, "Returning: %s", bool_repr(result));
+   return result;
+}
+
+
+// what to return is TBD
+
+bool
+ddc_uses_null_response_to_indicate_unsupported(Display_Ref * dref) {
+   bool debug = false;
+   bool result = false;
+   DBGMSF(debug, "Starting.  dref=%s", dref_repr(dref));
+
+   Display_Handle * dh;
+   Public_Status_Code psc = ddc_open_display(dref,  CALLOPT_NONE, &dh);
+   if (psc == 0) {
+      Parsed_Nontable_Vcp_Response * presp = NULL;
+      // or could use get_vcp_value()
+      psc = get_nontable_vcp_value(dh,
+                             0x00,    // non-existent status code
+                         //     false,    // retry null response
+                             &presp);
+      DBGMSF(debug, "get_nontable_vcp_value() returned %s", psc_desc( psc));
+      if (psc == 0) {
+         free(presp);
+         // result = true;
+      }
+      if (psc == DDCRC_NULL_RESPONSE)
          result = true;
       ddc_close_display(dh);
    }
@@ -206,6 +239,9 @@ ddc_is_valid_display_ref(Display_Ref * dref, Call_Options callopts) {
             bool ddc_working = ddc_verify(dref);
             if (ddc_working)
                dref->flags |= DREF_DDC_COMMUNICATION_WORKING;
+            dref->flags |= DREF_DDC_NULL_RESPONSE_CHECKED;
+            if (ddc_uses_null_response_to_indicate_unsupported(dref))
+               dref->flags |= DREF_DDC_USES_NULL_RESPONSE_FOR_UNSUPPORTED;
          }
          result = (dref->flags & DREF_DDC_COMMUNICATION_WORKING);
       }
@@ -728,8 +764,13 @@ ddc_report_active_display(Display_Info * curinfo, int depth) {
 
             }
 
+
             if (output_level >= DDCA_OL_VERBOSE)
                set_output_level(output_level);
+
+            if (output_level >= DDCA_OL_VERBOSE)
+               rpt_vstring(depth, "Uses DDC Null Response to indicate unspported: %s",
+                                  bool_repr(dh->dref->flags & DREF_DDC_USES_NULL_RESPONSE_FOR_UNSUPPORTED));
          }
 
          ddc_close_display(dh);
