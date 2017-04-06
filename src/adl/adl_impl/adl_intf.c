@@ -320,8 +320,7 @@ static bool is_active_display(int iAdapterIndex, ADLDisplayInfo * pDisplayInfo) 
  */
 static bool scan_for_displays() {
    bool debug = false;
-   if (adl_debug)
-      debug = true;
+   debug = adl_debug || debug;
    DBGMSF(debug, "Starting." );
    int            rc;
    int            iNumberAdapters;
