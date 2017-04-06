@@ -153,6 +153,18 @@ void set_ferr_to_default();
 
 
 //
+// Performance statistics
+//
+
+typedef enum {
+   STATS_NONE     = 0x00,
+   STATS_TRIES    = 0x01,
+   STATS_ERRORS   = 0x02,
+   STATS_CALLS    = 0x04,
+   STATS_ALL      = 0xFF
+} Stats_Type;
+
+//
 // Message level control
 //
 
