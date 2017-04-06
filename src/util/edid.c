@@ -209,11 +209,11 @@ static void get_edid_descriptor_strings(
  *
  * @return pointer to newly allocated Parsed_Edid struct,
  *         or NULL if the bytes could not be parsed.
- *         It is the responsiblity of the caller to free this memory.
+ *         It is the responsibility of the caller to free this memory.
  */
 Parsed_Edid * create_parsed_edid(Byte* edidbytes) {
    assert(edidbytes);
-   bool debug = true;
+   bool debug = false;
    bool ok = true;
    Parsed_Edid* parsed_edid = NULL;
 
