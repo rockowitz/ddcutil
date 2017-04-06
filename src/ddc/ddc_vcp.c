@@ -93,7 +93,7 @@ set_nontable_vcp_value(
 #ifdef USE_USB
       psc = usb_set_nontable_vcp_value(dh, feature_code, new_value);
 #else
-      PROGRAM_LOGIC_ERROR("ddcutil not build with USB support");
+      PROGRAM_LOGIC_ERROR("ddcutil not built with USB support");
 #endif
    }
    else {
@@ -143,7 +143,7 @@ set_table_vcp_value(
 #ifdef USE_USB
       psc = DDCL_UNIMPLEMENTED;
 #else
-      PROGRAM_LOGIC_ERROR("ddcutil not build with USB support");
+      PROGRAM_LOGIC_ERROR("ddcutil not built with USB support");
 #endif
    }
    else {
@@ -163,9 +163,10 @@ set_table_vcp_value(
 
 static bool verify_setvcp = false;
 
+
 void set_verify_setvcp(bool onoff) {
    bool debug = false;
-   DBGMSF(debug, "Setging verify_setvcp = %s", bool_repr(onoff));
+   DBGMSF(debug, "Setting verify_setvcp = %s", bool_repr(onoff));
    verify_setvcp = onoff;
 }
 
@@ -191,10 +192,16 @@ is_rereadable_feature(
    };
 
    VCP_Feature_Table_Entry * vfte = vcp_find_feature_by_hexid(opcode);
-   // DBGMSF(debug, "vfte=%p", vfte);
+   DBGMSF(debug, "vfte=%p", vfte);
    if (vfte) {
       assert(opcode < 0xe0);
       DDCA_MCCS_Version_Spec vspec = get_vcp_version_by_display_handle(dh);  // ensure dh->vcp_version set
+      DBGMSF(debug, "vspec = %d.%d", vspec.major, vspec.minor);
+      // hack, make a guess
+      if ( vcp_version_eq(vspec, VCP_SPEC_UNKNOWN)   ||
+           vcp_version_eq(vspec, VCP_SPEC_UNQUERIED ))
+         vspec = VCP_SPEC_V22;
+
       if ( !vcp_version_eq(vspec, VCP_SPEC_UNKNOWN) &&
            !vcp_version_eq(vspec, VCP_SPEC_UNQUERIED ))
       {
@@ -255,7 +262,7 @@ bool single_vcp_value_equal(
  */
 Public_Status_Code
 set_vcp_value(
-      Display_Handle *   dh,
+      Display_Handle *        dh,
       DDCA_Single_Vcp_Value * vrec)
 {
    bool debug = false;
@@ -280,7 +287,7 @@ set_vcp_value(
              vrec->value_type,
              &newval);
          if (psc != 0) {
-            f0printf(FOUT, "Read after write failed. get_vcp_value() returned: %s", psc_desc(psc));
+            f0printf(FOUT, "Read after write failed. get_vcp_value() returned: %s\n", psc_desc(psc));
             psc = DDCRC_VERIFY;
          }
          else {
@@ -325,10 +332,12 @@ set_vcp_value(
 Public_Status_Code get_nontable_vcp_value(
        Display_Handle *               dh,
        Byte                           feature_code,
+  //   bool                           retry_null_response,
        Parsed_Nontable_Vcp_Response** ppInterpretedCode)
 {
    bool debug = false;
-   DBGTRC(debug, TRACE_GROUP, "Reading feature 0x%02x", feature_code);
+   DBGTRC(debug, TRACE_GROUP, "Reading feature 0x%02x",
+                              feature_code);
 
    Public_Status_Code psc = 0;
    // Output_Level output_level = get_output_level();
@@ -336,7 +345,8 @@ Public_Status_Code get_nontable_vcp_value(
 
    DDC_Packet * request_packet_ptr  = NULL;
    DDC_Packet * response_packet_ptr = NULL;
-   request_packet_ptr = create_ddc_getvcp_request_packet(feature_code, "get_vcp_by_DisplayRef:request packet");
+   request_packet_ptr = create_ddc_getvcp_request_packet(
+                           feature_code, "get_vcp_by_DisplayRef:request packet");
    // dump_packet(request_packet_ptr);
 
    Byte expected_response_type = DDC_PACKET_TYPE_QUERY_VCP_RESPONSE;
@@ -350,12 +360,12 @@ Public_Status_Code get_nontable_vcp_value(
            expected_response_type,
            expected_subtype,
            false,                       // all_zero_response_ok
+       //  retry_null_response,
            &response_packet_ptr
         );
-   // rc = public_to_global_status_code(psc);
    // TRCMSGTG(tg, "perform_ddc_write_read_with_retry() returned %s", psc_desc(psc));
-   if (debug || psc != 0 ) {
-      DBGTRC(debug, TRACE_GROUP, "perform_ddc_write_read_with_retry() returned %s", psc_desc(psc));
+   if (debug || psc != 0 || IS_TRACING() ) {
+      DBGMSG("perform_ddc_write_read_with_retry() returned %s", psc_desc(psc));
    }
 
    if (psc == 0) {
@@ -386,7 +396,6 @@ Public_Status_Code get_nontable_vcp_value(
    if (response_packet_ptr)
       free_ddc_packet(response_packet_ptr);
 
-   // TRCMSGTG(tg, "Returning %s, *ppinterpreted_code=%p", gsc_name(rc), parsed_response);
    DBGTRC(debug, TRACE_GROUP,
           "Returning %s, *ppinterpreted_code=%p", psc_desc(psc), parsed_response);
    *ppInterpretedCode = parsed_response;
@@ -469,6 +478,8 @@ get_vcp_value(
    DBGTRC(debug, TRACE_GROUP, "Starting. Reading feature 0x%02x, dh=%s, dh->fh=%d",
             feature_code, display_handle_repr(dh), dh->fh);
 
+  // bool retry_null_response = true;   // *** TEMP ***
+
    Public_Status_Code psc = 0;
 
    Buffer * buffer = NULL;
@@ -513,6 +524,7 @@ get_vcp_value(
             psc = get_nontable_vcp_value(
                      dh,
                      feature_code,
+                 //     retry_null_response,
                      &parsed_nontable_response);
             if (psc == 0) {
                valrec = create_nontable_vcp_value(

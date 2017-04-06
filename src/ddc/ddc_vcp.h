@@ -58,6 +58,7 @@ Public_Status_Code
 get_nontable_vcp_value(
       Display_Handle *          dh,
       Byte                      feature_code,
+  //  bool                      retry_null_response,
       Parsed_Nontable_Vcp_Response** pp_parsed_response);
 
 Public_Status_Code
