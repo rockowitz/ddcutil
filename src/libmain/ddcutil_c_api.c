@@ -1179,7 +1179,11 @@ ddca_get_nontable_vcp_value(
 {
    WITH_DH(ddct_dh,  {
        Parsed_Nontable_Vcp_Response * code_info;
-       psc = get_nontable_vcp_value(dh, feature_code,&code_info);
+       psc = get_nontable_vcp_value(
+                dh,
+                feature_code,
+         //       true,               // retry_null_response  ???
+                &code_info);
        // DBGMSG(" get_nontable_vcp_value() returned %s", gsc_desc(gsc));
        if (psc == 0) {
           response->feature_code = code_info->vcp_code;
@@ -1319,23 +1323,44 @@ ddca_get_formatted_vcp_value(
 
 
 DDCA_Status
+ddca_set_single_vcp_value(
+      DDCA_Display_Handle     ddca_dh,
+      DDCA_Single_Vcp_Value * valrec)
+   {
+      WITH_DH(ddca_dh,  {
+            psc = set_vcp_value(dh, valrec);
+            // psc = global_to_public_status_code(gsc);
+         } );
+   }
+
+
+
+
+DDCA_Status
 ddca_set_continuous_vcp_value(
       DDCA_Display_Handle   ddca_dh,
-      DDCA_Vcp_Feature_Code      feature_code,
+      DDCA_Vcp_Feature_Code feature_code,
       int                   new_value)
 {
+#ifdef OLD
    WITH_DH(ddca_dh,  {
          psc = set_nontable_vcp_value(dh, feature_code, new_value);
          // psc = global_to_public_status_code(gsc);
       } );
+#endif
+   DDCA_Single_Vcp_Value valrec;
+   valrec.opcode = feature_code;
+   valrec.value_type = DDCA_NON_TABLE_VCP_VALUE;
+   valrec.val.c.cur_val = new_value;
+   return ddca_set_single_vcp_value(ddca_dh, &valrec);
 }
 
 
 DDCA_Status
 ddca_set_simple_nc_vcp_value(
-      DDCA_Display_Handle   ddca_dh,
-      DDCA_Vcp_Feature_Code      feature_code,
-      Byte                  new_value)
+      DDCA_Display_Handle    ddca_dh,
+      DDCA_Vcp_Feature_Code  feature_code,
+      Byte                   new_value)
 {
    return ddca_set_continuous_vcp_value(ddca_dh, feature_code, new_value);
 }
