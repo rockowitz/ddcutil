@@ -65,8 +65,8 @@
 DDCA_MCCS_Version_Spec get_vcp_version_by_display_handle(Display_Handle * dh) {
    bool debug = false;
    // TMI
-   // DBGMSF(debug, "Starting. dh=%p, dh->vcp_version =  %d.%d",
-   //               dh, dh->vcp_version.major, dh->vcp_version.minor);
+   DBGMSF(debug, "Starting. dh=%p, dh->vcp_version =  %d.%d, %s",
+                 dh, dh->vcp_version.major, dh->vcp_version.minor, format_vspec(dh->vcp_version));
    if (vcp_version_is_unqueried(dh->vcp_version)) {
       if (debug) {
          DBGMSG("Starting.  vcp_version not set");
@@ -100,12 +100,17 @@ DDCA_MCCS_Version_Spec get_vcp_version_by_display_handle(Display_Handle * dh) {
          if (olev == DDCA_OL_VERBOSE)
             set_output_level(DDCA_OL_NORMAL);
          Public_Status_Code psc = get_vcp_value(dh, 0xdf, DDCA_NON_TABLE_VCP_VALUE, &pvalrec);
+         DBGMSF(debug, "get_vcp_value() returned %s", psc_desc(psc));
          if (olev == DDCA_OL_VERBOSE)
             set_output_level(olev);
 
          if (psc == 0) {
             dh->vcp_version.major = pvalrec->val.nc.sh;
             dh->vcp_version.minor = pvalrec->val.nc.sl;
+            DBGMSF(debug, "Set dh->vcp_version to %d.%d, %s",
+                          dh->vcp_version.major,
+                          dh->vcp_version.minor,
+                          format_vspec(dh->vcp_version) );
          }
          else {
             // happens for pre MCCS v2 monitors
@@ -120,6 +125,9 @@ DDCA_MCCS_Version_Spec get_vcp_version_by_display_handle(Display_Handle * dh) {
    //    DBGMSG("Done.");
    //    report_display_handle(dh, /*msg=*/ NULL, 1);
    // }
+   DBGMSF(debug, "Returning dh->vcp_version = %d.%d, %s",
+                 dh->vcp_version.major, dh->vcp_version.minor,
+                 format_vspec(dh->vcp_version));
    return dh->vcp_version;
 }
 
