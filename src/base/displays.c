@@ -345,6 +345,7 @@ void report_display_ref(Display_Ref * dref, int depth) {
    rpt_vstring(d1, "flags:        0x%02x", dref->flags);
    rpt_vstring(d2, "DDC communication checked:  %s", (dref->flags & DREF_DDC_COMMUNICATION_CHECKED) ? "true" : "false");
    rpt_vstring(d2, "DDC communication working:  %s", (dref->flags & DREF_DDC_COMMUNICATION_WORKING) ? "true" : "false");
+   rpt_vstring(d2, "DDC NULL response usage checked:                %s", bool_repr(dref->flags & DREF_DDC_NULL_RESPONSE_CHECKED));
    rpt_vstring(d2, "Uses DDC NULL response to indicate unsupported: %s", bool_repr(dref->flags & DREF_DDC_USES_NULL_RESPONSE_FOR_UNSUPPORTED));
 }
 

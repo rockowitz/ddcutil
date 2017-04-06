@@ -141,9 +141,10 @@ bool               dsel_validate(          Display_Selector * dsel);
 char * mccs_io_mode_name(DDCA_IO_Mode val);
 
 typedef Byte Dref_Flags;
-#define DREF_DDC_COMMUNICATION_CHECKED 0x80
-#define DREF_DDC_COMMUNICATION_WORKING 0x40
-#define DREF_DDC_USES_NULL_RESPONSE_FOR_UNSUPPORTED 0x20
+#define DREF_DDC_COMMUNICATION_CHECKED              0x80
+#define DREF_DDC_COMMUNICATION_WORKING              0x40
+#define DREF_DDC_NULL_RESPONSE_CHECKED              0x20
+#define DREF_DDC_USES_NULL_RESPONSE_FOR_UNSUPPORTED 0x10
 #define DISPLAY_REF_MARKER "DREF"
 /** A **Display_Ref** is a logical display identifier.
  * It can be an I2C bus number, and ADL adapter/display number pair,
