@@ -25,6 +25,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 
 #include "public/ddcutil_c_api.h"
 
@@ -202,6 +203,13 @@ test_cont_value(
    char * feature_name = ddca_get_feature_name(feature_code);
    printf("(%s) Feature name: %s\n", __func__, feature_name);
 
+   bool saved_report_ddc_errors = ddca_is_report_ddc_errors_enabled();
+   printf("(%s) Calling ddca_enable_report_ddc_errors(true)...\n", __func__);
+   ddca_enable_report_ddc_errors(true);
+   bool saved_verify_setvcp = ddca_get_verify_setvcp();
+   printf("(%s) Calling ddca_set_verify_setvcp(true)...\n", __func__);
+   ddca_set_verify_setvcp(true);
+
    DDCA_Version_Feature_Info * info;
    rc = ddca_get_feature_info_by_display(
            dh,    // needed because in rare cases feature info is MCCS version dependent
@@ -214,7 +222,9 @@ test_cont_value(
    else {
      //  report_ddca_version_feature_flags(feature_code, info->feature_flags);
       // report_version_feature_info(info, 1);
-      my_report_version_feature_info(info);
+
+      // TMI
+      // exit(info);
    }
 
    DDCA_Non_Table_Value_Response non_table_response;
@@ -246,13 +256,17 @@ test_cont_value(
       }
       else {
          printf("(%s) Setting new value succeeded.  Reading the current value...\n", __func__);
-         rc = ddca_get_nontable_vcp_value(dh, feature_code, &non_table_response);
+         rc = ddca_get_vcp_value(
+               dh,
+               feature_code,
+               DDCA_NON_TABLE_VCP_VALUE,
+               &valrec);
          if (rc != 0) {
             ok = false;
-            FUNCTION_ERRMSG("ddca_get_nontable_vcp_value", rc);
+            FUNCTION_ERRMSG("ddca_get_vcp_value", rc);
          }
          else {
-            if ( non_table_response.c.cur_val != new_value) {
+            if ( valrec->val.c.cur_val != new_value) {
                printf("(%s) Current value %d does not match new value set %d",
                       __func__, non_table_response.c.cur_val, new_value);
                ok = false;
@@ -270,23 +284,20 @@ test_cont_value(
          }
          else {
             printf("(%s) Resetting original value succeeded.\n", __func__);
-            rc = ddca_get_nontable_vcp_value(dh, feature_code, &non_table_response);
+            // doesn't help DDCRC_NULL_RESPONSE on HWP
+            // printf("Sleeping first...\n");
+            // usleep(100*1000);
+
+            rc = ddca_get_vcp_value(dh, feature_code,DDCA_NON_TABLE_VCP_VALUE, &valrec);
             if (rc != 0) {
                ok = false;
-               FUNCTION_ERRMSG("ddct_get_continuous_vcp_value", rc);
+               FUNCTION_ERRMSG("ddca_get_vcp_vvalue", rc);
             }
             else {
-               rc = ddca_get_nontable_vcp_value(dh, feature_code, &non_table_response);
-               if (rc != 0) {
+               if ( valrec->val.c.cur_val != old_value) {
+                  printf("(%s) Current value %d does not match original current value %d", __func__,
+                         valrec->val.c.cur_val, old_value);
                   ok = false;
-                  FUNCTION_ERRMSG("ddct_get_continuous_vcp_value", rc);
-               }
-               else {
-                  if ( non_table_response.c.cur_val != old_value) {
-                     printf("(%s) Current value %d does not match original current value %d", __func__,
-                            non_table_response.c.cur_val, old_value);
-                     ok = false;
-                  }
                }
             }
 
@@ -294,6 +305,9 @@ test_cont_value(
 
       }
    }
+
+   ddca_set_verify_setvcp(saved_verify_setvcp);
+   ddca_enable_report_ddc_errors(saved_report_ddc_errors);
    printf("(%s) Done. Returning: %d\n", __func__, ok);
    return ok;
 }
