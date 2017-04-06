@@ -211,7 +211,7 @@ char * format_vcp_version_id(DDCA_MCCS_Version_Id version_id) {
 
 #ifdef OLD
 char * vcp_version_id_name0(DDCA_MCCS_Version_Id version_id) {
-   bool debug = true;
+   bool debug = false;
    DBGMSF(debug, "Starting. version_id=%d", version_id);
 
    char * result = NULL;
