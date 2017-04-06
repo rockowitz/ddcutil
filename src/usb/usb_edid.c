@@ -139,7 +139,7 @@ bye:
 
 #ifdef UNUSED
 bool is_eizo_monitor(int fd) {
-   bool debug = true;
+   bool debug = false;
    bool result = false;
    struct hiddev_devinfo dev_info;
    int rc = ioctl(fd, HIDIOCGDEVINFO, &dev_info);
