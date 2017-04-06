@@ -293,7 +293,7 @@ void fsim_report_error_table(int depth) {
 // an optional minus sign be recognized?
 // e.g. should we specify -EBUSY for -22?
 bool eval_fsim_rc(char * rc_string, int * evaluated_rc) {
-   bool debug = true;
+   bool debug = false;
    if (debug)
       printf("(%s) Starting.  rc_string=%s\n", __func__, rc_string);
    char * end;
