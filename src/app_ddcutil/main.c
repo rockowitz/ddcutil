@@ -99,35 +99,14 @@ static long start_time_nanos;
 
 static
 void reset_stats() {
-   ddc_reset_stats();
-   reset_execution_stats();
+   ddc_reset_all_stats();
 }
 
 
 
 static
 void report_stats(Stats_Type stats) {
-   if (stats & STATS_TRIES) {
-      puts("");
-      // retry related stats
-      ddc_report_max_tries(0);
-      ddc_report_write_only_stats(0);
-      ddc_report_write_read_stats(0);
-      ddc_report_multi_part_read_stats(0);
-   }
-   if (stats & STATS_ERRORS) {
-      puts("");
-      show_all_status_counts();   // error code counts
-   }
-   if (stats & STATS_CALLS) {
-      puts("");
-      report_sleep_strategy_stats(0);
-      puts("");
-      report_io_call_stats(0);
-      puts("");
-      report_sleep_stats(0);
-   }
-
+   ddc_report_all_stats(stats, 0);
    puts("");
    long elapsed_nanos = cur_realtime_nanosec() - start_time_nanos;
    printf("Elapsed milliseconds (nanoseconds):             %10ld  (%10ld)\n",

@@ -34,6 +34,7 @@
 #include "base/adl_errors.h"
 #include "base/base_init.h"
 #include "base/parms.h"
+#include "base/sleep.h"
 
 #include "vcp/vcp_feature_codes.h"
 
@@ -47,11 +48,70 @@
 #include "ddc/ddc_services.h"
 
 
+//
+// Statistics
+//
+
+
 /** Resets all DDC level statistics */
-void ddc_reset_stats() {
+void ddc_reset_ddc_stats() {
    ddc_reset_write_only_stats();
    ddc_reset_write_read_stats();
    ddc_reset_multi_part_read_stats();
+}
+
+void ddc_report_ddc_stats(int depth) {
+   rpt_nl();
+   // retry related stats
+   ddc_report_max_tries(0);
+   ddc_report_write_only_stats(0);
+   ddc_report_write_read_stats(0);
+   ddc_report_multi_part_read_stats(0);
+}
+
+
+
+void ddc_reset_all_stats() {
+   ddc_reset_ddc_stats();
+   reset_execution_stats();
+}
+
+
+void ddc_report_all_stats(Stats_Type stats, int depth) {
+   if (stats & STATS_TRIES) {
+      ddc_report_ddc_stats(depth);
+   }
+   if (stats & STATS_ERRORS) {
+      rpt_nl(); ;
+      show_all_status_counts();   // error code counts
+   }
+   if (stats & STATS_CALLS) {
+      rpt_nl();
+      report_sleep_strategy_stats(depth);
+      rpt_nl();
+      report_io_call_stats(depth);
+      rpt_nl();
+      report_sleep_stats(depth);
+   }
+}
+
+
+/** Reports the current max try settings.
+ *
+ *  \param depth logical indentation depth
+ */
+void ddc_report_max_tries(int depth) {
+   rpt_vstring(depth, "Maximum Try Settings:");
+   rpt_vstring(depth, "Operation Type             Current  Default");
+   rpt_vstring(depth, "Write only exchange tries: %8d %8d",
+               ddc_get_max_write_only_exchange_tries(),
+               MAX_WRITE_ONLY_EXCHANGE_TRIES);
+   rpt_vstring(depth, "Write read exchange tries: %8d %8d",
+               ddc_get_max_write_read_exchange_tries(),
+               MAX_WRITE_READ_EXCHANGE_TRIES);
+   rpt_vstring(depth, "Multi-part exchange tries: %8d %8d",
+               ddc_get_max_multi_part_read_tries(),
+               MAX_MULTI_EXCHANGE_TRIES);
 }
 
 
@@ -70,27 +130,7 @@ void init_ddc_services() {
    adlshim_initialize();
 
    // ddc:
-   ddc_reset_stats();
+   ddc_reset_ddc_stats();
    init_vcp_feature_codes();
    init_ddc_packets();   // 11/2015: does nothing
-}
-
-
-// Located here because this function doesn't really belong anywhere else.
-/** Reports the current max try settings.
- *
- *  \param depth logical indentation depth
- */
-void ddc_report_max_tries(int depth) {
-   rpt_vstring(depth, "Maximum Try Settings:");
-   rpt_vstring(depth, "Operation Type             Current  Default");
-   rpt_vstring(depth, "Write only exchange tries: %8d %8d",
-               ddc_get_max_write_only_exchange_tries(),
-               MAX_WRITE_ONLY_EXCHANGE_TRIES);
-   rpt_vstring(depth, "Write read exchange tries: %8d %8d",
-               ddc_get_max_write_read_exchange_tries(),
-               MAX_WRITE_READ_EXCHANGE_TRIES);
-   rpt_vstring(depth, "Multi-part exchange tries: %8d %8d",
-               ddc_get_max_multi_part_read_tries(),
-               MAX_MULTI_EXCHANGE_TRIES);
 }
