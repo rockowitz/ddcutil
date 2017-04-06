@@ -460,6 +460,8 @@ int test_monitor_detection() {
 int main(int argc, char** argv) {
    printf("\n(%s) Starting.\n", __func__);
 
+   ddca_reset_stats();
+
    DDCA_Status rc;
    DDCA_Display_Identifier did;
    DDCA_Display_Ref dref;
@@ -609,5 +611,8 @@ int main(int argc, char** argv) {
       rc = ddca_free_display_identifier(did);
       printf("(%s) ddca_free_display_identifier() returned %d\n", __func__, rc);
    }
+
+   ddca_show_stats(0);
+
    return 0;
 }
