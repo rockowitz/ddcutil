@@ -458,7 +458,7 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
 #ifdef COMMA_DELIMITED_TRACE
    if (tracework) {
        bool saved_debug = debug;
-       debug = true;
+       debug = false;
        if (debug)
           DBGMSG("tracework, argument = |%s|", tracework );
        strupper(tracework);
