@@ -312,6 +312,17 @@ ddca_is_report_ddc_errors_enabled();
 
 
 //
+// Statistics
+//
+
+void ddca_reset_stats();
+
+// until we define data structures for returning stats
+void ddca_show_stats(int depth);
+
+
+
+//
 // Display Identifier
 //
 

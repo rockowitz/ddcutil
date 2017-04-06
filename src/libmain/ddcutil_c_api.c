@@ -42,6 +42,7 @@
 #include "base/ddc_packets.h"
 #include "base/displays.h"
 #include "base/base_init.h"
+#include "base/execution_stats.h"
 #include "base/parms.h"
 #include "vcp/vcp_feature_codes.h"
 #include "vcp/parse_capabilities.h"
@@ -454,6 +455,21 @@ ddca_set_timeout_millis(
    // *** UNIMPLEMENTED
 }
 #endif
+
+
+//
+// Statistics
+//
+
+void ddca_reset_stats() {
+   ddc_reset_all_stats();
+}
+
+// until we define data structures for returning stats
+void ddca_show_stats(int depth) {
+   ddc_report_all_stats( 0xff,    // all stats
+                         0);      // logical indentation depth
+}
 
 
 
