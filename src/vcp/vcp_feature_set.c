@@ -91,8 +91,11 @@ create_feature_set(VCP_Feature_Subset subset_id, DDCA_MCCS_Version_Spec vcp_vers
          // n. this is a pointer into permanent data structures, should not be freed:
          VCP_Feature_Table_Entry* vcp_entry = vcp_find_feature_by_hexid(id);
          // original code looks at VCP2_READABLE, output level
-         if (vcp_entry)
-            g_ptr_array_add(fset->members, vcp_entry);
+         if (vcp_entry) {
+            if ( !is_feature_table_by_vcp_version(vcp_entry, vcp_version) ||
+                 get_output_level() >= DDCA_OL_VERBOSE)
+               g_ptr_array_add(fset->members, vcp_entry);
+         }
          else {
             g_ptr_array_add(fset->members, vcp_create_dummy_feature_for_hexid(id));
             if (ndx >= 0xe0 && (get_output_level() >= DDCA_OL_VERBOSE) ) {
