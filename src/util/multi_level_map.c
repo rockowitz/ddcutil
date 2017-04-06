@@ -156,7 +156,6 @@ void report_mlm_node(
  * @param depth  logical indentation depth
  */
 void report_multi_level_map(Multi_Level_Map * header, int depth) {
-      // bool debug = true;
    int d1 = depth+1;
    int d2 = depth+2;
    rpt_structure_loc("Multi_Level_Table", header, depth);
