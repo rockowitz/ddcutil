@@ -123,7 +123,7 @@ void init_msg_control() {
  * @ingroup output_redirection
  */
 void set_fout(FILE * fout) {
-   bool debug = true;
+   bool debug = false;
    DBGMSF(debug, "fout = %p", fout);
    FOUT = fout;
    rpt_change_output_dest(fout);
