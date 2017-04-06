@@ -30,6 +30,6 @@ void init_ddc_services();
 
 void ddc_reset_stats();
 
-void ddc_show_max_tries(FILE * fh);
+void ddc_report_max_tries(int depth);
 
 #endif /* DDC_SERVICES_H_ */

@@ -29,6 +29,8 @@
 #include <stdio.h>
 /** \endcond */
 
+#include "util/report_util.h"
+
 #include "base/adl_errors.h"
 #include "base/base_init.h"
 #include "base/parms.h"
@@ -77,18 +79,18 @@ void init_ddc_services() {
 // Located here because this function doesn't really belong anywhere else.
 /** Reports the current max try settings.
  *
- *  \param fh where to write output
+ *  \param depth logical indentation depth
  */
-void ddc_show_max_tries(FILE * fh) {
-   fprintf(fh, "Maximum Try Settings:\n");
-   fprintf(fh, "Operation Type             Current  Default\n");
-   fprintf(fh, "Write only exchange tries: %8d %8d\n",
+void ddc_report_max_tries(int depth) {
+   rpt_vstring(depth, "Maximum Try Settings:");
+   rpt_vstring(depth, "Operation Type             Current  Default");
+   rpt_vstring(depth, "Write only exchange tries: %8d %8d",
                ddc_get_max_write_only_exchange_tries(),
                MAX_WRITE_ONLY_EXCHANGE_TRIES);
-   fprintf(fh, "Write read exchange tries: %8d %8d\n",
+   rpt_vstring(depth, "Write read exchange tries: %8d %8d",
                ddc_get_max_write_read_exchange_tries(),
                MAX_WRITE_READ_EXCHANGE_TRIES);
-   fprintf(fh, "Multi-part exchange tries: %8d %8d\n",
+   rpt_vstring(depth, "Multi-part exchange tries: %8d %8d",
                ddc_get_max_multi_part_read_tries(),
                MAX_MULTI_EXCHANGE_TRIES);
 }

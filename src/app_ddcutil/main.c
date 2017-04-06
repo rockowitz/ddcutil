@@ -110,7 +110,7 @@ void report_stats(Stats_Type stats) {
    if (stats & STATS_TRIES) {
       puts("");
       // retry related stats
-      ddc_show_max_tries(stdout);
+      ddc_report_max_tries(0);
       ddc_report_write_only_stats(0);
       ddc_report_write_read_stats(0);
       ddc_report_multi_part_read_stats(0);
