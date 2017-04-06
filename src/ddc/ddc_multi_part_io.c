@@ -124,6 +124,7 @@ try_multi_part_read(
    DBGTRC(force_debug, TRACE_GROUP,
           "Starting. request_type=0x%02x, request_subtype=x%02x, accumulator=%p",
           request_type, request_subtype, accumulator);
+   // bool retry_null_response = false;
 
    Public_Status_Code psc = 0;
    const int MAX_FRAGMENT_SIZE = 32;
@@ -153,6 +154,7 @@ try_multi_part_read(
            expected_response_type,
            expected_subtype,
            all_zero_response_ok,
+     //    retry_null_response,
            &response_packet_ptr
           );
       DBGMSF(force_debug,
