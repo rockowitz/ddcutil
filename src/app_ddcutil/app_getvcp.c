@@ -300,7 +300,11 @@ app_read_changes(Display_Handle * dh) {
 
 
    DDCA_MCCS_Version_Spec vspec = get_vcp_version_by_display_handle(dh);
-   psc = get_nontable_vcp_value(dh, 0x02, &p_nontable_response);
+   psc = get_nontable_vcp_value(
+            dh,
+            0x02,
+       //     false,  // retry_null_response
+            &p_nontable_response);
    if (psc != 0) {
       DBGMSG("get_nontable_vcp_value() returned %s", psc_desc(psc));
    }
@@ -314,7 +318,11 @@ app_read_changes(Display_Handle * dh) {
 
       // new_values_found = true;
       if ( vcp_version_le(vspec, VCP_SPEC_V21) ) {
-         psc = get_nontable_vcp_value(dh, 0x52, &p_nontable_response);
+         psc = get_nontable_vcp_value(
+                  dh,
+                  0x52,
+             //     false,   // retry_null_response  ??
+                  &p_nontable_response);
          if (psc != 0) {
              DBGMSG("get_nontable_vcp_value() returned %s", psc_desc(psc));
              return;
@@ -325,7 +333,11 @@ app_read_changes(Display_Handle * dh) {
       else {  // x52 is a FIFO
          int ctr = 0;
          for (;ctr < MAX_CHANGES; ctr++) {
-            psc = get_nontable_vcp_value(dh, 0x52, &p_nontable_response);
+            psc = get_nontable_vcp_value(
+                     dh,
+                     0x52,
+               //      false,     // retry_null_response ???
+                     &p_nontable_response);
             if (psc != 0) {
                 DBGMSG("get_nontable_vcp_value() returned %s", psc_desc(psc));
                 return;
