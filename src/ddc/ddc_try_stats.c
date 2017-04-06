@@ -30,6 +30,8 @@
 #include <string.h>
 /** \endcond */
 
+#include "util/report_util.h"
+
 #include "base/ddc_errno.h"
 #include "base/parms.h"
 
@@ -151,25 +153,37 @@ int try_data_get_total_attempts(void * stats_rec) {
 }
 
 
-void try_data_report(void * stats_rec) {
+/** Reports a statistics record.
+ *
+ *  Output is written to the current FOUT destination.
+ *
+ *  \param stats_rec    opaque reference to stats record
+ *  \param depth        logical indentation depth
+ *
+ *  \remark
+ *  Why does this data structure need to be opaque?  (4/2017)
+ */
+void try_data_report(void * stats_rec, int depth) {
+   int d1 = depth+1;
    Try_Data * try_data = unopaque(stats_rec);
-   printf("\nRetry statistics for %s\n", try_data->stat_name);
+   rpt_nl();
+   rpt_vstring(depth, "Retry statistics for %s", try_data->stat_name);
    if (try_data_get_total_attempts(stats_rec) == 0) {
-      printf("   No tries attempted\n");
+      rpt_vstring(d1, "No tries attempted");
    }
    else {
       int total_successful_attempts = 0;
-      printf("   Max tries allowed: %d\n", try_data->max_tries);
-      printf("   Successful attempts by number of tries required:\n");
+      rpt_vstring(d1, "Max tries allowed: %d", try_data->max_tries);
+      rpt_vstring(d1, "Successful attempts by number of tries required:");
       int ndx;
       for (ndx=2; ndx <= try_data->max_tries+1; ndx++) {
          total_successful_attempts += try_data->counters[ndx];
          // DBGMSG("ndx=%d", ndx);
-         printf("      %2d:  %3d\n", ndx-1, try_data->counters[ndx]);
+         rpt_vstring(d1, "   %2d:  %3d", ndx-1, try_data->counters[ndx]);
       }
-      printf("   Total:                            %3d\n", total_successful_attempts);
-      printf("   Failed due to max tries exceeded: %3d\n", try_data->counters[1]);
-      printf("   Failed due to fatal error:        %3d\n", try_data->counters[0]);
-      printf("   Total attempts:                   %3d\n", try_data_get_total_attempts(stats_rec));
+      rpt_vstring(d1, "Total:                            %3d", total_successful_attempts);
+      rpt_vstring(d1, "Failed due to max tries exceeded: %3d", try_data->counters[1]);
+      rpt_vstring(d1, "Failed due to fatal error:        %3d", try_data->counters[0]);
+      rpt_vstring(d1, "Total attempts:                   %3d", try_data_get_total_attempts(stats_rec));
    }
 }

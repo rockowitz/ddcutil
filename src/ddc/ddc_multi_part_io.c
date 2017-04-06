@@ -66,7 +66,7 @@ static int max_multi_part_read_tries = MAX_MULTI_EXCHANGE_TRIES;
 
 static void * multi_part_read_stats_rec = NULL;
 
-/** Rests the statistics for multi-part reads */
+/** Resets the statistics for multi-part reads */
 void ddc_reset_multi_part_read_stats() {
    if (multi_part_read_stats_rec)
       try_data_reset(multi_part_read_stats_rec);
@@ -75,9 +75,9 @@ void ddc_reset_multi_part_read_stats() {
 }
 
 /** Reports the statisics for multi-part reads */
-void ddc_report_multi_part_read_stats() {
+void ddc_report_multi_part_read_stats(int depth) {
    assert(multi_part_read_stats_rec);
-   try_data_report(multi_part_read_stats_rec);
+   try_data_report(multi_part_read_stats_rec, depth);
 }
 
 

@@ -35,7 +35,7 @@ void try_data_record_tries(void * stats_rec, int rc, int tryct);
 
 int  try_data_get_total_attempts(void * stats_rec);
 
-void try_data_report(void * stats_rec);
+void try_data_report(void * stats_rec, int depth);
 
 int  try_data_get_max_tries(void * stats_rec);
 

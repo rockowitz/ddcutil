@@ -42,7 +42,7 @@
 
 // Statistics
 void ddc_reset_multi_part_read_stats();
-void ddc_report_multi_part_read_stats();
+void ddc_report_multi_part_read_stats(int depth);
 
 // Retry management
 void ddc_set_max_multi_part_read_tries(int ct);

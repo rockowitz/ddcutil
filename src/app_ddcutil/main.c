@@ -38,6 +38,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
+#include "../ddc/ddc_try_stats.h"
 /** \endcond */
 
 
@@ -74,8 +76,6 @@
 #include "ddc/ddc_services.h"
 #include "ddc/ddc_vcp_version.h"
 #include "ddc/ddc_vcp.h"
-#include "ddc/try_stats.h"
-
 #include "cmdline/cmd_parser_aux.h"    // for parse_feature_id_or_subset(), should it be elsewhere?
 #include "cmdline/cmd_parser.h"
 #include "cmdline/parsed_cmd.h"
@@ -111,9 +111,9 @@ void report_stats(Stats_Type stats) {
       puts("");
       // retry related stats
       ddc_show_max_tries(stdout);
-      ddc_report_write_only_stats();
-      ddc_report_write_read_stats();
-      ddc_report_multi_part_read_stats();
+      ddc_report_write_only_stats(0);
+      ddc_report_write_read_stats(0);
+      ddc_report_multi_part_read_stats(0);
    }
    if (stats & STATS_ERRORS) {
       puts("");
