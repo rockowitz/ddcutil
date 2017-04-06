@@ -94,7 +94,7 @@ Base_Status_ADL adl_ddc_write_read_with_retry(
       Byte *  pRcvMsgBuf,
       int *   pRcvBytect)
 {
-   bool debug = true;
+   bool debug = false;
    if (debug) {
       char * s = hexstring(pSendMsgBuf, sendMsgLen);
       DBGMSG("Starting. iAdapterIndex=%d, iDisplayIndex=%d, sendMsgLen=%d, pSendMsgBuf->%s, *pRcvBytect=%d", 
