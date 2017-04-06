@@ -569,7 +569,7 @@ show_feature_set_values(
 #ifdef FUTURE
 //typedef bool (*VCP_Feature_Set_Filter_Func)(VCP_Feature_Table_Entry * ventry);
 bool hack42(VCP_Feature_Table_Entry * ventry) {
-   bool debug = true;
+   bool debug = false;
    bool result = true;
 
    // if (ventry->code >= 0xe0)  {     // is everything promoted to int before comparison?
