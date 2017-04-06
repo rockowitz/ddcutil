@@ -1328,7 +1328,6 @@ static bool query_card_and_driver_using_lspci() {
  * Returns:     singly linked list of video driver names
  */
 static struct driver_name_node * query_card_and_driver_using_sysfs() {
-   // bool debug = true;
    rpt_vstring(0,"Obtaining card and driver information from /sys...");
 
    // also of possible interest:
