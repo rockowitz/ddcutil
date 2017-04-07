@@ -29,6 +29,7 @@
 
 // #define USE_USB
 
+/** \cond */
 #include <assert.h>
 #include <ctype.h>
 #include <dirent.h>
@@ -64,13 +65,12 @@
 #include "util/string_util.h"
 #include "util/subprocess_util.h"
 #include "util/x11_util.h"
-// #ifdef USE_USB
 #include "util/udev_util.h"
-// #endif
+/** \endcond */
 
-
-#include "base/ddc_errno.h"
+#include "base/build_info.h"
 #include "base/core.h"
+#include "base/ddc_errno.h"
 #include "base/linux_errno.h"
 
 #include "i2c/i2c_bus_core.h"
@@ -455,6 +455,9 @@ bool is_smbus_device_summary(GPtrArray * summaries, char * sbusno) {
 /* Reports basic system information
  */
 static void query_base_env() {
+   rpt_vstring(0, "ddcutil version: %s", BUILD_VERSION);
+   rpt_nl();
+
    wrap_get_first_line("/proc/version", NULL, 0);
 
    rpt_nl();
