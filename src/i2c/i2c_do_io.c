@@ -141,7 +141,7 @@ Status_Errno_DDC invoke_single_byte_i2c_reader(
       int        bytect,
       Byte *     readbuf)
 {
-   bool debug = true;
+   bool debug = false;
    DBGMSF(debug, "bytect=%d", bytect);
    Status_Errno_DDC psc = 0;
    int ndx = 0;
