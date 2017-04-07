@@ -1717,32 +1717,48 @@ static void query_using_i2cdetect() {
 
    // GPtrArray * busnames = execute_shell_cmd_collect("ls /dev/i2c*");
    GPtrArray * busnames = execute_shell_cmd_collect("ls /dev/i2c* | cut -c 10- | sort -n");
+
+   if (!busnames) {
+      rpt_vstring(1, "No I2C buses found");
+      goto bye;
+   }
+   if (busnames->len > 0) {
+      int i;
+      bool isint = str_to_int(g_ptr_array_index(busnames,0), &i);
+      if (!isint) {
+         rpt_vstring(1, "Apparently no I2C buses");
+         goto bye;
+      }
+   }
+
    for (int ndx = 0; ndx < busnames->len; ndx++) {
       // printf("ndx=%d, value=|%s|\n", ndx, (char *) g_ptr_array_index(busnames, ndx));
+
       char cmd[80];
       char * busname = (char *) g_ptr_array_index(busnames, ndx);
       // busname+=9;   // strip off "/dev/i2c-"
 
-// #ifdef USE_USB
       if (is_smbus_device_summary(summaries, busname) ) {
          rpt_nl();
-         rpt_vstring(0, "Device /dev/i2c-%s is a SMBus device.  Skipping i2cdetect.", busname);
+         rpt_vstring(1, "Device /dev/i2c-%s is a SMBus device.  Skipping i2cdetect.", busname);
          continue;
       }
-// #endif
 
       snprintf(cmd, 80, "i2cdetect -y %s", busname);
       rpt_nl();
-      rpt_vstring(0,"Probing bus /dev/i2c-%d using command \"%s\"", ndx, cmd);
+      rpt_vstring(1,"Probing bus /dev/i2c-%d using command \"%s\"", ndx, cmd);
       // DBGMSG("Executing command: |%s|\n", cmd);
-      int rc = execute_shell_cmd_rpt(cmd, 1 /* depth */);
+      int rc = execute_shell_cmd_rpt(cmd, 2 /* depth */);
       // DBGMSG("execute_shell_cmd(\"%s\") returned %d", cmd, rc);
       if (rc != 1) {
-         rpt_vstring(0,"i2cdetect command unavailable");
+         rpt_vstring(1,"i2cdetect command unavailable");
          break;
       }
    }
-   g_ptr_array_free(busnames, true);
+
+bye:
+   if (busnames)
+      g_ptr_array_free(busnames, true);
 }
 
 
