@@ -156,7 +156,6 @@ create_feature_set(VCP_Feature_Subset subset_id, DDCA_MCCS_Version_Spec vcp_vers
 
 VCP_Feature_Set
 create_single_feature_set_by_vcp_entry(VCP_Feature_Table_Entry * vcp_entry) {
-   // bool debug = true;
    struct vcp_feature_set * fset = calloc(1,sizeof(struct vcp_feature_set));
    memcpy(fset->marker, VCP_FEATURE_SET_MARKER, 4);
    fset->members = g_ptr_array_sized_new(1);
@@ -283,7 +282,7 @@ void report_feature_set(VCP_Feature_Set feature_set, int depth) {
 }
 
 void filter_feature_set(VCP_Feature_Set feature_set, VCP_Feature_Set_Filter_Func func) {
-   bool debug = true;
+   bool debug = false;
 
    struct vcp_feature_set * fset = (struct vcp_feature_set *) feature_set;
    assert( fset && memcmp(fset->marker, VCP_FEATURE_SET_MARKER, 4) == 0);
@@ -298,8 +297,6 @@ void filter_feature_set(VCP_Feature_Set feature_set, VCP_Feature_Set_Filter_Func
          if (vcp_entry->vcp_global_flags & DDCA_SYNTHETIC) {
             free_synthetic_vcp_entry(vcp_entry);
          }
-
       }
-
    }
 }
