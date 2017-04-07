@@ -650,7 +650,7 @@ Public_Status_Code try_single_getvcp_call(int fh, unsigned char vcp_feature_code
       goto bye;
    }
    if (rc != writect) {
-      rpt_vstring(0,"(%s) write() returned %d, expected %d   ", __func__, rc, writect );
+      DBGMSF(debug, "write() returned %d, expected %d", rc, writect );
       rc = DDCRC_BAD_BYTECT;
       goto bye;
    }
@@ -663,13 +663,13 @@ Public_Status_Code try_single_getvcp_call(int fh, unsigned char vcp_feature_code
    if (rc < 0) {
       // printf("(%s) read() returned %d, errno=%d.\n", __func__, rc, errno );
       int errsv = errno;
-      DBGMSG("read() failed, errno=%s", linux_errno_desc(errsv));
+      DBGMSF(debug, "read() failed, errno=%s", linux_errno_desc(errsv));
       rc = -errsv;
       goto bye;
    }
 
    if (rc != readct) {
-      rpt_vstring(0,"(%s) read() returned %d, should be %d  ", __func__, rc, readct );
+      DBGMSF(debug, "read() returned %d, should be %d", rc, readct );
       rc = DDCRC_BAD_BYTECT;
       goto bye;
    }
@@ -677,7 +677,7 @@ Public_Status_Code try_single_getvcp_call(int fh, unsigned char vcp_feature_code
    // printf("(%s) read() returned %s\n", __func__, hexstring(ddc_response_bytes+1, readct) );
    if (debug) {
       char * hs = hexstring(ddc_response_bytes+1, readct);
-      DBGMSG("read() returned %s", hs );
+      DBGMSF(debug, "read() returned %s", hs );
       free(hs);
       // hex_dump(ddc_response_bytes,1+rc);
    }
@@ -702,21 +702,21 @@ Public_Status_Code try_single_getvcp_call(int fh, unsigned char vcp_feature_code
 
    if (ddc_response_bytes[1] != 0x6e) {
       // assert(ddc_response_bytes[1] == 0x6e);
-      rpt_vstring(0,"(%s) Invalid address byte in response, expected 06e, actual 0x%02x",
-                    __func__, ddc_response_bytes[1] );
+      DBGMSF(debug, "Invalid address byte in response, expected 06e, actual 0x%02x",
+                    ddc_response_bytes[1] );
       rc = DDCRC_INVALID_DATA;
       goto bye;
    }
 
    if (ddc_data_length != 8) {
-      rpt_vstring(0,"(%s) Invalid query VCP response length: %d", __func__, ddc_data_length );
+      DBGMSF(debug, "Invalid query VCP response length: %d", ddc_data_length );
       rc = DDCRC_BAD_BYTECT;
       goto bye;
    }
 
    if (ddc_response_bytes[3] != 0x02) {       // get feature response
-      rpt_vstring(0,"(%s) Expected 0x02 in feature response field, actual value 0x%02x",
-                    __func__, ddc_response_bytes[3] );
+      DBGMSF(debug, "Expected 0x02 in feature response field, actual value 0x%02x",
+                    ddc_response_bytes[3] );
       rc = DDCRC_INVALID_DATA;
       goto bye;
    }
@@ -727,7 +727,7 @@ Public_Status_Code try_single_getvcp_call(int fh, unsigned char vcp_feature_code
    for (ndx=1; ndx < 11; ndx++) calculated_checksum ^= ddc_response_bytes[ndx];
    // printf("(%s) checksum0=0x%02x, calculated_checksum=0x%02x\n", __func__, checksum0, calculated_checksum );
    if (ddc_response_bytes[11] != calculated_checksum) {
-      rpt_vstring(0,"(%s) Unexpected checksum.  actual=0x%02x, calculated=0x%02x  ", __func__,
+      DBGMSF(debug, "Unexpected checksum.  actual=0x%02x, calculated=0x%02x",
              ddc_response_bytes[11], calculated_checksum );
       rc = DDCRC_CHECKSUM;
       goto bye;
@@ -740,12 +740,12 @@ Public_Status_Code try_single_getvcp_call(int fh, unsigned char vcp_feature_code
          DBGMSF(debug, "cur_val = %d, max_val = %d", cur_val, max_val );
       }
       else if (ddc_response_bytes[4] == 0x01) {    // unsupported VCP code
-         rpt_vstring(0,"(%s) Unsupported VCP code: 0x%02x", __func__ , vcp_feature_code);
+         DBGMSF(debug, "Unsupported VCP code: 0x%02x", vcp_feature_code);
          rc = DDCRC_REPORTED_UNSUPPORTED;
       }
       else {
-         rpt_vstring(0,"(%s) Unexpected value in supported VCP code field: 0x%02x  ",
-                       __func__, ddc_response_bytes[4] );
+         DBGMSF(debug, "Unexpected value in supported VCP code field: 0x%02x  ",
+                       ddc_response_bytes[4] );
          rc = DDCRC_INVALID_DATA;
       }
 
