@@ -234,20 +234,21 @@ endif
 
 
 # Notes: 
-# 1) Following line fails because list of file is archived internally, get file not found errors after remove
+# 1) Without -prune option, the following line fails because list of file is archived internally, get file not found errors after remove
 #	find $(top_distdir) -name ".deps" -exec rm -rf {} \;
-#   Use pipe to xargs rm -rf instead 
-# 2) Why explicit copy of .h files?
-# 3) find statements in src/usb_util/Makefile.am find nothing, but those here work.  why?
+# 2) Piping to xargs fails on if there are no files, which occurs if "make dist" is invoked without anything having bee built.
+#    find $(top_distdir) -name ".deps" | xargs rm
+# 3) Why explicit copy of .h files?
+# 4) find statements in src/usb_util/Makefile.am find nothing, but those here work.  why?
 
 
 dist-hook:
 	@echo "(src/Makefile) Executing hook dist-hook.top_distdir=$(top_distdir) distdir=$(distdir).."
 	find .  -type f | grep  \.h$ | xargs -i cp --parents "{}" $(distdir)
-	find $(distdir) -name ".deps" | xargs rm -rf 
-	find $(distdir) -name ".libs" | xargs rm -rf 
-	find $(distdir) -name "*.lo"  | xargs rm 
-	find $(distdir) -name "*.o"   | xargs rm
+	find $(distdir) -name ".deps" -prune -exec rm -rf {} \;  
+	find $(distdir) -name ".libs" -prune -exec rm -rf {} \;  
+	find $(distdir) -name "*.lo"  -exec rm {} \;  
+	find $(distdir) -name "*.o"   -exec rm {} \;  
 	rm -rf $(distdir)/swig/pyenv
 	rm -rf $(distdir)/swig/__pycache__
 
