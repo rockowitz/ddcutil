@@ -48,6 +48,8 @@
 #define EDID_EXTRA_STRING_FIELD_SIZE 14
 #define EDID_MODEL_NAME_FIELD_SIZE   14
 #define EDID_SERIAL_ASCII_FIELD_SIZE 14
+#define EDID_SOURCE_MAX_LEN           3
+#define EDID_SOURCE_FIELD_SIZE        4
 
 //Calculates checksum for a 128 byte EDID
 Byte edid_checksum(Byte * edid);
@@ -85,8 +87,8 @@ struct {
    ushort       by;                      ///< blue  y coordinate
    Byte         video_input_definition;  /// EDID byte 20 (x14)
    // bool         is_digital_input;      // from byte 20 (x14), but 7
-   uint8_t      extension_flag;        ///< number of optional extension blocks
-   char *       edid_source;           ///< describes source of EDID
+   uint8_t      extension_flag;          ///< number of optional extension blocks
+   char         edid_source[EDID_SOURCE_FIELD_SIZE];  ///< describes source of EDID
 } Parsed_Edid;
 
 

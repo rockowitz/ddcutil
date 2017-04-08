@@ -261,7 +261,7 @@ Parsed_Edid * get_x11_edid_by_model_sn(char * model_name, char * sn_ascii) {
          if (streq(parsed_edid->model_name, model_name) &&
                streq(parsed_edid->serial_ascii, sn_ascii) )
          {
-            parsed_edid->edid_source = "X11";
+            g_strlcpy(parsed_edid->edid_source, "X11", EDID_SOURCE_FIELD_SIZE);
             DBGMSF(debug, "Found matching EDID from X11\n", __func__);
             break;
          }
@@ -314,7 +314,7 @@ Parsed_Edid * get_fallback_hiddev_edid(int fd, struct hiddev_devinfo * dev_info)
          if (bus_info) {
             printf("(%s) Using EDID for /dev/i2c-%d\n", __func__, bus_info->busno);
             parsed_edid = bus_info->edid;
-            parsed_edid->edid_source = "I2C";
+            g_strlcpy(parsed_edid->edid_source, "I2C", EDID_SOURCE_FIELD_SIZE);
             // result = NULL;   // for testing - both i2c and X11 methods work
          }
          else {    // ADL
@@ -323,7 +323,7 @@ Parsed_Edid * get_fallback_hiddev_edid(int fd, struct hiddev_devinfo * dev_info)
                                     model_sn->model,
                                     model_sn->sn);
             parsed_edid = adlshim_get_parsed_edid_by_display_ref(dref);
-            parsed_edid->edid_source = "ADL";
+            g_strlcpy(parsed_edid->edid_source, "ADL", EDID_SOURCE_FIELD_SIZE);
             // memory leak: not freeing dref because don't want to clobber parsed_edid
             // need to review Display_Ref lifecycle
          }
@@ -382,7 +382,7 @@ Parsed_Edid * get_hiddev_edid_with_fallback(int fd, struct hiddev_devinfo * dev_
           // }
        }
        else
-          parsed_edid->edid_source = "USB";
+          g_strlcpy(parsed_edid->edid_source, "USB", EDID_SOURCE_FIELD_SIZE);
 
        buffer_free(edid_buffer, __func__);
        edid_buffer = NULL;

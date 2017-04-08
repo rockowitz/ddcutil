@@ -379,7 +379,7 @@ void report_parsed_edid_base(Parsed_Edid * edid, bool verbose, bool show_raw, in
       }
 
       if (verbose) {
-         if (edid->edid_source)
+   //      if (strlen(edid->edid_source) > 0)
             rpt_vstring(depth,"EDID source: %s",        edid->edid_source);
       }
       if (show_raw) {
@@ -389,7 +389,7 @@ void report_parsed_edid_base(Parsed_Edid * edid, bool verbose, bool show_raw, in
 
    }
    else {
-      // if (verbose)
+       if (verbose)
          rpt_vstring(d1,"No EDID");
    }
 }
