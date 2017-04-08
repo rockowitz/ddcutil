@@ -272,7 +272,7 @@ get_raw_value_for_feature_table_entry(
  *    dh                 display handle
  *    feature_set        feature set identifying features to be queried
  *    vset               append values retrieved to this value set
- *    ignore_unspported  unsupported features are not an error
+ *    ignore_unsupported  unsupported features are not an error
  *    msg_fh             destination for error messages
  *
  * Returns:
@@ -331,7 +331,7 @@ collect_raw_feature_set_values(
  *    dh                 display handle
  *    subset             feature set identifier
  *    vset               append values retrieved to this value set
- *    ignore_unspported  unsupported features are not an error
+ *    ignore_unsupported  unsupported features are not an error
  *    msg_fh             destination for error messages
  *
  * Returns:

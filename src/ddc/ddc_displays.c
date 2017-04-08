@@ -769,7 +769,7 @@ ddc_report_active_display(Display_Info * curinfo, int depth) {
                set_output_level(output_level);
 
             if (output_level >= DDCA_OL_VERBOSE)
-               rpt_vstring(depth, "Uses DDC Null Response to indicate unspported: %s",
+               rpt_vstring(depth, "Uses DDC Null Response to indicate unsupported: %s",
                                   bool_repr(dh->dref->flags & DREF_DDC_USES_NULL_RESPONSE_FOR_UNSUPPORTED));
          }
 
