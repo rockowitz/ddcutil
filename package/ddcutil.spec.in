@@ -351,6 +351,7 @@ rm -rf %{buildroot}
 %{_includedir}/ddcutil_c_api.h
 %{_libdir}/pkgconfig/ddcutil.pc
 %{_libdir}/libddcutil.so
+%{_datadir}/cmake/Modules/FindDDCUtil.cmake
 
 # %%doc -n ddcutil
 # %%doc -n libddcutil-0

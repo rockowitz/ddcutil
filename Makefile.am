@@ -27,6 +27,9 @@ SUBDIRS = src man data package $(DOXYDIR)
 if ENABLE_SHARED_LIB_COND
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = ddcutil.pc
+cmakedir = $(datadir)/cmake/Modules
+cmake_DATA = FindDDCUtil.cmake
+EXTRA_DIST += FindDDCUtil.cmake
 endif
 
 
