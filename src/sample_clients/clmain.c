@@ -456,53 +456,11 @@ int test_monitor_detection() {
    return displayct;
 }
 
-
-int main(int argc, char** argv) {
-   printf("\n(%s) Starting.\n", __func__);
-
-   ddca_reset_stats();
-
-   DDCA_Status rc;
+void test_display_id_ref_handle_use() {
    DDCA_Display_Identifier did;
-   DDCA_Display_Ref dref;
-   DDCA_Display_Handle dh = NULL;  // initialize to avoid clang analyzer warning
-
-   // Initialize libddcutil.   Must be called first
-   // printf("(%s) Calling ddca_init()...\n", __func__);
-   // ddca_init();
-
-#ifdef WRONG
-   // Register an abort function.
-   // If libddcutil encounters an unexpected, unrecoverable error, it will
-   // normally exit, causing the calling program to fail.  If the caller registers an
-   // abort function, that function will be called instead.
-   ddca_register_abort_func(my_abort_func);
-#endif
-
-   // For aborting out of shared library
-   jmp_buf abort_buf;
-   int jmprc = setjmp(abort_buf);
-   if (jmprc) {
-      DDCA_Global_Failure_Information * finfo = ddca_get_global_failure_information();
-      if (finfo)
-         fprintf(stderr, "(%s) Error %d (%s) in function %s at line %d in file %s\n",
-                         __func__, finfo->status, ddca_status_code_name(finfo->status), finfo->funcname, finfo->lineno, finfo->fn);
-      fprintf(stderr, "(%s) Aborting. Internal status code = %d\n", __func__, jmprc);
-      exit(EXIT_FAILURE);
-   }
-   ddca_register_jmp_buf(&abort_buf);
-
-   // Query library build settings.
-   // test_build_information();
-
-   // Retry management
-   // test_retry_management();
-
-
-   // Monitor detection
-  //  int displayct = test_monitor_detection();
-   // goto bye;  // *** TEMP ***
-
+   DDCA_Display_Ref        dref;
+   DDCA_Display_Handle     dh;
+   int rc;
    // printf("\nCreate a Display Identifier for display 2...\n");
    // rc = ddca_create_dispno_display_identifier(2, &did);
 
@@ -564,11 +522,60 @@ int main(int argc, char** argv) {
          rc = ddca_close_display(dh);
          if (rc != 0)
             FUNCTION_ERRMSG("ddca_close_display", rc);
-
-
       }
    }
-   goto bye;
+
+}
+
+
+int main(int argc, char** argv) {
+   printf("\n(%s) Starting.\n", __func__);
+
+   ddca_reset_stats();
+
+   DDCA_Status rc;
+   DDCA_Display_Identifier did;
+   DDCA_Display_Ref dref;
+   DDCA_Display_Handle dh = NULL;  // initialize to avoid clang analyzer warning
+
+   // Initialize libddcutil.   Must be called first
+   // printf("(%s) Calling ddca_init()...\n", __func__);
+   // ddca_init();
+
+#ifdef WRONG
+   // Register an abort function.
+   // If libddcutil encounters an unexpected, unrecoverable error, it will
+   // normally exit, causing the calling program to fail.  If the caller registers an
+   // abort function, that function will be called instead.
+   ddca_register_abort_func(my_abort_func);
+#endif
+
+   // For aborting out of shared library
+   jmp_buf abort_buf;
+   int jmprc = setjmp(abort_buf);
+   if (jmprc) {
+      DDCA_Global_Failure_Information * finfo = ddca_get_global_failure_information();
+      if (finfo)
+         fprintf(stderr, "(%s) Error %d (%s) in function %s at line %d in file %s\n",
+                         __func__, finfo->status, ddca_status_code_name(finfo->status), finfo->funcname, finfo->lineno, finfo->fn);
+      fprintf(stderr, "(%s) Aborting. Internal status code = %d\n", __func__, jmprc);
+      exit(EXIT_FAILURE);
+   }
+   ddca_register_jmp_buf(&abort_buf);
+
+   // Query library build settings.
+   // test_build_information();
+
+   // Retry management
+   // test_retry_management();
+
+
+   // Monitor detection
+   int displayct = test_monitor_detection();
+   // goto bye;  // *** TEMP ***
+
+   test_display_id_ref_handle_use();
+
 
 
    DDCA_Display_Info_List * dlist = ddca_get_displays();
@@ -595,7 +602,6 @@ int main(int argc, char** argv) {
       printf("(%s) Opened display handle: %s\n", __func__, dh_repr);
 
       test_cont_value(dh, 0x10);
-
 
       rc = ddca_close_display(dh);
       if (rc != 0)
