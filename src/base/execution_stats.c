@@ -460,7 +460,6 @@ void reset_sleep_event_counts() {
 
 
 /** Rudimentary mechanism for changing the sleep strategy.
- *
  */
 bool set_sleep_strategy(int strategy) {
    if (strategy == -1)    // if unset
@@ -473,12 +472,19 @@ bool set_sleep_strategy(int strategy) {
    return result;
 }
 
+
 /** Gets the current sleep strategy number
  */
 int get_sleep_strategy() {
    return sleep_strategy;
 }
 
+
+/** Gets description of a sleep strategy.
+ *
+ * \param sleep_strategy sleep strategy number
+ * \return description
+ */
 char * sleep_strategy_desc(int sleep_strategy) {
    char * result = NULL;
    switch(sleep_strategy) {
@@ -498,6 +504,19 @@ char * sleep_strategy_desc(int sleep_strategy) {
 }
 
 
+/** Sleep for a period based on a failure event type and the number
+ *  of consecutive failures.
+ *
+ *  This function does 3 things:
+ *  1. Determines the sleep period based on the communication
+ *     mechanism, event type and occurrence number.
+ *  2. Records the sleep event.
+ *  3. Sleeps for period determined.
+ *
+ * @param io_mode     communication mechanism (must be #DDCA_IO_DEVI2C)
+ * @param event_type  reason for sleep (currently only #SE_DDC_NULL - DDC Null Response)
+ * @param occno       occurrence count of event
+ */
 void
 call_dynamic_tuned_sleep(
       DDCA_IO_Mode io_mode,
@@ -528,6 +547,13 @@ call_dynamic_tuned_sleep(
 
 }
 
+
+/** Convenience function for invoking #call_dynamic_tuned_sleep() in
+ *  the common case where the communication mechanism is I2C.
+ *
+ *  \param event_type
+ *  \param occno occurrence count of event
+ */
 void
 call_dynamic_tuned_sleep_i2c(
       Sleep_Event_Type event_type,
@@ -666,7 +692,6 @@ void call_tuned_sleep_dh(Display_Handle* dh, Sleep_Event_Type event_type) {
 
 
 
-
 /** Reports sleep strategy statistics.
  *
  * @param depth logical indentation depth
@@ -689,7 +714,9 @@ void report_sleep_strategy_stats(int depth) {
 // Module initialization
 //
 
-/** Initialize execution stats module
+/** Initializes execution stats module.
+ *
+ * Must be called once at program startup.
  */
 void init_execution_stats() {
    primary_error_code_counts = new_status_code_counts(NULL);
@@ -697,6 +724,7 @@ void init_execution_stats() {
    program_start_timestamp = cur_realtime_nanosec();
 }
 
+/** Resets collected execution statistics */
 void reset_execution_stats() {
    reset_sleep_event_counts();
    reset_status_code_counts();

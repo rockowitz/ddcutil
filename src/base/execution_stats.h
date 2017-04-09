@@ -49,10 +49,19 @@ void reset_execution_stats();
 
 // IO Event Tracking
 
-/** IO Event type.
+/** IO Event type identifiers.
+ *
  * Statistics for each event type are recorded separately.
  */
-typedef enum {IE_WRITE, IE_READ, IE_WRITE_READ, IE_OPEN, IE_CLOSE, IE_OTHER} IO_Event_Type;
+typedef enum {
+   IE_WRITE,               ///< write event
+   IE_READ,                ///< read event
+   IE_WRITE_READ,          ///< write/read operation, typical for I2C
+   IE_OPEN,                ///< device file open
+   IE_CLOSE,               ///< device file close
+   IE_OTHER                ///< other IO event
+} IO_Event_Type;
+
 
 const char * io_event_name(IO_Event_Type event_type);
 
