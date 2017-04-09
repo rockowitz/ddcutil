@@ -968,13 +968,13 @@ static char * hiddev_directory() {
 }
 
 
-/** Checks if a given #display_Rec satisfies all the criteria specified in a
+/** Checks if a given #Display_Rec satisfies all the criteria specified in a
  *  #Display_Criteria struct.
  *
- *  \param drec  pointer to #Display_Rec to test
- *  \param critera pointer to criteria
- *  \retval true all specified criteria match
- *  \retval at least one specified criterion does not match
+ *  \param  drec     pointer to #Display_Rec to test
+ *  \param  criteria pointer to criteria
+ *  \retval true     all specified criteria match
+ *  \retval false    at least one specified criterion does not match
  *
  *  \remark
  *  In the degenerate case that no criteria are set in **criteria**, returns true.
@@ -1148,7 +1148,7 @@ Display_Rec * ddc_find_display_rec_by_display_identifier(Display_Identifier * di
 /** Searches the master display list for a display matching the given #Display_Identifier,
  *  returning its #Display_Ref.
  *
- *  @param  did  $Display_Identifier
+ *  @param  did  pointer to #Display_Identifier
  *  @return #Display_Ref for the identifier, NULL if not found
  *
  *  * \remark

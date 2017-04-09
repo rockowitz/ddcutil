@@ -69,7 +69,12 @@ Display_Ref* ddc_find_display_by_edid(
 
 
 #define DISPLAY_REC_MARKER "DREC"
-// new way
+/** Describes a single monitor detected.
+ *
+ * @remark
+ * To facilitate conversion, this struct contains redundant information
+ * from multiple existing data structures.
+ */
 typedef struct {
    char          marker[4];
    int           dispno;
