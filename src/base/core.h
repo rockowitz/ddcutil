@@ -156,12 +156,15 @@ void set_ferr_to_default();
 // Performance statistics
 //
 
+/** Used as values to specify a statistics type, and as
+ *  bitflags to select statistics types.
+ */
 typedef enum {
-   STATS_NONE     = 0x00,
-   STATS_TRIES    = 0x01,
-   STATS_ERRORS   = 0x02,
-   STATS_CALLS    = 0x04,
-   STATS_ALL      = 0xFF
+   STATS_NONE     = 0x00,    ///< no statistics
+   STATS_TRIES    = 0x01,    ///< retry statistics
+   STATS_ERRORS   = 0x02,    ///< error statistics
+   STATS_CALLS    = 0x04,    ///< system calls
+   STATS_ALL      = 0xFF     ///< indicates all statistics types
 } Stats_Type;
 
 //
@@ -175,6 +178,7 @@ char *            output_level_name(DDCA_Output_Level val);
 
 // Debug trace message control
 
+#ifdef OLD
 typedef Byte Trace_Group;
 #define TRC_BASE 0x80
 #define TRC_I2C  0x40
@@ -185,6 +189,21 @@ typedef Byte Trace_Group;
 
 #define TRC_NEVER  0x00
 #define TRC_ALWAYS 0xff
+#endif
+
+typedef enum {
+ TRC_BASE = 0x80,
+ TRC_I2C  = 0x40,
+ TRC_ADL  = 0x20,
+ TRC_DDC  = 0x10,
+ TRC_USB  = 0x08,
+ TRC_TOP  = 0x04,
+
+ TRC_NEVER  = 0x00,
+ TRC_ALWAYS = 0xff
+} Trace_Group;
+
+
 
 Trace_Group trace_class_name_to_value(char * name);
 void set_trace_levels(Trace_Group trace_flags);

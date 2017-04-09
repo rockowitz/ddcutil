@@ -824,7 +824,7 @@ void dbgmsg(
  * Returns:         nothing
  */
 void dbgtrc(
-        Byte         trace_group,
+        Trace_Group  trace_group,
         const char * funcname,
         const int    lineno,
         const char * fn,
