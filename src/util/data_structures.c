@@ -547,6 +547,18 @@ int bbf_iter_next(Byte_Bit_Flags_Iterator bbf_iter) {
 // Cross functions bba <-> bbf
 //
 
+
+/** Tests if the bit number of every byte in a #Byte_Value_Array is set
+ *  in a #Byte_Bit_Flags, and conversely that for every bit set in the
+ *  #Byte_Bit_Flags there is a corresponding byte in the #Byte_Value_Array.
+ *
+ *  Note it is possible that the same byte appears more than once in the
+ *  #Byte_Value_Array.
+ *
+ *  \param bva     #Byte_Value_Array to test
+ *  \param bbflags #Byte_Bit_Flags to test
+ *  \return        true/false
+ */
 bool bva_bbf_same_values( Byte_Value_Array bva , Byte_Bit_Flags bbflags) {
    bool result = true;
    int item;
@@ -560,13 +572,24 @@ bool bva_bbf_same_values( Byte_Value_Array bva , Byte_Bit_Flags bbflags) {
    return result;
 }
 
-
+/** Function matching signature #Byte_Appender that adds a byte
+ * to a #Byte_Value_Array.
+ *
+ * \param data_struct pointer to #Byte_Value_Array
+ * \param val  byte to append
+ */
 void bva_appender(void * data_struct, Byte val) {
    Byte_Value_Array bva = (Byte_Value_Array) data_struct;
    bva_append(bva, val);
 }
 
 
+/** Function matching signature #Byte_Appender that sets a bit in
+ *  a #Byte_Bit_Flags
+ *
+ * \param data_struct pointer to #Byte_Bit_Flags
+ * \param val  bit number to set
+ */
 void bbf_appender(void * data_struct, Byte val) {
    Byte_Bit_Flags bbf = (Byte_Bit_Flags) data_struct;
    assert(bbf);
@@ -1288,6 +1311,7 @@ char * vnt_interpret_flags(
      return result;
 
 }
+
 
 /** Shows the contents of a **Value_Name_Title table.
  *  Output is written to stdout.

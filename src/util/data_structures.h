@@ -85,6 +85,9 @@ int            bbf_iter_next(Byte_Bit_Flags_Iterator bbf_iter);
 
 bool bva_bbf_same_values( Byte_Value_Array bva , Byte_Bit_Flags bbf);
 
+/** Function signature for passing function that appends a value to
+ * either a #Byte_Bit_Flags or a #Byte_Value_Array
+ */
 typedef void (*Byte_Appender) (void * data_struct, Byte val);
 void bva_appender(void * data_struct, Byte val);
 void bbf_appender(void * data_struct, Byte val);
