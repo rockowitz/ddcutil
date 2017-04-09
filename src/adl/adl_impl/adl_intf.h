@@ -45,7 +45,7 @@
 
 /** Describes an ADL display.
  *
- * Used only winin ADL implementation code and tests
+ * Used only within ADL implementation code and tests
  */
 typedef
 struct {
@@ -108,6 +108,13 @@ ADL_Display_Rec * adl_find_display_by_mfg_model_sn(const char * mfg_id, const ch
 ADL_Display_Rec * adl_find_display_by_edid(const Byte * pEdidBytes);
 
 Display_Info_List adl_get_valid_displays();
+
+
+// new
+
+int adl_get_active_display_ct();
+ADL_Display_Rec * adl_get_active_display_rec(int ndx);
+
 
 
 // Read from and write to the display

@@ -971,7 +971,7 @@ int i2c_get_busct() {
 // Bus_Info retrieval
 //
 
-static
+
 Bus_Info * i2c_get_bus_info_by_index(int busndx) {
    assert(busndx >= 0);
    bool debug = false;
@@ -1193,6 +1193,8 @@ Bus_Info * i2c_get_bus_info(int busno, Byte findopts) {
 }
 
 
+// called from get_fallback_hiddev_edid() in usb_edid.c
+
 /** Retrieves bus information by some combination of the monitor's
  * mfg id, model name and/or serial number.
  *
@@ -1228,6 +1230,7 @@ i2c_find_bus_info_by_mfg_model_sn(
 }
 
 
+#ifdef  PRE_DISPLAY_REC
 /** Retrieves bus information using the 128 byte EDID of the monitor on the bus.
  *
  *  @param  edidbytes  pointer to 128 byte EDID
@@ -1250,7 +1253,7 @@ Bus_Info * i2c_find_bus_info_by_edid(const Byte * edidbytes, Byte findopts) {
    DBGMSF(debug, "Returning: %p", result );
    return result;
 }
-
+#endif
 
 //
 // I2C Bus Inquiry
@@ -1338,6 +1341,7 @@ typedef struct {
 #endif
 
 
+#ifdef PRE_DISPLAY_REC
 /** Gets list of I2C connected displays in the form expected by
  * higher levels of the program.
  *
@@ -1345,7 +1349,7 @@ typedef struct {
  *
  * @return list of displays
  */
-Display_Info_List i2c_get_displays() {
+Display_Info_List i2c_get_displays_old() {
    Display_Info_List info_list = {0,NULL};
    Display_Info info_recs[256];
    int busct = i2c_get_busct();
@@ -1369,6 +1373,20 @@ Display_Info_List i2c_get_displays() {
    // DBGMSG("Done. Returning:");
    // report_display_info_list(&info_list, 0);
    return info_list;
+}
+#endif
+
+
+GPtrArray* i2c_get_displays() {
+   GPtrArray * p = g_ptr_array_new();
+   int busct = i2c_get_busct();
+   int busndx = 0;
+   for (busndx=0; busndx < busct; busndx++) {
+      Bus_Info * businfo = i2c_get_bus_info_by_index(busndx);
+      if ( (businfo->flags & I2C_BUS_ADDR_0X50) )
+         g_ptr_array_add(p, businfo);
+    }
+   return p;
 }
 
 

@@ -28,6 +28,7 @@
 
 /** \cond */
 #include <assert.h>
+#include <glib.h>
 #include <stdlib.h>     // wchar_t, needed by adl_structures.h
 #include <stdbool.h>
 #include <string.h>
@@ -36,6 +37,7 @@
 #include "public/ddcutil_types.h"
 
 #include "util/edid.h"
+#include "util/report_util.h"
 #include "util/string_util.h"
 
 #include "base/core.h"
@@ -140,6 +142,39 @@ Display_Ref * adlshim_find_display_by_edid(const Byte * pEdidBytes) {
 
 Display_Info_List adlshim_get_valid_displays() {
    return adl_get_valid_displays();
+}
+
+int adlshim_get_valid_display_ct() {
+   return adl_get_active_display_ct();
+}
+
+GPtrArray * adlshim_get_valid_display_details() {
+   GPtrArray * pa = g_ptr_array_new();
+   int ct = adl_get_active_display_ct();
+   for (int ndx = 0; ndx < ct; ndx++) {
+
+      ADL_Display_Rec * irec =  adl_get_active_display_rec(ndx);
+      ADL_Display_Detail * orec = calloc(1, sizeof(ADL_Display_Detail));
+      memcpy(orec->marker, ADL_DISPLAY_DETAIL_MARKER, 4);
+      orec->iAdapterIndex = irec->iAdapterIndex;
+      orec->iDisplayIndex = irec->iDisplayIndex;
+      orec->supports_ddc  = irec->supports_ddc;
+      orec->pEdid         = irec->pEdid;
+      orec->xrandr_name   = strdup(irec->xrandr_name);
+
+      g_ptr_array_add(pa, orec);
+   }
+   return pa;
+}
+
+void report_adl_display_detail(ADL_Display_Detail * detail, int depth) {
+   int d1 = depth+1;
+   rpt_structure_loc("ADL_Display_Detail", detail, depth);
+   rpt_int("iAdapterIndex", NULL, detail->iAdapterIndex, d1);
+   rpt_int("iDisplayIndex", NULL, detail->iDisplayIndex, d1);
+   rpt_bool("supports ddc", NULL, detail->supports_ddc, d1);
+   rpt_str("xrandr_name", NULL,  detail->xrandr_name, d1);
+   report_parsed_edid(detail->pEdid, true, d1);
 }
 
 

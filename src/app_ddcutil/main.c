@@ -453,13 +453,23 @@ int main(int argc, char *argv[]) {
       main_rc = EXIT_SUCCESS;
    }
 
+   // start of commands that actually access monitors
+
+
    else if (parsed_cmd->cmd_id == CMDID_DETECT) {
+
+      // newer
+      ddc_ensure_displays_initialized();
+
+
 #ifdef OLD
       if (parsed_cmd->programmatic_output)
          set_output_format(OUTPUT_PROG_BUSINFO);
 #endif
+
       // new way:
       ddc_report_active_displays(0);
+
    }
 
    else if (parsed_cmd->cmd_id == CMDID_TESTCASE) {
@@ -471,6 +481,8 @@ int main(int argc, char *argv[]) {
          ok = false;
       }
       else {
+         ddc_ensure_displays_initialized();
+
          if (!parsed_cmd->pdid)
             parsed_cmd->pdid = create_dispno_display_identifier(1);   // default monitor
          ok = execute_testcase(testnum, parsed_cmd->pdid);
@@ -479,6 +491,8 @@ int main(int argc, char *argv[]) {
    }
 
    else if (parsed_cmd->cmd_id == CMDID_LOADVCP) {
+      ddc_ensure_displays_initialized();
+
       char * fn = strdup( parsed_cmd->args[0] );
       // DBGMSG("Processing command loadvcp.  fn=%s", fn );
       Display_Handle * dh   = NULL;
@@ -500,6 +514,8 @@ int main(int argc, char *argv[]) {
    }
 
    else if (parsed_cmd->cmd_id == CMDID_ENVIRONMENT) {
+      ddc_ensure_displays_initialized();   // *** NEEDED HERE ??? ***
+
       printf("The following tests probe the runtime environment using multiple overlapping methods.\n");
       // DBGMSG("Exploring runtime environment...\n");
       query_sysenv();
@@ -508,6 +524,7 @@ int main(int argc, char *argv[]) {
 
    else if (parsed_cmd->cmd_id == CMDID_USBENV) {
 #ifdef USE_USB
+      ddc_ensure_displays_initialized();   // *** NEEDED HERE ??? ***
       printf("The following tests probe for USB connected monitors.\n");
       // DBGMSG("Exploring runtime environment...\n");
       query_usbenv();
@@ -539,6 +556,9 @@ int main(int argc, char *argv[]) {
       printf("This command will take a while to run...\n\n");
       ddc_set_max_write_read_exchange_tries(MAX_MAX_TRIES);
       ddc_set_max_multi_part_read_tries(MAX_MAX_TRIES);
+
+      ddc_ensure_displays_initialized();    // *** ???
+
       query_sysenv();
 #ifdef USE_USB
       query_usbenv();
@@ -585,6 +605,9 @@ int main(int argc, char *argv[]) {
       Call_Options callopts = CALLOPT_ERR_MSG;        // emit error messages
       if (parsed_cmd->force)
          callopts |= CALLOPT_FORCE;
+
+      ddc_ensure_displays_initialized();
+
       Display_Ref * dref = get_display_ref_for_display_identifier(
                               parsed_cmd->pdid, callopts);
       if (dref) {

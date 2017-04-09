@@ -30,6 +30,7 @@
 
 /** \cond */
 #include <assert.h>
+#include <glib.h>
 #include <stdbool.h>
 #include <stdlib.h>     // wchar_t, needed by adl_structures.h
 /** \endcond */
@@ -143,6 +144,19 @@ Display_Info_List adlshim_get_valid_displays() {
    Display_Info_List info_list = {0,NULL};
    return info_list;
 }
+
+
+// new
+int adlshim_get_valid_display_ct() {
+   return 0;
+}
+
+// new
+GPtrArray * adlshim_get_valid_display_details() {
+   return g_ptr_array_new();
+}
+
+
 
 /** Mock implementation to satisfy dynamic linker.  Never called. */
 Modulated_Status_ADL

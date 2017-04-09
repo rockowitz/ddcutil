@@ -336,6 +336,7 @@ void report_display_ref(Display_Ref * dref, int depth) {
    case DDCA_IO_USB:
       rpt_int("usb_bus",    NULL, dref->usb_bus,    d1);
       rpt_int("usb_device", NULL, dref->usb_device, d1);
+      rpt_str("usb_hiddev_name", NULL, dref->usb_hiddev_name, d1);
       break;
 
    }
@@ -343,10 +344,12 @@ void report_display_ref(Display_Ref * dref, int depth) {
    // rpt_vstring(d1, "vcp_version:  %d.%d\n", dref->vcp_version.major, dref->vcp_version.minor );
    rpt_vstring(d1, "vcp_version:  %s", format_vspec(dref->vcp_version) );
    rpt_vstring(d1, "flags:        0x%02x", dref->flags);
-   rpt_vstring(d2, "DDC communication checked:  %s", (dref->flags & DREF_DDC_COMMUNICATION_CHECKED) ? "true" : "false");
-   rpt_vstring(d2, "DDC communication working:  %s", (dref->flags & DREF_DDC_COMMUNICATION_WORKING) ? "true" : "false");
-   rpt_vstring(d2, "DDC NULL response usage checked:                %s", bool_repr(dref->flags & DREF_DDC_NULL_RESPONSE_CHECKED));
-   rpt_vstring(d2, "Uses DDC NULL response to indicate unsupported: %s", bool_repr(dref->flags & DREF_DDC_USES_NULL_RESPONSE_FOR_UNSUPPORTED));
+   rpt_vstring(d2, "DDC communication checked:                  %s", (dref->flags & DREF_DDC_COMMUNICATION_CHECKED) ? "true" : "false");
+   if (dref->flags & DREF_DDC_COMMUNICATION_CHECKED)
+   rpt_vstring(d2, "DDC communication working:                  %s", (dref->flags & DREF_DDC_COMMUNICATION_WORKING) ? "true" : "false");
+   rpt_vstring(d2, "DDC NULL response usage checked:            %s", bool_repr(dref->flags & DREF_DDC_NULL_RESPONSE_CHECKED));
+   if (dref->flags & DREF_DDC_NULL_RESPONSE_CHECKED)
+   rpt_vstring(d2, "DDC NULL response may indicate unsupported: %s", bool_repr(dref->flags & DREF_DDC_USES_NULL_RESPONSE_FOR_UNSUPPORTED));
 }
 
 

@@ -498,8 +498,10 @@ int main(int argc, char** argv) {
    // Retry management
    // test_retry_management();
 
+
    // Monitor detection
-   int displayct = test_monitor_detection();
+  //  int displayct = test_monitor_detection();
+   // goto bye;  // *** TEMP ***
 
    // printf("\nCreate a Display Identifier for display 2...\n");
    // rc = ddca_create_dispno_display_identifier(2, &did);
@@ -566,8 +568,14 @@ int main(int argc, char** argv) {
 
       }
    }
+   goto bye;
 
-   for (int dispno = 1; dispno <= displayct; dispno++) {
+
+   DDCA_Display_Info_List * dlist = ddca_get_displays();
+   printf("ddca_get_displays() returned %p\n", dlist);
+
+
+   for (int dispno = 1; dispno <= dlist->ct; dispno++) {
       printf("\n(%s) ===> Test loop for display %d\n", __func__, dispno);
 
       printf("Create a Display Identifier for display %d...\n", dispno);
@@ -612,7 +620,9 @@ int main(int argc, char** argv) {
       printf("(%s) ddca_free_display_identifier() returned %d\n", __func__, rc);
    }
 
-   ddca_show_stats(0);
+   // ddca_show_stats(0);
 
+bye:
+   ddca_show_stats(0);
    return 0;
 }

@@ -709,8 +709,10 @@ Public_Status_Code ddc_write_read_with_retry(
                if (retryable) {
                   int retry_millisec = ddcrc_null_response_ct * 100;
                   // if (debug || output_level >= DDCA_OL_VERBOSE)
-                     DBGMSG("DDCRC_NULL_RESPONSE, Sleeping for %d milliseconds, then retrying...",
-                           retry_millisec);
+                    // DBGMSG("DDCRC_NULL_RESPONSE, Sleeping for %d milliseconds, then retrying...",
+                    //       retry_millisec);
+                  if (ddcrc_null_response_ct == 1)
+                     f0printf(FOUT, "Extended delay as recovery from DDC Null Response...\n");
                   sleep_millis(retry_millisec);
                }
 // #endif
@@ -722,7 +724,7 @@ Public_Status_Code ddc_write_read_with_retry(
                   retryable = false;
                }
 #endif
-               DBGMSG("DDCRC_NULL_RESPONSE, retryable = %s", bool_repr(retryable) );
+               // DBGMSG("DDCRC_NULL_RESPONSE, retryable = %s", bool_repr(retryable) );
             }
             // when is DDCRC_READ_ALL_ZERO actually an error vs the response of the monitor instead of NULL response?
             // On Dell monitors (P2411, U3011) all zero response occurs on unsupported Table features

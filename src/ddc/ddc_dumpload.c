@@ -47,6 +47,7 @@
 #include "base/core.h"
 #include "base/ddc_errno.h"
 #include "base/ddc_packets.h"
+#include "base/displays.h"
 #include "base/parms.h"
 #include "base/status_code_mgt.h"
 #include "base/vcp_version.h"
@@ -381,11 +382,20 @@ loadvcp_by_dumpload_data(
    else {
      // no Display_Ref passed as argument, just use the identifiers in the
      // data to pick the display
+#ifdef PRE_DISPLAY_REC
       Display_Ref * dref = ddc_find_display_by_mfg_model_sn(
                               NULL,    // mfg_id
                               pdata->model,
                               pdata->serial_ascii,
                               DISPSEL_VALID_ONLY);
+#endif
+      Display_Identifier * did = create_mfg_model_sn_display_identifier(
+                             pdata->mfg_id,
+                             pdata->model,
+                             pdata->serial_ascii);
+      assert(did);
+      Display_Ref * dref = get_display_ref_for_display_identifier(
+                              did, CALLOPT_NONE);
       if (!dref) {
          f0printf(FERR, "Monitor not connected: %s - %s   \n", pdata->model, pdata->serial_ascii );
          psc = DDCRC_INVALID_DISPLAY;

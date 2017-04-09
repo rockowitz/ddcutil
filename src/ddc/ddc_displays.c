@@ -51,6 +51,9 @@
 #include "i2c/i2c_do_io.h"
 
 #include "adl/adl_shim.h"
+#ifdef HAVE_ADL
+#include "adl/adl_impl/adl_intf.h"
+#endif
 
 #ifdef USE_USB
 #include "usb/usb_displays.h"
@@ -67,8 +70,16 @@
 // Trace class for this file
 // static Trace_Group TRACE_GROUP = TRC_DDC;   // currently unused
 
+
+
+static GPtrArray * all_displays = NULL;
+static int dispno_max = 0;
+
+
+
+
 // forward references
-Display_Ref * ddc_find_display_by_usb_busnum_devnum(int   busnum, int   devnum);
+// Display_Ref * ddc_find_display_by_usb_busnum_devnum(int   busnum, int   devnum);
 
 
 //
@@ -295,7 +306,7 @@ ddc_is_valid_display_ref(Display_Ref * dref, Call_Options callopts) {
             break;
          case DDCA_IO_USB:
               // n. flags not currently used for USB IO
-             // snprintf(workbuf, 100, "USB connected display %d.%d does not support DDC.\n",dref->usb_bus, dref->usb_device);
+             // snprintf(workbuf, 100, "USB connected display %d.%d does not support DDC.\n",dref->usb_bus, dref->usb_devno);
              break;
          }
       }
@@ -312,6 +323,8 @@ ddc_is_valid_display_ref(Display_Ref * dref, Call_Options callopts) {
    return result;
 }
 
+
+#ifdef PRE_DISPLAY_REC
 
 /**  Converts display identifier passed on the command line to a logical
  * reference to an I2C, ADL, or USB display.  If an I2C bus number, ADL adapter.display
@@ -330,7 +343,7 @@ ddc_is_valid_display_ref(Display_Ref * dref, Call_Options callopts) {
 // OLD             ADL number does in fact reference an attached displ
 
 Display_Ref*
-get_display_ref_for_display_identifier(
+get_display_ref_for_display_identifier_old(
                 Display_Identifier* pdid,
                 Call_Options        callopts)
 {
@@ -410,6 +423,7 @@ get_display_ref_for_display_identifier(
    }
    return dref;
 }
+#endif
 
 
 #ifdef REDUNDANT
@@ -428,9 +442,46 @@ void report_display_info(Display_Info * dinfo, int depth) {
 #endif
 
 
+
+
+
+
 //
 // Functions to get display information
 //
+
+
+Display_Info_List *
+ddc_get_valid_displays() {
+   ddc_ensure_displays_initialized();
+
+   int displayct = dispno_max;
+
+   Display_Info_List * info_list = calloc(1, sizeof(Display_Info_List));
+   info_list->ct = displayct;
+   if (displayct > 0) {
+      info_list->info_recs = calloc(displayct, sizeof(Display_Info));
+      int displayctr = 0;
+      int inforecctr = 0;
+      for (displayctr = 0; displayctr < all_displays->len; displayctr++) {
+         Display_Rec * drec = g_ptr_array_index(all_displays, displayctr);
+         assert(memcmp(drec->marker, DISPLAY_REC_MARKER, 4) == 0);
+         if (drec->dispno > 0) {
+            Display_Info * curinfo =  info_list->info_recs + inforecctr;
+            curinfo->dispno = drec->dispno;
+            curinfo->dref   = drec->dref;
+            curinfo->edid   = drec->edid;
+            memcpy(curinfo->marker, DISPLAY_INFO_MARKER, 4);
+            inforecctr++;
+         }
+      }
+   }
+   return info_list;
+}
+
+
+
+#ifdef PRE_DISPLAY_REC
 
 /** Creates a list of all displays found.  The list first contains displays
  * on /dev/i2c-n buses, then ADL displays, then USB connected displays.
@@ -443,12 +494,12 @@ void report_display_info(Display_Info * dinfo, int depth) {
  * @return pointer to newly allocated #Display_Info_List struct
  */
 Display_Info_List *
-ddc_get_valid_displays() {
+ddc_get_valid_displays_old() {
    bool debug = false;
    DBGMSF(debug, "Starting");
    int ndx;
 
-   Display_Info_List i2c_displays = i2c_get_displays();
+   Display_Info_List i2c_displays = i2c_get_displays_old();
    if (debug) {
       DBGMSG("i2c_displays returned from i2c_get_displays():");
       report_display_info_list(&i2c_displays,1);
@@ -524,8 +575,9 @@ ddc_get_valid_displays() {
    }
    return all_displays;
 }
+#endif
 
-
+#ifdef PRE_DISPLAY_REC
 /*8 Returns a #Display_Ref for the nth display.
  *
  * @param dispno     display number
@@ -539,7 +591,7 @@ ddc_find_display_by_dispno(int dispno) {
    DBGMSF(debug, "Starting.  dispno=%d", dispno);
 
    Display_Ref * result = NULL;
-   Display_Info_List * all_displays = ddc_get_valid_displays();
+   Display_Info_List * all_displays = ddc_get_valid_displays_old();
    if (dispno >= 1 && dispno <= all_displays->ct) {
       // we're not done yet.   There may be an invalid display in the list.
       int ndx;
@@ -655,15 +707,17 @@ ddc_find_display_by_edid(const Byte * pEdidBytes, Byte findopts) {
    DBGMSF(debug, "Returning: %p  %s", result, (result)?dref_repr(result):"" );
    return result;
 }
+#endif
 
+// TODO: variant that takes a Display_Rec argument, does not read VCP values since
+// that should have happened already
 
-/* Show information about a display.
+/** Shows information about a display.
  *
  * Output is written using report functions
  *
- * Arguments:
- *    curinfo   pointer to display information
- *    depth     logical indentation depth
+ * \param curinfo   pointer to display information
+ * \param depth     logical indentation depth
  */
 void
 ddc_report_active_display(Display_Info * curinfo, int depth) {
@@ -769,7 +823,7 @@ ddc_report_active_display(Display_Info * curinfo, int depth) {
                set_output_level(output_level);
 
             if (output_level >= DDCA_OL_VERBOSE)
-               rpt_vstring(depth, "Uses DDC Null Response to indicate unsupported: %s",
+               rpt_vstring(depth, "DDC Null Response may indicate unsupported: %s",
                                   bool_repr(dh->dref->flags & DREF_DDC_USES_NULL_RESPONSE_FOR_UNSUPPORTED));
          }
 
@@ -810,5 +864,398 @@ ddc_report_active_displays(int depth) {
    free_display_info_list(display_list);
    // DBGMSG("Returning %d", valid_display_ct);
    return valid_display_ct;
+}
+
+
+
+// new way
+
+/** Debugging function to display the contents of a #Display_Rec.
+ *
+ * \param drec  pointer to #Display_Rec
+ * \param depth logical indentation depth
+ */
+void report_display_rec(Display_Rec * drec, int depth) {
+   int d1 = depth+1;
+   int d2 = depth+2;
+   DDCA_Output_Level saved_output_level = get_output_level();
+   set_output_level(DDCA_OL_VERBOSE);
+   rpt_structure_loc("Display_Rec", drec, depth);
+   rpt_int("dispno", NULL, drec->dispno, d1);
+
+   rpt_vstring(d1, "dref: %p:", drec->dref);
+   report_display_ref(drec->dref, d1);
+
+   rpt_vstring(d1, "edid: %p (Skipping report)", drec->edid);
+   // report_parsed_edid(drec->edid, false, d1);
+
+   rpt_vstring(d1, "io_mode: %s", mccs_io_mode_name(drec->io_mode));
+   rpt_vstring(d1, "flags:   0x%02x", drec->flags);
+   switch(drec->io_mode) {
+   case(DDCA_IO_DEVI2C):
+         rpt_vstring(d1, "I2C bus information: ");
+         report_businfo(drec->detail.bus_detail, d2);
+         break;
+   case(DDCA_IO_ADL):
+#ifdef HAVE_ADL
+      rpt_vstring(d1, "ADL device information: ");
+      report_adl_display_detail(drec->detail.adl_detail, d2);
+#endif
+      break;
+   case(DDCA_IO_USB):
+         rpt_vstring(d1, "USB device information: ");
+         report_usb_monitor_info(drec->detail.usb_detail, d2);
+   break;
+   }
+
+   set_output_level(saved_output_level);
+}
+
+
+/** Debugging function to report a collection of #Display_Rec.
+ *
+ * \param recs    pointer to collection of #Display_Rec
+ * \param depth   logical indentation depth
+ */
+void report_display_recs(GPtrArray * recs, int depth) {
+   assert(recs);
+   rpt_vstring(depth, "Reporting %d Display_Rec instances", recs->len);
+   for (int ndx = 0; ndx < recs->len; ndx++) {
+      Display_Rec * drec = g_ptr_array_index(recs, ndx);
+      assert( memcmp(drec->marker, DISPLAY_REC_MARKER, 4) == 0);
+      rpt_nl();
+      report_display_rec(drec, depth+1);
+   }
+}
+
+
+/** Display selection criteria */
+typedef struct {
+   int     dispno;
+   int     i2c_busno;
+   int     iAdapterIndex;
+   int     iDisplayIndex;
+   int     hiddev;
+   int     usb_busno;
+   int     usb_devno;
+   char *  mfg_id;
+   char *  model_name;
+   char *  serial_ascii;
+   Byte *  edidbytes;
+} Display_Criteria;
+
+
+/** Allocates a new #Display_Criteria and initializes it to contain no criteria.
+ *
+ * \return initialized #Display_Criteria
+ */
+Display_Criteria * new_display_criteria() {
+   Display_Criteria * criteria = calloc(1, sizeof(Display_Criteria));
+   criteria->dispno = -1;
+   criteria->i2c_busno  = -1;
+   criteria->iAdapterIndex = -1;
+   criteria->iDisplayIndex = -1;
+   criteria->hiddev = -1;
+   criteria->usb_busno = -1;
+   criteria->usb_devno = -1;
+   return criteria;
+}
+
+
+/** Excapsulates locateion of hiddev device files, in case it needs to be generalized */
+static char * hiddev_directory() {
+   return "/dev/usb";
+}
+
+
+/** Checks if a given #display_Rec satisfies all the criteria specified in a
+ *  #Display_Criteria struct.
+ *
+ *  \param drec  pointer to #Display_Rec to test
+ *  \param critera pointer to criteria
+ *  \retval true all specified criteria match
+ *  \retval at least one specified criterion does not match
+ *
+ *  \remark
+ *  In the degenerate case that no criteria are set in **criteria**, returns true.
+ *
+ */
+bool ddc_check_display_rec(Display_Rec * drec, Display_Criteria * criteria) {
+   assert(drec && criteria);
+   bool result = false;
+
+   if (criteria->dispno >= 0 && criteria->dispno != drec->dispno)
+      goto bye;
+
+   if (criteria->i2c_busno >= 0) {
+      if (drec->io_mode != DDCA_IO_DEVI2C || drec->dref->busno != criteria->i2c_busno)
+         goto bye;
+   }
+
+   if (criteria->iAdapterIndex >= 0) {
+      if (drec->io_mode != DDCA_IO_ADL || drec->dref->iAdapterIndex != criteria->iAdapterIndex)
+         goto bye;
+   }
+
+   if (criteria->iDisplayIndex >= 0) {
+      if (drec->io_mode != DDCA_IO_ADL || drec->dref->iDisplayIndex != criteria->iDisplayIndex)
+         goto bye;
+   }
+
+   if (criteria->hiddev >= 0) {
+      if (drec->io_mode != DDCA_IO_USB)
+         goto bye;
+      char buf[40];
+      snprintf(buf, 40, "%s/hiddev%d", hiddev_directory(), criteria->hiddev);
+      if (!streq( drec->detail.usb_detail->hiddev_device_name, buf))
+         goto bye;
+   }
+
+   if (criteria->usb_busno >= 0) {
+      if (drec->io_mode != DDCA_IO_USB)
+         goto bye;
+      if ( drec->detail.usb_detail->hiddev_devinfo->busnum != criteria->usb_busno )
+         goto bye;
+   }
+
+   if (criteria->usb_devno >= 0) {
+      if (drec->io_mode != DDCA_IO_USB)
+         goto bye;
+      if ( drec->detail.usb_detail->hiddev_devinfo->devnum != criteria->usb_devno )
+         goto bye;
+   }
+
+   if (criteria->mfg_id && (strlen(criteria->mfg_id) > 0) && !streq(drec->edid->mfg_id, criteria->mfg_id) )
+      goto bye;
+
+   if (criteria->model_name && (strlen(criteria->model_name) > 0) && !streq(drec->edid->model_name, criteria->model_name) )
+      goto bye;
+
+   if (criteria->serial_ascii && (strlen(criteria->serial_ascii) > 0) && !streq(drec->edid->serial_ascii, criteria->serial_ascii) )
+      goto bye;
+
+   if (criteria->edidbytes && memcmp(drec->edid->bytes, criteria->edidbytes, 128) != 0)
+      goto bye;
+
+   result = true;
+
+bye:
+   return result;
+}
+
+
+
+
+// void all_displays_init() {
+//    all_displays = g_ptr_array_new();
+// }
+
+
+// TO REVIEW - DOING TOO MUCH?
+
+void ddc_add_display_rec(GPtrArray * all_displays, Display_Rec * drec) {
+   if (drec->dispno < 0) {
+      // check if valid displays, etc
+
+      if (ddc_is_valid_display_ref(drec->dref, CALLOPT_NONE)) {
+         drec->dispno = ++dispno_max;
+      }
+      else {
+         drec->dispno = -1;
+      }
+   }
+   g_ptr_array_add(all_displays, drec);
+}
+
+
+
+Display_Rec * ddc_find_display_rec_by_criteria(Display_Criteria * criteria) {
+   Display_Rec * result = NULL;
+   for (int ndx = 0; ndx < all_displays->len; ndx++) {
+      Display_Rec * drec = g_ptr_array_index(all_displays, ndx);
+      assert(memcmp(drec->marker, DISPLAY_REC_MARKER, 4) == 0);
+      if (ddc_check_display_rec(drec, criteria)) {
+         result = drec;
+         break;
+      }
+   }
+   return result;
+}
+
+
+/** Searches the master display list for a display matching the
+ * specified #Display_Identifier, returning its #Display_Rec
+ *
+ * \param did display identifier to search for
+ * \return #Display_Rec for the dksplay.
+ *
+ * \remark
+ * The returned value is a pointer into an internal data structure
+ * and should not be freed by the caller.
+ */
+Display_Rec * ddc_find_display_rec_by_display_identifier(Display_Identifier * did) {
+   bool debug = false;
+   DBGMSF(debug, "Starting");
+   if (debug)
+      report_display_identifier(did, 1);
+
+   Display_Rec * result = NULL;
+
+   Display_Criteria * criteria = new_display_criteria();
+
+   switch(did->id_type) {
+   case DISP_ID_BUSNO:
+         criteria->i2c_busno = did->busno;
+         break;
+   case DISP_ID_ADL:
+      criteria->iAdapterIndex = did->iAdapterIndex;
+      criteria->iDisplayIndex = did->iDisplayIndex;
+      break;
+   case DISP_ID_MONSER:
+      criteria->mfg_id = did->mfg_id;
+      criteria->model_name = did->model_name;
+      criteria->serial_ascii = did->serial_ascii;
+      break;
+   case DISP_ID_EDID:
+      criteria->edidbytes = did->edidbytes;
+      break;
+   case DISP_ID_DISPNO:
+      criteria->dispno = did->dispno;
+      break;
+   case DISP_ID_USB:
+      criteria->usb_busno = did->usb_bus;
+      criteria->usb_devno = did->usb_device;
+      break;
+   }
+
+   result = ddc_find_display_rec_by_criteria(criteria);
+
+   free(criteria);   // do not free pointers in criteria, they are owned by Display_Identifier
+
+   if (debug) {
+      if (result) {
+         DBGMSG("Done.  Returning: ");
+         report_display_rec(result, 1);
+      }
+      else
+         DBGMSG("Done.  Returning NULL");
+   }
+
+   return result;
+}
+
+
+/** Searches the master display list for a display matching the given #Display_Identifier,
+ *  returning its #Display_Ref.
+ *
+ *  @param  did  $Display_Identifier
+ *  @return #Display_Ref for the identifier, NULL if not found
+ *
+ *  * \remark
+ * The returned value is a pointer into an internal data structure
+ * and should not be freed by the caller.
+ */
+Display_Ref * ddc_find_dref_by_did(Display_Identifier * did) {
+   Display_Ref * dref = NULL;
+   Display_Rec * drec = ddc_find_display_rec_by_display_identifier(did);
+   if (drec)
+      dref = drec->dref;
+
+   return dref;
+}
+
+
+Display_Ref *
+get_display_ref_for_display_identifier(
+                Display_Identifier* pdid,
+                Call_Options        callopts)
+{
+   Display_Ref * dref = ddc_find_dref_by_did(pdid);
+
+   if (!dref && (pdid->id_type == DISP_ID_BUSNO || pdid->id_type == DISP_ID_ADL)
+             && (callopts & CALLOPT_FORCE ) ) {
+      DBGMSG("Special handling for --force unimplemented");
+   }
+   return dref;
+}
+
+
+/** Detects all connected displays by querying the I2C, ADL, and USB subsystems.
+ *
+ * \return array of #Display_Rec
+ */
+GPtrArray *  ddc_detect_all_displays() {
+   bool debug = false;
+   DBGMSF(debug, "Starting");
+
+   GPtrArray * display_list = g_ptr_array_new();
+
+   int busct = i2c_get_busct();
+   int busndx = 0;
+   for (busndx=0; busndx < busct; busndx++) {
+      Bus_Info * businfo = i2c_get_bus_info_by_index(busndx);
+      if ( (businfo->flags & I2C_BUS_ADDR_0X50) ) {
+         Display_Ref * dref = create_bus_display_ref(businfo->busno);
+         Display_Rec * drec = calloc(1,sizeof(Display_Rec));
+         memcpy(drec->marker, DISPLAY_REC_MARKER, 4);
+         drec->dispno = -1;
+         drec->dref = dref;
+         drec->edid = businfo->edid;
+         drec->detail.bus_detail = businfo;
+
+         ddc_add_display_rec(display_list, drec);
+      }
+   }
+
+  GPtrArray * all_details = adlshim_get_valid_display_details();
+  int adlct = all_details->len;
+  for (int ndx = 0; ndx < adlct; ndx++) {
+     ADL_Display_Detail * detail = g_ptr_array_index(all_details, ndx);
+     Display_Ref * dref = create_adl_display_ref(detail->iAdapterIndex, detail->iDisplayIndex);
+     Display_Rec * drec = calloc(1, sizeof(Display_Rec));
+     memcpy(drec->marker, DISPLAY_REC_MARKER, 4);
+     drec->dispno = -1;
+     drec->dref = dref;
+     drec->edid = detail->pEdid;
+     drec->detail.adl_detail = detail;
+     ddc_add_display_rec(display_list, drec);
+  }
+
+   GPtrArray * usb_monitors = get_usb_monitor_list();
+   // DBGMSF(debug, "Found %d USB displays", usb_monitors->len);
+   for (int ndx=0; ndx<usb_monitors->len; ndx++) {
+      Usb_Monitor_Info  * curmon = g_ptr_array_index(usb_monitors,ndx);
+      assert(memcmp(curmon->marker, USB_MONITOR_INFO_MARKER, 4) == 0);
+      Display_Ref * dref = create_usb_display_ref(
+                                curmon->hiddev_devinfo->busnum,
+                                curmon->hiddev_devinfo->devnum,
+                                curmon->hiddev_device_name);
+      Display_Rec * drec = calloc(1, sizeof(Display_Rec));
+      memcpy(drec->marker, DISPLAY_REC_MARKER, 4);
+      drec->dispno = -1;
+      drec->dref = dref;
+      drec->edid = curmon->edid;
+      drec->detail.usb_detail = curmon;
+      ddc_add_display_rec(display_list, drec);
+   }
+
+
+   // if (debug) {
+   //    DBGMSG("Displays detected:");
+   //    report_display_recs(display_list, 1);
+   // }
+   DBGMSF(debug, "Done. Detected %d valid displays", dispno_max);
+   return display_list;
+}
+
+
+/** Initializes the master display list.
+ *
+ *  Does nothing if the list has alreeady been initialized.
+ */
+void ddc_ensure_displays_initialized() {
+   if (!all_displays) {
+      all_displays = ddc_detect_all_displays();
+   }
 }
 

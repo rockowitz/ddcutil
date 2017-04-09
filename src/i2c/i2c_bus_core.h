@@ -29,6 +29,7 @@
 #define I2C_BUS_CORE_H_
 
 /** \cond */
+#include <glib.h>
 #include <stdbool.h>
 #include <stdio.h>
 /** \endcond */
@@ -68,21 +69,30 @@ struct {
    Byte             flags;              // I2C_BUS_ flags
 } Bus_Info;
 
+void report_businfo(Bus_Info * bus_info, int depth);
+
 bool i2c_bus_exists(int busno);
 int  i2c_get_busct();
+Bus_Info * i2c_get_bus_info_by_index(int busndx);
 void i2c_report_bus(int busno);
 int  i2c_report_buses(bool report_all, int depth);
 
-Display_Info_List i2c_get_displays();
+#ifdef PRE_DISPLAY_REC
+Display_Info_List i2c_get_displays_old();
+#endif
+GPtrArray* i2c_get_displays();
 
 Bus_Info * i2c_get_bus_info(int busno, Byte findopts);
 Bus_Info * i2c_check_bus(Bus_Info * bus_info);
+
 Bus_Info * i2c_find_bus_info_by_mfg_model_sn(
               const char * mfg_id,
               const char * model,
               const char * sn,
               Byte findopts);
+#ifdef PRE_DISPLAY_REC
 Bus_Info * i2c_find_bus_info_by_edid(const Byte * pEdidBytes, Byte findopts);
+#endif
 // void report_businfo(Bus_Info * bus_info);
 bool i2c_is_valid_bus(int busno, Call_Options callopts);
 

@@ -733,6 +733,16 @@ int adl_report_active_displays() {
 }
 
 
+int adl_get_active_display_ct() {
+   return active_display_ct;
+}
+
+ADL_Display_Rec * adl_get_active_display_rec(int ndx){
+   return &active_displays[ndx];
+}
+
+
+
 /** Returns a #Display_Info_List describing the detected ADL displays.
  *
  *  @return #Display_Info_List

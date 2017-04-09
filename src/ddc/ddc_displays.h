@@ -31,6 +31,15 @@
 #include "base/core.h"
 #include "base/displays.h"
 
+#include "i2c/i2c_bus_core.h"
+
+#include "adl/adl_shim.h"
+
+#include "usb/usb_displays.h"
+
+Display_Info_List *
+ddc_get_valid_displays_old();
+
 Display_Info_List *
 ddc_get_valid_displays();
 
@@ -40,7 +49,7 @@ ddc_report_active_displays(int depth);
 Display_Ref*
 get_display_ref_for_display_identifier(
    Display_Identifier* pdid,
-   Call_Options           callopts);
+   Call_Options        callopts);
 
 Display_Ref*
 ddc_find_display_by_dispno(
@@ -56,5 +65,32 @@ ddc_find_display_by_mfg_model_sn(
 Display_Ref* ddc_find_display_by_edid(
    const Byte *  pEdidBytes,
    Byte          findopts);
+
+
+
+#define DISPLAY_REC_MARKER "DREC"
+// new way
+typedef struct {
+   char          marker[4];
+   int           dispno;
+   Display_Ref * dref;
+   Parsed_Edid * edid;     // redundant, in detail
+   DDCA_IO_Mode io_mode;   // redundant, also in Display_Ref
+   union {
+      Bus_Info * bus_detail;
+      ADL_Display_Detail * adl_detail;
+#ifdef USE_USB
+      Usb_Monitor_Info * usb_detail;
+#endif
+   } detail;
+   uint8_t     flags;
+
+} Display_Rec;
+
+void report_display_rec(Display_Rec * drec, int depth);
+
+GPtrArray * ddc_detect_all_displays();
+
+void ddc_ensure_displays_initialized();
 
 #endif /* DDC_DISPLAYS_H_ */

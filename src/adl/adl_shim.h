@@ -31,6 +31,7 @@
 #define ADL_SHIM_H_
 
 /** \cond */
+#include <glib.h>
 #include <stdlib.h>     // wchar_t, needed by adl_structures.h
 #include <stdbool.h>
 /** \endcond */
@@ -92,6 +93,7 @@ adlshim_find_display_by_mfg_model_sn(
       const char * model,
       const char * sn);
 
+
 Display_Ref *
 adlshim_find_display_by_edid(
       const Byte * pEdidBytes);
@@ -132,5 +134,28 @@ Modulated_Status_ADL adlshim_ddc_read_only(
 //      int     sendMsgLen,
 //      Byte *  pRcvMsgBuf,
 //      int *   pRcvBytect);
+
+
+// new
+
+#define ADL_DISPLAY_DETAIL_MARKER "ADTD"
+typedef
+struct {
+   char                  marker[4];
+   int                   iAdapterIndex;
+   int                   iDisplayIndex;
+   bool                  supports_ddc;
+   char *                xrandr_name;
+   Parsed_Edid *         pEdid;
+} ADL_Display_Detail;
+
+void report_adl_display_detail(ADL_Display_Detail * detail, int depth);
+
+
+
+
+int adlshim_get_valid_display_ct();
+
+GPtrArray * adlshim_get_valid_display_details();
 
 #endif /* ADL_SHIM_H_ */

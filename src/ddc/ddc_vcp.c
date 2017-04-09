@@ -364,8 +364,9 @@ Public_Status_Code get_nontable_vcp_value(
            &response_packet_ptr
         );
    // TRCMSGTG(tg, "perform_ddc_write_read_with_retry() returned %s", psc_desc(psc));
-   if (debug || psc != 0 || IS_TRACING() ) {
-      DBGMSG("perform_ddc_write_read_with_retry() returned %s", psc_desc(psc));
+   if (debug || IS_TRACING() ) {
+      if (psc != 0)
+         DBGMSG("perform_ddc_write_read_with_retry() returned %s", psc_desc(psc));
    }
 
    if (psc == 0) {

@@ -1,7 +1,7 @@
 /* usb_displays.c
  *
  * <copyright>
- * Copyright (C) 2014-2016 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2014-2017 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -21,6 +21,7 @@
  * </endcopyright>
  */
 
+/** \cond */
 #include <assert.h>
 #include <errno.h>
 #include <fcntl.h>
@@ -28,6 +29,7 @@
 #include <linux/hiddev.h>
 #include <sys/ioctl.h>
 #include <unistd.h>
+/** \endcond */
 
 #include "util/device_id_util.h"
 #include "util/report_util.h"
@@ -56,11 +58,11 @@ void usb_core_unused_function_to_avoid_unused_variable_warning() {
    printf("0x%02x\n",TRACE_GROUP);
 }
 
-// Forward declarations
-static GPtrArray * get_usb_monitor_list();  // returns array of Usb_Monitor_Info
+// // Forward declarations
+// static GPtrArray * get_usb_monitor_list();  // returns array of Usb_Monitor_Info
 
 // Global variables
-static GPtrArray * usb_monitors;    // array of Usb_Monitor_Info
+static GPtrArray * usb_monitors = NULL;    // array of Usb_Monitor_Info
 
 
 #define HID_USAGE_PAGE_MASK   0xffff0000
@@ -113,7 +115,7 @@ static void report_usb_monitor_vcp_rec(Usb_Monitor_Vcp_Rec * vcprec, int depth) 
  *
  * Returns:       nothing
  */
-static void report_usb_monitor_info(Usb_Monitor_Info * moninfo, int depth) {
+void report_usb_monitor_info(Usb_Monitor_Info * moninfo, int depth) {
    const int d1 = depth+1;
    const int d2 = depth+2;
    rpt_structure_loc("Usb_Monitor_Info", moninfo, d1);
@@ -143,7 +145,8 @@ static void report_usb_monitor_info(Usb_Monitor_Info * moninfo, int depth) {
  *
  * Returns:      nothing
  */
-static void report_usb_monitors(GPtrArray * monitors, int depth) {
+// static
+void report_usb_monitors(GPtrArray * monitors, int depth) {
    const int d1 = depth+1;
 
    rpt_vstring(depth, "GPtrArray of %d Usb_Monitor_Info at %p", monitors->len, monitors);
@@ -293,7 +296,7 @@ static char * usb_synthesize_capabilities_string(Usb_Monitor_Info * moninfo) {
  *
  *  The result is cached in global variable usb_monitors
  */
-static GPtrArray * get_usb_monitor_list() {
+GPtrArray * get_usb_monitor_list() {
    bool debug = false;
    DBGMSF(debug, "Starting...");
    DDCA_Output_Level ol = get_output_level();
@@ -351,6 +354,7 @@ static GPtrArray * get_usb_monitor_list() {
          vcp_reports = collect_vcp_reports(fd);
 
          moninfo = calloc(1,sizeof(Usb_Monitor_Info));
+         memcpy(moninfo->marker, USB_MONITOR_INFO_MARKER, 4);
          moninfo-> hiddev_device_name = strdup(hiddev_fn);
          moninfo->edid = parsed_edid;
          moninfo->hiddev_devinfo = devinfo;
@@ -387,8 +391,8 @@ static GPtrArray * get_usb_monitor_list() {
    g_ptr_array_free(hiddev_names, true);
 
    if (debug) {
-      DBGMSG("Returning monitor list:");
-      report_usb_monitors(usb_monitors,1);
+      DBGMSG("Returning  %d monitors ", usb_monitors->len);
+      // report_usb_monitors(usb_monitors,1);
    }
 
    return usb_monitors;
@@ -502,6 +506,7 @@ Display_Info_List usb_get_valid_displays() {
 
 //  *** Functions to return a Display_Ref for a USB monitor ***
 
+#ifdef PRE_DISPLAY_REF
 
 static Display_Ref *
 create_display_ref_from_usb_monitor_info(Usb_Monitor_Info * moninfo) {
@@ -602,6 +607,7 @@ usb_find_display_by_edid(const Byte * edidbytes) {
 
    return result;
 }
+#endif
 
 
 bool usb_is_valid_display_ref(Display_Ref * dref, bool emit_error_msg) {
