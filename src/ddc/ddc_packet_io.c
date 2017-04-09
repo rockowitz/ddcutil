@@ -745,6 +745,9 @@ Public_Status_Code ddc_write_read_with_retry(
 
             else
                retryable = true;     // for now
+
+            if (psc < 0)
+               COUNT_STATUS_CODE(psc);
          }
          else {   // DDC_IO_ADL
             // TODO more detailed tests
