@@ -86,8 +86,17 @@ bool   set_sleep_strategy(int strategy);
 int    get_sleep_strategy();
 char * sleep_strategy_desc(int sleep_strategy);
 
-typedef enum {SE_WRITE_TO_READ, SE_POST_OPEN, SE_POST_WRITE, SE_POST_READ } Sleep_Event_Type;
+/** Sleep event type */
+typedef enum {
+   SE_WRITE_TO_READ,         ///< between I2C write and read
+   SE_POST_OPEN,             ///< after I2C device opened
+   SE_POST_WRITE,            ///< after I2C write without subsequent read
+   SE_POST_READ,             ///< after I2C read
+   SE_DDC_NULL               ///< after DDC Null response
+} Sleep_Event_Type;
 const char * sleep_event_name(Sleep_Event_Type event_type);
+
+
 
 // Functions for sleeping.  The actual sleep time is determined
 // by the strategy in place given the situation in which sleep is invoked.
@@ -98,6 +107,8 @@ void call_tuned_sleep_adl(Sleep_Event_Type event_type);   // DDC_IO_ADL
 void call_tuned_sleep_dh(Display_Handle* dh, Sleep_Event_Type event_type);
 // The workhorse:
 void call_tuned_sleep(DDCA_IO_Mode io_mode, Sleep_Event_Type event_type);
+void call_dynamic_tuned_sleep( DDCA_IO_Mode io_mode,Sleep_Event_Type event_type, int occno);
+void call_dynamic_tuned_sleep_i2c(Sleep_Event_Type event_type, int occno);
 
 void report_sleep_strategy_stats(int depth);
 

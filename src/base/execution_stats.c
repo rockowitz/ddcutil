@@ -38,6 +38,7 @@
 #include "util/glib_util.h"
 #include "util/report_util.h"
 
+#include "base/core.h"
 #include "base/sleep.h"
 #include "base/parms.h"
 #include "base/ddc_errno.h"
@@ -433,14 +434,16 @@ static const char * sleep_event_names[] = {
       "SE_WRITE_TO_READ",
       "SE_POST_OPEN",
       "SE_POST_WRITE",
-      "SE_POST_READ"
+      "SE_POST_READ",
+      "SE_DDC_NULL"
      };
 #define SLEEP_EVENT_ID_CT (sizeof(sleep_event_names)/sizeof(char *))
 
-
+/** Returns the name of sleep event type */
 const char * sleep_event_name(Sleep_Event_Type event_type) {
    return sleep_event_names[event_type];
 }
+
 
 static int sleep_event_cts_by_id[SLEEP_EVENT_ID_CT];
 static int total_sleep_event_ct = 0;
@@ -495,6 +498,43 @@ char * sleep_strategy_desc(int sleep_strategy) {
 }
 
 
+void
+call_dynamic_tuned_sleep(
+      DDCA_IO_Mode io_mode,
+      Sleep_Event_Type event_type,
+      int occno)
+{
+   bool debug = false;
+
+   int sleep_time_millis = 0;
+   assert(io_mode == DDCA_IO_DEVI2C);
+   assert(event_type == SE_DDC_NULL);
+
+   switch(event_type) {
+   case SE_DDC_NULL:
+      sleep_time_millis = occno * DDC_TIMEOUT_MILLIS_NULL_RESPONSE_INCREMENT;
+      break;
+
+   default:
+      PROGRAM_LOGIC_ERROR("Invalid sleep event type: %d = %s", event_type, sleep_event_name(event_type));
+   }
+
+   DBGMSF(debug, "Event type=%s, occno=%d, calculated sleep time = %d millisec",
+                 sleep_event_name(event_type), occno, sleep_time_millis);
+
+   sleep_event_cts_by_id[event_type]++;
+   total_sleep_event_ct++;
+   sleep_millis(sleep_time_millis);
+
+}
+
+void
+call_dynamic_tuned_sleep_i2c(
+      Sleep_Event_Type event_type,
+      int occno)
+{
+   call_dynamic_tuned_sleep(DDCA_IO_DEVI2C, event_type, occno);
+}
 
 
 /** Sleep for a period required by the DDC protocol.
@@ -518,6 +558,8 @@ char * sleep_strategy_desc(int sleep_strategy) {
 void call_tuned_sleep(DDCA_IO_Mode io_mode, Sleep_Event_Type event_type) {
    int sleep_time_millis = 0;    // should be a default
    switch(io_mode) {
+
+   assert(event_type != SE_DDC_NULL);
 
    case DDCA_IO_DEVI2C:
       switch(event_type) {

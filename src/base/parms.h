@@ -48,6 +48,8 @@
 #define DDC_TIMEOUT_USE_DEFAULT                    -1
 #define DDC_TIMEOUT_NONE                            0
 
+#define DDC_TIMEOUT_MILLIS_NULL_RESPONSE_INCREMENT       100
+
 
 // TODO: move comments re smbus problems to low level smbus functions (currently in i2c_base_io.c)
 
