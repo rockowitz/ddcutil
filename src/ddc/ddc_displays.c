@@ -231,9 +231,6 @@ bool initial_checks_by_dref(Display_Ref * dref) {
 }
 
 
-
-
-
 //
 //  Display Specification
 //
@@ -1004,6 +1001,16 @@ ddc_report_active_display_old(Display_Info * curinfo, int depth) {
 }
 #endif
 
+
+/** Gets the controller firmware version as a string
+ *
+ * \param dh  pointer to display handle
+ * \return pointer to character string, which is valid until the next
+ * call to this function.
+ *
+ * \remark
+ * Consider caching the value in dh->dref
+ */
 char * get_firmware_version_string(Display_Handle * dh) {
    bool debug = true;
 
@@ -1031,6 +1038,15 @@ char * get_firmware_version_string(Display_Handle * dh) {
 }
 
 
+/** Gets the controller manufacturer name for an open display.
+ *
+ * \param dh  pointer to display handle
+ * \return pointer to character string, which is valid until the next
+ * call to this function.
+ *
+ * \remark
+ * Consider caching the value in dh->dref
+ */
 char * get_controller_mfg_string(Display_Handle * dh) {
    bool debug = true;
 
@@ -1060,8 +1076,7 @@ char * get_controller_mfg_string(Display_Handle * dh) {
 }
 
 
-
-/** Shows information about a display.
+/** Shows information about a display, specified by a #Display_Ref
  *
  * Output is written using report functions
  *
@@ -1157,8 +1172,6 @@ ddc_report_active_display(Display_Info * curinfo, int depth) {
    ddc_report_display_by_dref(dref, depth);
    DBGMSF(debug, "Done");
 }
-
-
 
 
 /** Reports valid displays found.
@@ -1331,7 +1344,8 @@ Display_Criteria * new_display_criteria() {
 }
 
 
-/** Excapsulates locateion of hiddev device files, in case it needs to be generalized */
+// Move function to hiddev utility library?
+/** Excapsulates location of hiddev device files, in case it needs to be generalized */
 static char * hiddev_directory() {
    return "/dev/usb";
 }
@@ -1347,8 +1361,8 @@ static char * hiddev_directory() {
  *
  *  \remark
  *  In the degenerate case that no criteria are set in **criteria**, returns true.
- *
  */
+static
 bool ddc_check_display_rec(Display_Rec * drec, Display_Criteria * criteria) {
    assert(drec && criteria);
    bool result = false;
@@ -1413,21 +1427,22 @@ bye:
 }
 
 
-
-
-// void all_displays_init() {
-//    all_displays = g_ptr_array_new();
-// }
-
-
-// TO REVIEW - DOING TOO MUCH?
-
+/** Adds a display to the list of detected displays.
+ *
+ * \param all_displays   list to add to
+ * \param pointer to #Display_Rec to add
+ *
+ * \remark
+ * Initial monitor cheks are performed.  (Does this belong here?)
+ * \remark
+ * This function is used during program initialization.
+ * In the future, it could be used to dynamically add nely
+ * connected monitors if the library is long running.
+ */
+static
 void ddc_add_display_rec(GPtrArray * all_displays, Display_Rec * drec) {
    if (drec->dispno < 0) {
-      // check if valid displays, etc
-
-
-      // if (ddc_is_valid_display_ref(drec->dref, CALLOPT_NONE)) {
+      // check if valid display, etc.  (Does this belong here?)
       if (initial_checks_by_dref(drec->dref)) {
          drec->dispno = ++dispno_max;
       }
@@ -1439,7 +1454,7 @@ void ddc_add_display_rec(GPtrArray * all_displays, Display_Rec * drec) {
 }
 
 
-
+static
 Display_Rec * ddc_find_display_rec_by_criteria(Display_Criteria * criteria) {
    Display_Rec * result = NULL;
    for (int ndx = 0; ndx < all_displays->len; ndx++) {
@@ -1535,7 +1550,18 @@ Display_Ref * ddc_find_dref_by_did(Display_Identifier * did) {
    return dref;
 }
 
-
+/** Searches the detected displays for one matching the criteria in a
+ *  #Display_Identifier.
+ *
+ *  \param pdid  pointer to a #Display_Identifier
+ *  \param callopts  standard call options
+ *  \return pointer to #Display_Ref for the display, NULL if not found
+ *
+ *  \todo
+ *  If the criteria directly specify an access path
+ *  (e.g. I2C bus number) and CALLOPT_FORCe specified, then create a
+ *  temporary #Display_Ref, bypassing the list of detected monitors.
+ */
 Display_Ref *
 get_display_ref_for_display_identifier(
                 Display_Identifier* pdid,
@@ -1615,7 +1641,6 @@ GPtrArray *  ddc_detect_all_displays() {
       ddc_add_display_rec(display_list, drec);
    }
 
-
    // if (debug) {
    //    DBGMSG("Displays detected:");
    //    report_display_recs(display_list, 1);
@@ -1627,7 +1652,7 @@ GPtrArray *  ddc_detect_all_displays() {
 
 /** Initializes the master display list.
  *
- *  Does nothing if the list has alreeady been initialized.
+ *  Does nothing if the list has already been initialized.
  */
 void ddc_ensure_displays_initialized() {
    if (!all_displays) {
