@@ -72,23 +72,28 @@
 
 
 
-static GPtrArray * all_displays = NULL;
-static int dispno_max = 0;
+static GPtrArray * all_displays = NULL;    // all detected displays
+static int dispno_max = 0;                 // highest assigned display number
 
 
-
-
-// forward references
-// Display_Ref * ddc_find_display_by_usb_busnum_devnum(int   busnum, int   devnum);
-
-
-
-// If DDC, it is possible that DDC communication fails even if x37 set
-
-// Problem: ADL does not notice that a display doesn't support DDC,
-// e.g. Dell 1905FP
-// As a heuristic check, try reading the brightness.  Observationally, any monitor
-// that supports DDC allows for for brightness adjustment.
+/** Checks that DDC communication is working by trying to read the value
+ *  of feature x10 (brightness).
+ *
+ *  \param dh  #Display_Handle of open display
+ *  \retval true communication successful
+ *  \retval false communication failed
+ *
+ *  \remark
+ *  It has been observed that DDC communication can fail even if slave address x37
+ *  is valid on the I2C bus.
+ *  \remark
+ *  ADL does not notice that a reported display, e.g. Dell 1905FP, does not support
+ *  DDC.
+ *  \remark
+ *  If a validly structured DDC response is received, e.g. with the unsupported feature
+ *  bit set or a DDC Null response, communication is considered successful.
+ *  \remark
+ */
 bool check_ddc_communication(Display_Handle * dh) {
    bool debug = false;
    DBGMSF(debug, "Starting. dh=%s", display_handle_repr(dh));
@@ -117,6 +122,20 @@ bool check_ddc_communication(Display_Handle * dh) {
 }
 
 
+/** Checks whether the monitor uses a DDC Null response to report
+ *  and unspupported VCP code by attempted to read feature 0x00.
+ *
+ *  \param dh  #Display_Handle of monitor
+ *  \retval true  DDC Null Response was received
+ *  \retval false any other response
+ *
+ *  \remark
+ *  Monitors should set the unsupported feature bit in a valid DDC
+ *  response, but a few monitors (mis)use the Null Reponse instead.
+ *  \remark
+ *  Note that this test is not perfect, as a Null Response might
+ *  in fact indicate a transient error, but that is rare.
+ */
 bool check_monitor_ddc_null_response(Display_Handle * dh) {
    bool debug = false;
    DBGMSF(debug, "Starting. dh=%s", display_handle_repr(dh));
@@ -151,7 +170,17 @@ bool check_monitor_ddc_null_response(Display_Handle * dh) {
 }
 
 
-
+/** Collects most initial monitor checks to perform them on a single open of the
+ *  monitor device, and to avoid repeating them.
+ *
+ *  Performs the followign tests:
+ *  - Checks that DDC communication is working.
+ *  - Checks if the monitor uses DDC Mull Response to indicate invalid VCP code
+ *  - Queries the VCP (MCCS) version.
+ *
+ *  \param dh  pointer to #Display_Handle for open monitor device
+ *  \return **true** if DDC communication with the display succeeded, **false** otherwise.
+ */
 bool initial_checks_by_dh(Display_Handle * dh) {
    bool debug = false;
    DBGMSF(debug, "Starting. dh=%s", display_handle_repr(dh));
@@ -180,6 +209,12 @@ bool initial_checks_by_dh(Display_Handle * dh) {
 }
 
 
+/** Given a #Display_Ref, opens the monitor device and calls #initial_checks_by_dh()
+ *  to perform initial monitor checks.
+ *
+ *  \param dref pointer to #Display_Ref for monitor
+ *  \return **true** if DDC communication with the display succeeded, **false** otherwise.
+ */
 bool initial_checks_by_dref(Display_Ref * dref) {
    // bool debug = false;
    bool result = false;
@@ -203,10 +238,11 @@ bool initial_checks_by_dref(Display_Ref * dref) {
 //  Display Specification
 //
 
+#ifdef OLD
 // problem:  this function is doing 2 things:
 //   reading brightness as a sanity check
 //   looking up and saving vcp version
-#ifdef OLD
+
 static bool
 verify_adl_display_ref(Display_Ref * dref) {
    bool debug = true;
@@ -566,14 +602,15 @@ void report_display_info(Display_Info * dinfo, int depth) {
 
 
 
-
-
-
 //
 // Functions to get display information
 //
 
 
+/** Gets a list of valid monitors in the format needed by the API.
+ *
+ * \return pointer to #Display_Info_List
+ */
 Display_Info_List *
 ddc_get_valid_displays() {
    ddc_ensure_displays_initialized();
@@ -602,13 +639,18 @@ ddc_get_valid_displays() {
    return info_list;
 }
 
+
+/** Gets a list of all detected displays, whether they support DDC or not.
+ *
+ *  Initializes the list of detected monitors if necessary.
+ *
+ *  \return **GPtrArray of #Display_Rec instances
+ */
 GPtrArray * ddc_get_all_displays() {
    ddc_ensure_displays_initialized();
 
    return all_displays;
 }
-
-
 
 
 #ifdef PRE_DISPLAY_REC
@@ -838,9 +880,6 @@ ddc_find_display_by_edid(const Byte * pEdidBytes, Byte findopts) {
    return result;
 }
 #endif
-
-// TODO: variant that takes a Display_Rec argument, does not read VCP values since
-// that should have happened already
 
 #ifdef OLD
 

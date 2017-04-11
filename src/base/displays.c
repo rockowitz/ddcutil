@@ -396,14 +396,14 @@ void free_display_ref(Display_Ref * dref) {
    }
 }
 
-/** Tests if 2 #Dispalay_Ref instances specify the same path to the
+/** Tests if 2 #Display_Ref instances specify the same path to the
  *  display.
  *
  *  Note that if a display communicates MCCS over both I2C and USB
  *  these are different paths to the display.
  *
- *  \param this pointer to first #display_Ref
- *  \param that pointer to second #display_Ref
+ *  \param this pointer to first #Display_Ref
+ *  \param that pointer to second Ddisplay_Ref
  *  \retval true same display
  *  \retval false different displays
  */
@@ -509,7 +509,7 @@ char * dref_short_name_r(Display_Ref * dref, char * buf, int bufsz) {
 /** Creates a short description of a #Display_Ref.  The returned
  *  value is valid until the next call to this function.
  *
- *  \param  pointer to #Display_Ref instance
+ *  \param  dref pointer to #Display_Ref instance
  *  \return string representation of #Display_Ref
  */
 char * dref_short_name(Display_Ref * dref) {
