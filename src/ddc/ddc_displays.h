@@ -43,8 +43,13 @@ ddc_get_valid_displays_old();
 Display_Info_List *
 ddc_get_valid_displays();
 
+GPtrArray * ddc_get_all_displays();
+
 int
 ddc_report_active_displays(int depth);
+
+int
+ddc_report_all_displays(int depth);
 
 Display_Ref*
 get_display_ref_for_display_identifier(

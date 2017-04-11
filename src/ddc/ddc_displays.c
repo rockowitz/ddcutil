@@ -82,6 +82,123 @@ static int dispno_max = 0;
 // Display_Ref * ddc_find_display_by_usb_busnum_devnum(int   busnum, int   devnum);
 
 
+
+// If DDC, it is possible that DDC communication fails even if x37 set
+
+// Problem: ADL does not notice that a display doesn't support DDC,
+// e.g. Dell 1905FP
+// As a heuristic check, try reading the brightness.  Observationally, any monitor
+// that supports DDC allows for for brightness adjustment.
+bool check_ddc_communication(Display_Handle * dh) {
+   bool debug = false;
+   DBGMSF(debug, "Starting. dh=%s", display_handle_repr(dh));
+
+   bool result = true;
+
+   DDCA_Single_Vcp_Value * pvalrec;
+
+   // verbose output is distracting since this function is called when querying for other things
+   DDCA_Output_Level olev = get_output_level();
+   if (olev == DDCA_OL_VERBOSE)
+      set_output_level(DDCA_OL_NORMAL);
+
+   Public_Status_Code psc = get_vcp_value(dh, 0x10, DDCA_NON_TABLE_VCP_VALUE, &pvalrec);
+
+   if (olev == DDCA_OL_VERBOSE)
+      set_output_level(olev);
+
+   if (psc != 0 && psc != DDCRC_REPORTED_UNSUPPORTED && psc != DDCRC_DETERMINED_UNSUPPORTED) {
+      result = false;
+      DBGMSF(debug, "Error getting value for brightness VCP feature 0x10. gsc=%s\n", psc_desc(psc) );
+   }
+
+   DBGMSF(debug, "Returning: %s", bool_repr(result));
+   return result;
+}
+
+
+bool check_monitor_ddc_null_response(Display_Handle * dh) {
+   bool debug = false;
+   DBGMSF(debug, "Starting. dh=%s", display_handle_repr(dh));
+
+   bool result = false;
+
+   if (dh->io_mode != DDCA_IO_USB) {
+
+      DDCA_Single_Vcp_Value * pvalrec;
+
+      // verbose output is distracting since this function is called when querying for other things
+      DDCA_Output_Level olev = get_output_level();
+      if (olev == DDCA_OL_VERBOSE)
+         set_output_level(DDCA_OL_NORMAL);
+
+      Public_Status_Code psc = get_vcp_value(dh, 0x00, DDCA_NON_TABLE_VCP_VALUE, &pvalrec);
+
+      if (olev == DDCA_OL_VERBOSE)
+         set_output_level(olev);
+
+      if (psc == DDCRC_NULL_RESPONSE) {
+         result = true;
+      }
+      else if (psc != 0 && psc != DDCRC_REPORTED_UNSUPPORTED && psc != DDCRC_DETERMINED_UNSUPPORTED) {
+         DBGMSF(debug, "Unexpected status getting value for non-existent VCP feature 0x00. gsc=%s\n", psc_desc(psc) );
+      }
+
+   }
+
+   DBGMSF(debug, "Returning: %s", bool_repr(result));
+   return result;
+}
+
+
+
+bool initial_checks_by_dh(Display_Handle * dh) {
+   bool debug = false;
+   DBGMSF(debug, "Starting. dh=%s", display_handle_repr(dh));
+
+   if (!(dh->dref->flags & DREF_DDC_COMMUNICATION_CHECKED)) {
+      if (check_ddc_communication(dh))
+         dh->dref->flags |= DREF_DDC_COMMUNICATION_WORKING;
+      dh->dref->flags |= DREF_DDC_COMMUNICATION_CHECKED;
+   }
+   bool communication_working = dh->dref->flags & DREF_DDC_COMMUNICATION_WORKING;
+
+   if (communication_working) {
+      if (!(dh->dref->flags & DREF_DDC_NULL_RESPONSE_CHECKED)) {
+         if (check_monitor_ddc_null_response(dh) )
+            dh->dref->flags |= DREF_DDC_USES_NULL_RESPONSE_FOR_UNSUPPORTED;
+         dh->dref->flags |= DREF_DDC_NULL_RESPONSE_CHECKED;
+      }
+      if ( vcp_version_is_unqueried(dh->dref->vcp_version)) {
+         dh->dref->vcp_version = get_vcp_version_by_display_handle(dh);
+         dh->vcp_version = dh->dref->vcp_version;
+      }
+   }
+
+   DBGMSF(debug, "Returning: %s", bool_repr(communication_working));
+   return communication_working;
+}
+
+
+bool initial_checks_by_dref(Display_Ref * dref) {
+   // bool debug = false;
+   bool result = false;
+   Display_Handle * dh = NULL;
+   Public_Status_Code psc = 0;
+
+   psc = ddc_open_display(dref, CALLOPT_ERR_MSG | CALLOPT_ERR_ABORT, &dh);
+   if (psc == 0)  {
+      result = initial_checks_by_dh(dh);
+      ddc_close_display(dh);
+   }
+
+   return result;
+}
+
+
+
+
+
 //
 //  Display Specification
 //
@@ -89,10 +206,10 @@ static int dispno_max = 0;
 // problem:  this function is doing 2 things:
 //   reading brightness as a sanity check
 //   looking up and saving vcp version
-
+#ifdef OLD
 static bool
 verify_adl_display_ref(Display_Ref * dref) {
-   bool debug = false;
+   bool debug = true;
    bool result = true;
    Display_Handle * dh = NULL;
    Public_Status_Code psc = 0;
@@ -128,9 +245,10 @@ verify_adl_display_ref(Display_Ref * dref) {
  bye:
    return result;
 }
+#endif
 
 
-
+#ifdef OLD
 //  duplicative of verify_adl_display_ref()
 
 /* Verify that a bus actually supports DDC by trying to read brightness
@@ -148,7 +266,7 @@ verify_adl_display_ref(Display_Ref * dref) {
  */
 bool
 ddc_verify(Display_Ref * dref) {
-   bool debug = false;
+   bool debug = true;
    bool result = false;
    DBGMSF(debug, "Starting.  dref=%s", dref_repr(dref));
    // FAILSIM_BOOL_EXT is wrongly coded
@@ -179,12 +297,13 @@ ddc_verify(Display_Ref * dref) {
    return result;
 }
 
+#endif
 
-// what to return is TBD
+#ifdef OLD
 
 bool
 ddc_uses_null_response_to_indicate_unsupported(Display_Ref * dref) {
-   bool debug = false;
+   bool debug = true;
    bool result = false;
    DBGMSF(debug, "Starting.  dref=%s", dref_repr(dref));
 
@@ -210,8 +329,10 @@ ddc_uses_null_response_to_indicate_unsupported(Display_Ref * dref) {
    DBGMSF(debug, "Returning: %s", bool_repr(result));
    return result;
 }
+#endif
 
 
+#ifdef OLD
 
 /** Tests if a Display_Ref identifies an attached display.
  *
@@ -322,6 +443,8 @@ ddc_is_valid_display_ref(Display_Ref * dref, Call_Options callopts) {
    DBGMSF(debug, "Returning %s", bool_repr(result));
    return result;
 }
+
+#endif
 
 
 #ifdef PRE_DISPLAY_REC
@@ -478,6 +601,13 @@ ddc_get_valid_displays() {
    }
    return info_list;
 }
+
+GPtrArray * ddc_get_all_displays() {
+   ddc_ensure_displays_initialized();
+
+   return all_displays;
+}
+
 
 
 
@@ -712,6 +842,8 @@ ddc_find_display_by_edid(const Byte * pEdidBytes, Byte findopts) {
 // TODO: variant that takes a Display_Rec argument, does not read VCP values since
 // that should have happened already
 
+#ifdef OLD
+
 /** Shows information about a display.
  *
  * Output is written using report functions
@@ -720,7 +852,7 @@ ddc_find_display_by_edid(const Byte * pEdidBytes, Byte findopts) {
  * \param depth     logical indentation depth
  */
 void
-ddc_report_active_display(Display_Info * curinfo, int depth) {
+ddc_report_active_display_old(Display_Info * curinfo, int depth) {
    assert(memcmp(curinfo->marker, DISPLAY_INFO_MARKER, 4) == 0);
    switch(curinfo->dref->io_mode) {
    case DDCA_IO_DEVI2C:
@@ -831,9 +963,166 @@ ddc_report_active_display(Display_Info * curinfo, int depth) {
       }
    }
 }
+#endif
+
+char * get_firmware_version_string(Display_Handle * dh) {
+   bool debug = true;
+
+   static char version[40];
+
+   DDCA_Single_Vcp_Value * valrec;
+
+   Public_Status_Code psc = get_vcp_value(
+                               dh,
+                               0xc9,                     // firmware detection
+                               DDCA_NON_TABLE_VCP_VALUE,
+                               &valrec);
+   if (psc != 0) {
+      strcpy(version, "Unspecified");
+      if (psc != DDCRC_REPORTED_UNSUPPORTED && psc != DDCRC_DETERMINED_UNSUPPORTED) {
+         DBGMSF(debug, "get_vcp_value(0xc9) returned %s", psc_desc(psc));
+         strcpy(version, "DDC communication failed");
+      }
+   }
+   else {
+      snprintf(version, sizeof(version), "%d.%d",
+         valrec->val.nc.sh, valrec->val.nc.sl);
+   }
+   return version;
+}
 
 
-/** Reports all displays found.
+char * get_controller_mfg_string(Display_Handle * dh) {
+   bool debug = true;
+
+   static char mfg_name_buf[100] = "";
+   char * mfg_name = NULL;
+   DDCA_Single_Vcp_Value *   valrec;
+   Public_Status_Code psc = get_vcp_value(dh, 0xc8, DDCA_NON_TABLE_VCP_VALUE, &valrec);
+
+   if (psc == 0) {
+      DDCA_Feature_Value_Entry * vals = pxc8_display_controller_type_values;
+      mfg_name =  get_feature_value_name(
+                            vals,
+                            valrec->val.nc.sl);
+      if (!mfg_name) {
+         snprintf(mfg_name_buf, sizeof(mfg_name_buf), "Unrecognized manufacturer code 0x%02x", valrec->val.nc.sl);
+         mfg_name = mfg_name_buf;
+      }
+   }
+   else if (psc == DDCRC_REPORTED_UNSUPPORTED || psc == DDCRC_DETERMINED_UNSUPPORTED) {
+      mfg_name = "Unspecified";
+   }
+   else {
+      DBGMSF(debug, "get_nontable_vcp_value(0xc8) returned %s", psc_desc(psc));
+      mfg_name = "DDC communication failed";
+    }
+   return mfg_name;
+}
+
+
+
+/** Shows information about a display.
+ *
+ * Output is written using report functions
+ *
+ * \param dref   pointer to display reference
+ * \param depth     logical indentation depth
+ */
+void
+ddc_report_display_by_dref(Display_Ref * dref, int depth) {
+   bool debug = false;
+   DBGMSF(debug, "Starting");
+   assert(memcmp(dref->marker, DISPLAY_REF_MARKER, 4) == 0);
+
+   switch(dref->io_mode) {
+   case DDCA_IO_DEVI2C:
+      i2c_report_active_display_by_busno(dref->busno, depth);
+      break;
+   case DDCA_IO_ADL:
+      adlshim_report_active_display_by_display_ref(dref, depth);
+      break;
+   case DDCA_IO_USB:
+#ifdef USE_USB
+      usb_show_active_display_by_display_ref(dref, depth);
+#else
+      PROGRAM_LOGIC_ERROR("ddcutil not built with USB support");
+#endif
+      break;
+   }
+
+   assert( dref->flags & DREF_DDC_COMMUNICATION_CHECKED);
+   if ( dref->flags & DREF_DDC_COMMUNICATION_WORKING)
+      assert( (dref->flags & DREF_DDC_NULL_RESPONSE_CHECKED) &&
+              !vcp_version_is_unqueried(dref->vcp_version)    );
+
+   DDCA_Output_Level output_level = get_output_level();
+
+   if (output_level >= DDCA_OL_NORMAL) {
+      if (!(dref->flags & DREF_DDC_COMMUNICATION_WORKING) ) {
+         rpt_vstring(depth, "DDC communication failed");
+         if (output_level >= DDCA_OL_VERBOSE) {
+            rpt_vstring(depth, "Is DDC/CI enabled in the monitor's on-screen display?");
+         }
+      }
+      else {
+         // n. requires write access since may call get_vcp_value(), which does a write
+         Display_Handle * dh = NULL;
+         Public_Status_Code psc = ddc_open_display(dref, CALLOPT_ERR_MSG, &dh);
+         if (psc != 0) {
+            rpt_vstring(depth, "Error opening display %s, error = %s",
+                               dref_short_name(dref), psc_desc(psc));
+         }
+         else {
+            DDCA_MCCS_Version_Spec vspec = dref->vcp_version;
+            if ( vspec.major   == 0)
+               rpt_vstring(depth, "VCP version:         Detection failed");
+            else
+               rpt_vstring(depth, "VCP version:         %d.%d", vspec.major, vspec.minor);
+
+            if (output_level >= DDCA_OL_VERBOSE) {
+               // display controller mfg, firmware version
+               rpt_vstring(depth, "Controller mfg:      %s", get_controller_mfg_string(dh) );
+               rpt_vstring(depth, "Firmware version:    %s", get_firmware_version_string(dh));;
+               if (dref->io_mode != DDCA_IO_USB)
+               rpt_vstring(depth, "Monitor returns DDC Null Response for unsupported features: %s",
+                                  bool_repr(dh->dref->flags & DREF_DDC_USES_NULL_RESPONSE_FOR_UNSUPPORTED));
+            }
+         }
+
+         ddc_close_display(dh);
+      }
+   }
+   DBGMSF(debug, "Done");
+}
+
+
+void
+ddc_report_display_by_display_rec(Display_Rec * drec, int depth) {
+   bool debug = false;
+   DBGMSF(debug, "Starting");
+   assert(memcmp(drec->marker, DISPLAY_REC_MARKER, 4) == 0);
+   Display_Ref  * dref = drec->dref;
+   ddc_report_display_by_dref(dref, depth);
+   DBGMSF(debug, "Done");
+}
+
+
+
+void
+ddc_report_active_display(Display_Info * curinfo, int depth) {
+   bool debug = true;
+   DBGMSF(debug, "Starting");
+   assert(memcmp(curinfo->marker, DISPLAY_INFO_MARKER, 4) == 0);
+   Display_Ref  * dref = curinfo->dref;
+   ddc_report_display_by_dref(dref, depth);
+   DBGMSF(debug, "Done");
+}
+
+
+
+
+/** Reports valid displays found.
  *
  * Output is written to the current report destination using
  * report functions.
@@ -844,6 +1133,8 @@ ddc_report_active_display(Display_Info * curinfo, int depth) {
  */
 int
 ddc_report_active_displays(int depth) {
+    bool debug = true;
+    DBGMSF(debug, "Starting");
    // PROGRAM_LOGIC_ERROR("---> pseudo failure <-----");
    Display_Info_List * display_list = ddc_get_valid_displays();
    int ndx;
@@ -863,7 +1154,46 @@ ddc_report_active_displays(int depth) {
       rpt_vstring(depth, "No active displays found");
    free_display_info_list(display_list);
    // DBGMSG("Returning %d", valid_display_ct);
+   DBGMSF(debug, "Done.  Returning: %d", valid_display_ct);
    return valid_display_ct;
+}
+
+
+/** Reports all displays found.
+ *
+ * Output is written to the current report destination using
+ * report functions.
+ *
+ * @param   depth       logical indentation depth
+ *
+ * @return total number of displays  (or should it be v valid sisplays?)
+ */
+int
+ddc_report_all_displays(int depth) {
+    bool debug = true;
+    DBGMSF(debug, "Starting");
+
+    ddc_ensure_displays_initialized();
+
+   int valid_display_ct = 0;
+   for (int ndx=0; ndx<all_displays->len; ndx++) {
+      Display_Rec * drec = g_ptr_array_index(all_displays, ndx);
+      assert(memcmp(drec->marker, DISPLAY_REC_MARKER, 4) == 0);
+      if (drec->dispno == -1)
+         rpt_vstring(depth, "Invalid display");
+      else {
+         rpt_vstring(depth, "Display %d", drec->dispno);
+         valid_display_ct++;
+      }
+      ddc_report_display_by_display_rec(drec, depth+1);
+      rpt_title("",0);
+   }
+   if (valid_display_ct == 0)
+      rpt_vstring(depth, "No active displays found");
+   // DBGMSG("Returning %d", valid_display_ct);
+   int result = all_displays->len;
+   DBGMSF(debug, "Done.  Returning: %d", result);
+   return result;
 }
 
 
@@ -1057,7 +1387,9 @@ void ddc_add_display_rec(GPtrArray * all_displays, Display_Rec * drec) {
    if (drec->dispno < 0) {
       // check if valid displays, etc
 
-      if (ddc_is_valid_display_ref(drec->dref, CALLOPT_NONE)) {
+
+      // if (ddc_is_valid_display_ref(drec->dref, CALLOPT_NONE)) {
+      if (initial_checks_by_dref(drec->dref)) {
          drec->dispno = ++dispno_max;
       }
       else {
@@ -1202,7 +1534,8 @@ GPtrArray *  ddc_detect_all_displays() {
          drec->dref = dref;
          drec->edid = businfo->edid;
          drec->detail.bus_detail = businfo;
-
+         drec->dref->flags |= DREF_DDC_IS_MONITOR_CHECKED;
+         drec->dref->flags |= DREF_DDC_IS_MONITOR;
          ddc_add_display_rec(display_list, drec);
       }
    }
@@ -1218,6 +1551,8 @@ GPtrArray *  ddc_detect_all_displays() {
      drec->dref = dref;
      drec->edid = detail->pEdid;
      drec->detail.adl_detail = detail;
+     drec->dref->flags |= DREF_DDC_IS_MONITOR_CHECKED;
+     drec->dref->flags |= DREF_DDC_IS_MONITOR;
      ddc_add_display_rec(display_list, drec);
   }
 
@@ -1236,6 +1571,8 @@ GPtrArray *  ddc_detect_all_displays() {
       drec->dref = dref;
       drec->edid = curmon->edid;
       drec->detail.usb_detail = curmon;
+      drec->dref->flags |= DREF_DDC_IS_MONITOR_CHECKED;
+      drec->dref->flags |= DREF_DDC_IS_MONITOR;
       ddc_add_display_rec(display_list, drec);
    }
 

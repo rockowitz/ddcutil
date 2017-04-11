@@ -468,7 +468,7 @@ int main(int argc, char *argv[]) {
 #endif
 
       // new way:
-      ddc_report_active_displays(0);
+      ddc_report_all_displays(0);
 
    }
 
@@ -568,7 +568,7 @@ int main(int argc, char *argv[]) {
       reset_stats();
 
       printf("\n*** Detected Displays ***\n");
-      int display_ct = ddc_report_active_displays(0 /* logical depth */);
+      int display_ct = ddc_report_all_displays(0 /* logical depth */);
       // printf("Detected: %d displays\n", display_ct);   // not needed
       printf("\nStatistics for display detection:\n");
       report_stats(STATS_ALL);
