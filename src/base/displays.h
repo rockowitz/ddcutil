@@ -23,6 +23,7 @@
  * </endcopyright>
  */
 
+
 #ifndef DISPLAYS_H_
 #define DISPLAYS_H_
 
@@ -58,7 +59,7 @@ For ADL displays, the translation from Display_Ref to Display_Handle is direct.
 For I2C displays, the device must be opened.  Display_Handle then contains the open file handle.
 */
 
-// *** DisplayIdentifier ***
+// *** Display_Identifier ***
 
 /** Display_Identifier type */
 typedef enum {
@@ -86,6 +87,7 @@ typedef struct {
    char            serial_ascii[EDID_SERIAL_ASCII_FIELD_SIZE];
    int             usb_bus;
    int             usb_device;
+   int             hiddev_devno;           // 4/1027
    Byte            edidbytes[128];
 } Display_Identifier;
 
@@ -145,22 +147,27 @@ typedef Byte Dref_Flags;
 #define DREF_DDC_COMMUNICATION_WORKING              0x40
 #define DREF_DDC_NULL_RESPONSE_CHECKED              0x20
 #define DREF_DDC_USES_NULL_RESPONSE_FOR_UNSUPPORTED 0x10
+#define DREF_DDC_IS_MONITOR_CHECKED                 0x08
+#define DREF_DDC_IS_MONITOR                         0x04
 #define DISPLAY_REF_MARKER "DREF"
 /** A **Display_Ref** is a logical display identifier.
  * It can be an I2C bus number, and ADL adapter/display number pair,
  * or a USB bus number/device number pair.
  */
 typedef struct {
-   char         marker[4];
-   DDCA_IO_Mode io_mode;
-   int          busno;
-   int          iAdapterIndex;
-   int          iDisplayIndex;
-   int          usb_bus;
-   int          usb_device;
-   char *       usb_hiddev_name;
+   char          marker[4];
+   DDCA_IO_Mode  io_mode;
+   int           busno;
+   int           iAdapterIndex;
+   int           iDisplayIndex;
+   int           usb_bus;
+   int           usb_device;
+   char *        usb_hiddev_name;
    DDCA_MCCS_Version_Spec vcp_version;
-   Dref_Flags   flags;
+   Dref_Flags    flags;
+   int           usb_hiddev_devno;       // added 4/2017
+   char *        capabilities_string;    // added 4/2017
+   Parsed_Edid * pedid;                  // added 4/2017
 } Display_Ref;
 
 // n. works for both Display_Ref and Display_Handle

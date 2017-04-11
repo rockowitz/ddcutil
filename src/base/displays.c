@@ -3,7 +3,7 @@
  * Maintains list of all detected monitors.
  *
  * <copyright>
- * Copyright (C) 2014-2016 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2014-2017 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -23,13 +23,19 @@
  * </endcopyright>
  */
 
+/** \file
+ * Monitor identifier, reference, handle
+ */
+
 #include <config.h>
 
+/** \cond */
 #include <assert.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+/** \endcond */
 
 #include "util/string_util.h"
 #include "util/report_util.h"
@@ -38,7 +44,7 @@
 #include "base/vcp_version.h"
 
 
-// *** DisplayIdentifier ***
+// *** Display_Identifier ***
 
 static char * Display_Id_Type_Names[] = {
       "DISP_ID_BUSNO",
@@ -50,6 +56,10 @@ static char * Display_Id_Type_Names[] = {
 };
 
 
+/** Returns symbolic name of display identifier type
+ * \param val display identifier type
+ * \return symbolic name
+ */
 char * display_id_type_name(Display_Id_Type val) {
    return Display_Id_Type_Names[val];
 }
@@ -71,6 +81,15 @@ Display_Identifier* common_create_display_identifier(Display_Id_Type id_type) {
    return pIdent;
 }
 
+/** Creates a #Display_Identifier using a **ddcutil** display number
+ *
+ * \param  dispno display number (1 based)
+ * \return pointer to newly allocated #Display_Identifier
+ *
+ * \remark
+ * It is the responsibility of the caller to free the allocated
+ * #Display_Identifier using #free_display_identifier().
+ */
 Display_Identifier* create_dispno_display_identifier(int dispno) {
    Display_Identifier* pIdent = common_create_display_identifier(DISP_ID_DISPNO);
    pIdent->dispno = dispno;
@@ -78,16 +97,35 @@ Display_Identifier* create_dispno_display_identifier(int dispno) {
 }
 
 
+/** Creates a #Display_Identifier using an I2C bus number
+ *
+ * \param  busno O2C bus number
+ * \return pointer to newly allocated #Display_Identifier
+ *
+ * \remark
+ * It is the responsibility of the caller to free the allocated
+ * #Display_Identifier using #free_display_identifier().
+ */
 Display_Identifier* create_busno_display_identifier(int busno) {
    Display_Identifier* pIdent = common_create_display_identifier(DISP_ID_BUSNO);
    pIdent->busno = busno;
    return pIdent;
 }
 
+
+/** Creates a #Display_Identifier using an ADL adapter number/display number pair.
+ *
+ * \param  iAdapterIndex ADL adapter number
+ * \param  iDisplayIndex ADL display number
+ * \return pointer to newly allocated #Display_Identifier
+ *
+ * \remark
+ * It is the responsibility of the caller to free the allocated
+ * #Display_Identifier using #free_display_identifier().
+ */
 Display_Identifier* create_adlno_display_identifier(
       int    iAdapterIndex,
-      int    iDisplayIndex
-      )
+      int    iDisplayIndex)
 {
    Display_Identifier* pIdent = common_create_display_identifier(DISP_ID_ADL);
    pIdent->iAdapterIndex = iAdapterIndex;
@@ -95,6 +133,16 @@ Display_Identifier* create_adlno_display_identifier(
    return pIdent;
 }
 
+
+/** Creates a #Display_Identifier using an EDID value
+ *
+ * \param  edidbytes  pointer to 128 byte EDID value
+ * \return pointer to newly allocated #Display_Identifier
+ *
+ * \remark
+ * It is the responsibility of the caller to free the allocated
+ * #Display_Identifier using #free_display_identifier().
+ */
 Display_Identifier* create_edid_display_identifier(
       const Byte* edidbytes
       )
@@ -104,6 +152,23 @@ Display_Identifier* create_edid_display_identifier(
    return pIdent;
 }
 
+/** Creates a #Display_Identifier using one or more of
+ *  manufacturer id, model name, and/or serial number string
+ *  as recorded in the EDID.
+ *
+ * \param  mfg_id       manufacturer id
+ * \param  model_name   model name
+ * \param  serial_ascii string serial number
+ * \return pointer to newly allocated #Display_Identifier
+ *
+ * \remark
+ * Unspecified parameters can be either NULL or strings of length 0.
+ * \remark
+ * At least one parameter must be non-null and have length > 0.
+ * \remark
+ * It is the responsibility of the caller to free the allocated
+ * #Display_Identifier using #free_display_identifier().
+ */
 Display_Identifier* create_mfg_model_sn_display_identifier(
       const char* mfg_id,
       const char* model_name,
@@ -133,19 +198,48 @@ Display_Identifier* create_mfg_model_sn_display_identifier(
    return pIdent;
 }
 
-// #ifdef USE_USB
+
+/** Creates a #Display_Identifier using a USB /dev/usb/hiddevN device number
+ *
+ * \param  hiddev_devno hiddev device number
+ * \return pointer to newly allocated #Display_Identifier
+ *
+ * \remark
+ * It is the responsibility of the caller to free the allocated
+ * #Display_Identifier using #free_display_identifier().
+ */
+Display_Identifier* create_usb_hiddev_display_identifier(int hiddev_devno) {
+   Display_Identifier* pIdent = common_create_display_identifier(DISP_ID_USB);
+   pIdent->hiddev_devno = hiddev_devno;
+   return pIdent;
+}
+
+
+/** Creates a #Display_Identifier using a USB bus number/device number pair.
+ *
+ * \param  bus    USB bus number
+ * \param  device USB device number
+ * \return pointer to newly allocated #Display_Identifier
+ *
+ * \remark
+ * It is the responsibility of the caller to free the allocated
+ * #Display_Identifier using #free_display_identifier().
+ */
 Display_Identifier* create_usb_display_identifier(int bus, int device) {
    Display_Identifier* pIdent = common_create_display_identifier(DISP_ID_USB);
    pIdent->usb_bus = bus;
    pIdent->usb_device = device;
    return pIdent;
-
 }
-// #endif
 
 
+/** Reports the contents of a #Display_Identifier in a format suitable
+ *  for debugging use.
+ *
+ *  \param  pdid pointer to #Display_Identifier instance
+ *  \param  depth logical indentation depth
+ */
 void report_display_identifier(Display_Identifier * pdid, int depth) {
-
    rpt_structure_loc("BasicStructureRef", pdid, depth );
    int d1 = depth+1;
    rpt_mapped_int("ddc_io_mode",   NULL, pdid->id_type, (Value_To_Name_Function) display_id_type_name, d1);
@@ -155,6 +249,7 @@ void report_display_identifier(Display_Identifier * pdid, int depth) {
    rpt_int( "iDisplayIndex", NULL, pdid->iDisplayIndex, d1);
    rpt_int( "usb_bus",       NULL, pdid->usb_bus,       d1);
    rpt_int( "usb_device",    NULL, pdid->usb_device,    d1);
+   rpt_int( "hiddev_devno",  NULL, pdid->hiddev_devno,  d1);
    rpt_str( "mfg_id",        NULL, pdid->mfg_id,        d1);
    rpt_str( "model_name",    NULL, pdid->model_name,    d1);
    rpt_str( "serial_ascii",  NULL, pdid->serial_ascii,  d1);
@@ -173,6 +268,10 @@ void report_display_identifier(Display_Identifier * pdid, int depth) {
 }
 
 
+/** Frees a #Display_Identifier instance
+ *
+ * \param pdid pointer to #Display_Identifier to free
+ */
 void free_display_identifier(Display_Identifier * pdid) {
    // all variants use the same common data structure,
    // with no pointers to other memory
@@ -212,12 +311,17 @@ void dsel_free(Display_Selector * dsel) {
 // *** DisplayRef ***
 
 static char * MCCS_IO_Mode_Names[] = {
-      "DDC_IO_DEVI2C",
-      "DDC_IO_ADL",
-      "USB_IO"
+      "DDCA_IO_DEVI2C",
+      "DDCA_IO_ADL",
+      "DDCA_IO_USB"
 };
 
 
+/** Returns the symbolic name of a #DDCA_IO_Mode value.
+ *
+ * \param val #DDCA_IO_Mode value
+ * \return symbolic name, e.g. "DDCA_IO_DEVI2C"
+ */
 char * mccs_io_mode_name(DDCA_IO_Mode val) {
    return (val >= 0 && val < 3)            // protect against bad arg
          ? MCCS_IO_Mode_Names[val]
@@ -226,6 +330,11 @@ char * mccs_io_mode_name(DDCA_IO_Mode val) {
 
 
 // PROBLEM: bus display ref getting created some other way
+/** Creates a #Display_Ref for IO mode #DDCA_IO_DEVI2C
+ *
+ * @param busno /dev/i2c bus number
+ * \return pointer to #Display_Ref
+ */
 Display_Ref * create_bus_display_ref(int busno) {
    Display_Ref * dref = calloc(1, sizeof(Display_Ref));
    memcpy(dref->marker, DISPLAY_REF_MARKER, 4);
@@ -287,6 +396,17 @@ void free_display_ref(Display_Ref * dref) {
    }
 }
 
+/** Tests if 2 #Dispalay_Ref instances specify the same path to the
+ *  display.
+ *
+ *  Note that if a display communicates MCCS over both I2C and USB
+ *  these are different paths to the display.
+ *
+ *  \param this pointer to first #display_Ref
+ *  \param that pointer to second #display_Ref
+ *  \retval true same display
+ *  \retval false different displays
+ */
 bool dreq(Display_Ref* this, Display_Ref* that) {
    bool result = false;
    if (!this && !that)
@@ -353,19 +473,32 @@ void report_display_ref(Display_Ref * dref, int depth) {
 }
 
 
-char * dref_short_name_r(Display_Ref * dref, char * buf, int bufsize) {
+/** Creates a short description of a #Display_Ref in a buffer provided
+ *  by the caller.
+ *
+ *  \param  dref   pointer to $Display_Ref
+ *  \param  buf    pointer to buffer
+ *  \param  bufsz  buffer size
+ */
+char * dref_short_name_r(Display_Ref * dref, char * buf, int bufsz) {
+   assert(buf);
+   assert(bufsz > 0);
+
    switch (dref->io_mode) {
 
    case DDCA_IO_DEVI2C:
-      snprintf(buf, bufsize, "bus /dev/i2c-%d", dref->busno);
+      snprintf(buf, bufsz, "bus /dev/i2c-%d", dref->busno);
+      buf[bufsz-1] = '\0';  // ensure null terminated
       break;
 
    case DDCA_IO_ADL:
-      snprintf(buf, bufsize, "adl display %d.%d", dref->iAdapterIndex, dref->iDisplayIndex);
+      snprintf(buf, bufsz, "adl display %d.%d", dref->iAdapterIndex, dref->iDisplayIndex);
+      buf[bufsz-1] = '\0';  // ensure null terminated
       break;
 
    case DDCA_IO_USB:
-      snprintf(buf, bufsize, "usb %d:%d", dref->usb_bus, dref->usb_device);
+      snprintf(buf, bufsz, "usb %d:%d", dref->usb_bus, dref->usb_device);
+      buf[bufsz-1] = '\0';  // ensure null terminated
       break;
 
    }
@@ -373,12 +506,26 @@ char * dref_short_name_r(Display_Ref * dref, char * buf, int bufsize) {
 }
 
 
+/** Creates a short description of a #Display_Ref.  The returned
+ *  value is valid until the next call to this function.
+ *
+ *  \param  pointer to #Display_Ref instance
+ *  \return string representation of #Display_Ref
+ */
 char * dref_short_name(Display_Ref * dref) {
    static char display_ref_short_name_buffer[100];
    return dref_short_name_r(dref, display_ref_short_name_buffer, 100);
 }
 
 
+/** Creates a short representation of a $Display_Ref suitable
+ *  for diagnostic output.
+ *
+ *  \param dref   pointer to #Display_Ref
+ *
+ *  @remark
+ *  The returned value is valid until the next call of this function.
+ */
 char * dref_repr(Display_Ref * dref) {
    char buf[100];
    static char display_ref_short_id_buffer[100];
@@ -449,14 +596,12 @@ Display_Handle * create_usb_display_handle_from_display_ref(int fh, Display_Ref 
 }
 #endif
 
-/* Reports the contents of a Display_Handle
+
+/** Reports the contents of a #Display_Handle in a format appropriate for debugging.
  *
- * Arguments:
- *    dh       display handle
- *    msg      if non-null, output this string before the Display_Handle detail
- *    depth    logical indentation depth
- *
- * Returns: nothing
+ *  \param  dh       display handle
+ *  \param  msg      if non-null, output this string before the #Display_Handle detail
+ *  \param  depth    logical indentation depth
  */
 void report_display_handle(Display_Handle * dh, const char * msg, int depth) {
    int d1 = depth+1;
@@ -496,39 +641,35 @@ void report_display_handle(Display_Handle * dh, const char * msg, int depth) {
 }
 
 
-/* Returns a string summarizing the specified Display_Handle, in
+/* Returns a string summarizing the specified #Display_Handle, in
  * a buffer provided by the caller.
  *
- * Arguments:
- *   dh      display handle
- *   buf     pointer to buffer in which to return summary string
- *   bufsz   buffer size
- *
- * Returns:
- *   string representation of handle
+ * \param  dh      display handle
+ * \param  buf     pointer to buffer in which to return summary string
+ * \param  bufsz   buffer size
  */
-char * display_handle_repr_r(Display_Handle * dref, char * buf, int bufsz) {
-   assert(memcmp(dref->marker, DISPLAY_HANDLE_MARKER, 4) == 0);
+char * display_handle_repr_r(Display_Handle * dh, char * buf, int bufsz) {
+   assert(memcmp(dh->marker, DISPLAY_HANDLE_MARKER, 4) == 0);
    assert(buf && bufsz);
 
-   switch (dref->io_mode) {
+   switch (dh->io_mode) {
 
    case DDCA_IO_DEVI2C:
       snprintf(buf, bufsz,
                "Display_Handle[i2c: fh=%d, busno=%d]",
-               dref->fh, dref->busno);
+               dh->fh, dh->busno);
       break;
 
    case DDCA_IO_ADL:
       snprintf(buf, bufsz,
                "Display_Handle[adl: display %d.%d]",
-               dref->iAdapterIndex, dref->iDisplayIndex);
+               dh->iAdapterIndex, dh->iDisplayIndex);
       break;
 
    case DDCA_IO_USB:
       snprintf(buf, bufsz,
                "Display_Handle[usb: %d:%d]",
-               dref->usb_bus, dref->usb_device);
+               dh->usb_bus, dh->usb_device);
       break;
    }
 
@@ -536,15 +677,13 @@ char * display_handle_repr_r(Display_Handle * dref, char * buf, int bufsz) {
 }
 
 
-/* Returns a string summarizing the specified Display_Handle.
+/* Returns a string summarizing the specified #Display_Handle.
  * The string is valid until the next call to this function.
  * Caller should NOT free this string.
  *
- * Arguments:
- *   dh    display handle
+ * \param  dh    display handle
  *
- * Returns:
- *   string representation of handle
+ * \return  string representation of handle
  */
 char * display_handle_repr(Display_Handle * dh) {
    static char dh_repr_buf[100];
