@@ -1331,7 +1331,8 @@ typedef struct {
  *
  * \return initialized #Display_Criteria
  */
-Display_Criteria * new_display_criteria() {
+static Display_Criteria *
+new_display_criteria() {
    Display_Criteria * criteria = calloc(1, sizeof(Display_Criteria));
    criteria->dispno = -1;
    criteria->i2c_busno  = -1;
@@ -1346,7 +1347,8 @@ Display_Criteria * new_display_criteria() {
 
 // Move function to hiddev utility library?
 /** Excapsulates location of hiddev device files, in case it needs to be generalized */
-static char * hiddev_directory() {
+static char *
+hiddev_directory() {
    return "/dev/usb";
 }
 
@@ -1362,8 +1364,8 @@ static char * hiddev_directory() {
  *  \remark
  *  In the degenerate case that no criteria are set in **criteria**, returns true.
  */
-static
-bool ddc_check_display_rec(Display_Rec * drec, Display_Criteria * criteria) {
+static bool
+ddc_check_display_rec(Display_Rec * drec, Display_Criteria * criteria) {
    assert(drec && criteria);
    bool result = false;
 
@@ -1439,8 +1441,8 @@ bye:
  * In the future, it could be used to dynamically add nely
  * connected monitors if the library is long running.
  */
-static
-void ddc_add_display_rec(GPtrArray * all_displays, Display_Rec * drec) {
+static void
+ddc_add_display_rec(GPtrArray * all_displays, Display_Rec * drec) {
    if (drec->dispno < 0) {
       // check if valid display, etc.  (Does this belong here?)
       if (initial_checks_by_dref(drec->dref)) {
@@ -1454,8 +1456,8 @@ void ddc_add_display_rec(GPtrArray * all_displays, Display_Rec * drec) {
 }
 
 
-static
-Display_Rec * ddc_find_display_rec_by_criteria(Display_Criteria * criteria) {
+static Display_Rec *
+ddc_find_display_rec_by_criteria(Display_Criteria * criteria) {
    Display_Rec * result = NULL;
    for (int ndx = 0; ndx < all_displays->len; ndx++) {
       Display_Rec * drec = g_ptr_array_index(all_displays, ndx);
@@ -1479,7 +1481,8 @@ Display_Rec * ddc_find_display_rec_by_criteria(Display_Criteria * criteria) {
  * The returned value is a pointer into an internal data structure
  * and should not be freed by the caller.
  */
-Display_Rec * ddc_find_display_rec_by_display_identifier(Display_Identifier * did) {
+Display_Rec *
+ddc_find_display_rec_by_display_identifier(Display_Identifier * did) {
    bool debug = false;
    DBGMSF(debug, "Starting");
    if (debug)
@@ -1541,7 +1544,8 @@ Display_Rec * ddc_find_display_rec_by_display_identifier(Display_Identifier * di
  * The returned value is a pointer into an internal data structure
  * and should not be freed by the caller.
  */
-Display_Ref * ddc_find_dref_by_did(Display_Identifier * did) {
+Display_Ref *
+ddc_find_dref_by_did(Display_Identifier * did) {
    Display_Ref * dref = NULL;
    Display_Rec * drec = ddc_find_display_rec_by_display_identifier(did);
    if (drec)
@@ -1581,7 +1585,8 @@ get_display_ref_for_display_identifier(
  *
  * \return array of #Display_Rec
  */
-GPtrArray *  ddc_detect_all_displays() {
+GPtrArray *
+ddc_detect_all_displays() {
    bool debug = false;
    DBGMSF(debug, "Starting");
 
@@ -1654,7 +1659,8 @@ GPtrArray *  ddc_detect_all_displays() {
  *
  *  Does nothing if the list has already been initialized.
  */
-void ddc_ensure_displays_initialized() {
+void
+ddc_ensure_displays_initialized() {
    if (!all_displays) {
       all_displays = ddc_detect_all_displays();
    }
