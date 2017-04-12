@@ -1183,6 +1183,9 @@ ddc_report_active_display(Display_Info * curinfo, int depth) {
  * @param   depth       logical indentation depth
  *
  * @return number of displays
+ *
+ * \remark
+ * For C API
  */
 int
 ddc_report_active_displays(int depth) {
@@ -1223,7 +1226,7 @@ ddc_report_active_displays(int depth) {
  */
 int
 ddc_report_all_displays(int depth) {
-    bool debug = true;
+    bool debug = false;
     DBGMSF(debug, "Starting");
 
     ddc_ensure_displays_initialized();
