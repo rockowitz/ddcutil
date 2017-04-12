@@ -208,7 +208,7 @@ typedef struct {
    char *       hiddev_device_name;
    DDCA_MCCS_Version_Spec vcp_version;
    char *       capabilities_string;
-   Parsed_Edid* pedid;                             // added 7/2016
+ //  Parsed_Edid* pedid;                             // added 7/2016
 } Display_Handle;
 
 Display_Handle * create_bus_display_handle_from_display_ref(int fh, Display_Ref * dref);

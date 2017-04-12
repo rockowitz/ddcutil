@@ -360,18 +360,18 @@ loadvcp_by_dumpload_data(
 
    if (dh) {
       // If explicit display specified, check that the data is valid for it
-      assert(dh->pedid);
+      assert(dh->dref->pedid);
       bool ok = true;
-      if ( !streq(dh->pedid->model_name, pdata->model) ) {
+      if ( !streq(dh->dref->pedid->model_name, pdata->model) ) {
          f0printf(FERR,
             "Monitor model in data (%s) does not match that for specified device (%s)\n",
-            pdata->model, dh->pedid->model_name);
+            pdata->model, dh->dref->pedid->model_name);
          ok = false;
       }
-      if (!streq(dh->pedid->serial_ascii, pdata->serial_ascii) ) {
+      if (!streq(dh->dref->pedid->serial_ascii, pdata->serial_ascii) ) {
          f0printf(FERR,
             "Monitor serial number in data (%s) does not match that for specified device (%s)\n",
-            pdata->serial_ascii, dh->pedid->serial_ascii);
+            pdata->serial_ascii, dh->dref->pedid->serial_ascii);
          ok = false;
       }
       if (!ok) {

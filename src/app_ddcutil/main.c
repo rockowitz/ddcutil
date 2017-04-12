@@ -171,7 +171,7 @@ void probe_display_by_dh(Display_Handle * dh)
    Public_Status_Code psc = 0;
 
    printf("\nMfg id: %s, model: %s, sn: %s\n",
-          dh->pedid->mfg_id, dh->pedid->model_name, dh->pedid->serial_ascii);
+          dh->dref->pedid->mfg_id, dh->dref->pedid->model_name, dh->dref->pedid->serial_ascii);
 
    printf("\nCapabilities for display %s\n", display_handle_repr(dh) );
       // not needed, causes confusing messages if get_vcp_version fails but get_capabilities succeeds

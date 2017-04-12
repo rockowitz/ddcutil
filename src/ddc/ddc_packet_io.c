@@ -115,7 +115,7 @@ Public_Status_Code ddc_open_display(
    bool debug = false;
    DBGMSF(debug,"Opening display %s, callopts=%s",
                  dref_short_name(dref), interpret_call_options(callopts));
-   Display_Handle * pDispHandle = NULL;
+   Display_Handle * dh = NULL;
    Public_Status_Code psc = 0;
 
    switch (dref->io_mode) {
@@ -143,12 +143,12 @@ Public_Status_Code ddc_open_display(
          // Is this needed?
          // 10/24/15, try disabling:
          // sleepMillisWithTrace(DDC_TIMEOUT_MILLIS_DEFAULT, __func__, NULL);
-
-         pDispHandle = create_bus_display_handle_from_display_ref(fd, dref);
+         dh = create_bus_display_handle_from_display_ref(fd, dref);    // n. sets dh->dref = dref
+         // n. sets
          Bus_Info * bus_info = i2c_get_bus_info(dref->busno, DISPSEL_VALID_ONLY);   // or DISPSEL_NONE?
-         pDispHandle->pedid = bus_info->edid;
+         dref->pedid = bus_info->edid;
 
-         if (!pDispHandle->pedid) {
+         if (!dref->pedid) {
             // How is this even possible?
             // 1/2017:  see with x260 laptop and Ultradock, See ddcutil user report.
             //          close(fd) fails
@@ -162,13 +162,12 @@ Public_Status_Code ddc_open_display(
             else
                DBGMSG("Continuing");
          }
-
       }
       break;
 
    case DDCA_IO_ADL:
-      pDispHandle = create_adl_display_handle_from_display_ref(dref);
-      pDispHandle->pedid = adlshim_get_parsed_edid_by_display_handle(pDispHandle);
+      dh = create_adl_display_handle_from_display_ref(dref);  // n. sets dh->dref = dref
+      dref->pedid = adlshim_get_parsed_edid_by_display_handle(dh);
       break;
 
    case DDCA_IO_USB:
@@ -188,15 +187,15 @@ Public_Status_Code ddc_open_display(
             // log_status_code(gsc,__func__);
             goto bye;
          }
-         pDispHandle = create_usb_display_handle_from_display_ref(fd, dref);
-         pDispHandle->pedid = usb_get_parsed_edid_by_display_handle(pDispHandle);
+         dh = create_usb_display_handle_from_display_ref(fd, dref);
+         dref->pedid = usb_get_parsed_edid_by_display_handle(dh);
       }
 #else
       PROGRAM_LOGIC_ERROR("ddcutil not built with USB support");
 #endif
       break;
    } // switch
-   assert(!pDispHandle || pDispHandle->pedid);
+   assert(!dh || dh->dref->pedid);
    // needed?  for both or just I2C?
    // sleep_millis_with_trace(DDC_TIMEOUT_MILLIS_DEFAULT, __func__, NULL);
    if (dref->io_mode != DDCA_IO_USB)
@@ -205,7 +204,7 @@ Public_Status_Code ddc_open_display(
 bye:
    if (psc != 0)
       COUNT_STATUS_CODE(psc);
-   *pdh = pDispHandle;
+   *pdh = dh;
    assert(psc <= 0);
    return psc;
 }
