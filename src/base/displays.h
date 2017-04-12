@@ -206,7 +206,7 @@ typedef struct {
    int          usb_bus;
    int          usb_device;
    char *       hiddev_device_name;
-   DDCA_MCCS_Version_Spec vcp_version;
+ //  DDCA_MCCS_Version_Spec vcp_version;
  //  char *       capabilities_string;
  //  Parsed_Edid* pedid;                             // added 7/2016
 } Display_Handle;

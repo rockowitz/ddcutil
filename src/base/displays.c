@@ -544,7 +544,7 @@ static Display_Handle * create_bus_display_handle_from_busno(int fh, int busno) 
    dh->io_mode = DDCA_IO_DEVI2C;
    dh->fh = fh;
    dh->busno = busno;
-   dh->vcp_version = VCP_SPEC_UNQUERIED;
+   dh->dref->vcp_version = VCP_SPEC_UNQUERIED;
 
    // report_display_handle(dh,__func__);
    return dh;
@@ -566,7 +566,7 @@ static Display_Handle * create_adl_display_handle_from_adlno(int iAdapterIndex, 
    dh->io_mode = DDCA_IO_ADL;
    dh->iAdapterIndex = iAdapterIndex;
    dh->iDisplayIndex = iDisplayIndex;
-   dh->vcp_version = VCP_SPEC_UNQUERIED;
+   dh->dref->vcp_version = VCP_SPEC_UNQUERIED;
    return dh;
 }
 
@@ -590,7 +590,7 @@ Display_Handle * create_usb_display_handle_from_display_ref(int fh, Display_Ref 
    dh->hiddev_device_name = dref->usb_hiddev_name;
    dh->usb_bus = dref->usb_bus;
    dh->usb_device = dref->usb_device;
-   dh->vcp_version = VCP_SPEC_UNQUERIED;
+   dh->dref->vcp_version = VCP_SPEC_UNQUERIED;
 
    // report_display_handle(dh,__func__);
    return dh;
@@ -637,7 +637,7 @@ void report_display_handle(Display_Handle * dh, const char * msg, int depth) {
             break;
          }
       }
-      rpt_vstring(d1, "vcp_version:         %d.%d", dh->vcp_version.major, dh->vcp_version.minor);
+      // rpt_vstring(d1, "vcp_version:         %d.%d", dh->vcp_version.major, dh->vcp_version.minor);
    }
 }
 

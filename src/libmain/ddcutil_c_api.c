@@ -1182,7 +1182,7 @@ ddct_get_nc_feature_value_name(
    WITH_DH(ddct_dh,  {
          // this should be a function in vcp_feature_codes:
          char * feature_name = NULL;
-         DDCA_MCCS_Version_Spec vspec = dh->vcp_version;
+         DDCA_MCCS_Version_Spec vspec = dh->dref->vcp_version;
          DDCA_Feature_Value_Entry * feature_value_entries = find_feature_values(feature_code, vspec);
          if (feature_value_entries == NULL) {
             psc = DDCL_ARG;

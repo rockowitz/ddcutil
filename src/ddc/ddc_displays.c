@@ -201,7 +201,7 @@ bool initial_checks_by_dh(Display_Handle * dh) {
       }
       if ( vcp_version_is_unqueried(dh->dref->vcp_version)) {
          dh->dref->vcp_version = get_vcp_version_by_display_handle(dh);
-         dh->vcp_version = dh->dref->vcp_version;
+         // dh->vcp_version = dh->dref->vcp_version;
       }
    }
 

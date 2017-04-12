@@ -1,13 +1,11 @@
 /* ddc_vcp_version.c
  *
- * Created on: Dec 31, 2015
- *
  * Functions to obtain the VCP (MCCS) version for a display.
  * These functions are in a separate source file to simplify
  * the acyclic graph of #includes within the ddc source directory.
  *
  * <copyright>
- * Copyright (C) 2014-2015 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2014-2017 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -65,14 +63,14 @@
 DDCA_MCCS_Version_Spec get_vcp_version_by_display_handle(Display_Handle * dh) {
    bool debug = false;
    // TMI
-   DBGMSF(debug, "Starting. dh=%p, dh->vcp_version =  %d.%d, %s",
-                 dh, dh->vcp_version.major, dh->vcp_version.minor, format_vspec(dh->vcp_version));
-   if (vcp_version_is_unqueried(dh->vcp_version)) {
+   DBGMSF(debug, "Starting. dh=%p, dh->dref->vcp_version =  %d.%d, %s",
+                 dh, dh->dref->vcp_version.major, dh->dref->vcp_version.minor, format_vspec(dh->dref->vcp_version));
+   if (vcp_version_is_unqueried(dh->dref->vcp_version)) {
       if (debug) {
          DBGMSG("Starting.  vcp_version not set");
          report_display_handle(dh, /*msg=*/ NULL, 1);
       }
-      dh->vcp_version = VCP_SPEC_UNKNOWN;
+      dh->dref->vcp_version = VCP_SPEC_UNKNOWN;
 
       if (dh->io_mode == DDCA_IO_USB) {
 #ifdef USE_USB
@@ -81,8 +79,8 @@ DDCA_MCCS_Version_Spec get_vcp_version_by_display_handle(Display_Handle * dh) {
          DBGMSF(debug, "VESA version from usb_get_vesa_version(): 0x%08x", vesa_ver);
          if (vesa_ver) {
             DBGMSF(debug, "VESA version from usb_get_vesa_version(): 0x%08x", vesa_ver);
-            dh->vcp_version.major = (vesa_ver >> 8) & 0xff;
-            dh->vcp_version.minor = vesa_ver & 0xff;
+            dh->dref->vcp_version.major = (vesa_ver >> 8) & 0xff;
+            dh->dref->vcp_version.minor = vesa_ver & 0xff;
          }
          else {
             DBGMSF(debug, "Error detecting VESA version using usb_get_vesa_version()");
@@ -105,30 +103,30 @@ DDCA_MCCS_Version_Spec get_vcp_version_by_display_handle(Display_Handle * dh) {
             set_output_level(olev);
 
          if (psc == 0) {
-            dh->vcp_version.major = pvalrec->val.nc.sh;
-            dh->vcp_version.minor = pvalrec->val.nc.sl;
-            DBGMSF(debug, "Set dh->vcp_version to %d.%d, %s",
-                          dh->vcp_version.major,
-                          dh->vcp_version.minor,
-                          format_vspec(dh->vcp_version) );
+            dh->dref->vcp_version.major = pvalrec->val.nc.sh;
+            dh->dref->vcp_version.minor = pvalrec->val.nc.sl;
+            DBGMSF(debug, "Set dh->dref->vcp_version to %d.%d, %s",
+                          dh->dref->vcp_version.major,
+                          dh->dref->vcp_version.minor,
+                          format_vspec(dh->dref->vcp_version) );
          }
          else {
             // happens for pre MCCS v2 monitors
             DBGMSF(debug, "Error detecting VCP version using VCP feature 0xdf. psc=%s\n", psc_desc(psc) );
          }
       }
-      DBGMSF(debug, "Non-cache lookup returning: %d.%d", dh->vcp_version.major, dh->vcp_version.minor);
+      DBGMSF(debug, "Non-cache lookup returning: %d.%d", dh->dref->vcp_version.major, dh->dref->vcp_version.minor);
    }
-   // DBGMSF(debug, "Returning: %d.%d", dh->vcp_version.major, dh->vcp_version.minor);
-   assert( !vcp_version_eq(dh->vcp_version, VCP_SPEC_UNQUERIED) );
+   // DBGMSF(debug, "Returning: %d.%d", dh->dref->vcp_version.major, dh->dref->vcp_version.minor);
+   assert( !vcp_version_eq(dh->dref->vcp_version, VCP_SPEC_UNQUERIED) );
    // if (debug) {
    //    DBGMSG("Done.");
    //    report_display_handle(dh, /*msg=*/ NULL, 1);
    // }
-   DBGMSF(debug, "Returning dh->vcp_version = %d.%d, %s",
-                 dh->vcp_version.major, dh->vcp_version.minor,
-                 format_vspec(dh->vcp_version));
-   return dh->vcp_version;
+   DBGMSF(debug, "Returning dh->dref->vcp_version = %d.%d, %s",
+                 dh->dref->vcp_version.major, dh->dref->vcp_version.minor,
+                 format_vspec(dh->dref->vcp_version));
+   return dh->dref->vcp_version;
 }
 
 
