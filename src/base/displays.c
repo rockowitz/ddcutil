@@ -538,44 +538,54 @@ char * dref_repr(Display_Ref * dref) {
 
 // *** Display_Handle ***
 
+#ifdef OLD
 static Display_Handle * create_bus_display_handle_from_busno(int fh, int busno) {
    Display_Handle * dh = calloc(1, sizeof(Display_Handle));
    memcpy(dh->marker, DISPLAY_HANDLE_MARKER, 4);
    dh->io_mode = DDCA_IO_DEVI2C;
    dh->fh = fh;
    dh->busno = busno;
-   dh->dref->vcp_version = VCP_SPEC_UNQUERIED;
-
    // report_display_handle(dh,__func__);
    return dh;
 }
+#endif
 
 
-// hacky implementation for transition
 Display_Handle * create_bus_display_handle_from_display_ref(int fh, Display_Ref * dref) {
    assert(dref->io_mode == DDCA_IO_DEVI2C);
-   Display_Handle * dh = create_bus_display_handle_from_busno(fh, dref->busno);
+   // Display_Handle * dh = create_bus_display_handle_from_busno(fh, dref->busno);
+   Display_Handle * dh = calloc(1, sizeof(Display_Handle));
+   memcpy(dh->marker, DISPLAY_HANDLE_MARKER, 4);
+   dh->io_mode = DDCA_IO_DEVI2C;
+   dh->fh = fh;
+   dh->busno = dref->busno;
    dh->dref = dref;
+   dref->vcp_version = VCP_SPEC_UNQUERIED;
    return dh;
 }
 
-
+#ifdef OLD
 static Display_Handle * create_adl_display_handle_from_adlno(int iAdapterIndex, int iDisplayIndex) {
    Display_Handle * dh = calloc(1, sizeof(Display_Handle));
    memcpy(dh->marker, DISPLAY_HANDLE_MARKER, 4);
    dh->io_mode = DDCA_IO_ADL;
    dh->iAdapterIndex = iAdapterIndex;
    dh->iDisplayIndex = iDisplayIndex;
-   dh->dref->vcp_version = VCP_SPEC_UNQUERIED;
    return dh;
 }
-
+#endif
 
 // hacky implementation for transition
 Display_Handle * create_adl_display_handle_from_display_ref(Display_Ref * dref) {
    assert(dref->io_mode == DDCA_IO_ADL);
-   Display_Handle * dh = create_adl_display_handle_from_adlno(dref->iAdapterIndex, dref->iDisplayIndex);
+   // Display_Handle * dh = create_adl_display_handle_from_adlno(dref->iAdapterIndex, dref->iDisplayIndex);
+   Display_Handle * dh = calloc(1, sizeof(Display_Handle));
+   memcpy(dh->marker, DISPLAY_HANDLE_MARKER, 4);
+   dh->io_mode = DDCA_IO_ADL;
+   dh->iAdapterIndex = dref->iAdapterIndex;
+   dh->iDisplayIndex = dref->iDisplayIndex;
    dh->dref = dref;
+   dref->vcp_version = VCP_SPEC_UNQUERIED;   // needed?
    return dh;
 }
 
@@ -590,7 +600,7 @@ Display_Handle * create_usb_display_handle_from_display_ref(int fh, Display_Ref 
    dh->hiddev_device_name = dref->usb_hiddev_name;
    dh->usb_bus = dref->usb_bus;
    dh->usb_device = dref->usb_device;
-   dh->dref->vcp_version = VCP_SPEC_UNQUERIED;
+   dref->vcp_version = VCP_SPEC_UNQUERIED;
 
    // report_display_handle(dh,__func__);
    return dh;

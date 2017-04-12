@@ -1276,21 +1276,27 @@ void report_display_rec(Display_Rec * drec, int depth) {
    // report_parsed_edid(drec->edid, false, d1);
 
    rpt_vstring(d1, "io_mode: %s", mccs_io_mode_name(drec->io_mode));
-   rpt_vstring(d1, "flags:   0x%02x", drec->flags);
+   // rpt_vstring(d1, "flags:   0x%02x", drec->flags);
    switch(drec->io_mode) {
    case(DDCA_IO_DEVI2C):
          rpt_vstring(d1, "I2C bus information: ");
-         report_businfo(drec->detail.bus_detail, d2);
+         Bus_Info * businfo = drec->detail2;
+         assert( memcmp(businfo->marker, BUS_INFO_MARKER, 4) == 0);
+         report_businfo(businfo, d2);
          break;
    case(DDCA_IO_ADL):
 #ifdef HAVE_ADL
       rpt_vstring(d1, "ADL device information: ");
-      report_adl_display_detail(drec->detail.adl_detail, d2);
+      ADL_Display_Detail * adl_detail = drec->detail2;
+      assert(memcmp(adl_detail->marker, ADL_DISPLAY_DETAIL_MARKER, 4) == 0);
+      report_adl_display_detail(adl_detail, d2);
 #endif
       break;
    case(DDCA_IO_USB):
          rpt_vstring(d1, "USB device information: ");
-         report_usb_monitor_info(drec->detail.usb_detail, d2);
+         Usb_Monitor_Info * moninfo = drec->detail2;
+         assert(memcmp(moninfo->marker, USB_MONITOR_INFO_MARKER, 4) == 0);
+         report_usb_monitor_info(moninfo, d2);
    break;
    }
 
@@ -1390,21 +1396,27 @@ ddc_check_display_rec(Display_Rec * drec, Display_Criteria * criteria) {
          goto bye;
       char buf[40];
       snprintf(buf, 40, "%s/hiddev%d", hiddev_directory(), criteria->hiddev);
-      if (!streq( drec->detail.usb_detail->hiddev_device_name, buf))
+      Usb_Monitor_Info * moninfo = drec->detail2;
+      assert(memcmp(moninfo->marker, USB_MONITOR_INFO_MARKER, 4) == 0);
+      if (!streq( moninfo->hiddev_device_name, buf))
          goto bye;
    }
 
    if (criteria->usb_busno >= 0) {
       if (drec->io_mode != DDCA_IO_USB)
          goto bye;
-      if ( drec->detail.usb_detail->hiddev_devinfo->busnum != criteria->usb_busno )
+      Usb_Monitor_Info * moninfo = drec->detail2;
+      assert(memcmp(moninfo->marker, USB_MONITOR_INFO_MARKER, 4) == 0);
+      if ( moninfo->hiddev_devinfo->busnum != criteria->usb_busno )
          goto bye;
    }
 
    if (criteria->usb_devno >= 0) {
       if (drec->io_mode != DDCA_IO_USB)
          goto bye;
-      if ( drec->detail.usb_detail->hiddev_devinfo->devnum != criteria->usb_devno )
+      Usb_Monitor_Info * moninfo = drec->detail2;
+      assert(memcmp(moninfo->marker, USB_MONITOR_INFO_MARKER, 4) == 0);
+      if ( moninfo->hiddev_devinfo->devnum != criteria->usb_devno )
          goto bye;
    }
 
@@ -1612,7 +1624,8 @@ ddc_detect_all_displays() {
          drec->dispno = -1;
          drec->dref = dref;
          drec->edid = businfo->edid;
-         drec->detail.bus_detail = businfo;
+         // drec->detail.bus_detail = businfo;
+         drec->detail2 = businfo;
          drec->dref->flags |= DREF_DDC_IS_MONITOR_CHECKED;
          drec->dref->flags |= DREF_DDC_IS_MONITOR;
          ddc_add_display_rec(display_list, drec);
@@ -1629,7 +1642,8 @@ ddc_detect_all_displays() {
      drec->dispno = -1;
      drec->dref = dref;
      drec->edid = detail->pEdid;
-     drec->detail.adl_detail = detail;
+     // drec->detail.adl_detail = detail;
+     drec->detail2 = detail;
      drec->dref->flags |= DREF_DDC_IS_MONITOR_CHECKED;
      drec->dref->flags |= DREF_DDC_IS_MONITOR;
      ddc_add_display_rec(display_list, drec);
@@ -1649,7 +1663,8 @@ ddc_detect_all_displays() {
       drec->dispno = -1;
       drec->dref = dref;
       drec->edid = curmon->edid;
-      drec->detail.usb_detail = curmon;
+      // drec->detail.usb_detail = curmon;
+      drec->detail2 = curmon;
       drec->dref->flags |= DREF_DDC_IS_MONITOR_CHECKED;
       drec->dref->flags |= DREF_DDC_IS_MONITOR;
       ddc_add_display_rec(display_list, drec);

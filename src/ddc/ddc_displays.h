@@ -88,6 +88,7 @@ typedef struct {
    Display_Ref * dref;
    Parsed_Edid * edid;     // redundant, in detail
    DDCA_IO_Mode io_mode;   // redundant, also in Display_Ref
+#ifdef OLD
    union {
       Bus_Info * bus_detail;
       ADL_Display_Detail * adl_detail;
@@ -95,7 +96,9 @@ typedef struct {
       Usb_Monitor_Info * usb_detail;
 #endif
    } detail;
-   uint8_t     flags;
+#endif
+   void * detail2;
+   // uint8_t     flags;            // currently unneeded
 
 } Display_Rec;
 
