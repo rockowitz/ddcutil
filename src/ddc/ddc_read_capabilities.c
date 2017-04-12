@@ -5,7 +5,7 @@
  * the acyclic graph of #includes within the ddc source directory.
  *
  * <copyright>
- * Copyright (C) 2014-2016 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2014-2017 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -102,8 +102,7 @@ get_capabilities_buffer(
 
 /* Gets the capabilities string for a display.
  *
- * The value is cached in the display Handle as this is an
- * expensive operation.
+ * The value is cached as this is an expensive operation.
  *
  * Arguments:
  *   dh       display handle
@@ -118,11 +117,11 @@ get_capabilities_buffer(
 Public_Status_Code
 get_capabilities_string(Display_Handle * dh, char** pcaps) {
    Public_Status_Code psc = 0;
-   if (!dh->capabilities_string) {
+   if (!dh->dref->capabilities_string) {
       if (dh->io_mode == DDCA_IO_USB) {
 #ifdef USE_USB
          // newly created string, can just  reference
-         dh->capabilities_string = usb_get_capabilities_string_by_display_handle(dh);
+         dh->dref->capabilities_string = usb_get_capabilities_string_by_display_handle(dh);
 #else
          PROGRAM_LOGIC_ERROR("ddcutil not build with USB support");
 #endif
@@ -131,12 +130,12 @@ get_capabilities_string(Display_Handle * dh, char** pcaps) {
          Buffer * pcaps_buffer;
          psc = get_capabilities_buffer(dh, &pcaps_buffer);
          if (psc == 0) {
-            dh->capabilities_string = strdup((char *) pcaps_buffer->bytes);
+            dh->dref->capabilities_string = strdup((char *) pcaps_buffer->bytes);
             buffer_free(pcaps_buffer,__func__);
          }
       }
    }
-   *pcaps = dh->capabilities_string;
+   *pcaps = dh->dref->capabilities_string;
    return psc;
 }
 
