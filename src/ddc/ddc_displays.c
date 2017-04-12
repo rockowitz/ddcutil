@@ -628,7 +628,7 @@ ddc_get_valid_displays() {
             Display_Info * curinfo =  info_list->info_recs + inforecctr;
             curinfo->dispno = drec->dispno;
             curinfo->dref   = drec->dref;
-            curinfo->edid   = drec->edid;
+            curinfo->edid   = drec->dref->pedid;
             memcpy(curinfo->marker, DISPLAY_INFO_MARKER, 4);
             inforecctr++;
          }
@@ -1272,12 +1272,12 @@ void report_display_rec(Display_Rec * drec, int depth) {
    rpt_vstring(d1, "dref: %p:", drec->dref);
    report_display_ref(drec->dref, d1);
 
-   rpt_vstring(d1, "edid: %p (Skipping report)", drec->edid);
+   rpt_vstring(d1, "edid: %p (Skipping report)", drec->dref->pedid);
    // report_parsed_edid(drec->edid, false, d1);
 
-   rpt_vstring(d1, "io_mode: %s", mccs_io_mode_name(drec->io_mode));
+   rpt_vstring(d1, "io_mode: %s", mccs_io_mode_name(drec->dref->io_mode));
    // rpt_vstring(d1, "flags:   0x%02x", drec->flags);
-   switch(drec->io_mode) {
+   switch(drec->dref->io_mode) {
    case(DDCA_IO_DEVI2C):
          rpt_vstring(d1, "I2C bus information: ");
          Bus_Info * businfo = drec->detail2;
@@ -1377,22 +1377,22 @@ ddc_check_display_rec(Display_Rec * drec, Display_Criteria * criteria) {
       goto bye;
 
    if (criteria->i2c_busno >= 0) {
-      if (drec->io_mode != DDCA_IO_DEVI2C || drec->dref->busno != criteria->i2c_busno)
+      if (drec->dref->io_mode != DDCA_IO_DEVI2C || drec->dref->busno != criteria->i2c_busno)
          goto bye;
    }
 
    if (criteria->iAdapterIndex >= 0) {
-      if (drec->io_mode != DDCA_IO_ADL || drec->dref->iAdapterIndex != criteria->iAdapterIndex)
+      if (drec->dref->io_mode != DDCA_IO_ADL || drec->dref->iAdapterIndex != criteria->iAdapterIndex)
          goto bye;
    }
 
    if (criteria->iDisplayIndex >= 0) {
-      if (drec->io_mode != DDCA_IO_ADL || drec->dref->iDisplayIndex != criteria->iDisplayIndex)
+      if (drec->dref->io_mode != DDCA_IO_ADL || drec->dref->iDisplayIndex != criteria->iDisplayIndex)
          goto bye;
    }
 
    if (criteria->hiddev >= 0) {
-      if (drec->io_mode != DDCA_IO_USB)
+      if (drec->dref->io_mode != DDCA_IO_USB)
          goto bye;
       char buf[40];
       snprintf(buf, 40, "%s/hiddev%d", hiddev_directory(), criteria->hiddev);
@@ -1403,7 +1403,7 @@ ddc_check_display_rec(Display_Rec * drec, Display_Criteria * criteria) {
    }
 
    if (criteria->usb_busno >= 0) {
-      if (drec->io_mode != DDCA_IO_USB)
+      if (drec->dref->io_mode != DDCA_IO_USB)
          goto bye;
       Usb_Monitor_Info * moninfo = drec->detail2;
       assert(memcmp(moninfo->marker, USB_MONITOR_INFO_MARKER, 4) == 0);
@@ -1412,7 +1412,7 @@ ddc_check_display_rec(Display_Rec * drec, Display_Criteria * criteria) {
    }
 
    if (criteria->usb_devno >= 0) {
-      if (drec->io_mode != DDCA_IO_USB)
+      if (drec->dref->io_mode != DDCA_IO_USB)
          goto bye;
       Usb_Monitor_Info * moninfo = drec->detail2;
       assert(memcmp(moninfo->marker, USB_MONITOR_INFO_MARKER, 4) == 0);
@@ -1421,23 +1421,23 @@ ddc_check_display_rec(Display_Rec * drec, Display_Criteria * criteria) {
    }
 
    if (criteria->hiddev >= 0) {
-      if (drec->io_mode != DDCA_IO_USB)
+      if (drec->dref->io_mode != DDCA_IO_USB)
          goto bye;
       // if ( drec->detail.usb_detail->hiddev_devinfo->devnum != criteria->usb_devno )
       DBGMSG("hiddev devno unimplemented");
       goto bye;
    }
 
-   if (criteria->mfg_id && (strlen(criteria->mfg_id) > 0) && !streq(drec->edid->mfg_id, criteria->mfg_id) )
+   if (criteria->mfg_id && (strlen(criteria->mfg_id) > 0) && !streq(drec->dref->pedid->mfg_id, criteria->mfg_id) )
       goto bye;
 
-   if (criteria->model_name && (strlen(criteria->model_name) > 0) && !streq(drec->edid->model_name, criteria->model_name) )
+   if (criteria->model_name && (strlen(criteria->model_name) > 0) && !streq(drec->dref->pedid->model_name, criteria->model_name) )
       goto bye;
 
-   if (criteria->serial_ascii && (strlen(criteria->serial_ascii) > 0) && !streq(drec->edid->serial_ascii, criteria->serial_ascii) )
+   if (criteria->serial_ascii && (strlen(criteria->serial_ascii) > 0) && !streq(drec->dref->pedid->serial_ascii, criteria->serial_ascii) )
       goto bye;
 
-   if (criteria->edidbytes && memcmp(drec->edid->bytes, criteria->edidbytes, 128) != 0)
+   if (criteria->edidbytes && memcmp(drec->dref->pedid->bytes, criteria->edidbytes, 128) != 0)
       goto bye;
 
    result = true;
@@ -1623,7 +1623,7 @@ ddc_detect_all_displays() {
          memcpy(drec->marker, DISPLAY_REC_MARKER, 4);
          drec->dispno = -1;
          drec->dref = dref;
-         drec->edid = businfo->edid;
+         drec->dref->pedid = businfo->edid;    // needed?
          // drec->detail.bus_detail = businfo;
          drec->detail2 = businfo;
          drec->dref->flags |= DREF_DDC_IS_MONITOR_CHECKED;
@@ -1641,7 +1641,7 @@ ddc_detect_all_displays() {
      memcpy(drec->marker, DISPLAY_REC_MARKER, 4);
      drec->dispno = -1;
      drec->dref = dref;
-     drec->edid = detail->pEdid;
+     drec->dref->pedid = detail->pEdid;   // needed?
      // drec->detail.adl_detail = detail;
      drec->detail2 = detail;
      drec->dref->flags |= DREF_DDC_IS_MONITOR_CHECKED;
@@ -1662,7 +1662,7 @@ ddc_detect_all_displays() {
       memcpy(drec->marker, DISPLAY_REC_MARKER, 4);
       drec->dispno = -1;
       drec->dref = dref;
-      drec->edid = curmon->edid;
+      drec->dref->pedid = curmon->edid;
       // drec->detail.usb_detail = curmon;
       drec->detail2 = curmon;
       drec->dref->flags |= DREF_DDC_IS_MONITOR_CHECKED;

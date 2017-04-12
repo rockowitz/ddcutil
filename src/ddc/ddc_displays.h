@@ -86,8 +86,8 @@ typedef struct {
    char          marker[4];
    int           dispno;
    Display_Ref * dref;
-   Parsed_Edid * edid;     // redundant, in detail
-   DDCA_IO_Mode io_mode;   // redundant, also in Display_Ref
+ //  Parsed_Edid * edid;     // use dref->pedid
+ //  DDCA_IO_Mode io_mode;   // use dref->io_mode
 #ifdef OLD
    union {
       Bus_Info * bus_detail;
