@@ -596,3 +596,27 @@ bye:
 
    return result;
 }
+
+
+/** Excapsulates location of hiddev device files, in case it needs to be generalized
+
+ \remark
+According to file https://www.kernel.org/doc/Documentation/hid/hiddev.txt,
+hiddev devices are always named /dev/usb/hiddevN (where n = 0..15).
+
+However, searching the web finds statements that the hiddev device files
+might be located in any of several distribution dependent directories, and
+code examples that looks in multiple directories.
+
+I suspect that for recent kernels/distributions the device file location is
+fixed, but that variation existed in the past.
+
+For now, assume the location is fixed.  If in fact it proves to be variable,
+this function can be extended to use udev or other some other mechanisms to locate
+the hiddev directory.
+ */
+char *
+hiddev_directory() {
+   return "/dev/usb";
+}
+

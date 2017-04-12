@@ -86,4 +86,8 @@ typedef struct udev_usb_devinfo {
 void report_udev_usb_devinfo(struct udev_usb_devinfo * dinfo, int depth);
 Udev_Usb_Devinfo * get_udev_usb_devinfo(char * subsystem, char * simple_devname);
 
+// Move function to hiddev utility library?
+/** Excapsulates location of hiddev device files, in case it needs to be generalized */
+char * hiddev_directory();
+
 #endif /* UDEV_UTIL_H_ */

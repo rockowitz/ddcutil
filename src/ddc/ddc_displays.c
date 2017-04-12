@@ -38,6 +38,7 @@
 #include "util/debug_util.h"
 #include "util/failsim.h"
 #include "util/report_util.h"
+#include "util/udev_util.h"
 
 #include "base/adl_errors.h"
 #include "base/ddc_errno.h"
@@ -1345,12 +1346,6 @@ new_display_criteria() {
 }
 
 
-// Move function to hiddev utility library?
-/** Excapsulates location of hiddev device files, in case it needs to be generalized */
-static char *
-hiddev_directory() {
-   return "/dev/usb";
-}
 
 
 /** Checks if a given #Display_Rec satisfies all the criteria specified in a
