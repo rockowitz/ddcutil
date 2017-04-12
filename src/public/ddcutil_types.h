@@ -246,6 +246,7 @@ typedef struct {
       struct {
          int    usb_bus;
          int    usb_device;
+     //  int    hiddev_devno;       // will replace hiddev_device_name
          char * hiddev_device_name;
       } usb;
    };

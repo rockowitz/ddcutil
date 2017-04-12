@@ -28,6 +28,8 @@
 #ifndef DDC_DISPLAYS_H_
 #define DDC_DDC_DISPLAYS_H_
 
+#include "public/ddcutil_types.h"
+
 #include "base/core.h"
 #include "base/displays.h"
 

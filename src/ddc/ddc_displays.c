@@ -1510,6 +1510,9 @@ ddc_find_display_rec_by_display_identifier(Display_Identifier * did) {
       criteria->usb_busno = did->usb_bus;
       criteria->usb_devno = did->usb_device;
       break;
+   case DISP_ID_HIDDEV:
+      criteria->hiddev = did->hiddev_devno;
+
    }
 
    result = ddc_find_display_rec_by_criteria(criteria);
