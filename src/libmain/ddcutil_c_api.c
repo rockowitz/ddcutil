@@ -625,7 +625,11 @@ ddca_repr_display_identifier(DDCA_Display_Identifier ddca_did) {
             break;
       case DISP_ID_USB:
             snprintf(did_work_buf, 100,
-                     "Display Id Type: %s, dispno=%d", did_type_name, pdid->dispno);
+                     "Display Id Type: %s, usb bus:device=%d.%d", did_type_name, pdid->usb_bus, pdid->usb_device);;
+            break;
+      case DISP_ID_HIDDEV:
+            snprintf(did_work_buf, 100,
+                     "Display Id Type: %s, hiddev_devno=%d", did_type_name, pdid->hiddev_devno);
             break;
 
       } // switch

@@ -52,7 +52,8 @@ static char * Display_Id_Type_Names[] = {
       "DISP_ID_MONSER",
       "DISP_ID_EDID",
       "DISP_ID_DISPNO",
-      "DISP_ID_USB"
+      "DISP_ID_USB",
+      "DISP_ID_HIDDEV"
 };
 
 
