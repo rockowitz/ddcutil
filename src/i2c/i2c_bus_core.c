@@ -1412,20 +1412,6 @@ void report_businfo(Bus_Info * bus_info, int depth) {
 
    switch (output_level) {
 
-#ifdef OLD
-      case OL_PROGRAM:
-         if ( bus_info->flags & I2C_BUS_ADDR_0X50 ) {
-            rpt_vstring(
-                    depth,
-                    "%d:%s:%s:%s",
-                    bus_info->busno,
-                    bus_info->edid->mfg_id,
-                    bus_info->edid->model_name,
-                    bus_info->edid->serial_ascii);
-         }
-         break;
-#endif
-
       case DDCA_OL_VERBOSE:
          puts("");
          rpt_vstring(depth, "Bus /dev/i2c-%d found:    %s", bus_info->busno, bool_repr(bus_info->flags&I2C_BUS_EXISTS));
@@ -1503,11 +1489,7 @@ void i2c_report_active_display(Bus_Info * businfo, int depth) {
       free(sysattr_name);
    }
 
-#ifdef OLD
-   if (output_level == DDCA_OL_TERSE || output_level == OL_PROGRAM)
-#else
    if (output_level == DDCA_OL_TERSE)
-#endif
    rpt_vstring(depth, "Monitor:             %s:%s:%s",  businfo->edid->mfg_id,
                                                businfo->edid->model_name,
                                                businfo->edid->serial_ascii);
