@@ -21,6 +21,10 @@
  * </endcopyright>
  */
 
+/** \file
+ *
+ */
+
 /** \cond */
 #include <assert.h>
 #include <errno.h>
@@ -438,7 +442,8 @@ Usb_Monitor_Info * usb_find_monitor_by_display_handle(Display_Handle * dh) {
    // printf("(%s) Starting. dh=%p\n", __func__, dh);
    bool debug = false;
    DBGMSF(debug, "Starting. dh = %s", display_handle_repr(dh));
-   assert(dh->io_mode == DDCA_IO_USB);
+   assert(dh && dh->dref);
+   assert(dh->dref->io_mode == DDCA_IO_USB);
    Usb_Monitor_Info * result = NULL;
    result = usb_find_monitor_by_busnum_devnum(dh->dref->usb_bus, dh->dref->usb_device);
    DBGMSF(debug, "Returning %p", result);

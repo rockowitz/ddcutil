@@ -87,7 +87,8 @@ Parsed_Edid*
 adlshim_get_parsed_edid_by_display_handle(
       Display_Handle * dh)
 {
-   ASSERT_DISPLAY_IO_MODE(dh, DDCA_IO_ADL);
+   assert(dh && dh->dref && dh->dref->io_mode == DDCA_IO_ADL);
+   // ASSERT_DISPLAY_IO_MODE(dh, DDCA_IO_ADL);
    // assert(dh->io_mode == DDC_IO_ADL);
    return adl_get_parsed_edid_by_adlno(dh->dref->iAdapterIndex, dh->dref->iDisplayIndex);
 }
@@ -97,8 +98,9 @@ Parsed_Edid*
 adlshim_get_parsed_edid_by_display_ref(
       Display_Ref * dref)
 {
+   assert(dref && dref->io_mode == DDCA_IO_ADL);
    // assert(dref->io_mode == DDC_IO_ADL);
-   ASSERT_DISPLAY_IO_MODE(dref, DDCA_IO_ADL);
+   // ASSERT_DISPLAY_IO_MODE(dref, DDCA_IO_ADL);
    return adl_get_parsed_edid_by_adlno(dref->iAdapterIndex, dref->iDisplayIndex);
 }
 
@@ -111,7 +113,8 @@ void adlshim_show_active_display_by_adlno(int iAdapterIndex, int iDisplayIndex, 
 
 
 void adlshim_report_active_display_by_display_ref(Display_Ref * dref, int depth) {
-   ASSERT_DISPLAY_IO_MODE(dref, DDCA_IO_ADL);
+   assert(dref && dref->io_mode == DDCA_IO_ADL);
+   // ASSERT_DISPLAY_IO_MODE(dref, DDCA_IO_ADL);
    return adl_report_active_display_by_adlno(dref->iAdapterIndex, dref->iDisplayIndex, depth);
 }
 
@@ -119,8 +122,9 @@ void adlshim_report_active_display_by_display_ref(Display_Ref * dref, int depth)
 // Find and validate display
 
 bool              adlshim_is_valid_display_ref(Display_Ref * dref, bool emit_error_msg) {
+   assert(dref && dref->io_mode == DDCA_IO_ADL);
    // assert(dref->ddc_io_mode == DDC_IO_ADL);
-   ASSERT_DISPLAY_IO_MODE(dref, DDCA_IO_ADL);
+   // ASSERT_DISPLAY_IO_MODE(dref, DDCA_IO_ADL);
    return adl_is_valid_adlno(dref->iAdapterIndex, dref->iDisplayIndex, emit_error_msg);
 }
 
@@ -212,7 +216,7 @@ adlshim_ddc_write_only(
       Byte *  pSendMsgBuf,
       int     sendMsgLen)
 {
-   assert(dh->io_mode == DDCA_IO_ADL);
+   assert(dh && dh->dref && dh->dref->io_mode == DDCA_IO_ADL);
    Base_Status_ADL adlrc = adl_ddc_write_only(dh->dref->iAdapterIndex, dh->dref->iDisplayIndex, pSendMsgBuf, sendMsgLen);
    return modulate_rc(adlrc, RR_ADL);
 }
@@ -230,7 +234,7 @@ Modulated_Status_ADL adlshim_ddc_read_only(
       Byte *  pRcvMsgBuf,
       int *   pRcvBytect)
 {
-   assert(dh->io_mode == DDCA_IO_ADL);
+   assert(dh && dh->dref && dh->dref->io_mode == DDCA_IO_ADL);
    Base_Status_ADL adlrc = adl_ddc_read_only(dh->dref->iAdapterIndex, dh->dref->iDisplayIndex, pRcvMsgBuf, pRcvBytect);
    return modulate_rc(adlrc, RR_ADL);
 }

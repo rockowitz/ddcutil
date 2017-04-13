@@ -775,8 +775,8 @@ ddca_repr_display_handle(DDCA_Display_Handle ddca_dh) {
       repr = NULL;
    }
    else {
-      char * dh_type_name = mccs_io_mode_name(dh->io_mode);
-      switch (dh->io_mode) {
+      char * dh_type_name = mccs_io_mode_name(dh->dref->io_mode);
+      switch (dh->dref->io_mode) {
       case(DISP_ID_BUSNO):
          snprintf(dh_work_buf, 100,
                   "Display Handle Type: %s, bus=/dev/i2c-%d",

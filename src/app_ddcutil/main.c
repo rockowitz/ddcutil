@@ -148,13 +148,13 @@ perform_get_capabilities_by_display_handle(Display_Handle * dh) {
       DDCA_Output_Level output_level = get_output_level();
       if (output_level <= DDCA_OL_TERSE) {
          printf("%s capabilities string: %s\n",
-               (dh->io_mode == DDCA_IO_USB) ? "Synthesized unparsed" : "Unparsed",
+               (dh->dref->io_mode == DDCA_IO_USB) ? "Synthesized unparsed" : "Unparsed",
                capabilities_string);
       }
       else {
-         if (dh->io_mode == DDCA_IO_USB)
+         if (dh->dref->io_mode == DDCA_IO_USB)
             pcap->raw_value_synthesized = true;
-         // report_parsed_capabilities(pcap, dh->io_mode);    // io_mode no longer needed
+         // report_parsed_capabilities(pcap, dh->dref->io_mode);    // io_mode no longer needed
          report_parsed_capabilities(pcap);
          // free_parsed_capabilities(pcap);
       }

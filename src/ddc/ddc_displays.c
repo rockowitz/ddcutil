@@ -138,12 +138,14 @@ bool check_ddc_communication(Display_Handle * dh) {
  *  in fact indicate a transient error, but that is rare.
  */
 bool check_monitor_ddc_null_response(Display_Handle * dh) {
+   assert(dh);
+   assert(dh->dref);
    bool debug = false;
    DBGMSF(debug, "Starting. dh=%s", display_handle_repr(dh));
 
    bool result = false;
 
-   if (dh->io_mode != DDCA_IO_USB) {
+   if (dh->dref->io_mode != DDCA_IO_USB) {
 
       DDCA_Single_Vcp_Value * pvalrec;
 

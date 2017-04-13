@@ -1,7 +1,7 @@
 /* ddc_strategy.h
  *
  * <copyright>
- * Copyright (C) 2015-2016 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2015-2017 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -21,7 +21,11 @@
  * </endcopyright>
  */
 
+/** \file */
+
+/** \cond */
 #include <assert.h>
+/** \endcond */
 
 #include "ddc/ddc_strategy.h"
 
@@ -35,15 +39,17 @@ DDC_Strategy ddc_strategies[] = {
 void validate_ddc_strategies() {
    assert(  ddc_strategies[DDCA_IO_DEVI2C].io_mode == DDCA_IO_DEVI2C);
    assert(  ddc_strategies[DDCA_IO_ADL].io_mode    == DDCA_IO_ADL);
-   assert(  ddc_strategies[DDCA_IO_USB].io_mode        == DDCA_IO_USB);
+   assert(  ddc_strategies[DDCA_IO_USB].io_mode    == DDCA_IO_USB);
 }
 
 DDC_Raw_Writer ddc_raw_writer(Display_Handle * dh) {
-   return ddc_strategies[dh->io_mode].writer;
+   assert(dh && dh->dref);
+   return ddc_strategies[dh->dref->io_mode].writer;
 }
 
 DDC_Raw_Reader ddc_raw_reader(Display_Handle * dh) {
-   return ddc_strategies[dh->io_mode].reader;
+   assert(dh && dh->dref);
+   return ddc_strategies[dh->dref->io_mode].reader;
 }
 
 void init_ddc_strategies() {

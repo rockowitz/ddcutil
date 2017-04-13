@@ -6,7 +6,7 @@
  * #include dependencies within the ddc source directory.
  *
  * <copyright>
- * Copyright (C) 2014-20167 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2014-2017 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -33,6 +33,10 @@
  * include dependencies within the ddc source directory.
  */
 
+/** \cond */
+#include <assert.h>
+/** \endcond */
+
 #include "base/core.h"
 #include "util/edid.h"
 #include "i2c/i2c_bus_core.h"
@@ -54,9 +58,11 @@ static Trace_Group TRACE_GROUP = TRC_DDC;
  */
 Parsed_Edid*
 ddc_get_parsed_edid_by_display_handle(Display_Handle * dh) {
+   assert(dh);
+   assert(dh->dref);
    Parsed_Edid* pEdid = NULL;
 
-   switch (dh->io_mode) {
+   switch (dh->dref->io_mode) {
    case DDCA_IO_DEVI2C:
       pEdid = i2c_get_parsed_edid_by_busno(dh->dref->busno);
       break;

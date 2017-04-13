@@ -687,7 +687,7 @@ void call_tuned_sleep_adl(Sleep_Event_Type event_type) {
  *  @param event_type sleep event type
  */
 void call_tuned_sleep_dh(Display_Handle* dh, Sleep_Event_Type event_type) {
-   call_tuned_sleep(dh->io_mode, event_type);
+   call_tuned_sleep(dh->dref->io_mode, event_type);
 }
 
 

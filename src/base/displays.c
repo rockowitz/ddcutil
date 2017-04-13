@@ -559,7 +559,7 @@ Display_Handle * create_bus_display_handle_from_display_ref(int fh, Display_Ref 
    // Display_Handle * dh = create_bus_display_handle_from_busno(fh, dref->busno);
    Display_Handle * dh = calloc(1, sizeof(Display_Handle));
    memcpy(dh->marker, DISPLAY_HANDLE_MARKER, 4);
-   dh->io_mode = DDCA_IO_DEVI2C;
+   // dh->io_mode = DDCA_IO_DEVI2C;
    dh->fh = fh;
    // dh->busno = dref->busno;
    dh->dref = dref;
@@ -584,7 +584,7 @@ Display_Handle * create_adl_display_handle_from_display_ref(Display_Ref * dref) 
    // Display_Handle * dh = create_adl_display_handle_from_adlno(dref->iAdapterIndex, dref->iDisplayIndex);
    Display_Handle * dh = calloc(1, sizeof(Display_Handle));
    memcpy(dh->marker, DISPLAY_HANDLE_MARKER, 4);
-   dh->io_mode = DDCA_IO_ADL;
+   // dh->io_mode = DDCA_IO_ADL;
    // dh->iAdapterIndex = dref->iAdapterIndex;
    // dh->iDisplayIndex = dref->iDisplayIndex;
    dh->dref = dref;
@@ -597,7 +597,7 @@ Display_Handle * create_usb_display_handle_from_display_ref(int fh, Display_Ref 
    assert(dref->io_mode == DDCA_IO_USB);
    Display_Handle * dh = calloc(1, sizeof(Display_Handle));
    memcpy(dh->marker, DISPLAY_HANDLE_MARKER, 4);
-   dh->io_mode = DDCA_IO_USB;
+   // dh->io_mode = DDCA_IO_USB;
    dh->fh = fh;
    dh->dref = dref;
    // dh->hiddev_device_name = dref->usb_hiddev_name;
@@ -629,8 +629,8 @@ void report_display_handle(Display_Handle * dh, const char * msg, int depth) {
       }
       else {
          rpt_vstring(d1, "dref:                 %p", dh->dref);
-         rpt_vstring(d1, "ddc_io_mode:          %s",  display_id_type_name(dh->io_mode) );
-         switch (dh->io_mode) {
+         rpt_vstring(d1, "io mode:              %s",  display_id_type_name(dh->dref->io_mode) );
+         switch (dh->dref->io_mode) {
          case (DDCA_IO_DEVI2C):
             // rpt_vstring(d1, "ddc_io_mode = DDC_IO_DEVI2C");
             rpt_vstring(d1, "fh:                  %d", dh->fh);
@@ -665,8 +665,10 @@ void report_display_handle(Display_Handle * dh, const char * msg, int depth) {
 char * display_handle_repr_r(Display_Handle * dh, char * buf, int bufsz) {
    assert(memcmp(dh->marker, DISPLAY_HANDLE_MARKER, 4) == 0);
    assert(buf && bufsz);
+   assert(dh);
+   assert(dh->dref);
 
-   switch (dh->io_mode) {
+   switch (dh->dref->io_mode) {
 
    case DDCA_IO_DEVI2C:
       snprintf(buf, bufsz,

@@ -27,8 +27,10 @@
 
 #include <config.h>
 
+/** \cond */
 #include <assert.h>
 #include <stdbool.h>
+/** \endcond */
 
 #include "base/core.h"
 #include "base/displays.h"
@@ -72,7 +74,7 @@ DDCA_MCCS_Version_Spec get_vcp_version_by_display_handle(Display_Handle * dh) {
       }
       dh->dref->vcp_version = VCP_SPEC_UNKNOWN;
 
-      if (dh->io_mode == DDCA_IO_USB) {
+      if (dh->dref->io_mode == DDCA_IO_USB) {
 #ifdef USE_USB
          // DBGMSG("Trying to get VESA version...");
          __s32 vesa_ver =  usb_get_vesa_version(dh->fh);

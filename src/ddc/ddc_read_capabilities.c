@@ -25,13 +25,17 @@
  * </endcopyright>
  */
 
+/** \file */
+
 #include <config.h>
 
+/** \cond */
 #include <assert.h>
 #include <errno.h>
 #include <glib.h>
 #include <string.h>
 #include <time.h>
+/** \endcond */
 
 #include "util/data_structures.h"
 #include "util/report_util.h"
@@ -116,9 +120,12 @@ get_capabilities_buffer(
  */
 Public_Status_Code
 get_capabilities_string(Display_Handle * dh, char** pcaps) {
+   assert(dh);
+   assert(dh->dref);
+
    Public_Status_Code psc = 0;
    if (!dh->dref->capabilities_string) {
-      if (dh->io_mode == DDCA_IO_USB) {
+      if (dh->dref->io_mode == DDCA_IO_USB) {
 #ifdef USE_USB
          // newly created string, can just  reference
          dh->dref->capabilities_string = usb_get_capabilities_string_by_display_handle(dh);

@@ -173,7 +173,7 @@ typedef struct {
 } Display_Ref;
 
 // n. works for both Display_Ref and Display_Handle
-#define ASSERT_DISPLAY_IO_MODE(_dref, _mode) assert(_dref && _dref->io_mode == _mode)
+// #define ASSERT_DISPLAY_IO_MODE(_dref, _mode) assert(_dref && _dref->io_mode == _mode)
 
 Display_Ref * create_bus_display_ref(int busno);
 Display_Ref * create_adl_display_ref(int iAdapterIndex, int iDisplayIndex);
@@ -197,7 +197,7 @@ bool dreq(Display_Ref* this, Display_Ref* that);
 /** Describes an open display device. */
 typedef struct {
    char         marker[4];
-   DDCA_IO_Mode io_mode;
+//   DDCA_IO_Mode io_mode;
    Display_Ref* dref;                               // added 4/2016
  //  int          busno;  // used for messages
    int          fh;     // file handle if ddc_io_mode == DDC_IO_DEVI2C or USB_IO

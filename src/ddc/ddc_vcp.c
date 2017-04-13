@@ -3,7 +3,7 @@
  * Virtual Control Panel access
  *
  * <copyright>
- * Copyright (C) 2014-2016 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2014-2017 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -23,8 +23,13 @@
  * </endcopyright>
  */
 
+/** \file
+ *
+ */
+
 #include <config.h>
 
+/** \cond */
 #include <assert.h>
 #include <errno.h>
 #include <fcntl.h>
@@ -32,6 +37,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+/** \endcond */
 
 #include "util/report_util.h"
 
@@ -89,7 +95,7 @@ set_nontable_vcp_value(
           feature_code, new_value, display_handle_repr(dh));
    Public_Status_Code psc = 0;
 
-   if (dh->io_mode == DDCA_IO_USB) {
+   if (dh->dref->io_mode == DDCA_IO_USB) {
 #ifdef USE_USB
       psc = usb_set_nontable_vcp_value(dh, feature_code, new_value);
 #else
@@ -139,7 +145,7 @@ set_table_vcp_value(
    Public_Status_Code psc = 0;
 
 
-   if (dh->io_mode == DDCA_IO_USB) {
+   if (dh->dref->io_mode == DDCA_IO_USB) {
 #ifdef USE_USB
       psc = DDCL_UNIMPLEMENTED;
 #else
@@ -488,7 +494,7 @@ get_vcp_value(
    DDCA_Single_Vcp_Value * valrec = NULL;
 
    // why are we coming here for USB?
-   if (dh->io_mode == DDCA_IO_USB) {
+   if (dh->dref->io_mode == DDCA_IO_USB) {
 #ifdef USE_USB
       DBGMSF(debug, "USB case");
 

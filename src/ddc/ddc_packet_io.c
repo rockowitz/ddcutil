@@ -224,7 +224,7 @@ void ddc_close_display(Display_Handle * dh) {
       report_display_handle(dh, __func__, 1);
    }
 
-   switch(dh->io_mode) {
+   switch(dh->dref->io_mode) {
    case DDCA_IO_DEVI2C:
       {
          Status_Errno rc = i2c_close_bus(dh->fh, dh->dref->busno,  CALLOPT_NONE);    // return error if failure
@@ -379,7 +379,8 @@ Public_Status_Code ddc_i2c_write_read_raw(
                               display_handle_repr(dh), readbuf);
    // DBGMSG("request_packet_ptr=%p", request_packet_ptr);
    // dump_packet(request_packet_ptr);
-   ASSERT_DISPLAY_IO_MODE(dh, DDCA_IO_DEVI2C);
+   assert(dh && dh->dref && dh->dref->io_mode == DDCA_IO_ADL);
+   // ASSERT_DISPLAY_IO_MODE(dh, DDCA_IO_DEVI2C);
 
 #ifdef TEST_THAT_DIDNT_WORK
    bool single_byte_reads = false;   // doesn't work
@@ -448,14 +449,11 @@ Public_Status_Code ddc_adl_write_read_raw(
      )
 {
    bool debug = false;
-   // bool tf = IS_TRACING();
-   // if (debug) tf = true;
-   // TRCMSGTF(tf, "Starting. Using adl_ddc_write_only() and adl_ddc_read_only() dh=%s",
-   //          display_handle_repr(dh));
    DBGTRC(debug, TRACE_GROUP,
           "Starting. Using adl_ddc_write_only() and adl_ddc_read_only() dh=%s",
           display_handle_repr(dh));
-   ASSERT_DISPLAY_IO_MODE(dh, DDCA_IO_ADL);
+   assert(dh && dh->dref && dh->dref->io_mode == DDCA_IO_ADL);
+   // ASSERT_DISPLAY_IO_MODE(dh, DDCA_IO_ADL);
 
    Public_Status_Code psc = adlshim_ddc_write_only(
                                dh,
@@ -518,8 +516,8 @@ Public_Status_Code ddc_write_read_raw(
                               display_handle_repr(dh), readbuf);
    Public_Status_Code psc;
 
-   assert(dh->io_mode == DDCA_IO_DEVI2C || dh->io_mode == DDCA_IO_ADL);
-   if (dh->io_mode == DDCA_IO_DEVI2C) {
+   assert(dh->dref->io_mode == DDCA_IO_DEVI2C || dh->dref->io_mode == DDCA_IO_ADL);
+   if (dh->dref->io_mode == DDCA_IO_DEVI2C) {
         psc =  ddc_i2c_write_read_raw(
               dh,
               request_packet_ptr,
@@ -658,7 +656,7 @@ Public_Status_Code ddc_write_read_with_retry(
    bool debug = false;
    DBGTRC(debug, TRACE_GROUP, "Starting. dh=%s, all_zero_response_ok=%s",
           display_handle_repr(dh), bool_repr(all_zero_response_ok)  );
-   assert(dh->io_mode != DDCA_IO_USB);
+   assert(dh->dref->io_mode != DDCA_IO_USB);
    // show_backtrace(1);
 
    // will be false on initial call to verify DDC communication
@@ -695,7 +693,7 @@ Public_Status_Code ddc_write_read_with_retry(
 
       if (psc < 0) {     // n. ADL status codes have been modulated
          DBGMSF(debug, "perform_ddc_write_read() returned %s", psc_desc(psc) );
-         if (dh->io_mode == DDCA_IO_DEVI2C) {
+         if (dh->dref->io_mode == DDCA_IO_DEVI2C) {
             // The problem: Does NULL response indicate an error condition, or
             // is the monitor using NULL response to indicate unsupported?
             // Acer monitor uses NULL response instead of setting the unsupported
@@ -830,8 +828,8 @@ Public_Status_Code ddc_write_only( Display_Handle * dh, DDC_Packet *   request_p
    DBGTRC(debug, TRACE_GROUP, "Starting.");
 
    Public_Status_Code psc = 0;
-   assert(dh->io_mode != DDCA_IO_USB);
-   if (dh->io_mode == DDCA_IO_DEVI2C) {
+   assert(dh->dref->io_mode != DDCA_IO_USB);
+   if (dh->dref->io_mode == DDCA_IO_DEVI2C) {
       psc = ddc_i2c_write_only(dh->fh, request_packet_ptr);
    }
    else {
@@ -871,7 +869,7 @@ ddc_write_only_with_retry( Display_Handle * dh, DDC_Packet *   request_packet_pt
    // TRCMSGTF(tf, "Starting.");
    DBGTRC(debug, TRACE_GROUP, "Starting.");
 
-   assert(dh->io_mode != DDCA_IO_USB);
+   assert(dh->dref->io_mode != DDCA_IO_USB);
 
    Public_Status_Code psc;
    int  tryctr;
@@ -888,7 +886,7 @@ ddc_write_only_with_retry( Display_Handle * dh, DDC_Packet *   request_packet_pt
       psc = ddc_write_only(dh, request_packet_ptr);
 
       if (psc < 0) {
-         if (dh->io_mode == DDCA_IO_DEVI2C) {
+         if (dh->dref->io_mode == DDCA_IO_DEVI2C) {
             if (psc < 0) {
                // if (psc != modulate_rc(-EIO, RR_ERRNO) )
                if (psc != -EIO)

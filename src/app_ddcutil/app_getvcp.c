@@ -1,7 +1,7 @@
 /* app_getvcp.c
  *
  * <copyright>
- * Copyright (C) 2014-2016 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2014-2017 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -21,13 +21,19 @@
  * </endcopyright>
  */
 
+/** \file
+ *
+ */
+
 #include <config.h>
 
+/** \cond */
 #include <assert.h>
 #include <errno.h>
 #include <stdio.h>
 #include <sys/ioctl.h>
 #include <unistd.h>
+/** \endcond */
 
 #include "util/string_util.h"
 #include "util/report_util.h"
@@ -376,7 +382,7 @@ app_read_changes_usb(Display_Handle * dh) {
    DBGMSF(debug, "Starting");
    // bool new_values_found = false;
 
-   assert(dh->io_mode == DDCA_IO_USB);
+   assert(dh->dref->io_mode == DDCA_IO_USB);
    int fd = dh->fh;
    int flaguref = HIDDEV_FLAG_UREF;
    struct hiddev_usage_ref uref;
@@ -425,7 +431,7 @@ app_read_changes_forever(Display_Handle * dh) {
    printf("Type ^C to exit...\n");
    while(true) {
 #ifdef USE_USB
-      if (dh->io_mode == DDCA_IO_USB)
+      if (dh->dref->io_mode == DDCA_IO_USB)
          app_read_changes_usb(dh);
       else
 #endif

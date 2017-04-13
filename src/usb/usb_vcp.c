@@ -3,7 +3,7 @@
  * Get and set VCP feature codes for USB connected monitors.
  *
  * <copyright>
- * Copyright (C) 2016 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2017 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -23,6 +23,11 @@
  * </endcopyright>
  */
 
+/** \file
+ *
+ */
+
+/** \cond */
 #include <assert.h>
 #include <errno.h>
 #include <linux/hiddev.h>
@@ -31,6 +36,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/ioctl.h>
+/** \endcond */
 
 #include "util/report_util.h"
 #include "util/string_util.h"
@@ -449,7 +455,7 @@ usb_get_nontable_vcp_value(
    DBGTRC(debug, TRACE_GROUP,
              "Reading feature 0x%02x, dh=%p, dh->dref=%p", feature_code, dh, dh->dref);
 
-   assert(dh->io_mode == DDCA_IO_USB);
+   assert(dh->dref->io_mode == DDCA_IO_USB);
    // if (!dh->dref) {
    //    DGBMSF(debug, "HACK: getting value for uninitialized dh->dref");
    //    ---
@@ -621,7 +627,7 @@ usb_set_nontable_vcp_value(
           feature_code, dh, dh->dref, new_value);
 
    Public_Status_Code psc =  DDCRC_REPORTED_UNSUPPORTED;  // = 0;
-   assert(dh->io_mode == DDCA_IO_USB);
+   assert(dh->dref->io_mode == DDCA_IO_USB);
    Usb_Monitor_Info * moninfo = usb_find_monitor_by_display_handle(dh);
    assert(moninfo);
 

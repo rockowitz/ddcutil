@@ -22,7 +22,6 @@
  */
 
 /** \file
- *
  */
 
 #include <config.h>
@@ -169,11 +168,14 @@ get_raw_value_for_feature_table_entry(
       Display_Handle *           dh,
       VCP_Feature_Table_Entry *  frec,
       bool                       ignore_unsupported,
-      DDCA_Single_Vcp_Value **        pvalrec,
+      DDCA_Single_Vcp_Value **   pvalrec,
       FILE *                     msg_fh)
 {
    bool debug = false;
    DBGTRC(debug, TRACE_GROUP, "Starting");
+
+   assert(dh);
+   assert(dh->dref);
 
    Public_Status_Code psc = 0;
    DDCA_MCCS_Version_Spec vspec = get_vcp_version_by_display_handle(dh);
@@ -184,7 +186,7 @@ get_raw_value_for_feature_table_entry(
    DDCA_Vcp_Value_Type feature_type = (is_table_feature) ? DDCA_TABLE_VCP_VALUE : DDCA_NON_TABLE_VCP_VALUE;
    DDCA_Output_Level output_level = get_output_level();
    DDCA_Single_Vcp_Value * valrec = NULL;
-   if (dh->io_mode == DDCA_IO_USB) {
+   if (dh->dref->io_mode == DDCA_IO_USB) {
 #ifdef USE_USB
      psc = usb_get_vcp_value(
               dh,

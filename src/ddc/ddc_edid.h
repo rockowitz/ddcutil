@@ -21,7 +21,6 @@
  * </endcopyright>
  */
 
-
 /** \file */
 
 #ifndef DDC_EDID_H_
