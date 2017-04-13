@@ -367,6 +367,7 @@ Display_Ref * create_usb_display_ref(int usb_bus, int usb_device, char * hiddev_
    dref->usb_bus     = usb_bus;
    dref->usb_device  = usb_device;
    dref->usb_hiddev_name = strdup(hiddev_devname);
+   dref->usb_hiddev_devno = hiddev_name_to_number(hiddev_devname);
    dref->vcp_version = VCP_SPEC_UNQUERIED;
    return dref;
 }
@@ -459,6 +460,7 @@ void report_display_ref(Display_Ref * dref, int depth) {
       rpt_int("usb_bus",    NULL, dref->usb_bus,    d1);
       rpt_int("usb_device", NULL, dref->usb_device, d1);
       rpt_str("usb_hiddev_name", NULL, dref->usb_hiddev_name, d1);
+      rpt_int("usb_hiddev_devno", NULL, dref->usb_hiddev_devno, d1);
       break;
 
    }

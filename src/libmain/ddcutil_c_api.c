@@ -904,7 +904,7 @@ ddca_get_displays()
          case DDCA_IO_USB:
             curinfo->loc.usb.usb_bus    = dref->usb_bus;
             curinfo->loc.usb.usb_device = dref->usb_device;
-            curinfo->loc.usb.hiddev_device_name = strdup(dref->usb_hiddev_name);
+            curinfo->loc.usb.hiddev_devno = dref->usb_hiddev_devno;
             break;
          }
          curinfo->edid_bytes    = drec.edid->bytes;
@@ -958,7 +958,7 @@ ddca_report_display_info(
    case (DDCA_IO_USB):
          rpt_vstring(d1, "USB bus.device:       %d.%d",
                          dinfo->loc.usb.usb_bus, dinfo->loc.usb.usb_device);
-         rpt_vstring(d1, "USB device name:      %s", dinfo->loc.usb.hiddev_device_name);
+         rpt_vstring(d1, "USB hiddev number:    %d", dinfo->loc.usb.hiddev_devno);
          break;
    }
 
