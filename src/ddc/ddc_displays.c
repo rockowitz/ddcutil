@@ -1191,7 +1191,7 @@ ddc_report_active_display(Display_Info * curinfo, int depth) {
  */
 int
 ddc_report_active_displays(int depth) {
-    bool debug = true;
+    bool debug = false;
     DBGMSF(debug, "Starting");
    // PROGRAM_LOGIC_ERROR("---> pseudo failure <-----");
    Display_Info_List * display_list = ddc_get_valid_displays();
