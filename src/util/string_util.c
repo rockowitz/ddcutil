@@ -693,7 +693,10 @@ bool sbuf_append(char * buf, int bufsz, char * sepstr, char * nextval) {
  * @param p_ival address at which to store integer value
  * @return true if conversion succeeded, false if it failed
  *
- * @remark This function wraps system function strtol(), hiding the ugly details.
+ * \remark
+ * If conversion fails, the value pointed to by **p_ival** is unchanged.
+ * @remark
+ * This function wraps system function strtol(), hiding the ugly details.
  */
 bool str_to_int(const char * sval, int * p_ival) {
    bool debug = false;

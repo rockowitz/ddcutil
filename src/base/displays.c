@@ -39,6 +39,7 @@
 
 #include "util/string_util.h"
 #include "util/report_util.h"
+#include "util/udev_util.h"
 
 #include "base/displays.h"
 #include "base/vcp_version.h"
@@ -796,4 +797,34 @@ Video_Card_Info * create_video_card_info() {
    memcpy(card_info->marker, VIDEO_CARD_INFO_MARKER, 4);
    return card_info;
 }
+
+
+int hiddev_name_to_number(char * hiddev_name) {
+   assert(hiddev_name);
+   char * p = strstr(hiddev_name, "hiddev");
+
+   int hiddev_number = -1;
+   if (p) {
+      p = p + strlen("hiddev");
+      if (strlen(p) > 0) {
+         // hiddev_number unchanged if error
+         // n str_to_int() allows leading whitespace, not worth checking
+         str_to_int(p, &hiddev_number);
+      }
+   }
+   DBGMSG("hiddev_name = |%s|, returning: %d", hiddev_name, hiddev_number);
+   return hiddev_number;
+}
+
+
+char * hiddev_number_to_name(int hiddev_number) {
+   assert(hiddev_number >= 0 && hiddev_number < 100);
+   char * hiddev_dir = hiddev_directory();
+   int sz = strlen(hiddev_dir) + strlen("/hiddev") + 2;
+   char * s = malloc(sz);
+   snprintf(s, sz, "%s/hiddev%d", hiddev_dir, hiddev_number);
+   DBGMSG("hiddev_number=%d, returning: %s", hiddev_number, s);
+   return s;
+}
+
 
