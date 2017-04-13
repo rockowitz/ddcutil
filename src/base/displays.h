@@ -201,8 +201,8 @@ typedef struct {
    Display_Ref* dref;                               // added 4/2016
  //  int          busno;  // used for messages
    int          fh;     // file handle if ddc_io_mode == DDC_IO_DEVI2C or USB_IO
-   int          iAdapterIndex;
-   int          iDisplayIndex;
+//   int          iAdapterIndex;
+//   int          iDisplayIndex;
    int          usb_bus;
    int          usb_device;
    char *       hiddev_device_name;

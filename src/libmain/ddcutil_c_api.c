@@ -784,7 +784,7 @@ ddca_repr_display_handle(DDCA_Display_Handle ddca_dh) {
       case(DISP_ID_ADL):
          snprintf(dh_work_buf, 100,
                   "Display Handle Type: %s, adlno=%d.%d",
-                  dh_type_name, dh->iAdapterIndex, dh->iDisplayIndex);
+                  dh_type_name, dh->dref->iAdapterIndex, dh->dref->iDisplayIndex);
          break;
       case DDCA_IO_USB:
          snprintf(dh_work_buf, 100,

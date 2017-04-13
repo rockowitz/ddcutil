@@ -585,8 +585,8 @@ Display_Handle * create_adl_display_handle_from_display_ref(Display_Ref * dref) 
    Display_Handle * dh = calloc(1, sizeof(Display_Handle));
    memcpy(dh->marker, DISPLAY_HANDLE_MARKER, 4);
    dh->io_mode = DDCA_IO_ADL;
-   dh->iAdapterIndex = dref->iAdapterIndex;
-   dh->iDisplayIndex = dref->iDisplayIndex;
+   // dh->iAdapterIndex = dref->iAdapterIndex;
+   // dh->iDisplayIndex = dref->iDisplayIndex;
    dh->dref = dref;
    dref->vcp_version = VCP_SPEC_UNQUERIED;   // needed?
    return dh;
@@ -638,8 +638,8 @@ void report_display_handle(Display_Handle * dh, const char * msg, int depth) {
             break;
          case (DDCA_IO_ADL):
             // rpt_vstring(d1, "ddc_io_mode = DDC_IO_ADL");
-            rpt_vstring(d1, "iAdapterIndex:       %d", dh->iAdapterIndex);
-            rpt_vstring(d1, "iDisplayIndex:       %d", dh->iDisplayIndex);
+            rpt_vstring(d1, "iAdapterIndex:       %d", dh->dref->iAdapterIndex);
+            rpt_vstring(d1, "iDisplayIndex:       %d", dh->dref->iDisplayIndex);
             break;
          case (DDCA_IO_USB):
             // rpt_vstring(d1, "ddc_io_mode = USB_IO");
@@ -677,7 +677,7 @@ char * display_handle_repr_r(Display_Handle * dh, char * buf, int bufsz) {
    case DDCA_IO_ADL:
       snprintf(buf, bufsz,
                "Display_Handle[adl: display %d.%d]",
-               dh->iAdapterIndex, dh->iDisplayIndex);
+               dh->dref->iAdapterIndex, dh->dref->iDisplayIndex);
       break;
 
    case DDCA_IO_USB:

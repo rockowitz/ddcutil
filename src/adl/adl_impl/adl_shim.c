@@ -89,7 +89,7 @@ adlshim_get_parsed_edid_by_display_handle(
 {
    ASSERT_DISPLAY_IO_MODE(dh, DDCA_IO_ADL);
    // assert(dh->io_mode == DDC_IO_ADL);
-   return adl_get_parsed_edid_by_adlno(dh->iAdapterIndex, dh->iDisplayIndex);
+   return adl_get_parsed_edid_by_adlno(dh->dref->iAdapterIndex, dh->dref->iDisplayIndex);
 }
 
 
@@ -190,8 +190,8 @@ adlshim_get_video_card_info(
       Video_Card_Info * card_info)
 {
    Base_Status_ADL adlrc = adl_get_video_card_info_by_adlno(
-                              dh->iAdapterIndex,
-                              dh->iDisplayIndex,
+                              dh->dref->iAdapterIndex,
+                              dh->dref->iDisplayIndex,
                               card_info);
    return modulate_rc(adlrc, RR_ADL);
 }
@@ -213,7 +213,7 @@ adlshim_ddc_write_only(
       int     sendMsgLen)
 {
    assert(dh->io_mode == DDCA_IO_ADL);
-   Base_Status_ADL adlrc = adl_ddc_write_only(dh->iAdapterIndex, dh->iDisplayIndex, pSendMsgBuf, sendMsgLen);
+   Base_Status_ADL adlrc = adl_ddc_write_only(dh->dref->iAdapterIndex, dh->dref->iDisplayIndex, pSendMsgBuf, sendMsgLen);
    return modulate_rc(adlrc, RR_ADL);
 }
 
@@ -231,7 +231,7 @@ Modulated_Status_ADL adlshim_ddc_read_only(
       int *   pRcvBytect)
 {
    assert(dh->io_mode == DDCA_IO_ADL);
-   Base_Status_ADL adlrc = adl_ddc_read_only(dh->iAdapterIndex, dh->iDisplayIndex, pRcvMsgBuf, pRcvBytect);
+   Base_Status_ADL adlrc = adl_ddc_read_only(dh->dref->iAdapterIndex, dh->dref->iDisplayIndex, pRcvMsgBuf, pRcvBytect);
    return modulate_rc(adlrc, RR_ADL);
 }
 
