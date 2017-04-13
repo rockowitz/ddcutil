@@ -227,7 +227,7 @@ void ddc_close_display(Display_Handle * dh) {
    switch(dh->io_mode) {
    case DDCA_IO_DEVI2C:
       {
-         Status_Errno rc = i2c_close_bus(dh->fh, dh->busno,  CALLOPT_NONE);    // return error if failure
+         Status_Errno rc = i2c_close_bus(dh->fh, dh->dref->busno,  CALLOPT_NONE);    // return error if failure
          if (rc != 0) {
             assert(rc < 0);
             DBGMSG("close_i2c_bus returned %d", rc);

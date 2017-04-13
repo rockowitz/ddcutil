@@ -779,7 +779,7 @@ ddca_repr_display_handle(DDCA_Display_Handle ddca_dh) {
       case(DISP_ID_BUSNO):
          snprintf(dh_work_buf, 100,
                   "Display Handle Type: %s, bus=/dev/i2c-%d",
-                  dh_type_name, dh->busno);
+                  dh_type_name, dh->dref->busno);
          break;
       case(DISP_ID_ADL):
          snprintf(dh_work_buf, 100,

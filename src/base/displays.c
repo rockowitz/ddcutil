@@ -561,7 +561,7 @@ Display_Handle * create_bus_display_handle_from_display_ref(int fh, Display_Ref 
    memcpy(dh->marker, DISPLAY_HANDLE_MARKER, 4);
    dh->io_mode = DDCA_IO_DEVI2C;
    dh->fh = fh;
-   dh->busno = dref->busno;
+   // dh->busno = dref->busno;
    dh->dref = dref;
    dref->vcp_version = VCP_SPEC_UNQUERIED;
    return dh;
@@ -634,7 +634,7 @@ void report_display_handle(Display_Handle * dh, const char * msg, int depth) {
          case (DDCA_IO_DEVI2C):
             // rpt_vstring(d1, "ddc_io_mode = DDC_IO_DEVI2C");
             rpt_vstring(d1, "fh:                  %d", dh->fh);
-            rpt_vstring(d1, "busno:               %d", dh->busno);
+            rpt_vstring(d1, "busno:               %d", dh->dref->busno);
             break;
          case (DDCA_IO_ADL):
             // rpt_vstring(d1, "ddc_io_mode = DDC_IO_ADL");
@@ -671,7 +671,7 @@ char * display_handle_repr_r(Display_Handle * dh, char * buf, int bufsz) {
    case DDCA_IO_DEVI2C:
       snprintf(buf, bufsz,
                "Display_Handle[i2c: fh=%d, busno=%d]",
-               dh->fh, dh->busno);
+               dh->fh, dh->dref->busno);
       break;
 
    case DDCA_IO_ADL:

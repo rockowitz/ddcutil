@@ -199,7 +199,7 @@ typedef struct {
    char         marker[4];
    DDCA_IO_Mode io_mode;
    Display_Ref* dref;                               // added 4/2016
-   int          busno;  // used for messages
+ //  int          busno;  // used for messages
    int          fh;     // file handle if ddc_io_mode == DDC_IO_DEVI2C or USB_IO
    int          iAdapterIndex;
    int          iDisplayIndex;

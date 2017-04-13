@@ -58,7 +58,7 @@ ddc_get_parsed_edid_by_display_handle(Display_Handle * dh) {
 
    switch (dh->io_mode) {
    case DDCA_IO_DEVI2C:
-      pEdid = i2c_get_parsed_edid_by_busno(dh->busno);
+      pEdid = i2c_get_parsed_edid_by_busno(dh->dref->busno);
       break;
    case DDCA_IO_ADL:
       pEdid = adlshim_get_parsed_edid_by_display_handle(dh);
