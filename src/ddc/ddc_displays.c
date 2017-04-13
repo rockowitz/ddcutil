@@ -1123,32 +1123,34 @@ ddc_report_display_by_dref(Display_Ref * dref, int depth) {
          }
       }
       else {
-         // n. requires write access since may call get_vcp_value(), which does a write
-         Display_Handle * dh = NULL;
-         Public_Status_Code psc = ddc_open_display(dref, CALLOPT_ERR_MSG, &dh);
-         if (psc != 0) {
-            rpt_vstring(depth, "Error opening display %s, error = %s",
-                               dref_short_name(dref), psc_desc(psc));
-         }
-         else {
-            DDCA_MCCS_Version_Spec vspec = dref->vcp_version;
-            if ( vspec.major   == 0)
-               rpt_vstring(depth, "VCP version:         Detection failed");
-            else
-               rpt_vstring(depth, "VCP version:         %d.%d", vspec.major, vspec.minor);
+         DDCA_MCCS_Version_Spec vspec = dref->vcp_version;
+         if ( vspec.major   == 0)
+            rpt_vstring(depth, "VCP version:         Detection failed");
+         else
+            rpt_vstring(depth, "VCP version:         %d.%d", vspec.major, vspec.minor);
 
-            if (output_level >= DDCA_OL_VERBOSE) {
+         if (output_level >= DDCA_OL_VERBOSE) {
+            // n. requires write access since may call get_vcp_value(), which does a write
+            Display_Handle * dh = NULL;
+            Public_Status_Code psc = ddc_open_display(dref, CALLOPT_ERR_MSG, &dh);
+            if (psc != 0) {
+               rpt_vstring(depth, "Error opening display %s, error = %s",
+                                  dref_short_name(dref), psc_desc(psc));
+            }
+            else {
                // display controller mfg, firmware version
                rpt_vstring(depth, "Controller mfg:      %s", get_controller_mfg_string(dh) );
                rpt_vstring(depth, "Firmware version:    %s", get_firmware_version_string(dh));;
-               if (dref->io_mode != DDCA_IO_USB)
+               ddc_close_display(dh);
+            }
+
+            if (dref->io_mode != DDCA_IO_USB)
                rpt_vstring(depth, "Monitor returns DDC Null Response for unsupported features: %s",
                                   bool_repr(dh->dref->flags & DREF_DDC_USES_NULL_RESPONSE_FOR_UNSUPPORTED));
-            }
          }
 
-         ddc_close_display(dh);
       }
+
    }
    DBGMSF(debug, "Done");
 }
@@ -1160,6 +1162,12 @@ ddc_report_display_by_display_rec(Display_Rec * drec, int depth) {
    DBGMSF(debug, "Starting");
    assert(memcmp(drec->marker, DISPLAY_REC_MARKER, 4) == 0);
    Display_Ref  * dref = drec->dref;
+
+   if (drec->dispno == -1)
+      rpt_vstring(depth, "Invalid display");
+   else
+      rpt_vstring(depth, "Display %d", drec->dispno);
+
    ddc_report_display_by_dref(dref, depth);
    DBGMSF(debug, "Done");
 }
@@ -1224,7 +1232,7 @@ ddc_report_active_displays(int depth) {
  *
  * @param   depth       logical indentation depth
  *
- * @return total number of displays  (or should it be v valid sisplays?)
+ * @return total number of displays  (or should it be v valid displays?)
  */
 int
 ddc_report_all_displays(int depth) {
@@ -1237,13 +1245,9 @@ ddc_report_all_displays(int depth) {
    for (int ndx=0; ndx<all_displays->len; ndx++) {
       Display_Rec * drec = g_ptr_array_index(all_displays, ndx);
       assert(memcmp(drec->marker, DISPLAY_REC_MARKER, 4) == 0);
-      if (drec->dispno == -1)
-         rpt_vstring(depth, "Invalid display");
-      else {
-         rpt_vstring(depth, "Display %d", drec->dispno);
+      if (drec->dispno > 0)
          valid_display_ct++;
-      }
-      ddc_report_display_by_display_rec(drec, depth+1);
+      ddc_report_display_by_display_rec(drec, depth);
       rpt_title("",0);
    }
    if (valid_display_ct == 0)
@@ -1621,16 +1625,25 @@ ddc_detect_all_displays() {
       Bus_Info * businfo = i2c_get_bus_info_by_index(busndx);
       if ( (businfo->flags & I2C_BUS_ADDR_0X50) ) {
          Display_Ref * dref = create_bus_display_ref(businfo->busno);
-         Display_Rec * drec = calloc(1,sizeof(Display_Rec));
-         memcpy(drec->marker, DISPLAY_REC_MARKER, 4);
+
+         // Transition:
+         // Display_Rec * drec = calloc(1,sizeof(Display_Rec));
+         Display_Rec * drec = dref;
+         // memcpy(drec->marker, DISPLAY_REC_MARKER, 4);
          drec->dispno = -1;
          drec->dref = dref;
-         drec->dref->pedid = businfo->edid;    // needed?
+
+         dref->pedid = businfo->edid;    // needed?
          // drec->detail.bus_detail = businfo;
          drec->detail2 = businfo;
-         drec->dref->flags |= DREF_DDC_IS_MONITOR_CHECKED;
-         drec->dref->flags |= DREF_DDC_IS_MONITOR;
+         dref->flags |= DREF_DDC_IS_MONITOR_CHECKED;
+         dref->flags |= DREF_DDC_IS_MONITOR;
          ddc_add_display_rec(display_list, drec);
+
+         // DBGMSG("======= as dref:");
+         // report_display_ref(dref, 1);
+         // DBGMSG("========as drec: ");
+         // report_display_rec(dref, 1);
       }
    }
 
@@ -1639,15 +1652,20 @@ ddc_detect_all_displays() {
   for (int ndx = 0; ndx < adlct; ndx++) {
      ADL_Display_Detail * detail = g_ptr_array_index(all_details, ndx);
      Display_Ref * dref = create_adl_display_ref(detail->iAdapterIndex, detail->iDisplayIndex);
-     Display_Rec * drec = calloc(1, sizeof(Display_Rec));
-     memcpy(drec->marker, DISPLAY_REC_MARKER, 4);
+
+     // transition
+     // Display_Rec * drec = calloc(1, sizeof(Display_Rec));
+     // memcpy(drec->marker, DISPLAY_REC_MARKER, 4);
+     Display_Rec * drec = dref;
+
      drec->dispno = -1;
      drec->dref = dref;
-     drec->dref->pedid = detail->pEdid;   // needed?
+
+     dref->pedid = detail->pEdid;   // needed?
      // drec->detail.adl_detail = detail;
      drec->detail2 = detail;
-     drec->dref->flags |= DREF_DDC_IS_MONITOR_CHECKED;
-     drec->dref->flags |= DREF_DDC_IS_MONITOR;
+     dref->flags |= DREF_DDC_IS_MONITOR_CHECKED;
+     dref->flags |= DREF_DDC_IS_MONITOR;
      ddc_add_display_rec(display_list, drec);
   }
 
@@ -1660,15 +1678,19 @@ ddc_detect_all_displays() {
                                 curmon->hiddev_devinfo->busnum,
                                 curmon->hiddev_devinfo->devnum,
                                 curmon->hiddev_device_name);
-      Display_Rec * drec = calloc(1, sizeof(Display_Rec));
-      memcpy(drec->marker, DISPLAY_REC_MARKER, 4);
+
+      // Transition
+      // Display_Rec * drec = calloc(1, sizeof(Display_Rec));
+      // memcpy(drec->marker, DISPLAY_REC_MARKER, 4);
+      Display_Rec * drec = dref;
+
       drec->dispno = -1;
       drec->dref = dref;
-      drec->dref->pedid = curmon->edid;
+      dref->pedid = curmon->edid;
       // drec->detail.usb_detail = curmon;
       drec->detail2 = curmon;
-      drec->dref->flags |= DREF_DDC_IS_MONITOR_CHECKED;
-      drec->dref->flags |= DREF_DDC_IS_MONITOR;
+      dref->flags |= DREF_DDC_IS_MONITOR_CHECKED;
+      dref->flags |= DREF_DDC_IS_MONITOR;
       ddc_add_display_rec(display_list, drec);
    }
 
