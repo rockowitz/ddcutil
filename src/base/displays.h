@@ -172,6 +172,37 @@ typedef struct {
    Parsed_Edid * pedid;                  // added 4/2017
 } Display_Ref;
 
+
+
+#define DISPLAY_REC_MARKER "DREC"
+/** Describes a single monitor detected.
+ *
+ * @remark
+ * To facilitate conversion, this struct contains redundant information
+ * from multiple existing data structures.
+ */
+typedef struct {
+   char          marker[4];
+   int           dispno;
+   Display_Ref * dref;
+ //  Parsed_Edid * edid;     // use dref->pedid
+ //  DDCA_IO_Mode io_mode;   // use dref->io_mode
+#ifdef OLD
+   union {
+      Bus_Info * bus_detail;
+      ADL_Display_Detail * adl_detail;
+#ifdef USE_USB
+      Usb_Monitor_Info * usb_detail;
+#endif
+   } detail;
+#endif
+   void * detail2;
+   // uint8_t     flags;            // currently unneeded
+
+} Display_Rec;
+
+
+
 // n. works for both Display_Ref and Display_Handle
 // #define ASSERT_DISPLAY_IO_MODE(_dref, _mode) assert(_dref && _dref->io_mode == _mode)
 
@@ -210,6 +241,7 @@ typedef struct {
  //  char *       capabilities_string;
  //  Parsed_Edid* pedid;                             // added 7/2016
 } Display_Handle;
+
 
 Display_Handle * create_bus_display_handle_from_display_ref(int fh, Display_Ref * dref);
 Display_Handle * create_adl_display_handle_from_display_ref(Display_Ref * dref);

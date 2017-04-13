@@ -75,33 +75,6 @@ Display_Ref* ddc_find_display_by_edid(
 
 
 
-#define DISPLAY_REC_MARKER "DREC"
-/** Describes a single monitor detected.
- *
- * @remark
- * To facilitate conversion, this struct contains redundant information
- * from multiple existing data structures.
- */
-typedef struct {
-   char          marker[4];
-   int           dispno;
-   Display_Ref * dref;
- //  Parsed_Edid * edid;     // use dref->pedid
- //  DDCA_IO_Mode io_mode;   // use dref->io_mode
-#ifdef OLD
-   union {
-      Bus_Info * bus_detail;
-      ADL_Display_Detail * adl_detail;
-#ifdef USE_USB
-      Usb_Monitor_Info * usb_detail;
-#endif
-   } detail;
-#endif
-   void * detail2;
-   // uint8_t     flags;            // currently unneeded
-
-} Display_Rec;
-
 void report_display_rec(Display_Rec * drec, int depth);
 
 GPtrArray * ddc_detect_all_displays();
