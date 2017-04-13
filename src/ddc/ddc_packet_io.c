@@ -379,7 +379,9 @@ Public_Status_Code ddc_i2c_write_read_raw(
                               display_handle_repr(dh), readbuf);
    // DBGMSG("request_packet_ptr=%p", request_packet_ptr);
    // dump_packet(request_packet_ptr);
-   assert(dh && dh->dref && dh->dref->io_mode == DDCA_IO_ADL);
+   assert(dh);
+   assert(dh->dref);
+   assert(dh->dref->io_mode == DDCA_IO_DEVI2C);
    // ASSERT_DISPLAY_IO_MODE(dh, DDCA_IO_DEVI2C);
 
 #ifdef TEST_THAT_DIDNT_WORK
