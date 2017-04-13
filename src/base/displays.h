@@ -156,7 +156,7 @@ typedef Byte Dref_Flags;
  * It can be an I2C bus number, and ADL adapter/display number pair,
  * or a USB bus number/device number pair.
  */
-typedef struct {
+typedef struct _display_ref {
    char          marker[4];
    DDCA_IO_Mode  io_mode;
    int           busno;
@@ -170,11 +170,20 @@ typedef struct {
    int           usb_hiddev_devno;       // added 4/2017
    char *        capabilities_string;    // added 4/2017
    Parsed_Edid * pedid;                  // added 4/2017
+
+   // for merger with Display_Rec:
+   int           dispno;
+   struct _display_ref * dref;
+   void *        detail2;
 } Display_Ref;
 
 
 
-#define DISPLAY_REC_MARKER "DREC"
+// #define DISPLAY_REC_MARKER "DREC"
+// for merger
+#define DISPLAY_REC_MARKER DISPLAY_REF_MARKER
+
+#ifdef OLD
 /** Describes a single monitor detected.
  *
  * @remark
@@ -200,7 +209,9 @@ typedef struct {
    // uint8_t     flags;            // currently unneeded
 
 } Display_Rec;
+#endif
 
+typedef Display_Ref Display_Rec;   // for merger
 
 
 // n. works for both Display_Ref and Display_Handle
