@@ -440,7 +440,7 @@ Usb_Monitor_Info * usb_find_monitor_by_display_handle(Display_Handle * dh) {
    DBGMSF(debug, "Starting. dh = %s", display_handle_repr(dh));
    assert(dh->io_mode == DDCA_IO_USB);
    Usb_Monitor_Info * result = NULL;
-   result = usb_find_monitor_by_busnum_devnum(dh->usb_bus, dh->usb_device);
+   result = usb_find_monitor_by_busnum_devnum(dh->dref->usb_bus, dh->dref->usb_device);
    DBGMSF(debug, "Returning %p", result);
    return result;
 }

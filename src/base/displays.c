@@ -600,9 +600,9 @@ Display_Handle * create_usb_display_handle_from_display_ref(int fh, Display_Ref 
    dh->io_mode = DDCA_IO_USB;
    dh->fh = fh;
    dh->dref = dref;
-   dh->hiddev_device_name = dref->usb_hiddev_name;
-   dh->usb_bus = dref->usb_bus;
-   dh->usb_device = dref->usb_device;
+   // dh->hiddev_device_name = dref->usb_hiddev_name;
+   // dh->usb_bus = dref->usb_bus;
+   //dh->usb_device = dref->usb_device;
    dref->vcp_version = VCP_SPEC_UNQUERIED;
 
    // report_display_handle(dh,__func__);
@@ -644,9 +644,9 @@ void report_display_handle(Display_Handle * dh, const char * msg, int depth) {
          case (DDCA_IO_USB):
             // rpt_vstring(d1, "ddc_io_mode = USB_IO");
             rpt_vstring(d1, "fh:                  %d", dh->fh);
-            rpt_vstring(d1, "usb_bus:             %d", dh->usb_bus);
-            rpt_vstring(d1, "usb_device:          %d", dh->usb_device);
-            rpt_vstring(d1, "hiddev_device_name:  %s", dh->hiddev_device_name);
+            rpt_vstring(d1, "usb_bus:             %d", dh->dref->usb_bus);
+            rpt_vstring(d1, "usb_device:          %d", dh->dref->usb_device);
+            rpt_vstring(d1, "hiddev_device_name:  %s", dh->dref->usb_hiddev_name);
             break;
          }
       }
@@ -682,8 +682,8 @@ char * display_handle_repr_r(Display_Handle * dh, char * buf, int bufsz) {
 
    case DDCA_IO_USB:
       snprintf(buf, bufsz,
-               "Display_Handle[usb: %d:%d]",
-               dh->usb_bus, dh->usb_device);
+               "Display_Handle[usb: %d:%d, %s/hiddev/%d]",
+               dh->dref->usb_bus, dh->dref->usb_device, hiddev_directory(), dh->dref->usb_hiddev_devno);
       break;
    }
 

@@ -35,6 +35,7 @@
 #include "util/data_structures.h"
 #include "util/report_util.h"
 #include "util/string_util.h"
+#include "util/udev_util.h"
 
 #include "base/build_info.h"
 #include "base/core.h"
@@ -788,8 +789,9 @@ ddca_repr_display_handle(DDCA_Display_Handle ddca_dh) {
          break;
       case DDCA_IO_USB:
          snprintf(dh_work_buf, 100,
-                  "Display Handle Type: %s, bus=%d, device=%d",
-                  dh_type_name, dh->usb_bus, dh->usb_device);
+                  "Display Handle Type: %s, bus=%d, device=%d, %s/hiddev/%d]",
+                  dh_type_name, dh->dref->usb_bus, dh->dref->usb_device,
+                  hiddev_directory(), dh->dref->usb_hiddev_devno);
          break;
       }
       repr = dh_work_buf;

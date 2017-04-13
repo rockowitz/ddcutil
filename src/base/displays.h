@@ -203,9 +203,9 @@ typedef struct {
    int          fh;     // file handle if ddc_io_mode == DDC_IO_DEVI2C or USB_IO
 //   int          iAdapterIndex;
 //   int          iDisplayIndex;
-   int          usb_bus;
-   int          usb_device;
-   char *       hiddev_device_name;
+//   int          usb_bus;
+//   int          usb_device;
+//   char *       hiddev_device_name;
  //  DDCA_MCCS_Version_Spec vcp_version;
  //  char *       capabilities_string;
  //  Parsed_Edid* pedid;                             // added 7/2016

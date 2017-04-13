@@ -243,7 +243,7 @@ void ddc_close_display(Display_Handle * dh) {
    case DDCA_IO_USB:
 #ifdef USE_USB
       {
-         Status_Errno rc = usb_close_device(dh->fh, dh->hiddev_device_name, CALLOPT_NONE); // return error if failure
+         Status_Errno rc = usb_close_device(dh->fh, dh->dref->usb_hiddev_name, CALLOPT_NONE); // return error if failure
          if (rc != 0) {
             assert(rc < 0);
             DBGMSG("usb_close_device returned %d", rc);
