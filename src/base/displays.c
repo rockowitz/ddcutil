@@ -816,7 +816,7 @@ int hiddev_name_to_number(char * hiddev_name) {
          str_to_int(p, &hiddev_number);
       }
    }
-   DBGMSG("hiddev_name = |%s|, returning: %d", hiddev_name, hiddev_number);
+   // DBGMSG("hiddev_name = |%s|, returning: %d", hiddev_name, hiddev_number);
    return hiddev_number;
 }
 
