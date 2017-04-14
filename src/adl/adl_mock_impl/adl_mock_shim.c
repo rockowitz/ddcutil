@@ -73,6 +73,18 @@ bool adlshim_initialize() {
 
 // Report on active displays
 
+
+/** Mock implementation.
+ * @retval NULL
+ */
+Parsed_Edid*
+adlshim_get_parsed_edid_by_adlno(
+      int iAdapterIndex,
+      int iDisplayIndex)
+{
+   return NULL;
+}
+
 /** Mock implementation.
  * @retval NULL
  */
@@ -117,7 +129,7 @@ adlshim_is_valid_display_ref(
 }
 
 /** Mock implementation.
- * @retval false
+ * @retval NULL
  */
 Display_Ref *
 adlshim_find_display_by_mfg_model_sn(
@@ -126,6 +138,20 @@ adlshim_find_display_by_mfg_model_sn(
       const char * sn)
 {
    return NULL;
+}
+
+
+/** Mock implementation.
+ * @retval {-1,-1}
+ */
+Adlno
+adlshim_find_adlno_by_mfg_model_sn(
+      const char * mfg_id,
+      const char * model,
+      const char * sn)
+{
+   Adlno result = {-1,-1};
+   return result;
 }
 
 /** Mock implementation to satisfy dynamic linker.

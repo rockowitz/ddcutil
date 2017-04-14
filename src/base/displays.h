@@ -74,6 +74,14 @@ typedef enum {
 
 char * display_id_type_name(Display_Id_Type val);
 
+
+typedef struct {
+   int iAdapterIndex;
+   int iDisplayIndex;
+} Adlno;
+// uses -1,-1 for unset
+
+
 #define DISPLAY_IDENTIFIER_MARKER "DPID"
 /** Specifies the identifiers to be used to select a display. */
 typedef struct {
@@ -151,6 +159,7 @@ typedef Byte Dref_Flags;
 #define DREF_DDC_USES_NULL_RESPONSE_FOR_UNSUPPORTED 0x10
 #define DREF_DDC_IS_MONITOR_CHECKED                 0x08
 #define DREF_DDC_IS_MONITOR                         0x04
+#define DREF_TRANSIENT                              0x02
 #define DISPLAY_REF_MARKER "DREF"
 /** A **Display_Ref** is a logical display identifier.
  * It can be an I2C bus number, and ADL adapter/display number pair,

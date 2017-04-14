@@ -84,6 +84,13 @@ void adlshim_release() {
 // Report on active displays
 
 Parsed_Edid*
+adlshim_get_parsed_edid_by_adlno(int iAdapterIndex, int iDisplayIndex) {
+   return adl_get_parsed_edid_by_adlno(iAdapterIndex, iDisplayIndex);
+}
+
+
+
+Parsed_Edid*
 adlshim_get_parsed_edid_by_display_handle(
       Display_Handle * dh)
 {
@@ -137,6 +144,18 @@ Display_Ref * adlshim_find_display_by_mfg_model_sn(const char * mfg_id, const ch
       dref = create_adl_display_ref(adl_rec->iAdapterIndex, adl_rec->iDisplayIndex);
    return dref;
 }
+
+// used by get_fallback_hiddev_edid() in usb_edid.c
+Adlno adlshim_find_adlno_by_mfg_model_sn(const char * mfg_id, const char * model, const char * sn) {
+   Adlno result = {-1,-1};
+   ADL_Display_Rec * adl_rec = adl_find_display_by_mfg_model_sn(mfg_id, model, sn);
+   if (adl_rec) {
+      result.iAdapterIndex = adl_rec->iAdapterIndex;
+      result.iDisplayIndex = adl_rec->iDisplayIndex;
+   }
+   return result;
+}
+
 
 Display_Ref * adlshim_find_display_by_edid(const Byte * pEdidBytes) {
    Display_Ref * dref = NULL;

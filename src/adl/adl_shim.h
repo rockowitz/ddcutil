@@ -55,6 +55,11 @@ bool adlshim_initialize();
 // Report on active displays
 
 Parsed_Edid*
+adlshim_get_parsed_edid_by_adlno(
+      int iAdapterIndex,
+      int iDisplayIndex);
+
+Parsed_Edid*
 adlshim_get_parsed_edid_by_display_handle(
       Display_Handle * dh);
 
@@ -89,6 +94,13 @@ adlshim_is_valid_display_ref(
 
 Display_Ref *
 adlshim_find_display_by_mfg_model_sn(
+      const char * mfg_id,
+      const char * model,
+      const char * sn);
+
+
+Adlno
+adlshim_find_adlno_by_mfg_model_sn(
       const char * mfg_id,
       const char * model,
       const char * sn);

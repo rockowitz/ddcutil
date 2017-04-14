@@ -596,6 +596,8 @@ void adl_release() {
  * @param  iAdapterIndex  adapter number
  * @param  iDisplayIndex  display number
  * @return pointer to #Parsed_Edid, NULL if display not found
+ *
+ * The #Parsed_Edid found should not be freed by the caller.
  */
 Parsed_Edid*
 adl_get_parsed_edid_by_adlno(
@@ -874,6 +876,9 @@ adl_get_video_card_info_by_adlno(
  *
  *  @return pointer to #ADL_Display_Rec describing the display,
  *          NULL if not found
+ *
+ *  The returned pointer points to a permanently allocated #ADL_Display_Rec.
+ *  It should not be freed by the caller.
  */
 ADL_Display_Rec *
 adl_get_display_by_adlno(

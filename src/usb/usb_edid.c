@@ -295,6 +295,7 @@ Parsed_Edid * get_fallback_hiddev_edid(int fd, struct hiddev_devinfo * dev_info)
    DBGMSF(debug, "Starting");
 
    Parsed_Edid * parsed_edid = NULL;
+   char * edid_source;
 
    struct model_sn_pair * model_sn = NULL;
 
@@ -314,16 +315,27 @@ Parsed_Edid * get_fallback_hiddev_edid(int fd, struct hiddev_devinfo * dev_info)
          if (bus_info) {
             printf("(%s) Using EDID for /dev/i2c-%d\n", __func__, bus_info->busno);
             parsed_edid = bus_info->edid;
-            g_strlcpy(parsed_edid->edid_source, "I2C", EDID_SOURCE_FIELD_SIZE);
+            edid_source = "I2C";
+            // g_strlcpy(parsed_edid->edid_source, "I2C", EDID_SOURCE_FIELD_SIZE);
             // result = NULL;   // for testing - both i2c and X11 methods work
          }
          else {    // ADL
+#ifdef OLD
             Display_Ref * dref = adlshim_find_display_by_mfg_model_sn(
                                     NULL,              // mfg_id
                                     model_sn->model,
                                     model_sn->sn);
             parsed_edid = adlshim_get_parsed_edid_by_display_ref(dref);
-            g_strlcpy(parsed_edid->edid_source, "ADL", EDID_SOURCE_FIELD_SIZE);
+#endif
+            Adlno adlno = adlshim_find_adlno_by_mfg_model_sn(
+                                    NULL,              // mfg_id
+                                    model_sn->model,
+                                    model_sn->sn);
+            if (adlno.iAdapterIndex >= 0)   {    //  {-1,-1} means unset
+               parsed_edid = adlshim_get_parsed_edid_by_adlno(adlno.iAdapterIndex, adlno.iDisplayIndex);
+               edid_source = "ADL";
+                  // g_strlcpy(parsed_edid->edid_source, "ADL", EDID_SOURCE_FIELD_SIZE);
+            }
             // memory leak: not freeing dref because don't want to clobber parsed_edid
             // need to review Display_Ref lifecycle
          }
@@ -332,10 +344,13 @@ Parsed_Edid * get_fallback_hiddev_edid(int fd, struct hiddev_devinfo * dev_info)
 
    if (!parsed_edid && model_sn) {
       parsed_edid = get_x11_edid_by_model_sn(model_sn->model, model_sn->sn);
+      edid_source = "X11";
    }
 
    if (model_sn)
       free_model_sn_pair(model_sn);
+   if (parsed_edid)
+      g_strlcpy(parsed_edid->edid_source, edid_source, EDID_SOURCE_FIELD_SIZE);
    DBGMSF(debug, "Returning: %p", parsed_edid);
    return parsed_edid;
 }
