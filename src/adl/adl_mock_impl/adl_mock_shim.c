@@ -128,6 +128,7 @@ adlshim_is_valid_display_ref(
    return false;
 }
 
+#ifdef OLD
 /** Mock implementation.
  * @retval NULL
  */
@@ -139,6 +140,7 @@ adlshim_find_display_by_mfg_model_sn(
 {
    return NULL;
 }
+#endif
 
 
 /** Mock implementation.
@@ -154,6 +156,7 @@ adlshim_find_adlno_by_mfg_model_sn(
    return result;
 }
 
+#ifdef OLD
 /** Mock implementation to satisfy dynamic linker.
  *
  * @param pEdidBytes  pointer to 128 byte EDID
@@ -162,6 +165,7 @@ adlshim_find_adlno_by_mfg_model_sn(
 Display_Ref * adlshim_find_display_by_edid(const Byte * pEdidBytes) {
    return NULL;
 }
+#endif
 
 #ifdef OLD
 /** Mock implementation to satisfy dynamic linker.

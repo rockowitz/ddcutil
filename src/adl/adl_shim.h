@@ -92,12 +92,13 @@ adlshim_is_valid_display_ref(
 
 // ADL_Display_Rec * adl_get_display_by_adlno(int iAdapterIndex, int iDisplayIndex, bool emit_error_msg);
 
+#ifdef OLD
 Display_Ref *
 adlshim_find_display_by_mfg_model_sn(
       const char * mfg_id,
       const char * model,
       const char * sn);
-
+#endif
 
 Adlno
 adlshim_find_adlno_by_mfg_model_sn(
@@ -106,9 +107,11 @@ adlshim_find_adlno_by_mfg_model_sn(
       const char * sn);
 
 
+#ifdef OLD
 Display_Ref *
 adlshim_find_display_by_edid(
       const Byte * pEdidBytes);
+#endif
 
 #ifdef OLD
 Display_Info_List
