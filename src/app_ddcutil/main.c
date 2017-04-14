@@ -558,7 +558,7 @@ int main(int argc, char *argv[]) {
       reset_stats();
 
       printf("\n*** Detected Displays ***\n");
-      int display_ct = ddc_report_all_displays(0 /* logical depth */);
+      /* int display_ct =  */ ddc_report_all_displays(0 /* logical depth */);
       // printf("Detected: %d displays\n", display_ct);   // not needed
       printf("\nStatistics for display detection:\n");
       report_stats(STATS_ALL);
@@ -569,6 +569,8 @@ int main(int argc, char *argv[]) {
 
       int dispno = 1;
       // dispno = 2;      // TEMP FOR TESTING
+      // n.b. display_ct is the total number of monitors detected, including invalid displays
+#ifdef OLD
       for (; dispno <= display_ct; dispno++) {
          printf("\nProbing display %d\n", dispno);
          Display_Identifier * did = create_dispno_display_identifier(dispno);
@@ -576,10 +578,21 @@ int main(int argc, char *argv[]) {
          if (!dref) {
             PROGRAM_LOGIC_ERROR("get_display_ref_for_display_identifier() failed for display %d", dispno);
          }
+#endif
+      GPtrArray * all_displays = ddc_get_all_displays();
+      for (int ndx=0; ndx < all_displays->len; ndx++) {
+         Display_Ref * dref = g_ptr_array_index(all_displays, ndx);
+         assert( memcmp(dref->marker, DISPLAY_REF_MARKER, 4) == 0);
+         if (dref->dispno < 0) {
+            printf("\nSkipping invalid display on %s\n", dref_short_name(dref));
+         }
+         else {
+            printf("\nProbing display %d\n", dref->dispno);
 
-         probe_display_by_dref(dref);
-         printf("\nStatistics for probe of display %d:\n", dispno);
-         report_stats(STATS_ALL);
+            probe_display_by_dref(dref);
+            printf("\nStatistics for probe of display %d:\n", dispno);
+            report_stats(STATS_ALL);
+         }
          reset_stats();
       }
       printf("\nDisplay scanning complete.\n");
