@@ -457,17 +457,7 @@ int main(int argc, char *argv[]) {
 
 
    else if (parsed_cmd->cmd_id == CMDID_DETECT) {
-
-      // newer
       ddc_ensure_displays_detected();
-
-
-#ifdef OLD
-      if (parsed_cmd->programmatic_output)
-         set_output_format(OUTPUT_PROG_BUSINFO);
-#endif
-
-      // new way:
       ddc_report_all_displays(0);
 
    }
@@ -623,7 +613,7 @@ int main(int argc, char *argv[]) {
             dref->flags |= DREF_DDC_IS_MONITOR_CHECKED;
             dref->flags |= DREF_DDC_IS_MONITOR;
             dref->flags |= DREF_TRANSIENT;
-            DBGMSG("Synthetic Display_Ref");
+            // DBGMSG("Synthetic Display_Ref");
          }
          else {
             printf("No monitor detected on I2C bus /dev/i2c-%d\n", busno);
