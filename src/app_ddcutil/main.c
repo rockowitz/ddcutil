@@ -173,122 +173,122 @@ void probe_display_by_dh(Display_Handle * dh)
    printf("\nMfg id: %s, model: %s, sn: %s\n",
           dh->dref->pedid->mfg_id, dh->dref->pedid->model_name, dh->dref->pedid->serial_ascii);
 
-   printf("\nCapabilities for display %s\n", display_handle_repr(dh) );
-      // not needed, causes confusing messages if get_vcp_version fails but get_capabilities succeeds
-      DDCA_MCCS_Version_Spec vspec = get_vcp_version_by_display_handle(dh);
-      // if (vspec.major < 2) {
-      //    printf("VCP (aka MCCS) version for display is less than 2.0. Output may not be accurate.\n");
-      // }
-      // reports capabilities, and if successful returns Parsed_Capabilities
-      Parsed_Capabilities * pcaps = perform_get_capabilities_by_display_handle(dh);
+   // printf("\nCapabilities for display %s\n", display_handle_repr(dh) );
+   printf("\nCapabilities for display on %s\n", dref_short_name(dh->dref) );
+   // not needed, message causes confusing messages if get_vcp_version fails but get_capabilities succeeds
+   DDCA_MCCS_Version_Spec vspec = get_vcp_version_by_display_handle(dh);
+   // if (vspec.major < 2) {
+   //    printf("VCP (aka MCCS) version for display is less than 2.0. Output may not be accurate.\n");
+   // }
+   // reports capabilities, and if successful returns Parsed_Capabilities
+   Parsed_Capabilities * pcaps = perform_get_capabilities_by_display_handle(dh);
 
-      // how to pass this information down into app_show_vcp_subset_values_by_display_handle()?
-      bool table_reads_possible = parsed_capabilities_may_support_table_commands(pcaps);
-      printf("\nMay support table reads:   %s\n", bool_repr(table_reads_possible));
+   // how to pass this information down into app_show_vcp_subset_values_by_display_handle()?
+   bool table_reads_possible = parsed_capabilities_may_support_table_commands(pcaps);
+   printf("\nMay support table reads:   %s\n", bool_repr(table_reads_possible));
 
+   // *** VCP Feature Scan ***
+   // printf("\n\nScanning all VCP feature codes for display %d\n", dispno);
+   printf("\nScanning all VCP feature codes for display %s\n", display_handle_repr(dh) );
+   Byte_Bit_Flags features_seen = bbf_create();
+   app_show_vcp_subset_values_by_display_handle(
+         dh, VCP_SUBSET_SCAN, /* show_unsupported */ true, features_seen);
 
-      // *** VCP Feature Scan ***
-      // printf("\n\nScanning all VCP feature codes for display %d\n", dispno);
-      printf("\nScanning all VCP feature codes for display %s\n", display_handle_repr(dh) );
-      Byte_Bit_Flags features_seen = bbf_create();
-      app_show_vcp_subset_values_by_display_handle(
-            dh, VCP_SUBSET_SCAN, /* show_unsupported */ true, features_seen);
+   if (pcaps) {
+      printf("\n\nComparing declared capabilities to observed features...\n");
+      Byte_Bit_Flags features_declared =
+            parsed_capabilities_feature_ids(pcaps, /*readable_only=*/true);
+      char * s0 = bbf_to_string(features_declared, NULL, 0);
+      printf("\nReadable features declared in capabilities string: %s\n", s0);
+      free(s0);
 
-      if (pcaps) {
-         printf("\n\nComparing declared capabilities to observed features...\n");
-         Byte_Bit_Flags features_declared =
-               parsed_capabilities_feature_ids(pcaps, /*readable_only=*/true);
-         char * s0 = bbf_to_string(features_declared, NULL, 0);
-         printf("\nReadable features declared in capabilities string: %s\n", s0);
-         free(s0);
+      Byte_Bit_Flags caps_not_seen = bbf_subtract(features_declared, features_seen);
+      Byte_Bit_Flags seen_not_caps = bbf_subtract(features_seen, features_declared);
 
-         Byte_Bit_Flags caps_not_seen = bbf_subtract(features_declared, features_seen);
-         Byte_Bit_Flags seen_not_caps = bbf_subtract(features_seen, features_declared);
+      printf("\nMCCS (VCP) version reported by capabilities: %s\n",
+               format_vspec(pcaps->parsed_mccs_version));
+      printf("MCCS (VCP) version reported by feature 0xDf: %s\n",
+               format_vspec(vspec));
+      if (!vcp_version_eq(pcaps->parsed_mccs_version, vspec))
+         printf("Versions do not match!!!\n");
 
-         printf("\nMCCS (VCP) version reported by capabilities: %s\n",
-                  format_vspec(pcaps->parsed_mccs_version));
-         printf("MCCS (VCP) version reported by feature 0xDf: %s\n",
-                  format_vspec(vspec));
-         if (!vcp_version_eq(pcaps->parsed_mccs_version, vspec))
-            printf("Versions do not match!!!\n");
-
-         if (bbf_count_set(caps_not_seen) > 0) {
-            printf("\nFeatures declared as readable capabilities but not found by scanning:\n");
-            for (int code = 0; code < 256; code++) {
-               if (bbf_is_set(caps_not_seen, code)) {
-                  VCP_Feature_Table_Entry * vfte = vcp_find_feature_by_hexid_w_default(code);
-                  char * feature_name = get_version_sensitive_feature_name(vfte, pcaps->parsed_mccs_version);
-                  printf("   Feature x%02x - %s\n", code, feature_name);
-               }
+      if (bbf_count_set(caps_not_seen) > 0) {
+         printf("\nFeatures declared as readable capabilities but not found by scanning:\n");
+         for (int code = 0; code < 256; code++) {
+            if (bbf_is_set(caps_not_seen, code)) {
+               VCP_Feature_Table_Entry * vfte = vcp_find_feature_by_hexid_w_default(code);
+               char * feature_name = get_version_sensitive_feature_name(vfte, pcaps->parsed_mccs_version);
+               printf("   Feature x%02x - %s\n", code, feature_name);
             }
          }
-         else
-            printf("\nAll readable features declared in capabilities were found by scanning.\n");
+      }
+      else
+         printf("\nAll readable features declared in capabilities were found by scanning.\n");
 
-         if (bbf_count_set(seen_not_caps) > 0) {
-            printf("\nFeatures found by scanning but not declared as capabilities:\n");
-            for (int code = 0; code < 256; code++) {
-               if (bbf_is_set(seen_not_caps, code)) {
-                  VCP_Feature_Table_Entry * vfte = vcp_find_feature_by_hexid_w_default(code);
-                  char * feature_name = get_version_sensitive_feature_name(vfte, vspec);
-                  printf("   Feature x%02x - %s\n", code, feature_name);
-               }
+      if (bbf_count_set(seen_not_caps) > 0) {
+         printf("\nFeatures found by scanning but not declared as capabilities:\n");
+         for (int code = 0; code < 256; code++) {
+            if (bbf_is_set(seen_not_caps, code)) {
+               VCP_Feature_Table_Entry * vfte = vcp_find_feature_by_hexid_w_default(code);
+               char * feature_name = get_version_sensitive_feature_name(vfte, vspec);
+               printf("   Feature x%02x - %s\n", code, feature_name);
             }
          }
-         else
-            printf("\nAll features found by scanning were declared in capabilities.\n");
-
-         bbf_free(features_declared);
-         bbf_free(caps_not_seen);
-         bbf_free(seen_not_caps);
-         free_parsed_capabilities(pcaps);
       }
-      else {
-         printf("\n\nUnable to read or parse capabilities.\n");
-         printf("Skipping comparison of declared capabilities to observed features\n");
-      }
-      bbf_free(features_seen);
+      else
+         printf("\nAll features found by scanning were declared in capabilities.\n");
+
+      bbf_free(features_declared);
+      bbf_free(caps_not_seen);
+      bbf_free(seen_not_caps);
+      free_parsed_capabilities(pcaps);
+   }
+   else {
+      printf("\n\nUnable to read or parse capabilities.\n");
+      printf("Skipping comparison of declared capabilities to observed features\n");
+   }
+   bbf_free(features_seen);
 
 
-      puts("");
-      // get VCP 0B
-      DDCA_Single_Vcp_Value * valrec;
-      int color_temp_increment = 0;
-      int color_temp_units = 0;
+   puts("");
+   // get VCP 0B
+   DDCA_Single_Vcp_Value * valrec;
+   int color_temp_increment = 0;
+   int color_temp_units = 0;
+   psc =  get_vcp_value(
+            dh,
+          0x0b,              // color temperature increment,
+          DDCA_NON_TABLE_VCP_VALUE,
+          &valrec);
+   if (psc == 0) {
+      if (debug)
+         printf("Value returned for feature x0b: %s\n", summarize_single_vcp_value(valrec) );
+      color_temp_increment = valrec->val.c.cur_val;
+
       psc =  get_vcp_value(
-               dh,
-             0x0b,              // color temperature increment,
-             DDCA_NON_TABLE_VCP_VALUE,
-             &valrec);
+            dh,
+          0x0c,              // color temperature request
+          DDCA_NON_TABLE_VCP_VALUE,
+          &valrec);
       if (psc == 0) {
          if (debug)
-            printf("Value returned for feature x0b: %s\n", summarize_single_vcp_value(valrec) );
-         color_temp_increment = valrec->val.c.cur_val;
-
-         psc =  get_vcp_value(
-               dh,
-             0x0c,              // color temperature request
-             DDCA_NON_TABLE_VCP_VALUE,
-             &valrec);
-         if (psc == 0) {
-            if (debug)
-               printf("Value returned for feature x0c: %s\n", summarize_single_vcp_value(valrec) );
-            color_temp_units = valrec->val.c.cur_val;
-            int color_temp = 3000 + color_temp_units * color_temp_increment;
-            printf("Color temperature increment (x0b) = %d degrees Kelvin\n", color_temp_increment);
-            printf("Color temperature request   (x0c) = %d\n", color_temp_units);
-            printf("Requested color temperature = (3000 deg Kelvin) + %d * (%d degrees Kelvin)"
-                  " = %d degrees Kelvin\n",
-                  color_temp_units,
-                  color_temp_increment,
-                  color_temp);
-         }
+            printf("Value returned for feature x0c: %s\n", summarize_single_vcp_value(valrec) );
+         color_temp_units = valrec->val.c.cur_val;
+         int color_temp = 3000 + color_temp_units * color_temp_increment;
+         printf("Color temperature increment (x0b) = %d degrees Kelvin\n", color_temp_increment);
+         printf("Color temperature request   (x0c) = %d\n", color_temp_units);
+         printf("Requested color temperature = (3000 deg Kelvin) + %d * (%d degrees Kelvin)"
+               " = %d degrees Kelvin\n",
+               color_temp_units,
+               color_temp_increment,
+               color_temp);
       }
-      if (psc != 0)
-         printf("Unable to calculate color temperature from VCP features x0B and x0C\n");
+   }
+   if (psc != 0)
+      printf("Unable to calculate color temperature from VCP features x0B and x0C\n");
 
-      // get VCP 14
-      // report color preset
+   // get VCP 14
+   // report color preset
 
    DBGMSF(debug, "Done.");
 }
