@@ -177,6 +177,10 @@ Display_Info_List adlshim_get_valid_displays() {
 }
 #endif
 
+
+void adlshim_report_adl_display_detail(ADL_Display_Detail * detail, int depth) {
+}
+
 // new
 int adlshim_get_valid_display_ct() {
    return 0;
@@ -200,7 +204,6 @@ adlshim_get_video_card_info(
 }
 
 
-
 // Read from and write to the display
 
 /** Mock implementation to satisfy dynamic linker.  Never called. */
@@ -222,19 +225,3 @@ adlshim_ddc_read_only(
    assert(false);
    return 0;
 }
-
-//Base_Status_ADL adl_ddc_write_read(
-//      int     iAdapterIndex,
-//      int     iDisplayIndex,
-//      Byte *  pSendMsgBuf,
-//      int     sendMsgLen,
-//      Byte *  pRcvMsgBuf,
-//      int *   pRcvBytect);
-
-//Base_Status_ADL adl_ddc_write_read_onecall(
-//      int     iAdapterIndex,
-//      int     iDisplayIndex,
-//      Byte *  pSendMsgBuf,
-//      int     sendMsgLen,
-//      Byte *  pRcvMsgBuf,
-//      int *   pRcvBytect);

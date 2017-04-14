@@ -136,40 +136,20 @@ Modulated_Status_ADL adlshim_ddc_read_only(
       Byte *  pRcvMsgBuf,
       int *   pRcvBytect);
 
-//Base_Status_ADL adl_ddc_write_read(
-//      int     iAdapterIndex,
-//      int     iDisplayIndex,
-//      Byte *  pSendMsgBuf,
-//      int     sendMsgLen,
-//      Byte *  pRcvMsgBuf,
-//      int *   pRcvBytect);
-
-//Base_Status_ADL adl_ddc_write_read_onecall(
-//      int     iAdapterIndex,
-//      int     iDisplayIndex,
-//      Byte *  pSendMsgBuf,
-//      int     sendMsgLen,
-//      Byte *  pRcvMsgBuf,
-//      int *   pRcvBytect);
-
-
-// new
 
 #define ADL_DISPLAY_DETAIL_MARKER "ADTD"
+/** Public description of one ADL display */
 typedef
 struct {
-   char                  marker[4];
-   int                   iAdapterIndex;
-   int                   iDisplayIndex;
-   bool                  supports_ddc;
-   char *                xrandr_name;
-   Parsed_Edid *         pEdid;
+   char                  marker[4];          ///< always "ADTD"
+   int                   iAdapterIndex;      ///< ADL adapter number
+   int                   iDisplayIndex;      ///< ADL display number
+   bool                  supports_ddc;       ///< does display support DDC?
+   char *                xrandr_name;        ///< XRandR name
+   Parsed_Edid *         pEdid;              ///< pointer to parsed EDID
 } ADL_Display_Detail;
 
-void report_adl_display_detail(ADL_Display_Detail * detail, int depth);
-
-
-
+void adlshim_report_adl_display_detail(ADL_Display_Detail * detail, int depth);
 
 int adlshim_get_valid_display_ct();
 

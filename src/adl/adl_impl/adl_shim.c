@@ -197,7 +197,7 @@ GPtrArray * adlshim_get_valid_display_details() {
    return pa;
 }
 
-void report_adl_display_detail(ADL_Display_Detail * detail, int depth) {
+void adlshim_report_adl_display_detail(ADL_Display_Detail * detail, int depth) {
    int d1 = depth+1;
    rpt_structure_loc("ADL_Display_Detail", detail, depth);
    rpt_int("iAdapterIndex", NULL, detail->iAdapterIndex, d1);
