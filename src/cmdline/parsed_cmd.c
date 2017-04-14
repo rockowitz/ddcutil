@@ -34,7 +34,6 @@
 // Parsed_Cmd data structure
 //
 
-
 #ifdef FUTURE
 Value_Name_Table cmd_flag_table = {
       VNT(CMD_FLAG_DDCDATA,          "report DDC errors"),
@@ -70,7 +69,7 @@ void report_parsed_cmd(Parsed_Cmd * parsed_cmd, int depth) {
    int d1 = depth+1;
    int d2 = depth+2;
    rpt_structure_loc("Parsed_Cmd", parsed_cmd, depth);
-   rpt_int_as_hex( "cmd_id", NULL,  parsed_cmd->cmd_id,                 d1);
+   rpt_int_as_hex( "cmd_id", NULL,  parsed_cmd->cmd_id,               d1);
 
    rpt_structure_loc("pdid", parsed_cmd->pdid,                        d1);
    if (parsed_cmd->pdid)
@@ -102,10 +101,11 @@ void report_parsed_cmd(Parsed_Cmd * parsed_cmd, int depth) {
    }
    char buf[20];
    snprintf(buf,20, "%d,%d,%d", parsed_cmd->max_tries[0], parsed_cmd->max_tries[1], parsed_cmd->max_tries[2] );
-   rpt_str("max_retries",  NULL, buf, d1);
-   rpt_int("sleep_stragegy", NULL, parsed_cmd->sleep_strategy,       d1);
+   rpt_str("max_retries",        NULL, buf, d1);
+   rpt_int("sleep_stragegy",     NULL, parsed_cmd->sleep_strategy,       d1);
    rpt_bool("enable_failure_simulation", NULL, parsed_cmd->enable_failure_simulation, d1);
    rpt_str("failsim_control_fn", NULL, parsed_cmd->failsim_control_fn, d1);
+   rpt_bool("nodetect",          NULL, parsed_cmd->nodetect, d1);
 
 #ifdef FUTURE
    char * interpreted_flags = vnt_interpret_flags(parsed_cmd->flags, cmd_flag_table, false, ", ");
