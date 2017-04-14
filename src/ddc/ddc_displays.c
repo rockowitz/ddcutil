@@ -1627,13 +1627,11 @@ get_display_ref_for_display_identifier(
                 Display_Identifier* pdid,
                 Call_Options        callopts)
 {
-   // Display_Ref * dref = ddc_find_dref_by_did(pdid);
    Display_Ref * dref = ddc_find_display_ref_by_display_identifier(pdid);
-
-   if (!dref && (pdid->id_type == DISP_ID_BUSNO || pdid->id_type == DISP_ID_ADL)
-             && (callopts & CALLOPT_FORCE ) ) {
-      DBGMSG("Special handling for --force unimplemented");
+   if ( !dref && (callopts & CALLOPT_ERR_MSG) ) {
+      f0printf(FOUT, "Display not found\n");
    }
+
    return dref;
 }
 
