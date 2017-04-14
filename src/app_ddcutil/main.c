@@ -459,7 +459,7 @@ int main(int argc, char *argv[]) {
    else if (parsed_cmd->cmd_id == CMDID_DETECT) {
 
       // newer
-      ddc_ensure_displays_initialized();
+      ddc_ensure_displays_detected();
 
 
 #ifdef OLD
@@ -481,7 +481,7 @@ int main(int argc, char *argv[]) {
          ok = false;
       }
       else {
-         ddc_ensure_displays_initialized();
+         ddc_ensure_displays_detected();
 
          if (!parsed_cmd->pdid)
             parsed_cmd->pdid = create_dispno_display_identifier(1);   // default monitor
@@ -491,7 +491,7 @@ int main(int argc, char *argv[]) {
    }
 
    else if (parsed_cmd->cmd_id == CMDID_LOADVCP) {
-      ddc_ensure_displays_initialized();
+      ddc_ensure_displays_detected();
 
       char * fn = strdup( parsed_cmd->args[0] );
       // DBGMSG("Processing command loadvcp.  fn=%s", fn );
@@ -514,7 +514,7 @@ int main(int argc, char *argv[]) {
    }
 
    else if (parsed_cmd->cmd_id == CMDID_ENVIRONMENT) {
-      ddc_ensure_displays_initialized();   // *** NEEDED HERE ??? ***
+      ddc_ensure_displays_detected();   // *** NEEDED HERE ??? ***
 
       printf("The following tests probe the runtime environment using multiple overlapping methods.\n");
       // DBGMSG("Exploring runtime environment...\n");
@@ -524,7 +524,7 @@ int main(int argc, char *argv[]) {
 
    else if (parsed_cmd->cmd_id == CMDID_USBENV) {
 #ifdef USE_USB
-      ddc_ensure_displays_initialized();   // *** NEEDED HERE ??? ***
+      ddc_ensure_displays_detected();   // *** NEEDED HERE ??? ***
       printf("The following tests probe for USB connected monitors.\n");
       // DBGMSG("Exploring runtime environment...\n");
       query_usbenv();
@@ -557,7 +557,7 @@ int main(int argc, char *argv[]) {
       ddc_set_max_write_read_exchange_tries(MAX_MAX_TRIES);
       ddc_set_max_multi_part_read_tries(MAX_MAX_TRIES);
 
-      ddc_ensure_displays_initialized();    // *** ???
+      ddc_ensure_displays_detected();    // *** ???
 
       query_sysenv();
 #ifdef USE_USB
@@ -606,7 +606,7 @@ int main(int argc, char *argv[]) {
       if (parsed_cmd->force)
          callopts |= CALLOPT_FORCE;
 
-      ddc_ensure_displays_initialized();
+      ddc_ensure_displays_detected();
 
       Display_Ref * dref = get_display_ref_for_display_identifier(
                               parsed_cmd->pdid, callopts);

@@ -75,10 +75,10 @@ Display_Ref* ddc_find_display_by_edid(
 
 
 
-void report_display_rec(Display_Rec * drec, int depth);
+void debug_report_display_ref(Display_Ref * drec, int depth);
 
 GPtrArray * ddc_detect_all_displays();
 
-void ddc_ensure_displays_initialized();
+void ddc_ensure_displays_detected();
 
 #endif /* DDC_DISPLAYS_H_ */

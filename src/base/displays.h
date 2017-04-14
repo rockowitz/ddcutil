@@ -173,7 +173,7 @@ typedef struct _display_ref {
 
    // for merger with Display_Rec:
    int           dispno;
-   struct _display_ref * dref;
+   // struct _display_ref * dref;    // self reference, for transition
    void *        detail2;
 } Display_Ref;
 
@@ -181,7 +181,7 @@ typedef struct _display_ref {
 
 // #define DISPLAY_REC_MARKER "DREC"
 // for merger
-#define DISPLAY_REC_MARKER DISPLAY_REF_MARKER
+// #define DISPLAY_REC_MARKER DISPLAY_REF_MARKER
 
 #ifdef OLD
 /** Describes a single monitor detected.
@@ -211,7 +211,7 @@ typedef struct {
 } Display_Rec;
 #endif
 
-typedef Display_Ref Display_Rec;   // for merger
+// typedef Display_Ref Display_Rec;   // for merger
 
 
 // n. works for both Display_Ref and Display_Handle

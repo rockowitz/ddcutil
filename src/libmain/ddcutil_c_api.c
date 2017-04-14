@@ -649,7 +649,7 @@ DDCA_Status ddca_create_display_ref(DDCA_Display_Identifier did, DDCA_Display_Re
    if (!library_initialized)
       return DDCL_UNINITIALIZED;
 
-   ddc_ensure_displays_initialized();
+   ddc_ensure_displays_detected();
 
    DDCA_Status rc = 0;
    Display_Identifier * pdid = (Display_Identifier *) did;
@@ -724,7 +724,7 @@ ddca_open_display(
    if (!library_initialized)
       return DDCL_UNINITIALIZED;
 
-   ddc_ensure_displays_initialized();
+   ddc_ensure_displays_detected();
 
    DDCA_Status rc = 0;
    *p_dh = NULL;        // in case of error
@@ -861,7 +861,7 @@ ddca_mccs_version_id_desc(DDCA_MCCS_Version_Id version_id) {
 DDCA_Display_Info_List *
 ddca_get_displays()
 {
-   ddc_ensure_displays_initialized();
+   ddc_ensure_displays_detected();
 
    // PROGRAM_LOGIC_ERROR("---> pseudo failure");
    Display_Info_List * info_list = ddc_get_valid_displays();
