@@ -466,7 +466,7 @@ char * get_hiddev_devname_by_display_ref(Display_Ref * dref) {
 // Display_Info_list Functions
 //
 
-
+#ifdef UNUSED
 /* Returns a list of all valid USB HID compliant monitors,
  * in a form expected by higher levels of ddcutil, namely
  * a collection of Display_Refs
@@ -506,7 +506,7 @@ Display_Info_List usb_get_valid_displays() {
 
    return info_list;
 }
-
+#endif
 
 
 //  *** Functions to return a Display_Ref for a USB monitor ***

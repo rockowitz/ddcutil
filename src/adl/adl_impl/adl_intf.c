@@ -742,6 +742,7 @@ ADL_Display_Rec * adl_get_active_display_rec(int ndx){
 }
 
 
+#ifdef OLD
 
 /** Returns a #Display_Info_List describing the detected ADL displays.
  *
@@ -764,6 +765,7 @@ Display_Info_List adl_get_valid_displays() {
    // report_display_info_list(&info_list, 0);
    return info_list;
 }
+#endif
 
 
 #ifdef REFERENCE

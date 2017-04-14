@@ -128,6 +128,8 @@ bool              adlshim_is_valid_display_ref(Display_Ref * dref, bool emit_err
    return adl_is_valid_adlno(dref->iAdapterIndex, dref->iDisplayIndex, emit_error_msg);
 }
 
+
+// used by get_fallback_hiddev_edid() in usb_edid.c
 Display_Ref * adlshim_find_display_by_mfg_model_sn(const char * mfg_id, const char * model, const char * sn) {
    Display_Ref * dref = NULL;
    ADL_Display_Rec * adl_rec = adl_find_display_by_mfg_model_sn(mfg_id, model, sn);
@@ -144,9 +146,11 @@ Display_Ref * adlshim_find_display_by_edid(const Byte * pEdidBytes) {
    return dref;
 }
 
+#ifdef OLD
 Display_Info_List adlshim_get_valid_displays() {
    return adl_get_valid_displays();
 }
+#endif
 
 int adlshim_get_valid_display_ct() {
    return adl_get_active_display_ct();

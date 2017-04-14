@@ -39,8 +39,10 @@
 
 #include "usb/usb_displays.h"
 
+#ifdef OLD
 Display_Info_List *
 ddc_get_valid_displays_old();
+#endif
 
 Display_Info_List *
 ddc_get_valid_displays();

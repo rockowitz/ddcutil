@@ -98,8 +98,10 @@ Display_Ref *
 adlshim_find_display_by_edid(
       const Byte * pEdidBytes);
 
+#ifdef OLD
 Display_Info_List
 adlshim_get_valid_displays();
+#endif
 
 Modulated_Status_ADL
 adlshim_get_video_card_info(

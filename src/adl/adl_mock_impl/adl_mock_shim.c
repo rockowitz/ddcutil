@@ -137,6 +137,7 @@ Display_Ref * adlshim_find_display_by_edid(const Byte * pEdidBytes) {
    return NULL;
 }
 
+#ifdef OLD
 /** Mock implementation to satisfy dynamic linker.
  * @return empty list
  */
@@ -144,7 +145,7 @@ Display_Info_List adlshim_get_valid_displays() {
    Display_Info_List info_list = {0,NULL};
    return info_list;
 }
-
+#endif
 
 // new
 int adlshim_get_valid_display_ct() {
