@@ -597,7 +597,8 @@ int main(int argc, char *argv[]) {
       main_rc = EXIT_SUCCESS;
    }
 
-   else {     // commands that require display identifier
+   // *** Commands that require Display Identifier ***
+   else {
       if (!parsed_cmd->pdid)
          parsed_cmd->pdid = create_dispno_display_identifier(1);   // default monitor
       // assert(parsed_cmd->pdid);
@@ -606,10 +607,32 @@ int main(int argc, char *argv[]) {
       if (parsed_cmd->force)
          callopts |= CALLOPT_FORCE;
 
-      ddc_ensure_displays_detected();
-
-      Display_Ref * dref = get_display_ref_for_display_identifier(
-                              parsed_cmd->pdid, callopts);
+      // If --nodetect option specified and I2C bus number was specified,
+      // skip scan for all devices.
+      Display_Ref * dref = NULL;
+      if (parsed_cmd->pdid->id_type == DISP_ID_BUSNO && parsed_cmd->nodetect) {
+         int busno = parsed_cmd->pdid->busno;
+         // is this really a monitor?
+         Bus_Info * businfo = i2c_get_bus_info(busno, DISPSEL_VALID_ONLY);
+         if ( businfo && (businfo->flags & I2C_BUS_ADDR_0X50) ) {
+            dref = create_bus_display_ref(busno);
+            dref->dispno = -1;     // should use some other value for unassigned vs invalid
+            dref->pedid = businfo->edid;    // needed?
+            // dref->pedid = i2c_get_parsed_edid_by_busno(parsed_cmd->pdid->busno);
+            dref->detail2 = businfo;
+            dref->flags |= DREF_DDC_IS_MONITOR_CHECKED;
+            dref->flags |= DREF_DDC_IS_MONITOR;
+            dref->flags |= DREF_TRANSIENT;
+            DBGMSG("Synthetic Display_Ref");
+         }
+         else {
+            printf("No monitor detected on I2C bus /dev/i2c-%d\n", busno);
+         }
+      }
+      else {
+         ddc_ensure_displays_detected();
+         dref = get_display_ref_for_display_identifier(parsed_cmd->pdid, callopts);
+      }
       if (dref) {
          Display_Handle * dh = NULL;
          callopts |=  CALLOPT_ERR_MSG;    // removed CALLOPT_ERR_ABORT
@@ -698,6 +721,8 @@ int main(int argc, char *argv[]) {
 
             ddc_close_display(dh);
          }
+         if (dref->flags & DREF_TRANSIENT)
+            free_display_ref(dref);
       }
    }
 
