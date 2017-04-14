@@ -1285,7 +1285,7 @@ ddc_report_all_displays(int depth) {
 
 /** Debugging function to display the contents of a #Display_Ref.
  *
- * \param drec  pointer to #Display_Ref
+ * \param dref  pointer to #Display_Ref
  * \param depth logical indentation depth
  */
 void debug_report_display_ref(Display_Ref * dref, int depth) {
