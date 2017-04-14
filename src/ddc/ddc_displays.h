@@ -47,7 +47,7 @@ ddc_get_valid_displays_old();
 Display_Info_List *
 ddc_get_valid_displays();
 
-GPtrArray * ddc_get_all_displays();
+GPtrArray * ddc_get_all_displays();  // returns GPtrArray of Display_Ref instances, including invalid displays
 
 int
 ddc_report_active_displays(int depth);
