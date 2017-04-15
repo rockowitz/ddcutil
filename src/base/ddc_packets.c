@@ -3,7 +3,7 @@
  * Functions for creating DDC packets and interpreting DDC response packets.
  *
  * <copyright>
- * Copyright (C) 2014-2016 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2014-2017 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -23,10 +23,16 @@
  * </endcopyright>
  */
 
+/** \file
+ * Functions for creating DDC packets and interpreting DDC response packets.
+ */
+
+/** \cond */
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+/** \endcond */
 
 #include "util/report_util.h"
 #include "util/string_util.h"
@@ -36,29 +42,18 @@
 
 #include "base/ddc_packets.h"
 
-#ifdef OLD
-// forward reference:
-int interpret_vcp_feature_response(Byte * vcp_data_bytes,
-                                   int bytect,
-                                   Byte requested_vcp_code,
-                                   Parsed_Nontable_Vcp_Response * aux_data,
-                                   bool debug);
-#endif
 
 //
 //  Initialization
 //
 
 void init_ddc_packets() {
-
 }
 
 
 //
 // Trace control
 //
-
-// TraceControl ddc_packets_trace_level = NEVER;
 
 Trace_Group TRACE_GROUP = TRC_DDC;
 
@@ -266,14 +261,12 @@ void free_ddc_packet(DDC_Packet * packet) {
 }
 
 
-/* Base function for creating any DDC packet
+/** Base function for creating any DDC packet
  *
- * Arguments:
- *    max_size  size of buffer allocated for packet bytes
- *    tag       debug string
+ *  \param  max_size  size of buffer allocated for packet bytes
+ *  \param  tag       debug string (may be NULL)
  *
- * Returns:
- *    pointer to created DDC_Packet
+ *  \return pointer to newly allocated #DDC_Packet
  */
 DDC_Packet * create_empty_ddc_packet(int max_size, const char * tag) {
    bool debug = false;
@@ -282,8 +275,7 @@ DDC_Packet * create_empty_ddc_packet(int max_size, const char * tag) {
    DDC_Packet * packet = malloc(sizeof(DDC_Packet));
    packet->buf = buffer_new(max_size, "empty DDC packet");
    if (tag) {
-      strncpy(packet->tag, tag, MAX_DDC_TAG);
-      packet->tag[MAX_DDC_TAG] = '\0';    // in case we maxed out
+      g_strlcpy(packet->tag, tag, MAX_DDC_TAG);
    }
    else
       packet->tag[0] = '\0';
@@ -303,24 +295,25 @@ DDC_Packet * create_empty_ddc_packet(int max_size, const char * tag) {
 // Request Packets
 //
 
-/* Create a generic DDC request packet
+/** Creates a generic DDC request packet
  *
- * Arguments:
- *    data_bytes   data bytes of packet
- *    data_bytect  number of data bytes
- *    tag          debug string
+ *  \param  data_bytes   data bytes of packet
+ *  \param  data_bytect  number of data bytes
+ *  \param  tag          debug string (may be NULL)
  *
- * Returns:
- *    pointer to created packet
+ *  \return  pointer to created packet
  */
 DDC_Packet * create_ddc_base_request_packet(
                 Byte *       data_bytes,
                 int          data_bytect,
                 const char * tag)
 {
-   char * hs =  hexstring(data_bytes, data_bytect);
-   TRCMSG("Starting.  bytes=%s, tag=%s", hs, tag);
-   free(hs);
+   bool debug = false;
+   if (debug) {
+      char * hs =  hexstring(data_bytes, data_bytect);
+      DBGMSG("Starting.  bytes=%s, tag=%s", hs, tag);
+      free(hs);
+   }
 
    assert( data_bytect <= 32 );
 
@@ -339,7 +332,7 @@ DDC_Packet * create_ddc_base_request_packet(
       packet->type = 0x00;
    // dump_buffer(packet->buf);
 
-   TRCMSG("Done. packet=%p", packet);
+   DBGMSF(debug, "Done. packet=%p", packet);
    return packet;
 }
 
@@ -424,8 +417,6 @@ void update_ddc_multi_part_read_request_packet_offset(DDC_Packet * packet, int n
 }
 
 
-
-
 /* Creates a DDC VCP table write request packet
  *
  * Arguments:
@@ -463,8 +454,6 @@ DDC_Packet * create_ddc_multi_part_write_request_packet(
    // dump_packet(packet_ptr);
    return packet_ptr;
 }
-
-
 
 
 /* Creates a Get VCP request packet
@@ -518,6 +507,23 @@ create_ddc_setvcp_request_packet(Byte vcp_code, int new_value, const char * tag)
 // Response Packets
 //
 
+/** Performs tasks common to creating any DDC response packet.
+ *  Checks for malformed packet, but not packet contents.
+ *
+ *  \param i2c_response_bytes          pointer to raw packet bytes
+ *  \param response_bytes_buffer_size  size of buffer pointed to by **i2c_response_bytes**,
+ *                                     (used for debug hex dump)
+ *  \param tag                         debug string (may be NULL)
+ *  \param packet_ptr_addr             where to return pointer to newly allocated #DDC_Packet
+ *
+ *  \retval 0
+ *  \retval DDCRC_RESPONSE_ENVELOPE
+ *  \retval DDCRC_DOUBLE_BYTE
+ *  \retval DDCRC_PACKET_SIZE
+ *  \retval DDCRC_CHECKSUM
+ *
+ *  The pointer returned at packet_ptr_addr is non-null iff the status code is 0.
+ */
 Status_DDC
 create_ddc_base_response_packet(
    Byte *        i2c_response_bytes,
@@ -525,12 +531,12 @@ create_ddc_base_response_packet(
    const char *  tag,
    DDC_Packet ** packet_ptr_addr)
 {
-   // bool debug = adjust_debug_level(true, ddc_packets_trace_level);
-   // if (debug)
-   //    DBGMSG("Starting. i2c_response_bytes=%s", hexstring(i2c_response_bytes,20));
-   char * hs = hexstring(i2c_response_bytes,20);
-   TRCMSG("Starting. i2c_response_bytes=%s", hs );
-   free(hs);
+   bool debug = false;
+   if (debug) {
+      char * hs = hexstring(i2c_response_bytes,20);
+      DBGMSG("Starting. i2c_response_bytes=%s", hs );
+      free(hs);
+   }
 
    int result = DDCRC_OK;
    DDC_Packet * packet = NULL;
@@ -602,33 +608,49 @@ create_ddc_base_response_packet(
       *packet_ptr_addr = packet;
    else
       *packet_ptr_addr = NULL;
-   // if (debug || (result != 0 && showRecoverableErrors) ) {
-   //    printf("(%s) returning %s, *packet_ptr_addr=%p\n",
-   //           __func__, ddcrc_description(result), *packet_ptr_addr);
-   // }
-   TRCMSG("returning %s, *packet_ptr_addr=%p\n",
-          ddcrc_desc(result), *packet_ptr_addr);
+
+   DBGMSF(debug, "Returning %s, *packet_ptr_addr=%p\n", ddcrc_desc(result), *packet_ptr_addr);
 
    assert( (result==DDCRC_OK && *packet_ptr_addr) || (result != DDCRC_OK && !*packet_ptr_addr));
    return result;
 }
 
 
+/** Creates a DDC response packet, checking for expected type and DDC Null Response
+ *
+ *  \param i2c_response_bytes          pointer to raw packet bytes
+ *  \param response_bytes_buffer_size  size of buffer pointed to by **i2c_response_bytes**
+ *  \param expected_type               expected packet type
+ *  \param tag                         debug string (may be NULL)
+ *  \param packet_ptr_addr             where to return pointer to newly allocated #DDC_Packet
+ *
+ *  \return 0 for success\n
+ *          as from create_ddc_base_response_packet, indicating malformed response
+ *  \retval DDCRC_NULL_RESPONSE
+ *  \retval DDCRC_RESPONSE_TYPE
+ *
+ *  The pointer returned at packet_ptr_addr is non-null iff the status code is 0.
+ */
 Status_DDC
 create_ddc_response_packet(
-       Byte *         i2c_response_bytes,
-       int            response_bytes_buffer_size,
-       Byte           expected_type,
-       const char *   tag,
-       DDC_Packet **  packet_ptr_addr)
+       Byte *          i2c_response_bytes,
+       int             response_bytes_buffer_size,
+       DDC_Packet_Type expected_type,
+       const char *    tag,
+       DDC_Packet **   packet_ptr_addr)
 {
-   // bool debug = adjust_debug_level(true, ddc_packets_trace_level);
-   // if (debug)
-   //    DBGMSG("Starting. i2c_response_bytes=%s", hexstring(i2c_response_bytes,20));
-   char * hs = hexstring(i2c_response_bytes,20);
-   TRCMSG("Starting. i2c_response_bytes=%s", hs);
-   free(hs);
-   int result = create_ddc_base_response_packet(i2c_response_bytes, response_bytes_buffer_size, tag,  packet_ptr_addr);
+   bool debug = false;
+   if (debug) {
+      char * hs = hexstring(i2c_response_bytes,20);
+      DBGMSG("Starting. i2c_response_bytes=%s", hs);
+      free(hs);
+   }
+
+   Status_DDC result = create_ddc_base_response_packet(
+                          i2c_response_bytes,
+                          response_bytes_buffer_size,
+                          tag,
+                          packet_ptr_addr);
    // DBGMSG("create_ddc_base_response_packet() returned %d, *packet_ptr_addr=%p", result, *packet_ptr_addr);
    if (result == 0) {
       if (isNullPacket(*packet_ptr_addr)) {
@@ -649,15 +671,10 @@ create_ddc_response_packet(
    }
 
    if (result < 0) {
-      // if (result == DDCRC_NULL_RESPONSE)
-      //    log_secondary_status_code(result, __func__);
-      // else
-      //    log_status_code(result, __func__);
       log_status_code(result, __func__);
    }
-   // if (debug)
-   //    DBGMSG("returning %s, *packet_ptr_addr=%p", ddcrc_description(result), *packet_ptr_addr);
-   TRCMSG("returning %s, *packet_ptr_addr=%p", ddcrc_desc(result), *packet_ptr_addr);
+
+   DBGMSF(debug, "Returning %s, *packet_ptr_addr=%p", ddcrc_desc(result), *packet_ptr_addr);
    assert( (result==DDCRC_OK && *packet_ptr_addr) || (result != DDCRC_OK && !*packet_ptr_addr));
    return result;
 }
@@ -677,15 +694,23 @@ void report_interpreted_capabilities(Interpreted_Capabilities_Fragment * interpr
 }
 
 
+/** Interprets the bytes of a multi part read response.
+ *
+ *  \param  response_type
+ *  \param  data_bytes
+ *  \param  bytect
+ *  \param  aux_data       pointer to #Interpreted_Multi_Part_Read_Fragment to fill in
+ *  \reatval 0 success
+ *  \retval  DDCRC_INVALID_DATA
+ */
 Status_DDC
 interpret_multi_part_read_response(
-       Byte   response_type,
+       DDC_Packet_Type  response_type,
        Byte * data_bytes,
        int    bytect,
-       Interpreted_Multi_Part_Read_Fragment * aux_data,    //   Interpreted_Capabilities_Fragment * aux_data,
-       bool debug)
+       Interpreted_Multi_Part_Read_Fragment * aux_data)  //   Interpreted_Capabilities_Fragment * aux_data,
 {
-   debug = false;
+   bool debug = false;
    int result = DDCRC_OK;
 
    // not needed, already checked
@@ -752,27 +777,23 @@ typedef
         } /*__attribute__((packed)) */ Vcp_Response;
 
 
-/* Interpret the standard 8 byte VCP feature response.
+/** Interprets the standard 8 byte VCP feature response.
  *
  * The response is checked for validity, and a
  * Interpreted_Notable_Vcp_Response struct is filled in.
  *
- * Arguments:
- *    vcp_data_bytes      pointer to data bytes
- *    bytect              number of bytes in response, must be 8
- *    requested_vcp_code  must be in the vcp_code field of he response bytes
- *    aux_data            pointer to Interpreted_Nontable_Vcp_Response struct
- *                        to be filled in
+ * \param  vcp_data_bytes      pointer to data bytes
+ * \param  bytect              number of bytes in response, must be 8
+ * \param  requested_vcp_code  must be in the vcp_code field of he response bytes
+ * \param  aux_data            pointer to #Parsed_Nontable_Vcp_Response struct to be filled in
  *
- * Returns:
- *    status code         DDCRC_OK
- *                        DDCRC_INVALID_DATA
+ * \retval 0    success
+ * \retval DDCRC_INVALID_DATA
  *
- * Notes:
- * - It is not an error if the supported_opcode byte is set false in an
- *   otherwise well constructed response.
+ * \remark
+ * It is not an error if the supported_opcode byte is set false in an
+ * otherwise well constructed response.
  */
-
 Status_DDC
 interpret_vcp_feature_response_std(
        Byte*                 vcp_data_bytes,
@@ -780,9 +801,8 @@ interpret_vcp_feature_response_std(
        Byte                  requested_vcp_code,
        Parsed_Nontable_Vcp_Response* aux_data)   // record in which interpreted feature response will be stored
 {
-   // debug = false;
-   // DBGMSG(debug, "Starting");
-   TRCMSG("Starting.");
+   bool debug = false;
+   DBGMSF(debug, "Starting.");
 
    int result = DDCRC_OK;
    // set initial values for failure case:
@@ -849,89 +869,10 @@ interpret_vcp_feature_response_std(
       }
    }
 
-   // DBGMSF(debug, "returning %s", ddcrc_description(result));
-   TRCMSG("returning %s\n", __func__, ddcrc_desc(result));
+   DBGMSF(debug, "Returning %s", psc_desc(result));
    return result;
 }
 
-
-#ifdef OLD
-Status_DDC
-interpret_vcp_feature_response(
-   Byte *                              vcp_data_bytes,
-   int                                 bytect,
-   Byte                                requested_vcp_code,
-   Parsed_Nontable_Vcp_Response * aux_data,
-   bool                                debug)
-{
-
-#ifdef IN_PROGRESS
-   debug = false;
-   if (debug)
-      DBGMSG("Starting");
-
-   int result = DDCRC_OK;
-
-                   // To be used:
-                   // Vcp_Response  vcp_response;
-                   // Vcp_Response * vcp_response_ptr;
-
-      // bool valid_response     = true;
-      // bool supported_vcp_code = true;
-
-      // set initial values for failure case
-      aux_data->vcp_code = 0x00;
-      aux_data->valid_response = false;
-      aux_data->supported_opcode = false;
-      aux_data->max_value = 0;
-      aux_data->cur_value = 0;
-
-      if (bytect != 8) {
-         // if (debug)
-         DBGMSG("Invalid response data length: %d, should be 8", bytect);
-         result = COUNT_STATUS_CODE(DDCRC_INVALID_DATA);
-      }
-      else {
-         // TODO: replace with union
-         Byte result_code     = vcp_data_bytes[1];
-         Byte vcp_opcode      = vcp_data_bytes[2];
-         Byte vcp_type_code   = vcp_data_bytes[3];
-         Byte max_val_hi_byte = vcp_data_bytes[4];
-         Byte max_val_lo_byte = vcp_data_bytes[5];
-         Byte cur_val_hi_byte = vcp_data_bytes[6];
-         Byte cur_val_lo_byte = vcp_data_bytes[7];
-
-         aux_data->vcp_code = vcp_opcode;
-
-         bool valid_response = true;
-         if (result_code != 0) {
-            if (result_code == 0x01) {
-               if (debug)
-                  DBGMSG("Unsupported VCP Code");
-               aux_data->valid_response = true;
-            }
-            else {
-               if (debug) DBGMSG("Unexpected result code: 0x%02x", result_code);
-               result = COUNT_STATUS_CODE(DDCRC_INVALID_DATA);
-            }
-         }
-         else if (vcp_opcode != requested_vcp_code){
-            if (debug) DBGMSG("Unexpected VCP opcode 0x%02x, should be 0x%02x", vcp_opcode, requested_vcp_code);
-            result = COUNT_STATUS_CODE(DDCRC_INVALID_DATA);
-         }
-         else {
-#endif
-
-   int rc;
-
-   rc = interpret_vcp_feature_response_std(vcp_data_bytes,
-                                           bytect,
-                                           requested_vcp_code,
-                                           aux_data,
-                                           debug);
-   return rc;
-}
-#endif
 
 
 void report_interpreted_nontable_vcp_response(
@@ -969,19 +910,38 @@ void   report_parsed_vcp_response(Parsed_Vcp_Response * response, int depth) {
 // Response packets 
 //
 
+/** Creates a #DDC_Packet for a DDC response.
+ *
+ *  \param i2c_response_bytes          pointer to raw packet bytes
+ *  \param response_bytes_buffer_size  size of buffer pointed to by **i2c_response_bytes**
+ *  \param expected_type               expected packet type
+ *  \param expected_subtype            depends on expected_type
+ *  \param tag                         debug string (may be NULL)
+ *  \param packet_ptr_addr             where to return pointer to newly allocated #DDC_Packet
+ *
+ *  \retval 0
+ *  \return as from #create_ddc_response_packet()
+ *  \retval DDCRC_INVALID_DATA may be set by function that fills in aux_data struct
+ *
+ *  The pointer returned at packet_ptr_addr is non-null iff the status code is 0.
+ *
+ *  The contents of **expected_subtype** depends on the value of **expected_type**.
+ *  For DDC_PACKET_TYPE_QUERY_VCP_RESPONSE it is the VCP feature code.
+ */
 Status_DDC create_ddc_typed_response_packet(
-      Byte*        i2c_response_bytes,
-      int          response_bytes_buffer_size,
-      Byte         expected_type,
-      Byte         expected_subtype,
-      const char*  tag,
-      DDC_Packet** packet_ptr_addr)
+      Byte*           i2c_response_bytes,
+      int             response_bytes_buffer_size,
+      DDC_Packet_Type expected_type,
+      Byte            expected_subtype,
+      const char*     tag,
+      DDC_Packet**    packet_ptr_addr)
 {
    bool debug = false;
-
-   char * hs =  hexstring(i2c_response_bytes,20);
-   DBGTRC(debug, TRACE_GROUP, "Starting. i2c_response_bytes=%s", hs );
-   free(hs);
+   if (debug) {
+      char * hs =  hexstring(i2c_response_bytes,20);
+      DBGMSF(debug, "Starting. i2c_response_bytes=%s", hs );
+      free(hs);
+   }
 
    void * aux_data;
 
@@ -993,46 +953,36 @@ Status_DDC create_ddc_typed_response_packet(
                expected_type,
                tag,
                packet_ptr_addr);
-   DBGTRC(debug, TRACE_GROUP, "create_ddc_response_packet() returned %s, *packet_ptr_addr=%p",
+   DBGMSF(debug, "Create_ddc_response_packet() returned %s, *packet_ptr_addr=%p",
                                __func__, psc_desc(rc), *packet_ptr_addr);
    if (rc == 0) {
       DDC_Packet * packet = *packet_ptr_addr;
       switch (expected_type) {
+
       case DDC_PACKET_TYPE_CAPABILITIES_RESPONSE:
-//         aux_data = calloc(1, sizeof(Interpreted_Capabilities_Fragment));
-//         packet->aux_data = aux_data;
-//
-//         rc = interpret_capabilities_response(
-//                get_data_start(packet),
-//                get_data_len(packet),
-//                (Interpreted_Capabilities_Fragment *) aux_data,
-//                true);
-//         break;
       case DDC_PACKET_TYPE_TABLE_READ_RESPONSE:
          aux_data = calloc(1, sizeof(Interpreted_Multi_Part_Read_Fragment));
          packet->aux_data = aux_data;
-
          rc = interpret_multi_part_read_response(
                 expected_type,
                 get_data_start(packet),
                 get_data_len(packet),
-                (Interpreted_Multi_Part_Read_Fragment *) aux_data,
-                true);
+                (Interpreted_Multi_Part_Read_Fragment *) aux_data);
          break;
+
       case DDC_PACKET_TYPE_QUERY_VCP_RESPONSE:
          aux_data = calloc(1, sizeof(Parsed_Nontable_Vcp_Response));
          packet->aux_data = aux_data;
-
-         rc =  interpret_vcp_feature_response_std(get_data_start(packet),
-                                            get_data_len(packet),
-                                            expected_subtype,
-                                            (Parsed_Nontable_Vcp_Response *) aux_data);
+         rc = interpret_vcp_feature_response_std(
+                 get_data_start(packet),
+                 get_data_len(packet),
+                 expected_subtype,
+                 (Parsed_Nontable_Vcp_Response *) aux_data);
          break;
 
       default:
          // what to do?  for now just bail
          TERMINATE_EXECUTION_ON_ERROR("Unhandled case. expected_type=%d", expected_type);
-         // printf("something\n");
          break;
       }
    }
@@ -1042,16 +992,11 @@ Status_DDC create_ddc_typed_response_packet(
       *packet_ptr_addr = NULL;
    }
 
-   // if (debug) {
-   //    DBGMSG("returning %s, *packet_ptr=%p", ddcrc_description(rc), *packet_ptr_addr);
-   //    if (rc >= 0)
-   //       dump_packet(*packet_ptr_addr);
-   // }
-   DBGTRC(debug, TRACE_GROUP, "Returning %s, *packet_ptr=%p", ddcrc_desc(rc), *packet_ptr_addr);
-   if ( debug || IS_TRACING() ) {
-      if (rc >= 0)
-         dump_packet(*packet_ptr_addr);
-   }
+   DBGMSF(debug, "Returning %s, *packet_ptr=%p", ddcrc_desc(rc), *packet_ptr_addr);
+   if ( debug && rc >= 0)
+      dump_packet(*packet_ptr_addr);
+
+   assert( (rc == 0 && *packet_ptr_addr) || (rc != 0 && !*packet_ptr_addr));
    return rc;
 }
 
@@ -1091,8 +1036,7 @@ Status_DDC create_ddc_multi_part_read_response_packet(
                  response_type,
                  get_data_start(packet),
                  get_data_len(packet),
-                 (Interpreted_Multi_Part_Read_Fragment *) aux_data,
-                 true);
+                 (Interpreted_Multi_Part_Read_Fragment *) aux_data);
       }
    }
    if (rc != 0 && packet) {
@@ -1106,6 +1050,7 @@ Status_DDC create_ddc_multi_part_read_response_packet(
 
 // VCP Feature response
 
+// 4/2017: used only in ddc_vcp_tests.c:
 Status_DDC
 create_ddc_getvcp_response_packet(
        Byte *         i2c_response_bytes,
@@ -1160,114 +1105,36 @@ create_ddc_getvcp_response_packet(
 // Operations on response packets
 // 
 
-// Capabilities 
-
-#ifdef OLD
-Status_DDC get_interpreted_capabilities_fragment(
-                     DDC_Packet *  packet,
-                     bool          make_copy,
-                     Interpreted_Capabilities_Fragment ** interpreted_ptr)
-{
-   // DBGMSG("Starting");
-   Status_DDC rc = DDCRC_OK;
-   if (packet->type != DDC_PACKET_TYPE_CAPABILITIES_RESPONSE)
-      rc = COUNT_STATUS_CODE(DDCRC_RESPONSE_TYPE);
-   else {
-      if (make_copy) {
-         Interpreted_Capabilities_Fragment * copy =
-            malloc(sizeof(Interpreted_Capabilities_Fragment));
-         memcpy(copy, packet->aux_data, sizeof(Interpreted_Capabilities_Fragment));
-         *interpreted_ptr = copy;
-      }
-      else {
-         *interpreted_ptr = packet->aux_data;
-      }
-   }
-   return rc;
-}
-#endif
-
-#ifdef OLD
-int get_capabilities_offset(DDC_Packet * packet, int * offset_ptr) {
-   Interpreted_Capabilities_Fragment * aux_ptr;
-   int rc = get_interpreted_capabilities_fragment(packet, false, &aux_ptr );
-   if (rc == 0) {
-      *offset_ptr = aux_ptr->fragment_offset;
-   }
-
-   return rc;
-}
-#endif
-
-#ifdef UNUSED
-
-int get_capabilities_fragment(DDC_Packet * packet, char ** fragment_ptr) {
-   Interpreted_Capabilities_Fragment * aux_ptr;
-   int rc = get_interpreted_capabilities_fragment(packet, false, &aux_ptr );
-   if (rc == 0) {
-      // Interpreted_Capabilities_Fragment contains no pointers, so no need for deep copy
-      memcpy(*fragment_ptr, aux_ptr->text, aux_ptr->fragment_length_wo_null+1);
-   }
-   return rc;
-}
-
-#endif
-
-
-
-// Table Read
-
-#ifdef UNUSED
-
-Status_DDC get_interpreted_table_read_fragment(
-                     DDC_Packet *  packet,
-                     bool          make_copy,
-                     Interpreted_Table_Read_Fragment ** interpreted_ptr)
-{
-   // DBGMSG("Starting");
-   Status_DDC rc = DDCRC_OK;
-   if (packet->type != DDC_PACKET_TYPE_TABLE_READ_RESPONSE)
-      rc = COUNT_STATUS_CODE(DDCRC_RESPONSE_TYPE);
-   else {
-      if (make_copy) {
-         Interpreted_Table_Read_Fragment * copy =
-            malloc(sizeof(Interpreted_Table_Read_Fragment));
-         memcpy(copy, packet->aux_data, sizeof(Interpreted_Table_Read_Fragment));
-         *interpreted_ptr = copy;
-      }
-      else {
-         *interpreted_ptr = packet->aux_data;
-      }
-   }
-   return rc;
-}
-
-
-Status_DDC get_table_read_offset(DDC_Packet * packet, int * offset_ptr) {
-   Interpreted_Table_Read_Fragment * aux_ptr;
-   int rc = get_interpreted_table_read_fragment(packet, false, &aux_ptr );
-   if (rc == 0) {
-      *offset_ptr = aux_ptr->fragment_offset;
-   }
-   return rc;
-}
-
-#endif
 
 // VCP Feature Code
 
-Status_DDC get_interpreted_vcp_code(
+/** Extracts the interpretation of a non-table VCP response from a #DDC_Packet.
+ *
+ *  This is the aux_data field of #DDC_Packet
+ *
+ * \param   packet  pointer to digested packet (not raw bytes)
+ * \param   make_copy  if true, make a copy of the aux_data field,\n
+ *                     if false, just return a pointer to it
+ * \param   interpeted_ptr  where to return newly allocated #Parsed_Nontable_Vcp_Response
+ * \retval  0    success
+ * \retval  DDCRC_RESPONSE_TYPE  not a VCP response packet
+ *
+ * The value pointed to by **interpreted_ptr** is non-null iff the returned status code is 0.
+ */
+Status_DDC
+get_interpreted_vcp_code(
        DDC_Packet *            packet,
        bool                    make_copy,
        Parsed_Nontable_Vcp_Response ** interpreted_ptr)
 {
    bool debug = false;
-   if (debug)
-      DBGMSG("Starting");
+   DBGMSF(debug, "Starting");
+
    Status_DDC rc = DDCRC_OK;
    if (packet->type != DDC_PACKET_TYPE_QUERY_VCP_RESPONSE) {
       COUNT_STATUS_CODE(DDCRC_RESPONSE_TYPE);
       rc = DDCRC_RESPONSE_TYPE;
+      *interpreted_ptr = NULL;
    }
    else {
       if (make_copy) {
@@ -1280,10 +1147,11 @@ Status_DDC get_interpreted_vcp_code(
          *interpreted_ptr = packet->aux_data;
       }
    }
-   if (debug)
-      DBGMSG("Returning %d: %s\n", rc, psc_desc(rc) );
+   DBGMSF(debug, "Returning %d: %s\n", rc, psc_desc(rc) );
+   assert( (rc == 0 && *interpreted_ptr) || (rc && !*interpreted_ptr));
    return rc;
 }
+
 
 // 12/23/2015: not currently used
 Status_DDC get_vcp_cur_value(DDC_Packet * packet, int * value_ptr) {

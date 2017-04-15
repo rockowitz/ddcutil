@@ -24,7 +24,7 @@
  */
 
 /** \file
- *
+ * Virtual Control Panel access
  */
 
 #include <config.h>
@@ -323,12 +323,11 @@ set_vcp_value(
 // Get VCP values
 //
 
-/* Gets the value for a non-table feature.
+/** Gets the value for a non-table feature.
  *
- * Arguments:
- *   dh                 handle for open display
- *   feature_code
- *   ppInterpretedCode  where to return parsed response
+ *  \param  dh                 handle for open display
+ *  \param  feature_code       VCP feature code
+ *  \param  ppInterpretedCode  where to return parsed response
  *
  * Returns:
  *   status code
@@ -337,8 +336,7 @@ set_vcp_value(
  */
 Public_Status_Code get_nontable_vcp_value(
        Display_Handle *               dh,
-       Byte                           feature_code,
-  //   bool                           retry_null_response,
+       DDCA_Vcp_Feature_Code          feature_code,
        Parsed_Nontable_Vcp_Response** ppInterpretedCode)
 {
    bool debug = false;
@@ -377,25 +375,25 @@ Public_Status_Code get_nontable_vcp_value(
 
    if (psc == 0) {
       // ??? why is this allocated?  it's discarded by get_interpreted_vcp_code()?
-      parsed_response = (Parsed_Nontable_Vcp_Response *) calloc(1, sizeof(Parsed_Nontable_Vcp_Response));
+      // parsed_response = (Parsed_Nontable_Vcp_Response *) calloc(1, sizeof(Parsed_Nontable_Vcp_Response));
 
       psc = get_interpreted_vcp_code(response_packet_ptr, true /* make_copy */, &parsed_response);   // ???
-      //if (msgLevel >= VERBOSE)
       // if (output_level >= OL_VERBOSE)
       //    report_interpreted_nontable_vcp_response(interpretation_ptr);
-   }
 
-   if (psc == 0) {
-      if (!parsed_response->valid_response)  {
-         psc = DDCRC_INVALID_DATA;
+      if (psc == 0) {
+         if (!parsed_response->valid_response)  {
+            psc = DDCRC_INVALID_DATA;
+         }
+         else if (!parsed_response->supported_opcode) {
+            psc = DDCRC_REPORTED_UNSUPPORTED;
+         }
+         if (psc != 0) {
+            free(parsed_response);
+            parsed_response = NULL;
+         }
       }
-      else if (!parsed_response->supported_opcode) {
-         psc = DDCRC_REPORTED_UNSUPPORTED;
-      }
-      if (psc != 0) {
-         free(parsed_response);
-         parsed_response = NULL;
-      }
+
    }
 
    if (request_packet_ptr)
@@ -461,18 +459,18 @@ Public_Status_Code get_table_vcp_value(
 }
 
 
-/* Gets the value of a VCP feature.
+/** Gets the value of a VCP feature.
  *
- * Arguments:
- *   dh              handle for open display
- *   feature_code    feature code id
- *   call_type       indicates whether table or non-table
- *   pvalrec         location where to return newly allocated result
+ * \param  dh              handle for open display
+ * \param  feature_code    feature code id
+ * \param  call_type       indicates whether table or non-table
+ * \param  pvalrec         location where to return newly allocated #DDCA_Single_Vcp_Value
  *
- * Returns:
- *   status code
+ * \return status code
  *
- * The caller is responsible for freeing the value result returned.
+ * The value pointed to by pvalrec is non-null iff the returned status code is 0.
+ *
+ * The caller is responsible for freeing the value pointed returned at pvalrec.
  */
 Public_Status_Code
 get_vcp_value(
@@ -485,10 +483,7 @@ get_vcp_value(
    DBGTRC(debug, TRACE_GROUP, "Starting. Reading feature 0x%02x, dh=%s, dh->fh=%d",
             feature_code, display_handle_repr(dh), dh->fh);
 
-  // bool retry_null_response = true;   // *** TEMP ***
-
    Public_Status_Code psc = 0;
-
    Buffer * buffer = NULL;
    Parsed_Nontable_Vcp_Response * parsed_nontable_response = NULL;  // vs interpreted ..
    DDCA_Single_Vcp_Value * valrec = NULL;
@@ -517,7 +512,7 @@ get_vcp_value(
                 break;
 
           case (DDCA_TABLE_VCP_VALUE):
-                psc = DDCRC_REPORTED_UNSUPPORTED;
+                psc = DDCL_UNIMPLEMENTED;
                 break;
           }
 #else
@@ -531,7 +526,6 @@ get_vcp_value(
             psc = get_nontable_vcp_value(
                      dh,
                      feature_code,
-                 //     retry_null_response,
                      &parsed_nontable_response);
             if (psc == 0) {
                valrec = create_nontable_vcp_value(

@@ -3,7 +3,7 @@
  * Functions for creating DDC packets and interpreting DDC response packets.
  *
  * <copyright>
- * Copyright (C) 2014-2016 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2014-2017 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -23,6 +23,9 @@
  * </endcopyright>
  */
 
+/** \file
+ *  Functions for creating DDC packets and interpreting DDC response packets.
+ */
 #ifndef DDC_PACKETS_H_
 #define DDC_PACKETS_H_
 
@@ -65,22 +68,9 @@ typedef struct {
 } Parsed_VCP_Response_Data;
 #endif
 
-typedef
-struct {
-   Buffer * buf;
-   char     tag[MAX_DDC_TAG+1];    // +1 for \0
-   Byte     type;
-   void *   aux_data;      // type dependent
-   // additional fields for new way of parsing result data
-   // Parsed_Response_Data * parsed_response;
-} DDC_Packet;
-
-void dump_packet(DDC_Packet * packet);
-
-bool is_double_byte(Byte * pb);
 
 // TODO: Unify with list in ddc_command_codes.h
-
+typedef Byte DDC_Packet_Type;
 #define DDC_PACKET_TYPE_NONE                  0x00
 #define DDC_PACKET_TYPE_QUERY_VCP_REQUEST     0x01
 #define DDC_PACKET_TYPE_QUERY_VCP_RESPONSE    0x02
@@ -92,18 +82,33 @@ bool is_double_byte(Byte * pb);
 #define DDC_PACKET_TYPE_TABLE_READ_REQUEST    0xe2
 #define DDC_PACKET_TYPE_TABLE_READ_RESPONSE   0xe4
 #define DDC_PACKET_TYPE_TABLE_WRITE_REQUEST   0xe7
-#define DDC_PACKET_TYPE_
+
+
+typedef
+struct {
+   Buffer * buf;
+   char     tag[MAX_DDC_TAG+1];    // debug string describing packet, +1 for \0
+   DDC_Packet_Type     type;       // packet type
+   void *   aux_data;      // type dependent
+   // additional fields for new way of parsing result data
+   // Parsed_Response_Data * parsed_response;
+} DDC_Packet;
+
+void dump_packet(DDC_Packet * packet);
+
+bool is_double_byte(Byte * pb);
+
 
 Byte xor_bytes(Byte * bytes, int len);
 Byte ddc_checksum(Byte * bytes, int len, bool altmode);
 bool valid_ddc_packet_checksum(Byte * readbuf);
 void test_checksum();
 
-
+/** Interpretation of a packet of type DDC_PACKET_TYPE_QUERY_VCP_RESPONSE */
 typedef
 struct {
-   Byte   vcp_code;
-   bool   valid_response;
+   Byte   vcp_code;             ///< VCP feature code
+   bool   valid_response;       ///<
    bool   supported_opcode;
    int    max_value;
    int    cur_value;
@@ -120,7 +125,7 @@ struct {
 
 typedef
 struct {
-   DDCA_Vcp_Value_Type                  response_type;
+   DDCA_Vcp_Value_Type             response_type;
    Parsed_Nontable_Vcp_Response *  non_table_response;
    Buffer *                        table_response;
 } Parsed_Vcp_Response;
