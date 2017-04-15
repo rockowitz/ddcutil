@@ -171,7 +171,7 @@ try_multi_part_read(
 #ifdef OLD
          report_interpreted_multi_read_fragment(response_packet_ptr->aux_data);
 #endif
-         report_interpreted_multi_read_fragment(response_packet_ptr->parsed.multi_part_read_fragment);
+         report_interpreted_multi_read_fragment(response_packet_ptr->parsed.multi_part_read_fragment, 0);
       }
 
       Interpreted_Multi_Part_Read_Fragment * aux_data_ptr =

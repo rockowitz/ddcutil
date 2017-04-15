@@ -29,7 +29,9 @@
 #ifndef DDC_PACKETS_H_
 #define DDC_PACKETS_H_
 
+/** \cond */
 #include <stdbool.h>
+/** \endcond */
 
 #include "ddcutil_types.h"
 
@@ -48,6 +50,7 @@
 #define MAX_DDC_PACKET_WO_CHECKSUM  38
 #define MAX_DDC_PACKET_INC_CHECKSUM 39
 
+// also is max table fragment size
 #define MAX_DDC_CAPABILITIES_FRAGMENT_SIZE 32
 
 #define MAX_DDC_TAG 39
@@ -261,9 +264,18 @@ get_interpreted_vcp_code(
       bool          make_copy,
       Parsed_Nontable_Vcp_Response ** interpreted_ptr);
 
-void   report_interpreted_capabilities(Interpreted_Multi_Part_Read_Fragment * interpreted);
-void   report_interpreted_multi_read_fragment(Interpreted_Multi_Part_Read_Fragment * interpreted);
-void   report_interpreted_nontable_vcp_response(Parsed_Nontable_Vcp_Response * interpreted, int depth);
+void
+report_interpreted_capabilities(
+      Interpreted_Multi_Part_Read_Fragment * interpreted,
+      int depth);
+void
+report_interpreted_multi_read_fragment(
+      Interpreted_Multi_Part_Read_Fragment * interpreted,
+      int depth);
+void
+report_interpreted_nontable_vcp_response(
+      Parsed_Nontable_Vcp_Response * interpreted,
+      int depth);
 #ifdef OLD
 void   report_interpreted_aux_data(Byte response_type, void * interpreted);
 #endif

@@ -218,7 +218,7 @@ void dump_packet(DDC_Packet * packet) {
       switch(packet->type) {
       case (DDC_PACKET_TYPE_CAPABILITIES_RESPONSE):
       case (DDC_PACKET_TYPE_TABLE_READ_RESPONSE):
-         report_interpreted_multi_read_fragment(packet->parsed.multi_part_read_fragment);
+         report_interpreted_multi_read_fragment(packet->parsed.multi_part_read_fragment, 0);
          break;
       case (DDC_PACKET_TYPE_QUERY_VCP_RESPONSE):
          report_interpreted_nontable_vcp_response(packet->parsed.nontable_response, 0);
@@ -712,11 +712,16 @@ create_ddc_response_packet(
 
 // Capabilities response data 
 
-void report_interpreted_capabilities(Interpreted_Multi_Part_Read_Fragment * interpreted) {
-   printf("Capabilities response contents:\n");
-   printf("   offset:          %d\n", interpreted->fragment_offset);
-   printf("   fragment length: %d\n", interpreted->fragment_length);
-   printf("   text:            |%.*s|\n", interpreted->fragment_length, interpreted->bytes);
+void
+report_interpreted_capabilities(
+      Interpreted_Multi_Part_Read_Fragment * interpreted,
+      int depth)
+{
+   int d1 = depth+1;
+   rpt_vstring(depth, "Capabilities response contents:");
+   rpt_vstring(d1,    "offset:          %d", interpreted->fragment_offset);
+   rpt_vstring(d1,    "fragment length: %d", interpreted->fragment_length);
+   rpt_vstring(d1,    "text:            |%.*s|", interpreted->fragment_length, interpreted->bytes);
 }
 
 
@@ -767,17 +772,22 @@ interpret_multi_part_read_response(
 }
 
 
-void report_interpreted_multi_read_fragment(Interpreted_Multi_Part_Read_Fragment * interpreted) {
-   printf("Multi-read response contents:\n");
-   printf("   frament type:    0x%02x\n", interpreted->fragment_type);
-   printf("   offset:          %d\n", interpreted->fragment_offset);
-   printf("   fragment length: %d\n", interpreted->fragment_length);
-   printf("   data addr:       %p\n", interpreted->bytes);
+void
+report_interpreted_multi_read_fragment(
+      Interpreted_Multi_Part_Read_Fragment * interpreted,
+      int depth)
+{
+   int d1 = depth+1;
+   rpt_vstring(depth, "Multi-read response contents:");
+   rpt_vstring(d1,    "fragment type:   0x%02x", interpreted->fragment_type);
+   rpt_vstring(d1,    "offset:          %d",     interpreted->fragment_offset);
+   rpt_vstring(d1,    "fragment length: %d",     interpreted->fragment_length);
+   rpt_vstring(d1,    "data addr:       %p",     interpreted->bytes);
    if (interpreted->fragment_type == DDC_PACKET_TYPE_CAPABILITIES_RESPONSE)
-   printf("   text:            |%.*s|\n", interpreted->fragment_length, interpreted->bytes);
+   rpt_vstring(d1,    "text:            |%.*s|", interpreted->fragment_length, interpreted->bytes);
    else {
-      char * hs = hexstring(interpreted->bytes, interpreted->fragment_length);
-      printf("   data:            0x%s\n", hs);
+      char * hs = hexstring(interpreted->bytes,  interpreted->fragment_length);
+      rpt_vstring(d1, "data:            0x%s", hs);
       free(hs);
    }
 }
