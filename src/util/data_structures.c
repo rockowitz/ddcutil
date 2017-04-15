@@ -486,7 +486,7 @@ typedef struct {
  * \return iterator
  */
 Byte_Bit_Flags_Iterator bbf_iter_new(Byte_Bit_Flags bbflags) {
-   _Byte_Bit_Flags_Iterator * result = malloc(sizeof(Byte_Bit_Flags_Iterator));
+   _Byte_Bit_Flags_Iterator * result = malloc(sizeof(_Byte_Bit_Flags_Iterator));
    memcpy(result->marker, BBF_ITER_MARKER, 4);
    result->bbflags = bbflags;   // TODO: save pointer to unopaque _BitByteFlags
    result->lastpos = -1;
