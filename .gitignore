@@ -120,6 +120,7 @@ src/swig/ddc_swig3.py
 src/swig/*_wrap.c
 *plist/
 clang-report/
+*clang_output*
 cov-int/
 ddcutil-coverity.tgz
 *.diff
