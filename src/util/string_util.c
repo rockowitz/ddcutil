@@ -783,6 +783,7 @@ bool hhs_to_byte_in_buf(const char * s, Byte * result) {
 bool any_one_byte_hex_string_to_byte_in_buf(const char * s, Byte * result) {
    // printf("(%s) s = |%s|\n", __func__, s);
    char * suc = strdup_uc(s);
+   char * suc0 = suc;
    if (str_starts_with(suc, "0X"))
          suc = suc + 2;
    else if (*suc == 'X')
@@ -790,7 +791,7 @@ bool any_one_byte_hex_string_to_byte_in_buf(const char * s, Byte * result) {
    else if (str_ends_with(suc, "H"))
          *(suc+strlen(suc)-1) = '\0';
    bool ok = hhs_to_byte_in_buf(suc, result);
-   free(suc);
+   free(suc0);
    // printf("(%s) returning %d, *result=0x%02x\n", __func__, ok, *result);
    return ok;
 }
