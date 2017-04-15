@@ -329,10 +329,11 @@ set_vcp_value(
  *  \param  feature_code       VCP feature code
  *  \param  ppInterpretedCode  where to return parsed response
  *
- * Returns:
- *   status code
+ *  \return status code
  *
  * It is the responsibility of the caller to free the parsed response.
+ *
+ * The value pointed to by ppInterpretedCode is non-null iff the returned status code is 0.
  */
 Public_Status_Code get_nontable_vcp_value(
        Display_Handle *               dh,
@@ -404,6 +405,7 @@ Public_Status_Code get_nontable_vcp_value(
    DBGTRC(debug, TRACE_GROUP,
           "Returning %s, *ppinterpreted_code=%p", psc_desc(psc), parsed_response);
    *ppInterpretedCode = parsed_response;
+   assert( (psc == 0 && parsed_response) || (psc < 0 && !parsed_response));
    return psc;
 }
 
