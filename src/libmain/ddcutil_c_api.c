@@ -574,6 +574,19 @@ ddca_create_usb_display_identifier(
    return 0;
 }
 
+
+DDCA_Status
+ddca_create_usb_hiddev_display_identifier(
+      int                      hiddev_devno,
+      DDCA_Display_Identifier* p_did)
+{
+   Display_Identifier* did = create_usb_hiddev_display_identifier(hiddev_devno);
+   *p_did = did;
+   return 0;
+}
+
+
+
 DDCA_Status
 ddca_free_display_identifier(
       DDCA_Display_Identifier did)
@@ -900,13 +913,13 @@ ddca_get_displays()
             curinfo->loc.i2c_busno = dref->busno;
             break;
          case DDCA_IO_ADL:
-            curinfo->loc.adl.iAdapterIndex = dref->iAdapterIndex;
-            curinfo->loc.adl.iDisplayIndex = dref->iDisplayIndex;
+            curinfo->loc.adlno.iAdapterIndex = dref->iAdapterIndex;
+            curinfo->loc.adlno.iDisplayIndex = dref->iDisplayIndex;
             break;
          case DDCA_IO_USB:
-            curinfo->loc.usb.usb_bus    = dref->usb_bus;
-            curinfo->loc.usb.usb_device = dref->usb_device;
-            curinfo->loc.usb.hiddev_devno = dref->usb_hiddev_devno;
+            curinfo->usb_bus    = dref->usb_bus;
+            curinfo->usb_device = dref->usb_device;
+            curinfo->loc.hiddev_devno = dref->usb_hiddev_devno;
             break;
          }
          curinfo->edid_bytes    = drec.edid->bytes;
@@ -955,12 +968,12 @@ ddca_report_display_info(
          break;
    case (DDCA_IO_ADL):
          rpt_vstring(d1, "ADL adapter.display:  %d.%d",
-                         dinfo->loc.adl.iAdapterIndex, dinfo->loc.adl.iDisplayIndex);
+                         dinfo->loc.adlno.iAdapterIndex, dinfo->loc.adlno.iDisplayIndex);
          break;
    case (DDCA_IO_USB):
          rpt_vstring(d1, "USB bus.device:       %d.%d",
-                         dinfo->loc.usb.usb_bus, dinfo->loc.usb.usb_device);
-         rpt_vstring(d1, "USB hiddev number:    %d", dinfo->loc.usb.hiddev_devno);
+                         dinfo->usb_bus, dinfo->usb_device);
+         rpt_vstring(d1, "USB hiddev number:    %d", dinfo->loc.hiddev_devno);
          break;
    }
 

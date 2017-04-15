@@ -146,13 +146,13 @@ adlshim_find_display_by_mfg_model_sn(
 /** Mock implementation.
  * @retval {-1,-1}
  */
-Adlno
+DDCA_Adlno
 adlshim_find_adlno_by_mfg_model_sn(
       const char * mfg_id,
       const char * model,
       const char * sn)
 {
-   Adlno result = {-1,-1};
+   DDCA_Adlno result = {-1,-1};
    return result;
 }
 

@@ -217,13 +217,18 @@ typedef void * DDCA_Display_Handle;
 ///@}
 
 
+typedef struct {
+   int iAdapterIndex;
+   int iDisplayIndex;
+} DDCA_Adlno;
+// uses -1,-1 for unset
+
+
 //
 // Display Information
 //
 
-/** Indicates how a display is accessed
- *
- */
+/** Indicates how a display is accessed */
 typedef enum {
    DDCA_IO_DEVI2C,     /**< Use DDC to communicate with a /dev/i2c-n device */
    DDCA_IO_ADL,        /**< Use ADL API */
@@ -231,6 +236,7 @@ typedef enum {
 } DDCA_IO_Mode;
 
 
+#ifdef OLD
 // Does this make the API and data structures clearer or more obscure?
 /** Describes a display's access mode and the location identifiers for that mode
  *
@@ -251,6 +257,20 @@ typedef struct {
       } usb;
    };
 } DDCA_Display_Location;
+#endif
+
+/** Describes a display's access mode and the location identifiers for that mode
+ *
+ */
+typedef struct {
+   DDCA_IO_Mode io_mode;
+   union {
+      int        i2c_busno;
+      DDCA_Adlno adlno;
+      int        hiddev_devno;
+   };
+} DDCA_Display_Path;
+
 
 
 #define DDCA_DISPLAY_INFO_MARKER "DDIN"
@@ -268,8 +288,10 @@ typedef struct {
    int              usb_bus;
    int              usb_device;
 #endif
-   DDCA_Display_Location loc;
+   DDCA_Display_Path loc;
 
+   int              usb_bus;
+   int              usb_device;
    // or should these be actual character/byte arrays instead of pointers?
    const char *     mfg_id;
    const char *     model_name;

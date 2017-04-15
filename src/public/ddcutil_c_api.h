@@ -407,6 +407,19 @@ ddca_create_usb_display_identifier(
       int                      device,
       DDCA_Display_Identifier* pdid);
 
+/** Creates a display identifier using a /dev/usb/hiddev device number
+ * @param hiddev_devno hiddev device number
+ * @param pdid   where to return display identifier handle
+ * @return       status code
+ *
+ *  \ingroup api_display_spec
+ */
+DDCA_Status
+ddca_create_usb_hiddev_display_identifier(
+      int                      hiddev_devno,
+      DDCA_Display_Identifier* p_did);
+
+
 /** Release the memory of a display identifier */
 DDCA_Status
 ddca_free_display_identifier(

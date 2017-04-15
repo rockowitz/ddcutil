@@ -100,7 +100,7 @@ adlshim_find_display_by_mfg_model_sn(
       const char * sn);
 #endif
 
-Adlno
+DDCA_Adlno
 adlshim_find_adlno_by_mfg_model_sn(
       const char * mfg_id,
       const char * model,

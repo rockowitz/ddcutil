@@ -45,6 +45,12 @@
 #include "base/vcp_version.h"
 
 
+
+bool is_adlno_defined(DDCA_Adlno adlno) {
+   return adlno.iAdapterIndex >= 0 && adlno.iDisplayIndex >= 0;
+}
+
+
 // *** Display_Identifier ***
 
 static char * Display_Id_Type_Names[] = {

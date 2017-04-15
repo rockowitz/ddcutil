@@ -147,8 +147,8 @@ Display_Ref * adlshim_find_display_by_mfg_model_sn(const char * mfg_id, const ch
 #endif
 
 // used by get_fallback_hiddev_edid() in usb_edid.c
-Adlno adlshim_find_adlno_by_mfg_model_sn(const char * mfg_id, const char * model, const char * sn) {
-   Adlno result = {-1,-1};
+DDCA_Adlno adlshim_find_adlno_by_mfg_model_sn(const char * mfg_id, const char * model, const char * sn) {
+   DDCA_Adlno result = {-1,-1};
    ADL_Display_Rec * adl_rec = adl_find_display_by_mfg_model_sn(mfg_id, model, sn);
    if (adl_rec) {
       result.iAdapterIndex = adl_rec->iAdapterIndex;

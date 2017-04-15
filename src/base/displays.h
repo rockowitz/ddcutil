@@ -74,12 +74,9 @@ typedef enum {
 
 char * display_id_type_name(Display_Id_Type val);
 
+bool is_adlno_defibed(DDCA_Adlno adlno);
+#define ADLNO_UNDEFINED {-1,-1}
 
-typedef struct {
-   int iAdapterIndex;
-   int iDisplayIndex;
-} Adlno;
-// uses -1,-1 for unset
 
 
 #define DISPLAY_IDENTIFIER_MARKER "DPID"
