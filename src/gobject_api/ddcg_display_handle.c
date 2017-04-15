@@ -169,9 +169,9 @@ ddcg_display_handle_close(DdcgDisplayHandle * ddcg_dh) {
  */
 DdcgContResponse *
 ddcg_display_handle_get_nontable_vcp_value(
-               DdcgDisplayHandle *             ddcg_dh,
-               DdcgFeatureCode               feature_code,
-               GError **             error)
+               DdcgDisplayHandle *  ddcg_dh,
+               DdcgFeatureCode      feature_code,
+               GError **            error)
 {
    DdcgContResponse * ddcg_response = NULL;
    DDCA_Non_Table_Value_Response ddct_response;
