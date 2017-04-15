@@ -304,18 +304,17 @@ app_read_changes(Display_Handle * dh) {
 
    Parsed_Nontable_Vcp_Response * p_nontable_response = NULL;
 
-
    DDCA_MCCS_Version_Spec vspec = get_vcp_version_by_display_handle(dh);
    psc = get_nontable_vcp_value(
             dh,
             0x02,
-       //     false,  // retry_null_response
             &p_nontable_response);
    if (psc != 0) {
       DBGMSG("get_nontable_vcp_value() returned %s", psc_desc(psc));
    }
    else if (p_nontable_response->sl == 0x01) {
       DBGMSF(debug, "No new control values found");
+      free(p_nontable_response);
    }
    else {
       DBGMSG("x02 value: 0x%02x", p_nontable_response->sl);
@@ -327,13 +326,13 @@ app_read_changes(Display_Handle * dh) {
          psc = get_nontable_vcp_value(
                   dh,
                   0x52,
-             //     false,   // retry_null_response  ??
                   &p_nontable_response);
          if (psc != 0) {
              DBGMSG("get_nontable_vcp_value() returned %s", psc_desc(psc));
              return;
           }
           Byte changed_feature = p_nontable_response->sl;
+          free(p_nontable_response);
           app_show_single_vcp_value_by_feature_id(dh, changed_feature, false);
       }
       else {  // x52 is a FIFO
@@ -342,7 +341,6 @@ app_read_changes(Display_Handle * dh) {
             psc = get_nontable_vcp_value(
                      dh,
                      0x52,
-               //      false,     // retry_null_response ???
                      &p_nontable_response);
             if (psc != 0) {
                 DBGMSG("get_nontable_vcp_value() returned %s", psc_desc(psc));
@@ -368,10 +366,10 @@ app_read_changes(Display_Handle * dh) {
       }
    }
 
-   if (p_nontable_response) {
-      free(p_nontable_response);
-      p_nontable_response = NULL;
-   }
+   // if (p_nontable_response) {
+   //    free(p_nontable_response);
+   //    p_nontable_response = NULL;
+   // }
 }
 
 
