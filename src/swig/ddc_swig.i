@@ -36,7 +36,7 @@ ddcs_init();
 //  }
    bool exception_thrown = check_exception2();
    if (exception_thrown) {
-      printf("(ddc_swig.i:exception handler) throwing exception\n");
+      puts("(ddc_swig.i:exception handler) throwing exception");
       return NULL;
    }
 }
