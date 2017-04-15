@@ -69,41 +69,6 @@ typedef struct {
 #endif
 
 
-// TODO: Unify with list in ddc_command_codes.h
-typedef Byte DDC_Packet_Type;
-#define DDC_PACKET_TYPE_NONE                  0x00
-#define DDC_PACKET_TYPE_QUERY_VCP_REQUEST     0x01
-#define DDC_PACKET_TYPE_QUERY_VCP_RESPONSE    0x02
-#define DDC_PACKET_TYPE_SET_VCP_REQUEST       0x03    // n. no reply message
-#define DDC_PACKET_TYPE_CAPABILITIES_REQUEST  0xf3
-#define DDC_PACKET_TYPE_CAPABILITIES_RESPONSE 0xe3
-#define DDC_PACKET_TYPE_ID_REQUEST            0xf1
-#define DDC_PACKET_TYPE_ID_RESPONSE           0xe1
-#define DDC_PACKET_TYPE_TABLE_READ_REQUEST    0xe2
-#define DDC_PACKET_TYPE_TABLE_READ_RESPONSE   0xe4
-#define DDC_PACKET_TYPE_TABLE_WRITE_REQUEST   0xe7
-
-
-typedef
-struct {
-   Buffer * buf;
-   char     tag[MAX_DDC_TAG+1];    // debug string describing packet, +1 for \0
-   DDC_Packet_Type     type;       // packet type
-   void *   aux_data;      // type dependent
-   // additional fields for new way of parsing result data
-   // Parsed_Response_Data * parsed_response;
-} DDC_Packet;
-
-void dump_packet(DDC_Packet * packet);
-
-bool is_double_byte(Byte * pb);
-
-
-Byte xor_bytes(Byte * bytes, int len);
-Byte ddc_checksum(Byte * bytes, int len, bool altmode);
-bool valid_ddc_packet_checksum(Byte * readbuf);
-void test_checksum();
-
 /** Interpretation of a packet of type DDC_PACKET_TYPE_QUERY_VCP_RESPONSE */
 typedef
 struct {
@@ -122,16 +87,7 @@ struct {
 
 
 
-
-typedef
-struct {
-   DDCA_Vcp_Value_Type             response_type;
-   Parsed_Nontable_Vcp_Response *  non_table_response;
-   Buffer *                        table_response;
-} Parsed_Vcp_Response;
-
-void   report_parsed_vcp_response(Parsed_Vcp_Response * response, int depth);
-
+#ifdef OLD
 typedef
 struct {
    int   fragment_offset;
@@ -145,15 +101,76 @@ struct {
    int   fragment_length;
    Byte  read_data[MAX_DDC_CAPABILITIES_FRAGMENT_SIZE];
 } Interpreted_Table_Read_Fragment;
+#endif
 
-
+/** For digesting capabilities or table read fragment */
 typedef
 struct {
    Byte  fragment_type;       // DDC_PACKET_TYPE_CAPABILITIES_RESPONSE || DDC_PACKET_TYPE_TABLE_READ_RESPONSE
    int   fragment_offset;
-   int   fragment_length;
-   Byte  bytes[MAX_DDC_CAPABILITIES_FRAGMENT_SIZE];
+   int   fragment_length;     // without possible terminating '\0'
+   // add 1 to allow for appending a terminating '\0' in case of DDC_PACKET_TYPE_CAPABILITIES_RESPONSE
+   Byte  bytes[MAX_DDC_CAPABILITIES_FRAGMENT_SIZE+1];
 } Interpreted_Multi_Part_Read_Fragment;
+
+
+// TODO: Unify with list in ddc_command_codes.h
+typedef Byte DDC_Packet_Type;
+#define DDC_PACKET_TYPE_NONE                  0x00
+#define DDC_PACKET_TYPE_QUERY_VCP_REQUEST     0x01
+#define DDC_PACKET_TYPE_QUERY_VCP_RESPONSE    0x02
+#define DDC_PACKET_TYPE_SET_VCP_REQUEST       0x03    // n. no reply message
+#define DDC_PACKET_TYPE_CAPABILITIES_REQUEST  0xf3
+#define DDC_PACKET_TYPE_CAPABILITIES_RESPONSE 0xe3
+#define DDC_PACKET_TYPE_ID_REQUEST            0xf1
+#define DDC_PACKET_TYPE_ID_RESPONSE           0xe1
+#define DDC_PACKET_TYPE_TABLE_READ_REQUEST    0xe2
+#define DDC_PACKET_TYPE_TABLE_READ_RESPONSE   0xe4
+#define DDC_PACKET_TYPE_TABLE_WRITE_REQUEST   0xe7
+
+/** Packet bytes and interpretation */
+typedef
+struct {
+   Buffer *         buf;                ///< raw packet bytes
+   char             tag[MAX_DDC_TAG+1]; ///* debug string describing packet, +1 for \0
+   DDC_Packet_Type  type;               ///* packet type
+   void *           aux_data;           ///* type dependent
+
+   // for a bit more type safety and code clarity:
+   union {
+      Parsed_Nontable_Vcp_Response *         nontable_response;
+      Interpreted_Multi_Part_Read_Fragment * multi_part_read_fragment;
+      void *                                 raw;
+   } interpreted;
+
+   // additional fields for new way of parsing result data
+   // Parsed_Response_Data * parsed_response;
+} DDC_Packet;
+
+void dump_packet(DDC_Packet * packet);
+
+bool is_double_byte(Byte * pb);
+
+
+Byte xor_bytes(Byte * bytes, int len);
+Byte ddc_checksum(Byte * bytes, int len, bool altmode);
+bool valid_ddc_packet_checksum(Byte * readbuf);
+void test_checksum();
+
+
+
+
+
+typedef
+struct {
+   DDCA_Vcp_Value_Type             response_type;
+   Parsed_Nontable_Vcp_Response *  non_table_response;
+   Buffer *                        table_response;
+} Parsed_Vcp_Response;
+
+void   report_parsed_vcp_response(Parsed_Vcp_Response * response, int depth);
+
+
 
 
 void   free_ddc_packet(DDC_Packet * packet);
@@ -216,7 +233,7 @@ Status_DDC
 interpret_capabilities_response(
       Byte *        data_bytes,
       int           bytect,
-      Interpreted_Capabilities_Fragment * aux_data,
+      Interpreted_Multi_Part_Read_Fragment * aux_data,
       bool          debug);
 
 DDC_Packet *
@@ -244,7 +261,7 @@ get_interpreted_vcp_code(
       bool          make_copy,
       Parsed_Nontable_Vcp_Response ** interpreted_ptr);
 
-void   report_interpreted_capabilities(Interpreted_Capabilities_Fragment * interpreted);
+void   report_interpreted_capabilities(Interpreted_Multi_Part_Read_Fragment * interpreted);
 void   report_interpreted_multi_read_fragment(Interpreted_Multi_Part_Read_Fragment * interpreted);
 void   report_interpreted_nontable_vcp_response(Parsed_Nontable_Vcp_Response * interpreted, int depth);
 void   report_interpreted_aux_data(Byte response_type, void * interpreted);

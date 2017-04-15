@@ -282,6 +282,7 @@ DDC_Packet * create_empty_ddc_packet(int max_size, const char * tag) {
    // DBGMSG("packet->tag=%s", packet->tag);
    packet->type = DDC_PACKET_TYPE_NONE;
    packet->aux_data = NULL;
+   // packet->interpreted.raw = NULL;     // future
 
    DBGMSF(debug, "Done. Returning %p, packet->tag=%p", packet, packet->tag);
    if (debug)
@@ -686,11 +687,11 @@ create_ddc_response_packet(
 
 // Capabilities response data 
 
-void report_interpreted_capabilities(Interpreted_Capabilities_Fragment * interpreted) {
+void report_interpreted_capabilities(Interpreted_Multi_Part_Read_Fragment * interpreted) {
    printf("Capabilities response contents:\n");
    printf("   offset:          %d\n", interpreted->fragment_offset);
-   printf("   fragment length: %d\n", interpreted->fragment_length_wo_null);
-   printf("   text:            |%.*s|\n", interpreted->fragment_length_wo_null, interpreted->text);
+   printf("   fragment length: %d\n", interpreted->fragment_length);
+   printf("   text:            |%.*s|\n", interpreted->fragment_length, interpreted->bytes);
 }
 
 
@@ -700,7 +701,7 @@ void report_interpreted_capabilities(Interpreted_Capabilities_Fragment * interpr
  *  \param  data_bytes
  *  \param  bytect
  *  \param  aux_data       pointer to #Interpreted_Multi_Part_Read_Fragment to fill in
- *  \reatval 0 success
+ *  \retval 0 success
  *  \retval  DDCRC_INVALID_DATA
  */
 Status_DDC
@@ -1029,7 +1030,7 @@ Status_DDC create_ddc_multi_part_read_response_packet(
          rc = COUNT_STATUS_CODE(DDCRC_INVALID_DATA);
       }
       else {
-         void * aux_data = calloc(1, sizeof(Interpreted_Capabilities_Fragment));
+         void * aux_data = calloc(1, sizeof(Interpreted_Multi_Part_Read_Fragment));
          packet->aux_data = aux_data;
 
          rc = interpret_multi_part_read_response(
@@ -1115,7 +1116,7 @@ create_ddc_getvcp_response_packet(
  * \param   packet  pointer to digested packet (not raw bytes)
  * \param   make_copy  if true, make a copy of the aux_data field,\n
  *                     if false, just return a pointer to it
- * \param   interpeted_ptr  where to return newly allocated #Parsed_Nontable_Vcp_Response
+ * \param   interpreted_ptr  where to return newly allocated #Parsed_Nontable_Vcp_Response
  * \retval  0    success
  * \retval  DDCRC_RESPONSE_TYPE  not a VCP response packet
  *
