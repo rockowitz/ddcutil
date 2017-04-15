@@ -339,7 +339,9 @@ ddc_set_multiple(
  *  the monitor specified in that data structure.
  *
  * @param  pdata      pointer to #Dumpload_Data instance
- * @param  dh         display handle for open display
+ * @param  dh         display handle for open display,
+ *                    if NULL, open the find the display based on the identifiers
+ *                    in the data and open it
  *
  * @return   status code
  */
@@ -396,6 +398,7 @@ loadvcp_by_dumpload_data(
       assert(did);
       Display_Ref * dref = get_display_ref_for_display_identifier(
                               did, CALLOPT_NONE);
+      free_display_identifier(did);
       if (!dref) {
          f0printf(FERR, "Monitor not connected: %s - %s   \n", pdata->model, pdata->serial_ascii );
          psc = DDCRC_INVALID_DISPLAY;
