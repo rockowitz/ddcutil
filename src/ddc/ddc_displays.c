@@ -1453,9 +1453,7 @@ ddc_check_display_ref(Display_Ref * dref, Display_Criteria * criteria) {
    if (criteria->hiddev >= 0) {
       if (dref->io_mode != DDCA_IO_USB)
          goto bye;
-      // if ( drec->detail.usb_detail->hiddev_devinfo->devnum != criteria->usb_devno )
-      if ( dref->usb_hiddev_devno != criteria->usb_devno )
-         // DBGMSG("hiddev devno unimplemented");
+      if ( dref->usb_hiddev_devno != criteria->hiddev )
          goto bye;
    }
 
