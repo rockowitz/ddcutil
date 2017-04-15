@@ -1229,7 +1229,7 @@ ddca_get_nontable_vcp_value(
           response->nc.ml        = code_info->ml;
           response->nc.sh        = code_info->sh;
           response->nc.sl        = code_info->sl;
-          free(response);
+          free(code_info);
        }
        // else psc = global_to_public_status_code(gsc);
     } );
