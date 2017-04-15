@@ -1084,12 +1084,13 @@ char * get_controller_mfg_string(Display_Handle * dh) {
  * Output is written using report functions
  *
  * \param dref   pointer to display reference
- * \param depth     logical indentation depth
+ * \param depth  logical indentation depth
  */
 void
 ddc_report_display_by_dref(Display_Ref * dref, int depth) {
    bool debug = false;
    DBGMSF(debug, "Starting");
+   assert(dref);
    assert(memcmp(dref->marker, DISPLAY_REF_MARKER, 4) == 0);
    int d1 = depth+1;
 
