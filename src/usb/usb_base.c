@@ -86,8 +86,9 @@ int usb_open_hiddev_device(
    // per man open:
    // returns file descriptor if successful
    // -1 if error, and errno is set
-   int errsv = errno;
+
    if (file < 0) {
+      int errsv = errno;
       if (calloptions & CALLOPT_ERR_ABORT)
          TERMINATE_EXECUTION_ON_ERROR(
                "Open failed for %s: errno=%s", hiddev_devname, linux_errno_desc(errsv));
@@ -101,10 +102,9 @@ int usb_open_hiddev_device(
    if (file >= 0)
    {
       // Solves problem of ddc detect not getting edid unless ddcutil env called first
-      errsv = errno;
       int rc = ioctl(file, HIDIOCINITREPORT);
       if (rc < 0) {
-         errsv = errno;
+         int errsv = errno;
          // call should never fail.  always wrote an error message
          REPORT_IOCTL_ERROR("HIDIOCGREPORT", rc);
          close(file);
