@@ -1201,19 +1201,24 @@ ddct_get_nc_feature_value_name(
 }
 
 
-// n.b. fills in the response buffer provided by the caller, does not allocate
+/** Gets the value of a non-table VCP feature.
+ *
+ *  \param ddca_dh      handle of open display
+ *  \param feature_code VCP feature code
+ *  \param response     pointer to existing #DDCA_Non_Table_Value_Response that is filled in
+ *  \return             status code
+ */
 DDCA_Status
 ddca_get_nontable_vcp_value(
-      DDCA_Display_Handle             ddct_dh,
-      DDCA_Vcp_Feature_Code                feature_code,
+      DDCA_Display_Handle             ddca_dh,
+      DDCA_Vcp_Feature_Code           feature_code,
       DDCA_Non_Table_Value_Response * response)
 {
-   WITH_DH(ddct_dh,  {
+   WITH_DH(ddca_dh,  {
        Parsed_Nontable_Vcp_Response * code_info;
        psc = get_nontable_vcp_value(
                 dh,
                 feature_code,
-         //       true,               // retry_null_response  ???
                 &code_info);
        // DBGMSG(" get_nontable_vcp_value() returned %s", gsc_desc(gsc));
        if (psc == 0) {
@@ -1224,6 +1229,7 @@ ddca_get_nontable_vcp_value(
           response->nc.ml        = code_info->ml;
           response->nc.sh        = code_info->sh;
           response->nc.sl        = code_info->sl;
+          free(response);
        }
        // else psc = global_to_public_status_code(gsc);
     } );
