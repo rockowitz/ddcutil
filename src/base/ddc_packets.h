@@ -131,17 +131,17 @@ typedef Byte DDC_Packet_Type;
 /** Packet bytes and interpretation */
 typedef
 struct {
-   Buffer *         buf;                ///< raw packet bytes
+   Buffer *         raw_bytes;                ///< raw packet bytes
    char             tag[MAX_DDC_TAG+1]; ///* debug string describing packet, +1 for \0
    DDC_Packet_Type  type;               ///* packet type
-   void *           aux_data;           ///* type dependent
+   // void *           aux_data;           ///* type dependent
 
    // for a bit more type safety and code clarity:
    union {
       Parsed_Nontable_Vcp_Response *         nontable_response;
       Interpreted_Multi_Part_Read_Fragment * multi_part_read_fragment;
-      void *                                 raw;
-   } interpreted;
+      void *                                 raw_parsed;
+   } parsed;
 
    // additional fields for new way of parsing result data
    // Parsed_Response_Data * parsed_response;
@@ -264,7 +264,9 @@ get_interpreted_vcp_code(
 void   report_interpreted_capabilities(Interpreted_Multi_Part_Read_Fragment * interpreted);
 void   report_interpreted_multi_read_fragment(Interpreted_Multi_Part_Read_Fragment * interpreted);
 void   report_interpreted_nontable_vcp_response(Parsed_Nontable_Vcp_Response * interpreted, int depth);
+#ifdef OLD
 void   report_interpreted_aux_data(Byte response_type, void * interpreted);
+#endif
 
 Byte * get_packet_start(DDC_Packet * packet);
 int    get_packet_len(  DDC_Packet * packet);

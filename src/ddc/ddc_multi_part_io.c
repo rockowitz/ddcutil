@@ -168,11 +168,18 @@ try_multi_part_read(
 
       if ( IS_TRACING() || force_debug ) {
          DBGMSF(force_debug, "After try_write_read():");
+#ifdef OLD
          report_interpreted_multi_read_fragment(response_packet_ptr->aux_data);
+#endif
+         report_interpreted_multi_read_fragment(response_packet_ptr->parsed.multi_part_read_fragment);
       }
 
       Interpreted_Multi_Part_Read_Fragment * aux_data_ptr =
+#ifdef OLD
          (Interpreted_Multi_Part_Read_Fragment *) response_packet_ptr->aux_data;
+#endif
+         response_packet_ptr->parsed.multi_part_read_fragment;
+
       int display_current_offset = aux_data_ptr->fragment_offset;
       if (display_current_offset != cur_offset) {
          DBGMSF(force_debug, "display_current_offset %d != cur_offset %d",
