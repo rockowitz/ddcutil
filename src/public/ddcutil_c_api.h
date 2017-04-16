@@ -73,15 +73,13 @@ extern "C" {
 // Library build information
 //
 
-#ifdef UNUSED
-typedef struct {
-   int    major;
-   int    minor;
-   int    build;
-} DDCA_Version_Spec;
 
-DDCA_Version_Spec ddct_get_version(void);       // ddcutil version
-#endif
+/**
+ * Returns the ddcutil version as a struct of 3 8 bit integers. .
+ *
+ * @return version numbers
+ */
+DDCA_Ddcutil_Version_Spec ddca_ddcutil_version(void);       // ddcutil version
 
 /**
  * Returns the ddcutil version as a string in the form "major.minor.micro".
@@ -306,7 +304,7 @@ void
 ddca_enable_report_ddc_errors(
       bool onoff);
 
-/** Checks whether messages describing DDC protocol errors are to output */
+/** Checks whether messages describing DDC protocol errors are output */
 bool
 ddca_is_report_ddc_errors_enabled();
 
@@ -315,11 +313,15 @@ ddca_is_report_ddc_errors_enabled();
 // Statistics
 //
 
+/** Resets all **ddcutil** statistics */
 void ddca_reset_stats();
 
-// until we define data structures for returning stats
-void ddca_show_stats(int depth);
-
+/** Show execution statistics.
+ *
+ *  \param stats_types bitflags of statistics types to show
+ *  \param depth       logical indentation depth
+ */
+void ddca_show_stats(DDCA_Stats_Type stats, int depth);
 
 
 //

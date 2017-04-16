@@ -75,7 +75,7 @@ struct {
    int                 argct;
    char *              args[MAX_ARGS];
    Feature_Set_Ref*    fref;
-   Stats_Type          stats_types;
+   DDCA_Stats_Type          stats_types;
    bool                ddcdata;
 #ifdef OLD
    Msg_Level           msg_level;

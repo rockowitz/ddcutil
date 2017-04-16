@@ -29,10 +29,10 @@
 void init_ddc_services();
 
 void ddc_reset_ddc_stats();
-void ddc_reset_all_stats();
+void ddc_reset_stats_main();
 
-void ddc_reset_all_stats();
-void ddc_report_all_stats(Stats_Type stats, int depth);
+void ddc_reset_stats_main();
+void ddc_report_stats_main(DDCA_Stats_Type stats, int depth);
 
 void ddc_report_max_tries(int depth);
 

@@ -54,7 +54,7 @@ static char *       usbwork       = NULL;
 static DDCA_Output_Level output_level  = DDCA_OL_NORMAL;
 static int          iAdapterIndex = -1;
 static int          iDisplayIndex = -1;
-static Stats_Type   stats_work    = STATS_NONE;
+static DDCA_Stats_Type   stats_work    = DDCA_STATS_NONE;
 
 
 // not currently used
@@ -117,23 +117,23 @@ gboolean stats_arg_func(const    gchar* option_name,
    if (value) {
       char * v2 = strupper(strdup(value));
       if ( streq(v2,"ALL") ) {
-         stats_work |= STATS_ALL;
+         stats_work |= DDCA_STATS_ALL;
       }
       else if (streq(v2,"TRY") || is_abbrev(v2, "TRIES",3)) {
-         stats_work |= STATS_TRIES;
+         stats_work |= DDCA_STATS_TRIES;
       }
       else if ( is_abbrev(v2, "CALLS",3)) {
-         stats_work |= STATS_CALLS;
+         stats_work |= DDCA_STATS_CALLS;
       }
       else if (streq(v2,"ERRS") || is_abbrev(v2, "ERRORS",3)) {
-         stats_work |= STATS_ERRORS;
+         stats_work |= DDCA_STATS_ERRORS;
       }
       else
          ok = false;
       free(v2);
    }
    else {
-      stats_work = STATS_ALL;
+      stats_work = DDCA_STATS_ALL;
    }
 
    if (!ok) {

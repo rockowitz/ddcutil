@@ -99,14 +99,14 @@ static long start_time_nanos;
 
 static
 void reset_stats() {
-   ddc_reset_all_stats();
+   ddc_reset_stats_main();
 }
 
 
 
 static
-void report_stats(Stats_Type stats) {
-   ddc_report_all_stats(stats, 0);
+void report_stats(DDCA_Stats_Type stats) {
+   ddc_report_stats_main(stats, 0);
    puts("");
    long elapsed_nanos = cur_realtime_nanosec() - start_time_nanos;
    printf("Elapsed milliseconds (nanoseconds):             %10ld  (%10ld)\n",
@@ -540,7 +540,7 @@ int main(int argc, char *argv[]) {
       set_output_level(DDCA_OL_VERBOSE);
       printf("Setting maximum retries...\n");
       printf("Forcing --stats...\n");
-      parsed_cmd->stats_types = STATS_ALL;
+      parsed_cmd->stats_types = DDCA_STATS_ALL;
       printf("Forcing --force-slave-address..\n");
       i2c_force_slave_addr_flag = true;
       printf("This command will take a while to run...\n\n");
@@ -554,14 +554,14 @@ int main(int argc, char *argv[]) {
       query_usbenv();
 #endif
       printf("\nStatistics for environment exploration:\n");
-      report_stats(STATS_ALL);
+      report_stats(DDCA_STATS_ALL);
       reset_stats();
 
       printf("\n*** Detected Displays ***\n");
       /* int display_ct =  */ ddc_report_all_displays(0 /* logical depth */);
       // printf("Detected: %d displays\n", display_ct);   // not needed
       printf("\nStatistics for display detection:\n");
-      report_stats(STATS_ALL);
+      report_stats(DDCA_STATS_ALL);
       reset_stats();
 
       printf("Setting output level normal  Table features will be skipped...\n");
@@ -591,7 +591,7 @@ int main(int argc, char *argv[]) {
 
             probe_display_by_dref(dref);
             printf("\nStatistics for probe of display %d:\n", dispno);
-            report_stats(STATS_ALL);
+            report_stats(DDCA_STATS_ALL);
          }
          reset_stats();
       }
@@ -729,7 +729,7 @@ int main(int argc, char *argv[]) {
       }
    }
 
-   if (parsed_cmd->stats_types != STATS_NONE && parsed_cmd->cmd_id != CMDID_INTERROGATE) {
+   if (parsed_cmd->stats_types != DDCA_STATS_NONE && parsed_cmd->cmd_id != CMDID_INTERROGATE) {
       report_stats(parsed_cmd->stats_types);
       // report_timestamp_history();  // debugging function
    }

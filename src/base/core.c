@@ -550,16 +550,11 @@ Trace_Group trace_class_name_to_value_old(char * name) {
  *  /ingroup dbgtrace
  */
 Trace_Group trace_class_name_to_value(char * name) {
-#ifdef OLD
-   return (Trace_Group) vnt_id_by_title(trace_group_table,
-                                        name,
-                                        true,      // ignore-case
-                                        TRC_NEVER);
-#endif
-   return (Trace_Group) vnt_find_id(trace_group_table,
-                                        name,
-                                        true,      // search title field
-                                        true,      // ignore-case
+   return (Trace_Group) vnt_find_id(
+                           trace_group_table,
+                           name,
+                           true,      // search title field
+                           true,      // ignore-case
                                         TRC_NEVER);
 }
 

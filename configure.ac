@@ -37,6 +37,7 @@ m4_define([ddcutil_version],
 dnl causes VERSION to be set in config.h
 AC_INIT([ddcutil], [ddcutil_version], [rockowitz@minsoft.com])
 
+
 AC_ARG_VAR(DBG, [Turn on script debugging messages(0/1)])
 dnl AC_MSG_NOTICE([DBG = |$DBG|])
 
@@ -77,6 +78,11 @@ AC_CONFIG_FILES([
 AC_CONFIG_FILES(package/upload_obsrpm, [chmod +x package/upload_obsrpm] )
 AC_CONFIG_FILES(package/build_dpkg, [chmod +x package/build_dpkg] )
 dnl cannot chmod on build_dpkg, upload_obsrpm, since they will not exist within dpkg build environment
+
+dnl not working, why?
+# AC_DEFINE_UNQUOTED([DDCUTIL_MAJOR_VERSION], [$ddcutil_major_version], [ddcutil major version])
+
+
 
 dnl removed -Werror from AM_INIT_AUTOMAKE to allow compilation to proceed
 AM_INIT_AUTOMAKE([1.11 -Wall -Wno-extra-portability foreign subdir-objects])

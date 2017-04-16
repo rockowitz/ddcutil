@@ -111,6 +111,22 @@ static inline bool valid_display_ref(Display_Ref * dref) {
 // Library Build Information
 //
 
+
+DDCA_Ddcutil_Version_Spec ddca_ddcutil_version(void) {
+   static DDCA_Ddcutil_Version_Spec vspec = {255,255,255};
+   static bool vspec_init = false;
+
+   if (!vspec_init) {
+      int ct = sscanf(BUILD_VERSION, "%hhu.%hhu.%hhu", &vspec.major, &vspec.minor, &vspec.micro);
+      assert(ct == 3);
+      vspec_init = true;
+   }
+   // DBGMSG("Returning: %d.%d.%d", vspec.major, vspec.minor, vspec.micro);
+   return vspec;
+
+}
+
+
 /*  Returns the ddcutil version as a string in the form "major.minor.micro".
  */
 const char *
@@ -463,15 +479,14 @@ ddca_set_timeout_millis(
 //
 
 void ddca_reset_stats() {
-   ddc_reset_all_stats();
+   ddc_reset_stats_main();
 }
 
-// until we define data structures for returning stats
-void ddca_show_stats(int depth) {
-   ddc_report_all_stats( 0xff,    // all stats
-                         0);      // logical indentation depth
+// TODO: Functions that return stats in data structures
+void ddca_show_stats(DDCA_Stats_Type stats_types, int depth) {
+   ddc_report_stats_main( stats_types,    // stats to show
+                          depth);         // logical indentation depth
 }
-
 
 
 //

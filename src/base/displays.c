@@ -316,7 +316,7 @@ void dsel_free(Display_Selector * dsel) {
 #endif
 
 
-// *** DisplayRef ***
+// *** Display_Ref ***
 
 static char * MCCS_IO_Mode_Names[] = {
       "DDCA_IO_DEVI2C",

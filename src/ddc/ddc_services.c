@@ -22,7 +22,7 @@
  */
 
 /** \file
- *  DDC initialization and configuration
+ *  DDC initialization and configuration, statistics management
  */
 
 /** \cond */
@@ -52,7 +52,6 @@
 // Statistics
 //
 
-
 /** Resets all DDC level statistics */
 void ddc_reset_ddc_stats() {
    ddc_reset_write_only_stats();
@@ -60,6 +59,10 @@ void ddc_reset_ddc_stats() {
    ddc_reset_multi_part_read_stats();
 }
 
+
+/** Reports all DDC level statistics
+ * \param depth logical indentation depth
+ */
 void ddc_report_ddc_stats(int depth) {
    rpt_nl();
    // retry related stats
@@ -70,22 +73,27 @@ void ddc_report_ddc_stats(int depth) {
 }
 
 
-
-void ddc_reset_all_stats() {
+/** Resets all statistics */
+void ddc_reset_stats_main() {
    ddc_reset_ddc_stats();
    reset_execution_stats();
 }
 
 
-void ddc_report_all_stats(Stats_Type stats, int depth) {
-   if (stats & STATS_TRIES) {
+/** Master function for reporting statistics.
+ *
+ * \param stats bitflags indicating which statistics to report
+ * \param depth logical indentation depth
+ */
+void ddc_report_stats_main(DDCA_Stats_Type stats, int depth) {
+   if (stats & DDCA_STATS_TRIES) {
       ddc_report_ddc_stats(depth);
    }
-   if (stats & STATS_ERRORS) {
+   if (stats & DDCA_STATS_ERRORS) {
       rpt_nl(); ;
       show_all_status_counts();   // error code counts
    }
-   if (stats & STATS_CALLS) {
+   if (stats & DDCA_STATS_CALLS) {
       rpt_nl();
       report_sleep_strategy_stats(depth);
       rpt_nl();

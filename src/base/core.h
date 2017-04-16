@@ -40,9 +40,6 @@
 
 #include "util/coredefs.h"
 
-// Map API names to shorter names used internally.
-
-
 
 // /** @addtogroup abnormal_termination
 //  */
@@ -152,20 +149,6 @@ void set_fout_to_default();
 void set_ferr_to_default();
 
 
-//
-// Performance statistics
-//
-
-/** Used as values to specify a statistics type, and as
- *  bitflags to select statistics types.
- */
-typedef enum {
-   STATS_NONE     = 0x00,    ///< no statistics
-   STATS_TRIES    = 0x01,    ///< retry statistics
-   STATS_ERRORS   = 0x02,    ///< error statistics
-   STATS_CALLS    = 0x04,    ///< system calls
-   STATS_ALL      = 0xFF     ///< indicates all statistics types
-} Stats_Type;
 
 //
 // Message level control

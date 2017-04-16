@@ -389,7 +389,10 @@ void test_build_information() {
    printf("\n(%s) ===> Starting. \n", __func__);
    printf("Probe static build information...\n");
    // Get the ddcutil version as a string in the form "major.minor.micro".
-   printf("ddcutil version: %s\n", ddca_ddcutil_version_string() );
+   printf("ddcutil version by ddca_ddcutil_version_string(): %s\n", ddca_ddcutil_version_string() );
+
+   DDCA_Ddcutil_Version_Spec vspec = ddca_ddcutil_version();
+   printf("ddcutil version by ddca_ddcutil_version():  %d.%d.%d\n", vspec.major, vspec.minor, vspec.micro);
 
 
    // old way
@@ -564,7 +567,7 @@ int main(int argc, char** argv) {
    ddca_register_jmp_buf(&abort_buf);
 
    // Query library build settings.
-   // test_build_information();
+   test_build_information();
 
    // Retry management
    // test_retry_management();
@@ -629,6 +632,6 @@ int main(int argc, char** argv) {
    // ddca_show_stats(0);
 
 bye:
-   ddca_show_stats(0);
+   ddca_show_stats(DDCA_STATS_ALL, 0);
    return 0;
 }

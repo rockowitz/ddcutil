@@ -21,16 +21,14 @@
  * </endcopyright>
  */
 
-
 /** @file ddcutil_types.h
  *  @brief File ddcutil_types.h contains type declarations for the C API.
  *
  *  API function declarations are specified in a separate file, ddcutil_c_api.h.
  *  The reason for this split is that the type declarations are used throughout the
- *  **ddcutil** implementation, whereas the function declarations are used only
+ *  **ddcutil** implementation, whereas the function declarations are only referenced
  *  within the code that implements the API.
  */
-
 
 #ifndef DDCUTIL_TYPES_H_
 #define DDCUTIL_TYPES_H_
@@ -78,7 +76,7 @@ typedef int DDCA_Status;
 typedef struct {
    uint8_t    major;
    uint8_t    minor;
-   uint8_t    build;
+   uint8_t    micro;
 } DDCA_Ddcutil_Version_Spec;
 
 
@@ -133,6 +131,23 @@ typedef enum {
    DDCA_OL_NORMAL =0x08,         /**< Normal  output */
    DDCA_OL_VERBOSE=0x10          /**< Verbose output */
 } DDCA_Output_Level;
+
+
+//
+// Performance statistics
+//
+
+/** Used as values to specify a single statistics type, and as
+ *  bitflags to select statistics types.
+ */
+typedef enum {
+   DDCA_STATS_NONE     = 0x00,    ///< no statistics
+   DDCA_STATS_TRIES    = 0x01,    ///< retry statistics
+   DDCA_STATS_ERRORS   = 0x02,    ///< error statistics
+   DDCA_STATS_CALLS    = 0x04,    ///< system calls
+   DDCA_STATS_ALL      = 0xFF     ///< indicates all statistics types
+} DDCA_Stats_Type;
+
 
 
 //
