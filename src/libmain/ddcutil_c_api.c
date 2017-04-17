@@ -29,6 +29,7 @@
 
 /** \cond */
 #include <assert.h>
+#include <errno.h>
 #include <string.h>
 /** \endcond */
 
@@ -416,7 +417,7 @@ ddca_set_max_tries(
 {
    DDCA_Status rc = 0;
    if (max_tries < 1 || max_tries > MAX_MAX_TRIES)
-      rc = DDCL_ARG;
+      rc = -EINVAL;
    else {
       switch(retry_type) {
       case (DDCA_WRITE_ONLY_TRIES):

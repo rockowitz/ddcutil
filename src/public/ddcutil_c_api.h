@@ -241,6 +241,9 @@ ddca_get_max_tries(
 /** Sets the maximum number of I2C retries for the specified operation type
  * @param retry_type    I2C operation type
  * @param max_tries     maximum count to set
+ *
+ *  *
+ * \retval EINVAL       max_tries < 1 or > #ddca_get_max_tries()
  */
 DDCA_Status
 ddca_set_max_tries(
