@@ -349,7 +349,7 @@ collect_raw_subset_values(
 {
    Public_Status_Code psc = 0;
    bool debug = false;
-   DBGMSF(debug, "Starting.  subset=%d  dh=%s", subset, display_handle_repr(dh) );
+   DBGMSF(debug, "Starting.  subset=%d  dh=%s", subset, dh_repr(dh) );
    DDCA_MCCS_Version_Spec vcp_version = get_vcp_version_by_display_handle(dh);
    // DBGMSG("VCP version = %d.%d", vcp_version.major, vcp_version.minor);
    VCP_Feature_Set feature_set = create_feature_set(subset, vcp_version);
@@ -609,7 +609,7 @@ show_vcp_values(
 {
    Public_Status_Code psc = 0;
    bool debug = false;
-   DBGMSF(debug, "Starting.  subset=%d  dh=%s", subset, display_handle_repr(dh) );
+   DBGMSF(debug, "Starting.  subset=%d  dh=%s", subset, dh_repr(dh) );
 
    DDCA_MCCS_Version_Spec vcp_version = get_vcp_version_by_display_handle(dh);
    // DBGMSG("VCP version = %d.%d", vcp_version.major, vcp_version.minor);

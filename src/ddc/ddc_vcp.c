@@ -92,7 +92,7 @@ set_nontable_vcp_value(
    // TRCMSGTG(tg, "Writing feature 0x%02x , new value = %d\n", feature_code, new_value);
    DBGTRC(debug, TRACE_GROUP,
           "Writing feature 0x%02x , new value = %d, dh=%s\n",
-          feature_code, new_value, display_handle_repr(dh));
+          feature_code, new_value, dh_repr(dh));
    Public_Status_Code psc = 0;
 
    if (dh->dref->io_mode == DDCA_IO_USB) {
@@ -483,7 +483,7 @@ get_vcp_value(
 {
    bool debug = false;
    DBGTRC(debug, TRACE_GROUP, "Starting. Reading feature 0x%02x, dh=%s, dh->fh=%d",
-            feature_code, display_handle_repr(dh), dh->fh);
+            feature_code, dh_repr(dh), dh->fh);
 
    Public_Status_Code psc = 0;
    Buffer * buffer = NULL;

@@ -66,7 +66,7 @@ DDCA_MCCS_Version_Spec get_vcp_version_by_display_handle(Display_Handle * dh) {
    bool debug = false;
    // TMI
    DBGMSF(debug, "Starting. dh=%s, dh->dref->vcp_version =  %d.%d, %s",
-                 display_handle_repr(dh), dh->dref->vcp_version.major, dh->dref->vcp_version.minor, format_vspec(dh->dref->vcp_version));
+                 dh_repr(dh), dh->dref->vcp_version.major, dh->dref->vcp_version.minor, format_vspec(dh->dref->vcp_version));
    if (vcp_version_is_unqueried(dh->dref->vcp_version)) {
       if (debug) {
          DBGMSG("Starting.  vcp_version not set");

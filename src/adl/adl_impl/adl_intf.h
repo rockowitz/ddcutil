@@ -107,8 +107,9 @@ ADL_Display_Rec * adl_get_display_by_adlno(int iAdapterIndex, int iDisplayIndex,
 ADL_Display_Rec * adl_find_display_by_mfg_model_sn(const char * mfg_id, const char * model, const char * sn);
 ADL_Display_Rec * adl_find_display_by_edid(const Byte * pEdidBytes);
 
+#ifdef OLd
 Display_Info_List adl_get_valid_displays();
-
+#endif
 
 // new
 

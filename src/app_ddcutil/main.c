@@ -133,11 +133,11 @@ perform_get_capabilities_by_display_handle(Display_Handle * dh) {
          break;
       case DDCRC_RETRIES:
          printf("Unable to get capabilities for monitor on %s.  Maximum DDC retries exceeded.\n",
-                 display_handle_repr(dh));
+                 dh_repr(dh));
          break;
       default:
          printf("(%s) !!! Unable to get capabilities for monitor on %s\n",
-                __func__, display_handle_repr(dh));
+                __func__, dh_repr(dh));
          DBGMSG("Unexpected status code: %s", psc_desc(psc));
       }
    }
@@ -167,7 +167,7 @@ perform_get_capabilities_by_display_handle(Display_Handle * dh) {
 void probe_display_by_dh(Display_Handle * dh)
 {
    bool debug = false;
-   DBGMSF(debug, "Starting. dh=%s", display_handle_repr(dh));
+   DBGMSF(debug, "Starting. dh=%s", dh_repr(dh));
    Public_Status_Code psc = 0;
 
    printf("\nMfg id: %s, model: %s, sn: %s\n",
@@ -189,7 +189,7 @@ void probe_display_by_dh(Display_Handle * dh)
 
    // *** VCP Feature Scan ***
    // printf("\n\nScanning all VCP feature codes for display %d\n", dispno);
-   printf("\nScanning all VCP feature codes for display %s\n", display_handle_repr(dh) );
+   printf("\nScanning all VCP feature codes for display %s\n", dh_repr(dh) );
    Byte_Bit_Flags features_seen = bbf_create();
    app_show_vcp_subset_values_by_display_handle(
          dh, VCP_SUBSET_SCAN, /* show_unsupported */ true, features_seen);
@@ -458,7 +458,7 @@ int main(int argc, char *argv[]) {
 
    else if (parsed_cmd->cmd_id == CMDID_DETECT) {
       ddc_ensure_displays_detected();
-      ddc_report_all_displays(0);
+      ddc_report_displays(DDC_REPORT_ALL_DISPLAYS, 0);
 
    }
 
@@ -558,7 +558,7 @@ int main(int argc, char *argv[]) {
       reset_stats();
 
       printf("\n*** Detected Displays ***\n");
-      /* int display_ct =  */ ddc_report_all_displays(0 /* logical depth */);
+      /* int display_ct =  */ ddc_report_displays(DDC_REPORT_ALL_DISPLAYS, 0 /* logical depth */);
       // printf("Detected: %d displays\n", display_ct);   // not needed
       printf("\nStatistics for display detection:\n");
       report_stats(DDCA_STATS_ALL);

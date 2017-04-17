@@ -78,7 +78,7 @@ app_show_single_vcp_value_by_feature_table_entry(
 {
    bool debug = false;
    DBGMSF(debug, "Starting. Getting feature 0x%02x for %s",
-                 entry->code, display_handle_repr(dh) );
+                 entry->code, dh_repr(dh) );
 
    DDCA_MCCS_Version_Spec vspec      = get_vcp_version_by_display_handle(dh);
    Public_Status_Code     psc        = 0;
@@ -135,7 +135,7 @@ app_show_single_vcp_value_by_feature_id(
 {
    bool debug = false;
    DBGMSF(debug, "Starting. Getting feature 0x%02x for %s, force=%s",
-                 feature_id, display_handle_repr(dh), bool_repr(force) );
+                 feature_id, dh_repr(dh), bool_repr(force) );
 
    Public_Status_Code         psc = 0;
    VCP_Feature_Table_Entry *  entry = NULL;
@@ -248,7 +248,7 @@ app_show_feature_set_values_by_display_handle(
    bool debug = false;
    if (debug) {
       DBGMSG("Starting");
-      DBGMSG("dh: %s", display_handle_repr(dh) );
+      DBGMSG("dh: %s", dh_repr(dh) );
       report_feature_set_ref(fsref,1);
    }
 
@@ -425,7 +425,7 @@ app_read_changes_usb(Display_Handle * dh) {
  */
 void
 app_read_changes_forever(Display_Handle * dh) {
-   printf("Watching for VCP feature changes on display %s\n", display_handle_repr(dh));
+   printf("Watching for VCP feature changes on display %s\n", dh_repr(dh));
    printf("Type ^C to exit...\n");
    while(true) {
 #ifdef USE_USB

@@ -672,7 +672,7 @@ ddca_repr_display_identifier(DDCA_Display_Identifier ddca_did) {
 // Display References
 //
 
-DDCA_Status ddca_create_display_ref(DDCA_Display_Identifier did, DDCA_Display_Ref* ddct_dref) {
+DDCA_Status ddca_get_display_ref(DDCA_Display_Identifier did, DDCA_Display_Ref* ddca_dref) {
    bool debug = false;
    if (!library_initialized)
       return DDCL_UNINITIALIZED;
@@ -689,7 +689,7 @@ DDCA_Status ddca_create_display_ref(DDCA_Display_Identifier did, DDCA_Display_Re
       if (debug)
          DBGMSG("get_display_ref_for_display_identifier() returned %p", dref);
       if (dref)
-         *ddct_dref = dref;
+         *ddca_dref = dref;
       else
          rc = DDCL_ARG;
    }
@@ -697,11 +697,11 @@ DDCA_Status ddca_create_display_ref(DDCA_Display_Identifier did, DDCA_Display_Re
 }
 
 
-DDCA_Status ddca_free_display_ref(DDCA_Display_Ref ddct_dref) {
-   WITH_DR(ddct_dref,
+DDCA_Status ddca_free_display_ref(DDCA_Display_Ref ddca_dref) {
+   WITH_DR(ddca_dref,
          {
-               // ** TODO: only free if dynamically created
-         // free_display_ref(dref);
+            if (dref->flags & DREF_TRANSIENT)
+               free_display_ref(dref);
          }
    );
 }
@@ -817,9 +817,11 @@ ddca_repr_display_handle(DDCA_Display_Handle ddca_dh) {
          break;
       case DDCA_IO_USB:
          snprintf(dh_work_buf, 100,
-                  "Display Handle Type: %s, bus=%d, device=%d, %s/hiddev/%d]",
-                  dh_type_name, dh->dref->usb_bus, dh->dref->usb_device,
-                  hiddev_directory(), dh->dref->usb_hiddev_devno);
+                  "Display Handle Type: %s, %s/hiddev%d, usb bus:device=%d:%d]",
+                  dh_type_name,
+                  hiddev_directory(), dh->dref->usb_hiddev_devno,
+                  dh->dref->usb_bus, dh->dref->usb_device
+                  );
          break;
       }
       repr = dh_work_buf;
@@ -884,10 +886,10 @@ ddca_mccs_version_id_desc(DDCA_MCCS_Version_Id version_id) {
    return format_vcp_version_id(version_id);
 }
 
-
+#ifdef OLD
 // or should this return status code?
 DDCA_Display_Info_List *
-ddca_get_displays()
+ddca_get_displays_old()
 {
    ddc_ensure_displays_detected();
 
@@ -942,9 +944,68 @@ ddca_get_displays()
          curinfo->mfg_id        = drec.edid->mfg_id;
          curinfo->model_name    = drec.edid->model_name;
          curinfo->sn            = drec.edid->serial_ascii;
+         curinfo->ddca_dref     = dref;
       }
    }
    free_display_info_list(info_list);
+
+   // DBGMSG("Returning %p", result_list);
+   return result_list;
+}
+#endif
+
+
+// or should this return status code?
+DDCA_Display_Info_List *
+ddca_get_displays()
+{
+   ddc_ensure_displays_detected();
+
+   GPtrArray * all_displays = ddc_get_all_displays();
+
+   int true_ct = 0;         // number of valid displays
+   for (int ndx = 0; ndx < all_displays->len; ndx++) {
+      Display_Ref * dref = g_ptr_array_index(all_displays, ndx);
+      if (dref->dispno != -1)    // ignore invalid displays
+         true_ct++;
+   }
+
+   int reqd_size =   offsetof(DDCA_Display_Info_List,info) + true_ct * sizeof(DDCA_Display_Info);
+   DDCA_Display_Info_List * result_list = calloc(1,reqd_size);
+   result_list->ct = true_ct;
+   // DBGMSG("sizeof(DDCA_Display_Info) = %d, sizeof(Display_Info_List) = %d, reqd_size=%d, true_ct=%d, offsetof(DDCA_Display_Info_List,info) = %d",
+   //       sizeof(DDCA_Display_Info), sizeof(DDCA_Display_Info_List), reqd_size, true_ct, offsetof(DDCA_Display_Info_List,info));
+
+   int true_ctr = 0;
+   for (int ndx = 0; ndx < all_displays->len; ndx++) {
+      Display_Ref * dref = g_ptr_array_index(all_displays, ndx);
+      if (dref->dispno != -1) {
+         DDCA_Display_Info * curinfo = &result_list->info[true_ctr++];
+         memcpy(curinfo->marker, DDCA_DISPLAY_INFO_MARKER, 4);
+         curinfo->dispno        = dref->dispno;
+         curinfo->loc.io_mode = dref->io_mode;
+         switch (dref->io_mode) {
+         case DDCA_IO_DEVI2C:
+            curinfo->loc.i2c_busno = dref->busno;
+            break;
+         case DDCA_IO_ADL:
+            curinfo->loc.adlno.iAdapterIndex = dref->iAdapterIndex;
+            curinfo->loc.adlno.iDisplayIndex = dref->iDisplayIndex;
+            break;
+         case DDCA_IO_USB:
+            curinfo->usb_bus    = dref->usb_bus;
+            curinfo->usb_device = dref->usb_device;
+            curinfo->loc.hiddev_devno = dref->usb_hiddev_devno;
+            break;
+         }
+         curinfo->edid_bytes    = dref->pedid->bytes;
+         // or should these be memcpy'd instead of just pointers, can edid go away?
+         curinfo->mfg_id        = dref->pedid->mfg_id;
+         curinfo->model_name    = dref->pedid->model_name;
+         curinfo->sn            = dref->pedid->serial_ascii;
+         curinfo->ddca_dref     = dref;
+      }
+   }
 
    // DBGMSG("Returning %p", result_list);
    return result_list;
@@ -997,6 +1058,7 @@ ddca_report_display_info(
    rpt_vstring(d1, "Model:          %s", dinfo->model_name);
    rpt_vstring(d1, "Serial number:  %s", dinfo->sn);
    rpt_vstring(d1, "EDID:           %s", edidstr);
+   rpt_vstring(d1, "ddca_dref:      %p", dinfo->ddca_dref);
    free(edidstr);
 }
 
@@ -1619,5 +1681,6 @@ ddca_set_profile_related_values(
 
 int
 ddca_report_active_displays(int depth) {
-   return ddc_report_active_displays(depth);
+   // return ddc_report_active_displays(depth);
+   return ddc_report_displays(DDC_REPORT_VALID_DISPLAYS_ONLY, 0);
 }

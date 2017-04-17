@@ -376,7 +376,7 @@ Public_Status_Code ddc_i2c_write_read_raw(
    //    tg = 0xff;
    // TRCMSGTG(tg, "Starting. dh=%s, readbuf=%p", display_handle_repr(dh), readbuf);
    DBGTRC(debug, TRACE_GROUP, "Starting. dh=%s, readbuf=%p",
-                              display_handle_repr(dh), readbuf);
+                              dh_repr(dh), readbuf);
    // DBGMSG("request_packet_ptr=%p", request_packet_ptr);
    // dump_packet(request_packet_ptr);
    assert(dh);
@@ -453,7 +453,7 @@ Public_Status_Code ddc_adl_write_read_raw(
    bool debug = false;
    DBGTRC(debug, TRACE_GROUP,
           "Starting. Using adl_ddc_write_only() and adl_ddc_read_only() dh=%s",
-          display_handle_repr(dh));
+          dh_repr(dh));
    assert(dh && dh->dref && dh->dref->io_mode == DDCA_IO_ADL);
    // ASSERT_DISPLAY_IO_MODE(dh, DDCA_IO_ADL);
 
@@ -515,7 +515,7 @@ Public_Status_Code ddc_write_read_raw(
 {
    bool debug = false;
    DBGTRC(debug, TRACE_GROUP, "Starting. dh=%s, readbuf=%p",
-                              display_handle_repr(dh), readbuf);
+                              dh_repr(dh), readbuf);
    Public_Status_Code psc;
 
    assert(dh->dref->io_mode == DDCA_IO_DEVI2C || dh->dref->io_mode == DDCA_IO_ADL);
@@ -573,7 +573,7 @@ Public_Status_Code ddc_write_read(
      )
 {
    bool debug = false;
-   DBGTRC(debug, TRACE_GROUP, "Starting. io dh=%s", display_handle_repr(dh) );
+   DBGTRC(debug, TRACE_GROUP, "Starting. io dh=%s", dh_repr(dh) );
 
    Byte * readbuf = calloc(1, max_read_bytes);
    int    bytes_received = max_read_bytes;
@@ -657,7 +657,7 @@ Public_Status_Code ddc_write_read_with_retry(
 {
    bool debug = false;
    DBGTRC(debug, TRACE_GROUP, "Starting. dh=%s, all_zero_response_ok=%s",
-          display_handle_repr(dh), bool_repr(all_zero_response_ok)  );
+          dh_repr(dh), bool_repr(all_zero_response_ok)  );
    assert(dh->dref->io_mode != DDCA_IO_USB);
    // show_backtrace(1);
 

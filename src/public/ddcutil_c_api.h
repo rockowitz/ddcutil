@@ -442,7 +442,9 @@ ddca_repr_display_identifier(
 // Display Reference
 //
 
-/** Creates a display reference from a display identifier.
+/** Gets a display reference for a display identifier.
+ *  Normally, this is a permanently allocated #Display_Ref
+ *  created by monitor detection and does not need to be freed.
  * @param[in]  did display identifier
  * @param[out] pdref where to return display reference
  * @return     status code
@@ -450,7 +452,7 @@ ddca_repr_display_identifier(
  * \ingroup api_display_spec
  */
 DDCA_Status
-ddca_create_display_ref(
+ddca_get_display_ref(
       DDCA_Display_Identifier did,
       DDCA_Display_Ref*       pdref);
 

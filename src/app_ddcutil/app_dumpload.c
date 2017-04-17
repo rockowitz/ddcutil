@@ -192,7 +192,7 @@ Dumpload_Data * read_vcp_file(const char * fn) {
 // TODO: convert to Public_Status_Code
 bool loadvcp_by_file(const char * fn, Display_Handle * dh) {
    bool debug = false;
-   DBGMSF(debug, "Starting. fn=%s, dh=%p %s", fn, dh, (dh) ? display_handle_repr(dh):"");
+   DBGMSF(debug, "Starting. fn=%s, dh=%p %s", fn, dh, (dh) ? dh_repr(dh):"");
 
    DDCA_Output_Level output_level = get_output_level();
    bool verbose = (output_level >= DDCA_OL_VERBOSE);

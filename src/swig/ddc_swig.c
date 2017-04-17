@@ -263,7 +263,7 @@ char * ddcs_repr_display_identifier(DDCS_Display_Identifier ddcs_did){
 
 DDCS_Display_Ref ddcs_get_display_ref(DDCS_Display_Identifier did){
    DDCS_Display_Ref result = NULL;
-   DDCA_Status rc = ddca_create_display_ref(did, &result);
+   DDCA_Status rc = ddca_get_display_ref(did, &result);
    clear_exception();
    if (rc != 0)
       throw_exception_from_status_code(rc);

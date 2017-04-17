@@ -441,7 +441,7 @@ static Usb_Monitor_Info * usb_find_monitor_by_display_ref(Display_Ref * dref) {
 Usb_Monitor_Info * usb_find_monitor_by_display_handle(Display_Handle * dh) {
    // printf("(%s) Starting. dh=%p\n", __func__, dh);
    bool debug = false;
-   DBGMSF(debug, "Starting. dh = %s", display_handle_repr(dh));
+   DBGMSF(debug, "Starting. dh = %s", dh_repr(dh));
    assert(dh && dh->dref);
    assert(dh->dref->io_mode == DDCA_IO_USB);
    Usb_Monitor_Info * result = NULL;

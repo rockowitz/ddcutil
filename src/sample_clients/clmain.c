@@ -479,7 +479,7 @@ void test_display_id_ref_handle_use() {
    printf("(%s) did=%s\n", __func__, did_repr);
 
    printf("\nCreate a display reference from the display identifier...\n");
-   rc = ddca_create_display_ref(did, &dref);
+   rc = ddca_get_display_ref(did, &dref);
 
    if (rc != 0) {
       printf("(%s) ddct_get_display_ref() returned %d (%s): %s\n",
@@ -574,7 +574,7 @@ int main(int argc, char** argv) {
 
 
    // Monitor detection
-   int displayct = test_monitor_detection();
+   /* int displayct = */ test_monitor_detection();
    // goto bye;  // *** TEMP ***
 
    test_display_id_ref_handle_use();
@@ -588,17 +588,25 @@ int main(int argc, char** argv) {
    for (int dispno = 1; dispno <= dlist->ct; dispno++) {
       printf("\n(%s) ===> Test loop for display %d\n", __func__, dispno);
 
+      DDCA_Display_Info * dinfo = &dlist->info[dispno-1];
+      ddca_report_display_info(dinfo, 1);
+
+      did = NULL;
+#ifdef ALT
       printf("Create a Display Identifier for display %d...\n", dispno);
       rc = ddca_create_dispno_display_identifier(dispno, &did);
 
       printf("Create a display reference from the display identifier...\n");
-      rc = ddca_create_display_ref(did, &dref);
+      rc = ddca_get_display_ref(did, &dref);
       assert(rc == 0);
+#endif
+
+      dref = dlist->info[dispno-1].ddca_dref;    // *** ugh ***
 
       printf("Open the display reference, creating a display handle...\n");
       rc = ddca_open_display(dref, &dh);
       if (rc != 0) {
-         FUNCTION_ERRMSG("ddct_open_display", rc);
+         FUNCTION_ERRMSG("ddca_open_display", rc);
          continue;
       }
       char * dh_repr = ddca_repr_display_handle(dh);
@@ -631,7 +639,7 @@ int main(int argc, char** argv) {
 
    // ddca_show_stats(0);
 
-bye:
+// bye:
    ddca_show_stats(DDCA_STATS_ALL, 0);
    return 0;
 }

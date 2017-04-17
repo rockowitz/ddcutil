@@ -157,6 +157,7 @@ typedef Byte Dref_Flags;
 #define DREF_DDC_IS_MONITOR_CHECKED                 0x08
 #define DREF_DDC_IS_MONITOR                         0x04
 #define DREF_TRANSIENT                              0x02
+
 #define DISPLAY_REF_MARKER "DREF"
 /** A **Display_Ref** is a logical display identifier.
  * It can be an I2C bus number, and ADL adapter/display number pair,
@@ -264,8 +265,8 @@ Display_Handle * create_bus_display_handle_from_display_ref(int fh, Display_Ref 
 Display_Handle * create_adl_display_handle_from_display_ref(Display_Ref * dref);
 Display_Handle * create_usb_display_handle_from_display_ref(int fh, Display_Ref * dref);
 void   report_display_handle(Display_Handle * dh, const char * msg, int depth);
-char * display_handle_repr_r(Display_Handle * dh, char * buf, int bufsize);
-char * display_handle_repr(Display_Handle * dh);
+char * dh_repr_r(Display_Handle * dh, char * buf, int bufsize);
+char * dh_repr(Display_Handle * dh);
 
 #define VIDEO_CARD_INFO_MARKER "VIDC"
 /** Video card information */
@@ -279,6 +280,7 @@ typedef struct {
 Video_Card_Info * create_video_card_info();
 
 
+#ifdef OLD
 
 #define DISPLAY_INFO_MARKER "DINF"
 /**
@@ -300,13 +302,15 @@ typedef struct {
    int            ct;
    Display_Info * info_recs;      // n. this is a pointer to an array of Display_Info, not an array of Display_Info *
 } Display_Info_List;
+#endif
 
+#ifdef OLD
 void report_display_info(Display_Info * dinfo, int depth);
 void report_display_info_list(Display_Info_List * pinfo_list, int depth);
 
 void free_display_info(Display_Info * dinfo);
 void free_display_info_list(Display_Info_List * pinfo_list);
-
+#endif
 
 // For internal display selection functions
 

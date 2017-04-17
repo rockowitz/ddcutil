@@ -396,7 +396,7 @@ Display_Ref * clone_display_ref(Display_Ref * old) {
 }
 
 void free_display_ref(Display_Ref * dref) {
-   if (dref) {
+   if (dref && (dref->flags & DREF_TRANSIENT) ) {
       assert(memcmp(dref->marker, DISPLAY_REF_MARKER,4) == 0);
       dref->marker[3] = 'x';
       if (dref->usb_hiddev_name)
@@ -668,7 +668,7 @@ void report_display_handle(Display_Handle * dh, const char * msg, int depth) {
  * \param  buf     pointer to buffer in which to return summary string
  * \param  bufsz   buffer size
  */
-char * display_handle_repr_r(Display_Handle * dh, char * buf, int bufsz) {
+char * dh_repr_r(Display_Handle * dh, char * buf, int bufsz) {
    assert(memcmp(dh->marker, DISPLAY_HANDLE_MARKER, 4) == 0);
    assert(buf && bufsz);
    assert(dh);
@@ -707,15 +707,15 @@ char * display_handle_repr_r(Display_Handle * dh, char * buf, int bufsz) {
  *
  * \return  string representation of handle
  */
-char * display_handle_repr(Display_Handle * dh) {
+char * dh_repr(Display_Handle * dh) {
    static char dh_repr_buf[100];
-   return display_handle_repr_r(dh,dh_repr_buf,100);
+   return dh_repr_r(dh,dh_repr_buf,100);
 }
 
 
 // *** Display_Info ***
 
-
+#ifdef OLD
 // n.b. frees the contents of dinfo, but not dinfo itself
 void free_display_info(Display_Info * dinfo) {
    if (dinfo) {
@@ -756,8 +756,10 @@ void report_display_info(Display_Info * dinfo, int depth) {
       }
    }
 }
+#endif
 
 
+#ifdef OLd
 void free_display_info_list(Display_Info_List * pinfo_list) {
    if (pinfo_list && pinfo_list->info_recs) {
       for (int ndx = 0; ndx < pinfo_list->ct; ndx++) {
@@ -789,6 +791,7 @@ void report_display_info_list(Display_Info_List * pinfo_list, int depth) {
       }
    }
 }
+#endif
 
 
 // *** Miscellaneous ***

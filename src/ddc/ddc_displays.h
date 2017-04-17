@@ -44,16 +44,20 @@ Display_Info_List *
 ddc_get_valid_displays_old();
 #endif
 
+#ifdef OLD
 Display_Info_List *
 ddc_get_valid_displays();
+#endif
 
 GPtrArray * ddc_get_all_displays();  // returns GPtrArray of Display_Ref instances, including invalid displays
 
 int
 ddc_report_active_displays(int depth);
 
+#define DDC_REPORT_ALL_DISPLAYS false
+#define DDC_REPORT_VALID_DISPLAYS_ONLY true
 int
-ddc_report_all_displays(int depth);
+ddc_report_displays(bool valid_only, int depth);
 
 Display_Ref*
 get_display_ref_for_display_identifier(

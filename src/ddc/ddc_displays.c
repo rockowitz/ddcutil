@@ -97,7 +97,7 @@ static int dispno_max = 0;                 // highest assigned display number
  */
 bool check_ddc_communication(Display_Handle * dh) {
    bool debug = false;
-   DBGMSF(debug, "Starting. dh=%s", display_handle_repr(dh));
+   DBGMSF(debug, "Starting. dh=%s", dh_repr(dh));
 
    bool result = true;
 
@@ -141,7 +141,7 @@ bool check_monitor_ddc_null_response(Display_Handle * dh) {
    assert(dh);
    assert(dh->dref);
    bool debug = false;
-   DBGMSF(debug, "Starting. dh=%s", display_handle_repr(dh));
+   DBGMSF(debug, "Starting. dh=%s", dh_repr(dh));
 
    bool result = false;
 
@@ -186,7 +186,7 @@ bool check_monitor_ddc_null_response(Display_Handle * dh) {
  */
 bool initial_checks_by_dh(Display_Handle * dh) {
    bool debug = false;
-   DBGMSF(debug, "Starting. dh=%s", display_handle_repr(dh));
+   DBGMSF(debug, "Starting. dh=%s", dh_repr(dh));
 
    if (!(dh->dref->flags & DREF_DDC_COMMUNICATION_CHECKED)) {
       if (check_ddc_communication(dh))
@@ -606,7 +606,7 @@ void report_display_info(Display_Info * dinfo, int depth) {
 // Functions to get display information
 //
 
-
+#ifdef OLD
 /** Gets a list of valid monitors in the format needed by the API.
  *
  * \return pointer to #Display_Info_List
@@ -638,6 +638,7 @@ ddc_get_valid_displays() {
    }
    return info_list;
 }
+#endif
 
 
 /** Gets a list of all detected displays, whether they support DDC or not.
@@ -1203,6 +1204,7 @@ ddc_report_active_display(Display_Info * curinfo, int depth) {
 #endif
 
 
+#ifdef OLd
 /** Reports valid displays found.
  *
  * Output is written to the current report destination using
@@ -1233,6 +1235,8 @@ ddc_report_active_displays(int depth) {
          valid_display_ct++;
       }
 #endif
+      if (curinfo->dispno != -1)
+         valid_display_ct++;
      // ddc_report_active_display(curinfo, depth+1);
       ddc_report_display_by_dref(curinfo->dref, depth);
       rpt_title("",0);
@@ -1244,40 +1248,41 @@ ddc_report_active_displays(int depth) {
    DBGMSF(debug, "Done.  Returning: %d", valid_display_ct);
    return valid_display_ct;
 }
-
+#endif
 
 /** Reports all displays found.
  *
  * Output is written to the current report destination using
  * report functions.
  *
+ * @param   valid_displays_only  if **true**, report only valid displays\n
+ *                      if **false**, report all displays
  * @param   depth       logical indentation depth
  *
- * @return total number of displays  (or should it be v valid displays?)
+ * @return total number of displays reported
  */
 int
-ddc_report_all_displays(int depth) {
+ddc_report_displays(bool valid_displays_only, int depth) {
    bool debug = false;
    DBGMSF(debug, "Starting");
 
    ddc_ensure_displays_detected();
 
-   int valid_display_ct = 0;
+   int display_ct = 0;
    for (int ndx=0; ndx<all_displays->len; ndx++) {
       Display_Ref * dref = g_ptr_array_index(all_displays, ndx);
       assert(memcmp(dref->marker, DISPLAY_REF_MARKER, 4) == 0);
-      if (dref->dispno > 0)
-         valid_display_ct++;
-      // ddc_report_display_by_display_rec(drec, depth);
-      ddc_report_display_by_dref(dref, depth);
-      rpt_title("",0);
+      if (dref->dispno > 0 || !valid_displays_only) {
+         display_ct++;
+         ddc_report_display_by_dref(dref, depth);
+         rpt_title("",0);
+      }
    }
-   if (valid_display_ct == 0)
-      rpt_vstring(depth, "No active displays found");
-   // DBGMSG("Returning %d", valid_display_ct);
-   int result = all_displays->len;
-   DBGMSF(debug, "Done.  Returning: %d", result);
-   return result;
+   if (display_ct == 0)
+      rpt_vstring(depth, "No %sdisplays found", (valid_displays_only) ? "active " : "");
+
+   DBGMSF(debug, "Done.  Returning: %d", display_ct);
+   return display_ct;
 }
 
 
