@@ -74,7 +74,8 @@ check_PROGRAMS =
 if ENABLE_SHARED_LIB_COND
 # Sample C client program for shared library:
 check_PROGRAMS += \
-  laclient 
+  laclient \
+  ddc_global_settings_sample
 endif
 
 
@@ -136,6 +137,9 @@ endif
 #
 laclient_SOURCES = \
 sample_clients/clmain.c
+
+ddc_global_settings_sample_SOURCES = \
+sample_clients/global_settings.c
 
 #
 # Files only in libddcutil
@@ -293,6 +297,7 @@ endif
 
 ddcutil_CFLAGS          = $(AM_CFLAGS)  -fPIC
 laclient_CFLAGS         = $(AM_CFLAGS)  -fPIC
+ddc_global_settings_sample_CFLAGS         = $(AM_CFLAGS)  -fPIC
 
 # unneessary, will use AM_CFLAGS if xxx_CFLAGS undefined
 # libcommon_la_CFLAGS     = $(AM_CFLAGS)
@@ -359,7 +364,11 @@ ddcutil_LDFLAGS += -export-dynamic
 laclient_LDADD = \
   libddcutil.la 
 
+ddc_global_settings_sample_LDADD = \
+  libddcutil.la
+
 laclient_LDFLAGS = -pie
+ddc_global_settings_sample_LDFLAGS = -pie
 
 # debug-install-hook:
 #  	ls -ld $(DESTDIR)$(libdir)

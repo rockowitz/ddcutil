@@ -385,62 +385,6 @@ void my_abort_func(Public_Status_Code psc) {
 #endif
 
 
-void test_build_information() {
-   printf("\n(%s) ===> Starting. \n", __func__);
-   printf("Probe static build information...\n");
-   // Get the ddcutil version as a string in the form "major.minor.micro".
-   printf("ddcutil version by ddca_ddcutil_version_string(): %s\n", ddca_ddcutil_version_string() );
-
-   DDCA_Ddcutil_Version_Spec vspec = ddca_ddcutil_version();
-   printf("ddcutil version by ddca_ddcutil_version():  %d.%d.%d\n", vspec.major, vspec.minor, vspec.micro);
-
-
-   // old way
-   // printf("(%s) Built with ADL support: %s\n", __func__, (ddca_built_with_adl()) ? "yes" : "no");
-   // printf("(%s) Built with USB support: %s\n", __func__, (ddca_built_with_usb()) ? "yes" : "no");
-
-   uint8_t build_options = ddca_get_build_options();
-   printf("(%s) Built with ADL support: %s\n", __func__, (build_options & DDCA_BUILT_WITH_ADL) ? "yes" : "no");
-   printf("(%s) Built with USB support: %s\n", __func__, (build_options & DDCA_BUILT_WITH_USB) ? "yes" : "no");
-}
-
-
-void test_retry_management() {
-
-  printf("\n(%s) ===> Starting. Exercise retry management functions...\n", __func__);
-
-  int rc = 0;
-
-  // The maximum retry number that can be specified on ddca_set_max_tries().
-  // Any larger number will case the call to fail.
-  int max_max_tries = ddca_get_max_max_tries();
-  printf("Maximum retry count that can be set: %d\n", max_max_tries);
-
-  rc = ddca_set_max_tries(DDCA_WRITE_READ_TRIES, 15);
-  printf("(%s) ddca_set_max_tries(DDCA_WRITE_READ_TRIES,15) returned: %d (%s)\n",
-         __func__, rc, ddca_status_code_name(rc) );
-
-  printf("Calling ddca_set_max_tries() with a retry count that's too large...\n");
-  int badct = max_max_tries + 1;
-  rc = ddca_set_max_tries(DDCA_WRITE_READ_TRIES, badct);
-  printf("(%s) ddca_set_max_tries(DDCA_WRITE_READ_TRIES, %d) returned: %d (%s)\n",
-         __func__, badct, rc, ddca_status_code_name(rc) );
-
-  printf("Setting the count to exactly max_max_tries works...\n");
-  rc = ddca_set_max_tries(DDCA_WRITE_READ_TRIES, max_max_tries);
-  printf("(%s) ddca_set_max_tries(DDCA_WRITE_READ_TRIES, %d) returned: %d (%s)\n",
-         __func__, max_max_tries, rc, ddca_status_code_name(rc) );
-
-  rc = ddca_set_max_tries(DDCA_MULTI_PART_TRIES, 15);
-  if (rc != 0)
-     FUNCTION_ERRMSG("DDCT_MULTI_PART_TRIES:ddct_set_max_tries", rc);
-
-
-  printf("(%s) max write only tries: %d\n", __func__, ddca_get_max_tries(DDCA_WRITE_ONLY_TRIES));
-  printf("(%s) max write read tries: %d\n", __func__, ddca_get_max_tries(DDCA_WRITE_READ_TRIES));
-  printf("(%s) max multi part tries: %d\n", __func__, ddca_get_max_tries(DDCA_MULTI_PART_TRIES));
-}
-
 int test_monitor_detection() {
    printf("\n(%s) ===> Starting.\n", __func__);
    printf("Check for monitors using ddca_get_displays()...\n");
@@ -567,7 +511,7 @@ int main(int argc, char** argv) {
    ddca_register_jmp_buf(&abort_buf);
 
    // Query library build settings.
-   test_build_information();
+   // test_build_information();
 
    // Retry management
    // test_retry_management();
