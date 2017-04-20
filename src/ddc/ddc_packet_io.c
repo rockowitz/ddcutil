@@ -94,12 +94,11 @@ bool is_ddc_null_message(Byte * packet) {
 // Open/Close Display
 //
 
-/* Opens a DDC display.
+/** Opens a DDC display.
  *
- * Arguments:
- *    dref            display reference
- *    callopts
- *    pdh             address at which to return display handle
+ *  \param  dref            display reference
+ *  \param  callopts        call option flags
+ *  \param  pdh             address at which to return display handle
  *
  * Returns:
  *    status code
@@ -124,9 +123,7 @@ Public_Status_Code ddc_open_display(
       {
          int fd = i2c_open_bus(dref->busno, callopts);
          if (fd < 0) {    // will be < 0 if open_i2c_bus failed and CALLOPT_ERR_ABORT not set
-            // gsc = modulate_rc(fd, RR_ERRNO);
             psc = fd;
-            // COUNT_STATUS_CODE(gsc);
             goto bye;
          }
 
@@ -136,7 +133,6 @@ Public_Status_Code ddc_open_display(
             assert(base_rc < 0);
             close(fd);
             psc = base_rc;
-            // gsc = modulate_rc(base_rc, RR_ERRNO);
             goto bye;
          }
 
@@ -182,9 +178,7 @@ Public_Status_Code ddc_open_display(
          // }
          int fd = usb_open_hiddev_device(dref->usb_hiddev_name, callopts);
          if (fd < 0) {
-            // gsc = modulate_rc(fd, RR_ERRNO);
             psc = fd;
-            // log_status_code(gsc,__func__);
             goto bye;
          }
          dh = create_usb_display_handle_from_display_ref(fd, dref);
@@ -257,6 +251,8 @@ void ddc_close_display(Display_Handle * dh) {
       PROGRAM_LOGIC_ERROR("ddcutil not build with USB support");
 #endif
    } //switch
+
+   free_display_handle(dh);
 }
 
 
