@@ -359,6 +359,7 @@ loadvcp_by_dumpload_data(
    }
 
    Public_Status_Code psc = 0;
+   Display_Handle dh_argument = dh;
 
    if (dh) {
       // If explicit display specified, check that the data is valid for it
@@ -381,6 +382,7 @@ loadvcp_by_dumpload_data(
          goto bye;
       }
    }
+
    else {
      // no Display_Ref passed as argument, just use the identifiers in the
      // data to pick the display
@@ -414,7 +416,10 @@ loadvcp_by_dumpload_data(
    }
 
    psc = ddc_set_multiple(dh, pdata->vcp_values);
-   ddc_close_display(dh);
+
+   // close the display only if this function opened it
+   if (!dh_argument)
+      ddc_close_display(dh);
 
 bye:
    DBGMSF(debug, "Returning: %s", psc_desc(psc));
