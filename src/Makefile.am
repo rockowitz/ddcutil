@@ -75,7 +75,9 @@ if ENABLE_SHARED_LIB_COND
 # Sample C client program for shared library:
 check_PROGRAMS += \
   laclient \
-  ddc_global_settings_sample
+  demo_global_settings \
+  demo_vcpinfo \
+  demo_display_selection
 endif
 
 
@@ -138,8 +140,9 @@ endif
 laclient_SOURCES = \
 sample_clients/clmain.c
 
-ddc_global_settings_sample_SOURCES = \
-sample_clients/global_settings.c
+demo_global_settings_SOURCES   = sample_clients/demo_global_settings.c
+demo_vcpinfo_SOURCES           = sample_clients/demo_vcpinfo.c
+demo_display_selection_SOURCES = sample_clients/demo_display_selection.c
 
 #
 # Files only in libddcutil
@@ -295,9 +298,11 @@ endif
 
 # AM_CFLAGS += $(PYTHON_CPPFLAGS)
 
-ddcutil_CFLAGS          = $(AM_CFLAGS)  -fPIC
-laclient_CFLAGS         = $(AM_CFLAGS)  -fPIC
-ddc_global_settings_sample_CFLAGS         = $(AM_CFLAGS)  -fPIC
+ddcutil_CFLAGS                 = $(AM_CFLAGS)  -fPIC
+laclient_CFLAGS                = $(AM_CFLAGS)  -fPIC
+demo_global_settings_CFLAGS    = $(AM_CFLAGS)  -fPIC
+demo_vcpinfo_CFLAGS            = $(AM_CFLAGS)  -fPIC
+demo_display_selection_CFLAGS  = $(AM_CFLAGS)  -fPIC
 
 # unneessary, will use AM_CFLAGS if xxx_CFLAGS undefined
 # libcommon_la_CFLAGS     = $(AM_CFLAGS)
@@ -361,14 +366,15 @@ ddcutil_LDFLAGS += -pie
 # -export-dynamic needed for failsim
 ddcutil_LDFLAGS += -export-dynamic 
 
-laclient_LDADD = \
-  libddcutil.la 
+laclient_LDADD                = libddcutil.la 
+demo_global_settings_LDADD    = libddcutil.la
+demo_vcpinfo_LDADD            = libddcutil.la
+demo_display_selection_LDADD  = libddcutil.la
 
-ddc_global_settings_sample_LDADD = \
-  libddcutil.la
-
-laclient_LDFLAGS = -pie
-ddc_global_settings_sample_LDFLAGS = -pie
+laclient_LDFLAGS                = -pie
+demo_global_settings_LDFLAGS    = -pie
+demo_vcpinfo_LDFLAGS            = -pie
+demo_display_selection_LDFLAGS  = -pie
 
 # debug-install-hook:
 #  	ls -ld $(DESTDIR)$(libdir)
