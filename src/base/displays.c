@@ -31,6 +31,7 @@
 
 /** \cond */
 #include <assert.h>
+#include <glib.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -276,6 +277,61 @@ void report_display_identifier(Display_Identifier * pdid, int depth) {
 }
 
 
+/** Returns a succinct representation of a #Display_Identifier for
+ *  debugging purposes.
+ *
+ *  \param pdid pointer to #Display_Identifier
+ *  \return pointer to string description
+ *
+ *  \remark
+ *  The returned pointer is valid until the #Display_Identifier is freed.
+ */
+char * did_repr(Display_Identifier * pdid) {
+   if (!pdid->repr) {
+      char * did_type_name = display_id_type_name(pdid->id_type);
+      switch (pdid->id_type) {
+      case(DISP_ID_BUSNO):
+            pdid->repr = gaux_asprintf(
+                     "Display Id[type=%s, bus=/dev/i2c-%d]", did_type_name, pdid->busno);
+            break;
+      case(DISP_ID_ADL):
+            pdid->repr = gaux_asprintf(
+                     "Display Id[type=%s, adlno=%d.%d]", did_type_name, pdid->iAdapterIndex, pdid->iDisplayIndex);
+            break;
+      case(DISP_ID_MONSER):
+            pdid->repr = gaux_asprintf(
+                     "Display Id[type=%s, mfg=%s, model=%s, sn=%s]",
+                     did_type_name, pdid->mfg_id, pdid->model_name, pdid->serial_ascii);
+            break;
+      case(DISP_ID_EDID):
+      {
+            char * hs = hexstring(pdid->edidbytes, 128);
+            pdid->repr = gaux_asprintf(
+                     "Display Id[type=%s, edid=%8s...%8s]", did_type_name, hs, hs+248);
+            free(hs);
+            break;
+      }
+      case(DISP_ID_DISPNO):
+            pdid->repr = gaux_asprintf(
+                     "Display Id[type=%s, dispno=%d]", did_type_name, pdid->dispno);
+            break;
+      case DISP_ID_USB:
+            pdid->repr = gaux_asprintf(
+                     "Display Id[type=%s, usb bus:device=%d.%d]", did_type_name, pdid->usb_bus, pdid->usb_device);;
+            break;
+      case DISP_ID_HIDDEV:
+            pdid->repr = gaux_asprintf(
+                     "Display Id[type=%s, hiddev_devno=%d]", did_type_name, pdid->hiddev_devno);
+            break;
+
+      } // switch
+
+   }
+   return pdid->repr;
+}
+
+
+
 /** Frees a #Display_Identifier instance
  *
  * \param pdid pointer to #Display_Identifier to free
@@ -285,6 +341,7 @@ void free_display_identifier(Display_Identifier * pdid) {
    // with no pointers to other memory
    assert( memcmp(pdid->marker, DISPLAY_IDENTIFIER_MARKER, 4) == 0);
    pdid->marker[3] = 'x';
+   free(pdid->repr);   // may be null, that's ok
    free(pdid);
 }
 
@@ -661,55 +718,35 @@ void report_display_handle(Display_Handle * dh, const char * msg, int depth) {
 }
 
 
-/* Returns a string summarizing the specified #Display_Handle, in
- * a buffer provided by the caller.
- *
- * \param  dh      display handle
- * \param  buf     pointer to buffer in which to return summary string
- * \param  bufsz   buffer size
- */
-char * dh_repr_r(Display_Handle * dh, char * buf, int bufsz) {
-   assert(memcmp(dh->marker, DISPLAY_HANDLE_MARKER, 4) == 0);
-   assert(buf && bufsz);
-   assert(dh);
-   assert(dh->dref);
-
-   switch (dh->dref->io_mode) {
-
-   case DDCA_IO_DEVI2C:
-      snprintf(buf, bufsz,
-               "Display_Handle[i2c: fh=%d, busno=%d]",
-               dh->fh, dh->dref->busno);
-      break;
-
-   case DDCA_IO_ADL:
-      snprintf(buf, bufsz,
-               "Display_Handle[adl: display %d.%d]",
-               dh->dref->iAdapterIndex, dh->dref->iDisplayIndex);
-      break;
-
-   case DDCA_IO_USB:
-      snprintf(buf, bufsz,
-               "Display_Handle[usb: %d:%d, %s/hiddev/%d]",
-               dh->dref->usb_bus, dh->dref->usb_device, hiddev_directory(), dh->dref->usb_hiddev_devno);
-      break;
-   }
-
-   return buf;
-}
-
-
 /* Returns a string summarizing the specified #Display_Handle.
- * The string is valid until the next call to this function.
- * Caller should NOT free this string.
  *
  * \param  dh    display handle
  *
  * \return  string representation of handle
  */
 char * dh_repr(Display_Handle * dh) {
-   static char dh_repr_buf[100];
-   return dh_repr_r(dh,dh_repr_buf,100);
+   assert(dh);
+   assert(dh->dref);
+   if (!dh->repr) {
+      switch (dh->dref->io_mode) {
+      case DDCA_IO_DEVI2C:
+          dh->repr = gaux_asprintf(
+                   "Display_Handle[i2c: fh=%d, busno=%d]",
+                   dh->fh, dh->dref->busno);
+          break;
+      case DDCA_IO_ADL:
+          dh->repr = gaux_asprintf(
+                   "Display_Handle[adl: display %d.%d]",
+                   dh->dref->iAdapterIndex, dh->dref->iDisplayIndex);
+          break;
+      case DDCA_IO_USB:
+          dh->repr = gaux_asprintf(
+                   "Display_Handle[usb: %d:%d, %s/hiddev/%d]",
+                   dh->dref->usb_bus, dh->dref->usb_device, hiddev_directory(), dh->dref->usb_hiddev_devno);
+          break;
+      }
+   }
+   return dh->repr;
 }
 
 

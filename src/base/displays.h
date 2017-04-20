@@ -95,6 +95,7 @@ typedef struct {
    int             usb_device;
    int             hiddev_devno;           // 4/1027
    Byte            edidbytes[128];
+   char *          repr;
 } Display_Identifier;
 
 
@@ -105,6 +106,7 @@ Display_Identifier* create_edid_display_identifier(const Byte* edidbytes);
 Display_Identifier* create_mfg_model_sn_display_identifier(const char* mfg_code, const char* model_name, const char* serial_ascii);
 Display_Identifier* create_usb_display_identifier(int bus, int device);
 Display_Identifier* create_usb_hiddev_display_identifier(int hiddev_devno);
+char *              did_repr(Display_Identifier * pdid);
 void                report_display_identifier(Display_Identifier * pdid, int depth);
 void                free_display_identifier(Display_Identifier * pdid);
 
@@ -258,6 +260,7 @@ typedef struct {
  //  DDCA_MCCS_Version_Spec vcp_version;
  //  char *       capabilities_string;
  //  Parsed_Edid* pedid;                             // added 7/2016
+   char *       repr;
 } Display_Handle;
 
 
@@ -265,7 +268,6 @@ Display_Handle * create_bus_display_handle_from_display_ref(int fh, Display_Ref 
 Display_Handle * create_adl_display_handle_from_display_ref(Display_Ref * dref);
 Display_Handle * create_usb_display_handle_from_display_ref(int fh, Display_Ref * dref);
 void   report_display_handle(Display_Handle * dh, const char * msg, int depth);
-char * dh_repr_r(Display_Handle * dh, char * buf, int bufsize);
 char * dh_repr(Display_Handle * dh);
 
 #define VIDEO_CARD_INFO_MARKER "VIDC"
