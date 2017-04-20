@@ -130,7 +130,7 @@ get_capabilities_string(Display_Handle * dh, char** pcaps) {
          // newly created string, can just  reference
          dh->dref->capabilities_string = usb_get_capabilities_string_by_display_handle(dh);
 #else
-         PROGRAM_LOGIC_ERROR("ddcutil not build with USB support");
+         PROGRAM_LOGIC_ERROR("ddcutil not built with USB support");
 #endif
       }
       else {
@@ -145,4 +145,23 @@ get_capabilities_string(Display_Handle * dh, char** pcaps) {
    *pcaps = dh->dref->capabilities_string;
    return psc;
 }
+
+
+Public_Status_Code
+get_capabilities_string_by_dref(Display_Ref * dref, char **pcaps) {
+   assert(dref);
+
+   Public_Status_Code psc = 0;
+   if (!dref->capabilities_string) {
+      Display_Handle * dh = NULL;
+      psc = ddc_open_display(dref, CALLOPT_NONE, &dh);
+      if (psc == 0) {
+         psc = get_capabilities_string(dh, &dref->capabilities_string);
+         ddc_close_display(dh);
+      }
+   }
+   *pcaps = dref->capabilities_string;
+   return psc;
+}
+
 
