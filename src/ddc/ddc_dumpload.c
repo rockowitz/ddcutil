@@ -359,7 +359,7 @@ loadvcp_by_dumpload_data(
    }
 
    Public_Status_Code psc = 0;
-   Display_Handle dh_argument = dh;
+   Display_Handle * dh_argument = dh;
 
    if (dh) {
       // If explicit display specified, check that the data is valid for it
