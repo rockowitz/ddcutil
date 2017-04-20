@@ -36,8 +36,8 @@
 #define FUNCTION_ERRMSG(function_name,status_code) \
    printf("(%s) %s() returned %d (%s): %s\n",      \
           __func__, function_name, status_code,    \
-          ddca_status_code_name(status_code),      \
-          ddca_status_code_desc(status_code))
+          ddca_rc_name(status_code),      \
+          ddca_rc_desc(status_code))
 
 
 // A simple function that opens the first detected display.
@@ -242,7 +242,7 @@ void demo_get_capabilities() {
    if (!dh)
       goto bye;
 
-   printf("\n(%s) ===> Starting.  dh = %s\n", __func__, ddca_repr_display_handle(dh));
+   printf("\n(%s) ===> Starting.  dh = %s\n", __func__, ddca_dh_repr(dh));
    char * capabilities = NULL;
    DDCA_Status rc =  ddca_get_capabilities_string(dh, &capabilities);
    if (rc != 0)

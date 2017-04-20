@@ -33,8 +33,8 @@
 #define FUNCTION_ERRMSG(function_name,status_code) \
    printf("(%s) %s() returned %d (%s): %s\n",      \
           __func__, function_name, status_code,    \
-          ddca_status_code_name(status_code),      \
-          ddca_status_code_desc(status_code))
+          ddca_rc_name(status_code),      \
+          ddca_rc_desc(status_code))
 
 int
 test_cont_value(
@@ -42,7 +42,7 @@ test_cont_value(
       DDCA_Vcp_Feature_Code   feature_code)
 {
    printf("\n(%s) ===> Starting. dh=%s, feature_code=0x%02x\n",
-          __func__, ddca_repr_display_handle(dh), feature_code);
+          __func__, ddca_dh_repr(dh), feature_code);
    DDCA_Status rc;
    bool ok = true;
    char * feature_name = ddca_get_feature_name(feature_code);
@@ -162,7 +162,7 @@ test_cont_value(
 
 
 DDCA_Status test_get_set_profile_related_values(DDCA_Display_Handle dh) {
-   printf("\n(%s) ===> Starting.  dh = %s\n", __func__, ddca_repr_display_handle(dh));
+   printf("\n(%s) ===> Starting.  dh = %s\n", __func__, ddca_dh_repr(dh));
    printf("(%s) Calling ddca_get_profile_related_values()...\n", __func__);
    DDCA_Status psc = 0;
    char* profile_values_string;
@@ -231,7 +231,7 @@ void test_display_id_ref_handle_use() {
 
    if (rc != 0) {
       printf("(%s) ddct_get_display_ref() returned %d (%s): %s\n",
-             __func__, rc, ddca_status_code_name(rc), ddca_status_code_desc(rc));
+             __func__, rc, ddca_rc_name(rc), ddca_rc_desc(rc));
    }
    else {
       char * dref_repr = ddca_repr_display_ref(dref);
@@ -244,7 +244,7 @@ void test_display_id_ref_handle_use() {
          FUNCTION_ERRMSG("ddct_open_display", rc);
       }
       else {
-         char * dh_repr = ddca_repr_display_handle(dh);
+         char * dh_repr = ddca_dh_repr(dh);
          printf("(%s) display handle: %s\n", __func__, dh_repr);
 
          DDCA_MCCS_Version_Spec vspec;
@@ -319,7 +319,7 @@ int main(int argc, char** argv) {
          FUNCTION_ERRMSG("ddca_open_display", rc);
          continue;
       }
-      char * dh_repr = ddca_repr_display_handle(dh);
+      char * dh_repr = ddca_dh_repr(dh);
       printf("(%s) Opened display handle: %s\n", __func__, dh_repr);
 
       test_cont_value(dh, 0x10);

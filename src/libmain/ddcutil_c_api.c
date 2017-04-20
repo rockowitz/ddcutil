@@ -291,7 +291,7 @@ global_to_ddca_status_code(Global_Status_ Code gsc) {
 #endif
 
 char *
-ddca_status_code_name(DDCA_Status status_code) {
+ddca_rc_name(DDCA_Status status_code) {
    char * result = NULL;
    // Global_ Status_Code gsc = ddca_to_global_ status_code(status_code);
    // Status_Code_Info * code_info = find_global_status_code_info(gsc);
@@ -303,7 +303,7 @@ ddca_status_code_name(DDCA_Status status_code) {
 
 
 char *
-ddca_status_code_desc(DDCA_Status status_code) {
+ddca_rc_desc(DDCA_Status status_code) {
    char * result = "unknown status code";
    // Global_ Status_Code gsc = ddca_to_global_status_code(status_code);
    // Status_Code_Info * code_info = find_global_status_code_info(gsc);
@@ -625,7 +625,7 @@ ddca_free_display_identifier(
 // static char did_work_buf[100];
 
 char *
-ddca_repr_display_identifier(DDCA_Display_Identifier ddca_did) {
+ddca_did_repr(DDCA_Display_Identifier ddca_did) {
    char * result = NULL;
    Display_Identifier * pdid = (Display_Identifier *) ddca_did;
    if (pdid != NULL && memcmp(pdid->marker, DISPLAY_IDENTIFIER_MARKER, 4) == 0 )  {
@@ -718,7 +718,7 @@ DDCA_Status ddca_free_display_ref(DDCA_Display_Ref ddca_dref) {
 // static char dref_work_buf[100];
 
 char *
-ddca_repr_display_ref(DDCA_Display_Ref ddca_dref){
+ddca_dref_repr(DDCA_Display_Ref ddca_dref){
    char * result = NULL;
    Display_Ref * dref = (Display_Ref *) ddca_dref;
    if (dref != NULL && memcmp(dref->marker, DISPLAY_REF_MARKER, 4) == 0 )  {
@@ -801,7 +801,7 @@ ddca_close_display(DDCA_Display_Handle ddca_dh) {
 
 
 char *
-ddca_repr_display_handle(DDCA_Display_Handle ddca_dh) {
+ddca_dh_repr(DDCA_Display_Handle ddca_dh) {
    char * repr = NULL;
    Display_Handle * dh = (Display_Handle *) ddca_dh;
    if (valid_display_handle(dh))

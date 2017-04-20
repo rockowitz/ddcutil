@@ -229,7 +229,7 @@ ddcg_display_handle_repr(
 {
    g_return_val_if_fail( DDCG_IS_DISPLAY_HANDLE(ddcg_dh), NULL);
 
-   gchar * repr = ddca_repr_display_handle(ddcg_dh->priv->ddct_dh);
+   gchar * repr = ddca_dh_repr(ddcg_dh->priv->ddct_dh);
    // DBGMSG("repr=%p", repr);
    // DBGMSG("repr = %s", repr);
    if ( !repr) {

@@ -63,7 +63,7 @@ static void throw_exception_from_status_code(DDCA_Status rc) {
    ddcutil_error_status = rc;
    snprintf(error_msg, sizeof(error_msg),
             "%s (%d): %s",
-            ddca_status_code_name(rc), rc, ddca_status_code_desc(rc)
+            ddca_rc_name(rc), rc, ddca_rc_desc(rc)
            );
 }
 
@@ -250,7 +250,7 @@ void ddcs_free_display_identifier(DDCS_Display_Identifier ddcs_did){
 
 char * ddcs_repr_display_identifier(DDCS_Display_Identifier ddcs_did){
    clear_exception();
-   char * result = ddca_repr_display_identifier(ddcs_did);
+   char * result = ddca_did_repr(ddcs_did);
    if (!result)
       throw_exception_from_status_code(DDCL_ARG);   // TODO: Python ValueError
    return result;
@@ -279,7 +279,7 @@ void ddcs_free_display_ref(DDCS_Display_Ref dref) {
 
 char *  ddcs_repr_display_ref(DDCS_Display_Ref dref) {
    clear_exception();
-   char * result =  ddca_repr_display_ref(dref);
+   char * result =  ddca_dref_repr(dref);
    if (!result)
       throw_exception_from_status_code(DDCL_ARG);     // TODO: Python ValueError
    return result;
@@ -313,7 +313,7 @@ void ddcs_close_display(DDCS_Display_Handle dh) {
 
 char * ddcs_repr_display_handle(DDCS_Display_Handle dh) {
    clear_exception();
-   char * result = ddca_repr_display_handle(dh);
+   char * result = ddca_dh_repr(dh);
    if (!result)
       throw_exception_from_status_code(DDCL_OTHER);   // should just be Python ValueError
    return result;

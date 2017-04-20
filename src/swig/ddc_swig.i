@@ -117,12 +117,12 @@ FlagsByte ddcs_get_build_options();
 // Status Code Management
 //
 
-%rename(ddcs_status_code_name) ddca_status_code_name;
-%rename(ddcs_status_code_desc) ddca_status_code_desc;
+%rename(ddcs_status_code_name) ddca_rc_name;
+%rename(ddcs_status_code_desc) ddca_rc_desc;
 typedef int DDCA_Status;    // for now
 // need to handle illegal status_code 
-char * ddca_status_code_name(DDCA_Status status_code);
-char * ddca_status_code_desc(DDCA_Status status_code);
+char * ddca_rc_name(DDCA_Status status_code);
+char * ddca_rc_desc(DDCA_Status status_code);
 
 
  //

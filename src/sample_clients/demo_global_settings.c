@@ -37,8 +37,8 @@
 #define FUNCTION_ERRMSG(function_name,status_code) \
    printf("(%s) %s() returned %d (%s): %s\n",      \
           __func__, function_name, status_code,    \
-          ddca_status_code_name(status_code),      \
-          ddca_status_code_desc(status_code))
+          ddca_rc_name(status_code),      \
+          ddca_rc_desc(status_code))
 
 
 void demo_build_information() {
@@ -100,12 +100,12 @@ void demo_retry_management() {
   rc = ddca_set_max_tries(DDCA_WRITE_READ_TRIES, badct);
   assert(rc == -EINVAL);
   printf("      ddca_set_max_tries(DDCA_WRITE_READ_TRIES, %d) returned: %d (%s)\n",
-         badct, rc, ddca_status_code_name(rc) );
+         badct, rc, ddca_rc_name(rc) );
 
   printf("   Setting the count to exactly ddca_get_max_max_tries() works...\n");
   rc = ddca_set_max_tries(DDCA_WRITE_READ_TRIES, max_max_tries);
   printf("      ddca_set_max_tries(DDCA_WRITE_READ_TRIES, %d) returned: %d (%s)\n",
-         max_max_tries, rc, ddca_status_code_name(rc) );
+         max_max_tries, rc, ddca_rc_name(rc) );
 
 }
 
@@ -123,7 +123,7 @@ void handle_library_abort() {
       DDCA_Global_Failure_Information * finfo = ddca_get_global_failure_information();
       if (finfo)
          fprintf(stderr, "(%s) Error %d (%s) in function %s at line %d in file %s\n",
-                         __func__, finfo->status, ddca_status_code_name(finfo->status), finfo->funcname, finfo->lineno, finfo->fn);
+                         __func__, finfo->status, ddca_rc_name(finfo->status), finfo->funcname, finfo->lineno, finfo->fn);
       fprintf(stderr, "(%s) Aborting. Internal status code = %d\n", __func__, jmprc);
       exit(EXIT_FAILURE);
    }

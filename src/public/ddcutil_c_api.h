@@ -174,13 +174,13 @@ typedef enum {
  * @param status_code numeric status code
  * @return symbolic name, e.g. EBUSY, DDCRC-INVALID_DATA
  *  */
-char * ddca_status_code_name(DDCA_Status status_code);
+char * ddca_rc_name(DDCA_Status status_code);
 
 /** Returns a description of a ddcutil status code
  * @param status_code numeric status code
  * @return explanation of status code, e.g. "device or resource busy"
  */
-char * ddca_status_code_desc(DDCA_Status status_code);
+char * ddca_rc_desc(DDCA_Status status_code);
 
 
 //
@@ -439,7 +439,7 @@ ddca_free_display_identifier(
  *  \ingroup api_display_spec
  */
 char *
-ddca_repr_display_identifier(
+ddca_did_repr(
       DDCA_Display_Identifier did);
 
 
@@ -478,7 +478,7 @@ ddca_free_display_ref(
  * @return      string representation of display reference, NULL if invalid
  * */
 char *
-ddca_repr_display_ref(
+ddca_dref_repr(
       DDCA_Display_Ref dref);
 
 /** Writes a report on the specified display reference to the current FOUT device
@@ -529,7 +529,7 @@ ddca_close_display(
  *  \ingroup api_display_spec
  */
 char *
-ddca_repr_display_handle(
+ddca_dh_repr(
       DDCA_Display_Handle   ddca_dh);
 
 

@@ -151,7 +151,7 @@ ddcg_display_ref_repr(
    g_return_val_if_fail( DDCG_IS_DISPLAY_REF(ddcg_dref), NULL);
 
    gchar * repr =
-      ddca_repr_display_ref( ddcg_dref->priv->ddct_dref);
+      ddca_dref_repr( ddcg_dref->priv->ddct_dref);
    if (!repr) {
       GQuark domain = g_quark_from_string("DDCTOOL_DDCG");
       g_set_error(error,  domain, DDCL_ARG, "ddcg_display_ref_repr() returned %d=ddcg_status",DDCL_ARG);

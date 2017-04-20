@@ -293,7 +293,7 @@ ddcg_display_identifier_repr(
    g_return_val_if_fail (error == NULL || *error == NULL, NULL);
    g_return_val_if_fail( DDCG_IS_DISPLAY_IDENTIFIER(ddcg_did), NULL);
 
-   char * repr = ddca_repr_display_identifier(ddcg_did->priv->ddct_did);
+   char * repr = ddca_did_repr(ddcg_did->priv->ddct_did);
    if (!repr) {
       GQuark domain = g_quark_from_string("DDCTOOL_DDCG");
       g_set_error(error,  domain, DDCL_ARG, "ddct_repr_identifier() returned %d=ddct_status", DDCL_ARG);

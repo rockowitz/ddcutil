@@ -43,8 +43,8 @@
 #define FUNCTION_ERRMSG(function_name,status_code) \
    printf("(%s) %s() returned %d (%s): %s\n",      \
           __func__, function_name, status_code,    \
-          ddca_status_code_name(status_code),      \
-          ddca_status_code_desc(status_code))
+          ddca_rc_name(status_code),      \
+          ddca_rc_desc(status_code))
 
 
 
@@ -78,7 +78,7 @@ DDCA_Display_Ref display_selection_using_ddca_get_displays() {
    }
 
    if (dref) {
-      printf("Found display: %s\n", ddca_repr_display_ref(dref) );
+      printf("Found display: %s\n", ddca_dref_repr(dref) );
 
       // printf("Detailed debug report:\n");
       // ddca_report_display_ref(
@@ -107,34 +107,34 @@ DDCA_Display_Ref display_selection_using_display_identifier() {
 
    printf("\nCreate a Display Identifier using I2C bus number\n");
    ddca_create_busno_display_identifier(7, &did); // always succeeds
-   printf("Created display identifier: %s\n", ddca_repr_display_identifier(did) );
+   printf("Created display identifier: %s\n", ddca_did_repr(did) );
    ddca_free_display_identifier(did);
 
    printf("\nCreate a Display Identifier using mfg code and model\n");
    rc = ddca_create_mfg_model_sn_display_identifier("ACI", "VE247", NULL, &did);
    assert(rc == 0);
-   printf("Created display identifier: %s\n", ddca_repr_display_identifier(did) );
+   printf("Created display identifier: %s\n", ddca_did_repr(did) );
    ddca_free_display_identifier(did);
 
    printf("\nCalling ddca_create_mfg_model_sn_display_identifier() with an invalid argument fails\n");
    rc = ddca_create_mfg_model_sn_display_identifier(NULL, "Model name longer than 13 chars", NULL, &did);
    if (rc != 0) {
       printf("   ddca_create_mfg_model_sn_display_identifier() returned %d (%s): %s\n",
-              rc, ddca_status_code_name(rc), ddca_status_code_desc(rc));
+              rc, ddca_rc_name(rc), ddca_rc_desc(rc));
    }
 
    printf("\nCreate a Display Identifier for display 1...\n");
    ddca_create_dispno_display_identifier(1, &did);     // always succeeds
-   printf("Created display identifier: %s\n", ddca_repr_display_identifier(did) );
+   printf("Created display identifier: %s\n", ddca_did_repr(did) );
 
    printf("\nFind a display reference for the display identifier...\n");
    rc = ddca_get_display_ref(did, &dref);
    if (rc != 0) {
       printf("     ddca_get_display_ref() returned %d (%s): %s\n",
-               rc, ddca_status_code_name(rc), ddca_status_code_desc(rc));
+               rc, ddca_rc_name(rc), ddca_rc_desc(rc));
    }
    else {
-       printf("Found display reference: %s\n", ddca_repr_display_ref(dref) );
+       printf("Found display reference: %s\n", ddca_dref_repr(dref) );
    }
 
    return dref;
@@ -164,7 +164,7 @@ void demo_use_display_ref(DDCA_Display_Ref dref) {
       FUNCTION_ERRMSG("ddca_open_display", rc);
    }
    else {
-      printf("   display handle: %s\n",  ddca_repr_display_handle(dh));
+      printf("   display handle: %s\n",  ddca_dh_repr(dh));
 
       DDCA_MCCS_Version_Spec vspec;
       rc = ddca_get_mccs_version(dh, &vspec);
