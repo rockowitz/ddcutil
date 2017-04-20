@@ -156,11 +156,10 @@ DDCA_Status  ddca_set_max_tries(DDCA_Retry_Type retry_type, int max_tries);
 %rename(ddcs_get_output_level) ddca_get_output_level;
 %rename(ddcs_set_output_level) ddca_set_output_level;
 %rename(ddcs_output_level_name) ddca_output_level_name;
-typedef enum {// OL_DEFAULT=0x01,
-              // OL_PROGRAM=0x02,
-              DDCA_OL_TERSE  =0x04,
-              DDCA_OL_NORMAL =0x08,
-              DDCA_OL_VERBOSE=0x10
+typedef enum {
+           DDCA_OL_TERSE  =0x04,
+           DDCA_OL_NORMAL =0x08,
+           DDCA_OL_VERBOSE=0x10
 } DDCA_Output_Level;
 
 
