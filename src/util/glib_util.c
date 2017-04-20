@@ -135,3 +135,29 @@ gint g_ptr_scomp(gconstpointer a, gconstpointer b) {
    // printf("(%s) bp = %p -> -> %p -> |%s|\n", __func__, bp, *bp, *bp);
    return g_ascii_strcasecmp(*ap,*bp);
 }
+
+
+/** Formats a string similarly to g_sprintf(), but allocates
+ *  a sufficiently sized buffer in which the formatted string
+ *  is returned.
+ *
+ *  \param fmt  format string
+ *  \param ...  arguments
+ *  \return     pointer to newly allocated string
+ */
+char * gaux_asprintf(char * fmt, ...) {
+   char * result = NULL;
+   va_list(args);
+   va_start(args, fmt);
+
+   // g_vasprintf(&result, fmt, args);  // get implicit function declaration error
+
+   gsize sz = g_printf_string_upper_bound(fmt,args);
+   result = calloc(1,sz);
+   va_start(args, fmt);
+   g_vsnprintf(result, sz, fmt, args);
+   va_end(args);
+   return result;
+}
+
+

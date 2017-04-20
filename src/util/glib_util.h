@@ -38,4 +38,6 @@ gpointer * g_list_to_g_array(GList * glist, guint * length);
 
 gint g_ptr_scomp(gconstpointer a, gconstpointer b);
 
+char * gaux_asprintf(char * fmt, ...);
+
 #endif /* GLIB_UTIL_H_ */
