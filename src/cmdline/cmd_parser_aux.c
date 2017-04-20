@@ -245,10 +245,6 @@ bool validate_output_level(Parsed_Cmd* parsed_cmd) {
          // default_output_level = OL_NORMAL;
          valid_output_levels = DDCA_OL_TERSE | DDCA_OL_NORMAL | DDCA_OL_VERBOSE;
    }
-
-   // if (parsed_cmd->output_level == OL_DEFAULT) {
-   //    parsed_cmd->output_level = default_output_level;
-   // }
    if (!(parsed_cmd->output_level & valid_output_levels)) {
       printf("Output level invalid for command %s: %s\n",
              get_command(parsed_cmd->cmd_id)->cmd_name,

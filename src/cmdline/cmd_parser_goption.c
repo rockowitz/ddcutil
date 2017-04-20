@@ -49,8 +49,6 @@
 // Variables used by callback functions
 static char *       adlwork       = NULL;
 static char *       usbwork       = NULL;
-// no longer need to vary default output level based on command
-// static DDCA_Output_Level output_level  = OL_DEFAULT;
 static DDCA_Output_Level output_level  = DDCA_OL_NORMAL;
 static int          iAdapterIndex = -1;
 static int          iDisplayIndex = -1;
