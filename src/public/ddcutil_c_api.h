@@ -334,7 +334,7 @@ void ddca_show_stats(DDCA_Stats_Type stats, int depth);
 /** Creates a display identifier using the display number assigned by ddcutil
  * @param[in]  dispno  display number
  * @param[out] pdid    where to return display identifier handle
- * @return status code
+ * @retval     0
  *
  * \ingroup api_display_spec
  * */
@@ -346,7 +346,7 @@ ddca_create_dispno_display_identifier(
 /** Creates a display identifier using an I2C bus number
  * @param[in]  busno  I2C bus number
  * @param[out] pdid   where to return display identifier handle
- * @return            status code
+ * @retval     0
  *
  * \ingroup api_display_spec
  */
@@ -375,7 +375,8 @@ ddca_create_adlno_display_identifier(
  * @param model   model name string
  * @param sn     serial number string
  * @param pdid   where to return display identifier handle
- * @return       status code
+ * @retval 0       success
+ * @retval -EINVAL no argument specified, or argument too long
  *
  * \ingroup api_display_spec
  */
@@ -387,9 +388,10 @@ ddca_create_mfg_model_sn_display_identifier(
       DDCA_Display_Identifier* pdid);
 
 /** Creates a display identifier using a 128 byte EDID
- * @param edid  pointer to 128 byte EDID
- * @param pdid  where to return display identifier handle
- * @return      status code
+ * @param   edid  pointer to 128 byte EDID
+ * @param   pdid  where to return display identifier handle
+ * @retval  0       success
+ * @retval  -EINVAL edid==NULL
  *
  * \ingroup api_display_spec
  */
@@ -402,7 +404,7 @@ ddca_create_edid_display_identifier(
  * @param bus    USB bus number
  * @param device USB device number
  * @param pdid   where to return display identifier handle
- * @return       status code
+ * @retval 0 success
  *
  *  \ingroup api_display_spec
  */
@@ -415,7 +417,7 @@ ddca_create_usb_display_identifier(
 /** Creates a display identifier using a /dev/usb/hiddev device number
  * @param hiddev_devno hiddev device number
  * @param pdid   where to return display identifier handle
- * @return       status code
+ * @retval 0  success
  *
  *  \ingroup api_display_spec
  */
@@ -431,8 +433,8 @@ ddca_free_display_identifier(
       DDCA_Display_Identifier did);
 
 /** Returns a string representation of a display identifier
- *  @param[in]  did    display indentifier
- *  @return     string representation of display identifier, NULL if invalid
+ *  \param[in]  did    display identifier
+ *  \return     string representation of display identifier, NULL if invalid
  *
  *  \ingroup api_display_spec
  */
@@ -450,7 +452,9 @@ ddca_repr_display_identifier(
  *  created by monitor detection and does not need to be freed.
  * @param[in]  did display identifier
  * @param[out] pdref where to return display reference
- * @return     status code
+ * @retval     0 success
+ * @retval     -EINVAL  did not a valid display identifier handle
+ * @retval     DDCRC_INVALID_DISPLAY display not found
  *
  * \ingroup api_display_spec
  */
@@ -542,6 +546,18 @@ ddca_repr_display_handle(
 DDCA_Display_Info_List *
 ddca_get_displays();
 
+
+/** Frees a list of detected displays.
+ *
+ *  This function understands which fields in the list
+ *  point to permanently allocated data structures and should
+ *  not be freed.
+ *
+ *  \param dlist pointer to #DDCA_Display_Info_List
+ */
+void ddca_free_display_info_list(DDCA_Display_Info_List * dlist);
+
+
 /** Presents a report on a single display.
  *  The report is written to the current FOUT device.
  *
@@ -563,7 +579,6 @@ void
 ddca_report_display_info_list(
       DDCA_Display_Info_List * dlist,
       int                      depth);
-
 
 /** Reports on all active displays.
  *  This function hooks into the code used by command "ddcutil detect"

@@ -538,20 +538,23 @@ ddca_create_mfg_model_sn_display_identifier(
 {
    *p_did = NULL;
    DDCA_Status rc = 0;
+
    // break up the invalid argument tests for clarity
-   // at least 1 argument must be specified
+
+   // At least 1 argument must be specified
    if (  ( !mfg_id       || strlen(mfg_id)       == 0)  &&
          ( !model_name   || strlen(model_name)   == 0)  &&
          ( !serial_ascii || strlen(serial_ascii) == 0)
       )
-      rc = DDCL_ARG;
+      rc = -EINVAL;
 
-   // check that no arguments are too long
-   if ( (model_name   && strlen(model_name)   >= EDID_MODEL_NAME_FIELD_SIZE)  ||
+   // check if any arguments are too long
+   else if (
+        (model_name   && strlen(model_name)   >= EDID_MODEL_NAME_FIELD_SIZE)  ||
         (mfg_id       && strlen(mfg_id)       >= EDID_MFG_ID_FIELD_SIZE)      ||
         (serial_ascii && strlen(serial_ascii) >= EDID_SERIAL_ASCII_FIELD_SIZE)
       )
-      rc = DDCL_ARG;
+      rc = -EINVAL;
 
    else {
       *p_did = create_mfg_model_sn_display_identifier(
@@ -569,7 +572,7 @@ ddca_create_edid_display_identifier(
    *p_did = NULL;
    DDCA_Status rc = 0;
    if (edid == NULL) {
-      rc = DDCL_ARG;
+      rc = -EINVAL;
       *p_did = NULL;
    }
    else {
@@ -619,13 +622,14 @@ ddca_free_display_identifier(
 }
 
 
-static char did_work_buf[100];
+// static char did_work_buf[100];
 
 char *
 ddca_repr_display_identifier(DDCA_Display_Identifier ddca_did) {
    char * result = NULL;
    Display_Identifier * pdid = (Display_Identifier *) ddca_did;
    if (pdid != NULL && memcmp(pdid->marker, DISPLAY_IDENTIFIER_MARKER, 4) == 0 )  {
+#ifdef OLD
       char * did_type_name = display_id_type_name(pdid->id_type);
       switch (pdid->id_type) {
       case(DISP_ID_BUSNO):
@@ -664,6 +668,9 @@ ddca_repr_display_identifier(DDCA_Display_Identifier ddca_did) {
 
       } // switch
       result = did_work_buf;
+#endif
+      result = did_repr(pdid);
+
    }
    return result;
 }
@@ -683,7 +690,7 @@ DDCA_Status ddca_get_display_ref(DDCA_Display_Identifier did, DDCA_Display_Ref* 
    DDCA_Status rc = 0;
    Display_Identifier * pdid = (Display_Identifier *) did;
    if (pdid == NULL || memcmp(pdid->marker, DISPLAY_IDENTIFIER_MARKER, 4) != 0 )  {
-     rc = DDCL_ARG;
+     rc = -EINVAL;
    }
    else {
       Display_Ref* dref = get_display_ref_for_display_identifier(pdid, CALLOPT_ERR_MSG);
@@ -692,7 +699,7 @@ DDCA_Status ddca_get_display_ref(DDCA_Display_Identifier did, DDCA_Display_Ref* 
       if (dref)
          *ddca_dref = dref;
       else
-         rc = DDCL_ARG;
+         rc = DDCRC_INVALID_DISPLAY;
    }
    return rc;
 }
@@ -729,7 +736,8 @@ ddca_repr_display_ref(DDCA_Display_Ref ddca_dref){
       }
       *repr = did_work_buf;
 #endif
-      result = dref_short_name(dref);
+      // result = dref_short_name(dref);
+      result = dref_repr(dref);
    }
    return result;
 }
@@ -740,7 +748,7 @@ ddca_report_display_ref(
       int              depth)
 {
    Display_Ref * dref = (Display_Ref *) ddca_dref;
-   rpt_vstring(depth, "DDCT_Display_Ref at %p:", dref);
+   rpt_vstring(depth, "DDCA_Display_Ref at %p:", dref);
    report_display_ref(dref, depth+1);
 }
 
@@ -759,15 +767,13 @@ ddca_open_display(
    *p_dh = NULL;        // in case of error
    Display_Ref * dref = (Display_Ref *) ddca_dref;
    if (dref == NULL || memcmp(dref->marker, DISPLAY_REF_MARKER, 4) != 0 )  {
-      rc = DDCL_ARG;
+      rc = -EINVAL;
    }
    else {
      Display_Handle* dh = NULL;
      rc = ddc_open_display(dref,  CALLOPT_ERR_MSG, &dh);
      if (rc == 0)
         *p_dh = dh;
-     else
-        rc = DDCL_ARG;     //  TEMP, need a proper status code
    }
    return rc;
 }
@@ -793,43 +799,13 @@ ddca_close_display(DDCA_Display_Handle ddca_dh) {
 }
 
 
-static char dh_work_buf[100];
 
 char *
 ddca_repr_display_handle(DDCA_Display_Handle ddca_dh) {
    char * repr = NULL;
    Display_Handle * dh = (Display_Handle *) ddca_dh;
-   // if (dh == NULL || memcmp(dh->marker, DISPLAY_HANDLE_MARKER, 4) != 0 )  {
-   if (!valid_display_handle(dh)) {
-      repr = NULL;
-   }
-   else {
-      char * dh_type_name = mccs_io_mode_name(dh->dref->io_mode);
-      switch (dh->dref->io_mode) {
-      case(DISP_ID_BUSNO):
-         snprintf(dh_work_buf, 100,
-                  "Display Handle Type: %s, bus=/dev/i2c-%d",
-                  dh_type_name, dh->dref->busno);
-         break;
-      case(DISP_ID_ADL):
-         snprintf(dh_work_buf, 100,
-                  "Display Handle Type: %s, adlno=%d.%d",
-                  dh_type_name, dh->dref->iAdapterIndex, dh->dref->iDisplayIndex);
-         break;
-      case DDCA_IO_USB:
-         snprintf(dh_work_buf, 100,
-                  "Display Handle Type: %s, %s/hiddev%d, usb bus:device=%d:%d]",
-                  dh_type_name,
-                  hiddev_directory(), dh->dref->usb_hiddev_devno,
-                  dh->dref->usb_bus, dh->dref->usb_device
-                  );
-         break;
-      }
-      repr = dh_work_buf;
-   }
-   // DBGMSG("repr=%p, *repr=%p, dh_work_buf=%p", repr, *repr, dh_work_buf);
-   // DBGMSG("dh_work_buf=|%s|", dh_work_buf);
-   // DBGMSG("Returning rc=%d, *repr=%s", rc, *repr);
+   if (valid_display_handle(dh))
+      repr = dh_repr(dh);
    return repr;
 }
 
@@ -925,19 +901,19 @@ ddca_get_displays_old()
          curinfo->usb_bus       = dref->usb_bus;
          curinfo->usb_device    = dref->usb_device;
 #endif
-         curinfo->loc.io_mode = dref->io_mode;
+         curinfo->path.io_mode = dref->io_mode;
          switch (dref->io_mode) {
          case DDCA_IO_DEVI2C:
-            curinfo->loc.i2c_busno = dref->busno;
+            curinfo->path.i2c_busno = dref->busno;
             break;
          case DDCA_IO_ADL:
-            curinfo->loc.adlno.iAdapterIndex = dref->iAdapterIndex;
-            curinfo->loc.adlno.iDisplayIndex = dref->iDisplayIndex;
+            curinfo->path.adlno.iAdapterIndex = dref->iAdapterIndex;
+            curinfo->path.adlno.iDisplayIndex = dref->iDisplayIndex;
             break;
          case DDCA_IO_USB:
             curinfo->usb_bus    = dref->usb_bus;
             curinfo->usb_device = dref->usb_device;
-            curinfo->loc.hiddev_devno = dref->usb_hiddev_devno;
+            curinfo->path.hiddev_devno = dref->usb_hiddev_devno;
             break;
          }
          curinfo->edid_bytes    = drec.edid->bytes;
@@ -960,8 +936,9 @@ ddca_get_displays_old()
 DDCA_Display_Info_List *
 ddca_get_displays()
 {
-   ddc_ensure_displays_detected();
+   // PROGRAM_LOGIC_ERROR("Pseudo failure");
 
+   ddc_ensure_displays_detected();
    GPtrArray * all_displays = ddc_get_all_displays();
 
    int true_ct = 0;         // number of valid displays
@@ -984,19 +961,20 @@ ddca_get_displays()
          DDCA_Display_Info * curinfo = &result_list->info[true_ctr++];
          memcpy(curinfo->marker, DDCA_DISPLAY_INFO_MARKER, 4);
          curinfo->dispno        = dref->dispno;
-         curinfo->loc.io_mode = dref->io_mode;
+         curinfo->path.io_mode = dref->io_mode;
+         // n. usb_bus, usb_device initialized to 0 by calloc
          switch (dref->io_mode) {
          case DDCA_IO_DEVI2C:
-            curinfo->loc.i2c_busno = dref->busno;
+            curinfo->path.i2c_busno = dref->busno;
             break;
          case DDCA_IO_ADL:
-            curinfo->loc.adlno.iAdapterIndex = dref->iAdapterIndex;
-            curinfo->loc.adlno.iDisplayIndex = dref->iDisplayIndex;
+            curinfo->path.adlno.iAdapterIndex = dref->iAdapterIndex;
+            curinfo->path.adlno.iDisplayIndex = dref->iDisplayIndex;
             break;
          case DDCA_IO_USB:
             curinfo->usb_bus    = dref->usb_bus;
             curinfo->usb_device = dref->usb_device;
-            curinfo->loc.hiddev_devno = dref->usb_hiddev_devno;
+            curinfo->path.hiddev_devno = dref->usb_hiddev_devno;
             break;
          }
          curinfo->edid_bytes    = dref->pedid->bytes;
@@ -1004,12 +982,27 @@ ddca_get_displays()
          curinfo->mfg_id        = dref->pedid->mfg_id;
          curinfo->model_name    = dref->pedid->model_name;
          curinfo->sn            = dref->pedid->serial_ascii;
-         curinfo->ddca_dref     = dref;
+         curinfo->dref          = dref;
       }
    }
 
    // DBGMSG("Returning %p", result_list);
    return result_list;
+}
+
+static
+void ddca_free_display_info(DDCA_Display_Info * info_rec) {
+   // All pointers in DDCA_Display_Info are to permananently allocated
+   // data structures.  Nothing to free.
+}
+
+void ddca_free_display_info_list(DDCA_Display_Info_List * dlist) {
+   if (dlist) {
+      for (int ndx = 0; ndx < dlist->ct; ndx++) {
+         ddca_free_display_info(&dlist->info[ndx]);
+      }
+      free(dlist);
+   }
 }
 
 
@@ -1038,19 +1031,19 @@ ddca_report_display_info(
    }
 #endif
 
-   rpt_vstring(d1, "IO mode:         %s", mccs_io_mode_name(dinfo->loc.io_mode));
-   switch(dinfo->loc.io_mode) {
+   rpt_vstring(d1, "IO mode:         %s", mccs_io_mode_name(dinfo->path.io_mode));
+   switch(dinfo->path.io_mode) {
    case (DDCA_IO_DEVI2C):
-         rpt_vstring(d1, "I2C bus number:     %d", dinfo->loc.i2c_busno);
+         rpt_vstring(d1, "I2C bus number:     %d", dinfo->path.i2c_busno);
          break;
    case (DDCA_IO_ADL):
          rpt_vstring(d1, "ADL adapter.display:  %d.%d",
-                         dinfo->loc.adlno.iAdapterIndex, dinfo->loc.adlno.iDisplayIndex);
+                         dinfo->path.adlno.iAdapterIndex, dinfo->path.adlno.iDisplayIndex);
          break;
    case (DDCA_IO_USB):
          rpt_vstring(d1, "USB bus.device:       %d.%d",
                          dinfo->usb_bus, dinfo->usb_device);
-         rpt_vstring(d1, "USB hiddev number:    %d", dinfo->loc.hiddev_devno);
+         rpt_vstring(d1, "USB hiddev number:    %d", dinfo->path.hiddev_devno);
          break;
    }
 
@@ -1059,7 +1052,7 @@ ddca_report_display_info(
    rpt_vstring(d1, "Model:          %s", dinfo->model_name);
    rpt_vstring(d1, "Serial number:  %s", dinfo->sn);
    rpt_vstring(d1, "EDID:           %s", edidstr);
-   rpt_vstring(d1, "ddca_dref:      %p", dinfo->ddca_dref);
+   rpt_vstring(d1, "dref:           %p", dinfo->dref);
    free(edidstr);
 }
 
