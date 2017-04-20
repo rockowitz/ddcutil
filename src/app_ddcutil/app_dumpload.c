@@ -186,6 +186,7 @@ Dumpload_Data * read_vcp_file(const char * fn) {
  *
  * Arguments:
  *    fn          file name
+ *    dh          handle for open display
  *
  * Returns:  true if load succeeded, false if not
  */
