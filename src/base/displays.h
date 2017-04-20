@@ -269,6 +269,7 @@ Display_Handle * create_adl_display_handle_from_display_ref(Display_Ref * dref);
 Display_Handle * create_usb_display_handle_from_display_ref(int fh, Display_Ref * dref);
 void   report_display_handle(Display_Handle * dh, const char * msg, int depth);
 char * dh_repr(Display_Handle * dh);
+void   free_display_handle(Display_Handle * dh);
 
 #define VIDEO_CARD_INFO_MARKER "VIDC"
 /** Video card information */

@@ -750,6 +750,15 @@ char * dh_repr(Display_Handle * dh) {
 }
 
 
+void   free_display_handle(Display_Handle * dh) {
+   if (dh && memcmp(dh->marker, DISPLAY_HANDLE_MARKER, 4) == 0) {
+      dh->marker[3] = 'x';
+      free(dh->repr);
+      free(dh);
+   }
+}
+
+
 // *** Display_Info ***
 
 #ifdef OLD
