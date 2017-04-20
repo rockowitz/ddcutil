@@ -1496,13 +1496,21 @@ void i2c_report_active_display(Bus_Info * businfo, int depth) {
       free(sysattr_name);
    }
 
-   if (output_level == DDCA_OL_TERSE)
-   rpt_vstring(depth, "Monitor:             %s:%s:%s",  businfo->edid->mfg_id,
-                                               businfo->edid->model_name,
-                                               businfo->edid->serial_ascii);
-   if (output_level >= DDCA_OL_NORMAL && businfo->edid) {
-      bool verbose = (output_level >= DDCA_OL_VERBOSE);
-      report_parsed_edid(businfo->edid, verbose, depth);
+   if (businfo->edid) {
+      switch(output_level) {
+      case DDCA_OL_TERSE:
+         rpt_vstring(depth, "Monitor:             %s:%s:%s",
+                            businfo->edid->mfg_id,
+                            businfo->edid->model_name,
+                            businfo->edid->serial_ascii);
+         break;
+      case DDCA_OL_NORMAL:
+         report_parsed_edid(businfo->edid, false, depth);
+         break;
+      case DDCA_OL_VERBOSE:
+         report_parsed_edid(businfo->edid, true, depth);
+         break;
+      }
    }
 }
 
