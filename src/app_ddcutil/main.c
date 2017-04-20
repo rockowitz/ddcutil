@@ -500,6 +500,10 @@ int main(int argc, char *argv[]) {
       }
       if (ok)
          ok = loadvcp_by_file(fn, dh);
+
+      // if we opened the display, we close it
+      if (dh)
+         ddc_close_display(dh);
       main_rc = (ok) ? EXIT_SUCCESS : EXIT_FAILURE;
    }
 
