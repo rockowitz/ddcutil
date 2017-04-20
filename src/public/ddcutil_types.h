@@ -125,8 +125,6 @@ typedef enum{
  * Values are ascending in order of verbosity
  */
 typedef enum {
-   // OL_DEFAULT=0x01,    // used only within command line parser
-   // OL_PROGRAM=0x02,
    DDCA_OL_TERSE  =0x04,         /**< Brief   output  */
    DDCA_OL_NORMAL =0x08,         /**< Normal  output */
    DDCA_OL_VERBOSE=0x10          /**< Verbose output */
@@ -274,45 +272,33 @@ typedef struct {
 } DDCA_Display_Location;
 #endif
 
-/** Describes a display's access mode and the location identifiers for that mode
- *
- */
+
+/** Describes a display's physical access mode and the location identifiers for that mode  */
 typedef struct {
-   DDCA_IO_Mode io_mode;
+   DDCA_IO_Mode io_mode;        ///< physical access mode
    union {
-      int        i2c_busno;
-      DDCA_Adlno adlno;
-      int        hiddev_devno;
+      int        i2c_busno;     ///< I2C bus number
+      DDCA_Adlno adlno;         ///< ADL iAdapterIndex/iDisplayIndex pair
+      int        hiddev_devno;  ///* USB hiddev device  number
    };
-} DDCA_Display_Path;
+} DDCA_IO_Path;
 
 
 
 #define DDCA_DISPLAY_INFO_MARKER "DDIN"
-/** DDCA_Display_Info describes one monitor detected by ddcutil.
- *
- */
+/** Describes one monitor detected by ddcutil. */
 typedef struct {
-   char             marker[4];
-   int              dispno;
-#ifdef OLD
-   DDCA_IO_Mode     io_mode;
-   int              i2c_busno;
-   int              iAdapterIndex;
-   int              iDisplayIndex;
-   int              usb_bus;
-   int              usb_device;
-#endif
-   DDCA_Display_Path loc;
-
-   int              usb_bus;
-   int              usb_device;
+   char              marker[4];
+   int               dispno;
+   DDCA_IO_Path      path;
+   int               usb_bus;
+   int               usb_device;
    // or should these be actual character/byte arrays instead of pointers?
-   const char *     mfg_id;
-   const char *     model_name;
-   const char *     sn;
-   const uint8_t *  edid_bytes;
-   DDCA_Display_Ref ddca_dref;
+   const char *      mfg_id;
+   const char *      model_name;
+   const char *      sn;
+   const uint8_t *   edid_bytes;
+   DDCA_Display_Ref  dref;
 } DDCA_Display_Info;
 
 
@@ -493,19 +479,6 @@ typedef enum {
    DDCA_NON_TABLE_VCP_VALUE,   /**< Continuous (C) or Non-Continuous (NC) value */
    DDCA_TABLE_VCP_VALUE,       /**< Table (T) value */
 } DDCA_Vcp_Value_Type;
-
-
-#ifdef OLD
-typedef struct {
-   uint8_t  mh;
-   uint8_t  ml;
-   uint8_t  sh;
-   uint8_t  sl;
-   int      max_value;
-   int      cur_value;
-   // include interpreted string?
-} DDCA_Non_Table_Value_Response;
-#endif
 
 
 /** Represents a single non-table VCP value */
