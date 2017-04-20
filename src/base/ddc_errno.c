@@ -78,6 +78,7 @@ static Status_Code_Info ddcrc_info[] = {
       EDENTRY(DDCL_INTERNAL_ERROR         , "fatal error condition"),
       EDENTRY(DDCL_OTHER                  , "other error"),       // for use during development
       EDENTRY(DDCRC_VERIFY                , "VCP read after write failed"),
+      EDENTRY(DDCRC_NOT_FOUND             , "not found"),
 
     };
 #undef EDENTRY
