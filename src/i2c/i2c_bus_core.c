@@ -178,15 +178,20 @@ bool i2c_force_slave_addr_flag = false;
  *
  * @retval  0 if success
  * @retval <0 negative Linux errno, if ioctl call fails and CALLOPT_ERR_ABORT not set in callopts
+ *
+ * \remark
+ * Errors which are recovered are counted here using COUNT_STATUS_CODE().
+ * The final status code is left for the caller to count
  */
 Status_Errno i2c_set_addr(int file, int addr, Call_Options callopts) {
    bool debug = false;
+#ifdef FOR_TESTING
    bool force_i2c_slave_failure = false;
+#endif
    callopts |= CALLOPT_ERR_MSG;    // temporary
    DBGMSF(debug, "file=%d, addr=0x%02x, i2c_force_slave_addr_flag=%s, callopts=%s",
                  file, addr, bool_repr(i2c_force_slave_addr_flag), interpret_call_options(callopts));
-   // FAILSIM_EXT( ( show_backtrace(1) ) )
-   FAILSIM;
+   // FAILSIM;
 
    Status_Errno result = 0;
    int rc = 0;
@@ -199,6 +204,7 @@ retry:
          IE_OTHER,
          ( rc = ioctl(file, op, addr) )
         );
+#ifdef FOR_TESTING
    if (force_i2c_slave_failure) {
       if (op == I2C_SLAVE) {
          DBGMSG("Forcing pseudo failure");
@@ -206,6 +212,7 @@ retry:
          errno=EBUSY;
       }
    }
+#endif
    errsv = errno;
 
    if (rc < 0) {
