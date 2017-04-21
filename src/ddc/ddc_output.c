@@ -195,7 +195,7 @@ get_raw_value_for_feature_table_entry(
               &valrec);
       // gsc = public_to_global_status_code(psc);
 #else
-      PROGRAM_LOGIC_ERROR("ddcutil not build with USB support");
+      PROGRAM_LOGIC_ERROR("ddcutil not built with USB support");
 #endif
    }
    else {
@@ -379,9 +379,7 @@ get_formatted_value_for_feature_table_entry(
       FILE *                     msg_fh)
 {
    bool debug = false;
-   // Trace_Group tg = (debug) ? 0xff : TRACE_GROUP;
-   // TRCMSGTG(tg, "Starting");
-   DBGTRC(debug, TRACE_GROUP, "Starting");
+   DBGTRC(debug, TRACE_GROUP, "Starting. suppress_unsupported=%s", bool_repr(suppress_unsupported));
 
    Public_Status_Code psc = 0;
    *pformatted_value = NULL;
@@ -400,13 +398,17 @@ get_formatted_value_for_feature_table_entry(
    }
 
    DDCA_Single_Vcp_Value *    pvalrec = NULL;
-   bool ignore_unsupported = !(output_level >= DDCA_OL_NORMAL && !suppress_unsupported);
+
+   // bool ignore_unsupported = !(output_level >= DDCA_OL_NORMAL && !suppress_unsupported);
+   bool ignore_unsupported = suppress_unsupported;
+
    psc = get_raw_value_for_feature_table_entry(
             dh,
             vcp_entry,
             ignore_unsupported,
             &pvalrec,
-            msg_fh);
+            (output_level == DDCA_OL_TERSE) ? NULL : msg_fh);
+            // msg_fh);
    assert( (psc==0 && (feature_type == pvalrec->value_type)) || (psc!=0 && !pvalrec) );
    if (psc == 0) {
       // if (!is_table_feature && output_level >= OL_VERBOSE) {
@@ -419,8 +421,8 @@ get_formatted_value_for_feature_table_entry(
       }
 
 
-#ifdef OLD
-      if (output_level == OL_PROGRAM) {
+// #ifdef OLD
+      if (output_level == DDCA_OL_TERSE) {
          if (is_table_feature) {                // OL_PROGRAM, is table feature
             // output VCP code  hex values of bytes
             int bytect = pvalrec->val.t.bytect;
@@ -430,18 +432,40 @@ get_formatted_value_for_feature_table_entry(
             // n. buffer passed to hexstring2(), so no allocation
             hexstring2(pvalrec->val.t.bytes, bytect, &space, false /* upper case */, hexbuf, hexbufsize);
             char * formatted = calloc(hexbufsize + 20, sizeof(char));
-            snprintf(formatted, hexbufsize+20, "VCP %02X %s\n", feature_code, hexbuf);
+            snprintf(formatted, hexbufsize+20, "VCP %02X T x%s\n", feature_code, hexbuf);
             *pformatted_value = formatted;
             free(hexbuf);
          }
          else {                                // OL_PROGRAM, not table feature
+            DDCA_Version_Feature_Flags vflags =
+               get_version_sensitive_feature_flags(vcp_entry, vspec);
             char buf[200];
-            snprintf(buf, 200, "VCP %02X %5d", vcp_entry->code, pvalrec->val.c.cur_val);
+            if (vflags & DDCA_CONT) {
+               snprintf(buf, 200, "VCP %02X C %d %d",
+                                  vcp_entry->code,
+                                  pvalrec->val.c.cur_val, pvalrec->val.c.max_val);
+            }
+            else if (vflags & DDCA_SIMPLE_NC) {
+               snprintf(buf, 200, "VCP %02X SNC x%02x",
+                                   vcp_entry->code, pvalrec->val.nc.sl);
+            }
+            else if (vflags & DDCA_COMPLEX_NC) {
+               snprintf(buf, 200, "VCP %02X CNC x%02x x%02x x%02x x%02x",
+                                  vcp_entry->code,
+                                  pvalrec->val.nc.mh,
+                                  pvalrec->val.nc.ml,
+                                  pvalrec->val.nc.sh,
+                                  pvalrec->val.nc.sl
+                                  );
+            }
+            else
+               PROGRAM_LOGIC_ERROR("Unknown value type");
+
             *pformatted_value = strdup(buf);
          }
       }
       else  {
-#endif// normal (non OL_PROGRAM) output
+// #endif// normal (non OL_PROGRAM) output
          bool ok;
          char * formatted_data = NULL;
 
@@ -470,10 +494,17 @@ get_formatted_value_for_feature_table_entry(
                 *pformatted_value = formatted_data;
              }
          }
-#ifdef OLD
+// #ifdef OLD
       }         // normal (non OL_PROGRAM) output
-#endif
+// #endif
 
+   }
+
+   else {   // error
+      // if output_level >= DDCA_OL_NORMAL, get_raw_value_for_feature_table_entry() already issued message
+      if (output_level == DDCA_OL_TERSE && !suppress_unsupported) {
+         f0printf(msg_fh, "VCP %02X ERR\n", vcp_entry->code);
+      }
    }
 
    if (pvalrec)
