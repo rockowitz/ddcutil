@@ -95,6 +95,7 @@ static int dispno_max = 0;                 // highest assigned display number
  *  bit set or a DDC Null response, communication is considered successful.
  *  \remark
  */
+static
 bool check_ddc_communication(Display_Handle * dh) {
    bool debug = false;
    DBGMSF(debug, "Starting. dh=%s", dh_repr(dh));
@@ -137,6 +138,7 @@ bool check_ddc_communication(Display_Handle * dh) {
  *  Note that this test is not perfect, as a Null Response might
  *  in fact indicate a transient error, but that is rare.
  */
+static
 bool check_monitor_ddc_null_response(Display_Handle * dh) {
    assert(dh);
    assert(dh->dref);

@@ -49,6 +49,9 @@ Display_Info_List *
 ddc_get_valid_displays();
 #endif
 
+// bool initial_checks_by_dh(Display_Handle * dh);   not used externally
+bool initial_checks_by_dref(Display_Ref * dref);
+
 GPtrArray * ddc_get_all_displays();  // returns GPtrArray of Display_Ref instances, including invalid displays
 
 int

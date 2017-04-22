@@ -621,6 +621,7 @@ int main(int argc, char *argv[]) {
          int busno = parsed_cmd->pdid->busno;
          // is this really a monitor?
          Bus_Info * businfo = i2c_get_bus_info(busno, DISPSEL_VALID_ONLY);
+         bool valid_monitor = false;
          if ( businfo && (businfo->flags & I2C_BUS_ADDR_0X50) ) {
             dref = create_bus_display_ref(busno);
             dref->dispno = -1;     // should use some other value for unassigned vs invalid
@@ -630,6 +631,11 @@ int main(int argc, char *argv[]) {
             dref->flags |= DREF_DDC_IS_MONITOR_CHECKED;
             dref->flags |= DREF_DDC_IS_MONITOR;
             dref->flags |= DREF_TRANSIENT;
+            if (!initial_checks_by_dref(dref)) {
+               printf("DDC communication failed for monitor on I2C bus /dev/i2c-%d\n", busno);
+               free_display_ref(dref);
+               dref = NULL;
+            }
             // DBGMSG("Synthetic Display_Ref");
          }
          else {
@@ -640,6 +646,7 @@ int main(int argc, char *argv[]) {
          ddc_ensure_displays_detected();
          dref = get_display_ref_for_display_identifier(parsed_cmd->pdid, callopts);
       }
+
       if (dref) {
          Display_Handle * dh = NULL;
          callopts |=  CALLOPT_ERR_MSG;    // removed CALLOPT_ERR_ABORT
