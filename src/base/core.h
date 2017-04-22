@@ -149,7 +149,6 @@ void set_fout_to_default();
 void set_ferr_to_default();
 
 
-
 //
 // Message level control
 //
