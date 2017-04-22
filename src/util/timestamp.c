@@ -44,10 +44,9 @@
 /** For debugging timestamp generation, maintain a timestamp history. */
 bool  tracking_timestamps = false;    // set true to enable timestamp history
 #define MAX_TIMESTAMPS 1000
-static long  timestamp[MAX_TIMESTAMPS];
+// static long  timestamp[MAX_TIMESTAMPS];
 static int   timestamp_ct = 0;
-
-long * timestamp_history = NULL;
+static uint64_t * timestamp_history = NULL;
 
 
 
@@ -59,18 +58,18 @@ long * timestamp_history = NULL;
  * @remark
  * If debugging timestamp generation, the timestamp is remembered.
  */
-long cur_realtime_nanosec() {
+uint64_t cur_realtime_nanosec() {
    struct timespec tvNow;
    clock_gettime(CLOCK_REALTIME, &tvNow);
    // long result = (tvNow.tv_sec * 1000) + (tvNow.tv_nsec / (1000 * 1000) );  // milliseconds
    // long result = (tvNow.tv_sec * 1000 * 1000) + (tvNow.tv_nsec / 1000);     // microseconds
-   long result = tvNow.tv_sec * (1000 * 1000 * 1000) + tvNow.tv_nsec;          // NANOSEC
+   uint64_t result = tvNow.tv_sec * (1000 * 1000 * 1000) + tvNow.tv_nsec;      // NANOSEC
    if (tracking_timestamps && timestamp_ct < MAX_TIMESTAMPS) {
       if (!timestamp_history) {
          timestamp_ct = 0;
-         timestamp_history = calloc(MAX_TIMESTAMPS, sizeof(long));
+         timestamp_history = calloc(MAX_TIMESTAMPS, sizeof(uint64_t));
       }
-      timestamp[timestamp_ct++] = result;
+      timestamp_history[timestamp_ct++] = result;
    }
    // printf("(%s) Returning: %ld\n", result);
    return result;
@@ -89,8 +88,8 @@ void show_timestamp_history() {
       bool monotonic = true;
       int ctr = 0;
       for (; ctr < timestamp_ct; ctr++) {
-         printf("  timestamp[%d] =  %15ld\n", ctr, timestamp[ctr] );
-         if (ctr > 0 && timestamp[ctr] <= timestamp[ctr-1]) {
+         printf("  timestamp[%d] =  %15ld\n", ctr, timestamp_history[ctr] );
+         if (ctr > 0 && timestamp_history[ctr] <= timestamp_history[ctr-1]) {
             printf("   !!! NOT STRICTLY MONOTONIC !!!\n");
             monotonic = false;
          }
@@ -102,7 +101,8 @@ void show_timestamp_history() {
 }
 
 
-static long initial_timestamp_nanos = 0;
+static uint64_t initial_timestamp_nanos = 0;
+
 
 /** Returns the elapsed time in nanoseconds since the start of
  *  program execution.
@@ -112,12 +112,12 @@ static long initial_timestamp_nanos = 0;
  *
  *  @return nonoseconds since start of program execution
  */
-long elapsed_time_nanosec() {
+uint64_t elapsed_time_nanosec() {
    // printf("(%s) initial_timestamp_nanos=%ld\n", __func__, initial_timestamp_nanos);
-   long cur_nanos = cur_realtime_nanosec();
+   uint64_t cur_nanos = cur_realtime_nanosec();
    if (initial_timestamp_nanos == 0)
       initial_timestamp_nanos = cur_nanos;
-   long result = cur_nanos - initial_timestamp_nanos;
+   uint64_t result = cur_nanos - initial_timestamp_nanos;
    // printf("(%s) Returning: %ld\n", __func__, result);
    return result;
 }
@@ -134,13 +134,15 @@ long elapsed_time_nanosec() {
 char * formatted_elapsed_time() {
    // static char elapsed_buf1[40];
    static char elapsed_buf2[40];
-   long et_nanos = elapsed_time_nanosec();
+   uint64_t et_nanos = elapsed_time_nanosec();
    // double secs = et_nanos/(1000.0 * 1000.0 * 1000.0);
    // snprintf(elapsed_buf1, 40, "%7.3f", secs);
-   long    isecs   = et_nanos/ (1000 * 1000 * 1000);
-   long    imillis = et_nanos/ (1000 * 1000);
+   unsigned int    isecs   = et_nanos/ (1000 * 1000 * 1000);
+   unsigned int    imillis = et_nanos/ (1000 * 1000);
    // printf("(%s) et_nanos=%ld, isecs=%ld, imillis=%ld\n", __func__,  et_nanos, isecs, imillis);
-   snprintf(elapsed_buf2, 40, "%3ld.%03ld", isecs, imillis - (isecs*1000) );
+   // snprintf(elapsed_buf2, 40, "%3ld.%03ld", isecs, imillis - (isecs*1000) );
+   snprintf(elapsed_buf2, 40, "%3d.%03d", isecs, imillis - (isecs*1000) );
+
    // printf("(%s) %s, %s\n", __func__, elapsed_buf1, elapsed_buf2);
    // printf("(%s) %s\n", __func__, elapsed_buf2);
    return elapsed_buf2;

@@ -28,12 +28,14 @@
 #ifndef TIMESTAMP_H_
 #define TIMESTAMP_H_
 
+#include <stdint.h>
+
 //
 // Timestamp Generation
 //
-long   cur_realtime_nanosec();   // Returns the current value of the realtime clock in nanoseconds
-void   show_timestamp_history(); // For debugging
-long   elapsed_time_nanaosec();  // nanoseconds since start of program, first call initializes
-char * formatted_elapsed_time();
+uint64_t cur_realtime_nanosec();   // Returns the current value of the realtime clock in nanoseconds
+void     show_timestamp_history(); // For debugging
+uint64_t elapsed_time_nanosec();   // nanoseconds since start of program, first call initializes
+char *   formatted_elapsed_time();
 
 #endif /* TIMESTAMP_H_ */
