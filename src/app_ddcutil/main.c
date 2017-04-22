@@ -94,7 +94,7 @@
 // Initialization and Statistics
 //
 
-static long start_time_nanos;
+// static long start_time_nanos;
 
 
 static
@@ -107,11 +107,18 @@ void reset_stats() {
 static
 void report_stats(DDCA_Stats_Type stats) {
    ddc_report_stats_main(stats, 0);
-   puts("");
-   long elapsed_nanos = cur_realtime_nanosec() - start_time_nanos;
-   printf("Elapsed milliseconds (nanoseconds):             %10ld  (%10ld)\n",
-         elapsed_nanos / (1000*1000),
-         elapsed_nanos);
+
+   // Report the elapsed time in ddc_report_stats_main().
+   // The start time used there is that at the time of stats initialization,
+   // which is slightly later than start_time_nanos, but the difference is
+   // less than a tenth of a millisecond.  Using that start time allows for
+   // elapsed time to be used from library functions.
+
+   // puts("");
+   // long elapsed_nanos = cur_realtime_nanosec() - start_time_nanos;
+   // printf("Elapsed milliseconds (nanoseconds):             %10ld  (%10ld)\n",
+   //       elapsed_nanos / (1000*1000),
+   //       elapsed_nanos);
 }
 
 
@@ -322,7 +329,7 @@ void probe_display_by_dref(Display_Ref * dref) {
   * @retval  EXIT_FAILURE an error occurred
   */
 int main(int argc, char *argv[]) {
-   start_time_nanos = cur_realtime_nanosec();
+   // start_time_nanos = cur_realtime_nanosec();
 
    // For aborting out of shared library
    jmp_buf abort_buf;
@@ -358,7 +365,7 @@ int main(int argc, char *argv[]) {
    }
 #endif
 
-   init_ddc_services();
+   init_ddc_services();  // n. initializes start timestamp
    // overrides setting in init_ddc_services():
    i2c_set_io_strategy(DEFAULT_I2C_IO_STRATEGY);
 
@@ -621,7 +628,6 @@ int main(int argc, char *argv[]) {
          int busno = parsed_cmd->pdid->busno;
          // is this really a monitor?
          Bus_Info * businfo = i2c_get_bus_info(busno, DISPSEL_VALID_ONLY);
-         bool valid_monitor = false;
          if ( businfo && (businfo->flags & I2C_BUS_ADDR_0X50) ) {
             dref = create_bus_display_ref(busno);
             dref->dispno = -1;     // should use some other value for unassigned vs invalid
@@ -744,6 +750,7 @@ int main(int argc, char *argv[]) {
       report_stats(parsed_cmd->stats_types);
       // report_timestamp_history();  // debugging function
    }
+   DBGMSG("Done");   // for timestamp
 
    return main_rc;
 }

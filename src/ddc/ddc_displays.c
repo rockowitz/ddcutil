@@ -1500,6 +1500,8 @@ bye:
  */
 static void
 ddc_add_display_ref(GPtrArray * all_displays, Display_Ref * dref) {
+   bool debug = true;
+   DBGMSF(debug, "Starting. dref=%s", dref_repr(dref));
    if (dref->dispno < 0) {
       // check if valid display, etc.  (Does this belong here?)
       if (initial_checks_by_dref(dref)) {
@@ -1510,6 +1512,7 @@ ddc_add_display_ref(GPtrArray * all_displays, Display_Ref * dref) {
       }
    }
    g_ptr_array_add(all_displays, dref);
+   DBGMSF(debug, "Done. dispno = %d", dref->dispno);
 }
 
 

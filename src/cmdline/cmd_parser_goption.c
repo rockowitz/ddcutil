@@ -47,11 +47,11 @@
 
 
 // Variables used by callback functions
-static char *       adlwork       = NULL;
-static char *       usbwork       = NULL;
+static char *            adlwork       = NULL;
+static char *            usbwork       = NULL;
 static DDCA_Output_Level output_level  = DDCA_OL_NORMAL;
-static int          iAdapterIndex = -1;
-static int          iDisplayIndex = -1;
+static int               iAdapterIndex = -1;
+static int               iDisplayIndex = -1;
 static DDCA_Stats_Type   stats_work    = DDCA_STATS_NONE;
 
 
@@ -125,6 +125,9 @@ gboolean stats_arg_func(const    gchar* option_name,
       }
       else if (streq(v2,"ERRS") || is_abbrev(v2, "ERRORS",3)) {
          stats_work |= DDCA_STATS_ERRORS;
+      }
+      else if ( is_abbrev(v2,"ELAPSED",3) || is_abbrev(v2, "TIME",3)) {
+         stats_work |= DDCA_STATS_ELAPSED;
       }
       else
          ok = false;

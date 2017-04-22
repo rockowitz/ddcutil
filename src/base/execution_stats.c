@@ -84,6 +84,7 @@ typedef struct {
 static IO_Event_Type        last_io_event;
 static long                 last_io_timestamp = -1;
 static long                 program_start_timestamp;
+static uint64_t             resettable_timestamp;
 static Status_Code_Counts * primary_error_code_counts;
 
 
@@ -722,6 +723,8 @@ void init_execution_stats() {
    primary_error_code_counts = new_status_code_counts(NULL);
    // secondary_status_code_counts = new_status_code_counts("Derived and Other Errors");
    program_start_timestamp = cur_realtime_nanosec();
+   resettable_timestamp    = program_start_timestamp;
+   elapsed_time_nanosec();    // first call initializes, used for dbgtrc
 }
 
 /** Resets collected execution statistics */
@@ -729,6 +732,22 @@ void reset_execution_stats() {
    reset_sleep_event_counts();
    reset_status_code_counts();
    reset_io_event_stats();
+   resettable_timestamp = cur_realtime_nanosec();
 }
 
+
+void report_elapsed_stats(int depth) {
+   long end_nanos = cur_realtime_nanosec();
+//   if (program_start_timestamp != resettable_timestamp) {
+      uint64_t cur_elapsed_nanos = end_nanos - resettable_timestamp;
+      rpt_vstring(depth, "Elapsed milliseconds since last reset (nanoseconds):%6ld  (%10ld)",
+            cur_elapsed_nanos / (1000*1000),
+            cur_elapsed_nanos);
+//   }
+
+   long elapsed_nanos = end_nanos - program_start_timestamp;
+   rpt_vstring(depth, "Total elapsed milliseconds (nanoseconds):       %10ld  (%10ld)",
+         elapsed_nanos / (1000*1000),
+         elapsed_nanos);
+}
 
