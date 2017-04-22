@@ -37,17 +37,17 @@
 // Sleep and sleep statistics
 //
 
-void sleep_millis( int milliseconds);
+void sleep_millis(int milliseconds);
 void sleep_millis_with_trace(int milliseconds, const char * caller_location, const char * message);
 
 typedef struct {
-   long requested_sleep_milliseconds;
-   long actual_sleep_nanos;
-   int  total_sleep_calls;
+   uint64_t actual_sleep_nanos;
+   int      requested_sleep_milliseconds;
+   int      total_sleep_calls;
 } Sleep_Stats;
 
-void init_sleep_stats();
-Sleep_Stats * get_sleep_stats();
-void report_sleep_stats(int depth);
+void         init_sleep_stats();
+Sleep_Stats  get_sleep_stats();
+void         report_sleep_stats(int depth);
 
 #endif /* BASE_SLEEP_H_ */

@@ -32,6 +32,7 @@
 
 /** \cond */
 #include <stdbool.h>
+#include <inttypes.h>
 #include <stdio.h>
 #include <unistd.h>
 /** \endcond */
@@ -49,7 +50,7 @@
 
 static Sleep_Stats sleep_stats;
 
-
+/** Sets all sleep statistics to 0. */
 void init_sleep_stats() {
    sleep_stats.total_sleep_calls = 0;
    sleep_stats.requested_sleep_milliseconds = 0;
@@ -57,33 +58,55 @@ void init_sleep_stats() {
 }
 
 
-Sleep_Stats * get_sleep_stats() {
-   return &sleep_stats;
+/** Returns the current sleep statistics
+ *
+ * \return the current value of the accumulated sleep stats
+ */
+Sleep_Stats get_sleep_stats() {
+   return sleep_stats;
 }
 
-
+/** Reports the accumulated sleep statistics
+ *
+ * \param depth logical indentation depth
+ */
 void report_sleep_stats(int depth) {
    int d1 = depth+1;
    rpt_title("Sleep Call Stats:", depth);
    rpt_vstring(d1, "Total sleep calls:                           %10d",  sleep_stats.total_sleep_calls);
-   rpt_vstring(d1, "Requested sleep time milliseconds :          %10ld", sleep_stats.requested_sleep_milliseconds);
-   rpt_vstring(d1, "Actual sleep milliseconds (nanosec):         %10ld  (%10ld)",
+   rpt_vstring(d1, "Requested sleep time milliseconds :          %10d", sleep_stats.requested_sleep_milliseconds);
+   rpt_vstring(d1, "Actual sleep milliseconds (nanosec):         %10d  (%10" PRIu64 ")",
           sleep_stats.actual_sleep_nanos / (1000*1000),
           sleep_stats.actual_sleep_nanos);
 }
 
-
-// SleepMilliseconds specifies time in milliseconds, usleep takes microseconds
-void sleep_millis( int milliseconds) {
-   long start_nanos = cur_realtime_nanosec();
-   usleep(milliseconds*1000);
+/** Sleep for the specified number of milliseconds.
+ *
+ * \param milliseconds number of milliseconds to sleep
+ */
+void sleep_millis(int milliseconds) {
+   uint64_t start_nanos = cur_realtime_nanosec();
+   usleep(milliseconds*1000);   // usleep takes microseconds, not milliseconds
    sleep_stats.actual_sleep_nanos += (cur_realtime_nanosec()-start_nanos);
    sleep_stats.requested_sleep_milliseconds += milliseconds;
    sleep_stats.total_sleep_calls++;
 }
 
 
-void sleep_millis_with_trace(int milliseconds, const char * caller_location, const char * message) {
+/** Sleep for the specified number of milliseconds, with tracing
+ *
+ * \param milliseconds number of milliseconds to sleep
+ * \param caller_location name of calling function
+ * \param message trace message
+ *
+ * Tracing is only performed if the trace_sleep function internal to this function
+ * is set to **true**.
+ */
+void sleep_millis_with_trace(
+        int          milliseconds,
+        const char * caller_location,
+        const char * message)
+{
    bool trace_sleep = false;
 
    if (trace_sleep) {
