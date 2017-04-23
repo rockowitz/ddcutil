@@ -518,7 +518,7 @@ get_vcp_value(
                 break;
           }
 #else
-      PROGRAM_LOGIC_ERROR("ddcutil not build with USB support");
+      PROGRAM_LOGIC_ERROR("ddcutil not built with USB support");
 #endif
    }
    else {
