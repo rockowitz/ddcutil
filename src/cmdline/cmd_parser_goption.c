@@ -179,7 +179,7 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
    gboolean version_flag   = false;
    gboolean timestamp_trace_flag = false;
    gboolean verify_flag    = false;
-   gboolean nodetect_flag  = false;
+// gboolean nodetect_flag  = false;
 // gboolean myhelp_flag    = false;
 // gboolean myusage_flag   = false;
    char *   mfg_id_work    = NULL;
@@ -230,7 +230,7 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
                   '\0', 0, G_OPTION_ARG_NONE,     &force_slave_flag, "Force I2C slave address",         NULL},
       {"force",   'f',  0, G_OPTION_ARG_NONE,     &force_flag,       "Ignore certain checks",           NULL},
       {"verify",  '\0', 0, G_OPTION_ARG_NONE,     &verify_flag,      "Read VCP value after setting it", NULL},
-      {"nodetect",'\0', 0, G_OPTION_ARG_NONE,     &nodetect_flag,    "Skip initial monitor detection",  NULL},
+//    {"nodetect",'\0', 0, G_OPTION_ARG_NONE,     &nodetect_flag,    "Skip initial monitor detection",  NULL},
 
       // debugging
       {"trace",   '\0', 0, G_OPTION_ARG_STRING_ARRAY, &trace_classes, "Trace classes",         "trace class name" },
@@ -310,7 +310,7 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
    parsed_cmd->sleep_strategy   = sleep_strategy_work;
    parsed_cmd->timestamp_trace  = timestamp_trace_flag;
    parsed_cmd->verify_setvcp    = verify_flag;
-   parsed_cmd->nodetect         = nodetect_flag;
+// parsed_cmd->nodetect         = nodetect_flag;
    if (failsim_fn_work) {
 #ifdef ENABLE_FAILSIM
       parsed_cmd->enable_failure_simulation = true;

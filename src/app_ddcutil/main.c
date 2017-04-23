@@ -623,8 +623,10 @@ int main(int argc, char *argv[]) {
 
       // If --nodetect option specified and I2C bus number was specified,
       // skip scan for all devices.
+      // --nodetect option not needed, just do it
       Display_Ref * dref = NULL;
-      if (parsed_cmd->pdid->id_type == DISP_ID_BUSNO && parsed_cmd->nodetect) {
+//    if (parsed_cmd->pdid->id_type == DISP_ID_BUSNO && parsed_cmd->nodetect) {
+      if (parsed_cmd->pdid->id_type == DISP_ID_BUSNO) {
          int busno = parsed_cmd->pdid->busno;
          // is this really a monitor?
          Bus_Info * businfo = i2c_get_bus_info(busno, DISPSEL_VALID_ONLY);

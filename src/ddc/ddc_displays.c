@@ -692,6 +692,7 @@ void async_scan(GPtrArray * all_displays) {
    }
    DBGMSF(debug, "Threads joined");
 
+#ifdef OLD
    for (int ndx = 0; ndx < all_displays->len; ndx++) {
       Display_Ref * dref = g_ptr_array_index(all_displays, ndx);
       assert( memcmp(dref->marker, DISPLAY_REF_MARKER, 4) == 0 );
@@ -702,6 +703,7 @@ void async_scan(GPtrArray * all_displays) {
          dref->dispno = -1;
       }
    }
+#endif
    DBGMSF(debug, "Done");
 }
 
@@ -714,13 +716,14 @@ void non_async_scan(GPtrArray * all_displays) {
       assert( memcmp(dref->marker, DISPLAY_REF_MARKER, 4) == 0 );
       initial_checks_by_dref(dref);
 
+#ifdef OLD
       if (dref->flags & DREF_DDC_COMMUNICATION_WORKING) {
          dref->dispno = ++dispno_max;
       }
       else {
          dref->dispno = -1;
       }
-
+#endif
    }
    DBGMSF(debug, "Done");
 }
@@ -910,6 +913,19 @@ ddc_detect_all_displays() {
 
    if (olev == DDCA_OL_VERBOSE)
       set_output_level(olev);
+
+   // assign display numbers
+   for (int ndx = 0; ndx < display_list->len; ndx++) {
+      Display_Ref * dref = g_ptr_array_index(display_list, ndx);
+      assert( memcmp(dref->marker, DISPLAY_REF_MARKER, 4) == 0 );
+      if (dref->flags & DREF_DDC_COMMUNICATION_WORKING) {
+         dref->dispno = ++dispno_max;
+      }
+      else {
+         dref->dispno = -1;
+      }
+   }
+
 
    // if (debug) {
    //    DBGMSG("Displays detected:");
