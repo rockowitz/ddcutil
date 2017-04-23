@@ -54,8 +54,8 @@ typedef struct {
    IO_Event_Type  id;
    const char *   name;
    const char *   desc;
+   uint64_t       call_nanosec;
    int            call_count;
-   long           call_nanosec;
 } IO_Event_Type_Stats;
 
 
@@ -82,9 +82,9 @@ typedef struct {
 //
 
 static IO_Event_Type        last_io_event;
-static long                 last_io_timestamp = -1;
-static long                 program_start_timestamp;
-static uint64_t             resettable_timestamp;
+// static long                 last_io_timestamp = -1;
+static uint64_t             program_start_timestamp;
+static uint64_t             resettable_start_timestamp;
 static Status_Code_Counts * primary_error_code_counts;
 
 
@@ -145,8 +145,8 @@ static int total_io_event_count() {
 }
 
 // unused
-long total_io_event_nanosec() {
-   long total = 0;
+uint64_t total_io_event_nanosec() {
+   uint64_t total = 0;
    int ndx = 0;
    for (;ndx < IO_EVENT_TYPE_CT; ndx++)
       total += io_event_stats[ndx].call_nanosec;
@@ -155,7 +155,7 @@ long total_io_event_nanosec() {
 
 
 // No effect on program logic, but makes debug messages easier to scan
-long normalize_timestamp(long timestamp) {
+uint64_t normalize_timestamp(long timestamp) {
    return timestamp - program_start_timestamp;
 }
 
@@ -178,19 +178,18 @@ long normalize_timestamp(long timestamp) {
 void log_io_call(
         const IO_Event_Type  event_type,
         const char *         location,
-        long                 start_time_nanos,
-        long                 end_time_nanos)
+        uint64_t             start_time_nanos,
+        uint64_t             end_time_nanos)
 {
    bool debug = false;
-   if (debug)
-      DBGMSG("event_type=%d %s", event_type, io_event_name(event_type));
+   DBGMSF(debug, "event_type=%d %s", event_type, io_event_name(event_type));
 
-   long elapsed_nanos = (end_time_nanos-start_time_nanos);
+   uint64_t elapsed_nanos = (end_time_nanos-start_time_nanos);
    io_event_stats[event_type].call_count++;
    io_event_stats[event_type].call_nanosec += elapsed_nanos;
 
    last_io_event = event_type;
-   last_io_timestamp = normalize_timestamp(end_time_nanos);
+   // last_io_timestamp = normalize_timestamp(end_time_nanos);
 }
 
 
@@ -202,7 +201,7 @@ void report_io_call_stats(int depth) {
    int d1 = depth+1;
    rpt_title("Call Stats:", depth);
    int total_ct = 0;
-   long total_nanos = 0;
+   uint64_t total_nanos = 0;
    int ndx = 0;
    // int max_name_length = max_event_name_length();
    // not working as variable length string specifier
@@ -213,7 +212,7 @@ void report_io_call_stats(int depth) {
          IO_Event_Type_Stats* curstat = &io_event_stats[ndx];
          char buf[100];
          snprintf(buf, 100, "%-17s (%s)", curstat->desc, curstat->name);
-         rpt_vstring(d1, "%-40s  %4d  %7ld  (%10ld)",
+         rpt_vstring(d1, "%-40s  %4d  %7d  (%10" PRIu64 ")",
                      buf,
                      curstat->call_count,
                      curstat->call_nanosec / (1000*1000),
@@ -223,7 +222,7 @@ void report_io_call_stats(int depth) {
          total_nanos += curstat->call_nanosec;
       }
    }
-   rpt_vstring(d1, "%-40s  %4d  %7ld  (%10ld)",
+   rpt_vstring(d1, "%-40s  %4d  %7ld  (%10" PRIu64 ")",
                "Totals:",
                total_ct,
                total_nanos / (1000*1000),
@@ -723,7 +722,7 @@ void init_execution_stats() {
    primary_error_code_counts = new_status_code_counts(NULL);
    // secondary_status_code_counts = new_status_code_counts("Derived and Other Errors");
    program_start_timestamp = cur_realtime_nanosec();
-   resettable_timestamp    = program_start_timestamp;
+   resettable_start_timestamp    = program_start_timestamp;
    elapsed_time_nanosec();    // first call initializes, used for dbgtrc
 }
 
@@ -732,18 +731,18 @@ void reset_execution_stats() {
    reset_sleep_event_counts();
    reset_status_code_counts();
    reset_io_event_stats();
-   resettable_timestamp = cur_realtime_nanosec();
+   resettable_start_timestamp = cur_realtime_nanosec();
 }
 
 
 void report_elapsed_stats(int depth) {
-   long end_nanos = cur_realtime_nanosec();
-//   if (program_start_timestamp != resettable_timestamp) {
-      uint64_t cur_elapsed_nanos = end_nanos - resettable_timestamp;
+   uint64_t end_nanos = cur_realtime_nanosec();
+   if (program_start_timestamp != resettable_start_timestamp) {
+      uint64_t cur_elapsed_nanos = end_nanos - resettable_start_timestamp;
       rpt_vstring(depth, "Elapsed milliseconds since last reset (nanoseconds):%6ld  (%10ld)",
             cur_elapsed_nanos / (1000*1000),
             cur_elapsed_nanos);
-//   }
+   }
 
    long elapsed_nanos = end_nanos - program_start_timestamp;
    rpt_vstring(depth, "Total elapsed milliseconds (nanoseconds):       %10ld  (%10ld)",

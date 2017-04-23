@@ -33,6 +33,8 @@
 #ifndef BASE_SLEEP_H_
 #define BASE_SLEEP_H_
 
+#include <inttypes.h>
+
 //
 // Sleep and sleep statistics
 //

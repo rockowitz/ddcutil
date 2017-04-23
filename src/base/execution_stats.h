@@ -31,6 +31,7 @@
 #define EXECUTION_STATS_H_
 
 /** \cond */
+#include <inttypes.h>
 #include <stdbool.h>
 /** \endcond */
 
@@ -74,8 +75,8 @@ const char * io_event_name(IO_Event_Type event_type);
 void log_io_call(
         const IO_Event_Type  event_type,
         const char *         location,
-        long                 start_time_nanos,
-        long                 end_time_nanos);
+        uint64_t             start_time_nanos,
+        uint64_t             end_time_nanos);
 
 #define RECORD_IO_EVENT(event_type, cmd_to_time)  { \
    long _start_time = cur_realtime_nanosec(); \

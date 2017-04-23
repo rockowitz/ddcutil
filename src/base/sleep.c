@@ -32,7 +32,6 @@
 
 /** \cond */
 #include <stdbool.h>
-#include <inttypes.h>
 #include <stdio.h>
 #include <unistd.h>
 /** \endcond */
