@@ -801,6 +801,7 @@ Bus_Info * i2c_check_bus(Bus_Info * bus_info) {
    int file = 0;
 
    if (!(bus_info->flags & I2C_BUS_PROBED)) {
+      DBGMSF(debug, "Probing");
       bus_info->flags |= I2C_BUS_PROBED;
       file = i2c_open_bus(bus_info->busno, CALLOPT_ERR_MSG);  // returns if failure
 
