@@ -235,13 +235,6 @@ bool initial_checks_by_dref(Display_Ref * dref) {
 
 
 //
-//  Display Specification
-//
-
-
-
-
-//
 // Functions to get display information
 //
 
@@ -529,6 +522,10 @@ void debug_report_display_refs(GPtrArray * recs, int depth) {
 }
 
 
+//
+// Monitor selection
+//
+
 /** Display selection criteria */
 typedef struct {
    int     dispno;
@@ -561,8 +558,6 @@ new_display_criteria() {
    criteria->usb_devno = -1;
    return criteria;
 }
-
-
 
 
 /** Checks if a given #Display_Ref satisfies all the criteria specified in a
@@ -813,25 +808,13 @@ ddc_detect_all_displays() {
       Bus_Info * businfo = i2c_get_bus_info_by_index(busndx);
       if ( (businfo->flags & I2C_BUS_ADDR_0X50) ) {
          Display_Ref * dref = create_bus_display_ref(businfo->busno);
-
-         // Transition:
-         // Display_Rec * drec = calloc(1,sizeof(Display_Rec));
-         // Display_Rec * drec = dref;
-         // memcpy(drec->marker, DISPLAY_REC_MARKER, 4);
          dref->dispno = -1;
-         // dref->dref = dref;   // was drec->dref
-
          dref->pedid = businfo->edid;    // needed?
          // drec->detail.bus_detail = businfo;
          dref->detail2 = businfo;
          dref->flags |= DREF_DDC_IS_MONITOR_CHECKED;
          dref->flags |= DREF_DDC_IS_MONITOR;
          ddc_add_display_ref(display_list, dref);
-
-         // DBGMSG("======= as dref:");
-         // report_display_ref(dref, 1);
-         // DBGMSG("========as drec: ");
-         // report_display_rec(dref, 1);
       }
    }
 
@@ -840,15 +823,7 @@ ddc_detect_all_displays() {
   for (int ndx = 0; ndx < adlct; ndx++) {
      ADL_Display_Detail * detail = g_ptr_array_index(all_details, ndx);
      Display_Ref * dref = create_adl_display_ref(detail->iAdapterIndex, detail->iDisplayIndex);
-
-     // transition
-     // Display_Rec * drec = calloc(1, sizeof(Display_Rec));
-     // memcpy(drec->marker, DISPLAY_REC_MARKER, 4);
-     // Display_Rec * drec = dref;
-
      dref->dispno = -1;
-     // dref->dref = dref;   // for transition
-
      dref->pedid = detail->pEdid;   // needed?
      // drec->detail.adl_detail = detail;
      dref->detail2 = detail;
@@ -866,14 +841,7 @@ ddc_detect_all_displays() {
                                 curmon->hiddev_devinfo->busnum,
                                 curmon->hiddev_devinfo->devnum,
                                 curmon->hiddev_device_name);
-
-      // Transition
-      // Display_Rec * drec = calloc(1, sizeof(Display_Rec));
-      // memcpy(drec->marker, DISPLAY_REC_MARKER, 4);
-      // Display_Rec * drec = dref;
-
       dref->dispno = -1;
-      // dref->dref = dref;     // was drec->dref
       dref->pedid = curmon->edid;
       // drec->detail.usb_detail = curmon;
       dref->detail2 = curmon;
