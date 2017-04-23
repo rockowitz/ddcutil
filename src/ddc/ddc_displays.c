@@ -67,11 +67,7 @@
 #include "ddc/ddc_displays.h"
 
 // on banner, async  detect: 1.7 sec, non-async 3.4 sec
-#define ASYNC 1
-
-#ifdef ASYNC
 const int ASYNC_THRESHOLD = 3;
-#endif
 
 // Trace class for this file
 // static Trace_Group TRACE_GROUP = TRC_DDC;   // currently unused
@@ -109,14 +105,14 @@ bool check_ddc_communication(Display_Handle * dh) {
    DDCA_Single_Vcp_Value * pvalrec;
 
    // verbose output is distracting since this function is called when querying for other things
-   DDCA_Output_Level olev = get_output_level();
-   if (olev == DDCA_OL_VERBOSE)
-      set_output_level(DDCA_OL_NORMAL);
+   // DDCA_Output_Level olev = get_output_level();
+   // if (olev == DDCA_OL_VERBOSE)
+   //    set_output_level(DDCA_OL_NORMAL);
 
    Public_Status_Code psc = get_vcp_value(dh, 0x10, DDCA_NON_TABLE_VCP_VALUE, &pvalrec);
 
-   if (olev == DDCA_OL_VERBOSE)
-      set_output_level(olev);
+   // if (olev == DDCA_OL_VERBOSE)
+   //    set_output_level(olev);
 
    if (psc != 0 && psc != DDCRC_REPORTED_UNSUPPORTED && psc != DDCRC_DETERMINED_UNSUPPORTED) {
       result = false;
@@ -155,15 +151,15 @@ bool check_monitor_ddc_null_response(Display_Handle * dh) {
 
       DDCA_Single_Vcp_Value * pvalrec;
 
-      // verbose output is distracting since this function is called when querying for other things
-      DDCA_Output_Level olev = get_output_level();
-      if (olev == DDCA_OL_VERBOSE)
-         set_output_level(DDCA_OL_NORMAL);
+      // // verbose output is distracting since this function is called when querying for other things
+      // DDCA_Output_Level olev = get_output_level();
+      // if (olev == DDCA_OL_VERBOSE)
+      //    set_output_level(DDCA_OL_NORMAL);
 
       Public_Status_Code psc = get_vcp_value(dh, 0x00, DDCA_NON_TABLE_VCP_VALUE, &pvalrec);
 
-      if (olev == DDCA_OL_VERBOSE)
-         set_output_level(olev);
+      // if (olev == DDCA_OL_VERBOSE)
+      //    set_output_level(olev);
 
       if (psc == DDCRC_NULL_RESPONSE) {
          result = true;
@@ -191,7 +187,7 @@ bool check_monitor_ddc_null_response(Display_Handle * dh) {
  *  \return **true** if DDC communication with the display succeeded, **false** otherwise.
  */
 bool initial_checks_by_dh(Display_Handle * dh) {
-   bool debug = true;
+   bool debug = false;
    DBGMSF(debug, "Starting. dh=%s", dh_repr(dh));
 
    if (!(dh->dref->flags & DREF_DDC_COMMUNICATION_CHECKED)) {
@@ -282,7 +278,7 @@ GPtrArray * ddc_get_all_displays() {
  * Consider caching the value in dh->dref
  */
 char * get_firmware_version_string(Display_Handle * dh) {
-   bool debug = true;
+   bool debug = false;
 
    static char version[40];
 
@@ -318,7 +314,7 @@ char * get_firmware_version_string(Display_Handle * dh) {
  * Consider caching the value in dh->dref
  */
 char * get_controller_mfg_string(Display_Handle * dh) {
-   bool debug = true;
+   bool debug = false;
 
    static char mfg_name_buf[100] = "";
    char * mfg_name = NULL;
@@ -674,7 +670,7 @@ bye:
 
 
 void async_scan(GPtrArray * all_displays) {
-   bool debug = true;
+   bool debug = false;
    DBGMSF(debug, "Starting. all_displays=%p, display_count=%d", all_displays, all_displays->len);
 
    GPtrArray * threads = g_ptr_array_new();
@@ -710,7 +706,7 @@ void async_scan(GPtrArray * all_displays) {
 }
 
 void non_async_scan(GPtrArray * all_displays) {
-   bool debug = true;
+   bool debug = false;
    DBGMSF(debug, "Starting. checking %d displays", all_displays->len);
 
    for (int ndx = 0; ndx < all_displays->len; ndx++) {
@@ -729,44 +725,6 @@ void non_async_scan(GPtrArray * all_displays) {
    DBGMSF(debug, "Done");
 }
 
-
-
-/** Adds a display to the list of detected displays.
- *
- * \param all_displays   list to add to
- * \param pointer to #Display_Ref to add
- *
- * \remark
- * Initial monitor checks are performed.  (Does this belong here?)
- * \remark
- * This function is used during program initialization.
- * In the future, it could be used to dynamically add nely
- * connected monitors if the library is long running.
- */
-static void
-ddc_add_display_ref(GPtrArray * all_displays, Display_Ref * dref) {
-   bool debug = true;
-   DBGMSF(debug, "Starting. dref=%s", dref_repr(dref));
-
-#ifndef ASYNC
-   DBGMSF(debug, "Non-async");
-   if (dref->dispno < 0) {
-#ifdef OLD
-      // check if valid display, etc.  (Does this belong here?)
-      if (initial_checks_by_dref(dref)) {
-#else
-      if (dref->flags & DREF_DDC_COMMUNICATION_WORKING) {
-#endif
-         dref->dispno = ++dispno_max;
-      }
-      else {
-         dref->dispno = -1;
-      }
-   }
-#endif
-   g_ptr_array_add(all_displays, dref);
-   DBGMSF(debug, "Done. dispno = %d", dref->dispno);
-}
 
 
 static Display_Ref *
@@ -899,18 +857,15 @@ ddc_detect_all_displays() {
          dref->detail2 = businfo;
          dref->flags |= DREF_DDC_IS_MONITOR_CHECKED;
          dref->flags |= DREF_DDC_IS_MONITOR;
-#ifndef ASYNC
-         initial_checks_by_dref(dref);
-#endif
-         // g_ptr_array_add(display_list, dref);
-         ddc_add_display_ref(display_list, dref);
+         g_ptr_array_add(display_list, dref);
+         // ddc_add_display_ref(display_list, dref);
       }
    }
 
-  GPtrArray * all_details = adlshim_get_valid_display_details();
-  int adlct = all_details->len;
+  GPtrArray * all_adl_details = adlshim_get_valid_display_details();
+  int adlct = all_adl_details->len;
   for (int ndx = 0; ndx < adlct; ndx++) {
-     ADL_Display_Detail * detail = g_ptr_array_index(all_details, ndx);
+     ADL_Display_Detail * detail = g_ptr_array_index(all_adl_details, ndx);
      Display_Ref * dref = create_adl_display_ref(detail->iAdapterIndex, detail->iDisplayIndex);
      dref->dispno = -1;
      dref->pedid = detail->pEdid;   // needed?
@@ -918,11 +873,8 @@ ddc_detect_all_displays() {
      dref->detail2 = detail;
      dref->flags |= DREF_DDC_IS_MONITOR_CHECKED;
      dref->flags |= DREF_DDC_IS_MONITOR;
-#ifndef ASYNC
-     initial_checks_by_dref(dref);
-#endif
-     // g_ptr_array_add(display_list, dref);
-     ddc_add_display_ref(display_list, dref);
+     g_ptr_array_add(display_list, dref);
+     // ddc_add_display_ref(display_list, dref);
   }
 
    GPtrArray * usb_monitors = get_usb_monitor_list();
@@ -940,19 +892,25 @@ ddc_detect_all_displays() {
       dref->detail2 = curmon;
       dref->flags |= DREF_DDC_IS_MONITOR_CHECKED;
       dref->flags |= DREF_DDC_IS_MONITOR;
-#ifndef ASYNC
-      initial_checks_by_dref(dref);
-#endif
-      // g_ptr_array_add(display_list, dref);
-      ddc_add_display_ref(display_list, dref);
+      g_ptr_array_add(display_list, dref);
+      // ddc_add_display_ref(display_list, dref);
    }
 
-#ifdef ASYNC
-   if (display_list->len >= ASYNC_THRESHOLD)
+
+   // verbose output is distracting within scans
+   // saved and reset here to that async threads are not adjusting output level
+   DDCA_Output_Level olev = get_output_level();
+   if (olev == DDCA_OL_VERBOSE)
+      set_output_level(DDCA_OL_NORMAL);
+
+   if (display_list->len >= ASYNC_THRESHOLD && all_adl_details->len == 0)
       async_scan(display_list);
    else
       non_async_scan(display_list);
-#endif
+
+   if (olev == DDCA_OL_VERBOSE)
+      set_output_level(olev);
+
    // if (debug) {
    //    DBGMSG("Displays detected:");
    //    report_display_recs(display_list, 1);
