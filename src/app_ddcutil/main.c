@@ -527,7 +527,7 @@ int main(int argc, char *argv[]) {
 #ifdef USE_USB
       ddc_ensure_displays_detected();   // *** NEEDED HERE ??? ***
       printf("The following tests probe for USB connected monitors.\n");
-      // DBGMSG("Exploring runtime environment...\n");
+      // DBGMSG("Exploring USB runtime environment...\n");
       query_usbenv();
       main_rc = EXIT_SUCCESS;
 #else
@@ -750,7 +750,7 @@ int main(int argc, char *argv[]) {
       report_stats(parsed_cmd->stats_types);
       // report_timestamp_history();  // debugging function
    }
-   DBGMSG("Done");   // for timestamp
+   // DBGMSG("Done");
 
    return main_rc;
 }
