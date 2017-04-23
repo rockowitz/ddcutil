@@ -66,6 +66,12 @@
 
 #include "ddc/ddc_displays.h"
 
+// on banner, async  detect: 1.7 sec, non-async 3.4 sec
+#define ASYNC 1
+
+#ifdef ASYNC
+const int ASYNC_THRESHOLD = 3;
+#endif
 
 // Trace class for this file
 // static Trace_Group TRACE_GROUP = TRC_DDC;   // currently unused
@@ -185,7 +191,7 @@ bool check_monitor_ddc_null_response(Display_Handle * dh) {
  *  \return **true** if DDC communication with the display succeeded, **false** otherwise.
  */
 bool initial_checks_by_dh(Display_Handle * dh) {
-   bool debug = false;
+   bool debug = true;
    DBGMSF(debug, "Starting. dh=%s", dh_repr(dh));
 
    if (!(dh->dref->flags & DREF_DDC_COMMUNICATION_CHECKED)) {
@@ -232,6 +238,18 @@ bool initial_checks_by_dref(Display_Ref * dref) {
 
    return result;
 }
+
+
+// function to be run in thread
+void * threaded_initial_checks_by_dref(gpointer data) {
+   Display_Ref * dref = data;
+   assert(memcmp(dref->marker, DISPLAY_REF_MARKER, 4) == 0 );
+   initial_checks_by_dref(dref);
+   // g_thread_exit(NULL);
+   return NULL;
+}
+
+
 
 
 //
@@ -654,13 +672,72 @@ bye:
 }
 
 
+
+void async_scan(GPtrArray * all_displays) {
+   bool debug = true;
+   DBGMSF(debug, "Starting. all_displays=%p, display_count=%d", all_displays, all_displays->len);
+
+   GPtrArray * threads = g_ptr_array_new();
+   for (int ndx = 0; ndx < all_displays->len; ndx++) {
+      Display_Ref * dref = g_ptr_array_index(all_displays, ndx);
+      assert( memcmp(dref->marker, DISPLAY_REF_MARKER, 4) == 0 );
+
+      GThread * th =
+      g_thread_new(
+            dref_repr(dref),
+            threaded_initial_checks_by_dref,
+            dref);
+      g_ptr_array_add(threads, th);
+   }
+   DBGMSF(debug, "Started %d threads", threads->len);
+   for (int ndx = 0; ndx < threads->len; ndx++) {
+      GThread * thread = g_ptr_array_index(threads, ndx);
+      g_thread_join(thread);
+   }
+   DBGMSF(debug, "Threads joined");
+
+   for (int ndx = 0; ndx < all_displays->len; ndx++) {
+      Display_Ref * dref = g_ptr_array_index(all_displays, ndx);
+      assert( memcmp(dref->marker, DISPLAY_REF_MARKER, 4) == 0 );
+      if (dref->flags & DREF_DDC_COMMUNICATION_WORKING) {
+         dref->dispno = ++dispno_max;
+      }
+      else {
+         dref->dispno = -1;
+      }
+   }
+   DBGMSF(debug, "Done");
+}
+
+void non_async_scan(GPtrArray * all_displays) {
+   bool debug = true;
+   DBGMSF(debug, "Starting. checking %d displays", all_displays->len);
+
+   for (int ndx = 0; ndx < all_displays->len; ndx++) {
+      Display_Ref * dref = g_ptr_array_index(all_displays, ndx);
+      assert( memcmp(dref->marker, DISPLAY_REF_MARKER, 4) == 0 );
+      initial_checks_by_dref(dref);
+
+      if (dref->flags & DREF_DDC_COMMUNICATION_WORKING) {
+         dref->dispno = ++dispno_max;
+      }
+      else {
+         dref->dispno = -1;
+      }
+
+   }
+   DBGMSF(debug, "Done");
+}
+
+
+
 /** Adds a display to the list of detected displays.
  *
  * \param all_displays   list to add to
  * \param pointer to #Display_Ref to add
  *
  * \remark
- * Initial monitor cheks are performed.  (Does this belong here?)
+ * Initial monitor checks are performed.  (Does this belong here?)
  * \remark
  * This function is used during program initialization.
  * In the future, it could be used to dynamically add nely
@@ -670,15 +747,23 @@ static void
 ddc_add_display_ref(GPtrArray * all_displays, Display_Ref * dref) {
    bool debug = true;
    DBGMSF(debug, "Starting. dref=%s", dref_repr(dref));
+
+#ifndef ASYNC
+   DBGMSF(debug, "Non-async");
    if (dref->dispno < 0) {
+#ifdef OLD
       // check if valid display, etc.  (Does this belong here?)
       if (initial_checks_by_dref(dref)) {
+#else
+      if (dref->flags & DREF_DDC_COMMUNICATION_WORKING) {
+#endif
          dref->dispno = ++dispno_max;
       }
       else {
          dref->dispno = -1;
       }
    }
+#endif
    g_ptr_array_add(all_displays, dref);
    DBGMSF(debug, "Done. dispno = %d", dref->dispno);
 }
@@ -814,6 +899,10 @@ ddc_detect_all_displays() {
          dref->detail2 = businfo;
          dref->flags |= DREF_DDC_IS_MONITOR_CHECKED;
          dref->flags |= DREF_DDC_IS_MONITOR;
+#ifndef ASYNC
+         initial_checks_by_dref(dref);
+#endif
+         // g_ptr_array_add(display_list, dref);
          ddc_add_display_ref(display_list, dref);
       }
    }
@@ -829,6 +918,10 @@ ddc_detect_all_displays() {
      dref->detail2 = detail;
      dref->flags |= DREF_DDC_IS_MONITOR_CHECKED;
      dref->flags |= DREF_DDC_IS_MONITOR;
+#ifndef ASYNC
+     initial_checks_by_dref(dref);
+#endif
+     // g_ptr_array_add(display_list, dref);
      ddc_add_display_ref(display_list, dref);
   }
 
@@ -847,9 +940,19 @@ ddc_detect_all_displays() {
       dref->detail2 = curmon;
       dref->flags |= DREF_DDC_IS_MONITOR_CHECKED;
       dref->flags |= DREF_DDC_IS_MONITOR;
+#ifndef ASYNC
+      initial_checks_by_dref(dref);
+#endif
+      // g_ptr_array_add(display_list, dref);
       ddc_add_display_ref(display_list, dref);
    }
 
+#ifdef ASYNC
+   if (display_list->len >= ASYNC_THRESHOLD)
+      async_scan(display_list);
+   else
+      non_async_scan(display_list);
+#endif
    // if (debug) {
    //    DBGMSG("Displays detected:");
    //    report_display_recs(display_list, 1);
