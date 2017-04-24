@@ -218,7 +218,7 @@ Display_Identifier* create_mfg_model_sn_display_identifier(
  * #Display_Identifier using #free_display_identifier().
  */
 Display_Identifier* create_usb_hiddev_display_identifier(int hiddev_devno) {
-   Display_Identifier* pIdent = common_create_display_identifier(DISP_ID_USB);
+   Display_Identifier* pIdent = common_create_display_identifier(DISP_ID_HIDDEV);
    pIdent->hiddev_devno = hiddev_devno;
    return pIdent;
 }
@@ -337,12 +337,12 @@ char * did_repr(Display_Identifier * pdid) {
  * \param pdid pointer to #Display_Identifier to free
  */
 void free_display_identifier(Display_Identifier * pdid) {
-   // all variants use the same common data structure,
-   // with no pointers to other memory
-   assert( memcmp(pdid->marker, DISPLAY_IDENTIFIER_MARKER, 4) == 0);
-   pdid->marker[3] = 'x';
-   free(pdid->repr);   // may be null, that's ok
-   free(pdid);
+   if (pdid) {
+      assert( memcmp(pdid->marker, DISPLAY_IDENTIFIER_MARKER, 4) == 0);
+      pdid->marker[3] = 'x';
+      free(pdid->repr);   // may be null, that's ok
+      free(pdid);
+   }
 }
 
 
