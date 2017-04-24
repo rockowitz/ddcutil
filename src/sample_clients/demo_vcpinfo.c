@@ -48,7 +48,7 @@ DDCA_Display_Handle * open_first_display() {
    DDCA_Display_Handle dh = NULL;
 
    // Inquire about detected monitors.
-   DDCA_Display_Info_List * dlist = ddca_get_displays();
+   DDCA_Display_Info_List * dlist = ddca_get_display_info_list();
    printf("ddca_get_displays() returned %p\n", dlist);
    assert(dlist);   // this is sample code
    if (dlist->ct == 0) {

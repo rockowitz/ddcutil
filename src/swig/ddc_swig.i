@@ -8,7 +8,7 @@
 // Start of copy block
 #include "swig/ddc_swig.h"
 //  void ddca_init(void);
-bool ddcs_built_with_adl(void);
+// bool ddcs_built_with_adl(void);
 const char * ddcutil_version(void);
 // enum Retries{DDCT_WRITE_ONLY_TRIES3, DDCT_WRITE_READ_TRIES3, DDCT_MULTI_PART_TRIES3};
 // end of copy block
@@ -91,8 +91,8 @@ const char * ddcs_ddcutil_version_string(void);
 
 // which variant to keep?
 
-bool ddcs_built_with_adl(void);
-bool ddcs_built_with_usb(void);
+// bool ddcs_built_with_adl(void);
+// bool ddcs_built_with_usb(void);
 
 %rename(DDCS_HAS_ADL)  DDCA_HAS_ADL;
 %rename(DDCS_HAS_USB)  DDCA_HAS_USB;

@@ -51,7 +51,7 @@
 DDCA_Display_Ref display_selection_using_ddca_get_displays() {
    printf("\nCheck for monitors using ddca_get_displays()...\n");
    // Inquire about detected monitors.
-   DDCA_Display_Info_List * dlist = ddca_get_displays();
+   DDCA_Display_Info_List * dlist = ddca_get_display_info_list();
    printf("   ddca_get_displays() returned %p\n", dlist);
 
    // A convenience function to report the result of ddca_get_displays()

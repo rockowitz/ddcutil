@@ -192,7 +192,7 @@ int test_monitor_detection() {
    printf("\n(%s) ===> Starting.\n", __func__);
    printf("Check for monitors using ddca_get_displays()...\n");
    // Inquire about detected monitors.
-   DDCA_Display_Info_List * dlist = ddca_get_displays();
+   DDCA_Display_Info_List * dlist = ddca_get_display_info_list();
    printf("ddca_get_displays() returned %p\n", dlist);
 
    // A convenience function to report the result of ddca_get_displays()
@@ -291,7 +291,7 @@ int main(int argc, char** argv) {
    DDCA_Display_Ref dref;
    DDCA_Display_Handle dh = NULL;  // initialize to avoid clang analyzer warning
 
-   DDCA_Display_Info_List * dlist = ddca_get_displays();
+   DDCA_Display_Info_List * dlist = ddca_get_display_info_list();
    printf("ddca_get_displays() returned %p\n", dlist);
 
    for (int ndx = 0; ndx <  dlist->ct; ndx++) {

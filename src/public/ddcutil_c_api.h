@@ -45,9 +45,6 @@ extern "C" {
  *
  *  Function names in the public C API begin with "ddca_"\n
  *  Typedefs, constants, etc. begin with "DDCA_".
- *
- *  Function ddca_init() must be called before all others
- *  (except for library build information).
  */
 
 
@@ -88,6 +85,7 @@ DDCA_Ddcutil_Version_Spec ddca_ddcutil_version(void);       // ddcutil version
  */
 const char * ddca_ddcutil_version_string();
 
+#ifdef OLD
 /**
  * Indicates whether the ddcutil library was built with ADL support.
  *
@@ -105,6 +103,7 @@ bool ddca_built_with_adl(void);
  * @return true/false
  */
 bool ddca_built_with_usb(void);
+#endif
 
 /** Queries the options with which the **ddcutil** library was built.
  *
@@ -251,8 +250,16 @@ ddca_set_max_tries(
       int             max_tries);
 ///@}
 
-
+/** Controls whether VCP values are read after being set.
+ *
+ * \param onoff true/false
+ */
 void ddca_set_verify_setvcp(bool onoff);
+
+/** Query whether VCP values are read after being set.
+ * \retval true values are verified after being set
+ * \retval false values are not verified
+ */
 bool ddca_get_verify_setvcp();
 
 
@@ -325,6 +332,66 @@ void ddca_reset_stats();
  *  \param depth       logical indentation depth
  */
 void ddca_show_stats(DDCA_Stats_Type stats, int depth);
+
+
+//
+// Display Descriptions
+//
+
+/** Gets a list of the detected displays.
+ *
+ *  Displays that do not support DDC are not included.
+ *
+ *  @return list of display summaries
+ */
+DDCA_Display_Info_List *
+ddca_get_display_info_list();
+
+
+/** Frees a list of detected displays.
+ *
+ *  This function understands which fields in the list
+ *  point to permanently allocated data structures and should
+ *  not be freed.
+ *
+ *  \param dlist pointer to #DDCA_Display_Info_List
+ */
+void ddca_free_display_info_list(DDCA_Display_Info_List * dlist);
+
+
+/** Presents a report on a single display.
+ *  The report is written to the current FOUT device.
+ *
+ *  @param[in]  dinfo  pointer to a DDCA_Display_Info struct
+ *  @param[in]  depth  logical indentation depth
+ */
+void
+ddca_report_display_info(
+      DDCA_Display_Info * dinfo,
+      int                 depth);
+
+/** Reports on all displays in a list of displays.
+ *  The report is written to the current FOUT device
+ *
+ *  @param[in]  dlist  pointer to a DDCA_Display_Info_List
+ *  @param[in]  depth  logical indentation depth
+ */
+void
+ddca_report_display_info_list(
+      DDCA_Display_Info_List * dlist,
+      int                      depth);
+
+/** Reports on all active displays.
+ *  This function hooks into the code used by command "ddcutil detect"
+ *
+ *  @param[in] depth  logical indentation depth
+ *  @return    number of MCCS capable displays
+ */
+int
+ddca_report_active_displays(
+      int depth);
+
+
 
 
 //
@@ -453,7 +520,7 @@ ddca_did_repr(
  * @param[in]  did display identifier
  * @param[out] pdref where to return display reference
  * @retval     0 success
- * @retval     -EINVAL  did not a valid display identifier handle
+ * @retval     -EINVAL  did is not a valid display identifier handle
  * @retval     DDCRC_INVALID_DISPLAY display not found
  *
  * \ingroup api_display_spec
@@ -531,64 +598,6 @@ ddca_close_display(
 char *
 ddca_dh_repr(
       DDCA_Display_Handle   ddca_dh);
-
-
-//
-// Display Descriptions
-//
-
-/** Gets a list of the detected displays.
- *
- *  Displays that do not support DDC are not included.
- *
- *  @return list of display summaries
- */
-DDCA_Display_Info_List *
-ddca_get_displays();
-
-
-/** Frees a list of detected displays.
- *
- *  This function understands which fields in the list
- *  point to permanently allocated data structures and should
- *  not be freed.
- *
- *  \param dlist pointer to #DDCA_Display_Info_List
- */
-void ddca_free_display_info_list(DDCA_Display_Info_List * dlist);
-
-
-/** Presents a report on a single display.
- *  The report is written to the current FOUT device.
- *
- *  @param[in]  dinfo  pointer to a DDCA_Display_Info struct
- *  @param[in]  depth  logical indentation depth
- */
-void
-ddca_report_display_info(
-      DDCA_Display_Info * dinfo,
-      int                 depth);
-
-/** Reports on all displays in a list of displays.
- *  The report is written to the current FOUT device
- *
- *  @param[in]  dlist  pointer to a DDCA_Display_Info_List
- *  @param[in]  depth  logical indentation depth
- */
-void
-ddca_report_display_info_list(
-      DDCA_Display_Info_List * dlist,
-      int                      depth);
-
-/** Reports on all active displays.
- *  This function hooks into the code used by command "ddcutil detect"
- *
- *  @param[in] depth  logical indentation depth
- *  @return    number of MCCS capable displays
- */
-int
-ddca_report_active_displays(
-      int depth);
 
 
 //

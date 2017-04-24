@@ -109,6 +109,7 @@ const char * ddcs_ddcutil_version_string(void) {
    return ddca_ddcutil_version_string();
 }
 
+#ifdef OLD
 bool ddcs_built_with_adl(void) {
    return ddca_built_with_adl();
 }
@@ -116,6 +117,7 @@ bool ddcs_built_with_adl(void) {
 bool ddcs_built_with_usb(void) {
    return ddca_built_with_usb();
 }
+#endif
 
 FlagsByte ddcs_get_build_options(void) {
    unsigned long feature_bits = ddca_get_build_options();

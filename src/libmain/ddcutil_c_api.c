@@ -934,7 +934,7 @@ ddca_get_displays_old()
 
 // or should this return status code?
 DDCA_Display_Info_List *
-ddca_get_displays()
+ddca_get_display_info_list()
 {
    // PROGRAM_LOGIC_ERROR("Pseudo failure");
 

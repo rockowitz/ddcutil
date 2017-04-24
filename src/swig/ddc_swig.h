@@ -46,9 +46,10 @@ const char * ddcs_ddcutil_version_string();
 
 typedef uint8_t FlagsByte;
 
+#ifdef OLD
 bool ddcs_built_with_adl(void);
 bool ddcs_built_with_usb(void);
-
+#endif
 
 // #define DDCS_BUILT_WITH_ADL     DDCA_BUILT_WITH_ADL
 // #define DDCS_BUILT_WITH_USB     DDCA_BUILT_WITH_USB
