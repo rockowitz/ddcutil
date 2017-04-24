@@ -179,6 +179,7 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
    gboolean version_flag   = false;
    gboolean timestamp_trace_flag = false;
    gboolean verify_flag    = false;
+   gboolean noverify_flag  = false;
 // gboolean nodetect_flag  = false;
 // gboolean myhelp_flag    = false;
 // gboolean myusage_flag   = false;
@@ -190,6 +191,7 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
    char**   cmd_and_args   = NULL;
    gchar**  trace_classes  = NULL;
    gint     buswork        = -1;
+   gint     hidwork        = -1;
    gint     dispwork       = -1;
    char *   maxtrywork      = NULL;
    gint     sleep_strategy_work = -1;
@@ -202,12 +204,13 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
       {"display", 'd',  0, G_OPTION_ARG_INT,      &dispwork,         "Display number",              "number"},
       {"dis",    '\0',  0, G_OPTION_ARG_INT,      &dispwork,         "Display number",              "number"},
       {"bus",     'b',  0, G_OPTION_ARG_INT,      &buswork,          "I2C bus number",              "busnum" },
+      {"hiddev", '\0',  0, G_OPTION_ARG_INT,      &hidwork,          "hiddev device number",        "number" },
 //    {"adl",     'a',  0, G_OPTION_ARG_CALLBACK, adl_arg_func,      "ADL adapter and display indexes", "adapterIndex.displayIndex"},
       {"adl",     'a',  0, G_OPTION_ARG_STRING,   &adlwork,          "ADL adapter and display indexes", "adapterIndex.displayIndex"},
-      {"usb",     'u',  0, G_OPTION_ARG_STRING,   &usbwork,          "USB bus and device numbers", "busnum.devicenum"},
-      {"mfg",     'g',  0, G_OPTION_ARG_STRING,   &mfg_id_work,      "Monitor manufacturer code",      "mfg_id"},
-      {"model",   'l',  0, G_OPTION_ARG_STRING,   &modelwork,        "Monitor model",                     "model name"},
-      {"sn",      'n',  0, G_OPTION_ARG_STRING,   &snwork,           "Monitor serial number",          "serial number"},
+      {"usb",     'u',  0, G_OPTION_ARG_STRING,   &usbwork,          "USB bus and device numbers",  "busnum.devicenum"},
+      {"mfg",     'g',  0, G_OPTION_ARG_STRING,   &mfg_id_work,      "Monitor manufacturer code",   "mfg_id"},
+      {"model",   'l',  0, G_OPTION_ARG_STRING,   &modelwork,        "Monitor model",               "model name"},
+      {"sn",      'n',  0, G_OPTION_ARG_STRING,   &snwork,           "Monitor serial number",       "serial number"},
       {"edid",    'e',  0, G_OPTION_ARG_STRING,   &edidwork,         "Monitor EDID",            "256 char hex string" },
 
       // output control
@@ -230,6 +233,7 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
                   '\0', 0, G_OPTION_ARG_NONE,     &force_slave_flag, "Force I2C slave address",         NULL},
       {"force",   'f',  0, G_OPTION_ARG_NONE,     &force_flag,       "Ignore certain checks",           NULL},
       {"verify",  '\0', 0, G_OPTION_ARG_NONE,     &verify_flag,      "Read VCP value after setting it", NULL},
+      {"noverify",'\0', 0, G_OPTION_ARG_NONE,     &noverify_flag,    "Do not read VCP value after setting it", NULL},
 //    {"nodetect",'\0', 0, G_OPTION_ARG_NONE,     &nodetect_flag,    "Skip initial monitor detection",  NULL},
 
       // debugging
@@ -244,7 +248,7 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
       {"sleep-strategy",
                   'y', 0,  G_OPTION_ARG_INT,      &sleep_strategy_work, "Set sleep strategy", "strategy number" },
       {"failsim", '\0', 0,
-                           G_OPTION_ARG_FILENAME,   &failsim_fn_work, "Enable simulation", "control file name"},
+                           G_OPTION_ARG_FILENAME, &failsim_fn_work, "Enable simulation", "control file name"},
 
       // other
       {"version", 'V',  0, G_OPTION_ARG_NONE,     &version_flag,     "Show version information", NULL},
@@ -309,7 +313,12 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
    parsed_cmd->stats_types      = stats_work;
    parsed_cmd->sleep_strategy   = sleep_strategy_work;
    parsed_cmd->timestamp_trace  = timestamp_trace_flag;
-   parsed_cmd->verify_setvcp    = verify_flag;
+   if (verify_flag)
+      parsed_cmd->verify_setvcp = true;
+   else if (noverify_flag)
+      parsed_cmd->verify_setvcp = false;
+   else
+      parsed_cmd->verify_setvcp = true;
 // parsed_cmd->nodetect         = nodetect_flag;
    if (failsim_fn_work) {
 #ifdef ENABLE_FAILSIM
@@ -320,6 +329,11 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
       ok = false;
 #endif
    }
+
+
+   // Create display identifier
+   //
+   // n. at this point parsed_cmd->pdid == NULL
 
    if (adlwork) {
 #ifdef HAVE_ADL
@@ -360,8 +374,10 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
           // DBGMSG("After USB parse, ok=%d", ok);
       }
       else {
-         // parsedCmd->dref = createAdlDisplayRef(iAdapterIndex, iDisplayIndex);
-         // free(parsed_cmd->pdid);
+         // avoid memory leak in case parsed_cmd->pdid set in more than 1 way
+         if (parsed_cmd->pdid) {
+            free_display_identifier(parsed_cmd->pdid);
+         }
          parsed_cmd->pdid = create_usb_display_identifier(busnum, devicenum);
       }
       explicit_display_spec_ct++;
@@ -372,16 +388,25 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
    }
 
    if (buswork >= 0) {
-      // DBGMSG("case B");
-      // free(parsed_cmd->pdid);
+      // avoid memory leak in case parsed_cmd->pdid set in more than 1 way
+      if (parsed_cmd->pdid)
+         free_display_identifier(parsed_cmd->pdid);
       parsed_cmd->pdid = create_busno_display_identifier(buswork);
       explicit_display_spec_ct++;
    }
 
+   if (hidwork >= 0) {
+      // avoid memory leak in case parsed_cmd->pdid set in more than 1 way
+      if (parsed_cmd->pdid)
+         free_display_identifier(parsed_cmd->pdid);
+      parsed_cmd->pdid = create_usb_hiddev_display_identifier(hidwork);
+      explicit_display_spec_ct++;
+   }
+
    if (dispwork >= 0) {
-      // need to handle 0?
-      // DBGMSG("case B");
-      // free(parsed_cmd->pdid);
+      // avoid memory leak in case parsed_cmd->pdid set in more than 1 way
+      if (parsed_cmd->pdid)
+         free_display_identifier(parsed_cmd->pdid);
       parsed_cmd->pdid = create_dispno_display_identifier(dispwork);
       explicit_display_spec_ct++;
    }
@@ -399,7 +424,9 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
             ok = false;
          }
          else {
-            // free(parsed_cmd->pdid);
+            // avoid memory leak in case parsed_cmd->pdid set in more than 1 way
+            if (parsed_cmd->pdid)
+               free_display_identifier(parsed_cmd->pdid);
             parsed_cmd->pdid = create_edid_display_identifier(pba);  // new way
          }
          if (pba)
@@ -409,7 +436,9 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
    }
 
    if (mfg_id_work || modelwork || snwork) {
-      // free(parsed_cmd->pdid);
+      // avoid memory leak in case parsed_cmd->pdid set in more than 1 way
+      if (parsed_cmd->pdid)
+         free_display_identifier(parsed_cmd->pdid);
       parsed_cmd->pdid = create_mfg_model_sn_display_identifier(
                           mfg_id_work,
                           modelwork,
@@ -576,6 +605,8 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
    // All options processed.  Check for consistency, set defaults
    if (explicit_display_spec_ct > 1) {
       fprintf(stderr, "Monitor specified in more than one way\n");
+      free_display_identifier(parsed_cmd->pdid);
+      parsed_cmd->pdid = NULL;
       ok = false;
    }
    // else if (explicit_display_spec_ct == 0)
@@ -639,6 +670,23 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
             else
                printf("Invalid feature code or subset: %s\n", parsed_cmd->args[0]);
          }
+
+         // validate options vs commands
+
+         switch (parsed_cmd->cmd_id) {
+         case (CMDID_PROBE):
+               if (parsed_cmd->output_level == DDCA_OL_TERSE) {
+                  // don't want to deal with how to report errors, write-only features
+                  fprintf(stderr, "probe command: option --terse unsupported");
+                  ok = false;
+               }
+               break;
+
+         default:
+            break;
+         }
+
+
       }  // recognized command
    }
 
