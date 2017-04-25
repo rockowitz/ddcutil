@@ -741,8 +741,9 @@ char * dh_repr(Display_Handle * dh) {
           break;
       case DDCA_IO_USB:
           dh->repr = gaux_asprintf(
-                   "Display_Handle[usb: %d:%d, %s/hiddev/%d]",
-                   dh->dref->usb_bus, dh->dref->usb_device, hiddev_directory(), dh->dref->usb_hiddev_devno);
+                   "Display_Handle[usb: %d:%d, %s/hiddev%d]",
+                   dh->dref->usb_bus, dh->dref->usb_device,
+                   hiddev_directory(), dh->dref->usb_hiddev_devno);
           break;
       }
    }
