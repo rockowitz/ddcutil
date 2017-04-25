@@ -300,7 +300,7 @@ set_vcp_value(
          if (psc != 0) {
             f0printf(fout, "(%s) Read after write failed. get_vcp_value() returned: %s\n",
                            __func__, psc_desc(psc));
-            psc = DDCRC_VERIFY;
+            // psc = DDCRC_VERIFY;
          }
          else {
             if (! single_vcp_value_equal(vrec,newval)) {

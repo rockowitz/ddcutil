@@ -98,7 +98,7 @@ bool parse_vcp_value(char * string_value, long* parsed_value) {
  *
  * Returns:
  *   0          success
- *   -EINVAL (modulated)  invalid setvcp arguments, feature not writable
+ *   -EINVAL    invalid setvcp arguments, feature not writable
  *   from put_vcp_by_display_ref()
  */
 // TODO: consider moving value parsing to command parser
@@ -119,7 +119,7 @@ app_set_vcp_value(
    DDCA_MCCS_Version_Spec vspec = get_vcp_version_by_display_handle(dh);
    bool ok = any_one_byte_hex_string_to_byte_in_buf(feature, &hexid);
    if (!ok) {
-      printf("Unrecognized VCP feature code: %s\n", feature);
+      f0printf(FOUT, "Unrecognized VCP feature code: %s\n", feature);
       psc = DDCL_UNKNOWN_FEATURE;
       goto bye;
    }
@@ -127,7 +127,7 @@ app_set_vcp_value(
    if (!entry && ( force || hexid >= 0xe0) )  // assume force for mfg specific codes
       entry = vcp_create_dummy_feature_for_hexid(hexid);
    if (!entry) {
-      printf("Unrecognized VCP feature code: %s\n", feature);
+      f0printf(FOUT, "Unrecognized VCP feature code: %s\n", feature);
       // gsc = modulate_rc(-EINVAL, RR_ERRNO);
       psc = DDCL_UNKNOWN_FEATURE;
       goto bye;
@@ -135,7 +135,7 @@ app_set_vcp_value(
 
    if (!is_feature_writable_by_vcp_version(entry, vspec)) {
       char * feature_name =  get_version_sensitive_feature_name(entry, vspec);
-      printf("Feature %s (%s) is not writable\n", feature, feature_name);
+      f0printf(FOUT, "Feature %s (%s) is not writable\n", feature, feature_name);
       psc = DDCL_INVALID_OPERATION;
       goto bye;
    }
@@ -164,7 +164,7 @@ app_set_vcp_value(
    }
 
    if (!good_value) {
-      printf("Invalid VCP value: %s\n", new_value);
+      f0printf(FOUT, "Invalid VCP value: %s\n", new_value);
       // what is better status code?
       psc = -EINVAL;
       goto bye;
@@ -172,8 +172,14 @@ app_set_vcp_value(
 
    psc = set_vcp_value(dh, &vrec);
    if (psc != 0)  {
-      // Is this proper error message?
-      printf("Setting value failed. rc=%s\n", psc_desc(psc));
+      switch(psc) {
+      case DDCRC_VERIFY:
+            f0printf(FOUT, "Verification failed for feature %02x\n", entry->code);
+            break;
+      default:
+         // Is this proper error message?
+         f0printf(FOUT, "Setting value failed for feature %02x. rc=%s\n", entry->code, psc_desc(psc));
+      }
    }
 
 bye:
