@@ -273,6 +273,10 @@ set_vcp_value(
 {
    bool debug = false;
    DBGMSF(debug, "Starting");
+   FILE * fout = FOUT;
+   bool verbose = false;
+   if (!verbose)
+      fout = NULL;
 
    Public_Status_Code psc = 0;
    if (vrec->value_type == DDCA_NON_TABLE_VCP_VALUE) {
@@ -285,7 +289,7 @@ set_vcp_value(
 
    if (psc == 0 && verify_setvcp) {
       if (is_rereadable_feature(dh, vrec->opcode) ) {
-         fprintf(FOUT, "Verifying that value of feature 0x%02x successfully set...\n", vrec->opcode);
+         f0printf(fout, "Verifying that value of feature 0x%02x successfully set...\n", vrec->opcode);
          DDCA_Single_Vcp_Value * newval = NULL;
          psc = get_vcp_value(
              dh,
@@ -293,21 +297,21 @@ set_vcp_value(
              vrec->value_type,
              &newval);
          if (psc != 0) {
-            f0printf(FOUT, "Read after write failed. get_vcp_value() returned: %s\n", psc_desc(psc));
+            f0printf(fout, "Read after write failed. get_vcp_value() returned: %s\n", psc_desc(psc));
             psc = DDCRC_VERIFY;
          }
          else {
             if (! single_vcp_value_equal(vrec,newval)) {
                psc = DDCRC_VERIFY;
-               f0printf(FOUT, "Current value does not match value set.\n");
+               f0printf(fout, "Current value does not match value set.\n");
             }
             else {
-               f0printf(FOUT, "Verification succeeded\n");
+               f0printf(fout, "Verification succeeded\n");
             }
          }
       }
       else {
-         fprintf(FOUT, "Feature 0x%02x does not support verification\n", vrec->opcode);
+         f0printf(fout, "Feature 0x%02x does not support verification\n", vrec->opcode);
          // rpt_vstring(0, "Feature 0x%02x does not support verification", vrec->opcode);
       }
 
