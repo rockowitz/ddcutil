@@ -77,6 +77,7 @@ check_PROGRAMS += \
   laclient \
   demo_global_settings \
   demo_vcpinfo \
+  demo_get_set_vcp \
   demo_display_selection
 endif
 
@@ -143,6 +144,7 @@ sample_clients/clmain.c
 demo_global_settings_SOURCES   = sample_clients/demo_global_settings.c
 demo_vcpinfo_SOURCES           = sample_clients/demo_vcpinfo.c
 demo_display_selection_SOURCES = sample_clients/demo_display_selection.c
+demo_get_set_vcp_SOURCES       = sample_clients/demo_get_set_vcp.c
 
 #
 # Files only in libddcutil
@@ -302,6 +304,7 @@ ddcutil_CFLAGS                 = $(AM_CFLAGS)  -fPIC
 laclient_CFLAGS                = $(AM_CFLAGS)  -fPIC
 demo_global_settings_CFLAGS    = $(AM_CFLAGS)  -fPIC
 demo_vcpinfo_CFLAGS            = $(AM_CFLAGS)  -fPIC
+demo_get_set_vcp_CFLAGS        = $(AM_CFLAGS)  -fPIC
 demo_display_selection_CFLAGS  = $(AM_CFLAGS)  -fPIC
 
 # unneessary, will use AM_CFLAGS if xxx_CFLAGS undefined
@@ -369,11 +372,13 @@ ddcutil_LDFLAGS += -export-dynamic
 laclient_LDADD                = libddcutil.la 
 demo_global_settings_LDADD    = libddcutil.la
 demo_vcpinfo_LDADD            = libddcutil.la
+demo_get_set_vcp_LDADD        = libddcutil.la
 demo_display_selection_LDADD  = libddcutil.la
 
 laclient_LDFLAGS                = -pie
 demo_global_settings_LDFLAGS    = -pie
 demo_vcpinfo_LDFLAGS            = -pie
+demo_get_set_vcp_LDFLAGS        = -pie
 demo_display_selection_LDFLAGS  = -pie
 
 # debug-install-hook:
