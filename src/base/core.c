@@ -685,7 +685,8 @@ void ddcmsg(Trace_Group  traceGroup,
       va_list(args);
       va_start(args, format);
       vsnprintf(buffer, 200, format, args);
-      f0printf(FOUT, "(%s) %s\n", funcname, buffer);
+      // f0printf(FOUT, "(%s) %s\n", funcname, buffer);
+      f0printf(FOUT, "DDC: %s\n", buffer);
       va_end(args);
    }
 }
