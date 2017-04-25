@@ -33,6 +33,8 @@
  * include dependencies within the ddc source directory.
  */
 
+#include <config.h>
+
 /** \cond */
 #include <assert.h>
 /** \endcond */
@@ -75,7 +77,7 @@ ddc_get_parsed_edid_by_display_handle(Display_Handle * dh) {
       pEdid = usb_get_parsed_edid_by_display_handle(dh);
       break;
 #else
-      PROGRAM_LOGIC_ERROR("ddcutil not build with USB support");
+      PROGRAM_LOGIC_ERROR("ddcutil not built with USB support");
 #endif
    }
    TRCMSG("Returning %p", __func__, pEdid);
