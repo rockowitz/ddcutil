@@ -25,6 +25,8 @@ ddcutil \- Query and change monitor settings
 .IR busno ]
 .RB [ "--adl" | "-a " 
 .IR "adapter-index.display-index" ]
+.RB [ "--hiddev"
+.IR hiddev device number ]
 .RB [ "--usb" | "-u"
 .IR "busnum.devicenum" ]
 .RB [ "--edid" 
@@ -35,8 +37,9 @@ ddcutil \- Query and change monitor settings
 .IR "model name" ]
 .RB [ "--sn" | "-n" 
 .IR "serial number" ]
+.RB [ "--noverify" ]
 .RB [ "-v|--verbose" ]
-.RB [ -t | --terse ]
+.RB [ -t | --terse | --brief ]
 .RB [ "-U" | "--show-unsupported" ]
 .RB [ --ddc ]
 .RB [ "-s" | "--stats" ]
@@ -82,7 +85,6 @@ Alternatively, \fBddcutil\fP can communicate with USB connected monitors impleme
 
 The Monitor Control Command Set describes a collection of Virtual Control Panel (VCP) features that a monitor can implement.
 Each feature is identified using a single byte.  For example, feature x10 is the brightness control. 
-
 
 A particular use case for \fBddcutil\fP is as part of color profile management.  
 Monitor calibration is relative to the monitor color settings currently in effect, e.g. red gain.  
@@ -197,6 +199,10 @@ I2C bus number
 .BI "-a,--adl " "adapterIndex.displayIndex"
 ADL adapter and display indexes
 .TQ
+.BR "--hiddev "
+.I device number
+hiddev device number
+.TQ
 .BI "-u,--usb " "busnum.devicenum"
 USB bus and device numbers
 .TQ
@@ -219,17 +225,17 @@ Options to control the amount and form of output.
 .B "-U, --show-unsupported"
 Normally, \fBgetvcp\fP does not report unsupported features when querying a feature-group.  This option forces output. 
 .TQ
-.B "-t, --terse"
-Show brief detail
+.B "-t, --terse, --brief"
+Show brief detail.  For command \fBsetvcp\fP, the output is in machine readable form.
 .TQ
 .B -v, --verbose
 Show extended detail
 .PP
 Options for diagnostic output.
 .TQ
-.BR --stats " [" all | errors | tries | calls ]
+.BR --stats " [" all | errors | tries | calls | elapsed | time ]
 Report execution statistics.  If no argument is specified, or ALL is specified, then all statistics are 
-output.  
+output.  \fBelapsed\fP is a synonym for \fBtime\fP.  \fBcalls\fP implies \fBtime\fP.
 .br Specify this option multiple times to report multiple statistics groups.
 .br
 I2C bus communication is an inherently unreliable.  It is the responsibility of the program using the bus 
@@ -265,6 +271,13 @@ Take control of slave addresses on the I2C bus even they are in use.
 .TQ
 .B "-f, --force"
 Do not check certain parameters. 
+.TQ
+.B "--verify"
+Verify values set by \fBsetvcp\fP or \fBloadvcp\fP. (default)
+.TQ
+.B "--noverify"
+Do not verify values set by \fBsetvcp\fP or \fBloadvcp\fP. 
+
 
 .SH EXECUTION ENVIRONMENT 
 
