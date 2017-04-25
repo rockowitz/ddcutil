@@ -254,13 +254,13 @@ ddca_set_max_tries(
  *
  * \param onoff true/false
  */
-void ddca_set_verify_setvcp(bool onoff);
+void ddca_enable_verify(bool onoff);
 
 /** Query whether VCP values are read after being set.
  * \retval true values are verified after being set
  * \retval false values are not verified
  */
-bool ddca_get_verify_setvcp();
+bool ddca_is_verify_enabled();
 
 
 //
@@ -695,12 +695,23 @@ ddca_get_feature_name(DDCA_Vcp_Feature_Code feature_code);
  * @param[in]  mccs_version_id   MCCS version id
  * @param[out] p_value_table     where to return pointer to array of DDCA_Feature_Value_Entry
  * @return     status code
+ * @retval     0                success
+ * @retval     DDCRC_NOT_FOUND  unrecognized feature code
+ * @retval     -EINVAL          feature not simple NC
  */
 DDCA_Status
 ddca_get_simple_sl_value_table(
       DDCA_Vcp_Feature_Code       feature_code,
       DDCA_MCCS_Version_Id        mccs_version_id,
       DDCA_Feature_Value_Table *  p_value_table);   // DDCA_Feature_Value_Entry **
+
+
+DDCA_Status
+ddca_get_simple_nc_feature_value_name(
+      DDCA_Display_Handle    ddca_dh,    // needed because value lookup mccs version dependent
+      DDCA_Vcp_Feature_Code  feature_code,
+      uint8_t                feature_value,
+      char**                 p_feature_name);
 
 
 //

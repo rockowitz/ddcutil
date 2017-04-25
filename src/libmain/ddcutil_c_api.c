@@ -436,11 +436,11 @@ ddca_set_max_tries(
 
 
 
-void ddca_set_verify_setvcp(bool onoff) {
+void ddca_enable_verify(bool onoff) {
    set_verify_setvcp(onoff);
 }
 
-bool ddca_get_verify_setvcp() {
+bool ddca_is_verify_enabled() {
    return get_verify_setvcp();
 }
 
@@ -992,7 +992,7 @@ ddca_get_display_info_list()
 
 static
 void ddca_free_display_info(DDCA_Display_Info * info_rec) {
-   // All pointers in DDCA_Display_Info are to permananently allocated
+   // All pointers in DDCA_Display_Info are to permanently allocated
    // data structures.  Nothing to free.
 }
 
@@ -1015,45 +1015,33 @@ ddca_report_display_info(
    assert(memcmp(dinfo->marker, DDCA_DISPLAY_INFO_MARKER, 4) == 0);
    int d0 = depth;
    int d1 = depth+1;
+   int d2 = depth+2;
    rpt_vstring(d0, "Display number:  %d", dinfo->dispno);
-#ifdef OLD
-   rpt_vstring(d1, "IO mode:         %s", mccs_io_mode_name(dinfo->io_mode));
-   switch(dinfo->io_mode) {
-   case (DDCA_IO_DEVI2C):
-         rpt_vstring(d1, "I2C bus number:     %d", dinfo->i2c_busno);
-         break;
-   case (DDCA_IO_ADL):
-         rpt_vstring(d1, "ADL adapter.display:  %d.%d", dinfo->iAdapterIndex, dinfo->iDisplayIndex);
-         break;
-   case (DDCA_IO_USB):
-         rpt_vstring(d1, "USB bus.device:       %d.%d", dinfo->usb_bus, dinfo->usb_device);
-         break;
-   }
-#endif
-
-   rpt_vstring(d1, "IO mode:         %s", mccs_io_mode_name(dinfo->path.io_mode));
+   rpt_vstring(d1, "IO mode:             %s", mccs_io_mode_name(dinfo->path.io_mode));
    switch(dinfo->path.io_mode) {
    case (DDCA_IO_DEVI2C):
          rpt_vstring(d1, "I2C bus number:     %d", dinfo->path.i2c_busno);
          break;
    case (DDCA_IO_ADL):
-         rpt_vstring(d1, "ADL adapter.display:  %d.%d",
+         rpt_vstring(d1, "ADL adapter.display: %d.%d",
                          dinfo->path.adlno.iAdapterIndex, dinfo->path.adlno.iDisplayIndex);
          break;
    case (DDCA_IO_USB):
-         rpt_vstring(d1, "USB bus.device:       %d.%d",
+         rpt_vstring(d1, "USB bus.device:      %d.%d",
                          dinfo->usb_bus, dinfo->usb_device);
-         rpt_vstring(d1, "USB hiddev number:    %d", dinfo->path.hiddev_devno);
+         rpt_vstring(d1, "USB hiddev number:   %d", dinfo->path.hiddev_devno);
          break;
    }
 
-   char * edidstr = hexstring(dinfo->edid_bytes, 128);
-   rpt_vstring(d1, "Mfg Id:         %s", dinfo->mfg_id);
-   rpt_vstring(d1, "Model:          %s", dinfo->model_name);
-   rpt_vstring(d1, "Serial number:  %s", dinfo->sn);
-   rpt_vstring(d1, "EDID:           %s", edidstr);
-   rpt_vstring(d1, "dref:           %p", dinfo->dref);
-   free(edidstr);
+   // char * edidstr = hexstring(dinfo->edid_bytes, 128);
+   rpt_vstring(d1, "Mfg Id:              %s", dinfo->mfg_id);
+   rpt_vstring(d1, "Model:               %s", dinfo->model_name);
+   rpt_vstring(d1, "Serial number:       %s", dinfo->sn);
+   // rpt_vstring(d1, "EDID:                %s", edidstr);
+   rpt_vstring(d1, "EDID:");
+   rpt_hex_dump(dinfo->edid_bytes, 128, d2);
+   rpt_vstring(d1, "dref:                %p", dinfo->dref);
+   // free(edidstr);
 }
 
 
@@ -1184,7 +1172,7 @@ ddca_get_feature_info_by_vcp_version(
 
 DDCA_Status
 ddca_get_feature_info_by_display(
-      DDCA_Display_Handle      ddca_dh,    // needed because in rare cases feature info is MCCS version dependent
+      DDCA_Display_Handle           ddca_dh,    // needed because in rare cases feature info is MCCS version dependent
       DDCA_Vcp_Feature_Code         feature_code,
       DDCA_Version_Feature_Info **  p_info)
 {
@@ -1221,7 +1209,7 @@ ddca_get_feature_name(DDCA_Vcp_Feature_Code feature_code) {
 
 DDCA_Status
 ddca_get_simple_sl_value_table(
-      DDCA_Vcp_Feature_Code           feature_code,
+      DDCA_Vcp_Feature_Code      feature_code,
       DDCA_MCCS_Version_Id       mccs_version_id,
       DDCA_Feature_Value_Entry** pvalue_table)
 {
@@ -1232,14 +1220,14 @@ ddca_get_simple_sl_value_table(
    VCP_Feature_Table_Entry * pentry = vcp_find_feature_by_hexid(feature_code);
    if (!pentry) {
         *pvalue_table = NULL;
-        rc = DDCL_ARG;
+        rc = DDCRC_NOT_FOUND;
   }
   else {
      DDCA_MCCS_Version_Spec vspec2 = {vspec.major, vspec.minor};
      DDCA_Version_Feature_Flags vflags = get_version_specific_feature_flags(pentry, vspec2);
      if (!(vflags & DDCA_SIMPLE_NC)) {
         *pvalue_table = NULL;
-        rc = DDCL_ARG;    // need better code
+        rc = -EINVAL;
      }
      else  {
         DDCA_Feature_Value_Entry * table = get_version_specific_sl_values(pentry, vspec2);
@@ -1259,13 +1247,38 @@ ddca_get_simple_sl_value_table(
 
 // or:
 DDCA_Status
-ddct_get_nc_feature_value_name(
-      DDCA_Display_Handle  ddct_dh,    // needed because value lookup mccs version dependent
-      DDCA_Vcp_Feature_Code     feature_code,
-      Byte                 feature_value,
-      char**               p_feature_name)
+ddca_get_simple_nc_feature_value_name(
+      DDCA_Display_Handle    ddca_dh,    // needed because value lookup mccs version dependent
+      DDCA_Vcp_Feature_Code  feature_code,
+      uint8_t                feature_value,
+      char**                 p_feature_name)
 {
-   WITH_DH(ddct_dh,  {
+   WITH_DH(ddca_dh,  {
+         // this should be a function in vcp_feature_codes:
+         char * feature_name = NULL;
+         DDCA_MCCS_Version_Spec vspec = dh->dref->vcp_version;
+         DDCA_Feature_Value_Entry * feature_value_entries = NULL;
+         psc = ddca_get_simple_sl_value_table(feature_code, mccs_version_spec_to_id(vspec), &feature_value_entries);
+         if (psc == 0) {
+            feature_name = get_feature_value_name(feature_value_entries, feature_value);
+            if (feature_name == NULL)
+               psc = DDCRC_NOT_FOUND;               // correct handling for value not found?
+            else
+               *p_feature_name = feature_name;
+         }
+   }
+   );
+}
+
+
+DDCA_Status
+ddca_get_simple_nc_feature_value_name0(
+      DDCA_Display_Handle    ddca_dh,    // needed because value lookup mccs version dependent
+      DDCA_Vcp_Feature_Code  feature_code,
+      uint8_t                feature_value,
+      char**                 p_feature_name)
+{
+   WITH_DH(ddca_dh,  {
          // this should be a function in vcp_feature_codes:
          char * feature_name = NULL;
          DDCA_MCCS_Version_Spec vspec = dh->dref->vcp_version;
