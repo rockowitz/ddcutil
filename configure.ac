@@ -66,6 +66,7 @@ AC_CONFIG_FILES([
   src/usb_util/Makefile
   src/swig/Makefile 
   src/gobject_api/Makefile 
+  src/sample_clients/Makefile
 	man/Makefile 
 	data/Makefile 
   docs/Makefile

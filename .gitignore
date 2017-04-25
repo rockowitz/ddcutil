@@ -151,4 +151,9 @@ package/debian/rules.in.0
 doxydoc/html
 doxydoc/latex
 doxydoc/apidoc
-src/demo_*
+laclient
+demo_display_selection
+demo_get_set_vcp
+demo_vcpinfo
+demo_global_settings
+
