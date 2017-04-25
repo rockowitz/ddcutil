@@ -256,6 +256,8 @@ bool single_vcp_value_equal(
 
 
 
+// TODO: Consider wrapping set_vcp_value() in set_vcp_value_with_retry(), which will
+// retry in case verification fails
 
 /* Sets a VCP feature value.
  *
@@ -274,8 +276,7 @@ set_vcp_value(
    bool debug = false;
    DBGMSF(debug, "Starting");
    FILE * fout = FOUT;
-   bool verbose = false;
-   if (!verbose)
+   if ( get_output_level() < DDCA_OL_VERBOSE )
       fout = NULL;
 
    Public_Status_Code psc = 0;
@@ -297,7 +298,8 @@ set_vcp_value(
              vrec->value_type,
              &newval);
          if (psc != 0) {
-            f0printf(fout, "Read after write failed. get_vcp_value() returned: %s\n", psc_desc(psc));
+            f0printf(fout, "(%s) Read after write failed. get_vcp_value() returned: %s\n",
+                           __func__, psc_desc(psc));
             psc = DDCRC_VERIFY;
          }
          else {
