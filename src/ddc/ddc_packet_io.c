@@ -686,7 +686,7 @@ Public_Status_Code ddc_write_read_with_retry(
                 response_packet_ptr_loc);
 
       if (psc == 0 && ddcrc_null_response_ct > 0) {
-         DBGMSG("ddc_write_read() succeeded after %d sleep and retry", ddcrc_null_response_ct);
+         DBGMSG("ddc_write_read() succeeded after %d sleep and retry for DDC Null Response", ddcrc_null_response_ct);
       }
 
       if (psc < 0) {     // n. ADL status codes have been modulated
@@ -703,14 +703,8 @@ Public_Status_Code ddc_write_read_with_retry(
                retryable = (ddcrc_null_response_ct++ < ddcrc_null_response_max);
                DBGMSF(debug, "DDCRC_NULL_RESPONSE, retryable=%s", bool_repr(retryable));
                if (retryable) {
-                  // int retry_millisec = ddcrc_null_response_ct * 100;
-                  // if (debug || output_level >= DDCA_OL_VERBOSE)
-                    // DBGMSG("DDCRC_NULL_RESPONSE, Sleeping for %d milliseconds, then retrying...",
-                    //       retry_millisec);
                   if (ddcrc_null_response_ct == 1 && get_output_level() >= DDCA_OL_VERBOSE)
                      f0printf(FOUT, "Extended delay as recovery from DDC Null Response...\n");
-                  // sleep_millis(retry_millisec);
-                  // uses DDC_TIMEOUT_MILLIS_NULL_RESPONSE_INCREMENT in parms.h:
                   call_dynamic_tuned_sleep_i2c(SE_DDC_NULL, ddcrc_null_response_ct);
                }
 // #endif
