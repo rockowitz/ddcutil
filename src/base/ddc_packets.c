@@ -864,7 +864,7 @@ interpret_vcp_feature_response_std(
       if (vcpresp->result_code != 0) {
          if (vcpresp->result_code == 0x01) {
             // DBGMSF(debug, "Unsupported VCP Code");
-            DDCMSG("Unsupported VCP Code", __func__);
+            DDCMSG("Unsupported VCP Code: 0x%02x", vcpresp->vcp_opcode);
             aux_data->valid_response = true;
          }
          else {
