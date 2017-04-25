@@ -1444,7 +1444,7 @@ bool format_feature_detail_x73_lut_size(
  */
 DDCA_Feature_Value_Entry *
 find_feature_values(
-      DDCA_Vcp_Feature_Code        feature_code,
+      DDCA_Vcp_Feature_Code   feature_code,
       DDCA_MCCS_Version_Spec  vcp_version)
 {
    bool debug = false;
@@ -1546,7 +1546,7 @@ char * get_feature_value_name(DDCA_Feature_Value_Entry * value_entries, Byte val
  *    explanation string, or "Invalid value" if value_id not found
  */
 char * lookup_value_name(
-          DDCA_Vcp_Feature_Code        feature_code,
+          DDCA_Vcp_Feature_Code   feature_code,
           DDCA_MCCS_Version_Spec  vcp_version,
           Byte                    sl_value)
 {
