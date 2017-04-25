@@ -86,11 +86,17 @@ Alternatively, \fBddcutil\fP can communicate with USB connected monitors impleme
 The Monitor Control Command Set describes a collection of Virtual Control Panel (VCP) features that a monitor can implement.
 Each feature is identified using a single byte.  For example, feature x10 is the brightness control. 
 
+In general, the monitor settings that can be controlled by \fBddcutil\fP are a superset of what can be changed using the buttons
+on a monitor and its on screen display.  The specific capabilities vary from monitor to monitor.
+
 A particular use case for \fBddcutil\fP is as part of color profile management.  
 Monitor calibration is relative to the monitor color settings currently in effect, e.g. red gain.  
 \fBddcutil\fP allows color related settings to be saved at the time a monitor is calibrated, 
 and then restored when the calibration is applied.
 
+Another common use case is to switch the monitor input source.
+
+For extended documentation, see http://www.ddcutil.com. 
 
 .PP
 .\" TeX users may be more comfortable with the \fB<whatever>\fP and
@@ -186,7 +192,7 @@ A number in the range 0..255
 
 .SH OPTIONS
 Options for monitor selection.  If none are of these options are specified, the default is the first detected monitor.
-Options \fB--model\fP and \fB--sn\fP must be specified together.
+Options \fB--mfg\fP, \fB--model\fP and \fB--sn\fP can be specified together.
 .TQ
 .BR -d , "--display "
 .I display-number 
@@ -226,7 +232,7 @@ Options to control the amount and form of output.
 Normally, \fBgetvcp\fP does not report unsupported features when querying a feature-group.  This option forces output. 
 .TQ
 .B "-t, --terse, --brief"
-Show brief detail.  For command \fBsetvcp\fP, the output is in machine readable form.
+Show brief detail.  For command \fBgetvcp\fP, the output is in machine readable form.
 .TQ
 .B -v, --verbose
 Show extended detail
@@ -245,7 +251,7 @@ to manage retries in case of failure.  This option reports retry counts and vari
 Reports DDC protocol errors.  These may reflect I2C bus errors, or deviations by monitors from the MCCS specification.
 .TQ
 .BI "--trace " "trace-class"
-Enable debug tracing for a trace class.  Valid values are: \fIbase\fP, i2c, adl, ddc, main, and the special value \fIall\fP. 
+Enable debug tracing for a trace class.  Valid values are: \fIbase\fP, \fBi2c\fP, \fBadl\fP, \fBddc\fP, \fBmain\fP, and the special value \fIall\fP. 
 Some trace classes are more useful than others.
 .br
 Specify this option multiple times to enable multiple trace classes.
