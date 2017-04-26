@@ -29,6 +29,7 @@
  */
 
 /** \cond */
+#include <inttypes.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -88,7 +89,7 @@ void show_timestamp_history() {
       bool monotonic = true;
       int ctr = 0;
       for (; ctr < timestamp_ct; ctr++) {
-         printf("  timestamp[%d] =  %15ld\n", ctr, timestamp_history[ctr] );
+         printf("  timestamp[%d] =  %15" PRIu64 "\n", ctr, timestamp_history[ctr] );
          if (ctr > 0 && timestamp_history[ctr] <= timestamp_history[ctr-1]) {
             printf("   !!! NOT STRICTLY MONOTONIC !!!\n");
             monotonic = false;
