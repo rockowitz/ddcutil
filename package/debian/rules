@@ -11,6 +11,8 @@ include /usr/share/dpkg/default.mk
 
 # see FEATURE AREAS in dpkg-buildflags(1)
 #export DEB_BUILD_MAINT_OPTIONS = hardening=+all
+# Setting DEB_BUILD_MAINT_OPTIONS here works, setting it in rules.dh7 does not
+export DEB_BUILD_MAINT_OPTIONS = hardening=+all
 
 # see ENVIRONMENT in dpkg-buildflags(1)
 # package maintainers to append CFLAGS
@@ -21,7 +23,7 @@ include /usr/share/dpkg/default.mk
 config_args=
 # config_args="--enable-lib=yes"
 # config_args=--enable-lib=yes --enable-swig=yes
-config_args=--enable-lib=yes --enable-drm=yes 
+config_args=--enable-lib=yes --enable-drm=yes --enable-usb=yes
 
 # echo "(debian/rules) config_args=${config_args}"
 

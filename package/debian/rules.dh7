@@ -8,7 +8,8 @@ DPKG_EXPORT_BUILDFLAGS = 1
 include /usr/share/dpkg/default.mk
 
 # see FEATURE AREAS in dpkg-buildflags(1)
-#export DEB_BUILD_MAINT_OPTIONS = hardening=+all
+# export DEB_BUILD_MAINT_OPTIONS = hardening=+all
+# DEB_BUILD_MAINT_OPTIONS must be set in rules, no effect if set here (4/2017)
 
 # see ENVIRONMENT in dpkg-buildflags(1)
 # package maintainers to append CFLAGS
