@@ -81,11 +81,16 @@ typedef struct {
 // Global Variables
 //
 
-static IO_Event_Type        last_io_event;
+// static IO_Event_Type        last_io_event;
 // static long                 last_io_timestamp = -1;
 static uint64_t             program_start_timestamp;
 static uint64_t             resettable_start_timestamp;
 static Status_Code_Counts * primary_error_code_counts;
+static GMutex               status_code_counts_mutex;
+static GMutex               global_stats_mutex;
+static bool                 debug_status_code_counts_mutex  = false;
+static bool                 debug_global_stats_mutex = false;
+static bool                 debug_sleep_stats_mutex = false;
 
 
 
@@ -94,6 +99,7 @@ static Status_Code_Counts * primary_error_code_counts;
 // IO Event Tracking
 //
 
+static
 IO_Event_Type_Stats io_event_stats[] = {
       // id           name             desc             count  nanosec
       {IE_WRITE,      "IE_WRITE",      "write calls",       0, 0},
@@ -104,13 +110,22 @@ IO_Event_Type_Stats io_event_stats[] = {
       {IE_OTHER,      "IE_OTHER",      "other I/O calls",   0, 0},
 };
 #define IO_EVENT_TYPE_CT (sizeof(io_event_stats)/sizeof(IO_Event_Type_Stats))
+static GMutex io_event_stats_mutex;
+static bool   debug_io_event_stats_mutex;
 
 static
 void reset_io_event_stats() {
+   bool debug = false || debug_io_event_stats_mutex;
+   DBGMSF(debug, "Starting");
+
+   g_mutex_lock(&io_event_stats_mutex);
    for (int ndx = 0; ndx < IO_EVENT_TYPE_CT; ndx++) {
       io_event_stats[ndx].call_count   = 0;
       io_event_stats[ndx].call_nanosec = 0;
    }
+   g_mutex_unlock(&io_event_stats_mutex);
+
+   DBGMSF(debug, "Done");
 }
 
 /** Returns type symbolic name of an even type.
@@ -181,14 +196,19 @@ void log_io_call(
         uint64_t             start_time_nanos,
         uint64_t             end_time_nanos)
 {
-   bool debug = false;
+   bool debug = false || debug_io_event_stats_mutex;
    DBGMSF(debug, "event_type=%d %s", event_type, io_event_name(event_type));
 
    uint64_t elapsed_nanos = (end_time_nanos-start_time_nanos);
+
+   g_mutex_lock(&io_event_stats_mutex);
    io_event_stats[event_type].call_count++;
    io_event_stats[event_type].call_nanosec += elapsed_nanos;
+   g_mutex_unlock(&io_event_stats_mutex);
 
-   last_io_event = event_type;
+   // unused
+   // last_io_event = event_type;
+
    // last_io_timestamp = normalize_timestamp(end_time_nanos);
 }
 
@@ -243,21 +263,35 @@ void report_io_call_stats(int depth) {
 
 static
 Status_Code_Counts * new_status_code_counts(char * name) {
+   bool debug = false || debug_status_code_counts_mutex;
+   DBGMSF(debug, "Starting");
+
+   g_mutex_lock(&status_code_counts_mutex);
    Status_Code_Counts * pcounts = calloc(1,sizeof(Status_Code_Counts));
    memcpy(pcounts->marker, STATUS_CODE_COUNTS_MARKER, 4);
    pcounts->error_counts_hash =  g_hash_table_new(NULL,NULL);
    pcounts->total_status_counts = 0;
    if (name)
       pcounts->name = strdup(name);
+   g_mutex_unlock(&status_code_counts_mutex);
+
+   DBGMSF(debug, "Done");
    return pcounts;
 }
 
 static void
 reset_status_code_counts_struct(Status_Code_Counts * pcounts) {
+   bool debug = false || debug_status_code_counts_mutex;
+   DBGMSF(debug, "Starting");
    assert(pcounts);
+
+   g_mutex_lock(&status_code_counts_mutex);
    if (pcounts->error_counts_hash)
       g_hash_table_remove_all(pcounts->error_counts_hash);
    pcounts->total_status_counts = 0;
+   g_mutex_unlock(&status_code_counts_mutex);
+
+   DBGMSF(debug, "Done");
 }
 
 
@@ -271,15 +305,16 @@ reset_status_code_counts() {
 
 static
 int log_any_status_code(Status_Code_Counts * pcounts, int rc, const char * caller_name) {
-   bool debug = false;
+   bool debug = false || debug_status_code_counts_mutex;
    DBGMSF(debug, "caller=%s, rc=%d", caller_name, rc);
    assert(pcounts->error_counts_hash);
-   pcounts->total_status_counts++;
 
    if (rc == 0) {
       DBGMSG("Called with rc = 0, from function %s", caller_name);
    }
 
+   g_mutex_lock(&status_code_counts_mutex);
+   pcounts->total_status_counts++;
    // n. if key rc not found, returns NULL, which is 0
    int ct = GPOINTER_TO_INT(g_hash_table_lookup(pcounts->error_counts_hash,  GINT_TO_POINTER(rc)) );
    g_hash_table_insert(pcounts->error_counts_hash, GINT_TO_POINTER(rc), GINT_TO_POINTER(ct+1));
@@ -287,9 +322,11 @@ int log_any_status_code(Status_Code_Counts * pcounts, int rc, const char * calle
 
    // check the new value
    int newct = GPOINTER_TO_INT(g_hash_table_lookup(pcounts->error_counts_hash,  GINT_TO_POINTER(rc)) );
+   g_mutex_unlock(&status_code_counts_mutex);
    // DBGMSG("new count for key %d = %d", rc, newct);
    assert(newct == ct+1);
 
+   DBGMSF(debug, "Done");
    return ct+1;
 }
 
@@ -435,7 +472,8 @@ static const char * sleep_event_names[] = {
       "SE_POST_OPEN",
       "SE_POST_WRITE",
       "SE_POST_READ",
-      "SE_DDC_NULL"
+      "SE_DDC_NULL",
+      "SE_POST_SAVE_SETTINGS",
      };
 #define SLEEP_EVENT_ID_CT (sizeof(sleep_event_names)/sizeof(char *))
 
@@ -444,16 +482,24 @@ const char * sleep_event_name(Sleep_Event_Type event_type) {
    return sleep_event_names[event_type];
 }
 
-
 static int sleep_event_cts_by_id[SLEEP_EVENT_ID_CT];
 static int total_sleep_event_ct = 0;
 static int sleep_strategy = 0;
+static GMutex sleep_stats_mutex;
+
 
 static
 void reset_sleep_event_counts() {
+   bool debug = false || debug_sleep_stats_mutex;
+   DBGMSF(debug, "Starting");
+
+   g_mutex_lock(&sleep_stats_mutex);
    for (int ndx = 0; ndx < SLEEP_EVENT_ID_CT; ndx++) {
       sleep_event_cts_by_id[ndx] = 0;
    }
+   g_mutex_unlock(&sleep_stats_mutex);
+
+   DBGMSF(debug, "Done");
 }
 
 // TODO: create table of sleep strategy number, description
@@ -516,6 +562,10 @@ char * sleep_strategy_desc(int sleep_strategy) {
  * @param io_mode     communication mechanism (must be #DDCA_IO_DEVI2C)
  * @param event_type  reason for sleep (currently only #SE_DDC_NULL - DDC Null Response)
  * @param occno       occurrence count of event
+ *
+ * @remark
+ * Can be called in a multi-threaded environment.  Guards changes to the stats
+ * data structure with a mutex.
  */
 void
 call_dynamic_tuned_sleep(
@@ -523,7 +573,7 @@ call_dynamic_tuned_sleep(
       Sleep_Event_Type event_type,
       int occno)
 {
-   bool debug = false;
+   bool debug =  false || debug_sleep_stats_mutex;
 
    int sleep_time_millis = 0;
    assert(io_mode == DDCA_IO_DEVI2C);
@@ -541,10 +591,14 @@ call_dynamic_tuned_sleep(
    DBGMSF(debug, "Event type=%s, occno=%d, calculated sleep time = %d millisec",
                  sleep_event_name(event_type), occno, sleep_time_millis);
 
+   g_mutex_lock(&sleep_stats_mutex);
    sleep_event_cts_by_id[event_type]++;
    total_sleep_event_ct++;
+   g_mutex_unlock(&sleep_stats_mutex);
+
    sleep_millis(sleep_time_millis);
 
+   DBGMSF(debug, "Done");
 }
 
 
@@ -582,6 +636,9 @@ call_dynamic_tuned_sleep_i2c(
  * last system call, previous error rate, etc.
  */
 void call_tuned_sleep(DDCA_IO_Mode io_mode, Sleep_Event_Type event_type) {
+   bool debug = false || debug_sleep_stats_mutex;
+   DBGMSF(debug, "Starting");
+
    int sleep_time_millis = 0;    // should be a default
    switch(io_mode) {
 
@@ -621,6 +678,9 @@ void call_tuned_sleep(DDCA_IO_Mode io_mode, Sleep_Event_Type event_type) {
       case (SE_POST_READ):
             sleep_time_millis = DDC_TIMEOUT_MILLIS_DEFAULT;
             break;
+      case (SE_POST_SAVE_SETTINGS):
+            sleep_time_millis = 200;   // per DDC spec
+            break;
       default:
          sleep_time_millis = DDC_TIMEOUT_MILLIS_DEFAULT;
       }  // switch within DDC_IO_DEVI2C
@@ -636,6 +696,9 @@ void call_tuned_sleep(DDCA_IO_Mode io_mode, Sleep_Event_Type event_type) {
             break;
       case (SE_POST_OPEN):
             sleep_time_millis = DDC_TIMEOUT_MILLIS_DEFAULT;
+            break;
+      case (SE_POST_SAVE_SETTINGS):
+            sleep_time_millis = 200;   // per DDC spec
             break;
       default:
          sleep_time_millis = DDC_TIMEOUT_MILLIS_DEFAULT;
@@ -654,9 +717,15 @@ void call_tuned_sleep(DDCA_IO_Mode io_mode, Sleep_Event_Type event_type) {
    // Is tracing useful, given that we know the event type?
    // void sleep_millis_with_trace(int milliseconds, const char * caller_location, const char * message);
 
+   // For better performance, separate mutex for each index in array
+   g_mutex_lock(&sleep_stats_mutex);
    sleep_event_cts_by_id[event_type]++;
    total_sleep_event_ct++;
+   g_mutex_unlock(&sleep_stats_mutex);
+
    sleep_millis(sleep_time_millis);
+
+   DBGMSF(debug, "Done");
 }
 
 
@@ -699,13 +768,13 @@ void call_tuned_sleep_dh(Display_Handle* dh, Sleep_Event_Type event_type) {
 void report_sleep_strategy_stats(int depth) {
    int d1 = depth+1;
    rpt_title("Sleep Strategy Stats:", depth);
-   rpt_vstring(d1, "Total IO events:     %5d", total_io_event_count());
-   rpt_vstring(d1, "IO error count:      %5d", get_true_io_error_count(primary_error_code_counts));
-   rpt_vstring(d1, "Total sleep events:  %5d", total_sleep_event_ct);
+   rpt_vstring(d1, "Total IO events:      %5d", total_io_event_count());
+   rpt_vstring(d1, "IO error count:       %5d", get_true_io_error_count(primary_error_code_counts));
+   rpt_vstring(d1, "Total sleep events:   %5d", total_sleep_event_ct);
    rpt_nl();
-   rpt_title("Sleep Event type     Count", d1);
+   rpt_title("Sleep Event type      Count", d1);
    for (int id=0; id < SLEEP_EVENT_ID_CT; id++) {
-      rpt_vstring(d1, "%-20s  %4d", sleep_event_names[id], sleep_event_cts_by_id[id]);
+      rpt_vstring(d1, "%-21s  %4d", sleep_event_names[id], sleep_event_cts_by_id[id]);
    }
 }
 
@@ -728,10 +797,18 @@ void init_execution_stats() {
 
 /** Resets collected execution statistics */
 void reset_execution_stats() {
+   bool debug = false || debug_global_stats_mutex;
+   DBGMSF(debug, "Starting");
+
    reset_sleep_event_counts();
    reset_status_code_counts();
    reset_io_event_stats();
+
+   g_mutex_lock(&global_stats_mutex);
    resettable_start_timestamp = cur_realtime_nanosec();
+   g_mutex_unlock(&global_stats_mutex);
+
+   DBGMSF(debug, "Done");
 }
 
 
