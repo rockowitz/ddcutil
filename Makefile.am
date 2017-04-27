@@ -27,9 +27,9 @@ SUBDIRS = src man data package $(DOXYDIR)
 if ENABLE_SHARED_LIB_COND
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = ddcutil.pc
-cmakedir = $(datadir)/cmake/Modules
-cmake_DATA = FindDDCUtil.cmake
-EXTRA_DIST += FindDDCUtil.cmake
+# cmakedir = $(datadir)/cmake/Modules
+# cmake_DATA = FindDDCUtil.cmake
+# EXTRA_DIST += FindDDCUtil.cmake
 endif
 
 
@@ -39,11 +39,11 @@ rpms srcrpm: dist
 	@echo "----> Makefile: rpms srcrpm"
 	(cd package && $(MAKE) $(AM_MAKEFLAGS) $@) || exit 1
 
-obsrpm:  
+obsrpm: dist 
 	echo "---> Makefile: obsrpm"
 	(cd package && $(MAKE) $(AM_MAKEFLAGS) $@) || exit 1
 
-obsrpmtest:  
+obsrpmtest: dist 
 	echo "---> Makefile: obsrpmtest"
 	(cd package && $(MAKE) $(AM_MAKEFLAGS) $@) || exit 1
 
@@ -56,15 +56,15 @@ pdebuild:  dist
 	(cd package && $(MAKE) $(AM_MAKEFLAGS) $@) || exit 1
 
 
-obsdeb:  
+obsdeb: dist 
 	echo "---> Makefile: obsdeb"
 	(cd package && $(MAKE) $(AM_MAKEFLAGS) $@) || exit 1
 
-obsdebtest:  
+obsdebtest: dist  
 	echo "---> Makefile: obsdeb"
 	(cd package && $(MAKE) $(AM_MAKEFLAGS) $@) || exit 1
 
-ppa:  
+ppa: dist 
 	echo "---> Makefile: ppa"
 	(cd package && $(MAKE) $(AM_MAKEFLAGS) $@) || exit 1
 

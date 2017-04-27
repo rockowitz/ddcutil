@@ -328,7 +328,12 @@ rm -rf %{buildroot}
 # %%doc %%{_datadir}/doc/%%{name}/INSTALL
 # %%doc %%{_datadir}/doc/%%{name}/NEWS 
 # %%doc %%{_datadir}/doc/%%{name}/README
-%{_datadir}/%{name}/
+# would copy entire directory:
+# %%{_datadir}/%{name}/
+%dir %{_datadir}/%{name}/
+%dir %{_datadir}/%{name}/data
+%{_datadir}/%{name}/data/*rules
+%{_datadir}/%{name}/data/90-nvidia-i2c.conf
 %{_mandir}/man1/ddcutil.1*
 %attr(755,root,root)%{_bindir}/ddcutil
 
@@ -351,7 +356,12 @@ rm -rf %{buildroot}
 %{_includedir}/ddcutil_c_api.h
 %{_libdir}/pkgconfig/ddcutil.pc
 %{_libdir}/libddcutil.so
-%{_datadir}/cmake/Modules/FindDDCUtil.cmake
+# Fails on SuSE, lack permissions to write to Modules
+# %%{_datadir}/cmake/Modules/FindDDCUtil.cmake
+%dir %{_datadir}/%{name}
+%dir %{_datadir}/%{name}/data/
+%{_datadir}/%{name}/data/FindDDCUtil.cmake
+
 
 # %%doc -n ddcutil
 # %%doc -n libddcutil-0
@@ -363,7 +373,7 @@ rm -rf %{buildroot}
 
 %changelog
 
-* Thu Apr 27 2016 Sanford Rockowitz <rockowitz@minsoft.com> 0.7.4-1
+* Thu Apr 27 2017 Sanford Rockowitz <rockowitz@minsoft.com> 0.7.4-1
 
   Release 0.7.4
 

@@ -2,7 +2,8 @@
 resfiles = \
 	etc/udev/rules.d/45-ddcutil-i2c.rules \
 	etc/udev/rules.d/45-ddcutil-usb.rules \
-	etc/X11/xorg.conf.d/90-nvidia-i2c.conf 
+	etc/X11/xorg.conf.d/90-nvidia-i2c.conf \
+	usr/share/cmake/Modules/FindDDCUtil.cmake
 # resdir: not used
 # resdir = $(datadir)/ddcutil/data
 ddcutildir = $(datadir)/ddcutil/data

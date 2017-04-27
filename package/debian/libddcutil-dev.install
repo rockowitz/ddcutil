@@ -2,4 +2,4 @@
 /usr/lib/*/*.a
 usr/include
 usr/lib/*/pkgconfig
-usr/share/cmake/Modules
+usr/share/ddcutil/data/*cmake
