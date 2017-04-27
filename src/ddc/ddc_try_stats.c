@@ -25,6 +25,7 @@
 
 /** \cond */
 #include <assert.h>
+#include <glib.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -32,6 +33,7 @@
 
 #include "util/report_util.h"
 
+#include "base/core.h"
 #include "base/ddc_errno.h"
 #include "base/parms.h"
 
@@ -41,6 +43,9 @@
 
 
 static char * TAG_VALUE = "STAT";
+
+static GMutex try_data_mutex;
+static bool debug_mutex = false;
 
 typedef
 struct {
@@ -91,35 +96,71 @@ int  try_data_get_max_tries(void * stats_rec) {
 }
 
 void try_data_set_max_tries(void * stats_rec, int new_max_tries) {
+   bool debug = false || debug_mutex;
+   DBGMSF(debug, "Starting");
+
    Try_Data * try_data = unopaque(stats_rec);
    assert(new_max_tries >= 1 && new_max_tries <= MAX_MAX_TRIES);
+
+   g_mutex_lock(&try_data_mutex);
    try_data->max_tries = new_max_tries;
+   g_mutex_unlock(&try_data_mutex);
+
+   DBGMSF(debug, "Done");
 }
 
 void try_data_reset(void * stats_rec) {
+   bool debug = false || debug_mutex;
+   DBGMSF(debug, "Starting");
+
    Try_Data * try_data = unopaque(stats_rec);
-   int ndx;
-   for (ndx=0; ndx < MAX_MAX_TRIES+1; ndx++)
+
+   g_mutex_lock(&try_data_mutex);
+   for (int ndx=0; ndx < MAX_MAX_TRIES+1; ndx++)
       try_data->counters[ndx] = 0;
+   g_mutex_unlock(&try_data_mutex);
+
+   DBGMSF(debug, "Done");
 }
 
 static void record_successful_tries(void * stats_rec, int tryct){
+   bool debug = false || debug_mutex;
+   DBGMSF(debug, "Starting");
+
    Try_Data * try_data = unopaque(stats_rec);
    assert(0 < tryct && tryct <= try_data->max_tries);
-   // if ( (tryct+1) == MAX_MAX_TRIES) {
-   //    DBGMSG("tryct+1 == MAX_MAX_TRIES (%d)", MAX_MAX_TRIES);
-   // }
+
+   g_mutex_lock(&try_data_mutex);
    try_data->counters[tryct+1] += 1;
+   g_mutex_unlock(&try_data_mutex);
+
+   DBGMSF(debug, "Done");
 }
 
 static void record_failed_max_tries(void * stats_rec) {
+   bool debug = false || debug_mutex;
+   DBGMSF(debug, "Starting");
+
    Try_Data * try_data = unopaque(stats_rec);
+
+   g_mutex_lock(&try_data_mutex);
    try_data->counters[1] += 1;
+   g_mutex_unlock(&try_data_mutex);
+
+   DBGMSF(debug, "Done");
 }
 
 static void record_failed_fatally(void * stats_rec) {
+   bool debug = false || debug_mutex;
+    DBGMSF(debug, "Starting");
+
    Try_Data * try_data = unopaque(stats_rec);
+
+   g_mutex_lock(&try_data_mutex);
    try_data->counters[0] += 1;
+   g_mutex_unlock(&try_data_mutex);
+
+   DBGMSF(debug, "Done");
 }
 
 
