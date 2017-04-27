@@ -529,6 +529,18 @@ create_ddc_setvcp_request_packet(Byte vcp_code, int new_value, const char * tag)
 }
 
 
+DDC_Packet *
+create_ddc_save_settings_request_packet(const char * tag)
+{
+   Byte data_bytes[] = { 0x0C   // Command: Save Current Settings
+                       };
+   DDC_Packet * pkt = create_ddc_base_request_packet(data_bytes, 1, tag);
+
+   // DBGMSG("Done. rc=%d, packet_ptr%p, *packet_ptr=%p", rc, packet_ptr, *packet_ptr);
+   return pkt;
+}
+
+
 //
 // Response Packets
 //

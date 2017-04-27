@@ -624,6 +624,8 @@ int main(int argc, char *argv[]) {
       // If --nodetect option specified and I2C bus number was specified,
       // skip scan for all devices.
       // --nodetect option not needed, just do it
+      // n. useful even if not much speed up, since avoids cluttering stats
+      // with all the failures during detect
       Display_Ref * dref = NULL;
 //    if (parsed_cmd->pdid->id_type == DISP_ID_BUSNO && parsed_cmd->nodetect) {
       if (parsed_cmd->pdid->id_type == DISP_ID_BUSNO) {
@@ -713,6 +715,25 @@ int main(int argc, char *argv[]) {
                         main_rc = EXIT_FAILURE;   // ???
                         break;
                      }
+                  }
+               }
+               break;
+
+            case CMDID_SAVE_SETTINGS:
+               if (parsed_cmd->argct != 0) {
+                  printf("SCS command takes no arguments");
+                  main_rc = EXIT_FAILURE;
+               }
+               else if (dh->dref->io_mode == DDCA_IO_USB) {
+                  printf("SCS command not supported for USB devices\n");
+                  main_rc = EXIT_FAILURE;
+               }
+               else {
+                  main_rc = EXIT_SUCCESS;
+                  Public_Status_Code rc = save_current_settings(dh);
+                  if (rc != 0)  {
+                     f0printf(FOUT, "Save current settings failed. rc=%s\n", psc_desc(rc));
+                     main_rc = EXIT_FAILURE;
                   }
                }
                break;

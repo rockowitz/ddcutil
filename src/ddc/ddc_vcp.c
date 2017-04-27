@@ -67,6 +67,39 @@
 static Trace_Group TRACE_GROUP = TRC_DDC;
 
 
+
+Public_Status_Code
+save_current_settings(
+      Display_Handle * dh)
+{
+   bool debug = false;
+   DBGTRC(debug, TRACE_GROUP,
+          "Invoking DDC Save Current Settings command. dh=%s", dh_repr(dh));
+   Public_Status_Code psc = 0;
+
+   if (dh->dref->io_mode == DDCA_IO_USB) {
+      // command line parser should block this case
+      PROGRAM_LOGIC_ERROR("MCCS over USB does not have Save Current Settings command");
+   }
+   else {
+      DDC_Packet * request_packet_ptr =
+         create_ddc_save_settings_request_packet("save_current_settings:request packet");
+      // DBGMSG("create_ddc_save_settings_request_packet returned packet_ptr=%p", request_packet_ptr);
+      // dump_packet(request_packet_ptr);
+
+      psc = ddc_write_only_with_retry(dh, request_packet_ptr);
+
+      if (request_packet_ptr)
+         free_ddc_packet(request_packet_ptr);
+   }
+
+   DBGTRC(debug, TRACE_GROUP, "Returning %s", psc_desc(psc));
+   return psc;
+}
+
+
+
+
 //
 // Set VCP feature value
 //

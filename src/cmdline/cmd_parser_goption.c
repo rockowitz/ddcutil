@@ -673,6 +673,8 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
 
          // validate options vs commands
 
+#ifdef OLD
+         // unnecessary - validate_output_levels() handles this
          switch (parsed_cmd->cmd_id) {
          case (CMDID_PROBE):
                if (parsed_cmd->output_level == DDCA_OL_TERSE) {
@@ -685,6 +687,7 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
          default:
             break;
          }
+#endif
 
 
       }  // recognized command

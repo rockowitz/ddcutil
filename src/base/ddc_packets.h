@@ -123,6 +123,7 @@ typedef Byte DDC_Packet_Type;
 #define DDC_PACKET_TYPE_QUERY_VCP_REQUEST     0x01
 #define DDC_PACKET_TYPE_QUERY_VCP_RESPONSE    0x02
 #define DDC_PACKET_TYPE_SET_VCP_REQUEST       0x03    // n. no reply message
+#define DDC_PACKET_TYPE_SAVE_CURRENT_SETTINGS 0x0C    // n. no reply message
 #define DDC_PACKET_TYPE_CAPABILITIES_REQUEST  0xf3
 #define DDC_PACKET_TYPE_CAPABILITIES_RESPONSE 0xe3
 #define DDC_PACKET_TYPE_ID_REQUEST            0xf1
@@ -257,6 +258,10 @@ create_ddc_setvcp_request_packet(
       Byte          vcp_code,
       int           new_value,
       const char *  tag);
+
+DDC_Packet *
+create_ddc_save_settings_request_packet(
+      const char * tag);
 
 Status_DDC
 get_interpreted_vcp_code(

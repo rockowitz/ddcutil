@@ -64,6 +64,7 @@ static Cmd_Desc cmdinfo[] = {
    {CMDID_CHKUSBMON,    "chkusbmon",      3,  1,       1},
 #endif
    {CMDID_PROBE,        "probe",          5,  0,       0},
+   {CMDID_SAVE_SETTINGS,"scs",            3,  0,       0},
 };
 static int cmdct = sizeof(cmdinfo)/sizeof(Cmd_Desc);
 
@@ -240,6 +241,11 @@ bool validate_output_level(Parsed_Cmd* parsed_cmd) {
          break;
       case (CMDID_GETVCP):
          valid_output_levels = DDCA_OL_TERSE | DDCA_OL_NORMAL | DDCA_OL_VERBOSE;
+         break;
+      case (CMDID_PROBE):
+         // don't want to deal with how to report errors, handle write-only features
+         // of machine readable output triggered by --terse
+         valid_output_levels =                 DDCA_OL_NORMAL | DDCA_OL_VERBOSE;
          break;
       default:
          // default_output_level = OL_NORMAL;

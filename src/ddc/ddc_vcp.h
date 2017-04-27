@@ -38,6 +38,10 @@ bool get_verify_setvcp();
 
 
 Public_Status_Code
+save_current_settings(
+      Display_Handle * dh);
+
+Public_Status_Code
 set_nontable_vcp_value(
       Display_Handle *          dh,
       Byte                      feature_code,
@@ -45,8 +49,8 @@ set_nontable_vcp_value(
 
 Public_Status_Code
 set_vcp_value(
-      Display_Handle *   dh,
-      DDCA_Single_Vcp_Value * vrec);
+      Display_Handle *          dh,
+      DDCA_Single_Vcp_Value *   vrec);
 
 Public_Status_Code
 get_table_vcp_value(
@@ -65,7 +69,7 @@ Public_Status_Code
 get_vcp_value(
       Display_Handle *          dh,
       Byte                      feature_code,
-      DDCA_Vcp_Value_Type            call_type,
-      DDCA_Single_Vcp_Value **       pvalrec);
+      DDCA_Vcp_Value_Type       call_type,
+      DDCA_Single_Vcp_Value **  pvalrec);
 
 #endif /* DDC_VCP_H_ */

@@ -225,7 +225,6 @@ void ddc_close_display(Display_Handle * dh) {
          if (rc != 0) {
             assert(rc < 0);
             DBGMSG("close_i2c_bus returned %d", rc);
-            // COUNT_STATUS_CODE(modulate_rc(rc, RR_ERRNO) );
             COUNT_STATUS_CODE(rc);
          }
          dh->fh = -1;    // indicate invalid, in case we try to continue using dh
@@ -241,7 +240,6 @@ void ddc_close_display(Display_Handle * dh) {
          if (rc != 0) {
             assert(rc < 0);
             DBGMSG("usb_close_device returned %d", rc);
-            // COUNT_STATUS_CODE(modulate_rc(rc, RR_ERRNO));
             COUNT_STATUS_CODE(rc);
          }
          dh->fh = -1;
@@ -355,7 +353,7 @@ Public_Status_Code (*Write_Read_Raw_Function)(
  *
  * Returns:
  *   0 if success
- *   modulated(-errno) if error in write
+ *   -errno if error in write
  *   DDCRC_READ_ALL_ZERO
  */
 Public_Status_Code ddc_i2c_write_read_raw(
@@ -642,13 +640,12 @@ Public_Status_Code ddc_write_read(
  */
 Public_Status_Code ddc_write_read_with_retry(
          Display_Handle * dh,
-         DDC_Packet *  request_packet_ptr,
-         int           max_read_bytes,
-         Byte          expected_response_type,
-         Byte          expected_subtype,
-         bool          all_zero_response_ok,
-     //  bool          retry_null_response,
-         DDC_Packet ** response_packet_ptr_loc
+         DDC_Packet *     request_packet_ptr,
+         int              max_read_bytes,
+         Byte             expected_response_type,
+         Byte             expected_subtype,
+         bool             all_zero_response_ok,
+         DDC_Packet **    response_packet_ptr_loc
         )
 {
    bool debug = false;
@@ -686,7 +683,9 @@ Public_Status_Code ddc_write_read_with_retry(
                 response_packet_ptr_loc);
 
       if (psc == 0 && ddcrc_null_response_ct > 0) {
-         DBGMSG("ddc_write_read() succeeded after %d sleep and retry for DDC Null Response", ddcrc_null_response_ct);
+         DBGMSG("%s, ddc_write_read() succeeded after %d sleep and retry for DDC Null Response",
+                dh_repr(dh),
+                ddcrc_null_response_ct);
       }
 
       if (psc < 0) {     // n. ADL status codes have been modulated
@@ -724,11 +723,9 @@ Public_Status_Code ddc_write_read_with_retry(
             else if ( psc == DDCRC_READ_ALL_ZERO)
                retryable = (all_zero_response_ok) ? false : true;
 
-            //else if (psc == modulate_rc(-EIO, RR_ERRNO))
             else if (psc == -EIO)
                 retryable = true;
 
-            // else if (psc == modulate_rc(-EBADF, RR_ERRNO))
             else if (psc == -EBADF)
                retryable = false;
 
@@ -785,10 +782,9 @@ ddc_i2c_write_only(
         )
 {
    bool debug = false;
-   // bool tf = IS_TRACING();
-   // tf = true;
-   // TRCMSGTF(tf, "Starting.");
    DBGTRC(debug, TRACE_GROUP, "Starting.");
+   if (debug)
+      dump_packet(request_packet_ptr);
 
    Status_Errno_DDC rc =
          invoke_i2c_writer(fh,
@@ -796,7 +792,11 @@ ddc_i2c_write_only(
                            get_packet_start(request_packet_ptr)+1 );
    if (rc < 0)
       log_status_code(rc, __func__);
-   call_tuned_sleep_i2c(SE_POST_WRITE);
+   Sleep_Event_Type sleep_type =
+         (request_packet_ptr->type == DDC_PACKET_TYPE_SAVE_CURRENT_SETTINGS )
+            ? SE_POST_SAVE_SETTINGS
+            : SE_POST_WRITE;
+   call_tuned_sleep_i2c(sleep_type);
    DBGTRC(debug, TRACE_GROUP, "Done. rc=%s\n", psc_desc(rc) );
    return rc;
 }
@@ -814,9 +814,6 @@ ddc_i2c_write_only(
  */
 Public_Status_Code ddc_write_only( Display_Handle * dh, DDC_Packet *   request_packet_ptr) {
    bool debug = false;
-   // bool tf = IS_TRACING();
-   // tf = true;
-   // TRCMSGTF(tf, "Starting.");
    DBGTRC(debug, TRACE_GROUP, "Starting.");
 
    Public_Status_Code psc = 0;
@@ -856,9 +853,6 @@ Public_Status_Code ddc_write_only( Display_Handle * dh, DDC_Packet *   request_p
 Public_Status_Code
 ddc_write_only_with_retry( Display_Handle * dh, DDC_Packet *   request_packet_ptr) {
    bool debug = false;
-   // bool tf = IS_TRACING();
-   // tf = false;
-   // TRCMSGTF(tf, "Starting.");
    DBGTRC(debug, TRACE_GROUP, "Starting.");
 
    assert(dh->dref->io_mode != DDCA_IO_USB);
@@ -880,7 +874,6 @@ ddc_write_only_with_retry( Display_Handle * dh, DDC_Packet *   request_packet_pt
       if (psc < 0) {
          if (dh->dref->io_mode == DDCA_IO_DEVI2C) {
             if (psc < 0) {
-               // if (psc != modulate_rc(-EIO, RR_ERRNO) )
                if (psc != -EIO)
                    retryable = false;
             }
