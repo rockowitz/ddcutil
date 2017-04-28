@@ -176,12 +176,14 @@ void probe_display_by_dh(Display_Handle * dh)
    bool debug = false;
    DBGMSF(debug, "Starting. dh=%s", dh_repr(dh));
    Public_Status_Code psc = 0;
+   char dref_name_buf[DREF_SHORT_NAME_BUF_SIZE];
+
 
    printf("\nMfg id: %s, model: %s, sn: %s\n",
           dh->dref->pedid->mfg_id, dh->dref->pedid->model_name, dh->dref->pedid->serial_ascii);
 
    // printf("\nCapabilities for display %s\n", display_handle_repr(dh) );
-   printf("\nCapabilities for display on %s\n", dref_short_name(dh->dref) );
+   printf("\nCapabilities for display on %s\n", dref_short_name_r(dh->dref, dref_name_buf, sizeof(dref_name_buf)) );
    // not needed, message causes confusing messages if get_vcp_version fails but get_capabilities succeeds
    DDCA_MCCS_Version_Spec vspec = get_vcp_version_by_display_handle(dh);
    // if (vspec.major < 2) {
@@ -305,8 +307,9 @@ void probe_display_by_dref(Display_Ref * dref) {
    Display_Handle * dh = NULL;
    Public_Status_Code psc = ddc_open_display(dref, CALLOPT_ERR_MSG, &dh);
    if (psc != 0) {
+      char buf[DREF_SHORT_NAME_BUF_SIZE];
       printf("Unable to open display %s, status code %s",
-             dref_short_name(dref), psc_desc(psc) );
+             dref_short_name_r(dref, buf, sizeof(buf)), psc_desc(psc) );
    }
    else {
       probe_display_by_dh(dh);
@@ -631,7 +634,8 @@ int main(int argc, char *argv[]) {
       if (parsed_cmd->pdid->id_type == DISP_ID_BUSNO) {
          int busno = parsed_cmd->pdid->busno;
          // is this really a monitor?
-         Bus_Info * businfo = i2c_get_bus_info(busno, DISPSEL_VALID_ONLY);
+         // Bus_Info * businfo = i2c_get_bus_info(busno, DISPSEL_VALID_ONLY);
+         Bus_Info * businfo = i2c_get_bus_info_new(busno);
          if ( businfo && (businfo->flags & I2C_BUS_ADDR_0X50) ) {
             dref = create_bus_display_ref(busno);
             dref->dispno = -1;     // should use some other value for unassigned vs invalid
