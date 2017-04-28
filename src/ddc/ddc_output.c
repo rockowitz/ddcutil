@@ -476,7 +476,7 @@ get_formatted_value_for_feature_table_entry(
                  &formatted_data);
          // DBGMSG("vcp_format_feature_detail set formatted_data=|%s|", formatted_data);
          if (!ok) {
-            f0printf(msg_fh, FMT_CODE_NAME_DETAIL_WO_NL,
+            f0printf(msg_fh, FMT_CODE_NAME_DETAIL_W_NL,
                             feature_code, feature_name, "!!! UNABLE TO FORMAT OUTPUT");
             psc = DDCRC_INTERPRETATION_FAILED;
             // TODO: retry with default output function
