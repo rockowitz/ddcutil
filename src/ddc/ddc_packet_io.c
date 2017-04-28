@@ -112,8 +112,9 @@ Public_Status_Code ddc_open_display(
       Display_Handle** pdh)
 {
    bool debug = false;
-   DBGMSF(debug,"Opening display %s, callopts=%s",
-                 dref_short_name(dref), interpret_call_options(callopts));
+   DBGMSF(debug, "Opening display %s, callopts=%s",
+                 dref_repr_t(dref), interpret_call_options_t(callopts) );
+
    Display_Handle * dh = NULL;
    Public_Status_Code psc = 0;
 
@@ -127,7 +128,7 @@ Public_Status_Code ddc_open_display(
             goto bye;
          }
 
-         DBGMSF(debug, "Calling set_addr(0x37) for %s", dref_repr(dref));
+         DBGMSF(debug, "Calling set_addr(0x37) for %s", dref_repr_t(dref));
          Status_Errno base_rc =  i2c_set_addr(fd, 0x37, callopts);
          if (base_rc != 0) {
             assert(base_rc < 0);
@@ -141,7 +142,9 @@ Public_Status_Code ddc_open_display(
          // sleepMillisWithTrace(DDC_TIMEOUT_MILLIS_DEFAULT, __func__, NULL);
          dh = create_bus_display_handle_from_display_ref(fd, dref);    // n. sets dh->dref = dref
          // n. sets
-         Bus_Info * bus_info = i2c_get_bus_info(dref->busno, DISPSEL_VALID_ONLY);   // or DISPSEL_NONE?
+         // Bus_Info * bus_info = i2c_get_bus_info(dref->busno, DISPSEL_VALID_ONLY);   // or DISPSEL_NONE?
+         Bus_Info * bus_info = i2c_get_bus_info_new(dref->busno);   // or DISPSEL_NONE?
+         assert(bus_info);   // need to convert to a test?
          dref->pedid = bus_info->edid;
 
          if (!dref->pedid) {

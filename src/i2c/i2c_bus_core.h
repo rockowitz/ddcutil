@@ -123,4 +123,9 @@ Public_Status_Code i2c_get_raw_edid_by_fd( int fd,      Buffer * rawedidbuf);
 Parsed_Edid * i2c_get_parsed_edid_by_fd(int fd);
 Parsed_Edid * i2c_get_parsed_edid_by_busno(int busno);
 
+// new:
+
+int i2c_detect_buses();
+Bus_Info * i2c_get_bus_info_new(int busno);
+
 #endif /* I2C_BUS_CORE_H_ */
