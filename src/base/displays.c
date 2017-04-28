@@ -585,6 +585,32 @@ char * dref_short_name(Display_Ref * dref) {
 }
 
 
+
+
+char * dref_short_name_t(Display_Ref * dref) {
+   static GPrivate  dref_short_name_key = G_PRIVATE_INIT(g_free);
+
+   GThread * this_thread = g_thread_self();
+   char * buf = g_private_get(&dref_short_name_key);
+   printf("(%s) this_thread=%p, dref_short_name_key=%p, buf=%p\n",
+          __func__, this_thread, &dref_short_name_key, buf);
+   if (!buf) {
+      buf = g_new(char, 100);
+      printf("(%s) Calling g_private_set()\n", __func__);
+      g_private_set(&dref_short_name_key, buf);
+   }
+
+   char buf2[80];
+
+   snprintf(buf, 100,
+            "Display_Ref[%s]", dref_short_name_r(dref, buf2, 80) );
+
+   return buf;
+
+
+}
+
+
 /** Creates a short representation of a $Display_Ref suitable
  *  for diagnostic output.
  *
@@ -600,6 +626,28 @@ char * dref_repr(Display_Ref * dref) {
             "Display_Ref[%s]", dref_short_name_r(dref, buf, 100) );
    return display_ref_short_id_buffer;
 }
+
+char * dref_repr_t(Display_Ref * dref) {
+   static GPrivate  dref_repr_key = G_PRIVATE_INIT(g_free);
+
+   char * buf = g_private_get(&dref_repr_key);
+
+   // GThread * this_thread = g_thread_self();
+   // printf("(%s) this_thread=%p, dref_repr_key=%p, buf=%p\n",
+   //        __func__, this_thread, &dref_repr_key, buf);
+
+   if (!buf) {
+      buf = g_new(char, 100);
+      g_private_set(&dref_repr_key, buf);
+   }
+
+   char buf2[80];
+   snprintf(buf, 100,
+            "Display_Ref[%s]", dref_short_name_r(dref, buf2, 80) );
+
+   return buf;
+}
+
 
 
 // *** Display_Handle ***
@@ -718,6 +766,84 @@ void report_display_handle(Display_Handle * dh, const char * msg, int depth) {
 }
 
 
+
+char * dh_repr_a(Display_Handle * dh) {
+   assert(dh);
+   assert(dh->dref);
+
+   char * repr = NULL;
+
+      switch (dh->dref->io_mode) {
+      case DDCA_IO_DEVI2C:
+          repr = gaux_asprintf(
+                   "Display_Handle[i2c: fh=%d, busno=%d]",
+                   dh->fh, dh->dref->busno);
+          break;
+      case DDCA_IO_ADL:
+          repr = gaux_asprintf(
+                   "Display_Handle[adl: display %d.%d]",
+                   dh->dref->iAdapterIndex, dh->dref->iDisplayIndex);
+          break;
+      case DDCA_IO_USB:
+          repr = gaux_asprintf(
+                   "Display_Handle[usb: %d:%d, %s/hiddev%d]",
+                   dh->dref->usb_bus, dh->dref->usb_device,
+                   hiddev_directory(), dh->dref->usb_hiddev_devno);
+          break;
+      }
+      return repr;
+   }
+
+
+
+char * dh_repr_r(Display_Handle * dh, char * buf, int bufsz) {
+   assert(dh);
+   assert(dh->dref);
+
+   switch (dh->dref->io_mode) {
+   case DDCA_IO_DEVI2C:
+       snprintf(buf, bufsz,
+                "Display_Handle[i2c: fh=%d, busno=%d]",
+                dh->fh, dh->dref->busno);
+       break;
+   case DDCA_IO_ADL:
+       snprintf(buf, bufsz,
+                "Display_Handle[adl: display %d.%d]",
+                dh->dref->iAdapterIndex, dh->dref->iDisplayIndex);
+       break;
+   case DDCA_IO_USB:
+       snprintf(buf, bufsz,
+                "Display_Handle[usb: %d:%d, %s/hiddev%d]",
+                dh->dref->usb_bus, dh->dref->usb_device,
+                hiddev_directory(), dh->dref->usb_hiddev_devno);
+       break;
+   }
+   buf[bufsz-1] = '\0';
+   return buf;
+}
+
+
+char * dh_repr_t(Display_Handle * dh) {
+   static GPrivate  dh_buf_key = G_PRIVATE_INIT(g_free);
+
+   char * buf = g_private_get(&dh_buf_key);
+
+   // GThread * this_thread = g_thread_self();
+   // printf("(%s) this_thread=%p, dh_buf_key=%p, buf=%p\n",
+   //        __func__, this_thread, &dh_buf_key, buf);
+
+   if (!buf) {
+      buf = g_new(char, 100);
+      g_private_set(&dh_buf_key, buf);
+   }
+   dh_repr_r(dh, buf, 100);
+   return buf;
+
+}
+
+
+
+
 /* Returns a string summarizing the specified #Display_Handle.
  *
  * \param  dh    display handle
@@ -728,27 +854,11 @@ char * dh_repr(Display_Handle * dh) {
    assert(dh);
    assert(dh->dref);
    if (!dh->repr) {
-      switch (dh->dref->io_mode) {
-      case DDCA_IO_DEVI2C:
-          dh->repr = gaux_asprintf(
-                   "Display_Handle[i2c: fh=%d, busno=%d]",
-                   dh->fh, dh->dref->busno);
-          break;
-      case DDCA_IO_ADL:
-          dh->repr = gaux_asprintf(
-                   "Display_Handle[adl: display %d.%d]",
-                   dh->dref->iAdapterIndex, dh->dref->iDisplayIndex);
-          break;
-      case DDCA_IO_USB:
-          dh->repr = gaux_asprintf(
-                   "Display_Handle[usb: %d:%d, %s/hiddev%d]",
-                   dh->dref->usb_bus, dh->dref->usb_device,
-                   hiddev_directory(), dh->dref->usb_hiddev_devno);
-          break;
-      }
+      dh->repr = dh_repr_a(dh);
    }
    return dh->repr;
 }
+
 
 
 void   free_display_handle(Display_Handle * dh) {
