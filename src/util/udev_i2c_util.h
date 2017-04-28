@@ -25,8 +25,15 @@
 #ifndef UDEV_I2C_UTIL_H_
 #define UDEV_I2C_UTIL_H_
 
+#include <glib.h>
+#include <stdbool.h>
+
+#include "data_structures.h"
+
 GPtrArray * get_i2c_devices_using_udev();
 void report_i2c_device_summaries(GPtrArray * summaries, char * title, int depth) ;
 bool is_smbus_device_summary(GPtrArray * summaries, char * sbusno) ;
+
+Byte_Value_Array get_i2c_devices_as_bva_using_udev();
 
 #endif /* UDEV_I2C_UTIL_H_ */

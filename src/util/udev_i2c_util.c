@@ -31,9 +31,11 @@
 #include <stdio.h>
 #include <string.h>
 
-#include <report_util.h>
-#include <string_util.h>
-#include <udev_util.h>
+#include "report_util.h"
+#include "string_util.h"
+#include "udev_util.h"
+
+#include "udev_i2c_util.h"
 
 
 //
@@ -198,4 +200,28 @@ bool is_smbus_device_summary(GPtrArray * summaries, char * sbusno) {
 }
 
 
+Byte_Value_Array get_i2c_devices_as_bva_using_udev() {
+   bool debug = false;
+   if (debug)
+      printf("(%s) Starting.\n", __func__);
 
+   Byte_Value_Array bva = bva_create();
+
+   GPtrArray * summaries = get_i2c_devices_using_udev();
+   if (summaries) {
+      for (int ndx = 0; ndx < summaries->len; ndx++) {
+         Udev_Device_Summary * summary = g_ptr_array_index(summaries, ndx);
+         if ( str_starts_with(summary->sysattr_name, "SMBus") )
+            continue;
+         int busno = udev_i2c_device_summary_busno(summary);
+         assert(busno >= 0);
+         assert(busno <= 127);
+         bva_append(bva, busno);
+      }
+      g_ptr_array_free(summaries, true);
+   }
+
+   if (debug)
+      bva_report(bva, "Returning I2c bus numbers:");
+   return bva;
+}
