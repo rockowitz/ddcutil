@@ -98,7 +98,7 @@ static int dispno_max = 0;                 // highest assigned display number
 static
 bool check_ddc_communication(Display_Handle * dh) {
    bool debug = false;
-   DBGMSF(debug, "Starting. dh=%s", dh_repr(dh));
+   DBGMSF(debug, "Starting. dh=%s", dh_repr_t(dh));
 
    bool result = true;
 
@@ -143,7 +143,7 @@ bool check_monitor_ddc_null_response(Display_Handle * dh) {
    assert(dh);
    assert(dh->dref);
    bool debug = false;
-   DBGMSF(debug, "Starting. dh=%s", dh_repr(dh));
+   DBGMSF(debug, "Starting. dh=%s", dh_repr_t(dh));
 
    bool result = false;
 
@@ -188,7 +188,7 @@ bool check_monitor_ddc_null_response(Display_Handle * dh) {
  */
 bool initial_checks_by_dh(Display_Handle * dh) {
    bool debug = false;
-   DBGMSF(debug, "Starting. dh=%s", dh_repr(dh));
+   DBGMSF(debug, "Starting. dh=%s", dh_repr_t(dh));
 
    if (!(dh->dref->flags & DREF_DDC_COMMUNICATION_CHECKED)) {
       if (check_ddc_communication(dh))
@@ -221,7 +221,6 @@ bool initial_checks_by_dh(Display_Handle * dh) {
  *  \return **true** if DDC communication with the display succeeded, **false** otherwise.
  */
 bool initial_checks_by_dref(Display_Ref * dref) {
-   // bool debug = false;
    bool result = false;
    Display_Handle * dh = NULL;
    Public_Status_Code psc = 0;
@@ -260,7 +259,8 @@ void * threaded_initial_checks_by_dref(gpointer data) {
  *  \return **GPtrArray of #Display_Ref instances
  */
 GPtrArray * ddc_get_all_displays() {
-   ddc_ensure_displays_detected();
+   // ddc_ensure_displays_detected();
+   assert(all_displays);
 
    return all_displays;
 }
@@ -680,7 +680,7 @@ void async_scan(GPtrArray * all_displays) {
 
       GThread * th =
       g_thread_new(
-            dref_repr(dref),
+            dref_repr_t(dref),
             threaded_initial_checks_by_dref,
             dref);
       g_ptr_array_add(threads, th);
@@ -846,9 +846,13 @@ ddc_detect_all_displays() {
    bool debug = false;
    DBGMSF(debug, "Starting");
 
+   // int new_busct =  i2c_detect_buses();
+   // DBGMSF(debug, "i2c_detect_buses() returned: %d", new_busct);
+
    GPtrArray * display_list = g_ptr_array_new();
 
-   int busct = i2c_get_busct();
+   // int busct = i2c_get_busct();
+   int busct = i2c_detect_buses();
    int busndx = 0;
    for (busndx=0; busndx < busct; busndx++) {
       Bus_Info * businfo = i2c_get_bus_info_by_index(busndx);
@@ -907,6 +911,7 @@ ddc_detect_all_displays() {
       set_output_level(DDCA_OL_NORMAL);
 
    if (display_list->len >= ASYNC_THRESHOLD && all_adl_details->len == 0)
+   // if (true)
       async_scan(display_list);
    else
       non_async_scan(display_list);
@@ -943,6 +948,7 @@ ddc_detect_all_displays() {
 void
 ddc_ensure_displays_detected() {
    if (!all_displays) {
+      i2c_detect_buses();
       all_displays = ddc_detect_all_displays();
    }
 }
