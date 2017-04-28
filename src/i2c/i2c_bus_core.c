@@ -520,13 +520,14 @@ static bool is_function_supported(int busno, char * funcname) {
       if (!func_bit) {
          TERMINATE_EXECUTION_ON_ERROR("Unrecognized function name: %s", funcname);
       }
-      if (busno < 0 || busno >= i2c_get_busct() ) {
-         TERMINATE_EXECUTION_ON_ERROR("Invalid bus: /dev/i2c-%d", busno);
-      }
 
       // DBGMSG("functionality=0x%lx, func_table_entry->bit=-0x%lx", bus_infos[busno].functionality, func_table_entry->bit);
       // Bus_Info * bus_info = i2c_get_bus_info(busno, DISPSEL_NONE);
       Bus_Info * bus_info = i2c_get_bus_info_new(busno);
+      if ( !bus_info ) {
+         TERMINATE_EXECUTION_ON_ERROR("Invalid bus: /dev/i2c-%d", busno);
+      }
+
       result = (bus_info->functionality & func_bit) != 0;
    }
    // DBGMSG("busno=%d, funcname=%s, returning %d", busno, funcname, result);
