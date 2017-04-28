@@ -334,6 +334,7 @@ bool * detect_all_addrs(int busno) {
  *
  * Sets:
  *   Returns byte with flags possibly set:
+ *    I2C_BUS_ADDR_0x30        true if addr x30 responds (EDID block selection)
  *    I2C_BUS_ADDR_0x50        true if addr x50 responds (EDID)
  *    I2C_BUS_ADDR_0x37        true if addr x37 responds (DDC commands)
  *
@@ -387,7 +388,6 @@ Status_Errno_DDC detect_ddc_addrs_by_fd(int fd, Byte * presult) {
 bye:
    // if (gsc != 0)
    if (base_rc != 0)
-      result = 0x00;
 
    *presult = result;
 
@@ -406,39 +406,7 @@ bye:
 // They are overly complex for production use.  They were created during development
 // to facilitate exploratory programming.
 
-#ifdef OLD
-typedef
-struct {
-        unsigned long bit;
-        char *        name;
-        char *        function_name;
-} I2C_Func_Table_Entry;
 
-// Note 2 entries for I2C_FUNC_I2C.  Usage must take this into account.
-I2C_Func_Table_Entry functionality_table[] = {
-//  bit value of flag                 flag name                          i2c function name
-// {I2C_FUNC_I2C                    , "I2C_FUNC_I2C",                    NULL},
-   {I2C_FUNC_I2C                    , "I2C_FUNC_I2C",                    "ioctl_write"},
-   {I2C_FUNC_I2C                    , "I2C_FUNC_I2C",                    "ioctl_read"},
-   {I2C_FUNC_10BIT_ADDR             , "I2C_FUNC_10BIT_ADDR",             NULL},
-   {I2C_FUNC_PROTOCOL_MANGLING      , "I2C_FUNC_PROTOCOL_MANGLING",      NULL},
-   {I2C_FUNC_SMBUS_PEC              , "I2C_FUNC_SMBUS_PEC",              "i2c_smbus_pec"},
-   {I2C_FUNC_SMBUS_BLOCK_PROC_CALL  , "I2C_FUNC_SMBUS_BLOCK_PROC_CALL",  "i2c_smbus_block_proc_call"},
-   {I2C_FUNC_SMBUS_QUICK            , "I2C_FUNC_SMBUS_QUICK",            "i2c_smbus_quick"},
-   {I2C_FUNC_SMBUS_READ_BYTE        , "I2C_FUNC_SMBUS_READ_BYTE",        "i2c_smbus_read_byte"},
-   {I2C_FUNC_SMBUS_WRITE_BYTE       , "I2C_FUNC_SMBUS_WRITE_BYTE",       "i2c_smbus_write_byte"},
-   {I2C_FUNC_SMBUS_READ_BYTE_DATA   , "I2C_FUNC_SMBUS_READ_BYTE_DATA",   "i2c_smbus_read_byte_data"},
-   {I2C_FUNC_SMBUS_WRITE_BYTE_DATA  , "I2C_FUNC_SMBUS_WRITE_BYTE_DATA",  "i2c_smbus_write_byte_data"},
-   {I2C_FUNC_SMBUS_READ_WORD_DATA   , "I2C_FUNC_SMBUS_READ_WORD_DATA",   "i2c_smbus_read_word_data"},
-   {I2C_FUNC_SMBUS_WRITE_WORD_DATA  , "I2C_FUNC_SMBUS_WRITE_WORD_DATA",  "i2c_smbus_write_word_data"},
-   {I2C_FUNC_SMBUS_PROC_CALL        , "I2C_FUNC_SMBUS_PROC_CALL",        "i2c_smbus_proc_call"},
-   {I2C_FUNC_SMBUS_READ_BLOCK_DATA  , "I2C_FUNC_SMBUS_READ_BLOCK_DATA",  "i2c_smbus_read_block_data"},
-   {I2C_FUNC_SMBUS_WRITE_BLOCK_DATA , "I2C_FUNC_SMBUS_WRITE_BLOCK_DATA", "i2c_smbus_write_block_data"},
-   {I2C_FUNC_SMBUS_READ_I2C_BLOCK   , "I2C_FUNC_SMBUS_READ_I2C_BLOCK",   "i2c_smbus_read_i2c_block_data"},
-   {I2C_FUNC_SMBUS_WRITE_I2C_BLOCK  , "I2C_FUNC_SMBUS_WRITE_I2C_BLOCK",  "i2c_smbus_write_i2c_block_data"}
-};
-int bit_name_ct = sizeof(functionality_table) / sizeof(I2C_Func_Table_Entry);
-#endif
 
 // Note 2 entries for I2C_FUNC_I2C.  Usage must take this into account.
 Value_Name_Title_Table functionality_table2 = {
@@ -463,48 +431,7 @@ Value_Name_Title_Table functionality_table2 = {
       VNT(I2C_FUNC_SMBUS_WRITE_I2C_BLOCK  , "i2c_smbus_write_i2c_block_data")
 };
 
-#ifdef OLD
-static I2C_Func_Table_Entry * find_func_table_entry_by_funcname(char * funcname) {
-   // DBGMSG("Starting.  funcname=%s", funcname);
-   int ndx = 0;
-   I2C_Func_Table_Entry * result = NULL;
-   for (ndx = 0; ndx < bit_name_ct; ndx++) {
-      // printf("ndx=%d, bit_name_ct=%d\n", ndx, bit_name_ct);
-      // printf("--%s--\n", funcname);
-      // printf("--%s--\n", functionality_table[ndx].function_name);
-      if ( streq( functionality_table[ndx].function_name, funcname)) {
-         result = &functionality_table[ndx];
-         break;
-      }
-   }
-   // DBGMSG("funcname=%s, returning %s", funcname, (result) ? result->name : "NULL");
-   return result;
-}
-#endif
 
-
-#ifdef OLD
-static bool is_function_supported(int busno, char * funcname) {
-   // DBGMSG("Starting. busno=%d, funcname=%s", busno, funcname);
-   bool result = true;
-   if ( !streq(funcname, "read") &&  !streq(funcname, "write") ) {
-      I2C_Func_Table_Entry * func_table_entry = find_func_table_entry_by_funcname(funcname);
-      if (!func_table_entry) {
-         TERMINATE_EXECUTION_ON_ERROR("Unrecognized function name: %s", funcname);
-      }
-      assert(func_table_entry);   // suppresses clang analyzer warning re dereference of possibly null func_table_entry
-      if (busno < 0 || busno >= i2c_get_busct() ) {
-         TERMINATE_EXECUTION_ON_ERROR("Invalid bus: /dev/i2c-%d", busno);
-      }
-
-      // DBGMSG("functionality=0x%lx, func_table_entry->bit=-0x%lx", bus_infos[busno].functionality, func_table_entry->bit);
-      Bus_Info * bus_info = i2c_get_bus_info(busno, DISPSEL_NONE);
-      result = (bus_info->functionality & func_table_entry->bit) != 0;
-   }
-   // DBGMSG("busno=%d, funcname=%s, returning %d", busno, funcname, result);
-   return result;
-}
-#endif
 
 static bool is_function_supported(int busno, char * funcname) {
    // DBGMSG("Starting. busno=%d, funcname=%s", busno, funcname);
