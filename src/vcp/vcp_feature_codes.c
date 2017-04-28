@@ -1137,10 +1137,7 @@ bool
 vcp_format_feature_detail(
        VCP_Feature_Table_Entry * vfte,
        DDCA_MCCS_Version_Spec    vcp_version,
-       DDCA_Single_Vcp_Value *        valrec,
-#ifdef OLD
-       Parsed_Vcp_Response *     raw_data,
-#endif
+       DDCA_Single_Vcp_Value *   valrec,
        char * *                  aformatted_data
      )
 {
@@ -1160,7 +1157,6 @@ vcp_format_feature_detail(
       ok = vcp_format_nontable_feature_detail(
               vfte,
               vcp_version,
-           //   raw_data->non_table_response,
               nontable_value,
               workbuf,
               200);
@@ -1171,7 +1167,6 @@ vcp_format_feature_detail(
       ok = vcp_format_table_feature_detail(
             vfte,
             vcp_version,
-        //  raw_data->table_response,
             buffer_new_with_value(valrec->val.t.bytes, valrec->val.t.bytect, __func__),
             &formatted_data);
    }
