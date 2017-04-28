@@ -527,8 +527,8 @@ static bool is_function_supported(int busno, char * funcname) {
       if ( !bus_info ) {
          TERMINATE_EXECUTION_ON_ERROR("Invalid bus: /dev/i2c-%d", busno);
       }
-
-      result = (bus_info->functionality & func_bit) != 0;
+      else   // add unneeded else clause to avoid clang warning
+         result = (bus_info->functionality & func_bit) != 0;
    }
    // DBGMSG("busno=%d, funcname=%s, returning %d", busno, funcname, result);
    return result;
