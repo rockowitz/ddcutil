@@ -74,7 +74,7 @@ int usb_open_hiddev_device(
 {
    bool debug = false;
    DBGMSF(debug, "hiddev_devname=%s, calloptions=0x%02x (%s)",
-                 hiddev_devname, calloptions, interpret_call_options(calloptions));
+                 hiddev_devname, calloptions, interpret_call_options_t(calloptions) );
 
    int  file;
    int mode = (calloptions & CALLOPT_RDONLY) ? O_RDONLY : O_RDWR;
