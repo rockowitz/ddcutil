@@ -737,7 +737,7 @@ ddca_dref_repr(DDCA_Display_Ref ddca_dref){
       *repr = did_work_buf;
 #endif
       // result = dref_short_name(dref);
-      result = dref_repr(dref);
+      result = dref_repr_t(dref);
    }
    return result;
 }
