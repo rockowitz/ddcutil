@@ -105,6 +105,8 @@ typedef Byte Call_Options;
 // Return string interpretation of CALLOPT_ flag byte
 char * interpret_call_options_r(Call_Options calloptions, char * buffer, int bufsize);
 char * interpret_call_options(Call_Options calloptions);
+char * interpret_call_options_a(Call_Options calloptions);
+char * interpret_call_options_t(Call_Options calloptions);
 
 
 

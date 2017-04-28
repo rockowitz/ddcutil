@@ -295,17 +295,6 @@ char * bitflags_to_string(
 // Standard call options
 //
 
-#ifdef OLD
-Bitname_Table callopt_bitname_table = {
-      {CALLOPT_ERR_MSG,     "CALLOPT_ERR_MSG"},
-      {CALLOPT_ERR_ABORT,   "CALLOPT_ERR_ABORT"},
-      {CALLOPT_RDONLY,      "CALLOPT_RDONLY"},
-      {CALLOPT_WARN_FINDEX, "CALLOPT_WARN_FINDEX"},
-      {CALLOPT_FORCE,       "CALLOPT_FORCE"},
-//      {CALLOPT_FORCE_SLAVE, "CALLOPT_FORCE_SLAVE"},
-      {CALLOPT_NONE,        "CALLOPT_NONE"},
-};
-#endif
 
 
 Value_Name_Table callopt_bitname_table2 = {
@@ -339,7 +328,7 @@ char * interpret_call_options_r_old(Call_Options calloptions, char * buffer, int
  *  @remark
  *  If the buffer is insufficiently large, the interpretation is truncated.
  */
-char * interpret_call_options_r(Call_Options calloptions, char * buffer, int bufsize) {
+char * interpret_call_options_a(Call_Options calloptions, char * buffer, int bufsize) {
    // bitflags_to_string(calloptions, callopt_bitname_table, "|", buffer, bufsize);
    interpret_named_flags(calloptions, callopt_bitname_table2, "|", buffer, bufsize);
    return buffer;
@@ -353,7 +342,7 @@ char * interpret_call_options_r2(Call_Options callopts) {
 #ifdef OLD
 char * interpret_call_options_old(Call_Options calloptions) {
    static char buffer[120];
-   char * result = interpret_call_options_r(calloptions, buffer, 100);
+   char * result = interpret_call_options_a(calloptions, buffer, 100);
    // DBGMSG("calloptions = 0x%02x, returning %s", calloptions, result);
    return result;
 }
@@ -370,17 +359,51 @@ char * interpret_call_options_old(Call_Options calloptions) {
 #ifdef OLD
 char * interpret_call_options_old(Call_Options calloptions) {
    static char buffer[120];
-   char * result = interpret_call_options_r(calloptions, buffer, 100);
+   char * result = interpret_call_options_a(calloptions, buffer, 100);
    // DBGMSG("calloptions = 0x%02x, returning %s", calloptions, result);
    return result;
 }
 #endif
 
+
+
 char * interpret_call_options(Call_Options calloptions) {
    static char * buffer = NULL;
-   if (buffer)
+   if (buffer) {
       free(buffer);
+      buffer = NULL;
+   }
    buffer = vnt_interpret_flags(calloptions, callopt_bitname_table2, false, "|");
+   return buffer;
+}
+
+
+char * interpret_call_options_t(Call_Options calloptions) {
+   static GPrivate  callopts_buf_key = G_PRIVATE_INIT(g_free);
+
+   char * buf = g_private_get(&callopts_buf_key);
+
+   // GThread * this_thread = g_thread_self();
+   // printf("(%s) this_thread=%p, callopts_buf_key=%p, buf=%p\n",
+   //        __func__, this_thread, &callopts_buf_key, buf);
+
+   if (!buf) {
+      buf = g_new(char, 200);
+      g_private_set(&callopts_buf_key, buf);
+   }
+
+   char * buftemp = vnt_interpret_flags(calloptions, callopt_bitname_table2, false, "|");
+   g_strlcpy(buf, buftemp, 200);
+   free(buftemp);
+
+   return buf;
+
+}
+
+
+
+char * interpret_call_options_a(Call_Options calloptions) {
+   char * buffer = vnt_interpret_flags(calloptions, callopt_bitname_table2, false, "|");
    return buffer;
 }
 
