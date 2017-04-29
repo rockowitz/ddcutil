@@ -628,7 +628,7 @@ void raw_scan_i2c_devices() {
    bool saved_i2c_force_slave_addr_flag = i2c_force_slave_addr_flag;
 
    for (int busno=0; busno < I2C_BUS_MAX; busno++) {
-      if (i2c_bus_exists(busno)) {
+      if (i2c_device_exists(busno)) {
          busct++;
          rpt_nl();
          rpt_vstring(d1, "Examining device /dev/i2c-%d...", busno);
@@ -794,7 +794,7 @@ static void check_i2c_devices(struct driver_name_node * driver_list) {
    uname = strdup(pwd->pw_name);
 
    bool all_i2c_rw = false;
-   int busct = i2c_get_busct();   // Consider replacing with local code
+   int busct = i2c_device_count();   // simple count, no side effects, consider replacing with local code
    if (busct == 0 && !just_fglrx) {
       rpt_vstring(0,"WARNING: No /dev/i2c-* devices found");
    }
@@ -804,7 +804,7 @@ static void check_i2c_devices(struct driver_name_node * driver_list) {
       char fnbuf[20];
 
       for (busno=0; busno < 32; busno++) {
-         if (i2c_bus_exists(busno)) {
+         if (i2c_device_exists(busno)) {
             snprintf(fnbuf, sizeof(fnbuf), "/dev/i2c-%d", busno);
             int rc;
             int errsv;
