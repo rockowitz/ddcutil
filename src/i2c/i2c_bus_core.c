@@ -22,7 +22,7 @@
  */
 
 /** \file
- *
+ * I2C bus detection and inspection
  */
 
 /** \cond */
@@ -62,16 +62,15 @@
 static Trace_Group TRACE_GROUP = TRC_I2C;
 
 // forward declarations
-void report_businfo(Bus_Info * bus_info, int depth);
+void i2c_report_bus_info(Bus_Info * bus_info, int depth);
 
 /** All I2C buses.  GPtrArray of pointers to #Bus_Info */
 static GPtrArray * i2c_buses = NULL;
 
-/** Global variable.  Controls whether function #i2c_set_addr() retries from
- *  EBUSY error by changing I2C op I2C_SLAVE to I2C_SLAVE_FORCE.
+/** Global variable.  Controls whether function #i2c_set_addr() attempts retry
+ *  after EBUSY error by changing ioctl op I2C_SLAVE to I2C_SLAVE_FORCE.
  */
 bool i2c_force_slave_addr_flag = false;
-
 
 
 //
@@ -363,6 +362,7 @@ void i2c_report_functionality_flags(long functionality, int maxline, int depth) 
 // I2C Bus Inspection - Slave Addresses
 //
 
+#ifdef UNUSED
 /* Checks each address on an I2C bus to see if a device exists.
  * The bus device has already been opened.
  *
@@ -379,7 +379,7 @@ void i2c_report_functionality_flags(long functionality, int maxline, int depth) 
  * TODO: exclude reserved I2C bus addresses from check
  */
 static
-bool * detect_all_addrs_by_fd(int fd) {
+bool * i2c_detect_all_slave_addrs_by_fd(int fd) {
    bool debug = false;
    DBGMSF(debug, "Starting. fd=%d", fd);
    assert (fd >= 0);
@@ -415,7 +415,7 @@ bool * detect_all_addrs_by_fd(int fd) {
  * This "exploratory" function is not currently used but is
  * retained for diagnostic purposes.
  */
-bool * detect_all_addrs(int busno) {
+bool * i2c_detect_all_slave_addrs(int busno) {
    bool debug = false;
    DBGMSF(debug, "Starting. busno=%d", busno);
 
@@ -423,14 +423,14 @@ bool * detect_all_addrs(int busno) {
    bool * addrmap = NULL;
 
    if (file >= 0) {
-      addrmap = detect_all_addrs_by_fd(file);
+      addrmap = i2c_detect_all_slave_addrs_by_fd(file);
       i2c_close_bus(file, busno, CALLOPT_ERR_ABORT);
    }
 
    DBGMSF(debug, "Returning %p", addrmap);
    return addrmap;
 }
-
+#endif
 
 /* Checks DDC related addresses on an I2C bus to see if the addresses are active.
  * The bus device has already been opened.
@@ -450,7 +450,7 @@ bool * detect_all_addrs(int busno) {
  *    < 0, modulated status code
  */
 // static
-Status_Errno_DDC detect_ddc_addrs_by_fd(int fd, Byte * presult) {
+Status_Errno_DDC i2c_detect_ddc_addrs_by_fd(int fd, Byte * presult) {
    bool debug = false;
    DBGMSF(debug, "Starting. fd=%d", fd);
    assert(fd >= 0);
@@ -577,11 +577,13 @@ bye:
 
 /** Returns a parsed EDID record for the monitor on an I2C bus.
  *
- *  @param fd      file descriptor for open /dev/i2c-n
+ * @param fd      file descriptor for open /dev/i2c-n
+ * @param edid_ptr_loc where to return pointer to newly allocated #Parsed_Edid,
+ *                     or NULL if error
  *
- * @return  Parsed_Edid, NULL if get_raw_edid_by_fd() failed
+ * @return status code
  */
-Parsed_Edid * i2c_get_parsed_edid_by_fd(int fd) {
+Public_Status_Code i2c_get_parsed_edid_by_fd(int fd, Parsed_Edid ** edid_ptr_loc) {
    bool debug = false;
    DBGTRC(debug, TRACE_GROUP, "Starting. fd=%d\n", fd);
    Parsed_Edid * edid = NULL;
@@ -596,14 +598,17 @@ Parsed_Edid * i2c_get_parsed_edid_by_fd(int fd) {
          else
             DBGMSG("create_parsed_edid() returned NULL");
       }
+      if (!edid)
+         rc = DDCRC_EDID;
    }
    else if (rc == DDCRC_EDID) {
       DBGTRC(debug, TRACE_GROUP, "i2c_get_raw_edid_by_fd() returned %s", psc_desc(rc));
-
    }
+
    buffer_free(rawedidbuf, NULL);
    DBGTRC(debug, TRACE_GROUP, "Returning %p", edid);
-   return edid;
+   *edid_ptr_loc = edid;
+   return rc;
 }
 
 
@@ -611,6 +616,19 @@ Parsed_Edid * i2c_get_parsed_edid_by_fd(int fd) {
 //
 // I2C Bus Inspection - Fill in and report Bus_Info
 //
+
+/** Allocates and initializes a new #Bus_Info struct
+ *
+ * @param busno I2C bus number
+ * @return newly allocated #Bus_Info
+ */
+Bus_Info * i2c_new_bus_info(int busno) {
+   Bus_Info * businfo = calloc(1, sizeof(Bus_Info));
+   memcpy(businfo->marker, BUS_INFO_MARKER, 4);
+   businfo->busno = busno;
+   return businfo;
+}
+
 
 /** Inspects an I2C bus.
  *
@@ -636,7 +654,7 @@ void i2c_check_bus(Bus_Info * bus_info) {
       if (file >= 0) {
          bus_info->flags |= I2C_BUS_ACCESSIBLE;
          Byte ddc_addr_flags = 0x00;
-         Status_Errno_DDC psc = detect_ddc_addrs_by_fd(file, &ddc_addr_flags);
+         Status_Errno_DDC psc = i2c_detect_ddc_addrs_by_fd(file, &ddc_addr_flags);
          if (psc != 0) {
             DBGMSF(debug, "detect_ddc_addrs_by_fd() returned %d", psc);
             f0printf(FERR, "Failure detecting bus addresses for /dev/i2c-%d: status code=%s\n",
@@ -652,7 +670,13 @@ void i2c_check_bus(Bus_Info * bus_info) {
             // when the bytes are read in i2c_get_parsed_edid_by_fd()
             // TODO: handle case of i2c_get_parsed_edid_by_fd() returning NULL
             // but should never fail if detect_ddc_addrs_by_fd() succeeds
-            bus_info->edid = i2c_get_parsed_edid_by_fd(file);
+            psc = i2c_get_parsed_edid_by_fd(file, &bus_info->edid);
+            if (psc != 0) {
+               DBGMSF(debug, "i2c_get_parsed_edid_by_fd() returned %d", psc);
+               f0printf(FERR, "Failure getting EDID for /dev/i2c-%d: status code=%s\n",
+                              bus_info->busno, psc_desc(psc));
+               goto bye;
+            }
             // bus_info->flags |= I2C_BUS_EDID_CHECKED;
          }
 #ifdef NO
@@ -677,7 +701,7 @@ bye:
 }
 
 
-void free_bus_info(Bus_Info * bus_info) {
+void i2c_free_bus_info(Bus_Info * bus_info) {
    if (bus_info) {
       if ( memcmp(bus_info->marker, "BINx", 4) != 0) {   // just ignore if already freed
          assert( memcmp(bus_info->marker, BUS_INFO_MARKER, 4) == 0);
@@ -705,7 +729,7 @@ void free_bus_info(Bus_Info * bus_info) {
  * \remark
  * The format of the output as well as its extent is controlled by get_output_level().
  */
-void report_businfo(Bus_Info * bus_info, int depth) {
+void i2c_report_bus_info(Bus_Info * bus_info, int depth) {
    bool debug = false;
    DDCA_Output_Level output_level = get_output_level();
    DBGMSF(debug, "bus_info=%p, output_level=%s", bus_info, output_level_name(output_level));
@@ -812,10 +836,8 @@ void i2c_report_active_display(Bus_Info * businfo, int depth) {
 
 
 
-
-
 //
-// Bus inventory
+// Simple Bus Detection
 //
 
 /** Checks if an I2C bus with a given number exists.
@@ -824,7 +846,7 @@ void i2c_report_active_display(Bus_Info * businfo, int depth) {
  *
  * @return  true/false
  */
-bool i2c_bus_exists(int busno) {
+bool i2c_device_exists(int busno) {
    bool result = false;
    bool debug = false;
    int  errsv;
@@ -857,26 +879,27 @@ bool i2c_bus_exists(int busno) {
 }
 
 
-#ifdef UNUSED
-/* Returns the number of I2C buses on the system, by looking for
- * devices named /dev/i2c-n.
+/** Returns the number of I2C buses on the system, by looking for
+ *  devices named /dev/i2c-n.
  *
- * Note that no attempt is made to open the devices.
+ *  Note that no attempt is made to open the devices.
  */
-
-static int _count_i2c_devices() {
+int i2c_device_count() {
    bool debug = false;
    int  busct = 0;
 
    for (int busno=0; busno < I2C_BUS_MAX; busno++) {
-      if (i2c_bus_exists(busno))
+      if (i2c_device_exists(busno))
          busct++;
    }
    DBGTRC(debug, TRACE_GROUP, "Returning %d", busct );
    return busct;
 }
-#endif
 
+
+//
+// Bus inventory
+//
 
 int i2c_detect_buses() {
    bool debug = false;
@@ -889,13 +912,11 @@ int i2c_detect_buses() {
       for (int ndx = 0; ndx < bva_length(i2c_bus_bva); ndx++) {
          int busno = bva_get(i2c_bus_bva, ndx);
          DBGMSF(debug, "busno = %d", busno);
-         Bus_Info * businfo = calloc(1, sizeof(Bus_Info));
-         memcpy(businfo->marker, BUS_INFO_MARKER, 4);
-         businfo->busno = busno;
+         Bus_Info * businfo = i2c_new_bus_info(busno);
          businfo->flags = I2C_BUS_EXISTS;
          i2c_check_bus(businfo);
          if (debug)
-            report_businfo(businfo, 0);
+            i2c_report_bus_info(businfo, 0);
          g_ptr_array_add(i2c_buses, businfo);
       }
    }
@@ -910,14 +931,12 @@ Bus_Info * detect_single_bus(int busno) {
    DBGMSF(debug, "Starting.  busno = %d", busno);
    Bus_Info * businfo = NULL;
 
-   if (i2c_bus_exists(busno) ) {
-      businfo = calloc(1, sizeof(Bus_Info));
-      memcpy(businfo->marker, BUS_INFO_MARKER, 4);
-      businfo->busno = busno;
+   if (i2c_device_exists(busno) ) {
+      businfo = i2c_new_bus_info(busno);
       businfo->flags = I2C_BUS_EXISTS;
       i2c_check_bus(businfo);
       if (debug)
-         report_businfo(businfo, 0);
+         i2c_report_bus_info(businfo, 0);
    }
 
    DBGMSF(debug, "Done.  busnp=%d, returning: %p", busno, businfo);
@@ -926,14 +945,12 @@ Bus_Info * detect_single_bus(int busno) {
 
 
 
-
+#ifdef UNUSED
 /** Returns the number of /dev/i2c-n devices found on the system.
  *
  * As a side effect, data structures for storing information about
  * the devices are initialized if not already initialized.
  */
-
-
 int i2c_get_busct() {
    bool debug = false;
 
@@ -942,6 +959,7 @@ int i2c_get_busct() {
    DBGMSF(debug, "Returning %d", result);
    return result;
 }
+#endif
 
 
 //
@@ -1075,7 +1093,7 @@ bool bus_info_matches_selector(Bus_Info * bus_info, I2C_Bus_Selector * sel) {
    bool debug = false;
    if (debug) {
       DBGMSG("Starting");
-      report_businfo(bus_info, 1);
+      i2c_report_bus_info(bus_info, 1);
    }
 
    assert( bus_info && sel);
@@ -1175,7 +1193,7 @@ Bus_Info * find_bus_info_by_selector(I2C_Bus_Selector * sel) {
 
     DBGMSF(debug, "returning %p", bus_info );
     if (debug && bus_info) {
-       report_businfo(bus_info, 1);
+       i2c_report_bus_info(bus_info, 1);
     }
     return bus_info;
  }
@@ -1222,8 +1240,6 @@ i2c_find_bus_info_by_mfg_model_sn(
 }
 
 
-
-
 //
 // I2C Bus Inquiry
 //
@@ -1250,7 +1266,7 @@ bool i2c_is_valid_bus(int busno, Call_Options callopts) {
    // Bus_Info * businfo = i2c_get_bus_info(busno, DISPSEL_NONE);
    Bus_Info * businfo = i2c_find_bus_info_by_busno(busno);
    if (debug && businfo)
-      report_businfo(businfo, 1);
+      i2c_report_bus_info(businfo, 1);
 
    bool overridable = false;
    if (!businfo)
@@ -1368,7 +1384,7 @@ void i2c_report_bus(int busno) {
   else {
      // Bus_Info * busInfo = i2c_get_bus_info(busno, DISPSEL_NONE);
      Bus_Info * busInfo = i2c_find_bus_info_by_busno(busno);
-     report_businfo(busInfo, 0);
+     i2c_report_bus_info(busInfo, 0);
   }
 
   DBGMSF(debug, "Done");
@@ -1405,7 +1421,7 @@ int i2c_report_buses_old(bool report_all, int depth) {
    for (busno=0; busno < busct; busno++) {
       Bus_Info * busInfo = i2c_get_bus_info(busno, DISPSEL_NONE);
       if ( (busInfo->flags & I2C_BUS_ADDR_0X50) || report_all) {
-         report_businfo(busInfo, depth);
+         i2c_report_bus_info(busInfo, depth);
          reported_ct++;
       }
    }
@@ -1439,7 +1455,7 @@ int i2c_report_buses(bool report_all, int depth) {
    for (int ndx = 0; ndx < busct; ndx++) {
       Bus_Info * busInfo = g_ptr_array_index(i2c_buses, ndx);
       if ( (busInfo->flags & I2C_BUS_ADDR_0X50) || report_all) {
-         report_businfo(busInfo, depth);
+         i2c_report_bus_info(busInfo, depth);
          reported_ct++;
       }
    }
@@ -1449,11 +1465,6 @@ int i2c_report_buses(bool report_all, int depth) {
    DBGTRC(debug, TRACE_GROUP, "Done. Returning %d\n", reported_ct);
    return reported_ct;
 }
-
-
-
-
-
 
 
 //
@@ -1486,7 +1497,7 @@ static bool is_function_supported(int busno, char * funcname) {
       }
       else   // add unneeded else clause to avoid clang warning
          result = (bus_info->functionality & func_bit) != 0;
-      free_bus_info(bus_info);
+      i2c_free_bus_info(bus_info);
    }
 
    DBGMSF(debug, "busno=%d, funcname=%s, returning %d", busno, funcname, result);
@@ -1519,8 +1530,3 @@ bool i2c_verify_functions_supported(int busno, char * write_func_name, char * re
    // DBGMSG("returning %d", result);
    return result;
 }
-
-
-
-
-

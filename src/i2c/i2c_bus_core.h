@@ -22,7 +22,7 @@
  */
 
 /** \file
- *
+ *  I2C bus detection and inspection
  */
 
 #ifndef I2C_BUS_CORE_H_
@@ -49,6 +49,26 @@
 /** \def I2C_SLAVE_ADDR_MAX Addresses on an I2C bus are 7 bits in size */
 #define I2C_SLAVE_ADDR_MAX 128
 
+// Controls whether function #i2c_set_addr() retries from EBUSY error by
+// changing ioctl op I2C_SLAVE to op I2C_SLAVE_FORCE.
+extern bool i2c_force_slave_addr_flag;
+
+// Basic I2C bus operations
+int           i2c_open_bus(int busno, Call_Options callopts);
+Status_Errno  i2c_close_bus(int fd, int busno, Call_Options callopts);
+Status_Errno  i2c_set_addr(int fd, int addr, Call_Options callopts);
+
+// Bus functionality flags
+unsigned long i2c_get_functionality_flags_by_fd(int fd);
+char *        i2c_interpret_functionality_into_buffer(unsigned long functionality, Buffer * buf);
+void          i2c_report_functionality_flags(long functionality, int maxline, int depth);
+
+bool i2c_verify_functions_supported(int busno, char * write_func_name, char * read_func_name);
+
+
+// EDID inspection
+Public_Status_Code i2c_get_raw_edid_by_fd(int fd, Buffer * rawedid);
+Public_Status_Code i2c_get_parsed_edid_by_fd(int fd, Parsed_Edid ** edid_ptr_loc);
 
 // Retrieve and inspect bus information
 
@@ -70,61 +90,32 @@ struct {
    Byte             flags;              ///< I2C_BUS_* flags
 } Bus_Info;
 
-void report_businfo(Bus_Info * bus_info, int depth);
-void free_bus_info(Bus_Info * bus_info);
+// void i2c_new_bus_info(int busno);               // used only locally
+// void i2c_check_bus(Bus_Info * bus_info);        // used only locally
+// void i2c_free_bus_info(Bus_Info * bus_info);    // used only locally
+void i2c_report_bus_info(Bus_Info * bus_info, int depth);
+void i2c_report_active_display(Bus_Info * businfo, int depth);
 
-bool i2c_bus_exists(int busno);
-int  i2c_get_busct();
+// Simple bus detection, no side effects
+bool i2c_device_exists(int busno);
+int  i2c_device_count();           // simple /dev/i2c-n count, no side effects
+
+// Bus inventory - detect and probe buses
+int i2c_detect_buses();            // creates internal array of Bus_Info for I2C buses
+Bus_Info * detect_single_bus(int busno);
+
+// Simple Bus_Info retrieval
 Bus_Info * i2c_get_bus_info_by_index(int busndx);
-void i2c_report_bus(int busno);
-int  i2c_report_buses(bool report_all, int depth);
+Bus_Info * i2c_find_bus_info_by_busno(int busno);
 
-
-GPtrArray* i2c_get_displays();
-
-Bus_Info * i2c_get_bus_info(int busno, Byte findopts);
-void       i2c_check_bus(Bus_Info * bus_info);
-
+// Complex Bus_Info retrieval
 Bus_Info * i2c_find_bus_info_by_mfg_model_sn(
               const char * mfg_id,
               const char * model,
               const char * sn,
               Byte findopts);
 
-// void report_businfo(Bus_Info * bus_info);
-bool i2c_is_valid_bus(int busno, Call_Options callopts);
-
-void i2c_report_active_display(Bus_Info * businfo, int depth);
-void i2c_report_active_display_by_busno(int busno, int depth);
-
-
-// Basic bus operations
-
-int           i2c_open_bus(int busno, Call_Options callopts);
-Status_Errno  i2c_close_bus(int fd, int busno, Call_Options callopts);
-Status_Errno  i2c_set_addr(int fd, int addr, Call_Options callopts);
-
-extern bool i2c_force_slave_addr_flag;
-
-// Bus functionality flags
-
-unsigned long i2c_get_functionality_flags_by_fd(int fd);
-unsigned long i2c_get_functionality_flags_by_busno(int busno);
-char * i2c_interpret_functionality_into_buffer(unsigned long functionality, Buffer * buf);
-void i2c_report_functionality_flags(long functionality, int maxline, int depth);
-bool i2c_verify_functions_supported(int busno, char * write_func_name, char * read_func_name);
-
-
-// Retrieve EDID
-
-Public_Status_Code i2c_get_raw_edid_by_fd( int fd,      Buffer * rawedidbuf);
-Parsed_Edid * i2c_get_parsed_edid_by_fd(int fd);
-Parsed_Edid * i2c_get_parsed_edid_by_busno(int busno);
-
-// new:
-
-int i2c_detect_buses();
-Bus_Info * i2c_find_bus_info_by_busno(int busno);
-Bus_Info * detect_single_bus(int busno);
+// Reports all detected i2c buses:
+int  i2c_report_buses(bool report_all, int depth);
 
 #endif /* I2C_BUS_CORE_H_ */
