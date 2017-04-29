@@ -483,7 +483,7 @@ ddc_report_displays(bool valid_displays_only, int depth) {
  * \param dref  pointer to #Display_Ref
  * \param depth logical indentation depth
  */
-void debug_report_display_ref(Display_Ref * dref, int depth) {
+void dbgreport_display_ref(Display_Ref * dref, int depth) {
    int d1 = depth+1;
    int d2 = depth+2;
    DDCA_Output_Level saved_output_level = get_output_level();
@@ -504,7 +504,7 @@ void debug_report_display_ref(Display_Ref * dref, int depth) {
          rpt_vstring(d1, "I2C bus information: ");
          Bus_Info * businfo = dref->detail2;
          assert( memcmp(businfo->marker, BUS_INFO_MARKER, 4) == 0);
-         report_businfo(businfo, d2);
+         i2c_report_bus_info(businfo, d2);
          break;
    case(DDCA_IO_ADL):
 #ifdef HAVE_ADL
@@ -515,10 +515,14 @@ void debug_report_display_ref(Display_Ref * dref, int depth) {
 #endif
       break;
    case(DDCA_IO_USB):
+#ifdef USE_USB
          rpt_vstring(d1, "USB device information: ");
          Usb_Monitor_Info * moninfo = dref->detail2;
          assert(memcmp(moninfo->marker, USB_MONITOR_INFO_MARKER, 4) == 0);
          report_usb_monitor_info(moninfo, d2);
+#else
+         PROGRAM_LOGIC_ERROR("Built without USB support");
+#endif
    break;
    }
 
@@ -538,7 +542,7 @@ void debug_report_display_refs(GPtrArray * recs, int depth) {
       Display_Ref * drec = g_ptr_array_index(recs, ndx);
       assert( memcmp(drec->marker, DISPLAY_REF_MARKER, 4) == 0);
       rpt_nl();
-      debug_report_display_ref(drec, depth+1);
+      dbgreport_display_ref(drec, depth+1);
    }
 }
 
@@ -808,7 +812,7 @@ ddc_find_display_ref_by_display_identifier(Display_Identifier * did) {
    if (debug) {
       if (result) {
          DBGMSG("Done.  Returning: ");
-         debug_report_display_ref(result, 1);
+         dbgreport_display_ref(result, 1);
       }
       else
          DBGMSG("Done.  Returning NULL");
@@ -891,6 +895,7 @@ ddc_detect_all_displays() {
      // ddc_add_display_ref(display_list, dref);
   }
 
+#ifdef USE_USB
    GPtrArray * usb_monitors = get_usb_monitor_list();
    // DBGMSF(debug, "Found %d USB displays", usb_monitors->len);
    for (int ndx=0; ndx<usb_monitors->len; ndx++) {
@@ -909,7 +914,7 @@ ddc_detect_all_displays() {
       g_ptr_array_add(display_list, dref);
       // ddc_add_display_ref(display_list, dref);
    }
-
+#endif
 
    // verbose output is distracting within scans
    // saved and reset here to that async threads are not adjusting output level
@@ -937,7 +942,6 @@ ddc_detect_all_displays() {
          dref->dispno = -1;
       }
    }
-
 
    // if (debug) {
    //    DBGMSG("Displays detected:");
