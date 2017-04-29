@@ -581,18 +581,6 @@ int main(int argc, char *argv[]) {
       printf("Setting output level normal  Table features will be skipped...\n");
       set_output_level(DDCA_OL_NORMAL);
 
-      int dispno = 1;
-      // dispno = 2;      // TEMP FOR TESTING
-      // n.b. display_ct is the total number of monitors detected, including invalid displays
-#ifdef OLD
-      for (; dispno <= display_ct; dispno++) {
-         printf("\nProbing display %d\n", dispno);
-         Display_Identifier * did = create_dispno_display_identifier(dispno);
-         Display_Ref * dref = get_display_ref_for_display_identifier(did, CALLOPT_ERR_MSG);
-         if (!dref) {
-            PROGRAM_LOGIC_ERROR("get_display_ref_for_display_identifier() failed for display %d", dispno);
-         }
-#endif
       GPtrArray * all_displays = ddc_get_all_displays();
       for (int ndx=0; ndx < all_displays->len; ndx++) {
          Display_Ref * dref = g_ptr_array_index(all_displays, ndx);
@@ -602,9 +590,8 @@ int main(int argc, char *argv[]) {
          }
          else {
             printf("\nProbing display %d\n", dref->dispno);
-
             probe_display_by_dref(dref);
-            printf("\nStatistics for probe of display %d:\n", dispno);
+            printf("\nStatistics for probe of display %d:\n", dref->dispno);
             report_stats(DDCA_STATS_ALL);
          }
          reset_stats();
@@ -624,18 +611,15 @@ int main(int argc, char *argv[]) {
       if (parsed_cmd->force)
          callopts |= CALLOPT_FORCE;
 
-      // If --nodetect option specified and I2C bus number was specified,
-      // skip scan for all devices.
+      // If --nodetect and --bus options were specified,skip scan for all devices.
       // --nodetect option not needed, just do it
       // n. useful even if not much speed up, since avoids cluttering stats
       // with all the failures during detect
       Display_Ref * dref = NULL;
-//    if (parsed_cmd->pdid->id_type == DISP_ID_BUSNO && parsed_cmd->nodetect) {
-      if (parsed_cmd->pdid->id_type == DISP_ID_BUSNO) {
+      if (parsed_cmd->pdid->id_type == DISP_ID_BUSNO && parsed_cmd->nodetect) {
+  //  if (parsed_cmd->pdid->id_type == DISP_ID_BUSNO) {
          int busno = parsed_cmd->pdid->busno;
          // is this really a monitor?
-         // Bus_Info * businfo = i2c_get_bus_info(busno, DISPSEL_VALID_ONLY);
-         // Bus_Info * businfo = i2c_get_bus_info_new(busno);
          Bus_Info * businfo = detect_single_bus(busno);
          if ( businfo && (businfo->flags & I2C_BUS_ADDR_0X50) ) {
             dref = create_bus_display_ref(busno);
