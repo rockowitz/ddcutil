@@ -143,8 +143,10 @@ Public_Status_Code ddc_open_display(
          dh = create_bus_display_handle_from_display_ref(fd, dref);    // n. sets dh->dref = dref
          // n. sets
          // Bus_Info * bus_info = i2c_get_bus_info(dref->busno, DISPSEL_VALID_ONLY);   // or DISPSEL_NONE?
-         Bus_Info * bus_info = i2c_get_bus_info_new(dref->busno);   // or DISPSEL_NONE?
+         // Bus_Info * bus_info = i2c_get_bus_info_new(dref->busno);   // or DISPSEL_NONE?
+         Bus_Info * bus_info = dref->detail2;
          assert(bus_info);   // need to convert to a test?
+         assert( memcmp(bus_info, BUS_INFO_MARKER, 4) == 0);
          dref->pedid = bus_info->edid;
 
          if (!dref->pedid) {
@@ -203,6 +205,7 @@ bye:
       COUNT_STATUS_CODE(psc);
    *pdh = dh;
    assert(psc <= 0);
+   DBGMSF(debug, "Done.  Returning: %s, *pdh=%d", psc_desc(psc), *pdh);
    return psc;
 }
 

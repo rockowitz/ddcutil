@@ -49,8 +49,12 @@
 #endif
 
 
+#ifdef OLD
+
 // Trace class for this file
 static Trace_Group TRACE_GROUP = TRC_DDC;
+
+
 
 /** Gets a #Parsed_Edid for an open display.
  *
@@ -115,3 +119,5 @@ ddc_get_parsed_edid_by_display_ref(Display_Ref * dref) {
    TRCMSG("Returning %p", pEdid);
    return pEdid;
 }
+
+#endif

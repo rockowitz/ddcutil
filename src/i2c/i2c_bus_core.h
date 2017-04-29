@@ -60,16 +60,18 @@
 #define I2C_BUS_PROBED        0x01      // has bus been checked?
 
 #define BUS_INFO_MARKER "BINF"
+/** Information about one I2C bus */
 typedef
 struct {
-   char             marker[4];          // always "BINF"
-   int              busno;              // n for /dev/i2c-n
-   unsigned long    functionality;      // i2c bus functionality flags
-   Parsed_Edid *    edid;
-   Byte             flags;              // I2C_BUS_ flags
+   char             marker[4];          ///< always "BINF"
+   int              busno;              ///< I2C device number, i.e. N for /dev/i2c-N
+   unsigned long    functionality;      ///< i2c bus functionality flags
+   Parsed_Edid *    edid;               ///< parsed EDID, if slave address x50 active
+   Byte             flags;              ///< I2C_BUS_* flags
 } Bus_Info;
 
 void report_businfo(Bus_Info * bus_info, int depth);
+void free_bus_info(Bus_Info * bus_info);
 
 bool i2c_bus_exists(int busno);
 int  i2c_get_busct();
@@ -81,7 +83,7 @@ int  i2c_report_buses(bool report_all, int depth);
 GPtrArray* i2c_get_displays();
 
 Bus_Info * i2c_get_bus_info(int busno, Byte findopts);
-Bus_Info * i2c_check_bus(Bus_Info * bus_info);
+void       i2c_check_bus(Bus_Info * bus_info);
 
 Bus_Info * i2c_find_bus_info_by_mfg_model_sn(
               const char * mfg_id,
@@ -122,6 +124,7 @@ Parsed_Edid * i2c_get_parsed_edid_by_busno(int busno);
 // new:
 
 int i2c_detect_buses();
-Bus_Info * i2c_get_bus_info_new(int busno);
+Bus_Info * i2c_find_bus_info_by_busno(int busno);
+Bus_Info * detect_single_bus(int busno);
 
 #endif /* I2C_BUS_CORE_H_ */

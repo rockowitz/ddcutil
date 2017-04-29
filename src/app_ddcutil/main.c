@@ -635,7 +635,8 @@ int main(int argc, char *argv[]) {
          int busno = parsed_cmd->pdid->busno;
          // is this really a monitor?
          // Bus_Info * businfo = i2c_get_bus_info(busno, DISPSEL_VALID_ONLY);
-         Bus_Info * businfo = i2c_get_bus_info_new(busno);
+         // Bus_Info * businfo = i2c_get_bus_info_new(busno);
+         Bus_Info * businfo = detect_single_bus(busno);
          if ( businfo && (businfo->flags & I2C_BUS_ADDR_0X50) ) {
             dref = create_bus_display_ref(busno);
             dref->dispno = -1;     // should use some other value for unassigned vs invalid

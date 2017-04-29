@@ -371,7 +371,14 @@ ddc_report_display_by_dref(Display_Ref * dref, int depth) {
 
    switch(dref->io_mode) {
    case DDCA_IO_DEVI2C:
-      i2c_report_active_display_by_busno(dref->busno, d1);
+      // i2c_report_active_display_by_busno(dref->busno, d1);
+      {
+         Bus_Info * curinfo = dref->detail2;
+         assert(curinfo);
+         assert(memcmp(curinfo, BUS_INFO_MARKER, 4) == 0);
+
+         i2c_report_active_display(curinfo, d1);
+      }
       break;
    case DDCA_IO_ADL:
       adlshim_report_active_display_by_display_ref(dref, d1);

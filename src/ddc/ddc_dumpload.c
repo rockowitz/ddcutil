@@ -674,7 +674,10 @@ dumpvcp_as_dumpload_data(
    dumped_data->vcp_version = get_vcp_version_by_display_handle(dh);  // use function to ensure set
 
    // identification information from edid:
-   Parsed_Edid * edid = ddc_get_parsed_edid_by_display_handle(dh);
+   // Parsed_Edid * edid = ddc_get_parsed_edid_by_display_handle(dh);
+   Parsed_Edid * edid = dh->dref->pedid;
+   assert(edid);
+
    memcpy(dumped_data->mfg_id, edid->mfg_id, sizeof(dumped_data->mfg_id));
    memcpy(dumped_data->model,  edid->model_name, sizeof(dumped_data->model));
    memcpy(dumped_data->serial_ascii, edid->serial_ascii, sizeof(dumped_data->serial_ascii));

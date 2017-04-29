@@ -192,7 +192,6 @@ base/status_code_mgt.c      	\
 base/vcp_version.c          	\
 ddc/ddc_displays.c          	\
 ddc/ddc_dumpload.c          	\
-ddc/ddc_edid.c              	\
 ddc/ddc_multi_part_io.c     	\
 ddc/ddc_output.c            	\
 ddc/ddc_packet_io.c         	\

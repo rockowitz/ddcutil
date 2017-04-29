@@ -1078,7 +1078,9 @@ ddca_get_edid_by_display_ref(
       goto bye;
    }
 
-   Parsed_Edid*  edid = ddc_get_parsed_edid_by_display_ref(dref);
+   // Parsed_Edid*  edid = ddc_get_parsed_edid_by_display_ref(dref);
+   Parsed_Edid * edid = dref->pedid;
+   assert(edid);
    *p_bytes = edid->bytes;
 
 bye:

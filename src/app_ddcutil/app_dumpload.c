@@ -62,6 +62,13 @@
 #define USER_VCP_DATA_DIR ".local/share/icc"
 
 
+/** Uses the identifiers in an EDID and a timestamp to create a VCP filename.
+ *
+ * \param  edid         pointer to parsed edid
+ * \param  time_millis  timestamp to use
+ * \param  buf          buffer in which to return filename
+ * \param  bufsz        buffer size
+ */
 char * create_simple_vcp_fn_by_edid(
           Parsed_Edid * edid,
           time_t        time_millis,
@@ -94,7 +101,8 @@ char * create_simple_vcp_fn_by_display_handle(
           char *           buf,
           int              bufsz)
 {
-   Parsed_Edid* edid = ddc_get_parsed_edid_by_display_handle(dh);
+   // Parsed_Edid* edid = ddc_get_parsed_edid_by_display_handle(dh);
+   Parsed_Edid * edid = dh->dref->pedid;
    assert(edid);
    return create_simple_vcp_fn_by_edid(edid, time_millis, buf, bufsz);
 }
