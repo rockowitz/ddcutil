@@ -301,6 +301,7 @@ void free_parsed_edid(Parsed_Edid * parsed_edid) {
    assert( parsed_edid );
    assert( memcmp(parsed_edid->marker, EDID_MARKER_NAME, 4)==0 );
    parsed_edid->marker[3] = 'x';
+   // n. Parsed_Edid contains no pointers
    free(parsed_edid);
 }
 
