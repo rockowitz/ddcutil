@@ -64,12 +64,12 @@ For I2C displays, the device must be opened.  Display_Handle then contains the o
 /** Display_Identifier type */
 typedef enum {
    DISP_ID_BUSNO,      ///< /dev/i2c bus number
-   DISP_ID_ADL,        ///* ADL iAdapterIndex/iDisplayIndex pair
-   DISP_ID_MONSER,     ///* monitor mfg id, model name, and/or serial number
-   DISP_ID_EDID,       ///* 128 byte EDID
-   DISP_ID_DISPNO,     ///* ddcutil assigned sisplay number
-   DISP_ID_USB,        ///* USB bus/device number pair
-   DISP_ID_HIDDEV      ///* /dev/usb/hiddev device number
+   DISP_ID_ADL,        ///< ADL iAdapterIndex/iDisplayIndex pair
+   DISP_ID_MONSER,     ///< monitor mfg id, model name, and/or serial number
+   DISP_ID_EDID,       ///< 128 byte EDID
+   DISP_ID_DISPNO,     ///< ddcutil assigned sisplay number
+   DISP_ID_USB,        ///< USB bus/device number pair
+   DISP_ID_HIDDEV      ///< /dev/usb/hiddev device number
 } Display_Id_Type;
 
 char * display_id_type_name(Display_Id_Type val);
