@@ -88,7 +88,7 @@ struct {
    bool                show_unsupported;
    bool                enable_failure_simulation;
    bool                verify_setvcp;
-// bool                nodetect;
+   bool                nodetect;
    char *              failsim_control_fn;
    Display_Identifier* pdid;
    Trace_Group         trace;
