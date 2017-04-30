@@ -328,8 +328,8 @@ void ddca_reset_stats();
 
 /** Show execution statistics.
  *
- *  \param stats_types bitflags of statistics types to show
- *  \param depth       logical indentation depth
+ *  \param stats  bitflags of statistics types to show
+ *  \param depth  logical indentation depth
  */
 void ddca_show_stats(DDCA_Stats_Type stats, int depth);
 
@@ -464,7 +464,7 @@ ddca_create_mfg_model_sn_display_identifier(
  */
 DDCA_Status
 ddca_create_edid_display_identifier(
-      const uint8_t*              edid,
+      const uint8_t*            edid,
       DDCA_Display_Identifier * pdid);      // 128 byte edid
 
 /** Creates a display identifier using a USB bus number and device number
@@ -491,7 +491,7 @@ ddca_create_usb_display_identifier(
 DDCA_Status
 ddca_create_usb_hiddev_display_identifier(
       int                      hiddev_devno,
-      DDCA_Display_Identifier* p_did);
+      DDCA_Display_Identifier* pdid);
 
 
 /** Release the memory of a display identifier */

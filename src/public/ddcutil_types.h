@@ -289,23 +289,24 @@ typedef struct {
 #define DDCA_DISPLAY_INFO_MARKER "DDIN"
 /** Describes one monitor detected by ddcutil. */
 typedef struct {
-   char              marker[4];
-   int               dispno;
-   DDCA_IO_Path      path;
-   int               usb_bus;
-   int               usb_device;
+   char              marker[4];        ///< always "DDIN"
+   int               dispno;           ///< ddcutil assigned display number
+   DDCA_IO_Path      path;             ///< physical access path to display
+   int               usb_bus;          ///< USB bus number, if USB connection
+   int               usb_device;       ///< USB device number, if USB connection
    // or should these be actual character/byte arrays instead of pointers?
-   const char *      mfg_id;
-   const char *      model_name;
-   const char *      sn;
-   const uint8_t *   edid_bytes;
-   DDCA_Display_Ref  dref;
+   const char *      mfg_id;          ///< 3 character manufacturer id, from EDID
+   const char *      model_name;      ///< model name, from EDID
+   const char *      sn;              ///< ASCII serial number string from EDID
+   const uint8_t *   edid_bytes;      ///< raw bytes (128) of first EDID block
+   DDCA_Display_Ref  dref;            ///< opaque display reference
 } DDCA_Display_Info;
 
 
+/** Collection of #DDCA_Display_Info */
 typedef struct {
-   int                ct;
-   DDCA_Display_Info  info[];   // array whose size is determined by ct
+   int                ct;       ///< number of records
+   DDCA_Display_Info  info[];   ///< array whose size is determined by ct
 } DDCA_Display_Info_List;
 
 

@@ -1011,7 +1011,6 @@ Bus_Info * i2c_get_bus_info_by_index(int busndx) {
  * bus, it is calculated by calling check_i2c_bus()
  *
  * @param   busno    bus number
- * @param   findopts
  *
  * @return  pointer to Bus_Info struct for the bus,\n
  *          NULL if invalid bus number
