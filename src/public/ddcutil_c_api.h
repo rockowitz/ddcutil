@@ -72,7 +72,7 @@ extern "C" {
 
 
 /**
- * Returns the ddcutil version as a struct of 3 8 bit integers. .
+ * Returns the ddcutil version as a struct of 3 8 bit integers.
  *
  * @return version numbers
  */
@@ -515,7 +515,7 @@ ddca_did_repr(
 //
 
 /** Gets a display reference for a display identifier.
- *  Normally, this is a permanently allocated #Display_Ref
+ *  Normally, this is a permanently allocated #DDCA_Display_Ref
  *  created by monitor detection and does not need to be freed.
  * @param[in]  did display identifier
  * @param[out] pdref where to return display reference
