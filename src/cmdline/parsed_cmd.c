@@ -107,6 +107,7 @@ void report_parsed_cmd(Parsed_Cmd * parsed_cmd, int depth) {
    rpt_bool("enable_failure_simulation", NULL, parsed_cmd->enable_failure_simulation, d1);
    rpt_str("failsim_control_fn", NULL, parsed_cmd->failsim_control_fn, d1);
    rpt_bool("nodetect",          NULL, parsed_cmd->nodetect, d1);
+   rpt_bool("async",             NULL, parsed_cmd->async,    d1);
 
 #ifdef FUTURE
    char * interpreted_flags = vnt_interpret_flags(parsed_cmd->flags, cmd_flag_table, false, ", ");

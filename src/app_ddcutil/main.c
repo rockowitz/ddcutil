@@ -419,6 +419,11 @@ int main(int argc, char *argv[]) {
    if (parsed_cmd->sleep_strategy >= 0)
       set_sleep_strategy(parsed_cmd->sleep_strategy);
 
+   int threshold = DISPLAY_CHECK_ASYNC_NEVER;
+   if (parsed_cmd->async)
+      threshold = DISPLAY_CHECK_ASYNC_THRESHOLD;
+   ddc_set_async_threshold(threshold);
+
    if (parsed_cmd->cmd_id == CMDID_LISTVCP) {
       vcp_list_feature_codes(stdout);
       main_rc = EXIT_SUCCESS;

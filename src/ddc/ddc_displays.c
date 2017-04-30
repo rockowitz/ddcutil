@@ -73,6 +73,14 @@
 
 static GPtrArray * all_displays = NULL;    // all detected displays
 static int dispno_max = 0;                 // highest assigned display number
+static int async_threshold = DISPLAY_CHECK_ASYNC_THRESHOLD;
+
+
+void ddc_set_async_threshold(int threshold) {
+   // DBGMSG("threshold = %d", threshold);
+   async_threshold = threshold;
+}
+
 
 
 /** Checks that DDC communication is working by trying to read the value
@@ -920,7 +928,7 @@ ddc_detect_all_displays() {
    if (olev == DDCA_OL_VERBOSE)
       set_output_level(DDCA_OL_NORMAL);
 
-   if (display_list->len >= DISPLAY_CHECK_ASYNC_THRESHOLD && all_adl_details->len == 0)
+   if (display_list->len >= async_threshold && all_adl_details->len == 0)
    // if (true)
       async_scan(display_list);
    else
