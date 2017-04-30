@@ -21,13 +21,9 @@
  * </endcopyright>
  */
 
-// #include <base/parms.h>    // put first for USE_LIBEXPLAIN
-
 #include <config.h>
 
 #define _GNU_SOURCE 1       // for function group_member
-
-// #define USE_USB
 
 /** \cond */
 #include <assert.h>

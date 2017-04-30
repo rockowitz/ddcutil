@@ -66,8 +66,6 @@
 
 #include "ddc/ddc_displays.h"
 
-// on banner, async  detect: 1.7 sec, non-async 3.4 sec
-const int ASYNC_THRESHOLD = 3;
 
 // Trace class for this file
 // static Trace_Group TRACE_GROUP = TRC_DDC;   // currently unused
@@ -922,7 +920,7 @@ ddc_detect_all_displays() {
    if (olev == DDCA_OL_VERBOSE)
       set_output_level(DDCA_OL_NORMAL);
 
-   if (display_list->len >= ASYNC_THRESHOLD && all_adl_details->len == 0)
+   if (display_list->len >= DISPLAY_CHECK_ASYNC_THRESHOLD && all_adl_details->len == 0)
    // if (true)
       async_scan(display_list);
    else

@@ -24,7 +24,7 @@
  */
 
 /** \file
- * Record execution statistics, namely the count and elapsed time of system calls.
+ * Record execution statistics, mainly the count and elapsed time of system calls.
  */
 
 /** \cond */
@@ -57,7 +57,6 @@ typedef struct {
    uint64_t       call_nanosec;
    int            call_count;
 } IO_Event_Type_Stats;
-
 
 
 // struct that accumulates status code occurrence statistics
@@ -94,7 +93,6 @@ static bool                 debug_sleep_stats_mutex = false;
 
 
 
-
 //
 // IO Event Tracking
 //
@@ -127,6 +125,7 @@ void reset_io_event_stats() {
 
    DBGMSF(debug, "Done");
 }
+
 
 /** Returns type symbolic name of an even type.
  *
@@ -426,6 +425,7 @@ void show_specific_status_counts(Status_Code_Counts * pcounts) {
    DBGMSF(debug, "Done");
 }
 
+
 /** Master function to display status counts
  */
 void show_all_status_counts() {
@@ -679,7 +679,7 @@ void call_tuned_sleep(DDCA_IO_Mode io_mode, Sleep_Event_Type event_type) {
             sleep_time_millis = DDC_TIMEOUT_MILLIS_DEFAULT;
             break;
       case (SE_POST_SAVE_SETTINGS):
-            sleep_time_millis = 200;   // per DDC spec
+            sleep_time_millis = DDC_TIMEOUT_POST_SAVE_SETTINGS;   // per DDC spec
             break;
       default:
          sleep_time_millis = DDC_TIMEOUT_MILLIS_DEFAULT;
@@ -760,7 +760,6 @@ void call_tuned_sleep_dh(Display_Handle* dh, Sleep_Event_Type event_type) {
 }
 
 
-
 /** Reports sleep strategy statistics.
  *
  * @param depth logical indentation depth
@@ -795,6 +794,7 @@ void init_execution_stats() {
    elapsed_time_nanosec();    // first call initializes, used for dbgtrc
 }
 
+
 /** Resets collected execution statistics */
 void reset_execution_stats() {
    bool debug = false || debug_global_stats_mutex;
@@ -812,6 +812,13 @@ void reset_execution_stats() {
 }
 
 
+/** Reports elapsed time statistics.
+ *
+ *  @param depth logical indentation depth
+ *
+ *  If a statistics reset has occurred, reports both the time
+ *  since reset and total elapsed time.
+ */
 void report_elapsed_stats(int depth) {
    uint64_t end_nanos = cur_realtime_nanosec();
    if (program_start_timestamp != resettable_start_timestamp) {
@@ -826,4 +833,3 @@ void report_elapsed_stats(int depth) {
          elapsed_nanos / (1000*1000),
          elapsed_nanos);
 }
-

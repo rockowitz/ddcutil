@@ -920,33 +920,6 @@ void report_ioctl_error(
 }
 
 
-#ifdef UNUSED
-// variant that can use libexplain, unused
-void report_ioctl_error2(
-      int   errnum,
-      int   fh,
-      int   request,
-      void* data,
-      const char* funcname,   // const to avoid warning msg on references at compile time
-      int   lineno,
-      char* filename,
-      bool fatal)
-{
-   int errsv = errno;
-   // fprintf(stderr, "(report_ioctl_error2)\n");
-   report_ioctl_error(errno, funcname, lineno, filename, false /* non-fatal */ );
-#ifdef USE_LIBEXPLAIN
-   // fprintf(stderr, "(report_ioctl_error2) within USE_LIBEXPLAIN\n");
-   fprintf(stderr, "%s\n", explain_ioctl(fh, request, data));
-#endif
-   if (fatal)
-      exit(EXIT_FAILURE);
-   errno = errsv;
-}
-#endif
-
-
-
 /** Called when a condition that should be impossible has been detected.
  * Issues messages to **stderr** and terminates execution.
  *
