@@ -322,6 +322,7 @@ static bool scan_for_displays() {
    bool debug = false;
    debug = adl_debug || debug;
    DBGMSF(debug, "Starting." );
+
    int            rc;
    int            iNumberAdapters;
    AdapterInfo *  pAdapterInfo;
@@ -474,12 +475,19 @@ static bool scan_for_displays() {
                   pCurActiveDisplay->pAdlEdidData = pEdidData;
                   Byte * pEdidBytes = (Byte *) &(pEdidData->cEDIDData);
                   Parsed_Edid * pEdid = create_parsed_edid(pEdidBytes);
-                  memcpy(pCurActiveDisplay->mfg_id,       pEdid->mfg_id,       sizeof(pCurActiveDisplay->mfg_id));
-                  memcpy(pCurActiveDisplay->model_name,   pEdid->model_name,   sizeof(pCurActiveDisplay->model_name));
-                  memcpy(pCurActiveDisplay->serial_ascii, pEdid->serial_ascii, sizeof(pCurActiveDisplay->serial_ascii));
-                  // should use snprintf to ensure no buffer overflow:
-                  memcpy(pCurActiveDisplay->xrandr_name,  xrandrname,          sizeof(pCurActiveDisplay->xrandr_name));
-                  pCurActiveDisplay->pEdid = pEdid;
+                  if (!pEdid) {
+                     DBGMSG("Error parsing EDID");
+                     pCurActiveDisplay->pAdlEdidData = NULL;
+                     free(pEdidData);
+                  }
+                  else {
+                     memcpy(pCurActiveDisplay->mfg_id,       pEdid->mfg_id,       sizeof(pCurActiveDisplay->mfg_id));
+                     memcpy(pCurActiveDisplay->model_name,   pEdid->model_name,   sizeof(pCurActiveDisplay->model_name));
+                     memcpy(pCurActiveDisplay->serial_ascii, pEdid->serial_ascii, sizeof(pCurActiveDisplay->serial_ascii));
+                     // should use snprintf to ensure no buffer overflow:
+                     memcpy(pCurActiveDisplay->xrandr_name,  xrandrname,          sizeof(pCurActiveDisplay->xrandr_name));
+                     pCurActiveDisplay->pEdid = pEdid;
+                  }
                }
 
                ADLDDCInfo2 * pDDCInfo2 = calloc(1, sizeof(ADLDDCInfo2));
