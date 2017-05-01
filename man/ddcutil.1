@@ -50,6 +50,8 @@ ddcutil \- Query and change monitor settings
 .IR  comma separated list ]
 .RB [ "--force-slave-address" ]
 .RB [ "-f" | "--force" ]
+.RB [  "--async" ]
+.RB [  "--nodetect" ]
 .RB [ "-V" | "--version" ]
 .RB [ "h"  | "--help" ]
 .BR detect " |  " listvcp  " | " capabilities " | " getvcp " | " probe 
@@ -283,10 +285,14 @@ Verify values set by \fBsetvcp\fP or \fBloadvcp\fP. (default)
 .TQ
 .B "--noverify"
 Do not verify values set by \fBsetvcp\fP or \fBloadvcp\fP. 
-
+.TQ
+.B "--async"
+If there are multiple monitors, initial checks are performed in multiple threads, improving performance.
+.TQ
+.B "--nodetect"
+If the monitor is specified by its I2C bus number (option \fB--busno\fP) skip the monitor detection phase, improving performance.
 
 .SH EXECUTION ENVIRONMENT 
-
 
 requires package i2c-dev
 
