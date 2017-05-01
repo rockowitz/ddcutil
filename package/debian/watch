@@ -6,3 +6,13 @@ version=3
 
 # Dummy watch page to make lintian happy
 
+
+opts=filenamemangle=s/.+\/v?(\d\S+)\.tar\.gz/ddcutil-$1\.tar\.gz/ \
+   https://github.com/rockowitz/ddcutil/tags .*/v?(\d\S+)\.tar\.gz
+
+# opts=filenamemangle=s/.+\/v?(\d\S+)\.tar\.gz/ddcutil-$1\.tar\.gz/ \
+#    https://github.com/rockowitz/ddcutil/releases .*/(\d\S+)\.tar\.gz
+
+opts=filenamemangle=s/.+\/v?(\d\S+)\.tar\.gz/ddcutil-$1\.tar\.gz/ \
+   pgpsigurlmangle=s/archive\/(\d\S+)\.tar\.gz/releases\/download\/$1\/$1\.tar\.gz\.asc/ \
+   https://github.com/rockowitz/ddcutil/releases .*/(\d\S+)\.tar\.gz

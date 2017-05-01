@@ -53,6 +53,11 @@ ppa) echo "case ppa"
      debuild -S
      ;;
 
+
+mentors) echo "case mentors"
+     debuild -S -sa	
+     ;;
+
 obsdeb)  echo "case obsdeb"
      debuild -us -uc -I -i
      ;;

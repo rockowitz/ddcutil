@@ -69,6 +69,10 @@ ppa: dist
 	(cd package && $(MAKE) $(AM_MAKEFLAGS) $@) || exit 1
 
 
+mentors: dist 
+	echo "---> Makefile: mentors"
+	(cd package && $(MAKE) $(AM_MAKEFLAGS) $@) || exit 1
+
 # Copied and adapted from colord
 # is calling autogen.sh within this file dangerous?
 clang:

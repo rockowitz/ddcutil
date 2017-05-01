@@ -71,4 +71,11 @@ ppa:
 	./upload_ppa ${ver} ${rlse}
 
 
+mentors:
+	echo "--------------------------> package/Makefile: target mentors"
+	chmod +x build_dpkg upload_ppa upload_mentors
+	./build_dpkg mentors 
+	debsign debwork/ddcutil_${ver}-${rlse}_source.changes   
+	./upload_mentors ${ver} ${rlse}
+
 .PHONY:  rpmcheck srcrpm rpms obsrpm dpkg obsdeb ppa
