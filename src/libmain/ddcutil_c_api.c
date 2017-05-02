@@ -1258,7 +1258,7 @@ ddca_get_simple_nc_feature_value_name(
    WITH_DH(ddca_dh,  {
          // this should be a function in vcp_feature_codes:
          char * feature_name = NULL;
-         DDCA_MCCS_Version_Spec vspec = dh->dref->vcp_version;
+         DDCA_MCCS_Version_Spec vspec = get_vcp_version_by_display_handle(dh);
          DDCA_Feature_Value_Entry * feature_value_entries = NULL;
          psc = ddca_get_simple_sl_value_table(feature_code, mccs_version_spec_to_id(vspec), &feature_value_entries);
          if (psc == 0) {
@@ -1283,7 +1283,7 @@ ddca_get_simple_nc_feature_value_name0(
    WITH_DH(ddca_dh,  {
          // this should be a function in vcp_feature_codes:
          char * feature_name = NULL;
-         DDCA_MCCS_Version_Spec vspec = dh->dref->vcp_version;
+         DDCA_MCCS_Version_Spec vspec = get_vcp_version_by_display_handle(dh);
          DDCA_Feature_Value_Entry * feature_value_entries = find_feature_values(feature_code, vspec);
          if (feature_value_entries == NULL) {
             psc = DDCL_ARG;
