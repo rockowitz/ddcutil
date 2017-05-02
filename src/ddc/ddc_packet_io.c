@@ -730,7 +730,7 @@ Public_Status_Code ddc_write_read_with_retry(
                retryable = (all_zero_response_ok) ? false : true;
 
             else if (psc == -EIO)
-                retryable = true;
+                retryable = false;     // ??
 
             else if (psc == -EBADF)
                retryable = false;
