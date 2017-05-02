@@ -100,6 +100,8 @@ void ddc_set_async_threshold(int threshold) {
  *  If a validly structured DDC response is received, e.g. with the unsupported feature
  *  bit set or a DDC Null response, communication is considered successful.
  *  \remark
+ *  Output level should have been set <= DDCA_OL_NORMAL prior to this call since
+ *  verbose output is distracting.
  */
 static
 bool check_ddc_communication(Display_Handle * dh) {
@@ -220,6 +222,48 @@ bool initial_checks_by_dh(Display_Handle * dh) {
 }
 
 
+bool initial_checks_by_dh_new(Display_Handle * dh) {
+   bool debug = false;
+   DBGMSF(debug, "Starting. dh=%s", dh_repr_t(dh));
+   assert(dh);
+   DDCA_Single_Vcp_Value * pvalrec;
+
+   if (!(dh->dref->flags & DREF_DDC_COMMUNICATION_CHECKED)) {
+
+      Public_Status_Code psc = get_vcp_value(dh, 0x00, DDCA_NON_TABLE_VCP_VALUE, &pvalrec);
+      if (psc == DDCRC_NULL_RESPONSE ||
+          psc == 0                   ||
+          psc == DDCRC_REPORTED_UNSUPPORTED ||
+          psc == DDCRC_DETERMINED_UNSUPPORTED)
+      {
+         dh->dref->flags |= DREF_DDC_COMMUNICATION_WORKING;
+
+         if (psc == DDCRC_NULL_RESPONSE)
+            dh->dref->flags |= DREF_DDC_USES_NULL_RESPONSE_FOR_UNSUPPORTED;
+      }
+      dh->dref->flags |= DREF_DDC_COMMUNICATION_CHECKED;
+      dh->dref->flags |= DREF_DDC_NULL_RESPONSE_CHECKED;    // redundant with refactoring
+   }
+   bool communication_working = dh->dref->flags & DREF_DDC_COMMUNICATION_WORKING;
+
+   if (communication_working) {
+      if (!(dh->dref->flags & DREF_DDC_NULL_RESPONSE_CHECKED)) {
+         if (check_monitor_ddc_null_response(dh) )
+            dh->dref->flags |= DREF_DDC_USES_NULL_RESPONSE_FOR_UNSUPPORTED;
+         dh->dref->flags |= DREF_DDC_NULL_RESPONSE_CHECKED;
+      }
+      if ( vcp_version_is_unqueried(dh->dref->vcp_version)) {
+         dh->dref->vcp_version = get_vcp_version_by_display_handle(dh);
+         // dh->vcp_version = dh->dref->vcp_version;
+      }
+   }
+
+   DBGMSF(debug, "Returning: %s", bool_repr(communication_working));
+   return communication_working;
+}
+
+
+
 /** Given a #Display_Ref, opens the monitor device and calls #initial_checks_by_dh()
  *  to perform initial monitor checks.
  *
@@ -233,7 +277,7 @@ bool initial_checks_by_dref(Display_Ref * dref) {
 
    psc = ddc_open_display(dref, CALLOPT_ERR_MSG | CALLOPT_ERR_ABORT, &dh);
    if (psc == 0)  {
-      result = initial_checks_by_dh(dh);
+      result = initial_checks_by_dh_new(dh);
       ddc_close_display(dh);
    }
 
