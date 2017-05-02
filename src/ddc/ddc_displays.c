@@ -223,7 +223,7 @@ bool initial_checks_by_dh(Display_Handle * dh) {
 
 
 bool initial_checks_by_dh_new(Display_Handle * dh) {
-   bool debug = false;
+   bool debug = true;
    DBGMSF(debug, "Starting. dh=%s", dh_repr_t(dh));
    assert(dh);
    DDCA_Single_Vcp_Value * pvalrec;
@@ -231,6 +231,7 @@ bool initial_checks_by_dh_new(Display_Handle * dh) {
    if (!(dh->dref->flags & DREF_DDC_COMMUNICATION_CHECKED)) {
 
       Public_Status_Code psc = get_vcp_value(dh, 0x00, DDCA_NON_TABLE_VCP_VALUE, &pvalrec);
+      DBGMSF("get_vcp_value() for feature 0x00 returned: %s", psc_desc(psc));
       if (psc == DDCRC_NULL_RESPONSE ||
           psc == 0                   ||
           psc == DDCRC_REPORTED_UNSUPPORTED ||
@@ -247,15 +248,11 @@ bool initial_checks_by_dh_new(Display_Handle * dh) {
    bool communication_working = dh->dref->flags & DREF_DDC_COMMUNICATION_WORKING;
 
    if (communication_working) {
-      if (!(dh->dref->flags & DREF_DDC_NULL_RESPONSE_CHECKED)) {
-         if (check_monitor_ddc_null_response(dh) )
-            dh->dref->flags |= DREF_DDC_USES_NULL_RESPONSE_FOR_UNSUPPORTED;
-         dh->dref->flags |= DREF_DDC_NULL_RESPONSE_CHECKED;
-      }
-      if ( vcp_version_is_unqueried(dh->dref->vcp_version)) {
-         dh->dref->vcp_version = get_vcp_version_by_display_handle(dh);
-         // dh->vcp_version = dh->dref->vcp_version;
-      }
+
+      // if ( vcp_version_is_unqueried(dh->dref->vcp_version)) {
+      //    dh->dref->vcp_version = get_vcp_version_by_display_handle(dh);
+      //    // dh->vcp_version = dh->dref->vcp_version;
+      // }
    }
 
    DBGMSF(debug, "Returning: %s", bool_repr(communication_working));
@@ -418,7 +415,6 @@ ddc_report_display_by_dref(Display_Ref * dref, int depth) {
       rpt_vstring(depth, "Display %d", dref->dispno);
    }
 
-
    switch(dref->io_mode) {
    case DDCA_IO_DEVI2C:
       // i2c_report_active_display_by_busno(dref->busno, d1);
@@ -443,9 +439,6 @@ ddc_report_display_by_dref(Display_Ref * dref, int depth) {
    }
 
    assert( dref->flags & DREF_DDC_COMMUNICATION_CHECKED);
-   if ( dref->flags & DREF_DDC_COMMUNICATION_WORKING)
-      assert( (dref->flags & DREF_DDC_NULL_RESPONSE_CHECKED) &&
-              !vcp_version_is_unqueried(dref->vcp_version)    );
 
    DDCA_Output_Level output_level = get_output_level();
 
@@ -457,7 +450,7 @@ ddc_report_display_by_dref(Display_Ref * dref, int depth) {
          }
       }
       else {
-         DDCA_MCCS_Version_Spec vspec = dref->vcp_version;
+         DDCA_MCCS_Version_Spec vspec = get_vcp_version_by_display_ref(dref);
          if ( vspec.major   == 0)
             rpt_vstring(d1, "VCP version:         Detection failed");
          else
