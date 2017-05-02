@@ -591,6 +591,8 @@ Public_Status_Code try_single_getvcp_call(int fh, unsigned char vcp_feature_code
          rc = DDCRC_INVALID_DATA;
       }
 
+   rc = 0;
+
 bye:
    DBGMSF(debug, "Returning: %s",  psc_desc(rc));
    return rc;
