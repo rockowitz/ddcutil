@@ -766,7 +766,15 @@ void report_display_handle(Display_Handle * dh, const char * msg, int depth) {
 }
 
 
-
+/* Returns a string summarizing the specified #Display_Handle.
+ *
+ * The string is returned in a newly allocated buffer.
+ * It is the responsibility of the caller to free this buffer.
+ *
+ * \param  dh    display handle
+ *
+ * \return  string representation of handle
+ */
 char * dh_repr_a(Display_Handle * dh) {
    assert(dh);
    assert(dh->dref);
@@ -795,7 +803,15 @@ char * dh_repr_a(Display_Handle * dh) {
    }
 
 
-
+/* Returns a string summarizing the specified #Display_Handle.
+ * The string is returned in a buffer provided by the caller.
+ *
+ * \param  dh    display handle
+ * \param  buf   pointer to buffer
+ * \param  bufsz buffer size
+ *
+ * \return  string representation of handle (buf)
+ */
 char * dh_repr_r(Display_Handle * dh, char * buf, int bufsz) {
    assert(dh);
    assert(dh->dref);
@@ -823,6 +839,17 @@ char * dh_repr_r(Display_Handle * dh, char * buf, int bufsz) {
 }
 
 
+/** Returns a string summarizing the specified #Display_Handle.
+ *
+ *  The string is valid until the next call to this function
+ *  from within the current thread.
+ *
+ *  This variant of #dh_repr() is thread safe.
+ *
+ * \param  dh    display handle
+ *
+ * \return  string representation of handle
+ */
 char * dh_repr_t(Display_Handle * dh) {
    static GPrivate  dh_buf_key = G_PRIVATE_INIT(g_free);
 
@@ -840,8 +867,6 @@ char * dh_repr_t(Display_Handle * dh) {
    return buf;
 
 }
-
-
 
 
 /* Returns a string summarizing the specified #Display_Handle.
