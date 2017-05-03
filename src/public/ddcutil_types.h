@@ -231,9 +231,10 @@ typedef void * DDCA_Display_Handle;
 ///@}
 
 
+/** ADL adapter number/display number pair, which identifies a display */
 typedef struct {
-   int iAdapterIndex;
-   int iDisplayIndex;
+   int iAdapterIndex;  /**< adapter number */
+   int iDisplayIndex;  /**< display number */
 } DDCA_Adlno;
 // uses -1,-1 for unset
 
@@ -250,30 +251,6 @@ typedef enum {
 } DDCA_IO_Mode;
 
 
-#ifdef OLD
-// Does this make the API and data structures clearer or more obscure?
-/** Describes a display's access mode and the location identifiers for that mode
- *
- */
-typedef struct {
-   DDCA_IO_Mode io_mode;
-   union {
-      int   i2c_busno;
-      struct {
-         int    iAdapterIndex;
-         int    iDisplayIndex;
-      } adl;
-      struct {
-         int    usb_bus;
-         int    usb_device;
-         int    hiddev_devno;       // replaced hiddev_device_name
-         // char * hiddev_device_name;
-      } usb;
-   };
-} DDCA_Display_Location;
-#endif
-
-
 /** Describes a display's physical access mode and the location identifiers for that mode  */
 typedef struct {
    DDCA_IO_Mode io_mode;        ///< physical access mode
@@ -283,7 +260,6 @@ typedef struct {
       int        hiddev_devno;  ///* USB hiddev device  number
    };
 } DDCA_IO_Path;
-
 
 
 #define DDCA_DISPLAY_INFO_MARKER "DDIN"
