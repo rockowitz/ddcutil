@@ -990,13 +990,20 @@ ddca_get_display_info_list()
    return result_list;
 }
 
-static
-void ddca_free_display_info(DDCA_Display_Info * info_rec) {
+
+static void
+ddca_free_display_info(DDCA_Display_Info * info_rec) {
    // All pointers in DDCA_Display_Info are to permanently allocated
    // data structures.  Nothing to free.
+   if (info_rec && memcmp(info_rec->marker, DDCA_DISPLAY_INFO_MARKER, 4) == 0) {
+      info_rec->marker[3] = 'x';
+      free(info_rec);
+   }
 }
 
-void ddca_free_display_info_list(DDCA_Display_Info_List * dlist) {
+
+void
+ddca_free_display_info_list(DDCA_Display_Info_List * dlist) {
    if (dlist) {
       for (int ndx = 0; ndx < dlist->ct; ndx++) {
          ddca_free_display_info(&dlist->info[ndx]);
