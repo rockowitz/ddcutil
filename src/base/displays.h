@@ -23,6 +23,9 @@
  * </endcopyright>
  */
 
+/** \file
+ * Display specification
+ */
 
 #ifndef DISPLAYS_H_
 #define DISPLAYS_H_
@@ -59,6 +62,7 @@ For ADL displays, the translation from Display_Ref to Display_Handle is direct.
 For I2C displays, the device must be opened.  Display_Handle then contains the open file handle.
 */
 
+
 // *** Display_Identifier ***
 
 /** Display_Identifier type */
@@ -73,11 +77,6 @@ typedef enum {
 } Display_Id_Type;
 
 char * display_id_type_name(Display_Id_Type val);
-
-bool is_adlno_defibed(DDCA_Adlno adlno);
-#define ADLNO_UNDEFINED {-1,-1}
-
-
 
 #define DISPLAY_IDENTIFIER_MARKER "DPID"
 /** Specifies the identifiers to be used to select a display. */
@@ -98,7 +97,6 @@ typedef struct {
    char *          repr;
 } Display_Identifier;
 
-
 Display_Identifier* create_dispno_display_identifier(int dispno);
 Display_Identifier* create_busno_display_identifier(int busno);
 Display_Identifier* create_adlno_display_identifier(int iAdapterIndex, int iDisplayIndex);
@@ -109,7 +107,6 @@ Display_Identifier* create_usb_hiddev_display_identifier(int hiddev_devno);
 char *              did_repr(Display_Identifier * pdid);
 void                report_display_identifier(Display_Identifier * pdid, int depth);
 void                free_display_identifier(Display_Identifier * pdid);
-
 
 #ifdef FUTURE
 // new way
@@ -143,11 +140,7 @@ bool               dsel_validate(          Display_Selector * dsel);
 #endif
 
 
-
 // *** Display_Ref ***
-
-// moved MCCS_IO_Mode to ddcutil_types.h
-
 
 char * mccs_io_mode_name(DDCA_IO_Mode val);
 
@@ -186,43 +179,6 @@ typedef struct _display_ref {
    void *        detail2;
 } Display_Ref;
 
-
-
-// #define DISPLAY_REC_MARKER "DREC"
-// for merger
-// #define DISPLAY_REC_MARKER DISPLAY_REF_MARKER
-
-#ifdef OLD
-/** Describes a single monitor detected.
- *
- * @remark
- * To facilitate conversion, this struct contains redundant information
- * from multiple existing data structures.
- */
-typedef struct {
-   char          marker[4];
-   int           dispno;
-   Display_Ref * dref;
- //  Parsed_Edid * edid;     // use dref->pedid
- //  DDCA_IO_Mode io_mode;   // use dref->io_mode
-#ifdef OLD
-   union {
-      Bus_Info * bus_detail;
-      ADL_Display_Detail * adl_detail;
-#ifdef USE_USB
-      Usb_Monitor_Info * usb_detail;
-#endif
-   } detail;
-#endif
-   void * detail2;
-   // uint8_t     flags;            // currently unneeded
-
-} Display_Rec;
-#endif
-
-// typedef Display_Ref Display_Rec;   // for merger
-
-
 // n. works for both Display_Ref and Display_Handle
 // #define ASSERT_DISPLAY_IO_MODE(_dref, _mode) assert(_dref && _dref->io_mode == _mode)
 
@@ -233,47 +189,37 @@ void          report_display_ref(Display_Ref * dref, int depth);
 #define DREF_SHORT_NAME_BUF_SIZE 100
 char *        dref_short_name_r(Display_Ref * dref, char * buf, int bufsize);
 char *        dref_short_name(Display_Ref * dref);  // value valid until next call
-char * dref_short_name_t(Display_Ref * dref);
+char *        dref_short_name_t(Display_Ref * dref);
 char *        dref_repr(Display_Ref * dref);  // value valid until next call
 char *        dref_repr_t(Display_Ref * dref);  // value valid until next call
 Display_Ref * clone_display_ref(Display_Ref * old);
 void          free_display_ref(Display_Ref * dref);
 
-// are two Display_Ref's equal?
+// Do two Display_Ref's identify the same device?
 bool dreq(Display_Ref* this, Display_Ref* that);
 
 
 // *** Display_Handle ***
 
-// TODO: simplify, remove redundant fields for values obtainable from dref
-
 #define DISPLAY_HANDLE_MARKER "DSPH"
 /** Describes an open display device. */
 typedef struct {
    char         marker[4];
-//   DDCA_IO_Mode io_mode;
-   Display_Ref* dref;                               // added 4/2016
- //  int          busno;  // used for messages
-   int          fh;     // file handle if ddc_io_mode == DDC_IO_DEVI2C or USB_IO
-//   int          iAdapterIndex;
-//   int          iDisplayIndex;
-//   int          usb_bus;
-//   int          usb_device;
-//   char *       hiddev_device_name;
- //  DDCA_MCCS_Version_Spec vcp_version;
- //  char *       capabilities_string;
- //  Parsed_Edid* pedid;                             // added 7/2016
+   Display_Ref* dref;
+   int          fh;     // file handle if ddc_io_mode == DDC_IO_DEVI2C or USB_IO                           // added 7/2016
    char *       repr;
 } Display_Handle;
-
 
 Display_Handle * create_bus_display_handle_from_display_ref(int fh, Display_Ref * dref);
 Display_Handle * create_adl_display_handle_from_display_ref(Display_Ref * dref);
 Display_Handle * create_usb_display_handle_from_display_ref(int fh, Display_Ref * dref);
-void   report_display_handle(Display_Handle * dh, const char * msg, int depth);
-char * dh_repr(Display_Handle * dh);
-char * dh_repr_t(Display_Handle * dh);
-void   free_display_handle(Display_Handle * dh);
+void             report_display_handle(Display_Handle * dh, const char * msg, int depth);
+char *           dh_repr(Display_Handle * dh);
+char *           dh_repr_t(Display_Handle * dh);
+void             free_display_handle(Display_Handle * dh);
+
+
+// *** Video_Card_Info ***
 
 #define VIDEO_CARD_INFO_MARKER "VIDC"
 /** Video card information */
@@ -287,37 +233,12 @@ typedef struct {
 Video_Card_Info * create_video_card_info();
 
 
-#ifdef OLD
+// *** Miscellaneous ***
 
-#define DISPLAY_INFO_MARKER "DINF"
-/**
- * For surfacing display information at higher levels than i2c and adl, without creating
- * circular dependencies
- */
-typedef struct {
-   char          marker[4];
-   int           dispno;
-   Display_Ref * dref;
-   Parsed_Edid * edid;
-} Display_Info;
+bool is_adlno_defibed(DDCA_Adlno adlno);
 
-
-// #define DISPLAY_INFO_LIST_MARKER "DINL"
-/** List of #Display_Info */
-typedef struct {
-   // char           marker[4];   // complicates an otherwise simple initialization, not worth it
-   int            ct;
-   Display_Info * info_recs;      // n. this is a pointer to an array of Display_Info, not an array of Display_Info *
-} Display_Info_List;
-#endif
-
-#ifdef OLD
-void report_display_info(Display_Info * dinfo, int depth);
-void report_display_info_list(Display_Info_List * pinfo_list, int depth);
-
-void free_display_info(Display_Info * dinfo);
-void free_display_info_list(Display_Info_List * pinfo_list);
-#endif
+/** Reserved #DDCA_Adlno value indicating undefined */
+#define ADLNO_UNDEFINED {-1,-1}
 
 // For internal display selection functions
 
@@ -333,7 +254,7 @@ void free_display_info_list(Display_Info_List * pinfo_list);
 //* Option flags for display selection functions */
 typedef Byte Display_Selection_Options;
 
-int hiddev_name_to_number(char * hiddev_name);
+int    hiddev_name_to_number(char * hiddev_name);
 char * hiddev_number_to_name(int hiddev_number);
 
 #endif /* DISPLAYS_H_ */

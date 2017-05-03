@@ -46,7 +46,12 @@
 #include "base/vcp_version.h"
 
 
-
+/** Reports whether a #DDCA_Adlno value is set or is currently undefined.
+ *  \param adlno ADL adapter/index number pair
+ *
+ *  \remark
+ *  Used to hide the magic number for "undefined"
+ */
 bool is_adlno_defined(DDCA_Adlno adlno) {
    return adlno.iAdapterIndex >= 0 && adlno.iDisplayIndex >= 0;
 }
@@ -869,7 +874,7 @@ char * dh_repr_t(Display_Handle * dh) {
 }
 
 
-/* Returns a string summarizing the specified #Display_Handle.
+/** Returns a string summarizing the specified #Display_Handle.
  *
  * \param  dh    display handle
  *
@@ -885,7 +890,10 @@ char * dh_repr(Display_Handle * dh) {
 }
 
 
-
+/** Frees a #Display_Handle struct.
+ *
+ * \param  dh  display handle to free
+ */
 void   free_display_handle(Display_Handle * dh) {
    if (dh && memcmp(dh->marker, DISPLAY_HANDLE_MARKER, 4) == 0) {
       dh->marker[3] = 'x';
@@ -895,97 +903,14 @@ void   free_display_handle(Display_Handle * dh) {
 }
 
 
-// *** Display_Info ***
-
-#ifdef OLD
-// n.b. frees the contents of dinfo, but not dinfo itself
-void free_display_info(Display_Info * dinfo) {
-   if (dinfo) {
-      assert(memcmp(dinfo->marker, DISPLAY_INFO_MARKER, 4) == 0);
-      dinfo->marker[3] = 'x';
-      if (dinfo->dref) {
-         // TODO: are there other references to dinfo->dref?   need to check
-         // free_display_ref(dinfo->dref);
-      }
-      if (dinfo->edid) {
-         // TODO: are there other references to dinfo->edid?   need to check
-         // free_parsed_edid(dinfo->edid);
-      }
-      // free(dinfo);
-   }
-}
-
-
-/* Outputs a debug report of a Display_Info struct.
- *
- * Arguments:
- *   dinfo   pointer to display_Info
- *   depth   logical indentation depth
- *
- * Returns:  nothing
- */
-void report_display_info(Display_Info * dinfo, int depth) {
-   const int d1 = depth+1;
-   rpt_structure_loc("Display_Info", dinfo, depth);
-   if (dinfo) {
-      assert(memcmp(dinfo->marker, DISPLAY_INFO_MARKER, 4) == 0);
-      rpt_vstring(d1, "dref:         %p  %s",
-                      dinfo->dref,
-                      (dinfo->dref) ? dref_short_name(dinfo->dref) : "");
-      rpt_vstring(d1, "edid          %p", dinfo->edid);
-      if (dinfo->edid) {
-         report_parsed_edid(dinfo->edid, false /* !verbose */, d1);
-      }
-   }
-}
-#endif
-
-
-#ifdef OLd
-void free_display_info_list(Display_Info_List * pinfo_list) {
-   if (pinfo_list && pinfo_list->info_recs) {
-      for (int ndx = 0; ndx < pinfo_list->ct; ndx++) {
-         Display_Info * dinfo = &pinfo_list->info_recs[ndx];
-         free_display_info(dinfo);
-      }
-   }
-   free(pinfo_list);
-}
-
-
-/* Outputs a debug report of a Display_Info_List.
- *
- * Arguments:
- *   pinfo_list  pointer to display_Info_List
- *   depth       logical indentation depth
- *
- * Returns:  nothing
- */
-void report_display_info_list(Display_Info_List * pinfo_list, int depth) {
-   rpt_vstring(depth, "Display_Info_List at %p", pinfo_list);
-   if (pinfo_list) {
-      int d1 = depth+1;
-      rpt_vstring(d1, "Count:         %d", pinfo_list->ct);
-      int ndx = 0;
-      for (; ndx < pinfo_list->ct; ndx++) {
-         Display_Info * dinfo = &pinfo_list->info_recs[ndx];
-         report_display_info(dinfo, d1);
-      }
-   }
-}
-#endif
-
-
 // *** Miscellaneous ***
 
-// Currently unused.  Needed for video card information retrieval
-// currently defined only in ADL code.
-
-/* Creates and initializes a Video_Card_Info struct.
+/** Creates and initializes a #Video_Card_Info struct.
  *
- * Arguments:  none
+ * \return new instance
  *
- * Returns:    new instance
+ * \remark
+ * Currently unused.  Struct Video_Card_Info is referenced only in ADL code.
  */
 Video_Card_Info * create_video_card_info() {
    Video_Card_Info * card_info = calloc(1, sizeof(Video_Card_Info));
@@ -994,6 +919,12 @@ Video_Card_Info * create_video_card_info() {
 }
 
 
+/** Given a hiddev device name, e.g. /dev/usb/hiddev3,
+ *  extract its number, e.g. 3.
+ *
+ *  \param   hiddev_name device name
+ *  \return  device number, -1 if error
+ */
 int hiddev_name_to_number(char * hiddev_name) {
    assert(hiddev_name);
    char * p = strstr(hiddev_name, "hiddev");
@@ -1012,6 +943,11 @@ int hiddev_name_to_number(char * hiddev_name) {
 }
 
 
+/** Given a hiddev device number, e.g. 3, return its name, e.g. /dev/usb/hiddev3
+ *
+ *  \param   hiddev_number device number
+ *  \return  device name
+ */
 char * hiddev_number_to_name(int hiddev_number) {
    assert(hiddev_number >= 0 && hiddev_number < 100);
    char * hiddev_dir = hiddev_directory();
@@ -1021,5 +957,3 @@ char * hiddev_number_to_name(int hiddev_number) {
    DBGMSG("hiddev_number=%d, returning: %s", hiddev_number, s);
    return s;
 }
-
-
