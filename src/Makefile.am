@@ -335,7 +335,8 @@ libcommon_la_LIBADD += \
 
 
 
-libddcutil_la_LIBADD = -lz
+# libddcutil_la_LIBADD = -lz
+libddcutil_la_LIBADD = $(ZLIB_LIBS)
 libddcutil_la_LIBADD += libcommon.la
 
 

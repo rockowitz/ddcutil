@@ -542,6 +542,12 @@ AS_IF([test "x$enable_gobject" == "xyes"],
      [ PKG_CHECK_MODULES(GOBJECT,  gobject-2.0 >= 2.14)  ],
      )
 
+### Library
+
+AS_IF([test "x$enable_lib" == "xyes"],
+     [ PKG_CHECK_MODULES(ZLIB,  zlib)  ],
+     )
+
 
 ### Python and SWIG
 
