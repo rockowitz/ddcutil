@@ -183,6 +183,7 @@ BuildRequires: python-devel
 %if %{defined fedora}
 BuildRequires: libusbx-devel
 BuildRequires: systemd-devel
+BuildRequires: zlib zlib-devel
 %endif
 %if %{defined suse_version}
 BuildRequires: libusb-1_0-devel
