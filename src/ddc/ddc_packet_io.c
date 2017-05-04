@@ -735,6 +735,9 @@ Public_Status_Code ddc_write_read_with_retry(
             else if (psc == -EBADF)
                retryable = false;
 
+            else if (psc == -ENXIO)    // no such device or address, i915 driver
+               retryable = false;
+
             else
                retryable = true;     // for now
 
