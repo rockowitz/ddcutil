@@ -44,7 +44,7 @@ is_smbus_device_summary(
       char *      sbusno) ;
 
 void
-report_udev_i2c_device_summaries(
+report_i2c_udev_device_summaries(
       GPtrArray * summaries,    // array of Udev_Device_Summary
       char *      title,
       int         depth) ;

@@ -129,7 +129,7 @@ get_i2c_devices_using_udev() {
  * depth           logical indentation depth
  */
 void
-report_udev_i2c_device_summaries(GPtrArray * summaries, char * title, int depth) {
+report_i2c_udev_device_summaries(GPtrArray * summaries, char * title, int depth) {
    rpt_vstring(0,title);
    if (!summaries || summaries->len == 0)
       rpt_vstring(depth,"No devices detected");
@@ -162,7 +162,7 @@ GPtrArray * get_i2c_smbus_devices_using_udev() {
    }
 
    if (debug)
-      report_udev_i2c_device_summaries(summaries, "I2C SMBus Devices:", 0);
+      report_i2c_udev_device_summaries(summaries, "I2C SMBus Devices:", 0);
 
 
    return summaries;

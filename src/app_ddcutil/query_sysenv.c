@@ -1618,7 +1618,7 @@ void probe_i2c_devices_using_udev() {
    rpt_nl();
 
    GPtrArray * summaries = get_i2c_devices_using_udev();
-   report_udev_i2c_device_summaries(summaries, "Summary of udev I2C devices",1);
+   report_i2c_udev_device_summaries(summaries, "Summary of udev I2C devices",1);
    free_udev_device_summaries(summaries);   // ok if summaries == NULL
 }
 
