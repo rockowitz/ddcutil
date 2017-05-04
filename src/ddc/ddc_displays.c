@@ -224,7 +224,7 @@ bool initial_checks_by_dh(Display_Handle * dh) {
 
 
 bool initial_checks_by_dh_new(Display_Handle * dh) {
-   bool debug = true;
+   bool debug = false;
    DBGMSF(debug, "Starting. dh=%s", dh_repr_t(dh));
    assert(dh);
    DDCA_Single_Vcp_Value * pvalrec;
@@ -312,8 +312,6 @@ GPtrArray * ddc_get_all_displays() {
 
    return all_displays;
 }
-
-
 
 
 /** Gets the controller firmware version as a string
@@ -447,8 +445,8 @@ ddc_report_display_by_dref(Display_Ref * dref, int depth) {
       if (!(dref->flags & DREF_DDC_COMMUNICATION_WORKING) ) {
          rpt_vstring(d1, "DDC communication failed");
          if (output_level >= DDCA_OL_VERBOSE) {
-            if (strlen(dref->pedid->model_name)   == 0 &&
-                strlen(dref->pedid->serial_ascii) == 0 )
+            if (streq(dref->pedid->model_name,   "Unspecified") &&
+                streq(dref->pedid->serial_ascii, "Unspecified") )
             {
                rpt_vstring(d1, "This appears to be a laptop display. Laptop displays do not support DDC/CI.");
             }
