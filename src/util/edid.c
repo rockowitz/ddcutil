@@ -343,25 +343,25 @@ void report_parsed_edid_base(Parsed_Edid * edid, bool verbose, bool show_raw, in
          if (edid->edid_version_major == 1 && edid->edid_version_minor >= 4) {
             switch (edid->video_input_definition & 0x0f) {
             case 0x00:
-               strcat(explbuf, "(Digital interface not defined)");
+               strcat(explbuf, " (Digital interface not defined)");
                break;
             case 0x01:
-               strcat(explbuf, "(DVI)");
+               strcat(explbuf, " (DVI)");
                break;
             case 0x02:
-               strcat(explbuf, "(HDMI-a)");
+               strcat(explbuf, " (HDMI-a)");
                break;
             case 0x03:
-               strcat(explbuf, "(HDMI-b");
+               strcat(explbuf, " (HDMI-b");
                break;
             case 0x04:
-               strcat(explbuf, "(MDDI)");
+               strcat(explbuf, " (MDDI)");
                break;
             case 0x05:
-               strcat(explbuf, "(DisplayPort)");
+               strcat(explbuf, " (DisplayPort)");
                break;
             default:
-               strcat(explbuf, "(Invalid DVI standard)");
+               strcat(explbuf, " (Invalid DVI standard)");
             }
          }
       }
