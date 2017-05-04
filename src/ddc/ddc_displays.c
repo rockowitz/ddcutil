@@ -447,7 +447,13 @@ ddc_report_display_by_dref(Display_Ref * dref, int depth) {
       if (!(dref->flags & DREF_DDC_COMMUNICATION_WORKING) ) {
          rpt_vstring(d1, "DDC communication failed");
          if (output_level >= DDCA_OL_VERBOSE) {
-            rpt_vstring(d1, "Is DDC/CI enabled in the monitor's on-screen display?");
+            if (strlen(dref->pedid->model_name)   == 0 &&
+                strlen(dref->pedid->serial_ascii) == 0 )
+            {
+               rpt_vstring(d1, "This appears to be a laptop display. Laptop displays do not support DDC/CI.");
+            }
+            else
+               rpt_vstring(d1, "Is DDC/CI enabled in the monitor's on-screen display?");
          }
       }
       else {
