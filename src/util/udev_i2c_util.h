@@ -1,8 +1,7 @@
 /* udev_i2c_util.h
  *
- *
  * <copyright>
- * Copyright (C) 2014-2015 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2016-2017 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -22,18 +21,36 @@
  * </endcopyright>
  */
 
+/** \file *
+ *  I2C specific udev utilities
+ */
+
 #ifndef UDEV_I2C_UTIL_H_
 #define UDEV_I2C_UTIL_H_
 
+/** \cond */
 #include <glib.h>
 #include <stdbool.h>
+/** \endcond */
 
 #include "data_structures.h"
 
-GPtrArray * get_i2c_devices_using_udev();
-void report_i2c_device_summaries(GPtrArray * summaries, char * title, int depth) ;
-bool is_smbus_device_summary(GPtrArray * summaries, char * sbusno) ;
+GPtrArray *                     // array of Udev_Device_Summary
+get_i2c_devices_using_udev();
 
-Byte_Value_Array get_i2c_devices_as_bva_using_udev();
+bool
+is_smbus_device_summary(
+      GPtrArray * summaries,    // array of Udev_Device_Summary
+      char *      sbusno) ;
+
+void
+report_udev_i2c_device_summaries(
+      GPtrArray * summaries,    // array of Udev_Device_Summary
+      char *      title,
+      int         depth) ;
+
+
+Byte_Value_Array                // one byte for each I2C bus number
+get_non_smbus_i2c_device_numbers_using_udev();
 
 #endif /* UDEV_I2C_UTIL_H_ */

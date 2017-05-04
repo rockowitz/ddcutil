@@ -906,7 +906,7 @@ int i2c_detect_buses() {
    DBGMSF(debug, "Starting.  i2c_buses = %p", i2c_buses);
    if (!i2c_buses) {
 
-      Byte_Value_Array i2c_bus_bva = get_i2c_devices_as_bva_using_udev();
+      Byte_Value_Array i2c_bus_bva = get_non_smbus_i2c_device_numbers_using_udev();
       // TODO: set free function
       i2c_buses = g_ptr_array_sized_new(bva_length(i2c_bus_bva));
       for (int ndx = 0; ndx < bva_length(i2c_bus_bva); ndx++) {

@@ -1,10 +1,7 @@
 /* udev_i2c_util.c
  *
- * Created on: Apr 27, 2017
- *     Author: rock
- *
  * <copyright>
- * Copyright (C) 2014-2015 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2016-2017 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -24,12 +21,17 @@
  * </endcopyright>
  */
 
+/** \file
+ * I2C specific udev utilities
+ */
 
+/** \cond */
 #include <assert.h>
 #include <glib.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <string.h>
+/** \endcond */
 
 #include "report_util.h"
 #include "string_util.h"
@@ -44,14 +46,23 @@
 // Create, report, query, and destroy a list of summaries of UDEV I2C devices
 //
 
-// #ifdef USE_USB
+#ifdef REFERENCE
+#define UDEV_DEVICE_SUMMARY_MARKER "UDSM"
+typedef struct udev_device_summary {
+   char   marker[4];
+   const char * sysname;
+   const char * devpath;
+   const char * sysattr_name;
+} Udev_Device_Summary;
+#endif
+
 
 /* Extract the i2c bus number from a device summary.
  *
  * Helper function for get_i2c_devices_using_udev()
  */
-static
-int udev_i2c_device_summary_busno(Udev_Device_Summary * summary) {
+static int
+udev_i2c_device_summary_busno(Udev_Device_Summary * summary) {
    int result = -1;
    if (str_starts_with(summary->sysname, "i2c-")) {
      const char * sbusno = summary->sysname+4;
@@ -67,12 +78,12 @@ int udev_i2c_device_summary_busno(Udev_Device_Summary * summary) {
 }
 
 
-/* Compare 2 Udev device summaries by their bus number
+/* Compare 2 udev device summaries of I2C devices by their I2C bus number
  *
- * Helper function for get_i2c_devices_using_udev(
+ * Helper function for get_i2c_devices_using_udev()
  */
-static
-int compare_udev_i2c_device_summary(const void * a, const void * b) {
+static int
+compare_udev_i2c_device_summary(const void * a, const void * b) {
    Udev_Device_Summary * p1 = *(Udev_Device_Summary**) a;
    Udev_Device_Summary * p2 = *(Udev_Device_Summary**) b;
 
@@ -89,10 +100,13 @@ int compare_udev_i2c_device_summary(const void * a, const void * b) {
 }
 
 
-/* Returns array of Udev_Device_Summary for I2C devices,
- * sorted by bus number.
+/** Returns array of Udev_Device_Summary for I2C devices found by udev,
+ *  sorted by bus number.
+ *
+ * \return array of #Udev_Device_Summary
  */
-GPtrArray * get_i2c_devices_using_udev() {
+GPtrArray *
+get_i2c_devices_using_udev() {
    GPtrArray * summaries = summarize_udev_subsystem_devices("i2c-dev");
 
    if (summaries) {
@@ -108,24 +122,14 @@ GPtrArray * get_i2c_devices_using_udev() {
 }
 
 
-#ifdef REFERENCE
-#define UDEV_DEVICE_SUMMARY_MARKER "UDSM"
-typedef struct udev_device_summary {
-char   marker[4];
-const char * sysname;
-const char * devpath;
-const char * sysattr_name;
-} Udev_Device_Summary;
-#endif
-
-
-/* Reports a collection of device summaries in table form.
+/** Reports a collection of #Udev_Device_Summary for I2C devices in table form.
  *
- * summaries       array of Udev_Device_Summary
+ * summaries       array of #Udev_Device_Summary
  * title           title line
  * depth           logical indentation depth
  */
-void report_i2c_device_summaries(GPtrArray * summaries, char * title, int depth) {
+void
+report_udev_i2c_device_summaries(GPtrArray * summaries, char * title, int depth) {
    rpt_vstring(0,title);
    if (!summaries || summaries->len == 0)
       rpt_vstring(depth,"No devices detected");
@@ -158,7 +162,7 @@ GPtrArray * get_i2c_smbus_devices_using_udev() {
    }
 
    if (debug)
-      report_i2c_device_summaries(summaries, "I2C SMBus Devices:", 0);
+      report_udev_i2c_device_summaries(summaries, "I2C SMBus Devices:", 0);
 
 
    return summaries;
@@ -166,17 +170,16 @@ GPtrArray * get_i2c_smbus_devices_using_udev() {
 #endif
 
 
-/* Given a specified I2C bus number, checks the list of I2C device
- * summaries to see if it is the bus number of a SMBUS device.
+/** Given a specified I2C bus number, checks a list of I2C device
+ *  summaries to see if it is the bus number of a SMBUS device.
  *
- * Arguments;
- *    summaries    array of Udev_Device_Summary
- *    sbusno       I2C bus number, as string
+ *  \param  summaries    array of Udev_Device_Summary
+ *  \param  sbusno       I2C bus number, as string
  *
- * Returns:
- *    true if the number is that of an SMBUS device, false otherwise
+ *  \return  **true** if the number is that of an SMBUS device, **false* if not
  */
-bool is_smbus_device_summary(GPtrArray * summaries, char * sbusno) {
+bool
+is_smbus_device_summary(GPtrArray * summaries, char * sbusno) {
    bool debug = false;
    char devname [10];
    snprintf(devname, sizeof(devname), "i2c-%s", sbusno);
@@ -200,7 +203,12 @@ bool is_smbus_device_summary(GPtrArray * summaries, char * sbusno) {
 }
 
 
-Byte_Value_Array get_i2c_devices_as_bva_using_udev() {
+/** Gets the numbers of all non-SMBus I2C devices
+ *
+ *  \return #Byte_Value_Array of I2C device numbers
+ */
+Byte_Value_Array
+get_non_smbus_i2c_device_numbers_using_udev() {
    bool debug = false;
    if (debug)
       printf("(%s) Starting.\n", __func__);
