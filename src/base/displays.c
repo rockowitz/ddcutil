@@ -41,6 +41,7 @@
 #include "util/string_util.h"
 #include "util/report_util.h"
 #include "util/udev_util.h"
+#include "util/udev_usb_util.h"
 
 #include "base/displays.h"
 #include "base/vcp_version.h"
@@ -801,7 +802,7 @@ char * dh_repr_a(Display_Handle * dh) {
           repr = gaux_asprintf(
                    "Display_Handle[usb: %d:%d, %s/hiddev%d]",
                    dh->dref->usb_bus, dh->dref->usb_device,
-                   hiddev_directory(), dh->dref->usb_hiddev_devno);
+                   usb_hiddev_directory(), dh->dref->usb_hiddev_devno);
           break;
       }
       return repr;
@@ -836,7 +837,7 @@ char * dh_repr_r(Display_Handle * dh, char * buf, int bufsz) {
        snprintf(buf, bufsz,
                 "Display_Handle[usb: %d:%d, %s/hiddev%d]",
                 dh->dref->usb_bus, dh->dref->usb_device,
-                hiddev_directory(), dh->dref->usb_hiddev_devno);
+                usb_hiddev_directory(), dh->dref->usb_hiddev_devno);
        break;
    }
    buf[bufsz-1] = '\0';
@@ -950,7 +951,7 @@ int hiddev_name_to_number(char * hiddev_name) {
  */
 char * hiddev_number_to_name(int hiddev_number) {
    assert(hiddev_number >= 0 && hiddev_number < 100);
-   char * hiddev_dir = hiddev_directory();
+   char * hiddev_dir = usb_hiddev_directory();
    int sz = strlen(hiddev_dir) + strlen("/hiddev") + 2;
    char * s = malloc(sz);
    snprintf(s, sz, "%s/hiddev%d", hiddev_dir, hiddev_number);

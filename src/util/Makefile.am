@@ -42,6 +42,7 @@ string_util.c              \
 subprocess_util.c          \
 timestamp.c                \
 udev_i2c_util.c            \
+udev_usb_util.c            \
 udev_util.c                \
 x11_util.c                 
 

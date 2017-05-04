@@ -39,6 +39,7 @@
 #include "util/failsim.h"
 #include "util/report_util.h"
 #include "util/udev_util.h"
+#include "util/udev_usb_util.h"
 
 #include "base/adl_errors.h"
 #include "base/ddc_errno.h"
@@ -666,7 +667,7 @@ ddc_check_display_ref(Display_Ref * dref, Display_Criteria * criteria) {
       if (dref->io_mode != DDCA_IO_USB)
          goto bye;
       char buf[40];
-      snprintf(buf, 40, "%s/hiddev%d", hiddev_directory(), criteria->hiddev);
+      snprintf(buf, 40, "%s/hiddev%d", usb_hiddev_directory(), criteria->hiddev);
       Usb_Monitor_Info * moninfo = dref->detail2;
       assert(memcmp(moninfo->marker, USB_MONITOR_INFO_MARKER, 4) == 0);
       if (!streq( moninfo->hiddev_device_name, buf))

@@ -52,14 +52,13 @@
 // #include <time.h>
 #include <unistd.h>
 
-// #include "util/device_id_util.h"
-// #include "util/edid.h"
 #include "util/file_util.h"
 #include "util/report_util.h"
 #include "util/string_util.h"
 #include "util/subprocess_util.h"
-
 #include "util/udev_util.h"
+#include "util/udev_usb_util.h"
+
 #include "usb_util/hiddev_reports.h"
 #include "usb_util/hiddev_util.h"
 // #include "usb_util/hidapi_util.h"

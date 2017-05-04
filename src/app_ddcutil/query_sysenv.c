@@ -62,6 +62,7 @@
 #include "util/subprocess_util.h"
 #include "util/x11_util.h"
 #include "util/udev_i2c_util.h"
+#include "util/udev_usb_util.h"
 #include "util/udev_util.h"
 /** \endcond */
 
@@ -75,12 +76,9 @@
 #include "ddc/ddc_packet_io.h"
 
 #include "adl/adl_shim.h"
-// #ifdef USE_USB
-//#include "usb/usb_displays.h"
-// #endif
 
 #include "query_drm_sysenv.h"
-#include "app_ddcutil/query_sysenv.h"
+#include "query_sysenv.h"
 
 
 // Forward references

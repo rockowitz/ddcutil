@@ -39,6 +39,7 @@
 #include "util/report_util.h"
 #include "util/string_util.h"
 #include "util/udev_util.h"
+#include "util/udev_usb_util.h"
 
 #include "usb_util/hiddev_reports.h"
 #include "usb_util/hiddev_util.h"
