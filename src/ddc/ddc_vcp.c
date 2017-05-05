@@ -74,7 +74,7 @@ save_current_settings(
 {
    bool debug = false;
    DBGTRC(debug, TRACE_GROUP,
-          "Invoking DDC Save Current Settings command. dh=%s", dh_repr(dh));
+          "Invoking DDC Save Current Settings command. dh=%s", dh_repr_t(dh));
    Public_Status_Code psc = 0;
 
    if (dh->dref->io_mode == DDCA_IO_USB) {
@@ -125,7 +125,7 @@ set_nontable_vcp_value(
    // TRCMSGTG(tg, "Writing feature 0x%02x , new value = %d\n", feature_code, new_value);
    DBGTRC(debug, TRACE_GROUP,
           "Writing feature 0x%02x , new value = %d, dh=%s\n",
-          feature_code, new_value, dh_repr(dh));
+          feature_code, new_value, dh_repr_t(dh));
    Public_Status_Code psc = 0;
 
    if (dh->dref->io_mode == DDCA_IO_USB) {
@@ -380,11 +380,9 @@ Public_Status_Code get_nontable_vcp_value(
        Parsed_Nontable_Vcp_Response** ppInterpretedCode)
 {
    bool debug = false;
-   DBGTRC(debug, TRACE_GROUP, "Reading feature 0x%02x",
-                              feature_code);
+   DBGTRC(debug, TRACE_GROUP, "Reading feature 0x%02x", feature_code);
 
    Public_Status_Code psc = 0;
-   // Output_Level output_level = get_output_level();
    Parsed_Nontable_Vcp_Response * parsed_response = NULL;
 
    DDC_Packet * request_packet_ptr  = NULL;
@@ -397,6 +395,7 @@ Public_Status_Code get_nontable_vcp_value(
    Byte expected_subtype = feature_code;
    int max_read_bytes  = 20;    // actually 3 + 8 + 1, or is it 2 + 8 + 1?
 
+   // retry:
    psc = ddc_write_read_with_retry(
            dh,
            request_packet_ptr,
@@ -410,18 +409,23 @@ Public_Status_Code get_nontable_vcp_value(
    // TRCMSGTG(tg, "perform_ddc_write_read_with_retry() returned %s", psc_desc(psc));
    if (debug || IS_TRACING() ) {
       if (psc != 0)
-         DBGMSG("perform_ddc_write_read_with_retry() returned %s", psc_desc(psc));
+         DBGMSG("perform_ddc_write_read_with_retry() returned %s, reponse_packet_ptr=%p", psc_desc(psc), response_packet_ptr);
    }
 
    if (psc == 0) {
-      // ??? why is this allocated?  it's discarded by get_interpreted_vcp_code()?
-      // parsed_response = (Parsed_Nontable_Vcp_Response *) calloc(1, sizeof(Parsed_Nontable_Vcp_Response));
-
+      // dump_packet(response_packet_ptr);
       psc = get_interpreted_vcp_code(response_packet_ptr, true /* make_copy */, &parsed_response);   // ???
-      // if (output_level >= OL_VERBOSE)
-      //    report_interpreted_nontable_vcp_response(interpretation_ptr);
-
       if (psc == 0) {
+#ifdef NO_LONGER_NEEDED
+         if (parsed_response->vcp_code != feature_code) {
+            DBGMSG("!!! WTF! requested feature_code = 0x%02x, but code in response is 0x%02x",
+                   feature_code, parsed_response->vcp_code);
+            call_tuned_sleep_i2c(SE_POST_READ);
+            goto retry;
+         }
+#endif
+
+
          if (!parsed_response->valid_response)  {
             psc = DDCRC_INVALID_DATA;
          }
@@ -433,7 +437,6 @@ Public_Status_Code get_nontable_vcp_value(
             parsed_response = NULL;
          }
       }
-
    }
 
    if (request_packet_ptr)
@@ -522,7 +525,7 @@ get_vcp_value(
 {
    bool debug = false;
    DBGTRC(debug, TRACE_GROUP, "Starting. Reading feature 0x%02x, dh=%s, dh->fh=%d",
-            feature_code, dh_repr(dh), dh->fh);
+            feature_code, dh_repr_t(dh), dh->fh);
 
    Public_Status_Code psc = 0;
    Buffer * buffer = NULL;
