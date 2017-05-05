@@ -61,9 +61,6 @@
 // Trace class for this file
 static Trace_Group TRACE_GROUP = TRC_I2C;
 
-// forward declarations
-void i2c_report_bus_info(Bus_Info * bus_info, int depth);
-
 /** All I2C buses.  GPtrArray of pointers to #Bus_Info */
 static GPtrArray * i2c_buses = NULL;
 
@@ -355,9 +352,6 @@ void i2c_report_functionality_flags(long functionality, int maxline, int depth) 
 }
 
 
-
-
-
 //
 // I2C Bus Inspection - Slave Addresses
 //
@@ -432,22 +426,19 @@ bool * i2c_detect_all_slave_addrs(int busno) {
 }
 #endif
 
-/* Checks DDC related addresses on an I2C bus to see if the addresses are active.
- * The bus device has already been opened.
+
+/** Checks DDC related addresses on an I2C bus to see if the addresses are active.
+ *  The bus device has already been opened.
  *
- * Arguments:
- *   fd       file descriptor for open i2c device
- *   presult  where to return result byte
+ * \param  fd       file descriptor for open i2c device
+ * \param  presult  where to return result byte
+ * \return status code, 0 if success
  *
  * Sets:
  *   Returns byte with flags possibly set:
  *    I2C_BUS_ADDR_0x30        true if addr x30 responds (EDID block selection)
  *    I2C_BUS_ADDR_0x50        true if addr x50 responds (EDID)
  *    I2C_BUS_ADDR_0x37        true if addr x37 responds (DDC commands)
- *
- * Returns:
- *    0    success
- *    < 0, modulated status code
  */
 // static
 Status_Errno_DDC i2c_detect_ddc_addrs_by_fd(int fd, Byte * presult) {
@@ -498,7 +489,6 @@ bye:
    DBGMSF(debug, "Done.  Returning base_rc=%d, *presult = 0x%02x", base_rc, *presult);
    return base_rc;
 }
-
 
 
 //
@@ -610,7 +600,6 @@ Public_Status_Code i2c_get_parsed_edid_by_fd(int fd, Parsed_Edid ** edid_ptr_loc
    *edid_ptr_loc = edid;
    return rc;
 }
-
 
 
 //
@@ -729,6 +718,9 @@ void i2c_free_bus_info(Bus_Info * bus_info) {
  * \remark
  * The format of the output as well as its extent is controlled by get_output_level().
  */
+// used by dbgreport_display_ref() in ddc_displays.c
+// used by debug code within this file
+// used by i2c_report_buses() in this file, which is called by query_i2c_buses() in query_sysenv.c
 void i2c_report_bus_info(Bus_Info * bus_info, int depth) {
    bool debug = false;
    DDCA_Output_Level output_level = get_output_level();
@@ -797,6 +789,7 @@ void i2c_report_bus_info(Bus_Info * bus_info, int depth) {
  * @param   businfo     bus record
  * @param   depth       logical indentation depth
  */
+// used by detect, interrogate commands, C API
 void i2c_report_active_display(Bus_Info * businfo, int depth) {
    DDCA_Output_Level output_level = get_output_level();
    rpt_vstring(depth, "I2C bus:             /dev/i2c-%d", businfo->busno);
@@ -833,7 +826,6 @@ void i2c_report_active_display(Bus_Info * businfo, int depth) {
       }
    }
 }
-
 
 
 //
