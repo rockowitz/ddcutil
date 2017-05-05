@@ -114,7 +114,7 @@ DDCA_MCCS_Version_Spec get_vcp_version_by_display_handle(Display_Handle * dh) {
          }
          else {
             // happens for pre MCCS v2 monitors
-            DBGMSF(debug, "Error detecting VCP version using VCP feature 0xdf. psc=%s\n", psc_desc(psc) );
+            DBGMSF(debug, "Error detecting VCP version using VCP feature 0xdf. psc=%s", psc_desc(psc) );
          }
       }
       DBGMSF(debug, "Non-cache lookup returning: %d.%d", dh->dref->vcp_version.major, dh->dref->vcp_version.minor);
@@ -146,7 +146,7 @@ DDCA_MCCS_Version_Spec get_vcp_version_by_display_handle(Display_Handle * dh) {
  */
 DDCA_MCCS_Version_Spec get_vcp_version_by_display_ref(Display_Ref * dref) {
    bool debug = false;
-   DBGMSF(debug, "Starting. dref=%p, dref->vcp_version =  %d.%d\n",
+   DBGMSF(debug, "Starting. dref=%p, dref->vcp_version =  %d.%d",
                  dref, dref->vcp_version.major, dref->vcp_version.minor);
 
    if (vcp_version_is_unqueried(dref->vcp_version)) {
