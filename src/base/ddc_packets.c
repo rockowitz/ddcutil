@@ -304,9 +304,6 @@ DDC_Packet * create_empty_ddc_packet(int max_size, const char * tag) {
       packet->tag[0] = '\0';
    // DBGMSG("packet->tag=%s", packet->tag);
    packet->type = DDC_PACKET_TYPE_NONE;
-#ifdef OLD
-   packet->aux_data = NULL;
-#endif
    packet->parsed.raw_parsed = NULL;
 
    DBGMSF(debug, "Done. Returning %p, packet->tag=%p", packet, packet->tag);
@@ -851,6 +848,10 @@ interpret_vcp_feature_response_std(
 {
    bool debug = false;
    DBGMSF(debug, "Starting.");
+   if (debug) {
+      DBGMSG("vcp_data_bytes: ");
+      rpt_hex_dump(vcp_data_bytes, bytect, 1);
+   }
 
    int result = DDCRC_OK;
    // set initial values for failure case:
@@ -873,7 +874,16 @@ interpret_vcp_feature_response_std(
       assert(vcpresp->result_code == vcp_data_bytes[1]);  // validate the overlay
       aux_data->vcp_code = vcpresp->vcp_opcode;
       bool valid_response = true;
-      if (vcpresp->result_code != 0) {
+
+      if (vcpresp->vcp_opcode != requested_vcp_code){
+         // if (debug) printf("(%s) Unexpected VCP opcode 0x%02x, should be 0x%02x\n",
+         //                   __func__, vcpresp->vcp_opcode, requested_vcp_code);
+         DDCMSG("Unexpected VCP opcode 0x%02x, should be 0x%02x",
+                vcpresp->vcp_opcode, requested_vcp_code);
+         result = COUNT_STATUS_CODE(DDCRC_INVALID_DATA);
+      }
+
+      else if (vcpresp->result_code != 0) {
          if (vcpresp->result_code == 0x01) {
             // DBGMSF(debug, "Unsupported VCP Code");
             DDCMSG("Unsupported VCP Code: 0x%02x", vcpresp->vcp_opcode);
@@ -885,13 +895,7 @@ interpret_vcp_feature_response_std(
             result = COUNT_STATUS_CODE(DDCRC_INVALID_DATA);
          }
       }
-      else if (vcpresp->vcp_opcode != requested_vcp_code){
-         // if (debug) printf("(%s) Unexpected VCP opcode 0x%02x, should be 0x%02x\n",
-         //                   __func__, vcpresp->vcp_opcode, requested_vcp_code);
-         DDCMSG("Unexpected VCP opcode 0x%02x, should be 0x%02x\n",
-                vcpresp->vcp_opcode, requested_vcp_code);
-         result = COUNT_STATUS_CODE(DDCRC_INVALID_DATA);
-      }
+
       else {
          int max_val = (vcpresp->max_val_hi_byte << 8) | vcpresp->max_val_lo_byte;
          int cur_val = (vcpresp->cur_val_hi_byte << 8) | vcpresp->cur_val_lo_byte;
@@ -991,10 +995,6 @@ Status_DDC create_ddc_typed_response_packet(
       free(hs);
    }
 
-#ifdef OLD
-   void * aux_data;
-#endif
-
    // DBGMSG("before create_ddc_response_packet(), *packet_ptr_addr=%p", *packet_ptr_addr);
    // n. may return DDC_NULL_RESPONSE??   (old note)
    Status_DDC rc = create_ddc_response_packet(
@@ -1011,15 +1011,6 @@ Status_DDC create_ddc_typed_response_packet(
 
       case DDC_PACKET_TYPE_CAPABILITIES_RESPONSE:
       case DDC_PACKET_TYPE_TABLE_READ_RESPONSE:
-#ifdef OLD
-         aux_data = calloc(1, sizeof(Interpreted_Multi_Part_Read_Fragment));
-         packet->aux_data = aux_data;
-         rc = interpret_multi_part_read_response(
-                expected_type,
-                get_data_start(packet),
-                get_data_len(packet),
-                (Interpreted_Multi_Part_Read_Fragment *) aux_data);
-#endif
          {
             Interpreted_Multi_Part_Read_Fragment * aux_data = calloc(1, sizeof(Interpreted_Multi_Part_Read_Fragment));
             packet->parsed.multi_part_read_fragment = aux_data;
@@ -1032,15 +1023,6 @@ Status_DDC create_ddc_typed_response_packet(
          break;
 
       case DDC_PACKET_TYPE_QUERY_VCP_RESPONSE:
-#ifdef OLD
-         aux_data = calloc(1, sizeof(Parsed_Nontable_Vcp_Response));
-         packet->aux_data = aux_data;
-         rc = interpret_vcp_feature_response_std(
-                 get_data_start(packet),
-                 get_data_len(packet),
-                 expected_subtype,
-                 (Parsed_Nontable_Vcp_Response *) aux_data);
-#endif
          {
             Parsed_Nontable_Vcp_Response * aux_data = calloc(1, sizeof(Parsed_Nontable_Vcp_Response));
             packet->parsed.nontable_response = aux_data;
