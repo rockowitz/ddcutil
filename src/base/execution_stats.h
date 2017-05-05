@@ -90,8 +90,9 @@ void report_io_call_stats(int depth);
 // Record Status Code Occurrence
 
 Public_Status_Code log_status_code(Public_Status_Code rc, const char * caller_name);
-int log_secondary_status_code(int rc, const char * caller_name);
+Public_Status_Code log_retryable_status_code(Public_Status_Code rc, const char * caller_name);
 #define COUNT_STATUS_CODE(rc) log_status_code(rc,__func__)
+#define COUNT_RETRYABLE_STATUS_CODE(rc) log_retryable_status_code(rc,__func__)
 void show_all_status_counts();
 
 

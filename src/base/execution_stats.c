@@ -85,6 +85,7 @@ typedef struct {
 static uint64_t             program_start_timestamp;
 static uint64_t             resettable_start_timestamp;
 static Status_Code_Counts * primary_error_code_counts;
+static Status_Code_Counts * retryable_error_code_counts;
 static GMutex               status_code_counts_mutex;
 static GMutex               global_stats_mutex;
 static bool                 debug_status_code_counts_mutex  = false;
@@ -298,6 +299,7 @@ reset_status_code_counts_struct(Status_Code_Counts * pcounts) {
 static void
 reset_status_code_counts() {
    reset_status_code_counts_struct(primary_error_code_counts);
+   reset_status_code_counts_struct(retryable_error_code_counts);
 }
 
 
@@ -334,11 +336,36 @@ int log_any_status_code(Status_Code_Counts * pcounts, int rc, const char * calle
  *
  * @param rc           status code
  * @param caller_name  function logging the event
+ *
+ * @return status code (unchanged)
+ *
+ * @remark returning the status code allows for assigning a status code and
+ * logging it to be done in one statement
  */
-int log_status_code(int rc, const char * caller_name) {
+Public_Status_Code
+log_status_code(Public_Status_Code rc, const char * caller_name) {
+   // DBGMSG("rc=%d, caller_name=%s", rc, caller_name);
    Status_Code_Counts * pcounts = primary_error_code_counts;
    // if ( ddcrc_is_derived_status_code(rc) )
    //    pcounts = secondary_status_code_counts;
+   log_any_status_code(pcounts, rc, caller_name);
+   return rc;
+}
+
+/** Log a status code that occurs in a retry loop
+ *
+ * @param rc           status code
+ * @param caller_name  function logging the event
+ *
+ * @return status code (unchanged)
+ *
+ * @remark returning the status code allows for assigning a status code and
+ * logging it to be done in one statement
+ */
+Public_Status_Code
+log_retryable_status_code(Public_Status_Code rc, const char * caller_name) {
+   // DBGMSG("rc=%d, caller_name=%s", rc, caller_name);
+   Status_Code_Counts * pcounts = retryable_error_code_counts;
    log_any_status_code(pcounts, rc, caller_name);
    return rc;
 }
@@ -361,8 +388,8 @@ static
 void show_specific_status_counts(Status_Code_Counts * pcounts) {
    bool debug = false;
    DBGMSF(debug, "Starting");
-   if (pcounts->name)
-      printf("%s:\n", pcounts->name);
+
+   char * title = (pcounts->name) ? pcounts->name : "Errors";
    assert(pcounts->error_counts_hash);
    unsigned int keyct;
 
@@ -380,7 +407,8 @@ void show_specific_status_counts(Status_Code_Counts * pcounts) {
    }
    int summed_ct = 0;
    // fprintf(stdout, "DDC packet error status codes with non-zero counts:  %s\n",
-   fprintf(stdout, "DDC Related Errors:  %s\n",
+   fprintf(stdout, "%s:  %s\n",
+           title,
            (keyct == 0) ? "None" : "");
    if (keyct > 0) {
       qsort(keysp, keyct, sizeof(gpointer), compare);    // sort keys
@@ -431,6 +459,9 @@ void show_specific_status_counts(Status_Code_Counts * pcounts) {
 void show_all_status_counts() {
    show_specific_status_counts(primary_error_code_counts);
    // show_specific_status_counts(secondary_status_code_counts);    // not used
+
+   rpt_nl();
+   show_specific_status_counts(retryable_error_code_counts);
 }
 
 
@@ -787,7 +818,8 @@ void report_sleep_strategy_stats(int depth) {
  * Must be called once at program startup.
  */
 void init_execution_stats() {
-   primary_error_code_counts = new_status_code_counts(NULL);
+   primary_error_code_counts = new_status_code_counts("DDC Related Errors");
+   retryable_error_code_counts = new_status_code_counts("Errors Wrapped in Retry");
    // secondary_status_code_counts = new_status_code_counts("Derived and Other Errors");
    program_start_timestamp = cur_realtime_nanosec();
    resettable_start_timestamp    = program_start_timestamp;
