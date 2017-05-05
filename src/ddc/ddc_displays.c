@@ -232,15 +232,16 @@ bool initial_checks_by_dh_new(Display_Handle * dh) {
    if (!(dh->dref->flags & DREF_DDC_COMMUNICATION_CHECKED)) {
 
       Public_Status_Code psc = get_vcp_value(dh, 0x00, DDCA_NON_TABLE_VCP_VALUE, &pvalrec);
-      DBGMSF("get_vcp_value() for feature 0x00 returned: %s", psc_desc(psc));
+      DBGMSF(debug, "get_vcp_value() for feature 0x00 returned: %s", psc_desc(psc));
       if (psc == DDCRC_NULL_RESPONSE ||
+          psc == DDCRC_ALL_RESPONSES_NULL ||
           psc == 0                   ||
           psc == DDCRC_REPORTED_UNSUPPORTED ||
           psc == DDCRC_DETERMINED_UNSUPPORTED)
       {
          dh->dref->flags |= DREF_DDC_COMMUNICATION_WORKING;
 
-         if (psc == DDCRC_NULL_RESPONSE)
+         if (psc == DDCRC_NULL_RESPONSE || psc == DDCRC_ALL_RESPONSES_NULL)
             dh->dref->flags |= DREF_DDC_USES_NULL_RESPONSE_FOR_UNSUPPORTED;
       }
       dh->dref->flags |= DREF_DDC_COMMUNICATION_CHECKED;
@@ -293,12 +294,9 @@ void * threaded_initial_checks_by_dref(gpointer data) {
 }
 
 
-
-
 //
 // Functions to get display information
 //
-
 
 /** Gets a list of all detected displays, whether they support DDC or not.
  *
@@ -456,6 +454,7 @@ ddc_report_display_by_dref(Display_Ref * dref, int depth) {
       }
       else {
          DDCA_MCCS_Version_Spec vspec = get_vcp_version_by_display_ref(dref);
+         // DBGMSG("vspec = %d.%d", vspec.major, vspec.minor);
          if ( vspec.major   == 0)
             rpt_vstring(d1, "VCP version:         Detection failed");
          else
@@ -523,7 +522,6 @@ ddc_report_displays(bool valid_displays_only, int depth) {
    DBGMSF(debug, "Done.  Returning: %d", display_ct);
    return display_ct;
 }
-
 
 
 /** Debugging function to display the contents of a #Display_Ref.

@@ -42,9 +42,11 @@
 void ddc_set_async_threshold(int threshold);
 
 // bool initial_checks_by_dh(Display_Handle * dh);   not used externally
-bool initial_checks_by_dref(Display_Ref * dref);
+bool
+initial_checks_by_dref(Display_Ref * dref);
 
-GPtrArray * ddc_get_all_displays();  // returns GPtrArray of Display_Ref instances, including invalid displays
+GPtrArray *
+ddc_get_all_displays();  // returns GPtrArray of Display_Ref instances, including invalid displays
 
 int
 ddc_report_active_displays(int depth);
@@ -70,16 +72,18 @@ ddc_find_display_by_mfg_model_sn(
    const char *  sn,
    Byte          findopts);
 
-Display_Ref* ddc_find_display_by_edid(
+Display_Ref*
+ddc_find_display_by_edid(
    const Byte *  pEdidBytes,
    Byte          findopts);
 
+void
+dbgreport_display_ref(Display_Ref * drec, int depth);
 
+GPtrArray *
+ddc_detect_all_displays();
 
-void dbgreport_display_ref(Display_Ref * drec, int depth);
-
-GPtrArray * ddc_detect_all_displays();
-
-void ddc_ensure_displays_detected();
+void
+ddc_ensure_displays_detected();
 
 #endif /* DDC_DISPLAYS_H_ */
