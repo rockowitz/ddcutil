@@ -232,7 +232,6 @@ retry:
       if (errsv == EBUSY && i2c_force_slave_addr_flag && op == I2C_SLAVE) {
          DBGMSG("Retrying using IOCTL op I2C_SLAVE_FORCE for address 0x%02x", addr );
          // normally errors counted at higher level, but in this case it would be lost because of retry
-         // COUNT_STATUS_CODE( modulate_rc(-errsv, RR_ERRNO));
          COUNT_STATUS_CODE(-errsv);
          op = I2C_SLAVE_FORCE;
          debug = true;   // force final message for clarity
@@ -514,7 +513,6 @@ Public_Status_Code i2c_get_raw_edid_by_fd(int fd, Buffer * rawedid) {
 
    rc = i2c_set_addr(fd, 0x50, CALLOPT_ERR_MSG);
    if (rc < 0) {
-      // gsc = modulate_rc(rc, RR_ERRNO);
       goto bye;
    }
    // 10/23/15, try disabling sleep before write
@@ -845,14 +843,6 @@ bool i2c_device_exists(int busno) {
    char namebuf[20];
    struct stat statbuf;
    int  rc = 0;
-
-#ifdef MOCK_DATA
-   if (busno == 0 || busno == 3) {
-      DBGMSG("Inserting mock data.  Returning false for bus %d", busno);
-      return false;
-   }
-#endif
-
    sprintf(namebuf, "/dev/i2c-%d", busno);
    errno = 0;
    rc = stat(namebuf, &statbuf);
@@ -935,23 +925,6 @@ Bus_Info * detect_single_bus(int busno) {
    return businfo;
 }
 
-
-
-#ifdef UNUSED
-/** Returns the number of /dev/i2c-n devices found on the system.
- *
- * As a side effect, data structures for storing information about
- * the devices are initialized if not already initialized.
- */
-int i2c_get_busct() {
-   bool debug = false;
-
-   int result = i2c_detect_buses();
-
-   DBGMSF(debug, "Returning %d", result);
-   return result;
-}
-#endif
 
 
 //
@@ -1168,9 +1141,6 @@ Bus_Info * find_bus_info_by_selector(I2C_Bus_Selector * sel) {
    }
 
    Bus_Info * bus_info = NULL;
-   // int busct = i2c_get_busct();   // forces initialization of Bus_Info data structs if necessary
-   // int busct = i2c_detect_buses();   // forces initialization of Bus_Info data structs if necessary
-
    assert(i2c_buses);
    int busct = i2c_buses->len;
 
@@ -1190,9 +1160,7 @@ Bus_Info * find_bus_info_by_selector(I2C_Bus_Selector * sel) {
  }
 
 
-// Finally, the functions that use the generalized bus selection mechanism
-
-// called from get_fallback_hiddev_edid() in usb_edid.c
+// Finally, functions that use the generalized bus selection mechanism
 
 /** Retrieves bus information by some combination of the monitor's
  * mfg id, model name and/or serial number.
@@ -1289,98 +1257,7 @@ bool i2c_is_valid_bus(int busno, Call_Options callopts) {
 #endif
 
 
-#ifdef UNUSED
 
-/** Gets the parsed EDID record for the monitor on an I2C bus
- * specified by its bus number.
- *
- * @param  busno        I2C bus number
- *
- * @return      Parsed_Edid record, NULL if not found
- */
-Parsed_Edid * i2c_get_parsed_edid_by_busno(int busno) {
-   bool debug = false;
-   DBGMSF(debug, "Starting. busno=%d", busno);
-   Parsed_Edid * edid = NULL;
-
-   // Bus_Info * pbus_info = i2c_get_bus_info(busno, DISPSEL_NONE);
-   Bus_Info * pbus_info = i2c_find_bus_info_by_busno(busno);
-   if (pbus_info)
-      edid = pbus_info->edid;
-
-   DBGMSF(debug, "Returning: %p", edid);
-   return edid;
-}
-
-#endif
-
-
-#ifdef OLD
-
-GPtrArray* i2c_get_displays() {
-   GPtrArray * p = g_ptr_array_new();
-   int busct = i2c_get_busct();
-   int busndx = 0;
-   for (busndx=0; busndx < busct; busndx++) {
-      Bus_Info * businfo = i2c_get_bus_info_by_index(busndx);
-      if ( (businfo->flags & I2C_BUS_ADDR_0X50) )
-         g_ptr_array_add(p, businfo);
-    }
-   return p;
-}
-#endif
-
-
-
-
-#ifdef UNUSED
-/** Reports a single active display, specified by its bus number.
- *
- * Output is written to the current report destination.
- *
- * @param busno       bus number (must be valid)
- * @param depth       logical indentation depth
- */
-void i2c_report_active_display_by_busno(int busno, int depth) {
-   bool debug = false;
-   DBGMSF(debug, "Starting. busno=%d", busno);
-
-   // Bus_Info * curinfo = i2c_get_bus_info(busno, DISPSEL_NONE);
-   Bus_Info * curinfo = i2c_find_bus_info_by_busno(busno);
-   assert(curinfo);
-   i2c_report_active_display(curinfo, depth);
-
-   DBGMSF(debug, "Done");
-}
-#endif
-
-
-#ifdef OLD
-/** Reports on a single I2C bus.
- *
- *  @param   busno       bus number
- *
- * @remark
- * The format of the output is determined by a call to getOutputFormat().
- */
-
-void i2c_report_bus(int busno) {
-   bool debug = false;
-   DBGMSF(debug, "Starting. busno=%d", busno );
-   assert(busno >= 0);
-
-  int busct = i2c_get_busct();
-  if (busno >= busct)
-     fprintf(stderr, "Invalid I2C bus number: %d\n", busno);
-  else {
-     // Bus_Info * busInfo = i2c_get_bus_info(busno, DISPSEL_NONE);
-     Bus_Info * busInfo = i2c_find_bus_info_by_busno(busno);
-     i2c_report_bus_info(busInfo, 0);
-  }
-
-  DBGMSF(debug, "Done");
-}
-#endif
 
 
 /** Reports I2C buses.
@@ -1394,47 +1271,12 @@ void i2c_report_bus(int busno) {
  * @remark
  * Used by query-sysenv.c
  */
-#ifdef OLD
-int i2c_report_buses_old(bool report_all, int depth) {
-   bool debug = false;
-   DBGTRC(debug, TRACE_GROUP, "Starting. report_all=%s\n", bool_repr(report_all));
-
-   int busct = i2c_get_busct();
-   int reported_ct = 0;
-
-   puts("");
-   if (report_all)
-      rpt_vstring(depth,"Detected I2C buses:");
-   else
-      rpt_vstring(depth, "I2C buses with monitors detected at address 0x50:");
-
-   int busno = 0;
-   for (busno=0; busno < busct; busno++) {
-      Bus_Info * busInfo = i2c_get_bus_info(busno, DISPSEL_NONE);
-      if ( (busInfo->flags & I2C_BUS_ADDR_0X50) || report_all) {
-         i2c_report_bus_info(busInfo, depth);
-         reported_ct++;
-      }
-   }
-   if (reported_ct == 0)
-      rpt_vstring(depth, "   No buses\n");
-
-   DBGTRC(debug, TRACE_GROUP, "Done. Returning %d\n", reported_ct);
-   return reported_ct;
-}
-#endif
-
-
 int i2c_report_buses(bool report_all, int depth) {
    bool debug = false;
    DBGTRC(debug, TRACE_GROUP, "Starting. report_all=%s\n", bool_repr(report_all));
 
-   // int busct = i2c_get_busct();
-   // int busct = i2c_detect_buses();  // ensure initailized
-
    assert(i2c_buses);
    int busct = i2c_buses->len;
-
    int reported_ct = 0;
 
    puts("");
