@@ -1549,13 +1549,10 @@ void query_x11() {
  */
 static void query_using_i2cdetect() {
    rpt_vstring(0,"Examining I2C buses using i2cdetect: ");
-
    // calling i2cdetect for an SMBUs device fills dmesg with error messages
    // avoid this if possible
-// #ifdef USE_USB
    // GPtrArray * summaries = get_i2c_smbus_devices_using_udev();
    GPtrArray * summaries = get_i2c_devices_using_udev();
-// #endif
 
    // GPtrArray * busnames = execute_shell_cmd_collect("ls /dev/i2c*");
    GPtrArray * busnames = execute_shell_cmd_collect("ls /dev/i2c* | cut -c 10- | sort -n");
@@ -1618,85 +1615,15 @@ void probe_i2c_devices_using_udev() {
    GPtrArray * summaries = get_i2c_devices_using_udev();
    report_i2c_udev_device_summaries(summaries, "Summary of udev I2C devices",1);
    free_udev_device_summaries(summaries);   // ok if summaries == NULL
-}
 
-#ifdef OLD
-void probe_i2c_devices_using_udev1() {
-   char * subsys_name = "i2c-dev";
    rpt_nl();
-   rpt_vstring(0,"Probing I2C devices using udev, susbsystem %s...", subsys_name);
-   // probe_udev_subsystem() is in udev_util.c, which is only linked in if USE_USB
-
-   probe_udev_subsystem(subsys_name, /*show_usb_parent=*/ false, 1);
-
-   GPtrArray * summaries = get_i2c_devices_using_udev();
-   rpt_nl();
-   rpt_vstring(0,"Summary of udev I2C devices:");
-   if (!summaries || summaries->len == 0)
-      rpt_vstring(0,"No devices detected");
-   else {
-#ifdef REFERENCE
-#define UDEV_DEVICE_SUMMARY_MARKER "UDSM"
-typedef struct udev_device_summary {
-char   marker[4];
-const char * sysname;
-const char * devpath;
-const char * sysattr_name;
-} Udev_Device_Summary;
-#endif
-
-      rpt_vstring(0,"%-15s %-35s %s", "Sysname", "Sysattr Name", "Devpath");
-      for (int ndx = 0; ndx < summaries->len; ndx++) {
-         Udev_Device_Summary * summary = g_ptr_array_index(summaries, ndx);
-         assert( memcmp(summary->marker, UDEV_DEVICE_SUMMARY_MARKER, 4) == 0);
-         udev_i2c_device_summary_busno(summary);
-         rpt_vstring(0,"%-15s %-35s %s",
-                summary->sysname, summary->sysattr_name, summary->devpath);
-      }
-   }
+   char * nameattr = "DPMST";
+   rpt_vstring(0,"Looking for udev devices with name attribute %s...", nameattr);
+   summaries = find_devices_by_sysattr_name(nameattr);
+   report_i2c_udev_device_summaries(summaries, "Summary of udev DPMST devices...",1);
    free_udev_device_summaries(summaries);   // ok if summaries == NULL
+
 }
-
-
-void probe_i2c_devices_using_udev0() {
-   char * subsys_name = "i2c-dev";
-   rpt_nl();
-   rpt_vstring(0,"Probing I2C devices using udev, susbsystem %s...", subsys_name);
-   // probe_udev_subsystem() is in udev_util.c, which is only linked in if USE_USB
-   probe_udev_subsystem(subsys_name, /*show_usb_parent=*/ false, 1);
-
-   GPtrArray * summaries = summarize_udev_subsystem_devices(subsys_name);
-   rpt_nl();
-   rpt_vstring(0,"Summary of udev I2C devices:");
-   if (!summaries || summaries->len == 0)
-      rpt_vstring(0,"No devices detected");
-   else {
-#ifdef REFERENCE
-#define UDEV_DEVICE_SUMMARY_MARKER "UDSM"
-typedef struct udev_device_summary {
-char   marker[4];
-const char * sysname;
-const char * devpath;
-const char * sysattr_name;
-} Udev_Device_Summary;
-#endif
-
-      g_ptr_array_sort(summaries, compare_udev_i2c_device_summary);
-      rpt_vstring(0,"%-15s %-35s %s", "Sysname", "Sysattr Name", "Devpath");
-      for (int ndx = 0; ndx < summaries->len; ndx++) {
-         Udev_Device_Summary * summary = g_ptr_array_index(summaries, ndx);
-         assert( memcmp(summary->marker, UDEV_DEVICE_SUMMARY_MARKER, 4) == 0);
-         udev_i2c_device_summary_busno(summary);
-         rpt_vstring(0,"%-15s %-35s %s",
-                summary->sysname, summary->sysattr_name, summary->devpath);
-      }
-   }
-   free_udev_device_summaries(summaries);   // ok if summaries == NULL
-}
-
-#endif
-
-// #endif
 
 
 //
