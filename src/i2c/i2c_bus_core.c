@@ -931,9 +931,7 @@ Bus_Info * detect_single_bus(int busno) {
 // Bus_Info retrieval
 //
 
-//
 // Simple Bus_Info retrieval
-//
 
 /** Retrieves bus information by its index in the i2c_buses array
  *
@@ -999,7 +997,6 @@ Bus_Info * i2c_find_bus_info_by_busno(int busno) {
 }
 
 
-//
 // Generalized Bus_Info search
 //
 // Overkill for current use.
@@ -1007,7 +1004,6 @@ Bus_Info * i2c_find_bus_info_by_busno(int busno) {
 // level rather than in ddc_displays.c.
 // Still used by USB layer as a fallback to find the EDID by model etc.
 // if the EDID can't be gotten from USB services.
-//
 
 typedef struct {
    int           busno;
@@ -1255,9 +1251,6 @@ bool i2c_is_valid_bus(int busno, Call_Options callopts) {
    return result;
 }
 #endif
-
-
-
 
 
 /** Reports I2C buses.
