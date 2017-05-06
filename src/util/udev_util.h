@@ -42,10 +42,12 @@ typedef struct udev_device_summary {
    const char * sysname;          ///< e.g. i2c-3
    const char * devpath;          ///< device path
    const char * sysattr_name;     ///< sysattr name
+   const char * subsystem;        ///< subsystem, e.g. usbmisc
 } Udev_Device_Summary;
 
 void free_udev_device_summaries(GPtrArray* summaries);
 GPtrArray * summarize_udev_subsystem_devices(char * subsystem);
+GPtrArray * find_devices_by_sysattr_name(char * name);
 
 void report_udev_device(struct udev_device * dev, int depth);
 

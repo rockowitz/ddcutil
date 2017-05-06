@@ -69,10 +69,11 @@ void free_udev_device_summaries(GPtrArray* summaries) {
 Udev_Device_Summary * get_udev_device_summary(struct udev_device * dev) {
   Udev_Device_Summary * summary = calloc(1,sizeof(struct udev_device_summary));
   memcpy(summary->marker, UDEV_DEVICE_SUMMARY_MARKER, 4);
-  // n. all strings returned are chonst char *
+  // n. all strings returned are const char *
   summary->devpath      = udev_device_get_devpath(dev);
   summary->sysname      = udev_device_get_sysname(dev);
   summary->sysattr_name = udev_device_get_sysattr_value(dev, "name");
+  summary->subsystem    = udev_device_get_subsystem(dev);
   return summary;
 }
 
@@ -80,7 +81,7 @@ Udev_Device_Summary * get_udev_device_summary(struct udev_device * dev) {
 /** Queries UDEV to obtain summaries of each device in a subsystem.
  *
  * @param  subsystem    subsystem name, e.g. "i2c-dev"
- * @return GPtrArray of Udev_Device_Summary
+ * @return GPtrArray of #Udev_Device_Summary
  */
 GPtrArray * summarize_udev_subsystem_devices(char * subsystem) {
    struct udev *udev;
@@ -88,15 +89,15 @@ GPtrArray * summarize_udev_subsystem_devices(char * subsystem) {
    struct udev_list_entry *devices, *dev_list_entry;
    struct udev_device *dev;
 
+   GPtrArray * summaries = g_ptr_array_sized_new(10);
+   g_ptr_array_set_free_func(summaries, free_udev_device_summary);
+
    /* Create the udev object */
    udev = udev_new();
    if (!udev) {
       printf("(%s) Can't create udev\n", __func__);
-      return NULL;   // exit(1);
+      goto bye;
    }
-
-   GPtrArray * summaries = g_ptr_array_sized_new(10);
-   g_ptr_array_set_free_func(summaries, free_udev_device_summary);
 
    /* Create a list of the devices in the specified subsystem. */
    enumerate = udev_enumerate_new(udev);
@@ -118,7 +119,51 @@ GPtrArray * summarize_udev_subsystem_devices(char * subsystem) {
 
       g_ptr_array_add(summaries, get_udev_device_summary(dev));
    }
+
+bye:
    return summaries;
+}
+
+
+/** Queries udev to find all devices with a given name attribute
+ *
+ *  @param  name  e.g. DPMST
+ *  @return GPtrArray of #Udev_Device_Summary
+ */
+GPtrArray * find_devices_by_sysattr_name(char * name) {
+   struct udev *udev;
+   struct udev_enumerate *enumerate;
+   struct udev_list_entry *devices, *dev_list_entry;
+   struct udev_device *dev;
+
+   GPtrArray * result = g_ptr_array_sized_new(10);
+   g_ptr_array_set_free_func(result, free_udev_device_summary);
+
+   udev = udev_new();    // Create the udev object
+   if (!udev) {
+      printf("(%s) Can't create udev\n", __func__);
+      goto bye;
+   }
+
+   /* Create a list of the devices in the specified subsystem. */
+   enumerate = udev_enumerate_new(udev);
+   udev_enumerate_add_match_sysattr(enumerate, "name", name);
+   udev_enumerate_scan_devices(enumerate);
+   devices = udev_enumerate_get_list_entry(enumerate);
+   // udev_list_entry_foreach is a macro which expands to a loop.
+   // The loop will be executed for each member in devices, setting dev_list_entry
+   // to a list entry which contains the device's path in /sys.
+   udev_list_entry_foreach(dev_list_entry, devices) {
+      // Get the filename of the /sys entry for the device,
+      // and create a udev_device object (dev) representing it
+      const char * path = udev_list_entry_get_name(dev_list_entry);
+      dev = udev_device_new_from_syspath(udev, path);
+
+      g_ptr_array_add(result, get_udev_device_summary(dev));
+   }
+
+bye:
+   return result;
 }
 
 
