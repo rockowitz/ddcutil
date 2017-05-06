@@ -321,17 +321,18 @@ GPtrArray * get_usb_monitor_list() {
          calloptions |= CALLOPT_ERR_MSG;
       int fd = usb_open_hiddev_device(hiddev_fn, calloptions);
       if (fd < 0 && ol >= DDCA_OL_VERBOSE) {
-         Usb_Detailed_Device_Summary * devsum =
-         lookup_udev_usb_device_by_devname(hiddev_fn);
-         // report_usb_detailed_device_summary(devsum, 2);
-         f0printf(FERR, "  USB bus %s, device %s, vid:pid: %s:%s - %s:%s\n",
-                        devsum->busnum_s,
-                        devsum->devnum_s,
-                        devsum->vendor_id,
-                        devsum->product_id,
-                        devsum->vendor_name,
-                        devsum->product_name);
-         free_usb_detailed_device_summary(devsum);
+         Usb_Detailed_Device_Summary * devsum = lookup_udev_usb_device_by_devname(hiddev_fn);
+         if (devsum) {
+            // report_usb_detailed_device_summary(devsum, 2);
+            f0printf(FERR, "  USB bus %s, device %s, vid:pid: %s:%s - %s:%s\n",
+                           devsum->busnum_s,
+                           devsum->devnum_s,
+                           devsum->vendor_id,
+                           devsum->product_id,
+                           devsum->vendor_name,
+                           devsum->product_name);
+            free_usb_detailed_device_summary(devsum);
+         }
       }
       else if (fd > 1) {     // fd == 0 should never occur
          // Declare variables here and initialize them to NULL so that code at label close: works
