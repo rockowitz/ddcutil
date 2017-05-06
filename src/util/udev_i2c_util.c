@@ -108,15 +108,10 @@ compare_udev_i2c_device_summary(const void * a, const void * b) {
 GPtrArray *
 get_i2c_devices_using_udev() {
    GPtrArray * summaries = summarize_udev_subsystem_devices("i2c-dev");
+   assert(summaries);
 
-   if (summaries) {
-      if ( summaries->len == 0) {
-         free_udev_device_summaries(summaries);   // ok if summaries == NULL
-         summaries = NULL;
-      }
-      else {
-         g_ptr_array_sort(summaries, compare_udev_i2c_device_summary);
-      }
+   if (summaries->len > 1) {
+      g_ptr_array_sort(summaries, compare_udev_i2c_device_summary);
    }
    return summaries;
 }
@@ -134,13 +129,13 @@ report_i2c_udev_device_summaries(GPtrArray * summaries, char * title, int depth)
    if (!summaries || summaries->len == 0)
       rpt_vstring(depth,"No devices detected");
    else {
-      rpt_vstring(depth,"%-15s %-35s %s", "Sysname", "Sysattr Name", "Devpath");
+      rpt_vstring(depth,"%-15s %-15s %-35s %s", "Subsystem", "Sysname", "Sysattr Name", "Devpath");
       for (int ndx = 0; ndx < summaries->len; ndx++) {
          Udev_Device_Summary * summary = g_ptr_array_index(summaries, ndx);
          assert( memcmp(summary->marker, UDEV_DEVICE_SUMMARY_MARKER, 4) == 0);
          udev_i2c_device_summary_busno(summary);   // ???
-         rpt_vstring(depth,"%-15s %-35s %s",
-                summary->sysname, summary->sysattr_name, summary->devpath);
+         rpt_vstring(depth,"%-15s %-15s %-35s %s",
+                summary->subsystem, summary->sysname, summary->sysattr_name, summary->devpath);
       }
    }
 }
