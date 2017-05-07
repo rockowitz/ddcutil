@@ -306,6 +306,14 @@ static void query_base_env() {
    rpt_nl();
    wrap_get_first_line("/proc/cmdline", NULL, 0);
 
+   if (get_output_level() >= DDCA_OL_VERBOSE) {
+      rpt_nl();
+      rpt_vstring(0,"Processor information as reported by lscpu:");
+        bool ok = execute_shell_cmd_rpt("lscpu", 1);
+        if (!ok)    // lscpu should always be there, but just in case:
+           rpt_vstring(1, "Command lscpu not found");
+   }
+
 }
 
 
