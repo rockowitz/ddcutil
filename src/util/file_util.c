@@ -130,6 +130,7 @@ char * file_get_first_line(const char * fn, bool verbose) {
       }
       fclose(fp);
    }
+   // printf("(%s) fn=|%s|, returning: |%s|\n", __func__, fn, single_line);
    return single_line;
 }
 
