@@ -26,12 +26,14 @@
 */
 
 /** \cond */
+#include <assert.h>
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 /** \endcond */
 
+#include "glib_util.h"
 #include "report_util.h"
 #include "string_util.h"
 
@@ -203,3 +205,24 @@ bool is_command_in_path(char * cmd) {
    return result;
 }
 
+
+
+int test_command_executability(char * cmd) {
+   assert(cmd);
+   char * full_cmd = calloc(1, strlen(cmd) + 20);
+   strcpy(full_cmd, cmd);
+   strcat(full_cmd, ">/dev/null 2>&1");
+   // printf("(%s) cmd: |%s|, full_cmd: |%s|\n", __func__, cmd, full_cmd);
+   int rc = system(full_cmd);
+   // printf("(%s) system(%s) returned: %d, %d, %d\n", __func__, full_cmd, rc, WIFEXITED(rc), WEXITSTATUS(rc));
+   free(full_cmd);
+
+   // 0 ok
+   // 127 command not found
+   // 2 on dmidecode - not running sudo
+   // 2 on i2cdetect - not sudo
+   // 1 on i2cdetect - sudo, but some error
+
+
+   return WEXITSTATUS(rc);
+}
