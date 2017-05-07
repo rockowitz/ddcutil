@@ -451,7 +451,7 @@ static void query_base_env() {
       char * chassis_desc = dv;
       char workbuf[100];
       if (chassis_type_s) {
-         int chassis_type_i = atoi(chassis_type_s);   // TODO: use something safer
+         int chassis_type_i = atoi(chassis_type_s);   // TODO: use something safer?
          const char * chassis_type_name = dmi_chassis_type(chassis_type_i);
          if (chassis_type_name)
             snprintf(workbuf, 100, "%s - %s", chassis_type_s, chassis_type_name);
