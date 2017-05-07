@@ -157,3 +157,4 @@ demo_get_set_vcp
 demo_vcpinfo
 demo_global_settings
 .*.swo
+github_signing/
