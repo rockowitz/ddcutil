@@ -1,0 +1,19 @@
+#!/bin/sh
+
+# Problem: if run from other than doxydocs directory, 
+# doxygen picks up files from subdirectories of that directory, 
+# despite the explicit INPUT statement in the control file. 
+# So change to the doxydocs directory and execute the command there
+
+curdir=$PWD
+
+doxyfile=`dirname $0`/internals.doxyfile
+
+cd `dirname $0`
+
+# cmd="doxygen ${doxyfile}"
+cmd="doxygen internals.doxyfile"
+echo "Executing command: ${cmd}"
+$cmd
+
+cd $curdir

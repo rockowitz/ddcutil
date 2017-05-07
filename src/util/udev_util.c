@@ -42,7 +42,7 @@
 
 
 /* GDestroyNotify() function to be called when a data element in a GPtrRrray of
- * Udev_Device_Summary is destroyed.
+ * #Udev_Device_Summary is destroyed.
  *
  * Arguments:
  *    data    pointer to Udev_Device_Summary
@@ -59,13 +59,22 @@ void free_udev_device_summary(gpointer data) {
 
 /** Destroys a GPtrArray of Udev_Device_Summary
  *
- * @param summaries  pointer to GPtrArray of summaries
+ * @param summaries  pointer to GPtrArray of #Udev_Device_Summary
  */
 void free_udev_device_summaries(GPtrArray* summaries) {
    g_ptr_array_free(summaries, true);
 }
 
 
+/** Returns a struct containing key fields extracted from a **struct udev_device**.
+ *
+ * \param dev pointer to struct udev_device
+ * \return newly allocated #Udev_Device_Summary
+ *
+ * \remark
+ * It is the responsibility of the caller to free the returned struct
+ * using #free_udev_device_summary()
+ */
 Udev_Device_Summary * get_udev_device_summary(struct udev_device * dev) {
   Udev_Device_Summary * summary = calloc(1,sizeof(struct udev_device_summary));
   memcpy(summary->marker, UDEV_DEVICE_SUMMARY_MARKER, 4);
@@ -82,6 +91,9 @@ Udev_Device_Summary * get_udev_device_summary(struct udev_device * dev) {
  *
  * @param  subsystem    subsystem name, e.g. "i2c-dev"
  * @return GPtrArray of #Udev_Device_Summary
+ *
+ * @remark
+ * Use #free_udev_device_summaries() to free the returned data structure.
  */
 GPtrArray * summarize_udev_subsystem_devices(char * subsystem) {
    struct udev *udev;
@@ -129,6 +141,9 @@ bye:
  *
  *  @param  name  e.g. DPMST
  *  @return GPtrArray of #Udev_Device_Summary
+ *
+ * @remark
+ * Use #free_udev_device_summaries() to free the returned data structure.
  */
 GPtrArray * find_devices_by_sysattr_name(char * name) {
    struct udev *udev;
@@ -245,4 +260,3 @@ void report_udev_device(struct udev_device * dev, int depth) {
       }
    }
 }
-
