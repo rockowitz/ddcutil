@@ -129,6 +129,17 @@ char * read_sysfs_attr(char * dirname, char * attrname, bool verbose) {
    return file_get_first_line(fn, verbose);
 }
 
+char * read_sysfs_attr_w_default(char * dirname, char * attrname, char * default_value, bool verbose) {
+   char fn[PATH_MAX];
+   sprintf(fn, "%s/%s", dirname, attrname);
+   char * result = file_get_first_line(fn, verbose);
+   if (!result)
+      result = default_value;
+   return result;
+}
+
+
+
 
 ushort h2ushort(char * hval) {
    bool debug = false;
@@ -289,6 +300,86 @@ static bool found_driver(struct driver_name_node * driver_list, char * driver_na
 //
 
 
+// from dmidecode.c
+static const char *dmi_chassis_type(Byte code)
+{
+   /* 7.4.1 */
+   static const char *type[] = {
+      "Other", /* 0x01 */
+      "Unknown",
+      "Desktop",
+      "Low Profile Desktop",
+      "Pizza Box",
+      "Mini Tower",
+      "Tower",
+      "Portable",
+      "Laptop",
+      "Notebook",
+      "Hand Held",
+      "Docking Station",
+      "All In One",
+      "Sub Notebook",
+      "Space-saving",
+      "Lunch Box",
+      "Main Server Chassis", /* CIM_Chassis.ChassisPackageType says "Main System Chassis" */
+      "Expansion Chassis",
+      "Sub Chassis",
+      "Bus Expansion Chassis",
+      "Peripheral Chassis",
+      "RAID Chassis",
+      "Rack Mount Chassis",
+      "Sealed-case PC",
+      "Multi-system",
+      "CompactPCI",
+      "AdvancedTCA",
+      "Blade",
+      "Blade Enclosing",
+      "Tablet",
+      "Convertible",
+      "Detachable",
+      "IoT Gateway",
+      "Embedded PC",
+      "Mini PC",
+      "Stick PC" /* 0x24 */
+   };
+
+   code &= 0x7F; /* bits 6:0 are chassis type, 7th bit is the lock bit */
+
+   if (code >= 0x01 && code <= 0x24)
+      return type[code - 0x01];
+   return NULL;
+}
+
+
+
+#ifdef UNUSED_UGLY
+void report_dmidecode_string(char * s, int depth) {
+   char cmd[100];
+   strcpy(cmd, "dmidecode -s ");
+   strcat(cmd, s);
+   rpt_vstring(depth, "%s:", s);
+   execute_shell_cmd_rpt(cmd, depth+1);
+}
+#endif
+
+
+void report_dmicode_group(char * header, int depth) {
+   char cmd[100];
+   snprintf(cmd, 100, "dmidecode | grep '%s' -A2", header);
+   // DBGMSG("cmd: |%s|", cmd);
+   GPtrArray * lines = execute_shell_cmd_collect(cmd);
+   if (lines) {
+      for (int ndx = 0; ndx < lines->len; ndx++) {
+         char * s = g_ptr_array_index(lines, ndx);
+         rpt_title(s, 1);
+      }
+      g_ptr_array_free(lines,true);
+   }
+   else
+      rpt_vstring(1, "Command failed: %s", cmd);
+}
+
+
 /* Reports basic system information
  */
 static void query_base_env() {
@@ -310,8 +401,90 @@ static void query_base_env() {
       rpt_nl();
       rpt_vstring(0,"Processor information as reported by lscpu:");
         bool ok = execute_shell_cmd_rpt("lscpu", 1);
-        if (!ok)    // lscpu should always be there, but just in case:
+        if (!ok) {   // lscpu should always be there, but just in case:
            rpt_vstring(1, "Command lscpu not found");
+           rpt_nl();
+           rpt_title("Processor information from /proc/cpuinfo:", 0);
+           execute_shell_cmd_rpt( "cat /proc/cpuinfo | grep vendor_id | uniq", 1);
+           execute_shell_cmd_rpt( "cat /proc/cpuinfo | grep \"cpu family\" | uniq", 1);
+           execute_shell_cmd_rpt( "cat /proc/cpuinfo | grep \"model[[:space:]][[:space:]]\" | uniq",  1);   //  "model"
+           execute_shell_cmd_rpt( "cat /proc/cpuinfo | grep \"model name\" | uniq",  1);   // "model name"
+       }
+
+#ifdef NO
+      // leave in for testing
+      rpt_nl();
+      if (test_command_executability("dmidecode") == 0) {
+         rpt_vstring(0, "System information from dmidecode:");
+
+#ifdef NO_UGLY
+         report_dmidecode_string("baseboard-manufacturer", 1);
+         report_dmidecode_string("baseboard-product-name", 1);
+         report_dmidecode_string("system-manufacturer", 1);
+         report_dmidecode_string("system-product-name", 1);
+         report_dmidecode_string("chassis-manufacturer", 1);
+         report_dmidecode_string("chassis-type", 1);
+#endif
+
+         report_dmicode_group("Base Board Info", 1);
+         report_dmicode_group("System Info", 1);
+         report_dmicode_group("Chassis Info", 1);
+      }
+      else
+         rpt_vstring(0, "dmidecode command unavailable");
+#endif
+
+      char * sysdir = "/sys/class/dmi/id";
+      // better way, doesn't require privileged dmidecode
+      rpt_nl();
+      rpt_title("DMI Information from /sys/class/dmi/id:", 0);
+
+      char * dv = "(Unavailable)";
+      //                                                                                            verbpse
+      rpt_vstring(1, "%-25s %s","Motherboard vendor:",       read_sysfs_attr_w_default(sysdir, "board_vendor",  dv, false));
+      rpt_vstring(1, "%-25s %s","Motherboard product name:", read_sysfs_attr_w_default(sysdir, "board_name",    dv, false));
+      rpt_vstring(1, "%-25s %s","System vendor:",            read_sysfs_attr_w_default(sysdir, "sys_vendor",    dv, false));
+      rpt_vstring(1, "%-25s %s","System product name:",      read_sysfs_attr_w_default(sysdir, "product_name",  dv, false));
+      rpt_vstring(1, "%-25s %s","Chassis vendor:",           read_sysfs_attr_w_default(sysdir, "chassis_vendor",dv, false));
+
+      char * chassis_type_s = read_sysfs_attr(sysdir, "chassis_type", /*verbose=*/ true);
+      char * chassis_desc = dv;
+      char workbuf[100];
+      if (chassis_type_s) {
+         int chassis_type_i = atoi(chassis_type_s);   // TODO: use something safer
+         const char * chassis_type_name = dmi_chassis_type(chassis_type_i);
+         if (chassis_type_name)
+            snprintf(workbuf, 100, "%s - %s", chassis_type_s, chassis_type_name);
+         else
+            snprintf(workbuf, 100, "%s - Unrecognized value", chassis_type_s);
+         chassis_desc = workbuf;
+      }
+      rpt_vstring(1, "%-25s %s", "Chassis type:", chassis_desc);
+
+
+      // test_command_executability("i2cdetect");
+      // test_command_executability("nonesuch");
+
+
+
+#ifdef NOT_WORKING
+      char * cmd =    "dmidecode | grep \"['Base Board Info'|'Chassis Info'|'System Info']\' -A2";
+      // char * cmd =    "dmidecode | grep 'Base Board Info' -A2";
+      DBGMSG("cmd: |%s|", cmd);
+      GPtrArray * lines = execute_shell_cmd_collect(cmd);
+
+      if (lines) {
+      for (int ndx = 0; ndx < lines->len; ndx++) {
+         char * s = g_ptr_array_index(lines, ndx);
+         rpt_title(s, 1);
+      }
+      }
+      else
+         rpt_vstring(1, "Command failed: %s", cmd);
+      g_ptr_array_free(lines,true);
+#endif
+
+
    }
 
 }
