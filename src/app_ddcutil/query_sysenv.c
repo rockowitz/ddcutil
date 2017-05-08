@@ -129,6 +129,7 @@ char * read_sysfs_attr(char * dirname, char * attrname, bool verbose) {
    return file_get_first_line(fn, verbose);
 }
 
+
 char * read_sysfs_attr_w_default(char * dirname, char * attrname, char * default_value, bool verbose) {
    char fn[PATH_MAX];
    sprintf(fn, "%s/%s", dirname, attrname);
@@ -137,8 +138,6 @@ char * read_sysfs_attr_w_default(char * dirname, char * attrname, char * default
       result = default_value;
    return result;
 }
-
-
 
 
 ushort h2ushort(char * hval) {
@@ -187,11 +186,9 @@ static bool show_one_file(char * dir_name, char * simple_fn, bool verbose, int d
 }
 
 
-//
-// Functions to query and free the driver name list.  The list is created by
-// executing function query_card_and_driver_using_sysfs(), which is grouped
-// with the sysfs functions.
-//
+// Functions to query and free the linked list of driver names.
+// The list is created by executing function query_card_and_driver_using_sysfs(),
+// which is grouped with the sysfs functions.
 
 struct driver_name_node;
 
@@ -296,9 +293,8 @@ static bool found_driver(struct driver_name_node * driver_list, char * driver_na
 
 
 //
-// Higher level functions
+// dmidecode related functions
 //
-
 
 // from dmidecode.c
 static const char *dmi_chassis_type(Byte code)
@@ -351,7 +347,6 @@ static const char *dmi_chassis_type(Byte code)
 }
 
 
-
 #ifdef UNUSED_UGLY
 void report_dmidecode_string(char * s, int depth) {
    char cmd[100];
@@ -379,6 +374,10 @@ void report_dmicode_group(char * header, int depth) {
       rpt_vstring(1, "Command failed: %s", cmd);
 }
 
+
+//
+// Higher level functions
+//
 
 /* Reports basic system information
  */
@@ -465,8 +464,6 @@ static void query_base_env() {
       // test_command_executability("i2cdetect");
       // test_command_executability("nonesuch");
 
-
-
 #ifdef NOT_WORKING
       char * cmd =    "dmidecode | grep \"['Base Board Info'|'Chassis Info'|'System Info']\' -A2";
       // char * cmd =    "dmidecode | grep 'Base Board Info' -A2";
@@ -483,7 +480,6 @@ static void query_base_env() {
          rpt_vstring(1, "Command failed: %s", cmd);
       g_ptr_array_free(lines,true);
 #endif
-
 
    }
 
@@ -628,7 +624,6 @@ Public_Status_Code try_single_getvcp_call(int fh, unsigned char vcp_feature_code
    DBGMSF(debug, "Starting. vcp_feature_code=0x%02x", vcp_feature_code );
 
    int ndx;
-   unsigned char checksum;
    Status_Errno rc = 0;
 
 #ifdef NO
@@ -651,21 +646,16 @@ Public_Status_Code try_single_getvcp_call(int fh, unsigned char vcp_feature_code
       vcp_feature_code,  //
       0x00,              // checksum, to be set
    };
-   // unsigned char checksum0 = xor_bytes(ddc_cmd_bytes,5);
-   checksum = ddc_checksum(ddc_cmd_bytes, 5, false);    // calculate DDC checksum on all bytes
-   // assert(checksum==checksum0);
+
+   // calculate checksum by XORing bytes 0..4
    ddc_cmd_bytes[5] = ddc_cmd_bytes[0];
-   for (ndx=1; ndx < 5; ndx++) ddc_cmd_bytes[5] ^= ddc_cmd_bytes[ndx];    // calculate checksum
-   // printf("(%s) ddc_cmd_bytes = %s   \n", __func__ , hexstring(ddc_cmd_bytes,6) );
-   // printf("(%s) checksum=0x%02x, ddc_cmd_bytes[5]=0x%02x   \n", __func__, checksum, ddc_cmd_bytes[5] );
-   // assert(ddc_cmd_bytes[5] == 0xac);
-   assert(checksum == ddc_cmd_bytes[5]);
+   for (ndx=1; ndx < 5; ndx++)
+      ddc_cmd_bytes[5] ^= ddc_cmd_bytes[ndx];    // calculate checksum
 
    int writect = sizeof(ddc_cmd_bytes)-1;
    rc = write(fh, ddc_cmd_bytes+1, writect);
    if (rc < 0) {
       int errsv = errno;
-      // printf("(%s) write() returned %d, errno=%d. \n", __func__, rc, errno);
       DBGMSF(debug, "write() failed, errno=%s", linux_errno_desc(errsv));
       rc = -errsv;
       goto bye;
@@ -708,7 +698,6 @@ Public_Status_Code try_single_getvcp_call(int fh, unsigned char vcp_feature_code
       rc = DDCRC_READ_ALL_ZERO;
       goto bye;
    }
-
 
    int ddc_data_length = ddc_response_bytes[2] & 0x7f;
    // some monitors return a DDC null response to indicate an invalid request:
@@ -754,21 +743,21 @@ Public_Status_Code try_single_getvcp_call(int fh, unsigned char vcp_feature_code
       goto bye;
    }
 
-      if (ddc_response_bytes[4] == 0x00) {         // valid VCP code
-         // The interpretation for most VCP codes:
-         int max_val = (ddc_response_bytes[7] << 8) + ddc_response_bytes[8];
-         int cur_val = (ddc_response_bytes[9] << 8) + ddc_response_bytes[10];
-         DBGMSF(debug, "cur_val = %d, max_val = %d", cur_val, max_val );
-      }
-      else if (ddc_response_bytes[4] == 0x01) {    // unsupported VCP code
-         DBGMSF(debug, "Unsupported VCP code: 0x%02x", vcp_feature_code);
-         rc = DDCRC_REPORTED_UNSUPPORTED;
-      }
-      else {
-         DBGMSF(debug, "Unexpected value in supported VCP code field: 0x%02x  ",
-                       ddc_response_bytes[4] );
-         rc = DDCRC_INVALID_DATA;
-      }
+   if (ddc_response_bytes[4] == 0x00) {         // valid VCP code
+      // The interpretation for most VCP codes:
+      int max_val = (ddc_response_bytes[7] << 8) + ddc_response_bytes[8];
+      int cur_val = (ddc_response_bytes[9] << 8) + ddc_response_bytes[10];
+      DBGMSF(debug, "cur_val = %d, max_val = %d", cur_val, max_val );
+   }
+   else if (ddc_response_bytes[4] == 0x01) {    // unsupported VCP code
+      DBGMSF(debug, "Unsupported VCP code: 0x%02x", vcp_feature_code);
+      rc = DDCRC_REPORTED_UNSUPPORTED;
+   }
+   else {
+      DBGMSF(debug, "Unexpected value in supported VCP code field: 0x%02x  ",
+                    ddc_response_bytes[4] );
+      rc = DDCRC_INVALID_DATA;
+   }
 
    rc = 0;
 
@@ -894,7 +883,7 @@ void raw_scan_i2c_devices() {
 }
 
 
-/* Checks on the existence and accessibility of  /dev/i2c devices.
+/* Checks on the existence and accessibility of /dev/i2c devices.
  *
  * Arguments:
  *   driver_list   singly linked list of names of video drivers detected
