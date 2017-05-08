@@ -49,11 +49,11 @@
 #include <sys/utsname.h>
 #include <time.h>
 #include <unistd.h>
-
 #include <X11/Xlib.h>
 #include <X11/Xatom.h>
 #include <X11/extensions/Xrandr.h>
 
+#include "util/data_structures.h"
 #include "util/device_id_util.h"
 #include "util/edid.h"
 #include "util/file_util.h"
@@ -117,6 +117,101 @@ static char * other_driver_modules[] = {
       "i2c_piix4",
       NULL
 };
+
+
+//
+// Get list of /dev/i2c devices
+//
+// There are too many ways of doing this throughout the code.
+// Consolidate them here.  (IN PROGRESS)
+//
+
+Byte_Value_Array get_i2c_devices_by_existence_test() {
+   Byte_Value_Array bva = bva_create();
+   for (int busno=0; busno < I2C_BUS_MAX; busno++) {
+      if (i2c_device_exists(busno)) {
+         bva_append(bva, busno);
+      }
+   }
+   return bva;
+}
+
+Byte_Value_Array get_i2c_devices_by_ls() {
+   Byte_Value_Array bva = bva_create();
+
+   int ival;
+
+   // returns array of I2C bus numbers in string form, sorted in numeric order
+   GPtrArray * busnums = execute_shell_cmd_collect("ls /dev/i2c* | cut -c 10- | sort -n");
+
+   if (!busnums) {
+      rpt_vstring(1, "No I2C buses found");
+      goto bye;
+   }
+   if (busnums->len > 0) {
+      bool isint = str_to_int(g_ptr_array_index(busnums,0), &ival);
+      if (!isint) {
+         rpt_vstring(1, "Apparently no I2C buses");
+         goto bye;
+      }
+   }
+   for (int ndx = 0; ndx < busnums->len; ndx++) {
+      char * sval = g_ptr_array_index(busnums, ndx);
+      bool isint = str_to_int(sval, &ival);
+      if (!isint) {
+         rpt_vstring(1, "Parsing error.  Invalid I2C bus number: %s", sval);
+      }
+      else {
+         bva_append(bva, ival);
+      }
+   }
+bye:
+   if (busnums)
+      g_ptr_array_free(busnums, true);
+
+
+   return bva;
+}
+
+
+// temporarily here.  move it to data_structures.c
+
+bool bva_sorted_eq(Byte_Value_Array bva1, Byte_Value_Array bva2) {
+   // punt on the NULL case for now
+   assert(bva1);
+   assert(bva2);
+   bool result = true;
+   if (bva_length(bva1) != bva_length(bva2)) {
+      result = false;
+   }
+   else {
+      for (int ndx = 0; ndx < bva_length(bva1); ndx++) {
+         if (bva_get(bva1,ndx) != bva_get(bva2,ndx))
+            result = false;
+      }
+   }
+   return result;
+}
+
+
+static Byte_Value_Array i2c_device_numbers = NULL;
+
+Byte_Value_Array identify_i2c_devices() {
+
+   Byte_Value_Array bva1 = get_i2c_devices_by_existence_test();
+   Byte_Value_Array bva2 = get_i2c_devices_by_ls();
+   Byte_Value_Array bva3 = get_i2c_device_numbers_using_udev(/* include_smbus= */ true);
+
+   assert(bva_sorted_eq(bva1,bva2));
+   assert(bva_sorted_eq(bva1,bva3));
+
+   i2c_device_numbers = bva1;
+   bva_free(bva2);
+   bva_free(bva3);
+   DBGMSG("Identified %d I2C devices", bva_length(bva1));
+   return i2c_device_numbers;
+}
+
 
 
 //
@@ -734,7 +829,8 @@ Public_Status_Code try_single_getvcp_call(int fh, unsigned char vcp_feature_code
    ddc_response_bytes[0] = 0x50;   // for calculating DDC checksum
    // checksum0 = xor_bytes(ddc_response_bytes, sizeof(ddc_response_bytes)-1);
    unsigned char calculated_checksum = ddc_response_bytes[0];
-   for (ndx=1; ndx < 11; ndx++) calculated_checksum ^= ddc_response_bytes[ndx];
+   for (ndx=1; ndx < 11; ndx++)
+      calculated_checksum ^= ddc_response_bytes[ndx];
    // printf("(%s) checksum0=0x%02x, calculated_checksum=0x%02x\n", __func__, checksum0, calculated_checksum );
    if (ddc_response_bytes[11] != calculated_checksum) {
       DBGMSF(debug, "Unexpected checksum.  actual=0x%02x, calculated=0x%02x",
@@ -1725,7 +1821,7 @@ static void query_using_i2cdetect() {
    // GPtrArray * summaries = get_i2c_smbus_devices_using_udev();
    GPtrArray * summaries = get_i2c_devices_using_udev();
 
-   // GPtrArray * busnames = execute_shell_cmd_collect("ls /dev/i2c*");
+   // returns array of I2C bus numbers in string form, sorted in numeric order
    GPtrArray * busnums = execute_shell_cmd_collect("ls /dev/i2c* | cut -c 10- | sort -n");
 
    if (!busnums) {
@@ -1943,6 +2039,8 @@ void query_sysenv() {
 
    rpt_nl();
    rpt_vstring(0,"*** Primary Check 2: Check that /dev/i2c-* exist and writable ***");
+   rpt_nl();
+   identify_i2c_devices();   // TODO: incomplete step toward consolidation
    rpt_nl();
    check_i2c_devices(driver_list);
 
