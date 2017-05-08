@@ -51,6 +51,6 @@ report_i2c_udev_device_summaries(
 
 
 Byte_Value_Array                // one byte for each I2C bus number
-get_non_smbus_i2c_device_numbers_using_udev();
+get_i2c_device_numbers_using_udev(bool include_smbus);
 
 #endif /* UDEV_I2C_UTIL_H_ */
