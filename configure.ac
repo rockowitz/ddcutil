@@ -881,6 +881,7 @@ AC_MSG_RESULT([
 	adl_header_dir:         ${adl_header_dir}
 	enable_lib:             ${enable_lib}
 	enable_swig:            ${enable_swig}
+	enable_gobject          ${enable_gobject}
 	enable_usb:             ${enable_usb}
 	enable_drm:             ${enable_drm}   
 	enable_doxygen:         ${enable_doxygen}
