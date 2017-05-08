@@ -25,12 +25,12 @@ Package: ddcutil
 Architecture: any
 Depends: ${shlibs:Depends}, 
          ${misc:Depends}, 
-         i2c-tools, 
          libdrm2,
          libglib2.0-0, 
          libudev-dev,
          libudev1,
          libxrandr2
+Suggests: i2c-tools
 # Description: 60 char max short description, followed by long description
 # Long description should be a paragraph which gives more details about the package. 
 # Column 1 of each line should be empty. There must be no blank lines, but you can put a single . (dot) 
@@ -55,7 +55,6 @@ Section: libs
 Architecture: any
 Depends: ${shlibs:Depends}, 
          ${misc:Depends}, 
-         i2c-tools, 
          libglib2.0-0, 
          libudev-dev,
          libudev1,
@@ -74,7 +73,6 @@ Package: libddcutil-dev
 Section: libdevel
 Architecture: any
 Depends: ${misc:Depends}, 
-         i2c-tools, 
          libglib2.0-0, 
          libudev-dev,
          libudev1,

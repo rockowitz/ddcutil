@@ -1244,6 +1244,8 @@ static void check_i2c_dev_module(struct driver_name_node * video_driver_list) {
 }
 
 
+#ifdef OLD
+
 /* Checks for installed packages i2c-tools and libi2c-dev
  */
 static void query_packages() {
@@ -1281,7 +1283,7 @@ static void query_packages() {
    if (!ok)
       rpt_vstring(0,"rpm command not found");
 }
-
+#endif
 
 static bool query_card_and_driver_using_lspci() {
    // DBGMSG("Starting");
@@ -1340,7 +1342,6 @@ static bool query_card_and_driver_using_lspci() {
    }
    return ok;
 }
-
 
 
 /* Scans /sys/bus/pci/devices for video devices.
@@ -1736,26 +1737,26 @@ static void query_using_i2cdetect() {
    GPtrArray * summaries = get_i2c_devices_using_udev();
 
    // GPtrArray * busnames = execute_shell_cmd_collect("ls /dev/i2c*");
-   GPtrArray * busnames = execute_shell_cmd_collect("ls /dev/i2c* | cut -c 10- | sort -n");
+   GPtrArray * busnums = execute_shell_cmd_collect("ls /dev/i2c* | cut -c 10- | sort -n");
 
-   if (!busnames) {
+   if (!busnums) {
       rpt_vstring(1, "No I2C buses found");
       goto bye;
    }
-   if (busnames->len > 0) {
+   if (busnums->len > 0) {
       int i;
-      bool isint = str_to_int(g_ptr_array_index(busnames,0), &i);
+      bool isint = str_to_int(g_ptr_array_index(busnums,0), &i);
       if (!isint) {
          rpt_vstring(1, "Apparently no I2C buses");
          goto bye;
       }
    }
 
-   for (int ndx = 0; ndx < busnames->len; ndx++) {
+   for (int ndx = 0; ndx < busnums->len; ndx++) {
       // printf("ndx=%d, value=|%s|\n", ndx, (char *) g_ptr_array_index(busnames, ndx));
 
       char cmd[80];
-      char * busname = (char *) g_ptr_array_index(busnames, ndx);
+      char * busname = (char *) g_ptr_array_index(busnums, ndx);
       // busname+=9;   // strip off "/dev/i2c-"
 
       if (is_smbus_device_summary(summaries, busname) ) {
@@ -1777,8 +1778,8 @@ static void query_using_i2cdetect() {
    }
 
 bye:
-   if (busnames)
-      g_ptr_array_free(busnames, true);
+   if (busnums)
+      g_ptr_array_free(busnums, true);
 }
 
 
@@ -1970,11 +1971,13 @@ void query_sysenv() {
    free_driver_name_list(driver_list);
    driver_list = NULL;
 
+#ifdef OLD
    rpt_nl();
    rpt_vstring(0,"*** Primary Check 5: Installed packages ***");
    rpt_nl();
    query_packages();
    rpt_nl();
+#endif
 
    rpt_nl();
    rpt_vstring(0,"*** Additional probes ***");

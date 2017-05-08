@@ -163,7 +163,8 @@ License: GPL-2.0+
 
 URL: http://github.com/rockowitz/ddctool
 # BuildRequires: gcc  glib2 glib2-devel 
-BuildRequires: gcc  pkgconfig(glib-2.0) i2c-tools libXrandr-devel
+# BuildRequires: i2c-tools
+BuildRequires: gcc  pkgconfig(glib-2.0) libXrandr-devel
 BuildRequires: libdrm-devel
 
 %if %{defined fedora}
@@ -202,7 +203,7 @@ BuildRequires: libz1 zlib-devel
 # You must let rpm find the library dependencies by itself. Do not put unneeded
 # explicit Requires: tags.
 # %%if %%{defined suse_version}
-Requires: i2c-tools 
+# Requires: i2c-tools 
 # %%else
 # Requires: i2c-tools 
 # Requires: glib2 libXrandr
