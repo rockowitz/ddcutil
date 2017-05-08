@@ -250,6 +250,8 @@ Retcode_Range_Id get_modulation(Public_Status_Code rc) {
       }
    }
    assert(ndx < retcode_range_ct);    // fails if not found
+
+   // printf("(%s) rc=%d, returning %d\n", __func__, rc, range_id);
    return range_id;
 }
 
