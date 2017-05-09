@@ -532,8 +532,9 @@ ddc_report_displays(bool valid_displays_only, int depth) {
 void dbgreport_display_ref(Display_Ref * dref, int depth) {
    int d1 = depth+1;
    int d2 = depth+2;
-   DDCA_Output_Level saved_output_level = get_output_level();
-   set_output_level(DDCA_OL_VERBOSE);
+   // no longer needed for i2c_dbgreport_bus_info()
+   // DDCA_Output_Level saved_output_level = get_output_level();
+   // set_output_level(DDCA_OL_VERBOSE);
    rpt_structure_loc("Display_Ref", dref, depth);
    rpt_int("dispno", NULL, dref->dispno, d1);
 
@@ -550,7 +551,7 @@ void dbgreport_display_ref(Display_Ref * dref, int depth) {
          rpt_vstring(d1, "I2C bus information: ");
          Bus_Info * businfo = dref->detail2;
          assert( memcmp(businfo->marker, BUS_INFO_MARKER, 4) == 0);
-         i2c_report_bus_info(businfo, d2);
+         i2c_dbgreport_bus_info(businfo, d2);
          break;
    case(DDCA_IO_ADL):
 #ifdef HAVE_ADL
@@ -572,7 +573,7 @@ void dbgreport_display_ref(Display_Ref * dref, int depth) {
    break;
    }
 
-   set_output_level(saved_output_level);
+   // set_output_level(saved_output_level);
 }
 
 

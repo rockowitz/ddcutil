@@ -81,11 +81,15 @@
 #include "query_sysenv.h"
 
 
+/** Perform redundant checks as cross-verification */
+bool redundant_checks = true;
+
 // Forward references
 // #ifdef USE_USB
 GPtrArray * get_i2c_devices_using_udev();
 // GPtrArray * get_i2c_smbus_devices_using_udev();
 bool is_smbus_device_summary(GPtrArray * summaries, char * sbusno);
+bool is_smbus_device_using_sysfs(int busno);
 // #endif
 
 
@@ -130,6 +134,7 @@ Byte_Value_Array get_i2c_devices_by_existence_test() {
    Byte_Value_Array bva = bva_create();
    for (int busno=0; busno < I2C_BUS_MAX; busno++) {
       if (i2c_device_exists(busno)) {
+         // is_smbus_device_using_sysfs(busno);
          bva_append(bva, busno);
       }
    }
@@ -163,6 +168,7 @@ Byte_Value_Array get_i2c_devices_by_ls() {
       }
       else {
          bva_append(bva, ival);
+         // is_smbus_device_using_sysfs(ival);
       }
    }
 bye:
@@ -198,20 +204,28 @@ static Byte_Value_Array i2c_device_numbers = NULL;
 
 Byte_Value_Array identify_i2c_devices() {
 
-   Byte_Value_Array bva1 = get_i2c_devices_by_existence_test();
-   Byte_Value_Array bva2 = get_i2c_devices_by_ls();
-   Byte_Value_Array bva3 = get_i2c_device_numbers_using_udev(/* include_smbus= */ true);
+   Byte_Value_Array bva1 = NULL;
+   Byte_Value_Array bva2 = NULL;
+   Byte_Value_Array bva3 = NULL;
 
-   assert(bva_sorted_eq(bva1,bva2));
-   assert(bva_sorted_eq(bva1,bva3));
+
+   bva1 = get_i2c_devices_by_existence_test();
+   if (redundant_checks) {
+      bva2 = get_i2c_devices_by_ls();
+      bva3 = get_i2c_device_numbers_using_udev(/* include_smbus= */ true);
+
+      assert(bva_sorted_eq(bva1,bva2));
+      assert(bva_sorted_eq(bva1,bva3));
+   }
 
    i2c_device_numbers = bva1;
-   bva_free(bva2);
-   bva_free(bva3);
+   if (redundant_checks) {
+      bva_free(bva2);
+      bva_free(bva3);
+   }
    DBGMSG("Identified %d I2C devices", bva_length(bva1));
    return i2c_device_numbers;
 }
-
 
 
 //
@@ -279,6 +293,22 @@ static bool show_one_file(char * dir_name, char * simple_fn, bool verbose, int d
       rpt_vstring(depth, "File not found: %s", fqfn);
    return result;
 }
+
+
+bool is_smbus_device_using_sysfs(int busno) {
+   char workbuf[50];
+   snprintf(workbuf, 50, "/sys/bus/i2c/devices/i2c-%d/name", busno);
+   char * name = file_get_first_line(workbuf, /*verbose */ false);
+   bool result = false;
+   if (name && str_starts_with(name, "SMBus"))
+      result = true;
+   // DBGMSG("busno=%d, returning: %s", busno, bool_repr(result));
+   return result;
+}
+
+
+
+
 
 
 // Functions to query and free the linked list of driver names.
@@ -721,7 +751,12 @@ Public_Status_Code try_single_getvcp_call(int fh, unsigned char vcp_feature_code
    int ndx;
    Status_Errno rc = 0;
 
+
+   // extra sleep time does not help P2411
+
 #ifdef NO
+   usleep(50000);   // doesn't help
+   // usleep(50000);
    // write seems to be necessary to reset monitor state
    unsigned char zeroByte = 0x00;  // 0x00;
    rc = write(fh, &zeroByte, 1);
@@ -731,6 +766,7 @@ Public_Status_Code try_single_getvcp_call(int fh, unsigned char vcp_feature_code
    }
 #endif
    // without this or 0 byte write, read() sometimes returns all 0 on P2411H
+   usleep(50000);
    usleep(50000);
 
    unsigned char ddc_cmd_bytes[] = {
@@ -760,6 +796,7 @@ Public_Status_Code try_single_getvcp_call(int fh, unsigned char vcp_feature_code
       rc = DDCRC_BAD_BYTECT;
       goto bye;
    }
+   usleep(50000);
    usleep(50000);
 
    unsigned char ddc_response_bytes[12];
@@ -881,7 +918,7 @@ void raw_scan_i2c_devices() {
    Parsed_Edid * edid = NULL;
 
    rpt_nl();
-   rpt_title("Performing basic scan of I2C devices",depth);
+   rpt_title("Performing basic scan of I2C devices using local sysenv functions...",depth);
 
    Buffer * buf0 = buffer_new(1000, __func__);
    int  busct = 0;
@@ -946,6 +983,10 @@ void raw_scan_i2c_devices() {
                      rpt_vstring(d2, "Attempt %d to read feature returned DDCRC_NULL_RESPONSE");
                      break;
                   }
+                  break;
+               }
+               if (get_modulation(psc) == RR_ERRNO) {    // also RR_ADL?
+                  rpt_vstring(d2, "Attempt %d to read feature returned hard error: %s", tryctr+1, psc_desc(psc));
                   break;
                }
                rpt_vstring(d2, "Attempt %d to read feature failed. status = %s.  %s",
@@ -1814,10 +1855,12 @@ void query_x11() {
  *
  * Returns:      nothing
  */
-static void query_using_i2cdetect() {
+#ifdef OLD
+static void query_using_i2cdetect_old() {
    rpt_vstring(0,"Examining I2C buses using i2cdetect: ");
    // calling i2cdetect for an SMBUs device fills dmesg with error messages
    // avoid this if possible
+
    // GPtrArray * summaries = get_i2c_smbus_devices_using_udev();
    GPtrArray * summaries = get_i2c_devices_using_udev();
 
@@ -1865,6 +1908,46 @@ static void query_using_i2cdetect() {
 bye:
    if (busnums)
       g_ptr_array_free(busnums, true);
+
+
+}
+#endif
+
+
+static void query_using_i2cdetect() {
+   assert(i2c_device_numbers);
+
+   int d0 = 0;
+   int d1 = 1;
+
+   rpt_vstring(d0,"Examining I2C buses using i2cdetect... ");
+
+   if (bva_length(i2c_device_numbers) == 0) {
+      rpt_vstring(d1, "No I2C buses found");
+   }
+   else {
+      for (int ndx=0; ndx< bva_length(i2c_device_numbers); ndx++) {
+         int busno = bva_get(i2c_device_numbers, ndx);
+         if (is_smbus_device_using_sysfs(busno)) {
+            // calling i2cdetect for an SMBUs device fills dmesg with error messages
+            rpt_nl();
+            rpt_vstring(d1, "Device /dev/i2c-%d is a SMBus device.  Skipping i2cdetect.", busno);
+         }
+         else {
+            char cmd[80];
+            snprintf(cmd, 80, "i2cdetect -y %d", busno);
+            rpt_nl();
+            rpt_vstring(d1,"Probing bus /dev/i2c-%d using command \"%s\"", busno, cmd);
+            int rc = execute_shell_cmd_rpt(cmd, 2 /* depth */);
+            // DBGMSG("execute_shell_cmd(\"%s\") returned %d", cmd, rc);
+            if (rc != 1) {
+               rpt_vstring(d1,"i2cdetect command unavailable");
+               break;
+            }
+         }
+      }
+   }
+
 }
 
 

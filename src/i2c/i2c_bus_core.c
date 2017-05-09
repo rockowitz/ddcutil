@@ -708,74 +708,50 @@ void i2c_free_bus_info(Bus_Info * bus_info) {
 // Why are there 2 functions?  Consolidate?
 
 
+void i2c_dbgreport_bus_info_flags(Bus_Info * bus_info, int depth) {
+   rpt_vstring(depth, "Bus /dev/i2c-%d found:    %s", bus_info->busno, bool_repr(bus_info->flags&I2C_BUS_EXISTS));
+   rpt_vstring(depth, "Bus /dev/i2c-%d probed:   %s", bus_info->busno, bool_repr(bus_info->flags&I2C_BUS_PROBED ));
+   if ( bus_info->flags & I2C_BUS_PROBED ) {
+      rpt_vstring(depth, "Address 0x30 present:    %s", bool_repr(bus_info->flags & I2C_BUS_ADDR_0X30));
+      rpt_vstring(depth, "Address 0x37 present:    %s", bool_repr(bus_info->flags & I2C_BUS_ADDR_0X37));
+      rpt_vstring(depth, "Address 0x50 present:    %s", bool_repr(bus_info->flags & I2C_BUS_ADDR_0X50));
+   }
+   i2c_report_functionality_flags(bus_info->functionality, /* maxline */ 90, depth);
+}
+
+
+
 /** Reports on a single I2C bus.
  *
  * \param   bus_info    pointer to Bus_Info structure describing bus
  * \param   depth       logical indentation depth
  *
  * \remark
- * The format of the output as well as its extent is controlled by get_output_level().
+ * The format of the output as well as its extent is controlled by get_output_level(). - no longer!
  */
-// used by dbgreport_display_ref() in ddc_displays.c
+// used by dbgreport_display_ref() in ddc_displays.c, always OL_VERBOSE
 // used by debug code within this file
-// used by i2c_report_buses() in this file, which is called by query_i2c_buses() in query_sysenv.c
-void i2c_report_bus_info(Bus_Info * bus_info, int depth) {
+// used by i2c_report_buses() in this file, which is called by query_i2c_buses() in query_sysenv.c, always OL_VERBOSE
+void i2c_dbgreport_bus_info(Bus_Info * bus_info, int depth) {
    bool debug = false;
-   DDCA_Output_Level output_level = get_output_level();
-   DBGMSF(debug, "bus_info=%p, output_level=%s", bus_info, output_level_name(output_level));
+   DBGMSF(debug, "bus_info=%p", bus_info);
    assert(bus_info);
 
-   Buffer * buf0 = buffer_new(1000, "report_businfo");
-
-   switch (output_level) {
-
-      case DDCA_OL_VERBOSE:
-         puts("");
-         rpt_vstring(depth, "Bus /dev/i2c-%d found:    %s", bus_info->busno, bool_repr(bus_info->flags&I2C_BUS_EXISTS));
-         rpt_vstring(depth, "Bus /dev/i2c-%d probed:   %s", bus_info->busno, bool_repr(bus_info->flags&I2C_BUS_PROBED ));
-         if ( bus_info->flags & I2C_BUS_PROBED ) {
-            rpt_vstring(depth, "Address 0x30 present:    %s", bool_repr(bus_info->flags & I2C_BUS_ADDR_0X30));
-            rpt_vstring(depth, "Address 0x37 present:    %s", bool_repr(bus_info->flags & I2C_BUS_ADDR_0X37));
-            rpt_vstring(depth, "Address 0x50 present:    %s", bool_repr(bus_info->flags & I2C_BUS_ADDR_0X50));
-            // i2c_interpret_functionality_into_buffer(bus_info->functionality, buf0);
-            // rpt_vstring(depth, "Bus functionality:    %.*s",  buf0->len, buf0->bytes /* buf */);
-            i2c_report_functionality_flags(bus_info->functionality, /* maxline */ 90, depth);
-            if ( bus_info->flags & I2C_BUS_ADDR_0X50) {
-               if (bus_info->edid) {
-                  report_parsed_edid(bus_info->edid, true /* verbose */, depth);
-               }
-            }
+   // rpt_nl();
+   rpt_vstring(depth, "Bus /dev/i2c-%d found:    %s", bus_info->busno, bool_repr(bus_info->flags&I2C_BUS_EXISTS));
+   rpt_vstring(depth, "Bus /dev/i2c-%d probed:   %s", bus_info->busno, bool_repr(bus_info->flags&I2C_BUS_PROBED ));
+   if ( bus_info->flags & I2C_BUS_PROBED ) {
+      rpt_vstring(depth, "Address 0x30 present:    %s", bool_repr(bus_info->flags & I2C_BUS_ADDR_0X30));
+      rpt_vstring(depth, "Address 0x37 present:    %s", bool_repr(bus_info->flags & I2C_BUS_ADDR_0X37));
+      rpt_vstring(depth, "Address 0x50 present:    %s", bool_repr(bus_info->flags & I2C_BUS_ADDR_0X50));
+      i2c_report_functionality_flags(bus_info->functionality, /* maxline */ 90, depth);
+      if ( bus_info->flags & I2C_BUS_ADDR_0X50) {
+         if (bus_info->edid) {
+            report_parsed_edid(bus_info->edid, true /* verbose */, depth);
          }
-         break;
+      }
+   }
 
-      case DDCA_OL_NORMAL:
-         puts("");
-         rpt_vstring(depth, "Bus:              /dev/i2c-%d", bus_info->busno);
-         rpt_vstring(depth, "Supports DDC:     %s", bool_repr(bus_info->flags & I2C_BUS_ADDR_0X37));
-         if ( (bus_info->flags & I2C_BUS_ADDR_0X50) && bus_info->edid) {
-            report_parsed_edid(bus_info->edid, false /* verbose */, depth);
-         }
-         break;
-
-      default:    // OL_TERSE
-         assert (output_level == DDCA_OL_TERSE);
-         puts("");
-         rpt_vstring(depth, "Bus:                     /dev/i2c-%d\n", bus_info->busno);
-         if ( (bus_info->flags & I2C_BUS_PROBED)     &&
-              (bus_info->flags & I2C_BUS_ADDR_0X37)  &&
-              (bus_info->flags & I2C_BUS_ADDR_0X50)  &&
-              (bus_info->edid)
-            )
-         {
-            Parsed_Edid * edid = bus_info->edid;
-            // what if edid->mfg_id, edid->model_name, or edid->serial_ascii are NULL ??
-            rpt_vstring(depth, "Monitor:                 %s:%s:%s",
-                   edid->mfg_id, edid->model_name, edid->serial_ascii);
-         }
-         break;
-      }  // switch
-
-   buffer_free(buf0, "report_businfo");
    DBGMSF(debug, "Done");
 }
 
@@ -898,7 +874,7 @@ int i2c_detect_buses() {
          businfo->flags = I2C_BUS_EXISTS;
          i2c_check_bus(businfo);
          if (debug)
-            i2c_report_bus_info(businfo, 0);
+            i2c_dbgreport_bus_info(businfo, 0);
          g_ptr_array_add(i2c_buses, businfo);
       }
    }
@@ -918,7 +894,7 @@ Bus_Info * detect_single_bus(int busno) {
       businfo->flags = I2C_BUS_EXISTS;
       i2c_check_bus(businfo);
       if (debug)
-         i2c_report_bus_info(businfo, 0);
+         i2c_dbgreport_bus_info(businfo, 0);
    }
 
    DBGMSF(debug, "Done.  busnp=%d, returning: %p", busno, businfo);
@@ -1053,7 +1029,7 @@ bool bus_info_matches_selector(Bus_Info * bus_info, I2C_Bus_Selector * sel) {
    bool debug = false;
    if (debug) {
       DBGMSG("Starting");
-      i2c_report_bus_info(bus_info, 1);
+      i2c_dbgreport_bus_info(bus_info, 1);
    }
 
    assert( bus_info && sel);
@@ -1150,7 +1126,7 @@ Bus_Info * find_bus_info_by_selector(I2C_Bus_Selector * sel) {
 
     DBGMSF(debug, "returning %p", bus_info );
     if (debug && bus_info) {
-       i2c_report_bus_info(bus_info, 1);
+       i2c_dbgreport_bus_info(bus_info, 1);
     }
     return bus_info;
  }
@@ -1221,7 +1197,7 @@ bool i2c_is_valid_bus(int busno, Call_Options callopts) {
    // Bus_Info * businfo = i2c_get_bus_info(busno, DISPSEL_NONE);
    Bus_Info * businfo = i2c_find_bus_info_by_busno(busno);
    if (debug && businfo)
-      i2c_report_bus_info(businfo, 1);
+      i2c_dbgreport_bus_info(businfo, 1);
 
    bool overridable = false;
    if (!businfo)
@@ -1262,7 +1238,7 @@ bool i2c_is_valid_bus(int busno, Call_Options callopts) {
  * @return count of reported buses
  *
  * @remark
- * Used by query-sysenv.c
+ * Used by query-sysenv.c, always OL_VERBOSE
  */
 int i2c_report_buses(bool report_all, int depth) {
    bool debug = false;
@@ -1281,7 +1257,8 @@ int i2c_report_buses(bool report_all, int depth) {
    for (int ndx = 0; ndx < busct; ndx++) {
       Bus_Info * busInfo = g_ptr_array_index(i2c_buses, ndx);
       if ( (busInfo->flags & I2C_BUS_ADDR_0X50) || report_all) {
-         i2c_report_bus_info(busInfo, depth);
+         rpt_nl();
+         i2c_dbgreport_bus_info(busInfo, depth);
          reported_ct++;
       }
    }

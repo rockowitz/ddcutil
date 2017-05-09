@@ -93,8 +93,9 @@ struct {
 // void i2c_new_bus_info(int busno);               // used only locally
 // void i2c_check_bus(Bus_Info * bus_info);        // used only locally
 // void i2c_free_bus_info(Bus_Info * bus_info);    // used only locally
-void i2c_report_bus_info(Bus_Info * bus_info, int depth);
+void i2c_dbgreport_bus_info(Bus_Info * bus_info, int depth);
 void i2c_report_active_display(Bus_Info * businfo, int depth);
+void i2c_dbgreport_bus_info_flags(Bus_Info * bus_info, int depth);
 
 // Simple bus detection, no side effects
 bool i2c_device_exists(int busno);
