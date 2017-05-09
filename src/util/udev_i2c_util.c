@@ -61,7 +61,7 @@ typedef struct udev_device_summary {
  *
  * Helper function for get_i2c_devices_using_udev()
  */
-static int
+int
 udev_i2c_device_summary_busno(Udev_Device_Summary * summary) {
    int result = -1;
    if (str_starts_with(summary->sysname, "i2c-")) {

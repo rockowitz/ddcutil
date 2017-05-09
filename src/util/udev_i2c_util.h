@@ -34,9 +34,11 @@
 /** \endcond */
 
 #include "data_structures.h"
+#include "udev_util.h"
 
 GPtrArray *                     // array of Udev_Device_Summary
 get_i2c_devices_using_udev();
+int udev_i2c_device_summary_busno(Udev_Device_Summary * summary);
 
 bool
 is_smbus_device_summary(

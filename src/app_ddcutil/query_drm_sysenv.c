@@ -55,6 +55,8 @@
 #include "base/core.h"
 #include "base/linux_errno.h"
 
+#include "query_sysenv_xref.h"
+
 #include "query_drm_sysenv.h"
 
 #ifdef REF
@@ -351,9 +353,15 @@ static void probe_open_device_using_libdrm(int fd, int depth) {
       if (debug)
          report_drmModeConnector(fd, conn, d1) ;
 
+      char connector_name[100];
+      snprintf(connector_name, 100, "%s-%u",
+                                    connector_type_title(conn->connector_type),
+                                    conn->connector_type_id);
+
       rpt_vstring(d1, "%-20s %u",       "connector_id:",      conn->connector_id);
-      rpt_vstring(d2, "%-20s %s-%u",    "connector name",     connector_type_title(conn->connector_type),
-                                                              conn->connector_type_id);
+      // rpt_vstring(d2, "%-20s %s-%u",    "connector name",     connector_type_title(conn->connector_type),
+      //                                                         conn->connector_type_id);
+      rpt_vstring(d2, "%-20s %s",       "connector name",     connector_name);
       rpt_vstring(d2, "%-20s %d - %s",  "connector_type:",    conn->connector_type,
                                                               connector_type_title(conn->connector_type));
       rpt_vstring(d2, "%-20s %d",       "connector_type_id:", conn->connector_type_id);
@@ -394,6 +402,13 @@ static void probe_open_device_using_libdrm(int fd, int depth) {
                            d3);
                      free_parsed_edid(parsed_edid);
                   }
+
+                  Device_Id_Xref * xref = device_xref_get(blob_ptr->data);
+                  xref->drm_connector_name = strdup(connector_name);
+                  xref->drm_connector_type = conn->connector_type;
+                  // xref->drm_device_path    = strdup(conn->
+
+
                }
 
                drmModeFreePropertyBlob(blob_ptr);

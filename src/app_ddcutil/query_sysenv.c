@@ -78,6 +78,8 @@
 #include "adl/adl_shim.h"
 
 #include "query_drm_sysenv.h"
+#include "query_sysenv_xref.h"
+
 #include "query_sysenv.h"
 
 
@@ -85,13 +87,10 @@
 bool redundant_checks = true;
 
 // Forward references
-// #ifdef USE_USB
 GPtrArray * get_i2c_devices_using_udev();
 // GPtrArray * get_i2c_smbus_devices_using_udev();
 bool is_smbus_device_summary(GPtrArray * summaries, char * sbusno);
 bool is_smbus_device_using_sysfs(int busno);
-// #endif
-
 
 
 static char * known_video_driver_modules[] = {
@@ -207,7 +206,6 @@ Byte_Value_Array identify_i2c_devices() {
    Byte_Value_Array bva1 = NULL;
    Byte_Value_Array bva2 = NULL;
    Byte_Value_Array bva3 = NULL;
-
 
    bva1 = get_i2c_devices_by_existence_test();
    if (redundant_checks) {
@@ -960,6 +958,9 @@ void raw_scan_i2c_devices() {
                     d2);
             else
                rpt_vstring(d2, "Unable to parse EDID");
+
+            Device_Id_Xref * xref = device_xref_get(buf0->bytes);
+            xref->i2c_busno = busno;
          }
 
          rpt_nl();
@@ -1836,6 +1837,9 @@ void query_x11() {
          // hex_dump(prec->edidbytes, 128);
       }
       rpt_nl();
+
+      Device_Id_Xref * xref = device_xref_get(prec->edidbytes);
+      xref->xrandr_name = strdup(prec->output_name);
    }
    free_x11_edids(edid_recs);
 
@@ -1964,6 +1968,21 @@ void probe_i2c_devices_using_udev() {
 
    GPtrArray * summaries = get_i2c_devices_using_udev();
    report_i2c_udev_device_summaries(summaries, "Summary of udev I2C devices",1);
+
+   for (int ndx = 0; ndx < summaries->len; ndx++) {
+      Udev_Device_Summary * summary = g_ptr_array_index(summaries, ndx);
+      assert( memcmp(summary->marker, UDEV_DEVICE_SUMMARY_MARKER, 4) == 0);
+      int busno = udev_i2c_device_summary_busno(summary);
+      Device_Id_Xref * xref = device_xref_find_by_busno(busno);
+      if (xref) {
+         xref->udev_name = strdup(summary->sysattr_name);
+         xref->udev_syspath = strdup(summary->devpath);
+      }
+      else {
+         DBGMSG("Device_Id_Xref not found for busno %d", busno);
+      }
+   }
+
    free_udev_device_summaries(summaries);   // ok if summaries == NULL
 
    rpt_nl();
@@ -2110,6 +2129,8 @@ void probe_logs() {
  * Returns:      nothing
  */
 void query_sysenv() {
+   device_xref_init();
+
    rpt_nl();
    rpt_vstring(0,"*** Basic System Information ***");
    rpt_nl();
@@ -2184,13 +2205,11 @@ void query_sysenv() {
 
       query_x11();
 
-// #ifdef USE_USB
       // probe_udev_subsystem() is in udev_util.c, which is only linked in if USE_USB
       probe_i2c_devices_using_udev();
 
       // temp
       // get_i2c_smbus_devices_using_udev();
-// #endif
 
       probe_logs();
 
@@ -2199,6 +2218,8 @@ void query_sysenv() {
 #else
       rpt_vstring(0, "Not built with libdrm support.  Skipping DRM related checks");
 #endif
+
+      device_xref_report(0);
    }
 
 

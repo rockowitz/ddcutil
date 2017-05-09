@@ -108,6 +108,7 @@ cmdline/cmd_parser_goption.c \
 cmdline/parsed_cmd.c \
 app_ddcutil/main.c \
 app_ddcutil/app_dumpload.c \
+app_ddcutil/query_sysenv_xref.c \
 app_ddcutil/query_sysenv.c \
 app_ddcutil/app_setvcp.c \
 app_ddcutil/app_getvcp.c \
