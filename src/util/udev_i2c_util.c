@@ -129,12 +129,12 @@ report_i2c_udev_device_summaries(GPtrArray * summaries, char * title, int depth)
    if (!summaries || summaries->len == 0)
       rpt_vstring(depth,"No devices detected");
    else {
-      rpt_vstring(depth,"%-15s %-15s %-35s %s", "Subsystem", "Sysname", "Sysattr Name", "Devpath");
+      rpt_vstring(depth,"%-11s %-10s %-35s %s", "Subsystem", "Sysname", "Sysattr Name", "Devpath");
       for (int ndx = 0; ndx < summaries->len; ndx++) {
          Udev_Device_Summary * summary = g_ptr_array_index(summaries, ndx);
          assert( memcmp(summary->marker, UDEV_DEVICE_SUMMARY_MARKER, 4) == 0);
-         udev_i2c_device_summary_busno(summary);   // ???
-         rpt_vstring(depth,"%-15s %-15s %-35s %s",
+         // udev_i2c_device_summary_busno(summary);   // ???
+         rpt_vstring(depth,"%-11s %-10s %-35s %s",
                 summary->subsystem, summary->sysname, summary->sysattr_name, summary->devpath);
       }
    }
