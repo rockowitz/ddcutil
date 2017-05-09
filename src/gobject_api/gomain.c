@@ -55,6 +55,9 @@ int main(int argc, char** argv) {
    DdcgContext * context = g_object_new(DDCG_TYPE_CONTEXT, NULL);
    DBGMSG("context=%p", context);
 
+   int max_max_tries = ddcg_context_get_max_tries(context);
+   printf("(%s) max_max_tries = %d\n", max_max_tries);
+
 
    int busno = 3;
    GError * err = NULL;

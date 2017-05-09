@@ -88,6 +88,17 @@ DdcgContext * ddcg_context_new(void) {
    return g_object_new(DDCG_TYPE_CONTEXT, NULL);
 }
 
+// fails to compile
+
+// ‘ddcg_context_get_max_max_tries’ declared as function returning a function
+gint32 ddcg_context_get_max_max_tries(
+      DdcgContext * ddcg_context)
+    //  GError **     error)
+{
+   return ddca_get_max_max_tries();
+
+}
+
 
 /**
  * ddcg_context_create_display_ref:
