@@ -1987,7 +1987,7 @@ void probe_i2c_devices_using_udev() {
          xref->udev_syspath = strdup(summary->devpath);
       }
       else {
-         DBGMSG("Device_Id_Xref not found for busno %d", busno);
+         // DBGMSG("Device_Id_Xref not found for busno %d", busno);
       }
    }
 
