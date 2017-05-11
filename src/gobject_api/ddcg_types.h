@@ -1,7 +1,7 @@
 /* ddcg_types.h
  *
  * <copyright>
- * Copyright (C) 2014-2016 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2014-2017 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -21,8 +21,8 @@
  * </endcopyright>
  */
 
-#ifndef GOBJECT_API_DDCG_TYPES_H_
-#define GOBJECT_API_DDCG_TYPES_H_
+#ifndef DDCG_TYPES_H_
+#define DDCG_TYPES_H_
 
 
 #include <glib-object.h>
@@ -31,4 +31,4 @@ typedef gint32 DdcgStatusCode;
 typedef guint8 DdcgFeatureCode;
 
 
-#endif /* GOBJECT_API_DDCG_TYPES_H_ */
+#endif /* DDCG_TYPES_H_ */

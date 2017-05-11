@@ -171,7 +171,7 @@ typedef enum {
 
 /** Returns the symbolic name for a ddcutil status code
  * @param status_code numeric status code
- * @return symbolic name, e.g. EBUSY, DDCRC-INVALID_DATA
+ * @return symbolic name, e.g. EBUSY, DDCRC_INVALID_DATA
  *  */
 char * ddca_rc_name(DDCA_Status status_code);
 

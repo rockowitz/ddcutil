@@ -47,7 +47,7 @@ struct _DdcgDisplayHandle {
 
 G_DEFINE_TYPE_WITH_PRIVATE(DdcgDisplayHandle, ddcg_display_handle, G_TYPE_OBJECT);
 
-#ifdef FORWARE_REF_NOT_NEEDED
+#ifdef FORWARD_REF_NOT_NEEDED
 static void ddcg_display_handle_class_init(DdcgDisplayHandleClass * cls);
 static void ddcg_display_handle_init(DdcgDisplayHandle * display_handle);
 #endif
@@ -232,7 +232,7 @@ ddcg_display_handle_repr(
    gchar * repr = ddca_dh_repr(ddcg_dh->priv->ddct_dh);
    // DBGMSG("repr=%p", repr);
    // DBGMSG("repr = %s", repr);
-   if ( !repr) {
+   if ( repr) {
    }
    else {
       GQuark domain = g_quark_from_string("DDCTOOL_DDCG");

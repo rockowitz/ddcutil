@@ -94,6 +94,7 @@ ddcg_display_identifier_report(DdcgDisplayIdentifier * ddcg_did, int depth) {
    rpt_vstring(d1, "priv:            %p", ddcg_did->priv);
    if (ddcg_did->priv) {
       rpt_vstring(d2, "ddct_did:     %p", ddcg_did->priv->ddct_did);
+      rpt_vstring(d2, "did: %s", ddca_did_repr(ddcg_did->priv->ddct_did));
    }
 }
 

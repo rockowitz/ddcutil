@@ -78,6 +78,8 @@ G_DECLARE_FINAL_TYPE(DdcgContext, ddcg_context, DDCG, CONTEXT, GObject)
 
 DdcgContext * ddcg_context_new(void);
 
+
+
 gint32 ddcg_context_get_max_max_tries(
       DdcgContext * ddcg_context);
      //  GError **     error);

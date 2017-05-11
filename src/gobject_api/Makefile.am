@@ -7,10 +7,8 @@ CLEANFILES = \
 clean-local:
 	echo "(src/gobject_api/Makefile) clean-local"
 
-
 if ENABLE_SHARED_LIB_COND
 if ENABLE_GOBJECT_COND
-
 
 # The library that exposes the ddcutil GObject API
 lib_LTLIBRARIES = libddcgobj.la

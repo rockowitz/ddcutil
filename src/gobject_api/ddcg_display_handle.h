@@ -1,7 +1,7 @@
-/* ddc_display_handle.h
+/* ddg_display_handle.h
  *
  * <copyright>
- * Copyright (C) 2014-2015 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2014-2017 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -26,6 +26,7 @@
 
 
 #include <glib-object.h>
+// #include <glib-2.0/glib-object.h>   // make eclipse happy
 
 #include "gobject_api/ddcg_types.h"
 
