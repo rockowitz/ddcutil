@@ -930,6 +930,12 @@ void raw_scan_i2c_devices() {
          rpt_nl();
          rpt_vstring(d1, "Examining device /dev/i2c-%d...", busno);
 
+         char sysdir[100];
+         snprintf(sysdir, 100, "/sys/bus/i2c/devices/i2c-%d", busno);
+         char * dev_name = read_sysfs_attr_w_default(sysdir, "name", "(not found)", false);
+         rpt_vstring(d2, "Device name (%s/name): %s", sysdir, dev_name);
+
+
          if (!is_i2c_device_rw(busno))
             continue;
 
@@ -1518,7 +1524,6 @@ static struct driver_name_node * query_card_and_driver_using_sysfs() {
             sprintf(cur_fn, "%s/class", cur_dir_name);
             char * class_id = read_sysfs_attr(cur_dir_name, "class", true);
             // printf("%s: |%s|\n", cur_fn, class_id);
-            // if (streq(class_id, "0x030000")) {
             if (str_starts_with(class_id, "0x03")) {
                // printf("%s = 0x030000\n", cur_fn);
 
@@ -1644,6 +1649,9 @@ static struct driver_name_node * query_card_and_driver_using_sysfs() {
                free(device_id);
                free(subsystem_vendor);
                free(subsystem_device);
+            }
+            else if (str_starts_with(class_id, "0x0a")) {
+               DBGMSG("Encountered docking station (class 0x0a) device. dir=%s", cur_dir_name);
             }
          }
       }
