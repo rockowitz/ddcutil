@@ -742,7 +742,7 @@ bool is_i2c_device_rw(int busno) {
 // Auxiliary function for raw_scan_i2c_devices()
 // adapted from ddc_vcp_tests
 
-Public_Status_Code try_single_getvcp_call(int fh, unsigned char vcp_feature_code) {
+Public_Status_Code try_single_getvcp_call(int fh, unsigned char vcp_feature_code, int depth) {
    bool debug = false;
    DBGMSF(debug, "Starting. vcp_feature_code=0x%02x", vcp_feature_code );
 
@@ -765,7 +765,7 @@ Public_Status_Code try_single_getvcp_call(int fh, unsigned char vcp_feature_code
 #endif
    // without this or 0 byte write, read() sometimes returns all 0 on P2411H
    usleep(50000);
-   usleep(50000);
+   // usleep(50000);
 
    unsigned char ddc_cmd_bytes[] = {
       0x6e,              // address 0x37, shifted left 1 bit
@@ -795,7 +795,7 @@ Public_Status_Code try_single_getvcp_call(int fh, unsigned char vcp_feature_code
       goto bye;
    }
    usleep(50000);
-   usleep(50000);
+   // usleep(50000);
 
    unsigned char ddc_response_bytes[12];
    int readct = sizeof(ddc_response_bytes)-1;
@@ -808,6 +808,12 @@ Public_Status_Code try_single_getvcp_call(int fh, unsigned char vcp_feature_code
       rc = -errsv;
       goto bye;
    }
+
+   char * hs = hexstring(ddc_response_bytes+1, rc);
+   rpt_vstring(depth, "read() returned %s", hs );
+   free(hs);
+
+
 
    if (rc != readct) {
       DBGMSF(debug, "read() returned %d, should be %d", rc, readct );
@@ -935,6 +941,11 @@ void raw_scan_i2c_devices() {
          char * dev_name = read_sysfs_attr_w_default(sysdir, "name", "(not found)", false);
          rpt_vstring(d2, "Device name (%s/name): %s", sysdir, dev_name);
 
+         if (str_starts_with(dev_name, "SMBus")) {
+            rpt_vstring(d2, "Skipping SMBus device");
+            continue;
+         }
+
 
          if (!is_i2c_device_rw(busno))
             continue;
@@ -976,7 +987,7 @@ void raw_scan_i2c_devices() {
             int maxtries = 3;
             psc = -1;
             for (int tryctr=0; tryctr<maxtries && psc < 0; tryctr++) {
-               psc = try_single_getvcp_call(fd, 0x10);
+               psc = try_single_getvcp_call(fd, 0x10, d2);
                if (psc == 0 || psc == DDCRC_NULL_RESPONSE || psc == DDCRC_REPORTED_UNSUPPORTED) {
                   switch (psc) {
                   case 0:
