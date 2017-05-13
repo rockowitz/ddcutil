@@ -31,7 +31,7 @@
 #include <dirent.h>
 #include <errno.h>
 #include <fcntl.h>
-#include <glib.h>
+#include <glib-2.0/glib.h>         // glib-2.0/ to avoid bogus eclipse error
 #include <grp.h>
 #include <limits.h>
 // #include <libosinfo-1.0/osinfo/osinfo.h>
