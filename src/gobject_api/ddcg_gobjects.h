@@ -24,7 +24,7 @@
 #ifndef DDCG_GOBJECTS_H_
 #define DDCG_GOBJECTS_H_
 
-#include <glib-object.h>
+// #include <glib-2.0/glib-object.h>
 // Hack for eclipse not picked up pkg-config location from autotools
 // explicit location for Ubuntu
 #include <glib-2.0/glib-object.h>

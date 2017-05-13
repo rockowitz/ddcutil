@@ -25,10 +25,64 @@
 #define DDCG_TYPES_H_
 
 
-#include <glib-object.h>
+#include <glib-2.0/glib-object.h>     // glib-2.0 to avoid bogus eclipse error
+
+#include "public/ddcutil_types.h"
 
 typedef gint32 DdcgStatusCode;
 typedef guint8 DdcgFeatureCode;
+
+
+
+
+
+//
+// Build Information
+//
+
+// /** ddcutil version */
+
+typedef struct {
+   uint8_t    major;
+   uint8_t    minor;
+   uint8_t    micro;
+} DdcgDdcutilVersionSpec;    //  DDCA_Ddcutil_Version_Spec;
+
+// /**
+//  * DDCA_Ddcutil_Version_Spec: (rename-to DdcgDdcutilVersionSpec);
+//  *
+//  */
+
+
+// typedef DDCA_Ddcutil_Version_Spec DdcgDdcutilVersionSpec;
+
+
+
+#ifdef REF
+
+/** I2C timeout types */
+typedef enum{
+   DDCA_TIMEOUT_STANDARD,      /**< Normal retry interval */
+   DDCA_TIMEOUT_TABLE_RETRY    /**< Special timeout for Table reads and writes */
+} DDCA_Timeout_Type;
+
+/** I2C retry limit types */
+typedef enum{
+   DDCA_WRITE_ONLY_TRIES,     /**< Maximum write-only operation tries */
+   DDCA_WRITE_READ_TRIES,     /**< Maximum read-write operation tries */
+   DDCA_MULTI_PART_TRIES      /**< Maximum multi-part operation tries */
+} DDCA_Retry_Type;
+#endif
+
+typedef enum {
+   DDCG_WRITE_ONLY_TRIES = DDCA_WRITE_ONLY_TRIES,
+   DDCG_WRITE_READ_TRIES = DDCA_WRITE_READ_TRIES,
+   DDCG_MULTI_PART_TRIES = DDCA_MULTI_PART_TRIES
+}
+   DdcgRetryType;
+
+
+
 
 
 #endif /* DDCG_TYPES_H_ */

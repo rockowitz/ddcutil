@@ -22,9 +22,79 @@
  */
 
 #include "base/core.h"
+#include "base/status_code_mgt.h"
 
 #include "gobject_api/ddcg_context.h"
 #include "public/ddcutil_c_api.h"
+
+
+//
+// Build Information
+//
+
+#ifdef REF
+
+DDCA_Ddcutil_Version_Spec ddca_ddcutil_version(void);       // ddcutil version
+
+const char * ddca_ddcutil_version_string();
+#endif
+
+/**
+ * ddcg_ddcutil_version_spec:
+ *
+ * Returns: (transfer none): struct of ints
+ */
+DdcgDdcutilVersionSpec ddcg_ddcutil_version_spec(void) {
+   DDCA_Ddcutil_Version_Spec vspec = ddca_ddcutil_version();
+   DdcgDdcutilVersionSpec gvspec = {0,0,0};
+   gvspec.major = vspec.major;
+   gvspec.minor = vspec.minor;
+   gvspec.micro = vspec.micro;
+   // gvspec = (DdcgDdcutilVersionSpec) vspec;
+
+   return gvspec;
+}
+
+/**
+ * ddcg_ddcutil_version_string:
+ * Returns: (transfer none): ddcutil version as a string
+ */
+const gchar * ddcg_ddcutil_version_string(void) {
+   return ddca_ddcutil_version_string();
+}
+
+
+
+
+//
+// Status Codes
+//
+
+/**
+ * ddcg_rc_name:
+ * @status_code: numeric status code
+ *
+ * Returns: symbolic name, e.g. EBUSY, DDCRC_INVALID_DATA
+ *
+ * Returns the symbolic name for a ddcutil status code
+ */
+const gchar * ddcg_rc_name(DdcgStatusCode status_code) {
+   return ddca_rc_name(status_code);
+}
+
+/**
+ * ddcg_rc_desc:
+ * @status_code numeric status code
+ *
+ * Returns: explanation of status code, e.g. "device or resource busy"
+ *
+ *  Returns explanation of status code
+ */
+const gchar * ddcg_rc_desc(DdcgStatusCode status_code) {
+   return ddca_rc_desc(status_code);
+}
+
+
 
 
 
@@ -88,15 +158,53 @@ DdcgContext * ddcg_context_new(void) {
    return g_object_new(DDCG_TYPE_CONTEXT, NULL);
 }
 
-// fails to compile
 
-// ‘ddcg_context_get_max_max_tries’ declared as function returning a function
 gint32 ddcg_context_get_max_max_tries(
       DdcgContext * ddcg_context)
     //  GError **     error)
 {
    return ddca_get_max_max_tries();
 
+}
+
+/**
+ * ddcg_context_get_max_tries:
+ * @ddcg_context  context
+ * @retry_type: retry type
+ *
+ * Returns:  max tries for specified type
+ */
+gint32
+ddcg_context_get_max_tries(
+      DdcgContext *  ddcg_context,
+      DdcgRetryType retry_type) {
+   return ddca_get_max_tries(retry_type);
+}
+
+
+
+/**
+ * ddcg_context_set_max_tries:
+ * @ddcg_context: context
+ * @retry_type:   type of retry
+ * @max_tries:    count to set
+ * @error: (out): location where to return error
+ *
+ * Sets the retry count
+ */
+void
+ddcg_context_set_max_tries(
+      DdcgContext *  ddcg_context,
+      DdcgRetryType retry_type,
+      gint32             max_tries,
+      GError **          error)
+{
+   *error = NULL;
+   DDCA_Status psc = ddca_set_max_tries(retry_type, max_tries);
+   if (psc) {
+      GQuark domain = g_quark_from_string("DDCTOOL_DDCG");
+      g_set_error(error,  domain, psc, "ddca_set_max_tries() returned ddct_status=%s", psc_desc(psc));
+   }
 }
 
 
@@ -138,4 +246,5 @@ ddcg_context_create_display_ref(
    }
    return ddcg_dref;
 }
+
 
