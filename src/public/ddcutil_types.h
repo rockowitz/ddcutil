@@ -72,7 +72,8 @@ typedef int DDCA_Status;
 // Build Information
 //
 
-/** ddcutil version */
+//! ddcutil version
+//!
 typedef struct {
    uint8_t    major;
    uint8_t    minor;
@@ -84,9 +85,8 @@ typedef struct {
 // Global Settings
 //
 
-/** Failure information filled in at the time of a program abort,
- *  before longjmp() is called.
- */
+//! Failure information filled in at the time of a program abort,
+//! before longjmp() is called.
 typedef struct {
    bool       info_set_fg;
    char       funcname[64];
@@ -100,13 +100,15 @@ typedef struct {
 // I2C Protocol Control
 //
 
-/** I2C timeout types */
+//! I2C timeout types
+//!
 typedef enum{
    DDCA_TIMEOUT_STANDARD,      /**< Normal retry interval */
    DDCA_TIMEOUT_TABLE_RETRY    /**< Special timeout for Table reads and writes */
 } DDCA_Timeout_Type;
 
-/** I2C retry limit types */
+//! I2C retry limit types
+//
 typedef enum{
    DDCA_WRITE_ONLY_TRIES,     /**< Maximum write-only operation tries */
    DDCA_WRITE_READ_TRIES,     /**< Maximum read-write operation tries */
@@ -118,12 +120,12 @@ typedef enum{
 // Message Control
 //
 
-/** Output Level
- *
- * Values assigned to constants allow them to be or'd in bit flags.
- *
- * Values are ascending in order of verbosity
- */
+//! Output Level
+//!
+//! Values assigned to constants allow them to be or'd in bit flags.
+//!
+//!  Values are ascending in order of verbosity
+//!
 typedef enum {
    DDCA_OL_TERSE  =0x04,         /**< Brief   output  */
    DDCA_OL_NORMAL =0x08,         /**< Normal  output */
@@ -135,9 +137,8 @@ typedef enum {
 // Performance statistics
 //
 
-/** Used as values to specify a single statistics type, and as
- *  bitflags to select statistics types.
- */
+//! Used as values to specify a single statistics type, and as
+//! bitflags to select statistics types.
 typedef enum {
    DDCA_STATS_NONE     = 0x00,    ///< no statistics
    DDCA_STATS_TRIES    = 0x01,    ///< retry statistics
