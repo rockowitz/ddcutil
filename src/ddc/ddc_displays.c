@@ -30,7 +30,7 @@
 /** \cond */
 #include <assert.h>
 #include <errno.h>
-#include <glib.h>
+#include <glib-2.0/glib.h>    // glib-2.0/ to make eclipse happy
 #include <string.h>
 #include <time.h>
 /** \endcond */
