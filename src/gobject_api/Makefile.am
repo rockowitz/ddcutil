@@ -15,6 +15,7 @@ lib_LTLIBRARIES = libddcgobj.la
 
 # Files implementing GObject API for introspection: 
 gobject_api_sources = \
+  ddcg_structs.c \
   ddcg_cont_response.c \
   ddcg_context.c \
   ddcg_display_handle.c \
@@ -26,6 +27,7 @@ gobject_api_sources = \
 # gobject_api/ddcg_gobjects.h
  
 gobject_api_headers = \
+  ddcg_structs.h \
   ddcg_cont_response.h \
   ddcg_context.h \
   ddcg_display_handle.h \

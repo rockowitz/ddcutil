@@ -3,17 +3,24 @@ import sys
 gi.require_version("ddcutil", "1.0")
 from gi.repository import ddcutil
 from gi.repository import GLib
+from gi.repository import GObject
 
 dir(ddcutil)
 
 print( "Exercise functions that require no object instance:")
 
 print("Build information:")
-vstr = ddcutil.ddcutil_version_string()
-print("  ddcutil_version_string():  %s" % vstr)
-vspec = ddcutil.ddcutil_version_spec() 
+vstr = ddcutil.get_ddcutil_version_string()
+print("  ddcutil_get_version_string():  %s" % vstr)
+vspec = ddcutil.get_ddcutil_version_spec() 
 print vspec
-print("  ddcutil_version_spec():         %d.%d.%d" % (vspec[0], vspec[1], vspec[2]))
+print repr(vspec)
+print("  ddcutil_get_version_spec():         %d.%d.%d" % (vspec.major, vspec.minor, vspec.micro))
+vspec4 = ddcutil.get_ddcutil_version_spec4() 
+print("  ddcutil.get_ddcutil_version_spec4(): %s" % vspec4)
+
+build_options = ddcutil.get_build_options() 
+
 
 
 print("Status code functions:")

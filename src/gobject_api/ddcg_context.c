@@ -24,6 +24,7 @@
 #include "base/core.h"
 #include "base/status_code_mgt.h"
 
+#include "ddcg_structs.h"
 #include "gobject_api/ddcg_context.h"
 #include "public/ddcutil_c_api.h"
 
@@ -39,28 +40,98 @@ DDCA_Ddcutil_Version_Spec ddca_ddcutil_version(void);       // ddcutil version
 const char * ddca_ddcutil_version_string();
 #endif
 
+
 /**
- * ddcg_ddcutil_version_spec:
+ * ddcg_get_ddcutil_version_spec:
  *
- * Returns: (transfer none): struct of ints
+ * Returns:(transfer none): pointer to struct of ints
  */
-DdcgDdcutilVersionSpec ddcg_ddcutil_version_spec(void) {
+DdcgDdcutilVersionSpec * ddcg_get_ddcutil_version_spec(void) {
    DDCA_Ddcutil_Version_Spec vspec = ddca_ddcutil_version();
-   DdcgDdcutilVersionSpec gvspec = {0,0,0};
-   gvspec.major = vspec.major;
-   gvspec.minor = vspec.minor;
-   gvspec.micro = vspec.micro;
-   // gvspec = (DdcgDdcutilVersionSpec) vspec;
+   static DdcgDdcutilVersionSpec * gvspec = NULL;
+   if (!gvspec) {
+      gvspec = ddcg_ddcutil_version_spec_new();
+      gvspec->major = vspec.major;
+      gvspec->minor = vspec.minor;
+      gvspec->micro = vspec.micro;
+   }
 
    return gvspec;
 }
 
+
+#ifdef NO
 /**
- * ddcg_ddcutil_version_string:
+ * ddcg_get_ddcutil_version_spec2:
+ *
+ * Returns:(transfer none)(array fixed-size=3)(element-type gint)  : pointer to struct of ints
+ */
+DdcgDdcutilVersionSpec2 ddcg_get_ddcutil_version_spec2(void) {
+   DDCA_Ddcutil_Version_Spec vspec = ddca_ddcutil_version();
+   gint gvspec[3];
+   gvspec[0]  = vspec.major;
+   gvspec[1] = vspec.minor;
+   gvspec[2] = vspec.micro;
+
+   return gvspec;
+}
+#endif
+
+
+#ifdef NO
+// makes integer from pointer w/o a cast
+/**
+ * ddcg_get_ddcutil_version_spec3:
+ *
+ * Returns:(transfer none)(array fixed-size=3)(element-type gint)  : pointer to struct of ints
+ */
+gint ddcg_get_ddcutil_version_spec3(void) {
+   DDCA_Ddcutil_Version_Spec vspec = ddca_ddcutil_version();
+   gint gvspec[3];
+   gvspec[0]  = vspec.major;
+   gvspec[1] = vspec.minor;
+   gvspec[2] = vspec.micro;
+
+   return gvspec;
+}
+#endif
+
+
+/**
+ * ddcg_get_ddcutil_version_spec4:
+ *
+ * Returns:(transfer none)(array fixed-size=3)(element-type gint)  : pointer to struct of ints
+ */
+gint * ddcg_get_ddcutil_version_spec4(void) {
+   static gint gvspec[3];
+   DDCA_Ddcutil_Version_Spec vspec = ddca_ddcutil_version();
+   gvspec[0] = vspec.major;
+   gvspec[1] = vspec.minor;
+   gvspec[2] = vspec.micro;
+
+   return gvspec;
+}
+
+
+
+
+
+
+/**
+ * ddcg_get_ddcutil_version_string:
  * Returns: (transfer none): ddcutil version as a string
  */
-const gchar * ddcg_ddcutil_version_string(void) {
+const gchar * ddcg_get_ddcutil_version_string(void) {
    return ddca_ddcutil_version_string();
+}
+
+
+/**
+ * ddcg_get_build_options:
+ * Returns: build flags
+ */
+const guint8 ddcg_get_build_options(void) {
+   return ddca_get_build_options();
 }
 
 

@@ -36,25 +36,6 @@ typedef guint8 DdcgFeatureCode;
 
 
 
-//
-// Build Information
-//
-
-// /** ddcutil version */
-
-typedef struct {
-   uint8_t    major;
-   uint8_t    minor;
-   uint8_t    micro;
-} DdcgDdcutilVersionSpec;    //  DDCA_Ddcutil_Version_Spec;
-
-// /**
-//  * DDCA_Ddcutil_Version_Spec: (rename-to DdcgDdcutilVersionSpec);
-//  *
-//  */
-
-
-// typedef DDCA_Ddcutil_Version_Spec DdcgDdcutilVersionSpec;
 
 
 
@@ -78,8 +59,7 @@ typedef enum {
    DDCG_WRITE_ONLY_TRIES = DDCA_WRITE_ONLY_TRIES,
    DDCG_WRITE_READ_TRIES = DDCA_WRITE_READ_TRIES,
    DDCG_MULTI_PART_TRIES = DDCA_MULTI_PART_TRIES
-}
-   DdcgRetryType;
+} DdcgRetryType;
 
 
 

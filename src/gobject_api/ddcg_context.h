@@ -27,19 +27,51 @@
 #include <stdbool.h>
 
 #include <glib-2.0/glib-object.h>
-
-#include "ddcg_display_ref.h"
 // #include <gio/gio.h>
 
 #include "public/ddcutil_types.h"
+#include "public/ddcutil_c_api.h"
 
-#include "gobject_api/ddcg_types.h"
-#include "gobject_api/ddcg_display_identifier.h"
+#include "ddcg_display_identifier.h"
+#include "ddcg_display_ref.h"
+#include "ddcg_structs.h"
+#include "ddcg_types.h"
+
 
 // Build Information
+DdcgDdcutilVersionSpec * ddcg_get_ddcutil_version_spec(void);
+gint *                   ddcg_get_ddcutil_version_spec4(void);
+const gchar *            ddcg_get_ddcutil_version_string(void);
 
-DdcgDdcutilVersionSpec ddcg_ddcutil_version_spec(void);
-const gchar *          ddcg_ddcutil_version_string(void);
+/**
+ * DDCG_BUILD_OPTIONS_ADL3:
+ * Built with ADL support.
+ */
+#define DDCG_BUILD_OPTIONS_ADL3 1
+
+
+// cannot use DDCA_BUILT_WITH_USB as a value for the define. must be actual number
+/**
+ * DDCG_BUILT_WITH_USB3: (value 2)
+ * Built with USB support.
+ */
+#define DDCG_BUILT_WITH_USB3 2
+const guint8             ddcg_get_build_options(void);
+
+typedef enum {
+   DDCG_BUILD_OPTIONS_ADL2     = DDCA_BUILT_WITH_ADL,
+   DDCG_BUILD_OPTIONS_USB2     = DDCA_BUILT_WITH_USB,
+   DDCG_BUILT_OPTIONS_FAILSIM2 = DDCA_BUILT_WITH_FAILSIM,
+} DdcgBuildOptions;
+
+#ifdef TO_SOURCE
+GEnumClass * build_flags_class;
+GEnumValue * build_flags_value;
+
+
+build_flags_class = g_type_class_ref(DDCA_Build_Option_Flags);
+build_flags_value = g_enum_get_value(build_flags_class, DDCA_BUILD_FLAGS_USB);
+#endif
 
 
 // Status Codes
