@@ -42,6 +42,8 @@ ddcs_init();
 }
 
 
+// Convert byte of bit flags to a Python set
+
 %typemap(out) FlagsByte {
    printf("(typemap:FlagsByte) Starting. Value=0x%02x\n", $1);
    PyObject * pyset = PySet_New(NULL);

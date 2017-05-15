@@ -40,7 +40,10 @@ void   clear_exception();
 char * check_exception();
 bool   check_exception2();
 
+
+//
 //  Build Information
+//
 
 const char * ddcs_ddcutil_version_string();
 

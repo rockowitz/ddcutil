@@ -105,6 +105,10 @@ void ddcs_init(void) {
 }
 
 
+//
+// Build Options
+//
+
 const char * ddcs_ddcutil_version_string(void) {
    return ddca_ddcutil_version_string();
 }
@@ -125,6 +129,9 @@ FlagsByte ddcs_get_build_options(void) {
 }
 
 
+//
+// IO Redirection
+//
 
 #ifdef NO
 void ddcs_set_fout(void * fpy) {
