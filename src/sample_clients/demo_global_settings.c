@@ -53,8 +53,9 @@ void demo_build_information() {
 
    // Get build options
    uint8_t build_options = ddca_get_build_options();
-   printf("   Built with ADL support: %s\n", (build_options & DDCA_BUILT_WITH_ADL) ? "yes" : "no");
-   printf("   Built with USB support: %s\n", (build_options & DDCA_BUILT_WITH_USB) ? "yes" : "no");
+   printf("   Built with ADL support:        %s\n", (build_options & DDCA_BUILT_WITH_ADL)     ? "yes" : "no");
+   printf("   Built with USB support:        %s\n", (build_options & DDCA_BUILT_WITH_USB)     ? "yes" : "no");
+   printf("   Built with failure simulation: %s\n", (build_options & DDCA_BUILT_WITH_FAILSIM) ? "yes" : "no");
 }
 
 
