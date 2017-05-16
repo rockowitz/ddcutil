@@ -1,7 +1,7 @@
 /* ddc_vcp.h
  *
  * <copyright>
- * Copyright (C) 2014-2016 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2014-2017 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -21,10 +21,15 @@
  * </endcopyright>
  */
 
+/** \file
+ */
+
 #ifndef DDC_VCP_H_
 #define DDC_VCP_H_
 
+/** \cond */
 #include <stdio.h>
+/** \endcond */
 
 #include "base/core.h"
 #include "base/status_code_mgt.h"
@@ -62,7 +67,6 @@ Public_Status_Code
 get_nontable_vcp_value(
       Display_Handle *          dh,
       Byte                      feature_code,
-  //  bool                      retry_null_response,
       Parsed_Nontable_Vcp_Response** pp_parsed_response);
 
 Public_Status_Code

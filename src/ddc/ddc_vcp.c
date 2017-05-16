@@ -67,7 +67,15 @@
 static Trace_Group TRACE_GROUP = TRC_DDC;
 
 
+//
+//  Save Control Settings
+//
 
+/** Executes the DDC Save Control Settings command.
+ *
+ * \param  dh handle of open display device
+ * \return status code, as returned by #ddc_write_only_with_retry()
+ */
 Public_Status_Code
 save_current_settings(
       Display_Handle * dh)
@@ -98,21 +106,16 @@ save_current_settings(
 }
 
 
-
-
 //
 // Set VCP feature value
 //
 
-/* Sets a non-table VCP feature value.
+/** Sets a non-table VCP feature value.
  *
- * Arguments:
- *    dh            display handle for open display
- *    feature_code  VCP feature code
- *    new_value     new value
- *
- *  Returns:
- *     status code from ddc_write_only_with_retry()
+ *  \param  dh            display handle for open display
+ *  \param  feature_code  VCP feature code
+ *  \param  new_value     new value
+ *  \return status code from #ddc_write_only_with_retry()
  */
 Public_Status_Code
 set_nontable_vcp_value(
@@ -153,16 +156,14 @@ set_nontable_vcp_value(
 }
 
 
-/* Sets a table VCP feature value.
+/** Sets a table VCP feature value.
  *
- * Arguments:
- *    dh            display handle for open display
- *    feature_code  VCP feature code
- *    bytes         pointer to table bytes
- *    bytect        number of bytes
- *
- *  Returns:
- *     status code (currently DDCL_UNIMPLEMENTED)
+ *  \param  dh            display handle for open display
+ *  \param  feature_code  VCP feature code
+ *  \param  bytes         pointer to table bytes
+ *  \param  bytect        number of bytes
+ *  \return status code   normally as from ##multi_part_write_with_retry()
+ *                        DDCL_UNIMPLEMENTED) if io mode is USB
  */
 Public_Status_Code
 set_table_vcp_value(
@@ -172,11 +173,8 @@ set_table_vcp_value(
       int               bytect)
 {
    bool debug = false;
-   // Trace_Group tg = (debug) ? 0xFF : TRACE_GROUP;
-   // TRCMSGTG(tg, "Writing feature 0x%02x , bytect = %d\n", feature_code, bytect);
    DBGTRC(debug, TRACE_GROUP, "Writing feature 0x%02x , bytect = %d\n", feature_code, bytect);
    Public_Status_Code psc = 0;
-
 
    if (dh->dref->io_mode == DDCA_IO_USB) {
 #ifdef USE_USB
@@ -194,27 +192,39 @@ set_table_vcp_value(
 
       buffer_free(new_value, __func__);
    }
-   // TRCMSGTG(tg, "Returning: %s", gsc_desc(gsc));
    DBGTRC(debug, TRACE_GROUP, "Returning: %s", psc_desc(psc));
    return psc;
 }
 
 
+
 static bool verify_setvcp = false;
 
-
+/** Sets the setvcp verification setting.
+ *
+ *  If enabled, setvcp will read the feature value from the monitor after
+ *  writing it, to ensure the monitor has actually changed the feature value.
+ *
+ *  \param onoff  **true** for enabled, **false** for disabled.
+ */
 void set_verify_setvcp(bool onoff) {
    bool debug = false;
    DBGMSF(debug, "Setting verify_setvcp = %s", bool_repr(onoff));
    verify_setvcp = onoff;
 }
 
+
+/** Gets the current setvcp verification setting.
+ *
+ *  \return **true** if setvcp verification enabled\n
+ *          **false** if not
+ */
 bool get_verify_setvcp() {
    return verify_setvcp;
 }
 
 
-bool
+static bool
 is_rereadable_feature(
       Display_Handle * dh,
       DDCA_Vcp_Feature_Code opcode)
@@ -263,7 +273,8 @@ is_rereadable_feature(
 }
 
 
-bool single_vcp_value_equal(
+static bool
+single_vcp_value_equal(
       DDCA_Single_Vcp_Value * vrec1,
       DDCA_Single_Vcp_Value * vrec2)
 {
@@ -289,17 +300,17 @@ bool single_vcp_value_equal(
 
 
 
-// TODO: Consider wrapping set_vcp_value() in set_vcp_value_with_retry(), which will
+// TODO: Consider wrapping set_vcp_value() in set_vcp_value_with_retry(), which would
 // retry in case verification fails
 
-/* Sets a VCP feature value.
+/** Sets a VCP feature value.
  *
- * Arguments:
- *    dh            display handle for open display
- *    vrec          pointer to value record
+ *  \param  dh            display handle for open display
+ *  \param  vrec          pointer to value record
+ *  \return status code
  *
- *  Returns:
- *     status code
+ *  If write verification is turned on, reads the feature value after writing it
+ *  to ensure the display has actually changed the value.
  */
 Public_Status_Code
 set_vcp_value(
@@ -349,8 +360,6 @@ set_vcp_value(
          f0printf(fout, "Feature 0x%02x does not support verification\n", vrec->opcode);
          // rpt_vstring(0, "Feature 0x%02x does not support verification", vrec->opcode);
       }
-
-
    }
 
    DBGMSF(debug, "Returning: %s", psc_desc(psc));
@@ -367,7 +376,6 @@ set_vcp_value(
  *  \param  dh                 handle for open display
  *  \param  feature_code       VCP feature code
  *  \param  ppInterpretedCode  where to return parsed response
- *
  *  \return status code
  *
  * It is the responsibility of the caller to free the parsed response.
@@ -425,7 +433,6 @@ Public_Status_Code get_nontable_vcp_value(
          }
 #endif
 
-
          if (!parsed_response->valid_response)  {
             psc = DDCRC_INVALID_DATA;
          }
@@ -452,16 +459,13 @@ Public_Status_Code get_nontable_vcp_value(
 }
 
 
-/* Gets the value of a table feature in a newly allocated Buffer struct.
- * It is the responsibility of the caller to free the Buffer.
+/** Gets the value of a table feature in a newly allocated Buffer struct.
+ *  It is the responsibility of the caller to free the Buffer.
  *
- * Arguments:
- *    dh              display handle
- *    feature_code    VCP feature code
- *    pp_table_bytes  location at which to save address of newly allocated Buffer
- *
- * Returns:
- *    status code
+ *  \param  dh              display handle
+ *  \param  feature_code    VCP feature code
+ *  \param  pp_table_bytes  location at which to save address of newly allocated Buffer
+ *  \return status code
  */
 Public_Status_Code get_table_vcp_value(
        Display_Handle *       dh,
@@ -469,8 +473,6 @@ Public_Status_Code get_table_vcp_value(
        Buffer**               pp_table_bytes)
 {
    bool debug = false;
-   // Trace_Group tg = (debug) ? 0xff : TRACE_GROUP;
-   // TRCMSGTG(tg, "Starting. Reading feature 0x%02x", feature_code);
    DBGTRC(debug, TRACE_GROUP, "Starting. Reading feature 0x%02x", feature_code);
 
    Public_Status_Code psc = 0;
@@ -496,7 +498,6 @@ Public_Status_Code get_table_vcp_value(
       }
    }
 
-   // TRCMSGTG(tg, "Done. Returning rc=%s, *pp_table_bytes=%p", gsc_desc(gsc), *pp_table_bytes);
    DBGTRC(debug, TRACE_GROUP,
           "Done. Returning rc=%s, *pp_table_bytes=%p", psc_desc(psc), *pp_table_bytes);
    return psc;
@@ -509,7 +510,6 @@ Public_Status_Code get_table_vcp_value(
  * \param  feature_code    feature code id
  * \param  call_type       indicates whether table or non-table
  * \param  pvalrec         location where to return newly allocated #DDCA_Single_Vcp_Value
- *
  * \return status code
  *
  * The value pointed to by pvalrec is non-null iff the returned status code is 0.
@@ -598,11 +598,9 @@ get_vcp_value(
 
    *pvalrec = valrec;
 
-   // TRCMSGTG(tg, "Done.  Returning: %s", gsc_desc(gsc) );
    DBGTRC(debug, TRACE_GROUP, "Done.  Returning: %s", psc_desc(psc) );
    if (psc == 0 && debug)
       report_single_vcp_value(valrec,1);
    assert( (psc == 0 && *pvalrec) || (psc != 0 && !*pvalrec) );
    return psc;
 }
-
