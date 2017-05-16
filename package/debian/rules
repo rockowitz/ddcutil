@@ -2,7 +2,6 @@
 # See debhelper(7) (uncomment to enable)
 # output every command that modifies files on the build system.
 # DH_VERBOSE = 1
-# DH_VERBOSE = 1
 # export DH_OPTIONS=-v
 
 # see EXAMPLES in dpkg-buildflags(1) and read /usr/share/dpkg/*
@@ -20,11 +19,8 @@ export DEB_BUILD_MAINT_OPTIONS = hardening=+all
 # package maintainers to append LDFLAGS
 #export DEB_LDFLAGS_MAINT_APPEND = -Wl,--as-needed
 
-config_args=
-# config_args="--enable-lib=yes"
-# config_args=--enable-lib=yes --enable-swig=yes
+# config_args=
 config_args=--enable-lib=yes --enable-drm=yes --enable-usb=yes
-
 # echo "(debian/rules) config_args=${config_args}"
 
   
@@ -52,7 +48,4 @@ override_dh_auto_configure:
 # sed -i "/dependency_libs/ s/'.*'/''/"
 # "$(CURDIR)/debian/<pkg>/usr/lib/<la-file>"
 
-
-
 # --enable-lib=yes
-
