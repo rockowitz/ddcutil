@@ -1,4 +1,4 @@
-/usr/lib/*/*.la
+# /usr/lib/*/*.la
 /usr/lib/*/*.a
 usr/include
 usr/lib/*/pkgconfig
