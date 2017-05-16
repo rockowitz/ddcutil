@@ -108,7 +108,7 @@ void device_xref_report(int depth) {
    int d2 = depth+2;
 
    rpt_nl();
-   rpt_vstring(depth, "Device Identifer Cross Reference Report");
+   rpt_vstring(depth, "Device Identifier Cross Reference Report");
    // rpt_nl();
 
    // rpt_vstring(d1, "EDID    Busno Xrandr  DRM   Udev name   Udev Path");
