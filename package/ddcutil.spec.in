@@ -167,6 +167,11 @@ URL: http://github.com/rockowitz/ddctool
 BuildRequires: gcc  pkgconfig(glib-2.0) libXrandr-devel
 BuildRequires: libdrm-devel
 
+# OpenSUSE 13.1, 13.2 requires i2c-tools for header file linux/i2c-dev.h
+%if %{defined suse_version}
+BuildRequires: i2c-tools
+%endif
+
 %if %{defined fedora}
 BuildRequires: python2-devel
 %endif
