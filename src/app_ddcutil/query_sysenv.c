@@ -749,7 +749,6 @@ Public_Status_Code try_single_getvcp_call(int fh, unsigned char vcp_feature_code
    int ndx;
    Status_Errno rc = 0;
 
-
    // extra sleep time does not help P2411
 
 #ifdef NO
@@ -885,6 +884,7 @@ Public_Status_Code try_single_getvcp_call(int fh, unsigned char vcp_feature_code
       int max_val = (ddc_response_bytes[7] << 8) + ddc_response_bytes[8];
       int cur_val = (ddc_response_bytes[9] << 8) + ddc_response_bytes[10];
       DBGMSF(debug, "cur_val = %d, max_val = %d", cur_val, max_val );
+      rc = 0;
    }
    else if (ddc_response_bytes[4] == 0x01) {    // unsupported VCP code
       DBGMSF(debug, "Unsupported VCP code: 0x%02x", vcp_feature_code);
@@ -895,8 +895,6 @@ Public_Status_Code try_single_getvcp_call(int fh, unsigned char vcp_feature_code
                     ddc_response_bytes[4] );
       rc = DDCRC_INVALID_DATA;
    }
-
-   rc = 0;
 
 bye:
    DBGMSF(debug, "Returning: %s",  psc_desc(rc));
