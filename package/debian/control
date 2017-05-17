@@ -15,7 +15,7 @@ Build-Depends: debhelper (>= 9),
                libxrandr-dev, 
                python-all-dev,
                swig (>= 2.0)
-Standards-Version: 3.9.8
+Standards-Version: 3.9.7
 Homepage: http://www.github.com/rockowitz/ddcutil
 Vcs-Git: https://www.github.com/rockowitz/ddcutil.git
 #Vcs-Browser: http://anonscm.debian.org/?p=collab-maint/ddcutil.git;a=summary

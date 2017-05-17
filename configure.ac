@@ -30,7 +30,7 @@ AC_PREREQ([2.69])
 m4_define([ddcutil_major_version], [0])
 m4_define([ddcutil_minor_version], [8])
 dnl temp micro version for development
-m4_define([ddcutil_micro_version], [1])
+m4_define([ddcutil_micro_version], [2])
 m4_define([ddcutil_version],
           [ddcutil_major_version.ddcutil_minor_version.ddcutil_micro_version])
 
@@ -167,7 +167,7 @@ AC_SUBST(LT_REVISION)
 AC_SUBST(LT_AGE)
 
 dnl for debian/changelog - should do it some other way
-DEBIAN_RELEASE=6
+DEBIAN_RELEASE=1
 DEBIAN_DISTRIBUTION=xenial
 AC_SUBST(DEBIAN_RELEASE)
 AC_SUBST(DEBIAN_DISTRIBUTION)

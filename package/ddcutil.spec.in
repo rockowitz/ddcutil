@@ -375,9 +375,13 @@ rm -rf %{buildroot}
 
 %changelog
 
+* Wed May 17 2017 Sanford Rockowitz <rockowitz@minsoft.com> 0.8.2-1
+
+  Release 0.8.2
+
 * Sat May 06 2017 Sanford Rockowitz <rockowitz@minsoft.com> 0.8.1-1
 
-  Release 0.8.0
+  Release 0.8.1
 
 * Mon May 01 2017 Sanford Rockowitz <rockowitz@minsoft.com> 0.8.0-1
 
