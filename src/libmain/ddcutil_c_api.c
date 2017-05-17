@@ -997,7 +997,7 @@ ddca_free_display_info(DDCA_Display_Info * info_rec) {
    // data structures.  Nothing to free.
    if (info_rec && memcmp(info_rec->marker, DDCA_DISPLAY_INFO_MARKER, 4) == 0) {
       info_rec->marker[3] = 'x';
-      free(info_rec);
+      // free(info_rec);
    }
 }
 
