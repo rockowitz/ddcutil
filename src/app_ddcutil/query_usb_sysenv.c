@@ -1,10 +1,7 @@
 /* query_usb_sysenv.c
  *
- * Created on: Feb 2, 2017
- *     Author: rock
- *
  * <copyright>
- * Copyright (C) 2014-2015 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2016-2017 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -24,33 +21,25 @@
  * </endcopyright>
  */
 
+/** \file
+ *  Probe the USB environment
+ */
+
 #include <config.h>
 
 #define _GNU_SOURCE 1       // for function group_member
 
-// #include <assert.h>
-// #include <ctype.h>
+/** \cond */
 #include <dirent.h>
 #include <errno.h>
-// #include <fcntl.h>
-#include <glib.h>
-// #include <grp.h>
-// #include <limits.h>
-// #include <libosinfo-1.0/osinfo/osinfo.h>
-// #include <libudev.h>        // not yet used
-// #include <linux/hiddev.h>
-// #include <linux/limits.h>
-// #include <pwd.h>
-// #include <stdarg.h>
+#include <glib-2.0/glib.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/ioctl.h>
-// #include <sys/stat.h>
 #include <sys/types.h>
-// #include <sys/utsname.h>
-// #include <time.h>
 #include <unistd.h>
+/** \endcond */
 
 #include "util/file_util.h"
 #include "util/report_util.h"
