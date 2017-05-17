@@ -21,10 +21,16 @@
  * </endcopyright>
  */
 
+/** \file
+ * Display identifier cross-reference
+ */
+
+/** \cond */
 #include <assert.h>
 #include <glib.h>
 #include <stdio.h>
 #include <string.h>
+/** \endcond */
 
 #include "util/report_util.h"
 #include "util/string_util.h"
@@ -41,7 +47,13 @@ void device_xref_init() {
    device_xref = g_ptr_array_new();
 }
 
-
+/** Finds an existing cross-reference entry with the specified
+ *  128 byte EDID value.
+ *
+ *  \param  raw_edid pointer to 128 byte EDID
+ *  \return pointer to existing #Device_Id_Xref,\n
+ *          NULL if not found
+ */
 Device_Id_Xref * device_xref_find(Byte * raw_edid) {
    Device_Id_Xref * result = NULL;
    for (int ndx = 0; ndx < device_xref->len; ndx++) {
@@ -56,6 +68,11 @@ Device_Id_Xref * device_xref_find(Byte * raw_edid) {
 }
 
 
+/** Creates a new #Device_Id_Xref with the specified EDID value.
+ *
+ *  \param  raw_edid pointer 128 byte EDID
+ *  \return pointer to newly allocated #Device_Id_Xref
+ */
 Device_Id_Xref * device_xref_new(Byte * raw_edid) {
    Device_Id_Xref * xref = calloc(1, sizeof(Device_Id_Xref));
    memcpy(xref->marker, DEVICE_ID_XREF_MARKER, 4);
@@ -67,6 +84,12 @@ Device_Id_Xref * device_xref_new(Byte * raw_edid) {
 }
 
 
+/** Returns the #Device_Id_Xref for the specified EDID value.
+ *  If the #Device_Id_Xref does not already exist, it is created
+ *
+ *  \param  raw_edid pointer 128 byte EDID
+ *  \return pointer to #Device_Id_Xref
+ */
 Device_Id_Xref * device_xref_get(Byte * raw_edid) {
    if (!device_xref)
       device_xref_init();
@@ -81,6 +104,14 @@ Device_Id_Xref * device_xref_get(Byte * raw_edid) {
    return xref;
 }
 
+
+/** Find the #Device_Id_Xref for the specified I2C bus number
+ *
+ * \param  busno  I2C bus number
+ * \return device identification cross-reference entry,\n
+ *         NULL if not found
+ *
+ */
 Device_Id_Xref * device_xref_find_by_busno(int busno) {
    bool debug = false;
 
@@ -103,6 +134,10 @@ Device_Id_Xref * device_xref_find_by_busno(int busno) {
 }
 
 
+/** Reports the device identification cross-reference table.
+ *
+ * \param depth logical indentation depth
+ */
 void device_xref_report(int depth) {
    int d1 = depth+1;
    int d2 = depth+2;
@@ -135,23 +170,23 @@ void device_xref_report(int depth) {
 #endif
 
       rpt_nl();
-      if (parsed_edid)
+      if (parsed_edid) {
          rpt_vstring(d1, "EDID: ...%s  Mfg: %-3s  Model: %-13s  SN: %-13s",
                          xref->edid_tag,
                          parsed_edid->mfg_id,
                          parsed_edid->model_name,
                          parsed_edid->serial_ascii);
+         free_parsed_edid(parsed_edid);
+      }
       else
          rpt_vstring(d1, "EDID: ...%s", xref->edid_tag);
+
       rpt_vstring(d2, "Bus:           /dev/i2c-%d", xref->i2c_busno);
       rpt_vstring(d2, "XrandR output: %s", xref->xrandr_name);
       rpt_vstring(d2, "DRM connector: %s", xref->drm_connector_name);
       // rpt_vstring(d2, "DRM path:      %s", xref->drm_device_path);
       rpt_vstring(d2, "UDEV name:     %s", xref->udev_name);
       rpt_vstring(d2, "UDEV syspath:  %s", xref->udev_syspath);
-
-
    }
 }
-
 

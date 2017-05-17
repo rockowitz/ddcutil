@@ -21,12 +21,17 @@
  * </endcopyright>
  */
 
+/** \file
+ *
+ */
+
 #ifndef QUERY_SYSENV_XREF_H_
 #define QUERY_SYSENV_XREF_H_
 
 #include "util/edid.h"
 
 #define DEVICE_ID_XREF_MARKER "DXRF"
+/** Device identifier cross-reference entry */
 typedef struct {
    char          marker[4];
    Byte          raw_edid[128];
