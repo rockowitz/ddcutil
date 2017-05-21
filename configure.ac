@@ -30,7 +30,7 @@ AC_PREREQ([2.69])
 m4_define([ddcutil_major_version], [0])
 m4_define([ddcutil_minor_version], [8])
 dnl temp micro version for development
-m4_define([ddcutil_micro_version], [2])
+m4_define([ddcutil_micro_version], [3])
 m4_define([ddcutil_version],
           [ddcutil_major_version.ddcutil_minor_version.ddcutil_micro_version])
 
@@ -62,17 +62,19 @@ AC_CONFIG_MACRO_DIR([m4])
 AC_CONFIG_FILES([
 	Makefile 
 	src/Makefile 
-  src/util/Makefile
-  src/usb_util/Makefile
-  src/swig/Makefile 
-  src/gobject_api/Makefile 
-  src/sample_clients/Makefile
+	src/util/Makefile
+	src/usb_util/Makefile
+	src/swig/Makefile 
+	src/gobject_api/Makefile 
+	src/sample_clients/Makefile
 	man/Makefile 
 	data/Makefile 
-  docs/Makefile
-  docs/doxygen/Makefile
+	docs/Makefile
+	docs/doxygen/Makefile
 	package/Makefile 
+	package/fedora/Makefile
 	package/ddcutil.spec 
+	package/fedora/ddcutil.spec
   ddcutil.pc
   ],
  )
@@ -112,7 +114,7 @@ AC_PROG_CC_STDC
 
 dnl AC_PROG_LIBTOOL, AM_PROG_LIBTOOL are deprecated names for older versions of LT_INIT
 dnl adds support for --enable/disable -static/shared, -with/without-pic configure flags
-LT_INIT
+LT_INIT([disable-static])
 
 dnl Automatically update libtool script if it becomes out of date:
 AC_SUBST([LIBTOOL_DEPS])
