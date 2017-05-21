@@ -1,3 +1,5 @@
+SUBDIRS = fedora
+
 rpmspec = $(PACKAGE_TARNAME).spec
 
 rpmmacros = \
@@ -23,6 +25,19 @@ rpmcheck:
 		echo "*** This target requires an rpm build environmnent"; \
 		(exit 1); exit 1; \
 	fi
+
+fsrcrpm frpms: rpmcheck $(rpmspec)
+	echo "--------------------------> package/Makefile: target fsrcrpm"
+	(cd fedora && $(MAKE) $(AM_MAKEFLAGS) $@) || exit 1
+
+#	rpmspec=ddcutil_fedora.spec
+#	$(RPMBUILD) $(RPMFLAGS) -bs $(rpmmacros) ddcutil_fedora.spec 
+
+# frpms: rpmcheck $(rpmspec)
+# 	echo "--------------------------> package/Makefile: target frpms"
+# 	rpmspec=ddcutil_fedora.spec
+# 	$(RPMENV) $(RPMBUILD) $(RPMFLAGS) -ba $(rpmmacros) ddcutil_fedora.spec
+
 
 srcrpm: rpmcheck $(rpmspec)
 	echo "--------------------------> package/Makefile: target srcrpm"
@@ -79,3 +94,6 @@ mentors:
 	./upload_mentors ${ver} ${rlse}
 
 .PHONY:  rpmcheck srcrpm rpms obsrpm dpkg obsdeb ppa
+
+dist-hook:
+	@echo "(package/Makefile) Executing dist-hook"
