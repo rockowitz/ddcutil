@@ -22,6 +22,10 @@ if USE_DOXYGEN
 DOXYDIR = docs
 endif
 
+
+
+doc_DATA = AUTHORS COPYING NEWS README.md
+
 SUBDIRS = src man data package $(DOXYDIR)
 
 if ENABLE_SHARED_LIB_COND
@@ -32,8 +36,17 @@ pkgconfig_DATA = ddcutil.pc
 # EXTRA_DIST += FindDDCUtil.cmake
 endif
 
+if ENABLE_SHARED_LIB_COND
+libddcdocdir = $(datarootdir)/doc/libddcutil
+libddcdoc_DATA = AUTHORS
+endif
+
 
 RPM = rpm
+
+frpms fsrcrpm: dist
+	@echo "----> Makefile: frpms fsrcrpm"
+	(cd package && $(MAKE) $(AM_MAKEFLAGS) $@) || exit 1
 
 rpms srcrpm: dist
 	@echo "----> Makefile: rpms srcrpm"
@@ -53,6 +66,11 @@ dpkg:  dist
 
 pdebuild:  dist
 	echo "---> Makefile: pdebuild"
+	(cd package && $(MAKE) $(AM_MAKEFLAGS) $@) || exit 1
+
+
+mockbuild:  dist
+	echo "---> Makefile: mockbuild"
 	(cd package && $(MAKE) $(AM_MAKEFLAGS) $@) || exit 1
 
 
