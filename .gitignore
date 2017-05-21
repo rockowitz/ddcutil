@@ -160,3 +160,7 @@ demo_global_settings
 github_signing/
 src/gobject_api/pyobj_hello.py
 rpmwork
+kojilogs
+copr_logs
+coprlogs
+
