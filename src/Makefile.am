@@ -352,6 +352,9 @@ libddcutil_la_LDFLAGS += -version-info '@LT_CURRENT@:@LT_REVISION@:@LT_AGE@'
 # libddcutil_la_LDFLAGS += -init _ddca_init
 libddcutil_la_LDFLAGS += -pie
 
+# doesn't prevent creation of .la 
+libddcutil_la_LDFLAGS += --disable-static
+
 
 #
 # Link the executables
@@ -389,12 +392,28 @@ ddcutil_LDFLAGS += -export-dynamic
 # 	@echo "  pyexecdir       = $(pyexecdir)"
 # 	@echo  $(DESTDIR)$(libdir)
 
+
 install-exec-hook:
 	@echo "(install-exec-hook) Executing..." 
-	@if [ -f $(DESTDIR)$(libdir)/libddcutil.la ] ; then \
-	  echo "(install-exec-hook) Stripping dependency_libs from libddcutil.la" ; \
-	  sed -i "/dependency_libs/ s/'.*'/''/" $(DESTDIR)$(libdir)/libddcutil.la ; \
-	fi
+	rm -f $(DESTDIR)$(libdir)/libddcutil.la  
+	rm -f $(DESTDIR)$(libdir)/libddcutil.a  
+
+
+#	@if [ -f $(DESTDIR)$(libdir)/libddcutil.la ] ; then \
+#		rm $(DESTDIR)$(libdir)/libddcutil.la ; \
+#	fi
+#	@if [ -f $(DESTDIR)$(libdir)/libddcutil.a ] ; then \
+#		rm $(DESTDIR)$(libdir)/libddcutil.a ; \
+#	fi
+
+#	@if [ -f $(DESTDIR)$(libdir)/libddcutil.la ] ; then \
+#	  echo "(install-exec-hook) Stripping dependency_libs from libddcutil.la" ; \
+#	  sed -i "/dependency_libs/ s/'.*'/''/" $(DESTDIR)$(libdir)/libddcutil.la ; \
+#	fi
 
 # objdump -p $(DESTDIR)$(libdir)/libddcutil.so | sed -n -e's/^[[:space:]]*SONAME[[:space:]]*//p' |  sed -r -e's/([0-9])\.so\./\1-/; s/\.so(\.|$)//; y/_/-/; s/(.*)/\L&/'
 
+
+uninstall-local:
+	@echo "(src/Makefile:uninstall-local) Executing..."
+	rm -f $(DESTDIR)$(libdir)/libddcutil*  
