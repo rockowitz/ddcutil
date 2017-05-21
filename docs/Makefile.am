@@ -1,5 +1,9 @@
+
+SUBDIRS = 
+# SUBDIRS += ddcutil
+
 if USE_DOXYGEN
-  SUBDIRS = doxygen
+  SUBDIRS += doxygen
 endif
 
 if USE_DOXYGEN
