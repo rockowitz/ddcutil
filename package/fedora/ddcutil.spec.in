@@ -1,8 +1,8 @@
 Name:    ddcutil
 Version: @PACKAGE_VERSION@
-Release: 1%{dist}
+Release: 1%{?dist}
 Summary: Query and update monitor settings
-License: GPLv2+
+License: GPLv2
 URL:     https://github.com/rockowitz/ddcutil
 Source:  http://www.ddcutil.com/%{name}-%{version}.tar.gz
 
@@ -15,7 +15,6 @@ Source:  http://www.ddcutil.com/%{name}-%{version}.tar.gz
 # ExcludeArch: ppc64       # builds successfully in Koji, untested
 # ExcludeArch: ppc         # builds successfully in Koji, untested
 
-BuildRequires: gcc
 BuildRequires: pkgconfig(glib-2.0) 
 BuildRequires: pkgconfig(libusb-1.0) >= 1.0.15
 BuildRequires: pkgconfig(systemd)
@@ -52,13 +51,15 @@ rpmbuild --version
 %configure --enable-lib=no 
 %make_build V=1
 
+%check
+
 %install
 make DESTDIR=%{buildroot} install
 
 %files
 %defattr(664,root,root)
 %doc %{_datadir}/doc/%{name}/AUTHORS
-%doc %{_datadir}/doc/%{name}/COPYING
+%license %{_datadir}/doc/%{name}/COPYING
 %doc %{_datadir}/doc/%{name}/NEWS 
 %doc %{_datadir}/doc/%{name}/README.md
 %{_datadir}/%{name}/data/*rules
@@ -67,6 +68,9 @@ make DESTDIR=%{buildroot} install
 %attr(755,root,root)%{_bindir}/ddcutil
 
 %changelog
+* Sat May 20 2017 Sanford Rockowitz <rockowitz@minsoft.com> 0.8.3-1
+- Changes for Fedora packaging
+
 * Wed May 17 2017 Sanford Rockowitz <rockowitz@minsoft.com> 0.8.2-1
 - Minor enchancements to diagnostics in the environment and interrogate
   commands
