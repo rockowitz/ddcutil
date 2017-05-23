@@ -1,0 +1,8 @@
+#!/bin/sh
+
+cp -p ddcutil.spec                  fedrev_temp
+cp -p built_rpms/ddcutil-*src.rpm   fedrev_temp
+cp -p built_rpms/x86_64/ddcutil*rpm fedrev_temp
+cd fedrev_temp
+rm -r review-ddcutil
+fedora-review --mock-config fedora-rawhide-x86_64 -n ddcutil
