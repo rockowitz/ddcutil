@@ -144,5 +144,4 @@ void init_ddc_services() {
    // ddc:
    ddc_reset_ddc_stats();
    init_vcp_feature_codes();
-   init_ddc_packets();   // 11/2015: does nothing
 }

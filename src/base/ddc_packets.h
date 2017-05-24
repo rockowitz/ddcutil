@@ -55,8 +55,6 @@
 
 #define MAX_DDC_TAG 39
 
-void init_ddc_packets();
-
 #ifdef NEW
 // apparently unused
 typedef struct {
@@ -87,24 +85,6 @@ struct {
    Byte   sl;
 } Parsed_Nontable_Vcp_Response;
 
-
-
-
-#ifdef OLD
-typedef
-struct {
-   int   fragment_offset;
-   int   fragment_length_wo_null;
-   char  text[MAX_DDC_CAPABILITIES_FRAGMENT_SIZE+1];    // max fragment size + 1 for null
-} Interpreted_Capabilities_Fragment;
-
-typedef
-struct {
-   int   fragment_offset;
-   int   fragment_length;
-   Byte  read_data[MAX_DDC_CAPABILITIES_FRAGMENT_SIZE];
-} Interpreted_Table_Read_Fragment;
-#endif
 
 /** For digesting capabilities or table read fragment */
 typedef
@@ -152,17 +132,14 @@ struct {
 } DDC_Packet;
 
 void dump_packet(DDC_Packet * packet);
+void free_ddc_packet(DDC_Packet * packet);
 
 bool is_double_byte(Byte * pb);
 
-
-Byte xor_bytes(Byte * bytes, int len);
+// Byte xor_bytes(Byte * bytes, int len);
 Byte ddc_checksum(Byte * bytes, int len, bool altmode);
 bool valid_ddc_packet_checksum(Byte * readbuf);
 void test_checksum();
-
-
-
 
 
 typedef
@@ -172,12 +149,7 @@ struct {
    Buffer *                        table_response;
 } Parsed_Vcp_Response;
 
-void   report_parsed_vcp_response(Parsed_Vcp_Response * response, int depth);
-
-
-
-
-void   free_ddc_packet(DDC_Packet * packet);
+void report_parsed_vcp_response(Parsed_Vcp_Response * response,int depth);
 
 Status_DDC
 create_ddc_base_response_packet(

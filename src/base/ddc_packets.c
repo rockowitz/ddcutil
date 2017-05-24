@@ -44,14 +44,6 @@
 
 
 //
-//  Initialization
-//
-
-void init_ddc_packets() {
-}
-
-
-//
 // Trace control
 //
 
@@ -82,6 +74,8 @@ bool is_double_byte(Byte * pb) {
 // Checksums
 //
 
+
+#ifdef OLD
 Byte xor_bytes(Byte * bytes, int len) {
    Byte result = 0x00;
    int  ndx;
@@ -93,7 +87,7 @@ Byte xor_bytes(Byte * bytes, int len) {
 }
 
 
-Byte ddc_checksum(Byte * bytes, int len, bool altmode) {
+Byte ddc_checksum_old(Byte * bytes, int len, bool altmode) {
    // DBGMSG("bytes=%p, len=%d, altmode=%d", bytes, len, altmode);
    // largest packet is capabilities fragment, which can have up to 32 bytes of text,
    // plus 4 bytes of offset data.  Adding this to the dest, src, and len bytes is 39
@@ -115,6 +109,27 @@ Byte ddc_checksum(Byte * bytes, int len, bool altmode) {
 
    return result;
 }
+#endif
+
+
+Byte ddc_checksum(Byte * bytes, int len, bool altmode) {
+   // DBGMSG("bytes=%p, len=%d, altmode=%d", bytes, len, altmode);
+   // largest packet is capabilities fragment, which can have up to 32 bytes of text,
+   // plus 4 bytes of offset data.  Adding this to the dest, src, and len bytes is 39
+   // assert(len <= MAX_DDC_PACKET_WO_CHECKSUM);  // no longer needed, not allocating work buffer
+   assert(len >= 1);
+
+   Byte checksum = bytes[0];
+   if (altmode)
+      checksum = 0x50;
+   for (int ndx = 1; ndx < len; ndx++) {
+      checksum ^= bytes[ndx];
+   }
+   // assert(checksum == ddc_checksum_old(bytes, len, altmode));
+   return checksum;
+}
+
+
 
 
 void test_one_checksum(Byte * bytes, int len, bool altmode, Byte expected, char * spec_section) {
@@ -144,28 +159,24 @@ void test_checksum() {
 
 
 bool valid_ddc_packet_checksum(Byte * readbuf) {
-   bool result;
+   bool debug = false;
+   bool result = false;
 
    int data_size = (readbuf[2] & 0x7f);
-   // DBGMSG("data_size = %d", data_size);
    if (data_size > MAX_DDCCI_PACKET_SIZE) {    // correct constant?
-      // DBGMSG("Invalid data_size = %d", data_size);
       DDCMSG("Invalid data_size = %d", data_size);
-      result = false;
    }
    else {
       int response_size_wo_checksum = 3 + data_size;
       readbuf[1] = 0x51;   // dangerous
       unsigned char expected_checksum = ddc_checksum(readbuf, response_size_wo_checksum, false);
       unsigned char actual_checksum   = readbuf[response_size_wo_checksum];
-      // printf("(%s) actual checksum = 0x%02x, expected = 0x%02x\n",
-      //        __func__, actual_checksum, expected_checksum);
-      TRCMSG("actual checksum = 0x%02x, expected = 0x%02x",
-             actual_checksum, expected_checksum);
+      DBGMSF(debug, "actual checksum = 0x%02x, expected = 0x%02x",
+                    actual_checksum, expected_checksum);
       result = (expected_checksum == actual_checksum);
    }
 
-   // DBGMSG("Returning: %d", result);
+   DBGMSF(debug, "Returning: %d", result);
    return result;
 }
 
@@ -332,11 +343,14 @@ DDC_Packet * create_ddc_base_request_packet(
                 const char * tag)
 {
    bool debug = false;
+#ifdef OLD
    if (debug) {
       char * hs =  hexstring(data_bytes, data_bytect);
       DBGMSG("Starting.  bytes=%s, tag=%s", hs, tag);
       free(hs);
    }
+#endif
+   DBGMSF(debug, "Starting.  bytes=%s, tag=%s", hexstring_t(data_bytes,data_bytect), tag);
 
    assert( data_bytect <= 32 );
 
@@ -567,16 +581,11 @@ create_ddc_base_response_packet(
    DDC_Packet ** packet_ptr_addr)
 {
    bool debug = false;
-   if (debug) {
-      char * hs = hexstring(i2c_response_bytes,20);
-      DBGMSG("Starting. i2c_response_bytes=%s", hs );
-      free(hs);
-   }
+   DBGMSF(debug, "Starting. i2c_response_bytes=%s", hexstring_t(i2c_response_bytes, 20) );
 
    int result = DDCRC_OK;
    DDC_Packet * packet = NULL;
    if (i2c_response_bytes[0] != 0x6e ) {
-      // DBGMSG("Unexpected source address 0x%02x, should be 0x6e", i2c_response_bytes[0]);
       DDCMSG("Unexpected source address 0x%02x, should be 0x6e", i2c_response_bytes[0]);
       result = DDCRC_RESPONSE_ENVELOPE;
    }
@@ -586,15 +595,10 @@ create_ddc_base_response_packet(
       if (data_ct > MAX_DDC_DATA_SIZE) {
          if ( is_double_byte(&i2c_response_bytes[1])) {
             result = DDCRC_DOUBLE_BYTE;
-            // if (showRecoverableErrors || debug)
-            //    DBGMSG("Double byte in packet.");
             DDCMSG("Double byte in packet.");
          }
          else {
             result = DDCRC_PACKET_SIZE;
-            // if (showRecoverableErrors || debug)
-            //    printf("(%s) Invalid data length in packet: %d exceeds MAX_DDC_DATA_SIZE\n",
-            //           __func__, data_ct);
             DDCMSG("Invalid data length in packet: %d exceeds MAX_DDC_DATA_SIZE", data_ct);
          }
       }
@@ -604,11 +608,6 @@ create_ddc_base_response_packet(
          if (data_ct > 0)
             packet->type = i2c_response_bytes[2];
          Byte * packet_bytes = packet->raw_bytes->bytes;
-         // DBGMSG("packet_bytes=%p", packet_bytes);
-         // packet_bytes[0] = 0x6f;    // implicit, would be 0x50 on access bus
-         // packet_bytes[1] = 0x6e;       // i2c_response_bytes[0[
-         // memcpy(packet_bytes+2, i2c_response_bytes+1, 1 + data_ct + 1);
-         // packet->buf->len = 3 + data_ct + 1;
          buffer_set_byte(  packet->raw_bytes, 0, 0x6f);     // implicit, would be 0x50 on access bus
          buffer_set_byte(  packet->raw_bytes, 1, 0x6e);     // i2c_response_bytes[0]
          buffer_set_bytes( packet->raw_bytes, 2, i2c_response_bytes+1, 1 + data_ct + 1);
@@ -616,27 +615,18 @@ create_ddc_base_response_packet(
          Byte calculated_checksum = ddc_checksum(packet_bytes, 3 + data_ct, true);   // replacing right byte?
          Byte actual_checksum = packet_bytes[3+data_ct];
          if (calculated_checksum != actual_checksum) {
-            // if (showRecoverableErrors || debug)
-            //    printf("(%s) Actual checksum 0x%02x, expected 0x%02x\n",
-            //           __func__, actual_checksum, calculated_checksum);
             DDCMSG("Actual checksum 0x%02x, expected 0x%02x",
                    actual_checksum, calculated_checksum);
-            // DBGMSG("!!! SUPPRESSING CHECKSUM ERROR");
             result = DDCRC_CHECKSUM;
-            // DBGMSG("Freeing packet=%p", packet);
             free_ddc_packet(packet);
          }
       }
    }
 
    if (result != DDCRC_OK) {
-      // if (showRecoverableErrors || debug) {
-      //    printf("(%s) i2c_response_bytes: %s\n",
-      //           __func__,  hexstring(i2c_response_bytes, response_bytes_buffer_size));
-      // }
-      char * hs = hexstring(i2c_response_bytes, response_bytes_buffer_size);
-      DDCMSG("i2c_response_bytes: %s", hs);
-      free(hs);
+      // char * hs = hexstring(i2c_response_bytes, response_bytes_buffer_size);
+      DDCMSG("i2c_response_bytes: %s", hexstring_t(i2c_response_bytes, response_bytes_buffer_size));
+      // free(hs);
    }
 
    if (result == DDCRC_OK)
@@ -644,8 +634,7 @@ create_ddc_base_response_packet(
    else
       *packet_ptr_addr = NULL;
 
-   DBGMSF(debug, "Returning %s, *packet_ptr_addr=%p\n", ddcrc_desc(result), *packet_ptr_addr);
-
+   DBGMSF(debug, "Returning %s, *packet_ptr_addr=%p", ddcrc_desc(result), *packet_ptr_addr);
    assert( (result==DDCRC_OK && *packet_ptr_addr) || (result != DDCRC_OK && !*packet_ptr_addr));
    return result;
 }
@@ -675,11 +664,14 @@ create_ddc_response_packet(
        DDC_Packet **   packet_ptr_addr)
 {
    bool debug = false;
+#ifdef OLD
    if (debug) {
       char * hs = hexstring(i2c_response_bytes,20);
       DBGMSG("Starting. i2c_response_bytes=%s", hs);
       free(hs);
    }
+#endif
+   DBGMSF(debug, "Starting. i2c_response_bytes=%s", hexstring_t(i2c_response_bytes, 20));
 
    Status_DDC result = create_ddc_base_response_packet(
                           i2c_response_bytes,
@@ -989,11 +981,14 @@ Status_DDC create_ddc_typed_response_packet(
       DDC_Packet**    packet_ptr_addr)
 {
    bool debug = false;
+#ifdef OLD
    if (debug) {
       char * hs =  hexstring(i2c_response_bytes,20);
       DBGMSF(debug, "Starting. i2c_response_bytes=%s", hs );
       free(hs);
    }
+#endif
+   DBGMSF(debug, "Starting. i2c_response_bytes=%s", hexstring_t(i2c_response_bytes, 20) );
 
    // DBGMSG("before create_ddc_response_packet(), *packet_ptr_addr=%p", *packet_ptr_addr);
    // n. may return DDC_NULL_RESPONSE??   (old note)
