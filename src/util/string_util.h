@@ -126,7 +126,7 @@ char * hexstring2(
           const unsigned char * bytes,      // bytes to convert
           int                   len,        // number of bytes
           const char *          sepstr,     // separator string between hex digits
-          bool                  uppercase,  // use upper case hex characters?
+          bool                  uppercase,  // use upper case hex characters
           char *                buffer,     // buffer in which to return hex string
           int                   bufsz);     // buffer size
 char * hexstring2_t(
@@ -134,6 +134,12 @@ char * hexstring2_t(
           int                   len,        // number of bytes
           const char *          sepstr,     // separator string between hex digits
           bool                  uppercase); // use upper case hex characters?
+char * hexstring3_t(
+          const unsigned char * bytes,      // bytes to convert
+          int                   len,        // number of bytes
+          const char *          sepstr,     // separator string between hex digits
+          uint8_t               hunk_size,  // separator string frequency
+          bool                  uppercase); // use upper case hex characters
 
 void fhex_dump_indented(FILE * fh, const Byte* data, int size, int indents);
 void fhex_dump(FILE * fh, const Byte* bytes, int size);

@@ -31,10 +31,13 @@
 #include <glib-2.0/glib.h>
 #include <errno.h>
 #include <stdio.h>
+#include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
 #include <stdarg.h>
 /** \endcond */
+
+#include "glib_util.h"
 
 #include "string_util.h"
 
@@ -1025,6 +1028,8 @@ char * hexstring2(
 }
 
 
+// TODO: replace implementation of hexstring2_t() with call to hexstring3_t()
+
 /** Thread safe version of #hexstring2().
  *
  *  This function allocates a thread specific buffer in which the
@@ -1046,7 +1051,7 @@ char * hexstring2(
  * This function is intended to simplify formatting of diagnostic messages, since
  * the caller needn't be concerned with buffer size and allocation.
  */
-char * hexstring2_t(
+char * hexstring2_t_old(
           const unsigned char * bytes,
           int                   len,
           const char *          sepstr,
@@ -1100,6 +1105,101 @@ char * hexstring2_t(
    // printf("(%s)  buffer=|%s|\n", __func__, buffer );
    assert(strlen(buf) == required_size-1);
 
+   return buf;
+}
+
+
+char * hexstring2_t(
+          const unsigned char * bytes,
+          int                   len,
+          const char *          sepstr,
+          bool                  uppercase)
+{
+   return hexstring3_t(bytes, len, sepstr, 1, uppercase);
+}
+
+
+char * hexstring3_t(
+          const unsigned char * bytes,      // bytes to convert
+          int                   len,        // number of bytes
+          const char *          sepstr,     // separator string between hex digits
+          uint8_t               hunk_size,  // separator string frequency
+          bool                  uppercase)  // use upper case hex characters
+{
+   static GPrivate  hexstring3_key = G_PRIVATE_INIT(g_free);
+   static GPrivate  hexstring3_len_key = G_PRIVATE_INIT(g_free);
+
+#ifdef OLD
+   char * buf = g_private_get(&hexstring3_key);
+   int  * bufsz_ptr = g_private_get(&hexstring3_len_key);
+   GThread * this_thread = g_thread_self();
+   printf("(%s) this_thread=%p, hexstring3_key=%p, buf=%p, hexstring3_len_key=%p, bufsz_ptr=%p\n",
+          __func__, this_thread, &hexstring3_key, buf, &hexstring3_len_key, bufsz_ptr);
+   if (bufsz_ptr)
+      printf("(%s) *bufsz_ptr = %d\n", __func__, *bufsz_ptr);
+
+   // TODO: Keep track of buffer size, only reallocate if buffer insufficiently large.
+   // But note that this function is only used for diagnostic messages, so performance
+   // gain is insignificant.
+
+   // unnecessary if use g_private_replace() instead of g_private_set()
+   // if (buf)
+   //    g_free(buf);
+#endif
+   // printf("(%s) bytes=%p, len=%d, sepstr=|%s|, uppercase=%s\n", __func__,
+   //       bytes, len, sepstr, bool_repr(uppercase));
+   if (hunk_size == 0)
+      sepstr = NULL;
+   else if (sepstr == NULL)
+      hunk_size = 0;
+
+   int sepsize = 0;
+   if (sepstr) {
+      sepsize = strlen(sepstr);
+   }
+   int required_size = 1;    // special case if len == 0
+   // excessive if hunk_size > 1, but not worth the effort to be accurate
+   if (len > 0)
+      required_size =   2*len             // hex rep of bytes
+                       + (len-1)*sepsize   // for separators
+                       + 1;                // terminating null
+   // printf("(%s) sepstr=|%s|, hunk_size=%d, required_size=%d\n", __func__, sepstr, hunk_size, required_size);
+
+#ifdef OLD
+   if ( !bufsz_ptr || *bufsz_ptr < required_size) {
+      buf = g_new(char, required_size);
+      // printf("(%s) Calling g_private_set()\n", __func__);
+      g_private_replace(&hexstring3_key, buf);
+
+
+      if (!bufsz_ptr) {
+         bufsz_ptr = g_new(int, 1);
+         g_private_set(&hexstring3_len_key, bufsz_ptr);
+      }
+      *bufsz_ptr = required_size;
+   }
+#endif
+   char * buf = get_thread_dynamic_buffer(&hexstring3_key, &hexstring3_len_key, required_size);
+   // char * buf = get_thread_private_buffer(&hexstring3_key, NULL, required_size);
+
+   char * pattern = (uppercase) ? "%02X" : "%02x";
+
+   // int incr1 = 2 + sepsize;
+   *buf = '\0';
+   for (int i=0; i < len; i++) {
+      // printf("(%s) i=%d, strlen(buf)=%ld\n", __func__, i, strlen(buf));
+      sprintf(buf+strlen(buf), pattern, bytes[i]);
+      bool insert_sepstr = (hunk_size == 0)
+                               ? (i < (len-1) && sepstr)
+                               : (i < (len-1) && sepstr && (i+1)%hunk_size == 0);
+      if (insert_sepstr)
+         strcat(buf, sepstr);
+   }
+   // printf("(%s) strlen(buffer) = %ld, required_size=%d   \n", __func__, strlen(buffer), required_size );
+   // printf("(%s)  buffer=|%s|\n", __func__, buffer );
+   assert(strlen(buf) <= required_size-1);
+
+   // printf("(%s) Returning: %p\n", __func__, buf);
    return buf;
 }
 
