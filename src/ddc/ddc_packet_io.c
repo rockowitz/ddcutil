@@ -158,7 +158,7 @@ Public_Status_Code ddc_open_display(
 
          if (!dref->pedid) {
             // How is this even possible?
-            // 1/2017:  see with x260 laptop and Ultradock, See ddcutil user report.
+            // 1/2017:  Observed with x260 laptop and Ultradock, See ddcutil user report.
             //          close(fd) fails
             DBGMSG("No EDID for device on bus /dev/i2c-%d", dref->busno);
             if (!(callopts & CALLOPT_FORCE)) {
@@ -466,7 +466,6 @@ Public_Status_Code ddc_adl_write_read_raw(
                                get_packet_len(request_packet_ptr)
                               );
    if (psc < 0) {
-      // TRCMSGTF(tf, "adl_ddc_write_only() returned gsc=%d\n", gsc);
       DBGTRC(debug, TRACE_GROUP, "adl_ddc_write_only() returned gsc=%d\n", psc);
    }
    else {
@@ -477,7 +476,6 @@ Public_Status_Code ddc_adl_write_read_raw(
             pbytes_received);
       // note_io_event(IE_READ_AFTER_WRITE, __func__);
       if (psc < 0) {
-         // TRCMSGTF(tf, "adl_ddc_read_only() returned adlrc=%d\n", gsc);
          DBGTRC(debug, TRACE_GROUP, "adl_ddc_read_only() returned %d\n", psc);
       }
       else {
@@ -488,7 +486,6 @@ Public_Status_Code ddc_adl_write_read_raw(
                  COUNT_STATUS_CODE(psc);
          }
          else if (memcmp(get_packet_start(request_packet_ptr), readbuf, get_packet_len(request_packet_ptr)) == 0) {
-            // DBGMSG("Bytes read same as bytes written." );
             // is this a DDC error or a programming bug?
             DDCMSG("Bytes read same as bytes written.", __func__ );
             psc = DDCRC_READ_EQUALS_WRITE;
@@ -502,7 +499,6 @@ Public_Status_Code ddc_adl_write_read_raw(
 
    if (psc < 0)
       log_status_code(psc, __func__);
-   // TRCMSGTF(tf, "Done. rc=%s\n", gsc_desc(gsc));
    DBGTRC(debug, TRACE_GROUP, "Done. rc=%s\n", psc_desc(psc));
    return psc;
 }
@@ -546,9 +542,12 @@ Public_Status_Code ddc_write_read_raw(
 
    DBGTRC(debug, TRACE_GROUP, "Done, returning: %s", psc_desc(psc));
    if (debug && psc == 0) {
+#ifdef OLD
       char * hs = hexstring(readbuf, *pbytes_received);
       DBGMSG("readbuf: %s", hs);
       free(hs);
+#endif
+      DBGMSG("readbuf: %s", hexstring_t(readbuf, *pbytes_received));
    }
    return psc;
 }
@@ -741,6 +740,10 @@ Public_Status_Code ddc_write_read_with_retry(
 
             else
                retryable = true;     // for now
+
+            // try exponential backoff on all errors, not just SE_DDC_NULL
+            // if (retryable)
+            //    call_dynamic_tuned_sleep_i2c(SE_DDC_NULL, tryctr+1);
          }
          else {   // DDC_IO_ADL
             // TODO more detailed tests
