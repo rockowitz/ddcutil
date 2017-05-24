@@ -596,10 +596,10 @@ char * dref_short_name(Display_Ref * dref) {
 char * dref_short_name_t(Display_Ref * dref) {
    static GPrivate  dref_short_name_key = G_PRIVATE_INIT(g_free);
 
-   GThread * this_thread = g_thread_self();
    char * buf = g_private_get(&dref_short_name_key);
-   printf("(%s) this_thread=%p, dref_short_name_key=%p, buf=%p\n",
-          __func__, this_thread, &dref_short_name_key, buf);
+   // GThread * this_thread = g_thread_self();
+   // printf("(%s) this_thread=%p, dref_short_name_key=%p, buf=%p\n",
+   //        __func__, this_thread, &dref_short_name_key, buf);
    if (!buf) {
       buf = g_new(char, 100);
       printf("(%s) Calling g_private_set()\n", __func__);
@@ -612,8 +612,6 @@ char * dref_short_name_t(Display_Ref * dref) {
             "Display_Ref[%s]", dref_short_name_r(dref, buf2, 80) );
 
    return buf;
-
-
 }
 
 
