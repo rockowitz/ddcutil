@@ -34,6 +34,7 @@
 
 #include "base/core.h"
 #include "base/parms.h"
+#include "base/status_code_mgt.h"
 
 #include "i2c/i2c_base_io.h"
 
@@ -79,6 +80,7 @@ void i2c_set_io_strategy(I2C_IO_Strategy_Id strategy_id) {
  * @param   fh              file handle for open /dev/i2c bus
  * @param   bytect          number of bytes to write
  * @param   bytes_to_write  pointer to bytes to be written
+ * @return  status code
  */
 Status_Errno_DDC invoke_i2c_writer(
       int    fh,
@@ -86,23 +88,18 @@ Status_Errno_DDC invoke_i2c_writer(
       Byte * bytes_to_write)
 {
    bool debug = false;
-   if (debug) {
-      char * hs = hexstring(bytes_to_write, bytect);
-      DBGMSG("writer=|%s|, bytes_to_write=%s", i2c_io_strategy->i2c_writer_name, hs);
-      free(hs);
-   }
+   DBGMSF(debug, "writer=%s, bytes_to_write=%s",
+                 i2c_io_strategy->i2c_writer_name, hexstring_t(bytes_to_write, bytect));
 
    Status_Errno_DDC rc;
    RECORD_IO_EVENT(
       IE_WRITE,
       ( rc = i2c_io_strategy->i2c_writer(fh, bytect, bytes_to_write ) )
      );
-   if (debug)
-      DBGMSG("writer() function returned %d", rc);
+   // DBGMSF(debug, "writer() function returned %d", rc);
    assert (rc <= 0);
 
-   if (debug)
-      DBGMSG("Returning rc=%d", rc);
+   DBGMSF(debug, "Returning rc=%s", psc_desc(rc));
    return rc;
 }
 
@@ -113,6 +110,7 @@ Status_Errno_DDC invoke_i2c_writer(
  * @param   fh              file handle for open /dev/i2c bus
  * @param   bytect          number of bytes to read
  * @param   readbuf         location where bytes will be read to
+ * @return  status code
  */
 Status_Errno_DDC invoke_i2c_reader(
        int        fh,
@@ -127,10 +125,9 @@ Status_Errno_DDC invoke_i2c_reader(
         IE_READ,
         ( rc = i2c_io_strategy->i2c_reader(fh, bytect, readbuf) )
        );
-     DBGMSF(debug, "reader() function returned %d", rc);
      assert (rc <= 0);
 
-     DBGMSF(debug, "Returning rc=%d", rc);
+     DBGMSF(debug, "Returning rc=%s", psc_desc(rc));
      return rc;
 }
 
