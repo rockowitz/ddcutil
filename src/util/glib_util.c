@@ -35,6 +35,8 @@
 #include <string.h>
 /** \endcond */
 
+
+
 #include "glib_util.h"
 
 #ifdef ALTERNATIVE
@@ -145,7 +147,7 @@ gint g_ptr_scomp(gconstpointer a, gconstpointer b) {
  *  \param ...  arguments
  *  \return     pointer to newly allocated string
  */
-char * gaux_asprintf(char * fmt, ...) {
+gchar * gaux_asprintf(gchar * fmt, ...) {
    char * result = NULL;
    va_list(args);
    va_start(args, fmt);
@@ -158,6 +160,78 @@ char * gaux_asprintf(char * fmt, ...) {
    g_vsnprintf(result, sz, fmt, args);
    va_end(args);
    return result;
+}
+
+
+//
+// Thread utilities
+//
+
+
+gchar *
+get_thread_dynamic_buffer(
+      GPrivate * buf_key_ptr,
+      GPrivate * bufsz_key_ptr,
+      guint16    required_size)
+{
+   // printf("(%s) buf_key_ptr=%p, bufsz_key_ptr=%p, required_size=%d\n",
+   //        __func__, buf_key_ptr, bufsz_key_ptr, required_size);
+
+   char * buf       = g_private_get(buf_key_ptr);
+   int * bufsz_ptr  = NULL;
+   if (bufsz_key_ptr)
+      bufsz_ptr = g_private_get(bufsz_key_ptr);
+
+   // GThread * this_thread = g_thread_self();
+   // printf("(%s) this_thread=%p, buf=%p, bufsz_ptr=%p\n", __func__, this_thread, buf, bufsz_ptr);
+   // if (bufsz_ptr)
+   //    printf("(%s) *bufsz_ptr = %d\n", __func__, *bufsz_ptr);
+
+
+   // unnecessary if use g_private_replace() instead of g_private_set()
+   // if (buf)
+   //    g_free(buf);
+
+   if ( !bufsz_ptr || *bufsz_ptr < required_size) {
+      buf = g_new(char, required_size);
+      // printf("(%s) Calling g_private_set()\n", __func__);
+      g_private_replace(buf_key_ptr, buf);
+
+      if (bufsz_key_ptr) {
+         if (!bufsz_ptr) {
+            bufsz_ptr = g_new(int, 1);
+            g_private_set(bufsz_key_ptr, bufsz_ptr);
+         }
+         *bufsz_ptr = required_size;
+      }
+   }
+
+   // printf("(%s) Returning: %p\n", __func__, buf);
+   return buf;
+}
+
+
+gchar *
+get_thread_fixed_buffer(
+      GPrivate * buf_key_ptr,
+      guint16    required_size)
+{
+   // printf("(%s) buf_key_ptr=%p, required_size=%d\n", __func__, buf_key_ptr, required_size);
+   assert(required_size > 0);
+
+   char * buf = g_private_get(buf_key_ptr);
+
+   // GThread * this_thread = g_thread_self();
+   // printf("(%s) this_thread=%p, buf=%p\n", __func__, this_thread, buf);
+
+   if (!buf) {
+      buf = g_new(char, required_size);
+      buf[0] = '\0';     // (sort of) mark buffer as unused
+      g_private_set(buf_key_ptr, buf);
+   }
+
+   // printf("(%s) Returning: %p\n", __func__, buf);
+   return buf;
 }
 
 

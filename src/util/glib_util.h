@@ -31,13 +31,26 @@
 #define GLIB_UTIL_H_
 
 /** \cond */
-#include <glib.h>
+#include <glib-2.0/glib.h>
 /** \endcond */
 
 gpointer * g_list_to_g_array(GList * glist, guint * length);
 
 gint g_ptr_scomp(gconstpointer a, gconstpointer b);
 
-char * gaux_asprintf(char * fmt, ...);
+gchar * gaux_asprintf(gchar * fmt, ...);
+
+
+gchar *
+get_thread_dynamic_buffer(
+      GPrivate * buf_key_ptr,
+      GPrivate * bufsz_key_ptr,
+      guint16    required_size);
+
+gchar *
+get_thread_fixed_buffer(
+      GPrivate * buf_key_ptr,
+      guint16    required_size);
+
 
 #endif /* GLIB_UTIL_H_ */
