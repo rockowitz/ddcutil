@@ -591,11 +591,17 @@ char * dref_short_name(Display_Ref * dref) {
 }
 
 
-
-
+/** Thread safe function that returns a short description of a #Display_Ref.
+ *  The returned value is valid until the next call to this function on
+ *  the current thread.
+ *
+ *  \param  dref  pointer to #Display_Ref
+ *  \return short description
+ */
 char * dref_short_name_t(Display_Ref * dref) {
    static GPrivate  dref_short_name_key = G_PRIVATE_INIT(g_free);
 
+#ifdef OLD
    char * buf = g_private_get(&dref_short_name_key);
    // GThread * this_thread = g_thread_self();
    // printf("(%s) this_thread=%p, dref_short_name_key=%p, buf=%p\n",
@@ -605,11 +611,11 @@ char * dref_short_name_t(Display_Ref * dref) {
       printf("(%s) Calling g_private_set()\n", __func__);
       g_private_set(&dref_short_name_key, buf);
    }
+#endif
 
+   char * buf = get_thread_fixed_buffer(&dref_short_name_key, 100);
    char buf2[80];
-
-   snprintf(buf, 100,
-            "Display_Ref[%s]", dref_short_name_r(dref, buf2, 80) );
+   snprintf(buf, 100, "Display_Ref[%s]", dref_short_name_r(dref, buf2, 80) );
 
    return buf;
 }
@@ -631,9 +637,20 @@ char * dref_repr(Display_Ref * dref) {
    return display_ref_short_id_buffer;
 }
 
+
+/** Thread safe function that returns a string representation of a #Display_Ref
+ *  suitable for diagnostic messages. The returned value is valid until the
+ *  next call to this function on the current thread.
+ *
+ *  \param  dref  pointer to #Display_Ref
+ *  \return string representation of #Display_Ref
+ */
 char * dref_repr_t(Display_Ref * dref) {
    static GPrivate  dref_repr_key = G_PRIVATE_INIT(g_free);
 
+   char * buf = get_thread_fixed_buffer(&dref_repr_key, 100);
+
+#ifdef OLD
    char * buf = g_private_get(&dref_repr_key);
 
    // GThread * this_thread = g_thread_self();
@@ -644,6 +661,7 @@ char * dref_repr_t(Display_Ref * dref) {
       buf = g_new(char, 100);
       g_private_set(&dref_repr_key, buf);
    }
+#endif
 
    char buf2[80];
    snprintf(buf, 100,
@@ -851,12 +869,14 @@ char * dh_repr_r(Display_Handle * dh, char * buf, int bufsz) {
  *  This variant of #dh_repr() is thread safe.
  *
  * \param  dh    display handle
- *
  * \return  string representation of handle
  */
 char * dh_repr_t(Display_Handle * dh) {
    static GPrivate  dh_buf_key = G_PRIVATE_INIT(g_free);
 
+   char * buf = get_thread_fixed_buffer(&dh_buf_key, 100);
+
+#ifdef OLD
    char * buf = g_private_get(&dh_buf_key);
 
    // GThread * this_thread = g_thread_self();
@@ -867,6 +887,8 @@ char * dh_repr_t(Display_Handle * dh) {
       buf = g_new(char, 100);
       g_private_set(&dh_buf_key, buf);
    }
+#endif
+
    dh_repr_r(dh, buf, 100);
    return buf;
 
