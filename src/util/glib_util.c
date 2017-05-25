@@ -167,7 +167,23 @@ gchar * gaux_asprintf(gchar * fmt, ...) {
 // Thread utilities
 //
 
-
+/** Handles the boilerplate of obtaining a thread specific buffer that can
+ *  change size.
+ *
+ *  If parm **bufsz_key_ptr** is NULL, the buffer is reallocated with the
+ *  specified size with each call to this function.
+ *
+ *  If parm **bufsz_key_ptr** is non-NULL, then the buffer is reallocated
+ *  only if the requested size is larger than the current size.  That is,
+ *  the buffer can grow in size but never shrink.
+ *
+ *  \param  buf_key_ptr    address of a **GPrivate** used as the identifier
+ *                         for the buffer
+ *  \param  bufsz_key_ptr  address of **GPrivate** used as an identifier for
+ *                         the current buffer size
+ *  \param  required_size  size of buffer to allocate
+ *  \return pointer to thread specific buffer
+ */
 gchar *
 get_thread_dynamic_buffer(
       GPrivate * buf_key_ptr,
@@ -211,13 +227,26 @@ get_thread_dynamic_buffer(
 }
 
 
+/** Handles the boilerplate of obtaining a thread specific fixed size buffer.
+ *  The first call to this function in a thread with a given key address
+ *  allocates the buffer.  Subsequent calls in the thread for the same key
+ *  address return the same buffer.
+ *
+ *  \param  buf_key_ptr  address of a **GPrivate** used as the identifier
+ *                       for the buffer
+ *  \param  buffer_size  size of buffer to allocate
+ *  \return pointer to thread specific buffer
+ *
+ *  \remark
+ *  When the buffer is first allocated, byte 0 is set to '\0'
+ */
 gchar *
 get_thread_fixed_buffer(
       GPrivate * buf_key_ptr,
-      guint16    required_size)
+      guint16    buffer_size)
 {
-   // printf("(%s) buf_key_ptr=%p, required_size=%d\n", __func__, buf_key_ptr, required_size);
-   assert(required_size > 0);
+   // printf("(%s) buf_key_ptr=%p, buffer_size=%d\n", __func__, buf_key_ptr, buffer_size);
+   assert(buffer_size > 0);
 
    char * buf = g_private_get(buf_key_ptr);
 
@@ -225,7 +254,7 @@ get_thread_fixed_buffer(
    // printf("(%s) this_thread=%p, buf=%p\n", __func__, this_thread, buf);
 
    if (!buf) {
-      buf = g_new(char, required_size);
+      buf = g_new(char, buffer_size);
       buf[0] = '\0';     // (sort of) mark buffer as unused
       g_private_set(buf_key_ptr, buf);
    }
