@@ -904,17 +904,14 @@ ddc_detect_all_displays() {
    bool debug = false;
    DBGMSF(debug, "Starting");
 
-   // int new_busct =  i2c_detect_buses();
-   // DBGMSF(debug, "i2c_detect_buses() returned: %d", new_busct);
-
    GPtrArray * display_list = g_ptr_array_new();
 
-   // int busct = i2c_get_busct();
    int busct = i2c_detect_buses();
+   // DBGMSF(debug, "i2c_detect_buses() returned: %d", busct);
    int busndx = 0;
    for (busndx=0; busndx < busct; busndx++) {
       Bus_Info * businfo = i2c_get_bus_info_by_index(busndx);
-      if ( (businfo->flags & I2C_BUS_ADDR_0X50) ) {
+      if ( (businfo->flags & I2C_BUS_ADDR_0X50)  && businfo->edid ) {
          Display_Ref * dref = create_bus_display_ref(businfo->busno);
          dref->dispno = -1;
          dref->pedid = businfo->edid;    // needed?
@@ -923,7 +920,6 @@ ddc_detect_all_displays() {
          dref->flags |= DREF_DDC_IS_MONITOR_CHECKED;
          dref->flags |= DREF_DDC_IS_MONITOR;
          g_ptr_array_add(display_list, dref);
-         // ddc_add_display_ref(display_list, dref);
       }
    }
 
@@ -939,7 +935,6 @@ ddc_detect_all_displays() {
      dref->flags |= DREF_DDC_IS_MONITOR_CHECKED;
      dref->flags |= DREF_DDC_IS_MONITOR;
      g_ptr_array_add(display_list, dref);
-     // ddc_add_display_ref(display_list, dref);
   }
 
 #ifdef USE_USB
@@ -959,7 +954,6 @@ ddc_detect_all_displays() {
       dref->flags |= DREF_DDC_IS_MONITOR_CHECKED;
       dref->flags |= DREF_DDC_IS_MONITOR;
       g_ptr_array_add(display_list, dref);
-      // ddc_add_display_ref(display_list, dref);
    }
 #endif
 
