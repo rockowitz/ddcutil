@@ -109,12 +109,15 @@ app_set_vcp_value(
       char *           new_value,
       bool             force)
 {
+   bool debug = false;
+   DBGMSF(debug,"Starting");
+
    Public_Status_Code         psc = 0;
    long                       longtemp;
    Byte                       hexid;
    VCP_Feature_Table_Entry *  entry = NULL;
    bool                       good_value = false;
-   DDCA_Single_Vcp_Value           vrec;
+   DDCA_Single_Vcp_Value      vrec;
 
    DDCA_MCCS_Version_Spec vspec = get_vcp_version_by_display_handle(dh);
    bool ok = any_one_byte_hex_string_to_byte_in_buf(feature, &hexid);
@@ -171,6 +174,13 @@ app_set_vcp_value(
    }
 
    psc = set_vcp_value(dh, &vrec);
+
+   // *** TEMP FOR TESTING ***
+   // if (vrec.val.c.cur_val == 25) {
+   //    DBGMSG("Forcing DDC_VERIFY");
+   //    psc = DDCRC_VERIFY;
+   // }
+
    if (psc != 0)  {
       switch(psc) {
       case DDCRC_VERIFY:
@@ -186,5 +196,7 @@ bye:
    if (entry && (entry->vcp_global_flags & DDCA_SYNTHETIC) ) {
       free_synthetic_vcp_entry(entry);
    }
+
+   DBGMSF(debug, "Returning: %s", psc_desc(psc));
    return psc;
 }
