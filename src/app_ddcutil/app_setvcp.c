@@ -131,7 +131,6 @@ app_set_vcp_value(
       entry = vcp_create_dummy_feature_for_hexid(hexid);
    if (!entry) {
       f0printf(FOUT, "Unrecognized VCP feature code: %s\n", feature);
-      // gsc = modulate_rc(-EINVAL, RR_ERRNO);
       psc = DDCL_UNKNOWN_FEATURE;
       goto bye;
    }
