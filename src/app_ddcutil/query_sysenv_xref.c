@@ -181,7 +181,10 @@ void device_xref_report(int depth) {
       else
          rpt_vstring(d1, "EDID: ...%s", xref->edid_tag);
 
-      rpt_vstring(d2, "Bus:           /dev/i2c-%d", xref->i2c_busno);
+      if (xref->i2c_busno == -1)
+         rpt_vstring(d2, "Bus:           Not found");
+      else
+         rpt_vstring(d2, "Bus:           /dev/i2c-%d", xref->i2c_busno);
       rpt_vstring(d2, "XrandR output: %s", xref->xrandr_name);
       rpt_vstring(d2, "DRM connector: %s", xref->drm_connector_name);
       // rpt_vstring(d2, "DRM path:      %s", xref->drm_device_path);
