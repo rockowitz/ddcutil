@@ -123,7 +123,7 @@ void report_stats(DDCA_Stats_Type stats) {
 
 
 // TODO: refactor
-//       originally just displayed capabilities, now returns parsed capabilities as weel
+//       originally just displayed capabilities, now returns parsed capabilities as well
 //       these actions should be separated
 Parsed_Capabilities *
 perform_get_capabilities_by_display_handle(Display_Handle * dh) {
@@ -139,11 +139,11 @@ perform_get_capabilities_by_display_handle(Display_Handle * dh) {
          printf("Unsupported request\n");
          break;
       case DDCRC_RETRIES:
-         printf("Unable to get capabilities for monitor on %s.  Maximum DDC retries exceeded.\n",
+         f0printf(FOUT, "Unable to get capabilities for monitor on %s.  Maximum DDC retries exceeded.\n",
                  dh_repr(dh));
          break;
       default:
-         printf("(%s) !!! Unable to get capabilities for monitor on %s\n",
+         f0printf(FOUT, "(%s) !!! Unable to get capabilities for monitor on %s\n",
                 __func__, dh_repr(dh));
          DBGMSG("Unexpected status code: %s", psc_desc(psc));
       }
@@ -154,9 +154,10 @@ perform_get_capabilities_by_display_handle(Display_Handle * dh) {
       pcap = parse_capabilities_string(capabilities_string);
       DDCA_Output_Level output_level = get_output_level();
       if (output_level <= DDCA_OL_TERSE) {
-         printf("%s capabilities string: %s\n",
-               (dh->dref->io_mode == DDCA_IO_USB) ? "Synthesized unparsed" : "Unparsed",
-               capabilities_string);
+         f0printf(FOUT,
+                  "%s capabilities string: %s\n",
+                  (dh->dref->io_mode == DDCA_IO_USB) ? "Synthesized unparsed" : "Unparsed",
+                  capabilities_string);
       }
       else {
          if (dh->dref->io_mode == DDCA_IO_USB)
@@ -178,9 +179,9 @@ void probe_display_by_dh(Display_Handle * dh)
    Public_Status_Code psc = 0;
    char dref_name_buf[DREF_SHORT_NAME_BUF_SIZE];
 
-
-   printf("\nMfg id: %s, model: %s, sn: %s\n",
-          dh->dref->pedid->mfg_id, dh->dref->pedid->model_name, dh->dref->pedid->serial_ascii);
+   f0printf(FOUT,
+            "\nMfg id: %s, model: %s, sn: %s\n",
+            dh->dref->pedid->mfg_id, dh->dref->pedid->model_name, dh->dref->pedid->serial_ascii);
 
    // printf("\nCapabilities for display %s\n", display_handle_repr(dh) );
    printf("\nCapabilities for display on %s\n", dref_short_name_r(dh->dref, dref_name_buf, sizeof(dref_name_buf)) );
@@ -194,58 +195,58 @@ void probe_display_by_dh(Display_Handle * dh)
 
    // how to pass this information down into app_show_vcp_subset_values_by_display_handle()?
    bool table_reads_possible = parsed_capabilities_may_support_table_commands(pcaps);
-   printf("\nMay support table reads:   %s\n", bool_repr(table_reads_possible));
+   f0printf(FOUT, "\nMay support table reads:   %s\n", bool_repr(table_reads_possible));
 
    // *** VCP Feature Scan ***
    // printf("\n\nScanning all VCP feature codes for display %d\n", dispno);
-   printf("\nScanning all VCP feature codes for display %s\n", dh_repr(dh) );
+   f0printf(FOUT, "\nScanning all VCP feature codes for display %s\n", dh_repr(dh) );
    Byte_Bit_Flags features_seen = bbf_create();
    app_show_vcp_subset_values_by_display_handle(
          dh, VCP_SUBSET_SCAN, /* show_unsupported */ true, features_seen);
 
    if (pcaps) {
-      printf("\n\nComparing declared capabilities to observed features...\n");
+      f0printf(FOUT, "\n\nComparing declared capabilities to observed features...\n");
       Byte_Bit_Flags features_declared =
             parsed_capabilities_feature_ids(pcaps, /*readable_only=*/true);
       char * s0 = bbf_to_string(features_declared, NULL, 0);
-      printf("\nReadable features declared in capabilities string: %s\n", s0);
+      f0printf(FOUT, "\nReadable features declared in capabilities string: %s\n", s0);
       free(s0);
 
       Byte_Bit_Flags caps_not_seen = bbf_subtract(features_declared, features_seen);
       Byte_Bit_Flags seen_not_caps = bbf_subtract(features_seen, features_declared);
 
-      printf("\nMCCS (VCP) version reported by capabilities: %s\n",
+      f0printf(FOUT, "\nMCCS (VCP) version reported by capabilities: %s\n",
                format_vspec(pcaps->parsed_mccs_version));
-      printf("MCCS (VCP) version reported by feature 0xDf: %s\n",
+      f0printf(FOUT, "MCCS (VCP) version reported by feature 0xDf: %s\n",
                format_vspec(vspec));
       if (!vcp_version_eq(pcaps->parsed_mccs_version, vspec))
-         printf("Versions do not match!!!\n");
+         f0printf(FOUT, "Versions do not match!!!\n");
 
       if (bbf_count_set(caps_not_seen) > 0) {
-         printf("\nFeatures declared as readable capabilities but not found by scanning:\n");
+         f0printf(FOUT, "\nFeatures declared as readable capabilities but not found by scanning:\n");
          for (int code = 0; code < 256; code++) {
             if (bbf_is_set(caps_not_seen, code)) {
                VCP_Feature_Table_Entry * vfte = vcp_find_feature_by_hexid_w_default(code);
                char * feature_name = get_version_sensitive_feature_name(vfte, pcaps->parsed_mccs_version);
-               printf("   Feature x%02x - %s\n", code, feature_name);
+               f0printf(FOUT, "   Feature x%02x - %s\n", code, feature_name);
             }
          }
       }
       else
-         printf("\nAll readable features declared in capabilities were found by scanning.\n");
+         f0printf(FOUT, "\nAll readable features declared in capabilities were found by scanning.\n");
 
       if (bbf_count_set(seen_not_caps) > 0) {
-         printf("\nFeatures found by scanning but not declared as capabilities:\n");
+         f0printf(FOUT, "\nFeatures found by scanning but not declared as capabilities:\n");
          for (int code = 0; code < 256; code++) {
             if (bbf_is_set(seen_not_caps, code)) {
                VCP_Feature_Table_Entry * vfte = vcp_find_feature_by_hexid_w_default(code);
                char * feature_name = get_version_sensitive_feature_name(vfte, vspec);
-               printf("   Feature x%02x - %s\n", code, feature_name);
+               f0printf(FOUT, "   Feature x%02x - %s\n", code, feature_name);
             }
          }
       }
       else
-         printf("\nAll features found by scanning were declared in capabilities.\n");
+         f0printf(FOUT, "\nAll features found by scanning were declared in capabilities.\n");
 
       bbf_free(features_declared);
       bbf_free(caps_not_seen);
@@ -253,8 +254,8 @@ void probe_display_by_dh(Display_Handle * dh)
       free_parsed_capabilities(pcaps);
    }
    else {
-      printf("\n\nUnable to read or parse capabilities.\n");
-      printf("Skipping comparison of declared capabilities to observed features\n");
+      f0printf(FOUT, "\n\nUnable to read or parse capabilities.\n");
+      f0printf(FOUT, "Skipping comparison of declared capabilities to observed features\n");
    }
    bbf_free(features_seen);
 
@@ -271,7 +272,7 @@ void probe_display_by_dh(Display_Handle * dh)
           &valrec);
    if (psc == 0) {
       if (debug)
-         printf("Value returned for feature x0b: %s\n", summarize_single_vcp_value(valrec) );
+         f0printf(FOUT, "Value returned for feature x0b: %s\n", summarize_single_vcp_value(valrec) );
       color_temp_increment = valrec->val.c.cur_val;
 
       psc =  get_vcp_value(
@@ -281,12 +282,12 @@ void probe_display_by_dh(Display_Handle * dh)
           &valrec);
       if (psc == 0) {
          if (debug)
-            printf("Value returned for feature x0c: %s\n", summarize_single_vcp_value(valrec) );
+            f0printf(FOUT, "Value returned for feature x0c: %s\n", summarize_single_vcp_value(valrec) );
          color_temp_units = valrec->val.c.cur_val;
          int color_temp = 3000 + color_temp_units * color_temp_increment;
-         printf("Color temperature increment (x0b) = %d degrees Kelvin\n", color_temp_increment);
-         printf("Color temperature request   (x0c) = %d\n", color_temp_units);
-         printf("Requested color temperature = (3000 deg Kelvin) + %d * (%d degrees Kelvin)"
+         f0printf(FOUT, "Color temperature increment (x0b) = %d degrees Kelvin\n", color_temp_increment);
+         f0printf(FOUT, "Color temperature request   (x0c) = %d\n", color_temp_units);
+         f0printf(FOUT, "Requested color temperature = (3000 deg Kelvin) + %d * (%d degrees Kelvin)"
                " = %d degrees Kelvin\n",
                color_temp_units,
                color_temp_increment,
@@ -294,7 +295,7 @@ void probe_display_by_dh(Display_Handle * dh)
       }
    }
    if (psc != 0)
-      printf("Unable to calculate color temperature from VCP features x0B and x0C\n");
+      f0printf(FOUT, "Unable to calculate color temperature from VCP features x0B and x0C\n");
 
    // get VCP 14
    // report color preset
@@ -308,7 +309,7 @@ void probe_display_by_dref(Display_Ref * dref) {
    Public_Status_Code psc = ddc_open_display(dref, CALLOPT_ERR_MSG, &dh);
    if (psc != 0) {
       char buf[DREF_SHORT_NAME_BUF_SIZE];
-      printf("Unable to open display %s, status code %s",
+      f0printf(FOUT, "Unable to open display %s, status code %s",
              dref_short_name_r(dref, buf, sizeof(buf)), psc_desc(psc) );
    }
    else {
@@ -482,7 +483,7 @@ int main(int argc, char *argv[]) {
       bool ok = true;
       int ct = sscanf(parsed_cmd->args[0], "%d", &testnum);
       if (ct != 1) {
-         printf("Invalid test number: %s\n", parsed_cmd->args[0]);
+         f0printf(FOUT, "Invalid test number: %s\n", parsed_cmd->args[0]);
          ok = false;
       }
       else {
@@ -525,8 +526,7 @@ int main(int argc, char *argv[]) {
    else if (parsed_cmd->cmd_id == CMDID_ENVIRONMENT) {
       ddc_ensure_displays_detected();   // *** NEEDED HERE ??? ***
 
-      printf("The following tests probe the runtime environment using multiple overlapping methods.\n");
-      // DBGMSG("Exploring runtime environment...\n");
+      f0printf(FOUT, "The following tests probe the runtime environment using multiple overlapping methods.\n");
       query_sysenv();
       main_rc = EXIT_SUCCESS;
    }
@@ -534,12 +534,12 @@ int main(int argc, char *argv[]) {
    else if (parsed_cmd->cmd_id == CMDID_USBENV) {
 #ifdef USE_USB
       ddc_ensure_displays_detected();   // *** NEEDED HERE ??? ***
-      printf("The following tests probe for USB connected monitors.\n");
+      f0printf(FOUT, "The following tests probe for USB connected monitors.\n");
       // DBGMSG("Exploring USB runtime environment...\n");
       query_usbenv();
       main_rc = EXIT_SUCCESS;
 #else
-      printf("ddcutil was not built with support for USB connected monitors\n");
+      f0printf(FOUT, "ddcutil was not built with support for USB connected monitors\n");
       main_rc = EXIT_FAILURE;
 #endif
    }
@@ -555,14 +555,14 @@ int main(int argc, char *argv[]) {
    }
 
    else if (parsed_cmd->cmd_id == CMDID_INTERROGATE) {
-      printf("Setting output level verbose...\n");
+      f0printf(FOUT, "Setting output level verbose...\n");
       set_output_level(DDCA_OL_VERBOSE);
-      printf("Setting maximum retries...\n");
-      printf("Forcing --stats...\n");
+      f0printf(FOUT, "Setting maximum retries...\n");
+      f0printf(FOUT, "Forcing --stats...\n");
       parsed_cmd->stats_types = DDCA_STATS_ALL;
-      printf("Forcing --force-slave-address..\n");
+      f0printf(FOUT, "Forcing --force-slave-address..\n");
       i2c_force_slave_addr_flag = true;
-      printf("This command will take a while to run...\n\n");
+      f0printf(FOUT, "This command will take a while to run...\n\n");
       ddc_set_max_write_read_exchange_tries(MAX_MAX_TRIES);
       ddc_set_max_multi_part_read_tries(MAX_MAX_TRIES);
 
@@ -572,18 +572,18 @@ int main(int argc, char *argv[]) {
 #ifdef USE_USB
       query_usbenv();
 #endif
-      printf("\nStatistics for environment exploration:\n");
+      f0printf(FOUT, "\nStatistics for environment exploration:\n");
       report_stats(DDCA_STATS_ALL);
       reset_stats();
 
-      printf("\n*** Detected Displays ***\n");
+      f0printf(FOUT, "\n*** Detected Displays ***\n");
       /* int display_ct =  */ ddc_report_displays(DDC_REPORT_ALL_DISPLAYS, 0 /* logical depth */);
       // printf("Detected: %d displays\n", display_ct);   // not needed
-      printf("\nStatistics for display detection:\n");
+      f0printf(FOUT, "\nStatistics for display detection:\n");
       report_stats(DDCA_STATS_ALL);
       reset_stats();
 
-      printf("Setting output level normal  Table features will be skipped...\n");
+      f0printf(FOUT, "Setting output level normal  Table features will be skipped...\n");
       set_output_level(DDCA_OL_NORMAL);
 
       GPtrArray * all_displays = ddc_get_all_displays();
@@ -591,17 +591,17 @@ int main(int argc, char *argv[]) {
          Display_Ref * dref = g_ptr_array_index(all_displays, ndx);
          assert( memcmp(dref->marker, DISPLAY_REF_MARKER, 4) == 0);
          if (dref->dispno < 0) {
-            printf("\nSkipping invalid display on %s\n", dref_short_name(dref));
+            f0printf(FOUT, "\nSkipping invalid display on %s\n", dref_short_name(dref));
          }
          else {
-            printf("\nProbing display %d\n", dref->dispno);
+            f0printf(FOUT, "\nProbing display %d\n", dref->dispno);
             probe_display_by_dref(dref);
-            printf("\nStatistics for probe of display %d:\n", dref->dispno);
+            f0printf(FOUT, "\nStatistics for probe of display %d:\n", dref->dispno);
             report_stats(DDCA_STATS_ALL);
          }
          reset_stats();
       }
-      printf("\nDisplay scanning complete.\n");
+      f0printf(FOUT, "\nDisplay scanning complete.\n");
 
       main_rc = EXIT_SUCCESS;
    }
@@ -636,14 +636,14 @@ int main(int argc, char *argv[]) {
             dref->flags |= DREF_DDC_IS_MONITOR;
             dref->flags |= DREF_TRANSIENT;
             if (!initial_checks_by_dref(dref)) {
-               printf("DDC communication failed for monitor on I2C bus /dev/i2c-%d\n", busno);
+               f0printf(FOUT, "DDC communication failed for monitor on I2C bus /dev/i2c-%d\n", busno);
                free_display_ref(dref);
                dref = NULL;
             }
             // DBGMSG("Synthetic Display_Ref");
          }
          else {
-            printf("No monitor detected on I2C bus /dev/i2c-%d\n", busno);
+            f0printf(FOUT, "No monitor detected on I2C bus /dev/i2c-%d\n", busno);
          }
       }
       else {
@@ -664,7 +664,7 @@ int main(int argc, char *argv[]) {
             {
                DDCA_MCCS_Version_Spec vspec = get_vcp_version_by_display_handle(dh);
                if (vspec.major < 2) {
-                  printf("VCP (aka MCCS) version for display is undetected or less than 2.0. "
+                  f0printf(FOUT, "VCP (aka MCCS) version for display is undetected or less than 2.0. "
                         "Output may not be accurate.\n");
                }
             }
@@ -692,7 +692,7 @@ int main(int argc, char *argv[]) {
 
             case CMDID_SETVCP:
                if (parsed_cmd->argct % 2 != 0) {
-                  printf("SETVCP command requires even number of arguments");
+                  f0printf(FOUT, "SETVCP command requires even number of arguments\n");
                   main_rc = EXIT_FAILURE;
                }
                else {
@@ -715,11 +715,11 @@ int main(int argc, char *argv[]) {
 
             case CMDID_SAVE_SETTINGS:
                if (parsed_cmd->argct != 0) {
-                  printf("SCS command takes no arguments");
+                  f0printf(FOUT, "SCS command takes no arguments\n");
                   main_rc = EXIT_FAILURE;
                }
                else if (dh->dref->io_mode == DDCA_IO_USB) {
-                  printf("SCS command not supported for USB devices\n");
+                  f0printf(FOUT, "SCS command not supported for USB devices\n");
                   main_rc = EXIT_FAILURE;
                }
                else {
