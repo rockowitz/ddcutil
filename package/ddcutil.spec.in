@@ -328,22 +328,27 @@ rm -rf %{buildroot}%{_datadir}/doc/%{name}/html
 rm -rf %{buildroot}
 
 %files
-%defattr(664,root,root)
-# %%doc %%{_datadir}/doc/%%{name}/AUTHORS
-# %%doc %%{_datadir}/doc/%%{name}/ChangeLog
-# %%doc %%{_datadir}/doc/%%{name}/COPYING
-# %%doc %%{_datadir}/doc/%%{name}/INSTALL
-# %%doc %%{_datadir}/doc/%%{name}/NEWS 
-# %%doc %%{_datadir}/doc/%%{name}/README
+# Not needed, is default:
+# %%defattr(664,root,root)
+
+# fedora-review complains if use %%docdir instead of %%dir:
+# %%docdir %%{_datadir}/doc/%%{name}
+%dir     %{_docdir}/%{name}
+%doc     %{_docdir}/%{name}/AUTHORS
+%license %{_docdir}/%{name}/COPYING
+%doc     %{_docdir}/%{name}/NEWS
+%doc     %{_docdir}/%{name}/README.md
+
+
 # would copy entire directory:
-# %%{_datadir}/%{name}/
-%dir %{_datadir}/%{name}/
+# %%{_datadir}/%%{name}/
+%dir %{_datadir}/%{name}
 %dir %{_datadir}/%{name}/data
 %{_datadir}/%{name}/data/*rules
 %{_datadir}/%{name}/data/90-nvidia-i2c.conf
+
 %{_mandir}/man1/ddcutil.1*
 %attr(755,root,root)%{_bindir}/ddcutil
-
 
 %files -n libddcutil0
 %if %{build_libs} == 1
@@ -357,8 +362,8 @@ rm -rf %{buildroot}
 
 %files -n libddcutil-devel
 %defattr(-,root,root)
-%{_libdir}/libddcutil.a
-%{_libdir}/libddcutil.la
+# %%{_libdir}/libddcutil.a
+# %{_libdir}/libddcutil.la
 %{_includedir}/ddcutil_types.h
 %{_includedir}/ddcutil_c_api.h
 %{_libdir}/pkgconfig/ddcutil.pc
@@ -379,6 +384,10 @@ rm -rf %{buildroot}
 
 
 %changelog
+
+* Sat Jul 15 2017 Sanford Rockowitz <rockowitz@minsoft.com> 0.8.4-1
+
+  Release 0.8.4
 
 * Wed May 17 2017 Sanford Rockowitz <rockowitz@minsoft.com> 0.8.2-1
 
