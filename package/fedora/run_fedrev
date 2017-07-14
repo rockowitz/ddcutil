@@ -1,8 +1,45 @@
 #!/bin/sh
 
-cp -p ddcutil.spec                  fedrev_temp
+# DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+# echo $DIR
+
+# Old Way 
+# rm -rf fedrev_temp/*
+# mkdir -p fedrev_temp
+# cp -p ddcutil.spec                  fedrev_temp
+# cp -p built_rpms/ddcutil-*src.rpm   fedrev_temp
+# cp -p built_rpms/x86_64/ddcutil*rpm fedrev_temp
+# cd fedrev_temp
+# fedora-review --mock-config fedora-rawhide-x86_64 -n ddcutil
+# exit 
+
+
+# Newer way:
+
+rm -rf fedrev_work/*
+mkdir -p fedrev_work
+
+make fsrcrpm
+srpm=`ls built_rpms/ddcutil-*.src.rpm`
+echo $srpm
+fqsrpm=${PWD}/${srpm}
+echo $fqsrpm
+cd fedrev_work
+fedora-review --mock-config fedora-rawhide-x86_64 -rn ${fqsrpm}
+exit
+
+
+
+# New Way 
+
+rm -rf fedrev_temp/*
+mkdir -p fedrev_temp
+
+make fsrcrpm
+
 cp -p built_rpms/ddcutil-*src.rpm   fedrev_temp
-cp -p built_rpms/x86_64/ddcutil*rpm fedrev_temp
 cd fedrev_temp
-rm -r review-ddcutil
-fedora-review --mock-config fedora-rawhide-x86_64 -n ddcutil
+srpm=`ls ddcutil-*.src.rpm`
+echo $srpm
+fedora-review --mock-config fedora-rawhide-x86_64 -rn ${PWD}/${srpm}
+
