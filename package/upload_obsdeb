@@ -76,20 +76,22 @@ cd $workdir
 
 # delfiles ddcutil_*.orig.tar.gz
 
-for f in ddcutil_*.orig.tar.gz; do
-	echo "(upload_obsdeb) Deleting file: $f"
-   rm $f
-done
+# Not needed, keep old files
 
-for f in ddcutil_*.debian.tar.xz; do
-	echo "(upload_obsdeb) Deleting file: $f"
-   rm $f
-done
+# for f in ddcutil_*.orig.tar.gz; do
+# 	echo "(upload_obsdeb) Deleting file: $f"
+#    rm $f
+# done
 
-for f in ddcutil_*.dsc; do
-   echo "Deleting file: $f"
-   rm $f
-done
+# for f in ddcutil_*.debian.tar.xz; do
+# 	echo "(upload_obsdeb) Deleting file: $f"
+#    rm $f
+# done
+
+# for f in ddcutil_*.dsc; do
+#    echo "Deleting file: $f"
+#    rm $f
+# done
 
 fn1="ddcutil_${ver}.orig.tar.gz"        
 fn2="ddcutil_${ver}-${rlse}.debian.tar.xz"
@@ -108,8 +110,15 @@ osc addremove
 # echo "fn2=${fn2}"
 # echo "fn3=${fn3}"
 
-cmd="osc commit ${fn1} ${fn2} ${fn3} --message=\"new deb build files\""
+# cmd="osc commit ${fn1} ${fn2} ${fn3} --message=\"new deb build files\""
+cmd="osc commit  -m \"new debian build files for package ${obs_pkg}\""
+
 echo "cmd: ${cmd}"
 $cmd
+
+echo "Files in package ${obs_pkg} after osc commit:"
+cmd="osc ls -l ${obs_proj} ${obs_pkg}"
+$cmd
+
 
 # osc rebuild
