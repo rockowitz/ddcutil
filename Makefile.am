@@ -44,43 +44,14 @@ endif
 
 RPM = rpm
 
-frpms fsrcrpm: dist
-	@echo "----> Makefile: frpms fsrcrpm"
+rpms srcrpm frpms fsrcrpm mockbuild obsrpm obsrpmtest: dist
+	@echo "----> Makefile: $@"
 	(cd package && $(MAKE) $(AM_MAKEFLAGS) $@) || exit 1
 
-rpms srcrpm: dist
-	@echo "----> Makefile: rpms srcrpm"
+dpkg pdebuild obsdeb obsdebtest:  dist
+	echo "---> Makefile: $@"
 	(cd package && $(MAKE) $(AM_MAKEFLAGS) $@) || exit 1
 
-obsrpm: dist 
-	echo "---> Makefile: obsrpm"
-	(cd package && $(MAKE) $(AM_MAKEFLAGS) $@) || exit 1
-
-obsrpmtest: dist 
-	echo "---> Makefile: obsrpmtest"
-	(cd package && $(MAKE) $(AM_MAKEFLAGS) $@) || exit 1
-
-dpkg:  dist
-	echo "---> Makefile: dpkg"
-	(cd package && $(MAKE) $(AM_MAKEFLAGS) $@) || exit 1
-
-pdebuild:  dist
-	echo "---> Makefile: pdebuild"
-	(cd package && $(MAKE) $(AM_MAKEFLAGS) $@) || exit 1
-
-
-mockbuild:  dist
-	echo "---> Makefile: mockbuild"
-	(cd package && $(MAKE) $(AM_MAKEFLAGS) $@) || exit 1
-
-
-obsdeb: dist 
-	echo "---> Makefile: obsdeb"
-	(cd package && $(MAKE) $(AM_MAKEFLAGS) $@) || exit 1
-
-obsdebtest: dist  
-	echo "---> Makefile: obsdeb"
-	(cd package && $(MAKE) $(AM_MAKEFLAGS) $@) || exit 1
 
 ppa: dist 
 	echo "---> Makefile: ppa"
@@ -175,7 +146,12 @@ show:
 
 
 
-.PHONY: srcrpm rpms obsrpm dpkg obsdeb ppa clang show
+.PHONY: srcrpm rpms fsrcrpm frpms mockbuild obsrpm obsrpmtest dpkg pdebuild obsdeb obsdebtest ppa clang show
+
+
+install-data-local:
+	@echo "(install-data-local):"
+	@echo "  docdir                 = $(docdir)"
 
 
 
