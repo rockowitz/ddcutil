@@ -205,14 +205,17 @@ char * lookup_libusb_string(struct libusb_device_handle * dh, int string_id) {
                (unsigned char *) libusb_string_buffer,
                LIBUSB_STRING_BUFFER_SIZE);
    if (rc < 0) {
-        REPORT_LIBUSB_ERROR("libusb_get_string_descriptor_ascii",  rc, LIBUSB_CONTINUE);
-        strcpy(libusb_string_buffer, "<Unknown string>");
+      REPORT_LIBUSB_ERROR("libusb_get_string_descriptor_ascii",  rc, LIBUSB_CONTINUE);
+      strcpy(libusb_string_buffer, "<Unknown string>");
    }
    else {
-        assert(rc == strlen(libusb_string_buffer));
-
+      // 7/2017: assert was triggered by user, why?
+      // replace assert by diagnostic message
+      printf("(%s) rc=%d, LIBUSB_STRING_BUFFER_SIZE=%d, strlen=%zu\n",
+            __func__, rc, LIBUSB_STRING_BUFFER_SIZE,    strlen(libusb_string_buffer) );
+      // assert(rc == strlen(libusb_string_buffer));
    }
-   return (char *) libusb_string_buffer;
+   return libusb_string_buffer;
 }
 
 
