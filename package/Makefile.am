@@ -26,18 +26,9 @@ rpmcheck:
 		(exit 1); exit 1; \
 	fi
 
-fsrcrpm frpms: rpmcheck $(rpmspec)
-	echo "--------------------------> package/Makefile: target fsrcrpm"
+fsrcrpm frpms: rpmcheck 
+	echo "--------------------------> package/Makefile: target fsrcrpm/frpms"
 	(cd fedora && $(MAKE) $(AM_MAKEFLAGS) $@) || exit 1
-
-#	rpmspec=ddcutil_fedora.spec
-#	$(RPMBUILD) $(RPMFLAGS) -bs $(rpmmacros) ddcutil_fedora.spec 
-
-# frpms: rpmcheck $(rpmspec)
-# 	echo "--------------------------> package/Makefile: target frpms"
-# 	rpmspec=ddcutil_fedora.spec
-# 	$(RPMENV) $(RPMBUILD) $(RPMFLAGS) -ba $(rpmmacros) ddcutil_fedora.spec
-
 
 srcrpm: rpmcheck $(rpmspec)
 	echo "--------------------------> package/Makefile: target srcrpm"
@@ -73,7 +64,7 @@ obsdeb:
 
 
 obsdebtest:
-	echo "--------------------------> package/Makefile: target obsdeb"
+	echo "--------------------------> package/Makefile: target obsdebtest"
 	./build_dpkg obsdeb 
 	./upload_obsdeb ${ver} ${rlse} ddcutil-test
 
