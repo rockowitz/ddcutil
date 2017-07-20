@@ -174,9 +174,11 @@ BuildRequires: i2c-tools
 
 %if %{defined fedora}
 BuildRequires: python2-devel
+BuildRequires: fedora-release
 %endif
 %if %{defined suse_version}
 BuildRequires: python-devel
+BuildRequires: openSUSE-release
 %endif
 
 # Works on Fedora, fails on OBS with message 
@@ -270,11 +272,9 @@ rpmbuild --version
 %build
 %if %{build_libs} == 1
 %{echo: =================================> building libraries, }
-#%%configure -enable-lib=yes
 %define conf_lib_parm yes
 %else
 %{echo: =================================> NOT building libraries, }
-#%%configure -enable-lib=no
 %define conf_lib_parm no
 %endif
 
@@ -306,12 +306,19 @@ rpmbuild --version
    %define conf_drm_parm yes 
 %endif
 
-
 %{echo:conf_usb_parm  is %{?conf_usb_parm}, }
 %{echo:conf_drm_parm  is %{?conf_drm_parm}, }
-         
 
-%configure --enable-lib=%{conf_lib_parm} --enable-drm=%{conf_drm_parm} --enable-usb=%{conf_usb_parm}
+# Not needed
+# %%if 0%%{?any_suse} == 1
+#   %%define force_suse_parm yes
+# %%else
+#   %%define force_suse_parm no
+# %%endif
+         
+%configure --enable-lib=%{conf_lib_parm} --enable-drm=%{conf_drm_parm} --enable-usb=%{conf_usb_parm} 
+# Parm not needed:
+# --enable-force-suse=%%{force_suse_parm}
 make V=1
 
 %check
@@ -331,14 +338,28 @@ rm -rf %{buildroot}
 # Not needed, is default:
 # %%defattr(664,root,root)
 
+
+# n. Fedora: docdir is /usr/share/doc
+#    SuSE:   docdir is /usr/share/doc/packages
+# %%if %%{defined suse_version}
+%if 0%{?any_suse} == 999
+# %%docdir %%{_datadir}/doc/packages/%%{name}
 # fedora-review complains if use %%docdir instead of %%dir:
+%dir     %{_docdir}/packages/%{name}
+%doc     %{_docdir}/packages/%{name}/AUTHORS
+%license %{_docdir}/packages/%{name}/COPYING
+%doc     %{_docdir}/packages/%{name}/NEWS
+%doc     %{_docdir}/packages/%{name}/README.md
+%else
+
 # %%docdir %%{_datadir}/doc/%%{name}
+# fedora-review complains if use %%docdir instead of %%dir:
 %dir     %{_docdir}/%{name}
 %doc     %{_docdir}/%{name}/AUTHORS
 %license %{_docdir}/%{name}/COPYING
 %doc     %{_docdir}/%{name}/NEWS
 %doc     %{_docdir}/%{name}/README.md
-
+%endif
 
 # would copy entire directory:
 # %%{_datadir}/%%{name}/
@@ -385,7 +406,7 @@ rm -rf %{buildroot}
 
 %changelog
 
-* Sat Jul 15 2017 Sanford Rockowitz <rockowitz@minsoft.com> 0.8.4-1
+* Sat Jul 22 2017 Sanford Rockowitz <rockowitz@minsoft.com> 0.8.4-1
 
   Release 0.8.4
 
