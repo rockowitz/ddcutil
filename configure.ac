@@ -335,6 +335,21 @@ AS_IF( [test "x$enable_failsim" == "xyes"],
          AC_MSG_NOTICE( [failsim..... disabled] )
      )
 
+
+dnl *** configure option: --enable-force-suse
+AC_ARG_ENABLE([force-suse],
+              [ AS_HELP_STRING( [--enable-force-suse=@<:@no/yes@:>@], [Force SUSE target directories@<:@default=no@:>@] )],
+              [enable_force_suse=${enableval}],
+              [enable_force_suse=no] )
+AM_CONDITIONAL([ENABLE_FORCE_SUSE_COND], [test "x$enable_force_suse" == "xyes"] )
+AS_IF( [test "x$enable_force_suse" == "xyes"],
+         AC_DEFINE( [ENABLE_FORCE_SUSE], [1], [If defined, force SUSE target directories.])
+         AC_MSG_NOTICE( [force-suse..... enabled] )
+      ,
+         AC_MSG_NOTICE( [force-suse..... disabled] )
+     )
+
+
 ###
 ### Checks for typedefs, structures, and compiler characteristics.
 ###
@@ -862,6 +877,48 @@ dnl AC_MSG_NOTICE([======================== required_packages:   $required_packa
 AC_SUBST(REQUIRED_PACKAGES,$required_packages)
 
 
+### Opsys variability
+
+dnl Fails: if building in OBS, SUSE is in /proc/version, even when building for Fedora
+dnl TODO: do not modify if explicitly set
+dnl AC_MSG_NOTICE([Original docdir:   ${docdir}])
+dnl AS_IF( [ grep SUSE /proc/version ], [
+dnl 	AC_MSG_NOTICE( [IS SUSE]) 
+dnl         docdir=\${datarootdir}/doc/packages/\${PACKAGE_TARNAME}
+dnl 	], [
+dnl	AC_MSG_NOTICE( [NOT SUSE] )
+dnl 	] )
+
+
+dnl AC_MSG_NOTICE([======> Tests for SUSE target:])
+
+dnl test using  [ grep SUSE /proc/version ] 
+dnl always tests true on OBS, i.e reports the OS on which the build system is running, not the target os
+
+dnl test using  [ ls -d /usr/share/doc/packages ]
+dnl always tests true on OBS 
+
+dnl test using  [test "x$enable_force_suse" == "xyes"], i.e. enable-force_suse parm passed to configure
+dnl works
+
+dnl test using  [ grep suse /etc/os-release ]
+dnl successfully detects target OS when run on OBS
+
+dnl test using  [lsb-release -i | grep SUSE ]
+dnl on OBS, command not found
+
+
+AC_MSG_CHECKING( [target OS using /etc/os-release] )
+AS_IF( [ grep suse /etc/os-release > /dev/null], [
+   AC_MSG_RESULT( [target is SUSE]) 
+   docdir=\${datarootdir}/doc/packages/\${PACKAGE_TARNAME}
+   AC_MSG_NOTICE( [..Forcing docdir to ${docdir}] )
+   ], [
+   AC_MSG_RESULT( [target is not SUSE ] )
+   ] )
+
+
+
 ###
 ### Generate output   
 ###
@@ -878,6 +935,7 @@ AC_MSG_RESULT([
 	prefix:                 ${prefix}
 	datarootdir:            ${datarootdir}
 	datadir:                ${datadir}
+	docdir:                 ${docdir}
 	mandir:               	${mandir}
 
 	adl_header_dir:         ${adl_header_dir}
