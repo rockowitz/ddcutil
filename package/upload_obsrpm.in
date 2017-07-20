@@ -9,6 +9,7 @@ ver="@PACKAGE_VERSION@"
 obs_proj="home:rockowitz"
 obs_pkg=ddcutil
 
+echo "---------> package/upload_obsrpm"
 echo "arg 0: $0"
 echo "arg 1: $1"
 echo "arg 2: $2"
@@ -51,23 +52,24 @@ else
   tar_fn_new=1
 fi
 
-# TODO: remove all prior versions 
+# Can't remove all prior versions because might delete version used by debian 
+# rm -f $workdir/ddcutil*tar.gz
 cp -p $srcdir/$tar_fn $workdir
 cp -p $curdir/ddcutil.spec $workdir
+echo "Modified $workdir:"
+ls -l $workdir 
 
 cd obswork
 
 osc addremove 
 
-
-
-
-# cp -p $srcdir/ddcutil-${ver}.tar.gz $workdir
-
-# cp -p $srcdir/obs/ddcutil.spec $workdir
-
-cmd="osc commit ddcutil-${ver}.tar.gz ddcutil.spec --message=\"new rpm build files\""
+# cmd="osc commit ddcutil-${ver}.tar.gz ddcutil.spec --message=\"new rpm build files\""
+cmd="osc commit  -m \"new rpm build files for ${obs_pkg}\""
 echo cmd: $cmd
+$cmd
+
+echo "Files in package ${obs_pkg} after osc commit:"
+cmd="osc ls -l home:rockowitz ${obs_pkg}"
 $cmd
 
 # osc rebuild
