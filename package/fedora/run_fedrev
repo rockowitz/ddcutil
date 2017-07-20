@@ -21,9 +21,9 @@ mkdir -p fedrev_work
 
 make fsrcrpm
 srpm=`ls built_rpms/ddcutil-*.src.rpm`
-echo $srpm
+# echo $srpm
 fqsrpm=${PWD}/${srpm}
-echo $fqsrpm
+# echo $fqsrpm
 cd fedrev_work
 fedora-review --mock-config fedora-rawhide-x86_64 -rn ${fqsrpm}
 exit
