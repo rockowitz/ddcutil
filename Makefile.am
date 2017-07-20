@@ -44,7 +44,7 @@ endif
 
 RPM = rpm
 
-rpms srcrpm frpms fsrcrpm mockbuild obsrpm obsrpmtest: dist
+rpms srcrpm frpms fsrcrpm obsrpm obsrpmtest: dist
 	@echo "----> Makefile: $@"
 	(cd package && $(MAKE) $(AM_MAKEFLAGS) $@) || exit 1
 
