@@ -570,7 +570,11 @@ int main(int argc, char *argv[]) {
 
       query_sysenv();
 #ifdef USE_USB
-      query_usbenv();
+      // 7/2017: disable, USB attached monitors are rare, and this just
+      // clutters the output
+      f0printf(FOUT, "\nSkipping USB environment exploration.\n");
+      f0printf(FOUT, "Issue command \"ddcutil usbenvironment --verbose\" if there are any USB attached monitors.\n");
+      // query_usbenv();
 #endif
       f0printf(FOUT, "\nStatistics for environment exploration:\n");
       report_stats(DDCA_STATS_ALL);
