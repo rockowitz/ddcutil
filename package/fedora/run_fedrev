@@ -19,12 +19,12 @@
 rm -rf fedrev_work/*
 mkdir -p fedrev_work
 
-rm -f built_rpms/ddcutil-*.src.rpm
+# rm not needed, using head on srpm
+# rm -f built_rpms/ddcutil-*.src.rpm
 echo 
 echo "--> Call fsrcrpm:"
 make fsrcrpm
-# assumes there's exactly 1 src rpm in built_rpms:
-srpm=`ls built_rpms/ddcutil-*.src.rpm`
+srpm=`ls -t built_rpms/ddcutil-*.src.rpm | head --lines=1`
 # echo $srpm
 fqsrpm=${PWD}/${srpm}
 # echo $fqsrpm
