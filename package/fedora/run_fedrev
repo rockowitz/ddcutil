@@ -19,13 +19,28 @@
 rm -rf fedrev_work/*
 mkdir -p fedrev_work
 
+rm -f built_rpms/ddcutil-*.src.rpm
+echo 
+echo "--> Call fsrcrpm:"
 make fsrcrpm
+# assumes there's exactly 1 src rpm in built_rpms:
 srpm=`ls built_rpms/ddcutil-*.src.rpm`
 # echo $srpm
 fqsrpm=${PWD}/${srpm}
 # echo $fqsrpm
 cd fedrev_work
-fedora-review --mock-config fedora-rawhide-x86_64 -rn ${fqsrpm}
+mock_config=fedora-rawhide-x86_64
+
+# does not solve problem of dirs in package also owned by libddcutil-devel
+# cmd="mock -r ${mock_config} --init"
+# echo
+# echo "--> Executing $cmd"
+# $cmd
+
+cmd="fedora-review --mock-config ${mock_config} -rn ${fqsrpm}"
+echo
+echo "--> Executing $cmd"
+$cmd
 exit
 
 
