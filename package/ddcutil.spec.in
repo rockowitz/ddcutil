@@ -408,7 +408,9 @@ rm -rf %{buildroot}
 
 * Sat Jul 22 2017 Sanford Rockowitz <rockowitz@minsoft.com> 0.8.4-1
 
-  Release 0.8.4
+- Release 0.8.4
+
+- See http://www.ddcutil.com/release_notes for details.
 
 * Wed May 17 2017 Sanford Rockowitz <rockowitz@minsoft.com> 0.8.2-1
 
