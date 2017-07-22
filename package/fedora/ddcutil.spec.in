@@ -81,6 +81,12 @@ make DESTDIR=%{buildroot} install
 %attr(755,root,root)%{_bindir}/ddcutil
 
 %changelog
+* Sat Jul 22 2017 Sanford Rockowitz <rockowitz@minsoft.com> 0.8.4-1
+- Changes to conform to Fedora packaging standards
+- Minor enhancements and bug fixes. 
+- For a complete list of changes and bug fixes,
+  see http://www.ddcutil.com/release_notes
+
 * Sat May 20 2017 Sanford Rockowitz <rockowitz@minsoft.com> 0.8.3-1
 - Changes for Fedora packaging
 
