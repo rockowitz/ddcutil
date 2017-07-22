@@ -76,22 +76,22 @@ cd $workdir
 
 # delfiles ddcutil_*.orig.tar.gz
 
-# Not needed, keep old files
+# If old files not deleted, OBS marks build as "excluded"
 
-# for f in ddcutil_*.orig.tar.gz; do
-# 	echo "(upload_obsdeb) Deleting file: $f"
-#    rm $f
-# done
+for f in ddcutil_*.orig.tar.gz; do
+	echo "(upload_obsdeb) Deleting file: $f"
+   rm $f
+done
 
-# for f in ddcutil_*.debian.tar.xz; do
-# 	echo "(upload_obsdeb) Deleting file: $f"
-#    rm $f
-# done
+for f in ddcutil_*.debian.tar.xz; do
+	echo "(upload_obsdeb) Deleting file: $f"
+   rm $f
+done
 
-# for f in ddcutil_*.dsc; do
-#    echo "Deleting file: $f"
-#    rm $f
-# done
+for f in ddcutil_*.dsc; do
+   echo "Deleting file: $f"
+   rm $f
+done
 
 fn1="ddcutil_${ver}.orig.tar.gz"        
 fn2="ddcutil_${ver}-${rlse}.debian.tar.xz"
