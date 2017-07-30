@@ -79,7 +79,7 @@ AC_CONFIG_FILES([
   ],
  )
 AC_CONFIG_FILES(package/upload_obsrpm, [chmod +x package/upload_obsrpm] )
-AC_CONFIG_FILES(package/build_dpkg, [chmod +x package/build_dpkg] )
+dnl AC_CONFIG_FILES(package/build_dpkg, [chmod +x package/build_dpkg] )
 dnl cannot chmod on build_dpkg, upload_obsrpm, since they will not exist within dpkg build environment
 
 dnl not working, why?

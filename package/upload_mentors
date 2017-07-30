@@ -21,6 +21,6 @@ echo "(upload_mentors) fn1=${fn1}"
 
 # echo "passphrase is ief..."
 # cmd="dput  ppa:rockowitz/ddcutil ${debdir}/${fn1}"
-cmd="dput  mentors:rockowitz@minsoft.com ${debdir}/${fn1}"
+cmd="dput --force mentors:rockowitz@minsoft.com ${debdir}/${fn1}"
 echo "(upload_mentors) cmd: ${cmd}"
 $cmd

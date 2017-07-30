@@ -139,6 +139,7 @@ src/swig/set_pylocal_exec
 src/swig/pylocal
 run_coverity_fragment
 ddcutil-coverity.tgz.0
+ddcutil*.build
 src/swig/pyenv
 bug_reports
 m4/archived/

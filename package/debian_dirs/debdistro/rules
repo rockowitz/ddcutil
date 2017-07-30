@@ -1,0 +1,12 @@
+#!/usr/bin/make -f
+
+DPKG_EXPORT_BUILDFLAGS = 1
+include /usr/share/dpkg/default.mk
+
+export DEB_BUILD_MAINT_OPTIONS = hardening=+all
+
+%:
+	dh $@  --with autotools-dev
+
+override_dh_auto_configure:
+	dh_auto_configure -- --enable-lib=no --enable-drm=yes --enable-usb=yes 

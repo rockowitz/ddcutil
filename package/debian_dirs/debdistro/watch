@@ -1,0 +1,11 @@
+# Watch control file for uscan
+# See uscan(1) for format
+
+version=3
+
+opts=filenamemangle=s/.+\/v?(\d\S+)\.tar\.gz/ddcutil-$1\.tar\.gz/ \
+   https://github.com/rockowitz/ddcutil/releases .*/v?(\d\S+)\.tar\.gz
+
+# opts=filenamemangle=s/.+\/v?(\d\S+)\.tar\.gz/ddcutil-$1\.tar\.gz/, \
+#    pgpsigurlmangle=s/archive\/(\d\S+)\.tar\.gz/releases\/download\/$1\/$1\.tar\.gz\.asc/ \
+#    https://github.com/rockowitz/ddcutil/releases .*/v?(\d\S+)\.tar\.gz

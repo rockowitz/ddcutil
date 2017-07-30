@@ -50,29 +50,29 @@ obsrpmtest:
 
 dpkg:
 	echo "--------------------------> obs/Makefile: target dpkg"
-	./build_dpkg debuild
+	./build_dpkg debuild ${ver}
 
 pdebuild:
 	echo "--------------------------> obs/Makefile: target pdebuild"
-	./build_dpkg pdebuild
+	./build_dpkg pdebuild ${ver}
 
 
 obsdeb:
 	echo "--------------------------> package/Makefile: target obsdeb"
-	./build_dpkg obsdeb 
+	./build_dpkg obsdeb ${ver}
 	./upload_obsdeb ${ver} ${rlse}
 
 
 obsdebtest:
 	echo "--------------------------> package/Makefile: target obsdebtest"
-	./build_dpkg obsdeb 
+	./build_dpkg obsdeb ${ver}
 	./upload_obsdeb ${ver} ${rlse} ddcutil-test
 
 
 ppa:
 	echo "--------------------------> package/Makefile: target ppa"
 	chmod +x build_dpkg upload_ppa
-	./build_dpkg ppa
+	./build_dpkg ppa ${ver}
 	debsign debwork/ddcutil_${ver}-${rlse}_source.changes   
 	./upload_ppa ${ver} ${rlse}
 
@@ -80,7 +80,7 @@ ppa:
 mentors:
 	echo "--------------------------> package/Makefile: target mentors"
 	chmod +x build_dpkg upload_ppa upload_mentors
-	./build_dpkg mentors 
+	./build_dpkg mentors ${ver} 
 	debsign debwork/ddcutil_${ver}-${rlse}_source.changes   
 	./upload_mentors ${ver} ${rlse}
 
