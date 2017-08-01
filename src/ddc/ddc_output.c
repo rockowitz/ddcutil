@@ -254,14 +254,13 @@ get_raw_value_for_feature_table_entry(
    default:
    {
       char buf[200];
-      snprintf(buf, 200, "Invalid response. status code=%s", psc_desc(psc));
+      snprintf(buf, 200, "Invalid response. status code=%s, %s", psc_desc(psc), dh_repr_t(dh));
       f0printf(msg_fh, FMT_CODE_NAME_DETAIL_W_NL,
                        feature_code, feature_name, buf);
    }
    }
 
    *pvalrec = valrec;
-   // TRCMSGTG(tg, "Done.  Returning: %s, *pvalrec=%p", gsc_desc(gsc), *pvalrec);
    DBGTRC(debug, TRACE_GROUP, "Done.  Returning: %s, *pvalrec=%p", psc_desc(psc), *pvalrec);
    assert( (psc == 0 && *pvalrec) || (psc != 0 && !*pvalrec) );
    return psc;
@@ -271,11 +270,11 @@ get_raw_value_for_feature_table_entry(
 /* Gather values for the features in a feature set.
  *
  * Arguments:
- *    dh                 display handle
- *    feature_set        feature set identifying features to be queried
- *    vset               append values retrieved to this value set
+ *    dh                  display handle
+ *    feature_set         feature set identifying features to be queried
+ *    vset                append values retrieved to this value set
  *    ignore_unsupported  unsupported features are not an error
- *    msg_fh             destination for error messages
+ *    msg_fh              destination for error messages
  *
  * Returns:
  *    status code
