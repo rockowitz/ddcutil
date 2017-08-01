@@ -350,11 +350,12 @@ loadvcp_by_dumpload_data(
       Dumpload_Data *   pdata,
       Display_Handle *  dh)
 {
+   assert(pdata);
+
    bool debug = false;
    if (debug) {
         DBGMSG("Loading VCP settings for monitor \"%s\", sn \"%s\", dh=%p \n",
                pdata->model, pdata->serial_ascii, dh);
-
         report_dumpload_data(pdata, 0);
    }
 
@@ -383,16 +384,15 @@ loadvcp_by_dumpload_data(
       }
    }
 
+   else if ( strlen(pdata->mfg_id) + strlen(pdata->model) + strlen(pdata->serial_ascii) == 0) {
+      // Pathological.  Someone's been messing with the VCP file.
+      f0printf(FERR, "Monitor manufacturer id, model, and serial number all missing from input.\n");
+      psc = DDCRC_INVALID_DISPLAY;
+      goto bye;
+   }
+
    else {
-     // no Display_Ref passed as argument, just use the identifiers in the
-     // data to pick the display
-#ifdef PRE_DISPLAY_REC
-      Display_Ref * dref = ddc_find_display_by_mfg_model_sn(
-                              NULL,    // mfg_id
-                              pdata->model,
-                              pdata->serial_ascii,
-                              DISPSEL_VALID_ONLY);
-#endif
+     // no Display_Ref passed as argument, just use the identifiers in the data to pick the display
       Display_Identifier * did = create_mfg_model_sn_display_identifier(
                              pdata->mfg_id,
                              pdata->model,
