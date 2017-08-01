@@ -667,7 +667,7 @@ int main(int argc, char *argv[]) {
                )
             {
                DDCA_MCCS_Version_Spec vspec = get_vcp_version_by_display_handle(dh);
-               if (vspec.major < 2) {
+               if (vspec.major < 2 && get_output_level() >= DDCA_OL_NORMAL) {
                   f0printf(FOUT, "VCP (aka MCCS) version for display is undetected or less than 2.0. "
                         "Output may not be accurate.\n");
                }
