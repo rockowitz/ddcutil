@@ -44,6 +44,7 @@ typedef struct {
    char *        drm_connector_name;
    int           drm_connector_type;
    char *        drm_device_path;
+   char *        sysfs_drm_name;
 } Device_Id_Xref;
 
 void device_xref_init();

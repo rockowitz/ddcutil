@@ -246,6 +246,56 @@ char * read_sysfs_attr_w_default(char * dirname, char * attrname, char * default
    return result;
 }
 
+GByteArray * read_binary_sysfs_attr(char * dirname, char * attrname, int est_size, bool verbose) {
+   assert(dirname);
+   assert(attrname);
+
+   bool debug = false;
+
+   char fn[PATH_MAX];
+   sprintf(fn, "%s/%s", dirname, attrname);
+   // DBGMSG("fn=%s", fn);
+
+   Byte  buf[1];
+
+   GByteArray * gbarray = NULL;
+
+   FILE * fp;
+   if (!(fp = fopen(fn, "r"))) {
+      int errsv = errno;
+      if (verbose){
+         fprintf(FERR, "Error opening \"%s\", error = %s\n", fn, psc_desc(errsv));
+      }
+      goto bye;
+   }
+
+
+   if (est_size <= 0)
+      gbarray = g_byte_array_new();
+   else
+      gbarray = g_byte_array_sized_new(est_size);
+
+   // TODO: read bigger hunks
+   size_t ct = 0;
+   while ( (ct = fread(buf, /*size*/ 1, /*nmemb*/ 1, fp) ) > 0) {
+      assert(ct == 1);
+      g_byte_array_append(gbarray, buf, ct);
+
+   }
+   fclose(fp);
+
+
+bye:
+   if (debug) {
+      if (gbarray)
+         DBGMSG("Returning GByteArray of size %d", gbarray->len);
+      else
+         DBGMSG("Returning NULL");
+      }
+   return gbarray;
+
+}
+
 
 ushort h2ushort(char * hval) {
    bool debug = false;
@@ -1780,6 +1830,103 @@ static void query_i2c_bus_using_sysfs() {
 }
 
 
+void query_drm_using_sysfs() {
+   struct dirent *dent;
+   DIR           *d;
+   char          *dname;
+   char          dnbuf[90];
+   char          cardname[10];
+
+   rpt_nl();
+   rpt_vstring(0,"Examining /sys/class/drm...");
+   dname = "/sys/class/drm";
+   d = opendir(dname);
+   if (!d) {
+      rpt_vstring(1, "drm not defined in sysfs. Unable to open directory %s: %s\n",
+                     dname, strerror(errno));
+   }
+   else {
+      closedir(d);
+      int cardno = 0;
+      for (;;cardno++) {
+         snprintf(cardname, 10, "card%d", cardno);
+         snprintf(dnbuf, 80, "/sys/class/drm/%s", cardname);
+         d = opendir(dnbuf);
+         if (!d) {
+            // rpt_vstring(1, "Unable to open sysfs directory %s: %s\n", dnbuf, strerror(errno));
+            break;
+         }
+         else {
+            while ((dent = readdir(d)) != NULL) {
+               // DBGMSG("%s", dent->d_name);
+               // char cur_fn[100];
+               if (str_starts_with(dent->d_name, cardname)) {
+                  rpt_vstring(1, "Found connector: %s", dent->d_name);
+                 char cur_dir_name[100];
+                 sprintf(cur_dir_name, "%s/%s", dnbuf, dent->d_name);
+
+                 // char * s_dpms = read_sysfs_attr(cur_dir_name, "dpms", false);
+                 // rpt_vstring(1, "%s/dpms: %s", cur_dir_name, s_dpms);
+
+                 // char * s_enabled = read_sysfs_attr(cur_dir_name, "enabled", false);
+                 //  rpt_vstring(1, "%s/enabled: %s", cur_dir_name, s_enabled);
+
+                 char * s_status = read_sysfs_attr(cur_dir_name, "status", false);
+                 rpt_vstring(2, "%s/status: %s", cur_dir_name, s_status);
+                 // edid present iff status == "connected"
+                 if (streq(s_status, "connected")) {
+
+                    GByteArray * gba_edid = read_binary_sysfs_attr(
+                          cur_dir_name, "edid", 128, /*verbose=*/ false);
+
+                    // hex_dump(gba_edid->data, gba_edid->len);
+
+#ifdef UNNEEDED
+                    rpt_vstring(2, "Raw EDID:");
+                    rpt_hex_dump(gba_edid->data, gba_edid->len, 2);
+                    if (gba_edid->len >= 128) {
+                       Parsed_Edid * parsed_edid = create_parsed_edid(gba_edid->data);
+                       if (parsed_edid) {
+                          report_parsed_edid_base(
+                             parsed_edid,
+                             true,   // verbose
+                             false,  // show_hex
+                             2);     // depth
+                          free_parsed_edid(parsed_edid);
+
+                       }
+                       else {
+                           rpt_vstring(2, "Unable to parse EDID");
+                           // printf(" Unparsable EDID for output name: %s -> %p\n", prec->output_name, prec->edidbytes);
+                           // hex_dump(prec->edidbytes, 128);
+                       }
+                    }
+#endif
+                    // rpt_nl();
+
+                    Device_Id_Xref * xref = device_xref_get(gba_edid->data);
+                    // xref->sysfs_drm_name = strdup(dent->d_name);
+                    xref->sysfs_drm_name = strdup(cur_dir_name);
+
+                    g_byte_array_free(gba_edid, true);
+
+                 }
+                 rpt_nl();
+               }
+            }
+         }
+
+      }
+      if (cardno==0)
+         rpt_vstring(1, "No drm class cards found in %s", dname);
+      closedir(d);
+
+   }
+}
+
+
+
+
 #ifdef UNUSED
 static bool query_card_and_driver_using_osinfo() {
    bool ok = false;
@@ -2235,6 +2382,8 @@ void query_sysenv() {
 #else
       rpt_vstring(0, "Not built with libdrm support.  Skipping DRM related checks");
 #endif
+
+      query_drm_using_sysfs();
 
       device_xref_report(0);
    }

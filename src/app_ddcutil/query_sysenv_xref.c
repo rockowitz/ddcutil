@@ -184,12 +184,20 @@ void device_xref_report(int depth) {
       if (xref->i2c_busno == -1)
          rpt_vstring(d2, "Bus:           Not found");
       else
-         rpt_vstring(d2, "Bus:           /dev/i2c-%d", xref->i2c_busno);
-      rpt_vstring(d2, "XrandR output: %s", xref->xrandr_name);
-      rpt_vstring(d2, "DRM connector: %s", xref->drm_connector_name);
-      // rpt_vstring(d2, "DRM path:      %s", xref->drm_device_path);
-      rpt_vstring(d2, "UDEV name:     %s", xref->udev_name);
-      rpt_vstring(d2, "UDEV syspath:  %s", xref->udev_syspath);
+         rpt_vstring(d2, "Bus:            /dev/i2c-%d", xref->i2c_busno);
+      rpt_vstring(d2, "XrandR output:  %s", xref->xrandr_name);
+      rpt_vstring(d2, "DRM connector:  %s", xref->drm_connector_name);
+      // rpt_vstring(d2, "DRM path:       %s", xref->drm_device_path);
+      rpt_vstring(d2, "UDEV name:      %s", xref->udev_name);
+      rpt_vstring(d2, "UDEV syspath:   %s", xref->udev_syspath);
+      rpt_vstring(d2, "sysfs drm path: %s", xref->sysfs_drm_name);
+      // TEMP to screen scrape the EDID:
+      // if (xref->raw_edid) {
+      //    char * s = hexstring2(xref->raw_edid, 128,
+      //                  NULL, true, NULL, 0);
+      //    puts(s);
+      //    free(s);
+      // }
    }
 }
 
