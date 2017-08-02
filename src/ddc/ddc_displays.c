@@ -854,6 +854,12 @@ ddc_find_display_ref_by_display_identifier(Display_Identifier * did) {
 
    result = ddc_find_display_ref_by_criteria(criteria);
 
+   // Is this the best location in the call chain to make this check?
+   if (result && (result->dispno < 0)) {
+      DBGMSF(debug, "Found a display that doesn't support DDC.  Ignoring.");
+      result = NULL;
+   }
+
    free(criteria);   // do not free pointers in criteria, they are owned by Display_Identifier
 
    if (debug) {
@@ -878,7 +884,7 @@ ddc_find_display_ref_by_display_identifier(Display_Identifier * did) {
  *
  *  \todo
  *  If the criteria directly specify an access path
- *  (e.g. I2C bus number) and CALLOPT_FORCe specified, then create a
+ *  (e.g. I2C bus number) and CALLOPT_FORCE specified, then create a
  *  temporary #Display_Ref, bypassing the list of detected monitors.
  */
 Display_Ref *
@@ -888,7 +894,7 @@ get_display_ref_for_display_identifier(
 {
    Display_Ref * dref = ddc_find_display_ref_by_display_identifier(pdid);
    if ( !dref && (callopts & CALLOPT_ERR_MSG) ) {
-      f0printf(FOUT, "Display not found\n");
+      f0printf(FERR, "Display not found\n");
    }
 
    return dref;
