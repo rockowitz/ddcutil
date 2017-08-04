@@ -45,6 +45,10 @@ typedef struct {
    int           drm_connector_type;
    char *        drm_device_path;
    char *        sysfs_drm_name;
+   char *        sysfs_drm_i2c;     // or save I2C bus number found?
+#ifdef ALTERNATIVE
+   int           sysfs_drm_busno;
+#endif
 } Device_Id_Xref;
 
 void device_xref_init();

@@ -994,8 +994,7 @@ void raw_scan_i2c_devices() {
             continue;
          }
 
-
-         if (!is_i2c_device_rw(busno))
+         if (!is_i2c_device_rw(busno))   // issues message if not RW
             continue;
 
          int fd = i2c_open_bus(busno, CALLOPT_ERR_MSG);
@@ -1832,6 +1831,7 @@ static void query_i2c_bus_using_sysfs() {
 
 void query_drm_using_sysfs() {
    struct dirent *dent;
+   struct dirent *dent2;
    DIR           *d;
    char          *dname;
    char          dnbuf[90];
@@ -1902,11 +1902,35 @@ void query_drm_using_sysfs() {
                        }
                     }
 #endif
+
+                    // look for i2c-n subdirectory, may or may not be present depending on driver
+                    // DBGMSG("cur_dir_name: %s", cur_dir_name);
+                    DIR* d2 = opendir(cur_dir_name);
+                    char * i2c_node_name = NULL;
+
+                    if (!d2) {
+                       rpt_vstring(1, "Unexpected error. Unable to open sysfs directory %s: %s\n",
+                                      cur_dir_name, strerror(errno));
+                       break;
+                    }
+                    else {
+                       while ((dent2 = readdir(d2)) != NULL) {
+                          // DBGMSG("%s", dent2->d_name);
+                          if (str_starts_with(dent2->d_name, "i2c")) {
+                             rpt_vstring(2, "I2C device: %s", dent2->d_name);
+                             i2c_node_name = strdup(dent2->d_name);
+                             break;
+                          }
+                       }
+                       closedir(d2);
+                    }
+
                     // rpt_nl();
 
                     Device_Id_Xref * xref = device_xref_get(gba_edid->data);
                     // xref->sysfs_drm_name = strdup(dent->d_name);
                     xref->sysfs_drm_name = strdup(cur_dir_name);
+                    xref->sysfs_drm_i2c  = i2c_node_name;
 
                     g_byte_array_free(gba_edid, true);
 
@@ -1922,6 +1946,9 @@ void query_drm_using_sysfs() {
       closedir(d);
 
    }
+
+   rpt_title("Query file system for i2c nodes under /sys/class/drm/card*...", 1);
+   execute_shell_cmd_rpt("ls -ld /sys/class/drm/card*/card*/i2c*", 1);
 }
 
 

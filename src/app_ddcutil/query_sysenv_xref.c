@@ -79,6 +79,9 @@ Device_Id_Xref * device_xref_new(Byte * raw_edid) {
    memcpy(xref->raw_edid, raw_edid, 128);
    xref->edid_tag =  hexstring2(xref->raw_edid+124, 4, NULL, true, NULL, 0);
    xref->i2c_busno = -1;
+#ifdef ALTERNATIVE
+   xref->sysfs_drm_busno = -1;
+#endif
    // DBGMSG("Created xref %p with tag: %s", xref, xref->edid_tag);
    return xref;
 }
@@ -182,15 +185,25 @@ void device_xref_report(int depth) {
          rpt_vstring(d1, "EDID: ...%s", xref->edid_tag);
 
       if (xref->i2c_busno == -1)
-         rpt_vstring(d2, "Bus:           Not found");
+         rpt_vstring(d2, "I2C device:    Not found");
       else
-         rpt_vstring(d2, "Bus:            /dev/i2c-%d", xref->i2c_busno);
+         rpt_vstring(d2, "I2C device:     /dev/i2c-%d", xref->i2c_busno);
       rpt_vstring(d2, "XrandR output:  %s", xref->xrandr_name);
       rpt_vstring(d2, "DRM connector:  %s", xref->drm_connector_name);
       // rpt_vstring(d2, "DRM path:       %s", xref->drm_device_path);
       rpt_vstring(d2, "UDEV name:      %s", xref->udev_name);
       rpt_vstring(d2, "UDEV syspath:   %s", xref->udev_syspath);
       rpt_vstring(d2, "sysfs drm path: %s", xref->sysfs_drm_name);
+
+      // pick one way or the other
+      rpt_vstring(d2, "sysfs drm I2C:  %s", xref->sysfs_drm_i2c);
+#ifdef ALTERNATIVE
+      if (xref->sysfs_drm_busno == -1)
+         rpt_vstring(d2, "sysfs drm bus: Not found");
+      else
+         rpt_vstring(d2, "sysfs drm bus: i2c-%d", xref->sysfs_drm_busno);
+#endif
+
       // TEMP to screen scrape the EDID:
       // if (xref->raw_edid) {
       //    char * s = hexstring2(xref->raw_edid, 128,
