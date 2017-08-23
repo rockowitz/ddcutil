@@ -12,14 +12,14 @@ Build-Depends: debhelper (>= 10),
                libudev-dev, 
                libusb-1.0-0-dev, 
                libxrandr-dev 
-Standards-Version: 3.9.8
+Standards-Version: 4.0.1 
 Homepage: http://www.ddcutil.com
 Vcs-Git: https://www.github.com/rockowitz/ddcutil.git
 Vcs-Browser: https://www.github.com/rockowitz/ddcutil
 
 Package: ddcutil
 Architecture: any
-Depends: ${shlibs:Depends}, 
+Depends: ${shlibs:Depends},
          ${misc:Depends} 
 Suggests: i2c-tools
 Description: Control monitor settings 
