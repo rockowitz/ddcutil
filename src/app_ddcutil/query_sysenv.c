@@ -2378,7 +2378,23 @@ void query_sysenv() {
       query_proc_driver_nvidia();
    }
 
+
+
    if (output_level >= DDCA_OL_VERBOSE) {
+
+      // TODO: move to more appropriate locations
+      rpt_nl();
+      rpt_vstring(0,"DKMS modules:");
+      execute_shell_cmd_rpt("dkms status", 1 /* depth */);
+      rpt_nl();
+      rpt_vstring(0,"Kernel AMDGPU configuration settings:");
+      execute_shell_cmd_rpt("grep AMDGPU /boot/config-$(uname -r)", 1 /* depth */);
+      rpt_nl();
+      // TMI:
+      // rpt_vstring(0,"Full xrandr --props:");
+      // execute_shell_cmd_rpt("xrandr --props", 1 /* depth */);
+      // rpt_nl();
+
       query_i2c_buses();
 
       rpt_nl();
