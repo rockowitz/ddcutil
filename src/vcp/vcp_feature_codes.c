@@ -2585,7 +2585,7 @@ DDCA_Feature_Value_Entry xd0_v2_output_select_values[] = {
 // 0xd6
 static  DDCA_Feature_Value_Entry xd6_power_mode_values[] =
    { {0x01, "DPM: On,  DPMS: Off"},
-     {0x02, "CPM: Off, DPMS: Standby"},
+     {0x02, "DPM: Off, DPMS: Standby"},
      {0x03, "DPM: Off, DPMS: Suspend"},
      {0x04, "DPM: Off, DPMS: Off" },
      {0x05, "Write only value to turn off display"},
