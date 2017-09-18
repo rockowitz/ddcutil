@@ -839,11 +839,8 @@ interpret_vcp_feature_response_std(
        Parsed_Nontable_Vcp_Response* aux_data)   // record in which interpreted feature response will be stored
 {
    bool debug = false;
-   DBGMSF(debug, "Starting.");
-   if (debug) {
-      DBGMSG("vcp_data_bytes: ");
-      rpt_hex_dump(vcp_data_bytes, bytect, 1);
-   }
+   DBGMSF(debug, "Starting. requested_vcp_code: 0x%02x, vcp_data_bytes: %s",
+                 requested_vcp_code, hexstring3_t(vcp_data_bytes, bytect, " ", 4, false));
 
    int result = DDCRC_OK;
    // set initial values for failure case:
@@ -854,8 +851,8 @@ interpret_vcp_feature_response_std(
    aux_data->cur_value        = 0;
 
    if (bytect != 8) {
-      // DBGMSF(debug, "Invalid response data length: %d, should be 8", bytect);
-      DDCMSG("(DDCMSG) Invalid response data length: %d, should be 8", bytect);
+      DDCMSG("Invalid response data length: %d, should be 8, response data bytes: %s",
+             bytect, hexstring3_t(vcp_data_bytes, bytect, " ", 4, false));
       COUNT_STATUS_CODE(DDCRC_INVALID_DATA);
       result = DDCRC_INVALID_DATA;
    }
@@ -868,22 +865,21 @@ interpret_vcp_feature_response_std(
       bool valid_response = true;
 
       if (vcpresp->vcp_opcode != requested_vcp_code){
-         // if (debug) printf("(%s) Unexpected VCP opcode 0x%02x, should be 0x%02x\n",
-         //                   __func__, vcpresp->vcp_opcode, requested_vcp_code);
-         DDCMSG("Unexpected VCP opcode 0x%02x, should be 0x%02x",
-                vcpresp->vcp_opcode, requested_vcp_code);
+         DDCMSG("Unexpected VCP opcode 0x%02x, should be 0x%02x, response data bytes: %s",
+                vcpresp->vcp_opcode, requested_vcp_code,
+                hexstring3_t(vcp_data_bytes, bytect, " ", 4, false));
          result = COUNT_STATUS_CODE(DDCRC_INVALID_DATA);
       }
 
       else if (vcpresp->result_code != 0) {
          if (vcpresp->result_code == 0x01) {
-            // DBGMSF(debug, "Unsupported VCP Code");
             DDCMSG("Unsupported VCP Code: 0x%02x", vcpresp->vcp_opcode);
             aux_data->valid_response = true;
          }
          else {
-            // DBGMSF(debug, "Unexpected result code: 0x%02x", vcpresp->result_code);
-            DDCMSG("Unexpected result code: 0x%02x\n", vcpresp->result_code);
+            DDCMSG("Unexpected result code: 0x%02x, response_data_bytes: %s",
+                   vcpresp->result_code,
+                   hexstring3_t(vcp_data_bytes, bytect, " ", 4, false));
             result = COUNT_STATUS_CODE(DDCRC_INVALID_DATA);
          }
       }
@@ -892,14 +888,10 @@ interpret_vcp_feature_response_std(
          int max_val = (vcpresp->max_val_hi_byte << 8) | vcpresp->max_val_lo_byte;
          int cur_val = (vcpresp->cur_val_hi_byte << 8) | vcpresp->cur_val_lo_byte;
 
-         // if (debug) {
-         //    printf("(%s) vcp_opcode = 0x%02x, vcp_type_code=0x%02x, max_val=%d (0x%04x), cur_val=%d (0x%04x)\n",
-         //               __func__, vcpresp->vcp_opcode, vcpresp->vcp_typecode, max_val, max_val, cur_val, cur_val);
-         //    DBGMSG("valid_response=%d", valid_response);
-         // }
-         TRCMSG("vcp_opcode = 0x%02x, vcp_type_code=0x%02x, max_val=%d (0x%04x), cur_val=%d (0x%04x)",
+         DBGTRC(debug, TRACE_GROUP,
+                "vcp_opcode = 0x%02x, vcp_type_code=0x%02x, max_val=%d (0x%04x), cur_val=%d (0x%04x)",
                 vcpresp->vcp_opcode, vcpresp->vcp_typecode, max_val, max_val, cur_val, cur_val);
-         TRCMSG("valid_response=%d", __func__, valid_response);
+         DBGTRC(debug, TRACE_GROUP, "valid_response=%s", bool_repr(valid_response));
 
          aux_data->valid_response   = true;
          aux_data->supported_opcode = true;
