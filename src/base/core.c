@@ -660,32 +660,53 @@ void show_trace_groups() {
 //
 
 // global variable - controls display of messages regarding DDC data errors
-bool show_recoverable_errors = true;
+bool report_ddc_errors = true;
 
-// Normally wrapped in macro IS_REPORTING_DDC
-bool is_reporting_ddc(Trace_Group traceGroup, const char * filename, const char * funcname) {
-  bool result = (is_tracing(traceGroup,filename, funcname) || show_recoverable_errors);
+
+/** Checks if DDC data errors are to be reported.  This is the case if any of the
+ *  following hold:
+ *  - DDC error reporting has been explicitly enabled
+ *  - The trace group specified by the calling function is currently active.
+ *  - The value of **trace_group** is 0xff, which is the convention used for debug messages
+ *  - The file name specified is currently being traced
+ *  - The function name specified is currently being traced.
+ *
+ *  @param trace_group trace group of caller, if 0xff then always output
+ *  @param filename file name to check
+ *  @param funcname function name to check
+ *  @return **true** if message is to be output, **false** if not
+ *
+ *  @remark
+ *  This function is normally wrapped in function **IS_REPORTING_DDC()**
+ */
+bool is_reporting_ddc(Trace_Group trace_group, const char * filename, const char * funcname) {
+  bool result = (is_tracing(trace_group,filename, funcname) || report_ddc_errors);
   return result;
 }
 
 
 /* Submits a message regarding a DDC data error for possible output.
- * Whether a message is actually output depends on whether DDC errors are
- * being shown and (currently unimplemented) the trace group for the
- * message.
+ *
+ * @param trace_group group to check, 0xff to always output
+ * @param funcname    function name to check
+ * @param lineno      line number in file
+ * @param filename    file name to check
+ * @param format      message format string
+ * @param ...         arguments for message format string
+ *
  *
  * Normally, invocation of this function is wrapped in macro DDCMSG.
  */
-void ddcmsg(Trace_Group  traceGroup,
+void ddcmsg(Trace_Group  trace_group,
             const char * funcname,
             const int    lineno,
             const char * filename,
             char *       format,
             ...)
 {
-   //  if ( is_reporting_ddc(traceGroup, fn) ) {   // wrong
-   bool debug_or_trace = is_tracing(traceGroup, filename, funcname);
-   if (debug_or_trace || show_recoverable_errors) {
+   //  if ( is_reporting_ddc(trace_group, fn) ) {   // wrong
+   bool debug_or_trace = is_tracing(trace_group, filename, funcname);
+   if (debug_or_trace || report_ddc_errors) {
       char buffer[200];
       va_list(args);
       va_start(args, format);
@@ -708,7 +729,7 @@ void show_ddcmsg() {
    print_simple_title_value(SHOW_REPORTING_TITLE_START,
                               "Reporting DDC data errors: ",
                               SHOW_REPORTING_MIN_TITLE_SIZE,
-                              bool_repr(show_recoverable_errors));
+                              bool_repr(report_ddc_errors));
 }
 
 
@@ -736,12 +757,19 @@ void show_reporting() {
 // Issue messages of various types
 //
 
-// n. used within macro LOADFUNC of adl_intf.c
-
-
-// NB CANNOT MAP TO dbgtrc - writes to stderr, not stdout
-
-
+/** Issues an error message.
+ *
+ *  @param funcname      function name of caller
+ *  @param lineno        line number in caller
+ *  @param filename      file name of caller
+ *  @param format        format string for message
+ *  @param ...           arguments for format string
+ *
+ *  @remark
+ *  This function cannot map to dbgtrc(), since it writes to stderr, not stdout
+ *  @remark
+ *  n. used within macro **LOADFUNC** of adl_intf.c
+ */
 void severemsg(
         const char * funcname,
         const int    lineno,
@@ -761,63 +789,23 @@ void severemsg(
 }
 
 
-
-#ifdef OLD
-// normally wrapped in one of the DBSMGS macros
-void dbgmsg(
-        const char * funcname,
-        const int    lineno,
-        const char * fn,
-        char *       format,
-        ...)
-{
-   // char buffer[200];
-   // char buf2[250];
-   static char * buffer = NULL;
-   static int    bufsz  = 200;     // initial value
-   static char * buf2   = NULL;
-
-   if (!buffer) {      // first call
-      buffer = calloc(bufsz,    sizeof(char*));
-      buf2   = calloc(bufsz+50, sizeof(char*));
-   }
-   va_list(args);
-   va_start(args, format);
-   int ct = vsnprintf(buffer, bufsz, format, args);
-   if (ct >= bufsz) {
-      // printf("(dbgmsg) Reallocting buffer, new size = %d\n", ct+1);
-      // buffer too small, reallocate and try again
-      free(buffer);
-      free(buf2);
-      bufsz = ct+1;
-      buffer = calloc(bufsz, sizeof(char*));
-      buf2   = calloc(bufsz+50, sizeof(char*));
-      va_list(args);
-      va_start(args, format);
-      ct = vsnprintf(buffer, bufsz, format, args);
-      assert(ct < bufsz);
-   }
-   snprintf(buf2, bufsz+50, "(%s) %s", funcname, buffer);
-   puts(buf2);
-   va_end(args);
-}
-#endif
-
-
-/* Core function for emitting debug or trace messages.
- * Normally wrapped in a DBGMSG or TRCMSG macro to
- * simplify calling.
+/** Core function for emitting debug or trace messages.
+ *  Normally wrapped in a DBGMSG or TRCMSG macro to simplify calling.
  *
- * Arguments:
- *    trace_group   trace group of caller, to determine whether to output msg
- *                  0xff to always output
- *    funcname      function name in message
- *    lineno        line number in message
- *    filename      file name
- *    format        format string for message
- *    ...           format arguments
+ *  The message is output if any of the following are true:
+ *  - the trace_group specified is currently active
+ *  - the value is trace group is 0xff
+ *  - funcname is the name of a function being traced
+ *  - filename is thename of a file being traced
  *
- * Returns:         true if message was output, false if not
+ *  @param trace_group   trace group of caller, 0xff to always output
+ *  @param funcname      function name of caller
+ *  @param lineno        line number in caller
+ *  @param filename      file name of caller
+ *  @param format        format string for message
+ *  @param ...           arguments for format string
+ *
+ *  @return **true** if message was output, **false** if not
  */
 bool dbgtrc(
         Trace_Group  trace_group,

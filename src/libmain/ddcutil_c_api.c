@@ -209,7 +209,7 @@ _ddca_init() {
       init_base_services();
       init_ddc_services();
       set_output_level(DDCA_OL_NORMAL);
-      show_recoverable_errors = false;
+      report_ddc_errors = false;
       library_initialized = true;
       DBGMSF(debug, "library initialization executed");
    }
@@ -374,12 +374,12 @@ ddca_output_level_name(DDCA_Output_Level val) {
 void
 ddca_enable_report_ddc_errors(bool onoff) {
    // global variable in core.c:
-   show_recoverable_errors = onoff;
+   report_ddc_errors = onoff;
 }
 
 bool
 ddca_is_report_ddc_errors_enabled() {
-   return show_recoverable_errors;
+   return report_ddc_errors;
 }
 
 

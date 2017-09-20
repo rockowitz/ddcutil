@@ -67,27 +67,6 @@ void ddc_abort(
 extern DDCA_Global_Failure_Information global_failure_information;
 
 
-#ifdef OLD
-//
-// Generic data structure and function for creating string representation of named bits
-//
-
-typedef struct {
-   unsigned int  bitvalue;
-   char *        bitname;
-} Bitname_Table_Entry;
-
-// last entry MUST have bitvalue = 0
-typedef Bitname_Table_Entry Bitname_Table[];
-
-char * bitflags_to_string(
-          int            flags_val,
-          Bitname_Table  bitname_table,
-          char *         sepstr,
-          char *         buffer,
-          int            bufsize );
-#endif
-
 //
 // Standard flags to indicate behavior if a system call fails
 //
@@ -124,17 +103,6 @@ typedef struct {
 #endif
 
 
-#ifdef OLD
-// For defining boolean "exit if failure" function arguments, allowing
-// functions to be called with more comprehensible parameter values than
-// "true" and "false".
-// deprecated in favor of options byte using CALLOPT_ flags
-typedef bool Failure_Action;
-static const Failure_Action EXIT_IF_FAILURE = true;
-static const Failure_Action RETURN_ERROR_IF_FAILURE = false;
-#endif
-
-
 //
 // Global redirection for messages that normally go to stdout and stderr,
 // used within functions that are part of the shared library.
@@ -157,16 +125,16 @@ void              set_output_level(DDCA_Output_Level newval);
 char *            output_level_name(DDCA_Output_Level val);
 
 
-// Debug trace message control
-
+//
+// Trace message control
+//
 
 void add_traced_function(const char * funcname);
-bool is_traced_function(const char * funcname);
+bool is_traced_function( const char * funcname);
 void show_traced_functions();
 
-
 void add_traced_file(const char * filename);
-bool is_traced_file(const char * filename);
+bool is_traced_file( const char * filename);
 void show_traced_files();
 
 typedef enum {
@@ -183,20 +151,23 @@ typedef enum {
 
 Trace_Group trace_class_name_to_value(char * name);
 void set_trace_levels(Trace_Group trace_flags);
-// extern const char * trace_group_names[];
-// extern const int    trace_group_ct;
-
 char * get_active_trace_group_names();
 void show_trace_groups();
 
+
 bool is_tracing(Trace_Group trace_group, const char * filename, const char * funcname);
+/** Checks if tracking is currently active for the globally defined TRACE_GROUP value,
+ *  current file and function.
+ *
+ *  Wrappers call to **is_tracking()**.
+ */
 #define IS_TRACING() is_tracing(TRACE_GROUP, __FILE__, __func__)
 
 
 // Manage DDC data error reporting
 
 // Controls display of messages regarding I2C error conditions that can be retried.
-extern bool show_recoverable_errors;
+extern bool report_ddc_errors;
 
 bool is_reporting_ddc(Trace_Group trace_group, const char * filename, const char * funcname);
 #define IS_REPORTING_DDC() is_reporting_ddc(TRACE_GROUP, __FILE__, __func__)
@@ -204,12 +175,11 @@ bool is_reporting_ddc(Trace_Group trace_group, const char * filename, const char
 void ddcmsg(Trace_Group trace_group, const char* funcname, const int lineno, const char* fn, char* format, ...);
 #define DDCMSG(format, ...) ddcmsg(TRACE_GROUP, __func__, __LINE__, __FILE__, format, ##__VA_ARGS__)
 
-#define DDCDBGTRC(debug_flag, trace_group, format, ...) \
+#define DDCDBGTRCX(debug_flag, trace_group, format, ...) \
    ddcmsg(( (debug_flag) ) ? 0xff : (trace_group), __func__, __LINE__, __FILE__, format, ##__VA_ARGS__)
 
-#define DDCDBGTRCI(debug_flag, format, ...) \
+#define DDCDBGTRC(debug_flag, format, ...) \
    ddcmsg(( (debug_flag) ) ? 0xff : (TRACE_GROUP), __func__, __LINE__, __FILE__, format, ##__VA_ARGS__)
-
 
 
 // Show report levels for all types

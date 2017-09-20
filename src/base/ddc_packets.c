@@ -851,7 +851,7 @@ interpret_vcp_feature_response_std(
    aux_data->cur_value        = 0;
 
    if (bytect != 8) {
-      DDCDBGTRCI(debug, "Invalid response data length: %d, should be 8, response data bytes: %s",
+      DDCDBGTRC(debug, "Invalid response data length: %d, should be 8, response data bytes: %s",
              bytect, hexstring3_t(vcp_data_bytes, bytect, " ", 4, false));
       COUNT_STATUS_CODE(DDCRC_INVALID_DATA);
       result = DDCRC_INVALID_DATA;
@@ -865,7 +865,7 @@ interpret_vcp_feature_response_std(
       bool valid_response = true;
 
       if (vcpresp->vcp_opcode != requested_vcp_code){
-         DDCDBGTRCI(debug, "Unexpected VCP opcode 0x%02x, should be 0x%02x, response data bytes: %s",
+         DDCDBGTRC(debug, "Unexpected VCP opcode 0x%02x, should be 0x%02x, response data bytes: %s",
                 vcpresp->vcp_opcode, requested_vcp_code,
                 hexstring3_t(vcp_data_bytes, bytect, " ", 4, false));
          result = COUNT_STATUS_CODE(DDCRC_INVALID_DATA);
@@ -882,7 +882,7 @@ interpret_vcp_feature_response_std(
             aux_data->valid_response = true;
          }
          else {
-            DDCDBGTRCI(debug, "Unexpected result code: 0x%02x, response_data_bytes: %s",
+            DDCDBGTRC(debug, "Unexpected result code: 0x%02x, response_data_bytes: %s",
                    vcpresp->result_code,
                    hexstring3_t(vcp_data_bytes, bytect, " ", 4, false));
             result = COUNT_STATUS_CODE(DDCRC_INVALID_DATA);
