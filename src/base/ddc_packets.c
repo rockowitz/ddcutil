@@ -851,7 +851,7 @@ interpret_vcp_feature_response_std(
    aux_data->cur_value        = 0;
 
    if (bytect != 8) {
-      DDCMSG("Invalid response data length: %d, should be 8, response data bytes: %s",
+      DDCDBGTRCI(debug, "Invalid response data length: %d, should be 8, response data bytes: %s",
              bytect, hexstring3_t(vcp_data_bytes, bytect, " ", 4, false));
       COUNT_STATUS_CODE(DDCRC_INVALID_DATA);
       result = DDCRC_INVALID_DATA;
@@ -865,7 +865,7 @@ interpret_vcp_feature_response_std(
       bool valid_response = true;
 
       if (vcpresp->vcp_opcode != requested_vcp_code){
-         DDCMSG("Unexpected VCP opcode 0x%02x, should be 0x%02x, response data bytes: %s",
+         DDCDBGTRCI(debug, "Unexpected VCP opcode 0x%02x, should be 0x%02x, response data bytes: %s",
                 vcpresp->vcp_opcode, requested_vcp_code,
                 hexstring3_t(vcp_data_bytes, bytect, " ", 4, false));
          result = COUNT_STATUS_CODE(DDCRC_INVALID_DATA);
@@ -873,11 +873,16 @@ interpret_vcp_feature_response_std(
 
       else if (vcpresp->result_code != 0) {
          if (vcpresp->result_code == 0x01) {
-            DDCMSG("Unsupported VCP Code: 0x%02x", vcpresp->vcp_opcode);
+            // Do not report as DDC error if VCP code is 0x00, since that value is used
+            // for probing.
+            bool msg_emitted = DBGTRC(debug, TRACE_GROUP,
+                                      "Unsupported VCP Code: 0x%02x", vcpresp->vcp_opcode);
+            if (requested_vcp_code != 0x00 && !msg_emitted)
+               DDCMSG("Unsupported VCP Code: 0x%02x", vcpresp->vcp_opcode);
             aux_data->valid_response = true;
          }
          else {
-            DDCMSG("Unexpected result code: 0x%02x, response_data_bytes: %s",
+            DDCDBGTRCI(debug, "Unexpected result code: 0x%02x, response_data_bytes: %s",
                    vcpresp->result_code,
                    hexstring3_t(vcp_data_bytes, bytect, " ", 4, false));
             result = COUNT_STATUS_CODE(DDCRC_INVALID_DATA);

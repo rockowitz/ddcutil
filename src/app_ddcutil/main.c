@@ -354,6 +354,10 @@ int main(int argc, char *argv[]) {
    if (parsed_cmd->timestamp_trace)         // timestamps on debug and trace messages?
       dbgtrc_show_time = true;              // extern in core.h
    set_trace_levels(parsed_cmd->trace);
+   if (parsed_cmd->traced_functions) {
+      for (int ndx = 0; ndx < ntsa_length(parsed_cmd->traced_functions); ndx++)
+         add_traced_function(  parsed_cmd->traced_functions[ndx]);
+   }
 #ifdef ENABLE_FAILSIM
    fsim_set_name_to_number_funcs(
          status_name_to_modulated_number,

@@ -360,6 +360,13 @@ char * tracing_multiple_call_option_help =
   //   "\n"
       ;
 
+char * trcfunc_multiple_call_option_help =
+       "Tracing:\n"
+       "  The argument to --trcfunc is a function name.  Specify the --trcfunc option multiple\n"
+       "  times to trace multiple functions, e.g. \"--trcfunc func1 --trcfunc func2\"\n"
+      ;
+
+
 char * stats_multiple_call_option_help =
        "Stats:\n"
        "  The argument to --stats is a statistics class.  Specify the --stats option multiple\n"

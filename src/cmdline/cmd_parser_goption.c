@@ -85,7 +85,7 @@ gboolean output_arg_func(const gchar* option_name,
                          gpointer     data,
                          GError**     error)
 {
-   bool debug = false;
+   bool debug = true;
    DBGMSF(debug, "option_name=|%s|, value|%s|, data=%p", option_name, value, data);
 
    if (streq(option_name, "-v") || streq(option_name, "--verbose") )
@@ -192,6 +192,8 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
 // char *   tracework      = NULL;
    char**   cmd_and_args   = NULL;
    gchar**  trace_classes  = NULL;
+   gchar**  trace_functions = NULL;
+// gchar**  trace_filenames = NULL;   // FUTURE
    gint     buswork        = -1;
    gint     hidwork        = -1;
    gint     dispwork       = -1;
@@ -243,6 +245,7 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
       // debugging
       {"trace",   '\0', 0, G_OPTION_ARG_STRING_ARRAY, &trace_classes, "Trace classes",         "trace class name" },
 //    {"trace",   '\0', 0, G_OPTION_ARG_STRING,   &tracework,        "Trace classes",          "comma separated list" },
+      {"trcfunc", '\0',0, G_OPTION_ARG_STRING_ARRAY, &trace_functions, "Trace functions",     "function name" },
       {"timestamp",'\0',  0, G_OPTION_ARG_NONE,   &timestamp_trace_flag, "Prepend trace msgs with elapsed time",  NULL},
       {"ts",      '\0',   0, G_OPTION_ARG_NONE,   &timestamp_trace_flag, "Prepend trace msgs with elapsed time",  NULL},
 
@@ -282,10 +285,12 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
    const char * pieces4[] = {monitor_selection_option_help,
                              tracing_multiple_call_option_help,
                              "\n",
+                             trcfunc_multiple_call_option_help,
+                             "\n",
                              stats_multiple_call_option_help,
                              "\n",
                              maxtries_option_help};
-   char * help_description = strjoin(pieces4, 6, NULL);
+   char * help_description = strjoin(pieces4, 8, NULL);
 
    // on --help, comes after usage line, before option detail
    g_option_context_set_summary(context, help_summary);
@@ -562,6 +567,10 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
       parsed_cmd->trace = traceClasses;
    }
 // #endif
+
+   if (trace_functions) {
+      parsed_cmd->traced_functions = trace_functions;
+   }
 
    int rest_ct = 0;
    // don't pull debug into the if clause, need rest_ct to be set

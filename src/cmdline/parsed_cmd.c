@@ -22,10 +22,12 @@
  */
 
 #include <assert.h>
+#include <glib-2.0/glib.h>
 #include <stdlib.h>
 #include <string.h>
 
 #include "util/data_structures.h"
+#include "util/glib_string_util.h"
 #include "util/report_util.h"
 
 #include "cmdline/parsed_cmd.h"
@@ -95,6 +97,14 @@ void report_parsed_cmd(Parsed_Cmd * parsed_cmd, int depth) {
    rpt_bool("timestamp_trace",  NULL, parsed_cmd->timestamp_trace,    d1);
    rpt_int_as_hex(
             "trace",       NULL,  parsed_cmd->trace,                  d1);
+   if (parsed_cmd->traced_functions) {
+      char * joined = g_strjoinv(", ", parsed_cmd->traced_functions);
+      rpt_str("traced_functions", NULL, joined, d1);
+      free(joined);
+   }
+   else
+      rpt_str("traced_functions", NULL, "none", d1);
+
    rpt_int( "argct",       NULL,  parsed_cmd->argct,                  d1);
    int ndx = 0;
    for (ndx = 0; ndx < parsed_cmd->argct; ndx++) {

@@ -38,7 +38,7 @@
 
 //* \cond */
 #include <assert.h>
-#include <glib.h>
+#include <glib-2.0/glib.h>
 #include <errno.h>
 #include <setjmp.h>
 #include <stdio.h>
@@ -49,6 +49,7 @@
 #include "util/data_structures.h"
 #include "util/debug_util.h"
 #include "util/file_util.h"
+#include "util/glib_string_util.h"
 #include "util/report_util.h"
 #include "util/string_util.h"
 #include "util/timestamp.h"
@@ -587,10 +588,136 @@ void set_trace_levels(Trace_Group trace_flags) {
    trace_levels = trace_flags;
 }
 
+#ifdef OLD
+static GHashTable * traced_function_table = NULL;
+#endif
+static GPtrArray  * traced_function_table2 = NULL;
+
+bool string_ptr_array_contains(GPtrArray * haystack, const char * needle) {
+   bool result = false;
+   for (int ndx = 0; ndx < haystack->len; ndx++) {
+      if (streq(needle, g_ptr_array_index(haystack, ndx))) {
+         result = true;
+         break;
+      }
+   }
+   return result;
+}
+
+
+void add_traced_function(const char * funcname) {
+   // printf("(%s) funcname=|%s|\n", __func__, funcname);
+#ifdef OLD
+   if (!traced_function_table)
+      traced_function_table = g_hash_table_new(g_str_hash, g_str_equal);
+   g_hash_table_add(traced_function_table, g_strdup(funcname));
+#endif
+
+   if (!traced_function_table2)
+      traced_function_table2 = g_ptr_array_new();
+   // n. g_ptr_array_find_with_equal_func() requires glib 2.54
+   bool found = string_ptr_array_contains(traced_function_table2, funcname);
+   if (!found)
+      g_ptr_array_add(traced_function_table2, g_strdup(funcname));
+}
+
+
+
+
+bool is_traced_function(const char * funcname) {
+#ifdef OLD
+   bool result = traced_function_table;
+   // printf("(%s) trace_function_table non-null\n", __func__);
+   // g_hash_table_contains() new in glib 2.32, don't use it
+   if (result) {
+      // gpointer v = g_hash_table_lookup(traced_function_table, funcname);
+      // if (v)
+      //    result = true;
+      gpointer v = g_hash_table_lookup(traced_function_table, funcname) ;
+      result = (v != NULL);
+   }
+#endif
+
+   bool result2 = false;
+   if (traced_function_table2) {
+      // guint index;
+      // result2  = g_ptr_array_find_with_equal_func(traced_function_table2, funcname, g_str_equal, &index);
+      result2 = string_ptr_array_contains(traced_function_table2, funcname);
+   }
+
+   // printf("(%s) funcname=|%s|, returning: %s\n", __func__, funcname, bool_repr(result2));
+   return result2;
+}
+
+
+
+#ifdef ALTERNATIVE
+GList * get_traced_functions_as_glist() {
+   guint  ct;
+   GList * result = NULL;
+   if (traced_function_table)
+      result = g_hash_table_get_keys(traced_function_table);
+   GCompareFunc* compfunc = g_strcmp0;
+
+   g_list_sort(result, compfunc);
+   return result;
+}
+#endif
+
+#ifdef OLD
+static gchar ** get_traced_functions_as_ntsa() {
+   guint  ct;
+   gpointer * result = NULL;
+   if (traced_function_table)
+      result = g_hash_table_get_keys_as_array(traced_function_table, &ct);
+   // gpointer * result2 = NULL;
+   // if (traced_function_table2) {
+   //    g_ptr_array_sort(traced_function_table2, g_strcmp0);
+   //    result2 =
+   // }
+   return (gchar **) result;
+}
+#endif
+
+static char * get_traced_functions_as_joined_string() {
+#ifdef OLD
+   gchar ** pieces =  get_traced_functions_as_ntsa();
+   char * result = NULL;
+   if (pieces) {
+      result = g_strjoinv(", ", pieces);
+      ntsa_free(pieces);
+   }
+#endif
+
+   char * result2 = NULL;
+   if (traced_function_table2) {
+      // g_ptr_array_sort(traced_function_table2, g_strcmp0);
+      result2 = join_string_g_ptr_array(traced_function_table2, ", ");
+   }
+
+   return result2;
+}
+
+
+void show_traced_functions() {
+   char * buf = get_traced_functions_as_joined_string();
+   print_simple_title_value(SHOW_REPORTING_TITLE_START,
+                              "Traced functions: ",
+                              SHOW_REPORTING_MIN_TITLE_SIZE,
+                              (buf && (strlen(buf) > 0)) ? buf : "none");
+   free(buf);
+}
+
+
+
+
+
+
 /** Checks if a group is being traced
  *
  * @param trace_group group to check
  * @param filename    file from which check is occurring (not currently used)
+ * @param funcname    function name
  *
  * @return **true** if tracing enabled, **false** if not
  *
@@ -606,71 +733,34 @@ void set_trace_levels(Trace_Group trace_flags) {
  * @ingroup dbgtrace
  *
  */
+#ifdef OLD
 bool is_tracing(Trace_Group trace_group, const char * filename) {
    bool result =  (trace_group == 0xff) || (trace_levels & trace_group); // is trace_group being traced?
    // printf("(%s) traceGroup = %02x, filename=%s, traceLevels=0x%02x, returning %d\n",
    //        __func__, traceGroup, filename, traceLevels, result);
    return result;
 }
-
-#ifdef OLD
-void show_trace_groups_old() {
-   const int bufsz = 200;
-   char buf[bufsz];
-   buf[0] = '\0';
-   int ndx;
-   for (ndx=0; ndx< trace_group_ct; ndx++) {
-      if ( trace_levels & trace_group_ids[ndx]) {
-         // buffer is sufficiently large, but make coverity happy by guarding against buffer overflow:
-         if ( (strlen(buf) + 2 + strlen(trace_group_names[ndx]) ) < bufsz) {
-            if (strlen(buf) > 0)
-               strcat(buf, ", ");
-            strcat(buf, trace_group_names[ndx]);
-         }
-      }
-   }
-   if (strlen(buf) == 0)
-      strcpy(buf,"none");
-   // printf("Trace groups active:      %s\n", buf);
-   print_simple_title_value(SHOW_REPORTING_TITLE_START,
-                              "Trace groups active: ",
-                              SHOW_REPORTING_MIN_TITLE_SIZE,
-                              buf);
-}
 #endif
 
-#ifdef OLD
-char * get_active_trace_group_names_in_buffer(char * buf, int bufsz) {
-        interpret_vnt_flags_by_title(
-           trace_levels,
-           trace_group_table,
-           ", ",
-           buf,
-           bufsz);
-   return buf;
+bool is_tracing_new(Trace_Group trace_group, const char * filename, const char * funcname) {
+   bool result =  (trace_group == 0xff) || (trace_levels & trace_group); // is trace_group being traced?
+
+   result = result || is_traced_function(funcname);
+   // result = result || is_traced_file(filename);
+
+   printf("(%s) trace_group = %02x, filename=%s, funcname=%s, traceLevels=0x%02x, returning %d\n",
+          __func__, trace_group, filename, funcname, trace_levels, result);
+   return result;
 }
 
-char * get_active_trace_group_names() {
-   const int bufsz = 200;
-   char buf[bufsz];
-   return strdup(get_active_trace_group_names_in_buffer(buf, bufsz));
 
-}
-#endif
 
 void show_trace_groups() {
-   // const int bufsz = 200;
-   // char buf[bufsz];
-   // get_active_trace_group_names_in_buffer(buf, bufsz);
    char * buf = vnt_interpret_flags(trace_levels, trace_group_table, true /* use title */, ", ");
-   // if (strlen(buf) == 0)
-   //    strcpy(buf,"none");
-   // printf("Trace groups active:      %s\n", buf);
    print_simple_title_value(SHOW_REPORTING_TITLE_START,
                               "Trace groups active: ",
                               SHOW_REPORTING_MIN_TITLE_SIZE,
                               (strlen(buf) == 0) ? "none" : buf);
-                              // buf);
    free(buf);
 }
 
@@ -682,8 +772,8 @@ void show_trace_groups() {
 bool show_recoverable_errors = true;
 
 // Normally wrapped in macro IS_REPORTING_DDC
-bool is_reporting_ddc(Trace_Group traceGroup, const char * fn) {
-  bool result = (is_tracing(traceGroup,fn) || show_recoverable_errors);
+bool is_reporting_ddc(Trace_Group traceGroup, const char * filename, const char * funcname) {
+  bool result = (is_tracing_new(traceGroup,filename, funcname) || show_recoverable_errors);
   return result;
 }
 
@@ -698,18 +788,21 @@ bool is_reporting_ddc(Trace_Group traceGroup, const char * fn) {
 void ddcmsg(Trace_Group  traceGroup,
             const char * funcname,
             const int    lineno,
-            const char * fn,
+            const char * filename,
             char *       format,
             ...)
 {
-//  if ( is_reporting_ddc(traceGroup, fn) ) {   // wrong
-    if (show_recoverable_errors) {
+   //  if ( is_reporting_ddc(traceGroup, fn) ) {   // wrong
+   bool debug_or_trace = is_tracing_new(traceGroup, filename, funcname);
+   if (debug_or_trace || show_recoverable_errors) {
       char buffer[200];
       va_list(args);
       va_start(args, format);
       vsnprintf(buffer, 200, format, args);
-      // f0printf(FOUT, "(%s) %s\n", funcname, buffer);
-      f0printf(FOUT, "DDC: %s\n", buffer);
+      if (debug_or_trace)
+         f0printf(FOUT, "(%s) DDC: %s\n", funcname, buffer);
+      else
+         f0printf(FOUT, "DDC: %s\n", buffer);
       va_end(args);
    }
 }
@@ -721,7 +814,6 @@ void ddcmsg(Trace_Group  traceGroup,
  * Returns:     nothing
  */
 void show_ddcmsg() {
-   // printf("Reporting DDC data errors: %s\n", bool_repr(show_recoverable_errors));
    print_simple_title_value(SHOW_REPORTING_TITLE_START,
                               "Reporting DDC data errors: ",
                               SHOW_REPORTING_MIN_TITLE_SIZE,
@@ -741,6 +833,7 @@ void show_reporting() {
    show_output_level();
    show_ddcmsg();
    show_trace_groups();
+   show_traced_functions();
    // f0puts("", FOUT);
 }
 
@@ -826,17 +919,17 @@ void dbgmsg(
  *                  0xff to always output
  *    funcname      function name in message
  *    lineno        line number in message
- *    fn            file name
+ *    filename      file name
  *    format        format string for message
  *    ...           format arguments
  *
- * Returns:         nothing
+ * Returns:         true if message was output, false if not
  */
-void dbgtrc(
+bool dbgtrc(
         Trace_Group  trace_group,
         const char * funcname,
         const int    lineno,
-        const char * fn,
+        const char * filename,
         char *       format,
         ...)
 {
@@ -849,7 +942,8 @@ void dbgtrc(
       buf2   = calloc(bufsz+60, sizeof(char));
    }
 
-   if ( is_tracing(trace_group, fn) ) {
+   bool msg_emitted = false;
+   if ( is_tracing_new(trace_group, filename, funcname) ) {
       va_list(args);
       va_start(args, format);
       int ct = vsnprintf(buffer, bufsz, format, args);
@@ -877,8 +971,11 @@ void dbgtrc(
          snprintf(buf2, bufsz+60, "(%s) %s\n", funcname, buffer);
       // puts(buf2);        // automatic terminating null
       f0puts(buf2, FOUT);    // no automatic terminating null
+      msg_emitted = true;
       // va_end(args);
    }
+
+   return msg_emitted;
 }
 
 
@@ -979,7 +1076,7 @@ void terminate_execution_on_error(
         Trace_Group   trace_group,
         const char * funcname,
         const int    lineno,
-        const char * fn,
+        const char * filename,
         char *       format,
         ...)
 {
@@ -990,7 +1087,7 @@ void terminate_execution_on_error(
    va_start(args, format);
    vsnprintf(buffer, 200, format, args);
 
-   if ( is_tracing(trace_group, fn) ) {
+   if ( is_tracing_new(trace_group, filename, funcname) ) {
       snprintf(buf2, 250, "(%s) %s", funcname, buffer);
       finalBuffer = buf2;
    }
@@ -998,6 +1095,6 @@ void terminate_execution_on_error(
    f0puts(finalBuffer, FERR);
    f0puts("\n", FERR);
 
-   ddc_abort(funcname, lineno, fn, DDCL_INTERNAL_ERROR);
+   ddc_abort(funcname, lineno, filename, DDCL_INTERNAL_ERROR);
 }
 

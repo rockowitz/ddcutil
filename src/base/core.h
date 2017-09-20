@@ -162,6 +162,12 @@ char *            output_level_name(DDCA_Output_Level val);
 
 // Debug trace message control
 
+
+void add_traced_function(const char * funcname);
+bool is_traced_function(const char * funcname);
+void show_traced_functions();
+
+
 #ifdef OLD
 typedef Byte Trace_Group;
 #define TRC_BASE 0x80
@@ -198,7 +204,8 @@ char * get_active_trace_group_names();
 void show_trace_groups();
 
 bool is_tracing(Trace_Group trace_group, const char * filename);
-#define IS_TRACING() is_tracing(TRACE_GROUP, __FILE__)
+bool is_tracing_new(Trace_Group trace_group, const char * filename, const char * funcname);
+#define IS_TRACING() is_tracing_new(TRACE_GROUP, __FILE__, __func__)
 
 
 // Manage DDC data error reporting
@@ -206,11 +213,18 @@ bool is_tracing(Trace_Group trace_group, const char * filename);
 // Controls display of messages regarding I2C error conditions that can be retried.
 extern bool show_recoverable_errors;
 
-bool is_reporting_ddc(Trace_Group trace_group, const char * fn);
-#define IS_REPORTING_DDC() is_reporting_ddc(TRACE_GROUP, __FILE__)
+bool is_reporting_ddc(Trace_Group trace_group, const char * filename, const char * funcname);
+#define IS_REPORTING_DDC() is_reporting_ddc(TRACE_GROUP, __FILE__, __func__)
 
 void ddcmsg(Trace_Group trace_group, const char* funcname, const int lineno, const char* fn, char* format, ...);
 #define DDCMSG(format, ...) ddcmsg(TRACE_GROUP, __func__, __LINE__, __FILE__, format, ##__VA_ARGS__)
+
+#define DDCDBGTRC(debug_flag, trace_group, format, ...) \
+   ddcmsg(( (debug_flag) ) ? 0xff : (trace_group), __func__, __LINE__, __FILE__, format, ##__VA_ARGS__)
+
+#define DDCDBGTRCI(debug_flag, format, ...) \
+   ddcmsg(( (debug_flag) ) ? 0xff : (TRACE_GROUP), __func__, __LINE__, __FILE__, format, ##__VA_ARGS__)
+
 
 
 // Show report levels for all types
@@ -228,7 +242,7 @@ void severemsg(
         char *       format,
         ...);
 
-void dbgtrc(
+bool dbgtrc(
         Trace_Group  trace_group,
         const char * funcname,
         const int    lineno,

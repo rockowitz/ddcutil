@@ -24,6 +24,7 @@
 #ifndef PARSED_CMD_H_
 #define PARSED_CMD_H_
 
+#include <glib-2.0/glib.h>
 #include <stdbool.h>
 
 #include "base/core.h"
@@ -93,6 +94,8 @@ struct {
    char *              failsim_control_fn;
    Display_Identifier* pdid;
    Trace_Group         trace;
+   gchar **            traced_files;
+   gchar **            traced_functions;
    DDCA_Output_Level   output_level;
    int                 max_tries[3];
    int                 sleep_strategy;
