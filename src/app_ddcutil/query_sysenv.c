@@ -246,14 +246,12 @@ char * read_sysfs_attr_w_default(char * dirname, char * attrname, char * default
    return result;
 }
 
-GByteArray * read_binary_sysfs_attr(char * dirname, char * attrname, int est_size, bool verbose) {
-   assert(dirname);
-   assert(attrname);
+
+GByteArray * read_binary_file(char * fn, int est_size, bool verbose) {
+   assert(fn);
 
    bool debug = false;
 
-   char fn[PATH_MAX];
-   sprintf(fn, "%s/%s", dirname, attrname);
    // DBGMSG("fn=%s", fn);
 
    Byte  buf[1];
@@ -269,7 +267,6 @@ GByteArray * read_binary_sysfs_attr(char * dirname, char * attrname, int est_siz
       goto bye;
    }
 
-
    if (est_size <= 0)
       gbarray = g_byte_array_new();
    else
@@ -280,10 +277,8 @@ GByteArray * read_binary_sysfs_attr(char * dirname, char * attrname, int est_siz
    while ( (ct = fread(buf, /*size*/ 1, /*nmemb*/ 1, fp) ) > 0) {
       assert(ct == 1);
       g_byte_array_append(gbarray, buf, ct);
-
    }
    fclose(fp);
-
 
 bye:
    if (debug) {
@@ -293,7 +288,18 @@ bye:
          DBGMSG("Returning NULL");
       }
    return gbarray;
+}
 
+
+GByteArray * read_binary_sysfs_attr(char * dirname, char * attrname, int est_size, bool verbose) {
+   assert(dirname);
+   assert(attrname);
+
+   char fn[PATH_MAX];
+   sprintf(fn, "%s/%s", dirname, attrname);
+   // DBGMSG("fn=%s", fn);
+
+   return read_binary_file(fn, est_size, verbose);
 }
 
 
@@ -1875,7 +1881,6 @@ void query_drm_using_sysfs() {
                  rpt_vstring(2, "%s/status: %s", cur_dir_name, s_status);
                  // edid present iff status == "connected"
                  if (streq(s_status, "connected")) {
-
                     GByteArray * gba_edid = read_binary_sysfs_attr(
                           cur_dir_name, "edid", 128, /*verbose=*/ false);
 
@@ -2377,8 +2382,6 @@ void query_sysenv() {
       rpt_nl();
       query_proc_driver_nvidia();
    }
-
-
 
    if (output_level >= DDCA_OL_VERBOSE) {
 
