@@ -356,7 +356,11 @@ int main(int argc, char *argv[]) {
    set_trace_levels(parsed_cmd->trace);
    if (parsed_cmd->traced_functions) {
       for (int ndx = 0; ndx < ntsa_length(parsed_cmd->traced_functions); ndx++)
-         add_traced_function(  parsed_cmd->traced_functions[ndx]);
+         add_traced_function(parsed_cmd->traced_functions[ndx]);
+   }
+   if (parsed_cmd->traced_files) {
+      for (int ndx = 0; ndx < ntsa_length(parsed_cmd->traced_files); ndx++)
+         add_traced_file(parsed_cmd->traced_files[ndx]);
    }
 #ifdef ENABLE_FAILSIM
    fsim_set_name_to_number_funcs(

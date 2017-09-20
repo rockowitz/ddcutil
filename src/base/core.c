@@ -296,8 +296,6 @@ char * bitflags_to_string(
 // Standard call options
 //
 
-
-
 Value_Name_Table callopt_bitname_table2 = {
       VN(CALLOPT_ERR_MSG),
       VN(CALLOPT_ERR_ABORT),
@@ -592,6 +590,7 @@ void set_trace_levels(Trace_Group trace_flags) {
 static GHashTable * traced_function_table = NULL;
 #endif
 static GPtrArray  * traced_function_table2 = NULL;
+static GPtrArray  * traced_file_table = NULL;
 
 bool string_ptr_array_contains(GPtrArray * haystack, const char * needle) {
    bool result = false;
@@ -621,33 +620,43 @@ void add_traced_function(const char * funcname) {
       g_ptr_array_add(traced_function_table2, g_strdup(funcname));
 }
 
+void add_traced_file(const char * filename) {
+   if (!traced_file_table)
+      traced_file_table = g_ptr_array_new();
+   // n. g_ptr_array_find_with_equal_func() requires glib 2.54
 
+   gchar * bname = g_path_get_basename(filename);
+   if (!str_ends_with(bname, ".c")) {
+      int newsz = strlen(bname) + 2 + 1;
+      gchar * temp = calloc(1, newsz);
+      strcpy(temp, bname);
+      strcat(temp, ".c");
+      free(bname);
+      bname = temp;
+   }
+
+   bool found = string_ptr_array_contains(traced_file_table, bname);
+   if (!found)
+      g_ptr_array_add(traced_file_table, g_strdup(bname));
+   // printf("(%s) filename=|%s|, bname=|%s|, found=%s\n", __func__, filename, bname, bool_repr(found));
+}
 
 
 bool is_traced_function(const char * funcname) {
-#ifdef OLD
-   bool result = traced_function_table;
-   // printf("(%s) trace_function_table non-null\n", __func__);
-   // g_hash_table_contains() new in glib 2.32, don't use it
-   if (result) {
-      // gpointer v = g_hash_table_lookup(traced_function_table, funcname);
-      // if (v)
-      //    result = true;
-      gpointer v = g_hash_table_lookup(traced_function_table, funcname) ;
-      result = (v != NULL);
-   }
-#endif
-
-   bool result2 = false;
-   if (traced_function_table2) {
-      // guint index;
-      // result2  = g_ptr_array_find_with_equal_func(traced_function_table2, funcname, g_str_equal, &index);
-      result2 = string_ptr_array_contains(traced_function_table2, funcname);
-   }
-
+   bool result = traced_function_table2 && string_ptr_array_contains(traced_function_table2, funcname);
    // printf("(%s) funcname=|%s|, returning: %s\n", __func__, funcname, bool_repr(result2));
-   return result2;
+   return result;
 }
+
+
+bool is_traced_file(const char * filename) {
+   char * bname = g_path_get_basename(filename);
+   bool result =  traced_file_table && string_ptr_array_contains(traced_file_table, bname);
+   // printf("(%s) filename=|%s|, bname=|%s|, returning: %s\n", __func__, filename, bname, bool_repr(result));
+   free(bname);
+   return result;
+}
+
 
 
 
@@ -699,10 +708,34 @@ static char * get_traced_functions_as_joined_string() {
 }
 
 
+static char * get_traced_files_as_joined_string() {
+   char * result = NULL;
+   if (traced_file_table) {
+      // g_ptr_array_sort(traced_function_table2, g_strcmp0);
+      result = join_string_g_ptr_array(traced_file_table, ", ");
+   }
+
+   return result;
+}
+
+
+
+
 void show_traced_functions() {
    char * buf = get_traced_functions_as_joined_string();
    print_simple_title_value(SHOW_REPORTING_TITLE_START,
                               "Traced functions: ",
+                              SHOW_REPORTING_MIN_TITLE_SIZE,
+                              (buf && (strlen(buf) > 0)) ? buf : "none");
+   free(buf);
+}
+
+
+
+void show_traced_files() {
+   char * buf = get_traced_files_as_joined_string();
+   print_simple_title_value(SHOW_REPORTING_TITLE_START,
+                              "Traced files: ",
                               SHOW_REPORTING_MIN_TITLE_SIZE,
                               (buf && (strlen(buf) > 0)) ? buf : "none");
    free(buf);
@@ -742,14 +775,13 @@ bool is_tracing(Trace_Group trace_group, const char * filename) {
 }
 #endif
 
-bool is_tracing_new(Trace_Group trace_group, const char * filename, const char * funcname) {
+bool is_tracing(Trace_Group trace_group, const char * filename, const char * funcname) {
    bool result =  (trace_group == 0xff) || (trace_levels & trace_group); // is trace_group being traced?
 
-   result = result || is_traced_function(funcname);
-   // result = result || is_traced_file(filename);
+   result = result || is_traced_function(funcname) || is_traced_file(filename);
 
-   printf("(%s) trace_group = %02x, filename=%s, funcname=%s, traceLevels=0x%02x, returning %d\n",
-          __func__, trace_group, filename, funcname, trace_levels, result);
+   // printf("(%s) trace_group = %02x, filename=%s, funcname=%s, traceLevels=0x%02x, returning %d\n",
+   //        __func__, trace_group, filename, funcname, trace_levels, result);
    return result;
 }
 
@@ -773,7 +805,7 @@ bool show_recoverable_errors = true;
 
 // Normally wrapped in macro IS_REPORTING_DDC
 bool is_reporting_ddc(Trace_Group traceGroup, const char * filename, const char * funcname) {
-  bool result = (is_tracing_new(traceGroup,filename, funcname) || show_recoverable_errors);
+  bool result = (is_tracing(traceGroup,filename, funcname) || show_recoverable_errors);
   return result;
 }
 
@@ -793,7 +825,7 @@ void ddcmsg(Trace_Group  traceGroup,
             ...)
 {
    //  if ( is_reporting_ddc(traceGroup, fn) ) {   // wrong
-   bool debug_or_trace = is_tracing_new(traceGroup, filename, funcname);
+   bool debug_or_trace = is_tracing(traceGroup, filename, funcname);
    if (debug_or_trace || show_recoverable_errors) {
       char buffer[200];
       va_list(args);
@@ -834,6 +866,7 @@ void show_reporting() {
    show_ddcmsg();
    show_trace_groups();
    show_traced_functions();
+   show_traced_files();
    // f0puts("", FOUT);
 }
 
@@ -943,7 +976,7 @@ bool dbgtrc(
    }
 
    bool msg_emitted = false;
-   if ( is_tracing_new(trace_group, filename, funcname) ) {
+   if ( is_tracing(trace_group, filename, funcname) ) {
       va_list(args);
       va_start(args, format);
       int ct = vsnprintf(buffer, bufsz, format, args);
@@ -1087,7 +1120,7 @@ void terminate_execution_on_error(
    va_start(args, format);
    vsnprintf(buffer, 200, format, args);
 
-   if ( is_tracing_new(trace_group, filename, funcname) ) {
+   if ( is_tracing(trace_group, filename, funcname) ) {
       snprintf(buf2, 250, "(%s) %s", funcname, buffer);
       finalBuffer = buf2;
    }

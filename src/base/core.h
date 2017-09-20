@@ -168,6 +168,12 @@ bool is_traced_function(const char * funcname);
 void show_traced_functions();
 
 
+void add_traced_file(const char * filename);
+bool is_traced_file(const char * filename);
+void show_traced_files();
+
+
+
 #ifdef OLD
 typedef Byte Trace_Group;
 #define TRC_BASE 0x80
@@ -203,9 +209,8 @@ void set_trace_levels(Trace_Group trace_flags);
 char * get_active_trace_group_names();
 void show_trace_groups();
 
-bool is_tracing(Trace_Group trace_group, const char * filename);
-bool is_tracing_new(Trace_Group trace_group, const char * filename, const char * funcname);
-#define IS_TRACING() is_tracing_new(TRACE_GROUP, __FILE__, __func__)
+bool is_tracing(Trace_Group trace_group, const char * filename, const char * funcname);
+#define IS_TRACING() is_tracing(TRACE_GROUP, __FILE__, __func__)
 
 
 // Manage DDC data error reporting

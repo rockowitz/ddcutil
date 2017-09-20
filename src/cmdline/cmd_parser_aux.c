@@ -317,7 +317,7 @@ char * command_argument_help =
       ;
 
 char * monitor_selection_option_help =
-       "Monitor Selection\n"
+       "Monitor Selection:\n"
        "  The monitor to be communicated with can be specified using the following options:\n"
        "  --display <display_number>, where <display_number> ranges from 1 to the number of\n"
        "    displays detected\n"
@@ -351,7 +351,7 @@ char * tracing_comma_separated_option_help =
       ;
 
 char * tracing_multiple_call_option_help =
-       "Tracing:\n"
+       "Trace by trace class:\n"
        "  The argument to --trace is a trace class.  Specify the --trace option multiple\n"
        "  times to activate multiple trace classes, e.g. \"--trace i2c --trace ddc\"\n"
        "  Valid trace classes are:  BASE, I2C, ADL, DDC, TOP, ALL.\n"
@@ -361,9 +361,15 @@ char * tracing_multiple_call_option_help =
       ;
 
 char * trcfunc_multiple_call_option_help =
-       "Tracing:\n"
+       "Trace by function name:\n"
        "  The argument to --trcfunc is a function name.  Specify the --trcfunc option multiple\n"
        "  times to trace multiple functions, e.g. \"--trcfunc func1 --trcfunc func2\"\n"
+      ;
+
+char * trcfile_multiple_call_option_help =
+       "Trace by file name:\n"
+       "  The argument to --trcfile is a simple file name.  Specify the --trcfile option multiple\n"
+       "  times to trace multiple functions, e.g. \"--trcfile ddc_edid.c --trcfile ddc_output.c\"\n"
       ;
 
 
