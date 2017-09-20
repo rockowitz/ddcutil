@@ -49,6 +49,7 @@
 #include "util/data_structures.h"
 #include "util/debug_util.h"
 #include "util/file_util.h"
+#include "util/glib_util.h"
 #include "util/glib_string_util.h"
 #include "util/report_util.h"
 #include "util/string_util.h"
@@ -482,40 +483,39 @@ void set_trace_levels(Trace_Group trace_flags) {
    trace_levels = trace_flags;
 }
 
-#ifdef OLD
-static GHashTable * traced_function_table = NULL;
-#endif
-static GPtrArray  * traced_function_table2 = NULL;
-static GPtrArray  * traced_file_table = NULL;
 
-bool string_ptr_array_contains(GPtrArray * haystack, const char * needle) {
-   bool result = false;
-   for (int ndx = 0; ndx < haystack->len; ndx++) {
-      if (streq(needle, g_ptr_array_index(haystack, ndx))) {
-         result = true;
-         break;
-      }
-   }
-   return result;
-}
+// traced_function_table and traced_file_table were initially implemented using
+// GHashTable.  The implementation had bugs, and given that (a) these data structures
+// are used only for testing and (b) there will be at most a handful of entries in the
+// tables, a simpler GPtrArray implementation is used.
+
+static GPtrArray  * traced_function_table = NULL;
+static GPtrArray  * traced_file_table     = NULL;
 
 
+/** Add a function to the list of functions to be traced.
+ *
+ *  @param funcname function name
+ */
 void add_traced_function(const char * funcname) {
    // printf("(%s) funcname=|%s|\n", __func__, funcname);
-#ifdef OLD
-   if (!traced_function_table)
-      traced_function_table = g_hash_table_new(g_str_hash, g_str_equal);
-   g_hash_table_add(traced_function_table, g_strdup(funcname));
-#endif
 
-   if (!traced_function_table2)
-      traced_function_table2 = g_ptr_array_new();
+   if (!traced_function_table)
+      traced_function_table = g_ptr_array_new();
    // n. g_ptr_array_find_with_equal_func() requires glib 2.54
-   bool found = string_ptr_array_contains(traced_function_table2, funcname);
-   if (!found)
-      g_ptr_array_add(traced_function_table2, g_strdup(funcname));
+   if (gaux_string_ptr_array_find(traced_function_table, funcname) < 0)
+      g_ptr_array_add(traced_function_table, g_strdup(funcname));
 }
 
+/** Add a file to the list of files to be traced.
+ *
+ *  @param filename file name
+ *
+ *  @remark
+ *  Only the basename portion of the specified file name is used.
+ *  @remark
+ *  If the file name does not end in ".c", that suffix is appended.
+ */
 void add_traced_file(const char * filename) {
    if (!traced_file_table)
       traced_file_table = g_ptr_array_new();
@@ -531,92 +531,60 @@ void add_traced_file(const char * filename) {
       bname = temp;
    }
 
-   bool found = string_ptr_array_contains(traced_file_table, bname);
-   if (!found)
+   if (gaux_string_ptr_array_find(traced_file_table, bname) < 0)
       g_ptr_array_add(traced_file_table, g_strdup(bname));
    // printf("(%s) filename=|%s|, bname=|%s|, found=%s\n", __func__, filename, bname, bool_repr(found));
 }
 
 
+/** Checks if a function is being traced.
+ *
+ *  @param funcname function name
+ *  @return **true** if the function is being traced, **false** if not
+ */
 bool is_traced_function(const char * funcname) {
-   bool result = traced_function_table2 && string_ptr_array_contains(traced_function_table2, funcname);
+   bool result = (traced_function_table && gaux_string_ptr_array_find(traced_function_table, funcname) >= 0);
    // printf("(%s) funcname=|%s|, returning: %s\n", __func__, funcname, bool_repr(result2));
    return result;
 }
 
 
+/** Checks if a file is being traced.
+ *
+ *  @param filename file name
+ *  @return **true** if trace is enabled for all functions in the file, **false** if not
+ */
 bool is_traced_file(const char * filename) {
    char * bname = g_path_get_basename(filename);
-   bool result =  traced_file_table && string_ptr_array_contains(traced_file_table, bname);
+   bool result = (traced_file_table && gaux_string_ptr_array_find(traced_file_table, bname) >= 0);
    // printf("(%s) filename=|%s|, bname=|%s|, returning: %s\n", __func__, filename, bname, bool_repr(result));
    free(bname);
    return result;
 }
 
 
-
-
-#ifdef ALTERNATIVE
-GList * get_traced_functions_as_glist() {
-   guint  ct;
-   GList * result = NULL;
-   if (traced_function_table)
-      result = g_hash_table_get_keys(traced_function_table);
-   GCompareFunc* compfunc = g_strcmp0;
-
-   g_list_sort(result, compfunc);
-   return result;
-}
-#endif
-
-#ifdef OLD
-static gchar ** get_traced_functions_as_ntsa() {
-   guint  ct;
-   gpointer * result = NULL;
-   if (traced_function_table)
-      result = g_hash_table_get_keys_as_array(traced_function_table, &ct);
-   // gpointer * result2 = NULL;
-   // if (traced_function_table2) {
-   //    g_ptr_array_sort(traced_function_table2, g_strcmp0);
-   //    result2 =
-   // }
-   return (gchar **) result;
-}
-#endif
-
 static char * get_traced_functions_as_joined_string() {
-#ifdef OLD
-   gchar ** pieces =  get_traced_functions_as_ntsa();
    char * result = NULL;
-   if (pieces) {
-      result = g_strjoinv(", ", pieces);
-      ntsa_free(pieces);
+   if (traced_function_table) {
+      g_ptr_array_sort(traced_function_table, gaux_ptr_scomp);
+      result = join_string_g_ptr_array(traced_function_table, ", ");
    }
-#endif
-
-   char * result2 = NULL;
-   if (traced_function_table2) {
-      // g_ptr_array_sort(traced_function_table2, g_strcmp0);
-      result2 = join_string_g_ptr_array(traced_function_table2, ", ");
-   }
-
-   return result2;
+   return result;
 }
 
 
 static char * get_traced_files_as_joined_string() {
    char * result = NULL;
    if (traced_file_table) {
-      // g_ptr_array_sort(traced_function_table2, g_strcmp0);
+      g_ptr_array_sort(traced_file_table, gaux_ptr_scomp);
       result = join_string_g_ptr_array(traced_file_table, ", ");
    }
-
    return result;
 }
 
 
-
-
+/** Outputs a line reporting the traced function list.
+ */
 void show_traced_functions() {
    char * buf = get_traced_functions_as_joined_string();
    print_simple_title_value(SHOW_REPORTING_TITLE_START,
@@ -627,7 +595,8 @@ void show_traced_functions() {
 }
 
 
-
+/** Outputs a line reporting the traced file list.
+ */
 void show_traced_files() {
    char * buf = get_traced_files_as_joined_string();
    print_simple_title_value(SHOW_REPORTING_TITLE_START,
@@ -638,11 +607,12 @@ void show_traced_files() {
 }
 
 
-
-
-
-
-/** Checks if a group is being traced
+/** Checks if a tracing is to be performed.
+ *
+ * Tracing is enabled if any of the following tests pass:
+ * - trace group
+ * - file name
+ * - function name
  *
  * @param trace_group group to check
  * @param filename    file from which check is occurring (not currently used)
@@ -662,15 +632,6 @@ void show_traced_files() {
  * @ingroup dbgtrace
  *
  */
-#ifdef OLD
-bool is_tracing(Trace_Group trace_group, const char * filename) {
-   bool result =  (trace_group == 0xff) || (trace_levels & trace_group); // is trace_group being traced?
-   // printf("(%s) traceGroup = %02x, filename=%s, traceLevels=0x%02x, returning %d\n",
-   //        __func__, traceGroup, filename, traceLevels, result);
-   return result;
-}
-#endif
-
 bool is_tracing(Trace_Group trace_group, const char * filename, const char * funcname) {
    bool result =  (trace_group == 0xff) || (trace_levels & trace_group); // is trace_group being traced?
 
@@ -682,7 +643,8 @@ bool is_tracing(Trace_Group trace_group, const char * filename, const char * fun
 }
 
 
-
+/** Outputs a line reporting the active trace groups.
+ */
 void show_trace_groups() {
    char * buf = vnt_interpret_flags(trace_levels, trace_group_table, true /* use title */, ", ");
    print_simple_title_value(SHOW_REPORTING_TITLE_START,
@@ -691,6 +653,7 @@ void show_trace_groups() {
                               (strlen(buf) == 0) ? "none" : buf);
    free(buf);
 }
+
 
 //
 // Report DDC data errors
@@ -753,6 +716,8 @@ void show_ddcmsg() {
  *   - general output level (terse, verbose, etc)
  *   - DDC data errors
  *   - trace groups
+ *   - traced functions
+ *   - traced files
  *
  * Arguments:    none
  * Returns:      nothing

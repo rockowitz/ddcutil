@@ -83,3 +83,26 @@ char * join_string_g_ptr_array(GPtrArray* strings, char * sepstr) {
 
    return catenated;
 }
+
+
+/** Looks for a string in a **GPtrArray** of strings.
+ *
+ * @param haystack **GPtrArray** to search
+ * @param needle   string to search for (case sensitive)
+ * @return index of string if found, -1 if not found
+ *
+ * @remark
+ * glib function **g_ptr_array_find_with_equal_funct()** is an obvious alternative,
+ * but it requires glib version >= 2.54
+ */
+int gaux_string_ptr_array_find(GPtrArray * haystack, const char * needle) {
+   int result = -1;
+   for (int ndx = 0; ndx < haystack->len; ndx++) {
+      if (streq(needle, g_ptr_array_index(haystack, ndx))) {
+         result = ndx;
+         break;
+      }
+   }
+   return result;
+}
+

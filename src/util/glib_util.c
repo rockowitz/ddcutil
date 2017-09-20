@@ -130,7 +130,7 @@ gpointer * g_list_to_g_array(GList * glist, guint * length) {
  * @param b pointer to second string
  * @return -1, 0, +1 in the usual way
  */
-gint g_ptr_scomp(gconstpointer a, gconstpointer b) {
+gint gaux_ptr_scomp(gconstpointer a, gconstpointer b) {
    char ** ap = (char **) a;
    char ** bp = (char **) b;
    // printf("(%s) ap = %p -> -> %p -> |%s|\n", __func__, ap, *ap, *ap);

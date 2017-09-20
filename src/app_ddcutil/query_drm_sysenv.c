@@ -629,7 +629,7 @@ static int is_dri(const struct dirent *ent) {
 GPtrArray * get_dri_device_names_using_filesys() {
    const char *dri_paths[] = { "/dev/dri/", NULL };
    GPtrArray* dev_names = get_filenames_by_filter(dri_paths, is_dri);
-   g_ptr_array_sort(dev_names, g_ptr_scomp);   // needed?
+   g_ptr_array_sort(dev_names, gaux_ptr_scomp);   // needed?
    return dev_names;
 }
 
