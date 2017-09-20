@@ -103,11 +103,8 @@ typedef Byte Call_Options;
 // #define CALLOPT_FORCE_SLAVE  0x04    // use ioctl I2C_FORCE_SLAVE
 
 // Return string interpretation of CALLOPT_ flag byte
-char * interpret_call_options_r(Call_Options calloptions, char * buffer, int bufsize);
 char * interpret_call_options(Call_Options calloptions);
-// char * interpret_call_options_a(Call_Options calloptions); // unused
 char * interpret_call_options_t(Call_Options calloptions);
-
 
 
 //
@@ -172,21 +169,6 @@ void add_traced_file(const char * filename);
 bool is_traced_file(const char * filename);
 void show_traced_files();
 
-
-
-#ifdef OLD
-typedef Byte Trace_Group;
-#define TRC_BASE 0x80
-#define TRC_I2C  0x40
-#define TRC_ADL  0x20
-#define TRC_DDC  0x10
-#define TRC_USB  0x08
-#define TRC_TOP  0x04
-
-#define TRC_NEVER  0x00
-#define TRC_ALWAYS 0xff
-#endif
-
 typedef enum {
  TRC_BASE = 0x80,
  TRC_I2C  = 0x40,
@@ -198,8 +180,6 @@ typedef enum {
  TRC_NEVER  = 0x00,
  TRC_ALWAYS = 0xff
 } Trace_Group;
-
-
 
 Trace_Group trace_class_name_to_value(char * name);
 void set_trace_levels(Trace_Group trace_flags);
