@@ -253,46 +253,6 @@ void ddc_abort(
 
 
 //
-// For interpreting field of named bits
-//
-
-#ifdef OLD
-static void char_buf_append(char * buffer, int bufsize, char * val_to_append) {
-   assert(strlen(buffer) + strlen(val_to_append) < bufsize);
-   strcat(buffer, val_to_append);
-}
-
-char * bitflags_to_string(
-          int            flags_val,
-          Bitname_Table  bitname_table,
-          char *         sepstr,
-          char *         buffer,
-          int            bufsize )
-{
-   assert(buffer && bufsize > 1);
-   buffer[0] = '\0';
-   bool first = true;
-   Bitname_Table_Entry * cur_entry = bitname_table;
-   while (cur_entry->bitvalue) {
-      // DBGMSG("Comparing flags_val=0x%08x vs cur_entry->bitvalue = 0x%08x", flags_val, cur_entry->bitvalue);
-
-      if (flags_val & cur_entry->bitvalue) {
-         if (first)
-            first = false;
-         else
-            char_buf_append(buffer, bufsize, sepstr);
-         char_buf_append(buffer, bufsize, cur_entry->bitname);
-      }
-      cur_entry++;
-   }
-   if (!flags_val && cur_entry->bitname)
-      char_buf_append(buffer, bufsize, cur_entry->bitname);
-   // printf("(%s) flags_val = 0x%08x, Returning |%s|\n", __func__, flags_val, buffer );
-   return buffer;
-}
-#endif
-
-//
 // Standard call options
 //
 
@@ -307,47 +267,6 @@ Value_Name_Table callopt_bitname_table2 = {
 };
 
 
-#ifdef OLD
-char * interpret_call_options_r_old(Call_Options calloptions, char * buffer, int bufsize) {
-   bitflags_to_string(calloptions, callopt_bitname_table, "|", buffer, bufsize);
-   return buffer;
-}
-#endif
-
-#ifdef OLD
-/** Interprets a **Call_Options** byte as a printable string, returning the
- *  result in the buffer provided.
- *
- *  @param calloptions  **Call_Options** byte
- *  @param buffer       buffer in which to return result
- *  @param bufsize      buffer size
- *
- *  @return buffer
- *
- *  @remark
- *  If the buffer is insufficiently large, the interpretation is truncated.
- */
-char * interpret_call_options_a(Call_Options calloptions, char * buffer, int bufsize) {
-   // bitflags_to_string(calloptions, callopt_bitname_table, "|", buffer, bufsize);
-   interpret_named_flags(calloptions, callopt_bitname_table2, "|", buffer, bufsize);
-   return buffer;
-}
-
-char * interpret_call_options_r2(Call_Options callopts) {
-   return vnt_interpret_flags(callopts, callopt_bitname_table2, false, "|");
-}
-#endif
-
-#ifdef OLD
-char * interpret_call_options_old(Call_Options calloptions) {
-   static char buffer[120];
-   char * result = interpret_call_options_a(calloptions, buffer, 100);
-   // DBGMSG("calloptions = 0x%02x, returning %s", calloptions, result);
-   return result;
-}
-#endif
-
-
 /** Interprets a **Call_Options** byte as a printable string.
  *  The returned value is valid until the next call of this function.
  *
@@ -355,17 +274,6 @@ char * interpret_call_options_old(Call_Options calloptions) {
  *
  *  @return interpreted value
  */
-#ifdef OLD
-char * interpret_call_options_old(Call_Options calloptions) {
-   static char buffer[120];
-   char * result = interpret_call_options_a(calloptions, buffer, 100);
-   // DBGMSG("calloptions = 0x%02x, returning %s", calloptions, result);
-   return result;
-}
-#endif
-
-
-
 char * interpret_call_options(Call_Options calloptions) {
    static char * buffer = NULL;
    if (buffer) {
