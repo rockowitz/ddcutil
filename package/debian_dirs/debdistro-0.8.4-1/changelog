@@ -1,0 +1,6 @@
+ddcutil (0.8.4-1) unstable; urgency=low
+
+  * Initial release. (Closes: #858510)
+
+ -- Sanford Rockowitz <rockowitz@minsoft.com>  Thu, 31 Aug 2017 14:00:00 -0400
+

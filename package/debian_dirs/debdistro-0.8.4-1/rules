@@ -3,12 +3,12 @@
 export DEB_BUILD_MAINT_OPTIONS = hardening=+all
 
 %:
-	dh $@  --with autotools-dev
+	dh $@ 
 
 override_dh_auto_install:
 	dh_auto_install
-	@echo "Deleting license file, per Debian policy"
-	find . -name COPYING -delete
+	@echo "Deleting license file debian/ddcutil/usr/share/doc/ddcutil/COPYING, per Debian policy"
+	rm -fv debian/ddcutil/usr/share/doc/ddcutil/COPYING
 
 override_dh_auto_configure:
 	dh_auto_configure -- --enable-lib=no --enable-drm=yes --enable-usb=yes 

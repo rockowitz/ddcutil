@@ -68,6 +68,7 @@ dh_make/
 /Makefile.oop
 *tar
 /*tar.gz
+/*tar.gz.asc
 junk*
 *.typelib
 *.gir

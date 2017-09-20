@@ -2,6 +2,12 @@
 # TODO: Converge with upload_mentors, should be just one file
 echo "Executing $0"
 
+echo "(upload_mentors) executing"
+if [ $# -lt 2 ]; then
+   echo "Syntax: upload_mentors <ddcutil-version> <debian-release-number>"
+   exit 1
+fi
+
 # ver="0.2.4"
 ver=$1
 rlse=$2

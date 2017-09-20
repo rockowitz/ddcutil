@@ -3,8 +3,6 @@ Priority: optional
 Section: utils
 Maintainer: Sanford Rockowitz <rockowitz@minsoft.com>
 Build-Depends: debhelper (>= 10),
-               dh-autoreconf,
-               autotools-dev,  
                pkg-config, 
                libc6-dev (>= 2.17), 
                libdrm-dev,
@@ -12,10 +10,8 @@ Build-Depends: debhelper (>= 10),
                libudev-dev, 
                libusb-1.0-0-dev, 
                libxrandr-dev 
-Standards-Version: 4.0.1 
+Standards-Version: 4.1.0 
 Homepage: http://www.ddcutil.com
-Vcs-Git: https://www.github.com/rockowitz/ddcutil.git
-Vcs-Browser: https://www.github.com/rockowitz/ddcutil
 
 Package: ddcutil
 Architecture: any

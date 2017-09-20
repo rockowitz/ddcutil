@@ -3,11 +3,11 @@ Upstream-Name: ddcutil
 Source: http://www.github.com/rockowitz/ddcutil
 
 Files: *
-Copyright: 2015-2016 Sanford Rockowitz <rockowitz@minsoft.com>
+Copyright: 2015-2017 Sanford Rockowitz <rockowitz@minsoft.com>
 License: GPL-2.0+
 
 Files: debian/*
-Copyright: 2016 Sanford Rockowitz <rockowitz@minsoft.com>
+Copyright: 2016-2017 Sanford Rockowitz <rockowitz@minsoft.com>
 License: GPL-2.0+
 
 License: GPL-2.0+
