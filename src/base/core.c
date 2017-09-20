@@ -432,14 +432,6 @@ typedef Byte Trace_Group;
 #define TRC_TOP  0x04
 #endif
 
-// same order as flags in TraceGroup
-#ifdef OLD
-const Byte   trace_group_ids[]   = {TRC_BASE, TRC_I2C, TRC_ADL, TRC_DDC, TRC_USB, TRC_TOP};
-const char * trace_group_names[] = {"BASE",   "I2C",   "ADL",   "DDC",   "USB",   "TOP"};
-const int    trace_group_ct = sizeof(trace_group_names)/sizeof(char *);
-#endif
-
-// new way:
 
 static
 Value_Name_Title_Table trace_group_table = {
@@ -455,20 +447,6 @@ Value_Name_Title_Table trace_group_table = {
 };
 const int trace_group_ct = ARRAY_SIZE(trace_group_table)-1;
 
-#ifdef OLD
-Trace_Group trace_class_name_to_value_old(char * name) {
-   Trace_Group trace_group = 0x00;
-   int ndx = 0;
-   for (; ndx < trace_group_ct; ndx++) {
-      if (strcmp(name, trace_group_names[ndx]) == 0) {
-         trace_group = 0x01 << (7-ndx);
-      }
-   }
-   // printf("(%s) name=|%s|, returning 0x%2x\n", __func__, name, traceGroup);
-
-   return trace_group;
-}
-#endif
 
 /** Given a trace group name, return its identifier.
  *  Case is ignored.
