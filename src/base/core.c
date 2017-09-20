@@ -773,7 +773,7 @@ void show_reporting() {
 void severemsg(
         const char * funcname,
         const int    lineno,
-        const char * fn,
+        const char * filename,
         char *       format,
         ...)
 {
@@ -783,7 +783,6 @@ void severemsg(
       va_start(args, format);
       vsnprintf(buffer, 200, format, args);
       snprintf(buf2, 250, "(%s) %s\n", funcname, buffer);
-      // fputs(buf2, stderr);
       f0puts(buf2, FERR);
       va_end(args);
 }
@@ -831,11 +830,8 @@ bool dbgtrc(
       int ct = vsnprintf(buffer, bufsz, format, args);
       va_end(args);
       if (ct >= bufsz) {   // if buffer too small, reallocate
-         // printf("(dbgtrc) Reallocating buffer, new size = %d\n", ct+1);
-         // buffer too small, reallocate and try again
          free(buffer);
          free(buf2);
-         // va_end(args);
 
          bufsz = ct+1;
          buffer = calloc(bufsz, sizeof(char));
@@ -851,10 +847,8 @@ bool dbgtrc(
          snprintf(buf2, bufsz+60, "[%s](%s) %s\n", formatted_elapsed_time(), funcname, buffer);
       else
          snprintf(buf2, bufsz+60, "(%s) %s\n", funcname, buffer);
-      // puts(buf2);        // automatic terminating null
       f0puts(buf2, FOUT);    // no automatic terminating null
       msg_emitted = true;
-      // va_end(args);
    }
 
    return msg_emitted;
@@ -882,18 +876,14 @@ void report_ioctl_error(
       const char* funcname,   // const to avoid warning msg on references at compile time
       int   lineno,
       char* filename,
-      bool fatal) {
+      bool  fatal) {
    int errsv = errno;
-   // fprintf(stderr, "(report_ioctl_error)\n");
    f0printf(FERR, "ioctl error in function %s at line %d in file %s: errno=%s\n",
            funcname, lineno, filename, linux_errno_desc(errnum) );
-   // fprintf(stderr, "  %s\n", strerror(errnum));  // linux_errno_desc now calls strerror
-   // will contain at least sterror(errnum), possibly more:
    // not worth the linkage issues:
    // fprintf(stderr, "  %s\n", explain_errno_ioctl(errnum, filedes, request, data));
    if (fatal) {
       ddc_abort(funcname, lineno, filename, DDCL_INTERNAL_ERROR);
-      // exit(EXIT_FAILURE);
    }
    errno = errsv;
 }
@@ -937,7 +927,6 @@ void program_logic_error(
 
   // fputs("Terminating execution.\n", stderr);
   ddc_abort(funcname, lineno, fn, DDCL_INTERNAL_ERROR);
-  // exit(EXIT_FAILURE);
 }
 
 
@@ -948,7 +937,7 @@ void program_logic_error(
  *  @param  trace_group trace group for function where error occurred
  *  @param  funcname    function name
  *  @param  lineno      line number
- *  @param  fn          file name
+ *  @param  filename    file name
  *  @param  format      printf() style format string
  *  @param  ...         arguments for format string
  *
