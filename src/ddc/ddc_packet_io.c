@@ -544,11 +544,6 @@ static Public_Status_Code ddc_write_read_raw(
 
    DBGTRC(debug, TRACE_GROUP, "Done, returning: %s", psc_desc(psc));
    if (debug && psc == 0) {
-#ifdef OLD
-      char * hs = hexstring(readbuf, *pbytes_received);
-      DBGMSG("readbuf: %s", hs);
-      free(hs);
-#endif
       DBGMSG("readbuf: %s", hexstring_t(readbuf, *pbytes_received));
    }
    return psc;
