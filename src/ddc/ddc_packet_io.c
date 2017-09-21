@@ -410,7 +410,7 @@ Public_Status_Code ddc_i2c_write_read_raw(
       call_tuned_sleep_i2c(SE_POST_READ);
 
       if (rc == 0 && all_zero(readbuf, max_read_bytes)) {
-         DDCMSG("All zero response detected in %s", __func__);
+         DDCMSG(debug, "All zero response detected in %s", __func__);
          rc = DDCRC_READ_ALL_ZERO;
          // printf("(%s) All zero response.", __func__ );
          // DBGMSG("Request was: %s",
@@ -481,13 +481,12 @@ Public_Status_Code ddc_adl_write_read_raw(
       else {
          if ( all_zero(readbuf+1, max_read_bytes-1)) {
                  psc = DDCRC_READ_ALL_ZERO;
-                 DBGTRC(debug, TRACE_GROUP, "All zero response.");
-                 DDCMSG("All zero response.");
+                 DDCMSG(debug, "All zero response.");
                  COUNT_STATUS_CODE(psc);
          }
          else if (memcmp(get_packet_start(request_packet_ptr), readbuf, get_packet_len(request_packet_ptr)) == 0) {
             // is this a DDC error or a programming bug?
-            DDCMSG("Bytes read same as bytes written.", __func__ );
+            DDCMSG(debug, "Bytes read same as bytes written.", __func__ );
             psc = DDCRC_READ_EQUALS_WRITE;
             COUNT_STATUS_CODE(psc);
          }

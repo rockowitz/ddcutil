@@ -164,7 +164,7 @@ bool valid_ddc_packet_checksum(Byte * readbuf) {
 
    int data_size = (readbuf[2] & 0x7f);
    if (data_size > MAX_DDCCI_PACKET_SIZE) {    // correct constant?
-      DDCMSG("Invalid data_size = %d", data_size);
+      DDCMSG(debug, "Invalid data_size = %d", data_size);
    }
    else {
       int response_size_wo_checksum = 3 + data_size;
@@ -586,7 +586,7 @@ create_ddc_base_response_packet(
    int result = DDCRC_OK;
    DDC_Packet * packet = NULL;
    if (i2c_response_bytes[0] != 0x6e ) {
-      DDCMSG("Unexpected source address 0x%02x, should be 0x6e", i2c_response_bytes[0]);
+      DDCMSG(debug, "Unexpected source address 0x%02x, should be 0x6e", i2c_response_bytes[0]);
       result = DDCRC_RESPONSE_ENVELOPE;
    }
    else {
@@ -595,11 +595,11 @@ create_ddc_base_response_packet(
       if (data_ct > MAX_DDC_DATA_SIZE) {
          if ( is_double_byte(&i2c_response_bytes[1])) {
             result = DDCRC_DOUBLE_BYTE;
-            DDCMSG("Double byte in packet.");
+            DDCMSG(debug, "Double byte in packet.");
          }
          else {
             result = DDCRC_PACKET_SIZE;
-            DDCMSG("Invalid data length in packet: %d exceeds MAX_DDC_DATA_SIZE", data_ct);
+            DDCMSG(debug,"Invalid data length in packet: %d exceeds MAX_DDC_DATA_SIZE", data_ct);
          }
       }
       else {
@@ -615,8 +615,8 @@ create_ddc_base_response_packet(
          Byte calculated_checksum = ddc_checksum(packet_bytes, 3 + data_ct, true);   // replacing right byte?
          Byte actual_checksum = packet_bytes[3+data_ct];
          if (calculated_checksum != actual_checksum) {
-            DDCMSG("Actual checksum 0x%02x, expected 0x%02x",
-                   actual_checksum, calculated_checksum);
+            DDCMSG(debug, "Actual checksum 0x%02x, expected 0x%02x",
+                             actual_checksum, calculated_checksum);
             result = DDCRC_CHECKSUM;
             free_ddc_packet(packet);
          }
@@ -624,9 +624,8 @@ create_ddc_base_response_packet(
    }
 
    if (result != DDCRC_OK) {
-      // char * hs = hexstring(i2c_response_bytes, response_bytes_buffer_size);
-      DDCMSG("i2c_response_bytes: %s", hexstring_t(i2c_response_bytes, response_bytes_buffer_size));
-      // free(hs);
+      DDCMSG(debug, "i2c_response_bytes: %s",
+                       hexstring_t(i2c_response_bytes, response_bytes_buffer_size));
    }
 
    if (result == DDCRC_OK)
@@ -748,8 +747,7 @@ interpret_multi_part_read_response(
    // not needed, already checked
    if (bytect < 3 || bytect > 35) {
       // if (debug)
-      // DBGMSG("Invalid response data length: %d", bytect);
-      DDCMSG("(DDCMSG) Invalid response data length: %d", bytect);
+      DDCMSG(debug, "Invalid response data length: %d", bytect);
       result = COUNT_STATUS_CODE(DDCRC_INVALID_DATA);
    }
    else {
@@ -851,8 +849,8 @@ interpret_vcp_feature_response_std(
    aux_data->cur_value        = 0;
 
    if (bytect != 8) {
-      DDCDBGTRC(debug, "Invalid response data length: %d, should be 8, response data bytes: %s",
-             bytect, hexstring3_t(vcp_data_bytes, bytect, " ", 4, false));
+      DDCMSG(debug, "Invalid response data length: %d, should be 8, response data bytes: %s",
+                       bytect, hexstring3_t(vcp_data_bytes, bytect, " ", 4, false));
       COUNT_STATUS_CODE(DDCRC_INVALID_DATA);
       result = DDCRC_INVALID_DATA;
    }
@@ -865,9 +863,9 @@ interpret_vcp_feature_response_std(
       bool valid_response = true;
 
       if (vcpresp->vcp_opcode != requested_vcp_code){
-         DDCDBGTRC(debug, "Unexpected VCP opcode 0x%02x, should be 0x%02x, response data bytes: %s",
-                vcpresp->vcp_opcode, requested_vcp_code,
-                hexstring3_t(vcp_data_bytes, bytect, " ", 4, false));
+         DDCMSG(debug, "Unexpected VCP opcode 0x%02x, should be 0x%02x, response data bytes: %s",
+                          vcpresp->vcp_opcode, requested_vcp_code,
+                          hexstring3_t(vcp_data_bytes, bytect, " ", 4, false));
          result = COUNT_STATUS_CODE(DDCRC_INVALID_DATA);
       }
 
@@ -878,13 +876,13 @@ interpret_vcp_feature_response_std(
             bool msg_emitted = DBGTRC(debug, TRACE_GROUP,
                                       "Unsupported VCP Code: 0x%02x", vcpresp->vcp_opcode);
             if (requested_vcp_code != 0x00 && !msg_emitted)
-               DDCMSG("Unsupported VCP Code: 0x%02x", vcpresp->vcp_opcode);
+               DDCMSG(debug, "Unsupported VCP Code: 0x%02x", vcpresp->vcp_opcode);
             aux_data->valid_response = true;
          }
          else {
-            DDCDBGTRC(debug, "Unexpected result code: 0x%02x, response_data_bytes: %s",
-                   vcpresp->result_code,
-                   hexstring3_t(vcp_data_bytes, bytect, " ", 4, false));
+            DDCMSG(debug, "Unexpected result code: 0x%02x, response_data_bytes: %s",
+                             vcpresp->result_code,
+                             hexstring3_t(vcp_data_bytes, bytect, " ", 4, false));
             result = COUNT_STATUS_CODE(DDCRC_INVALID_DATA);
          }
       }
@@ -1047,12 +1045,16 @@ Status_DDC create_ddc_typed_response_packet(
 }
 
 
-Status_DDC create_ddc_multi_part_read_response_packet(
-                     Byte           response_type,
-                     Byte *         i2c_response_bytes,
-                     int            response_bytes_buffer_size,
-                     const char *   tag,
-                     DDC_Packet **  packet_ptr) {
+Status_DDC
+create_ddc_multi_part_read_response_packet(
+      Byte           response_type,
+      Byte *         i2c_response_bytes,
+      int            response_bytes_buffer_size,
+      const char *   tag,
+      DDC_Packet **  packet_ptr)
+{
+   bool debug = false;
+
    DDC_Packet * packet = NULL;
    Status_DDC rc = create_ddc_response_packet(i2c_response_bytes,
                                                      response_bytes_buffer_size,
@@ -1069,22 +1071,12 @@ Status_DDC create_ddc_multi_part_read_response_packet(
       int max_data_len = 35;
       int data_len = get_data_len(packet);
       if (data_len < min_data_len || data_len > max_data_len) {
-         DDCMSG("Invalid data fragment_length_wo_null: %d", data_len);
+         DDCMSG(debug, "Invalid data fragment_length_wo_null: %d", data_len);
          if (IS_REPORTING_DDC())
             dump_packet(packet);
          rc = COUNT_STATUS_CODE(DDCRC_INVALID_DATA);
       }
       else {
-#ifdef OLD
-         void * aux_data = calloc(1, sizeof(Interpreted_Multi_Part_Read_Fragment));
-         packet->aux_data = aux_data;
-
-         rc = interpret_multi_part_read_response(
-                 response_type,
-                 get_data_start(packet),
-                 get_data_len(packet),
-                 (Interpreted_Multi_Part_Read_Fragment *) aux_data);
-#endif
          Interpreted_Multi_Part_Read_Fragment * aux_data = calloc(1, sizeof(Interpreted_Multi_Part_Read_Fragment));
          packet->parsed.multi_part_read_fragment = aux_data;
 
@@ -1115,6 +1107,8 @@ create_ddc_getvcp_response_packet(
        const char *   tag,
        DDC_Packet **  packet_ptr)
 {
+   bool debug = false;
+
    DDC_Packet * packet = NULL;
    Status_DDC rc = create_ddc_response_packet(
                i2c_response_bytes,
@@ -1132,7 +1126,7 @@ create_ddc_getvcp_response_packet(
       if (data_len != 8) {
          // DBGMSG("Invalid data length: %d, should be 8", data_len);
          // dump_packet(packet);
-         DDCMSG("Invalid data length: %d, should be 8", data_len);
+         DDCMSG(debug, "Invalid data length: %d, should be 8", data_len);
          if ( IS_REPORTING_DDC() )
             dump_packet(packet);
          rc = COUNT_STATUS_CODE(DDCRC_INVALID_DATA);

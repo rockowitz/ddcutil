@@ -159,7 +159,8 @@ bool is_tracing(Trace_Group trace_group, const char * filename, const char * fun
 /** Checks if tracking is currently active for the globally defined TRACE_GROUP value,
  *  current file and function.
  *
- *  Wrappers call to **is_tracking()**.
+ *  Wrappers call to **is_tracking()**, using the current **TRACE_GROUP** value,
+ *  filename, and function as implicit arguments.
  */
 #define IS_TRACING() is_tracing(TRACE_GROUP, __FILE__, __func__)
 
@@ -172,13 +173,28 @@ extern bool report_ddc_errors;
 bool is_reporting_ddc(Trace_Group trace_group, const char * filename, const char * funcname);
 #define IS_REPORTING_DDC() is_reporting_ddc(TRACE_GROUP, __FILE__, __func__)
 
-void ddcmsg(Trace_Group trace_group, const char* funcname, const int lineno, const char* fn, char* format, ...);
-#define DDCMSG(format, ...) ddcmsg(TRACE_GROUP, __func__, __LINE__, __FILE__, format, ##__VA_ARGS__)
+bool ddcmsg(Trace_Group trace_group, const char* funcname, const int lineno, const char* fn, char* format, ...);
+#define DDCMSG0(format, ...) ddcmsg(TRACE_GROUP, __func__, __LINE__, __FILE__, format, ##__VA_ARGS__)
 
-#define DDCDBGTRCX(debug_flag, trace_group, format, ...) \
+/** Variant of **DDCMSG** that takes an explicit trace group as an argument.
+ *
+ * @param debug_flag
+ * @param trace_group
+ * @param format
+ * @param ...
+ */
+#define DDCMSGX(debug_flag, trace_group, format, ...) \
    ddcmsg(( (debug_flag) ) ? 0xff : (trace_group), __func__, __LINE__, __FILE__, format, ##__VA_ARGS__)
 
-#define DDCDBGTRC(debug_flag, format, ...) \
+
+/** Macro that wrappers function **ddcmsg()**, passing the current TRACE_GROUP,
+ *  file name, line number, and function name as arguments.
+ *
+ * @param debug_flag
+ * @param format
+ * @param ...
+ */
+#define DDCMSG(debug_flag, format, ...) \
    ddcmsg(( (debug_flag) ) ? 0xff : (TRACE_GROUP), __func__, __LINE__, __FILE__, format, ##__VA_ARGS__)
 
 

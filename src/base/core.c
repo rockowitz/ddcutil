@@ -694,19 +694,21 @@ bool is_reporting_ddc(Trace_Group trace_group, const char * filename, const char
  * @param format      message format string
  * @param ...         arguments for message format string
  *
+ * @return **true** if message was output, **false** if not
  *
  * Normally, invocation of this function is wrapped in macro DDCMSG.
  */
-void ddcmsg(Trace_Group  trace_group,
+bool ddcmsg(Trace_Group  trace_group,
             const char * funcname,
             const int    lineno,
             const char * filename,
             char *       format,
             ...)
 {
-   //  if ( is_reporting_ddc(trace_group, fn) ) {   // wrong
+   bool result = false;
    bool debug_or_trace = is_tracing(trace_group, filename, funcname);
    if (debug_or_trace || report_ddc_errors) {
+      result = true;
       char buffer[200];
       va_list(args);
       va_start(args, format);
@@ -717,6 +719,7 @@ void ddcmsg(Trace_Group  trace_group,
          f0printf(FOUT, "DDC: %s\n", buffer);
       va_end(args);
    }
+   return result;
 }
 
 
