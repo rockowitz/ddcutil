@@ -1362,3 +1362,22 @@ int vf0printf(FILE * stream, const char * format, va_list ap) {
       rc = vfprintf(stream, format, ap);
    return rc;
 }
+
+
+//
+// Miscellaneous
+//
+
+/** Tests if a range of bytes is entirely 0
+ *
+ * @param bytes pointer to first byte
+ * @param bytect number of bytes
+ * @return **true** if all bytes are zero, **false** if not
+ */
+bool all_bytes_zero(Byte * bytes, int bytect) {
+   Byte sum = 0;
+   for (int ndx=0; ndx < bytect; ndx++) {
+      sum |= bytes[ndx];
+   }
+   return !sum;
+}

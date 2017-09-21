@@ -34,7 +34,7 @@
 #include "base/displays.h"
 
 
-bool all_zero(Byte * bytes, int bytec);
+// bool all_zero(Byte * bytes, int bytec);
 
 Public_Status_Code ddc_open_display(
       Display_Ref *    dref,

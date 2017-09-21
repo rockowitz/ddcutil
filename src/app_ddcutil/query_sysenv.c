@@ -884,7 +884,7 @@ Public_Status_Code try_single_getvcp_call(int fh, unsigned char vcp_feature_code
       // hex_dump(ddc_response_bytes,1+rc);
    }
 
-   if ( all_zero( ddc_response_bytes+1, readct) ) {
+   if ( all_bytes_zero( ddc_response_bytes+1, readct) ) {
       DBGMSF(debug, "All bytes zero");
       rc = DDCRC_READ_ALL_ZERO;
       goto bye;

@@ -155,4 +155,10 @@ int f0puts(const char * s, FILE * stream);
 int f0printf(FILE * stream, const char * format, ...);
 int vf0printf(FILE * stream, const char * format, va_list ap);
 
+//
+// Miscellaneous
+//
+
+bool all_bytes_zero(Byte * bytes, int bytect);
+
 #endif /* STRINGUTIL_H_ */

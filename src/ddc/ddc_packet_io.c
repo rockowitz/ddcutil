@@ -72,6 +72,8 @@
 // Trace class for this file
 static Trace_Group TRACE_GROUP = TRC_DDC;
 
+#ifdef DEPRECATED
+// Deprecated - use all_bytes_zero() in string_util.c
 // Tests if a range of bytes is entirely 0
 bool all_zero(Byte * bytes, int bytect) {
    bool result = true;
@@ -84,6 +86,7 @@ bool all_zero(Byte * bytes, int bytect) {
    }
    return result;
 }
+#endif
 
 // Test for DDC null message
 #ifdef UNUSED
@@ -369,7 +372,7 @@ Public_Status_Code (*Write_Read_Raw_Function)(
  *   -errno if error in write
  *   DDCRC_READ_ALL_ZERO
  */
-Public_Status_Code ddc_i2c_write_read_raw(
+static Public_Status_Code ddc_i2c_write_read_raw(
          Display_Handle * dh,
          DDC_Packet *     request_packet_ptr,
          int              max_read_bytes,
@@ -409,7 +412,7 @@ Public_Status_Code ddc_i2c_write_read_raw(
       // try adding sleep to see if improves capabilities read for P2411H
       call_tuned_sleep_i2c(SE_POST_READ);
 
-      if (rc == 0 && all_zero(readbuf, max_read_bytes)) {
+      if (rc == 0 && all_bytes_zero(readbuf, max_read_bytes)) {
          DDCMSG(debug, "All zero response detected in %s", __func__);
          rc = DDCRC_READ_ALL_ZERO;
          // printf("(%s) All zero response.", __func__ );
@@ -445,7 +448,7 @@ Public_Status_Code ddc_i2c_write_read_raw(
  *   additional information.  Never seen.  How to handle?
  */
 
-Public_Status_Code ddc_adl_write_read_raw(
+static Public_Status_Code ddc_adl_write_read_raw(
       Display_Handle * dh,
       DDC_Packet *     request_packet_ptr,
       int              max_read_bytes,
@@ -479,7 +482,7 @@ Public_Status_Code ddc_adl_write_read_raw(
          DBGTRC(debug, TRACE_GROUP, "adl_ddc_read_only() returned %d\n", psc);
       }
       else {
-         if ( all_zero(readbuf+1, max_read_bytes-1)) {
+         if ( all_bytes_zero(readbuf+1, max_read_bytes-1)) {
                  psc = DDCRC_READ_ALL_ZERO;
                  DDCMSG(debug, "All zero response.");
                  COUNT_STATUS_CODE(psc);
@@ -503,7 +506,7 @@ Public_Status_Code ddc_adl_write_read_raw(
 }
 
 
-Public_Status_Code ddc_write_read_raw(
+static Public_Status_Code ddc_write_read_raw(
       Display_Handle * dh,
       DDC_Packet *     request_packet_ptr,
       int              max_read_bytes,
@@ -593,8 +596,6 @@ Public_Status_Code ddc_write_read(
             readbuf,
             &bytes_received
      );
-
-
    if (psc >= 0) {
        // readbuf[0] = 0x6e;
        // hex_dump(readbuf, bytes_received+1);
