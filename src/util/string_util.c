@@ -1028,6 +1028,7 @@ char * hexstring2(
 }
 
 
+#ifdef DEPRECATED
 // TODO: replace implementation of hexstring2_t() with call to hexstring3_t()
 
 /** Thread safe version of #hexstring2().
@@ -1107,8 +1108,9 @@ char * hexstring2_t_old(
 
    return buf;
 }
+#endif
 
-
+#ifdef DEPRECATED
 char * hexstring2_t(
           const unsigned char * bytes,
           int                   len,
@@ -1117,8 +1119,30 @@ char * hexstring2_t(
 {
    return hexstring3_t(bytes, len, sepstr, 1, uppercase);
 }
+#endif
 
 
+/** Thread safe version of #hexstring2().
+ *
+ * This function allocates a thread specific buffer in which the hex string is built.
+ * The buffer is valid until the next call of this function in the same thread.
+ *
+ * @param   bytes    pointer to bytes
+ * @param   len      number of bytes
+ * @param   sepstr   string to separate each segment of 2 hex character pairs representing bytes
+ *                   if NULL then no separators will be inserted
+ * @param   hunk_size separator string frequency
+ * @param   uppercase if true, use uppercase hex characters,
+ *                    if false, use lower case hex characters
+ *
+ * @return  pointer to hex string
+ *
+ * Note that if the returned pointer is referenced after another call to
+ * this function, the results are unpredictable.
+ *
+ * This function is intended to simplify formatting of diagnostic messages, since
+ * the caller needn't be concerned with buffer size and allocation.
+ */
 char * hexstring3_t(
           const unsigned char * bytes,      // bytes to convert
           int                   len,        // number of bytes
@@ -1208,7 +1232,7 @@ char * hexstring_t(
           const unsigned char * bytes,
           int                   len)
 {
-      return hexstring2_t(bytes, len, " ", false);
+      return hexstring3_t(bytes, len, " ", 1, false);
 }
 
 
