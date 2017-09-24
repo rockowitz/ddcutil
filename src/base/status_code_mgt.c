@@ -302,10 +302,13 @@ Status_Code_Info * find_status_code_info(Public_Status_Code status_code) {
  *  @return string description of status code
  *
  *  @remark
- *  The value returned is valid until the next call of this function.
+ *  The value returned is valid until the next call of this function in the
+ *  same thread. Caller should not free.
  */
 char * psc_desc(Public_Status_Code psc) {
-   static char workbuf[GSC_WORKBUF_SIZE];
+   static GPrivate  psc_desc_key = G_PRIVATE_INIT(g_free);
+   char * workbuf = get_thread_fixed_buffer(&psc_desc_key, GSC_WORKBUF_SIZE);
+   // static char workbuf[GSC_WORKBUF_SIZE];
    // printf("(%s) status_code=%d\n", __func__, status_code);
    Status_Code_Info * pinfo = find_status_code_info(psc);
    if (pinfo) {
