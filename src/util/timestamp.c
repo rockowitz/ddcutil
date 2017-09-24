@@ -29,12 +29,17 @@
  */
 
 /** \cond */
+#include <assert.h>
+#include <glib-2.0/glib.h>
 #include <inttypes.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
 /** \endcond */
+
+#include "glib_util.h"
+#include "string_util.h"
 
 #include "timestamp.h"
 
@@ -127,25 +132,22 @@ uint64_t elapsed_time_nanosec() {
 /** Returns the elapsed time since start of program execution
  *  as a formatted, printable string.
  *
- *  The string is built in an internal buffer and is valid until
- *  the next call of this function.
+ *  The string is built in a thread specific private buffer.  The returned
+ *  string valid until the next call of this function in the same thread.
  *
  *  @return formatted elapsed time
  */
 char * formatted_elapsed_time() {
-   // static char elapsed_buf1[40];
-   static char elapsed_buf2[40];
+   static GPrivate  formatted_elapsed_time_key = G_PRIVATE_INIT(g_free);
+   char * elapsed_buf = get_thread_fixed_buffer(&formatted_elapsed_time_key, 40);
+
    uint64_t et_nanos = elapsed_time_nanosec();
-   // double secs = et_nanos/(1000.0 * 1000.0 * 1000.0);
-   // snprintf(elapsed_buf1, 40, "%7.3f", secs);
    unsigned int    isecs   = et_nanos/ (1000 * 1000 * 1000);
    unsigned int    imillis = et_nanos/ (1000 * 1000);
    // printf("(%s) et_nanos=%ld, isecs=%ld, imillis=%ld\n", __func__,  et_nanos, isecs, imillis);
-   // snprintf(elapsed_buf2, 40, "%3ld.%03ld", isecs, imillis - (isecs*1000) );
-   snprintf(elapsed_buf2, 40, "%3d.%03d", isecs, imillis - (isecs*1000) );
+   snprintf(elapsed_buf, 40, "%3d.%03d", isecs, imillis - (isecs*1000) );
 
-   // printf("(%s) %s, %s\n", __func__, elapsed_buf1, elapsed_buf2);
-   // printf("(%s) %s\n", __func__, elapsed_buf2);
-   return elapsed_buf2;
+   // printf("(%s) |%s|\n", __func__, elapsed_buf);
+   return elapsed_buf;
 }
 
