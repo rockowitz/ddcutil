@@ -93,15 +93,6 @@ typedef struct {
 // is called by the initializer function in those files.
 
 Retcode_Range_Table_Entry retcode_range_table[] = {
-#ifdef OLD
-      { .id = RR_BASE,
-        .base = RCRANGE_BASE_START,
-        .max  = RCRANGE_BASE_MAX,
-      //  NULL,                        false,
-      //  NULL,
-      //  NULL
-      },     // should this be entry in table?
-#endif
       {.id = RR_ERRNO,
        .base = RCRANGE_ERRNO_START,
        .max = RCRANGE_ERRNO_MAX,
@@ -255,38 +246,8 @@ Retcode_Range_Id get_modulation(Public_Status_Code rc) {
    return range_id;
 }
 
-#ifdef OLD
-Global_Status_Code modulate_base_errno_ddc_to_global(Base_Status_Errno_DDC rc) {
-   Global_Status_Code gsc =
-         (get_modulation(rc) == RR_BASE)
-             ? modulate_rc(rc, RR_ERRNO)
-             : rc;
-   return gsc;
-}
-#endif
-
-#ifdef OLD
-Public_Status_Code global_to_public_status_code(Global_Status_Code gsc){
-   Public_Status_Code psc =
-         (get_modulation(gsc) == RR_ERRNO)
-            ? demodulate_rc(gsc, RR_ERRNO)
-            : gsc;
-   return psc;
-}
-
-Global_Status_Code public_to_global_status_code(Public_Status_Code psc) {
-   Global_Status_Code gsc =
-         (get_modulation(psc) == RR_BASE)
-             ? modulate_rc(psc, RR_ERRNO)
-             : psc;
-   return gsc;
-}
-#endif
-
-
 
 static Status_Code_Info ok_status_code_info = {0, "OK", "success"};
-
 
 // N.B. Works equally well whether argument is a Global_Status_Code or a
 // Public_Status_Code.  get_modulaetion() figures things out
@@ -313,14 +274,6 @@ Status_Code_Info * find_status_code_info(Public_Status_Code status_code) {
       if (debug)
          printf("(%s) modulation=%d\n", __func__, modulation);
 
-#ifdef OLD
-      // Hack for transition
-      if (modulation == RR_BASE) {
-         status_code = modulate_rc(status_code, RR_ERRNO);
-         modulation = RR_ERRNO;
-      }
-#endif
-
       Retcode_Description_Finder finder_func = retcode_range_table[modulation].desc_finder;
       assert(finder_func != NULL);
       bool finder_arg_is_modulated = retcode_range_table[modulation].finder_arg_is_modulated;
@@ -341,52 +294,6 @@ Status_Code_Info * find_status_code_info(Public_Status_Code status_code) {
 
 
 #define GSC_WORKBUF_SIZE 300
-
-#ifdef OLD
-/** Returns a description string for a #Global_Status_Code.
- *  Synthesizes a description if information for the status code cannot be found.
- *
- *  @param  status_code  global (modulated) status code
- *  @return string description of status code
- *
- *  @remark
- *  The value returned is valid unti the next call of this function.
- */
-char * gsc_desc(Global_Status_Code status_code) {
-   static char workbuf[GSC_WORKBUF_SIZE];
-   // printf("(%s) status_code=%d\n", __func__, status_code);
-   Status_Code_Info * pdesc = find_status_code_info(status_code);
-   if (pdesc) {
-      snprintf(workbuf, GSC_WORKBUF_SIZE, "%s(%d): %s",
-               pdesc->name, status_code, pdesc->description);
-   }
-   else {
-      snprintf(workbuf, GSC_WORKBUF_SIZE, "%d",
-               status_code );
-   }
-   return workbuf;
-}
-#endif
-
-#ifdef OLD
-char * psc_desc(Public_Status_Code psc) {
-   Global_Status_Code gsc = public_to_global_status_code(psc);
-
-   static char workbuf[GSC_WORKBUF_SIZE];
-   // printf("(%s) status_code=%d\n", __func__, status_code);
-   Status_Code_Info * pdesc = find_status_code_info(gsc);
-   if (pdesc) {
-      snprintf(workbuf, GSC_WORKBUF_SIZE, "%s(%d): %s",
-               pdesc->name, psc, pdesc->description);
-   }
-   else {
-      snprintf(workbuf, GSC_WORKBUF_SIZE, "%d",
-               psc );
-   }
-   return workbuf;
-}
-#endif
-
 
 /** Returns a description string for a #Public_Status_Code.
  *  Synthesizes a description if information for the status code cannot be found.
@@ -414,19 +321,6 @@ char * psc_desc(Public_Status_Code psc) {
 
 #undef GSC_WORKBUF_SIZE
 
-#ifdef OLD
-/** Returns the symbolic name of a #Global_Status_Code
- *
- * @param status_code global (modulated) status code
- * @return symbolic name, or "" if not found
- */
-
-char * gsc_name(Global_Status_Code status_code) {
-   Status_Code_Info * pdesc = find_status_code_info(status_code);
-   char * result = (pdesc) ? pdesc->name : "";
-   return result;
-}
-#endif
 
 /** Returns the symbolic name of a #Public_Status_Code
  *

@@ -39,9 +39,8 @@ void init_status_code_mgt();
 /** Describes one status code.
  *
  * @remark
- * Code could be simplified by using a #Value_Name_Title table
- * instead, but left as is because we might want to add additional
- * fields.
+ * Code could be simplified by using a #Value_Name_Title table instead,
+ * but left as is because we might want to add additional fields.
  */
 typedef
 struct {
@@ -84,11 +83,6 @@ Status_Code_Info * (*Retcode_Description_Finder)(int rc);
 typedef
 bool (*Retcode_Number_Finder)(const char * name, int * p_number);
 
-
-#ifdef OLD
-Status_Errno_DDC modulate_base_errno_ddc_to_global(Status_Errno_DDC rc);
-#endif
-
 //
 // Status codes ranges
 //
@@ -114,43 +108,29 @@ typedef enum {
           RR_DDC       ///< range id for **ddcutil**-specific error codes
 } Retcode_Range_Id;
 
-#ifdef OLD
-void register_retcode_desc_finder(
-        Retcode_Range_Id           id,
-        Retcode_Description_Finder finder_func,
-        bool                       finder_arg_is_modulated);
-#endif
-
 int modulate_rc(  int unmodulated_rc, Retcode_Range_Id range_id);
 int demodulate_rc(int   modulated_rc, Retcode_Range_Id range_id);
 Retcode_Range_Id get_modulation(int rc);
 // int demodulate_any_rc(int modulated_rc);   // unimplemented
 
-#ifdef OLD
-Public_Status_Code global_to_public_status_code(Status_Errno_DDC gsc);
-Status_Errno_DDC public_to_Base_Status_Errno_DDC(Public_Status_Code);
-#endif
-
 Status_Code_Info * find_status_code_info(Public_Status_Code status_code);
 
-// Returns status code description:
-#ifdef OLD
-char * gsc_desc(Status_Errno_DDC rc);   // must be freed after use
-#endif
+// Return status code description and name.  Do not free after use.
 char * psc_desc(Public_Status_Code rc);
-#ifdef OLD
-char * gsc_name(Status_Errno_DDC status_code);   // do not free after use
-#endif
+char * psc_name(Public_Status_Code status_code);
 
-char * psc_name(Public_Status_Code status_code);   // do not free after us
+bool status_name_to_unmodulated_number(
+        const char *         status_code_name,
+        int *                p_error_number);
+bool status_name_to_modulated_number(
+        const char *         status_code_name,
+        Public_Status_Code * p_error_number);
 
-
-bool status_name_to_unmodulated_number(const char * status_code_name, int * p_error_number);
-bool status_name_to_modulated_number(const char * status_code_name, Public_Status_Code * p_error_number);
-
-// new    ???
+#ifdef FUTURE
+// Future:
 bool status_code_name_to_psc_number(
-      const char * status_code_name,
-      Public_Status_Code * p_error_number);
+        const char *         status_code_name,
+        Public_Status_Code * p_error_number);
+#endif
 
 #endif /* STATUS_CODE_MGT_H_ */
