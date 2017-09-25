@@ -797,7 +797,7 @@ void report_display_handle(Display_Handle * dh, const char * msg, int depth) {
  *
  * \return  string representation of handle
  */
-char * dh_repr_a(Display_Handle * dh) {
+static char * dh_repr_a(Display_Handle * dh) {
    assert(dh);
    assert(dh->dref);
 
@@ -834,7 +834,7 @@ char * dh_repr_a(Display_Handle * dh) {
  *
  * \return  string representation of handle (buf)
  */
-char * dh_repr_r(Display_Handle * dh, char * buf, int bufsz) {
+static char * dh_repr_r(Display_Handle * dh, char * buf, int bufsz) {
    assert(dh);
    assert(dh->dref);
 
@@ -873,25 +873,9 @@ char * dh_repr_r(Display_Handle * dh, char * buf, int bufsz) {
  */
 char * dh_repr_t(Display_Handle * dh) {
    static GPrivate  dh_buf_key = G_PRIVATE_INIT(g_free);
-
    char * buf = get_thread_fixed_buffer(&dh_buf_key, 100);
-
-#ifdef OLD
-   char * buf = g_private_get(&dh_buf_key);
-
-   // GThread * this_thread = g_thread_self();
-   // printf("(%s) this_thread=%p, dh_buf_key=%p, buf=%p\n",
-   //        __func__, this_thread, &dh_buf_key, buf);
-
-   if (!buf) {
-      buf = g_new(char, 100);
-      g_private_set(&dh_buf_key, buf);
-   }
-#endif
-
    dh_repr_r(dh, buf, 100);
    return buf;
-
 }
 
 
