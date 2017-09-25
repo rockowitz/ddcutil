@@ -600,23 +600,9 @@ char * dref_short_name(Display_Ref * dref) {
  */
 char * dref_short_name_t(Display_Ref * dref) {
    static GPrivate  dref_short_name_key = G_PRIVATE_INIT(g_free);
-
-#ifdef OLD
-   char * buf = g_private_get(&dref_short_name_key);
-   // GThread * this_thread = g_thread_self();
-   // printf("(%s) this_thread=%p, dref_short_name_key=%p, buf=%p\n",
-   //        __func__, this_thread, &dref_short_name_key, buf);
-   if (!buf) {
-      buf = g_new(char, 100);
-      printf("(%s) Calling g_private_set()\n", __func__);
-      g_private_set(&dref_short_name_key, buf);
-   }
-#endif
-
    char * buf = get_thread_fixed_buffer(&dref_short_name_key, 100);
    char buf2[80];
    snprintf(buf, 100, "Display_Ref[%s]", dref_short_name_r(dref, buf2, 80) );
-
    return buf;
 }
 
@@ -649,24 +635,9 @@ char * dref_repr_t(Display_Ref * dref) {
    static GPrivate  dref_repr_key = G_PRIVATE_INIT(g_free);
 
    char * buf = get_thread_fixed_buffer(&dref_repr_key, 100);
-
-#ifdef OLD
-   char * buf = g_private_get(&dref_repr_key);
-
-   // GThread * this_thread = g_thread_self();
-   // printf("(%s) this_thread=%p, dref_repr_key=%p, buf=%p\n",
-   //        __func__, this_thread, &dref_repr_key, buf);
-
-   if (!buf) {
-      buf = g_new(char, 100);
-      g_private_set(&dref_repr_key, buf);
-   }
-#endif
-
    char buf2[80];
    snprintf(buf, 100,
             "Display_Ref[%s]", dref_short_name_r(dref, buf2, 80) );
-
    return buf;
 }
 
@@ -674,71 +645,46 @@ char * dref_repr_t(Display_Ref * dref) {
 
 // *** Display_Handle ***
 
-#ifdef OLD
-static Display_Handle * create_bus_display_handle_from_busno(int fh, int busno) {
-   Display_Handle * dh = calloc(1, sizeof(Display_Handle));
-   memcpy(dh->marker, DISPLAY_HANDLE_MARKER, 4);
-   dh->io_mode = DDCA_IO_DEVI2C;
-   dh->fh = fh;
-   dh->busno = busno;
-   // report_display_handle(dh,__func__);
-   return dh;
-}
-#endif
-
 
 Display_Handle * create_bus_display_handle_from_display_ref(int fh, Display_Ref * dref) {
    assert(dref->io_mode == DDCA_IO_DEVI2C);
-   // Display_Handle * dh = create_bus_display_handle_from_busno(fh, dref->busno);
    Display_Handle * dh = calloc(1, sizeof(Display_Handle));
    memcpy(dh->marker, DISPLAY_HANDLE_MARKER, 4);
-   // dh->io_mode = DDCA_IO_DEVI2C;
    dh->fh = fh;
-   // dh->busno = dref->busno;
    dh->dref = dref;
    dref->vcp_version = VCP_SPEC_UNQUERIED;
+   dh->repr = gaux_asprintf(
+            "Display_Handle[i2c: fh=%d, busno=%d]",
+            dh->fh, dh->dref->busno);
    return dh;
 }
 
-#ifdef OLD
-static Display_Handle * create_adl_display_handle_from_adlno(int iAdapterIndex, int iDisplayIndex) {
-   Display_Handle * dh = calloc(1, sizeof(Display_Handle));
-   memcpy(dh->marker, DISPLAY_HANDLE_MARKER, 4);
-   dh->io_mode = DDCA_IO_ADL;
-   dh->iAdapterIndex = iAdapterIndex;
-   dh->iDisplayIndex = iDisplayIndex;
-   return dh;
-}
-#endif
 
-// hacky implementation for transition
 Display_Handle * create_adl_display_handle_from_display_ref(Display_Ref * dref) {
    assert(dref->io_mode == DDCA_IO_ADL);
-   // Display_Handle * dh = create_adl_display_handle_from_adlno(dref->iAdapterIndex, dref->iDisplayIndex);
    Display_Handle * dh = calloc(1, sizeof(Display_Handle));
    memcpy(dh->marker, DISPLAY_HANDLE_MARKER, 4);
-   // dh->io_mode = DDCA_IO_ADL;
-   // dh->iAdapterIndex = dref->iAdapterIndex;
-   // dh->iDisplayIndex = dref->iDisplayIndex;
    dh->dref = dref;
    dref->vcp_version = VCP_SPEC_UNQUERIED;   // needed?
+   dh->repr = gaux_asprintf(
+            "Display_Handle[adl: display %d.%d]",
+            dh->dref->iAdapterIndex, dh->dref->iDisplayIndex);
    return dh;
 }
+
 
 #ifdef USE_USB
 Display_Handle * create_usb_display_handle_from_display_ref(int fh, Display_Ref * dref) {
    assert(dref->io_mode == DDCA_IO_USB);
    Display_Handle * dh = calloc(1, sizeof(Display_Handle));
    memcpy(dh->marker, DISPLAY_HANDLE_MARKER, 4);
-   // dh->io_mode = DDCA_IO_USB;
    dh->fh = fh;
    dh->dref = dref;
-   // dh->hiddev_device_name = dref->usb_hiddev_name;
-   // dh->usb_bus = dref->usb_bus;
-   //dh->usb_device = dref->usb_device;
+   dh->repr = gaux_asprintf(
+            "Display_Handle[usb: %d:%d, %s/hiddev%d]",
+            dh->dref->usb_bus, dh->dref->usb_device,
+            usb_hiddev_directory(), dh->dref->usb_hiddev_devno);
    dref->vcp_version = VCP_SPEC_UNQUERIED;
-
-   // report_display_handle(dh,__func__);
    return dh;
 }
 #endif
@@ -797,7 +743,7 @@ void report_display_handle(Display_Handle * dh, const char * msg, int depth) {
  *
  * \return  string representation of handle
  */
-static char * dh_repr_a(Display_Handle * dh) {
+char * dh_repr_a(Display_Handle * dh) {
    assert(dh);
    assert(dh->dref);
 
@@ -888,9 +834,14 @@ char * dh_repr_t(Display_Handle * dh) {
 char * dh_repr(Display_Handle * dh) {
    assert(dh);
    assert(dh->dref);
+   assert(dh->repr);
+   // do not calculate and memoize here, possible race condition between threads
+   // instead now always precalculate at time of Display_Handle creation
+#ifdef OLD
    if (!dh->repr) {
       dh->repr = dh_repr_a(dh);
    }
+#endif
    return dh->repr;
 }
 
