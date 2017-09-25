@@ -399,10 +399,10 @@ dnl 1) appends to xxx_CFLAGS and xxx_LIBS the output of pkg-config --cflags|--li
 dnl 2) if no action-if-false branch defined, pkg_check_modules terminates execution if not found
 
 dnl was 2.36, can we drop this to 2.14 to allow for Debian 7.0
-PKG_CHECK_MODULES(GLIB,  glib-2.0 >= 2.14) 
-required_packages="$required_packages glib-2.0 >= 2.14"
-
-dnl Not currently used
+dnl 9/2017: need >= 2.32 for g_thread_...() functions
+PKG_CHECK_MODULES(GLIB,  glib-2.0 >= 2.32) 
+required_packages="$required_packages glib-2.0 >= 2.32"
+2nl Not currently used
 dnl PKG_CHECK_MODULES(OSINFO, libosinfo-1.0 >= 0.1, [libosinfo_found=yes], [libosinfo_found=no])
 
 PKG_CHECK_MODULES(XRANDR, xrandr)
