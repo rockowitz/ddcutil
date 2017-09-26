@@ -166,7 +166,6 @@ Public_Status_Code ddc_open_display(
             DBGMSG("No EDID for device on bus /dev/i2c-%d", dref->busno);
             if (!(callopts & CALLOPT_FORCE)) {
                close(fd);
-
                psc = DDCRC_EDID;
                goto bye;
             }
@@ -184,7 +183,6 @@ Public_Status_Code ddc_open_display(
    case DDCA_IO_USB:
 #ifdef USE_USB
       {
-         // bool emit_error_msg = true;
          DBGMSF(debug, "Opening USB device: %s", dref->usb_hiddev_name);
          assert(dref->usb_hiddev_name);
          // if (!dref->usb_hiddev_name) { // HACK
