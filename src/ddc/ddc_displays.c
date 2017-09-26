@@ -466,7 +466,7 @@ ddc_report_display_by_dref(Display_Ref * dref, int depth) {
             Public_Status_Code psc = ddc_open_display(dref, CALLOPT_ERR_MSG, &dh);
             if (psc != 0) {
                rpt_vstring(d1, "Error opening display %s, error = %s",
-                                  dref_short_name(dref), psc_desc(psc));
+                                  dref_short_name_t(dref), psc_desc(psc));
             }
             else {
                // display controller mfg, firmware version

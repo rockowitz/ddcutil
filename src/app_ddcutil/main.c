@@ -603,7 +603,7 @@ int main(int argc, char *argv[]) {
          Display_Ref * dref = g_ptr_array_index(all_displays, ndx);
          assert( memcmp(dref->marker, DISPLAY_REF_MARKER, 4) == 0);
          if (dref->dispno < 0) {
-            f0printf(FOUT, "\nSkipping invalid display on %s\n", dref_short_name(dref));
+            f0printf(FOUT, "\nSkipping invalid display on %s\n", dref_short_name_t(dref));
          }
          else {
             f0printf(FOUT, "\nProbing display %d\n", dref->dispno);

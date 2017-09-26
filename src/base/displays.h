@@ -155,7 +155,7 @@ typedef Byte Dref_Flags;
 
 #define DISPLAY_REF_MARKER "DREF"
 /** A **Display_Ref** is a logical display identifier.
- * It can be an I2C bus number, and ADL adapter/display number pair,
+ * It can contain an I2C bus number, and ADL adapter/display number pair,
  * or a USB bus number/device number pair.
  */
 typedef struct _display_ref {
@@ -175,7 +175,6 @@ typedef struct _display_ref {
 
    // for merger with Display_Rec:
    int           dispno;
-   // struct _display_ref * dref;    // self reference, for transition
    void *        detail2;
 } Display_Ref;
 
@@ -188,9 +187,9 @@ Display_Ref * create_usb_display_ref(int bus, int device, char * hiddev_devname)
 void          report_display_ref(Display_Ref * dref, int depth);
 #define DREF_SHORT_NAME_BUF_SIZE 100
 char *        dref_short_name_r(Display_Ref * dref, char * buf, int bufsize);
-char *        dref_short_name(Display_Ref * dref);  // value valid until next call
+// char *        dref_short_name(Display_Ref * dref);  // value valid until next call
 char *        dref_short_name_t(Display_Ref * dref);
-char *        dref_repr(Display_Ref * dref);  // value valid until next call
+// char *        dref_repr(Display_Ref * dref);  // value valid until next call
 char *        dref_repr_t(Display_Ref * dref);  // value valid until next call
 Display_Ref * clone_display_ref(Display_Ref * old);
 void          free_display_ref(Display_Ref * dref);

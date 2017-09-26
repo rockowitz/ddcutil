@@ -38,6 +38,7 @@
 #include <string.h>
 /** \endcond */
 
+#include "util/glib_util.h"
 #include "util/string_util.h"
 #include "util/report_util.h"
 #include "util/udev_util.h"
@@ -578,7 +579,7 @@ char * dref_short_name_r(Display_Ref * dref, char * buf, int bufsz) {
    return buf;
 }
 
-
+#ifdef OLD
 /** Creates a short description of a #Display_Ref.  The returned
  *  value is valid until the next call to this function.
  *
@@ -589,7 +590,7 @@ char * dref_short_name(Display_Ref * dref) {
    static char display_ref_short_name_buffer[100];
    return dref_short_name_r(dref, display_ref_short_name_buffer, 100);
 }
-
+#endif
 
 /** Thread safe function that returns a short description of a #Display_Ref.
  *  The returned value is valid until the next call to this function on
@@ -607,6 +608,7 @@ char * dref_short_name_t(Display_Ref * dref) {
 }
 
 
+#ifdef OLD
 /** Creates a short representation of a $Display_Ref suitable
  *  for diagnostic output.
  *
@@ -622,6 +624,7 @@ char * dref_repr(Display_Ref * dref) {
             "Display_Ref[%s]", dref_short_name_r(dref, buf, 100) );
    return display_ref_short_id_buffer;
 }
+#endif
 
 
 /** Thread safe function that returns a string representation of a #Display_Ref
@@ -636,8 +639,7 @@ char * dref_repr_t(Display_Ref * dref) {
 
    char * buf = get_thread_fixed_buffer(&dref_repr_key, 100);
    char buf2[80];
-   snprintf(buf, 100,
-            "Display_Ref[%s]", dref_short_name_r(dref, buf2, 80) );
+   snprintf(buf, 100, "Display_Ref[%s]", dref_short_name_r(dref, buf2, 80) );
    return buf;
 }
 
@@ -903,13 +905,19 @@ int hiddev_name_to_number(char * hiddev_name) {
  *
  *  \param   hiddev_number device number
  *  \return  device name
+ *
+ *  \remark It the the responsibility of the caller to free the returned string.
  */
 char * hiddev_number_to_name(int hiddev_number) {
+   assert(hiddev_number >= 0);
+#ifdef OLD
    assert(hiddev_number >= 0 && hiddev_number < 100);
    char * hiddev_dir = usb_hiddev_directory();
    int sz = strlen(hiddev_dir) + strlen("/hiddev") + 2;
    char * s = malloc(sz);
    snprintf(s, sz, "%s/hiddev%d", hiddev_dir, hiddev_number);
+#endif
+   char * s = gaux_asprintf("%s/hiddev%d", usb_hiddev_directory(),hiddev_number);
    DBGMSG("hiddev_number=%d, returning: %s", hiddev_number, s);
    return s;
 }
