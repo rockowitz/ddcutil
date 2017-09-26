@@ -647,7 +647,15 @@ char * dref_repr_t(Display_Ref * dref) {
 
 // *** Display_Handle ***
 
-
+/** Creates a #Display_Handle for an I2C #Display_Ref.
+ *
+ *  \param  fh   file handle of open display
+ *  \param  dref pointer to #Display_Ref
+ *  \return newly allocated #display_Handle
+ *
+ *  \remark
+ *  This functions handles the boilerplate of creating a #Display_Handle.
+ */
 Display_Handle * create_bus_display_handle_from_display_ref(int fh, Display_Ref * dref) {
    assert(dref->io_mode == DDCA_IO_DEVI2C);
    Display_Handle * dh = calloc(1, sizeof(Display_Handle));
@@ -662,6 +670,14 @@ Display_Handle * create_bus_display_handle_from_display_ref(int fh, Display_Ref 
 }
 
 
+/** Creates a #Display_Handle for an ADL #Display_Ref.
+ *
+ *  \param  dref pointer to #Display_Ref
+ *  \return newly allocated #display_Handle
+ *
+ *  \remark
+ *  This functions handles the boilerplate of creating a #Display_Handle.
+ */
 Display_Handle * create_adl_display_handle_from_display_ref(Display_Ref * dref) {
    assert(dref->io_mode == DDCA_IO_ADL);
    Display_Handle * dh = calloc(1, sizeof(Display_Handle));
@@ -676,6 +692,15 @@ Display_Handle * create_adl_display_handle_from_display_ref(Display_Ref * dref) 
 
 
 #ifdef USE_USB
+/** Creates a #Display_Handle for a USB #Display_Ref.
+ *
+ *  \param  fh   file handle of open display
+ *  \param  dref pointer to #Display_Ref
+ *  \return newly allocated #display_Handle
+ *
+ *  \remark
+ *  This functions handles to boilerplate of creating a #Display_Handle.
+ */
 Display_Handle * create_usb_display_handle_from_display_ref(int fh, Display_Ref * dref) {
    assert(dref->io_mode == DDCA_IO_USB);
    Display_Handle * dh = calloc(1, sizeof(Display_Handle));
