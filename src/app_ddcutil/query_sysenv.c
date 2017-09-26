@@ -1047,11 +1047,11 @@ void raw_scan_i2c_devices() {
                      rpt_vstring(d2, "Attempt %d to read feature succeeded.", tryctr+1);
                      break;
                   case DDCRC_REPORTED_UNSUPPORTED:
-                     rpt_vstring(d2, "Attempt %d to read feature returned DDCRC_REPORTED_UNSUPPORTED");
+                     rpt_vstring(d2, "Attempt %d to read feature returned DDCRC_REPORTED_UNSUPPORTED", tryctr+1);
                      psc = 0;
                      break;
                   case DDCRC_NULL_RESPONSE:
-                     rpt_vstring(d2, "Attempt %d to read feature returned DDCRC_NULL_RESPONSE");
+                     rpt_vstring(d2, "Attempt %d to read feature returned DDCRC_NULL_RESPONSE", tryctr+1);
                      break;
                   }
                   break;
