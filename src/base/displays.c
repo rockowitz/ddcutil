@@ -405,7 +405,7 @@ char * mccs_io_mode_name(DDCA_IO_Mode val) {
 /** Creates a #Display_Ref for IO mode #DDCA_IO_DEVI2C
  *
  * @param busno /dev/i2c bus number
- * \return pointer to #Display_Ref
+ * \return pointer to newly allocated #Display_Ref
  */
 Display_Ref * create_bus_display_ref(int busno) {
    Display_Ref * dref = calloc(1, sizeof(Display_Ref));
@@ -418,6 +418,13 @@ Display_Ref * create_bus_display_ref(int busno) {
    return dref;
 }
 
+
+/** Creates a #Display_Ref for IO mode #DDCA_IO_ADL
+ *
+ * @param  iAdapaterIndex  ADL adapter index
+ * @param  iDisplayIndex   ADL display index
+ * \return pointer to newly allocated #Display_Ref
+ */
 Display_Ref * create_adl_display_ref(int iAdapterIndex, int iDisplayIndex) {
    Display_Ref * dref = calloc(1, sizeof(Display_Ref));
    memcpy(dref->marker, DISPLAY_REF_MARKER, 4);
@@ -428,7 +435,15 @@ Display_Ref * create_adl_display_ref(int iAdapterIndex, int iDisplayIndex) {
    return dref;
 }
 
+
 #ifdef USE_USB
+/** Creates a #Display_Ref for IO mode #DDCA_IO_ADL
+ *
+ * @param  usb_bus USB bus number
+ * @param  usb_device USB device number
+ * @param  hiddev_devname device name, e.g. /dev/usb/hiddev1
+ * \return pointer to newly allocated #Display_Ref
+ */
 Display_Ref * create_usb_display_ref(int usb_bus, int usb_device, char * hiddev_devname) {
    assert(hiddev_devname);
    Display_Ref * dref = calloc(1, sizeof(Display_Ref));
