@@ -101,6 +101,8 @@ static bool is_known_vcp_spec(DDCA_MCCS_Version_Spec vspec) {
  * Will require modification if a new spec appears
  */
 bool vcp_version_le(DDCA_MCCS_Version_Spec v1, DDCA_MCCS_Version_Spec v2) {
+   bool debug = false;
+
    bool result = false;
    assert( is_known_vcp_spec(v1) && is_known_vcp_spec(v2) );
    assert( !(vcp_version_eq(v1, VCP_SPEC_V22) && vcp_version_eq(v2, VCP_SPEC_V30)) &&
@@ -109,11 +111,15 @@ bool vcp_version_le(DDCA_MCCS_Version_Spec v1, DDCA_MCCS_Version_Spec v2) {
 
    if (v1.major < v2.major)
       result = true;
-   else if (v1.major == v1.minor) {
+   else if (v1.major == v2.major) {
       if (v1.minor <= v2.minor)
          result = true;
    }
 
+   DBGMSF(debug, "v1=%d.%d <= v2=%d.%d returning: %s",
+                 v1.major, v2.minor,
+                 v2.major, v2.minor,
+                 bool_repr(result));
    return result;
 }
 
