@@ -478,8 +478,11 @@ void free_display_ref(Display_Ref * dref) {
    if (dref && (dref->flags & DREF_TRANSIENT) ) {
       assert(memcmp(dref->marker, DISPLAY_REF_MARKER,4) == 0);
       dref->marker[3] = 'x';
-      if (dref->usb_hiddev_name)
+      if (dref->usb_hiddev_name)       // always set by strdup()
          free(dref->usb_hiddev_name);
+      if (dref->capabilities_string)   // always a private copy
+         free(dref->capabilities_string);
+      // 9/2017: what about pedid, detail2?
       free(dref);
    }
 }

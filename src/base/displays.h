@@ -170,7 +170,7 @@ typedef struct _display_ref {
    DDCA_MCCS_Version_Spec vcp_version;
    Dref_Flags    flags;
    int           usb_hiddev_devno;       // added 4/2017
-   char *        capabilities_string;    // added 4/2017
+   char *        capabilities_string;    // added 4/2017, private copy
    Parsed_Edid * pedid;                  // added 4/2017
 
    // for merger with Display_Rec:
