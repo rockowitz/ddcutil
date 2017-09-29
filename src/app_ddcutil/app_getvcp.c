@@ -275,7 +275,7 @@ app_show_feature_set_values_by_display_handle(
  *
  * If the VCP version is 2.1 or less a single feature is
  * read from x52.  For VCP version 3.0 and 2.2, x52 is a
- * FIFO is a queue of changed features.
+ * FIFO queue of changed features.
  *
  * Finally, 1 is written to feature x02 as a reset.
  *
@@ -284,7 +284,7 @@ app_show_feature_set_values_by_display_handle(
  */
 void
 app_read_changes(Display_Handle * dh) {
-   bool debug = false;
+   bool debug = true;
    // DBGMSF(debug, "Starting");
    int MAX_CHANGES = 20;
    // bool new_values_found = false;
@@ -303,8 +303,8 @@ app_read_changes(Display_Handle * dh) {
     */
 
    Parsed_Nontable_Vcp_Response * p_nontable_response = NULL;
-
    DDCA_MCCS_Version_Spec vspec = get_vcp_version_by_display_handle(dh);
+   // DBGMSF(debug, "VCP version: %d.%d", vspec.major, vspec.minor);
    psc = get_nontable_vcp_value(
             dh,
             0x02,
@@ -328,7 +328,7 @@ app_read_changes(Display_Handle * dh) {
                   0x52,
                   &p_nontable_response);
          if (psc != 0) {
-             DBGMSG("get_nontable_vcp_value() returned %s", psc_desc(psc));
+             DBGMSG("get_nontable_vcp_value() for VCP feature x52 returned %s", psc_desc(psc));
              return;
           }
           Byte changed_feature = p_nontable_response->sl;
@@ -354,6 +354,9 @@ app_read_changes(Display_Handle * dh) {
                 break;
              }
              app_show_single_vcp_value_by_feature_id(dh, changed_feature, false);
+         }
+         if (ctr == MAX_CHANGES) {
+            DBGMSG("Reached loop guard value MAX_CHANGES (%d)", MAX_CHANGES);
          }
       }
 
@@ -425,8 +428,13 @@ app_read_changes_usb(Display_Handle * dh) {
  */
 void
 app_read_changes_forever(Display_Handle * dh) {
+   bool debug = true;
+
    printf("Watching for VCP feature changes on display %s\n", dh_repr(dh));
    printf("Type ^C to exit...\n");
+   // show version here instead of in called function to declutter debug output:
+   DDCA_MCCS_Version_Spec vspec = get_vcp_version_by_display_handle(dh);
+   DBGMSF(debug, "VCP version: %d.%d", vspec.major, vspec.minor);
    while(true) {
 #ifdef USE_USB
       if (dh->dref->io_mode == DDCA_IO_USB)
