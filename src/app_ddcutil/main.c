@@ -563,6 +563,7 @@ int main(int argc, char *argv[]) {
    }
 
    else if (parsed_cmd->cmd_id == CMDID_INTERROGATE) {
+      set_ferr(FOUT);    // ensure that all messages are collected
       f0printf(FOUT, "Setting output level verbose...\n");
       set_output_level(DDCA_OL_VERBOSE);
       f0printf(FOUT, "Setting maximum retries...\n");
