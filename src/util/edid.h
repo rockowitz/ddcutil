@@ -87,6 +87,7 @@ struct {
    ushort       by;                      ///< blue  y coordinate
    Byte         video_input_definition;  /// EDID byte 20 (x14)
    // bool         is_digital_input;      // from byte 20 (x14), but 7
+   Byte         supported_features;      ///< EDID byte 24 (x18) supported features bitmap
    uint8_t      extension_flag;          ///< number of optional extension blocks
    char         edid_source[EDID_SOURCE_FIELD_SIZE];  ///< describes source of EDID
 } Parsed_Edid;

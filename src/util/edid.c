@@ -281,6 +281,8 @@ Parsed_Edid * create_parsed_edid(Byte* edidbytes) {
    parsed_edid->video_input_definition = edidbytes[0x14];
    // printf("(%s) video_input_parms_bitmap = 0x%02x\n", __func__, video_input_parms_bitmap);
    // parsed_edid->is_digital_input = (parsed_edid->video_input_definition & 0x80) ? true : false;
+
+   parsed_edid->supported_features = edidbytes[0x18];
    parsed_edid->extension_flag = edidbytes[0x7e];
 
    if (!ok) {
@@ -320,6 +322,7 @@ void free_parsed_edid(Parsed_Edid * parsed_edid) {
  */
 void report_parsed_edid_base(Parsed_Edid * edid, bool verbose, bool show_raw, int depth) {
    int d1 = depth+1;
+   int d2 = depth+2;
    // verbose = true;
    if (edid) {
       rpt_vstring(depth,"EDID synopsis:");
@@ -332,56 +335,106 @@ void report_parsed_edid_base(Parsed_Edid * edid, bool verbose, bool show_raw, in
       rpt_vstring(d1,"EDID version:     %d.%d", edid->edid_version_major, edid->edid_version_minor);
 
       if (verbose) {
-      rpt_vstring(d1,"Product code:     0x%04x (%u)",      edid->model_hex, edid->model_hex);
-      // useless, binary serial number is typically 0x00000000 or 0x01010101
-      // rpt_vstring(d1,"Binary sn:        %u (0x%08x)", edid->serial_binary, edid->serial_binary);
-      rpt_vstring(d1,"Extra descriptor: %s",          edid->extra_descriptor_string);
-      char explbuf[100];
-      explbuf[0] = '\0';
-      if (edid->video_input_definition & 0x80) {
-         strcpy(explbuf, "Digital Input");
-         if (edid->edid_version_major == 1 && edid->edid_version_minor >= 4) {
-            switch (edid->video_input_definition & 0x0f) {
-            case 0x00:
-               strcat(explbuf, " (Digital interface not defined)");
-               break;
-            case 0x01:
-               strcat(explbuf, " (DVI)");
-               break;
-            case 0x02:
-               strcat(explbuf, " (HDMI-a)");
-               break;
-            case 0x03:
-               strcat(explbuf, " (HDMI-b");
-               break;
-            case 0x04:
-               strcat(explbuf, " (MDDI)");
-               break;
-            case 0x05:
-               strcat(explbuf, " (DisplayPort)");
-               break;
-            default:
-               strcat(explbuf, " (Invalid DVI standard)");
+         rpt_vstring(d1,"Product code:     0x%04x (%u)",      edid->model_hex, edid->model_hex);
+         // useless, binary serial number is typically 0x00000000 or 0x01010101
+         // rpt_vstring(d1,"Binary sn:        %u (0x%08x)", edid->serial_binary, edid->serial_binary);
+         rpt_vstring(d1,"Extra descriptor: %s",          edid->extra_descriptor_string);
+
+         char explbuf[100];
+         explbuf[0] = '\0';
+         if (edid->video_input_definition & 0x80) {
+            strcpy(explbuf, "Digital Input");
+            if (edid->edid_version_major == 1 && edid->edid_version_minor >= 4) {
+               switch (edid->video_input_definition & 0x0f) {
+               case 0x00:
+                  strcat(explbuf, " (Digital interface not defined)");
+                  break;
+               case 0x01:
+                  strcat(explbuf, " (DVI)");
+                  break;
+               case 0x02:
+                  strcat(explbuf, " (HDMI-a)");
+                  break;
+               case 0x03:
+                  strcat(explbuf, " (HDMI-b");
+                  break;
+               case 0x04:
+                  strcat(explbuf, " (MDDI)");
+                  break;
+               case 0x05:
+                  strcat(explbuf, " (DisplayPort)");
+                  break;
+               default:
+                  strcat(explbuf, " (Invalid DVI standard)");
+               }
             }
          }
-      }
-      else {
-         strcpy(explbuf, "Analog Input");
-      }
+         else {
+            strcpy(explbuf, "Analog Input");
+         }
+         rpt_vstring(d1,"Video input definition: 0x%02x - %s", edid->video_input_definition, explbuf);
+      // rpt_vstring(d1,"Video input:      %s",          (edid->is_digital_input) ? "Digital" : "Analog");
+         // end, video_input_definition interpretation
 
-      rpt_vstring(d1,"Video input definition: 0x%02x - %s", edid->video_input_definition, explbuf);
-   // rpt_vstring(d1,"Video input:      %s",          (edid->is_digital_input) ? "Digital" : "Analog");
-      rpt_vstring(d1,"White x,y:        %.3f, %.3f",  edid->wx/1024.0, edid->wy/1024.0);
-      rpt_vstring(d1,"Red   x,y:        %.3f, %.3f",  edid->rx/1024.0, edid->ry/1024.0);
-      rpt_vstring(d1,"Green x,y:        %.3f, %.3f",  edid->gx/1024.0, edid->gy/1024.0);
-      rpt_vstring(d1,"Blue  x,y:        %.3f, %.3f",  edid->bx/1024.0, edid->by/1024.0);
-      // restrict to EDID version >= 1.3?
-      rpt_vstring(d1,"Extension blocks: %u",    edid->extension_flag);
-      }
+         rpt_vstring(d1, "Supported features:");
+         if (edid->supported_features & 0x80)
+            rpt_vstring(d2, "DPMS standby");
+         if (edid->supported_features & 0x40)
+            rpt_vstring(d2, "DPMS suspend");
+         if (edid->supported_features & 0x20)
+            rpt_vstring(d2, "DPMS active-off");
+         Byte display_type = (edid->supported_features & 0x14) >> 3;     // bits 4-3
+         if (edid->video_input_definition & 0x80) {   // digital input
+            switch(display_type) {
+            case 0:
+               rpt_vstring(d2, "Digital display type: RGB 4:4:4");
+               break;
+            case 1:
+               rpt_vstring(d2, "Digital display type: RGB 4:4:4 + YCrCb 4:4:4");
+               break;
+            case 2:
+               rpt_vstring(d2, "Digital display type: RGB 4:4:4 + YCrCb 4:2:2");
+               break;
+            case 3:
+               rpt_vstring(d2, "Digital display type: RGB 4:4:4 + YCrCb 4:4:4 + YCrCb 4:2:2");
+               break;
+            default:
+               // should be PROGRAM_LOGIC_ERROR, but that would violdate layering
+               rpt_vstring(d2, "Invalid digital display type: 0x02", display_type);
+            }
+         }
+         else {   // analog input
+            switch(display_type) {
+            case 0:
+               rpt_vstring(d2, "Analog display type: Monochrome or grayscale");
+               break;
+            case 1:
+               rpt_vstring(d2, "Analog display type: Color");
+               break;
+            case 2:
+               rpt_vstring(d2, "Analog display type: Non-RGB color");
+               break;
+            case 3:
+               rpt_vstring(d2, "Undefined analog display type");
+               break;
+            default:
+               // should be PROGRAM_LOGIC_ERROR, but that would violdate layering
+               rpt_vstring(d2, "Invalid analog display type: 0x02", display_type);
+            }
+         }
+         rpt_vstring(d2, "Standard sRGB color space: %s", (display_type & 0x02) ? "True" : "False");
+         // end supported_features interpretation
 
-      if (verbose) {
-   //      if (strlen(edid->edid_source) > 0)
-            rpt_vstring(depth,"EDID source: %s",        edid->edid_source);
+         rpt_vstring(d1,"White x,y:        %.3f, %.3f",  edid->wx/1024.0, edid->wy/1024.0);
+         rpt_vstring(d1,"Red   x,y:        %.3f, %.3f",  edid->rx/1024.0, edid->ry/1024.0);
+         rpt_vstring(d1,"Green x,y:        %.3f, %.3f",  edid->gx/1024.0, edid->gy/1024.0);
+         rpt_vstring(d1,"Blue  x,y:        %.3f, %.3f",  edid->bx/1024.0, edid->by/1024.0);
+
+         // restrict to EDID version >= 1.3?
+         rpt_vstring(d1,"Extension blocks: %u",    edid->extension_flag);
+
+      //  if (strlen(edid->edid_source) > 0)
+         rpt_vstring(depth,"EDID source: %s",        edid->edid_source);
       }
       if (show_raw) {
          rpt_vstring(depth,"EDID hex dump:");
