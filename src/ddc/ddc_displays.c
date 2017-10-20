@@ -83,7 +83,8 @@ void ddc_set_async_threshold(int threshold) {
 }
 
 
-
+#ifdef OLD
+// NOTICE EXTENDED REMARKS IN COMMENTS, MAY WANT TO PRESERVE
 /** Checks that DDC communication is working by trying to read the value
  *  of feature x10 (brightness).
  *
@@ -131,10 +132,12 @@ bool check_ddc_communication(Display_Handle * dh) {
    DBGMSF(debug, "Returning: %s", bool_repr(result));
    return result;
 }
+#endif
 
 
+#ifdef OLD
 /** Checks whether the monitor uses a DDC Null response to report
- *  and unspupported VCP code by attempted to read feature 0x00.
+ *  an unsupported VCP code by attempting to read feature 0x00.
  *
  *  \param dh  #Display_Handle of monitor
  *  \retval true  DDC Null Response was received
@@ -142,10 +145,13 @@ bool check_ddc_communication(Display_Handle * dh) {
  *
  *  \remark
  *  Monitors should set the unsupported feature bit in a valid DDC
- *  response, but a few monitors (mis)use the Null Reponse instead.
+ *  response, but a few monitors (mis)use the Null Response instead.
  *  \remark
  *  Note that this test is not perfect, as a Null Response might
  *  in fact indicate a transient error, but that is rare.
+ *  \remark
+ *  Output level should have been set <= DDCA_OL_NORMAL prior to this call since
+ *  verbose output is distracting.
  */
 static
 bool check_monitor_ddc_null_response(Display_Handle * dh) {
@@ -182,20 +188,22 @@ bool check_monitor_ddc_null_response(Display_Handle * dh) {
    DBGMSF(debug, "Returning: %s", bool_repr(result));
    return result;
 }
+#endif
 
 
+#ifdef OLD
 /** Collects most initial monitor checks to perform them on a single open of the
  *  monitor device, and to avoid repeating them.
  *
- *  Performs the followign tests:
+ *  Performs the following tests:
  *  - Checks that DDC communication is working.
- *  - Checks if the monitor uses DDC Mull Response to indicate invalid VCP code
+ *  - Checks if the monitor uses DDC Null Response to indicate invalid VCP code
  *  - Queries the VCP (MCCS) version.
  *
  *  \param dh  pointer to #Display_Handle for open monitor device
  *  \return **true** if DDC communication with the display succeeded, **false** otherwise.
  */
-bool initial_checks_by_dh(Display_Handle * dh) {
+bool initial_checks_by_dh_old(Display_Handle * dh) {
    bool debug = false;
    DBGMSF(debug, "Starting. dh=%s", dh_repr_t(dh));
 
@@ -221,9 +229,39 @@ bool initial_checks_by_dh(Display_Handle * dh) {
    DBGMSF(debug, "Returning: %s", bool_repr(communication_working));
    return communication_working;
 }
+#endif
 
 
-bool initial_checks_by_dh_new(Display_Handle * dh) {
+/** Collects initial monitor checks to perform them on a single open of the
+ *  monitor device, and to avoid repeating them.
+ *
+ *  Performs the following tests:
+ *  - Checks that DDC communication is working.
+ *  - Checks if the monitor uses DDC Null Response to indicate invalid VCP code
+ *
+ *  \param dh  pointer to #Display_Handle for open monitor device
+ *  \return **true** if DDC communication with the display succeeded, **false** otherwise.
+ *
+ *  \remark
+ *  Sets bits in dh->dref->flags
+ *   *  \remark
+ *  It has been observed that DDC communication can fail even if slave address x37
+ *  is valid on the I2C bus.
+ *  \remark
+ *  ADL does not notice that a reported display, e.g. Dell 1905FP, does not support
+ *  DDC.
+ *  \remark
+ *  Monitors are supposed to set the unsupported feature bit in a valid DDC
+ *  response, but a few monitors (mis)use the Null Response instead to indicate
+ *  an unsupported feature.
+ *  \remark
+ *  Note that the test here is not perfect, as a Null Response might
+ *  in fact indicate a transient error, but that is rare.
+ *  \remark
+ *  Output level should have been set <= DDCA_OL_NORMAL prior to this call since
+ *  verbose output is distracting.
+ */
+bool initial_checks_by_dh(Display_Handle * dh) {
    bool debug = false;
    DBGMSF(debug, "Starting. dh=%s", dh_repr_t(dh));
    assert(dh);
@@ -249,18 +287,18 @@ bool initial_checks_by_dh_new(Display_Handle * dh) {
    }
    bool communication_working = dh->dref->flags & DREF_DDC_COMMUNICATION_WORKING;
 
-   if (communication_working) {
-
+   // commented out - defer checking version until actually needed to avoid
+   // additional DDC io during monitor detection
+   // if (communication_working) {
       // if ( vcp_version_is_unqueried(dh->dref->vcp_version)) {
       //    dh->dref->vcp_version = get_vcp_version_by_display_handle(dh);
       //    // dh->vcp_version = dh->dref->vcp_version;
       // }
-   }
+   // }
 
    DBGMSF(debug, "Returning: %s", bool_repr(communication_working));
    return communication_working;
 }
-
 
 
 /** Given a #Display_Ref, opens the monitor device and calls #initial_checks_by_dh()
@@ -276,7 +314,7 @@ bool initial_checks_by_dref(Display_Ref * dref) {
 
    psc = ddc_open_display(dref, CALLOPT_ERR_MSG | CALLOPT_ERR_ABORT, &dh);
    if (psc == 0)  {
-      result = initial_checks_by_dh_new(dh);
+      result = initial_checks_by_dh(dh);
       ddc_close_display(dh);
    }
 
