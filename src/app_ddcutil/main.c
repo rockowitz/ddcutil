@@ -38,6 +38,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 
 #include "../ddc/ddc_try_stats.h"
 /** \endcond */
@@ -479,7 +480,6 @@ int main(int argc, char *argv[]) {
 
    // start of commands that actually access monitors
 
-
    else if (parsed_cmd->cmd_id == CMDID_DETECT) {
       ddc_ensure_displays_detected();
       ddc_report_displays(DDC_REPORT_ALL_DISPLAYS, 0);
@@ -532,6 +532,7 @@ int main(int argc, char *argv[]) {
    }
 
    else if (parsed_cmd->cmd_id == CMDID_ENVIRONMENT) {
+      dup2(1,2);   // redirect stderr to stdout
       ddc_ensure_displays_detected();   // *** NEEDED HERE ??? ***
 
       f0printf(FOUT, "The following tests probe the runtime environment using multiple overlapping methods.\n");
@@ -541,6 +542,7 @@ int main(int argc, char *argv[]) {
 
    else if (parsed_cmd->cmd_id == CMDID_USBENV) {
 #ifdef USE_USB
+      dup2(1,2);   // redirect stderr to stdout
       ddc_ensure_displays_detected();   // *** NEEDED HERE ??? ***
       f0printf(FOUT, "The following tests probe for USB connected monitors.\n");
       // DBGMSG("Exploring USB runtime environment...\n");
@@ -563,7 +565,8 @@ int main(int argc, char *argv[]) {
    }
 
    else if (parsed_cmd->cmd_id == CMDID_INTERROGATE) {
-      set_ferr(FOUT);    // ensure that all messages are collected
+      dup2(1,2);   // redirect stderr to stdout
+      // set_ferr(FOUT);    // ensure that all messages are collected - made unnecessary by dup2()
       f0printf(FOUT, "Setting output level verbose...\n");
       set_output_level(DDCA_OL_VERBOSE);
       f0printf(FOUT, "Setting maximum retries...\n");
