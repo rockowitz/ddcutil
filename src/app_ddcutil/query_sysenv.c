@@ -549,12 +549,46 @@ void report_dmicode_group(char * header, int depth) {
    if (lines) {
       for (int ndx = 0; ndx < lines->len; ndx++) {
          char * s = g_ptr_array_index(lines, ndx);
-         rpt_title(s, 1);
+         rpt_title(s, depth);
       }
       g_ptr_array_free(lines,true);
    }
    else
-      rpt_vstring(1, "Command failed: %s", cmd);
+      rpt_vstring(depth, "Command failed: %s", cmd);
+}
+
+
+void report_endian(int depth) {
+   int d1 = depth+1;
+   rpt_title("Byte order checks:", depth);
+
+   bool is_bigendian = (*(uint16_t *)"\0\xff" < 0x100);
+   rpt_vstring(d1, "Is big endian (local test):       %s", bool_repr(is_bigendian));
+
+   rpt_vstring(d1, "WORDS_BIGENDIAN macro (autoconf): "
+#ifdef WORDS_BIGENDIAN
+         "defined"
+#else
+         "not defined"
+#endif
+         );
+   rpt_vstring(d1, "__BYTE_ORDER__ macro (gcc):       "
+#if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
+         "__ORDER_LITTLE_ENDIAN__"
+#elif __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
+         "__ORDER_BIG_ENDIAN__"
+#elif __BYTE_ORDER__ == __ORDER_PDP_ENDIAN__
+         "__ORDER_PDP_ENDIAN__"
+#else
+         "unexpected value"
+#endif
+         );
+
+#ifdef REDUNDANT
+   __u32 i = 1;
+   bool is_bigendian2 =  ( (*(char*)&i) == 0 );
+   rpt_vstring(d1, "Is big endian (runtime test): %s", bool_repr(is_bigendian2));
+#endif
 }
 
 
@@ -664,6 +698,8 @@ static void query_base_env() {
       g_ptr_array_free(lines,true);
 #endif
 
+      rpt_nl();
+      report_endian(0);
    }
 
 }
