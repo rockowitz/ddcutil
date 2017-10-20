@@ -270,6 +270,18 @@ AS_IF([test "x$enable_drm" == "xyes"],
         AC_MSG_NOTICE( [drm... disabled] )
      )
 
+dnl *** configure option: --enable-x11
+AC_ARG_ENABLE([x11],
+              [ AS_HELP_STRING( [--enable-x11=@<:@yes/no@:>@], [Use X11 in diagnostics@<:@default=yes@:>@] )],
+              [enable_x11=${enableval}],
+              [enable_x11=yes] )
+AS_IF([test "x$enable_x11" == "xyes"],
+        AC_MSG_NOTICE( [x11... enabled]  )
+      ,
+        AC_MSG_NOTICE( [x11... disabled] )
+     )
+
+
 dnl *** configure option: --enable-doxygen
 AC_ARG_ENABLE([doxygen],
               [ AS_HELP_STRING( [--enable-doxygen=@<:@no/yes@:>@], [Build API documentation using Doxygen (if it is installed)@<:@default=no@:>@] )],
@@ -463,13 +475,42 @@ AS_IF([test "x$enable_drm" == "xyes"],
         AC_MSG_NOTICE( [drm... disabled] )
      )
 
-
-
 AS_IF( [test 0$DBG -ne 0], 
        [
           AC_MSG_NOTICE( [LIBDRM_CFLAGS:    $LIBDRM_CFLAGS] )
           AC_MSG_NOTICE( [LIBDRM_LIBS:      $LIBDRM_LIBS] )
        ]) 
+
+
+### X11 
+
+AS_IF([test "x$enable_x11" == "xyes"],
+         [ PKG_CHECK_MODULES(LIBX11, x11, 
+             [x11_found=yes], 
+             [x11_found=no
+              AC_MSG_WARN( [X11 not found. Forcing --disable-x11])
+              enable_x11=no
+             ]
+           ) 
+         ],
+         [ AC_MSG_NOTICE( [x11 disabled, not checking for library X11] ) ]
+     )
+
+AM_CONDITIONAL([USE_LIBX11_COND], [test "x$enable_x11" == "xyes"] )
+AS_IF([test "x$enable_x11" == "xyes"],
+        AC_DEFINE([USE_X11], [1], [Use X11])
+        AC_MSG_NOTICE( [x11... enabled]  )
+      ,
+        AC_MSG_NOTICE( [x11... disabled] )
+     )
+
+dnl Note cflags and libs, but don't need to use in makefiles 
+AS_IF( [test 0$DBG -ne 0], 
+       [
+          AC_MSG_NOTICE( [LIBX11_CFLAGS:    $LIBX11_CFLAGS] )
+          AC_MSG_NOTICE( [LIBX11_LIBS:      $LIBX11_LIBS] )
+       ]) 
+
 
 
 
@@ -944,6 +985,7 @@ AC_MSG_RESULT([
 	enable_gobject          ${enable_gobject}
 	enable_usb:             ${enable_usb}
 	enable_drm:             ${enable_drm}   
+	enable_x11:             ${enable_x11}   
 	enable_doxygen:         ${enable_doxygen}
 	enable_failsim:         ${enable_failsim}
 

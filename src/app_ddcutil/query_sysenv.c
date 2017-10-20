@@ -49,9 +49,11 @@
 #include <sys/utsname.h>
 #include <time.h>
 #include <unistd.h>
+#ifdef USE_X11
 #include <X11/Xlib.h>
 #include <X11/Xatom.h>
 #include <X11/extensions/Xrandr.h>
+#endif
 
 #include "util/data_structures.h"
 #include "util/device_id_util.h"
@@ -60,7 +62,9 @@
 #include "util/report_util.h"
 #include "util/string_util.h"
 #include "util/subprocess_util.h"
+#ifdef USE_X11
 #include "util/x11_util.h"
+#endif
 #include "util/udev_i2c_util.h"
 #include "util/udev_usb_util.h"
 #include "util/udev_util.h"
@@ -1994,7 +1998,7 @@ static void query_i2c_buses() {
    i2c_report_buses(true, 1 /* indentation depth */);    // in i2c_bus_core.c
 }
 
-
+#ifdef USE_X11
 //
 // Using X11 API
 //
@@ -2043,6 +2047,7 @@ void query_x11() {
    // GPtrArray *  outputs = get_x11_connected_outputs(x11_disp);
    // close_x11_display(x11_disp);
 }
+#endif
 
 
 //
@@ -2413,7 +2418,9 @@ void query_sysenv() {
 
       raw_scan_i2c_devices();
 
+#ifdef USE_X11
       query_x11();
+#endif
 
       // probe_udev_subsystem() is in udev_util.c, which is only linked in if USE_USB
       probe_i2c_devices_using_udev();
