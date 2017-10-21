@@ -509,25 +509,28 @@ static Public_Status_Code ddc_write_read_raw(
       DDC_Packet *     request_packet_ptr,
       int              max_read_bytes,
       Byte *           readbuf,
-      int *            pbytes_received
+      int *            p_rcvd_bytes_ct
      )
 {
    bool debug = false;
-   DBGTRC(debug, TRACE_GROUP, "Starting. dh=%s, readbuf=%p", dh_repr_t(dh), readbuf);
+   DBGTRC(debug, TRACE_GROUP, "Starting. dh=%s, readbuf=%p, max_read_bytes=%d",
+                              dh_repr_t(dh), readbuf, max_read_bytes);
    if (debug) {
       DBGMSG("request_packer_ptr->raw_bytes:");
       buffer_dump(request_packet_ptr->raw_bytes);
    }
    Public_Status_Code psc;
 
+   // This function should not be called for USB
    assert(dh->dref->io_mode == DDCA_IO_DEVI2C || dh->dref->io_mode == DDCA_IO_ADL);
+
    if (dh->dref->io_mode == DDCA_IO_DEVI2C) {
         psc =  ddc_i2c_write_read_raw(
               dh,
               request_packet_ptr,
               max_read_bytes,
               readbuf,
-              pbytes_received
+              p_rcvd_bytes_ct
        );
    }
    else {
@@ -536,13 +539,17 @@ static Public_Status_Code ddc_write_read_raw(
               request_packet_ptr,
               max_read_bytes,
               readbuf,
-              pbytes_received
+              p_rcvd_bytes_ct
        );
    }
 
-   DBGTRC(debug, TRACE_GROUP, "Done, returning: %s", psc_desc(psc));
-   if (debug && psc == 0) {
-      DBGMSG("readbuf: %s", hexstring_t(readbuf, *pbytes_received));
+   DBGTRC(debug, TRACE_GROUP, "Done. Returning: %s", psc_desc(psc));
+   if (psc == 0) {
+      DBGTRC(debug, TRACE_GROUP,
+             "      readbuf: %s",
+             hexstring3_t(readbuf, *p_rcvd_bytes_ct, " ", 4, false));
+
+            // hexstring_t(readbuf, *pbytes_received));
    }
    return psc;
 }
