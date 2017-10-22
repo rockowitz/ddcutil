@@ -178,6 +178,8 @@ get_raw_value_for_feature_table_entry(
    assert(dh->dref);
 
    Public_Status_Code psc = 0;
+   RETRY_HISTORY_LOCAL(retry_history);    // should this be a parm?
+
    DDCA_MCCS_Version_Spec vspec = get_vcp_version_by_display_handle(dh);
    char * feature_name = get_version_sensitive_feature_name(frec, vspec);
 
@@ -203,7 +205,8 @@ get_raw_value_for_feature_table_entry(
               dh,
               feature_code,
               feature_type,
-              &valrec);
+              &valrec,
+              retry_history);
    }
    assert ( (psc==0 && valrec) || (psc!=0 && !valrec) );
 

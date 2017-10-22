@@ -26,18 +26,16 @@
 #ifndef DDC_READ_CAPABILITIES_H_
 #define DDC_READ_CAPABILITIES_H_
 
-#ifdef NOT_USED
-#include "util/data_structures.h"
-#endif
-
 #include "base/displays.h"
+#include "base/retry_history.h"
 #include "base/status_code_mgt.h"
 
-
 // Get capability string for monitor.
-#ifdef NOT_USED
-Public_Status_Code get_capabilities_buffer(Display_Handle * dh, Buffer** ppCapabilitiesBuffer);
-#endif
-Public_Status_Code get_capabilities_string(Display_Handle * dh, char** pcaps);
+
+Public_Status_Code
+get_capabilities_string(
+      Display_Handle * dh,
+      char**           pcaps,
+      Retry_History *  retry_history);
 
 #endif /* DDC_READ_CAPABILITIES_H_ */

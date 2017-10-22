@@ -45,6 +45,7 @@
 
 #include "base/core.h"
 #include "base/ddc_errno.h"
+#include "base/retry_history.h"
 #include "base/sleep.h"
 #include "base/vcp_version.h"
 
@@ -291,6 +292,10 @@ app_read_changes(Display_Handle * dh) {
 
    Public_Status_Code psc = 0;
 
+   Retry_History hist;
+   retry_history_clear(&hist);
+   Retry_History * retry_history = &hist;
+
    // read 02h
    // xff: no user controls
    // x01: no new control values
@@ -308,9 +313,12 @@ app_read_changes(Display_Handle * dh) {
    psc = get_nontable_vcp_value(
             dh,
             0x02,
-            &p_nontable_response);
+            &p_nontable_response,
+            retry_history);
    if (psc != 0) {
       DBGMSG("get_nontable_vcp_value() returned %s", psc_desc(psc));
+      if (psc == DDCRC_RETRIES && retry_history)
+         DBGMSG("    Try errors: %s", retry_history_string(retry_history));
    }
    else if (p_nontable_response->sl == 0x01) {
       DBGMSF(debug, "No new control values found");
@@ -320,15 +328,19 @@ app_read_changes(Display_Handle * dh) {
       DBGMSG("x02 value: 0x%02x", p_nontable_response->sl);
       free(p_nontable_response);
       p_nontable_response = NULL;
+      retry_history_clear(retry_history);
 
       // new_values_found = true;
       if ( vcp_version_le(vspec, VCP_SPEC_V21) ) {
          psc = get_nontable_vcp_value(
                   dh,
                   0x52,
-                  &p_nontable_response);
+                  &p_nontable_response,
+                  retry_history);
          if (psc != 0) {
              DBGMSG("get_nontable_vcp_value() for VCP feature x52 returned %s", psc_desc(psc));
+             if (psc == DDCRC_RETRIES && retry_history)
+                DBGMSG("    Try errors: %s", retry_history_string(retry_history));
              return;
           }
           Byte changed_feature = p_nontable_response->sl;
@@ -341,9 +353,12 @@ app_read_changes(Display_Handle * dh) {
             psc = get_nontable_vcp_value(
                      dh,
                      0x52,
-                     &p_nontable_response);
+                     &p_nontable_response,
+                     retry_history);
             if (psc != 0) {
                 DBGMSG("get_nontable_vcp_value() returned %s", psc_desc(psc));
+                if (psc == DDCRC_RETRIES && retry_history)
+                   DBGMSG("    Try errors: %s", retry_history_string(retry_history));
                 return;
              }
              Byte changed_feature = p_nontable_response->sl;
@@ -361,9 +376,13 @@ app_read_changes(Display_Handle * dh) {
       }
 
       if (psc == 0) {
-         psc = set_nontable_vcp_value(dh, 0x02, 0x01);
-         if (psc != 0)
+         retry_history_clear(retry_history);
+         psc = set_nontable_vcp_value(dh, 0x02, 0x01, retry_history);
+         if (psc != 0) {
             DBGMSG("set_nontable_vcp_value_by_display_handle() returned %s", psc_desc(psc));
+            if (psc == DDCRC_RETRIES && retry_history)
+                DBGMSG("    Try errors: %s", retry_history_string(retry_history));
+         }
          else
             DBGMSG("reset new control value successful");
       }

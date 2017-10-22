@@ -283,6 +283,7 @@ create_dumpload_data_from_g_ptr_array(GPtrArray * garray) {
  *
  * @param   dh      display handle
  * @param   vset    values to set
+ * @param   retry_history  if non-null, records retryable errors
  *
  * @return status code of first error, or 0 if no errors
  *
@@ -292,7 +293,8 @@ create_dumpload_data_from_g_ptr_array(GPtrArray * garray) {
 Public_Status_Code
 ddc_set_multiple(
       Display_Handle* dh,
-      Vcp_Value_Set   vset)
+      Vcp_Value_Set   vset,
+      Retry_History * retry_history)
 {
    Public_Status_Code psc = 0;
    int value_ct = vcp_value_set_size(vset);
@@ -321,10 +323,12 @@ ddc_set_multiple(
       // }
 
 
-      psc = set_vcp_value(dh, vrec);
+      psc = set_vcp_value(dh, vrec, retry_history);
       if (psc != 0) {
          f0printf(FERR, "Error setting value for VCP feature code 0x%02x: %s\n",
                          feature_code, psc_desc(psc) );
+         if (psc == DDCRC_RETRIES && retry_history)
+            f0printf(FERR, "    Try errors: %s\n", retry_history_string(retry_history));
          f0printf(FERR, "Terminating.");
          break;
       }
@@ -342,13 +346,15 @@ ddc_set_multiple(
  * @param  dh         display handle for open display,
  *                    if NULL, open the find the display based on the identifiers
  *                    in the data and open it
+ * @param  retry_history  if non-null, collects retryable errors
  *
  * @return   status code
  */
 Public_Status_Code
 loadvcp_by_dumpload_data(
       Dumpload_Data *   pdata,
-      Display_Handle *  dh)
+      Display_Handle *  dh,
+      Retry_History *   retry_history)
 {
    assert(pdata);
 
@@ -415,7 +421,7 @@ loadvcp_by_dumpload_data(
       }
    }
 
-   psc = ddc_set_multiple(dh, pdata->vcp_values);
+   psc = ddc_set_multiple(dh, pdata->vcp_values, retry_history);
 
    // close the display only if this function opened it
    if (!dh_argument)
@@ -423,6 +429,8 @@ loadvcp_by_dumpload_data(
 
 bye:
    DBGMSF(debug, "Returning: %s", psc_desc(psc));
+   if (psc == DDCRC_RETRIES && retry_history && debug)
+      DBGMSG("        Try errors: %s", retry_history_string(retry_history));
    return psc;
 }
 
@@ -433,6 +441,7 @@ bye:
  * Arguments:
  *    ntsa    null terminated array of strings
  *    dh      display handle
+ *    retry_history  if non-null, collects retryable errors
  *
  * Returns:
  *    0 if success, status code if not
@@ -440,7 +449,8 @@ bye:
 Public_Status_Code
 loadvcp_by_ntsa(
       Null_Terminated_String_Array ntsa,
-      Display_Handle *             dh)
+      Display_Handle *             dh,
+      Retry_History *              retry_history)
 {
    bool debug = false;
 
@@ -469,7 +479,7 @@ loadvcp_by_ntsa(
            report_dumpload_data(pdata, 0);
            rpt_pop_output_dest();
       }
-      psc = loadvcp_by_dumpload_data(pdata, dh);
+      psc = loadvcp_by_dumpload_data(pdata, dh, retry_history);
       free_dumpload_data(pdata);
    }
    return psc;
@@ -483,6 +493,7 @@ loadvcp_by_ntsa(
  * Arguments:
  *    catenated    data string
  *    dh           display handle
+ *    retry_history if non-null, collects retryable errors
  *
  * Returns:
  *    0 if success, status code if not
@@ -491,10 +502,11 @@ loadvcp_by_ntsa(
 Public_Status_Code
 loadvcp_by_string(
       char *           catenated,
-      Display_Handle * dh)
+      Display_Handle * dh,
+      Retry_History *  retry_history)
 {
    Null_Terminated_String_Array nta = strsplit(catenated, ";");
-   Public_Status_Code psc = loadvcp_by_ntsa(nta, dh);
+   Public_Status_Code psc = loadvcp_by_ntsa(nta, dh, retry_history);
    ntsa_free(nta);
    return psc;
 }

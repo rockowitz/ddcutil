@@ -207,6 +207,7 @@ bool loadvcp_by_file(const char * fn, Display_Handle * dh) {
    bool verbose = (output_level >= DDCA_OL_VERBOSE);
    bool ok = false;
    Public_Status_Code psc = 0;
+   RETRY_HISTORY_LOCAL(retry_history);
 
    Dumpload_Data * pdata = read_vcp_file(fn);
    if (!pdata) {
@@ -221,7 +222,7 @@ bool loadvcp_by_file(const char * fn, Display_Handle * dh) {
            report_dumpload_data(pdata, 0);
            rpt_pop_output_dest();
       }
-      psc = loadvcp_by_dumpload_data(pdata, dh);
+      psc = loadvcp_by_dumpload_data(pdata, dh, retry_history);
       free_dumpload_data(pdata);
       ok = (psc == 0);
    }

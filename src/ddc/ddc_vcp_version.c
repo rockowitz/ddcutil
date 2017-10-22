@@ -33,6 +33,7 @@
 /** \endcond */
 
 #include "base/core.h"
+#include "base/ddc_errno.h"
 #include "base/displays.h"
 #include "base/status_code_mgt.h"
 
@@ -99,8 +100,11 @@ DDCA_MCCS_Version_Spec get_vcp_version_by_display_handle(Display_Handle * dh) {
          DDCA_Output_Level olev = get_output_level();
          if (olev == DDCA_OL_VERBOSE)
             set_output_level(DDCA_OL_NORMAL);
-         Public_Status_Code psc = get_vcp_value(dh, 0xdf, DDCA_NON_TABLE_VCP_VALUE, &pvalrec);
+         RETRY_HISTORY_LOCAL(retry_history);
+         Public_Status_Code psc = get_vcp_value(dh, 0xdf, DDCA_NON_TABLE_VCP_VALUE, &pvalrec, retry_history);
          DBGMSF(debug, "get_vcp_value() returned %s", psc_desc(psc));
+         if (debug && retry_history && psc == DDCRC_RETRIES)
+            DBGMSG("    Try errors: %s", retry_history_string(retry_history));
          if (olev == DDCA_OL_VERBOSE)
             set_output_level(olev);
 

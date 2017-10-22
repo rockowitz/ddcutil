@@ -35,6 +35,7 @@
 /** \endcond */
 
 #include "base/displays.h"
+#include "base/retry_history.h"
 #include "base/status_code_mgt.h"
 
 #include "vcp/vcp_feature_values.h"
@@ -68,10 +69,16 @@ char *
 format_timestamp(time_t time_millis, char * buf, int bufsz);
 
 Public_Status_Code
-loadvcp_by_dumpload_data(Dumpload_Data* pdata, Display_Handle * dh);
+loadvcp_by_dumpload_data(
+      Dumpload_Data*   pdata,
+      Display_Handle * dh,
+      Retry_History *  retry_history);
 
 Public_Status_Code
-loadvcp_by_string(char * catenated, Display_Handle * dh);
+loadvcp_by_string(
+      char *           catenated,
+      Display_Handle * dh,
+      Retry_History *  retry_history);
 
 Dumpload_Data*
 create_dumpload_data_from_g_ptr_array(GPtrArray * garray);

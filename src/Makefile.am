@@ -179,7 +179,7 @@ all-local:
 # shared between ddcutil and libddcutil: 
 #
 libcommon_la_SOURCES =      	\
-base/base_init.c        	\
+base/base_init.c            	\
 base/build_info.c           	\
 base/core.c                 	\
 base/ddc_errno.c            	\
@@ -188,6 +188,7 @@ base/displays.c             	\
 base/execution_stats.c      	\
 base/feature_sets.c         	\
 base/linux_errno.c          	\
+base/retry_history.c            \
 base/sleep.c                	\
 base/status_code_mgt.c      	\
 base/vcp_version.c          	\

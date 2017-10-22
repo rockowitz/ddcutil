@@ -25,23 +25,35 @@
 #ifndef RETRY_HISTORY_H_
 #define RETRY_HISTORY_H_
 
+#include "core.h"
 #include "parms.h"
 #include "status_code_mgt.h"
 
 
+#define RETRY_HISTORY_MARKER "RHST"
 typedef struct retry_history {
+   char marker[4];    // RETRY_HISTORY_MARKER
    int ct;
    Public_Status_Code psc[MAX_MAX_TRIES];
 } Retry_History; 
 
-Retry_History * retry_history_new(){
-   return calloc(1, sizeof(Retry_History));
-}
+#define RETRY_HISTORY_LOCAL(histvar) \
+   Retry_History _hist;              \
+   retry_history_init(&_hist);       \
+   Retry_History * histvar = &_hist;
+   
+#define DBGTRC_RETRY_ERRORS(debug, psc, retry_history)                     \
+   if (psc == DDCRC_RETRIES && retry_history && (debug || IS_TRACING()))   \
+      DBGMSG("    Try errors: %s", retry_history_string(retry_history));
 
+
+Retry_History * retry_history_new();
+void retry_history_init(Retry_History* unitialized);
 void retry_history_free(Retry_History* history);
 void retry_history_clear(Retry_History * history);
 int  retry_history_add(Retry_History * history, Public_Status_Code psc);
 
-
+void retry_history_dump(Retry_History * history);
+char * retry_history_string(Retry_History * history);
 
 #endif /* RETRY_HISTORY_H_ */

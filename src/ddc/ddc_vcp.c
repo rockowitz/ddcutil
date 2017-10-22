@@ -44,6 +44,8 @@
 #include "base/ddc_errno.h"
 #include "base/ddc_packets.h"
 #include "base/displays.h"
+#include "base/retry_history.h"
+#include "base/status_code_mgt.h"
 
 #include "i2c/i2c_bus_core.h"
 
@@ -74,11 +76,13 @@ static Trace_Group TRACE_GROUP = TRC_DDC;
 /** Executes the DDC Save Control Settings command.
  *
  * \param  dh handle of open display device
+ * \param  retry_history  if non-null, logs retryable errors
  * \return status code, as returned by #ddc_write_only_with_retry()
  */
 Public_Status_Code
 save_current_settings(
-      Display_Handle * dh)
+      Display_Handle * dh,
+      Retry_History *  retry_history)
 {
    bool debug = false;
    DBGTRC(debug, TRACE_GROUP,
@@ -95,13 +99,15 @@ save_current_settings(
       // DBGMSG("create_ddc_save_settings_request_packet returned packet_ptr=%p", request_packet_ptr);
       // dump_packet(request_packet_ptr);
 
-      psc = ddc_write_only_with_retry(dh, request_packet_ptr);
+      psc = ddc_write_only_with_retry(dh, request_packet_ptr, retry_history);
 
       if (request_packet_ptr)
          free_ddc_packet(request_packet_ptr);
    }
 
    DBGTRC(debug, TRACE_GROUP, "Returning %s", psc_desc(psc));
+   if (psc == DDCRC_RETRIES && retry_history && (debug||IS_TRACING()))
+      DBGMSG("          Try errors: %s", retry_history_string(retry_history));
    return psc;
 }
 
@@ -115,20 +121,20 @@ save_current_settings(
  *  \param  dh            display handle for open display
  *  \param  feature_code  VCP feature code
  *  \param  new_value     new value
+ *  \param  retry_history if non-null, logs retryable errors
  *  \return status code from #ddc_write_only_with_retry()
  */
 Public_Status_Code
 set_nontable_vcp_value(
       Display_Handle * dh,
       Byte             feature_code,
-      int              new_value)
+      int              new_value,
+      Retry_History *  retry_history)
 {
    bool debug = false;
-   // Trace_Group tg = (debug) ? 0xFF : TRACE_GROUP;
-   // TRCMSGTG(tg, "Writing feature 0x%02x , new value = %d\n", feature_code, new_value);
    DBGTRC(debug, TRACE_GROUP,
-          "Writing feature 0x%02x , new value = %d, dh=%s\n",
-          feature_code, new_value, dh_repr_t(dh));
+          "Writing feature 0x%02x , new value = %d, dh=%s, retry_history=%p",
+          feature_code, new_value, dh_repr_t(dh), retry_history);
    Public_Status_Code psc = 0;
 
    if (dh->dref->io_mode == DDCA_IO_USB) {
@@ -144,14 +150,15 @@ set_nontable_vcp_value(
       // DBGMSG("create_ddc_getvcp_request_packet returned packet_ptr=%p", request_packet_ptr);
       // dump_packet(request_packet_ptr);
 
-      psc = ddc_write_only_with_retry(dh, request_packet_ptr);
+      psc = ddc_write_only_with_retry(dh, request_packet_ptr, retry_history);
 
       if (request_packet_ptr)
          free_ddc_packet(request_packet_ptr);
    }
 
-   // TRCMSGTG(tg, "Returning %s", gsc_desc(gsc));
    DBGTRC(debug, TRACE_GROUP, "Returning %s", psc_desc(psc));
+   if (psc == DDCRC_RETRIES && retry_history && (debug || IS_TRACING()))
+      DBGMSG("          Try errors: %s", retry_history_string(retry_history));
    return psc;
 }
 
@@ -162,6 +169,7 @@ set_nontable_vcp_value(
  *  \param  feature_code  VCP feature code
  *  \param  bytes         pointer to table bytes
  *  \param  bytect        number of bytes
+ *  \param  retry_history if non-null, collects retryable errors
  *  \return status code   normally as from ##multi_part_write_with_retry()
  *                        DDCL_UNIMPLEMENTED) if io mode is USB
  */
@@ -170,10 +178,12 @@ set_table_vcp_value(
       Display_Handle *  dh,
       Byte              feature_code,
       Byte *            bytes,
-      int               bytect)
+      int               bytect,
+      Retry_History *   retry_history)
 {
    bool debug = false;
-   DBGTRC(debug, TRACE_GROUP, "Writing feature 0x%02x , bytect = %d\n", feature_code, bytect);
+   DBGTRC(debug, TRACE_GROUP, "Writing feature 0x%02x , bytect = %d, retry_history=%p",
+                              feature_code, bytect, retry_history);
    Public_Status_Code psc = 0;
 
    if (dh->dref->io_mode == DDCA_IO_USB) {
@@ -188,11 +198,14 @@ set_table_vcp_value(
       // pointless wrapping in a Buffer just to unwrap
       Buffer * new_value = buffer_new_with_value(bytes, bytect, __func__);
 
-      psc = multi_part_write_with_retry(dh, feature_code, new_value);
+      psc = multi_part_write_with_retry(dh, feature_code, new_value, retry_history);
 
       buffer_free(new_value, __func__);
    }
+
    DBGTRC(debug, TRACE_GROUP, "Returning: %s", psc_desc(psc));
+   if ( (debug || IS_TRACING()) && psc == DDCRC_RETRIES && retry_history)
+      DBGMSG("      Try errors: %s", retry_history_string(retry_history));
    return psc;
 }
 
@@ -307,6 +320,7 @@ single_vcp_value_equal(
  *
  *  \param  dh            display handle for open display
  *  \param  vrec          pointer to value record
+ *  \param  retry_history if non-null, collects retryable errors
  *  \return status code
  *
  *  If write verification is turned on, reads the feature value after writing it
@@ -315,35 +329,40 @@ single_vcp_value_equal(
 Public_Status_Code
 set_vcp_value(
       Display_Handle *        dh,
-      DDCA_Single_Vcp_Value * vrec)
+      DDCA_Single_Vcp_Value * vrec,
+      Retry_History *         retry_history)
 {
    bool debug = false;
-   DBGMSF(debug, "Starting");
+   DBGMSF(debug, "Starting. retry_history=%p", retry_history);
    FILE * fout = FOUT;
    if ( get_output_level() < DDCA_OL_VERBOSE )
       fout = NULL;
 
    Public_Status_Code psc = 0;
    if (vrec->value_type == DDCA_NON_TABLE_VCP_VALUE) {
-      psc = set_nontable_vcp_value(dh, vrec->opcode, vrec->val.c.cur_val);
+      psc = set_nontable_vcp_value(dh, vrec->opcode, vrec->val.c.cur_val, retry_history);
    }
    else {
       assert(vrec->value_type == DDCA_TABLE_VCP_VALUE);
-      psc = set_table_vcp_value(dh, vrec->opcode, vrec->val.t.bytes, vrec->val.t.bytect);
+      psc = set_table_vcp_value(dh, vrec->opcode, vrec->val.t.bytes, vrec->val.t.bytect, retry_history);
    }
 
    if (psc == 0 && verify_setvcp) {
       if (is_rereadable_feature(dh, vrec->opcode) ) {
          f0printf(fout, "Verifying that value of feature 0x%02x successfully set...\n", vrec->opcode);
          DDCA_Single_Vcp_Value * newval = NULL;
+         retry_history_clear(retry_history);
          psc = get_vcp_value(
              dh,
              vrec->opcode,
              vrec->value_type,
-             &newval);
+             &newval,
+             retry_history);
          if (psc != 0) {
             f0printf(fout, "(%s) Read after write failed. get_vcp_value() returned: %s\n",
                            __func__, psc_desc(psc));
+            if (psc == DDCRC_RETRIES && retry_history)
+               f0printf(fout, "(%s)    Try errors: %s\n", __func__, retry_history_string(retry_history));
             // psc = DDCRC_VERIFY;
          }
          else {
@@ -376,6 +395,7 @@ set_vcp_value(
  *  \param  dh                 handle for open display
  *  \param  feature_code       VCP feature code
  *  \param  ppInterpretedCode  where to return parsed response
+ *  \param  retry_history      if non-null, records status code for retries
  *  \return status code
  *
  * It is the responsibility of the caller to free the parsed response.
@@ -385,7 +405,8 @@ set_vcp_value(
 Public_Status_Code get_nontable_vcp_value(
        Display_Handle *               dh,
        DDCA_Vcp_Feature_Code          feature_code,
-       Parsed_Nontable_Vcp_Response** ppInterpretedCode)
+       Parsed_Nontable_Vcp_Response** ppInterpretedCode,
+       Retry_History *                retry_history)
 {
    bool debug = false;
    DBGTRC(debug, TRACE_GROUP, "Reading feature 0x%02x", feature_code);
@@ -412,7 +433,8 @@ Public_Status_Code get_nontable_vcp_value(
            expected_subtype,
            false,                       // all_zero_response_ok
        //  retry_null_response,
-           &response_packet_ptr
+           &response_packet_ptr,
+           retry_history                        // Retry_History
         );
    // TRCMSGTG(tg, "perform_ddc_write_read_with_retry() returned %s", psc_desc(psc));
    if (debug || IS_TRACING() ) {
@@ -465,12 +487,14 @@ Public_Status_Code get_nontable_vcp_value(
  *  \param  dh              display handle
  *  \param  feature_code    VCP feature code
  *  \param  pp_table_bytes  location at which to save address of newly allocated Buffer
+ *  \param  retry_history   if non-null, collects retry status codes
  *  \return status code
  */
 Public_Status_Code get_table_vcp_value(
        Display_Handle *       dh,
        Byte                   feature_code,
-       Buffer**               pp_table_bytes)
+       Buffer**               pp_table_bytes,
+       Retry_History *        retry_history)
 {
    bool debug = false;
    DBGTRC(debug, TRACE_GROUP, "Starting. Reading feature 0x%02x", feature_code);
@@ -484,7 +508,8 @@ Public_Status_Code get_table_vcp_value(
             DDC_PACKET_TYPE_TABLE_READ_REQUEST,
             feature_code,
             true,                      // all_zero_response_ok
-            &paccumulator);
+            &paccumulator,
+            retry_history);
    if (debug || psc != 0) {
       DBGTRC(debug, TRACE_GROUP,
              "perform_ddc_write_read_with_retry() returned %s", psc_desc(psc));
@@ -500,6 +525,9 @@ Public_Status_Code get_table_vcp_value(
 
    DBGTRC(debug, TRACE_GROUP,
           "Done. Returning rc=%s, *pp_table_bytes=%p", psc_desc(psc), *pp_table_bytes);
+   // if (psc == DDCRC_RETRIES && retry_history && (debug || IS_TRACING()) )
+   //       DBGMSG("    Try errors: %s", retry_history_string(retry_history));
+   DBGTRC_RETRY_ERRORS(debug, psc, retry_history);
    return psc;
 }
 
@@ -510,6 +538,7 @@ Public_Status_Code get_table_vcp_value(
  * \param  feature_code    feature code id
  * \param  call_type       indicates whether table or non-table
  * \param  pvalrec         location where to return newly allocated #DDCA_Single_Vcp_Value
+ * \param  retry_history   if non-null, collects retryable errors
  * \return status code
  *
  * The value pointed to by pvalrec is non-null iff the returned status code is 0.
@@ -521,7 +550,8 @@ get_vcp_value(
        Display_Handle *          dh,
        Byte                      feature_code,
        DDCA_Vcp_Value_Type       call_type,
-       DDCA_Single_Vcp_Value **  pvalrec)
+       DDCA_Single_Vcp_Value **  pvalrec,
+       Retry_History *           retry_history)
 {
    bool debug = false;
    DBGTRC(debug, TRACE_GROUP, "Starting. Reading feature 0x%02x, dh=%s, dh->fh=%d",
@@ -536,6 +566,8 @@ get_vcp_value(
    if (dh->dref->io_mode == DDCA_IO_USB) {
 #ifdef USE_USB
       DBGMSF(debug, "USB case");
+      if (retry_history)
+         retry_history_clear(retry_history);
 
       switch (call_type) {
 
@@ -570,7 +602,8 @@ get_vcp_value(
             psc = get_nontable_vcp_value(
                      dh,
                      feature_code,
-                     &parsed_nontable_response);
+                     &parsed_nontable_response,
+                     retry_history);
             if (psc == 0) {
                valrec = create_nontable_vcp_value(
                            feature_code,
@@ -586,7 +619,8 @@ get_vcp_value(
             psc = get_table_vcp_value(
                     dh,
                     feature_code,
-                    &buffer);
+                    &buffer,
+                    retry_history);
             if (psc == 0) {
                valrec = create_table_vcp_value_by_buffer(feature_code, buffer);
                buffer_free(buffer, __func__);
@@ -598,9 +632,17 @@ get_vcp_value(
 
    *pvalrec = valrec;
 
-   DBGTRC(debug, TRACE_GROUP, "Done.  Returning: %s", psc_desc(psc) );
+   DBGTRC(debug, TRACE_GROUP, "Done. Returning: %s", psc_desc(psc) );
    if (psc == 0 && debug)
       report_single_vcp_value(valrec,1);
+
+   if (psc == DDCRC_RETRIES && retry_history && ( debug || IS_TRACING())) {
+      // retry_history_dump(retry_history);
+      DBGTRC(debug, TRACE_GROUP, "      Try errors: %s", retry_history_string(retry_history));
+   }
+
+
+
    assert( (psc == 0 && *pvalrec) || (psc != 0 && !*pvalrec) );
    return psc;
 }

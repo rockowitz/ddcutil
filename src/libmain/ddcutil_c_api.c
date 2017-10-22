@@ -46,6 +46,8 @@
 #include "base/base_init.h"
 #include "base/execution_stats.h"
 #include "base/parms.h"
+#include "base/retry_history.h"
+
 #include "vcp/vcp_feature_codes.h"
 #include "vcp/parse_capabilities.h"
 #include "vcp/parsed_capabilities_feature.h"
@@ -1320,12 +1322,15 @@ ddca_get_nontable_vcp_value(
       DDCA_Vcp_Feature_Code           feature_code,
       DDCA_Non_Table_Value_Response * response)
 {
+   Retry_History * retry_history = NULL;
+
    WITH_DH(ddca_dh,  {
        Parsed_Nontable_Vcp_Response * code_info;
        psc = get_nontable_vcp_value(
                 dh,
                 feature_code,
-                &code_info);
+                &code_info,
+                retry_history);
        // DBGMSG(" get_nontable_vcp_value() returned %s", gsc_desc(gsc));
        if (psc == 0) {
           response->feature_code = code_info->vcp_code;
@@ -1374,10 +1379,12 @@ ddca_get_table_vcp_value(
       int *               value_len,
       Byte**              value_bytes)
 {
+   RETRY_HISTORY_LOCAL(retry_history);
+
    WITH_DH(ddca_dh,
       {
          Buffer * p_table_bytes = NULL;
-         psc =  get_table_vcp_value(dh, feature_code, &p_table_bytes);
+         psc =  get_table_vcp_value(dh, feature_code, &p_table_bytes, retry_history);
          if (psc == 0) {
             assert(p_table_bytes);  // avoid coverity warning
             int len = p_table_bytes->len;
@@ -1400,13 +1407,12 @@ ddca_get_vcp_value(
       DDCA_Vcp_Value_Type       call_type,   // why is this needed?   look it up from dh and feature_code
       DDCA_Single_Vcp_Value **  pvalrec)
 {
-
+   RETRY_HISTORY_LOCAL(retry_history);
 
    WITH_DH(ddca_dh,
          {
                *pvalrec = NULL;
-               psc = get_vcp_value(dh, feature_code, call_type, pvalrec);
-               //psc = global_to_public_status_code(gsc);
+               psc = get_vcp_value(dh, feature_code, call_type, pvalrec, retry_history);
          }
    );
 }
@@ -1418,6 +1424,8 @@ ddca_get_formatted_vcp_value(
       DDCA_Vcp_Feature_Code        feature_code,
       char**                  p_formatted_value)
 {
+   RETRY_HISTORY_LOCAL(retry_history);
+
    WITH_DH(ddca_dh,
          {
                *p_formatted_value = NULL;
@@ -1443,7 +1451,7 @@ ddca_get_formatted_vcp_value(
                    // n. will default to NON_TABLE_VCP_VALUE if not a known code
                    DDCA_Vcp_Value_Type call_type = (flags & DDCA_TABLE) ?  DDCA_TABLE_VCP_VALUE : DDCA_NON_TABLE_VCP_VALUE;
                    DDCA_Single_Vcp_Value * pvalrec;
-                   psc = get_vcp_value(dh, feature_code, call_type, &pvalrec);
+                   psc = get_vcp_value(dh, feature_code, call_type, &pvalrec, retry_history);
                    if (psc == 0) {
                       bool ok =
                       vcp_format_feature_detail(
@@ -1457,8 +1465,6 @@ ddca_get_formatted_vcp_value(
                          assert(!p_formatted_value);
                       }
                    }
-
-                   // psc = global_to_public_status_code(gsc);
                }
          }
    )
@@ -1470,12 +1476,12 @@ ddca_set_single_vcp_value(
       DDCA_Display_Handle     ddca_dh,
       DDCA_Single_Vcp_Value * valrec)
    {
+      RETRY_HISTORY_LOCAL(retry_history);
+
       WITH_DH(ddca_dh,  {
-            psc = set_vcp_value(dh, valrec);
-            // psc = global_to_public_status_code(gsc);
+            psc = set_vcp_value(dh, valrec, retry_history);
          } );
    }
-
 
 
 
@@ -1529,16 +1535,17 @@ ddca_get_capabilities_string(
       DDCA_Display_Handle  ddca_dh,
       char**               pcaps)
 {
+   RETRY_HISTORY_LOCAL(retry_history);
+
    WITH_DH(ddca_dh,
       {
          char * p_cap_string = NULL;
-         psc = get_capabilities_string(dh, &p_cap_string);
+         psc = get_capabilities_string(dh, &p_cap_string, retry_history);
          if (psc == 0) {
             // make copy to ensure caller does not muck around in ddcutil's
             // internal data structures
             *pcaps = strdup(p_cap_string);
          }
-         // psc = public_to_global_ status_code(gsc);
       }
    );
 }
@@ -1686,7 +1693,8 @@ DDCA_Status
 ddca_set_profile_related_values(
       char * profile_values_string)
 {
-   Public_Status_Code psc = loadvcp_by_string(profile_values_string, NULL);
+   RETRY_HISTORY_LOCAL(retry_history);
+   Public_Status_Code psc = loadvcp_by_string(profile_values_string, NULL, retry_history);
    return psc;
 }
 

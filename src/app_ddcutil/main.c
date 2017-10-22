@@ -55,9 +55,9 @@
 #include "base/displays.h"
 #include "base/linux_errno.h"
 #include "base/parms.h"
+#include "base/retry_history.h"
 #include "base/sleep.h"
 #include "base/status_code_mgt.h"
-
 
 #include "vcp/parse_capabilities.h"
 #include "vcp/vcp_feature_codes.h"
@@ -131,7 +131,8 @@ perform_get_capabilities_by_display_handle(Display_Handle * dh) {
    bool debug = false;
    Parsed_Capabilities * pcap = NULL;
    char * capabilities_string;
-   Public_Status_Code psc = get_capabilities_string(dh, &capabilities_string);
+   RETRY_HISTORY_LOCAL(retry_history);
+   Public_Status_Code psc = get_capabilities_string(dh, &capabilities_string, retry_history);
 
    if (psc < 0) {
       switch(psc) {
@@ -178,19 +179,23 @@ void probe_display_by_dh(Display_Handle * dh)
    bool debug = false;
    DBGMSF(debug, "Starting. dh=%s", dh_repr(dh));
    Public_Status_Code psc = 0;
+   // RETRY_HISTORY_LOCAL(retry_history);
    char dref_name_buf[DREF_SHORT_NAME_BUF_SIZE];
+   dref_short_name_r(dh->dref, dref_name_buf, sizeof(dref_name_buf));
 
    f0printf(FOUT,
             "\nMfg id: %s, model: %s, sn: %s\n",
             dh->dref->pedid->mfg_id, dh->dref->pedid->model_name, dh->dref->pedid->serial_ascii);
 
    // printf("\nCapabilities for display %s\n", display_handle_repr(dh) );
-   printf("\nCapabilities for display on %s\n", dref_short_name_r(dh->dref, dref_name_buf, sizeof(dref_name_buf)) );
-   // not needed, message causes confusing messages if get_vcp_version fails but get_capabilities succeeds
+   f0printf(FOUT, "\nCapabilities for display on %s\n", dref_name_buf);
+
    DDCA_MCCS_Version_Spec vspec = get_vcp_version_by_display_handle(dh);
+   // not needed, message causes confusing messages if get_vcp_version fails but get_capabilities succeeds
    // if (vspec.major < 2) {
    //    printf("VCP (aka MCCS) version for display is less than 2.0. Output may not be accurate.\n");
    // }
+
    // reports capabilities, and if successful returns Parsed_Capabilities
    Parsed_Capabilities * pcaps = perform_get_capabilities_by_display_handle(dh);
 
@@ -270,7 +275,8 @@ void probe_display_by_dh(Display_Handle * dh)
             dh,
           0x0b,              // color temperature increment,
           DDCA_NON_TABLE_VCP_VALUE,
-          &valrec);
+          &valrec,
+          NULL);    // Retry_History *
    if (psc == 0) {
       if (debug)
          f0printf(FOUT, "Value returned for feature x0b: %s\n", summarize_single_vcp_value(valrec) );
@@ -280,7 +286,8 @@ void probe_display_by_dh(Display_Handle * dh)
             dh,
           0x0c,              // color temperature request
           DDCA_NON_TABLE_VCP_VALUE,
-          &valrec);
+          &valrec,
+          NULL);    // Retry_History *
       if (psc == 0) {
          if (debug)
             f0printf(FOUT, "Value returned for feature x0c: %s\n", summarize_single_vcp_value(valrec) );
@@ -672,6 +679,8 @@ int main(int argc, char *argv[]) {
          callopts |=  CALLOPT_ERR_MSG;    // removed CALLOPT_ERR_ABORT
          ddc_open_display(dref, callopts, &dh);
 
+         RETRY_HISTORY_LOCAL(retry_history);
+
          if (dh) {
             if (// parsed_cmd->cmd_id == CMDID_CAPABILITIES ||
                 parsed_cmd->cmd_id == CMDID_GETVCP       ||
@@ -720,7 +729,8 @@ int main(int argc, char *argv[]) {
                              dh,
                              parsed_cmd->args[argNdx],
                              parsed_cmd->args[argNdx+1],
-                             parsed_cmd->force);
+                             parsed_cmd->force,
+                             retry_history);
                      if (rc != 0) {
                         main_rc = EXIT_FAILURE;   // ???
                         break;
@@ -740,9 +750,11 @@ int main(int argc, char *argv[]) {
                }
                else {
                   main_rc = EXIT_SUCCESS;
-                  Public_Status_Code rc = save_current_settings(dh);
+                  Public_Status_Code rc = save_current_settings(dh, retry_history);
                   if (rc != 0)  {
                      f0printf(FOUT, "Save current settings failed. rc=%s\n", psc_desc(rc));
+                     if (rc == DDCRC_RETRIES && retry_history)
+                        f0printf(FOUT, "    Try errors: %s", retry_history_string(retry_history));
                      main_rc = EXIT_FAILURE;
                   }
                }

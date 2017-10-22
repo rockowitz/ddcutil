@@ -32,6 +32,7 @@
 /** \endcond */
 
 #include "base/core.h"
+#include "base/retry_history.h"
 #include "base/status_code_mgt.h"
 
 #include "vcp/vcp_feature_codes.h"
@@ -44,36 +45,42 @@ bool get_verify_setvcp();
 
 Public_Status_Code
 save_current_settings(
-      Display_Handle * dh);
+      Display_Handle *          dh,
+      Retry_History *           retry_history);
 
 Public_Status_Code
 set_nontable_vcp_value(
       Display_Handle *          dh,
       Byte                      feature_code,
-      int                       new_value);
+      int                       new_value,
+      Retry_History *           retry_history);
 
 Public_Status_Code
 set_vcp_value(
       Display_Handle *          dh,
-      DDCA_Single_Vcp_Value *   vrec);
+      DDCA_Single_Vcp_Value *   vrec,
+      Retry_History *           retry_history);
 
 Public_Status_Code
 get_table_vcp_value(
       Display_Handle *          dh,
       Byte                      feature_code,
-      Buffer**                  pp_table_bytes);
+      Buffer**                  pp_table_bytes,
+      Retry_History *           retry_history);
 
 Public_Status_Code
 get_nontable_vcp_value(
       Display_Handle *          dh,
       Byte                      feature_code,
-      Parsed_Nontable_Vcp_Response** pp_parsed_response);
+      Parsed_Nontable_Vcp_Response** pp_parsed_response,
+      Retry_History *           retry_history);
 
 Public_Status_Code
 get_vcp_value(
       Display_Handle *          dh,
       Byte                      feature_code,
       DDCA_Vcp_Value_Type       call_type,
-      DDCA_Single_Vcp_Value **  pvalrec);
+      DDCA_Single_Vcp_Value **  pvalrec,
+      Retry_History *           retry_history);
 
 #endif /* DDC_VCP_H_ */

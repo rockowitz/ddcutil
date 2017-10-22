@@ -67,6 +67,7 @@
  * Arguments:
  *    dh                    pointer to display handle
  *    ppCapabilitiesBuffer  address at which to return pointer to allocated Buffer
+ *    retry_history         if non-null, collects retryable errors
  *
  * Returns:
  *   status code
@@ -74,7 +75,8 @@
 static Public_Status_Code
 get_capabilities_buffer(
       Display_Handle * dh,
-      Buffer**         ppCapabilitiesBuffer)
+      Buffer**         ppCapabilitiesBuffer,
+      Retry_History *  retry_history)
 {
    Public_Status_Code psc;
 
@@ -83,7 +85,8 @@ get_capabilities_buffer(
                DDC_PACKET_TYPE_CAPABILITIES_REQUEST,
                0x00,                       // no subtype for capabilities
                false,                      // !all_zero_response_ok
-               ppCapabilitiesBuffer);
+               ppCapabilitiesBuffer,
+               retry_history);
    Buffer * cap_buffer = *ppCapabilitiesBuffer;
    assert(psc <= 0);
    if (psc == 0) {
@@ -111,6 +114,7 @@ get_capabilities_buffer(
  * Arguments:
  *   dh       display handle
  *   pcaps    location where to return pointer to capabilities string.
+ *   retry_history if non-null, collects retryable errors
  *
  * Returns:
  *   status code
@@ -119,7 +123,11 @@ get_capabilities_buffer(
  * display handle.  It should NOT be freed by the caller.
  */
 Public_Status_Code
-get_capabilities_string(Display_Handle * dh, char** pcaps) {
+get_capabilities_string(
+      Display_Handle * dh,
+      char**           pcaps,
+      Retry_History *  retry_history)
+{
    assert(dh);
    assert(dh->dref);
 
@@ -135,7 +143,7 @@ get_capabilities_string(Display_Handle * dh, char** pcaps) {
       }
       else {
          Buffer * pcaps_buffer;
-         psc = get_capabilities_buffer(dh, &pcaps_buffer);
+         psc = get_capabilities_buffer(dh, &pcaps_buffer, retry_history);
          if (psc == 0) {
             dh->dref->capabilities_string = strdup((char *) pcaps_buffer->bytes);
             buffer_free(pcaps_buffer,__func__);
@@ -148,7 +156,7 @@ get_capabilities_string(Display_Handle * dh, char** pcaps) {
 
 
 Public_Status_Code
-get_capabilities_string_by_dref(Display_Ref * dref, char **pcaps) {
+get_capabilities_string_by_dref(Display_Ref * dref, char **pcaps, Retry_History * retry_history) {
    assert(dref);
 
    Public_Status_Code psc = 0;
@@ -156,7 +164,7 @@ get_capabilities_string_by_dref(Display_Ref * dref, char **pcaps) {
       Display_Handle * dh = NULL;
       psc = ddc_open_display(dref, CALLOPT_NONE, &dh);
       if (psc == 0) {
-         psc = get_capabilities_string(dh, &dref->capabilities_string);
+         psc = get_capabilities_string(dh, &dref->capabilities_string, retry_history);
          ddc_close_display(dh);
       }
    }

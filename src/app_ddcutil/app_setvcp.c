@@ -95,6 +95,8 @@ bool parse_vcp_value(char * string_value, long* parsed_value) {
  *   dh         display handle
  *   feature    feature id (as string)
  *   new_value  new feature value (as string)
+ *   force
+ *   retry_history if non-null, collects retryable errors
  *
  * Returns:
  *   0          success
@@ -107,7 +109,8 @@ app_set_vcp_value(
       Display_Handle * dh,
       char *           feature,
       char *           new_value,
-      bool             force)
+      bool             force,
+      Retry_History *  retry_history)
 {
    bool debug = false;
    DBGMSF(debug,"Starting");
@@ -172,7 +175,7 @@ app_set_vcp_value(
       goto bye;
    }
 
-   psc = set_vcp_value(dh, &vrec);
+   psc = set_vcp_value(dh, &vrec, retry_history);
 
    // *** TEMP FOR TESTING ***
    // if (vrec.val.c.cur_val == 25) {
@@ -188,6 +191,8 @@ app_set_vcp_value(
       default:
          // Is this proper error message?
          f0printf(FOUT, "Setting value failed for feature %02x. rc=%s\n", entry->code, psc_desc(psc));
+         if (psc == DDCRC_RETRIES && retry_history)
+            f0printf(FOUT, "    Try errors: %s", retry_history_string(retry_history));
       }
    }
 

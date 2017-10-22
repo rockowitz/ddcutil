@@ -42,6 +42,7 @@
 #include "base/ddc_packets.h"
 #include "base/execution_stats.h"
 #include "base/parms.h"
+#include "base/retry_history.h"
 
 #include "ddc/ddc_packet_io.h"
 #include "ddc/ddc_try_stats.h"
@@ -126,6 +127,7 @@ try_multi_part_read(
    // bool retry_null_response = false;
 
    Public_Status_Code psc = 0;
+   RETRY_HISTORY_LOCAL(retry_history);
    const int MAX_FRAGMENT_SIZE = 32;
    const int readbuf_size = 6 + MAX_FRAGMENT_SIZE + 1;
 
@@ -146,6 +148,7 @@ try_multi_part_read(
                                        ? DDC_PACKET_TYPE_CAPABILITIES_RESPONSE
                                        : DDC_PACKET_TYPE_TABLE_READ_RESPONSE;
       Byte expected_subtype = request_subtype;     // 0x00 for capabilities, VCP feature code for table read
+      retry_history_clear(retry_history);
       psc = ddc_write_read_with_retry(
            dh,
            request_packet_ptr,
@@ -154,11 +157,15 @@ try_multi_part_read(
            expected_subtype,
            all_zero_response_ok,
      //    retry_null_response,
-           &response_packet_ptr
+           &response_packet_ptr,
+           retry_history
           );
+
       DBGMSF(force_debug,
              "ddc_write_read_with_retry() request_type=0x%02x, request_subtype=0x%02x, returned %s",
              request_type, request_subtype, psc_desc( psc));
+      if (force_debug && psc == DDCRC_RETRIES && retry_history)
+         DBGMSG("    Try errors: %s", retry_history_string(retry_history));
 
       if (psc != 0) {
          if (response_packet_ptr)
@@ -168,17 +175,11 @@ try_multi_part_read(
 
       if ( IS_TRACING() || force_debug ) {
          DBGMSF(force_debug, "After try_write_read():");
-#ifdef OLD
-         report_interpreted_multi_read_fragment(response_packet_ptr->aux_data);
-#endif
          report_interpreted_multi_read_fragment(response_packet_ptr->parsed.multi_part_read_fragment, 0);
       }
 
       Interpreted_Multi_Part_Read_Fragment * aux_data_ptr =
-#ifdef OLD
-         (Interpreted_Multi_Part_Read_Fragment *) response_packet_ptr->aux_data;
-#endif
-         response_packet_ptr->parsed.multi_part_read_fragment;
+      response_packet_ptr->parsed.multi_part_read_fragment;
 
       int display_current_offset = aux_data_ptr->fragment_offset;
       if (display_current_offset != cur_offset) {
@@ -226,9 +227,10 @@ try_multi_part_read(
 *  @param  all_zero_response_ok   if true, zero response is not an error
 *  @param  pp_buffer  address at which to return newly allocated #Buffer in which
 *                   result is returned
+*  @oaran  retry_history if non-null, collects try errors
 *
 *  @retval  0    success
-*  @retval  DDCRC_UNSUPPORTD does not support Capabilities Request
+*  @retval  DDCRC_UNSUPPORTED does not support Capabilities Request
 *  @retval  DDCRC_TRIES  maximum retries exceeded:
 */
 Public_Status_Code
@@ -237,7 +239,8 @@ multi_part_read_with_retry(
       Byte             request_type,
       Byte             request_subtype,   // VCP feature code for table read, ignore for capabilities
       bool             all_zero_response_ok,
-      Buffer**         pp_buffer)
+      Buffer**         pp_buffer,
+      Retry_History *  retry_history)
 {
    bool debug = false;
    if (IS_TRACING())
@@ -246,6 +249,7 @@ multi_part_read_with_retry(
    // TRCMSGTG(tg, "Starting. pdisp = %s", display_ref_short_name(pdisp, buf, 100) );
 
    Public_Status_Code rc = -1;   // dummy value for first call of while loop
+   retry_history_clear(retry_history);
 
    int try_ctr = 0;
    bool can_retry = true;
@@ -257,7 +261,6 @@ multi_part_read_with_retry(
       DBGTRC(debug, TRACE_GROUP,
              "Start of while loop. try_ctr=%d, max_multi_part_read_tries=%d",
              try_ctr, max_multi_part_read_tries);
-
 
       rc = try_multi_part_read(
               dh,
@@ -294,6 +297,7 @@ multi_part_read_with_retry(
    if (rc < 0) {
       buffer_free(accumulator, "capabilities buffer, error");
       accumulator = NULL;
+      retry_history_add(retry_history, rc);
       if (try_ctr >= max_multi_part_read_tries) {
          rc = DDCRC_RETRIES;
       }
@@ -321,16 +325,13 @@ try_multi_part_write(
       Buffer *         value_to_set)
 {
    bool force_debug = false;
-   // Trace_Group tg = TRACE_GROUP;
-   // if (force_debug)
-   //    tg = 0xFF;  // force tracing
    Byte request_type = DDC_PACKET_TYPE_TABLE_WRITE_REQUEST;
    Byte request_subtype = vcp_code;
-   // TRCMSGTG(tg, "Starting. request_type=0x%02x, request_subtype=x%02x, accumulator=%p",
-   //          request_type, request_subtype, value_to_set);
    DBGTRC(force_debug, TRACE_GROUP,
           "Starting. request_type=0x%02x, request_subtype=x%02x, accumulator=%p",
           request_type, request_subtype, value_to_set);
+
+   RETRY_HISTORY_LOCAL(retry_history);
 
    Public_Status_Code psc = 0;
    int MAX_FRAGMENT_SIZE = 32;
@@ -351,7 +352,7 @@ try_multi_part_write(
                    value_to_set->bytes+offset,
                    bytect_to_write,
                    __func__);
-      psc = ddc_write_only_with_retry(dh, request_packet_ptr);
+      psc = ddc_write_only_with_retry(dh, request_packet_ptr, retry_history);
       free_ddc_packet(request_packet_ptr);
 
       if (psc == 0) {
@@ -363,6 +364,8 @@ try_multi_part_write(
    }
 
    DBGTRC(force_debug, TRACE_GROUP, "Returning %s", psc_desc(psc));
+   if ( psc == DDCRC_RETRIES && retry_history && (force_debug || IS_TRACING()) )
+      DBGMSG("     Try errors: %s", retry_history_string(retry_history));
    return psc;
 }
 
@@ -372,25 +375,24 @@ try_multi_part_write(
  * @param  dh display handle
  * @param vcp_code  VCP feature code to write
  * @param value_to_set bytes of Table feature
+ * @param retry_history if non-null, collects retryable errors
  * @return  status code
  */
 Public_Status_Code
 multi_part_write_with_retry(
      Display_Handle * dh,
      Byte             vcp_code,
-     Buffer *         value_to_set)
+     Buffer *         value_to_set,
+     Retry_History *  retry_history)
 {
    bool debug = false;
-   // Trace_Group tg = TRACE_GROUP;
-   // if (debug)
-   //    tg = 0xFF;
-   // char buf[100];
    if (IS_TRACING())
       puts("");
-   // TODO: fix:
-   // TRCMSGTG(tg, "Starting. pdisp = %s", display_ref_short_name(pdisp, buf, 100) );
+   DBGTRC(debug, TRACE_GROUP, "Starting. dh=%s, vcp_code=0x%02x, retry_history=%p",
+                              dh_repr_t(dh), vcp_code, retry_history);
 
    Public_Status_Code rc = -1;   // dummy value for first call of while loop
+   retry_history_clear(retry_history);
 
    int try_ctr = 0;
    bool can_retry = true;
@@ -409,8 +411,16 @@ multi_part_write_with_retry(
 
       // TODO: What rc values set can_retry = false?
 
+      if (rc < 0 && can_retry)
+         retry_history_add(retry_history, rc);
+
       try_ctr++;
    }
 
+   if (debug || IS_TRACING()) {
+      DBGMSG("Done.  Returning: %s", psc_desc(rc));
+      if (rc == DDCRC_RETRIES && retry_history)
+         DBGMSG("    Try errors: %s", retry_history_string(retry_history));
+   }
    return rc;
 }

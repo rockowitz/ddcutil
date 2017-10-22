@@ -32,6 +32,7 @@
 #include "base/core.h"
 #include "base/ddc_packets.h"
 #include "base/displays.h"
+#include "base/retry_history.h"
 
 
 // bool all_zero(Byte * bytes, int bytec);
@@ -61,7 +62,8 @@ Public_Status_Code ddc_write_only(
 
 Public_Status_Code ddc_write_only_with_retry(
       Display_Handle * dh,
-      DDC_Packet *     request_packet_ptr);
+      DDC_Packet *     request_packet_ptr,
+      Retry_History *  retry_history);
 
 Public_Status_Code ddc_write_read(
       Display_Handle * dh,
@@ -80,7 +82,8 @@ Public_Status_Code ddc_write_read_with_retry(
       Byte             expected_subtype,
       bool             all_zero_response_ok,
   //  bool             retry_null_response,
-      DDC_Packet **    response_packet_ptr_loc
+      DDC_Packet **    response_packet_ptr_loc,
+      Retry_History *  retry_history
      );
 
 #endif /* DDC_PACKET_IO_H_ */

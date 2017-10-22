@@ -642,7 +642,8 @@ Public_Status_Code ddc_write_read(
  *  \param expected_response_type expected response type to check for
  *  \param expected_subtype    expected subtype to check for
  *  \param all_zero_response_ok treat a response of all 0s as valid
- *  \param  response_packet_ptr_loc  where to write address of response packet received
+ *  \param response_packet_ptr_loc  where to write address of response packet received
+ *  \param retry_history       if non-null, records status codes causing retry
  *
  *  \return   >= 0 if success (may be positive for positive ADL status code ??),
  *            status code from #ddc_write_read() if exactly 1 pass through try loop\n
@@ -660,12 +661,13 @@ Public_Status_Code ddc_write_read_with_retry(
          Byte             expected_response_type,
          Byte             expected_subtype,
          bool             all_zero_response_ok,
-         DDC_Packet **    response_packet_ptr_loc
+         DDC_Packet **    response_packet_ptr_loc,
+         Retry_History *  retry_history
         )
 {
    bool debug = false;
-   DBGTRC(debug, TRACE_GROUP, "Starting. dh=%s, all_zero_response_ok=%s",
-          dh_repr_t(dh), bool_repr(all_zero_response_ok)  );
+   DBGTRC(debug, TRACE_GROUP, "Starting. dh=%s, all_zero_response_ok=%s, retry_history=%p",
+          dh_repr_t(dh), bool_repr(all_zero_response_ok), retry_history  );
    assert(dh->dref->io_mode != DDCA_IO_USB);
    // show_backtrace(1);
 
@@ -679,6 +681,9 @@ Public_Status_Code ddc_write_read_with_retry(
    int  ddcrc_read_all_zero_ct = 0;
    int  ddcrc_null_response_ct = 0;
    int  ddcrc_null_response_max = (retry_null_response) ? 3 : 0;
+
+   if (retry_history)
+      retry_history_clear(retry_history);
 
    for (tryctr=0, psc=-999, retryable=true;
         tryctr < max_write_read_exchange_tries && psc < 0 && retryable;
@@ -741,6 +746,7 @@ Public_Status_Code ddc_write_read_with_retry(
             else
                retryable = true;     // for now
 
+
             // try exponential backoff on all errors, not just SE_DDC_NULL
             // if (retryable)
             //    call_dynamic_tuned_sleep_i2c(SE_DDC_NULL, tryctr+1);
@@ -754,6 +760,10 @@ Public_Status_Code ddc_write_read_with_retry(
             else
                retryable = false;
          }
+
+         if (retry_history)
+            retry_history_add(retry_history, psc);
+
          if (psc == DDCRC_READ_ALL_ZERO)
             ddcrc_read_all_zero_ct++;
       }    // rc < 0
@@ -776,6 +786,10 @@ Public_Status_Code ddc_write_read_with_retry(
    }
    try_data_record_tries(write_read_stats_rec, psc, tryctr);
    DBGTRC(debug, TRACE_GROUP, "Done. psc=%s", psc_desc(psc));
+   if (psc == DDCRC_RETRIES && retry_history && ( debug || IS_TRACING())) {
+      // retry_history_dump(retry_history);
+      DBGTRC(debug, TRACE_GROUP, "      Try errors: %s", retry_history_string(retry_history));
+   }
    return psc;
 }
 
@@ -854,27 +868,33 @@ Public_Status_Code ddc_write_only( Display_Handle * dh, DDC_Packet *   request_p
 
 /* Wraps ddc_write_only() in retry logic.
  *
- * Arguments:
- *   dh                  display handle (for either I2C or ADL device)
- *   request_packet_ptr  DDC packet to write
- *
- * Returns:
- *   0 if success
- *   DDCRC_RETRIES if maximum try count exceeded
+ *  \param  dh                  display handle (for either I2C or ADL device)
+ *  \param  request_packet_ptr  DDC packet to write
+ *  \param  retry_history       if non-null, records status codes causing retry
+ *  \retval 0                   success
+ *  \retval DDCRC_RETRIES       maximum retry count exceeded
  *
  *  The maximum number of tries allowed has been set in global variable
  *  max_write_only_exchange_tries.
  */
 Public_Status_Code
-ddc_write_only_with_retry( Display_Handle * dh, DDC_Packet *   request_packet_ptr) {
+ddc_write_only_with_retry(
+      Display_Handle * dh,
+      DDC_Packet *     request_packet_ptr,
+      Retry_History *  retry_history
+     )
+{
    bool debug = false;
-   DBGTRC(debug, TRACE_GROUP, "Starting.");
+   DBGTRC(debug, TRACE_GROUP, "Starting. retry_history=%p");
 
    assert(dh->dref->io_mode != DDCA_IO_USB);
 
    Public_Status_Code psc;
    int  tryctr;
    bool retryable;
+
+   if (retry_history)
+      retry_history_clear(retry_history);
 
    for (tryctr=0, psc=-999, retryable=true;
        tryctr < max_write_only_exchange_tries && psc < 0 && retryable;
@@ -901,6 +921,8 @@ ddc_write_only_with_retry( Display_Handle * dh, DDC_Packet *   request_packet_pt
                    // retryable = true;    // *** TEMP ***
             }
          }
+         if (retryable && retry_history)
+            retry_history_add(retry_history, psc);
       }   // rc < 0
    }
    if (psc < 0 && retryable)
@@ -909,6 +931,10 @@ ddc_write_only_with_retry( Display_Handle * dh, DDC_Packet *   request_packet_pt
 
    // TRCMSGTF(tf, "Done. rc=%d", rc);
    DBGTRC(debug, TRACE_GROUP, "Done. rc=%s", psc_desc(psc));
+   if (psc == DDCRC_RETRIES && retry_history && ( debug || IS_TRACING())) {
+      // retry_history_dump(retry_history);
+      DBGTRC(debug, TRACE_GROUP, "      Try errors: %s", retry_history_string(retry_history));
+   }
    return psc;
 }
 

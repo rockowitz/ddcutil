@@ -25,12 +25,14 @@
 #define APP_SETVCP_H_
 
 #include "base/displays.h"
+#include "base/retry_history.h"
 #include "base/status_code_mgt.h"
 
 Public_Status_Code app_set_vcp_value(
         Display_Handle * dh,
         char *           feature,
         char *           new_value,
-        bool             force);
+        bool             force,
+        Retry_History *  retry_history);
 
 #endif /* APP_SETVCP_H_ */
