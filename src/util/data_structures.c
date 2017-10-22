@@ -1267,7 +1267,7 @@ char * interpret_vnt_flags_by_title(
  * @param bitname_table  pointer to Value_Name table
  * @param use_title      if **true**, use the **title** field of the table,\n
  *                       if **false**, use the **name** field of the table
- * @param sepstr  if non-NULL, separator string to insert between values
+ * @param sepstr         if non-NULL, separator string to insert between values
  *
  * @return newly allocated character string
  *
@@ -1281,11 +1281,18 @@ char * vnt_interpret_flags(
       bool                    use_title,
       char *                  sepstr)
 {
+   bool debug = false;
+   if (debug)
+      printf("(%s) Starting. flags_val=0x%08x, bitname_table=%p, use_title=%s, sepstr=|%s|\n",
+             __func__, flags_val, bitname_table, bool_repr(use_title), sepstr);
+
    GString * sbuf = g_string_sized_new(200);
    bool first = true;
    Value_Name_Title * cur_entry = bitname_table;
      while (cur_entry->name) {
-        // DBGMSG("Comparing flags_val=0x%08x vs cur_entry->bitvalue = 0x%08x", flags_val, cur_entry->bitvalue);
+        if (debug)
+           printf("(%s) Comparing flags_val=0x%08x vs cur_entry->value = 0x%08x\n",
+                  __func__, flags_val, cur_entry->value);
         if (!flags_val && cur_entry->value == flags_val) { // special value for no bit set
            char * sval = (use_title) ? cur_entry->title : cur_entry->name;
            if (!sval)
@@ -1296,8 +1303,11 @@ char * vnt_interpret_flags(
         if (flags_val & cur_entry->value) {
            if (first)
               first = false;
-           else
-              g_string_append(sbuf, ", ");
+           else {
+              // g_string_append(sbuf, ", ");
+              if (sepstr)
+                 g_string_append(sbuf, sepstr);
+           }
 
            char * sval = (use_title) ? cur_entry->title : cur_entry->name;
            if (!sval)
@@ -1308,6 +1318,9 @@ char * vnt_interpret_flags(
      }
      char * result = strdup(sbuf->str);
      g_string_free(sbuf, true);
+
+     if (debug)
+        printf("(%s) Done. Returning: |%s|\n", __func__, result);
      return result;
 
 }
