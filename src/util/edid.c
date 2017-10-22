@@ -321,6 +321,10 @@ void free_parsed_edid(Parsed_Edid * parsed_edid) {
  *  Output is written using rpt_ functions.
  */
 void report_parsed_edid_base(Parsed_Edid * edid, bool verbose, bool show_raw, int depth) {
+   bool debug = false;
+   if (debug)
+      printf("(%s) Starting. edid=%p", __func__, edid);
+
    int d1 = depth+1;
    int d2 = depth+2;
    // verbose = true;
@@ -446,6 +450,9 @@ void report_parsed_edid_base(Parsed_Edid * edid, bool verbose, bool show_raw, in
        if (verbose)
          rpt_vstring(d1,"No EDID");
    }
+
+   if (debug)
+      printf("(%s) Done.", __func__);
 }
 
 
