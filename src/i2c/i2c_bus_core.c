@@ -290,6 +290,9 @@ Value_Name_Title_Table functionality_table2 = {
  *  @return functionality flags
  */
 unsigned long i2c_get_functionality_flags_by_fd(int fd) {
+   bool debug = false;
+   DBGMSF(debug, "Starting.");
+
    unsigned long funcs;
    int rc;
 
@@ -298,7 +301,7 @@ unsigned long i2c_get_functionality_flags_by_fd(int fd) {
    if (rc < 0)
       report_ioctl_error( errsv, __func__, (__LINE__-3), __FILE__, true /*fatal*/);
 
-   // DBGMSG("Functionality for file %d: %lu, 0x%lx", file, funcs, funcs);
+   DBGMSF(debug, "Functionality for file descriptor %d: %lu, 0x%0lx", fd, funcs, funcs);
    return funcs;
 }
 
@@ -326,8 +329,11 @@ char * i2c_interpret_functionality_flags(unsigned long functionality) {
  *  @param  depth          logical indentation depth
  */
 void i2c_report_functionality_flags(long functionality, int maxline, int depth) {
+   bool debug = false;
+   DBGMSF(debug, "Starting.  functionality=0x%016x, maxline=%d", functionality, maxline);
+
    char * buf0 = i2c_interpret_functionality_flags(functionality);
-   // rpt_vstring(1, "Functionality:  %s", buf0->bytes);
+   DBGMSF(debug, "buf0=|%s|", buf0);
 
    char * header = "Functionality: ";
    int hdrlen = strlen(header);
@@ -348,6 +354,8 @@ void i2c_report_functionality_flags(long functionality, int maxline, int depth) 
    }
    free(buf0);
    ntsa_free(ntsa);
+
+   DBGMSF(debug, "Done");
 }
 
 
@@ -1250,7 +1258,7 @@ int i2c_report_buses(bool report_all, int depth) {
 
    puts("");
    if (report_all)
-      rpt_vstring(depth,"Detected I2C buses:");
+      rpt_vstring(depth,"Detected %d I2C buses:", busct);
    else
       rpt_vstring(depth, "I2C buses with monitors detected at address 0x50:");
 
