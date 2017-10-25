@@ -1650,12 +1650,17 @@ static struct driver_name_node * query_card_and_driver_using_sysfs() {
                char * rpath = realpath(workfn, resolved_path);
                if (!rpath) {
                   int errsv = errno;
+                  rpt_vstring(0,"Cannot determine driver name");
+                  rpt_vstring(0, "realpath(%s) returned NULL, errno=%d (%s)",
+                                  workfn, errsv, linux_errno_name(errsv));
                   if (errsv == ENOENT) {
                      // fail in virtual environment?
-                     rpt_vstring(0,"Cannot determine driver name");
+                     // Raspberry Pi
+                     rpt_vstring(0, "Directory not found: %s", cur_dir_name);
                   }
                   else {
-                     DBGMSG("realpath(%s) returned NULL, errno=%d (%s)", workfn, errsv, linux_errno_name(errsv));
+                     // rpt_vstring(0, "realpath(%s) returned NULL, errno=%d (%s)",
+                     //                 workfn, errsv, linux_errno_name(errsv));
                   }
                }
                else {
