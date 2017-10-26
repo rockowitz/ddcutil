@@ -62,6 +62,7 @@
 #include "util/report_util.h"
 #include "util/string_util.h"
 #include "util/subprocess_util.h"
+#include "util/sysfs_util.h"
 #ifdef USE_X11
 #include "util/x11_util.h"
 #endif
@@ -94,7 +95,7 @@ bool redundant_checks = true;
 GPtrArray * get_i2c_devices_using_udev();
 // GPtrArray * get_i2c_smbus_devices_using_udev();
 bool is_smbus_device_summary(GPtrArray * summaries, char * sbusno);
-bool is_smbus_device_using_sysfs(int busno);
+static bool is_smbus_device_using_sysfs(int busno);
 
 
 static char * known_video_driver_modules[] = {
@@ -185,7 +186,7 @@ bye:
 
 // temporarily here.  move it to data_structures.c
 
-bool bva_sorted_eq(Byte_Value_Array bva1, Byte_Value_Array bva2) {
+static bool bva_sorted_eq(Byte_Value_Array bva1, Byte_Value_Array bva2) {
    // punt on the NULL case for now
    assert(bva1);
    assert(bva2);
@@ -234,80 +235,7 @@ Byte_Value_Array identify_i2c_devices() {
 // Utilities
 //
 
-char * read_sysfs_attr(char * dirname, char * attrname, bool verbose) {
-   char fn[PATH_MAX];
-   sprintf(fn, "%s/%s", dirname, attrname);
-   return file_get_first_line(fn, verbose);
-}
-
-
-char * read_sysfs_attr_w_default(char * dirname, char * attrname, char * default_value, bool verbose) {
-   char fn[PATH_MAX];
-   sprintf(fn, "%s/%s", dirname, attrname);
-   char * result = file_get_first_line(fn, verbose);
-   if (!result)
-      result = default_value;
-   return result;
-}
-
-
-GByteArray * read_binary_file(char * fn, int est_size, bool verbose) {
-   assert(fn);
-
-   bool debug = false;
-
-   // DBGMSG("fn=%s", fn);
-
-   Byte  buf[1];
-
-   GByteArray * gbarray = NULL;
-
-   FILE * fp;
-   if (!(fp = fopen(fn, "r"))) {
-      int errsv = errno;
-      if (verbose){
-         fprintf(FERR, "Error opening \"%s\", error = %s\n", fn, psc_desc(errsv));
-      }
-      goto bye;
-   }
-
-   if (est_size <= 0)
-      gbarray = g_byte_array_new();
-   else
-      gbarray = g_byte_array_sized_new(est_size);
-
-   // TODO: read bigger hunks
-   size_t ct = 0;
-   while ( (ct = fread(buf, /*size*/ 1, /*nmemb*/ 1, fp) ) > 0) {
-      assert(ct == 1);
-      g_byte_array_append(gbarray, buf, ct);
-   }
-   fclose(fp);
-
-bye:
-   if (debug) {
-      if (gbarray)
-         DBGMSG("Returning GByteArray of size %d", gbarray->len);
-      else
-         DBGMSG("Returning NULL");
-      }
-   return gbarray;
-}
-
-
-GByteArray * read_binary_sysfs_attr(char * dirname, char * attrname, int est_size, bool verbose) {
-   assert(dirname);
-   assert(attrname);
-
-   char fn[PATH_MAX];
-   sprintf(fn, "%s/%s", dirname, attrname);
-   // DBGMSG("fn=%s", fn);
-
-   return read_binary_file(fn, est_size, verbose);
-}
-
-
-ushort h2ushort(char * hval) {
+static ushort h2ushort(char * hval) {
    bool debug = false;
    int ct;
    ushort ival;
@@ -353,7 +281,7 @@ static bool show_one_file(char * dir_name, char * simple_fn, bool verbose, int d
 }
 
 
-bool is_smbus_device_using_sysfs(int busno) {
+static bool is_smbus_device_using_sysfs(int busno) {
    char workbuf[50];
    snprintf(workbuf, 50, "/sys/bus/i2c/devices/i2c-%d/name", busno);
    char * name = file_get_first_line(workbuf, /*verbose */ false);
@@ -363,10 +291,6 @@ bool is_smbus_device_using_sysfs(int busno) {
    // DBGMSG("busno=%d, returning: %s", busno, bool_repr(result));
    return result;
 }
-
-
-
-
 
 
 // Functions to query and free the linked list of driver names.
@@ -1581,6 +1505,121 @@ static bool query_card_and_driver_using_lspci() {
 }
 
 
+// Two ways to get the hex device identifiers.  Both are ugly.
+// Reading modalias requires extracting values from a single string.
+// Reading individual ids from individual attributes is simpler,
+// but note the lack of error checking that all exist.
+// Pick your poison.
+
+typedef struct {
+   ushort   vendor_id;
+   ushort   device_id;
+   ushort   subdevice_id;    // subsystem device id
+   ushort   subvendor_id;    // subsystem vendor id
+} Device_Ids;
+
+/** Reads the device identifiers from directory
+ *  /sys/bus/pci/devices/nnnn:nn:nn.n/ using the individual vendor, device,
+ *  subsystem, and subsystem_device attributes.
+ *
+ *  \param cur_dir_name  directory name
+ *  \return struct containing the ids
+ *
+ *  \remark
+ *  Note the struct itself is returned on the stack, not a pointer to a struct.
+ *  There is nothing to free.
+ */
+Device_Ids read_device_ids1(char * cur_dir_name) {
+   Device_Ids result = {0};
+
+   rpt_vstring(0, "Reading device ids from individual attribute files...");
+   // printf("vendor: %s\n", read_sysfs_attr(cur_dir_name, "vendor", true));
+   // printf("device: %s\n", read_sysfs_attr(cur_dir_name, "device", true));
+   // printf("subsystem_device: %s\n", read_sysfs_attr(cur_dir_name, "subsystem_device", true));
+   // printf("subsystem_vendor: %s\n", read_sysfs_attr(cur_dir_name, "subsystem_vendor", true));
+
+   char * vendor_id        = read_sysfs_attr_w_default(cur_dir_name, "vendor",           "0x00", true);
+   char * device_id        = read_sysfs_attr_w_default(cur_dir_name, "device",           "0x00", true);
+   char * subsystem_device = read_sysfs_attr_w_default(cur_dir_name, "subsystem_device", "0x00", true);
+   char * subsystem_vendor = read_sysfs_attr_w_default(cur_dir_name, "subsystem_vendor", "0x00", true);
+
+   result.vendor_id    = h2ushort(vendor_id);
+   result.device_id    = h2ushort(device_id);
+   result.subvendor_id = h2ushort(subsystem_vendor);
+   result.subdevice_id = h2ushort(subsystem_device);
+
+   free(vendor_id);
+   free(device_id);
+   free(subsystem_device);
+   free(subsystem_vendor);
+
+   return result;
+}
+
+
+/** Reads the device identifiers from directory
+ *  /sys/bus/pci/devices/nnnn:nn:nn.n/ by reading and parsing the modalias
+ *  attribute.
+ *
+ *  \param cur_dir_name  directory name
+ *  \return struct containing the ids
+ *
+ *  \remark
+ *  Note the struct itself is returned on the stack, not a pointer to a struct.
+ *  There is nothing to free.
+ */
+Device_Ids read_device_ids2(char * cur_dir_name) {
+   Device_Ids result = {0};
+
+   rpt_vstring(0, "Reading device ids by parsing modalias attribute...");
+   char * modalias = read_sysfs_attr(cur_dir_name, "modalias", true);
+               // printf("modalias: %s\n", modalias);
+   if (modalias) {
+      // printf("\nParsing modalias for values...\n");
+      char * colonpos = strchr(modalias, ':');
+      assert(colonpos);                // coverity complains that strchr() might return NULL
+      assert(*(colonpos+1) == 'v');    // vendor_id
+      char * vendor_id = substr(colonpos, 2, 8);
+      // printf("vendor_id:        %s\n", vendor_id);
+      assert(*(colonpos+10) == 'd');
+      char * device_id = lsub(colonpos+11,8);
+      // printf("device_id:        %s\n", device_id);
+      assert( *(colonpos+19) == 's');
+      assert( *(colonpos+20) == 'v');
+      char * subsystem_vendor = lsub(colonpos+21,8);
+      // printf("subsystem_vendor: %s\n", subsystem_vendor);
+      assert( *(colonpos+29) == 's');
+      assert( *(colonpos+30) == 'd');
+      char * subsystem_device = lsub(colonpos+31,8);
+      // printf("subsystem_device: %s\n", subsystem_device);
+      assert( *(colonpos+39) == 'b');
+      assert( *(colonpos+40) == 'c');
+      // not used
+      //char * base_class = lsub(colonpos+41,2);
+      // printf("base_class:       %s\n", base_class);     // bytes 0-1 of value from class
+      assert( *(colonpos+43) == 's');
+      assert( *(colonpos+44) == 'c');
+      // not used
+      // char * sub_class = lsub(colonpos+45,2);          // bytes 1-2 of value from class
+      // printf("sub_class:        %s\n", sub_class);
+      assert( *(colonpos+47) == 'i');
+      // not used
+      // char * interface_id = lsub(colonpos+48,2);
+      // printf("interface_id:     %s\n", interface_id);  // bytes 4-5 of value from class?
+
+      result.vendor_id    = h2ushort(vendor_id);
+      result.device_id    = h2ushort(device_id);
+      result.subvendor_id = h2ushort(subsystem_vendor);
+      result.subdevice_id = h2ushort(subsystem_device);
+
+      free(modalias);
+   }
+
+   return result;
+}
+
+
+
 /* Scans /sys/bus/pci/devices for video devices.
  * Reports on the devices, and returns a singly linked list of driver names.
  *
@@ -1605,42 +1644,30 @@ static struct driver_name_node * query_card_and_driver_using_sysfs() {
    // /sys/module/i2c_dev ?
    // /sys/module/... etc
 
-   // bool ok = true;
    char * driver_name = NULL;
    struct driver_name_node * driver_list = NULL;
 
    struct dirent *dent;
    DIR           *d;
 
-   char * d0 = "/sys/bus/pci/devices";
-   d = opendir(d0);
+   char * pci_devices_dir_name = "/sys/bus/pci/devices";
+   d = opendir(pci_devices_dir_name);
    if (!d) {
-      rpt_vstring(0,"Unable to open directory %s: %s", d0, strerror(errno));
+      rpt_vstring(0,"Unable to open directory %s: %s", pci_devices_dir_name, strerror(errno));
    }
    else {
       while ((dent = readdir(d)) != NULL) {
          // DBGMSG("%s", dent->d_name);
-
          char cur_fn[100];
          char cur_dir_name[100];
          if (!streq(dent->d_name, ".") && !streq(dent->d_name, "..") ) {
-            sprintf(cur_dir_name, "%s/%s", d0, dent->d_name);
+            sprintf(cur_dir_name, "%s/%s", pci_devices_dir_name, dent->d_name);
             sprintf(cur_fn, "%s/class", cur_dir_name);
-            char * class_id = read_sysfs_attr(cur_dir_name, "class", true);
+            // read /sys/bus/pci/devices/nnnn:nn:nn.n/class
+            char * class_id = read_sysfs_attr(cur_dir_name, "class", /*verbose=*/true);
             // printf("%s: |%s|\n", cur_fn, class_id);
             if (str_starts_with(class_id, "0x03")) {
                // printf("%s = 0x030000\n", cur_fn);
-
-#ifdef WORKS
-               printf("\nReading values from individual attribute files:\n");
-               printf("vendor: %s\n", read_sysfs_attr(cur_dir_name, "vendor", true));
-               printf("device: %s\n", read_sysfs_attr(cur_dir_name, "device", true));
-               printf("subsystem_device: %s\n", read_sysfs_attr(cur_dir_name, "subsystem_device", true));
-               printf("subsystem_vendor: %s\n", read_sysfs_attr(cur_dir_name, "subsystem_vendor", true));
-#endif
-               char * modalias = read_sysfs_attr(cur_dir_name, "modalias", true);
-               // printf("modalias: %s\n", modalias);
-
                rpt_nl();
                rpt_vstring(0,"Determining driver name and possibly version...");
                // DBGMSG("cur_dir_name: %s", cur_dir_name);
@@ -1687,77 +1714,43 @@ static struct driver_name_node * query_card_and_driver_using_sysfs() {
                      rpt_vstring(0,"   Unable to determine driver version");
                }
 
-
-               // printf("\nParsing modalias for values...\n");
-               char * colonpos = strchr(modalias, ':');
-               assert(colonpos);                // coverity complains that strchr() might return NULL
-               assert(*(colonpos+1) == 'v');    // vendor_id
-               char * vendor_id = substr(colonpos, 2, 8);
-               // printf("vendor_id:        %s\n", vendor_id);
-               assert(*(colonpos+10) == 'd');
-               char * device_id = lsub(colonpos+11,8);
-               // printf("device_id:        %s\n", device_id);
-               assert( *(colonpos+19) == 's');
-               assert( *(colonpos+20) == 'v');
-               char * subsystem_vendor = lsub(colonpos+21,8);
-               // printf("subsystem_vendor: %s\n", subsystem_vendor);
-               assert( *(colonpos+29) == 's');
-               assert( *(colonpos+30) == 'd');
-               char * subsystem_device = lsub(colonpos+31,8);
-               // printf("subsystem_device: %s\n", subsystem_device);
-               assert( *(colonpos+39) == 'b');
-               assert( *(colonpos+40) == 'c');
-               // not used
-               //char * base_class = lsub(colonpos+41,2);
-               // printf("base_class:       %s\n", base_class);     // bytes 0-1 of value from class
-               assert( *(colonpos+43) == 's');
-               assert( *(colonpos+44) == 'c');
-               // not used
-               // char * sub_class = lsub(colonpos+45,2);          // bytes 1-2 of value from class
-               // printf("sub_class:        %s\n", sub_class);
-               assert( *(colonpos+47) == 'i');
-               // not used
-               // char * interface_id = lsub(colonpos+48,2);
-               // printf("interface_id:     %s\n", interface_id);  // bytes 4-5 of value from class?
+               rpt_nl();
+               Device_Ids dev_ids = read_device_ids1(cur_dir_name);
+               Device_Ids dev_ids2 = read_device_ids2(cur_dir_name);
+               assert(dev_ids.vendor_id == dev_ids2.vendor_id);
+               assert(dev_ids.device_id == dev_ids2.device_id);
+               assert(dev_ids.subvendor_id == dev_ids2.subvendor_id);
+               assert(dev_ids.subdevice_id == dev_ids2.subdevice_id);
 
 
-               // printf("\nConverting modalias strings to ushort...\n");
-               ushort xvendor_id    = h2ushort(vendor_id);
-               ushort xdevice_id    = h2ushort(device_id);
-               ushort xsubvendor_id = h2ushort(subsystem_vendor);
-               ushort xsubdevice_id = h2ushort(subsystem_device);
 
                // printf("\nLooking up names in pci.ids...\n");
-               rpt_nl();
+               // rpt_nl();
                rpt_vstring(0,"Video card identification:");
                bool pci_ids_ok = devid_ensure_initialized();
                if (pci_ids_ok) {
                   Pci_Usb_Id_Names names = devid_get_pci_names(
-                                  xvendor_id,
-                                  xdevice_id,
-                                  xsubvendor_id,
-                                  xsubdevice_id,
+                                  dev_ids.vendor_id,
+                                  dev_ids.device_id,
+                                  dev_ids.subvendor_id,
+                                  dev_ids.subdevice_id,
                                   4);
                   if (!names.vendor_name)
                      names.vendor_name = "unknown vendor";
                   if (!names.device_name)
                      names.device_name = "unknown device";
 
-                  rpt_vstring(0,"   Vendor:              %04x       %s", xvendor_id, names.vendor_name);
-                  rpt_vstring(0,"   Device:              %04x       %s", xdevice_id, names.device_name);
+                  rpt_vstring(0,"   Vendor:              %04x       %s", dev_ids.vendor_id, names.vendor_name);
+                  rpt_vstring(0,"   Device:              %04x       %s", dev_ids.device_id, names.device_name);
                   if (names.subsys_or_interface_name)
-                  rpt_vstring(0,"   Subvendor/Subdevice: %04x/%04x  %s", xsubvendor_id, xsubdevice_id, names.subsys_or_interface_name);
+                  rpt_vstring(0,"   Subvendor/Subdevice: %04x/%04x  %s", dev_ids.subvendor_id, dev_ids.subdevice_id, names.subsys_or_interface_name);
                }
                else {
                   rpt_vstring(0,"Unable to find pci.ids file for name lookup.");
-                  rpt_vstring(0,"   Vendor:              %04x       ", xvendor_id);
-                  rpt_vstring(0,"   Device:              %04x       ", xdevice_id);
-                  rpt_vstring(0,"   Subvendor/Subdevice: %04x/%04x  ", xsubvendor_id, xsubdevice_id);
+                  rpt_vstring(0,"   Vendor:              %04x       ", dev_ids.vendor_id);
+                  rpt_vstring(0,"   Device:              %04x       ", dev_ids.device_id);
+                  rpt_vstring(0,"   Subvendor/Subdevice: %04x/%04x  ", dev_ids.subvendor_id, dev_ids.subdevice_id);
                }
-               free(vendor_id);
-               free(device_id);
-               free(subsystem_vendor);
-               free(subsystem_device);
             }
             else if (str_starts_with(class_id, "0x0a")) {
                DBGMSG("Encountered docking station (class 0x0a) device. dir=%s", cur_dir_name);
@@ -2435,6 +2428,9 @@ void query_sysenv() {
       rpt_nl();
       rpt_vstring(0,"DKMS modules:");
       execute_shell_cmd_rpt("dkms status", 1 /* depth */);
+      rpt_nl();
+      rpt_vstring(0,"Kernel I2C configuration settings:");
+      execute_shell_cmd_rpt("grep I2C /boot/config-$(uname -r)", 1 /* depth */);
       rpt_nl();
       rpt_vstring(0,"Kernel AMDGPU configuration settings:");
       execute_shell_cmd_rpt("grep AMDGPU /boot/config-$(uname -r)", 1 /* depth */);

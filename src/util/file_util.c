@@ -112,7 +112,7 @@ char * file_get_first_line(const char * fn, bool verbose) {
    char * single_line = NULL;
    if (!fp) {
       if (verbose)
-         fprintf(stderr, "Error opening %s: %s\n", fn, strerror(errno));
+         fprintf(stderr, "Error opening %s: %s\n", fn, strerror(errno));  // TODO: strerror() not thread safe
    }
    else {
       size_t len = 0;
@@ -133,6 +133,67 @@ char * file_get_first_line(const char * fn, bool verbose) {
    // printf("(%s) fn=|%s|, returning: |%s|\n", __func__, fn, single_line);
    return single_line;
 }
+
+
+
+/** Reads a binary file, returning it as a #GByteArray.
+ *
+ *  \param  fn        file name
+ *  \param  est_size  estimated size
+ *  \param  verbose   if open fails, write message to stderr
+ *  \return if successful, a #GByteArray of bytes, caller is responsible for freeing
+ *          if failure, then NULL
+ */
+GByteArray *
+read_binary_file(
+      char * fn,
+      int    est_size,
+      bool   verbose)
+{
+   assert(fn);
+
+   bool debug = false;
+
+   // DBGMSG("fn=%s", fn);
+
+   Byte  buf[1];
+
+   GByteArray * gbarray = NULL;
+
+   FILE * fp;
+   if (!(fp = fopen(fn, "r"))) {
+      int errsv = errno;
+      if (verbose){
+         fprintf(stderr, "Error opening \"%s\", %s\n", fn, strerror(errsv));
+      }
+      goto bye;
+   }
+
+   if (est_size <= 0)
+      gbarray = g_byte_array_new();
+   else
+      gbarray = g_byte_array_sized_new(est_size);
+
+   // TODO: read bigger hunks
+   size_t ct = 0;
+   while ( (ct = fread(buf, /*size*/ 1, /*nmemb*/ 1, fp) ) > 0) {
+      assert(ct == 1);
+      g_byte_array_append(gbarray, buf, ct);
+   }
+   fclose(fp);
+
+bye:
+   if (debug) {
+      if (gbarray)
+         printf("(%s) Returning GByteArray of size %d", __func__, gbarray->len);
+      else
+         printf("(%s) Returning NULL", __func__);
+      }
+   return gbarray;
+}
+
+
+
 
 
 /** Checks if a regular file exists.

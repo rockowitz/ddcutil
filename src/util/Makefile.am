@@ -39,6 +39,7 @@ multi_level_map.c          \
 output_sink.c              \
 report_util.c              \
 string_util.c              \
+sysfs_util.c               \
 subprocess_util.c          \
 timestamp.c                \
 udev_i2c_util.c            \

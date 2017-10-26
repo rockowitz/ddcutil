@@ -1,4 +1,4 @@
-/* file_util.h
+/* sysfs_util.h
  *
  * <copyright>
  * Copyright (C) 2014-2017 Sanford Rockowitz <rockowitz@minsoft.com>
@@ -21,30 +21,36 @@
  * </endcopyright>
  */
 
-/** @file file_util.h
- * File utility functions
+#ifndef SYSFS_UTIL_H_
+#define SYSFS_UTIL_H_
+
+/** \file 
+ * Functions for reading /sys file system
  */
 
-#ifndef FILE_UTIL_H_
-#define FILE_UTIL_H_
 
-/** \cond */
-#include <dirent.h>
-#include <glib.h>
+#endif /* SYSFS_UTIL_H_ */
+
 #include <stdbool.h>
-/** \endcond */
+#include <glib-2.0/glib.h>
 
-int    file_getlines(const char * fn, GPtrArray* line_array, bool verbose);
-char * file_get_first_line(const char * fn, bool verbose);
-GByteArray * read_binary_file(char * fn, int est_size, bool verbose);
+char *
+read_sysfs_attr(
+      char * dirname,
+      char * attrname,
+      bool verbose);
 
-bool regular_file_exists(const char * fqfn);
-bool directory_exists(const char * fqfn);
+char *
+read_sysfs_attr_w_default(
+      char * dirname,
+      char * attrname,
+      char * default_value,
+      bool verbose);
 
-/** Filter function for get_filenames_by_filter() */
-typedef int (*Dirent_Filter)(const struct dirent *end);
-GPtrArray * get_filenames_by_filter(const char * dirnames[], Dirent_Filter filter_func);
+GByteArray *
+read_binary_sysfs_attr(
+      char * dirname,
+      char * attrname,
+      int    est_size,
+      bool   verbose);
 
-int filename_for_fd(int fd, char** p_fn);
-
-#endif /* FILE_UTIL_H_ */
