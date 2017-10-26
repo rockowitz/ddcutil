@@ -226,7 +226,7 @@ Byte_Value_Array identify_i2c_devices() {
       bva_free(bva2);
       bva_free(bva3);
    }
-   DBGMSG("Identified %d I2C devices", bva_length(bva1));
+   // DBGMSG("Identified %d I2C devices", bva_length(bva1));
    return i2c_device_numbers;
 }
 
@@ -2379,7 +2379,9 @@ void query_sysenv() {
    rpt_nl();
    rpt_vstring(0,"*** Primary Check 2: Check that /dev/i2c-* exist and writable ***");
    rpt_nl();
-   identify_i2c_devices();   // TODO: incomplete step toward consolidation
+   Byte_Value_Array i2c_devices = identify_i2c_devices();   // TODO: incomplete step toward consolidation
+   rpt_vstring(0, "Identified %d I2C devices", bva_length(i2c_devices));
+   bva_free(i2c_devices);        // *** NOT YET USED ***
    rpt_nl();
    check_i2c_devices(driver_list);
 
