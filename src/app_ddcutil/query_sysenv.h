@@ -26,9 +26,6 @@
 
 #include <config.h>
 
-#include <stdbool.h>
-
-bool is_module_loaded_using_sysfs(const char * module_name);
 void query_sysenv();
 
 #endif /* QUERY_SYSENV_H_ */

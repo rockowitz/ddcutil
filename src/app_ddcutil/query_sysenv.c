@@ -1274,35 +1274,6 @@ static void check_i2c_devices(struct driver_name_node * driver_list) {
 }
 
 
-/* Looks in the /sys file system to check if a module is loaded.
- *
- * Arguments:
- *   module_name    module name
- *
- * Returns:         true if the module is loaded, false if not
- */
-bool is_module_loaded_using_sysfs(const char * module_name) {
-   bool debug = false;
-   struct stat statbuf;
-   char   module_fn[100];
-   bool found = false;
-   snprintf(module_fn, sizeof(module_fn), "/sys/module/%s", module_name);
-   int rc = stat(module_fn, &statbuf);
-   if (rc < 0) {
-      // int errsv = errno;
-      // will be ENOENT (2) if file not found
-      // DBGMSF(debug, "stat(%s) returned %d, errno = %s",
-      //       module_fn, rc, linux_errno_desc(errsv));
-      found = false;
-   }
-   else {
-      // if (S_ISDIR(statbuf.st_mode))   // pointless
-         found = true;
-   }
-   DBGMSF(debug, "module_name = %s, returning %d", module_name, found);
-   return found;
-}
-
 
 /* Checks if a module is built in to the kernel.
  *

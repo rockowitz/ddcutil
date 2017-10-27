@@ -27,6 +27,7 @@
 
 #include <assert.h>
 #include <limits.h>
+#include <sys/stat.h>
 #include <stdio.h>
 #include <string.h>
 
@@ -100,8 +101,39 @@ read_binary_sysfs_attr(
 
    char fn[PATH_MAX];
    sprintf(fn, "%s/%s", dirname, attrname);
-   // DBGMSG("fn=%s", fn);
 
    return read_binary_file(fn, est_size, verbose);
+}
+
+
+/** Looks in the /sys file system to check if a module is loaded.
+ *
+ * \param  module_name    module name
+ * \return true if the module is loaded, false if not
+ */
+bool
+is_module_loaded_using_sysfs(
+      const char * module_name)
+{
+   bool debug = false;
+
+   struct stat statbuf;
+   char   module_fn[100];
+   bool   found = false;
+
+   snprintf(module_fn, sizeof(module_fn), "/sys/module/%s", module_name);
+   int rc = stat(module_fn, &statbuf);
+   if (rc < 0) {
+      // will be ENOENT (2) if file not found
+      found = false;
+   }
+   else {
+      // if (S_ISDIR(statbuf.st_mode))   // pointless
+         found = true;
+   }
+
+   if (debug)
+      printf("(%s) module_name = %s, returning %d", __func__, module_name, found);
+   return found;
 }
 

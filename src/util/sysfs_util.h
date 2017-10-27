@@ -54,3 +54,6 @@ read_binary_sysfs_attr(
       int    est_size,
       bool   verbose);
 
+bool
+is_module_loaded_using_sysfs(
+      const char * module_name);
