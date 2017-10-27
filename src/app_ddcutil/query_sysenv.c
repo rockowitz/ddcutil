@@ -89,12 +89,9 @@
 
 
 /** Perform redundant checks as cross-verification */
-bool redundant_checks = true;
+bool redundant_i2c_device_identification_checks = true;
 
 // Forward references
-GPtrArray * get_i2c_devices_using_udev();
-// GPtrArray * get_i2c_smbus_devices_using_udev();
-bool is_smbus_device_summary(GPtrArray * summaries, char * sbusno);
 static bool is_smbus_device_using_sysfs(int busno);
 
 
@@ -205,16 +202,22 @@ static bool bva_sorted_eq(Byte_Value_Array bva1, Byte_Value_Array bva2) {
 }
 
 
-static Byte_Value_Array i2c_device_numbers = NULL;
+// static Byte_Value_Array i2c_device_numbers = NULL;
 
+/** Consolidated function to identify I2C devices.
+ *
+ *  \return #ByteValueArray of bus numbers for detected I2C devices
+ */
 Byte_Value_Array identify_i2c_devices() {
+
+   Byte_Value_Array i2c_device_numbers_result = NULL;   // result
 
    Byte_Value_Array bva1 = NULL;
    Byte_Value_Array bva2 = NULL;
    Byte_Value_Array bva3 = NULL;
 
    bva1 = get_i2c_devices_by_existence_test();
-   if (redundant_checks) {
+   if (redundant_i2c_device_identification_checks) {
       bva2 = get_i2c_devices_by_ls();
       bva3 = get_i2c_device_numbers_using_udev(/* include_smbus= */ true);
 
@@ -222,13 +225,13 @@ Byte_Value_Array identify_i2c_devices() {
       assert(bva_sorted_eq(bva1,bva3));
    }
 
-   i2c_device_numbers = bva1;
-   if (redundant_checks) {
+   i2c_device_numbers_result = bva1;
+   if (redundant_i2c_device_identification_checks) {
       bva_free(bva2);
       bva_free(bva3);
    }
    // DBGMSG("Identified %d I2C devices", bva_length(bva1));
-   return i2c_device_numbers;
+   return i2c_device_numbers_result;
 }
 
 
@@ -2124,20 +2127,20 @@ bye:
 #endif
 
 
-static void query_using_i2cdetect() {
-   assert(i2c_device_numbers);
+static void query_using_i2cdetect(Byte_Value_Array i2c_device_numbers_local) {
+   assert(i2c_device_numbers_local);
 
    int d0 = 0;
    int d1 = 1;
 
    rpt_vstring(d0,"Examining I2C buses using i2cdetect... ");
 
-   if (bva_length(i2c_device_numbers) == 0) {
+   if (bva_length(i2c_device_numbers_local) == 0) {
       rpt_vstring(d1, "No I2C buses found");
    }
    else {
-      for (int ndx=0; ndx< bva_length(i2c_device_numbers); ndx++) {
-         int busno = bva_get(i2c_device_numbers, ndx);
+      for (int ndx=0; ndx< bva_length(i2c_device_numbers_local); ndx++) {
+         int busno = bva_get(i2c_device_numbers_local, ndx);
          if (is_smbus_device_using_sysfs(busno)) {
             // calling i2cdetect for an SMBUs device fills dmesg with error messages
             rpt_nl();
@@ -2350,9 +2353,9 @@ void query_sysenv() {
    rpt_nl();
    rpt_vstring(0,"*** Primary Check 2: Check that /dev/i2c-* exist and writable ***");
    rpt_nl();
-   Byte_Value_Array i2c_devices = identify_i2c_devices();   // TODO: incomplete step toward consolidation
-   rpt_vstring(0, "Identified %d I2C devices", bva_length(i2c_devices));
-   bva_free(i2c_devices);        // *** NOT YET USED ***
+   Byte_Value_Array i2c_device_numbers = identify_i2c_devices();
+   assert(i2c_device_numbers);
+   rpt_vstring(0, "Identified %d I2C devices", bva_length(i2c_device_numbers));
    rpt_nl();
    check_i2c_devices(driver_list);
 
@@ -2424,7 +2427,7 @@ void query_sysenv() {
       execute_shell_cmd_rpt("ps aux | grep ddccontrol | grep -v grep", 1);
       rpt_nl();
 
-      query_using_i2cdetect();
+      query_using_i2cdetect(i2c_device_numbers);
 
       raw_scan_i2c_devices();
 
