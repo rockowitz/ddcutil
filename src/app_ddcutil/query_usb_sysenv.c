@@ -142,7 +142,7 @@ static void probe_uhid(int depth) {
             if (is_monitor) {
                rpt_nl();
                rpt_vstring(d1, "%s:", fqfn);
-               rpt_file_contents(fqfn, d2);
+               rpt_file_contents(fqfn, /*verbose=*/true, d2);
             }
          }
       }

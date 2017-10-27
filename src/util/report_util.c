@@ -322,14 +322,16 @@ void rpt_2col(char * s1,  char * s2,  int col2offset, bool offset_absolute, int 
 
 /* Reports the contents of a file.
  *
- * @param fn  name of file
- * @depth depth logical indentation depth
+ * @param   fn        name of file
+ * @param   verbose   if true, emit message if error reading file
+ * @depth   depth     logical indentation depth
  */
-int rpt_file_contents(const char * fn, int depth) {
+int rpt_file_contents(const char * fn, bool verbose, int depth) {
    GPtrArray * line_array = g_ptr_array_new();
    int rc = file_getlines(fn, line_array, false);
    if (rc < 0) {
-      rpt_vstring(depth, "Error reading file %s: %s", fn, strerror(-rc));
+      if (verbose)
+         rpt_vstring(depth, "Error reading file %s: %s", fn, strerror(-rc));
    }
    else if (rc > 0) {
       int ndx = 0;

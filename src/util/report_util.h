@@ -56,7 +56,7 @@ void rpt_vstring(int depth, char * format, ...) ;
 void rpt_2col(char * s1,  char * s2,  int col2offset, bool offset_absolute, int depth);
 void rpt_structure_loc(const char * name, const void * ptr, int depth);
 void rpt_hex_dump(const Byte * data, int size, int depth);
-int rpt_file_contents(const char * fn, int depth);
+int rpt_file_contents(const char * fn, bool verbose, int depth);
 
 // Remaining rpt_ functions share common formatting
 void rpt_str(const char * name, char * info, const char * val, int depth);

@@ -273,7 +273,7 @@ static bool show_one_file(char * dir_name, char * simple_fn, bool verbose, int d
    strncat(fqfn,simple_fn, sizeof(fqfn)-(strlen(fqfn)+1));  // use strncat to make Coverity happy
    if (regular_file_exists(fqfn)) {
       rpt_vstring(depth, "%s:", fqfn);
-      rpt_file_contents(fqfn, depth+1);
+      rpt_file_contents(fqfn, /*verbose=*/true, depth+1);
       result = true;
    }
    else if (verbose)
