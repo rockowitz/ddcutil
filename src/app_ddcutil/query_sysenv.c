@@ -102,6 +102,7 @@ static char * known_video_driver_modules[] = {
       "amdgpu",
       "fglrx",
       "i915",
+      "mgag200",
       "nvidia",
       "nouveau",
       "radeon",
