@@ -1394,7 +1394,6 @@ static void check_i2c_dev_module(struct driver_name_node * video_driver_list) {
                         "/run/modules-load.d/*conf "
                         "/usr/lib/modules-load.d/*conf "
                         , 1);
-
       rpt_nl();
       rpt_vstring(0,"Check for any references to i2c_dev in /etc/modprobe.d ...");
       execute_shell_cmd_rpt("grep -H i2c[-_]dev "
@@ -1508,7 +1507,7 @@ static bool query_card_and_driver_using_lspci() {
 // Two ways to get the hex device identifiers.  Both are ugly.
 // Reading modalias requires extracting values from a single string.
 // Reading individual ids from individual attributes is simpler,
-// but note the lack of error checking that all exist.
+// but note the lack of error checking.
 // Pick your poison.
 
 typedef struct {
