@@ -45,9 +45,9 @@
  */
 char *
 read_sysfs_attr(
-      char * dirname,
-      char * attrname,
-      bool verbose)
+      const char * dirname,
+      const char * attrname,
+      bool         verbose)
 {
    char fn[PATH_MAX];
    sprintf(fn, "%s/%s", dirname, attrname);
@@ -66,10 +66,10 @@ read_sysfs_attr(
  */
 char *
 read_sysfs_attr_w_default(
-      char * dirname,
-      char * attrname,
-      char * default_value,
-      bool verbose)
+      const char * dirname,
+      const char * attrname,
+      const char * default_value,
+      bool         verbose)
 {
    char fn[PATH_MAX];
    sprintf(fn, "%s/%s", dirname, attrname);
@@ -91,10 +91,10 @@ read_sysfs_attr_w_default(
  */
 GByteArray *
 read_binary_sysfs_attr(
-      char * dirname,
-      char * attrname,
-      int    est_size,
-      bool   verbose)
+      const char * dirname,
+      const char * attrname,
+      int          est_size,
+      bool         verbose)
 {
    assert(dirname);
    assert(attrname);

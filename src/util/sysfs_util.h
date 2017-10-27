@@ -21,39 +21,38 @@
  * </endcopyright>
  */
 
-#ifndef SYSFS_UTIL_H_
-#define SYSFS_UTIL_H_
-
 /** \file 
  * Functions for reading /sys file system
  */
 
-
-#endif /* SYSFS_UTIL_H_ */
+#ifndef SYSFS_UTIL_H_
+#define SYSFS_UTIL_H_
 
 #include <stdbool.h>
 #include <glib-2.0/glib.h>
 
 char *
 read_sysfs_attr(
-      char * dirname,
-      char * attrname,
-      bool verbose);
+      const char * dirname,
+      const char * attrname,
+      bool         verbose);
 
 char *
 read_sysfs_attr_w_default(
-      char * dirname,
-      char * attrname,
-      char * default_value,
-      bool verbose);
+      const char * dirname,
+      const char * attrname,
+      const char * default_value,
+      bool         verbose);
 
 GByteArray *
 read_binary_sysfs_attr(
-      char * dirname,
-      char * attrname,
-      int    est_size,
-      bool   verbose);
+      const char * dirname,
+      const char * attrname,
+      int          est_size,
+      bool         verbose);
 
 bool
 is_module_loaded_using_sysfs(
       const char * module_name);
+
+#endif /* SYSFS_UTIL_H_ */
