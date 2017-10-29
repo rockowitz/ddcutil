@@ -279,7 +279,8 @@ Value_Name_Title_Table functionality_table2 = {
       VNT(I2C_FUNC_SMBUS_READ_BLOCK_DATA  , "i2c_smbus_read_block_data"),
       VNT(I2C_FUNC_SMBUS_WRITE_BLOCK_DATA , "i2c_smbus_write_block_data"),
       VNT(I2C_FUNC_SMBUS_READ_I2C_BLOCK   , "i2c_smbus_read_i2c_block_data"),
-      VNT(I2C_FUNC_SMBUS_WRITE_I2C_BLOCK  , "i2c_smbus_write_i2c_block_data")
+      VNT(I2C_FUNC_SMBUS_WRITE_I2C_BLOCK  , "i2c_smbus_write_i2c_block_data"),
+      VNT_END
 };
 
 
@@ -657,7 +658,9 @@ void i2c_check_bus(Bus_Info * bus_info) {
             goto bye;
          }
          bus_info->flags |= ddc_addr_flags;
+         // DBGMSF(debug, "Calling i2c_get_functionality_flags_by_fd()...");
          bus_info->functionality = i2c_get_functionality_flags_by_fd(file);
+         // DBGMSF(debug, "i2c_get_functionality_flags_by_fd() returned %lu", bus_info->functionality);
          if (bus_info->flags & I2C_BUS_ADDR_0X50) {
             // Have seen case of nouveau driver with Quadro card where
             // there's a bus that has no monitor but responds to the X50 probe
@@ -717,6 +720,8 @@ void i2c_free_bus_info(Bus_Info * bus_info) {
 
 
 void i2c_dbgreport_bus_info_flags(Bus_Info * bus_info, int depth) {
+   bool debug = false;
+   DBGMSF(debug, "Starting.  bus_info=%p");
    rpt_vstring(depth, "Bus /dev/i2c-%d found:    %s", bus_info->busno, bool_repr(bus_info->flags&I2C_BUS_EXISTS));
    rpt_vstring(depth, "Bus /dev/i2c-%d probed:   %s", bus_info->busno, bool_repr(bus_info->flags&I2C_BUS_PROBED ));
    if ( bus_info->flags & I2C_BUS_PROBED ) {
@@ -725,6 +730,7 @@ void i2c_dbgreport_bus_info_flags(Bus_Info * bus_info, int depth) {
       rpt_vstring(depth, "Address 0x50 present:    %s", bool_repr(bus_info->flags & I2C_BUS_ADDR_0X50));
    }
    i2c_report_functionality_flags(bus_info->functionality, /* maxline */ 90, depth);
+   DBGMSF(false, "Done");
 }
 
 
