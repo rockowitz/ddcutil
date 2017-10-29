@@ -46,6 +46,7 @@
 
 #include "util/data_structures.h"
 #include "util/failsim.h"
+#include "util/sysfs_util.h"
 
 #include "base/adl_errors.h"
 #include "base/base_init.h"
