@@ -144,15 +144,9 @@ Buffer * bbf_to_buffer(Byte_Bit_Flags flags);
  *
  *  @param v symbolic name
  */
-#ifdef OLD
-#define VN(v) {v,#v}
-#endif
 #define VN(v) {v,#v,NULL}
 /** \def VN_END
  * Terminating entry for a Value_Name table. */
-#ifdef OLD
-#define VN_END {0xff,NULL}
-#endif
 #define VN_END {0xff,NULL,NULL}
 
 /** \def VNT(v,t)
@@ -166,25 +160,6 @@ Buffer * bbf_to_buffer(Byte_Bit_Flags flags);
 /** Terminating entry for a Value_Name_Title table. */
 #define VNT_END {0xff,NULL,NULL}
 
-/** A Value_Name struct is a pair containing a value and its symbolic name.
- */
-#ifdef OLD
-typedef struct {
-   Byte   value;   ///< byte value
-   char * name;    ///< symbolic name
-} Value_Name;
-#endif
-
-/** A Value_Name table is an array of Value_Name structs.
- *  It is used to map byte values to their symbolic names.
- *  Each Value_Name struct contains a value/name pair.
- *
- * The table is terminated by an entry whose name field is NULL.
- */
-#ifdef OLD
-typedef Value_Name Value_Name_Table[];
-#endif
-
 /** A Value_Name_Title table is used to map byte values to their
  * symbolic names and description (title).
  * Each entry is a value/name/description triple..
@@ -192,9 +167,6 @@ typedef Value_Name Value_Name_Table[];
  * The table is terminated by an entry whose name and description fields are NULL.
  */
 typedef struct {
-#ifdef OLD
-   Byte   value;         ///< byte value
-#endif
    uint32_t value;       ///< value
    char *   name;        ///< symbolic name
    char *   title;       ///< value description
@@ -206,9 +178,6 @@ typedef Value_Name_Title       Value_Name;
 typedef Value_Name_Title_Table Value_Name_Table;
 
 
-#ifdef OLD
-char * vn_name(  Value_Name*       table, uint32_t val);
-#endif
 char * vnt_name( Value_Name_Title* table, uint32_t val);
 #define vn_name vnt_name
 char * vnt_title(Value_Name_Title* table, uint32_t val);
@@ -219,43 +188,6 @@ uint32_t vnt_find_id(
            bool use_title,       // if false, search by symbolic name, if true, search by title
            bool ignore_case,
            uint32_t default_id);
-
-#ifdef OLD
-uint32_t vnt_id_by_title(Value_Name_Title_Table table,
-                         const char * title,
-                         bool ignore_case,
-                         uint32_t default_id);
-#endif
-
-
-
-
-#ifdef OLD
-char * interpret_named_flags_old(
-      Value_Name * table,
-      uint32_t     val,
-      char *       buffer,
-      int          bufsz,
-      char *       sepstr);
-#endif
-
-#ifdef OLD
-char * interpret_named_flags(
-          uint32_t       flags_val,
-          Value_Name *   bitname_table,
-          char *         sepstr,
-          char *         buffer,
-          int            bufsize );
-#endif
-
-#ifdef OLD
-char * interpret_vnt_flags_by_title(
-          uint32_t       flags_val,
-          Value_Name_Title_Table   bitname_table,
-          char *         sepstr,
-          char *         buffer,
-          int            bufsz );
-#endif
 
 #define INTERPRET_VNT_FLAGS_BY_NAME false
 #define INTERPRET VNT_FLAGS_BY_TITLE true

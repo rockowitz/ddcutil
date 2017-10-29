@@ -994,12 +994,6 @@ void buffer_dump(Buffer * buffer) {
 // Identifier id to name and description lookup
 //
 
-// TODO: Consider using a Value_Name_Title_Table with
-// NULL title field instead of Value_Name_Table.
-// would eliminate duplicative code.
-
-
-
 /** Returns the name of an entry in a Value_Nmme_Title table.
  *
  * @param table  pointer to table
@@ -1021,8 +1015,6 @@ char * vnt_name(Value_Name_Title* table, uint32_t val) {
    }
    return result;
 }
-
-
 
 
 /** Returns the title (description field) of an entry in a Value_Nmme_Title table.
@@ -1084,181 +1076,6 @@ uint32_t vnt_find_id(
    }
    return result;
 }
-
-
-#ifdef OLD
-/** Searches a Value_Name_Title_Table for a specified title,
- *  and returns its id value.
- *
- *  @param table a Value_Name_Title table
- *  @param title string to search for
- *  @param ignore_case  if true, search is case-insensitive
- *  @param default_id   value to return if not found
- *
- *  @result value id
- */
-uint32_t vnt_id_by_title(Value_Name_Title_Table table,
-                         const char * title,
-                         bool ignore_case,
-                         uint32_t default_id) {
-#ifdef OLD
-   uint32_t result = default_id;
-   Value_Name_Title * cur = table;
-   for (; cur->name; cur++) {
-      int comprc = (ignore_case)
-                       ? strcasecmp(title, cur->title)
-                       : strcmp(title, cur->title);
-      if (comprc == 0) {
-         result = cur->value;
-         break;
-      }
-   }
-   return result;
-#endif
-   return vnt_find_id(table, title, true /* use_title */, ignore_case, default_id);
-}
-#endif
-
-
-#ifdef OLD
-/* Returns the name of an entry in a Value_Nmme table.
- *
- * @param table  pointer to table
- * @param val    value to lookup
- *
- * @return name of value, NULL if not found
- */
-char * vn_name(Value_Name* table, uint32_t val) {
-   char * result = NULL;
-
-   Value_Name * cur = table;
-   for (; cur->name; cur++) {
-      if (val == cur->value) {
-         result = cur->name;
-         break;
-      }
-   }
-   return result;
-}
-#endif
-
-
-
-#ifdef OLD
-/** Interprets an integer whose bits represent named flags.
- *  The interpretation is returned in the buffer provided.
- *
- * @param table   pointer to Value_Name table
- * @param val     value to interpret
- * @param buffer  pointer to character buffer in which to return result
- * @param bufsz   buffer size
- * @param sepstr  if non-NULL, separator string to insert between values
- *
- * @return buffer
- *
- * @remark
- * Consider using Buffer instead
- */
-char * interpret_named_flags_old(
-      Value_Name * table,
-      uint32_t     val,
-      char *       buffer,
-      int          bufsz,
-      char *       sepstr)
-{
-   assert(buffer);
-   buffer[0] = '\0';
-   Value_Name * cur = table;
-   for (; cur->name; cur++) {
-      if (val & cur->value) {
-         if (sbuf_append(buffer, bufsz, sepstr, cur->name) )   //  truncated?
-            break;
-      }
-   }
-   return buffer;
-}
-#endif
-
-#ifdef OLD
-/** Interprets an integer whose bits represent named flags.
- *  The interpretation is returned in the buffer provided.
- *
- * @param flags_val     value to interpret
- * @param bitname_table   pointer to Value_Name table
- * @param sepstr  if non-NULL, separator string to insert between values
- * @param buffer  pointer to character buffer in which to return result
- * @param bufsz   buffer size
- *
- * @return buffer
- *
- * @remark
- * Consider using Buffer instead
- */
-char * interpret_named_flags(
-          uint32_t       flags_val,
-          Value_Name *   bitname_table,
-          char *         sepstr,
-          char *         buffer,
-          int            bufsz )
-{
-   assert(buffer && bufsz > 1);
-   buffer[0] = '\0';
-   Value_Name * cur_entry = bitname_table;
-   while (cur_entry->name) {
-      // DBGMSG("Comparing flags_val=0x%08x vs cur_entry->bitvalue = 0x%08x", flags_val, cur_entry->bitvalue);
-      if (!flags_val && cur_entry->value == flags_val) {
-         sbuf_append(buffer, bufsz, sepstr, cur_entry->name);
-         break;
-      }
-      if (flags_val & cur_entry->value) {
-         sbuf_append(buffer, bufsz, sepstr, cur_entry->name);
-      }
-      cur_entry++;
-   }
-   return buffer;
-}
-#endif
-
-#ifdef OLD
-/** Interprets an integer whose bits represent named flags,
- *  using the **title** field of a **Value_Name_Title** table.
- *  The interpretation is returned in the buffer provided.
- *
- * @param flags_val     value to interpret
- * @param bitname_table   pointer to Value_Name table
- * @param sepstr  if non-NULL, separator string to insert between values
- * @param buffer  pointer to character buffer in which to return result
- * @param bufsz   buffer size
- *
- * @return buffer
- *
- * @remark
- * - Consider using Buffer instead
- */
-char * interpret_vnt_flags_by_title(
-          uint32_t       flags_val,
-          Value_Name_Title_Table   bitname_table,
-          char *         sepstr,
-          char *         buffer,
-          int            bufsz )
-{
-   assert(buffer && bufsz > 1);
-   buffer[0] = '\0';
-   Value_Name_Title * cur_entry = bitname_table;
-   while (cur_entry->name) {
-      // DBGMSG("Comparing flags_val=0x%08x vs cur_entry->bitvalue = 0x%08x", flags_val, cur_entry->bitvalue);
-      if (!flags_val && cur_entry->value == flags_val) {
-         sbuf_append(buffer, bufsz, sepstr, (cur_entry->title)? cur_entry->title : "missing" );
-         break;
-      }
-      if (flags_val & cur_entry->value) {
-         sbuf_append(buffer, bufsz, sepstr, (cur_entry->title) ? cur_entry->title : "missing");
-      }
-      cur_entry++;
-   }
-   return buffer;
-}
-#endif
 
 
 /** Interprets an integer whose bits represent named flags.
