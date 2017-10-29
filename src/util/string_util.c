@@ -417,15 +417,19 @@ Null_Terminated_String_Array strsplit(const char * str_to_split, const char * de
 }
 
 
-/** Splits a string based on a list of delimiter characters.
- *  However, no piece is longer than a specified number of characters.
+/** Splits a string into segments, each of which is no longer
+ *  that a specified number of characters.  If delimiters are
+ *  specified, then they are used to split the string into segments.
+ *  Otherwise all segments, except possibly the last, are
+ *  #max_piece_length in length.
  *
  *  @param  str_to_split     string to be split
  *  @param  max_piece_length maximum length of each segment
  *  @param  delims           string of delimiter characters
  *  @return null terminated array of pieces
  *
- * Note: Each character in delims is used as an individual test.
+ * @remark
+ * Each character in #delims is used as an individual test.
  * The full string is NOT a delimiter string.
  */
 Null_Terminated_String_Array
@@ -451,15 +455,21 @@ strsplit_maxlength(
       char * end = start + max_piece_length;
       if (end > str_to_split2_end)
          end = str_to_split2_end;
-      if (delims) {
-         char * last = end-1;
-         while(last >= start) {
-            // printf("(%s) last = %p\n", __func__, last);
-            if (strchr(delims, *last)) {
-               end = last+1;
-               break;
+      // int cursize = end-start;
+      // printf("(%s) end=%p, start=%p, cursize=%d, max_piece_length=%d\n",
+      //        __func__, end, start, cursize, max_piece_length);
+      if ( end < str_to_split2_end) {
+         // printf("(%s) Need to split. \n", __func__);
+         if (delims) {
+            char * last = end-1;
+            while(last >= start) {
+               // printf("(%s) last = %p\n", __func__, last);
+               if (strchr(delims, *last)) {
+                  end = last+1;
+                  break;
+               }
+               last--;
             }
-            last--;
          }
       }
       char * piece = strndup(start, end-start);
