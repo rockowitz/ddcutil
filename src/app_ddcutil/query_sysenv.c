@@ -975,7 +975,9 @@ void raw_scan_i2c_devices() {
          if (fd < 0)
             continue;
 
+         // DBGMSG("Calling i2c_get_functionality_flags_by_fd()");
          unsigned long functionality = i2c_get_functionality_flags_by_fd(fd);
+         // DBGMSG("i2c_get_functionality_flags_by_fd() returned %ul", functionality);
          i2c_report_functionality_flags(functionality, 90, d2);
 
          //  Base_Status_Errno rc = i2c_set_addr(fd, 0x50, CALLOPT_ERR_MSG);
