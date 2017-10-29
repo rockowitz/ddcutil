@@ -1291,12 +1291,15 @@ char * vnt_interpret_flags(
    Value_Name_Title * cur_entry = bitname_table;
      while (cur_entry->name) {
         if (debug)
-           printf("(%s) Comparing flags_val=0x%08x vs cur_entry->value = 0x%08x\n",
-                  __func__, flags_val, cur_entry->value);
+           printf("(%s) cur_entry=%p, Comparing flags_val=0x%08x vs cur_entry->value = 0x%08x\n",
+                  __func__, cur_entry, flags_val, cur_entry->value);
         if (!flags_val && cur_entry->value == flags_val) { // special value for no bit set
            char * sval = (use_title) ? cur_entry->title : cur_entry->name;
            if (!sval)
               sval = "missing";
+
+           // printf("(%s-1) sbuf=%p, sbuf->str=\"%s\", sbuf->len=%zu, sval=%s\n",
+           //        __func__, sbuf, sbuf->str, sbuf->len, sval);
            g_string_append(sbuf, sval);
            break;
         }
@@ -1305,13 +1308,19 @@ char * vnt_interpret_flags(
               first = false;
            else {
               // g_string_append(sbuf, ", ");
-              if (sepstr)
+              if (sepstr) {
+                 // printf("(%s-2) sbuf=%p, sbuf->str=\"%s\", sbuf->len=%zu, sepstr=%s\n",
+                 //        __func__, sbuf, sbuf->str, sbuf->len, sepstr);
                  g_string_append(sbuf, sepstr);
+              }
            }
 
            char * sval = (use_title) ? cur_entry->title : cur_entry->name;
-           if (!sval)
+           if (!sval) {
               sval = "missing";
+           }
+           // printf("(%s-3) sbuf=%p, sbuf->str=\"%s\", sbuf->len=%zu, sval=%s\n",
+           //         __func__, sbuf, sbuf->str, sbuf->len, sval);
            g_string_append(sbuf, sval);
         }
         cur_entry++;

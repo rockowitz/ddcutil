@@ -166,8 +166,7 @@ Buffer * bbf_to_buffer(Byte_Bit_Flags flags);
 /** Terminating entry for a Value_Name_Title table. */
 #define VNT_END {0xff,NULL,NULL}
 
-/** A Value_Name struct struct is a pair containing
- *  value and its symbolic name.
+/** A Value_Name struct is a pair containing a value and its symbolic name.
  */
 #ifdef OLD
 typedef struct {
@@ -197,8 +196,8 @@ typedef struct {
    Byte   value;         ///< byte value
 #endif
    uint32_t value;       ///< value
-   char * name;          ///< symbolic name
-   char * title;         ///< value description
+   char *   name;        ///< symbolic name
+   char *   title;       ///< value description
 } Value_Name_Title;
 
 typedef Value_Name_Title Value_Name_Title_Table[];
@@ -240,12 +239,14 @@ char * interpret_named_flags_old(
       char *       sepstr);
 #endif
 
+#ifdef OLD
 char * interpret_named_flags(
           uint32_t       flags_val,
           Value_Name *   bitname_table,
           char *         sepstr,
           char *         buffer,
           int            bufsize );
+#endif
 
 #ifdef OLD
 char * interpret_vnt_flags_by_title(
