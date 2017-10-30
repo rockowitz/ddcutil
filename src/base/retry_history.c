@@ -31,12 +31,21 @@
 
 #include "retry_history.h"
 
+/** Initializes an existing #Retry_History record to
+ *  have 0 status codes.
+ *
+ *  \remark
+ *  Used when #Record_History is allocated on the stack.
+ */
 void retry_history_init(Retry_History* history) {
    assert(history);
    memcpy(history->marker, RETRY_HISTORY_MARKER, 4);
    history->ct = 0;
 }
 
+/** Allocates a new #Retry_History record and initializes
+ *  it to have 0 status code.
+ */
 Retry_History * retry_history_new() {
    Retry_History * history = calloc(1, sizeof(Retry_History));
    memcpy(history->marker, RETRY_HISTORY_MARKER, 4);
