@@ -183,6 +183,7 @@ base/base_init.c            	\
 base/build_info.c           	\
 base/core.c                 	\
 base/ddc_errno.c            	\
+base/ddc_error.c                \
 base/ddc_packets.c          	\
 base/displays.c             	\
 base/execution_stats.c      	\
