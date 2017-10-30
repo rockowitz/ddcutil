@@ -60,7 +60,7 @@ Status_Errno  i2c_set_addr(int fd, int addr, Call_Options callopts);
 
 // Bus functionality flags
 unsigned long i2c_get_functionality_flags_by_fd(int fd);
-char *        i2c_interpret_functionality_into_buffer(unsigned long functionality, Buffer * buf);
+char *        i2c_interpret_functionality_flags(unsigned long functionality);
 void          i2c_report_functionality_flags(long functionality, int maxline, int depth);
 
 bool i2c_verify_functions_supported(int busno, char * write_func_name, char * read_func_name);
