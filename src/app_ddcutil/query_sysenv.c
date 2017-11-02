@@ -93,6 +93,15 @@ bool redundant_i2c_device_identification_checks = true;
 
 // Forward references
 static bool is_smbus_device_using_sysfs(int busno);
+struct driver_name_node;
+
+// Preserves information relevant to later tests
+typedef struct {
+   char * architecture;
+   char * distributor_id;
+   bool   is_raspbian;
+   struct driver_name_node * driver_list;
+} Env_Accumulator;
 
 
 static char * known_video_driver_modules[] = {
@@ -104,6 +113,7 @@ static char * known_video_driver_modules[] = {
       "nouveau",
       "radeon",
       "vboxvideo",
+      "vc4",
       NULL
 };
 
@@ -112,6 +122,7 @@ static char * prefix_matches[] = {
       "drm",
       "i2c",
       "video",
+      "vc4",
       NULL
 };
 
@@ -184,15 +195,28 @@ bye:
 
 // temporarily here.  move it to data_structures.c
 
+/** Compare 2 sorted #Byte_Value_Array instances for equality.
+ *  If the same value occurs multiple times in one array, it
+ *  must occur the same number of times in the other.
+ *
+ *  \param  bva1  pointer to first instance
+ *  \param  bva2  pointer to second instance
+ *  \retval true  arrays are identical
+ *  \retval false arrays not identical
+ *
+ *  \remark
+ *  If bva1 or bva2 is null, it is considered to contain 0 values.
+ */
+
 static bool bva_sorted_eq(Byte_Value_Array bva1, Byte_Value_Array bva2) {
-   // punt on the NULL case for now
-   assert(bva1);
-   assert(bva2);
+   int len1 = (bva1) ? bva_length(bva1) : 0;
+   int len2 = (bva2) ? bva_length(bva2) : 0;
+
    bool result = true;
-   if (bva_length(bva1) != bva_length(bva2)) {
+   if (len1  != len2) {
       result = false;
    }
-   else {
+   else if ( (len1+len2) > 0 ) {
       for (int ndx = 0; ndx < bva_length(bva1); ndx++) {
          if (bva_get(bva1,ndx) != bva_get(bva2,ndx))
             result = false;
@@ -201,8 +225,6 @@ static bool bva_sorted_eq(Byte_Value_Array bva1, Byte_Value_Array bva2) {
    return result;
 }
 
-
-// static Byte_Value_Array i2c_device_numbers = NULL;
 
 /** Consolidated function to identify I2C devices.
  *
@@ -301,7 +323,7 @@ static bool is_smbus_device_using_sysfs(int busno) {
 // The list is created by executing function query_card_and_driver_using_sysfs(),
 // which is grouped with the sysfs functions.
 
-struct driver_name_node;
+// struct driver_name_node;
 
 struct driver_name_node {
    char * driver_name;
@@ -486,6 +508,85 @@ void report_dmicode_group(char * header, int depth) {
 }
 
 
+
+
+static void query_dmidecode() {
+
+#ifdef NO
+   // leave in for testing
+   rpt_nl();
+   if (test_command_executability("dmidecode") == 0) {
+      rpt_vstring(0, "System information from dmidecode:");
+
+#ifdef NO_UGLY
+      report_dmidecode_string("baseboard-manufacturer", 1);
+      report_dmidecode_string("baseboard-product-name", 1);
+      report_dmidecode_string("system-manufacturer", 1);
+      report_dmidecode_string("system-product-name", 1);
+      report_dmidecode_string("chassis-manufacturer", 1);
+      report_dmidecode_string("chassis-type", 1);
+#endif
+
+      report_dmicode_group("Base Board Info", 1);
+      report_dmicode_group("System Info", 1);
+      report_dmicode_group("Chassis Info", 1);
+   }
+   else
+      rpt_vstring(0, "dmidecode command unavailable");
+#endif
+
+   char * sysdir = "/sys/class/dmi/id";
+   // better way, doesn't require privileged dmidecode
+   // rpt_nl();
+   rpt_title("DMI Information from /sys/class/dmi/id:", 0);
+
+   char * dv = "(Unavailable)";
+   //                                                                                            verbpse
+   rpt_vstring(1, "%-25s %s","Motherboard vendor:",       read_sysfs_attr_w_default(sysdir, "board_vendor",  dv, false));
+   rpt_vstring(1, "%-25s %s","Motherboard product name:", read_sysfs_attr_w_default(sysdir, "board_name",    dv, false));
+   rpt_vstring(1, "%-25s %s","System vendor:",            read_sysfs_attr_w_default(sysdir, "sys_vendor",    dv, false));
+   rpt_vstring(1, "%-25s %s","System product name:",      read_sysfs_attr_w_default(sysdir, "product_name",  dv, false));
+   rpt_vstring(1, "%-25s %s","Chassis vendor:",           read_sysfs_attr_w_default(sysdir, "chassis_vendor",dv, false));
+
+   char * chassis_type_s = read_sysfs_attr(sysdir, "chassis_type", /*verbose=*/ true);
+   char * chassis_desc = dv;
+   char workbuf[100];
+   if (chassis_type_s) {
+      int chassis_type_i = atoi(chassis_type_s);   // TODO: use something safer?
+      const char * chassis_type_name = dmi_chassis_type(chassis_type_i);
+      if (chassis_type_name)
+         snprintf(workbuf, 100, "%s - %s", chassis_type_s, chassis_type_name);
+      else
+         snprintf(workbuf, 100, "%s - Unrecognized value", chassis_type_s);
+      chassis_desc = workbuf;
+   }
+   rpt_vstring(1, "%-25s %s", "Chassis type:", chassis_desc);
+
+
+   // test_command_executability("i2cdetect");
+   // test_command_executability("nonesuch");
+
+#ifdef NOT_WORKING
+   char * cmd =    "dmidecode | grep \"['Base Board Info'|'Chassis Info'|'System Info']\' -A2";
+   // char * cmd =    "dmidecode | grep 'Base Board Info' -A2";
+   DBGMSG("cmd: |%s|", cmd);
+   GPtrArray * lines = execute_shell_cmd_collect(cmd);
+
+   if (lines) {
+   for (int ndx = 0; ndx < lines->len; ndx++) {
+      char * s = g_ptr_array_index(lines, ndx);
+      rpt_title(s, 1);
+   }
+   }
+   else
+      rpt_vstring(1, "Command failed: %s", cmd);
+   g_ptr_array_free(lines,true);
+#endif
+
+}
+
+
+
 void report_endian(int depth) {
    int d1 = depth+1;
    rpt_title("Byte order checks:", depth);
@@ -520,23 +621,52 @@ void report_endian(int depth) {
 }
 
 
+
+
+
+
 //
 // Higher level functions
 //
 
 /* Reports basic system information
+ *
+ * \param  accum  pointer to struct in which information is returned
  */
-static void query_base_env() {
+static void query_base_env(Env_Accumulator * accum) {
    rpt_vstring(0, "ddcutil version: %s", BUILD_VERSION);
    rpt_nl();
 
    wrap_get_first_line("/proc/version", NULL, 0);
 
+
+   char * expected_architectures[] = {"x86_64", "i386", "armv7l", NULL};
+   char * architecture   = execute_shell_cmd_one_line_result("arch");      // alt: use uname -m
+   char * distributor_id = execute_shell_cmd_one_line_result("lsb_release -s -i");  // e.g. Ubuntu, Raspbian
+   char * release        = execute_shell_cmd_one_line_result("lsb_release -s -r");
+   rpt_nl();
+   rpt_vstring(0, "Architecture:     %s", architecture);
+   rpt_vstring(0, "Distributor id:   %s", distributor_id);
+   rpt_vstring(0, "Release:          %s", release);
+
+   if ( ntsa_find(expected_architectures, architecture) >= 0) {
+      rpt_vstring(0, "Found a known architecture");
+   }
+   else {
+      rpt_vstring(0, "Unexpected architecture %s.  Please report.", architecture);
+   }
+
+   accum->architecture = architecture;
+   accum->distributor_id = distributor_id;
+   accum->is_raspbian = streq(accum->distributor_id, "Raspbian");
+
+#ifdef REDUNDANT
    rpt_nl();
    rpt_vstring(0,"/etc/os-release...");
    bool ok = execute_shell_cmd_rpt("grep PRETTY_NAME /etc/os-release", 1 /* depth */);
    if (!ok)
       rpt_vstring(1,"Unable to read PRETTY_NAME from /etc/os-release");
+#endif
 
    rpt_nl();
    wrap_get_first_line("/proc/cmdline", NULL, 0);
@@ -555,76 +685,13 @@ static void query_base_env() {
            execute_shell_cmd_rpt( "cat /proc/cpuinfo | grep \"model name\" | uniq",  1);   // "model name"
        }
 
-#ifdef NO
-      // leave in for testing
-      rpt_nl();
-      if (test_command_executability("dmidecode") == 0) {
-         rpt_vstring(0, "System information from dmidecode:");
-
-#ifdef NO_UGLY
-         report_dmidecode_string("baseboard-manufacturer", 1);
-         report_dmidecode_string("baseboard-product-name", 1);
-         report_dmidecode_string("system-manufacturer", 1);
-         report_dmidecode_string("system-product-name", 1);
-         report_dmidecode_string("chassis-manufacturer", 1);
-         report_dmidecode_string("chassis-type", 1);
-#endif
-
-         report_dmicode_group("Base Board Info", 1);
-         report_dmicode_group("System Info", 1);
-         report_dmicode_group("Chassis Info", 1);
-      }
-      else
-         rpt_vstring(0, "dmidecode command unavailable");
-#endif
-
-      char * sysdir = "/sys/class/dmi/id";
-      // better way, doesn't require privileged dmidecode
-      rpt_nl();
-      rpt_title("DMI Information from /sys/class/dmi/id:", 0);
-
-      char * dv = "(Unavailable)";
-      //                                                                                            verbpse
-      rpt_vstring(1, "%-25s %s","Motherboard vendor:",       read_sysfs_attr_w_default(sysdir, "board_vendor",  dv, false));
-      rpt_vstring(1, "%-25s %s","Motherboard product name:", read_sysfs_attr_w_default(sysdir, "board_name",    dv, false));
-      rpt_vstring(1, "%-25s %s","System vendor:",            read_sysfs_attr_w_default(sysdir, "sys_vendor",    dv, false));
-      rpt_vstring(1, "%-25s %s","System product name:",      read_sysfs_attr_w_default(sysdir, "product_name",  dv, false));
-      rpt_vstring(1, "%-25s %s","Chassis vendor:",           read_sysfs_attr_w_default(sysdir, "chassis_vendor",dv, false));
-
-      char * chassis_type_s = read_sysfs_attr(sysdir, "chassis_type", /*verbose=*/ true);
-      char * chassis_desc = dv;
-      char workbuf[100];
-      if (chassis_type_s) {
-         int chassis_type_i = atoi(chassis_type_s);   // TODO: use something safer?
-         const char * chassis_type_name = dmi_chassis_type(chassis_type_i);
-         if (chassis_type_name)
-            snprintf(workbuf, 100, "%s - %s", chassis_type_s, chassis_type_name);
-         else
-            snprintf(workbuf, 100, "%s - Unrecognized value", chassis_type_s);
-         chassis_desc = workbuf;
-      }
-      rpt_vstring(1, "%-25s %s", "Chassis type:", chassis_desc);
-
-
-      // test_command_executability("i2cdetect");
-      // test_command_executability("nonesuch");
-
-#ifdef NOT_WORKING
-      char * cmd =    "dmidecode | grep \"['Base Board Info'|'Chassis Info'|'System Info']\' -A2";
-      // char * cmd =    "dmidecode | grep 'Base Board Info' -A2";
-      DBGMSG("cmd: |%s|", cmd);
-      GPtrArray * lines = execute_shell_cmd_collect(cmd);
-
-      if (lines) {
-      for (int ndx = 0; ndx < lines->len; ndx++) {
-         char * s = g_ptr_array_index(lines, ndx);
-         rpt_title(s, 1);
-      }
-      }
-      else
-         rpt_vstring(1, "Command failed: %s", cmd);
-      g_ptr_array_free(lines,true);
-#endif
+       rpt_nl();
+        if (accum->is_raspbian) {
+           rpt_vstring(0, "Skipping dmidecode checks on %s.", accum->distributor_id);
+        }
+        else {
+           query_dmidecode();
+        }
 
       rpt_nl();
       report_endian(0);
@@ -1603,7 +1670,7 @@ Device_Ids read_device_ids2(char * cur_dir_name) {
  *
  * Returns:     singly linked list of video driver names
  */
-static struct driver_name_node * query_card_and_driver_using_sysfs() {
+static struct driver_name_node * query_card_and_driver_using_sysfs(Env_Accumulator * accum) {
    rpt_vstring(0,"Obtaining card and driver information from /sys...");
 
    // also of possible interest:
@@ -1626,116 +1693,119 @@ static struct driver_name_node * query_card_and_driver_using_sysfs() {
    struct dirent *dent;
    DIR           *d;
 
-   char * pci_devices_dir_name = "/sys/bus/pci/devices";
-   d = opendir(pci_devices_dir_name);
-   if (!d) {
-      rpt_vstring(0,"Unable to open directory %s: %s", pci_devices_dir_name, strerror(errno));
+   if (accum->is_raspbian) {
+      rpt_vstring(0, "Executing on %s.  Skipping /sys/bus/pci checks.", accum->distributor_id);
    }
    else {
-      while ((dent = readdir(d)) != NULL) {
-         // DBGMSG("%s", dent->d_name);
-         char cur_fn[100];
-         char cur_dir_name[100];
-         if (!streq(dent->d_name, ".") && !streq(dent->d_name, "..") ) {
-            sprintf(cur_dir_name, "%s/%s", pci_devices_dir_name, dent->d_name);
-            sprintf(cur_fn, "%s/class", cur_dir_name);
-            // read /sys/bus/pci/devices/nnnn:nn:nn.n/class
-            char * class_id = read_sysfs_attr(cur_dir_name, "class", /*verbose=*/true);
-            // printf("%s: |%s|\n", cur_fn, class_id);
-            if (str_starts_with(class_id, "0x03")) {
-               // printf("%s = 0x030000\n", cur_fn);
-               rpt_nl();
-               rpt_vstring(0,"Determining driver name and possibly version...");
-               // DBGMSG("cur_dir_name: %s", cur_dir_name);
-               char workfn[PATH_MAX];
-               sprintf(workfn, "%s/%s", cur_dir_name, "driver");
-               char resolved_path[PATH_MAX];
-               char * rpath = realpath(workfn, resolved_path);
-               if (!rpath) {
-                  int errsv = errno;
-                  rpt_vstring(0,"Cannot determine driver name");
-                  rpt_vstring(0, "realpath(%s) returned NULL, errno=%d (%s)",
-                                  workfn, errsv, linux_errno_name(errsv));
-                  if (errsv == ENOENT) {
-                     // fail in virtual environment?
-                     // Raspberry Pi
-                     rpt_vstring(0, "Directory not found: %s", cur_dir_name);
+      char * pci_devices_dir_name = "/sys/bus/pci/devices";
+      d = opendir(pci_devices_dir_name);
+      if (!d) {
+         rpt_vstring(0,"Unable to open directory %s: %s", pci_devices_dir_name, strerror(errno));
+      }
+      else {
+         while ((dent = readdir(d)) != NULL) {
+            // DBGMSG("%s", dent->d_name);
+            char cur_fn[100];
+            char cur_dir_name[100];
+            if (!streq(dent->d_name, ".") && !streq(dent->d_name, "..") ) {
+               sprintf(cur_dir_name, "%s/%s", pci_devices_dir_name, dent->d_name);
+               sprintf(cur_fn, "%s/class", cur_dir_name);
+               // read /sys/bus/pci/devices/nnnn:nn:nn.n/class
+               char * class_id = read_sysfs_attr(cur_dir_name, "class", /*verbose=*/true);
+               // printf("%s: |%s|\n", cur_fn, class_id);
+               if (str_starts_with(class_id, "0x03")) {
+                  // printf("%s = 0x030000\n", cur_fn);
+                  rpt_nl();
+                  rpt_vstring(0,"Determining driver name and possibly version...");
+                  // DBGMSG("cur_dir_name: %s", cur_dir_name);
+                  char workfn[PATH_MAX];
+                  sprintf(workfn, "%s/%s", cur_dir_name, "driver");
+                  char resolved_path[PATH_MAX];
+                  char * rpath = realpath(workfn, resolved_path);
+                  if (!rpath) {
+                     int errsv = errno;
+                     rpt_vstring(0,"Cannot determine driver name");
+                     rpt_vstring(0, "realpath(%s) returned NULL, errno=%d (%s)",
+                                     workfn, errsv, linux_errno_name(errsv));
+                     if (errsv == ENOENT) {
+                        // fail in virtual environment?
+                        // Raspberry Pi
+                        rpt_vstring(0, "Directory not found: %s", cur_dir_name);
+                     }
+                     else {
+                        // rpt_vstring(0, "realpath(%s) returned NULL, errno=%d (%s)",
+                        //                 workfn, errsv, linux_errno_name(errsv));
+                     }
                   }
                   else {
-                     // rpt_vstring(0, "realpath(%s) returned NULL, errno=%d (%s)",
-                     //                 workfn, errsv, linux_errno_name(errsv));
+                     // printf("realpath returned %s\n", rpath);
+                     // printf("%s --> %s\n",workfn, resolved_path);
+                     char * final_slash_ptr = strrchr(rpath, '/');
+                     // TODO: handle case where there are more than 1 video drivers loaded,
+                     // say if the system contains both an AMD and Nvidia card
+                     driver_name = final_slash_ptr+1;
+                     printf(    "   Driver name:    %s\n", driver_name);
+                     struct driver_name_node * new_node = calloc(1, sizeof(struct driver_name_node));
+                     new_node->driver_name = strdup(driver_name);
+                     new_node->next = driver_list;
+                     driver_list = new_node;
+
+
+                     char driver_module_dir[PATH_MAX];
+                     sprintf(driver_module_dir, "%s/driver/module", cur_dir_name);
+                     // printf("driver_module_dir: %s\n", driver_module_dir);
+                     char * driver_version = read_sysfs_attr(driver_module_dir, "version", false);
+                     if (driver_version)
+                         rpt_vstring(0,"   Driver version: %s", driver_version);
+                     else
+                        rpt_vstring(0,"   Unable to determine driver version");
+                  }
+
+                  rpt_nl();
+                  Device_Ids dev_ids = read_device_ids1(cur_dir_name);
+                  Device_Ids dev_ids2 = read_device_ids2(cur_dir_name);
+                  assert(dev_ids.vendor_id == dev_ids2.vendor_id);
+                  assert(dev_ids.device_id == dev_ids2.device_id);
+                  assert(dev_ids.subvendor_id == dev_ids2.subvendor_id);
+                  assert(dev_ids.subdevice_id == dev_ids2.subdevice_id);
+
+                  // printf("\nLooking up names in pci.ids...\n");
+                  // rpt_nl();
+                  rpt_vstring(0,"Video card identification:");
+                  bool pci_ids_ok = devid_ensure_initialized();
+                  if (pci_ids_ok) {
+                     Pci_Usb_Id_Names names = devid_get_pci_names(
+                                     dev_ids.vendor_id,
+                                     dev_ids.device_id,
+                                     dev_ids.subvendor_id,
+                                     dev_ids.subdevice_id,
+                                     4);
+                     if (!names.vendor_name)
+                        names.vendor_name = "unknown vendor";
+                     if (!names.device_name)
+                        names.device_name = "unknown device";
+
+                     rpt_vstring(0,"   Vendor:              %04x       %s", dev_ids.vendor_id, names.vendor_name);
+                     rpt_vstring(0,"   Device:              %04x       %s", dev_ids.device_id, names.device_name);
+                     if (names.subsys_or_interface_name)
+                     rpt_vstring(0,"   Subvendor/Subdevice: %04x/%04x  %s", dev_ids.subvendor_id, dev_ids.subdevice_id, names.subsys_or_interface_name);
+                  }
+                  else {
+                     rpt_vstring(0,"Unable to find pci.ids file for name lookup.");
+                     rpt_vstring(0,"   Vendor:              %04x       ", dev_ids.vendor_id);
+                     rpt_vstring(0,"   Device:              %04x       ", dev_ids.device_id);
+                     rpt_vstring(0,"   Subvendor/Subdevice: %04x/%04x  ", dev_ids.subvendor_id, dev_ids.subdevice_id);
                   }
                }
-               else {
-                  // printf("realpath returned %s\n", rpath);
-                  // printf("%s --> %s\n",workfn, resolved_path);
-                  char * final_slash_ptr = strrchr(rpath, '/');
-                  // TODO: handle case where there are more than 1 video drivers loaded,
-                  // say if the system contains both an AMD and Nvidia card
-                  driver_name = final_slash_ptr+1;
-                  printf(    "   Driver name:    %s\n", driver_name);
-                  struct driver_name_node * new_node = calloc(1, sizeof(struct driver_name_node));
-                  new_node->driver_name = strdup(driver_name);
-                  new_node->next = driver_list;
-                  driver_list = new_node;
-
-
-                  char driver_module_dir[PATH_MAX];
-                  sprintf(driver_module_dir, "%s/driver/module", cur_dir_name);
-                  // printf("driver_module_dir: %s\n", driver_module_dir);
-                  char * driver_version = read_sysfs_attr(driver_module_dir, "version", false);
-                  if (driver_version)
-                      rpt_vstring(0,"   Driver version: %s", driver_version);
-                  else
-                     rpt_vstring(0,"   Unable to determine driver version");
+               else if (str_starts_with(class_id, "0x0a")) {
+                  DBGMSG("Encountered docking station (class 0x0a) device. dir=%s", cur_dir_name);
                }
-
-               rpt_nl();
-               Device_Ids dev_ids = read_device_ids1(cur_dir_name);
-               Device_Ids dev_ids2 = read_device_ids2(cur_dir_name);
-               assert(dev_ids.vendor_id == dev_ids2.vendor_id);
-               assert(dev_ids.device_id == dev_ids2.device_id);
-               assert(dev_ids.subvendor_id == dev_ids2.subvendor_id);
-               assert(dev_ids.subdevice_id == dev_ids2.subdevice_id);
-
-
-
-               // printf("\nLooking up names in pci.ids...\n");
-               // rpt_nl();
-               rpt_vstring(0,"Video card identification:");
-               bool pci_ids_ok = devid_ensure_initialized();
-               if (pci_ids_ok) {
-                  Pci_Usb_Id_Names names = devid_get_pci_names(
-                                  dev_ids.vendor_id,
-                                  dev_ids.device_id,
-                                  dev_ids.subvendor_id,
-                                  dev_ids.subdevice_id,
-                                  4);
-                  if (!names.vendor_name)
-                     names.vendor_name = "unknown vendor";
-                  if (!names.device_name)
-                     names.device_name = "unknown device";
-
-                  rpt_vstring(0,"   Vendor:              %04x       %s", dev_ids.vendor_id, names.vendor_name);
-                  rpt_vstring(0,"   Device:              %04x       %s", dev_ids.device_id, names.device_name);
-                  if (names.subsys_or_interface_name)
-                  rpt_vstring(0,"   Subvendor/Subdevice: %04x/%04x  %s", dev_ids.subvendor_id, dev_ids.subdevice_id, names.subsys_or_interface_name);
-               }
-               else {
-                  rpt_vstring(0,"Unable to find pci.ids file for name lookup.");
-                  rpt_vstring(0,"   Vendor:              %04x       ", dev_ids.vendor_id);
-                  rpt_vstring(0,"   Device:              %04x       ", dev_ids.device_id);
-                  rpt_vstring(0,"   Subvendor/Subdevice: %04x/%04x  ", dev_ids.subvendor_id, dev_ids.subdevice_id);
-               }
-            }
-            else if (str_starts_with(class_id, "0x0a")) {
-               DBGMSG("Encountered docking station (class 0x0a) device. dir=%s", cur_dir_name);
             }
          }
+         closedir(d);
       }
-      closedir(d);
    }
-
+   accum->driver_list = driver_list;
    return driver_list;
 }
 
@@ -2329,9 +2399,106 @@ void probe_logs() {
 }
 
 
+void query_raspbian() {
+
+      //      DPI = Display Parallel Interface  interference issues
+      //      DSI = Display Serial Interface    special purpose displays eg cell phones
+      //      DBI = Display Bus Interface    old
+      //      Pi Display product uses combination of DPI (the display) DSI , bridge chip
+
+
+      //      /sys/bus/i2c/devices
+      //          entries point to devices/platform/soc/ directory
+      //         i2c-n
+      //          name
+      //          device ->
+      //      /sys/devices/platform/soc/
+      //               3f805000.i2c
+      //                    modalias
+      //                         of:Ni2cT<NULL>Cbrcm,brcm2835=i2c
+      //               soc:gpu/
+      //               soc:i2cdsi/
+    //                      modalias
+       //                       of:Ni2cdsiT<NULL>Ci2c-gpio
+   // per file2alias.c:   of:    of table
+      //                   sequence of entries
+      //                   for each entry:
+      //                   of:N<name>T<type>C<compatible>
+       //                        additional Calias?
+
+ //                          <name> and <type> may be "*"
+   //                        C<compatible> field is optional
+     //                      <compatible> is "*" if <type> is "*"
+       //                    <NULL> in example is sprintf() formatting of a null pointer
+
+
+
+   //
+
+      //          driver -> /sys/bus/platform/drivers/vc4-drm
+      //          drm/card0
+      //          graphics/fb0/dev   value 29:0
+      //          modalias
+      //      /sys/bus/platform/drivers    look for driver vc4
+      //
+      //
+      //     drm locations:
+      //     /sys/devices/platform/soc/soc:gpu/drm
+      //              card0-Composite-1
+      //              card0-DSI-1
+      //              card0-HDMI-A-1
+      //     /sys/class/drm     - symbolic links to file in soc:gpu/drm
+      //     /sys/module/drm    - uninteresting
+      //
+      //
+      //    /boot/config.txt
+      //      should include dtoverlay=vc4-kms-v3d
+      //      don't work:  vc4-fkms-v3d
+      //
+      //   /etc/modules ?
+      //      bcm_..
+      //
+      //   /etc/modprobe.d/raspi.blacklist.conf
+      //       spi-bcm2708        does not apply
+      //       i2c-bcm2708        needed?
+      //
+      //   /etc/modprove.d/xxx.conf    xxx.conf couuld be i2c.conf
+      //       #operate at 400khz, not 100khz  - does this apply to video i2c?
+      //       options i2c_bcm2708 baudrate=400000
+      //
+      //   /etc/modules     - modules to load at boot time
+      //       i2c-dev
+      //       i2c-bcm2708   is it already loaded?
+      //
+      //   bcm2708    video driver
+      //   bcm2835    i2c-1
+      //
+      //
+      //  /etc/udev/rules.d/*
+      //      rules file to enable access
+      //
+      //      give everyone:
+      //        KERNEL="i2c-[0-7]*",MODE="666"
+      //
+      //
+      //
+      //    command lspci not found
+      //
+      //
+      //    discuss raspi-config
+      //
+      //
+      //    discuss udev rules, group i2c
+      //
+}
+
+
+
 //
 // Mainline
 //
+
+char * expected_architectures[] = {"x86_64", "i386", "armv7l", NULL};
 
 /* Master function to query the system environment
  *
@@ -2342,15 +2509,17 @@ void probe_logs() {
 void query_sysenv() {
    device_xref_init();
 
+   Env_Accumulator * accumulator = calloc(1, sizeof(Env_Accumulator));
+
    rpt_nl();
    rpt_vstring(0,"*** Basic System Information ***");
    rpt_nl();
-   query_base_env();
+   query_base_env(accumulator);
 
    rpt_nl();
    rpt_vstring(0,"*** Primary Check 1: Identify video card and driver ***");
    rpt_nl();
-   struct driver_name_node * driver_list = query_card_and_driver_using_sysfs();
+   struct driver_name_node * driver_list = query_card_and_driver_using_sysfs(accumulator);
 
    rpt_nl();
    rpt_vstring(0,"*** Primary Check 2: Check that /dev/i2c-* exist and writable ***");
