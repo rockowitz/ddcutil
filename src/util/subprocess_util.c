@@ -183,6 +183,28 @@ GPtrArray * execute_shell_cmd_collect(char * shell_cmd) {
  }
 
 
+/** Executes a shell command that always outputs a single line and returns the
+ * output as a newly allocated character string
+ *
+ *  @param shell_cmd      command to execute
+ *
+ *  @return :response   if command succeeded
+ *           NULL       if command failed, e.g. command not found
+ *
+ *  @remark
+ *  Caller is responsible for freeing the returned string.
+ */
+char * execute_shell_cmd_one_line_result(char * shell_cmd) {
+   char * result = NULL;
+   GPtrArray * response = execute_shell_cmd_collect(shell_cmd);
+   if (response) {
+      result = strdup(g_ptr_array_index(response, 0));
+      g_ptr_array_free(response, true);
+   }
+   return result;
+}
+
+
 /** Tests if a command is found in path
  *
  *  @param cmd command name
