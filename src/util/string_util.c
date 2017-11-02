@@ -516,6 +516,33 @@ int ntsa_length(Null_Terminated_String_Array string_array) {
 }
 
 
+int ntsa_findx(
+      Null_Terminated_String_Array string_array,
+      char *                       value,
+      String_Comp_Func             func)
+{
+   assert(string_array);
+   int result = -1;
+   int ndx = 0;
+   char * s = NULL;
+   while ( (s=string_array[ndx]) ) {
+      // printf("(%s) checking ndx=%d |%s|\n", __func__, ndx, s);
+      if (func(s,value)) {
+         result = ndx;
+         break;
+      }
+      ndx++;
+   }
+   // printf("(%s) Returning: %d\n", __func__, result);
+   return result;
+
+}
+
+int  ntsa_find(  Null_Terminated_String_Array string_array, char * value) {
+   return ntsa_findx(string_array, value, streq);
+}
+
+
 /* Reports the contents of a Null_Terminated_String_Array.
  *
  * @param string_array null-terminated string array

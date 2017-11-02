@@ -86,6 +86,8 @@ typedef char** Null_Terminated_String_Array;
 void ntsa_free(  Null_Terminated_String_Array string_array);
 int  ntsa_length(Null_Terminated_String_Array string_array);
 void ntsa_show(  Null_Terminated_String_Array string_array);
+int  ntsa_findx( Null_Terminated_String_Array string_array, char * value, String_Comp_Func func);
+int  ntsa_find(  Null_Terminated_String_Array string_array, char * value);
 
 Null_Terminated_String_Array strsplit(const char * str_to_split, const char* delims);
 Null_Terminated_String_Array strsplit_maxlength(
