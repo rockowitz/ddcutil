@@ -192,7 +192,7 @@ app_set_vcp_value(
          // Is this proper error message?
          f0printf(FOUT, "Setting value failed for feature %02x. rc=%s\n", entry->code, psc_desc(psc));
          if (psc == DDCRC_RETRIES && retry_history)
-            f0printf(FOUT, "    Try errors: %s", retry_history_string(retry_history));
+            f0printf(FOUT, "    Try errors: %s\n", retry_history_string(retry_history));
       }
    }
 
