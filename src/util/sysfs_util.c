@@ -29,6 +29,7 @@
 #include <limits.h>
 #include <sys/stat.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 #include "file_util.h"
@@ -78,6 +79,29 @@ read_sysfs_attr_w_default(
       result = strdup(default_value);  // strdup() so caller can free any result
    return result;
 }
+
+char *
+read_sysfs_attr_w_default_r(
+      const char * dirname,
+      const char * attrname,
+      const char * default_value,
+      char *       buf,
+      unsigned     bufsz,
+      bool         verbose)
+{
+   char fn[PATH_MAX];
+   sprintf(fn, "%s/%s", dirname, attrname);
+   char * result = file_get_first_line(fn, verbose);
+   if (result) {
+      g_strlcpy(buf, result, bufsz);
+      free(result);
+   }
+   else {
+      g_strlcpy(buf, default_value, bufsz);
+   }
+   return buf;
+}
+
 
 
 /** Reads a binary /sys attribute file

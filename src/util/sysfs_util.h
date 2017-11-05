@@ -44,6 +44,15 @@ read_sysfs_attr_w_default(
       const char * default_value,
       bool         verbose);
 
+char *
+read_sysfs_attr_w_default_r(
+      const char * dirname,
+      const char * attrname,
+      const char * default_value,
+      char *       buf,
+      unsigned     bufsz,
+      bool         verbose);
+
 GByteArray *
 read_binary_sysfs_attr(
       const char * dirname,
