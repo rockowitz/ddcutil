@@ -124,6 +124,36 @@ bool bva_contains(Byte_Value_Array bva, Byte item) {
 }
 
 
+/** Compare 2 sorted #Byte_Value_Array instances for equality.
+ *  If the same value occurs multiple times in one array, it
+ *  must occur the same number of times in the other.
+ *
+ *  \param  bva1  pointer to first instance
+ *  \param  bva2  pointer to second instance
+ *  \retval true  arrays are identical
+ *  \retval false arrays not identical
+ *
+ *  \remark
+ *  If bva1 or bva2 is null, it is considered to contain 0 values.
+ */
+bool bva_sorted_eq(Byte_Value_Array bva1, Byte_Value_Array bva2) {
+   int len1 = (bva1) ? bva_length(bva1) : 0;
+   int len2 = (bva2) ? bva_length(bva2) : 0;
+
+   bool result = true;
+   if (len1  != len2) {
+      result = false;
+   }
+   else if ( (len1+len2) > 0 ) {
+      for (int ndx = 0; ndx < bva_length(bva1); ndx++) {
+         if (bva_get(bva1,ndx) != bva_get(bva2,ndx))
+            result = false;
+      }
+   }
+   return result;
+}
+
+
 /** Returns the bytes from a **Byte_Value_Array**.
  *
  * @param bva **Byte_Value_Array** instance

@@ -105,7 +105,7 @@ struct driver_name_node {
 static void free_driver_name_list(struct driver_name_node * driver_list);
 
 
-// Preserves information relevant to later tests
+// Collects information relevant to later tests
 typedef struct {
    char * architecture;
    char * distributor_id;
@@ -113,6 +113,7 @@ typedef struct {
    Byte_Value_Array i2c_device_numbers;
    struct driver_name_node * driver_list;
 } Env_Accumulator;
+
 
 void free_env_accumulator(Env_Accumulator * accum) {
    if (accum) {
@@ -153,7 +154,7 @@ static char * prefix_matches[] = {
 
 static char * other_driver_modules[] = {
       "drm",
-      "eeprom",
+  //  "eeprom",       // not really interesting
       "i2c_algo_bit",
       "i2c_dev",
       "i2c_piix4",
@@ -178,6 +179,7 @@ Byte_Value_Array get_i2c_devices_by_existence_test() {
    }
    return bva;
 }
+
 
 Byte_Value_Array get_i2c_devices_by_ls() {
    Byte_Value_Array bva = bva_create();
@@ -213,41 +215,7 @@ bye:
    if (busnums)
       g_ptr_array_free(busnums, true);
 
-
    return bva;
-}
-
-
-// temporarily here.  move it to data_structures.c
-
-/** Compare 2 sorted #Byte_Value_Array instances for equality.
- *  If the same value occurs multiple times in one array, it
- *  must occur the same number of times in the other.
- *
- *  \param  bva1  pointer to first instance
- *  \param  bva2  pointer to second instance
- *  \retval true  arrays are identical
- *  \retval false arrays not identical
- *
- *  \remark
- *  If bva1 or bva2 is null, it is considered to contain 0 values.
- */
-
-static bool bva_sorted_eq(Byte_Value_Array bva1, Byte_Value_Array bva2) {
-   int len1 = (bva1) ? bva_length(bva1) : 0;
-   int len2 = (bva2) ? bva_length(bva2) : 0;
-
-   bool result = true;
-   if (len1  != len2) {
-      result = false;
-   }
-   else if ( (len1+len2) > 0 ) {
-      for (int ndx = 0; ndx < bva_length(bva1); ndx++) {
-         if (bva_get(bva1,ndx) != bva_get(bva2,ndx))
-            result = false;
-      }
-   }
-   return result;
 }
 
 
@@ -1677,6 +1645,8 @@ Device_Ids read_device_ids1(char * cur_dir_name) {
  */
 Device_Ids read_device_ids2(char * cur_dir_name) {
    Device_Ids result = {0};
+
+   // TODO: Reimplement using proper parsing.  See kernel file file2alias.c
 
    rpt_vstring(0, "Reading device ids by parsing modalias attribute...");
    char * modalias = read_sysfs_attr(cur_dir_name, "modalias", true);

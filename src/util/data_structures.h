@@ -49,6 +49,7 @@ int              bva_length(Byte_Value_Array bva);
 void             bva_append(Byte_Value_Array bva, Byte item);
 Byte             bva_get(Byte_Value_Array bva, int ndx);
 bool             bva_contains(Byte_Value_Array bva, Byte item);
+bool             bva_sorted_eq(Byte_Value_Array bva1, Byte_Value_Array bva2);
 Byte *           bva_bytes(Byte_Value_Array bva);
 void             bva_free(Byte_Value_Array bva);
 void             bva_report(Byte_Value_Array ids, char * title);
