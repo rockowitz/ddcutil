@@ -495,7 +495,7 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
           }
           assert(ndx == ntsal);
        }
-       ntsa_free(pieces);
+       ntsa_free(pieces, /* free_strings */ true);
 
        DBGMSF(debug, "retries = %d,%d,%d", parsed_cmd->max_tries[0], parsed_cmd->max_tries[1], parsed_cmd->max_tries[2]);
        debug = saved_debug;
