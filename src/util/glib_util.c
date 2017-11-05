@@ -163,6 +163,33 @@ gchar * gaux_asprintf(gchar * fmt, ...) {
 }
 
 
+GPtrArray * gaux_ptr_array_truncate(GPtrArray * gpa, int limit) {
+   assert(gpa);
+   bool debug = false;
+   if (debug)
+      printf("(%s) Starting.  gpa->len=%d, limit=%d\n", __func__, gpa->len, limit);
+   if (limit > 0) {
+      int removect = gpa->len - limit;
+      if (removect > 0) {
+         g_ptr_array_remove_range(gpa, limit, removect);
+      }
+   }
+   else if (limit < 0) {
+      int removect = gpa->len + limit;
+      if (removect > 0) {
+         g_ptr_array_remove_range(gpa, 0, removect);
+      }
+   }
+   if (debug)
+      printf("(%s) Done.  gpa->len=%d\n", __func__, gpa->len);
+   return gpa;
+}
+
+
+
+
+
+
 //
 // Thread utilities
 //

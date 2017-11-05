@@ -51,5 +51,6 @@ get_thread_fixed_buffer(
       GPrivate * buf_key_ptr,
       guint16    required_size);
 
+GPtrArray * gaux_ptr_array_truncate(GPtrArray * gpa, int limit);
 
 #endif /* GLIB_UTIL_H_ */
