@@ -507,7 +507,7 @@ loadvcp_by_string(
 {
    Null_Terminated_String_Array nta = strsplit(catenated, ";");
    Public_Status_Code psc = loadvcp_by_ntsa(nta, dh, retry_history);
-   ntsa_free(nta);
+   ntsa_free(nta, /* free_strings */ true);
    return psc;
 }
 

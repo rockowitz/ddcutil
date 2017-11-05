@@ -488,16 +488,19 @@ strsplit_maxlength(
 
 
 /** Frees a null terminated array of strings.
- *  Each string in the array is freed.
  *
  *  @param string_array null terminated array of pointers to strings
+ *  @param free_strings if try, each string in the array is freed as well
  */
-void ntsa_free(Null_Terminated_String_Array string_array) {
-   assert(string_array);
-   int ndx = 0;
-   while (string_array[ndx] != NULL)
-      free(string_array[ndx++]);
-   free(string_array);
+void ntsa_free(Null_Terminated_String_Array string_array, bool free_strings) {
+   if (string_array) {
+      if (free_strings) {
+      int ndx = 0;
+      while (string_array[ndx] != NULL)
+         free(string_array[ndx++]);
+      }
+      free(string_array);
+   }
 }
 
 
@@ -514,6 +517,38 @@ int ntsa_length(Null_Terminated_String_Array string_array) {
    }
    return ndx;
 }
+
+Null_Terminated_String_Array ntsa_join(
+      Null_Terminated_String_Array a1,
+      Null_Terminated_String_Array a2,
+      bool dup)
+{
+   int ct = ntsa_length(a1) + ntsa_length(a2);
+   Null_Terminated_String_Array result = calloc((ct+1), sizeof(char *));
+   char ** to = result;
+   char ** from = a1;
+   while (*from) {
+      if (dup)
+         *to = strdup(*from);
+      else
+         *to = *from;
+      to++;
+      from++;
+   }
+   from = a2;
+   while (*from) {
+      if (dup)
+         *to = strdup(*from);
+      else
+         *to = *from;
+      to++;
+      from++;
+   }
+   return result;
+}
+
+
+
 
 
 int ntsa_findx(

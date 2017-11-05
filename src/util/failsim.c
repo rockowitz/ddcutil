@@ -431,7 +431,7 @@ bool fsim_load_control_from_gptrarray(GPtrArray * lines) {
             ok = false;
          }
 
-         ntsa_free(pieces);
+         ntsa_free(pieces, /* free_strings */ true);
       }
       free(trimmed_line);
    }

@@ -83,11 +83,12 @@ int exactly_matches_any(const char * word, char ** match_list);
 int starts_with_any(    const char * word, char ** match_list);
 
 typedef char** Null_Terminated_String_Array;
-void ntsa_free(  Null_Terminated_String_Array string_array);
+void ntsa_free(  Null_Terminated_String_Array string_array, bool free_strings);
 int  ntsa_length(Null_Terminated_String_Array string_array);
 void ntsa_show(  Null_Terminated_String_Array string_array);
 int  ntsa_findx( Null_Terminated_String_Array string_array, char * value, String_Comp_Func func);
 int  ntsa_find(  Null_Terminated_String_Array string_array, char * value);
+Null_Terminated_String_Array  ntsa_join(  Null_Terminated_String_Array a1, Null_Terminated_String_Array a2, bool dup);
 
 Null_Terminated_String_Array strsplit(const char * str_to_split, const char* delims);
 Null_Terminated_String_Array strsplit_maxlength(

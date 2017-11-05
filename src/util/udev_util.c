@@ -236,7 +236,7 @@ void report_udev_device(struct udev_device * dev, int depth) {
                ndx++;
             }
          }
-         ntsa_free(ntsa);
+         ntsa_free(ntsa, /* free_strings */ true);
 
 #ifdef ALTERNATIVE
          // simpler, works
