@@ -50,6 +50,7 @@
 #include "util/string_util.h"
 
 #include "base/ddc_errno.h"
+#include "base/ddc_error.h"
 #include "base/displays.h"
 #include "base/execution_stats.h"
 #include "base/parms.h"
@@ -67,6 +68,10 @@
 #include "ddc/ddc_try_stats.h"
 
 #include "ddc/ddc_packet_io.h"
+
+
+// Transitional:
+// #define USE_DDC_ERROR
 
 
 // Trace class for this file
@@ -671,6 +676,10 @@ Public_Status_Code ddc_write_read_with_retry(
    assert(dh->dref->io_mode != DDCA_IO_USB);
    // show_backtrace(1);
 
+#ifdef USE_DDC_ERROR
+   Public_Status_Code try_status_codes[MAX_MAX_TRIES];   // For future Ddc_Error mechanism
+#endif
+
    // will be false on initial call to verify DDC communication
    // bool null_response_checked = dh->dref->flags & DREF_DDC_NULL_RESPONSE_CHECKED;   // unused
    bool retry_null_response = !(dh->dref->flags & DREF_DDC_USES_NULL_RESPONSE_FOR_UNSUPPORTED);
@@ -761,6 +770,9 @@ Public_Status_Code ddc_write_read_with_retry(
                retryable = false;
          }
 
+#ifdef USE_DDC_ERROR
+         try_status_codes[tryctr] = psc;   // for future Ddc_Error mechanism
+#endif
          if (retry_history)
             retry_history_add(retry_history, psc);
 
@@ -768,6 +780,42 @@ Public_Status_Code ddc_write_read_with_retry(
             ddcrc_read_all_zero_ct++;
       }    // rc < 0
    }
+
+
+#ifdef USE_DDC_ERROR
+   // Using new Ddc_Error mechanism
+   Ddc_Error * ddc_error_result = NULL;
+   if (psc < 0) {
+      Public_Status_Code reported_psc = 0;
+      int last_try_index = tryctr-1;
+      DBGTRC(debug, TRACE_GROUP, "After try loop. tryctr=%d, retryable=%s", tryctr, bool_repr(retryable));
+      Public_Status_Code last_psc = try_status_codes[last_try_index];
+      if (tryctr == 1) {
+      // if (!retryable) {
+         reported_psc = last_psc;
+         ddc_error_result = ddc_error_new(reported_psc, __func__);
+      }
+      else {
+         reported_psc = DDCRC_RETRIES;
+         if (ddcrc_read_all_zero_ct == max_write_read_exchange_tries) {
+            reported_psc = DDCRC_ALL_TRIES_ZERO;
+            // printf("(%s) All tries zero ddcrc_read_all_zero_ct=%d, max_write_read_exchange_tries=%d, tryctr=%d\n",
+            //        __func__, ddcrc_read_all_zero_ct, max_write_read_exchange_tries, tryctr);
+         }
+         else if (ddcrc_null_response_ct > ddcrc_null_response_max) {
+            reported_psc = DDCRC_ALL_RESPONSES_NULL;
+         }
+
+         if (reported_psc == DDCRC_RETRIES) {
+            ddc_error_result = ddc_error_new_retries(try_status_codes, tryctr, "ddc_write_read" , __func__);
+         }
+         else {
+            ddc_error_result = ddc_error_new(reported_psc, __func__);
+         }
+      }
+   }
+#endif
+
    // n. rc is now the value from the last pass through the loop
    // set it to a DDC status code indicating max tries exceeded
    // if ( psc < 0 && retryable ) {
@@ -787,9 +835,23 @@ Public_Status_Code ddc_write_read_with_retry(
    try_data_record_tries(write_read_stats_rec, psc, tryctr);
    DBGTRC(debug, TRACE_GROUP, "Done. psc=%s", psc_desc(psc));
    if (psc == DDCRC_RETRIES && retry_history && ( debug || IS_TRACING())) {
-      // retry_history_dump(retry_history);
+      retry_history_dump(retry_history);
       DBGTRC(debug, TRACE_GROUP, "      Try errors: %s", retry_history_string(retry_history));
    }
+
+#ifdef USE_DDC_ERROR
+   // new Ddc_Error mechanism
+   DBGTRC(debug, TRACE_GROUP, "Done (new). psc=%s", (ddc_error_result) ? psc_desc(ddc_error_result->psc) : "0");
+   if (ddc_error_result && ddc_error_result->psc == DDCRC_RETRIES && (debug || IS_TRACING())) {
+      report_ddc_error(ddc_error_result, 0);
+      DBGTRC(debug, TRACE_GROUP, "      Try errors: %s", ddc_error_causes_string(ddc_error_result));
+   }
+   // Toss the Ddc_Error for now:
+   if (ddc_error_result)
+      ddc_error_free(ddc_error_result);
+#endif
+
+
    return psc;
 }
 
@@ -885,13 +947,18 @@ ddc_write_only_with_retry(
      )
 {
    bool debug = false;
-   DBGTRC(debug, TRACE_GROUP, "Starting. retry_history=%p");
+   DBGTRC(debug, TRACE_GROUP, "Starting. retry_history=%p", retry_history);
 
    assert(dh->dref->io_mode != DDCA_IO_USB);
 
    Public_Status_Code psc;
    int  tryctr;
    bool retryable;
+
+#ifdef USE_DDC_ERROR
+   Public_Status_Code try_status_codes[MAX_MAX_TRIES];   // For future Ddc_Error mechanism
+#endif
+
 
    if (retry_history)
       retry_history_clear(retry_history);
@@ -924,7 +991,33 @@ ddc_write_only_with_retry(
          if (retryable && retry_history)
             retry_history_add(retry_history, psc);
       }   // rc < 0
+#ifdef USE_DDC_ERROR
+      try_status_codes[tryctr] = psc;   // for future Ddc_Error mechanism
+#endif
    }
+
+
+#ifdef USE_DDC_ERROR
+   // Using new Ddc_Error mechanism
+   Ddc_Error * ddc_error_result = NULL;
+   if (psc < 0) {
+      Public_Status_Code reported_psc = 0;
+      int last_try_index = tryctr-1;
+      DBGTRC(debug, TRACE_GROUP, "After try loop. tryctr=%d, retryable=%s", tryctr, bool_repr(retryable));
+      Public_Status_Code last_psc = try_status_codes[last_try_index];
+      if (tryctr == 1) {
+      // if (!retryable) {
+         reported_psc = last_psc;
+         ddc_error_result = ddc_error_new(reported_psc, __func__);
+      }
+      else {
+         reported_psc = DDCRC_RETRIES;
+         ddc_error_result = ddc_error_new_retries(try_status_codes, tryctr, "ddc_write_read" , __func__);
+      }
+   }
+#endif
+
+
    if (psc < 0 && retryable)
       psc = DDCRC_RETRIES;
    try_data_record_tries(write_only_stats_rec, psc, tryctr);
@@ -935,6 +1028,21 @@ ddc_write_only_with_retry(
       // retry_history_dump(retry_history);
       DBGTRC(debug, TRACE_GROUP, "      Try errors: %s", retry_history_string(retry_history));
    }
+
+#ifdef USE_DDC_ERROR
+   // new Ddc_Error mechanism
+   DBGTRC(debug, TRACE_GROUP, "Done (new). psc=%s", (ddc_error_result) ? psc_desc(ddc_error_result->psc) : "0");
+   if (ddc_error_result && ddc_error_result->psc == DDCRC_RETRIES && (debug || IS_TRACING())) {
+      report_ddc_error(ddc_error_result, 0);
+      DBGTRC(debug, TRACE_GROUP, "      Try errors: %s", ddc_error_causes_string(ddc_error_result));
+   }
+   // Toss the Ddc_Error for now:
+   if (ddc_error_result)
+      ddc_error_free(ddc_error_result);
+#endif
+
+
+
    return psc;
 }
 
