@@ -63,6 +63,7 @@
 #include "util/string_util.h"
 #include "util/subprocess_util.h"
 #include "util/sysfs_util.h"
+#include "util/systemd_util.h"
 #ifdef USE_X11
 #include "util/x11_util.h"
 #endif
@@ -91,22 +92,46 @@
 /** Perform redundant checks as cross-verification */
 bool redundant_i2c_device_identification_checks = true;
 
-// Forward references
-static bool is_smbus_device_using_sysfs(int busno);
-struct driver_name_node;
+
+
+// Linked list of driver names
+// struct driver_name_node;
+struct driver_name_node {
+   char * driver_name;
+   struct driver_name_node * next;
+};
+
+// Forward reference
+static void free_driver_name_list(struct driver_name_node * driver_list);
+
 
 // Preserves information relevant to later tests
 typedef struct {
    char * architecture;
    char * distributor_id;
    bool   is_raspbian;
+   Byte_Value_Array i2c_device_numbers;
    struct driver_name_node * driver_list;
 } Env_Accumulator;
+
+void free_env_accumulator(Env_Accumulator * accum) {
+   if (accum) {
+      free(accum->architecture);
+      free(accum->distributor_id);
+      if (accum->i2c_device_numbers)
+         bva_free(accum->i2c_device_numbers);
+      if (accum->driver_list)
+         free_driver_name_list(accum->driver_list);
+      free(accum);
+   }
+}
 
 
 static char * known_video_driver_modules[] = {
       "amdgpu",
+      "fbdev",
       "fglrx",
+      "fturbo",
       "i915",
       "mgag200",
       "nvidia",
@@ -273,7 +298,7 @@ static ushort h2ushort(char * hval) {
 }
 
 
-static void wrap_get_first_line(char * fn, char * title, int depth) {
+static void report_file_first_line(char * fn, char * title, int depth) {
    int d1 = depth+1;
    if (title)
       rpt_title(title, depth);
@@ -307,14 +332,62 @@ static bool show_one_file(char * dir_name, char * simple_fn, bool verbose, int d
 }
 
 
-static bool is_smbus_device_using_sysfs(int busno) {
+/** Gets the sysfs name of an I2C device,
+ *  i.e. the value of /sys/bus/in2c/devices/i2c-n/name
+ *
+ *  \param  busno   I2C bus number
+ *  \return newly allocated string containing attribute value,
+ *          NULL if not found
+ *
+ *  \remark
+ *  Caller is responsible for freeing returned value
+ */
+static char * get_i2c_device_sysfs_name(int busno) {
    char workbuf[50];
    snprintf(workbuf, 50, "/sys/bus/i2c/devices/i2c-%d/name", busno);
    char * name = file_get_first_line(workbuf, /*verbose */ false);
+   // DBGMSG("busno=%d, returning: %s", busno, bool_repr(result));
+   return name;
+}
+
+#ifdef UNUSED
+static bool is_smbus_device_using_sysfs(int busno) {
+#ifdef OLD
+   char workbuf[50];
+   snprintf(workbuf, 50, "/sys/bus/i2c/devices/i2c-%d/name", busno);
+   char * name = file_get_first_line(workbuf, /*verbose */ false);
+#endif
+   char * name = get_i2c_device_sysfs_name(busno);
+
    bool result = false;
    if (name && str_starts_with(name, "SMBus"))
       result = true;
+   free(name);
    // DBGMSG("busno=%d, returning: %s", busno, bool_repr(result));
+   return result;
+}
+#endif
+
+/** Checks if an I2C bus cannot be a DDC/CI connected monitor
+ *  and therefore can be ignored, e.g. if it is an SMBus device.
+ *
+ *  \param  busno  I2C bus number
+ *  \return true if ignorable, false if not
+ *
+ *  \remark
+ *  This function avoids unnecessary calls to i2cdetect, which can be
+ *  slow for SMBus devices and fills the system logs with errors
+ */
+static bool is_ignorable_i2c_device(int busno) {
+   bool result = false;
+   char * name = get_i2c_device_sysfs_name(busno);
+   if (name) {
+      if (str_starts_with(name, "SMBus"))
+         result = true;
+      else if (streq(name, "soc:i2cdsi"))     // Raspberry Pi
+         result = true;
+      free(name);
+   }
    return result;
 }
 
@@ -323,20 +396,9 @@ static bool is_smbus_device_using_sysfs(int busno) {
 // The list is created by executing function query_card_and_driver_using_sysfs(),
 // which is grouped with the sysfs functions.
 
-// struct driver_name_node;
-
-struct driver_name_node {
-   char * driver_name;
-   struct driver_name_node * next;
-};
-
-
-/* Frees the driver name list created by query_card_and_driver_using_sysfs()
+/** Frees the driver name list created by query_card_and_driver_using_sysfs()
  *
- * Arguments:
- *    driver_list     pointer to head of linked list of driver names
- *
- * Returns:           nothing
+ * \param driver_list     pointer to head of linked list of driver names
  */
 static void free_driver_name_list(struct driver_name_node * driver_list) {
    // Free the driver list
@@ -349,13 +411,11 @@ static void free_driver_name_list(struct driver_name_node * driver_list) {
 }
 
 
-/* Checks the list of detected drivers to see if AMD's proprietary
+/** Checks the list of detected drivers to see if AMD's proprietary
  * driver fglrx is the only driver.
  *
- * Arguments:
- *   driver_list     linked list of driver names
- *
- * Returns:          true/false
+ * \param  driver_list     linked list of driver names
+ * \return true if fglrx is the only driver, false otherwise
  */
 bool only_fglrx(struct driver_name_node * driver_list) {
    int driverct = 0;
@@ -373,14 +433,12 @@ bool only_fglrx(struct driver_name_node * driver_list) {
 }
 
 
-/* Checks the list of detected drivers to see if the proprietary
- * AMD and Nvidia drivers are the only ones.
+/** Checks the list of detected drivers to see if the proprietary
+ *  AMD and Nvidia drivers are the only ones.
  *
- * Arguments:
- *   driver list        linked list of driver names
- *
- * Returns:             true if both nvidia and fglrx are present
- *                       and there are no other drivers, false otherwise
+ * \param  driver list        linked list of driver names
+ * \return true  if both nvidia and fglrx are present and there are no other drivers,
+ *         false otherwise
  */
 static bool only_nvidia_or_fglrx(struct driver_name_node * driver_list) {
    int driverct = 0;
@@ -402,25 +460,24 @@ static bool only_nvidia_or_fglrx(struct driver_name_node * driver_list) {
 }
 
 
-/* Checks if any driver name in the list of detected drivers starts with
+/** Checks if any driver name in the list of detected drivers starts with
  * the specified string.
  *
- * Arguments:
- *   driver list        linked list of driver names
- *
- * Returns:             true if the driver is found
+ *  \param  driver list     linked list of driver names
+ *  \parar  driver_prefix   driver name prefix
+ *  \return true if found, false if not
  */
-static bool found_driver(struct driver_name_node * driver_list, char * driver_name) {
+static bool found_driver(struct driver_name_node * driver_list, char * driver_prefix) {
    bool found = false;
    struct driver_name_node * curnode = driver_list;
    while (curnode) {
-      if ( str_starts_with(curnode->driver_name, driver_name) ) {
+      if ( str_starts_with(curnode->driver_name, driver_prefix) ) {
          found = true;
          break;
       }
       curnode = curnode->next;
    }
-   // DBGMSG("driver_name=%s, returning %d", driver_name, found);
+   // DBGMSG("driver_name=%s, returning %d", driver_prefix, found);
    return found;
 }
 
@@ -488,7 +545,6 @@ void report_dmidecode_string(char * s, int depth) {
    rpt_vstring(depth, "%s:", s);
    execute_shell_cmd_rpt(cmd, depth+1);
 }
-#endif
 
 
 void report_dmicode_group(char * header, int depth) {
@@ -506,10 +562,11 @@ void report_dmicode_group(char * header, int depth) {
    else
       rpt_vstring(depth, "Command failed: %s", cmd);
 }
+#endif
 
 
-
-
+/** Reports DMI information for the system.
+ */
 static void query_dmidecode() {
 
 #ifdef NO
@@ -541,12 +598,15 @@ static void query_dmidecode() {
    rpt_title("DMI Information from /sys/class/dmi/id:", 0);
 
    char * dv = "(Unavailable)";
-   //                                                                                            verbpse
-   rpt_vstring(1, "%-25s %s","Motherboard vendor:",       read_sysfs_attr_w_default(sysdir, "board_vendor",  dv, false));
-   rpt_vstring(1, "%-25s %s","Motherboard product name:", read_sysfs_attr_w_default(sysdir, "board_name",    dv, false));
-   rpt_vstring(1, "%-25s %s","System vendor:",            read_sysfs_attr_w_default(sysdir, "sys_vendor",    dv, false));
-   rpt_vstring(1, "%-25s %s","System product name:",      read_sysfs_attr_w_default(sysdir, "product_name",  dv, false));
-   rpt_vstring(1, "%-25s %s","Chassis vendor:",           read_sysfs_attr_w_default(sysdir, "chassis_vendor",dv, false));
+   char buf[100];
+   int bufsz = 100;
+
+   //    verbpse
+   rpt_vstring(1, "%-25s %s","Motherboard vendor:",       read_sysfs_attr_w_default_r(sysdir, "board_vendor",  dv, buf, bufsz, false));
+   rpt_vstring(1, "%-25s %s","Motherboard product name:", read_sysfs_attr_w_default_r(sysdir, "board_name",    dv, buf, bufsz, false));
+   rpt_vstring(1, "%-25s %s","System vendor:",            read_sysfs_attr_w_default_r(sysdir, "sys_vendor",    dv, buf, bufsz, false));
+   rpt_vstring(1, "%-25s %s","System product name:",      read_sysfs_attr_w_default_r(sysdir, "product_name",  dv, buf, bufsz, false));
+   rpt_vstring(1, "%-25s %s","Chassis vendor:",           read_sysfs_attr_w_default_r(sysdir, "chassis_vendor",dv, buf, bufsz, false));
 
    char * chassis_type_s = read_sysfs_attr(sysdir, "chassis_type", /*verbose=*/ true);
    char * chassis_desc = dv;
@@ -586,8 +646,11 @@ static void query_dmidecode() {
 }
 
 
-
-void report_endian(int depth) {
+/** Compile time and runtime checks of endianness.
+ *
+ *  \param depth logical indentation depth
+ */
+static void report_endian(int depth) {
    int d1 = depth+1;
    rpt_title("Byte order checks:", depth);
 
@@ -621,15 +684,11 @@ void report_endian(int depth) {
 }
 
 
-
-
-
-
 //
 // Higher level functions
 //
 
-/* Reports basic system information
+/** Reports basic system information
  *
  * \param  accum  pointer to struct in which information is returned
  */
@@ -637,8 +696,7 @@ static void query_base_env(Env_Accumulator * accum) {
    rpt_vstring(0, "ddcutil version: %s", BUILD_VERSION);
    rpt_nl();
 
-   wrap_get_first_line("/proc/version", NULL, 0);
-
+   report_file_first_line("/proc/version", NULL, 0);
 
    char * expected_architectures[] = {"x86_64", "i386", "armv7l", NULL};
    char * architecture   = execute_shell_cmd_one_line_result("arch");      // alt: use uname -m
@@ -656,9 +714,10 @@ static void query_base_env(Env_Accumulator * accum) {
       rpt_vstring(0, "Unexpected architecture %s.  Please report.", architecture);
    }
 
-   accum->architecture = architecture;
+   accum->architecture   = architecture;
    accum->distributor_id = distributor_id;
-   accum->is_raspbian = streq(accum->distributor_id, "Raspbian");
+   accum->is_raspbian    = streq(accum->distributor_id, "Raspbian");
+   free(release);
 
 #ifdef REDUNDANT
    rpt_nl();
@@ -669,7 +728,7 @@ static void query_base_env(Env_Accumulator * accum) {
 #endif
 
    rpt_nl();
-   wrap_get_first_line("/proc/cmdline", NULL, 0);
+   report_file_first_line("/proc/cmdline", NULL, 0);
 
    if (get_output_level() >= DDCA_OL_VERBOSE) {
       rpt_nl();
@@ -700,7 +759,7 @@ static void query_base_env(Env_Accumulator * accum) {
 }
 
 
-/* Scans /proc/modules for information on loaded drivers of interest
+/** Scans /proc/modules for information on loaded drivers of interest
  */
 static int query_proc_modules_for_video() {
    int rc = 0;
@@ -750,8 +809,8 @@ static int query_proc_modules_for_video() {
 }
 
 
-/* Report nvidia proprietary driver information by examining
- * /proc/driver/nvidia.
+/** Reports nvidia proprietary driver information by examining
+ *  /proc/driver/nvidia.
  */
 static bool query_proc_driver_nvidia() {
    bool debug = false;
@@ -833,7 +892,11 @@ bool is_i2c_device_rw(int busno) {
 // Auxiliary function for raw_scan_i2c_devices()
 // adapted from ddc_vcp_tests
 
-Public_Status_Code try_single_getvcp_call(int fh, unsigned char vcp_feature_code, int depth) {
+Public_Status_Code try_single_getvcp_call(
+      int           fh,
+      unsigned char vcp_feature_code,
+      int           depth)
+{
    bool debug = false;
    DBGMSF(debug, "Starting. vcp_feature_code=0x%02x", vcp_feature_code );
 
@@ -902,8 +965,6 @@ Public_Status_Code try_single_getvcp_call(int fh, unsigned char vcp_feature_code
    char * hs = hexstring(ddc_response_bytes+1, rc);
    rpt_vstring(depth, "read() returned %s", hs );
    free(hs);
-
-
 
    if (rc != readct) {
       DBGMSF(debug, "read() returned %d, should be %d", rc, readct );
@@ -993,8 +1054,7 @@ bye:
 }
 
 
-
-/* Check each I2C device.
+/** Checks each I2C device.
  *
  * This function largely uses direct coding to probe the I2C buses.
  * Allows for trying to read x37 even if X50 fails, and provides
@@ -1025,16 +1085,25 @@ void raw_scan_i2c_devices() {
          rpt_nl();
          rpt_vstring(d1, "Examining device /dev/i2c-%d...", busno);
 
+         if (is_ignorable_i2c_device(busno))
+            continue;
+#ifdef old
          char sysdir[100];
          snprintf(sysdir, 100, "/sys/bus/i2c/devices/i2c-%d", busno);
          char * dev_name = read_sysfs_attr_w_default(sysdir, "name", "(not found)", false);
          rpt_vstring(d2, "Device name (%s/name): %s", sysdir, dev_name);
 
+
          if (str_starts_with(dev_name, "SMBus")) {
             rpt_vstring(d2, "Skipping SMBus device");
             continue;
          }
-
+         //raspbian:
+         if (streq(dev_name, "soc:i2cdsi")) {
+            rpt_vstring(d2, "Skipping DSI device");
+            continue;
+         }
+#endif
          if (!is_i2c_device_rw(busno))   // issues message if not RW
             continue;
 
@@ -1128,12 +1197,9 @@ void raw_scan_i2c_devices() {
 }
 
 
-/* Checks on the existence and accessibility of /dev/i2c devices.
+/** Checks on the existence and accessibility of /dev/i2c devices.
  *
- * Arguments:
- *   driver_list   singly linked list of names of video drivers detected
- *
- * Returns:        nothing
+ *  \param driver_list singly linked list of names of video drivers previously detected
  *
  * Checks that user has RW access to all /dev/i2c devices.
  * Checks if group i2c exists and whether the current user is a member.
@@ -1272,7 +1338,6 @@ static void check_i2c_devices(struct driver_name_node * driver_list) {
          }
          else {
             rpt_vstring(0,"   WARNING: Current user %s is NOT a member of group i2c", uname /*username*/);
-
          }
       }
       if (!group_i2c_exists) {
@@ -1344,7 +1409,6 @@ static void check_i2c_devices(struct driver_name_node * driver_list) {
                         "/etc/udev/rules.d/*rules", 1 );
    }
 }
-
 
 
 /* Checks if a module is built in to the kernel.
@@ -1655,6 +1719,10 @@ Device_Ids read_device_ids2(char * cur_dir_name) {
       result.subvendor_id = h2ushort(subsystem_vendor);
       result.subdevice_id = h2ushort(subsystem_device);
 
+      free(vendor_id);
+      free(device_id);
+      free(subsystem_vendor);
+      free(subsystem_device);
       free(modalias);
    }
 
@@ -1687,6 +1755,10 @@ static struct driver_name_node * query_card_and_driver_using_sysfs(Env_Accumulat
    // /sys/module/i2c_dev ?
    // /sys/module/... etc
 
+   // Raspbian:
+   // /sys/bus/platform/drivers/vc4_v3d
+   // /sys/module/vc4
+
    char * driver_name = NULL;
    struct driver_name_node * driver_list = NULL;
 
@@ -1695,6 +1767,31 @@ static struct driver_name_node * query_card_and_driver_using_sysfs(Env_Accumulat
 
    if (accum->is_raspbian) {
       rpt_vstring(0, "Executing on %s.  Skipping /sys/bus/pci checks.", accum->distributor_id);
+      char * platform_drivers_dir_name = "/sys/bus/platform/drivers";
+      d = opendir(platform_drivers_dir_name);
+      if (!d) {
+         rpt_vstring(0,"Unable to open directory %s: %s", platform_drivers_dir_name, strerror(errno));
+      }
+      else {
+         while ((dent = readdir(d)) != NULL) {
+            // DBGMSG("%s", dent->d_name);
+            char cur_fn[100];
+            char cur_dir_name[100];
+            if (!streq(dent->d_name, ".") && !streq(dent->d_name, "..") ) {
+               // sprintf(cur_dir_name, "%s/%s", pci_devices_dir_name, dent->d_name);
+               sprintf(cur_fn, "%s", cur_dir_name);
+               if (streq(cur_dir_name, "vc4_v3d")) {
+                  char * driver_name = cur_fn;
+                  printf(    "   Driver name:    %s\n", driver_name);
+                  struct driver_name_node * new_node = calloc(1, sizeof(struct driver_name_node));
+                  new_node->driver_name = strdup(driver_name);
+                  new_node->next = driver_list;
+                  driver_list = new_node;
+               }
+            }
+         }
+      }
+      closedir(d);
    }
    else {
       char * pci_devices_dir_name = "/sys/bus/pci/devices";
@@ -1748,6 +1845,7 @@ static struct driver_name_node * query_card_and_driver_using_sysfs(Env_Accumulat
                      struct driver_name_node * new_node = calloc(1, sizeof(struct driver_name_node));
                      new_node->driver_name = strdup(driver_name);
                      new_node->next = driver_list;
+
                      driver_list = new_node;
 
 
@@ -2027,12 +2125,13 @@ void query_drm_using_sysfs() {
                  rpt_nl();
                }
             }
+            closedir(d);
          }
 
       }
       if (cardno==0)
          rpt_vstring(1, "No drm class cards found in %s", dname);
-      closedir(d);
+      // closedir(d);
 
    }
 
@@ -2213,10 +2312,10 @@ static void query_using_i2cdetect(Byte_Value_Array i2c_device_numbers_local) {
    else {
       for (int ndx=0; ndx< bva_length(i2c_device_numbers_local); ndx++) {
          int busno = bva_get(i2c_device_numbers_local, ndx);
-         if (is_smbus_device_using_sysfs(busno)) {
+         if (is_ignorable_i2c_device(busno)) {
             // calling i2cdetect for an SMBUs device fills dmesg with error messages
             rpt_nl();
-            rpt_vstring(d1, "Device /dev/i2c-%d is a SMBus device.  Skipping i2cdetect.", busno);
+            rpt_vstring(d1, "Device /dev/i2c-%d is a SMBus or other ignorable device.  Skipping i2cdetect.", busno);
          }
          else {
             char cmd[80];
@@ -2280,23 +2379,95 @@ void probe_i2c_devices_using_udev() {
 // Log files
 //
 
+
+
+int read_file_with_filter(
+      GPtrArray * line_array,
+      char *      fn,
+      char **     filter_terms,
+      bool        ignore_case,
+      int         limit)
+{
+   bool debug = false;
+   DBGMSF(debug, "line_array=%p, fn=%s, ct(filter_terms)=%d, ignore_case=%s, limit=%d",
+            line_array, fn, ntsa_length(filter_terms), bool_repr(ignore_case), limit);
+#ifdef TOO_MUCH
+   if (debug) {
+      if (filter_terms) {
+         printf("(%s) filter_terms:\n", __func__);
+         ntsa_show(filter_terms);
+      }
+   }
+#endif
+
+   g_ptr_array_set_free_func(line_array, g_free);    // in case not already set
+
+   int rc = file_getlines(fn, line_array, /*verbose*/ true);
+   DBGMSF(debug, "file_getlines() returned %d", rc);
+   if (rc < 0) {
+      DBGMSG("file_getlines() returned %d", rc);
+   }
+   else if (rc > 0) {
+      // should really happen elsewhere
+      for (int ndx=0; ndx < line_array->len; ndx++)
+         rtrim_in_place(g_ptr_array_index(line_array, ndx));     // strip trailing newline
+
+      // DBGMSF(debug, "Read %d lines", line_array->len);
+      // filtered = g_ptr_array_new_full(1000, g_free);
+      // inefficient, just make it work for now
+      int lastndx = (line_array->len) - 1;
+      // DBGMSF(debug, "lastndx=%d", lastndx);
+      for (int ndx = lastndx ; ndx >= 0; ndx--) {
+         // DBGMSF(debug, "ndx=%d", ndx);
+         char * s = g_ptr_array_index(line_array, ndx);
+         // DBGMSF(debug, "s=|%s|", s);
+         bool keep = true;
+         if (filter_terms)
+            keep = apply_filter_terms(s, filter_terms, ignore_case);
+         if (!keep) {
+            g_ptr_array_remove_index(line_array, ndx);
+         }
+      }
+      gaux_ptr_array_truncate(line_array, limit);
+      rc = line_array->len;
+   }
+   else { // rc == 0
+      DBGMSF(debug, "Empty file");
+   }
+   DBGMSF(debug, "Returning: %d", rc);
+   return rc;
+}
+
+
+
+
 /* Helper function that scans a single log file
  *
- * Arguments:
- *   pre_grep     portion of command before the grep command
- *   grep_cmd     grep command
- *   post_grep    portion of command after the grep command
- *   title        describes what is being scanned
- *   depth        logical indentation depth
+ * \param  pre_grep     portion of command before the grep command
+ * \param  grep_cmd     grep command
+ * \param  post_grep    portion of command after the grep command
+ * \param  title        describes what is being scanned
+ * \param  depth        logical indentation depth
  */
-void probe_one_log(char * pre_grep, char * grep_cmd, char * post_grep, char * title, int depth) {
+bool probe_one_log(
+      char * pre_grep,
+      char * grep_cmd,
+      char * post_grep,
+      char * title,
+      int    depth)
+{
    bool debug = false;
+   bool result = true;
    assert(grep_cmd);
    assert(title);
+   DBGMSF(debug, "Starting. pre_grep=\"%s\", grep_cmd=\"%s\", post_grep=\"%s\", title=\"%s\"",
+          pre_grep, grep_cmd, post_grep, title);
    int l1 = (pre_grep) ? strlen(pre_grep) : 0;
    int l2 = strlen(grep_cmd);
    int l3 = (post_grep) ? strlen(post_grep) : 0;
-   char * buf = malloc(l1 + l2 + l3 + 1);
+   int bsz = l1 + l2 + l3 + 1;
+   char * buf = malloc(bsz);
+   DBGMSF(debug, "Allocated buffer of size %d", bsz);
    buf[0] = '\0';
    if (pre_grep)
       strcpy(buf, pre_grep);
@@ -2304,13 +2475,156 @@ void probe_one_log(char * pre_grep, char * grep_cmd, char * post_grep, char * ti
    if (post_grep)
       strcat(buf, post_grep);
 
-   rpt_vstring(depth,"Checking %s for video and I2C related lines...", title);
-   DBGMSF(debug, "Shell command: \"%s\"", buf);
-   if ( !execute_shell_cmd_rpt(buf, depth+1) )
+   // rpt_vstring(depth,"Checking %s for video and I2C related lines...", title);
+   rpt_vstring(depth,"Checking %s for I2C related lines...", title);
+   DBGMSF(debug, "Shell command, len=%d: \"%s\"", strlen(buf), buf);
+   // GPtrArray * all_lines = execute_shell_cmd_collect(buf);
+   // for (int ndx = 0; ndx < all_lines->len; ndx++)
+   //    rpt_vstring(5, "%d: %s", ndx, g_ptr_array_index(all_lines, ndx));
+   if ( !execute_shell_cmd_rpt(buf, depth+1) ) {
       rpt_vstring(depth+1,"Unable to process %s", title);
+      result = false;
+   }
    rpt_nl();
    free(buf);
+   DBGMSF(debug, "Done.  Returning %s", bool_repr(result));
+   return result;
 }
+
+
+/*  Helper function for building egrep command.  Appends search terms.
+ *
+ *  \param  terms  null terminated array of grep terms
+ *  \param  buf    pointer to buffer to which terms are appended
+ *  \param  bufsz  buffer size
+ */
+void add_egrep_terms(char ** terms, char * buf, int bufsz) {
+   bool debug = false;
+   DBGMSF(debug, "Starting. buf=|%s|", buf);
+   char ** p = terms;
+   char * src = NULL;
+   while (*p) {
+      // 11/4/2017: quoted search terms suddenly causing parsing error when
+      // string is passed to popen() and the command ends with a "| head" or "|tail"
+      // why?
+      // Eliminated adding quotes and there's no problem
+      // Luckily no search terms contain blanks
+      // Alas, not true for future use - Raspbian
+      // problem solved by eliminating spaces around "|" before "head"or "tail"
+
+   src = " -e\""; strncat(buf, src, bufsz - (strlen(buf)+1));
+   //                  strncat(buf, " -e\"", bufsz - (strlen(buf)+1));
+                     strncat(buf, *p,  bufsz - (strlen(buf)+1));
+   src = "\"";    strncat(buf, src, bufsz - (strlen(buf)+1));
+   //                  strncat(buf, "\"", bufsz - (strlen(buf)+1));
+#ifdef ALT
+                   strncat(buf, " -e ", bufsz - (strlen(buf)+1));
+                     strncat(buf, *p,  bufsz - (strlen(buf)+1));
+   //                  strncat(buf, "\"", bufsz - (strlen(buf)+1));
+#endif
+      p++;
+   }
+   DBGMSF(debug, "Done. len=%d, buf=|%s|", strlen(buf), buf);
+}
+
+
+/** Scan one log file using grep
+ *
+ *  \param  log_fn      file name
+ *  \param  terms       #Null_Terminated_String_Array of grep terms
+ *  \param  ignore_case if true, perform case insensitive grep
+ *  \param  limit       if > 0, report only the first #limit lines found
+ *                      if < 0, report only the last #limit lines found
+ *                      if 0, report all lines found
+ *  \param  depth       logical indentation depth
+ *  \return true if log find found, false if not
+ */
+bool probe_log_for_terms(
+      char *  log_fn,
+      char ** terms,
+      bool    ignore_case,
+      int     limit,
+      int     depth)
+{
+   bool debug = false;
+   assert(log_fn);
+   assert(terms);
+   bool file_found = false;
+   if (regular_file_exists(log_fn)) {
+      const int limit_buf_sz = 200;
+      char limit_buf[limit_buf_sz];
+      limit_buf[0] = '\0';
+      if (limit < 0) {
+         rpt_vstring(depth, "Limiting output to last %d lines...", -limit);
+         snprintf(limit_buf, 200, " %s|tail -n %d", log_fn, -limit);
+      }
+      else if (limit > 0) {
+         rpt_vstring(depth, "Limiting output to first %d lines...", limit);
+         snprintf(limit_buf, 200, " %s|head -n %d", log_fn, limit);
+      }
+      else {
+         snprintf(limit_buf, 200, " %s", log_fn);
+      }
+      DBGMSF(debug, "limit_buf size=%d, len=%d, \"%s\"",
+                    limit_buf_sz, strlen(limit_buf), limit_buf);
+      char gbuf[1000];
+      int  gbufsz = 1000;
+
+      if (ignore_case)
+         strncpy(gbuf, "grep -E -i ", gbufsz);
+      else
+         strncpy(gbuf, "grep -E ", gbufsz);
+      add_egrep_terms(terms, gbuf, gbufsz);
+      DBGMSF(debug, "gbuf size=%d, len=%d, \"%s\"",
+                    gbufsz, strlen(gbuf), gbuf);
+      probe_one_log(NULL, gbuf, limit_buf, log_fn, depth);
+      file_found = true;
+   }
+   else
+      rpt_vstring(depth, "File not found: %s", log_fn);
+   return file_found;
+}
+
+
+bool probe_log_for_terms_direct(
+      char *  log_fn,
+      char ** filter_terms,
+      bool    ignore_case,
+      int     limit,
+      int     depth)
+{
+   bool debug = false;
+   assert(log_fn);
+   DBGMSF(debug, "Staring. log_fn=%s, filter_terms=%p, ignore_case=%s, limit=%d",
+                 log_fn, filter_terms, bool_repr(ignore_case), limit);
+   bool file_found = false;
+   int rc = 0;
+   if (regular_file_exists(log_fn)) {
+      rpt_vstring(depth, "Reading file: %s", log_fn);
+      if (limit < 0) {
+         rpt_vstring(depth, "Limiting output to last %d lines...", -limit);
+      }
+      else if (limit > 0) {
+          rpt_vstring(depth, "Limiting output to first %d lines...", limit);
+      }
+      GPtrArray * found_lines = g_ptr_array_new_full(1000, g_free);
+      rc = read_file_with_filter(found_lines, log_fn, filter_terms, ignore_case, limit);
+      for (int ndx = 0; ndx < found_lines->len; ndx++) {
+         rpt_title(g_ptr_array_index(found_lines, ndx), depth+1);
+      }
+      file_found = true;
+   }
+   else {
+      rpt_vstring(depth, "File not found: %s", log_fn);
+      rc = -ENOENT;
+   }
+   DBGMSF(debug, "rc=%d, file_found=%s", rc, bool_repr(file_found));
+   rpt_nl();
+   return file_found;
+}
+
+
+
 
 
 /* Scan log files for lines of interest.
@@ -2318,187 +2632,248 @@ void probe_one_log(char * pre_grep, char * grep_cmd, char * post_grep, char * ti
  * The following logs are checked:
  *    dmesg
  *    Xorg.0.log
+ *
+ *  \param accum
  */
-void probe_logs() {
-   char gbuf[500];
-   // char cbuf[550];
+void probe_logs(Env_Accumulator * accum) {
+   char gbuf[500];             // contains grep command
    int  gbufsz = sizeof(gbuf);
-   // int  cbufsz = sizeof(cbuf);
    int depth = 0;
+   int d1 = depth+1;
+   int d2 = depth+2;
    // DBGMSG("Starting");
    // debug_output_dest();
 
    rpt_nl();
    rpt_title("Examining system logs...", depth);
 
+   const Byte LOG_XORG       = 0x80;
+   const Byte LOG_DAEMON     = 0x40;
+   const Byte LOG_SYSLOG     = 0x20;
+   const Byte LOG_KERN       = 0x10;
+   const Byte LOG_JOURNALCTL = 0x08;
+   const Byte LOG_MESSAGES   = 0x04;
+   const Byte LOG_DMESG      = 0x02;
+
+   Value_Name_Title_Table log_table = {
+         VNT(LOG_DMESG,      "dmesg"              ),
+         VNT(LOG_JOURNALCTL, "journalctl"         ),
+         VNT(LOG_DAEMON,     "/var/log/daemon.log" ),
+         VNT(LOG_KERN,       "/var/log/kern.log"  ),
+         VNT(LOG_MESSAGES,   "/var/log/messages"  ),
+         VNT(LOG_SYSLOG,     "/var/log/syslog"    ),
+         VNT(LOG_XORG,       "/var/log/Xorg.0.log"),
+         VNT_END
+   };
+
+   bool log_xorg_found       = false;
+   bool log_daemon_found     = false;        // Raspbian
+   bool log_syslog_found     = false;        // Ubuntu, Raspbian
+   bool log_kern_found       = false;        // Raspbian
+ //bool log_journalctl_found = false;        // Debian, Raspbian
+   bool log_messages_found   = false;        // Raspbian
+   bool log_dmesg_found      = false;
+
+   Byte logs_checked = 0x00;
+   Byte logs_found   = 0x00;
+
+
    strncpy(gbuf, "egrep -i", gbufsz);
-   char ** p = known_video_driver_modules;
-   char * src = NULL;
-   while (*p) {
-      src = " -e\""; strncat(gbuf, src, gbufsz - (strlen(gbuf)+1));
-                     strncat(gbuf, *p,  gbufsz - (strlen(gbuf)+1) );
-      src = "\"";    strncat(gbuf, src, gbufsz - (strlen(gbuf)+1));
-      p++;
-   }
+   add_egrep_terms(known_video_driver_modules, gbuf, gbufsz);
 
 #ifdef NO
-   // problem: dmesg is can be filled w i2c errors from i2cdetect trying to
+   // Problem: dmesg can be filled w i2c errors from i2cdetect trying to
    // read an SMBus device
-   // disable prefix_matches until filter out SMBUS devices
+   // Disable prefix_matches until filter out SMBUS devices
    p = prefix_matches;
 #endif
    char * addl_matches[] = {
          "drm",
          "video",
          "eeprom",
-         "i2c_",
+         "i2c_",    // was i2c_
          NULL
    };
 
-   p = addl_matches;
-   while (*p) {
-      src = " -e\""; strncat(gbuf, src, gbufsz - (strlen(gbuf)+1));
-                     strncat(gbuf, *p,  gbufsz - (strlen(gbuf)+1) );
-      src = "\"";    strncat(gbuf, src, gbufsz - (strlen(gbuf)+1));
-      p++;
-   }
-   // printf("(%s) assembled command: |%s|\n", __func__, gbuf);
+   add_egrep_terms(addl_matches, gbuf, gbufsz);
 
-#ifdef OLD
-   snprintf(cbuf, cbufsz, "dmesg | %s", gbuf);
-   // printf("(%s) cbuf: |%s|\n", __func__, cbuf);
-   rpt_nl();
-   rpt_vstring(1,"Checking dmesg for video and I2C related lines...");
-   if ( !execute_shell_cmd_rpt(cbuf, 2 /* depth */) )
-      rpt_vstring(2,"Unable to process dmesg");
-   rpt_nl();
-
-   snprintf(cbuf, cbufsz, "%s /var/log/Xorg.0.log", gbuf);
-   // printf("(%s) cbuf: |%s|\n", __func__, cbuf);
-
-   rpt_vstring(1,"Checking Xorg.0.log for video and I2C related lines...");
-   if ( !execute_shell_cmd_rpt(cbuf, 2 /* depth */) )
-      rpt_vstring(2,"Unable to read Xorg.0.log");
-   rpt_nl();
-#endif
+   Null_Terminated_String_Array all_terms = ntsa_join(known_video_driver_modules, addl_matches, /*dup*/ false);
 
    rpt_nl();
    // first few lines of dmesg are lost.  turning on any sort of debugging causes
    // them to reappear.  apparently a NL in the stream does the trick.  why?
    // it's a heisenbug.  Just use the more verbose journalctl output
-   probe_one_log("dmesg |",      gbuf, NULL,                   "dmesg",      depth+1);
+   logs_checked |= LOG_DMESG;
+   log_dmesg_found = probe_one_log("dmesg |",      gbuf, NULL,                   "dmesg",      depth+1);
+   if (log_dmesg_found)
+      logs_found |= LOG_DMESG;
+
+   logs_checked |= LOG_JOURNALCTL;
+   rpt_title("Checking journalctl for I2C related entries...", depth+1);
+   GPtrArray * journalctl_msgs = get_current_boot_messages(all_terms, /* ignore case */true, 0);
+   if (journalctl_msgs) {
+      // log_journalctl_found = true;
+      logs_found |= LOG_JOURNALCTL;
+
+      for (int ndx = 0; ndx < journalctl_msgs->len; ndx++) {
+         rpt_vstring(depth+2, "%s", g_ptr_array_index(journalctl_msgs, ndx));
+      }
+   }
+   rpt_nl();
+
+   // 11/4/17:  Now getting error msgs like:
+   //   sh: 1: Syntax error: end of file unexpected
+   // apparent problem with pipe and execute_shell_cmd_report()
 
    // no, it's journalctl that's the offender.  With just journalctl, earlier
    // messages re Summary of Udev devices is screwed up
    // --no-pager solves the problem
-   probe_one_log("journalctl --no-pager --boot |", gbuf, NULL,                   "journalctl", depth+1);
+   //probe_one_log("journalctl --no-pager --boot|", gbuf, NULL,                   "journalctl", depth+1);
 
-   rpt_vstring(depth+1, "Limiting output to 200 lines...");
-   probe_one_log(NULL,           gbuf, " /var/log/Xorg.0.log | head -n 200", "Xorg.0.log", depth+1);
+   char * xorg_terms[] = {
+    //   "[Ll]oadModule:",     // matches LoadModule, UnloadModule
+         "LoadModule:",     // matches LoadModule, UnloadModule
+    //     "[Ll]oading",         // matches Loading Unloading
+         "Loading",
+         "driver for",
+         "Matched .* as autoconfigured",
+         "Loaded and initialized",
+         "drm",
+         "soc",
+         "fbdev",       // matches fbdevhw
+         "vc4",
+         "i2c",
+         NULL
+   };
+
+   if (!accum->is_raspbian) {
+      logs_checked |= LOG_XORG;
+      rpt_vstring(depth+1, "Limiting output to 200 lines...");
+      log_xorg_found = probe_one_log(NULL,           gbuf, " /var/log/Xorg.0.log|head -n 200", "Xorg.0.log", depth+1);
+      if (log_xorg_found)
+         logs_found |= LOG_XORG;
+
+      DBGMSG("Using probe_log_for_terms...");
+      log_xorg_found =  probe_log_for_terms("/var/log/Xorg.0.log", xorg_terms, /*ignore_case*/ true, 200, depth+1);
+      if (log_xorg_found)
+         logs_found |= LOG_XORG;
+   }
+
+   Null_Terminated_String_Array log_terms = all_terms;
+
+   if (accum->is_raspbian) {
+      logs_checked |= LOG_XORG;
+      log_xorg_found = probe_log_for_terms("/var/log/Xorg.0.log", xorg_terms, /*ignore_case*/ false, 0, depth);
+      if (log_xorg_found)
+         logs_found |= LOG_XORG;
+
+      char * rasp_log_terms[] = {
+            "i2c",
+            NULL
+      };
+      log_terms = ntsa_join(all_terms, rasp_log_terms, false);
+
+   }
+
+   logs_checked |= (LOG_MESSAGES | LOG_KERN | LOG_DAEMON | LOG_SYSLOG);
+   log_messages_found = probe_log_for_terms("/var/log/messages",   log_terms, /*ignore_case*/ true, -40, d1);
+   log_kern_found     = probe_log_for_terms("/var/log/kern.log",   log_terms, /*ignore_case*/ true, -20, d1);
+   log_daemon_found   = probe_log_for_terms("/var/log/daemon.log", log_terms, /*ignore_case*/ true, -10, d1);
+   log_syslog_found   = probe_log_for_terms("/var/log/syslog",     log_terms, /*ignore_case*/ true, -50, d1);
+
+   log_messages_found = probe_log_for_terms_direct("/var/log/messages",   log_terms, /*ignore_case*/ true, -40, d1);
+   log_kern_found     = probe_log_for_terms_direct("/var/log/kern.log",   log_terms, /*ignore_case*/ true, -20, d1);
+   log_daemon_found   = probe_log_for_terms_direct("/var/log/daemon.log", log_terms, /*ignore_case*/ true, -10, d1);
+   log_syslog_found   = probe_log_for_terms_direct("/var/log/syslog",     log_terms, /*ignore_case*/ true, -50, d1);
+
+   if (log_messages_found)
+      logs_found |= LOG_MESSAGES;
+   if (log_kern_found)
+      logs_found |= LOG_KERN;
+   if (log_daemon_found)
+      logs_found |= LOG_DAEMON;
+   if (log_syslog_found)
+      logs_found |= LOG_SYSLOG;
+
+
+   // for now, just report the logs seen to avoid warning about unused vars
+#ifdef NO
+   rpt_title("Log files found:  ", depth);
+   rpt_bool("dmesg"               , NULL, log_dmesg_found,      d1);
+   rpt_bool("/var/log/messages"   , NULL, log_messages_found,   d1);
+   rpt_bool("journalctl"          , NULL, log_journalctl_found, d1);
+   rpt_bool("/var/log/kern"       , NULL, log_kern_found,       d1);
+   rpt_bool("/var/log/syslog"     , NULL, log_syslog_found,     d1);
+   rpt_bool("/var/log/daemaon"    , NULL, log_daemon_found,     d1);
+   rpt_bool("/var/log/Xorg.0.log" , NULL, log_xorg_found,       d1);
+#endif
+   rpt_nl();
+   rpt_title("Log Summary", d1);
+   // rpt_nl();
+   Value_Name_Title * entry = log_table;
+   rpt_vstring(d2,  "%-30s  %-7s   %-6s",  "Log", "Checked", "Found");
+   rpt_vstring(d2,  "%-30s  %-7s   %-6s",  "===", "=======", "=====");
+   while (entry->title) {
+      rpt_vstring(d2, "%-30s  %-7s   %-6s",
+                      entry->title,
+                      bool_repr(logs_checked & entry->value),
+                      bool_repr(logs_found & entry->value));
+      entry++;
+   }
+   rpt_nl();
+   if (log_terms != all_terms)
+      ntsa_free(log_terms, false);
+   ntsa_free(all_terms, false);
 
 }
 
 
-void query_raspbian() {
+void probe_config_files(Env_Accumulator * accum) {
+   int depth = 0;
+   // DBGMSG("Starting");
+   // debug_output_dest();
 
-      //      DPI = Display Parallel Interface  interference issues
-      //      DSI = Display Serial Interface    special purpose displays eg cell phones
-      //      DBI = Display Bus Interface    old
-      //      Pi Display product uses combination of DPI (the display) DSI , bridge chip
+   rpt_nl();
+   rpt_title("Examining configuration files...", depth);
 
-
-      //      /sys/bus/i2c/devices
-      //          entries point to devices/platform/soc/ directory
-      //         i2c-n
-      //          name
-      //          device ->
-      //      /sys/devices/platform/soc/
-      //               3f805000.i2c
-      //                    modalias
-      //                         of:Ni2cT<NULL>Cbrcm,brcm2835=i2c
-      //               soc:gpu/
-      //               soc:i2cdsi/
-    //                      modalias
-       //                       of:Ni2cdsiT<NULL>Ci2c-gpio
-   // per file2alias.c:   of:    of table
-      //                   sequence of entries
-      //                   for each entry:
-      //                   of:N<name>T<type>C<compatible>
-       //                        additional Calias?
-
- //                          <name> and <type> may be "*"
-   //                        C<compatible> field is optional
-     //                      <compatible> is "*" if <type> is "*"
-       //                    <NULL> in example is sprintf() formatting of a null pointer
-
-
-
-   //
-
-      //          driver -> /sys/bus/platform/drivers/vc4-drm
-      //          drm/card0
-      //          graphics/fb0/dev   value 29:0
-      //          modalias
-      //      /sys/bus/platform/drivers    look for driver vc4
-      //
-      //
-      //     drm locations:
-      //     /sys/devices/platform/soc/soc:gpu/drm
-      //              card0-Composite-1
-      //              card0-DSI-1
-      //              card0-HDMI-A-1
-      //     /sys/class/drm     - symbolic links to file in soc:gpu/drm
-      //     /sys/module/drm    - uninteresting
-      //
-      //
-      //    /boot/config.txt
-      //      should include dtoverlay=vc4-kms-v3d
-      //      don't work:  vc4-fkms-v3d
-      //
-      //   /etc/modules ?
-      //      bcm_..
-      //
-      //   /etc/modprobe.d/raspi.blacklist.conf
-      //       spi-bcm2708        does not apply
-      //       i2c-bcm2708        needed?
-      //
-      //   /etc/modprove.d/xxx.conf    xxx.conf couuld be i2c.conf
-      //       #operate at 400khz, not 100khz  - does this apply to video i2c?
-      //       options i2c_bcm2708 baudrate=400000
-      //
-      //   /etc/modules     - modules to load at boot time
-      //       i2c-dev
-      //       i2c-bcm2708   is it already loaded?
-      //
-      //   bcm2708    video driver
-      //   bcm2835    i2c-1
-      //
-      //
-      //  /etc/udev/rules.d/*
-      //      rules file to enable access
-      //
-      //      give everyone:
-      //        KERNEL="i2c-[0-7]*",MODE="666"
-      //
-      //
-      //
-      //    command lspci not found
-      //
-      //
-      //    discuss raspi-config
-      //
-      //
-      //    discuss udev rules, group i2c
-      //
+   if (accum->is_raspbian) {
+#ifdef OLD
+      probe_one_log(
+            NULL,
+            "egrep -i -e\"dtparam\" -e\"dtoverlay\"",
+            " /boot/config.txt | grep -v \"^ *#\"",
+            "/boot/config.txt",
+            depth+1
+            );
+#endif
+      rpt_title("Examining /boot/config.txt:", depth+1);
+      execute_shell_cmd_rpt("egrep -i -edtparam -edtoverlay /boot/config.txt | grep -v \"^ *#\"", depth+2);
+      rpt_nl();
+      rpt_vstring(depth+1, "Looking for blacklisted drivers in /etc/modprobe.d:");
+      execute_shell_cmd_rpt("grep -ir blacklist /etc/modprobe.d | grep -v \"^ *#\"", depth+2);
+   }
+   else {
+      rpt_nl();
+      rpt_vstring(0,"DKMS modules:");
+      execute_shell_cmd_rpt("dkms status", 1 /* depth */);
+      rpt_nl();
+      rpt_vstring(0,"Kernel I2C configuration settings:");
+      execute_shell_cmd_rpt("grep I2C /boot/config-$(uname -r)", 1 /* depth */);
+      rpt_nl();
+      rpt_vstring(0,"Kernel AMDGPU configuration settings:");
+      execute_shell_cmd_rpt("grep AMDGPU /boot/config-$(uname -r)", 1 /* depth */);
+      rpt_nl();
+      // TMI:
+      // rpt_vstring(0,"Full xrandr --props:");
+      // execute_shell_cmd_rpt("xrandr --props", 1 /* depth */);
+      // rpt_nl();
+   }
 }
-
 
 
 //
 // Mainline
 //
-
-char * expected_architectures[] = {"x86_64", "i386", "armv7l", NULL};
 
 /* Master function to query the system environment
  *
@@ -2519,30 +2894,33 @@ void query_sysenv() {
    rpt_nl();
    rpt_vstring(0,"*** Primary Check 1: Identify video card and driver ***");
    rpt_nl();
-   struct driver_name_node * driver_list = query_card_and_driver_using_sysfs(accumulator);
+   query_card_and_driver_using_sysfs(accumulator);
+
 
    rpt_nl();
    rpt_vstring(0,"*** Primary Check 2: Check that /dev/i2c-* exist and writable ***");
    rpt_nl();
    Byte_Value_Array i2c_device_numbers = identify_i2c_devices();
+   accumulator->i2c_device_numbers = i2c_device_numbers;
    assert(i2c_device_numbers);
-   rpt_vstring(0, "Identified %d I2C devices", bva_length(i2c_device_numbers));
+   rpt_vstring(0, "Identified %d I2C devices", bva_length(accumulator->i2c_device_numbers));
    rpt_nl();
-   check_i2c_devices(driver_list);
+   check_i2c_devices(accumulator->driver_list);
 
    rpt_nl();
    rpt_vstring(0,"*** Primary Check 3: Check that module i2c_dev is loaded ***");
    rpt_nl();
-   check_i2c_dev_module(driver_list);
+   check_i2c_dev_module(accumulator->driver_list);
 
    rpt_nl();
    rpt_vstring(0,"*** Primary Check 4: Driver specific checks ***");
    rpt_nl();
-   driver_specific_tests(driver_list);
+   driver_specific_tests(accumulator->driver_list);
 
+   // TODO: move to end of function
    // Free the driver list created by query_card_and_driver_using_sysfs()
-   free_driver_name_list(driver_list);
-   driver_list = NULL;
+   // free_driver_name_list(accumulator->driver_list);
+   // driver_list = NULL;
 
 #ifdef OLD
    rpt_nl();
@@ -2557,8 +2935,10 @@ void query_sysenv() {
    // printf("Gathering card and driver information...\n");
    rpt_nl();
    query_proc_modules_for_video();
-   rpt_nl();
-   query_card_and_driver_using_lspci();
+   if (!accumulator->is_raspbian) {
+      rpt_nl();
+      query_card_and_driver_using_lspci();
+   }
    rpt_nl();
    query_loaded_modules_using_sysfs();
    query_i2c_bus_using_sysfs();
@@ -2570,23 +2950,6 @@ void query_sysenv() {
    }
 
    if (output_level >= DDCA_OL_VERBOSE) {
-
-      // TODO: move to more appropriate locations
-      rpt_nl();
-      rpt_vstring(0,"DKMS modules:");
-      execute_shell_cmd_rpt("dkms status", 1 /* depth */);
-      rpt_nl();
-      rpt_vstring(0,"Kernel I2C configuration settings:");
-      execute_shell_cmd_rpt("grep I2C /boot/config-$(uname -r)", 1 /* depth */);
-      rpt_nl();
-      rpt_vstring(0,"Kernel AMDGPU configuration settings:");
-      execute_shell_cmd_rpt("grep AMDGPU /boot/config-$(uname -r)", 1 /* depth */);
-      rpt_nl();
-      // TMI:
-      // rpt_vstring(0,"Full xrandr --props:");
-      // execute_shell_cmd_rpt("xrandr --props", 1 /* depth */);
-      // rpt_nl();
-
       query_i2c_buses();
 
       rpt_nl();
@@ -2598,7 +2961,7 @@ void query_sysenv() {
       execute_shell_cmd_rpt("ps aux | grep ddccontrol | grep -v grep", 1);
       rpt_nl();
 
-      query_using_i2cdetect(i2c_device_numbers);
+      query_using_i2cdetect(accumulator->i2c_device_numbers);
 
       raw_scan_i2c_devices();
 
@@ -2612,7 +2975,8 @@ void query_sysenv() {
       // temp
       // get_i2c_smbus_devices_using_udev();
 
-      probe_logs();
+      probe_config_files(accumulator);
+      probe_logs(accumulator);
 
 #ifdef USE_LIBDRM
       probe_using_libdrm();
@@ -2625,6 +2989,6 @@ void query_sysenv() {
       device_xref_report(0);
    }
 
-
+   free_env_accumulator(accumulator);     // make Coverity happy
 }
 
