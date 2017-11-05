@@ -73,6 +73,7 @@ bool execute_shell_cmd_rpt(char * shell_cmd, int depth) {
        bool first_line = true;
        while ( (read=getline(&a_line, &len, fp)) != -1) {
           if (strlen(a_line) > 0) {
+             // printf("(%s) a_line: |%s|\n", __func__, a_line);
              int ch = a_line[strlen(a_line)-1];
              if (debug) {
                 if (ch != '\n')
@@ -109,8 +110,9 @@ bool execute_shell_cmd_rpt(char * shell_cmd, int depth) {
           // free(a_line);
        }
        int pclose_rc = pclose(fp);
+       int errsv = errno;
        if (debug)
-          printf("(%s) plose() rc = %d\n", __func__, pclose_rc);
+          printf("(%s) plose() rc=%d, error=%d - %s\n", __func__, pclose_rc, errsv, strerror(errsv));
     }
     return ok;
  }
