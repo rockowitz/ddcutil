@@ -277,6 +277,7 @@ AM_CPPFLAGS=     \
 $(GLIB_CFLAGS)   \
 $(XRANDR_CFLAGS) \
 $(LIBUSB_CFLAGS) \
+$(SYSTEMD_CFLAGS) \
 -I$(srcdir)      \
 -I$(srcdir)/public
 
@@ -334,6 +335,7 @@ libcommon_la_LIBADD += \
   $(GLIB_LIBS)   \
   $(UDEV_LIBS)   \
   $(LIBUSB_LIBS) \
+  $(SYSTEMD_LIBS) \
   $(LIBDRM_LIBS)
 
 
