@@ -39,24 +39,25 @@
 
 #define VALID_DDC_ERROR_PTR(ptr) \
    assert(ptr); \
-   assert(memcpy(ptr->marker, DDC_ERROR_MARKER, 4) == 0);
+   assert(memcmp(ptr->marker, DDC_ERROR_MARKER, 4) == 0);
 
 
-void free_ddc_error(Ddc_Error * erec){
+void ddc_error_free(Ddc_Error * erec){
    VALID_DDC_ERROR_PTR(erec);
    for (int ndx = 0; ndx < erec->cause_ct; ndx++) {
-      free_ddc_error(erec->causes[ndx]);
+      ddc_error_free(erec->causes[ndx]);
    }
+   free(erec->func);
    erec->marker[3] = 'x';
    free(erec);
 }
 
 
-Ddc_Error *  ddc_error_new(Public_Status_Code psc, char * func) {
+Ddc_Error *  ddc_error_new(Public_Status_Code psc, const char * func) {
    Ddc_Error * erec = calloc(1, sizeof(Ddc_Error));
    memcpy(erec->marker, DDC_ERROR_MARKER, 4);
    erec->psc = psc;
-   erec->func = func;   // will not free
+   erec->func = strdup(func);   // strdup to avoid constness warning, must free
    return erec;
 }
 
@@ -72,6 +73,19 @@ Ddc_Error * ddc_error_new_chained(Ddc_Error * cause, char * func) {
    return erec;
 }
 
+Ddc_Error * ddc_error_new_retries(
+      Public_Status_Code *  status_codes,
+      int                   status_code_ct,
+      const char *          called_func,
+      const char *          func)
+{
+   Ddc_Error * result = ddc_error_new(DDCRC_RETRIES, func);
+   for (int ndx = 0; ndx < status_code_ct; ndx++) {
+      Ddc_Error * cause = ddc_error_new(status_codes[ndx],called_func);
+      ddc_error_add_cause(result, cause);
+   }
+   return result;
+}
 
 void ddc_error_add_cause(Ddc_Error * parent, Ddc_Error * cause) {
    VALID_DDC_ERROR_PTR(parent);
@@ -105,8 +119,14 @@ char * ddc_error_causes_string(Ddc_Error * erec) {
 void report_ddc_error(Ddc_Error * erec, int depth) {
    int d1 = depth+1;
 
-   rpt_vstring(depth, "Status code: %s", psc_desc(erec->psc));
-   rpt_vstring(depth, "Location: %s", (erec->func) ? erec->func : "not set");
+   // rpt_vstring(depth, "Status code: %s", psc_desc(erec->psc));
+   // rpt_vstring(depth, "Location: %s", (erec->func) ? erec->func : "not set");
+   rpt_vstring(depth, "%s: status=%s",
+         (erec->func) ? erec->func : "not set",
+                      psc_desc(erec->psc)
+
+
+   );
    if (erec->cause_ct > 0) {
       rpt_vstring(depth, "Caused by: ");
       for (int ndx = 0; ndx < erec->cause_ct; ndx++) {

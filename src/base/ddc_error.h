@@ -50,9 +50,15 @@ typedef struct ddc_error_struct {
    // struct ddc_error_struct * next;
 } Ddc_Error;
 
-void free_ddc_error(Ddc_Error * error);
+void ddc_error_free(Ddc_Error * error);
 
-Ddc_Error *  ddc_error_new(Public_Status_Code psc, char * func);
+Ddc_Error *  ddc_error_new(Public_Status_Code psc, const char * func);
+
+Ddc_Error * ddc_error_new_retries(
+      Public_Status_Code *  status_codes,
+      int                   status_code_ct,
+      const char *                called_func,
+      const char *                func);
 
 void ddc_error_add_cause(Ddc_Error * parent, Ddc_Error * cause);
 
