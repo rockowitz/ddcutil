@@ -532,7 +532,9 @@ void add_traced_file(const char * filename) {
    }
 
    if (gaux_string_ptr_array_find(traced_file_table, bname) < 0)
-      g_ptr_array_add(traced_file_table, g_strdup(bname));
+      g_ptr_array_add(traced_file_table, bname);
+   else
+      free(bname);
    // printf("(%s) filename=|%s|, bname=|%s|, found=%s\n", __func__, filename, bname, bool_repr(found));
 }
 
