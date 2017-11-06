@@ -40,13 +40,15 @@ output_sink.c              \
 report_util.c              \
 string_util.c              \
 sysfs_util.c               \
-systemd_util.c             \
 subprocess_util.c          \
 timestamp.c                \
 udev_i2c_util.c            \
 udev_usb_util.c            \
 udev_util.c                \
 x11_util.c                 
+
+# libutil_la_SOURCES += systemd_util.c
+
 
 if ENABLE_FAILSIM_COND
 libutil_la_SOURCES += failsim.c

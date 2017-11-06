@@ -272,12 +272,12 @@ dist-hook:
 # C Pre-Processor Flags
 #
 
+#  $(SYSTEMD_CFLAGS) removed, libsystemd not currently needed
 # GLIB_CFLAGS contains output of pkgconfig --cflags glib-2.0
 AM_CPPFLAGS=     \
 $(GLIB_CFLAGS)   \
 $(XRANDR_CFLAGS) \
 $(LIBUSB_CFLAGS) \
-$(SYSTEMD_CFLAGS) \
 -I$(srcdir)      \
 -I$(srcdir)/public
 
@@ -329,13 +329,13 @@ if ENABLE_USB_COND
 libcommon_la_LIBADD += usb_util/libusbutil.la
 endif
 
+# $(SYSTEMD_LIBS) removed from list, libsystemd not currently used
 libcommon_la_LIBADD += \
   $(X11_LIBS) \
   $(XRANDR_LIBS) \
   $(GLIB_LIBS)   \
   $(UDEV_LIBS)   \
   $(LIBUSB_LIBS) \
-  $(SYSTEMD_LIBS) \
   $(LIBDRM_LIBS)
 
 

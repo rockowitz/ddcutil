@@ -429,7 +429,9 @@ PKG_CHECK_MODULES(UDEV,   libudev,
      ] )
 required_packages="$required_packages xrandr x11"
 dnl how to handle libudev?   punt for now
-PKG_CHECK_MODULES(SYSTEMD, libsystemd)
+
+dnl disabled because systemd_util.c no longer needed:
+dnl PKG_CHECK_MODULES(SYSTEMD, libsystemd)
 
 
 ###
