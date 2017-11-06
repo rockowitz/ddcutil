@@ -253,6 +253,9 @@ char * strtrim_r(const char * s, char * buffer, int bufsz) {
  *
  * @param s string to trim
  * @return s
+ *
+ * @remark
+ * Particularly useful for stripping trailing newlines.
  */
 char * rtrim_in_place(char * s) {
    int len = strlen(s);

@@ -1647,6 +1647,8 @@ Device_Ids read_device_ids2(char * cur_dir_name) {
    Device_Ids result = {0};
 
    // TODO: Reimplement using proper parsing.  See kernel file file2alias.c
+   // See also:
+   //  http://people.skolelinux.org/pere/blog/Modalias_strings___a_practical_way_to_map__stuff__to_hardware.html
 
    rpt_vstring(0, "Reading device ids by parsing modalias attribute...");
    char * modalias = read_sysfs_attr(cur_dir_name, "modalias", true);
@@ -2268,20 +2270,25 @@ bye:
 #endif
 
 
-static void query_using_i2cdetect(Byte_Value_Array i2c_device_numbers_local) {
-   assert(i2c_device_numbers_local);
+/** Examines /dev/i2c devices using command i2cdetect, if it exists.
+ *
+ *  \param  i2c_device_numbers  I2C bus numbers to check
+ *
+ */
+static void query_using_i2cdetect(Byte_Value_Array i2c_device_numbers) {
+   assert(i2c_device_numbers);
 
    int d0 = 0;
    int d1 = 1;
 
    rpt_vstring(d0,"Examining I2C buses using i2cdetect... ");
 
-   if (bva_length(i2c_device_numbers_local) == 0) {
+   if (bva_length(i2c_device_numbers) == 0) {
       rpt_vstring(d1, "No I2C buses found");
    }
    else {
-      for (int ndx=0; ndx< bva_length(i2c_device_numbers_local); ndx++) {
-         int busno = bva_get(i2c_device_numbers_local, ndx);
+      for (int ndx=0; ndx< bva_length(i2c_device_numbers); ndx++) {
+         int busno = bva_get(i2c_device_numbers, ndx);
          if (is_ignorable_i2c_device(busno)) {
             // calling i2cdetect for an SMBUs device fills dmesg with error messages
             rpt_nl();
@@ -2301,12 +2308,13 @@ static void query_using_i2cdetect(Byte_Value_Array i2c_device_numbers_local) {
          }
       }
    }
-
 }
 
 
-
-void probe_i2c_devices_using_udev() {
+/** Queries UDEV for devices in subsystem "i2c-dev".
+ *  Also looks for devices with name attribute "DPMST"
+ */
+static void probe_i2c_devices_using_udev() {
    char * subsys_name = "i2c-dev";
    rpt_nl();
    rpt_vstring(0,"Probing I2C devices using udev, susbsystem %s...", subsys_name);
@@ -2318,7 +2326,6 @@ void probe_i2c_devices_using_udev() {
 
    GPtrArray * summaries = get_i2c_devices_using_udev();
    report_i2c_udev_device_summaries(summaries, "Summary of udev I2C devices",1);
-
    for (int ndx = 0; ndx < summaries->len; ndx++) {
       Udev_Device_Summary * summary = g_ptr_array_index(summaries, ndx);
       assert( memcmp(summary->marker, UDEV_DEVICE_SUMMARY_MARKER, 4) == 0);
@@ -2332,7 +2339,6 @@ void probe_i2c_devices_using_udev() {
          // DBGMSG("Device_Id_Xref not found for busno %d", busno);
       }
    }
-
    free_udev_device_summaries(summaries);   // ok if summaries == NULL
 
    rpt_nl();
@@ -2341,7 +2347,6 @@ void probe_i2c_devices_using_udev() {
    summaries = find_devices_by_sysattr_name(nameattr);
    report_i2c_udev_device_summaries(summaries, "Summary of udev DPMST devices...",1);
    free_udev_device_summaries(summaries);   // ok if summaries == NULL
-
 }
 
 
@@ -2349,8 +2354,27 @@ void probe_i2c_devices_using_udev() {
 // Log files
 //
 
-
-
+/** Reads the contents of a file into a #GPtrArray of lines, optionally keeping only
+ *  those lines containing at least one on a list of terms.  After filtering, the set
+ *  of returned lines may be further reduced to either the first or last n number of
+ *  lines.
+ *
+ *  \param  line_array #GPtrArray in which to return the lines read
+ *  \param  fn         file name
+ *  \param  filter_terms  #Null_Terminated_String_Away of filter terms
+ *  \param  ignore_case   ignore case when testing filter terms
+ *  \param  limit if 0, return all lines that pass filter terms
+ *                if > 0, return at most the first #limit lines that satisfy the filter terms
+ *                if < 0, return at most the last  #limit lines that satisfy the filter terms
+ *  \return status code
+ *
+ *  \remark
+ *  This function was created because using grep in conjunction with pipes was
+ *  producing obscure shell errors.
+ *  \remark The #GPtrArray is passed into this function instead of allocating it
+ *          to allow for returning a status code.
+ *  \remark Consider adding the ability to treat filter terms as regular expressions
+ */
 int read_file_with_filter(
       GPtrArray * line_array,
       char *      fn,
@@ -2407,8 +2431,6 @@ int read_file_with_filter(
    DBGMSF(debug, "Returning: %d", rc);
    return rc;
 }
-
-
 
 
 /* Helper function that scans a single log file
@@ -2594,18 +2616,23 @@ bool probe_log_for_terms_direct(
 }
 
 
-
-
-
-/* Scan log files for lines of interest.
+/** Scans log files for lines of interest.
  *
- * The following logs are checked:
- *    dmesg
- *    Xorg.0.log
+ *  Depending on operating environment, some subset of
+ *  the following files and command output:
+ *    - dmesg
+ *    - journalctl
+ *    - /var/log/daemon.log
+ *    - /var/log/kern.log
+ *    - /var/log/messages
+ *    - /var/log/syslog
+ *    - /var/log/Xorg.0.log
  *
- *  \param accum
+ *  \param accum collected environment information
  */
 void probe_logs(Env_Accumulator * accum) {
+   // TODO: Function needs major cleanup
+
    char gbuf[500];             // contains grep command
    int  gbufsz = sizeof(gbuf);
    int depth = 0;
@@ -2616,6 +2643,8 @@ void probe_logs(Env_Accumulator * accum) {
 
    rpt_nl();
    rpt_title("Examining system logs...", depth);
+
+   // TODO: Pick simpler data structures.  Is Value_Name_Title_Table worth it?
 
    const Byte LOG_XORG       = 0x80;
    const Byte LOG_DAEMON     = 0x40;
@@ -2742,15 +2771,17 @@ void probe_logs(Env_Accumulator * accum) {
             NULL
       };
       log_terms = ntsa_join(all_terms, rasp_log_terms, false);
-
    }
 
    logs_checked |= (LOG_MESSAGES | LOG_KERN | LOG_DAEMON | LOG_SYSLOG);
+
+   // Problem: Commands sometimes produce obscure shell error messages
    log_messages_found = probe_log_for_terms("/var/log/messages",   log_terms, /*ignore_case*/ true, -40, d1);
    log_kern_found     = probe_log_for_terms("/var/log/kern.log",   log_terms, /*ignore_case*/ true, -20, d1);
    log_daemon_found   = probe_log_for_terms("/var/log/daemon.log", log_terms, /*ignore_case*/ true, -10, d1);
    log_syslog_found   = probe_log_for_terms("/var/log/syslog",     log_terms, /*ignore_case*/ true, -50, d1);
 
+   // Using our own code instead of shell to scan files
    log_messages_found = probe_log_for_terms_direct("/var/log/messages",   log_terms, /*ignore_case*/ true, -40, d1);
    log_kern_found     = probe_log_for_terms_direct("/var/log/kern.log",   log_terms, /*ignore_case*/ true, -20, d1);
    log_daemon_found   = probe_log_for_terms_direct("/var/log/daemon.log", log_terms, /*ignore_case*/ true, -10, d1);
@@ -2798,6 +2829,10 @@ void probe_logs(Env_Accumulator * accum) {
 }
 
 
+/** Examines kernel configuration files and DKMS.
+ *
+ *  \param  accum  accumulated environment
+ */
 void probe_config_files(Env_Accumulator * accum) {
    int depth = 0;
    // DBGMSG("Starting");
