@@ -74,9 +74,9 @@ int file_getlines(const char * fn,  GPtrArray* line_array, bool verbose) {
       errno = 0;
       while ((read = getline(&line, &len, fp)) != -1) {
          linectr++;
+         rtrim_in_place(line);     // strip trailing newline
          g_ptr_array_add(line_array, line);
-         // printf("Retrieved line of length %zu :\n", read);
-         // printf("%s", line);
+         // printf("Retrieved line of length %zu: %s\n", read, line);
          line = NULL;
          len  = 0;
       }

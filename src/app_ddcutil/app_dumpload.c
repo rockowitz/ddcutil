@@ -170,10 +170,12 @@ dumpvcp_as_file(Display_Handle * dh, char * filename) {
 // Loadvcp
 //
 
-/* Read a file into a Dumpload_Data struct.
+/* Read a file into a newly allocated Dumpload_Data struct.
  */
 Dumpload_Data * read_vcp_file(const char * fn) {
-   // DBGMSG("Starting. fn=%s  ", fn );
+   bool debug = false;
+   DBGMSF(debug, "Starting. fn=%s  ", fn );
+
    Dumpload_Data * data = NULL;
    GPtrArray * g_line_array = g_ptr_array_sized_new(100);
    // issues message if error:
@@ -184,7 +186,8 @@ Dumpload_Data * read_vcp_file(const char * fn) {
    else {
       data = create_dumpload_data_from_g_ptr_array(g_line_array);
    }
-   // DBGMSG("Returning: %p  ", data );
+
+   DBGMSF(debug, "Returning: %p  ", data );
    return data;
 }
 

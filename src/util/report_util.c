@@ -333,11 +333,15 @@ int rpt_file_contents(const char * fn, bool verbose, int depth) {
       if (verbose)
          rpt_vstring(depth, "Error reading file %s: %s", fn, strerror(-rc));
    }
+   else if (rc == 0) {
+      if (verbose)
+         rpt_vstring(depth, "Empty file: %s", fn);
+   }
    else if (rc > 0) {
       int ndx = 0;
       for (; ndx < line_array->len; ndx++) {
          char * curline = g_ptr_array_index(line_array, ndx);
-         rtrim_in_place(curline);     // strip trailing newline
+         // trim_in_place(curline);     // strip trailing newline - now done in file_getlines()
          rpt_title(curline, depth);
       }
    }

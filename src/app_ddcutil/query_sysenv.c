@@ -730,6 +730,9 @@ static void query_base_env(Env_Accumulator * accum) {
 /** Scans /proc/modules for information on loaded drivers of interest
  */
 static int query_proc_modules_for_video() {
+   bool debug = false;
+   DBGMSF(debug, "Starting.");
+
    int rc = 0;
 
    GPtrArray * garray = g_ptr_array_sized_new(300);
@@ -773,6 +776,7 @@ static int query_proc_modules_for_video() {
       }
    }
 
+   DBGMSF(debug, "Done.");
    return rc;
 }
 
@@ -2403,8 +2407,8 @@ int read_file_with_filter(
    }
    else if (rc > 0) {
       // should really happen elsewhere
-      for (int ndx=0; ndx < line_array->len; ndx++)
-         rtrim_in_place(g_ptr_array_index(line_array, ndx));     // strip trailing newline
+      // for (int ndx=0; ndx < line_array->len; ndx++)  // now done by file_getlines()
+      //   rtrim_in_place(g_ptr_array_index(line_array, ndx));     // strip trailing newline
 
       // DBGMSF(debug, "Read %d lines", line_array->len);
       // filtered = g_ptr_array_new_full(1000, g_free);
