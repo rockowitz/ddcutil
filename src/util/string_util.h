@@ -166,4 +166,8 @@ int vf0printf(FILE * stream, const char * format, va_list ap);
 
 bool all_bytes_zero(Byte * bytes, int bytect);
 
+bool apply_filter_terms(const char * text, char ** terms, bool ignore_case);
+
+
+
 #endif /* STRINGUTIL_H_ */

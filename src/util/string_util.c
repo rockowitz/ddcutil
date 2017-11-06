@@ -26,6 +26,9 @@
  */
 
 /** \cond */
+// for strcasestr()
+#define _GNU_SOURCE
+
 #include <assert.h>
 #include <ctype.h>
 #include <glib-2.0/glib.h>
@@ -1487,3 +1490,50 @@ bool all_bytes_zero(Byte * bytes, int bytect) {
    }
    return !sum;
 }
+
+
+
+// Belongs in some more general file.   where?  string_util.c, data_structures.c?
+// Idea: allow for option to treat terms as regular expressions
+// convert parm ignore_case into a flags byte of options
+
+bool apply_filter_terms(const char * text, char ** terms, bool ignore_case) {
+   assert(text);
+   bool debug = false;
+   bool result = true;
+   char ** term = NULL;
+   if (terms) {
+       //  printf("(%s) filter_terms:\n", __func__);
+       //  ntsa_show(terms);
+      result = false;
+      term = terms;
+      while (*term) {
+         // printf("(%s) Comparing |%s|\n", __func__, *term);
+         if (ignore_case) {
+            if (strcasestr(text,*term)) {
+               result = true;
+               break;
+            }
+         }
+         else {
+            if (strstr(text, *term)) {
+               result = true;
+               break;
+            }
+         }
+         term++;
+      }
+   }
+
+   if (debug) {
+      if (result) {
+         printf("(%s) text=|%s|, term=|%s|, Returning:  true\n", __func__, text, *term);
+      }
+      else {
+         printf("(%s) text=|%s|, Returning: false\n", __func__, text);
+      }
+   }
+
+   return result;
+}
+

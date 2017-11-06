@@ -29,6 +29,6 @@
 
 GPtrArray * get_current_boot_messages(char ** filter_terms, bool ignore_case, int limit);
 
-bool apply_filter_terms(const char * text, char ** terms, bool ignore_case);
+// bool apply_filter_terms(const char * text, char ** terms, bool ignore_case);
 
 #endif /* SYSTEMD_UTIL_H_ */

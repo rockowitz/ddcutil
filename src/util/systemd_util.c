@@ -24,7 +24,8 @@
  * </endcopyright>
  */
 
-#define _GNU_SOURCE
+// for strcasestr():
+// #define _GNU_SOURCE
 
 #include <assert.h>
 #include <glib-2.0/glib.h>
@@ -42,7 +43,12 @@
 #include "systemd_util.h"
 
 
-char * del_hyphens(const char * src) {
+/** Delete hyphens in a string.
+ *
+ *  \param source string
+ *  \return newly allocated string with hyphens removed
+ */
+static char * del_hyphens(const char * src) {
    char * result = calloc(1, strlen(src) + 1);
    int destndx = 0;
    for (int srcndx = 0; srcndx <= strlen(src); srcndx++) {   // n. <= to copy trailing null
@@ -52,63 +58,48 @@ char * del_hyphens(const char * src) {
    return result;
 }
 
-// uint64_t
-// char[16] :q
-char * get_current_boot_id() {
 
+/** Gets the current boot id as a character string with hyphens removed.
+ *
+ *  Source is /proc/sys/kernel/random/boot_id
+ *
+ *  \return newly allocated string containing boot id
+ */
+char * get_current_boot_id() {
    char* boot_id_s =  file_get_first_line("/proc/sys/kernel/random/boot_id", /*verbose*/ true);
+   assert(boot_id_s);     // don't deal with boot_id missing from /proc
    // printf("(%s) boot_id_s = %s\n", __func__, boot_id_s);
    char * boot_id_nohyphens = del_hyphens(boot_id_s);
    free(boot_id_s);
    return boot_id_nohyphens;
 }
 
-
-// Belongs in some more general file.   where?  string_util.c, data_structures.c?
-// Idea: allow for option to treat terms as regular expressions
-// convert parm ignore_case into a flags byte of options
-
-bool apply_filter_terms(const char * text, char ** terms, bool ignore_case) {
-   assert(text);
-   bool debug = false;
-   bool result = true;
-   char ** term = NULL;
-   if (terms) {
-       //  printf("(%s) filter_terms:\n", __func__);
-       //  ntsa_show(terms);
-      result = false;
-      term = terms;
-      while (*term) {
-         // printf("(%s) Comparing |%s|\n", __func__, *term);
-         if (ignore_case) {
-            if (strcasestr(text,*term)) {
-               result = true;
-               break;
-            }
-         }
-         else {
-            if (strstr(text, *term)) {
-               result = true;
-               break;
-            }
-         }
-         term++;
-      }
-
-   }
-
-   if (debug) {
-      if (result) {
-         printf("(%s) text=|%s|, term=|%s|, Returning:  true\n", __func__, text, *term);
-      }
-      else {
-         printf("(%s) text=|%s|, Returning: false\n", __func__, text);
-      }
-   }
-
+#ifdef BAD_IMPL
+/** Finds the first occurrence of the substring #needle in #haystack.
+ *  The terminating null bytes )'\0') are not compared. the comparison
+ *  ignores case.
+ *
+ *  \param haystack
+ *  \param needle
+ *  \return pointer to beginning of located string, or NULL if not found
+ *
+ *  \remark
+ *  Implements strcasestr() function, which is only available
+ *  if #GNU_SOURCE is defined.   Avoids having to regression test
+ *  the effect of setting #GNU_SOURCE
+ *  \remark
+ *  Assumes that the
+ */
+char * d_strcasestr(const char * haystack, const char * needle) {
+   char * uhaystack = strdup_uc(haystack);
+   char * uneedle   = strdup_uc(needle);
+   char * result = strstr(uhaystack, uneedle);
+   free(uhaystack);
+   free(uneedle);
    return result;
-
 }
+#endif
+
 
 
 GPtrArray * get_current_boot_messages(char ** filter_terms, bool ignore_case, int limit) {
