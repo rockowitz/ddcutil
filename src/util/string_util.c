@@ -317,7 +317,7 @@ char * lsub(const char * s, int ct) {
 /** Joins an array of strings into a single string, using a separator string.
  *
  * @param  pieces   array of strings
- * @param  ct       number of strings
+ * @param  ct0      number of strings, if < 0 the array is null terminated
  * @param  sepstr   separator string, if NULL then no separator string
  *
  * @return joined string (null terminated)
@@ -325,15 +325,22 @@ char * lsub(const char * s, int ct) {
  * The returned string has been malloc'd.  It is the responsibility of
  * the caller to free it.
  */
-char * strjoin( const char ** pieces, const int ct, const char * sepstr) {
-   // printf("(%s) ct=%d\n", __func__, ct);
+char * strjoin( const char ** pieces, const int ct0, const char * sepstr) {
+   // printf("(%s) ct0=%d, sepstr=|%s|\n", __func__, ct0, sepstr);
    int total_length = 0;
    int ndx;
    int seplen = (sepstr) ? strlen(sepstr) : 0;  // sepstr may be null
-   for (ndx=0; ndx<ct; ndx++)
+
+   int max_ct = (ct0 < 0) ? 9999 : ct0;
+   for (ndx=0; ndx < max_ct && pieces[ndx]; ndx++) {
       total_length += strlen(pieces[ndx]);
-   total_length += (ct-1) * seplen + 1;
-   // printf("(%s) total_length=%d\n", __func__, total_length);
+      if (ndx > 0)
+         total_length += seplen;
+   }
+   total_length += 1;   // for terminating null
+   int ct = ndx;
+
+   // printf("(%s) ct=%d, total_length=%d\n", __func__, ct, total_length);
    char * result = malloc(total_length);
    char * end = result;
    for (ndx=0; ndx<ct; ndx++) {
