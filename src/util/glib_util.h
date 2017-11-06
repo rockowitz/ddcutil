@@ -53,4 +53,34 @@ get_thread_fixed_buffer(
 
 GPtrArray * gaux_ptr_array_truncate(GPtrArray * gpa, int limit);
 
+// Future:
+typedef  gpointer (*GAuxDupFunc)(gpointer src);
+
+GPtrArray *
+gaux_ptr_array_append_array(
+      GPtrArray * dest,
+      GPtrArray * src,
+      GAuxDupFunc dup_func);
+
+GPtrArray *
+gaux_ptr_array_join(
+      GPtrArray *    gpa1,
+      GPtrArray *    gpa2,
+      GAuxDupFunc    dup_func,
+      GDestroyNotify element_free_func);
+
+GPtrArray *
+gaux_ptr_array_copy(
+      GPtrArray *    src,
+      GAuxDupFunc    dup_func,
+      GDestroyNotify element_free_func);
+
+GPtrArray *
+gaux_ptr_array_from_null_terminated_array(
+      gpointer *     src,
+      GAuxDupFunc    dup_func,
+      GDestroyNotify element_free_func);
+
+
+
 #endif /* GLIB_UTIL_H_ */

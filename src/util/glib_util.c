@@ -186,6 +186,90 @@ GPtrArray * gaux_ptr_array_truncate(GPtrArray * gpa, int limit) {
 }
 
 
+// Future:
+
+
+GPtrArray *
+gaux_ptr_array_append_array(
+      GPtrArray * dest,
+      GPtrArray * src,
+      GAuxDupFunc dup_func)
+{
+   assert(dest);
+   if (src) {
+      for (int ndx = 0; ndx < src->len; ndx++) {
+         gpointer v = g_ptr_array_index(src,ndx);
+         if (dup_func)
+            v = dup_func(v);
+         g_ptr_array_add(dest, v);
+      }
+   }
+   return dest;
+}
+
+GPtrArray *
+gaux_ptr_array_join(
+      GPtrArray *    gpa1,
+      GPtrArray *    gpa2,
+      GAuxDupFunc    dup_func,
+      GDestroyNotify element_free_func)
+{
+   int new_len = gpa1->len + gpa2->len;
+   GPtrArray * dest = g_ptr_array_sized_new(new_len);
+   if (element_free_func)
+      g_ptr_array_set_free_func(dest,element_free_func);
+   for (int ndx = 0; ndx < gpa1->len; ndx++) {
+      gpointer v = g_ptr_array_index(gpa1,ndx);
+      if (dup_func)
+         v = dup_func(v);
+      g_ptr_array_add(dest, v);
+   }
+   for (int ndx = 0; ndx < gpa2->len; ndx++) {
+      gpointer v = g_ptr_array_index(gpa2,ndx);
+      if (dup_func)
+         v = dup_func(v);
+      g_ptr_array_add(dest, v);
+   }
+   return dest;
+}
+
+GPtrArray *
+gaux_ptr_array_copy(
+      GPtrArray *    src,
+      GAuxDupFunc    dup_func,
+      GDestroyNotify element_free_func)
+{
+   GPtrArray * dest = g_ptr_array_sized_new(src->len);
+   if (element_free_func)
+      g_ptr_array_set_free_func(dest, element_free_func);
+   for (int ndx = 0; ndx < src->len; ndx++) {
+      gpointer v = g_ptr_array_index(src,ndx);
+      if (dup_func)
+         v = dup_func(v);
+      g_ptr_array_add(dest, v);
+   }
+   return dest;
+}
+
+
+GPtrArray *
+gaux_ptr_array_from_null_terminated_array(
+      gpointer *     src,
+      GAuxDupFunc    dup_func,
+      GDestroyNotify element_free_func)
+{
+   GPtrArray * result = g_ptr_array_new();
+   if (dup_func)
+      g_ptr_array_set_free_func(result, element_free_func);
+   gpointer* p = src;
+   while (*p) {
+      gpointer v = (dup_func) ? dup_func(*p) : *p;
+      g_ptr_array_add(result, v);
+   }
+   return result;
+}
+
+
 
 
 
