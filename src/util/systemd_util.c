@@ -81,13 +81,13 @@ bool apply_filter_terms(const char * text, char ** terms, bool ignore_case) {
       while (*term) {
          // printf("(%s) Comparing |%s|\n", __func__, *term);
          if (ignore_case) {
-            if (strstr(text,*term)) {
+            if (strcasestr(text,*term)) {
                result = true;
                break;
             }
          }
          else {
-            if (strcasestr(text, *term)) {
+            if (strstr(text, *term)) {
                result = true;
                break;
             }
