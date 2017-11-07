@@ -2980,7 +2980,6 @@ void probe_logs(Env_Accumulator * accum) {
    if (log_syslog_found)
       logs_found |= LOG_SYSLOG;
 
-
    // for now, just report the logs seen to avoid warning about unused vars
 #ifdef NO
    rpt_title("Log files found:  ", depth);
