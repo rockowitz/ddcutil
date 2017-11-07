@@ -63,7 +63,9 @@
 #include "util/string_util.h"
 #include "util/subprocess_util.h"
 #include "util/sysfs_util.h"
+#ifdef PROBE_USING_SHELL
 #include "util/systemd_util.h"
+#endif
 #ifdef USE_X11
 #include "util/x11_util.h"
 #endif
@@ -110,6 +112,7 @@ typedef struct {
    char * architecture;
    char * distributor_id;
    bool   is_raspbian;
+   bool   is_arm;
    Byte_Value_Array i2c_device_numbers;
    struct driver_name_node * driver_list;
 } Env_Accumulator;
@@ -685,6 +688,7 @@ static void query_base_env(Env_Accumulator * accum) {
    accum->architecture   = architecture;
    accum->distributor_id = distributor_id;
    accum->is_raspbian    = streq(accum->distributor_id, "Raspbian");
+   accum->is_arm         = str_starts_with(accum->architecture, "arm");
    free(release);
 
 #ifdef REDUNDANT
@@ -713,8 +717,8 @@ static void query_base_env(Env_Accumulator * accum) {
        }
 
        rpt_nl();
-        if (accum->is_raspbian) {
-           rpt_vstring(0, "Skipping dmidecode checks on %s.", accum->distributor_id);
+        if (accum->is_arm) {
+           rpt_vstring(0, "Skipping dmidecode checks on architecture %s.", accum->architecture);
         }
         else {
            query_dmidecode();
@@ -1415,13 +1419,14 @@ static bool is_module_builtin(char * module_name) {
    GPtrArray * response = execute_shell_cmd_collect(cmdbuf);
    // internal rc =  0 if found, 256 if not found
    // returns 0 lines if not found
+   // NULL response if command error
 
    // DBGMSG("execute_shell_cmd_collect() returned %d lines", response->len);
    // for (int ndx = 0; ndx < response->len; ndx++) {
    //    puts(g_ptr_array_index(response, ndx));
    // }
 
-   result = (response->len > 0);
+   result = (response && response->len > 0);
    g_ptr_array_free(response, true);
 
    DBGMSF(debug, "module_name = %s, returning %s", module_name, bool_repr(result));
@@ -1741,8 +1746,8 @@ static struct driver_name_node * query_card_and_driver_using_sysfs(Env_Accumulat
    struct dirent *dent;
    DIR           *d;
 
-   if (accum->is_raspbian) {
-      rpt_vstring(0, "Executing on %s.  Skipping /sys/bus/pci checks.", accum->distributor_id);
+   if (accum->is_arm) {
+      rpt_vstring(0, "Machine architecture is %s.  Skipping /sys/bus/pci checks.", accum->architecture);
       char * platform_drivers_dir_name = "/sys/bus/platform/drivers";
       d = opendir(platform_drivers_dir_name);
       if (!d) {
@@ -2358,6 +2363,48 @@ static void probe_i2c_devices_using_udev() {
 // Log files
 //
 
+void filter_and_limit_g_ptr_array(
+      GPtrArray * line_array,
+      char **     filter_terms,
+      bool        ignore_case,
+      int         limit)
+{
+   bool debug = false;
+   DBGMSF(debug, "line_array=%p, ct(filter_terms)=%d, ignore_case=%s, limit=%d",
+            line_array, ntsa_length(filter_terms), bool_repr(ignore_case), limit);
+   if (debug) {
+      // (const char **) cast to conform to strjoin() signature
+      char * s = strjoin( (const char **) filter_terms, -1, ", ");
+      DBGMSG("Filter terms: %s", s);
+      free(s);
+   };
+#ifdef TOO_MUCH
+   if (debug) {
+      if (filter_terms) {
+         printf("(%s) filter_terms:\n", __func__);
+         ntsa_show(filter_terms);
+      }
+   }
+#endif
+   // inefficient, just make it work for now
+   for (int ndx = (line_array->len)-1 ; ndx >= 0; ndx--) {
+      char * s = g_ptr_array_index(line_array, ndx);
+      // DBGMSF(debug, "s=|%s|", s);
+      bool keep = true;
+      if (filter_terms)
+         keep = apply_filter_terms(s, filter_terms, ignore_case);
+      if (!keep) {
+         g_ptr_array_remove_index(line_array, ndx);
+      }
+   }
+   gaux_ptr_array_truncate(line_array, limit);
+
+   DBGMSF(debug, "Done. line_array->len=%d", line_array->len);
+}
+
+
+
+
 /** Reads the contents of a file into a #GPtrArray of lines, optionally keeping only
  *  those lines containing at least one on a list of terms.  After filtering, the set
  *  of returned lines may be further reduced to either the first or last n number of
@@ -2370,7 +2417,8 @@ static void probe_i2c_devices_using_udev() {
  *  \param  limit if 0, return all lines that pass filter terms
  *                if > 0, return at most the first #limit lines that satisfy the filter terms
  *                if < 0, return at most the last  #limit lines that satisfy the filter terms
- *  \return status code
+ *  \return if >= 0, number of lines before filtering and limit applied
+ *          if < 0,  -errno
  *
  *  \remark
  *  This function was created because using grep in conjunction with pipes was
@@ -2379,7 +2427,7 @@ static void probe_i2c_devices_using_udev() {
  *          to allow for returning a status code.
  *  \remark Consider adding the ability to treat filter terms as regular expressions
  */
-int read_file_with_filter(
+static int read_file_with_filter(
       GPtrArray * line_array,
       char *      fn,
       char **     filter_terms,
@@ -2389,6 +2437,7 @@ int read_file_with_filter(
    bool debug = false;
    DBGMSF(debug, "line_array=%p, fn=%s, ct(filter_terms)=%d, ignore_case=%s, limit=%d",
             line_array, fn, ntsa_length(filter_terms), bool_repr(ignore_case), limit);
+
 #ifdef TOO_MUCH
    if (debug) {
       if (filter_terms) {
@@ -2401,42 +2450,58 @@ int read_file_with_filter(
    g_ptr_array_set_free_func(line_array, g_free);    // in case not already set
 
    int rc = file_getlines(fn, line_array, /*verbose*/ true);
-   DBGMSF(debug, "file_getlines() returned %d", rc);
-   if (rc < 0) {
-      DBGMSG("file_getlines() returned %d", rc);
-   }
-   else if (rc > 0) {
-      // should really happen elsewhere
-      // for (int ndx=0; ndx < line_array->len; ndx++)  // now done by file_getlines()
-      //   rtrim_in_place(g_ptr_array_index(line_array, ndx));     // strip trailing newline
+   DBGMSF((debug||(rc<0)), "file_getlines() returned %d", rc);
 
-      // DBGMSF(debug, "Read %d lines", line_array->len);
-      // filtered = g_ptr_array_new_full(1000, g_free);
-      // inefficient, just make it work for now
-      int lastndx = (line_array->len) - 1;
-      // DBGMSF(debug, "lastndx=%d", lastndx);
-      for (int ndx = lastndx ; ndx >= 0; ndx--) {
-         // DBGMSF(debug, "ndx=%d", ndx);
-         char * s = g_ptr_array_index(line_array, ndx);
-         // DBGMSF(debug, "s=|%s|", s);
-         bool keep = true;
-         if (filter_terms)
-            keep = apply_filter_terms(s, filter_terms, ignore_case);
-         if (!keep) {
-            g_ptr_array_remove_index(line_array, ndx);
-         }
-      }
-      gaux_ptr_array_truncate(line_array, limit);
-      rc = line_array->len;
+   if (rc > 0) {
+      filter_and_limit_g_ptr_array(
+         line_array,
+         filter_terms,
+         ignore_case,
+         limit);
    }
    else { // rc == 0
       DBGMSF(debug, "Empty file");
    }
+
    DBGMSF(debug, "Returning: %d", rc);
    return rc;
 }
 
 
+int execute_cmd_collect_with_filter(
+      char *       cmd,
+      char **      filter_terms,
+      bool         ignore_case,
+      int          limit,
+      GPtrArray ** result_loc)
+{
+   bool debug = false;
+   DBGMSF(debug, "cmd|%s|, ct(filter_terms)=%d, ignore_case=%s, limit=%d",
+            cmd, ntsa_length(filter_terms), bool_repr(ignore_case), limit);
+
+   int rc = 0;
+   GPtrArray *line_array = execute_shell_cmd_collect(cmd);
+   if (!line_array) {
+      rc = -1;
+   }
+   else {
+      rc = line_array->len;
+      if (rc > 0) {
+         filter_and_limit_g_ptr_array(
+            line_array,
+            filter_terms,
+            ignore_case,
+            limit);
+      }
+   }
+   *result_loc = line_array;
+
+   DBGMSF(debug, "Returning: %d", rc);
+   return rc;
+}
+
+
+#ifdef USE_SHELL
 /* Helper function that scans a single log file
  *
  * \param  pre_grep     portion of command before the grep command
@@ -2445,7 +2510,7 @@ int read_file_with_filter(
  * \param  title        describes what is being scanned
  * \param  depth        logical indentation depth
  */
-bool probe_one_log(
+bool probe_one_log_using_shell(
       char * pre_grep,
       char * grep_cmd,
       char * post_grep,
@@ -2486,7 +2551,7 @@ bool probe_one_log(
    DBGMSF(debug, "Done.  Returning %s", bool_repr(result));
    return result;
 }
-
+#endif
 
 /*  Helper function for building egrep command.  Appends search terms.
  *
@@ -2524,6 +2589,7 @@ void add_egrep_terms(char ** terms, char * buf, int bufsz) {
 }
 
 
+#ifdef USING_SHELL
 /** Scan one log file using grep
  *
  *  \param  log_fn      file name
@@ -2535,14 +2601,16 @@ void add_egrep_terms(char ** terms, char * buf, int bufsz) {
  *  \param  depth       logical indentation depth
  *  \return true if log find found, false if not
  */
-bool probe_log_for_terms(
+bool probe_log_using_shell(
       char *  log_fn,
       char ** terms,
       bool    ignore_case,
       int     limit,
       int     depth)
 {
-   bool debug = false;
+   bool debug = false;;
+   DBGMSF(debug, "Starting.  log_fn=%s", log_fn);
+
    assert(log_fn);
    assert(terms);
    bool file_found = false;
@@ -2573,16 +2641,19 @@ bool probe_log_for_terms(
       add_egrep_terms(terms, gbuf, gbufsz);
       DBGMSF(debug, "gbuf size=%d, len=%d, \"%s\"",
                     gbufsz, strlen(gbuf), gbuf);
-      probe_one_log(NULL, gbuf, limit_buf, log_fn, depth);
+      probe_one_log_using_shell(NULL, gbuf, limit_buf, log_fn, depth);
       file_found = true;
    }
    else
       rpt_vstring(depth, "File not found: %s", log_fn);
+
+   DBGMSF(debug, "Done. Returning %s", bool_repr(file_found));
    return file_found;
 }
+#endif
 
 
-bool probe_log_for_terms_direct(
+bool probe_log_using_api(
       char *  log_fn,
       char ** filter_terms,
       bool    ignore_case,
@@ -2591,24 +2662,37 @@ bool probe_log_for_terms_direct(
 {
    bool debug = false;
    assert(log_fn);
-   DBGMSF(debug, "Staring. log_fn=%s, filter_terms=%p, ignore_case=%s, limit=%d",
+   DBGMSF(debug, "Starting. log_fn=%s, filter_terms=%p, ignore_case=%s, limit=%d",
                  log_fn, filter_terms, bool_repr(ignore_case), limit);
    bool file_found = false;
    int rc = 0;
    if (regular_file_exists(log_fn)) {
-      rpt_vstring(depth, "Reading file: %s", log_fn);
+      rpt_vstring(depth, "Scanning file: %s", log_fn);
       if (limit < 0) {
-         rpt_vstring(depth, "Limiting output to last %d lines...", -limit);
+         rpt_vstring(depth, "Limiting output to last %d relevant lines...", -limit);
       }
       else if (limit > 0) {
-          rpt_vstring(depth, "Limiting output to first %d lines...", limit);
+          rpt_vstring(depth, "Limiting output to first %d relevant lines...", limit);
       }
       GPtrArray * found_lines = g_ptr_array_new_full(1000, g_free);
       rc = read_file_with_filter(found_lines, log_fn, filter_terms, ignore_case, limit);
-      for (int ndx = 0; ndx < found_lines->len; ndx++) {
-         rpt_title(g_ptr_array_index(found_lines, ndx), depth+1);
+      if (rc < 0) {
+         f0printf(FERR, "Error reading file: %s\n", psc_desc(rc));
       }
-      file_found = true;
+      else if (rc == 0) {   // rc >0 is the original number of lines
+         rpt_title("Empty file", depth);
+         file_found = true;
+      }
+      else if (found_lines->len == 0) {
+         rpt_title("No lines found after filtering", depth);
+         file_found = true;
+      }
+      else {
+         for (int ndx = 0; ndx < found_lines->len; ndx++) {
+            rpt_title(g_ptr_array_index(found_lines, ndx), depth+1);
+         }
+         file_found = true;
+      }
    }
    else {
       rpt_vstring(depth, "File not found: %s", log_fn);
@@ -2618,6 +2702,52 @@ bool probe_log_for_terms_direct(
    rpt_nl();
    return file_found;
 }
+
+
+
+bool probe_cmd_using_api(
+      char *  cmd,
+      char ** filter_terms,
+      bool    ignore_case,
+      int     limit,
+      int     depth)
+{
+   bool debug = false;
+   assert(cmd);
+   DBGMSF(debug, "Starting. cmd=%s, filter_terms=%p, ignore_case=%s, limit=%d",
+                 cmd, filter_terms, bool_repr(ignore_case), limit);
+
+   rpt_vstring(depth, "Executing command: %s", cmd);
+   if (limit < 0) {
+      rpt_vstring(depth, "Limiting output to last %d relevant lines...", -limit);
+   }
+   else if (limit > 0) {
+       rpt_vstring(depth, "Limiting output to first %d relevant lines...", limit);
+   }
+   GPtrArray * filtered_lines = NULL;
+   int rc = execute_cmd_collect_with_filter(cmd, filter_terms, ignore_case, limit, &filtered_lines);
+   if (rc < 0) {
+      f0printf(FERR, "Error executing command: %s\n", psc_desc(rc));
+   }
+   else if (rc == 0) {   // rc >0 is the original number of lines
+      rpt_title("No output", depth);
+   }
+   else if (filtered_lines->len == 0) {
+         rpt_title("No lines found after filtering", depth);
+      }
+      else {
+         for (int ndx = 0; ndx < filtered_lines->len; ndx++) {
+            rpt_title(g_ptr_array_index(filtered_lines, ndx), depth+1);
+         }
+      }
+
+   bool result = (rc >= 0);
+   DBGMSF(debug, "rc=%d, returning %s", rc, bool_repr(result));
+   rpt_nl();
+   return result;
+}
+
+
 
 
 /** Scans log files for lines of interest.
@@ -2637,8 +2767,11 @@ bool probe_log_for_terms_direct(
 void probe_logs(Env_Accumulator * accum) {
    // TODO: Function needs major cleanup
 
+#ifdef USE_SHELL
    char gbuf[500];             // contains grep command
    int  gbufsz = sizeof(gbuf);
+#endif
+
    int depth = 0;
    int d1 = depth+1;
    int d2 = depth+2;
@@ -2680,9 +2813,10 @@ void probe_logs(Env_Accumulator * accum) {
    Byte logs_checked = 0x00;
    Byte logs_found   = 0x00;
 
-
+#ifdef USE_SHELL
    strncpy(gbuf, "egrep -i", gbufsz);
    add_egrep_terms(known_video_driver_modules, gbuf, gbufsz);
+#endif
 
 #ifdef NO
    // Problem: dmesg can be filled w i2c errors from i2cdetect trying to
@@ -2698,22 +2832,39 @@ void probe_logs(Env_Accumulator * accum) {
          NULL
    };
 
+#ifdef USE_SHELL
    add_egrep_terms(addl_matches, gbuf, gbufsz);
+#endif
 
-   Null_Terminated_String_Array all_terms = ntsa_join(known_video_driver_modules, addl_matches, /*dup*/ false);
+   Null_Terminated_String_Array drivers_plus_addl_matches =
+            ntsa_join(known_video_driver_modules, addl_matches, /*dup*/ false);
+
+   // *** dmesg ***
 
    rpt_nl();
    // first few lines of dmesg are lost.  turning on any sort of debugging causes
    // them to reappear.  apparently a NL in the stream does the trick.  why?
    // it's a heisenbug.  Just use the more verbose journalctl output
    logs_checked |= LOG_DMESG;
-   log_dmesg_found = probe_one_log("dmesg |",      gbuf, NULL,                   "dmesg",      depth+1);
+#ifdef USE_SHELL
+   log_dmesg_found = probe_one_log_using_shell("dmesg |",      gbuf, NULL,                   "dmesg",      depth+1);
+#endif
+
+   // DBGMSG("Alternative using API:");
+   rpt_title("Scanning dmesg output for I2C related entries...", depth+1);
+   log_dmesg_found = probe_cmd_using_api("dmesg", drivers_plus_addl_matches, /*ignore_case*/ true, 0, depth+1);
    if (log_dmesg_found)
       logs_found |= LOG_DMESG;
 
+   // *** journalctl ***
+
    logs_checked |= LOG_JOURNALCTL;
+
+#ifdef ALT
+   // if don't use this version, don't need to link with libsystemd
+   DBGMSG("Using get_current_boot_messages...");
    rpt_title("Checking journalctl for I2C related entries...", depth+1);
-   GPtrArray * journalctl_msgs = get_current_boot_messages(all_terms, /* ignore case */true, 0);
+   GPtrArray * journalctl_msgs = get_current_boot_messages(drivers_plus_addl_matches, /* ignore case */true, 0);
    if (journalctl_msgs) {
       // log_journalctl_found = true;
       logs_found |= LOG_JOURNALCTL;
@@ -2723,6 +2874,15 @@ void probe_logs(Env_Accumulator * accum) {
       }
    }
    rpt_nl();
+#endif
+
+   // has a few more lines from nvidia-persistence, lines have timestamp, hostname, and subsystem
+   DBGMSG("Using probe_cmd_using_api()...:");
+   rpt_title("Scanning journalctl output for I2C related entries...", depth+1);
+   log_dmesg_found = probe_cmd_using_api("journalctl --no-pager --boot", drivers_plus_addl_matches, /*ignore_case*/ true, 0, depth+1);
+   if (log_dmesg_found)
+      logs_found |= LOG_DMESG;
+    rpt_nl();
 
    // 11/4/17:  Now getting error msgs like:
    //   sh: 1: Syntax error: end of file unexpected
@@ -2731,7 +2891,12 @@ void probe_logs(Env_Accumulator * accum) {
    // no, it's journalctl that's the offender.  With just journalctl, earlier
    // messages re Summary of Udev devices is screwed up
    // --no-pager solves the problem
-   //probe_one_log("journalctl --no-pager --boot|", gbuf, NULL,                   "journalctl", depth+1);
+
+   // DBGMSG("Using probe_one_log_using_shell()...");
+   // probe_one_log_using_shell("journalctl --no-pager --boot|", gbuf, NULL,                   "journalctl", depth+1);
+
+
+   // *** Xorg.0.log ***
 
    char * xorg_terms[] = {
     //   "[Ll]oadModule:",     // matches LoadModule, UnloadModule
@@ -2749,48 +2914,63 @@ void probe_logs(Env_Accumulator * accum) {
          NULL
    };
 
-   if (!accum->is_raspbian) {
+   // Null_Terminated_String_Array log_terms = all_terms;
+   char * rasp_log_terms[] = {
+         "i2c",
+         NULL
+   };
+
+   Null_Terminated_String_Array log_terms = ntsa_join(drivers_plus_addl_matches, rasp_log_terms, false);
+   Null_Terminated_String_Array all_terms = log_terms;
+
+   if (accum->is_arm) {
       logs_checked |= LOG_XORG;
-      rpt_vstring(depth+1, "Limiting output to 200 lines...");
-      log_xorg_found = probe_one_log(NULL,           gbuf, " /var/log/Xorg.0.log|head -n 200", "Xorg.0.log", depth+1);
+#ifdef ALT
+      DBGMSG("Using probe_log_using_shell()...");
+      log_xorg_found = probe_log_using_shell("/var/log/Xorg.0.log", xorg_terms, /*ignore_case*/ true, 0, depth+1);
       if (log_xorg_found)
          logs_found |= LOG_XORG;
+#endif
+      DBGMSG("Using probe_log_using_api...");
+      log_xorg_found =  probe_log_using_api("/var/log/Xorg.0.log", xorg_terms, /*ignore_case*/ true,  0, depth+1);
+      if (log_xorg_found)
+         logs_found |= LOG_XORG;
+   }
+   else {
+      logs_checked |= LOG_XORG;
+      // rpt_vstring(depth+1, "Limiting output to 200 lines...");
 
-      DBGMSG("Using probe_log_for_terms...");
-      log_xorg_found =  probe_log_for_terms("/var/log/Xorg.0.log", xorg_terms, /*ignore_case*/ true, 200, depth+1);
+#ifdef SHELL_CMD
+      DBGMSG("Using probe_one_log_using_shell()...");
+      log_xorg_found = probe_one_log_using_shell(NULL,           gbuf, " /var/log/Xorg.0.log|head -n 200", "Xorg.0.log", depth+1);
+      if (log_xorg_found)
+         logs_found |= LOG_XORG;
+#endif
+
+      DBGMSG("Using probe_log_using_api...");
+      log_xorg_found =  probe_log_using_api("/var/log/Xorg.0.log", drivers_plus_addl_matches, /*ignore_case*/ true, 200, depth+1);
       if (log_xorg_found)
          logs_found |= LOG_XORG;
    }
 
-   Null_Terminated_String_Array log_terms = all_terms;
 
-   if (accum->is_raspbian) {
-      logs_checked |= LOG_XORG;
-      log_xorg_found = probe_log_for_terms("/var/log/Xorg.0.log", xorg_terms, /*ignore_case*/ false, 0, depth);
-      if (log_xorg_found)
-         logs_found |= LOG_XORG;
+   // ***/var/log/kern.log, /var/log/daemon.log, /var/log/syslog, /va/log/messages ***
 
-      char * rasp_log_terms[] = {
-            "i2c",
-            NULL
-      };
-      log_terms = ntsa_join(all_terms, rasp_log_terms, false);
-   }
-
-   logs_checked |= (LOG_MESSAGES | LOG_KERN | LOG_DAEMON | LOG_SYSLOG);
-
+#ifdef USING_SHELL
    // Problem: Commands sometimes produce obscure shell error messages
-   log_messages_found = probe_log_for_terms("/var/log/messages",   log_terms, /*ignore_case*/ true, -40, d1);
-   log_kern_found     = probe_log_for_terms("/var/log/kern.log",   log_terms, /*ignore_case*/ true, -20, d1);
-   log_daemon_found   = probe_log_for_terms("/var/log/daemon.log", log_terms, /*ignore_case*/ true, -10, d1);
-   log_syslog_found   = probe_log_for_terms("/var/log/syslog",     log_terms, /*ignore_case*/ true, -50, d1);
+   log_messages_found = probe_log_using_shell("/var/log/messages",   log_terms, /*ignore_case*/ true, -40, d1);
+   log_kern_found     = probe_log_using_shell("/var/log/kern.log",   log_terms, /*ignore_case*/ true, -20, d1);
+   log_daemon_found   = probe_log_using_shell("/var/log/daemon.log", log_terms, /*ignore_case*/ true, -10, d1);
+   log_syslog_found   = probe_log_using_shell("/var/log/syslog",     log_terms, /*ignore_case*/ true, -50, d1);
+#endif
 
    // Using our own code instead of shell to scan files
-   log_messages_found = probe_log_for_terms_direct("/var/log/messages",   log_terms, /*ignore_case*/ true, -40, d1);
-   log_kern_found     = probe_log_for_terms_direct("/var/log/kern.log",   log_terms, /*ignore_case*/ true, -20, d1);
-   log_daemon_found   = probe_log_for_terms_direct("/var/log/daemon.log", log_terms, /*ignore_case*/ true, -10, d1);
-   log_syslog_found   = probe_log_for_terms_direct("/var/log/syslog",     log_terms, /*ignore_case*/ true, -50, d1);
+   log_messages_found = probe_log_using_api("/var/log/messages",   log_terms, /*ignore_case*/ true, -40, d1);
+   log_kern_found     = probe_log_using_api("/var/log/kern.log",   log_terms, /*ignore_case*/ true, -20, d1);
+   log_daemon_found   = probe_log_using_api("/var/log/daemon.log", log_terms, /*ignore_case*/ true, -10, d1);
+   log_syslog_found   = probe_log_using_api("/var/log/syslog",     log_terms, /*ignore_case*/ true, -50, d1);
 
+   logs_checked |= (LOG_MESSAGES | LOG_KERN | LOG_DAEMON | LOG_SYSLOG);
    if (log_messages_found)
       logs_found |= LOG_MESSAGES;
    if (log_kern_found)
@@ -2814,22 +2994,18 @@ void probe_logs(Env_Accumulator * accum) {
 #endif
    rpt_nl();
    rpt_title("Log Summary", d1);
-   // rpt_nl();
-   Value_Name_Title * entry = log_table;
    rpt_vstring(d2,  "%-30s  %-7s   %-6s",  "Log", "Checked", "Found");
    rpt_vstring(d2,  "%-30s  %-7s   %-6s",  "===", "=======", "=====");
-   while (entry->title) {
+   for (Value_Name_Title * entry = log_table; entry->title; entry++) {
       rpt_vstring(d2, "%-30s  %-7s   %-6s",
                       entry->title,
                       bool_repr(logs_checked & entry->value),
                       bool_repr(logs_found & entry->value));
-      entry++;
    }
    rpt_nl();
    if (log_terms != all_terms)
       ntsa_free(log_terms, false);
    ntsa_free(all_terms, false);
-
 }
 
 
@@ -2845,9 +3021,9 @@ void probe_config_files(Env_Accumulator * accum) {
    rpt_nl();
    rpt_title("Examining configuration files...", depth);
 
-   if (accum->is_raspbian) {
+   if (accum->is_arm) {
 #ifdef OLD
-      probe_one_log(
+      probe_one_log_using_shell(
             NULL,
             "egrep -i -e\"dtparam\" -e\"dtoverlay\"",
             " /boot/config.txt | grep -v \"^ *#\"",
@@ -2856,7 +3032,7 @@ void probe_config_files(Env_Accumulator * accum) {
             );
 #endif
       rpt_title("Examining /boot/config.txt:", depth+1);
-      execute_shell_cmd_rpt("egrep -i -edtparam -edtoverlay /boot/config.txt | grep -v \"^ *#\"", depth+2);
+      execute_shell_cmd_rpt("egrep -i -edtparam -edtoverlay -edevice_tree /boot/config.txt | grep -v \"^ *#\"", depth+2);
       rpt_nl();
       rpt_vstring(depth+1, "Looking for blacklisted drivers in /etc/modprobe.d:");
       execute_shell_cmd_rpt("grep -ir blacklist /etc/modprobe.d | grep -v \"^ *#\"", depth+2);
@@ -2944,7 +3120,7 @@ void query_sysenv() {
    // printf("Gathering card and driver information...\n");
    rpt_nl();
    query_proc_modules_for_video();
-   if (!accumulator->is_raspbian) {
+   if (!accumulator->is_arm) {
       rpt_nl();
       query_card_and_driver_using_lspci();
    }
