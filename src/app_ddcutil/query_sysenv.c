@@ -2877,7 +2877,7 @@ void probe_logs(Env_Accumulator * accum) {
 #endif
 
    // has a few more lines from nvidia-persistence, lines have timestamp, hostname, and subsystem
-   DBGMSG("Using probe_cmd_using_api()...:");
+   // DBGMSG("Using probe_cmd_using_api()...:");
    rpt_title("Scanning journalctl output for I2C related entries...", depth+1);
    log_dmesg_found = probe_cmd_using_api("journalctl --no-pager --boot", drivers_plus_addl_matches, /*ignore_case*/ true, 0, depth+1);
    if (log_dmesg_found)
@@ -2931,7 +2931,7 @@ void probe_logs(Env_Accumulator * accum) {
       if (log_xorg_found)
          logs_found |= LOG_XORG;
 #endif
-      DBGMSG("Using probe_log_using_api...");
+      // DBGMSG("Using probe_log_using_api...");
       log_xorg_found =  probe_log_using_api("/var/log/Xorg.0.log", xorg_terms, /*ignore_case*/ true,  0, depth+1);
       if (log_xorg_found)
          logs_found |= LOG_XORG;
@@ -2947,7 +2947,7 @@ void probe_logs(Env_Accumulator * accum) {
          logs_found |= LOG_XORG;
 #endif
 
-      DBGMSG("Using probe_log_using_api...");
+      // DBGMSG("Using probe_log_using_api...");
       log_xorg_found =  probe_log_using_api("/var/log/Xorg.0.log", drivers_plus_addl_matches, /*ignore_case*/ true, 200, depth+1);
       if (log_xorg_found)
          logs_found |= LOG_XORG;
