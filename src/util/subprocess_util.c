@@ -230,7 +230,14 @@ bool is_command_in_path(char * cmd) {
 }
 
 
-
+/** Tests if a command is executable.
+ *
+ *  \param cmd command to test execute
+ *  \retval   0    ok
+ *  \retval 127    command not found
+ *  \retval   2    command requires sudo
+ *  \retval   1    command executed, but with some error
+ */
 int test_command_executability(char * cmd) {
    assert(cmd);
    char * full_cmd = calloc(1, strlen(cmd) + 20);
@@ -246,7 +253,6 @@ int test_command_executability(char * cmd) {
    // 2 on dmidecode - not running sudo
    // 2 on i2cdetect - not sudo
    // 1 on i2cdetect - sudo, but some error
-
 
    return WEXITSTATUS(rc);
 }

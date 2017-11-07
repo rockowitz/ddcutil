@@ -63,7 +63,7 @@
 #include "util/string_util.h"
 #include "util/subprocess_util.h"
 #include "util/sysfs_util.h"
-#ifdef PROBE_USING_SHELL
+#ifdef PROBE_USING_SYSTEMD
 #include "util/systemd_util.h"
 #endif
 #ifdef USE_X11
@@ -176,7 +176,7 @@ Byte_Value_Array get_i2c_devices_by_existence_test() {
    Byte_Value_Array bva = bva_create();
    for (int busno=0; busno < I2C_BUS_MAX; busno++) {
       if (i2c_device_exists(busno)) {
-         // is_smbus_device_using_sysfs(busno);
+         // if (!is_ignorable_i2c_device(busno))
          bva_append(bva, busno);
       }
    }
@@ -593,26 +593,11 @@ static void query_dmidecode() {
    }
    rpt_vstring(1, "%-25s %s", "Chassis type:", chassis_desc);
 
-
-   // test_command_executability("i2cdetect");
-   // test_command_executability("nonesuch");
-
-#ifdef NOT_WORKING
-   char * cmd =    "dmidecode | grep \"['Base Board Info'|'Chassis Info'|'System Info']\' -A2";
-   // char * cmd =    "dmidecode | grep 'Base Board Info' -A2";
-   DBGMSG("cmd: |%s|", cmd);
-   GPtrArray * lines = execute_shell_cmd_collect(cmd);
-
-   if (lines) {
-   for (int ndx = 0; ndx < lines->len; ndx++) {
-      char * s = g_ptr_array_index(lines, ndx);
-      rpt_title(s, 1);
-   }
-   }
-   else
-      rpt_vstring(1, "Command failed: %s", cmd);
-   g_ptr_array_free(lines,true);
-#endif
+   // Note: The alternative of calling execute_shell_cmd_collect() with the following
+   // command fails if executing from a non-privileged account, which lacks permissions
+   // for /dev/mem or /sys/firmware/dmi/tables/smbios_entry_point
+   // char * cmd =    "dmidecode | grep \"['Base Board Info'|'Chassis Info'|'System Info']\" -A2";
+   // GPtrArray * lines = execute_shell_cmd_collect(cmd);
 
 }
 
@@ -1063,23 +1048,7 @@ void raw_scan_i2c_devices() {
 
          if (is_ignorable_i2c_device(busno))
             continue;
-#ifdef old
-         char sysdir[100];
-         snprintf(sysdir, 100, "/sys/bus/i2c/devices/i2c-%d", busno);
-         char * dev_name = read_sysfs_attr_w_default(sysdir, "name", "(not found)", false);
-         rpt_vstring(d2, "Device name (%s/name): %s", sysdir, dev_name);
 
-
-         if (str_starts_with(dev_name, "SMBus")) {
-            rpt_vstring(d2, "Skipping SMBus device");
-            continue;
-         }
-         //raspbian:
-         if (streq(dev_name, "soc:i2cdsi")) {
-            rpt_vstring(d2, "Skipping DSI device");
-            continue;
-         }
-#endif
          if (!is_i2c_device_rw(busno))   // issues message if not RW
             continue;
 
