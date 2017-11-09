@@ -41,10 +41,10 @@
 #include "base/core.h"
 #include "base/linux_errno.h"
 
-#include "../app_sysenv/query_sysenv_base.h"
-#include "../app_sysenv/query_sysenv_xref.h"
+#include "query_sysenv_base.h"
+#include "query_sysenv_xref.h"
 
-#include "../app_sysenv/query_sysenv_sysfs.h"
+#include "query_sysenv_sysfs.h"
 
 
 static ushort h2ushort(char * hval) {

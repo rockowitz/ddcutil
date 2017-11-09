@@ -1,6 +1,5 @@
 /* query_sysenv_procfs.h
  *
- *
  * <copyright>
  * Copyright (C) 2014-2017 Sanford Rockowitz <rockowitz@minsoft.com>
  *

@@ -30,8 +30,6 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "../app_sysenv/query_sysenv_base.h"
-
 #include "util/data_structures.h"
 #include "util/file_util.h"
 #include "util/report_util.h"
@@ -39,6 +37,7 @@
 
 #include "base/core.h"
 
+#include "query_sysenv_base.h"
 
 /** Scans /proc/modules for information on loaded drivers of interest
  */

@@ -26,5 +26,4 @@
 
 void query_dmidecode();
 
-
 #endif /* QUERY_SYSENV_DMIDECODE_H_ */

@@ -24,7 +24,7 @@
 #ifndef QUERY_SYSENV_LOGS_H_
 #define QUERY_SYSENV_LOGS_H_
 
-#include "../app_sysenv/query_sysenv_base.h"
+#include "query_sysenv_base.h"
 
 void probe_logs(Env_Accumulator * accum);
 void probe_config_files(Env_Accumulator * accum);

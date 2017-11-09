@@ -35,12 +35,11 @@
 #include "util/report_util.h"
 #include "util/string_util.h"
 
-#define SYSENV_GLOBALS
-#include "../app_sysenv/query_sysenv_base.h"
+#include "query_sysenv_base.h"
 
 
 
-char * known_video_driver_modules[] = {
+static char * known_video_driver_modules[] = {
       "amdgpu",
       "fbdev",
       "fglrx",
@@ -55,7 +54,7 @@ char * known_video_driver_modules[] = {
       NULL
 };
 
-char * prefix_matches[] = {
+static char * prefix_matches[] = {
       "amdgpu",
       "drm",
       "i2c",
@@ -64,7 +63,7 @@ char * prefix_matches[] = {
       NULL
 };
 
-char * other_driver_modules[] = {
+static char * other_driver_modules[] = {
       "drm",
   //  "eeprom",       // not really interesting
       "i2c_algo_bit",

@@ -85,15 +85,15 @@
 
 #include "adl/adl_shim.h"
 
-#include "../app_sysenv/query_sysenv_base.h"
-#include "../app_sysenv/query_sysenv_procfs.h"
-#include "../app_sysenv/query_sysenv_dmidecode.h"
-#include "../app_sysenv/query_sysenv_logs.h"
+#include "query_sysenv_base.h"
+#include "query_sysenv_dmidecode.h"
 #include "query_sysenv_drm.h"
-#include "../app_sysenv/query_sysenv_xref.h"
-#include "../app_sysenv/query_sysenv_sysfs.h"
+#include "query_sysenv_logs.h"
+#include "query_sysenv_procfs.h"
+#include "query_sysenv_sysfs.h"
+#include "query_sysenv_xref.h"
 
-#include "../app_sysenv/query_sysenv.h"
+#include "query_sysenv.h"
 
 
 /** Perform redundant checks as cross-verification */
