@@ -233,20 +233,24 @@ Byte_Value_Array identify_i2c_devices() {
    Byte_Value_Array bva1 = NULL;
    Byte_Value_Array bva2 = NULL;
    Byte_Value_Array bva3 = NULL;
+   Byte_Value_Array bva4 = NULL;
 
    bva1 = get_i2c_devices_by_existence_test();
    if (redundant_i2c_device_identification_checks) {
       bva2 = get_i2c_devices_by_ls();
       bva3 = get_i2c_device_numbers_using_udev(/* include_smbus= */ true);
+      bva4 = get_i2c_device_numbers_using_udev_w_sysattr_name_filter(NULL);
 
       assert(bva_sorted_eq(bva1,bva2));
       assert(bva_sorted_eq(bva1,bva3));
+      assert(bva_sorted_eq(bva1,bva4));
    }
 
    i2c_device_numbers_result = bva1;
    if (redundant_i2c_device_identification_checks) {
       bva_free(bva2);
       bva_free(bva3);
+      bva_free(bva4);
    }
    // DBGMSG("Identified %d I2C devices", bva_length(bva1));
    return i2c_device_numbers_result;
@@ -453,6 +457,47 @@ static bool found_driver(struct driver_name_node * driver_list, char * driver_pr
 }
 
 
+/** Signature of filename filter function passed to #dir_foreach(). */
+typedef bool (*Filename_Filter_Func)(char * simple_fn);
+
+/** Signature of function called for each file in the directory. */
+typedef void (*Dir_Foreach_Func)(char * dirname, char * fn, void * accumulator, int depth);
+
+/** Handles the boilerplate of iterating over a directory.
+ *
+ *  \param   dirname     directory name
+ *  \param   fn_filter   tests the name of a file in a directory to see if should
+ *                       be processe.  If NULL, all files are processed.
+ *  \param   func        function to be called for each filename in the directory
+ *  \param   accumulator pointer to a data structure passed
+ *  \param   depth       logical indentation depth
+ */
+void dir_foreach(
+      char * dirname,
+      Filename_Filter_Func fn_filter,
+      Dir_Foreach_Func func,
+      void * accumulator,
+      int depth)
+{
+   struct dirent *dent;
+   DIR           *d;
+   d = opendir(dirname);
+   if (!d) {
+      rpt_vstring(depth,"Unable to open directory %s: %s", dirname, strerror(errno));
+   }
+   else {
+      while ((dent = readdir(d)) != NULL) {
+         // DBGMSG("%s", dent->d_name);
+         if (!streq(dent->d_name, ".") && !streq(dent->d_name, "..") ) {
+            if (!fn_filter || fn_filter(dent->d_name)) {
+               func(dirname, dent->d_name, accumulator, depth);
+            }
+         }
+      }
+   }
+}
+
+
 //
 // dmidecode related functions
 //
@@ -654,7 +699,7 @@ static void query_base_env(Env_Accumulator * accum) {
 
    report_file_first_line("/proc/version", NULL, 0);
 
-   char * expected_architectures[] = {"x86_64", "i386", "armv7l", NULL};
+   char * expected_architectures[] = {"x86_64", "i386", "i686", "armv7l", NULL};
    char * architecture   = execute_shell_cmd_one_line_result("arch");      // alt: use uname -m
    char * distributor_id = execute_shell_cmd_one_line_result("lsb_release -s -i");  // e.g. Ubuntu, Raspbian
    char * release        = execute_shell_cmd_one_line_result("lsb_release -s -r");
@@ -1412,8 +1457,9 @@ static bool is_module_builtin(char * module_name) {
  *
  * Returns:              nothing
  */
-static void check_i2c_dev_module(struct driver_name_node * video_driver_list) {
+static void check_i2c_dev_module(Env_Accumulator * accum) {
    rpt_vstring(0,"Checking for module i2c_dev...");
+   struct driver_name_node * video_driver_list = accum->driver_list;  // for transition
 
    DDCA_Output_Level output_level = get_output_level();
 
@@ -1437,8 +1483,19 @@ static void check_i2c_dev_module(struct driver_name_node * video_driver_list) {
    bool is_loaded = is_module_loaded_using_sysfs("i2c_dev");
       // DBGMSF(debug, "is_loaded=%d", is_loaded);
    if (!is_builtin)
-      rpt_vstring(0,"   Module %-16s is %sloaded", "i2c_dev", (is_loaded) ? "" : "NOT ");
+      rpt_vstring(1,"Module %-16s is %sloaded", "i2c_dev", (is_loaded) ? "" : "NOT ");
 
+   if (bva_length(accum->i2c_device_numbers) == 0 && !is_builtin && !is_loaded && module_required) {
+      rpt_nl();
+      if (!only_nvidia_or_fglrx(video_driver_list)) {
+         rpt_vstring(0, "No /dev/i2c devices found, but module i2c_dev is not loaded.");
+         rpt_vstring(0, "Suggestion:");
+         rpt_vstring(1, "Manually load module i2c-dev using the command \"modprobe i2c-dev\"");
+         rpt_vstring(1,  "If this solves the problem, put an entry in directory /etc/modules-load.c");
+         rpt_vstring(1, "that will cause i2c-dev to be loaded.  Type \"man modules-load.d\" for details");
+         rpt_nl();
+      }
+   }
    if ( (!is_loaded && !is_builtin) || output_level >= DDCA_OL_VERBOSE) {
       rpt_nl();
       rpt_vstring(0,"Check that kernel module i2c_dev is being loaded by examining files where this would be specified...");
@@ -1499,12 +1556,188 @@ static void query_packages() {
 }
 #endif
 
-static bool query_card_and_driver_using_lspci() {
-   // DBGMSG("Starting");
-   bool ok = true;
-   FILE * fp;
 
+typedef struct {
+   ushort   vendor_id;
+   ushort   device_id;
+   ushort   subdevice_id;    // subsystem device id
+   ushort   subvendor_id;    // subsystem vendor id
+} Device_Ids;
+
+Device_Ids read_device_ids1(char * cur_dir_name);
+
+
+void lspci_alt_one_i2c(char * dirname, char * fn, void * accumulator, int depth) {
+   if (str_starts_with(fn, "i2c")) {
+      char cur_dir[PATH_MAX];
+      snprintf(cur_dir, PATH_MAX, "%s/%s", dirname, fn);
+      char * name = read_sysfs_attr_w_default(cur_dir, "name","", false);
+      rpt_vstring(depth, "I2C device: %-10s name: %s", fn, name);
+   }
+}
+
+
+// sprintf(cur_dir_name, "%s/%s", dirname, dent->d_name);
+
+// typedef void (*Dir_Foreach_Func)(char * fn, void * accumulator);
+void lspci_alt_one_device(
+      char * dirname,
+      char * fn,
+      void * accumulator,
+      int    depth)
+{
+   bool debug = false;
+   DBGMSF(debug, "Starting.  dirname=%s, fn=%s", dirname, fn);
+
+   int d1 = depth+1;
+
+   char cur_dir_name[PATH_MAX];
+   snprintf(cur_dir_name, PATH_MAX, "%s/%s", dirname, fn);
+   char *device_class = read_sysfs_attr(cur_dir_name, "class", true);
+   if (!device_class) {
+      rpt_vstring(depth, "Unexpected for %s: class not found", cur_dir_name);
+      goto bye;
+   }
+
+   // hack - should convert hex value, use device id table lookup of class name
+   // DBGMSG("class = %s", device_class);
+   if (str_starts_with(device_class, "0x03")) {
+      bool is_primary_video = false;
+
+      if (str_starts_with(device_class, "0x0300")) {
+         // DBGMSG("VGA compatible controller");
+         is_primary_video = true;
+      }
+      else    if (str_starts_with(device_class, "0x0380")) {
+         // DBGMSG("Other display controller");
+      }
+      else {
+         rpt_vstring(depth, "Unexpected class for video device: %s", device_class);
+         goto bye;
+      }
+
+      char * boot_vga = read_sysfs_attr_w_default(cur_dir_name, "boot_vga", "-1", false);
+      // DBGMSG("boot_vga: %s", boot_vga);
+      bool boot_vga_flag = (boot_vga && streq(boot_vga, "1")) ;
+      // if (boot_vga_flag) {
+      //   DBGMSG("boot_vga set");
+      // }
+      // DBGMSG("primary video: %s", bool_repr(is_primary_video));
+
+      Device_Ids devids = read_device_ids1(cur_dir_name);
+
+      Pci_Usb_Id_Names devnames =  devid_get_pci_names(
+                      devids.vendor_id,
+                      devids.device_id,
+                      devids.subvendor_id,
+                      devids.subdevice_id,
+                      4);
+      // DBGMSG("vendor: %s, device: %s", devnames.vendor_name, devnames.device_name);
+
+      rpt_vstring(depth, "%s video controller: %s %s (boot_vga is %sset)",
+                         (is_primary_video) ? "Primary" : "Secondary",
+                         devnames.vendor_name,
+                         devnames.device_name,
+                         (boot_vga_flag) ? " " : "not " );
+      rpt_vstring(d1, "PCI device path: %s", fn);
+      char fnbuf[PATH_MAX];
+      snprintf(fnbuf, PATH_MAX, "%s/%s", cur_dir_name, "driver");
+      // DBGMSG("fnbuf=%s", fnbuf);
+      char resolved_path[PATH_MAX];
+      char * rp = realpath(fnbuf,resolved_path);
+      int errsv = errno;
+      // DBGMSG("resolved_path: %s", rp);
+      if (!rp) {
+         DBGMSG("Unable to resolve driver path. errno = %d", errsv);
+         rpt_vstring(d1, "Driver:  none");
+      }
+      else {
+         char * rp2 = strdup(rp);
+         char * driver_name = basename(rp2);
+         rpt_vstring(d1, "Driver: %s", driver_name);
+      }
+      dir_foreach(cur_dir_name, NULL, lspci_alt_one_i2c, NULL, d1);
+
+
+   }
+
+bye:
+   return;
+}
+
+bool query_card_and_driver_using_lspci_alt() {
+   DBGMSG("Starting");
+
+   dir_foreach("/sys/bus/pci/devices", NULL, lspci_alt_one_device, NULL, 1);
+
+   DBGMSG("Done");
+   return true;
+}
+
+
+static bool query_card_and_driver_using_lspci() {
+   // n. equivalent to examining
+   //  /sys/bus/pci/devices/0000:nn:nn.n/
+   //        boot_vga   1  if the boot device, appears not exist ow
+   //        class      0x030000 for video
+   //        device     hex PID
+   //        driver    -> /sys/bus/pci/drivers/radeon
+   //        drm
+   //           card0 (dir0
+   //           controlD64 (dir)
+   //           controlD128 (dir)
+   //        enable
+   //        graphics (dir)
+   //            fb0 (dir)
+   //        i2c-n (dir)
+   //            device -> /sys/bus/pci/devices/0000:nn:nn.n
+   //            name
+   //        modalias
+   //        subsystem (dir)  -> /sys/bus/pci
+   //             devices (dir)
+   //             drivers (dir)
+   //        subsystem_device
+   //        subsystem_vendor
+   //        vendor           hex VID
+
+   //
+
+
+
+   bool ok = false;
    rpt_vstring(0,"Using lspci to examine driver environment...");
+   GPtrArray * lines = execute_shell_cmd_collect("lspci");  // issues msg if error
+   if (lines) {
+      for (int linendx = 0; linendx < lines->len; linendx++) {
+         ok = true;
+         char pci_addr[15];
+         // char device_title[100];
+         char device_name[300];
+         char * a_line = g_ptr_array_index(lines, linendx);
+         int ct = sscanf(a_line, "%s %s", pci_addr, device_name);
+         // DBGMSG("ct=%d, t_read=%ld, pci_addr=%s, device_name=%s", ct, len, pci_addr, device_name);
+         if (ct == 2) {
+            if ( str_starts_with("VGA", device_name) ) {
+               // printf("Video controller 0: %s\n", device_name);
+               char * colonpos = strchr(a_line + strlen(pci_addr), ':');
+               if (colonpos)
+                  rpt_vstring(0,"Video controller: %s", colonpos+1);
+               else
+                  rpt_vstring(0,"colon not found");
+            }
+         }
+      }
+      g_ptr_array_free(lines, true);
+   }
+
+
+
+
+#ifdef OLD
+    // DBGMSG("Starting");
+    bool ok = true;
+    FILE * fp;
+
    fp = popen("lspci", "r");
    if (!fp) {
       // int errsv = errno;
@@ -1515,6 +1748,7 @@ static bool query_card_and_driver_using_lspci() {
       ok = false;
    }
    else {
+   if (lines {
       char * a_line = NULL;
       size_t len = 0;
       ssize_t read;
@@ -1554,6 +1788,8 @@ static bool query_card_and_driver_using_lspci() {
       }
       pclose(fp);
    }
+#endif
+
    return ok;
 }
 
@@ -1564,12 +1800,7 @@ static bool query_card_and_driver_using_lspci() {
 // but note the lack of error checking.
 // Pick your poison.
 
-typedef struct {
-   ushort   vendor_id;
-   ushort   device_id;
-   ushort   subdevice_id;    // subsystem device id
-   ushort   subvendor_id;    // subsystem vendor id
-} Device_Ids;
+
 
 /** Reads the device identifiers from directory
  *  /sys/bus/pci/devices/nnnn:nn:nn.n/ using the individual vendor, device,
@@ -1585,7 +1816,7 @@ typedef struct {
 Device_Ids read_device_ids1(char * cur_dir_name) {
    Device_Ids result = {0};
 
-   rpt_vstring(0, "Reading device ids from individual attribute files...");
+
    // printf("vendor: %s\n", read_sysfs_attr(cur_dir_name, "vendor", true));
    // printf("device: %s\n", read_sysfs_attr(cur_dir_name, "device", true));
    // printf("subsystem_device: %s\n", read_sysfs_attr(cur_dir_name, "subsystem_device", true));
@@ -1681,6 +1912,7 @@ Device_Ids read_device_ids2(char * cur_dir_name) {
 
 
 
+
 /* Scans /sys/bus/pci/devices for video devices.
  * Reports on the devices, and returns a singly linked list of driver names.
  *
@@ -1740,7 +1972,7 @@ static struct driver_name_node * query_card_and_driver_using_sysfs(Env_Accumulat
                }
             }
          }
-      }
+      }read
       closedir(d);
    }
    else {
@@ -1810,6 +2042,7 @@ static struct driver_name_node * query_card_and_driver_using_sysfs(Env_Accumulat
                   }
 
                   rpt_nl();
+                  rpt_vstring(0, "Reading device ids from individual attribute files...");
                   Device_Ids dev_ids = read_device_ids1(cur_dir_name);
                   Device_Ids dev_ids2 = read_device_ids2(cur_dir_name);
                   assert(dev_ids.vendor_id == dev_ids2.vendor_id);
@@ -2419,7 +2652,7 @@ static int read_file_with_filter(
    g_ptr_array_set_free_func(line_array, g_free);    // in case not already set
 
    int rc = file_getlines(fn, line_array, /*verbose*/ true);
-   DBGMSF((debug||(rc<0)), "file_getlines() returned %d", rc);
+   DBGMSF(debug, "file_getlines() returned %d", rc);
 
    if (rc > 0) {
       filter_and_limit_g_ptr_array(
@@ -3063,7 +3296,7 @@ void query_sysenv() {
    rpt_nl();
    rpt_vstring(0,"*** Primary Check 3: Check that module i2c_dev is loaded ***");
    rpt_nl();
-   check_i2c_dev_module(accumulator->driver_list);
+   check_i2c_dev_module(accumulator);
 
    rpt_nl();
    rpt_vstring(0,"*** Primary Check 4: Driver specific checks ***");
@@ -3091,6 +3324,8 @@ void query_sysenv() {
    if (!accumulator->is_arm) {
       rpt_nl();
       query_card_and_driver_using_lspci();
+      rpt_nl();
+      query_card_and_driver_using_lspci_alt();
    }
    rpt_nl();
    query_loaded_modules_using_sysfs();
