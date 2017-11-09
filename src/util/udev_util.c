@@ -51,6 +51,7 @@ void free_udev_device_summary(gpointer data) {
    if (data) {
       Udev_Device_Summary * summary = (Udev_Device_Summary *) data;
       assert(memcmp(summary->marker, UDEV_DEVICE_SUMMARY_MARKER, 4) == 0);
+      summary->marker[3] = 'x';
       // no need to free strings, they are consts
    free(summary);
    }
@@ -73,7 +74,9 @@ void free_udev_device_summaries(GPtrArray* summaries) {
  *
  * \remark
  * It is the responsibility of the caller to free the returned struct
- * using #free_udev_device_summary()
+ * using #free_udev_device_summary().
+ * The strings pointed within #Udev_Device_Summary are consts
+ * within the UDEV data structures and should not be freed.
  */
 Udev_Device_Summary * get_udev_device_summary(struct udev_device * dev) {
   Udev_Device_Summary * summary = calloc(1,sizeof(struct udev_device_summary));
@@ -179,6 +182,37 @@ GPtrArray * find_devices_by_sysattr_name(char * name) {
 
 bye:
    return result;
+}
+
+
+
+/** Filters a #GPtrArray of struct #udev_device, removing
+ *  entries that do not satisfy the predicate function provided.
+ *
+ *  summaries #GPtrArray of struct #udev_device
+ *  func      filter function, if returns false then delete the entry
+ *  \return   #summaries
+ *
+ *  \remark
+ *  - if #summaries is NULL, returns NULL
+ *  - if #summaries is non_NULL, but keep_func is NULL, returns summaries
+ */
+GPtrArray *
+filter_device_summaries(
+      GPtrArray * summaries,
+      Udev_Summary_Filter_Func keep_func)
+{
+   if (!summaries || !keep_func)
+      goto bye;
+
+   for (int ndx=0; ndx < summaries->len; ndx++) {
+      Udev_Device_Summary * summary = g_ptr_array_index(summaries, ndx);
+      if (!keep_func(summary))
+         g_ptr_array_remove_index(summaries, ndx);
+   }
+
+bye:
+   return summaries;
 }
 
 
