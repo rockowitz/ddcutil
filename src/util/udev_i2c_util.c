@@ -60,10 +60,14 @@ typedef struct udev_device_summary {
 /* Extract the i2c bus number from a device summary.
  *
  * Helper function for get_i2c_devices_using_udev()
+ *
+ * \param pointer to Udev_Device_Summary
+ * \return I2C bus number from sysname attribute, -1 if unable to parse
  */
 int
 udev_i2c_device_summary_busno(Udev_Device_Summary * summary) {
    int result = -1;
+   // On Raspbian, not all sysattr names have the form i2c-n.
    if (str_starts_with(summary->sysname, "i2c-")) {
      const char * sbusno = summary->sysname+4;
      // DBGMSG("sbusno = |%s|", sbusno);
@@ -73,7 +77,7 @@ udev_i2c_device_summary_busno(Udev_Device_Summary * summary) {
      if (ok)
         result = ibusno;
    }
-   // DBGMSG("Returning: %d", result);
+   // DBGMSG("sysname=|%s|. Returning: %d", summary->sysname, result);
    return result;
 }
 
@@ -165,6 +169,7 @@ GPtrArray * get_i2c_smbus_devices_using_udev() {
 #endif
 
 
+#ifdef UNUSED
 /** Given a specified I2C bus number, checks a list of I2C device
  *  summaries to see if it is the bus number of a SMBUS device.
  *
@@ -196,12 +201,12 @@ is_smbus_device_summary(GPtrArray * summaries, char * sbusno) {
       printf("(%s) Returning: %s", __func__, bool_repr(result));
    return result;
 }
-
+#endif
 
 /** Gets the numbers of all non-SMBus I2C devices
  *
  *  \param  include_smbus  if true, do not exclude SMBus devices
- *  \return #Byte_Value_Array of I2C device numbers
+ *  \return sorted #Byte_Value_Array of I2C device numbers
  */
 Byte_Value_Array
 get_i2c_device_numbers_using_udev(bool include_smbus) {
@@ -229,3 +234,52 @@ get_i2c_device_numbers_using_udev(bool include_smbus) {
       bva_report(bva, "Returning I2c bus numbers:");
    return bva;
 }
+
+
+/** Gets the bus numbers of I2C devices reported by UDEV,
+ *  optionally filtered by the sys attribute name (e.g. to eliminate SMBus devices).
+ *
+ *  \param  keep_func predicate function
+ *  \return sorted #Byte_Value_Array of I2C device numbers
+ *
+ *  \remark
+ *  ***keep_func*** takes a bus number as its sole argument,
+ *  returning true iff the number should be included
+ *  \remark,
+ *  if the udev sysname value does not have the form i2c-n,
+ *  the udev node is ignored
+ *  \remark
+ *  if ***keep_func*** is NULL, all device numbers
+ *  are included, i.e. there is no filtering
+ */
+Byte_Value_Array
+get_i2c_device_numbers_using_udev_w_sysattr_name_filter(Sysattr_Name_Filter keep_func) {
+   bool debug = false;
+   if (debug)
+      printf("(%s) Starting.\n", __func__);
+
+   Byte_Value_Array bva = bva_create();
+
+   GPtrArray * summaries = get_i2c_devices_using_udev();
+   if (summaries) {
+      for (int ndx = 0; ndx < summaries->len; ndx++) {
+         Udev_Device_Summary * summary = g_ptr_array_index(summaries, ndx);
+         bool keep = true;
+         if (keep_func)
+            keep = keep_func(summary->sysattr_name);
+         if (keep) {
+            int busno = udev_i2c_device_summary_busno(summary);
+            if (busno >= 0) {      // -1 if parse error
+               assert(busno <= 127);
+               bva_append(bva, busno);
+            }
+         }
+      }
+      g_ptr_array_free(summaries, true);
+   }
+
+   if (debug)
+      bva_report(bva, "Returning I2c bus numbers:");
+   return bva;
+}
+

@@ -55,4 +55,11 @@ report_i2c_udev_device_summaries(
 Byte_Value_Array                // one byte for each I2C bus number
 get_i2c_device_numbers_using_udev(bool include_smbus);
 
+
+/** Signature of function that tests sys attribute name */
+typedef bool (*Sysattr_Name_Filter)(const char * sysattr_name);
+
+Byte_Value_Array
+get_i2c_device_numbers_using_udev_w_sysattr_name_filter(Sysattr_Name_Filter keep_func);
+
 #endif /* UDEV_I2C_UTIL_H_ */
