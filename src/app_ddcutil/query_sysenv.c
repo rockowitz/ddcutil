@@ -233,7 +233,6 @@ Byte_Value_Array identify_i2c_devices() {
    Byte_Value_Array bva1 = NULL;
    Byte_Value_Array bva2 = NULL;
    Byte_Value_Array bva3 = NULL;
-   Byte_Value_Array bva4 = NULL;
 
    bva1 = get_i2c_devices_by_existence_test();
    if (redundant_i2c_device_identification_checks) {
