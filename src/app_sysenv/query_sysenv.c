@@ -867,10 +867,12 @@ static void check_i2c_devices(struct driver_name_node * driver_list) {
             ndx++;
          }
          if (found_curuser) {
-            rpt_vstring(0,"   Current user %s is a member of group i2c", uname  /* username */);
+            rpt_vstring(1,"Current user %s is a member of group i2c", uname  /* username */);
          }
          else {
-            rpt_vstring(0,"   WARNING: Current user %s is NOT a member of group i2c", uname /*username*/);
+            rpt_vstring(1, "WARNING: Current user %s is NOT a member of group i2c", uname /*username*/);
+            rpt_vstring(2, "Suggestion:  Add current user to group i2c.");
+            rpt_vstring(2, "Use command: sudo usermod -G i2c -a <username>");
          }
       }
       if (!group_i2c_exists) {
@@ -1009,18 +1011,19 @@ static void check_i2c_dev_module(Env_Accumulator * accum) {
    bool module_required = !only_nvidia_or_fglrx(video_driver_list);
    if (!module_required) {
       rpt_vstring(0,"Using only proprietary nvidia or fglrx driver. Module i2c_dev not required.");
-      if (output_level < DDCA_OL_VERBOSE)
+      // if (output_level < DDCA_OL_VERBOSE)
          return;
-      rpt_vstring(0,"Remaining i2c_dev detail is purely informational.");
+      // rpt_vstring(0,"Remaining i2c_dev detail is purely informational.");
    }
 
    bool is_builtin = is_module_builtin("i2c-dev");
-   rpt_vstring(0,"   Module %-16s is %sbuilt into kernel", "i2c_dev", (is_builtin) ? "" : "NOT ");
+   rpt_vstring(0,"   Module %s is %sbuilt into kernel", "i2c_dev", (is_builtin) ? "" : "NOT ");
    if (is_builtin) {
-      if (output_level < DDCA_OL_VERBOSE)
-         return;
-      if (module_required)  // no need for duplicate message
-         rpt_vstring(0,"Remaining i2c_dev detail is purely informational.");
+      return;
+      // if (output_level < DDCA_OL_VERBOSE)
+      //    return;
+      // if (module_required)  // no need for duplicate message
+      //    rpt_vstring(0,"Remaining i2c_dev detail is purely informational.");
    }
 
    bool is_loaded = is_module_loaded_using_sysfs("i2c_dev");
@@ -1100,7 +1103,7 @@ static void query_packages() {
 #endif
 
 
-
+#ifdef UNUSED
 static bool query_card_and_driver_using_lspci() {
    bool ok = false;
    rpt_vstring(0,"Using lspci to examine driver environment...");
@@ -1127,7 +1130,6 @@ static bool query_card_and_driver_using_lspci() {
       }
       g_ptr_array_free(lines, true);
    }
-
 
 
 
@@ -1190,6 +1192,8 @@ static bool query_card_and_driver_using_lspci() {
 
    return ok;
 }
+#endif
+
 
 
 /* Performs checks specific to the nvidia and fglrx proprietary video drivers.
@@ -1482,7 +1486,7 @@ static void probe_i2c_devices_using_udev() {
 void query_sysenv() {
    device_xref_init();
 
-   Env_Accumulator * accumulator = calloc(1, sizeof(Env_Accumulator));
+   Env_Accumulator * accumulator = env_accumulator_new();
 
    rpt_nl();
    rpt_vstring(0,"*** Basic System Information ***");
@@ -1534,8 +1538,8 @@ void query_sysenv() {
    rpt_nl();
    query_proc_modules_for_video();
    if (!accumulator->is_arm) {
-      rpt_nl();
-      query_card_and_driver_using_lspci();
+      // rpt_nl();
+      // query_card_and_driver_using_lspci();
       rpt_nl();
       query_card_and_driver_using_lspci_alt();
    }

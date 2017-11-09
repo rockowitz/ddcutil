@@ -44,14 +44,17 @@ struct driver_name_node {
    struct driver_name_node * next;
 };
 
+void driver_name_list_add(struct driver_name_node ** headtr, char * driver_name);
 
 
 void free_driver_name_list(struct driver_name_node * driver_list);
 
 
+#define ENV_ACCUMULATOR_NAME "ENVA"
 
 // Collects information relevant to later tests
 typedef struct {
+   char   marker[4];
    char * architecture;
    char * distributor_id;
    bool   is_raspbian;
@@ -60,6 +63,7 @@ typedef struct {
    struct driver_name_node * driver_list;
 } Env_Accumulator;
 
+Env_Accumulator * env_accumulator_new();
 void free_env_accumulator(Env_Accumulator * accum);
 
 /** Signature of filename filter function passed to #dir_foreach(). */
@@ -71,8 +75,8 @@ typedef void (*Dir_Foreach_Func)(char * dirname, char * fn, void * accumulator, 
 void dir_foreach(
       char * dirname,
       Filename_Filter_Func fn_filter,
-      Dir_Foreach_Func func,
-      void * accumulator,
-      int depth);
+      Dir_Foreach_Func     func,
+      void *               accumulator,
+      int                  depth);
 
 #endif /* QUERY_SYSENV_BASE_H_ */

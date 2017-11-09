@@ -125,6 +125,11 @@ bool show_one_file(char * dir_name, char * simple_fn, bool verbose, int depth) {
 }
 
 
+Env_Accumulator * env_accumulator_new() {
+   Env_Accumulator * accum = calloc(1, sizeof(Env_Accumulator));
+   memcpy(accum->marker, ENV_ACCUMULATOR_NAME, 4);
+   return accum;
+}
 
 
 
@@ -145,6 +150,22 @@ void free_env_accumulator(Env_Accumulator * accum) {
 // Functions to query and free the linked list of driver names.
 // The list is created by executing function query_card_and_driver_using_sysfs(),
 // which is grouped with the sysfs functions.
+
+#ifdef REF
+struct driver_name_node {
+   char * driver_name;
+   struct driver_name_node * next;
+};
+#endif
+
+void driver_name_list_add(struct driver_name_node ** headptr, char * driver_name) {
+   struct driver_name_node * newnode = calloc(1, sizeof(struct driver_name_node));
+   newnode->driver_name = driver_name;
+
+   newnode->next = *headptr;
+      *headptr = newnode;
+}
+
 
 /** Frees the driver name list created by query_card_and_driver_using_sysfs()
  *
@@ -173,11 +194,11 @@ void free_driver_name_list(struct driver_name_node * driver_list) {
  *  \param   depth       logical indentation depth
  */
 void dir_foreach(
-      char * dirname,
+      char *               dirname,
       Filename_Filter_Func fn_filter,
-      Dir_Foreach_Func func,
-      void * accumulator,
-      int depth)
+      Dir_Foreach_Func     func,
+      void *               accumulator,
+      int                  depth)
 {
    struct dirent *dent;
    DIR           *d;

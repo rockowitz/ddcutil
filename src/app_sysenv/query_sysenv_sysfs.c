@@ -163,7 +163,7 @@ Device_Ids read_device_ids2(char * cur_dir_name) {
    // See also:
    //  http://people.skolelinux.org/pere/blog/Modalias_strings___a_practical_way_to_map__stuff__to_hardware.html
 
-   rpt_vstring(0, "Reading device ids by parsing modalias attribute...");
+
    char * modalias = read_sysfs_attr(cur_dir_name, "modalias", true);
                // printf("modalias: %s\n", modalias);
    if (modalias) {
@@ -333,7 +333,7 @@ void lspci_alt_one_device(
       int errsv = errno;
       // DBGMSG("resolved_path: %s", rp);
       if (!rp) {
-         DBGMSG("Unable to resolve driver path. errno = %d", errsv);
+         DBGMSF(debug, "Unable to resolve driver path. errno = %d", errsv);
          rpt_vstring(d1, "Driver:  none");
       }
       else {
@@ -351,25 +351,158 @@ bye:
 }
 
 bool query_card_and_driver_using_lspci_alt() {
-   DBGMSG("Starting");
+   bool debug = false;
+   DBGMSF(debug, "Starting");
 
-   dir_foreach("/sys/bus/pci/devices", NULL, lspci_alt_one_device, NULL, 1);
+   dir_foreach("/sys/bus/pci/devices", NULL, lspci_alt_one_device, NULL, 0);
 
-   DBGMSG("Done");
+   DBGMSF(debug, "Done");
    return true;
 }
 
+void report_device_identification(char * sysfs_device_dir, int depth) {
+   bool debug = false;
+   DBGMSF(debug, "sysfs_device_dir: %s", sysfs_device_dir);
+   int d1 = depth+1;
 
+   char * dev_dir_temp = strdup(sysfs_device_dir);
+   char * pci_path = basename(dev_dir_temp);
+
+
+   rpt_nl();
+   DBGMSF(debug, "Reading device ids from individual attribute files...");
+   Device_Ids dev_ids = read_device_ids1(sysfs_device_dir);
+   DBGMSF(debug, "Reading device ids by parsing modalias attribute...");
+   Device_Ids dev_ids2 = read_device_ids2(sysfs_device_dir);
+   assert(dev_ids.vendor_id == dev_ids2.vendor_id);
+   assert(dev_ids.device_id == dev_ids2.device_id);
+   assert(dev_ids.subvendor_id == dev_ids2.subvendor_id);
+   assert(dev_ids.subdevice_id == dev_ids2.subdevice_id);
+
+   // printf("\nLooking up names in pci.ids...\n");
+   // rpt_nl();
+   rpt_vstring(depth,"Video controller:");
+   rpt_vstring(d1,"PCI device address:  %s", pci_path);
+   free(dev_dir_temp);
+   bool pci_ids_ok = devid_ensure_initialized();
+   if (pci_ids_ok) {
+      Pci_Usb_Id_Names names = devid_get_pci_names(
+                      dev_ids.vendor_id,
+                      dev_ids.device_id,
+                      dev_ids.subvendor_id,
+                      dev_ids.subdevice_id,
+                      4);
+      if (!names.vendor_name)
+         names.vendor_name = "unknown vendor";
+      if (!names.device_name)
+         names.device_name = "unknown device";
+
+      rpt_vstring(d1,"Vendor:              %04x       %s", dev_ids.vendor_id, names.vendor_name);
+      rpt_vstring(d1,"Device:              %04x       %s", dev_ids.device_id, names.device_name);
+      if (names.subsys_or_interface_name)
+      rpt_vstring(d1,"Subvendor/Subdevice: %04x/%04x  %s", dev_ids.subvendor_id, dev_ids.subdevice_id, names.subsys_or_interface_name);
+   }
+   else {
+      rpt_vstring(d1,"Unable to find pci.ids file for name lookup.");
+      rpt_vstring(d1,"Vendor:              %04x       ", dev_ids.vendor_id);
+      rpt_vstring(d1,"Device:              %04x       ", dev_ids.device_id);
+      rpt_vstring(d1,"Subvendor/Subdevice: %04x/%04x  ", dev_ids.subvendor_id, dev_ids.subdevice_id);
+   }
+
+}
+
+
+void each_pci_device(char * dirname, char * fn, void * accum, int depth) {
+   bool debug = false;
+   DBGMSF(debug, "Starting. dirname=%s, fn=%s, accum=%p", dirname, fn, accum);
+
+   int d1 = depth+1;
+
+   Env_Accumulator * accumulator = accum;
+   assert(accumulator && memcmp(accumulator->marker, ENV_ACCUMULATOR_NAME, 4) == 0);
+
+   char cur_dir_name[PATH_MAX];
+   sprintf(cur_dir_name, "%s/%s", dirname, fn);
+   // sprintf(cur_fn, "%s/class", cur_dir_name);
+   // read /sys/bus/pci/devices/nnnn:nn:nn.n/class
+   char * class_id = read_sysfs_attr(cur_dir_name, "class", /*verbose=*/true);
+   // printf("%s: |%s|\n", cur_fn, class_id);
+   if (str_starts_with(class_id, "0x03")) {
+      // printf("%s = 0x030000\n", cur_fn);
+
+      report_device_identification(cur_dir_name, depth);
+
+      // rpt_nl();
+      // rpt_vstring(d1,"Determining driver name and possibly version...");
+      // DBGMSG("cur_dir_name: %s", cur_dir_name);
+      char workfn[PATH_MAX];
+      sprintf(workfn, "%s/%s", cur_dir_name, "driver");
+      char resolved_path[PATH_MAX];
+      char * rpath = realpath(workfn, resolved_path);
+      if (!rpath) {
+         int errsv = errno;
+         if (errsv == ENOENT)
+            rpt_vstring(d1, "No driver");
+         else {
+            rpt_vstring(d1, "realpath(%s) returned NULL, errno=%d (%s)",
+                            workfn, errsv, linux_errno_name(errsv));
+         }
+      }
+      else {
+         // printf("realpath returned %s\n", rpath);
+         // printf("%s --> %s\n",workfn, resolved_path);
+         char * final_slash_ptr = strrchr(rpath, '/');
+         // TODO: handle case where there are more than 1 video drivers loaded,
+         // say if the system contains both an AMD and Nvidia card
+         char * driver_name = final_slash_ptr+1;
+         rpt_vstring(d1, "Driver name:         %s", driver_name);
+         driver_name_list_add(&accumulator->driver_list, driver_name);
+
+         char driver_module_dir[PATH_MAX];
+         sprintf(driver_module_dir, "%s/driver/module", cur_dir_name);
+         // printf("driver_module_dir: %s\n", driver_module_dir);
+         char * driver_version = read_sysfs_attr(driver_module_dir, "version", false);
+         if (driver_version)
+            rpt_vstring(d1,"Driver version:      %s", driver_version);
+         else
+            rpt_vstring(d1,"Unable to determine driver version");
+      }
+
+   }
+
+   else if (str_starts_with(class_id, "0x0a")) {
+      DBGMSG("Encountered docking station (class 0x0a) device. dir=%s", cur_dir_name);
+   }
+}
+
+
+void each_arm_device(char * dirname, char * fn, void * accumulator, int depth) {
+   bool debug = false;
+   DBGMSF(debug, "Starting. dirname=%s, fn=%s, accumulator=%p", dirname, fn, accumulator);
+
+   Env_Accumulator * accum = accumulator;
+   assert(accumulator && memcmp(accum->marker, ENV_ACCUMULATOR_NAME, 4) == 0);
+
+   // int d1 = depth+1;
+
+   if (streq(fn, "vc4_v3d")) {
+      char * driver_name = fn;
+      rpt_vstring(depth, "Driver name:    %s", driver_name);
+      driver_name_list_add(&accum->driver_list, driver_name);
+   }
+   DBGMSF(debug, "Done");
+}
 
 
 /* Scans /sys/bus/pci/devices for video devices.
  * Reports on the devices, and returns a singly linked list of driver names.
  *
- * Arguments:   none
+ * Arguments:   accum
  *
- * Returns:     singly linked list of video driver names
  */
-struct driver_name_node * query_card_and_driver_using_sysfs(Env_Accumulator * accum) {
+void query_card_and_driver_using_sysfs(Env_Accumulator * accum) {
+   bool debug = false;
+
    rpt_vstring(0,"Obtaining card and driver information from /sys...");
 
    // also of possible interest:
@@ -390,15 +523,17 @@ struct driver_name_node * query_card_and_driver_using_sysfs(Env_Accumulator * ac
    // /sys/bus/platform/drivers/vc4_v3d
    // /sys/module/vc4
 
-   char * driver_name = NULL;
-   struct driver_name_node * driver_list = NULL;
+   //char * driver_name = NULL;
+   // struct driver_name_node * driver_list = NULL;
 
-   struct dirent *dent;
-   DIR           *d;
+   // struct dirent *dent;
+   // DIR           *d;
 
    if (accum->is_arm) {
-      rpt_vstring(0, "Machine architecture is %s.  Skipping /sys/bus/pci checks.", accum->architecture);
+      DBGMSF(debug, "Machine architecture is %s.  Skipping /sys/bus/pci checks.", accum->architecture);
       char * platform_drivers_dir_name = "/sys/bus/platform/drivers";
+      dir_foreach(platform_drivers_dir_name, /*fn_filter*/ NULL, each_arm_device, accum, 0);
+#ifdef OLD
       d = opendir(platform_drivers_dir_name);
       if (!d) {
          rpt_vstring(0,"Unable to open directory %s: %s", platform_drivers_dir_name, strerror(errno));
@@ -414,18 +549,25 @@ struct driver_name_node * query_card_and_driver_using_sysfs(Env_Accumulator * ac
                if (streq(cur_dir_name, "vc4_v3d")) {
                   char * driver_name = cur_fn;
                   printf(    "   Driver name:    %s\n", driver_name);
-                  struct driver_name_node * new_node = calloc(1, sizeof(struct driver_name_node));
-                  new_node->driver_name = strdup(driver_name);
-                  new_node->next = driver_list;
-                  driver_list = new_node;
+                  driver_name_list_add(&accum->driver_list, driver_name);
+                  // struct driver_name_node * new_node = calloc(1, sizeof(struct driver_name_node));
+                  // new_node->driver_name = strdup(driver_name);
+                  // new_node->next = driver_list;
+                  // driver_list = new_node;
                }
             }
          }
       }
       closedir(d);
+#endif
    }
    else {
       char * pci_devices_dir_name = "/sys/bus/pci/devices";
+      dir_foreach(pci_devices_dir_name, /*fn_filter*/ NULL, each_pci_device, accum, 0);
+
+
+
+#ifdef OLD
       d = opendir(pci_devices_dir_name);
       if (!d) {
          rpt_vstring(0,"Unable to open directory %s: %s", pci_devices_dir_name, strerror(errno));
@@ -491,8 +633,9 @@ struct driver_name_node * query_card_and_driver_using_sysfs(Env_Accumulator * ac
                   }
 
                   rpt_nl();
-                  rpt_vstring(0, "Reading device ids from individual attribute files...");
+                  DBGMSF(debug, "Reading device ids from individual attribute files...");
                   Device_Ids dev_ids = read_device_ids1(cur_dir_name);
+                  DBGMSF(debug, "Reading device ids by parsing modalias attribute...");
                   Device_Ids dev_ids2 = read_device_ids2(cur_dir_name);
                   assert(dev_ids.vendor_id == dev_ids2.vendor_id);
                   assert(dev_ids.device_id == dev_ids2.device_id);
@@ -534,9 +677,10 @@ struct driver_name_node * query_card_and_driver_using_sysfs(Env_Accumulator * ac
          }
          closedir(d);
       }
+#endif
    }
-   accum->driver_list = driver_list;
-   return driver_list;
+   // accum->driver_list = driver_list;
+   // return driver_list;
 }
 
 

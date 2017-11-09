@@ -45,6 +45,7 @@ int query_proc_modules_for_video() {
    bool debug = false;
    DBGMSF(debug, "Starting.");
 
+   int d1 = 1;
    int rc = 0;
 
    GPtrArray * garray = g_ptr_array_sized_new(300);
@@ -74,16 +75,16 @@ int query_proc_modules_for_video() {
             DBGMSG("Unexpected error parsing /proc/modules.  sscanf returned %d", piece_ct);
          }
          if (streq(mod_name, "drm") ) {
-            rpt_vstring(0,"   Loaded drm module depends on: %s", mod_dependencies);
+            rpt_vstring(d1,"Loaded drm module depends on:   %s", mod_dependencies);
          }
          else if (streq(mod_name, "video") ) {
-            rpt_vstring(0,"   Loaded video module depends on: %s", mod_dependencies);
+            rpt_vstring(d1,"Loaded video module depends on: %s", mod_dependencies);
          }
          else if (exactly_matches_any(mod_name, get_known_video_driver_modules()) >= 0 ) {
-            rpt_vstring(0,"   Found video driver module: %s", mod_name);
+            rpt_vstring(d1,"Found video driver module:      %s", mod_name);
          }
          else if ( starts_with_any(mod_name, get_prefix_matches()) >= 0 ) {
-            rpt_vstring(0,"   Found other loaded module: %s", mod_name);
+            rpt_vstring(d1,"Found other loaded module:      %s", mod_name);
          }
       }
    }

@@ -39,7 +39,7 @@ typedef struct {
 } Device_Ids;
 
 bool query_card_and_driver_using_lspci_alt();
-struct driver_name_node * query_card_and_driver_using_sysfs(Env_Accumulator * accum);
+void query_card_and_driver_using_sysfs(Env_Accumulator * accum);
 void query_loaded_modules_using_sysfs();
 void query_i2c_bus_using_sysfs();
 void query_drm_using_sysfs();
