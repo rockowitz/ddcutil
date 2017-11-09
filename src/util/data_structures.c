@@ -58,6 +58,29 @@ Byte_Value_Array bva_create() {
 }
 
 
+/** Creates a new **Byte_Value_Array** instance,
+ *  containing the values from an existing instance
+ *  that satisfy the filter function.
+ *
+ *  \param  bva **Byte_Value_Array** instance
+ *  \param  filter_func  function that takes a byte value as an argument,
+ *                       returning true if the value should be included
+ *                       in the output **Byte_Value_Array**
+ *  \return new **Byte_Value_Array**
+ */
+Byte_Value_Array bva_filter(Byte_Value_Array  bva, IFilter filter_func) {
+   GByteArray * src = (GByteArray*) bva;
+   GByteArray * result = g_byte_array_new();
+   for (int ndx=0; ndx < src->len;  ndx++) {
+      guint8 v = src->data[ndx];
+      // Byte v1 = v;
+      if (filter_func(v))
+         bva_append(result,v);
+   }
+   return (Byte_Value_Array) result;
+}
+
+
 /** Returns the number of entries in a **Byte_Value_Array**.
  *
  * @param bva **Byte_Value_Array** instance

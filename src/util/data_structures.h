@@ -38,6 +38,8 @@
 #include "coredefs.h"   // for Byte
 
 
+typedef bool *IFilter(int i);
+
 /** An opaque structure containing an array of bytes that
  *  can grow dynamically.  Note that the same byte value can
  * appear multiple times.
@@ -54,6 +56,7 @@ Byte *           bva_bytes(Byte_Value_Array bva);
 void             bva_free(Byte_Value_Array bva);
 void             bva_report(Byte_Value_Array ids, char * title);
 bool             bva_store_bytehex_list(Byte_Value_Array bva, char * start, int len);
+Byte_Value_Array bva_filter(Byte_Value_Array bva, IFilter filter_func);
 
 
 /** An opaque data structure containing 256 flags */
