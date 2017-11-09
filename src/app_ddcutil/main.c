@@ -40,6 +40,7 @@
 #include <string.h>
 #include <unistd.h>
 
+#include "../app_sysenv/query_sysenv.h"
 #include "../ddc/ddc_try_stats.h"
 /** \endcond */
 
@@ -85,9 +86,8 @@
 #include "app_ddcutil/app_dumpload.h"
 #include "app_ddcutil/app_getvcp.h"
 #include "app_ddcutil/app_setvcp.h"
-#include "app_ddcutil/query_sysenv.h"
 #ifdef USE_USB
-#include "app_ddcutil/query_usb_sysenv.h"
+#include "../app_sysenv/query_usb_sysenv.h"
 #endif
 #include "app_ddcutil/testcases.h"
 

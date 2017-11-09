@@ -55,9 +55,9 @@
 #include "base/core.h"
 #include "base/linux_errno.h"
 
-#include "query_sysenv_xref.h"
+#include "../app_sysenv/query_sysenv_xref.h"
 
-#include "query_drm_sysenv.h"
+#include "../app_sysenv/query_drm_sysenv.h"
 
 #ifdef REF
 #define DRM_BUS_PCI   0

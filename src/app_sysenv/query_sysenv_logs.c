@@ -21,11 +21,14 @@
  * </endcopyright>
  */
 
+#include "../app_sysenv/query_sysenv_logs.h"
+
 #include <assert.h>
 #include <errno.h>
 #include <glib-2.0/glib.h>
 #include <string.h>
 
+#include "../app_sysenv/query_sysenv_base.h"
 #include "util/data_structures.h"
 #include "util/file_util.h"
 #include "util/glib_util.h"
@@ -34,10 +37,8 @@
 #include "util/subprocess_util.h"
 
 #include "base/core.h"
+#include "base/status_code_mgt.h"
 
-#include "query_sysenv_base.h"
-
-#include "query_sysenv_logs.h"
 
 //
 // Log files

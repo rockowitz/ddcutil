@@ -29,13 +29,13 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "../app_sysenv/query_sysenv_base.h"
 #include "util/data_structures.h"
 #include "util/report_util.h"
 #include "util/sysfs_util.h"
 
 #include "base/core.h"
 
-#include "query_sysenv_base.h"
 
 
 //

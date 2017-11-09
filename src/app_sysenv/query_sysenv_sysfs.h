@@ -27,7 +27,7 @@
 #ifndef QUERY_SYSENV_SYSFS_H_
 #define QUERY_SYSENV_SYSFS_H_
 
-#include "query_sysenv_base.h"
+#include "../app_sysenv/query_sysenv_base.h"
 
 char * get_i2c_device_sysfs_name(int busno);
 

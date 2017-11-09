@@ -63,7 +63,7 @@
 
 #include "usb/usb_displays.h"
 
-#include "app_ddcutil/query_usb_sysenv.h"
+#include "../app_sysenv/query_usb_sysenv.h"
 
 
 

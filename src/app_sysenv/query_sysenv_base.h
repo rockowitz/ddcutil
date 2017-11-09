@@ -26,6 +26,7 @@
 
 #include <stdbool.h>
 
+#include "util/data_structures.h"
 
 
 char ** get_known_video_driver_modules();

@@ -36,7 +36,7 @@
 #include "util/string_util.h"
 
 #define SYSENV_GLOBALS
-#include "query_sysenv_base.h"
+#include "../app_sysenv/query_sysenv_base.h"
 
 
 

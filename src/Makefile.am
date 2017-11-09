@@ -108,20 +108,20 @@ cmdline/cmd_parser_goption.c \
 cmdline/parsed_cmd.c \
 app_ddcutil/main.c \
 app_ddcutil/app_dumpload.c \
-app_ddcutil/query_sysenv_base.c \
-app_ddcutil/query_sysenv_sysfs.c \
-app_ddcutil/query_sysenv_procfs.c \
-app_ddcutil/query_sysenv_logs.c \
-app_ddcutil/query_sysenv_dmidecode.c \
-app_ddcutil/query_sysenv_xref.c \
-app_ddcutil/query_sysenv.c \
+app_sysenv/query_sysenv_base.c \
+app_sysenv/query_sysenv_sysfs.c \
+app_sysenv/query_sysenv_procfs.c \
+app_sysenv/query_sysenv_logs.c \
+app_sysenv/query_sysenv_dmidecode.c \
+app_sysenv/query_sysenv_xref.c \
+app_sysenv/query_sysenv.c \
 app_ddcutil/app_setvcp.c \
 app_ddcutil/app_getvcp.c \
 app_ddcutil/testcases.c 
 
 if ENABLE_USB_COND
 ddcutil_SOURCES += \
-   app_ddcutil/query_usb_sysenv.c
+   app_sysenv/query_usb_sysenv.c
 endif
 
 if INCLUDE_TESTCASES_COND
@@ -138,7 +138,7 @@ endif
 
 if USE_LIBDRM_COND
 ddcutil_SOURCES += \
-  app_ddcutil/query_drm_sysenv.c
+  app_sysenv/query_drm_sysenv.c
 endif
 
 #
