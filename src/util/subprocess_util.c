@@ -152,7 +152,7 @@ GPtrArray * execute_shell_cmd_collect(char * shell_cmd) {
    // printf("(%s) open. errno=%d\n", __func__, errno);
     if (!fp) {
        // int errsv = errno;
-       printf("Unable to execute command \"%s\": %s\n", shell_cmd, strerror(errno));
+       fprintf(stderr, "Unable to execute command \"%s\": %s\n", shell_cmd, strerror(errno));
        ok = false;
     }
     else {
