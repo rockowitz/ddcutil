@@ -87,7 +87,7 @@
 #include "app_ddcutil/app_getvcp.h"
 #include "app_ddcutil/app_setvcp.h"
 #ifdef USE_USB
-#include "../app_sysenv/query_usb_sysenv.h"
+#include "../app_sysenv/query_sysenv_usb.h"
 #endif
 #include "app_ddcutil/testcases.h"
 

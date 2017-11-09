@@ -121,7 +121,7 @@ app_ddcutil/testcases.c
 
 if ENABLE_USB_COND
 ddcutil_SOURCES += \
-   app_sysenv/query_usb_sysenv.c
+   app_sysenv/query_sysenv_usb.c
 endif
 
 if INCLUDE_TESTCASES_COND
@@ -138,7 +138,7 @@ endif
 
 if USE_LIBDRM_COND
 ddcutil_SOURCES += \
-  app_sysenv/query_drm_sysenv.c
+  app_sysenv/query_sysenv_drm.c
 endif
 
 #

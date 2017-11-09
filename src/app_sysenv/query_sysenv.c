@@ -89,7 +89,7 @@
 #include "../app_sysenv/query_sysenv_procfs.h"
 #include "../app_sysenv/query_sysenv_dmidecode.h"
 #include "../app_sysenv/query_sysenv_logs.h"
-#include "../app_sysenv/query_drm_sysenv.h"
+#include "query_sysenv_drm.h"
 #include "../app_sysenv/query_sysenv_xref.h"
 #include "../app_sysenv/query_sysenv_sysfs.h"
 

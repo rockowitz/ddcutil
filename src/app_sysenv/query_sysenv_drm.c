@@ -57,7 +57,7 @@
 
 #include "../app_sysenv/query_sysenv_xref.h"
 
-#include "../app_sysenv/query_drm_sysenv.h"
+#include "query_sysenv_drm.h"
 
 #ifdef REF
 #define DRM_BUS_PCI   0
