@@ -414,11 +414,9 @@ dnl was 2.36, can we drop this to 2.14 to allow for Debian 7.0
 dnl 9/2017: need >= 2.32 for g_thread_...() functions
 PKG_CHECK_MODULES(GLIB,  glib-2.0 >= 2.32) 
 required_packages="$required_packages glib-2.0 >= 2.32"
-2nl Not currently used
+dnl Not currently used
 dnl PKG_CHECK_MODULES(OSINFO, libosinfo-1.0 >= 0.1, [libosinfo_found=yes], [libosinfo_found=no])
 
-PKG_CHECK_MODULES(XRANDR, xrandr)
-PKG_CHECK_MODULES(X11,    x11)
 PKG_CHECK_MODULES(UDEV,   libudev, 
      [libudev_found=1],  
      [libudev_found=0
@@ -487,25 +485,25 @@ AS_IF( [test 0$DBG -ne 0],
 
 ### X11 
 
-AS_IF([test "x$enable_x11" == "xyes"],
-         [ PKG_CHECK_MODULES(LIBX11, x11, 
-             [x11_found=yes], 
-             [x11_found=no
-              AC_MSG_WARN( [X11 not found. Forcing --disable-x11])
-              enable_x11=no
-             ]
-           ) 
-         ],
-         [ AC_MSG_NOTICE( [x11 disabled, not checking for library X11] ) ]
-     )
+dnl PKG_CHECK_MODULES(XRANDR, xrandr)
+dnl PKG_CHECK_MODULES(X11,    x11)
 
-AM_CONDITIONAL([USE_LIBX11_COND], [test "x$enable_x11" == "xyes"] )
+AS_IF([test "x$enable_x11" == "xyes"],
+         [ PKG_CHECK_MODULES(LIBX11, x11)
+         ]) 
+
+AM_CONDITIONAL([USE_X11_COND], [test "x$enable_x11" == "xyes"] )
 AS_IF([test "x$enable_x11" == "xyes"],
         AC_DEFINE([USE_X11], [1], [Use X11])
         AC_MSG_NOTICE( [x11... enabled]  )
       ,
         AC_MSG_NOTICE( [x11... disabled] )
      )
+
+AS_IF([test "x$enable_x11" == "xyes"],
+         [ PKG_CHECK_MODULES(XRANDR, xrandr)  
+         ])
+
 
 dnl Note cflags and libs, but don't need to use in makefiles 
 AS_IF( [test 0$DBG -ne 0], 

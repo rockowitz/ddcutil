@@ -44,8 +44,7 @@ subprocess_util.c          \
 timestamp.c                \
 udev_i2c_util.c            \
 udev_usb_util.c            \
-udev_util.c                \
-x11_util.c                 
+udev_util.c
 
 # libutil_la_SOURCES += systemd_util.c
 
@@ -56,6 +55,10 @@ endif
 
 if USE_LIBDRM_COND
 libutil_la_SOURCES += libdrm_util.c
+endif
+
+if USE_X11_COND
+libutil_la_SOURCES += x11_util.c
 endif
 
 

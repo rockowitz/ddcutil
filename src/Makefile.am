@@ -331,7 +331,7 @@ endif
 
 # $(SYSTEMD_LIBS) removed from list, libsystemd not currently used
 libcommon_la_LIBADD += \
-  $(X11_LIBS) \
+  $(LIBX11_LIBS) \
   $(XRANDR_LIBS) \
   $(GLIB_LIBS)   \
   $(UDEV_LIBS)   \

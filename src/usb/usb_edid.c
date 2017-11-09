@@ -43,7 +43,9 @@
 #include "util/device_id_util.h"
 #include "util/report_util.h"
 #include "util/string_util.h"
+#ifdef USE_X11
 #include "util/x11_util.h"         // for EDID fallback
+#endif
 
 #include "usb_util/hiddev_reports.h"
 #include "usb_util/hiddev_util.h"
@@ -229,6 +231,7 @@ struct model_sn_pair *  get_eizo_model_sn_by_report(int fd) {
 //  EDID Retrieval
 //
 
+#ifdef USE_X11
 /* Obtains EDID from X11.
  *
  * Arguments:
@@ -276,6 +279,7 @@ Parsed_Edid * get_x11_edid_by_model_sn(char * model_name, char * sn_ascii) {
       }
    }
 
+
 #ifdef MOCK_DATA_FOR_DEVELOPMENT
    if (!parsed_edid && edid_recs->len > 0) {
       printf("(%s) HACK FOR TESTING: Using last X11 EDID\n", __func__);
@@ -288,6 +292,7 @@ Parsed_Edid * get_x11_edid_by_model_sn(char * model_name, char * sn_ascii) {
    DBGMSF(debug, "returning %p", parsed_edid);
    return parsed_edid;
 }
+#endif
 
 
 Parsed_Edid * get_fallback_hiddev_edid(int fd, struct hiddev_devinfo * dev_info) {
@@ -342,10 +347,12 @@ Parsed_Edid * get_fallback_hiddev_edid(int fd, struct hiddev_devinfo * dev_info)
       }
    }
 
+#ifdef USE_X11
    if (!parsed_edid && model_sn) {
       parsed_edid = get_x11_edid_by_model_sn(model_sn->model, model_sn->sn);
       edid_source = "X11";
    }
+#endif
 
    if (model_sn)
       free_model_sn_pair(model_sn);
