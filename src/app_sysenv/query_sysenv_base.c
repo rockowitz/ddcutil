@@ -25,6 +25,7 @@
  */
 
 #include <assert.h>
+#include <errno.h>
 #include <limits.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -156,6 +157,43 @@ void free_driver_name_list(struct driver_name_node * driver_list) {
       struct driver_name_node * next_node = cur_node->next;
       free(cur_node);
       cur_node = next_node;
+   }
+}
+
+
+
+
+/** Handles the boilerplate of iterating over a directory.
+ *
+ *  \param   dirname     directory name
+ *  \param   fn_filter   tests the name of a file in a directory to see if should
+ *                       be processe.  If NULL, all files are processed.
+ *  \param   func        function to be called for each filename in the directory
+ *  \param   accumulator pointer to a data structure passed
+ *  \param   depth       logical indentation depth
+ */
+void dir_foreach(
+      char * dirname,
+      Filename_Filter_Func fn_filter,
+      Dir_Foreach_Func func,
+      void * accumulator,
+      int depth)
+{
+   struct dirent *dent;
+   DIR           *d;
+   d = opendir(dirname);
+   if (!d) {
+      rpt_vstring(depth,"Unable to open directory %s: %s", dirname, strerror(errno));
+   }
+   else {
+      while ((dent = readdir(d)) != NULL) {
+         // DBGMSG("%s", dent->d_name);
+         if (!streq(dent->d_name, ".") && !streq(dent->d_name, "..") ) {
+            if (!fn_filter || fn_filter(dent->d_name)) {
+               func(dirname, dent->d_name, accumulator, depth);
+            }
+         }
+      }
    }
 }
 

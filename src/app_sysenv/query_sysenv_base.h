@@ -62,4 +62,17 @@ typedef struct {
 
 void free_env_accumulator(Env_Accumulator * accum);
 
+/** Signature of filename filter function passed to #dir_foreach(). */
+typedef bool (*Filename_Filter_Func)(char * simple_fn);
+
+/** Signature of function called for each file in the directory. */
+typedef void (*Dir_Foreach_Func)(char * dirname, char * fn, void * accumulator, int depth);
+
+void dir_foreach(
+      char * dirname,
+      Filename_Filter_Func fn_filter,
+      Dir_Foreach_Func func,
+      void * accumulator,
+      int depth);
+
 #endif /* QUERY_SYSENV_BASE_H_ */
