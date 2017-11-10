@@ -73,7 +73,7 @@ typedef bool (*Filename_Filter_Func)(char * simple_fn);
 typedef void (*Dir_Foreach_Func)(char * dirname, char * fn, void * accumulator, int depth);
 
 void dir_foreach(
-      char * dirname,
+      char *               dirname,
       Filename_Filter_Func fn_filter,
       Dir_Foreach_Func     func,
       void *               accumulator,
