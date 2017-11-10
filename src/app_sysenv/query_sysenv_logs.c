@@ -158,7 +158,7 @@ static int read_file_with_filter(
  *  one in a list of terms.  After filtering, the set of returned lines may
  *  be further reduced to either the first or last n number of lines.
  *
- *  \param  cmd           command to execute
+ *  \param  cmd        command to execute
  *  \param  fn         file name
  *  \param  filter_terms  #Null_Terminated_String_Away of filter terms
  *  \param  ignore_case   ignore case when testing filter terms
@@ -169,7 +169,7 @@ static int read_file_with_filter(
  *  \return if >= 0, number of lines before filtering and limit applied
  *          if < 0,  -errno
  */
-int execute_cmd_collect_with_filter(
+static int execute_cmd_collect_with_filter(
       char *       cmd,
       char **      filter_terms,
       bool         ignore_case,
@@ -202,7 +202,7 @@ int execute_cmd_collect_with_filter(
 }
 
 
-bool probe_log_using_api(
+static bool probe_log(
       char *  log_fn,
       char ** filter_terms,
       bool    ignore_case,
@@ -254,7 +254,7 @@ bool probe_log_using_api(
 
 
 
-bool probe_cmd_using_api(
+static bool probe_cmd(
       char *  cmd,
       char ** filter_terms,
       bool    ignore_case,
@@ -282,21 +282,19 @@ bool probe_cmd_using_api(
       rpt_title("No output", depth);
    }
    else if (filtered_lines->len == 0) {
-         rpt_title("No lines found after filtering", depth);
+      rpt_title("No lines found after filtering", depth);
+   }
+   else {
+      for (int ndx = 0; ndx < filtered_lines->len; ndx++) {
+         rpt_title(g_ptr_array_index(filtered_lines, ndx), depth+1);
       }
-      else {
-         for (int ndx = 0; ndx < filtered_lines->len; ndx++) {
-            rpt_title(g_ptr_array_index(filtered_lines, ndx), depth+1);
-         }
-      }
+   }
 
    bool result = (rc >= 0);
    DBGMSF(debug, "rc=%d, returning %s", rc, bool_repr(result));
    rpt_nl();
    return result;
 }
-
-
 
 
 /** Scans log files for lines of interest.
@@ -383,7 +381,12 @@ void probe_logs(Env_Accumulator * accum) {
    logs_checked |= LOG_DMESG;
 
    rpt_title("Scanning dmesg output for I2C related entries...", depth+1);
-   log_dmesg_found = probe_cmd_using_api("dmesg", drivers_plus_addl_matches, /*ignore_case*/ true, 0, depth+1);
+   log_dmesg_found = probe_cmd(
+         "dmesg",
+         drivers_plus_addl_matches,
+         true,    // ignore_case
+         0,       // no limit
+         depth+1);
    if (log_dmesg_found)
       logs_found |= LOG_DMESG;
 
@@ -408,24 +411,11 @@ void probe_logs(Env_Accumulator * accum) {
 #endif
 
    // has a few more lines from nvidia-persistence, lines have timestamp, hostname, and subsystem
-   // DBGMSG("Using probe_cmd_using_api()...:");
    rpt_title("Scanning journalctl output for I2C related entries...", depth+1);
-   log_dmesg_found = probe_cmd_using_api("journalctl --no-pager --boot", drivers_plus_addl_matches, /*ignore_case*/ true, 0, depth+1);
+   log_dmesg_found = probe_cmd("journalctl --no-pager --boot", drivers_plus_addl_matches, /*ignore_case*/ true, 0, depth+1);
    if (log_dmesg_found)
       logs_found |= LOG_DMESG;
     rpt_nl();
-
-   // 11/4/17:  Now getting error msgs like:
-   //   sh: 1: Syntax error: end of file unexpected
-   // apparent problem with pipe and execute_shell_cmd_report()
-
-   // no, it's journalctl that's the offender.  With just journalctl, earlier
-   // messages re Summary of Udev devices is screwed up
-   // --no-pager solves the problem
-
-   // DBGMSG("Using probe_one_log_using_shell()...");
-   // probe_one_log_using_shell("journalctl --no-pager --boot|", gbuf, NULL,                   "journalctl", depth+1);
-
 
    // *** Xorg.0.log ***
 
@@ -456,26 +446,25 @@ void probe_logs(Env_Accumulator * accum) {
 
    if (accum->is_arm) {
       logs_checked |= LOG_XORG;
-      log_xorg_found =  probe_log_using_api("/var/log/Xorg.0.log", xorg_terms, /*ignore_case*/ true,  0, depth+1);
+      log_xorg_found =  probe_log("/var/log/Xorg.0.log", xorg_terms, /*ignore_case*/ true,  0, depth+1);
       if (log_xorg_found)
          logs_found |= LOG_XORG;
    }
    else {
       logs_checked |= LOG_XORG;
       // rpt_vstring(depth+1, "Limiting output to 200 lines...");
-      log_xorg_found =  probe_log_using_api("/var/log/Xorg.0.log", drivers_plus_addl_matches, /*ignore_case*/ true, 200, depth+1);
+      log_xorg_found =  probe_log("/var/log/Xorg.0.log", drivers_plus_addl_matches, /*ignore_case*/ true, 200, depth+1);
       if (log_xorg_found)
          logs_found |= LOG_XORG;
    }
 
-
    // ***/var/log/kern.log, /var/log/daemon.log, /var/log/syslog, /var/log/messages ***
 
    // Using our own code instead of shell to scan files
-   log_messages_found = probe_log_using_api("/var/log/messages",   log_terms, /*ignore_case*/ true, -40, d1);
-   log_kern_found     = probe_log_using_api("/var/log/kern.log",   log_terms, /*ignore_case*/ true, -20, d1);
-   log_daemon_found   = probe_log_using_api("/var/log/daemon.log", log_terms, /*ignore_case*/ true, -10, d1);
-   log_syslog_found   = probe_log_using_api("/var/log/syslog",     log_terms, /*ignore_case*/ true, -50, d1);
+   log_messages_found = probe_log("/var/log/messages",   log_terms, /*ignore_case*/ true, -40, d1);
+   log_kern_found     = probe_log("/var/log/kern.log",   log_terms, /*ignore_case*/ true, -20, d1);
+   log_daemon_found   = probe_log("/var/log/daemon.log", log_terms, /*ignore_case*/ true, -10, d1);
+   log_syslog_found   = probe_log("/var/log/syslog",     log_terms, /*ignore_case*/ true, -50, d1);
 
    logs_checked |= (LOG_MESSAGES | LOG_KERN | LOG_DAEMON | LOG_SYSLOG);
    if (log_messages_found)
