@@ -202,9 +202,9 @@ void driver_name_list_add(Driver_Name_Node ** headptr, char * driver_name) {
 }
 
 
-/** Frees the driver name list created by query_card_and_driver_using_sysfs()
+/** Frees the driver name list
  *
- * \param driver_list     pointer to head of linked list of driver names
+ * \param driver_list pointer to head of linked list of driver names
  *
  * \remark
  * Driver names in the list list are always pointers into permanent data
