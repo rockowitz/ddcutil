@@ -356,8 +356,6 @@ static char * video_device_class_name(unsigned class_id) {
 
 /** Process attributes of a /sys/bus/pci/devices/nnnn:nn:nn.n directory.\
  *
- *  COMBINED VERSION
- *
  *  Ignores non-video devices.
  *
  *  Called by #query_card_and_driver_using_sysfs() via #dir_foreach()
