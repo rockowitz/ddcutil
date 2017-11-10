@@ -80,10 +80,10 @@ int query_proc_modules_for_video() {
          else if (streq(mod_name, "video") ) {
             rpt_vstring(d1,"Loaded video module depends on: %s", mod_dependencies);
          }
-         else if (exactly_matches_any(mod_name, get_known_video_driver_modules()) >= 0 ) {
+         else if (exactly_matches_any(mod_name, get_known_video_driver_module_names()) >= 0 ) {
             rpt_vstring(d1,"Found video driver module:      %s", mod_name);
          }
-         else if ( starts_with_any(mod_name, get_prefix_matches()) >= 0 ) {
+         else if ( starts_with_any(mod_name, get_prefix_match_names()) >= 0 ) {
             rpt_vstring(d1,"Found other loaded module:      %s", mod_name);
          }
       }
@@ -104,9 +104,9 @@ bool query_proc_driver_nvidia() {
    if ( directory_exists(dn) ) {
       rpt_vstring(0,"Examining /proc/driver/nvidia:");
       result = true;
-      show_one_file(dn, "version",  debug, 1);
-      show_one_file(dn, "registry", debug, 1);
-      show_one_file(dn, "params",   debug, 1);
+      sysenv_show_one_file(dn, "version",  debug, 1);
+      sysenv_show_one_file(dn, "registry", debug, 1);
+      sysenv_show_one_file(dn, "params",   debug, 1);
       char * dn_gpus = "/proc/driver/nvidia/gpus/";
       if (directory_exists(dn_gpus)) {
          DIR * dp = opendir(dn_gpus);
@@ -131,8 +131,8 @@ bool query_proc_driver_nvidia() {
                //    closedir(dp2);
                // }
                if ( directory_exists(dirbuf)) {
-                  show_one_file(dirbuf, "information", debug, 1);
-                  show_one_file(dirbuf, "registry",    debug, 1);
+                  sysenv_show_one_file(dirbuf, "information", debug, 1);
+                  sysenv_show_one_file(dirbuf, "registry",    debug, 1);
                }
             }
          }

@@ -518,7 +518,7 @@ void probe_logs(Env_Accumulator * accum) {
 #endif
 
    Null_Terminated_String_Array drivers_plus_addl_matches =
-            ntsa_join(get_known_video_driver_modules(), addl_matches, /*dup*/ false);
+            ntsa_join(get_known_video_driver_module_names(), addl_matches, /*dup*/ false);
 
    // *** dmesg ***
 

@@ -21,55 +21,58 @@
  * </endcopyright>
  */
 
+/** \file
+ * Base structures and functions for subsystem that diagnoses user configuration
+ */
+
 #ifndef QUERY_SYSENV_BASE_H_
 #define QUERY_SYSENV_BASE_H_
 
+/** \cond */
 #include <stdbool.h>
 
 #include "util/data_structures.h"
+/** \endcond */
 
 
-char ** get_known_video_driver_modules();
-char ** get_prefix_matches();
-char ** get_other_driver_modules();
+char ** get_known_video_driver_module_names();
+char ** get_prefix_match_names();
+char ** get_other_driver_module_names();
 
+void sysenv_rpt_file_first_line(char * fn, char * title, int depth);
+bool sysenv_show_one_file(char * dir_name, char * simple_fn, bool verbose, int depth);
 
-void report_file_first_line(char * fn, char * title, int depth);
-bool show_one_file(char * dir_name, char * simple_fn, bool verbose, int depth);
-
-// Linked list of driver names
-// struct driver_name_node;
-struct driver_name_node {
+/** Linked list of names of detected drivers */
+typedef struct driver_name_node {
    char * driver_name;
    struct driver_name_node * next;
-};
+} Driver_Name_Node;
 
-void driver_name_list_add(struct driver_name_node ** headtr, char * driver_name);
+Driver_Name_Node * driver_name_list_find(Driver_Name_Node * head, char * driver_name);
+void driver_name_list_add(struct driver_name_node ** headptr, char * driver_name);
+void driver_name_list_free(struct driver_name_node * driver_list);
 
 
-void free_driver_name_list(struct driver_name_node * driver_list);
+#define ENV_ACCUMULATOR_MARKER "ENVA"
 
-
-#define ENV_ACCUMULATOR_NAME "ENVA"
-
-// Collects information relevant to later tests
+/** Collects system environment information */
 typedef struct {
-   char   marker[4];
-   char * architecture;
-   char * distributor_id;
-   bool   is_raspbian;
-   bool   is_arm;
-   Byte_Value_Array i2c_device_numbers;
-   struct driver_name_node * driver_list;
+   char               marker[4];
+   char *             architecture;
+   char *             distributor_id;
+   bool               is_raspbian;
+   bool               is_arm;
+   Byte_Value_Array   i2c_device_numbers;
+   Driver_Name_Node * driver_list;
 } Env_Accumulator;
 
 Env_Accumulator * env_accumulator_new();
-void free_env_accumulator(Env_Accumulator * accum);
+void env_accumulator_free(Env_Accumulator * accum);
 
 /** Signature of filename filter function passed to #dir_foreach(). */
 typedef bool (*Filename_Filter_Func)(char * simple_fn);
 
-/** Signature of function called for each file in the directory. */
+/** Signature of function called by #dir_foreach to process each file. */
 typedef void (*Dir_Foreach_Func)(char * dirname, char * fn, void * accumulator, int depth);
 
 void dir_foreach(

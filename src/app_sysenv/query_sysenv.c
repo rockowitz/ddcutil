@@ -346,7 +346,7 @@ static void query_base_env(Env_Accumulator * accum) {
    rpt_vstring(0, "ddcutil version: %s", BUILD_VERSION);
    rpt_nl();
 
-   report_file_first_line("/proc/version", NULL, 0);
+   sysenv_rpt_file_first_line("/proc/version", NULL, 0);
 
    char * expected_architectures[] = {"x86_64", "i386", "i686", "armv7l", NULL};
    char * architecture   = execute_shell_cmd_one_line_result("arch");      // alt: use uname -m
@@ -379,7 +379,7 @@ static void query_base_env(Env_Accumulator * accum) {
 #endif
 
    rpt_nl();
-   report_file_first_line("/proc/cmdline", NULL, 0);
+   sysenv_rpt_file_first_line("/proc/cmdline", NULL, 0);
 
    if (get_output_level() >= DDCA_OL_VERBOSE) {
       rpt_nl();
@@ -1593,6 +1593,6 @@ void query_sysenv() {
       device_xref_report(0);
    }
 
-   free_env_accumulator(accumulator);     // make Coverity happy
+   env_accumulator_free(accumulator);     // make Coverity happy
 }
 

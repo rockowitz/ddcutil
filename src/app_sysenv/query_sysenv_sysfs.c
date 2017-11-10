@@ -348,7 +348,7 @@ void each_video_pci_device(
    int d1 = depth+1;
 
    Env_Accumulator * accum = accumulator;
-   assert(accum && memcmp(accum->marker, ENV_ACCUMULATOR_NAME, 4) == 0);
+   assert(accum && memcmp(accum->marker, ENV_ACCUMULATOR_MARKER, 4) == 0);
 
    char cur_dir_name[PATH_MAX];
    sprintf(cur_dir_name, "%s/%s", dirname, fn);
@@ -449,7 +449,7 @@ void each_arm_device(char * dirname, char * fn, void * accumulator, int depth) {
    DBGMSF(debug, "Starting. dirname=%s, fn=%s, accumulator=%p", dirname, fn, accumulator);
 
    Env_Accumulator * accum = accumulator;
-   assert(accumulator && memcmp(accum->marker, ENV_ACCUMULATOR_NAME, 4) == 0);
+   assert(accumulator && memcmp(accum->marker, ENV_ACCUMULATOR_MARKER, 4) == 0);
 
    // int d1 = depth+1;
 
@@ -515,7 +515,7 @@ void query_loaded_modules_using_sysfs() {
    // known_video_driver_modules
    // other_driver_modules
 
-   char ** pmodule_name = get_known_video_driver_modules();
+   char ** pmodule_name = get_known_video_driver_module_names();
    char * curmodule;
    int ndx;
    for (ndx=0; (curmodule=pmodule_name[ndx]) != NULL; ndx++) {
@@ -523,7 +523,7 @@ void query_loaded_modules_using_sysfs() {
       // DBGMSF(debug, "is_loaded=%d", is_loaded);
       rpt_vstring(0,"   Module %-16s is %sloaded", curmodule, (is_loaded) ? "" : "NOT ");
    }
-   pmodule_name = get_other_driver_modules();
+   pmodule_name = get_other_driver_module_names();
    for (ndx=0; (curmodule=pmodule_name[ndx]) != NULL; ndx++) {
       bool is_loaded = is_module_loaded_using_sysfs(curmodule);
       rpt_vstring(0,"   Module %-16s is %sloaded", curmodule, (is_loaded) ? "" : "NOT ");
