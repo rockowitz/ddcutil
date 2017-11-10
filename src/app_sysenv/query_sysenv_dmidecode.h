@@ -1,7 +1,7 @@
 /* query_sysenv_dmidecode.h
  *
  * <copyright>
- * Copyright (C) 2014-2015 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2016-2017 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -19,6 +19,10 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  * </endcopyright>
+ */
+
+/** \f
+ *  dmidecode report for the environment command
  */
 
 #ifndef QUERY_SYSENV_DMIDECODE_H_

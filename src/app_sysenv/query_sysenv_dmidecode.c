@@ -1,10 +1,7 @@
 /* query_sysenv_dmidecode.c
  *
- * Created on: Nov 9, 2017
- *     Author: rock
- *
  * <copyright>
- * Copyright (C) 2014-2015 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2016-2017 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -24,6 +21,11 @@
  * </endcopyright>
  */
 
+/** \file
+ * query dmidecode for the environment command
+ */
+
+/** \cond */
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -34,6 +36,7 @@
 #include "util/sysfs_util.h"
 
 #include "base/core.h"
+/** \endcond */
 
 #include "query_sysenv_base.h"
 
@@ -93,71 +96,24 @@ static const char *dmi_chassis_type(Byte code)
 }
 
 
-#ifdef UNUSED_UGLY
-void report_dmidecode_string(char * s, int depth) {
-   char cmd[100];
-   strcpy(cmd, "dmidecode -s ");
-   strcat(cmd, s);
-   rpt_vstring(depth, "%s:", s);
-   execute_shell_cmd_rpt(cmd, depth+1);
-}
-
-
-void report_dmicode_group(char * header, int depth) {
-   char cmd[100];
-   snprintf(cmd, 100, "dmidecode | grep '%s' -A2", header);
-   // DBGMSG("cmd: |%s|", cmd);
-   GPtrArray * lines = execute_shell_cmd_collect(cmd);
-   if (lines) {
-      for (int ndx = 0; ndx < lines->len; ndx++) {
-         char * s = g_ptr_array_index(lines, ndx);
-         rpt_title(s, depth);
-      }
-      g_ptr_array_free(lines,true);
-   }
-   else
-      rpt_vstring(depth, "Command failed: %s", cmd);
-}
-#endif
-
-
 /** Reports DMI information for the system.
  */
 void query_dmidecode() {
 
-#ifdef NO
-   // leave in for testing
-   rpt_nl();
-   if (test_command_executability("dmidecode") == 0) {
-      rpt_vstring(0, "System information from dmidecode:");
-
-#ifdef NO_UGLY
-      report_dmidecode_string("baseboard-manufacturer", 1);
-      report_dmidecode_string("baseboard-product-name", 1);
-      report_dmidecode_string("system-manufacturer", 1);
-      report_dmidecode_string("system-product-name", 1);
-      report_dmidecode_string("chassis-manufacturer", 1);
-      report_dmidecode_string("chassis-type", 1);
-#endif
-
-      report_dmicode_group("Base Board Info", 1);
-      report_dmicode_group("System Info", 1);
-      report_dmicode_group("Chassis Info", 1);
-   }
-   else
-      rpt_vstring(0, "dmidecode command unavailable");
-#endif
+   // Note: The alternative of calling execute_shell_cmd_collect() with the following
+   // command fails if executing from a non-privileged account, which lacks permissions
+   // for /dev/mem or /sys/firmware/dmi/tables/smbios_entry_point
+   // char * cmd =    "dmidecode | grep \"['Base Board Info'|'Chassis Info'|'System Info']\" -A2";
+   // GPtrArray * lines = execute_shell_cmd_collect(cmd);
 
    char * sysdir = "/sys/class/dmi/id";
-   // better way, doesn't require privileged dmidecode
-   // rpt_nl();
    rpt_title("DMI Information from /sys/class/dmi/id:", 0);
 
    char * dv = "(Unavailable)";
    char buf[100];
    int bufsz = 100;
 
-   //    verbpse
+   //    verbose
    rpt_vstring(1, "%-25s %s","Motherboard vendor:",       read_sysfs_attr_w_default_r(sysdir, "board_vendor",  dv, buf, bufsz, false));
    rpt_vstring(1, "%-25s %s","Motherboard product name:", read_sysfs_attr_w_default_r(sysdir, "board_name",    dv, buf, bufsz, false));
    rpt_vstring(1, "%-25s %s","System vendor:",            read_sysfs_attr_w_default_r(sysdir, "sys_vendor",    dv, buf, bufsz, false));
@@ -177,11 +133,5 @@ void query_dmidecode() {
       chassis_desc = workbuf;
    }
    rpt_vstring(1, "%-25s %s", "Chassis type:", chassis_desc);
-
-   // Note: The alternative of calling execute_shell_cmd_collect() with the following
-   // command fails if executing from a non-privileged account, which lacks permissions
-   // for /dev/mem or /sys/firmware/dmi/tables/smbios_entry_point
-   // char * cmd =    "dmidecode | grep \"['Base Board Info'|'Chassis Info'|'System Info']\" -A2";
-   // GPtrArray * lines = execute_shell_cmd_collect(cmd);
 
 }
