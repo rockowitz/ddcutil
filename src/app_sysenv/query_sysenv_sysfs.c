@@ -244,7 +244,7 @@ void do_dir_sys_bus_pci_devices_pcipath_i2conly(char * dirname, char * fn, void 
       char cur_dir[PATH_MAX];
       snprintf(cur_dir, PATH_MAX, "%s/%s", dirname, fn);
       char * name = read_sysfs_attr_w_default(cur_dir, "name","", false);
-      rpt_vstring(depth, "I2C device:          %-8s name: %s", fn, name);
+      rpt_vstring(depth, "I2C device:          %-10s name: %s", fn, name);
    }
 }
 
