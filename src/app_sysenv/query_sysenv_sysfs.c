@@ -323,6 +323,37 @@ void report_device_identification(char * sysfs_device_dir, int depth) {
 }
 
 
+/** Returns the name for video class ids.
+ *
+ *  Hardcoded because device_ids_util.c does not maintain the class
+ *  information that is maintained in file pci.ids.
+ *
+ *  \param class_id
+ *  \return class name, "" if not a display controller class
+ */
+static char * video_device_class_name(unsigned class_id) {
+   char * result = "";
+   switch(class_id >> 8) {
+   case 0x0300:
+      result = "VGA compatible controller";
+      break;
+   case 0x0301:
+      result = "XGA compatible controller";
+      break;
+   case 0x0302:
+      result = "3D controller";
+      break;
+   case 0x0380:
+      result = "Display controller";
+      break;
+   default:
+      if (class_id >> 16 == 0x03)
+         result = "Unspecified display controller";
+   }
+   return result;
+}
+
+
 /** Process attributes of a /sys/bus/pci/devices/nnnn:nn:nn.n directory.\
  *
  *  COMBINED VERSION
@@ -381,7 +412,7 @@ void each_video_pci_device(
                          (is_primary_video) ? "Primary" : "Secondary",
                          fn,
                          (boot_vga_flag) ? "" : "not ");
-      rpt_vstring(d1,   "Device class:        x%06x", class_id);
+      rpt_vstring(d1,   "Device class:        x%06x    %s", class_id, video_device_class_name(class_id));
       report_device_identification(cur_dir_name, depth);
 
       // rpt_nl();
