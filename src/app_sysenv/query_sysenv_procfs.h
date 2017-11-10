@@ -21,12 +21,18 @@
  * </endcopyright>
  */
 
+/** \f
+ *  Query environment using /proc file system
+ */
+
 #ifndef QUERY_SYSENV_PROCFS_H_
 #define QUERY_SYSENV_PROCFS_H_
 
+/** \cond */
 #include <stdbool.h>
+/** \endcond */
 
-int query_proc_modules_for_video();
+int  query_proc_modules_for_video();
 bool query_proc_driver_nvidia();
 
 #endif /* QUERY_SYSENV_PROCFS_H_ */

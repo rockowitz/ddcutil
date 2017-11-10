@@ -1,8 +1,5 @@
 /* query_sysenv_procfs.c
  *
- * Created on: Nov 9, 2017
- *     Author: rock
- *
  * <copyright>
  * Copyright (C) 2014-2015 Sanford Rockowitz <rockowitz@minsoft.com>
  *
@@ -24,8 +21,11 @@
  * </endcopyright>
  */
 
-#include "../app_sysenv/query_sysenv_procfs.h"
+/** \f
+ *  Query environment using /proc file system
+ */
 
+/** \cond */
 #include <glib-2.0/glib.h>
 #include <stdio.h>
 #include <string.h>
@@ -36,8 +36,12 @@
 #include "util/string_util.h"
 
 #include "base/core.h"
+/** \endcore */
 
 #include "query_sysenv_base.h"
+
+#include "query_sysenv_procfs.h"
+
 
 /** Scans /proc/modules for information on loaded drivers of interest
  */
@@ -136,7 +140,6 @@ bool query_proc_driver_nvidia() {
                }
             }
          }
-
          closedir(dp);
       }
    }
