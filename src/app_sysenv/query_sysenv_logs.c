@@ -21,8 +21,11 @@
  * </endcopyright>
  */
 
-#include "../app_sysenv/query_sysenv_logs.h"
+/** \f
+ *  Query configuration files, logs, and output of logging commands.
+ */
 
+/** cond */
 #include <assert.h>
 #include <errno.h>
 #include <glib-2.0/glib.h>
@@ -37,13 +40,28 @@
 
 #include "base/core.h"
 #include "base/status_code_mgt.h"
+/** endcond */
 
 #include "query_sysenv_base.h"
 
-//
-// Log files
-//
+#include "query_sysenv_logs.h"
 
+
+/** Deletes lines from a #GPtrArray of text lines. If filter terms
+ *  are specified, lines not satisfying any of the search terms are
+ *  deleted.  Then, if **limit** is specified, at most the limit
+ *  number of lines are left.
+ *
+ *  \param line_array   GPtrArray of null-terminated strings
+ *  \param filter_terms null-terminated string array of terms
+ *  \param ignore_case  if true, ignore case when testing filter terms
+ *  \param  limit if 0, return all lines that pass filter terms
+ *                if > 0, return at most the first #limit lines that satisfy the filter terms
+ *                if < 0, return at most the last  #limit lines that satisfy the filter terms
+ *
+ *  \remark
+ *  Consider allowing filter_terms to be regular expressions.
+ */
 void filter_and_limit_g_ptr_array(
       GPtrArray * line_array,
       char **     filter_terms,
@@ -84,8 +102,6 @@ void filter_and_limit_g_ptr_array(
 }
 
 
-
-
 /** Reads the contents of a file into a #GPtrArray of lines, optionally keeping only
  *  those lines containing at least one on a list of terms.  After filtering, the set
  *  of returned lines may be further reduced to either the first or last n number of
@@ -104,9 +120,6 @@ void filter_and_limit_g_ptr_array(
  *  \remark
  *  This function was created because using grep in conjunction with pipes was
  *  producing obscure shell errors.
- *  \remark The #GPtrArray is passed into this function instead of allocating it
- *          to allow for returning a status code.
- *  \remark Consider adding the ability to treat filter terms as regular expressions
  */
 static int read_file_with_filter(
       GPtrArray * line_array,
@@ -118,15 +131,6 @@ static int read_file_with_filter(
    bool debug = false;
    DBGMSF(debug, "line_array=%p, fn=%s, ct(filter_terms)=%d, ignore_case=%s, limit=%d",
             line_array, fn, ntsa_length(filter_terms), bool_repr(ignore_case), limit);
-
-#ifdef TOO_MUCH
-   if (debug) {
-      if (filter_terms) {
-         printf("(%s) filter_terms:\n", __func__);
-         ntsa_show(filter_terms);
-      }
-   }
-#endif
 
    g_ptr_array_set_free_func(line_array, g_free);    // in case not already set
 
@@ -149,6 +153,22 @@ static int read_file_with_filter(
 }
 
 
+/** Execute a shell command and return the contents in a newly allocated
+ *  #GPtrArray of lines. Optionally, keep only those lines containing at least
+ *  one in a list of terms.  After filtering, the set of returned lines may
+ *  be further reduced to either the first or last n number of lines.
+ *
+ *  \param  cmd           command to execute
+ *  \param  fn         file name
+ *  \param  filter_terms  #Null_Terminated_String_Away of filter terms
+ *  \param  ignore_case   ignore case when testing filter terms
+ *  \param  limit if 0, return all lines that pass filter terms
+ *                if > 0, return at most the first #limit lines that satisfy the filter terms
+ *                if < 0, return at most the last  #limit lines that satisfy the filter terms
+ *  \param  result_loc  address at which to return a pointer to the newly allocate #GPtrArray
+ *  \return if >= 0, number of lines before filtering and limit applied
+ *          if < 0,  -errno
+ */
 int execute_cmd_collect_with_filter(
       char *       cmd,
       char **      filter_terms,
