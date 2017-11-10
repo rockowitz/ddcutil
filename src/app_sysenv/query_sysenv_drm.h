@@ -21,6 +21,10 @@
  * </endcopyright>
  */
 
+/** \f
+ *  drm reporting for the environment command
+ */
+
 #ifndef QUERY_DRM_SYSENV_H_
 #define QUERY_DRM_SYSENV_H_
 

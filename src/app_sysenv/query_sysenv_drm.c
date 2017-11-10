@@ -21,10 +21,13 @@
  * </endcopyright>
  */
 
-// ??
-#define _GNU_SOURCE
-#define __USE_GNU
+/** \f
+ *  drm reporting for the environment command
+ */
 
+#define _GNU_SOURCE
+
+/** \cond */
 #include <assert.h>
 #include <errno.h>
 #include <glib.h>
@@ -43,7 +46,6 @@
 #include <drm/drm_mode.h>
 #endif
 
-
 #include "util/edid.h"
 #include "util/file_util.h"
 #include "util/glib_util.h"
@@ -54,12 +56,13 @@
 
 #include "base/core.h"
 #include "base/linux_errno.h"
+/** \endcond */
 
-#include "../app_sysenv/query_sysenv_xref.h"
+#include "query_sysenv_xref.h"
 
 #include "query_sysenv_drm.h"
 
-#ifdef REF
+#ifdef REF  // local copy for reference
 #define DRM_BUS_PCI   0
 
 typedef struct _drmPciBusInfo {
@@ -94,6 +97,7 @@ extern void drmFreeDevice(drmDevicePtr *device);
 #endif
 
 
+#ifdef UNUSED
 // can't find basename, roll our own
 char * basename0(char * fn) {
    char * result = NULL;
@@ -114,6 +118,7 @@ char * basename0(char * fn) {
    }
    return result;
 }
+#endif
 
 
 char * drm_bus_type_name(uint8_t bus) {
