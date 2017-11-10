@@ -21,6 +21,11 @@
  * </endcopyright>
  */
 
+/** \f
+ *  Query environment using /sys file system
+ */
+
+/** \cond */
 #define _GNU_SOURCE
 
 #include <assert.h>
@@ -40,15 +45,60 @@
 
 #include "base/core.h"
 #include "base/linux_errno.h"
+/** \endcond */
 
 #include "query_sysenv_base.h"
 #include "query_sysenv_xref.h"
 
 #include "query_sysenv_sysfs.h"
 
+// Notes on directory structure
+//
+//  /sys/bus/pci/devices/0000:nn:nn.n/
+//        boot_vga   1  if the boot device, appears not exist ow
+//        class      0x030000 for video
+//        device     hex PID
+//        driver    -> /sys/bus/pci/drivers/radeon
+//        drm
+//           card0 (dir)
+//           controlD64 (dir)
+//           controlD128 (dir)
+//        enable
+//        graphics (dir)
+//            fb0 (dir)
+//        i2c-n (dir)
+//            device -> /sys/bus/pci/devices/0000:nn:nn.n
+//            name
+//        modalias
+//        subsystem (dir)  -> /sys/bus/pci
+//             devices (dir)
+//             drivers (dir)
+//        subsystem_device
+//        subsystem_vendor
+//        vendor           hex VID
+//
+// also of possible interest:
+// /sys/class/i2c-dev/i2c-*/name
+//    refers to video driver or piix4_smbus
+// also accessed at:
+// /sys/bus/i2c/devices/i2c-*/name
+// /sys/bus/pci/drivers/nouveau
+// /sys/bus/pci/drivers/piix4_smbus
+// /sys/bus/pci/drivers/nouveau/0000:01:00.0
+//                                           /name
+//                                           i2c-dev
+// /sys/module/nvidia
+// /sys/module/i2c_dev ?
+// /sys/module/... etc
 
-// Local conversion function for data coming from sysfs,
+// Raspbian:
+// /sys/bus/platform/drivers/vc4_v3d
+// /sys/module/vc4
+
+
+// Local conversion functions for data coming from sysfs,
 // which should always be valid.
+
 static ushort h2ushort(char * hval) {
    bool debug = false;
    int ct;
@@ -128,12 +178,6 @@ static bool is_smbus_device_using_sysfs(int busno) {
  */
 Device_Ids read_device_ids1(char * cur_dir_name) {
    Device_Ids result = {0};
-
-
-   // printf("vendor: %s\n", read_sysfs_attr(cur_dir_name, "vendor", true));
-   // printf("device: %s\n", read_sysfs_attr(cur_dir_name, "device", true));
-   // printf("subsystem_device: %s\n", read_sysfs_attr(cur_dir_name, "subsystem_device", true));
-   // printf("subsystem_vendor: %s\n", read_sysfs_attr(cur_dir_name, "subsystem_vendor", true));
 
    char * vendor_id        = read_sysfs_attr_w_default(cur_dir_name, "vendor",           "0x00", true);
    char * device_id        = read_sysfs_attr_w_default(cur_dir_name, "device",           "0x00", true);
@@ -247,30 +291,6 @@ void do_dir_sys_bus_pci_devices_pcipath_i2conly(char * dirname, char * fn, void 
       rpt_vstring(depth, "I2C device:          %-10s name: %s", fn, name);
    }
 }
-
-// n. equivalent to examining
-//  /sys/bus/pci/devices/0000:nn:nn.n/
-//        boot_vga   1  if the boot device, appears not exist ow
-//        class      0x030000 for video
-//        device     hex PID
-//        driver    -> /sys/bus/pci/drivers/radeon
-//        drm
-//           card0 (dir0
-//           controlD64 (dir)
-//           controlD128 (dir)
-//        enable
-//        graphics (dir)
-//            fb0 (dir)
-//        i2c-n (dir)
-//            device -> /sys/bus/pci/devices/0000:nn:nn.n
-//            name
-//        modalias
-//        subsystem (dir)  -> /sys/bus/pci
-//             devices (dir)
-//             drivers (dir)
-//        subsystem_device
-//        subsystem_vendor
-//        vendor           hex VID
 
 
 /** Reports the device identifiers in directory /sys/bus/pci/devices/nnnn:nn:nn.n
@@ -501,31 +521,6 @@ void query_card_and_driver_using_sysfs(Env_Accumulator * accum) {
    DBGMSF(debug, "Starting.  accum=%p", accum);
 
    rpt_vstring(0,"Obtaining card and driver information from /sys...");
-
-   // also of possible interest:
-   // /sys/class/i2c-dev/i2c-*/name
-   //    refers to video driver or piix4_smbus
-   // also accessed at:
-   // /sys/bus/i2c/devices/i2c-*/name
-   // /sys/bus/pci/drivers/nouveau
-   // /sys/bus/pci/drivers/piix4_smbus
-   // /sys/bus/pci/drivers/nouveau/0000:01:00.0
-   //                                           /name
-   //                                           i2c-dev
-   // /sys/module/nvidia
-   // /sys/module/i2c_dev ?
-   // /sys/module/... etc
-
-   // Raspbian:
-   // /sys/bus/platform/drivers/vc4_v3d
-   // /sys/module/vc4
-
-   //char * driver_name = NULL;
-   // struct driver_name_node * driver_list = NULL;
-
-   // struct dirent *dent;
-   // DIR           *d;
-
    if (accum->is_arm) {
       DBGMSF(debug, "Machine architecture is %s.  Skipping /sys/bus/pci checks.", accum->architecture);
       char * platform_drivers_dir_name = "/sys/bus/platform/drivers";
@@ -538,8 +533,10 @@ void query_card_and_driver_using_sysfs(Env_Accumulator * accum) {
 }
 
 
+/** For each driver module name known to be relevant, checks /sys to
+ *  see if it is loaded.
+ */
 void query_loaded_modules_using_sysfs() {
-   rpt_nl();
    rpt_vstring(0,"Testing if modules are loaded using /sys...");
    // known_video_driver_modules
    // other_driver_modules
@@ -560,14 +557,47 @@ void query_loaded_modules_using_sysfs() {
 }
 
 
-void query_i2c_bus_using_sysfs() {
+
+void each_i2c_device(
+      char * dirname,     // always /sys/bus/i2c/devices
+      char * fn,          // i2c-0, i2c-1, ...
+      void * accumulator,
+      int    depth)
+{
+   Env_Accumulator * accum = accumulator;
+   char cur_dir_name[100];
+   sprintf(cur_dir_name, "%s/%s", dirname, fn);
+   char * dev_name = read_sysfs_attr(cur_dir_name, "name", true);
+   char buf[100];
+   snprintf(buf, 100, "%s/name:", cur_dir_name);
+   rpt_vstring(depth, "%-34s %s", buf, dev_name);
+   accum->sysfs_i2c_devices_exist = true;
+}
+
+
+/** Examines /sys/bus/i2c/devices
+ */
+void query_i2c_bus_using_sysfs(Env_Accumulator * accumulator) {
+#ifdef OLD
    struct dirent *dent;
    DIR           *d;
+#endif
    char          *dname;
 
-   rpt_nl();
    rpt_vstring(0,"Examining /sys/bus/i2c/devices...");
    dname = "/sys/bus/i2c";
+   if (!directory_exists(dname)) {
+      rpt_vstring(1, "Directory not found: %s", dname);
+   }
+   else {
+      char * dname = "/sys/bus/i2c/devices";
+      accumulator->sysfs_i2c_devices_exist = false;
+      dir_foreach(dname, NULL, each_i2c_device, accumulator, 1);
+      if (!accumulator->sysfs_i2c_devices_exist)
+         rpt_vstring(1, "No i2c devices found in %s", dname);
+   }
+
+#ifdef OLD
    d = opendir(dname);
    if (!d) {
       rpt_vstring(1, "i2c bus not defined in sysfs. Unable to open directory %s: %s\n",
@@ -599,9 +629,13 @@ void query_i2c_bus_using_sysfs() {
          closedir(d);
       }
    }
+#endif
+
 }
 
 
+/** Examines /sys/class/drm
+ */
 void query_drm_using_sysfs() {
    struct dirent *dent;
    struct dirent *dent2;
@@ -610,7 +644,6 @@ void query_drm_using_sysfs() {
    char          dnbuf[90];
    char          cardname[10];
 
-   rpt_nl();
    rpt_vstring(0,"Examining /sys/class/drm...");
    dname = "/sys/class/drm";
    d = opendir(dname);

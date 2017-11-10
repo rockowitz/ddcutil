@@ -64,6 +64,7 @@ typedef struct {
    bool               is_arm;
    Byte_Value_Array   i2c_device_numbers;
    Driver_Name_Node * driver_list;
+   bool               sysfs_i2c_devices_exist;
 } Env_Accumulator;
 
 Env_Accumulator * env_accumulator_new();

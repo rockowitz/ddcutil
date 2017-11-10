@@ -161,6 +161,7 @@ bye:
  *
  *  \return #ByteValueArray of bus numbers for detected I2C devices
  */
+// TODO: simplify, no longer need to test with multiple methods
 Byte_Value_Array identify_i2c_devices() {
 
    Byte_Value_Array i2c_device_numbers_result = NULL;   // result
@@ -192,13 +193,6 @@ Byte_Value_Array identify_i2c_devices() {
 }
 
 
-//
-// Utilities
-//
-
-
-
-
 /** Checks if an I2C bus cannot be a DDC/CI connected monitor
  *  and therefore can be ignored, e.g. if it is an SMBus device.
  *
@@ -221,7 +215,6 @@ static bool is_ignorable_i2c_device(int busno) {
    }
    return result;
 }
-
 
 
 /** Checks the list of detected drivers to see if AMD's proprietary
@@ -1439,7 +1432,6 @@ static void query_using_i2cdetect(Byte_Value_Array i2c_device_numbers) {
  */
 static void probe_i2c_devices_using_udev() {
    char * subsys_name = "i2c-dev";
-   rpt_nl();
    rpt_vstring(0,"Probing I2C devices using udev, susbsystem %s...", subsys_name);
    // probe_udev_subsystem() is in udev_util.c, which is only linked in if USE_USB
 
@@ -1545,15 +1537,15 @@ void query_sysenv() {
    }
    rpt_nl();
    query_loaded_modules_using_sysfs();
+   rpt_nl();
    query_i2c_bus_using_sysfs();
 
    DDCA_Output_Level output_level = get_output_level();
    if (output_level >= DDCA_OL_VERBOSE) {
       rpt_nl();
       query_proc_driver_nvidia();
-   }
 
-   if (output_level >= DDCA_OL_VERBOSE) {
+      rpt_nl();
       query_i2c_buses();
 
       rpt_nl();
