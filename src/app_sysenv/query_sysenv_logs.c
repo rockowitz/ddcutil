@@ -202,158 +202,6 @@ int execute_cmd_collect_with_filter(
 }
 
 
-#ifdef USE_SHELL
-/* Helper function that scans a single log file
- *
- * \param  pre_grep     portion of command before the grep command
- * \param  grep_cmd     grep command
- * \param  post_grep    portion of command after the grep command
- * \param  title        describes what is being scanned
- * \param  depth        logical indentation depth
- */
-bool probe_one_log_using_shell(
-      char * pre_grep,
-      char * grep_cmd,
-      char * post_grep,
-      char * title,
-      int    depth)
-{
-   bool debug = false;
-   bool result = true;
-   assert(grep_cmd);
-   assert(title);
-   DBGMSF(debug, "Starting. pre_grep=\"%s\", grep_cmd=\"%s\", post_grep=\"%s\", title=\"%s\"",
-          pre_grep, grep_cmd, post_grep, title);
-   int l1 = (pre_grep) ? strlen(pre_grep) : 0;
-   int l2 = strlen(grep_cmd);
-   int l3 = (post_grep) ? strlen(post_grep) : 0;
-   int bsz = l1 + l2 + l3 + 1;
-   char * buf = malloc(bsz);
-   DBGMSF(debug, "Allocated buffer of size %d", bsz);
-   buf[0] = '\0';
-   if (pre_grep)
-      strcpy(buf, pre_grep);
-   strcat(buf, grep_cmd);
-   if (post_grep)
-      strcat(buf, post_grep);
-
-   // rpt_vstring(depth,"Checking %s for video and I2C related lines...", title);
-   rpt_vstring(depth,"Checking %s for I2C related lines...", title);
-   DBGMSF(debug, "Shell command, len=%d: \"%s\"", strlen(buf), buf);
-   // GPtrArray * all_lines = execute_shell_cmd_collect(buf);
-   // for (int ndx = 0; ndx < all_lines->len; ndx++)
-   //    rpt_vstring(5, "%d: %s", ndx, g_ptr_array_index(all_lines, ndx));
-   if ( !execute_shell_cmd_rpt(buf, depth+1) ) {
-      rpt_vstring(depth+1,"Unable to process %s", title);
-      result = false;
-   }
-   rpt_nl();
-   free(buf);
-   DBGMSF(debug, "Done.  Returning %s", bool_repr(result));
-   return result;
-}
-#endif
-
-/*  Helper function for building egrep command.  Appends search terms.
- *
- *  \param  terms  null terminated array of grep terms
- *  \param  buf    pointer to buffer to which terms are appended
- *  \param  bufsz  buffer size
- */
-void add_egrep_terms(char ** terms, char * buf, int bufsz) {
-   bool debug = false;
-   DBGMSF(debug, "Starting. buf=|%s|", buf);
-   char ** p = terms;
-   char * src = NULL;
-   while (*p) {
-      // 11/4/2017: quoted search terms suddenly causing parsing error when
-      // string is passed to popen() and the command ends with a "| head" or "|tail"
-      // why?
-      // Eliminated adding quotes and there's no problem
-      // Luckily no search terms contain blanks
-      // Alas, not true for future use - Raspbian
-      // problem solved by eliminating spaces around "|" before "head"or "tail"
-
-   src = " -e\""; strncat(buf, src, bufsz - (strlen(buf)+1));
-   //                  strncat(buf, " -e\"", bufsz - (strlen(buf)+1));
-                     strncat(buf, *p,  bufsz - (strlen(buf)+1));
-   src = "\"";    strncat(buf, src, bufsz - (strlen(buf)+1));
-   //                  strncat(buf, "\"", bufsz - (strlen(buf)+1));
-#ifdef ALT
-                   strncat(buf, " -e ", bufsz - (strlen(buf)+1));
-                     strncat(buf, *p,  bufsz - (strlen(buf)+1));
-   //                  strncat(buf, "\"", bufsz - (strlen(buf)+1));
-#endif
-      p++;
-   }
-   DBGMSF(debug, "Done. len=%d, buf=|%s|", strlen(buf), buf);
-}
-
-
-#ifdef USING_SHELL
-/** Scan one log file using grep
- *
- *  \param  log_fn      file name
- *  \param  terms       #Null_Terminated_String_Array of grep terms
- *  \param  ignore_case if true, perform case insensitive grep
- *  \param  limit       if > 0, report only the first #limit lines found
- *                      if < 0, report only the last #limit lines found
- *                      if 0, report all lines found
- *  \param  depth       logical indentation depth
- *  \return true if log find found, false if not
- */
-bool probe_log_using_shell(
-      char *  log_fn,
-      char ** terms,
-      bool    ignore_case,
-      int     limit,
-      int     depth)
-{
-   bool debug = false;;
-   DBGMSF(debug, "Starting.  log_fn=%s", log_fn);
-
-   assert(log_fn);
-   assert(terms);
-   bool file_found = false;
-   if (regular_file_exists(log_fn)) {
-      const int limit_buf_sz = 200;
-      char limit_buf[limit_buf_sz];
-      limit_buf[0] = '\0';
-      if (limit < 0) {
-         rpt_vstring(depth, "Limiting output to last %d lines...", -limit);
-         snprintf(limit_buf, 200, " %s|tail -n %d", log_fn, -limit);
-      }
-      else if (limit > 0) {
-         rpt_vstring(depth, "Limiting output to first %d lines...", limit);
-         snprintf(limit_buf, 200, " %s|head -n %d", log_fn, limit);
-      }
-      else {
-         snprintf(limit_buf, 200, " %s", log_fn);
-      }
-      DBGMSF(debug, "limit_buf size=%d, len=%d, \"%s\"",
-                    limit_buf_sz, strlen(limit_buf), limit_buf);
-      char gbuf[1000];
-      int  gbufsz = 1000;
-
-      if (ignore_case)
-         strncpy(gbuf, "grep -E -i ", gbufsz);
-      else
-         strncpy(gbuf, "grep -E ", gbufsz);
-      add_egrep_terms(terms, gbuf, gbufsz);
-      DBGMSF(debug, "gbuf size=%d, len=%d, \"%s\"",
-                    gbufsz, strlen(gbuf), gbuf);
-      probe_one_log_using_shell(NULL, gbuf, limit_buf, log_fn, depth);
-      file_found = true;
-   }
-   else
-      rpt_vstring(depth, "File not found: %s", log_fn);
-
-   DBGMSF(debug, "Done. Returning %s", bool_repr(file_found));
-   return file_found;
-}
-#endif
-
-
 bool probe_log_using_api(
       char *  log_fn,
       char ** filter_terms,
@@ -468,11 +316,6 @@ bool probe_cmd_using_api(
 void probe_logs(Env_Accumulator * accum) {
    // TODO: Function needs major cleanup
 
-#ifdef USE_SHELL
-   char gbuf[500];             // contains grep command
-   int  gbufsz = sizeof(gbuf);
-#endif
-
    int depth = 0;
    int d1 = depth+1;
    int d2 = depth+2;
@@ -514,11 +357,6 @@ void probe_logs(Env_Accumulator * accum) {
    Byte logs_checked = 0x00;
    Byte logs_found   = 0x00;
 
-#ifdef USE_SHELL
-   strncpy(gbuf, "egrep -i", gbufsz);
-   add_egrep_terms(known_video_driver_modules, gbuf, gbufsz);
-#endif
-
 #ifdef NO
    // Problem: dmesg can be filled w i2c errors from i2cdetect trying to
    // read an SMBus device
@@ -533,10 +371,6 @@ void probe_logs(Env_Accumulator * accum) {
          NULL
    };
 
-#ifdef USE_SHELL
-   add_egrep_terms(addl_matches, gbuf, gbufsz);
-#endif
-
    Null_Terminated_String_Array drivers_plus_addl_matches =
             ntsa_join(get_known_video_driver_module_names(), addl_matches, /*dup*/ false);
 
@@ -547,11 +381,7 @@ void probe_logs(Env_Accumulator * accum) {
    // them to reappear.  apparently a NL in the stream does the trick.  why?
    // it's a heisenbug.  Just use the more verbose journalctl output
    logs_checked |= LOG_DMESG;
-#ifdef USE_SHELL
-   log_dmesg_found = probe_one_log_using_shell("dmesg |",      gbuf, NULL,                   "dmesg",      depth+1);
-#endif
 
-   // DBGMSG("Alternative using API:");
    rpt_title("Scanning dmesg output for I2C related entries...", depth+1);
    log_dmesg_found = probe_cmd_using_api("dmesg", drivers_plus_addl_matches, /*ignore_case*/ true, 0, depth+1);
    if (log_dmesg_found)
@@ -626,13 +456,6 @@ void probe_logs(Env_Accumulator * accum) {
 
    if (accum->is_arm) {
       logs_checked |= LOG_XORG;
-#ifdef ALT
-      DBGMSG("Using probe_log_using_shell()...");
-      log_xorg_found = probe_log_using_shell("/var/log/Xorg.0.log", xorg_terms, /*ignore_case*/ true, 0, depth+1);
-      if (log_xorg_found)
-         logs_found |= LOG_XORG;
-#endif
-      // DBGMSG("Using probe_log_using_api...");
       log_xorg_found =  probe_log_using_api("/var/log/Xorg.0.log", xorg_terms, /*ignore_case*/ true,  0, depth+1);
       if (log_xorg_found)
          logs_found |= LOG_XORG;
@@ -640,30 +463,13 @@ void probe_logs(Env_Accumulator * accum) {
    else {
       logs_checked |= LOG_XORG;
       // rpt_vstring(depth+1, "Limiting output to 200 lines...");
-
-#ifdef SHELL_CMD
-      DBGMSG("Using probe_one_log_using_shell()...");
-      log_xorg_found = probe_one_log_using_shell(NULL,           gbuf, " /var/log/Xorg.0.log|head -n 200", "Xorg.0.log", depth+1);
-      if (log_xorg_found)
-         logs_found |= LOG_XORG;
-#endif
-
-      // DBGMSG("Using probe_log_using_api...");
       log_xorg_found =  probe_log_using_api("/var/log/Xorg.0.log", drivers_plus_addl_matches, /*ignore_case*/ true, 200, depth+1);
       if (log_xorg_found)
          logs_found |= LOG_XORG;
    }
 
 
-   // ***/var/log/kern.log, /var/log/daemon.log, /var/log/syslog, /va/log/messages ***
-
-#ifdef USING_SHELL
-   // Problem: Commands sometimes produce obscure shell error messages
-   log_messages_found = probe_log_using_shell("/var/log/messages",   log_terms, /*ignore_case*/ true, -40, d1);
-   log_kern_found     = probe_log_using_shell("/var/log/kern.log",   log_terms, /*ignore_case*/ true, -20, d1);
-   log_daemon_found   = probe_log_using_shell("/var/log/daemon.log", log_terms, /*ignore_case*/ true, -10, d1);
-   log_syslog_found   = probe_log_using_shell("/var/log/syslog",     log_terms, /*ignore_case*/ true, -50, d1);
-#endif
+   // ***/var/log/kern.log, /var/log/daemon.log, /var/log/syslog, /var/log/messages ***
 
    // Using our own code instead of shell to scan files
    log_messages_found = probe_log_using_api("/var/log/messages",   log_terms, /*ignore_case*/ true, -40, d1);
@@ -722,15 +528,6 @@ void probe_config_files(Env_Accumulator * accum) {
    rpt_title("Examining configuration files...", depth);
 
    if (accum->is_arm) {
-#ifdef OLD
-      probe_one_log_using_shell(
-            NULL,
-            "egrep -i -e\"dtparam\" -e\"dtoverlay\"",
-            " /boot/config.txt | grep -v \"^ *#\"",
-            "/boot/config.txt",
-            depth+1
-            );
-#endif
       rpt_title("Examining /boot/config.txt:", depth+1);
       execute_shell_cmd_rpt("egrep -i -edtparam -edtoverlay -edevice_tree /boot/config.txt | grep -v \"^ *#\"", depth+2);
       rpt_nl();
