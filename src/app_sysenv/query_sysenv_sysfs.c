@@ -273,116 +273,6 @@ void do_dir_sys_bus_pci_devices_pcipath_i2conly(char * dirname, char * fn, void 
 //        vendor           hex VID
 
 
-#ifdef OLD
-// typedef void (*Dir_Foreach_Func)(char * fn, void * accumulator);
-
-/** Process attributes of a /sys/bus/pci/devices/nnnn:nn:nn.n.
- *
- *  Ignores non-video devices.
- *
- *  Called by #query_card_and_driver_using_lspci_alt() via #dir_foreach()
- *
- *  \param  dirname   always /sys/bus/pci/device
- *  \param  fn        nnnn:nn:nn.n  PCI device path
- *  \param  accum     pointer to accumulator struct, may be NULL
- *  \param  depth     logical indentation depth
- */
-void lspci_alt_one_device(
-      char * dirname,           // always /sys/bus/pci/devices
-      char * fn,                // name of file in /sys/bus/pci/devices
-      void * accumulator,
-      int    depth)
-{
-   bool debug = false;
-   DBGMSF(debug, "Starting.  dirname=%s, fn=%s", dirname, fn);
-
-   int d1 = depth+1;
-
-   char cur_dir_name[PATH_MAX];
-   snprintf(cur_dir_name, PATH_MAX, "%s/%s", dirname, fn);
-   char *device_class = read_sysfs_attr(cur_dir_name, "class", true);
-   if (!device_class) {
-      rpt_vstring(depth, "Unexpected for %s: class not found", cur_dir_name);
-      goto bye;
-   }
-
-   // hack - should convert hex value, use device id table lookup of class name
-   // DBGMSG("class = %s", device_class);
-   if (str_starts_with(device_class, "0x03")) {
-      bool is_primary_video = false;
-
-      if (str_starts_with(device_class, "0x0300")) {
-         // DBGMSG("VGA compatible controller");
-         is_primary_video = true;
-      }
-      else    if (str_starts_with(device_class, "0x0380")) {
-         // DBGMSG("Other display controller");
-      }
-      else {
-         rpt_vstring(depth, "Unexpected class for video device: %s", device_class);
-         goto bye;
-      }
-
-      char * boot_vga = read_sysfs_attr_w_default(cur_dir_name, "boot_vga", "-1", false);
-      // DBGMSG("boot_vga: %s", boot_vga);
-      bool boot_vga_flag = (boot_vga && streq(boot_vga, "1")) ;
-      // if (boot_vga_flag) {
-      //   DBGMSG("boot_vga set");
-      // }
-      // DBGMSG("primary video: %s", bool_repr(is_primary_video));
-
-      Device_Ids devids = read_device_ids1(cur_dir_name);
-
-      Pci_Usb_Id_Names devnames =  devid_get_pci_names(
-                      devids.vendor_id,
-                      devids.device_id,
-                      devids.subvendor_id,
-                      devids.subdevice_id,
-                      4);
-      // DBGMSG("vendor: %s, device: %s", devnames.vendor_name, devnames.device_name);
-
-      rpt_vstring(depth, "%s video controller: %s %s (boot_vga is %sset)",
-                         (is_primary_video) ? "Primary" : "Secondary",
-                         devnames.vendor_name,
-                         devnames.device_name,
-                         (boot_vga_flag) ? "" : "not " );
-      rpt_vstring(d1, "PCI device path: %s", fn);
-      char fnbuf[PATH_MAX];
-      snprintf(fnbuf, PATH_MAX, "%s/%s", cur_dir_name, "driver");
-      // DBGMSG("fnbuf=%s", fnbuf);
-      char resolved_path[PATH_MAX];
-      char * rp = realpath(fnbuf,resolved_path);
-      int errsv = errno;
-      // DBGMSG("resolved_path: %s", rp);
-      if (!rp) {
-         DBGMSF(debug, "Unable to resolve driver path. errno = %d", errsv);
-         rpt_vstring(d1, "Driver:  none");
-      }
-      else {
-         char * rp2 = strdup(rp);
-         char * driver_name = basename(rp2);
-         rpt_vstring(d1, "Driver: %s", driver_name);
-      }
-      dir_foreach(cur_dir_name, NULL, do_dir_sys_bus_pci_devices_pcipath_i2conly, NULL, d1);
-   }
-
-bye:
-   return;
-}
-
-
-bool query_card_and_driver_using_lspci_alt() {
-   bool debug = false;
-   DBGMSF(debug, "Starting");
-
-   dir_foreach("/sys/bus/pci/devices", NULL, lspci_alt_one_device, NULL, 0);
-
-   DBGMSF(debug, "Done");
-   return true;
-}
-#endif
-
-
 /** Reports the device identifiers in directory /sys/bus/pci/devices/nnnn:nn:nn.n
  *
  *  Note that the devices/nnnn:nn:nn.n under /sys/bus/pci always has
@@ -397,11 +287,6 @@ void report_device_identification(char * sysfs_device_dir, int depth) {
    DBGMSF(debug, "sysfs_device_dir: %s", sysfs_device_dir);
    int d1 = depth+1;
 
-   // char * dev_dir_temp = strdup(sysfs_device_dir);
-   // char * pci_path = basename(dev_dir_temp);
-
-
-   // rpt_nl();
    DBGMSF(debug, "Reading device ids from individual attribute files...");
    Device_Ids dev_ids = read_device_ids1(sysfs_device_dir);
    DBGMSF(debug, "Reading device ids by parsing modalias attribute...");
@@ -411,11 +296,6 @@ void report_device_identification(char * sysfs_device_dir, int depth) {
    assert(dev_ids.subvendor_id == dev_ids2.subvendor_id);
    assert(dev_ids.subdevice_id == dev_ids2.subdevice_id);
 
-   // printf("\nLooking up names in pci.ids...\n");
-   // rpt_nl();
-   // rpt_vstring(depth,"Video controller:");
-   // rpt_vstring(d1,"PCI device address:  %s", pci_path);
-   // free(dev_dir_temp);
    bool pci_ids_ok = devid_ensure_initialized();
    if (pci_ids_ok) {
       Pci_Usb_Id_Names names = devid_get_pci_names(
@@ -441,87 +321,6 @@ void report_device_identification(char * sysfs_device_dir, int depth) {
       rpt_vstring(d1,"Subvendor/Subdevice: %04x/%04x  ", dev_ids.subvendor_id, dev_ids.subdevice_id);
    }
 }
-
-
-#ifdef OLD
-/** Process attributes of a /sys/bus/pci/devices/nnnn:nn:nn.n directory.
- *
- *  Ignores non-video devices.
- *
- *  Called by #query_card_and_driver_using_sysfs() via #dir_foreach()
- *
- *  \param  dirname   always /sys/bus/pci/devices
- *  \param  fn        nnnn:nn:nn.n  PCI device path
- *  \param  accum     pointer to accumulator struct, may be NULL
- *  \param  depth     logical indentation depth
- */
-void each_pci_device(char * dirname, char * fn, void * accum, int depth) {
-   bool debug = false;
-   DBGMSF(debug, "Starting. dirname=%s, fn=%s, accum=%p", dirname, fn, accum);
-
-   int d1 = depth+1;
-
-   Env_Accumulator * accumulator = accum;
-   assert(accumulator && memcmp(accumulator->marker, ENV_ACCUMULATOR_NAME, 4) == 0);
-
-   char cur_dir_name[PATH_MAX];
-   sprintf(cur_dir_name, "%s/%s", dirname, fn);
-   // sprintf(cur_fn, "%s/class", cur_dir_name);
-   // read /sys/bus/pci/devices/nnnn:nn:nn.n/class
-   char * class_id = read_sysfs_attr(cur_dir_name, "class", /*verbose=*/true);
-   // printf("%s: |%s|\n", cur_fn, class_id);
-   if (str_starts_with(class_id, "0x03")) {
-      // printf("%s = 0x030000\n", cur_fn);
-
-      rpt_nl();
-      rpt_vstring(depth,"Video controller:");
-      rpt_vstring(d1,"PCI device address:  %s", fn);
-      report_device_identification(cur_dir_name, depth);
-
-      // rpt_nl();
-      // rpt_vstring(d1,"Determining driver name and possibly version...");
-      // DBGMSG("cur_dir_name: %s", cur_dir_name);
-      char workfn[PATH_MAX];
-      sprintf(workfn, "%s/%s", cur_dir_name, "driver");
-      char resolved_path[PATH_MAX];
-      char * rpath = realpath(workfn, resolved_path);
-      if (!rpath) {
-         int errsv = errno;
-         if (errsv == ENOENT)
-            rpt_vstring(d1, "No driver");
-         else {
-            rpt_vstring(d1, "realpath(%s) returned NULL, errno=%d (%s)",
-                            workfn, errsv, linux_errno_name(errsv));
-         }
-      }
-      else {
-         // printf("realpath returned %s\n", rpath);
-         // printf("%s --> %s\n",workfn, resolved_path);
-         char * final_slash_ptr = strrchr(rpath, '/');
-         // TODO: handle case where there are more than 1 video drivers loaded,
-         // say if the system contains both an AMD and Nvidia card
-         char * driver_name = final_slash_ptr+1;
-         rpt_vstring(d1, "Driver name:         %s", driver_name);
-         driver_name_list_add(&accumulator->driver_list, driver_name);
-
-         char driver_module_dir[PATH_MAX];
-         sprintf(driver_module_dir, "%s/driver/module", cur_dir_name);
-         // printf("driver_module_dir: %s\n", driver_module_dir);
-         char * driver_version = read_sysfs_attr(driver_module_dir, "version", false);
-         if (driver_version)
-            rpt_vstring(d1,"Driver version:      %s", driver_version);
-         else
-            rpt_vstring(d1,"Unable to determine driver version");
-      }
-
-   }
-
-   else if (str_starts_with(class_id, "0x0a")) {
-      DBGMSG("Encountered docking station (class 0x0a) device. dir=%s", cur_dir_name);
-   }
-}
-#endif
-
 
 
 /** Process attributes of a /sys/bus/pci/devices/nnnn:nn:nn.n directory.\
@@ -634,7 +433,6 @@ bye:
 }
 
 
-
 /** Process attributes of a /sys/bus/platform/driver
  *
  *  Only processes entry for driver vc4_v3d.
@@ -703,163 +501,12 @@ void query_card_and_driver_using_sysfs(Env_Accumulator * accum) {
       DBGMSF(debug, "Machine architecture is %s.  Skipping /sys/bus/pci checks.", accum->architecture);
       char * platform_drivers_dir_name = "/sys/bus/platform/drivers";
       dir_foreach(platform_drivers_dir_name, /*fn_filter*/ NULL, each_arm_device, accum, 0);
-#ifdef OLD
-      d = opendir(platform_drivers_dir_name);
-      if (!d) {
-         rpt_vstring(0,"Unable to open directory %s: %s", platform_drivers_dir_name, strerror(errno));
-      }
-      else {
-         while ((dent = readdir(d)) != NULL) {
-            // DBGMSG("%s", dent->d_name);
-            char cur_fn[100];
-            char cur_dir_name[100];
-            if (!streq(dent->d_name, ".") && !streq(dent->d_name, "..") ) {
-               // sprintf(cur_dir_name, "%s/%s", pci_devices_dir_name, dent->d_name);
-               sprintf(cur_fn, "%s", cur_dir_name);
-               if (streq(cur_dir_name, "vc4_v3d")) {
-                  char * driver_name = cur_fn;
-                  printf(    "   Driver name:    %s\n", driver_name);
-                  driver_name_list_add(&accum->driver_list, driver_name);
-                  // struct driver_name_node * new_node = calloc(1, sizeof(struct driver_name_node));
-                  // new_node->driver_name = strdup(driver_name);
-                  // new_node->next = driver_list;
-                  // driver_list = new_node;
-               }
-            }
-         }
-      }
-      closedir(d);
-#endif
    }
    else {
       char * pci_devices_dir_name = "/sys/bus/pci/devices";
-      // DBGMSG("OLD WAY");
-      // dir_foreach(pci_devices_dir_name, /*fn_filter*/ NULL, each_pci_device, accum, 0);
-      // DBGMSG("NEW WAY");
       dir_foreach(pci_devices_dir_name, /*fn_filter*/ NULL, each_video_pci_device, accum, 0);
-
-
-
-#ifdef OLD
-      d = opendir(pci_devices_dir_name);
-      if (!d) {
-         rpt_vstring(0,"Unable to open directory %s: %s", pci_devices_dir_name, strerror(errno));
-      }
-      else {
-         while ((dent = readdir(d)) != NULL) {
-            // DBGMSG("%s", dent->d_name);
-            char cur_fn[100];
-            char cur_dir_name[100];
-            if (!streq(dent->d_name, ".") && !streq(dent->d_name, "..") ) {
-               sprintf(cur_dir_name, "%s/%s", pci_devices_dir_name, dent->d_name);
-               sprintf(cur_fn, "%s/class", cur_dir_name);
-               // read /sys/bus/pci/devices/nnnn:nn:nn.n/class
-               char * class_id = read_sysfs_attr(cur_dir_name, "class", /*verbose=*/true);
-               // printf("%s: |%s|\n", cur_fn, class_id);
-               if (str_starts_with(class_id, "0x03")) {
-                  // printf("%s = 0x030000\n", cur_fn);
-                  rpt_nl();
-                  rpt_vstring(0,"Determining driver name and possibly version...");
-                  // DBGMSG("cur_dir_name: %s", cur_dir_name);
-                  char workfn[PATH_MAX];
-                  sprintf(workfn, "%s/%s", cur_dir_name, "driver");
-                  char resolved_path[PATH_MAX];
-                  char * rpath = realpath(workfn, resolved_path);
-                  if (!rpath) {
-                     int errsv = errno;
-                     rpt_vstring(0,"Cannot determine driver name");
-                     rpt_vstring(0, "realpath(%s) returned NULL, errno=%d (%s)",
-                                     workfn, errsv, linux_errno_name(errsv));
-                     if (errsv == ENOENT) {
-                        // fail in virtual environment?
-                        // Raspberry Pi
-                        rpt_vstring(0, "Directory not found: %s", cur_dir_name);
-                     }
-                     else {
-                        // rpt_vstring(0, "realpath(%s) returned NULL, errno=%d (%s)",
-                        //                 workfn, errsv, linux_errno_name(errsv));
-                     }
-                  }
-                  else {
-                     // printf("realpath returned %s\n", rpath);
-                     // printf("%s --> %s\n",workfn, resolved_path);
-                     char * final_slash_ptr = strrchr(rpath, '/');
-                     // TODO: handle case where there are more than 1 video drivers loaded,
-                     // say if the system contains both an AMD and Nvidia card
-                     driver_name = final_slash_ptr+1;
-                     printf(    "   Driver name:    %s\n", driver_name);
-                     struct driver_name_node * new_node = calloc(1, sizeof(struct driver_name_node));
-                     new_node->driver_name = strdup(driver_name);
-                     new_node->next = driver_list;
-
-                     driver_list = new_node;
-
-
-                     char driver_module_dir[PATH_MAX];
-                     sprintf(driver_module_dir, "%s/driver/module", cur_dir_name);
-                     // printf("driver_module_dir: %s\n", driver_module_dir);
-                     char * driver_version = read_sysfs_attr(driver_module_dir, "version", false);
-                     if (driver_version)
-                         rpt_vstring(0,"   Driver version: %s", driver_version);
-                     else
-                        rpt_vstring(0,"   Unable to determine driver version");
-                  }
-
-                  rpt_nl();
-                  DBGMSF(debug, "Reading device ids from individual attribute files...");
-                  Device_Ids dev_ids = read_device_ids1(cur_dir_name);
-                  DBGMSF(debug, "Reading device ids by parsing modalias attribute...");
-                  Device_Ids dev_ids2 = read_device_ids2(cur_dir_name);
-                  assert(dev_ids.vendor_id == dev_ids2.vendor_id);
-                  assert(dev_ids.device_id == dev_ids2.device_id);
-                  assert(dev_ids.subvendor_id == dev_ids2.subvendor_id);
-                  assert(dev_ids.subdevice_id == dev_ids2.subdevice_id);
-
-                  // printf("\nLooking up names in pci.ids...\n");
-                  // rpt_nl();
-                  rpt_vstring(0,"Video card identification:");
-                  bool pci_ids_ok = devid_ensure_initialized();
-                  if (pci_ids_ok) {
-                     Pci_Usb_Id_Names names = devid_get_pci_names(
-                                     dev_ids.vendor_id,
-                                     dev_ids.device_id,
-                                     dev_ids.subvendor_id,
-                                     dev_ids.subdevice_id,
-                                     4);
-                     if (!names.vendor_name)
-                        names.vendor_name = "unknown vendor";
-                     if (!names.device_name)
-                        names.device_name = "unknown device";
-
-                     rpt_vstring(0,"   Vendor:              %04x       %s", dev_ids.vendor_id, names.vendor_name);
-                     rpt_vstring(0,"   Device:              %04x       %s", dev_ids.device_id, names.device_name);
-                     if (names.subsys_or_interface_name)
-                     rpt_vstring(0,"   Subvendor/Subdevice: %04x/%04x  %s", dev_ids.subvendor_id, dev_ids.subdevice_id, names.subsys_or_interface_name);
-                  }
-                  else {
-                     rpt_vstring(0,"Unable to find pci.ids file for name lookup.");
-                     rpt_vstring(0,"   Vendor:              %04x       ", dev_ids.vendor_id);
-                     rpt_vstring(0,"   Device:              %04x       ", dev_ids.device_id);
-                     rpt_vstring(0,"   Subvendor/Subdevice: %04x/%04x  ", dev_ids.subvendor_id, dev_ids.subdevice_id);
-                  }
-               }
-               else if (str_starts_with(class_id, "0x0a")) {
-                  DBGMSG("Encountered docking station (class 0x0a) device. dir=%s", cur_dir_name);
-               }
-            }
-         }
-         closedir(d);
-      }
-#endif
    }
-   // accum->driver_list = driver_list;
-   // return driver_list;
 }
-
-
-//
-// Using sysfs
-//
 
 
 void query_loaded_modules_using_sysfs() {
