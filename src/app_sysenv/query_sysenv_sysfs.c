@@ -47,6 +47,8 @@
 #include "query_sysenv_sysfs.h"
 
 
+// Local conversion function for data coming from sysfs,
+// which should always be valid.
 static ushort h2ushort(char * hval) {
    bool debug = false;
    int ct;
@@ -55,6 +57,17 @@ static ushort h2ushort(char * hval) {
    assert(ct == 1);
    if (debug)
       DBGMSG("hhhh = |%s|, returning 0x%04x", hval, ival);
+   return ival;
+}
+
+static unsigned h2uint(char * hval) {
+   bool debug = false;
+   int ct;
+   unsigned ival;
+   ct = sscanf(hval, "%x", &ival);
+   assert(ct == 1);
+   if (debug)
+      DBGMSG("hhhh = |%s|, returning 0x%08x", hval, ival);
    return ival;
 }
 
@@ -96,15 +109,11 @@ static bool is_smbus_device_using_sysfs(int busno) {
 #endif
 
 
-
-
 // Two ways to get the hex device identifiers.  Both are ugly.
 // Reading modalias requires extracting values from a single string.
 // Reading individual ids from individual attributes is simpler,
 // but note the lack of error checking.
 // Pick your poison.
-
-
 
 /** Reads the device identifiers from directory
  *  /sys/bus/pci/devices/nnnn:nn:nn.n/ using the individual vendor, device,
@@ -163,7 +172,6 @@ Device_Ids read_device_ids2(char * cur_dir_name) {
    // See also:
    //  http://people.skolelinux.org/pere/blog/Modalias_strings___a_practical_way_to_map__stuff__to_hardware.html
 
-
    char * modalias = read_sysfs_attr(cur_dir_name, "modalias", true);
                // printf("modalias: %s\n", modalias);
    if (modalias) {
@@ -215,24 +223,30 @@ Device_Ids read_device_ids2(char * cur_dir_name) {
 }
 
 
+/** Reports one directory whose name is of the form /sys/bus/pci/devices/nnnn:nn:nn.n/
+ *
+ *  Processees only attributes whose name is of the form i2c-n,
+ *  reporting the i2c-n dname and the the contained sysattr name.
+ *
+ *  This function is passed from #lspci_alt_one_device()  to #dir_foreach() ,
+ *  which in turn invokes this function.
+ *
+ *  \param dirname      always /sys/bus/pci/devices
+ *  \param fn           PCI device path, nnnn:nn:nn.n
+ *  \param accumulator  accumulator struct
+ *  \param depth        logical indentation depth
+ */
+void do_dir_sys_bus_pci_devices_pcipath_i2conly(char * dirname, char * fn, void * accumulator, int depth) {
+   bool debug = false;
+   DBGMSF(debug, "dirname=%s, fn=%s", dirname, fn);
 
-
-
-
-void lspci_alt_one_i2c(char * dirname, char * fn, void * accumulator, int depth) {
    if (str_starts_with(fn, "i2c")) {
       char cur_dir[PATH_MAX];
       snprintf(cur_dir, PATH_MAX, "%s/%s", dirname, fn);
       char * name = read_sysfs_attr_w_default(cur_dir, "name","", false);
-      rpt_vstring(depth, "I2C device: %-10s name: %s", fn, name);
+      rpt_vstring(depth, "I2C device:          %-8s name: %s", fn, name);
    }
 }
-
-
-
-
-
-
 
 // n. equivalent to examining
 //  /sys/bus/pci/devices/0000:nn:nn.n/
@@ -258,16 +272,24 @@ void lspci_alt_one_i2c(char * dirname, char * fn, void * accumulator, int depth)
 //        subsystem_vendor
 //        vendor           hex VID
 
-//
 
-
-
-// sprintf(cur_dir_name, "%s/%s", dirname, dent->d_name);
-
+#ifdef OLD
 // typedef void (*Dir_Foreach_Func)(char * fn, void * accumulator);
+
+/** Process attributes of a /sys/bus/pci/devices/nnnn:nn:nn.n.
+ *
+ *  Ignores non-video devices.
+ *
+ *  Called by #query_card_and_driver_using_lspci_alt() via #dir_foreach()
+ *
+ *  \param  dirname   always /sys/bus/pci/device
+ *  \param  fn        nnnn:nn:nn.n  PCI device path
+ *  \param  accum     pointer to accumulator struct, may be NULL
+ *  \param  depth     logical indentation depth
+ */
 void lspci_alt_one_device(
-      char * dirname,
-      char * fn,
+      char * dirname,           // always /sys/bus/pci/devices
+      char * fn,                // name of file in /sys/bus/pci/devices
       void * accumulator,
       int    depth)
 {
@@ -323,7 +345,7 @@ void lspci_alt_one_device(
                          (is_primary_video) ? "Primary" : "Secondary",
                          devnames.vendor_name,
                          devnames.device_name,
-                         (boot_vga_flag) ? " " : "not " );
+                         (boot_vga_flag) ? "" : "not " );
       rpt_vstring(d1, "PCI device path: %s", fn);
       char fnbuf[PATH_MAX];
       snprintf(fnbuf, PATH_MAX, "%s/%s", cur_dir_name, "driver");
@@ -341,14 +363,13 @@ void lspci_alt_one_device(
          char * driver_name = basename(rp2);
          rpt_vstring(d1, "Driver: %s", driver_name);
       }
-      dir_foreach(cur_dir_name, NULL, lspci_alt_one_i2c, NULL, d1);
-
-
+      dir_foreach(cur_dir_name, NULL, do_dir_sys_bus_pci_devices_pcipath_i2conly, NULL, d1);
    }
 
 bye:
    return;
 }
+
 
 bool query_card_and_driver_using_lspci_alt() {
    bool debug = false;
@@ -359,17 +380,28 @@ bool query_card_and_driver_using_lspci_alt() {
    DBGMSF(debug, "Done");
    return true;
 }
+#endif
 
+
+/** Reports the device identifiers in directory /sys/bus/pci/devices/nnnn:nn:nn.n
+ *
+ *  Note that the devices/nnnn:nn:nn.n under /sys/bus/pci always has
+ *  vendor/device etc from modalias extracted into individual attributes.
+ *  Other device subdirectories do not necessarily have these attributes.
+ *
+ *  \param sysfs_device_dir   always /sys/bus/pck/devices/nnnn:nn:nn.n
+ *  \param depth              logical indentation depth
+ */
 void report_device_identification(char * sysfs_device_dir, int depth) {
    bool debug = false;
    DBGMSF(debug, "sysfs_device_dir: %s", sysfs_device_dir);
    int d1 = depth+1;
 
-   char * dev_dir_temp = strdup(sysfs_device_dir);
-   char * pci_path = basename(dev_dir_temp);
+   // char * dev_dir_temp = strdup(sysfs_device_dir);
+   // char * pci_path = basename(dev_dir_temp);
 
 
-   rpt_nl();
+   // rpt_nl();
    DBGMSF(debug, "Reading device ids from individual attribute files...");
    Device_Ids dev_ids = read_device_ids1(sysfs_device_dir);
    DBGMSF(debug, "Reading device ids by parsing modalias attribute...");
@@ -381,9 +413,9 @@ void report_device_identification(char * sysfs_device_dir, int depth) {
 
    // printf("\nLooking up names in pci.ids...\n");
    // rpt_nl();
-   rpt_vstring(depth,"Video controller:");
-   rpt_vstring(d1,"PCI device address:  %s", pci_path);
-   free(dev_dir_temp);
+   // rpt_vstring(depth,"Video controller:");
+   // rpt_vstring(d1,"PCI device address:  %s", pci_path);
+   // free(dev_dir_temp);
    bool pci_ids_ok = devid_ensure_initialized();
    if (pci_ids_ok) {
       Pci_Usb_Id_Names names = devid_get_pci_names(
@@ -397,8 +429,8 @@ void report_device_identification(char * sysfs_device_dir, int depth) {
       if (!names.device_name)
          names.device_name = "unknown device";
 
-      rpt_vstring(d1,"Vendor:              %04x       %s", dev_ids.vendor_id, names.vendor_name);
-      rpt_vstring(d1,"Device:              %04x       %s", dev_ids.device_id, names.device_name);
+      rpt_vstring(d1,"Vendor:              x%04x      %s", dev_ids.vendor_id, names.vendor_name);
+      rpt_vstring(d1,"Device:              x%04x      %s", dev_ids.device_id, names.device_name);
       if (names.subsys_or_interface_name)
       rpt_vstring(d1,"Subvendor/Subdevice: %04x/%04x  %s", dev_ids.subvendor_id, dev_ids.subdevice_id, names.subsys_or_interface_name);
    }
@@ -408,10 +440,21 @@ void report_device_identification(char * sysfs_device_dir, int depth) {
       rpt_vstring(d1,"Device:              %04x       ", dev_ids.device_id);
       rpt_vstring(d1,"Subvendor/Subdevice: %04x/%04x  ", dev_ids.subvendor_id, dev_ids.subdevice_id);
    }
-
 }
 
 
+#ifdef OLD
+/** Process attributes of a /sys/bus/pci/devices/nnnn:nn:nn.n directory.
+ *
+ *  Ignores non-video devices.
+ *
+ *  Called by #query_card_and_driver_using_sysfs() via #dir_foreach()
+ *
+ *  \param  dirname   always /sys/bus/pci/devices
+ *  \param  fn        nnnn:nn:nn.n  PCI device path
+ *  \param  accum     pointer to accumulator struct, may be NULL
+ *  \param  depth     logical indentation depth
+ */
 void each_pci_device(char * dirname, char * fn, void * accum, int depth) {
    bool debug = false;
    DBGMSF(debug, "Starting. dirname=%s, fn=%s, accum=%p", dirname, fn, accum);
@@ -430,6 +473,9 @@ void each_pci_device(char * dirname, char * fn, void * accum, int depth) {
    if (str_starts_with(class_id, "0x03")) {
       // printf("%s = 0x030000\n", cur_fn);
 
+      rpt_nl();
+      rpt_vstring(depth,"Video controller:");
+      rpt_vstring(d1,"PCI device address:  %s", fn);
       report_device_identification(cur_dir_name, depth);
 
       // rpt_nl();
@@ -474,8 +520,132 @@ void each_pci_device(char * dirname, char * fn, void * accum, int depth) {
       DBGMSG("Encountered docking station (class 0x0a) device. dir=%s", cur_dir_name);
    }
 }
+#endif
 
 
+
+/** Process attributes of a /sys/bus/pci/devices/nnnn:nn:nn.n directory.\
+ *
+ *  COMBINED VERSION
+ *
+ *  Ignores non-video devices.
+ *
+ *  Called by #query_card_and_driver_using_sysfs() via #dir_foreach()
+ *
+ *  \param  dirname   always /sys/bus/pci/devices
+ *  \param  fn        nnnn:nn:nn.n  PCI device path
+ *  \param  accum     pointer to accumulator struct, may be NULL
+ *  \param  depth     logical indentation depth
+ */
+void each_video_pci_device(
+      char * dirname,
+      char * fn,
+      void * accumulator,
+      int    depth)
+{
+   bool debug = false;
+   DBGMSF(debug, "Starting. dirname=%s, fn=%s, accumulator=%p", dirname, fn, accumulator);
+
+   int d1 = depth+1;
+
+   Env_Accumulator * accum = accumulator;
+   assert(accum && memcmp(accum->marker, ENV_ACCUMULATOR_NAME, 4) == 0);
+
+   char cur_dir_name[PATH_MAX];
+   sprintf(cur_dir_name, "%s/%s", dirname, fn);
+   // DBGMSF(debug, "cur_dir_name: %s", cur_dir_name);
+   char * device_class = read_sysfs_attr(cur_dir_name, "class", /*verbose=*/true);
+   // DBGMSF(debug, "device_class: %s", device_class);
+   if (!device_class) {
+      rpt_vstring(depth, "Unexpected for %s: class not found", cur_dir_name);
+      goto bye;
+   }
+   unsigned class_id = h2uint(device_class);
+   // DBGMSF(debug, "class_id: 0x%08x", class_id);
+   //   if (str_starts_with(device_class, "0x03")) {
+   if (class_id >> 16 == 0x03) {
+      bool is_primary_video = false;
+
+      switch(class_id >> 8) {
+      case 0x0300:
+         is_primary_video=true;
+         break;
+      case 0x0380:
+         break;
+      default:
+         rpt_vstring(depth, "Unexpected class for video device: %s", device_class);
+      }
+      char * boot_vga = read_sysfs_attr_w_default(cur_dir_name, "boot_vga", "-1", false);
+      // DBGMSG("boot_vga: %s", boot_vga);
+      bool boot_vga_flag = (boot_vga && streq(boot_vga, "1")) ;
+      rpt_vstring(depth, "%s video controller at PCI address %s (boot_vga flag is %sset)",
+                         (is_primary_video) ? "Primary" : "Secondary",
+                         fn,
+                         (boot_vga_flag) ? "" : "not ");
+      rpt_vstring(d1,   "Device class:        x%06x", class_id);
+      report_device_identification(cur_dir_name, depth);
+
+      // rpt_nl();
+      // rpt_vstring(d1,"Determining driver name and possibly version...");
+
+      char workfn[PATH_MAX];
+      sprintf(workfn, "%s/%s", cur_dir_name, "driver");
+      char resolved_path[PATH_MAX];
+      char * rpath = realpath(workfn, resolved_path);
+      if (!rpath) {
+         int errsv = errno;
+         if (errsv == ENOENT)
+            rpt_vstring(d1, "No driver");
+         else {
+            rpt_vstring(d1, "realpath(%s) returned NULL, errno=%d (%s)",
+                            workfn, errsv, linux_errno_name(errsv));
+         }
+      }
+      else {
+         // printf("realpath returned %s\n", rpath);
+         // printf("%s --> %s\n",workfn, resolved_path);
+         char * rp2 = strdup(rpath);
+         char * driver_name = basename(rp2);
+         rpt_vstring(d1, "Driver name:         %s", driver_name);
+         driver_name_list_add(&accum->driver_list, driver_name);
+         free(rp2);
+
+         char driver_module_dir[PATH_MAX];
+         sprintf(driver_module_dir, "%s/driver/module", cur_dir_name);
+         // printf("driver_module_dir: %s\n", driver_module_dir);
+         char * driver_version = read_sysfs_attr(driver_module_dir, "version", false);
+         if (driver_version)
+            rpt_vstring(d1,"Driver version:      %s", driver_version);
+         else
+            rpt_vstring(d1,"Driver version:      Unable to determine");
+
+         // list associated I2C devices
+         dir_foreach(cur_dir_name, NULL, do_dir_sys_bus_pci_devices_pcipath_i2conly, NULL, d1);
+      }
+
+   }
+
+   else if (str_starts_with(device_class, "0x0a")) {
+      rpt_vstring(depth, "Encountered docking station (class 0x0a) device. dir=%s", cur_dir_name);
+   }
+
+bye:
+   return;
+}
+
+
+
+/** Process attributes of a /sys/bus/platform/driver
+ *
+ *  Only processes entry for driver vc4_v3d.
+ *
+ *  Called by #query_card_and_driver_using_sysfs() via #dir_foreach()
+ *
+ *  \param  dirname   always /sys/bus/pci/device
+ *  \param  fn        driver name
+ *  \param  accum     pointer to accumulator struct, may be NULL
+ *  \param  depth     logical indentation depth
+ */
 void each_arm_device(char * dirname, char * fn, void * accumulator, int depth) {
    bool debug = false;
    DBGMSF(debug, "Starting. dirname=%s, fn=%s, accumulator=%p", dirname, fn, accumulator);
@@ -494,14 +664,14 @@ void each_arm_device(char * dirname, char * fn, void * accumulator, int depth) {
 }
 
 
-/* Scans /sys/bus/pci/devices for video devices.
- * Reports on the devices, and returns a singly linked list of driver names.
+/**
  *
  * Arguments:   accum
  *
  */
 void query_card_and_driver_using_sysfs(Env_Accumulator * accum) {
    bool debug = false;
+   DBGMSF(debug, "Starting.  accum=%p", accum);
 
    rpt_vstring(0,"Obtaining card and driver information from /sys...");
 
@@ -563,7 +733,10 @@ void query_card_and_driver_using_sysfs(Env_Accumulator * accum) {
    }
    else {
       char * pci_devices_dir_name = "/sys/bus/pci/devices";
-      dir_foreach(pci_devices_dir_name, /*fn_filter*/ NULL, each_pci_device, accum, 0);
+      // DBGMSG("OLD WAY");
+      // dir_foreach(pci_devices_dir_name, /*fn_filter*/ NULL, each_pci_device, accum, 0);
+      // DBGMSG("NEW WAY");
+      dir_foreach(pci_devices_dir_name, /*fn_filter*/ NULL, each_video_pci_device, accum, 0);
 
 
 

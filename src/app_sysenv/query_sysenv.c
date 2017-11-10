@@ -1211,7 +1211,7 @@ static void driver_specific_tests(struct driver_name_node * driver_list) {
       found_driver_specific_checks = true;
       rpt_nl();
       rpt_vstring(0,"Checking for special settings for proprietary Nvidia driver ");
-      rpt_vstring(0,"(needed for some newer Nvidia cards).");
+      rpt_vstring(0,"(Needed for some newer Nvidia cards).");
       execute_shell_cmd_rpt("grep -iH i2c /etc/X11/xorg.conf /etc/X11/xorg.conf.d/*", 1);
    }
 
@@ -1540,8 +1540,8 @@ void query_sysenv() {
    if (!accumulator->is_arm) {
       // rpt_nl();
       // query_card_and_driver_using_lspci();
-      rpt_nl();
-      query_card_and_driver_using_lspci_alt();
+      //rpt_nl();
+      //query_card_and_driver_using_lspci_alt();
    }
    rpt_nl();
    query_loaded_modules_using_sysfs();
