@@ -268,20 +268,20 @@ Device_Ids read_device_ids2(char * cur_dir_name) {
 }
 
 
-/** Reports one directory whose name is of the form /sys/bus/pci/devices/nnnn:nn:nn.n/
+/** Reports one directory whose name is of the form /sys/bus/pci/devices/nnnn:nn:nn.n/driver
  *
- *  Processees only attributes whose name is of the form i2c-n,
- *  reporting the i2c-n dname and the the contained sysattr name.
+ *  Processes only files whose name is of the form i2c-n,
+ *  reporting the i2c-n dname and the the contained name attribute.
  *
- *  This function is passed from #lspci_alt_one_device()  to #dir_foreach() ,
+ *  This function is passed from #each_video_pci_device()  to #dir_foreach() ,
  *  which in turn invokes this function.
  *
- *  \param dirname      always /sys/bus/pci/devices
- *  \param fn           PCI device path, nnnn:nn:nn.n
+ *  \param dirname      always /sys/bus/pci/devices/nnnn:nn:nn.n/driver
+ *  \param fn           fn, process only those of form i2c-n
  *  \param accumulator  accumulator struct
  *  \param depth        logical indentation depth
  */
-void do_dir_sys_bus_pci_devices_pcipath_i2conly(char * dirname, char * fn, void * accumulator, int depth) {
+void each_video_device_i2c(char * dirname, char * fn, void * accumulator, int depth) {
    bool debug = false;
    DBGMSF(debug, "dirname=%s, fn=%s", dirname, fn);
 
@@ -377,7 +377,8 @@ static char * video_device_class_name(unsigned class_id) {
 
 /** Process attributes of a /sys/bus/pci/devices/nnnn:nn:nn.n directory.\
  *
- *  Ignores non-video devices.
+ *  Ignores non-video devices, i.e. devices whose class does not begin
+ *  with x03.
  *
  *  Called by #query_card_and_driver_using_sysfs() via #dir_foreach()
  *
@@ -385,6 +386,9 @@ static char * video_device_class_name(unsigned class_id) {
  *  \param  fn        nnnn:nn:nn.n  PCI device path
  *  \param  accum     pointer to accumulator struct, may be NULL
  *  \param  depth     logical indentation depth
+ *
+ *  \remark
+ *  Adds detected driver to list of detected drivers
  */
 void each_video_pci_device(
       char * dirname,
@@ -469,7 +473,7 @@ void each_video_pci_device(
             rpt_vstring(d1,"Driver version:      Unable to determine");
 
          // list associated I2C devices
-         dir_foreach(cur_dir_name, NULL, do_dir_sys_bus_pci_devices_pcipath_i2conly, NULL, d1);
+         dir_foreach(cur_dir_name, NULL, each_video_device_i2c, NULL, d1);
       }
 
    }
@@ -493,6 +497,9 @@ bye:
  *  \param  fn        driver name
  *  \param  accum     pointer to accumulator struct, may be NULL
  *  \param  depth     logical indentation depth
+ *
+ *  \remark
+ *  Adds detected driver to list of detected drivers
  */
 void each_arm_device(char * dirname, char * fn, void * accumulator, int depth) {
    bool debug = false;
@@ -500,8 +507,6 @@ void each_arm_device(char * dirname, char * fn, void * accumulator, int depth) {
 
    Env_Accumulator * accum = accumulator;
    assert(accumulator && memcmp(accum->marker, ENV_ACCUMULATOR_MARKER, 4) == 0);
-
-   // int d1 = depth+1;
 
    if (streq(fn, "vc4_v3d")) {
       char * driver_name = fn;
@@ -512,10 +517,13 @@ void each_arm_device(char * dirname, char * fn, void * accumulator, int depth) {
 }
 
 
-/**
+/** Depending on architecture, examines /sys/bus/pci/devices or
+ *  /sub/bus/platform/drivers.
  *
- * Arguments:   accum
+ * \accum   accum
  *
+ * \remark
+ * Updates list of detected drivers, accum->driver_list
  */
 void query_card_and_driver_using_sysfs(Env_Accumulator * accum) {
    bool debug = false;
@@ -558,7 +566,18 @@ void query_loaded_modules_using_sysfs() {
 }
 
 
-
+/** Examines a single /dev/sub/i2c/devices/i2c-N directory.
+ *
+ *  Called by #dir_foreach() from #query_sys_bus_i2c()
+ *
+ *  \param  dirname     always /sys/bus/i2c/devices
+ *  \param  fn          i2c-0, i2c-1, ...
+ *  \param  accumulator collects environment information
+ *  \param  depth       logical indentation depth
+ *
+ *  \remark
+ *  Adds current bus number to **accumulator->sys_bus_i2c_device_numbers
+ */
 void each_i2c_device(
       char * dirname,     // always /sys/bus/i2c/devices
       char * fn,          // i2c-0, i2c-1, ...
@@ -584,17 +603,17 @@ void each_i2c_device(
 
 
 /** Examines /sys/bus/i2c/devices
+ *
+ *  \param accumulator  collects environment information
+ *
+ *  \remark
+ *  Sets **accumulator->sys_bus_i2c_device_numbers** to sorted
+ *  array of detected I2C device numbers.
  */
 void query_sys_bus_i2c(Env_Accumulator * accumulator) {
-#ifdef OLD
-   struct dirent *dent;
-   DIR           *d;
-#endif
-   char          *dname;
-
    accumulator->sys_bus_i2c_device_numbers = bva_create();
    rpt_vstring(0,"Examining /sys/bus/i2c/devices...");
-   dname = "/sys/bus/i2c";
+   char * dname = "/sys/bus/i2c";
    if (!directory_exists(dname)) {
       rpt_vstring(1, "Directory not found: %s", dname);
    }
@@ -606,41 +625,6 @@ void query_sys_bus_i2c(Env_Accumulator * accumulator) {
          rpt_vstring(1, "No i2c devices found in %s", dname);
       bva_sort(accumulator->sys_bus_i2c_device_numbers);
    }
-
-#ifdef OLD
-   d = opendir(dname);
-   if (!d) {
-      rpt_vstring(1, "i2c bus not defined in sysfs. Unable to open directory %s: %s\n",
-                     dname, strerror(errno));
-   }
-   else {
-      closedir(d);
-      dname = "/sys/bus/i2c/devices";
-      d = opendir(dname);
-      if (!d) {
-         rpt_vstring(1, "Unable to open sysfs directory %s: %s\n", dname, strerror(errno));
-      }
-      else {
-         bool i2c_seen = false;
-         while ((dent = readdir(d)) != NULL) {
-            // DBGMSF("%s", dent->d_name);
-            // char cur_fn[100];
-            char cur_dir_name[100];
-            if (!streq(dent->d_name, ".") && !streq(dent->d_name, "..") ) {
-               // DBGMSF(debug, "dent->dname: %s", dent->d_name);
-               sprintf(cur_dir_name, "%s/%s", dname, dent->d_name);
-               char * dev_name = read_sysfs_attr(cur_dir_name, "name", true);
-               rpt_vstring(1, "%s/name: %s", cur_dir_name, dev_name);
-               i2c_seen = true;
-            }
-         }
-         if (!i2c_seen)
-            rpt_vstring(1, "No i2c devices found in %s", dname);
-         closedir(d);
-      }
-   }
-#endif
-
 }
 
 

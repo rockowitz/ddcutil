@@ -194,76 +194,6 @@ Byte_Value_Array identify_i2c_devices() {
 }
 
 
-/** Checks the list of detected drivers to see if AMD's proprietary
- * driver fglrx is the only driver.
- *
- * \param  driver_list     linked list of driver names
- * \return true if fglrx is the only driver, false otherwise
- */
-bool only_fglrx(struct driver_name_node * driver_list) {
-   int driverct = 0;
-   bool fglrx_seen = false;
-   struct driver_name_node * curnode = driver_list;
-   while (curnode) {
-      driverct++;
-      if (str_starts_with(curnode->driver_name, "fglrx"))
-         fglrx_seen = true;
-      curnode = curnode->next;
-   }
-   bool result = (driverct == 1 && fglrx_seen);
-   // DBGMSG("driverct = %d, returning %d", driverct, result);
-   return result;
-}
-
-
-/** Checks the list of detected drivers to see if the proprietary
- *  AMD and Nvidia drivers are the only ones.
- *
- * \param  driver list        linked list of driver names
- * \return true  if both nvidia and fglrx are present and there are no other drivers,
- *         false otherwise
- */
-static bool only_nvidia_or_fglrx(struct driver_name_node * driver_list) {
-   int driverct = 0;
-   bool other_driver_seen = false;
-   struct driver_name_node * curnode = driver_list;
-   while (curnode) {
-      driverct++;
-      if (!str_starts_with(curnode->driver_name, "fglrx") &&
-          !streq(curnode->driver_name, "nvidia")
-         )
-      {
-         other_driver_seen = true;
-      }
-      curnode = curnode->next;
-   }
-   bool result = (!other_driver_seen && driverct > 0);
-   // DBGMSG("driverct = %d, returning %d", driverct, result);
-   return result;
-}
-
-
-/** Checks if any driver name in the list of detected drivers starts with
- * the specified string.
- *
- *  \param  driver list     linked list of driver names
- *  \parar  driver_prefix   driver name prefix
- *  \return true if found, false if not
- */
-static bool found_driver(struct driver_name_node * driver_list, char * driver_prefix) {
-   bool found = false;
-   struct driver_name_node * curnode = driver_list;
-   while (curnode) {
-      if ( str_starts_with(curnode->driver_name, driver_prefix) ) {
-         found = true;
-         break;
-      }
-      curnode = curnode->next;
-   }
-   // DBGMSG("driver_name=%s, returning %d", driver_prefix, found);
-   return found;
-}
-
 
 
 /** Compile time and runtime checks of endianness.
@@ -383,7 +313,7 @@ static void query_base_env(Env_Accumulator * accum) {
 
 /** Checks on the existence and accessibility of /dev/i2c devices.
  *
- *  \param driver_list singly linked list of names of video drivers previously detected
+ *  \param accum   accumulates environment information
  *
  * Checks that user has RW access to all /dev/i2c devices.
  * Checks if group i2c exists and whether the current user is a member.
@@ -393,9 +323,32 @@ static void query_base_env(Env_Accumulator * accum) {
  * skipped (or if verbose output, purely informational).
  *
  * TODO: ignore i2c smbus devices
+ *
+ *  \remark
+ *  assumes drivers already detected, i.e. **accum->driver_list** already set
+ *
+ *  \remark
+ *  Sets:
+ *    accum->group_i2c_exists
+ *    accum->cur_user_in_group_i2c
+ *    accum->cur_user_any_devi2c_rw
+ *    accum->cur_user_all_devi2c_rw
  */
-static void check_i2c_devices(struct driver_name_node * driver_list) {
+static void check_i2c_devices(Env_Accumulator * accum) {
    bool debug = false;
+   DBGMSF(debug, "Starting");
+
+   accum->dev_i2c_devices_required = true;
+   accum->group_i2c_exists = false;
+   accum->cur_user_in_group_i2c = false;
+   accum->cur_user_any_devi2c_rw = false;
+   accum->cur_user_all_devi2c_rw = true;  // i.e. none fail the test
+   accum->any_dev_i2c_has_group_i2c = false;
+   accum->all_dev_i2c_has_group_i2c = true;
+   accum->any_dev_i2c_is_group_rw = false;
+   accum->all_dev_i2c_is_group_rw = true;
+
+   Driver_Name_Node * driver_list = accum->driver_list;
    // int rc;
    // char username[32+1];       // per man useradd, max username length is 32
    char *uname = NULL;
@@ -406,9 +359,11 @@ static void check_i2c_devices(struct driver_name_node * driver_list) {
 
    bool just_fglrx = only_fglrx(driver_list);
    if (just_fglrx){
+      accum->dev_i2c_devices_required = false;
       rpt_nl();
       rpt_vstring(0,"Apparently using only the AMD proprietary driver fglrx.");
       rpt_vstring(0,"Devices /dev/i2c-* are not required.");
+      // TODO: delay leaving to properl set other variables
       if (output_level < DDCA_OL_VERBOSE)
          return;
       rpt_vstring(0, "/dev/i2c device detail is purely informational.");
@@ -449,6 +404,7 @@ static void check_i2c_devices(struct driver_name_node * driver_list) {
    uid_t uid = getuid();
    // uid_t euid = geteuid();
    // printf("(%s) uid=%u, euid=%u\n", __func__, uid, euid);
+   // gets logged on user name, user id, group id
    struct passwd *  pwd = getpwuid(uid);
    rpt_nl();
    rpt_vstring(0,"Current user: %s (%u)\n", pwd->pw_name, uid);
@@ -476,6 +432,50 @@ static void check_i2c_devices(struct driver_name_node * driver_list) {
                rpt_vstring(0,"Device %s is not readable and writable.  Error = %s",
                       fnbuf, linux_errno_desc(errsv) );
                all_i2c_rw = false;
+               accum->cur_user_all_devi2c_rw = false;
+            }
+            else
+               accum->cur_user_any_devi2c_rw = true;
+
+            struct stat fs;
+            rc = stat(fnbuf, &fs);
+            if (rc < 0) {
+               errsv = errno;
+               rpt_vstring(0,"Error getting group information for device %s.  Error = %s",
+                      fnbuf, linux_errno_desc(errsv) );
+            }
+            else {
+               bool cur_file_grp_rw =  ( fs.st_mode & S_IRGRP ) && (fs.st_mode & S_IWGRP)  ;
+               struct group*  grp;
+               errno = 0;
+               grp = getgrgid(fs.st_gid);
+               if (!grp) {
+                  errsv = errno;
+                  rpt_vstring(0,"Error getting group information for group %d.  Error = %s",
+                         fs.st_gid, linux_errno_desc(errsv) );
+               }
+               else {
+                  char * gr_name = grp->gr_name;
+                  if (accum->dev_i2c_common_group_name) {
+                     if (!streq(accum->dev_i2c_common_group_name, gr_name))
+                        accum->dev_i2c_common_group_name = "MIXED";
+                  }
+                  else accum->dev_i2c_common_group_name = strdup(gr_name);
+                  if (streq(gr_name, "i2c"))
+                     accum->any_dev_i2c_has_group_i2c = true;
+                  else
+                     accum->all_dev_i2c_has_group_i2c = false;
+
+                  DBGMSF(debug, "file=%s, st_gid=%d, gr_name=%s, cur_file_grp_rw=%s",
+                        fnbuf, fs.st_gid, gr_name, bool_repr(cur_file_grp_rw));
+
+                  if (fs.st_gid != 0) {    // root group is special case
+                     if (cur_file_grp_rw)
+                        accum->any_dev_i2c_is_group_rw = true;
+                     else
+                        accum->all_dev_i2c_is_group_rw = false;
+                  }
+               }
             }
          }
       }
@@ -503,6 +503,7 @@ static void check_i2c_devices(struct driver_name_node * driver_list) {
       struct group * pgi2c = getgrnam("i2c");
       if (pgi2c) {
          rpt_vstring(0,"   Group i2c exists");
+         accum->group_i2c_exists = true;
          group_i2c_exists = true;
          // gid_i2c = pgi2c->gr_gid;
          // DBGMSG("getgrnam returned gid=%d for group i2c", gid_i2c);
@@ -520,6 +521,7 @@ static void check_i2c_devices(struct driver_name_node * driver_list) {
          }
          if (found_curuser) {
             rpt_vstring(1,"Current user %s is a member of group i2c", uname  /* username */);
+            accum->cur_user_in_group_i2c = true;
          }
          else {
             rpt_vstring(1, "WARNING: Current user %s is NOT a member of group i2c", uname /*username*/);
@@ -595,6 +597,7 @@ static void check_i2c_devices(struct driver_name_node * driver_list) {
                         "/run/udev/rules.d/*rules "
                         "/etc/udev/rules.d/*rules", 1 );
    }
+   DBGMSF(debug, "Done");
 }
 
 
@@ -621,6 +624,10 @@ static bool is_module_builtin(char * module_name) {
    char modules_builtin_fn[100];
    snprintf(modules_builtin_fn, 100, "/lib/modules/%s/modules.builtin", utsbuf.release);
    // free(osrelease);
+
+
+   // TODO: replace shell command with API read and scan of file,
+   //       can use code from query_sysenv_logs.c
 
    char cmdbuf[200];
 
@@ -649,10 +656,12 @@ static bool is_module_builtin(char * module_name) {
 /* Checks if module i2c_dev is required and if so whether it is loaded.
  * Reports the result.
  *
- * Arguments:
- *    video_driver_list  list of video drivers
+ * \param  accum  collects environment information
  *
- * Returns:              nothing
+ * \remark
+ * Sets #accum->module_i2c_dev_needed
+ *      #accum->module_i2c_dev_loaded
+ *
  */
 static void check_i2c_dev_module(Env_Accumulator * accum) {
    rpt_vstring(0,"Checking for module i2c_dev...");
@@ -660,17 +669,22 @@ static void check_i2c_dev_module(Env_Accumulator * accum) {
 
    DDCA_Output_Level output_level = get_output_level();
 
+   accum->module_i2c_dev_needed = true;
+   accum->module_i2c_dev_loaded = false;
+
    bool module_required = !only_nvidia_or_fglrx(video_driver_list);
    if (!module_required) {
       rpt_vstring(0,"Using only proprietary nvidia or fglrx driver. Module i2c_dev not required.");
       // if (output_level < DDCA_OL_VERBOSE)
-         return;
+      accum->module_i2c_dev_needed = false;
+      return;
       // rpt_vstring(0,"Remaining i2c_dev detail is purely informational.");
    }
 
    bool is_builtin = is_module_builtin("i2c-dev");
    rpt_vstring(0,"   Module %s is %sbuilt into kernel", "i2c_dev", (is_builtin) ? "" : "NOT ");
    if (is_builtin) {
+      accum->module_i2c_dev_loaded = true;
       return;
       // if (output_level < DDCA_OL_VERBOSE)
       //    return;
@@ -679,6 +693,7 @@ static void check_i2c_dev_module(Env_Accumulator * accum) {
    }
 
    bool is_loaded = is_module_loaded_using_sysfs("i2c_dev");
+   accum->module_i2c_dev_loaded = is_loaded;
       // DBGMSF(debug, "is_loaded=%d", is_loaded);
    if (!is_builtin)
       rpt_vstring(1,"Module %-16s is %sloaded", "i2c_dev", (is_loaded) ? "" : "NOT ");
@@ -793,8 +808,6 @@ static void driver_specific_tests(struct driver_name_node * driver_list) {
    if (!found_driver_specific_checks)
       rpt_vstring(0,"No driver specific checks apply.");
 }
-
-
 
 
 #ifdef USE_X11
@@ -932,6 +945,75 @@ static void probe_i2c_devices_using_udev() {
 }
 
 
+/** Analyze collected environment information, Make suggestions.
+ *
+ * \param accum  accumulated environment information
+ * \param depth  logical indentation depth
+ */
+void final_analysis(Env_Accumulator * accum, int depth) {
+   int d1 = depth + 1;
+   int d2 = depth + 2;
+   int d3 = depth + 3;
+   int suggestion_ct = 0;
+
+   bool odd_groups = accum->dev_i2c_common_group_name &&
+                    !streq(accum->dev_i2c_common_group_name, "root") &&
+                    !streq(accum->dev_i2c_common_group_name, "i2c");
+
+   rpt_vstring(depth, "Configuration suggestions:");
+
+   if (odd_groups)
+      rpt_multiline(d1, "",
+                        "/dev/i2c devices have non-standard or varying group names.",
+                        "Suggestions are incomplete.",
+                        NULL);
+
+   // TODO: Also compare dev_i2c_devices vs sys_bus_i2c_devices ?
+   if (bva_length(accum->dev_i2c_device_numbers) == 0 &&
+       accum->module_i2c_dev_needed &&
+       !accum->module_i2c_dev_loaded)
+   {
+      rpt_nl();
+      rpt_vstring(d1, "Suggestion %d:", ++suggestion_ct);
+      rpt_vstring(d2, "No /dev/i2c devices found, and module i2c_dev is not loaded.");
+      rpt_vstring(d2, "Manually load module i2c-dev using the command \"modprobe i2c-dev\"");
+      rpt_vstring(d2,  "If this solves the problem, put an entry in directory /etc/modules-load.c");
+      rpt_vstring(d2, "that will cause i2c-dev to be loaded.  Type \"man modules-load.d\" for details");
+   }
+
+   if (!accum->cur_user_all_devi2c_rw) {
+      // TODO: case of cur_user_all_dev_i2c_rw == false but
+      //               cur_user_any_dev_i2c_rw == true
+
+      if (!accum->group_i2c_exists) {
+         rpt_nl();
+         rpt_vstring(d1, "Suggestion %d:", ++suggestion_ct);
+         rpt_vstring(d2, "Create group i2c, assign all /dev/i2c devices to group i2c,");
+         rpt_vstring(d2, "and add the current user to group i2c");
+         rpt_vstring(d2, "To create group i2c, use command:");
+         rpt_vstring(d3, "sudo groupadd --system i2c");
+      }
+      if (accum->group_i2c_exists && !accum->all_dev_i2c_has_group_i2c) {
+         // TODO handle odd case of all_dev_i2c_has_group_i2c == false but
+         //                         any_dev_i2c_has_group_i2c == true
+         rpt_nl();
+         rpt_vstring(d1, "Suggestion %d:", ++suggestion_ct);
+         rpt_vstring(d2, "Assign /dev/i2c devices to group i2c by adding rule to /etc/udev/rules.d");
+      }
+
+      if (!accum->cur_user_in_group_i2c) {
+         rpt_nl();
+         rpt_vstring(d1, "Suggestion %d:", ++suggestion_ct);
+         rpt_vstring(d2, "Current user is not a member of group i2c");
+         rpt_vstring(d2, "Execute command:");
+         rpt_vstring(d3, "sudo usermod -G i2c -a <username>");
+      }
+   }
+
+   if (suggestion_ct == 0)
+      rpt_vstring(d1, "None");
+}
+
 //
 // Mainline
 //
@@ -966,7 +1048,7 @@ void query_sysenv() {
    assert(i2c_device_numbers);
    rpt_vstring(0, "Identified %d I2C devices", bva_length(accumulator->dev_i2c_device_numbers));
    rpt_nl();
-   check_i2c_devices(accumulator->driver_list);
+   check_i2c_devices(accumulator);
 
    rpt_nl();
    rpt_vstring(0,"*** Primary Check 3: Check that module i2c_dev is loaded ***");
@@ -1054,6 +1136,9 @@ void query_sysenv() {
 
    rpt_nl();
    env_accumulator_report(accumulator, 0);
+
+   rpt_nl();
+   final_analysis(accumulator, 0);
 
    env_accumulator_free(accumulator);     // make Coverity happy
 }

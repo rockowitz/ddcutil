@@ -214,6 +214,26 @@ void env_accumulator_report(Env_Accumulator * accum, int depth) {
    }
    assert(strlen(buf) < bufsz);
    rpt_vstring(d1, "%-30s %s", "/sys/bus/i2c device numbers:", buf);
+
+#ifdef REF
+   bool               group_i2c_exists;
+   bool               cur_user_in_group_i2c;
+   bool               cur_user_any_devi2c_rw;
+   bool               cur_user_all_devi2c_rw;
+#endif
+
+   rpt_vstring(d1, "%-30s %s", "dev_i2c_devices_required:",       bool_repr(accum->dev_i2c_devices_required));
+   rpt_vstring(d1, "%-30s %s", "group_i2c_exists:",       bool_repr(accum->group_i2c_exists));
+   rpt_vstring(d1, "%-30s %s", "dev_i2c_common_group_name:",     accum->dev_i2c_common_group_name);
+   rpt_vstring(d1, "%-30s %s", "cur_user_in_group_i2c:",  bool_repr(accum->cur_user_in_group_i2c));
+   rpt_vstring(d1, "%-30s %s", "cur_user_any_devi2c_rw:", bool_repr(accum->cur_user_any_devi2c_rw));
+   rpt_vstring(d1, "%-30s %s", "cur_user_all_devi2c_rw:", bool_repr(accum->cur_user_all_devi2c_rw));
+   rpt_vstring(d1, "%-30s %s", "module_i2c_dev_needed:",  bool_repr(accum->module_i2c_dev_needed));
+   rpt_vstring(d1, "%-30s %s", "module_i2c_dev_loaded:",  bool_repr(accum->module_i2c_dev_loaded));
+   rpt_vstring(d1, "%-30s %s", "all_dev_i2c_has_group_i2c:",  bool_repr(accum->all_dev_i2c_has_group_i2c));
+   rpt_vstring(d1, "%-30s %s", "any_dev_i2c_has_group_i2c:",  bool_repr(accum->any_dev_i2c_has_group_i2c));
+   rpt_vstring(d1, "%-30s %s", "all_dev_i2c_is_group_rw:",  bool_repr(accum->all_dev_i2c_is_group_rw));
+   rpt_vstring(d1, "%-30s %s", "any_dev_i2c_is_group_rw:",  bool_repr(accum->any_dev_i2c_is_group_rw));
 }
 
 
@@ -251,6 +271,79 @@ void driver_name_list_add(Driver_Name_Node ** headptr, char * driver_name) {
       *headptr = newnode;
    }
 }
+
+
+/** Checks the list of detected drivers to see if AMD's proprietary
+ * driver fglrx is the only driver.
+ *
+ * \param  driver_list     linked list of driver names
+ * \return true if fglrx is the only driver, false otherwise
+ */
+bool only_fglrx(struct driver_name_node * driver_list) {
+   int driverct = 0;
+   bool fglrx_seen = false;
+   struct driver_name_node * curnode = driver_list;
+   while (curnode) {
+      driverct++;
+      if (str_starts_with(curnode->driver_name, "fglrx"))
+         fglrx_seen = true;
+      curnode = curnode->next;
+   }
+   bool result = (driverct == 1 && fglrx_seen);
+   // DBGMSG("driverct = %d, returning %d", driverct, result);
+   return result;
+}
+
+
+/** Checks the list of detected drivers to see if the proprietary
+ *  AMD and Nvidia drivers are the only ones.
+ *
+ * \param  driver list        linked list of driver names
+ * \return true  if both nvidia and fglrx are present and there are no other drivers,
+ *         false otherwise
+ */
+bool only_nvidia_or_fglrx(struct driver_name_node * driver_list) {
+   int driverct = 0;
+   bool other_driver_seen = false;
+   struct driver_name_node * curnode = driver_list;
+   while (curnode) {
+      driverct++;
+      if (!str_starts_with(curnode->driver_name, "fglrx") &&
+          !streq(curnode->driver_name, "nvidia")
+         )
+      {
+         other_driver_seen = true;
+      }
+      curnode = curnode->next;
+   }
+   bool result = (!other_driver_seen && driverct > 0);
+   // DBGMSG("driverct = %d, returning %d", driverct, result);
+   return result;
+}
+
+
+// TODO: combine with driver_name_list_find(), add a boolean by_prefix or exact parm
+/** Checks if any driver name in the list of detected drivers starts with
+ * the specified string.
+ *
+ *  \param  driver list     linked list of driver names
+ *  \parar  driver_prefix   driver name prefix
+ *  \return true if found, false if not
+ */
+bool found_driver(struct driver_name_node * driver_list, char * driver_prefix) {
+   bool found = false;
+   struct driver_name_node * curnode = driver_list;
+   while (curnode) {
+      if ( str_starts_with(curnode->driver_name, driver_prefix) ) {
+         found = true;
+         break;
+      }
+      curnode = curnode->next;
+   }
+   // DBGMSG("driver_name=%s, returning %d", driver_prefix, found);
+   return found;
+}
+
 
 
 /** Frees the driver name list
