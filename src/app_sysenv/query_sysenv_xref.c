@@ -26,22 +26,23 @@
  */
 
 /** \cond */
-#include "../app_sysenv/query_sysenv_xref.h"
 
 #include <assert.h>
 #include <glib.h>
 #include <stdio.h>
 #include <string.h>
-/** \endcond */
 
 #include "util/report_util.h"
 #include "util/string_util.h"
 
 #include "base/core.h"
+/** \endcond */
+
+#include "query_sysenv_xref.h"
 
 
 
-/** Collection of Device_Id_Xref */
+/** Collection of #Device_Id_Xref */
 static GPtrArray * device_xref = NULL;
 
 void device_xref_init() {
