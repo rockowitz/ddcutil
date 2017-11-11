@@ -38,6 +38,7 @@
 #include "util/data_structures.h"
 #include "util/device_id_util.h"
 #include "util/file_util.h"
+#include "util/i2c_util.h"
 #include "util/report_util.h"
 #include "util/string_util.h"
 #include "util/subprocess_util.h"
@@ -571,19 +572,27 @@ void each_i2c_device(
    char buf[100];
    snprintf(buf, 100, "%s/name:", cur_dir_name);
    rpt_vstring(depth, "%-34s %s", buf, dev_name);
+
+   int busno = i2c_name_to_busno(fn);
+   if (busno >= 0)
+      bva_append(accum->sys_bus_i2c_device_numbers, busno);
+   else
+      DBGMSG("Unexpected /sys/bus/i2c/devices file name: %s", fn);
+
    accum->sysfs_i2c_devices_exist = true;
 }
 
 
 /** Examines /sys/bus/i2c/devices
  */
-void query_i2c_bus_using_sysfs(Env_Accumulator * accumulator) {
+void query_sys_bus_i2c(Env_Accumulator * accumulator) {
 #ifdef OLD
    struct dirent *dent;
    DIR           *d;
 #endif
    char          *dname;
 
+   accumulator->sys_bus_i2c_device_numbers = bva_create();
    rpt_vstring(0,"Examining /sys/bus/i2c/devices...");
    dname = "/sys/bus/i2c";
    if (!directory_exists(dname)) {
@@ -595,6 +604,7 @@ void query_i2c_bus_using_sysfs(Env_Accumulator * accumulator) {
       dir_foreach(dname, NULL, each_i2c_device, accumulator, 1);
       if (!accumulator->sysfs_i2c_devices_exist)
          rpt_vstring(1, "No i2c devices found in %s", dname);
+      bva_sort(accumulator->sys_bus_i2c_device_numbers);
    }
 
 #ifdef OLD

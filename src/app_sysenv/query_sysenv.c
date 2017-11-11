@@ -1024,7 +1024,7 @@ static void check_i2c_dev_module(Env_Accumulator * accum) {
    if (!is_builtin)
       rpt_vstring(1,"Module %-16s is %sloaded", "i2c_dev", (is_loaded) ? "" : "NOT ");
 
-   if (bva_length(accum->i2c_device_numbers) == 0 && !is_builtin && !is_loaded && module_required) {
+   if (bva_length(accum->dev_i2c_device_numbers) == 0 && !is_builtin && !is_loaded && module_required) {
       rpt_nl();
       if (!only_nvidia_or_fglrx(video_driver_list)) {
          rpt_vstring(0, "No /dev/i2c devices found, but module i2c_dev is not loaded.");
@@ -1495,9 +1495,9 @@ void query_sysenv() {
    rpt_vstring(0,"*** Primary Check 2: Check that /dev/i2c-* exist and writable ***");
    rpt_nl();
    Byte_Value_Array i2c_device_numbers = identify_i2c_devices();
-   accumulator->i2c_device_numbers = i2c_device_numbers;
+   accumulator->dev_i2c_device_numbers = i2c_device_numbers;
    assert(i2c_device_numbers);
-   rpt_vstring(0, "Identified %d I2C devices", bva_length(accumulator->i2c_device_numbers));
+   rpt_vstring(0, "Identified %d I2C devices", bva_length(accumulator->dev_i2c_device_numbers));
    rpt_nl();
    check_i2c_devices(accumulator->driver_list);
 
@@ -1538,7 +1538,7 @@ void query_sysenv() {
    rpt_nl();
    query_loaded_modules_using_sysfs();
    rpt_nl();
-   query_i2c_bus_using_sysfs();
+   query_sys_bus_i2c(accumulator);
 
    DDCA_Output_Level output_level = get_output_level();
    if (output_level >= DDCA_OL_VERBOSE) {
@@ -1557,7 +1557,7 @@ void query_sysenv() {
       execute_shell_cmd_rpt("ps aux | grep ddccontrol | grep -v grep", 1);
       rpt_nl();
 
-      query_using_i2cdetect(accumulator->i2c_device_numbers);
+      query_using_i2cdetect(accumulator->dev_i2c_device_numbers);
 
       raw_scan_i2c_devices();
 
@@ -1584,6 +1584,9 @@ void query_sysenv() {
 
       device_xref_report(0);
    }
+
+   rpt_nl();
+   env_accumulator_report(accumulator, 0);
 
    env_accumulator_free(accumulator);     // make Coverity happy
 }
