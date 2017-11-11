@@ -30,6 +30,7 @@
 
 /** \cond */
 #include <stdbool.h>
+#include <glib-2.0/glib.h>
 
 #include "util/data_structures.h"
 /** \endcond */
@@ -102,4 +103,23 @@ void dir_foreach(
       void *               accumulator,
       int                  depth);
 
+void filter_and_limit_g_ptr_array(
+      GPtrArray * line_array,
+      char **     filter_terms,
+      bool        ignore_case,
+      int         limit);
+
+int read_file_with_filter(
+      GPtrArray * line_array,
+      char *      fn,
+      char **     filter_terms,
+      bool        ignore_case,
+      int         limit);
+
+int execute_cmd_collect_with_filter(
+      char *       cmd,
+      char **      filter_terms,
+      bool         ignore_case,
+      int          limit,
+      GPtrArray ** result_loc);
 #endif /* QUERY_SYSENV_BASE_H_ */
