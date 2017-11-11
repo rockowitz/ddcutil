@@ -199,8 +199,8 @@ Device_Ids read_device_ids1(char * cur_dir_name) {
 }
 
 
-/** Reads the device identifiers from directory
- *  /sys/bus/pci/devices/nnnn:nn:nn.n/ by reading and parsing the modalias
+/** Reads the device identifiers from the directory of a PCI device
+ *  (/sys/bus/pci/devices/nnnn:nn:nn.n/) by reading and parsing the modalias
  *  attribute.
  *
  *  \param cur_dir_name  directory name
