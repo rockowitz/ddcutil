@@ -1,4 +1,4 @@
-/* query_sysenv_sysfs.h
+/* query_sysenv_i2c.h
  *
  * <copyright>
  * Copyright (C) 2014-2017 Sanford Rockowitz <rockowitz@minsoft.com>
@@ -22,27 +22,16 @@
  */
 
 /** \f
- *  Query environment using /sys file system
+ * Check I2C devices using directly coded I2C calls
  */
 
-#ifndef QUERY_SYSENV_SYSFS_H_
-#define QUERY_SYSENV_SYSFS_H_
+#ifndef QUERY_SYSENV_I2C_H_
+#define QUERY_SYSENV_I2C_H_
 
 #include "query_sysenv_base.h"
 
-char * get_i2c_device_sysfs_name(int busno);
 
-typedef struct {
-   ushort   vendor_id;
-   ushort   device_id;
-   ushort   subdevice_id;    // subsystem device id
-   ushort   subvendor_id;    // subsystem vendor id
-} Device_Ids;
+void raw_scan_i2c_devices(Env_Accumulator * accum);
+void query_i2c_buses();
 
-void query_card_and_driver_using_sysfs(Env_Accumulator * accum);
-void query_loaded_modules_using_sysfs();
-void query_sys_bus_i2c(Env_Accumulator * accum);
-void query_drm_using_sysfs();
-bool is_ignorable_i2c_device(int busno);
-
-#endif /* QUERY_SYSENV_SYSFS_H_ */
+#endif /* QUERY_SYSENV_I2C_H_ */

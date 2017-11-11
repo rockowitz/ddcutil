@@ -767,3 +767,27 @@ void query_drm_using_sysfs() {
    execute_shell_cmd_rpt("ls -ld /sys/class/drm/card*/card*/i2c*", 1);
 }
 
+
+
+/** Checks if an I2C bus cannot be a DDC/CI connected monitor
+ *  and therefore can be ignored, e.g. if it is an SMBus device.
+ *
+ *  \param  busno  I2C bus number
+ *  \return true if ignorable, false if not
+ *
+ *  \remark
+ *  This function avoids unnecessary calls to i2cdetect, which can be
+ *  slow for SMBus devices and fills the system logs with errors
+ */
+bool is_ignorable_i2c_device(int busno) {
+   bool result = false;
+   char * name = get_i2c_device_sysfs_name(busno);
+   if (name) {
+      if (str_starts_with(name, "SMBus"))
+         result = true;
+      else if (streq(name, "soc:i2cdsi"))     // Raspberry Pi
+         result = true;
+      free(name);
+   }
+   return result;
+}

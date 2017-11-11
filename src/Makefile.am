@@ -108,13 +108,14 @@ cmdline/cmd_parser_goption.c \
 cmdline/parsed_cmd.c \
 app_ddcutil/main.c \
 app_ddcutil/app_dumpload.c \
-app_sysenv/query_sysenv_base.c \
-app_sysenv/query_sysenv_sysfs.c \
-app_sysenv/query_sysenv_procfs.c \
-app_sysenv/query_sysenv_logs.c \
-app_sysenv/query_sysenv_dmidecode.c \
-app_sysenv/query_sysenv_xref.c \
 app_sysenv/query_sysenv.c \
+app_sysenv/query_sysenv_base.c \
+app_sysenv/query_sysenv_dmidecode.c \
+app_sysenv/query_sysenv_i2c.c \
+app_sysenv/query_sysenv_logs.c \
+app_sysenv/query_sysenv_procfs.c \
+app_sysenv/query_sysenv_sysfs.c \
+app_sysenv/query_sysenv_xref.c \
 app_ddcutil/app_setvcp.c \
 app_ddcutil/app_getvcp.c \
 app_ddcutil/testcases.c 
