@@ -490,7 +490,6 @@ Public_Status_Code try_single_getvcp_call(
       goto bye;
    }
    usleep(50000);
-   // usleep(50000);
 
    unsigned char ddc_response_bytes[12];
    int readct = sizeof(ddc_response_bytes)-1;
@@ -823,9 +822,10 @@ static void check_i2c_devices(struct driver_name_node * driver_list) {
       }
 
       if (!all_i2c_rw) {
-         rpt_vstring(0,"WARNING: Current user (%s) does not have RW access to all /dev/i2c-* devices.",
- //               username);
-                uname);
+         rpt_vstring(
+               0,
+               "WARNING: Current user (%s) does not have RW access to all /dev/i2c-* devices.",
+               uname);
       }
       else
          rpt_vstring(0,"Current user (%s) has RW access to all /dev/i2c-* devices.",
@@ -1096,99 +1096,6 @@ static void query_packages() {
 #endif
 
 
-#ifdef UNUSED
-static bool query_card_and_driver_using_lspci() {
-   bool ok = false;
-   rpt_vstring(0,"Using lspci to examine driver environment...");
-   GPtrArray * lines = execute_shell_cmd_collect("lspci");  // issues msg if error
-   if (lines) {
-      for (int linendx = 0; linendx < lines->len; linendx++) {
-         ok = true;
-         char pci_addr[15];
-         // char device_title[100];
-         char device_name[300];
-         char * a_line = g_ptr_array_index(lines, linendx);
-         int ct = sscanf(a_line, "%s %s", pci_addr, device_name);
-         // DBGMSG("ct=%d, t_read=%ld, pci_addr=%s, device_name=%s", ct, len, pci_addr, device_name);
-         if (ct == 2) {
-            if ( str_starts_with("VGA", device_name) ) {
-               // printf("Video controller 0: %s\n", device_name);
-               char * colonpos = strchr(a_line + strlen(pci_addr), ':');
-               if (colonpos)
-                  rpt_vstring(0,"Video controller: %s", colonpos+1);
-               else
-                  rpt_vstring(0,"colon not found");
-            }
-         }
-      }
-      g_ptr_array_free(lines, true);
-   }
-
-
-
-#ifdef OLD
-    // DBGMSG("Starting");
-    bool ok = true;
-    FILE * fp;
-
-   fp = popen("lspci", "r");
-   if (!fp) {
-      // int errsv = errno;
-      rpt_vstring(0,"Unable to execute command lspci: %s", strerror(errno));
-
-      printf("lspci command unavailable\n");       // why doesn't this print?
-      printf("lspci command really unavailable\n");  // or this?
-      ok = false;
-   }
-   else {
-   if (lines {
-      char * a_line = NULL;
-      size_t len = 0;
-      ssize_t read;
-      char pci_addr[15];
-      // char device_title[100];
-      char device_name[300];
-      while ( (read=getline(&a_line, &len, fp)) != -1) {
-         if (strlen(a_line) > 0)
-            a_line[strlen(a_line)-1] = '\0';
-         // UGLY UGLY - WHY DOESN'T SCANF WORK ???
-         // DBGMSG("lspci line: |%s|", a_line);
-#ifdef SCAN_FAILS
-         // doesn't find ':'
-         // char * pattern = "%s %s:%s";
-         char * pattern = "%[^' '],%[^':'], %s";
-         int ct = sscanf(a_line, pattern, pci_addr, device_title, device_name);
-
-         DBGMSG("ct=%d, t_read=%ld, pci_addr=%s, device_title=%s", ct, len, pci_addr, device_title);
-         if (ct == 3) {
-            if ( str_starts_with("VGA", device_title) ) {
-               printf("Video controller: %s\n", device_name);
-            }
-         }
-#endif
-         int ct = sscanf(a_line, "%s %s", pci_addr, device_name);
-         // DBGMSG("ct=%d, t_read=%ld, pci_addr=%s, device_name=%s", ct, len, pci_addr, device_name);
-         if (ct == 2) {
-            if ( str_starts_with("VGA", device_name) ) {
-               // printf("Video controller 0: %s\n", device_name);
-               char * colonpos = strchr(a_line + strlen(pci_addr), ':');
-               if (colonpos)
-                  rpt_vstring(0,"Video controller: %s", colonpos+1);
-               else
-                  rpt_vstring(0,"colon not found");
-            }
-         }
-      }
-      pclose(fp);
-   }
-#endif
-
-   return ok;
-}
-#endif
-
-
-
 /* Performs checks specific to the nvidia and fglrx proprietary video drivers.
  *
  * Arguments:
@@ -1227,32 +1134,6 @@ static void driver_specific_tests(struct driver_name_node * driver_list) {
    if (!found_driver_specific_checks)
       rpt_vstring(0,"No driver specific checks apply.");
 }
-
-
-
-#ifdef UNUSED
-static bool query_card_and_driver_using_osinfo() {
-   bool ok = false;
-
-#ifdef FAILS
-   printf("Trying Osinfo\n");
-
-   OsinfoDb * info_db = osinfo_db_new();
-
-   OsinfoDeviceList * device_list = osinfo_db_get_device_list(info_db);
-   gint device_ct = osinfo_list_get_length(device_list);
-   int ndx = 0;
-   for (ndx=0; ndx < ct; ndx++) {
-      OsinfoEntity * entity = osinfo_list_get_nth(device_list, ndx);
-      char * entity_id = osinfo_entity_get_id(entity);
-      DBGMSG("osinfo entity id = %s", entity_id );
-
-   }
-#endif
-
-   return ok;
-}
-#endif
 
 
 //
@@ -1320,71 +1201,6 @@ void query_x11() {
 //
 // i2cdetect
 //
-
-/* Uses i2cdetect to probe active addresses on I2C buses
- *
- * Arguments:    none
- *
- * Returns:      nothing
- */
-#ifdef OLD
-static void query_using_i2cdetect_old() {
-   rpt_vstring(0,"Examining I2C buses using i2cdetect: ");
-   // calling i2cdetect for an SMBUs device fills dmesg with error messages
-   // avoid this if possible
-
-   // GPtrArray * summaries = get_i2c_smbus_devices_using_udev();
-   GPtrArray * summaries = get_i2c_devices_using_udev();
-
-   // returns array of I2C bus numbers in string form, sorted in numeric order
-   GPtrArray * busnums = execute_shell_cmd_collect("ls /dev/i2c* | cut -c 10- | sort -n");
-
-   if (!busnums) {
-      rpt_vstring(1, "No I2C buses found");
-      goto bye;
-   }
-   if (busnums->len > 0) {
-      int i;
-      bool isint = str_to_int(g_ptr_array_index(busnums,0), &i);
-      if (!isint) {
-         rpt_vstring(1, "Apparently no I2C buses");
-         goto bye;
-      }
-   }
-
-   for (int ndx = 0; ndx < busnums->len; ndx++) {
-      // printf("ndx=%d, value=|%s|\n", ndx, (char *) g_ptr_array_index(busnames, ndx));
-
-      char cmd[80];
-      char * busname = (char *) g_ptr_array_index(busnums, ndx);
-      // busname+=9;   // strip off "/dev/i2c-"
-
-      if (is_smbus_device_summary(summaries, busname) ) {
-         rpt_nl();
-         rpt_vstring(1, "Device /dev/i2c-%s is a SMBus device.  Skipping i2cdetect.", busname);
-         continue;
-      }
-
-      snprintf(cmd, 80, "i2cdetect -y %s", busname);
-      rpt_nl();
-      rpt_vstring(1,"Probing bus /dev/i2c-%d using command \"%s\"", ndx, cmd);
-      // DBGMSG("Executing command: |%s|\n", cmd);
-      int rc = execute_shell_cmd_rpt(cmd, 2 /* depth */);
-      // DBGMSG("execute_shell_cmd(\"%s\") returned %d", cmd, rc);
-      if (rc != 1) {
-         rpt_vstring(1,"i2cdetect command unavailable");
-         break;
-      }
-   }
-
-bye:
-   if (busnums)
-      g_ptr_array_free(busnums, true);
-
-
-}
-#endif
-
 
 /** Examines /dev/i2c devices using command i2cdetect, if it exists.
  *
