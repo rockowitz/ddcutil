@@ -57,6 +57,7 @@ void             bva_free(Byte_Value_Array bva);
 void             bva_report(Byte_Value_Array ids, char * title);
 bool             bva_store_bytehex_list(Byte_Value_Array bva, char * start, int len);
 Byte_Value_Array bva_filter(Byte_Value_Array bva, IFilter filter_func);
+void             bva_sort(Byte_Value_Array bva);
 
 
 /** An opaque data structure containing 256 flags */

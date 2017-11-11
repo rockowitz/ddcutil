@@ -147,6 +147,31 @@ bool bva_contains(Byte_Value_Array bva, Byte item) {
 }
 
 
+// Comparison function used by gba_sort()
+static int bva_comp_func(const void * val1, const void * val2) {
+   const guint8 * v1 = val1;
+   const guint8 * v2 = val2;
+   int result = 0;
+   if (*v1 < *v2)
+      result = -1;
+   else if (*v1 > *v2)
+      result = 1;
+   // printf("(%s) *v1=%u, *v2=%u, returning: %d\n", __func__, *v1, *v2, result);
+   return result;
+}
+
+/** Sorts a **Byte_Value_Array** in ascending order
+ *
+ *  @param  bva **Byte_Value_Array** instance
+ */
+void  bva_sort(Byte_Value_Array bva) {
+   // printf("(%s) Starting", __func__);
+   GByteArray* ga = (GByteArray*) bva;
+   qsort(ga->data, ga->len, 1, bva_comp_func);
+   // printf("(%s) Done", __func__);
+}
+
+
 /** Compare 2 sorted #Byte_Value_Array instances for equality.
  *  If the same value occurs multiple times in one array, it
  *  must occur the same number of times in the other.
