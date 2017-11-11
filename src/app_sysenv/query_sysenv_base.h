@@ -51,6 +51,7 @@ typedef struct driver_name_node {
 Driver_Name_Node * driver_name_list_find(Driver_Name_Node * head, char * driver_name);
 void driver_name_list_add(struct driver_name_node ** headptr, char * driver_name);
 void driver_name_list_free(struct driver_name_node * driver_list);
+char * driver_name_list_string(Driver_Name_Node * head);
 
 
 #define ENV_ACCUMULATOR_MARKER "ENVA"
@@ -62,13 +63,16 @@ typedef struct {
    char *             distributor_id;
    bool               is_raspbian;
    bool               is_arm;
-   Byte_Value_Array   i2c_device_numbers;
+   Byte_Value_Array   dev_i2c_device_numbers;
    Driver_Name_Node * driver_list;
    bool               sysfs_i2c_devices_exist;
+   Byte_Value_Array   sys_bus_i2c_device_numbers;
 } Env_Accumulator;
 
 Env_Accumulator * env_accumulator_new();
 void env_accumulator_free(Env_Accumulator * accum);
+void env_accumulator_report(Env_Accumulator * accum, int depth);
+
 
 /** Signature of filename filter function passed to #dir_foreach(). */
 typedef bool (*Filename_Filter_Func)(char * simple_fn);

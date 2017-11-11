@@ -157,12 +157,63 @@ void env_accumulator_free(Env_Accumulator * accum) {
    if (accum) {
       free(accum->architecture);
       free(accum->distributor_id);
-      if (accum->i2c_device_numbers)
-         bva_free(accum->i2c_device_numbers);
+      if (accum->dev_i2c_device_numbers)
+         bva_free(accum->dev_i2c_device_numbers);
       if (accum->driver_list)
          driver_name_list_free(accum->driver_list);
+      if (accum->sys_bus_i2c_device_numbers)
+         bva_free(accum->sys_bus_i2c_device_numbers);
       free(accum);
    }
+}
+
+/*** Debugging report for the **Env_Accumulator** struct
+ *
+ *   @param accum  pointer to data structure
+ *   @param depth  logical indentation depth
+ */
+void env_accumulator_report(Env_Accumulator * accum, int depth) {
+   int d1 = depth+1;
+   rpt_title("Env_Accumulator:", depth);
+   rpt_vstring(d1, "%-30s %s", "architecture:", (accum->architecture) ? accum->architecture : "");
+   rpt_vstring(d1, "%-30s %s", "distributor_id", (accum->distributor_id) ? accum->distributor_id : "");
+
+   const int bufsz = 200;
+   char buf[bufsz];
+   buf[0] = '\0';
+   if (accum->dev_i2c_device_numbers) {
+      int len = bva_length(accum->dev_i2c_device_numbers);
+      Byte * bytes = bva_bytes(accum->dev_i2c_device_numbers);
+      for (int ndx = 0; ndx < len; ndx++) {
+         snprintf(buf + strlen(buf), bufsz-strlen(buf), "%s%d",
+                  (ndx == 0) ? "" : " ",
+                  bytes[ndx]);
+      }
+   }
+   assert(strlen(buf) < bufsz);
+   rpt_vstring(d1, "%-30s %s", "/dev/i2c device numbers:", buf);
+
+   char * driver_names = NULL;
+   if (accum->driver_list)
+      driver_names = driver_name_list_string(accum->driver_list);
+   rpt_vstring(d1, "%-30s %s", "Drivers detected:", (driver_names) ? driver_names : "");
+   if (driver_names)
+      free(driver_names);
+   rpt_vstring(d1, "%-30s %s", "sysfs_i2c_devices_exist:", bool_repr(accum->sysfs_i2c_devices_exist));
+
+   buf[0] = '\0';
+   if (accum->sys_bus_i2c_device_numbers) {
+   int len = bva_length(accum->sys_bus_i2c_device_numbers);
+      Byte * bytes = bva_bytes(accum->sys_bus_i2c_device_numbers);
+      for (int ndx = 0; ndx < len; ndx++) {
+         snprintf(buf + strlen(buf), bufsz-strlen(buf),
+                  "%s%d",
+                  (ndx == 0) ? "" : " ",
+                  bytes[ndx]);
+      }
+   }
+   assert(strlen(buf) < bufsz);
+   rpt_vstring(d1, "%-30s %s", "/sys/bus/i2c device numbers:", buf);
 }
 
 
@@ -192,12 +243,12 @@ Driver_Name_Node * driver_name_list_find(Driver_Name_Node * head, char * driver_
  *  \param driver_name name to add
  */
 void driver_name_list_add(Driver_Name_Node ** headptr, char * driver_name) {
+   // printf("(%s) Adding driver |%s|\n", __func__, driver_name);
    if (!driver_name_list_find(*headptr, driver_name)) {
       Driver_Name_Node * newnode = calloc(1, sizeof(Driver_Name_Node));
-      newnode->driver_name = driver_name;
-
+      newnode->driver_name = strdup(driver_name);
       newnode->next = *headptr;
-         *headptr = newnode;
+      *headptr = newnode;
    }
 }
 
@@ -205,19 +256,47 @@ void driver_name_list_add(Driver_Name_Node ** headptr, char * driver_name) {
 /** Frees the driver name list
  *
  * \param driver_list pointer to head of linked list of driver names
- *
- * \remark
- * Driver names in the list list are always pointers into permanent data
- * structures returned by system calls, so are never freed.
  */
 void driver_name_list_free(struct driver_name_node * driver_list) {
    // Free the driver list
    struct driver_name_node * cur_node = driver_list;
    while (cur_node) {
+      free(cur_node->driver_name);
       struct driver_name_node * next_node = cur_node->next;
       free(cur_node);
       cur_node = next_node;
    }
+}
+
+
+/** Returns a comma delimited list of all the driver names in a
+ *  driver name list.
+ *
+ *  \param head pointer to head of list
+ */
+char * driver_name_list_string(Driver_Name_Node * head) {
+   int reqd_sz = 1;   // for trailing \0
+   Driver_Name_Node * cur = head;
+   while (cur) {
+      // printf("(%s) driver_name: |%s|\n", __func__, cur->driver_name);
+      reqd_sz += strlen(cur->driver_name);
+      if (cur != head)
+         reqd_sz += 2;   // for ", "
+      cur = cur->next;
+   }
+   // printf("(%s) reqd_sz = %d\n", __func__, reqd_sz);
+   char * result = malloc(reqd_sz);
+   result[0] = '\0';
+   cur = head;
+   while(cur) {
+      if (cur != head)
+         strcat(result, ", ");
+      strcat(result, cur->driver_name);
+      cur = cur->next;
+   }
+   assert(strlen(result) == reqd_sz-1);
+   // printf("(%s) result: |%s|\n", __func__, result);
+   return result;
 }
 
 
