@@ -109,6 +109,7 @@ cmdline/parsed_cmd.c \
 app_ddcutil/main.c \
 app_ddcutil/app_dumpload.c \
 app_sysenv/query_sysenv.c \
+app_sysenv/query_sysenv_access.c \
 app_sysenv/query_sysenv_base.c \
 app_sysenv/query_sysenv_dmidecode.c \
 app_sysenv/query_sysenv_i2c.c \
