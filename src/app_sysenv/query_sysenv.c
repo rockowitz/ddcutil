@@ -221,23 +221,17 @@ static void query_base_env(Env_Accumulator * accum) {
  * Returns:         true/false
  */
 static bool is_module_builtin(char * module_name) {
-   bool debug = false;
+   bool debug = true;
    bool result = false;
 
    struct utsname utsbuf;
    int rc = uname(&utsbuf);
    assert(rc == 0);
-   // DBGMSG("uname() returned release: %s", &utsbuf.release);
-
-   // works, but simpler to use uname() that doesn't require free(osrelease)
-   // char * osrelease = file_get_first_line("/proc/sys/kernel/osrelease", true /* verbose */);
-   // assert(streq(utsbuf.release, osrelease));
 
    char modules_builtin_fn[100];
    snprintf(modules_builtin_fn, 100, "/lib/modules/%s/modules.builtin", utsbuf.release);
-   // free(osrelease);
 
-
+#ifdef OLD
    // TODO: replace shell command with API read and scan of file,
    //       can use code from query_sysenv_logs.c
 
@@ -258,7 +252,34 @@ static bool is_module_builtin(char * module_name) {
 
    result = (response && response->len > 0);
    g_ptr_array_free(response, true);
+#endif
 
+   // new way
+   char ko_name[40];
+   snprintf(ko_name, 40, "%s.ko", module_name);
+
+   bool builtin2 = false;
+   GPtrArray * lines = g_ptr_array_new_full(400, g_free);
+   char * terms[2];
+   terms[0] = ko_name;
+   terms[1] = NULL;
+   int unfiltered_ct = read_file_with_filter(lines, modules_builtin_fn, terms, false, 0);
+   if (unfiltered_ct < 0) {
+      int errsv = errno;
+      fprintf(FERR, "Error reading file %s: %s\n", modules_builtin_fn, linux_errno_desc(errsv));
+      fprintf(FERR, "Assuming module %s is not built in to kernsl\n", module_name);
+   }
+   else {
+      DBGMSG("lines->len=%d", lines->len);
+      builtin2 = (lines->len == 1);
+   }
+   g_ptr_array_free(lines, true);
+   DBGMSG("builtin2=%s", bool_repr(builtin2));
+   result = builtin2;
+
+#ifdef OLD
+   DBGMSF(debug, "module_name = %s, returning %s", module_name, bool_repr(result));
+#endif
    DBGMSF(debug, "module_name = %s, returning %s", module_name, bool_repr(result));
    return result;
 }
@@ -284,6 +305,9 @@ static void check_i2c_dev_module(Env_Accumulator * accum) {
    accum->module_i2c_dev_needed = true;
    accum->module_i2c_dev_loaded = false;
 
+   bool is_builtin = is_module_builtin("i2c-dev");
+   rpt_vstring(0,"   Module %s is %sbuilt into kernel", "i2c_dev", (is_builtin) ? "" : "NOT ");
+
    bool module_required = !only_nvidia_or_fglrx(video_driver_list);
    if (!module_required) {
       rpt_vstring(0,"Using only proprietary nvidia or fglrx driver. Module i2c_dev not required.");
@@ -293,8 +317,7 @@ static void check_i2c_dev_module(Env_Accumulator * accum) {
       // rpt_vstring(0,"Remaining i2c_dev detail is purely informational.");
    }
 
-   bool is_builtin = is_module_builtin("i2c-dev");
-   rpt_vstring(0,"   Module %s is %sbuilt into kernel", "i2c_dev", (is_builtin) ? "" : "NOT ");
+
    if (is_builtin) {
       accum->module_i2c_dev_loaded = true;
       return;
