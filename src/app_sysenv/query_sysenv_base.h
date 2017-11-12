@@ -49,17 +49,16 @@ typedef struct driver_name_node {
    struct driver_name_node * next;
 } Driver_Name_Node;
 
-Driver_Name_Node * driver_name_list_find(Driver_Name_Node * head, char * driver_name);
-void driver_name_list_add(struct driver_name_node ** headptr, char * driver_name);
-void driver_name_list_free(struct driver_name_node * driver_list);
+Driver_Name_Node * driver_name_list_find_exact( Driver_Name_Node * head, char * driver_name);
+Driver_Name_Node * driver_name_list_find_prefix(Driver_Name_Node * head, char * driver_prefix);
+void driver_name_list_add(Driver_Name_Node ** headptr, char * driver_name);
+void driver_name_list_free(Driver_Name_Node * driver_list);
 char * driver_name_list_string(Driver_Name_Node * head);
-bool only_fglrx(struct driver_name_node * driver_list);
-bool only_nvidia_or_fglrx(struct driver_name_node * driver_list);
-bool found_driver(struct driver_name_node * driver_list, char * driver_prefix);
+bool only_fglrx(Driver_Name_Node * driver_list);
+bool only_nvidia_or_fglrx(Driver_Name_Node * driver_list);
 
 
 #define ENV_ACCUMULATOR_MARKER "ENVA"
-
 /** Collects system environment information */
 typedef struct {
    char               marker[4];
@@ -71,11 +70,14 @@ typedef struct {
    Driver_Name_Node * driver_list;
    bool               sysfs_i2c_devices_exist;
    Byte_Value_Array   sys_bus_i2c_device_numbers;
+   bool               group_i2c_checked;
    bool               group_i2c_exists;
    bool               dev_i2c_devices_required;
    bool               all_dev_i2c_has_group_i2c;
    bool               any_dev_i2c_has_group_i2c;
    char *             dev_i2c_common_group_name;
+   char *             cur_uname;
+   uid_t              cur_uid;
    bool               cur_user_in_group_i2c;
    bool               cur_user_any_devi2c_rw;
    bool               cur_user_all_devi2c_rw;

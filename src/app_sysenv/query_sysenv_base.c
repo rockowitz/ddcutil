@@ -148,6 +148,15 @@ bool sysenv_show_one_file(char * dir_name, char * simple_fn, bool verbose, int d
 Env_Accumulator * env_accumulator_new() {
    Env_Accumulator * accum = calloc(1, sizeof(Env_Accumulator));
    memcpy(accum->marker, ENV_ACCUMULATOR_MARKER, 4);
+
+   // Defaults that differ from 0 values set by calloc():
+   accum->dev_i2c_devices_required  = true;
+
+   // will be set false if any instance fails the test
+   accum->cur_user_all_devi2c_rw    = true;
+   accum->all_dev_i2c_has_group_i2c = true;
+   accum->all_dev_i2c_is_group_rw   = true;
+
    return accum;
 }
 
@@ -160,12 +169,15 @@ void env_accumulator_free(Env_Accumulator * accum) {
    if (accum) {
       free(accum->architecture);
       free(accum->distributor_id);
+      free(accum->cur_uname);
+      free(accum->dev_i2c_common_group_name);
       if (accum->dev_i2c_device_numbers)
          bva_free(accum->dev_i2c_device_numbers);
       if (accum->driver_list)
          driver_name_list_free(accum->driver_list);
       if (accum->sys_bus_i2c_device_numbers)
          bva_free(accum->sys_bus_i2c_device_numbers);
+
       free(accum);
    }
 }
@@ -217,26 +229,21 @@ void env_accumulator_report(Env_Accumulator * accum, int depth) {
    }
    assert(strlen(buf) < bufsz);
    rpt_vstring(d1, "%-30s %s", "/sys/bus/i2c device numbers:", buf);
-
-#ifdef REF
-   bool               group_i2c_exists;
-   bool               cur_user_in_group_i2c;
-   bool               cur_user_any_devi2c_rw;
-   bool               cur_user_all_devi2c_rw;
-#endif
-
-   rpt_vstring(d1, "%-30s %s", "dev_i2c_devices_required:",       bool_repr(accum->dev_i2c_devices_required));
-   rpt_vstring(d1, "%-30s %s", "group_i2c_exists:",       bool_repr(accum->group_i2c_exists));
-   rpt_vstring(d1, "%-30s %s", "dev_i2c_common_group_name:",     accum->dev_i2c_common_group_name);
-   rpt_vstring(d1, "%-30s %s", "cur_user_in_group_i2c:",  bool_repr(accum->cur_user_in_group_i2c));
-   rpt_vstring(d1, "%-30s %s", "cur_user_any_devi2c_rw:", bool_repr(accum->cur_user_any_devi2c_rw));
-   rpt_vstring(d1, "%-30s %s", "cur_user_all_devi2c_rw:", bool_repr(accum->cur_user_all_devi2c_rw));
-   rpt_vstring(d1, "%-30s %s", "module_i2c_dev_needed:",  bool_repr(accum->module_i2c_dev_needed));
-   rpt_vstring(d1, "%-30s %s", "module_i2c_dev_loaded:",  bool_repr(accum->module_i2c_dev_loaded));
-   rpt_vstring(d1, "%-30s %s", "all_dev_i2c_has_group_i2c:",  bool_repr(accum->all_dev_i2c_has_group_i2c));
-   rpt_vstring(d1, "%-30s %s", "any_dev_i2c_has_group_i2c:",  bool_repr(accum->any_dev_i2c_has_group_i2c));
-   rpt_vstring(d1, "%-30s %s", "all_dev_i2c_is_group_rw:",  bool_repr(accum->all_dev_i2c_is_group_rw));
-   rpt_vstring(d1, "%-30s %s", "any_dev_i2c_is_group_rw:",  bool_repr(accum->any_dev_i2c_is_group_rw));
+   rpt_vstring(d1, "%-30s %s", "dev_i2c_devices_required:",  bool_repr(accum->dev_i2c_devices_required));
+   rpt_vstring(d1, "%-30s %s", "group_i2c_checked:",         bool_repr(accum->group_i2c_checked));
+   rpt_vstring(d1, "%-30s %s", "group_i2c_exists:",          bool_repr(accum->group_i2c_exists));
+   rpt_vstring(d1, "%-30s %s", "dev_i2c_common_group_name:", accum->dev_i2c_common_group_name);
+   rpt_vstring(d1, "%-30s %s", "cur_uname:",                 accum->cur_uname);
+   rpt_vstring(d1, "%-30s %d", "cur_uid:",                   accum->cur_uid);
+   rpt_vstring(d1, "%-30s %s", "cur_user_in_group_i2c:",     bool_repr(accum->cur_user_in_group_i2c));
+   rpt_vstring(d1, "%-30s %s", "cur_user_any_devi2c_rw:",    bool_repr(accum->cur_user_any_devi2c_rw));
+   rpt_vstring(d1, "%-30s %s", "cur_user_all_devi2c_rw:",    bool_repr(accum->cur_user_all_devi2c_rw));
+   rpt_vstring(d1, "%-30s %s", "module_i2c_dev_needed:",     bool_repr(accum->module_i2c_dev_needed));
+   rpt_vstring(d1, "%-30s %s", "module_i2c_dev_loaded:",     bool_repr(accum->module_i2c_dev_loaded));
+   rpt_vstring(d1, "%-30s %s", "all_dev_i2c_has_group_i2c:", bool_repr(accum->all_dev_i2c_has_group_i2c));
+   rpt_vstring(d1, "%-30s %s", "any_dev_i2c_has_group_i2c:", bool_repr(accum->any_dev_i2c_has_group_i2c));
+   rpt_vstring(d1, "%-30s %s", "all_dev_i2c_is_group_rw:",   bool_repr(accum->all_dev_i2c_is_group_rw));
+   rpt_vstring(d1, "%-30s %s", "any_dev_i2c_is_group_rw:",   bool_repr(accum->any_dev_i2c_is_group_rw));
 }
 
 
@@ -250,11 +257,35 @@ void env_accumulator_report(Env_Accumulator * accum, int depth) {
  *  \param driver_name name of driver to search for
  *  \return pointer to node containing driver, NULL if not found
  */
-Driver_Name_Node * driver_name_list_find(Driver_Name_Node * head, char * driver_name) {
+Driver_Name_Node *
+driver_name_list_find_exact(
+      Driver_Name_Node * head,
+      char *             driver_name)
+{
    Driver_Name_Node * cur_node = head;
    while (cur_node && !streq(cur_node->driver_name, driver_name))
         cur_node = cur_node->next;
    return cur_node;
+}
+
+
+/** Checks if any driver name in the list of detected drivers starts with
+ * the specified string.
+ *
+ *  \param  driver list     head of linked list of driver names
+ *  \parar  driver_prefix   driver name prefix
+ *  \return pointer to first node satisfying the prefix match, NULL if none
+ */
+Driver_Name_Node *
+driver_name_list_find_prefix(
+      Driver_Name_Node * head,
+      char *             driver_prefix)
+{
+   Driver_Name_Node * curnode = head;
+   while (curnode  && !str_starts_with(curnode->driver_name, driver_prefix) )
+         curnode = curnode->next;
+   DBGMSG("driver_prefix=%s, returning %p", driver_prefix, curnode);
+   return curnode;
 }
 
 
@@ -267,7 +298,7 @@ Driver_Name_Node * driver_name_list_find(Driver_Name_Node * head, char * driver_
  */
 void driver_name_list_add(Driver_Name_Node ** headptr, char * driver_name) {
    // printf("(%s) Adding driver |%s|\n", __func__, driver_name);
-   if (!driver_name_list_find(*headptr, driver_name)) {
+   if (!driver_name_list_find_exact(*headptr, driver_name)) {
       Driver_Name_Node * newnode = calloc(1, sizeof(Driver_Name_Node));
       newnode->driver_name = strdup(driver_name);
       newnode->next = *headptr;
@@ -323,30 +354,6 @@ bool only_nvidia_or_fglrx(struct driver_name_node * driver_list) {
    // DBGMSG("driverct = %d, returning %d", driverct, result);
    return result;
 }
-
-
-// TODO: combine with driver_name_list_find(), add a boolean by_prefix or exact parm
-/** Checks if any driver name in the list of detected drivers starts with
- * the specified string.
- *
- *  \param  driver list     linked list of driver names
- *  \parar  driver_prefix   driver name prefix
- *  \return true if found, false if not
- */
-bool found_driver(struct driver_name_node * driver_list, char * driver_prefix) {
-   bool found = false;
-   struct driver_name_node * curnode = driver_list;
-   while (curnode) {
-      if ( str_starts_with(curnode->driver_name, driver_prefix) ) {
-         found = true;
-         break;
-      }
-      curnode = curnode->next;
-   }
-   // DBGMSG("driver_name=%s, returning %d", driver_prefix, found);
-   return found;
-}
-
 
 
 /** Frees the driver name list
