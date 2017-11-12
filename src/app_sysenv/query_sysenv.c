@@ -221,7 +221,7 @@ static void query_base_env(Env_Accumulator * accum) {
  * Returns:         true/false
  */
 static bool is_module_builtin(char * module_name) {
-   bool debug = true;
+   bool debug = false;
    bool result = false;
 
    struct utsname utsbuf;
@@ -270,11 +270,11 @@ static bool is_module_builtin(char * module_name) {
       fprintf(FERR, "Assuming module %s is not built in to kernsl\n", module_name);
    }
    else {
-      DBGMSG("lines->len=%d", lines->len);
+      // DBGMSG("lines->len=%d", lines->len);
       builtin2 = (lines->len == 1);
    }
    g_ptr_array_free(lines, true);
-   DBGMSG("builtin2=%s", bool_repr(builtin2));
+   // DBGMSG("builtin2=%s", bool_repr(builtin2));
    result = builtin2;
 
 #ifdef OLD
