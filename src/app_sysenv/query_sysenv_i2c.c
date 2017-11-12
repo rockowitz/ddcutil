@@ -372,7 +372,6 @@ void raw_scan_i2c_devices(Env_Accumulator * accum) {
 
 
 void query_i2c_buses() {
-   rpt_nl();
    rpt_vstring(0,"Examining I2C buses, as detected by I2C layer...");
    i2c_report_buses(true, 1 /* indentation depth */);    // in i2c_bus_core.c
 }
