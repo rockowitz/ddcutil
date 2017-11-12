@@ -41,6 +41,10 @@
 #include "i2c/i2c_do_io.h"
 
 
+// Trace class for this file
+static Trace_Group TRACE_GROUP = TRC_I2C;
+
+
 I2C_IO_Strategy  i2c_file_io_strategy = {
       write_writer,
       read_reader,
@@ -88,7 +92,7 @@ Status_Errno_DDC invoke_i2c_writer(
       Byte * bytes_to_write)
 {
    bool debug = false;
-   DBGMSF(debug, "writer=%s, bytes_to_write=%s",
+   DBGTRC(debug, TRACE_GROUP, "writer=%s, bytes_to_write=%s",
                  i2c_io_strategy->i2c_writer_name, hexstring_t(bytes_to_write, bytect));
 
    Status_Errno_DDC rc;
@@ -99,7 +103,7 @@ Status_Errno_DDC invoke_i2c_writer(
    // DBGMSF(debug, "writer() function returned %d", rc);
    assert (rc <= 0);
 
-   DBGMSF(debug, "Returning rc=%s", psc_desc(rc));
+   DBGTRC(debug, TRACE_GROUP, "Returning rc=%s", psc_desc(rc));
    return rc;
 }
 
@@ -118,7 +122,7 @@ Status_Errno_DDC invoke_i2c_reader(
        Byte *     readbuf)
 {
      bool debug = false;
-     DBGMSF(debug, "reader=%s, bytect=%d", i2c_io_strategy->i2c_reader_name, bytect);
+     DBGTRC(debug, TRACE_GROUP, "reader=%s, bytect=%d", i2c_io_strategy->i2c_reader_name, bytect);
 
      Status_Errno_DDC rc;
      RECORD_IO_EVENT(
@@ -127,7 +131,7 @@ Status_Errno_DDC invoke_i2c_reader(
        );
      assert (rc <= 0);
 
-     DBGMSF(debug, "Returning rc=%s", psc_desc(rc));
+     DBGTRC(debug, TRACE_GROUP, "Returning rc=%s", psc_desc(rc));
      return rc;
 }
 
