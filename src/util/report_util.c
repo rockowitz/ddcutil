@@ -211,6 +211,26 @@ void rpt_title(char * title, int depth) {
 }
 
 
+/* Writes a constant string to the current output destination.
+ *
+ * A newline is appended to the string specified.
+ *
+ * The output is indented per the specified indentation depth.
+ *
+ * @param depth logical indentation depth.
+ * @param title string to write
+ *
+ * @remark
+ * This function is logically equivalent to #rpt_title(), except that
+ * the **depth** parameter is first, not last.
+ * Experience wih the API has shown that #rpt_title() tends not to be
+ * used along with #rpt_vstring() because the different position of the
+ * **depth** parameter makes the code harder to read.
+ */
+void rpt_label(int depth, char * text) {
+   rpt_title(text, depth);
+}
+
 /** Writes a formatted string to the current output destination.
  *
  * A newline is appended to the string specified

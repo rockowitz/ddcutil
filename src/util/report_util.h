@@ -49,6 +49,7 @@ void rpt_flush();
 
 void rpt_nl();
 void rpt_title(char * title, int depth);
+void rpt_label(int depth, char * text);
 void rpt_multiline(int depth, ...);
 void rpt_g_ptr_array(int depth, GPtrArray * strings);
 
