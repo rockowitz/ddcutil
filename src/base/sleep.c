@@ -72,11 +72,13 @@ Sleep_Stats get_sleep_stats() {
 void report_sleep_stats(int depth) {
    int d1 = depth+1;
    rpt_title("Sleep Call Stats:", depth);
-   rpt_vstring(d1, "Total sleep calls:                           %10d",  sleep_stats.total_sleep_calls);
-   rpt_vstring(d1, "Requested sleep time milliseconds :          %10d", sleep_stats.requested_sleep_milliseconds);
-   rpt_vstring(d1, "Actual sleep milliseconds (nanosec):         %10d  (%10" PRIu64 ")",
-          sleep_stats.actual_sleep_nanos / (1000*1000),
-          sleep_stats.actual_sleep_nanos);
+   rpt_vstring(d1, "Total sleep calls:                              %10d",
+                   sleep_stats.total_sleep_calls);
+   rpt_vstring(d1, "Requested sleep time milliseconds :             %10d",
+                   sleep_stats.requested_sleep_milliseconds);
+   rpt_vstring(d1, "Actual sleep milliseconds (nanosec):            %10"PRIu64"  (%13" PRIu64 ")",
+                   sleep_stats.actual_sleep_nanos / (1000*1000),
+                   sleep_stats.actual_sleep_nanos);
 }
 
 /** Sleep for the specified number of milliseconds.

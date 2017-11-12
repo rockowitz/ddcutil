@@ -100,7 +100,7 @@ static bool                 debug_sleep_stats_mutex = false;
 
 static
 IO_Event_Type_Stats io_event_stats[] = {
-      // id           name             desc             count  nanosec
+      // id           name             desc           nanosec  count
       {IE_WRITE,      "IE_WRITE",      "write calls",       0, 0},
       {IE_READ,       "IE_READ",       "read calls",        0, 0},
       {IE_WRITE_READ, "IE_WRITE_READ", "write/read calls",  0, 0},
@@ -128,7 +128,7 @@ void reset_io_event_stats() {
 }
 
 
-/** Returns type symbolic name of an even type.
+/** Returns symbolic name of an event type.
  *
  * @param event_type
  * @return symbolic name
@@ -170,7 +170,7 @@ uint64_t total_io_event_nanosec() {
 
 
 // No effect on program logic, but makes debug messages easier to scan
-uint64_t normalize_timestamp(long timestamp) {
+uint64_t normalize_timestamp(uint64_t timestamp) {
    return timestamp - program_start_timestamp;
 }
 
@@ -197,14 +197,20 @@ void log_io_call(
         uint64_t             end_time_nanos)
 {
    bool debug = false || debug_io_event_stats_mutex;
-   DBGMSF(debug, "event_type=%d %s", event_type, io_event_name(event_type));
 
    uint64_t elapsed_nanos = (end_time_nanos-start_time_nanos);
+   DBGMSF(debug, "event_type=%d %-10s, elapsed_nanos=%"PRIu64", as millis=%"PRIu64,
+                  event_type, io_event_name(event_type), elapsed_nanos, elapsed_nanos/(1000*1000) );
 
    g_mutex_lock(&io_event_stats_mutex);
+
    io_event_stats[event_type].call_count++;
    io_event_stats[event_type].call_nanosec += elapsed_nanos;
+
    g_mutex_unlock(&io_event_stats_mutex);
+
+   DBGMSF(debug, "Updated total nanosec = %"PRIu64", as millis=%"PRIu64,
+                  io_event_stats[event_type].call_nanosec, io_event_stats[event_type].call_nanosec /(1000*1000) );
 
    // unused
    // last_io_event = event_type;
@@ -226,13 +232,13 @@ void report_io_call_stats(int depth) {
    // int max_name_length = max_event_name_length();
    // not working as variable length string specifier
    // DBGMSG("max_name_length=%d", max_name_length);
-   rpt_vstring(d1, "%-40s Count Millisec  (   Nanosec)", "Type");
+   rpt_vstring(d1, "%-40s Count    Millisec  (      Nanosec)", "Type");
    for (;ndx < IO_EVENT_TYPE_CT; ndx++) {
       if (io_event_stats[ndx].call_count > 0) {
          IO_Event_Type_Stats* curstat = &io_event_stats[ndx];
          char buf[100];
          snprintf(buf, 100, "%-17s (%s)", curstat->desc, curstat->name);
-         rpt_vstring(d1, "%-40s  %4d  %7d  (%10" PRIu64 ")",
+         rpt_vstring(d1, "%-40s  %4d  %10" PRIu64 "  (%13" PRIu64 ")",
                      buf,
                      curstat->call_count,
                      curstat->call_nanosec / (1000*1000),
@@ -242,7 +248,7 @@ void report_io_call_stats(int depth) {
          total_nanos += curstat->call_nanosec;
       }
    }
-   rpt_vstring(d1, "%-40s  %4d  %7ld  (%10" PRIu64 ")",
+   rpt_vstring(d1, "%-40s  %4d  %10"PRIu64"  (%13" PRIu64 ")",
                "Totals:",
                total_ct,
                total_nanos / (1000*1000),
@@ -818,11 +824,11 @@ void report_sleep_strategy_stats(int depth) {
  * Must be called once at program startup.
  */
 void init_execution_stats() {
-   primary_error_code_counts = new_status_code_counts("DDC Related Errors");
+   primary_error_code_counts   = new_status_code_counts("DDC Related Errors");
    retryable_error_code_counts = new_status_code_counts("Errors Wrapped in Retry");
    // secondary_status_code_counts = new_status_code_counts("Derived and Other Errors");
-   program_start_timestamp = cur_realtime_nanosec();
-   resettable_start_timestamp    = program_start_timestamp;
+   program_start_timestamp     = cur_realtime_nanosec();
+   resettable_start_timestamp  = program_start_timestamp;
    elapsed_time_nanosec();    // first call initializes, used for dbgtrc
 }
 
@@ -855,13 +861,15 @@ void report_elapsed_stats(int depth) {
    uint64_t end_nanos = cur_realtime_nanosec();
    if (program_start_timestamp != resettable_start_timestamp) {
       uint64_t cur_elapsed_nanos = end_nanos - resettable_start_timestamp;
-      rpt_vstring(depth, "Elapsed milliseconds since last reset (nanoseconds):%6ld  (%10ld)",
+      rpt_vstring(depth,
+            "Elapsed milliseconds since last reset (nanosec):%10"PRIu64"  (%13"PRIu64")",
             cur_elapsed_nanos / (1000*1000),
             cur_elapsed_nanos);
    }
 
-   long elapsed_nanos = end_nanos - program_start_timestamp;
-   rpt_vstring(depth, "Total elapsed milliseconds (nanoseconds):       %10ld  (%10ld)",
+   uint64_t elapsed_nanos = end_nanos - program_start_timestamp;
+   rpt_vstring(depth,
+         "Total elapsed milliseconds (nanoseconds):          %10"PRIu64"  (%13"PRIu64")",
          elapsed_nanos / (1000*1000),
          elapsed_nanos);
 }

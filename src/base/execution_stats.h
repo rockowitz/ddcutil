@@ -79,7 +79,7 @@ void log_io_call(
         uint64_t             end_time_nanos);
 
 #define RECORD_IO_EVENT(event_type, cmd_to_time)  { \
-   long _start_time = cur_realtime_nanosec(); \
+   uint64_t _start_time = cur_realtime_nanosec(); \
    cmd_to_time; \
    log_io_call(event_type, __func__, _start_time, cur_realtime_nanosec()); \
 }
