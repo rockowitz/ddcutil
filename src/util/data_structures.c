@@ -205,17 +205,19 @@ bool bva_sorted_eq(Byte_Value_Array bva1, Byte_Value_Array bva2) {
 /** Returns the bytes from a **Byte_Value_Array**.
  *
  * @param bva **Byte_Value_Array** instance
- * @return pointer to newly allocate memory containing bytes
+ * @return pointer to bytes within
  *
  * @remark
  * The length of the bytes returned must be obtained from **bva_length()**.
  * Alternatively, consider returning a **Buffer**.
+ * @remark
+ * Caller should not free the returned pointer.
  */
-// n. caller must free() result
 Byte * bva_bytes(Byte_Value_Array bva) {
    GByteArray* ga = (GByteArray*) bva;
-   Byte * result = calloc(ga->len, sizeof(guint8));
-   memcpy(result, ga->data, ga->len);
+   // Byte * result = calloc(ga->len, sizeof(guint8));
+   // memcpy(result, ga->data, ga->len);
+   Byte * result = ga->data;
    return result;
 }
 
