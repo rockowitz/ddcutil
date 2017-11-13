@@ -285,7 +285,7 @@ driver_name_list_find_prefix(
    Driver_Name_Node * curnode = head;
    while (curnode  && !str_starts_with(curnode->driver_name, driver_prefix) )
          curnode = curnode->next;
-   DBGMSG("driver_prefix=%s, returning %p", driver_prefix, curnode);
+   // DBGMSG("driver_prefix=%s, returning %p", driver_prefix, curnode);
    return curnode;
 }
 
