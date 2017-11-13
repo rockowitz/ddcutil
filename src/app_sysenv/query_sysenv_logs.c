@@ -347,6 +347,7 @@ void probe_logs(Env_Accumulator * accum) {
    if (log_terms != all_terms)
       ntsa_free(log_terms, false);
    ntsa_free(all_terms, false);
+   ntsa_free(drivers_plus_addl_matches, false);
 }
 
 
