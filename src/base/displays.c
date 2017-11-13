@@ -936,7 +936,8 @@ int hiddev_name_to_number(char * hiddev_name) {
       if (strlen(p) > 0) {
          // hiddev_number unchanged if error
          // n str_to_int() allows leading whitespace, not worth checking
-         str_to_int(p, &hiddev_number);
+         bool ok = str_to_int(p, &hiddev_number);
+         assert(ok);    // make coverity happy
       }
    }
    // DBGMSG("hiddev_name = |%s|, returning: %d", hiddev_name, hiddev_number);
