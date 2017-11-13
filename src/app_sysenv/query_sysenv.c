@@ -634,7 +634,7 @@ void final_analysis(Env_Accumulator * accum, int depth) {
    else {
       if (accum->cur_user_all_devi2c_rw) {   // n. will be true if no /dev/i2c devices exist
          rpt_label(d1, "Current user has RW access to all /dev/i2c-n devices.");
-         rpt_label(d1, "Skipping futher checks.");
+         rpt_label(d1, "Skipping further checks.");
          rpt_nl();
          disclaimer = true;
       }
