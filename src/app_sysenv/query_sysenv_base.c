@@ -125,7 +125,8 @@ void sysenv_rpt_file_first_line(char * fn, char * title, int depth) {
 bool sysenv_show_one_file(char * dir_name, char * simple_fn, bool verbose, int depth) {
    bool result = false;
    char fqfn[PATH_MAX+2];
-   strcpy(fqfn,dir_name);
+   // strcpy(fqfn,dir_name);
+   g_strlcpy(fqfn, dir_name, PATH_MAX);  // make coverity happy
    if (!str_ends_with(dir_name, "/"))
       strcat(fqfn,"/");
    assert(strlen(fqfn) + strlen(simple_fn) <= PATH_MAX);   // for Coverity
