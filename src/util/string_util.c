@@ -531,11 +531,27 @@ int ntsa_length(Null_Terminated_String_Array string_array) {
    return ndx;
 }
 
+
+/** Creates a new **Null_Terminated_String_Array** from 2 existing instances.
+ *  The result contains all the strings of the first array, followed by all
+ *  the strings of the second.
+ *
+ *  @param a1  first instance
+ *  @param s2  second instance
+ *  @param dup if true, the pointers in the output array point to newly
+ *                      allocated strings
+ *             if false, the pointers in the output array point to the
+ *                      original strings.
+ *
+ *  @return newly allocate **Null_Terminated_String_Array**.
+ */
 Null_Terminated_String_Array ntsa_join(
       Null_Terminated_String_Array a1,
       Null_Terminated_String_Array a2,
       bool dup)
 {
+   assert(a1);
+   assert(a2);
    int ct = ntsa_length(a1) + ntsa_length(a2);
    Null_Terminated_String_Array result = calloc((ct+1), sizeof(char *));
    char ** to = result;
