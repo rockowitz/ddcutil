@@ -205,7 +205,6 @@ void env_accumulator_report(Env_Accumulator * accum, int depth) {
                   (ndx == 0) ? "" : " ",
                   bytes[ndx]);
       }
-      bva_free(bytes);
    }
    assert(strlen(buf) < bufsz);
    rpt_vstring(d1, "%-30s %s", "/dev/i2c device numbers:", buf);
