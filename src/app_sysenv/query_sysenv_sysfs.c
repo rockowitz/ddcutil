@@ -290,6 +290,7 @@ void each_video_device_i2c(char * dirname, char * fn, void * accumulator, int de
       snprintf(cur_dir, PATH_MAX, "%s/%s", dirname, fn);
       char * name = read_sysfs_attr_w_default(cur_dir, "name","", false);
       rpt_vstring(depth, "I2C device:          %-10s name: %s", fn, name);
+      free(name);
    }
 }
 
@@ -475,6 +476,7 @@ void each_video_pci_device(
          // list associated I2C devices
          dir_foreach(cur_dir_name, NULL, each_video_device_i2c, NULL, d1);
       }
+      free(boot_vga);
 
    }
 
