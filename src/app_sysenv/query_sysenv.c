@@ -310,6 +310,7 @@ static void check_i2c_dev_module(Env_Accumulator * accum) {
 
    bool module_required = !only_nvidia_or_fglrx(video_driver_list);
    if (!module_required) {
+      rpt_nl();
       rpt_vstring(0,"Using only proprietary nvidia or fglrx driver. Module i2c_dev not required.");
       // if (output_level < DDCA_OL_VERBOSE)
       accum->module_i2c_dev_needed = false;
@@ -331,16 +332,16 @@ static void check_i2c_dev_module(Env_Accumulator * accum) {
    accum->module_i2c_dev_loaded = is_loaded;
       // DBGMSF(debug, "is_loaded=%d", is_loaded);
    if (!is_builtin)
-      rpt_vstring(1,"Module %-16s is %sloaded", "i2c_dev", (is_loaded) ? "" : "NOT ");
+      rpt_vstring(1,"Module %s is %sloaded", "i2c_dev", (is_loaded) ? "" : "NOT ");
 
    if (bva_length(accum->dev_i2c_device_numbers) == 0 && !is_builtin && !is_loaded && module_required) {
       rpt_nl();
       if (!only_nvidia_or_fglrx(video_driver_list)) {
          rpt_vstring(0, "No /dev/i2c devices found, but module i2c_dev is not loaded.");
-         rpt_vstring(0, "Suggestion:");
-         rpt_vstring(1, "Manually load module i2c-dev using the command \"modprobe i2c-dev\"");
-         rpt_vstring(1,  "If this solves the problem, put an entry in directory /etc/modules-load.c");
-         rpt_vstring(1, "that will cause i2c-dev to be loaded.  Type \"man modules-load.d\" for details");
+         // rpt_vstring(0, "Suggestion:");
+         // rpt_vstring(1, "Manually load module i2c-dev using the command \"modprobe i2c-dev\"");
+         // rpt_vstring(1,  "If this solves the problem, put an entry in directory /etc/modules-load.c");
+         // rpt_vstring(1, "that will cause i2c-dev to be loaded.  Type \"man modules-load.d\" for details");
          rpt_nl();
       }
    }
@@ -416,7 +417,7 @@ static void driver_specific_tests(struct driver_name_node * driver_list) {
    rpt_vstring(0,"Performing driver specific checks...");
    bool found_driver_specific_checks = false;
 
-   if (found_driver(driver_list, "nvidia")) {
+   if (driver_name_list_find_prefix(driver_list, "nvidia")) {
       found_driver_specific_checks = true;
       rpt_nl();
       rpt_vstring(0,"Checking for special settings for proprietary Nvidia driver ");
@@ -424,7 +425,7 @@ static void driver_specific_tests(struct driver_name_node * driver_list) {
       execute_shell_cmd_rpt("grep -iH i2c /etc/X11/xorg.conf /etc/X11/xorg.conf.d/*", 1);
    }
 
-   if (found_driver(driver_list, "fglrx")) {
+   if (driver_name_list_find_prefix(driver_list, "fglrx")) {
       found_driver_specific_checks = true;
       rpt_nl();
       rpt_vstring(0,"Performing ADL specific checks...");
@@ -467,7 +468,7 @@ void query_x11() {
       // printf(" Output name: %s -> %p\n", prec->output_name, prec->edid);
       // hex_dump(prec->edid, 128);
       rpt_vstring(1, "xrandr output: %s", prec->output_name);
-      rpt_vstring(2, "Raw EDID:");
+      rpt_label  (2, "Raw EDID:");
       rpt_hex_dump(prec->edidbytes, 128, 2);
       Parsed_Edid * parsed_edid = create_parsed_edid(prec->edidbytes);
       if (parsed_edid) {
@@ -479,7 +480,7 @@ void query_x11() {
          free_parsed_edid(parsed_edid);
       }
       else {
-         rpt_vstring(2, "Unable to parse EDID");
+         rpt_label(2, "Unable to parse EDID");
          // printf(" Unparsable EDID for output name: %s -> %p\n", prec->output_name, prec->edidbytes);
          // hex_dump(prec->edidbytes, 128);
       }
@@ -589,64 +590,98 @@ void final_analysis(Env_Accumulator * accum, int depth) {
    int d1 = depth + 1;
    int d2 = depth + 2;
    int d3 = depth + 3;
-   int suggestion_ct = 0;
+
+   // for testing:
+   // accum->dev_i2c_common_group_name = NULL;  // for test
+   // accum->module_i2c_dev_loaded = false;
+   // accum->cur_user_all_devi2c_rw = false;
 
    bool odd_groups = accum->dev_i2c_common_group_name &&
                     !streq(accum->dev_i2c_common_group_name, "root") &&
                     !streq(accum->dev_i2c_common_group_name, "i2c");
 
+   bool disclaimer = false;
+   int suggestion_ct = 0;
    rpt_vstring(depth, "Configuration suggestions:");
 
-   if (odd_groups)
+   if (odd_groups) {
       rpt_multiline(d1, "",
                         "/dev/i2c devices have non-standard or varying group names.",
                         "Suggestions are incomplete.",
+                        "",
                         NULL);
+      disclaimer = true;
+   }
 
    // TODO: Also compare dev_i2c_devices vs sys_bus_i2c_devices ?
    if (bva_length(accum->dev_i2c_device_numbers) == 0 &&
        accum->module_i2c_dev_needed &&
        !accum->module_i2c_dev_loaded)
    {
+      rpt_vstring(d1, "Issue %d:", ++suggestion_ct);
+      rpt_label  (d2, "No /dev/i2c devices found.");
+      rpt_vstring(d2, "%sI2C devices exist in /sys/bus/i2c", (accum->sysfs_i2c_devices_exist) ? "" : "No ");
+      rpt_label  (d2, "Module dev-i2c is required.");
+      rpt_label  (d2, "Module dev-i2c is not loaded");
+      rpt_label  (d1, "Suggestion:");
+      rpt_label  (d2, "Manually load module i2c-dev using the command:");
+      rpt_label  (d3, "sudo modprobe i2c-dev");
+      rpt_label  (d2,  "If this solves the problem, put an entry in directory /etc/modules-load.c");
+      rpt_label  (d2, "that will cause i2c-dev to be loaded.  Type \"man modules-load.d\" for details");
       rpt_nl();
-      rpt_vstring(d1, "Suggestion %d:", ++suggestion_ct);
-      rpt_vstring(d2, "No /dev/i2c devices found, and module i2c_dev is not loaded.");
-      rpt_vstring(d2, "Manually load module i2c-dev using the command \"modprobe i2c-dev\"");
-      rpt_vstring(d2,  "If this solves the problem, put an entry in directory /etc/modules-load.c");
-      rpt_vstring(d2, "that will cause i2c-dev to be loaded.  Type \"man modules-load.d\" for details");
    }
 
-   if (!accum->cur_user_all_devi2c_rw) {
-      // TODO: case of cur_user_all_dev_i2c_rw == false but
-      //               cur_user_any_dev_i2c_rw == true
-
-      if (!accum->group_i2c_exists) {
+   else {
+      if (accum->cur_user_all_devi2c_rw) {   // n. will be true if no /dev/i2c devices exist
+         rpt_label(d1, "Current user has RW access to all /dev/i2c-n devices.");
+         rpt_label(d1, "Skipping futher checks.");
          rpt_nl();
-         rpt_vstring(d1, "Suggestion %d:", ++suggestion_ct);
-         rpt_vstring(d2, "Create group i2c, assign all /dev/i2c devices to group i2c,");
-         rpt_vstring(d2, "and add the current user to group i2c");
-         rpt_vstring(d2, "To create group i2c, use command:");
-         rpt_vstring(d3, "sudo groupadd --system i2c");
+         disclaimer = true;
       }
-      if (accum->group_i2c_exists && !accum->all_dev_i2c_has_group_i2c) {
-         // TODO handle odd case of all_dev_i2c_has_group_i2c == false but
-         //                         any_dev_i2c_has_group_i2c == true
-         rpt_nl();
-         rpt_vstring(d1, "Suggestion %d:", ++suggestion_ct);
-         rpt_vstring(d2, "Assign /dev/i2c devices to group i2c by adding rule to /etc/udev/rules.d");
-      }
+      else {
 
-      if (!accum->cur_user_in_group_i2c) {
-         rpt_nl();
-         rpt_vstring(d1, "Suggestion %d:", ++suggestion_ct);
-         rpt_vstring(d2, "Current user is not a member of group i2c");
-         rpt_vstring(d2, "Execute command:");
-         rpt_vstring(d3, "sudo usermod -G i2c -a <username>");
+         // TODO: case of cur_user_all_dev_i2c_rw == false but
+         //               cur_user_any_dev_i2c_rw == true
+
+         if (!accum->group_i2c_exists) {
+            rpt_vstring(d1, "Issue %d:", ++suggestion_ct);
+            rpt_label  (d2, "Group i2c does exist.");
+            rpt_label  (d1, "Suggestion:");
+            rpt_label  (d2, "Create group i2c. To create group i2c, use command:");
+            rpt_label  (d3, "sudo groupadd --system i2c");
+            rpt_label  (d2, "Assign /dev/i2c devices to group i2c by adding a rule to /etc/udev/rules.d");
+            rpt_label  (d2, "Add the current user to group i2c:");
+            rpt_label  (d3,  "sudo usermod -G i2c -a <username>");
+            rpt_nl();
+         }
+         else {  // group i2c exists
+            if (!accum->all_dev_i2c_has_group_i2c) {
+               // TODO handle odd case of all_dev_i2c_has_group_i2c == false but
+               //                         any_dev_i2c_has_group_i2c == true
+               rpt_vstring(d1, "Issue %d:", ++suggestion_ct);
+               rpt_label  (d2, "/dev/i2c-n devices not assigned to group i2c");
+               rpt_label  (d1, "Suggestion:");
+               rpt_label  (d2, "Assign /dev/i2c-n devices to group i2c by adding or editing a rule in /etc/udev/rules.d");
+               rpt_nl();
+            }
+            // handle case of /dev/i2c devics have group i2c, but not RW
+
+            if (!accum->cur_user_in_group_i2c) {
+               rpt_vstring(d1, "Issue %d:", ++suggestion_ct);
+               rpt_label  (d2, "Current user is not a member of group i2c");
+               rpt_label  (d1, "Suggestion:");
+               rpt_label  (d2, "Execute command:");
+               rpt_vstring(d3, "sudo usermod -G i2c -a %s", accum->cur_uname);
+               rpt_nl();
+            }
+         }
       }
    }
 
-   if (suggestion_ct == 0)
+   if (suggestion_ct == 0 && !disclaimer) {
       rpt_vstring(d1, "None");
+      rpt_nl();
+   }
 }
 
 //
@@ -678,11 +713,11 @@ void query_sysenv() {
    rpt_nl();
    rpt_vstring(0,"*** Primary Check 2: Check that /dev/i2c-* exist and writable ***");
    rpt_nl();
-   Byte_Value_Array i2c_device_numbers = identify_i2c_devices();
-   accumulator->dev_i2c_device_numbers = i2c_device_numbers;
-   assert(i2c_device_numbers);
-   rpt_vstring(0, "Identified %d I2C devices", bva_length(accumulator->dev_i2c_device_numbers));
-   rpt_nl();
+   accumulator->dev_i2c_device_numbers = identify_i2c_devices();
+   assert(accumulator->dev_i2c_device_numbers);
+   // redundant
+   // rpt_vstring(0, "Identified %d I2C devices", bva_length(accumulator->dev_i2c_device_numbers));
+   // rpt_nl();
    check_i2c_devices(accumulator);
 
    rpt_nl();
