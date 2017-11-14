@@ -267,6 +267,41 @@ Device_Ids read_device_ids2(char * cur_dir_name) {
    return result;
 }
 
+#ifdef FUTURE_FRAGMENT
+
+void report_modalias(char * cur_dir_name, int depth) {
+   char * modalias = read_sysfs_attr(cur_dir_name, "modalias", true);
+               // printf("modalias: %s\n", modalias);
+   if (modalias) {
+      char * colonpos = strchr(modalias, ':');
+      assert(colonpos);                // coverity complains that strchr() might return NULL
+      if (!colonpos) {
+         rpt_vstring(depth, "Unexpected modalias value: %s", modalias);
+      }
+      if (memcmp(modalias, "pci", (colonpos-1)-modalias) == 0) {
+         // TO DO: properly refactor
+         Device_Ids = read_device_ids2(cur_dir_name);
+         // TOD: report it
+      }
+      else if (memcmp(modalias, "of", (colonpos-1)-modalias) == 0) {
+         // format:  of:NnameTtypeCclass
+         //     type may be "<NULL>"
+         //      Cclass is optional
+         //   may repeat?
+
+         char * re = "^of:N(.*)T(.*)
+
+      }
+      else {
+         rpt_vstring(depth, "modialias: %s", modalias);
+      }
+
+
+
+   }
+}
+#endif
+
 
 /** Reports one directory whose name is of the form /sys/bus/pci/devices/nnnn:nn:nn.n/driver
  *
