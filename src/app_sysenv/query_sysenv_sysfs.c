@@ -289,7 +289,7 @@ void report_modalias(char * cur_dir_name, int depth) {
          //      Cclass is optional
          //   may repeat?
 
-         char * re = "^of:N(.*)T(.*)
+         char * re = "^of:N(.*)T(.*)"
 
       }
       else {
@@ -524,13 +524,13 @@ bye:
 }
 
 
-/** Process attributes of a /sys/bus/platform/driver
+/** Process attributes of a /sys/bus/platform/drivers directory
  *
  *  Only processes entry for driver vc4_v3d.
  *
  *  Called by #query_card_and_driver_using_sysfs() via #dir_foreach()
  *
- *  \param  dirname   always /sys/bus/pci/device
+ *  \param  dirname   always /sys/bus/platform/drivers
  *  \param  fn        driver name
  *  \param  accum     pointer to accumulator struct, may be NULL
  *  \param  depth     logical indentation depth
@@ -538,7 +538,7 @@ bye:
  *  \remark
  *  Adds detected driver to list of detected drivers
  */
-void each_arm_device(char * dirname, char * fn, void * accumulator, int depth) {
+void each_arm_driver(char * dirname, char * fn, void * accumulator, int depth) {
    bool debug = false;
    DBGMSF(debug, "Starting. dirname=%s, fn=%s, accumulator=%p", dirname, fn, accumulator);
 
@@ -570,7 +570,7 @@ void query_card_and_driver_using_sysfs(Env_Accumulator * accum) {
    if (accum->is_arm) {
       DBGMSF(debug, "Machine architecture is %s.  Skipping /sys/bus/pci checks.", accum->architecture);
       char * platform_drivers_dir_name = "/sys/bus/platform/drivers";
-      dir_foreach(platform_drivers_dir_name, /*fn_filter*/ NULL, each_arm_device, accum, 0);
+      dir_foreach(platform_drivers_dir_name, /*fn_filter*/ NULL, each_arm_driver, accum, 0);
    }
    else {
       char * pci_devices_dir_name = "/sys/bus/pci/devices";
