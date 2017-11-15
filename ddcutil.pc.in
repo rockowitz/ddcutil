@@ -9,5 +9,5 @@ URL: http://www.ddcutil.com
 Version: @VERSION@
 Requires: @REQUIRED_PACKAGES@ 
 # Libs and Cflags not needed since using default locations
-Libs: -L${libdir} 
+Libs: -L${libdir} -lddcutil
 Cflags: -I${includedir}
