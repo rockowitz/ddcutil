@@ -67,7 +67,7 @@ make DESTDIR=%{buildroot} install
 %dir     %{_docdir}/%{name}
 %doc     %{_docdir}/%{name}/AUTHORS
 %license %{_docdir}/%{name}/COPYING
-%doc     %{_docdir}/%{name}/NEWS 
+%doc     %{_docdir}/%{name}/NEWS.md
 %doc     %{_docdir}/%{name}/README.md
 
 %{_datadir}/%{name}

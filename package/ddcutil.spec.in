@@ -348,7 +348,8 @@ rm -rf %{buildroot}
 %dir     %{_docdir}/packages/%{name}
 %doc     %{_docdir}/packages/%{name}/AUTHORS
 %license %{_docdir}/packages/%{name}/COPYING
-%doc     %{_docdir}/packages/%{name}/NEWS
+%doc     %{_docdir}/packages/%{name}/NEWS.md
+%doc     %{_docdir}/packages/%{name}/ChangeLog
 %doc     %{_docdir}/packages/%{name}/README.md
 %else
 
@@ -357,7 +358,8 @@ rm -rf %{buildroot}
 %dir     %{_docdir}/%{name}
 %doc     %{_docdir}/%{name}/AUTHORS
 %license %{_docdir}/%{name}/COPYING
-%doc     %{_docdir}/%{name}/NEWS
+%doc     %{_docdir}/%{name}/NEWS.md
+%doc     %{_docdir}/%{name}/ChangeLog
 %doc     %{_docdir}/%{name}/README.md
 %endif
 
