@@ -1,2 +1,0 @@
-?package(ddcutil):needs="text" section="Applications/System/Hardware"\
-  title="ddcutil" command="/usr/bin/ddcutil"
