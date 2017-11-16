@@ -71,16 +71,12 @@ AC_CONFIG_FILES([
 	data/Makefile 
 	docs/Makefile
 	docs/doxygen/Makefile
-	package/Makefile 
-	package/fedora/Makefile
-	package/ddcutil.spec 
-	package/fedora/ddcutil.spec
   ddcutil.pc
   ],
  )
-AC_CONFIG_FILES(package/upload_obsrpm, [chmod +x package/upload_obsrpm] )
-dnl AC_CONFIG_FILES(package/build_dpkg, [chmod +x package/build_dpkg] )
-dnl cannot chmod on build_dpkg, upload_obsrpm, since they will not exist within dpkg build environment
+dnl AC_CONFIG_FILES(package/upload_obsrpm, [chmod +x package/upload_obsrpm] )
+dnl dnl AC_CONFIG_FILES(package/build_dpkg, [chmod +x package/build_dpkg] )
+dnl dnl cannot chmod on build_dpkg, upload_obsrpm, since they will not exist within dpkg build environment
 
 dnl not working, why?
 # AC_DEFINE_UNQUOTED([DDCUTIL_MAJOR_VERSION], [$ddcutil_major_version], [ddcutil major version])

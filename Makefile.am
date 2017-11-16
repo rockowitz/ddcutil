@@ -26,7 +26,7 @@ endif
 
 doc_DATA = AUTHORS COPYING NEWS.md README.md ChangeLog
 
-SUBDIRS = src man data package $(DOXYDIR)
+SUBDIRS = src man data  $(DOXYDIR)
 
 if ENABLE_SHARED_LIB_COND
 pkgconfigdir = $(libdir)/pkgconfig
