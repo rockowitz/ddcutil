@@ -634,7 +634,7 @@ void final_analysis(Env_Accumulator * accum, int depth) {
    else {
       if (accum->cur_user_all_devi2c_rw) {   // n. will be true if no /dev/i2c-N devices exist
          rpt_label(d1, "Current user has RW access to all /dev/i2c-N devices.");
-         rpt_label(d1, "Skipping further checks.");
+         rpt_label(d1, "Skipping further group and permission checks.");
          rpt_nl();
          msg_issued = true;
       }
@@ -659,6 +659,8 @@ void final_analysis(Env_Accumulator * accum, int depth) {
             rpt_label  (d2, "Assign /dev/i2c-N devices to group i2c by adding a rule to /etc/udev/rules.d");
             rpt_label  (d2, "Add the current user to group i2c:");
             rpt_label  (d3,  "sudo usermod -G i2c -a <username>");
+            rpt_label  (d2, "After this, you will have to logout and login again.");
+            rpt_label  (d2, "The changes to the user's group list are not read until a new login.");
             rpt_nl();
             msg_issued = true;
          }
@@ -693,6 +695,8 @@ void final_analysis(Env_Accumulator * accum, int depth) {
                rpt_label  (d1, "Suggestion:");
                rpt_label  (d2, "Execute command:");
                rpt_vstring(d3, "sudo usermod -G i2c -a %s", accum->cur_uname);
+               rpt_label  (d2, "After this, you will have to logout and login again.");
+               rpt_label  (d2, "The changes to the user's group list are not read until a new login.");
                rpt_nl();
                msg_issued = true;
             }
