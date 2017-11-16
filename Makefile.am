@@ -125,7 +125,7 @@ show:
 
 
 
-.PHONY: srcrpm rpms fsrcrpm frpms mockbuild obsrpm obsrpmtest dpkg pdebuild obsdeb obsdebtest ppa clang show
+.PHONY: clang show
 
 
 install-data-local:
