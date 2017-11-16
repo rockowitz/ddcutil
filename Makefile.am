@@ -41,27 +41,6 @@ libddcdocdir = $(datarootdir)/doc/libddcutil
 libddcdoc_DATA = AUTHORS
 endif
 
-
-RPM = rpm
-
-rpms srcrpm frpms fsrcrpm obsrpm obsrpmtest: dist
-	@echo "----> Makefile: $@"
-	(cd package && $(MAKE) $(AM_MAKEFLAGS) $@) || exit 1
-
-dpkg pdebuild obsdeb obsdebtest:  dist
-	echo "---> Makefile: $@"
-	(cd package && $(MAKE) $(AM_MAKEFLAGS) $@) || exit 1
-
-
-ppa: dist 
-	echo "---> Makefile: ppa"
-	(cd package && $(MAKE) $(AM_MAKEFLAGS) $@) || exit 1
-
-
-mentors: dist 
-	echo "---> Makefile: mentors"
-	(cd package && $(MAKE) $(AM_MAKEFLAGS) $@) || exit 1
-
 # Copied and adapted from colord
 # is calling autogen.sh within this file dangerous?
 clang:
