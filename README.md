@@ -7,7 +7,7 @@ brightness and color levels.
 ddcutil uses DDC/CI to communicate with monitors implementing MCCS 
 (Monitor Control Command Set) over I2C.  Normally, the video driver for the
 monitor exposes the I2C channel as devices named /dev/i2c-n.  There is also
-preliminary support for monitors (such as Apple Cinema and Eizo ColorEdge)
+psupport for monitors (such as Apple Cinema and Eizo ColorEdge)
 that implement MCCS using a USB connection. 
 
 A particular use case for ddcutil is as part of color profile management. 
@@ -29,15 +29,15 @@ man 1 ddcutil
 
 ## Feedback Needed
 
-This is an initial release, and feedback would be very helpful.   
-There are many aspects can vary from system to system.  In particular:
+Many aspects of ddcutil can vary from system to system.  In particular:
 
 - The build environment can vary. 
 - I2C implementation can vary with card, monitor, and driver.  
-  There is variation in MCCS interpretation.  
+- There is variation in MCCS interpretation.  
 - I2C is an inherently unreliable protocol, requiring retry management.  
 
-In particular: 
+Given the wide variability, it is not possible to test all combinations. 
+Some questions that arise:
 
 - Were changes required to build ddcutil?
 - Does it work with given card, driver, and monitor?  I'm not particularly 
@@ -45,14 +45,13 @@ In particular:
   less than 2.0).  On the other hand, I'm very interested in how ddcutil
   handles monitors implementing MCCS V3.0, as the V3.0 specific code has not 
   been tested. In particular, does ddcutil properly read Table type features? 
-- And of course, is the program useful?   Does it merit further development?  
-  What features does it need?
+- What features should be added? 
 
 Command `ddcutil interrogate` collects maximal information about the 
 installation environment, video card and driver, and monitor capabilities.   
 I'd appreciate it if you could redirect its output to a file and send the file
-to me. This will help diagnose problems and identify features that should be 
-implemented.
+to me. This will help to document the variability of monitor DDC/CI implementations,
+diagnose problems, and identify features that should be implemented.
 
 
 ### Installation Diagnostics
