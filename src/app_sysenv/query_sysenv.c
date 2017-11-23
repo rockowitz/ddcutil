@@ -625,7 +625,7 @@ void final_analysis(Env_Accumulator * accum, int depth) {
       rpt_label  (d1, "Suggestion:");
       rpt_label  (d2, "Manually load module i2c-dev using the command:");
       rpt_label  (d3, "sudo modprobe i2c-dev");
-      rpt_label  (d2,  "If this solves the problem, put an entry in directory /etc/modules-load.c");
+      rpt_label  (d2,  "If this solves the problem, put an entry in directory /etc/modules-load.d");
       rpt_label  (d2, "that will cause i2c-dev to be loaded.  Type \"man modules-load.d\" for details");
       rpt_nl();
       msg_issued = true;
