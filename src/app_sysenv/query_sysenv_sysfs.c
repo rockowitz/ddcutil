@@ -31,6 +31,7 @@
 #include <assert.h>
 #include <dirent.h>
 #include <errno.h>
+#include <glib-2.0/glib.h>
 #include <stdbool.h>
 #include <string.h>
 #include <sys/types.h>
@@ -673,7 +674,8 @@ void query_drm_using_sysfs() {
    DIR           *d;
    char          *dname;
    char          dnbuf[90];
-   char          cardname[10];
+   const int     cardname_sz = 20;
+   char          cardname[cardname_sz];
 
    rpt_vstring(0,"Examining /sys/class/drm...");
    dname = "/sys/class/drm";
@@ -686,7 +688,7 @@ void query_drm_using_sysfs() {
       closedir(d);
       int cardno = 0;
       for (;;cardno++) {
-         snprintf(cardname, 10, "card%d", cardno);
+         snprintf(cardname, cardname_sz, "card%d", cardno);
          snprintf(dnbuf, 80, "/sys/class/drm/%s", cardname);
          d = opendir(dnbuf);
          if (!d) {
@@ -699,23 +701,23 @@ void query_drm_using_sysfs() {
                // char cur_fn[100];
                if (str_starts_with(dent->d_name, cardname)) {
                   rpt_vstring(1, "Found connector: %s", dent->d_name);
-                 char cur_dir_name[100];
-                 sprintf(cur_dir_name, "%s/%s", dnbuf, dent->d_name);
+                  char cur_dir_name[PATH_MAX];
+                  g_snprintf(cur_dir_name, PATH_MAX, "%s/%s", dnbuf, dent->d_name);
 
-                 // char * s_dpms = read_sysfs_attr(cur_dir_name, "dpms", false);
-                 // rpt_vstring(1, "%s/dpms: %s", cur_dir_name, s_dpms);
+                  // char * s_dpms = read_sysfs_attr(cur_dir_name, "dpms", false);
+                  // rpt_vstring(1, "%s/dpms: %s", cur_dir_name, s_dpms);
 
-                 // char * s_enabled = read_sysfs_attr(cur_dir_name, "enabled", false);
-                 //  rpt_vstring(1, "%s/enabled: %s", cur_dir_name, s_enabled);
+                  // char * s_enabled = read_sysfs_attr(cur_dir_name, "enabled", false);
+                  //  rpt_vstring(1, "%s/enabled: %s", cur_dir_name, s_enabled);
 
-                 char * s_status = read_sysfs_attr(cur_dir_name, "status", false);
-                 rpt_vstring(2, "%s/status: %s", cur_dir_name, s_status);
-                 // edid present iff status == "connected"
-                 if (streq(s_status, "connected")) {
-                    GByteArray * gba_edid = read_binary_sysfs_attr(
-                          cur_dir_name, "edid", 128, /*verbose=*/ false);
+                  char * s_status = read_sysfs_attr(cur_dir_name, "status", false);
+                  rpt_vstring(2, "%s/status: %s", cur_dir_name, s_status);
+                  // edid present iff status == "connected"
+                  if (streq(s_status, "connected")) {
+                     GByteArray * gba_edid = read_binary_sysfs_attr(
+                           cur_dir_name, "edid", 128, /*verbose=*/ false);
 
-                    // hex_dump(gba_edid->data, gba_edid->len);
+                     // hex_dump(gba_edid->data, gba_edid->len);
 
 #ifdef UNNEEDED
                     rpt_vstring(2, "Raw EDID:");
