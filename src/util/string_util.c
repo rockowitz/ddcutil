@@ -92,15 +92,18 @@ bool streq(const char * s1, const char * s2) {
  * @param  minchars  minimum number of characters that must match
  * @return true/false
  */
-bool is_abbrev(const char * value, const char * longname, int minchars) {
+bool is_abbrev(const char * value, const char * longname, size_t  minchars) {
    bool result = false;
-   int vlen = strlen(value);
-   if ( vlen >= minchars &&
-        vlen <= strlen(longname) &&
-        memcmp(value, longname, vlen) == 0
-      )
-      result = true;
-
+   if (value && longname) {
+      int vlen = strlen(value);
+      if ( vlen >= minchars &&
+           vlen <= strlen(longname) &&
+           memcmp(value, longname, vlen) == 0   // n. returns 0 if vlen == 0
+         )
+      {
+         result = true;
+      }
+   }
    // printf("(%s) value=|%s|, longname=|%s| returning %d\n", __func__, value, longname, result);
    return result;
 }
@@ -110,13 +113,17 @@ bool is_abbrev(const char * value, const char * longname, int minchars) {
  *
  * @param  value_to_test  value to examine
  * @param  prefix         prefix to check for
- * @return true/flase
+ * @return true/false
  *
  * @remark Consider using lib function g_str_prefix() ?? instead
+ *
+ * @remark
+ * Returns **false** if either **value_to_test** or **prefix** are null
  */
 bool str_starts_with(const char * value_to_test, const char * prefix) {
-   return is_abbrev(prefix, value_to_test, strlen(prefix));
+   return value_to_test && prefix && is_abbrev(prefix, value_to_test, strlen(prefix));
 }
+
 
 /** Tests if string ends with a string.
  *
