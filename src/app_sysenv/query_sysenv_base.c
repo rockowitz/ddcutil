@@ -183,6 +183,7 @@ void env_accumulator_free(Env_Accumulator * accum) {
    }
 }
 
+
 /*** Debugging report for the **Env_Accumulator** struct
  *
  *   @param accum  pointer to data structure
@@ -190,63 +191,50 @@ void env_accumulator_free(Env_Accumulator * accum) {
  */
 void env_accumulator_report(Env_Accumulator * accum, int depth) {
    int d1 = depth+1;
-   rpt_title("Env_Accumulator:", depth);
-   rpt_vstring(d1, "%-30s %s", "architecture:", (accum->architecture) ? accum->architecture : "");
-   rpt_vstring(d1, "%-30s %s", "distributor_id", (accum->distributor_id) ? accum->distributor_id : "");
 
-   const int bufsz = 200;
-   char buf[bufsz];
-   buf[0] = '\0';
-   if (accum->dev_i2c_device_numbers) {
-      int len = bva_length(accum->dev_i2c_device_numbers);
-      Byte * bytes = bva_bytes(accum->dev_i2c_device_numbers);
-      for (int ndx = 0; ndx < len; ndx++) {
-         snprintf(buf + strlen(buf), bufsz-strlen(buf), "%s%d",
-                  (ndx == 0) ? "" : " ",
-                  bytes[ndx]);
-      }
-   }
-   assert(strlen(buf) < bufsz);
-   rpt_vstring(d1, "%-30s %s", "/dev/i2c device numbers:", buf);
+   char * dev_i2c_device_numbers_string = "";
+   if (accum->dev_i2c_device_numbers)
+      dev_i2c_device_numbers_string = bva_as_string(accum->dev_i2c_device_numbers, /*as_hex*/ false, " ");
 
-   char * driver_names = NULL;
+   char * driver_names = "";
    if (accum->driver_list)
       driver_names = driver_name_list_string(accum->driver_list);
-   rpt_vstring(d1, "%-30s %s", "Drivers detected:", (driver_names) ? driver_names : "");
-   if (driver_names)
-      free(driver_names);
-   rpt_vstring(d1, "%-30s %s", "sysfs_i2c_devices_exist:", bool_repr(accum->sysfs_i2c_devices_exist));
 
-   buf[0] = '\0';
-   if (accum->sys_bus_i2c_device_numbers) {
-   int len = bva_length(accum->sys_bus_i2c_device_numbers);
-      Byte * bytes = bva_bytes(accum->sys_bus_i2c_device_numbers);
-      for (int ndx = 0; ndx < len; ndx++) {
-         snprintf(buf + strlen(buf), bufsz-strlen(buf),
-                  "%s%d",
-                  (ndx == 0) ? "" : " ",
-                  bytes[ndx]);
-      }
-   }
-   assert(strlen(buf) < bufsz);
-   rpt_vstring(d1, "%-30s %s", "/sys/bus/i2c device numbers:", buf);
+   char * sys_bus_i2c_device_numbers_string = "";
+   if (accum->sys_bus_i2c_device_numbers)
+      sys_bus_i2c_device_numbers_string = bva_as_string(accum->sys_bus_i2c_device_numbers, /*as_hex*/ false, " ");
+
+   rpt_label(depth, "Env_Accumulator:");
+   rpt_vstring(d1, "%-30s %s", "architecture:",  (accum->architecture)   ? accum->architecture   : "");
+   rpt_vstring(d1, "%-30s %s", "distributor_id", (accum->distributor_id) ? accum->distributor_id : "");
+   rpt_vstring(d1, "%-30s %s", "Drivers detected:",          driver_names);
+   rpt_vstring(d1, "%-30s %s", "/dev/i2c device numbers:",   dev_i2c_device_numbers_string);
+   rpt_vstring(d1, "%-30s %s", "sysfs_i2c_devices_exist:",   bool_repr(accum->sysfs_i2c_devices_exist));
+   rpt_vstring(d1, "%-30s %s", "/sys/bus/i2c device numbers:", sys_bus_i2c_device_numbers_string);
    rpt_vstring(d1, "%-30s %s", "dev_i2c_devices_required:",  bool_repr(accum->dev_i2c_devices_required));
+   rpt_vstring(d1, "%-30s %s", "module_i2c_dev_needed:",     bool_repr(accum->module_i2c_dev_needed));
+   rpt_vstring(d1, "%-30s %s", "module_i2c_dev_builtin:",    bool_repr(accum->module_i2c_dev_builtin));
+   rpt_vstring(d1, "%-30s %s", "loadable_i2c_dev_exists:",   bool_repr(accum->loadable_i2c_dev_exists));
+   rpt_vstring(d1, "%-30s %s", "i2c_dev_loaded_or_builtin:", bool_repr(accum->i2c_dev_loaded_or_builtin));
    rpt_vstring(d1, "%-30s %s", "group_i2c_checked:",         bool_repr(accum->group_i2c_checked));
    rpt_vstring(d1, "%-30s %s", "group_i2c_exists:",          bool_repr(accum->group_i2c_exists));
    rpt_vstring(d1, "%-30s %s", "dev_i2c_common_group_name:", accum->dev_i2c_common_group_name);
+   rpt_vstring(d1, "%-30s %s", "all_dev_i2c_has_group_i2c:", bool_repr(accum->all_dev_i2c_has_group_i2c));
+   rpt_vstring(d1, "%-30s %s", "any_dev_i2c_has_group_i2c:", bool_repr(accum->any_dev_i2c_has_group_i2c));
+   rpt_vstring(d1, "%-30s %s", "all_dev_i2c_is_group_rw:",   bool_repr(accum->all_dev_i2c_is_group_rw));
+   rpt_vstring(d1, "%-30s %s", "any_dev_i2c_is_group_rw:",   bool_repr(accum->any_dev_i2c_is_group_rw));
    rpt_vstring(d1, "%-30s %s", "cur_uname:",                 accum->cur_uname);
    rpt_vstring(d1, "%-30s %d", "cur_uid:",                   accum->cur_uid);
    rpt_vstring(d1, "%-30s %s", "cur_user_in_group_i2c:",     bool_repr(accum->cur_user_in_group_i2c));
    rpt_vstring(d1, "%-30s %s", "cur_user_any_devi2c_rw:",    bool_repr(accum->cur_user_any_devi2c_rw));
    rpt_vstring(d1, "%-30s %s", "cur_user_all_devi2c_rw:",    bool_repr(accum->cur_user_all_devi2c_rw));
-   rpt_vstring(d1, "%-30s %s", "module_i2c_dev_needed:",     bool_repr(accum->module_i2c_dev_needed));
-   rpt_vstring(d1, "%-30s %s", "module_i2c_dev_builtin:",    bool_repr(accum->module_i2c_dev_builtin));
-   rpt_vstring(d1, "%-30s %s", "loadable_i2c_dev_exists:",   bool_repr(accum->loadable_i2c_dev_exists));
-   rpt_vstring(d1, "%-30s %s", "module_i2c_dev_loaded:",     bool_repr(accum->module_i2c_dev_loaded));
-   rpt_vstring(d1, "%-30s %s", "all_dev_i2c_has_group_i2c:", bool_repr(accum->all_dev_i2c_has_group_i2c));
-   rpt_vstring(d1, "%-30s %s", "any_dev_i2c_has_group_i2c:", bool_repr(accum->any_dev_i2c_has_group_i2c));
-   rpt_vstring(d1, "%-30s %s", "all_dev_i2c_is_group_rw:",   bool_repr(accum->all_dev_i2c_is_group_rw));
-   rpt_vstring(d1, "%-30s %s", "any_dev_i2c_is_group_rw:",   bool_repr(accum->any_dev_i2c_is_group_rw));
+
+   if (accum->dev_i2c_device_numbers)
+      free(dev_i2c_device_numbers_string);
+   if (accum->sys_bus_i2c_device_numbers)
+      free(sys_bus_i2c_device_numbers_string);
+   if (accum->driver_list)
+      free(driver_names);
 }
 
 

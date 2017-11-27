@@ -84,7 +84,7 @@ typedef struct {
    bool               module_i2c_dev_needed;
    bool               loadable_i2c_dev_exists;
    bool               module_i2c_dev_builtin;
-   bool               module_i2c_dev_loaded;     // loaded or built-in
+   bool               i2c_dev_loaded_or_builtin;     // loaded or built-in
    bool               any_dev_i2c_is_group_rw;
    bool               all_dev_i2c_is_group_rw;
 } Env_Accumulator;

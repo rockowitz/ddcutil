@@ -294,12 +294,11 @@ static bool is_module_builtin(char * module_name) {
 }
 
 
-static bool is_module_loadable(char * module_name) {
+static bool is_module_loadable(char * module_name, int depth) {
    bool debug = true;
    DBGMSF("Starting. module_name=%s", module_name);
 
    bool result = false;
-   int depth = 0;
 
    struct utsname utsbuf;
    int rc = uname(&utsbuf);
@@ -335,83 +334,67 @@ static bool is_module_loadable(char * module_name) {
 }
 
 
-
 /* Checks if module i2c_dev is required and if so whether it is loaded.
  * Reports the result.
  *
  * \param  accum  collects environment information
+ * \param  depth  logical indentation depth
  *
  * \remark
  * Sets #accum->module_i2c_dev_needed
  *      #accum->module_i2c_dev_loaded
- *
+ *      #accum->loadable_i2c_dev_exists
  */
-static void check_i2c_dev_module(Env_Accumulator * accum) {
-   rpt_vstring(0,"Checking for module i2c_dev...");
-   struct driver_name_node * video_driver_list = accum->driver_list;  // for transition
-
+static void check_i2c_dev_module(Env_Accumulator * accum, int depth) {
+   int d0 = depth;
+   int d1 = depth+1;
+   rpt_vstring(d0,"Checking for module i2c_dev...");
    DDCA_Output_Level output_level = get_output_level();
 
    accum->module_i2c_dev_needed = true;
-   accum->module_i2c_dev_loaded = false;
+   accum->i2c_dev_loaded_or_builtin = false;
 
    bool is_builtin = is_module_builtin("i2c-dev");
    accum->module_i2c_dev_builtin = is_builtin;
-   rpt_vstring(0,"   Module %s is %sbuilt into kernel", "i2c_dev", (is_builtin) ? "" : "NOT ");
+   rpt_vstring(d1,"Module %s is %sbuilt into kernel", "i2c-dev", (is_builtin) ? "" : "NOT ");
 
-   accum->loadable_i2c_dev_exists = is_module_loadable("i2c-dev");
-
-   bool module_required = !only_nvidia_or_fglrx(video_driver_list);
-   if (!module_required) {
-      rpt_nl();
-      rpt_vstring(0,"Using only proprietary nvidia or fglrx driver. Module i2c_dev not required.");
-      // if (output_level < DDCA_OL_VERBOSE)
-      accum->module_i2c_dev_needed = false;
-      return;
-      // rpt_vstring(0,"Remaining i2c_dev detail is purely informational.");
-   }
-
-   if (is_builtin) {
-      accum->module_i2c_dev_loaded = true;
-      return;
-      // if (output_level < DDCA_OL_VERBOSE)
-      //    return;
-      // if (module_required)  // no need for duplicate message
-      //    rpt_vstring(0,"Remaining i2c_dev detail is purely informational.");
-   }
+   accum->loadable_i2c_dev_exists = is_module_loadable("i2c-dev", d1);
+   if (!is_builtin)
+      rpt_vstring(d1,"Loadable i2c-dev module %sfound", (accum->loadable_i2c_dev_exists) ? "" : "NOT ");
 
    bool is_loaded = is_module_loaded_using_sysfs("i2c_dev");
-   accum->module_i2c_dev_loaded = is_loaded;
-      // DBGMSF(debug, "is_loaded=%d", is_loaded);
+   accum->i2c_dev_loaded_or_builtin = is_loaded || is_builtin;
    if (!is_builtin)
-      rpt_vstring(1,"Module %s is %sloaded", "i2c_dev", (is_loaded) ? "" : "NOT ");
+      rpt_vstring(d1,"Module %s is %sloaded", "i2c_dev", (is_loaded) ? "" : "NOT ");
 
-   if (bva_length(accum->dev_i2c_device_numbers) == 0 && !is_builtin && !is_loaded && module_required) {
+   bool module_required = !only_nvidia_or_fglrx(accum->driver_list);
+   if (!module_required) {
       rpt_nl();
-      if (!only_nvidia_or_fglrx(video_driver_list)) {
-         rpt_vstring(0, "No /dev/i2c-N devices found, but module i2c_dev is not loaded.");
-         // rpt_vstring(0, "Suggestion:");
-         // rpt_vstring(1, "Manually load module i2c-dev using the command \"modprobe i2c-dev\"");
-         // rpt_vstring(1,  "If this solves the problem, put an entry in directory /etc/modules-load.c");
-         // rpt_vstring(1, "that will cause i2c-dev to be loaded.  Type \"man modules-load.d\" for details");
+      rpt_vstring(d0,"Using only proprietary nvidia or fglrx driver. Module i2c_dev not required.");
+      accum->module_i2c_dev_needed = false;
+   }
+   else if (!is_builtin) {
+      if (bva_length(accum->dev_i2c_device_numbers) == 0 && !is_loaded ) {
+         rpt_nl();
+         rpt_vstring(d0, "No /dev/i2c-N devices found, and module i2c_dev is not loaded.");
          rpt_nl();
       }
-   }
-   if ( (!is_loaded && !is_builtin) || output_level >= DDCA_OL_VERBOSE) {
-      rpt_nl();
-      rpt_vstring(0,"Check that kernel module i2c_dev is being loaded by examining files where this would be specified...");
-      execute_shell_cmd_rpt("grep -H i2c[-_]dev "
-                        "/etc/modules "
-                        "/etc/modules-load.d/*conf "
-                        "/run/modules-load.d/*conf "
-                        "/usr/lib/modules-load.d/*conf "
-                        , 1);
-      rpt_nl();
-      rpt_vstring(0,"Check for any references to i2c_dev in /etc/modprobe.d ...");
-      execute_shell_cmd_rpt("grep -H i2c[-_]dev "
-                        "/etc/modprobe.d/*conf "
-                        "/run/modprobe.d/*conf "
-                        , 1);
+      if ( !is_loaded  || output_level >= DDCA_OL_VERBOSE) {
+         rpt_nl();
+         rpt_vstring(0,"Check that kernel module i2c_dev is being loaded by examining files where this would be specified...");
+         execute_shell_cmd_rpt("grep -H i2c[-_]dev "
+                           "/etc/modules "
+                           "/etc/modules-load.d/*conf "
+                           "/run/modules-load.d/*conf "
+                           "/usr/lib/modules-load.d/*conf "
+                           , d1);
+         rpt_nl();
+         rpt_vstring(0,"Check for any references to i2c_dev in /etc/modprobe.d ...");
+         execute_shell_cmd_rpt("grep -H i2c[-_]dev "
+                           "/etc/modprobe.d/*conf "
+                           "/run/modprobe.d/*conf "
+                           , d1);
+      }
    }
 }
 
@@ -645,7 +628,7 @@ void final_analysis(Env_Accumulator * accum, int depth) {
 
    // for testing:
    // accum->dev_i2c_common_group_name = NULL;
-   // accum->module_i2c_dev_loaded = false;
+   // accum->module_i2c_dev_loaded_or_builtin = false;
    // accum->cur_user_all_devi2c_rw = false;
    // accum->all_dev_i2c_is_group_rw = false;
 
@@ -667,7 +650,7 @@ void final_analysis(Env_Accumulator * accum, int depth) {
    // TODO: Also compare dev_i2c_devices vs sys_bus_i2c_devices ?
    if (bva_length(accum->dev_i2c_device_numbers) == 0 &&
        accum->module_i2c_dev_needed &&
-       !accum->module_i2c_dev_loaded)
+       !accum->i2c_dev_loaded_or_builtin)
    {
       rpt_label  (d1, "Issue:");
       rpt_label  (d2, "No /dev/i2c-N devices found.");
@@ -811,7 +794,7 @@ void query_sysenv() {
    rpt_nl();
    rpt_vstring(0,"*** Primary Check 3: Check that module i2c_dev is loaded ***");
    rpt_nl();
-   check_i2c_dev_module(accumulator);
+   check_i2c_dev_module(accumulator, 0);
 
    rpt_nl();
    rpt_vstring(0,"*** Primary Check 4: Driver specific checks ***");
