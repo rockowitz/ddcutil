@@ -240,6 +240,8 @@ void env_accumulator_report(Env_Accumulator * accum, int depth) {
    rpt_vstring(d1, "%-30s %s", "cur_user_any_devi2c_rw:",    bool_repr(accum->cur_user_any_devi2c_rw));
    rpt_vstring(d1, "%-30s %s", "cur_user_all_devi2c_rw:",    bool_repr(accum->cur_user_all_devi2c_rw));
    rpt_vstring(d1, "%-30s %s", "module_i2c_dev_needed:",     bool_repr(accum->module_i2c_dev_needed));
+   rpt_vstring(d1, "%-30s %s", "module_i2c_dev_builtin:",    bool_repr(accum->module_i2c_dev_builtin));
+   rpt_vstring(d1, "%-30s %s", "loadable_i2c_dev_exists:",   bool_repr(accum->loadable_i2c_dev_exists));
    rpt_vstring(d1, "%-30s %s", "module_i2c_dev_loaded:",     bool_repr(accum->module_i2c_dev_loaded));
    rpt_vstring(d1, "%-30s %s", "all_dev_i2c_has_group_i2c:", bool_repr(accum->all_dev_i2c_has_group_i2c));
    rpt_vstring(d1, "%-30s %s", "any_dev_i2c_has_group_i2c:", bool_repr(accum->any_dev_i2c_has_group_i2c));
