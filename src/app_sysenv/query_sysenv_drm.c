@@ -62,6 +62,9 @@
 
 #include "query_sysenv_drm.h"
 
+// Trace class for this file
+static Trace_Group TRACE_GROUP = TRC_ENV;
+
 #ifdef REF  // local copy for reference
 #define DRM_BUS_PCI   0
 
@@ -159,6 +162,8 @@ static void probe_open_device_using_libdrm(int fd, int depth) {
 
    rpt_nl();
 
+   DBGTRC(debug, TRACE_GROUP, "Starting. fd=%d", fd);
+
    // succeeds if run as root, fails w errno=EACCES(13) if not
    // but no effect on subsequent failures for nvidia
    // reviewed code in drm_ioctl.c.  ioctl calls would fail with EACCES
@@ -176,7 +181,7 @@ static void probe_open_device_using_libdrm(int fd, int depth) {
    // if returns NULL, errno is as set from the underlying ioctl()
    drmVersionPtr vp = drmGetVersion(fd);
    if (vp) {
-      rpt_vstring(d1, "Drm driver version information:");
+      rpt_vstring(d1, "DRM driver version information:");
       report_drmVersion(vp, d2);
       drmFreeVersion(vp);
    }
@@ -200,7 +205,7 @@ static void probe_open_device_using_libdrm(int fd, int depth) {
    // uses successive DRM_IOCTL_GET_UNIQUE calls
    busid = drmGetBusid(fd);
    if (busid) {
-      rpt_vstring(d1, "DRM Busid:  %s");
+      rpt_vstring(d1, "DRM Busid:  %s", busid);
       // drmFreeBusid(busid);
    }
    else {
@@ -474,6 +479,8 @@ static void probe_open_device_using_libdrm(int fd, int depth) {
    }
 
 bye:
+   DBGTRC(debug, TRACE_GROUP, "Done");
+   rpt_nl();
    return;
 }
 
