@@ -221,6 +221,31 @@ Byte * bva_bytes(Byte_Value_Array bva) {
    return result;
 }
 
+/** Returns a string representation of the data in a **Byte_Value_Array.
+ *
+ *  @param bva  **Byte_Value_Array** instance
+ *  @param as_hex if true, use 2 character hex representation,
+ *                if false, use 1-3 character integer representation
+ *  @param sep  separator string between values, if NULL then none
+ *  @return string representation of data, caller must free
+ */
+char * bva_as_string(Byte_Value_Array bva, bool as_hex, char * sep) {
+   GByteArray* ga = (GByteArray*) bva;
+   int len = ga->len;
+   Byte * bytes = ga->data;
+   int sepsz = (sep) ? strlen(sep) : 0;
+   int alloc_sz = len * (3+sepsz) + 1;  // slightly large, but simpler to compute
+   char * buf = calloc(1, alloc_sz);
+   for (int ndx = 0; ndx < len; ndx++) {
+      char * cursep = (ndx > 0 && sep) ? cursep = sep : "";
+      if (as_hex)
+         snprintf(buf + strlen(buf), alloc_sz-strlen(buf), "%s%02x", cursep, bytes[ndx]);
+      else
+         snprintf(buf + strlen(buf), alloc_sz-strlen(buf), "%s%d", cursep, bytes[ndx]);
+   }
+   return buf;
+}
+
 
 /** Destroy a **Byte_Value_Array**.
  *

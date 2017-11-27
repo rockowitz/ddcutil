@@ -53,6 +53,7 @@ Byte             bva_get(Byte_Value_Array bva, int ndx);
 bool             bva_contains(Byte_Value_Array bva, Byte item);
 bool             bva_sorted_eq(Byte_Value_Array bva1, Byte_Value_Array bva2);
 Byte *           bva_bytes(Byte_Value_Array bva);
+char *           bva_as_string(Byte_Value_Array bva, bool as_hex, char * sep);
 void             bva_free(Byte_Value_Array bva);
 void             bva_report(Byte_Value_Array ids, char * title);
 bool             bva_store_bytehex_list(Byte_Value_Array bva, char * start, int len);
