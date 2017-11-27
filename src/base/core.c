@@ -444,6 +444,7 @@ Value_Name_Title_Table trace_group_table = {
       VNT(TRC_DDC, "DDC"),
       VNT(TRC_USB, "USB"),
       VNT(TRC_TOP, "TOP"),
+      VNT(TRC_ENV, "ENV"),
       VNT_END
 };
 const int trace_group_ct = ARRAY_SIZE(trace_group_table)-1;

@@ -144,6 +144,7 @@ typedef enum {
  TRC_DDC  = 0x10,
  TRC_USB  = 0x08,
  TRC_TOP  = 0x04,
+ TRC_ENV  = 0x02,
 
  TRC_NEVER  = 0x00,
  TRC_ALWAYS = 0xff
