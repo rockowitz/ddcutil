@@ -146,31 +146,39 @@ static void report_endian(int depth) {
  * \param  accum  pointer to struct in which information is returned
  */
 static void query_base_env(Env_Accumulator * accum) {
-   rpt_vstring(0, "ddcutil version: %s", BUILD_VERSION);
+   int d0 = 0;
+   int d1 = d0+1;
+
+   rpt_vstring(d0, "ddcutil version: %s", BUILD_VERSION);
    rpt_nl();
 
    sysenv_rpt_file_first_line("/proc/version", NULL, 0);
 
-   char * expected_architectures[] = {"x86_64", "i386", "i686", "armv7l", NULL};
-   char * architecture   = execute_shell_cmd_one_line_result("arch");      // alt: use uname -m
-   char * distributor_id = execute_shell_cmd_one_line_result("lsb_release -s -i");  // e.g. Ubuntu, Raspbian
+   char * expected_architectures[] = {"x86_64", "i386", "i686", "armv7l", "aarch64", NULL};
+   // n. alternative command "arch" not found on Arch Linux
+   // uname -m  machine hardware name
+   // uname -p  processor type (non-portable)
+   // uname -i  hardware platform (non-portable)
+   accum->architecture   = execute_shell_cmd_one_line_result("uname -m");
+   accum->distributor_id = execute_shell_cmd_one_line_result("lsb_release -s -i");  // e.g. Ubuntu, Raspbian
    char * release        = execute_shell_cmd_one_line_result("lsb_release -s -r");
    rpt_nl();
-   rpt_vstring(0, "Architecture:     %s", architecture);
-   rpt_vstring(0, "Distributor id:   %s", distributor_id);
-   rpt_vstring(0, "Release:          %s", release);
+   rpt_vstring(d0, "Architecture:     %s", accum->architecture);
+   rpt_vstring(d0, "Distributor id:   %s", accum->distributor_id);
+   rpt_vstring(d0, "Release:          %s", release);
 
-   if ( ntsa_find(expected_architectures, architecture) >= 0) {
-      rpt_vstring(0, "Found a known architecture");
+   if ( ntsa_find(expected_architectures, accum->architecture) >= 0) {
+      rpt_vstring(d0, "Found a known architecture");
    }
    else {
-      rpt_vstring(0, "Unexpected architecture %s.  Please report.", architecture);
+      rpt_vstring(d0, "Unexpected architecture %s.  Please report.", accum->architecture);
    }
 
-   accum->architecture   = architecture;
-   accum->distributor_id = distributor_id;
-   accum->is_raspbian    = streq(accum->distributor_id, "Raspbian");
-   accum->is_arm         = str_starts_with(accum->architecture, "arm");
+   accum->is_raspbian = accum->distributor_id && streq(accum->distributor_id, "Raspbian");
+   accum->is_arm      = accum->architecture   &&
+                        ( str_starts_with(accum->architecture, "arm") ||
+                          str_starts_with(accum->architecture, "aarch")
+                        );
    free(release);
 
 #ifdef REDUNDANT
@@ -182,32 +190,33 @@ static void query_base_env(Env_Accumulator * accum) {
 #endif
 
    rpt_nl();
-   sysenv_rpt_file_first_line("/proc/cmdline", NULL, 0);
+   sysenv_rpt_file_first_line("/proc/cmdline", NULL, d0);
 
    if (get_output_level() >= DDCA_OL_VERBOSE) {
       rpt_nl();
-      rpt_vstring(0,"Processor information as reported by lscpu:");
+      rpt_vstring(d0,"Processor information as reported by lscpu:");
         bool ok = execute_shell_cmd_rpt("lscpu", 1);
         if (!ok) {   // lscpu should always be there, but just in case:
            rpt_vstring(1, "Command lscpu not found");
            rpt_nl();
-           rpt_title("Processor information from /proc/cpuinfo:", 0);
-           execute_shell_cmd_rpt( "cat /proc/cpuinfo | grep vendor_id | uniq", 1);
-           execute_shell_cmd_rpt( "cat /proc/cpuinfo | grep \"cpu family\" | uniq", 1);
-           execute_shell_cmd_rpt( "cat /proc/cpuinfo | grep \"model[[:space:]][[:space:]]\" | uniq",  1);   //  "model"
-           execute_shell_cmd_rpt( "cat /proc/cpuinfo | grep \"model name\" | uniq",  1);   // "model name"
+           rpt_title("Processor information from /proc/cpuinfo:", d0);
+           // uniq because entries for each processor of a mulit-processor cpu
+           execute_shell_cmd_rpt( "cat /proc/cpuinfo | grep vendor_id | uniq", d1);
+           execute_shell_cmd_rpt( "cat /proc/cpuinfo | grep \"cpu family\" | uniq", d1);
+           execute_shell_cmd_rpt( "cat /proc/cpuinfo | grep \"model[[:space:]][[:space:]]\" | uniq",  d1);   //  "model"
+           execute_shell_cmd_rpt( "cat /proc/cpuinfo | grep \"model name\" | uniq",  d1);   // "model name"
        }
 
        rpt_nl();
         if (accum->is_arm) {
-           rpt_vstring(0, "Skipping dmidecode checks on architecture %s.", accum->architecture);
+           rpt_vstring(d0, "Skipping dmidecode checks on architecture %s.", accum->architecture);
         }
         else {
            query_dmidecode();
         }
 
       rpt_nl();
-      report_endian(0);
+      report_endian(d0);
    }
 
 }
@@ -285,6 +294,47 @@ static bool is_module_builtin(char * module_name) {
 }
 
 
+static bool is_module_loadable(char * module_name) {
+   bool debug = true;
+   DBGMSF("Starting. module_name=%s", module_name);
+
+   bool result = false;
+   int depth = 0;
+
+   struct utsname utsbuf;
+   int rc = uname(&utsbuf);
+   assert(rc == 0);
+
+   char module_name_ko[100];
+   g_snprintf(module_name_ko, 100, "%s.ko", module_name);
+
+   char dirname[PATH_MAX];
+   g_snprintf(dirname, PATH_MAX, "/lib/modules/%s/kernel/drivers/i2c", utsbuf.release);
+
+   struct dirent *dent;
+     DIR           *d;
+     d = opendir(dirname);
+     if (!d) {
+        rpt_vstring(depth,"Unable to open directory %s: %s", dirname, strerror(errno));
+     }
+     else {
+        while ((dent = readdir(d)) != NULL) {
+           // DBGMSG("%s", dent->d_name);
+           if (!streq(dent->d_name, ".") && !streq(dent->d_name, "..") ) {
+              if (str_starts_with(dent->d_name, module_name_ko)) {
+                 result = true;
+                 break;
+              }
+           }
+        }
+        closedir(d);
+     }
+
+   DBGMSF(debug, "Done. Returning: %s", bool_repr(result));
+   return result;
+}
+
+
 
 /* Checks if module i2c_dev is required and if so whether it is loaded.
  * Reports the result.
@@ -306,7 +356,10 @@ static void check_i2c_dev_module(Env_Accumulator * accum) {
    accum->module_i2c_dev_loaded = false;
 
    bool is_builtin = is_module_builtin("i2c-dev");
+   accum->module_i2c_dev_builtin = is_builtin;
    rpt_vstring(0,"   Module %s is %sbuilt into kernel", "i2c_dev", (is_builtin) ? "" : "NOT ");
+
+   accum->loadable_i2c_dev_exists = is_module_loadable("i2c-dev");
 
    bool module_required = !only_nvidia_or_fglrx(video_driver_list);
    if (!module_required) {
@@ -317,7 +370,6 @@ static void check_i2c_dev_module(Env_Accumulator * accum) {
       return;
       // rpt_vstring(0,"Remaining i2c_dev detail is purely informational.");
    }
-
 
    if (is_builtin) {
       accum->module_i2c_dev_loaded = true;
