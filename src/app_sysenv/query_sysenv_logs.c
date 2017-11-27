@@ -376,7 +376,8 @@ void probe_config_files(Env_Accumulator * accum) {
       execute_shell_cmd_rpt("dkms status", 1 /* depth */);
       rpt_nl();
       rpt_vstring(0,"Kernel I2C configuration settings:");
-      execute_shell_cmd_rpt("grep I2C /boot/config-$(uname -r)", 1 /* depth */);
+   // execute_shell_cmd_rpt("grep I2C /boot/config-$(uname -r)", 1 /* depth */);
+      execute_shell_cmd_rpt("grep I2C_CHARDEV /boot/config-$(uname -r)", 1 /* depth */);
       rpt_nl();
       rpt_vstring(0,"Kernel AMDGPU configuration settings:");
       execute_shell_cmd_rpt("grep AMDGPU /boot/config-$(uname -r)", 1 /* depth */);
