@@ -24,7 +24,7 @@ endif
 
 
 
-doc_DATA = AUTHORS COPYING NEWS.md README.md ChangeLog
+# doc_DATA = AUTHORS COPYING NEWS.md README.md ChangeLog
 
 SUBDIRS = src man data  $(DOXYDIR)
 
