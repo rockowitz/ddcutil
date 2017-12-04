@@ -179,7 +179,7 @@ bool str_all_printable(const char * s) {
  *  @retval >= 0 index of first entry in list for which the comparison function succeeds
  *  @retval -1   no match
  */
-int matches_by_func(const char * s, char ** match_list, String_Comp_Func comp_func) {
+int matches_by_func(const char * s, const char ** match_list, String_Comp_Func comp_func) {
    int result = -1;
    int ndx = 0;
    for (ndx=0; match_list[ndx] != NULL; ndx++) {
@@ -201,7 +201,7 @@ int matches_by_func(const char * s, char ** match_list, String_Comp_Func comp_fu
  *  @retval >= 0  index of matching array entry
  *  @retval -1    no match
  */
-int exactly_matches_any(const char * s, char ** match_list) {
+int exactly_matches_any(const char * s, const char ** match_list) {
    return matches_by_func(s, match_list, streq);
 }
 
@@ -215,7 +215,7 @@ int exactly_matches_any(const char * s, char ** match_list) {
  *  @retval >= 0 index of matching prefix
  *  @retval -1   not found
  */
-int starts_with_any(const char * s, char ** match_list) {
+int starts_with_any(const char * s, const char ** match_list) {
    return matches_by_func(s, match_list, str_starts_with);
 }
 

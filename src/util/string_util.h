@@ -79,9 +79,9 @@ char * strcat_new(char * s1, char * s2);
 bool   sbuf_append(char * buf, int bufsz, char * sepstr, char * nextval);
 
 typedef bool (*String_Comp_Func)(const char * a, const char * b);
-int matches_by_func(    const char * word, char ** match_list, String_Comp_Func  comp_func);
-int exactly_matches_any(const char * word, char ** match_list);
-int starts_with_any(    const char * word, char ** match_list);
+int matches_by_func(    const char * word, const char ** match_list, String_Comp_Func  comp_func);
+int exactly_matches_any(const char * word, const char ** match_list);
+int starts_with_any(    const char * word, const char ** match_list);
 
 typedef char** Null_Terminated_String_Array;
 void ntsa_free(  Null_Terminated_String_Array string_array, bool free_strings);
