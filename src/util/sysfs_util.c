@@ -33,6 +33,7 @@
 #include <string.h>
 
 #include "file_util.h"
+#include "string_util.h"
 
 #include "sysfs_util.h"
 
@@ -160,4 +161,97 @@ is_module_loaded_using_sysfs(
       printf("(%s) module_name = %s, returning %d", __func__, module_name, found);
    return found;
 }
+
+
+// The following functions would more properly be located in a file in base,
+// as they are not really generic sysfs utilities, but in the interest of
+// not proliferating files they are included here.
+
+
+/** Gets the sysfs name of an I2C device,
+ *  i.e. the value of /sys/bus/in2c/devices/i2c-n/name
+ *
+ *  \param  busno   I2C bus number
+ *  \return newly allocated string containing attribute value,
+ *          NULL if not found
+ *
+ *  \remark
+ *  Caller is responsible for freeing returned value
+ */
+char * get_i2c_device_sysfs_name(int busno) {
+   char workbuf[50];
+   snprintf(workbuf, 50, "/sys/bus/i2c/devices/i2c-%d/name", busno);
+   char * name = file_get_first_line(workbuf, /*verbose */ false);
+   // DBGMSG("busno=%d, returning: %s", busno, bool_repr(result));
+   return name;
+}
+
+#ifdef UNUSED
+static bool is_smbus_device_using_sysfs(int busno) {
+#ifdef OLD
+   char workbuf[50];
+   snprintf(workbuf, 50, "/sys/bus/i2c/devices/i2c-%d/name", busno);
+   char * name = file_get_first_line(workbuf, /*verbose */ false);
+#endif
+   char * name = get_i2c_device_sysfs_name(busno);
+
+   bool result = false;
+   if (name && str_starts_with(name, "SMBus"))
+      result = true;
+   free(name);
+   // DBGMSG("busno=%d, returning: %s", busno, bool_repr(result));
+   return result;
+}
+#endif
+
+
+bool ignorable_i2c_device_sysfs_name(const char * name) {
+   bool result = false;
+   const char * ignorable_prefixes[] = {
+         "SMBus",
+         "soc:i2cdsi",
+         "smu",          // Mac G5, probing causes system hang
+         "mac-io",       // Mac G5
+         "u4",           // Mac G5
+         NULL };
+   if (name) {
+#ifdef OLD
+      if (str_starts_with(name, "SMBus"))
+         result = true;
+      else if (streq(name, "soc:i2cdsi"))     // Raspberry Pi
+         result = true;
+#endif
+      if (starts_with_any(name, ignorable_prefixes) >= 0)
+         result = true;
+
+   }
+   // printf("(%s) name=|%s|, returning: %s\n", __func__, name, bool_repr(result));
+   return result;
+}
+
+
+
+
+/** Checks if an I2C bus cannot be a DDC/CI connected monitor
+ *  and therefore can be ignored, e.g. if it is an SMBus device.
+ *
+ *  \param  busno  I2C bus number
+ *  \return true if ignorable, false if not
+ *
+ *  \remark
+ *  This function avoids unnecessary calls to i2cdetect, which can be
+ *  slow for SMBus devices and fills the system logs with errors
+ */
+bool is_ignorable_i2c_device(int busno) {
+   bool result = false;
+   char * name = get_i2c_device_sysfs_name(busno);
+   if (name)
+      result = ignorable_i2c_device_sysfs_name(name);
+
+   // printf("(%s) busno=%d, name=|%s|, returning: %s\n", __func__, busno, name, bool_repr(result));
+   free(name);   // safe if NULL
+   return result;
+}
+
+
 

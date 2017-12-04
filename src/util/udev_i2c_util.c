@@ -35,6 +35,7 @@
 
 #include "report_util.h"
 #include "string_util.h"
+#include "sysfs_util.h"
 #include "udev_util.h"
 
 #include "udev_i2c_util.h"
@@ -205,11 +206,11 @@ is_smbus_device_summary(GPtrArray * summaries, char * sbusno) {
 
 /** Gets the numbers of all non-SMBus I2C devices
  *
- *  \param  include_smbus  if true, do not exclude SMBus devices
+ *  \param  include_ignorable_devices  if true, do not exclude SMBus devices
  *  \return sorted #Byte_Value_Array of I2C device numbers
  */
 Byte_Value_Array
-get_i2c_device_numbers_using_udev(bool include_smbus) {
+get_i2c_device_numbers_using_udev(bool include_ignorable_devices) {
    bool debug = false;
    if (debug)
       printf("(%s) Starting.\n", __func__);
@@ -220,7 +221,7 @@ get_i2c_device_numbers_using_udev(bool include_smbus) {
    if (summaries) {
       for (int ndx = 0; ndx < summaries->len; ndx++) {
          Udev_Device_Summary * summary = g_ptr_array_index(summaries, ndx);
-         if ( !include_smbus && str_starts_with(summary->sysattr_name, "SMBus") )
+         if ( !include_ignorable_devices && ignorable_i2c_device_sysfs_name(summary->sysattr_name) )
             continue;
          int busno = udev_i2c_device_summary_busno(summary);
          assert(busno >= 0);

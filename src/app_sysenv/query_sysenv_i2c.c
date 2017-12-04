@@ -33,6 +33,7 @@
 #include "util/edid.h"
 #include "util/report_util.h"
 #include "util/string_util.h"
+#include "util/sysfs_util.h"
 
 #include "base/core.h"
 #include "base/ddc_errno.h"
@@ -47,8 +48,6 @@
 #include "query_sysenv_xref.h"
 
 #include "query_sysenv_i2c.h"
-
-
 
 
 // Auxiliary function for raw_scan_i2c_devices()

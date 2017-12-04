@@ -124,42 +124,6 @@ static unsigned h2uint(char * hval) {
 }
 
 
-/** Gets the sysfs name of an I2C device,
- *  i.e. the value of /sys/bus/in2c/devices/i2c-n/name
- *
- *  \param  busno   I2C bus number
- *  \return newly allocated string containing attribute value,
- *          NULL if not found
- *
- *  \remark
- *  Caller is responsible for freeing returned value
- */
-char * get_i2c_device_sysfs_name(int busno) {
-   char workbuf[50];
-   snprintf(workbuf, 50, "/sys/bus/i2c/devices/i2c-%d/name", busno);
-   char * name = file_get_first_line(workbuf, /*verbose */ false);
-   // DBGMSG("busno=%d, returning: %s", busno, bool_repr(result));
-   return name;
-}
-
-#ifdef UNUSED
-static bool is_smbus_device_using_sysfs(int busno) {
-#ifdef OLD
-   char workbuf[50];
-   snprintf(workbuf, 50, "/sys/bus/i2c/devices/i2c-%d/name", busno);
-   char * name = file_get_first_line(workbuf, /*verbose */ false);
-#endif
-   char * name = get_i2c_device_sysfs_name(busno);
-
-   bool result = false;
-   if (name && str_starts_with(name, "SMBus"))
-      result = true;
-   free(name);
-   // DBGMSG("busno=%d, returning: %s", busno, bool_repr(result));
-   return result;
-}
-#endif
-
 
 // Two ways to get the hex device identifiers.  Both are ugly.
 // Reading modalias requires extracting values from a single string.
@@ -791,26 +755,3 @@ void query_drm_using_sysfs() {
 }
 
 
-
-/** Checks if an I2C bus cannot be a DDC/CI connected monitor
- *  and therefore can be ignored, e.g. if it is an SMBus device.
- *
- *  \param  busno  I2C bus number
- *  \return true if ignorable, false if not
- *
- *  \remark
- *  This function avoids unnecessary calls to i2cdetect, which can be
- *  slow for SMBus devices and fills the system logs with errors
- */
-bool is_ignorable_i2c_device(int busno) {
-   bool result = false;
-   char * name = get_i2c_device_sysfs_name(busno);
-   if (name) {
-      if (str_starts_with(name, "SMBus"))
-         result = true;
-      else if (streq(name, "soc:i2cdsi"))     // Raspberry Pi
-         result = true;
-      free(name);
-   }
-   return result;
-}

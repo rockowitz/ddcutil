@@ -43,6 +43,5 @@ void query_card_and_driver_using_sysfs(Env_Accumulator * accum);
 void query_loaded_modules_using_sysfs();
 void query_sys_bus_i2c(Env_Accumulator * accum);
 void query_drm_using_sysfs();
-bool is_ignorable_i2c_device(int busno);
 
 #endif /* QUERY_SYSENV_SYSFS_H_ */

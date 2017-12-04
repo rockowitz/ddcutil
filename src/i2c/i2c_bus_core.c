@@ -43,6 +43,7 @@
 #include "util/file_util.h"
 #include "util/report_util.h"
 #include "util/string_util.h"
+#include "util/sysfs_util.h"
 #include "util/udev_i2c_util.h"
 
 #include "base/core.h"
@@ -676,51 +677,58 @@ void i2c_check_bus(Bus_Info * bus_info) {
    if (!(bus_info->flags & I2C_BUS_PROBED)) {
       DBGMSF(debug, "Probing");
       bus_info->flags |= I2C_BUS_PROBED;
-      file = i2c_open_bus(bus_info->busno, CALLOPT_ERR_MSG);  // returns if failure
 
-      if (file >= 0) {
-         bus_info->flags |= I2C_BUS_ACCESSIBLE;
-         Byte ddc_addr_flags = 0x00;
-         Status_Errno_DDC psc = i2c_detect_ddc_addrs_by_fd(file, &ddc_addr_flags);
-         if (psc != 0) {
-            DBGMSF(debug, "detect_ddc_addrs_by_fd() returned %d", psc);
-            f0printf(FERR, "Failure detecting bus addresses for /dev/i2c-%d: status code=%s\n",
-                           bus_info->busno, psc_desc(psc));
-            goto bye;
-         }
-         bus_info->flags |= ddc_addr_flags;
-         // DBGMSF(debug, "Calling i2c_get_functionality_flags_by_fd()...");
-         bus_info->functionality = i2c_get_functionality_flags_by_fd(file);
-         // DBGMSF(debug, "i2c_get_functionality_flags_by_fd() returned %lu", bus_info->functionality);
-         if (bus_info->flags & I2C_BUS_ADDR_0X50) {
-            // Have seen case of nouveau driver with Quadro card where
-            // there's a bus that has no monitor but responds to the X50 probe
-            // of detect_ddc_addrs_by_fd() and then returns a garbage EDID
-            // when the bytes are read in i2c_get_parsed_edid_by_fd()
-            // TODO: handle case of i2c_get_parsed_edid_by_fd() returning NULL
-            // but should never fail if detect_ddc_addrs_by_fd() succeeds
-            psc = i2c_get_parsed_edid_by_fd(file, &bus_info->edid);
+
+      // unnecessary, bus_info is already filtered
+      // probing hangs on PowerMac if i2c device is SMU
+      // if (!is_ignorable_i2c_device(bus_info->busno)) {
+
+         file = i2c_open_bus(bus_info->busno, CALLOPT_ERR_MSG);  // returns if failure
+
+         if (file >= 0) {
+            bus_info->flags |= I2C_BUS_ACCESSIBLE;
+            Byte ddc_addr_flags = 0x00;
+            Status_Errno_DDC psc = i2c_detect_ddc_addrs_by_fd(file, &ddc_addr_flags);
             if (psc != 0) {
-               DBGMSF(debug, "i2c_get_parsed_edid_by_fd() returned %d", psc);
-               f0printf(FERR, "Failure getting EDID for /dev/i2c-%d: status code=%s\n",
+               DBGMSF(debug, "detect_ddc_addrs_by_fd() returned %d", psc);
+               f0printf(FERR, "Failure detecting bus addresses for /dev/i2c-%d: status code=%s\n",
                               bus_info->busno, psc_desc(psc));
                goto bye;
             }
-            // bus_info->flags |= I2C_BUS_EDID_CHECKED;
-         }
-#ifdef NO
-         // test is being made in ddc_displays.c
-         if (bus_info->flags & I2C_BUS_ADDR_0X37) {
-            // have seen case where laptop display reports addr 37 active, but
-            // it doesn't respond to DDC
-            // TODO: sanity check for DDC goes here
-            // or make this check at a higher level, since I2c doesn't understand DDC
+            bus_info->flags |= ddc_addr_flags;
+            // DBGMSF(debug, "Calling i2c_get_functionality_flags_by_fd()...");
+            bus_info->functionality = i2c_get_functionality_flags_by_fd(file);
+            // DBGMSF(debug, "i2c_get_functionality_flags_by_fd() returned %lu", bus_info->functionality);
+            if (bus_info->flags & I2C_BUS_ADDR_0X50) {
+               // Have seen case of nouveau driver with Quadro card where
+               // there's a bus that has no monitor but responds to the X50 probe
+               // of detect_ddc_addrs_by_fd() and then returns a garbage EDID
+               // when the bytes are read in i2c_get_parsed_edid_by_fd()
+               // TODO: handle case of i2c_get_parsed_edid_by_fd() returning NULL
+               // but should never fail if detect_ddc_addrs_by_fd() succeeds
+               psc = i2c_get_parsed_edid_by_fd(file, &bus_info->edid);
+               if (psc != 0) {
+                  DBGMSF(debug, "i2c_get_parsed_edid_by_fd() returned %d", psc);
+                  f0printf(FERR, "Failure getting EDID for /dev/i2c-%d: status code=%s\n",
+                                 bus_info->busno, psc_desc(psc));
+                  goto bye;
+               }
+               // bus_info->flags |= I2C_BUS_EDID_CHECKED;
+            }
+   #ifdef NO
+            // test is being made in ddc_displays.c
+            if (bus_info->flags & I2C_BUS_ADDR_0X37) {
+               // have seen case where laptop display reports addr 37 active, but
+               // it doesn't respond to DDC
+               // TODO: sanity check for DDC goes here
+               // or make this check at a higher level, since I2c doesn't understand DDC
+
+            }
+   #endif
 
          }
-#endif
-
       }
-   }
+   // }
 
 bye:
    if (file >= 0)

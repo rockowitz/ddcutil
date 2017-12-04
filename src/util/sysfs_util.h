@@ -64,4 +64,16 @@ bool
 is_module_loaded_using_sysfs(
       const char * module_name);
 
+char *
+get_i2c_device_sysfs_name(
+      int busno);
+
+bool
+ignorable_i2c_device_sysfs_name(
+      const char * name);
+
+bool
+is_ignorable_i2c_device(
+      int busno);
+
 #endif /* SYSFS_UTIL_H_ */
