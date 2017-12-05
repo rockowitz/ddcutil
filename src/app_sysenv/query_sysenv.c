@@ -286,16 +286,21 @@ static bool is_module_builtin(char * module_name) {
    // DBGMSG("builtin2=%s", bool_repr(builtin2));
    result = builtin2;
 
-#ifdef OLD
-   DBGMSF(debug, "module_name = %s, returning %s", module_name, bool_repr(result));
-#endif
    DBGMSF(debug, "module_name = %s, returning %s", module_name, bool_repr(result));
    return result;
 }
 
 
+/* Checks if a loadable module exists
+ *
+ * Arguments:
+ *   module_name    simple module name, as it appears in the file system, e.g. i2c-dev,
+ *                  without .ko, .ko.xz
+ *
+ * Returns:         true/false
+ */
 static bool is_module_loadable(char * module_name, int depth) {
-   bool debug = true;
+   bool debug = false;
    DBGMSF("Starting. module_name=%s", module_name);
 
    bool result = false;
