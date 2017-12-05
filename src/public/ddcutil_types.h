@@ -34,6 +34,8 @@
 #define DDCUTIL_TYPES_H_
 
 /** \cond */
+#include <config.h>
+
 #include <linux/limits.h>
 #include <stdbool.h>
 #include <stdint.h>
