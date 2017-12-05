@@ -23,7 +23,7 @@
  * </endcopyright>
  */
 
-
+#include <config.h>
 
 #include <assert.h>
 #include <dirent.h>
