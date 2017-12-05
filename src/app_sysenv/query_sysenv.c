@@ -154,7 +154,7 @@ static void query_base_env(Env_Accumulator * accum) {
 
    sysenv_rpt_file_first_line("/proc/version", NULL, 0);
 
-   char * expected_architectures[] = {"x86_64", "i386", "i686", "armv7l", "aarch64", NULL};
+   char * expected_architectures[] = {"x86_64", "i386", "i686", "armv7l", "aarch64", "ppc64",  NULL};
    // n. alternative command "arch" not found on Arch Linux
    // uname -m  machine hardware name
    // uname -p  processor type (non-portable)
