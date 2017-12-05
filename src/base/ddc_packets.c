@@ -28,6 +28,8 @@
  */
 
 /** \cond */
+#include <config.h>
+
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -74,7 +76,6 @@ bool is_double_byte(Byte * pb) {
 // Checksums
 //
 
-
 #ifdef OLD
 Byte xor_bytes(Byte * bytes, int len) {
    Byte result = 0x00;
@@ -83,30 +84,6 @@ Byte xor_bytes(Byte * bytes, int len) {
    for (ndx=0; ndx < len; ndx++) {
       result = result ^ bytes[ndx];
    }
-   return result;
-}
-
-
-Byte ddc_checksum_old(Byte * bytes, int len, bool altmode) {
-   // DBGMSG("bytes=%p, len=%d, altmode=%d", bytes, len, altmode);
-   // largest packet is capabilities fragment, which can have up to 32 bytes of text,
-   // plus 4 bytes of offset data.  Adding this to the dest, src, and len bytes is 39
-   assert(len <= MAX_DDC_PACKET_WO_CHECKSUM);
-   Byte workbuf[MAX_DDC_PACKET_WO_CHECKSUM];
-   Byte * bytes2 = bytes;
-   Byte result;
-
-   if (altmode) {
-      bytes2 = workbuf;
-      memcpy(bytes2, bytes, len);
-      bytes2[0] = 0x50;
-   }
-   result = xor_bytes(bytes2, len);
-
-   // char * hs = hexstring(bytes2, len);
-   // DBGMSG("checksum for %s is 0x%02x", hs, result);
-   // free(hs);
-
    return result;
 }
 #endif
@@ -128,8 +105,6 @@ Byte ddc_checksum(Byte * bytes, int len, bool altmode) {
    // assert(checksum == ddc_checksum_old(bytes, len, altmode));
    return checksum;
 }
-
-
 
 
 void test_one_checksum(Byte * bytes, int len, bool altmode, Byte expected, char * spec_section) {
@@ -221,10 +196,6 @@ void dump_packet(DDC_Packet * packet) {
           packet, packet->type, packet->tag, packet->raw_bytes, packet->parsed.raw_parsed);
    buffer_dump(packet->raw_bytes);
    // TODO show interpreted aux_data
-#ifdef OLD
-   if (packet->aux_data)
-      report_interpreted_aux_data(packet->type, packet->aux_data);
-#endif
    if (packet->parsed.raw_parsed) {
       switch(packet->type) {
       case (DDC_PACKET_TYPE_CAPABILITIES_RESPONSE):
@@ -240,27 +211,6 @@ void dump_packet(DDC_Packet * packet) {
    }
 }
 
-#ifdef OLD
-void report_interpreted_aux_data(Byte response_type, void * aux_data) {
-   assert(aux_data);
-
-   printf("Interpreting aux data at %p for response type: 0x%02x\n", aux_data, response_type);
-   switch (response_type) {
-   case (DDC_PACKET_TYPE_CAPABILITIES_RESPONSE):
-   case (DDC_PACKET_TYPE_TABLE_READ_RESPONSE):
-      report_interpreted_multi_read_fragment(aux_data);
-      break;
-   case (DDC_PACKET_TYPE_QUERY_VCP_RESPONSE):
-      report_interpreted_nontable_vcp_response(aux_data, 0);
-      break;
-
-   default:
-      DBGMSG("Don't know how to interpret aux data for response type: 0x%02x", response_type);
-   }
-}
-#endif
-
-
 
 bool isNullPacket(DDC_Packet * packet) {
    return  (get_data_len(packet) == 0);
@@ -274,12 +224,6 @@ void free_ddc_packet(DDC_Packet * packet) {
    // dump_packet(packet);
 
    if (packet) {
-#ifdef OLD
-      if (packet->aux_data) {
-         DBGMSF(debug, "freeing packet->aux_data=%p", packet->aux_data);
-         free(packet->aux_data);
-      }
-#endif
       if (packet->parsed.raw_parsed) {
          DBGMSF(debug, "freeing packet->parsed.raw=%p", packet->parsed.raw_parsed);
          free(packet->parsed.raw_parsed);
@@ -343,13 +287,6 @@ DDC_Packet * create_ddc_base_request_packet(
                 const char * tag)
 {
    bool debug = false;
-#ifdef OLD
-   if (debug) {
-      char * hs =  hexstring(data_bytes, data_bytect);
-      DBGMSG("Starting.  bytes=%s, tag=%s", hs, tag);
-      free(hs);
-   }
-#endif
    DBGMSF(debug, "Starting.  bytes=%s, tag=%s", hexstring_t(data_bytes,data_bytect), tag);
 
    assert( data_bytect <= 32 );
@@ -581,7 +518,8 @@ create_ddc_base_response_packet(
    DDC_Packet ** packet_ptr_addr)
 {
    bool debug = false;
-   DBGMSF(debug, "Starting. i2c_response_bytes=%s", hexstring_t(i2c_response_bytes, 20) );
+   DBGTRC(debug, TRACE_GROUP,
+          "Starting. i2c_response_bytes=%s", hexstring_t(i2c_response_bytes, 20) );
 
    int result = DDCRC_OK;
    DDC_Packet * packet = NULL;
@@ -633,7 +571,8 @@ create_ddc_base_response_packet(
    else
       *packet_ptr_addr = NULL;
 
-   DBGMSF(debug, "Returning %s, *packet_ptr_addr=%p", ddcrc_desc(result), *packet_ptr_addr);
+   DBGTRC(debug, TRACE_GROUP,
+          "Returning %s, *packet_ptr_addr=%p", ddcrc_desc(result), *packet_ptr_addr);
    assert( (result==DDCRC_OK && *packet_ptr_addr) || (result != DDCRC_OK && !*packet_ptr_addr));
    return result;
 }
@@ -663,14 +602,8 @@ create_ddc_response_packet(
        DDC_Packet **   packet_ptr_addr)
 {
    bool debug = false;
-#ifdef OLD
-   if (debug) {
-      char * hs = hexstring(i2c_response_bytes,20);
-      DBGMSG("Starting. i2c_response_bytes=%s", hs);
-      free(hs);
-   }
-#endif
-   DBGMSF(debug, "Starting. i2c_response_bytes=%s", hexstring_t(i2c_response_bytes, 20));
+   DBGTRC(debug, TRACE_GROUP,
+          "Starting. i2c_response_bytes=%s", hexstring_t(i2c_response_bytes, 20));
 
    Status_DDC result = create_ddc_base_response_packet(
                           i2c_response_bytes,
@@ -700,7 +633,8 @@ create_ddc_response_packet(
       log_status_code(result, __func__);
    }
 
-   DBGMSF(debug, "Returning %s, *packet_ptr_addr=%p", ddcrc_desc(result), *packet_ptr_addr);
+   DBGTRC(debug, TRACE_GROUP,
+          "Returning %s, *packet_ptr_addr=%p", ddcrc_desc(result), *packet_ptr_addr);
    assert( (result==DDCRC_OK && *packet_ptr_addr) || (result != DDCRC_OK && !*packet_ptr_addr));
    return result;
 }
@@ -804,10 +738,10 @@ typedef
               Byte  result_code;              // 0x00=no error, 0x01=Unsupported op code
               Byte  vcp_opcode;               // VCP opcode from feature request message
               Byte  vcp_typecode;             // 0x00=set parameter, 0x01=momentary
-              Byte  max_val_hi_byte;
-              Byte  max_val_lo_byte;
-              Byte  cur_val_hi_byte;
-              Byte  cur_val_lo_byte;
+              Byte  mh;
+              Byte  ml;
+              Byte  sh;
+              Byte  sl;
 //            } fields;
         } /*__attribute__((packed)) */ Vcp_Response;
 
@@ -837,8 +771,9 @@ interpret_vcp_feature_response_std(
        Parsed_Nontable_Vcp_Response* aux_data)   // record in which interpreted feature response will be stored
 {
    bool debug = false;
-   DBGMSF(debug, "Starting. requested_vcp_code: 0x%02x, vcp_data_bytes: %s",
-                 requested_vcp_code, hexstring3_t(vcp_data_bytes, bytect, " ", 4, false));
+   DBGTRC(debug, TRACE_GROUP,
+          "Starting. requested_vcp_code: 0x%02x, vcp_data_bytes: %s",
+          requested_vcp_code, hexstring3_t(vcp_data_bytes, bytect, " ", 4, false));
 
    int result = DDCRC_OK;
    // set initial values for failure case:
@@ -888,8 +823,8 @@ interpret_vcp_feature_response_std(
       }
 
       else {
-         int max_val = (vcpresp->max_val_hi_byte << 8) | vcpresp->max_val_lo_byte;
-         int cur_val = (vcpresp->cur_val_hi_byte << 8) | vcpresp->cur_val_lo_byte;
+         int max_val = (vcpresp->mh << 8) | vcpresp->ml;
+         int cur_val = (vcpresp->sh << 8) | vcpresp->sl;
 
          DBGTRC(debug, TRACE_GROUP,
                 "vcp_opcode = 0x%02x, vcp_type_code=0x%02x, max_val=%d (0x%04x), cur_val=%d (0x%04x)",
@@ -901,14 +836,14 @@ interpret_vcp_feature_response_std(
          aux_data->max_value        = max_val;   // valid only for continuous features
          aux_data->cur_value        = cur_val;   // valid only for continuous features
          // for new way
-         aux_data->mh = vcpresp->max_val_hi_byte;
-         aux_data->ml = vcpresp->max_val_lo_byte;
-         aux_data->sh = vcpresp->cur_val_hi_byte;
-         aux_data->sl = vcpresp->cur_val_lo_byte;
+         aux_data->mh = vcpresp->mh;
+         aux_data->ml = vcpresp->ml;
+         aux_data->sh = vcpresp->sh;
+         aux_data->sl = vcpresp->sl;
       }
    }
 
-   DBGMSF(debug, "Returning %s", psc_desc(result));
+   DBGTRC(debug, TRACE_GROUP, "Returning %s", psc_desc(result));
    return result;
 }
 
@@ -944,6 +879,58 @@ void   report_parsed_vcp_response(Parsed_Vcp_Response * response, int depth) {
 
 
 
+char * ddca_vcp_value_type_name(DDCA_Vcp_Value_Type  value_type) {
+   char * result = "<unrecognized>";
+   switch(value_type) {
+   case DDCA_NON_TABLE_VCP_VALUE:
+      result = "DDCA_NON_TABLE_VCP_VALUE";
+      break;
+   case DDCA_TABLE_VCP_VALUE:
+      result = "DDCA_TABLE_VCP_VALUE";
+      break;
+   default:
+      result = "invalid value";
+   }
+   return result;
+}
+
+
+
+
+void dbgrpt_ddca_single_vcp_value(
+      DDCA_Single_Vcp_Value * valrec,
+      int depth)
+{
+   int d1 = depth + 1;
+   int d2 = depth + 2;
+
+   rpt_vstring(depth, "DDCA_Single_Vcp_Value at %p:", valrec);
+   if (valrec) {
+      rpt_vstring(d1, "Opcode:          0x%02x", valrec->opcode);
+      rpt_vstring(d1, "Value type       %d - %s", valrec->value_type, ddca_vcp_value_type_name(valrec->value_type));
+      if (valrec->value_type == DDCA_TABLE_VCP_VALUE) {
+         rpt_vstring(d1, "Bytes:");
+         rpt_hex_dump(valrec->val.t.bytes, valrec->val.t.bytect, d2);
+      }
+      else if (valrec->value_type == DDCA_NON_TABLE_VCP_VALUE) {
+#ifdef WORDS_BIGENDIAN
+         rpt_label  (d1, "Struct is big-endian");
+#else
+         rpt_label  (d1, "Struct is little-endian");
+#endif
+         rpt_vstring(d1, "max_val:     %d - 0x%04x", valrec->val.c.max_val, valrec->val.c.max_val);
+         rpt_vstring(d1, "cur_val:     %d - 0x%04x", valrec->val.c.cur_val, valrec->val.c.cur_val);
+         rpt_vstring(d1, "mh:          0x%02x",  valrec->val.nc.mh);
+         rpt_vstring(d1, "ml:          0x%02x",  valrec->val.nc.ml);
+         rpt_vstring(d1, "sh:          0x%02x",  valrec->val.nc.sh);
+         rpt_vstring(d1, "sl:          0x%02x",  valrec->val.nc.sl);
+      }
+
+   }
+
+}
+
+
 
 //
 // Response packets 
@@ -976,14 +963,7 @@ Status_DDC create_ddc_typed_response_packet(
       DDC_Packet**    packet_ptr_addr)
 {
    bool debug = false;
-#ifdef OLD
-   if (debug) {
-      char * hs =  hexstring(i2c_response_bytes,20);
-      DBGMSF(debug, "Starting. i2c_response_bytes=%s", hs );
-      free(hs);
-   }
-#endif
-   DBGMSF(debug, "Starting. i2c_response_bytes=%s", hexstring_t(i2c_response_bytes, 20) );
+   DBGTRC(debug, TRACE_GROUP, "Starting. i2c_response_bytes=%s", hexstring_t(i2c_response_bytes, 20) );
 
    // DBGMSG("before create_ddc_response_packet(), *packet_ptr_addr=%p", *packet_ptr_addr);
    // n. may return DDC_NULL_RESPONSE??   (old note)
@@ -993,7 +973,7 @@ Status_DDC create_ddc_typed_response_packet(
                expected_type,
                tag,
                packet_ptr_addr);
-   DBGMSF(debug, "Create_ddc_response_packet() returned %s, *packet_ptr_addr=%p",
+   DBGTRC(debug, TRACE_GROUP, "Create_ddc_response_packet() returned %s, *packet_ptr_addr=%p",
                                __func__, psc_desc(rc), *packet_ptr_addr);
    if (rc == 0) {
       DDC_Packet * packet = *packet_ptr_addr;
@@ -1036,8 +1016,8 @@ Status_DDC create_ddc_typed_response_packet(
       *packet_ptr_addr = NULL;
    }
 
-   DBGMSF(debug, "Returning %s, *packet_ptr=%p", ddcrc_desc(rc), *packet_ptr_addr);
-   if ( debug && rc >= 0)
+   DBGTRC(debug, TRACE_GROUP, "Returning %s, *packet_ptr=%p", ddcrc_desc(rc), *packet_ptr_addr);
+   if ( (debug || IS_TRACING()) && rc >= 0)
       dump_packet(*packet_ptr_addr);
 
    assert( (rc == 0 && *packet_ptr_addr) || (rc != 0 && !*packet_ptr_addr));
@@ -1132,16 +1112,6 @@ create_ddc_getvcp_response_packet(
          rc = COUNT_STATUS_CODE(DDCRC_INVALID_DATA);
       }
       else {
-#ifdef OLD
-         void * aux_data = calloc(1, sizeof(Parsed_Nontable_Vcp_Response));
-         packet->aux_data = aux_data;
-
-         rc =  interpret_vcp_feature_response_std(
-                  get_data_start(packet),
-                  get_data_len(packet),
-                  expected_vcp_opcode,
-                  (Parsed_Nontable_Vcp_Response *) aux_data);
-#endif
          Parsed_Nontable_Vcp_Response * aux_data = calloc(1, sizeof(Parsed_Nontable_Vcp_Response));
          packet->parsed.nontable_response = aux_data;
 
@@ -1200,16 +1170,10 @@ get_interpreted_vcp_code(
       if (make_copy) {
          Parsed_Nontable_Vcp_Response * copy =
             malloc(sizeof(Parsed_Nontable_Vcp_Response));
-#ifdef OLD
-         memcpy(copy, packet->aux_data, sizeof(Parsed_Nontable_Vcp_Response));
-#endif
          memcpy(copy, packet->parsed.nontable_response, sizeof(Parsed_Nontable_Vcp_Response));
          *interpreted_ptr = copy;
       }
       else {
-#ifdef OLD
-         *interpreted_ptr = packet->aux_data;
-#endif
          *interpreted_ptr = packet->parsed.nontable_response;
       }
    }
