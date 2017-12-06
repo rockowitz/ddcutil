@@ -273,8 +273,10 @@ void raw_scan_i2c_devices(Env_Accumulator * accum) {
          rpt_nl();
          rpt_vstring(d1, "Examining device /dev/i2c-%d...", busno);
 
-         if (is_ignorable_i2c_device(busno))
+         if (is_ignorable_i2c_device(busno)) {
+            rpt_vstring(9, "Device /dev/i2c-%d is a SMBus or other ignorable device.  Skipping.", busno);
             continue;
+         }
 
          if (!is_i2c_device_rw(busno))   // issues message if not RW
             continue;
