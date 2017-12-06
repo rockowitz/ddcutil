@@ -79,7 +79,7 @@ Public_Status_Code i2c_get_parsed_edid_by_fd(int fd, Parsed_Edid ** edid_ptr_loc
 #define I2C_BUS_ADDR_0X30     0x08      // write-only addr to specify EDID block number
 #define I2C_BUS_PROBED        0x01      // has bus been checked?
 
-#define BUS_INFO_MARKER "BINF"
+#define I2C_BUS_INFO_MARKER "BINF"
 /** Information about one I2C bus */
 typedef
 struct {
@@ -88,14 +88,10 @@ struct {
    unsigned long    functionality;      ///< i2c bus functionality flags
    Parsed_Edid *    edid;               ///< parsed EDID, if slave address x50 active
    Byte             flags;              ///< I2C_BUS_* flags
-} Bus_Info;
+} I2C_Bus_Info;
 
-// void i2c_new_bus_info(int busno);               // used only locally
-// void i2c_check_bus(Bus_Info * bus_info);        // used only locally
-// void i2c_free_bus_info(Bus_Info * bus_info);    // used only locally
-void i2c_dbgreport_bus_info(Bus_Info * bus_info, int depth);
-void i2c_report_active_display(Bus_Info * businfo, int depth);
-void i2c_dbgreport_bus_info_flags(Bus_Info * bus_info, int depth);
+void i2c_dbgrpt_bus_info(I2C_Bus_Info * bus_info, int depth);
+void i2c_report_active_display(I2C_Bus_Info * businfo, int depth);
 
 // Simple bus detection, no side effects
 bool i2c_device_exists(int busno);
@@ -103,18 +99,18 @@ int  i2c_device_count();           // simple /dev/i2c-n count, no side effects
 
 // Bus inventory - detect and probe buses
 int i2c_detect_buses();            // creates internal array of Bus_Info for I2C buses
-Bus_Info * detect_single_bus(int busno);
+I2C_Bus_Info * detect_single_bus(int busno);
 
 // Simple Bus_Info retrieval
-Bus_Info * i2c_get_bus_info_by_index(int busndx);
-Bus_Info * i2c_find_bus_info_by_busno(int busno);
+I2C_Bus_Info * i2c_get_bus_info_by_index(int busndx);
+I2C_Bus_Info * i2c_find_bus_info_by_busno(int busno);
 
 // Complex Bus_Info retrieval
-Bus_Info * i2c_find_bus_info_by_mfg_model_sn(
+I2C_Bus_Info * i2c_find_bus_info_by_mfg_model_sn(
               const char * mfg_id,
               const char * model,
               const char * sn,
-              Byte findopts);
+              Byte         findopts);
 
 // Reports all detected i2c buses:
 int  i2c_report_buses(bool report_all, int depth);

@@ -159,9 +159,9 @@ Public_Status_Code ddc_open_display(
          // n. sets
          // Bus_Info * bus_info = i2c_get_bus_info(dref->busno, DISPSEL_VALID_ONLY);   // or DISPSEL_NONE?
          // Bus_Info * bus_info = i2c_get_bus_info_new(dref->busno);   // or DISPSEL_NONE?
-         Bus_Info * bus_info = dref->detail2;
+         I2C_Bus_Info * bus_info = dref->detail2;
          assert(bus_info);   // need to convert to a test?
-         assert( memcmp(bus_info, BUS_INFO_MARKER, 4) == 0);
+         assert( memcmp(bus_info, I2C_BUS_INFO_MARKER, 4) == 0);
          dref->pedid = bus_info->edid;
 
          if (!dref->pedid) {

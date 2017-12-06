@@ -649,7 +649,7 @@ int main(int argc, char *argv[]) {
   //  if (parsed_cmd->pdid->id_type == DISP_ID_BUSNO) {
          int busno = parsed_cmd->pdid->busno;
          // is this really a monitor?
-         Bus_Info * businfo = detect_single_bus(busno);
+         I2C_Bus_Info * businfo = detect_single_bus(busno);
          if ( businfo && (businfo->flags & I2C_BUS_ADDR_0X50) ) {
             dref = create_bus_display_ref(busno);
             dref->dispno = -1;     // should use some other value for unassigned vs invalid

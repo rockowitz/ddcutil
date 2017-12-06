@@ -312,7 +312,7 @@ Parsed_Edid * get_fallback_hiddev_edid(int fd, struct hiddev_devinfo * dev_info)
 
       if (model_sn) {
          // Should there be a ddc level function to find non-usb EDID?
-         Bus_Info * bus_info = i2c_find_bus_info_by_mfg_model_sn(
+         I2C_Bus_Info * bus_info = i2c_find_bus_info_by_mfg_model_sn(
                                   NULL,               // mfg_id
                                   model_sn->model,
                                   model_sn->sn,

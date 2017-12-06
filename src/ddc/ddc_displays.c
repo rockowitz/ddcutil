@@ -467,9 +467,9 @@ ddc_report_display_by_dref(Display_Ref * dref, int depth) {
    case DDCA_IO_DEVI2C:
       // i2c_report_active_display_by_busno(dref->busno, d1);
       {
-         Bus_Info * curinfo = dref->detail2;
+         I2C_Bus_Info * curinfo = dref->detail2;
          assert(curinfo);
-         assert(memcmp(curinfo, BUS_INFO_MARKER, 4) == 0);
+         assert(memcmp(curinfo, I2C_BUS_INFO_MARKER, 4) == 0);
 
          i2c_report_active_display(curinfo, d1);
       }
@@ -600,9 +600,9 @@ void dbgreport_display_ref(Display_Ref * dref, int depth) {
    switch(dref->io_mode) {
    case(DDCA_IO_DEVI2C):
          rpt_vstring(d1, "I2C bus information: ");
-         Bus_Info * businfo = dref->detail2;
-         assert( memcmp(businfo->marker, BUS_INFO_MARKER, 4) == 0);
-         i2c_dbgreport_bus_info(businfo, d2);
+         I2C_Bus_Info * businfo = dref->detail2;
+         assert( memcmp(businfo->marker, I2C_BUS_INFO_MARKER, 4) == 0);
+         i2c_dbgrpt_bus_info(businfo, d2);
          break;
    case(DDCA_IO_ADL):
 #ifdef HAVE_ADL
@@ -967,7 +967,7 @@ ddc_detect_all_displays() {
    // DBGMSF(debug, "i2c_detect_buses() returned: %d", busct);
    int busndx = 0;
    for (busndx=0; busndx < busct; busndx++) {
-      Bus_Info * businfo = i2c_get_bus_info_by_index(busndx);
+      I2C_Bus_Info * businfo = i2c_get_bus_info_by_index(busndx);
       if ( (businfo->flags & I2C_BUS_ADDR_0X50)  && businfo->edid ) {
          Display_Ref * dref = create_bus_display_ref(businfo->busno);
          dref->dispno = -1;
