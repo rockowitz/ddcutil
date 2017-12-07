@@ -1331,6 +1331,7 @@ ddca_get_nontable_vcp_value(
                 feature_code,
                 &code_info);
        psc = (ddc_excp) ? ddc_excp->psc : 0;
+       ddc_error_free(ddc_excp);
        // DBGMSG(" get_nontable_vcp_value() returned %s", gsc_desc(gsc));
        if (psc == 0) {
           response->feature_code = code_info->vcp_code;
@@ -1386,6 +1387,7 @@ ddca_get_table_vcp_value(
          Buffer * p_table_bytes = NULL;
          ddc_excp =  get_table_vcp_value(dh, feature_code, &p_table_bytes);
          psc = (ddc_excp) ? ddc_excp->psc : 0;
+         ddc_error_free(ddc_excp);
          if (psc == 0) {
             assert(p_table_bytes);  // avoid coverity warning
             int len = p_table_bytes->len;
@@ -1415,6 +1417,7 @@ ddca_get_vcp_value(
                *pvalrec = NULL;
                ddc_excp = get_vcp_value(dh, feature_code, call_type, pvalrec);
                psc = (ddc_excp) ? ddc_excp->psc : 0;
+               ddc_error_free(ddc_excp);
          }
    );
 }
@@ -1454,6 +1457,7 @@ ddca_get_formatted_vcp_value(
                    DDCA_Single_Vcp_Value * pvalrec;
                    ddc_excp = get_vcp_value(dh, feature_code, call_type, &pvalrec);
                    psc = (ddc_excp) ? ddc_excp->psc : 0;
+                   ddc_error_free(ddc_excp);
                    if (psc == 0) {
                       bool ok =
                       vcp_format_feature_detail(
@@ -1482,6 +1486,7 @@ ddca_set_single_vcp_value(
       WITH_DH(ddca_dh,  {
             ddc_excp = set_vcp_value(dh, valrec);
             psc = (ddc_excp) ? ddc_excp->psc : 0;
+            ddc_error_free(ddc_excp);
          } );
    }
 
@@ -1543,6 +1548,7 @@ ddca_get_capabilities_string(
          char * p_cap_string = NULL;
          ddc_excp = get_capabilities_string(dh, &p_cap_string);
          psc = (ddc_excp) ? ddc_excp->psc : 0;
+         ddc_error_free(ddc_excp);
          if (psc == 0) {
             // make copy to ensure caller does not muck around in ddcutil's
             // internal data structures
@@ -1697,6 +1703,7 @@ ddca_set_profile_related_values(
 {
    Ddc_Error * ddc_excp = loadvcp_by_string(profile_values_string, NULL);
    Public_Status_Code psc = (ddc_excp) ? ddc_excp->psc : 0;
+   ddc_error_free(ddc_excp);
    return psc;
 }
 

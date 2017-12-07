@@ -46,13 +46,15 @@
 
 
 void ddc_error_free(Ddc_Error * erec){
-   VALID_DDC_ERROR_PTR(erec);
-   for (int ndx = 0; ndx < erec->cause_ct; ndx++) {
-      ddc_error_free(erec->causes[ndx]);
+   if (erec) {
+      VALID_DDC_ERROR_PTR(erec);
+      for (int ndx = 0; ndx < erec->cause_ct; ndx++) {
+         ddc_error_free(erec->causes[ndx]);
+      }
+      free(erec->func);
+      erec->marker[3] = 'x';
+      free(erec);
    }
-   free(erec->func);
-   erec->marker[3] = 'x';
-   free(erec);
 }
 
 
