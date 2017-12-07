@@ -103,7 +103,7 @@ void report_dumpload_data(Dumpload_Data * data, int depth) {
 }
 
 
-/* Given an array of strings stored in a GPtrArray,
+/** Given an array of strings stored in a GPtrArray,
  * convert it a #Dumpload_Data struct.
  *
  * @param   garray      array of strings
@@ -284,9 +284,7 @@ create_dumpload_data_from_g_ptr_array(GPtrArray * garray) {
  *
  * @param   dh      display handle
  * @param   vset    values to set
- * @param   retry_history  if non-null, records retryable errors
- *
- * @return status code of first error, or 0 if no errors
+ * @return  #Ddc_Error reflecting the first error, or NULL if no errors
  *
  * This function stops applying values on the first error encountered, and
  * returns the value of that error as its status code.
@@ -347,9 +345,8 @@ ddc_set_multiple(
  * @param  dh         display handle for open display,
  *                    if NULL, open the find the display based on the identifiers
  *                    in the data and open it
- * @param  retry_history  if non-null, collects retryable errors
  *
- * @return   status code
+ * @return   #Ddc_Error describing the first error, or NULL if no error
  */
 Ddc_Error *
 loadvcp_by_dumpload_data(
@@ -437,16 +434,12 @@ bye:
 }
 
 
-/* Reads the monitor identification and VCP values from a null terminated
- * string array and applies those values to the selected monitor.
+/** Reads the monitor identification and VCP values from a null terminated
+ *  string array and applies those values to the selected monitor.
  *
- * Arguments:
- *    ntsa    null terminated array of strings
- *    dh      display handle
- *    retry_history  if non-null, collects retryable errors
- *
- * Returns:
- *    0 if success, status code if not
+ *  \param  ntsa    null terminated array of strings
+ *  \param  dh      display handle
+ *  \return pointer to #Ddc_Error describing the first error, NULL if if success
  */
 Ddc_Error *
 loadvcp_by_ntsa(
@@ -489,17 +482,13 @@ loadvcp_by_ntsa(
 }
 
 
-/* Reads the monitor identification and VCP values from a single string
- * whose fields are separated by ';' and applies those values to the
- * selected monitor.
+/** Reads the monitor identification and VCP values from a single string
+ *  whose fields are separated by ';' and applies those values to the
+ *  selected monitor.
  *
- * Arguments:
- *    catenated    data string
- *    dh           display handle
- *    retry_history if non-null, collects retryable errors
- *
- * Returns:
- *    0 if success, status code if not
+ *  \param   catenated    data string
+ *  \param   dh           display handle
+ *  \return  pointer to #Ddc_Error describing first error, NULL if success
  */
 // n. called from ddct_public:
 Ddc_Error *
@@ -519,26 +508,24 @@ loadvcp_by_string(
 // Dumpvcp
 //
 
-
 //
 // Support for dumpvcp command and returning profile info as string in API
 //
 
-/* Formats a timestamp in a way usable in a filename, specifically:
+/** Formats a timestamp in a way usable in a filename, specifically:
  *    YYYMMDD-HHMMSS
  *
- * Arguments:
- *    time_millis   timestamp in milliseconds
- *    buf           buffer in which to return the formatted timestamp
- *    bufsz         buffer size
+ *  \param  time_millis   timestamp in milliseconds
+ *  \param  buf           buffer in which to return the formatted timestamp
+ *  \param  bufsz         buffer size
+ *  \return formatted timestamp
  *
- *    If buf == NULL or bufsz == 0, then this function allocates a buffer.
- *    It is the responsibility of the caller to free this buffer.
- *
- *  Returns:
- *    formatted timestamp
+ * \remark
+ * If buf == NULL or bufsz == 0, then this function allocates a buffer.
+ * It is the responsibility of the caller to free this buffer.
  */
-char * format_timestamp(time_t time_millis, char * buf, int bufsz) {
+char *
+format_timestamp(time_t time_millis, char * buf, int bufsz) {
    if (bufsz == 0 || buf == NULL) {
       bufsz = 128;
       buf = calloc(1, bufsz);
@@ -554,6 +541,7 @@ char * format_timestamp(time_t time_millis, char * buf, int bufsz) {
                  );
    return buf;
 }
+
 
 #ifdef UNUSED
 /* Returns monitor identification information in an array of strings.
@@ -588,16 +576,14 @@ void collect_machine_readable_monitor_id(Display_Handle * dh, GPtrArray * vals) 
 #endif
 
 
-/* Appends timestamp lines to an array of strings.
- * The strings are written in the format of the DUMPVCP command.
+/** Appends timestamp lines to an array of strings.
+ *  The strings are written in the format of the DUMPVCP command.
  *
- * Arguments:
- *    dh       display handle for monitor
- *    vals     GPtrArray to which the timestamp strings are appended.
- *
- * Returns:  nothing
+ *  \param  dh       display handle for monitor
+ *  \param  vals     GPtrArray to which the timestamp strings are appended.
  */
-void collect_machine_readable_timestamp(time_t time_millis, GPtrArray* vals) {
+void
+collect_machine_readable_timestamp(time_t time_millis, GPtrArray* vals) {
    // temporarily use same output format as filename, but format the
    // date separately here for flexibility
    char timestamp_buf[30];
@@ -660,18 +646,15 @@ collect_profile_related_values(
 #endif
 
 
-/* Primary function for the DUMPVCP command.
+/** Primary function for the DUMPVCP command.
  *
  * Writes DUMPVCP data to the in-core Dumpload_Data structure
  *
- * Arguments:
- *    dh              display handle for connected display
- *    pdumpload_data  address at which to return pointer to newly allocated
+ * \param   dh              display handle for connected display
+ * \param   pdumpload_data  address at which to return pointer to newly allocated
  *                    Dumpload_Data struct.  It is the responsibility of the
  *                    caller to free this data structure.
- *
- * Returns:
- *    status code
+ * \return status code
  */
 Public_Status_Code
 dumpvcp_as_dumpload_data(
@@ -728,17 +711,16 @@ dumpvcp_as_dumpload_data(
 }
 
 
-/* Converts a Dumpload_Data structure to an array of strings
+/** Converts a Dumpload_Data structure to an array of strings
  *
- * Arguments:
- *    data     pointer to Dumpload_Data instance
+ *  \param data     pointer to Dumpload_Data instance
+ *  \param          array of strings
  *
- * Returns:
- *    array of strings
- *
+ * \remark
  * Note that the result shares no memory with data
  */
-GPtrArray * convert_dumpload_data_to_string_array(Dumpload_Data * data) {
+GPtrArray *
+convert_dumpload_data_to_string_array(Dumpload_Data * data) {
    bool debug = false;
    DBGMSF(debug, "Starting. data=%p", data);
    assert(data);
@@ -783,17 +765,14 @@ GPtrArray * convert_dumpload_data_to_string_array(Dumpload_Data * data) {
 }
 
 
-/* Returns the output of the DUMPVCP command a single string.
- * Each field is separated by a semicolon.
+/** Returns the output of the DUMPVCP command a single string.
+ *  Each field is separated by a semicolon.
  *
- * The caller is responsible for freeing the returned string.
+ *  The caller is responsible for freeing the returned string.
  *
- * Arguments:
- *    dh       display handle of open monitor
- *    pstring  location at which to return string
- *
- * Returns:
- *    status code
+ *  \param  dh       display handle of open monitor
+ *  \param  pstring  location at which to return string
+ *  \return status code
  */
 // n. called from ddct_public.c
 // move to glib_util.c?
