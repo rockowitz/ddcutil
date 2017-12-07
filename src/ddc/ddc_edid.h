@@ -28,7 +28,9 @@
 
 #include "base/displays.h"
 
+#ifdef UNUSED
 Parsed_Edid* ddc_get_parsed_edid_by_display_handle(Display_Handle * dh);
 Parsed_Edid* ddc_get_parsed_edid_by_display_ref(Display_Ref * dref);
+#endif
 
 #endif /* DDC_EDID_H_ */
