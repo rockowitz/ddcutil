@@ -227,7 +227,10 @@ bool loadvcp_by_file(const char * fn, Display_Handle * dh) {
            rpt_pop_output_dest();
       }
       ddc_excp = loadvcp_by_dumpload_data(pdata, dh);
-      psc = (ddc_excp) ? ddc_excp->psc : 0;
+      if (ddc_excp) {
+         psc = ddc_excp->psc;
+         ddc_error_free(ddc_excp);
+      }
       free_dumpload_data(pdata);
       ok = (psc == 0);
    }
