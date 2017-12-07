@@ -229,11 +229,10 @@ try_multi_part_read(
 *  @param  all_zero_response_ok   if true, zero response is not an error
 *  @param  pp_buffer  address at which to return newly allocated #Buffer in which
 *                   result is returned
-*  @oaran  retry_history if non-null, collects try errors
 *
-*  @retval  0    success
-*  @retval  DDCRC_UNSUPPORTED does not support Capabilities Request
-*  @retval  DDCRC_TRIES  maximum retries exceeded:
+*  @retval  NULL    success
+*  @retval  #Ddc_Error containing status DDCRC_UNSUPPORTED does not support Capabilities Request
+*  @retval  #Ddc_Error containing status DDCRC_TRIES  maximum retries exceeded:
 */
 Ddc_Error *
 multi_part_read_with_retry(
@@ -389,8 +388,7 @@ try_multi_part_write(
  * @param  dh display handle
  * @param vcp_code  VCP feature code to write
  * @param value_to_set bytes of Table feature
- * @param retry_history if non-null, collects retryable errors
- * @return  status code
+ * @return  NULL if success, pointer to #Ddc_Error if failure
  */
 Ddc_Error *
 multi_part_write_with_retry(

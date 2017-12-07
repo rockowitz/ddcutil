@@ -62,7 +62,7 @@
 // Trace class for this file
 static Trace_Group TRACE_GROUP = TRC_I2C;
 
-/** All I2C buses.  GPtrArray of pointers to #Bus_Info */
+/** All I2C buses.  GPtrArray of pointers to #I2C_Bus_Info */
 static GPtrArray * i2c_buses = NULL;
 
 /** Global variable.  Controls whether function #i2c_set_addr() attempts retry
@@ -645,10 +645,10 @@ Public_Status_Code i2c_get_parsed_edid_by_fd(int fd, Parsed_Edid ** edid_ptr_loc
 // I2C Bus Inspection - Fill in and report Bus_Info
 //
 
-/** Allocates and initializes a new #Bus_Info struct
+/** Allocates and initializes a new #I2C_Bus_Info struct
  *
  * @param busno I2C bus number
- * @return newly allocated #Bus_Info
+ * @return newly allocated #I2C_Bus_Info
  */
 static I2C_Bus_Info * i2c_new_bus_info(int busno) {
    I2C_Bus_Info * businfo = calloc(1, sizeof(I2C_Bus_Info));
@@ -660,7 +660,7 @@ static I2C_Bus_Info * i2c_new_bus_info(int busno) {
 
 /** Inspects an I2C bus.
  *
- *  Takes the number of the bus to be inspected from the #Bus_Info struct passed
+ *  Takes the number of the bus to be inspected from the #I2C_Bus_Info struct passed
  *  as an argument.
  *
  *  @param  bus_info  pointer to #I2C_Bus_Info struct in which information will be set
@@ -1000,7 +1000,7 @@ I2C_Bus_Info * i2c_get_bus_info_by_index(int busndx) {
 
 /** Retrieves bus information by I2C bus number.
  *
- * If the bus information does not already exist in the #Bus_Info struct for the
+ * If the bus information does not already exist in the #I2C_Bus_Info struct for the
  * bus, it is calculated by calling check_i2c_bus()
  *
  * @param   busno    bus number

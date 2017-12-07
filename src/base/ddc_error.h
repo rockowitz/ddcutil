@@ -1,10 +1,7 @@
 /* ddc_error.h
  *
- * Created on: Oct 22, 2017
- *     Author: rock
- *
  * <copyright>
- * Copyright (C) 2014-2015 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2017 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -24,6 +21,10 @@
  * </endcopyright>
  */
 
+/** \f
+ *  Struct for reporting errors that collects causes
+ */
+
 #ifndef DDC_ERROR_H_
 #define DDC_ERROR_H_
 
@@ -39,11 +40,12 @@
 
 #define DDC_ERROR_MARKER "DERM"
 
+/** Struct for reporting errors, designed for collecting retry failures */
 typedef struct ddc_error_struct {
-   char               marker[4];
-   Public_Status_Code psc;
-   char *             func;
-   int                cause_ct;
+   char               marker[4];     //<:  always DERM
+   Public_Status_Code psc;           //<:  status code
+   char *             func;          //<:  name of function generating status code
+   int                cause_ct;      //<:  number of causal errors
    struct ddc_error_struct * causes[MAX_MAX_TRIES];
    // alt:
    // GPointerArray * causes_alt;   // GPointerArray of Ddc_Error *

@@ -441,7 +441,7 @@ Null_Terminated_String_Array strsplit(const char * str_to_split, const char * de
  *  that a specified number of characters.  If delimiters are
  *  specified, then they are used to split the string into segments.
  *  Otherwise all segments, except possibly the last, are
- *  #max_piece_length in length.
+ *  **max_piece_length** in length.
  *
  *  @param  str_to_split     string to be split
  *  @param  max_piece_length maximum length of each segment
@@ -449,7 +449,7 @@ Null_Terminated_String_Array strsplit(const char * str_to_split, const char * de
  *  @return null terminated array of pieces
  *
  * @remark
- * Each character in #delims is used as an individual test.
+ * Each character in **delims** is used as an individual test.
  * The full string is NOT a delimiter string.
  */
 Null_Terminated_String_Array
@@ -539,18 +539,18 @@ int ntsa_length(Null_Terminated_String_Array string_array) {
 }
 
 
-/** Creates a new **Null_Terminated_String_Array** from 2 existing instances.
+/** Creates a new #Null_Terminated_String_Array from 2 existing instances.
  *  The result contains all the strings of the first array, followed by all
  *  the strings of the second.
  *
  *  @param a1  first instance
- *  @param s2  second instance
+ *  @param a2  second instance
  *  @param dup if true, the pointers in the output array point to newly
  *                      allocated strings
  *             if false, the pointers in the output array point to the
  *                      original strings.
  *
- *  @return newly allocate **Null_Terminated_String_Array**.
+ *  @return newly allocated #Null_Terminated_String_Array
  */
 Null_Terminated_String_Array ntsa_join(
       Null_Terminated_String_Array a1,

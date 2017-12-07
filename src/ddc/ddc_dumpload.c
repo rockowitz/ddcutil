@@ -576,11 +576,11 @@ void collect_machine_readable_monitor_id(Display_Handle * dh, GPtrArray * vals) 
 #endif
 
 
-/** Appends timestamp lines to an array of strings.
+/** Appends TIMESTAMP_TEXT and TIMESTAMP_MILLIS lines to an array of strings.
  *  The strings are written in the format of the DUMPVCP command.
  *
- *  \param  dh       display handle for monitor
- *  \param  vals     GPtrArray to which the timestamp strings are appended.
+ *  \param  time_millis timestamp in milliseconds
+ *  \param  vals        GPtrArray to which the timestamp strings are appended.
  */
 void
 collect_machine_readable_timestamp(time_t time_millis, GPtrArray* vals) {
@@ -714,7 +714,7 @@ dumpvcp_as_dumpload_data(
 /** Converts a Dumpload_Data structure to an array of strings
  *
  *  \param data     pointer to Dumpload_Data instance
- *  \param          array of strings
+ *  \return         array of strings
  *
  * \remark
  * Note that the result shares no memory with data

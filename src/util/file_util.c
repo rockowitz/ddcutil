@@ -134,12 +134,12 @@ char * file_get_first_line(const char * fn, bool verbose) {
 
 
 
-/** Reads a binary file, returning it as a #GByteArray.
+/** Reads a binary file, returning it as a **GByteArray**.
  *
  *  \param  fn        file name
  *  \param  est_size  estimated size
  *  \param  verbose   if open fails, write message to stderr
- *  \return if successful, a #GByteArray of bytes, caller is responsible for freeing
+ *  \return if successful, a **GByteArray** of bytes, caller is responsible for freeing
  *          if failure, then NULL
  */
 GByteArray *

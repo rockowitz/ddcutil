@@ -421,7 +421,7 @@ Display_Ref * create_bus_display_ref(int busno) {
 
 /** Creates a #Display_Ref for IO mode #DDCA_IO_ADL
  *
- * @param  iAdapaterIndex  ADL adapter index
+ * @param  iAdapterIndex   ADL adapter index
  * @param  iDisplayIndex   ADL display index
  * \return pointer to newly allocated #Display_Ref
  */
@@ -669,7 +669,7 @@ char * dref_repr_t(Display_Ref * dref) {
  *
  *  \param  fh   file handle of open display
  *  \param  dref pointer to #Display_Ref
- *  \return newly allocated #display_Handle
+ *  \return newly allocated #Display_Handle
  *
  *  \remark
  *  This functions handles the boilerplate of creating a #Display_Handle.
@@ -691,7 +691,7 @@ Display_Handle * create_bus_display_handle_from_display_ref(int fh, Display_Ref 
 /** Creates a #Display_Handle for an ADL #Display_Ref.
  *
  *  \param  dref pointer to #Display_Ref
- *  \return newly allocated #display_Handle
+ *  \return newly allocated #Display_Handle
  *
  *  \remark
  *  This functions handles the boilerplate of creating a #Display_Handle.
@@ -714,7 +714,7 @@ Display_Handle * create_adl_display_handle_from_display_ref(Display_Ref * dref) 
  *
  *  \param  fh   file handle of open display
  *  \param  dref pointer to #Display_Ref
- *  \return newly allocated #display_Handle
+ *  \return newly allocated #Display_Handle
  *
  *  \remark
  *  This functions handles to boilerplate of creating a #Display_Handle.

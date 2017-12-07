@@ -185,17 +185,16 @@ bye:
 }
 
 
-
-/** Filters a #GPtrArray of struct #udev_device, removing
+/** Filters a **GPtrArray** of #Udev_Device_Summary removing
  *  entries that do not satisfy the predicate function provided.
  *
- *  summaries #GPtrArray of struct #udev_device
+ *  summaries **GPtrArray** of #Udev_Device_Summary
  *  func      filter function, if returns false then delete the entry
- *  \return   #summaries
+ *  \return   NULL or **summaries**
  *
  *  \remark
- *  - if #summaries is NULL, returns NULL
- *  - if #summaries is non_NULL, but keep_func is NULL, returns summaries
+ *  - if **summaries** is NULL, returns NULL
+ *  - if **summaries** is non_NULL, but keep_func is NULL, returns **summaries**
  */
 GPtrArray *
 filter_device_summaries(

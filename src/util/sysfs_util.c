@@ -60,10 +60,10 @@ read_sysfs_attr(
 /** Reads a /sys attribute file, which is 1 line of text.
  *  If the attribute is not found, returns a default value
  *
- * \param  dirname    directory name
- * \param  attrname   attribute name, i.e. file name
- * \param  default    default value, duplicated
- * \param  verbose    if true, write message to stderr if unable to open file
+ * \param  dirname        directory name
+ * \param  attrname       attribute name, i.e. file name
+ * \param  default_value  default value, duplicated
+ * \param  verbose        if true, write message to stderr if unable to open file
  * \return pointer to attribute value string, caller is responsible for freeing
  */
 char *
@@ -111,7 +111,7 @@ read_sysfs_attr_w_default_r(
  * \param  attrname   attribute name, i.e. file name
  * \param  est_size  estimated size
  * \param  verbose   if open fails, write message to stderr
- * \return if successful, a #GByteArray of bytes, caller is responsible for freeing
+ * \return if successful, a **GByteArray** of bytes, caller is responsible for freeing
  *          if failure, then NULL
  */
 GByteArray *

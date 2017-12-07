@@ -1,10 +1,7 @@
 /* ddc_error.c
  *
- * Created on: Oct 22, 2017
- *     Author: rock
- *
  * <copyright>
- * Copyright (C) 2014-2015 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2017 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -24,11 +21,17 @@
  * </endcopyright>
  */
 
+/** \f
+ *  Struct for reporting errors.
+ */
+
+/** \cond */
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>
 
 #include "util/report_util.h"
+/** \endcond */
 
 #include "ddc_errno.h"
 #include "retry_history.h"
@@ -36,7 +39,7 @@
 
 #include "ddc_error.h"
 
-
+/** Validates a pointer to a #Ddc_Error, using asserts */
 #define VALID_DDC_ERROR_PTR(ptr) \
    assert(ptr); \
    assert(memcmp(ptr->marker, DDC_ERROR_MARKER, 4) == 0);

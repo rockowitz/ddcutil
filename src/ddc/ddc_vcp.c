@@ -76,8 +76,7 @@ static Trace_Group TRACE_GROUP = TRC_DDC;
 /** Executes the DDC Save Control Settings command.
  *
  * \param  dh handle of open display device
- * \param  retry_history  if non-null, logs retryable errors
- * \return status code, as returned by #ddc_write_only_with_retry()
+ * \return NULL if success, pointer to #Ddc_Error if failure
  */
 Ddc_Error *
 save_current_settings(
@@ -122,8 +121,8 @@ save_current_settings(
  *  \param  dh            display handle for open display
  *  \param  feature_code  VCP feature code
  *  \param  new_value     new value
- *  \param  retry_history if non-null, logs retryable errors
- *  \return status code from #ddc_write_only_with_retry()
+ *  \return NULL if success,
+ *          pointer to #Ddc_Error from #ddc_write_only_with_retry() if failure
  */
 Ddc_Error *
 set_nontable_vcp_value(
@@ -171,9 +170,9 @@ set_nontable_vcp_value(
  *  \param  feature_code  VCP feature code
  *  \param  bytes         pointer to table bytes
  *  \param  bytect        number of bytes
- *  \param  retry_history if non-null, collects retryable errors
- *  \return status code   normally as from ##multi_part_write_with_retry()
- *                        DDCL_UNIMPLEMENTED) if io mode is USB
+ *  \return NULL  if success
+ *          DDCL_UNIMPLEMENTED if io mode is USB
+ *          #Ddc_Error from #multi_part_write_with_retry() otherwise
  */
 Ddc_Error *
 set_table_vcp_value(
@@ -323,8 +322,7 @@ single_vcp_value_equal(
  *
  *  \param  dh            display handle for open display
  *  \param  vrec          pointer to value record
- *  \param  retry_history if non-null, collects retryable errors
- *  \return status code
+ *  \return NULL if success, pointer to #Ddc_Error if failure
  *
  *  If write verification is turned on, reads the feature value after writing it
  *  to ensure the display has actually changed the value.
@@ -399,9 +397,8 @@ set_vcp_value(
  *
  *  \param  dh                 handle for open display
  *  \param  feature_code       VCP feature code
- *  \param  ppInterpretedCode  where to return parsed response
- *  \param  retry_history      if non-null, records status code for retries
- *  \return status code
+ *  \param  ppInterpretedCode  where to return parsed respons
+ *  \return NULL if success, pointer to #Ddc_Error if failure
  *
  * It is the responsibility of the caller to free the parsed response.
  *
@@ -502,8 +499,7 @@ get_nontable_vcp_value(
  *  \param  dh              display handle
  *  \param  feature_code    VCP feature code
  *  \param  pp_table_bytes  location at which to save address of newly allocated Buffer
- *  \param  retry_history   if non-null, collects retry status codes
- *  \return status code
+ *  \return NULL if success, pointer to #Ddc_Error if failure
  */
 Ddc_Error * get_table_vcp_value(
        Display_Handle *       dh,
@@ -555,8 +551,7 @@ Ddc_Error * get_table_vcp_value(
  * \param  feature_code    feature code id
  * \param  call_type       indicates whether table or non-table
  * \param  pvalrec         location where to return newly allocated #DDCA_Single_Vcp_Value
- * \param  retry_history   if non-null, collects retryable errors
- * \return status code
+ * \return NULL if success, pointer to #Ddc_Error if failure
  *
  * The value pointed to by pvalrec is non-null iff the returned status code is 0.
  *
