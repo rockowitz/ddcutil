@@ -45,6 +45,12 @@
    assert(memcmp(ptr->marker, DDC_ERROR_MARKER, 4) == 0);
 
 
+/** Releases a #Ddc_Error instance, including
+ *  all instances it points to.
+ *
+ *  \param erec pointer to #Ddc_Error instance,
+ *              do nothing if NULL
+ */
 void ddc_error_free(Ddc_Error * erec){
    if (erec) {
       VALID_DDC_ERROR_PTR(erec);
@@ -58,6 +64,13 @@ void ddc_error_free(Ddc_Error * erec){
 }
 
 
+/** Creates a new #Ddc_Error instance with the specified status code
+ *  and function name.
+ *
+ *  \param  psc  status code
+ *  \param  func name of function generating status code
+ *  \return pointer to new instance
+ */
 Ddc_Error *  ddc_error_new(Public_Status_Code psc, const char * func) {
    Ddc_Error * erec = calloc(1, sizeof(Ddc_Error));
    memcpy(erec->marker, DDC_ERROR_MARKER, 4);
@@ -66,17 +79,34 @@ Ddc_Error *  ddc_error_new(Public_Status_Code psc, const char * func) {
    return erec;
 }
 
-Ddc_Error * ddc_error_new_with_cause(Public_Status_Code psc, Ddc_Error * cause, char * func) {
+
+/** Creates a new #Ddc_Error instance, including a reference to another
+ *  instance that is the cause of the current error.
+ *
+ *  \param  psc   status code
+ *  \param  cause pointer to another #Ddc_Error that is included as a cause
+ *  \param  func  name of function generating status code
+ *  \return pointer to new instance
+ */
+Ddc_Error * ddc_error_new_with_cause(
+      Public_Status_Code psc,
+      Ddc_Error *        cause,
+      char *             func)
+{
+   VALID_DDC_ERROR_PTR(cause);
    Ddc_Error * erec = ddc_error_new(psc, func);
    erec->causes[0] = cause;
    erec->cause_ct  = 1;
    return erec;
 }
 
+
 Ddc_Error * ddc_error_new_chained(Ddc_Error * cause, char * func) {
+   VALID_DDC_ERROR_PTR(cause);
    Ddc_Error * erec = ddc_error_new_with_cause(cause->psc, cause, func);
    return erec;
 }
+
 
 Ddc_Error * ddc_error_new_retries(
       Public_Status_Code *  status_codes,
@@ -96,13 +126,7 @@ void ddc_error_add_cause(Ddc_Error * parent, Ddc_Error * cause) {
    VALID_DDC_ERROR_PTR(parent);
    VALID_DDC_ERROR_PTR(cause);
 
-   // assert(parent);
-   // assert(memcpy(parent->marker, DDC_ERROR_MARKER, 4) == 0);
    assert(parent->cause_ct < MAX_MAX_TRIES);
-
-   // assert(cause);
-   // assert(memcpy(cause->marker, DDC_ERROR_MARKER, 4) == 0);
-
    parent->causes[parent->cause_ct++] = cause;
 }
 
@@ -121,7 +145,14 @@ char * ddc_error_causes_string_old(Ddc_Error * erec) {
    return result;
 }
 
-
+/** Returns a comma separated string of the status code names in the
+ *  causes of the specified #Ddc_Error.
+ *  Multiple consecutive identical names are replaced with a
+ *  single name and a parenthesized instance count.
+ *
+ *  \param  erec  pointer to #Ddc_Error instance
+ *  \return comma separated string, caller is responsible for freeing
+ */
 char * ddc_error_causes_string(Ddc_Error * erec) {
    bool debug = false;
    // DBGMSF(debug, "history=%p, history->ct=%d", history, history->ct);
