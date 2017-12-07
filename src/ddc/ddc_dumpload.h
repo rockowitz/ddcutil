@@ -61,9 +61,11 @@ struct {
    Vcp_Value_Set  vcp_values;             ///< VCP values
 } Dumpload_Data;
 
-void report_dumpload_data(Dumpload_Data * data, int depth);
+void
+report_dumpload_data(Dumpload_Data * data, int depth);
 
-void free_dumpload_data(Dumpload_Data * pdata);
+void
+free_dumpload_data(Dumpload_Data * pdata);
 
 char *
 format_timestamp(time_t time_millis, char * buf, int bufsz);
