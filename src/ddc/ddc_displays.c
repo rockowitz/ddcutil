@@ -266,17 +266,15 @@ bool initial_checks_by_dh(Display_Handle * dh) {
    DBGMSF(debug, "Starting. dh=%s", dh_repr_t(dh));
    assert(dh);
    DDCA_Single_Vcp_Value * pvalrec;
-   // Retry_History hist;
-   // retry_history_init(&hist);
-   // Retry_History * retry_history = &hist;
-   RETRY_HISTORY_LOCAL(retry_history);
 
    if (!(dh->dref->flags & DREF_DDC_COMMUNICATION_CHECKED)) {
 
-      Public_Status_Code psc = get_vcp_value(dh, 0x00, DDCA_NON_TABLE_VCP_VALUE, &pvalrec, retry_history);
+      Public_Status_Code psc = 0;
+      Ddc_Error * ddc_excp = get_vcp_value(dh, 0x00, DDCA_NON_TABLE_VCP_VALUE, &pvalrec);
+      psc = (ddc_excp) ? ddc_excp->psc : 0;
       DBGMSF(debug, "get_vcp_value() for feature 0x00 returned: %s", psc_desc(psc));
-      if (psc == DDCRC_RETRIES && retry_history && debug)
-         DBGMSG("    Try errors: %s", retry_history_string(retry_history));
+      if (psc == DDCRC_RETRIES && debug)
+         DBGMSG("    Try errors: %s", ddc_error_causes_string(ddc_excp));
 
       if (psc == DDCRC_NULL_RESPONSE ||
           psc == DDCRC_ALL_RESPONSES_NULL ||
@@ -372,14 +370,14 @@ char * get_firmware_version_string(Display_Handle * dh) {
    static char version[40];
 
    DDCA_Single_Vcp_Value * valrec;
-   RETRY_HISTORY_LOCAL(retry_history);
 
-   Public_Status_Code psc = get_vcp_value(
+   Public_Status_Code psc = 0;
+   Ddc_Error * ddc_excp = get_vcp_value(
                                dh,
                                0xc9,                     // firmware detection
                                DDCA_NON_TABLE_VCP_VALUE,
-                               &valrec,
-                               retry_history);
+                               &valrec);
+   psc = (ddc_excp) ? ddc_excp->psc : 0;
    if (psc != 0) {
       strcpy(version, "Unspecified");
       if (psc != DDCRC_REPORTED_UNSUPPORTED && psc != DDCRC_DETERMINED_UNSUPPORTED) {
@@ -410,9 +408,10 @@ char * get_controller_mfg_string(Display_Handle * dh) {
    static char mfg_name_buf[100] = "";
    char * mfg_name = NULL;
    DDCA_Single_Vcp_Value *   valrec;
-   RETRY_HISTORY_LOCAL(retry_history);
 
-   Public_Status_Code psc = get_vcp_value(dh, 0xc8, DDCA_NON_TABLE_VCP_VALUE, &valrec, retry_history);
+   Public_Status_Code psc = 0;
+   Ddc_Error * ddc_excp = get_vcp_value(dh, 0xc8, DDCA_NON_TABLE_VCP_VALUE, &valrec);
+   psc = (ddc_excp) ? ddc_excp->psc : 0;
 
    if (psc == 0) {
       DDCA_Feature_Value_Entry * vals = pxc8_display_controller_type_values;
@@ -429,8 +428,8 @@ char * get_controller_mfg_string(Display_Handle * dh) {
    }
    else {
       DBGMSF(debug, "get_nontable_vcp_value(0xc8) returned %s", psc_desc(psc));
-      if (retry_history && debug)
-         DBGMSG("    Try errors: %s", retry_history_string(retry_history));
+      if (debug)
+         DBGMSG("    Try errors: %s", ddc_error_causes_string(ddc_excp));
       mfg_name = "DDC communication failed";
     }
    return mfg_name;

@@ -26,16 +26,16 @@
 #ifndef DDC_READ_CAPABILITIES_H_
 #define DDC_READ_CAPABILITIES_H_
 
+#include "base/ddc_error.h"
 #include "base/displays.h"
 #include "base/retry_history.h"
 #include "base/status_code_mgt.h"
 
 // Get capability string for monitor.
 
-Public_Status_Code
+Ddc_Error *
 get_capabilities_string(
       Display_Handle * dh,
-      char**           pcaps,
-      Retry_History *  retry_history);
+      char**           pcaps);
 
 #endif /* DDC_READ_CAPABILITIES_H_ */

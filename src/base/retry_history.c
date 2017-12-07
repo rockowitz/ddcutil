@@ -80,6 +80,7 @@ int retry_history_add(Retry_History * history, Public_Status_Code psc) {
 
 
 void retry_history_dump(Retry_History * history) {
+   DBGMSG("Retry_History at %p", history);
    if (history) {
       assert(memcmp(history->marker, RETRY_HISTORY_MARKER, 4) == 0);
       for (int ndx = 0; ndx < history->ct; ndx++) {

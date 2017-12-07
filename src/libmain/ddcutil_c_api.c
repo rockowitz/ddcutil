@@ -41,6 +41,7 @@
 #include "base/build_info.h"
 #include "base/core.h"
 #include "base/ddc_errno.h"
+#include "base/ddc_error.h"
 #include "base/ddc_packets.h"
 #include "base/displays.h"
 #include "base/base_init.h"
@@ -1322,15 +1323,15 @@ ddca_get_nontable_vcp_value(
       DDCA_Vcp_Feature_Code           feature_code,
       DDCA_Non_Table_Value_Response * response)
 {
-   Retry_History * retry_history = NULL;
+   Ddc_Error * ddc_excp = NULL;
 
    WITH_DH(ddca_dh,  {
        Parsed_Nontable_Vcp_Response * code_info;
-       psc = get_nontable_vcp_value(
+       ddc_excp = get_nontable_vcp_value(
                 dh,
                 feature_code,
-                &code_info,
-                retry_history);
+                &code_info);
+       psc = (ddc_excp) ? ddc_excp->psc : 0;
        // DBGMSG(" get_nontable_vcp_value() returned %s", gsc_desc(gsc));
        if (psc == 0) {
           response->feature_code = code_info->vcp_code;
@@ -1379,12 +1380,13 @@ ddca_get_table_vcp_value(
       int *               value_len,
       Byte**              value_bytes)
 {
-   RETRY_HISTORY_LOCAL(retry_history);
+   Ddc_Error * ddc_excp = NULL;
 
    WITH_DH(ddca_dh,
       {
          Buffer * p_table_bytes = NULL;
-         psc =  get_table_vcp_value(dh, feature_code, &p_table_bytes, retry_history);
+         ddc_excp =  get_table_vcp_value(dh, feature_code, &p_table_bytes);
+         psc = (ddc_excp) ? ddc_excp->psc : 0;
          if (psc == 0) {
             assert(p_table_bytes);  // avoid coverity warning
             int len = p_table_bytes->len;
@@ -1402,17 +1404,18 @@ ddca_get_table_vcp_value(
 
 DDCA_Status
 ddca_get_vcp_value(
-      DDCA_Display_Handle  ddca_dh,
+      DDCA_Display_Handle       ddca_dh,
       DDCA_Vcp_Feature_Code     feature_code,
       DDCA_Vcp_Value_Type       call_type,   // why is this needed?   look it up from dh and feature_code
       DDCA_Single_Vcp_Value **  pvalrec)
 {
-   RETRY_HISTORY_LOCAL(retry_history);
+   Ddc_Error * ddc_excp = NULL;
 
    WITH_DH(ddca_dh,
          {
                *pvalrec = NULL;
-               psc = get_vcp_value(dh, feature_code, call_type, pvalrec, retry_history);
+               ddc_excp = get_vcp_value(dh, feature_code, call_type, pvalrec);
+               psc = (ddc_excp) ? ddc_excp->psc : 0;
          }
    );
 }
@@ -1424,8 +1427,7 @@ ddca_get_formatted_vcp_value(
       DDCA_Vcp_Feature_Code        feature_code,
       char**                  p_formatted_value)
 {
-   RETRY_HISTORY_LOCAL(retry_history);
-
+   Ddc_Error * ddc_excp = NULL;
    WITH_DH(ddca_dh,
          {
                *p_formatted_value = NULL;
@@ -1451,7 +1453,8 @@ ddca_get_formatted_vcp_value(
                    // n. will default to NON_TABLE_VCP_VALUE if not a known code
                    DDCA_Vcp_Value_Type call_type = (flags & DDCA_TABLE) ?  DDCA_TABLE_VCP_VALUE : DDCA_NON_TABLE_VCP_VALUE;
                    DDCA_Single_Vcp_Value * pvalrec;
-                   psc = get_vcp_value(dh, feature_code, call_type, &pvalrec, retry_history);
+                   ddc_excp = get_vcp_value(dh, feature_code, call_type, &pvalrec);
+                   psc = (ddc_excp) ? ddc_excp->psc : 0;
                    if (psc == 0) {
                       bool ok =
                       vcp_format_feature_detail(
@@ -1476,10 +1479,10 @@ ddca_set_single_vcp_value(
       DDCA_Display_Handle     ddca_dh,
       DDCA_Single_Vcp_Value * valrec)
    {
-      RETRY_HISTORY_LOCAL(retry_history);
-
+      Ddc_Error * ddc_excp = NULL;
       WITH_DH(ddca_dh,  {
-            psc = set_vcp_value(dh, valrec, retry_history);
+            ddc_excp = set_vcp_value(dh, valrec);
+            psc = (ddc_excp) ? ddc_excp->psc : 0;
          } );
    }
 
@@ -1535,12 +1538,12 @@ ddca_get_capabilities_string(
       DDCA_Display_Handle  ddca_dh,
       char**               pcaps)
 {
-   RETRY_HISTORY_LOCAL(retry_history);
-
+   Ddc_Error * ddc_excp = NULL;
    WITH_DH(ddca_dh,
       {
          char * p_cap_string = NULL;
-         psc = get_capabilities_string(dh, &p_cap_string, retry_history);
+         ddc_excp = get_capabilities_string(dh, &p_cap_string);
+         psc = (ddc_excp) ? ddc_excp->psc : 0;
          if (psc == 0) {
             // make copy to ensure caller does not muck around in ddcutil's
             // internal data structures
@@ -1693,8 +1696,8 @@ DDCA_Status
 ddca_set_profile_related_values(
       char * profile_values_string)
 {
-   RETRY_HISTORY_LOCAL(retry_history);
-   Public_Status_Code psc = loadvcp_by_string(profile_values_string, NULL, retry_history);
+   Ddc_Error * ddc_excp = loadvcp_by_string(profile_values_string, NULL);
+   Public_Status_Code psc = (ddc_excp) ? ddc_excp->psc : 0;
    return psc;
 }
 

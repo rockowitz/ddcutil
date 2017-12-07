@@ -72,27 +72,27 @@
  * Returns:
  *   status code
  */
-static Public_Status_Code
+static Ddc_Error *
 get_capabilities_buffer(
       Display_Handle * dh,
-      Buffer**         ppCapabilitiesBuffer,
-      Retry_History *  retry_history)
+      Buffer**         ppCapabilitiesBuffer)
 {
    Public_Status_Code psc;
+   Ddc_Error * ddc_excp = NULL;
 
-   psc = multi_part_read_with_retry(
+   ddc_excp = multi_part_read_with_retry(
                dh,
                DDC_PACKET_TYPE_CAPABILITIES_REQUEST,
                0x00,                       // no subtype for capabilities
                false,                      // !all_zero_response_ok
-               ppCapabilitiesBuffer,
-               retry_history);
+               ppCapabilitiesBuffer);
    Buffer * cap_buffer = *ppCapabilitiesBuffer;
+   psc = (ddc_excp) ? ddc_excp->psc: 0;
    assert(psc <= 0);
    if (psc == 0) {
       // trim trailing blanks and nulls
       int len = buffer_length(*ppCapabilitiesBuffer);
-      while ( len > 0) {
+      while ( len > 0 ) {
          Byte ch = cap_buffer->bytes[len-1];
          if (ch == ' ' || ch == '\0')
             len--;
@@ -103,7 +103,7 @@ get_capabilities_buffer(
       buffer_set_byte(cap_buffer, len, '\0');
       buffer_set_length(cap_buffer, len+1);
    }
-   return psc;
+   return ddc_excp;
 }
 
 
@@ -122,16 +122,16 @@ get_capabilities_buffer(
  * The returned pointer points to a string that is part of the
  * display handle.  It should NOT be freed by the caller.
  */
-Public_Status_Code
+Ddc_Error *
 get_capabilities_string(
       Display_Handle * dh,
-      char**           pcaps,
-      Retry_History *  retry_history)
+      char**           pcaps)
 {
    assert(dh);
    assert(dh->dref);
 
    Public_Status_Code psc = 0;
+   Ddc_Error * ddc_excp = NULL;
    if (!dh->dref->capabilities_string) {
       if (dh->dref->io_mode == DDCA_IO_USB) {
 #ifdef USE_USB
@@ -143,7 +143,8 @@ get_capabilities_string(
       }
       else {
          Buffer * pcaps_buffer;
-         psc = get_capabilities_buffer(dh, &pcaps_buffer, retry_history);
+         ddc_excp = get_capabilities_buffer(dh, &pcaps_buffer);
+         psc = (ddc_excp) ? ddc_excp->psc : 0;
          if (psc == 0) {
             dh->dref->capabilities_string = strdup((char *) pcaps_buffer->bytes);
             buffer_free(pcaps_buffer,__func__);
@@ -151,25 +152,28 @@ get_capabilities_string(
       }
    }
    *pcaps = dh->dref->capabilities_string;
-   return psc;
+   return ddc_excp;
 }
 
 
-Public_Status_Code
-get_capabilities_string_by_dref(Display_Ref * dref, char **pcaps, Retry_History * retry_history) {
+Ddc_Error *
+get_capabilities_string_by_dref(Display_Ref * dref, char **pcaps) {
    assert(dref);
 
    Public_Status_Code psc = 0;
+   Ddc_Error * ddc_excp = NULL;
    if (!dref->capabilities_string) {
       Display_Handle * dh = NULL;
       psc = ddc_open_display(dref, CALLOPT_NONE, &dh);
       if (psc == 0) {
-         psc = get_capabilities_string(dh, &dref->capabilities_string, retry_history);
+         ddc_excp = get_capabilities_string(dh, &dref->capabilities_string);
          ddc_close_display(dh);
       }
+      else
+         ddc_excp = ddc_error_new(psc, __func__);
    }
    *pcaps = dref->capabilities_string;
-   return psc;
+   return ddc_excp;
 }
 
 

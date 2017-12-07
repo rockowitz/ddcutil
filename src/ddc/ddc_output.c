@@ -39,6 +39,7 @@
 
 #include "base/adl_errors.h"
 #include "base/ddc_errno.h"
+#include "base/ddc_error.h"
 #include "base/ddc_packets.h"
 #include "base/linux_errno.h"
 #include "base/parms.h"
@@ -178,7 +179,7 @@ get_raw_value_for_feature_table_entry(
    assert(dh->dref);
 
    Public_Status_Code psc = 0;
-   RETRY_HISTORY_LOCAL(retry_history);    // should this be a parm?
+   Ddc_Error * ddc_excp = NULL;
 
    DDCA_MCCS_Version_Spec vspec = get_vcp_version_by_display_handle(dh);
    char * feature_name = get_version_sensitive_feature_name(frec, vspec);
@@ -195,18 +196,19 @@ get_raw_value_for_feature_table_entry(
               feature_code,
               feature_type,
               &valrec);
-      // gsc = public_to_global_status_code(psc);
+     if (psc != 0)
+        ddc_excp = ddc_error_new(psc, __func__);
 #else
       PROGRAM_LOGIC_ERROR("ddcutil not built with USB support");
 #endif
    }
    else {
-      psc = get_vcp_value(
+      ddc_excp = get_vcp_value(
               dh,
               feature_code,
               feature_type,
-              &valrec,
-              retry_history);
+              &valrec);
+      psc = (ddc_excp) ? ddc_excp->psc : 0;
    }
    assert ( (psc==0 && valrec) || (psc!=0 && !valrec) );
 

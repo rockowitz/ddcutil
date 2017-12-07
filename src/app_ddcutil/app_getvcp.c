@@ -45,7 +45,7 @@
 
 #include "base/core.h"
 #include "base/ddc_errno.h"
-#include "base/retry_history.h"
+#include "base/ddc_error.h"
 #include "base/sleep.h"
 #include "base/vcp_version.h"
 
@@ -291,10 +291,7 @@ app_read_changes(Display_Handle * dh) {
    // bool new_values_found = false;
 
    Public_Status_Code psc = 0;
-
-   Retry_History hist;
-   retry_history_clear(&hist);
-   Retry_History * retry_history = &hist;
+   Ddc_Error * ddc_excp = NULL;
 
    // read 02h
    // xff: no user controls
@@ -310,15 +307,15 @@ app_read_changes(Display_Handle * dh) {
    Parsed_Nontable_Vcp_Response * p_nontable_response = NULL;
    DDCA_MCCS_Version_Spec vspec = get_vcp_version_by_display_handle(dh);
    // DBGMSF(debug, "VCP version: %d.%d", vspec.major, vspec.minor);
-   psc = get_nontable_vcp_value(
+   ddc_excp = get_nontable_vcp_value(
             dh,
             0x02,
-            &p_nontable_response,
-            retry_history);
+            &p_nontable_response);
+   psc = (ddc_excp) ? ddc_excp->psc : 0;
    if (psc != 0) {
       DBGMSG("get_nontable_vcp_value() returned %s", psc_desc(psc));
-      if (psc == DDCRC_RETRIES && retry_history)
-         DBGMSG("    Try errors: %s", retry_history_string(retry_history));
+      if (psc == DDCRC_RETRIES)
+         DBGMSG("    Try errors: %s", ddc_error_causes_string(ddc_excp) );
    }
    else if (p_nontable_response->sl == 0x01) {
       DBGMSF(debug, "No new control values found");
@@ -328,19 +325,18 @@ app_read_changes(Display_Handle * dh) {
       DBGMSG("x02 value: 0x%02x", p_nontable_response->sl);
       free(p_nontable_response);
       p_nontable_response = NULL;
-      retry_history_clear(retry_history);
 
       // new_values_found = true;
       if ( vcp_version_le(vspec, VCP_SPEC_V21) ) {
-         psc = get_nontable_vcp_value(
+         ddc_excp = get_nontable_vcp_value(
                   dh,
                   0x52,
-                  &p_nontable_response,
-                  retry_history);
+                  &p_nontable_response);
+         psc = (ddc_excp) ? ddc_excp->psc : 0;
          if (psc != 0) {
              DBGMSG("get_nontable_vcp_value() for VCP feature x52 returned %s", psc_desc(psc));
-             if (psc == DDCRC_RETRIES && retry_history)
-                DBGMSG("    Try errors: %s", retry_history_string(retry_history));
+             if (psc == DDCRC_RETRIES )
+                DBGMSG("    Try errors: %s", ddc_error_causes_string(ddc_excp));
              return;
           }
           Byte changed_feature = p_nontable_response->sl;
@@ -350,15 +346,15 @@ app_read_changes(Display_Handle * dh) {
       else {  // x52 is a FIFO
          int ctr = 0;
          for (;ctr < MAX_CHANGES; ctr++) {
-            psc = get_nontable_vcp_value(
+            ddc_excp = get_nontable_vcp_value(
                      dh,
                      0x52,
-                     &p_nontable_response,
-                     retry_history);
+                     &p_nontable_response);
+            psc = (ddc_excp) ? ddc_excp->psc : 0;
             if (psc != 0) {
                 DBGMSG("get_nontable_vcp_value() returned %s", psc_desc(psc));
-                if (psc == DDCRC_RETRIES && retry_history)
-                   DBGMSG("    Try errors: %s", retry_history_string(retry_history));
+                if (psc == DDCRC_RETRIES)
+                   DBGMSG("    Try errors: %s", ddc_error_causes_string(ddc_excp));
                 return;
              }
              Byte changed_feature = p_nontable_response->sl;
@@ -376,12 +372,12 @@ app_read_changes(Display_Handle * dh) {
       }
 
       if (psc == 0) {
-         retry_history_clear(retry_history);
-         psc = set_nontable_vcp_value(dh, 0x02, 0x01, retry_history);
+         Ddc_Error * ddc_excp = set_nontable_vcp_value(dh, 0x02, 0x01);
+         psc = (ddc_excp) ? ddc_excp->psc : 0;
          if (psc != 0) {
             DBGMSG("set_nontable_vcp_value_by_display_handle() returned %s", psc_desc(psc));
-            if (psc == DDCRC_RETRIES && retry_history)
-                DBGMSG("    Try errors: %s", retry_history_string(retry_history));
+            if (psc == DDCRC_RETRIES)
+                DBGMSG("    Try errors: %s", ddc_error_causes_string(ddc_excp));
          }
          else
             DBGMSG("reset new control value successful");

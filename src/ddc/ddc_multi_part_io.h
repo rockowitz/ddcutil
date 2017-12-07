@@ -36,6 +36,7 @@
 // #include "util/coredefs.h"
 #include "util/data_structures.h"
 
+#include "base/ddc_error.h"
 #include "base/displays.h"
 #include "base/retry_history.h"
 #include "base/status_code_mgt.h"
@@ -50,19 +51,17 @@ void ddc_set_max_multi_part_read_tries(int ct);
 int  ddc_get_max_multi_part_read_tries();
 
 
-Public_Status_Code
+Ddc_Error *
 multi_part_read_with_retry(
    Display_Handle * dh,
    Byte             request_type,
    Byte             request_subtype,   // VCP feature code for table read, ignore for capabilities
    bool             all_zero_response_ok,
-   Buffer**         ppbuffer,
-   Retry_History *  retry_history);
+   Buffer**         ppbuffer);
 
-Public_Status_Code
+Ddc_Error *
 multi_part_write_with_retry(
      Display_Handle * dh,
      Byte             vcp_code,
-     Buffer *         value_to_set,
-     Retry_History *  retry_history);
+     Buffer *         value_to_set);
 #endif /* DDC_MULTI_PART_IO_H_ */

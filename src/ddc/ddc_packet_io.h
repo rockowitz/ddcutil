@@ -30,6 +30,7 @@
 #include <stdbool.h>
 
 #include "base/core.h"
+#include "base/ddc_error.h"
 #include "base/ddc_packets.h"
 #include "base/displays.h"
 #include "base/retry_history.h"
@@ -60,10 +61,9 @@ Public_Status_Code ddc_write_only(
       Display_Handle * dh,
       DDC_Packet *     request_packet_ptr);
 
-Public_Status_Code ddc_write_only_with_retry(
+Ddc_Error * ddc_write_only_with_retry(
       Display_Handle * dh,
-      DDC_Packet *     request_packet_ptr,
-      Retry_History *  retry_history);
+      DDC_Packet *     request_packet_ptr);
 
 Public_Status_Code ddc_write_read(
       Display_Handle * dh,
@@ -74,7 +74,7 @@ Public_Status_Code ddc_write_read(
       DDC_Packet **    response_packet_ptr_loc
      );
 
-Public_Status_Code ddc_write_read_with_retry(
+Ddc_Error *  ddc_write_read_with_retry(
       Display_Handle * dh,
       DDC_Packet *     request_packet_ptr,
       int              max_read_bytes,
@@ -82,8 +82,7 @@ Public_Status_Code ddc_write_read_with_retry(
       Byte             expected_subtype,
       bool             all_zero_response_ok,
   //  bool             retry_null_response,
-      DDC_Packet **    response_packet_ptr_loc,
-      Retry_History *  retry_history
+      DDC_Packet **    response_packet_ptr_loc
      );
 
 #endif /* DDC_PACKET_IO_H_ */

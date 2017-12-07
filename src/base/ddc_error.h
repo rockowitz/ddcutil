@@ -30,7 +30,9 @@
 
 #include <glib-2.0/glib.h>
 
+// #ifdef TRANSITIONAL
 #include "base/retry_history.h"
+// #endif
 #include "base/parms.h"
 #include "base/status_code_mgt.h"
 
@@ -68,10 +70,14 @@ char * ddc_error_causes_string(Ddc_Error * erec);
 
 void report_ddc_error(Ddc_Error * erec, int depth);
 
+
 void ddc_error_fill_retry_history(Ddc_Error * erec, Retry_History * hist);
 Retry_History * ddc_error_to_new_retry_history(Ddc_Error * erec);
 
+#ifdef TRANSITIONAL
 Ddc_Error * ddc_error_from_retry_history(Retry_History * hist, char * func);
+bool ddc_error_comp(Ddc_Error * erec, Retry_History * hist);
+#endif
 
 
 #endif /* DDC_ERROR_H_ */

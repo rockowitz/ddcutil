@@ -104,18 +104,18 @@ bool parse_vcp_value(char * string_value, long* parsed_value) {
  *   from put_vcp_by_display_ref()
  */
 // TODO: consider moving value parsing to command parser
-Public_Status_Code
+Ddc_Error *
 app_set_vcp_value(
       Display_Handle * dh,
       char *           feature,
       char *           new_value,
-      bool             force,
-      Retry_History *  retry_history)
+      bool             force)
 {
    bool debug = false;
    DBGMSF(debug,"Starting");
 
    Public_Status_Code         psc = 0;
+   Ddc_Error *                ddc_excp = NULL;
    long                       longtemp;
    Byte                       hexid;
    VCP_Feature_Table_Entry *  entry = NULL;
@@ -175,7 +175,8 @@ app_set_vcp_value(
       goto bye;
    }
 
-   psc = set_vcp_value(dh, &vrec, retry_history);
+   ddc_excp = set_vcp_value(dh, &vrec);
+   psc = (ddc_excp) ? ddc_excp->psc : 0;
 
    // *** TEMP FOR TESTING ***
    // if (vrec.val.c.cur_val == 25) {
@@ -191,8 +192,8 @@ app_set_vcp_value(
       default:
          // Is this proper error message?
          f0printf(FOUT, "Setting value failed for feature %02x. rc=%s\n", entry->code, psc_desc(psc));
-         if (psc == DDCRC_RETRIES && retry_history)
-            f0printf(FOUT, "    Try errors: %s\n", retry_history_string(retry_history));
+         if (psc == DDCRC_RETRIES)
+            f0printf(FOUT, "    Try errors: %s\n", ddc_error_causes_string(ddc_excp));
       }
    }
 
@@ -202,5 +203,5 @@ bye:
    }
 
    DBGMSF(debug, "Returning: %s", psc_desc(psc));
-   return psc;
+   return ddc_excp;
 }

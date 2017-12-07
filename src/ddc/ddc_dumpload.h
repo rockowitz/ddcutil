@@ -34,8 +34,8 @@
 #include <stdio.h>
 /** \endcond */
 
+#include "base/ddc_error.h"
 #include "base/displays.h"
-#include "base/retry_history.h"
 #include "base/status_code_mgt.h"
 
 #include "vcp/vcp_feature_values.h"
@@ -68,17 +68,15 @@ void free_dumpload_data(Dumpload_Data * pdata);
 char *
 format_timestamp(time_t time_millis, char * buf, int bufsz);
 
-Public_Status_Code
+Ddc_Error *
 loadvcp_by_dumpload_data(
       Dumpload_Data*   pdata,
-      Display_Handle * dh,
-      Retry_History *  retry_history);
+      Display_Handle * dh);
 
-Public_Status_Code
+Ddc_Error *
 loadvcp_by_string(
       char *           catenated,
-      Display_Handle * dh,
-      Retry_History *  retry_history);
+      Display_Handle * dh);
 
 Dumpload_Data*
 create_dumpload_data_from_g_ptr_array(GPtrArray * garray);

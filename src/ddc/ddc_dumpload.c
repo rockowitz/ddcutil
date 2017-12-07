@@ -46,6 +46,7 @@
 
 #include "base/core.h"
 #include "base/ddc_errno.h"
+#include "base/ddc_error.h"
 #include "base/ddc_packets.h"
 #include "base/displays.h"
 #include "base/parms.h"
@@ -290,13 +291,13 @@ create_dumpload_data_from_g_ptr_array(GPtrArray * garray) {
  * This function stops applying values on the first error encountered, and
  * returns the value of that error as its status code.
  */
-Public_Status_Code
+Ddc_Error *
 ddc_set_multiple(
       Display_Handle* dh,
-      Vcp_Value_Set   vset,
-      Retry_History * retry_history)
+      Vcp_Value_Set   vset)
 {
    Public_Status_Code psc = 0;
+   Ddc_Error *        ddc_excp = NULL;
    int value_ct = vcp_value_set_size(vset);
 
    int ndx;
@@ -322,20 +323,20 @@ ddc_set_multiple(
       //    sleep_millis_with_trace(DDC_TIMEOUT_MILLIS_DEFAULT, __func__, "before set_vcp_value()");
       // }
 
-
-      psc = set_vcp_value(dh, vrec, retry_history);
+      ddc_excp = set_vcp_value(dh, vrec);
+      psc = (ddc_excp) ? ddc_excp->psc : 0;
       if (psc != 0) {
          f0printf(FERR, "Error setting value for VCP feature code 0x%02x: %s\n",
                          feature_code, psc_desc(psc) );
-         if (psc == DDCRC_RETRIES && retry_history)
-            f0printf(FERR, "    Try errors: %s\n", retry_history_string(retry_history));
+         if (psc == DDCRC_RETRIES)
+            f0printf(FERR, "    Try errors: %s\n", ddc_error_causes_string(ddc_excp));
          f0printf(FERR, "Terminating.");
          break;
       }
 
    } // for loop
 
-   return psc;
+   return ddc_excp;
 }
 
 
@@ -350,11 +351,10 @@ ddc_set_multiple(
  *
  * @return   status code
  */
-Public_Status_Code
+Ddc_Error *
 loadvcp_by_dumpload_data(
       Dumpload_Data *   pdata,
-      Display_Handle *  dh,
-      Retry_History *   retry_history)
+      Display_Handle *  dh)
 {
    assert(pdata);
 
@@ -366,6 +366,7 @@ loadvcp_by_dumpload_data(
    }
 
    Public_Status_Code psc = 0;
+   Ddc_Error * ddc_excp = NULL;
    Display_Handle * dh_argument = dh;
 
    if (dh) {
@@ -421,7 +422,8 @@ loadvcp_by_dumpload_data(
       }
    }
 
-   psc = ddc_set_multiple(dh, pdata->vcp_values, retry_history);
+   ddc_excp = ddc_set_multiple(dh, pdata->vcp_values);
+   psc = (ddc_excp) ? ddc_excp->psc : 0;
 
    // close the display only if this function opened it
    if (!dh_argument)
@@ -429,9 +431,9 @@ loadvcp_by_dumpload_data(
 
 bye:
    DBGMSF(debug, "Returning: %s", psc_desc(psc));
-   if (psc == DDCRC_RETRIES && retry_history && debug)
-      DBGMSG("        Try errors: %s", retry_history_string(retry_history));
-   return psc;
+   if (psc == DDCRC_RETRIES && debug)
+      DBGMSG("        Try errors: %s", ddc_error_causes_string(ddc_excp));
+   return ddc_excp;;
 }
 
 
@@ -446,11 +448,10 @@ bye:
  * Returns:
  *    0 if success, status code if not
  */
-Public_Status_Code
+Ddc_Error *
 loadvcp_by_ntsa(
       Null_Terminated_String_Array ntsa,
-      Display_Handle *             dh,
-      Retry_History *              retry_history)
+      Display_Handle *             dh)
 {
    bool debug = false;
 
@@ -462,6 +463,7 @@ loadvcp_by_ntsa(
       verbose = true;
    }
    Public_Status_Code psc = 0;
+   Ddc_Error * ddc_excp = NULL;
 
    GPtrArray * garray = ntsa_to_g_ptr_array(ntsa);
 
@@ -470,6 +472,7 @@ loadvcp_by_ntsa(
    if (!pdata) {
       f0printf(FERR, "Unable to load VCP data from string\n");
       psc = DDCRC_INVALID_DATA;
+      ddc_excp = ddc_error_new(psc, __func__);
    }
    else {
       if (verbose) {
@@ -479,10 +482,10 @@ loadvcp_by_ntsa(
            report_dumpload_data(pdata, 0);
            rpt_pop_output_dest();
       }
-      psc = loadvcp_by_dumpload_data(pdata, dh, retry_history);
+      ddc_excp = loadvcp_by_dumpload_data(pdata, dh);
       free_dumpload_data(pdata);
    }
-   return psc;
+   return ddc_excp;
 }
 
 
@@ -499,16 +502,16 @@ loadvcp_by_ntsa(
  *    0 if success, status code if not
  */
 // n. called from ddct_public:
-Public_Status_Code
+Ddc_Error *
 loadvcp_by_string(
       char *           catenated,
-      Display_Handle * dh,
-      Retry_History *  retry_history)
+      Display_Handle * dh)
 {
    Null_Terminated_String_Array nta = strsplit(catenated, ";");
-   Public_Status_Code psc = loadvcp_by_ntsa(nta, dh, retry_history);
+   Ddc_Error * ddc_excp = loadvcp_by_ntsa(nta, dh);
+
    ntsa_free(nta, /* free_strings */ true);
-   return psc;
+   return ddc_excp;
 }
 
 

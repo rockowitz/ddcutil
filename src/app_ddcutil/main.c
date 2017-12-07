@@ -39,9 +39,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-
-#include "../app_sysenv/query_sysenv.h"
-#include "../ddc/ddc_try_stats.h"
 /** \endcond */
 
 
@@ -53,11 +50,11 @@
 #include "base/base_init.h"
 #include "base/core.h"
 #include "base/ddc_errno.h"
+#include "base/ddc_error.h"
 #include "base/ddc_packets.h"
 #include "base/displays.h"
 #include "base/linux_errno.h"
 #include "base/parms.h"
-#include "base/retry_history.h"
 #include "base/sleep.h"
 #include "base/status_code_mgt.h"
 
@@ -66,6 +63,8 @@
 
 #include "i2c/i2c_bus_core.h"
 #include "i2c/i2c_do_io.h"
+
+#include "ddc/ddc_try_stats.h"
 
 #include "adl/adl_shim.h"
 
@@ -86,10 +85,13 @@
 #include "app_ddcutil/app_dumpload.h"
 #include "app_ddcutil/app_getvcp.h"
 #include "app_ddcutil/app_setvcp.h"
+
+#include "app_ddcutil/testcases.h"
+
+#include "app_sysenv/query_sysenv.h"
 #ifdef USE_USB
 #include "../app_sysenv/query_sysenv_usb.h"
 #endif
-#include "app_ddcutil/testcases.h"
 
 
 //
@@ -132,8 +134,8 @@ perform_get_capabilities_by_display_handle(Display_Handle * dh) {
    bool debug = false;
    Parsed_Capabilities * pcap = NULL;
    char * capabilities_string;
-   RETRY_HISTORY_LOCAL(retry_history);
-   Public_Status_Code psc = get_capabilities_string(dh, &capabilities_string, retry_history);
+   Ddc_Error * ddc_excp = get_capabilities_string(dh, &capabilities_string);
+    Public_Status_Code psc = (ddc_excp) ? ddc_excp->psc : 0;
 
    if (psc < 0) {
       switch(psc) {
@@ -180,6 +182,7 @@ void probe_display_by_dh(Display_Handle * dh)
    bool debug = false;
    DBGMSF(debug, "Starting. dh=%s", dh_repr(dh));
    Public_Status_Code psc = 0;
+   Ddc_Error * ddc_excp = NULL;
    // RETRY_HISTORY_LOCAL(retry_history);
    char dref_name_buf[DREF_SHORT_NAME_BUF_SIZE];
    dref_short_name_r(dh->dref, dref_name_buf, sizeof(dref_name_buf));
@@ -272,23 +275,23 @@ void probe_display_by_dh(Display_Handle * dh)
    DDCA_Single_Vcp_Value * valrec;
    int color_temp_increment = 0;
    int color_temp_units = 0;
-   psc =  get_vcp_value(
+   ddc_excp =  get_vcp_value(
             dh,
           0x0b,              // color temperature increment,
           DDCA_NON_TABLE_VCP_VALUE,
-          &valrec,
-          NULL);    // Retry_History *
+          &valrec);
+   psc = (ddc_excp) ? ddc_excp->psc : 0;
    if (psc == 0) {
       if (debug)
          f0printf(FOUT, "Value returned for feature x0b: %s\n", summarize_single_vcp_value(valrec) );
       color_temp_increment = valrec->val.c.cur_val;
 
-      psc =  get_vcp_value(
+      ddc_excp =  get_vcp_value(
             dh,
           0x0c,              // color temperature request
           DDCA_NON_TABLE_VCP_VALUE,
-          &valrec,
-          NULL);    // Retry_History *
+          &valrec);
+      psc = (ddc_excp) ? ddc_excp->psc : 0;
       if (psc == 0) {
          if (debug)
             f0printf(FOUT, "Value returned for feature x0c: %s\n", summarize_single_vcp_value(valrec) );
@@ -680,8 +683,6 @@ int main(int argc, char *argv[]) {
          callopts |=  CALLOPT_ERR_MSG;    // removed CALLOPT_ERR_ABORT
          ddc_open_display(dref, callopts, &dh);
 
-         RETRY_HISTORY_LOCAL(retry_history);
-
          if (dh) {
             if (// parsed_cmd->cmd_id == CMDID_CAPABILITIES ||
                 parsed_cmd->cmd_id == CMDID_GETVCP       ||
@@ -725,13 +726,14 @@ int main(int argc, char *argv[]) {
                   main_rc = EXIT_SUCCESS;
                   int argNdx;
                   Public_Status_Code rc = 0;
+                  Ddc_Error * ddc_excp;
                   for (argNdx=0; argNdx < parsed_cmd->argct; argNdx+= 2) {
-                     rc = app_set_vcp_value(
+                     ddc_excp = app_set_vcp_value(
                              dh,
                              parsed_cmd->args[argNdx],
                              parsed_cmd->args[argNdx+1],
-                             parsed_cmd->force,
-                             retry_history);
+                             parsed_cmd->force);
+                     rc = (ddc_excp) ? ddc_excp->psc : 0;
                      if (rc != 0) {
                         main_rc = EXIT_FAILURE;   // ???
                         break;
@@ -751,11 +753,11 @@ int main(int argc, char *argv[]) {
                }
                else {
                   main_rc = EXIT_SUCCESS;
-                  Public_Status_Code rc = save_current_settings(dh, retry_history);
-                  if (rc != 0)  {
-                     f0printf(FOUT, "Save current settings failed. rc=%s\n", psc_desc(rc));
-                     if (rc == DDCRC_RETRIES && retry_history)
-                        f0printf(FOUT, "    Try errors: %s", retry_history_string(retry_history));
+                  Ddc_Error * ddc_excp = save_current_settings(dh);
+                  if (ddc_excp)  {
+                     f0printf(FOUT, "Save current settings failed. rc=%s\n", psc_desc(ddc_excp->psc));
+                     if (ddc_excp->psc == DDCRC_RETRIES)
+                        f0printf(FOUT, "    Try errors: %s", ddc_error_causes_string(ddc_excp) );
                      main_rc = EXIT_FAILURE;
                   }
                }

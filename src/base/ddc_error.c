@@ -106,7 +106,7 @@ void ddc_error_set_status(Ddc_Error * erec, Public_Status_Code psc) {
    erec->psc = psc;
 }
 
-char * ddc_error_causes_string(Ddc_Error * erec) {
+char * ddc_error_causes_string_old(Ddc_Error * erec) {
    // return strdup("unimplemented");
    // *** Temporary hacked up implementation ***
    // TODO: Reimplement
@@ -116,17 +116,58 @@ char * ddc_error_causes_string(Ddc_Error * erec) {
    return result;
 }
 
+
+char * ddc_error_causes_string(Ddc_Error * erec) {
+   bool debug = false;
+   // DBGMSF(debug, "history=%p, history->ct=%d", history, history->ct);
+
+   GString * gs = g_string_new(NULL);
+
+   if (erec) {
+      assert(memcmp(erec->marker, DDC_ERROR_MARKER, 4) == 0);
+
+      bool first = true;
+
+      int ndx = 0;
+      while (ndx < erec->cause_ct) {
+         Public_Status_Code this_psc = erec->causes[ndx]->psc;
+         int cur_ct = 1;
+         for (int i = ndx+1; i < erec->cause_ct; i++) {
+            if (erec->causes[i]->psc != this_psc)
+               break;
+            cur_ct++;
+         }
+         if (first)
+            first = false;
+         else
+            g_string_append(gs, ", ");
+         char * cur_name = psc_name(this_psc);
+         g_string_append(gs, cur_name);
+         if (cur_ct > 1)
+            g_string_append_printf(gs, "(x%d)", cur_ct);
+         ndx += cur_ct;
+      }
+
+   }
+
+   char * result = gs->str;
+   g_string_free(gs, false);
+
+   DBGMSF(debug, "Done.  Returning: |%s|", result);
+   return result;
+}
+
+
+
+
+
 void report_ddc_error(Ddc_Error * erec, int depth) {
    int d1 = depth+1;
 
    // rpt_vstring(depth, "Status code: %s", psc_desc(erec->psc));
    // rpt_vstring(depth, "Location: %s", (erec->func) ? erec->func : "not set");
-   rpt_vstring(depth, "%s: status=%s",
-         (erec->func) ? erec->func : "not set",
-                      psc_desc(erec->psc)
-
-
-   );
+   rpt_vstring(depth, "Exception in function %s: status=%s",
+         (erec->func) ? erec->func : "not set", psc_desc(erec->psc) );
    if (erec->cause_ct > 0) {
       rpt_vstring(depth, "Caused by: ");
       for (int ndx = 0; ndx < erec->cause_ct; ndx++) {
@@ -141,11 +182,13 @@ void report_ddc_error(Ddc_Error * erec, int depth) {
 
 
 void ddc_error_fill_retry_history(Ddc_Error * erec, Retry_History * hist) {
-   VALID_DDC_ERROR_PTR(erec);
-   assert(erec->psc == DDCRC_RETRIES);
+   if (erec && hist) {
+      VALID_DDC_ERROR_PTR(erec);
+      assert(erec->psc == DDCRC_RETRIES);
 
-   for (int ndx = 0; ndx < erec->cause_ct; ndx++) {
-      retry_history_add(hist, erec->causes[ndx]->psc);
+      for (int ndx = 0; ndx < erec->cause_ct; ndx++) {
+         retry_history_add(hist, erec->causes[ndx]->psc);
+      }
    }
 }
 
@@ -174,6 +217,49 @@ Ddc_Error * ddc_error_from_retry_history(Retry_History * hist, char * func) {
    return erec;
 }
 
+bool ddc_error_comp(Ddc_Error * erec, Retry_History * hist) {
+   bool match = false;
 
+   if (!erec && !hist) {
+      DBGMSG("erec == NULL, hist == NULL");
+      match = true;
+   }
+   else if (erec && !hist) {
+      DBGMSG("erec non-null, hist is null");
+      match = false;
+   }
+   else if (!erec && hist) {
+      DBGMSG("erec is null, hist is non-null");
+      if (hist->ct != 0) {
+         DBGMSG("Retry_History non-empty");
+         match = false;
+      }
+      else
+         match = true;
+   }
+   else {
+      match = true;
+      for (int ndx = 0; ndx < erec->cause_ct; ndx++) {
+         DBGMSG("erec->causes[%d]->psc = %d", ndx, erec->causes[ndx]->psc);
+      }
+      for (int ndx = 0; ndx < hist->ct; ndx++) {
+         DBGMSG("hist->psc[%d] = %d", ndx, hist->psc[ndx]);
+      }
+      if (erec->cause_ct != hist->ct) {
+         DBGMSG("erec->cause_ct == %d, hist->ct == %d", erec->cause_ct, hist->ct);
 
+         match = false;
+      }
+      else for (int ndx = 0; ndx < erec->cause_ct;  ndx++) {
+         if (erec->causes[ndx]->psc  != hist->psc[ndx]) {
+            DBGMSG("erec->causes[%d]->psc == %d, hist->psc[%d] = %d",
+                   ndx, erec->causes[ndx]->psc, ndx, hist->psc[ndx]);
+            match = false;
+         }
+      }
+   }
+
+   DBGMSG("Ddc_Error and Retry_History %smatch", (match) ? "" : "DO NOT");
+   return match;
+}
 
