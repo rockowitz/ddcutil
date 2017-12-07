@@ -107,7 +107,7 @@ save_current_settings(
 
    DBGTRC(debug, TRACE_GROUP, "Returning %s", psc_desc(psc));
    if ( (debug||IS_TRACING()) && ddc_excp)
-      report_ddc_error(ddc_excp, 0);
+      ddc_error_report(ddc_excp, 0);
    return ddc_excp;
 }
 
@@ -485,7 +485,7 @@ get_nontable_vcp_value(
           "Returning %s, *ppinterpreted_code=%p", psc_desc(psc), parsed_response);
    if (excp) {
       rpt_vstring(0, "Error reading feature x%02x", feature_code);
-      report_ddc_error(excp, 1);
+      ddc_error_report(excp, 1);
    }
    *ppInterpretedCode = parsed_response;
    assert( (psc == 0 && parsed_response) || (psc < 0 && !parsed_response));
@@ -540,7 +540,7 @@ Ddc_Error * get_table_vcp_value(
    //       DBGMSG("    Try errors: %s", retry_history_string(retry_history));
    // DBGTRC_RETRY_ERRORS(debug, psc, retry_history);
    if (ddc_excp)
-      report_ddc_error(ddc_excp, 0);
+      ddc_error_report(ddc_excp, 0);
    return ddc_excp;
 }
 

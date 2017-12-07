@@ -824,12 +824,12 @@ ddc_write_read_with_retry(
 
    DBGTRC(debug, TRACE_GROUP, "Done (new). psc=%s", (ddc_excp) ? psc_desc(ddc_excp->psc) : "0");
    if (ddc_excp && ddc_excp->psc == DDCRC_RETRIES && (debug || IS_TRACING())) {
-      report_ddc_error(ddc_excp, 0);
+      ddc_error_report(ddc_excp, 0);
       DBGTRC(debug, TRACE_GROUP, "      Try errors: %s", ddc_error_causes_string(ddc_excp));
    }
 
    if (ddc_excp) {
-      report_ddc_error(ddc_excp, 1);
+      ddc_error_report(ddc_excp, 1);
    }
 
    return ddc_excp;
@@ -993,7 +993,7 @@ ddc_write_only_with_retry(
    // new Ddc_Error mechanism
    DBGTRC(debug, TRACE_GROUP, "Done (new). psc=%s", (ddc_excp) ? psc_desc(ddc_excp->psc) : "0");
    if (ddc_excp && ddc_excp->psc == DDCRC_RETRIES && (debug || IS_TRACING())) {
-      report_ddc_error(ddc_excp, 0);
+      ddc_error_report(ddc_excp, 0);
       DBGTRC(debug, TRACE_GROUP, "      Try errors: %s", ddc_error_causes_string(ddc_excp));
    }
 

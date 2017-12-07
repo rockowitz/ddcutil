@@ -25,18 +25,19 @@
  *
  */
 
+/** \cond */
 #include <config.h>
 
-/** \cond */
 #include <assert.h>
 #include <errno.h>
 #include <stdio.h>
 #include <sys/ioctl.h>
 #include <unistd.h>
-/** \endcond */
 
 #include "util/string_util.h"
 #include "util/report_util.h"
+/** \endcond */
+
 
 #ifdef USE_USB
 #include "usb_util/hiddev_reports.h"
@@ -313,6 +314,7 @@ app_read_changes(Display_Handle * dh) {
             &p_nontable_response);
    psc = (ddc_excp) ? ddc_excp->psc : 0;
    if (psc != 0) {
+      ddc_error_free(ddc_excp);
       DBGMSG("get_nontable_vcp_value() returned %s", psc_desc(psc));
       if (psc == DDCRC_RETRIES)
          DBGMSG("    Try errors: %s", ddc_error_causes_string(ddc_excp) );
@@ -334,14 +336,15 @@ app_read_changes(Display_Handle * dh) {
                   &p_nontable_response);
          psc = (ddc_excp) ? ddc_excp->psc : 0;
          if (psc != 0) {
-             DBGMSG("get_nontable_vcp_value() for VCP feature x52 returned %s", psc_desc(psc));
-             if (psc == DDCRC_RETRIES )
-                DBGMSG("    Try errors: %s", ddc_error_causes_string(ddc_excp));
-             return;
-          }
-          Byte changed_feature = p_nontable_response->sl;
-          free(p_nontable_response);
-          app_show_single_vcp_value_by_feature_id(dh, changed_feature, false);
+            ddc_error_free(ddc_excp);
+            DBGMSG("get_nontable_vcp_value() for VCP feature x52 returned %s", psc_desc(psc));
+            if (psc == DDCRC_RETRIES )
+               DBGMSG("    Try errors: %s", ddc_error_causes_string(ddc_excp));
+            return;
+         }
+         Byte changed_feature = p_nontable_response->sl;
+         free(p_nontable_response);
+         app_show_single_vcp_value_by_feature_id(dh, changed_feature, false);
       }
       else {  // x52 is a FIFO
          int ctr = 0;
@@ -352,19 +355,20 @@ app_read_changes(Display_Handle * dh) {
                      &p_nontable_response);
             psc = (ddc_excp) ? ddc_excp->psc : 0;
             if (psc != 0) {
-                DBGMSG("get_nontable_vcp_value() returned %s", psc_desc(psc));
-                if (psc == DDCRC_RETRIES)
-                   DBGMSG("    Try errors: %s", ddc_error_causes_string(ddc_excp));
-                return;
-             }
-             Byte changed_feature = p_nontable_response->sl;
-             free(p_nontable_response);
-             p_nontable_response = NULL;
-             if (changed_feature == 0x00) {
-                DBGMSG("No more changed features found");
-                break;
-             }
-             app_show_single_vcp_value_by_feature_id(dh, changed_feature, false);
+               ddc_error_free(ddc_excp);
+               DBGMSG("get_nontable_vcp_value() returned %s", psc_desc(psc));
+               if (psc == DDCRC_RETRIES)
+                  DBGMSG("    Try errors: %s", ddc_error_causes_string(ddc_excp));
+               return;
+            }
+            Byte changed_feature = p_nontable_response->sl;
+            free(p_nontable_response);
+            p_nontable_response = NULL;
+            if (changed_feature == 0x00) {
+               DBGMSG("No more changed features found");
+               break;
+            }
+            app_show_single_vcp_value_by_feature_id(dh, changed_feature, false);
          }
          if (ctr == MAX_CHANGES) {
             DBGMSG("Reached loop guard value MAX_CHANGES (%d)", MAX_CHANGES);
@@ -375,6 +379,7 @@ app_read_changes(Display_Handle * dh) {
          Ddc_Error * ddc_excp = set_nontable_vcp_value(dh, 0x02, 0x01);
          psc = (ddc_excp) ? ddc_excp->psc : 0;
          if (psc != 0) {
+            ddc_error_free(ddc_excp);
             DBGMSG("set_nontable_vcp_value_by_display_handle() returned %s", psc_desc(psc));
             if (psc == DDCRC_RETRIES)
                 DBGMSG("    Try errors: %s", ddc_error_causes_string(ddc_excp));
@@ -423,7 +428,6 @@ app_read_changes_usb(Display_Handle * dh) {
          report_hiddev_usage_ref(&uref, 1);
          rpt_vstring(1, "New value: 0x%04x (%d)", uref.value, uref.value);
       }
-
    }
    else {
       DBGMSF(debug, "tick");

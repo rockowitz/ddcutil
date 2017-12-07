@@ -1,7 +1,7 @@
 /* app_getvcp.h
  *
  * <copyright>
- * Copyright (C) 2014-2016 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2014-2017 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -21,10 +21,16 @@
  * </endcopyright>
  */
 
+/** \f
+ *
+ */
+
 #ifndef APP_GETVCP_H_
 #define APP_GETVCP_H_
 
+/** \cond */
 #include <stdbool.h>
+/** \endcond */
 
 #include "base/displays.h"
 #include "base/feature_sets.h"

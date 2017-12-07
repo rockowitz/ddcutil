@@ -70,7 +70,7 @@ void ddc_error_set_status(Ddc_Error * erec, Public_Status_Code psc);
 
 char * ddc_error_causes_string(Ddc_Error * erec);
 
-void report_ddc_error(Ddc_Error * erec, int depth);
+void ddc_error_report(Ddc_Error * erec, int depth);
 
 
 void ddc_error_fill_retry_history(Ddc_Error * erec, Retry_History * hist);

@@ -27,9 +27,9 @@
  * ddcutil standalone application mainline
  */
 
+/** \cond */
 #include <config.h>
 
-/** \cond */
 #include <assert.h>
 #include <ctype.h>
 #include <errno.h>
@@ -39,12 +39,11 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-/** \endcond */
-
 
 #include "util/data_structures.h"
 #include "util/failsim.h"
 #include "util/sysfs_util.h"
+/** \endcond */
 
 #include "base/adl_errors.h"
 #include "base/base_init.h"
@@ -90,7 +89,7 @@
 
 #include "app_sysenv/query_sysenv.h"
 #ifdef USE_USB
-#include "../app_sysenv/query_sysenv_usb.h"
+#include "app_sysenv/query_sysenv_usb.h"
 #endif
 
 
@@ -135,7 +134,7 @@ perform_get_capabilities_by_display_handle(Display_Handle * dh) {
    Parsed_Capabilities * pcap = NULL;
    char * capabilities_string;
    Ddc_Error * ddc_excp = get_capabilities_string(dh, &capabilities_string);
-    Public_Status_Code psc = (ddc_excp) ? ddc_excp->psc : 0;
+   Public_Status_Code psc = (ddc_excp) ? ddc_excp->psc : 0;
 
    if (psc < 0) {
       switch(psc) {
@@ -152,6 +151,7 @@ perform_get_capabilities_by_display_handle(Display_Handle * dh) {
                 __func__, dh_repr(dh));
          DBGMSG("Unexpected status code: %s", psc_desc(psc));
       }
+      ddc_error_free(ddc_excp);
    }
    else {
       assert(capabilities_string);
@@ -183,7 +183,6 @@ void probe_display_by_dh(Display_Handle * dh)
    DBGMSF(debug, "Starting. dh=%s", dh_repr(dh));
    Public_Status_Code psc = 0;
    Ddc_Error * ddc_excp = NULL;
-   // RETRY_HISTORY_LOCAL(retry_history);
    char dref_name_buf[DREF_SHORT_NAME_BUF_SIZE];
    dref_short_name_r(dh->dref, dref_name_buf, sizeof(dref_name_buf));
 
@@ -306,9 +305,10 @@ void probe_display_by_dh(Display_Handle * dh)
                color_temp);
       }
    }
-   if (psc != 0)
+   if (psc != 0) {
       f0printf(FOUT, "Unable to calculate color temperature from VCP features x0B and x0C\n");
-
+      ddc_error_free(ddc_excp);
+   }
    // get VCP 14
    // report color preset
 
@@ -329,7 +329,6 @@ void probe_display_by_dref(Display_Ref * dref) {
       ddc_close_display(dh);
    }
 }
-
 
 
 //
@@ -735,6 +734,7 @@ int main(int argc, char *argv[]) {
                              parsed_cmd->force);
                      rc = (ddc_excp) ? ddc_excp->psc : 0;
                      if (rc != 0) {
+                        ddc_error_free(ddc_excp);
                         main_rc = EXIT_FAILURE;   // ???
                         break;
                      }
@@ -758,6 +758,8 @@ int main(int argc, char *argv[]) {
                      f0printf(FOUT, "Save current settings failed. rc=%s\n", psc_desc(ddc_excp->psc));
                      if (ddc_excp->psc == DDCRC_RETRIES)
                         f0printf(FOUT, "    Try errors: %s", ddc_error_causes_string(ddc_excp) );
+                     ddc_error_report(ddc_excp, 0);   // ** ALTERNATIVE **/
+                     ddc_error_free(ddc_excp);
                      main_rc = EXIT_FAILURE;
                   }
                }

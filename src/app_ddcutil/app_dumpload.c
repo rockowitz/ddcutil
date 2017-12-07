@@ -1,7 +1,7 @@
 /* app_dumpload.c
  *
  * <copyright>
- * Copyright (C) 2014-2016 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2014-2017 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -21,6 +21,11 @@
  * </endcopyright>
  */
 
+/** \f
+ *
+ */
+
+/** \cond */
 #include <assert.h>
 #include <errno.h>
 #include <fcntl.h>
@@ -36,6 +41,7 @@
 #include "util/file_util.h"
 #include "util/glib_util.h"
 #include "util/report_util.h"
+/** \endcond */
 
 #include "base/core.h"
 #include "base/ddc_error.h"

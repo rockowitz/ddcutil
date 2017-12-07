@@ -197,7 +197,7 @@ char * ddc_error_causes_string(Ddc_Error * erec) {
 
 
 
-void report_ddc_error(Ddc_Error * erec, int depth) {
+void ddc_error_report(Ddc_Error * erec, int depth) {
    int d1 = depth+1;
 
    // rpt_vstring(depth, "Status code: %s", psc_desc(erec->psc));
@@ -207,7 +207,7 @@ void report_ddc_error(Ddc_Error * erec, int depth) {
    if (erec->cause_ct > 0) {
       rpt_vstring(depth, "Caused by: ");
       for (int ndx = 0; ndx < erec->cause_ct; ndx++) {
-         report_ddc_error(erec->causes[ndx], d1);
+         ddc_error_report(erec->causes[ndx], d1);
       }
    }
 }

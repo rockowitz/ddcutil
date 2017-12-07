@@ -21,9 +21,15 @@
  * </endcopyright>
  */
 
+/** \f
+ *
+ */
+
+/** \cond */
 #include <assert.h>
 #include <errno.h>
 #include <string.h>
+/** \endcond */
 
 #include "base/core.h"
 #include "base/ddc_errno.h"

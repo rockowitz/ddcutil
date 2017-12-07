@@ -21,6 +21,10 @@
  * </endcopyright>
  */
 
+/** \f
+ *
+ */
+
 #ifndef APP_SETVCP_H_
 #define APP_SETVCP_H_
 
