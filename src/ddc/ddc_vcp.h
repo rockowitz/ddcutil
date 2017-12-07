@@ -32,7 +32,7 @@
 /** \endcond */
 
 #include "base/core.h"
-#include "base/retry_history.h"
+#include "base/ddc_error.h"
 #include "base/status_code_mgt.h"
 
 #include "vcp/vcp_feature_codes.h"

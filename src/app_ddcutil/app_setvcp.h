@@ -1,7 +1,7 @@
 /* app_setvcp.h
  *
  * <copyright>
- * Copyright (C) 2014-2016 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2014-2017 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -24,8 +24,8 @@
 #ifndef APP_SETVCP_H_
 #define APP_SETVCP_H_
 
+#include "base/ddc_error.h"
 #include "base/displays.h"
-#include "base/retry_history.h"
 #include "base/status_code_mgt.h"
 
 Ddc_Error *

@@ -43,7 +43,6 @@
 #include "base/ddc_packets.h"
 #include "base/execution_stats.h"
 #include "base/parms.h"
-#include "base/retry_history.h"
 
 #include "ddc/ddc_packet_io.h"
 #include "ddc/ddc_try_stats.h"

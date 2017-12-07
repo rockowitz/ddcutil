@@ -83,7 +83,7 @@ Ddc_Error *
 save_current_settings(
       Display_Handle * dh)
 {
-   bool debug = true;
+   bool debug = false;
    DBGTRC(debug, TRACE_GROUP,
           "Invoking DDC Save Current Settings command. dh=%s", dh_repr_t(dh));
    Public_Status_Code psc = 0;
@@ -131,7 +131,7 @@ set_nontable_vcp_value(
       Byte             feature_code,
       int              new_value)
 {
-   bool debug = true;
+   bool debug = false;
    DBGTRC(debug, TRACE_GROUP,
           "Writing feature 0x%02x , new value = %d, dh=%s",
           feature_code, new_value, dh_repr_t(dh) );
@@ -334,7 +334,7 @@ set_vcp_value(
       Display_Handle *        dh,
       DDCA_Single_Vcp_Value * vrec)
 {
-   bool debug = true;
+   bool debug = false;
    DBGMSF(debug, "Starting. ");
    FILE * fout = FOUT;
    if ( get_output_level() < DDCA_OL_VERBOSE )
@@ -413,7 +413,7 @@ get_nontable_vcp_value(
        DDCA_Vcp_Feature_Code          feature_code,
        Parsed_Nontable_Vcp_Response** ppInterpretedCode)
 {
-   bool debug = true;
+   bool debug = false;
    DBGTRC(debug, TRACE_GROUP, "Reading feature 0x%02x", feature_code);
 
    Public_Status_Code psc = 0;
@@ -484,7 +484,8 @@ get_nontable_vcp_value(
    DBGTRC(debug, TRACE_GROUP,
           "Returning %s, *ppinterpreted_code=%p", psc_desc(psc), parsed_response);
    if (excp) {
-      report_ddc_error(excp, 0);
+      rpt_vstring(0, "Error reading feature x%02x", feature_code);
+      report_ddc_error(excp, 1);
    }
    *ppInterpretedCode = parsed_response;
    assert( (psc == 0 && parsed_response) || (psc < 0 && !parsed_response));
@@ -506,7 +507,7 @@ Ddc_Error * get_table_vcp_value(
        Byte                   feature_code,
        Buffer**               pp_table_bytes)
 {
-   bool debug = true;
+   bool debug = false;
    DBGTRC(debug, TRACE_GROUP, "Starting. Reading feature 0x%02x", feature_code);
 
    Public_Status_Code psc = 0;
@@ -565,7 +566,7 @@ get_vcp_value(
        DDCA_Vcp_Value_Type       call_type,
        DDCA_Single_Vcp_Value **  pvalrec)
 {
-   bool debug = true;
+   bool debug = false;
    DBGTRC(debug, TRACE_GROUP, "Starting. Reading feature 0x%02x, dh=%s, dh->fh=%d",
             feature_code, dh_repr_t(dh), dh->fh);
 

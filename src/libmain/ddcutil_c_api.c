@@ -47,7 +47,6 @@
 #include "base/base_init.h"
 #include "base/execution_stats.h"
 #include "base/parms.h"
-#include "base/retry_history.h"
 
 #include "vcp/vcp_feature_codes.h"
 #include "vcp/parse_capabilities.h"
@@ -207,7 +206,7 @@ void __attribute__ ((constructor))
 _ddca_init() {
    // Note: Until init_msg_control() is called within init_base_services(),
    // FOUT is null, so DBGMSG() causes a segfault
-   bool debug = true;
+   bool debug = false;
    if (!library_initialized) {
       init_base_services();
       init_ddc_services();
