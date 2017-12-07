@@ -31,10 +31,10 @@
 
 /** \cond */
 #include <stdbool.h>
-/** \endcond */
 
 // #include "util/coredefs.h"
 #include "util/data_structures.h"
+/** \endcond */
 
 #include "base/ddc_error.h"
 #include "base/displays.h"
