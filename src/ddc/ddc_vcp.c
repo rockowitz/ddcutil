@@ -474,6 +474,9 @@ get_nontable_vcp_value(
             parsed_response = NULL;
          }
       }
+      else {
+         excp = ddc_error_new(psc, __func__);
+      }
    }
 
    if (request_packet_ptr)

@@ -32,9 +32,9 @@
 // N. ddc_open_display() and ddc_close_display() handle case USB, but the
 // packet functions are for I2C and ADL only.  Consider splitting.
 
+/** \cond */
 #include <config.h>
 
-/** \cond */
 #include <assert.h>
 #include <errno.h>
 #include <fcntl.h>
@@ -44,10 +44,10 @@
 #include <string.h>
 #include <sys/ioctl.h>
 #include <unistd.h>
-/** \endcond */
 
 #include "util/debug_util.h"
 #include "util/string_util.h"
+/** \endcond */
 
 #include "base/ddc_errno.h"
 #include "base/ddc_error.h"
@@ -68,10 +68,6 @@
 #include "ddc/ddc_try_stats.h"
 
 #include "ddc/ddc_packet_io.h"
-
-
-// Transitional:
-// #define USE_DDC_ERROR
 
 
 // Trace class for this file
@@ -648,9 +644,11 @@ Public_Status_Code ddc_write_read(
  *  \param expected_subtype    expected subtype to check for
  *  \param all_zero_response_ok treat a response of all 0s as valid
  *  \param response_packet_ptr_loc  where to write address of response packet received
- *  \param retry_history       if non-null, records status codes causing retry
  *
- *  \return   >= 0 if success (may be positive for positive ADL status code ??),
+ *  \return pointer to #Ddc_Error if failure, NULL if success
+ *
+ *  \remark
+ *  status code from #ddc_write_read() may be positive for positive ADL status code ??
  *            status code from #ddc_write_read() if exactly 1 pass through try loop\n
  *            DDCRC_RETRIES, DDCRC_ALL_TRIES_ZERO, DDCRC_ALL_RESPONES_NULL if maximum tries exceeded
  *
@@ -676,9 +674,7 @@ ddc_write_read_with_retry(
    assert(dh->dref->io_mode != DDCA_IO_USB);
    // show_backtrace(1);
 
-// #ifdef USE_DDC_ERROR
-   Public_Status_Code try_status_codes[MAX_MAX_TRIES];   // For future Ddc_Error mechanism
-// #endif
+   Public_Status_Code try_status_codes[MAX_MAX_TRIES];
 
    // will be false on initial call to verify DDC communication
    // bool null_response_checked = dh->dref->flags & DREF_DDC_NULL_RESPONSE_CHECKED;   // unused
@@ -732,7 +728,6 @@ ddc_write_read_with_retry(
                      f0printf(FOUT, "Extended delay as recovery from DDC Null Response...\n");
                   call_dynamic_tuned_sleep_i2c(SE_DDC_NULL, ddcrc_null_response_ct);
                }
-               // DBGMSG("DDCRC_NULL_RESPONSE, retryable = %s", bool_repr(retryable) );
             }
             // when is DDCRC_READ_ALL_ZERO actually an error vs the response of the monitor instead of NULL response?
             // On Dell monitors (P2411, U3011) all zero response occurs on unsupported Table features
@@ -888,7 +883,11 @@ ddc_i2c_write_only(
  *   0 if success
  *   < 0 if error
  */
-Public_Status_Code ddc_write_only( Display_Handle * dh, DDC_Packet *   request_packet_ptr) {
+Public_Status_Code
+ddc_write_only(
+      Display_Handle * dh,
+      DDC_Packet *   request_packet_ptr)
+{
    bool debug = false;
    DBGTRC(debug, TRACE_GROUP, "Starting.");
 
@@ -917,9 +916,7 @@ Public_Status_Code ddc_write_only( Display_Handle * dh, DDC_Packet *   request_p
  *
  *  \param  dh                  display handle (for either I2C or ADL device)
  *  \param  request_packet_ptr  DDC packet to write
- *  \param  retry_history       if non-null, records status codes causing retry
- *  \retval 0                   success
- *  \retval DDCRC_RETRIES       maximum retry count exceeded
+ *  \return pointer to #Ddc_Error if failure, NULL if success
  *
  *  The maximum number of tries allowed has been set in global variable
  *  max_write_only_exchange_tries.
