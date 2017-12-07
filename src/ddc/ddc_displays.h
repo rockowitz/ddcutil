@@ -22,7 +22,6 @@
  */
 
 /** \file
- *
  */
 
 #ifndef DDC_DISPLAYS_H_
@@ -41,7 +40,6 @@
 
 void ddc_set_async_threshold(int threshold);
 
-// bool initial_checks_by_dh(Display_Handle * dh);   not used externally
 bool
 initial_checks_by_dref(Display_Ref * dref);
 
