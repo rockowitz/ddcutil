@@ -271,6 +271,8 @@ get_raw_value_for_feature_table_entry(
    if (*pvalrec && (debug || IS_TRACING())) {
       dbgrpt_ddca_single_vcp_value(*pvalrec, 1);
    }
+   if (ddc_excp)
+      ddc_error_free(ddc_excp);
    return psc;
 }
 
