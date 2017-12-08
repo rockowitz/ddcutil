@@ -63,6 +63,7 @@ DDCA_Display_Handle * open_first_display() {
          FUNCTION_ERRMSG("ddca_open_display", rc);
       }
    }
+   ddca_free_display_info_list(dlist);
    return dh;
 }
 
@@ -205,17 +206,18 @@ void test_get_single_feature_info(
           feature_code, ddca_mccs_version_id_desc(version_id));
    printf("Feature name: %s\n", ddca_get_feature_name(feature_code));
    // DDCA_Version_Feature_Flags feature_flags;
-   DDCA_Version_Feature_Info * info;
-  DDCA_Status rc = ddca_get_feature_info_by_vcp_version(feature_code, version_id, &info);
-  if (rc != 0)
-     FUNCTION_ERRMSG("ddca_get_feature_info_by_vcp_version", rc);
-  else {
-     // TODO: Version_Specific_Feature_Info needs a report function
-    //  report_ddca_version_feature_flags(feature_code, info->feature_flags);
-     // report_version_feature_info(info, 1);
-     show_version_feature_info(info);
-  }
-  printf("%s) Done.\n", __func__);
+   DDCA_Version_Feature_Info * info = NULL;
+   DDCA_Status rc = ddca_get_feature_info_by_vcp_version(feature_code, version_id, &info);
+   if (rc != 0)
+      FUNCTION_ERRMSG("ddca_get_feature_info_by_vcp_version", rc);
+   else {
+      // TODO: Version_Specific_Feature_Info needs a report function
+      //  report_ddca_version_feature_flags(feature_code, info->feature_flags);
+      // report_version_feature_info(info, 1);
+      show_version_feature_info(info);
+      ddca_free_feature_info(info);
+   }
+   printf("%s) Done.\n", __func__);
 }
 
 

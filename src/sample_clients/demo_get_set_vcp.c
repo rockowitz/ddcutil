@@ -111,7 +111,7 @@ test_cont_value(
    ddca_enable_verify(false);   // we'll do the check ourselves
 
 
-   DDCA_Version_Feature_Info * info;
+   DDCA_Version_Feature_Info * info = NULL;
    rc = ddca_get_feature_info_by_display(
            dh,    // needed because in rare cases feature info is MCCS version dependent
            feature_code,
@@ -164,6 +164,8 @@ test_cont_value(
    ok = verify_cont_value(dh, feature_code, old_value) && ok;
 
 bye:
+   if (info)
+      ddca_free_feature_info(info);
    restore_standard_settings();
    // Uncomment to see statistics:
    // printf("\nStatistics for one execution of %s()", __func__);
@@ -314,6 +316,8 @@ bool test_simple_nc_value(
 
 
 bye:
+    if (info)
+       ddca_free_feature_info(info);
     restore_standard_settings();
 
     // uncomment to show statistics:
@@ -376,6 +380,8 @@ bool test_complex_nc_value(
 
 
 bye:
+    if (info)
+       ddca_free_feature_info(info);
     restore_standard_settings();
 
     // uncomment to show statistics:
@@ -490,9 +496,7 @@ int main(int argc, char** argv) {
       dh = NULL;
    }
 
-   if (dlist) {
-      ddca_free_display_info_list(dlist);
-   }
+   ddca_free_display_info_list(dlist);
 
 
 // bye:

@@ -122,6 +122,7 @@ DDCA_Display_Ref display_selection_using_display_identifier() {
       printf("   ddca_create_mfg_model_sn_display_identifier() returned %d (%s): %s\n",
               rc, ddca_rc_name(rc), ddca_rc_desc(rc));
    }
+   assert(rc!=0 && !did);
 
    printf("\nCreate a Display Identifier for display 1...\n");
    ddca_create_dispno_display_identifier(1, &did);     // always succeeds
@@ -136,6 +137,7 @@ DDCA_Display_Ref display_selection_using_display_identifier() {
    else {
        printf("Found display reference: %s\n", ddca_dref_repr(dref) );
    }
+   ddca_free_display_identifier(did);
 
    return dref;
 }

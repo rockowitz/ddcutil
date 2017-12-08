@@ -45,7 +45,7 @@ int main(int argc, char** argv) {
    ddca_reset_stats();
 
    DDCA_Status rc;
-   DDCA_Display_Identifier did;
+
    DDCA_Display_Ref dref;
    DDCA_Display_Handle dh = NULL;  // initialize to avoid clang analyzer warning
 
@@ -53,20 +53,21 @@ int main(int argc, char** argv) {
    printf("ddca_get_displays() returned %p\n", dlist);
 
    for (int ndx = 0; ndx <  dlist->ct; ndx++) {
-;
-
       DDCA_Display_Info * dinfo = &dlist->info[ndx];
       ddca_report_display_info(dinfo, /* depth=*/ 1);
       printf("\n(%s) ===> Test loop for display %d\n", __func__, dinfo->dispno);
 
-      did = NULL;
 #ifdef ALT
+      DDCA_Display_Identifier did = NULL;
       printf("Create a Display Identifier for display %d...\n", dispno);
       rc = ddca_create_dispno_display_identifier(dispno, &did);
 
       printf("Create a display reference from the display identifier...\n");
       rc = ddca_get_display_ref(did, &dref);
       assert(rc == 0);
+
+      rc = ddca_free_display_identifier(did);
+      printf("ddca_free_display_identifier() returned %d\n", rc);
 #endif
 
       dref = dinfo->dref;
@@ -98,13 +99,6 @@ int main(int argc, char** argv) {
          FUNCTION_ERRMSG("ddca_close_display", rc);
    }
 
-   if (did) {
-      rc = ddca_free_display_identifier(did);
-      printf("(%s) ddca_free_display_identifier() returned %d\n", __func__, rc);
-   }
-
-
-// bye:
    ddca_show_stats(DDCA_STATS_ALL, 0);
    return 0;
 }
