@@ -1201,6 +1201,21 @@ ddca_get_feature_info_by_display(
    );
 }
 
+DDCA_Status
+ddca_free_feature_info(
+      DDCA_Version_Feature_Info * info)
+{
+   DDCA_Status rc = 0;
+   if (info) {
+      if (memcmp(info->marker, VCP_VERSION_SPECIFIC_FEATURE_INFO_MARKER, 4) != 0 )  {
+        rc = DDCL_ARG;
+      }
+      else {
+         free_version_feature_info(info);
+      }
+   }
+   return rc;
+}
 
 // static char  default_feature_name_buffer[40];
 char *

@@ -769,6 +769,10 @@ ddca_get_feature_info_by_display(
       DDCA_Vcp_Feature_Code         feature_code,
       DDCA_Version_Feature_Info **  p_info);
 
+DDCA_Status
+ddca_free_feature_info(
+      DDCA_Version_Feature_Info * info);
+
 
 //
 //  Miscellaneous Monitor Specific Functions
