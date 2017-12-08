@@ -65,7 +65,7 @@ static Trace_Group TRACE_GROUP = TRC_DDC;
 #define MAX_MAX_MULTI_EXCHANGE_TRIES  MAX_MAX_TRIES     /* from parms.h */
 
 /** \def Maximum number of capabilities exchange tries allowed. Can be adjusted. */
-static int max_multi_part__tries = MAX_MULTI_EXCHANGE_TRIES;
+static int max_multi_part_read_tries = MAX_MULTI_EXCHANGE_TRIES;
 
 static int max_multi_part_write_tries = MAX_MULTI_EXCHANGE_TRIES;
 
@@ -77,7 +77,7 @@ void ddc_reset_multi_part_read_stats() {
    if (multi_part_read_stats_rec)
       try_data_reset(multi_part_read_stats_rec);
    else
-      multi_part_read_stats_rec = try_data_create("multi-part read exchange", max_multi_part__tries);
+      multi_part_read_stats_rec = try_data_create("multi-part read exchange", max_multi_part_read_tries);
 }
 
 /** Resets the statistics for multi-part writes */
@@ -106,7 +106,7 @@ void ddc_report_multi_part_write_stats(int depth) {
  */
 void ddc_set_max_multi_part_read_tries(int ct) {
    assert(ct > 0 && ct <= MAX_MAX_MULTI_EXCHANGE_TRIES);
-   max_multi_part__tries = ct;
+   max_multi_part_read_tries = ct;
    if (multi_part_read_stats_rec)
          try_data_set_max_tries(multi_part_read_stats_rec, ct);
 }
@@ -126,7 +126,7 @@ void ddc_set_max_multi_part_write_tries(int ct) {
   * @return maximum number of tries
   */
 int ddc_get_max_multi_part_read_tries() {
-   return max_multi_part__tries;
+   return max_multi_part_read_tries;
 }
 
 /** Gets the current maximum number of multi-part write exchange tries allowed
@@ -279,7 +279,7 @@ multi_part_read_with_retry(
    DBGTRC(debug, TRACE_GROUP,
           "Starting.  request_type=0x%02x, request_subtype=0x%02x, all_zero_response_ok=%s"
           ", max_multi_part_read_tries=%d",
-          request_type, request_subtype, bool_repr(all_zero_response_ok), max_multi_part__tries);
+          request_type, request_subtype, bool_repr(all_zero_response_ok), max_multi_part_read_tries);
 
    Public_Status_Code rc = -1;   // dummy value for first call of while loop
    Ddc_Error * ddc_excp = NULL;
@@ -290,10 +290,10 @@ multi_part_read_with_retry(
    bool can_retry = true;
    Buffer * accumulator = buffer_new(2048, "multi part read buffer");
 
-   while (tryctr < max_multi_part__tries && rc < 0 && can_retry) {
+   while (tryctr < max_multi_part_read_tries && rc < 0 && can_retry) {
       DBGTRC(debug, TRC_NEVER,
              "Start of while loop. try_ctr=%d, max_multi_part_read_tries=%d",
-             tryctr, max_multi_part__tries);
+             tryctr, max_multi_part_read_tries);
 
       ddc_excp = try_multi_part_read(
               dh,
@@ -338,7 +338,7 @@ multi_part_read_with_retry(
    if (rc < 0) {
       buffer_free(accumulator, "capabilities buffer, error");
       accumulator = NULL;
-      if (tryctr >= max_multi_part__tries) {
+      if (tryctr >= max_multi_part_read_tries) {
          rc = DDCRC_RETRIES;
          ddc_excp = ddc_error_new_with_causes(
                DDCRC_RETRIES,
