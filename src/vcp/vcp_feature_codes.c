@@ -929,6 +929,23 @@ extract_version_feature_info(
    return info;
 }
 
+
+void free_version_feature_info(DDCA_Version_Feature_Info * info) {
+   // be careful, may be called from client
+   if (info && memcmp(info->marker, VCP_VERSION_SPECIFIC_FEATURE_INFO_MARKER, 4) == 0) {
+      info->marker[3] = 'x';
+
+      // Only need to free pointers to values that were allocated when creating
+      // this struct, not those that are pointers into permanent data structures.
+      // info->desc, info->name, info->sl values point into VCP_Feature_Table_Entry
+
+      // TODO: Address case of synthetic VCP_Feature_Table_Entry
+
+      free(info);
+   }
+}
+
+
 #ifdef OLD
 DDCA_Version_Feature_Info *
 get_version_specific_feature_info(

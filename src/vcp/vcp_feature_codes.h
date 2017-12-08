@@ -268,6 +268,9 @@ get_version_feature_info(
       bool                   with_default,
       bool                   version_sensitive);
 
+void
+free_version_feature_info(
+      DDCA_Version_Feature_Info * info);
 
 
 DDCA_Feature_Value_Entry *
