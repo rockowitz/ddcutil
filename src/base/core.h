@@ -150,6 +150,8 @@ typedef enum {
  TRC_ALWAYS = 0xff
 } Trace_Group;
 
+#define TRC_NONE TRC_NEVER
+
 Trace_Group trace_class_name_to_value(char * name);
 void set_trace_levels(Trace_Group trace_flags);
 char * get_active_trace_group_names();
@@ -164,6 +166,10 @@ bool is_tracing(Trace_Group trace_group, const char * filename, const char * fun
  *  filename, and function as implicit arguments.
  */
 #define IS_TRACING() is_tracing(TRACE_GROUP, __FILE__, __func__)
+
+#define IS_TRACING_GROUP(grp) is_tracing(grp, __FILE__, __func__)
+
+#define IS_TRACING_BY_FUNC_OR_FILE() is_tracing(TRC_NEVER, __FILE__, __func__)
 
 
 // Manage DDC data error reporting
