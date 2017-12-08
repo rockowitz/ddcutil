@@ -334,12 +334,10 @@ app_read_changes(Display_Handle * dh) {
                   dh,
                   0x52,
                   &p_nontable_response);
-         psc = (ddc_excp) ? ddc_excp->psc : 0;
-         if (psc != 0) {
+         // psc = (ddc_excp) ? ddc_excp->psc : 0;
+         if (ddc_excp) {
+            DBGMSG("get_nontable_vcp_value() for VCP feature x52 returned %s", ddc_error_summary(ddc_excp) );
             ddc_error_free(ddc_excp);
-            DBGMSG("get_nontable_vcp_value() for VCP feature x52 returned %s", psc_desc(psc));
-            if (psc == DDCRC_RETRIES )
-               DBGMSG("    Try errors: %s", ddc_error_causes_string(ddc_excp));
             return;
          }
          Byte changed_feature = p_nontable_response->sl;
@@ -353,12 +351,10 @@ app_read_changes(Display_Handle * dh) {
                      dh,
                      0x52,
                      &p_nontable_response);
-            psc = (ddc_excp) ? ddc_excp->psc : 0;
-            if (psc != 0) {
+            // psc = (ddc_excp) ? ddc_excp->psc : 0;
+            if (ddc_excp) {
+               DBGMSG("get_nontable_vcp_value() returned %s", ddc_error_summary(ddc_excp) );
                ddc_error_free(ddc_excp);
-               DBGMSG("get_nontable_vcp_value() returned %s", psc_desc(psc));
-               if (psc == DDCRC_RETRIES)
-                  DBGMSG("    Try errors: %s", ddc_error_causes_string(ddc_excp));
                return;
             }
             Byte changed_feature = p_nontable_response->sl;
@@ -378,11 +374,9 @@ app_read_changes(Display_Handle * dh) {
       if (psc == 0) {
          Ddc_Error * ddc_excp = set_nontable_vcp_value(dh, 0x02, 0x01);
          psc = (ddc_excp) ? ddc_excp->psc : 0;
-         if (psc != 0) {
+         if (ddc_excp) {
+            DBGMSG("set_nontable_vcp_value_by_display_handle() returned %s", ddc_error_summary(ddc_excp) );
             ddc_error_free(ddc_excp);
-            DBGMSG("set_nontable_vcp_value_by_display_handle() returned %s", psc_desc(psc));
-            if (psc == DDCRC_RETRIES)
-                DBGMSG("    Try errors: %s", ddc_error_causes_string(ddc_excp));
          }
          else
             DBGMSG("reset new control value successful");
