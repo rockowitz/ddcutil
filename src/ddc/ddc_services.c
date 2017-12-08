@@ -57,6 +57,7 @@ void ddc_reset_ddc_stats() {
    ddc_reset_write_only_stats();
    ddc_reset_write_read_stats();
    ddc_reset_multi_part_read_stats();
+   ddc_reset_multi_part_write_stats();
 }
 
 
@@ -70,6 +71,7 @@ void ddc_report_ddc_stats(int depth) {
    ddc_report_write_only_stats(0);
    ddc_report_write_read_stats(0);
    ddc_report_multi_part_read_stats(0);
+   ddc_report_multi_part_write_stats(0);
 }
 
 
@@ -121,8 +123,11 @@ void ddc_report_max_tries(int depth) {
    rpt_vstring(depth, "Write read exchange tries: %8d %8d",
                ddc_get_max_write_read_exchange_tries(),
                MAX_WRITE_READ_EXCHANGE_TRIES);
-   rpt_vstring(depth, "Multi-part exchange tries: %8d %8d",
+   rpt_vstring(depth, "Multi-part read exchange tries: %8d %8d",
                ddc_get_max_multi_part_read_tries(),
+               MAX_MULTI_EXCHANGE_TRIES);
+   rpt_vstring(depth, "Multi-part write exchange tries: %8d %8d",
+               ddc_get_max_multi_part_write_tries(),
                MAX_MULTI_EXCHANGE_TRIES);
 }
 
