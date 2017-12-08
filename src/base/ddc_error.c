@@ -91,7 +91,7 @@ Ddc_Error *  ddc_error_new(Public_Status_Code psc, const char * func) {
 Ddc_Error * ddc_error_new_with_cause(
       Public_Status_Code psc,
       Ddc_Error *        cause,
-      char *             func)
+      const char *             func)
 {
    VALID_DDC_ERROR_PTR(cause);
    Ddc_Error * erec = ddc_error_new(psc, func);
@@ -121,6 +121,20 @@ Ddc_Error * ddc_error_new_retries(
    }
    return result;
 }
+
+Ddc_Error * ddc_error_new_with_causes(
+      Public_Status_Code    psc,
+      Ddc_Error **          causes,
+      int                   cause_ct,
+      const char *          func)
+{
+   Ddc_Error * result = ddc_error_new(psc, func);
+   for (int ndx = 0; ndx < cause_ct; ndx++) {
+      ddc_error_add_cause(result, causes[ndx]);
+   }
+   return result;
+}
+
 
 void ddc_error_add_cause(Ddc_Error * parent, Ddc_Error * cause) {
    VALID_DDC_ERROR_PTR(parent);
@@ -211,6 +225,37 @@ void ddc_error_report(Ddc_Error * erec, int depth) {
       }
    }
 }
+
+
+// todo: use private threadsafe buffer
+// temp
+static char summary_buffer[1000];
+char * ddc_error_summary(Ddc_Error * erec) {
+   if (!erec)
+      return "NULL";
+
+   VALID_DDC_ERROR_PTR(erec);
+
+   char * desc = psc_desc(erec->psc);
+   char * causes = NULL;
+   if (erec->cause_ct == 0) {
+      snprintf(summary_buffer, 1000,
+            "Ddc_Error[%s in %s]",
+             desc, erec->func);
+   }
+   else {
+      causes   = ddc_error_causes_string(erec);
+      snprintf(summary_buffer, 1000,
+            "Ddc_Error[%s in %s, causes: %s]",
+             desc, erec->func, causes);
+   }
+   free(desc);
+   if (causes)
+      free(causes);
+   return summary_buffer;
+}
+
+
 
 //
 // Transitional functions

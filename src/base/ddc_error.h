@@ -58,6 +58,17 @@ void ddc_error_free(Ddc_Error * error);
 
 Ddc_Error *  ddc_error_new(Public_Status_Code psc, const char * func);
 
+Ddc_Error * ddc_error_new_with_cause(
+      Public_Status_Code psc,
+      Ddc_Error *        cause,
+      const char *             func);
+
+Ddc_Error * ddc_error_new_with_causes(
+      Public_Status_Code    psc,
+      Ddc_Error **          causes,
+      int                   cause_ct,
+      const char *          func);
+
 Ddc_Error * ddc_error_new_retries(
       Public_Status_Code *  status_codes,
       int                   status_code_ct,
@@ -71,6 +82,8 @@ void ddc_error_set_status(Ddc_Error * erec, Public_Status_Code psc);
 char * ddc_error_causes_string(Ddc_Error * erec);
 
 void ddc_error_report(Ddc_Error * erec, int depth);
+
+char * ddc_error_summary(Ddc_Error * erec);
 
 
 void ddc_error_fill_retry_history(Ddc_Error * erec, Retry_History * hist);
