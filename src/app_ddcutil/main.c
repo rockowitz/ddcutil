@@ -135,8 +135,9 @@ perform_get_capabilities_by_display_handle(Display_Handle * dh) {
    char * capabilities_string;
    Ddc_Error * ddc_excp = get_capabilities_string(dh, &capabilities_string);
    Public_Status_Code psc = (ddc_excp) ? ddc_excp->psc : 0;
+   assert( (ddc_excp && psc!=0) || (!ddc_excp && psc==0) );
 
-   if (psc < 0) {
+   if (ddc_excp) {
       switch(psc) {
       case DDCRC_REPORTED_UNSUPPORTED:       // should not happen
       case DDCRC_DETERMINED_UNSUPPORTED:
