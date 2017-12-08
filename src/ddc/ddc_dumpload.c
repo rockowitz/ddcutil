@@ -323,7 +323,7 @@ ddc_set_multiple(
 
       ddc_excp = set_vcp_value(dh, vrec);
       psc = (ddc_excp) ? ddc_excp->psc : 0;
-      if (psc != 0) {
+      if (ddc_excp) {
          f0printf(FERR, "Error setting value for VCP feature code 0x%02x: %s\n",
                          feature_code, psc_desc(psc) );
          if (psc == DDCRC_RETRIES)
