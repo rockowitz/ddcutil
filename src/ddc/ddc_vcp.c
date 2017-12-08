@@ -350,7 +350,7 @@ set_vcp_value(
       psc = (ddc_excp) ? ddc_excp->psc : 0;
    }
 
-   if (psc == 0 && verify_setvcp) {
+   if (!ddc_excp && verify_setvcp) {
       if (is_rereadable_feature(dh, vrec->opcode) ) {
          f0printf(fout, "Verifying that value of feature 0x%02x successfully set...\n", vrec->opcode);
          DDCA_Single_Vcp_Value * newval = NULL;
@@ -360,7 +360,7 @@ set_vcp_value(
              vrec->value_type,
              &newval);
          psc = (ddc_excp) ? ddc_excp->psc : 0;
-         if (psc != 0) {
+         if (ddc_excp) {
             f0printf(fout, "(%s) Read after write failed. get_vcp_value() returned: %s\n",
                            __func__, psc_desc(psc));
             if (psc == DDCRC_RETRIES)
