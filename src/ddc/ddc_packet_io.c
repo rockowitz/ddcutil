@@ -775,12 +775,18 @@ ddc_write_read_with_retry(
    if (psc < 0) {
       Public_Status_Code reported_psc = 0;
       int last_try_index = tryctr-1;
-      DBGTRC(debug, TRACE_GROUP, "After try loop. tryctr=%d, retryable=%s", tryctr, bool_repr(retryable));
+      // DBGTRC(debug, TRACE_GROUP, "After try loop. tryctr=%d, retryable=%s", tryctr, bool_repr(retryable));
       Public_Status_Code last_psc = try_status_codes[last_try_index];
-      if (tryctr == 1) {
+      if (tryctr == 1 || !retryable) {
       // if (!retryable) {
          reported_psc = last_psc;
-         ddc_excp = ddc_error_new(reported_psc, __func__);
+         // ddc_excp = ddc_error_new(reported_psc, __func__);
+         ddc_excp = ddc_error_new_with_callee_status_codes(
+               reported_psc,
+               try_status_codes,
+               tryctr,
+               "ddc_write_read",
+               __func__);
       }
       else {
          reported_psc = DDCRC_RETRIES;
@@ -820,16 +826,14 @@ ddc_write_read_with_retry(
       COUNT_STATUS_CODE(psc);  // new status code, count it
    }
    try_data_record_tries(write_read_stats_rec, psc, tryctr);
-   DBGTRC(debug, TRACE_GROUP, "Done. psc=%s", psc_desc(psc));
 
-   DBGTRC(debug, TRACE_GROUP, "Done (new). psc=%s", (ddc_excp) ? psc_desc(ddc_excp->psc) : "0");
-   if (ddc_excp && ddc_excp->psc == DDCRC_RETRIES && (debug || IS_TRACING())) {
-      ddc_error_report(ddc_excp, 0);
-      DBGTRC(debug, TRACE_GROUP, "      Try errors: %s", ddc_error_causes_string(ddc_excp));
-   }
-
-   if (ddc_excp) {
-      ddc_error_report(ddc_excp, 1);
+   if ( debug || IS_TRACING() ) {
+      DBGMSG("Done. psc=%s", (ddc_excp) ? psc_desc(ddc_excp->psc) : "0");
+      if (ddc_excp) {
+         // ddc_error_report(ddc_excp, 1);
+         //alt:
+         DBGMSG("      Try errors: %s", ddc_error_causes_string(ddc_excp));
+      }
    }
 
    return ddc_excp;
