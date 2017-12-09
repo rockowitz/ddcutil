@@ -170,6 +170,7 @@ void ddc_error_set_status(Ddc_Error * erec, Public_Status_Code psc) {
    erec->psc = psc;
 }
 
+#ifdef TRANSITIONAL
 char * ddc_error_causes_string_old(Ddc_Error * erec) {
    // return strdup("unimplemented");
    // *** Temporary hacked up implementation ***
@@ -179,6 +180,7 @@ char * ddc_error_causes_string_old(Ddc_Error * erec) {
    free(hist);
    return result;
 }
+#endif
 
 /** Returns a comma separated string of the status code names in the
  *  causes of the specified #Ddc_Error.
@@ -284,6 +286,7 @@ char * ddc_error_summary(Ddc_Error * erec) {
 }
 
 
+#ifdef TRANSITIONAL
 //
 // Transitional functions
 //
@@ -370,3 +373,4 @@ bool ddc_error_comp(Ddc_Error * erec, Retry_History * hist) {
    return match;
 }
 
+#endif
