@@ -481,11 +481,15 @@ get_nontable_vcp_value(
    if (response_packet_ptr)
       free_ddc_packet(response_packet_ptr);
 
-   DBGTRC(debug, TRACE_GROUP,
-          "Returning %s, *ppinterpreted_code=%p", psc_desc(psc), parsed_response);
-   if (excp) {
-      rpt_vstring(0, "Error reading feature x%02x", feature_code);
-      ddc_error_report(excp, 1);
+
+   if (debug || IS_TRACING() ) {
+      if (excp) {
+         DBGMSG("Error reading feature x%02x.  Returning exception: ", feature_code);
+         ddc_error_report(excp, 1);
+      }
+      else {
+         DBGMSG("Success reading feature x%02x. *ppinterpreted_code=%p", feature_code, parsed_response);
+      }
    }
    *ppInterpretedCode = parsed_response;
    assert( (psc == 0 && parsed_response) || (psc < 0 && !parsed_response));
