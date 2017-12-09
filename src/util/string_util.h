@@ -148,9 +148,9 @@ char * hexstring3_t(
           uint8_t               hunk_size,  // separator string frequency
           bool                  uppercase); // use upper case hex characters
 
-void fhex_dump_indented(FILE * fh, const Byte* data, int size, int indents);
-void fhex_dump(FILE * fh, const Byte* bytes, int size);
-void hex_dump(const Byte * bytes, int size);
+void fhex_dump_indented(FILE * fh, const Byte* data,  int size, int indents);
+void fhex_dump(         FILE * fh, const Byte* bytes, int size);
+void hex_dump(                     const Byte* bytes, int size);
 
 
 //
@@ -159,17 +159,15 @@ void hex_dump(const Byte * bytes, int size);
 
 int f0putc(int c, FILE * stream);
 int f0puts(const char * s, FILE * stream);
-int f0printf(FILE * stream, const char * format, ...);
+int f0printf( FILE * stream, const char * format, ...);
 int vf0printf(FILE * stream, const char * format, va_list ap);
+
 
 //
 // Miscellaneous
 //
 
 bool all_bytes_zero(Byte * bytes, int bytect);
-
 bool apply_filter_terms(const char * text, char ** terms, bool ignore_case);
-
-
 
 #endif /* STRINGUTIL_H_ */
