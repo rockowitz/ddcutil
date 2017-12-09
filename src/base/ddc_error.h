@@ -54,14 +54,22 @@ typedef struct ddc_error_struct {
    // struct ddc_error_struct * next;
 } Ddc_Error;
 
-void ddc_error_free(Ddc_Error * error);
+void
+ddc_error_free(
+      Ddc_Error * error);
 
-Ddc_Error *  ddc_error_new(Public_Status_Code psc, const char * func);
+Ddc_Error * ddc_error_new(
+      Public_Status_Code psc,
+      const char * func);
 
 Ddc_Error * ddc_error_new_with_cause(
       Public_Status_Code psc,
       Ddc_Error *        cause,
-      const char *             func);
+      const char *       func);
+
+Ddc_Error * ddc_error_new_chained(
+      Ddc_Error *        cause,
+      const char *       func);
 
 Ddc_Error * ddc_error_new_with_causes(
       Public_Status_Code    psc,
@@ -69,11 +77,18 @@ Ddc_Error * ddc_error_new_with_causes(
       int                   cause_ct,
       const char *          func);
 
+Ddc_Error * ddc_error_new_with_callee_status_codes(
+      Public_Status_Code    status_code,
+      Public_Status_Code *  callee_status_codes,
+      int                   callee_status_code_ct,
+      const char *          callee_func,
+      const char *          func);
+
 Ddc_Error * ddc_error_new_retries(
       Public_Status_Code *  status_codes,
       int                   status_code_ct,
-      const char *                called_func,
-      const char *                func);
+      const char *          called_func,
+      const char *          func);
 
 void ddc_error_add_cause(Ddc_Error * parent, Ddc_Error * cause);
 

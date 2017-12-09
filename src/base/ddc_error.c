@@ -27,9 +27,11 @@
 
 /** \cond */
 #include <assert.h>
+#include <glib-2.0/glib.h>
 #include <stdlib.h>
 #include <string.h>
 
+#include "util/glib_util.h"
 #include "util/report_util.h"
 /** \endcond */
 
@@ -91,7 +93,7 @@ Ddc_Error *  ddc_error_new(Public_Status_Code psc, const char * func) {
 Ddc_Error * ddc_error_new_with_cause(
       Public_Status_Code psc,
       Ddc_Error *        cause,
-      const char *             func)
+      const char *       func)
 {
    VALID_DDC_ERROR_PTR(cause);
    Ddc_Error * erec = ddc_error_new(psc, func);
@@ -101,10 +103,29 @@ Ddc_Error * ddc_error_new_with_cause(
 }
 
 
-Ddc_Error * ddc_error_new_chained(Ddc_Error * cause, char * func) {
+Ddc_Error * ddc_error_new_chained(
+      Ddc_Error * cause,
+      const char * func)
+{
    VALID_DDC_ERROR_PTR(cause);
    Ddc_Error * erec = ddc_error_new_with_cause(cause->psc, cause, func);
    return erec;
+}
+
+
+Ddc_Error * ddc_error_new_with_callee_status_codes(
+      Public_Status_Code    status_code,
+      Public_Status_Code *  callee_status_codes,
+      int                   callee_status_code_ct,
+      const char *          callee_func,
+      const char *          func)
+{
+   Ddc_Error * result = ddc_error_new(status_code, func);
+   for (int ndx = 0; ndx < callee_status_code_ct; ndx++) {
+      Ddc_Error * cause = ddc_error_new(callee_status_codes[ndx],callee_func);
+      ddc_error_add_cause(result, cause);
+   }
+   return result;
 }
 
 
@@ -227,40 +248,45 @@ void ddc_error_report(Ddc_Error * erec, int depth) {
 }
 
 
-// todo: use private threadsafe buffer
-// temp
-static char summary_buffer[1000];
+/** Returns a string summary of the specified #Ddc_Error.
+ *  The returned value is valid until the next call to this function in the
+ *  current thread, and should not be freed by the caller.
+ *
+ *  \param erec  pointer to #Ddc_Error instance
+ *  \return string summmay of error
+ */
 char * ddc_error_summary(Ddc_Error * erec) {
    if (!erec)
       return "NULL";
-
    VALID_DDC_ERROR_PTR(erec);
 
+   static GPrivate  esumm_key     = G_PRIVATE_INIT(g_free);
+   static GPrivate  esumm_len_key = G_PRIVATE_INIT(g_free);
+
    char * desc = psc_desc(erec->psc);
-   char * causes = NULL;
+
+   gchar * buf1 = NULL;
    if (erec->cause_ct == 0) {
-      snprintf(summary_buffer, 1000,
-            "Ddc_Error[%s in %s]",
-             desc, erec->func);
+      buf1 = gaux_asprintf("Ddc_Error[%s in %s]", desc, erec->func);
    }
    else {
-      causes   = ddc_error_causes_string(erec);
-      snprintf(summary_buffer, 1000,
-            "Ddc_Error[%s in %s, causes: %s]",
-             desc, erec->func, causes);
+      char * causes   = ddc_error_causes_string(erec);
+      buf1 = gaux_asprintf("Ddc_Error[%s in %s, causes: %s]", desc, erec->func, causes);
+      free(causes);
    }
    free(desc);
-   if (causes)
-      free(causes);
-   return summary_buffer;
-}
+   int required_size = strlen(buf1) + 1;
 
+   char * buf = get_thread_dynamic_buffer(&esumm_key, &esumm_len_key, required_size);
+   g_strlcpy(buf, buf1, required_size);
+   free(buf1);
+   return buf;
+}
 
 
 //
 // Transitional functions
 //
-
 
 void ddc_error_fill_retry_history(Ddc_Error * erec, Retry_History * hist) {
    if (erec && hist) {
