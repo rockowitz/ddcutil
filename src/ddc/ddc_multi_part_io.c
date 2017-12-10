@@ -300,6 +300,7 @@ multi_part_read_with_retry(
               all_zero_response_ok,
               accumulator);
       try_errors[tryctr] = ddc_excp;
+      rc = (ddc_excp) ? ddc_excp->psc : 0;
 
       if (rc == DDCRC_NULL_RESPONSE) {
          // generally means this, but could conceivably indicate a protocol error.
