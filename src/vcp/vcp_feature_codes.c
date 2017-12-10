@@ -4129,6 +4129,8 @@ int vcp_feature_code_count = sizeof(vcp_code_table)/sizeof(VCP_Feature_Table_Ent
 //
 // Functions for validating vcp_code_table[]
 //
+// Intended for use only during development
+//
 
 int check_one_version_flags(
       DDCA_Version_Feature_Flags     vflags,
@@ -4271,7 +4273,8 @@ void validate_vcp_feature_table() {
 
    }
    if (!(ok && ok2))
-      PROGRAM_LOGIC_ERROR(NULL);
+      assert(false);
+      // PROGRAM_LOGIC_ERROR(NULL);
 }
 
 // End of functions for validating vcp_code_table
@@ -4281,7 +4284,7 @@ void validate_vcp_feature_table() {
  * Must be called before any other function.
  */
 void init_vcp_feature_codes() {
-   validate_vcp_feature_table();
+   // validate_vcp_feature_table();  // enable for development
    for (int ndx=0; ndx < vcp_feature_code_count; ndx++) {
       memcpy( vcp_code_table[ndx].marker, VCP_FEATURE_TABLE_ENTRY_MARKER, 4);
    }
