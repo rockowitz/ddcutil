@@ -293,6 +293,7 @@ single_vcp_value_equal(
       DDCA_Single_Vcp_Value * vrec1,
       DDCA_Single_Vcp_Value * vrec2)
 {
+   assert(vrec1 && vrec2);  // no implementation for degenerate cases
    bool debug = false;
 
    bool result = false;
@@ -368,6 +369,7 @@ set_vcp_value(
             // psc = DDCRC_VERIFY;
          }
          else {
+            assert(vrec && newval);    // silence clang complaint
             if (! single_vcp_value_equal(vrec,newval)) {
                psc = DDCRC_VERIFY;
                ddc_excp = ddc_error_new(DDCRC_VERIFY, __func__);
@@ -443,7 +445,7 @@ get_nontable_vcp_value(
       if (psc != 0)
          DBGMSG("perform_ddc_write_read_with_retry() returned %s, reponse_packet_ptr=%p", psc_desc(psc), response_packet_ptr);
    }
-   psc = (excp) ? excp->psc : 0;
+   // psc = (excp) ? excp->psc : 0;
 
    if (!excp) {
       // dump_packet(response_packet_ptr);
@@ -492,7 +494,7 @@ get_nontable_vcp_value(
       }
    }
    *ppInterpretedCode = parsed_response;
-   assert( (psc == 0 && parsed_response) || (psc < 0 && !parsed_response));
+   assert( (!excp && parsed_response) || (excp && !parsed_response));
    return excp;
 }
 
@@ -615,11 +617,11 @@ get_vcp_value(
 
       case (DDCA_NON_TABLE_VCP_VALUE):
             ddc_excp = get_nontable_vcp_value(
-                     dh,
-                     feature_code,
-                     &parsed_nontable_response);
+                          dh,
+                          feature_code,
+                          &parsed_nontable_response);
             psc = (ddc_excp) ? ddc_excp->psc : 0;
-            if (psc == 0) {
+            if (!ddc_excp) {
                valrec = create_nontable_vcp_value(
                            feature_code,
                            parsed_nontable_response->mh,
@@ -635,8 +637,8 @@ get_vcp_value(
                     dh,
                     feature_code,
                     &buffer);
-           psc = (ddc_excp) ? ddc_excp->psc : 0;
-            if (psc == 0) {
+            psc = (ddc_excp) ? ddc_excp->psc : 0;
+            if (!ddc_excp) {
                valrec = create_table_vcp_value_by_buffer(feature_code, buffer);
                buffer_free(buffer, __func__);
             }
