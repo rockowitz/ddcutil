@@ -67,6 +67,7 @@ AC_CONFIG_FILES([
 	src/base/Makefile
 	src/vcp/Makefile
 	src/i2c/Makefile
+	src/ddc/Makefile
 	src/swig/Makefile 
 	src/gobject_api/Makefile 
 	src/sample_clients/Makefile

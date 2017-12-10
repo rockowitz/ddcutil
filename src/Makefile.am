@@ -1,6 +1,6 @@
 ## Process this file with automake to produce Makefile.in
 
-SUBDIRS = util usb_util base vcp i2c . gobject_api swig sample_clients
+SUBDIRS = util usb_util base vcp i2c ddc . gobject_api swig sample_clients
 
 MOSTLYCLEANFILES =   
 
@@ -185,18 +185,7 @@ all-local:
 # libcommon contains the source files that are 
 # shared between ddcutil and libddcutil: 
 #
-libcommon_la_SOURCES =      	\
-ddc/ddc_displays.c          	\
-ddc/ddc_dumpload.c          	\
-ddc/ddc_multi_part_io.c     	\
-ddc/ddc_output.c            	\
-ddc/ddc_packet_io.c         	\
-ddc/ddc_read_capabilities.c 	\
-ddc/ddc_services.c          	\
-ddc/ddc_strategy.c          	\
-ddc/ddc_vcp.c               	\
-ddc/ddc_vcp_version.c       	\
-ddc/ddc_try_stats.c             	
+libcommon_la_SOURCES =      	
 
 if HAVE_ADL_COND
 libcommon_la_SOURCES += \
@@ -310,7 +299,8 @@ libcommon_la_LIBADD = \
 util/libutil.la  \
 base/libbase.la  \
 vcp/libvcp.la    \
-i2c/libi2c.la
+i2c/libi2c.la    \
+ddc/libddc.la
 
 if ENABLE_USB_COND
 libcommon_la_LIBADD += usb_util/libusbutil.la
