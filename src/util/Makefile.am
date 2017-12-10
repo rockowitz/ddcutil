@@ -19,7 +19,6 @@ clean-local:
 mostlyclean-local:
 	@echo "(src/util/Makefile) mostlyclean-local"
 
-
 distclean-local:
 	@echo "(src/util/Makefile) distclean-local"
 
@@ -45,7 +44,8 @@ subprocess_util.c          \
 timestamp.c                \
 udev_i2c_util.c            \
 udev_usb_util.c            \
-udev_util.c
+udev_util.c                \
+utilrpt.c
 
 # libutil_la_SOURCES += systemd_util.c
 
