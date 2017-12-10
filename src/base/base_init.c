@@ -24,11 +24,11 @@
  * </endcopyright>
  */
 
-#include "base/core.h"
-#include "base/ddc_packets.h"
-#include "base/execution_stats.h"
-#include "base/linux_errno.h"
-#include "base/sleep.h"
+#include "core.h"
+#include "ddc_packets.h"
+#include "execution_stats.h"
+#include "linux_errno.h"
+#include "sleep.h"
 
 #include "base_init.h"
 
