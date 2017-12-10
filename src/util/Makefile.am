@@ -1,6 +1,6 @@
 AM_CPPFLAGS =        \
   $(GLIB_CFLAGS)     \
-  $(LIBDRM_CFLAGS)   
+  $(LIBDRM_CFLAGS)
 
 AM_CFLAGS = -Wall 
 AM_CFLAGS += -Werror

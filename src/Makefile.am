@@ -1,6 +1,6 @@
 ## Process this file with automake to produce Makefile.in
 
-SUBDIRS = util usb_util  . gobject_api swig sample_clients
+SUBDIRS = util usb_util base  . gobject_api swig sample_clients
 
 MOSTLYCLEANFILES =   
 
@@ -17,7 +17,7 @@ CLEANFILES =
 # sample_clients/*expand    \
 # test/*expand              \
 # test/adl/*expand          \
-#  test/ddc/*expand          \
+# test/ddc/*expand          \
 # test/i2c/*expand          \
 # usb/*expand               \
 # usb_util/*expand          \
@@ -186,20 +186,6 @@ all-local:
 # shared between ddcutil and libddcutil: 
 #
 libcommon_la_SOURCES =      	\
-base/base_init.c            	\
-base/build_info.c           	\
-base/core.c                 	\
-base/ddc_errno.c            	\
-base/ddc_error.c                \
-base/ddc_packets.c          	\
-base/displays.c             	\
-base/execution_stats.c      	\
-base/feature_sets.c         	\
-base/linux_errno.c          	\
-base/retry_history.c            \
-base/sleep.c                	\
-base/status_code_mgt.c      	\
-base/vcp_version.c          	\
 ddc/ddc_displays.c          	\
 ddc/ddc_dumpload.c          	\
 ddc/ddc_multi_part_io.c     	\
@@ -330,7 +316,8 @@ ddcutil_CFLAGS                 = $(AM_CFLAGS)  -fPIC
 #
 
 libcommon_la_LIBADD = \
-util/libutil.la 
+util/libutil.la  \
+base/libbase.la
 
 if ENABLE_USB_COND
 libcommon_la_LIBADD += usb_util/libusbutil.la
