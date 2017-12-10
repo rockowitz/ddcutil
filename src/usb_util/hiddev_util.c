@@ -1,7 +1,7 @@
 /* hiddev_util.c
  *
  * <copyright>
- * Copyright (C) 2016 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2016-2917 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -21,6 +21,11 @@
  * </endcopyright>
  */
 
+/** \f
+ *
+ */
+
+/** \cond */
 #include <config.h>
 
 #include <assert.h>
@@ -45,11 +50,14 @@
 #include "util/glib_util.h"
 #include "util/report_util.h"
 #include "util/string_util.h"
+#include "util/utilrpt.h"
+/** \endcond */
 
 #include "usb_util/usb_hid_common.h"
 #include "usb_util/hiddev_reports.h"
 #include "usb_util/hiddev_util.h"
 
+#include "base/core.h"
 
 static const char* report_type_id_table[] = {
       "invalid value",
@@ -742,9 +750,9 @@ get_multibyte_value_by_uref_multi(
 
 bye:
    if (debug) {
-      printf("(%s) Returning: %p\n", __func__, result);
+      DBGMSG("Returning: %p", __func__, result);
       if (result) {
-         buffer_dump(result);
+         dbgrpt_buffer(result, 1);
       }
    }
    return result;
