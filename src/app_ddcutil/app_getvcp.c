@@ -373,7 +373,7 @@ app_read_changes(Display_Handle * dh) {
 
       if (psc == 0) {
          Ddc_Error * ddc_excp = set_nontable_vcp_value(dh, 0x02, 0x01);
-         psc = (ddc_excp) ? ddc_excp->psc : 0;
+         // psc = (ddc_excp) ? ddc_excp->psc : 0;
          if (ddc_excp) {
             DBGMSG("set_nontable_vcp_value_by_display_handle() returned %s", ddc_error_summary(ddc_excp) );
             ddc_error_free(ddc_excp);
