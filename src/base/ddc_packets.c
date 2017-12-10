@@ -189,7 +189,7 @@ int get_packet_max_size(DDC_Packet * packet) {
 }
 
 
-void dbgrpt_response_packet(DDC_Packet * packet, int depth) {
+void dbgrpt_packet(DDC_Packet * packet, int depth) {
    assert(packet);      // make clang analyzer happy
    int d0 = depth;
    // printf("DDC_Packet dump.  Addr: %p, Type: 0x%02x, Tag: |%s|, buf: %p, aux_data: %p\n",
@@ -266,7 +266,7 @@ DDC_Packet * create_empty_ddc_packet(int max_size, const char * tag) {
 
    DBGMSF(debug, "Done. Returning %p, packet->tag=%p", packet, packet->tag);
    if (debug)
-      dbgrpt_response_packet(packet, 1);
+      dbgrpt_packet(packet, 1);
 
    return packet;
 }
@@ -1021,7 +1021,7 @@ Status_DDC create_ddc_typed_response_packet(
 
    DBGTRC(debug, TRACE_GROUP, "Returning %s, *packet_ptr=%p", ddcrc_desc(rc), *packet_ptr_addr);
    if ( (debug || IS_TRACING()) && rc >= 0)
-      dbgrpt_response_packet(*packet_ptr_addr, 1);
+      dbgrpt_packet(*packet_ptr_addr, 1);
 
    assert( (rc == 0 && *packet_ptr_addr) || (rc != 0 && !*packet_ptr_addr));
    return rc;
@@ -1056,7 +1056,7 @@ create_ddc_multi_part_read_response_packet(
       if (data_len < min_data_len || data_len > max_data_len) {
          DDCMSG(debug, "Invalid data fragment_length_wo_null: %d", data_len);
          if (IS_REPORTING_DDC())
-            dbgrpt_response_packet(packet, 1);
+            dbgrpt_packet(packet, 1);
          rc = COUNT_STATUS_CODE(DDCRC_INVALID_DATA);
       }
       else {
@@ -1111,7 +1111,7 @@ create_ddc_getvcp_response_packet(
          // dump_packet(packet);
          DDCMSG(debug, "Invalid data length: %d, should be 8", data_len);
          if ( IS_REPORTING_DDC() )
-            dbgrpt_response_packet(packet, 1);
+            dbgrpt_packet(packet, 1);
          rc = COUNT_STATUS_CODE(DDCRC_INVALID_DATA);
       }
       else {

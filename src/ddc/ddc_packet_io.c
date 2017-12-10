@@ -635,7 +635,7 @@ ddc_write_read(
 
    DBGTRC(debug, TRACE_GROUP, "Done. Returning: %s", ddc_error_summary(excp)  );
    if (psc == 0 && (IS_TRACING() || debug) )
-      dbgrpt_response_packet(*response_packet_ptr_loc, 1);
+      dbgrpt_packet(*response_packet_ptr_loc, 1);
 
    return excp;
 }
@@ -826,7 +826,7 @@ ddc_i2c_write_only(
    bool debug = false;
    DBGTRC(debug, TRACE_GROUP, "Starting.");
    if (debug)
-      dbgrpt_response_packet(request_packet_ptr, 1);
+      dbgrpt_packet(request_packet_ptr, 1);
 
    Status_Errno_DDC rc =
          invoke_i2c_writer(fh,
