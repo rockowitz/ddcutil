@@ -3,6 +3,13 @@ AM_CPPFLAGS =        \
   -I$(top_srcdir)/src \
   -I$(top_srcdir)/src/public
 
+if HAVE_ADL_COND
+AM_CPPFLAGS +=  \
+  -I@ADL_HEADER_DIR@  
+endif
+
+
+
 AM_CFLAGS = -Wall 
 AM_CFLAGS += -Werror
 

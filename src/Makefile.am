@@ -1,6 +1,6 @@
 ## Process this file with automake to produce Makefile.in
 
-SUBDIRS = util usb_util base vcp i2c ddc . gobject_api swig sample_clients
+SUBDIRS = util usb_util base vcp i2c adl usb ddc . gobject_api swig sample_clients
 
 MOSTLYCLEANFILES =   
 
@@ -48,8 +48,6 @@ clean-local:
 	find . -name ".deps" -type d 
 	find . -name ".deps" -type d -exec ls -ld  {} \;
 	find . -path "*/.deps/*" -exec ls -l {} \;    
-
-
 
 mostlyclean-local:
 	@echo "(src/Makefile) mostlyclean-local"
@@ -189,26 +187,10 @@ libcommon_la_SOURCES =
 
 if HAVE_ADL_COND
 libcommon_la_SOURCES += \
-  adl/adl_impl/adl_aux_intf.c \
-  adl/adl_impl/adl_errors.c \
-  adl/adl_impl/adl_intf.c \
-  adl/adl_impl/adl_report.c \
-  adl/adl_impl/adl_shim.c \
   test/adl/adl_tests.c \
   test/adl/adl_from_sample.c 
-else
-libcommon_la_SOURCES += \
-  adl/adl_mock_impl/adl_mock_shim.c \
-  adl/adl_mock_impl/adl_mock_errors.c
 endif
 
-if ENABLE_USB_COND
-libcommon_la_SOURCES += \
-  usb/usb_base.c \
-  usb/usb_edid.c \
-  usb/usb_displays.c  \
-  usb/usb_vcp.c  
-endif
 
 if ENABLE_SHARED_LIB_COND
 include_HEADERS = \
@@ -283,7 +265,7 @@ ddcutil_CFLAGS                 = $(AM_CFLAGS)  -fPIC
 # demo_get_set_vcp_CFLAGS        = $(AM_CFLAGS)  -fPIC
 # demo_display_selection_CFLAGS  = $(AM_CFLAGS)  -fPIC
 
-# unneessary, will use AM_CFLAGS if xxx_CFLAGS undefined
+# unnessary, will use AM_CFLAGS if xxx_CFLAGS undefined
 # libcommon_la_CFLAGS     = $(AM_CFLAGS)
 # libddcutil_la_CFLAGS    = $(AM_CFLAGS)
 
@@ -300,10 +282,13 @@ util/libutil.la  \
 base/libbase.la  \
 vcp/libvcp.la    \
 i2c/libi2c.la    \
-ddc/libddc.la
+ddc/libddc.la    \
+adl/libadl.la
 
 if ENABLE_USB_COND
-libcommon_la_LIBADD += usb_util/libusbutil.la
+libcommon_la_LIBADD += \
+  usb_util/libusbutil.la \
+  usb/libusb.la
 endif
 
 # $(SYSTEMD_LIBS) removed from list, libsystemd not currently used

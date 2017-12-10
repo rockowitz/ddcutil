@@ -47,6 +47,7 @@ goclient_SOURCES = \
 # C Pre-Processor Flags:
 #
 AM_CPPFLAGS = \
+  -I$(top_srcdir) \
   -I..        \
   -I../public  \
   $(GOBJECT_CFLAGS) 
