@@ -1,6 +1,6 @@
 ## Process this file with automake to produce Makefile.in
 
-SUBDIRS = util usb_util base vcp  . gobject_api swig sample_clients
+SUBDIRS = util usb_util base vcp i2c . gobject_api swig sample_clients
 
 MOSTLYCLEANFILES =   
 
@@ -196,10 +196,7 @@ ddc/ddc_services.c          	\
 ddc/ddc_strategy.c          	\
 ddc/ddc_vcp.c               	\
 ddc/ddc_vcp_version.c       	\
-ddc/ddc_try_stats.c             	\
-i2c/i2c_base_io.c          	    \
-i2c/i2c_bus_core.c          	\
-i2c/i2c_do_io.c    	        	
+ddc/ddc_try_stats.c             	
 
 if HAVE_ADL_COND
 libcommon_la_SOURCES += \
@@ -312,7 +309,8 @@ ddcutil_CFLAGS                 = $(AM_CFLAGS)  -fPIC
 libcommon_la_LIBADD = \
 util/libutil.la  \
 base/libbase.la  \
-vcp/libvcp.la
+vcp/libvcp.la    \
+i2c/libi2c.la
 
 if ENABLE_USB_COND
 libcommon_la_LIBADD += usb_util/libusbutil.la
