@@ -247,8 +247,6 @@ try_multi_part_read(
 
    free_ddc_packet(request_packet_ptr);
 
-   if (psc > 0)
-      psc = 0;
    DBGTRC(debug, TRACE_GROUP, "Returning %s", ddc_error_summary(excp));
    return excp;
 }
@@ -301,11 +299,7 @@ multi_part_read_with_retry(
               request_subtype,
               all_zero_response_ok,
               accumulator);
-      rc = (ddc_excp) ? ddc_excp->psc : 0;
-      if (ddc_excp){
-         try_errors[tryctr] = ddc_excp;
-         // try_status_codes[tryctr] = rc;
-      }
+      try_errors[tryctr] = ddc_excp;
 
       if (rc == DDCRC_NULL_RESPONSE) {
          // generally means this, but could conceivably indicate a protocol error.
@@ -338,17 +332,16 @@ multi_part_read_with_retry(
    if (rc < 0) {
       buffer_free(accumulator, "capabilities buffer, error");
       accumulator = NULL;
-      if (tryctr >= max_multi_part_read_tries) {
+      if (tryctr >= max_multi_part_read_tries)
          rc = DDCRC_RETRIES;
-         ddc_excp = ddc_error_new_with_causes(
-               DDCRC_RETRIES,
-               try_errors,
-               tryctr,
-               __func__);
-      }
-      else {
-         ddc_excp = ddc_error_new_with_cause(rc, ddc_excp, __func__);
-      }
+      ddc_excp = ddc_error_new_with_causes(rc, try_errors, tryctr, __func__);
+
+      if (rc != try_errors[tryctr-1]->psc)
+         COUNT_STATUS_CODE(rc);     // new status code, count it
+   }
+   else {
+      for (int ndx = 0; ndx < tryctr; ndx++)
+         ddc_error_free(try_errors[ndx]);
    }
 
    // if counts for DDCRC_ALL_TRIES_ZERO?
@@ -442,51 +435,43 @@ multi_part_write_with_retry(
    Public_Status_Code rc = -1;   // dummy value for first call of while loop
    Ddc_Error * ddc_excp = NULL;
 
-   // Public_Status_Code  try_status_codes[MAX_MAX_TRIES]
    Ddc_Error *         try_errors[MAX_MAX_TRIES];
 
-   int try_ctr = 0;
+   int tryctr = 0;
    bool can_retry = true;
 
-   while (try_ctr < max_multi_part_write_tries && rc < 0 && can_retry) {
+   while (tryctr < max_multi_part_write_tries && rc < 0 && can_retry) {
       DBGTRC(debug, TRACE_GROUP,
              "Start of while loop. try_ctr=%d, max_multi_part_write_tries=%d",
-             try_ctr, max_multi_part_write_tries);
+             tryctr, max_multi_part_write_tries);
 
       ddc_excp = try_multi_part_write(
               dh,
               vcp_code,
               value_to_set);
+      try_errors[tryctr] = ddc_excp;
       rc = (ddc_excp) ? ddc_excp->psc : 0;
       assert( (ddc_excp && rc<0) || (!ddc_excp && rc==0) );
 
       // TODO: What rc values set can_retry = false?
 
-      if (rc < 0 && can_retry) {
-         // try_status_codes[try_ctr] = rc;
-         try_errors[try_ctr] = ddc_excp;
-      }
-      try_ctr++;
+      tryctr++;
    }
+   assert( (ddc_excp && rc < 0) || (!ddc_excp && rc==0) );
 
    if (rc < 0) {
-      if (try_ctr >= max_multi_part_write_tries)  {
+      if (can_retry)
          rc = DDCRC_RETRIES;
-         ddc_excp = ddc_error_new_with_causes(
-               DDCRC_RETRIES,
-               try_errors,
-               try_ctr,
-               __func__);
-      }
-      else {
-         ddc_excp = ddc_error_new_with_cause(rc, ddc_excp, __func__);
-      }
+      ddc_excp= ddc_error_new_with_causes(rc, try_errors, tryctr, __func__);
+
+      if (rc != try_errors[tryctr-1]->psc)
+         COUNT_STATUS_CODE(rc);     // new status code, count it
+   }
+   else {
+      for (int ndx=0; ndx<tryctr; ndx++)
+         ddc_error_free(try_errors[ndx]);
    }
 
-   if (debug || IS_TRACING()) {
-      DBGMSG("Done.  Returning: %s", psc_desc(rc));
-      if (rc == DDCRC_RETRIES)
-         DBGMSG("    Try errors: %s", ddc_error_causes_string(ddc_excp));
-   }
+   DBGTRC(debug, TRACE_GROUP, "Done.  Returning: %s", ddc_error_summary(ddc_excp));
    return ddc_excp;
 }
