@@ -23,6 +23,12 @@
 
 /** \f
  *  Struct for reporting errors.
+ *
+ *  #Ddc_Error provides a pseudo-exception framework that can be integrated
+ *  with more traditional status codes.  Instead of returning a status code,
+ *  a C function returns a #Ddc_Error instance in the case of an error, or
+ *  NULL if there is no error.  Information about the cause of an error is
+ *  retained for use by higher levels in the call stack.
  */
 
 /** \cond */
@@ -65,6 +71,21 @@ void ddc_error_free(Ddc_Error * erec){
    }
 }
 
+static void ddc_error_add_cause(Ddc_Error * parent, Ddc_Error * cause) {
+   VALID_DDC_ERROR_PTR(parent);
+   VALID_DDC_ERROR_PTR(cause);
+
+   assert(parent->cause_ct < MAX_MAX_TRIES);
+   parent->causes[parent->cause_ct++] = cause;
+}
+
+#ifdef UNUSED
+static void ddc_error_set_status(Ddc_Error * erec, Public_Status_Code psc) {
+   VALID_DDC_ERROR_PTR(erec);
+   erec->psc = psc;
+}
+#endif
+
 
 /** Creates a new #Ddc_Error instance with the specified status code
  *  and function name.
@@ -87,7 +108,7 @@ Ddc_Error *  ddc_error_new(Public_Status_Code psc, const char * func) {
  *
  *  \param  psc   status code
  *  \param  cause pointer to another #Ddc_Error that is included as a cause
- *  \param  func  name of function generating status code
+ *  \param  func  name of function creating new instance
  *  \return pointer to new instance
  */
 Ddc_Error * ddc_error_new_with_cause(
@@ -103,6 +124,14 @@ Ddc_Error * ddc_error_new_with_cause(
 }
 
 
+/** Creates a new #Ddc_Error instance, including a reference to another
+ *  instance that is the cause of the current error.  The status code
+ *  of the new instance is the same as that of the referenced instance.
+ *
+ *  \param  cause pointer to another #Ddc_Error that is included as a cause
+ *  \param  func  name of function creating new instance
+ *  \return pointer to new instance
+ */
 Ddc_Error * ddc_error_new_chained(
       Ddc_Error * cause,
       const char * func)
@@ -113,6 +142,44 @@ Ddc_Error * ddc_error_new_chained(
 }
 
 
+/** Creates a new #Ddc_Error instance with a collection of
+ *  instances specified as the causes.
+ *
+ *  \param  psc             status code of the new instance
+ *  \param  causes          array of #Ddc_Error instances
+ *  \param  cause_ct        number of causes
+ *  \param  func            name of function creating the new #Ddc_Error
+ *  \return pointer to new instance
+ */
+Ddc_Error * ddc_error_new_with_causes(
+      Public_Status_Code    psc,
+      Ddc_Error **          causes,
+      int                   cause_ct,
+      const char *          func)
+{
+   Ddc_Error * result = ddc_error_new(psc, func);
+   for (int ndx = 0; ndx < cause_ct; ndx++) {
+      ddc_error_add_cause(result, causes[ndx]);
+   }
+   return result;
+}
+
+
+// For creating a new Ddc_Error when the called functions
+// return status codes not Ddc_Errors.
+
+/** Creates a new #Ddc_Error instance, including references to multiple
+ *  status codes from called functions that contribute to the current error.
+ *  Each of the callee status codes is wrapped in a synthesized #Ddc_Error
+ *  instance that is included as a cause.
+ *
+ *  \param  status_code
+ *  \param  callee_status_codes    array of status codes
+ *  \param  callee_status_code_ct  number of status codes in **callee_status_codes**
+ *  \param  callee_func            name of function that returned **callee** status codes
+ *  \param  func                   name of function generating new #Ddc_Error
+ *  \return pointer to new instance
+ */
 Ddc_Error * ddc_error_new_with_callee_status_codes(
       Public_Status_Code    status_code,
       Public_Status_Code *  callee_status_codes,
@@ -129,6 +196,16 @@ Ddc_Error * ddc_error_new_with_callee_status_codes(
 }
 
 
+/** Special case of #ddc_Error_with_new_callee_status_codes() for the case
+ *  where the **callee** status codes represent try errors.  The status code
+ *  of the newly created instance is **DDCRC_RETRIES**.
+ *
+ *  \param  status_codes    array of status codes
+ *  \param  status_code_ct  number of status codes in **callee_status_codes**
+ *  \param  called_func     name of function that returned **callee** status codes
+ *  \param  func            name of function generating new #Ddc_Error
+ *  \return pointer to new instance
+ */
 Ddc_Error * ddc_error_new_retries(
       Public_Status_Code *  status_codes,
       int                   status_code_ct,
@@ -143,32 +220,9 @@ Ddc_Error * ddc_error_new_retries(
    return result;
 }
 
-Ddc_Error * ddc_error_new_with_causes(
-      Public_Status_Code    psc,
-      Ddc_Error **          causes,
-      int                   cause_ct,
-      const char *          func)
-{
-   Ddc_Error * result = ddc_error_new(psc, func);
-   for (int ndx = 0; ndx < cause_ct; ndx++) {
-      ddc_error_add_cause(result, causes[ndx]);
-   }
-   return result;
-}
 
 
-void ddc_error_add_cause(Ddc_Error * parent, Ddc_Error * cause) {
-   VALID_DDC_ERROR_PTR(parent);
-   VALID_DDC_ERROR_PTR(cause);
 
-   assert(parent->cause_ct < MAX_MAX_TRIES);
-   parent->causes[parent->cause_ct++] = cause;
-}
-
-void ddc_error_set_status(Ddc_Error * erec, Public_Status_Code psc) {
-   VALID_DDC_ERROR_PTR(erec);
-   erec->psc = psc;
-}
 
 #ifdef TRANSITIONAL
 char * ddc_error_causes_string_old(Ddc_Error * erec) {

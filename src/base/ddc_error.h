@@ -28,8 +28,7 @@
 #ifndef DDC_ERROR_H_
 #define DDC_ERROR_H_
 
-
-#include <glib-2.0/glib.h>
+// #include <glib-2.0/glib.h>
 
 // #ifdef TRANSITIONAL
 #include "base/retry_history.h"
@@ -54,22 +53,21 @@ typedef struct ddc_error_struct {
    // struct ddc_error_struct * next;
 } Ddc_Error;
 
-void
-ddc_error_free(
+void ddc_error_free(
       Ddc_Error * error);
 
 Ddc_Error * ddc_error_new(
-      Public_Status_Code psc,
-      const char * func);
+      Public_Status_Code    psc,
+      const char *          func);
 
 Ddc_Error * ddc_error_new_with_cause(
-      Public_Status_Code psc,
-      Ddc_Error *        cause,
-      const char *       func);
+      Public_Status_Code    psc,
+      Ddc_Error *           cause,
+      const char *          func);
 
 Ddc_Error * ddc_error_new_chained(
-      Ddc_Error *        cause,
-      const char *       func);
+      Ddc_Error *           cause,
+      const char *          func);
 
 Ddc_Error * ddc_error_new_with_causes(
       Public_Status_Code    psc,
@@ -90,15 +88,25 @@ Ddc_Error * ddc_error_new_retries(
       const char *          called_func,
       const char *          func);
 
-void ddc_error_add_cause(Ddc_Error * parent, Ddc_Error * cause);
+#ifdef NOT_PUBLIC
+void ddc_error_add_cause(
+      Ddc_Error *           erec,
+      Ddc_Error *           cause);
 
-void ddc_error_set_status(Ddc_Error * erec, Public_Status_Code psc);
+void ddc_error_set_status(
+      Ddc_Error *           erec,
+      Public_Status_Code    psc);
+#endif
 
-char * ddc_error_causes_string(Ddc_Error * erec);
+char * ddc_error_causes_string(
+      Ddc_Error *           erec);
 
-void ddc_error_report(Ddc_Error * erec, int depth);
+void ddc_error_report(
+      Ddc_Error *           erec,
+      int                   depth);
 
-char * ddc_error_summary(Ddc_Error * erec);
+char * ddc_error_summary(
+      Ddc_Error *           erec);
 
 
 #ifdef TRANSITIONAL
@@ -107,6 +115,5 @@ Retry_History * ddc_error_to_new_retry_history(Ddc_Error * erec);
 Ddc_Error * ddc_error_from_retry_history(Retry_History * hist, char * func);
 bool ddc_error_comp(Ddc_Error * erec, Retry_History * hist);
 #endif
-
 
 #endif /* DDC_ERROR_H_ */
