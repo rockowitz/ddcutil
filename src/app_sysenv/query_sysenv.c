@@ -716,7 +716,7 @@ void final_analysis(Env_Accumulator * accum, int depth) {
                                     "",
                                     NULL
                                    );
-                  msg_issued = true;
+                  // msg_issued = true;     // redundant, clang complains
                }
 
                rpt_label  (d1, "Issue:");
