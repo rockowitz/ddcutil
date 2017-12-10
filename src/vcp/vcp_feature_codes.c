@@ -332,7 +332,9 @@ static void report_sl_values(DDCA_Feature_Value_Entry * sl_values, int depth) {
 }
 
 
-char * interpret_ddca_version_feature_flags_readwrite(DDCA_Version_Feature_Flags feature_flags) {
+char * interpret_ddca_version_feature_flags_readwrite(
+      DDCA_Version_Feature_Flags feature_flags)
+{
    char * result = NULL;
    if (feature_flags & DDCA_RW)
       result = "Read Write";
@@ -341,13 +343,15 @@ char * interpret_ddca_version_feature_flags_readwrite(DDCA_Version_Feature_Flags
    else if (feature_flags & DDCA_WO)
       result = "Write Only";
    else
-      PROGRAM_LOGIC_ERROR("No read/write bits set");
-      // result = "None of DDCA_RW, DDCA_RO, DDCA_WO set";
+      // PROGRAM_LOGIC_ERROR("No read/write bits set");
+      result = "PROGRAM LOGIC ERROR: No read/write bits set";
    return result;
 }
 
 
-char * interpret_ddca_version_feature_flags_type(DDCA_Version_Feature_Flags feature_flags) {
+char * interpret_ddca_version_feature_flags_type(
+      DDCA_Version_Feature_Flags feature_flags)
+{
    char * result = NULL;
    if (feature_flags & DDCA_STD_CONT)
       result = "Continuous (normal)";
@@ -364,16 +368,20 @@ char * interpret_ddca_version_feature_flags_type(DDCA_Version_Feature_Flags feat
    else if (feature_flags & DDCA_WO_TABLE)
       result = "Table (write-only)";
    else
-      // result = "unknown type";
-      PROGRAM_LOGIC_ERROR("No C/NC/T subtype bit set");
+      result = "PROGRAM LOGIC ERROR: No C/NC/T subtype bit set";
+      // PROGRAM_LOGIC_ERROR("No C/NC/T subtype bit set");
    return result;
 }
 
 
-static char * interpret_feature_flags_r(DDCA_Version_Feature_Flags vflags, char * workbuf, int bufsz) {
+static char * interpret_feature_flags_r(
+      DDCA_Version_Feature_Flags vflags,
+      char *                     workbuf,
+      int                        bufsz)
+{
    bool debug = false;
    DBGMSF(debug, "vflags=0x%04x", vflags);
-   assert(bufsz >= 50);     //  bigger than we'll need
+   assert(bufsz >= 100);     //  bigger than we'll need
    *workbuf = '\0';
    if (vflags & DDCA_DEPRECATED) {
       strcpy(workbuf, "Deprecated");
