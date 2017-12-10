@@ -88,7 +88,6 @@ Ddc_Error * ddc_error_new_retries(
       const char *          called_func,
       const char *          func);
 
-#ifdef NOT_PUBLIC
 void ddc_error_add_cause(
       Ddc_Error *           erec,
       Ddc_Error *           cause);
@@ -96,7 +95,6 @@ void ddc_error_add_cause(
 void ddc_error_set_status(
       Ddc_Error *           erec,
       Public_Status_Code    psc);
-#endif
 
 char * ddc_error_causes_string(
       Ddc_Error *           erec);

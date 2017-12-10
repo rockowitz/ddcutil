@@ -71,7 +71,7 @@ void ddc_error_free(Ddc_Error * erec){
    }
 }
 
-static void ddc_error_add_cause(Ddc_Error * parent, Ddc_Error * cause) {
+void ddc_error_add_cause(Ddc_Error * parent, Ddc_Error * cause) {
    VALID_DDC_ERROR_PTR(parent);
    VALID_DDC_ERROR_PTR(cause);
 
@@ -79,12 +79,10 @@ static void ddc_error_add_cause(Ddc_Error * parent, Ddc_Error * cause) {
    parent->causes[parent->cause_ct++] = cause;
 }
 
-#ifdef UNUSED
-static void ddc_error_set_status(Ddc_Error * erec, Public_Status_Code psc) {
+void ddc_error_set_status(Ddc_Error * erec, Public_Status_Code psc) {
    VALID_DDC_ERROR_PTR(erec);
    erec->psc = psc;
 }
-#endif
 
 
 /** Creates a new #Ddc_Error instance with the specified status code
