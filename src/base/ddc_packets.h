@@ -131,7 +131,7 @@ struct {
    // Parsed_Response_Data * parsed_response;
 } DDC_Packet;
 
-void dump_packet(DDC_Packet * packet);
+void dbgrpt_response_packet(DDC_Packet * packet, int depth);
 void free_ddc_packet(DDC_Packet * packet);
 
 bool is_double_byte(Byte * pb);

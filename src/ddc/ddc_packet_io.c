@@ -47,6 +47,7 @@
 
 #include "util/debug_util.h"
 #include "util/string_util.h"
+#include "util/utilrpt.h"
 /** \endcond */
 
 #include "base/ddc_errno.h"
@@ -518,7 +519,7 @@ static Public_Status_Code ddc_write_read_raw(
                               dh_repr_t(dh), readbuf, max_read_bytes);
    if (debug) {
       DBGMSG("request_packer_ptr->raw_bytes:");
-      buffer_dump(request_packet_ptr->raw_bytes);
+      dbgrpt_buffer(request_packet_ptr->raw_bytes, 1);
    }
    Public_Status_Code psc;
 
@@ -634,7 +635,7 @@ ddc_write_read(
 
    DBGTRC(debug, TRACE_GROUP, "Done. Returning: %s", ddc_error_summary(excp)  );
    if (psc == 0 && (IS_TRACING() || debug) )
-      dump_packet(*response_packet_ptr_loc);
+      dbgrpt_response_packet(*response_packet_ptr_loc, 1);
 
    return excp;
 }
@@ -825,7 +826,7 @@ ddc_i2c_write_only(
    bool debug = false;
    DBGTRC(debug, TRACE_GROUP, "Starting.");
    if (debug)
-      dump_packet(request_packet_ptr);
+      dbgrpt_response_packet(request_packet_ptr, 1);
 
    Status_Errno_DDC rc =
          invoke_i2c_writer(fh,

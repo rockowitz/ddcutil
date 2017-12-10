@@ -38,6 +38,7 @@
 
 #include "util/report_util.h"
 #include "util/string_util.h"
+#include "util/utilrpt.h"
 
 #include "base/ddc_errno.h"
 #include "base/execution_stats.h"
@@ -188,25 +189,27 @@ int get_packet_max_size(DDC_Packet * packet) {
 }
 
 
-void dump_packet(DDC_Packet * packet) {
+void dbgrpt_response_packet(DDC_Packet * packet, int depth) {
    assert(packet);      // make clang analyzer happy
+   int d0 = depth;
    // printf("DDC_Packet dump.  Addr: %p, Type: 0x%02x, Tag: |%s|, buf: %p, aux_data: %p\n",
    //        packet, packet->type, packet->tag, packet->raw_bytes, packet->aux_data);
-   printf("DDC_Packet dump.  Addr: %p, Type: 0x%02x, Tag: |%s|, buf: %p, parsed: %p\n",
+   rpt_vstring(depth, "DDC_Packet dump.  Addr: %p, Type: 0x%02x, Tag: |%s|, buf: %p, parsed: %p",
           packet, packet->type, packet->tag, packet->raw_bytes, packet->parsed.raw_parsed);
-   buffer_dump(packet->raw_bytes);
+   dbgrpt_buffer(packet->raw_bytes, d0);
    // TODO show interpreted aux_data
    if (packet->parsed.raw_parsed) {
       switch(packet->type) {
       case (DDC_PACKET_TYPE_CAPABILITIES_RESPONSE):
       case (DDC_PACKET_TYPE_TABLE_READ_RESPONSE):
-         report_interpreted_multi_read_fragment(packet->parsed.multi_part_read_fragment, 0);
+         report_interpreted_multi_read_fragment(packet->parsed.multi_part_read_fragment, d0);
          break;
       case (DDC_PACKET_TYPE_QUERY_VCP_RESPONSE):
-         report_interpreted_nontable_vcp_response(packet->parsed.nontable_response, 0);
+         report_interpreted_nontable_vcp_response(packet->parsed.nontable_response, d0);
          break;
       default:
-         PROGRAM_LOGIC_ERROR("Unexpected packet type: -x%02x", packet->type);
+         // PROGRAM_LOGIC_ERROR("Unexpected packet type: -x%02x", packet->type);
+         rpt_vstring(d0, "PROGRAM_LOGIC_ERROR: Unexpected packet type: -x%02x", packet->type);
       }
    }
 }
@@ -263,7 +266,7 @@ DDC_Packet * create_empty_ddc_packet(int max_size, const char * tag) {
 
    DBGMSF(debug, "Done. Returning %p, packet->tag=%p", packet, packet->tag);
    if (debug)
-      dump_packet(packet);
+      dbgrpt_response_packet(packet, 1);
 
    return packet;
 }
@@ -1018,7 +1021,7 @@ Status_DDC create_ddc_typed_response_packet(
 
    DBGTRC(debug, TRACE_GROUP, "Returning %s, *packet_ptr=%p", ddcrc_desc(rc), *packet_ptr_addr);
    if ( (debug || IS_TRACING()) && rc >= 0)
-      dump_packet(*packet_ptr_addr);
+      dbgrpt_response_packet(*packet_ptr_addr, 1);
 
    assert( (rc == 0 && *packet_ptr_addr) || (rc != 0 && !*packet_ptr_addr));
    return rc;
@@ -1053,7 +1056,7 @@ create_ddc_multi_part_read_response_packet(
       if (data_len < min_data_len || data_len > max_data_len) {
          DDCMSG(debug, "Invalid data fragment_length_wo_null: %d", data_len);
          if (IS_REPORTING_DDC())
-            dump_packet(packet);
+            dbgrpt_response_packet(packet, 1);
          rc = COUNT_STATUS_CODE(DDCRC_INVALID_DATA);
       }
       else {
@@ -1108,7 +1111,7 @@ create_ddc_getvcp_response_packet(
          // dump_packet(packet);
          DDCMSG(debug, "Invalid data length: %d, should be 8", data_len);
          if ( IS_REPORTING_DDC() )
-            dump_packet(packet);
+            dbgrpt_response_packet(packet, 1);
          rc = COUNT_STATUS_CODE(DDCRC_INVALID_DATA);
       }
       else {

@@ -40,6 +40,7 @@
 /** \endcond */
 
 #include "util/report_util.h"
+#include "util/utilrpt.h"
 
 #include "base/ddc_error.h"
 #include "base/ddc_errno.h"
@@ -535,8 +536,8 @@ Ddc_Error * get_table_vcp_value(
    if (psc == 0) {
       *pp_table_bytes = paccumulator;
       if (output_level >= DDCA_OL_VERBOSE) {
-         printf("Bytes returned on table read:");
-         buffer_dump(paccumulator);
+         DBGMSG("Bytes returned on table read:");
+         dbgrpt_buffer(paccumulator, 1);
       }
    }
 

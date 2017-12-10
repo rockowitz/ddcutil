@@ -45,6 +45,7 @@
 #include "util/string_util.h"
 #include "util/sysfs_util.h"
 #include "util/udev_i2c_util.h"
+#include "util/utilrpt.h"
 
 #include "base/core.h"
 #include "base/ddc_errno.h"
@@ -572,7 +573,7 @@ Public_Status_Code i2c_get_raw_edid_by_fd(int fd, Buffer * rawedid) {
             rawedid->len = 128;
             if (debug) {
                DBGMSG("call_read returned:");
-               buffer_dump(rawedid);
+               dbgrpt_buffer(rawedid, 1);
                DBGMSG("edid checksum = %d", edid_checksum(rawedid->bytes) );
             }
             Byte checksum = edid_checksum(rawedid->bytes);
