@@ -573,7 +573,8 @@ static Public_Status_Code ddc_write_read_raw(
  * \remark
  *  Issue: positive ADL codes, need to handle?
  */
-Public_Status_Code ddc_write_read(
+Ddc_Error *
+ddc_write_read(
       Display_Handle * dh,
       DDC_Packet *     request_packet_ptr,
       int              max_read_bytes,
@@ -627,11 +628,15 @@ Public_Status_Code ddc_write_read(
    // if (psc < 0  && get_modulation(psc) != RR_DDC)
    //    COUNT_STATUS_CODE(psc);
 
-   DBGTRC(debug, TRACE_GROUP, "Done. rc=%s", psc_desc(psc) );
+   Ddc_Error * excp = NULL;
+   if (psc < 0)
+      excp = ddc_error_new(psc, __func__);
+
+   DBGTRC(debug, TRACE_GROUP, "Done. Returning: %s", ddc_error_summary(excp)  );
    if (psc == 0 && (IS_TRACING() || debug) )
       dump_packet(*response_packet_ptr_loc);
 
-   return psc;
+   return excp;
 }
 
 
@@ -674,8 +679,6 @@ ddc_write_read_with_retry(
    assert(dh->dref->io_mode != DDCA_IO_USB);
    // show_backtrace(1);
 
-   Public_Status_Code try_status_codes[MAX_MAX_TRIES];
-
    // will be false on initial call to verify DDC communication
    // bool null_response_checked = dh->dref->flags & DREF_DDC_NULL_RESPONSE_CHECKED;   // unused
    bool retry_null_response = !(dh->dref->flags & DREF_DDC_USES_NULL_RESPONSE_FOR_UNSUPPORTED);
@@ -686,7 +689,9 @@ ddc_write_read_with_retry(
    int  ddcrc_read_all_zero_ct = 0;
    int  ddcrc_null_response_ct = 0;
    int  ddcrc_null_response_max = (retry_null_response) ? 3 : 0;
+   Ddc_Error * try_errors[MAX_MAX_TRIES];
 
+   assert(max_write_read_exchange_tries > 0);   // to avoid clang warning
    for (tryctr=0, psc=-999, retryable=true;
         tryctr < max_write_read_exchange_tries && psc < 0 && retryable;
         tryctr++)
@@ -695,13 +700,15 @@ ddc_write_read_with_retry(
            "Start of try loop, tryctr=%d, max_write_read_echange_tries=%d, rc=%d, retryable=%d",
            tryctr, max_write_read_exchange_tries, psc, retryable );
 
-      psc = ddc_write_read(
+      Ddc_Error * cur_excp = ddc_write_read(
                 dh,
                 request_packet_ptr,
                 max_read_bytes,
                 expected_response_type,
                 expected_subtype,
                 response_packet_ptr_loc);
+      psc = (cur_excp) ? cur_excp->psc : 0;
+      try_errors[tryctr] = cur_excp;
 
       if (psc == 0 && ddcrc_null_response_ct > 0) {
          DBGMSG("%s, ddc_write_read() succeeded after %d sleep and retry for DDC Null Response",
@@ -720,7 +727,6 @@ ddc_write_read_with_retry(
             // flag in a valid response
 
             if (psc == DDCRC_NULL_RESPONSE) {
-               // retryable = false;
                retryable = (ddcrc_null_response_ct++ < ddcrc_null_response_max);
                DBGMSF(debug, "DDCRC_NULL_RESPONSE, retryable=%s", bool_repr(retryable));
                if (retryable) {
@@ -752,6 +758,7 @@ ddc_write_read_with_retry(
             // if (retryable)
             //    call_dynamic_tuned_sleep_i2c(SE_DDC_NULL, tryctr+1);
          }
+
          else {   // DDC_IO_ADL
             // TODO more detailed tests
             if (psc == DDCRC_NULL_RESPONSE)
@@ -762,8 +769,6 @@ ddc_write_read_with_retry(
                retryable = false;
          }
 
-         try_status_codes[tryctr] = psc;   // for future Ddc_Error mechanism
-
          if (psc == DDCRC_READ_ALL_ZERO)
             ddcrc_read_all_zero_ct++;
       }    // rc < 0
@@ -772,70 +777,31 @@ ddc_write_read_with_retry(
 
    // Using new Ddc_Error mechanism
    Ddc_Error * ddc_excp = NULL;
+
    if (psc < 0) {
-      Public_Status_Code reported_psc = 0;
-      int last_try_index = tryctr-1;
-      // DBGTRC(debug, TRACE_GROUP, "After try loop. tryctr=%d, retryable=%s", tryctr, bool_repr(retryable));
-      Public_Status_Code last_psc = try_status_codes[last_try_index];
-      if (tryctr == 1 || !retryable) {
-      // if (!retryable) {
-         reported_psc = last_psc;
-         // ddc_excp = ddc_error_new(reported_psc, __func__);
-         ddc_excp = ddc_error_new_with_callee_status_codes(
-               reported_psc,
-               try_status_codes,
-               tryctr,
-               "ddc_write_read",
-               __func__);
-      }
-      else {
-         reported_psc = DDCRC_RETRIES;
-         if (ddcrc_read_all_zero_ct == max_write_read_exchange_tries) {
-            reported_psc = DDCRC_ALL_TRIES_ZERO;
-            // printf("(%s) All tries zero ddcrc_read_all_zero_ct=%d, max_write_read_exchange_tries=%d, tryctr=%d\n",
-            //        __func__, ddcrc_read_all_zero_ct, max_write_read_exchange_tries, tryctr);
-         }
-         else if (ddcrc_null_response_ct > ddcrc_null_response_max) {
-            reported_psc = DDCRC_ALL_RESPONSES_NULL;
-         }
+      // int last_try_index = tryctr-1;
+      DBGTRC(debug, TRACE_GROUP, "After try loop. tryctr=%d, retryable=%s", tryctr, bool_repr(retryable));
 
-         if (reported_psc == DDCRC_RETRIES) {
-            ddc_excp = ddc_error_new_retries(try_status_codes, tryctr, "ddc_write_read" , __func__);
-         }
-         else {
-            ddc_excp = ddc_error_new(reported_psc, __func__);
-         }
-      }
-   }
-// #endif
-
-   // n. rc is now the value from the last pass through the loop
-   // set it to a DDC status code indicating max tries exceeded
-   // if ( psc < 0 && retryable ) {
-   if (psc < 0 && tryctr > 1) {
-      // DBGMSG("ddcrc_null_response_ct = %d, ddcrc_null_response_max=%d", ddcrc_null_response_ct, ddcrc_null_response_max);
-      psc = DDCRC_RETRIES;
-      if (ddcrc_read_all_zero_ct == max_write_read_exchange_tries) {
+      if (retryable)
+         psc = DDCRC_RETRIES;
+      else if (ddcrc_read_all_zero_ct == max_write_read_exchange_tries)
          psc = DDCRC_ALL_TRIES_ZERO;
-         // printf("(%s) All tries zero ddcrc_read_all_zero_ct=%d, max_write_read_exchange_tries=%d, tryctr=%d\n",
-         //        __func__, ddcrc_read_all_zero_ct, max_write_read_exchange_tries, tryctr);
-      }
-      else if (ddcrc_null_response_ct > ddcrc_null_response_max) {
+      else if (ddcrc_null_response_ct > ddcrc_null_response_max)
          psc = DDCRC_ALL_RESPONSES_NULL;
-      }
-      COUNT_STATUS_CODE(psc);  // new status code, count it
+
+      ddc_excp = ddc_error_new_with_causes(psc, try_errors, tryctr, __func__);
+
+      if (psc != try_errors[tryctr-1]->psc)
+         COUNT_STATUS_CODE(psc);     // new status code, count it
    }
+   else {
+      for (int ndx = 0; ndx < tryctr; ndx++)
+         ddc_error_free(try_errors[ndx]);
+   }
+
    try_data_record_tries(write_read_stats_rec, psc, tryctr);
 
-   if ( debug || IS_TRACING() ) {
-      DBGMSG("Done. psc=%s", (ddc_excp) ? psc_desc(ddc_excp->psc) : "0");
-      if (ddc_excp) {
-         // ddc_error_report(ddc_excp, 1);
-         //alt:
-         DBGMSG("      Try errors: %s", ddc_error_causes_string(ddc_excp));
-      }
-   }
-
+   DBGTRC(debug, TRACE_GROUP, "Done.  Returning: %s", ddc_error_summary(ddc_excp));
    return ddc_excp;
 }
 
@@ -856,7 +822,7 @@ ddc_i2c_write_only(
          DDC_Packet *  request_packet_ptr
         )
 {
-   bool debug = false;
+   bool debug = true;
    DBGTRC(debug, TRACE_GROUP, "Starting.");
    if (debug)
       dump_packet(request_packet_ptr);
@@ -879,20 +845,16 @@ ddc_i2c_write_only(
 
 /* Writes a DDC request packet to a monitor
  *
- * Arguments:
- *   dh                  Display_Handle for open I2C or ADL device
- *   request_packet_ptr  DDC packet to write
- *
- * Returns:
- *   0 if success
- *   < 0 if error
+ * \param  dh                  Display_Handle for open I2C or ADL device
+ * \param  request_packet_ptr  DDC packet to write
+ * \return NULL if success, #Ddc_Error if error
  */
-Public_Status_Code
+Ddc_Error *
 ddc_write_only(
       Display_Handle * dh,
-      DDC_Packet *   request_packet_ptr)
+      DDC_Packet *     request_packet_ptr)
 {
-   bool debug = false;
+   bool debug = true;
    DBGTRC(debug, TRACE_GROUP, "Starting.");
 
    Public_Status_Code psc = 0;
@@ -908,11 +870,18 @@ ddc_write_only(
               // get_packet_start(request_packet_ptr)+1,
               // get_packet_len(request_packet_ptr)-1
              );
+      if (psc > 0) {
+         DBGMSG("Unusual positive return code from ADL: %d", psc);
+         psc = 0;
+      }
    }
 
-   // TRCMSGTF(tf, "Done. rc=%d\n", rc);
-   DBGTRC(debug, TRACE_GROUP, "Done. rc=%d\n", psc);
-   return psc;
+   Ddc_Error *  ddc_excp = NULL;
+   if (psc)
+      ddc_excp = ddc_error_new(psc, __func__);
+
+   DBGTRC(debug, TRACE_GROUP, "Done. Returning: %s", ddc_error_summary(ddc_excp));
+   return ddc_excp;
 }
 
 
@@ -931,17 +900,17 @@ ddc_write_only_with_retry(
       DDC_Packet *     request_packet_ptr
      )
 {
-   bool debug = false;
+   bool debug = true;
    DBGTRC(debug, TRACE_GROUP, "Starting." );
 
    assert(dh->dref->io_mode != DDCA_IO_USB);
 
    Public_Status_Code psc;
-   int  tryctr;
-   bool retryable;
+   int                tryctr;
+   bool               retryable;
+   Ddc_Error *        try_errors[MAX_MAX_TRIES];
 
-   Public_Status_Code try_status_codes[MAX_MAX_TRIES];   // For future Ddc_Error mechanism
-
+   assert(max_write_only_exchange_tries > 0);
    for (tryctr=0, psc=-999, retryable=true;
        tryctr < max_write_only_exchange_tries && psc < 0 && retryable;
        tryctr++)
@@ -950,7 +919,9 @@ ddc_write_only_with_retry(
              "Start of try loop, tryctr=%d, max_write_only_exchange_tries=%d, rc=%d, retryable=%d",
              tryctr, max_write_only_exchange_tries, psc, retryable );
 
-      psc = ddc_write_only(dh, request_packet_ptr);
+      Ddc_Error * cur_excp = ddc_write_only(dh, request_packet_ptr);
+      psc = (cur_excp) ? cur_excp->psc : 0;
+      try_errors[tryctr] = cur_excp;
 
       if (psc < 0) {
          COUNT_RETRYABLE_STATUS_CODE(psc);
@@ -968,39 +939,40 @@ ddc_write_only_with_retry(
             }
          }
       }   // rc < 0
-      try_status_codes[tryctr] = psc;   // for future Ddc_Error mechanism
+      // try_status_codes[tryctr] = psc;   // for future Ddc_Error mechanism
    }
 
 
-   // Using new Ddc_Error mechanism
    Ddc_Error * ddc_excp = NULL;
+
    if (psc < 0) {
-      Public_Status_Code reported_psc = 0;
-      int last_try_index = tryctr-1;
+      // now:
+      //   tryctr = number of tries
+      //   tryctr-1 = index of last try
+      //   tryctr == max_write_only_exchange_tries &&  retryable
+      //   tryctr <  max_write_only_exchange_tries && !retryable
+      //   tryctr == max_write_only_exchange_tries && !retryable
+
+      // int last_try_index = tryctr-1;
       DBGTRC(debug, TRACE_GROUP, "After try loop. tryctr=%d, retryable=%s", tryctr, bool_repr(retryable));
-      Public_Status_Code last_psc = try_status_codes[last_try_index];
-      if (tryctr == 1) {
-      // if (!retryable) {
-         reported_psc = last_psc;
-         ddc_excp = ddc_error_new(reported_psc, __func__);
-      }
-      else {
-         reported_psc = DDCRC_RETRIES;
-         ddc_excp = ddc_error_new_retries(try_status_codes, tryctr, "ddc_write_read" , __func__);
+
+      if (retryable)
+         psc = DDCRC_RETRIES;
+
+      ddc_excp = ddc_error_new_with_causes(psc, try_errors, tryctr, __func__);
+
+      if (psc != try_errors[tryctr-1]->psc)
+         COUNT_STATUS_CODE(psc);     // new status code, count it
+   }
+   else {
+      for (int ndx = 0; ndx < tryctr; ndx++) {
+         ddc_error_free(try_errors[ndx]);
       }
    }
 
-   if (psc < 0 && retryable)
-      psc = DDCRC_RETRIES;
    try_data_record_tries(write_only_stats_rec, psc, tryctr);
 
-   // new Ddc_Error mechanism
-   DBGTRC(debug, TRACE_GROUP, "Done (new). psc=%s", (ddc_excp) ? psc_desc(ddc_excp->psc) : "0");
-   if (ddc_excp && ddc_excp->psc == DDCRC_RETRIES && (debug || IS_TRACING())) {
-      ddc_error_report(ddc_excp, 0);
-      DBGTRC(debug, TRACE_GROUP, "      Try errors: %s", ddc_error_causes_string(ddc_excp));
-   }
-
+   DBGTRC(debug, TRACE_GROUP, "Done.  Returning: %s", ddc_error_summary(ddc_excp));
    return ddc_excp;
 }
 
