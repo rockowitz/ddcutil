@@ -539,6 +539,7 @@ int main(int argc, char *argv[]) {
       // if we opened the display, we close it
       if (dh)
          ddc_close_display(dh);
+      free(fn);
       main_rc = (ok) ? EXIT_SUCCESS : EXIT_FAILURE;
    }
 
