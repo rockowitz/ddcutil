@@ -79,7 +79,7 @@ gboolean adl_arg_func(const gchar* option_name,
 }
 
 
-// Callback function for processing --terse, --verbose, --program
+// Callback function for processing --terse, --verbose and synonyms
 gboolean output_arg_func(const gchar* option_name,
                          const gchar* value,
                          gpointer     data,
@@ -87,6 +87,7 @@ gboolean output_arg_func(const gchar* option_name,
 {
    bool debug = false;
    DBGMSF(debug, "option_name=|%s|, value|%s|, data=%p", option_name, value, data);
+   bool ok = true;
 
    if (streq(option_name, "-v") || streq(option_name, "--verbose") )
       output_level = DDCA_OL_VERBOSE;
@@ -96,10 +97,14 @@ gboolean output_arg_func(const gchar* option_name,
    else if (streq(option_name, "-p") || streq(option_name, "--program"))
       output_level = OL_PROGRAM;
 #endif
-   else
-      PROGRAM_LOGIC_ERROR("Unexpected option_name: %s", option_name);
+   else {
+      // PROGRAM_LOGIC_ERROR("Unexpected option_name: %s", option_name);
+      g_set_error(error, G_OPTION_ERROR, G_OPTION_ERROR_FAILED,
+                  "PROGRAM LOGIC ERROR: Unexpected option_name: %s", option_name);
+      ok = false;
+   }
 
-   return true;
+   return ok;
 }
 
 
