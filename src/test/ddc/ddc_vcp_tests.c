@@ -254,8 +254,15 @@ void probe_get_luminosity(int busno, char * write_mode, char * read_mode) {
    // printf("(%s) create_ddc_getvcp_request_packet returned rc=%d, packet_ptr=%p\n", __func__, rc, request_packet_ptr);
    // dump_packet(request_packet_ptr);
 
-   file = i2c_open_bus(busno, CALLOPT_ERR_ABORT);
-   rc = i2c_set_addr(file, 0x37, CALLOPT_ERR_MSG|CALLOPT_ERR_ABORT);
+   file = i2c_open_bus(busno, CALLOPT_ERR_MSG);
+   if (file < 0) {
+      return;
+   }
+   rc = i2c_set_addr(file, 0x37, CALLOPT_ERR_MSG);
+   if (rc < 0) {
+      free_ddc_packet(request_packet_ptr);
+      goto bye;
+   }
    assert(rc == 0);    // CALLOPT_ERR_ABORT was set
    // usleep(DEFAULT_TIMEOUT);
    sleep_millis_with_trace(DDC_TIMEOUT_MILLIS_DEFAULT, __func__, NULL);
@@ -291,6 +298,7 @@ void probe_get_luminosity(int busno, char * write_mode, char * read_mode) {
          }
       } // read_ok
    } // write_ok
+bye:
    close(file);
 }
 
