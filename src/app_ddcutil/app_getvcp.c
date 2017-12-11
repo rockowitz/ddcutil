@@ -270,6 +270,77 @@ app_show_feature_set_values_by_display_handle(
 }
 
 
+//
+// Watch for changed VCP values
+//
+
+void reset_vcp_x02(Display_Handle * dh) {
+   Ddc_Error * ddc_excp = set_nontable_vcp_value(dh, 0x02, 0x01);
+   if (ddc_excp) {
+      DBGMSG("set_nontable_vcp_value_by_display_handle() returned %s", ddc_error_summary(ddc_excp) );
+      ddc_error_free(ddc_excp);
+   }
+   else
+      DBGMSG("reset feature x02 (new control value) successful");
+}
+
+bool new_control_values_exist(Display_Handle * dh) {
+   bool debug = true;
+   Parsed_Nontable_Vcp_Response * p_nontable_response = NULL;
+   // DBGMSF(debug, "VCP version: %d.%d", vspec.major, vspec.minor);
+   bool result = false;
+    Ddc_Error * ddc_excp = get_nontable_vcp_value(
+             dh,
+             0x02,
+             &p_nontable_response);
+    if (ddc_excp) {
+       DBGMSG("get_nontable_vcp_value() returned %s", ddc_error_summary(ddc_excp) );
+       ddc_error_free(ddc_excp);
+    }
+
+    else if (p_nontable_response->sl == 0x01) {
+       DBGMSF(debug, "No new control values found");
+       free(p_nontable_response);
+    }
+    else {
+       DBGMSG("New control values exist. x02 value: 0x%02x", p_nontable_response->sl);
+       free(p_nontable_response);
+       p_nontable_response = NULL;
+       result = true;
+    }
+    return result;
+}
+
+
+/** Gets the ID of the next changed feature from VCP feature x52,
+ *  then reads and displays the value of that feature.
+ *
+ *  \param   dh  #Display_Handle
+ *  \return  id of changed feature, 0x00 if none
+ */
+
+Byte show_changed_feature(Display_Handle * dh) {
+   Parsed_Nontable_Vcp_Response * p_nontable_response = NULL;
+   Byte changed_feature = 0x00;
+   Ddc_Error * ddc_excp = get_nontable_vcp_value(
+              dh,
+              0x52,
+              &p_nontable_response);
+  // psc = (ddc_excp) ? ddc_excp->psc : 0;
+  if (ddc_excp) {
+     DBGMSG("get_nontable_vcp_value() for VCP feature x52 returned %s", ddc_error_summary(ddc_excp) );
+     ddc_error_free(ddc_excp);
+  }
+  else {
+     changed_feature = p_nontable_response->sl;
+     free(p_nontable_response);
+     if (changed_feature)
+        app_show_single_vcp_value_by_feature_id(dh, changed_feature, false);
+  }
+  return changed_feature;
+}
+
+
 /* Checks for VCP feature changes by:
  *   - reading feature x02 to check if changes exist,
  *   - querying feature x52 for the id of a changed feature
@@ -286,107 +357,43 @@ app_show_feature_set_values_by_display_handle(
  */
 void
 app_read_changes(Display_Handle * dh) {
-   bool debug = true;
-   // DBGMSF(debug, "Starting");
+   bool debug = false;
+   DBGMSF(debug, "Starting");
    int MAX_CHANGES = 20;
-   // bool new_values_found = false;
-
-   Public_Status_Code psc = 0;
-   Ddc_Error * ddc_excp = NULL;
 
    // read 02h
    // xff: no user controls
    // x01: no new control values
    // x02: new control values exist
 
-   /* Per the 3.0 and 2.2 specs, x52 is a FIFO to be read until x00 indicates empty
-    * What apparently happens on 2.1 (U3011) is that each time x02 is reset with value x01
-    * the subsequent read of x02 returns x02 (new control values exists) until the queue
+   /* Per the 3.0 and 2.2 specs, feature x52 is a FIFO to be read until value x00 indicates empty
+    * What apparently happens on 2.1 (U3011) is that each time feature x02 is reset with value x01
+    * the subsequent read of feature x02 returns x02 (new control values exists) until the queue
     * of changes is flushed
     */
 
-   Parsed_Nontable_Vcp_Response * p_nontable_response = NULL;
    DDCA_MCCS_Version_Spec vspec = get_vcp_version_by_display_handle(dh);
-   // DBGMSF(debug, "VCP version: %d.%d", vspec.major, vspec.minor);
-   ddc_excp = get_nontable_vcp_value(
-            dh,
-            0x02,
-            &p_nontable_response);
-   psc = (ddc_excp) ? ddc_excp->psc : 0;
-   if (psc != 0) {
-      ddc_error_free(ddc_excp);
-      DBGMSG("get_nontable_vcp_value() returned %s", psc_desc(psc));
-      if (psc == DDCRC_RETRIES)
-         DBGMSG("    Try errors: %s", ddc_error_causes_string(ddc_excp) );
-   }
-   else if (p_nontable_response->sl == 0x01) {
-      DBGMSF(debug, "No new control values found");
-      free(p_nontable_response);
-   }
-   else {
-      DBGMSG("x02 value: 0x%02x", p_nontable_response->sl);
-      free(p_nontable_response);
-      p_nontable_response = NULL;
 
-      // new_values_found = true;
+   if (new_control_values_exist(dh)) {
       if ( vcp_version_le(vspec, VCP_SPEC_V21) ) {
-         ddc_excp = get_nontable_vcp_value(
-                  dh,
-                  0x52,
-                  &p_nontable_response);
-         // psc = (ddc_excp) ? ddc_excp->psc : 0;
-         if (ddc_excp) {
-            DBGMSG("get_nontable_vcp_value() for VCP feature x52 returned %s", ddc_error_summary(ddc_excp) );
-            ddc_error_free(ddc_excp);
-            return;
-         }
-         Byte changed_feature = p_nontable_response->sl;
-         free(p_nontable_response);
-         app_show_single_vcp_value_by_feature_id(dh, changed_feature, false);
+         show_changed_feature(dh);
       }
       else {  // x52 is a FIFO
          int ctr = 0;
          for (;ctr < MAX_CHANGES; ctr++) {
-            ddc_excp = get_nontable_vcp_value(
-                     dh,
-                     0x52,
-                     &p_nontable_response);
-            // psc = (ddc_excp) ? ddc_excp->psc : 0;
-            if (ddc_excp) {
-               DBGMSG("get_nontable_vcp_value() returned %s", ddc_error_summary(ddc_excp) );
-               ddc_error_free(ddc_excp);
-               return;
-            }
-            Byte changed_feature = p_nontable_response->sl;
-            free(p_nontable_response);
-            p_nontable_response = NULL;
-            if (changed_feature == 0x00) {
+            Byte cur_feature = show_changed_feature(dh);
+            if (cur_feature == 0x00) {
                DBGMSG("No more changed features found");
                break;
             }
-            app_show_single_vcp_value_by_feature_id(dh, changed_feature, false);
          }
          if (ctr == MAX_CHANGES) {
             DBGMSG("Reached loop guard value MAX_CHANGES (%d)", MAX_CHANGES);
          }
       }
-
-      if (psc == 0) {
-         Ddc_Error * ddc_excp = set_nontable_vcp_value(dh, 0x02, 0x01);
-         // psc = (ddc_excp) ? ddc_excp->psc : 0;
-         if (ddc_excp) {
-            DBGMSG("set_nontable_vcp_value_by_display_handle() returned %s", ddc_error_summary(ddc_excp) );
-            ddc_error_free(ddc_excp);
-         }
-         else
-            DBGMSG("reset new control value successful");
-      }
+      reset_vcp_x02(dh);
    }
 
-   // if (p_nontable_response) {
-   //    free(p_nontable_response);
-   //    p_nontable_response = NULL;
-   // }
 }
 
 
