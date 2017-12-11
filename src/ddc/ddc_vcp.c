@@ -441,7 +441,6 @@ get_nontable_vcp_value(
            expected_response_type,
            expected_subtype,
            false,                       // all_zero_response_ok
-       //  retry_null_response,
            &response_packet_ptr
         );
    if (debug || IS_TRACING() ) {
@@ -451,6 +450,7 @@ get_nontable_vcp_value(
    // psc = (excp) ? excp->psc : 0;
 
    if (!excp) {
+      assert(response_packet_ptr);
       // dump_packet(response_packet_ptr);
       psc = get_interpreted_vcp_code(response_packet_ptr, true /* make_copy */, &parsed_response);   // ???
       if (psc == 0) {
