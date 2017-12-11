@@ -130,7 +130,9 @@ bool execute_testcase(int testnum, Display_Identifier* pdid) {
             break;
 
          default:
-            PROGRAM_LOGIC_ERROR("Impossible display id type: %d\n", pDesc->drefType);
+            // PROGRAM_LOGIC_ERROR("Impossible display id type: %d\n", pDesc->drefType);
+            DBGMSG("PROGRAM LOGIC ERROR: Impossible display id type: %d\n", pDesc->drefType);
+            ok = false;
          }  // switch
       }
 
