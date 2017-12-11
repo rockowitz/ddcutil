@@ -671,9 +671,15 @@ get_version_sensitive_feature_flags(
       else if (pvft_entry->v22_flags)
          result = pvft_entry->v22_flags;
       if (!result) {
-         PROGRAM_LOGIC_ERROR(
+
+         // PROGRAM_LOGIC_ERROR(
+         //    "Feature = 0x%02x, Version=%d.%d: No version sensitive feature flags found",
+         //    pvft_entry->code, vcp_version.major, vcp_version.minor);
+
+         DBGMSG("PROGRAM LOGIC ERROR: "
             "Feature = 0x%02x, Version=%d.%d: No version sensitive feature flags found",
             pvft_entry->code, vcp_version.major, vcp_version.minor);
+         assert(false);
       }
    }
 
@@ -715,8 +721,11 @@ get_highest_non_deprecated_version(
       vspec.major = 2;
       vspec.minor = 0;
    }
-   else
-      PROGRAM_LOGIC_ERROR("Feature 0x%02x is deprecated for all versions", vfte->code);
+   else {
+      // PROGRAM_LOGIC_ERROR("Feature 0x%02x is deprecated for all versions", vfte->code);
+      DBGMSG("PROGRAM LOGIC ERROR: Feature 0x%02x is deprecated for all versions", vfte->code);
+      assert(false);
+   }
 
    return vspec;
 }
