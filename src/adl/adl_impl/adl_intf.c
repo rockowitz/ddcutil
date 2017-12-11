@@ -857,7 +857,10 @@ adl_get_video_card_info_by_adlno(
    int rc = 0;
    ADL_Display_Rec * pAdlRec = adl_get_display_by_adlno(iAdapterIndex, iDisplayIndex, true /* emit_error_msg */);
    if (!pAdlRec) {
-      PROGRAM_LOGIC_ERROR("%s called with invalid Display_Handle");
+      // issue error message for impossible case:
+      // PROGRAM_LOGIC_ERROR("%s called with invalid Display_Handle");
+      DBGMSG("PROGRAM LOGIC ERROR: %s called with invalid Display_Handle %d.%d", iAdapterIndex, iDisplayIndex);
+      rc = ADL_ERR_INVALID_ADL_IDX;
    }
    // assignments wrapped in unnecessary else{} clause to avoid clang warning
    // about possible null dereference in case pAdlRec is NULL
