@@ -622,7 +622,8 @@ call_dynamic_tuned_sleep(
       break;
 
    default:
-      PROGRAM_LOGIC_ERROR("Invalid sleep event type: %d = %s", event_type, sleep_event_name(event_type));
+      // PROGRAM_LOGIC_ERROR("Invalid sleep event type: %d = %s", event_type, sleep_event_name(event_type));
+      DBGMSG("PROGRAM LOCIG ERROR: Invalid sleep event type: %d = %s", event_type, sleep_event_name(event_type));
    }
 
    DBGMSF(debug, "Event type=%s, occno=%d, calculated sleep time = %d millisec",
