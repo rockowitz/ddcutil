@@ -317,7 +317,9 @@ char * ddc_error_summary(Ddc_Error * erec) {
    static GPrivate  esumm_key     = G_PRIVATE_INIT(g_free);
    static GPrivate  esumm_len_key = G_PRIVATE_INIT(g_free);
 
-   char * desc = psc_desc(erec->psc);
+   // DBGMSG("erec=%p", erec);
+   // DBGMSG("psc=%d", erec->psc);
+   char * desc = psc_desc(erec->psc);  // thread safe buffer owned by psc_desc(), do not free()
 
    gchar * buf1 = NULL;
    if (erec->cause_ct == 0) {
@@ -328,7 +330,6 @@ char * ddc_error_summary(Ddc_Error * erec) {
       buf1 = gaux_asprintf("Ddc_Error[%s in %s, causes: %s]", desc, erec->func, causes);
       free(causes);
    }
-   free(desc);
    int required_size = strlen(buf1) + 1;
 
    char * buf = get_thread_dynamic_buffer(&esumm_key, &esumm_len_key, required_size);
