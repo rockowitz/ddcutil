@@ -429,10 +429,8 @@ get_formatted_value_for_feature_table_entry(
          rpt_pop_output_dest();
       }
 
-
-// #ifdef OLD
       if (output_level == DDCA_OL_TERSE) {
-         if (is_table_feature) {                // OL_PROGRAM, is table feature
+         if (is_table_feature) {
             // output VCP code  hex values of bytes
             int bytect = pvalrec->val.t.bytect;
             int hexbufsize = bytect * 3;
@@ -449,6 +447,7 @@ get_formatted_value_for_feature_table_entry(
             DDCA_Version_Feature_Flags vflags =
                get_version_sensitive_feature_flags(vcp_entry, vspec);
             char buf[200];
+            assert(vflags & (DDCA_CONT | DDCA_SIMPLE_NC | DDCA_COMPLEX_NC));
             if (vflags & DDCA_CONT) {
                snprintf(buf, 200, "VCP %02X C %d %d",
                                   vcp_entry->code,
@@ -458,7 +457,8 @@ get_formatted_value_for_feature_table_entry(
                snprintf(buf, 200, "VCP %02X SNC x%02x",
                                    vcp_entry->code, pvalrec->val.nc.sl);
             }
-            else if (vflags & DDCA_COMPLEX_NC) {
+            else {
+               assert(vflags & DDCA_COMPLEX_NC);
                snprintf(buf, 200, "VCP %02X CNC x%02x x%02x x%02x x%02x",
                                   vcp_entry->code,
                                   pvalrec->val.nc.mh,
@@ -467,14 +467,12 @@ get_formatted_value_for_feature_table_entry(
                                   pvalrec->val.nc.sl
                                   );
             }
-            else
-               PROGRAM_LOGIC_ERROR("Unknown value type");
 
             *pformatted_value = strdup(buf);
          }
       }
+
       else  {
-// #endif// normal (non OL_PROGRAM) output
          bool ok;
          char * formatted_data = NULL;
 
@@ -503,10 +501,7 @@ get_formatted_value_for_feature_table_entry(
                 *pformatted_value = formatted_data;
              }
          }
-// #ifdef OLD
       }         // normal (non OL_PROGRAM) output
-// #endif
-
    }
 
    else {   // error
