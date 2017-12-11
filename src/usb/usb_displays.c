@@ -184,7 +184,8 @@ GPtrArray * collect_vcp_reports(int fd) {
            //       __func__, rptct, rinfo.report_id, interpret_report_id(rinfo.report_id));
 
           errno = 0;
-          reportinfo_rc = hiddev_get_report_info(fd, &rinfo, CALLOPT_ERR_MSG | CALLOPT_ERR_ABORT);
+          // eliminated CALLOPT_ERR_ABORT:
+          reportinfo_rc = hiddev_get_report_info(fd, &rinfo, CALLOPT_ERR_MSG);
           // reportinfo_rc = ioctl(fd, HIDIOCGREPORTINFO, &rinfo);
           if (reportinfo_rc != 0) {    // no more reports
              assert( reportinfo_rc == -1);
@@ -203,10 +204,12 @@ GPtrArray * collect_vcp_reports(int fd) {
                    .report_id   = rinfo.report_id,
                    .field_index = fndx
              };
-             Byte callopts = CALLOPT_ERR_MSG | CALLOPT_ERR_ABORT;
+             Byte callopts = CALLOPT_ERR_MSG;    //  | CALLOPT_ERR_ABORT;
              if (debug)
                 callopts |= CALLOPT_WARN_FINDEX;
-             hiddev_get_field_info(fd, &finfo, callopts);
+             int rc = hiddev_get_field_info(fd, &finfo, callopts);
+             if (rc < 0)
+                continue;
              if (finfo.application != 0x00800001) // USB Monitor Page/Monitor Control
                 continue;
 
@@ -217,7 +220,9 @@ GPtrArray * collect_vcp_reports(int fd) {
                        .field_index = fndx,
                        .usage_index = undx
                 };
-                hiddev_get_usage_code(fd, &uref, CALLOPT_ERR_MSG|CALLOPT_ERR_ABORT);
+                int rc = hiddev_get_usage_code(fd, &uref, CALLOPT_ERR_MSG); // |CALLOPT_ERR_ABORT);
+                if (rc < 0)
+                   continue;
                 if ( (uref.usage_code & 0xffff0000) != 0x00820000)  // Monitor VESA Virtual Controls page
                    continue;
                 Byte vcp_feature = uref.usage_code & 0xff;
