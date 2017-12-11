@@ -295,7 +295,8 @@ DDCA_MCCS_Version_Id mccs_version_spec_to_id(DDCA_MCCS_Version_Spec vspec) {
    else {
       //PROGRAM_LOGIC_ERROR("Unexpected version spec value %d.%d", vspec.major, vspec.minor);
       DBGMSG("PROGRAM LOGIC ERROR: Unexpected version spec value %d.%d", vspec.major, vspec.minor);
-      result = DDCA_VUNK;
+      assert(false);
+      result = DDCA_VUNK;   // in case assertions turned off
    }
 
    return result;
