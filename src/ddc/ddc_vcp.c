@@ -91,7 +91,9 @@ save_current_settings(
 
    if (dh->dref->io_mode == DDCA_IO_USB) {
       // command line parser should block this case
-      PROGRAM_LOGIC_ERROR("MCCS over USB does not have Save Current Settings command");
+      // PROGRAM_LOGIC_ERROR("MCCS over USB does not have Save Current Settings command");
+      DBGMSG("PROGRAM LOGIC ERROR: MCCS over USB does not have Save Current Settings command");
+      ddc_excp = ddc_error_new(DDCL_UNIMPLEMENTED, __func__);
    }
    else {
       DDC_Packet * request_packet_ptr =
