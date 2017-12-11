@@ -55,8 +55,14 @@ void read_edid_ala_libxcm(int busno) {
    int    rc;
    Byte*  edidbuf;
 
-   fd = i2c_open_bus(busno, CALLOPT_ERR_ABORT);
-   i2c_set_addr(fd, 0x50, CALLOPT_ERR_MSG|CALLOPT_ERR_ABORT);
+   fd = i2c_open_bus(busno, CALLOPT_ERR_MSG);
+   if (fd < 0)
+      return;
+
+   rc = i2c_set_addr(fd, 0x50, CALLOPT_ERR_MSG);
+   if (rc < 0)
+      goto bye;
+
    // usleep(TIMEOUT);
    sleep_millis_with_trace(100, __func__, "before write()");
 
@@ -75,6 +81,7 @@ void read_edid_ala_libxcm(int busno) {
       }
       free(edidbuf);
    }
+bye:
    close(fd);
 }
 
@@ -91,8 +98,13 @@ void probe_read_edid(int busno, char * write_mode, char * read_mode) {
    // bool  debug = true;
    Byte  cmd_byte = 0xFF;  // for cases where cmd byte must be passed
 
-   fd = i2c_open_bus(busno, CALLOPT_ERR_ABORT);
-   i2c_set_addr(fd, 0x50, CALLOPT_ERR_MSG|CALLOPT_ERR_ABORT);
+   fd = i2c_open_bus(busno, CALLOPT_ERR_MSG);
+   if (fd < 0)
+      return;
+
+   rc = i2c_set_addr(fd, 0x50, CALLOPT_ERR_MSG);
+   if (rc < 0)
+      goto bye;
    // usleep(TIMEOUT);
    sleep_millis_with_trace(DDC_TIMEOUT_MILLIS_DEFAULT, __func__, NULL);
 
@@ -183,6 +195,7 @@ void probe_read_edid(int busno, char * write_mode, char * read_mode) {
       }
       free(edidbuf);
    }
+bye:
    close(fd);
 }
 
