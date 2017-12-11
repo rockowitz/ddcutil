@@ -204,7 +204,7 @@ try_multi_part_read(
             free_ddc_packet(response_packet_ptr);
          continue;
       }
-
+      assert(response_packet_ptr);
       assert(!excp && psc == 0);
 
       if ( IS_TRACING_BY_FUNC_OR_FILE() || debug ) {
@@ -397,8 +397,9 @@ try_multi_part_write(
       ddc_excp = ddc_write_only_with_retry(dh, request_packet_ptr);
       psc = (ddc_excp) ? ddc_excp->psc : 0;
       free_ddc_packet(request_packet_ptr);
+      assert( (!ddc_excp && psc == 0) || (ddc_excp && psc!=0) );
 
-      if (psc == 0) {
+      if (!ddc_excp) {
          if (bytect_to_write == 0)   // if just wrote final empty segment to indicate done
             break;
          offset += bytect_to_write;
