@@ -292,8 +292,11 @@ DDCA_MCCS_Version_Id mccs_version_spec_to_id(DDCA_MCCS_Version_Spec vspec) {
    else if (vspec.major == 0 && vspec.minor == 0)
       result = DDCA_VUNK;
    // case UNQUERIED should never arise
-   else
-      PROGRAM_LOGIC_ERROR("Unexpected version spec value %d.%d", vspec.major, vspec.minor);
+   else {
+      //PROGRAM_LOGIC_ERROR("Unexpected version spec value %d.%d", vspec.major, vspec.minor);
+      DBGMSG("PROGRAM LOGIC ERROR: Unexpected version spec value %d.%d", vspec.major, vspec.minor);
+      result = DDCA_VUNK;
+   }
 
    return result;
 }
