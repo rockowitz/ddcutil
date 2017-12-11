@@ -270,17 +270,6 @@ void report_ioctl_error(
       char*       filename,
       bool        fatal);
 
-#ifdef UNUSED
-void report_ioctl_error2(
-      int   errnum,
-      int   fh,
-      int   request,
-      void* data,
-      const char* funcname,   // const to avoid warning msg on references at compile time
-      int   lineno,
-      char* filename,
-      bool fatal);
-#endif
 
 // reports a program logic error and terminates execution
 void program_logic_error(
