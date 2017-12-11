@@ -317,7 +317,7 @@ bool initial_checks_by_dref(Display_Ref * dref) {
    Display_Handle * dh = NULL;
    Public_Status_Code psc = 0;
 
-   psc = ddc_open_display(dref, CALLOPT_ERR_MSG | CALLOPT_ERR_ABORT, &dh);
+   psc = ddc_open_display(dref, CALLOPT_ERR_MSG, &dh);   // deleted CALLOPT_ERR_ABORT
    if (psc == 0)  {
       result = initial_checks_by_dh(dh);
       ddc_close_display(dh);
