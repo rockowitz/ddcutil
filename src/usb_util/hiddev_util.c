@@ -197,7 +197,7 @@ bool force_hiddev_monitor(int fd) {
 
    int rc = ioctl(fd, HIDIOCGDEVINFO, &dev_info);
    if (rc != 0) {
-      REPORT_IOCTL_ERROR("HIDIOCGDEVINFO", rc);
+      REPORT_USB_IOCTL_ERROR("HIDIOCGDEVINFO", errno);
       goto bye;
    }
 
@@ -285,7 +285,7 @@ __u32 hiddev_get_identical_ucode(int fd, struct hiddev_field_info * finfo, __u32
       //       __func__, rinfo->report_type, rinfo->report_id, field_index=saved_field_index, undx);
       int rc = ioctl(fd, HIDIOCGUCODE, &uref);    // Fills in usage code
       if (rc != 0) {
-          REPORT_IOCTL_ERROR("HIDIOCGUCODE", rc);
+          REPORT_USB_IOCTL_ERROR("HIDIOCGUCODE", errno);
           result = 0;
           break;
       }
@@ -349,7 +349,7 @@ Buffer * hiddev_collect_single_byte_usage_values(
        //       __func__, finfo->report_type, finfo->report_id, finfo->field_index, finfo->maxusage, undx);
        int rc = ioctl(fd, HIDIOCGUCODE, &uref);    // Fills in usage code
        if (rc != 0) {
-           REPORT_IOCTL_ERROR("HIDIOCGUCODE", rc);
+           REPORT_USB_IOCTL_ERROR("HIDIOCGUCODE", errno);
            ok = false;
            break;
        }
@@ -367,7 +367,7 @@ Buffer * hiddev_collect_single_byte_usage_values(
 
        rc = ioctl(fd, HIDIOCGUSAGE, &uref);  // Fills in usage value
        if (rc != 0) {
-          REPORT_IOCTL_ERROR("HIDIOCGUSAGE", rc);
+          REPORT_USB_IOCTL_ERROR("HIDIOCGUSAGE", errno);
           ok = false;
           break;
        }
@@ -433,7 +433,7 @@ bool hiddev_is_field_edid(int fd, struct hiddev_report_info * rinfo, int field_i
    int saved_field_index = field_index;
    rc = ioctl(fd, HIDIOCGFIELDINFO, &finfo);
    if (rc != 0)
-      REPORT_IOCTL_ERROR("HIDIOCGFIELDINFO", rc);
+      REPORT_USB_IOCTL_ERROR("HIDIOCGFIELDINFO", errno);
    assert(rc == 0);
    if (debug) {
       if (finfo.field_index != saved_field_index && debug) {
@@ -522,7 +522,7 @@ test_field_ucode(
    int saved_field_index = field_index;
    rc = ioctl(fd, HIDIOCGFIELDINFO, &finfo);
    if (rc != 0) {
-      REPORT_IOCTL_ERROR("HIDIOCGFIELDINFO", rc);
+      REPORT_USB_IOCTL_ERROR("HIDIOCGFIELDINFO", errno);
       goto bye;
    }
    if (debug) {
@@ -551,7 +551,7 @@ test_field_ucode(
          };
          rc = ioctl(fd, HIDIOCGUCODE, &uref);    // Fills in usage code
          if (rc != 0) {
-            REPORT_IOCTL_ERROR("HIDIOCGUCODE", rc);
+            REPORT_USB_IOCTL_ERROR("HIDIOCGUCODE", errno);
             break;
          }
          if (uref.usage_code == ucode) {
@@ -615,7 +615,7 @@ hiddev_find_report(int fd, __u32 report_type, __u32 ucode, bool match_all_ucodes
       reportinfo_rc = ioctl(fd, HIDIOCGREPORTINFO, &rinfo);
       if (reportinfo_rc != 0) {    // no more reports
          if (reportinfo_rc != -1)
-            REPORT_IOCTL_ERROR("HIDIOCGREPORTINFO", reportinfo_rc);
+            REPORT_USB_IOCTL_ERROR("HIDIOCGREPORTINFO", errno);
          break;
       }
 
@@ -741,7 +741,7 @@ get_multibyte_value_by_uref_multi(
 
    rc = ioctl(fd, HIDIOCGUSAGES, uref_multi);  // Fills in usage value
    if (rc != 0) {
-      REPORT_IOCTL_ERROR("HIDIOCGUSAGES", rc);
+      REPORT_USB_IOCTL_ERROR("HIDIOCGUSAGES", errno);
       goto bye;
    }
    result = buffer_new(uref_multi->num_values, __func__);
@@ -790,7 +790,7 @@ Buffer * hiddev_get_multibyte_report_value_by_hid_field_locator(
 
    int rc = ioctl(fd, HIDIOCGREPORT, &rinfo);
    if (rc != 0) {
-      REPORT_IOCTL_ERROR("HIDIOCGREPORT", rc);
+      REPORT_USB_IOCTL_ERROR("HIDIOCGREPORT", errno);
       goto bye;
    }
 

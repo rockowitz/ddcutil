@@ -462,7 +462,7 @@ void report_field_usage(
    errno = 0;
    rc = ioctl(fd, HIDIOCGUCODE, &uref);    // Fills in usage code
    if (rc != 0)
-      REPORT_IOCTL_ERROR("HIDIOCGUCODE", rc);
+      REPORT_USB_IOCTL_ERROR("HIDIOCGUCODE", errno);
    // assert(rc == 0);
    if (rc == 0) {
      rpt_vstring(d1, "Usage code = 0x%08x  %s",
@@ -474,7 +474,7 @@ void report_field_usage(
         // Gets the current value of the field
         rc = ioctl(fd, HIDIOCGUSAGE, &uref);  // Fills in usage value
         if (rc != 0)
-           REPORT_IOCTL_ERROR("HIDIOCGUSAGE", rc);
+           REPORT_USB_IOCTL_ERROR("HIDIOCGUSAGE", errno);
         // occasionally see -1, errno = 22 invalid argument - for Battery System Page: Run Time to Empty
         if (rc == 0)
            rpt_vstring(d1, "Current value (value) = %d (0x%08x)", uref.value, uref.value);
@@ -513,7 +513,7 @@ void report_report_descriptors_for_report_type(int fd, __u32 report_type, int de
    ret = ioctl(fd, HIDIOCGREPORTINFO, &rinfo);
    if (ret != 0) {    // no more reports
       if (ret != -1)
-         REPORT_IOCTL_ERROR("HIDIOCGREPORTINFO", ret);
+         REPORT_USB_IOCTL_ERROR("HIDIOCGREPORTINFO", errno);
       rpt_vstring(d1, "No reports defined");
       return;
    }
@@ -531,7 +531,7 @@ void report_report_descriptors_for_report_type(int fd, __u32 report_type, int de
          // So that usage value filled in
          int rc = ioctl(fd, HIDIOCGREPORT, &rinfo);
          if (rc != 0) {
-            REPORT_IOCTL_ERROR("HIDIOCGREPORT", rc);
+            REPORT_USB_IOCTL_ERROR("HIDIOCGREPORT", errno);
             printf("(%s) Unable to get report %d\n", __func__, rinfo.report_id);
             break;
          }
@@ -556,7 +556,7 @@ void report_report_descriptors_for_report_type(int fd, __u32 report_type, int de
          rpt_vstring(d2, "Report id: %d, Field index %d:", finfo.report_id, fndx);
          int rc = ioctl(fd, HIDIOCGFIELDINFO, &finfo);
          if (rc != 0) {   // should never occur
-            REPORT_IOCTL_ERROR("HIDIOCGFIELDINFO", rc);
+            REPORT_USB_IOCTL_ERROR("HIDIOCGFIELDINFO", errno);
             break;        // just stop checking fields
          }
 
@@ -591,7 +591,7 @@ void report_report_descriptors_for_report_type(int fd, __u32 report_type, int de
 
                   rc = ioctl(fd, HIDIOCGUSAGES, &uref_multi);  // Fills in usage values
                   if (rc != 0) {
-                     REPORT_IOCTL_ERROR("HIDIOCGUSAGES", rc);
+                     REPORT_USB_IOCTL_ERROR("HIDIOCGUSAGES", errno);
                   }
                   else {
                      // printf("(%s) Value retrieved by HIDIOCGUSAGES:\n", __func__);
@@ -713,7 +713,7 @@ void report_hiddev_device_by_fd(int fd, int depth) {
 
    rc = ioctl(fd, HIDIOCGDEVINFO, &dev_info);
    if (rc != 0) {
-      REPORT_IOCTL_ERROR("HIDIOCGDEVINFO", rc);
+      REPORT_USB_IOCTL_ERROR("HIDIOCGDEVINFO", errno);
       return;
    }
    report_hiddev_devinfo(&dev_info, /*lookup_names=*/true, depth);

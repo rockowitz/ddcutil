@@ -44,7 +44,7 @@
 
 
 // Trace class for this file
-static Trace_Group TRACE_GROUP = TRC_USB;
+// static Trace_Group TRACE_GROUP = TRC_USB;     // currently unused
 
 // In keeping with the style of Linux USB code, this module prefers
 // "struct xxx {}" to "typedef {} xxx"
@@ -89,10 +89,11 @@ int usb_open_hiddev_device(
 
    if (file < 0) {
       int errsv = errno;
+#ifdef OLD
       if (calloptions & CALLOPT_ERR_ABORT)
          TERMINATE_EXECUTION_ON_ERROR(
                "Open failed for %s: errno=%s", hiddev_devname, linux_errno_desc(errsv));
-
+#endif
       if (calloptions & CALLOPT_ERR_MSG)
          f0printf(FERR, "Open failed for %s: errno=%s\n", hiddev_devname, linux_errno_desc(errsv));
       file = -errsv;
@@ -106,10 +107,12 @@ int usb_open_hiddev_device(
       if (rc < 0) {
          int errsv = errno;
          // call should never fail.  always wrote an error message
-         REPORT_IOCTL_ERROR("HIDIOCGREPORT", rc);
+         REPORT_IOCTL_ERROR("HIDIOCGREPORT", errsv);
          close(file);
+#ifdef OLD
          if (calloptions & CALLOPT_ERR_ABORT)
             DDC_ABORT(errsv);
+#endif
          file = -errsv;
       }
    }
@@ -157,10 +160,10 @@ usb_close_device(
          snprintf(workbuf, 300,
                   "USB device close failed. errno=%s",
                   linux_errno_desc(errsv));
-
+#ifdef OLD
       if (calloptions & CALLOPT_ERR_ABORT)
          TERMINATE_EXECUTION_ON_ERROR(workbuf);
-
+#endif
       if (calloptions & CALLOPT_ERR_MSG)
          fprintf(stderr, "%s\n", workbuf);
 
@@ -186,10 +189,11 @@ hiddev_get_device_info(
    if (rc != 0) {
       int errsv = errno;
       if (calloptions & CALLOPT_ERR_MSG)
-         REPORT_IOCTL_ERROR("HIDIOCGDEVINFO", rc);
-
+         REPORT_IOCTL_ERROR("HIDIOCGDEVINFO", errsv);
+#ifdef OLD
       if (calloptions & CALLOPT_ERR_ABORT)
          DDC_ABORT(errsv);
+#endif
       rc = -errsv;
   }
 
@@ -198,17 +202,19 @@ hiddev_get_device_info(
 }
 
 
-int hiddev_get_report_info(int fd, struct hiddev_report_info * rinfo, Byte calloptions) {
+Status_Errno hiddev_get_report_info(int fd, struct hiddev_report_info * rinfo, Byte calloptions) {
    assert(rinfo);
 
    int rc = ioctl(fd, HIDIOCGREPORTINFO, rinfo);
    if (rc < -1) {     // -1 means no more reports
       int errsv = errno;
       if (calloptions & CALLOPT_ERR_MSG)
-         REPORT_IOCTL_ERROR("HIDIOCGREPORTINFO", rc);
+         REPORT_IOCTL_ERROR("HIDIOCGREPORTINFO", errsv);
 
+#ifdef OLD
       if (calloptions & CALLOPT_ERR_ABORT)
          DDC_ABORT(errsv);
+#endif
 
       rc = -errsv;
   }
@@ -217,16 +223,17 @@ int hiddev_get_report_info(int fd, struct hiddev_report_info * rinfo, Byte callo
 }
 
 
-int hiddev_get_field_info(int fd, struct hiddev_field_info * finfo, Byte calloptions) {
+Status_Errno hiddev_get_field_info(int fd, struct hiddev_field_info * finfo, Byte calloptions) {
    int saved_field_index = finfo->field_index;
    int rc = ioctl(fd, HIDIOCGFIELDINFO, finfo);
    if (rc != 0) {
       int errsv = errno;
       if (calloptions & CALLOPT_ERR_MSG)
-         REPORT_IOCTL_ERROR("HIDIOCGFIELDINFO", rc);
-
+         REPORT_IOCTL_ERROR("HIDIOCGFIELDINFO", errsv);
+#ifdef OLD
       if (calloptions & CALLOPT_ERR_ABORT)
          DDC_ABORT(errsv);
+#endif
    }
    assert(rc == 0);
    if (finfo->field_index != saved_field_index && (calloptions & CALLOPT_WARN_FINDEX)) {
@@ -235,54 +242,55 @@ int hiddev_get_field_info(int fd, struct hiddev_field_info * finfo, Byte callopt
       printf("(%s) finfo.maxusage=%d\n",
              __func__,  finfo->maxusage);
    }
-
    return rc;
 }
 
 
-int hiddev_get_usage_code(int fd, struct hiddev_usage_ref * uref, Byte calloptions) {
+Status_Errno hiddev_get_usage_code(int fd, struct hiddev_usage_ref * uref, Byte calloptions) {
    int rc = ioctl(fd, HIDIOCGUCODE, uref);    // Fills in usage code
    if (rc != 0) {
       int errsv = errno;
       if (calloptions & CALLOPT_ERR_MSG)
-         REPORT_IOCTL_ERROR("HIDIOCGUCODE", rc);
+         REPORT_IOCTL_ERROR("HIDIOCGUCODE", errsv);
 
+#ifdef OLD
       if (calloptions & CALLOPT_ERR_ABORT)
          DDC_ABORT(errsv);
+#endif
       rc = -errsv;
    }
-
    return rc;
 }
 
 
-int hiddev_get_usage_value(int fd, struct hiddev_usage_ref * uref, Byte calloptions) {
+Status_Errno hiddev_get_usage_value(int fd, struct hiddev_usage_ref * uref, Byte calloptions) {
    int rc = ioctl(fd, HIDIOCGUSAGE, uref);
    if (rc != 0) {
       int errsv = errno;
       if (calloptions & CALLOPT_ERR_MSG)
-         REPORT_IOCTL_ERROR("HIDIOCGUSAGE", rc);
-
+         REPORT_IOCTL_ERROR("HIDIOCGUSAGE", errsv);
+#ifdef OLD
       if (calloptions & CALLOPT_ERR_ABORT)
          DDC_ABORT(errsv);
+#endif
       rc = -errsv;
    }
-
    return rc;
 }
 
 
-int hiddev_get_report(int fd, struct hiddev_report_info * rinfo, Byte calloptions) {
+Status_Errno hiddev_get_report(int fd, struct hiddev_report_info * rinfo, Byte calloptions) {
    int rc = ioctl(fd, HIDIOCGUCODE, rinfo);
    if (rc != 0) {
       int errsv = errno;
       if (calloptions & CALLOPT_ERR_MSG)
-         REPORT_IOCTL_ERROR("HIDIOCGREPORT", rc);
+         REPORT_IOCTL_ERROR("HIDIOCGREPORT", errsv);
 
+#ifdef OLD
       if (calloptions & CALLOPT_ERR_ABORT)
          DDC_ABORT(errsv);
+#endif
       rc = -errsv;
    }
-
    return rc;
 }

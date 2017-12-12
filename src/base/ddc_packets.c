@@ -34,11 +34,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-/** \endcond */
 
 #include "util/report_util.h"
 #include "util/string_util.h"
 #include "util/utilrpt.h"
+/** \endcond */
 
 #include "base/ddc_errno.h"
 #include "base/execution_stats.h"
@@ -1008,8 +1008,8 @@ Status_DDC create_ddc_typed_response_packet(
          break;
 
       default:
-         // what to do?  for now just bail
-         TERMINATE_EXECUTION_ON_ERROR("Unhandled case. expected_type=%d", expected_type);
+         rc = DDCL_INTERNAL_ERROR;
+         DBGMSG("Unhandled case. expected_type=%d", expected_type);
          break;
       }
    }

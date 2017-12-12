@@ -410,7 +410,7 @@ app_read_changes_usb(Display_Handle * dh) {
    struct hiddev_usage_ref uref;
    int rc = ioctl(fd, HIDIOCSFLAG, &flaguref);
    if (rc < 0) {
-      REPORT_IOCTL_ERROR("HIDIOCSFLAG", rc);
+      REPORT_IOCTL_ERROR("HIDIOCSFLAG", errno);
       return;
    }
 

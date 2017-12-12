@@ -263,13 +263,24 @@ bool dbgtrc(
 // Error handling
 //
 
-void report_ioctl_error(
+#ifdef OLD
+void report_ioctl_error_old(
       int         errnum,
       const char* funcname,
       int         lineno,
       char*       filename,
       bool        fatal);
+#endif
 
+void report_ioctl_error_new(
+      const char * ioctl_name,
+      int          errnum,
+      const char * funcname,
+      const char * filename,
+      int          lineno);
+
+#define REPORT_IOCTL_ERROR(_ioctl_name, _errnum) \
+   report_ioctl_error_new(_ioctl_name, _errnum, __func__, __FILE__, __LINE__);
 
 // reports a program logic error and terminates execution
 void program_logic_error(
@@ -288,7 +299,7 @@ void program_logic_error(
 #define PROGRAM_LOGIC_ERROR(format, ...) \
    program_logic_error(__func__, __LINE__, __FILE__, format, ##__VA_ARGS__)
 
-
+#ifdef OLD
 void terminate_execution_on_error(
         Trace_Group  trace_group,
         const char * funcname,
@@ -303,5 +314,7 @@ void terminate_execution_on_error(
  */
 #define TERMINATE_EXECUTION_ON_ERROR(format, ...) \
    terminate_execution_on_error(TRACE_GROUP, __func__, __LINE__, __FILE__, format, ##__VA_ARGS__)
+#endif
+
 
 #endif /* BASE_CORE_H_ */

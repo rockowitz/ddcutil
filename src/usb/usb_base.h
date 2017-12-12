@@ -28,7 +28,7 @@
 
 #include "util/coredefs.h"
 
-
+#ifdef UNUSED
 #define REPORT_IOCTL_ERROR_AND_QUIT(_ioctl_name, _rc) \
    do { \
          printf("(%s) ioctl(%s) returned %d (0x%08x), errno=%d: %s\n", \
@@ -41,17 +41,17 @@
                ); \
          ddc_abort(errno); \
    } while(0)
+#endif
 
 
-int usb_open_hiddev_device(char * hiddev_devname, Byte calloptions);
+int          usb_open_hiddev_device(char * hiddev_devname, Byte calloptions);
 Status_Errno usb_close_device(int fd, char * device_fn, Byte calloptions);
 
-int hiddev_get_device_info(int fd, struct hiddev_devinfo *     dinfo, Byte calloptions);
-int hiddev_get_report_info(int fd, struct hiddev_report_info * rinfo, Byte calloptions);
-int hiddev_get_field_info( int fd, struct hiddev_field_info *  finfo, Byte calloptions);
-int hiddev_get_usage_code( int fd, struct hiddev_usage_ref *   uref,  Byte calloptions);
-int hiddev_get_usage_value(int fd, struct hiddev_usage_ref *   uref,  Byte calloptions);
-int hiddev_get_report(     int fd, struct hiddev_report_info * rinfo, Byte calloptions);
-
+Status_Errno hiddev_get_device_info(int fd, struct hiddev_devinfo *     dinfo, Byte calloptions);
+Status_Errno hiddev_get_report_info(int fd, struct hiddev_report_info * rinfo, Byte calloptions);
+Status_Errno hiddev_get_field_info( int fd, struct hiddev_field_info *  finfo, Byte calloptions);
+Status_Errno hiddev_get_usage_code( int fd, struct hiddev_usage_ref *   uref,  Byte calloptions);
+Status_Errno hiddev_get_usage_value(int fd, struct hiddev_usage_ref *   uref,  Byte calloptions);
+Status_Errno hiddev_get_report(     int fd, struct hiddev_report_info * rinfo, Byte calloptions);
 
 #endif /* USB_BASE_H_ */

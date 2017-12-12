@@ -866,6 +866,7 @@ bool dbgtrc(
 // error messages and possible program termination.
 //
 
+#ifdef OLD
 /* Report an IOCTL error and possibly terminate execution.
  *
  * Arguments:
@@ -877,7 +878,7 @@ bool dbgtrc(
  *
  *  Returns:         nothing
  */
-void report_ioctl_error(
+void report_ioctl_error_old(
       int   errnum,
       const char* funcname,   // const to avoid warning msg on references at compile time
       int   lineno,
@@ -893,10 +894,27 @@ void report_ioctl_error(
    }
    errno = errsv;
 }
+#endif
+
+
+void report_ioctl_error_new(
+      const char * ioctl_name,
+      int          errnum,
+      const char * funcname,
+      const char * filename,
+      int          lineno)
+{
+   int errsv = errno;
+   f0printf(FERR, "(%s) Error in ioctl(%s), errno=%s\n",
+           funcname, ioctl_name, linux_errno_desc(errnum) );
+   errno = errsv;
+}
+
+
 
 
 /** Called when a condition that should be impossible has been detected.
- * Issues messages to **stderr** and terminates execution.
+ * Issues messages to **stderr**.
  *
  * This function is normally invoked using macro PROGRAM_LOGIC_ERROR()
  *
@@ -930,12 +948,54 @@ void program_logic_error(
   f0puts(buf2,   FERR);
   f0puts(buffer, FERR);
   f0puts("\n",   FERR);
+}
+
+
+#ifdef UNUSED
+/** Called when a condition that should be impossible has been detected.
+ * Issues messages to **stderr** and terminates execution.
+ *
+ * This function is normally invoked using macro PROGRAM_LOGIC_ERROR()
+ *
+ *  @param  funcname    function name
+ *  @param  lineno      line number in source file
+ *  @param  fn          source file name
+ *  @param  format      format string, as in printf()
+ *  @param  ...         one or more substitution values for the format string
+ *
+ * @ingroup output_redirection
+ */
+void program_logic_error_fatal(
+      const char * funcname,
+      const int    lineno,
+      const char * fn,
+      char *       format,
+      ...)
+{
+  // assemble the error message
+  char buffer[200];
+  va_list(args);
+  va_start(args, format);
+  vsnprintf(buffer, 200, format, args);
+
+  // assemble the location message:
+  char buf2[250];
+  snprintf(buf2, 250, "Program logic error in function %s at line %d in file %s:\n",
+                      funcname, lineno, fn);
+
+  // don't combine into 1 line, might be very long.  just output 2 lines:
+  f0puts(buf2,   FERR);
+  f0puts(buffer, FERR);
+  f0puts("\n",   FERR);
 
   // fputs("Terminating execution.\n", stderr);
   ddc_abort(funcname, lineno, fn, DDCL_INTERNAL_ERROR);
 }
+#endif
 
 
+
+#ifdef UNUSED
 /** This function is called to terminate execution on a fatal error.
  *
  *  It is normally wrapped in macro TERMINATE_EXECUTION_ON_ERROR(format,...)
@@ -974,4 +1034,5 @@ void terminate_execution_on_error(
 
    ddc_abort(funcname, lineno, filename, DDCL_INTERNAL_ERROR);
 }
+#endif
 

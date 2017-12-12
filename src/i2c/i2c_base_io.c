@@ -181,9 +181,10 @@ Status_Errno_DDC ioctl_writer(int fh, int bytect, Byte * pbytes) {
    //    -1, errno is set
    // 11/15: as seen: always returns 1 for success
    int rc = ioctl(fh, I2C_RDWR, &msgset);
+   int errsv = errno;
    if (rc < 0) {
       if (debug) {
-         report_ioctl_error(errno, __func__, __LINE__-7, __FILE__, false /* fatal */ );
+         REPORT_IOCTL_ERROR("I2C_RDWR", errno);
       }
    }
    // DBGMSG("ioctl(..I2C_RDWR..) returned %d", rc);
@@ -196,7 +197,7 @@ Status_Errno_DDC ioctl_writer(int fh, int bytect, Byte * pbytes) {
    }
    else if (rc < 0) {
       // rc = modulate_rc(-errno, RR_ERRNO);
-      rc = -errno;
+      rc = -errsv;
    }
 
    DBGMSF(debug, "Returning %d", rc);
@@ -240,9 +241,10 @@ Status_Errno_DDC ioctl_reader(int fh, int bytect, Byte * readbuf) {
    // if error:
    //    -1, errno is set
    int rc =  ioctl(fh, I2C_RDWR, &msgset);
+   int errsv = errno;
    if (rc < 0) {
       if (debug) {
-         report_ioctl_error(errno, __func__, __LINE__-7, __FILE__, false /* fatal */ );
+         REPORT_IOCTL_ERROR("I2C_RDWR", errno);
       }
    }
    // DBGMSG("ioctl(..I2C_RDWR..) returned %d", rc);
@@ -253,7 +255,7 @@ Status_Errno_DDC ioctl_reader(int fh, int bytect, Byte * readbuf) {
       rc = 0;
    }
    else if (rc < 0)
-      rc = -errno;
+      rc = -errsv;
    return rc;
 }
 

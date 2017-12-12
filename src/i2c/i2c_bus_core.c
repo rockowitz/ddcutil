@@ -101,10 +101,12 @@ int i2c_open_bus(int busno, Byte callopts) {
    // -1 if error, and errno is set
    int errsv = errno;
    if (file < 0) {
+#ifdef OLD
       if (callopts & CALLOPT_ERR_ABORT) {
          TERMINATE_EXECUTION_ON_ERROR("Open failed for %s. errno=%s\n",
                                       filename, linux_errno_desc(errsv));
       }
+#endif
       if (callopts & CALLOPT_ERR_MSG) {
          f0printf(FERR, "Open failed for %s: errno=%s\n",
                         filename, linux_errno_desc(errsv));
@@ -160,10 +162,10 @@ Status_Errno i2c_close_bus(int fd, int busno, Call_Options callopts) {
          snprintf(workbuf, 80,
                   "Bus device close failed. errno=%s",
                   linux_errno_desc(errsv));
-
+#ifdef OLD
       if (callopts & CALLOPT_ERR_ABORT)
          TERMINATE_EXECUTION_ON_ERROR(workbuf);
-
+#endif
       if (callopts & CALLOPT_ERR_MSG)
          f0printf(FERR, "%s\n", workbuf);
 
@@ -209,10 +211,7 @@ Status_Errno i2c_set_addr(int file, int addr, Call_Options callopts) {
 
 retry:
    errno = 0;
-   RECORD_IO_EVENT(
-         IE_OTHER,
-         ( rc = ioctl(file, op, addr) )
-        );
+   RECORD_IO_EVENT( IE_OTHER, ( rc = ioctl(file, op, addr) ) );
 #ifdef FOR_TESTING
    if (force_i2c_slave_failure) {
       if (op == I2C_SLAVE) {
@@ -226,10 +225,13 @@ retry:
 
    if (rc < 0) {
       if ( callopts & CALLOPT_ERR_MSG)
+         REPORT_IOCTL_ERROR( (op == I2C_SLAVE) ? "I2C_SLAVE" : "I2C_SLAVE_FORCE", errno);
+#ifdef OLD
          report_ioctl_error(errsv, __func__, __LINE__-13, __FILE__,
                             /*fatal=*/ callopts&CALLOPT_ERR_ABORT);
       else if (callopts & CALLOPT_ERR_ABORT)
          DDC_ABORT(DDCL_INTERNAL_ERROR);
+#endif
 
       if (errsv == EBUSY && i2c_force_slave_addr_flag && op == I2C_SLAVE) {
          DBGMSG("Retrying using IOCTL op I2C_SLAVE_FORCE for address 0x%02x", addr );
@@ -330,9 +332,11 @@ unsigned long i2c_get_functionality_flags_by_fd(int fd) {
    int rc;
 
    RECORD_IO_EVENT(IE_OTHER, ( rc = ioctl(fd, I2C_FUNCS, &funcs) ) );
-   int errsv = errno;
-   if (rc < 0)
-      report_ioctl_error( errsv, __func__, (__LINE__-3), __FILE__, true /*fatal*/);
+   // int errsv = errno;
+   if (rc < 0) {
+      REPORT_IOCTL_ERROR("I2C_FUNCS", errno);
+      funcs = 0;
+   }
 
    DBGMSF(debug, "Functionality for file descriptor %d: %lu, 0x%0lx", fd, funcs, funcs);
    return funcs;
@@ -1343,7 +1347,9 @@ static bool is_function_supported(int busno, char * funcname) {
                                0x00);     //   default_id);
 
       if (!func_bit) {
-         TERMINATE_EXECUTION_ON_ERROR("Unrecognized function name: %s", funcname);
+         DBGMSG("Unrecognized function name: %s", funcname);
+         result = false;
+         goto bye;
       }
 
       // DBGMSG("functionality=0x%lx, func_table_entry->bit=-0x%lx", bus_infos[busno].functionality, func_table_entry->bit);
@@ -1351,13 +1357,15 @@ static bool is_function_supported(int busno, char * funcname) {
       // Bus_Info * bus_info = i2c_get_bus_info_new(busno);
       I2C_Bus_Info * bus_info = detect_single_bus(busno);
       if ( !bus_info ) {
-         TERMINATE_EXECUTION_ON_ERROR("Invalid bus: /dev/i2c-%d", busno);
+         DBGMSG("Invalid bus: /dev/i2c-%d", busno);
+         result = false;
       }
       else   // add unneeded else clause to avoid clang warning
          result = (bus_info->functionality & func_bit) != 0;
       i2c_free_bus_info(bus_info);
    }
 
+bye:
    DBGMSF(debug, "busno=%d, funcname=%s, returning %d", busno, funcname, result);
    return result;
 }

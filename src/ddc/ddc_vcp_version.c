@@ -155,10 +155,15 @@ DDCA_MCCS_Version_Spec get_vcp_version_by_display_ref(Display_Ref * dref) {
    DBGMSF(debug, "Starting. dref=%p, dref->vcp_version =  %d.%d",
                  dref, dref->vcp_version.major, dref->vcp_version.minor);
 
+   // ddc_open_display() should not fail
+   assert(dref->flags & DREF_DDC_COMMUNICATION_WORKING);
+
    if (vcp_version_is_unqueried(dref->vcp_version)) {
       Display_Handle * dh = NULL;
       // no need to check return code since aborting if error
-      ddc_open_display(dref, CALLOPT_ERR_MSG | CALLOPT_ERR_ABORT, &dh);
+      // shouuld never fail, since open already succeeded
+      Public_Status_Code psc = ddc_open_display(dref, CALLOPT_ERR_MSG, &dh);
+      assert(psc == 0);
       dref->vcp_version = get_vcp_version_by_display_handle(dh);
       ddc_close_display(dh);
    }

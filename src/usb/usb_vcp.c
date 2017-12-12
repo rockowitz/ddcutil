@@ -83,7 +83,7 @@ usb_get_usage_value_by_report_type_and_ucode(
    bool debug = false;
    DBGMSF(debug, "Starting. fd=%d, report_type=%d, usage_code=0x%08x", fd, report_type, usage_code);
    Public_Status_Code psc = 0;
-   int rc;
+   Status_Errno rc;
    *curval = 0;  // so there's a definite value in case of failure ...
    *maxval = 0;  // avoids complaints by clang analyzer
 
@@ -98,20 +98,21 @@ usb_get_usage_value_by_report_type_and_ucode(
    rc = hiddev_get_usage_value(fd, &uref, CALLOPT_NONE);
    // rc = ioctl(fd, HIDIOCGUSAGE, &uref);  // Fills in usage value
    if (rc != 0) {
-      int errsv = errno;
       // Problem: errno=22 (invalid argument) can mean the usage code is invalid,
       // i.e. invalid feature code, or another arg error which indicates a programming error
-      if (errsv == EINVAL) {
+      // occasionally errno = 22 invalid argument - for Battery System Page: Run Time to Empty
+      if (-rc == EINVAL) {
          if (debug)
-            REPORT_IOCTL_ERROR("HIDIOCGUSAGE", rc);
+            REPORT_IOCTL_ERROR("HIDIOCGUSAGE", -rc);
          psc = DDCRC_DETERMINED_UNSUPPORTED;
       }
       else {
-         REPORT_IOCTL_ERROR("HIDIOCGUSAGE", rc);
+         REPORT_IOCTL_ERROR("HIDIOCGUSAGE", -rc);
          // occasionally see -1, errno = 22 invalid argument - for Battery System Page: Run Time to Empty
          // gsc = modulate_rc(-errsv, RR_ERRNO);
-         psc = -errsv;
+         psc = rc;
       }
+
       if (debug) {
          DBGMSG("After hid_get_usage_value():");
          report_hiddev_usage_ref(&uref, 1);
@@ -132,7 +133,7 @@ usb_get_usage_value_by_report_type_and_ucode(
    rc = ioctl(fd, HIDIOCGFIELDINFO, &finfo);  // Fills in usage value
    if (rc != 0) {
       int errsv = errno;
-      REPORT_IOCTL_ERROR("HIDIOCGFIELDINFO", rc);
+      REPORT_IOCTL_ERROR("HIDIOCGFIELDINFO", errsv);
       // occasionally see -1, errno = 22 invalid argument - for Battery System Page: Run Time to Empty
       // gsc = modulate_rc(-errsv, RR_ERRNO);
       psc = -errsv;
@@ -213,12 +214,12 @@ set_control_value(int fd,
    }
    if ((rc=ioctl(fd, HIDIOCSUSAGE, &uref)) < 0) {
       result = -errno;
-      REPORT_IOCTL_ERROR("HIDIOCSUSAGE", rc);
+      REPORT_IOCTL_ERROR("HIDIOCSUSAGE", errno);
       goto bye;
    }
    if ((rc=ioctl(fd, HIDIOCSREPORT, &rinfo)) < 0) {
       result = -errno;
-      REPORT_IOCTL_ERROR("HIDIOCGUSAGE", rc);
+      REPORT_IOCTL_ERROR("HIDIOCGUSAGE", errno);
       goto bye;
    }
    result = 0;
@@ -267,7 +268,7 @@ set_usage_value_by_report_type_and_ucode(
    }
    if ((rc=ioctl(fd, HIDIOCSUSAGE, &uref)) < 0) {
       psc = -errno;
-      REPORT_IOCTL_ERROR("HIDIOCSUSAGE", rc);
+      REPORT_IOCTL_ERROR("HIDIOCSUSAGE", errno);
       goto bye;
    }
    // if (debug) {
@@ -275,12 +276,14 @@ set_usage_value_by_report_type_and_ucode(
    //    report_hiddev_usage_ref(&uref, 1);
    // }
 
-   // need to get the actual report_id - HIDIOCSREPORT failes if HID_REPORT_ID_UNKNOWN
-   hiddev_get_usage_value(fd, &uref, CALLOPT_ERR_ABORT|CALLOPT_ERR_MSG);   // should never fail
+   // need to get the actual report_id - HIDIOCSREPORT fails if HID_REPORT_ID_UNKNOWN
+   psc = hiddev_get_usage_value(fd, &uref, CALLOPT_ERR_MSG);   // should never fail, deleted CALLOPT_ERR_ABORT
    // if (debug) {
    //    DBGMSG("After get_hid_usage_value()");
    //    report_hiddev_usage_ref(&uref, 1);
    // }
+   if (psc < 0)          // should never occur
+      goto bye;
 
 
    struct hiddev_report_info rinfo = {
@@ -290,7 +293,7 @@ set_usage_value_by_report_type_and_ucode(
 
    if ((rc=ioctl(fd, HIDIOCSREPORT, &rinfo)) < 0) {
       psc = -errno;
-      REPORT_IOCTL_ERROR("HIDIOCSREPORT", rc);
+      REPORT_IOCTL_ERROR("HIDIOCSREPORT", errno);
       goto bye;
    }
    psc = 0;
@@ -340,7 +343,12 @@ usb_get_usage_value_by_vcprec(
                  vcprec->report_id,
                  vcprec->field_index,
                  vcprec->usage_index);
-   hiddev_get_report(fd, vcprec->rinfo, CALLOPT_ERR_MSG|CALLOPT_ERR_ABORT);
+   rc = hiddev_get_report(fd, vcprec->rinfo, CALLOPT_ERR_MSG);   // |CALLOPT_ERR_ABORT);
+   if (rc < 0) {
+      psc = rc;
+      goto bye;
+   }
+
    __s32 maxval1 = vcprec->finfo->logical_maximum;
    __s32 maxval2 = vcprec->finfo->physical_maximum;
    DBGMSF(debug, "logical_maximum: %d", maxval1);
@@ -360,21 +368,19 @@ usb_get_usage_value_by_vcprec(
    if (debug)
       report_hiddev_usage_ref(uref, 1);
 
-   rc  = hiddev_get_usage_value(fd, uref, CALLOPT_ERR_MSG);
+   psc  = hiddev_get_usage_value(fd, uref, CALLOPT_ERR_MSG);
    // rc = ioctl(fd, HIDIOCGUSAGE, uref);  // Fills in usage value
-   if (rc != 0) {
-      int errsv = errno;
+   if (psc != 0) {
       // REPORT_IOCTL_ERROR("HIDIOCGUSAGE", rc);
       // occasionally see -1, errno = 22 invalid argument - for Battery System Page: Run Time to Empty
       // gsc = modulate_rc(-errsv, RR_ERRNO);
-      psc = -errsv;
    }
    else {
       DBGMSF(debug, "usage_index=%d, value = 0x%08x",uref->usage_index, uref->value);
       *curval = uref->value;
-      psc = 0;
    }
 
+bye:
    DBGMSF(debug, "Returning: %s", psc_desc(psc) );
    return psc;
 }

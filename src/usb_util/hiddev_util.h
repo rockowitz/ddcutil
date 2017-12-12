@@ -37,15 +37,17 @@
 #include "util/edid.h"
 
 
-#define REPORT_IOCTL_ERROR(_ioctl_name, _rc) \
+// The define is used within directory usb_util.
+// The more general REPORT_USB_ERROR is defined in base/core.h, so is unavailable
+// at the util level.
+
+#define REPORT_USB_IOCTL_ERROR(_ioctl_name, _errno) \
    do { \
-         printf("(%s) ioctl(%s) returned %d (0x%08x), errno=%d: %s\n", \
+         printf("(%s) ioctl(%s) failed.  errno=%d: %s\n", \
                 __func__, \
                 _ioctl_name, \
-                _rc, \
-                _rc, \
-                errno, \
-                strerror(errno) \
+                _errno, \
+                strerror(_errno) \
                ); \
    } while(0)
 
