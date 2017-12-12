@@ -98,7 +98,7 @@ gboolean output_arg_func(const gchar* option_name,
       output_level = OL_PROGRAM;
 #endif
    else {
-      // PROGRAM_LOGIC_ERROR("Unexpected option_name: %s", option_name);
+      PROGRAM_LOGIC_ERROR("Unexpected option_name: %s", option_name);
       g_set_error(error, G_OPTION_ERROR, G_OPTION_ERROR_FAILED,
                   "PROGRAM LOGIC ERROR: Unexpected option_name: %s", option_name);
       ok = false;

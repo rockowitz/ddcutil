@@ -286,7 +286,7 @@ void report_ioctl_error(
 #define REPORT_IOCTL_ERROR(_ioctl_name, _errnum) \
    report_ioctl_error(_ioctl_name, _errnum, __func__, __FILE__, __LINE__);
 
-// reports a program logic error and terminates execution
+// reports a program logic error
 void program_logic_error(
       const char * funcname,
       const int    lineno,

@@ -343,7 +343,7 @@ char * interpret_ddca_version_feature_flags_readwrite(
    else if (feature_flags & DDCA_WO)
       result = "Write Only";
    else
-      // PROGRAM_LOGIC_ERROR("No read/write bits set");
+      PROGRAM_LOGIC_ERROR("No read/write bits set");
       result = "PROGRAM LOGIC ERROR: No read/write bits set";
    return result;
 }
@@ -369,7 +369,7 @@ char * interpret_ddca_version_feature_flags_type(
       result = "Table (write-only)";
    else
       result = "PROGRAM LOGIC ERROR: No C/NC/T subtype bit set";
-      // PROGRAM_LOGIC_ERROR("No C/NC/T subtype bit set");
+      PROGRAM_LOGIC_ERROR("No C/NC/T subtype bit set");
    return result;
 }
 
@@ -671,12 +671,7 @@ get_version_sensitive_feature_flags(
       else if (pvft_entry->v22_flags)
          result = pvft_entry->v22_flags;
       if (!result) {
-
-         // PROGRAM_LOGIC_ERROR(
-         //    "Feature = 0x%02x, Version=%d.%d: No version sensitive feature flags found",
-         //    pvft_entry->code, vcp_version.major, vcp_version.minor);
-
-         DBGMSG("PROGRAM LOGIC ERROR: "
+         PROGRAM_LOGIC_ERROR(
             "Feature = 0x%02x, Version=%d.%d: No version sensitive feature flags found",
             pvft_entry->code, vcp_version.major, vcp_version.minor);
          assert(false);
@@ -722,8 +717,7 @@ get_highest_non_deprecated_version(
       vspec.minor = 0;
    }
    else {
-      // PROGRAM_LOGIC_ERROR("Feature 0x%02x is deprecated for all versions", vfte->code);
-      DBGMSG("PROGRAM LOGIC ERROR: Feature 0x%02x is deprecated for all versions", vfte->code);
+      PROGRAM_LOGIC_ERROR("Feature 0x%02x is deprecated for all versions", vfte->code);
       assert(false);
    }
 
