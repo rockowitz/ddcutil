@@ -342,9 +342,10 @@ char * interpret_ddca_version_feature_flags_readwrite(
       result = "Read Only";
    else if (feature_flags & DDCA_WO)
       result = "Write Only";
-   else
+   else {
       PROGRAM_LOGIC_ERROR("No read/write bits set");
       result = "PROGRAM LOGIC ERROR: No read/write bits set";
+   }
    return result;
 }
 
@@ -367,9 +368,10 @@ char * interpret_ddca_version_feature_flags_type(
       result = "Table (normal)";
    else if (feature_flags & DDCA_WO_TABLE)
       result = "Table (write-only)";
-   else
+   else {
       result = "PROGRAM LOGIC ERROR: No C/NC/T subtype bit set";
       PROGRAM_LOGIC_ERROR("No C/NC/T subtype bit set");
+   }
    return result;
 }
 
