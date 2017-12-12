@@ -79,7 +79,7 @@ extern DDCA_Global_Failure_Information global_failure_information;
 typedef Byte Call_Options;
 #define CALLOPT_NONE         0x00    ///< no options
 #define CALLOPT_ERR_MSG      0x80    ///< issue message if error
-#define CALLOPT_ERR_ABORT    0x40    ///< terminate execution if error
+// #define CALLOPT_ERR_ABORT    0x40    ///< terminate execution if error
 #define CALLOPT_RDONLY       0x20    ///< open read-only
 #define CALLOPT_WARN_FINDEX  0x10    ///< issue warning msg re hiddev_field_info.field_index change
 #define CALLOPT_FORCE        0x08    ///< ignore various validity checks
