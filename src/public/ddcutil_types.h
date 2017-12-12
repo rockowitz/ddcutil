@@ -87,6 +87,7 @@ typedef struct {
 // Global Settings
 //
 
+#ifdef OBSOLETE
 //! Failure information filled in at the time of a program abort,
 //! before longjmp() is called.
 typedef struct {
@@ -96,7 +97,7 @@ typedef struct {
    char       fn[PATH_MAX];
    int        status;
 } DDCA_Global_Failure_Information;
-
+#endif
 
 //
 // I2C Protocol Control

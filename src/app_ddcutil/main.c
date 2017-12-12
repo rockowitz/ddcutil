@@ -347,6 +347,7 @@ void probe_display_by_dref(Display_Ref * dref) {
 int main(int argc, char *argv[]) {
    // start_time_nanos = cur_realtime_nanosec();
 
+#ifdef OBSOLETE
    // For aborting out of shared library
    jmp_buf abort_buf;
    int jmprc = setjmp(abort_buf);
@@ -354,7 +355,9 @@ int main(int argc, char *argv[]) {
       fprintf(stderr, "Aborting. Internal status code = %d\n", jmprc);
       exit(EXIT_FAILURE);
    }
+
    register_jmp_buf(&abort_buf);
+#endif
 
    // set_trace_levels(TRC_ADL);   // uncomment to enable tracing during initialization
    init_base_services();  // so tracing related modules are initialized

@@ -111,6 +111,7 @@ void demo_retry_management() {
 }
 
 
+#ifdef OBSOLETE
 
 // Register an abort function.
 // If libddcutil encounters an unexpected, unrecoverable error, it will
@@ -131,6 +132,7 @@ void handle_library_abort() {
    ddca_register_jmp_buf(&abort_buf);
 }
 
+#endif
 
 
 int main(int argc, char** argv) {
@@ -139,8 +141,10 @@ int main(int argc, char** argv) {
    // Query library build settings.
    demo_build_information();
 
+#ifdef OBSOLETE
    // Catches libddcutil failures that would otherwise cause program abort
    handle_library_abort();
+#endif
 
    // Retry management
    demo_retry_management();

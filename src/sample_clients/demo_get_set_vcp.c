@@ -430,6 +430,7 @@ bye:
 }
 
 
+#ifdef OBSOLETE
 
 // Register an abort function.
 // If libddcutil encounters an unexpected, unrecoverable error, it will
@@ -450,13 +451,16 @@ void handle_library_abort() {
    ddca_register_jmp_buf(&abort_buf);
 }
 
+#endif
 
 
 
 int main(int argc, char** argv) {
    printf("\n(%s) Starting.\n", __func__);
 
+#ifdef OBSOLETE
    handle_library_abort();
+#endif
 
    // ddca_reset_stats();
 

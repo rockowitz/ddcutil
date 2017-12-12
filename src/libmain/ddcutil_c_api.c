@@ -256,6 +256,8 @@ void ddca_register_abort_func(DDCA_Abort_Func func) {
 #endif
 
 
+#ifdef OBSOLETE
+
 void
 ddca_register_jmp_buf(jmp_buf* jb) {
    register_jmp_buf(jb);
@@ -272,6 +274,9 @@ ddca_get_global_failure_information()
                   ? &global_failure_information
                   : NULL;
 }
+
+#endif
+
 
 
 //

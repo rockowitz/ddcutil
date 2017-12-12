@@ -53,7 +53,9 @@ extern bool dbgtrc_show_time;  // include elapsed time in debug/trace timestamps
 //
 // For aborting out of shared library
 //
+#ifdef OBSOLETE
 void register_jmp_buf(jmp_buf* jb);
+#endif
 
 void ddc_abort(
       const char * funcname,
@@ -64,7 +66,9 @@ void ddc_abort(
 #define DDC_ABORT(status) \
    ddc_abort(__func__, __LINE__, __FILE__, status)
 
+#ifdef OBSOLETE
 extern DDCA_Global_Failure_Information global_failure_information;
+#endif
 
 
 //

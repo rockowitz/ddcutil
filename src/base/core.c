@@ -190,6 +190,7 @@ FILE * cur_fout() {
 // Global error return
 //
 
+#ifdef OBSOLETE
 /** @defgroup abnormal_termination Abnormal Termination
  *
  */
@@ -209,6 +210,7 @@ void register_jmp_buf(jmp_buf* jb) {
    DBGMSG("setting global_abort_jmp_buf_ptr = %p", jb);
    global_abort_jmp_buf_ptr = jb;
 }
+#endif
 
 
 /** Primary function for terminating **ddcutil** execution
@@ -233,6 +235,8 @@ void ddc_abort(
       int          status)
 {
    show_backtrace(2);
+
+#ifdef OBSOLETE
    DBGMSG("global_abort_jmp_buf_ptr = %p", global_abort_jmp_buf_ptr);
    if (global_abort_jmp_buf_ptr) {
 
@@ -246,10 +250,13 @@ void ddc_abort(
       longjmp(*global_abort_jmp_buf_ptr, status);
    }
    else {
+#endif
       // no point setting global_failure_information, we're outta here
       f0puts("Terminating execution.\n", FERR);
       exit(EXIT_FAILURE);     // or return status?
+#ifdef OBSOLETE
    }
+#endif
 }
 
 
@@ -259,7 +266,7 @@ void ddc_abort(
 
 Value_Name_Table callopt_bitname_table2 = {
       VN(CALLOPT_ERR_MSG),
-      VN(CALLOPT_ERR_ABORT),
+ //   VN(CALLOPT_ERR_ABORT),
       VN(CALLOPT_RDONLY),
       VN(CALLOPT_WARN_FINDEX),
       VN(CALLOPT_FORCE),

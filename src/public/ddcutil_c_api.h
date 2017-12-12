@@ -186,6 +186,8 @@ char * ddca_rc_desc(DDCA_Status status_code);
 // Global Settings
 //
 
+#ifdef OBSOLETE
+
 /** To capture certain rare fatal errors in libddcutil.
  *  If not set, library aborts.
  *
@@ -208,6 +210,8 @@ ddca_register_jmp_buf(jmp_buf* jb);
  */
 DDCA_Global_Failure_Information *
 ddca_get_global_failure_information();
+
+#endif
 
 /***
 I2C is an inherently unreliable protocol.  The application is responsible for
