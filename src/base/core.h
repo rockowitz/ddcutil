@@ -276,7 +276,7 @@ void report_ioctl_error_old(
       bool        fatal);
 #endif
 
-void report_ioctl_error_new(
+void report_ioctl_error(
       const char * ioctl_name,
       int          errnum,
       const char * funcname,
@@ -284,7 +284,7 @@ void report_ioctl_error_new(
       int          lineno);
 
 #define REPORT_IOCTL_ERROR(_ioctl_name, _errnum) \
-   report_ioctl_error_new(_ioctl_name, _errnum, __func__, __FILE__, __LINE__);
+   report_ioctl_error(_ioctl_name, _errnum, __func__, __FILE__, __LINE__);
 
 // reports a program logic error and terminates execution
 void program_logic_error(

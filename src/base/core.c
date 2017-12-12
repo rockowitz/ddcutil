@@ -904,7 +904,7 @@ void report_ioctl_error_old(
 #endif
 
 
-void report_ioctl_error_new(
+void report_ioctl_error(
       const char * ioctl_name,
       int          errnum,
       const char * funcname,
@@ -945,6 +945,7 @@ void program_logic_error(
   va_list(args);
   va_start(args, format);
   vsnprintf(buffer, 200, format, args);
+  va_end(args);
 
   // assemble the location message:
   char buf2[250];
