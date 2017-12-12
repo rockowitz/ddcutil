@@ -78,22 +78,12 @@ int main(int argc, char** argv) {
          FUNCTION_ERRMSG("ddca_open_display", rc);
          continue;
       }
-      char * dh_repr = ddca_dh_repr(dh);
-      printf("(%s) Opened display handle: %s\n", __func__, dh_repr);
-
+      printf("(%s) Opened display handle: %s\n", __func__, ddca_dh_repr(dh));
 
       //
       //  Insert test code here
       //
 
-      rc = ddca_close_display(dh);
-      if (rc != 0)
-         FUNCTION_ERRMSG("ddca_close_display", rc);
-   }
-
-
-   printf("\n(%s) Cleanup...\n", __func__);
-   if (dh) {
       rc = ddca_close_display(dh);
       if (rc != 0)
          FUNCTION_ERRMSG("ddca_close_display", rc);
