@@ -41,8 +41,8 @@
 #include "util/report_util.h"
 /** \endcond */
 
+#include "core.h"
 #include "ddc_errno.h"
-#include "retry_history.h"
 #include "status_code_mgt.h"
 
 #include "ddc_error.h"
@@ -338,92 +338,3 @@ char * ddc_error_summary(Ddc_Error * erec) {
    return buf;
 }
 
-
-#ifdef TRANSITIONAL
-//
-// Transitional functions
-//
-
-void ddc_error_fill_retry_history(Ddc_Error * erec, Retry_History * hist) {
-   if (erec && hist) {
-      VALID_DDC_ERROR_PTR(erec);
-      assert(erec->psc == DDCRC_RETRIES);
-
-      for (int ndx = 0; ndx < erec->cause_ct; ndx++) {
-         retry_history_add(hist, erec->causes[ndx]->psc);
-      }
-   }
-}
-
-
-Retry_History * ddc_error_to_new_retry_history(Ddc_Error * erec) {
-   VALID_DDC_ERROR_PTR(erec);
-   assert(erec->psc == DDCRC_RETRIES);
-
-   Retry_History * hist = retry_history_new();
-   ddc_error_fill_retry_history(erec, hist);
-
-   return hist;
-}
-
-
-
-Ddc_Error * ddc_error_from_retry_history(Retry_History * hist, char * func) {
-   assert(hist);
-   assert(memcmp(hist->marker, RETRY_HISTORY_MARKER, 4) == 0);
-
-   Ddc_Error * erec = ddc_error_new(DDCRC_RETRIES, func);
-   for (int ndx = 0; ndx < hist->ct; ndx++) {
-      Ddc_Error * cause = ddc_error_new(hist->psc[ndx], "dummy");
-      erec->causes[ndx] = cause;
-   }
-   return erec;
-}
-
-bool ddc_error_comp(Ddc_Error * erec, Retry_History * hist) {
-   bool match = false;
-
-   if (!erec && !hist) {
-      DBGMSG("erec == NULL, hist == NULL");
-      match = true;
-   }
-   else if (erec && !hist) {
-      DBGMSG("erec non-null, hist is null");
-      match = false;
-   }
-   else if (!erec && hist) {
-      DBGMSG("erec is null, hist is non-null");
-      if (hist->ct != 0) {
-         DBGMSG("Retry_History non-empty");
-         match = false;
-      }
-      else
-         match = true;
-   }
-   else {
-      match = true;
-      for (int ndx = 0; ndx < erec->cause_ct; ndx++) {
-         DBGMSG("erec->causes[%d]->psc = %d", ndx, erec->causes[ndx]->psc);
-      }
-      for (int ndx = 0; ndx < hist->ct; ndx++) {
-         DBGMSG("hist->psc[%d] = %d", ndx, hist->psc[ndx]);
-      }
-      if (erec->cause_ct != hist->ct) {
-         DBGMSG("erec->cause_ct == %d, hist->ct == %d", erec->cause_ct, hist->ct);
-
-         match = false;
-      }
-      else for (int ndx = 0; ndx < erec->cause_ct;  ndx++) {
-         if (erec->causes[ndx]->psc  != hist->psc[ndx]) {
-            DBGMSG("erec->causes[%d]->psc == %d, hist->psc[%d] = %d",
-                   ndx, erec->causes[ndx]->psc, ndx, hist->psc[ndx]);
-            match = false;
-         }
-      }
-   }
-
-   DBGMSG("Ddc_Error and Retry_History %smatch", (match) ? "" : "DO NOT");
-   return match;
-}
-
-#endif

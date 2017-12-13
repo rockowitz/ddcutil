@@ -28,11 +28,7 @@
 #ifndef DDC_ERROR_H_
 #define DDC_ERROR_H_
 
-// #include <glib-2.0/glib.h>
 
-// #ifdef TRANSITIONAL
-#include "base/retry_history.h"
-// #endif
 #include "base/parms.h"
 #include "base/status_code_mgt.h"
 
@@ -105,13 +101,5 @@ void ddc_error_report(
 
 char * ddc_error_summary(
       Ddc_Error *           erec);
-
-
-#ifdef TRANSITIONAL
-void ddc_error_fill_retry_history(Ddc_Error * erec, Retry_History * hist);
-Retry_History * ddc_error_to_new_retry_history(Ddc_Error * erec);
-Ddc_Error * ddc_error_from_retry_history(Retry_History * hist, char * func);
-bool ddc_error_comp(Ddc_Error * erec, Retry_History * hist);
-#endif
 
 #endif /* DDC_ERROR_H_ */
