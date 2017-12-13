@@ -29,10 +29,11 @@
 
 /** \cond */
 #include <stdio.h>
+
+#include "../base/error_info.h"
 /** \endcond */
 
 #include "base/core.h"
-#include "base/ddc_error.h"
 #include "base/status_code_mgt.h"
 
 #include "vcp/vcp_feature_codes.h"

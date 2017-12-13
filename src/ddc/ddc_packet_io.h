@@ -29,8 +29,8 @@
 
 #include <stdbool.h>
 
+#include "../base/error_info.h"
 #include "base/core.h"
-#include "base/ddc_error.h"
 #include "base/ddc_packets.h"
 #include "base/displays.h"
 

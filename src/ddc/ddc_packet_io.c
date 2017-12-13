@@ -36,6 +36,7 @@
 #include <config.h>
 
 #include <assert.h>
+#include <base/error_info.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <stdbool.h>
@@ -51,7 +52,6 @@
 /** \endcond */
 
 #include "base/ddc_errno.h"
-#include "base/ddc_error.h"
 #include "base/displays.h"
 #include "base/execution_stats.h"
 #include "base/parms.h"

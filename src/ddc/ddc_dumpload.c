@@ -46,7 +46,6 @@
 
 #include "base/core.h"
 #include "base/ddc_errno.h"
-#include "base/ddc_error.h"
 #include "base/ddc_packets.h"
 #include "base/displays.h"
 #include "base/parms.h"
@@ -57,6 +56,8 @@
 
 #include "ddc/ddc_displays.h"
 #include "ddc/ddc_dumpload.h"
+
+#include "../base/error_info.h"
 #include "ddc/ddc_edid.h"
 #include "ddc/ddc_output.h"
 #include "ddc/ddc_packet_io.h"

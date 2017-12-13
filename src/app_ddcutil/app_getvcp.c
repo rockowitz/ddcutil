@@ -46,7 +46,7 @@
 
 #include "base/core.h"
 #include "base/ddc_errno.h"
-#include "base/ddc_error.h"
+#include "../base/error_info.h"
 #include "base/sleep.h"
 #include "base/vcp_version.h"
 

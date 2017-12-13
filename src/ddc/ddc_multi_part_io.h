@@ -32,11 +32,11 @@
 /** \cond */
 #include <stdbool.h>
 
+#include "../base/error_info.h"
 // #include "util/coredefs.h"
 #include "util/data_structures.h"
 /** \endcond */
 
-#include "base/ddc_error.h"
 #include "base/displays.h"
 #include "base/status_code_mgt.h"
 

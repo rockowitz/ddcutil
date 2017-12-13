@@ -44,7 +44,6 @@
 /** \endcond */
 
 #include "base/core.h"
-#include "base/ddc_error.h"
 #include "base/ddc_errno.h"
 #include "base/ddc_packets.h"
 
@@ -61,6 +60,7 @@
 #include "ddc/ddc_vcp.h"
 
 #include "app_ddcutil/app_dumpload.h"
+#include "../base/error_info.h"
 
 
 // Filename creation

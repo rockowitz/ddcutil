@@ -31,6 +31,7 @@
 
 /** \cond */
 #include <assert.h>
+#include <base/error_info.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -40,7 +41,6 @@
 /** \endcond */
 
 #include "base/core.h"
-#include "base/ddc_error.h"
 #include "base/ddc_errno.h"
 #include "base/ddc_packets.h"
 #include "base/execution_stats.h"

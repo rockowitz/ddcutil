@@ -32,6 +32,8 @@
  */
 
 /** \cond */
+#include "error_info.h"
+
 #include <assert.h>
 #include <glib-2.0/glib.h>
 #include <stdlib.h>
@@ -45,7 +47,6 @@
 #include "ddc_errno.h"
 #include "status_code_mgt.h"
 
-#include "ddc_error.h"
 
 /** Validates a pointer to a #Ddc_Error, using asserts */
 #define VALID_DDC_ERROR_PTR(ptr) \

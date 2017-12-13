@@ -32,6 +32,8 @@
 #include <glib.h>
 #include <string.h>
 #include <time.h>
+
+#include "../base/error_info.h"
 /** \endcond */
 
 // #include "util/output_sink.h"
@@ -39,7 +41,6 @@
 
 #include "base/adl_errors.h"
 #include "base/ddc_errno.h"
-#include "base/ddc_error.h"
 #include "base/ddc_packets.h"
 #include "base/linux_errno.h"
 #include "base/parms.h"

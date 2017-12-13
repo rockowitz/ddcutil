@@ -40,6 +40,7 @@
 #include <string.h>
 #include <unistd.h>
 
+#include "../base/error_info.h"
 #include "util/data_structures.h"
 #include "util/failsim.h"
 #include "util/sysfs_util.h"
@@ -49,7 +50,6 @@
 #include "base/base_init.h"
 #include "base/core.h"
 #include "base/ddc_errno.h"
-#include "base/ddc_error.h"
 #include "base/ddc_packets.h"
 #include "base/displays.h"
 #include "base/linux_errno.h"
