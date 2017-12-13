@@ -574,7 +574,7 @@ static Public_Status_Code ddc_write_read_raw(
  * \remark
  *  Issue: positive ADL codes, need to handle?
  */
-Ddc_Error *
+Error_Info *
 ddc_write_read(
       Display_Handle * dh,
       DDC_Packet *     request_packet_ptr,
@@ -629,11 +629,11 @@ ddc_write_read(
    // if (psc < 0  && get_modulation(psc) != RR_DDC)
    //    COUNT_STATUS_CODE(psc);
 
-   Ddc_Error * excp = NULL;
+   Error_Info * excp = NULL;
    if (psc < 0)
-      excp = ddc_error_new(psc, __func__);
+      excp = errinfo_new(psc, __func__);
 
-   DBGTRC(debug, TRACE_GROUP, "Done. Returning: %s", ddc_error_summary(excp)  );
+   DBGTRC(debug, TRACE_GROUP, "Done. Returning: %s", errinfo_summary(excp)  );
    if (psc == 0 && (IS_TRACING() || debug) )
       dbgrpt_packet(*response_packet_ptr_loc, 1);
 
@@ -663,7 +663,7 @@ ddc_write_read(
  * \remark
  * The maximum number of tries is set in global variable max_write_read_exchange_tries.
  */
-Ddc_Error *
+Error_Info *
 ddc_write_read_with_retry(
          Display_Handle * dh,
          DDC_Packet *     request_packet_ptr,
@@ -690,7 +690,7 @@ ddc_write_read_with_retry(
    int  ddcrc_read_all_zero_ct = 0;
    int  ddcrc_null_response_ct = 0;
    int  ddcrc_null_response_max = (retry_null_response) ? 3 : 0;
-   Ddc_Error * try_errors[MAX_MAX_TRIES];
+   Error_Info * try_errors[MAX_MAX_TRIES];
 
    assert(max_write_read_exchange_tries > 0);   // to avoid clang warning
    for (tryctr=0, psc=-999, retryable=true;
@@ -701,7 +701,7 @@ ddc_write_read_with_retry(
            "Start of try loop, tryctr=%d, max_write_read_echange_tries=%d, rc=%d, retryable=%d",
            tryctr, max_write_read_exchange_tries, psc, retryable );
 
-      Ddc_Error * cur_excp = ddc_write_read(
+      Error_Info * cur_excp = ddc_write_read(
                 dh,
                 request_packet_ptr,
                 max_read_bytes,
@@ -777,7 +777,7 @@ ddc_write_read_with_retry(
 
 
    // Using new Ddc_Error mechanism
-   Ddc_Error * ddc_excp = NULL;
+   Error_Info * ddc_excp = NULL;
 
    if (psc < 0) {
       // int last_try_index = tryctr-1;
@@ -790,19 +790,19 @@ ddc_write_read_with_retry(
       else if (ddcrc_null_response_ct > ddcrc_null_response_max)
          psc = DDCRC_ALL_RESPONSES_NULL;
 
-      ddc_excp = ddc_error_new_with_causes(psc, try_errors, tryctr, __func__);
+      ddc_excp = errinfo_new_with_causes(psc, try_errors, tryctr, __func__);
 
       if (psc != try_errors[tryctr-1]->psc)
          COUNT_STATUS_CODE(psc);     // new status code, count it
    }
    else {
       for (int ndx = 0; ndx < tryctr; ndx++)
-         ddc_error_free(try_errors[ndx]);
+         errinfo_free(try_errors[ndx]);
    }
 
    try_data_record_tries(write_read_stats_rec, psc, tryctr);
 
-   DBGTRC(debug, TRACE_GROUP, "Done.  Returning: %s", ddc_error_summary(ddc_excp));
+   DBGTRC(debug, TRACE_GROUP, "Done.  Returning: %s", errinfo_summary(ddc_excp));
    return ddc_excp;
 }
 
@@ -850,7 +850,7 @@ ddc_i2c_write_only(
  * \param  request_packet_ptr  DDC packet to write
  * \return NULL if success, #Ddc_Error if error
  */
-Ddc_Error *
+Error_Info *
 ddc_write_only(
       Display_Handle * dh,
       DDC_Packet *     request_packet_ptr)
@@ -877,11 +877,11 @@ ddc_write_only(
       }
    }
 
-   Ddc_Error *  ddc_excp = NULL;
+   Error_Info *  ddc_excp = NULL;
    if (psc)
-      ddc_excp = ddc_error_new(psc, __func__);
+      ddc_excp = errinfo_new(psc, __func__);
 
-   DBGTRC(debug, TRACE_GROUP, "Done. Returning: %s", ddc_error_summary(ddc_excp));
+   DBGTRC(debug, TRACE_GROUP, "Done. Returning: %s", errinfo_summary(ddc_excp));
    return ddc_excp;
 }
 
@@ -895,7 +895,7 @@ ddc_write_only(
  *  The maximum number of tries allowed has been set in global variable
  *  max_write_only_exchange_tries.
  */
-Ddc_Error *
+Error_Info *
 ddc_write_only_with_retry(
       Display_Handle * dh,
       DDC_Packet *     request_packet_ptr
@@ -909,7 +909,7 @@ ddc_write_only_with_retry(
    Public_Status_Code psc;
    int                tryctr;
    bool               retryable;
-   Ddc_Error *        try_errors[MAX_MAX_TRIES];
+   Error_Info *        try_errors[MAX_MAX_TRIES];
 
    assert(max_write_only_exchange_tries > 0);
    for (tryctr=0, psc=-999, retryable=true;
@@ -920,7 +920,7 @@ ddc_write_only_with_retry(
              "Start of try loop, tryctr=%d, max_write_only_exchange_tries=%d, rc=%d, retryable=%d",
              tryctr, max_write_only_exchange_tries, psc, retryable );
 
-      Ddc_Error * cur_excp = ddc_write_only(dh, request_packet_ptr);
+      Error_Info * cur_excp = ddc_write_only(dh, request_packet_ptr);
       psc = (cur_excp) ? cur_excp->psc : 0;
       try_errors[tryctr] = cur_excp;
 
@@ -944,7 +944,7 @@ ddc_write_only_with_retry(
    }
 
 
-   Ddc_Error * ddc_excp = NULL;
+   Error_Info * ddc_excp = NULL;
 
    if (psc < 0) {
       // now:
@@ -960,20 +960,20 @@ ddc_write_only_with_retry(
       if (retryable)
          psc = DDCRC_RETRIES;
 
-      ddc_excp = ddc_error_new_with_causes(psc, try_errors, tryctr, __func__);
+      ddc_excp = errinfo_new_with_causes(psc, try_errors, tryctr, __func__);
 
       if (psc != try_errors[tryctr-1]->psc)
          COUNT_STATUS_CODE(psc);     // new status code, count it
    }
    else {
       for (int ndx = 0; ndx < tryctr; ndx++) {
-         ddc_error_free(try_errors[ndx]);
+         errinfo_free(try_errors[ndx]);
       }
    }
 
    try_data_record_tries(write_only_stats_rec, psc, tryctr);
 
-   DBGTRC(debug, TRACE_GROUP, "Done.  Returning: %s", ddc_error_summary(ddc_excp));
+   DBGTRC(debug, TRACE_GROUP, "Done.  Returning: %s", errinfo_summary(ddc_excp));
    return ddc_excp;
 }
 

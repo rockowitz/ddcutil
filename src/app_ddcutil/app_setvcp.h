@@ -32,7 +32,7 @@
 #include "base/displays.h"
 #include "base/status_code_mgt.h"
 
-Ddc_Error *
+Error_Info *
 app_set_vcp_value(
         Display_Handle * dh,
         char *           feature,

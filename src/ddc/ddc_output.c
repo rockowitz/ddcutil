@@ -179,7 +179,7 @@ get_raw_value_for_feature_table_entry(
    assert(dh->dref);
 
    Public_Status_Code psc = 0;
-   Ddc_Error * ddc_excp = NULL;
+   Error_Info * ddc_excp = NULL;
 
    DDCA_MCCS_Version_Spec vspec = get_vcp_version_by_display_handle(dh);
    char * feature_name = get_version_sensitive_feature_name(frec, vspec);
@@ -197,7 +197,7 @@ get_raw_value_for_feature_table_entry(
               feature_type,
               &valrec);
      if (psc != 0)
-        ddc_excp = ddc_error_new(psc, __func__);
+        ddc_excp = errinfo_new(psc, __func__);
 #else
       PROGRAM_LOGIC_ERROR("ddcutil not built with USB support");
 #endif
@@ -272,7 +272,7 @@ get_raw_value_for_feature_table_entry(
       dbgrpt_ddca_single_vcp_value(*pvalrec, 1);
    }
    if (ddc_excp)
-      ddc_error_free(ddc_excp);
+      errinfo_free(ddc_excp);
    return psc;
 }
 

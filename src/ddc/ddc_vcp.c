@@ -79,7 +79,7 @@ static Trace_Group TRACE_GROUP = TRC_DDC;
  * \param  dh handle of open display device
  * \return NULL if success, pointer to #Ddc_Error if failure
  */
-Ddc_Error *
+Error_Info *
 save_current_settings(
       Display_Handle * dh)
 {
@@ -87,12 +87,12 @@ save_current_settings(
    DBGTRC(debug, TRACE_GROUP,
           "Invoking DDC Save Current Settings command. dh=%s", dh_repr_t(dh));
    Public_Status_Code psc = 0;
-   Ddc_Error * ddc_excp = NULL;
+   Error_Info * ddc_excp = NULL;
 
    if (dh->dref->io_mode == DDCA_IO_USB) {
       // command line parser should block this case
       PROGRAM_LOGIC_ERROR("MCCS over USB does not have Save Current Settings command");
-      ddc_excp = ddc_error_new(DDCL_UNIMPLEMENTED, __func__);
+      ddc_excp = errinfo_new(DDCL_UNIMPLEMENTED, __func__);
    }
    else {
       DDC_Packet * request_packet_ptr =
@@ -109,7 +109,7 @@ save_current_settings(
 
    DBGTRC(debug, TRACE_GROUP, "Returning %s", psc_desc(psc));
    if ( (debug||IS_TRACING()) && ddc_excp)
-      ddc_error_report(ddc_excp, 0);
+      errinfo_report(ddc_excp, 0);
    return ddc_excp;
 }
 
@@ -126,7 +126,7 @@ save_current_settings(
  *  \return NULL if success,
  *          pointer to #Ddc_Error from #ddc_write_only_with_retry() if failure
  */
-Ddc_Error *
+Error_Info *
 set_nontable_vcp_value(
       Display_Handle * dh,
       Byte             feature_code,
@@ -137,7 +137,7 @@ set_nontable_vcp_value(
           "Writing feature 0x%02x , new value = %d, dh=%s",
           feature_code, new_value, dh_repr_t(dh) );
    Public_Status_Code psc = 0;
-   Ddc_Error * ddc_excp = NULL;
+   Error_Info * ddc_excp = NULL;
 
    if (dh->dref->io_mode == DDCA_IO_USB) {
 #ifdef USE_USB
@@ -161,7 +161,7 @@ set_nontable_vcp_value(
 
    DBGTRC(debug, TRACE_GROUP, "Returning %s", psc_desc(psc));
    if ( psc==DDCRC_RETRIES && (debug || IS_TRACING()) )
-      DBGMSG("          Try errors: %s", ddc_error_causes_string(ddc_excp));
+      DBGMSG("          Try errors: %s", errinfo_causes_string(ddc_excp));
    return ddc_excp;
 }
 
@@ -176,7 +176,7 @@ set_nontable_vcp_value(
  *          DDCL_UNIMPLEMENTED if io mode is USB
  *          #Ddc_Error from #multi_part_write_with_retry() otherwise
  */
-Ddc_Error *
+Error_Info *
 set_table_vcp_value(
       Display_Handle *  dh,
       Byte              feature_code,
@@ -187,7 +187,7 @@ set_table_vcp_value(
    DBGTRC(debug, TRACE_GROUP, "Writing feature 0x%02x , bytect = %d",
                               feature_code, bytect);
    Public_Status_Code psc = 0;
-   Ddc_Error * ddc_excp = NULL;
+   Error_Info * ddc_excp = NULL;
 
    if (dh->dref->io_mode == DDCA_IO_USB) {
 #ifdef USE_USB
@@ -209,7 +209,7 @@ set_table_vcp_value(
 
    DBGTRC(debug, TRACE_GROUP, "Returning: %s", psc_desc(psc));
    if ( (debug || IS_TRACING()) && psc == DDCRC_RETRIES )
-      DBGMSG("      Try errors: %s", ddc_error_causes_string(ddc_excp));
+      DBGMSG("      Try errors: %s", errinfo_causes_string(ddc_excp));
    return ddc_excp;
 }
 
@@ -330,7 +330,7 @@ single_vcp_value_equal(
  *  If write verification is turned on, reads the feature value after writing it
  *  to ensure the display has actually changed the value.
  */
-Ddc_Error *
+Error_Info *
 set_vcp_value(
       Display_Handle *        dh,
       DDCA_Single_Vcp_Value * vrec)
@@ -342,7 +342,7 @@ set_vcp_value(
       fout = NULL;
 
    Public_Status_Code psc = 0;
-   Ddc_Error * ddc_excp = NULL;
+   Error_Info * ddc_excp = NULL;
    if (vrec->value_type == DDCA_NON_TABLE_VCP_VALUE) {
       ddc_excp = set_nontable_vcp_value(dh, vrec->opcode, vrec->val.c.cur_val);
       psc = (ddc_excp) ? ddc_excp->psc : 0;
@@ -367,14 +367,14 @@ set_vcp_value(
             f0printf(fout, "(%s) Read after write failed. get_vcp_value() returned: %s\n",
                            __func__, psc_desc(psc));
             if (psc == DDCRC_RETRIES)
-               f0printf(fout, "(%s)    Try errors: %s\n", __func__, ddc_error_causes_string(ddc_excp));
+               f0printf(fout, "(%s)    Try errors: %s\n", __func__, errinfo_causes_string(ddc_excp));
             // psc = DDCRC_VERIFY;
          }
          else {
             assert(vrec && newval);    // silence clang complaint
             if (! single_vcp_value_equal(vrec,newval)) {
                psc = DDCRC_VERIFY;
-               ddc_excp = ddc_error_new(DDCRC_VERIFY, __func__);
+               ddc_excp = errinfo_new(DDCRC_VERIFY, __func__);
                f0printf(fout, "Current value does not match value set.\n");
             }
             else {
@@ -408,7 +408,7 @@ set_vcp_value(
  *
  * The value pointed to by ppInterpretedCode is non-null iff the returned status code is 0.
  */
-Ddc_Error *
+Error_Info *
 get_nontable_vcp_value(
        Display_Handle *               dh,
        DDCA_Vcp_Feature_Code          feature_code,
@@ -418,7 +418,7 @@ get_nontable_vcp_value(
    DBGTRC(debug, TRACE_GROUP, "Reading feature 0x%02x", feature_code);
 
    Public_Status_Code psc = 0;
-   Ddc_Error * excp = NULL;
+   Error_Info * excp = NULL;
    Parsed_Nontable_Vcp_Response * parsed_response = NULL;
 
    DDC_Packet * request_packet_ptr  = NULL;
@@ -464,11 +464,11 @@ get_nontable_vcp_value(
 
          if (!parsed_response->valid_response)  {
             psc = DDCRC_INVALID_DATA;
-            excp = ddc_error_new(psc, __func__);
+            excp = errinfo_new(psc, __func__);
          }
          else if (!parsed_response->supported_opcode) {
             psc = DDCRC_REPORTED_UNSUPPORTED;
-            excp = ddc_error_new(psc, __func__);
+            excp = errinfo_new(psc, __func__);
          }
          if (psc != 0) {
             free(parsed_response);
@@ -476,7 +476,7 @@ get_nontable_vcp_value(
          }
       }
       else {
-         excp = ddc_error_new(psc, __func__);
+         excp = errinfo_new(psc, __func__);
       }
    }
 
@@ -489,7 +489,7 @@ get_nontable_vcp_value(
    if (debug || IS_TRACING() ) {
       if (excp) {
          DBGMSG("Error reading feature x%02x.  Returning exception: ", feature_code);
-         ddc_error_report(excp, 1);
+         errinfo_report(excp, 1);
       }
       else {
          DBGMSG("Success reading feature x%02x. *ppinterpreted_code=%p", feature_code, parsed_response);
@@ -509,7 +509,7 @@ get_nontable_vcp_value(
  *  \param  pp_table_bytes  location at which to save address of newly allocated Buffer
  *  \return NULL if success, pointer to #Ddc_Error if failure
  */
-Ddc_Error * get_table_vcp_value(
+Error_Info * get_table_vcp_value(
        Display_Handle *       dh,
        Byte                   feature_code,
        Buffer**               pp_table_bytes)
@@ -518,7 +518,7 @@ Ddc_Error * get_table_vcp_value(
    DBGTRC(debug, TRACE_GROUP, "Starting. Reading feature 0x%02x", feature_code);
 
    Public_Status_Code psc = 0;
-   Ddc_Error * ddc_excp = NULL;
+   Error_Info * ddc_excp = NULL;
    DDCA_Output_Level output_level = get_output_level();
    Buffer * paccumulator =  NULL;
 
@@ -548,7 +548,7 @@ Ddc_Error * get_table_vcp_value(
    //       DBGMSG("    Try errors: %s", retry_history_string(retry_history));
    // DBGTRC_RETRY_ERRORS(debug, psc, retry_history);
    if (ddc_excp)
-      ddc_error_report(ddc_excp, 0);
+      errinfo_report(ddc_excp, 0);
    return ddc_excp;
 }
 
@@ -565,7 +565,7 @@ Ddc_Error * get_table_vcp_value(
  *
  * The caller is responsible for freeing the value pointed returned at pvalrec.
  */
-Ddc_Error *
+Error_Info *
 get_vcp_value(
        Display_Handle *          dh,
        Byte                      feature_code,
@@ -577,7 +577,7 @@ get_vcp_value(
             feature_code, dh_repr_t(dh), dh->fh);
 
    Public_Status_Code psc = 0;
-   Ddc_Error * ddc_excp = NULL;
+   Error_Info * ddc_excp = NULL;
    Buffer * buffer = NULL;
    Parsed_Nontable_Vcp_Response * parsed_nontable_response = NULL;  // vs interpreted ..
    DDCA_Single_Vcp_Value * valrec = NULL;
@@ -607,7 +607,7 @@ get_vcp_value(
 
           case (DDCA_TABLE_VCP_VALUE):
                 psc = DDCL_UNIMPLEMENTED;
-                ddc_excp = ddc_error_new(DDCL_UNIMPLEMENTED, __func__);
+                ddc_excp = errinfo_new(DDCL_UNIMPLEMENTED, __func__);
                 break;
           }
 #else
@@ -656,7 +656,7 @@ get_vcp_value(
       report_single_vcp_value(valrec,1);
 
    if (psc == DDCRC_RETRIES && ( debug || IS_TRACING())) {
-      DBGTRC(debug, TRACE_GROUP, "      Try errors: %s", ddc_error_causes_string(ddc_excp));
+      DBGTRC(debug, TRACE_GROUP, "      Try errors: %s", errinfo_causes_string(ddc_excp));
    }
 
 

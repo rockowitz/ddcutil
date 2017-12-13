@@ -56,15 +56,15 @@ void ddc_report_write_only_stats(int depth);
 void ddc_reset_write_read_stats();
 void ddc_report_write_read_stats(int depth);
 
-Ddc_Error * ddc_write_only(
+Error_Info * ddc_write_only(
       Display_Handle * dh,
       DDC_Packet *     request_packet_ptr);
 
-Ddc_Error * ddc_write_only_with_retry(
+Error_Info * ddc_write_only_with_retry(
       Display_Handle * dh,
       DDC_Packet *     request_packet_ptr);
 
-Ddc_Error * ddc_write_read(
+Error_Info * ddc_write_read(
       Display_Handle * dh,
       DDC_Packet *     request_packet_ptr,
       int              max_read_bytes,
@@ -73,7 +73,7 @@ Ddc_Error * ddc_write_read(
       DDC_Packet **    response_packet_ptr_loc
      );
 
-Ddc_Error *  ddc_write_read_with_retry(
+Error_Info *  ddc_write_read_with_retry(
       Display_Handle * dh,
       DDC_Packet *     request_packet_ptr,
       int              max_read_bytes,

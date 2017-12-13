@@ -55,7 +55,7 @@ void ddc_set_max_multi_part_write_tries(int ct);
 int  ddc_get_max_multi_part_write_tries();
 
 
-Ddc_Error *
+Error_Info *
 multi_part_read_with_retry(
    Display_Handle * dh,
    Byte             request_type,
@@ -63,7 +63,7 @@ multi_part_read_with_retry(
    bool             all_zero_response_ok,
    Buffer**         ppbuffer);
 
-Ddc_Error *
+Error_Info *
 multi_part_write_with_retry(
      Display_Handle * dh,
      Byte             vcp_code,

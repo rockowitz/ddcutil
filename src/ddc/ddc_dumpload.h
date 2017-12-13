@@ -70,12 +70,12 @@ free_dumpload_data(Dumpload_Data * pdata);
 char *
 format_timestamp(time_t time_millis, char * buf, int bufsz);
 
-Ddc_Error *
+Error_Info *
 loadvcp_by_dumpload_data(
       Dumpload_Data*   pdata,
       Display_Handle * dh);
 
-Ddc_Error *
+Error_Info *
 loadvcp_by_string(
       char *           catenated,
       Display_Handle * dh);

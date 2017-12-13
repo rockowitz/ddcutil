@@ -275,10 +275,10 @@ app_show_feature_set_values_by_display_handle(
 //
 
 void reset_vcp_x02(Display_Handle * dh) {
-   Ddc_Error * ddc_excp = set_nontable_vcp_value(dh, 0x02, 0x01);
+   Error_Info * ddc_excp = set_nontable_vcp_value(dh, 0x02, 0x01);
    if (ddc_excp) {
-      DBGMSG("set_nontable_vcp_value_by_display_handle() returned %s", ddc_error_summary(ddc_excp) );
-      ddc_error_free(ddc_excp);
+      DBGMSG("set_nontable_vcp_value_by_display_handle() returned %s", errinfo_summary(ddc_excp) );
+      errinfo_free(ddc_excp);
    }
    else
       DBGMSG("reset feature x02 (new control value) successful");
@@ -289,13 +289,13 @@ bool new_control_values_exist(Display_Handle * dh) {
    Parsed_Nontable_Vcp_Response * p_nontable_response = NULL;
    // DBGMSF(debug, "VCP version: %d.%d", vspec.major, vspec.minor);
    bool result = false;
-    Ddc_Error * ddc_excp = get_nontable_vcp_value(
+    Error_Info * ddc_excp = get_nontable_vcp_value(
              dh,
              0x02,
              &p_nontable_response);
     if (ddc_excp) {
-       DBGMSG("get_nontable_vcp_value() returned %s", ddc_error_summary(ddc_excp) );
-       ddc_error_free(ddc_excp);
+       DBGMSG("get_nontable_vcp_value() returned %s", errinfo_summary(ddc_excp) );
+       errinfo_free(ddc_excp);
     }
 
     else if (p_nontable_response->sl == 0x01) {
@@ -322,14 +322,14 @@ bool new_control_values_exist(Display_Handle * dh) {
 Byte show_changed_feature(Display_Handle * dh) {
    Parsed_Nontable_Vcp_Response * p_nontable_response = NULL;
    Byte changed_feature = 0x00;
-   Ddc_Error * ddc_excp = get_nontable_vcp_value(
+   Error_Info * ddc_excp = get_nontable_vcp_value(
               dh,
               0x52,
               &p_nontable_response);
   // psc = (ddc_excp) ? ddc_excp->psc : 0;
   if (ddc_excp) {
-     DBGMSG("get_nontable_vcp_value() for VCP feature x52 returned %s", ddc_error_summary(ddc_excp) );
-     ddc_error_free(ddc_excp);
+     DBGMSG("get_nontable_vcp_value() for VCP feature x52 returned %s", errinfo_summary(ddc_excp) );
+     errinfo_free(ddc_excp);
   }
   else {
      changed_feature = p_nontable_response->sl;

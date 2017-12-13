@@ -217,7 +217,7 @@ bool loadvcp_by_file(const char * fn, Display_Handle * dh) {
    bool verbose = (output_level >= DDCA_OL_VERBOSE);
    bool ok = false;
    Public_Status_Code psc = 0;
-   Ddc_Error * ddc_excp = NULL;
+   Error_Info * ddc_excp = NULL;
 
    Dumpload_Data * pdata = read_vcp_file(fn);
    if (!pdata) {
@@ -235,7 +235,7 @@ bool loadvcp_by_file(const char * fn, Display_Handle * dh) {
       ddc_excp = loadvcp_by_dumpload_data(pdata, dh);
       if (ddc_excp) {
          psc = ddc_excp->psc;
-         ddc_error_free(ddc_excp);
+         errinfo_free(ddc_excp);
       }
       free_dumpload_data(pdata);
       ok = (psc == 0);

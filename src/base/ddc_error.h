@@ -1,4 +1,4 @@
-/* ddc_error.h
+/* error_info.h
  *
  * <copyright>
  * Copyright (C) 2017 Sanford Rockowitz <rockowitz@minsoft.com>
@@ -25,8 +25,8 @@
  *  Struct for reporting errors that collects causes
  */
 
-#ifndef DDC_ERROR_H_
-#define DDC_ERROR_H_
+#ifndef ERROR_INFO_H_
+#define ERROR_INFO_H_
 
 
 #include <glib-2.0/glib.h>
@@ -37,75 +37,75 @@
 #include "base/status_code_mgt.h"
 
 
-#define DDC_ERROR_MARKER "DERM"
+#define ERROR_INFO_MARKER "EINF"
 
 /** Struct for reporting errors, designed for collecting retry failures */
-typedef struct ddc_error_struct {
+typedef struct error_info_struct {
    char               marker[4];     //<:  always DERM
    Public_Status_Code psc;           //<:  status code
    char *             func;          //<:  name of function generating status code
 #ifdef OLD
    int                cause_ct;      //<:  number of causal errors
-   struct ddc_error_struct * causes[MAX_MAX_TRIES];
+   struct error_info_struct * causes[MAX_MAX_TRIES];
 #endif
    // alt:
    GPtrArray * causes_alt;   // GPointerArray of Ddc_Error *
    // alt as linked list
    // problems:  creates confusions of cause hierarchies
    // struct ddc_error_struct * next;
-} Ddc_Error;
+} Error_Info;
 
-void ddc_error_free(
-      Ddc_Error * error);
+void errinfo_free(
+      Error_Info * error);
 
-Ddc_Error * ddc_error_new(
+Error_Info * errinfo_new(
       Public_Status_Code    psc,
       const char *          func);
 
-Ddc_Error * ddc_error_new_with_cause(
+Error_Info * errinfo_new_with_cause(
       Public_Status_Code    psc,
-      Ddc_Error *           cause,
+      Error_Info *           cause,
       const char *          func);
 
-Ddc_Error * ddc_error_new_chained(
-      Ddc_Error *           cause,
+Error_Info * errinfo_new_chained(
+      Error_Info *           cause,
       const char *          func);
 
-Ddc_Error * ddc_error_new_with_causes(
+Error_Info * errinfo_new_with_causes(
       Public_Status_Code    psc,
-      Ddc_Error **          causes,
+      Error_Info **          causes,
       int                   cause_ct,
       const char *          func);
 
-Ddc_Error * ddc_error_new_with_callee_status_codes(
+Error_Info * errinfo_new_with_callee_status_codes(
       Public_Status_Code    status_code,
       Public_Status_Code *  callee_status_codes,
       int                   callee_status_code_ct,
       const char *          callee_func,
       const char *          func);
 
-Ddc_Error * ddc_error_new_retries(
+Error_Info * errinfo_new_retries(
       Public_Status_Code *  status_codes,
       int                   status_code_ct,
       const char *          called_func,
       const char *          func);
 
-void ddc_error_add_cause(
-      Ddc_Error *           erec,
-      Ddc_Error *           cause);
+void errinfo_add_cause(
+      Error_Info *           erec,
+      Error_Info *           cause);
 
-void ddc_error_set_status(
-      Ddc_Error *           erec,
+void errinfo_set_status(
+      Error_Info *           erec,
       Public_Status_Code    psc);
 
-char * ddc_error_causes_string(
-      Ddc_Error *           erec);
+char * errinfo_causes_string(
+      Error_Info *           erec);
 
-void ddc_error_report(
-      Ddc_Error *           erec,
+void errinfo_report(
+      Error_Info *           erec,
       int                   depth);
 
-char * ddc_error_summary(
-      Ddc_Error *           erec);
+char * errinfo_summary(
+      Error_Info *           erec);
 
-#endif /* DDC_ERROR_H_ */
+#endif /* ERROR_INFO_H_ */

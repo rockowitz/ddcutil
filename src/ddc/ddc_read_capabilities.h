@@ -32,7 +32,7 @@
 
 // Get capability string for monitor.
 
-Ddc_Error *
+Error_Info *
 get_capabilities_string(
       Display_Handle * dh,
       char**           pcaps);

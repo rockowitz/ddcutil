@@ -148,7 +148,7 @@ int ddc_get_max_multi_part_write_tries() {
 *
 * @return status code
 */
-Ddc_Error *
+Error_Info *
 try_multi_part_read(
       Display_Handle * dh,
       Byte             request_type,
@@ -165,7 +165,7 @@ try_multi_part_read(
    const int readbuf_size = 6 + MAX_FRAGMENT_SIZE + 1;
 
    Public_Status_Code psc = 0;
-   Ddc_Error * excp = NULL;
+   Error_Info * excp = NULL;
 
    DDC_Packet * request_packet_ptr  = NULL;
    DDC_Packet * response_packet_ptr = NULL;
@@ -196,7 +196,7 @@ try_multi_part_read(
       psc = (excp) ? excp->psc : 0;
       DBGTRC(debug, TRC_NONE,
              "ddc_write_read_with_retry() request_type=0x%02x, request_subtype=0x%02x, returned %s",
-             request_type, request_subtype, ddc_error_summary(excp));
+             request_type, request_subtype, errinfo_summary(excp));
 
       if (excp) {
       // if (psc != 0) {
@@ -220,7 +220,7 @@ try_multi_part_read(
          DBGTRC(debug, TRC_NONE,
                 "display_current_offset %d != cur_offset %d", display_current_offset, cur_offset);
          psc = DDCRC_MULTI_PART_READ_FRAGMENT;
-         excp = ddc_error_new(psc, __func__);
+         excp = errinfo_new(psc, __func__);
          COUNT_STATUS_CODE(psc);
       }
       else {
@@ -247,7 +247,7 @@ try_multi_part_read(
 
    free_ddc_packet(request_packet_ptr);
 
-   DBGTRC(debug, TRACE_GROUP, "Returning %s", ddc_error_summary(excp));
+   DBGTRC(debug, TRACE_GROUP, "Returning %s", errinfo_summary(excp));
    return excp;
 }
 
@@ -265,7 +265,7 @@ try_multi_part_read(
 *  @retval  #Ddc_Error containing status DDCRC_UNSUPPORTED does not support Capabilities Request
 *  @retval  #Ddc_Error containing status DDCRC_TRIES  maximum retries exceeded:
 */
-Ddc_Error *
+Error_Info *
 multi_part_read_with_retry(
       Display_Handle * dh,
       Byte             request_type,
@@ -280,9 +280,9 @@ multi_part_read_with_retry(
           request_type, request_subtype, bool_repr(all_zero_response_ok), max_multi_part_read_tries);
 
    Public_Status_Code rc = -1;   // dummy value for first call of while loop
-   Ddc_Error * ddc_excp = NULL;
+   Error_Info * ddc_excp = NULL;
    // Public_Status_Code try_status_codes[MAX_MAX_TRIES];
-   Ddc_Error *        try_errors[MAX_MAX_TRIES];
+   Error_Info *        try_errors[MAX_MAX_TRIES];
 
    int tryctr = 0;
    bool can_retry = true;
@@ -335,14 +335,14 @@ multi_part_read_with_retry(
       accumulator = NULL;
       if (tryctr >= max_multi_part_read_tries)
          rc = DDCRC_RETRIES;
-      ddc_excp = ddc_error_new_with_causes(rc, try_errors, tryctr, __func__);
+      ddc_excp = errinfo_new_with_causes(rc, try_errors, tryctr, __func__);
 
       if (rc != try_errors[tryctr-1]->psc)
          COUNT_STATUS_CODE(rc);     // new status code, count it
    }
    else {
       for (int ndx = 0; ndx < tryctr; ndx++)
-         ddc_error_free(try_errors[ndx]);
+         errinfo_free(try_errors[ndx]);
    }
 
    // if counts for DDCRC_ALL_TRIES_ZERO?
@@ -361,7 +361,7 @@ multi_part_read_with_retry(
 *
 *   @return status code
 */
-Ddc_Error *
+Error_Info *
 try_multi_part_write(
       Display_Handle * dh,
       Byte             vcp_code,
@@ -375,7 +375,7 @@ try_multi_part_write(
           request_type, request_subtype, value_to_set);
 
    Public_Status_Code psc = 0;
-   Ddc_Error * ddc_excp = NULL;
+   Error_Info * ddc_excp = NULL;
    int MAX_FRAGMENT_SIZE = 32;
    int max_fragment_size = MAX_FRAGMENT_SIZE - 4;    // hack
    // const int writebbuf_size = 6 + MAX_FRAGMENT_SIZE + 1;
@@ -409,7 +409,7 @@ try_multi_part_write(
 
    DBGTRC(force_debug, TRACE_GROUP, "Returning %s", psc_desc(psc));
    if ( psc == DDCRC_RETRIES && (force_debug || IS_TRACING()) )
-      DBGMSG("     Try errors: %s", ddc_error_causes_string(ddc_excp));
+      DBGMSG("     Try errors: %s", errinfo_causes_string(ddc_excp));
    assert( (ddc_excp && psc<0) || (!ddc_excp && psc==0) );
    return ddc_excp;
 }
@@ -422,7 +422,7 @@ try_multi_part_write(
  * @param value_to_set bytes of Table feature
  * @return  NULL if success, pointer to #Ddc_Error if failure
  */
-Ddc_Error *
+Error_Info *
 multi_part_write_with_retry(
      Display_Handle * dh,
      Byte             vcp_code,
@@ -435,9 +435,9 @@ multi_part_write_with_retry(
                               dh_repr_t(dh), vcp_code);
 
    Public_Status_Code rc = -1;   // dummy value for first call of while loop
-   Ddc_Error * ddc_excp = NULL;
+   Error_Info * ddc_excp = NULL;
 
-   Ddc_Error *         try_errors[MAX_MAX_TRIES];
+   Error_Info *         try_errors[MAX_MAX_TRIES];
 
    int tryctr = 0;
    bool can_retry = true;
@@ -464,16 +464,16 @@ multi_part_write_with_retry(
    if (rc < 0) {
       if (can_retry)
          rc = DDCRC_RETRIES;
-      ddc_excp= ddc_error_new_with_causes(rc, try_errors, tryctr, __func__);
+      ddc_excp= errinfo_new_with_causes(rc, try_errors, tryctr, __func__);
 
       if (rc != try_errors[tryctr-1]->psc)
          COUNT_STATUS_CODE(rc);     // new status code, count it
    }
    else {
       for (int ndx=0; ndx<tryctr; ndx++)
-         ddc_error_free(try_errors[ndx]);
+         errinfo_free(try_errors[ndx]);
    }
 
-   DBGTRC(debug, TRACE_GROUP, "Done.  Returning: %s", ddc_error_summary(ddc_excp));
+   DBGTRC(debug, TRACE_GROUP, "Done.  Returning: %s", errinfo_summary(ddc_excp));
    return ddc_excp;
 }

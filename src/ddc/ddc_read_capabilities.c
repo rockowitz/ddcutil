@@ -72,13 +72,13 @@
  * Returns:
  *   status code
  */
-static Ddc_Error *
+static Error_Info *
 get_capabilities_buffer(
       Display_Handle * dh,
       Buffer**         ppCapabilitiesBuffer)
 {
    Public_Status_Code psc;
-   Ddc_Error * ddc_excp = NULL;
+   Error_Info * ddc_excp = NULL;
 
    ddc_excp = multi_part_read_with_retry(
                dh,
@@ -122,7 +122,7 @@ get_capabilities_buffer(
  * The returned pointer points to a string that is part of the
  * display handle.  It should NOT be freed by the caller.
  */
-Ddc_Error *
+Error_Info *
 get_capabilities_string(
       Display_Handle * dh,
       char**           pcaps)
@@ -131,7 +131,7 @@ get_capabilities_string(
    assert(dh->dref);
 
    Public_Status_Code psc = 0;
-   Ddc_Error * ddc_excp = NULL;
+   Error_Info * ddc_excp = NULL;
    if (!dh->dref->capabilities_string) {
       if (dh->dref->io_mode == DDCA_IO_USB) {
 #ifdef USE_USB
@@ -156,12 +156,12 @@ get_capabilities_string(
 }
 
 
-Ddc_Error *
+Error_Info *
 get_capabilities_string_by_dref(Display_Ref * dref, char **pcaps) {
    assert(dref);
 
    Public_Status_Code psc = 0;
-   Ddc_Error * ddc_excp = NULL;
+   Error_Info * ddc_excp = NULL;
    if (!dref->capabilities_string) {
       Display_Handle * dh = NULL;
       psc = ddc_open_display(dref, CALLOPT_NONE, &dh);
@@ -170,7 +170,7 @@ get_capabilities_string_by_dref(Display_Ref * dref, char **pcaps) {
          ddc_close_display(dh);
       }
       else
-         ddc_excp = ddc_error_new(psc, __func__);
+         ddc_excp = errinfo_new(psc, __func__);
    }
    *pcaps = dref->capabilities_string;
    return ddc_excp;

@@ -110,7 +110,7 @@ bool parse_vcp_value(char * string_value, long* parsed_value) {
  *   from put_vcp_by_display_ref()
  */
 // TODO: consider moving value parsing to command parser
-Ddc_Error *
+Error_Info *
 app_set_vcp_value(
       Display_Handle * dh,
       char *           feature,
@@ -121,7 +121,7 @@ app_set_vcp_value(
    DBGMSF(debug,"Starting");
 
    Public_Status_Code         psc = 0;
-   Ddc_Error *                ddc_excp = NULL;
+   Error_Info *                ddc_excp = NULL;
    long                       longtemp;
    Byte                       hexid;
    VCP_Feature_Table_Entry *  entry = NULL;
@@ -199,7 +199,7 @@ app_set_vcp_value(
          // Is this proper error message?
          f0printf(FOUT, "Setting value failed for feature %02x. rc=%s\n", entry->code, psc_desc(psc));
          if (psc == DDCRC_RETRIES)
-            f0printf(FOUT, "    Try errors: %s\n", ddc_error_causes_string(ddc_excp));
+            f0printf(FOUT, "    Try errors: %s\n", errinfo_causes_string(ddc_excp));
       }
    }
 

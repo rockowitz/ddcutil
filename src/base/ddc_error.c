@@ -50,7 +50,7 @@
 /** Validates a pointer to a #Ddc_Error, using asserts */
 #define VALID_DDC_ERROR_PTR(ptr) \
    assert(ptr); \
-   assert(memcmp(ptr->marker, DDC_ERROR_MARKER, 4) == 0);
+   assert(memcmp(ptr->marker, ERROR_INFO_MARKER, 4) == 0);
 
 
 /** Releases a #Ddc_Error instance, including
@@ -59,17 +59,17 @@
  *  \param erec pointer to #Ddc_Error instance,
  *              do nothing if NULL
  */
-void ddc_error_free(Ddc_Error * erec){
+void errinfo_free(Error_Info * erec){
    if (erec) {
       VALID_DDC_ERROR_PTR(erec);
 #ifdef OLD
       for (int ndx = 0; ndx < erec->cause_ct; ndx++) {
-         ddc_error_free(erec->causes[ndx]);
+         errinfo_free(erec->causes[ndx]);
       }
 #endif
       if (erec->causes_alt) {
          for (int ndx = 0; ndx < erec->causes_alt->len; ndx++) {
-            ddc_error_free( g_ptr_array_index(erec->causes_alt, ndx) );
+            errinfo_free( g_ptr_array_index(erec->causes_alt, ndx) );
          }
       }
       free(erec->func);
@@ -81,13 +81,13 @@ void ddc_error_free(Ddc_Error * erec){
 // signature satisfying GDestroyNotify()
 
 static void ddc_error_free2(void * erec) {
-   Ddc_Error* erec2 = (Ddc_Error *) erec;
+   Error_Info* erec2 = (Error_Info *) erec;
    VALID_DDC_ERROR_PTR(erec2);
-   ddc_error_free(erec2);
+   errinfo_free(erec2);
 }
 
 
-void ddc_error_add_cause(Ddc_Error * parent, Ddc_Error * cause) {
+void errinfo_add_cause(Error_Info * parent, Error_Info * cause) {
    VALID_DDC_ERROR_PTR(parent);
    VALID_DDC_ERROR_PTR(cause);
 
@@ -104,7 +104,7 @@ void ddc_error_add_cause(Ddc_Error * parent, Ddc_Error * cause) {
 }
 
 
-void ddc_error_set_status(Ddc_Error * erec, Public_Status_Code psc) {
+void errinfo_set_status(Error_Info * erec, Public_Status_Code psc) {
    VALID_DDC_ERROR_PTR(erec);
    erec->psc = psc;
 }
@@ -117,9 +117,9 @@ void ddc_error_set_status(Ddc_Error * erec, Public_Status_Code psc) {
  *  \param  func name of function generating status code
  *  \return pointer to new instance
  */
-Ddc_Error *  ddc_error_new(Public_Status_Code psc, const char * func) {
-   Ddc_Error * erec = calloc(1, sizeof(Ddc_Error));
-   memcpy(erec->marker, DDC_ERROR_MARKER, 4);
+Error_Info *  errinfo_new(Public_Status_Code psc, const char * func) {
+   Error_Info * erec = calloc(1, sizeof(Error_Info));
+   memcpy(erec->marker, ERROR_INFO_MARKER, 4);
    erec->psc = psc;
    erec->func = strdup(func);   // strdup to avoid constness warning, must free
    return erec;
@@ -134,14 +134,14 @@ Ddc_Error *  ddc_error_new(Public_Status_Code psc, const char * func) {
  *  \param  func  name of function creating new instance
  *  \return pointer to new instance
  */
-Ddc_Error * ddc_error_new_with_cause(
+Error_Info * errinfo_new_with_cause(
       Public_Status_Code psc,
-      Ddc_Error *        cause,
+      Error_Info *        cause,
       const char *       func)
 {
    VALID_DDC_ERROR_PTR(cause);
-   Ddc_Error * erec = ddc_error_new(psc, func);
-   ddc_error_add_cause(erec, cause);
+   Error_Info * erec = errinfo_new(psc, func);
+   errinfo_add_cause(erec, cause);
    return erec;
 }
 
@@ -154,12 +154,12 @@ Ddc_Error * ddc_error_new_with_cause(
  *  \param  func  name of function creating new instance
  *  \return pointer to new instance
  */
-Ddc_Error * ddc_error_new_chained(
-      Ddc_Error * cause,
+Error_Info * errinfo_new_chained(
+      Error_Info * cause,
       const char * func)
 {
    VALID_DDC_ERROR_PTR(cause);
-   Ddc_Error * erec = ddc_error_new_with_cause(cause->psc, cause, func);
+   Error_Info * erec = errinfo_new_with_cause(cause->psc, cause, func);
    return erec;
 }
 
@@ -173,15 +173,15 @@ Ddc_Error * ddc_error_new_chained(
  *  \param  func            name of function creating the new #Ddc_Error
  *  \return pointer to new instance
  */
-Ddc_Error * ddc_error_new_with_causes(
+Error_Info * errinfo_new_with_causes(
       Public_Status_Code    psc,
-      Ddc_Error **          causes,
+      Error_Info **          causes,
       int                   cause_ct,
       const char *          func)
 {
-   Ddc_Error * result = ddc_error_new(psc, func);
+   Error_Info * result = errinfo_new(psc, func);
    for (int ndx = 0; ndx < cause_ct; ndx++) {
-      ddc_error_add_cause(result, causes[ndx]);
+      errinfo_add_cause(result, causes[ndx]);
    }
    return result;
 }
@@ -202,17 +202,17 @@ Ddc_Error * ddc_error_new_with_causes(
  *  \param  func                   name of function generating new #Ddc_Error
  *  \return pointer to new instance
  */
-Ddc_Error * ddc_error_new_with_callee_status_codes(
+Error_Info * errinfo_new_with_callee_status_codes(
       Public_Status_Code    status_code,
       Public_Status_Code *  callee_status_codes,
       int                   callee_status_code_ct,
       const char *          callee_func,
       const char *          func)
 {
-   Ddc_Error * result = ddc_error_new(status_code, func);
+   Error_Info * result = errinfo_new(status_code, func);
    for (int ndx = 0; ndx < callee_status_code_ct; ndx++) {
-      Ddc_Error * cause = ddc_error_new(callee_status_codes[ndx],callee_func);
-      ddc_error_add_cause(result, cause);
+      Error_Info * cause = errinfo_new(callee_status_codes[ndx],callee_func);
+      errinfo_add_cause(result, cause);
    }
    return result;
 }
@@ -228,16 +228,16 @@ Ddc_Error * ddc_error_new_with_callee_status_codes(
  *  \param  func            name of function generating new #Ddc_Error
  *  \return pointer to new instance
  */
-Ddc_Error * ddc_error_new_retries(
+Error_Info * errinfo_new_retries(
       Public_Status_Code *  status_codes,
       int                   status_code_ct,
       const char *          called_func,
       const char *          func)
 {
-   Ddc_Error * result = ddc_error_new(DDCRC_RETRIES, func);
+   Error_Info * result = errinfo_new(DDCRC_RETRIES, func);
    for (int ndx = 0; ndx < status_code_ct; ndx++) {
-      Ddc_Error * cause = ddc_error_new(status_codes[ndx],called_func);
-      ddc_error_add_cause(result, cause);
+      Error_Info * cause = errinfo_new(status_codes[ndx],called_func);
+      errinfo_add_cause(result, cause);
    }
    return result;
 }
@@ -251,14 +251,14 @@ Ddc_Error * ddc_error_new_retries(
  *  \param  erec  pointer to #Ddc_Error instance
  *  \return comma separated string, caller is responsible for freeing
  */
-char * ddc_error_causes_string(Ddc_Error * erec) {
+char * errinfo_causes_string(Error_Info * erec) {
    bool debug = false;
    // DBGMSF(debug, "history=%p, history->ct=%d", history, history->ct);
 
    GString * gs = g_string_new(NULL);
 
    if (erec) {
-      assert(memcmp(erec->marker, DDC_ERROR_MARKER, 4) == 0);
+      assert(memcmp(erec->marker, ERROR_INFO_MARKER, 4) == 0);
 
       if (erec->causes_alt) {
 
@@ -271,7 +271,7 @@ char * ddc_error_causes_string(Ddc_Error * erec) {
          Public_Status_Code this_psc = erec->causes[ndx]->psc;
 #endif
       while (ndx < cause_ct) {
-         Ddc_Error * this_cause = g_ptr_array_index( erec->causes_alt, ndx);
+         Error_Info * this_cause = g_ptr_array_index( erec->causes_alt, ndx);
          Public_Status_Code this_psc = this_cause->psc;
 
          int cur_ct = 1;
@@ -285,7 +285,7 @@ char * ddc_error_causes_string(Ddc_Error * erec) {
 #endif
 
          for (int i = ndx+1; i < cause_ct; i++) {
-            Ddc_Error * next_cause = g_ptr_array_index( erec->causes_alt, i);
+            Error_Info * next_cause = g_ptr_array_index( erec->causes_alt, i);
             if (next_cause->psc != this_psc)
                break;
             cur_ct++;
@@ -313,7 +313,7 @@ char * ddc_error_causes_string(Ddc_Error * erec) {
 
 
 
-void ddc_error_report(Ddc_Error * erec, int depth) {
+void errinfo_report(Error_Info * erec, int depth) {
    int d1 = depth+1;
 
    // rpt_vstring(depth, "Status code: %s", psc_desc(erec->psc));
@@ -324,7 +324,7 @@ void ddc_error_report(Ddc_Error * erec, int depth) {
    if (erec->cause_ct > 0) {
       rpt_vstring(depth, "Caused by: ");
       for (int ndx = 0; ndx < erec->cause_ct; ndx++) {
-         ddc_error_report(erec->causes[ndx], d1);
+         errinfo_report(erec->causes[ndx], d1);
       }
    }
 #endif
@@ -332,7 +332,7 @@ void ddc_error_report(Ddc_Error * erec, int depth) {
    if (erec->causes_alt && erec->causes_alt->len > 0) {
       rpt_vstring(depth, "Caused by: ");
       for (int ndx = 0; ndx < erec->causes_alt->len; ndx++) {
-         ddc_error_report( g_ptr_array_index(erec->causes_alt,ndx), d1);
+         errinfo_report( g_ptr_array_index(erec->causes_alt,ndx), d1);
       }
    }
 
@@ -346,7 +346,7 @@ void ddc_error_report(Ddc_Error * erec, int depth) {
  *  \param erec  pointer to #Ddc_Error instance
  *  \return string summmay of error
  */
-char * ddc_error_summary(Ddc_Error * erec) {
+char * errinfo_summary(Error_Info * erec) {
    if (!erec)
       return "NULL";
    VALID_DDC_ERROR_PTR(erec);
@@ -367,7 +367,7 @@ char * ddc_error_summary(Ddc_Error * erec) {
       buf1 = gaux_asprintf("Ddc_Error[%s in %s]", desc, erec->func);
    }
    else {
-      char * causes   = ddc_error_causes_string(erec);
+      char * causes   = errinfo_causes_string(erec);
       buf1 = gaux_asprintf("Ddc_Error[%s in %s, causes: %s]", desc, erec->func, causes);
       free(causes);
    }

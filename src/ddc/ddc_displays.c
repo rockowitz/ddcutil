@@ -270,11 +270,11 @@ bool initial_checks_by_dh(Display_Handle * dh) {
    if (!(dh->dref->flags & DREF_DDC_COMMUNICATION_CHECKED)) {
 
       Public_Status_Code psc = 0;
-      Ddc_Error * ddc_excp = get_vcp_value(dh, 0x00, DDCA_NON_TABLE_VCP_VALUE, &pvalrec);
+      Error_Info * ddc_excp = get_vcp_value(dh, 0x00, DDCA_NON_TABLE_VCP_VALUE, &pvalrec);
       psc = (ddc_excp) ? ddc_excp->psc : 0;
       DBGMSF(debug, "get_vcp_value() for feature 0x00 returned: %s", psc_desc(psc));
       if (psc == DDCRC_RETRIES && debug)
-         DBGMSG("    Try errors: %s", ddc_error_causes_string(ddc_excp));
+         DBGMSG("    Try errors: %s", errinfo_causes_string(ddc_excp));
 
       if (psc == DDCRC_NULL_RESPONSE ||
           psc == DDCRC_ALL_RESPONSES_NULL ||
@@ -372,7 +372,7 @@ char * get_firmware_version_string(Display_Handle * dh) {
    DDCA_Single_Vcp_Value * valrec;
 
    Public_Status_Code psc = 0;
-   Ddc_Error * ddc_excp = get_vcp_value(
+   Error_Info * ddc_excp = get_vcp_value(
                                dh,
                                0xc9,                     // firmware detection
                                DDCA_NON_TABLE_VCP_VALUE,
@@ -410,7 +410,7 @@ char * get_controller_mfg_string(Display_Handle * dh) {
    DDCA_Single_Vcp_Value *   valrec;
 
    Public_Status_Code psc = 0;
-   Ddc_Error * ddc_excp = get_vcp_value(dh, 0xc8, DDCA_NON_TABLE_VCP_VALUE, &valrec);
+   Error_Info * ddc_excp = get_vcp_value(dh, 0xc8, DDCA_NON_TABLE_VCP_VALUE, &valrec);
    psc = (ddc_excp) ? ddc_excp->psc : 0;
 
    if (psc == 0) {
@@ -429,7 +429,7 @@ char * get_controller_mfg_string(Display_Handle * dh) {
    else {
       DBGMSF(debug, "get_nontable_vcp_value(0xc8) returned %s", psc_desc(psc));
       if (debug)
-         DBGMSG("    Try errors: %s", ddc_error_causes_string(ddc_excp));
+         DBGMSG("    Try errors: %s", errinfo_causes_string(ddc_excp));
       mfg_name = "DDC communication failed";
     }
    return mfg_name;

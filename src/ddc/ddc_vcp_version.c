@@ -102,11 +102,11 @@ DDCA_MCCS_Version_Spec get_vcp_version_by_display_handle(Display_Handle * dh) {
          if (olev == DDCA_OL_VERBOSE)
             set_output_level(DDCA_OL_NORMAL);
          Public_Status_Code psc =  0;
-         Ddc_Error * ddc_excp = get_vcp_value(dh, 0xdf, DDCA_NON_TABLE_VCP_VALUE, &pvalrec);
+         Error_Info * ddc_excp = get_vcp_value(dh, 0xdf, DDCA_NON_TABLE_VCP_VALUE, &pvalrec);
          psc = (ddc_excp) ? ddc_excp->psc : 0;
          DBGMSF(debug, "get_vcp_value() returned %s", psc_desc(psc));
          if (debug && psc == DDCRC_RETRIES)
-            DBGMSG("    Try errors: %s", ddc_error_causes_string(ddc_excp));
+            DBGMSG("    Try errors: %s", errinfo_causes_string(ddc_excp));
          if (olev == DDCA_OL_VERBOSE)
             set_output_level(olev);
 

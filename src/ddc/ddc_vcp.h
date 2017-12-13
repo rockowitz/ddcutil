@@ -43,34 +43,34 @@ void set_verify_setvcp(bool onoff);
 bool get_verify_setvcp();
 
 
-Ddc_Error *
+Error_Info *
 save_current_settings(
       Display_Handle *          dh);
 
-Ddc_Error *
+Error_Info *
 set_nontable_vcp_value(
       Display_Handle *          dh,
       Byte                      feature_code,
       int                       new_value);
 
-Ddc_Error *
+Error_Info *
 set_vcp_value(
       Display_Handle *          dh,
       DDCA_Single_Vcp_Value *   vrec);
 
-Ddc_Error *
+Error_Info *
 get_table_vcp_value(
       Display_Handle *          dh,
       Byte                      feature_code,
       Buffer**                  pp_table_bytes);
 
-Ddc_Error *
+Error_Info *
 get_nontable_vcp_value(
       Display_Handle *          dh,
       Byte                      feature_code,
       Parsed_Nontable_Vcp_Response** pp_parsed_response);
 
-Ddc_Error *
+Error_Info *
 get_vcp_value(
       Display_Handle *          dh,
       Byte                      feature_code,
