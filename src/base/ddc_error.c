@@ -62,8 +62,15 @@
 void ddc_error_free(Ddc_Error * erec){
    if (erec) {
       VALID_DDC_ERROR_PTR(erec);
+#ifdef OLD
       for (int ndx = 0; ndx < erec->cause_ct; ndx++) {
          ddc_error_free(erec->causes[ndx]);
+      }
+#endif
+      if (erec->causes_alt) {
+         for (int ndx = 0; ndx < erec->causes_alt->len; ndx++) {
+            ddc_error_free( g_ptr_array_index(erec->causes_alt, ndx) );
+         }
       }
       free(erec->func);
       erec->marker[3] = 'x';
@@ -71,13 +78,31 @@ void ddc_error_free(Ddc_Error * erec){
    }
 }
 
+// signature satisfying GDestroyNotify()
+
+static void ddc_error_free2(void * erec) {
+   Ddc_Error* erec2 = (Ddc_Error *) erec;
+   VALID_DDC_ERROR_PTR(erec2);
+   ddc_error_free(erec2);
+}
+
+
 void ddc_error_add_cause(Ddc_Error * parent, Ddc_Error * cause) {
    VALID_DDC_ERROR_PTR(parent);
    VALID_DDC_ERROR_PTR(cause);
 
+#ifdef OLD
    assert(parent->cause_ct < MAX_MAX_TRIES);
    parent->causes[parent->cause_ct++] = cause;
+#endif
+
+   if (!parent->causes_alt) {
+      parent->causes_alt = g_ptr_array_new_with_free_func(ddc_error_free2);
+      // parent->causes_alt = g_ptr_array_new();   // *** TRANSITIONAL ***
+   }
+   g_ptr_array_add(parent->causes_alt, cause);
 }
+
 
 void ddc_error_set_status(Ddc_Error * erec, Public_Status_Code psc) {
    VALID_DDC_ERROR_PTR(erec);
@@ -116,8 +141,7 @@ Ddc_Error * ddc_error_new_with_cause(
 {
    VALID_DDC_ERROR_PTR(cause);
    Ddc_Error * erec = ddc_error_new(psc, func);
-   erec->causes[0] = cause;
-   erec->cause_ct  = 1;
+   ddc_error_add_cause(erec, cause);
    return erec;
 }
 
@@ -236,17 +260,37 @@ char * ddc_error_causes_string(Ddc_Error * erec) {
    if (erec) {
       assert(memcmp(erec->marker, DDC_ERROR_MARKER, 4) == 0);
 
+      if (erec->causes_alt) {
+
       bool first = true;
 
       int ndx = 0;
+      int cause_ct = erec->causes_alt->len;
+#ifdef OLD
       while (ndx < erec->cause_ct) {
          Public_Status_Code this_psc = erec->causes[ndx]->psc;
+#endif
+      while (ndx < cause_ct) {
+         Ddc_Error * this_cause = g_ptr_array_index( erec->causes_alt, ndx);
+         Public_Status_Code this_psc = this_cause->psc;
+
          int cur_ct = 1;
+
+#ifdef OLD
          for (int i = ndx+1; i < erec->cause_ct; i++) {
             if (erec->causes[i]->psc != this_psc)
                break;
             cur_ct++;
          }
+#endif
+
+         for (int i = ndx+1; i < cause_ct; i++) {
+            Ddc_Error * next_cause = g_ptr_array_index( erec->causes_alt, i);
+            if (next_cause->psc != this_psc)
+               break;
+            cur_ct++;
+         }
+
          if (first)
             first = false;
          else
@@ -257,7 +301,7 @@ char * ddc_error_causes_string(Ddc_Error * erec) {
             g_string_append_printf(gs, "(x%d)", cur_ct);
          ndx += cur_ct;
       }
-
+      }
    }
 
    char * result = gs->str;
@@ -269,8 +313,6 @@ char * ddc_error_causes_string(Ddc_Error * erec) {
 
 
 
-
-
 void ddc_error_report(Ddc_Error * erec, int depth) {
    int d1 = depth+1;
 
@@ -278,12 +320,22 @@ void ddc_error_report(Ddc_Error * erec, int depth) {
    // rpt_vstring(depth, "Location: %s", (erec->func) ? erec->func : "not set");
    rpt_vstring(depth, "Exception in function %s: status=%s",
          (erec->func) ? erec->func : "not set", psc_desc(erec->psc) );
+#ifdef OLD
    if (erec->cause_ct > 0) {
       rpt_vstring(depth, "Caused by: ");
       for (int ndx = 0; ndx < erec->cause_ct; ndx++) {
          ddc_error_report(erec->causes[ndx], d1);
       }
    }
+#endif
+
+   if (erec->causes_alt && erec->causes_alt->len > 0) {
+      rpt_vstring(depth, "Caused by: ");
+      for (int ndx = 0; ndx < erec->causes_alt->len; ndx++) {
+         ddc_error_report( g_ptr_array_index(erec->causes_alt,ndx), d1);
+      }
+   }
+
 }
 
 
@@ -307,7 +359,11 @@ char * ddc_error_summary(Ddc_Error * erec) {
    char * desc = psc_desc(erec->psc);  // thread safe buffer owned by psc_desc(), do not free()
 
    gchar * buf1 = NULL;
+#ifdef OLD
    if (erec->cause_ct == 0) {
+#endif
+   if (erec->causes_alt || erec->causes_alt->len == 0) {
+
       buf1 = gaux_asprintf("Ddc_Error[%s in %s]", desc, erec->func);
    }
    else {

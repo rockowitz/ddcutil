@@ -29,7 +29,11 @@
 #define DDC_ERROR_H_
 
 
+#include <glib-2.0/glib.h>
+
+#ifdef OLD
 #include "base/parms.h"
+#endif
 #include "base/status_code_mgt.h"
 
 
@@ -40,10 +44,12 @@ typedef struct ddc_error_struct {
    char               marker[4];     //<:  always DERM
    Public_Status_Code psc;           //<:  status code
    char *             func;          //<:  name of function generating status code
+#ifdef OLD
    int                cause_ct;      //<:  number of causal errors
    struct ddc_error_struct * causes[MAX_MAX_TRIES];
+#endif
    // alt:
-   // GPointerArray * causes_alt;   // GPointerArray of Ddc_Error *
+   GPtrArray * causes_alt;   // GPointerArray of Ddc_Error *
    // alt as linked list
    // problems:  creates confusions of cause hierarchies
    // struct ddc_error_struct * next;
