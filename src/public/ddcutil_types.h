@@ -343,7 +343,7 @@ typedef uint8_t DDCA_Vcp_Feature_Code;
  * @remark
  * Flags #DDCA_STD_CONT, #DDCA_COMPLEX_CONT, #DDCA_SIMPLE_NC, #DDCA_COMPLEX_NC,
  * #DDCA_WO_NC, #DDCA_NORMAL_TABLE, #DDCA_WO_TABLE refine  the C/NC/TABLE categorization
- * of the VESA MCCS specification.  Exactly 1 of these bits is st.
+ * of the VESA MCCS specification.  Exactly 1 of these bits is set.
  */
 ///@{
 
