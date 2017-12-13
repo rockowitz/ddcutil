@@ -32,7 +32,6 @@
  */
 
 /** \cond */
-#include "error_info.h"
 
 #include <assert.h>
 #include <glib-2.0/glib.h>
@@ -46,6 +45,8 @@
 #include "core.h"
 #include "ddc_errno.h"
 #include "status_code_mgt.h"
+
+#include "error_info.h"
 
 
 /** Validates a pointer to a #Ddc_Error, using asserts */
@@ -176,7 +177,7 @@ Error_Info * errinfo_new_chained(
  */
 Error_Info * errinfo_new_with_causes(
       Public_Status_Code    psc,
-      Error_Info **          causes,
+      Error_Info **         causes,
       int                   cause_ct,
       const char *          func)
 {

@@ -64,16 +64,16 @@ Error_Info * errinfo_new(
 
 Error_Info * errinfo_new_with_cause(
       Public_Status_Code    psc,
-      Error_Info *           cause,
+      Error_Info *          cause,
       const char *          func);
 
 Error_Info * errinfo_new_chained(
-      Error_Info *           cause,
+      Error_Info *          cause,
       const char *          func);
 
 Error_Info * errinfo_new_with_causes(
       Public_Status_Code    psc,
-      Error_Info **          causes,
+      Error_Info **         causes,
       int                   cause_ct,
       const char *          func);
 
@@ -91,21 +91,21 @@ Error_Info * errinfo_new_retries(
       const char *          func);
 
 void errinfo_add_cause(
-      Error_Info *           erec,
-      Error_Info *           cause);
+      Error_Info *          erec,
+      Error_Info *          cause);
 
 void errinfo_set_status(
-      Error_Info *           erec,
+      Error_Info *          erec,
       Public_Status_Code    psc);
 
 char * errinfo_causes_string(
-      Error_Info *           erec);
+      Error_Info *          erec);
 
 void errinfo_report(
-      Error_Info *           erec,
+      Error_Info *          erec,
       int                   depth);
 
 char * errinfo_summary(
-      Error_Info *           erec);
+      Error_Info *          erec);
 
 #endif /* ERROR_INFO_H_ */
