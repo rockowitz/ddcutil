@@ -219,21 +219,6 @@ Ddc_Error * ddc_error_new_retries(
 }
 
 
-
-
-
-#ifdef TRANSITIONAL
-char * ddc_error_causes_string_old(Ddc_Error * erec) {
-   // return strdup("unimplemented");
-   // *** Temporary hacked up implementation ***
-   // TODO: Reimplement
-   Retry_History * hist = ddc_error_to_new_retry_history(erec);
-   char * result = retry_history_string(hist);
-   free(hist);
-   return result;
-}
-#endif
-
 /** Returns a comma separated string of the status code names in the
  *  causes of the specified #Ddc_Error.
  *  Multiple consecutive identical names are replaced with a
