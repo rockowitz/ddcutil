@@ -48,7 +48,6 @@
 #include "base/ddc_packets.h"
 #include "base/error_info.h"
 
-
 #include "vcp/vcp_feature_values.h"
 
 #include "i2c/i2c_bus_core.h"
