@@ -28,8 +28,9 @@
 #ifndef ERROR_INFO_H_
 #define ERROR_INFO_H_
 
-
+#ifdef ALT
 #include <glib-2.0/glib.h>
+#endif
 
 #ifdef OLD
 #include "base/parms.h"
@@ -40,23 +41,28 @@
 #define ERROR_INFO_MARKER "EINF"
 
 /** Struct for reporting errors, designed for collecting retry failures */
-typedef struct error_info_struct {
+typedef struct error_info {
    char               marker[4];     //<:  always DERM
    Public_Status_Code psc;           //<:  status code
    char *             func;          //<:  name of function generating status code
-#ifdef OLD
+
+   int                max_causes;
    int                cause_ct;      //<:  number of causal errors
-   struct error_info_struct * causes[MAX_MAX_TRIES];
-#endif
+   struct error_info **  causes3;
+
    // alt:
+#ifdef ALT
    GPtrArray * causes_alt;   // GPointerArray of Ddc_Error *
+#endif
    // alt as linked list
    // problems:  creates confusions of cause hierarchies
    // struct ddc_error_struct * next;
 } Error_Info;
 
 void errinfo_free(
-      Error_Info * error);
+      Error_Info *          erec);
+
+
 
 Error_Info * errinfo_new(
       Public_Status_Code    psc,
@@ -67,9 +73,11 @@ Error_Info * errinfo_new_with_cause(
       Error_Info *          cause,
       const char *          func);
 
+#ifdef UNUSED
 Error_Info * errinfo_new_chained(
       Error_Info *          cause,
       const char *          func);
+#endif
 
 Error_Info * errinfo_new_with_causes(
       Public_Status_Code    psc,
@@ -77,6 +85,7 @@ Error_Info * errinfo_new_with_causes(
       int                   cause_ct,
       const char *          func);
 
+#ifdef UNUSED
 Error_Info * errinfo_new_with_callee_status_codes(
       Public_Status_Code    status_code,
       Public_Status_Code *  callee_status_codes,
@@ -89,6 +98,7 @@ Error_Info * errinfo_new_retries(
       int                   status_code_ct,
       const char *          called_func,
       const char *          func);
+#endif
 
 void errinfo_add_cause(
       Error_Info *          erec,

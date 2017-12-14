@@ -33,6 +33,8 @@
 
 /** \cond */
 
+#define _GNU_SOURCE     // for reallocarray() in stdlib.h
+
 #include <assert.h>
 #include <glib-2.0/glib.h>
 #include <stdlib.h>
@@ -49,6 +51,9 @@
 #include "error_info.h"
 
 
+static Error_Info ** empty_list = {NULL};
+static int CAUSE_ALLOC_INCREMENT = 10;
+
 /** Validates a pointer to a #Ddc_Error, using asserts */
 #define VALID_DDC_ERROR_PTR(ptr) \
    assert(ptr); \
@@ -64,22 +69,28 @@
 void errinfo_free(Error_Info * erec){
    if (erec) {
       VALID_DDC_ERROR_PTR(erec);
-#ifdef OLD
-      for (int ndx = 0; ndx < erec->cause_ct; ndx++) {
-         errinfo_free(erec->causes[ndx]);
+
+      if (erec->cause_ct > 0) {
+         for (int ndx = 0; ndx < erec->cause_ct; ndx++) {
+            errinfo_free(erec->causes3[ndx]);
+         }
+         free(erec->causes3);
       }
-#endif
+
+#ifdef ALT
       if (erec->causes_alt) {
          for (int ndx = 0; ndx < erec->causes_alt->len; ndx++) {
             errinfo_free( g_ptr_array_index(erec->causes_alt, ndx) );
          }
       }
+#endif
       free(erec->func);
       erec->marker[3] = 'x';
       free(erec);
    }
 }
 
+#ifdef ALT
 // signature satisfying GDestroyNotify()
 
 static void ddc_error_free2(void * erec) {
@@ -87,22 +98,38 @@ static void ddc_error_free2(void * erec) {
    VALID_DDC_ERROR_PTR(erec2);
    errinfo_free(erec2);
 }
+#endif
 
 
 void errinfo_add_cause(Error_Info * parent, Error_Info * cause) {
    VALID_DDC_ERROR_PTR(parent);
    VALID_DDC_ERROR_PTR(cause);
 
-#ifdef OLD
-   assert(parent->cause_ct < MAX_MAX_TRIES);
-   parent->causes[parent->cause_ct++] = cause;
+   if (parent->cause_ct+1 == parent->max_causes) {
+      int new_max = parent->max_causes + CAUSE_ALLOC_INCREMENT;
+#ifdef ALT
+      Error_Info **  new_causes = calloc(new_max+1, sizeof(Error_Info *) );
+      memcpy(new_causes, parent->causes3, parent->cause_ct * sizeof(Error_Info *) );
+      free(parent->causes3);
+      parent->causes3 = new_causes;
 #endif
+      if (parent->causes3 == empty_list) {
+         parent->causes3 = calloc(new_max+1, sizeof(Error_Info *) );
+      }
+      else {
+         parent->causes3 = reallocarray(parent->causes3, new_max+1, sizeof(Error_Info*) );
+      }
+      parent->max_causes = new_max;
+   }
+   parent->causes3[parent->cause_ct++] = cause;
 
+#ifdef ALT
    if (!parent->causes_alt) {
       parent->causes_alt = g_ptr_array_new_with_free_func(ddc_error_free2);
       // parent->causes_alt = g_ptr_array_new();   // *** TRANSITIONAL ***
    }
    g_ptr_array_add(parent->causes_alt, cause);
+#endif
 }
 
 
@@ -123,6 +150,7 @@ Error_Info *  errinfo_new(Public_Status_Code psc, const char * func) {
    Error_Info * erec = calloc(1, sizeof(Error_Info));
    memcpy(erec->marker, ERROR_INFO_MARKER, 4);
    erec->psc = psc;
+   erec->causes3 = empty_list;
    erec->func = strdup(func);   // strdup to avoid constness warning, must free
    return erec;
 }
@@ -138,7 +166,7 @@ Error_Info *  errinfo_new(Public_Status_Code psc, const char * func) {
  */
 Error_Info * errinfo_new_with_cause(
       Public_Status_Code psc,
-      Error_Info *        cause,
+      Error_Info *       cause,
       const char *       func)
 {
    VALID_DDC_ERROR_PTR(cause);
@@ -262,36 +290,38 @@ char * errinfo_causes_string(Error_Info * erec) {
    if (erec) {
       assert(memcmp(erec->marker, ERROR_INFO_MARKER, 4) == 0);
 
+#ifdef ALT
       if (erec->causes_alt) {
-
+#endif
       bool first = true;
 
       int ndx = 0;
+#ifdef ALT
       int cause_ct = erec->causes_alt->len;
-#ifdef OLD
-      while (ndx < erec->cause_ct) {
-         Public_Status_Code this_psc = erec->causes[ndx]->psc;
 #endif
+      while (ndx < erec->cause_ct) {
+         Public_Status_Code this_psc = erec->causes3[ndx]->psc;
+#ifdef ALT
       while (ndx < cause_ct) {
          Error_Info * this_cause = g_ptr_array_index( erec->causes_alt, ndx);
          Public_Status_Code this_psc = this_cause->psc;
-
+#endif
          int cur_ct = 1;
 
-#ifdef OLD
          for (int i = ndx+1; i < erec->cause_ct; i++) {
-            if (erec->causes[i]->psc != this_psc)
+            if (erec->causes3[i]->psc != this_psc)
                break;
             cur_ct++;
          }
-#endif
 
+#ifdef ALT
          for (int i = ndx+1; i < cause_ct; i++) {
             Error_Info * next_cause = g_ptr_array_index( erec->causes_alt, i);
             if (next_cause->psc != this_psc)
                break;
             cur_ct++;
          }
+#endif
 
          if (first)
             first = false;
@@ -303,7 +333,9 @@ char * errinfo_causes_string(Error_Info * erec) {
             g_string_append_printf(gs, "(x%d)", cur_ct);
          ndx += cur_ct;
       }
+#ifdef ALT
       }
+#endif
    }
 
    char * result = gs->str;
@@ -322,23 +354,38 @@ void errinfo_report(Error_Info * erec, int depth) {
    // rpt_vstring(depth, "Location: %s", (erec->func) ? erec->func : "not set");
    rpt_vstring(depth, "Exception in function %s: status=%s",
          (erec->func) ? erec->func : "not set", psc_desc(erec->psc) );
-#ifdef OLD
+
    if (erec->cause_ct > 0) {
       rpt_vstring(depth, "Caused by: ");
       for (int ndx = 0; ndx < erec->cause_ct; ndx++) {
-         errinfo_report(erec->causes[ndx], d1);
+         errinfo_report(erec->causes3[ndx], d1);
       }
    }
-#endif
 
+#ifdef ALT
    if (erec->causes_alt && erec->causes_alt->len > 0) {
       rpt_vstring(depth, "Caused by: ");
       for (int ndx = 0; ndx < erec->causes_alt->len; ndx++) {
          errinfo_report( g_ptr_array_index(erec->causes_alt,ndx), d1);
       }
    }
+#endif
 
 }
+
+
+#ifdef FUTURE
+char * default_status_code_desc(int rc) {
+   static GPrivate  status_code_key     = G_PRIVATE_INIT(g_free);
+
+   const int default_status_code_buffer_size = 20;
+
+   char * buf = get_thread_fixed_buffer(&status_code_key, default_status_code_buffer_size);
+   g_snprintf(buf, default_status_code_buffer_size, "%d",rc);
+
+   return buf;
+}
+#endif
 
 
 /** Returns a string summary of the specified #Ddc_Error.
@@ -361,11 +408,10 @@ char * errinfo_summary(Error_Info * erec) {
    char * desc = psc_desc(erec->psc);  // thread safe buffer owned by psc_desc(), do not free()
 
    gchar * buf1 = NULL;
-#ifdef OLD
    if (erec->cause_ct == 0) {
-#endif
+#ifdef ALT
    if (erec->causes_alt || erec->causes_alt->len == 0) {
-
+#endif
       buf1 = gaux_asprintf("Ddc_Error[%s in %s]", desc, erec->func);
    }
    else {
