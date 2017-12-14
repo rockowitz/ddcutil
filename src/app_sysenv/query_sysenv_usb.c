@@ -57,14 +57,13 @@
 #include "usb_util/libusb_util.h"
 #include "usb_util/usb_hid_common.h"
 
-#include "base/ddc_errno.h"
 #include "base/core.h"
+#include "base/ddc_errno.h"
 // #include "base/linux_errno.h"
 
 #include "usb/usb_displays.h"
 
 #include "query_sysenv_usb.h"
-
 
 
 static bool is_hid_monitor_rdesc(const char * fn) {
