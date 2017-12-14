@@ -29,14 +29,6 @@
 #define ERROR_INFO_H_
 
 #include <stdbool.h>
-#ifdef ALT
-#include <glib-2.0/glib.h>
-#endif
-
-#ifdef OLD
-#include "base/parms.h"
-#endif
-// #include "base/status_code_mgt.h"
 
 #define ERRINFO_STATUS(_erec)  ( (_erec) ? _erec->status_code : 0 )
 
@@ -51,23 +43,18 @@ typedef struct error_info {
    int                cause_ct;     ///<  number of causal errors
    struct error_info **  causes;    ///<  pointer to array of pointers to Error_Info
 
-   // alt:
 #ifdef ALT
-   GPtrArray * causes_alt;   // GPointerArray of Ddc_Error *
+   GPtrArray *        causes_alt;   // GPointerArray of Ddc_Error *
 #endif
-   // alt as linked list
-   // problems:  creates confusions of cause hierarchies
-   // struct ddc_error_struct * next;
 } Error_Info;
 
 
 typedef char * (*ErrInfo_Status_Desc)(int code);
 typedef char * (*ErrInfo_Status_Name)(int code);
 
-void init_error_info(
+void errinfo_init(
       ErrInfo_Status_Name  name_func,
-      ErrInfo_Status_Desc  desc_func
-      );
+      ErrInfo_Status_Desc  desc_func);
 
 void errinfo_free(
       Error_Info *   erec);
@@ -75,9 +62,10 @@ void errinfo_free(
 #define ERRINFO_FREE_WITH_REPORT(_erec, _report) \
    errinfo_free_with_report(_erec, (_report), __func__)
 
-void errinfo_free_with_report(Error_Info * erec, bool report, const char * func);
-
-
+void errinfo_free_with_report(
+      Error_Info *  erec,
+      bool          report,
+      const char *  func);
 
 Error_Info * errinfo_new(
       int            status_code,
@@ -106,12 +94,6 @@ Error_Info * errinfo_new_with_callee_status_codes(
       int *          callee_status_codes,
       int            callee_status_code_ct,
       const char *   callee_func,
-      const char *   func);
-
-Error_Info * errinfo_new_retries(
-      int *  status_codes,
-      int            status_code_ct,
-      const char *   called_func,
       const char *   func);
 #endif
 

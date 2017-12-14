@@ -39,7 +39,7 @@
  */
 void init_base_services() {
    init_msg_control();
-   init_error_info(psc_name, psc_desc);
+   errinfo_init(psc_name, psc_desc);
    init_sleep_stats();
    init_execution_stats();
    init_status_code_mgt();
