@@ -665,6 +665,9 @@ void show_trace_groups() {
 }
 
 
+
+bool report_freed_exceptions = false;
+
 //
 // Report DDC data errors
 //

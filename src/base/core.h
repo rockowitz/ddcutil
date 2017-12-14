@@ -176,6 +176,8 @@ bool is_tracing(Trace_Group trace_group, const char * filename, const char * fun
 #define IS_TRACING_BY_FUNC_OR_FILE() is_tracing(TRC_NEVER, __FILE__, __func__)
 
 
+extern bool report_freed_exceptions;
+
 // Manage DDC data error reporting
 
 // Controls display of messages regarding I2C error conditions that can be retried.
