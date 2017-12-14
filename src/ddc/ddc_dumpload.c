@@ -47,7 +47,6 @@
 #include "base/core.h"
 #include "base/ddc_errno.h"
 #include "base/ddc_packets.h"
-#include "base/error_info.h"
 #include "base/displays.h"
 #include "base/parms.h"
 #include "base/status_code_mgt.h"

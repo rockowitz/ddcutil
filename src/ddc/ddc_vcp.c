@@ -31,17 +31,16 @@
 
 /** \cond */
 #include <assert.h>
-#include <base/error_info.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-/** \endcond */
 
 #include "util/report_util.h"
 #include "util/utilrpt.h"
+/** \endcond */
 
 #include "base/ddc_errno.h"
 #include "base/ddc_packets.h"

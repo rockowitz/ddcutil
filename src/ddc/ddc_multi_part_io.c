@@ -31,7 +31,6 @@
 
 /** \cond */
 #include <assert.h>
-#include <base/error_info.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

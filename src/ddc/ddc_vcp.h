@@ -30,7 +30,7 @@
 /** \cond */
 #include <stdio.h>
 
-#include "../base/error_info.h"
+#include "util/error_info.h"
 /** \endcond */
 
 #include "base/core.h"
@@ -42,7 +42,6 @@
 
 void set_verify_setvcp(bool onoff);
 bool get_verify_setvcp();
-
 
 Error_Info *
 save_current_settings(

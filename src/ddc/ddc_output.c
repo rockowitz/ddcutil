@@ -33,10 +33,7 @@
 #include <string.h>
 #include <time.h>
 
-#include "../base/error_info.h"
-/** \endcond */
-
-// #include "util/output_sink.h"
+#include "util/error_info.h"
 #include "util/report_util.h"
 
 #include "base/adl_errors.h"

@@ -38,6 +38,7 @@
 #include <time.h>
 #include <unistd.h>
 
+#include "util/error_info.h"
 #include "util/file_util.h"
 #include "util/glib_util.h"
 #include "util/report_util.h"
@@ -46,8 +47,6 @@
 #include "base/core.h"
 #include "base/ddc_errno.h"
 #include "base/ddc_packets.h"
-#include "base/error_info.h"
-
 #include "vcp/vcp_feature_values.h"
 
 #include "i2c/i2c_bus_core.h"

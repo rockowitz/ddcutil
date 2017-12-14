@@ -41,6 +41,7 @@
 #include <unistd.h>
 
 #include "util/data_structures.h"
+#include "util/error_info.h"
 #include "util/failsim.h"
 #include "util/sysfs_util.h"
 /** \endcond */
@@ -51,7 +52,6 @@
 #include "base/ddc_errno.h"
 #include "base/ddc_packets.h"
 #include "base/displays.h"
-#include "base/error_info.h"
 #include "base/linux_errno.h"
 #include "base/parms.h"
 #include "base/sleep.h"

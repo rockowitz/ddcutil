@@ -31,6 +31,7 @@ data_structures.c          \
 debug_util.c               \
 device_id_util.c           \
 edid.c                     \
+error_info.c               \
 file_util.c                \
 glib_util.c                \
 glib_string_util.c         \

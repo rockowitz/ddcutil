@@ -39,12 +39,12 @@
 #include <glib-2.0/glib.h>
 #include <stdlib.h>
 #include <string.h>
-
-#include "util/debug_util.h"
-#include "util/glib_util.h"
-#include "util/report_util.h"
-#include "util/string_util.h"
 /** \endcond */
+
+#include "debug_util.h"
+#include "glib_util.h"
+#include "report_util.h"
+#include "string_util.h"
 
 #include "error_info.h"
 

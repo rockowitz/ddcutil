@@ -30,12 +30,13 @@
 /** \cond */
 #include <assert.h>
 #include <stdbool.h>
+
+#include "util/error_info.h"
 /** \endcond */
 
 #include "base/core.h"
 #include "base/ddc_errno.h"
 #include "base/displays.h"
-#include "base/error_info.h"
 #include "base/status_code_mgt.h"
 
 #ifdef USE_USB

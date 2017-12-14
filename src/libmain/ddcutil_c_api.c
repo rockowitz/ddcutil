@@ -34,6 +34,7 @@
 /** \endcond */
 
 #include "util/data_structures.h"
+#include "util/error_info.h"
 #include "util/report_util.h"
 #include "util/string_util.h"
 #include "util/udev_util.h"
@@ -65,7 +66,6 @@
 #include "ddc/ddc_vcp.h"
 
 #include "public/ddcutil_c_api.h"
-#include "../base/error_info.h"
 
 
 #define WITH_DR(ddca_dref, action) \

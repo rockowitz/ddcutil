@@ -33,18 +33,18 @@
 #include <glib-2.0/glib.h>    // glib-2.0/ to make eclipse happy
 #include <string.h>
 #include <time.h>
-/** \endcond */
 
 #include "util/debug_util.h"
+#include "util/error_info.h"
 #include "util/failsim.h"
 #include "util/report_util.h"
-#include "util/udev_util.h"
 #include "util/udev_usb_util.h"
+#include "util/udev_util.h"
+/** \endcond */
 
 #include "base/adl_errors.h"
 #include "base/ddc_errno.h"
 #include "base/ddc_packets.h"
-#include "base/error_info.h"
 #include "base/linux_errno.h"
 #include "base/parms.h"
 

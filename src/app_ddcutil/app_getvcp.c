@@ -34,10 +34,10 @@
 #include <sys/ioctl.h>
 #include <unistd.h>
 
+#include "util/error_info.h"
 #include "util/string_util.h"
 #include "util/report_util.h"
 /** \endcond */
-
 
 #ifdef USE_USB
 #include "usb_util/hiddev_reports.h"
@@ -46,7 +46,6 @@
 
 #include "base/core.h"
 #include "base/ddc_errno.h"
-#include "base/error_info.h"
 #include "base/sleep.h"
 #include "base/vcp_version.h"
 

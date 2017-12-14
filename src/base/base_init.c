@@ -26,12 +26,12 @@
 
 #include "core.h"
 #include "ddc_packets.h"
-#include "error_info.h"
 #include "execution_stats.h"
 #include "linux_errno.h"
 #include "sleep.h"
 
 #include "base_init.h"
+#include "../util/error_info.h"
 
 
 

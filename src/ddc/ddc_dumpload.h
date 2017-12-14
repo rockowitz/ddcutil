@@ -33,7 +33,7 @@
 /** \cond */
 #include <stdio.h>
 
-#include "../base/error_info.h"
+#include "util/error_info.h"
 /** \endcond */
 
 #include "base/displays.h"
