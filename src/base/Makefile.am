@@ -34,7 +34,7 @@ base_init.c               \
 build_info.c              \
 core.c                    \
 ddc_errno.c               \
-ddc_error.c               \
+error_info.c              \
 ddc_packets.c             \
 displays.c                \
 execution_stats.c         \
