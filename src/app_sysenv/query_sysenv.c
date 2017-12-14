@@ -27,38 +27,12 @@
 
 /** \cond */
 #include <assert.h>
-#include <ctype.h>
-#include <dirent.h>
 #include <errno.h>
-#include <fcntl.h>
-#include <glib-2.0/glib.h>         // glib-2.0/ to avoid bogus eclipse error
-#include <grp.h>
-#include <limits.h>
-// #include <libosinfo-1.0/osinfo/osinfo.h>
-// #include <libudev.h>        // not yet used
-#include <linux/hiddev.h>
-#include <linux/limits.h>
-#include <pwd.h>
-#include <stdarg.h>
-#include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
-#include <sys/ioctl.h>
-#include <sys/stat.h>
-#include <sys/types.h>
 #include <sys/utsname.h>
-#include <time.h>
-#include <unistd.h>
-#ifdef USE_X11
-#include <X11/Xlib.h>
-#include <X11/Xatom.h>
-#include <X11/extensions/Xrandr.h>
-#endif
 
 #include "util/data_structures.h"
-#include "util/device_id_util.h"
 #include "util/edid.h"
-#include "util/file_util.h"
 #include "util/report_util.h"
 #include "util/string_util.h"
 #include "util/subprocess_util.h"
@@ -71,19 +45,11 @@
 #endif
 #include "util/udev_i2c_util.h"
 #include "util/udev_usb_util.h"
-#include "util/udev_util.h"
 /** \endcond */
 
 #include "base/build_info.h"
 #include "base/core.h"
-#include "base/ddc_errno.h"
 #include "base/linux_errno.h"
-
-#include "i2c/i2c_bus_core.h"
-
-#include "ddc/ddc_packet_io.h"
-
-#include "adl/adl_shim.h"
 
 #include "query_sysenv_access.h"
 #include "query_sysenv_base.h"
@@ -96,7 +62,6 @@
 #include "query_sysenv_xref.h"
 
 #include "query_sysenv.h"
-
 
 
 /** Compile time and runtime checks of endianness.
