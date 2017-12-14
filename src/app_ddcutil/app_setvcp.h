@@ -28,8 +28,8 @@
 #ifndef APP_SETVCP_H_
 #define APP_SETVCP_H_
 
-#include "../base/error_info.h"
 #include "base/displays.h"
+#include "base/error_info.h"
 #include "base/status_code_mgt.h"
 
 Error_Info *

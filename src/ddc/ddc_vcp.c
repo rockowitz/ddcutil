@@ -101,7 +101,7 @@ save_current_settings(
       // dump_packet(request_packet_ptr);
 
       ddc_excp = ddc_write_only_with_retry(dh, request_packet_ptr);
-      psc = (ddc_excp) ? ddc_excp->psc : 0;
+      psc = (ddc_excp) ? ddc_excp->status_code : 0;
 
       if (request_packet_ptr)
          free_ddc_packet(request_packet_ptr);
@@ -153,7 +153,7 @@ set_nontable_vcp_value(
       // dump_packet(request_packet_ptr);
 
       ddc_excp = ddc_write_only_with_retry(dh, request_packet_ptr);
-      psc = (ddc_excp) ? ddc_excp->psc : 0;
+      psc = (ddc_excp) ? ddc_excp->status_code : 0;
 
       if (request_packet_ptr)
          free_ddc_packet(request_packet_ptr);
@@ -202,7 +202,7 @@ set_table_vcp_value(
       Buffer * new_value = buffer_new_with_value(bytes, bytect, __func__);
 
       ddc_excp = multi_part_write_with_retry(dh, feature_code, new_value);
-      psc = (ddc_excp) ? ddc_excp->psc : 0;
+      psc = (ddc_excp) ? ddc_excp->status_code : 0;
 
       buffer_free(new_value, __func__);
    }
@@ -345,12 +345,12 @@ set_vcp_value(
    Error_Info * ddc_excp = NULL;
    if (vrec->value_type == DDCA_NON_TABLE_VCP_VALUE) {
       ddc_excp = set_nontable_vcp_value(dh, vrec->opcode, vrec->val.c.cur_val);
-      psc = (ddc_excp) ? ddc_excp->psc : 0;
+      psc = (ddc_excp) ? ddc_excp->status_code : 0;
    }
    else {
       assert(vrec->value_type == DDCA_TABLE_VCP_VALUE);
       ddc_excp = set_table_vcp_value(dh, vrec->opcode, vrec->val.t.bytes, vrec->val.t.bytect);
-      psc = (ddc_excp) ? ddc_excp->psc : 0;
+      psc = (ddc_excp) ? ddc_excp->status_code : 0;
    }
 
    if (!ddc_excp && verify_setvcp) {
@@ -362,7 +362,7 @@ set_vcp_value(
              vrec->opcode,
              vrec->value_type,
              &newval);
-         psc = (ddc_excp) ? ddc_excp->psc : 0;
+         psc = (ddc_excp) ? ddc_excp->status_code : 0;
          if (ddc_excp) {
             f0printf(fout, "(%s) Read after write failed. get_vcp_value() returned: %s\n",
                            __func__, psc_desc(psc));
@@ -528,7 +528,7 @@ Error_Info * get_table_vcp_value(
             feature_code,
             true,                      // all_zero_response_ok
             &paccumulator);
-   psc = (ddc_excp) ? ddc_excp->psc : 0;
+   psc = (ddc_excp) ? ddc_excp->status_code : 0;
    if (debug || psc != 0) {
       DBGTRC(debug, TRACE_GROUP,
              "perform_ddc_write_read_with_retry() returned %s", psc_desc(psc));
@@ -543,12 +543,8 @@ Error_Info * get_table_vcp_value(
    }
 
    DBGTRC(debug, TRACE_GROUP,
-          "Done. Returning rc=%s, *pp_table_bytes=%p", psc_desc(psc), *pp_table_bytes);
-   // if (psc == DDCRC_RETRIES && retry_history && (debug || IS_TRACING()) )
-   //       DBGMSG("    Try errors: %s", retry_history_string(retry_history));
-   // DBGTRC_RETRY_ERRORS(debug, psc, retry_history);
-   if (ddc_excp)
-      errinfo_report(ddc_excp, 0);
+          "Done. rc=%s, *pp_table_bytes=%p", psc_desc(psc), *pp_table_bytes);
+   DBGTRC(debug, TRACE_GROUP, "Returning: %s", errinfo_summary(ddc_excp));
    return ddc_excp;
 }
 
@@ -622,7 +618,7 @@ get_vcp_value(
                           dh,
                           feature_code,
                           &parsed_nontable_response);
-            psc = (ddc_excp) ? ddc_excp->psc : 0;
+            psc = (ddc_excp) ? ddc_excp->status_code : 0;
             if (!ddc_excp) {
                valrec = create_nontable_vcp_value(
                            feature_code,
@@ -639,7 +635,7 @@ get_vcp_value(
                     dh,
                     feature_code,
                     &buffer);
-            psc = (ddc_excp) ? ddc_excp->psc : 0;
+            psc = ERRINFO_STATUS(ddc_excp);
             if (!ddc_excp) {
                valrec = create_table_vcp_value_by_buffer(feature_code, buffer);
                buffer_free(buffer, __func__);
@@ -651,16 +647,10 @@ get_vcp_value(
 
    *pvalrec = valrec;
 
-   DBGTRC(debug, TRACE_GROUP, "Done. Returning: %s", psc_desc(psc) );
+   DBGTRC(debug, TRACE_GROUP, "Done. psc=%s", psc_desc(psc) );
    if (psc == 0 && debug)
       report_single_vcp_value(valrec,1);
-
-   if (psc == DDCRC_RETRIES && ( debug || IS_TRACING())) {
-      DBGTRC(debug, TRACE_GROUP, "      Try errors: %s", errinfo_causes_string(ddc_excp));
-   }
-
-
-
    assert( (psc == 0 && *pvalrec) || (psc != 0 && !*pvalrec) );
+   DBGTRC(debug, TRACE_GROUP, "Done. Returning: %s", errinfo_summary(ddc_excp));
    return ddc_excp;
 }

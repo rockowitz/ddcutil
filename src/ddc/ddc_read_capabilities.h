@@ -26,8 +26,8 @@
 #ifndef DDC_READ_CAPABILITIES_H_
 #define DDC_READ_CAPABILITIES_H_
 
-#include "../base/error_info.h"
 #include "base/displays.h"
+#include "base/error_info.h"
 #include "base/status_code_mgt.h"
 
 // Get capability string for monitor.

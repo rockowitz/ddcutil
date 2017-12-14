@@ -223,7 +223,7 @@ _ddca_init() {
 
 #ifdef WRONG
 /** Template for callback function registered with ddca_register_abort_func() */
-typedef void (*DDCA_Abort_Func)(DDCA_Status psc);
+typedef void (*DDCA_Abort_Func)(DDCA_Status status_code);
 
 static jmp_buf abort_buf;
 
@@ -244,9 +244,9 @@ void ddca_register_abort_func(DDCA_Abort_Func func) {
    int jmprc = setjmp(abort_buf);
    if (jmprc) {
 
-      Public_Status_Code psc = global_to_public_status_code(jmprc);
+      Public_Status_Code status_code = global_to_public_status_code(jmprc);
       if (abort_func)
-         abort_func(psc);
+         abort_func(status_code);
       fprintf(stderr, "Aborting. Internal status code = %d\n", jmprc);
       exit(EXIT_FAILURE);
    }
@@ -1350,7 +1350,7 @@ ddca_get_nontable_vcp_value(
                 dh,
                 feature_code,
                 &code_info);
-       psc = (ddc_excp) ? ddc_excp->psc : 0;
+       psc = (ddc_excp) ? ddc_excp->status_code : 0;
        errinfo_free(ddc_excp);
        // DBGMSG(" get_nontable_vcp_value() returned %s", gsc_desc(gsc));
        if (psc == 0) {
@@ -1406,7 +1406,7 @@ ddca_get_table_vcp_value(
       {
          Buffer * p_table_bytes = NULL;
          ddc_excp =  get_table_vcp_value(dh, feature_code, &p_table_bytes);
-         psc = (ddc_excp) ? ddc_excp->psc : 0;
+         psc = (ddc_excp) ? ddc_excp->status_code : 0;
          errinfo_free(ddc_excp);
          if (psc == 0) {
             assert(p_table_bytes);  // avoid coverity warning
@@ -1436,7 +1436,7 @@ ddca_get_vcp_value(
          {
                *pvalrec = NULL;
                ddc_excp = get_vcp_value(dh, feature_code, call_type, pvalrec);
-               psc = (ddc_excp) ? ddc_excp->psc : 0;
+               psc = (ddc_excp) ? ddc_excp->status_code : 0;
                errinfo_free(ddc_excp);
          }
    );
@@ -1476,7 +1476,7 @@ ddca_get_formatted_vcp_value(
                    DDCA_Vcp_Value_Type call_type = (flags & DDCA_TABLE) ?  DDCA_TABLE_VCP_VALUE : DDCA_NON_TABLE_VCP_VALUE;
                    DDCA_Single_Vcp_Value * pvalrec;
                    ddc_excp = get_vcp_value(dh, feature_code, call_type, &pvalrec);
-                   psc = (ddc_excp) ? ddc_excp->psc : 0;
+                   psc = (ddc_excp) ? ddc_excp->status_code : 0;
                    errinfo_free(ddc_excp);
                    if (psc == 0) {
                       bool ok =
@@ -1505,7 +1505,7 @@ ddca_set_single_vcp_value(
       Error_Info * ddc_excp = NULL;
       WITH_DH(ddca_dh,  {
             ddc_excp = set_vcp_value(dh, valrec);
-            psc = (ddc_excp) ? ddc_excp->psc : 0;
+            psc = (ddc_excp) ? ddc_excp->status_code : 0;
             errinfo_free(ddc_excp);
          } );
    }
@@ -1520,7 +1520,7 @@ ddca_set_continuous_vcp_value(
 {
 #ifdef OLD
    WITH_DH(ddca_dh,  {
-         psc = set_nontable_vcp_value(dh, feature_code, new_value);
+         status_code = set_nontable_vcp_value(dh, feature_code, new_value);
          // psc = global_to_public_status_code(gsc);
       } );
 #endif
@@ -1567,7 +1567,7 @@ ddca_get_capabilities_string(
       {
          char * p_cap_string = NULL;
          ddc_excp = get_capabilities_string(dh, &p_cap_string);
-         psc = (ddc_excp) ? ddc_excp->psc : 0;
+         psc = (ddc_excp) ? ddc_excp->status_code : 0;
          errinfo_free(ddc_excp);
          if (psc == 0) {
             // make copy to ensure caller does not muck around in ddcutil's
@@ -1722,7 +1722,7 @@ ddca_set_profile_related_values(
       char * profile_values_string)
 {
    Error_Info * ddc_excp = loadvcp_by_string(profile_values_string, NULL);
-   Public_Status_Code psc = (ddc_excp) ? ddc_excp->psc : 0;
+   Public_Status_Code psc = (ddc_excp) ? ddc_excp->status_code : 0;
    errinfo_free(ddc_excp);
    return psc;
 }

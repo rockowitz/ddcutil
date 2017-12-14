@@ -47,6 +47,7 @@
 #include "base/core.h"
 #include "base/ddc_errno.h"
 #include "base/ddc_packets.h"
+#include "base/error_info.h"
 #include "base/displays.h"
 #include "base/parms.h"
 #include "base/status_code_mgt.h"
@@ -55,15 +56,14 @@
 #include "i2c/i2c_bus_core.h"
 
 #include "ddc/ddc_displays.h"
-#include "ddc/ddc_dumpload.h"
-
-#include "../base/error_info.h"
 #include "ddc/ddc_edid.h"
 #include "ddc/ddc_output.h"
 #include "ddc/ddc_packet_io.h"
 #include "ddc/ddc_read_capabilities.h"
 #include "ddc/ddc_vcp.h"
 #include "ddc/ddc_vcp_version.h"
+
+#include "ddc/ddc_dumpload.h"
 
 
 /** Frees a #Dumpload_Data struct.  The underlying Vcp_Value_set is also freed.
@@ -323,7 +323,7 @@ ddc_set_multiple(
       // }
 
       ddc_excp = set_vcp_value(dh, vrec);
-      psc = (ddc_excp) ? ddc_excp->psc : 0;
+      psc = (ddc_excp) ? ddc_excp->status_code : 0;
       if (ddc_excp) {
          f0printf(FERR, "Error setting value for VCP feature code 0x%02x: %s\n",
                          feature_code, psc_desc(psc) );
@@ -421,7 +421,7 @@ loadvcp_by_dumpload_data(
    }
 
    ddc_excp = ddc_set_multiple(dh, pdata->vcp_values);
-   psc = (ddc_excp) ? ddc_excp->psc : 0;
+   psc = (ddc_excp) ? ddc_excp->status_code : 0;
 
    // close the display only if this function opened it
    if (!dh_argument)

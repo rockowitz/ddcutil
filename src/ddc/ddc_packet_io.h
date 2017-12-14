@@ -29,10 +29,10 @@
 
 #include <stdbool.h>
 
-#include "../base/error_info.h"
 #include "base/core.h"
 #include "base/ddc_packets.h"
 #include "base/displays.h"
+#include "base/error_info.h"
 
 
 // bool all_zero(Byte * bytes, int bytec);
@@ -73,7 +73,7 @@ Error_Info * ddc_write_read(
       DDC_Packet **    response_packet_ptr_loc
      );
 
-Error_Info *  ddc_write_read_with_retry(
+Error_Info * ddc_write_read_with_retry(
       Display_Handle * dh,
       DDC_Packet *     request_packet_ptr,
       int              max_read_bytes,

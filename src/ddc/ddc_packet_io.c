@@ -708,7 +708,7 @@ ddc_write_read_with_retry(
                 expected_response_type,
                 expected_subtype,
                 response_packet_ptr_loc);
-      psc = (cur_excp) ? cur_excp->psc : 0;
+      psc = (cur_excp) ? cur_excp->status_code : 0;
       try_errors[tryctr] = cur_excp;
 
       if (psc == 0 && ddcrc_null_response_ct > 0) {
@@ -774,7 +774,13 @@ ddc_write_read_with_retry(
             ddcrc_read_all_zero_ct++;
       }    // rc < 0
    }
-
+   DBGTRC(debug, TRC_NEVER, "After try loop. tryctr=%d, psc=%d, retryable=%s",
+         tryctr, psc, bool_repr(retryable));
+   if (debug) {
+      for (int ndx = 0; ndx < tryctr; ndx++) {
+         DBGMSG("try_errors[%d] = %p", ndx, try_errors[ndx]);
+      }
+   }
 
    // Using new Ddc_Error mechanism
    Error_Info * ddc_excp = NULL;
@@ -792,12 +798,14 @@ ddc_write_read_with_retry(
 
       ddc_excp = errinfo_new_with_causes(psc, try_errors, tryctr, __func__);
 
-      if (psc != try_errors[tryctr-1]->psc)
+      if (psc != try_errors[tryctr-1]->status_code)
          COUNT_STATUS_CODE(psc);     // new status code, count it
    }
    else {
-      for (int ndx = 0; ndx < tryctr; ndx++)
-         errinfo_free(try_errors[ndx]);
+      for (int ndx = 0; ndx < tryctr-1; ndx++) {
+         // errinfo_free(try_errors[ndx]);
+         ERRINFO_FREE_WITH_REPORT(try_errors[ndx], debug || IS_TRACING() || report_freed_exceptions);
+      }
    }
 
    try_data_record_tries(write_read_stats_rec, psc, tryctr);
@@ -921,7 +929,7 @@ ddc_write_only_with_retry(
              tryctr, max_write_only_exchange_tries, psc, retryable );
 
       Error_Info * cur_excp = ddc_write_only(dh, request_packet_ptr);
-      psc = (cur_excp) ? cur_excp->psc : 0;
+      psc = (cur_excp) ? cur_excp->status_code : 0;
       try_errors[tryctr] = cur_excp;
 
       if (psc < 0) {
@@ -962,12 +970,13 @@ ddc_write_only_with_retry(
 
       ddc_excp = errinfo_new_with_causes(psc, try_errors, tryctr, __func__);
 
-      if (psc != try_errors[tryctr-1]->psc)
+      if (psc != try_errors[tryctr-1]->status_code)
          COUNT_STATUS_CODE(psc);     // new status code, count it
    }
    else {
       for (int ndx = 0; ndx < tryctr; ndx++) {
-         errinfo_free(try_errors[ndx]);
+         // errinfo_free(try_errors[ndx]);
+         ERRINFO_FREE_WITH_REPORT(try_errors[ndx], debug || IS_TRACING() || report_freed_exceptions);
       }
    }
 

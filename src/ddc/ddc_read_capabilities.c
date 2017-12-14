@@ -87,7 +87,8 @@ get_capabilities_buffer(
                false,                      // !all_zero_response_ok
                ppCapabilitiesBuffer);
    Buffer * cap_buffer = *ppCapabilitiesBuffer;
-   psc = (ddc_excp) ? ddc_excp->psc: 0;
+   // psc = (ddc_excp) ? ddc_excp->psc: 0;
+   psc = ERRINFO_STATUS(ddc_excp);
    assert(psc <= 0);
    if (psc == 0) {
       // trim trailing blanks and nulls
@@ -144,7 +145,8 @@ get_capabilities_string(
       else {
          Buffer * pcaps_buffer;
          ddc_excp = get_capabilities_buffer(dh, &pcaps_buffer);
-         psc = (ddc_excp) ? ddc_excp->psc : 0;
+         // psc = (ddc_excp) ? ddc_excp->psc : 0;
+         psc = ERRINFO_STATUS(ddc_excp);
          if (psc == 0) {
             dh->dref->capabilities_string = strdup((char *) pcaps_buffer->bytes);
             buffer_free(pcaps_buffer,__func__);

@@ -209,7 +209,7 @@ get_raw_value_for_feature_table_entry(
               feature_code,
               feature_type,
               &valrec);
-      psc = (ddc_excp) ? ddc_excp->psc : 0;
+      psc = ERRINFO_STATUS(ddc_excp);
    }
    assert ( (psc==0 && valrec) || (psc!=0 && !valrec) );
 
@@ -272,8 +272,16 @@ get_raw_value_for_feature_table_entry(
    if (*pvalrec && (debug || IS_TRACING())) {
       dbgrpt_ddca_single_vcp_value(*pvalrec, 1);
    }
-   if (ddc_excp)
+   if (ddc_excp) {
+#ifdef OLD
+      if (debug || IS_TRACING() || report_freed_exceptions) {
+         DBGMSG("Freeing exception:");
+         errinfo_report(ddc_excp, 1);
+      }
       errinfo_free(ddc_excp);
+#endif
+      ERRINFO_FREE_WITH_REPORT(ddc_excp, debug || IS_TRACING() || report_freed_exceptions);
+   }
    return psc;
 }
 

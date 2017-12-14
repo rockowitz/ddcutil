@@ -182,7 +182,7 @@ app_set_vcp_value(
    }
 
    ddc_excp = set_vcp_value(dh, &vrec);
-   psc = (ddc_excp) ? ddc_excp->psc : 0;
+   psc = ERRINFO_STATUS(ddc_excp);
 
    // *** TEMP FOR TESTING ***
    // if (vrec.val.c.cur_val == 25) {

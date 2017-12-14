@@ -44,6 +44,7 @@
 #include "base/adl_errors.h"
 #include "base/ddc_errno.h"
 #include "base/ddc_packets.h"
+#include "base/error_info.h"
 #include "base/linux_errno.h"
 #include "base/parms.h"
 
@@ -271,7 +272,7 @@ bool initial_checks_by_dh(Display_Handle * dh) {
 
       Public_Status_Code psc = 0;
       Error_Info * ddc_excp = get_vcp_value(dh, 0x00, DDCA_NON_TABLE_VCP_VALUE, &pvalrec);
-      psc = (ddc_excp) ? ddc_excp->psc : 0;
+      psc = (ddc_excp) ? ddc_excp->status_code : 0;
       DBGMSF(debug, "get_vcp_value() for feature 0x00 returned: %s", psc_desc(psc));
       if (psc == DDCRC_RETRIES && debug)
          DBGMSG("    Try errors: %s", errinfo_causes_string(ddc_excp));
@@ -377,7 +378,7 @@ char * get_firmware_version_string(Display_Handle * dh) {
                                0xc9,                     // firmware detection
                                DDCA_NON_TABLE_VCP_VALUE,
                                &valrec);
-   psc = (ddc_excp) ? ddc_excp->psc : 0;
+   psc = (ddc_excp) ? ddc_excp->status_code : 0;
    if (psc != 0) {
       strcpy(version, "Unspecified");
       if (psc != DDCRC_REPORTED_UNSUPPORTED && psc != DDCRC_DETERMINED_UNSUPPORTED) {
@@ -411,7 +412,7 @@ char * get_controller_mfg_string(Display_Handle * dh) {
 
    Public_Status_Code psc = 0;
    Error_Info * ddc_excp = get_vcp_value(dh, 0xc8, DDCA_NON_TABLE_VCP_VALUE, &valrec);
-   psc = (ddc_excp) ? ddc_excp->psc : 0;
+   psc = (ddc_excp) ? ddc_excp->status_code : 0;
 
    if (psc == 0) {
       DDCA_Feature_Value_Entry * vals = pxc8_display_controller_type_values;

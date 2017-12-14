@@ -40,7 +40,6 @@
 #include <string.h>
 #include <unistd.h>
 
-#include "../base/error_info.h"
 #include "util/data_structures.h"
 #include "util/failsim.h"
 #include "util/sysfs_util.h"
@@ -52,6 +51,7 @@
 #include "base/ddc_errno.h"
 #include "base/ddc_packets.h"
 #include "base/displays.h"
+#include "base/error_info.h"
 #include "base/linux_errno.h"
 #include "base/parms.h"
 #include "base/sleep.h"
@@ -134,7 +134,7 @@ perform_get_capabilities_by_display_handle(Display_Handle * dh) {
    Parsed_Capabilities * pcap = NULL;
    char * capabilities_string;
    Error_Info * ddc_excp = get_capabilities_string(dh, &capabilities_string);
-   Public_Status_Code psc = (ddc_excp) ? ddc_excp->psc : 0;
+   Public_Status_Code psc =  psc = ERRINFO_STATUS(ddc_excp);
    assert( (ddc_excp && psc!=0) || (!ddc_excp && psc==0) );
 
    if (ddc_excp) {
@@ -152,7 +152,8 @@ perform_get_capabilities_by_display_handle(Display_Handle * dh) {
                 __func__, dh_repr(dh));
          DBGMSG("Unexpected status code: %s", psc_desc(psc));
       }
-      errinfo_free(ddc_excp);
+      // errinfo_free(ddc_excp);
+      ERRINFO_FREE_WITH_REPORT(ddc_excp, debug || report_freed_exceptions);
    }
    else {
       assert(capabilities_string);
@@ -280,7 +281,7 @@ void probe_display_by_dh(Display_Handle * dh)
           0x0b,              // color temperature increment,
           DDCA_NON_TABLE_VCP_VALUE,
           &valrec);
-   psc = (ddc_excp) ? ddc_excp->psc : 0;
+   psc = ERRINFO_STATUS(ddc_excp);
    if (psc == 0) {
       if (debug)
          f0printf(FOUT, "Value returned for feature x0b: %s\n", summarize_single_vcp_value(valrec) );
@@ -291,7 +292,7 @@ void probe_display_by_dh(Display_Handle * dh)
           0x0c,              // color temperature request
           DDCA_NON_TABLE_VCP_VALUE,
           &valrec);
-      psc = (ddc_excp) ? ddc_excp->psc : 0;
+      psc = ERRINFO_STATUS(ddc_excp);
       if (psc == 0) {
          if (debug)
             f0printf(FOUT, "Value returned for feature x0c: %s\n", summarize_single_vcp_value(valrec) );
@@ -308,7 +309,8 @@ void probe_display_by_dh(Display_Handle * dh)
    }
    if (psc != 0) {
       f0printf(FOUT, "Unable to calculate color temperature from VCP features x0B and x0C\n");
-      errinfo_free(ddc_excp);
+      // errinfo_free(ddc_excp);
+      ERRINFO_FREE_WITH_REPORT(ddc_excp, debug || report_freed_exceptions);
    }
    // get VCP 14
    // report color preset
@@ -368,6 +370,7 @@ int main(int argc, char *argv[]) {
    }
    if (parsed_cmd->timestamp_trace)         // timestamps on debug and trace messages?
       dbgtrc_show_time = true;              // extern in core.h
+   report_freed_exceptions = parsed_cmd->report_freed_exceptions;   // extern in core.h
    set_trace_levels(parsed_cmd->trace);
    if (parsed_cmd->traced_functions) {
       for (int ndx = 0; ndx < ntsa_length(parsed_cmd->traced_functions); ndx++)
@@ -729,7 +732,7 @@ int main(int argc, char *argv[]) {
                else {
                   main_rc = EXIT_SUCCESS;
                   int argNdx;
-                  Public_Status_Code rc = 0;
+                  // Public_Status_Code rc = 0;
                   Error_Info * ddc_excp;
                   for (argNdx=0; argNdx < parsed_cmd->argct; argNdx+= 2) {
                      ddc_excp = app_set_vcp_value(
@@ -737,9 +740,10 @@ int main(int argc, char *argv[]) {
                              parsed_cmd->args[argNdx],
                              parsed_cmd->args[argNdx+1],
                              parsed_cmd->force);
-                     rc = (ddc_excp) ? ddc_excp->psc : 0;
-                     if (rc != 0) {
-                        errinfo_free(ddc_excp);
+                     // rc =  ERRINFO_STATUS(ddc_excp);
+                     if (ddc_excp) {
+                        // errinfo_free(ddc_excp);
+                        ERRINFO_FREE_WITH_REPORT(ddc_excp, report_freed_exceptions);
                         main_rc = EXIT_FAILURE;   // ???
                         break;
                      }
@@ -760,11 +764,12 @@ int main(int argc, char *argv[]) {
                   main_rc = EXIT_SUCCESS;
                   Error_Info * ddc_excp = save_current_settings(dh);
                   if (ddc_excp)  {
-                     f0printf(FOUT, "Save current settings failed. rc=%s\n", psc_desc(ddc_excp->psc));
-                     if (ddc_excp->psc == DDCRC_RETRIES)
+                     f0printf(FOUT, "Save current settings failed. rc=%s\n", psc_desc(ddc_excp->status_code));
+                     if (ddc_excp->status_code == DDCRC_RETRIES)
                         f0printf(FOUT, "    Try errors: %s", errinfo_causes_string(ddc_excp) );
                      errinfo_report(ddc_excp, 0);   // ** ALTERNATIVE **/
                      errinfo_free(ddc_excp);
+                     // ERRINFO_FREE_WITH_REPORT(ddc_excp, report_exceptions);
                      main_rc = EXIT_FAILURE;
                   }
                }

@@ -159,7 +159,7 @@ try_multi_part_read(
    bool debug = false;
    DBGTRC(debug, TRACE_GROUP,
           "Starting. request_type=0x%02x, request_subtype=x%02x, all_zero_response_ok=%s, accumulator=%p",
-          request_type, request_subtype, all_zero_response_ok, accumulator);
+          request_type, request_subtype, bool_repr(all_zero_response_ok), accumulator);
 
    const int MAX_FRAGMENT_SIZE = 32;
    const int readbuf_size = 6 + MAX_FRAGMENT_SIZE + 1;
@@ -193,7 +193,7 @@ try_multi_part_read(
            all_zero_response_ok,
            &response_packet_ptr
           );
-      psc = (excp) ? excp->psc : 0;
+      psc = (excp) ? excp->status_code : 0;
       DBGTRC(debug, TRC_NONE,
              "ddc_write_read_with_retry() request_type=0x%02x, request_subtype=0x%02x, returned %s",
              request_type, request_subtype, errinfo_summary(excp));
@@ -300,7 +300,7 @@ multi_part_read_with_retry(
               all_zero_response_ok,
               accumulator);
       try_errors[tryctr] = ddc_excp;
-      rc = (ddc_excp) ? ddc_excp->psc : 0;
+      rc = (ddc_excp) ? ddc_excp->status_code : 0;
 
       if (rc == DDCRC_NULL_RESPONSE) {
          // generally means this, but could conceivably indicate a protocol error.
@@ -329,6 +329,15 @@ multi_part_read_with_retry(
       tryctr++;
    }
    assert( (rc<0 && ddc_excp) || (rc==0 && !ddc_excp) );
+   DBGTRC(debug, TRC_NEVER, "After try loop. tryctr=%d, rc=%d. ddc_excp=%p",
+                            tryctr, rc, ddc_excp);
+
+   if (debug) {
+      for (int ndx = 0; ndx < tryctr; ndx++) {
+         DBGMSG("try_errors[%d] = %p", ndx, try_errors[ndx]);
+      }
+   }
+
 
    if (rc < 0) {
       buffer_free(accumulator, "capabilities buffer, error");
@@ -337,18 +346,21 @@ multi_part_read_with_retry(
          rc = DDCRC_RETRIES;
       ddc_excp = errinfo_new_with_causes(rc, try_errors, tryctr, __func__);
 
-      if (rc != try_errors[tryctr-1]->psc)
+      if (rc != try_errors[tryctr-1]->status_code)
          COUNT_STATUS_CODE(rc);     // new status code, count it
    }
    else {
-      for (int ndx = 0; ndx < tryctr; ndx++)
-         errinfo_free(try_errors[ndx]);
+      for (int ndx = 0; ndx < tryctr-1; ndx++) {
+         // errinfo_free(try_errors[ndx]);
+         ERRINFO_FREE_WITH_REPORT(try_errors[ndx], debug || IS_TRACING() || report_freed_exceptions);
+      }
    }
 
    // if counts for DDCRC_ALL_TRIES_ZERO?
    try_data_record_tries(multi_part_read_stats_rec, rc, tryctr);
 
    *pp_buffer = accumulator;
+   DBGTRC(debug, TRACE_GROUP, "Returning: %s", errinfo_summary(ddc_excp));
    return ddc_excp;
 }
 
@@ -367,10 +379,10 @@ try_multi_part_write(
       Byte             vcp_code,
       Buffer *         value_to_set)
 {
-   bool force_debug = false;
+   bool debug = false;
    Byte request_type = DDC_PACKET_TYPE_TABLE_WRITE_REQUEST;
    Byte request_subtype = vcp_code;
-   DBGTRC(force_debug, TRACE_GROUP,
+   DBGTRC(debug, TRACE_GROUP,
           "Starting. request_type=0x%02x, request_subtype=x%02x, accumulator=%p",
           request_type, request_subtype, value_to_set);
 
@@ -395,7 +407,7 @@ try_multi_part_write(
                    bytect_to_write,
                    __func__);
       ddc_excp = ddc_write_only_with_retry(dh, request_packet_ptr);
-      psc = (ddc_excp) ? ddc_excp->psc : 0;
+      psc = (ddc_excp) ? ddc_excp->status_code : 0;
       free_ddc_packet(request_packet_ptr);
       assert( (!ddc_excp && psc == 0) || (ddc_excp && psc!=0) );
 
@@ -407,9 +419,7 @@ try_multi_part_write(
       }
    }
 
-   DBGTRC(force_debug, TRACE_GROUP, "Returning %s", psc_desc(psc));
-   if ( psc == DDCRC_RETRIES && (force_debug || IS_TRACING()) )
-      DBGMSG("     Try errors: %s", errinfo_causes_string(ddc_excp));
+   DBGTRC(debug, TRACE_GROUP, "Done. Returning: %s", errinfo_summary(ddc_excp));
    assert( (ddc_excp && psc<0) || (!ddc_excp && psc==0) );
    return ddc_excp;
 }
@@ -452,7 +462,7 @@ multi_part_write_with_retry(
               vcp_code,
               value_to_set);
       try_errors[tryctr] = ddc_excp;
-      rc = (ddc_excp) ? ddc_excp->psc : 0;
+      rc = (ddc_excp) ? ddc_excp->status_code : 0;
       assert( (ddc_excp && rc<0) || (!ddc_excp && rc==0) );
 
       // TODO: What rc values set can_retry = false?
@@ -466,12 +476,14 @@ multi_part_write_with_retry(
          rc = DDCRC_RETRIES;
       ddc_excp= errinfo_new_with_causes(rc, try_errors, tryctr, __func__);
 
-      if (rc != try_errors[tryctr-1]->psc)
+      if (rc != try_errors[tryctr-1]->status_code)
          COUNT_STATUS_CODE(rc);     // new status code, count it
    }
    else {
-      for (int ndx=0; ndx<tryctr; ndx++)
-         errinfo_free(try_errors[ndx]);
+      for (int ndx=0; ndx<tryctr; ndx++) {
+         // errinfo_free(try_errors[ndx]);
+         ERRINFO_FREE_WITH_REPORT(try_errors[ndx], debug || IS_TRACING() || report_freed_exceptions);
+      }
    }
 
    DBGTRC(debug, TRACE_GROUP, "Done.  Returning: %s", errinfo_summary(ddc_excp));

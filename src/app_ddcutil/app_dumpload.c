@@ -46,6 +46,8 @@
 #include "base/core.h"
 #include "base/ddc_errno.h"
 #include "base/ddc_packets.h"
+#include "base/error_info.h"
+
 
 #include "vcp/vcp_feature_values.h"
 
@@ -60,7 +62,6 @@
 #include "ddc/ddc_vcp.h"
 
 #include "app_ddcutil/app_dumpload.h"
-#include "../base/error_info.h"
 
 
 // Filename creation
@@ -234,8 +235,9 @@ bool loadvcp_by_file(const char * fn, Display_Handle * dh) {
       }
       ddc_excp = loadvcp_by_dumpload_data(pdata, dh);
       if (ddc_excp) {
-         psc = ddc_excp->psc;
-         errinfo_free(ddc_excp);
+         psc = ddc_excp->status_code;
+         // errinfo_free(ddc_excp);
+         ERRINFO_FREE_WITH_REPORT(ddc_excp, debug || report_freed_exceptions);
       }
       free_dumpload_data(pdata);
       ok = (psc == 0);
