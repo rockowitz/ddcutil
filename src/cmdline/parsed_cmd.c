@@ -45,6 +45,7 @@ Value_Name_Table cmd_flag_table = {
       VNT(CMD_FLAG_SHOW_UNSUPPORTED, "show unsupported VCP features"),
       VNT(CMD_FLAG_ENABLE_FAILSIM,   "enable failure simulation"),
       VNT(CMD_FLAG_VERIFY,           "read VCP features after setting them"),
+      // etc
 };
 #endif
 
@@ -125,6 +126,7 @@ void report_parsed_cmd(Parsed_Cmd * parsed_cmd, int depth) {
    rpt_str("failsim_control_fn", NULL, parsed_cmd->failsim_control_fn, d1);
    rpt_bool("nodetect",          NULL, parsed_cmd->nodetect, d1);
    rpt_bool("async",             NULL, parsed_cmd->async,    d1);
+   rpt_bool("report_freed_exceptions",             NULL, parsed_cmd->report_freed_exceptions,    d1);
 
 #ifdef FUTURE
    char * interpreted_flags = vnt_interpret_flags(parsed_cmd->flags, cmd_flag_table, false, ", ");

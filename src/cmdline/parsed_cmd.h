@@ -58,14 +58,18 @@ typedef enum {
 
 #ifdef FUTURE
 typedef enum {
-   CMD_FLAG_DDCDATA          = 0x01,
-   CMD_FLAG_FORCE            = 0x02,
-   CMD_FLAG_FORCE_SLAVE_ADDR = 0x04,
-   CMD_FLAG_TIMESTAMP_TRACE  = 0x08,
-   CMD_FLAG_SHOW_UNSUPPORTED = 0x10,
-   CMD_FLAG_ENABLE_FAILSIM   = 0x20,
-   CMD_FLAG_VERIFY           = 0x40
+   CMD_FLAG_DDCDATA           = 0x0001,
+   CMD_FLAG_FORCE             = 0x0002,
+   CMD_FLAG_FORCE_SLAVE_ADDR  = 0x0004,
+   CMD_FLAG_TIMESTAMP_TRACE   = 0x0008,
+   CMD_FLAG_SHOW_UNSUPPORTED  = 0x0010,
+   CMD_FLAG_ENABLE_FAILSIM    = 0x0020,
+   CMD_FLAG_VERIFY            = 0x0040,
+   CMD_FLAG_NODETECT          = 0x0080,
+   CMD_FLAG ASYNC             = 0x0100,
+   CMD_FLAG_REPORT_FREED_EXCP = 0x200
 } Parsed_Cmd_Flags;
+
 #endif
 
 
@@ -91,6 +95,7 @@ struct {
    bool                verify_setvcp;
    bool                nodetect;
    bool                async;
+   bool                report_freed_exceptions;
    char *              failsim_control_fn;
    Display_Identifier* pdid;
    Trace_Group         trace;

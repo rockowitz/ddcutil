@@ -188,6 +188,7 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
    gboolean noverify_flag  = false;
    gboolean nodetect_flag  = false;
    gboolean async_flag     = false;
+   gboolean report_freed_excp_flag = false;
 // gboolean myhelp_flag    = false;
 // gboolean myusage_flag   = false;
    char *   mfg_id_work    = NULL;
@@ -248,6 +249,7 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
       {"async",   '\0', 0, G_OPTION_ARG_NONE,     &async_flag,       "Enable asynchronous display detection", NULL},
 
       // debugging
+      {"excp",    '\0', 0, G_OPTION_ARG_NONE,     &report_freed_excp_flag,  "Report freed exceptions", NULL},
       {"trace",   '\0', 0, G_OPTION_ARG_STRING_ARRAY, &trace_classes, "Trace classes",         "trace class name" },
 //    {"trace",   '\0', 0, G_OPTION_ARG_STRING,   &tracework,        "Trace classes",          "comma separated list" },
       {"trcfunc", '\0',0, G_OPTION_ARG_STRING_ARRAY, &trace_functions, "Trace functions",     "function name" },
@@ -338,6 +340,7 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
       parsed_cmd->verify_setvcp = true;
    parsed_cmd->nodetect         = nodetect_flag;
    parsed_cmd->async            = async_flag;
+   parsed_cmd->report_freed_exceptions = report_freed_excp_flag;
    if (failsim_fn_work) {
 #ifdef ENABLE_FAILSIM
       parsed_cmd->enable_failure_simulation = true;
