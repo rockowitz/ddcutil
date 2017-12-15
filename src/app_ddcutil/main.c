@@ -134,7 +134,7 @@ perform_get_capabilities_by_display_handle(Display_Handle * dh) {
    Parsed_Capabilities * pcap = NULL;
    char * capabilities_string;
    Error_Info * ddc_excp = get_capabilities_string(dh, &capabilities_string);
-   Public_Status_Code psc =  psc = ERRINFO_STATUS(ddc_excp);
+   Public_Status_Code psc =  ERRINFO_STATUS(ddc_excp);
    assert( (ddc_excp && psc!=0) || (!ddc_excp && psc==0) );
 
    if (ddc_excp) {
