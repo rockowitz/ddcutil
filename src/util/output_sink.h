@@ -30,7 +30,7 @@
 #define UTIL_OUTPUT_SINK_H_
 
 /** \cond */
-#include <glib.h>
+#include <glib-2.0/glib.h>
 #include <stdio.h>
 /** \endcond */
 

@@ -27,7 +27,6 @@
 
 /** \cond */
 #include <assert.h>
-#include <glib.h>
 #include <stdarg.h>
 #include <stdbool.h>
 #include <stddef.h>

@@ -28,7 +28,7 @@
  */
 
 /** \cond */
-#include <glib.h>
+#include <glib-2.0/glib.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

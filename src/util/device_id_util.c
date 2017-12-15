@@ -30,7 +30,7 @@
 #include <ctype.h>
 #include <dirent.h>
 #include <errno.h>
-#include <glib.h>
+#include <glib-2.0/glib.h>
 #include <limits.h>
 #include <linux/limits.h>
 #include <stdarg.h>

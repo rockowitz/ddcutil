@@ -40,6 +40,7 @@
 #include <unistd.h>
 /** \endcond */
 
+#include "util/coredefs.h"
 #include "util/string_util.h"
 
 #include "base/core.h"

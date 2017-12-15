@@ -29,7 +29,7 @@
 #define MULTI_LEVEL_TABLE_H_
 
 /** \cond */
-#include <glib.h>
+#include <glib-2.0/glib.h>
 /** \endcond */
 
 

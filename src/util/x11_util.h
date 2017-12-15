@@ -29,7 +29,7 @@
 #define X11_UTIL_H_
 
 /** \cond */
-#include <glib.h>
+#include <glib-2.0/glib.h>
 /** \endcond */
 
 #include "coredefs.h"

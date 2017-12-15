@@ -29,7 +29,7 @@
 #define REPORT_UTIL_H_
 
 /** \cond */
-#include <glib.h>
+#include <glib-2.0/glib.h>
 #include <stdio.h>
 #include <stdbool.h>
 /** \endcond */

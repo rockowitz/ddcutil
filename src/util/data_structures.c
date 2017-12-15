@@ -30,7 +30,7 @@
 
 /** \cond */
 #include <assert.h>
-#include <glib.h>
+#include <glib-2.0/glib.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -40,7 +40,6 @@
 #include "string_util.h"
 
 #include "data_structures.h"
-
 
 
 // bva - Byte Value Array

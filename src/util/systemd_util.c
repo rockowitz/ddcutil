@@ -28,7 +28,6 @@
 // #define _GNU_SOURCE
 
 #include <assert.h>
-#include <glib-2.0/glib.h>
 #include <systemd/sd-journal.h>
 #include <stdint.h>
 #include <stdio.h>

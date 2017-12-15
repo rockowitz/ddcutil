@@ -29,7 +29,7 @@
 #define DEVICE_ID_UTIL_H_
 
 /** \cond */
-#include <glib.h>
+#include <glib-2.0/glib.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdlib.h>

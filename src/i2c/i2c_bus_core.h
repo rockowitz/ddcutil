@@ -29,7 +29,8 @@
 #define I2C_BUS_CORE_H_
 
 /** \cond */
-#include <glib.h>
+// #include <glib-2.0/glib.h>
+// #include <glib.h>
 #include <stdbool.h>
 #include <stdio.h>
 /** \endcond */
