@@ -51,6 +51,10 @@
 #include "base/core.h"
 #include "base/linux_errno.h"
 
+#ifdef HAVE_ADL
+#include "adl/adl_shim.h"
+#endif
+
 #include "query_sysenv_access.h"
 #include "query_sysenv_base.h"
 #include "query_sysenv_dmidecode.h"
