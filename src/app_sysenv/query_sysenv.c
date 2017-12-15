@@ -21,11 +21,14 @@
  * </endcopyright>
  */
 
+/** \f
+ *  Primary file for the ENVIRONMENT command
+ */
+
+/** \cond */
 #include <config.h>
 
 #define _GNU_SOURCE 1       // for function group_member
-
-/** \cond */
 #include <assert.h>
 #include <errno.h>
 #include <string.h>
@@ -187,7 +190,6 @@ static void query_base_env(Env_Accumulator * accum) {
       rpt_nl();
       report_endian(d0);
    }
-
 }
 
 
