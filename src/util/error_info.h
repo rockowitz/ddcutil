@@ -49,12 +49,11 @@ typedef struct error_info {
 } Error_Info;
 
 
-typedef char * (*ErrInfo_Status_Desc)(int code);
-typedef char * (*ErrInfo_Status_Name)(int code);
+typedef char * (*ErrInfo_Status_String)(int code);
 
 void errinfo_init(
-      ErrInfo_Status_Name  name_func,
-      ErrInfo_Status_Desc  desc_func);
+      ErrInfo_Status_String  name_func,
+      ErrInfo_Status_String  desc_func);
 
 void errinfo_free(
       Error_Info *   erec);

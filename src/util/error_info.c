@@ -26,14 +26,14 @@
  *
  *  #Error_Info provides a pseudo-exception framework that can be integrated
  *  with more traditional status codes.  Instead of returning a status code,
- *  a C function returns a #Error_Info instance in the case of an error, or
- *  NULL if there is no error.  Information about the cause of an error is
- *  retained for use by higher levels in the call stack.
+ *  a C function returns a pointer to an #Error_Info instance in the case of
+ *  an error, or NULL if there is no error.  Information about the cause of an
+ *  error is retained for use by higher levels in the call stack.
  */
 
 /** \cond */
 
-#define _GNU_SOURCE     // for reallocarray() in stdlib.h
+// #define _GNU_SOURCE     // for reallocarray() in stdlib.h
 
 #include <assert.h>
 #include <glib-2.0/glib.h>
@@ -49,31 +49,29 @@
 #include "error_info.h"
 
 
-/** Status code description function to be used if none is set
- *  by #errinfo_init()
- *
- *  \param  code  status code
- *  \return description of status code
- *
- *  The value returned is valid until the next call to this function
- *  in the current thread.
- */
-char * default_status_code_desc(int rc) {
-   static GPrivate  status_code_key     = G_PRIVATE_INIT(g_free);
-
-   const int default_status_code_buffer_size = 20;
-
-   char * buf = get_thread_fixed_buffer(&status_code_key, default_status_code_buffer_size);
-   g_snprintf(buf, default_status_code_buffer_size, "%d",rc);
-
-   return buf;
-}
+// Validates a pointer to an #Error_Info, using asserts
+#define VALID_DDC_ERROR_PTR(ptr) \
+   assert(ptr); \
+   assert(memcmp(ptr->marker, ERROR_INFO_MARKER, 4) == 0);
 
 
+// Forward references
+static char * default_status_code_desc(int rc);
+
+// Constants
+// allows cause list to always be null terminated, even when no causes:
 static Error_Info * empty_list[] = {NULL};
-static int CAUSE_ALLOC_INCREMENT = 10;
-static ErrInfo_Status_Desc errinfo_desc_func = default_status_code_desc;
-static ErrInfo_Status_Name errinfo_name_func =  NULL;
+static const int CAUSE_ALLOC_INCREMENT = 10;
+
+// Globals
+// status code to string functions:
+static ErrInfo_Status_String errinfo_desc_func = default_status_code_desc;
+static ErrInfo_Status_String errinfo_name_func =  NULL;
+
+
+//
+// Initialization
+//
 
 /** Initializes the module.
  *
@@ -81,19 +79,17 @@ static ErrInfo_Status_Name errinfo_name_func =  NULL;
  *   \param   desc_func  function returning a description of a status code
  */
 void errinfo_init(
-      ErrInfo_Status_Name name_func,
-      ErrInfo_Status_Desc desc_func)
+      ErrInfo_Status_String name_func,
+      ErrInfo_Status_String desc_func)
 {
    errinfo_name_func = name_func;
    errinfo_desc_func = desc_func;
 }
 
 
-/** Validates a pointer to a #Error_Info, using asserts */
-#define VALID_DDC_ERROR_PTR(ptr) \
-   assert(ptr); \
-   assert(memcmp(ptr->marker, ERROR_INFO_MARKER, 4) == 0);
-
+//
+// Instance destruction
+//
 
 /** Releases a #Error_Info instance, including all instances it points to.
  *
@@ -120,7 +116,6 @@ void errinfo_free(Error_Info * erec){
          }
          free(erec->causes);
       }
-
 #ifdef ALT
       if (erec->causes_alt) {
          for (int ndx = 0; ndx < erec->causes_alt->len; ndx++) {
@@ -128,6 +123,7 @@ void errinfo_free(Error_Info * erec){
          }
       }
 #endif
+
       free(erec->func);
       erec->marker[3] = 'x';
       free(erec);
@@ -163,6 +159,21 @@ static void ddc_error_free2(void * erec) {
 #endif
 
 
+//
+// Instance creation
+//
+
+/** Sets the status code in a existing #Error_Info instance.
+ *
+ *  \param  erec   pointer to instance
+ *  \param  code   status code
+ */
+void errinfo_set_status(Error_Info * erec, int code) {
+   VALID_DDC_ERROR_PTR(erec);
+   erec->status_code = code;
+}
+
+
 /** Adds a cause to an existing #Error_Info instance
  *
  *  \param  parent instance to which cause will be added
@@ -174,8 +185,7 @@ void errinfo_add_cause(Error_Info * parent, Error_Info * cause) {
 
    // printf("(%s) parent->cause_ct = %d, parent->max_causes = %d\n",
    //         __func__, parent->cause_ct, parent->max_causes);
-   // printf("(%s) parent->causes = %p\n", __func__, parent->causes);
-   if (parent->cause_ct+1 > parent->max_causes) {
+   if (parent->cause_ct == parent->max_causes) {
       int new_max = parent->max_causes + CAUSE_ALLOC_INCREMENT;
 #ifdef ALT
       Error_Info **  new_causes = calloc(new_max+1, sizeof(Error_Info *) );
@@ -189,7 +199,12 @@ void errinfo_add_cause(Error_Info * parent, Error_Info * cause) {
       }
       else {
          // printf("(%s) realloc\n", __func__);
-         parent->causes = reallocarray(parent->causes, new_max+1, sizeof(Error_Info*) );
+         // works, but requires _GNU_SOURCE feature test macro:
+         // parent->causes = reallocarray(parent->causes, new_max+1, sizeof(Error_Info*) );
+         void * new_causes = calloc(new_max+1, sizeof(Error_Info*) );
+         memcpy(new_causes, parent->causes, parent->max_causes * sizeof(Error_Info *) );
+         free(parent->causes);
+         parent->causes = new_causes;
       }
       parent->max_causes = new_max;
    }
@@ -206,17 +221,6 @@ void errinfo_add_cause(Error_Info * parent, Error_Info * cause) {
    }
    g_ptr_array_add(parent->causes_alt, cause);
 #endif
-}
-
-
-/** Sets the status code in a existing #Error_Info instance.
- *
- *  \param  erec   pointer to instance
- *  \param  code   status code
- */
-void errinfo_set_status(Error_Info * erec, int code) {
-   VALID_DDC_ERROR_PTR(erec);
-   erec->status_code = code;
 }
 
 
@@ -300,10 +304,12 @@ Error_Info * errinfo_new_with_causes(
 }
 
 
+#ifdef UNUSED
+
 // For creating a new Ddc_Error when the called functions
 // return status codes not Ddc_Errors.
 
-#ifdef UNUSED
+
 /** Creates a new #Error_Info instance, including references to multiple
  *  status codes from called functions that contribute to the current error.
  *  Each of the callee status codes is wrapped in a synthesized #Error_Info
@@ -331,6 +337,31 @@ Error_Info * errinfo_new_with_callee_status_codes(
    return result;
 }
 #endif
+
+
+//
+// Reporting
+//
+
+/** Status code description function to be used if none is set
+ *  by #errinfo_init()
+ *
+ *  \param  code  status code
+ *  \return description of status code
+ *
+ *  The value returned is valid until the next call to this function
+ *  in the current thread.
+ */
+static char * default_status_code_desc(int rc) {
+   static GPrivate  status_code_key     = G_PRIVATE_INIT(g_free);
+
+   const int default_status_code_buffer_size = 20;
+
+   char * buf = get_thread_fixed_buffer(&status_code_key, default_status_code_buffer_size);
+   g_snprintf(buf, default_status_code_buffer_size, "%d",rc);
+
+   return buf;
+}
 
 
 /** Returns a comma separated string of the status code names in the
@@ -443,7 +474,8 @@ char * errinfo_causes_string(Error_Info * erec) {
 }
 #endif
 
-/** Emits a fill report of the contents of the specified #Error_Info,
+
+/** Emits a full report of the contents of the specified #Error_Info,
  *  using report functions.
  *
  *  \param  erec   pointer to #Error_Info
@@ -511,4 +543,3 @@ char * errinfo_summary(Error_Info * erec) {
    free(buf1);
    return buf;
 }
-
