@@ -112,6 +112,7 @@ app_sysenv/query_sysenv_base.c \
 app_sysenv/query_sysenv_dmidecode.c \
 app_sysenv/query_sysenv_i2c.c \
 app_sysenv/query_sysenv_logs.c \
+app_sysenv/query_sysenv_modules.c \
 app_sysenv/query_sysenv_procfs.c \
 app_sysenv/query_sysenv_sysfs.c \
 app_sysenv/query_sysenv_xref.c \
