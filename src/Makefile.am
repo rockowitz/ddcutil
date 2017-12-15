@@ -1,6 +1,6 @@
 ## Process this file with automake to produce Makefile.in
 
-SUBDIRS = util usb_util base vcp i2c adl usb ddc . gobject_api swig sample_clients
+SUBDIRS = util usb_util base vcp i2c adl usb ddc app_sysenv . gobject_api swig sample_clients
 
 MOSTLYCLEANFILES =   
 
@@ -106,24 +106,10 @@ cmdline/cmd_parser_goption.c \
 cmdline/parsed_cmd.c \
 app_ddcutil/main.c \
 app_ddcutil/app_dumpload.c \
-app_sysenv/query_sysenv.c \
-app_sysenv/query_sysenv_access.c \
-app_sysenv/query_sysenv_base.c \
-app_sysenv/query_sysenv_dmidecode.c \
-app_sysenv/query_sysenv_i2c.c \
-app_sysenv/query_sysenv_logs.c \
-app_sysenv/query_sysenv_modules.c \
-app_sysenv/query_sysenv_procfs.c \
-app_sysenv/query_sysenv_sysfs.c \
-app_sysenv/query_sysenv_xref.c \
 app_ddcutil/app_setvcp.c \
 app_ddcutil/app_getvcp.c \
 app_ddcutil/testcases.c 
 
-if ENABLE_USB_COND
-ddcutil_SOURCES += \
-   app_sysenv/query_sysenv_usb.c
-endif
 
 if INCLUDE_TESTCASES_COND
 ddcutil_SOURCES += \
@@ -137,10 +123,6 @@ ddcutil_SOURCES += \
    app_ddcutil/testcase_mock_table.c
 endif
 
-if USE_LIBDRM_COND
-ddcutil_SOURCES += \
-  app_sysenv/query_sysenv_drm.c
-endif
 
 #
 # Files only in laclient executable
@@ -237,10 +219,6 @@ $(LIBUSB_CFLAGS) \
 -I$(srcdir)      \
 -I$(srcdir)/public
 
-AM_CPPFLAGS += \
-$(LIBDRM_CFLAGS)
-
-
 if HAVE_ADL_COND
 AM_CPPFLAGS +=               \
 -I@ADL_HEADER_DIR@  
@@ -279,12 +257,13 @@ ddcutil_CFLAGS                 = $(AM_CFLAGS)  -fPIC
 #
 
 libcommon_la_LIBADD = \
-util/libutil.la  \
-base/libbase.la  \
-vcp/libvcp.la    \
-i2c/libi2c.la    \
+app_sysenv/libappsysenv.la \
 ddc/libddc.la    \
-adl/libadl.la
+i2c/libi2c.la    \
+adl/libadl.la    \
+vcp/libvcp.la    \
+base/libbase.la  \
+util/libutil.la 
 
 if ENABLE_USB_COND
 libcommon_la_LIBADD += \
