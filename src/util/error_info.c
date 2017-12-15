@@ -512,7 +512,7 @@ void errinfo_report(Error_Info * erec, int depth) {
  *  current thread, and should not be freed by the caller.
  *
  *  \param erec  pointer to #Error_Info instance
- *  \return string summmay of error
+ *  \return string summary of error
  */
 char * errinfo_summary(Error_Info * erec) {
    if (!erec)
