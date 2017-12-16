@@ -123,6 +123,13 @@ ddcutil_SOURCES += \
    app_ddcutil/testcase_mock_table.c
 endif
 
+# it's a hack
+if USE_API_COND
+ddcutil_SOURCES += \
+   libmain/ddcutil_c_api.c  
+endif
+
+
 
 #
 # Files only in laclient executable

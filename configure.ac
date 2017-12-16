@@ -370,9 +370,9 @@ AC_ARG_ENABLE([use-api],
               [ AS_HELP_STRING( [--enable-use-api=@<:@no/yes@:>@], [Use ddcutil API internally@<:@default=no@:>@] )],
               [enable_use_api=${enableval}],
               [enable_use_api=no] )
-AM_CONDITIONAL([ENABLE_USE_API_COND], [test "x$enable_use_api" == "xyes"] )
+AM_CONDITIONAL([USE_API_COND], [test "x$enable_use_api" == "xyes"] )
 AS_IF( [test "x$enable_use_api" == "xyes"],
-         AC_DEFINE( [ENABLE_USE_API], [1], [If defined, use ddcutil APIs internally.])
+         AC_DEFINE( [USE_API], [1], [If defined, use ddcutil APIs internally.])
          AC_MSG_NOTICE( [use-api..... enabled] )
       ,
          AC_MSG_NOTICE( [use-api..... disabled] )
