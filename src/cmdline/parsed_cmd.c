@@ -81,7 +81,7 @@ void report_parsed_cmd(Parsed_Cmd * parsed_cmd, int depth) {
 
    rpt_structure_loc("fref", parsed_cmd->fref,                        d1);
    if (parsed_cmd->fref)
-       report_feature_set_ref(parsed_cmd->fref,                       d2);
+       dbgrpt_feature_set_ref(parsed_cmd->fref,                       d2);
 
    rpt_int_as_hex(
             "stats",       NULL,  parsed_cmd->stats_types,            d1);

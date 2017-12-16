@@ -74,7 +74,7 @@ void free_vcp_feature_set(VCP_Feature_Set fset) {
 VCP_Feature_Set
 create_feature_set(VCP_Feature_Subset subset_id, DDCA_MCCS_Version_Spec vcp_version) {
    assert(subset_id);
-   bool debug = false;
+   bool debug = true;
    DBGMSF(debug, "Starting. subset_id=%s(0x%04x), vcp_version=%d.%d",
                  feature_subset_name(subset_id), subset_id, vcp_version.major, vcp_version.minor);
    struct vcp_feature_set * fset = calloc(1,sizeof(struct vcp_feature_set));

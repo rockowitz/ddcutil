@@ -22,7 +22,7 @@
  */
 
 /** \file
- *
+ *  Feature set identifiers
  */
 
 #ifndef FEATURE_SETS_H_
@@ -30,13 +30,9 @@
 
 /** \cond */
 #include <stdbool.h>
-/** \endcond */
 
 #include "util/coredefs.h"
-
-// so all references still work with version spec declarations moved to vcp_version_spec.h
-#include "base/vcp_version.h"
-
+/** \endcond */
 
 
 // If this enum is changed, be sure to change the corresponding
@@ -65,6 +61,7 @@ typedef enum {
 } VCP_Feature_Subset;
 
 
+#ifdef OLD
 typedef
 struct _Vcp_Subset_Desc {
    VCP_Feature_Subset     subset_id;
@@ -72,11 +69,14 @@ struct _Vcp_Subset_Desc {
    char *                 public_name;
 } Vcp_Subset_Desc;
 
-
 extern struct _Vcp_Subset_Desc vcp_subset_desc[];
+
 const int vcp_subset_count;
+#endif
 
 char * feature_subset_name(VCP_Feature_Subset subset_id);
+
+char * feature_subset_names(VCP_Feature_Subset subset_ids);
 
 
 typedef struct {
@@ -84,7 +84,6 @@ typedef struct {
    Byte                specific_feature;
 } Feature_Set_Ref;
 
-void report_feature_set_ref(Feature_Set_Ref * fsref, int depth);
-
+void dbgrpt_feature_set_ref(Feature_Set_Ref * fsref, int depth);
 
 #endif /* FEATURE_SETS_H_ */

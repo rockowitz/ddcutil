@@ -32,6 +32,7 @@
 #include "util/report_util.h"
 
 #include "base/ddc_errno.h"
+#include "base/vcp_version.h"
 
 #include "vcp/vcp_feature_codes.h"
 
@@ -309,7 +310,7 @@ char * subset_names_r(VCP_Feature_Table_Entry * pentry, char * buf, int bufsz) {
 }
 #endif
 
-
+#ifdef OLD
 static char * subset_names_r(VCP_Feature_Table_Entry * pentry, char * buf, int bufsz) {
    *buf = '\0';
 
@@ -322,6 +323,22 @@ static char * subset_names_r(VCP_Feature_Table_Entry * pentry, char * buf, int b
 
    return buf;
 }
+#endif
+
+#ifdef OLD
+static char * subset_names_r(VCP_Feature_Table_Entry * pentry, char * buf, int bufsz) {
+   *buf = '\0';
+
+   int kk = 0;
+   for(;kk < vcp_subset_count; kk++) {
+      Value_Name_Title cur_desc = vcp_subset_table[kk];
+      if (pentry->vcp_subsets & cur_desc.value)
+         str_comma_cat_r(cur_desc.title, buf, bufsz);
+   }
+
+   return buf;
+}
+#endif
 
 
 static void report_sl_values(DDCA_Feature_Value_Entry * sl_values, int depth) {
@@ -460,8 +477,13 @@ void report_vcp_feature_table_entry(VCP_Feature_Table_Entry * pentry, int depth)
    rpt_vstring(d1, "MCCS versions: %s", workbuf);
    rpt_vstring(d1, "MCCS specification groups: %s",
                    spec_group_names_r(pentry, workbuf, sizeof(workbuf)));
+   char * subset_names = feature_subset_names(pentry->vcp_subsets);
+   rpt_vstring(d1, "ddcutil feature subsets: %s", subset_names);
+   free(subset_names);
+#ifdef OLD
    rpt_vstring(d1, "ddcutil feature subsets: %s",
                    subset_names_r(pentry, workbuf, sizeof(workbuf)));
+#endif
    if (has_version_specific_features(pentry)) {
       // rpt_vstring(d1, "VERSION SPECIFIC FLAGS");
       report_feature_table_entry_flags(pentry, VCP_SPEC_V20, d1);

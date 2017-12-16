@@ -250,7 +250,7 @@ app_show_feature_set_values_by_display_handle(
    if (debug) {
       DBGMSG("Starting");
       DBGMSG("dh: %s", dh_repr(dh) );
-      report_feature_set_ref(fsref,1);
+      dbgrpt_feature_set_ref(fsref,1);
    }
 
    Public_Status_Code psc = 0;
