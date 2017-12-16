@@ -218,9 +218,9 @@ bool parse_feature_id_or_subset(char * val, int cmd_id, Feature_Set_Ref * fsref)
         fsref->specific_feature = feature_hexid;
      }
    }
-   DBGMSF(debug, "Returning: %d");
+   DBGMSF(debug, "Returning: %s", bool_repr(ok));
    if (ok && debug)
-      report_feature_set_ref(fsref, 0);
+      dbgrpt_feature_set_ref(fsref, 0);
    return ok;
 }
 
