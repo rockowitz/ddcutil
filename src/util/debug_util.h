@@ -28,6 +28,9 @@
  * Functions for debugging
  */
 
+#include <glib-2.0/glib.h>
+
+GPtrArray * get_backtrace(int stack_adjust);
 void show_backtrace(int stack_adjust);
 
 #endif /* DEBUG_UTIL_H_ */
