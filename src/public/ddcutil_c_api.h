@@ -162,7 +162,7 @@ typedef enum {
  *
  * It is not an error if this function is called more than once.
  */
-// void __attribute__ ((constructor)) ddca_init(void);
+// void __attribute__ ((constructor)) _ddca_init(void);
 
 
 //
