@@ -92,6 +92,10 @@
 #include "app_sysenv/query_sysenv_usb.h"
 #endif
 
+#ifdef USE_API
+#include "public/ddcutil_c_api.h"
+#endif
+
 
 //
 // Initialization and Statistics
@@ -347,7 +351,6 @@ void probe_display_by_dref(Display_Ref * dref) {
   * @retval  EXIT_FAILURE an error occurred
   */
 int main(int argc, char *argv[]) {
-   // start_time_nanos = cur_realtime_nanosec();
 
 #ifdef OBSOLETE
    // For aborting out of shared library
@@ -365,7 +368,6 @@ int main(int argc, char *argv[]) {
    init_base_services();  // so tracing related modules are initialized
    Parsed_Cmd * parsed_cmd = parse_command(argc, argv);
    if (!parsed_cmd) {
-      // puts("Terminating execution");
       exit(EXIT_FAILURE);
    }
    if (parsed_cmd->timestamp_trace)         // timestamps on debug and trace messages?
@@ -411,9 +413,6 @@ int main(int argc, char *argv[]) {
    int main_rc = EXIT_FAILURE;
 
    Call_Options callopts = CALLOPT_NONE;
-   // TODO: remove CALLOPT_FORCE_SLAVE from callopts
-   // if (parsed_cmd->force_slave_addr)
-   //    callopts |= CALLOPT_FORCE_SLAVE;
    i2c_force_slave_addr_flag = parsed_cmd->force_slave_addr;
    if (parsed_cmd->force)
       callopts |= CALLOPT_FORCE;
@@ -435,14 +434,30 @@ int main(int argc, char *argv[]) {
 
    // n. MAX_MAX_TRIES checked during command line parsing
    if (parsed_cmd->max_tries[0] > 0) {
+#ifdef USE_API
+      ddca_set_max_tries(DDCA_WRITE_ONLY_TRIES, parsed_cmd->max_tries[0]);
+#else
       ddc_set_max_write_only_exchange_tries(parsed_cmd->max_tries[0]);
+#endif
    }
+
    if (parsed_cmd->max_tries[1] > 0) {
+#ifdef USE_API
+      ddca_set_max_tries(DDCA_WRITE_READ_TRIES, parsed_cmd->max_tries[1]);
+#else
       ddc_set_max_write_read_exchange_tries(parsed_cmd->max_tries[1]);
+#endif
    }
+
    if (parsed_cmd->max_tries[2] > 0) {
+#ifdef USE_API
+      ddca_set_max_tries(DDCA_MULTI_PART_TRIES, parsed_cmd->max_tries[2]);
+#else
       ddc_set_max_multi_part_read_tries(parsed_cmd->max_tries[2]);
+      ddc_set_max_multi_part_write_tries(parsed_cmd->max_tries[2]);
+#endif
    }
+
    if (parsed_cmd->sleep_strategy >= 0)
       set_sleep_strategy(parsed_cmd->sleep_strategy);
 
