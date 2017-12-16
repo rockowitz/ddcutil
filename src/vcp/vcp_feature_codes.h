@@ -4,7 +4,7 @@
  * those tables.
  *
  * <copyright>
- * Copyright (C) 2014-2016 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2014-2017 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -22,6 +22,10 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  * </endcopyright>
+ */
+
+/** \f
+ *  VCP Feature Code Table and related functions
  */
 
 #ifndef VCP_FEATURE_CODES_H_
@@ -49,6 +53,7 @@
 // x62: Audio Volume:
 //    v 2.0:   C
 //    v 3.0:   NC  Values x00 and xff are reserved, x01..xfe are a continuous range
+//
 // xdf: VCP Version:
 //    NC, uses both high and low bytes
 

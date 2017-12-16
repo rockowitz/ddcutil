@@ -3,7 +3,7 @@
  * VCP Feature Code Table and the functions it references
  *
  * <copyright>
- * Copyright (C) 2014-2016 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2014-2017 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -23,6 +23,10 @@
  * </endcopyright>
  */
 
+/** \f
+ *  VCP Feature Code Table and related functions
+ */
+
 #include <assert.h>
 #include <stdbool.h>
 #include <stdlib.h>
@@ -38,7 +42,6 @@
 
 
 // Direct writes to stdout,stderr:
-//   in function: bool format_feature_detail_display_usage_time()
 //   in table validation functions (Benign)
 
 
@@ -2153,9 +2156,8 @@ bool format_feature_detail_xc0_display_usage_time(
    // v2 spec says this is a 2 byte value, says nothing about mh, ml
    if (vcp_version.major >= 3) {
       if (code_info->mh != 0x00) {
-         // FIXME: *** DIRECT WRITE TO SYSOUT ***
-         printf("(%s) Data error.  Mh byte = 0x%02x, should be 0x00 for display usage time\n",
-                    __func__, code_info->mh );
+         SEVEREMSG("Data error.  Mh byte = 0x%02x, should be 0x00 for display usage time",
+                    code_info->mh );
       }
       usage_time = (code_info->ml << 16) | (code_info->sh << 8) | (code_info->sl);
    }
