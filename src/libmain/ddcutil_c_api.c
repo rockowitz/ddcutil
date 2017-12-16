@@ -435,6 +435,7 @@ ddca_set_max_tries(
          break;
       case (DDCA_MULTI_PART_TRIES):
          ddc_set_max_multi_part_read_tries(max_tries);
+         ddc_set_max_multi_part_write_tries(max_tries);      // TODO: Separate constant
          break;
       }
    }
