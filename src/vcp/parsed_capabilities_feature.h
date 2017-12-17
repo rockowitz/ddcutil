@@ -48,18 +48,17 @@ typedef struct {
      char *            value_string;  ///< value substring from capabilities string
 } Capabilities_Feature_Record;
 
-Capabilities_Feature_Record *
-new_capabilities_feature(
+Capabilities_Feature_Record * new_capabilities_feature(
       Byte   feature_id,
       char * value_string_start,
       int    value_string_len);
 
-void
-free_capabilities_feature(
+void free_capabilities_feature(
       Capabilities_Feature_Record * vfr);
-void
-show_capabilities_feature(
+
+void report_capabilities_feature(
       Capabilities_Feature_Record * vfr,
-      DDCA_MCCS_Version_Spec        vcp_version);
+      DDCA_MCCS_Version_Spec        vcp_version,
+      int                           depth);
 
 #endif /* PARSED_CAPABILITIES_H */

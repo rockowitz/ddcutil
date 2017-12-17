@@ -37,6 +37,7 @@
 /** \endcond */
 
 #include "util/data_structures.h"
+#include "util/report_util.h"
 
 #include "vcp/vcp_feature_codes.h"
 
@@ -54,8 +55,7 @@
  *  \param  value_string_start start of value string, may be NULL
  *  \param  value_string_len   length of value string
  */
-Capabilities_Feature_Record *
-new_capabilities_feature(
+Capabilities_Feature_Record * new_capabilities_feature(
       Byte   feature_id,
       char * value_string_start,
       int    value_string_len)
@@ -92,9 +92,8 @@ new_capabilities_feature(
       Byte_Bit_Flags bbf_values = bbf_create();
       bool ok2 = store_bytehex_list(value_string_start, value_string_len, bbf_values, bbf_appender);
       if (!ok2) {
-          f0printf(FOUT,
-                  "Error processing VCP feature value list into bbf_values: %.*s\n",
-                  value_string_len, value_string_start);
+          SEVEREMSG("Error processing VCP feature value list into bbf_values: %.*s\n",
+                     value_string_len, value_string_start);
        }
       if (debug) {
 #ifdef OLD_WAY
@@ -139,8 +138,7 @@ new_capabilities_feature(
  * \param pfeat  pointer to #Capabilities_Feature_Record to free.\n
  *               If null, do nothing
  */
-void
-free_capabilities_feature(
+void free_capabilities_feature(
       Capabilities_Feature_Record * pfeat)
 {
    // DBGMSG("Starting. pfeat=%p", pfeat);
@@ -167,7 +165,7 @@ free_capabilities_feature(
 }
 
 
-/** Displays the contents of #Capabilities_Feature_Record as part
+/** Displays the contents of a #Capabilities_Feature_Record as part
  *  of the **capabilities** command.
  *
  *  Output is written to the #FOUT device.
@@ -175,23 +173,29 @@ free_capabilities_feature(
  *  @param vfr         pointer to #Capabilities_Feature_Record
  *  @param vcp_version monitor VCP version, used in case feature
  *                     information is version specific
+ *  @param depth       logical indentation depth
  */
-void
-show_capabilities_feature(
+void report_capabilities_feature(
       Capabilities_Feature_Record *  vfr,
-      DDCA_MCCS_Version_Spec         vcp_version)
+      DDCA_MCCS_Version_Spec         vcp_version,
+      int                            depth)
 {
    bool debug = false;
    DBGMSF(debug, "Starting. vfr=%p, vcp_version=%d.%d", vfr, vcp_version.major, vcp_version.minor);
    assert(vfr && memcmp(vfr->marker, CAPABILITIES_FEATURE_MARKER, 4) == 0);
-   f0printf(FOUT, "  Feature: %02X (%s)\n",
+
+   int d0 = depth;
+   int d1 = depth+1;
+   int d2 = depth+2;
+
+   rpt_vstring(d0, "Feature: %02X (%s)",
                   vfr->feature_id,
                   get_feature_name_by_id_and_vcp_version(vfr->feature_id, vcp_version));
 
    DDCA_Output_Level ol = get_output_level();
    DBGMSF(debug,  "vfr->value_string=%p", vfr->value_string);
    if (ol >= DDCA_OL_VERBOSE && vfr->value_string) {
-      f0printf(FOUT, "    Values (unparsed): %s\n", vfr->value_string);
+      rpt_vstring(d1, "Values (unparsed): %s", vfr->value_string);
    }
 
 #ifdef OLD_BVA
@@ -261,9 +265,9 @@ show_capabilities_feature(
 
       if (feature_values) {  // did we find descriptions for the features?
          if (ol >= DDCA_OL_VERBOSE)
-            f0printf(FOUT, "    Values (  parsed):\n");
+            rpt_vstring(d1, "Values (  parsed):");
          else
-            f0printf(FOUT, "    Values:\n");
+            rpt_vstring(d1, "Values:");
 
          Byte_Bit_Flags iter = bbf_iter_new(vfr->bbflags);
          int nextval = -1;
@@ -272,16 +276,16 @@ show_capabilities_feature(
             char *  value_name = get_feature_value_name(feature_values, nextval);
             if (!value_name)
                value_name = "Unrecognized value";
-            f0printf(FOUT, "       %02x: %s\n", nextval, value_name);
+            rpt_vstring(d2, "%02x: %s", nextval, value_name);
          }
          bbf_iter_free(iter);
       }
       else {          // no interpretation available, just show the values
          char * buf1 = bbf_to_string(vfr->bbflags, NULL, 0);  // allocate buffer
          if (ol >= DDCA_OL_VERBOSE)
-            f0printf(FOUT, "    Values (  parsed): %s (interpretation unavailable)\n", buf1);
+            rpt_vstring(d1, "Values (  parsed): %s (interpretation unavailable)", buf1);
          else
-            f0printf(FOUT, "    Values: %s (interpretation unavailable)\n", buf1);
+            rpt_vstring(d1, "sValues: %s (interpretation unavailable)", buf1);
          free(buf1);
       }
    }
