@@ -275,6 +275,7 @@ Value_Name_Table callopt_bitname_table2 = {
 };
 
 
+#ifdef OLD
 /** Interprets a **Call_Options** byte as a printable string.
  *  The returned value is valid until the next call of this function.
  *
@@ -291,12 +292,14 @@ char * interpret_call_options(Call_Options calloptions) {
    buffer = vnt_interpret_flags(calloptions, callopt_bitname_table2, false, "|");
    return buffer;
 }
+#endif
 
 
 /** Thread safe version of **interpret_call_options()**.
  *
  *  Interprets a **Call_Options** byte as a printable string.
- *  The returned value is valid until the next call of this function.
+ *  The returned value is valid until the next call of this function in
+ *  the current thread.
  *
  *  @param calloptions  **Call_Options** byte
  *
@@ -409,7 +412,8 @@ char * output_level_name(DDCA_Output_Level val) {
 }
 
 
-/** Reports the current output level to the current FOUT device.
+/** Reports the current output level.
+ *  The report is written to the current **FOUT** device.
  *
  *  \ingroup msglevel
  */
@@ -457,7 +461,7 @@ Value_Name_Title_Table trace_group_table = {
 const int trace_group_ct = ARRAY_SIZE(trace_group_table)-1;
 
 
-/** Given a trace group name, return its identifier.
+/** Given a trace group name, returns its identifier.
  *  Case is ignored.
  *
  *  @param name trace group name
@@ -478,7 +482,8 @@ Trace_Group trace_class_name_to_value(char * name) {
 
 static Byte trace_levels = TRC_NEVER;   // 0x00
 
-/** Specify the trace groups to be traced.
+
+/** Specifies the trace groups to be traced.
  *
  * @param trace_flags bit flags indicating groups to trace
  *
@@ -501,7 +506,7 @@ static GPtrArray  * traced_function_table = NULL;
 static GPtrArray  * traced_file_table     = NULL;
 
 
-/** Add a function to the list of functions to be traced.
+/** Adds a function to the list of functions to be traced.
  *
  *  @param funcname function name
  */
@@ -515,7 +520,7 @@ void add_traced_function(const char * funcname) {
       g_ptr_array_add(traced_function_table, g_strdup(funcname));
 }
 
-/** Add a file to the list of files to be traced.
+/** Adds a file to the list of files to be traced.
  *
  *  @param filename file name
  *
@@ -594,6 +599,7 @@ static char * get_traced_files_as_joined_string() {
 
 
 /** Outputs a line reporting the traced function list.
+ *  Output is written to the current **FOUT** device.
  */
 void show_traced_functions() {
    char * buf = get_traced_functions_as_joined_string();
@@ -606,6 +612,7 @@ void show_traced_functions() {
 
 
 /** Outputs a line reporting the traced file list.
+ *  Output is written to the current **FOUT** device.
  */
 void show_traced_files() {
    char * buf = get_traced_files_as_joined_string();
@@ -654,6 +661,7 @@ bool is_tracing(Trace_Group trace_group, const char * filename, const char * fun
 
 
 /** Outputs a line reporting the active trace groups.
+ *  Output is written to the current **FOUT** device.
  */
 void show_trace_groups() {
    char * buf = vnt_interpret_flags(trace_levels, trace_group_table, true /* use title */, ", ");
@@ -736,10 +744,8 @@ bool ddcmsg(Trace_Group  trace_group,
 }
 
 
-/* Tells whether DDC data errors are reported
- *
- * Arguments:   none
- * Returns:     nothing
+/** Tells whether DDC data errors are reported.
+ *  Output is writtent to the current **FOUT** device.
  */
 void show_ddcmsg() {
    print_simple_title_value(SHOW_REPORTING_TITLE_START,
@@ -749,15 +755,14 @@ void show_ddcmsg() {
 }
 
 
-/* Reports output levels for:
+/** Reports output levels for:
  *   - general output level (terse, verbose, etc)
  *   - DDC data errors
  *   - trace groups
  *   - traced functions
  *   - traced files
  *
- * Arguments:    none
- * Returns:      nothing
+ * Output is written to the current **FOUT** device.
  */
 void show_reporting() {
    show_output_level();
@@ -774,6 +779,7 @@ void show_reporting() {
 //
 
 /** Issues an error message.
+ *  The message is written to the current FERR device.
  *
  *  @param funcname      function name of caller
  *  @param lineno        line number in caller
@@ -811,7 +817,7 @@ void severemsg(
  *  - the trace_group specified is currently active
  *  - the value is trace group is 0xff
  *  - funcname is the name of a function being traced
- *  - filename is thename of a file being traced
+ *  - filename is the name of a file being traced
  *
  *  @param trace_group   trace group of caller, 0xff to always output
  *  @param funcname      function name of caller
@@ -907,6 +913,15 @@ void report_ioctl_error_old(
 #endif
 
 
+/** Reports an IOCTL error.
+ *  The message is written to the current **FERR** device.
+ *
+ * @param  ioctl_name  ioctl name
+ * @param  errnum      errno value
+ * @param  funcname    function name of error
+ * @param  filename    file name of error
+ * @param  lineno      line number of error
+ */
 void report_ioctl_error(
       const char * ioctl_name,
       int          errnum,
@@ -921,10 +936,8 @@ void report_ioctl_error(
 }
 
 
-
-
 /** Called when a condition that should be impossible has been detected.
- * Issues messages to **stderr**.
+ *  Issues messages to the current FERR device.
  *
  * This function is normally invoked using macro PROGRAM_LOGIC_ERROR()
  *
