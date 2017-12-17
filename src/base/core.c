@@ -60,8 +60,9 @@
 
 #include "base/core.h"
 
+
 //
-// Externally visible variables
+// Global SDTOUT and STDERR redirection, for controlling message output in API
 //
 
 /** @defgroup output_redirection Basic Output Redirection
@@ -87,7 +88,6 @@ FILE * FOUT = NULL;
  */
 FILE * FERR = NULL;
 
-bool dbgtrc_show_time = false;    ///< include elapsed time in debug/trace output
 
 #ifdef OVERKILL
 #define FOUT_STACK_SIZE 8
@@ -96,10 +96,6 @@ static FILE* fout_stack[FOUT_STACK_SIZE];
 static int   fout_stack_pos = -1;
 #endif
 
-
-//
-// Global SDTOUT and STDERR redirection, for controlling message output in API
-//
 
 /** Initialize **stdout** and **stderr** redirection.
  *
@@ -434,16 +430,7 @@ void show_output_level() {
  *
  */
 
-#ifdef REFERENCE
-typedef Byte Trace_Group;
-#define TRC_BASE 0x80
-#define TRC_I2C  0x40
-#define TRC_ADL  0x20
-#define TRC_DDC  0x10
-#define TRC_USB  0x08
-#define TRC_TOP  0x04
-#endif
-
+bool dbgtrc_show_time = false;    ///< include elapsed time in debug/trace output
 
 static
 Value_Name_Title_Table trace_group_table = {
@@ -476,9 +463,8 @@ Trace_Group trace_class_name_to_value(char * name) {
                            name,
                            true,      // search title field
                            true,      // ignore-case
-                                        TRC_NEVER);
+                           TRC_NEVER);
 }
-
 
 static Byte trace_levels = TRC_NEVER;   // 0x00
 
@@ -673,8 +659,13 @@ void show_trace_groups() {
 }
 
 
+//
+// Error_Info reporting
+//
 
+/** If true, report #Error_Info instances before they are freed. */
 bool report_freed_exceptions = false;
+
 
 //
 // Report DDC data errors

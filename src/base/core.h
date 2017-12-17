@@ -48,7 +48,7 @@
 // Initialization
 //
 void init_msg_control();
-extern bool dbgtrc_show_time;  // include elapsed time in debug/trace timestamps
+
 
 //
 // For aborting out of shared library
@@ -72,7 +72,7 @@ extern DDCA_Global_Failure_Information global_failure_information;
 
 
 //
-// Standard flags to indicate behavior if a system call fails
+// Standard function call arguments and return values
 //
 
 /** Byte of standard call options */
@@ -83,16 +83,8 @@ typedef Byte Call_Options;
 #define CALLOPT_RDONLY       0x20    ///< open read-only
 #define CALLOPT_WARN_FINDEX  0x10    ///< issue warning msg re hiddev_field_info.field_index change
 #define CALLOPT_FORCE        0x08    ///< ignore various validity checks
-// #define CALLOPT_FORCE_SLAVE  0x04    // use ioctl I2C_FORCE_SLAVE
 
-// Return string interpretation of CALLOPT_ flag byte
-char * interpret_call_options(Call_Options calloptions);
 char * interpret_call_options_t(Call_Options calloptions);
-
-
-//
-// General Function Arguments and Return Values
-//
 
 #ifdef FUTURE
 // A way to return both a status code and a pointer.
@@ -132,6 +124,8 @@ char *            output_level_name(DDCA_Output_Level val);
 //
 // Trace message control
 //
+
+extern bool dbgtrc_show_time;  // include elapsed time in debug/trace timestamps
 
 void add_traced_function(const char * funcname);
 bool is_traced_function( const char * funcname);
@@ -175,10 +169,16 @@ bool is_tracing(Trace_Group trace_group, const char * filename, const char * fun
 
 #define IS_TRACING_BY_FUNC_OR_FILE() is_tracing(TRC_NEVER, __FILE__, __func__)
 
+//
+//  Error_Info reporting
+//
 
 extern bool report_freed_exceptions;
 
-// Manage DDC data error reporting
+
+//
+// DDC data error reporting
+//
 
 // Controls display of messages regarding I2C error conditions that can be retried.
 extern bool report_ddc_errors;
@@ -209,6 +209,7 @@ bool ddcmsg(Trace_Group trace_group, const char* funcname, const int lineno, con
  */
 #define DDCMSG(debug_flag, format, ...) \
    ddcmsg(( (debug_flag) ) ? 0xff : (TRACE_GROUP), __func__, __LINE__, __FILE__, format, ##__VA_ARGS__)
+
 
 
 // Show report levels for all types
@@ -244,7 +245,6 @@ bool dbgtrc(
 #define DBGMSG(            format, ...) dbgtrc(0xff, __func__, __LINE__, __FILE__, format, ##__VA_ARGS__)
 #define DBGMSF(debug_flag, format, ...) \
    do { if (debug_flag) dbgtrc( 0xff, __func__, __LINE__, __FILE__, format, ##__VA_ARGS__); }  while(0)
-
 
 #define TRCMSG(            format, ...) \
    dbgtrc(TRACE_GROUP, __func__, __LINE__, __FILE__, format, ##__VA_ARGS__)
@@ -299,11 +299,12 @@ void program_logic_error(
 /** @def PROGRAM_LOGIC_ERROR(format,...)
  *  Wraps call to program_logic_error()
  *
- *  Reports an error in program logic and terminates execution.
+ *  Reports an error in program logic.
  * @ingroup abnormal_termination
  */
 #define PROGRAM_LOGIC_ERROR(format, ...) \
    program_logic_error(__func__, __LINE__, __FILE__, format, ##__VA_ARGS__)
+
 
 #ifdef OLD
 void terminate_execution_on_error(
@@ -321,6 +322,5 @@ void terminate_execution_on_error(
 #define TERMINATE_EXECUTION_ON_ERROR(format, ...) \
    terminate_execution_on_error(TRACE_GROUP, __func__, __LINE__, __FILE__, format, ##__VA_ARGS__)
 #endif
-
 
 #endif /* BASE_CORE_H_ */
