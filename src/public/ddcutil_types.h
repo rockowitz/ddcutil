@@ -361,31 +361,34 @@ typedef uint16_t DDCA_Version_Feature_Flags;
 
 // Further refine the C/NC/TABLE categorization of the MCCS spec
 // Exactly 1 of the following 7 bits is set
-#define DDCA_STD_CONT       0x80       /**< Normal continuous feature */
-#define DDCA_COMPLEX_CONT   0x40       /**< Continuous feature with special interpretation */
-#define DDCA_SIMPLE_NC      0x20       /**< Non-continuous feature, having a defined list of values in byte SL */
-#define DDCA_COMPLEX_NC     0x10       /**< Non-continuous feature, having a complex interpretation using one or more of SL, SH, ML, MH */
+#define DDCA_STD_CONT     0x0080       /**< Normal continuous feature */
+#define DDCA_COMPLEX_CONT 0x0040       /**< Continuous feature with special interpretation */
+#define DDCA_SIMPLE_NC    0x0020       /**< Non-continuous feature, having a defined list of values in byte SL */
+#define DDCA_COMPLEX_NC   0x0010       /**< Non-continuous feature, having a complex interpretation using one or more of SL, SH, ML, MH */
 // For WO NC features.  There's no interpretation function or lookup table
 // Used to mark that the feature is defined for a version
-#define DDCA_WO_NC          0x08       /**< Used internally for write-only non-continuous features */
-#define DDCA_NORMAL_TABLE   0x04       /**< Normal RW table type feature */
-#define DDCA_WO_TABLE       0x02       /**< Write only table feature */
+#define DDCA_WO_NC        0x0008       /**< Used internally for write-only non-continuous features */
+#define DDCA_NORMAL_TABLE 0x0004       /**< Normal RW table type feature */
+#define DDCA_WO_TABLE     0x0002       /**< Write only table feature */
 
-#define DDCA_CONT           (DDCA_STD_CONT|DDCA_COMPLEX_CONT)            /**< Continuous feature, of any subtype */
-#define DDCA_NC             (DDCA_SIMPLE_NC|DDCA_COMPLEX_NC|DDCA_WO_NC)  /**< Non-continuous feature of any subtype */
-#define DDCA_NON_TABLE      (DDCA_CONT | DDCA_NC)                        /**< Non-table feature of any type */
+#define DDCA_CONT         (DDCA_STD_CONT|DDCA_COMPLEX_CONT)            /**< Continuous feature, of any subtype */
+#define DDCA_NC           (DDCA_SIMPLE_NC|DDCA_COMPLEX_NC|DDCA_WO_NC)  /**< Non-continuous feature of any subtype */
+#define DDCA_NON_TABLE    (DDCA_CONT | DDCA_NC)                        /**< Non-table feature of any type */
 
-#define DDCA_TABLE          (DDCA_NORMAL_TABLE | DDCA_WO_TABLE)        /**< Table type feature, of any subtype */
-// #define DDCA_KNOWN          (DDCA_CONT | DDCA_NC | DDCA_TABLE)           // *** unused ***
+#define DDCA_TABLE        (DDCA_NORMAL_TABLE | DDCA_WO_TABLE)        /**< Table type feature, of any subtype */
+// #define DDCA_KNOWN     (DDCA_CONT | DDCA_NC | DDCA_TABLE)           // *** unused ***
 
 // Additional bits:
-#define DDCA_DEPRECATED     0x01     /**< Feature is deprecated in the specified VCP version */
+#define DDCA_DEPRECATED   0x0001     /**< Feature is deprecated in the specified VCP version */
 
 ///@}
 
+typedef uint16_t DDCA_Global_Feature_Flags;
 
-// Bits in vcp_global_flags:
-#define DDCA_SYNTHETIC      0x80
+// Bits in DDCA_Global_Feature_Flags:
+#define DDCA_SYNTHETIC    0x8000
+
+typedef uint16_t DDCA_Feature_Flags;    // union (DDCA_Version_Feature_Flags, DDCA_Global_Feature_Flags)
 
 
 /** One entry in array listing defined simple NC values.
@@ -414,10 +417,9 @@ struct {
    // Format_Normal_Feature_Detail_Function nontable_formatter;
    // Format_Table_Feature_Detail_Function  table_formatter;
     DDCA_Feature_Value_Table             sl_values;     /**< valid when DDCA_SIMPLE_NC set */
-   uint8_t                               global_flags;
    // VCP_Feature_Subset                 vcp_subsets;   // Need it?
    char *                                feature_name;  /**< feature name */
-   DDCA_Version_Feature_Flags            feature_flags;
+   DDCA_Feature_Flags                    feature_flags;
 } DDCA_Version_Feature_Info;
 
 

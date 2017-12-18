@@ -118,7 +118,7 @@ struct {
    char *                                desc;
    Format_Normal_Feature_Detail_Function nontable_formatter;
    Format_Table_Feature_Detail_Function  table_formatter;
-   Byte                                  vcp_global_flags;
+   DDCA_Global_Feature_Flags             vcp_global_flags;
    ushort                                vcp_spec_groups;
    VCP_Feature_Subset                    vcp_subsets;
    char *                                v20_name;

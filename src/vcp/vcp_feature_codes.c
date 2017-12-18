@@ -395,6 +395,14 @@ char * interpret_ddca_version_feature_flags_type(
    return result;
 }
 
+char * interpret_ddca_global_feature_flags(
+      DDCA_Version_Feature_Flags feature_flags)
+{
+   char * result = "";
+   if (feature_flags & DDCA_SYNTHETIC)
+      result = "Synthetic";
+   return result;
+}
 
 static char * interpret_feature_flags_r(
       DDCA_Version_Feature_Flags vflags,
@@ -439,6 +447,12 @@ static char * interpret_feature_flags_r(
      else
         PROGRAM_LOGIC_ERROR("No type bits set");
 #endif
+     char * s = interpret_ddca_global_feature_flags(vflags);
+     if (s && strlen(s) > 0) {
+        strcat(workbuf, ", ");
+        strcat(workbuf, s);
+     }
+
    }
    return workbuf;
 }
@@ -532,7 +546,7 @@ void report_version_feature_info(
    DDCA_Version_Feature_Flags  vflags = info->feature_flags;
    interpret_feature_flags_r(vflags, workbuf, sizeof(workbuf));
    rpt_vstring(d1, "Attributes:   %s", workbuf);
-   rpt_vstring(d1, "Global_flags: 0x%02x",  info->global_flags);  // TODO: interpretation function
+   // rpt_vstring(d1, "Global_flags: 0x%02x",  info->global_flags);  // TODO: interpretation function
 
    if(info->sl_values) {
       rpt_vstring(d1, "Simple NC values:");
@@ -959,7 +973,7 @@ extract_version_feature_info(
            ? get_version_sensitive_feature_name(vfte, vspec)
            : get_version_specific_feature_name(vfte, vspec);
 
-   info->global_flags = vfte->vcp_global_flags;
+   info->feature_flags |= vfte->vcp_global_flags;
    info->sl_values = (version_sensitive)
          ? get_version_sensitive_sl_values(vfte, vspec)
          : get_version_specific_sl_values(vfte, vspec);

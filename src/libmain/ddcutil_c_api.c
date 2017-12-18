@@ -1159,8 +1159,8 @@ DDCA_Status ddca_get_feature_flags_by_vcp_version(
 DDCA_Status
 ddca_get_feature_info_by_vcp_version(
       DDCA_Vcp_Feature_Code       feature_code,
-   // DDCT_MCCS_Version_Spec vspec,
-      DDCA_MCCS_Version_Id   mccs_version_id,
+   // DDCT_MCCS_Version_Spec      vspec,
+      DDCA_MCCS_Version_Id        mccs_version_id,
       DDCA_Version_Feature_Info** p_info)
 {
    bool debug = false;
@@ -1679,8 +1679,10 @@ ddca_report_parsed_capabilities(
    assert(pcaps && memcmp(pcaps->marker, DDCA_CAPABILITIES_MARKER, 4) == 0);
    int d1 = depth+1;
    int d2 = depth+2;
+   int d3 = depth+3;
 
-   rpt_structure_loc("DDCA_Capabilities", pcaps, depth);
+   // rpt_structure_loc("DDCA_Capabilities", pcaps, depth);
+   rpt_label(  d1, "Capabilities:");
    rpt_vstring(d1, "unparsed string: %s", pcaps->unparsed_string);
    rpt_vstring(d1, "VCP version:     %d.%d", pcaps->version_spec.major, pcaps->version_spec.minor);
    rpt_vstring(d1, "VCP codes:");
@@ -1690,7 +1692,7 @@ ddca_report_parsed_capabilities(
       rpt_vstring(d2, "Feature code:  0x%02x", cur_vcp->feature_code);
       if (cur_vcp->value_ct > 0) {
          char * hs =  hexstring(cur_vcp->values, cur_vcp->value_ct);
-         rpt_vstring(d2, "Values:     %s", hs);
+         rpt_vstring(d3, "Values:     %s", hs);
          free(hs);
       }
    }
