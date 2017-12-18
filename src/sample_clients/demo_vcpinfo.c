@@ -23,6 +23,7 @@
  * </endcopyright>
  */
 
+#define _GNU_SOURCE        // for asprintf()
 
 #include <assert.h>
 #include <stdio.h>
@@ -40,9 +41,14 @@
           ddca_rc_desc(status_code))
 
 
-// A simple function that opens the first detected display.
-// For a more detailed example of display detection and management,
-// see ...
+/* A simple function that opens the first detected display.
+ * For a more detailed example of display detection and management,
+ * see demo_display_selection.c
+ *
+ * Arguments:    none
+ * Returns:      display handle of first detected display,
+ *               NULL if not found or can't be opened
+ */
 DDCA_Display_Handle * open_first_display() {
    printf("Check for monitors using ddca_get_displays()...\n");
    DDCA_Display_Handle dh = NULL;
@@ -68,60 +74,16 @@ DDCA_Display_Handle * open_first_display() {
 }
 
 
-
-#ifdef REF
-// Exactly 1 of DDCA_RO, DDCA_WO, DDCA_RW is set
-#define DDCA_RO           0x0400               /**< Read only feature */
-#define DDCA_WO           0x0200               /**< Write only feature */
-#define DDCA_RW           0x0100               /**< Feature is both readable and writable */
-#define DDCA_READABLE     (DDCA_RO | DDCA_RW)  /**< Feature is either RW or RO */
-#define DDCA_WRITABLE     (DDCA_WO | DDCA_RW)  /**< Feature is either RW or WO */
-
-// Further refine the C/NC/TABLE categorization of the MCCS spec
-// Exactly 1 of the following 7 bits is set
-#define DDCA_STD_CONT       0x80       /**< Normal continuous feature */
-#define DDCA_COMPLEX_CONT   0x40       /**< Continuous feature with special interpretation */
-#define DDCA_SIMPLE_NC      0x20       /**< Non-continuous feature, having a defined list of values in byte SL */
-#define DDCA_COMPLEX_NC     0x10       /**< Non-continuous feature, having a complex interpretation using one or more of SL, SH, ML, MH */
-// For WO NC features.  There's no interpretation function or lookup table
-// Used to mark that the feature is defined for a version
-#define DDCA_WO_NC          0x08       // TODO: CHECK USAGE
-#define DDCA_NORMAL_TABLE 0x04       /**< Normal table type feature */
-#define DDCA_WO_TABLE       0x02       /**< Write only table feature */
-
-#define DDCA_CONT           (DDCA_STD_CONT|DDCA_COMPLEX_CONT)            /**< Continuous feature, of any subtype */
-#define DDCA_NC             (DDCA_SIMPLE_NC|DDCA_COMPLEX_NC|DDCA_WO_NC)  /**< Non-continuous feature of any subtype */
-#define DDCA_NON_TABLE      (DDCA_CONT | DDCA_NC)                        /**< Non-table feature of any type */
-
-#define DDCA_TABLE          (DDCA_NORMAL_TABLE | DDCA_WO_TABLE)        /**< Table type feature, of any subtype */
-#define DDCA_KNOWN          (DDCA_CONT | DDCA_NC | DDCA_TABLE)           // TODO: Usage??? Check
-
-// Additional bits:
-#define DDCA_DEPRECATED     0x01     /**< Feature is deprecated in the specified VCP version */
-
-#endif
-
-
-/* Create a string representation of Version_Feature_Flags bitfield.
- * The representation is returned in a buffer provided.
+/* Creates a string representation of DDCA_Feature_Flags bitfield.
  *
  * Arguments:
  *    data       flags
- *    buffer     where to save formatted response
- *    bufsz      buffer size
  *
- * Returns:      buffer
+ * Returns:      string representation, caller must free
  */
-char * interpret_version_feature_flags_r(
-          DDCA_Version_Feature_Flags flags,
-          char *                     buffer,
-          int                        bufsz)
-{
-   assert(buffer);
-   // assert(buffer && bufsz > 150);
-   // printf("(%s) bufsz=%d\n", __func__, bufsz);
-
-   snprintf(buffer, bufsz, "%s%s%s%s%s%s%s%s%s%s%s",
+char * interpret_feature_flags(DDCA_Version_Feature_Flags flags) {
+   char * buffer = NULL;
+   int rc = asprintf(&buffer, "%s%s%s%s%s%s%s%s%s%s%s%s",
        flags & DDCA_RO             ? "Read-Only, "                   : "",
        flags & DDCA_WO             ? "Write-Only, "                  : "",
        flags & DDCA_RW             ? "Read-Write, "                  : "",
@@ -130,42 +92,25 @@ char * interpret_version_feature_flags_r(
        flags & DDCA_SIMPLE_NC      ? "Non-Continuous (simple), "     : "",
        flags & DDCA_COMPLEX_NC     ? "Non-Continuous (complex), "    : "",
        flags & DDCA_WO_NC          ? "Non-Continuous (write-only), " : "",
-       flags & DDCA_NORMAL_TABLE ? "Table (readable), "            : "",
+       flags & DDCA_NORMAL_TABLE   ? "Table (readable), "            : "",
        flags & DDCA_WO_TABLE       ? "Table (write-only), "          : "",
-       flags & DDCA_DEPRECATED     ? "Deprecated, "                  : ""
+       flags & DDCA_DEPRECATED     ? "Deprecated, "                  : "",
+       flags & DDCA_SYNTHETIC      ? "Synthesized, "                 : ""
        );
+   assert(rc >= 0);   // real life code would check for malloc() failure in asprintf()
    // remove final comma and blank
    if (strlen(buffer) > 0)
       buffer[strlen(buffer)-2] = '\0';
 
-   // printf("(%s) returning |%s|\n", __func__, buffer);
    return buffer;
 }
 
 
-char * interpret_global_feature_flags_r(
-          uint8_t flags,
-          char *  buffer,
-          int     bufsz)
-{
-   assert(buffer);
-   // assert(buffer && bufsz > 150);
-   // printf("(%s) bufsz=%d\n", __func__, bufsz);
-
-   snprintf(buffer, bufsz, "%s",
-       flags & DDCA_SYNTHETIC             ? "Dummy Info, "                   : ""
-       );
-   // remove final comma and blank
-   if (strlen(buffer) > 0)
-      buffer[strlen(buffer)-2] = '\0';
-
-   // printf("(%s) returning |%s|\n", __func__, buffer);
-   return buffer;
-}
-
-
-
-
+/* Displays the contents of DDCA_Version_Feature_Info instance.
+ *
+ * Arguments:
+ *   info     pointer to DDCA_Version_Feature_Info
+ */
 void show_version_feature_info(DDCA_Version_Feature_Info * info) {
    printf("\nVersion Sensitive Feature Information for VCP Feature: 0x%02x - %s\n",
            info->feature_code, info->feature_name);
@@ -176,28 +121,27 @@ void show_version_feature_info(DDCA_Version_Feature_Info * info) {
                   ddca_mccs_version_id_desc(info->version_id)
              );
    printf("   Description:          %s\n",  info->desc);
-   // printf("info->sl_values = %p\n", info->sl_values);
-   const int workbuf_sz = 100;
-#define WORKBUF_SZ 100
-   char workbuf[workbuf_sz];
-   printf("   Version insensitive flags: %s\n",
-          interpret_global_feature_flags_r(info->global_flags, workbuf, WORKBUF_SZ));
-   printf("   Version sensitive flags: %s\n",
-          interpret_version_feature_flags_r(info->feature_flags, workbuf, WORKBUF_SZ));
-#undef WORKBUF_SZ
+   char * s = interpret_feature_flags(info->feature_flags);
+   printf("   Feature flags: %s\n", s);
+   free(s);
    if (info->sl_values) {
       printf("   SL values: \n");
       DDCA_Feature_Value_Entry * cur_entry = info->sl_values;
       while (cur_entry->value_name) {
          printf("      0x%02x - %s\n", cur_entry->value_code,  cur_entry->value_name);
          cur_entry++;
-         // printf("cur_entry=%p\n", cur_entry);
       }
    }
 }
 
 
-
+/** Retrieves and displays feature information for a specified MCCS version
+ *  and feature code.
+ *
+ *  Arguments:
+ *     version_id
+ *     feature_code
+ */
 void test_get_single_feature_info(
         DDCA_MCCS_Version_Id  version_id,
         DDCA_Vcp_Feature_Code feature_code)
@@ -221,6 +165,13 @@ void test_get_single_feature_info(
 }
 
 
+/** Retrieves and displays feature information for a specified MCCS version
+ *  and a representative sample of feature codes.
+ *
+ *  Arguments:
+ *     version_id
+ *     feature_code
+ */
 void test_get_feature_info(DDCA_MCCS_Version_Id version_id) {
    printf("\n(%s) ===> Starting.  version_id = %s\n", __func__, ddca_mccs_version_id_name(version_id));
 
@@ -232,14 +183,20 @@ void test_get_feature_info(DDCA_MCCS_Version_Id version_id) {
    printf("%s) Done.\n", __func__);
 }
 
+
+
 void demo_feature_info() {
+   test_get_feature_info(DDCA_V10);
    test_get_feature_info(DDCA_V20);
+   test_get_feature_info(DDCA_V21);
+   test_get_feature_info(DDCA_V30);
+   test_get_feature_info(DDCA_V22);
 }
 
 
-
+/* Retrieves and reports the capabilities string for the first detected monitor.
+ */
 void demo_get_capabilities() {
-
    DDCA_Display_Handle dh = open_first_display();
    if (!dh)
       goto bye;
@@ -254,15 +211,11 @@ void demo_get_capabilities() {
    printf("(%s) Second call should be fast\n", __func__);
    rc =  ddca_get_capabilities_string(dh, &capabilities);
    if (rc != 0)
-      FUNCTION_ERRMSG("ddct_get_capabilities_string", rc);
-   else
+      FUNCTION_ERRMSG("ddca_get_capabilities_string", rc);
+   else {
       printf("(%s) Capabilities: %s\n", __func__, capabilities);
-
-
-   if (capabilities) {
       printf("(%s) Try parsing the string...\n", __func__);
-      // ddca_set_output_level(OL_VERBOSE);
-      DDCA_Capabilities * pcaps = NULL;
+        DDCA_Capabilities * pcaps = NULL;
       rc = ddca_parse_capabilities_string(
              capabilities,
              &pcaps);
@@ -270,7 +223,10 @@ void demo_get_capabilities() {
          FUNCTION_ERRMSG("ddca_parse_capabilities_string", rc);
       else {
          printf("(%s) Parsing succeeded.  Report the result...\n", __func__);
+         // DDCA_Output_Level saved_ol = ddca_get_output_level();
+         // ddca_set_output_level(DDCA_OL_VERBOSE);  // show both unparsed and parsed capabilities
          ddca_report_parsed_capabilities(pcaps, 1);
+         // ddca_set_output_level(saved_ol);
          ddca_free_parsed_capabilities(pcaps);
       }
    }
@@ -280,14 +236,8 @@ bye:
 }
 
 
-
-
-
-
-
-
 int main(int argc, char** argv) {
-   printf("\n(%s) Starting.\n", __func__);
+   printf("\ndemo_vcpinfo Starting.\n");
 
    demo_feature_info();
 
