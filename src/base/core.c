@@ -1,3 +1,18 @@
+/** @file core.c
+ * Core functions and global variables.
+ *
+ * File core.c provides a collection of inter-dependent services at the core
+ * of the **ddcutil** application.
+ *
+ * These include
+ * - message destination redirection
+ * - abnormal termination
+ * - standard function call options
+ * - timestamp generation
+ * - message level control
+ * - debug and trace messages
+ */
+
 /* core.c
  *
  * <copyright>
@@ -21,20 +36,6 @@
  * </endcopyright>
  */
 
-/** @file
- * Core functions and global variables.
- *
- * File core.c provides a collection of inter-dependent services at the core
- * of the **ddcutil** application.
- *
- * These include
- * - message destination redirection
- * - abnormal termination
- * - standard function call options
- * - timestamp generation
- * - message level control
- * - debug and trace messages
- */
 
 //* \cond */
 #include <assert.h>

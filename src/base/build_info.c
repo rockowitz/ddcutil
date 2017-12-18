@@ -1,6 +1,9 @@
-/* build_info.c
+/** \file build_info.c
  *
- * This file is recompiled every time **ddcutil** is built.
+ *  Build Information: version, build timestamp, etc.
+ */
+
+/* build_info.c
  *
  * <copyright>
  * Copyright (C) 2014-2015 Sanford Rockowitz <rockowitz@minsoft.com>
@@ -21,12 +24,6 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  * </endcopyright>
- */
-
-/** \file
- * Build Information
- *
- * Version, built timestamp, etc.
  */
 
 #include <config.h>

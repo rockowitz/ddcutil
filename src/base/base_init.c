@@ -24,6 +24,9 @@
  * </endcopyright>
  */
 
+
+#include "util/error_info.h"
+
 #include "core.h"
 #include "ddc_packets.h"
 #include "execution_stats.h"
@@ -31,8 +34,6 @@
 #include "sleep.h"
 
 #include "base_init.h"
-#include "../util/error_info.h"
-
 
 
 /** Master initialization function for files in subdirectory base

@@ -1,3 +1,18 @@
+/** @file core.h
+ * Core functions and global variables.
+ *
+ * File core.c provides a collection of inter-dependent services at the core
+ * of the **ddcutil** application.
+ *
+ * These include
+ * - message destination redirection
+ * - abnormal termination
+ * - standard function call options
+ * - timestamp generation
+ * - message level control
+ * - debug and trace messages
+ */
+
 /* core.h
  *
  * <copyright>
@@ -19,9 +34,6 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  * </endcopyright>
- */
-
-/** @file core.h
  */
 
 #ifndef BASE_CORE_H_
