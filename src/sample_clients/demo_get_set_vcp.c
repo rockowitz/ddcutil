@@ -117,7 +117,7 @@ test_cont_value(
            feature_code,
            &info);
    if (rc != 0) {
-      FUNCTION_ERRMSG("ddct_get_feature_info", rc);
+      FUNCTION_ERRMSG("ddca_get_feature_info", rc);
       ok = false;
       goto bye;
    }
@@ -409,7 +409,7 @@ DDCA_Status test_get_set_profile_related_values(DDCA_Display_Handle dh) {
    char* profile_values_string;
    psc = ddca_get_profile_related_values(dh, &profile_values_string);
    if (psc != 0) {
-      FUNCTION_ERRMSG("ddct_get_profile_related_values", psc);
+      FUNCTION_ERRMSG("ddca_get_profile_related_values", psc);
       goto bye;
    }
    printf("profile values string = %s\n", profile_values_string);
