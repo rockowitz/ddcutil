@@ -167,12 +167,12 @@ void set_trace_levels(Trace_Group trace_flags);
 char * get_active_trace_group_names();
 void show_trace_groups();
 
-
 bool is_tracing(Trace_Group trace_group, const char * filename, const char * funcname);
+
 /** Checks if tracking is currently active for the globally defined TRACE_GROUP value,
  *  current file and function.
  *
- *  Wrappers call to **is_tracking()**, using the current **TRACE_GROUP** value,
+ *  Wrappers call to **is_tracing()**, using the current **TRACE_GROUP** value,
  *  filename, and function as implicit arguments.
  */
 #define IS_TRACING() is_tracing(TRACE_GROUP, __FILE__, __func__)
@@ -180,6 +180,7 @@ bool is_tracing(Trace_Group trace_group, const char * filename, const char * fun
 #define IS_TRACING_GROUP(grp) is_tracing(grp, __FILE__, __func__)
 
 #define IS_TRACING_BY_FUNC_OR_FILE() is_tracing(TRC_NEVER, __FILE__, __func__)
+
 
 //
 //  Error_Info reporting
