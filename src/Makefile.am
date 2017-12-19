@@ -67,8 +67,6 @@ maintainerclean-local:
 bin_PROGRAMS = \
   ddcutil  
 
-# check_PROGRAMS =
-
 
 #
 # Intermediate Libraries
@@ -76,6 +74,9 @@ bin_PROGRAMS = \
 
 # Convenience library containing code shared between ddcutil executable and libddcutil shared library
 noinst_LTLIBRARIES = libcommon.la 
+
+# Convenience library to collect libraries used only in ddcutil executable
+noinst_LTLIBRARIES += libapp.la
 
 
 #
@@ -96,7 +97,7 @@ app_ddcutil/app_dumpload.c \
 app_ddcutil/app_setvcp.c \
 app_ddcutil/app_getvcp.c
 
-# it's a hack
+# it's a hack for using API calls in standalone executable
 if USE_API_COND
 ddcutil_SOURCES += \
    libmain/ddcutil_c_api.c  
@@ -135,6 +136,7 @@ all-local:
 #
 libcommon_la_SOURCES =      	
 
+libapp_la_SOURCES =
 
 if ENABLE_SHARED_LIB_COND
 include_HEADERS = \
@@ -199,11 +201,6 @@ endif
 # AM_CFLAGS += $(PYTHON_CPPFLAGS)
 
 ddcutil_CFLAGS                 = $(AM_CFLAGS)  -fPIC
-# laclient_CFLAGS                = $(AM_CFLAGS)  -fPIC
-# demo_global_settings_CFLAGS    = $(AM_CFLAGS)  -fPIC
-# demo_vcpinfo_CFLAGS            = $(AM_CFLAGS)  -fPIC
-# demo_get_set_vcp_CFLAGS        = $(AM_CFLAGS)  -fPIC
-# demo_display_selection_CFLAGS  = $(AM_CFLAGS)  -fPIC
 
 # unnessary, will use AM_CFLAGS if xxx_CFLAGS undefined
 # libcommon_la_CFLAGS     = $(AM_CFLAGS)
@@ -217,18 +214,7 @@ ddcutil_CFLAGS                 = $(AM_CFLAGS)  -fPIC
 # A library must be listed after any libraries that depend on it
 #
 
-
-# TODO: libcmdline.la, libtestcases.la, libappsysenv.la should not be in libcommon
-
-
 libcommon_la_LIBADD = \
-cmdline/libcmdline.la 
-if INCLUDE_TESTCASES_COND
-libcommon_la_LIBADD += \
-test/libtestcases.la
-endif
-libcommon_la_LIBADD += \
-app_sysenv/libappsysenv.la \
 ddc/libddc.la    \
 i2c/libi2c.la    \
 adl/libadl.la    \
@@ -241,6 +227,17 @@ libcommon_la_LIBADD += \
   usb_util/libusbutil.la \
   usb/libusb.la
 endif
+
+
+libapp_la_LIBADD = \
+app_sysenv/libappsysenv.la \
+cmdline/libcmdline.la 
+
+if INCLUDE_TESTCASES_COND
+libapp_la_LIBADD  += \
+test/libtestcases.la
+endif
+
 
 # $(SYSTEMD_LIBS) removed from list, libsystemd not currently used
 libcommon_la_LIBADD += \
@@ -281,7 +278,8 @@ libddcutil_la_LDFLAGS += --disable-static
 # so it needs LDADD references to external libraries as well
 
 ddcutil_LDADD =   \
-   libcommon.la
+   libapp.la \
+   libcommon.la 
 
 
 #needed?
