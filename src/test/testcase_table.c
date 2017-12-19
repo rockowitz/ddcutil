@@ -23,14 +23,14 @@
 
 #include <config.h>
 
-#include "test/ddc/ddc_capabilities_tests.h"
-#include "test/ddc/ddc_vcp_tests.h"
-#include "test/i2c/i2c_edid_tests.h"
+#include "ddc/ddc_capabilities_tests.h"
+#include "ddc/ddc_vcp_tests.h"
+#include "i2c/i2c_edid_tests.h"
 #ifdef HAVE_ADL
-#include "test/adl/adl_tests.h"
+#include "adl/adl_tests.h"
 #endif
 
-#include "test/testcase_table.h"
+#include "testcase_table.h"
 
 Testcase_Descriptor testcase_catalog[] = {
       {"get_luminosity_sample_code",        DisplayRefBus,  NULL, get_luminosity_sample_code, NULL, NULL},

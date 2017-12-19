@@ -85,11 +85,13 @@
 #include "app_ddcutil/app_getvcp.h"
 #include "app_ddcutil/app_setvcp.h"
 
-#include "app_ddcutil/testcases.h"
-
 #include "app_sysenv/query_sysenv.h"
 #ifdef USE_USB
 #include "app_sysenv/query_sysenv_usb.h"
+#endif
+
+#ifdef INCLUDE_TESTCASES
+#include "test/testcases.h"
 #endif
 
 #ifdef USE_API
@@ -505,10 +507,12 @@ int main(int argc, char *argv[]) {
       }
    }
 
+#ifdef INCLUDE_TESTCASES
    else if (parsed_cmd->cmd_id == CMDID_LISTTESTS) {
       show_test_cases();
       main_rc = EXIT_SUCCESS;
    }
+#endif
 
    // start of commands that actually access monitors
 
@@ -518,6 +522,7 @@ int main(int argc, char *argv[]) {
 
    }
 
+#ifdef INCLUDE_TESTCASES
    else if (parsed_cmd->cmd_id == CMDID_TESTCASE) {
       int testnum;
       bool ok = true;
@@ -535,6 +540,7 @@ int main(int argc, char *argv[]) {
       }
       main_rc = (ok) ? EXIT_SUCCESS : EXIT_FAILURE;
    }
+#endif
 
    else if (parsed_cmd->cmd_id == CMDID_LOADVCP) {
       ddc_ensure_displays_detected();

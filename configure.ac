@@ -70,6 +70,7 @@ AC_CONFIG_FILES([
 	src/adl/Makefile
 	src/usb/Makefile
 	src/ddc/Makefile
+	src/test/Makefile
 	src/cmdline/Makefile
 	src/app_sysenv/Makefile
 	src/swig/Makefile 
@@ -1011,6 +1012,7 @@ AC_MSG_RESULT([
 	enable_doxygen:         ${enable_doxygen}
 	enable_failsim:         ${enable_failsim}
 	enable_use_api:         ${enable_use_api}
+	include_testcases:      ${include_testcases}
 
 	compiler:               ${CC}
 	cflags:                 ${CFLAGS}

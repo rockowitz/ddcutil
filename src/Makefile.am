@@ -1,6 +1,6 @@
 ## Process this file with automake to produce Makefile.in
 
-SUBDIRS = util usb_util base vcp i2c adl usb ddc app_sysenv cmdline . gobject_api swig sample_clients
+SUBDIRS = util usb_util base vcp i2c adl usb ddc test app_sysenv cmdline . gobject_api swig sample_clients
 
 MOSTLYCLEANFILES =   
 
@@ -104,21 +104,8 @@ ddcutil_SOURCES = \
 app_ddcutil/main.c \
 app_ddcutil/app_dumpload.c \
 app_ddcutil/app_setvcp.c \
-app_ddcutil/app_getvcp.c \
-app_ddcutil/testcases.c 
+app_ddcutil/app_getvcp.c
 
-
-if INCLUDE_TESTCASES_COND
-ddcutil_SOURCES += \
-   test/ddc/ddc_capabilities_tests.c \
-   test/ddc/ddc_vcp_tests.c \
-   test/i2c/i2c_edid_tests.c \
-   test/i2c/i2c_io_old.c \
-   test/testcase_table.c
-else
-ddcutil_SOURCES += \
-   app_ddcutil/testcase_mock_table.c
-endif
 
 # it's a hack
 if USE_API_COND
@@ -261,7 +248,12 @@ ddcutil_CFLAGS                 = $(AM_CFLAGS)  -fPIC
 #
 
 libcommon_la_LIBADD = \
-cmdline/libcmdline.la \
+cmdline/libcmdline.la 
+if INCLUDE_TESTCASES_COND
+libcommon_la_LIBADD += \
+test/libtestcases.la
+endif
+libcommon_la_LIBADD += \
 app_sysenv/libappsysenv.la \
 ddc/libddc.la    \
 i2c/libi2c.la    \

@@ -21,7 +21,7 @@
  * </endcopyright>
  */
 
-#include "test/testcase_table.h"
+#include "testcase_table.h"
 
 Testcase_Descriptor testcase_catalog[] = {};
 int testcase_catalog_ct = sizeof(testcase_catalog)/sizeof(Testcase_Descriptor);
