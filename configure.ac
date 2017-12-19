@@ -70,6 +70,7 @@ AC_CONFIG_FILES([
 	src/adl/Makefile
 	src/usb/Makefile
 	src/ddc/Makefile
+	src/cmdline/Makefile
 	src/app_sysenv/Makefile
 	src/swig/Makefile 
 	src/gobject_api/Makefile 

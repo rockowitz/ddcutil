@@ -1,6 +1,6 @@
 ## Process this file with automake to produce Makefile.in
 
-SUBDIRS = util usb_util base vcp i2c adl usb ddc app_sysenv . gobject_api swig sample_clients
+SUBDIRS = util usb_util base vcp i2c adl usb ddc app_sysenv cmdline . gobject_api swig sample_clients
 
 MOSTLYCLEANFILES =   
 
@@ -101,9 +101,6 @@ endif
 # Files only in ddcutil executable
 #
 ddcutil_SOURCES = \
-cmdline/cmd_parser_aux.c \
-cmdline/cmd_parser_goption.c \
-cmdline/parsed_cmd.c \
 app_ddcutil/main.c \
 app_ddcutil/app_dumpload.c \
 app_ddcutil/app_setvcp.c \
@@ -264,6 +261,7 @@ ddcutil_CFLAGS                 = $(AM_CFLAGS)  -fPIC
 #
 
 libcommon_la_LIBADD = \
+cmdline/libcmdline.la \
 app_sysenv/libappsysenv.la \
 ddc/libddc.la    \
 i2c/libi2c.la    \
