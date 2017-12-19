@@ -103,7 +103,7 @@ package/debian/ddcutil.debhelper.log
 package/debian/changelog.*
 package/ddcutil.spec
 ubuntuvm_notes.txt
-test
+/test
 qudev
 uaa
 uat

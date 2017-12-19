@@ -67,17 +67,7 @@ maintainerclean-local:
 bin_PROGRAMS = \
   ddcutil  
 
-check_PROGRAMS =
-
-# if ENABLE_SHARED_LIB_COND
-# # Sample C client program for shared library:
-# check_PROGRAMS += \
-#   laclient \
-#   demo_global_settings \
-#   demo_vcpinfo \
-#   demo_get_set_vcp \
-#   demo_display_selection
-# endif
+# check_PROGRAMS =
 
 
 #
@@ -106,25 +96,11 @@ app_ddcutil/app_dumpload.c \
 app_ddcutil/app_setvcp.c \
 app_ddcutil/app_getvcp.c
 
-
 # it's a hack
 if USE_API_COND
 ddcutil_SOURCES += \
    libmain/ddcutil_c_api.c  
 endif
-
-
-
-#
-# Files only in laclient executable
-#
-# laclient_SOURCES = \
-# sample_clients/clmain.c
-
-# demo_global_settings_SOURCES   = sample_clients/demo_global_settings.c
-# demo_vcpinfo_SOURCES           = sample_clients/demo_vcpinfo.c
-# demo_display_selection_SOURCES = sample_clients/demo_display_selection.c
-# demo_get_set_vcp_SOURCES       = sample_clients/demo_get_set_vcp.c
 
 #
 # Files only in libddcutil
@@ -158,12 +134,6 @@ all-local:
 # shared between ddcutil and libddcutil: 
 #
 libcommon_la_SOURCES =      	
-
-if HAVE_ADL_COND
-libcommon_la_SOURCES += \
-  test/adl/adl_tests.c \
-  test/adl/adl_from_sample.c 
-endif
 
 
 if ENABLE_SHARED_LIB_COND
@@ -210,10 +180,10 @@ $(LIBUSB_CFLAGS) \
 -I$(srcdir)      \
 -I$(srcdir)/public
 
-if HAVE_ADL_COND
-AM_CPPFLAGS +=               \
--I@ADL_HEADER_DIR@  
-endif
+# if HAVE_ADL_COND
+# AM_CPPFLAGS +=               \
+# -I@ADL_HEADER_DIR@  
+# endif
 
 
 #
@@ -246,6 +216,10 @@ ddcutil_CFLAGS                 = $(AM_CFLAGS)  -fPIC
 # Be careful about library ordering. 
 # A library must be listed after any libraries that depend on it
 #
+
+
+# TODO: libcmdline.la, libtestcases.la, libappsysenv.la should not be in libcommon
+
 
 libcommon_la_LIBADD = \
 cmdline/libcmdline.la 
