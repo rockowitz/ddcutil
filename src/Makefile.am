@@ -5,24 +5,6 @@ SUBDIRS = util usb_util base vcp i2c adl usb ddc test app_sysenv cmdline . gobje
 MOSTLYCLEANFILES =   
 
 CLEANFILES =
-# adl/*expand               \
-# adl/adl_impl/*expand      \
-# adl/adl_mock_impl/*expand \
-# app_ddcutil/*expand       \
-# base/*expand              \
-# cmdline/*expand           \
-# ddc/*expand               \
-# i2c/*expand               \
-# libmain/*expand           \
-# sample_clients/*expand    \
-# test/*expand              \
-# test/adl/*expand          \
-# test/ddc/*expand          \
-# test/i2c/*expand          \
-# usb/*expand               \
-# usb_util/*expand          \
-# util/*expand              \
-# vcp/*expand
 
 
 # todo: factor out swig 
@@ -75,7 +57,7 @@ bin_PROGRAMS = \
 # Convenience library containing code shared between ddcutil executable and libddcutil shared library
 noinst_LTLIBRARIES = libcommon.la 
 
-# Convenience library to collect libraries used only in ddcutil executable
+# Convenience library to collect code used only in ddcutil executable
 noinst_LTLIBRARIES += libapp.la
 
 
