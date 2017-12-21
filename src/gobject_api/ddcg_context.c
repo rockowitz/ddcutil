@@ -113,10 +113,6 @@ gint * ddcg_get_ddcutil_version_spec4(void) {
 }
 
 
-
-
-
-
 /**
  * ddcg_get_ddcutil_version_string:
  * Returns: (transfer none): ddcutil version as a string
@@ -133,8 +129,6 @@ const gchar * ddcg_get_ddcutil_version_string(void) {
 const guint8 ddcg_get_build_options(void) {
    return ddca_get_build_options();
 }
-
-
 
 
 //
@@ -166,9 +160,6 @@ const gchar * ddcg_rc_desc(DdcgStatusCode status_code) {
 }
 
 
-
-
-
 #ifdef DOESNT_WORK
 struct _DdcgContextClass {
    GObjectClass parent_class;
@@ -178,7 +169,6 @@ struct _DdcgContextClass {
 
 struct _DdcgContext {
    GObject   parent_instance;
-
 };
 
 
@@ -210,7 +200,6 @@ static void ddcg_context_class_init(DdcgContextClass * cls) {
 #endif
    // ddca_init();
    // cls->class_initialized = true;  // no member named class_initialized
-
 }
 
 
@@ -238,6 +227,7 @@ gint32 ddcg_context_get_max_max_tries(
 
 }
 
+
 /**
  * ddcg_context_get_max_tries:
  * @ddcg_context  context
@@ -251,7 +241,6 @@ ddcg_context_get_max_tries(
       DdcgRetryType retry_type) {
    return ddca_get_max_tries(retry_type);
 }
-
 
 
 /**
@@ -317,5 +306,3 @@ ddcg_context_create_display_ref(
    }
    return ddcg_dref;
 }
-
-

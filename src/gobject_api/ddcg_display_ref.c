@@ -91,7 +91,6 @@ _ddcg_display_ref_set_ddct_object(
 }
 
 
-
 DDCA_Display_Ref
 _ddcg_display_ref_get_ddct_object(DdcgDisplayRef * ddcg_dref) {
    g_return_val_if_fail( DDCG_IS_DISPLAY_REF(ddcg_dref), NULL);
@@ -132,7 +131,6 @@ ddcg_display_ref_get(DdcgDisplayIdentifier * ddcg_did, GError ** error) {
 }
 
 
-
 /**
  *  ddcg_display_ref_repr:
  *  @ddcg_dref: a #DdcgDisplayRef
@@ -160,8 +158,6 @@ ddcg_display_ref_repr(
 }
 
 
-
-
 /**
  *  ddcg_display_ref_report:
  *  @ddcg_dref: a #DdcgDisplayRef
@@ -180,8 +176,3 @@ ddcg_display_ref_report(
    rpt_vstring(depth, "DdcgDisplayRef at %p:", ddcg_dref);
    ddca_report_display_ref(ddcg_dref->priv->ddct_dref, depth+1);
 }
-
-
-
-
-

@@ -21,18 +21,15 @@
  * </endcopyright>
  */
 
-
 #include "base/core.h"
 
 #include "ddcg_structs.h"
-
 
 
 G_DEFINE_TYPE(DdcgDdcutilVersionSpec, ddcg_ddcutil_version_spec, G_TYPE_OBJECT)
 
 static void ddcg_ddcutil_version_spec_class_init(DdcgDdcutilVersionSpecClass * cls);
 static void ddcg_ddcutil_version_spec_init(DdcgDdcutilVersionSpec * ddcutil_version_spec);
-
 
 
 static void ddcg_ddcutil_version_spec_class_init(DdcgDdcutilVersionSpecClass * cls) {
@@ -49,4 +46,3 @@ static void ddcg_ddcutil_version_spec_init(DdcgDdcutilVersionSpec * ddcutil_vers
 DdcgDdcutilVersionSpec * ddcg_ddcutil_version_spec_new(void) {
    return g_object_new(DDCG_TYPE_DDCUTIL_VERSION_SPEC, NULL);
 }
-

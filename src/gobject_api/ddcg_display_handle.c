@@ -56,7 +56,6 @@ static void ddcg_display_handle_finalize(GObject * obj);
 #endif
 
 
-
 static void ddcg_display_handle_class_init(DdcgDisplayHandleClass * cls) {
    DBGMSG("Starting");
 }
@@ -77,7 +76,6 @@ static void ddcg_display_handle_finalize(GObject * obj) {
 DdcgDisplayHandle * ddcg_display_handle_new(void) {
    return g_object_new(DDCG_TYPE_DISPLAY_HANDLE, NULL);
 }
-
 
 
 /**
@@ -138,7 +136,6 @@ ddcg_display_handle_open(DdcgDisplayRef * ddcg_dref, GError ** error) {
    }
    return ddcg_dh;
 }
-
 
 
 /**
@@ -243,7 +240,6 @@ ddcg_display_handle_repr(
 }
 
 
-
 #ifdef REF
 TO IMPLEMENT:
 
@@ -251,5 +247,3 @@ DDCA_Status ddct_get_mccs_version(DDCA_Display_Handle ddct_dh, DDCT_MCCS_Version
 
 
 #endif
-
-

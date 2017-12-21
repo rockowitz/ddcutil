@@ -52,10 +52,7 @@ void ddcg_cont_response_report(DdcgContResponse * presp, int depth) {
    rpt_vstring(d1, "max_value:  %d", presp->max_value);
    // rpt_vstring(d1, "pcontext:        %p", presp->pcontext);
    // rpt_vstring(d1, "priv:            %p", presp->priv);
-
-
 }
-
 
 
 G_DEFINE_TYPE (DdcgContResponse, ddcg_cont_response, G_TYPE_OBJECT);
@@ -79,8 +76,6 @@ static void ddcg_cont_response_constructed(GObject * obj) {
 #endif
 
 
-
-
 static void ddcg_cont_response_class_init(DdcgContResponseClass * cls) {
    DBGMSG("Starting");
 #ifdef WONT_COMPILE
@@ -89,15 +84,14 @@ static void ddcg_cont_response_class_init(DdcgContResponseClass * cls) {
 #endif
    // ddca_init();
    // cls->class_initialized = true;  // no member named class_initialized
-
 }
 
 
 static void ddcg_cont_response_init(DdcgContResponse * cont_response) {
    DBGMSG("Starting");
    // initialize the instance
-
 }
+
 
 #ifdef UNUSED
 static void ddcg_cont_response_finalize(GObject * obj) {
@@ -107,7 +101,6 @@ static void ddcg_cont_response_finalize(GObject * obj) {
 DdcgContResponse * ddcg_cont_response_new(void) {
    return g_object_new(DDCG_TYPE_CONT_RESPONSE, NULL);
 }
-
 
 
 /**
@@ -142,10 +135,6 @@ ddcg_cont_response_create(
       ddcg_response->max_value = mh << 8 | ml;
       ddcg_cont_response_report(ddcg_response, 1);
 
-
    DBGMSG("Returning ddcg_response=%p", ddcg_response);
    return ddcg_response;
 }
-
-
-

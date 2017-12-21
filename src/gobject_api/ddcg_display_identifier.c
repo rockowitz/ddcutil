@@ -240,9 +240,6 @@ ddcg_display_identifier_create_mfg_model_sn_identifier(
 }
 
 
-
-
-
 /**
  *  ddcg_display_identifier_create_dispno_identifier: (constructor):
  *  @dispno:    display number
