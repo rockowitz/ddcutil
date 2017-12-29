@@ -52,7 +52,7 @@ void demo_build_information() {
    printf("   ddcutil version by ddca_ddcutil_version():  %d.%d.%d\n", vspec.major, vspec.minor, vspec.micro);
 
    // Get build options
-   uint8_t build_options = ddca_get_build_options();
+   uint8_t build_options = ddca_build_options();
    printf("   Built with ADL support:        %s\n", (build_options & DDCA_BUILT_WITH_ADL)     ? "yes" : "no");
    printf("   Built with USB support:        %s\n", (build_options & DDCA_BUILT_WITH_USB)     ? "yes" : "no");
    printf("   Built with failure simulation: %s\n", (build_options & DDCA_BUILT_WITH_FAILSIM) ? "yes" : "no");
@@ -67,7 +67,7 @@ void demo_retry_management() {
 
   // The maximum retry number that can be specified on ddca_set_max_tries().
   // Any larger number will case the call to fail.
-  int max_max_tries = ddca_get_max_max_tries();
+  int max_max_tries = ddca_max_max_tries();
   printf("   Maximum try count that can be set: %d\n", max_max_tries);
 
   // There are separate maximum tries for 3 different types of I2C operations.

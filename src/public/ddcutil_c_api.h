@@ -124,7 +124,7 @@ bool ddca_built_with_usb(void);
  * </table>
  *
  */
-uint8_t ddca_get_build_options(void);
+uint8_t ddca_build_options(void);
 
 #ifdef OLD
 // Bit ids for ddca_get_build_options() - how to make connection in doxygen?
@@ -231,7 +231,7 @@ There are 3 retry contexts:
  * @return maximum max tries value allowed on set_max_tries()
  */
 int
-ddca_get_max_max_tries(void);
+ddca_max_max_tries(void);
 
 /** Gets the maximum number of I2C retries for the specified operation type.
  * @param  retry_type   I2C operation type
@@ -530,7 +530,7 @@ ddca_did_repr(
  * \ingroup api_display_spec
  */
 DDCA_Status
-ddca_get_display_ref(
+ddca_create_display_ref(
       DDCA_Display_Identifier did,
       DDCA_Display_Ref*       pdref);
 

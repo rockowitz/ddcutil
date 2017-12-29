@@ -42,7 +42,7 @@ cdef extern from "ddcutil_c_api.h":
         DDCA_BUILT_WITH_USB
         DDCA_BUILT_WITH_FAILSIM
 
-    int ddca_get_build_options()
+    int ddca_build_options()
 
 def ddcy_ddcutil_version_string():
     return ddca_ddcutil_version_string().decode("UTF-8")
@@ -60,7 +60,7 @@ BUILT_WITH_FAILSIM = DDCA_BUILT_WITH_FAILSIM
 
 
 def get_build_options():
-    bits = ddca_get_build_options()
+    bits = ddca_build_options()
     print(bits)
     l = []
     if bits & DDCA_BUILT_WITH_ADL: 
@@ -105,7 +105,7 @@ cdef extern from "ddcutil_c_api.h":
         DDCA_WRITE_READ_TRIES
         DDCA_MULTI_PART_TRIES
 
-    int ddca_get_max_max_tries() 
+    int ddca_max_max_tries() 
 
     void ddca_set_max_tries(int retry_type, int ct)
 
@@ -120,7 +120,7 @@ WRITE_READ_TRIES = DDCA_WRITE_READ_TRIES
 MULTI_PART_TRIES = DDCA_MULTI_PART_TRIES
 
 def ddcy_get_max_max_tries():
-    return ddca_get_max_max_tries() 
+    return ddca_max_max_tries() 
 
 def get_max_tries(retry_type):
     return ddca_get_max_tries(retry_type)
@@ -366,7 +366,7 @@ cdef extern from "ddcutil_c_api.h":
 
 cdef extern from "ddcutil_c_api.h":
     
-    int ddca_get_display_ref(void * did, void ** ddca_dref)
+    int ddca_create_display_ref(void * did, void ** ddca_dref)
 
     int ddca_free_display_ref(void * dref)
 
@@ -377,7 +377,7 @@ cdef extern from "ddcutil_c_api.h":
 
 # def get_display_ref(DDCA_Display_Identifier did): 
 #     cdef void * c_dref
-#     rc = ddca_get_display_ref(did, &c_dref)
+#     rc = ddca_create_display_ref(did, &c_dref)
 #     if rc != 0:
 #         excp = create_ddc_exception(rc)
 #         raise excp
@@ -419,7 +419,7 @@ cdef class Display_Identifier(object):
            excp = create_ddc_exception(rc)
            raise excp
 
-    # or
+    # or ?
     def __dealloc__(self):
         rc = ddca_free_display_identifier(self.c_did)
         if rc != 0:
@@ -442,7 +442,7 @@ cdef class Display_Ref(object):
   @classmethod
   def create_from_did(cls, Display_Identifier did):
       cdef void * c_dref
-      rc = ddca_get_display_ref(did.c_did, &c_dref)
+      rc = ddca_create_display_ref(did.c_did, &c_dref)
       if rc != 0:
           excp = create_ddc_exception(rc)
           raise excp

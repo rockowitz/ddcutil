@@ -178,7 +178,7 @@ ddca_adl_is_available(void) {
 // how to document bits?   should doxygen doc be in header instead?
 
 uint8_t
-ddca_get_build_options(void) {
+ddca_build_options(void) {
    uint8_t result = 0x00;
 #ifdef HAVE_ADL
    result |= DDCA_BUILT_WITH_ADL;
@@ -396,7 +396,7 @@ ddca_is_report_ddc_errors_enabled(void) {
 //
 
 int
-ddca_get_max_max_tries(void) {
+ddca_max_max_tries(void) {
    return MAX_MAX_TRIES;
 }
 
@@ -693,7 +693,7 @@ ddca_did_repr(DDCA_Display_Identifier ddca_did) {
 // Display References
 //
 
-DDCA_Status ddca_get_display_ref(DDCA_Display_Identifier did, DDCA_Display_Ref* ddca_dref) {
+DDCA_Status ddca_create_display_ref(DDCA_Display_Identifier did, DDCA_Display_Ref* ddca_dref) {
    bool debug = true;
    DBGMSF(debug, "Starting.  did=%p, ddca_dref=%p", did, ddca_dref);
    if (ddca_dref)

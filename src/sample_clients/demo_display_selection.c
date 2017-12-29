@@ -129,7 +129,7 @@ DDCA_Display_Ref display_selection_using_display_identifier() {
    printf("Created display identifier: %s\n", ddca_did_repr(did) );
 
    printf("\nFind a display reference for the display identifier...\n");
-   rc = ddca_get_display_ref(did, &dref);
+   rc = ddca_create_display_ref(did, &dref);
    if (rc != 0) {
       printf("     ddca_get_display_ref() returned %d (%s): %s\n",
                rc, ddca_rc_name(rc), ddca_rc_desc(rc));

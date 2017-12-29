@@ -124,7 +124,7 @@ bool ddcs_built_with_usb(void) {
 #endif
 
 FlagsByte ddcs_get_build_options(void) {
-   unsigned long feature_bits = ddca_get_build_options();
+   unsigned long feature_bits = ddca_build_options();
    return feature_bits;
 }
 
@@ -272,7 +272,7 @@ char * ddcs_repr_display_identifier(DDCS_Display_Identifier ddcs_did){
 
 DDCS_Display_Ref ddcs_get_display_ref(DDCS_Display_Identifier did){
    DDCS_Display_Ref result = NULL;
-   DDCA_Status rc = ddca_get_display_ref(did, &result);
+   DDCA_Status rc = ddca_create_display_ref(did, &result);
    clear_exception();
    if (rc != 0)
       throw_exception_from_status_code(rc);
