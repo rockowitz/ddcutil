@@ -74,6 +74,7 @@ AC_CONFIG_FILES([
 	src/cmdline/Makefile
 	src/app_sysenv/Makefile
 	src/swig/Makefile 
+	src/cython/Makefile 
 	src/gobject_api/Makefile 
 	src/sample_clients/Makefile
 	man/Makefile 
@@ -235,6 +236,19 @@ AM_CONDITIONAL([ENABLE_SWIG_COND], [test "x$enable_swig" == "xyes"] )
 AS_IF([test "x$enable_swig" == "xyes"],
       AC_MSG_NOTICE( [swig... enabled]  ),
       AC_MSG_NOTICE( [swig... disabled] )
+     )
+
+
+dnl *** configure option: --enable-cython
+AC_ARG_ENABLE([cython],
+              [ AS_HELP_STRING( [--enable-cython=@<:@no/yes@:>@], [Build cython interface@<:@default=no@:>@] )],
+              [enable_cython=${enableval}],
+              [enable_cython=no] )
+dnl Set flag for automake.am:
+AM_CONDITIONAL([ENABLE_CYTHON_COND], [test "x$enable_cython" == "xyes"] )
+AS_IF([test "x$enable_cython" == "xyes"],
+      AC_MSG_NOTICE( [cython... enabled]  ),
+      AC_MSG_NOTICE( [cython... disabled] )
      )
 
 
@@ -663,8 +677,8 @@ dnl   So need to know the version number of Python 3 to construct a name
 dnl   to pass to pkg-config
 
 
-AS_IF( [ test "x$enable_swig" == "xyes" ], [
-   AC_MSG_NOTICE( [SWIG enabled, checking for Python and SWIG...] )
+AS_IF( [ test "x$enable_swig" == "xyes" || test "x$enable_cython" == "xyes"  ], [
+   AC_MSG_NOTICE( [SWIG or Cython enabled, checking for Python and SWIG...] )
 
    # Python 3 
 
@@ -787,70 +801,73 @@ AS_IF( [ test "x$enable_swig" == "xyes" ], [
    )
    AC_MSG_NOTICE( [ enable_some_python:   $enable_some_python ])
 
-   AS_IF( [test "x$enable_some_python" == "xyes"], [
+   AS_IF( [ test "x$enable_swig" == "xyes"   ], [
 
-      AC_MSG_NOTICE( [Calling ax_pkg_swig...] )
+      AS_IF( [test "x$enable_some_python" == "xyes"], [
+         AC_MSG_NOTICE( [Calling ax_pkg_swig...] )
 
-      dnl ax_pkg_swig respects SWIG_LIB, but overrides SWIG, so don't expose the possibility of overriding
-      dnl AC_ARG_VAR(SWIG, [swig executable])
-      dnl AC_ARG_VAR(SWIG_LIB, [linker flags for swig])
-      dnl AC_MSG_NOTICE( [Before ax_pkg_swig:] )
-      dnl AC_MSG_NOTICE( [  SWIG                    = $SWIG ] )
-      dnl AC_MSG_NOTICE( [  SWIG_LIB                = $SWIG_LIB ])
+         dnl ax_pkg_swig respects SWIG_LIB, but overrides SWIG, so don't expose the possibility of overriding
+         dnl AC_ARG_VAR(SWIG, [swig executable])
+         dnl AC_ARG_VAR(SWIG_LIB, [linker flags for swig])
+         dnl AC_MSG_NOTICE( [Before ax_pkg_swig:] )
+         dnl AC_MSG_NOTICE( [  SWIG                    = $SWIG ] )
+         dnl AC_MSG_NOTICE( [  SWIG_LIB                = $SWIG_LIB ])
 
-      AX_PKG_SWIG(1.3.21, [swig_found=yes], [swig_found=no])
-      AS_IF( [test 0$DBG -ne 0], [
-         AC_MSG_NOTICE( [Set by ax_pkg_swig:] )
-         AC_MSG_NOTICE( [  swig_found              = $swig_found] )
-         AC_MSG_NOTICE( [  SWIG                    = $SWIG ] )
-         AC_MSG_NOTICE( [  SWIG_LIB                = $SWIG_LIB ])
-      ])
+         AX_PKG_SWIG(1.3.21, [swig_found=yes], [swig_found=no])
+         AS_IF( [test 0$DBG -ne 0], [
+            AC_MSG_NOTICE( [Set by ax_pkg_swig:] )
+            AC_MSG_NOTICE( [  swig_found              = $swig_found] )
+            AC_MSG_NOTICE( [  SWIG                    = $SWIG ] )
+            AC_MSG_NOTICE( [  SWIG_LIB                = $SWIG_LIB ])
+         ])
 
-      dnl AX_SWIG_MULTI_MODULE_SUPPORT
+         dnl AX_SWIG_MULTI_MODULE_SUPPORT
 
-      dnl dnl n.b. will fail if python2 not installed
-      dnl dnl AX_PYTHON_DEVEL Calls AC_PATH_PROG() to find $PYTHON, fails if python not found
-      dnl dnl PYTHON_SITE_PKG_EXEC set only in _alt version:
-      dnl AS_IF( [test "x$python_found" == "xyes" ], [
-      dnl    AC_MSG_NOTICE( [Calling ax_python_devel for informational purposes...])
-      dnl    AX_PYTHON_DEVEL
+         dnl dnl n.b. will fail if python2 not installed
+         dnl dnl AX_PYTHON_DEVEL Calls AC_PATH_PROG() to find $PYTHON, fails if python not found
+         dnl dnl PYTHON_SITE_PKG_EXEC set only in _alt version:
+         dnl AS_IF( [test "x$python_found" == "xyes" ], [
+         dnl    AC_MSG_NOTICE( [Calling ax_python_devel for informational purposes...])
+         dnl    AX_PYTHON_DEVEL
 
-      dnl    AS_IF( [test 0$DBG -ne 0], [
-      dnl       AC_MSG_NOTICE( [From ax_python_devel or ac_python_devel_alt..  ] )
-		  dnl       AC_MSG_NOTICE( [  PYTHON_CPPFLAGS      = $PYTHON_CPPFLAGS      ] )
-		  dnl       AC_MSG_NOTICE( [  PYTHON_SITE_PKG      = $PYTHON_SITE_PKG    ] )
+         dnl    AS_IF( [test 0$DBG -ne 0], [
+         dnl       AC_MSG_NOTICE( [From ax_python_devel or ac_python_devel_alt..  ] )
+	   	    dnl       AC_MSG_NOTICE( [  PYTHON_CPPFLAGS      = $PYTHON_CPPFLAGS      ] )
+	   	     dnl       AC_MSG_NOTICE( [  PYTHON_SITE_PKG      = $PYTHON_SITE_PKG    ] )
+   
+		     dnl       AC_MSG_NOTICE( [From ax_python_devel only ...  ] )
+		     dnl       AC_MSG_NOTICE( [  PYTHON_LIBS          = $PYTHON_LIBS          ] )
+		     dnl       AC_MSG_NOTICE( [  PYTHON_EXTRA_LDFLAGS = $PYTHON_EXTRA_LDFLAGS    ] )
+		     dnl       AC_MSG_NOTICE( [  PYTHON_EXTRA_LIBS    = $PYTHON_EXTRA_LIBS    ] )
 
-		  dnl       AC_MSG_NOTICE( [From ax_python_devel only ...  ] )
-		  dnl       AC_MSG_NOTICE( [  PYTHON_LIBS          = $PYTHON_LIBS          ] )
-		  dnl       AC_MSG_NOTICE( [  PYTHON_EXTRA_LDFLAGS = $PYTHON_EXTRA_LDFLAGS    ] )
-		  dnl       AC_MSG_NOTICE( [  PYTHON_EXTRA_LIBS    = $PYTHON_EXTRA_LIBS    ] )
+		     dnl       AC_MSG_NOTICE( [From ax_python_devel_alt only ...  ] )
+		     dnl       AC_MSG_NOTICE( [  PYTHON_LDFLAGS       = $PYTHON_LDFLAGS       ] )
+		     dnl       AC_MSG_NOTICE( [  PYTHON_SITE_PKG_EXEC = $PYTHON_SITE_PKG_EXEC    ] )
+		     dnl       AC_MSG_NOTICE( [  PYTHON_CFLAGS       = $PYTHON_CFLAGS] )
+		     dnl    ])
+		     dnl ])
 
-		  dnl       AC_MSG_NOTICE( [From ax_python_devel_alt only ...  ] )
-		  dnl       AC_MSG_NOTICE( [  PYTHON_LDFLAGS       = $PYTHON_LDFLAGS       ] )
-		  dnl       AC_MSG_NOTICE( [  PYTHON_SITE_PKG_EXEC = $PYTHON_SITE_PKG_EXEC    ] )
-		  dnl       AC_MSG_NOTICE( [  PYTHON_CFLAGS       = $PYTHON_CFLAGS] )
-		  dnl    ])
-		  dnl ])
+         dnl dnl n. AX_SWIG_PYTHON does AC_REQUIRE of AX_PKG_SWIG, AX_PYTHON_DEVEL
+         dnl dnl AC_MSG_NOTICE( [Calling ax_swig_python...] )
+         dnl AX_SWIG_PYTHON
+         dnl AS_IF( [test 0$DBG -ne 0], [
+         dnl    AC_MSG_NOTICE( [ Set by ax_swig_python:] )
+         dnl    AC_MSG_NOTICE( [   AX_SWIG_PYTHON_CPPFLAGS = $AX_SWIG_PYTHON_CPPFLAGS ] )
+         dnl    AC_MSG_NOTICE( [   AX_SWIG_PYTHON_OPT      = $AX_SWIG_PYTHON_OPT ] )
+         dnl    AC_MSG_NOTICE( [   AX_SWIG_PYTHON_LIBS     = $AX_SWIG_PYTHON_LIBS ] )
+         dnl ])
 
-      dnl dnl n. AX_SWIG_PYTHON does AC_REQUIRE of AX_PKG_SWIG, AX_PYTHON_DEVEL
-      dnl dnl AC_MSG_NOTICE( [Calling ax_swig_python...] )
-      dnl AX_SWIG_PYTHON
-      dnl AS_IF( [test 0$DBG -ne 0], [
-      dnl    AC_MSG_NOTICE( [ Set by ax_swig_python:] )
-      dnl    AC_MSG_NOTICE( [   AX_SWIG_PYTHON_CPPFLAGS = $AX_SWIG_PYTHON_CPPFLAGS ] )
-      dnl    AC_MSG_NOTICE( [   AX_SWIG_PYTHON_OPT      = $AX_SWIG_PYTHON_OPT ] )
-      dnl    AC_MSG_NOTICE( [   AX_SWIG_PYTHON_LIBS     = $AX_SWIG_PYTHON_LIBS ] )
-      dnl ])
+         AS_IF([ test "x$swig_found" == "xyes" -a "x$enable_some_python" == "xyes"],
+               [ python_and_swig_found="yes"],
+               [ python_and_swig_found="no"]
+              )
+         AC_MSG_NOTICE( [python_and_swig_found  = $python_and_swig_found ])
 
-      AS_IF([ test "x$swig_found" == "xyes" -a "x$enable_some_python" == "xyes"],
-            [ python_and_swig_found="yes"],
-            [ python_and_swig_found="no"]
+         AS_IF([test "x$enable_swig" == "xyes" -a  "x$python_and_swig_found" != "xyes" ] ,
+               AC_MSG_ERROR( [--enable-swig requires some version of Python, its development package, and SWIG] ) 
            )
-      AC_MSG_NOTICE( [python_and_swig_found  = $python_and_swig_found ])
-
-      AS_IF([test "x$enable_swig" == "xyes" -a  "x$python_and_swig_found" != "xyes" ] ,
-            AC_MSG_ERROR( [--enable-swig requires some version of Python, its development package, and SWIG] ) 
-        )
+		],
+		[])
 
    ],[
      AC_MSG_NOTICE([Skipping SWIG check])
@@ -936,6 +953,8 @@ AM_CONDITIONAL([ENABLE_PYTHON_SWIG],[test x$enable_swig   == xyes])
 dnl temporary crude flag:
 AM_CONDITIONAL([HAVE_PYTHON3],      [test x$enable_py3 == xyes])
 
+dnl temporary crude flag:
+AM_CONDITIONAL([ENABLE_CYTHON],[test x$enable_cython == xyes])
 
 dnl AC_MSG_NOTICE([======================== required_packages:   $required_packages])
 AC_SUBST(REQUIRED_PACKAGES,$required_packages)
@@ -1005,6 +1024,7 @@ AC_MSG_RESULT([
 	adl_header_dir:         ${adl_header_dir}
 	enable_lib:             ${enable_lib}
 	enable_swig:            ${enable_swig}
+	enable_cython:          ${enable_cython}
 	enable_gobject          ${enable_gobject}
 	enable_usb:             ${enable_usb}
 	enable_drm:             ${enable_drm}   

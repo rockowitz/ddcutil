@@ -1,6 +1,6 @@
 ## Process this file with automake to produce Makefile.in
 
-SUBDIRS = util usb_util base vcp i2c adl usb ddc test app_sysenv cmdline . gobject_api swig sample_clients
+SUBDIRS = util usb_util base vcp i2c adl usb ddc test app_sysenv cmdline . gobject_api swig cython  sample_clients 
 
 MOSTLYCLEANFILES =   
 
@@ -67,6 +67,7 @@ noinst_LTLIBRARIES += libapp.la
 
 if ENABLE_SHARED_LIB_COND
 lib_LTLIBRARIES = libddcutil.la
+# noinst_LTLIBRARIES += libhack.la
 endif
 
 
@@ -91,6 +92,8 @@ endif
 libddcutil_la_SOURCES = \
 libmain/ddcutil_c_api.c  
 
+# libhack_la_SOURCES = \
+# libmain/ddcutil_c_api.c  
 
 # Despite what the Autotools book says, all-local is executed aftar all, not before 
 # So this ensures that the NEXT execution of all will compile build_info.c 
@@ -236,6 +239,9 @@ libcommon_la_LIBADD += \
 libddcutil_la_LIBADD = $(ZLIB_LIBS)
 libddcutil_la_LIBADD += libcommon.la
 
+# libhack_la_LIBADD = $(ZLIB_LIBS)
+# libhack_la_LIBADD += libcommon.la  libddcutil.la
+
 
 libddcutil_la_LDFLAGS = 
 # -export-dynamic not required for failsim: 
@@ -249,8 +255,11 @@ libddcutil_la_LDFLAGS += -version-info '@LT_CURRENT@:@LT_REVISION@:@LT_AGE@'
 libddcutil_la_LDFLAGS += -pie
 
 # doesn't prevent creation of .la 
+# try disabling to create libddcutil.a - doesnt do it
 libddcutil_la_LDFLAGS += --disable-static
 
+
+# libhack_la_LDFLAGS = $(libddcutil_la_LDFLAGS)
 
 #
 # Link the executables
@@ -262,6 +271,7 @@ libddcutil_la_LDFLAGS += --disable-static
 ddcutil_LDADD =   \
    libapp.la \
    libcommon.la 
+
 
 
 #needed?
