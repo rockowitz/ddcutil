@@ -33,6 +33,7 @@
 #include <string.h>
 /** \endcond */
 
+
 #include "util/data_structures.h"
 #include "util/error_info.h"
 #include "util/report_util.h"
@@ -133,7 +134,7 @@ DDCA_Ddcutil_Version_Spec ddca_ddcutil_version(void) {
 /*  Returns the ddcutil version as a string in the form "major.minor.micro".
  */
 const char *
-ddca_ddcutil_version_string() {
+ddca_ddcutil_version_string(void) {
    return BUILD_VERSION;
 }
 
@@ -141,7 +142,7 @@ ddca_ddcutil_version_string() {
 /* Indicates whether the ddcutil library was built with ADL support. .
  */
 bool
-ddca_built_with_adl() {
+ddca_built_with_adl(void) {
 #ifdef HAVE_ADL
    return true;
 #else
@@ -153,7 +154,7 @@ ddca_built_with_adl() {
 /* Indicates whether the ddcutil library was built with support for USB connected monitors. .
  */
 bool
-ddca_built_with_usb() {
+ddca_built_with_usb(void) {
 #ifdef USE_USB
    return true;
 #else
@@ -167,7 +168,7 @@ ddca_built_with_usb() {
  * @return true/false
  */
 bool
-ddca_adl_is_available() {
+ddca_adl_is_available(void) {
    return adlshim_is_available();
 }
 
@@ -177,7 +178,7 @@ ddca_adl_is_available() {
 // how to document bits?   should doxygen doc be in header instead?
 
 uint8_t
-ddca_get_build_options() {
+ddca_get_build_options(void) {
    uint8_t result = 0x00;
 #ifdef HAVE_ADL
    result |= DDCA_BUILT_WITH_ADL;
@@ -203,7 +204,7 @@ static bool library_initialized = false;
  * It is not an error if this function is called more than once.
  */
 void __attribute__ ((constructor))
-_ddca_init() {
+_ddca_init(void) {
    // Note: Until init_msg_control() is called within init_base_services(),
    // FOUT is null, so DBGMSG() causes a segfault
    bool debug = false;
@@ -337,7 +338,7 @@ ddca_set_fout(FILE * fout) {
 
 
 void
-ddca_set_fout_to_default() {
+ddca_set_fout_to_default(void) {
    // if (!library_initialized)
    //    _ddca_init();
    set_fout_to_default();
@@ -353,7 +354,7 @@ void ddca_set_ferr(FILE * ferr) {
 }
 
 
-void ddca_set_ferr_to_default() {
+void ddca_set_ferr_to_default(void) {
    // if (!library_initialized)
    //    _ddca_init();
    set_ferr_to_default();
@@ -361,7 +362,7 @@ void ddca_set_ferr_to_default() {
 
 
 DDCA_Output_Level
-ddca_get_output_level() {
+ddca_get_output_level(void) {
    return get_output_level();
 }
 
@@ -385,7 +386,7 @@ ddca_enable_report_ddc_errors(bool onoff) {
 }
 
 bool
-ddca_is_report_ddc_errors_enabled() {
+ddca_is_report_ddc_errors_enabled(void) {
    return report_ddc_errors;
 }
 
@@ -395,7 +396,7 @@ ddca_is_report_ddc_errors_enabled() {
 //
 
 int
-ddca_get_max_max_tries() {
+ddca_get_max_max_tries(void) {
    return MAX_MAX_TRIES;
 }
 
@@ -487,7 +488,7 @@ ddca_set_timeout_millis(
 // Statistics
 //
 
-void ddca_reset_stats() {
+void ddca_reset_stats(void) {
    ddc_reset_stats_main();
 }
 
@@ -509,6 +510,7 @@ ddca_create_dispno_display_identifier(
 {
    Display_Identifier* did = create_dispno_display_identifier(dispno);
    *p_did = did;
+   DBGMSG("Done.  *p_did = %p", *p_did);
    return 0;
 }
 
@@ -618,6 +620,7 @@ DDCA_Status
 ddca_free_display_identifier(
       DDCA_Display_Identifier did)
 {
+   DBGMSG("Starting.  did=%p", did);
    DDCA_Status rc = 0;
    Display_Identifier * pdid = (Display_Identifier *) did;
    if (pdid == NULL || memcmp(pdid->marker, DISPLAY_IDENTIFIER_MARKER, 4) != 0 )  {
@@ -634,6 +637,7 @@ ddca_free_display_identifier(
 
 char *
 ddca_did_repr(DDCA_Display_Identifier ddca_did) {
+   DBGMSG("Starting.  ddca_did=%p", ddca_did);
    char * result = NULL;
    Display_Identifier * pdid = (Display_Identifier *) ddca_did;
    if (pdid != NULL && memcmp(pdid->marker, DISPLAY_IDENTIFIER_MARKER, 4) == 0 )  {
@@ -680,6 +684,7 @@ ddca_did_repr(DDCA_Display_Identifier ddca_did) {
       result = did_repr(pdid);
 
    }
+   DBGMSG("Done.  Returning: %p", result);
    return result;
 }
 
@@ -689,13 +694,19 @@ ddca_did_repr(DDCA_Display_Identifier ddca_did) {
 //
 
 DDCA_Status ddca_get_display_ref(DDCA_Display_Identifier did, DDCA_Display_Ref* ddca_dref) {
-   bool debug = false;
-   if (!library_initialized)
-      return DDCL_UNINITIALIZED;
+   bool debug = true;
+   DBGMSF(debug, "Starting.  did=%p, ddca_dref=%p", did, ddca_dref);
+   if (ddca_dref)
+      DBGMSF(debug,"    *ddca_dref=%p", *ddca_dref);
+   DDCA_Status rc = 0;
+
+   if (!library_initialized) {
+      rc =  DDCL_UNINITIALIZED;
+      goto bye;
+   }
 
    ddc_ensure_displays_detected();
 
-   DDCA_Status rc = 0;
    Display_Identifier * pdid = (Display_Identifier *) did;
    if (pdid == NULL || memcmp(pdid->marker, DISPLAY_IDENTIFIER_MARKER, 4) != 0 )  {
      rc = -EINVAL;
@@ -709,6 +720,11 @@ DDCA_Status ddca_get_display_ref(DDCA_Display_Identifier did, DDCA_Display_Ref* 
       else
          rc = DDCRC_INVALID_DISPLAY;
    }
+
+bye:
+   DBGMSF(debug, "Done.  Returning: %d", rc);
+   if (rc == 0)
+      DBGMSF(debug,"    *ddca_dref=%p", *ddca_dref);
    return rc;
 }
 
@@ -727,6 +743,8 @@ DDCA_Status ddca_free_display_ref(DDCA_Display_Ref ddca_dref) {
 
 char *
 ddca_dref_repr(DDCA_Display_Ref ddca_dref){
+   bool debug = true;
+   DBGMSF(debug, "Starting.  ddca_dref = %p", ddca_dref);
    char * result = NULL;
    Display_Ref * dref = (Display_Ref *) ddca_dref;
    if (dref != NULL && memcmp(dref->marker, DISPLAY_REF_MARKER, 4) == 0 )  {
@@ -747,6 +765,7 @@ ddca_dref_repr(DDCA_Display_Ref ddca_dref){
       // result = dref_short_name(dref);
       result = dref_repr_t(dref);
    }
+   DBGMSF(debug, "Done. Returning: %s", result);
    return result;
 }
 
@@ -755,6 +774,8 @@ ddca_report_display_ref(
       DDCA_Display_Ref ddca_dref,
       int              depth)
 {
+   bool debug = true;
+   DBGMSF(debug, "Starting.  ddca_dref = %p, depth=%d", ddca_dref, depth);
    Display_Ref * dref = (Display_Ref *) ddca_dref;
    rpt_vstring(depth, "DDCA_Display_Ref at %p:", dref);
    report_display_ref(dref, depth+1);
@@ -942,8 +963,9 @@ ddca_get_displays_old()
 
 // or should this return status code?
 DDCA_Display_Info_List *
-ddca_get_display_info_list()
+ddca_get_display_info_list(void)
 {
+   bool debug = true;
    // PROGRAM_LOGIC_ERROR("Pseudo failure");
 
    ddc_ensure_displays_detected();
@@ -959,8 +981,8 @@ ddca_get_display_info_list()
    int reqd_size =   offsetof(DDCA_Display_Info_List,info) + true_ct * sizeof(DDCA_Display_Info);
    DDCA_Display_Info_List * result_list = calloc(1,reqd_size);
    result_list->ct = true_ct;
-   // DBGMSG("sizeof(DDCA_Display_Info) = %d, sizeof(Display_Info_List) = %d, reqd_size=%d, true_ct=%d, offsetof(DDCA_Display_Info_List,info) = %d",
-   //       sizeof(DDCA_Display_Info), sizeof(DDCA_Display_Info_List), reqd_size, true_ct, offsetof(DDCA_Display_Info_List,info));
+   DBGMSF(debug, "sizeof(DDCA_Display_Info) = %d, sizeof(Display_Info_List) = %d, reqd_size=%d, true_ct=%d, offsetof(DDCA_Display_Info_List,info) = %d",
+           sizeof(DDCA_Display_Info), sizeof(DDCA_Display_Info_List), reqd_size, true_ct, offsetof(DDCA_Display_Info_List,info));
 
    int true_ctr = 0;
    for (int ndx = 0; ndx < all_displays->len; ndx++) {
@@ -994,7 +1016,7 @@ ddca_get_display_info_list()
       }
    }
 
-   // DBGMSG("Returning %p", result_list);
+   DBGMSF(debug, "Done. Returning %p", result_list);
    return result_list;
 }
 
@@ -1026,6 +1048,9 @@ ddca_report_display_info(
       DDCA_Display_Info * dinfo,
       int                 depth)
 {
+   bool debug = true;
+   DBGMSF(debug, "Starting. dinfo=%p, depth=%d", dinfo, depth);
+
    assert(dinfo);
    assert(memcmp(dinfo->marker, DDCA_DISPLAY_INFO_MARKER, 4) == 0);
    int d0 = depth;
@@ -1057,6 +1082,7 @@ ddca_report_display_info(
    rpt_hex_dump(dinfo->edid_bytes, 128, d2);
    rpt_vstring(d1, "dref:                %p", dinfo->dref);
    // free(edidstr);
+   DBGMSF(debug, "Done");
 }
 
 
@@ -1065,6 +1091,9 @@ ddca_report_display_info_list(
       DDCA_Display_Info_List * dlist,
       int                      depth)
 {
+   bool debug = true;
+   DBGMSF(debug, "Starting.  dlist=%p, depth=%d", dlist, depth);
+
    int d1 = depth+1;
    rpt_vstring(depth, "Found %d displays", dlist->ct);
    for (int ndx=0; ndx<dlist->ct; ndx++) {
@@ -1435,10 +1464,12 @@ ddca_get_vcp_value(
 
    WITH_DH(ddca_dh,
          {
+               bool debug = true;
                *pvalrec = NULL;
                ddc_excp = get_vcp_value(dh, feature_code, call_type, pvalrec);
                psc = (ddc_excp) ? ddc_excp->status_code : 0;
                errinfo_free(ddc_excp);
+               DBGMSF(debug, "*pvalrec=%p", *pvalrec);
          }
    );
 }
@@ -1563,6 +1594,7 @@ ddca_get_capabilities_string(
       DDCA_Display_Handle  ddca_dh,
       char**               pcaps)
 {
+   bool debug = true;
    Error_Info * ddc_excp = NULL;
    WITH_DH(ddca_dh,
       {
@@ -1574,6 +1606,7 @@ ddca_get_capabilities_string(
             // make copy to ensure caller does not muck around in ddcutil's
             // internal data structures
             *pcaps = strdup(p_cap_string);
+            DBGMSF(debug, "*pcaps=%p", *pcaps);
          }
       }
    );

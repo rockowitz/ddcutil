@@ -34,11 +34,11 @@
 #define DDCUTIL_TYPES_H_
 
 /** \cond */
-#include <config.h>
+// #include <config.h>
 
-#include <linux/limits.h>
-#include <stdbool.h>
-#include <stdint.h>
+// #include <linux/limits.h>
+// #include <stdbool.h>            // used only in obsolete DDCA_Global_Failure_Information
+#include <stdint.h>                // for uint8_t, unit16_t
 /** \endcond */
 
 
@@ -474,7 +474,23 @@ typedef struct {
          uint16_t   cur_val;        /**< current value (sh, sl bytes) for continuous value */
       }         c;                  /**< continuous (C) value */
       struct {
-   // WORDS_BIGENDIAN ifdef ensures proper overlay of ml/mh on max_val, sl/sh on cur_val
+   // Ensure proper overlay of ml/mh on max_val, sl/sh on cur_val
+
+#if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
+      uint8_t    ml;            /**< ML byte for NC value */
+      uint8_t    mh;            /**< MH byte for NC value */
+      uint8_t    sl;            /**< SL byte for NC value */
+      uint8_t    sh;            /**< SH byte for NC value */
+#elif __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
+      uint8_t    mh;
+      uint8_t    ml;
+      uint8_t    sh;
+      uint8_t    sl;
+#else
+#error "Unexpected byte order value: __BYTE_ORDER__"
+#endif
+
+#ifdef OLD
    #ifdef WORDS_BIGENDIAN
          uint8_t    mh;
          uint8_t    ml;
@@ -486,6 +502,7 @@ typedef struct {
          uint8_t    sl;            /**< SL byte for NC value */
          uint8_t    sh;            /**< SH byte for NC value */
    #endif
+#endif
       }         nc;                /**< non-continuous (NC) value */
    };
 } DDCA_Non_Table_Value_Response;
@@ -510,6 +527,22 @@ typedef struct {
          uint16_t   cur_val;        /**< current value (sh, sl bytes) for continuous value */
       }         c;                  /**< continuous (C) value */
       struct {
+      // __BYTE_ORDER__ ifdef ensures proper overlay of ml/mh on max_val, sl/sh on cur_val
+#if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
+         uint8_t    ml;            /**< ML byte for NC value */
+         uint8_t    mh;            /**< MH byte for NC value */
+         uint8_t    sl;            /**< SL byte for NC value */
+         uint8_t    sh;            /**< SH byte for NC value */
+#elif __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
+         uint8_t    mh;
+         uint8_t    ml;
+         uint8_t    sh;
+         uint8_t    sl;
+#else
+#error "Unexpected byte order value: __BYTE_ORDER__"
+#endif
+
+#ifdef OLD
 // WORDS_BIGENDIAN ifdef ensures proper overlay of ml/mh on max_val, sl/sh on cur_val
 #ifdef WORDS_BIGENDIAN
          uint8_t    mh;
@@ -521,6 +554,7 @@ typedef struct {
          uint8_t    mh;            /**< MH byte for NC value */
          uint8_t    sl;            /**< SL byte for NC value */
          uint8_t    sh;            /**< SH byte for NC value */
+#endif
 #endif
       }         nc;                /**< non-continuous (NC) value */
    }       val;

@@ -27,9 +27,9 @@
 #define DDCUTIL_C_API_H_
 
 /** \cond */
-#include <setjmp.h>
+// #include <setjmp.h>    // obsolete
 #include <stdbool.h>
-#include <stdio.h>
+// #include <stdio.h>
 /** \endcond */
 
 // is this the right location?
@@ -83,7 +83,7 @@ DDCA_Ddcutil_Version_Spec ddca_ddcutil_version(void);       // ddcutil version
  *
  * @return version string.
  */
-const char * ddca_ddcutil_version_string();
+const char * ddca_ddcutil_version_string(void);
 
 #ifdef OLD
 /**
@@ -231,7 +231,7 @@ There are 3 retry contexts:
  * @return maximum max tries value allowed on set_max_tries()
  */
 int
-ddca_get_max_max_tries();
+ddca_get_max_max_tries(void);
 
 /** Gets the maximum number of I2C retries for the specified operation type.
  * @param  retry_type   I2C operation type
@@ -264,7 +264,7 @@ void ddca_enable_verify(bool onoff);
  * \retval true values are verified after being set
  * \retval false values are not verified
  */
-bool ddca_is_verify_enabled();
+bool ddca_is_verify_enabled(void);
 
 
 //
@@ -279,7 +279,7 @@ ddca_set_fout(
 
 /** Redirects output that normally goes to STDOUT back to STDOUT */
 void
-ddca_set_fout_to_default();
+ddca_set_fout_to_default(void);
 
 /** Redirects output that normally would go to STDERR
  */
@@ -290,12 +290,12 @@ ddca_set_ferr(
 /** Redirects output that normally goes to STDERR back to STDERR
  */
 void
-ddca_set_ferr_to_default();
+ddca_set_ferr_to_default(void);
 
 
 /** Gets the current output level */
 DDCA_Output_Level                   /**< current output level */
-ddca_get_output_level();
+ddca_get_output_level(void);
 
 /** Sets the output level */
 void
@@ -320,7 +320,7 @@ ddca_enable_report_ddc_errors(
 
 /** Checks whether messages describing DDC protocol errors are output */
 bool
-ddca_is_report_ddc_errors_enabled();
+ddca_is_report_ddc_errors_enabled(void);
 
 
 //
@@ -328,7 +328,7 @@ ddca_is_report_ddc_errors_enabled();
 //
 
 /** Resets all **ddcutil** statistics */
-void ddca_reset_stats();
+void ddca_reset_stats(void);
 
 /** Show execution statistics.
  *
@@ -349,7 +349,7 @@ void ddca_show_stats(DDCA_Stats_Type stats, int depth);
  *  @return list of display summaries
  */
 DDCA_Display_Info_List *
-ddca_get_display_info_list();
+ddca_get_display_info_list(void);
 
 
 /** Frees a list of detected displays.
@@ -744,7 +744,7 @@ char *
 ddca_mccs_version_id_name(
       DDCA_MCCS_Version_Id  version_id);
 
-/** Returns the describptive name of a #DDCA_MCCS_Version_Id,
+/** Returns the descriptive name of a #DDCA_MCCS_Version_Id,
  *  e.g. "2.0".
  *
  *  @param  version_id  version id value
@@ -799,7 +799,7 @@ ddca_get_edid_by_display_ref(
 //
 
 void
-ddct_free_table_value_response(
+ddca_free_table_value_response(
       DDCA_Table_Value * table_value_response);
 
 
