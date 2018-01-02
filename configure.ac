@@ -75,6 +75,7 @@ AC_CONFIG_FILES([
 	src/app_sysenv/Makefile
 	src/swig/Makefile 
 	src/cython/Makefile 
+	src/cffi/Makefile 
 	src/gobject_api/Makefile 
 	src/sample_clients/Makefile
 	man/Makefile 
@@ -249,6 +250,19 @@ AM_CONDITIONAL([ENABLE_CYTHON_COND], [test "x$enable_cython" == "xyes"] )
 AS_IF([test "x$enable_cython" == "xyes"],
       AC_MSG_NOTICE( [cython... enabled]  ),
       AC_MSG_NOTICE( [cython... disabled] )
+     )
+
+
+dnl *** configure option: --enable-cffi
+AC_ARG_ENABLE([cffi],
+              [ AS_HELP_STRING( [--enable-cffi=@<:@no/yes@:>@], [Build cffi interface@<:@default=no@:>@] )],
+              [enable_cffi=${enableval}],
+              [enable_cffi=no] )
+dnl Set flag for automake.am:
+AM_CONDITIONAL([ENABLE_CFFO_COND], [test "x$enable_cffi" == "xyes"] )
+AS_IF([test "x$enable_cffi" == "xyes"],
+      AC_MSG_NOTICE( [cffi... enabled]  ),
+      AC_MSG_NOTICE( [cffi... disabled] )
      )
 
 
@@ -677,8 +691,8 @@ dnl   So need to know the version number of Python 3 to construct a name
 dnl   to pass to pkg-config
 
 
-AS_IF( [ test "x$enable_swig" == "xyes" || test "x$enable_cython" == "xyes"  ], [
-   AC_MSG_NOTICE( [SWIG or Cython enabled, checking for Python and SWIG...] )
+AS_IF( [ test "x$enable_swig" == "xyes" || test "x$enable_cython" == "xyes" || test "x$enable_cffi" == "xyes"  ], [
+   AC_MSG_NOTICE( [SWIG, Cython, or CFFI  enabled, checking for Python and SWIG...] )
 
    # Python 3 
 
@@ -955,6 +969,7 @@ AM_CONDITIONAL([HAVE_PYTHON3],      [test x$enable_py3 == xyes])
 
 dnl temporary crude flag:
 AM_CONDITIONAL([ENABLE_CYTHON],[test x$enable_cython == xyes])
+AM_CONDITIONAL([ENABLE_CFFI],  [test x$enable_cffi   == xyes])
 
 dnl AC_MSG_NOTICE([======================== required_packages:   $required_packages])
 AC_SUBST(REQUIRED_PACKAGES,$required_packages)
@@ -1025,6 +1040,7 @@ AC_MSG_RESULT([
 	enable_lib:             ${enable_lib}
 	enable_swig:            ${enable_swig}
 	enable_cython:          ${enable_cython}
+	enable_cffi:            ${enable_cffi}
 	enable_gobject          ${enable_gobject}
 	enable_usb:             ${enable_usb}
 	enable_drm:             ${enable_drm}   
