@@ -694,7 +694,7 @@ ddca_did_repr(DDCA_Display_Identifier ddca_did) {
 //
 
 DDCA_Status ddca_create_display_ref(DDCA_Display_Identifier did, DDCA_Display_Ref* ddca_dref) {
-   bool debug = true;
+   bool debug = false;
    DBGMSF(debug, "Starting.  did=%p, ddca_dref=%p", did, ddca_dref);
    if (ddca_dref)
       DBGMSF(debug,"    *ddca_dref=%p", *ddca_dref);
@@ -743,7 +743,7 @@ DDCA_Status ddca_free_display_ref(DDCA_Display_Ref ddca_dref) {
 
 char *
 ddca_dref_repr(DDCA_Display_Ref ddca_dref){
-   bool debug = true;
+   bool debug = false;
    DBGMSF(debug, "Starting.  ddca_dref = %p", ddca_dref);
    char * result = NULL;
    Display_Ref * dref = (Display_Ref *) ddca_dref;
@@ -774,7 +774,7 @@ ddca_report_display_ref(
       DDCA_Display_Ref ddca_dref,
       int              depth)
 {
-   bool debug = true;
+   bool debug = false;
    DBGMSF(debug, "Starting.  ddca_dref = %p, depth=%d", ddca_dref, depth);
    Display_Ref * dref = (Display_Ref *) ddca_dref;
    rpt_vstring(depth, "DDCA_Display_Ref at %p:", dref);
@@ -965,7 +965,7 @@ ddca_get_displays_old()
 DDCA_Display_Info_List *
 ddca_get_display_info_list(void)
 {
-   bool debug = true;
+   bool debug = false;
    // PROGRAM_LOGIC_ERROR("Pseudo failure");
 
    ddc_ensure_displays_detected();
@@ -1048,7 +1048,7 @@ ddca_report_display_info(
       DDCA_Display_Info * dinfo,
       int                 depth)
 {
-   bool debug = true;
+   bool debug = false;
    DBGMSF(debug, "Starting. dinfo=%p, depth=%d", dinfo, depth);
 
    assert(dinfo);
@@ -1091,7 +1091,7 @@ ddca_report_display_info_list(
       DDCA_Display_Info_List * dlist,
       int                      depth)
 {
-   bool debug = true;
+   bool debug = false;
    DBGMSF(debug, "Starting.  dlist=%p, depth=%d", dlist, depth);
 
    int d1 = depth+1;
@@ -1274,9 +1274,13 @@ ddca_get_simple_sl_value_table(
       DDCA_MCCS_Version_Id       mccs_version_id,
       DDCA_Feature_Value_Entry** pvalue_table)
 {
+   bool debug = false;
    DDCA_Status rc = 0;
    *pvalue_table = NULL;
    DDCA_MCCS_Version_Spec vspec = mccs_version_id_to_spec(mccs_version_id);
+   DBGMSF(debug, "feature_code = 0x%02x, mccs_version_id=%d, vspec=%d.%d",
+                 feature_code, mccs_version_id, vspec.major, vspec.minor);
+
 
    VCP_Feature_Table_Entry * pentry = vcp_find_feature_by_hexid(feature_code);
    if (!pentry) {
@@ -1285,7 +1289,7 @@ ddca_get_simple_sl_value_table(
   }
   else {
      DDCA_MCCS_Version_Spec vspec2 = {vspec.major, vspec.minor};
-     DDCA_Version_Feature_Flags vflags = get_version_specific_feature_flags(pentry, vspec2);
+     DDCA_Version_Feature_Flags vflags = get_version_sensitive_feature_flags(pentry, vspec2);
      if (!(vflags & DDCA_SIMPLE_NC)) {
         *pvalue_table = NULL;
         rc = -EINVAL;
@@ -1297,6 +1301,7 @@ ddca_get_simple_sl_value_table(
         rc = 0;
      }
   }
+   DBGMSF(debug, "Done. *pvalue_table=%p, returning %s", *pvalue_table, psc_desc(rc));
    return rc;
 }
 
@@ -1464,7 +1469,9 @@ ddca_get_vcp_value(
 
    WITH_DH(ddca_dh,
          {
-               bool debug = true;
+               bool debug = false;
+               DBGMSF(debug, "Starting. ddca_dh=%p, feature_code=0x%02x, call_type=%d, pvalrec=%p",
+                      ddca_dh, feature_code, call_type, pvalrec);
                *pvalrec = NULL;
                ddc_excp = get_vcp_value(dh, feature_code, call_type, pvalrec);
                psc = (ddc_excp) ? ddc_excp->status_code : 0;
@@ -1473,6 +1480,80 @@ ddca_get_vcp_value(
          }
    );
 }
+
+
+
+static DDCA_Vcp_Value_Type_Parm
+get_value_type_parm(
+      DDCA_Display_Handle         ddca_dh,
+      DDCA_Vcp_Feature_Code       feature_code,
+      DDCA_Vcp_Value_Type_Parm    default_value)
+{
+   bool debug = false;
+   DBGMSF(debug, "Starting. ddca_dh=%p, feature_code=0x%02x, default_value=%d",
+          ddca_dh, feature_code, default_value);
+   DDCA_Vcp_Value_Type_Parm result = default_value;
+   DDCA_MCCS_Version_Spec vspec      = get_vcp_version_by_display_handle(ddca_dh);
+   VCP_Feature_Table_Entry * pentry = vcp_find_feature_by_hexid(feature_code);
+   if (pentry) {
+      DDCA_Version_Feature_Flags flags = get_version_sensitive_feature_flags(pentry, vspec);
+      // Version_Feature_Flags flags = feature_info->internal_feature_flags;
+      // n. will default to NON_TABLE_VCP_VALUE if not a known code
+      result = (flags & DDCA_TABLE) ?  DDCA_TABLE_VCP_VALUE : DDCA_NON_TABLE_VCP_VALUE;
+   }
+
+   DBGMSF(debug, "Returning %d", result);
+   return result;
+}
+
+
+
+DDCA_Status
+ddca_get_any_vcp_value(
+       DDCA_Display_Handle         ddca_dh,
+       DDCA_Vcp_Feature_Code       feature_code,
+       DDCA_Vcp_Value_Type_Parm    call_type,
+       DDCA_Unified_Vcp_Value **   pvalrec)
+{
+   bool debug = false;
+   DBGMSF(debug, "Starting. ddca_dh=%p, feature_code=0x%02x, call_type=%d, pvalrec=%p",
+          ddca_dh, feature_code, call_type, pvalrec);
+   *pvalrec = NULL;
+   DDCA_Status rc = DDCL_ARG;
+
+   if (call_type == DDCA_UNSET_VCP_VALUE_TYPE_PARM) {
+      call_type = get_value_type_parm(ddca_dh, feature_code, DDCA_UNSET_VCP_VALUE_TYPE_PARM);
+   }
+   if (call_type != DDCA_UNSET_VCP_VALUE_TYPE_PARM) {
+      DDCA_Single_Vcp_Value *  valrec2 = NULL;
+      rc = ddca_get_vcp_value(ddca_dh, feature_code, call_type, &valrec2);
+      if (rc == 0) {
+         DDCA_Unified_Vcp_Value * valrec = calloc(1, sizeof(DDCA_Unified_Vcp_Value));
+         valrec->opcode     = valrec2->opcode;
+         valrec->value_type = valrec2->value_type;
+         if (valrec->value_type ==  DDCA_NON_TABLE_VCP_VALUE) {
+            valrec->val.c_nc.mh = valrec2->val.nc.mh;
+            valrec->val.c_nc.ml = valrec2->val.nc.ml;
+            valrec->val.c_nc.sh = valrec2->val.nc.sh;
+            valrec->val.c_nc.sl = valrec2->val.nc.sl;
+         }
+         else {          // DDCA_TABLE_VCP_VALUE
+            valrec->val.t.bytect = valrec2->val.t.bytect;
+            valrec->val.t.bytes  = valrec2->val.t.bytes;
+         }
+         free(valrec2);
+         *pvalrec = valrec;
+      }
+   }
+   DBGMSF(debug, "Done. Returning %s, *pvalrec=%p", psc_desc(rc), *pvalrec);
+   return rc;
+}
+
+
+
+
+
+
 
 
 DDCA_Status
@@ -1594,7 +1675,7 @@ ddca_get_capabilities_string(
       DDCA_Display_Handle  ddca_dh,
       char**               pcaps)
 {
-   bool debug = true;
+   bool debug = false;
    Error_Info * ddc_excp = NULL;
    WITH_DH(ddca_dh,
       {
@@ -1729,7 +1810,6 @@ ddca_report_parsed_capabilities(
          free(hs);
       }
    }
-
 }
 
 

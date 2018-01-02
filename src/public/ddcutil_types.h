@@ -458,9 +458,16 @@ struct {
  *  different data structures.
  */
 typedef enum {
-   DDCA_NON_TABLE_VCP_VALUE,   /**< Continuous (C) or Non-Continuous (NC) value */
-   DDCA_TABLE_VCP_VALUE,       /**< Table (T) value */
+   DDCA_NON_TABLE_VCP_VALUE = 1,   /**< Continuous (C) or Non-Continuous (NC) value */
+   DDCA_TABLE_VCP_VALUE     = 2,       /**< Table (T) value */
 } DDCA_Vcp_Value_Type;
+
+
+typedef enum {
+   DDCA_UNSET_VCP_VALUE_TYPE_PARM = 0,
+   DDCA_NON_TABLE_VCP_VALUE_PARM  = 1,   /**< Continuous (C) or Non-Continuous (NC) value */
+   DDCA_TABLE_VCP_VALUE_PARM      = 2,       /**< Table (T) value */
+} DDCA_Vcp_Value_Type_Parm;
 
 
 /** Represents a single non-table VCP value */
@@ -528,5 +535,24 @@ typedef struct {
       }         nc;                /**< non-continuous (NC) value */
    }       val;
 } DDCA_Single_Vcp_Value;
+
+
+typedef struct {
+   DDCA_Vcp_Feature_Code  opcode;         /**< VCP feature code */
+   DDCA_Vcp_Value_Type    value_type;      // probably a different type would be better
+   union {
+      struct {
+         uint8_t *  bytes;          /**< pointer to bytes of table value */
+         uint16_t   bytect;         /**< number of bytes in table value */
+      }         t;                  /**< table value */
+      struct {
+         uint8_t    mh;
+         uint8_t    ml;
+         uint8_t    sh;
+         uint8_t    sl;
+      }    c_nc;                /**< continuous non-continuous, i.e. non-table, value */
+   }       val;
+} DDCA_Unified_Vcp_Value;
+
 
 #endif /* DDCUTIL_TYPES_H_ */
