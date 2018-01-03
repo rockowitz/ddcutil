@@ -766,7 +766,7 @@ class Display_Handle(object):
 
     def get_vcp_value(self, feature_code, feature_type=lib.DDCA_UNSET_VCP_VALUE_TYPE_PARM):
        print("(get_vcp_value) Starting")
-       pvalrec = ffi.new("DDCA_Unified_Vcp_Value **", init=ffi.NULL)
+       pvalrec = ffi.new("DDCA_Any_Vcp_Value **", init=ffi.NULL)
        rc = lib.ddca_get_any_vcp_value(self.c_dh, feature_code, feature_type, pvalrec)
        if rc != 0:
           excp = create_ddc_exception(rc)

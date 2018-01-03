@@ -281,19 +281,13 @@ ddca_get_edid_by_display_ref(
 //       int *                   value_len,
 //       uint8_t**               value_bytes);
 
-// DDCA_Status
-// ddca_get_vcp_value(
-//        DDCA_Display_Handle     ddca_dh,
-//        DDCA_Vcp_Feature_Code        feature_code,
-//        DDCA_Vcp_Value_Type          call_type,   // TODO: eliminate
-//        DDCA_Single_Vcp_Value **     pvalrec);
 
 DDCA_Status
 ddca_get_any_vcp_value(
        DDCA_Display_Handle         ddca_dh,
        DDCA_Vcp_Feature_Code       feature_code,
        DDCA_Vcp_Value_Type_Parm    call_type,
-       DDCA_Unified_Vcp_Value **   pvalrec);
+       DDCA_Any_Vcp_Value **   pvalrec);
 
 DDCA_Status
 ddca_get_formatted_vcp_value(
