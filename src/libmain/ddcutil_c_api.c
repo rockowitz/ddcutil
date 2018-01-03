@@ -1458,6 +1458,7 @@ ddca_get_table_vcp_value(
 
 // alt
 
+static
 DDCA_Status
 ddca_get_vcp_value(
       DDCA_Display_Handle       ddca_dh,
@@ -1507,13 +1508,12 @@ get_value_type_parm(
 }
 
 
-
 DDCA_Status
 ddca_get_any_vcp_value(
        DDCA_Display_Handle         ddca_dh,
        DDCA_Vcp_Feature_Code       feature_code,
        DDCA_Vcp_Value_Type_Parm    call_type,
-       DDCA_Unified_Vcp_Value **   pvalrec)
+       DDCA_Any_Vcp_Value **       pvalrec)
 {
    bool debug = false;
    DBGMSF(debug, "Starting. ddca_dh=%p, feature_code=0x%02x, call_type=%d, pvalrec=%p",
@@ -1528,7 +1528,7 @@ ddca_get_any_vcp_value(
       DDCA_Single_Vcp_Value *  valrec2 = NULL;
       rc = ddca_get_vcp_value(ddca_dh, feature_code, call_type, &valrec2);
       if (rc == 0) {
-         DDCA_Unified_Vcp_Value * valrec = calloc(1, sizeof(DDCA_Unified_Vcp_Value));
+         DDCA_Any_Vcp_Value * valrec = calloc(1, sizeof(DDCA_Any_Vcp_Value));
          valrec->opcode     = valrec2->opcode;
          valrec->value_type = valrec2->value_type;
          if (valrec->value_type ==  DDCA_NON_TABLE_VCP_VALUE) {

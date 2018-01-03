@@ -882,58 +882,6 @@ void   report_parsed_vcp_response(Parsed_Vcp_Response * response, int depth) {
 
 
 
-char * ddca_vcp_value_type_name(DDCA_Vcp_Value_Type  value_type) {
-   char * result = "<unrecognized>";
-   switch(value_type) {
-   case DDCA_NON_TABLE_VCP_VALUE:
-      result = "DDCA_NON_TABLE_VCP_VALUE";
-      break;
-   case DDCA_TABLE_VCP_VALUE:
-      result = "DDCA_TABLE_VCP_VALUE";
-      break;
-   default:
-      result = "invalid value";
-   }
-   return result;
-}
-
-
-
-
-void dbgrpt_ddca_single_vcp_value(
-      DDCA_Single_Vcp_Value * valrec,
-      int depth)
-{
-   int d1 = depth + 1;
-   int d2 = depth + 2;
-
-   rpt_vstring(depth, "DDCA_Single_Vcp_Value at %p:", valrec);
-   if (valrec) {
-      rpt_vstring(d1, "Opcode:          0x%02x", valrec->opcode);
-      rpt_vstring(d1, "Value type       %d - %s", valrec->value_type, ddca_vcp_value_type_name(valrec->value_type));
-      if (valrec->value_type == DDCA_TABLE_VCP_VALUE) {
-         rpt_vstring(d1, "Bytes:");
-         rpt_hex_dump(valrec->val.t.bytes, valrec->val.t.bytect, d2);
-      }
-      else if (valrec->value_type == DDCA_NON_TABLE_VCP_VALUE) {
-#ifdef WORDS_BIGENDIAN
-         rpt_label  (d1, "Struct is big-endian");
-#else
-         rpt_label  (d1, "Struct is little-endian");
-#endif
-         rpt_vstring(d1, "max_val:     %d - 0x%04x", valrec->val.c.max_val, valrec->val.c.max_val);
-         rpt_vstring(d1, "cur_val:     %d - 0x%04x", valrec->val.c.cur_val, valrec->val.c.cur_val);
-         rpt_vstring(d1, "mh:          0x%02x",  valrec->val.nc.mh);
-         rpt_vstring(d1, "ml:          0x%02x",  valrec->val.nc.ml);
-         rpt_vstring(d1, "sh:          0x%02x",  valrec->val.nc.sh);
-         rpt_vstring(d1, "sl:          0x%02x",  valrec->val.nc.sl);
-      }
-
-   }
-
-}
-
-
 
 //
 // Response packets 

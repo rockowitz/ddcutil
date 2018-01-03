@@ -504,37 +504,6 @@ typedef struct {
    uint8_t  bytes[];       /**< Bytes of the value */
 } DDCA_Table_Value;
 
-/** Represents a single VCP value of any type */
-typedef struct {
-   DDCA_Vcp_Feature_Code  opcode;         /**< VCP feature code */
-   DDCA_Vcp_Value_Type    value_type;      // probably a different type would be better
-   union {
-      struct {
-         uint8_t *  bytes;          /**< pointer to bytes of table value */
-         uint16_t   bytect;         /**< number of bytes in table value */
-      }         t;                  /**< table value */
-      struct {
-         uint16_t   max_val;        /**< maximum value (mh, ml bytes) for continuous value */
-         uint16_t   cur_val;        /**< current value (sh, sl bytes) for continuous value */
-      }         c;                  /**< continuous (C) value */
-      struct {
-      // __BYTE_ORDER__ ifdef ensures proper overlay of ml/mh on max_val, sl/sh on cur_val
-#if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
-         uint8_t    ml;            /**< ML byte for NC value */
-         uint8_t    mh;            /**< MH byte for NC value */
-         uint8_t    sl;            /**< SL byte for NC value */
-         uint8_t    sh;            /**< SH byte for NC value */
-#elif __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
-         uint8_t    mh;
-         uint8_t    ml;
-         uint8_t    sh;
-         uint8_t    sl;
-#else
-#error "Unexpected byte order value: __BYTE_ORDER__"
-#endif
-      }         nc;                /**< non-continuous (NC) value */
-   }       val;
-} DDCA_Single_Vcp_Value;
 
 
 typedef struct {
@@ -552,7 +521,10 @@ typedef struct {
          uint8_t    sl;
       }    c_nc;                /**< continuous non-continuous, i.e. non-table, value */
    }       val;
-} DDCA_Unified_Vcp_Value;
+} DDCA_Any_Vcp_Value;
+
+#define VALREC_CUR_VAL(valrec) ( valrec->val.c_nc.sh << 8 | valrec->val.c_nc.sl )
+#define VALREC_MAX_VAL(valrec) ( valrec->val.c_nc.mh << 8 | valrec->val.c_nc.ml )
 
 
 #endif /* DDCUTIL_TYPES_H_ */

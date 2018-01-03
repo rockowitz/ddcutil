@@ -29,7 +29,7 @@
 /** \cond */
 // #include <setjmp.h>    // obsolete
 #include <stdbool.h>
-// #include <stdio.h>
+#include <stdio.h>
 /** \endcond */
 
 // is this the right location?
@@ -230,16 +230,14 @@ There are 3 retry contexts:
  *
  * @return maximum max tries value allowed on set_max_tries()
  */
-int
-ddca_max_max_tries(void);
+int ddca_max_max_tries(void);
 
 /** Gets the maximum number of I2C retries for the specified operation type.
  * @param  retry_type   I2C operation type
  * @return maximum number of retries
  */
-int
-ddca_get_max_tries(
-      DDCA_Retry_Type retry_type);
+int ddca_get_max_tries(
+       DDCA_Retry_Type retry_type);
 
 /** Sets the maximum number of I2C retries for the specified operation type
  * @param retry_type    I2C operation type
@@ -273,24 +271,20 @@ bool ddca_is_verify_enabled(void);
 
 /** Redirects output that normally would go to STDOUT
  */
-void
-ddca_set_fout(
-      FILE * fout);   /**< where to write normal messages, if NULL, suppress  */
+void ddca_set_fout(
+        FILE * fout);   /**< where to write normal messages, if NULL, suppress  */
 
 /** Redirects output that normally goes to STDOUT back to STDOUT */
-void
-ddca_set_fout_to_default(void);
+void ddca_set_fout_to_default(void);
 
 /** Redirects output that normally would go to STDERR
  */
-void
-ddca_set_ferr(
-      FILE * ferr);   /**< where to write error messages, If NULL, suppress */
+void ddca_set_ferr(
+        FILE * ferr);   /**< where to write error messages, If NULL, suppress */
 
 /** Redirects output that normally goes to STDERR back to STDERR
  */
-void
-ddca_set_ferr_to_default(void);
+void ddca_set_ferr_to_default(void);
 
 
 /** Gets the current output level */
@@ -298,29 +292,24 @@ DDCA_Output_Level                   /**< current output level */
 ddca_get_output_level(void);
 
 /** Sets the output level */
-void
-ddca_set_output_level(
+void ddca_set_output_level(
       DDCA_Output_Level newval);   /**< new output level */
 
 /** Gets the name of an output level
  * @param  val  output level id
  * @return output level name (do not free)
  */
-char *
-ddca_output_level_name(
-      DDCA_Output_Level val);     /**< output level id */
+char * ddca_output_level_name(
+          DDCA_Output_Level val);   /**< output level id */
 
 
 /** Controls whether messages describing DDC protocol errors are output
  * @param onoff    if true, errors will be issued
  * */
-void
-ddca_enable_report_ddc_errors(
-      bool onoff);
+void ddca_enable_report_ddc_errors(bool onoff);
 
 /** Checks whether messages describing DDC protocol errors are output */
-bool
-ddca_is_report_ddc_errors_enabled(void);
+bool ddca_is_report_ddc_errors_enabled(void);
 
 
 //
@@ -841,6 +830,8 @@ ddca_get_table_vcp_value(
        uint8_t**               value_bytes);
 
 
+// ddca_get_vcp_value() is deprecated, use ddca_get_any_vcp_value()
+#ifdef OLD
 /** Gets the value of a VCP feature.
  *
  * @param ddca_dh       display handle
@@ -857,15 +848,25 @@ ddca_get_vcp_value(
        DDCA_Vcp_Feature_Code        feature_code,
        DDCA_Vcp_Value_Type          call_type,   // TODO: eliminate
        DDCA_Single_Vcp_Value **     pvalrec);
+#endif
 
 
-
+/** Gets the value of a VCP feature.
+ *
+ * @param ddca_dh       display handle
+ * @param feature_code  VCP feature code
+ * @param value_type    value type
+ * @param pvalrec       address at which to return a pointer to a newly
+ *                      allocated Single_Vcp_Value
+ *
+ * @return external status code
+ */
 DDCA_Status
 ddca_get_any_vcp_value(
        DDCA_Display_Handle         ddca_dh,
        DDCA_Vcp_Feature_Code       feature_code,
-       DDCA_Vcp_Value_Type_Parm         call_type,
-       DDCA_Unified_Vcp_Value **   pvalrec);
+       DDCA_Vcp_Value_Type_Parm    value_type,
+       DDCA_Any_Vcp_Value **       pvalrec);
 
 
 /** Returns a string containing a formatted representation of the VCP value
@@ -878,7 +879,7 @@ ddca_get_any_vcp_value(
 DDCA_Status
 ddca_get_formatted_vcp_value(
        DDCA_Display_Handle *   ddca_dh,
-       DDCA_Vcp_Feature_Code        feature_code,
+       DDCA_Vcp_Feature_Code   feature_code,
        char**                  p_formatted_value);
 
 /** Sets a continuous VCP value.
@@ -892,7 +893,7 @@ ddca_get_formatted_vcp_value(
 DDCA_Status
 ddca_set_continuous_vcp_value(
       DDCA_Display_Handle      ddca_dh,
-      DDCA_Vcp_Feature_Code         feature_code,
+      DDCA_Vcp_Feature_Code    feature_code,
       int                      new_value);
 
 /** Sets a simple NC value, which is a single byte.
@@ -906,14 +907,14 @@ ddca_set_continuous_vcp_value(
 DDCA_Status
 ddca_set_simple_nc_vcp_value(
       DDCA_Display_Handle      ddca_dh,
-      DDCA_Vcp_Feature_Code         feature_code,
+      DDCA_Vcp_Feature_Code    feature_code,
       uint8_t                  new_value);
 
 /** Sets a non-table VCP value by directly specifying its bytes. */
 DDCA_Status
 ddca_set_raw_vcp_value(
       DDCA_Display_Handle      ddca_dh,         /**< Display handle     */
-      DDCA_Vcp_Feature_Code         feature_code,    /**< VCP feature code   */
+      DDCA_Vcp_Feature_Code    feature_code,    /**< VCP feature code   */
       uint8_t                  hi_byte,         /**< High byte of value */
       uint8_t                  lo_byte          /**< Low byte of value  */
      );

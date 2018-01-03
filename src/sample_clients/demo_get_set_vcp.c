@@ -65,9 +65,12 @@ bool verify_cont_value(
       DDCA_Vcp_Feature_Code   feature_code,
       int                     expected_value)
 {
-   DDCA_Single_Vcp_Value * valrec;
+
+
    DDCA_Status rc;
    bool ok = false;
+#ifdef OLD
+   DDCA_Single_Vcp_Value * valrec;
    rc = ddca_get_vcp_value(
            dh,
            feature_code,
@@ -80,6 +83,21 @@ bool verify_cont_value(
       if ( valrec->val.c.cur_val != expected_value) {
          printf("   Current value %d does not match expected value %d\n",
                    valrec->val.c.cur_val, expected_value);
+      }
+#endif
+   DDCA_Any_Vcp_Value * valrec;
+   rc = ddca_get_any_vcp_value(
+           dh,
+           feature_code,
+           DDCA_NON_TABLE_VCP_VALUE_PARM,
+           &valrec);
+   if (rc != 0) {
+       FUNCTION_ERRMSG("ddca_get_any_vcp_value", rc);
+   }
+   else {
+      if ( VALREC_CUR_VAL(valrec) != expected_value) {
+         printf("   Current value %d does not match expected value %d\n",
+                   VALREC_CUR_VAL(valrec), expected_value);
       }
       else {
          printf("   Current value matches expected value\n");
@@ -122,6 +140,7 @@ test_cont_value(
       goto bye;
    }
 
+#ifdef OLD
    DDCA_Single_Vcp_Value * valrec;
    rc =
    ddca_get_vcp_value(
@@ -141,6 +160,28 @@ test_cont_value(
           valrec->val.c.max_val);
 
    int old_value = valrec->val.c.cur_val;
+#endif
+   DDCA_Any_Vcp_Value * valrec;
+   rc =
+   ddca_get_any_vcp_value(
+         dh,
+         feature_code,
+         DDCA_NON_TABLE_VCP_VALUE_PARM,
+         &valrec);
+   if (rc != 0) {
+      FUNCTION_ERRMSG("ddca_get_any_vcp_value", rc);
+      ok = false;
+      goto bye;
+   }
+
+   printf("Feature 0x%02x (%s) current value = %d, max value = %d\n",
+          feature_code, feature_name,
+          VALREC_CUR_VAL(valrec),
+          VALREC_MAX_VAL(valrec) );
+
+   int old_value = VALREC_CUR_VAL(valrec) ;
+
+
    int new_value = old_value/2;
    printf("Setting new value %d,,,\n", new_value);
    rc = ddca_set_continuous_vcp_value(dh, feature_code, new_value);
@@ -182,9 +223,11 @@ bool verify_simple_nc_value(
       DDCA_Vcp_Feature_Code   feature_code,
       uint8_t                 expected_value)
 {
-   DDCA_Single_Vcp_Value * valrec;
+
    DDCA_Status rc;
    bool ok = false;
+#ifdef OLD
+   DDCA_Single_Vcp_Value * valrec;
    rc = ddca_get_vcp_value(
            dh,
            feature_code,
@@ -198,6 +241,22 @@ bool verify_simple_nc_value(
          printf("   Current value 0x%02x does not match expected value 0x%02x\n",
                    valrec->val.nc.sl, expected_value);
       }
+#endif
+      DDCA_Any_Vcp_Value * valrec;
+      rc = ddca_get_any_vcp_value(
+              dh,
+              feature_code,
+              DDCA_NON_TABLE_VCP_VALUE_PARM,
+              &valrec);
+      if (rc != 0) {
+          FUNCTION_ERRMSG("ddca_get_any_vcp_value", rc);
+      }
+      else {
+         if ( valrec->val.c_nc.sl != expected_value) {
+            printf("   Current value 0x%02x does not match expected value 0x%02x\n",
+                      valrec->val.c_nc.sl, expected_value);
+         }
+
       else {
          printf("   Current value matches expected value\n");
          ok = true;
@@ -264,6 +323,7 @@ bool test_simple_nc_value(
     }
     assert(info->feature_flags & DDCA_SIMPLE_NC);
 
+#ifdef OLD
     DDCA_Single_Vcp_Value * valrec;
     rc =
     ddca_get_vcp_value(
@@ -281,6 +341,25 @@ bool test_simple_nc_value(
               feature_code,
               valrec->val.nc.sl);
     uint8_t old_value = valrec->val.nc.sl;
+#endif
+    DDCA_Any_Vcp_Value * valrec;
+    rc =
+    ddca_get_any_vcp_value(
+          dh,
+          feature_code,
+          DDCA_NON_TABLE_VCP_VALUE_PARM,
+          &valrec);
+    if (rc != 0) {
+       FUNCTION_ERRMSG("ddca_get_any_vcp_value", rc);
+       ok = false;
+       goto bye;
+    }
+
+    printf("Feature 0x%02x current value = 0x%02x\n",
+              feature_code,
+              valrec->val.c_nc.sl);
+    uint8_t old_value = valrec->val.c_nc.sl;
+
     ok = show_simple_nc_feature_value(dh, feature_code, old_value);
 
     printf("Setting new value 0x%02x...\n", new_value);
@@ -357,6 +436,7 @@ bool test_complex_nc_value(
     }
     assert(info->feature_flags & DDCA_COMPLEX_NC);
 
+#ifdef OLD
     DDCA_Single_Vcp_Value * valrec;
     rc =
     ddca_get_vcp_value(
@@ -376,7 +456,27 @@ bool test_complex_nc_value(
               valrec->val.nc.ml,
               valrec->val.nc.sh,
               valrec->val.nc.sl);
+#endif
 
+    DDCA_Any_Vcp_Value * valrec;
+    rc =
+    ddca_get_any_vcp_value(
+          dh,
+          feature_code,
+          DDCA_NON_TABLE_VCP_VALUE_PARM,   // why is this needed?   look it up from dh and feature_code
+          &valrec);
+    if (rc != 0) {
+       FUNCTION_ERRMSG("ddca_get_any_vcp_value", rc);
+       ok = false;
+       goto bye;
+    }
+
+    printf("Feature 0x%02x current value: mh=0x%02x, ml=0x%02x, sh=0x%02x, sl=0x%02x\n",
+              feature_code,
+              valrec->val.c_nc.mh,
+              valrec->val.c_nc.ml,
+              valrec->val.c_nc.sh,
+              valrec->val.c_nc.sl);
 
 
 bye:
