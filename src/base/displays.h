@@ -37,10 +37,11 @@
 #include "util/coredefs.h"
 #include "util/edid.h"
 
-#include "base/core.h"
-#include "base/feature_sets.h"
-#include "base/vcp_version.h"
+#include "core.h"
+#include "feature_sets.h"
+#include "vcp_version.h"
 
+typedef void * Global_Display_Lock;
 
 /** \file
 Display Specification
@@ -139,6 +140,10 @@ Display_Selector * dsel_set_edid_hex(      Display_Selector* dsel, char * hexstr
 bool               dsel_validate(          Display_Selector * dsel);
 #endif
 
+// *** DDCA_Display_Path ***
+
+char *        dpath_repr_t(DDCA_IO_Path * dref);  // value valid until next call
+
 
 // *** Display_Ref ***
 
@@ -172,6 +177,7 @@ typedef struct _display_ref {
    int           usb_hiddev_devno;       // added 4/2017
    char *        capabilities_string;    // added 4/2017, private copy
    Parsed_Edid * pedid;                  // added 4/2017
+   Global_Display_Lock gdl;
 
    // for merger with Display_Rec:
    int           dispno;
@@ -256,5 +262,6 @@ typedef Byte Display_Selection_Options;
 
 int    hiddev_name_to_number(char * hiddev_name);
 char * hiddev_number_to_name(int hiddev_number);
+
 
 #endif /* DISPLAYS_H_ */
