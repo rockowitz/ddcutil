@@ -938,6 +938,12 @@ DDCA_Status
 ddca_set_profile_related_values(char *
       profile_values_string);
 
+/** Registers a callback function to call when a VCP value changes */
+DDCA_Status
+ddca_register_callback(
+      DDCA_Notification_Func func,
+      uint8_t                callback_options);   // type is a placeholder
+
 
 #ifdef __cplusplus
 }

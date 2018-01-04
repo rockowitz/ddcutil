@@ -526,5 +526,7 @@ typedef struct {
 #define VALREC_CUR_VAL(valrec) ( valrec->val.c_nc.sh << 8 | valrec->val.c_nc.sl )
 #define VALREC_MAX_VAL(valrec) ( valrec->val.c_nc.mh << 8 | valrec->val.c_nc.ml )
 
+/** Callback function to report VCP value change */
+typedef DDCA_Status (*DDCA_Notification_Func)(DDCA_Any_Vcp_Value* valrec);
 
 #endif /* DDCUTIL_TYPES_H_ */
