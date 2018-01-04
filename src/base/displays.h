@@ -32,10 +32,12 @@
 
 /** \cond **/
 #include <stdbool.h>
-/** \endcond */
 
 #include "util/coredefs.h"
 #include "util/edid.h"
+/** \endcond */
+
+#include "../public/ddcutil_types.h"
 
 #include "core.h"
 #include "feature_sets.h"
@@ -263,5 +265,9 @@ typedef Byte Display_Selection_Options;
 int    hiddev_name_to_number(char * hiddev_name);
 char * hiddev_number_to_name(int hiddev_number);
 
+
+Global_Display_Lock get_display_lock(DDCA_Display_Ref dref);
+bool lock_display_lock(Global_Display_Lock dlock, bool wait);
+void unlock_display_lock(Global_Display_Lock dlock);
 
 #endif /* DISPLAYS_H_ */

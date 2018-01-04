@@ -32,20 +32,26 @@
 /** \cond */
 #include <assert.h>
 #include <glib.h>
+// #include <glib-2.0/glib.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-/** \endcond */
 
 #include "util/glib_util.h"
 #include "util/string_util.h"
 #include "util/report_util.h"
 #include "util/udev_util.h"
 #include "util/udev_usb_util.h"
+/** \endcond */
 
-#include "base/displays.h"
-#include "base/vcp_version.h"
+#include "public/ddcutil_c_api.h"
+
+#include "core.h"
+#include "vcp_version.h"
+
+#include "displays.h"
+
 
 
 /** Reports whether a #DDCA_Adlno value is set or is currently undefined.
@@ -415,6 +421,7 @@ Display_Ref * create_bus_display_ref(int busno) {
    dref->vcp_version = VCP_SPEC_UNQUERIED;
    // DBGMSG("Done.  Constructed bus display ref: ");
    // report_display_ref(dref,0);
+   dref->gdl  = get_display_lock(dref);    // ugly
    return dref;
 }
 
@@ -432,6 +439,7 @@ Display_Ref * create_adl_display_ref(int iAdapterIndex, int iDisplayIndex) {
    dref->iAdapterIndex = iAdapterIndex;
    dref->iDisplayIndex = iDisplayIndex;
    dref->vcp_version   = VCP_SPEC_UNQUERIED;
+   dref->gdl  = get_display_lock(dref);    // ugly
    return dref;
 }
 
@@ -454,6 +462,7 @@ Display_Ref * create_usb_display_ref(int usb_bus, int usb_device, char * hiddev_
    dref->usb_hiddev_name = strdup(hiddev_devname);
    dref->usb_hiddev_devno = hiddev_name_to_number(hiddev_devname);
    dref->vcp_version = VCP_SPEC_UNQUERIED;
+   dref->gdl  = get_display_lock(dref);    // ugly
    return dref;
 }
 #endif
@@ -661,6 +670,30 @@ char * dref_repr_t(Display_Ref * dref) {
    return buf;
 }
 
+
+/** Thread safe function that returns a string representation of a #DDCA_IO_Path
+ *  suitable for diagnostic messages. The returned value is valid until the
+ *  next call to this function on the current thread.
+ *
+ *  \param  dpath  pointer to ##DDCA_IO_Path
+ *  \return string representation of #Display_Ref
+ */
+char * dpath_repr_t(DDCA_IO_Path * dpath) {
+   static GPrivate  dpath_repr_key = G_PRIVATE_INIT(g_free);
+
+   char * buf = get_thread_fixed_buffer(&dpath_repr_key, 100);
+   switch(dpath->io_mode) {
+   case DDCA_IO_DEVI2C:
+      snprintf(buf, 100, "Display_Path[/dev/i2c-%d]", dpath->i2c_busno);
+      break;
+   case DDCA_IO_ADL:
+      snprintf(buf, 100, "Display_Path[adl=(%d.%d(]", dpath->adlno.iAdapterIndex, dpath->adlno.iDisplayIndex);
+      break;
+   case DDCA_IO_USB:
+      snprintf(buf, 100, "Display_Path[/dev/usb/hiddev%d]", dpath->hiddev_devno);
+   }
+   return buf;
+}
 
 
 // *** Display_Handle ***
@@ -966,3 +999,182 @@ char * hiddev_number_to_name(int hiddev_number) {
    DBGMSG("hiddev_number=%d, returning: %s", hiddev_number, s);
    return s;
 }
+
+
+//
+// Display Locking
+//
+
+#define GDL_MARKER "GDL"
+typedef struct {
+   char          marker[4];
+   DDCA_IO_Path  dpath;  // key of lock
+   GThread *     owning_thread;     // id of thread owning lock (type int is placeholder)
+   GMutex        thread_lock;
+
+} GDL;
+
+// GLOCK... macros confuse Eclipse
+// GLOCK_DEFINE_STATIC(global_locks_mutex);
+// or
+static GMutex locks_master_list_mutex;
+
+
+GDL * gdl_new(DDCA_IO_Path dpath) {
+   GDL * result = calloc(1, sizeof(GDL));
+   memcpy(result->marker, GDL_MARKER, 4);
+   result->dpath = dpath;
+   g_mutex_init(&result->thread_lock);
+   result->owning_thread = NULL;
+   return result;
+}
+
+
+// TODO: move to displays.h
+// n. returned on stack
+DDCA_IO_Path dpath_from_dref(Display_Ref * dref) {
+    DDCA_IO_Path result;
+    result.io_mode = dref->io_mode;
+    switch(result.io_mode) {
+    case DDCA_IO_DEVI2C:
+       result.i2c_busno = dref->busno;
+       break;
+    case DDCA_IO_ADL:
+       result.adlno.iAdapterIndex = dref->iAdapterIndex;
+       result.adlno.iDisplayIndex = dref->iDisplayIndex;
+       break;
+    case DDCA_IO_USB:
+       result.hiddev_devno = dref->usb_hiddev_devno;
+    }
+    return result;
+}
+
+
+bool dpath_eq(DDCA_IO_Path p1, DDCA_IO_Path p2) {
+   bool result = false;
+   if (p1.io_mode == p2.io_mode) {
+      switch(p1.io_mode) {
+      case DDCA_IO_DEVI2C:
+         result = (p1.i2c_busno == p2.i2c_busno);
+         break;
+      case DDCA_IO_ADL:
+         result = (p1.adlno.iAdapterIndex == p2.adlno.iAdapterIndex) &&
+                  (p1.adlno.iDisplayIndex == p2.adlno.iDisplayIndex);
+         break;
+      case DDCA_IO_USB:
+         result = p1.hiddev_devno == p2.hiddev_devno;
+      }
+   }
+   return result;
+}
+
+
+void dbgrpt_global_locks_list(GPtrArray* global_locks, int depth) {
+   int d1 = depth+1;
+
+   rpt_structure_loc("GDL", global_locks, depth);
+   if (global_locks) {
+      for (int ndx = 0; ndx < global_locks->len; ndx++) {
+          GDL * cur = g_ptr_array_index(global_locks, ndx);
+          // DBGMSG("%p", cur);
+          rpt_vstring(d1, "%p - %s", cur, dpath_repr_t(&cur->dpath));
+      }
+   }
+}
+
+
+
+// There are only a handful of displays.  No need for a complex data structure.
+
+GPtrArray * global_locks = NULL;   // g_ptr_array_new();    // array of GDL
+
+GDL * find_lock(DDCA_IO_Path dpath) {
+   bool debug = false;
+   GDL * result = NULL;
+
+   for (int ndx = 0; ndx < global_locks->len; ndx++) {
+      GDL * cur = g_ptr_array_index(global_locks, ndx);
+      if ( dpath_eq(cur->dpath, dpath)) {
+         result = cur;
+         break;
+      }
+   }
+
+   DBGMSF(debug, "Returning %p", result);
+   return result;
+}
+
+
+
+
+/** Obtains a reference to the master lock for a display.
+ *
+ *  Note that the display itself is not locked.  This function
+ *  obtains a reference to the lock to be used for the display.
+ */
+Global_Display_Lock get_display_lock(DDCA_Display_Ref dref) {
+   bool debug = false;
+   assert(dref);
+   DDCA_IO_Path dpath = dpath_from_dref(dref);
+   // use dpath as key
+   // to do: define dpath_repr_t(), use it
+   DBGMSF(debug, "dref=%s", dref_repr_t(dref));
+   if (debug)
+      dbgrpt_global_locks_list(global_locks, 0);
+
+   // This is a simple critical section.  Always wait.
+   // G_LOCK(global_locks_mutex);
+   g_mutex_lock(&locks_master_list_mutex);
+
+   if (!global_locks)
+      global_locks = g_ptr_array_new();
+
+   GDL * result = find_lock(dpath);
+   if (!result) {
+      GDL * gdl = gdl_new(dpath);
+      // DBGMSG("Adding %p", gdl);
+      g_ptr_array_add(global_locks, gdl);
+      result = gdl;
+   }
+   // G_UNLOCK(global_locks_mutex);
+   g_mutex_unlock(&locks_master_list_mutex);
+   DBGMSF(debug, "Returning %p", result);
+   return result;
+}
+
+
+/** Acquired at display open time.
+ *  Only 1 thread can open
+ */
+bool lock_display_lock(Global_Display_Lock dlock, bool wait) {
+   GDL * gdl = (GDL *) dlock;
+   assert(gdl && memcmp(gdl->marker, GDL_MARKER, 4) == 0);
+
+   bool lock_acquired = false;
+
+   if (wait) {
+      g_mutex_lock(&gdl->thread_lock);
+      lock_acquired = true;
+   }
+   else {
+      lock_acquired = g_mutex_trylock(&gdl->thread_lock);
+   }
+   if (lock_acquired)
+      gdl->owning_thread = g_thread_self();
+
+   return lock_acquired;
+}
+
+void unlock_display_lock(Global_Display_Lock dlock) {
+   GDL * gdl = (GDL *) dlock;
+   assert(gdl && memcmp(gdl->marker, GDL_MARKER, 4) == 0);
+
+   if (gdl->owning_thread == g_thread_self()) {
+      gdl->owning_thread = NULL;
+      g_mutex_unlock(&gdl->thread_lock);
+   }
+}
+
+
+
+
