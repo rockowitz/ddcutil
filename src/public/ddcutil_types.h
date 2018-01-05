@@ -463,10 +463,12 @@ typedef enum {
 } DDCA_Vcp_Value_Type;
 
 
+/** #DDCA_Vcp_Value_Type_Parm extends #DDCA_Vcp_Value_Type to allow for its use as a
+    function call parameter where the type is unknown */
 typedef enum {
-   DDCA_UNSET_VCP_VALUE_TYPE_PARM = 0,
+   DDCA_UNSET_VCP_VALUE_TYPE_PARM = 0,   /**< Unspecified */
    DDCA_NON_TABLE_VCP_VALUE_PARM  = 1,   /**< Continuous (C) or Non-Continuous (NC) value */
-   DDCA_TABLE_VCP_VALUE_PARM      = 2,       /**< Table (T) value */
+   DDCA_TABLE_VCP_VALUE_PARM      = 2,   /**< Table (T) value */
 } DDCA_Vcp_Value_Type_Parm;
 
 
