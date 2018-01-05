@@ -193,11 +193,7 @@ Display_Ref * create_bus_display_ref(int busno);
 Display_Ref * create_adl_display_ref(int iAdapterIndex, int iDisplayIndex);
 Display_Ref * create_usb_display_ref(int bus, int device, char * hiddev_devname);
 void          report_display_ref(Display_Ref * dref, int depth);
-#define DREF_SHORT_NAME_BUF_SIZE 100
-char *        dref_short_name_r(Display_Ref * dref, char * buf, int bufsize);
-// char *        dref_short_name(Display_Ref * dref);  // value valid until next call
 char *        dref_short_name_t(Display_Ref * dref);
-// char *        dref_repr(Display_Ref * dref);  // value valid until next call
 char *        dref_repr_t(Display_Ref * dref);  // value valid until next call
 Display_Ref * clone_display_ref(Display_Ref * old);
 void          free_display_ref(Display_Ref * dref);

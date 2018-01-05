@@ -581,6 +581,7 @@ void report_display_ref(Display_Ref * dref, int depth) {
  *  \param  buf    pointer to buffer
  *  \param  bufsz  buffer size
  */
+static
 char * dref_short_name_r(Display_Ref * dref, char * buf, int bufsz) {
    assert(buf);
    assert(bufsz > 0);
@@ -606,18 +607,6 @@ char * dref_short_name_r(Display_Ref * dref, char * buf, int bufsz) {
    return buf;
 }
 
-#ifdef OLD
-/** Creates a short description of a #Display_Ref.  The returned
- *  value is valid until the next call to this function.
- *
- *  \param  dref pointer to #Display_Ref instance
- *  \return string representation of #Display_Ref
- */
-char * dref_short_name(Display_Ref * dref) {
-   static char display_ref_short_name_buffer[100];
-   return dref_short_name_r(dref, display_ref_short_name_buffer, 100);
-}
-#endif
 
 /** Thread safe function that returns a short description of a #Display_Ref.
  *  The returned value is valid until the next call to this function on
@@ -633,25 +622,6 @@ char * dref_short_name_t(Display_Ref * dref) {
    snprintf(buf, 100, "Display_Ref[%s]", dref_short_name_r(dref, buf2, 80) );
    return buf;
 }
-
-
-#ifdef OLD
-/** Creates a short representation of a $Display_Ref suitable
- *  for diagnostic output.
- *
- *  \param dref   pointer to #Display_Ref
- *
- *  @remark
- *  The returned value is valid until the next call of this function.
- */
-char * dref_repr(Display_Ref * dref) {
-   char buf[100];
-   static char display_ref_short_id_buffer[100];
-   snprintf(display_ref_short_id_buffer, 100,
-            "Display_Ref[%s]", dref_short_name_r(dref, buf, 100) );
-   return display_ref_short_id_buffer;
-}
-#endif
 
 
 /** Thread safe function that returns a string representation of a #Display_Ref

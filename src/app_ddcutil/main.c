@@ -191,15 +191,10 @@ void probe_display_by_dh(Display_Handle * dh)
    DBGMSF(debug, "Starting. dh=%s", dh_repr(dh));
    Public_Status_Code psc = 0;
    Error_Info * ddc_excp = NULL;
-   char dref_name_buf[DREF_SHORT_NAME_BUF_SIZE];
-   dref_short_name_r(dh->dref, dref_name_buf, sizeof(dref_name_buf));
 
-   f0printf(FOUT,
-            "\nMfg id: %s, model: %s, sn: %s\n",
-            dh->dref->pedid->mfg_id, dh->dref->pedid->model_name, dh->dref->pedid->serial_ascii);
-
-   // printf("\nCapabilities for display %s\n", display_handle_repr(dh) );
-   f0printf(FOUT, "\nCapabilities for display on %s\n", dref_name_buf);
+   f0printf(FOUT, "\nMfg id: %s, model: %s, sn: %s\n",
+                  dh->dref->pedid->mfg_id, dh->dref->pedid->model_name, dh->dref->pedid->serial_ascii);
+   f0printf(FOUT, "\nCapabilities for display on %s\n", dref_short_name_t(dh->dref));
 
    DDCA_MCCS_Version_Spec vspec = get_vcp_version_by_display_handle(dh);
    // not needed, message causes confusing messages if get_vcp_version fails but get_capabilities succeeds
@@ -329,9 +324,8 @@ void probe_display_by_dref(Display_Ref * dref) {
    Display_Handle * dh = NULL;
    Public_Status_Code psc = ddc_open_display(dref, CALLOPT_ERR_MSG, &dh);
    if (psc != 0) {
-      char buf[DREF_SHORT_NAME_BUF_SIZE];
       f0printf(FOUT, "Unable to open display %s, status code %s",
-             dref_short_name_r(dref, buf, sizeof(buf)), psc_desc(psc) );
+                     dref_short_name_t(dref), psc_desc(psc) );
    }
    else {
       probe_display_by_dh(dh);
