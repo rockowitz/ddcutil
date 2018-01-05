@@ -338,6 +338,31 @@ Nontable_Vcp_Value * single_vcp_value_to_nontable_vcp_value(DDCA_Single_Vcp_Valu
 }
 
 
+/** Converts a #DDCA_Single_Vcp_Value to #DDCA_Any_Vcp_Value
+ *
+ *  \param  valrec  pointer to #DDCA_Single_Vcp_Value to convert
+ *  \return converted value
+ */
+DDCA_Any_Vcp_Value * single_vcp_value_to_any_vcp_value(DDCA_Single_Vcp_Value * valrec) {
+   DDCA_Any_Vcp_Value * anyval = calloc(1, sizeof(DDCA_Any_Vcp_Value));
+   anyval->opcode     = valrec->opcode;
+   anyval->value_type = valrec->value_type;
+   if (valrec->value_type ==  DDCA_NON_TABLE_VCP_VALUE) {
+      anyval->val.c_nc.mh = valrec->val.nc.mh;
+      anyval->val.c_nc.ml = valrec->val.nc.ml;
+      anyval->val.c_nc.sh = valrec->val.nc.sh;
+      anyval->val.c_nc.sl = valrec->val.nc.sl;
+   }
+   else {          // DDCA_TABLE_VCP_VALUE
+      anyval->val.t.bytect = valrec->val.t.bytect;
+      anyval->val.t.bytes  = valrec->val.t.bytes;
+   }
+
+   return anyval;
+}
+
+
+
 Vcp_Value_Set vcp_value_set_new(int initial_size){
    GPtrArray* ga = g_ptr_array_sized_new(initial_size);
    g_ptr_array_set_free_func(ga, free_single_vcp_value_func);
