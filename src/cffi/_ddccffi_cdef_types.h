@@ -239,19 +239,19 @@ struct {
 
 // Get and set VCP Feature Values
 
+/** Indicates the physical type of a VCP value */
 typedef enum {
    DDCA_NON_TABLE_VCP_VALUE = 1,   /**< Continuous (C) or Non-Continuous (NC) value */
    DDCA_TABLE_VCP_VALUE     = 2,   /**< Table (T) value */
 } DDCA_Vcp_Value_Type;
 
-// ADDED: as a parameter
+/** #DDCA_Vcp_Value_Type_Parm extends #DDCA_Vcp_Value_Type to allow for its use as
+    function call parameter where the type is unknown */
 typedef enum {
-   DDCA_UNSET_VCP_VALUE_TYPE_PARM    = 0,
-   DDCA_NON_TABLE_VCP_VALUE_PARM = 1,   /**< Continuous (C) or Non-Continuous (NC) value */
-   DDCA_TABLE_VCP_VALUE_PARM     = 2,       /**< Table (T) value */
+   DDCA_UNSET_VCP_VALUE_TYPE_PARM = 0,   /**< type unknown */
+   DDCA_NON_TABLE_VCP_VALUE_PARM  = 1,   /**< Continuous (C) or Non-Continuous (NC) value */
+   DDCA_TABLE_VCP_VALUE_PARM      = 2,   /**< Table (T) value */
 } DDCA_Vcp_Value_Type_Parm;
-
-
 
 
 // VCP Values
@@ -273,4 +273,7 @@ typedef struct {
    }       val;
 } DDCA_Any_Vcp_Value;
 
+
+/** Callback function to report VCP value change */
+typedef void (*DDCA_Notification_Func)(DDCA_Status psc, DDCA_Any_Vcp_Value* valrec);
 
