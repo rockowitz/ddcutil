@@ -869,6 +869,15 @@ ddca_get_any_vcp_value(
        DDCA_Any_Vcp_Value **       pvalrec);
 
 
+DDCA_Status
+ddca_start_get_any_vcp_value(
+      DDCA_Display_Handle         ddca_dh,
+      DDCA_Vcp_Feature_Code       feature_code,
+      DDCA_Vcp_Value_Type_Parm    call_type,
+      DDCA_Notification_Func      callback_func);
+
+
+
 /** Returns a string containing a formatted representation of the VCP value
  *  of a feature.  It is the responsiblity of the caller to free this value.
  *  @param[in] ddca_dh            Display handle

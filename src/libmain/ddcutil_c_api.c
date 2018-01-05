@@ -52,6 +52,7 @@
 #include "vcp/vcp_feature_codes.h"
 #include "vcp/parse_capabilities.h"
 #include "vcp/parsed_capabilities_feature.h"
+#include "vcp/vcp_feature_values.h"
 
 #include "adl/adl_shim.h"
 
@@ -1525,9 +1526,11 @@ ddca_get_any_vcp_value(
       call_type = get_value_type_parm(ddca_dh, feature_code, DDCA_UNSET_VCP_VALUE_TYPE_PARM);
    }
    if (call_type != DDCA_UNSET_VCP_VALUE_TYPE_PARM) {
+
       DDCA_Single_Vcp_Value *  valrec2 = NULL;
       rc = ddca_get_vcp_value(ddca_dh, feature_code, call_type, &valrec2);
       if (rc == 0) {
+#ifdef OLD
          DDCA_Any_Vcp_Value * valrec = calloc(1, sizeof(DDCA_Any_Vcp_Value));
          valrec->opcode     = valrec2->opcode;
          valrec->value_type = valrec2->value_type;
@@ -1542,6 +1545,8 @@ ddca_get_any_vcp_value(
             valrec->val.t.bytes  = valrec2->val.t.bytes;
          }
          free(valrec2);
+#endif
+         DDCA_Any_Vcp_Value * valrec = single_vcp_value_to_any_vcp_value(valrec2);
          *pvalrec = valrec;
       }
    }
@@ -1550,9 +1555,37 @@ ddca_get_any_vcp_value(
 }
 
 
+DDCA_Status
+ddca_start_get_any_vcp_value(
+      DDCA_Display_Handle         ddca_dh,
+      DDCA_Vcp_Feature_Code       feature_code,
+      DDCA_Vcp_Value_Type_Parm    call_type,
+      DDCA_Notification_Func      callback_func)
+{
+   bool debug = true;
+   DBGMSF(debug, "Starting. ddca_dh=%p, feature_code=0x%02x, call_type=%d",
+                 ddca_dh, feature_code, call_type);
+   DDCA_Status rc = DDCL_ARG;
 
+   if (call_type == DDCA_UNSET_VCP_VALUE_TYPE_PARM) {
+       call_type = get_value_type_parm(ddca_dh, feature_code, DDCA_UNSET_VCP_VALUE_TYPE_PARM);
+   }
+   if (call_type != DDCA_UNSET_VCP_VALUE_TYPE_PARM) {
+      Error_Info * ddc_excp = NULL;
 
+      WITH_DH(ddca_dh,
+          {
+             ddc_excp = start_get_vcp_value(dh, feature_code, call_type, callback_func);
+             rc = (ddc_excp) ? ddc_excp->status_code : 0;
+             errinfo_free(ddc_excp);
+          }
+      );
 
+   }
+
+   DBGMSF(debug, "Done. Returning %s", psc_desc(rc));
+   return rc;
+}
 
 
 
