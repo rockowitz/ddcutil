@@ -1,7 +1,7 @@
 /* app_getvcp.h
  *
  * <copyright>
- * Copyright (C) 2014-2017 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2014-2018 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -22,7 +22,6 @@
  */
 
 /** \f
- *
  */
 
 #ifndef APP_GETVCP_H_
@@ -54,14 +53,6 @@ app_show_vcp_subset_values_by_display_handle(
       VCP_Feature_Subset subset,
       bool               show_unsupported,
       Byte_Bit_Flags     features_seen);
-
-#ifdef OLD
-Public_Status_Code
-app_show_vcp_subset_values_by_display_ref(
-      Display_Ref *      dref,
-      VCP_Feature_Subset subset,
-      bool               show_unsupported);
-#endif
 
 Public_Status_Code
 app_show_feature_set_values_by_display_handle(
