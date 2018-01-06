@@ -953,6 +953,14 @@ ddca_register_callback(
       DDCA_Notification_Func func,
       uint8_t                callback_options);   // type is a placeholder
 
+DDCA_Status
+ddca_pass_callback(
+      Simple_Callback_Func  func,
+      int                   parm
+      );
+
+
+
 
 #ifdef __cplusplus
 }

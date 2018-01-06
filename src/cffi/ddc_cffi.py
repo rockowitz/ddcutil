@@ -877,5 +877,18 @@ class Table_Vcp_Value(Vcp_Value):
     def __repr__(self):
         result = "[Vcp_Value: Feature 0x%02x, type=TABLE, bytes=???" % (self.opcode)
         return result
-                
-                
+      
+              
+# demo callback function      
+      
+@ffi.def_extern() 
+def sample_callback(parm):
+    print("(sample_callback) parm=%s" % parm)
+    return 42
+
+def invoke_callback():
+    cbfunc = lib.sample_callback
+    print ("(invoke_callback)", type(cbfunc))
+    rc = lib.ddca_pass_callback( cbfunc, 11)
+    print("(invoke_callback) ddca_pass_callback() returned %d" % rc)
+

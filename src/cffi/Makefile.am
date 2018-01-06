@@ -1,5 +1,5 @@
 generated_source_files = \
-ddc_cffi.c
+ddccffi.c ddccffi2.c ddccffi3.c
 
 CLEANFILES = ${generated_source_files}
 
@@ -12,18 +12,22 @@ py3exec_LTLIBRARIES = _ddccffi3.la
 
 # nodist_py3exec_PYTHON = 
 
-# Generated C file is version agnostic
-_ddccffi.c: _ddccffi_cdef_c_api.h _ddccffi_cdef_types.h  show_vars
-	@echo "=====> (src/cython/Makefile) Executing target _ddccffi.c"
-	python build_cffi.py --nocompile
-
 
 #
 # Python 2 version 
 #
 
+# Generated C file is version agnostic, but unfortunately the 
+# initialization entry point name must match the .so file name, 
+# and the only way to force this is use different c file names 
+# in build_cffi.py
+_ddccffi2.c: _ddccffi_cdef_c_api.h _ddccffi_cdef_types.h  show_vars
+	@echo "=====> (src/cython/Makefile) Executing target _ddccffi.c"
+	python build_cffi.py --nocompile
+
+
 # Module source code, nodist because ddc_cffi.c is generated
-nodist__ddccffi2_la_SOURCES = _ddccffi.c
+nodist__ddccffi2_la_SOURCES = _ddccffi2.c
 
 # Flags when compiling files in ddc_cffi2_SOURCES
 _ddccffi2_la_CPPFLAGS = -I${top_srcdir}/src -I${top_srcdir}/src/public ${PY2_CFLAGS}
@@ -45,8 +49,16 @@ _ddccffi2_la_LIBADD = \
 # Python 3 version
 #
 
+# Generated C file is version agnostic, but unfortunately the 
+# initialization entry point name must match the .so file name, 
+# and the only way to force this is use different c file names 
+# in build_cffi.py
+_ddccffi3.c: _ddccffi_cdef_c_api.h _ddccffi_cdef_types.h  show_vars
+	@echo "=====> (src/cython/Makefile) Executing target _ddccffi.c"
+	python build_cffi.py --nocompile
+
 # nodist because ddc_cffi.c is generated
-nodist__ddccffi3_la_SOURCES = _ddccffi.c
+nodist__ddccffi3_la_SOURCES = _ddccffi3.c
 
 # Flags when compiling files in ddc_cffi3_SOURCES
 _ddccffi3_la_CPPFLAGS = -I${top_srcdir}/src -I${top_srcdir}/src/public ${PY3_CFLAGS}

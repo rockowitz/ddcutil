@@ -531,4 +531,6 @@ typedef struct {
 /** Callback function to report VCP value change */
 typedef void (*DDCA_Notification_Func)(DDCA_Status psc, DDCA_Any_Vcp_Value* valrec);
 
+typedef int (*Simple_Callback_Func)(int val);
+
 #endif /* DDCUTIL_TYPES_H_ */

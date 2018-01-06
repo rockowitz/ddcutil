@@ -17,8 +17,8 @@ ffibuilder = FFI()
 base_dir    = "/shared/playproj/i2c/src/"
 header_fn   = base_dir + "public/ddcutil_c_apitypes.h"
 base_name   = "_ddccffi"
-# module_name = "%s%s" % (base_name, sysver)
-module_name = base_name
+module_name = "%s%s" % (base_name, sysver)
+# module_name = base_name
 
 
 ffibuilder.set_source(module_name,
@@ -30,11 +30,13 @@ ffibuilder.set_source(module_name,
 
 cdef_types_fn = base_name + "_cdef_types.h"
 cdef_api_fn   = base_name + "_cdef_c_api.h"
+sample_callback_fn = base_name + "_callback.h"
 
 def read_file(fn):
   try: 
      with open(fn, 'r') as fn_handle:
         lines = fn_handle.read()
+        
   except Exception as excp:
     print(excp)
     sys.exit(1)
@@ -45,11 +47,14 @@ def read_file(fn):
 
 cdef_types_lines = read_file(cdef_types_fn)
 cdef_api_lines   = read_file(cdef_api_fn)
+cdef_callback_lines = read_file(sample_callback_fn)
+    
 
 cdef_segments = []
 
 cdef_segments.append(cdef_types_lines)
 cdef_segments.append(cdef_api_lines)
+cdef_segments.append(cdef_callback_lines)
 
 print("len(cdef_segments): %d" % len(cdef_segments))
 
@@ -58,15 +63,16 @@ for ndx in range(len(cdef_segments)):
    ffibuilder.cdef(cdef_segments[ndx])
 
 if nocompile:
-    ffibuilder.emit_c_code("_ddccffi.c")
+    c_fn = "%s.c" % module_name
+    ffibuilder.emit_c_code(c_fn)
     
 else:
     ffibuilder.compile(verbose=True)
 
     # hack
     if sysver == 3:
-        os.rename("_ddccffi.cpython-36m-x86_64-linux-gnu.so", "_ddccffi3.so")
-    else:
-        os.rename("_ddccffi.so", "_ddccffi2.so")    
+        os.rename("_ddccffi3.cpython-36m-x86_64-linux-gnu.so", "_ddccffi3.so")
+    # else:
+    #     os.rename("_ddccffi.so", "_ddccffi2.so")    
     
     
