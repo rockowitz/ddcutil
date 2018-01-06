@@ -458,6 +458,23 @@ char * dpath_repr_t(DDCA_IO_Path * dpath) {
 
 // *** Display_Ref ***
 
+
+static Display_Ref * create_base_display_ref(DDCA_IO_Path io_path) {
+   Display_Ref * dref = calloc(1, sizeof(Display_Ref));
+   memcpy(dref->marker, DISPLAY_REF_MARKER, 4);
+   dref->io_path = io_path;
+   dref->vcp_version = VCP_SPEC_UNQUERIED;
+
+   dref->gdl  = get_display_lock(dref);    // keep?
+
+   // future
+   dref->request_queue = g_queue_new();
+   g_mutex_init(&dref->request_queue_lock);
+   return dref;
+}
+
+
+
 // PROBLEM: bus display ref getting created some other way
 /** Creates a #Display_Ref for IO mode #DDCA_IO_DEVI2C
  *
@@ -465,22 +482,15 @@ char * dpath_repr_t(DDCA_IO_Path * dpath) {
  * \return pointer to newly allocated #Display_Ref
  */
 Display_Ref * create_bus_display_ref(int busno) {
-   Display_Ref * dref = calloc(1, sizeof(Display_Ref));
-   memcpy(dref->marker, DISPLAY_REF_MARKER, 4);
-
-#ifdef OLD
-   dref->io_mode = DDCA_IO_DEVI2C;
-   dref->busno       = busno;
-#endif
-
-   // alt:
-   dref->io_path.io_mode = DDCA_IO_DEVI2C;
-   dref->io_path.i2c_busno = busno;
-
-   dref->vcp_version = VCP_SPEC_UNQUERIED;
-   // DBGMSG("Done.  Constructed bus display ref: ");
-   // report_display_ref(dref,0);
-   dref->gdl  = get_display_lock(dref);    // ugly
+   bool debug = true;
+   DDCA_IO_Path io_path;
+   io_path.io_mode   = DDCA_IO_DEVI2C;
+   io_path.i2c_busno = busno;
+   Display_Ref * dref = create_base_display_ref(io_path);
+   if (debug) {
+      DBGMSG("Done.  Constructed bus display ref:");
+      dbgrpt_display_ref(dref,0);
+   }
    return dref;
 }
 
@@ -492,22 +502,16 @@ Display_Ref * create_bus_display_ref(int busno) {
  * \return pointer to newly allocated #Display_Ref
  */
 Display_Ref * create_adl_display_ref(int iAdapterIndex, int iDisplayIndex) {
-   Display_Ref * dref = calloc(1, sizeof(Display_Ref));
-   memcpy(dref->marker, DISPLAY_REF_MARKER, 4);
-
-#ifdef OLD
-   dref->io_mode   = DDCA_IO_ADL;
-   dref->iAdapterIndex = iAdapterIndex;
-   dref->iDisplayIndex = iDisplayIndex;
-#endif
-
-   // alt:
-   dref->io_path.io_mode = DDCA_IO_ADL;
-   dref->io_path.adlno.iAdapterIndex = iAdapterIndex;
-   dref->io_path.adlno.iDisplayIndex = iDisplayIndex;
-
-   dref->vcp_version   = VCP_SPEC_UNQUERIED;
-   dref->gdl  = get_display_lock(dref);    // ugly
+   bool debug = true;
+   DDCA_IO_Path io_path;
+   io_path.io_mode   = DDCA_IO_ADL;
+   io_path.adlno.iAdapterIndex = iAdapterIndex;
+   io_path.adlno.iDisplayIndex = iDisplayIndex;
+   Display_Ref * dref = create_base_display_ref(io_path);
+   if (debug) {
+      DBGMSG("Done.  Constructed ADL display ref:");
+      dbgrpt_display_ref(dref,0);
+   }
    return dref;
 }
 
@@ -522,30 +526,27 @@ Display_Ref * create_adl_display_ref(int iAdapterIndex, int iDisplayIndex) {
  */
 Display_Ref * create_usb_display_ref(int usb_bus, int usb_device, char * hiddev_devname) {
    assert(hiddev_devname);
-   Display_Ref * dref = calloc(1, sizeof(Display_Ref));
-   memcpy(dref->marker, DISPLAY_REF_MARKER, 4);
-
-   // alt:
-   dref->io_path.io_mode      = DDCA_IO_USB;
-   dref->io_path.hiddev_devno = hiddev_name_to_number(hiddev_devname);
-
-#ifdef OLD
-   dref->io_mode  = DDCA_IO_USB;
-   dref->usb_hiddev_devno = hiddev_name_to_number(hiddev_devname);
-#endif
-
+   bool debug = true;
+   DDCA_IO_Path io_path;
+   io_path.io_mode      = DDCA_IO_USB;
+   io_path.hiddev_devno = hiddev_name_to_number(hiddev_devname);
+   Display_Ref * dref = create_base_display_ref(io_path);
 
    dref->usb_bus     = usb_bus;
    dref->usb_device  = usb_device;
    dref->usb_hiddev_name = strdup(hiddev_devname);
 
-   dref->vcp_version = VCP_SPEC_UNQUERIED;
-   dref->gdl  = get_display_lock(dref);    // ugly
+   if (debug) {
+      DBGMSG("Done.  Constructed ADL display ref:");
+      dbgrpt_display_ref(dref,0);
+   }
    return dref;
 }
 #endif
 
 
+#ifdef THANKFULLY_UNNEEDED
+// Issue: what to do with referenced data structures
 Display_Ref * clone_display_ref(Display_Ref * old) {
    assert(old);
    Display_Ref * dref = calloc(1, sizeof(Display_Ref));
@@ -560,6 +561,10 @@ Display_Ref * clone_display_ref(Display_Ref * old) {
    }
    return dref;
 }
+#endif
+
+
+// Is it still meaningful to free a display ref?
 
 void free_display_ref(Display_Ref * dref) {
    if (dref && (dref->flags & DREF_TRANSIENT) ) {
@@ -570,6 +575,7 @@ void free_display_ref(Display_Ref * dref) {
       if (dref->capabilities_string)   // always a private copy
          free(dref->capabilities_string);
       // 9/2017: what about pedid, detail2?
+      // what to do with gdl, request_queue?
       free(dref);
    }
 }

@@ -31,6 +31,7 @@
 #define DISPLAYS_H_
 
 /** \cond **/
+#include <glib.h>
 #include <stdbool.h>
 
 #include "util/coredefs.h"
@@ -192,6 +193,10 @@ typedef struct _display_ref {
    // for merger with Display_Rec:
    int           dispno;
    void *        detail2;
+
+   // for future request queue structure
+   GQueue *      request_queue;
+   GMutex        request_queue_lock;
 } Display_Ref;
 
 // n. works for both Display_Ref and Display_Handle
