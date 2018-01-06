@@ -53,6 +53,7 @@
 #include "displays.h"
 
 
+// *** Miscellaneous ***
 
 /** Reports whether a #DDCA_Adlno value is set or is currently undefined.
  *  \param adlno ADL adapter/index number pair
@@ -261,7 +262,7 @@ Display_Identifier* create_usb_display_identifier(int bus, int device) {
  *  \param  pdid pointer to #Display_Identifier instance
  *  \param  depth logical indentation depth
  */
-void report_display_identifier(Display_Identifier * pdid, int depth) {
+void dbgrpt_display_identifier(Display_Identifier * pdid, int depth) {
    rpt_structure_loc("BasicStructureRef", pdid, depth );
    int d1 = depth+1;
    rpt_mapped_int("ddc_io_mode",   NULL, pdid->id_type, (Value_To_Name_Function) display_id_type_name, d1);
@@ -286,7 +287,6 @@ void report_display_identifier(Display_Identifier * pdid, int depth) {
    char * edidstr2 = hexstring2(pdid->edidbytes, 128, NULL, true, edidbuf, 257);
    rpt_str( "edid",          NULL, edidstr2, d1);
 #endif
-
 }
 
 
@@ -386,9 +386,9 @@ void dsel_free(Display_Selector * dsel) {
 #endif
 
 
-// *** Display_Ref ***
+// *** DDCA_IO_Mode and DDCA_IO_Path ***
 
-static char * MCCS_IO_Mode_Names[] = {
+static char * IO_Mode_Names[] = {
       "DDCA_IO_DEVI2C",
       "DDCA_IO_ADL",
       "DDCA_IO_USB"
@@ -400,12 +400,63 @@ static char * MCCS_IO_Mode_Names[] = {
  * \param val #DDCA_IO_Mode value
  * \return symbolic name, e.g. "DDCA_IO_DEVI2C"
  */
-char * mccs_io_mode_name(DDCA_IO_Mode val) {
+char * io_mode_name(DDCA_IO_Mode val) {
    return (val >= 0 && val < 3)            // protect against bad arg
-         ? MCCS_IO_Mode_Names[val]
+         ? IO_Mode_Names[val]
          : NULL;
 }
 
+
+/** Thread safe function that returns a brief string representation of a #DDCA_IO_Path.
+ *  The returned value is valid until the next call to this function on the current thread.
+ *
+ *  \param  dpath  pointer to ##DDCA_IO_Path
+ *  \return string representation of #DDCA_IO_Path
+ */
+char * dpath_short_name_t(DDCA_IO_Path * dpath) {
+   static GPrivate  dpath_short_name_key = G_PRIVATE_INIT(g_free);
+
+   char * buf = get_thread_fixed_buffer(&dpath_short_name_key, 100);
+   switch(dpath->io_mode) {
+   case DDCA_IO_DEVI2C:
+      snprintf(buf, 100, "bus dev/i2c-%d", dpath->i2c_busno);
+      break;
+   case DDCA_IO_ADL:
+      snprintf(buf, 100, "adlno (%d.%d)", dpath->adlno.iAdapterIndex, dpath->adlno.iDisplayIndex);
+      break;
+   case DDCA_IO_USB:
+      snprintf(buf, 100, "usb /dev/usb/hiddev%d", dpath->hiddev_devno);
+   }
+   return buf;
+}
+
+
+/** Thread safe function that returns a string representation of a #DDCA_IO_Path
+ *  suitable for diagnostic messages. The returned value is valid until the
+ *  next call to this function on the current thread.
+ *
+ *  \param  dpath  pointer to ##DDCA_IO_Path
+ *  \return string representation of #DDCA_IO_Path
+ */
+char * dpath_repr_t(DDCA_IO_Path * dpath) {
+   static GPrivate  dpath_repr_key = G_PRIVATE_INIT(g_free);
+
+   char * buf = get_thread_fixed_buffer(&dpath_repr_key, 100);
+   switch(dpath->io_mode) {
+   case DDCA_IO_DEVI2C:
+      snprintf(buf, 100, "Display_Path[/dev/i2c-%d]", dpath->i2c_busno);
+      break;
+   case DDCA_IO_ADL:
+      snprintf(buf, 100, "Display_Path[adl=(%d.%d)]", dpath->adlno.iAdapterIndex, dpath->adlno.iDisplayIndex);
+      break;
+   case DDCA_IO_USB:
+      snprintf(buf, 100, "Display_Path[/dev/usb/hiddev%d]", dpath->hiddev_devno);
+   }
+   return buf;
+}
+
+
+// *** Display_Ref ***
 
 // PROBLEM: bus display ref getting created some other way
 /** Creates a #Display_Ref for IO mode #DDCA_IO_DEVI2C
@@ -416,8 +467,16 @@ char * mccs_io_mode_name(DDCA_IO_Mode val) {
 Display_Ref * create_bus_display_ref(int busno) {
    Display_Ref * dref = calloc(1, sizeof(Display_Ref));
    memcpy(dref->marker, DISPLAY_REF_MARKER, 4);
+
+#ifdef OLD
    dref->io_mode = DDCA_IO_DEVI2C;
    dref->busno       = busno;
+#endif
+
+   // alt:
+   dref->io_path.io_mode = DDCA_IO_DEVI2C;
+   dref->io_path.i2c_busno = busno;
+
    dref->vcp_version = VCP_SPEC_UNQUERIED;
    // DBGMSG("Done.  Constructed bus display ref: ");
    // report_display_ref(dref,0);
@@ -435,9 +494,18 @@ Display_Ref * create_bus_display_ref(int busno) {
 Display_Ref * create_adl_display_ref(int iAdapterIndex, int iDisplayIndex) {
    Display_Ref * dref = calloc(1, sizeof(Display_Ref));
    memcpy(dref->marker, DISPLAY_REF_MARKER, 4);
+
+#ifdef OLD
    dref->io_mode   = DDCA_IO_ADL;
    dref->iAdapterIndex = iAdapterIndex;
    dref->iDisplayIndex = iDisplayIndex;
+#endif
+
+   // alt:
+   dref->io_path.io_mode = DDCA_IO_ADL;
+   dref->io_path.adlno.iAdapterIndex = iAdapterIndex;
+   dref->io_path.adlno.iDisplayIndex = iDisplayIndex;
+
    dref->vcp_version   = VCP_SPEC_UNQUERIED;
    dref->gdl  = get_display_lock(dref);    // ugly
    return dref;
@@ -456,11 +524,21 @@ Display_Ref * create_usb_display_ref(int usb_bus, int usb_device, char * hiddev_
    assert(hiddev_devname);
    Display_Ref * dref = calloc(1, sizeof(Display_Ref));
    memcpy(dref->marker, DISPLAY_REF_MARKER, 4);
-   dref->io_mode     = DDCA_IO_USB;
+
+   // alt:
+   dref->io_path.io_mode      = DDCA_IO_USB;
+   dref->io_path.hiddev_devno = hiddev_name_to_number(hiddev_devname);
+
+#ifdef OLD
+   dref->io_mode  = DDCA_IO_USB;
+   dref->usb_hiddev_devno = hiddev_name_to_number(hiddev_devname);
+#endif
+
+
    dref->usb_bus     = usb_bus;
    dref->usb_device  = usb_device;
    dref->usb_hiddev_name = strdup(hiddev_devname);
-   dref->usb_hiddev_devno = hiddev_name_to_number(hiddev_devname);
+
    dref->vcp_version = VCP_SPEC_UNQUERIED;
    dref->gdl  = get_display_lock(dref);    // ugly
    return dref;
@@ -507,7 +585,8 @@ void free_display_ref(Display_Ref * dref) {
  *  \retval true same display
  *  \retval false different displays
  */
-bool dreq(Display_Ref* this, Display_Ref* that) {
+bool dref_eq(Display_Ref* this, Display_Ref* that) {
+#ifdef OLD
    bool result = false;
    if (!this && !that)
       result = true;
@@ -533,14 +612,25 @@ bool dreq(Display_Ref* this, Display_Ref* that) {
       }
    }
    return result;
+#endif
+   // return dpath_eq(dpath_from_dref(this), dpath_from_dref(that));
+   return dpath_eq(this->io_path, that->io_path);
 }
 
 
-void report_display_ref(Display_Ref * dref, int depth) {
+/** Reports the contents of a #Display_Ref in a format appropriate for debugging.
+ *
+ *  \param  pref  pointer to #Display_Ref instance
+ *  \param  depth logical indentation depth
+ */
+void dbgrpt_display_ref(Display_Ref * dref, int depth) {
    rpt_structure_loc("DisplayRef", dref, depth );
    int d1 = depth+1;
    int d2 = depth+2;
-   rpt_mapped_int("ddc_io_mode", NULL, dref->io_mode, (Value_To_Name_Function) mccs_io_mode_name, d1);
+
+#ifdef OLD
+   // old
+   rpt_mapped_int("ddc_io_mode", NULL, dref->io_mode, (Value_To_Name_Function) io_mode_name, d1);
 
    switch (dref->io_mode) {
 
@@ -561,6 +651,15 @@ void report_display_ref(Display_Ref * dref, int depth) {
       break;
 
    }
+#endif
+
+   // alt:
+   rpt_vstring(d1, "io_path:      %s", dpath_repr_t(&(dref->io_path)));
+   if (dref->io_path.io_mode == DDCA_IO_USB) {
+      rpt_int("usb_bus",    NULL, dref->usb_bus,    d1);
+      rpt_int("usb_device", NULL, dref->usb_device, d1);
+      rpt_str("usb_hiddev_name", NULL, dref->usb_hiddev_name, d1);
+   }
 
    // rpt_vstring(d1, "vcp_version:  %d.%d\n", dref->vcp_version.major, dref->vcp_version.minor );
    rpt_vstring(d1, "vcp_version:  %s", format_vspec(dref->vcp_version) );
@@ -574,10 +673,11 @@ void report_display_ref(Display_Ref * dref, int depth) {
 }
 
 
+#ifdef OLD
 /** Creates a short description of a #Display_Ref in a buffer provided
  *  by the caller.
  *
- *  \param  dref   pointer to $Display_Ref
+ *  \param  dref   pointer to #Display_Ref
  *  \param  buf    pointer to buffer
  *  \param  bufsz  buffer size
  */
@@ -589,24 +689,28 @@ char * dref_short_name_r(Display_Ref * dref, char * buf, int bufsz) {
    switch (dref->io_mode) {
 
    case DDCA_IO_DEVI2C:
-      snprintf(buf, bufsz, "bus /dev/i2c-%d", dref->busno);
-      buf[bufsz-1] = '\0';  // ensure null terminated
+      SAFE_SNPRINTF(buf, bufsz, "bus /dev/i2c-%d", dref->busno);
+
+      // snprintf(buf, bufsz, "bus /dev/i2c-%d", dref->busno);
+      // buf[bufsz-1] = '\0';  // ensure null terminated
       break;
 
    case DDCA_IO_ADL:
-      snprintf(buf, bufsz, "adl display %d.%d", dref->iAdapterIndex, dref->iDisplayIndex);
-      buf[bufsz-1] = '\0';  // ensure null terminated
+      SAFE_SNPRINTF(buf, bufsz, "adl display %d.%d", dref->iAdapterIndex, dref->iDisplayIndex);
+      // snprintf(buf, bufsz, "adl display %d.%d", dref->iAdapterIndex, dref->iDisplayIndex);
+      // buf[bufsz-1] = '\0';  // ensure null terminated
       break;
 
    case DDCA_IO_USB:
-      snprintf(buf, bufsz, "usb %d:%d", dref->usb_bus, dref->usb_device);
+      SAFE_SNPRINTF(buf, bufsz, "usb %d:%d", dref->usb_bus, dref->usb_device);
+      // snprintf(buf, bufsz, "usb %d:%d", dref->usb_bus, dref->usb_device);
       buf[bufsz-1] = '\0';  // ensure null terminated
       break;
 
    }
    return buf;
 }
-
+#endif
 
 /** Thread safe function that returns a short description of a #Display_Ref.
  *  The returned value is valid until the next call to this function on
@@ -616,11 +720,14 @@ char * dref_short_name_r(Display_Ref * dref, char * buf, int bufsz) {
  *  \return short description
  */
 char * dref_short_name_t(Display_Ref * dref) {
+   return dpath_short_name_t(&dref->io_path);
+#ifdef OLD
    static GPrivate  dref_short_name_key = G_PRIVATE_INIT(g_free);
    char * buf = get_thread_fixed_buffer(&dref_short_name_key, 100);
    char buf2[80];
    snprintf(buf, 100, "Display_Ref[%s]", dref_short_name_r(dref, buf2, 80) );
    return buf;
+#endif
 }
 
 
@@ -635,33 +742,8 @@ char * dref_repr_t(Display_Ref * dref) {
    static GPrivate  dref_repr_key = G_PRIVATE_INIT(g_free);
 
    char * buf = get_thread_fixed_buffer(&dref_repr_key, 100);
-   char buf2[80];
-   snprintf(buf, 100, "Display_Ref[%s]", dref_short_name_r(dref, buf2, 80) );
-   return buf;
-}
-
-
-/** Thread safe function that returns a string representation of a #DDCA_IO_Path
- *  suitable for diagnostic messages. The returned value is valid until the
- *  next call to this function on the current thread.
- *
- *  \param  dpath  pointer to ##DDCA_IO_Path
- *  \return string representation of #Display_Ref
- */
-char * dpath_repr_t(DDCA_IO_Path * dpath) {
-   static GPrivate  dpath_repr_key = G_PRIVATE_INIT(g_free);
-
-   char * buf = get_thread_fixed_buffer(&dpath_repr_key, 100);
-   switch(dpath->io_mode) {
-   case DDCA_IO_DEVI2C:
-      snprintf(buf, 100, "Display_Path[/dev/i2c-%d]", dpath->i2c_busno);
-      break;
-   case DDCA_IO_ADL:
-      snprintf(buf, 100, "Display_Path[adl=(%d.%d(]", dpath->adlno.iAdapterIndex, dpath->adlno.iDisplayIndex);
-      break;
-   case DDCA_IO_USB:
-      snprintf(buf, 100, "Display_Path[/dev/usb/hiddev%d]", dpath->hiddev_devno);
-   }
+   // char buf2[80];
+   SAFE_SNPRINTF(buf, 100, "Display_Ref[%s]", dpath_short_name_t(&dref->io_path));
    return buf;
 }
 
@@ -678,15 +760,16 @@ char * dpath_repr_t(DDCA_IO_Path * dpath) {
  *  This functions handles the boilerplate of creating a #Display_Handle.
  */
 Display_Handle * create_bus_display_handle_from_display_ref(int fh, Display_Ref * dref) {
-   assert(dref->io_mode == DDCA_IO_DEVI2C);
+   // assert(dref->io_mode == DDCA_IO_DEVI2C);
+   assert(dref->io_path.io_mode == DDCA_IO_DEVI2C);
    Display_Handle * dh = calloc(1, sizeof(Display_Handle));
    memcpy(dh->marker, DISPLAY_HANDLE_MARKER, 4);
    dh->fh = fh;
    dh->dref = dref;
    dref->vcp_version = VCP_SPEC_UNQUERIED;
    dh->repr = gaux_asprintf(
-            "Display_Handle[i2c: fh=%d, busno=%d]",
-            dh->fh, dh->dref->busno);
+                "Display_Handle[i2c: fh=%d, busno=%d]",
+                dh->fh, dh->dref->io_path.i2c_busno);
    return dh;
 }
 
@@ -700,14 +783,15 @@ Display_Handle * create_bus_display_handle_from_display_ref(int fh, Display_Ref 
  *  This functions handles the boilerplate of creating a #Display_Handle.
  */
 Display_Handle * create_adl_display_handle_from_display_ref(Display_Ref * dref) {
-   assert(dref->io_mode == DDCA_IO_ADL);
+   // assert(dref->io_mode == DDCA_IO_ADL);
+   assert(dref->io_path.io_mode == DDCA_IO_ADL);
    Display_Handle * dh = calloc(1, sizeof(Display_Handle));
    memcpy(dh->marker, DISPLAY_HANDLE_MARKER, 4);
    dh->dref = dref;
    dref->vcp_version = VCP_SPEC_UNQUERIED;   // needed?
    dh->repr = gaux_asprintf(
-            "Display_Handle[adl: display %d.%d]",
-            dh->dref->iAdapterIndex, dh->dref->iDisplayIndex);
+                "Display_Handle[adl: display %d.%d]",
+                 dh->dref->io_path.adlno.iAdapterIndex, dh->dref->io_path.adlno.iDisplayIndex);
    return dh;
 }
 
@@ -723,22 +807,23 @@ Display_Handle * create_adl_display_handle_from_display_ref(Display_Ref * dref) 
  *  This functions handles to boilerplate of creating a #Display_Handle.
  */
 Display_Handle * create_usb_display_handle_from_display_ref(int fh, Display_Ref * dref) {
-   assert(dref->io_mode == DDCA_IO_USB);
+   // assert(dref->io_mode == DDCA_IO_USB);
+   assert(dref->io_path.io_mode == DDCA_IO_USB);
    Display_Handle * dh = calloc(1, sizeof(Display_Handle));
    memcpy(dh->marker, DISPLAY_HANDLE_MARKER, 4);
    dh->fh = fh;
    dh->dref = dref;
    dh->repr = gaux_asprintf(
-            "Display_Handle[usb: %d:%d, %s/hiddev%d]",
-            dh->dref->usb_bus, dh->dref->usb_device,
-            usb_hiddev_directory(), dh->dref->usb_hiddev_devno);
+                "Display_Handle[usb: %d:%d, %s/hiddev%d]",
+                dh->dref->usb_bus, dh->dref->usb_device,
+                usb_hiddev_directory(), dh->dref->io_path.hiddev_devno);
    dref->vcp_version = VCP_SPEC_UNQUERIED;
    return dh;
 }
 #endif
 
 
-/** Reports the contents of a #Display_Handle in a format appropriate for debugging.
+/** Reports the contents of a #Display_Handle in a format useful for debugging.
  *
  *  \param  dh       display handle
  *  \param  msg      if non-null, output this string before the #Display_Handle detail
@@ -756,17 +841,17 @@ void report_display_handle(Display_Handle * dh, const char * msg, int depth) {
       }
       else {
          rpt_vstring(d1, "dref:                 %p", dh->dref);
-         rpt_vstring(d1, "io mode:              %s",  display_id_type_name(dh->dref->io_mode) );
-         switch (dh->dref->io_mode) {
+         rpt_vstring(d1, "io mode:              %s",  io_mode_name(dh->dref->io_path.io_mode) );
+         switch (dh->dref->io_path.io_mode) {
          case (DDCA_IO_DEVI2C):
             // rpt_vstring(d1, "ddc_io_mode = DDC_IO_DEVI2C");
             rpt_vstring(d1, "fh:                  %d", dh->fh);
-            rpt_vstring(d1, "busno:               %d", dh->dref->busno);
+            rpt_vstring(d1, "busno:               %d", dh->dref->io_path.i2c_busno);
             break;
          case (DDCA_IO_ADL):
             // rpt_vstring(d1, "ddc_io_mode = DDC_IO_ADL");
-            rpt_vstring(d1, "iAdapterIndex:       %d", dh->dref->iAdapterIndex);
-            rpt_vstring(d1, "iDisplayIndex:       %d", dh->dref->iDisplayIndex);
+            rpt_vstring(d1, "iAdapterIndex:       %d", dh->dref->io_path.adlno.iAdapterIndex);
+            rpt_vstring(d1, "iDisplayIndex:       %d", dh->dref->io_path.adlno.iDisplayIndex);
             break;
          case (DDCA_IO_USB):
             // rpt_vstring(d1, "ddc_io_mode = USB_IO");
@@ -781,7 +866,7 @@ void report_display_handle(Display_Handle * dh, const char * msg, int depth) {
    }
 }
 
-
+#ifdef OLD
 /* Returns a string summarizing the specified #Display_Handle.
  *
  * The string is returned in a newly allocated buffer.
@@ -817,8 +902,10 @@ char * dh_repr_a(Display_Handle * dh) {
       }
       return repr;
    }
+#endif
 
 
+#ifdef OLD
 /* Returns a string summarizing the specified #Display_Handle.
  * The string is returned in a buffer provided by the caller.
  *
@@ -853,6 +940,7 @@ static char * dh_repr_r(Display_Handle * dh, char * buf, int bufsz) {
    buf[bufsz-1] = '\0';
    return buf;
 }
+#endif
 
 
 /** Returns a string summarizing the specified #Display_Handle.
@@ -867,8 +955,32 @@ static char * dh_repr_r(Display_Handle * dh, char * buf, int bufsz) {
  */
 char * dh_repr_t(Display_Handle * dh) {
    static GPrivate  dh_buf_key = G_PRIVATE_INIT(g_free);
-   char * buf = get_thread_fixed_buffer(&dh_buf_key, 100);
-   dh_repr_r(dh, buf, 100);
+   const int bufsz = 100;
+   char * buf = get_thread_fixed_buffer(&dh_buf_key, bufsz);
+
+   assert(dh);
+   assert(dh->dref);
+
+   switch (dh->dref->io_path.io_mode) {
+   case DDCA_IO_DEVI2C:
+        snprintf(buf, bufsz,
+                 "Display_Handle[i2c: fh=%d, busno=%d]",
+                 dh->fh, dh->dref->io_path.i2c_busno);
+        break;
+    case DDCA_IO_ADL:
+        snprintf(buf, bufsz,
+                 "Display_Handle[adl: display %d.%d]",
+                 dh->dref->io_path.adlno.iAdapterIndex, dh->dref->io_path.adlno.iDisplayIndex);
+        break;
+    case DDCA_IO_USB:
+        snprintf(buf, bufsz,
+                 "Display_Handle[usb: %d:%d, %s/hiddev%d]",
+                 dh->dref->usb_bus, dh->dref->usb_device,
+                 usb_hiddev_directory(), dh->dref->io_path.hiddev_devno);
+        break;
+    }
+    buf[bufsz-1] = '\0';
+
    return buf;
 }
 
@@ -958,15 +1070,8 @@ int hiddev_name_to_number(char * hiddev_name) {
  */
 char * hiddev_number_to_name(int hiddev_number) {
    assert(hiddev_number >= 0);
-#ifdef OLD
-   assert(hiddev_number >= 0 && hiddev_number < 100);
-   char * hiddev_dir = usb_hiddev_directory();
-   int sz = strlen(hiddev_dir) + strlen("/hiddev") + 2;
-   char * s = malloc(sz);
-   snprintf(s, sz, "%s/hiddev%d", hiddev_dir, hiddev_number);
-#endif
    char * s = gaux_asprintf("%s/hiddev%d", usb_hiddev_directory(),hiddev_number);
-   DBGMSG("hiddev_number=%d, returning: %s", hiddev_number, s);
+   // DBGMSG("hiddev_number=%d, returning: %s", hiddev_number, s);
    return s;
 }
 
@@ -999,7 +1104,7 @@ GDL * gdl_new(DDCA_IO_Path dpath) {
    return result;
 }
 
-
+#ifdef OLD
 // TODO: move to displays.h
 // n. returned on stack
 DDCA_IO_Path dpath_from_dref(Display_Ref * dref) {
@@ -1018,6 +1123,7 @@ DDCA_IO_Path dpath_from_dref(Display_Ref * dref) {
     }
     return result;
 }
+#endif
 
 
 bool dpath_eq(DDCA_IO_Path p1, DDCA_IO_Path p2) {
@@ -1053,7 +1159,6 @@ void dbgrpt_global_locks_list(GPtrArray* global_locks, int depth) {
 }
 
 
-
 // There are only a handful of displays.  No need for a complex data structure.
 
 GPtrArray * global_locks = NULL;   // g_ptr_array_new();    // array of GDL
@@ -1075,17 +1180,16 @@ GDL * find_lock(DDCA_IO_Path dpath) {
 }
 
 
-
-
 /** Obtains a reference to the master lock for a display.
  *
  *  Note that the display itself is not locked.  This function
  *  obtains a reference to the lock to be used for the display.
  */
-Global_Display_Lock get_display_lock(DDCA_Display_Ref dref) {
+Global_Display_Lock get_display_lock(Display_Ref * dref) {
    bool debug = false;
    assert(dref);
-   DDCA_IO_Path dpath = dpath_from_dref(dref);
+   // DDCA_IO_Path dpath = dpath_from_dref(dref);
+   DDCA_IO_Path dpath = dref->io_path;
    // use dpath as key
    // to do: define dpath_repr_t(), use it
    DBGMSF(debug, "dref=%s", dref_repr_t(dref));
@@ -1144,7 +1248,5 @@ void unlock_display_lock(Global_Display_Lock dlock) {
       g_mutex_unlock(&gdl->thread_lock);
    }
 }
-
-
 
 

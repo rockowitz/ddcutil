@@ -461,7 +461,7 @@ usb_get_nontable_vcp_value(
    DBGTRC(debug, TRACE_GROUP,
              "Reading feature 0x%02x, dh=%p, dh->dref=%p", feature_code, dh, dh->dref);
 
-   assert(dh->dref->io_mode == DDCA_IO_USB);
+   assert(dh->dref->io_path.io_mode == DDCA_IO_USB);
    // if (!dh->dref) {
    //    DGBMSF(debug, "HACK: getting value for uninitialized dh->dref");
    //    ---
@@ -633,7 +633,7 @@ usb_set_nontable_vcp_value(
           feature_code, dh, dh->dref, new_value);
 
    Public_Status_Code psc =  DDCRC_REPORTED_UNSUPPORTED;  // = 0;
-   assert(dh->dref->io_mode == DDCA_IO_USB);
+   assert(dh->dref->io_path.io_mode == DDCA_IO_USB);
    Usb_Monitor_Info * moninfo = usb_find_monitor_by_display_handle(dh);
    assert(moninfo);
 

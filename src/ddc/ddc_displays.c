@@ -463,9 +463,9 @@ ddc_report_display_by_dref(Display_Ref * dref, int depth) {
       rpt_vstring(depth, "Display %d", dref->dispno);
    }
 
-   switch(dref->io_mode) {
+   switch(dref->io_path.io_mode) {
    case DDCA_IO_DEVI2C:
-      // i2c_report_active_display_by_busno(dref->busno, d1);
+      // i2c_report_active_display_by_busno(dref->io_path.io.i2c_busno, d1);
       {
          I2C_Bus_Info * curinfo = dref->detail2;
          assert(curinfo);
@@ -526,7 +526,7 @@ ddc_report_display_by_dref(Display_Ref * dref, int depth) {
                ddc_close_display(dh);
             }
 
-            if (dref->io_mode != DDCA_IO_USB)
+            if (dref->io_path.io_mode != DDCA_IO_USB)
                rpt_vstring(d1, "Monitor returns DDC Null Response for unsupported features: %s",
                                   bool_repr(dh->dref->flags & DREF_DDC_USES_NULL_RESPONSE_FOR_UNSUPPORTED));
          }
@@ -590,14 +590,14 @@ void dbgreport_display_ref(Display_Ref * dref, int depth) {
    rpt_int("dispno", NULL, dref->dispno, d1);
 
    // rpt_vstring(d1, "dref: %p:", dref->dref);
-   report_display_ref(dref, d1);
+   dbgrpt_display_ref(dref, d1);
 
    rpt_vstring(d1, "edid: %p (Skipping report)", dref->pedid);
    // report_parsed_edid(drec->edid, false, d1);
 
-   rpt_vstring(d1, "io_mode: %s", mccs_io_mode_name(dref->io_mode));
+   rpt_vstring(d1, "io_mode: %s", io_mode_name(dref->io_path.io_mode));
    // rpt_vstring(d1, "flags:   0x%02x", drec->flags);
-   switch(dref->io_mode) {
+   switch(dref->io_path.io_mode) {
    case(DDCA_IO_DEVI2C):
          rpt_vstring(d1, "I2C bus information: ");
          I2C_Bus_Info * businfo = dref->detail2;
@@ -703,22 +703,22 @@ ddc_check_display_ref(Display_Ref * dref, Display_Criteria * criteria) {
       goto bye;
 
    if (criteria->i2c_busno >= 0) {
-      if (dref->io_mode != DDCA_IO_DEVI2C || dref->busno != criteria->i2c_busno)
+      if (dref->io_path.io_mode != DDCA_IO_DEVI2C || dref->io_path.i2c_busno != criteria->i2c_busno)
          goto bye;
    }
 
    if (criteria->iAdapterIndex >= 0) {
-      if (dref->io_mode != DDCA_IO_ADL || dref->iAdapterIndex != criteria->iAdapterIndex)
+      if (dref->io_path.io_mode != DDCA_IO_ADL || dref->io_path.adlno.iAdapterIndex != criteria->iAdapterIndex)
          goto bye;
    }
 
    if (criteria->iDisplayIndex >= 0) {
-      if (dref->io_mode != DDCA_IO_ADL || dref->iDisplayIndex != criteria->iDisplayIndex)
+      if (dref->io_path.io_mode != DDCA_IO_ADL || dref->io_path.adlno.iDisplayIndex != criteria->iDisplayIndex)
          goto bye;
    }
 
    if (criteria->hiddev >= 0) {
-      if (dref->io_mode != DDCA_IO_USB)
+      if (dref->io_path.io_mode != DDCA_IO_USB)
          goto bye;
       char buf[40];
       snprintf(buf, 40, "%s/hiddev%d", usb_hiddev_directory(), criteria->hiddev);
@@ -729,7 +729,7 @@ ddc_check_display_ref(Display_Ref * dref, Display_Criteria * criteria) {
    }
 
    if (criteria->usb_busno >= 0) {
-      if (dref->io_mode != DDCA_IO_USB)
+      if (dref->io_path.io_mode != DDCA_IO_USB)
          goto bye;
       // Usb_Monitor_Info * moninfo = drec->detail2;
       // assert(memcmp(moninfo->marker, USB_MONITOR_INFO_MARKER, 4) == 0);
@@ -739,7 +739,7 @@ ddc_check_display_ref(Display_Ref * dref, Display_Criteria * criteria) {
    }
 
    if (criteria->usb_devno >= 0) {
-      if (dref->io_mode != DDCA_IO_USB)
+      if (dref->io_path.io_mode != DDCA_IO_USB)
          goto bye;
       // Usb_Monitor_Info * moninfo = drec->detail2;
       // assert(memcmp(moninfo->marker, USB_MONITOR_INFO_MARKER, 4) == 0);
@@ -749,9 +749,9 @@ ddc_check_display_ref(Display_Ref * dref, Display_Criteria * criteria) {
    }
 
    if (criteria->hiddev >= 0) {
-      if (dref->io_mode != DDCA_IO_USB)
+      if (dref->io_path.io_mode != DDCA_IO_USB)
          goto bye;
-      if ( dref->usb_hiddev_devno != criteria->hiddev )
+      if ( dref->io_path.hiddev_devno != criteria->hiddev )
          goto bye;
    }
 
@@ -869,7 +869,7 @@ ddc_find_display_ref_by_display_identifier(Display_Identifier * did) {
    bool debug = false;
    DBGMSF(debug, "Starting");
    if (debug)
-      report_display_identifier(did, 1);
+      dbgrpt_display_identifier(did, 1);
 
    Display_Ref * result = NULL;
 

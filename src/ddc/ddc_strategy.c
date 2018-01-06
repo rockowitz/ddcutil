@@ -44,12 +44,12 @@ void validate_ddc_strategies() {
 
 DDC_Raw_Writer ddc_raw_writer(Display_Handle * dh) {
    assert(dh && dh->dref);
-   return ddc_strategies[dh->dref->io_mode].writer;
+   return ddc_strategies[dh->dref->io_path.io_mode].writer;
 }
 
 DDC_Raw_Reader ddc_raw_reader(Display_Handle * dh) {
    assert(dh && dh->dref);
-   return ddc_strategies[dh->dref->io_mode].reader;
+   return ddc_strategies[dh->dref->io_path.io_mode].reader;
 }
 
 void init_ddc_strategies() {

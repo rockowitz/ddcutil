@@ -89,7 +89,7 @@ save_current_settings(
    Public_Status_Code psc = 0;
    Error_Info * ddc_excp = NULL;
 
-   if (dh->dref->io_mode == DDCA_IO_USB) {
+   if (dh->dref->io_path.io_mode == DDCA_IO_USB) {
       // command line parser should block this case
       PROGRAM_LOGIC_ERROR("MCCS over USB does not have Save Current Settings command");
       ddc_excp = errinfo_new(DDCL_UNIMPLEMENTED, __func__);
@@ -139,7 +139,7 @@ set_nontable_vcp_value(
    Public_Status_Code psc = 0;
    Error_Info * ddc_excp = NULL;
 
-   if (dh->dref->io_mode == DDCA_IO_USB) {
+   if (dh->dref->io_path.io_mode == DDCA_IO_USB) {
 #ifdef USE_USB
       psc = usb_set_nontable_vcp_value(dh, feature_code, new_value);
 #else
@@ -189,7 +189,7 @@ set_table_vcp_value(
    Public_Status_Code psc = 0;
    Error_Info * ddc_excp = NULL;
 
-   if (dh->dref->io_mode == DDCA_IO_USB) {
+   if (dh->dref->io_path.io_mode == DDCA_IO_USB) {
 #ifdef USE_USB
       psc = DDCL_UNIMPLEMENTED;
 #else
@@ -579,7 +579,7 @@ get_vcp_value(
    DDCA_Single_Vcp_Value * valrec = NULL;
 
    // why are we coming here for USB?
-   if (dh->dref->io_mode == DDCA_IO_USB) {
+   if (dh->dref->io_path.io_mode == DDCA_IO_USB) {
 #ifdef USE_USB
       DBGMSF(debug, "USB case");
 

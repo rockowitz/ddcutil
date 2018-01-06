@@ -169,13 +169,13 @@ perform_get_capabilities_by_display_handle(Display_Handle * dh) {
       if (output_level <= DDCA_OL_TERSE) {
          f0printf(FOUT,
                   "%s capabilities string: %s\n",
-                  (dh->dref->io_mode == DDCA_IO_USB) ? "Synthesized unparsed" : "Unparsed",
+                  (dh->dref->io_path.io_mode == DDCA_IO_USB) ? "Synthesized unparsed" : "Unparsed",
                   capabilities_string);
       }
       else {
-         if (dh->dref->io_mode == DDCA_IO_USB)
+         if (dh->dref->io_path.io_mode == DDCA_IO_USB)
             pcap->raw_value_synthesized = true;
-         // report_parsed_capabilities(pcap, dh->dref->io_mode);    // io_mode no longer needed
+         // report_parsed_capabilities(pcap, dh->dref->io_path.io_mode);    // io_mode no longer needed
          report_parsed_capabilities(pcap);
          // free_parsed_capabilities(pcap);
       }
@@ -771,7 +771,7 @@ int main(int argc, char *argv[]) {
                   f0printf(FOUT, "SCS command takes no arguments\n");
                   main_rc = EXIT_FAILURE;
                }
-               else if (dh->dref->io_mode == DDCA_IO_USB) {
+               else if (dh->dref->io_path.io_mode == DDCA_IO_USB) {
                   f0printf(FOUT, "SCS command not supported for USB devices\n");
                   main_rc = EXIT_FAILURE;
                }

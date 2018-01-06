@@ -56,6 +56,13 @@ char * bool_repr(int value);
    } while(0)
 #endif
 
+#define SAFE_SNPRINTF(buf, bufsz, fmt, ...) \
+   do { \
+      snprintf(buf, bufsz, fmt, __VA_ARGS__ ); \
+      if (bufsz > 0) \
+         buf[bufsz-1] = '\0'; \
+   } while(0)
+
 //
 // String functions (other than hex)
 //

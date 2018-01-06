@@ -438,7 +438,7 @@ static Usb_Monitor_Info * usb_find_monitor_by_busnum_devnum(int busnum, int devn
 static Usb_Monitor_Info * usb_find_monitor_by_display_ref(Display_Ref * dref) {
    bool debug = false;
    DBGMSF(debug, "Starting. dref = %s", dref_repr_t(dref));
-   assert(dref->io_mode == DDCA_IO_USB);
+   assert(dref->io_path.io_mode == DDCA_IO_USB);
    Usb_Monitor_Info * result = usb_find_monitor_by_busnum_devnum(dref->usb_bus, dref->usb_device);
    DBGMSF(debug, "Returning %p", result);
    return result;
@@ -450,7 +450,7 @@ Usb_Monitor_Info * usb_find_monitor_by_display_handle(Display_Handle * dh) {
    bool debug = false;
    DBGMSF(debug, "Starting. dh = %s", dh_repr(dh));
    assert(dh && dh->dref);
-   assert(dh->dref->io_mode == DDCA_IO_USB);
+   assert(dh->dref->io_path.io_mode == DDCA_IO_USB);
    Usb_Monitor_Info * result = NULL;
    result = usb_find_monitor_by_busnum_devnum(dh->dref->usb_bus, dh->dref->usb_device);
    DBGMSF(debug, "Returning %p", result);

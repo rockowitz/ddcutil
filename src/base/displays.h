@@ -108,7 +108,7 @@ Display_Identifier* create_mfg_model_sn_display_identifier(const char* mfg_code,
 Display_Identifier* create_usb_display_identifier(int bus, int device);
 Display_Identifier* create_usb_hiddev_display_identifier(int hiddev_devno);
 char *              did_repr(Display_Identifier * pdid);
-void                report_display_identifier(Display_Identifier * pdid, int depth);
+void                dbgrpt_display_identifier(Display_Identifier * pdid, int depth);
 void                free_display_identifier(Display_Identifier * pdid);
 
 #ifdef FUTURE
@@ -144,12 +144,13 @@ bool               dsel_validate(          Display_Selector * dsel);
 
 // *** DDCA_Display_Path ***
 
-char *        dpath_repr_t(DDCA_IO_Path * dref);  // value valid until next call
+char *  io_mode_name(DDCA_IO_Mode val);
+bool    dpath_eq(DDCA_IO_Path p1, DDCA_IO_Path p2);
+char *  dpath_repr_t(DDCA_IO_Path * dpath);  // value valid until next call
+
 
 
 // *** Display_Ref ***
-
-char * mccs_io_mode_name(DDCA_IO_Mode val);
 
 typedef Byte Dref_Flags;
 #define DREF_DDC_COMMUNICATION_CHECKED              0x80
@@ -167,16 +168,23 @@ typedef Byte Dref_Flags;
  */
 typedef struct _display_ref {
    char          marker[4];
+
+#ifdef OLD
    DDCA_IO_Mode  io_mode;
    int           busno;
    int           iAdapterIndex;
    int           iDisplayIndex;
+   int           usb_hiddev_devno;       // added 4/2017
+#endif
+   // alt:
+   DDCA_IO_Path  io_path;
+
    int           usb_bus;
    int           usb_device;
    char *        usb_hiddev_name;
    DDCA_MCCS_Version_Spec vcp_version;
    Dref_Flags    flags;
-   int           usb_hiddev_devno;       // added 4/2017
+
    char *        capabilities_string;    // added 4/2017, private copy
    Parsed_Edid * pedid;                  // added 4/2017
    Global_Display_Lock gdl;
@@ -192,14 +200,17 @@ typedef struct _display_ref {
 Display_Ref * create_bus_display_ref(int busno);
 Display_Ref * create_adl_display_ref(int iAdapterIndex, int iDisplayIndex);
 Display_Ref * create_usb_display_ref(int bus, int device, char * hiddev_devname);
-void          report_display_ref(Display_Ref * dref, int depth);
+void          dbgrpt_display_ref(Display_Ref * dref, int depth);
 char *        dref_short_name_t(Display_Ref * dref);
 char *        dref_repr_t(Display_Ref * dref);  // value valid until next call
 Display_Ref * clone_display_ref(Display_Ref * old);
 void          free_display_ref(Display_Ref * dref);
 
 // Do two Display_Ref's identify the same device?
-bool dreq(Display_Ref* this, Display_Ref* that);
+bool dref_eq(Display_Ref* this, Display_Ref* that);
+
+// n. returned on stack
+// DDCA_IO_Path dpath_from_dref(Display_Ref * dref);
 
 
 // *** Display_Handle ***
@@ -239,7 +250,7 @@ Video_Card_Info * create_video_card_info();
 
 // *** Miscellaneous ***
 
-bool is_adlno_defibed(DDCA_Adlno adlno);
+bool is_adlno_defined(DDCA_Adlno adlno);
 
 /** Reserved #DDCA_Adlno value indicating undefined */
 #define ADLNO_UNDEFINED {-1,-1}
@@ -262,7 +273,7 @@ int    hiddev_name_to_number(char * hiddev_name);
 char * hiddev_number_to_name(int hiddev_number);
 
 
-Global_Display_Lock get_display_lock(DDCA_Display_Ref dref);
+Global_Display_Lock get_display_lock(Display_Ref * dref);
 bool lock_display_lock(Global_Display_Lock dlock, bool wait);
 void unlock_display_lock(Global_Display_Lock dlock);
 

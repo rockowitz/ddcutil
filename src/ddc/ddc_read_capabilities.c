@@ -134,7 +134,7 @@ get_capabilities_string(
    Public_Status_Code psc = 0;
    Error_Info * ddc_excp = NULL;
    if (!dh->dref->capabilities_string) {
-      if (dh->dref->io_mode == DDCA_IO_USB) {
+      if (dh->dref->io_path.io_mode == DDCA_IO_USB) {
 #ifdef USE_USB
          // newly created string, can just  reference
          dh->dref->capabilities_string = usb_get_capabilities_string_by_display_handle(dh);

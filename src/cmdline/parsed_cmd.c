@@ -77,7 +77,7 @@ void report_parsed_cmd(Parsed_Cmd * parsed_cmd, int depth) {
 
    rpt_structure_loc("pdid", parsed_cmd->pdid,                        d1);
    if (parsed_cmd->pdid)
-       report_display_identifier(parsed_cmd->pdid,                    d2);
+       dbgrpt_display_identifier(parsed_cmd->pdid,                    d2);
 
    rpt_structure_loc("fref", parsed_cmd->fref,                        d1);
    if (parsed_cmd->fref)

@@ -129,11 +129,11 @@ Public_Status_Code ddc_open_display(
    Display_Handle * dh = NULL;
    Public_Status_Code psc = 0;
 
-   switch (dref->io_mode) {
+   switch (dref->io_path.io_mode) {
 
    case DDCA_IO_DEVI2C:
       {
-         int fd = i2c_open_bus(dref->busno, callopts);
+         int fd = i2c_open_bus(dref->io_path.i2c_busno, callopts);
          if (fd < 0) {    // will be < 0 if open_i2c_bus failed and CALLOPT_ERR_ABORT not set
             psc = fd;
             goto bye;
@@ -153,8 +153,8 @@ Public_Status_Code ddc_open_display(
          // sleepMillisWithTrace(DDC_TIMEOUT_MILLIS_DEFAULT, __func__, NULL);
          dh = create_bus_display_handle_from_display_ref(fd, dref);    // n. sets dh->dref = dref
          // n. sets
-         // Bus_Info * bus_info = i2c_get_bus_info(dref->busno, DISPSEL_VALID_ONLY);   // or DISPSEL_NONE?
-         // Bus_Info * bus_info = i2c_get_bus_info_new(dref->busno);   // or DISPSEL_NONE?
+         // Bus_Info * bus_info = i2c_get_bus_info(dref->io_path.i2c_busno, DISPSEL_VALID_ONLY);   // or DISPSEL_NONE?
+         // Bus_Info * bus_info = i2c_get_bus_info_new(dref->io_path.i2c_busno);   // or DISPSEL_NONE?
          I2C_Bus_Info * bus_info = dref->detail2;
          assert(bus_info);   // need to convert to a test?
          assert( memcmp(bus_info, I2C_BUS_INFO_MARKER, 4) == 0);
@@ -164,7 +164,7 @@ Public_Status_Code ddc_open_display(
             // How is this even possible?
             // 1/2017:  Observed with x260 laptop and Ultradock, See ddcutil user report.
             //          close(fd) fails
-            DBGMSG("No EDID for device on bus /dev/i2c-%d", dref->busno);
+            DBGMSG("No EDID for device on bus /dev/i2c-%d", dref->io_path.i2c_busno);
             if (!(callopts & CALLOPT_FORCE)) {
                close(fd);
                psc = DDCRC_EDID;
@@ -206,7 +206,7 @@ Public_Status_Code ddc_open_display(
    assert(!dh || dh->dref->pedid);
    // needed?  for both or just I2C?
    // sleep_millis_with_trace(DDC_TIMEOUT_MILLIS_DEFAULT, __func__, NULL);
-   if (dref->io_mode != DDCA_IO_USB)
+   if (dref->io_path.io_mode != DDCA_IO_USB)
       call_tuned_sleep_i2c(SE_POST_OPEN);
    // report_display_handle(pDispHandle, __func__);
 bye:
@@ -233,10 +233,10 @@ void ddc_close_display(Display_Handle * dh) {
       report_display_handle(dh, __func__, 1);
    }
 
-   switch(dh->dref->io_mode) {
+   switch(dh->dref->io_path.io_mode) {
    case DDCA_IO_DEVI2C:
       {
-         Status_Errno rc = i2c_close_bus(dh->fh, dh->dref->busno,  CALLOPT_NONE);    // return error if failure
+         Status_Errno rc = i2c_close_bus(dh->fh, dh->dref->io_path.i2c_busno,  CALLOPT_NONE);    // return error if failure
          if (rc != 0) {
             assert(rc < 0);
             DBGMSG("close_i2c_bus returned %d", rc);
@@ -386,7 +386,7 @@ static Public_Status_Code ddc_i2c_write_read_raw(
 
    assert(dh);
    assert(dh->dref);
-   assert(dh->dref->io_mode == DDCA_IO_DEVI2C);
+   assert(dh->dref->io_path.io_mode == DDCA_IO_DEVI2C);
    // ASSERT_DISPLAY_IO_MODE(dh, DDCA_IO_DEVI2C);
 
 #ifdef TEST_THAT_DIDNT_WORK
@@ -459,7 +459,7 @@ static Public_Status_Code ddc_adl_write_read_raw(
    DBGTRC(debug, TRACE_GROUP,
           "Starting. Using adl_ddc_write_only() and adl_ddc_read_only() dh=%s",
           dh_repr_t(dh));
-   assert(dh && dh->dref && dh->dref->io_mode == DDCA_IO_ADL);
+   assert(dh && dh->dref && dh->dref->io_path.io_mode == DDCA_IO_ADL);
    // ASSERT_DISPLAY_IO_MODE(dh, DDCA_IO_ADL);
 
    Public_Status_Code psc = adlshim_ddc_write_only(
@@ -523,9 +523,9 @@ static Public_Status_Code ddc_write_read_raw(
    Public_Status_Code psc;
 
    // This function should not be called for USB
-   assert(dh->dref->io_mode == DDCA_IO_DEVI2C || dh->dref->io_mode == DDCA_IO_ADL);
+   assert(dh->dref->io_path.io_mode == DDCA_IO_DEVI2C || dh->dref->io_path.io_mode == DDCA_IO_ADL);
 
-   if (dh->dref->io_mode == DDCA_IO_DEVI2C) {
+   if (dh->dref->io_path.io_mode == DDCA_IO_DEVI2C) {
         psc =  ddc_i2c_write_read_raw(
               dh,
               request_packet_ptr,
@@ -676,7 +676,7 @@ ddc_write_read_with_retry(
    bool debug = false;
    DBGTRC(debug, TRACE_GROUP, "Starting. dh=%s, all_zero_response_ok=%s",
           dh_repr_t(dh), bool_repr(all_zero_response_ok)  );
-   assert(dh->dref->io_mode != DDCA_IO_USB);
+   assert(dh->dref->io_path.io_mode != DDCA_IO_USB);
    // show_backtrace(1);
 
    // will be false on initial call to verify DDC communication
@@ -720,7 +720,7 @@ ddc_write_read_with_retry(
          DBGMSF(debug, "ddc_write_read() returned %s", psc_desc(psc) );
          COUNT_RETRYABLE_STATUS_CODE(psc);
 
-         if (dh->dref->io_mode == DDCA_IO_DEVI2C) {
+         if (dh->dref->io_path.io_mode == DDCA_IO_DEVI2C) {
             // The problem: Does NULL response indicate an error condition, or
             // is the monitor using NULL response to indicate unsupported?
             // Acer monitor uses NULL response instead of setting the unsupported
@@ -866,8 +866,8 @@ ddc_write_only(
    DBGTRC(debug, TRACE_GROUP, "Starting.");
 
    Public_Status_Code psc = 0;
-   assert(dh->dref->io_mode != DDCA_IO_USB);
-   if (dh->dref->io_mode == DDCA_IO_DEVI2C) {
+   assert(dh->dref->io_path.io_mode != DDCA_IO_USB);
+   if (dh->dref->io_path.io_mode == DDCA_IO_DEVI2C) {
       psc = ddc_i2c_write_only(dh->fh, request_packet_ptr);
    }
    else {
@@ -911,7 +911,7 @@ ddc_write_only_with_retry(
    bool debug = false;
    DBGTRC(debug, TRACE_GROUP, "Starting." );
 
-   assert(dh->dref->io_mode != DDCA_IO_USB);
+   assert(dh->dref->io_path.io_mode != DDCA_IO_USB);
 
    Public_Status_Code psc;
    int                tryctr;
@@ -933,7 +933,7 @@ ddc_write_only_with_retry(
 
       if (psc < 0) {
          COUNT_RETRYABLE_STATUS_CODE(psc);
-         if (dh->dref->io_mode == DDCA_IO_DEVI2C) {
+         if (dh->dref->io_path.io_mode == DDCA_IO_DEVI2C) {
             if (psc < 0) {
                if (psc != -EIO)
                    retryable = false;

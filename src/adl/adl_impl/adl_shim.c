@@ -94,10 +94,10 @@ Parsed_Edid*
 adlshim_get_parsed_edid_by_display_handle(
       Display_Handle * dh)
 {
-   assert(dh && dh->dref && dh->dref->io_mode == DDCA_IO_ADL);
-   // ASSERT_DISPLAY_IO_MODE(dh, DDCA_IO_ADL);
-   // assert(dh->io_mode == DDC_IO_ADL);
-   return adl_get_parsed_edid_by_adlno(dh->dref->iAdapterIndex, dh->dref->iDisplayIndex);
+   assert(dh && dh->dref && dh->dref->io_path.io_mode == DDCA_IO_ADL);
+   return adl_get_parsed_edid_by_adlno(
+             dh->dref->io_path.adlno.iAdapterIndex,
+             dh->dref->io_path.adlno.iDisplayIndex);
 }
 
 
@@ -105,10 +105,8 @@ Parsed_Edid*
 adlshim_get_parsed_edid_by_display_ref(
       Display_Ref * dref)
 {
-   assert(dref && dref->io_mode == DDCA_IO_ADL);
-   // assert(dref->io_mode == DDC_IO_ADL);
-   // ASSERT_DISPLAY_IO_MODE(dref, DDCA_IO_ADL);
-   return adl_get_parsed_edid_by_adlno(dref->iAdapterIndex, dref->iDisplayIndex);
+   assert(dref && dref->io_path.io_mode == DDCA_IO_ADL);
+   return adl_get_parsed_edid_by_adlno(dref->io_path.adlno.iAdapterIndex, dref->io_path.adlno.iDisplayIndex);
 }
 
 #ifdef UNUSED
@@ -120,19 +118,24 @@ void adlshim_show_active_display_by_adlno(int iAdapterIndex, int iDisplayIndex, 
 
 
 void adlshim_report_active_display_by_display_ref(Display_Ref * dref, int depth) {
-   assert(dref && dref->io_mode == DDCA_IO_ADL);
-   // ASSERT_DISPLAY_IO_MODE(dref, DDCA_IO_ADL);
-   return adl_report_active_display_by_adlno(dref->iAdapterIndex, dref->iDisplayIndex, depth);
+   assert(dref && dref->io_path.io_mode == DDCA_IO_ADL);
+   return adl_report_active_display_by_adlno(
+             dref->io_path.adlno.iAdapterIndex,
+             dref->io_path.adlno.iDisplayIndex,
+             depth);
 }
 
 
 // Find and validate display
 
 bool              adlshim_is_valid_display_ref(Display_Ref * dref, bool emit_error_msg) {
-   assert(dref && dref->io_mode == DDCA_IO_ADL);
+   assert(dref && dref->io_path.io_mode == DDCA_IO_ADL);
    // assert(dref->ddc_io_mode == DDC_IO_ADL);
    // ASSERT_DISPLAY_IO_MODE(dref, DDCA_IO_ADL);
-   return adl_is_valid_adlno(dref->iAdapterIndex, dref->iDisplayIndex, emit_error_msg);
+   return adl_is_valid_adlno(
+             dref->io_path.adlno.iAdapterIndex,
+             dref->io_path.adlno.iDisplayIndex,
+             emit_error_msg);
 }
 
 #ifdef OLD
@@ -220,8 +223,8 @@ adlshim_get_video_card_info(
       Video_Card_Info * card_info)
 {
    Base_Status_ADL adlrc = adl_get_video_card_info_by_adlno(
-                              dh->dref->iAdapterIndex,
-                              dh->dref->iDisplayIndex,
+                              dh->dref->io_path.adlno.iAdapterIndex,
+                              dh->dref->io_path.adlno.iDisplayIndex,
                               card_info);
    return modulate_rc(adlrc, RR_ADL);
 }
@@ -242,8 +245,11 @@ adlshim_ddc_write_only(
       Byte *  pSendMsgBuf,
       int     sendMsgLen)
 {
-   assert(dh && dh->dref && dh->dref->io_mode == DDCA_IO_ADL);
-   Base_Status_ADL adlrc = adl_ddc_write_only(dh->dref->iAdapterIndex, dh->dref->iDisplayIndex, pSendMsgBuf, sendMsgLen);
+   assert(dh && dh->dref && dh->dref->io_path.io_mode == DDCA_IO_ADL);
+   Base_Status_ADL adlrc = adl_ddc_write_only(
+                              dh->dref->io_path.adlno.iAdapterIndex,
+                              dh->dref->io_path.adlno.iDisplayIndex,
+                              pSendMsgBuf, sendMsgLen);
    return modulate_rc(adlrc, RR_ADL);
 }
 
@@ -260,8 +266,11 @@ Modulated_Status_ADL adlshim_ddc_read_only(
       Byte *  pRcvMsgBuf,
       int *   pRcvBytect)
 {
-   assert(dh && dh->dref && dh->dref->io_mode == DDCA_IO_ADL);
-   Base_Status_ADL adlrc = adl_ddc_read_only(dh->dref->iAdapterIndex, dh->dref->iDisplayIndex, pRcvMsgBuf, pRcvBytect);
+   assert(dh && dh->dref && dh->dref->io_path.io_mode == DDCA_IO_ADL);
+   Base_Status_ADL adlrc = adl_ddc_read_only(
+                              dh->dref->io_path.adlno.iAdapterIndex,
+                              dh->dref->io_path.adlno.iDisplayIndex,
+                              pRcvMsgBuf, pRcvBytect);
    return modulate_rc(adlrc, RR_ADL);
 }
 
