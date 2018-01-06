@@ -1,7 +1,7 @@
 /* feature_sets.h
  *
  * <copyright>
- * Copyright (C) 2014-2017 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2014-2018 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -36,7 +36,7 @@
 
 
 // If this enum is changed, be sure to change the corresponding
-// table in vcp_feature_base.c
+// table in feature_sets.c
 typedef enum {
    VCP_SUBSET_PROFILE         = 0x8000,
    VCP_SUBSET_COLOR           = 0x4000,
@@ -60,24 +60,8 @@ typedef enum {
    VCP_SUBSET_NONE            = 0x0000,
 } VCP_Feature_Subset;
 
-
-#ifdef OLD
-typedef
-struct _Vcp_Subset_Desc {
-   VCP_Feature_Subset     subset_id;
-   char *                 subset_id_name;
-   char *                 public_name;
-} Vcp_Subset_Desc;
-
-extern struct _Vcp_Subset_Desc vcp_subset_desc[];
-
-const int vcp_subset_count;
-#endif
-
 char * feature_subset_name(VCP_Feature_Subset subset_id);
-
 char * feature_subset_names(VCP_Feature_Subset subset_ids);
-
 
 typedef struct {
    VCP_Feature_Subset  subset;
