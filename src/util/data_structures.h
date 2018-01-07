@@ -185,7 +185,9 @@ typedef Value_Name_Title_Table Value_Name_Table;
 
 
 char * vnt_name( Value_Name_Title* table, uint32_t val);
+#ifdef TRANSITIONAL
 #define vn_name vnt_name
+#endif
 char * vnt_title(Value_Name_Title* table, uint32_t val);
 
 uint32_t vnt_find_id(
