@@ -4,7 +4,7 @@
 
 /*
  * <copyright>
- * Copyright (C) 2014-2017 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2014-2018 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -29,6 +29,7 @@
 
 #include "core.h"
 #include "ddc_packets.h"
+#include "displays.h"
 #include "execution_stats.h"
 #include "linux_errno.h"
 #include "sleep.h"
@@ -45,4 +46,5 @@ void init_base_services() {
    init_execution_stats();
    init_status_code_mgt();
    // init_linux_errno();
+   init_displays();
 }

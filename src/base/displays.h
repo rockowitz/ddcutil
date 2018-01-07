@@ -3,7 +3,7 @@
  * Display specification
  *
  * <copyright>
- * Copyright (C) 2014-2017 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2014-2018 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -38,13 +38,15 @@
 #include "util/edid.h"
 /** \endcond */
 
-#include "../public/ddcutil_types.h"
+#include "public/ddcutil_types.h"
 
 #include "core.h"
 #include "feature_sets.h"
 #include "vcp_version.h"
 
+
 typedef void * Global_Display_Lock;
+
 
 /** \file
 Display Specification
@@ -65,6 +67,40 @@ is direct.   Otherwise, displays are searched to find the monitor.
 For ADL displays, the translation from Display_Ref to Display_Handle is direct.
 For I2C displays, the device must be opened.  Display_Handle then contains the open file handle.
 */
+
+// *** Initialization ***
+
+void init_displays();
+
+
+// *** DDCA_Display_Path ***
+
+char *  io_mode_name(DDCA_IO_Mode val);
+bool    dpath_eq(DDCA_IO_Path p1, DDCA_IO_Path p2);
+char *  dpath_repr_t(DDCA_IO_Path * dpath);  // value valid until next call
+
+
+// *** Display_Async ***
+
+
+#define DISPLAY_ASYNC_REC_MARKER "DSNC"
+typedef struct Display_Async {
+   char           marker[4];
+   DDCA_IO_Path   dpath;        // key
+
+   // Global_Display_Lock gdl;
+
+   GThread *     thread_owning_display_lock;     // id of thread owning lock (type int is placeholder)
+   GMutex        display_lock;
+
+   // for future request queue structure
+   GQueue *      request_queue;
+   GMutex        request_queue_lock;
+   GThread *     request_execution_thread;  // or in DH?
+} Display_Async_Rec;
+
+
+
 
 
 // *** Display_Identifier ***
@@ -143,12 +179,6 @@ Display_Selector * dsel_set_edid_hex(      Display_Selector* dsel, char * hexstr
 bool               dsel_validate(          Display_Selector * dsel);
 #endif
 
-// *** DDCA_Display_Path ***
-
-char *  io_mode_name(DDCA_IO_Mode val);
-bool    dpath_eq(DDCA_IO_Path p1, DDCA_IO_Path p2);
-char *  dpath_repr_t(DDCA_IO_Path * dpath);  // value valid until next call
-
 
 
 // *** Display_Ref ***
@@ -177,7 +207,6 @@ typedef struct _display_ref {
    int           iDisplayIndex;
    int           usb_hiddev_devno;       // added 4/2017
 #endif
-   // alt:
    DDCA_IO_Path  io_path;
 
    int           usb_bus;
@@ -188,16 +217,13 @@ typedef struct _display_ref {
 
    char *        capabilities_string;    // added 4/2017, private copy
    Parsed_Edid * pedid;                  // added 4/2017
-   Global_Display_Lock gdl;
 
    // for merger with Display_Rec:
    int           dispno;
    void *        detail2;
 
-   // for future request queue structure
-   GQueue *      request_queue;
-   GMutex        request_queue_lock;
-   GThread *     request_execution_thread;  // or in DH?
+   Display_Async_Rec * async_rec;
+
 } Display_Ref;
 
 // n. works for both Display_Ref and Display_Handle
@@ -278,8 +304,7 @@ int    hiddev_name_to_number(char * hiddev_name);
 char * hiddev_number_to_name(int hiddev_number);
 
 
-Global_Display_Lock get_display_lock(Display_Ref * dref);
-bool lock_display_lock(Global_Display_Lock dlock, bool wait);
-void unlock_display_lock(Global_Display_Lock dlock);
+bool lock_display_lock(Display_Async_Rec * async_rec, bool wait);
+void unlock_display_lock(Display_Async_Rec * async_rec);
 
 #endif /* DISPLAYS_H_ */

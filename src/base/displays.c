@@ -66,6 +66,163 @@ bool is_adlno_defined(DDCA_Adlno adlno) {
 }
 
 
+// *** DDCA_IO_Path ***
+
+/** Tests 2 #DDCA_IO_Path instances for equality
+ *
+ *  \param p1  first instance
+ *  \param p2  second instance
+ *  \return  true/false
+ */
+bool dpath_eq(DDCA_IO_Path p1, DDCA_IO_Path p2) {
+   bool result = false;
+   if (p1.io_mode == p2.io_mode) {
+      switch(p1.io_mode) {
+      case DDCA_IO_DEVI2C:
+         result = (p1.i2c_busno == p2.i2c_busno);
+         break;
+      case DDCA_IO_ADL:
+         result = (p1.adlno.iAdapterIndex == p2.adlno.iAdapterIndex) &&
+                  (p1.adlno.iDisplayIndex == p2.adlno.iDisplayIndex);
+         break;
+      case DDCA_IO_USB:
+         result = p1.hiddev_devno == p2.hiddev_devno;
+      }
+   }
+   return result;
+}
+
+
+// *** Display_Async_Rec ***
+
+// At least temporarily for development, base all async operations for a display
+// on this struct.
+
+
+static GMutex displays_master_list_mutex;
+static GPtrArray * displays_master_list = NULL;  // only handful of displays, simple data structure suffices
+
+
+void dbgrpt_displays_master_list(GPtrArray* displays_master_list, int depth) {
+   int d1 = depth+1;
+
+   rpt_structure_loc("displays_master_list", displays_master_list, depth);
+   if (displays_master_list) {
+      for (int ndx = 0; ndx < displays_master_list->len; ndx++) {
+          Display_Async_Rec * cur = g_ptr_array_index(displays_master_list, ndx);
+          // DBGMSG("%p", cur);
+          rpt_vstring(d1, "%p - %s", cur, dpath_repr_t(&cur->dpath));
+      }
+   }
+}
+
+
+Display_Async_Rec * display_async_rec_new(DDCA_IO_Path dpath) {
+   Display_Async_Rec * newrec = calloc(1, sizeof(Display_Async_Rec));
+   memcpy(newrec->marker, DISPLAY_ASYNC_REC_MARKER, 4);
+   newrec->dpath = dpath;
+   // g_mutex_init(&newrec->thread_lock);
+   // newrec->owning_thread = NULL;
+
+   newrec->request_queue = g_queue_new();
+   g_mutex_init(&newrec->request_queue_lock);
+#ifdef FUTURE
+   newrec->request_execution_thread =
+         g_thread_new(
+               strdup(dpath_repr_t(dref)),       // thread name
+               NULL,                             // GThreadFunc    *** TEMP ***
+               dref->request_queue);             // or just dref?, how to pass dh?
+#endif
+
+   return newrec;
+}
+
+
+Display_Async_Rec * find_display_async_rec(DDCA_IO_Path dpath) {
+   bool debug = false;
+   assert(displays_master_list);
+   Display_Async_Rec * result = NULL;
+
+   for (int ndx = 0; ndx < displays_master_list->len; ndx++) {
+      Display_Async_Rec * cur = g_ptr_array_index(displays_master_list, ndx);
+      if ( dpath_eq(cur->dpath, dpath) ) {
+         result = cur;
+         break;
+      }
+   }
+
+   DBGMSF(debug, "Returning %p", result);
+   return result;
+}
+
+
+/** Obtains a reference to the #Display_Async_Rec for a display.
+ *
+ */
+Display_Async_Rec * get_display_async_rec(DDCA_IO_Path dpath) {
+   bool debug = false;
+   assert(displays_master_list);
+   DBGMSF(debug, "dpath=%s", dpath_repr_t(&dpath));
+   if (debug)
+      dbgrpt_displays_master_list(displays_master_list, 1);
+
+   // This is a simple critical section.  Always wait.
+   // G_LOCK(global_locks_mutex);
+   g_mutex_lock(&displays_master_list_mutex);
+
+   Display_Async_Rec * result = find_display_async_rec(dpath);
+   if (!result) {
+      result = display_async_rec_new(dpath);
+      // DBGMSG("Adding %p", gdl);
+      g_ptr_array_add(displays_master_list, result);
+   }
+   // G_UNLOCK(global_locks_mutex);
+   g_mutex_unlock(&displays_master_list_mutex);
+   DBGMSF(debug, "Returning %p", result);
+   return result;
+}
+
+
+// GLOCK... macros confuse Eclipse
+// GLOCK_DEFINE_STATIC(global_locks_mutex);
+
+
+
+
+/** Acquired at display open time.
+ *  Only 1 thread can open
+ */
+bool lock_display_lock(Display_Async_Rec * async_rec, bool wait) {
+   assert(async_rec && memcmp(async_rec->marker, DISPLAY_ASYNC_REC_MARKER, 4) == 0);
+
+   bool lock_acquired = false;
+
+   if (wait) {
+      g_mutex_lock(&async_rec->display_lock);
+      lock_acquired = true;
+   }
+   else {
+      lock_acquired = g_mutex_trylock(&async_rec->display_lock);
+   }
+   if (lock_acquired)
+      async_rec->thread_owning_display_lock = g_thread_self();
+
+   return lock_acquired;
+}
+
+
+void unlock_display_lock(Display_Async_Rec * async_rec) {
+   assert(async_rec && memcmp(async_rec->marker, DISPLAY_ASYNC_REC_MARKER, 4) == 0);
+
+   if (async_rec->thread_owning_display_lock == g_thread_self()) {
+      async_rec->thread_owning_display_lock = NULL;
+      g_mutex_unlock(&async_rec->display_lock);
+   }
+}
+
+
+
+
 // *** Display_Identifier ***
 
 static char * Display_Id_Type_Names[] = {
@@ -465,18 +622,8 @@ static Display_Ref * create_base_display_ref(DDCA_IO_Path io_path) {
    dref->io_path = io_path;
    dref->vcp_version = VCP_SPEC_UNQUERIED;
 
-   dref->gdl  = get_display_lock(dref);    // keep?
+   dref->async_rec  = get_display_async_rec(io_path);    // keep?
 
-   // future
-   dref->request_queue = g_queue_new();
-   g_mutex_init(&dref->request_queue_lock);
-#ifdef FUTURE
-   dref->request_execution_thread =
-         g_thread_new(
-               strdup(dpath_repr_t(dref)),       // thread name
-               NULL,                             // GThreadFunc    *** TEMP ***
-               dref->request_queue);             // or just dref?, how to pass dh?
-#endif
    return dref;
 }
 
@@ -1008,13 +1155,8 @@ char * dh_repr(Display_Handle * dh) {
    assert(dh);
    assert(dh->dref);
    assert(dh->repr);
-   // do not calculate and memoize here, possible race condition between threads
-   // instead now always precalculate at time of Display_Handle creation
-#ifdef OLD
-   if (!dh->repr) {
-      dh->repr = dh_repr_a(dh);
-   }
-#endif
+   // Do not calculate and memoize dh->repr here, due to possible race condition between threads
+   // Instead always precalculate at time of Display_Handle creation
    return dh->repr;
 }
 
@@ -1089,177 +1231,12 @@ char * hiddev_number_to_name(int hiddev_number) {
 }
 
 
-//
-// Display Locking
-//
-
-#define GDL_MARKER "GDL"
-typedef struct {
-   char          marker[4];
-   DDCA_IO_Path  dpath;  // key of lock
-   GThread *     owning_thread;     // id of thread owning lock (type int is placeholder)
-   GMutex        thread_lock;
-
-} GDL;
-
-// GLOCK... macros confuse Eclipse
-// GLOCK_DEFINE_STATIC(global_locks_mutex);
-// or
-static GMutex locks_master_list_mutex;
 
 
-GDL * gdl_new(DDCA_IO_Path dpath) {
-   GDL * result = calloc(1, sizeof(GDL));
-   memcpy(result->marker, GDL_MARKER, 4);
-   result->dpath = dpath;
-   g_mutex_init(&result->thread_lock);
-   result->owning_thread = NULL;
-   return result;
+void init_displays() {
+   displays_master_list = g_ptr_array_new();
+
 }
 
-#ifdef OLD
-// TODO: move to displays.h
-// n. returned on stack
-DDCA_IO_Path dpath_from_dref(Display_Ref * dref) {
-    DDCA_IO_Path result;
-    result.io_mode = dref->io_mode;
-    switch(result.io_mode) {
-    case DDCA_IO_DEVI2C:
-       result.i2c_busno = dref->busno;
-       break;
-    case DDCA_IO_ADL:
-       result.adlno.iAdapterIndex = dref->iAdapterIndex;
-       result.adlno.iDisplayIndex = dref->iDisplayIndex;
-       break;
-    case DDCA_IO_USB:
-       result.hiddev_devno = dref->usb_hiddev_devno;
-    }
-    return result;
-}
-#endif
-
-
-bool dpath_eq(DDCA_IO_Path p1, DDCA_IO_Path p2) {
-   bool result = false;
-   if (p1.io_mode == p2.io_mode) {
-      switch(p1.io_mode) {
-      case DDCA_IO_DEVI2C:
-         result = (p1.i2c_busno == p2.i2c_busno);
-         break;
-      case DDCA_IO_ADL:
-         result = (p1.adlno.iAdapterIndex == p2.adlno.iAdapterIndex) &&
-                  (p1.adlno.iDisplayIndex == p2.adlno.iDisplayIndex);
-         break;
-      case DDCA_IO_USB:
-         result = p1.hiddev_devno == p2.hiddev_devno;
-      }
-   }
-   return result;
-}
-
-
-void dbgrpt_global_locks_list(GPtrArray* global_locks, int depth) {
-   int d1 = depth+1;
-
-   rpt_structure_loc("GDL", global_locks, depth);
-   if (global_locks) {
-      for (int ndx = 0; ndx < global_locks->len; ndx++) {
-          GDL * cur = g_ptr_array_index(global_locks, ndx);
-          // DBGMSG("%p", cur);
-          rpt_vstring(d1, "%p - %s", cur, dpath_repr_t(&cur->dpath));
-      }
-   }
-}
-
-
-// There are only a handful of displays.  No need for a complex data structure.
-
-GPtrArray * global_locks = NULL;   // g_ptr_array_new();    // array of GDL
-
-GDL * find_lock(DDCA_IO_Path dpath) {
-   bool debug = false;
-   GDL * result = NULL;
-
-   for (int ndx = 0; ndx < global_locks->len; ndx++) {
-      GDL * cur = g_ptr_array_index(global_locks, ndx);
-      if ( dpath_eq(cur->dpath, dpath)) {
-         result = cur;
-         break;
-      }
-   }
-
-   DBGMSF(debug, "Returning %p", result);
-   return result;
-}
-
-
-/** Obtains a reference to the master lock for a display.
- *
- *  Note that the display itself is not locked.  This function
- *  obtains a reference to the lock to be used for the display.
- */
-Global_Display_Lock get_display_lock(Display_Ref * dref) {
-   bool debug = false;
-   assert(dref);
-   // DDCA_IO_Path dpath = dpath_from_dref(dref);
-   DDCA_IO_Path dpath = dref->io_path;
-   // use dpath as key
-   // to do: define dpath_repr_t(), use it
-   DBGMSF(debug, "dref=%s", dref_repr_t(dref));
-   if (debug)
-      dbgrpt_global_locks_list(global_locks, 0);
-
-   // This is a simple critical section.  Always wait.
-   // G_LOCK(global_locks_mutex);
-   g_mutex_lock(&locks_master_list_mutex);
-
-   if (!global_locks)
-      global_locks = g_ptr_array_new();
-
-   GDL * result = find_lock(dpath);
-   if (!result) {
-      GDL * gdl = gdl_new(dpath);
-      // DBGMSG("Adding %p", gdl);
-      g_ptr_array_add(global_locks, gdl);
-      result = gdl;
-   }
-   // G_UNLOCK(global_locks_mutex);
-   g_mutex_unlock(&locks_master_list_mutex);
-   DBGMSF(debug, "Returning %p", result);
-   return result;
-}
-
-
-/** Acquired at display open time.
- *  Only 1 thread can open
- */
-bool lock_display_lock(Global_Display_Lock dlock, bool wait) {
-   GDL * gdl = (GDL *) dlock;
-   assert(gdl && memcmp(gdl->marker, GDL_MARKER, 4) == 0);
-
-   bool lock_acquired = false;
-
-   if (wait) {
-      g_mutex_lock(&gdl->thread_lock);
-      lock_acquired = true;
-   }
-   else {
-      lock_acquired = g_mutex_trylock(&gdl->thread_lock);
-   }
-   if (lock_acquired)
-      gdl->owning_thread = g_thread_self();
-
-   return lock_acquired;
-}
-
-void unlock_display_lock(Global_Display_Lock dlock) {
-   GDL * gdl = (GDL *) dlock;
-   assert(gdl && memcmp(gdl->marker, GDL_MARKER, 4) == 0);
-
-   if (gdl->owning_thread == g_thread_self()) {
-      gdl->owning_thread = NULL;
-      g_mutex_unlock(&gdl->thread_lock);
-   }
-}
 
 
