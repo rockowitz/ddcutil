@@ -470,6 +470,13 @@ static Display_Ref * create_base_display_ref(DDCA_IO_Path io_path) {
    // future
    dref->request_queue = g_queue_new();
    g_mutex_init(&dref->request_queue_lock);
+#ifdef FUTURE
+   dref->request_execution_thread =
+         g_thread_new(
+               strdup(dpath_repr_t(dref)),       // thread name
+               NULL,                             // GThreadFunc    *** TEMP ***
+               dref->request_queue);             // or just dref?, how to pass dh?
+#endif
    return dref;
 }
 
@@ -482,7 +489,7 @@ static Display_Ref * create_base_display_ref(DDCA_IO_Path io_path) {
  * \return pointer to newly allocated #Display_Ref
  */
 Display_Ref * create_bus_display_ref(int busno) {
-   bool debug = true;
+   bool debug = false;
    DDCA_IO_Path io_path;
    io_path.io_mode   = DDCA_IO_DEVI2C;
    io_path.i2c_busno = busno;
@@ -502,7 +509,7 @@ Display_Ref * create_bus_display_ref(int busno) {
  * \return pointer to newly allocated #Display_Ref
  */
 Display_Ref * create_adl_display_ref(int iAdapterIndex, int iDisplayIndex) {
-   bool debug = true;
+   bool debug = false;
    DDCA_IO_Path io_path;
    io_path.io_mode   = DDCA_IO_ADL;
    io_path.adlno.iAdapterIndex = iAdapterIndex;
@@ -526,7 +533,7 @@ Display_Ref * create_adl_display_ref(int iAdapterIndex, int iDisplayIndex) {
  */
 Display_Ref * create_usb_display_ref(int usb_bus, int usb_device, char * hiddev_devname) {
    assert(hiddev_devname);
-   bool debug = true;
+   bool debug = false;
    DDCA_IO_Path io_path;
    io_path.io_mode      = DDCA_IO_USB;
    io_path.hiddev_devno = hiddev_name_to_number(hiddev_devname);
@@ -835,7 +842,7 @@ Display_Handle * create_usb_display_handle_from_display_ref(int fh, Display_Ref 
  *  \param  msg      if non-null, output this string before the #Display_Handle detail
  *  \param  depth    logical indentation depth
  */
-void report_display_handle(Display_Handle * dh, const char * msg, int depth) {
+void dbgrpt_display_handle(Display_Handle * dh, const char * msg, int depth) {
    int d1 = depth+1;
    if (msg)
       rpt_vstring(depth, "%s", msg);

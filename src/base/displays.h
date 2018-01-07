@@ -197,6 +197,7 @@ typedef struct _display_ref {
    // for future request queue structure
    GQueue *      request_queue;
    GMutex        request_queue_lock;
+   GThread *     request_execution_thread;  // or in DH?
 } Display_Ref;
 
 // n. works for both Display_Ref and Display_Handle
@@ -208,7 +209,7 @@ Display_Ref * create_usb_display_ref(int bus, int device, char * hiddev_devname)
 void          dbgrpt_display_ref(Display_Ref * dref, int depth);
 char *        dref_short_name_t(Display_Ref * dref);
 char *        dref_repr_t(Display_Ref * dref);  // value valid until next call
-Display_Ref * clone_display_ref(Display_Ref * old);
+// Display_Ref * clone_display_ref(Display_Ref * old);
 void          free_display_ref(Display_Ref * dref);
 
 // Do two Display_Ref's identify the same device?
@@ -232,8 +233,7 @@ typedef struct {
 Display_Handle * create_bus_display_handle_from_display_ref(int fh, Display_Ref * dref);
 Display_Handle * create_adl_display_handle_from_display_ref(Display_Ref * dref);
 Display_Handle * create_usb_display_handle_from_display_ref(int fh, Display_Ref * dref);
-void             report_display_handle(Display_Handle * dh, const char * msg, int depth);
-char *           dh_repr_a(Display_Handle * dh);
+void             dbgrpt_display_handle(Display_Handle * dh, const char * msg, int depth);
 char *           dh_repr(Display_Handle * dh);
 char *           dh_repr_t(Display_Handle * dh);
 void             free_display_handle(Display_Handle * dh);
