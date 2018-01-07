@@ -68,6 +68,17 @@ typedef struct {
    Byte                specific_feature;
 } Feature_Set_Ref;
 
+typedef enum {
+   // apply to multiple feature feature sets
+   FSF_SHOW_UNSUPPORTED      = 0x01,
+   FSF_NOTABLE               = 0x02,
+
+   // applies to single feature feature set
+   FSF_FORCE                 = 0x04
+} Feature_Set_Flags;
+
+char * feature_set_flag_names(Feature_Set_Flags flags);
+
 void dbgrpt_feature_set_ref(Feature_Set_Ref * fsref, int depth);
 
 #endif /* FEATURE_SETS_H_ */

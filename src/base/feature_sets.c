@@ -155,3 +155,21 @@ void dbgrpt_feature_set_ref(Feature_Set_Ref * fsref, int depth) {
    rpt_vstring(depth, "specific_feature:  0x%02x", fsref->specific_feature);
 }
 
+
+static
+Value_Name_Title_Table feature_set_flag_table = {
+      VNT(FSF_FORCE,            "force"),
+      VNT(FSF_SHOW_UNSUPPORTED, "report unsupported features"),
+      VNT(FSF_NOTABLE,          "do not report table features"),
+      VNT_END
+};
+const int feature_set_flag_ct = ARRAY_SIZE(feature_set_flag_table)-1;
+
+char * feature_set_flag_names(Feature_Set_Flags flags) {
+   return vnt_interpret_flags(
+             flags,
+             feature_set_flag_table,
+             false,                      // use value name, not description
+             "|");                      // sepstr
+}
+

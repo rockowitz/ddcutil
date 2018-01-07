@@ -174,13 +174,14 @@ Public_Status_Code
 app_show_vcp_subset_values_by_display_handle(
         Display_Handle *    dh,
         VCP_Feature_Subset  subset_id,
-        bool                show_unsupported,
+ //        bool                show_unsupported,  // deprecated
+        Feature_Set_Flags   flags,
         Byte_Bit_Flags      features_seen)
 {
    // DBGMSG("Starting.  subset=%d   ", subset );
 
    GPtrArray * collector = NULL;
-   Public_Status_Code psc = show_vcp_values(dh, subset_id, collector, show_unsupported, features_seen);
+   Public_Status_Code psc = show_vcp_values(dh, subset_id, collector, flags, features_seen);
    return psc;
 }
 
@@ -243,26 +244,35 @@ Public_Status_Code
 app_show_feature_set_values_by_display_handle(
       Display_Handle *     dh,
       Feature_Set_Ref *    fsref,
-      bool                 show_unsupported,
-      bool                 force)
+//       bool                 show_unsupported,
+//       bool                 force,
+      Feature_Set_Flags    flags
+     )
 {
    bool debug = false;
+   // bool show_unsupported = flags & FSF_SHOW_UNSUPPORTED;
    if (debug) {
-      DBGMSG("Starting");
-      DBGMSG("dh: %s", dh_repr(dh) );
+      char * s0 = feature_set_flag_names(flags);
+      DBGMSG("Starting. flags: %s, dh: %s", s0, dh_repr(dh));
       dbgrpt_feature_set_ref(fsref,1);
+      free(s0);
    }
 
    Public_Status_Code psc = 0;
    if (fsref->subset == VCP_SUBSET_SINGLE_FEATURE) {
+#ifdef OLD
       psc = app_show_single_vcp_value_by_feature_id(
             dh, fsref->specific_feature, force);
+#endif
+      psc = app_show_single_vcp_value_by_feature_id(
+            dh, fsref->specific_feature, flags&FSF_FORCE);
    }
    else {
       psc = app_show_vcp_subset_values_by_display_handle(
             dh,
             fsref->subset,
-            show_unsupported,
+   //      show_unsupported,
+            flags,
             NULL);
    }
    return psc;

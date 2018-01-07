@@ -189,6 +189,7 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
    gboolean nodetect_flag  = false;
    gboolean async_flag     = false;
    gboolean report_freed_excp_flag = false;
+   gboolean notable_flag   = false;
 // gboolean myhelp_flag    = false;
 // gboolean myusage_flag   = false;
    char *   mfg_id_work    = NULL;
@@ -227,13 +228,14 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
 
       {"ddc",     '\0', 0, G_OPTION_ARG_NONE,     &ddc_flag,         "Report DDC protocol and data errors", NULL},
       {"verbose", 'v',  G_OPTION_FLAG_NO_ARG,
-                           G_OPTION_ARG_CALLBACK, output_arg_func,   "Show extended detail",           NULL},
+                           G_OPTION_ARG_CALLBACK, output_arg_func,   "Show extended detail",             NULL},
       {"terse",   't',  G_OPTION_FLAG_NO_ARG,
-                           G_OPTION_ARG_CALLBACK, output_arg_func,   "Show brief detail",              NULL},
+                           G_OPTION_ARG_CALLBACK, output_arg_func,   "Show brief detail",                NULL},
       {"brief",   '\0', G_OPTION_FLAG_NO_ARG,
-                           G_OPTION_ARG_CALLBACK, output_arg_func,   "Show brief detail",              NULL},
+                           G_OPTION_ARG_CALLBACK, output_arg_func,   "Show brief detail",                NULL},
       {"show-unsupported",
                   'U',  0, G_OPTION_ARG_NONE,     &show_unsupported_flag, "Report unsupported features", NULL},
+      {"notable", '\0', 0, G_OPTION_ARG_NONE,     &notable_flag,     "Ignore table type feature codes",  NULL},
 
       // tuning
       {"maxtries",'\0', 0, G_OPTION_ARG_STRING,   &maxtrywork,       "Max try adjustment",  "comma separated list" },
@@ -325,9 +327,9 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
    int explicit_display_spec_ct = 0;  // number of ways the display is explicitly specified
 
    parsed_cmd->ddcdata          = ddc_flag;
-   parsed_cmd->force            = force_flag;
+   // parsed_cmd->force            = force_flag;
    parsed_cmd->force_slave_addr = force_slave_flag;
-   parsed_cmd->show_unsupported = show_unsupported_flag;
+   // parsed_cmd->show_unsupported = show_unsupported_flag;
    parsed_cmd->output_level     = output_level;
    parsed_cmd->stats_types      = stats_work;
    parsed_cmd->sleep_strategy   = sleep_strategy_work;
@@ -341,6 +343,15 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
    parsed_cmd->nodetect         = nodetect_flag;
    parsed_cmd->async            = async_flag;
    parsed_cmd->report_freed_exceptions = report_freed_excp_flag;
+
+   if (notable_flag)
+      parsed_cmd->flags |= CMD_FLAG_NOTABLE;
+   if (show_unsupported_flag)
+      parsed_cmd->flags |= CMD_FLAG_SHOW_UNSUPPORTED;
+   if (force_flag)
+      parsed_cmd->flags |= CMD_FLAG_FORCE;
+
+
    if (failsim_fn_work) {
 #ifdef ENABLE_FAILSIM
       parsed_cmd->enable_failure_simulation = true;
@@ -727,7 +738,7 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
    g_option_context_free(context);
 
    if (debug)
-      report_parsed_cmd(parsed_cmd, 0);
+      dbgrpt_parsed_cmd(parsed_cmd, 0);
 
    if (!ok) {
       free_parsed_cmd(parsed_cmd);

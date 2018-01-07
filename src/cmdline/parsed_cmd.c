@@ -1,7 +1,7 @@
 /* parsed_cmd.c
  *
  * <copyright>
- * Copyright (C) 2014-2016 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2014-2018 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -69,7 +69,7 @@ Parsed_Cmd *  new_parsed_cmd() {
 
 
 // Debugging function
-void report_parsed_cmd(Parsed_Cmd * parsed_cmd, int depth) {
+void dbgrpt_parsed_cmd(Parsed_Cmd * parsed_cmd, int depth) {
    int d1 = depth+1;
    int d2 = depth+2;
    rpt_structure_loc("Parsed_Cmd", parsed_cmd, depth);
@@ -86,14 +86,10 @@ void report_parsed_cmd(Parsed_Cmd * parsed_cmd, int depth) {
    rpt_int_as_hex(
             "stats",       NULL,  parsed_cmd->stats_types,            d1);
    rpt_bool("ddcdata",     NULL,  parsed_cmd->ddcdata,                d1);
-#ifdef OLD
-   rpt_str( "msg_level",   NULL,  msg_level_name(parsed_cmd->msg_level), d1);
-   rpt_bool("prog output", NULL,  parsed_cmd->programmatic_output,    d1);
-#endif
    rpt_str( "output_level",NULL,  output_level_name(parsed_cmd->output_level), d1);
-   rpt_bool("force",       NULL,  parsed_cmd->force,                  d1);
+  // rpt_bool("force",       NULL,  parsed_cmd->force,                  d1);
    rpt_bool("force_slave_addr", NULL, parsed_cmd->force_slave_addr,   d1);
-   rpt_bool("show_unsupported", NULL, parsed_cmd->show_unsupported,   d1);
+ //   rpt_bool("show_unsupported", NULL, parsed_cmd->show_unsupported,   d1);
    rpt_bool("verify_setvcp",    NULL, parsed_cmd->verify_setvcp,       d1);
    rpt_bool("timestamp_trace",  NULL, parsed_cmd->timestamp_trace,    d1);
    rpt_int_as_hex(
@@ -127,6 +123,9 @@ void report_parsed_cmd(Parsed_Cmd * parsed_cmd, int depth) {
    rpt_bool("nodetect",          NULL, parsed_cmd->nodetect, d1);
    rpt_bool("async",             NULL, parsed_cmd->async,    d1);
    rpt_bool("report_freed_exceptions",             NULL, parsed_cmd->report_freed_exceptions,    d1);
+   rpt_bool("force",             NULL, parsed_cmd->flags & CMD_FLAG_FORCE, d1);
+   rpt_bool("notable",           NULL, parsed_cmd->flags & CMD_FLAG_NOTABLE, d1);
+   rpt_bool("show unsupported",  NULL, parsed_cmd->flags & CMD_FLAG_SHOW_UNSUPPORTED, d1);
 
 #ifdef FUTURE
    char * interpreted_flags = vnt_interpret_flags(parsed_cmd->flags, cmd_flag_table, false, ", ");

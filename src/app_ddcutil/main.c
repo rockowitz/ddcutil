@@ -214,7 +214,7 @@ void probe_display_by_dh(Display_Handle * dh)
    f0printf(FOUT, "\nScanning all VCP feature codes for display %s\n", dh_repr(dh) );
    Byte_Bit_Flags features_seen = bbf_create();
    app_show_vcp_subset_values_by_display_handle(
-         dh, VCP_SUBSET_SCAN, /* show_unsupported */ true, features_seen);
+         dh, VCP_SUBSET_SCAN, FSF_SHOW_UNSUPPORTED, features_seen);
 
    if (pcaps) {
       f0printf(FOUT, "\n\nComparing declared capabilities to observed features...\n");
@@ -410,7 +410,7 @@ int main(int argc, char *argv[]) {
 
    Call_Options callopts = CALLOPT_NONE;
    i2c_force_slave_addr_flag = parsed_cmd->force_slave_addr;
-   if (parsed_cmd->force)
+   if (parsed_cmd->flags & CMD_FLAG_FORCE)
       callopts |= CALLOPT_FORCE;
 
    set_output_level(parsed_cmd->output_level);
@@ -662,7 +662,7 @@ int main(int argc, char *argv[]) {
       // assert(parsed_cmd->pdid);
       // returns NULL if not a valid display:
       Call_Options callopts = CALLOPT_ERR_MSG;        // emit error messages
-      if (parsed_cmd->force)
+      if (parsed_cmd->flags & CMD_FLAG_FORCE)
          callopts |= CALLOPT_FORCE;
 
       // If --nodetect and --bus options were specified,skip scan for all devices.
@@ -730,11 +730,26 @@ int main(int argc, char *argv[]) {
 
             case CMDID_GETVCP:
                {
+                  Feature_Set_Flags flags = 0x00;
+
+                  // DBGMSG("parsed_cmd->flags: 0x%04x", parsed_cmd->flags);
+                  if (parsed_cmd->flags & CMD_FLAG_SHOW_UNSUPPORTED)
+                     flags |= FSF_SHOW_UNSUPPORTED;
+                  if (parsed_cmd->flags & CMD_FLAG_FORCE)
+                     flags |= FSF_FORCE;
+                  if (parsed_cmd->flags & CMD_FLAG_NOTABLE)
+                     flags |= FSF_NOTABLE;
+                  // char * s0 = feature_set_flag_names(flags);
+                  // DBGMSG("flags: 0x%04x - %s", flags, s0);
+                  // free(s0);
+
                   Public_Status_Code psc = app_show_feature_set_values_by_display_handle(
                         dh,
                         parsed_cmd->fref,
-                        parsed_cmd->show_unsupported,
-                        parsed_cmd->force);
+                   //     parsed_cmd->show_unsupported,
+                   //     parsed_cmd->force,
+                        flags
+                        );
                   main_rc = (psc==0) ? EXIT_SUCCESS : EXIT_FAILURE;
                }
                break;
@@ -754,7 +769,7 @@ int main(int argc, char *argv[]) {
                              dh,
                              parsed_cmd->args[argNdx],
                              parsed_cmd->args[argNdx+1],
-                             parsed_cmd->force);
+                             parsed_cmd->flags & CMD_FLAG_FORCE);
                      // rc =  ERRINFO_STATUS(ddc_excp);
                      if (ddc_excp) {
                         // errinfo_free(ddc_excp);

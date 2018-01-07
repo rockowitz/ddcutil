@@ -533,17 +533,20 @@ show_feature_set_values(
       Display_Handle *      dh,
       VCP_Feature_Set       feature_set,
       GPtrArray *           collector,     // if null, write to FOUT
-      bool                  force_show_unsupported,
+ //      bool                  force_show_unsupported,  // deprecated
+      Feature_Set_Flags     flags,
       Byte_Value_Array      features_seen)     // if non-null, collect list of features seen
 {
    Public_Status_Code master_status_code = 0;
    bool debug = false;
-   DBGMSF(debug, "Starting.  collector=%p", collector);
+   char * s0 = feature_set_flag_names(flags);
+   DBGMSF(debug, "Starting.  flags=%s, collector=%p", s0, collector);
+   free(s0);
 
    VCP_Feature_Subset subset_id = get_feature_set_subset_id(feature_set);
    DDCA_Output_Level output_level = get_output_level();
    bool show_unsupported = false;
-   if ( force_show_unsupported     ||
+   if ( (flags & FSF_SHOW_UNSUPPORTED)  ||
         output_level >= DDCA_OL_VERBOSE ||
         subset_id == VCP_SUBSET_SINGLE_FEATURE
        )
@@ -570,37 +573,47 @@ show_feature_set_values(
          }
       }
       else {
-         char * formatted_value = NULL;
-         Public_Status_Code psc =
-         get_formatted_value_for_feature_table_entry(
-               dh,
-               entry,
-               suppress_unsupported,
-               prefix_value_with_feature_code,
-               &formatted_value,
-               msg_fh);
-         assert( (psc==0 && formatted_value) || (psc!=0 && !formatted_value) );
-         if (psc == 0) {
-            if (collector)
-               g_ptr_array_add(collector, formatted_value);
-            else
-               f0printf(FOUT, "%s\n", formatted_value);
-            free(formatted_value);
-            if (features_seen)
-               bbf_set(features_seen, entry->code);  // note that feature was read
+         bool skip_feature = false;
+         if (subset_id != VCP_SUBSET_SINGLE_FEATURE &&
+             is_feature_table_by_vcp_version(entry, vcp_version) &&
+             (flags & FSF_NOTABLE) )
+         {
+            skip_feature = true;
          }
-         else {
-            // or should I check features_ct == 1?
-            VCP_Feature_Subset subset_id = get_feature_set_subset_id(feature_set);
-            if (subset_id == VCP_SUBSET_SINGLE_FEATURE)
-               master_status_code = psc;
+         if (!skip_feature) {
+
+            char * formatted_value = NULL;
+            Public_Status_Code psc =
+            get_formatted_value_for_feature_table_entry(
+                  dh,
+                  entry,
+                  suppress_unsupported,
+                  prefix_value_with_feature_code,
+                  &formatted_value,
+                  msg_fh);
+            assert( (psc==0 && formatted_value) || (psc!=0 && !formatted_value) );
+            if (psc == 0) {
+               if (collector)
+                  g_ptr_array_add(collector, formatted_value);
+               else
+                  f0printf(FOUT, "%s\n", formatted_value);
+               free(formatted_value);
+               if (features_seen)
+                  bbf_set(features_seen, entry->code);  // note that feature was read
+            }
             else {
-               if ( (psc != DDCRC_REPORTED_UNSUPPORTED) && (psc != DDCRC_DETERMINED_UNSUPPORTED) ) {
-                  if (master_status_code == 0)
-                     master_status_code = psc;
+               // or should I check features_ct == 1?
+               VCP_Feature_Subset subset_id = get_feature_set_subset_id(feature_set);
+               if (subset_id == VCP_SUBSET_SINGLE_FEATURE)
+                  master_status_code = psc;
+               else {
+                  if ( (psc != DDCRC_REPORTED_UNSUPPORTED) && (psc != DDCRC_DETERMINED_UNSUPPORTED) ) {
+                     if (master_status_code == 0)
+                        master_status_code = psc;
+                  }
                }
             }
-         }
+         }   // !skip_feature
       }
       DBGMSF(debug,"ndx=%d, feature = 0x%02x Done", ndx, entry->code);
    }   // loop over features
@@ -645,12 +658,17 @@ show_vcp_values(
         Display_Handle *    dh,
         VCP_Feature_Subset  subset,
         GPtrArray *         collector,    // not used
-        bool                force_show_unsupported,
+  //       bool                force_show_unsupported, // deprecated
+        Feature_Set_Flags   flags,
         Byte_Bit_Flags      features_seen)
 {
    Public_Status_Code psc = 0;
    bool debug = false;
-   DBGMSF(debug, "Starting.  subset=%d  dh=%s", subset, dh_repr(dh) );
+   if (debug) {
+      char * s0 = feature_set_flag_names(flags);
+      DBGMSG("Starting.  subset=%d, flags=%s,  dh=%s", subset, s0, dh_repr(dh) );
+      free(s0);
+   }
 
    DDCA_MCCS_Version_Spec vcp_version = get_vcp_version_by_display_handle(dh);
    // DBGMSG("VCP version = %d.%d", vcp_version.major, vcp_version.minor);
@@ -669,7 +687,7 @@ show_vcp_values(
       report_feature_set(feature_set, 0);
 
    psc = show_feature_set_values(
-            dh, feature_set, collector, force_show_unsupported, features_seen);
+            dh, feature_set, collector, flags, features_seen);
    free_vcp_feature_set(feature_set);
    DBGMSF(debug, "Done");
    return psc;

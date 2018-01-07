@@ -1,7 +1,7 @@
 /* parsed_cmd.h
  *
  * <copyright>
- * Copyright (C) 2014-2016 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2014-2018 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -56,21 +56,26 @@ typedef enum {
 
 
 
-#ifdef FUTURE
 typedef enum {
+#ifdef FUTURE
    CMD_FLAG_DDCDATA           = 0x0001,
+#endif
    CMD_FLAG_FORCE             = 0x0002,
+#ifdef FUTURE
    CMD_FLAG_FORCE_SLAVE_ADDR  = 0x0004,
    CMD_FLAG_TIMESTAMP_TRACE   = 0x0008,
+#endif
    CMD_FLAG_SHOW_UNSUPPORTED  = 0x0010,
+#ifdef FUTURE
    CMD_FLAG_ENABLE_FAILSIM    = 0x0020,
    CMD_FLAG_VERIFY            = 0x0040,
    CMD_FLAG_NODETECT          = 0x0080,
-   CMD_FLAG ASYNC             = 0x0100,
-   CMD_FLAG_REPORT_FREED_EXCP = 0x200
+   CMD_FLAG_ASYNC             = 0x0100,
+   CMD_FLAG_REPORT_FREED_EXCP = 0x2000,
+#endif
+   CMD_FLAG_NOTABLE           = 0x4000
 } Parsed_Cmd_Flags;
 
-#endif
 
 
 #define PARSED_CMD_MARKER  "PCMD"
@@ -83,14 +88,10 @@ struct {
    Feature_Set_Ref*    fref;
    DDCA_Stats_Type     stats_types;
    bool                ddcdata;
-#ifdef OLD
-   Msg_Level           msg_level;
-   bool                programmatic_output;
-#endif
-   bool                force;
+   // bool                force;
    bool                force_slave_addr;
    bool                timestamp_trace;    // prepend trace and debug msgs with elapsed time
-   bool                show_unsupported;
+   // bool                show_unsupported;
    bool                enable_failure_simulation;
    bool                verify_setvcp;
    bool                nodetect;
@@ -104,13 +105,11 @@ struct {
    DDCA_Output_Level   output_level;
    int                 max_tries[3];
    int                 sleep_strategy;
-#ifdef FUTURE
    uint16_t            flags;      // Parsed_Cmd_Flags
-#endif
 } Parsed_Cmd;
 
 Parsed_Cmd *  new_parsed_cmd();
 void          free_parsed_cmd(Parsed_Cmd * parsed_cmd);
-void          report_parsed_cmd(Parsed_Cmd * parsed_cmd, int depth);   // debugging function
+void          dbgrpt_parsed_cmd(Parsed_Cmd * parsed_cmd, int depth);   // debugging function
 
 #endif /* PARSED_CMD_H_ */
