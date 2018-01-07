@@ -960,6 +960,12 @@ ddca_pass_callback(
       );
 
 
+// future:
+DDCA_Status
+ddca_queue_get_non_table_vcp_value(
+      DDCA_Display_Handle      ddca_dh,         /**< Display handle     */
+      DDCA_Vcp_Feature_Code    feature_code    /**< VCP feature code   */
+);
 
 
 #ifdef __cplusplus
