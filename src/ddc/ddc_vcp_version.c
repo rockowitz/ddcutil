@@ -73,7 +73,7 @@ DDCA_MCCS_Version_Spec get_vcp_version_by_display_handle(Display_Handle * dh) {
    if (vcp_version_is_unqueried(dh->dref->vcp_version)) {
       if (debug) {
          DBGMSG("Starting.  vcp_version not set");
-         report_display_handle(dh, /*msg=*/ NULL, 1);
+         dbgrpt_display_handle(dh, /*msg=*/ NULL, 1);
       }
       dh->dref->vcp_version = VCP_SPEC_UNKNOWN;
 
