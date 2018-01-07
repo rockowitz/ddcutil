@@ -230,7 +230,7 @@ void ddc_close_display(Display_Handle * dh) {
    bool debug = false;
    if (debug) {
       DBGMSG("Starting.");
-      report_display_handle(dh, __func__, 1);
+      dbgrpt_display_handle(dh, __func__, 1);
    }
 
    switch(dh->dref->io_path.io_mode) {
