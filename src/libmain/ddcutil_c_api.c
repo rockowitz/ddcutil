@@ -56,6 +56,7 @@
 
 #include "adl/adl_shim.h"
 
+#include "ddc/ddc_async.h"
 #include "ddc/ddc_displays.h"
 #include "ddc/ddc_dumpload.h"
 #include "ddc/ddc_edid.h"

@@ -34,6 +34,7 @@
 /** \endcond */
 
 #include "base/core.h"
+#include "base/displays.h"
 #include "base/status_code_mgt.h"
 
 #include "vcp/vcp_feature_codes.h"
@@ -77,11 +78,5 @@ get_vcp_value(
       DDCA_Vcp_Value_Type       call_type,
       DDCA_Single_Vcp_Value **  pvalrec);
 
-Error_Info *
-start_get_vcp_value(
-       Display_Handle *          dh,
-       Byte                      feature_code,
-       DDCA_Vcp_Value_Type       call_type,
-       DDCA_Notification_Func     callback_func);
 
 #endif /* DDC_VCP_H_ */
