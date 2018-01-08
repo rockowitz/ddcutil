@@ -74,7 +74,6 @@ extern "C" {
 // Library build information
 //
 
-
 /**
  * Returns the ddcutil version as a struct of 3 8 bit integers.
  *
@@ -130,6 +129,7 @@ typedef enum {
 // Initialization
 //
 
+#ifdef NOT_NEEDED
 /**
  * Initializes the ddcutil library module.
  *
@@ -138,6 +138,7 @@ typedef enum {
  * It is not an error if this function is called more than once.
  */
 // void __attribute__ ((constructor)) _ddca_init(void);
+#endif
 
 
 //
@@ -155,6 +156,31 @@ char * ddca_rc_name(DDCA_Status status_code);
  * @return explanation of status code, e.g. "device or resource busy"
  */
 char * ddca_rc_desc(DDCA_Status status_code);
+
+
+//
+// MCCS Version Id
+//
+
+/** Returns the symbolic name of a #DDCA_MCCS_Version_Id,
+ *  e.g. "DDCA_V20."
+ *
+ *  @param  version_id  version id value
+ *  @return symbolic name
+ */
+char *
+ddca_mccs_version_id_name(
+      DDCA_MCCS_Version_Id  version_id);
+
+/** Returns the descriptive name of a #DDCA_MCCS_Version_Id,
+ *  e.g. "2.0".
+ *
+ *  @param  version_id  version id value
+ *  @return descriptive name
+ */
+char *
+ddca_mccs_version_id_desc(
+      DDCA_MCCS_Version_Id  version_id);
 
 
 //
@@ -331,8 +357,6 @@ ddca_report_display_info_list(
 int
 ddca_report_active_displays(
       int depth);
-
-
 
 
 //
@@ -655,8 +679,37 @@ ddca_get_simple_nc_feature_value_name(
       char**                 p_feature_name);
 
 
+DDCA_Status
+ddca_free_feature_info(
+      DDCA_Version_Feature_Info * info);
+
+
 //
 // VCP Feature Information, Monitor Dependent
+//
+
+#ifdef UNIMPLEMENTED
+
+// Unimplemented
+// alt: can check status code for ddca_get_feature_info_by_display()
+DDCA_Status ddct_is_feature_supported(
+      DDCA_Display_Handle    dh,
+      DDCA_Vcp_Feature_Code  feature_code,
+      bool *                 answer);
+
+#endif
+
+
+// This is a convenience function. Keep?
+DDCA_Status
+ddca_get_feature_info_by_display(
+      DDCA_Display_Handle           ddca_dh,
+      DDCA_Vcp_Feature_Code         feature_code,
+      DDCA_Version_Feature_Info **  p_info);
+
+
+//
+//  Miscellaneous Monitor Specific Functions
 //
 
 // TODO: keep only 1 of the 2 get_mccs_version() variants
@@ -671,56 +724,7 @@ ddca_get_mccs_version_id(
       DDCA_Display_Handle     ddca_dh,
       DDCA_MCCS_Version_Id*   p_id);
 
-/** Returns the symbolic name of a #DDCA_MCCS_Version_Id,
- *  e.g. "DDCA_V20."
- *
- *  @param  version_id  version id value
- *  @return symbolic name
- */
-char *
-ddca_mccs_version_id_name(
-      DDCA_MCCS_Version_Id  version_id);
-
-/** Returns the descriptive name of a #DDCA_MCCS_Version_Id,
- *  e.g. "2.0".
- *
- *  @param  version_id  version id value
- *  @return descriptive name
- */
-char *
-ddca_mccs_version_id_desc(
-      DDCA_MCCS_Version_Id  version_id);
-
-#ifdef UNIMPLEMENTED
-
-// Unimplemented
-// alt: can check status code for ddca_get_feature_info_by_display()
-DDCA_Status ddct_is_feature_supported(
-      DDCA_Display_Handle   dh,
-      DDCA_Vcp_Feature_Code      feature_code,
-      bool *                answer);
-
-#endif
-
-
-// This is a convenience function. Keep?
-DDCA_Status
-ddca_get_feature_info_by_display(
-      DDCA_Display_Handle           ddca_dh,
-      DDCA_Vcp_Feature_Code         feature_code,
-      DDCA_Version_Feature_Info **  p_info);
-
-DDCA_Status
-ddca_free_feature_info(
-      DDCA_Version_Feature_Info * info);
-
-
-//
-//  Miscellaneous Monitor Specific Functions
-//
-
-
-// DDCT_Status ddct_get_edid(DDCA_Display_Handle * dh, uint8_t* edid_buffer);    // edid_buffer must be >= 128 bytes
+// DDCA_Status ddca_get_edid(DDCA_Display_Handle * dh, uint8_t* edid_buffer);    // edid_buffer must be >= 128 bytes
 // Keep?   Can get from ddca_get_edid_by_display_ref()
 
 DDCA_Status
@@ -729,10 +733,8 @@ ddca_get_edid_by_display_ref(
       uint8_t **       pbytes);   // pointer into ddcutil data structures, do not free
 
 
-
-
 //
-// Get and Set VCP Feature Values
+// Get VCP Feature Value
 //
 
 void
@@ -779,25 +781,6 @@ ddca_get_table_vcp_value(
 
 
 // ddca_get_vcp_value() is deprecated, use ddca_get_any_vcp_value()
-#ifdef OLD
-/** Gets the value of a VCP feature.
- *
- * @param ddca_dh       display handle
- * @param feature_code  VCP feature code
- * @param call_type     to be eliminated
- * @param pvalrec       address at which to return a pointer to a newly
- *                      allocated Single_Vcp_Value
- *
- * @return external status code
- */
-DDCA_Status
-ddca_get_vcp_value(
-       DDCA_Display_Handle     ddca_dh,
-       DDCA_Vcp_Feature_Code        feature_code,
-       DDCA_Vcp_Value_Type          call_type,   // TODO: eliminate
-       DDCA_Single_Vcp_Value **     pvalrec);
-#endif
-
 
 /** Gets the value of a VCP feature.
  *
@@ -817,15 +800,6 @@ ddca_get_any_vcp_value(
        DDCA_Any_Vcp_Value **       pvalrec);
 
 
-DDCA_Status
-ddca_start_get_any_vcp_value(
-      DDCA_Display_Handle         ddca_dh,
-      DDCA_Vcp_Feature_Code       feature_code,
-      DDCA_Vcp_Value_Type_Parm    call_type,
-      DDCA_Notification_Func      callback_func);
-
-
-
 /** Returns a string containing a formatted representation of the VCP value
  *  of a feature.  It is the responsiblity of the caller to free this value.
  *  @param[in] ddca_dh            Display handle
@@ -838,6 +812,11 @@ ddca_get_formatted_vcp_value(
        DDCA_Display_Handle *   ddca_dh,
        DDCA_Vcp_Feature_Code   feature_code,
        char**                  p_formatted_value);
+
+
+//
+// Set VCP value
+//
 
 /** Sets a continuous VCP value.
  *
@@ -877,14 +856,18 @@ ddca_set_raw_vcp_value(
      );
 
 #ifdef UNIMPLEMENTED
-// Unimplemented
 DDCA_Status
 ddct_set_table_vcp_value(
-      DDCA_Display_Handle  ddct_dh,
-      DDCA_Vcp_Feature_Code     feature_code,
-      int                  value_len,
-      uint8_t*             value_bytes);
+      DDCA_Display_Handle     ddca_dh,
+      DDCA_Vcp_Feature_Code   feature_code,
+      int                     value_len,
+      uint8_t*                value_bytes);
 #endif
+
+
+//
+// Get or set multiple values
+//
 
 DDCA_Status
 ddca_get_profile_related_values(
@@ -894,6 +877,19 @@ ddca_get_profile_related_values(
 DDCA_Status
 ddca_set_profile_related_values(char *
       profile_values_string);
+
+
+//
+// Experimental - Not for public use
+//
+
+DDCA_Status
+ddca_start_get_any_vcp_value(
+      DDCA_Display_Handle         ddca_dh,
+      DDCA_Vcp_Feature_Code       feature_code,
+      DDCA_Vcp_Value_Type_Parm    call_type,
+      DDCA_Notification_Func      callback_func);
+
 
 /** Registers a callback function to call when a VCP value changes */
 DDCA_Status
