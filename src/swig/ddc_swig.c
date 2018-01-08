@@ -376,19 +376,19 @@ DDCS_Non_Table_Value_Response ddcs_get_nontable_vcp_value(
                DDCS_VCP_Feature_Code    feature_code) {
 
    clear_exception();
-   DDCA_Non_Table_Value_Response resp = {0};
+   DDCA_Non_Table_Value resp = {0};
    DDCA_Status  rc = ddca_get_nontable_vcp_value(dh, feature_code, &resp);
    if (rc != 0)
       throw_exception_from_status_code(rc);
    DDCS_Non_Table_Value_Response result;
    // memcpy(&result, &resp, sizeof(resp));
    // How best to handle union in swig?
-   result.mh = resp.nc.mh;
-   result.ml = resp.nc.ml;
-   result.sh = resp.nc.sh;
-   result.sl = resp.nc.sl;
-   result.cur_value = resp.c.cur_val;
-   result.max_value = resp.c.max_val;
+   result.mh = resp.mh;
+   result.ml = resp.ml;
+   result.sh = resp.sh;
+   result.sl = resp.sl;
+   result.cur_value = resp.sh << 8 | resp.sl;
+   result.max_value = resp.mh << 8 | resp.ml;
 
    return result;
 }

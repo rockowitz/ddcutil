@@ -472,33 +472,14 @@ typedef enum {
 } DDCA_Vcp_Value_Type_Parm;
 
 
-/** Represents a single non-table VCP value */
 typedef struct {
-   DDCA_Vcp_Feature_Code  feature_code;
-   union {
-      struct {
-         uint16_t   max_val;        /**< maximum value (mh, ml bytes) for continuous value */
-         uint16_t   cur_val;        /**< current value (sh, sl bytes) for continuous value */
-      }         c;                  /**< continuous (C) value */
-      struct {
-   // Ensure proper overlay of ml/mh on max_val, sl/sh on cur_val
+   uint8_t    mh;
+   uint8_t    ml;
+   uint8_t    sh;
+   uint8_t    sl;
+} DDCA_Non_Table_Value;
 
-#if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
-      uint8_t    ml;            /**< ML byte for NC value */
-      uint8_t    mh;            /**< MH byte for NC value */
-      uint8_t    sl;            /**< SL byte for NC value */
-      uint8_t    sh;            /**< SH byte for NC value */
-#elif __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
-      uint8_t    mh;
-      uint8_t    ml;
-      uint8_t    sh;
-      uint8_t    sl;
-#else
-#error "Unexpected byte order value: __BYTE_ORDER__"
-#endif
-      }         nc;                /**< non-continuous (NC) value */
-   };
-} DDCA_Non_Table_Value_Response;
+
 
 /** Represents a single table VCP value.   Consists of a count, followed by the bytes */
 typedef struct {
@@ -540,12 +521,6 @@ typedef enum {
     DDCA_Q_CAPABILITIES   =  0xf3,    // CMD_CAPABILITIES_REQUEST
 } DDCA_Queued_Request_Type;
 
-typedef struct {
-   uint8_t    mh;
-   uint8_t    ml;
-   uint8_t    sh;
-   uint8_t    sl;
-} DDCA_Non_Table_Value;
 
 typedef struct {
    DDCA_Queued_Request_Type   request_type;

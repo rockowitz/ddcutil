@@ -44,10 +44,10 @@ void ddcg_cont_response_report(DdcgContResponse * presp, int depth) {
    int d1 = depth+1;
    //int d2 = depth+2;
    rpt_vstring(depth, "DdcgContResponse at %p", presp);
-   rpt_vstring(d1, "mh: 0x%02x", presp->mh);
-   rpt_vstring(d1, "ml: 0x%02x", presp->ml);
-   rpt_vstring(d1, "sh: 0x%02x", presp->sh);
-   rpt_vstring(d1, "sl: 0x%02x", presp->sl);
+   rpt_vstring(d1, "mh: 0x%02x",     presp->mh);
+   rpt_vstring(d1, "ml: 0x%02x",     presp->ml);
+   rpt_vstring(d1, "sh: 0x%02x",     presp->sh);
+   rpt_vstring(d1, "sl: 0x%02x",     presp->sl);
    rpt_vstring(d1, "cur_value:  %d", presp->cur_value);
    rpt_vstring(d1, "max_value:  %d", presp->max_value);
    // rpt_vstring(d1, "pcontext:        %p", presp->pcontext);

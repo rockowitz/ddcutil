@@ -748,16 +748,16 @@ ddca_free_table_value_response(
  *
  * @param ddca_dh       display handle
  * @param feature_code  VCP feature code
- * @param response      pointer to response buffer provided by the caller,
+ * @param valrec        pointer to response buffer provided by the caller,
  *                      which will be filled in
  *
  * @return external status code
  */
 DDCA_Status
 ddca_get_nontable_vcp_value(
-       DDCA_Display_Handle             ddca_dh,
-       DDCA_Vcp_Feature_Code           feature_code,
-       DDCA_Non_Table_Value_Response * response);
+       DDCA_Display_Handle        ddca_dh,
+       DDCA_Vcp_Feature_Code      feature_code,
+       DDCA_Non_Table_Value *     valrec);
 
 
 /** Gets the value of a table VCP feature.

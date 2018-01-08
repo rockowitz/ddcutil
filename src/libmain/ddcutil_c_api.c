@@ -1374,8 +1374,9 @@ ddca_get_simple_nc_feature_value_name0(
  *  \param response     pointer to existing #DDCA_Non_Table_Value_Response that is filled in
  *  \return             status code
  */
+static
 DDCA_Status
-ddca_get_nontable_vcp_value(
+ddca_get_nontable_vcp_value_old(
       DDCA_Display_Handle             ddca_dh,
       DDCA_Vcp_Feature_Code           feature_code,
       DDCA_Non_Table_Value_Response * response)
@@ -1403,6 +1404,26 @@ ddca_get_nontable_vcp_value(
        }
        // else psc = global_to_public_status_code(gsc);
     } );
+}
+
+
+DDCA_Status
+ddca_get_nontable_vcp_value(
+      DDCA_Display_Handle             ddca_dh,
+      DDCA_Vcp_Feature_Code           feature_code,
+      DDCA_Non_Table_Value *          valrec)
+{
+   DDCA_Non_Table_Value_Response      response;
+   DDCA_Status rc = 0;
+
+   rc = ddca_get_nontable_vcp_value_old(ddca_dh, feature_code, &response);
+   if (rc == 0) {
+      valrec->mh = response.nc.mh;
+      valrec->ml = response.nc.ml;
+      valrec->sh = response.nc.sh;
+      valrec->sl = response.nc.sl;
+   }
+   return rc;
 }
 
 
