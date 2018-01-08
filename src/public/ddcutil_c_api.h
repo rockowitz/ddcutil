@@ -161,33 +161,6 @@ char * ddca_rc_desc(DDCA_Status status_code);
 // Global Settings
 //
 
-#ifdef OBSOLETE
-
-/** To capture certain rare fatal errors in libddcutil.
- *  If not set, library aborts.
- *
- *  @param[in] jb pointer to setjmp()/longjmp() saved registers
- *
- *  Call this library function if the program using libddcutil
- *  uses setjmp() to register a longjmp() target.  The library needs
- *  to know what it is.
- */
-void
-ddca_register_jmp_buf(jmp_buf* jb);
-
-
-/** libddcutil's internal abort function fills in this data structure
- *  when a fatal error occurs.   If a jmp_buf has been registered by
- *  ddca_register_jmp_buf(), the caller can examine this data structure
- *  after an "error" return from setjmp()
- *
- *  @return pointer to #DDCA_Global_Failure_Information struct
- */
-DDCA_Global_Failure_Information *
-ddca_get_global_failure_information();
-
-#endif
-
 /***
 I2C is an inherently unreliable protocol.  The application is responsible for
 retry management.
