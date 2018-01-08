@@ -3,7 +3,7 @@
  * Public C APi for ddcutil. .
  *
  * <copyright>
- * Copyright (C) 2014-2016 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2014-2018 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -21,6 +21,10 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  * </endcopyright>
+ */
+
+/** \f
+ *  Public C API for ddcutil
  */
 
 #ifndef DDCUTIL_C_API_H_
@@ -85,25 +89,6 @@ DDCA_Ddcutil_Version_Spec ddca_ddcutil_version(void);       // ddcutil version
  */
 const char * ddca_ddcutil_version_string(void);
 
-#ifdef OLD
-/**
- * Indicates whether the ddcutil library was built with ADL support.
- *
- * (May be removed.)
- *
- * @return true/false
- */
-bool ddca_built_with_adl(void);
-
-/**
- * Indicates whether the ddcutil library was built with support for USB connected monitors.
- *
- * (May be removed.)
- *
- * @return true/false
- */
-bool ddca_built_with_usb(void);
-#endif
 
 /** Queries the options with which the **ddcutil** library was built.
  *
@@ -125,16 +110,6 @@ bool ddca_built_with_usb(void);
  *
  */
 uint8_t ddca_build_options(void);
-
-#ifdef OLD
-// Bit ids for ddca_get_build_options() - how to make connection in doxygen?
-/** @brief ddcutil was built with support for AMD Display Library connected monitors */
-#define DDCA_BUILT_WITH_ADL     0x01
-/** @brief ddcutil was built with support for USB connected monitors */
-#define DDCA_BUILT_WITH_USB     0x02
-#define DDCA_BUILT_WITH_FAILSIM 0x04  /**< @brief ddcutil was built with support for failure simulation */
-#endif
-
 
 // Bit ids for ddca_get_build_options() - how to make connection in doxygen?
 /** Build option flags
