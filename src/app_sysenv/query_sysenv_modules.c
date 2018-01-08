@@ -126,7 +126,7 @@ bool is_module_builtin(char * module_name) {
  */
 bool is_module_loadable(char * module_name, int depth) {
    bool debug = false;
-   DBGMSF("Starting. module_name=%s", module_name);
+   DBGMSF(debug, "Starting. module_name=%s", module_name);
 
    bool result = false;
 
