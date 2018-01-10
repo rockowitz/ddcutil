@@ -151,8 +151,9 @@ GPtrArray * get_backtrace(int stack_adjust) {
       printf("(%s) backtrace() returned %d addresses\n", __func__, nptrs);
 
    strings = backtrace_symbols(buffer, nptrs);
-   if (strings == NULL  && debug) {
-      perror("backtrace_symbols unavailable");
+   if (strings == NULL) {
+      if (debug)
+         perror("backtrace_symbols unavailable");
    }
    else {
       result = g_ptr_array_sized_new(nptrs-stack_adjust);
