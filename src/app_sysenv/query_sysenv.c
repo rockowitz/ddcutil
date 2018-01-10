@@ -28,7 +28,7 @@
 /** \cond */
 #include <config.h>
 
-#define _GNU_SOURCE 1       // for function group_member
+// #define _GNU_SOURCE 1       // for function group_member
 #include <assert.h>
 #include <errno.h>
 #include <string.h>

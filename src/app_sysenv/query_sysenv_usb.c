@@ -27,7 +27,7 @@
 
 #include <config.h>
 
-#define _GNU_SOURCE 1       // for function group_member
+// #define _GNU_SOURCE 1       // for function group_member
 
 /** \cond */
 #include <dirent.h>
