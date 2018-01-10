@@ -26,7 +26,7 @@
  */
 
 /** \cond */
-#define _GNU_SOURCE
+// #define _GNU_SOURCE   // for basename
 
 #include <assert.h>
 #include <dirent.h>
@@ -459,10 +459,11 @@ void each_video_pci_device(
          // printf("realpath returned %s\n", rpath);
          // printf("%s --> %s\n",workfn, resolved_path);
          char * rp2 = strdup(rpath);
-         char * driver_name = basename(rp2);
+         char * driver_name = g_path_get_basename(rp2);
          rpt_vstring(d1, "Driver name:         %s", driver_name);
          driver_name_list_add(&accum->driver_list, driver_name);
          free(rp2);
+         free(driver_name);
 
          char driver_module_dir[PATH_MAX];
          sprintf(driver_module_dir, "%s/driver/module", cur_dir_name);

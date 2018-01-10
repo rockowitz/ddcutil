@@ -25,7 +25,7 @@
  *  drm reporting for the environment command
  */
 
-#define _GNU_SOURCE
+// #define _GNU_SOURCE
 
 /** \cond */
 #include <assert.h>
