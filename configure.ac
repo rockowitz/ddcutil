@@ -395,9 +395,9 @@ AS_IF( [test "x$enable_force_suse" == "xyes"],
      )
 
 
-dnl *** configure option: --enable-use-api
+dnl *** configure option: --enable-internal-api-use
 AC_ARG_ENABLE([use-api],
-              [ AS_HELP_STRING( [--enable-use-api=@<:@no/yes@:>@], [Use ddcutil API internally@<:@default=no@:>@] )],
+              [ AS_HELP_STRING( [--enable-internal-api-use=@<:@no/yes@:>@], [Use ddcutil API internally@<:@default=no@:>@] )],
               [enable_use_api=${enableval}],
               [enable_use_api=no] )
 AM_CONDITIONAL([USE_API_COND], [test "x$enable_use_api" == "xyes"] )
