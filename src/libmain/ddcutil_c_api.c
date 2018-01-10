@@ -695,7 +695,11 @@ ddca_did_repr(DDCA_Display_Identifier ddca_did) {
 // Display References
 //
 
-DDCA_Status ddca_create_display_ref(DDCA_Display_Identifier did, DDCA_Display_Ref* ddca_dref) {
+DDCA_Status
+ddca_create_display_ref(
+      DDCA_Display_Identifier did,
+      DDCA_Display_Ref*       ddca_dref)
+{
    bool debug = false;
    DBGMSF(debug, "Starting.  did=%p, ddca_dref=%p", did, ddca_dref);
    if (ddca_dref)
@@ -710,7 +714,7 @@ DDCA_Status ddca_create_display_ref(DDCA_Display_Identifier did, DDCA_Display_Re
    ddc_ensure_displays_detected();
 
    Display_Identifier * pdid = (Display_Identifier *) did;
-   if (pdid == NULL || memcmp(pdid->marker, DISPLAY_IDENTIFIER_MARKER, 4) != 0 )  {
+   if (!pdid || memcmp(pdid->marker, DISPLAY_IDENTIFIER_MARKER, 4) != 0  || !ddca_dref)  {
      rc = -EINVAL;
    }
    else {
