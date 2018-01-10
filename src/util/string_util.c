@@ -27,7 +27,7 @@
 
 /** \cond */
 // for strcasestr()
-#define _GNU_SOURCE
+// #define _GNU_SOURCE
 
 #include <assert.h>
 #include <ctype.h>
@@ -1514,6 +1514,24 @@ bool all_bytes_zero(Byte * bytes, int bytect) {
    return !sum;
 }
 
+// Private version of strcasestr(), avoids needing to set _GNU_SOURCE
+
+char * ascii_strcasestr(const char * haystack, const char * needle) {
+   char * result = NULL;
+   if (haystack && needle) {
+      char * uhaystack = g_ascii_strup(haystack, /*len=*/ -1);   // -1: null-terminated
+      char * uneedle   = g_ascii_strup(needle,   /*len=*/ -1);   // -1: null-terminated
+      char * ustart = strstr(uhaystack, uneedle);
+      if (ustart) {
+         int offset = ustart-uhaystack;
+         char * h2 = (char *) haystack;  // cast to avoid warning re discarding const qualifier
+         result = h2+offset;
+      }
+      free(uhaystack);
+      free(uneedle);
+   }
+   return result;
+}
 
 
 // Belongs in some more general file.   where?  string_util.c, data_structures.c?
@@ -1533,7 +1551,8 @@ bool apply_filter_terms(const char * text, char ** terms, bool ignore_case) {
       while (*term) {
          // printf("(%s) Comparing |%s|\n", __func__, *term);
          if (ignore_case) {
-            if (strcasestr(text,*term)) {
+//          if (strcasestr(text,*term)) {
+            if (ascii_strcasestr(text,*term)) {
                result = true;
                break;
             }
