@@ -1,7 +1,7 @@
 /* query_sysenv_procfs.c
  *
  * <copyright>
- * Copyright (C) 2014-2015 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2014-2018 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -48,7 +48,7 @@
  */
 int query_proc_modules_for_video() {
    bool debug = false;
-   DBGMSF(debug, "Starting.");
+   DBGMSF0(debug, "Starting.");
 
    int d1 = 1;
    int rc = 0;
@@ -94,7 +94,7 @@ int query_proc_modules_for_video() {
       }
    }
 
-   DBGMSF(debug, "Done.");
+   DBGMSF0(debug, "Done.");
    return rc;
 }
 

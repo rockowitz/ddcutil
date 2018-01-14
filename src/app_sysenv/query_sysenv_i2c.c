@@ -1,7 +1,7 @@
 /* query_sysenv_i2c.c
  *
  * <copyright>
- * Copyright (C) 2014-2017 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2014-2018 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -168,7 +168,7 @@ static Public_Status_Code try_single_getvcp_call(
    }
 
    if ( all_bytes_zero( ddc_response_bytes+1, readct) ) {
-      DBGMSF(debug, "All bytes zero");
+      DBGMSF0(debug, "All bytes zero");
       rc = DDCRC_READ_ALL_ZERO;
       goto bye;
    }
@@ -179,7 +179,7 @@ static Public_Status_Code try_single_getvcp_call(
        ddc_data_length == 0          &&
        ddc_response_bytes[3] == 0xbe)     // 0xbe == checksum
    {
-      DBGMSF(debug, "Received DDC null response");
+      DBGMSF0(debug, "Received DDC null response");
       rc = DDCRC_NULL_RESPONSE;
       goto bye;
    }
@@ -251,7 +251,7 @@ bye:
  */
 void raw_scan_i2c_devices(Env_Accumulator * accum) {
    bool debug = false;
-   DBGMSF(debug, "Starting");
+   DBGMSF0(debug, "Starting");
 
    int depth = 0;
    int d1 = depth+1;
@@ -367,7 +367,7 @@ void raw_scan_i2c_devices(Env_Accumulator * accum) {
    i2c_force_slave_addr_flag = saved_i2c_force_slave_addr_flag;
    buffer_free(buf0, __func__);
 
-   DBGMSF(debug, "Done" );
+   DBGMSF0(debug, "Done" );
 }
 
 

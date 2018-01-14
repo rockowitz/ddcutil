@@ -1,7 +1,7 @@
 /* query_sysenv_base.c
  *
  * <copyright>
- * Copyright (C) 2014-2017 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2014-2018 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -528,7 +528,7 @@ int read_file_with_filter(
          limit);
    }
    else { // rc == 0
-      DBGMSF(debug, "Empty file");
+      DBGMSF0(debug, "Empty file");
    }
 
    DBGMSF(debug, "Returning: %d", rc);

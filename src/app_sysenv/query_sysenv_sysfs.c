@@ -1,7 +1,7 @@
 /* query_sysenv_sysfs.c
  *
  * <copyright>
- * Copyright (C) 2014-2017 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2014-2018 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -309,9 +309,9 @@ void report_device_identification(char * sysfs_device_dir, int depth) {
    DBGMSF(debug, "sysfs_device_dir: %s", sysfs_device_dir);
    int d1 = depth+1;
 
-   DBGMSF(debug, "Reading device ids from individual attribute files...");
+   DBGMSF0(debug, "Reading device ids from individual attribute files...");
    Device_Ids dev_ids = read_device_ids1(sysfs_device_dir);
-   DBGMSF(debug, "Reading device ids by parsing modalias attribute...");
+   DBGMSF0(debug, "Reading device ids by parsing modalias attribute...");
    Device_Ids dev_ids2 = read_device_ids2(sysfs_device_dir);
    assert(dev_ids.vendor_id == dev_ids2.vendor_id);
    assert(dev_ids.device_id == dev_ids2.device_id);
@@ -516,7 +516,7 @@ void each_arm_driver(char * dirname, char * fn, void * accumulator, int depth) {
       rpt_vstring(depth, "Driver name:    %s", driver_name);
       driver_name_list_add(&accum->driver_list, driver_name);
    }
-   DBGMSF(debug, "Done");
+   DBGMSF0(debug, "Done");
 }
 
 

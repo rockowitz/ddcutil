@@ -1,7 +1,7 @@
 /* query_sysenv_access.c
  *
  * <copyright>
- * Copyright (C) 2014-2015 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2014-2018 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -194,7 +194,7 @@ static char * get_username(Env_Accumulator * accum) {
  */
 static void check_dev_i2c_access(Env_Accumulator * accum) {
    bool debug = false;
-   DBGMSF(debug, "Starting");
+   DBGMSF0(debug, "Starting");
 
    // bool all_i2c_rw = false;
    int busct = bva_length(accum->dev_i2c_device_numbers);
@@ -286,7 +286,7 @@ static void check_dev_i2c_access(Env_Accumulator * accum) {
                accum->cur_uname);
    }
 
-   DBGMSF(debug, "Done");
+   DBGMSF0(debug, "Done");
 }
 
 
@@ -399,7 +399,7 @@ static void check_group_i2c(Env_Accumulator * accum, bool verbose) {
    }
 #endif
 
-   DBGMSF(debug, "Done.");
+   DBGMSF0(debug, "Done.");
 }
 
 
@@ -451,7 +451,7 @@ static void check_udev() {
  */
 void check_i2c_devices(Env_Accumulator * accum) {
    bool debug = false;
-   DBGMSF(debug, "Starting");
+   DBGMSF0(debug, "Starting");
 
    // Env_Accumulator values already set
    assert(accum->dev_i2c_device_numbers);
@@ -517,7 +517,7 @@ void check_i2c_devices(Env_Accumulator * accum) {
       check_udev();
    }
 
-   DBGMSF(debug, "Done");
+   DBGMSF0(debug, "Done");
 }
 
 

@@ -1,7 +1,7 @@
 /* query_drm_sysenv.c
  *
  * <copyright>
- * Copyright (C) 2017 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2017-2018 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -479,7 +479,7 @@ static void probe_open_device_using_libdrm(int fd, int depth) {
    }
 
 bye:
-   DBGTRC(debug, TRACE_GROUP, "Done");
+   DBGTRC0(debug, TRACE_GROUP, "Done");
    rpt_nl();
    return;
 }

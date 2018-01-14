@@ -1,7 +1,7 @@
 /* query_usb_sysenv.c
  *
  * <copyright>
- * Copyright (C) 2016-2017 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2016-2018 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -94,7 +94,7 @@ static void probe_uhid(int depth) {
    int d2 = depth+2;
 
    bool debug = false;
-   DBGMSF(debug, "Starting");
+   DBGMSF0(debug, "Starting");
 
    struct dirent * ep;
    char * dirname = "/sys/kernel/debug/hid/";
@@ -148,7 +148,7 @@ static void probe_uhid(int depth) {
       closedir(dp);
    }
 
-   DBGMSF(debug, "Done");
+   DBGMSF0(debug, "Done");
 }
 
 
