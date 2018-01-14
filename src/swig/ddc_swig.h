@@ -1,7 +1,7 @@
 /* ddc_swig.h
  *
  * <copyright>
- * Copyright (C) 2016-2017 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2016-2018 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -23,6 +23,8 @@
 
 #ifndef DDC_SWIG_H_
 #define DDC_SWIG_H_
+
+#include <float.h>
 
 #include <Python.h>
 
