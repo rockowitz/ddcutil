@@ -1,7 +1,7 @@
 /* i2c_do_io.c
  *
  * <copyright>
- * Copyright (C) 2014-2015 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2014-2018 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -75,7 +75,7 @@ void i2c_set_io_strategy(I2C_IO_Strategy_Id strategy_id) {
          i2c_io_strategy= &i2c_ioctl_io_strategy;
          break;
    }
-};
+}
 
 
 /** Writes to the I2C bus, using the function specified in the

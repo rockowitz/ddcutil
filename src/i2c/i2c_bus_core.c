@@ -1,7 +1,7 @@
 /* i2c_bus_core.c
  *
  * <copyright>
- * Copyright (C) 2014-2017 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2014-2018 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -327,7 +327,7 @@ Value_Name_Table functionality_flag_table = {
  */
 unsigned long i2c_get_functionality_flags_by_fd(int fd) {
    bool debug = false;
-   DBGMSF(debug, "Starting.");
+   DBGMSF(debug, "Starting.", NULL);
 
    unsigned long funcs;
    int rc;
@@ -394,7 +394,7 @@ void i2c_report_functionality_flags(long functionality, int maxline, int depth) 
    free(buf0);
    ntsa_free(ntsa, /* free_strings */ true);
 
-   DBGMSF(debug, "Done");
+   DBGMSF(debug, "Done", NULL);
 }
 
 
@@ -577,7 +577,7 @@ Public_Status_Code i2c_get_raw_edid_by_fd(int fd, Buffer * rawedid) {
          if (rc == 0) {
             rawedid->len = 128;
             if (debug) {
-               DBGMSG("call_read returned:");
+               DBGMSG("call_read returned:", NULL);
                dbgrpt_buffer(rawedid, 1);
                DBGMSG("edid checksum = %d", edid_checksum(rawedid->bytes) );
             }
@@ -631,7 +631,7 @@ Public_Status_Code i2c_get_parsed_edid_by_fd(int fd, Parsed_Edid ** edid_ptr_loc
          if (edid)
             report_parsed_edid(edid, false /* dump hex */, 0);
          else
-            DBGMSG("create_parsed_edid() returned NULL");
+            DBGMSG("create_parsed_edid() returned NULL", NULL);
       }
       if (!edid)
          rc = DDCRC_EDID;
@@ -681,7 +681,7 @@ static void i2c_check_bus(I2C_Bus_Info * bus_info) {
    int file = 0;
 
    if (!(bus_info->flags & I2C_BUS_PROBED)) {
-      DBGMSF(debug, "Probing");
+      DBGMSF(debug, "Probing", NULL);
       bus_info->flags |= I2C_BUS_PROBED;
 
 
@@ -812,7 +812,7 @@ void i2c_dbgrpt_bus_info(I2C_Bus_Info * bus_info, int depth) {
       }
    }
 
-   DBGMSF(debug, "Done");
+   DBGMSF(debug, "Done", NULL);
 }
 
 
@@ -1088,7 +1088,7 @@ static
 bool bus_info_matches_selector(I2C_Bus_Info * bus_info, I2C_Bus_Selector * sel) {
    bool debug = false;
    if (debug) {
-      DBGMSG("Starting");
+      DBGMSG("Starting", NULL);
       i2c_dbgrpt_bus_info(bus_info, 1);
    }
 
@@ -1113,7 +1113,7 @@ bool bus_info_matches_selector(I2C_Bus_Info * bus_info, I2C_Bus_Selector * sel) 
          result = false;
          goto bye;
       }
-      DBGMSF(debug, "busno test passed");
+      DBGMSF(debug, "busno test passed", NULL);
       some_test_passed = true;
    }
 
@@ -1168,7 +1168,7 @@ I2C_Bus_Info * find_bus_info_by_selector(I2C_Bus_Selector * sel) {
    assert(sel);
    bool debug = false;
    if (debug) {
-      DBGMSG("Starting.");
+      DBGMSG("Starting.", NULL);
       report_i2c_bus_selector(sel, 1);
    }
 
