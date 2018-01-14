@@ -5,7 +5,7 @@
  * ddcutil interrogate command.
  *
  * <copyright>
- * Copyright (C) 2016 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2016-2018 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -35,7 +35,7 @@
 #include <string.h>
 #include <sys/ioctl.h>
 #include <unistd.h>
-#include <wchar.h>
+// #include <wchar.h>
 
 #include "util/device_id_util.h"
 #include "util/report_util.h"

@@ -4,7 +4,7 @@
  * packages such as libusb, hiddev
  *
  * <copyright>
- * Copyright (C) 2014-2015 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2014-2018 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -70,8 +70,8 @@ const char * collection_type_name(uint8_t collection_type) {
  */
 bool force_hid_monitor_by_vid_pid(int16_t vid, int16_t pid) {
    struct vid_pid {
-      int16_t   vid;
-      int16_t   pid;
+      uint16_t   vid;
+      uint16_t   pid;
    };
 
    bool debug = false;

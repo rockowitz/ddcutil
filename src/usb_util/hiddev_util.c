@@ -1,7 +1,7 @@
 /* hiddev_util.c
  *
  * <copyright>
- * Copyright (C) 2016-2917 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2016-2018 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -43,7 +43,7 @@
 #include <strings.h>
 #include <sys/ioctl.h>
 #include <unistd.h>
-#include <wchar.h>
+// #include <wchar.h>
 
 #include "util/coredefs.h"
 #include "util/file_util.h"

@@ -3,8 +3,9 @@ $(GLIB_CFLAGS) \
 -I$(top_srcdir)/src
 
 
-
 AM_CFLAGS = -Wall 
+# lots of arguments for %p in format strings need (void*) casts if -Wpedantic
+# AM_CFLAGS += -Wpedantic
 
 if ENABLE_CALLGRAPH_COND
 AM_CFLAGS += -fdump-rtl-expand

@@ -3,7 +3,7 @@
  * libusb is not currently used by ddcutil.  This code is retained for reference.
  *
  * <copyright>
- * Copyright (C) 2016 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2016-2018 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -30,7 +30,7 @@
 
 #include <libusb-1.0/libusb.h>      // need pkgconfig?
 #include <stdbool.h>
-#include <wchar.h>
+// #include <wchar.h>
 
 #include "util/coredefs.h"
 
@@ -81,7 +81,9 @@ char * class_code_title(Byte val);
 // Misc utilities
 
 char *    lookup_libusb_string(     struct libusb_device_handle * dh, int string_id);
+#ifdef UNUSED
 wchar_t * lookup_libusb_string_wide(struct libusb_device_handle * dh, int string_id);
+#endif
 
 // Report functions for libusb data structures
 

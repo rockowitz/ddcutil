@@ -5,7 +5,7 @@
  * libusb is not currently used by ddcutil.  This code is retained for reference.
  *
  * <copyright>
- * Copyright (C) 2016 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2016-2018 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -40,7 +40,7 @@
 #include <string.h>
 #include <sys/ioctl.h>
 #include <unistd.h>
-#include <wchar.h>
+// #include <wchar.h>
 
 #include "util/data_structures.h"
 #include "util/string_util.h"
@@ -53,10 +53,10 @@
 
 #include "usb_util/libusb_reports.h"
 
+
 //
 // Identifier to name tables
 //
-
 
 Value_Name class_id_table[] = {
       {LIBUSB_CLASS_PER_INTERFACE, "LIBUSB_CLASS_PER_INTERFACE"},
@@ -218,7 +218,8 @@ char * lookup_libusb_string(struct libusb_device_handle * dh, int string_id) {
    return libusb_string_buffer;
 }
 
-
+#ifdef UNUSED
+// unused, and requires include of wchar.h
 wchar_t libusb_string_buffer_wide[LIBUSB_STRING_BUFFER_SIZE];
 
 wchar_t * lookup_libusb_string_wide(struct libusb_device_handle * dh, int string_id) {
@@ -240,7 +241,7 @@ wchar_t * lookup_libusb_string_wide(struct libusb_device_handle * dh, int string
    }
    return (wchar_t *) libusb_string_buffer;
 }
-
+#endif
 
 
 // from lsusb.c
