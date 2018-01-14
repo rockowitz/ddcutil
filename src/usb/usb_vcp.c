@@ -3,7 +3,7 @@
  * Get and set VCP feature codes for USB connected monitors.
  *
  * <copyright>
- * Copyright (C) 2017 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2017-2018 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -114,7 +114,7 @@ usb_get_usage_value_by_report_type_and_ucode(
       }
 
       if (debug) {
-         DBGMSG("After hid_get_usage_value():");
+         DBGMSG0("After hid_get_usage_value():");
          report_hiddev_usage_ref(&uref, 1);
       }
       // printf("(%s) errsv=%d, gsc=%d\n", __func__, errsv, gsc);
@@ -209,7 +209,7 @@ set_control_value(int fd,
       .value       = value,
    };
    if (debug) {
-      DBGMSG("Before HIDIOCSUSAGE");
+      DBGMSG0("Before HIDIOCSUSAGE");
       report_hiddev_usage_ref(&uref, 1);
    }
    if ((rc=ioctl(fd, HIDIOCSUSAGE, &uref)) < 0) {
@@ -263,7 +263,7 @@ set_usage_value_by_report_type_and_ucode(
       .value       = value,
    };
    if (debug) {
-      DBGMSG("Before HIDIOCSUSAGE");
+      DBGMSG0("Before HIDIOCSUSAGE");
       report_hiddev_usage_ref(&uref, 1);
    }
    if ((rc=ioctl(fd, HIDIOCSUSAGE, &uref)) < 0) {
@@ -658,7 +658,7 @@ usb_set_nontable_vcp_value(
          psc = DDCRC_REPORTED_UNSUPPORTED;
       }
       else {
-         DBGMSF(debug, "setting value");
+         DBGMSF0(debug, "setting value");
          // for testing purposes, try using each entry
          // for reading, usage 0 returns correct value, usage 1 returns 0
          // is usage 1 for writing?

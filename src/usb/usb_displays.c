@@ -1,7 +1,7 @@
 /* usb_displays.c
  *
  * <copyright>
- * Copyright (C) 2014-2017 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2014-2018 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -308,7 +308,7 @@ static char * usb_synthesize_capabilities_string(Usb_Monitor_Info * moninfo) {
  */
 GPtrArray * get_usb_monitor_list() {
    bool debug = false;
-   DBGMSF(debug, "Starting...");
+   DBGMSF0(debug, "Starting...");
    DDCA_Output_Level ol = get_output_level();
 
    if (usb_monitors)      // already initialized?

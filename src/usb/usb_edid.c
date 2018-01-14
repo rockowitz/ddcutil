@@ -3,7 +3,7 @@
  * Functions to get EDID for USB connected monitors
  *
  * <copyright>
- * Copyright (C) 2014-2015 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2014-2018 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -38,7 +38,7 @@
 #include <string.h>
 #include <sys/ioctl.h>
 #include <unistd.h>
-#include <wchar.h>
+// #include <wchar.h>
 
 #include "util/device_id_util.h"
 #include "util/report_util.h"
@@ -101,9 +101,6 @@ void report_model_sn_pair(struct model_sn_pair * p, int depth) {
 }
 
 
-
-
-
 //
 // EIZO Specific Functions
 //
@@ -131,7 +128,7 @@ struct hid_field_locator * find_eizo_model_sn_report(int fd) {
 
 bye:
    if (debug) {
-      printf("(%s) Returning: %p\n", __func__, loc);
+      printf("(%s) Returning: %p\n", __func__, (void*)loc);
       // if (loc)
       //    report_hid_field_locator(loc,2);
    }
@@ -174,7 +171,7 @@ bye:
  */
 struct model_sn_pair *  get_eizo_model_sn_by_report(int fd) {
    bool debug = false;
-   DBGMSF(debug, "Starting");
+   DBGMSF0(debug, "Starting");
    struct model_sn_pair* result = NULL;
    Buffer * modelsn  = NULL;
    Buffer * modelsn2 = NULL;
@@ -217,11 +214,11 @@ struct model_sn_pair *  get_eizo_model_sn_by_report(int fd) {
    if (debug) {
       if (result) {
          printf("(%s) Returning: %p -> mode=|%s|, sn=|%s|\n",
-               __func__, result, result->model, result->sn);
+               __func__, (void*) result, result->model, result->sn);
          // report_model_sn_pair(result, 1);
       }
       else
-         printf("(%s) Returning: %p\n", __func__, result);
+         printf("(%s) Returning: %p\n", __func__, (void*) result);
    }
    return result;
 }
@@ -297,7 +294,7 @@ Parsed_Edid * get_x11_edid_by_model_sn(char * model_name, char * sn_ascii) {
 
 Parsed_Edid * get_fallback_hiddev_edid(int fd, struct hiddev_devinfo * dev_info) {
    bool debug = false;
-   DBGMSF(debug, "Starting");
+   DBGMSF0(debug, "Starting");
 
    Parsed_Edid * parsed_edid = NULL;
    char * edid_source;
@@ -377,7 +374,7 @@ Parsed_Edid * get_fallback_hiddev_edid(int fd, struct hiddev_devinfo * dev_info)
 Parsed_Edid * get_hiddev_edid_with_fallback(int fd, struct hiddev_devinfo * dev_info)  {
    bool debug = false;
    if (debug) {
-      DBGMSG("Starting");
+      DBGMSG0("Starting");
       report_hiddev_devinfo(dev_info, true, 1);
    }
 
@@ -398,7 +395,7 @@ Parsed_Edid * get_hiddev_edid_with_fallback(int fd, struct hiddev_devinfo * dev_
    if (edid_buffer) {
        parsed_edid = create_parsed_edid(edid_buffer->bytes);  // copies bytes
        if (!parsed_edid) {
-          DBGMSF(debug, "get_hiddev_edid() returned invalid EDID");
+          DBGMSF0(debug, "get_hiddev_edid() returned invalid EDID");
           // if debug or verbose, dump the bad edid  ??
           // if (debug || get_output_level() >= OL_VERBOSE) {
           // }
