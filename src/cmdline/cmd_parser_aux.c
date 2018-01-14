@@ -4,7 +4,7 @@
  * package used.
  *
  * <copyright>
- * Copyright (C) 2014-2016 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2014-2018 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -78,7 +78,7 @@ void validate_cmdinfo() {
 
 
 void show_cmd_desc(Cmd_Desc * cmd_desc) {
-   printf("CmdDesc at %p\n", cmd_desc);
+   printf("CmdDesc at %p\n", (void*)cmd_desc);
    printf("   cmd_id:     0x%04x\n", cmd_desc->cmd_id);
    printf("   cmd_name:   %s\n",     cmd_desc->cmd_name);
    printf("   minchars:   %d\n",     cmd_desc->minchars);
