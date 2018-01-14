@@ -3,7 +3,7 @@
  * General purpose data structures..
  *
  * <copyright>
- * Copyright (C) 2014-2015 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2014-2018 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -808,7 +808,7 @@ Buffer * buffer_new(int size, const char * trace_msg) {
    buffer->size_increment = 0;
    if (trace_buffer_malloc_free)
       printf("(%s) Allocated buffer.  buffer=%p, buffer->bytes=%p, &buffer->bytes=%p, %s\n",
-             __func__, buffer, buffer->bytes, &(buffer->bytes), trace_msg);
+             __func__, (void*)buffer, buffer->bytes, (void*)&(buffer->bytes), trace_msg);
    return buffer;
 }
 
@@ -870,18 +870,18 @@ Buffer * buffer_dup(Buffer * srcbuf, const char * trace_msg) {
  */
 void buffer_free(Buffer * buffer, const char * trace_msg) {
    if (trace_buffer_malloc_free)
-      printf("(%s) Starting. buffer = %p\n", __func__, buffer);
+      printf("(%s) Starting. buffer = %p\n", __func__, (void*) buffer);
    assert(buffer);
    assert(memcmp(buffer->marker, BUFFER_MARKER, 4) == 0);
 
       if (buffer->bytes) {
         if (trace_buffer_malloc_free)
             printf("(%s) Freeing buffer->bytes = %p, &buffer->bytes=%p\n",
-                   __func__, buffer->bytes, &(buffer->bytes));
+                   __func__, buffer->bytes, (void*)&(buffer->bytes));
         free(buffer->bytes);
       }
       if (trace_buffer_malloc_free)
-         printf("(%s) Freeing buffer = %p, %s\n", __func__, buffer, trace_msg);
+         printf("(%s) Freeing buffer = %p, %s\n", __func__, (void*)buffer, trace_msg);
       buffer->marker[3] = 'x';
       free(buffer);
       if (trace_buffer_malloc_free)
@@ -1087,7 +1087,7 @@ void     buffer_extend(Buffer* buf, int addl_size) {
  */
 void buffer_dump(Buffer * buffer) {
    printf("Buffer at %p,  bytes addr=%p, len=%d, max_size=%d\n",
-          buffer, buffer->bytes, buffer->len, buffer->buffer_size);
+          (void*)buffer, buffer->bytes, buffer->len, buffer->buffer_size);
    // printf("  bytes end addr=%p\n", buffer->bytes+buffer->buffer_size);
    if (buffer->bytes)
       hex_dump(buffer->bytes, buffer->len);
@@ -1205,7 +1205,7 @@ char * vnt_interpret_flags(
    bool debug = false;
    if (debug)
       printf("(%s) Starting. flags_val=0x%08x, bitname_table=%p, use_title=%s, sepstr=|%s|\n",
-             __func__, flags_val, bitname_table, bool_repr(use_title), sepstr);
+             __func__, flags_val, (void*)bitname_table, bool_repr(use_title), sepstr);
 
    GString * sbuf = g_string_sized_new(200);
    bool first = true;
@@ -1213,14 +1213,11 @@ char * vnt_interpret_flags(
      while (cur_entry->name) {
         if (debug)
            printf("(%s) cur_entry=%p, Comparing flags_val=0x%08x vs cur_entry->value = 0x%08x\n",
-                  __func__, cur_entry, flags_val, cur_entry->value);
+                  __func__, (void*)cur_entry, flags_val, cur_entry->value);
         if (!flags_val && cur_entry->value == flags_val) { // special value for no bit set
            char * sval = (use_title) ? cur_entry->title : cur_entry->name;
            if (!sval)
               sval = "missing";
-
-           // printf("(%s-1) sbuf=%p, sbuf->str=\"%s\", sbuf->len=%zu, sval=%s\n",
-           //        __func__, sbuf, sbuf->str, sbuf->len, sval);
            g_string_append(sbuf, sval);
            break;
         }
@@ -1228,10 +1225,7 @@ char * vnt_interpret_flags(
            if (first)
               first = false;
            else {
-              // g_string_append(sbuf, ", ");
               if (sepstr) {
-                 // printf("(%s-2) sbuf=%p, sbuf->str=\"%s\", sbuf->len=%zu, sepstr=%s\n",
-                 //        __func__, sbuf, sbuf->str, sbuf->len, sepstr);
                  g_string_append(sbuf, sepstr);
               }
            }
@@ -1240,8 +1234,6 @@ char * vnt_interpret_flags(
            if (!sval) {
               sval = "missing";
            }
-           // printf("(%s-3) sbuf=%p, sbuf->str=\"%s\", sbuf->len=%zu, sval=%s\n",
-           //         __func__, sbuf, sbuf->str, sbuf->len, sval);
            g_string_append(sbuf, sval);
         }
         cur_entry++;

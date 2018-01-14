@@ -4,6 +4,10 @@ AM_CPPFLAGS =        \
 
 AM_CFLAGS = -Wall 
 AM_CFLAGS += -Werror
+# -pedantic issues warnings re code that doesn't conform to ISO C
+#  Alas, -m modifier on sscanf is a POSIX extension, not ISO C
+#  In combination with -Werror, causes device_util.c to fail compilation
+# AM_CFLAGS += -pedantic
 
 if ENABLE_CALLGRAPH_COND
 AM_CFLAGS += -fdump-rtl-expand
