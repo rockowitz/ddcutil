@@ -69,6 +69,7 @@ void init_msg_control();
 void register_jmp_buf(jmp_buf* jb);
 #endif
 
+#ifdef UNUSED
 void ddc_abort(
       const char * funcname,
       const int    lineno,
@@ -77,6 +78,7 @@ void ddc_abort(
 
 #define DDC_ABORT(status) \
    ddc_abort(__func__, __LINE__, __FILE__, status)
+#endif
 
 #ifdef OBSOLETE
 extern DDCA_Global_Failure_Information global_failure_information;
@@ -255,9 +257,16 @@ bool dbgtrc(
 
 // cannot map to dbgtrc, writes to stderr, not stdout
 // #define SEVEREMSG(format, ...) dbgtrc(0xff,       __func__, __LINE__, __FILE__, format, ##__VA_ARGS__)
+
 #define DBGMSG(            format, ...) dbgtrc(0xff, __func__, __LINE__, __FILE__, format, ##__VA_ARGS__)
+// workaround: if -Wpedantic, ISO C does not allow variadic macro calls that have no variable arguments
+#define DBGMSG0(           text) dbgtrc(0xff, __func__, __LINE__, __FILE__, text)
+
 #define DBGMSF(debug_flag, format, ...) \
    do { if (debug_flag) dbgtrc( 0xff, __func__, __LINE__, __FILE__, format, ##__VA_ARGS__); }  while(0)
+#define DBGMSF0(debug_flag, text) \
+   do { if (debug_flag) dbgtrc( 0xff, __func__, __LINE__, __FILE__, text); }  while(0)
+
 
 #define TRCMSG(            format, ...) \
    dbgtrc(TRACE_GROUP, __func__, __LINE__, __FILE__, format, ##__VA_ARGS__)
@@ -276,6 +285,9 @@ bool dbgtrc(
 // if a debug flag is set.
 #define DBGTRC(debug_flag, trace_group, format, ...) \
     dbgtrc( ( (debug_flag) ) ? 0xff : (trace_group), __func__, __LINE__, __FILE__, format, ##__VA_ARGS__)
+
+#define DBGTRC0(debug_flag, trace_group, format) \
+    dbgtrc( ( (debug_flag) ) ? 0xff : (trace_group), __func__, __LINE__, __FILE__, format)
 
 
 //

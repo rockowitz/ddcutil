@@ -210,6 +210,9 @@ void register_jmp_buf(jmp_buf* jb) {
 #endif
 
 
+#ifdef UNUSED
+// currently unused, iftest out to avoid rpmlint complaint about exit from library
+
 /** Primary function for terminating **ddcutil** execution
  * due to an internal error.
  *
@@ -255,6 +258,7 @@ void ddc_abort(
    }
 #endif
 }
+#endif
 
 
 //
