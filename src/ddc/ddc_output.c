@@ -1,7 +1,7 @@
 /* ddc_output.c
  *
  * <copyright>
- * Copyright (C) 2014-2017 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2014-2018 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -171,7 +171,7 @@ get_raw_value_for_feature_table_entry(
       FILE *                     msg_fh)
 {
    bool debug = false;
-   DBGTRC(debug, TRACE_GROUP, "Starting");
+   DBGTRC(debug, TRACE_GROUP, "Starting", NULL);
 
    assert(dh);
    assert(dh->dref);
@@ -305,7 +305,7 @@ collect_raw_feature_set_values(
 {
    Public_Status_Code master_status_code = 0;
    bool debug = false;
-   DBGMSF(debug, "Starting.");
+   DBGMSF0(debug, "Starting.");
    int features_ct = get_feature_set_size(feature_set);
    // needed when called from C API, o.w. get get NULL response for first feature
    // DBGMSG("Inserting sleep() before first call to get_raw_value_for_feature_table_entry()");
@@ -375,7 +375,7 @@ collect_raw_subset_values(
             dh, feature_set, vset,
             ignore_unsupported, msg_fh);
    free_vcp_feature_set(feature_set);
-   DBGMSF(debug, "Done");
+   DBGMSF0(debug, "Done");
    return psc;
 }
 
@@ -689,7 +689,7 @@ show_vcp_values(
    psc = show_feature_set_values(
             dh, feature_set, collector, flags, features_seen);
    free_vcp_feature_set(feature_set);
-   DBGMSF(debug, "Done");
+   DBGMSF0(debug, "Done");
    return psc;
 }
 

@@ -5,7 +5,7 @@
  * the acyclic graph of #includes within the ddc source directory.
  *
  * <copyright>
- * Copyright (C) 2014-2017 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2014-2018 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -72,7 +72,7 @@ DDCA_MCCS_Version_Spec get_vcp_version_by_display_handle(Display_Handle * dh) {
                  dh_repr(dh), dh->dref->vcp_version.major, dh->dref->vcp_version.minor, format_vspec(dh->dref->vcp_version));
    if (vcp_version_is_unqueried(dh->dref->vcp_version)) {
       if (debug) {
-         DBGMSG("Starting.  vcp_version not set");
+         DBGMSG0("Starting.  vcp_version not set");
          dbgrpt_display_handle(dh, /*msg=*/ NULL, 1);
       }
       dh->dref->vcp_version = VCP_SPEC_UNKNOWN;
@@ -88,7 +88,7 @@ DDCA_MCCS_Version_Spec get_vcp_version_by_display_handle(Display_Handle * dh) {
             dh->dref->vcp_version.minor = vesa_ver & 0xff;
          }
          else {
-            DBGMSF(debug, "Error detecting VESA version using usb_get_vesa_version()");
+            DBGMSF0(debug, "Error detecting VESA version using usb_get_vesa_version()");
          }
 #else
          PROGRAM_LOGIC_ERROR("ddcutil not built with USB support");

@@ -1,7 +1,7 @@
 /* ddc_displays.c
  *
  * <copyright>
- * Copyright (C) 2014-2017 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2014-2018 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -447,7 +447,7 @@ char * get_controller_mfg_string(Display_Handle * dh) {
 void
 ddc_report_display_by_dref(Display_Ref * dref, int depth) {
    bool debug = false;
-   DBGMSF(debug, "Starting");
+   DBGMSF0(debug, "Starting");
    assert(dref);
    assert(memcmp(dref->marker, DISPLAY_REF_MARKER, 4) == 0);
    int d1 = depth+1;
@@ -534,7 +534,7 @@ ddc_report_display_by_dref(Display_Ref * dref, int depth) {
       }
 
    }
-   DBGMSF(debug, "Done");
+   DBGMSF0(debug, "Done");
 }
 
 
@@ -553,7 +553,7 @@ ddc_report_display_by_dref(Display_Ref * dref, int depth) {
 int
 ddc_report_displays(bool valid_displays_only, int depth) {
    bool debug = false;
-   DBGMSF(debug, "Starting");
+   DBGMSF0(debug, "Starting");
 
    ddc_ensure_displays_detected();
 
@@ -799,7 +799,7 @@ void async_scan(GPtrArray * all_displays) {
       GThread * thread = g_ptr_array_index(threads, ndx);
       g_thread_join(thread);
    }
-   DBGMSF(debug, "Threads joined");
+   DBGMSF0(debug, "Threads joined");
 
 #ifdef OLD
    for (int ndx = 0; ndx < all_displays->len; ndx++) {
@@ -813,7 +813,7 @@ void async_scan(GPtrArray * all_displays) {
       }
    }
 #endif
-   DBGMSF(debug, "Done");
+   DBGMSF0(debug, "Done");
 }
 
 void non_async_scan(GPtrArray * all_displays) {
@@ -834,7 +834,7 @@ void non_async_scan(GPtrArray * all_displays) {
       }
 #endif
    }
-   DBGMSF(debug, "Done");
+   DBGMSF0(debug, "Done");
 }
 
 
@@ -867,7 +867,7 @@ ddc_find_display_ref_by_criteria(Display_Criteria * criteria) {
 Display_Ref *
 ddc_find_display_ref_by_display_identifier(Display_Identifier * did) {
    bool debug = false;
-   DBGMSF(debug, "Starting");
+   DBGMSF0(debug, "Starting");
    if (debug)
       dbgrpt_display_identifier(did, 1);
 
@@ -907,7 +907,7 @@ ddc_find_display_ref_by_display_identifier(Display_Identifier * did) {
 
    // Is this the best location in the call chain to make this check?
    if (result && (result->dispno < 0)) {
-      DBGMSF(debug, "Found a display that doesn't support DDC.  Ignoring.");
+      DBGMSF0(debug, "Found a display that doesn't support DDC.  Ignoring.");
       result = NULL;
    }
 
@@ -915,11 +915,11 @@ ddc_find_display_ref_by_display_identifier(Display_Identifier * did) {
 
    if (debug) {
       if (result) {
-         DBGMSG("Done.  Returning: ");
+         DBGMSG0("Done.  Returning: ");
          dbgreport_display_ref(result, 1);
       }
       else
-         DBGMSG("Done.  Returning NULL");
+         DBGMSG0("Done.  Returning NULL");
    }
 
    return result;
@@ -959,7 +959,7 @@ get_display_ref_for_display_identifier(
 GPtrArray *
 ddc_detect_all_displays() {
    bool debug = false;
-   DBGMSF(debug, "Starting");
+   DBGMSF0(debug, "Starting");
 
    GPtrArray * display_list = g_ptr_array_new();
 

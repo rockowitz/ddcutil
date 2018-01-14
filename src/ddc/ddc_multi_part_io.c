@@ -4,7 +4,7 @@
  * Capabilities.
  *
  * <copyright>
- * Copyright (C) 2014-2017 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2014-2018 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -174,7 +174,7 @@ try_multi_part_read(
    int  cur_offset = 0;
    bool complete   = false;
    while (!complete && !excp) {         // loop over fragments
-      DBGTRC(debug, TRC_NONE, "Top of fragment loop");
+      DBGTRC(debug, TRC_NONE, "Top of fragment loop", NULL);
 
       int fragment_size;
       update_ddc_multi_part_read_request_packet_offset(request_packet_ptr, cur_offset);
@@ -207,7 +207,7 @@ try_multi_part_read(
       assert(!excp && psc == 0);
 
       if ( IS_TRACING_BY_FUNC_OR_FILE() || debug ) {
-         DBGMSG("After try_write_read():");
+         DBGMSG0("After try_write_read():");
          report_interpreted_multi_read_fragment(response_packet_ptr->parsed.multi_part_read_fragment, 0);
       }
 

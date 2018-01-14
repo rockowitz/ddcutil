@@ -3,7 +3,7 @@
  * Load/store VCP settings from/to file.
  *
  * <copyright>
- * Copyright (C) 2014-2017 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2014-2018 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -115,7 +115,7 @@ void report_dumpload_data(Dumpload_Data * data, int depth) {
 Dumpload_Data*
 create_dumpload_data_from_g_ptr_array(GPtrArray * garray) {
    bool debug = false;
-   DBGMSF(debug, "Starting.");
+   DBGMSF0(debug, "Starting.");
 
    Dumpload_Data * data = calloc(1, sizeof(Dumpload_Data));
    bool valid_data = true;
@@ -239,7 +239,7 @@ create_dumpload_data_from_g_ptr_array(GPtrArray * garray) {
                      }
                      else {   // non-table feature
                         ushort feature_value;
-                        ct = sscanf(s2, "%hd", &feature_value);
+                        ct = sscanf(s2, "%hu", &feature_value);
                         if (ct == 0) {
                            f0printf(FERR, "Invalid value for opcode at line %d: %s\n", linectr, line);
                            valid_data = false;
@@ -621,7 +621,7 @@ collect_profile_related_values(
       GPtrArray**      pvals)
 {
    bool debug = false;
-   DBGMSF(debug, "Starting");
+   DBGMSF0(debug, "Starting");
    assert( get_output_level() == OL_PROGRAM);
    Public_Status_Code psc = 0;
    GPtrArray * vals = g_ptr_array_sized_new(50);
@@ -662,7 +662,7 @@ dumpvcp_as_dumpload_data(
       Dumpload_Data** pdumpload_data)
 {
    bool debug = false;
-   DBGMSF(debug, "Starting");
+   DBGMSF0(debug, "Starting");
    Public_Status_Code psc = 0;
    Dumpload_Data * dumped_data = calloc(1, sizeof(Dumpload_Data));
 
@@ -779,7 +779,7 @@ convert_dumpload_data_to_string_array(Dumpload_Data * data) {
 Public_Status_Code
 dumpvcp_as_string(Display_Handle * dh, char ** pstring) {
    bool debug = false;
-   DBGMSF(debug, "Starting");
+   DBGMSF0(debug, "Starting");
 
    Public_Status_Code psc    = 0;
    Dumpload_Data *    data   = NULL;

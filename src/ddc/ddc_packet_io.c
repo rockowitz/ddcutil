@@ -4,7 +4,7 @@
  *  or the ADL API, as appropriate.
  *
  * <copyright>
- * Copyright (C) 2014-2017 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2014-2018 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -171,7 +171,7 @@ Public_Status_Code ddc_open_display(
                goto bye;
             }
             else
-               DBGMSG("Continuing");
+               DBGMSG0("Continuing");
          }
       }
       break;
@@ -229,7 +229,7 @@ bye:
 void ddc_close_display(Display_Handle * dh) {
    bool debug = false;
    if (debug) {
-      DBGMSG("Starting.");
+      DBGMSG0("Starting.");
       dbgrpt_display_handle(dh, __func__, 1);
    }
 
@@ -483,7 +483,7 @@ static Public_Status_Code ddc_adl_write_read_raw(
       else {
          if ( all_bytes_zero(readbuf+1, max_read_bytes-1)) {
                  psc = DDCRC_READ_ALL_ZERO;
-                 DDCMSG(debug, "All zero response.");
+                 DDCMSG(debug, "All zero response.", NULL);
                  COUNT_STATUS_CODE(psc);
          }
          else if (memcmp(get_packet_start(request_packet_ptr), readbuf, get_packet_len(request_packet_ptr)) == 0) {
@@ -517,7 +517,7 @@ static Public_Status_Code ddc_write_read_raw(
    DBGTRC(debug, TRACE_GROUP, "Starting. dh=%s, readbuf=%p, max_read_bytes=%d",
                               dh_repr_t(dh), readbuf, max_read_bytes);
    if (debug) {
-      DBGMSG("request_packer_ptr->raw_bytes:");
+      DBGMSG0("request_packer_ptr->raw_bytes:");
       dbgrpt_buffer(request_packet_ptr->raw_bytes, 1);
    }
    Public_Status_Code psc;
@@ -831,7 +831,7 @@ ddc_i2c_write_only(
         )
 {
    bool debug = false;
-   DBGTRC(debug, TRACE_GROUP, "Starting.");
+   DBGTRC0(debug, TRACE_GROUP, "Starting.");
    if (debug)
       dbgrpt_packet(request_packet_ptr, 1);
 
@@ -863,7 +863,7 @@ ddc_write_only(
       DDC_Packet *     request_packet_ptr)
 {
    bool debug = false;
-   DBGTRC(debug, TRACE_GROUP, "Starting.");
+   DBGTRC0(debug, TRACE_GROUP, "Starting.");
 
    Public_Status_Code psc = 0;
    assert(dh->dref->io_path.io_mode != DDCA_IO_USB);
@@ -909,7 +909,7 @@ ddc_write_only_with_retry(
      )
 {
    bool debug = false;
-   DBGTRC(debug, TRACE_GROUP, "Starting." );
+   DBGTRC0(debug, TRACE_GROUP, "Starting." );
 
    assert(dh->dref->io_path.io_mode != DDCA_IO_USB);
 

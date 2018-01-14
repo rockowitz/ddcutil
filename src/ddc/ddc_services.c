@@ -1,7 +1,7 @@
 /* ddc_services.c
  *
  * <copyright>
- * Copyright (C) 2014-2017 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2014-2018 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -136,7 +136,7 @@ void ddc_report_max_tries(int depth) {
  */
 void init_ddc_services() {
    bool debug = false;
-   DBGMSF(debug, "Executing");
+   DBGMSF0(debug, "Executing");
 
    // i2c:
    i2c_set_io_strategy(DEFAULT_I2C_IO_STRATEGY);

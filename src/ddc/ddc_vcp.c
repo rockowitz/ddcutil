@@ -3,7 +3,7 @@
  * Virtual Control Panel access
  *
  * <copyright>
- * Copyright (C) 2014-2017 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2014-2018 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -91,7 +91,7 @@ save_current_settings(
 
    if (dh->dref->io_path.io_mode == DDCA_IO_USB) {
       // command line parser should block this case
-      PROGRAM_LOGIC_ERROR("MCCS over USB does not have Save Current Settings command");
+      PROGRAM_LOGIC_ERROR("MCCS over USB does not have Save Current Settings command", NULL);
       ddc_excp = errinfo_new(DDCL_UNIMPLEMENTED, __func__);
    }
    else {
@@ -279,7 +279,7 @@ is_rereadable_feature(
       for (int ndx = 0; ndx < ARRAY_SIZE(unrereadable_features); ndx++) {
          if ( unrereadable_features[ndx] == opcode ) {
             result = false;
-            DBGMSF(debug, "Unreadable opcode");
+            DBGMSF(debug, "Unreadable opcode 0x%02x", opcode);
             break;
          }
       }
@@ -336,7 +336,7 @@ set_vcp_value(
       DDCA_Single_Vcp_Value * vrec)
 {
    bool debug = false;
-   DBGMSF(debug, "Starting. ");
+   DBGMSF0(debug, "Starting. ");
    FILE * fout = FOUT;
    if ( get_output_level() < DDCA_OL_VERBOSE )
       fout = NULL;
@@ -537,7 +537,7 @@ Error_Info * get_table_vcp_value(
    if (psc == 0) {
       *pp_table_bytes = paccumulator;
       if (output_level >= DDCA_OL_VERBOSE) {
-         DBGMSG("Bytes returned on table read:");
+         DBGMSG0("Bytes returned on table read:");
          dbgrpt_buffer(paccumulator, 1);
       }
    }
@@ -581,7 +581,7 @@ get_vcp_value(
    // why are we coming here for USB?
    if (dh->dref->io_path.io_mode == DDCA_IO_USB) {
 #ifdef USE_USB
-      DBGMSF(debug, "USB case");
+      DBGMSF0(debug, "USB case");
 
       switch (call_type) {
 
