@@ -1,7 +1,7 @@
 /* parsed_capabilities_feature.c
  *
  * <copyright>
- * Copyright (C) 2014-2017 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2014-2018 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -66,7 +66,7 @@ Capabilities_Feature_Record * new_capabilities_feature(
       if (value_string_start)
          DBGMSG("value string: |%.*s|", value_string_len, value_string_start);
       else
-         DBGMSG("value_string_start = NULL");
+         DBGMSG0("value_string_start = NULL");
    }
 
    Capabilities_Feature_Record * vfr =
@@ -293,5 +293,5 @@ void report_capabilities_feature(
 
 
 
-   DBGMSF(debug, "Done.");
+   DBGMSF0(debug, "Done.");
 }

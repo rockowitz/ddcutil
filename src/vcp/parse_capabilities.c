@@ -3,7 +3,7 @@
  * Parse the capabilities string
  *
  * <copyright>
- * Copyright (C) 2014-2017 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2014-2018 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -428,7 +428,7 @@ static GPtrArray * parse_vcp_segment(
          // find matching )
          char * value_end = find_closing_paren(pos, end);
          if (value_end == end) {
-            DBGMSG("Value parse terminated without closing paren   " );
+            DBGMSG0("Value parse terminated without closing paren   " );
             // bad data, what to do?
             // need better error message
             // TODO: recover from error, this is bad data from the monitor
