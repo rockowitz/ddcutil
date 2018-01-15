@@ -8,6 +8,7 @@ AM_CFLAGS += -Werror
 #  Alas, -m modifier on sscanf is a POSIX extension, not ISO C
 #  In combination with -Werror, causes device_util.c to fail compilation
 # AM_CFLAGS += -pedantic
+# AM_CFLAGS += -H
 
 if ENABLE_CALLGRAPH_COND
 AM_CFLAGS += -fdump-rtl-expand
