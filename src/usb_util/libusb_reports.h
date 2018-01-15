@@ -41,7 +41,7 @@
 
 #define REPORT_LIBUSB_ERROR(_funcname, _errno, _exit_on_error) \
    do { \
-      printf("(%s) " _funcname " returned %d (%s): %s\n", \
+      fprintf(stderr, "(%s) " _funcname " returned %d (%s): %s\n", \
              __func__, \
              _errno,   \
              libusb_error_name(_errno), \
@@ -51,10 +51,23 @@
          exit(1); \
    } while(0);
 
+
+#define REPORT_LIBUSB_ERROR_NOEXIT(_funcname, _errno) \
+   do { \
+      fprintf(stderr, "(%s) " _funcname " returned %d (%s): %s\n", \
+             __func__, \
+             _errno,   \
+             libusb_error_name(_errno), \
+             libusb_strerror(_errno) \
+            ); \
+   } while(0);
+
+
+
 #define CHECK_LIBUSB_RC(_funcname, _rc, _exit_on_error) \
    do { \
       if (_rc < 0) { \
-         printf("(%s) " _funcname " returned %d (%s): %s\n", \
+         fprintf(stderr, "(%s) " _funcname " returned %d (%s): %s\n", \
                 __func__, \
                 _rc,   \
                 libusb_error_name(_rc), \

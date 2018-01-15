@@ -205,7 +205,7 @@ char * lookup_libusb_string(struct libusb_device_handle * dh, int string_id) {
                (unsigned char *) libusb_string_buffer,
                LIBUSB_STRING_BUFFER_SIZE);
    if (rc < 0) {
-      REPORT_LIBUSB_ERROR("libusb_get_string_descriptor_ascii",  rc, LIBUSB_CONTINUE);
+      REPORT_LIBUSB_ERROR_NOEXIT("libusb_get_string_descriptor_ascii",  rc);
       strcpy(libusb_string_buffer, "<Unknown string>");
    }
    else {
@@ -948,19 +948,13 @@ void report_libusb_device(
 
    int d1 = depth+1;
    int rc;
-   // int j;
 
-   // if (debug) {
    rpt_structure_loc("libusb_device", dev, depth);
    uint8_t busno = libusb_get_bus_number(dev);
    uint8_t devno = libusb_get_device_address(dev);
-
    rpt_vstring(d1, "%-20s: %d  (0x%04x)", "Bus number",     busno, busno);
    rpt_vstring(d1, "%-20s: %d  (0x%04x)", "Device address", devno, devno);
-   // }
-   // else {
-   //    rpt_vstring(depth, "USB bus:device = %d:%d", libusb_get_bus_number(dev), libusb_get_device_address(dev));
-   // }
+
    uint8_t portno = libusb_get_port_number(dev);
    rpt_vstring(d1, "%-20s: %u (%s)", "Port number",
                    portno,
@@ -975,7 +969,10 @@ void report_libusb_device(
    struct libusb_device_descriptor desc;
    // copies data into struct pointed to by desc, does not allocate:
    rc = libusb_get_device_descriptor(dev, &desc);
-   CHECK_LIBUSB_RC("libusb_get_device_descriptor", rc, LIBUSB_EXIT);
+   if (rc < 0) {
+      REPORT_LIBUSB_ERROR_NOEXIT("libusb_get_device_descriptor", rc);
+      goto bye;
+   }
 
    if ( !show_hubs && is_hub_descriptor(&desc)) {
       rpt_title("Is hub device, skipping detail", d1);
@@ -984,8 +981,9 @@ void report_libusb_device(
       struct libusb_device_handle * dh = NULL;
       int rc = libusb_open(dev, &dh);
       if (rc < 0) {
-         REPORT_LIBUSB_ERROR("libusb_open", rc, LIBUSB_CONTINUE);
+         REPORT_LIBUSB_ERROR_NOEXIT("libusb_open", rc);
          dh = NULL;   // belt and suspenders
+         goto bye;
       }
       else {
          if (debug)
@@ -1000,10 +998,11 @@ void report_libusb_device(
          if (has_detach_kernel_capability) {
             rc = libusb_set_auto_detach_kernel_driver(dh, 1);
             if (rc < 0) {
-               REPORT_LIBUSB_ERROR("libusb_set_auto_detach_kernel_driver", rc, LIBUSB_CONTINUE);
+               REPORT_LIBUSB_ERROR_NOEXIT("libusb_set_auto_detach_kernel_driver", rc);
+               libusb_close(dh);
+               goto bye;
             }
          }
-
       }
 
 #ifdef TEMPORARY_TEST
@@ -1022,9 +1021,10 @@ void report_libusb_device(
       report_libusb_config_descriptor(config, dh, d1);
       libusb_free_config_descriptor(config);
 
-      if (dh)
-         libusb_close(dh);
+      libusb_close(dh);
    }
+
+bye:
    printf("\n");
    if (debug)
       printf("(%s) Done\n", __func__);

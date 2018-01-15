@@ -308,8 +308,10 @@ bool possible_monitor_dev(libusb_device * dev, bool check_forced_monitor, Descri
    struct libusb_device_descriptor desc;
     // copies data into struct pointed to by desc, does not allocate:
     int rc = libusb_get_device_descriptor(dev, &desc);
-    if (rc < 0)
-       REPORT_LIBUSB_ERROR("libusb_get_device_descriptor",  rc, LIBUSB_EXIT);
+    if (rc < 0) {
+       REPORT_LIBUSB_ERROR_NOEXIT("libusb_get_device_descriptor",  rc);
+       goto bye;
+    }
    dpath.desc = &desc;
    dpath.dev  = dev;
    result = possible_monitor_config_descriptor(config, dpath);
@@ -319,7 +321,10 @@ bool possible_monitor_dev(libusb_device * dev, bool check_forced_monitor, Descri
    if (!result && check_forced_monitor) {
       struct libusb_device_descriptor desc;
       int rc = libusb_get_device_descriptor(dev, &desc);
-      CHECK_LIBUSB_RC("libusb_device_descriptor", rc, LIBUSB_EXIT);
+      if (rc < 0) {
+         REPORT_LIBUSB_ERROR_NOEXIT("libusb_device_descriptor", rc);
+         goto bye;
+      }
       // ushort vid = desc.idVendor;
       // ushort pid = desc.idProduct;
 
@@ -329,6 +334,7 @@ bool possible_monitor_dev(libusb_device * dev, bool check_forced_monitor, Descri
       result = force_hid_monitor_by_vid_pid(desc.idVendor, desc.idProduct);
    }
 
+bye:
    if (debug)
       printf("(%s) Returning: %s\n" , __func__, bool_repr(result));
    return result;
@@ -360,13 +366,19 @@ alt_possible_monitor_dev(
 
    struct libusb_device_descriptor desc;
    int rc = libusb_get_device_descriptor(dev, &desc);
-   CHECK_LIBUSB_RC("libusb_device_descriptor", rc, LIBUSB_EXIT);
+   if (rc < 0) {
+      REPORT_LIBUSB_ERROR_NOEXIT("libusb_device_descriptor", rc);
+      goto bye;
+   }
    vid = desc.idVendor;
    pid = desc.idProduct;
 
    struct libusb_config_descriptor * config;
    rc = libusb_get_config_descriptor(dev, 0, &config);   // returns a pointer
-   CHECK_LIBUSB_RC("libusb_config_descriptor", rc, LIBUSB_EXIT);
+   if (rc < 0) {
+      REPORT_LIBUSB_ERROR_NOEXIT("libusb_config_descriptor", rc);
+      goto bye;
+   }
 
    // Logitech receiver has subclass 0 on interface 2,
    // try ignoring all interfaces other than 0
@@ -395,14 +407,14 @@ alt_possible_monitor_dev(
                struct libusb_device_handle * dh = NULL;
                rc = libusb_open(dev, &dh);
                if (rc < 0) {
-                  REPORT_LIBUSB_ERROR("libusb_open", rc, LIBUSB_CONTINUE);
+                  REPORT_LIBUSB_ERROR_NOEXIT("libusb_open", rc);
                   dh = NULL;   // belt and suspenders
                }
                else {
                   printf("(%s) Successfully opened\n", __func__);
                   rc = libusb_set_auto_detach_kernel_driver(dh, 1);
                   if (rc < 0)
-                     REPORT_LIBUSB_ERROR("libusb_set_auto_detach_kernel_driver", rc, LIBUSB_CONTINUE);
+                     REPORT_LIBUSB_ERROR_NOEXIT("libusb_set_auto_detach_kernel_driver", rc);
 
                   if (new_node) {
                      printf("(%s) Found additional possible monitor device on altset_no %d.  Ignoring.\n",
@@ -447,6 +459,7 @@ alt_possible_monitor_dev(
    }
    libusb_free_config_descriptor(config);
 
+bye:
    if (debug)
       printf("(%s) Returning %p\n", __func__, new_node);
    return new_node;
@@ -527,8 +540,10 @@ libusb_device ** filter_possible_monitor_devs( libusb_device **devs) {
       struct libusb_device_descriptor desc;
       // copies data into struct pointed to by desc, does not allocate:
       int rc = libusb_get_device_descriptor(dev, &desc);
-      if (rc < 0)
-         REPORT_LIBUSB_ERROR("libusb_get_device_descriptor",  rc, LIBUSB_EXIT);
+      if (rc < 0) {
+         REPORT_LIBUSB_ERROR_NOEXIT("libusb_get_device_descriptor",  rc);
+         break;
+      }
       dpath.desc = &desc;
 
 
@@ -586,29 +601,35 @@ void probe_libusb(bool possible_monitors_only, int depth) {
    ssize_t          cnt;   // number of devices in list
 
    rc = libusb_init(NULL);      // initialize a library session, use default context
-   CHECK_LIBUSB_RC("libusb_init", rc, LIBUSB_EXIT);
+   if (rc < 0) {
+      REPORT_LIBUSB_ERROR_NOEXIT("libusb_init", rc);
+      goto bye;
+   }
    libusb_set_debug(NULL /*default context*/, LIBUSB_LOG_LEVEL_INFO);
 
    cnt = libusb_get_device_list(NULL /* default context */, &devs);
-   CHECK_LIBUSB_RC("libusb_get_device_list", (int) cnt, LIBUSB_EXIT);
-
-   libusb_device ** devs_to_show = devs;
-   libusb_device ** filtered_devs_to_show = NULL;
-   if (possible_monitors_only) {
-      devs_to_show = filter_possible_monitor_devs(devs);
-      filtered_devs_to_show = devs_to_show;     // note newly allocated memory
+   if (cnt < 0) {
+      REPORT_LIBUSB_ERROR_NOEXIT("libusb_get_device_list", (int) cnt);
    }
-   report_libusb_devices(devs_to_show,
-                         false,         // show_hubs
-                         depth);
+   else {
+      libusb_device ** devs_to_show = devs;
+      libusb_device ** filtered_devs_to_show = NULL;
+      if (possible_monitors_only) {
+         devs_to_show = filter_possible_monitor_devs(devs);
+         filtered_devs_to_show = devs_to_show;     // note newly allocated memory
+      }
+      report_libusb_devices(devs_to_show,
+                            false,         // show_hubs
+                            depth);
 
-   if (filtered_devs_to_show)
-      free(filtered_devs_to_show);
+      if (filtered_devs_to_show)
+         free(filtered_devs_to_show);
 
-   libusb_free_device_list(devs, 1 /* unref the devices in the list */);
-
+      libusb_free_device_list(devs, 1 /* unref the devices in the list */);
+   }
    libusb_exit(NULL);
 
+bye:
    if (debug)
       printf("(%s) Done\n", __func__);
 
@@ -630,59 +651,62 @@ bool libusb_is_monitor_by_path(ushort busno, ushort devno, ushort intfno) {
       }
 
       libusb_device **devs;
-      // libusb_context *ctx = NULL; //a libusb session
       int rc;
       ssize_t cnt;   // number of devices in list
 
-      // rc = libusb_init(&ctx);   // initialize a library session
       rc = libusb_init(NULL);      // initialize a library session, use default context
-      CHECK_LIBUSB_RC("libusb_init", rc, LIBUSB_EXIT);
-      // libusb_set_debug(ctx,3);
+      if (rc < 0) {
+         REPORT_LIBUSB_ERROR_NOEXIT("libusb_init", rc);
+         goto bye;
+      }
       libusb_set_debug(NULL /*default context*/, LIBUSB_LOG_LEVEL_INFO);
 
-      // cnt = libusb_get_device_list(ctx, &devs);
       cnt = libusb_get_device_list(NULL /* default context */, &devs);
-      CHECK_LIBUSB_RC("libusb_get_device_list", (int) cnt, LIBUSB_EXIT);
+      if (cnt < 0) {
+         REPORT_LIBUSB_ERROR_NOEXIT("libusb_get_device_list", (int) cnt);
+      }
+      else {
+         libusb_device *dev;
 
-      libusb_device *dev;
+         int i = 0;
+         while ((dev = devs[i++]) != NULL) {
+             // unsigned short busno =  libusb_get_bus_number(dev);
+             // unsigned short devno =  libusb_get_device_address(dev);
 
-      int i = 0;
-      while ((dev = devs[i++]) != NULL) {
-          // unsigned short busno =  libusb_get_bus_number(dev);
-          // unsigned short devno =  libusb_get_device_address(dev);
+             if (busno == libusb_get_bus_number(dev) && devno == libusb_get_device_address(dev)) {
+                printf ("(%s) Found busno=%d, devno=%d\n", __func__, busno, devno);
 
-          if (busno == libusb_get_bus_number(dev) && devno == libusb_get_device_address(dev)) {
-             printf ("(%s) Found busno=%d, devno=%d\n", __func__, busno, devno);
-
-             Descriptor_Path dpath;
-             memset(&dpath, 0, sizeof(Descriptor_Path));
-             dpath.busno = busno;
-             dpath.devno = devno;
+                Descriptor_Path dpath;
+                memset(&dpath, 0, sizeof(Descriptor_Path));
+                dpath.busno = busno;
+                dpath.devno = devno;
 
 
-             struct libusb_device_descriptor desc;
-             // copies data into struct pointed to by desc, does not allocate:
-             int rc = libusb_get_device_descriptor(dev, &desc);
-             if (rc < 0)
-                REPORT_LIBUSB_ERROR("libusb_get_device_descriptor",  rc, LIBUSB_EXIT);
-             dpath.desc = &desc;
+                struct libusb_device_descriptor desc;
+                // copies data into struct pointed to by desc, does not allocate:
+                int rc = libusb_get_device_descriptor(dev, &desc);
+                if (rc < 0) {
+                   REPORT_LIBUSB_ERROR_NOEXIT("libusb_get_device_descriptor",  rc);
+                   break;
+                }
+                dpath.desc = &desc;
 
-             if (debug)
-                printf("(%s) Examining device. bus=0x%04x, device=0x%04x\n", __func__, busno, devno);
+                if (debug)
+                   printf("(%s) Examining device. bus=0x%04x, device=0x%04x\n", __func__, busno, devno);
 
-             result = possible_monitor_dev(dev, /*check_forced_monitor=*/ true, dpath);
-             break;
+                result = possible_monitor_dev(dev, /*check_forced_monitor=*/ true, dpath);
+                break;
+             }
           }
-       }
 
-      libusb_free_device_list(devs, 1 /* unref the devices in the list */);
-
-      // libusb_exit(ctx);
+         libusb_free_device_list(devs, 1 /* unref the devices in the list */);
+      }
       libusb_exit(NULL);
-      if (debug)
-         printf("(%s) Done.  Returning %s\n", __func__, bool_repr(result));
    }
 
 bye:
+   if (debug)
+      printf("(%s) Done.  Returning %s\n", __func__, bool_repr(result));
    return result;
 }
+
