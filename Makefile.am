@@ -41,6 +41,12 @@ libddcdocdir = $(datarootdir)/doc/libddcutil
 libddcdoc_DATA = AUTHORS
 endif
 
+
+# Too many false positives: 
+#  alpha.clone.CloneChecker
+#  alpha.deadcode.UnreachableCode
+#  alpha.core.CastToStruct
+
 # Copied and adapted from colord
 # is calling autogen.sh within this file dangerous?
 clang:
@@ -50,9 +56,16 @@ clang:
 	        -o clang-report                         \
 		./autogen.sh				\
 	        --disable_gobject_api                   \
+		--enable-cffi                           \
+		--enable-cython                         \
 	        ;                                       \
 	scan-build --use-analyzer=/usr/bin/clang        \
-	        -o clang-report make
+	        -o clang-report                         \
+		-enable-checker alpha.core.CastSize       \
+		-enable-checker alpha.core.BoolAssignment \
+		-enable-checker alpha.core.Conversion     \
+		-enable-checker alpha.core.SizeofPtr      \
+		make
 
 
 
