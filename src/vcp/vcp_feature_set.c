@@ -222,7 +222,9 @@ VCP_Feature_Set create_single_feature_set_by_charid(Byte id, bool force) {
 }
 
 static inline struct vcp_feature_set *
-unopaque_feature_set(VCP_Feature_Set feature_set) {
+unopaque_feature_set(
+      VCP_Feature_Set feature_set)
+{
    struct vcp_feature_set * fset = (struct vcp_feature_set *) feature_set;
    assert( fset && memcmp(fset->marker, VCP_FEATURE_SET_MARKER, 4) == 0);
    return fset;
@@ -245,7 +247,11 @@ void free_feature_set(VCP_Feature_Set feature_set) {
    free(fset);
 }
 
-VCP_Feature_Table_Entry * get_feature_set_entry(VCP_Feature_Set feature_set, int index) {
+VCP_Feature_Table_Entry *
+get_feature_set_entry(
+      VCP_Feature_Set feature_set,
+      unsigned         index)
+{
    struct vcp_feature_set * fset = (struct vcp_feature_set *) feature_set;
    assert( fset && memcmp(fset->marker, VCP_FEATURE_SET_MARKER, 4) == 0);
    VCP_Feature_Table_Entry * ventry = NULL;
