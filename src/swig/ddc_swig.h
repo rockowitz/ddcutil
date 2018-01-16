@@ -24,9 +24,11 @@
 #ifndef DDC_SWIG_H_
 #define DDC_SWIG_H_
 
+
 // hack attempting to avoid _float128 undefined error in coverity
-#include <bits/floatn.h>
-#define __HAVE_FLOAT128 0
+// does not solve problem and causes warnigs re __HAVE_FLOAT128 redefined
+// #include <bits/floatn.h>
+// #define __HAVE_FLOAT128 0
 
 #include <Python.h>
 
