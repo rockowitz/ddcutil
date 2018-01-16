@@ -38,7 +38,7 @@ endif
 
 if ENABLE_SHARED_LIB_COND
 libddcdocdir = $(datarootdir)/doc/libddcutil
-libddcdoc_DATA = AUTHORS
+# libddcdoc_DATA = AUTHORS
 endif
 
 
