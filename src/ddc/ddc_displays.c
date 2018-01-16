@@ -703,17 +703,17 @@ ddc_check_display_ref(Display_Ref * dref, Display_Criteria * criteria) {
       goto bye;
 
    if (criteria->i2c_busno >= 0) {
-      if (dref->io_path.io_mode != DDCA_IO_DEVI2C || dref->io_path.i2c_busno != criteria->i2c_busno)
+      if (dref->io_path.io_mode != DDCA_IO_DEVI2C || dref->io_path.path.i2c_busno != criteria->i2c_busno)
          goto bye;
    }
 
    if (criteria->iAdapterIndex >= 0) {
-      if (dref->io_path.io_mode != DDCA_IO_ADL || dref->io_path.adlno.iAdapterIndex != criteria->iAdapterIndex)
+      if (dref->io_path.io_mode != DDCA_IO_ADL || dref->io_path.path.adlno.iAdapterIndex != criteria->iAdapterIndex)
          goto bye;
    }
 
    if (criteria->iDisplayIndex >= 0) {
-      if (dref->io_path.io_mode != DDCA_IO_ADL || dref->io_path.adlno.iDisplayIndex != criteria->iDisplayIndex)
+      if (dref->io_path.io_mode != DDCA_IO_ADL || dref->io_path.path.adlno.iDisplayIndex != criteria->iDisplayIndex)
          goto bye;
    }
 
@@ -751,7 +751,7 @@ ddc_check_display_ref(Display_Ref * dref, Display_Criteria * criteria) {
    if (criteria->hiddev >= 0) {
       if (dref->io_path.io_mode != DDCA_IO_USB)
          goto bye;
-      if ( dref->io_path.hiddev_devno != criteria->hiddev )
+      if ( dref->io_path.path.hiddev_devno != criteria->hiddev )
          goto bye;
    }
 

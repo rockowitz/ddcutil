@@ -133,7 +133,7 @@ Public_Status_Code ddc_open_display(
 
    case DDCA_IO_DEVI2C:
       {
-         int fd = i2c_open_bus(dref->io_path.i2c_busno, callopts);
+         int fd = i2c_open_bus(dref->io_path.path.i2c_busno, callopts);
          if (fd < 0) {    // will be < 0 if open_i2c_bus failed and CALLOPT_ERR_ABORT not set
             psc = fd;
             goto bye;
@@ -153,8 +153,8 @@ Public_Status_Code ddc_open_display(
          // sleepMillisWithTrace(DDC_TIMEOUT_MILLIS_DEFAULT, __func__, NULL);
          dh = create_bus_display_handle_from_display_ref(fd, dref);    // n. sets dh->dref = dref
          // n. sets
-         // Bus_Info * bus_info = i2c_get_bus_info(dref->io_path.i2c_busno, DISPSEL_VALID_ONLY);   // or DISPSEL_NONE?
-         // Bus_Info * bus_info = i2c_get_bus_info_new(dref->io_path.i2c_busno);   // or DISPSEL_NONE?
+         // Bus_Info * bus_info = i2c_get_bus_info(dref->io_path.path.i2c_busno, DISPSEL_VALID_ONLY);   // or DISPSEL_NONE?
+         // Bus_Info * bus_info = i2c_get_bus_info_new(dref->io_path.path.i2c_busno);   // or DISPSEL_NONE?
          I2C_Bus_Info * bus_info = dref->detail2;
          assert(bus_info);   // need to convert to a test?
          assert( memcmp(bus_info, I2C_BUS_INFO_MARKER, 4) == 0);
@@ -164,7 +164,7 @@ Public_Status_Code ddc_open_display(
             // How is this even possible?
             // 1/2017:  Observed with x260 laptop and Ultradock, See ddcutil user report.
             //          close(fd) fails
-            DBGMSG("No EDID for device on bus /dev/i2c-%d", dref->io_path.i2c_busno);
+            DBGMSG("No EDID for device on bus /dev/i2c-%d", dref->io_path.path.i2c_busno);
             if (!(callopts & CALLOPT_FORCE)) {
                close(fd);
                psc = DDCRC_EDID;
@@ -236,7 +236,7 @@ void ddc_close_display(Display_Handle * dh) {
    switch(dh->dref->io_path.io_mode) {
    case DDCA_IO_DEVI2C:
       {
-         Status_Errno rc = i2c_close_bus(dh->fh, dh->dref->io_path.i2c_busno,  CALLOPT_NONE);    // return error if failure
+         Status_Errno rc = i2c_close_bus(dh->fh, dh->dref->io_path.path.i2c_busno,  CALLOPT_NONE);    // return error if failure
          if (rc != 0) {
             assert(rc < 0);
             DBGMSG("close_i2c_bus returned %d", rc);

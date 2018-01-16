@@ -1,16 +1,19 @@
 generated_source_files = \
 ddccffi.c ddccffi2.c ddccffi3.c
 
-CLEANFILES = ${generated_source_files}
+CLEANFILES = ${generated_source_files}  libddccffi2.la libddccffi3.la _ddccffi2.c _ddccffi3.c
 
 
 if ENABLE_CFFI
 
 # Python extension modules, installed in $(py2execdir) or $(py3execdir)
-pyexec_LTLIBRARIES  = _ddccffi2.la
-py3exec_LTLIBRARIES = _ddccffi3.la
+
 
 # nodist_py3exec_PYTHON = 
+
+
+if ENABLE_PY2
+pyexec_LTLIBRARIES  = _ddccffi2.la
 
 
 #
@@ -22,8 +25,8 @@ py3exec_LTLIBRARIES = _ddccffi3.la
 # and the only way to force this is use different c file names 
 # in build_cffi.py
 _ddccffi2.c: _ddccffi_cdef_c_api.h _ddccffi_cdef_types.h  show_vars
-	@echo "=====> (src/cython/Makefile) Executing target _ddccffi.c"
-	python build_cffi.py --nocompile
+	@echo "=====> (src/cython/Makefile) Executing target _ddccffi2.c"
+	python2 build_cffi.py --nocompile
 
 
 # Module source code, nodist because ddc_cffi.c is generated
@@ -43,7 +46,12 @@ _ddccffi2_la_LIBADD = \
   ../libcommon.la \
   ../libddcutil.la 
 
+endif
 
+
+
+if ENABLE_PY3
+py3exec_LTLIBRARIES = _ddccffi3.la
 
 #
 # Python 3 version
@@ -54,8 +62,8 @@ _ddccffi2_la_LIBADD = \
 # and the only way to force this is use different c file names 
 # in build_cffi.py
 _ddccffi3.c: _ddccffi_cdef_c_api.h _ddccffi_cdef_types.h  show_vars
-	@echo "=====> (src/cython/Makefile) Executing target _ddccffi.c"
-	python build_cffi.py --nocompile
+	@echo "=====> (src/cython/Makefile) Executing target _ddccffi3.c"
+	python3 build_cffi.py --nocompile
 
 # nodist because ddc_cffi.c is generated
 nodist__ddccffi3_la_SOURCES = _ddccffi3.c
@@ -80,6 +88,8 @@ _ddccffi3_la_LIBADD = \
   ../libcommon.la \
   ../libddcutil.la 
 
+
+endif
 
 endif
 

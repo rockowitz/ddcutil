@@ -93,7 +93,7 @@ typedef struct {
 #error "Unexpected byte order value: __BYTE_ORDER__"
 #endif
       }         nc;                /**< non-continuous (NC) value */
-   };
+   } val;
 } DDCA_Non_Table_Value_Response;
 
 

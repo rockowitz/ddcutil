@@ -260,7 +260,7 @@ typedef struct {
       int        i2c_busno;     ///< I2C bus number
       DDCA_Adlno adlno;         ///< ADL iAdapterIndex/iDisplayIndex pair
       int        hiddev_devno;  ///* USB hiddev device  number
-   };
+   } path;
 } DDCA_IO_Path;
 
 

@@ -997,23 +997,32 @@ ddca_get_display_info_list(void)
          DDCA_Display_Info * curinfo = &result_list->info[true_ctr++];
          memcpy(curinfo->marker, DDCA_DISPLAY_INFO_MARKER, 4);
          curinfo->dispno        = dref->dispno;
+
          // TODO: simplify
+         curinfo->path = dref->io_path;
+#ifdef OLD
          curinfo->path.io_mode = dref->io_path.io_mode;
          // n. usb_bus, usb_device initialized to 0 by calloc
          switch (dref->io_path.io_mode) {
          case DDCA_IO_DEVI2C:
-            curinfo->path.i2c_busno = dref->io_path.i2c_busno;
+            curinfo->path.path.i2c_busno = dref->io_path.path.i2c_busno;
             break;
          case DDCA_IO_ADL:
-            curinfo->path.adlno.iAdapterIndex = dref->io_path.adlno.iAdapterIndex;
-            curinfo->path.adlno.iDisplayIndex = dref->io_path.adlno.iDisplayIndex;
+            curinfo->path.path.adlno.iAdapterIndex = dref->io_path.path.adlno.iAdapterIndex;
+            curinfo->path.path.adlno.iDisplayIndex = dref->io_path.path.adlno.iDisplayIndex;
             break;
          case DDCA_IO_USB:
             curinfo->usb_bus    = dref->usb_bus;
             curinfo->usb_device = dref->usb_device;
-            curinfo->path.hiddev_devno = dref->io_path.hiddev_devno;
+            curinfo->path.path.hiddev_devno = dref->io_path.path.hiddev_devno;
             break;
          }
+#endif
+         if (dref->io_path.io_mode == DDCA_IO_USB) {
+            curinfo->usb_bus    = dref->usb_bus;
+            curinfo->usb_device = dref->usb_device;
+         }
+
          curinfo->edid_bytes    = dref->pedid->bytes;
          // or should these be memcpy'd instead of just pointers, can edid go away?
          curinfo->mfg_id        = dref->pedid->mfg_id;
@@ -1067,16 +1076,16 @@ ddca_report_display_info(
    rpt_vstring(d1, "IO mode:             %s", io_mode_name(dinfo->path.io_mode));
    switch(dinfo->path.io_mode) {
    case (DDCA_IO_DEVI2C):
-         rpt_vstring(d1, "I2C bus number:     %d", dinfo->path.i2c_busno);
+         rpt_vstring(d1, "I2C bus number:     %d", dinfo->path.path.i2c_busno);
          break;
    case (DDCA_IO_ADL):
          rpt_vstring(d1, "ADL adapter.display: %d.%d",
-                         dinfo->path.adlno.iAdapterIndex, dinfo->path.adlno.iDisplayIndex);
+                         dinfo->path.path.adlno.iAdapterIndex, dinfo->path.path.adlno.iDisplayIndex);
          break;
    case (DDCA_IO_USB):
          rpt_vstring(d1, "USB bus.device:      %d.%d",
                          dinfo->usb_bus, dinfo->usb_device);
-         rpt_vstring(d1, "USB hiddev number:   %d", dinfo->path.hiddev_devno);
+         rpt_vstring(d1, "USB hiddev number:   %d", dinfo->path.path.hiddev_devno);
          break;
    }
 
@@ -1400,10 +1409,10 @@ ddca_get_nontable_vcp_value_old(
           response->feature_code = code_info->vcp_code;
           // response->cur_value = code_info->cur_value;
           // response->max_value = code_info->max_value;
-          response->nc.mh        = code_info->mh;
-          response->nc.ml        = code_info->ml;
-          response->nc.sh        = code_info->sh;
-          response->nc.sl        = code_info->sl;
+          response->val.nc.mh        = code_info->mh;
+          response->val.nc.ml        = code_info->ml;
+          response->val.nc.sh        = code_info->sh;
+          response->val.nc.sl        = code_info->sl;
           free(code_info);
        }
        // else psc = global_to_public_status_code(gsc);
@@ -1422,10 +1431,10 @@ ddca_get_nontable_vcp_value(
 
    rc = ddca_get_nontable_vcp_value_old(ddca_dh, feature_code, &response);
    if (rc == 0) {
-      valrec->mh = response.nc.mh;
-      valrec->ml = response.nc.ml;
-      valrec->sh = response.nc.sh;
-      valrec->sl = response.nc.sl;
+      valrec->mh = response.val.nc.mh;
+      valrec->ml = response.val.nc.ml;
+      valrec->sh = response.val.nc.sh;
+      valrec->sl = response.val.nc.sl;
    }
    return rc;
 }
