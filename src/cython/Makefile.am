@@ -2,7 +2,7 @@ generated_source_files = \
 cyddc2.c \
 cyddc3.c
 
-CLEANFILES = ${generated_source_files}
+CLEANFILES = ${generated_source_files}  *.so cyddc2.html cyddc3.html
 
 
 if ENABLE_CYTHON

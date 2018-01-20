@@ -1,7 +1,7 @@
 generated_source_files = \
 ddccffi.c ddccffi2.c ddccffi3.c
 
-CLEANFILES = ${generated_source_files}  libddccffi2.la libddccffi3.la _ddccffi2.c _ddccffi3.c
+CLEANFILES = ${generated_source_files}  libddccffi2.la libddccffi3.la _ddccffi2.c _ddccffi3.c __pycache__/*
 
 
 if ENABLE_CFFI
