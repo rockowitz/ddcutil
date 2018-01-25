@@ -57,22 +57,20 @@ typedef enum {
 
 
 typedef enum {
-#ifdef FUTURE
    CMD_FLAG_DDCDATA           = 0x0001,
-#endif
    CMD_FLAG_FORCE             = 0x0002,
-#ifdef FUTURE
+// #ifdef FUTURE
    CMD_FLAG_FORCE_SLAVE_ADDR  = 0x0004,
    CMD_FLAG_TIMESTAMP_TRACE   = 0x0008,
-#endif
+// #endif
    CMD_FLAG_SHOW_UNSUPPORTED  = 0x0010,
-#ifdef FUTURE
+// #ifdef FUTURE
    CMD_FLAG_ENABLE_FAILSIM    = 0x0020,
    CMD_FLAG_VERIFY            = 0x0040,
    CMD_FLAG_NODETECT          = 0x0080,
    CMD_FLAG_ASYNC             = 0x0100,
    CMD_FLAG_REPORT_FREED_EXCP = 0x2000,
-#endif
+// #endif
    CMD_FLAG_NOTABLE           = 0x4000
 } Parsed_Cmd_Flags;
 
@@ -87,16 +85,16 @@ struct {
    char *              args[MAX_ARGS];
    Feature_Set_Ref*    fref;
    DDCA_Stats_Type     stats_types;
-   bool                ddcdata;
+   // bool                ddcdata;
    // bool                force;
-   bool                force_slave_addr;
-   bool                timestamp_trace;    // prepend trace and debug msgs with elapsed time
+  //  bool                force_slave_addr;
+  //  bool                timestamp_trace;    // prepend trace and debug msgs with elapsed time
    // bool                show_unsupported;
-   bool                enable_failure_simulation;
-   bool                verify_setvcp;
-   bool                nodetect;
-   bool                async;
-   bool                report_freed_exceptions;
+   // bool                enable_failure_simulation;
+   // bool                verify_setvcp;
+   // bool                nodetect;
+   // bool                async;
+   // bool                report_freed_exceptions;
    char *              failsim_control_fn;
    Display_Identifier* pdid;
    Trace_Group         trace;
