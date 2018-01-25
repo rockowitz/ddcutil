@@ -176,9 +176,11 @@ const Feature_Subset_Table_Entry subset_table[] = {
    {VCP_SUBSET_PROFILE,   CMDID_GETVCP|CMDID_VCPINFO, 3, "PROFILE",   "Features for color profile management"},
    {VCP_SUBSET_COLOR,     CMDID_GETVCP|CMDID_VCPINFO, 3, "COLOR",     "Color related features"},
    {VCP_SUBSET_LUT,       CMDID_GETVCP|CMDID_VCPINFO, 3, "LUT",       "LUT related features"},
+   {VCP_SUBSET_CRT,       CMDID_GETVCP|CMDID_VCPINFO, 3, "CRT",       "CRT related features"},
    {VCP_SUBSET_AUDIO,     CMDID_GETVCP|CMDID_VCPINFO, 3, "AUDIO",     "Audio related features"},
    {VCP_SUBSET_WINDOW,    CMDID_GETVCP|CMDID_VCPINFO, 3, "WINDOW",    "Window related features"},
    {VCP_SUBSET_TV,        CMDID_GETVCP|CMDID_VCPINFO, 2, "TV",        "TV related features"},
+   {VCP_SUBSET_DPVL,      CMDID_GETVCP|CMDID_VCPINFO, 2, "DPVL",      "DPVL related features"},
    {VCP_SUBSET_PRESET,                 CMDID_VCPINFO, 3, "PRESET",    "Presets"},     // all WO
    {VCP_SUBSET_MFG,       CMDID_GETVCP,               3, "MANUFACTURER", "Manufacturer specific codes"},
    {VCP_SUBSET_TABLE,     CMDID_GETVCP|CMDID_VCPINFO, 3, "TABLE",     "Table type features"},
