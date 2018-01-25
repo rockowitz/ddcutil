@@ -38,14 +38,14 @@
 // If this enum is changed, be sure to change the corresponding
 // table in feature_sets.c
 typedef enum {
-   VCP_SUBSET_PROFILE         = 0x8000,
-   VCP_SUBSET_COLOR           = 0x4000,
-   VCP_SUBSET_LUT             = 0x2000,
-   VCP_SUBSET_CRT             = 0x1000,
-   VCP_SUBSET_TV              = 0x0800,
-   VCP_SUBSET_AUDIO           = 0x0400,
-   VCP_SUBSET_WINDOW          = 0x0200,
-   VCP_SUBSET_DPVL            = 0x0100,
+   VCP_SUBSET_PROFILE         = 0x800000,
+   VCP_SUBSET_COLOR           = 0x400000,
+   VCP_SUBSET_LUT             = 0x200000,
+   VCP_SUBSET_CRT             = 0x100000,
+   VCP_SUBSET_TV              = 0x080000,
+   VCP_SUBSET_AUDIO           = 0x040000,
+   VCP_SUBSET_WINDOW          = 0x020000,
+   VCP_SUBSET_DPVL            = 0x010000,
 
    // subsets used only on commands processing,
    // not in feature descriptor table
