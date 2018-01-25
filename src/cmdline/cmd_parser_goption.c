@@ -161,7 +161,7 @@ gboolean stats_arg_func(const    gchar* option_name,
  *    NULL if execution should be terminated
  */
 Parsed_Cmd * parse_command(int argc, char * argv[]) {
-   bool debug = false;
+   bool debug = true;
    DBGMSF(debug, "Starting" );
    validate_cmdinfo();   // assertions
 
@@ -332,49 +332,26 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
          parsed_cmd->flags |= _bit; \
    } while(0)
 
-
-   // parsed_cmd->ddcdata          = ddc_flag;
-   if (ddc_flag)
-      parsed_cmd->flags |= CMD_FLAG_DDCDATA;
-   SET_CMDFLAG(CMD_FLAG_DDCDATA, ddc_flag);
-   // parsed_cmd->force            = force_flag;
-   // parsed_cmd->force_slave_addr = force_slave_flag;
-   if (force_slave_flag)
-      parsed_cmd->flags |= CMD_FLAG_FORCE_SLAVE_ADDR;
-   // parsed_cmd->show_unsupported = show_unsupported_flag;
    parsed_cmd->output_level     = output_level;
    parsed_cmd->stats_types      = stats_work;
    parsed_cmd->sleep_strategy   = sleep_strategy_work;
-   // parsed_cmd->timestamp_trace  = timestamp_trace_flag;
-   if (timestamp_trace_flag)
-      parsed_cmd->flags |= CMD_FLAG_TIMESTAMP_TRACE;
-   if (verify_flag || !noverify_flag)
-      parsed_cmd->flags |= CMD_FLAG_VERIFY;
-   // if (verify_flag)
-   //    parsed_cmd->verify_setvcp = true;
-   // else if (noverify_flag)
-   //    parsed_cmd->verify_setvcp = false;
-   // else
-   //    parsed_cmd->verify_setvcp = true;
-
-   SET_CMDFLAG(CMD_FLAG_NODETECT, nodetect_flag);
-   SET_CMDFLAG(CMD_FLAG_ASYNC,    async_flag);
+   SET_CMDFLAG(CMD_FLAG_DDCDATA,          ddc_flag);
+   SET_CMDFLAG(CMD_FLAG_FORCE_SLAVE_ADDR, force_slave_flag);
+   SET_CMDFLAG(CMD_FLAG_TIMESTAMP_TRACE,   timestamp_trace_flag);
+   SET_CMDFLAG(CMD_FLAG_VERIFY,            verify_flag || !noverify_flag);
+   // if (verify_flag || !noverify_flag)
+   //    parsed_cmd->flags |= CMD_FLAG_VERIFY;
+   SET_CMDFLAG(CMD_FLAG_NODETECT,          nodetect_flag);
+   SET_CMDFLAG(CMD_FLAG_ASYNC,             async_flag);
    SET_CMDFLAG(CMD_FLAG_REPORT_FREED_EXCP, report_freed_excp_flag);
-   // parsed_cmd->nodetect         = nodetect_flag;
-   // parsed_cmd->async            = async_flag;
-   // parsed_cmd->report_freed_exceptions = report_freed_excp_flag;
-
-   if (notable_flag)
-      parsed_cmd->flags |= CMD_FLAG_NOTABLE;
-   if (show_unsupported_flag)
-      parsed_cmd->flags |= CMD_FLAG_SHOW_UNSUPPORTED;
-   if (force_flag)
-      parsed_cmd->flags |= CMD_FLAG_FORCE;
-
+   SET_CMDFLAG(CMD_FLAG_NOTABLE,           notable_flag);
+   SET_CMDFLAG(CMD_FLAG_SHOW_UNSUPPORTED,  show_unsupported_flag);
+   SET_CMDFLAG(CMD_FLAG_FORCE,             force_flag);
 
    if (failsim_fn_work) {
 #ifdef ENABLE_FAILSIM
-      parsed_cmd->enable_failure_simulation = true;
+      // parsed_cmd->enable_failure_simulation = true;
+      parsed_cmd->flags |= CMD_FLAG_ENABLE_FAILSIM;
       parsed_cmd->failsim_control_fn = failsim_fn_work;
 #else
       fprintf(stderr, "ddcutil not built with failure simulation support.  --failsim option invalid.\n");

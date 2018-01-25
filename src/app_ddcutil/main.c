@@ -366,10 +366,8 @@ int main(int argc, char *argv[]) {
    if (!parsed_cmd) {
       exit(EXIT_FAILURE);
    }
-   // if (parsed_cmd->timestamp_trace)         // timestamps on debug and trace messages?
    if (parsed_cmd->flags & CMD_FLAG_TIMESTAMP_TRACE)         // timestamps on debug and trace messages?
       dbgtrc_show_time = true;              // extern in core.h
-   // report_freed_exceptions = parsed_cmd->report_freed_exceptions;   // extern in core.h
    report_freed_exceptions = parsed_cmd->flags & CMD_FLAG_REPORT_FREED_EXCP;   // extern in core.h
    set_trace_levels(parsed_cmd->trace);
    if (parsed_cmd->traced_functions) {
@@ -399,7 +397,6 @@ int main(int argc, char *argv[]) {
    // overrides setting in init_ddc_services():
    i2c_set_io_strategy(DEFAULT_I2C_IO_STRATEGY);
 
-   // set_verify_setvcp(parsed_cmd->verify_setvcp);
    set_verify_setvcp(parsed_cmd->flags & CMD_FLAG_VERIFY);
 
 #ifndef HAVE_ADL
@@ -412,13 +409,11 @@ int main(int argc, char *argv[]) {
    int main_rc = EXIT_FAILURE;
 
    Call_Options callopts = CALLOPT_NONE;
-   // i2c_force_slave_addr_flag = parsed_cmd->force_slave_addr;
    i2c_force_slave_addr_flag = parsed_cmd->flags & CMD_FLAG_FORCE_SLAVE_ADDR;
    if (parsed_cmd->flags & CMD_FLAG_FORCE)
       callopts |= CALLOPT_FORCE;
 
    set_output_level(parsed_cmd->output_level);
-   // report_ddc_errors = parsed_cmd->ddcdata;
    report_ddc_errors = parsed_cmd->flags & CMD_FLAG_DDCDATA;
    // TMI:
    // if (show_recoverable_errors)
@@ -463,7 +458,6 @@ int main(int argc, char *argv[]) {
       set_sleep_strategy(parsed_cmd->sleep_strategy);
 
    int threshold = DISPLAY_CHECK_ASYNC_NEVER;
-   // if (parsed_cmd->async)
    if (parsed_cmd->flags & CMD_FLAG_ASYNC)
       threshold = DISPLAY_CHECK_ASYNC_THRESHOLD;
    ddc_set_async_threshold(threshold);
@@ -676,9 +670,7 @@ int main(int argc, char *argv[]) {
       // n. useful even if not much speed up, since avoids cluttering stats
       // with all the failures during detect
       Display_Ref * dref = NULL;
-//      if (parsed_cmd->pdid->id_type == DISP_ID_BUSNO && parsed_cmd->nodetect) {
       if (parsed_cmd->pdid->id_type == DISP_ID_BUSNO && (parsed_cmd->flags & CMD_FLAG_NODETECT)) {
-  //  if (parsed_cmd->pdid->id_type == DISP_ID_BUSNO) {
          int busno = parsed_cmd->pdid->busno;
          // is this really a monitor?
          I2C_Bus_Info * businfo = detect_single_bus(busno);

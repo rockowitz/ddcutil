@@ -85,20 +85,14 @@ void dbgrpt_parsed_cmd(Parsed_Cmd * parsed_cmd, int depth) {
        dbgrpt_feature_set_ref(parsed_cmd->fref,                       d2);
 
    rpt_int_as_hex(
-            "stats",       NULL,  parsed_cmd->stats_types,            d1);
-// rpt_bool("ddcdata",     NULL,  parsed_cmd->ddcdata,                d1);
-   rpt_bool("ddcdata",     NULL,  parsed_cmd->flags & CMD_FLAG_DDCDATA, d1);
-   rpt_str( "output_level",NULL,  output_level_name(parsed_cmd->output_level), d1);
-  // rpt_bool("force",       NULL,  parsed_cmd->force,                  d1);
- //  rpt_bool("force_slave_addr", NULL, parsed_cmd->force_slave_addr,   d1);
-   rpt_bool("force_slave_addr", NULL, parsed_cmd->flags & CMD_FLAG_FORCE_SLAVE_ADDR,   d1);
- //   rpt_bool("show_unsupported", NULL, parsed_cmd->show_unsupported,   d1);
- //  rpt_bool("verify_setvcp",    NULL, parsed_cmd->verify_setvcp,       d1);
-   rpt_bool("verify_setvcp",    NULL, parsed_cmd->flags & CMD_FLAG_VERIFY,       d1);
-//   rpt_bool("timestamp_trace",  NULL, parsed_cmd->timestamp_trace,    d1);
-   rpt_bool("timestamp_trace",  NULL, parsed_cmd->flags & CMD_FLAG_TIMESTAMP_TRACE,    d1);
+            "stats",            NULL, parsed_cmd->stats_types,                       d1);
+   rpt_bool("ddcdata",          NULL, parsed_cmd->flags & CMD_FLAG_DDCDATA,          d1);
+   rpt_str( "output_level",     NULL, output_level_name(parsed_cmd->output_level),   d1);
+   rpt_bool("force_slave_addr", NULL, parsed_cmd->flags & CMD_FLAG_FORCE_SLAVE_ADDR, d1);
+   rpt_bool("verify_setvcp",    NULL, parsed_cmd->flags & CMD_FLAG_VERIFY,           d1);
+   rpt_bool("timestamp_trace",  NULL, parsed_cmd->flags & CMD_FLAG_TIMESTAMP_TRACE,  d1);
    rpt_int_as_hex(
-            "trace",       NULL,  parsed_cmd->trace,                  d1);
+            "trace",            NULL,  parsed_cmd->trace,                            d1);
    if (parsed_cmd->traced_functions) {
       char * joined = g_strjoinv(", ", parsed_cmd->traced_functions);
       rpt_str("traced_functions", NULL, joined, d1);
@@ -121,20 +115,16 @@ void dbgrpt_parsed_cmd(Parsed_Cmd * parsed_cmd, int depth) {
    }
    char buf[20];
    snprintf(buf,20, "%d,%d,%d", parsed_cmd->max_tries[0], parsed_cmd->max_tries[1], parsed_cmd->max_tries[2] );
-   rpt_str("max_retries",        NULL, buf, d1);
-   rpt_int("sleep_stragegy",     NULL, parsed_cmd->sleep_strategy,       d1);
-   // rpt_bool("enable_failure_simulation", NULL, parsed_cmd->enable_failure_simulation, d1);
-   rpt_bool("enable_failure_simulation", NULL, parsed_cmd->flags & CMD_FLAG_ENABLE_FAILSIM, d1);
-   rpt_str("failsim_control_fn", NULL, parsed_cmd->failsim_control_fn, d1);
-   // rpt_bool("nodetect",          NULL, parsed_cmd->nodetect, d1);
-   // rpt_bool("async",             NULL, parsed_cmd->async,    d1);
-   // rpt_bool("report_freed_exceptions",             NULL, parsed_cmd->report_freed_exceptions,    d1);
-   rpt_bool("nodetect",          NULL, parsed_cmd->flags & CMD_FLAG_NODETECT, d1);
-   rpt_bool("async",             NULL, parsed_cmd->flags & CMD_FLAG_ASYNC,    d1);
-   rpt_bool("report_freed_exceptions",             NULL, parsed_cmd->flags & CMD_FLAG_REPORT_FREED_EXCP,    d1);
-   rpt_bool("force",             NULL, parsed_cmd->flags & CMD_FLAG_FORCE, d1);
-   rpt_bool("notable",           NULL, parsed_cmd->flags & CMD_FLAG_NOTABLE, d1);
-   rpt_bool("show unsupported",  NULL, parsed_cmd->flags & CMD_FLAG_SHOW_UNSUPPORTED, d1);
+   rpt_str("max_retries",        NULL, buf,                                                   d1);
+   rpt_int("sleep_stragegy",     NULL, parsed_cmd->sleep_strategy,                            d1);
+   rpt_bool("enable_failure_simulation", NULL, parsed_cmd->flags & CMD_FLAG_ENABLE_FAILSIM,   d1);
+   rpt_str("failsim_control_fn", NULL, parsed_cmd->failsim_control_fn,                        d1);
+   rpt_bool("nodetect",          NULL, parsed_cmd->flags & CMD_FLAG_NODETECT,                 d1);
+   rpt_bool("async",             NULL, parsed_cmd->flags & CMD_FLAG_ASYNC,                    d1);
+   rpt_bool("report_freed_exceptions", NULL, parsed_cmd->flags & CMD_FLAG_REPORT_FREED_EXCP,  d1);
+   rpt_bool("force",             NULL, parsed_cmd->flags & CMD_FLAG_FORCE,                    d1);
+   rpt_bool("notable",           NULL, parsed_cmd->flags & CMD_FLAG_NOTABLE,                  d1);
+   rpt_bool("show unsupported",  NULL, parsed_cmd->flags & CMD_FLAG_SHOW_UNSUPPORTED,         d1);
 
 #ifdef FUTURE
    char * interpreted_flags = vnt_interpret_flags(parsed_cmd->flags, cmd_flag_table, false, ", ");
