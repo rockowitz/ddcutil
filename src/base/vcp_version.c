@@ -1,7 +1,7 @@
 /* vcp_version.c
  *
  * <copyright>
- * Copyright (C) 2014-2017 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2014-2018 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -62,7 +62,7 @@ const DDCA_MCCS_Version_Spec VCP_SPEC_UNQUERIED = {0xff, 0xff}; ///< indicates v
  *
  *  @return  true/false
  */
-static bool is_known_vcp_spec(DDCA_MCCS_Version_Spec vspec) {
+bool is_known_vcp_spec(DDCA_MCCS_Version_Spec vspec) {
    bool result = vcp_version_eq(vspec, VCP_SPEC_V10) ||
                  vcp_version_eq(vspec, VCP_SPEC_V20) ||
                  vcp_version_eq(vspec, VCP_SPEC_V21) ||
@@ -168,6 +168,7 @@ bool vcp_version_is_unqueried(DDCA_MCCS_Version_Spec vspec) {
  *  @retval "Unknown" for VCP_SPEC_UNKNOWN
  */
 char * format_vspec(DDCA_MCCS_Version_Spec vspec) {
+   // TODO: make thread safe
    static char private_buffer[20];
    if ( vcp_version_eq(vspec, VCP_SPEC_UNQUERIED) )
       g_strlcpy(private_buffer,  "Unqueried", sizeof(private_buffer));  // g_strlcpy() to quiet covrity
@@ -249,14 +250,12 @@ char * vcp_version_id_name(DDCA_MCCS_Version_Id version_id) {
 }
 
 
-
-
 /** Converts a string representation of an MCCS version, e.g. "2.2"
  *  to a version spec (integer pair).
  *
  *  @param s  string to convert
  *  @return integer pair of major and minor versions
- *  retval DDCA_UNK if invalid string
+ *  retval DDCA_UNKNOWN if invalid string
  */
 DDCA_MCCS_Version_Spec parse_vspec(char * s) {
    DDCA_MCCS_Version_Spec vspec;
