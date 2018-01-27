@@ -12,7 +12,8 @@ endif
 
 AM_CFLAGS = -Wall 
 AM_CFLAGS += -Werror
-AM_CFLAGS += -Wpedantic
+# Causes PROGRAM_LOGIC_ERROR() macro to fail:
+# AM_CFLAGS += -Wpedantic
 
 if ENABLE_CALLGRAPH_COND
 AM_CFLAGS += -fdump-rtl-expand
