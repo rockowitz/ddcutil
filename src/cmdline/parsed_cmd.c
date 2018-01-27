@@ -125,6 +125,8 @@ void dbgrpt_parsed_cmd(Parsed_Cmd * parsed_cmd, int depth) {
    rpt_bool("force",             NULL, parsed_cmd->flags & CMD_FLAG_FORCE,                    d1);
    rpt_bool("notable",           NULL, parsed_cmd->flags & CMD_FLAG_NOTABLE,                  d1);
    rpt_bool("show unsupported",  NULL, parsed_cmd->flags & CMD_FLAG_SHOW_UNSUPPORTED,         d1);
+   rpt_str ("MCCS version spec", NULL, format_vspec(parsed_cmd->mccs_vspec), d1);
+   rpt_str ("MCCS version id",   NULL, vcp_version_id_name(parsed_cmd->mccs_version_id), d1);
 
 #ifdef FUTURE
    char * interpreted_flags = vnt_interpret_flags(parsed_cmd->flags, cmd_flag_table, false, ", ");

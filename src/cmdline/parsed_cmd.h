@@ -90,6 +90,10 @@ struct {
    int                 max_tries[3];
    int                 sleep_strategy;
    uint16_t            flags;      // Parsed_Cmd_Flags
+
+   // which?
+   DDCA_MCCS_Version_Spec mccs_vspec;
+   DDCA_MCCS_Version_Id   mccs_version_id;
 } Parsed_Cmd;
 
 Parsed_Cmd *  new_parsed_cmd();
