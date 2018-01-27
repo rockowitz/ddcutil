@@ -196,6 +196,7 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
    char *   modelwork      = NULL;
    char *   snwork         = NULL;
    char *   edidwork       = NULL;
+   char *   mccswork       = NULL;   // MCCS version
 // char *   tracework      = NULL;
    char**   cmd_and_args   = NULL;
    gchar**  trace_classes  = NULL;
@@ -269,6 +270,7 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
 
       // other
       {"version", 'V',  0, G_OPTION_ARG_NONE,     &version_flag,     "Show version information", NULL},
+      {"mccs",    '\0', 0, G_OPTION_ARG_STRING,   &mccswork,         "MCCS version",            "version id" },
 
       {G_OPTION_REMAINING,
                  '\0', 0,  G_OPTION_ARG_STRING_ARRAY, &cmd_and_args, "ARGUMENTS description",   "command [arguments...]"},
@@ -374,7 +376,7 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
       int iDisplayIndex;
       bool adlok = parse_dot_separated_arg(adlwork, &iAdapterIndex, &iDisplayIndex);
       if (!adlok) {
-          printf("Invalid ADL argument: %s\n", adlwork );
+          fprintf(stderr, "Invalid ADL argument: %s\n", adlwork );
           ok = false;
           // DBGMSG("After ADL parse, ok=%d", ok);
       }
@@ -400,7 +402,7 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
       if (!arg_ok)
          arg_ok = parse_colon_separated_arg(usbwork, &busnum, &devicenum);
       if (!arg_ok) {
-          printf("Invalid USB argument: %s\n", usbwork );
+          fprintf(stderr, "Invalid USB argument: %s\n", usbwork );
           ok = false;
           // DBGMSG("After USB parse, ok=%d", ok);
       }
@@ -519,6 +521,25 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
        debug = saved_debug;
     }
 
+   if (mccswork) {
+      DBGMSF(debug, "mccswork = |%s|", mccswork);
+      bool arg_ok = false;
+      DDCA_MCCS_Version_Spec vspec = parse_vspec(mccswork);
+      if (!vcp_version_eq(vspec, VCP_SPEC_UNKNOWN)) {
+         arg_ok = is_known_vcp_spec(vspec);
+      }
+      if (!arg_ok) {
+          fprintf(stderr, "Invalid MCCS spec: %s\n", mccswork );
+          ok = false;
+      }
+      else {
+         // which?
+         parsed_cmd->mccs_vspec = vspec;
+         parsed_cmd->mccs_version_id = mccs_version_spec_to_id(vspec);
+      }
+   }
+
+
 #ifdef COMMA_DELIMITED_TRACE
    if (tracework) {
        bool saved_debug = debug;
@@ -544,7 +565,7 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
                 traceClasses |= tg;
              }
              else {
-                printf("Invalid trace group: %s\n", token);
+                fprintf(stderr, "Invalid trace group: %s\n", token);
                 ok = false;
              }
           }
@@ -579,7 +600,7 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
                traceClasses |= tg;
             }
             else {
-               printf("Invalid trace group: %s\n", token);
+               fprintf(stderr, "Invalid trace group: %s\n", token);
                ok = false;
             }
         }
@@ -706,7 +727,7 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
             if (ok)
                parsed_cmd->fref = fsref;
             else
-               printf("Invalid feature code or subset: %s\n", parsed_cmd->args[0]);
+               fprintf(stderr, "Invalid feature code or subset: %s\n", parsed_cmd->args[0]);
          }
 
          // validate options vs commands
@@ -726,7 +747,6 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
             break;
          }
 #endif
-
 
       }  // recognized command
    }

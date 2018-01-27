@@ -147,7 +147,7 @@ perform_get_capabilities_by_display_handle(Display_Handle * dh) {
       switch(psc) {
       case DDCRC_REPORTED_UNSUPPORTED:       // should not happen
       case DDCRC_DETERMINED_UNSUPPORTED:
-         printf("Unsupported request\n");
+         f0printf(FERR, "Unsupported request\n");
          break;
       case DDCRC_RETRIES:
          f0printf(FOUT, "Unable to get capabilities for monitor on %s.  Maximum DDC retries exceeded.\n",
@@ -470,11 +470,12 @@ int main(int argc, char *argv[]) {
    else if (parsed_cmd->cmd_id == CMDID_VCPINFO) {
       bool ok = true;
 
-      DDCA_MCCS_Version_Spec vcp_version_any = {0,0};
+      // DDCA_MCCS_Version_Spec vcp_version_any = {0,0};
+
       VCP_Feature_Set fset = create_feature_set_from_feature_set_ref(
-         // &feature_set_ref,
          parsed_cmd->fref,
-         vcp_version_any,
+         // vcp_version_any,
+         parsed_cmd->mccs_vspec,
          false);       // force
       if (!fset) {
          ok = false;
@@ -745,8 +746,6 @@ int main(int argc, char *argv[]) {
                   Public_Status_Code psc = app_show_feature_set_values_by_display_handle(
                         dh,
                         parsed_cmd->fref,
-                   //     parsed_cmd->show_unsupported,
-                   //     parsed_cmd->force,
                         flags
                         );
                   main_rc = (psc==0) ? EXIT_SUCCESS : EXIT_FAILURE;
@@ -769,9 +768,7 @@ int main(int argc, char *argv[]) {
                              parsed_cmd->args[argNdx],
                              parsed_cmd->args[argNdx+1],
                              parsed_cmd->flags & CMD_FLAG_FORCE);
-                     // rc =  ERRINFO_STATUS(ddc_excp);
                      if (ddc_excp) {
-                        // errinfo_free(ddc_excp);
                         ERRINFO_FREE_WITH_REPORT(ddc_excp, report_freed_exceptions);
                         main_rc = EXIT_FAILURE;   // ???
                         break;

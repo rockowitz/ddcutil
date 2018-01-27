@@ -180,10 +180,16 @@ const Feature_Subset_Table_Entry subset_table[] = {
    {VCP_SUBSET_AUDIO,     CMDID_GETVCP|CMDID_VCPINFO, 3, "AUDIO",     "Audio related features"},
    {VCP_SUBSET_WINDOW,    CMDID_GETVCP|CMDID_VCPINFO, 3, "WINDOW",    "Window related features"},
    {VCP_SUBSET_TV,        CMDID_GETVCP|CMDID_VCPINFO, 2, "TV",        "TV related features"},
-   {VCP_SUBSET_DPVL,      CMDID_GETVCP|CMDID_VCPINFO, 2, "DPVL",      "DPVL related features"},
+   {VCP_SUBSET_DPVL,      CMDID_GETVCP|CMDID_VCPINFO, 3, "DPVL",      "DPVL related features"},
    {VCP_SUBSET_PRESET,                 CMDID_VCPINFO, 3, "PRESET",    "Presets"},     // all WO
    {VCP_SUBSET_MFG,       CMDID_GETVCP,               3, "MANUFACTURER", "Manufacturer specific codes"},
    {VCP_SUBSET_TABLE,     CMDID_GETVCP|CMDID_VCPINFO, 3, "TABLE",     "Table type features"},
+   {VCP_SUBSET_SCONT,     CMDID_GETVCP|CMDID_VCPINFO, 3, "SCONT",     "Simple Continuous features"},
+   {VCP_SUBSET_CCONT,     CMDID_GETVCP|CMDID_VCPINFO, 3, "CCONT",     "Complex Continuous features"},
+   {VCP_SUBSET_CONT,      CMDID_GETVCP|CMDID_VCPINFO, 3, "CONT",      "All Continuous features"},
+   {VCP_SUBSET_SNC,       CMDID_GETVCP|CMDID_VCPINFO, 3, "SNC",       "Simple NC features"},
+   {VCP_SUBSET_CNC,       CMDID_GETVCP|CMDID_VCPINFO, 3, "CNC",       "Complex NC features"},
+   {VCP_SUBSET_NC,        CMDID_GETVCP|CMDID_VCPINFO, 2, "NC",        "All NC features"},
 };
 const int subset_table_ct = sizeof(subset_table)/sizeof(Feature_Subset_Table_Entry);
 
