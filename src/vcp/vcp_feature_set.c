@@ -119,8 +119,32 @@ create_feature_set(VCP_Feature_Subset subset_id, DDCA_MCCS_Version_Spec vcp_vers
             showit = vcp_entry->vcp_spec_groups & VCP_SPEC_PRESET;
             break;
          case VCP_SUBSET_TABLE:
-            vflags = get_version_specific_feature_flags(vcp_entry, vcp_version);
+            vflags = get_version_sensitive_feature_flags(vcp_entry, vcp_version);
             showit = vflags & DDCA_TABLE;
+            break;
+         case VCP_SUBSET_CCONT:
+            vflags = get_version_sensitive_feature_flags(vcp_entry, vcp_version);
+            showit = vflags & DDCA_COMPLEX_CONT;
+            break;
+         case VCP_SUBSET_SCONT:
+            vflags = get_version_sensitive_feature_flags(vcp_entry, vcp_version);
+            showit = vflags & DDCA_STD_CONT;
+            break;
+         case VCP_SUBSET_CONT:
+            vflags = get_version_sensitive_feature_flags(vcp_entry, vcp_version);
+            showit = vflags & DDCA_CONT;
+            break;
+         case VCP_SUBSET_SNC:
+            vflags = get_version_sensitive_feature_flags(vcp_entry, vcp_version);
+            showit = vflags & DDCA_SIMPLE_NC;
+            break;
+         case VCP_SUBSET_CNC:
+            vflags = get_version_sensitive_feature_flags(vcp_entry, vcp_version);
+            showit = vflags & DDCA_COMPLEX_NC;
+            break;
+         case VCP_SUBSET_NC:
+            vflags = get_version_sensitive_feature_flags(vcp_entry, vcp_version);
+            showit = vflags & DDCA_NC;
             break;
          case VCP_SUBSET_KNOWN:
          case VCP_SUBSET_ALL:

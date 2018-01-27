@@ -49,6 +49,15 @@ typedef enum {
 
    // subsets used only on commands processing,
    // not in feature descriptor table
+
+   VCP_SUBSET_SCONT           = 0x8000,    // simple Continuous feature
+   VCP_SUBSET_CCONT           = 0x4000,    // complex Continuous feature
+   VCP_SUBSET_CONT            = 0x2000,    // Continuous feature
+   VCP_SUBSET_SNC             = 0x1000,    // simple NC feature
+   VCP_SUBSET_CNC             = 0x0800,    // complex NC feature
+ //VCP_SUBSET_WO_NC           = 0x0400,    // write-only NC feature
+   VCP_SUBSET_NC              = 0x0200,    // Non-Continuous feature
+
    VCP_SUBSET_SCAN            = 0x0080,
    VCP_SUBSET_ALL             = 0x0040,
    VCP_SUBSET_SUPPORTED       = 0x0020,
