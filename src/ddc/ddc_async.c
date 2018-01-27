@@ -72,6 +72,7 @@ gpointer threaded_get_vcp_value(gpointer data) {
       else {
          // convert valrec = DDCA_Any_Vcp_Value
          anyval = single_vcp_value_to_any_vcp_value(valrec);
+         free_single_vcp_value(valrec);
          psc = 0;
          // free(valrec);   // ??? what of table bytes
       }

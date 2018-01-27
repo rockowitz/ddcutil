@@ -109,6 +109,9 @@ compare_udev_i2c_device_summary(const void * a, const void * b) {
  *  sorted by bus number.
  *
  * \return array of #Udev_Device_Summary
+ *
+ * @remark
+ * Use #free_udev_device_summaries() to free the returned data structure.
  */
 GPtrArray *
 get_i2c_devices_using_udev() {
@@ -204,10 +207,11 @@ is_smbus_device_summary(GPtrArray * summaries, char * sbusno) {
 }
 #endif
 
+
 /** Gets the numbers of all non-SMBus I2C devices
  *
  *  \param  include_ignorable_devices  if true, do not exclude SMBus devices
- *  \return sorted #Byte_Value_Array of I2C device numbers
+ *  \return sorted #Byte_Value_Array of I2C device numbers, caller is responsible for freeing
  */
 Byte_Value_Array
 get_i2c_device_numbers_using_udev(bool include_ignorable_devices) {
@@ -228,7 +232,8 @@ get_i2c_device_numbers_using_udev(bool include_ignorable_devices) {
          assert(busno <= 127);
          bva_append(bva, busno);
       }
-      g_ptr_array_free(summaries, true);
+      free_udev_device_summaries(summaries);
+      // g_ptr_array_free(summaries, true);
    }
 
    if (debug)

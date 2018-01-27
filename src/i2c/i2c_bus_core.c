@@ -923,7 +923,6 @@ int i2c_detect_buses() {
    bool debug = false;
    DBGMSF(debug, "Starting.  i2c_buses = %p", i2c_buses);
    if (!i2c_buses) {
-
       Byte_Value_Array i2c_bus_bva = get_i2c_device_numbers_using_udev(false);
       // TODO: set free function
       i2c_buses = g_ptr_array_sized_new(bva_length(i2c_bus_bva));
@@ -937,6 +936,7 @@ int i2c_detect_buses() {
             i2c_dbgrpt_bus_info(businfo, 0);
          g_ptr_array_add(i2c_buses, businfo);
       }
+      bva_free(i2c_bus_bva);
    }
    int result = i2c_buses->len;
    DBGMSF(debug, "Returning: %d", result);

@@ -276,6 +276,8 @@ bool initial_checks_by_dh(Display_Handle * dh) {
       DBGMSF(debug, "get_vcp_value() for feature 0x00 returned: %s", psc_desc(psc));
       if (psc == DDCRC_RETRIES && debug)
          DBGMSG("    Try errors: %s", errinfo_causes_string(ddc_excp));
+      if (ddc_excp)
+         errinfo_free(ddc_excp);
 
       if (psc == DDCRC_NULL_RESPONSE ||
           psc == DDCRC_ALL_RESPONSES_NULL ||
@@ -777,7 +779,9 @@ bye:
 }
 
 
-
+/**
+ *  \param all_displays #GPtrArray of pointers to #Display_Ref
+ */
 void async_scan(GPtrArray * all_displays) {
    bool debug = false;
    DBGMSF(debug, "Starting. all_displays=%p, display_count=%d", all_displays, all_displays->len);
@@ -797,9 +801,10 @@ void async_scan(GPtrArray * all_displays) {
    DBGMSF(debug, "Started %d threads", threads->len);
    for (int ndx = 0; ndx < threads->len; ndx++) {
       GThread * thread = g_ptr_array_index(threads, ndx);
-      g_thread_join(thread);
+      g_thread_join(thread);  // implicitly unrefs the GThread
    }
    DBGMSF0(debug, "Threads joined");
+   g_ptr_array_free(threads, false);
 
 #ifdef OLD
    for (int ndx = 0; ndx < all_displays->len; ndx++) {

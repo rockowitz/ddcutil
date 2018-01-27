@@ -1583,12 +1583,25 @@ ddca_get_any_vcp_value(
          free(valrec2);
 #endif
          DDCA_Any_Vcp_Value * valrec = single_vcp_value_to_any_vcp_value(valrec2);
+         free(valrec2);   // n. does not free table bytes, which are now pointed to by valrec
          *pvalrec = valrec;
       }
    }
    DBGMSF(debug, "Done. Returning %s, *pvalrec=%p", psc_desc(rc), *pvalrec);
    return rc;
 }
+
+
+void
+ddca_free_any_vcp_value(
+      DDCA_Any_Vcp_Value * valrec)
+{
+   if (valrec->value_type == DDCA_TABLE_VCP_VALUE) {
+      free(valrec->val.t.bytes);
+   }
+   free(valrec);
+}
+
 
 
 DDCA_Status

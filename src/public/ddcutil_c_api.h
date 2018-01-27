@@ -782,6 +782,12 @@ ddca_get_table_vcp_value(
 
 // ddca_get_vcp_value() is deprecated, use ddca_get_any_vcp_value()
 
+
+void
+ddca_free_any_vcp_value(
+      DDCA_Any_Vcp_Value * valrec);
+
+
 /** Gets the value of a VCP feature.
  *
  * @param ddca_dh       display handle
@@ -801,7 +807,7 @@ ddca_get_any_vcp_value(
 
 
 /** Returns a string containing a formatted representation of the VCP value
- *  of a feature.  It is the responsiblity of the caller to free this value.
+ *  of a feature.  It is the responsibility of the caller to free this value.
  *  @param[in] ddca_dh            Display handle
  *  @param[in] feature_code       VCP feature code
  *  @param[out] p_formatted_value Address at which to return the formatted value
