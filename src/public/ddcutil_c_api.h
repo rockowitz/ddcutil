@@ -783,6 +783,10 @@ ddca_get_table_vcp_value(
 // ddca_get_vcp_value() is deprecated, use ddca_get_any_vcp_value()
 
 
+/** Frees a #DDCA_Any_Vcp_Value instance
+ *
+ *  @param valrec  pointer to #DDCA_Any_Vcp_Value instance
+ */
 void
 ddca_free_any_vcp_value(
       DDCA_Any_Vcp_Value * valrec);
