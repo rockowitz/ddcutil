@@ -3,7 +3,7 @@
  * Parse the command line using the glib goption functions.
  *
  * <copyright>
- * Copyright (C) 2014-2016 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2014-2018 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -270,7 +270,7 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
 
       // other
       {"version", 'V',  0, G_OPTION_ARG_NONE,     &version_flag,     "Show version information", NULL},
-      {"mccs",    '\0', 0, G_OPTION_ARG_STRING,   &mccswork,         "MCCS version",            "version id" },
+      {"mccs",    '\0', 0, G_OPTION_ARG_STRING,   &mccswork,         "MCCS version",            "major.minor" },
 
       {G_OPTION_REMAINING,
                  '\0', 0,  G_OPTION_ARG_STRING_ARRAY, &cmd_and_args, "ARGUMENTS description",   "command [arguments...]"},
@@ -291,8 +291,14 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
    // const char * pieces2[] = {command_argument_help, "  Recognized trace classes: ", trace_group_string, "\n\n"};
    // command_argument_help = strjoin(pieces, 4, NULL);
 
-   const char * pieces3[] = {commands_list_help, command_argument_help};
+   // const char * pieces3[] = {commands_list_help, command_argument_help};
+   // char * help_summary = strjoin(pieces3, 2, NULL);
+
+   char * cmd_args_help = assemble_command_argument_help();
+   // const char * pieces3[] = {commands_list_help, command_argument_help, cmd_args_help}; // TEMP commands_list_help
+   const char * pieces3[] = {commands_list_help, cmd_args_help};
    char * help_summary = strjoin(pieces3, 2, NULL);
+   free(cmd_args_help);
 
    const char * pieces4[] = {monitor_selection_option_help,
                              tracing_multiple_call_option_help,

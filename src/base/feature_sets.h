@@ -38,18 +38,20 @@
 // If this enum is changed, be sure to change the corresponding
 // table in feature_sets.c
 typedef enum {
+   // ddcutil defined groups
    VCP_SUBSET_PROFILE         = 0x800000,
    VCP_SUBSET_COLOR           = 0x400000,
    VCP_SUBSET_LUT             = 0x200000,
+
+   // MCCS spec groups
    VCP_SUBSET_CRT             = 0x100000,
    VCP_SUBSET_TV              = 0x080000,
    VCP_SUBSET_AUDIO           = 0x040000,
    VCP_SUBSET_WINDOW          = 0x020000,
    VCP_SUBSET_DPVL            = 0x010000,
+   VCP_SUBSET_PRESET          = 0x0008,    // uses VCP_SPEC_PRESET
 
-   // subsets used only on commands processing,
-   // not in feature descriptor table
-
+   // Subsets by feature type
    VCP_SUBSET_SCONT           = 0x8000,    // simple Continuous feature
    VCP_SUBSET_CCONT           = 0x4000,    // complex Continuous feature
    VCP_SUBSET_CONT            = 0x2000,    // Continuous feature
@@ -57,17 +59,24 @@ typedef enum {
    VCP_SUBSET_CNC             = 0x0800,    // complex NC feature
  //VCP_SUBSET_WO_NC           = 0x0400,    // write-only NC feature
    VCP_SUBSET_NC              = 0x0200,    // Non-Continuous feature
+   VCP_SUBSET_TABLE           = 0x0002,    // is a table feature
 
+   // subsets used only on commands processing,
+   // not in feature descriptor table
+
+   // special
    VCP_SUBSET_SCAN            = 0x0080,
    VCP_SUBSET_ALL             = 0x0040,
-   VCP_SUBSET_SUPPORTED       = 0x0020,
+// VCP_SUBSET_SUPPORTED       = 0x0020,
    VCP_SUBSET_KNOWN           = 0x0010,
-   VCP_SUBSET_PRESET          = 0x0008,    // uses VCP_SPEC_PRESET
+
    VCP_SUBSET_MFG             = 0x0004,    // mfg specific codes
-   VCP_SUBSET_TABLE           = 0x0002,    // is a table feature
+
    VCP_SUBSET_SINGLE_FEATURE  = 0x0001,
    VCP_SUBSET_NONE            = 0x0000,
 } VCP_Feature_Subset;
+
+extern const int vcp_subset_count;  // number of VCP_Feature_Subset values
 
 char * feature_subset_name(VCP_Feature_Subset subset_id);
 char * feature_subset_names(VCP_Feature_Subset subset_ids);

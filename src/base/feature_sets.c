@@ -45,20 +45,20 @@
 //
 
 Value_Name_Table vcp_subset_table = {
+      // ddcutil defined groups
       VNT(VCP_SUBSET_PROFILE,         "PROFILE"),
       VNT(VCP_SUBSET_COLOR,           "COLOR"),
       VNT(VCP_SUBSET_LUT,             "LUT"),
+
+      // MCCS defined groups
       VNT(VCP_SUBSET_CRT,             "CRT"),
       VNT(VCP_SUBSET_TV,              "TV"),
       VNT(VCP_SUBSET_AUDIO,           "AUDIO"),
       VNT(VCP_SUBSET_WINDOW,          "WINDOW"),
       VNT(VCP_SUBSET_DPVL,            "DPVL"),
-      VNT(VCP_SUBSET_SCAN,            "SCAN"),
-      VNT(VCP_SUBSET_ALL,             NULL),
-      VNT(VCP_SUBSET_SUPPORTED,       "SUPPORTED"),
-      VNT(VCP_SUBSET_KNOWN,           "KNOWN"),
       VNT(VCP_SUBSET_PRESET,          "PRESET"),
-      VNT(VCP_SUBSET_MFG,             "MFG"),
+
+      // by feature type
       VNT(VCP_SUBSET_TABLE,           "TABLE"),
       VNT(VCP_SUBSET_SCONT,           "SCONT"),
       VNT(VCP_SUBSET_CCONT,           "CCONT"),
@@ -66,6 +66,15 @@ Value_Name_Table vcp_subset_table = {
       VNT(VCP_SUBSET_SNC,             "SNC"),
       VNT(VCP_SUBSET_CNC,             "CNC"),
       VNT(VCP_SUBSET_NC,               "NC"),
+
+      // special handling
+      VNT(VCP_SUBSET_SCAN,            "SCAN"),
+      VNT(VCP_SUBSET_ALL,             NULL),
+//    VNT(VCP_SUBSET_SUPPORTED,       "SUPPORTED"),
+      VNT(VCP_SUBSET_KNOWN,           "KNOWN"),
+
+      VNT(VCP_SUBSET_MFG,             "MFG"),
+
       VNT(VCP_SUBSET_SINGLE_FEATURE,   NULL),
       VNT(VCP_SUBSET_NONE,             NULL),
       VNT_END

@@ -4,7 +4,7 @@
  * package used.
  *
  * <copyright>
- * Copyright (C) 2014-2016 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2014-2018 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -58,6 +58,8 @@ bool parse_int_arg(char * val, int * pIval);
 bool parse_feature_id_or_subset(char * val, int cmd_id, Feature_Set_Ref * fsref);
 
 bool validate_output_level(Parsed_Cmd* parsed_cmd);
+
+char * assemble_command_argument_help();
 
 extern char * commands_list_help;
 extern char * command_argument_help;

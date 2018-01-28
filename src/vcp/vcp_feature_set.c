@@ -148,7 +148,7 @@ create_feature_set(VCP_Feature_Subset subset_id, DDCA_MCCS_Version_Spec vcp_vers
             break;
          case VCP_SUBSET_KNOWN:
          case VCP_SUBSET_ALL:
-         case VCP_SUBSET_SUPPORTED:
+//       case VCP_SUBSET_SUPPORTED:
             showit = true;
             break;
          case VCP_SUBSET_COLOR:

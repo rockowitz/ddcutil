@@ -169,20 +169,27 @@ typedef struct feature_subset_table_entry_s {
 } Feature_Subset_Table_Entry;
 
 const Feature_Subset_Table_Entry subset_table[] = {
-   {VCP_SUBSET_ALL,       CMDID_GETVCP|CMDID_VCPINFO, 3, "ALL",       "All known features"},
-   {VCP_SUBSET_SUPPORTED, CMDID_GETVCP,               3, "SUPPORTED", "All known features that are valid for the display"},
+   // special handling
+   {VCP_SUBSET_KNOWN,     CMDID_GETVCP|CMDID_VCPINFO, 3, "KNOWN",     "All features known to ddcutil that are valid for the display"},
+   {VCP_SUBSET_ALL,       CMDID_GETVCP|CMDID_VCPINFO, 3, "ALL",       "Same as KNOWN"},
+// {VCP_SUBSET_SUPPORTED, CMDID_GETVCP,               3, "SUPPORTED", "All known features that are valid for the display"},
    {VCP_SUBSET_SCAN,      CMDID_GETVCP,               3, "SCAN",      "All feature codes 00..FF, except those known to be WO"},
-   {VCP_SUBSET_KNOWN,     CMDID_GETVCP|CMDID_VCPINFO, 3, "KNOWN",     "All features known by ddcutil"},
+   {VCP_SUBSET_MFG,       CMDID_GETVCP,               3, "MANUFACTURER", "Manufacturer specific codes"},
+
+   // ddcutil defined groups
    {VCP_SUBSET_PROFILE,   CMDID_GETVCP|CMDID_VCPINFO, 3, "PROFILE",   "Features for color profile management"},
    {VCP_SUBSET_COLOR,     CMDID_GETVCP|CMDID_VCPINFO, 3, "COLOR",     "Color related features"},
    {VCP_SUBSET_LUT,       CMDID_GETVCP|CMDID_VCPINFO, 3, "LUT",       "LUT related features"},
+
+   // by MCCS spec group
    {VCP_SUBSET_CRT,       CMDID_GETVCP|CMDID_VCPINFO, 3, "CRT",       "CRT related features"},
    {VCP_SUBSET_AUDIO,     CMDID_GETVCP|CMDID_VCPINFO, 3, "AUDIO",     "Audio related features"},
    {VCP_SUBSET_WINDOW,    CMDID_GETVCP|CMDID_VCPINFO, 3, "WINDOW",    "Window related features"},
    {VCP_SUBSET_TV,        CMDID_GETVCP|CMDID_VCPINFO, 2, "TV",        "TV related features"},
    {VCP_SUBSET_DPVL,      CMDID_GETVCP|CMDID_VCPINFO, 3, "DPVL",      "DPVL related features"},
    {VCP_SUBSET_PRESET,                 CMDID_VCPINFO, 3, "PRESET",    "Presets"},     // all WO
-   {VCP_SUBSET_MFG,       CMDID_GETVCP,               3, "MANUFACTURER", "Manufacturer specific codes"},
+
+   // by feature type
    {VCP_SUBSET_TABLE,     CMDID_GETVCP|CMDID_VCPINFO, 3, "TABLE",     "Table type features"},
    {VCP_SUBSET_SCONT,     CMDID_GETVCP|CMDID_VCPINFO, 3, "SCONT",     "Simple Continuous features"},
    {VCP_SUBSET_CCONT,     CMDID_GETVCP|CMDID_VCPINFO, 3, "CCONT",     "Complex Continuous features"},
@@ -193,6 +200,39 @@ const Feature_Subset_Table_Entry subset_table[] = {
 };
 const int subset_table_ct = sizeof(subset_table)/sizeof(Feature_Subset_Table_Entry);
 
+
+char * assemble_command_argument_help() {
+   // quick and dirty check that tables are in sync
+   // +2 for VCP_SUBSET_SINGLE_FEATURE, VCP_SUBSET_NONE
+   assert(subset_table_ct+2 == vcp_subset_count);
+
+   GString * buf = g_string_sized_new(1000);
+   g_string_append(buf,
+         "Command Arguments\n"
+         "  getvcp, vcpinfo:\n"
+         "    <feature-code-or-group> can be any of the following:\n"
+         "      - the hex feature code for a specific feature, with or without a leading 0x,\n"
+         "        e.g. 10 or 0x10\n");
+
+   for (int ndx = 0; ndx < subset_table_ct; ndx++) {
+      g_string_append_printf(buf, "      - %-10s - %s\n",  subset_table[ndx].subset_name, subset_table[ndx].subset_desc);
+   }
+
+   g_string_append(buf,
+   "    Keywords can be abbreviated to the first 3 characters.\n"
+   "    Case is ignored.  e.g. \"COL\", \"pro\"\n"
+   "\n"
+   "  setvcp:\n"
+   "    <feature-code>: hexadecimal feature code, with or without a leading 0x,\n"
+   "       e.g. 10 or 0x10\n"
+   "    <new-value>: a decimal number in the range 0..255, or a single byte hex value,\n"
+   "       e.g. 0x80\n");
+
+   char * result = buf->str;
+   g_string_free(buf, false);
+   // DBGMSG("Returning: |%s|", result);
+   return result;
+}
 
 
 VCP_Feature_Subset find_subset(char * name, int cmd_id) {
