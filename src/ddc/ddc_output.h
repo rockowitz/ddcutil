@@ -1,7 +1,7 @@
 /* ddc_output.h
  *
  * <copyright>
- * Copyright (C) 2014-2016 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2014-2018 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -82,7 +82,6 @@ show_vcp_values(
       Display_Handle *    dh,
       VCP_Feature_Subset  subset,
       GPtrArray *         collector,
- //     bool                force_show_unsupported,  // deprecated
       Feature_Set_Flags   flags,
       Byte_Bit_Flags      features_seen);
 
