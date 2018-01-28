@@ -109,7 +109,7 @@ GPtrArray * summarize_udev_subsystem_devices(char * subsystem) {
    /* Create the udev object */
    udev = udev_new();
    if (!udev) {
-      printf("(%s) Can't create udev\n", __func__);
+      fprintf(stderr, "(%s) Can't create udev\n", __func__);
       goto bye;
    }
 
@@ -133,6 +133,7 @@ GPtrArray * summarize_udev_subsystem_devices(char * subsystem) {
 
       g_ptr_array_add(summaries, get_udev_device_summary(dev));
    }
+   udev_enumerate_unref(enumerate);
 
 bye:
    return summaries;
