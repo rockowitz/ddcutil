@@ -473,7 +473,6 @@ get_formatted_value_for_feature_table_entry(
                                   pvalrec->val.nc.sl
                                   );
             }
-
             *pformatted_value = strdup(buf);
          }
       }
@@ -520,7 +519,6 @@ get_formatted_value_for_feature_table_entry(
    if (pvalrec)
       free_single_vcp_value(pvalrec);
 
-   // TRCMSGTG(tg, "Done.  Returning: %s, *pformatted_value=|%s|", gsc_desc(gsc), *pformatted_value);
    DBGTRC(debug, TRACE_GROUP,
           "Done.  Returning: %s, *pformatted_value=|%s|",
           psc_desc(psc), *pformatted_value);
@@ -533,7 +531,6 @@ show_feature_set_values(
       Display_Handle *      dh,
       VCP_Feature_Set       feature_set,
       GPtrArray *           collector,     // if null, write to FOUT
- //      bool                  force_show_unsupported,  // deprecated
       Feature_Set_Flags     flags,
       Byte_Value_Array      features_seen)     // if non-null, collect list of features seen
 {
@@ -647,7 +644,7 @@ bool hack42(VCP_Feature_Table_Entry * ventry) {
  *    dh         display handle for open display
  *    subset     feature subset id
  *    collector  accumulates output    // if null, write to FOUT
- *    force_show_unsupported
+ *    flags      feature set flags
  *    features_seen   if non-null, collect ids of features that exist
  *
  * Returns:
@@ -658,7 +655,6 @@ show_vcp_values(
         Display_Handle *    dh,
         VCP_Feature_Subset  subset,
         GPtrArray *         collector,    // not used
-  //       bool                force_show_unsupported, // deprecated
         Feature_Set_Flags   flags,
         Byte_Bit_Flags      features_seen)
 {
