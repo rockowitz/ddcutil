@@ -998,6 +998,10 @@ ddc_detect_all_displays() {
      dref->flags |= DREF_DDC_IS_MONITOR;
      g_ptr_array_add(display_list, dref);
   }
+  // Unlike businfo and usb_monitors, which point to persistent data structures,
+  // all_adl_details points to a transitory data structure created by
+  // adlshim_get_valid_display_details() and must be freed
+  g_ptr_array_free(all_adl_details, true);
 
 #ifdef USE_USB
    GPtrArray * usb_monitors = get_usb_monitor_list();

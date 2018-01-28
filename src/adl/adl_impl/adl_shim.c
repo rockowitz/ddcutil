@@ -181,8 +181,17 @@ int adlshim_get_valid_display_ct() {
    return adl_get_active_display_ct();
 }
 
+void adlshim_free_display_detail(void * ptr) {
+   ADL_Display_Detail * detail = (ADL_Display_Detail *) ptr;
+   assert(memcmp(detail->marker, ADL_DISPLAY_DETAIL_MARKER, 4) == 0);
+   free(detail->xrandr_name);
+   detail->marker[3] = 'x';
+   free(detail);
+}
+
 GPtrArray * adlshim_get_valid_display_details() {
    GPtrArray * pa = g_ptr_array_new();
+   g_ptr_array_set_free_func(pa, adlshim_free_display_detail);
    int ct = adl_get_active_display_ct();
    for (int ndx = 0; ndx < ct; ndx++) {
 
