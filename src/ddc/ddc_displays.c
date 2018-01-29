@@ -1024,12 +1024,13 @@ ddc_detect_all_displays() {
 #endif
 
    // verbose output is distracting within scans
-   // saved and reset here to that async threads are not adjusting output level
+   // saved and reset here so that async threads are not adjusting output level
    DDCA_Output_Level olev = get_output_level();
    if (olev == DDCA_OL_VERBOSE)
       set_output_level(DDCA_OL_NORMAL);
 
-   if (display_list->len >= async_threshold && all_adl_details->len == 0)
+   // ADL displays do not support async scan.  Not worth implementing.
+   if (display_list->len >= async_threshold && adlct == 0)
    // if (true)
       async_scan(display_list);
    else
