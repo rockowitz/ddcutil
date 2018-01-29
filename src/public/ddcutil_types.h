@@ -358,7 +358,7 @@ typedef uint16_t DDCA_Version_Feature_Flags;
 #define DDCA_WRITABLE     (DDCA_WO | DDCA_RW)  /**< Feature is either RW or WO */
 
 // Further refine the C/NC/TABLE categorization of the MCCS spec
-// Exactly 1 of the following 7 bits is set
+// Exactly 1 of the following 8 bits is set
 #define DDCA_STD_CONT     0x0080       /**< Normal continuous feature */
 #define DDCA_COMPLEX_CONT 0x0040       /**< Continuous feature with special interpretation */
 #define DDCA_SIMPLE_NC    0x0020       /**< Non-continuous feature, having a defined list of values in byte SL */

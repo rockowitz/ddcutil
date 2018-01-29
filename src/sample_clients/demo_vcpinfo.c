@@ -91,6 +91,7 @@ char * interpret_feature_flags(DDCA_Version_Feature_Flags flags) {
        flags & DDCA_COMPLEX_CONT   ? "Continuous (complex), "        : "",
        flags & DDCA_SIMPLE_NC      ? "Non-Continuous (simple), "     : "",
        flags & DDCA_COMPLEX_NC     ? "Non-Continuous (complex), "    : "",
+       flags & DDCA_NC_CONT        ? "Non-Continuous with continuous subrange, " :"",
        flags & DDCA_WO_NC          ? "Non-Continuous (write-only), " : "",
        flags & DDCA_NORMAL_TABLE   ? "Table (readable), "            : "",
        flags & DDCA_WO_TABLE       ? "Table (write-only), "          : "",

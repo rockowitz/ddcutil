@@ -453,7 +453,7 @@ get_formatted_value_for_feature_table_entry(
             DDCA_Version_Feature_Flags vflags =
                get_version_sensitive_feature_flags(vcp_entry, vspec);
             char buf[200];
-            assert(vflags & (DDCA_CONT | DDCA_SIMPLE_NC | DDCA_COMPLEX_NC));
+            assert(vflags & (DDCA_CONT | DDCA_SIMPLE_NC | DDCA_COMPLEX_NC | DDCA_NC_CONT));
             if (vflags & DDCA_CONT) {
                snprintf(buf, 200, "VCP %02X C %d %d",
                                   vcp_entry->code,
@@ -464,7 +464,7 @@ get_formatted_value_for_feature_table_entry(
                                    vcp_entry->code, pvalrec->val.nc.sl);
             }
             else {
-               assert(vflags & DDCA_COMPLEX_NC);
+               assert(vflags & (DDCA_COMPLEX_NC|DDCA_NC_CONT));
                snprintf(buf, 200, "VCP %02X CNC x%02x x%02x x%02x x%02x",
                                   vcp_entry->code,
                                   pvalrec->val.nc.mh,

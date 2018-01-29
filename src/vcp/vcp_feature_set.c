@@ -140,7 +140,7 @@ create_feature_set(VCP_Feature_Subset subset_id, DDCA_MCCS_Version_Spec vcp_vers
             break;
          case VCP_SUBSET_CNC:
             vflags = get_version_sensitive_feature_flags(vcp_entry, vcp_version);
-            showit = vflags & DDCA_COMPLEX_NC;
+            showit = vflags & (DDCA_COMPLEX_NC|DDCA_NC_CONT);   // until VCP_SUBSET_.. defined for DDCA_NC_CONT
             break;
          case VCP_SUBSET_NC:
             vflags = get_version_sensitive_feature_flags(vcp_entry, vcp_version);

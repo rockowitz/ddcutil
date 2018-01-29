@@ -382,6 +382,8 @@ char * interpret_ddca_version_feature_flags_type(
       result = "Non-Continuous (simple)";
    else if (feature_flags & DDCA_COMPLEX_NC)
       result = "Non-Continuous (complex)";
+   else if (feature_flags & DDCA_NC_CONT)
+      result = "Non-Continuous with continuous subrange";
    else if (feature_flags & DDCA_WO_NC)
       result = "Non-Continuous (write-only)";
    else if (feature_flags & DDCA_NORMAL_TABLE)
@@ -1124,7 +1126,7 @@ get_nontable_feature_detail_function(
    else if (version_specific_flags & DDCA_WO_NC)
       func = NULL;      // but should never be called for this case
    else {
-      assert(version_specific_flags & (DDCA_COMPLEX_CONT | DDCA_COMPLEX_NC));
+      assert(version_specific_flags & (DDCA_COMPLEX_CONT | DDCA_COMPLEX_NC | DDCA_NC_CONT));
       func = vfte->nontable_formatter;
       assert(func);
    }
@@ -1926,17 +1928,18 @@ bool format_feature_detail_select_color_preset(
 }
 
 // 0x62
-bool format_feature_detail_audio_speaker_volume_v30(
-      Nontable_Vcp_Value * code_info, DDCA_MCCS_Version_Spec vcp_version, char * buffer, int bufsz)
+bool format_feature_detail_audio_speaker_volume(
+      Nontable_Vcp_Value *   code_info,
+      DDCA_MCCS_Version_Spec vcp_version,
+      char *                 buffer,
+      int                    bufsz)
 {
   assert (code_info->vcp_code == 0x62);
-  // Continous in 2.0, 2,2, assume 2.1 is same
-  // NC with special x00 and xff values in 3.0
-  assert(vcp_version.major >= 3);
+  // Continuous in 2.0, assume 2.1 is same
+  // v2.2: doc lists as both C and NC, but documents special values, treat as NC
+  // v3.0: NC with special x00 and xff values
 
-  // leave v2 code in case logic changes
-  if (vcp_version.major < 3)
-  {
+  if (vcp_version_le(vcp_version,VCP_SPEC_V21)) {
      snprintf(buffer, bufsz, "%d", code_info->sl);
   }
   else {
@@ -1951,10 +1954,10 @@ bool format_feature_detail_audio_speaker_volume_v30(
 }
 
 bool format_feature_detail_x8d_v22_mute_audio_blank_screen(
-        Nontable_Vcp_Value * code_info,
-        DDCA_MCCS_Version_Spec                   vcp_version,
-        char *                         buffer,
-        int                            bufsz)
+        Nontable_Vcp_Value *     code_info,
+        DDCA_MCCS_Version_Spec   vcp_version,
+        char *                   buffer,
+        int                      bufsz)
 {
    assert (code_info->vcp_code == 0x8d);
    assert (vcp_version.major == 2 && vcp_version.minor >= 2);
@@ -1978,15 +1981,19 @@ bool format_feature_detail_x8d_v22_mute_audio_blank_screen(
 }
 
 // 0x8f, 0x91
-bool format_feature_detail_audio_treble_bass_v30(
-      Nontable_Vcp_Value * code_info, DDCA_MCCS_Version_Spec vcp_version, char * buffer, int bufsz)
+bool format_feature_detail_audio_treble_bass(
+      Nontable_Vcp_Value *    code_info,
+      DDCA_MCCS_Version_Spec  vcp_version,
+      char *                  buffer,
+      int                     bufsz)
 {
   assert (code_info->vcp_code == 0x8f || code_info->vcp_code == 0x91);
-  // Continous in 2.0, assume 2.1 same as 2.0,
+  // Continuous in 2.0, assume 2.1 same as 2.0,
   // NC with reserved x00 and special xff values in 3.0, 2.2
   // This function should not be called if VCP2_STD_CONT
 
   assert ( vcp_version_gt(vcp_version, VCP_SPEC_V21) );
+
   // leave v2 code in in case things change
   bool ok = true;
   if ( vcp_version_le(vcp_version, VCP_SPEC_V21))
@@ -3322,13 +3329,17 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
       .vcp_spec_groups = VCP_SPEC_AUDIO,
       .vcp_subsets = VCP_SUBSET_AUDIO,
       // is in 2.0, special coding as of 3.0 assume changed as of 3.0
+      // In MCCS spec v2.2a, summary table 7.4 Audio Adjustments lists this
+      // feature as type C, but detailed documentation in section
+      // 8.6 Audio Adjustments lists it as type NC and documents
+      // reserved values.  Treat as NC.
       // .nontable_formatter=format_feature_detail_standard_continuous,
-      .nontable_formatter=format_feature_detail_audio_speaker_volume_v30,
+      .nontable_formatter=format_feature_detail_audio_speaker_volume,
       // requires special handling for V3, mix of C and NC, SL byte only
       .desc = "Adjusts speaker volume",
       .v20_flags = DDCA_RW | DDCA_STD_CONT,
-      .v30_flags = DDCA_RW | DDCA_COMPLEX_CONT,
-      .v22_flags = DDCA_RW | DDCA_STD_CONT,
+      .v30_flags = DDCA_RW | DDCA_NC_CONT,
+      .v22_flags = DDCA_RW | DDCA_NC_CONT,
       .v20_name = "Audio speaker volume",
    },
    {  .code=0x63,
@@ -3631,12 +3642,16 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
       // n. for v2.0 name in spec is "TV-audio treble".  "TV" prefix is
       // dropped in 2.2, 3.0.  just use the more generic term for all versions
       // similar comments apply to x91, x93
+      // In MCCS spec v2.2a, summary table 7.4 Audio Adjustments lists this
+      // feature as type C, but detailed documentation in section
+      // 8.6 Audio Adjustments lists it as type NC and documents
+      // reserved values.  Treat as NC.
       .v20_name="Audio Treble",
       // requires special handling for V3, mix of C and NC, SL byte only
-      .nontable_formatter=format_feature_detail_audio_treble_bass_v30,
+      .nontable_formatter=format_feature_detail_audio_treble_bass,
       .v20_flags = DDCA_RW | DDCA_STD_CONT,
-      .v30_flags = DDCA_RW | DDCA_COMPLEX_NC,
-      .v22_flags = DDCA_RW | DDCA_COMPLEX_NC,
+      .v30_flags = DDCA_RW | DDCA_NC_CONT,
+      .v22_flags = DDCA_RW | DDCA_NC_CONT,
    },
    {  .code=0x90,
       .vcp_spec_groups = VCP_SPEC_MISC,     // 2.0
@@ -3652,10 +3667,14 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
       .desc="Emphasize/de-emphasize low frequency audio",
       .v20_name="Audio Bass",
       // requires special handling for V3.0 and v2.2: mix of C and NC, SL byte only
-      .nontable_formatter=format_feature_detail_audio_treble_bass_v30,
+      // In MCCS spec v2.2a, summary table 7.4 Audio Adjustments lists this
+      // feature as type C, but detailed documentation in section
+      // 8.6 Audio Adjustments lists it as type NC and documents
+      // reserved values.  Treat as NC.
+      .nontable_formatter=format_feature_detail_audio_treble_bass,
       .v20_flags = DDCA_RW | DDCA_STD_CONT,
-      .v30_flags = DDCA_RW | DDCA_COMPLEX_NC,
-      .v22_flags = DDCA_RW | DDCA_COMPLEX_NC,
+      .v30_flags = DDCA_RW | DDCA_NC_CONT,
+      .v22_flags = DDCA_RW | DDCA_NC_CONT,
    },
    {  .code=0x92,
       .vcp_spec_groups = VCP_SPEC_MISC,   // 2.0
@@ -3671,10 +3690,10 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
       .desc="Controls left/right audio balance",
       .v20_name="Audio Balance L/R",
       // requires special handling for V3 and v2.2, mix of C and NC, SL byte only
-      .nontable_formatter=format_feature_detail_audio_treble_bass_v30,
+      .nontable_formatter=format_feature_detail_audio_treble_bass,
       .v20_flags = DDCA_RW | DDCA_STD_CONT,
-      .v30_flags = DDCA_RW | DDCA_COMPLEX_NC,
-      .v22_flags = DDCA_RW | DDCA_COMPLEX_NC,
+      .v30_flags = DDCA_RW | DDCA_NC_CONT,
+      .v22_flags = DDCA_RW | DDCA_NC_CONT,
    },
    {  .code=0x94,
       .vcp_spec_groups = VCP_SPEC_AUDIO,    // v2.0

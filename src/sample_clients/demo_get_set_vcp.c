@@ -434,7 +434,7 @@ bool test_complex_nc_value(
        ok = false;
        goto bye;
     }
-    assert(info->feature_flags & DDCA_COMPLEX_NC);
+    assert(info->feature_flags & (DDCA_COMPLEX_NC|DDCA_NC_CONT));
 
 #ifdef OLD
     DDCA_Single_Vcp_Value * valrec;
