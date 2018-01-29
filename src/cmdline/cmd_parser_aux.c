@@ -196,6 +196,8 @@ const Feature_Subset_Table_Entry subset_table[] = {
    {VCP_SUBSET_CONT,      CMDID_GETVCP|CMDID_VCPINFO, 3, "CONT",      "All Continuous features"},
    {VCP_SUBSET_SNC,       CMDID_GETVCP|CMDID_VCPINFO, 3, "SNC",       "Simple NC features"},
    {VCP_SUBSET_CNC,       CMDID_GETVCP|CMDID_VCPINFO, 3, "CNC",       "Complex NC features"},
+   {VCP_SUBSET_NC_WO,                  CMDID_VCPINFO, 4, "NC_WO",     "Write-only NC features"},
+   {VCP_SUBSET_NC_CONT,   CMDID_GETVCP|CMDID_VCPINFO, 4, "NC_CONT",   "NC featues with continuous subrange"},
    {VCP_SUBSET_NC,        CMDID_GETVCP|CMDID_VCPINFO, 2, "NC",        "All NC features"},
 };
 const int subset_table_ct = sizeof(subset_table)/sizeof(Feature_Subset_Table_Entry);
