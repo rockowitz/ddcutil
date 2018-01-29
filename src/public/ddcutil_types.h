@@ -363,6 +363,7 @@ typedef uint16_t DDCA_Version_Feature_Flags;
 #define DDCA_COMPLEX_CONT 0x0040       /**< Continuous feature with special interpretation */
 #define DDCA_SIMPLE_NC    0x0020       /**< Non-continuous feature, having a defined list of values in byte SL */
 #define DDCA_COMPLEX_NC   0x0010       /**< Non-continuous feature, having a complex interpretation using one or more of SL, SH, ML, MH */
+#define DDCA_NC_CONT      0x0800       /**< NC feature combining reserved values with continuous range */
 // For WO NC features.  There's no interpretation function or lookup table
 // Used to mark that the feature is defined for a version
 #define DDCA_WO_NC        0x0008       /**< Used internally for write-only non-continuous features */
@@ -370,7 +371,7 @@ typedef uint16_t DDCA_Version_Feature_Flags;
 #define DDCA_WO_TABLE     0x0002       /**< Write only table feature */
 
 #define DDCA_CONT         (DDCA_STD_CONT|DDCA_COMPLEX_CONT)            /**< Continuous feature, of any subtype */
-#define DDCA_NC           (DDCA_SIMPLE_NC|DDCA_COMPLEX_NC|DDCA_WO_NC)  /**< Non-continuous feature of any subtype */
+#define DDCA_NC           (DDCA_SIMPLE_NC|DDCA_COMPLEX_NC|DDCA_WO_NC|DDCA_NC_CONT)  /**< Non-continuous feature of any subtype */
 #define DDCA_NON_TABLE    (DDCA_CONT | DDCA_NC)                        /**< Non-table feature of any type */
 
 #define DDCA_TABLE        (DDCA_NORMAL_TABLE | DDCA_WO_TABLE)        /**< Table type feature, of any subtype */
