@@ -536,7 +536,7 @@ ddc_report_display_by_dref(Display_Ref * dref, int depth) {
 
             if (dref->io_path.io_mode != DDCA_IO_USB)
                rpt_vstring(d1, "Monitor returns DDC Null Response for unsupported features: %s",
-                                  bool_repr(dh->dref->flags & DREF_DDC_USES_NULL_RESPONSE_FOR_UNSUPPORTED));
+                                  bool_repr(dref->flags & DREF_DDC_USES_NULL_RESPONSE_FOR_UNSUPPORTED));
          }
       }
    }
