@@ -389,8 +389,8 @@ char * get_firmware_version_string(Display_Handle * dh) {
       }
    }
    else {
-      snprintf(version, sizeof(version), "%d.%d",
-         valrec->val.nc.sh, valrec->val.nc.sl);
+      snprintf(version, sizeof(version), "%d.%d", valrec->val.nc.sh, valrec->val.nc.sl);
+      free_single_vcp_value(valrec);
    }
    return version;
 }
@@ -410,7 +410,7 @@ char * get_controller_mfg_string(Display_Handle * dh) {
 
    static char mfg_name_buf[100] = "";
    char * mfg_name = NULL;
-   Single_Vcp_Value *   valrec;
+   Single_Vcp_Value * valrec;
 
    Public_Status_Code psc = 0;
    Error_Info * ddc_excp = get_vcp_value(dh, 0xc8, DDCA_NON_TABLE_VCP_VALUE, &valrec);
@@ -421,6 +421,7 @@ char * get_controller_mfg_string(Display_Handle * dh) {
       mfg_name =  get_feature_value_name(
                             vals,
                             valrec->val.nc.sl);
+      free_single_vcp_value(valrec);
       if (!mfg_name) {
          snprintf(mfg_name_buf, sizeof(mfg_name_buf), "Unrecognized manufacturer code 0x%02x", valrec->val.nc.sl);
          mfg_name = mfg_name_buf;
