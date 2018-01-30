@@ -497,8 +497,7 @@ strsplit_maxlength(
       start = start + strlen(piece);
    }
 
-   Null_Terminated_String_Array result =
-          g_ptr_array_to_ntsa(pieces);
+   Null_Terminated_String_Array result = g_ptr_array_to_ntsa(pieces);
    g_ptr_array_free(pieces, false);
    free(str_to_split2);
    if (debug)
