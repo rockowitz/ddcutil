@@ -764,6 +764,10 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
 
    DBGMSF(debug, "Calling g_option_context_free(), context=%p...", context);
    g_option_context_free(context);
+   // if (trace_classes) {
+   //    DBGMSG("Freeing trace_classes=%p", trace_classes);
+   //    free(trace_classes);   // trying to avoid valgrind error re g_option_context_parse() - doesn't solve it
+   // }
 
    if (debug)
       dbgrpt_parsed_cmd(parsed_cmd, 0);
