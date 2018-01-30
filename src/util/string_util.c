@@ -458,7 +458,7 @@ strsplit_maxlength(
       uint16_t      max_piece_length,
       const char *  delims)
 {
-   bool debug = false;
+   bool debug = true;
    if (debug)
       printf("(%s) max_piece_length=%u, delims=|%s|, str_to_split=|%s|\n",
              __func__, max_piece_length, delims, str_to_split);
@@ -497,8 +497,11 @@ strsplit_maxlength(
       start = start + strlen(piece);
    }
 
-   Null_Terminated_String_Array result = g_ptr_array_to_ntsa(pieces);
-   g_ptr_array_free(pieces, false);
+   // for some reason, if g_ptr_array_to_ntsa() is called with duplicate=false and
+   // g_ptr_array(pieces, false) is called, valgrind complains about memory leak
+   Null_Terminated_String_Array result = g_ptr_array_to_ntsa(pieces, /*duplicate=*/ true);
+   g_ptr_array_set_free_func(pieces, g_free);
+   g_ptr_array_free(pieces, true);
    free(str_to_split2);
    if (debug)
       ntsa_show(result);
@@ -649,17 +652,25 @@ GPtrArray * ntsa_to_g_ptr_array(Null_Terminated_String_Array ntsa) {
 }
 
 
-/** Converts a GPtrArray if pointers to strings to a Null_Terminated_String_Array.
- * The underlying strings are referenced, not duplicated.
+/** Converts a GPtrArray of pointers to strings to a Null_Terminated_String_Array.
  *
  * @param gparray pointer to GPtrArray
+ * @param duplicate if true, the strings are duplicated
+ *                  if false, the pointers are copied
  * @return null-terminated array of string pointers
  */
-Null_Terminated_String_Array g_ptr_array_to_ntsa(GPtrArray * gparray) {
+Null_Terminated_String_Array
+g_ptr_array_to_ntsa(
+      GPtrArray * gparray,
+      bool        duplicate)
+{
    assert(gparray);
    Null_Terminated_String_Array ntsa = calloc(gparray->len+1, sizeof(char *));
    for (int ndx=0; ndx < gparray->len; ndx++) {
-      ntsa[ndx] = g_ptr_array_index(gparray,ndx);
+      if (duplicate)
+         ntsa[ndx] = strdup(g_ptr_array_index(gparray,ndx));
+      else
+         ntsa[ndx] = g_ptr_array_index(gparray,ndx);
    }
    return ntsa;
 }

@@ -107,7 +107,7 @@ Null_Terminated_String_Array strsplit_maxlength(
                                       const char * delims);
 
 GPtrArray * ntsa_to_g_ptr_array(Null_Terminated_String_Array ntsa);
-Null_Terminated_String_Array g_ptr_array_to_ntsa(GPtrArray * garray);
+Null_Terminated_String_Array g_ptr_array_to_ntsa(GPtrArray * garray, bool duplicate);
 
 
 //
