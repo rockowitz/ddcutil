@@ -403,7 +403,9 @@ void show_specific_status_counts(Status_Code_Counts * pcounts) {
    // in all but the most recent distros, .e.g SUSE 13.2 is v 2.18
    // gpointer * keysp = g_hash_table_get_keys_as_array(pcounts->error_counts_hash, &keyct);
    GList * glist = g_hash_table_get_keys(pcounts->error_counts_hash);
+   // copies the pointers in the linked list to the array, does not duplicate
    gpointer * keysp = g_list_to_g_array(glist, &keyct);
+   g_list_free(glist);
    if (debug) {
       DBGMSG("Keys.  keyct=%d", keyct);
       for (int ndx = 0; ndx < keyct; ndx++) {
@@ -481,6 +483,7 @@ int get_true_io_error_count(Status_Code_Counts * pcounts) {
      // gpointer * keysp = g_hash_table_get_keys_as_array(pcounts->error_counts_hash, &keyct);
      GList * glist = g_hash_table_get_keys(pcounts->error_counts_hash);
      gpointer * keysp = g_list_to_g_array(glist, &keyct);
+     g_list_free(glist);
 
      int summed_ct = 0;
 
