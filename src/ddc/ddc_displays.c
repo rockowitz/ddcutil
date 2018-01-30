@@ -425,12 +425,12 @@ static char * get_controller_mfg_string_t(Display_Handle * dh) {
       mfg_name =  get_feature_value_name(
                             vals,
                             valrec->val.nc.sl);
-      free_single_vcp_value(valrec);
       if (!mfg_name) {
          SAFE_SNPRINTF(mfg_name_buf, MFG_NAME_BUF_SIZE,
                        "Unrecognized manufacturer code 0x%02x", valrec->val.nc.sl);
          mfg_name = mfg_name_buf;
       }
+      free_single_vcp_value(valrec);
    }
    else if (psc == DDCRC_REPORTED_UNSUPPORTED || psc == DDCRC_DETERMINED_UNSUPPORTED) {
       mfg_name = "Unspecified";
