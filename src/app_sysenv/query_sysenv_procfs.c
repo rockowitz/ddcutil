@@ -54,6 +54,7 @@ int query_proc_modules_for_video() {
    int rc = 0;
 
    GPtrArray * garray = g_ptr_array_sized_new(300);
+   g_ptr_array_set_free_func(garray, g_free);
 
    rpt_vstring(0,"Scanning /proc/modules for driver environment...");
    int ct = file_getlines("/proc/modules", garray, true);
@@ -93,7 +94,7 @@ int query_proc_modules_for_video() {
          }
       }
    }
-
+   g_ptr_array_free(garray, true);
    DBGMSF0(debug, "Done.");
    return rc;
 }

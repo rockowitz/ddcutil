@@ -469,8 +469,10 @@ void each_video_pci_device(
          sprintf(driver_module_dir, "%s/driver/module", cur_dir_name);
          // printf("driver_module_dir: %s\n", driver_module_dir);
          char * driver_version = read_sysfs_attr(driver_module_dir, "version", false);
-         if (driver_version)
+         if (driver_version) {
             rpt_vstring(d1,"Driver version:      %s", driver_version);
+            free(driver_version);
+         }
          else
             rpt_vstring(d1,"Driver version:      Unable to determine");
 
@@ -484,6 +486,8 @@ void each_video_pci_device(
    else if (str_starts_with(device_class, "0x0a")) {
       rpt_vstring(depth, "Encountered docking station (class 0x0a) device. dir=%s", cur_dir_name);
    }
+
+   free(device_class);
 
 bye:
    return;
@@ -594,6 +598,7 @@ void each_i2c_device(
    char buf[100];
    snprintf(buf, 100, "%s/name:", cur_dir_name);
    rpt_vstring(depth, "%-34s %s", buf, dev_name);
+   free(dev_name);
 
    int busno = i2c_name_to_busno(fn);
    if (busno >= 0)

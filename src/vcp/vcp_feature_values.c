@@ -192,11 +192,14 @@ char * summarize_single_vcp_value(DDCA_Single_Vcp_Value * valrec) {
 
 // ignoring Buffer * since it only exists temporarily for transition
 void free_single_vcp_value(DDCA_Single_Vcp_Value * vcp_value) {
+   bool debug = false;
+   DBGMSF(debug, "Starting. vcp_value=%s", summarize_single_vcp_value(vcp_value));
    if (vcp_value->value_type == DDCA_TABLE_VCP_VALUE) {
       if (vcp_value->val.t.bytes)
          free(vcp_value->val.t.bytes);
    }
    free(vcp_value);
+   DBGMSF(debug, "Done");
 }
 
 // wrap free_single_vcp_value() in signature of GDestroyNotify()
@@ -370,6 +373,7 @@ Vcp_Value_Set vcp_value_set_new(int initial_size){
 }
 
 void free_vcp_value_set(Vcp_Value_Set vset){
+   // DBGMSG("Executing.");
    g_ptr_array_free(vset, true);
 }
 

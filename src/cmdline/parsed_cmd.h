@@ -21,11 +21,17 @@
  * </endcopyright>
  */
 
+/** \f
+ *
+ */
+
 #ifndef PARSED_CMD_H_
 #define PARSED_CMD_H_
 
+/** \cond */
 #include <glib-2.0/glib.h>
 #include <stdbool.h>
+/** \endcond */
 
 #include "base/core.h"
 #include "base/displays.h"

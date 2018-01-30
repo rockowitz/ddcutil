@@ -1,7 +1,7 @@
 /* device_id_util.c
  *
  * <copyright>
- * Copyright (C) 2014-2017 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2014-2018 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -140,6 +140,7 @@ create_simple_id_table(int initial_size) {
       new_table = g_ptr_array_sized_new(initial_size);
    else
       new_table = g_ptr_array_new();
+   // printf("(%s) Returning: %p\n", __func__, new_table);
    return new_table;
 }
 
@@ -163,7 +164,7 @@ sit_add(Simple_Id_Table * simple_table, ushort id, char * name) {
 
 void
 report_simple_id_table(Simple_Id_Table * simple_table, int depth) {
-   rpt_structure_loc("Simple ids table", simple_table, depth);
+   rpt_structure_loc("Simple_Id_Table", simple_table, depth);
    for (int ndx = 0; ndx < simple_table->len; ndx++) {
       Simple_Id_Table_Entry * cur_entry = g_ptr_array_index(simple_table, ndx);
       rpt_vstring(depth+1, "0x%04x -> |%s|", cur_entry->id, cur_entry->name);
@@ -227,8 +228,8 @@ load_simple_id_segment(
    bool debug = false;
    assert(simple_table);
    if (debug) {
-      printf("(%s) Starting. curpos=%d, -> |%s|\n",
-             __func__, cur_pos, (char *) g_ptr_array_index(all_lines,cur_pos));
+      printf("(%s) Starting. simple_table=%p, segment_tag=%s, curpos=%d, -> |%s|\n",
+             __func__, simple_table, segment_tag, cur_pos, (char *) g_ptr_array_index(all_lines,cur_pos));
    }
    bool more = true;
    int linect = all_lines->len;
@@ -240,10 +241,10 @@ load_simple_id_segment(
          // printf("(%s) Comment line\n", __func__);
          continue;
       }
-      // split into tag hexvalue  name
+      // split into: tag hexvalue  name
       char   atag[40];
       ushort acode;
-      char*   aname;
+      char*  aname = NULL;
       int ct = sscanf(a_line, "%s %hx %m[^\n]",
                           atag,
                           &acode,
@@ -254,10 +255,12 @@ load_simple_id_segment(
       assert(ct >= 0);
       if (!streq(atag, segment_tag)) {
          // printf("(%s) Tag doesn't match\n", __func__);
+         free(aname);
          break;
       }
 
       sit_add(simple_table, acode, aname);
+      free(aname);
    }
 
    if (cur_pos <= linect)
@@ -302,11 +305,14 @@ static  Multi_Level_Map * load_multi_level_segment(
 
       if (tabct == 0) {
          char cur_tag[40];
+         cur_name = NULL;
          int ct = sscanf(a_line+tabct, "%s %4hx %m[^\n]",
                               cur_tag,
                               &cur_code,    // &header->level_detail[tabct].cur_entry->code,
                               &cur_name);   // &header->level_detail[tabct].cur_entry->name );
          if (!streq(cur_tag, segment_tag)) {
+            if (cur_name)
+               free(cur_name);
             // more = false;   // needed for continue
             break;     // or continue?
          }
@@ -325,8 +331,8 @@ static  Multi_Level_Map * load_multi_level_segment(
             // printf("Successful level 0 node added. set header->level_detail[%d].cur_entry (addr %p) to %p\n",
             //        tabct, &(header->level_detail[tabct].cur_entry), header->level_detail[tabct].cur_entry   );
             // mlt_cur_entries(header);
-        }
-     }
+         }
+      }  // tabct == 0
 
      else  {    // intermediate or leaf node
         if (!cur_nodes[tabct-1]) {
@@ -387,6 +393,11 @@ static  Multi_Level_Map * load_multi_level_segment(
  *    segment_tag   first token of lines in current segment
  *
  * Returns:         line number of start of next segment
+ *
+ * The buffer pointed to by segment_tag is updated with the newly
+ * found tag.
+ *
+ * TODO: elminate this side effect, apparently left over from refactoring (2/1018)
  */
 int find_next_segment_start(GPtrArray* lines, int cur_ndx, char* segment_tag) {
    bool debug = false;
@@ -404,7 +415,7 @@ int find_next_segment_start(GPtrArray* lines, int cur_ndx, char* segment_tag) {
       if (segment_tag) {  // skipping the current segment
          if (tabct == 0) {
             char   atag[40];
-            char*  rest;
+            char*  rest = NULL;
             int ct = sscanf(a_line, "%s %m[^\n]",
                              atag,
                              &rest);
@@ -412,9 +423,11 @@ int find_next_segment_start(GPtrArray* lines, int cur_ndx, char* segment_tag) {
             // coverity scan gets unhappy if nothing sscanf's return code is not checked.
             // this does something trivial with it.
             assert(ct >= 0);
+            if (rest)
+               free(rest);
             if (!streq(atag,segment_tag)) {
                strcpy(segment_tag, atag);
-               free(rest);
+               // free(rest);
                break;
             }
          }
@@ -594,7 +607,10 @@ int load_device_ids(Device_Id_Type id_type, GPtrArray * all_lines) {
 
 
 static void load_file_lines(Device_Id_Type id_type, GPtrArray * all_lines) {
-   // bool debug = false;
+   bool debug = false;
+   if (debug)
+      printf("(%s) Starting.  id_type=%d\n", __func__, id_type);
+
    int linendx;
    // char * a_line;
 
@@ -623,23 +639,29 @@ static void load_file_lines(Device_Id_Type id_type, GPtrArray * all_lines) {
          if ( streq(tagbuf,"HID") ) {
             hid_descriptor_types = create_simple_id_table(0);
             load_simple_id_segment(hid_descriptor_types, all_lines, tagbuf, linendx, &linendx);
-               // printf("(%s) After HID, linendx=%d\n", __func__, linendx);
-               // rpt_title("hid_descriptor_types: ", 0);
-               // report_simple_ids(hid_descriptor_types, 1);
+            if (debug) {
+               printf("(%s) After processing tag HID, linendx=%d\n", __func__, linendx);
+               rpt_title("hid_descriptor_types: ", 0);
+               report_simple_id_table(hid_descriptor_types, 1);
+            }
          }
          else if ( streq(tagbuf,"R") ) {
              hid_descriptor_item_types = create_simple_id_table(0);
              load_simple_id_segment(hid_descriptor_item_types, all_lines, tagbuf, linendx, &linendx);
-                // printf("(%s) After R, linendx=%d\n", __func__, linendx);
-                // rpt_title("hid_descriptor_item_types: ", 0);
-                // report_simple_ids(hid_descriptor_item_types, 1);
+             if (debug) {
+                printf("(%s) After processing tag R, linendx=%d\n", __func__, linendx);
+                rpt_title("hid_descriptor_item_types: ", 0);
+                report_simple_id_table(hid_descriptor_item_types, 1);
+             }
           }
          else if ( streq(tagbuf,"HCC") ) {
              hid_country_codes = create_simple_id_table(0);
              load_simple_id_segment(hid_country_codes, all_lines, tagbuf, linendx, &linendx);
-                // printf("(%s) After HCC, linendx=%d\n", __func__, linendx);
-                // rpt_title("hid_country_codes: ", 0);
-                // report_simple_ids(hid_country_codes, 1);
+             if (debug) {
+                printf("(%s) After HCC, linendx=%d\n", __func__, linendx);
+                rpt_title("hid_country_codes: ", 0);
+                report_simple_id_table(hid_country_codes, 1);
+             }
           }
 
           else if ( streq(tagbuf,"HUT") ) {
@@ -667,6 +689,9 @@ static void load_file_lines(Device_Id_Type id_type, GPtrArray * all_lines) {
           }
       }
    }
+
+   if (debug)
+      printf("(%s) Done.  id_type=%d\n", __func__, id_type);
 }
 
 
@@ -703,6 +728,8 @@ static void load_id_file(Device_Id_Type id_type){
       free(device_id_fqfn);
    }          // if pci.ids or usb.ids was found
 
+   if (debug)
+      printf("(%s) Done\n", __func__);
    return;
 }
 
@@ -962,6 +989,24 @@ char * devid_hid_descriptor_item_type(ushort id) {
 }
 
 
+// not used, but without this valgrind complains of memory leak
+char * devid_hid_descriptor_type(ushort id) {
+   devid_ensure_initialized();
+   char * result = NULL;
+   result = get_simple_id_name(hid_descriptor_types, id);
+   return result;
+}
+
+// not used, but without this valgrind complains of memory leak
+char * devid_hid_descriptor_country_code(ushort id) {
+   devid_ensure_initialized();
+   char * result = NULL;
+   result = get_simple_id_name(hid_country_codes, id);
+   return result;
+}
+
+
+
 //
 // *** Initialization ***
 //
@@ -976,6 +1021,8 @@ bool devid_ensure_initialized() {
    bool ok = (pci_vendors_mlm && usb_vendors_mlm);
 
    if (!ok) {
+      printf("(%s) Loading.  pci_vendors_mlm=%p, usb_vendors_mlm=%p\n",
+             __func__,  pci_vendors_mlm, usb_vendors_mlm);
       load_id_file(ID_TYPE_PCI);
       load_id_file(ID_TYPE_USB);
       ok = true;

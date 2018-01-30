@@ -83,7 +83,7 @@ DDCA_Display_Handle * open_first_display() {
  */
 char * interpret_feature_flags(DDCA_Version_Feature_Flags flags) {
    char * buffer = NULL;
-   int rc = asprintf(&buffer, "%s%s%s%s%s%s%s%s%s%s%s%s",
+   int rc = asprintf(&buffer, "%s%s%s%s%s%s%s%s%s%s%s%s%s",
        flags & DDCA_RO             ? "Read-Only, "                   : "",
        flags & DDCA_WO             ? "Write-Only, "                  : "",
        flags & DDCA_RW             ? "Read-Write, "                  : "",

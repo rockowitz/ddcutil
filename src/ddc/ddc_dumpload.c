@@ -24,7 +24,7 @@
  */
 
 /** \file
- *
+ * Load/store VCP settings from/to file
  */
 
 /** \cond */
@@ -37,12 +37,12 @@
 #include <string.h>
 #include <time.h>
 #include <unistd.h>
-/** \endcond */
 
 #include "util/file_util.h"
 #include "util/glib_util.h"
 #include "util/glib_string_util.h"
 #include "util/report_util.h"
+/** \endcond */
 
 #include "base/core.h"
 #include "base/ddc_errno.h"
@@ -71,11 +71,14 @@
  *                if NULL, do nothing
  */
 void free_dumpload_data(Dumpload_Data * data) {
+   bool debug = false;
+   DBGMSF(debug, "Starting. data=%p");
    if (data) {
       if (data->vcp_values)
          free_vcp_value_set(data->vcp_values);
       free(data);
    }
+   DBGMSF(debug, "Done.");
 }
 
 
@@ -728,6 +731,7 @@ convert_dumpload_data_to_string_array(Dumpload_Data * data) {
       report_dumpload_data(data, 1);
 
    GPtrArray * strings = g_ptr_array_sized_new(30);
+   g_ptr_array_set_free_func(strings, g_free);
 
    collect_machine_readable_timestamp(data->timestamp_millis, strings);
 

@@ -532,10 +532,9 @@ ddc_report_display_by_dref(Display_Ref * dref, int depth) {
                rpt_vstring(d1, "Monitor returns DDC Null Response for unsupported features: %s",
                                   bool_repr(dh->dref->flags & DREF_DDC_USES_NULL_RESPONSE_FOR_UNSUPPORTED));
          }
-
       }
-
    }
+
    DBGMSF0(debug, "Done");
 }
 
@@ -582,7 +581,7 @@ ddc_report_displays(bool valid_displays_only, int depth) {
  * \param dref  pointer to #Display_Ref
  * \param depth logical indentation depth
  */
-void dbgreport_display_ref(Display_Ref * dref, int depth) {
+void ddc_dbgrpt_display_ref(Display_Ref * dref, int depth) {
    int d1 = depth+1;
    int d2 = depth+2;
    // no longer needed for i2c_dbgreport_bus_info()
@@ -635,14 +634,14 @@ void dbgreport_display_ref(Display_Ref * dref, int depth) {
  * \param recs    pointer to collection of #Display_Ref
  * \param depth   logical indentation depth
  */
-void debug_report_display_refs(GPtrArray * recs, int depth) {
+void ddc_dbgrpt_display_refs(GPtrArray * recs, int depth) {
    assert(recs);
    rpt_vstring(depth, "Reporting %d Display_Ref instances", recs->len);
    for (int ndx = 0; ndx < recs->len; ndx++) {
       Display_Ref * drec = g_ptr_array_index(recs, ndx);
       assert( memcmp(drec->marker, DISPLAY_REF_MARKER, 4) == 0);
       rpt_nl();
-      dbgreport_display_ref(drec, depth+1);
+      ddc_dbgrpt_display_ref(drec, depth+1);
    }
 }
 
@@ -804,7 +803,7 @@ void async_scan(GPtrArray * all_displays) {
       g_thread_join(thread);  // implicitly unrefs the GThread
    }
    DBGMSF0(debug, "Threads joined");
-   g_ptr_array_free(threads, false);
+   g_ptr_array_free(threads, true);
 
 #ifdef OLD
    for (int ndx = 0; ndx < all_displays->len; ndx++) {
@@ -921,7 +920,7 @@ ddc_find_display_ref_by_display_identifier(Display_Identifier * did) {
    if (debug) {
       if (result) {
          DBGMSG0("Done.  Returning: ");
-         dbgreport_display_ref(result, 1);
+         ddc_dbgrpt_display_ref(result, 1);
       }
       else
          DBGMSG0("Done.  Returning NULL");
@@ -1029,6 +1028,8 @@ ddc_detect_all_displays() {
    if (olev == DDCA_OL_VERBOSE)
       set_output_level(DDCA_OL_NORMAL);
 
+   DBGMSF(debug, "display_list->len=%d, async_threshold=%d, adlct=%d",
+                 display_list->len, async_threshold, adlct);
    // ADL displays do not support async scan.  Not worth implementing.
    if (display_list->len >= async_threshold && adlct == 0)
    // if (true)

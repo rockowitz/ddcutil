@@ -314,9 +314,11 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
 
    // on --help, comes after usage line, before option detail
    g_option_context_set_summary(context, help_summary);
+   free(help_summary);
 
    // on --help, comes at end after option detail
    g_option_context_set_description(context, help_description);
+   free(help_description);
 
    g_option_context_set_help_enabled(context, true);
    // bool ok = false;
@@ -760,6 +762,7 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
    if (ok)
       ok = validate_output_level(parsed_cmd);
 
+   DBGMSF(debug, "Calling g_option_context_free(), context=%p...", context);
    g_option_context_free(context);
 
    if (debug)

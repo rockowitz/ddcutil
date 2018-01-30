@@ -108,8 +108,10 @@ void sysenv_rpt_file_first_line(char * fn, char * title, int depth) {
       rpt_vstring(depth, "%s:", fn);
 
    char * s = file_get_first_line(fn, true /* verbose */);
-   if (s)
+   if (s) {
       rpt_title(s, d1);
+      free(s);
+   }
    else
       rpt_vstring(d1, "Unable to read %s", fn);
 }

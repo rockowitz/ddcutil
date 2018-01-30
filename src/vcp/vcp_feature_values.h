@@ -168,7 +168,7 @@ char * summarize_single_vcp_value_r(DDCA_Single_Vcp_Value * valrec, char * buffe
 char * summarize_single_vcp_value(DDCA_Single_Vcp_Value * valrec);
 
 
-typedef GPtrArray *  Vcp_Value_Set;
+typedef GPtrArray *  Vcp_Value_Set;   // GPtrArray of DDCA_Single_Vcp_Value
 
 Vcp_Value_Set vcp_value_set_new(int initial_size);
 

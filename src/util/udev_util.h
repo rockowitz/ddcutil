@@ -39,10 +39,10 @@
  */
 typedef struct udev_device_summary {
    char         marker[4];        ///< always "UDSM"
-   const char * sysname;          ///< e.g. i2c-3
-   const char * devpath;          ///< device path
-   const char * sysattr_name;     ///< sysattr name
-   const char * subsystem;        ///< subsystem, e.g. usbmisc
+   char * sysname;          ///< e.g. i2c-3
+   char * devpath;          ///< device path
+   char * sysattr_name;     ///< sysattr name
+   char * subsystem;        ///< subsystem, e.g. usbmisc
 } Udev_Device_Summary;
 
 void free_udev_device_summaries(GPtrArray* summaries);

@@ -380,11 +380,11 @@ set_vcp_value(
             else {
                f0printf(fout, "Verification succeeded\n");
             }
+            free_single_vcp_value(newval);
          }
       }
       else {
          f0printf(fout, "Feature 0x%02x does not support verification\n", vrec->opcode);
-         // rpt_vstring(0, "Feature 0x%02x does not support verification", vrec->opcode);
       }
    }
 

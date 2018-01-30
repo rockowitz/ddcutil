@@ -103,10 +103,11 @@ void report_usb_detailed_device_summary(Usb_Detailed_Device_Summary * devsum, in
 Usb_Detailed_Device_Summary * lookup_udev_usb_device_by_devname(char * devname) {
    int depth = 0;
    // int d1 = depth+1;
-   struct udev *udev;
+   struct udev * udev;
    struct udev_enumerate *enumerate;
    struct udev_list_entry *devices, *dev_list_entry;
-   struct udev_device *dev;
+   struct udev_device * dev = NULL;
+   struct udev_device * dev0 = NULL;
 
    /* Create the udev object */
    udev = udev_new();
@@ -135,7 +136,7 @@ Usb_Detailed_Device_Summary * lookup_udev_usb_device_by_devname(char * devname) 
          and create a udev_device object (dev) representing it */
       path = udev_list_entry_get_name(dev_list_entry);
       // rpt_vstring(depth, "path: %s", path);
-      dev = udev_device_new_from_syspath(udev, path);
+      dev0 = udev_device_new_from_syspath(udev, path);
 
       /* udev_device_get_devnode() returns the path to the device node
          itself in /dev. */
@@ -150,11 +151,12 @@ Usb_Detailed_Device_Summary * lookup_udev_usb_device_by_devname(char * devname) 
          be several levels up the tree, but the function will find
          it.*/
       dev = udev_device_get_parent_with_subsystem_devtype(
-             dev,
+             dev0,
              "usb",
              "usb_device");
       if (!dev) {
          rpt_vstring(depth, "Unable to find parent USB device.");
+         udev_device_unref(dev0);
          continue;   // exit(1);   // TODO: fix
       }
 
@@ -177,7 +179,8 @@ Usb_Detailed_Device_Summary * lookup_udev_usb_device_by_devname(char * devname) 
       devsum->devnum_s     = strdup( udev_device_get_sysattr_value(dev,"devnum") );
       // report_udev_device(dev, d1);
 
-      udev_device_unref(dev);
+      // udev_device_unref(dev);
+      udev_device_unref(dev0);   // freeing dev0 also frees dev
       devct++;
    }
    /* Free the enumerator object */

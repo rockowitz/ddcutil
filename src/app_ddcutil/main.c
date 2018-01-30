@@ -347,6 +347,8 @@ void probe_display_by_dref(Display_Ref * dref) {
   * @retval  EXIT_FAILURE an error occurred
   */
 int main(int argc, char *argv[]) {
+   bool main_debug = false;
+   int main_rc = EXIT_FAILURE;
 
 #ifdef OBSOLETE
    // For aborting out of shared library
@@ -354,7 +356,7 @@ int main(int argc, char *argv[]) {
    int jmprc = setjmp(abort_buf);
    if (jmprc) {
       fprintf(stderr, "Aborting. Internal status code = %d\n", jmprc);
-      exit(EXIT_FAILURE);
+      goto bye;       // main_rc == EXIT_FAILURE
    }
 
    register_jmp_buf(&abort_buf);
@@ -364,7 +366,7 @@ int main(int argc, char *argv[]) {
    init_base_services();  // so tracing related modules are initialized
    Parsed_Cmd * parsed_cmd = parse_command(argc, argv);
    if (!parsed_cmd) {
-      exit(EXIT_FAILURE);
+      goto bye;      // main_rc == EXIT_FAILURE
    }
    if (parsed_cmd->flags & CMD_FLAG_TIMESTAMP_TRACE)         // timestamps on debug and trace messages?
       dbgtrc_show_time = true;              // extern in core.h
@@ -387,7 +389,7 @@ int main(int argc, char *argv[]) {
       if (!ok) {
          fprintf(stderr, "Error loading failure simulation control file %s.\n",
                          parsed_cmd->failsim_control_fn);
-         exit(EXIT_FAILURE);
+         goto bye;      // main_rc == EXIT_FAILURE
       }
       fsim_report_error_table(0);
    }
@@ -405,8 +407,6 @@ int main(int argc, char *argv[]) {
       fprintf(stdout, "but this copy of ddcutil was built without fglrx support.");
    }
 #endif
-
-   int main_rc = EXIT_FAILURE;
 
    Call_Options callopts = CALLOPT_NONE;
    i2c_force_slave_addr_flag = parsed_cmd->flags & CMD_FLAG_FORCE_SLAVE_ADDR;
@@ -462,13 +462,15 @@ int main(int argc, char *argv[]) {
       threshold = DISPLAY_CHECK_ASYNC_THRESHOLD;
    ddc_set_async_threshold(threshold);
 
+   main_rc = EXIT_SUCCESS;     // from now on assume success;
+
    if (parsed_cmd->cmd_id == CMDID_LISTVCP) {
       vcp_list_feature_codes(stdout);
       main_rc = EXIT_SUCCESS;
    }
 
    else if (parsed_cmd->cmd_id == CMDID_VCPINFO) {
-      bool ok = true;
+      bool vcpinfo_ok = true;
 
       // DDCA_MCCS_Version_Spec vcp_version_any = {0,0};
 
@@ -478,7 +480,7 @@ int main(int argc, char *argv[]) {
          parsed_cmd->mccs_vspec,
          false);       // force
       if (!fset) {
-         ok = false;
+         vcpinfo_ok = false;
       }
       else {
          if (parsed_cmd->output_level <= DDCA_OL_TERSE)
@@ -491,15 +493,10 @@ int main(int argc, char *argv[]) {
                report_vcp_feature_table_entry(pentry, 0);
             }
          }
+         free_vcp_feature_set(fset);
       }
 
-      if (ok) {
-         main_rc = EXIT_SUCCESS;
-      }
-      else {
-         // printf("Unrecognized VCP feature code or group: %s\n", val);
-         main_rc = EXIT_FAILURE;
-      }
+      main_rc = (vcpinfo_ok) ? EXIT_SUCCESS : EXIT_FAILURE;
    }
 
 #ifdef INCLUDE_TESTCASES
@@ -514,7 +511,7 @@ int main(int argc, char *argv[]) {
    else if (parsed_cmd->cmd_id == CMDID_DETECT) {
       ddc_ensure_displays_detected();
       ddc_report_displays(DDC_REPORT_ALL_DISPLAYS, 0);
-
+      main_rc = EXIT_SUCCESS;
    }
 
 #ifdef INCLUDE_TESTCASES
@@ -543,26 +540,26 @@ int main(int argc, char *argv[]) {
       char * fn = strdup( parsed_cmd->args[0] );
       // DBGMSG("Processing command loadvcp.  fn=%s", fn );
       Display_Handle * dh   = NULL;
-      bool ok = true;
+      bool loadvcp_ok = true;
       if (parsed_cmd->pdid) {
          Display_Ref * dref = get_display_ref_for_display_identifier(
                                  parsed_cmd->pdid, callopts | CALLOPT_ERR_MSG);
          if (!dref)
-            ok = false;
+            loadvcp_ok = false;
          else {
             ddc_open_display(dref, callopts | CALLOPT_ERR_MSG, &dh);  // rc == 0 iff dh, removed CALLOPT_ERR_ABORT
             if (!dh)
-               ok = false;
+               loadvcp_ok = false;
          }
       }
-      if (ok)
-         ok = loadvcp_by_file(fn, dh);
+      if (loadvcp_ok)
+         loadvcp_ok = loadvcp_by_file(fn, dh);
 
       // if we opened the display, we close it
       if (dh)
          ddc_close_display(dh);
       free(fn);
-      main_rc = (ok) ? EXIT_SUCCESS : EXIT_FAILURE;
+      main_rc = (loadvcp_ok) ? EXIT_SUCCESS : EXIT_FAILURE;
    }
 
    else if (parsed_cmd->cmd_id == CMDID_ENVIRONMENT) {
@@ -595,6 +592,7 @@ int main(int argc, char *argv[]) {
       main_rc = (is_monitor) ? EXIT_SUCCESS : EXIT_FAILURE;
 #else
       PROGRAM_LOGIC_ERROR("ddcutil not built with USB support");
+      main_rc = EXIT_FAILURE;
 #endif
    }
 
@@ -724,7 +722,7 @@ int main(int argc, char *argv[]) {
                {
                   Parsed_Capabilities * pcaps = perform_get_capabilities_by_display_handle(dh);
                   main_rc = (pcaps) ? EXIT_SUCCESS : EXIT_FAILURE;
-                  free(pcaps);
+                  free_parsed_capabilities(pcaps);
                   break;
                }
 
@@ -815,20 +813,26 @@ int main(int argc, char *argv[]) {
                // DBGMSG("Case CMDID_READCHANGES");
                // report_parsed_cmd(parsed_cmd,0);
                app_read_changes_forever(dh);
+               main_rc = EXIT_SUCCESS;
                break;
 
             case CMDID_PROBE:
                probe_display_by_dh(dh);
+               main_rc = EXIT_SUCCESS;
                break;
 
             default:
-              break;
+               main_rc = EXIT_FAILURE;
+               break;
             }
 
             ddc_close_display(dh);
          }
          if (dref->flags & DREF_TRANSIENT)
             free_display_ref(dref);
+      }   // if (dref)
+      else {
+         main_rc = EXIT_FAILURE;
       }
    }
 
@@ -836,7 +840,9 @@ int main(int argc, char *argv[]) {
       report_stats(parsed_cmd->stats_types);
       // report_timestamp_history();  // debugging function
    }
-   // DBGMSG("Done");
+   free_parsed_cmd(parsed_cmd);
 
+bye:
+   DBGMSF(main_debug, "Done.  main_rc=%d", main_rc);
    return main_rc;
 }

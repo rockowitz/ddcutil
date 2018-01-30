@@ -1,7 +1,7 @@
 /* app_dumpload.c
  *
  * <copyright>
- * Copyright (C) 2014-2017 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2014-2018 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -22,7 +22,7 @@
  */
 
 /** \f
- *
+ * Implement loadvcp and dumpvcp commands
  */
 
 /** \cond */
@@ -167,6 +167,7 @@ dumpvcp_as_file(Display_Handle * dh, char * filename) {
          }
          fclose(output_fp);
       }
+      g_ptr_array_free(strings, true);
    }
    return psc;
 }
@@ -177,6 +178,10 @@ dumpvcp_as_file(Display_Handle * dh, char * filename) {
 //
 
 /* Read a file into a newly allocated Dumpload_Data struct.
+ *
+ * \param  fn  file name
+ * \return pointer to newly allocated #Dumpload_Data struct.
+ *         Caller is responsible for freeing
  */
 Dumpload_Data * read_vcp_file(const char * fn) {
    bool debug = false;
@@ -184,6 +189,7 @@ Dumpload_Data * read_vcp_file(const char * fn) {
 
    Dumpload_Data * data = NULL;
    GPtrArray * g_line_array = g_ptr_array_sized_new(100);
+   g_ptr_array_set_free_func(g_line_array, g_free);
    // issues message if error:
    int rc = file_getlines(fn, g_line_array, false);
    if (rc < 0) {
@@ -191,6 +197,7 @@ Dumpload_Data * read_vcp_file(const char * fn) {
    }
    else {
       data = create_dumpload_data_from_g_ptr_array(g_line_array);
+      g_ptr_array_free(g_line_array, true);
    }
 
    DBGMSF(debug, "Returning: %p  ", data );
@@ -224,12 +231,14 @@ bool loadvcp_by_file(const char * fn, Display_Handle * dh) {
       // f0printf(FERR, "Unable to load VCP data from file: %s\n", fn);
    }
    else {
-      if (verbose) {
+      if (verbose || debug) {
            f0printf(FOUT, "Loading VCP settings for monitor \"%s\", sn \"%s\" from file: %s\n",
                            pdata->model, pdata->serial_ascii, fn);
-           rpt_push_output_dest(FOUT);
-           report_dumpload_data(pdata, 0);
-           rpt_pop_output_dest();
+           if (debug) {
+              rpt_push_output_dest(FOUT);
+              report_dumpload_data(pdata, 0);
+              rpt_pop_output_dest();
+           }
       }
       ddc_excp = loadvcp_by_dumpload_data(pdata, dh);
       if (ddc_excp) {

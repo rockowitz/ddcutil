@@ -104,7 +104,6 @@ DDCA_MCCS_Version_Spec get_vcp_version_by_display_handle(Display_Handle * dh) {
             set_output_level(DDCA_OL_NORMAL);
          Public_Status_Code psc =  0;
          Error_Info * ddc_excp = get_vcp_value(dh, 0xdf, DDCA_NON_TABLE_VCP_VALUE, &pvalrec);
-         // psc = (ddc_excp) ? ddc_excp->psc : 0;
          psc = ERRINFO_STATUS(ddc_excp);
          DBGMSF(debug, "get_vcp_value() returned %s", psc_desc(psc));
          if (debug && psc == DDCRC_RETRIES)
@@ -119,6 +118,7 @@ DDCA_MCCS_Version_Spec get_vcp_version_by_display_handle(Display_Handle * dh) {
                           dh->dref->vcp_version.major,
                           dh->dref->vcp_version.minor,
                           format_vspec(dh->dref->vcp_version) );
+            free_single_vcp_value(pvalrec);
          }
          else {
             // happens for pre MCCS v2 monitors

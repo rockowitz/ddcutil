@@ -52,6 +52,10 @@ void free_udev_device_summary(gpointer data) {
       assert(memcmp(summary->marker, UDEV_DEVICE_SUMMARY_MARKER, 4) == 0);
       summary->marker[3] = 'x';
       // no need to free strings, they are consts
+      free(summary->devpath);
+      free(summary->sysattr_name);
+      free(summary->sysname);
+      free(summary->subsystem);
    free(summary);
    }
 }
@@ -81,10 +85,10 @@ Udev_Device_Summary * get_udev_device_summary(struct udev_device * dev) {
   Udev_Device_Summary * summary = calloc(1,sizeof(struct udev_device_summary));
   memcpy(summary->marker, UDEV_DEVICE_SUMMARY_MARKER, 4);
   // n. all strings returned are const char *
-  summary->devpath      = udev_device_get_devpath(dev);
-  summary->sysname      = udev_device_get_sysname(dev);
-  summary->sysattr_name = udev_device_get_sysattr_value(dev, "name");
-  summary->subsystem    = udev_device_get_subsystem(dev);
+  summary->devpath      = strdup(udev_device_get_devpath(dev));
+  summary->sysname      = strdup(udev_device_get_sysname(dev));
+  summary->sysattr_name = strdup(udev_device_get_sysattr_value(dev, "name"));
+  summary->subsystem    = strdup(udev_device_get_subsystem(dev));
   return summary;
 }
 
@@ -132,8 +136,10 @@ GPtrArray * summarize_udev_subsystem_devices(char * subsystem) {
       dev = udev_device_new_from_syspath(udev, path);
 
       g_ptr_array_add(summaries, get_udev_device_summary(dev));
+      udev_device_unref(dev);
    }
    udev_enumerate_unref(enumerate);
+   udev_unref(udev);
 
 bye:
    return summaries;

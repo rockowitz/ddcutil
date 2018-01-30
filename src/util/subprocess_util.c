@@ -1,7 +1,7 @@
 /* subprocess_util.c
  *
  * <copyright>
- * Copyright (C) 2014-2017 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2014-2018 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -107,12 +107,16 @@ bool execute_shell_cmd_rpt(char * shell_cmd, int depth) {
              rpt_title(a_line, depth);
           }
 
-          // free(a_line);
+          free(a_line);   // 1/2018 was commented out, why?
+          a_line = NULL;
+          len = 0;
        }
+       // per getline() doc, buffer is allocated even if getline(),
+       free(a_line);
        int pclose_rc = pclose(fp);
        int errsv = errno;
        if (debug)
-          printf("(%s) plose() rc=%d, error=%d - %s\n", __func__, pclose_rc, errsv, strerror(errsv));
+          printf("(%s) pclose() rc=%d, error=%d - %s\n", __func__, pclose_rc, errsv, strerror(errsv));
     }
     return ok;
  }
@@ -140,6 +144,7 @@ bool execute_shell_cmd(char * shell_cmd) {
 GPtrArray * execute_shell_cmd_collect(char * shell_cmd) {
    bool debug = false;
    GPtrArray * result = g_ptr_array_new();
+   g_ptr_array_set_free_func(result, g_free);
    // TO DO: set free func
    if (debug)
       printf("(%s) Starting. shell_cmd = |%s|", __func__, shell_cmd);
@@ -172,7 +177,11 @@ GPtrArray * execute_shell_cmd_collect(char * shell_cmd) {
              first_line = false;
           }
           g_ptr_array_add(result, strdup(a_line));
+          free(a_line);
+          a_line = NULL;
+          len = 0;
        }
+       free(a_line);
        int pclose_rc = pclose(fp);
        if (debug)
           printf("(%s) plose() rc = %d\n", __func__, pclose_rc);

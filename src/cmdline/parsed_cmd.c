@@ -21,14 +21,23 @@
  * </endcopyright>
  */
 
+/** \f
+ *
+ */
+
+/** \cond */
 #include <assert.h>
 #include <glib-2.0/glib.h>
 #include <stdlib.h>
 #include <string.h>
+/** \endcond */
 
 #include "util/data_structures.h"
 #include "util/glib_string_util.h"
 #include "util/report_util.h"
+#include "util/string_util.h"
+
+#include "base/core.h"
 
 #include "cmdline/parsed_cmd.h"
 
@@ -138,12 +147,21 @@ void dbgrpt_parsed_cmd(Parsed_Cmd * parsed_cmd, int depth) {
 
 
 void free_parsed_cmd(Parsed_Cmd * parsed_cmd) {
+   bool debug = false;
+   DBGMSF(debug, "Starting.  parsed_cmd=%p", parsed_cmd);
    assert ( memcmp(parsed_cmd->marker,PARSED_CMD_MARKER,4) == 0);
    int ndx = 0;
    for (; ndx < parsed_cmd->argct; ndx++)
       free(parsed_cmd->args[ndx]);
    if (parsed_cmd->pdid)
       free_display_identifier(parsed_cmd->pdid);
+
+   free(parsed_cmd->failsim_control_fn);
+   free(parsed_cmd->fref);
+   ntsa_free(parsed_cmd->traced_files, true);
+   ntsa_free(parsed_cmd->traced_functions, true);
+
    parsed_cmd->marker[3] = 'x';
    free(parsed_cmd);
+   DBGMSF(debug, "Done");
 }

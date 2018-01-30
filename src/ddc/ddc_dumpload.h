@@ -3,7 +3,7 @@
  * Load/store VCP settings from/to file.
  *
  * <copyright>
- * Copyright (C) 2014-2017 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2014-2018 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -43,11 +43,10 @@
 
 
 /**
-Internal form data structure used to
-hold data being loaded.
+Internal form data structure used to hold data being loaded or dumped.
 
-Whatever the external form, a file or a string, it is converted to
-**Dumpload_Data** and then written to the monitor.
+Whatever the external form, a file or a string, loadvcp converts the data to
+**Dumpload_Data** and then writes the data to the monitor.
 */
 typedef
 struct {

@@ -1214,14 +1214,10 @@ vcp_format_feature_detail(
 {
    bool debug = false;
    DBGMSF(debug, "Starting");
-   // hack to avoid having to change all of vcp_feature_code.c
-   // Parsed_Vcp_Response *
-   // raw_data = single_vcp_value_to_parsed_vcp_response(valrec);
    bool ok = true;
    *aformatted_data = NULL;
 
    char * formatted_data = NULL;
-//   if (raw_data->response_type == NON_TABLE_VCP_CALL) {
    if (valrec->value_type == DDCA_NON_TABLE_VCP_VALUE) {
       Nontable_Vcp_Value* nontable_value = single_vcp_value_to_nontable_vcp_value(valrec);
       char workbuf[200];
@@ -1231,6 +1227,7 @@ vcp_format_feature_detail(
               nontable_value,
               workbuf,
               200);
+      free(nontable_value);
       if (ok)
          formatted_data = strdup(workbuf);
    }
