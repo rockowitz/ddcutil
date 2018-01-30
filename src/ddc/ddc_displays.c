@@ -367,7 +367,7 @@ GPtrArray * ddc_get_all_displays() {
  * \remark
  * Consider caching the value in dh->dref
  */
-char * get_firmware_version_string(Display_Handle * dh) {
+static char * get_firmware_version_string_t(Display_Handle * dh) {
    bool debug = false;
 
    static GPrivate  firmware_version_key = G_PRIVATE_INIT(g_free);
@@ -405,7 +405,7 @@ char * get_firmware_version_string(Display_Handle * dh) {
  * \remark
  * Consider caching the value in dh->dref
  */
-char * get_controller_mfg_string(Display_Handle * dh) {
+static char * get_controller_mfg_string_t(Display_Handle * dh) {
    bool debug = false;
 
    const int MFG_NAME_BUF_SIZE = 100;
@@ -529,8 +529,8 @@ ddc_report_display_by_dref(Display_Ref * dref, int depth) {
             }
             else {
                // display controller mfg, firmware version
-               rpt_vstring(d1, "Controller mfg:      %s", get_controller_mfg_string(dh) );
-               rpt_vstring(d1, "Firmware version:    %s", get_firmware_version_string(dh));;
+               rpt_vstring(d1, "Controller mfg:      %s", get_controller_mfg_string_t(dh) );
+               rpt_vstring(d1, "Firmware version:    %s", get_firmware_version_string_t(dh));;
                ddc_close_display(dh);
             }
 
