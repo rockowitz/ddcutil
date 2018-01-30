@@ -332,8 +332,8 @@ single_vcp_value_equal(
  */
 Error_Info *
 set_vcp_value(
-      Display_Handle *        dh,
-      Single_Vcp_Value * vrec)
+      Display_Handle *    dh,
+      Single_Vcp_Value *  vrec)
 {
    bool debug = false;
    DBGMSF0(debug, "Starting. ");
@@ -554,7 +554,7 @@ Error_Info * get_table_vcp_value(
  * \param  dh              handle for open display
  * \param  feature_code    feature code id
  * \param  call_type       indicates whether table or non-table
- * \param  pvalrec         location where to return newly allocated #DDCA_Single_Vcp_Value
+ * \param  pvalrec         location where to return newly allocated #Single_Vcp_Value
  * \return NULL if success, pointer to #Ddc_Error if failure
  *
  * The value pointed to by pvalrec is non-null iff the returned status code is 0.
@@ -563,10 +563,10 @@ Error_Info * get_table_vcp_value(
  */
 Error_Info *
 get_vcp_value(
-       Display_Handle *          dh,
-       Byte                      feature_code,
-       DDCA_Vcp_Value_Type       call_type,
-       Single_Vcp_Value **  pvalrec)
+       Display_Handle *       dh,
+       Byte                   feature_code,
+       DDCA_Vcp_Value_Type    call_type,
+       Single_Vcp_Value **    pvalrec)
 {
    bool debug = false;
    DBGTRC(debug, TRACE_GROUP, "Starting. Reading feature 0x%02x, dh=%s, dh->fh=%d",

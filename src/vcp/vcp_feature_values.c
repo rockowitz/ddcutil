@@ -71,12 +71,12 @@ char * ddca_vcp_value_type_name(DDCA_Vcp_Value_Type  value_type) {
 
 void dbgrpt_ddca_single_vcp_value(
       Single_Vcp_Value * valrec,
-      int depth)
+      int                depth)
 {
    int d1 = depth + 1;
    int d2 = depth + 2;
 
-   rpt_vstring(depth, "DDCA_Single_Vcp_Value at %p:", valrec);
+   rpt_vstring(depth, "Single_Vcp_Value at %p:", valrec);
    if (valrec) {
       rpt_vstring(d1, "Opcode:          0x%02x", valrec->opcode);
       rpt_vstring(d1, "Value type       %d - %s", valrec->value_type, ddca_vcp_value_type_name(valrec->value_type));
@@ -101,8 +101,6 @@ void dbgrpt_ddca_single_vcp_value(
    }
 
 }
-
-
 
 
 void report_single_vcp_value(Single_Vcp_Value * valrec, int depth) {
@@ -341,9 +339,9 @@ Nontable_Vcp_Value * single_vcp_value_to_nontable_vcp_value(Single_Vcp_Value * v
 }
 
 
-/** Converts a #DDCA_Single_Vcp_Value to #DDCA_Any_Vcp_Value
+/** Converts a #Single_Vcp_Value to #DDCA_Any_Vcp_Value
  *
- *  \param  valrec  pointer to #DDCA_Single_Vcp_Value to convert
+ *  \param  valrec  pointer to #Single_Vcp_Value to convert
  *  \return converted value
  */
 DDCA_Any_Vcp_Value * single_vcp_value_to_any_vcp_value(Single_Vcp_Value * valrec) {
@@ -363,7 +361,6 @@ DDCA_Any_Vcp_Value * single_vcp_value_to_any_vcp_value(Single_Vcp_Value * valrec
 
    return anyval;
 }
-
 
 
 Vcp_Value_Set vcp_value_set_new(int initial_size){

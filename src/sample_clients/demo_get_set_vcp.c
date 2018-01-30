@@ -70,7 +70,7 @@ bool verify_cont_value(
    DDCA_Status rc;
    bool ok = false;
 #ifdef OLD
-   DDCA_Single_Vcp_Value * valrec;
+   Single_Vcp_Value * valrec;
    rc = ddca_get_vcp_value(
            dh,
            feature_code,
@@ -141,7 +141,7 @@ test_cont_value(
    }
 
 #ifdef OLD
-   DDCA_Single_Vcp_Value * valrec;
+   Single_Vcp_Value * valrec;
    rc =
    ddca_get_vcp_value(
          dh,
@@ -227,7 +227,7 @@ bool verify_simple_nc_value(
    DDCA_Status rc;
    bool ok = false;
 #ifdef OLD
-   DDCA_Single_Vcp_Value * valrec;
+   Single_Vcp_Value * valrec;
    rc = ddca_get_vcp_value(
            dh,
            feature_code,
@@ -324,7 +324,7 @@ bool test_simple_nc_value(
     assert(info->feature_flags & DDCA_SIMPLE_NC);
 
 #ifdef OLD
-    DDCA_Single_Vcp_Value * valrec;
+    Single_Vcp_Value * valrec;
     rc =
     ddca_get_vcp_value(
           dh,
@@ -437,7 +437,7 @@ bool test_complex_nc_value(
     assert(info->feature_flags & (DDCA_COMPLEX_NC|DDCA_NC_CONT));
 
 #ifdef OLD
-    DDCA_Single_Vcp_Value * valrec;
+    Single_Vcp_Value * valrec;
     rc =
     ddca_get_vcp_value(
           dh,
