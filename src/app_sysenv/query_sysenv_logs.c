@@ -135,6 +135,10 @@ static bool probe_cmd(
          rpt_title(g_ptr_array_index(filtered_lines, ndx), depth+1);
       }
    }
+   if (filtered_lines) {
+      g_ptr_array_set_free_func(filtered_lines, g_free);
+      g_ptr_array_free(filtered_lines, true);
+   }
 
    bool result = (rc >= 0);
    DBGMSF(debug, "rc=%d, returning %s", rc, bool_repr(result));
