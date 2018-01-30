@@ -1259,7 +1259,7 @@ vcp_format_feature_detail(
 //
 
 /* Free a dynamically created VCP_Feature_Table_Entry..
- * Does nothing if the entry is in the permanently allocates
+ * Does nothing if the entry is in the permanently allocated
  * vcp_code_table.
  */
 void free_synthetic_vcp_entry(VCP_Feature_Table_Entry * pfte) {

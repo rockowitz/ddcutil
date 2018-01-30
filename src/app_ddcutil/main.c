@@ -241,6 +241,9 @@ void probe_display_by_dh(Display_Handle * dh)
                VCP_Feature_Table_Entry * vfte = vcp_find_feature_by_hexid_w_default(code);
                char * feature_name = get_version_sensitive_feature_name(vfte, pcaps->parsed_mccs_version);
                f0printf(FOUT, "   Feature x%02x - %s\n", code, feature_name);
+               if (vfte->vcp_global_flags & DDCA_SYNTHETIC) {
+                  free_synthetic_vcp_entry(vfte);
+               }
             }
          }
       }
@@ -254,6 +257,9 @@ void probe_display_by_dh(Display_Handle * dh)
                VCP_Feature_Table_Entry * vfte = vcp_find_feature_by_hexid_w_default(code);
                char * feature_name = get_version_sensitive_feature_name(vfte, vspec);
                f0printf(FOUT, "   Feature x%02x - %s\n", code, feature_name);
+               if (vfte->vcp_global_flags & DDCA_SYNTHETIC) {
+                  free_synthetic_vcp_entry(vfte);
+               }
             }
          }
       }
