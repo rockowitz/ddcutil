@@ -57,7 +57,7 @@ gpointer threaded_get_vcp_value(gpointer data) {
       assert(memcmp(parms->marker, ASYNC_GETVCP_DATA_MARKER, 4) == 0 );
 
       Public_Status_Code psc = 0;
-      DDCA_Single_Vcp_Value * valrec = NULL;
+      Single_Vcp_Value * valrec = NULL;
       DDCA_Any_Vcp_Value    * anyval = NULL;
       Error_Info * ddc_excp = get_vcp_value(
             parms->dh,

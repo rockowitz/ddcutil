@@ -70,7 +70,7 @@ char * ddca_vcp_value_type_name(DDCA_Vcp_Value_Type  value_type) {
 // TODO: MERGE dbgrpt_ddca_single_vcp_value(), report_single_vcp_value()
 
 void dbgrpt_ddca_single_vcp_value(
-      DDCA_Single_Vcp_Value * valrec,
+      Single_Vcp_Value * valrec,
       int depth)
 {
    int d1 = depth + 1;
@@ -105,7 +105,7 @@ void dbgrpt_ddca_single_vcp_value(
 
 
 
-void report_single_vcp_value(DDCA_Single_Vcp_Value * valrec, int depth) {
+void report_single_vcp_value(Single_Vcp_Value * valrec, int depth) {
    int d1 = depth+1;
    rpt_vstring(depth, "Single_Vcp_Value at %p:", valrec);
    rpt_vstring(d1, "opcode=0x%02x, value_type=%s (0x%02x)",
@@ -130,7 +130,7 @@ void report_single_vcp_value(DDCA_Single_Vcp_Value * valrec, int depth) {
 #define SUMMARIZE_SINGLE_VCP_VALUE_BUFFER_SIZE  101
 // to expose an int rather than a define in the header file
 const int summzrize_single_vcp_value_buffer_size = SUMMARIZE_SINGLE_VCP_VALUE_BUFFER_SIZE;
-char * summarize_single_vcp_value_r(DDCA_Single_Vcp_Value * valrec, char * buffer, int bufsz) {
+char * summarize_single_vcp_value_r(Single_Vcp_Value * valrec, char * buffer, int bufsz) {
    bool debug = false;
    DBGMSF(debug, "Starting.  buffer=%p, bufsz=%d", buffer, bufsz);
    if (buffer) {
@@ -185,13 +185,13 @@ char * summarize_single_vcp_value_r(DDCA_Single_Vcp_Value * valrec, char * buffe
 }
 
 
-char * summarize_single_vcp_value(DDCA_Single_Vcp_Value * valrec) {
+char * summarize_single_vcp_value(Single_Vcp_Value * valrec) {
    static char buffer[SUMMARIZE_SINGLE_VCP_VALUE_BUFFER_SIZE];
    return summarize_single_vcp_value_r(valrec, buffer, sizeof(buffer));
 }
 
 // ignoring Buffer * since it only exists temporarily for transition
-void free_single_vcp_value(DDCA_Single_Vcp_Value * vcp_value) {
+void free_single_vcp_value(Single_Vcp_Value * vcp_value) {
    bool debug = false;
    DBGMSF(debug, "Starting. vcp_value=%s", summarize_single_vcp_value(vcp_value));
    if (vcp_value->value_type == DDCA_TABLE_VCP_VALUE) {
@@ -204,10 +204,10 @@ void free_single_vcp_value(DDCA_Single_Vcp_Value * vcp_value) {
 
 // wrap free_single_vcp_value() in signature of GDestroyNotify()
 void free_single_vcp_value_func(gpointer data) {
-   free_single_vcp_value((DDCA_Single_Vcp_Value *) data);
+   free_single_vcp_value((Single_Vcp_Value *) data);
 }
 
-DDCA_Single_Vcp_Value *
+Single_Vcp_Value *
 create_nontable_vcp_value(
       Byte feature_code,
       Byte mh,
@@ -215,7 +215,7 @@ create_nontable_vcp_value(
       Byte sh,
       Byte sl)
 {
-   DDCA_Single_Vcp_Value * valrec = calloc(1,sizeof(DDCA_Single_Vcp_Value));
+   Single_Vcp_Value * valrec = calloc(1,sizeof(Single_Vcp_Value));
    valrec->value_type = DDCA_NON_TABLE_VCP_VALUE;
    valrec->opcode = feature_code;
    valrec->val.nc.mh = mh;
@@ -228,13 +228,13 @@ create_nontable_vcp_value(
    return valrec;
 }
 
-DDCA_Single_Vcp_Value *
+Single_Vcp_Value *
 create_cont_vcp_value(
       Byte feature_code,
       ushort max_val,
       ushort cur_val)
 {
-   DDCA_Single_Vcp_Value * valrec = calloc(1,sizeof(DDCA_Single_Vcp_Value));
+   Single_Vcp_Value * valrec = calloc(1,sizeof(Single_Vcp_Value));
    valrec->value_type = DDCA_NON_TABLE_VCP_VALUE;
    valrec->opcode = feature_code;
    // not needed thanks to overlay
@@ -247,13 +247,13 @@ create_cont_vcp_value(
    return valrec;
 }
 
-DDCA_Single_Vcp_Value *
+Single_Vcp_Value *
 create_table_vcp_value_by_bytes(
       Byte   feature_code,
       Byte * bytes,
       ushort bytect)
 {
-   DDCA_Single_Vcp_Value * valrec = calloc(1,sizeof(DDCA_Single_Vcp_Value));
+   Single_Vcp_Value * valrec = calloc(1,sizeof(Single_Vcp_Value));
    valrec->value_type = DDCA_TABLE_VCP_VALUE;
    valrec->opcode = feature_code;
    valrec->val.t.bytect = bytect;
@@ -263,18 +263,18 @@ create_table_vcp_value_by_bytes(
 }
 
 
-DDCA_Single_Vcp_Value *
+Single_Vcp_Value *
 create_table_vcp_value_by_buffer(Byte feature_code, Buffer * buffer) {
    return create_table_vcp_value_by_bytes(feature_code, buffer->bytes, buffer->len);
 }
 
 
-DDCA_Single_Vcp_Value *
+Single_Vcp_Value *
 create_single_vcp_value_by_parsed_vcp_response(
       Byte feature_id,
       Parsed_Vcp_Response * presp)
 {
-   DDCA_Single_Vcp_Value * valrec = NULL;
+   Single_Vcp_Value * valrec = NULL;
 
    if (presp->response_type == DDCA_NON_TABLE_VCP_VALUE) {
       assert(presp->non_table_response->valid_response);
@@ -300,7 +300,7 @@ create_single_vcp_value_by_parsed_vcp_response(
 }
 
 // temp for aid in conversion
-Parsed_Vcp_Response * single_vcp_value_to_parsed_vcp_response(DDCA_Single_Vcp_Value * valrec) {
+Parsed_Vcp_Response * single_vcp_value_to_parsed_vcp_response(Single_Vcp_Value * valrec) {
    Parsed_Vcp_Response * presp = calloc(1, sizeof(Parsed_Vcp_Response));
    presp->response_type = valrec->value_type;
    if (valrec->value_type == DDCA_NON_TABLE_VCP_VALUE) {
@@ -325,7 +325,7 @@ Parsed_Vcp_Response * single_vcp_value_to_parsed_vcp_response(DDCA_Single_Vcp_Va
    return presp;
 }
 
-Nontable_Vcp_Value * single_vcp_value_to_nontable_vcp_value(DDCA_Single_Vcp_Value * valrec) {
+Nontable_Vcp_Value * single_vcp_value_to_nontable_vcp_value(Single_Vcp_Value * valrec) {
    Nontable_Vcp_Value * non_table_response = calloc(1, sizeof(Nontable_Vcp_Value));
    assert (valrec->value_type == DDCA_NON_TABLE_VCP_VALUE);
 
@@ -346,7 +346,7 @@ Nontable_Vcp_Value * single_vcp_value_to_nontable_vcp_value(DDCA_Single_Vcp_Valu
  *  \param  valrec  pointer to #DDCA_Single_Vcp_Value to convert
  *  \return converted value
  */
-DDCA_Any_Vcp_Value * single_vcp_value_to_any_vcp_value(DDCA_Single_Vcp_Value * valrec) {
+DDCA_Any_Vcp_Value * single_vcp_value_to_any_vcp_value(Single_Vcp_Value * valrec) {
    DDCA_Any_Vcp_Value * anyval = calloc(1, sizeof(DDCA_Any_Vcp_Value));
    anyval->opcode     = valrec->opcode;
    anyval->value_type = valrec->value_type;
@@ -377,7 +377,7 @@ void free_vcp_value_set(Vcp_Value_Set vset){
    g_ptr_array_free(vset, true);
 }
 
-void vcp_value_set_add(Vcp_Value_Set vset,  DDCA_Single_Vcp_Value * pval){
+void vcp_value_set_add(Vcp_Value_Set vset,  Single_Vcp_Value * pval){
    g_ptr_array_add(vset, pval);
 }
 
@@ -385,7 +385,7 @@ int vcp_value_set_size(Vcp_Value_Set vset){
    return vset->len;
 }
 
-DDCA_Single_Vcp_Value * vcp_value_set_get(Vcp_Value_Set vset, int ndx){
+Single_Vcp_Value * vcp_value_set_get(Vcp_Value_Set vset, int ndx){
    assert(0 <= ndx && ndx < vset->len);
    return g_ptr_array_index(vset, ndx);
 }

@@ -167,7 +167,7 @@ get_raw_value_for_feature_table_entry(
       Display_Handle *           dh,
       VCP_Feature_Table_Entry *  frec,
       bool                       ignore_unsupported,
-      DDCA_Single_Vcp_Value **   pvalrec,
+      Single_Vcp_Value **   pvalrec,
       FILE *                     msg_fh)
 {
    bool debug = false;
@@ -186,7 +186,7 @@ get_raw_value_for_feature_table_entry(
    bool is_table_feature = is_table_feature_by_display_handle(frec, dh);
    DDCA_Vcp_Value_Type feature_type = (is_table_feature) ? DDCA_TABLE_VCP_VALUE : DDCA_NON_TABLE_VCP_VALUE;
    DDCA_Output_Level output_level = get_output_level();
-   DDCA_Single_Vcp_Value * valrec = NULL;
+   Single_Vcp_Value * valrec = NULL;
    if (dh->dref->io_path.io_mode == DDCA_IO_USB) {
 #ifdef USE_USB
      psc = usb_get_vcp_value(
@@ -314,7 +314,7 @@ collect_raw_feature_set_values(
    for (ndx=0; ndx< features_ct; ndx++) {
       VCP_Feature_Table_Entry * entry = get_feature_set_entry(feature_set, ndx);
       DBGMSF(debug,"ndx=%d, feature = 0x%02x", ndx, entry->code);
-      DDCA_Single_Vcp_Value *    pvalrec;
+      Single_Vcp_Value *    pvalrec;
       Public_Status_Code cur_status_code =
        get_raw_value_for_feature_table_entry(
          dh,
@@ -412,7 +412,7 @@ get_formatted_value_for_feature_table_entry(
                             feature_name);
    }
 
-   DDCA_Single_Vcp_Value *    pvalrec = NULL;
+   Single_Vcp_Value *    pvalrec = NULL;
 
    // bool ignore_unsupported = !(output_level >= DDCA_OL_NORMAL && !suppress_unsupported);
    bool ignore_unsupported = suppress_unsupported;

@@ -1501,7 +1501,7 @@ ddca_get_vcp_value(
       DDCA_Display_Handle       ddca_dh,
       DDCA_Vcp_Feature_Code     feature_code,
       DDCA_Vcp_Value_Type       call_type,   // why is this needed?   look it up from dh and feature_code
-      DDCA_Single_Vcp_Value **  pvalrec)
+      Single_Vcp_Value **  pvalrec)
 {
    Error_Info * ddc_excp = NULL;
 
@@ -1563,7 +1563,7 @@ ddca_get_any_vcp_value(
    }
    if (call_type != DDCA_UNSET_VCP_VALUE_TYPE_PARM) {
 
-      DDCA_Single_Vcp_Value *  valrec2 = NULL;
+      Single_Vcp_Value *  valrec2 = NULL;
       rc = ddca_get_vcp_value(ddca_dh, feature_code, call_type, &valrec2);
       if (rc == 0) {
 #ifdef OLD
@@ -1669,7 +1669,7 @@ ddca_get_formatted_vcp_value(
                   // Version_Feature_Flags flags = feature_info->internal_feature_flags;
                    // n. will default to NON_TABLE_VCP_VALUE if not a known code
                    DDCA_Vcp_Value_Type call_type = (flags & DDCA_TABLE) ?  DDCA_TABLE_VCP_VALUE : DDCA_NON_TABLE_VCP_VALUE;
-                   DDCA_Single_Vcp_Value * pvalrec;
+                   Single_Vcp_Value * pvalrec;
                    ddc_excp = get_vcp_value(dh, feature_code, call_type, &pvalrec);
                    psc = (ddc_excp) ? ddc_excp->status_code : 0;
                    errinfo_free(ddc_excp);
@@ -1695,7 +1695,7 @@ ddca_get_formatted_vcp_value(
 DDCA_Status
 ddca_set_single_vcp_value(
       DDCA_Display_Handle     ddca_dh,
-      DDCA_Single_Vcp_Value * valrec)
+      Single_Vcp_Value * valrec)
    {
       Error_Info * ddc_excp = NULL;
       WITH_DH(ddca_dh,  {
@@ -1719,7 +1719,7 @@ ddca_set_continuous_vcp_value(
          // psc = global_to_public_status_code(gsc);
       } );
 #endif
-   DDCA_Single_Vcp_Value valrec;
+   Single_Vcp_Value valrec;
    valrec.opcode = feature_code;
    valrec.value_type = DDCA_NON_TABLE_VCP_VALUE;
    valrec.val.c.cur_val = new_value;

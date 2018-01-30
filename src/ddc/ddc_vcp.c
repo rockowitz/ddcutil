@@ -292,8 +292,8 @@ is_rereadable_feature(
 
 static bool
 single_vcp_value_equal(
-      DDCA_Single_Vcp_Value * vrec1,
-      DDCA_Single_Vcp_Value * vrec2)
+      Single_Vcp_Value * vrec1,
+      Single_Vcp_Value * vrec2)
 {
    assert(vrec1 && vrec2);  // no implementation for degenerate cases
    bool debug = false;
@@ -333,7 +333,7 @@ single_vcp_value_equal(
 Error_Info *
 set_vcp_value(
       Display_Handle *        dh,
-      DDCA_Single_Vcp_Value * vrec)
+      Single_Vcp_Value * vrec)
 {
    bool debug = false;
    DBGMSF0(debug, "Starting. ");
@@ -356,7 +356,7 @@ set_vcp_value(
    if (!ddc_excp && verify_setvcp) {
       if (is_rereadable_feature(dh, vrec->opcode) ) {
          f0printf(fout, "Verifying that value of feature 0x%02x successfully set...\n", vrec->opcode);
-         DDCA_Single_Vcp_Value * newval = NULL;
+         Single_Vcp_Value * newval = NULL;
          ddc_excp = get_vcp_value(
              dh,
              vrec->opcode,
@@ -566,7 +566,7 @@ get_vcp_value(
        Display_Handle *          dh,
        Byte                      feature_code,
        DDCA_Vcp_Value_Type       call_type,
-       DDCA_Single_Vcp_Value **  pvalrec)
+       Single_Vcp_Value **  pvalrec)
 {
    bool debug = false;
    DBGTRC(debug, TRACE_GROUP, "Starting. Reading feature 0x%02x, dh=%s, dh->fh=%d",
@@ -576,7 +576,7 @@ get_vcp_value(
    Error_Info * ddc_excp = NULL;
    Buffer * buffer = NULL;
    Parsed_Nontable_Vcp_Response * parsed_nontable_response = NULL;  // vs interpreted ..
-   DDCA_Single_Vcp_Value * valrec = NULL;
+   Single_Vcp_Value * valrec = NULL;
 
    // why are we coming here for USB?
    if (dh->dref->io_path.io_mode == DDCA_IO_USB) {

@@ -126,7 +126,7 @@ app_set_vcp_value(
    Byte                       hexid;
    VCP_Feature_Table_Entry *  entry = NULL;
    bool                       good_value = false;
-   DDCA_Single_Vcp_Value      vrec;
+   Single_Vcp_Value      vrec;
 
    DDCA_MCCS_Version_Spec vspec = get_vcp_version_by_display_handle(dh);
    bool ok = any_one_byte_hex_string_to_byte_in_buf(feature, &hexid);

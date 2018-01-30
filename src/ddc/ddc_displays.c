@@ -113,7 +113,7 @@ bool check_ddc_communication(Display_Handle * dh) {
 
    bool result = true;
 
-   DDCA_Single_Vcp_Value * pvalrec;
+   Single_Vcp_Value * pvalrec;
 
    // verbose output is distracting since this function is called when querying for other things
    // DDCA_Output_Level olev = get_output_level();
@@ -165,7 +165,7 @@ bool check_monitor_ddc_null_response(Display_Handle * dh) {
 
    if (dh->dref->io_mode != DDCA_IO_USB) {
 
-      DDCA_Single_Vcp_Value * pvalrec;
+      Single_Vcp_Value * pvalrec;
 
       // // verbose output is distracting since this function is called when querying for other things
       // DDCA_Output_Level olev = get_output_level();
@@ -266,7 +266,7 @@ bool initial_checks_by_dh(Display_Handle * dh) {
    bool debug = false;
    DBGMSF(debug, "Starting. dh=%s", dh_repr_t(dh));
    assert(dh);
-   DDCA_Single_Vcp_Value * pvalrec;
+   Single_Vcp_Value * pvalrec;
 
    if (!(dh->dref->flags & DREF_DDC_COMMUNICATION_CHECKED)) {
 
@@ -372,7 +372,7 @@ char * get_firmware_version_string(Display_Handle * dh) {
 
    static char version[40];
 
-   DDCA_Single_Vcp_Value * valrec;
+   Single_Vcp_Value * valrec;
 
    Public_Status_Code psc = 0;
    Error_Info * ddc_excp = get_vcp_value(
@@ -410,7 +410,7 @@ char * get_controller_mfg_string(Display_Handle * dh) {
 
    static char mfg_name_buf[100] = "";
    char * mfg_name = NULL;
-   DDCA_Single_Vcp_Value *   valrec;
+   Single_Vcp_Value *   valrec;
 
    Public_Status_Code psc = 0;
    Error_Info * ddc_excp = get_vcp_value(dh, 0xc8, DDCA_NON_TABLE_VCP_VALUE, &valrec);

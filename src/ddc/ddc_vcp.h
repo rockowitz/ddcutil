@@ -57,7 +57,7 @@ set_nontable_vcp_value(
 Error_Info *
 set_vcp_value(
       Display_Handle *          dh,
-      DDCA_Single_Vcp_Value *   vrec);
+      Single_Vcp_Value *   vrec);
 
 Error_Info *
 get_table_vcp_value(
@@ -76,7 +76,7 @@ get_vcp_value(
       Display_Handle *          dh,
       Byte                      feature_code,
       DDCA_Vcp_Value_Type       call_type,
-      DDCA_Single_Vcp_Value **  pvalrec);
+      Single_Vcp_Value **  pvalrec);
 
 
 #endif /* DDC_VCP_H_ */
