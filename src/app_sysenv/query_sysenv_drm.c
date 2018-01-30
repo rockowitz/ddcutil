@@ -206,7 +206,8 @@ static void probe_open_device_using_libdrm(int fd, int depth) {
    busid = drmGetBusid(fd);
    if (busid) {
       rpt_vstring(d1, "DRM Busid:  %s", busid);
-      // drmFreeBusid(busid);
+      // drmFreeBusid(busid);  // requires root
+      free(busid);
    }
    else {
       rpt_vstring(d1, "Error calling drmGetBusid().  errno=%s", linux_errno_desc(errno));

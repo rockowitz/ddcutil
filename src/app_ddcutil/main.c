@@ -187,7 +187,7 @@ perform_get_capabilities_by_display_handle(Display_Handle * dh) {
 
 void probe_display_by_dh(Display_Handle * dh)
 {
-   bool debug = true;
+   bool debug = false;
    DBGMSF(debug, "Starting. dh=%s", dh_repr(dh));
    Public_Status_Code psc = 0;
    Error_Info * ddc_excp = NULL;

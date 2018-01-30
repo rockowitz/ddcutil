@@ -103,6 +103,7 @@ void edid_recs_free_func(gpointer voidptr) {
    X11_Edid_Rec * prec = voidptr;
    free(prec->edidbytes);
    free(prec->output_name);
+   free(prec);
 }
 
 
