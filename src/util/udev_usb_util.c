@@ -218,13 +218,14 @@ void probe_udev_subsystem(char * subsystem, bool show_usb_parent, int depth) {
    struct udev *udev;
    struct udev_enumerate *enumerate;
    struct udev_list_entry *devices, *dev_list_entry;
-   struct udev_device *dev;
+   struct udev_device* dev  = NULL;
+   struct udev_device* dev0 = NULL;
 
    /* Create the udev object */
    udev = udev_new();
    if (!udev) {
       printf("(%s) Can't create udev\n", __func__);
-      return;   // exit(1);
+      goto bye;
    }
 
    /* Create a list of the devices in the specified subsystem. */
@@ -246,61 +247,62 @@ void probe_udev_subsystem(char * subsystem, bool show_usb_parent, int depth) {
          and create a udev_device object (dev) representing it */
       path = udev_list_entry_get_name(dev_list_entry);
       rpt_vstring(depth, "path: %s", path);
-      dev = udev_device_new_from_syspath(udev, path);
+      dev0 = udev_device_new_from_syspath(udev, path);
 
       /* udev_device_get_devnode() returns the path to the device node
          itself in /dev. */
-      rpt_vstring(depth, "Device Node Path: %s", udev_device_get_devnode(dev));
+      rpt_vstring(depth, "Device Node Path: %s", udev_device_get_devnode(dev0));
 
-      report_udev_device(dev, d1);
+      report_udev_device(dev0, d1);
 
-      if (!show_usb_parent)
-         continue;
+      if (show_usb_parent) {
 
-      /* The device pointed to by dev contains information about
-         the hidraw device. In order to get information about the
-         USB device, get the parent device with the
-         subsystem/devtype pair of "usb"/"usb_device". This will
-         be several levels up the tree, but the function will find
-         it.*/
-      dev = udev_device_get_parent_with_subsystem_devtype(
-             dev,
-             "usb",
-             "usb_device");
-      if (!dev) {
-         rpt_vstring(depth, "Unable to find parent USB device.");
-         continue;   // exit(1);
+         /* The device pointed to by dev contains information about
+            the hidraw device. In order to get information about the
+            USB device, get the parent device with the
+            subsystem/devtype pair of "usb"/"usb_device". This will
+            be several levels up the tree, but the function will find
+            it.*/
+         dev = udev_device_get_parent_with_subsystem_devtype(
+                dev,
+                "usb",
+                "usb_device");
+         if (!dev) {
+            rpt_vstring(depth, "Unable to find parent USB device.");
+         }
+         else {
+            puts("");
+            rpt_vstring(depth, "Parent device:");
+
+            /* From here, we can call get_sysattr_value() for each file
+               in the device's /sys entry. The strings passed into these
+               functions (idProduct, idVendor, serial, etc.) correspond
+               directly to the files in the directory which represents
+               the USB device. Note that USB strings are Unicode, UCS2
+               encoded, but the strings returned from
+               udev_device_get_sysattr_value() are UTF-8 encoded. */
+            rpt_vstring(d1, "VID/PID: %s %s",
+                            udev_device_get_sysattr_value(dev,"idVendor"),
+                            udev_device_get_sysattr_value(dev, "idProduct"));
+            rpt_vstring(d1, "%s",
+                    udev_device_get_sysattr_value(dev,"manufacturer") );
+            rpt_vstring(d1, "%s",
+                    udev_device_get_sysattr_value(dev,"product"));
+            rpt_vstring(d1, "serial: %s",
+                     udev_device_get_sysattr_value(dev, "serial"));
+
+            report_udev_device(dev, d1);
+         }
+
       }
-
-      puts("");
-      rpt_vstring(depth, "Parent device:");
-
-      /* From here, we can call get_sysattr_value() for each file
-         in the device's /sys entry. The strings passed into these
-         functions (idProduct, idVendor, serial, etc.) correspond
-         directly to the files in the directory which represents
-         the USB device. Note that USB strings are Unicode, UCS2
-         encoded, but the strings returned from
-         udev_device_get_sysattr_value() are UTF-8 encoded. */
-      rpt_vstring(d1, "VID/PID: %s %s",
-                      udev_device_get_sysattr_value(dev,"idVendor"),
-                      udev_device_get_sysattr_value(dev, "idProduct"));
-      rpt_vstring(d1, "%s",
-              udev_device_get_sysattr_value(dev,"manufacturer") );
-      rpt_vstring(d1, "%s",
-              udev_device_get_sysattr_value(dev,"product"));
-      rpt_vstring(d1, "serial: %s",
-               udev_device_get_sysattr_value(dev, "serial"));
-
-      report_udev_device(dev, d1);
-
-      udev_device_unref(dev);
+      udev_device_unref(dev0);
    }
    /* Free the enumerator object */
    udev_enumerate_unref(enumerate);
 
    udev_unref(udev);
 
+bye:
    return;
 }
 
