@@ -131,6 +131,7 @@ void query_dmidecode() {
       else
          snprintf(workbuf, 100, "%s - Unrecognized value", chassis_type_s);
       chassis_desc = workbuf;
+      free(chassis_type_s);
    }
    rpt_vstring(1, "%-25s %s", "Chassis type:", chassis_desc);
 
