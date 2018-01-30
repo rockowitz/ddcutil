@@ -88,6 +88,7 @@ static bool probe_log(
          }
          file_found = true;
       }
+      g_ptr_array_free(found_lines, true);
    }
    else {
       rpt_vstring(depth, "File not found: %s", log_fn);
