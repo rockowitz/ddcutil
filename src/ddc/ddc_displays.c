@@ -370,10 +370,10 @@ GPtrArray * ddc_get_all_displays() {
 char * get_firmware_version_string(Display_Handle * dh) {
    bool debug = false;
 
-   static char version[40];
+   static GPrivate  firmware_version_key = G_PRIVATE_INIT(g_free);
+   char * version = get_thread_fixed_buffer(&firmware_version_key, 40);
 
-   Single_Vcp_Value * valrec;
-
+   Single_Vcp_Value * valrec = NULL;
    Public_Status_Code psc = 0;
    Error_Info * ddc_excp = get_vcp_value(
                                dh,
@@ -389,7 +389,7 @@ char * get_firmware_version_string(Display_Handle * dh) {
       }
    }
    else {
-      snprintf(version, sizeof(version), "%d.%d", valrec->val.nc.sh, valrec->val.nc.sl);
+      SAFE_SNPRINTF(version, 40, "%d.%d", valrec->val.nc.sh, valrec->val.nc.sl);
       free_single_vcp_value(valrec);
    }
    return version;
@@ -408,7 +408,11 @@ char * get_firmware_version_string(Display_Handle * dh) {
 char * get_controller_mfg_string(Display_Handle * dh) {
    bool debug = false;
 
-   static char mfg_name_buf[100] = "";
+   const int MFG_NAME_BUF_SIZE = 100;
+
+   static GPrivate  controller_mfg_key = G_PRIVATE_INIT(g_free);
+   char * mfg_name_buf = get_thread_fixed_buffer(&controller_mfg_key, MFG_NAME_BUF_SIZE);
+
    char * mfg_name = NULL;
    Single_Vcp_Value * valrec;
 
@@ -423,7 +427,8 @@ char * get_controller_mfg_string(Display_Handle * dh) {
                             valrec->val.nc.sl);
       free_single_vcp_value(valrec);
       if (!mfg_name) {
-         snprintf(mfg_name_buf, sizeof(mfg_name_buf), "Unrecognized manufacturer code 0x%02x", valrec->val.nc.sl);
+         SAFE_SNPRINTF(mfg_name_buf, MFG_NAME_BUF_SIZE,
+                       "Unrecognized manufacturer code 0x%02x", valrec->val.nc.sl);
          mfg_name = mfg_name_buf;
       }
    }
