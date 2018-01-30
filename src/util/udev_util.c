@@ -185,6 +185,8 @@ GPtrArray * find_devices_by_sysattr_name(char * name) {
 
       g_ptr_array_add(result, get_udev_device_summary(dev));
    }
+   udev_enumerate_unref(enumerate);
+   udev_unref(udev);
 
 bye:
    return result;
