@@ -340,6 +340,7 @@ void rpt_2col(char * s1,  char * s2,  int col2offset, bool offset_absolute, int 
    rpt_vstring(depth, "%-*s%s", col1sz, s1, s2 );
 }
 
+
 /* Reports the contents of a file.
  *
  * @param   fn        name of file
@@ -348,6 +349,7 @@ void rpt_2col(char * s1,  char * s2,  int col2offset, bool offset_absolute, int 
  */
 int rpt_file_contents(const char * fn, bool verbose, int depth) {
    GPtrArray * line_array = g_ptr_array_new();
+   g_ptr_array_set_free_func(line_array, g_free);
    int rc = file_getlines(fn, line_array, false);
    if (rc < 0) {
       if (verbose)
@@ -365,6 +367,7 @@ int rpt_file_contents(const char * fn, bool verbose, int depth) {
          rpt_title(curline, depth);
       }
    }
+   g_ptr_array_free(line_array, true);
    return rc;
 }
 
