@@ -93,10 +93,6 @@ gboolean output_arg_func(const gchar* option_name,
       output_level = DDCA_OL_VERBOSE;
    else if (streq(option_name, "-t")  || streq(option_name, "--terse") || streq(option_name, "--brief") )
       output_level = DDCA_OL_TERSE;
-#ifdef OLD
-   else if (streq(option_name, "-p") || streq(option_name, "--program"))
-      output_level = OL_PROGRAM;
-#endif
    else {
       PROGRAM_LOGIC_ERROR("Unexpected option_name: %s", option_name);
       g_set_error(error, G_OPTION_ERROR, G_OPTION_ERROR_FAILED,
@@ -190,8 +186,6 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
    gboolean async_flag     = false;
    gboolean report_freed_excp_flag = false;
    gboolean notable_flag   = false;
-// gboolean myhelp_flag    = false;
-// gboolean myusage_flag   = false;
    char *   mfg_id_work    = NULL;
    char *   modelwork      = NULL;
    char *   snwork         = NULL;
@@ -226,7 +220,6 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
       {"edid",    'e',  0, G_OPTION_ARG_STRING,   &edidwork,         "Monitor EDID",            "256 char hex string" },
 
       // output control
-
       {"ddc",     '\0', 0, G_OPTION_ARG_NONE,     &ddc_flag,         "Report DDC protocol and data errors", NULL},
       {"verbose", 'v',  G_OPTION_FLAG_NO_ARG,
                            G_OPTION_ARG_CALLBACK, output_arg_func,   "Show extended detail",             NULL},
@@ -703,14 +696,12 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
          int max_arg_ct = cmdInfo->max_arg_ct;
          int argctr = 1;
          while ( cmd_and_args[argctr] != NULL) {
-            // printf("loop.  argctr=%d\n", argctr);
             if (argctr > max_arg_ct) {
                fprintf(stderr, "Too many arguments\n");
                ok = false;
                break;
             }
             char * thisarg = (char *) cmd_and_args[argctr];
-            // printf("thisarg |%s|\n", thisarg);
             char * argcopy = strdup(thisarg);
             parsed_cmd->args[argctr-1] = argcopy;
             argctr++;
