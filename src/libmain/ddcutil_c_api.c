@@ -938,7 +938,7 @@ ddca_get_displays_old()
 #endif
          curinfo->path.io_mode = dref->io_path.io_mode;
          switch (dref->io_path.io_mode) {
-         case DDCA_IO_DEVI2C:
+         case DDCA_IO_I2C:
             curinfo->path.i2c_busno = dref->io_path.i2c_busno;
             break;
          case DDCA_IO_ADL:
@@ -1004,7 +1004,7 @@ ddca_get_display_info_list(void)
          curinfo->path.io_mode = dref->io_path.io_mode;
          // n. usb_bus, usb_device initialized to 0 by calloc
          switch (dref->io_path.io_mode) {
-         case DDCA_IO_DEVI2C:
+         case DDCA_IO_I2C:
             curinfo->path.path.i2c_busno = dref->io_path.path.i2c_busno;
             break;
          case DDCA_IO_ADL:
@@ -1075,7 +1075,7 @@ ddca_report_display_info(
    rpt_vstring(d0, "Display number:  %d", dinfo->dispno);
    // rpt_vstring(d1, "IO mode:             %s", io_mode_name(dinfo->path.io_mode));
    switch(dinfo->path.io_mode) {
-   case (DDCA_IO_DEVI2C):
+   case (DDCA_IO_I2C):
          rpt_vstring(d1, "I2C bus number:      %d", dinfo->path.path.i2c_busno);
          break;
    case (DDCA_IO_ADL):

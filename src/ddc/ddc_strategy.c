@@ -31,13 +31,13 @@
 
 // keep in sync w DDC_IO_Mode
 DDC_Strategy ddc_strategies[] = {
-      {DDCA_IO_DEVI2C, NULL, NULL },
+      {DDCA_IO_I2C, NULL, NULL },
       {DDCA_IO_ADL,    NULL, NULL },
       {DDCA_IO_USB,        NULL, NULL }
 };
 
 void validate_ddc_strategies() {
-   assert(  ddc_strategies[DDCA_IO_DEVI2C].io_mode == DDCA_IO_DEVI2C);
+   assert(  ddc_strategies[DDCA_IO_I2C].io_mode == DDCA_IO_I2C);
    assert(  ddc_strategies[DDCA_IO_ADL].io_mode    == DDCA_IO_ADL);
    assert(  ddc_strategies[DDCA_IO_USB].io_mode    == DDCA_IO_USB);
 }

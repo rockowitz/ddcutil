@@ -472,7 +472,7 @@ ddc_report_display_by_dref(Display_Ref * dref, int depth) {
    }
 
    switch(dref->io_path.io_mode) {
-   case DDCA_IO_DEVI2C:
+   case DDCA_IO_I2C:
       // i2c_report_active_display_by_busno(dref->io_path.io.i2c_busno, d1);
       {
          I2C_Bus_Info * curinfo = dref->detail2;
@@ -605,7 +605,7 @@ void ddc_dbgrpt_display_ref(Display_Ref * dref, int depth) {
    rpt_vstring(d1, "io_mode: %s", io_mode_name(dref->io_path.io_mode));
    // rpt_vstring(d1, "flags:   0x%02x", drec->flags);
    switch(dref->io_path.io_mode) {
-   case(DDCA_IO_DEVI2C):
+   case(DDCA_IO_I2C):
          rpt_vstring(d1, "I2C bus information: ");
          I2C_Bus_Info * businfo = dref->detail2;
          assert( memcmp(businfo->marker, I2C_BUS_INFO_MARKER, 4) == 0);
@@ -710,7 +710,7 @@ ddc_check_display_ref(Display_Ref * dref, Display_Criteria * criteria) {
       goto bye;
 
    if (criteria->i2c_busno >= 0) {
-      if (dref->io_path.io_mode != DDCA_IO_DEVI2C || dref->io_path.path.i2c_busno != criteria->i2c_busno)
+      if (dref->io_path.io_mode != DDCA_IO_I2C || dref->io_path.path.i2c_busno != criteria->i2c_busno)
          goto bye;
    }
 

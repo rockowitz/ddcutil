@@ -247,9 +247,9 @@ typedef struct {
 
 /** Indicates how a display is accessed */
 typedef enum {
-   DDCA_IO_DEVI2C,     /**< Use DDC to communicate with a /dev/i2c-n device */
-   DDCA_IO_ADL,        /**< Use ADL API */
-   DDCA_IO_USB         /**< Use USB reports for a USB connected monitor */
+   DDCA_IO_I2C,     /**< Use DDC to communicate with a /dev/i2c-n device */
+   DDCA_IO_ADL,     /**< Use ADL API */
+   DDCA_IO_USB      /**< Use USB reports for a USB connected monitor */
 } DDCA_IO_Mode;
 
 

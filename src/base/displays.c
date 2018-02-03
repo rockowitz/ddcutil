@@ -78,7 +78,7 @@ bool dpath_eq(DDCA_IO_Path p1, DDCA_IO_Path p2) {
    bool result = false;
    if (p1.io_mode == p2.io_mode) {
       switch(p1.io_mode) {
-      case DDCA_IO_DEVI2C:
+      case DDCA_IO_I2C:
          result = (p1.path.i2c_busno == p2.path.i2c_busno);
          break;
       case DDCA_IO_ADL:
@@ -575,7 +575,7 @@ char * dpath_short_name_t(DDCA_IO_Path * dpath) {
 
    char * buf = get_thread_fixed_buffer(&dpath_short_name_key, 100);
    switch(dpath->io_mode) {
-   case DDCA_IO_DEVI2C:
+   case DDCA_IO_I2C:
       snprintf(buf, 100, "bus dev/i2c-%d", dpath->path.i2c_busno);
       break;
    case DDCA_IO_ADL:
@@ -600,7 +600,7 @@ char * dpath_repr_t(DDCA_IO_Path * dpath) {
 
    char * buf = get_thread_fixed_buffer(&dpath_repr_key, 100);
    switch(dpath->io_mode) {
-   case DDCA_IO_DEVI2C:
+   case DDCA_IO_I2C:
       snprintf(buf, 100, "Display_Path[/dev/i2c-%d]", dpath->path.i2c_busno);
       break;
    case DDCA_IO_ADL:
@@ -638,7 +638,7 @@ static Display_Ref * create_base_display_ref(DDCA_IO_Path io_path) {
 Display_Ref * create_bus_display_ref(int busno) {
    bool debug = false;
    DDCA_IO_Path io_path;
-   io_path.io_mode   = DDCA_IO_DEVI2C;
+   io_path.io_mode   = DDCA_IO_I2C;
    io_path.path.i2c_busno = busno;
    Display_Ref * dref = create_base_display_ref(io_path);
    if (debug) {
@@ -754,7 +754,7 @@ bool dref_eq(Display_Ref* this, Display_Ref* that) {
       if (this->io_mode == that->io_mode) {
          switch (this->io_mode) {
 
-         case DDCA_IO_DEVI2C:
+         case DDCA_IO_I2C:
             result = (this->busno == that->busno);
             break;
 
@@ -794,7 +794,7 @@ void dbgrpt_display_ref(Display_Ref * dref, int depth) {
 
    switch (dref->io_mode) {
 
-   case DDCA_IO_DEVI2C:
+   case DDCA_IO_I2C:
       rpt_int("busno", NULL, dref->busno, d1);
       break;
 
@@ -848,7 +848,7 @@ char * dref_short_name_r(Display_Ref * dref, char * buf, int bufsz) {
 
    switch (dref->io_mode) {
 
-   case DDCA_IO_DEVI2C:
+   case DDCA_IO_I2C:
       SAFE_SNPRINTF(buf, bufsz, "bus /dev/i2c-%d", dref->busno);
 
       // snprintf(buf, bufsz, "bus /dev/i2c-%d", dref->busno);
@@ -921,7 +921,7 @@ char * dref_repr_t(Display_Ref * dref) {
  */
 Display_Handle * create_bus_display_handle_from_display_ref(int fh, Display_Ref * dref) {
    // assert(dref->io_mode == DDCA_IO_DEVI2C);
-   assert(dref->io_path.io_mode == DDCA_IO_DEVI2C);
+   assert(dref->io_path.io_mode == DDCA_IO_I2C);
    Display_Handle * dh = calloc(1, sizeof(Display_Handle));
    memcpy(dh->marker, DISPLAY_HANDLE_MARKER, 4);
    dh->fh = fh;
@@ -1003,7 +1003,7 @@ void dbgrpt_display_handle(Display_Handle * dh, const char * msg, int depth) {
          rpt_vstring(d1, "dref:                 %p", dh->dref);
          rpt_vstring(d1, "io mode:              %s",  io_mode_name(dh->dref->io_path.io_mode) );
          switch (dh->dref->io_path.io_mode) {
-         case (DDCA_IO_DEVI2C):
+         case (DDCA_IO_I2C):
             // rpt_vstring(d1, "ddc_io_mode = DDC_IO_DEVI2C");
             rpt_vstring(d1, "fh:                  %d", dh->fh);
             rpt_vstring(d1, "busno:               %d", dh->dref->io_path.path.i2c_busno);
@@ -1043,7 +1043,7 @@ char * dh_repr_a(Display_Handle * dh) {
    char * repr = NULL;
 
       switch (dh->dref->io_mode) {
-      case DDCA_IO_DEVI2C:
+      case DDCA_IO_I2C:
           repr = gaux_asprintf(
                    "Display_Handle[i2c: fh=%d, busno=%d]",
                    dh->fh, dh->dref->busno);
@@ -1080,7 +1080,7 @@ static char * dh_repr_r(Display_Handle * dh, char * buf, int bufsz) {
    assert(dh->dref);
 
    switch (dh->dref->io_mode) {
-   case DDCA_IO_DEVI2C:
+   case DDCA_IO_I2C:
        snprintf(buf, bufsz,
                 "Display_Handle[i2c: fh=%d, busno=%d]",
                 dh->fh, dh->dref->busno);
@@ -1122,7 +1122,7 @@ char * dh_repr_t(Display_Handle * dh) {
    assert(dh->dref);
 
    switch (dh->dref->io_path.io_mode) {
-   case DDCA_IO_DEVI2C:
+   case DDCA_IO_I2C:
         snprintf(buf, bufsz,
                  "Display_Handle[i2c: fh=%d, busno=%d]",
                  dh->fh, dh->dref->io_path.path.i2c_busno);

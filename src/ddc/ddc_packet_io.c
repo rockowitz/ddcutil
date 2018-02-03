@@ -131,7 +131,7 @@ Public_Status_Code ddc_open_display(
 
    switch (dref->io_path.io_mode) {
 
-   case DDCA_IO_DEVI2C:
+   case DDCA_IO_I2C:
       {
          int fd = i2c_open_bus(dref->io_path.path.i2c_busno, callopts);
          if (fd < 0) {    // will be < 0 if open_i2c_bus failed and CALLOPT_ERR_ABORT not set
@@ -234,7 +234,7 @@ void ddc_close_display(Display_Handle * dh) {
    }
 
    switch(dh->dref->io_path.io_mode) {
-   case DDCA_IO_DEVI2C:
+   case DDCA_IO_I2C:
       {
          Status_Errno rc = i2c_close_bus(dh->fh, dh->dref->io_path.path.i2c_busno,  CALLOPT_NONE);    // return error if failure
          if (rc != 0) {
@@ -386,7 +386,7 @@ static Public_Status_Code ddc_i2c_write_read_raw(
 
    assert(dh);
    assert(dh->dref);
-   assert(dh->dref->io_path.io_mode == DDCA_IO_DEVI2C);
+   assert(dh->dref->io_path.io_mode == DDCA_IO_I2C);
    // ASSERT_DISPLAY_IO_MODE(dh, DDCA_IO_DEVI2C);
 
 #ifdef TEST_THAT_DIDNT_WORK
@@ -523,9 +523,9 @@ static Public_Status_Code ddc_write_read_raw(
    Public_Status_Code psc;
 
    // This function should not be called for USB
-   assert(dh->dref->io_path.io_mode == DDCA_IO_DEVI2C || dh->dref->io_path.io_mode == DDCA_IO_ADL);
+   assert(dh->dref->io_path.io_mode == DDCA_IO_I2C || dh->dref->io_path.io_mode == DDCA_IO_ADL);
 
-   if (dh->dref->io_path.io_mode == DDCA_IO_DEVI2C) {
+   if (dh->dref->io_path.io_mode == DDCA_IO_I2C) {
         psc =  ddc_i2c_write_read_raw(
               dh,
               request_packet_ptr,
@@ -720,7 +720,7 @@ ddc_write_read_with_retry(
          DBGMSF(debug, "ddc_write_read() returned %s", psc_desc(psc) );
          COUNT_RETRYABLE_STATUS_CODE(psc);
 
-         if (dh->dref->io_path.io_mode == DDCA_IO_DEVI2C) {
+         if (dh->dref->io_path.io_mode == DDCA_IO_I2C) {
             // The problem: Does NULL response indicate an error condition, or
             // is the monitor using NULL response to indicate unsupported?
             // Acer monitor uses NULL response instead of setting the unsupported
@@ -867,7 +867,7 @@ ddc_write_only(
 
    Public_Status_Code psc = 0;
    assert(dh->dref->io_path.io_mode != DDCA_IO_USB);
-   if (dh->dref->io_path.io_mode == DDCA_IO_DEVI2C) {
+   if (dh->dref->io_path.io_mode == DDCA_IO_I2C) {
       psc = ddc_i2c_write_only(dh->fh, request_packet_ptr);
    }
    else {
@@ -933,7 +933,7 @@ ddc_write_only_with_retry(
 
       if (psc < 0) {
          COUNT_RETRYABLE_STATUS_CODE(psc);
-         if (dh->dref->io_path.io_mode == DDCA_IO_DEVI2C) {
+         if (dh->dref->io_path.io_mode == DDCA_IO_I2C) {
             if (psc < 0) {
                if (psc != -EIO)
                    retryable = false;

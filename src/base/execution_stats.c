@@ -616,7 +616,7 @@ call_dynamic_tuned_sleep(
    bool debug =  false || debug_sleep_stats_mutex;
 
    int sleep_time_millis = 0;
-   assert(io_mode == DDCA_IO_DEVI2C);
+   assert(io_mode == DDCA_IO_I2C);
    assert(event_type == SE_DDC_NULL);
 
    switch(event_type) {
@@ -654,7 +654,7 @@ call_dynamic_tuned_sleep_i2c(
       Sleep_Event_Type event_type,
       int occno)
 {
-   call_dynamic_tuned_sleep(DDCA_IO_DEVI2C, event_type, occno);
+   call_dynamic_tuned_sleep(DDCA_IO_I2C, event_type, occno);
 }
 
 
@@ -685,7 +685,7 @@ void call_tuned_sleep(DDCA_IO_Mode io_mode, Sleep_Event_Type event_type) {
 
    assert(event_type != SE_DDC_NULL);
 
-   case DDCA_IO_DEVI2C:
+   case DDCA_IO_I2C:
       switch(event_type) {
       case (SE_WRITE_TO_READ):
             sleep_time_millis = DDC_TIMEOUT_MILLIS_DEFAULT;
@@ -778,7 +778,7 @@ void call_tuned_sleep(DDCA_IO_Mode io_mode, Sleep_Event_Type event_type) {
  *  @param event_type sleep event type
  */
 void call_tuned_sleep_i2c(Sleep_Event_Type event_type) {
-   call_tuned_sleep(DDCA_IO_DEVI2C, event_type);
+   call_tuned_sleep(DDCA_IO_I2C, event_type);
 }
 
 
