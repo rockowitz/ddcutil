@@ -922,6 +922,12 @@ ddca_queue_get_non_table_vcp_value(
 );
 
 
+void ddca_start_capture(void);
+
+char * ddca_end_capture(void);
+
+int ddca_captured_size();
+
 #ifdef __cplusplus
 }
 #endif

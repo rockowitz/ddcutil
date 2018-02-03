@@ -1073,10 +1073,10 @@ ddca_report_display_info(
    int d1 = depth+1;
    int d2 = depth+2;
    rpt_vstring(d0, "Display number:  %d", dinfo->dispno);
-   rpt_vstring(d1, "IO mode:             %s", io_mode_name(dinfo->path.io_mode));
+   // rpt_vstring(d1, "IO mode:             %s", io_mode_name(dinfo->path.io_mode));
    switch(dinfo->path.io_mode) {
    case (DDCA_IO_DEVI2C):
-         rpt_vstring(d1, "I2C bus number:     %d", dinfo->path.path.i2c_busno);
+         rpt_vstring(d1, "I2C bus number:      %d", dinfo->path.path.i2c_busno);
          break;
    case (DDCA_IO_ADL):
          rpt_vstring(d1, "ADL adapter.display: %d.%d",
@@ -1089,15 +1089,12 @@ ddca_report_display_info(
          break;
    }
 
-   // char * edidstr = hexstring(dinfo->edid_bytes, 128);
    rpt_vstring(d1, "Mfg Id:              %s", dinfo->mfg_id);
    rpt_vstring(d1, "Model:               %s", dinfo->model_name);
    rpt_vstring(d1, "Serial number:       %s", dinfo->sn);
-   // rpt_vstring(d1, "EDID:                %s", edidstr);
    rpt_vstring(d1, "EDID:");
    rpt_hex_dump(dinfo->edid_bytes, 128, d2);
-   rpt_vstring(d1, "dref:                %p", dinfo->dref);
-   // free(edidstr);
+   // rpt_vstring(d1, "dref:                %p", dinfo->dref);
    DBGMSF(debug, "Done");
 }
 
@@ -1873,13 +1870,14 @@ ddca_report_parsed_capabilities(
    bool debug = false;
    DBGMSF(debug, "Starting");
    assert(pcaps && memcmp(pcaps->marker, DDCA_CAPABILITIES_MARKER, 4) == 0);
+   int d0 = depth;
    int d1 = depth+1;
    int d2 = depth+2;
    int d3 = depth+3;
 
    // rpt_structure_loc("DDCA_Capabilities", pcaps, depth);
-   rpt_label(  d1, "Capabilities:");
-   rpt_vstring(d1, "unparsed string: %s", pcaps->unparsed_string);
+   rpt_label(  d0, "Capabilities:");
+   rpt_vstring(d1, "Unparsed string: %s", pcaps->unparsed_string);
    rpt_vstring(d1, "VCP version:     %d.%d", pcaps->version_spec.major, pcaps->version_spec.minor);
    rpt_vstring(d1, "VCP codes:");
    for (int code_ndx = 0; code_ndx < pcaps->vcp_code_ct; code_ndx++) {
@@ -1951,5 +1949,48 @@ ddca_pass_callback(
    return callback_rc;
 }
 
+
+//
+// Output redirection - Experimental
+//
+
+
+static FILE * in_memory_file = NULL;
+static char * in_memory_bufstart = NULL;
+static size_t in_memory_bufsize = 0;
+
+void ddca_start_capture(void) {
+   in_memory_file = open_memstream(&in_memory_bufstart, &in_memory_bufsize);
+   ddca_set_fout(in_memory_file);
+   printf("(%s) Done.\n", __func__);
+}
+
+char * ddca_end_capture(void) {
+   char * result = "\0";
+   printf("(%s) Starting.\n", __func__);
+   assert(in_memory_file);
+   if (fflush(in_memory_file) < 0) {
+      SEVEREMSG("flush() failed. errno=%d", errno);
+      return result;
+   }
+   result = strdup(in_memory_bufstart);
+   if (fclose(in_memory_file) < 0) {
+      SEVEREMSG("fclose() failed. errno=%d", errno);
+      return result;
+   }
+   ddca_set_fout_to_default();
+   in_memory_file = NULL;
+   printf("(%s) Done. result=%p\n", __func__, result);
+   return result;
+}
+
+int ddca_captured_size() {
+   printf("(%s) Starting.\n", __func__);
+   int result = -1;
+   if (in_memory_file)
+      result = in_memory_bufsize + 1;   // +1 for trailing \0
+   printf("(%s) Done. result=%d\n", __func__, result);
+   return result;
+}
 
 
