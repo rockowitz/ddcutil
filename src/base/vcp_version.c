@@ -164,18 +164,19 @@ bool vcp_version_is_unqueried(DDCA_MCCS_Version_Spec vspec) {
  *
  *  @param vspec version spec
  *  @return string in the form "2.0"
- *  @retval "unqueried" for VCP_SPEC_UNQUERIED
+ *  @retval "Unqueried" for VCP_SPEC_UNQUERIED
  *  @retval "Unknown" for VCP_SPEC_UNKNOWN
  */
 char * format_vspec(DDCA_MCCS_Version_Spec vspec) {
-   // TODO: make thread safe
-   static char private_buffer[20];
+   static GPrivate  format_vspec_key = G_PRIVATE_INIT(g_free);
+   char * private_buffer = get_thread_fixed_buffer(&format_vspec_key, 20);
+
    if ( vcp_version_eq(vspec, VCP_SPEC_UNQUERIED) )
-      g_strlcpy(private_buffer,  "Unqueried", sizeof(private_buffer));  // g_strlcpy() to quiet covrity
+      g_strlcpy(private_buffer,  "Unqueried", sizeof(private_buffer));  // g_strlcpy() to quiet coverity
    else if ( vcp_version_eq(vspec, VCP_SPEC_UNKNOWN) )
       strcpy(private_buffer,  "Unknown");     // will coverity flag this?
    else
-      snprintf(private_buffer, 20, "%d.%d", vspec.major, vspec.minor);
+      SAFE_SNPRINTF(private_buffer, 20, "%d.%d", vspec.major, vspec.minor);
    // DBGMSG("Returning: |%s|", private_buffer);
    return private_buffer;
 }
