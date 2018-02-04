@@ -241,53 +241,6 @@ typedef struct {
 // uses -1,-1 for unset
 
 
-//
-// Display Information
-//
-
-/** Indicates how a display is accessed */
-typedef enum {
-   DDCA_IO_I2C,     /**< Use DDC to communicate with a /dev/i2c-n device */
-   DDCA_IO_ADL,     /**< Use ADL API */
-   DDCA_IO_USB      /**< Use USB reports for a USB connected monitor */
-} DDCA_IO_Mode;
-
-
-/** Describes a display's physical access mode and the location identifiers for that mode  */
-typedef struct {
-   DDCA_IO_Mode io_mode;        ///< physical access mode
-   union {
-      int        i2c_busno;     ///< I2C bus number
-      DDCA_Adlno adlno;         ///< ADL iAdapterIndex/iDisplayIndex pair
-      int        hiddev_devno;  ///* USB hiddev device  number
-   } path;
-} DDCA_IO_Path;
-
-
-#define DDCA_DISPLAY_INFO_MARKER "DDIN"
-/** Describes one monitor detected by ddcutil. */
-typedef struct {
-   char              marker[4];        ///< always "DDIN"
-   int               dispno;           ///< ddcutil assigned display number
-   DDCA_IO_Path      path;             ///< physical access path to display
-   int               usb_bus;          ///< USB bus number, if USB connection
-   int               usb_device;       ///< USB device number, if USB connection
-   // or should these be actual character/byte arrays instead of pointers?
-   const char *      mfg_id;          ///< 3 character manufacturer id, from EDID
-   const char *      model_name;      ///< model name, from EDID
-   const char *      sn;              ///< ASCII serial number string from EDID
-   const uint8_t *   edid_bytes;      ///< raw bytes (128) of first EDID block
-   DDCA_Display_Ref  dref;            ///< opaque display reference
-} DDCA_Display_Info;
-
-
-/** Collection of #DDCA_Display_Info */
-typedef struct {
-   int                ct;       ///< number of records
-   DDCA_Display_Info  info[];   ///< array whose size is determined by ct
-} DDCA_Display_Info_List;
-
-
 
 //
 // VCP Feature Information
@@ -330,6 +283,71 @@ typedef enum {
 
 /** MCCS VCP Feature Id */
 typedef uint8_t DDCA_Vcp_Feature_Code;
+
+
+typedef struct {
+   uint8_t bytes[32];
+} DDCA_Feature_List;
+
+
+typedef enum {
+   DDCA_FEATURE_LIST_KNOWN,
+   DDCA_FEATURE_LIST_COLOR,
+   DDCA_FEATURE_LIST_PROFILE,
+   DDCA_FEATURE_LIST_MFG
+} DDCA_Feature_List_Id;
+
+
+
+//
+// Display Information
+//
+
+/** Indicates how a display is accessed */
+typedef enum {
+   DDCA_IO_I2C,     /**< Use DDC to communicate with a /dev/i2c-n device */
+   DDCA_IO_ADL,     /**< Use ADL API */
+   DDCA_IO_USB      /**< Use USB reports for a USB connected monitor */
+} DDCA_IO_Mode;
+
+
+/** Describes a display's physical access mode and the location identifiers for that mode  */
+typedef struct {
+   DDCA_IO_Mode io_mode;        ///< physical access mode
+   union {
+      int        i2c_busno;     ///< I2C bus number
+      DDCA_Adlno adlno;         ///< ADL iAdapterIndex/iDisplayIndex pair
+      int        hiddev_devno;  ///* USB hiddev device  number
+   } path;
+} DDCA_IO_Path;
+
+
+#define DDCA_DISPLAY_INFO_MARKER "DDIN"
+/** Describes one monitor detected by ddcutil. */
+typedef struct {
+   char              marker[4];        ///< always "DDIN"
+   int               dispno;           ///< ddcutil assigned display number
+   DDCA_IO_Path      path;             ///< physical access path to display
+   int               usb_bus;          ///< USB bus number, if USB connection
+   int               usb_device;       ///< USB device number, if USB connection
+   // or should these be actual character/byte arrays instead of pointers?
+   const char *      mfg_id;          ///< 3 character manufacturer id, from EDID
+   const char *      model_name;      ///< model name, from EDID
+   const char *      sn;              ///< ASCII serial number string from EDID
+   const uint8_t *   edid_bytes;      ///< raw bytes (128) of first EDID block
+   DDCA_MCCS_Version_Spec vcp_version;
+   DDCA_Display_Ref  dref;            ///< opaque display reference
+} DDCA_Display_Info;
+
+
+/** Collection of #DDCA_Display_Info */
+typedef struct {
+   int                ct;       ///< number of records
+   DDCA_Display_Info  info[];   ///< array whose size is determined by ct
+} DDCA_Display_Info_List;
+
+
+
 
 /** @name Version Feature Flags
  *

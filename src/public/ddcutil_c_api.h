@@ -732,6 +732,17 @@ ddca_get_edid_by_display_ref(
       DDCA_Display_Ref ddca_dref,
       uint8_t **       pbytes);   // pointer into ddcutil data structures, do not free
 
+//
+// Feature Sets
+//
+
+void ddca_feature_list_clear(DDCA_Feature_List* vcplist);
+void ddca_feature_list_set(DDCA_Feature_List * vcplist, uint8_t vcp_code);
+bool ddca_feature_list_test(DDCA_Feature_List * vcplist, uint8_t vcp_code) ;
+
+DDCA_Feature_List ddca_get_feature_list(
+      DDCA_Feature_List_Id feature_list_id,
+      DDCA_MCCS_Version_Spec vcp_version);
 
 //
 // Get VCP Feature Value

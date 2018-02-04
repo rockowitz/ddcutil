@@ -1,7 +1,7 @@
 /* vcp_feature_set.h
  *
  * <copyright>
- * Copyright (C) 2014-2016 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2014-2018 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -21,13 +21,21 @@
  * </endcopyright>
  */
 
+/** \f
+ *
+ */
+
 #ifndef VCP_FEATURE_SET_H_
 #define VCP_FEATURE_SET_H_
 
+#include "public/ddcutil_types.h"
+
+/** \cond */
 #include <glib.h>
 #include <stdbool.h>
 
 #include "util/coredefs.h"
+/** \endcond */
 
 #include "base/feature_sets.h"
 
@@ -68,5 +76,6 @@ create_feature_set_from_feature_set_ref(
 
 void filter_feature_set(VCP_Feature_Set fset, VCP_Feature_Set_Filter_Func func);
 
+DDCA_Feature_List feature_list_from_feature_set(VCP_Feature_Set feature_set);
 
 #endif /* VCP_FEATURE_SET_H_ */

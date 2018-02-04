@@ -338,3 +338,24 @@ void filter_feature_set(VCP_Feature_Set feature_set, VCP_Feature_Set_Filter_Func
       }
    }
 }
+
+DDCA_Feature_List feature_list_from_feature_set(VCP_Feature_Set feature_set) {
+   DDCA_Feature_List vcplist;
+   struct vcp_feature_set * fset = (struct vcp_feature_set *) feature_set;
+   assert( fset && memcmp(fset->marker, VCP_FEATURE_SET_MARKER, 4) == 0);
+   int ndx = 0;
+   for (; ndx < fset->members->len; ndx++) {
+      VCP_Feature_Table_Entry * vcp_entry = NULL;
+      vcp_entry = g_ptr_array_index(fset->members,ndx);
+
+      uint8_t vcp_code = vcp_entry->code;
+      int flagndx   = vcp_code >> 3;
+      int shiftct   = vcp_code & 0x07;
+      Byte flagbit  = 0x01 << shiftct;
+      // printf("(%s) val=0x%02x, flagndx=%d, shiftct=%d, flagbit=0x%02x\n",
+      //        __func__, val, flagndx, shiftct, flagbit);
+      vcplist.bytes[flagndx] |= flagbit;
+   }
+   return vcplist;
+
+}

@@ -1028,6 +1028,7 @@ ddca_get_display_info_list(void)
          curinfo->mfg_id        = dref->pedid->mfg_id;
          curinfo->model_name    = dref->pedid->model_name;
          curinfo->sn            = dref->pedid->serial_ascii;
+         curinfo->vcp_version   = dref->vcp_version;
          curinfo->dref          = dref;
       }
    }
@@ -1095,6 +1096,7 @@ ddca_report_display_info(
    rpt_vstring(d1, "EDID:");
    rpt_hex_dump(dinfo->edid_bytes, 128, d2);
    // rpt_vstring(d1, "dref:                %p", dinfo->dref);
+   rpt_vstring(d1, "VCP Version:         %s", format_vspec(dinfo->vcp_version));
    DBGMSF(debug, "Done");
 }
 
@@ -1142,6 +1144,58 @@ ddca_get_edid_by_display_ref(
 
 bye:
    return rc;
+}
+
+
+void ddca_feature_list_clear(DDCA_Feature_List* vcplist) {
+   memset(vcplist->bytes, 0, 32);
+}
+
+void ddca_feature_list_set(DDCA_Feature_List * vcplist, uint8_t vcp_code) {
+   int flagndx   = vcp_code >> 3;
+   int shiftct   = vcp_code & 0x07;
+   Byte flagbit  = 0x01 << shiftct;
+   // printf("(%s) val=0x%02x, flagndx=%d, shiftct=%d, flagbit=0x%02x\n",
+   //        __func__, val, flagndx, shiftct, flagbit);
+   vcplist->bytes[flagndx] |= flagbit;
+}
+
+bool ddca_feature_list_test(DDCA_Feature_List * vcplist, uint8_t vcp_code) {
+   int flagndx   = vcp_code >> 3;
+   int shiftct   = vcp_code & 0x07;
+   Byte flagbit  = 0x01 << shiftct;
+   // printf("(%s) val=0x%02x, flagndx=%d, shiftct=%d, flagbit=0x%02x\n",
+   //        __func__, val, flagndx, shiftct, flagbit);
+   bool result = vcplist->bytes[flagndx] & flagbit;
+   return result;
+}
+
+
+
+DDCA_Feature_List ddca_get_feature_list(
+      DDCA_Feature_List_Id feature_list_id,
+      DDCA_MCCS_Version_Spec vcp_version)
+{
+   VCP_Feature_Subset subset = VCP_SUBSET_NONE;  // pointless initialization to avoid compile warning
+   switch (feature_list_id) {
+   case DDCA_FEATURE_LIST_KNOWN:
+      subset = VCP_SUBSET_KNOWN;
+      break;
+   case DDCA_FEATURE_LIST_COLOR:
+      subset = VCP_SUBSET_COLOR;
+      break;
+   case DDCA_FEATURE_LIST_PROFILE:
+      subset = VCP_SUBSET_PROFILE;
+      break;
+   case DDCA_FEATURE_LIST_MFG:
+      subset = VCP_SUBSET_MFG;
+      break;
+   }
+   VCP_Feature_Set fset = create_feature_set(subset, vcp_version);
+   DDCA_Feature_List result = feature_list_from_feature_set(fset);
+   free_vcp_feature_set(fset);
+   return result;
+
 }
 
 
