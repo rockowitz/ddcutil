@@ -1208,7 +1208,7 @@ bool
 vcp_format_feature_detail(
        VCP_Feature_Table_Entry * vfte,
        DDCA_MCCS_Version_Spec    vcp_version,
-       Single_Vcp_Value *   valrec,
+       Single_Vcp_Value *        valrec,
        char * *                  aformatted_data
      )
 {
@@ -1217,8 +1217,10 @@ vcp_format_feature_detail(
    bool ok = true;
    *aformatted_data = NULL;
 
+   DBGMSF(debug, "valrec->value_type = %d", valrec->value_type);
    char * formatted_data = NULL;
    if (valrec->value_type == DDCA_NON_TABLE_VCP_VALUE) {
+      DBGMSF(debug, "DDCA_NON_TABLE_VCP_VALUE");
       Nontable_Vcp_Value* nontable_value = single_vcp_value_to_nontable_vcp_value(valrec);
       char workbuf[200];
       ok = vcp_format_nontable_feature_detail(
@@ -1232,6 +1234,7 @@ vcp_format_feature_detail(
          formatted_data = strdup(workbuf);
    }
    else {        // TABLE_VCP_CALL
+      DBGMSF(debug, "DDCA_TABLE_VCP_VALUE");
       ok = vcp_format_table_feature_detail(
             vfte,
             vcp_version,
