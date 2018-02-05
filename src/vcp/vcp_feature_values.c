@@ -324,6 +324,8 @@ Parsed_Vcp_Response * single_vcp_value_to_parsed_vcp_response(Single_Vcp_Value *
 }
 
 Nontable_Vcp_Value * single_vcp_value_to_nontable_vcp_value(Single_Vcp_Value * valrec) {
+   bool debug = false;
+   DBGMSF(debug, "Starting. valrec=%p", valrec);
    Nontable_Vcp_Value * non_table_response = calloc(1, sizeof(Nontable_Vcp_Value));
    assert (valrec->value_type == DDCA_NON_TABLE_VCP_VALUE);
 
@@ -335,6 +337,7 @@ Nontable_Vcp_Value * single_vcp_value_to_nontable_vcp_value(Single_Vcp_Value * v
    non_table_response->sl        = valrec->val.nc.sl;
    non_table_response->vcp_code  = valrec->opcode;
 
+   DBGMSF(debug, "Done. Returning: %p", non_table_response);
    return non_table_response;
 }
 
