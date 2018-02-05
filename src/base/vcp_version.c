@@ -172,7 +172,7 @@ char * format_vspec(DDCA_MCCS_Version_Spec vspec) {
    char * private_buffer = get_thread_fixed_buffer(&format_vspec_key, 20);
 
    if ( vcp_version_eq(vspec, VCP_SPEC_UNQUERIED) )
-      g_strlcpy(private_buffer,  "Unqueried", sizeof(private_buffer));  // g_strlcpy() to quiet coverity
+      g_strlcpy(private_buffer,  "Unqueried", 20);  // g_strlcpy() to quiet coverity
    else if ( vcp_version_eq(vspec, VCP_SPEC_UNKNOWN) )
       strcpy(private_buffer,  "Unknown");     // will coverity flag this?
    else
