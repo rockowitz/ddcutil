@@ -1194,6 +1194,18 @@ DDCA_Feature_List ddca_get_feature_list(
    VCP_Feature_Set fset = create_feature_set(subset, vcp_version);
    DDCA_Feature_List result = feature_list_from_feature_set(fset);
    free_vcp_feature_set(fset);
+
+#ifdef NO
+   DBGMSG("feature_list_id=%d, vcp_version=%s, returning:",
+          feature_list_id, format_vspec(vcp_version));
+   rpt_hex_dump(result.bytes, 32, 1);
+   for (int ndx = 0; ndx <= 255; ndx++) {
+      uint8_t code = (uint8_t) ndx;
+      if (ddca_feature_list_test(&result, code))
+         printf("%02x ", code);
+   }
+   printf("\n");
+#endif
    return result;
 
 }
@@ -1680,7 +1692,6 @@ ddca_start_get_any_vcp_value(
              errinfo_free(ddc_excp);
           }
       );
-
    }
 
    DBGMSF(debug, "Done. Returning %s", psc_desc(rc));
@@ -1691,10 +1702,12 @@ ddca_start_get_any_vcp_value(
 
 DDCA_Status
 ddca_get_formatted_vcp_value(
-      DDCA_Display_Handle *   ddca_dh,
-      DDCA_Vcp_Feature_Code        feature_code,
-      char**                  p_formatted_value)
+      DDCA_Display_Handle    ddca_dh,
+      DDCA_Vcp_Feature_Code  feature_code,
+      char**                 p_formatted_value)
 {
+   bool debug = false;
+   DBGMSF(debug, "Starting. feature_code=0x%02x", feature_code);
    Error_Info * ddc_excp = NULL;
    WITH_DH(ddca_dh,
          {
@@ -1717,26 +1730,37 @@ ddca_get_formatted_vcp_value(
                }
                else {
                   DDCA_Version_Feature_Flags flags = get_version_sensitive_feature_flags(pentry, vspec);
-                  // Version_Feature_Flags flags = feature_info->internal_feature_flags;
-                   // n. will default to NON_TABLE_VCP_VALUE if not a known code
-                   DDCA_Vcp_Value_Type call_type = (flags & DDCA_TABLE) ?  DDCA_TABLE_VCP_VALUE : DDCA_NON_TABLE_VCP_VALUE;
-                   Single_Vcp_Value * pvalrec;
-                   ddc_excp = get_vcp_value(dh, feature_code, call_type, &pvalrec);
-                   psc = (ddc_excp) ? ddc_excp->status_code : 0;
-                   errinfo_free(ddc_excp);
-                   if (psc == 0) {
-                      bool ok =
-                      vcp_format_feature_detail(
-                             pentry,
-                             vspec,
-                             pvalrec,
-                             p_formatted_value
-                           );
-                      if (!ok) {
-                         psc = DDCL_OTHER;    // ** WRONG CODE ***
-                         assert(!p_formatted_value);
+                  if (!(flags & DDCA_READABLE)) {
+                     if (flags & DDCA_DEPRECATED)
+                        *p_formatted_value = gaux_asprintf("Feature %02x is deprecated in MCCS %d.%d\n",
+                                                          feature_code, vspec.major, vspec.minor);
+                     else
+                        *p_formatted_value = gaux_asprintf("Feature %02x is not readable\n", feature_code);
+                     DBGMSF(debug, "%s", *p_formatted_value);
+                     psc = DDCL_INVALID_OPERATION;
+                  }
+                  else {
+                     // Version_Feature_Flags flags = feature_info->internal_feature_flags;
+                      // n. will default to NON_TABLE_VCP_VALUE if not a known code
+                      DDCA_Vcp_Value_Type call_type = (flags & DDCA_TABLE) ?  DDCA_TABLE_VCP_VALUE : DDCA_NON_TABLE_VCP_VALUE;
+                      Single_Vcp_Value * pvalrec;
+                      ddc_excp = get_vcp_value(dh, feature_code, call_type, &pvalrec);
+                      psc = (ddc_excp) ? ddc_excp->status_code : 0;
+                      errinfo_free(ddc_excp);
+                      if (psc == 0) {
+                         bool ok =
+                         vcp_format_feature_detail(
+                                pentry,
+                                vspec,
+                                pvalrec,
+                                p_formatted_value
+                              );
+                         if (!ok) {
+                            psc = DDCL_OTHER;    // ** WRONG CODE ***
+                            assert(!p_formatted_value);
+                         }
                       }
-                   }
+                  }
                }
          }
    )
@@ -1745,8 +1769,8 @@ ddca_get_formatted_vcp_value(
 
 DDCA_Status
 ddca_set_single_vcp_value(
-      DDCA_Display_Handle     ddca_dh,
-      Single_Vcp_Value * valrec)
+      DDCA_Display_Handle  ddca_dh,
+      Single_Vcp_Value *   valrec)
    {
       Error_Info * ddc_excp = NULL;
       WITH_DH(ddca_dh,  {

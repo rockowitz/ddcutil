@@ -830,7 +830,7 @@ ddca_get_any_vcp_value(
  */
 DDCA_Status
 ddca_get_formatted_vcp_value(
-       DDCA_Display_Handle *   ddca_dh,
+       DDCA_Display_Handle     ddca_dh,
        DDCA_Vcp_Feature_Code   feature_code,
        char**                  p_formatted_value);
 
