@@ -68,6 +68,7 @@ static Status_Code_Info ddcrc_info[] = {
 
       // library errors
       EDENTRY(DDCL_ARG                    , "illegal argument"),
+      EDENTRY(DDCL_INVALID_OPERATION      , "invalid operation"),
       EDENTRY(DDCL_UNIMPLEMENTED          , "unimplemented"),
       EDENTRY(DDCL_UNINITIALIZED          , "library uninitialized"),
 
