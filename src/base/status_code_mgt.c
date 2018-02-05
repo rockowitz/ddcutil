@@ -254,14 +254,14 @@ static Status_Code_Info ok_status_code_info = {0, "OK", "success"};
 
 
 /** Given a #Public_Status_Code, returns a pointer to the #Status_Code_Info struct.
- *  desribing it.
+ *  describing it.
  *
  * @param   status_code global (modulated) status code
  * @return  pointer to #Status_Code_Info for staus code, NULL if not found
  */
 Status_Code_Info * find_status_code_info(Public_Status_Code status_code) {
-   bool debug = false;
-   // use don't use DBGMSG to avoid circular includes
+   bool debug = false && status_code;
+   // use printf() instead of DBGMSG to avoid circular includes
    if (debug)
       printf("(%s) Starting.  rc = %d\n", __func__, status_code);
 
