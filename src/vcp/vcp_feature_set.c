@@ -340,7 +340,7 @@ void filter_feature_set(VCP_Feature_Set feature_set, VCP_Feature_Set_Filter_Func
 }
 
 DDCA_Feature_List feature_list_from_feature_set(VCP_Feature_Set feature_set) {
-   DDCA_Feature_List vcplist;
+   DDCA_Feature_List vcplist = {0};
    struct vcp_feature_set * fset = (struct vcp_feature_set *) feature_set;
    assert( fset && memcmp(fset->marker, VCP_FEATURE_SET_MARKER, 4) == 0);
    int ndx = 0;
@@ -349,13 +349,19 @@ DDCA_Feature_List feature_list_from_feature_set(VCP_Feature_Set feature_set) {
       vcp_entry = g_ptr_array_index(fset->members,ndx);
 
       uint8_t vcp_code = vcp_entry->code;
+      // DBGMSG("Setting feature: 0x%02x", vcp_code);
       int flagndx   = vcp_code >> 3;
       int shiftct   = vcp_code & 0x07;
       Byte flagbit  = 0x01 << shiftct;
-      // printf("(%s) val=0x%02x, flagndx=%d, shiftct=%d, flagbit=0x%02x\n",
-      //        __func__, val, flagndx, shiftct, flagbit);
+      // printf("(%s) vcp_code=0x%02x, flagndx=%d, shiftct=%d, flagbit=0x%02x\n",
+      //        __func__, vcp_code, flagndx, shiftct, flagbit);
       vcplist.bytes[flagndx] |= flagbit;
+      // uint8_t bval = vcplist.bytes[flagndx];
+      // printf("(%s) vcplist.bytes[%d] = 0x%02x\n",  __func__, flagndx, bval);
    }
+   // DBGMSG("Returning: ");
+   // rpt_hex_dump(vcplist.bytes, 32, 1);
+
    return vcplist;
 
 }
