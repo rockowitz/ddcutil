@@ -698,7 +698,7 @@ bool is_feature_supported_in_version(
 DDCA_Version_Feature_Flags
 get_version_sensitive_feature_flags(
        VCP_Feature_Table_Entry * pvft_entry,
-       DDCA_MCCS_Version_Spec              vcp_version)
+       DDCA_MCCS_Version_Spec    vcp_version)
 {
    bool debug = false;
    DDCA_Version_Feature_Flags result = get_version_specific_feature_flags(pvft_entry, vcp_version);
