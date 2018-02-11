@@ -82,8 +82,8 @@ bool is_known_vcp_spec(DDCA_MCCS_Version_Spec vspec) {
 *   v1.0---v2.0---- v2.1
 *                     |
 *                      -- v2.2
- *
- */
+*
+*/
 
 
 /** Checks if one #DDCA_MCCS_Version_Spec is less than or equal
