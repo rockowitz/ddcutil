@@ -971,8 +971,8 @@ ddca_get_displays_old()
 DDCA_Display_Info_List *
 ddca_get_display_info_list(void)
 {
-   bool debug = false;
-   // PROGRAM_LOGIC_ERROR("Pseudo failure");
+   bool debug = true;
+   DBGMSF0(debug, "Starting");
 
    ddc_ensure_displays_detected();
    GPtrArray * all_displays = ddc_get_all_displays();
@@ -1023,13 +1023,25 @@ ddca_get_display_info_list(void)
             curinfo->usb_device = dref->usb_device;
          }
 
+         // hack:
+         // vcp version is unqueried to improve performance
+         // mccs_version_spec_to_id has assert error if unqueried
+         DDCA_MCCS_Version_Id version_id = DDCA_VNONE;
+         DDCA_MCCS_Version_Spec vspec = dref->vcp_version;
+         if (vcp_version_eq(vspec, VCP_SPEC_UNQUERIED)) {
+            vspec = get_vcp_version_by_display_ref(dref);
+         }
+         version_id = mccs_version_spec_to_id(vspec);
+
+
          curinfo->edid_bytes    = dref->pedid->bytes;
          // or should these be memcpy'd instead of just pointers, can edid go away?
-         curinfo->mfg_id        = dref->pedid->mfg_id;
-         curinfo->model_name    = dref->pedid->model_name;
-         curinfo->sn            = dref->pedid->serial_ascii;
-         curinfo->vcp_version   = dref->vcp_version;
-         curinfo->dref          = dref;
+         curinfo->mfg_id         = dref->pedid->mfg_id;
+         curinfo->model_name     = dref->pedid->model_name;
+         curinfo->sn             = dref->pedid->serial_ascii;
+         curinfo->vcp_version    = vspec;
+         curinfo->vcp_version_id = version_id;
+         curinfo->dref           = dref;
       }
    }
 
@@ -1097,6 +1109,7 @@ ddca_report_display_info(
    rpt_hex_dump(dinfo->edid_bytes, 128, d2);
    // rpt_vstring(d1, "dref:                %p", dinfo->dref);
    rpt_vstring(d1, "VCP Version:         %s", format_vspec(dinfo->vcp_version));
+   rpt_vstring(d1, "VCP Version Id:      %s", format_vcp_version_id(dinfo->vcp_version_id) );
    DBGMSF(debug, "Done");
 }
 
@@ -1173,8 +1186,9 @@ bool ddca_feature_list_test(DDCA_Feature_List * vcplist, uint8_t vcp_code) {
 
 
 DDCA_Feature_List ddca_get_feature_list(
-      DDCA_Feature_List_Id feature_list_id,
-      DDCA_MCCS_Version_Spec vcp_version)
+      DDCA_Feature_List_Id   feature_list_id,
+      DDCA_MCCS_Version_Spec vcp_version,
+      bool                   include_table_features)
 {
    VCP_Feature_Subset subset = VCP_SUBSET_NONE;  // pointless initialization to avoid compile warning
    switch (feature_list_id) {
@@ -1191,7 +1205,7 @@ DDCA_Feature_List ddca_get_feature_list(
       subset = VCP_SUBSET_MFG;
       break;
    }
-   VCP_Feature_Set fset = create_feature_set(subset, vcp_version);
+   VCP_Feature_Set fset = create_feature_set(subset, vcp_version, !include_table_features);
    DDCA_Feature_List result = feature_list_from_feature_set(fset);
    free_vcp_feature_set(fset);
 
@@ -1271,7 +1285,7 @@ ddca_get_feature_info_by_vcp_version(
       DDCA_MCCS_Version_Id        mccs_version_id,
       DDCA_Version_Feature_Info** p_info)
 {
-   bool debug = false;
+   bool debug = true;
    DBGMSF(debug, "Starting. feature_code=0x%02x, mccs_version_id=%d", feature_code, mccs_version_id);
 
    DDCA_Status psc = 0;
@@ -1706,7 +1720,7 @@ ddca_get_formatted_vcp_value(
       DDCA_Vcp_Feature_Code  feature_code,
       char**                 p_formatted_value)
 {
-   bool debug = false;
+   bool debug = true;
    DBGMSF(debug, "Starting. feature_code=0x%02x", feature_code);
    Error_Info * ddc_excp = NULL;
    WITH_DH(ddca_dh,

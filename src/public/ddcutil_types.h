@@ -336,6 +336,7 @@ typedef struct {
    const char *      sn;              ///< ASCII serial number string from EDID
    const uint8_t *   edid_bytes;      ///< raw bytes (128) of first EDID block
    DDCA_MCCS_Version_Spec vcp_version;
+   DDCA_MCCS_Version_Id   vcp_version_id;
    DDCA_Display_Ref  dref;            ///< opaque display reference
 } DDCA_Display_Info;
 
