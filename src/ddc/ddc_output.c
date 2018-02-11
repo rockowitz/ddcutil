@@ -367,7 +367,10 @@ collect_raw_subset_values(
    DBGMSF(debug, "Starting.  subset=%d  dh=%s", subset, dh_repr(dh) );
    DDCA_MCCS_Version_Spec vcp_version = get_vcp_version_by_display_handle(dh);
    // DBGMSG("VCP version = %d.%d", vcp_version.major, vcp_version.minor);
-   VCP_Feature_Set feature_set = create_feature_set(subset, vcp_version);
+   VCP_Feature_Set feature_set = create_feature_set(
+                                     subset,
+                                     vcp_version,
+                                     false);      // exclude_table_features
    if (debug)
       report_feature_set(feature_set, 0);
 
@@ -668,7 +671,10 @@ show_vcp_values(
 
    DDCA_MCCS_Version_Spec vcp_version = get_vcp_version_by_display_handle(dh);
    // DBGMSG("VCP version = %d.%d", vcp_version.major, vcp_version.minor);
-   VCP_Feature_Set feature_set = create_feature_set(subset, vcp_version);
+   VCP_Feature_Set feature_set = create_feature_set(
+                                    subset,
+                                    vcp_version,
+                                    flags & FSF_NOTABLE);
 #ifdef FUTURE
    Parsed_Capabilities * pcaps = NULL;   // TODO: HOW TO GET Parsed_Capabilities?, will only be set for probe/interrogate
    // special case, if scanning, don't try to do a table read of manufacturer specific

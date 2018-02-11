@@ -72,7 +72,11 @@ void free_vcp_feature_set(VCP_Feature_Set fset) {
 }
 
 VCP_Feature_Set
-create_feature_set(VCP_Feature_Subset subset_id, DDCA_MCCS_Version_Spec vcp_version) {
+create_feature_set(
+      VCP_Feature_Subset     subset_id,
+      DDCA_MCCS_Version_Spec vcp_version,
+      bool                   exclude_table_features)
+{
    assert(subset_id);
    bool debug = false;
    DBGMSF(debug, "Starting. subset_id=%s(0x%04x), vcp_version=%d.%d",
@@ -92,13 +96,18 @@ create_feature_set(VCP_Feature_Subset subset_id, DDCA_MCCS_Version_Spec vcp_vers
          VCP_Feature_Table_Entry* vcp_entry = vcp_find_feature_by_hexid(id);
          // original code looks at VCP2_READABLE, output level
          if (vcp_entry) {
-            if ( !is_feature_table_by_vcp_version(vcp_entry, vcp_version) ||
-                 get_output_level() >= DDCA_OL_VERBOSE)
+            bool showit = true;
+            if ( is_feature_table_by_vcp_version(vcp_entry, vcp_version) ) {
+               if ( get_output_level() < DDCA_OL_VERBOSE || exclude_table_features  )
+                  showit = false;
+            }
+            if (showit) {
                g_ptr_array_add(fset->members, vcp_entry);
+            }
          }
          else {
             g_ptr_array_add(fset->members, vcp_create_dummy_feature_for_hexid(id));
-            if (ndx >= 0xe0 && (get_output_level() >= DDCA_OL_VERBOSE) ) {
+            if (ndx >= 0xe0 && (get_output_level() >= DDCA_OL_VERBOSE && !exclude_table_features) ) {
                // for manufacturer specific features, probe as both table and non-table
                // Only probe table if --verbose, output is confusing otherwise
                g_ptr_array_add(fset->members, vcp_create_table_dummy_feature_for_hexid(id));
@@ -175,6 +184,8 @@ create_feature_set(VCP_Feature_Subset subset_id, DDCA_MCCS_Version_Spec vcp_vers
          case VCP_SUBSET_NONE:
             break;
          }
+         if ( (vflags & DDCA_TABLE) && exclude_table_features)
+            showit = false;
          if (showit) {
             g_ptr_array_add(fset->members, vcp_entry);
          }
@@ -235,15 +246,15 @@ create_single_feature_set_by_hexid(Byte id, bool force) {
  */
 VCP_Feature_Set
 create_feature_set_from_feature_set_ref(
-   Feature_Set_Ref * fsref,
-   DDCA_MCCS_Version_Spec      vcp_version,
-   bool              force)
+   Feature_Set_Ref *         fsref,
+   DDCA_MCCS_Version_Spec    vcp_version,
+   bool                      force)
 {
     struct vcp_feature_set * fset = NULL;
     if (fsref->subset == VCP_SUBSET_SINGLE_FEATURE)
        fset = create_single_feature_set_by_hexid(fsref->specific_feature, force);
     else
-       fset = create_feature_set(fsref->subset, vcp_version);
+       fset = create_feature_set(fsref->subset, vcp_version, /* exclude_table_features */ false);
     return fset;
 }
 

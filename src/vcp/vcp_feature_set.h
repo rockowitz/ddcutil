@@ -49,7 +49,10 @@ typedef bool (*VCP_Feature_Set_Filter_Func)(VCP_Feature_Table_Entry * ventry);
 void free_vcp_feature_set(VCP_Feature_Set fset);
 
 VCP_Feature_Set
-create_feature_set(VCP_Feature_Subset subset, DDCA_MCCS_Version_Spec vcp_version);
+create_feature_set(
+      VCP_Feature_Subset     subset,
+      DDCA_MCCS_Version_Spec vcp_version,
+      bool                   exclude_table_features);
 
 VCP_Feature_Set
 create_single_feature_set_by_vcp_entry(VCP_Feature_Table_Entry * vcp_entry);
