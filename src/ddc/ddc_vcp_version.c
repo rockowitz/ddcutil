@@ -153,6 +153,7 @@ DDCA_MCCS_Version_Spec get_vcp_version_by_display_handle(Display_Handle * dh) {
  *    could not be retrieved (pre MCCS v2)
  */
 DDCA_MCCS_Version_Spec get_vcp_version_by_display_ref(Display_Ref * dref) {
+   assert(dref);
    bool debug = false;
    DBGMSF(debug, "Starting. dref=%p, dref->vcp_version =  %d.%d",
                  dref, dref->vcp_version.major, dref->vcp_version.minor);
