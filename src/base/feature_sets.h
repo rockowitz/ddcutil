@@ -59,7 +59,7 @@ typedef enum {
    VCP_SUBSET_SNC             = 0x00080000,    // simple NC feature
    VCP_SUBSET_CNC             = 0x00040000,    // complex NC feature
    VCP_SUBSET_NC_WO           = 0x00020000,    // write-only NC feature
-   VCP_SUBSET_NC_CONT         = 0x00010000,
+   VCP_SUBSET_NC_CONT         = 0x00010000,    // combines reserved values with countinuous subrange
    VCP_SUBSET_NC              = 0x00008000,    // Non-Continuous feature
    VCP_SUBSET_TABLE           = 0x00004000,    // is a table feature
 
