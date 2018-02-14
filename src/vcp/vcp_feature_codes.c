@@ -1076,9 +1076,43 @@ get_version_feature_info(
          vcp_version_id_name(mccs_version_id),
          bool_repr(with_default),
          bool_repr(version_sensitive));
+#ifdef OLD
+   DDCA_Version_Feature_Info* info = NULL;
+#endif
+   DDCA_MCCS_Version_Spec vspec = mccs_version_id_to_spec(mccs_version_id);
+
+#ifdef OLD
+   VCP_Feature_Table_Entry * pentry =
+         (with_default) ? vcp_find_feature_by_hexid_w_default(feature_code)
+                        : vcp_find_feature_by_hexid(feature_code);
+   if (pentry) {
+      info = extract_version_feature_info(pentry, vspec, version_sensitive);
+
+      if (pentry->vcp_global_flags & DDCA_SYNTHETIC)
+         free_synthetic_vcp_entry(pentry);
+   }
+
+   return info;
+#endif
+   return get_version_feature_info_by_vspec(feature_code, vspec, with_default, version_sensitive);
+}
+
+
+DDCA_Version_Feature_Info *
+get_version_feature_info_by_vspec(
+      DDCA_Vcp_Feature_Code   feature_code,
+      DDCA_MCCS_Version_Spec  vspec,
+      bool                    with_default,
+      bool                    version_sensitive)
+{
+   bool debug = false;
+   DBGMSF(debug, "feature_code=0x%02x, mccs_version=%d.%d, with_default=%s, version_sensitive=%s",
+         feature_code,
+         vspec.major, vspec.minor,
+         bool_repr(with_default),
+         bool_repr(version_sensitive));
 
    DDCA_Version_Feature_Info* info = NULL;
-   DDCA_MCCS_Version_Spec vspec = mccs_version_id_to_spec(mccs_version_id);
 
    VCP_Feature_Table_Entry * pentry =
          (with_default) ? vcp_find_feature_by_hexid_w_default(feature_code)
@@ -1093,6 +1127,8 @@ get_version_feature_info(
    return info;
 
 }
+
+
 
 
 

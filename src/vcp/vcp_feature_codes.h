@@ -273,6 +273,14 @@ get_version_feature_info(
       bool                   with_default,
       bool                   version_sensitive);
 
+DDCA_Version_Feature_Info *
+get_version_feature_info_by_vspec(
+      DDCA_Vcp_Feature_Code   feature_code,
+      DDCA_MCCS_Version_Spec  vspec,
+      bool                    with_default,
+      bool                    version_sensitive);
+
+
 void
 free_version_feature_info(
       DDCA_Version_Feature_Info * info);
