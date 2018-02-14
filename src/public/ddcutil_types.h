@@ -441,6 +441,17 @@ struct {
 } DDCA_Version_Feature_Info;
 
 
+
+/** Describes a VCP feature code, tailored for a specific VCP version */
+typedef
+struct {
+   DDCA_Vcp_Feature_Code                 feature_code;   /**< VCP feature code */
+   DDCA_MCCS_Version_Spec                vspec;            // ???
+   DDCA_MCCS_Version_Id                  version_id;       // which ?
+   DDCA_Feature_Flags                    feature_flags;
+} DDCA_Simplified_Version_Feature_Info;
+
+
 //
 // Represent the Capabilities string returned by a monitor
 //

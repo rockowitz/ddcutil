@@ -1310,6 +1310,32 @@ ddca_get_feature_info_by_vcp_version(
 
 
 DDCA_Status
+ddca_get_simplified_feature_info(
+      DDCA_Vcp_Feature_Code         feature_code,
+      DDCA_MCCS_Version_Spec        vspec,
+ //   DDCA_MCCS_Version_Id          mccs_version_id,
+      DDCA_Simplified_Version_Feature_Info *   info)
+{
+   DDCA_Status psc = DDCL_ARG;
+   DDCA_Version_Feature_Info * full_info =  get_version_feature_info_by_vspec(
+         feature_code,
+         vspec,
+         false,                       // with_default
+         true);                       // false => version specific, true=> version sensitive
+   if (full_info) {
+      info->feature_code  = feature_code;
+      info->vspec         = vspec;
+      info->version_id    = full_info->version_id;    // keep?
+      info->feature_flags = full_info->feature_flags;
+
+      free_version_feature_info(full_info);
+      psc = 0;
+   }
+   return psc;
+}
+
+
+DDCA_Status
 ddca_get_feature_info_by_display(
       DDCA_Display_Handle           ddca_dh,    // needed because in rare cases feature info is MCCS version dependent
       DDCA_Vcp_Feature_Code         feature_code,

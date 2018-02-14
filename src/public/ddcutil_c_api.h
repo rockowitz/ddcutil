@@ -645,6 +645,14 @@ ddca_get_feature_info_by_vcp_version(
       DDCA_Version_Feature_Info**   p_info);
 
 
+DDCA_Status
+ddca_get_simplified_feature_info(
+      DDCA_Vcp_Feature_Code         feature_code,
+      DDCA_MCCS_Version_Spec        vspec,
+ //   DDCA_MCCS_Version_Id          mccs_version_id,
+      DDCA_Simplified_Version_Feature_Info *  info);     // caller buffer to fill in,
+
+
 /** Gets the VCP feature name.  If different MCCS versions use different names
  * for the feature, this function makes a best guess.
  *
