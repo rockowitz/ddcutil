@@ -836,6 +836,14 @@ ddca_get_formatted_vcp_value(
        char**                  formatted_value_loc);
 
 
+DDCA_Status
+ddca_format_non_table_vcp_value(
+      DDCA_Vcp_Feature_Code   feature_code,
+      DDCA_MCCS_Version_Spec  vspec,
+      DDCA_Non_Table_Value *  valrec,
+      char **                 formatted_value_loc);
+
+
 //
 // Set VCP value
 //

@@ -1780,6 +1780,84 @@ ddca_get_formatted_vcp_value(
    )
 }
 
+static                     // not public for now
+DDCA_Status
+ddca_format_any_vcp_value(
+      DDCA_Vcp_Feature_Code   feature_code,
+      DDCA_MCCS_Version_Spec  vspec,
+      DDCA_Any_Vcp_Value *    anyval,
+      char **                 formatted_value_loc)
+{
+      bool debug = true;
+      DBGMSF(debug, "Starting. feature_code=0x%02x", feature_code);
+      DDCA_Status psc;
+
+      *formatted_value_loc = NULL;
+
+      // DDCA_MCCS_Version_Id   version_id = mccs_version_spec_to_id(vspec);
+
+      VCP_Feature_Table_Entry * pentry = vcp_find_feature_by_hexid(feature_code);
+      if (!pentry) {
+         psc = DDCL_ARG;
+         *formatted_value_loc = gaux_asprintf("Unrecognized feature code 0x%02x", feature_code);
+         goto bye;
+      }
+
+      DDCA_Version_Feature_Flags flags = get_version_sensitive_feature_flags(pentry, vspec);
+      if (!(flags & DDCA_READABLE)) {
+         if (flags & DDCA_DEPRECATED)
+            *formatted_value_loc = gaux_asprintf("Feature %02x is deprecated in MCCS %d.%d",
+                                              feature_code, vspec.major, vspec.minor);
+         else
+            *formatted_value_loc = gaux_asprintf("Feature %02x is not readable", feature_code);
+         DBGMSF(debug, "%s", *formatted_value_loc);
+         psc = DDCL_INVALID_OPERATION;
+         goto bye;
+      }
+
+      // Version_Feature_Flags flags = feature_info->internal_feature_flags;
+      // n. will default to NON_TABLE_VCP_VALUE if not a known code
+      DDCA_Vcp_Value_Type call_type = (flags & DDCA_TABLE) ?  DDCA_TABLE_VCP_VALUE : DDCA_NON_TABLE_VCP_VALUE;
+      if (call_type != anyval->value_type) {
+          *formatted_value_loc = gaux_asprintf(
+                "Feature type in value does not match feature code");
+          psc = DDCL_ARG;
+          goto bye;
+       }
+
+       Single_Vcp_Value * valrec = any_vcp_value_to_single_vcp_value(anyval);
+       bool ok = vcp_format_feature_detail(pentry,vspec, valrec,formatted_value_loc);
+       if (!ok) {
+          psc = DDCL_ARG;    // ??
+          assert(!formatted_value_loc);
+          *formatted_value_loc = gaux_asprintf("Unable to format value for feature 0x%02x", feature_code);
+       }
+       free(valrec);
+
+bye:
+      DBGMSF(debug, "Returning: %s, formatted_value_loc -> %s", psc_desc(psc), *formatted_value_loc);
+      return psc;
+}
+
+
+DDCA_Status
+ddca_format_non_table_vcp_value(
+      DDCA_Vcp_Feature_Code   feature_code,
+      DDCA_MCCS_Version_Spec  vspec,
+      DDCA_Non_Table_Value *  valrec,
+      char **                 formatted_value_loc)
+{
+   DDCA_Any_Vcp_Value anyval;
+   anyval.opcode = feature_code;
+   anyval.value_type = DDCA_NON_TABLE_VCP_VALUE;
+   anyval.val.c_nc.mh = valrec->mh;
+   anyval.val.c_nc.ml = valrec->ml;
+   anyval.val.c_nc.sh = valrec->sh;
+   anyval.val.c_nc.sl = valrec->sl;
+
+   return ddca_format_any_vcp_value(feature_code, vspec, &anyval, formatted_value_loc);
+}
+
 
 DDCA_Status
 ddca_set_single_vcp_value(
