@@ -658,7 +658,7 @@ ddca_get_feature_name(DDCA_Vcp_Feature_Code feature_code);
  *
  * @param[in]  feature_code      VCP feature code
  * @param[in]  mccs_version_id   MCCS version id
- * @param[out] p_value_table     where to return pointer to array of DDCA_Feature_Value_Entry
+ * @param[out] value_table_loc   where to return pointer to array of DDCA_Feature_Value_Entry
  * @return     status code
  * @retval     0                success
  * @retval     DDCRC_NOT_FOUND  unrecognized feature code
@@ -668,7 +668,7 @@ DDCA_Status
 ddca_get_simple_sl_value_table(
       DDCA_Vcp_Feature_Code       feature_code,
       DDCA_MCCS_Version_Id        mccs_version_id,
-      DDCA_Feature_Value_Table *  p_value_table);   // DDCA_Feature_Value_Entry **
+      DDCA_Feature_Value_Table *  value_table_loc);   // DDCA_Feature_Value_Entry **
 
 
 DDCA_Status
@@ -676,7 +676,7 @@ ddca_get_simple_nc_feature_value_name(
       DDCA_Display_Handle    ddca_dh,    // needed because value lookup mccs version dependent
       DDCA_Vcp_Feature_Code  feature_code,
       uint8_t                feature_value,
-      char**                 p_feature_name);
+      char**                 feature_name_loc);
 
 
 DDCA_Status
@@ -695,7 +695,7 @@ ddca_free_feature_info(
 DDCA_Status ddct_is_feature_supported(
       DDCA_Display_Handle    dh,
       DDCA_Vcp_Feature_Code  feature_code,
-      bool *                 answer);
+      bool *                 answer_loc);
 
 #endif
 
@@ -705,7 +705,7 @@ DDCA_Status
 ddca_get_feature_info_by_display(
       DDCA_Display_Handle           ddca_dh,
       DDCA_Vcp_Feature_Code         feature_code,
-      DDCA_Version_Feature_Info **  p_info);
+      DDCA_Version_Feature_Info **  info_loc);
 
 
 //
@@ -717,12 +717,12 @@ ddca_get_feature_info_by_display(
 DDCA_Status
 ddca_get_mccs_version(
       DDCA_Display_Handle     ddca_dh,
-      DDCA_MCCS_Version_Spec* pspec);
+      DDCA_MCCS_Version_Spec* vspec_loc);
 
 DDCA_Status
 ddca_get_mccs_version_id(
       DDCA_Display_Handle     ddca_dh,
-      DDCA_MCCS_Version_Id*   p_id);
+      DDCA_MCCS_Version_Id*   version_id_loc);
 
 // DDCA_Status ddca_get_edid(DDCA_Display_Handle * dh, uint8_t* edid_buffer);    // edid_buffer must be >= 128 bytes
 // Keep?   Can get from ddca_get_edid_by_display_ref()
@@ -730,7 +730,7 @@ ddca_get_mccs_version_id(
 DDCA_Status
 ddca_get_edid_by_display_ref(
       DDCA_Display_Ref ddca_dref,
-      uint8_t **       pbytes);   // pointer into ddcutil data structures, do not free
+      uint8_t **       pbytes_loc);   // pointer into ddcutil data structures, do not free
 
 //
 // Feature Sets
@@ -774,10 +774,10 @@ ddca_get_nontable_vcp_value(
 
 /** Gets the value of a table VCP feature.
  *
- * @param ddca_dh       display handle
- * @param feature_code  VCP feature code
- * @param value_len     address at which to return the value length
- * @param value_bytes   address at which to return a pointer to the value bytes
+ * @param ddca_dh         display handle
+ * @param feature_code    VCP feature code
+ * @param value_len_loc   address at which to return the value length
+ * @param value_bytes_loc address at which to return a pointer to the value bytes
  *
  * @return external status code
  *
@@ -788,8 +788,8 @@ DDCA_Status
 ddca_get_table_vcp_value(
        DDCA_Display_Handle     ddca_dh,
        DDCA_Vcp_Feature_Code   feature_code,
-       int *                   value_len,
-       uint8_t**               value_bytes);
+       int *                   value_len_loc,
+       uint8_t**               value_bytes_loc);
 
 
 // ddca_get_vcp_value() is deprecated, use ddca_get_any_vcp_value()
@@ -809,7 +809,7 @@ ddca_free_any_vcp_value(
  * @param ddca_dh       display handle
  * @param feature_code  VCP feature code
  * @param value_type    value type
- * @param pvalrec       address at which to return a pointer to a newly
+ * @param valrec_loc    address at which to return a pointer to a newly
  *                      allocated Single_Vcp_Value
  *
  * @return external status code
@@ -819,21 +819,21 @@ ddca_get_any_vcp_value(
        DDCA_Display_Handle         ddca_dh,
        DDCA_Vcp_Feature_Code       feature_code,
        DDCA_Vcp_Value_Type_Parm    value_type,
-       DDCA_Any_Vcp_Value **       pvalrec);
+       DDCA_Any_Vcp_Value **       valrec_loc);
 
 
 /** Returns a string containing a formatted representation of the VCP value
  *  of a feature.  It is the responsibility of the caller to free this value.
  *  @param[in] ddca_dh            Display handle
  *  @param[in] feature_code       VCP feature code
- *  @param[out] p_formatted_value Address at which to return the formatted value
+ *  @param[out] formatted_value_loc Address at which to return the formatted value
  *  @return                       status code, 0 if success
  */
 DDCA_Status
 ddca_get_formatted_vcp_value(
        DDCA_Display_Handle     ddca_dh,
        DDCA_Vcp_Feature_Code   feature_code,
-       char**                  p_formatted_value);
+       char**                  formatted_value_loc);
 
 
 //
@@ -894,7 +894,7 @@ ddct_set_table_vcp_value(
 DDCA_Status
 ddca_get_profile_related_values(
       DDCA_Display_Handle  ddca_dh,
-      char**               pprofile_values_string);
+      char**               profile_values_string_loc);
 
 DDCA_Status
 ddca_set_profile_related_values(char *
