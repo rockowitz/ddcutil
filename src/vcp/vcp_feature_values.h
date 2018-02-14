@@ -138,6 +138,10 @@ DDCA_Any_Vcp_Value *
 single_vcp_value_to_any_vcp_value(
       Single_Vcp_Value * valrec);
 
+Single_Vcp_Value *
+any_vcp_value_to_single_vcp_value(
+      DDCA_Any_Vcp_Value * anyval);
+
 // Simple stripped-down version of Parsed_Nontable_Vcp_Response
 // for use within vcp_feature_codes.c
 

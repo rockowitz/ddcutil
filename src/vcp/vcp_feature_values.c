@@ -345,7 +345,10 @@ Nontable_Vcp_Value * single_vcp_value_to_nontable_vcp_value(Single_Vcp_Value * v
 /** Converts a #Single_Vcp_Value to #DDCA_Any_Vcp_Value
  *
  *  \param  valrec  pointer to #Single_Vcp_Value to convert
- *  \return converted value
+ *  \return newly allocated converted value
+ *
+ *  \remark
+ *  If table type, only the pointer to the bytes is copied
  */
 DDCA_Any_Vcp_Value * single_vcp_value_to_any_vcp_value(Single_Vcp_Value * valrec) {
    DDCA_Any_Vcp_Value * anyval = calloc(1, sizeof(DDCA_Any_Vcp_Value));
@@ -363,6 +366,32 @@ DDCA_Any_Vcp_Value * single_vcp_value_to_any_vcp_value(Single_Vcp_Value * valrec
    }
 
    return anyval;
+}
+
+
+/** Converts a #DDCA_Any_Vcp_Value to #Single_Vcp_Value
+ *
+ *  \param  valrec  pointer to #DDCA_Any_Vcp_Value to convert
+ *  \return newly allocated converted value
+ *
+ *  \remark
+ *  If table type, only the pointer to the bytes is copied
+ */
+Single_Vcp_Value * any_vcp_value_to_single_vcp_value(DDCA_Any_Vcp_Value * anyval) {
+   Single_Vcp_Value * valrec = calloc(1, sizeof(Single_Vcp_Value));
+   valrec->opcode     = anyval->opcode;
+   valrec->value_type = anyval->value_type;
+   if (valrec->value_type ==  DDCA_NON_TABLE_VCP_VALUE) {
+      valrec->val.nc.mh = anyval->val.c_nc.mh;
+      valrec->val.nc.ml = anyval->val.c_nc.ml;
+      valrec->val.nc.sh = anyval->val.c_nc.sh;
+      valrec->val.nc.sl = anyval->val.c_nc.sl;
+   }
+   else {          // DDCA_TABLE_VCP_VALUE
+      valrec->val.t.bytect = anyval->val.t.bytect;
+      valrec->val.t.bytes  = anyval->val.t.bytes;
+   }
+   return valrec;
 }
 
 
