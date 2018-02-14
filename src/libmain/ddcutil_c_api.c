@@ -1382,9 +1382,57 @@ ddca_get_feature_name(DDCA_Vcp_Feature_Code feature_code) {
 }
 
 
+char *
+ddca_feature_name(
+      DDCA_Vcp_Feature_Code  feature_code,
+      DDCA_MCCS_Version_Spec vspec)
+{
+   char * result = get_feature_name_by_id_and_vcp_version(feature_code, vspec);
+   return result;
+}
+
+
+
 //
 // Display Inquiry
 //
+
+
+DDCA_Status
+ddca_get_simple_sl_value_table_by_vspec(
+      DDCA_Vcp_Feature_Code      feature_code,
+      DDCA_MCCS_Version_Spec     vspec,
+      DDCA_Feature_Value_Entry** pvalue_table)
+{
+   bool debug = false;
+   DDCA_Status rc = 0;
+   *pvalue_table = NULL;
+   DBGMSF(debug, "feature_code = 0x%02x, vspec=%d.%d",
+                 feature_code, vspec.major, vspec.minor);
+
+
+   VCP_Feature_Table_Entry * pentry = vcp_find_feature_by_hexid(feature_code);
+   if (!pentry) {
+        *pvalue_table = NULL;
+        rc = DDCRC_NOT_FOUND;
+  }
+  else {
+     DDCA_Version_Feature_Flags vflags = get_version_sensitive_feature_flags(pentry, vspec);
+     if (!(vflags & DDCA_SIMPLE_NC)) {
+        *pvalue_table = NULL;
+        rc = -EINVAL;
+     }
+     else  {
+        DDCA_Feature_Value_Entry * table = get_version_specific_sl_values(pentry, vspec);
+        DDCA_Feature_Value_Entry * table2 = (DDCA_Feature_Value_Entry*) table;    // identical definitions
+        *pvalue_table = table2;
+        rc = 0;
+     }
+  }
+   DBGMSF(debug, "Done. *pvalue_table=%p, returning %s", *pvalue_table, psc_desc(rc));
+   return rc;
+}
+
 
 
 DDCA_Status
@@ -1400,6 +1448,7 @@ ddca_get_simple_sl_value_table(
    DBGMSF(debug, "feature_code = 0x%02x, mccs_version_id=%d, vspec=%d.%d",
                  feature_code, mccs_version_id, vspec.major, vspec.minor);
 
+#ifdef OLD
 
    VCP_Feature_Table_Entry * pentry = vcp_find_feature_by_hexid(feature_code);
    if (!pentry) {
@@ -1422,6 +1471,9 @@ ddca_get_simple_sl_value_table(
   }
    DBGMSF(debug, "Done. *pvalue_table=%p, returning %s", *pvalue_table, psc_desc(rc));
    return rc;
+#endif
+
+   rc = ddca_get_simple_sl_value_table_by_vspec(feature_code, vspec, pvalue_table);
 }
 
 

@@ -662,6 +662,20 @@ ddca_get_simplified_feature_info(
 char *
 ddca_get_feature_name(DDCA_Vcp_Feature_Code feature_code);
 
+
+char *
+ddca_feature_name(
+      DDCA_Vcp_Feature_Code  feature_code,
+      DDCA_MCCS_Version_Spec vspec);
+
+
+
+DDCA_Status
+ddca_get_simple_sl_value_table_by_vspec(
+      DDCA_Vcp_Feature_Code      feature_code,
+      DDCA_MCCS_Version_Spec     vspec,
+      DDCA_Feature_Value_Entry** pvalue_table);
+
 /** Gets the value id/name table of the allowed values for a simple NC feature.
  *
  * @param[in]  feature_code      VCP feature code
