@@ -518,7 +518,9 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
        }
        ntsa_free(pieces, /* free_strings */ true);
 
-       DBGMSF(debug, "retries = %d,%d,%d", parsed_cmd->max_tries[0], parsed_cmd->max_tries[1], parsed_cmd->max_tries[2]);
+       DBGMSF(debug, "retries = %d,%d,%d", parsed_cmd->max_tries[0],
+                                           parsed_cmd->max_tries[1],
+                                           parsed_cmd->max_tries[2]);
        debug = saved_debug;
     }
 
@@ -727,6 +729,22 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
                parsed_cmd->fref = fsref;
             else
                fprintf(stderr, "Invalid feature code or subset: %s\n", parsed_cmd->args[0]);
+         }
+
+         if (ok && parsed_cmd->cmd_id == CMDID_SETVCP) {
+            if (parsed_cmd->argct == 3) {
+               if (streq(parsed_cmd->args[1],"+") || streq(parsed_cmd->args[1], "-")) {
+                  char * a1 = parsed_cmd->args[1];
+                  char * a2 = parsed_cmd->args[2];
+                  char * newarg1 = calloc(1, 1 + strlen(a2) + 1);
+                  strcpy(newarg1, a1);
+                  strcat(newarg1, a2);
+                  parsed_cmd->args[1] = newarg1;
+                  parsed_cmd->argct = 2;
+                  free(a1);
+                  free(a2);
+               }
+            }
          }
 
          // validate options vs commands
