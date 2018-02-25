@@ -6,7 +6,7 @@
 /* build_info.c
  *
  * <copyright>
- * Copyright (C) 2014-2015 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2014-2018 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -30,7 +30,8 @@
 
 #include "base/build_info.h"
 
-const char * BUILD_VERSION = VERSION;       /**< ddcutil version */
+const char * BUILD_VERSION = VERSION;      /**< ddcutil version */
+
 // TODO: patch dummy values at link time
 // const char * BUILD_DATE = __DATE__;
 const char * BUILD_DATE = "mmm dd yyyy";   /**<  build date, to be patched at link time */

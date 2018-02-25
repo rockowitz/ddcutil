@@ -6,7 +6,7 @@
 /* build_info.h
  *
  * <copyright>
- * Copyright (C) 2014-2017 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2014-2018 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -30,7 +30,8 @@
 #define BUILD_INFO_H_
 
 extern const char * BUILD_VERSION;
-extern const char * BUILD_DATE;
-extern const char * BUILD_TIME;
+
+// extern const char * BUILD_DATE;    // unimplemented
+// extern const char * BUILD_TIME;    // unimplemented
 
 #endif /* BUILD_INFO_H_ */
