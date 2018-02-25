@@ -1,7 +1,7 @@
 /* app_setvcp.c
  *
  * <copyright>
- * Copyright (C) 2014-2016 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2014-2018 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -119,20 +119,22 @@ app_set_vcp_value(
 {
    bool debug = false;
    DBGMSF(debug,"Starting");
+   assert(new_value && strlen(new_value) > 0);
 
    Public_Status_Code         psc = 0;
-   Error_Info *                ddc_excp = NULL;
+   Error_Info *               ddc_excp = NULL;
    long                       longtemp;
    Byte                       hexid;
    VCP_Feature_Table_Entry *  entry = NULL;
    bool                       good_value = false;
-   Single_Vcp_Value      vrec;
+   Single_Vcp_Value           vrec;
 
    DDCA_MCCS_Version_Spec vspec = get_vcp_version_by_display_handle(dh);
    bool ok = any_one_byte_hex_string_to_byte_in_buf(feature, &hexid);
    if (!ok) {
       f0printf(FOUT, "Unrecognized VCP feature code: %s\n", feature);
       psc = DDCL_UNKNOWN_FEATURE;
+      ddc_excp = errinfo_new(psc, __func__);
       goto bye;
    }
    entry = vcp_find_feature_by_hexid(hexid);
@@ -141,6 +143,7 @@ app_set_vcp_value(
    if (!entry) {
       f0printf(FOUT, "Unrecognized VCP feature code: %s\n", feature);
       psc = DDCL_UNKNOWN_FEATURE;
+      ddc_excp = errinfo_new(psc, __func__);
       goto bye;
    }
 
@@ -148,6 +151,7 @@ app_set_vcp_value(
       char * feature_name =  get_version_sensitive_feature_name(entry, vspec);
       f0printf(FOUT, "Feature %s (%s) is not writable\n", feature, feature_name);
       psc = DDCL_INVALID_OPERATION;
+      ddc_excp = errinfo_new(psc, __func__);
       goto bye;
    }
 
@@ -166,7 +170,51 @@ app_set_vcp_value(
       }
    }
    else {  // the usual non-table case
+
+      // Check for relative values
+      char value_prefix = ' ';
+      if (new_value[0] == '+' || new_value[0] == '-') {
+         value_prefix = new_value[0];
+         new_value = new_value+1;
+      }
       good_value = parse_vcp_value(new_value, &longtemp);
+
+      // Handle relative values
+      if (value_prefix != ' ') {
+         if ( !(get_version_sensitive_feature_flags(entry, vspec) & DDCA_CONT) ) {
+            char * feature_name =  get_version_sensitive_feature_name(entry, vspec);
+            f0printf(FOUT, "Feature %s (%s) is not continuous\n", feature, feature_name);
+            psc = DDCL_INVALID_OPERATION;
+            ddc_excp = errinfo_new(psc, __func__);
+            goto bye;
+         }
+
+         Parsed_Nontable_Vcp_Response * parsed_response;
+         ddc_excp = get_nontable_vcp_value(
+                       dh,
+                       entry->code,
+                       &parsed_response);
+         if (ddc_excp) {
+            // is message needed?
+            char * feature_name =  get_version_sensitive_feature_name(entry, vspec);
+            f0printf(FOUT, "Error reading feature %s (%s)\n", feature, feature_name);
+            goto bye;
+         }
+
+         if ( value_prefix == '+') {
+            longtemp = parsed_response->cur_value + longtemp;
+            if (longtemp > parsed_response->max_value)
+               longtemp = parsed_response->max_value;
+         }
+         else {
+            assert( value_prefix == '-');
+            longtemp = parsed_response->cur_value - longtemp;
+            if (longtemp < 0)
+               longtemp = 0;
+         }
+         free(parsed_response);
+      }
+
       if (good_value) {
          vrec.opcode        = entry->code;
          vrec.value_type    = DDCA_NON_TABLE_VCP_VALUE;
@@ -178,6 +226,7 @@ app_set_vcp_value(
       f0printf(FOUT, "Invalid VCP value: %s\n", new_value);
       // what is better status code?
       psc = -EINVAL;
+      ddc_excp = errinfo_new(psc, __func__);
       goto bye;
    }
 
