@@ -41,9 +41,12 @@
 #include "vcp/vcp_feature_values.h"
 
 
-void ddc_set_verify_setvcp(bool onoff);
+void
+ddc_set_verify_setvcp(
+      bool                      onoff);
 
-bool ddc_get_verify_setvcp();
+bool
+ddc_get_verify_setvcp();
 
 Error_Info *
 ddc_save_current_settings(
