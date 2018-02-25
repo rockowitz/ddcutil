@@ -1,7 +1,7 @@
 /* ddcutil_c_api.c
  *
  * <copyright>
- * Copyright (C) 2015-2017 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2015-2018 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -1469,11 +1469,12 @@ ddca_get_simple_sl_value_table(
         rc = 0;
      }
   }
-   DBGMSF(debug, "Done. *pvalue_table=%p, returning %s", *pvalue_table, psc_desc(rc));
-   return rc;
 #endif
 
    rc = ddca_get_simple_sl_value_table_by_vspec(feature_code, vspec, pvalue_table);
+
+   DBGMSF(debug, "Done. *pvalue_table=%p, returning %s", *pvalue_table, psc_desc(rc));
+   return rc;
 }
 
 
@@ -1866,9 +1867,9 @@ ddca_format_any_vcp_value(
       DDCA_Any_Vcp_Value *    anyval,
       char **                 formatted_value_loc)
 {
-      bool debug = true;
+      bool debug = false;
       DBGMSF(debug, "Starting. feature_code=0x%02x", feature_code);
-      DDCA_Status psc;
+      DDCA_Status psc = 0;
 
       *formatted_value_loc = NULL;
 
