@@ -80,11 +80,11 @@ bool parse_vcp_value(char * string_value, long* parsed_value) {
    // printf("errno=%d, new_value=|%s|, &new_value=%p, longtemp = %ld, endptr=0x%02x\n",
    //        errsv, new_value, &new_value, longtemp, *endptr);
    if (*endptr || errsv != 0) {
-      printf("Not a number: %s\n", string_value);
+      f0printf(FERR, "Not a number: %s\n", string_value);
       ok = false;
    }
    else if (longtemp < 0 || longtemp > 255) {
-      printf("Number must be in range 0..255 (for now at least):  %ld\n", longtemp);
+      f0printf(FERR, "Number must be in range 0..255 (for now at least):  %ld\n", longtemp);
       ok = false;
    }
    else {
@@ -132,7 +132,7 @@ app_set_vcp_value(
    DDCA_MCCS_Version_Spec vspec = get_vcp_version_by_display_handle(dh);
    bool ok = any_one_byte_hex_string_to_byte_in_buf(feature, &hexid);
    if (!ok) {
-      f0printf(FOUT, "Unrecognized VCP feature code: %s\n", feature);
+      f0printf(FERR, "Unrecognized VCP feature code: %s\n", feature);
       psc = DDCL_UNKNOWN_FEATURE;
       ddc_excp = errinfo_new(psc, __func__);
       goto bye;
@@ -141,7 +141,7 @@ app_set_vcp_value(
    if (!entry && ( force || hexid >= 0xe0) )  // assume force for mfg specific codes
       entry = vcp_create_dummy_feature_for_hexid(hexid);
    if (!entry) {
-      f0printf(FOUT, "Unrecognized VCP feature code: %s\n", feature);
+      f0printf(FERR, "Unrecognized VCP feature code: %s\n", feature);
       psc = DDCL_UNKNOWN_FEATURE;
       ddc_excp = errinfo_new(psc, __func__);
       goto bye;
@@ -149,7 +149,7 @@ app_set_vcp_value(
 
    if (!is_feature_writable_by_vcp_version(entry, vspec)) {
       char * feature_name =  get_version_sensitive_feature_name(entry, vspec);
-      f0printf(FOUT, "Feature %s (%s) is not writable\n", feature, feature_name);
+      f0printf(FERR, "Feature %s (%s) is not writable\n", feature, feature_name);
       psc = DDCL_INVALID_OPERATION;
       ddc_excp = errinfo_new(psc, __func__);
       goto bye;
@@ -183,7 +183,7 @@ app_set_vcp_value(
       if (value_prefix != ' ') {
          if ( !(get_version_sensitive_feature_flags(entry, vspec) & DDCA_CONT) ) {
             char * feature_name =  get_version_sensitive_feature_name(entry, vspec);
-            f0printf(FOUT, "Feature %s (%s) is not continuous\n", feature, feature_name);
+            f0printf(FERR, "Feature %s (%s) is not continuous\n", feature, feature_name);
             psc = DDCL_INVALID_OPERATION;
             ddc_excp = errinfo_new(psc, __func__);
             goto bye;
@@ -197,7 +197,7 @@ app_set_vcp_value(
          if (ddc_excp) {
             // is message needed?
             char * feature_name =  get_version_sensitive_feature_name(entry, vspec);
-            f0printf(FOUT, "Error reading feature %s (%s)\n", feature, feature_name);
+            f0printf(FERR, "Error reading feature %s (%s)\n", feature, feature_name);
             goto bye;
          }
 
@@ -242,13 +242,13 @@ app_set_vcp_value(
    if (psc != 0)  {
       switch(psc) {
       case DDCRC_VERIFY:
-            f0printf(FOUT, "Verification failed for feature %02x\n", entry->code);
+            f0printf(FERR, "Verification failed for feature %02x\n", entry->code);
             break;
       default:
          // Is this proper error message?
-         f0printf(FOUT, "Setting value failed for feature %02x. rc=%s\n", entry->code, psc_desc(psc));
+         f0printf(FERR, "Setting value failed for feature %02x. rc=%s\n", entry->code, psc_desc(psc));
          if (psc == DDCRC_RETRIES)
-            f0printf(FOUT, "    Try errors: %s\n", errinfo_causes_string(ddc_excp));
+            f0printf(FERR, "    Try errors: %s\n", errinfo_causes_string(ddc_excp));
       }
    }
 
