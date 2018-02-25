@@ -37,6 +37,10 @@ m4_define([ddcutil_version],
 dnl causes VERSION to be set in config.h
 AC_INIT([ddcutil], [ddcutil_version], [rockowitz@minsoft.com])
 
+AC_DEFINE_UNQUOTED( [PACKAGE_VMAJOR], [ ddcutil_major_version ], [ddcutil major version] )
+AC_DEFINE_UNQUOTED( [PACKAGE_VMINOR], [ ddcutil_minor_version ], [ddcutil minor version] )
+AC_DEFINE_UNQUOTED( [PACKAGE_VMICRO], [ ddcutil_micro_version ], [ddcutil micro version] )
+
 
 AC_ARG_VAR(DBG, [Turn on script debugging messages(0/1)])
 dnl AC_MSG_NOTICE([DBG = |$DBG|])
