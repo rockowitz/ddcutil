@@ -1,7 +1,7 @@
 /* ddc_vcp.h
  *
  * <copyright>
- * Copyright (C) 2014-2017 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2014-2018 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -41,42 +41,42 @@
 #include "vcp/vcp_feature_values.h"
 
 
-void set_verify_setvcp(bool onoff);
-bool get_verify_setvcp();
+void ddc_set_verify_setvcp(bool onoff);
+
+bool ddc_get_verify_setvcp();
 
 Error_Info *
-save_current_settings(
+ddc_save_current_settings(
       Display_Handle *          dh);
 
 Error_Info *
-set_nontable_vcp_value(
+ddc_set_nontable_vcp_value(
       Display_Handle *          dh,
       Byte                      feature_code,
       int                       new_value);
 
 Error_Info *
-set_vcp_value(
+ddc_set_vcp_value(
       Display_Handle *          dh,
       Single_Vcp_Value *        vrec);
 
 Error_Info *
-get_table_vcp_value(
+ddc_get_table_vcp_value(
       Display_Handle *          dh,
       Byte                      feature_code,
       Buffer**                  table_bytes_loc);
 
 Error_Info *
-get_nontable_vcp_value(
+ddc_get_nontable_vcp_value(
       Display_Handle *          dh,
       Byte                      feature_code,
       Parsed_Nontable_Vcp_Response** parsed_response_loc);
 
 Error_Info *
-get_vcp_value(
+ddc_get_vcp_value(
       Display_Handle *          dh,
       Byte                      feature_code,
       DDCA_Vcp_Value_Type       call_type,
       Single_Vcp_Value **       valrec_loc);
-
 
 #endif /* DDC_VCP_H_ */

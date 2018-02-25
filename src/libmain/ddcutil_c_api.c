@@ -448,11 +448,11 @@ ddca_set_max_tries(
 
 
 void ddca_enable_verify(bool onoff) {
-   set_verify_setvcp(onoff);
+   ddc_set_verify_setvcp(onoff);
 }
 
 bool ddca_is_verify_enabled() {
-   return get_verify_setvcp();
+   return ddc_get_verify_setvcp();
 }
 
 
@@ -1554,7 +1554,7 @@ ddca_get_nontable_vcp_value_old(
 
    WITH_DH(ddca_dh,  {
        Parsed_Nontable_Vcp_Response * code_info;
-       ddc_excp = get_nontable_vcp_value(
+       ddc_excp = ddc_get_nontable_vcp_value(
                 dh,
                 feature_code,
                 &code_info);
@@ -1633,7 +1633,7 @@ ddca_get_table_vcp_value(
    WITH_DH(ddca_dh,
       {
          Buffer * p_table_bytes = NULL;
-         ddc_excp =  get_table_vcp_value(dh, feature_code, &p_table_bytes);
+         ddc_excp =  ddc_get_table_vcp_value(dh, feature_code, &p_table_bytes);
          psc = (ddc_excp) ? ddc_excp->status_code : 0;
          errinfo_free(ddc_excp);
          if (psc == 0) {
@@ -1667,7 +1667,7 @@ ddca_get_vcp_value(
                DBGMSF(debug, "Starting. ddca_dh=%p, feature_code=0x%02x, call_type=%d, pvalrec=%p",
                       ddca_dh, feature_code, call_type, pvalrec);
                *pvalrec = NULL;
-               ddc_excp = get_vcp_value(dh, feature_code, call_type, pvalrec);
+               ddc_excp = ddc_get_vcp_value(dh, feature_code, call_type, pvalrec);
                psc = (ddc_excp) ? ddc_excp->status_code : 0;
                errinfo_free(ddc_excp);
                DBGMSF(debug, "*pvalrec=%p", *pvalrec);
@@ -1837,7 +1837,7 @@ ddca_get_formatted_vcp_value(
                       // n. will default to NON_TABLE_VCP_VALUE if not a known code
                       DDCA_Vcp_Value_Type call_type = (flags & DDCA_TABLE) ?  DDCA_TABLE_VCP_VALUE : DDCA_NON_TABLE_VCP_VALUE;
                       Single_Vcp_Value * pvalrec;
-                      ddc_excp = get_vcp_value(dh, feature_code, call_type, &pvalrec);
+                      ddc_excp = ddc_get_vcp_value(dh, feature_code, call_type, &pvalrec);
                       psc = (ddc_excp) ? ddc_excp->status_code : 0;
                       errinfo_free(ddc_excp);
                       if (psc == 0) {
@@ -1945,7 +1945,7 @@ ddca_set_single_vcp_value(
    {
       Error_Info * ddc_excp = NULL;
       WITH_DH(ddca_dh,  {
-            ddc_excp = set_vcp_value(dh, valrec);
+            ddc_excp = ddc_set_vcp_value(dh, valrec);
             psc = (ddc_excp) ? ddc_excp->status_code : 0;
             errinfo_free(ddc_excp);
          } );

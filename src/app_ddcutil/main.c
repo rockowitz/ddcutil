@@ -283,7 +283,7 @@ void probe_display_by_dh(Display_Handle * dh)
    Single_Vcp_Value * valrec;
    int color_temp_increment = 0;
    int color_temp_units = 0;
-   ddc_excp = get_vcp_value(
+   ddc_excp = ddc_get_vcp_value(
                  dh,
                  0x0b,              // color temperature increment,
                  DDCA_NON_TABLE_VCP_VALUE,
@@ -295,7 +295,7 @@ void probe_display_by_dh(Display_Handle * dh)
       color_temp_increment = valrec->val.c.cur_val;
       free_single_vcp_value(valrec);
 
-      ddc_excp = get_vcp_value(
+      ddc_excp = ddc_get_vcp_value(
                     dh,
                     0x0c,              // color temperature request
                     DDCA_NON_TABLE_VCP_VALUE,
@@ -407,7 +407,7 @@ int main(int argc, char *argv[]) {
    // overrides setting in init_ddc_services():
    i2c_set_io_strategy(DEFAULT_I2C_IO_STRATEGY);
 
-   set_verify_setvcp(parsed_cmd->flags & CMD_FLAG_VERIFY);
+   ddc_set_verify_setvcp(parsed_cmd->flags & CMD_FLAG_VERIFY);
 
 #ifndef HAVE_ADL
    if ( is_module_loaded_using_sysfs("fglrx") ) {
@@ -794,7 +794,7 @@ int main(int argc, char *argv[]) {
                }
                else {
                   main_rc = EXIT_SUCCESS;
-                  Error_Info * ddc_excp = save_current_settings(dh);
+                  Error_Info * ddc_excp = ddc_save_current_settings(dh);
                   if (ddc_excp)  {
                      f0printf(FOUT, "Save current settings failed. rc=%s\n", psc_desc(ddc_excp->status_code));
                      if (ddc_excp->status_code == DDCRC_RETRIES)

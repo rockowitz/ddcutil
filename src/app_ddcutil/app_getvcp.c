@@ -284,7 +284,7 @@ app_show_feature_set_values_by_display_handle(
 //
 
 void reset_vcp_x02(Display_Handle * dh) {
-   Error_Info * ddc_excp = set_nontable_vcp_value(dh, 0x02, 0x01);
+   Error_Info * ddc_excp = ddc_set_nontable_vcp_value(dh, 0x02, 0x01);
    if (ddc_excp) {
       DBGMSG("set_nontable_vcp_value_by_display_handle() returned %s", errinfo_summary(ddc_excp) );
       errinfo_free(ddc_excp);
@@ -298,7 +298,7 @@ bool new_control_values_exist(Display_Handle * dh) {
    Parsed_Nontable_Vcp_Response * p_nontable_response = NULL;
    // DBGMSF(debug, "VCP version: %d.%d", vspec.major, vspec.minor);
    bool result = false;
-    Error_Info * ddc_excp = get_nontable_vcp_value(
+    Error_Info * ddc_excp = ddc_get_nontable_vcp_value(
              dh,
              0x02,
              &p_nontable_response);
@@ -331,7 +331,7 @@ bool new_control_values_exist(Display_Handle * dh) {
 Byte show_changed_feature(Display_Handle * dh) {
    Parsed_Nontable_Vcp_Response * p_nontable_response = NULL;
    Byte changed_feature = 0x00;
-   Error_Info * ddc_excp = get_nontable_vcp_value(
+   Error_Info * ddc_excp = ddc_get_nontable_vcp_value(
               dh,
               0x52,
               &p_nontable_response);

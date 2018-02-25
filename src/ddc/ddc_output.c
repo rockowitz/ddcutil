@@ -201,7 +201,7 @@ get_raw_value_for_feature_table_entry(
 #endif
    }
    else {
-      ddc_excp = get_vcp_value(
+      ddc_excp = ddc_get_vcp_value(
               dh,
               feature_code,
               feature_type,

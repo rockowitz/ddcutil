@@ -59,7 +59,7 @@ gpointer threaded_get_vcp_value(gpointer data) {
       Public_Status_Code psc = 0;
       Single_Vcp_Value * valrec = NULL;
       DDCA_Any_Vcp_Value    * anyval = NULL;
-      Error_Info * ddc_excp = get_vcp_value(
+      Error_Info * ddc_excp = ddc_get_vcp_value(
             parms->dh,
             parms->feature_code,
             parms->call_type,

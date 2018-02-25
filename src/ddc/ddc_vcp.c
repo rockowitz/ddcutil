@@ -80,7 +80,7 @@ static Trace_Group TRACE_GROUP = TRC_DDC;
  * \return NULL if success, pointer to #Ddc_Error if failure
  */
 Error_Info *
-save_current_settings(
+ddc_save_current_settings(
       Display_Handle * dh)
 {
    bool debug = false;
@@ -127,7 +127,7 @@ save_current_settings(
  *          pointer to #Ddc_Error from #ddc_write_only_with_retry() if failure
  */
 Error_Info *
-set_nontable_vcp_value(
+ddc_set_nontable_vcp_value(
       Display_Handle * dh,
       Byte             feature_code,
       int              new_value)
@@ -224,7 +224,7 @@ static bool verify_setvcp = false;
  *
  *  \param onoff  **true** for enabled, **false** for disabled.
  */
-void set_verify_setvcp(bool onoff) {
+void ddc_set_verify_setvcp(bool onoff) {
    bool debug = false;
    DBGMSF(debug, "Setting verify_setvcp = %s", bool_repr(onoff));
    verify_setvcp = onoff;
@@ -236,7 +236,7 @@ void set_verify_setvcp(bool onoff) {
  *  \return **true** if setvcp verification enabled\n
  *          **false** if not
  */
-bool get_verify_setvcp() {
+bool ddc_get_verify_setvcp() {
    return verify_setvcp;
 }
 
@@ -331,7 +331,7 @@ single_vcp_value_equal(
  *  to ensure the display has actually changed the value.
  */
 Error_Info *
-set_vcp_value(
+ddc_set_vcp_value(
       Display_Handle *    dh,
       Single_Vcp_Value *  vrec)
 {
@@ -344,7 +344,7 @@ set_vcp_value(
    Public_Status_Code psc = 0;
    Error_Info * ddc_excp = NULL;
    if (vrec->value_type == DDCA_NON_TABLE_VCP_VALUE) {
-      ddc_excp = set_nontable_vcp_value(dh, vrec->opcode, vrec->val.c.cur_val);
+      ddc_excp = ddc_set_nontable_vcp_value(dh, vrec->opcode, vrec->val.c.cur_val);
       psc = (ddc_excp) ? ddc_excp->status_code : 0;
    }
    else {
@@ -357,7 +357,7 @@ set_vcp_value(
       if (is_rereadable_feature(dh, vrec->opcode) ) {
          f0printf(fout, "Verifying that value of feature 0x%02x successfully set...\n", vrec->opcode);
          Single_Vcp_Value * newval = NULL;
-         ddc_excp = get_vcp_value(
+         ddc_excp = ddc_get_vcp_value(
              dh,
              vrec->opcode,
              vrec->value_type,
@@ -409,7 +409,7 @@ set_vcp_value(
  * The value pointed to by ppInterpretedCode is non-null iff the returned status code is 0.
  */
 Error_Info *
-get_nontable_vcp_value(
+ddc_get_nontable_vcp_value(
        Display_Handle *               dh,
        DDCA_Vcp_Feature_Code          feature_code,
        Parsed_Nontable_Vcp_Response** ppInterpretedCode)
@@ -509,7 +509,7 @@ get_nontable_vcp_value(
  *  \param  pp_table_bytes  location at which to save address of newly allocated Buffer
  *  \return NULL if success, pointer to #Ddc_Error if failure
  */
-Error_Info * get_table_vcp_value(
+Error_Info * ddc_get_table_vcp_value(
        Display_Handle *       dh,
        Byte                   feature_code,
        Buffer**               pp_table_bytes)
@@ -562,7 +562,7 @@ Error_Info * get_table_vcp_value(
  * The caller is responsible for freeing the value pointed returned at pvalrec.
  */
 Error_Info *
-get_vcp_value(
+ddc_get_vcp_value(
        Display_Handle *       dh,
        Byte                   feature_code,
        DDCA_Vcp_Value_Type    call_type,
@@ -614,7 +614,7 @@ get_vcp_value(
       switch (call_type) {
 
       case (DDCA_NON_TABLE_VCP_VALUE):
-            ddc_excp = get_nontable_vcp_value(
+            ddc_excp = ddc_get_nontable_vcp_value(
                           dh,
                           feature_code,
                           &parsed_nontable_response);
@@ -631,7 +631,7 @@ get_vcp_value(
             break;
 
       case (DDCA_TABLE_VCP_VALUE):
-            ddc_excp = get_table_vcp_value(
+            ddc_excp = ddc_get_table_vcp_value(
                     dh,
                     feature_code,
                     &buffer);

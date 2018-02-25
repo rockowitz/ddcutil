@@ -324,7 +324,7 @@ ddc_set_multiple(
       //    sleep_millis_with_trace(DDC_TIMEOUT_MILLIS_DEFAULT, __func__, "before set_vcp_value()");
       // }
 
-      ddc_excp = set_vcp_value(dh, vrec);
+      ddc_excp = ddc_set_vcp_value(dh, vrec);
       psc = (ddc_excp) ? ddc_excp->status_code : 0;
       if (ddc_excp) {
          f0printf(FERR, "Error setting value for VCP feature code 0x%02x: %s\n",
