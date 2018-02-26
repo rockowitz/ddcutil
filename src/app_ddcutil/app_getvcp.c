@@ -164,7 +164,7 @@ app_show_single_vcp_value_by_feature_id(
  * Arguments:
  *    dh                display handle
  *    subset_id         feature subset
- *    show_unsupported  report unsupported values
+ *    flags             option flags
  *    features_seen     if non-null, collect list of features found
  *
  * Returns:
@@ -174,7 +174,6 @@ Public_Status_Code
 app_show_vcp_subset_values_by_display_handle(
         Display_Handle *    dh,
         VCP_Feature_Subset  subset_id,
- //        bool                show_unsupported,  // deprecated
         Feature_Set_Flags   flags,
         Byte_Bit_Flags      features_seen)
 {
@@ -233,8 +232,7 @@ void app_show_vcp_subset_values_by_display_ref(
  * Arguments:
  *    dh                display handle
  *    fsref             feature set reference
- *    show_unsupported  report unsupported values (applies if not a single feature feature set)
- *    force             applies if is a single feature feature set
+ *    flags             option flags
  *
  * Returns:
  *    status code       from app_show_single_vcp_value_by_feature_id() or
@@ -244,13 +242,9 @@ Public_Status_Code
 app_show_feature_set_values_by_display_handle(
       Display_Handle *     dh,
       Feature_Set_Ref *    fsref,
-//       bool                 show_unsupported,
-//       bool                 force,
-      Feature_Set_Flags    flags
-     )
+      Feature_Set_Flags    flags)
 {
    bool debug = false;
-   // bool show_unsupported = flags & FSF_SHOW_UNSUPPORTED;
    if (debug) {
       char * s0 = feature_set_flag_names(flags);
       DBGMSG("Starting. flags: %s, dh: %s", s0, dh_repr(dh));
@@ -260,10 +254,6 @@ app_show_feature_set_values_by_display_handle(
 
    Public_Status_Code psc = 0;
    if (fsref->subset == VCP_SUBSET_SINGLE_FEATURE) {
-#ifdef OLD
-      psc = app_show_single_vcp_value_by_feature_id(
-            dh, fsref->specific_feature, force);
-#endif
       psc = app_show_single_vcp_value_by_feature_id(
             dh, fsref->specific_feature, flags&FSF_FORCE);
    }
@@ -271,7 +261,6 @@ app_show_feature_set_values_by_display_handle(
       psc = app_show_vcp_subset_values_by_display_handle(
             dh,
             fsref->subset,
-   //      show_unsupported,
             flags,
             NULL);
    }
