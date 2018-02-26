@@ -286,20 +286,6 @@ ddca_get_global_failure_information()
 // Status Code Management
 //
 
-#ifdef OLD
-static Global_Status_ Code
-ddca_to_global_status_code(DDCA_Status ddca_status) {
-   return global_to_public_status_code(ddca_status);
-}
-
-
-// should be static, but not currently used, if static get warning
-DDCA_Status
-global_to_ddca_status_code(Global_Status_ Code gsc) {
-   return global_to_public_status_code(gsc);
-}
-#endif
-
 char *
 ddca_rc_name(DDCA_Status status_code) {
    char * result = NULL;
