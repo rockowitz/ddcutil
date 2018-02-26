@@ -51,7 +51,6 @@ Public_Status_Code
 app_show_vcp_subset_values_by_display_handle(
       Display_Handle *   dh,
       VCP_Feature_Subset subset,
-//       bool               show_unsupported,
       Feature_Set_Flags  flags,
       Byte_Bit_Flags     features_seen);
 
@@ -59,8 +58,6 @@ Public_Status_Code
 app_show_feature_set_values_by_display_handle(
       Display_Handle *   dh,
       Feature_Set_Ref *  fsref,
- //     bool               show_unsupported,
- //     bool               force,
       Feature_Set_Flags  flags);
 
 
