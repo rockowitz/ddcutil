@@ -183,7 +183,7 @@ create_dumpload_data_from_g_ptr_array(GPtrArray * garray) {
                // using VCP_SPEC_UNKNOWN as value when invalid,
                // what if monitor had no version, so 0.0 was output?
                if ( vcp_version_eq( data->vcp_version, VCP_SPEC_UNKNOWN) ) {
-                  f0printf(FERR, "Invalid VCP VERSION at line %d: %s\n", linectr, line);
+                  f0printf(ferr(), "Invalid VCP VERSION at line %d: %s\n", linectr, line);
                   valid_data = false;
                }
             }
@@ -195,14 +195,14 @@ create_dumpload_data_from_g_ptr_array(GPtrArray * garray) {
             }
             else if (streq(s0, "VCP")) {
                if (ct != 3) {
-                  f0printf(FERR, "Invalid VCP data at line %d: %s\n", linectr, line);
+                  f0printf(ferr(), "Invalid VCP data at line %d: %s\n", linectr, line);
                   valid_data = false;
                }
                else {   // found feature id and value
                   Byte feature_id;
                   bool ok = hhs_to_byte_in_buf(s1, &feature_id);
                   if (!ok) {
-                     f0printf(FERR, "Invalid opcode at line %d: %s", linectr, s1);
+                     f0printf(ferr(), "Invalid opcode at line %d: %s", linectr, s1);
                      valid_data = false;
                   }
                   else {     // valid opcode
@@ -227,7 +227,7 @@ create_dumpload_data_from_g_ptr_array(GPtrArray * garray) {
                         Byte * ba;
                         int bytect =  hhs_to_byte_array(s2, &ba);
                         if (bytect < 0) {
-                           f0printf(FERR,
+                           f0printf(ferr(),
                                     "Invalid hex string value for opcode at line %d: %s\n",
                                     linectr, line);
                            valid_data = false;
@@ -244,7 +244,7 @@ create_dumpload_data_from_g_ptr_array(GPtrArray * garray) {
                         ushort feature_value;
                         ct = sscanf(s2, "%hu", &feature_value);
                         if (ct == 0) {
-                           f0printf(FERR, "Invalid value for opcode at line %d: %s\n", linectr, line);
+                           f0printf(ferr(), "Invalid value for opcode at line %d: %s\n", linectr, line);
                            valid_data = false;
                         }
                         else {
@@ -266,7 +266,7 @@ create_dumpload_data_from_g_ptr_array(GPtrArray * garray) {
             }  // VCP
 
             else {
-               f0printf(FERR, "Unexpected field \"%s\" at line %d: %s\n", s0, linectr, line );
+               f0printf(ferr(), "Unexpected field \"%s\" at line %d: %s\n", s0, linectr, line );
                valid_data = false;
             }
          }    // more than 1 field on line
@@ -311,9 +311,9 @@ ddc_set_multiple(
       ushort new_value    = vrec->val.c.cur_val;
       psc = set_nontable_vcp_value(dh, feature_code, new_value);
       if (psc != 0) {
-         f0printf(FERR, "Error setting value %d for VCP feature code 0x%02x: %s\n",
+         f0printf(ferr(), "Error setting value %d for VCP feature code 0x%02x: %s\n",
                          new_value, feature_code, psc_desc(psc) );
-         f0printf(FERR, "Terminating.");
+         f0printf(ferr(), "Terminating.");
          break;
       }
 #endif
@@ -327,11 +327,11 @@ ddc_set_multiple(
       ddc_excp = ddc_set_vcp_value(dh, vrec);
       psc = (ddc_excp) ? ddc_excp->status_code : 0;
       if (ddc_excp) {
-         f0printf(FERR, "Error setting value for VCP feature code 0x%02x: %s\n",
+         f0printf(ferr(), "Error setting value for VCP feature code 0x%02x: %s\n",
                          feature_code, psc_desc(psc) );
          if (psc == DDCRC_RETRIES)
-            f0printf(FERR, "    Try errors: %s\n", errinfo_causes_string(ddc_excp));
-         f0printf(FERR, "Terminating.");
+            f0printf(ferr(), "    Try errors: %s\n", errinfo_causes_string(ddc_excp));
+         f0printf(ferr(), "Terminating.");
          break;
       }
 
@@ -357,6 +357,7 @@ loadvcp_by_dumpload_data(
       Display_Handle *  dh)
 {
    assert(pdata);
+   FILE * errf = ferr();
 
    bool debug = false;
    if (debug) {
@@ -374,13 +375,13 @@ loadvcp_by_dumpload_data(
       assert(dh->dref->pedid);
       bool ok = true;
       if ( !streq(dh->dref->pedid->model_name, pdata->model) ) {
-         f0printf(FERR,
+         f0printf(errf,
             "Monitor model in data (%s) does not match that for specified device (%s)\n",
             pdata->model, dh->dref->pedid->model_name);
          ok = false;
       }
       if (!streq(dh->dref->pedid->serial_ascii, pdata->serial_ascii) ) {
-         f0printf(FERR,
+         f0printf(errf,
             "Monitor serial number in data (%s) does not match that for specified device (%s)\n",
             pdata->serial_ascii, dh->dref->pedid->serial_ascii);
          ok = false;
@@ -393,7 +394,7 @@ loadvcp_by_dumpload_data(
 
    else if ( strlen(pdata->mfg_id) + strlen(pdata->model) + strlen(pdata->serial_ascii) == 0) {
       // Pathological.  Someone's been messing with the VCP file.
-      f0printf(FERR, "Monitor manufacturer id, model, and serial number all missing from input.\n");
+      f0printf(errf, "Monitor manufacturer id, model, and serial number all missing from input.\n");
       psc = DDCRC_INVALID_DISPLAY;
       goto bye;
    }
@@ -409,7 +410,7 @@ loadvcp_by_dumpload_data(
                               did, CALLOPT_NONE);
       free_display_identifier(did);
       if (!dref) {
-         f0printf(FERR, "Monitor not connected: %s - %s   \n", pdata->model, pdata->serial_ascii );
+         f0printf(errf, "Monitor not connected: %s - %s   \n", pdata->model, pdata->serial_ascii );
          psc = DDCRC_INVALID_DISPLAY;
          goto bye;
       }
@@ -466,15 +467,15 @@ loadvcp_by_ntsa(
    Dumpload_Data * pdata = create_dumpload_data_from_g_ptr_array(garray);
    DBGMSF(debug, "create_dumpload_data_from_g_ptr_array() returned %p", pdata);
    if (!pdata) {
-      f0printf(FERR, "Unable to load VCP data from string\n");
+      f0printf(ferr(), "Unable to load VCP data from string\n");
       psc = DDCRC_INVALID_DATA;
       ddc_excp = errinfo_new(psc, __func__);
    }
    else {
       if (verbose) {
-           f0printf(FOUT, "Loading VCP settings for monitor \"%s\", sn \"%s\" \n",
+           f0printf(fout(), "Loading VCP settings for monitor \"%s\", sn \"%s\" \n",
                            pdata->model, pdata->serial_ascii);
-           rpt_push_output_dest(FOUT);
+           rpt_push_output_dest(fout());
            report_dumpload_data(pdata, 0);
            rpt_pop_output_dest();
       }
@@ -696,7 +697,7 @@ dumpvcp_as_dumpload_data(
              VCP_SUBSET_PROFILE,
              vset,
              true,               //  ignore_unsupported
-             FERR);
+             ferr());
    if (psc == 0) {
       dumped_data->vcp_values = vset;             // NOTE REFERENCE, BE CAREFUL WHEN FREE
       dumped_data->vcp_value_ct = vcp_value_set_size(vset);
