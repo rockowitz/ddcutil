@@ -126,6 +126,8 @@ char * create_simple_vcp_fn_by_display_handle(
  */
 Public_Status_Code
 dumpvcp_as_file(Display_Handle * dh, char * filename) {
+   FILE * fout = stdout;
+   FILE * ferr = stderr;
    bool debug = false;
    DBGMSF(debug, "Starting");
    char               fqfn[PATH_MAX] = {0};
@@ -148,14 +150,14 @@ dumpvcp_as_file(Display_Handle * dh, char * filename) {
          // DBGMSG("fqfn=%s   ", fqfn );
          filename = fqfn;
          // control with MsgLevel?
-         f0printf(FOUT, "Writing file: %s\n", filename);
+         f0printf(fout, "Writing file: %s\n", filename);
       }
       free_dumpload_data(data);
 
       FILE * output_fp = fopen(filename, "w+");
       if (!output_fp) {
          int errsv = errno;
-         f0printf(FERR, "Unable to open %s for writing: %s\n", fqfn, strerror(errno));
+         f0printf(ferr, "Unable to open %s for writing: %s\n", fqfn, strerror(errno));
          psc = -errsv;
       }
       else {
@@ -184,6 +186,7 @@ dumpvcp_as_file(Display_Handle * dh, char * filename) {
  *         Caller is responsible for freeing
  */
 Dumpload_Data * read_vcp_file(const char * fn) {
+   FILE * ferr = stderr;
    bool debug = false;
    DBGMSF(debug, "Starting. fn=%s  ", fn );
 
@@ -193,7 +196,7 @@ Dumpload_Data * read_vcp_file(const char * fn) {
    // issues message if error:
    int rc = file_getlines(fn, g_line_array, false);
    if (rc < 0) {
-      f0printf(FERR, "%s: %s\n", strerror(-rc), fn);
+      f0printf(ferr, "%s: %s\n", strerror(-rc), fn);
    }
    else {
       data = create_dumpload_data_from_g_ptr_array(g_line_array);
@@ -216,6 +219,8 @@ Dumpload_Data * read_vcp_file(const char * fn) {
  */
 // TODO: convert to Public_Status_Code
 bool loadvcp_by_file(const char * fn, Display_Handle * dh) {
+   FILE * fout = stdout;
+   // FILE * ferr = stderr;
    bool debug = false;
    DBGMSF(debug, "Starting. fn=%s, dh=%p %s", fn, dh, (dh) ? dh_repr(dh):"");
 
@@ -228,14 +233,14 @@ bool loadvcp_by_file(const char * fn, Display_Handle * dh) {
    Dumpload_Data * pdata = read_vcp_file(fn);
    if (!pdata) {
       // Redundant, read_vcp_file() issues message:
-      // f0printf(FERR, "Unable to load VCP data from file: %s\n", fn);
+      // f0printf(ferr, "Unable to load VCP data from file: %s\n", fn);
    }
    else {
       if (verbose || debug) {
-           f0printf(FOUT, "Loading VCP settings for monitor \"%s\", sn \"%s\" from file: %s\n",
+           f0printf(fout, "Loading VCP settings for monitor \"%s\", sn \"%s\" from file: %s\n",
                            pdata->model, pdata->serial_ascii, fn);
            if (debug) {
-              rpt_push_output_dest(FOUT);
+              rpt_push_output_dest(fout);
               report_dumpload_data(pdata, 0);
               rpt_pop_output_dest();
            }
