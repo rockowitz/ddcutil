@@ -993,7 +993,7 @@ char * ddca_end_capture(void);
 /** Returns the current size of the in-memory capture buffer.
  *
  */
-int ddca_captured_size();
+int ddca_captured_size(void);
 
 #ifdef __cplusplus
 }
