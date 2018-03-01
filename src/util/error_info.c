@@ -486,8 +486,10 @@ void errinfo_report(Error_Info * erec, int depth) {
 
    // rpt_vstring(depth, "Status code: %s", psc_desc(erec->psc));
    // rpt_vstring(depth, "Location: %s", (erec->func) ? erec->func : "not set");
+   rpt_push_output_dest(stderr);
    rpt_vstring(depth, "Exception in function %s: status=%s",
          (erec->func) ? erec->func : "not set", errinfo_desc_func(erec->status_code) );
+   rpt_pop_output_dest();
 
    if (erec->cause_ct > 0) {
       rpt_vstring(depth, "Caused by: ");
