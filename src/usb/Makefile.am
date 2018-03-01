@@ -5,7 +5,7 @@ $(GLIB_CFLAGS)  \
 -I$(top_srcdir)/src/public 
 
 AM_CFLAGS  = -Wall 
-AM_CFLAGS += -Wpedantic
+# AM_CFLAGS += -Wpedantic
 
 if ENABLE_CALLGRAPH_COND
 AM_CFLAGS += -fdump-rtl-expand
