@@ -387,20 +387,39 @@ collect_raw_subset_values(
 // Get formatted feature values
 //
 
+/** Queries the monitor for a VCP feature value, and returns
+ *  a formatted interpretation of the value.
+ *
+ * \param  dh         handle for open display
+ * \param  vcp_entry  feature table entry
+ * \param  suppress_unsupported
+ *                    if true, do not report unsupported features
+ * \param  prefix_value_with_feature_code
+ *                    include feature code in formatted value
+ * \param  pformatted_value
+ *                    where to return pointer to formatted value
+ * \param msg_fh      where to write extended messages for verbose
+ *                    value retrieval, etc.
+ * \return status code
+ *
+ * \remark
+ * This function is a kitchen sink of functionality, extracted from
+ * earlier code.  It needs refactoring.
+ */
 Public_Status_Code
 get_formatted_value_for_feature_table_entry(
       Display_Handle *           dh,
       VCP_Feature_Table_Entry *  vcp_entry,
       bool                       suppress_unsupported,
       bool                       prefix_value_with_feature_code,
-      char **                    pformatted_value,
+      char **                    formatted_value_loc,
       FILE *                     msg_fh)
 {
    bool debug = false;
    DBGTRC(debug, TRACE_GROUP, "Starting. suppress_unsupported=%s", bool_repr(suppress_unsupported));
 
    Public_Status_Code psc = 0;
-   *pformatted_value = NULL;
+   *formatted_value_loc = NULL;
 
    DDCA_MCCS_Version_Spec vspec = get_vcp_version_by_display_handle(dh);
    Byte feature_code = vcp_entry->code;
@@ -449,7 +468,7 @@ get_formatted_value_for_feature_table_entry(
             hexstring2(pvalrec->val.t.bytes, bytect, &space, false /* upper case */, hexbuf, hexbufsize);
             char * formatted = calloc(hexbufsize + 20, sizeof(char));
             snprintf(formatted, hexbufsize+20, "VCP %02X T x%s\n", feature_code, hexbuf);
-            *pformatted_value = formatted;
+            *formatted_value_loc = formatted;
             free(hexbuf);
          }
          else {                                // OL_PROGRAM, not table feature
@@ -476,7 +495,7 @@ get_formatted_value_for_feature_table_entry(
                                   pvalrec->val.nc.sl
                                   );
             }
-            *pformatted_value = strdup(buf);
+            *formatted_value_loc = strdup(buf);
          }
       }
 
@@ -499,14 +518,14 @@ get_formatted_value_for_feature_table_entry(
 
          if (ok) {
             if (prefix_value_with_feature_code) {
-               *pformatted_value = calloc(1, strlen(formatted_data) + 50);
-               snprintf(*pformatted_value, strlen(formatted_data) + 49,
+               *formatted_value_loc = calloc(1, strlen(formatted_data) + 50);
+               snprintf(*formatted_value_loc, strlen(formatted_data) + 49,
                         FMT_CODE_NAME_DETAIL_WO_NL,
                         feature_code, feature_name, formatted_data);
                free(formatted_data);
             }
             else {
-                *pformatted_value = formatted_data;
+                *formatted_value_loc = formatted_data;
              }
          }
       }         // normal (non OL_PROGRAM) output
@@ -523,8 +542,8 @@ get_formatted_value_for_feature_table_entry(
       free_single_vcp_value(pvalrec);
 
    DBGTRC(debug, TRACE_GROUP,
-          "Done.  Returning: %s, *pformatted_value=|%s|",
-          psc_desc(psc), *pformatted_value);
+          "Done.  Returning: %s, *formatted_value_loc=|%s|",
+          psc_desc(psc), formatted_value_loc);
    return psc;
 }
 
@@ -533,7 +552,7 @@ Public_Status_Code
 show_feature_set_values(
       Display_Handle *      dh,
       VCP_Feature_Set       feature_set,
-      GPtrArray *           collector,     // if null, write to FOUT
+      GPtrArray *           collector,     // if null, write to current stdout device
       Feature_Set_Flags     flags,
       Byte_Value_Array      features_seen)     // if non-null, collect list of features seen
 {
@@ -542,6 +561,8 @@ show_feature_set_values(
    char * s0 = feature_set_flag_names(flags);
    DBGMSF(debug, "Starting.  flags=%s, collector=%p", s0, collector);
    free(s0);
+
+   FILE * outf = fout();
 
    VCP_Feature_Subset subset_id = get_feature_set_subset_id(feature_set);
    DDCA_Output_Level output_level = get_output_level();
@@ -555,7 +576,7 @@ show_feature_set_values(
 
    DDCA_MCCS_Version_Spec vcp_version = get_vcp_version_by_display_handle(dh);
    bool prefix_value_with_feature_code = true;    // TO FIX
-   FILE * msg_fh = FOUT;                        // TO FIX
+   FILE * msg_fh = outf;                        // TO FIX
    int features_ct = get_feature_set_size(feature_set);
    DBGMSF(debug, "features_ct=%d", features_ct);
    int ndx;
@@ -568,7 +589,7 @@ show_feature_set_values(
             char * feature_name =  get_version_sensitive_feature_name(entry, vcp_version);
             DDCA_Version_Feature_Flags vflags = get_version_sensitive_feature_flags(entry, vcp_version);
             char * msg = (vflags & DDCA_DEPRECATED) ? "Deprecated" : "Write-only feature";
-            f0printf(FOUT, FMT_CODE_NAME_DETAIL_W_NL,
+            f0printf(outf, FMT_CODE_NAME_DETAIL_W_NL,
                           entry->code, feature_name, msg);
          }
       }
@@ -598,7 +619,7 @@ show_feature_set_values(
                if (collector)
                   g_ptr_array_add(collector, formatted_value);
                else
-                  f0printf(FOUT, "%s\n", formatted_value);
+                  f0printf(outf, "%s\n", formatted_value);
                free(formatted_value);
                if (features_seen)
                   bbf_set(features_seen, entry->code);  // note that feature was read
@@ -648,7 +669,7 @@ bool hack42(VCP_Feature_Table_Entry * ventry) {
  * Arguments:
  *    dh         display handle for open display
  *    subset     feature subset id
- *    collector  accumulates output    // if null, write to FOUT
+ *    collector  accumulates output    // if null, write to current stdout device
  *    flags      feature set flags
  *    features_seen   if non-null, collect ids of features that exist
  *
