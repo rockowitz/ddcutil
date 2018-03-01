@@ -117,8 +117,8 @@ typedef struct {
 // Global redirection for messages that normally go to stdout and stderr,
 // used within functions that are part of the shared library.
 //
-extern FILE * FOUT;
-extern FILE * FERR;
+// extern FILE * FOUT;
+// extern FILE * FERR;
 
 void set_fout(FILE * fout);
 void set_ferr(FILE * ferr);

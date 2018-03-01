@@ -77,7 +77,7 @@
  *
  * @ingroup output_redirection
  */
-FILE * FOUT = NULL;
+static FILE * FOUT = NULL;
 
 /** Current stream for error messages.
  *
@@ -87,7 +87,7 @@ FILE * FOUT = NULL;
  *
  * @ingroup output_redirection
  */
-FILE * FERR = NULL;
+static FILE * FERR = NULL;
 
 
 #ifdef OVERKILL
