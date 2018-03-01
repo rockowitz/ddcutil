@@ -101,20 +101,22 @@ static int   fout_stack_pos = -1;
 typedef struct {
    FILE * fout;
    FILE * ferr;
-} Thread_Output_Dests;
+   DDCA_Output_Level output_level;
+} Thread_Output_Settings;
 
-static Thread_Output_Dests *  get_thread_settings() {
+static Thread_Output_Settings *  get_thread_settings() {
    static GPrivate per_thread_dests_key = G_PRIVATE_INIT(g_free);
 
-   Thread_Output_Dests *settings = g_private_get(&per_thread_dests_key);
+   Thread_Output_Settings *settings = g_private_get(&per_thread_dests_key);
 
    // GThread * this_thread = g_thread_self();
    // printf("(%s) this_thread=%p, settings=%p\n", __func__, this_thread, settings);
 
    if (!settings) {
-      settings = g_new0(Thread_Output_Dests, 1);
+      settings = g_new0(Thread_Output_Settings, 1);
       settings->fout = stdout;
       settings->ferr = stderr;
+      settings->output_level = DDCA_OL_NORMAL;
 
       g_private_set(&per_thread_dests_key, settings);
    }
@@ -153,7 +155,7 @@ void init_msg_control() {
 void set_fout(FILE * fout) {
    bool debug = false;
    DBGMSF(debug, "fout = %p", fout);
-   Thread_Output_Dests * dests = get_thread_settings();
+   Thread_Output_Settings * dests = get_thread_settings();
    dests->fout = fout;
    // FOUT = fout;
    rpt_change_output_dest(fout);
@@ -164,7 +166,7 @@ void set_fout(FILE * fout) {
  */
 void set_fout_to_default() {
    // FOUT = stdout;
-   Thread_Output_Dests * dests = get_thread_settings();
+   Thread_Output_Settings * dests = get_thread_settings();
    dests->fout = stdout;
    rpt_change_output_dest(stdout);
 }
@@ -176,7 +178,7 @@ void set_fout_to_default() {
  */
 void set_ferr(FILE * ferr) {
    // FERR = ferr;
-   Thread_Output_Dests * dests = get_thread_settings();
+   Thread_Output_Settings * dests = get_thread_settings();
    dests->ferr = ferr;
 }
 
@@ -185,19 +187,19 @@ void set_ferr(FILE * ferr) {
  */
 void set_ferr_to_default() {
    // FERR = stderr;
-   Thread_Output_Dests * dests = get_thread_settings();
+   Thread_Output_Settings * dests = get_thread_settings();
    dests->ferr = stderr;
 }
 
 FILE * fout() {
    // return FOUT;
-   Thread_Output_Dests * dests = get_thread_settings();
+   Thread_Output_Settings * dests = get_thread_settings();
    return dests->fout;
 }
 
 FILE * ferr() {
    // return FERR;
-   Thread_Output_Dests * dests = get_thread_settings();
+   Thread_Output_Settings * dests = get_thread_settings();
    return dests->ferr;
 }
 
@@ -413,7 +415,8 @@ print_simple_title_value(int    offset_start_to_title,
  * Functions and variables to manage and query output level settings.
  */
 
-static DDCA_Output_Level output_level;
+// static DDCA_Output_Level output_level;
+
 
 /** Gets the current output level.
  *
@@ -422,7 +425,9 @@ static DDCA_Output_Level output_level;
  * \ingroup msglevel
  */
 DDCA_Output_Level get_output_level() {
-   return output_level;
+   // return output_level;
+   Thread_Output_Settings * settings = get_thread_settings();
+   return settings->output_level;
 }
 
 /** Sets the output level.
@@ -433,7 +438,9 @@ DDCA_Output_Level get_output_level() {
  */
 void set_output_level(DDCA_Output_Level newval) {
    // printf("(%s) newval=%s  \n", __func__, msgLevelName(newval) );
-   output_level = newval;
+   // output_level = newval;
+   Thread_Output_Settings * settings = get_thread_settings();
+   settings->output_level = newval;
 }
 
 /** Gets the printable name of an output level.
@@ -469,10 +476,11 @@ char * output_level_name(DDCA_Output_Level val) {
  */
 void show_output_level() {
    // printf("Output level:           %s\n", output_level_name(output_level));
+   Thread_Output_Settings * settings = get_thread_settings();
    print_simple_title_value(SHOW_REPORTING_TITLE_START,
                               "Output level: ",
                               SHOW_REPORTING_MIN_TITLE_SIZE,
-                              output_level_name(output_level));
+                              output_level_name(settings->output_level));
 }
 
 
