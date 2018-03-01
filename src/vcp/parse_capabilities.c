@@ -98,7 +98,7 @@ static void report_features(
  *
  * @param pcaps pointer to ***Parsed_Capabilities***
  *
- * Output is written to the current FOUT device.
+ * Output is written to the current stdout device.
  */
 void report_parsed_capabilities(Parsed_Capabilities* pcaps)
 {
@@ -325,7 +325,7 @@ static Byte_Value_Array parse_cmds_segment(
    Byte_Value_Array cmd_ids2 = bva_create();
    bool ok = store_bytehex_list(start, len, cmd_ids2, bva_appender);
    if (!ok) {
-      f0printf(FERR, "Error processing commands list: %.*s\n", len, start);
+      f0printf(ferr(), "Error processing commands list: %.*s\n", len, start);
    }
    // report_id_array(cmd_ids, "Command ids found:");
    if (debug) {
@@ -421,7 +421,7 @@ static GPtrArray * parse_vcp_segment(
          }
       }
       if (!value_ok) {
-         f0printf(FOUT, "Feature: %.*s (invalid code)\n", 1, st);
+         f0printf(ferr(), "Feature: %.*s (invalid code)\n", 1, st);
       }
 
       if (*pos == '(') {

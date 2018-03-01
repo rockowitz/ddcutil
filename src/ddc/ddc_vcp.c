@@ -329,6 +329,10 @@ single_vcp_value_equal(
  *
  *  If write verification is turned on, reads the feature value after writing it
  *  to ensure the display has actually changed the value.
+ *
+ *  \remark
+ *  If verbose messages are in effect, writes detailed messages to the current
+ *  stdout device.
  */
 Error_Info *
 ddc_set_vcp_value(
@@ -337,9 +341,9 @@ ddc_set_vcp_value(
 {
    bool debug = false;
    DBGMSF0(debug, "Starting. ");
-   FILE * fout = FOUT;
+   FILE * verbose_msg_dest = fout();
    if ( get_output_level() < DDCA_OL_VERBOSE )
-      fout = NULL;
+      verbose_msg_dest = NULL;
 
    Public_Status_Code psc = 0;
    Error_Info * ddc_excp = NULL;
@@ -355,7 +359,7 @@ ddc_set_vcp_value(
 
    if (!ddc_excp && verify_setvcp) {
       if (is_rereadable_feature(dh, vrec->opcode) ) {
-         f0printf(fout, "Verifying that value of feature 0x%02x successfully set...\n", vrec->opcode);
+         f0printf(verbose_msg_dest, "Verifying that value of feature 0x%02x successfully set...\n", vrec->opcode);
          Single_Vcp_Value * newval = NULL;
          ddc_excp = ddc_get_vcp_value(
              dh,
@@ -364,10 +368,10 @@ ddc_set_vcp_value(
              &newval);
          psc = (ddc_excp) ? ddc_excp->status_code : 0;
          if (ddc_excp) {
-            f0printf(fout, "(%s) Read after write failed. get_vcp_value() returned: %s\n",
+            f0printf(verbose_msg_dest, "(%s) Read after write failed. get_vcp_value() returned: %s\n",
                            __func__, psc_desc(psc));
             if (psc == DDCRC_RETRIES)
-               f0printf(fout, "(%s)    Try errors: %s\n", __func__, errinfo_causes_string(ddc_excp));
+               f0printf(verbose_msg_dest, "(%s)    Try errors: %s\n", __func__, errinfo_causes_string(ddc_excp));
             // psc = DDCRC_VERIFY;
          }
          else {
@@ -375,16 +379,16 @@ ddc_set_vcp_value(
             if (! single_vcp_value_equal(vrec,newval)) {
                psc = DDCRC_VERIFY;
                ddc_excp = errinfo_new(DDCRC_VERIFY, __func__);
-               f0printf(fout, "Current value does not match value set.\n");
+               f0printf(verbose_msg_dest, "Current value does not match value set.\n");
             }
             else {
-               f0printf(fout, "Verification succeeded\n");
+               f0printf(verbose_msg_dest, "Verification succeeded\n");
             }
             free_single_vcp_value(newval);
          }
       }
       else {
-         f0printf(fout, "Feature 0x%02x does not support verification\n", vrec->opcode);
+         f0printf(verbose_msg_dest, "Feature 0x%02x does not support verification\n", vrec->opcode);
       }
    }
 
