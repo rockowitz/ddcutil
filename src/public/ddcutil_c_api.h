@@ -520,7 +520,7 @@ ddca_dref_repr(
  * \ingroup api_display_spec
  */
 void
-ddca_report_display_ref(
+ddca_dbgrpt_display_ref(
       DDCA_Display_Ref dref,
       int              depth);
 

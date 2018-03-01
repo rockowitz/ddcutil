@@ -296,7 +296,7 @@ char *  ddcs_repr_display_ref(DDCS_Display_Ref dref) {
 
 void        ddcs_report_display_ref(DDCS_Display_Ref dref, int depth) {
    clear_exception();
-   ddca_report_display_ref(dref, depth);
+   ddca_dbgrpt_display_ref(dref, depth);
 }
 
 

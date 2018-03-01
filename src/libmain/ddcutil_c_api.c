@@ -750,7 +750,7 @@ ddca_dref_repr(DDCA_Display_Ref ddca_dref){
 }
 
 void
-ddca_report_display_ref(
+ddca_dbgrpt_display_ref(
       DDCA_Display_Ref ddca_dref,
       int              depth)
 {
