@@ -125,6 +125,9 @@ void set_ferr(FILE * ferr);
 void set_fout_to_default();
 void set_ferr_to_default();
 
+FILE * fout();
+FILE * ferr();
+
 
 //
 // Message level control

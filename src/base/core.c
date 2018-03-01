@@ -152,6 +152,14 @@ void set_ferr_to_default() {
    FERR = stderr;
 }
 
+FILE * fout() {
+   return FOUT;
+}
+
+FILE * ferr() {
+   return FERR;
+}
+
 
 #ifdef OVERKILL
 
