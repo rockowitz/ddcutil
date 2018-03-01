@@ -136,6 +136,7 @@ void report_stats(DDCA_Stats_Type stats) {
 //       these actions should be separated
 Parsed_Capabilities *
 perform_get_capabilities_by_display_handle(Display_Handle * dh) {
+   FILE * fout = stdout;
    bool debug = false;
    Parsed_Capabilities * pcap = NULL;
    char * capabilities_string;
@@ -150,11 +151,11 @@ perform_get_capabilities_by_display_handle(Display_Handle * dh) {
          f0printf(FERR, "Unsupported request\n");
          break;
       case DDCRC_RETRIES:
-         f0printf(FOUT, "Unable to get capabilities for monitor on %s.  Maximum DDC retries exceeded.\n",
+         f0printf(fout, "Unable to get capabilities for monitor on %s.  Maximum DDC retries exceeded.\n",
                  dh_repr(dh));
          break;
       default:
-         f0printf(FOUT, "(%s) !!! Unable to get capabilities for monitor on %s\n",
+         f0printf(fout, "(%s) !!! Unable to get capabilities for monitor on %s\n",
                 __func__, dh_repr(dh));
          DBGMSG("Unexpected status code: %s", psc_desc(psc));
       }
@@ -167,7 +168,7 @@ perform_get_capabilities_by_display_handle(Display_Handle * dh) {
       pcap = parse_capabilities_string(capabilities_string);
       DDCA_Output_Level output_level = get_output_level();
       if (output_level <= DDCA_OL_TERSE) {
-         f0printf(FOUT,
+         f0printf(fout,
                   "%s capabilities string: %s\n",
                   (dh->dref->io_path.io_mode == DDCA_IO_USB) ? "Synthesized unparsed" : "Unparsed",
                   capabilities_string);
@@ -187,14 +188,15 @@ perform_get_capabilities_by_display_handle(Display_Handle * dh) {
 
 void probe_display_by_dh(Display_Handle * dh)
 {
+   FILE * fout = stdout;
    bool debug = false;
    DBGMSF(debug, "Starting. dh=%s", dh_repr(dh));
    Public_Status_Code psc = 0;
    Error_Info * ddc_excp = NULL;
 
-   f0printf(FOUT, "\nMfg id: %s, model: %s, sn: %s\n",
+   f0printf(fout, "\nMfg id: %s, model: %s, sn: %s\n",
                   dh->dref->pedid->mfg_id, dh->dref->pedid->model_name, dh->dref->pedid->serial_ascii);
-   f0printf(FOUT, "\nCapabilities for display on %s\n", dref_short_name_t(dh->dref));
+   f0printf(fout, "\nCapabilities for display on %s\n", dref_short_name_t(dh->dref));
 
    DDCA_MCCS_Version_Spec vspec = get_vcp_version_by_display_handle(dh);
    // not needed, message causes confusing messages if get_vcp_version fails but get_capabilities succeeds
@@ -207,40 +209,40 @@ void probe_display_by_dh(Display_Handle * dh)
 
    // how to pass this information down into app_show_vcp_subset_values_by_display_handle()?
    bool table_reads_possible = parsed_capabilities_may_support_table_commands(pcaps);
-   f0printf(FOUT, "\nMay support table reads:   %s\n", bool_repr(table_reads_possible));
+   f0printf(fout, "\nMay support table reads:   %s\n", bool_repr(table_reads_possible));
 
    // *** VCP Feature Scan ***
    // printf("\n\nScanning all VCP feature codes for display %d\n", dispno);
-   f0printf(FOUT, "\nScanning all VCP feature codes for display %s\n", dh_repr(dh) );
+   f0printf(fout, "\nScanning all VCP feature codes for display %s\n", dh_repr(dh) );
    Byte_Bit_Flags features_seen = bbf_create();
    app_show_vcp_subset_values_by_display_handle(
          dh, VCP_SUBSET_SCAN, FSF_SHOW_UNSUPPORTED, features_seen);
 
    if (pcaps) {
-      f0printf(FOUT, "\n\nComparing declared capabilities to observed features...\n");
+      f0printf(fout, "\n\nComparing declared capabilities to observed features...\n");
       Byte_Bit_Flags features_declared =
             parsed_capabilities_feature_ids(pcaps, /*readable_only=*/true);
       char * s0 = bbf_to_string(features_declared, NULL, 0);
-      f0printf(FOUT, "\nReadable features declared in capabilities string: %s\n", s0);
+      f0printf(fout, "\nReadable features declared in capabilities string: %s\n", s0);
       free(s0);
 
       Byte_Bit_Flags caps_not_seen = bbf_subtract(features_declared, features_seen);
       Byte_Bit_Flags seen_not_caps = bbf_subtract(features_seen, features_declared);
 
-      f0printf(FOUT, "\nMCCS (VCP) version reported by capabilities: %s\n",
+      f0printf(fout, "\nMCCS (VCP) version reported by capabilities: %s\n",
                format_vspec(pcaps->parsed_mccs_version));
-      f0printf(FOUT, "MCCS (VCP) version reported by feature 0xDf: %s\n",
+      f0printf(fout, "MCCS (VCP) version reported by feature 0xDf: %s\n",
                format_vspec(vspec));
       if (!vcp_version_eq(pcaps->parsed_mccs_version, vspec))
-         f0printf(FOUT, "Versions do not match!!!\n");
+         f0printf(fout, "Versions do not match!!!\n");
 
       if (bbf_count_set(caps_not_seen) > 0) {
-         f0printf(FOUT, "\nFeatures declared as readable capabilities but not found by scanning:\n");
+         f0printf(fout, "\nFeatures declared as readable capabilities but not found by scanning:\n");
          for (int code = 0; code < 256; code++) {
             if (bbf_is_set(caps_not_seen, code)) {
                VCP_Feature_Table_Entry * vfte = vcp_find_feature_by_hexid_w_default(code);
                char * feature_name = get_version_sensitive_feature_name(vfte, pcaps->parsed_mccs_version);
-               f0printf(FOUT, "   Feature x%02x - %s\n", code, feature_name);
+               f0printf(fout, "   Feature x%02x - %s\n", code, feature_name);
                if (vfte->vcp_global_flags & DDCA_SYNTHETIC) {
                   free_synthetic_vcp_entry(vfte);
                }
@@ -248,15 +250,15 @@ void probe_display_by_dh(Display_Handle * dh)
          }
       }
       else
-         f0printf(FOUT, "\nAll readable features declared in capabilities were found by scanning.\n");
+         f0printf(fout, "\nAll readable features declared in capabilities were found by scanning.\n");
 
       if (bbf_count_set(seen_not_caps) > 0) {
-         f0printf(FOUT, "\nFeatures found by scanning but not declared as capabilities:\n");
+         f0printf(fout, "\nFeatures found by scanning but not declared as capabilities:\n");
          for (int code = 0; code < 256; code++) {
             if (bbf_is_set(seen_not_caps, code)) {
                VCP_Feature_Table_Entry * vfte = vcp_find_feature_by_hexid_w_default(code);
                char * feature_name = get_version_sensitive_feature_name(vfte, vspec);
-               f0printf(FOUT, "   Feature x%02x - %s\n", code, feature_name);
+               f0printf(fout, "   Feature x%02x - %s\n", code, feature_name);
                if (vfte->vcp_global_flags & DDCA_SYNTHETIC) {
                   free_synthetic_vcp_entry(vfte);
                }
@@ -264,7 +266,7 @@ void probe_display_by_dh(Display_Handle * dh)
          }
       }
       else
-         f0printf(FOUT, "\nAll features found by scanning were declared in capabilities.\n");
+         f0printf(fout, "\nAll features found by scanning were declared in capabilities.\n");
 
       bbf_free(features_declared);
       bbf_free(caps_not_seen);
@@ -272,8 +274,8 @@ void probe_display_by_dh(Display_Handle * dh)
       free_parsed_capabilities(pcaps);
    }
    else {
-      f0printf(FOUT, "\n\nUnable to read or parse capabilities.\n");
-      f0printf(FOUT, "Skipping comparison of declared capabilities to observed features\n");
+      f0printf(fout, "\n\nUnable to read or parse capabilities.\n");
+      f0printf(fout, "Skipping comparison of declared capabilities to observed features\n");
    }
    bbf_free(features_seen);
 
@@ -291,7 +293,7 @@ void probe_display_by_dh(Display_Handle * dh)
    psc = ERRINFO_STATUS(ddc_excp);
    if (psc == 0) {
       if (debug)
-         f0printf(FOUT, "Value returned for feature x0b: %s\n", summarize_single_vcp_value(valrec) );
+         f0printf(fout, "Value returned for feature x0b: %s\n", summarize_single_vcp_value(valrec) );
       color_temp_increment = valrec->val.c.cur_val;
       free_single_vcp_value(valrec);
 
@@ -303,13 +305,13 @@ void probe_display_by_dh(Display_Handle * dh)
       psc = ERRINFO_STATUS(ddc_excp);
       if (psc == 0) {
          if (debug)
-            f0printf(FOUT, "Value returned for feature x0c: %s\n", summarize_single_vcp_value(valrec) );
+            f0printf(fout, "Value returned for feature x0c: %s\n", summarize_single_vcp_value(valrec) );
          color_temp_units = valrec->val.c.cur_val;
          free_single_vcp_value(valrec);
          int color_temp = 3000 + color_temp_units * color_temp_increment;
-         f0printf(FOUT, "Color temperature increment (x0b) = %d degrees Kelvin\n", color_temp_increment);
-         f0printf(FOUT, "Color temperature request   (x0c) = %d\n", color_temp_units);
-         f0printf(FOUT, "Requested color temperature = (3000 deg Kelvin) + %d * (%d degrees Kelvin)"
+         f0printf(fout, "Color temperature increment (x0b) = %d degrees Kelvin\n", color_temp_increment);
+         f0printf(fout, "Color temperature request   (x0c) = %d\n", color_temp_units);
+         f0printf(fout, "Requested color temperature = (3000 deg Kelvin) + %d * (%d degrees Kelvin)"
                " = %d degrees Kelvin\n",
                color_temp_units,
                color_temp_increment,
@@ -317,7 +319,7 @@ void probe_display_by_dh(Display_Handle * dh)
       }
    }
    if (psc != 0) {
-      f0printf(FOUT, "Unable to calculate color temperature from VCP features x0B and x0C\n");
+      f0printf(fout, "Unable to calculate color temperature from VCP features x0B and x0C\n");
       // errinfo_free(ddc_excp);
       ERRINFO_FREE_WITH_REPORT(ddc_excp, debug || report_freed_exceptions);
    }
@@ -329,10 +331,11 @@ void probe_display_by_dh(Display_Handle * dh)
 
 
 void probe_display_by_dref(Display_Ref * dref) {
+   FILE * fout = stdout;
    Display_Handle * dh = NULL;
    Public_Status_Code psc = ddc_open_display(dref, CALLOPT_ERR_MSG, &dh);
    if (psc != 0) {
-      f0printf(FOUT, "Unable to open display %s, status code %s",
+      f0printf(fout, "Unable to open display %s, status code %s",
                      dref_short_name_t(dref), psc_desc(psc) );
    }
    else {
@@ -355,6 +358,7 @@ void probe_display_by_dref(Display_Ref * dref) {
   * @retval  EXIT_FAILURE an error occurred
   */
 int main(int argc, char *argv[]) {
+   FILE * fout = stdout;
    bool main_debug = false;
    int main_rc = EXIT_FAILURE;
 
@@ -429,11 +433,11 @@ int main(int argc, char *argv[]) {
 
    if (parsed_cmd->output_level >= DDCA_OL_VERBOSE) {
       show_reporting();
-      f0printf( FOUT, "%.*s%-*s%s\n",
+      f0printf( fout, "%.*s%-*s%s\n",
                 0,"",
                 28, "Force I2C slave address:",
                 bool_repr(i2c_force_slave_addr_flag));
-      f0puts("\n", FOUT);
+      f0puts("\n", fout);
    }
 
    // n. MAX_MAX_TRIES checked during command line parsing
@@ -528,7 +532,7 @@ int main(int argc, char *argv[]) {
       bool ok = true;
       int ct = sscanf(parsed_cmd->args[0], "%d", &testnum);
       if (ct != 1) {
-         f0printf(FOUT, "Invalid test number: %s\n", parsed_cmd->args[0]);
+         f0printf(fout, "Invalid test number: %s\n", parsed_cmd->args[0]);
          ok = false;
       }
       else {
@@ -574,7 +578,7 @@ int main(int argc, char *argv[]) {
       dup2(1,2);   // redirect stderr to stdout
       ddc_ensure_displays_detected();   // *** NEEDED HERE ??? ***
 
-      f0printf(FOUT, "The following tests probe the runtime environment using multiple overlapping methods.\n");
+      f0printf(fout, "The following tests probe the runtime environment using multiple overlapping methods.\n");
       query_sysenv();
       main_rc = EXIT_SUCCESS;
    }
@@ -583,12 +587,12 @@ int main(int argc, char *argv[]) {
 #ifdef USE_USB
       dup2(1,2);   // redirect stderr to stdout
       ddc_ensure_displays_detected();   // *** NEEDED HERE ??? ***
-      f0printf(FOUT, "The following tests probe for USB connected monitors.\n");
+      f0printf(fout, "The following tests probe for USB connected monitors.\n");
       // DBGMSG("Exploring USB runtime environment...\n");
       query_usbenv();
       main_rc = EXIT_SUCCESS;
 #else
-      f0printf(FOUT, "ddcutil was not built with support for USB connected monitors\n");
+      f0printf(fout, "ddcutil was not built with support for USB connected monitors\n");
       main_rc = EXIT_FAILURE;
 #endif
    }
@@ -606,15 +610,15 @@ int main(int argc, char *argv[]) {
 
    else if (parsed_cmd->cmd_id == CMDID_INTERROGATE) {
       dup2(1,2);   // redirect stderr to stdout
-      // set_ferr(FOUT);    // ensure that all messages are collected - made unnecessary by dup2()
-      f0printf(FOUT, "Setting output level verbose...\n");
+      // set_ferr(fout);    // ensure that all messages are collected - made unnecessary by dup2()
+      f0printf(fout, "Setting output level verbose...\n");
       set_output_level(DDCA_OL_VERBOSE);
-      f0printf(FOUT, "Setting maximum retries...\n");
-      f0printf(FOUT, "Forcing --stats...\n");
+      f0printf(fout, "Setting maximum retries...\n");
+      f0printf(fout, "Forcing --stats...\n");
       parsed_cmd->stats_types = DDCA_STATS_ALL;
-      f0printf(FOUT, "Forcing --force-slave-address..\n");
+      f0printf(fout, "Forcing --force-slave-address..\n");
       i2c_force_slave_addr_flag = true;
-      f0printf(FOUT, "This command will take a while to run...\n\n");
+      f0printf(fout, "This command will take a while to run...\n\n");
       ddc_set_max_write_read_exchange_tries(MAX_MAX_TRIES);
       ddc_set_max_multi_part_read_tries(MAX_MAX_TRIES);
 
@@ -624,22 +628,22 @@ int main(int argc, char *argv[]) {
 #ifdef USE_USB
       // 7/2017: disable, USB attached monitors are rare, and this just
       // clutters the output
-      f0printf(FOUT, "\nSkipping USB environment exploration.\n");
-      f0printf(FOUT, "Issue command \"ddcutil usbenvironment --verbose\" if there are any USB attached monitors.\n");
+      f0printf(fout, "\nSkipping USB environment exploration.\n");
+      f0printf(fout, "Issue command \"ddcutil usbenvironment --verbose\" if there are any USB attached monitors.\n");
       // query_usbenv();
 #endif
-      f0printf(FOUT, "\nStatistics for environment exploration:\n");
+      f0printf(fout, "\nStatistics for environment exploration:\n");
       report_stats(DDCA_STATS_ALL);
       reset_stats();
 
-      f0printf(FOUT, "\n*** Detected Displays ***\n");
+      f0printf(fout, "\n*** Detected Displays ***\n");
       /* int display_ct =  */ ddc_report_displays(DDC_REPORT_ALL_DISPLAYS, 0 /* logical depth */);
       // printf("Detected: %d displays\n", display_ct);   // not needed
-      f0printf(FOUT, "\nStatistics for display detection:\n");
+      f0printf(fout, "\nStatistics for display detection:\n");
       report_stats(DDCA_STATS_ALL);
       reset_stats();
 
-      f0printf(FOUT, "Setting output level normal  Table features will be skipped...\n");
+      f0printf(fout, "Setting output level normal  Table features will be skipped...\n");
       set_output_level(DDCA_OL_NORMAL);
 
       GPtrArray * all_displays = ddc_get_all_displays();
@@ -647,17 +651,17 @@ int main(int argc, char *argv[]) {
          Display_Ref * dref = g_ptr_array_index(all_displays, ndx);
          assert( memcmp(dref->marker, DISPLAY_REF_MARKER, 4) == 0);
          if (dref->dispno < 0) {
-            f0printf(FOUT, "\nSkipping invalid display on %s\n", dref_short_name_t(dref));
+            f0printf(fout, "\nSkipping invalid display on %s\n", dref_short_name_t(dref));
          }
          else {
-            f0printf(FOUT, "\nProbing display %d\n", dref->dispno);
+            f0printf(fout, "\nProbing display %d\n", dref->dispno);
             probe_display_by_dref(dref);
-            f0printf(FOUT, "\nStatistics for probe of display %d:\n", dref->dispno);
+            f0printf(fout, "\nStatistics for probe of display %d:\n", dref->dispno);
             report_stats(DDCA_STATS_ALL);
          }
          reset_stats();
       }
-      f0printf(FOUT, "\nDisplay scanning complete.\n");
+      f0printf(fout, "\nDisplay scanning complete.\n");
 
       main_rc = EXIT_SUCCESS;
    }
@@ -691,14 +695,14 @@ int main(int argc, char *argv[]) {
             dref->flags |= DREF_DDC_IS_MONITOR;
             dref->flags |= DREF_TRANSIENT;
             if (!initial_checks_by_dref(dref)) {
-               f0printf(FOUT, "DDC communication failed for monitor on I2C bus /dev/i2c-%d\n", busno);
+               f0printf(fout, "DDC communication failed for monitor on I2C bus /dev/i2c-%d\n", busno);
                free_display_ref(dref);
                dref = NULL;
             }
             // DBGMSG("Synthetic Display_Ref");
          }
          else {
-            f0printf(FOUT, "No monitor detected on I2C bus /dev/i2c-%d\n", busno);
+            f0printf(fout, "No monitor detected on I2C bus /dev/i2c-%d\n", busno);
          }
       }
       else {
@@ -719,7 +723,7 @@ int main(int argc, char *argv[]) {
             {
                DDCA_MCCS_Version_Spec vspec = get_vcp_version_by_display_handle(dh);
                if (vspec.major < 2 && get_output_level() >= DDCA_OL_NORMAL) {
-                  f0printf(FOUT, "VCP (aka MCCS) version for display is undetected or less than 2.0. "
+                  f0printf(fout, "VCP (aka MCCS) version for display is undetected or less than 2.0. "
                         "Output may not be accurate.\n");
                }
             }
@@ -760,7 +764,7 @@ int main(int argc, char *argv[]) {
 
             case CMDID_SETVCP:
                if (parsed_cmd->argct % 2 != 0) {
-                  f0printf(FOUT, "SETVCP command requires even number of arguments\n");
+                  f0printf(fout, "SETVCP command requires even number of arguments\n");
                   main_rc = EXIT_FAILURE;
                }
                else {
@@ -785,20 +789,20 @@ int main(int argc, char *argv[]) {
 
             case CMDID_SAVE_SETTINGS:
                if (parsed_cmd->argct != 0) {
-                  f0printf(FOUT, "SCS command takes no arguments\n");
+                  f0printf(fout, "SCS command takes no arguments\n");
                   main_rc = EXIT_FAILURE;
                }
                else if (dh->dref->io_path.io_mode == DDCA_IO_USB) {
-                  f0printf(FOUT, "SCS command not supported for USB devices\n");
+                  f0printf(fout, "SCS command not supported for USB devices\n");
                   main_rc = EXIT_FAILURE;
                }
                else {
                   main_rc = EXIT_SUCCESS;
                   Error_Info * ddc_excp = ddc_save_current_settings(dh);
                   if (ddc_excp)  {
-                     f0printf(FOUT, "Save current settings failed. rc=%s\n", psc_desc(ddc_excp->status_code));
+                     f0printf(fout, "Save current settings failed. rc=%s\n", psc_desc(ddc_excp->status_code));
                      if (ddc_excp->status_code == DDCRC_RETRIES)
-                        f0printf(FOUT, "    Try errors: %s", errinfo_causes_string(ddc_excp) );
+                        f0printf(fout, "    Try errors: %s", errinfo_causes_string(ddc_excp) );
                      errinfo_report(ddc_excp, 0);   // ** ALTERNATIVE **/
                      errinfo_free(ddc_excp);
                      // ERRINFO_FREE_WITH_REPORT(ddc_excp, report_exceptions);
