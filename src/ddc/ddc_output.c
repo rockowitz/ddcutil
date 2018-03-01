@@ -574,12 +574,14 @@ show_feature_set_values(
       }
       else {
          bool skip_feature = false;
+#ifdef NO
          if (subset_id != VCP_SUBSET_SINGLE_FEATURE &&
              is_feature_table_by_vcp_version(entry, vcp_version) &&
              (flags & FSF_NOTABLE) )
          {
             skip_feature = true;
          }
+#endif
          if (!skip_feature) {
 
             char * formatted_value = NULL;
@@ -662,7 +664,7 @@ show_vcp_values(
         Byte_Bit_Flags      features_seen)
 {
    Public_Status_Code psc = 0;
-   bool debug = false;
+   bool debug = true;
    if (debug) {
       char * s0 = feature_set_flag_names(flags);
       DBGMSG("Starting.  subset=%d, flags=%s,  dh=%s", subset, s0, dh_repr(dh) );

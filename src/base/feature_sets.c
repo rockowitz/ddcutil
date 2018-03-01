@@ -71,7 +71,7 @@ Value_Name_Table vcp_subset_table = {
 
       // special handling
       VNT(VCP_SUBSET_SCAN,            "SCAN"),
-      VNT(VCP_SUBSET_ALL,             NULL),
+//    VNT(VCP_SUBSET_ALL,             NULL),
 //    VNT(VCP_SUBSET_SUPPORTED,       "SUPPORTED"),
       VNT(VCP_SUBSET_KNOWN,           "KNOWN"),
 

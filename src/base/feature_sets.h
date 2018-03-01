@@ -35,45 +35,43 @@
 /** \endcond */
 
 
-// If this enum is changed, be sure to change the corresponding
-// table in feature_sets.c
+// If ids are added to or removed from this enum, be sure to update the
+// corresponding tables in feature_sets.c, cmd_parser_aux.c
 typedef enum {
    // ddcutil defined groups
-   // VCP_SUBSET_PROFILE         = 0x80000000,   // error if set high bit
-   VCP_SUBSET_PROFILE         = 0x00000200,
-   VCP_SUBSET_COLOR           = 0x40000000,
-   VCP_SUBSET_LUT             = 0x20000000,
+   //                           0x80000000,   // unusable, error if high bit set
+   VCP_SUBSET_PROFILE         = 0x40000000,
+   VCP_SUBSET_COLOR           = 0x20000000,
+   VCP_SUBSET_LUT             = 0x10000000,
 
    // MCCS spec groups
-   VCP_SUBSET_CRT             = 0x10000000,
-   VCP_SUBSET_TV              = 0x08000000,
-   VCP_SUBSET_AUDIO           = 0x04000000,
-   VCP_SUBSET_WINDOW          = 0x02000000,
-   VCP_SUBSET_DPVL            = 0x01000000,
-   VCP_SUBSET_PRESET          = 0x00800000,    // uses VCP_SPEC_PRESET
+   VCP_SUBSET_CRT             = 0x08000000,
+   VCP_SUBSET_TV              = 0x04000000,
+   VCP_SUBSET_AUDIO           = 0x02000000,
+   VCP_SUBSET_WINDOW          = 0x01000000,
+   VCP_SUBSET_DPVL            = 0x00800000,
+   VCP_SUBSET_PRESET          = 0x00400000,    // uses VCP_SPEC_PRESET
 
    // Subsets by feature type
-   VCP_SUBSET_SCONT           = 0x00400000,    // simple Continuous feature
-   VCP_SUBSET_CCONT           = 0x00200000,    // complex Continuous feature
-   VCP_SUBSET_CONT            = 0x00100000,    // Continuous feature
-   VCP_SUBSET_SNC             = 0x00080000,    // simple NC feature
-   VCP_SUBSET_CNC             = 0x00040000,    // complex NC feature
-   VCP_SUBSET_NC_WO           = 0x00020000,    // write-only NC feature
-   VCP_SUBSET_NC_CONT         = 0x00010000,    // combines reserved values with countinuous subrange
-   VCP_SUBSET_NC              = 0x00008000,    // Non-Continuous feature
-   VCP_SUBSET_TABLE           = 0x00004000,    // is a table feature
+   VCP_SUBSET_SCONT           = 0x00100000,    // simple Continuous feature
+   VCP_SUBSET_CCONT           = 0x00080000,    // complex Continuous feature
+   VCP_SUBSET_CONT            = 0x00040000,    // Continuous feature
+   VCP_SUBSET_SNC             = 0x00020000,    // simple NC feature
+   VCP_SUBSET_CNC             = 0x00010000,    // complex NC feature
+   VCP_SUBSET_NC_WO           = 0x00008000,    // write-only NC feature
+   VCP_SUBSET_NC_CONT         = 0x00004000,    // combines reserved values with countinuous subrange
+   VCP_SUBSET_NC              = 0x00002000,    // Non-Continuous feature
+   VCP_SUBSET_TABLE           = 0x00001000,    // is a table feature
 
-   // subsets used only on commands processing,
-   // not in feature descriptor table
-
-   // special
-   VCP_SUBSET_SCAN            = 0x00000020,
-   VCP_SUBSET_ALL             = 0x00000010,
+   // subsets used only on command processing, not in feature descriptor table
+   VCP_SUBSET_SCAN            = 0x00000010,
+// VCP_SUBSET_ALL             = 0x00000010,
 // VCP_SUBSET_SUPPORTED       = 0x00000008,
-   VCP_SUBSET_KNOWN           = 0x00000004,
+   VCP_SUBSET_KNOWN           = 0x00000008,
 
-   VCP_SUBSET_MFG             = 0x00000002,    // mfg specific codes
+   VCP_SUBSET_MFG             = 0x00000004,    // mfg specific codes
 
+// VCP_SUBSET_CUSTOM          = 0x00000002,    // possible future subset, aka DYNAMIC, aka USER
    VCP_SUBSET_SINGLE_FEATURE  = 0x00000001,
    VCP_SUBSET_NONE            = 0x00000000,
 } VCP_Feature_Subset;

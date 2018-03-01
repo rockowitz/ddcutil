@@ -79,8 +79,9 @@ create_feature_set(
 {
    assert(subset_id);
    bool debug = false;
-   DBGMSF(debug, "Starting. subset_id=%s(0x%04x), vcp_version=%d.%d",
-                 feature_subset_name(subset_id), subset_id, vcp_version.major, vcp_version.minor);
+   DBGMSF(debug, "Starting. subset_id=%s(0x%04x), vcp_version=%d.%d, exclude_table_features=%s",
+                 feature_subset_name(subset_id), subset_id, vcp_version.major, vcp_version.minor,
+                 bool_repr(exclude_table_features));
    struct vcp_feature_set * fset = calloc(1,sizeof(struct vcp_feature_set));
    memcpy(fset->marker, VCP_FEATURE_SET_MARKER, 4);
    fset->subset = subset_id;
@@ -98,7 +99,8 @@ create_feature_set(
          if (vcp_entry) {
             bool showit = true;
             if ( is_feature_table_by_vcp_version(vcp_entry, vcp_version) ) {
-               if ( get_output_level() < DDCA_OL_VERBOSE || exclude_table_features  )
+               if ( /* get_output_level() < DDCA_OL_VERBOSE || */
+                    exclude_table_features  )
                   showit = false;
             }
             if (showit) {
@@ -116,55 +118,51 @@ create_feature_set(
       }
    }
    else {
+      if (subset_id == VCP_SUBSET_TABLE || subset_id == VCP_SUBSET_LUT) {
+         exclude_table_features = false;
+         DBGMSF(debug, "Reset exclude_table_features = false");
+      }
       int known_feature_ct = vcp_get_feature_code_count();
       int ndx = 0;
       for (ndx=0; ndx < known_feature_ct; ndx++) {
          VCP_Feature_Table_Entry * vcp_entry = vcp_get_feature_table_entry(ndx);
          assert(vcp_entry);
-         DDCA_Version_Feature_Flags vflags = 0;
+         DDCA_Version_Feature_Flags vflags =
+               get_version_sensitive_feature_flags(vcp_entry, vcp_version);
          bool showit = false;
          switch(subset_id) {
          case VCP_SUBSET_PRESET:
             showit = vcp_entry->vcp_spec_groups & VCP_SPEC_PRESET;
             break;
          case VCP_SUBSET_TABLE:
-            vflags = get_version_sensitive_feature_flags(vcp_entry, vcp_version);
             showit = vflags & DDCA_TABLE;
             break;
          case VCP_SUBSET_CCONT:
-            vflags = get_version_sensitive_feature_flags(vcp_entry, vcp_version);
             showit = vflags & DDCA_COMPLEX_CONT;
             break;
          case VCP_SUBSET_SCONT:
-            vflags = get_version_sensitive_feature_flags(vcp_entry, vcp_version);
             showit = vflags & DDCA_STD_CONT;
             break;
          case VCP_SUBSET_CONT:
-            vflags = get_version_sensitive_feature_flags(vcp_entry, vcp_version);
             showit = vflags & DDCA_CONT;
             break;
          case VCP_SUBSET_SNC:
-            vflags = get_version_sensitive_feature_flags(vcp_entry, vcp_version);
             showit = vflags & DDCA_SIMPLE_NC;
             break;
          case VCP_SUBSET_CNC:
-            vflags = get_version_sensitive_feature_flags(vcp_entry, vcp_version);
             showit = vflags & (DDCA_COMPLEX_NC);
             break;
          case VCP_SUBSET_NC_CONT:
-            vflags = get_version_sensitive_feature_flags(vcp_entry, vcp_version);
             showit = vflags & (DDCA_NC_CONT);
             break;
          case VCP_SUBSET_NC_WO:
-            vflags = get_version_sensitive_feature_flags(vcp_entry, vcp_version);
             showit = vflags & (DDCA_WO_NC);
             break;
          case VCP_SUBSET_NC:
-            vflags = get_version_sensitive_feature_flags(vcp_entry, vcp_version);
             showit = vflags & DDCA_NC;
             break;
          case VCP_SUBSET_KNOWN:
-         case VCP_SUBSET_ALL:
+//       case VCP_SUBSET_ALL:
 //       case VCP_SUBSET_SUPPORTED:
             showit = true;
             break;
@@ -184,8 +182,12 @@ create_feature_set(
          case VCP_SUBSET_NONE:
             break;
          }
-         if ( (vflags & DDCA_TABLE) && exclude_table_features)
-            showit = false;
+         if ( vflags & DDCA_TABLE)  {
+            // DBGMSF(debug, "Before final check for table feature.  showit=%s", bool_repr(showit));
+            if (exclude_table_features)
+               showit = false;
+            // DBGMSF(debug, "After final check for table feature.  showit=%s", bool_repr(showit));
+         }
          if (showit) {
             g_ptr_array_add(fset->members, vcp_entry);
          }
@@ -236,10 +238,10 @@ create_single_feature_set_by_hexid(Byte id, bool force) {
  *
  * Arguments:
  *    fsref   external feature set descriptor
- *    force   indicates behavior in the case of a single feature code
- *            if the feature id is not found in vcp_feature_table,
- *            if true, creates a feature set using a dummy feature table entry
- *            if false, returns NULL
+ *    force   indicates behavior in the case of a single feature code and
+ *            the feature id is not found in vcp_feature_table:
+ *              if true, creates a feature set using a dummy feature table entry
+ *              if false, returns NULL
  *
  * Returns: feature set containing a single feature
  *          NULL if the feature not found and force not specified
@@ -259,10 +261,13 @@ create_feature_set_from_feature_set_ref(
 }
 
 
+#ifdef FUTURE
 VCP_Feature_Set create_single_feature_set_by_charid(Byte id, bool force) {
    // TODO: copy and modify existing code:
    return NULL;
 }
+#endif
+
 
 static inline struct vcp_feature_set *
 unopaque_feature_set(

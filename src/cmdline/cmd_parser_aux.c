@@ -171,7 +171,7 @@ typedef struct feature_subset_table_entry_s {
 const Feature_Subset_Table_Entry subset_table[] = {
    // special handling
    {VCP_SUBSET_KNOWN,     CMDID_GETVCP|CMDID_VCPINFO, 3, "KNOWN",     "All features known to ddcutil that are valid for the display"},
-   {VCP_SUBSET_ALL,       CMDID_GETVCP|CMDID_VCPINFO, 3, "ALL",       "Same as KNOWN"},
+   {VCP_SUBSET_KNOWN,     CMDID_GETVCP|CMDID_VCPINFO, 3, "ALL",       "Same as KNOWN"},
 // {VCP_SUBSET_SUPPORTED, CMDID_GETVCP,               3, "SUPPORTED", "All known features that are valid for the display"},
    {VCP_SUBSET_SCAN,      CMDID_GETVCP,               3, "SCAN",      "All feature codes 00..FF, except those known to be WO"},
    {VCP_SUBSET_MFG,       CMDID_GETVCP,               3, "MANUFACTURER", "Manufacturer specific codes"},
@@ -206,7 +206,8 @@ const int subset_table_ct = sizeof(subset_table)/sizeof(Feature_Subset_Table_Ent
 char * assemble_command_argument_help() {
    // quick and dirty check that tables are in sync
    // +2 for VCP_SUBSET_SINGLE_FEATURE, VCP_SUBSET_NONE
-   assert(subset_table_ct+2 == vcp_subset_count);
+   // -1 for double VCP_SUBSET_KNOWN
+   assert(subset_table_ct+1 == vcp_subset_count);
 
    GString * buf = g_string_sized_new(1000);
    g_string_append(buf,
