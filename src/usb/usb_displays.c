@@ -329,7 +329,7 @@ GPtrArray * get_usb_monitor_list() {
          Usb_Detailed_Device_Summary * devsum = lookup_udev_usb_device_by_devname(hiddev_fn);
          if (devsum) {
             // report_usb_detailed_device_summary(devsum, 2);
-            f0printf(FERR, "  USB bus %s, device %s, vid:pid: %s:%s - %s:%s\n",
+            f0printf(fout(), "  USB bus %s, device %s, vid:pid: %s:%s - %s:%s\n",
                            devsum->busnum_s,
                            devsum->devnum_s,
                            devsum->vendor_id,
@@ -356,7 +356,7 @@ GPtrArray * get_usb_monitor_list() {
 
          parsed_edid = get_hiddev_edid_with_fallback(fd, devinfo);
          if (!parsed_edid) {
-            f0printf(FERR,
+            f0printf(ferr(),
                     "Monitor on device %s reports no EDID or has invalid EDID. Ignoring.\n",
                     hiddev_fn);
             goto close;
