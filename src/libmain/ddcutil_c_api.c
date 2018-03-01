@@ -203,7 +203,9 @@ static bool library_initialized = false;
 
 /** Initializes the ddcutil library module.
  *
- * It is not an error if this function is called more than once.
+ *  Normally called automatically during when the shared library is loaded.
+ *
+ *  It is not an error if this function is called more than once.
  */
 void __attribute__ ((constructor))
 _ddca_init(void) {
@@ -289,8 +291,6 @@ ddca_get_global_failure_information()
 char *
 ddca_rc_name(DDCA_Status status_code) {
    char * result = NULL;
-   // Global_ Status_Code gsc = ddca_to_global_ status_code(status_code);
-   // Status_Code_Info * code_info = find_global_status_code_info(gsc);
    Status_Code_Info * code_info = find_status_code_info(status_code);
    if (code_info)
       result = code_info->name;
@@ -301,8 +301,6 @@ ddca_rc_name(DDCA_Status status_code) {
 char *
 ddca_rc_desc(DDCA_Status status_code) {
    char * result = "unknown status code";
-   // Global_ Status_Code gsc = ddca_to_global_status_code(status_code);
-   // Status_Code_Info * code_info = find_global_status_code_info(gsc);
    Status_Code_Info * code_info = find_status_code_info(status_code);
    if (code_info)
       result = code_info->description;
@@ -318,33 +316,23 @@ ddca_rc_desc(DDCA_Status status_code) {
 void
 ddca_set_fout(FILE * fout) {
    // DBGMSG("Starting. fout=%p", fout);
-   // if (!library_initialized)
-   //    _ddca_init();
-
    set_fout(fout);
 }
 
 
 void
 ddca_set_fout_to_default(void) {
-   // if (!library_initialized)
-   //    _ddca_init();
    set_fout_to_default();
 }
 
 
 // Redirects output that normally would go to STDERR
 void ddca_set_ferr(FILE * ferr) {
-   // if (!library_initialized)
-   //    _ddca_init();
-
    set_ferr(ferr);
 }
 
 
 void ddca_set_ferr_to_default(void) {
-   // if (!library_initialized)
-   //    _ddca_init();
    set_ferr_to_default();
 }
 
@@ -2189,43 +2177,81 @@ ddca_pass_callback(
 // Output redirection - Experimental
 //
 
-
+#ifdef OLD
 static FILE * in_memory_file = NULL;
 static char * in_memory_bufstart = NULL;
 static size_t in_memory_bufsize = 0;
+#endif
+
+typedef struct {
+   FILE * in_memory_file;
+   char * in_memory_bufstart; ;
+   size_t in_memory_bufsize;
+} In_Memory_File_Desc;
+
+static In_Memory_File_Desc in_memory_file_desc = {0};
+
+#ifdef FUTURE
+static In_Memory_File_Desc *  get_thread_capture_buf_desc() {
+   static GPrivate  in_memory_key = G_PRIVATE_INIT(g_free);
+
+   In_Memory_File_Desc* fdesc = g_private_get(in_memory_key);
+
+   GThread * this_thread = g_thread_self();
+   printf("(%s) this_thread=%p, fdesc=%p\n", __func__, this_thread, fdesc);
+
+   if (!fdesc) {
+      fdesc = g_new0(In_Memory_File_Desc, 1);
+      g_private_set(in_memory_key, fdesc);
+   }
+
+   printf("(%s) Returning: %p\n", __func__, fdesc);
+   return fdesc;
+#endif
+
 
 void ddca_start_capture(void) {
-   in_memory_file = open_memstream(&in_memory_bufstart, &in_memory_bufsize);
-   ddca_set_fout(in_memory_file);
-   printf("(%s) Done.\n", __func__);
+   // In_Memory_File_Desc * fdesc = get_thread_capture_buf_desc();
+   In_Memory_File_Desc * fdesc = &in_memory_file_desc;
+
+   if (!fdesc->in_memory_file) {
+      fdesc->in_memory_file = open_memstream(&fdesc->in_memory_bufstart, &fdesc->in_memory_bufsize);
+      ddca_set_fout(fdesc->in_memory_file);   // TODO:  set_fout is not thread specific !!!
+   }
+   // printf("(%s) Done.\n", __func__);
 }
 
 char * ddca_end_capture(void) {
+   // In_Memory_File_Desc * fdesc = get_thread_capture_buf_desc();
+   In_Memory_File_Desc * fdesc = &in_memory_file_desc;
+
    char * result = "\0";
-   printf("(%s) Starting.\n", __func__);
-   assert(in_memory_file);
-   if (fflush(in_memory_file) < 0) {
+   // printf("(%s) Starting.\n", __func__);
+   assert(fdesc->in_memory_file);
+   if (fflush(fdesc->in_memory_file) < 0) {
       SEVEREMSG("flush() failed. errno=%d", errno);
-      return result;
+      return strdup(result);
    }
-   result = strdup(in_memory_bufstart);
-   if (fclose(in_memory_file) < 0) {
+   result = strdup(fdesc->in_memory_bufstart);
+   if (fclose(fdesc->in_memory_file) < 0) {
       SEVEREMSG("fclose() failed. errno=%d", errno);
       return result;
    }
    ddca_set_fout_to_default();
-   in_memory_file = NULL;
-   printf("(%s) Done. result=%p\n", __func__, result);
+   fdesc->in_memory_file = NULL;
+   // printf("(%s) Done. result=%p\n", __func__, result);
    return result;
 }
 
 int ddca_captured_size() {
-   printf("(%s) Starting.\n", __func__);
+   // printf("(%s) Starting.\n", __func__);
+   // In_Memory_File_Desc * fdesc = get_thread_capture_buf_desc();
+   In_Memory_File_Desc * fdesc = &in_memory_file_desc;
+
    int result = -1;
-   if (in_memory_file)
-      result = in_memory_bufsize + 1;   // +1 for trailing \0
+   if (fdesc->in_memory_file)
+      result = fdesc->in_memory_bufsize + 1;   // +1 for trailing \0
    printf("(%s) Done. result=%d\n", __func__, result);
    return result;
 }
-
 
