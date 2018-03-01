@@ -95,7 +95,7 @@ int usb_open_hiddev_device(
                "Open failed for %s: errno=%s", hiddev_devname, linux_errno_desc(errsv));
 #endif
       if (calloptions & CALLOPT_ERR_MSG)
-         f0printf(FERR, "Open failed for %s: errno=%s\n", hiddev_devname, linux_errno_desc(errsv));
+         f0printf(ferr(), "Open failed for %s: errno=%s\n", hiddev_devname, linux_errno_desc(errsv));
       file = -errsv;
    }
    DBGMSF(debug, "open() finished, file=%d", file);
