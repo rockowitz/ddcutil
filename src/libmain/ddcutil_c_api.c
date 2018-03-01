@@ -1401,9 +1401,17 @@ ddca_get_simple_sl_value_table_by_vspec(
         DDCA_Feature_Value_Entry * table2 = (DDCA_Feature_Value_Entry*) table;    // identical definitions
         *pvalue_table = table2;
         rc = 0;
+        DDCA_Feature_Value_Entry * cur = table2;
+        if (debug) {
+           while (cur->value_name) {
+              DBGMSG("   0x%02x - %s", cur->value_code, cur->value_name);
+              cur++;
+           }
+        }
      }
   }
-   DBGMSF(debug, "Done. *pvalue_table=%p, returning %s", *pvalue_table, psc_desc(rc));
+  DBGMSF(debug, "Done. *pvalue_table=%p, returning %s", *pvalue_table, psc_desc(rc));
+
    return rc;
 }
 
