@@ -152,11 +152,11 @@ perform_get_capabilities_by_display_handle(Display_Handle * dh) {
          f0printf(ferr, "Unsupported request\n");
          break;
       case DDCRC_RETRIES:
-         f0printf(fout, "Unable to get capabilities for monitor on %s.  Maximum DDC retries exceeded.\n",
+         f0printf(ferr, "Unable to get capabilities for monitor on %s.  Maximum DDC retries exceeded.\n",
                  dh_repr(dh));
          break;
       default:
-         f0printf(fout, "(%s) !!! Unable to get capabilities for monitor on %s\n",
+         f0printf(ferr, "(%s) !!! Unable to get capabilities for monitor on %s\n",
                 __func__, dh_repr(dh));
          DBGMSG("Unexpected status code: %s", psc_desc(psc));
       }
