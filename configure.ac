@@ -41,6 +41,9 @@ AC_DEFINE_UNQUOTED( [PACKAGE_VMAJOR], [ ddcutil_major_version ], [ddcutil major 
 AC_DEFINE_UNQUOTED( [PACKAGE_VMINOR], [ ddcutil_minor_version ], [ddcutil minor version] )
 AC_DEFINE_UNQUOTED( [PACKAGE_VMICRO], [ ddcutil_micro_version ], [ddcutil micro version] )
 
+AC_SUBST( PACKAGE_VMAJOR, [ddcutil_major_version] )
+AC_SUBST( PACKAGE_VMINOR, [ddcutil_minor_version] )
+AC_SUBST( PACKAGE_VMICRO, [ddcutil_micro_version] )
 
 AC_ARG_VAR(DBG, [Turn on script debugging messages(0/1)])
 dnl AC_MSG_NOTICE([DBG = |$DBG|])
@@ -86,6 +89,7 @@ AC_CONFIG_FILES([
 	data/Makefile 
 	docs/Makefile
 	docs/doxygen/Makefile
+	src/public/ddcutil_macros.h
   ddcutil.pc
   ],
  )

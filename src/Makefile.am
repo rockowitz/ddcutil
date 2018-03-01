@@ -6,6 +6,8 @@ MOSTLYCLEANFILES =
 
 CLEANFILES =
 
+DISTCLEANFILES = publc/ddcutil_macros.h
+
 
 # todo: factor out swig 
 # todo: fails if swig/.libs doesn't exist
@@ -148,7 +150,7 @@ dist-hook:
 	find $(distdir) -name "*.o"   -exec rm {} \;  
 	rm -rf $(distdir)/swig/pyenv
 	rm -rf $(distdir)/swig/__pycache__
-
+	rm -f ${distdir}/public/ddcutil_macros.h
 
 # Header files
 # trying to get i2c-dev.h from /usr/include/linux causes errors
