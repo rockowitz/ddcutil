@@ -77,7 +77,7 @@
  *
  * @ingroup output_redirection
  */
-static FILE * FOUT = NULL;
+// static FILE * FOUT = NULL;
 
 /** Current stream for error messages.
  *
@@ -87,7 +87,7 @@ static FILE * FOUT = NULL;
  *
  * @ingroup output_redirection
  */
-static FILE * FERR = NULL;
+// static FILE * FERR = NULL;
 
 
 #ifdef OVERKILL
@@ -98,6 +98,33 @@ static int   fout_stack_pos = -1;
 #endif
 
 
+typedef struct {
+   FILE * fout;
+   FILE * ferr;
+} Thread_Output_Dests;
+
+static Thread_Output_Dests *  get_thread_settings() {
+   static GPrivate per_thread_dests_key = G_PRIVATE_INIT(g_free);
+
+   Thread_Output_Dests *settings = g_private_get(&per_thread_dests_key);
+
+   // GThread * this_thread = g_thread_self();
+   // printf("(%s) this_thread=%p, settings=%p\n", __func__, this_thread, settings);
+
+   if (!settings) {
+      settings = g_new0(Thread_Output_Dests, 1);
+      settings->fout = stdout;
+      settings->ferr = stderr;
+
+      g_private_set(&per_thread_dests_key, settings);
+   }
+
+   // printf("(%s) Returning: %p\n", __func__, settings);
+   return settings;
+}
+
+
+
 /** Initialize **stdout** and **stderr** redirection.
  *
  * Must be called during program initialization.
@@ -105,8 +132,10 @@ static int   fout_stack_pos = -1;
  * @ingroup output_redirection
  */
 void init_msg_control() {
-   FOUT = stdout;
-   FERR = stderr;
+   // FOUT = stdout;
+   // FERR = stderr;
+
+   // initialization now performed in get_thread_settings()
 }
 
 
@@ -124,7 +153,9 @@ void init_msg_control() {
 void set_fout(FILE * fout) {
    bool debug = false;
    DBGMSF(debug, "fout = %p", fout);
-   FOUT = fout;
+   Thread_Output_Dests * dests = get_thread_settings();
+   dests->fout = fout;
+   // FOUT = fout;
    rpt_change_output_dest(fout);
 }
 
@@ -132,7 +163,9 @@ void set_fout(FILE * fout) {
  * @ingroup output_redirection
  */
 void set_fout_to_default() {
-   FOUT = stdout;
+   // FOUT = stdout;
+   Thread_Output_Dests * dests = get_thread_settings();
+   dests->fout = stdout;
    rpt_change_output_dest(stdout);
 }
 
@@ -142,22 +175,30 @@ void set_fout_to_default() {
  * @ingroup output_redirection
  */
 void set_ferr(FILE * ferr) {
-   FERR = ferr;
+   // FERR = ferr;
+   Thread_Output_Dests * dests = get_thread_settings();
+   dests->ferr = ferr;
 }
 
 /** Redirect output that would normally go to **stderr** back to **stderr**.
  * @ingroup output_redirection
  */
 void set_ferr_to_default() {
-   FERR = stderr;
+   // FERR = stderr;
+   Thread_Output_Dests * dests = get_thread_settings();
+   dests->ferr = stderr;
 }
 
 FILE * fout() {
-   return FOUT;
+   // return FOUT;
+   Thread_Output_Dests * dests = get_thread_settings();
+   return dests->fout;
 }
 
 FILE * ferr() {
-   return FERR;
+   // return FERR;
+   Thread_Output_Dests * dests = get_thread_settings();
+   return dests->ferr;
 }
 
 
