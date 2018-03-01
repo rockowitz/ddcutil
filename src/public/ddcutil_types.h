@@ -261,7 +261,7 @@ typedef struct {
 
 /** @name version_id
  *  Ids for MCCS/VCP versions, reflecting the fact that
- *  there is a smaill set of valid version values.
+ *  there is a small set of valid version values.
  */
 ///@{
 
