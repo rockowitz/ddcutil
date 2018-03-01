@@ -900,7 +900,7 @@ adl_get_display_by_adlno(
 
    if (active_display_ct == 0) {
       if (emit_error_msg)
-         f0printf(FERR, "No ADL displays found\n");
+         f0printf(ferr(), "No ADL displays found\n");
    }
    else {
       int ndx;
@@ -914,7 +914,7 @@ adl_get_display_by_adlno(
          }
       }
       if (!result && emit_error_msg)
-         f0printf(FERR, "ADL display %d.%d not found.\n", iAdapterIndex, iDisplayIndex);
+         f0printf(ferr(), "ADL display %d.%d not found.\n", iAdapterIndex, iDisplayIndex);
    }
 
    return result;
