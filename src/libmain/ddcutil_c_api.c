@@ -2188,30 +2188,29 @@ typedef struct {
    size_t in_memory_bufsize;
 } In_Memory_File_Desc;
 
-static In_Memory_File_Desc in_memory_file_desc = {0};
+// static In_Memory_File_Desc in_memory_file_desc = {0};
 
-#ifdef FUTURE
 static In_Memory_File_Desc *  get_thread_capture_buf_desc() {
    static GPrivate  in_memory_key = G_PRIVATE_INIT(g_free);
 
-   In_Memory_File_Desc* fdesc = g_private_get(in_memory_key);
+   In_Memory_File_Desc* fdesc = g_private_get(&in_memory_key);
 
    GThread * this_thread = g_thread_self();
    printf("(%s) this_thread=%p, fdesc=%p\n", __func__, this_thread, fdesc);
 
    if (!fdesc) {
       fdesc = g_new0(In_Memory_File_Desc, 1);
-      g_private_set(in_memory_key, fdesc);
+      g_private_set(&in_memory_key, fdesc);
    }
 
    printf("(%s) Returning: %p\n", __func__, fdesc);
    return fdesc;
-#endif
+}
 
 
 void ddca_start_capture(void) {
-   // In_Memory_File_Desc * fdesc = get_thread_capture_buf_desc();
-   In_Memory_File_Desc * fdesc = &in_memory_file_desc;
+   In_Memory_File_Desc * fdesc = get_thread_capture_buf_desc();
+   // In_Memory_File_Desc * fdesc = &in_memory_file_desc;
 
    if (!fdesc->in_memory_file) {
       fdesc->in_memory_file = open_memstream(&fdesc->in_memory_bufstart, &fdesc->in_memory_bufsize);
@@ -2221,8 +2220,8 @@ void ddca_start_capture(void) {
 }
 
 char * ddca_end_capture(void) {
-   // In_Memory_File_Desc * fdesc = get_thread_capture_buf_desc();
-   In_Memory_File_Desc * fdesc = &in_memory_file_desc;
+   In_Memory_File_Desc * fdesc = get_thread_capture_buf_desc();
+   // In_Memory_File_Desc * fdesc = &in_memory_file_desc;
 
    char * result = "\0";
    // printf("(%s) Starting.\n", __func__);
@@ -2231,11 +2230,13 @@ char * ddca_end_capture(void) {
       SEVEREMSG("flush() failed. errno=%d", errno);
       return strdup(result);
    }
+   // n. open_memstream() maintains a null byte at end of buffer, not included in in_memory_bufsize
    result = strdup(fdesc->in_memory_bufstart);
    if (fclose(fdesc->in_memory_file) < 0) {
       SEVEREMSG("fclose() failed. errno=%d", errno);
       return result;
    }
+   free(fdesc->in_memory_file);
    ddca_set_fout_to_default();
    fdesc->in_memory_file = NULL;
    // printf("(%s) Done. result=%p\n", __func__, result);
@@ -2244,8 +2245,8 @@ char * ddca_end_capture(void) {
 
 int ddca_captured_size() {
    // printf("(%s) Starting.\n", __func__);
-   // In_Memory_File_Desc * fdesc = get_thread_capture_buf_desc();
-   In_Memory_File_Desc * fdesc = &in_memory_file_desc;
+   In_Memory_File_Desc * fdesc = get_thread_capture_buf_desc();
+   // In_Memory_File_Desc * fdesc = &in_memory_file_desc;
 
    int result = -1;
    if (fdesc->in_memory_file)
