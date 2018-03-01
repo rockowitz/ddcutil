@@ -356,7 +356,7 @@ print_simple_title_value(int    offset_start_to_title,
                          int    offset_title_start_to_value,
                          char * value)
 {
-   f0printf(FOUT, "%.*s%-*s%s\n",
+   f0printf(fout(), "%.*s%-*s%s\n",
             offset_start_to_title,"",
             offset_title_start_to_value, title,
             value);
@@ -739,9 +739,9 @@ bool ddcmsg(Trace_Group  trace_group,
       va_start(args, format);
       vsnprintf(buffer, 200, format, args);
       if (debug_or_trace)
-         f0printf(FOUT, "(%s) DDC: %s\n", funcname, buffer);
+         f0printf(fout(), "(%s) DDC: %s\n", funcname, buffer);
       else
-         f0printf(FOUT, "DDC: %s\n", buffer);
+         f0printf(fout(), "DDC: %s\n", buffer);
       va_end(args);
    }
    return result;
@@ -774,7 +774,7 @@ void show_reporting() {
    show_trace_groups();
    show_traced_functions();
    show_traced_files();
-   // f0puts("", FOUT);
+   // f0puts("", fout());
 }
 
 
@@ -873,7 +873,7 @@ bool dbgtrc(
          snprintf(buf2, bufsz+60, "[%s](%s) %s\n", formatted_elapsed_time(), funcname, buffer);
       else
          snprintf(buf2, bufsz+60, "(%s) %s\n", funcname, buffer);
-      f0puts(buf2, FOUT);    // no automatic terminating null
+      f0puts(buf2, fout());    // no automatic terminating null
       msg_emitted = true;
    }
 
