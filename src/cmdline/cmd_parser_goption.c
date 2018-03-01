@@ -157,7 +157,7 @@ gboolean stats_arg_func(const    gchar* option_name,
  *    NULL if execution should be terminated
  */
 Parsed_Cmd * parse_command(int argc, char * argv[]) {
-   bool debug = false;
+   bool debug = true;
    DBGMSF(debug, "Starting" );
    validate_cmdinfo();   // assertions
 
@@ -185,7 +185,7 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
    gboolean nodetect_flag  = false;
    gboolean async_flag     = false;
    gboolean report_freed_excp_flag = false;
-   gboolean notable_flag   = false;
+   gboolean notable_flag   = true;
    char *   mfg_id_work    = NULL;
    char *   modelwork      = NULL;
    char *   snwork         = NULL;
@@ -229,7 +229,11 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
                            G_OPTION_ARG_CALLBACK, output_arg_func,   "Show brief detail",                NULL},
       {"show-unsupported",
                   'U',  0, G_OPTION_ARG_NONE,     &show_unsupported_flag, "Report unsupported features", NULL},
-      {"notable", '\0', 0, G_OPTION_ARG_NONE,     &notable_flag,     "Ignore table type feature codes",  NULL},
+      {"notable", '\0', G_OPTION_FLAG_HIDDEN,
+                           G_OPTION_ARG_NONE,     &notable_flag,     "Exclude table type feature codes",  NULL},
+      {"no-table",'\0', 0, G_OPTION_ARG_NONE,     &notable_flag,     "Exclude table type feature codes",  NULL},
+      {"show-table",'\0',G_OPTION_FLAG_REVERSE,
+                           G_OPTION_ARG_NONE,     &notable_flag,     "Report table type feature codes",  NULL},
 
       // tuning
       {"maxtries",'\0', 0, G_OPTION_ARG_STRING,   &maxtrywork,       "Max try adjustment",  "comma separated list" },
@@ -338,8 +342,8 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
    parsed_cmd->output_level     = output_level;
    parsed_cmd->stats_types      = stats_work;
    parsed_cmd->sleep_strategy   = sleep_strategy_work;
-   SET_CMDFLAG(CMD_FLAG_DDCDATA,          ddc_flag);
-   SET_CMDFLAG(CMD_FLAG_FORCE_SLAVE_ADDR, force_slave_flag);
+   SET_CMDFLAG(CMD_FLAG_DDCDATA,           ddc_flag);
+   SET_CMDFLAG(CMD_FLAG_FORCE_SLAVE_ADDR,  force_slave_flag);
    SET_CMDFLAG(CMD_FLAG_TIMESTAMP_TRACE,   timestamp_trace_flag);
    SET_CMDFLAG(CMD_FLAG_VERIFY,            verify_flag || !noverify_flag);
    // if (verify_flag || !noverify_flag)
@@ -729,6 +733,10 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
                parsed_cmd->fref = fsref;
             else
                fprintf(stderr, "Invalid feature code or subset: %s\n", parsed_cmd->args[0]);
+         }
+
+         if ( ok && parsed_cmd->cmd_id  == CMDID_VCPINFO) {
+            parsed_cmd->flags &= ~CMD_FLAG_NOTABLE;
          }
 
          if (ok && parsed_cmd->cmd_id == CMDID_SETVCP) {
