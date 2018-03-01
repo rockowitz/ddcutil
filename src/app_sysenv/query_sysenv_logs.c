@@ -72,7 +72,7 @@ static bool probe_log(
       GPtrArray * found_lines = g_ptr_array_new_full(1000, g_free);
       rc = read_file_with_filter(found_lines, log_fn, filter_terms, ignore_case, limit);
       if (rc < 0) {
-         f0printf(FERR, "Error reading file: %s\n", psc_desc(rc));
+         f0printf(stderr, "Error reading file: %s\n", psc_desc(rc));
       }
       else if (rc == 0) {   // rc >0 is the original number of lines
          rpt_title("Empty file", depth);
@@ -123,7 +123,7 @@ static bool probe_cmd(
    GPtrArray * filtered_lines = NULL;
    int rc = execute_cmd_collect_with_filter(cmd, filter_terms, ignore_case, limit, &filtered_lines);
    if (rc < 0) {
-      f0printf(FERR, "Error executing command: %s\n", psc_desc(rc));
+      f0printf(stderr, "Error executing command: %s\n", psc_desc(rc));
    }
    else if (rc == 0) {   // rc >0 is the original number of lines
       rpt_title("No output", depth);
