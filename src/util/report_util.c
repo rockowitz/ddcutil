@@ -6,7 +6,7 @@
  * This source file maintains state in static variables so is not thread safe.
  *
  * <copyright>
- * Copyright (C) 2014-2017 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2014-2018 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -37,6 +37,7 @@
 
 /** \cond */
 #include <assert.h>
+#include <glib-2.0/glib.h>
 #include <stdarg.h>
 #include <stdbool.h>
 #include <stdio.h>
@@ -54,11 +55,11 @@
 
 #define DEFAULT_INDENT_SPACES_PER_DEPTH 3
 #define INDENT_SPACES_STACK_SIZE  16
+#define OUTPUT_DEST_STACK_SIZE 8
 
+#ifdef OLD
 static int indent_spaces_stack[INDENT_SPACES_STACK_SIZE];
 static int indent_spaces_stack_pos = -1;
-
-#define OUTPUT_DEST_STACK_SIZE 8
 
 static FILE* output_dest_stack[OUTPUT_DEST_STACK_SIZE];
 static int   output_dest_stack_pos = -1;
@@ -66,6 +67,41 @@ static int   output_dest_stack_pos = -1;
 // work around for fact that can't initialize the initial stack entry to stdout
 static FILE* alt_initial_output_dest = NULL;
 static bool  initial_output_dest_changed = false;
+#endif
+
+
+typedef struct {
+   uint8_t indent_spaces_stack[INDENT_SPACES_STACK_SIZE];
+   int indent_spaces_stack_pos;    // initial  -1;
+
+   FILE* output_dest_stack[OUTPUT_DEST_STACK_SIZE];
+   int   output_dest_stack_pos;   // initial  -1;
+
+   // work around for fact that can't initialize the initial stack entry to stdout
+   FILE* alt_initial_output_dest;     // initial NULL;
+   bool  initial_output_dest_changed; // initial false;
+} Per_Thread_Settings;
+
+
+static Per_Thread_Settings *  get_thread_settings() {
+   static GPrivate per_thread_settings_key = G_PRIVATE_INIT(g_free);
+
+   Per_Thread_Settings* settings = g_private_get(&per_thread_settings_key);
+
+   // GThread * this_thread = g_thread_self();
+   // printf("(%s) this_thread=%p, settings=%p\n", __func__, this_thread, settings);
+
+   if (!settings) {
+      settings = g_new0(Per_Thread_Settings, 1);
+      settings->indent_spaces_stack_pos = -1;
+      settings->output_dest_stack_pos   = -1;
+
+      g_private_set(&per_thread_settings_key, settings);
+   }
+
+   // printf("(%s) Returning: %p\n", __func__, settings);
+   return settings;
+}
 
 
 //
@@ -77,19 +113,22 @@ static bool  initial_output_dest_changed = false;
 // 10/16/15: not currently used
 
 void rpt_push_indent(int new_spaces_per_depth) {
-   assert(indent_spaces_stack_pos < INDENT_SPACES_STACK_SIZE-1);
-   indent_spaces_stack[++indent_spaces_stack_pos] = new_spaces_per_depth;
+   Per_Thread_Settings * settings = get_thread_settings();
+   assert(settings->indent_spaces_stack_pos < INDENT_SPACES_STACK_SIZE-1);
+   settings->indent_spaces_stack[++settings->indent_spaces_stack_pos] = new_spaces_per_depth;
 }
 
 
 void rpt_pop_indent() {
-   if (indent_spaces_stack_pos >= 0)
-      indent_spaces_stack_pos--;
+   Per_Thread_Settings * settings = get_thread_settings();
+   if (settings->indent_spaces_stack_pos >= 0)
+      settings->indent_spaces_stack_pos--;
 }
 
 
 void rpt_reset_indent_stack() {
-   indent_spaces_stack_pos = -1;
+   Per_Thread_Settings * settings = get_thread_settings();
+   settings->indent_spaces_stack_pos = -1;
 }
 
 
@@ -100,9 +139,10 @@ void rpt_reset_indent_stack() {
  * @return number of indentation spaces
  */
 int rpt_get_indent(int depth) {
+   Per_Thread_Settings * settings = get_thread_settings();
    int spaces_ct = DEFAULT_INDENT_SPACES_PER_DEPTH;
-   if (indent_spaces_stack_pos >= 0)
-      spaces_ct = indent_spaces_stack[indent_spaces_stack_pos];
+   if (settings->indent_spaces_stack_pos >= 0)
+      spaces_ct = settings->indent_spaces_stack[settings->indent_spaces_stack_pos];
    return depth * spaces_ct;
 }
 
@@ -115,8 +155,9 @@ int rpt_get_indent(int depth) {
  *  @param new_dest  new output destination
  */
 void rpt_push_output_dest(FILE* new_dest) {
-   assert(output_dest_stack_pos < OUTPUT_DEST_STACK_SIZE-1);
-   output_dest_stack[++output_dest_stack_pos] = new_dest;
+   Per_Thread_Settings * settings = get_thread_settings();
+   assert(settings->output_dest_stack_pos < OUTPUT_DEST_STACK_SIZE-1);
+   settings->output_dest_stack[++settings->output_dest_stack_pos] = new_dest;
 }
 
 
@@ -124,8 +165,9 @@ void rpt_push_output_dest(FILE* new_dest) {
  *  to be used for report functions to the new top of the stack.
  */
 void rpt_pop_output_dest() {
-   if (output_dest_stack_pos >= 0)
-      output_dest_stack_pos--;
+   Per_Thread_Settings * settings = get_thread_settings();
+   if (settings->output_dest_stack_pos >= 0)
+      settings->output_dest_stack_pos--;
 }
 
 
@@ -133,7 +175,8 @@ void rpt_pop_output_dest() {
  * The output destination to be used for report functions to the default (stdout).
  */
 void rpt_reset_output_dest_stack() {
-   output_dest_stack_pos = -1;
+   Per_Thread_Settings * settings = get_thread_settings();
+   settings->output_dest_stack_pos = -1;
 }
 
 
@@ -142,13 +185,14 @@ void rpt_reset_output_dest_stack() {
  * @return current output destination
  */
 FILE * rpt_cur_output_dest() {
+   Per_Thread_Settings * settings = get_thread_settings();
    // special handling for unpushed case because can't statically initialize
    // output_dest_stack[0] to stdout
    FILE * result = NULL;
-   if (output_dest_stack_pos < 0)
-      result = (initial_output_dest_changed) ? alt_initial_output_dest : stdout;
+   if (settings->output_dest_stack_pos < 0)
+      result = (settings->initial_output_dest_changed) ? settings->alt_initial_output_dest : stdout;
    else
-      result = output_dest_stack[output_dest_stack_pos];
+      result = settings->output_dest_stack[settings->output_dest_stack_pos];
    return result;
 }
 
@@ -156,10 +200,11 @@ FILE * rpt_cur_output_dest() {
 /** Debugging function to show output destination.
  */
 void rpt_debug_output_dest() {
+    Per_Thread_Settings * settings = get_thread_settings();
     FILE * dest = rpt_cur_output_dest();
     char * addl = (dest == stdout) ? " (stdout)" : "";
     printf("(%s) output_dest_stack[%d] = %p %s\n",
-          __func__, output_dest_stack_pos, dest, addl);
+          __func__, settings->output_dest_stack_pos, dest, addl);
 }
 
 /** Changes the current output destination, without saving
@@ -170,11 +215,12 @@ void rpt_debug_output_dest() {
  * @remark Needed for set_fout() in core.c
  */
 void rpt_change_output_dest(FILE* new_dest) {
-   if (output_dest_stack_pos >= 0)
-      output_dest_stack[output_dest_stack_pos] = new_dest;
+   Per_Thread_Settings * settings = get_thread_settings();
+   if (settings->output_dest_stack_pos >= 0)
+      settings->output_dest_stack[settings->output_dest_stack_pos] = new_dest;
    else {
-      initial_output_dest_changed = true;
-      alt_initial_output_dest = new_dest;
+      settings->initial_output_dest_changed = true;
+      settings->alt_initial_output_dest = new_dest;
    }
 }
 
