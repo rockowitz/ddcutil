@@ -809,7 +809,7 @@ void severemsg(
       va_start(args, format);
       vsnprintf(buffer, 200, format, args);
       snprintf(buf2, 250, "(%s) %s\n", funcname, buffer);
-      f0puts(buf2, FERR);
+      f0puts(buf2, ferr());
       va_end(args);
 }
 
@@ -934,7 +934,7 @@ void report_ioctl_error(
       int          lineno)
 {
    int errsv = errno;
-   f0printf(FERR, "(%s) Error in ioctl(%s), errno=%s\n",
+   f0printf(ferr(), "(%s) Error in ioctl(%s), errno=%s\n",
            funcname, ioctl_name, linux_errno_desc(errnum) );
    errno = errsv;
 }
@@ -973,9 +973,10 @@ void program_logic_error(
                       funcname, lineno, fn);
 
   // don't combine into 1 line, might be very long.  just output 2 lines:
-  f0puts(buf2,   FERR);
-  f0puts(buffer, FERR);
-  f0puts("\n",   FERR);
+  FILE * f = ferr();
+  f0puts(buf2,   f);
+  f0puts(buffer, f);
+  f0puts("\n",   f);
 }
 
 
