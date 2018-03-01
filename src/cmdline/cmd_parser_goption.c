@@ -157,7 +157,7 @@ gboolean stats_arg_func(const    gchar* option_name,
  *    NULL if execution should be terminated
  */
 Parsed_Cmd * parse_command(int argc, char * argv[]) {
-   bool debug = true;
+   bool debug = false;
    DBGMSF(debug, "Starting" );
    validate_cmdinfo();   // assertions
 
