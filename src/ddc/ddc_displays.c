@@ -955,7 +955,7 @@ get_display_ref_for_display_identifier(
 {
    Display_Ref * dref = ddc_find_display_ref_by_display_identifier(pdid);
    if ( !dref && (callopts & CALLOPT_ERR_MSG) ) {
-      f0printf(FERR, "Display not found\n");
+      f0printf(ferr(), "Display not found\n");
    }
 
    return dref;
