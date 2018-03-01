@@ -739,12 +739,12 @@ ddca_get_feature_info_by_display(
 DDCA_Status
 ddca_get_mccs_version(
       DDCA_Display_Handle     ddca_dh,
-      DDCA_MCCS_Version_Spec* vspec_loc);
+      DDCA_MCCS_Version_Spec* p_vspec);
 
 DDCA_Status
 ddca_get_mccs_version_id(
       DDCA_Display_Handle     ddca_dh,
-      DDCA_MCCS_Version_Id*   version_id_loc);
+      DDCA_MCCS_Version_Id*   p_version_id);
 
 // DDCA_Status ddca_get_edid(DDCA_Display_Handle * dh, uint8_t* edid_buffer);    // edid_buffer must be >= 128 bytes
 // Keep?   Can get from ddca_get_edid_by_display_ref()
@@ -858,6 +858,15 @@ ddca_get_formatted_vcp_value(
        char**                  formatted_value_loc);
 
 
+/** Returns a formatted representation of a non-table VCP value.
+ *  It is the responsibility of the caller to free the returned string.
+ *
+ *  @param[in]  feature_code        VCP feature code
+ *  @param[in]  vspec               MCCS version
+ *  @param[in]  valrec              non-table VCP value
+ *  @param[out] formatted_value_loc address at which to return the formatted value.
+ *  @return                         status code, 0 if success
+ */
 DDCA_Status
 ddca_format_non_table_vcp_value(
       DDCA_Vcp_Feature_Code   feature_code,
@@ -959,15 +968,31 @@ ddca_pass_callback(
 // future:
 DDCA_Status
 ddca_queue_get_non_table_vcp_value(
-      DDCA_Display_Handle      ddca_dh,         /**< Display handle     */
+      DDCA_Display_Handle      ddca_dh,        /**< Display handle     */
       DDCA_Vcp_Feature_Code    feature_code    /**< VCP feature code   */
 );
 
 
+/** Begins capture of output to stdout to an in-memory buffer.
+ *
+ * @note
+ * If output is already being captured, his function has no effect.
+ */
 void ddca_start_capture(void);
 
+/** Ends capture stdout output and returns the contents of the
+ *  in-memory buffer.
+ *
+ *  @return captured output as a string.
+ *
+ *  @note
+ *  Writes messages to stderr in case of error.
+ */
 char * ddca_end_capture(void);
 
+/** Returns the current size of the in-memory capture buffer.
+ *
+ */
 int ddca_captured_size();
 
 #ifdef __cplusplus
