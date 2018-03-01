@@ -2153,8 +2153,7 @@ ddca_set_profile_related_values(
 
 int
 ddca_report_active_displays(int depth) {
-   // return ddc_report_active_displays(depth);
-   return ddc_report_displays(DDC_REPORT_VALID_DISPLAYS_ONLY, 0);
+   return ddc_report_displays(DDC_REPORT_VALID_DISPLAYS_ONLY, depth);
 }
 
 
