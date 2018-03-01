@@ -137,6 +137,7 @@ void report_stats(DDCA_Stats_Type stats) {
 Parsed_Capabilities *
 perform_get_capabilities_by_display_handle(Display_Handle * dh) {
    FILE * fout = stdout;
+   FILE * ferr = stderr;
    bool debug = false;
    Parsed_Capabilities * pcap = NULL;
    char * capabilities_string;
@@ -148,7 +149,7 @@ perform_get_capabilities_by_display_handle(Display_Handle * dh) {
       switch(psc) {
       case DDCRC_REPORTED_UNSUPPORTED:       // should not happen
       case DDCRC_DETERMINED_UNSUPPORTED:
-         f0printf(FERR, "Unsupported request\n");
+         f0printf(ferr, "Unsupported request\n");
          break;
       case DDCRC_RETRIES:
          f0printf(fout, "Unable to get capabilities for monitor on %s.  Maximum DDC retries exceeded.\n",
