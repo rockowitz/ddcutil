@@ -109,7 +109,7 @@ int i2c_open_bus(int busno, Byte callopts) {
       }
 #endif
       if (callopts & CALLOPT_ERR_MSG) {
-         f0printf(FERR, "Open failed for %s: errno=%s\n",
+         f0printf(ferr(), "Open failed for %s: errno=%s\n",
                         filename, linux_errno_desc(errsv));
       }
       file = -errsv;
@@ -168,7 +168,7 @@ Status_Errno i2c_close_bus(int fd, int busno, Call_Options callopts) {
          TERMINATE_EXECUTION_ON_ERROR(workbuf);
 #endif
       if (callopts & CALLOPT_ERR_MSG)
-         f0printf(FERR, "%s\n", workbuf);
+         f0printf(ferr(), "%s\n", workbuf);
 
       result = -errsv;
    }
@@ -697,7 +697,7 @@ static void i2c_check_bus(I2C_Bus_Info * bus_info) {
             Status_Errno_DDC psc = i2c_detect_ddc_addrs_by_fd(file, &ddc_addr_flags);
             if (psc != 0) {
                DBGMSF(debug, "detect_ddc_addrs_by_fd() returned %d", psc);
-               f0printf(FERR, "Failure detecting bus addresses for /dev/i2c-%d: status code=%s\n",
+               f0printf(ferr(), "Failure detecting bus addresses for /dev/i2c-%d: status code=%s\n",
                               bus_info->busno, psc_desc(psc));
                goto bye;
             }
@@ -715,7 +715,7 @@ static void i2c_check_bus(I2C_Bus_Info * bus_info) {
                psc = i2c_get_parsed_edid_by_fd(file, &bus_info->edid);
                if (psc != 0) {
                   DBGMSF(debug, "i2c_get_parsed_edid_by_fd() returned %d", psc);
-                  f0printf(FERR, "Failure getting EDID for /dev/i2c-%d: status code=%s\n",
+                  f0printf(ferr(), "Failure getting EDID for /dev/i2c-%d: status code=%s\n",
                                  bus_info->busno, psc_desc(psc));
                   goto bye;
                }
@@ -1276,10 +1276,10 @@ bool i2c_is_valid_bus(int busno, Call_Options callopts) {
       result = true;
 
    if (complaint && emit_error_msg) {
-      f0printf(FERR, "%s /dev/i2c-%d\n", complaint, busno);
+      f0printf(ferr(), "%s /dev/i2c-%d\n", complaint, busno);
    }
    if (complaint && overridable && (callopts & CALLOPT_FORCE)) {
-      f0printf(FERR, "Continuing.  --force option was specified.\n");
+      f0printf(ferr(), "Continuing.  --force option was specified.\n");
       result = true;
    }
 
