@@ -100,8 +100,8 @@ bool is_module_builtin(char * module_name) {
    int unfiltered_ct = read_file_with_filter(lines, modules_builtin_fn, terms, false, 0);
    if (unfiltered_ct < 0) {
       int errsv = errno;
-      fprintf(FERR, "Error reading file %s: %s\n", modules_builtin_fn, linux_errno_desc(errsv));
-      fprintf(FERR, "Assuming module %s is not built in to kernsl\n", module_name);
+      fprintf(stderr, "Error reading file %s: %s\n", modules_builtin_fn, linux_errno_desc(errsv));
+      fprintf(stderr, "Assuming module %s is not built in to kernsl\n", module_name);
    }
    else {
       // DBGMSG("lines->len=%d", lines->len);
