@@ -59,7 +59,7 @@ typedef enum {
    VCP_SUBSET_SNC             = 0x00020000,    // simple NC feature
    VCP_SUBSET_CNC             = 0x00010000,    // complex NC feature
    VCP_SUBSET_NC_WO           = 0x00008000,    // write-only NC feature
-   VCP_SUBSET_NC_CONT         = 0x00004000,    // combines reserved values with countinuous subrange
+   VCP_SUBSET_NC_CONT         = 0x00004000,    // combines reserved values with a continuous subrange
    VCP_SUBSET_NC              = 0x00002000,    // Non-Continuous feature
    VCP_SUBSET_TABLE           = 0x00001000,    // is a table feature
 
@@ -90,9 +90,12 @@ typedef enum {
    // apply to multiple feature feature sets
    FSF_SHOW_UNSUPPORTED      = 0x01,
    FSF_NOTABLE               = 0x02,
+   FSF_RW_ONLY               = 0x04,
+   FSF_RO_ONLY               = 0x08,
+   FSF_WO_ONLY               = 0x10,
 
    // applies to single feature feature set
-   FSF_FORCE                 = 0x04
+   FSF_FORCE                 = 0x20
 } Feature_Set_Flags;
 
 char * feature_set_flag_names(Feature_Set_Flags flags);

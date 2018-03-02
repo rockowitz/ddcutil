@@ -119,6 +119,7 @@ char * feature_subset_names(VCP_Feature_Subset subset_ids) {
    } Feature_Set_Ref;
 #endif
 
+
 void dbgrpt_feature_set_ref(Feature_Set_Ref * fsref, int depth) {
    rpt_vstring(depth, "subset: %s (%d)",  feature_subset_name(fsref->subset), fsref->subset);
    rpt_vstring(depth, "specific_feature:  0x%02x", fsref->specific_feature);
@@ -130,6 +131,9 @@ Value_Name_Title_Table feature_set_flag_table = {
       VNT(FSF_FORCE,            "force"),
       VNT(FSF_SHOW_UNSUPPORTED, "report unsupported features"),
       VNT(FSF_NOTABLE,          "do not report table features"),
+      VNT(FSF_RW_ONLY,          "include only RW features"),
+      VNT(FSF_RO_ONLY,          "include only RO features"),
+      VNT(FSF_WO_ONLY,          "include only WO features"),
       VNT_END
 };
 const int feature_set_flag_ct = ARRAY_SIZE(feature_set_flag_table)-1;
