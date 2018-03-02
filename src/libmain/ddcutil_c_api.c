@@ -1179,7 +1179,11 @@ DDCA_Feature_List ddca_get_feature_list(
       subset = VCP_SUBSET_MFG;
       break;
    }
-   VCP_Feature_Set fset = create_feature_set(subset, vcp_version, !include_table_features);
+   Feature_Set_Flags flags = 0x00;
+   if (!include_table_features)
+      flags |= FSF_NOTABLE;
+   VCP_Feature_Set fset = create_feature_set(subset, vcp_version, flags);
+   // VCP_Feature_Set fset = create_feature_set(subset, vcp_version, !include_table_features);
    DDCA_Feature_List result = feature_list_from_feature_set(fset);
    free_vcp_feature_set(fset);
 

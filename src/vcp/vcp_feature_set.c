@@ -75,10 +75,12 @@ VCP_Feature_Set
 create_feature_set(
       VCP_Feature_Subset     subset_id,
       DDCA_MCCS_Version_Spec vcp_version,
-      bool                   exclude_table_features)
+      Feature_Set_Flags      flags)
+  //    bool                   exclude_table_features)
 {
    assert(subset_id);
    bool debug = false;
+   bool exclude_table_features = flags & FSF_NOTABLE;
    DBGMSF(debug, "Starting. subset_id=%s(0x%04x), vcp_version=%d.%d, exclude_table_features=%s",
                  feature_subset_name(subset_id), subset_id, vcp_version.major, vcp_version.minor,
                  bool_repr(exclude_table_features));
@@ -255,8 +257,11 @@ create_feature_set_from_feature_set_ref(
     struct vcp_feature_set * fset = NULL;
     if (fsref->subset == VCP_SUBSET_SINGLE_FEATURE)
        fset = create_single_feature_set_by_hexid(fsref->specific_feature, force);
-    else
-       fset = create_feature_set(fsref->subset, vcp_version, /* exclude_table_features */ false);
+    else {
+       Feature_Set_Flags flags = 0x00;
+       // fset = create_feature_set(fsref->subset, vcp_version, /* exclude_table_features */ false);
+       fset = create_feature_set(fsref->subset, vcp_version, flags);
+    }
     return fset;
 }
 

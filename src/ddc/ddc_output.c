@@ -370,7 +370,8 @@ collect_raw_subset_values(
    VCP_Feature_Set feature_set = create_feature_set(
                                      subset,
                                      vcp_version,
-                                     false);      // exclude_table_features
+                                     FSF_NOTABLE);
+                                //   false);      // exclude_table_features
    if (debug)
       report_feature_set(feature_set, 0);
 
@@ -685,7 +686,7 @@ show_vcp_values(
         Byte_Bit_Flags      features_seen)
 {
    Public_Status_Code psc = 0;
-   bool debug = true;
+   bool debug = false;
    if (debug) {
       char * s0 = feature_set_flag_names(flags);
       DBGMSG("Starting.  subset=%d, flags=%s,  dh=%s", subset, s0, dh_repr(dh) );
@@ -697,7 +698,8 @@ show_vcp_values(
    VCP_Feature_Set feature_set = create_feature_set(
                                     subset,
                                     vcp_version,
-                                    flags & FSF_NOTABLE);
+                                    flags);
+                               //   flags & FSF_NOTABLE);
 #ifdef FUTURE
    Parsed_Capabilities * pcaps = NULL;   // TODO: HOW TO GET Parsed_Capabilities?, will only be set for probe/interrogate
    // special case, if scanning, don't try to do a table read of manufacturer specific

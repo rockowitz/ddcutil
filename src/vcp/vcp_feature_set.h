@@ -52,7 +52,8 @@ VCP_Feature_Set
 create_feature_set(
       VCP_Feature_Subset     subset,
       DDCA_MCCS_Version_Spec vcp_version,
-      bool                   exclude_table_features);
+      Feature_Set_Flags      flags);
+   // bool                   exclude_table_features);
 
 VCP_Feature_Set
 create_single_feature_set_by_vcp_entry(VCP_Feature_Table_Entry * vcp_entry);
