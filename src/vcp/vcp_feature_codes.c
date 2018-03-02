@@ -4070,7 +4070,7 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
       .nontable_formatter=format_feature_detail_display_controller_type,
       .default_sl_values=xc8_display_controller_type_values,
       .desc = "Mfg id of controller and 2 byte manufacturer-specific controller type",
-      .v20_flags = DDCA_RW | DDCA_COMPLEX_NC,
+      .v20_flags = DDCA_RO | DDCA_COMPLEX_NC,
       .v20_name = "Display controller type",
    },
    {  .code=0xc9,
