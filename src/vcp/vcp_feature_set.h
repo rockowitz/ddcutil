@@ -76,7 +76,8 @@ VCP_Feature_Set
 create_feature_set_from_feature_set_ref(
    Feature_Set_Ref *       fsref,
    DDCA_MCCS_Version_Spec  vcp_version,
-   bool                    force);
+   Feature_Set_Flags       flags);
+ //  bool                    force);
 
 void filter_feature_set(VCP_Feature_Set fset, VCP_Feature_Set_Filter_Func func);
 

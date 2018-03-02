@@ -268,13 +268,16 @@ VCP_Feature_Set
 create_feature_set_from_feature_set_ref(
    Feature_Set_Ref *         fsref,
    DDCA_MCCS_Version_Spec    vcp_version,
-   bool                      force)
+   Feature_Set_Flags         flags)
+ //bool                      force)
 {
     struct vcp_feature_set * fset = NULL;
-    if (fsref->subset == VCP_SUBSET_SINGLE_FEATURE)
-       fset = create_single_feature_set_by_hexid(fsref->specific_feature, force);
+    if (fsref->subset == VCP_SUBSET_SINGLE_FEATURE) {
+       // fset = create_single_feature_set_by_hexid(fsref->specific_feature, force);
+       fset = create_single_feature_set_by_hexid(fsref->specific_feature, flags & FSF_FORCE);
+    }
     else {
-       Feature_Set_Flags flags = 0x00;
+       // Feature_Set_Flags flags = 0x00;
        // fset = create_feature_set(fsref->subset, vcp_version, /* exclude_table_features */ false);
        fset = create_feature_set(fsref->subset, vcp_version, flags);
     }

@@ -487,11 +487,20 @@ int main(int argc, char *argv[]) {
 
       // DDCA_MCCS_Version_Spec vcp_version_any = {0,0};
 
+      Feature_Set_Flags flags = 0;
+      if (parsed_cmd->flags & CMD_FLAG_RW_ONLY)
+         flags |= FSF_RO_ONLY;
+      if (parsed_cmd->flags & CMD_FLAG_RO_ONLY)
+         flags |= FSF_WO_ONLY;
+      if (parsed_cmd->flags & CMD_FLAG_WO_ONLY)
+         flags |= FSF_RW_ONLY;
+
       VCP_Feature_Set fset = create_feature_set_from_feature_set_ref(
          parsed_cmd->fref,
          // vcp_version_any,
          parsed_cmd->mccs_vspec,
-         false);       // force
+         flags);
+         // false);       // force
       if (!fset) {
          vcpinfo_ok = false;
       }
@@ -750,6 +759,12 @@ int main(int argc, char *argv[]) {
                      flags |= FSF_FORCE;
                   if (parsed_cmd->flags & CMD_FLAG_NOTABLE)
                      flags |= FSF_NOTABLE;
+                  if (parsed_cmd->flags & CMD_FLAG_RW_ONLY)
+                     flags |= FSF_RO_ONLY;
+                  if (parsed_cmd->flags & CMD_FLAG_RO_ONLY)
+                     flags |= FSF_WO_ONLY;
+                  if (parsed_cmd->flags & CMD_FLAG_WO_ONLY)
+                     flags |= FSF_RW_ONLY;
                   // char * s0 = feature_set_flag_names(flags);
                   // DBGMSG("flags: 0x%04x - %s", flags, s0);
                   // free(s0);
