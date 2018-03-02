@@ -344,7 +344,7 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
    if (ro_only_flag)   rwo_flag_ct++;
    if (wo_only_flag)   rwo_flag_ct++;
    if (rwo_flag_ct > 1) {
-      fprintf(stderr, "Options -rw-only, --ro-only, --wo-only are mutually exclusive");
+      fprintf(stderr, "Options -rw-only, --ro-only, --wo-only are mutually exclusive\n");
       ok = false;
    }
 
@@ -760,8 +760,8 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
          }
 
          if (ok && parsed_cmd->cmd_id == CMDID_GETVCP && (parsed_cmd->flags & CMD_FLAG_WO_ONLY) ) {
-            fprintf(stdout, "Ignoring option --wo-only");
-            parsed_cmd->flags &= CMD_FLAG_WO_ONLY;
+            fprintf(stdout, "Ignoring option --wo-only\n");
+            parsed_cmd->flags &= ~CMD_FLAG_WO_ONLY;
          }
 
          if (ok && parsed_cmd->cmd_id == CMDID_SETVCP) {

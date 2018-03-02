@@ -81,9 +81,13 @@ create_feature_set(
    assert(subset_id);
    bool debug = false;
    bool exclude_table_features = flags & FSF_NOTABLE;
-   DBGMSF(debug, "Starting. subset_id=%s(0x%04x), vcp_version=%d.%d, exclude_table_features=%s",
+   if (debug) {
+      char * sflags = feature_set_flag_names(flags);
+      DBGMSG("Starting. subset_id=%s(0x%04x), vcp_version=%d.%d, flags=%s",
                  feature_subset_name(subset_id), subset_id, vcp_version.major, vcp_version.minor,
-                 bool_repr(exclude_table_features));
+                 sflags);
+      free(sflags);
+   }
    struct vcp_feature_set * fset = calloc(1,sizeof(struct vcp_feature_set));
    memcpy(fset->marker, VCP_FEATURE_SET_MARKER, 4);
    fset->subset = subset_id;
