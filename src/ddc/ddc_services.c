@@ -116,14 +116,14 @@ void ddc_report_stats_main(DDCA_Stats_Type stats, int depth) {
  */
 void ddc_report_max_tries(int depth) {
    rpt_vstring(depth, "Maximum Try Settings:");
-   rpt_vstring(depth, "Operation Type             Current  Default");
-   rpt_vstring(depth, "Write only exchange tries: %8d %8d",
+   rpt_vstring(depth, "Operation Type                    Current  Default");
+   rpt_vstring(depth, "Write only exchange tries:       %8d %8d",
                ddc_get_max_write_only_exchange_tries(),
                MAX_WRITE_ONLY_EXCHANGE_TRIES);
-   rpt_vstring(depth, "Write read exchange tries: %8d %8d",
+   rpt_vstring(depth, "Write read exchange tries:       %8d %8d",
                ddc_get_max_write_read_exchange_tries(),
                MAX_WRITE_READ_EXCHANGE_TRIES);
-   rpt_vstring(depth, "Multi-part read exchange tries: %8d %8d",
+   rpt_vstring(depth, "Multi-part read exchange tries:  %8d %8d",
                ddc_get_max_multi_part_read_tries(),
                MAX_MULTI_EXCHANGE_TRIES);
    rpt_vstring(depth, "Multi-part write exchange tries: %8d %8d",
