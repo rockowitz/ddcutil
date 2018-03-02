@@ -179,11 +179,27 @@ create_feature_set(
             showit = vcp_entry->vcp_subsets & subset_id;
             break;
          case VCP_SUBSET_SCAN:    // will never happen, inserted to avoid compiler warning
-         case VCP_SUBSET_MFG:
+         case VCP_SUBSET_MFG:     // will never happen
          case VCP_SUBSET_SINGLE_FEATURE:
          case VCP_SUBSET_NONE:
             break;
          }
+         if ( ( flags & (FSF_RW_ONLY | FSF_RO_ONLY | FSF_WO_ONLY) ) &&
+               subset_id != VCP_SUBSET_SINGLE_FEATURE && subset_id != VCP_SUBSET_NONE) {
+            if (flags &FSF_RW_ONLY) {
+               if (! (vflags & DDCA_RW) )
+                  showit = false;
+            }
+            else if (flags & FSF_RO_ONLY) {
+               if (! (vflags & DDCA_RO) )
+                  showit = false;
+            }
+            else if (flags & FSF_WO_ONLY) {
+               if (! (vflags & DDCA_WO) )
+                  showit = false;
+            }
+         }
+
          if ( vflags & DDCA_TABLE)  {
             // DBGMSF(debug, "Before final check for table feature.  showit=%s", bool_repr(showit));
             if (exclude_table_features)
