@@ -132,7 +132,7 @@ ddc_set_nontable_vcp_value(
       Byte             feature_code,
       int              new_value)
 {
-   bool debug = false;
+   bool debug = true;
    DBGTRC(debug, TRACE_GROUP,
           "Writing feature 0x%02x , new value = %d, dh=%s",
           feature_code, new_value, dh_repr_t(dh) );
@@ -339,10 +339,10 @@ ddc_set_vcp_value(
       Display_Handle *    dh,
       Single_Vcp_Value *  vrec)
 {
-   bool debug = false;
+   bool debug = true;
    DBGMSF0(debug, "Starting. ");
    FILE * verbose_msg_dest = fout();
-   if ( get_output_level() < DDCA_OL_VERBOSE )
+   if ( get_output_level() < DDCA_OL_VERBOSE && !debug )
       verbose_msg_dest = NULL;
 
    Public_Status_Code psc = 0;
@@ -376,6 +376,9 @@ ddc_set_vcp_value(
          }
          else {
             assert(vrec && newval);    // silence clang complaint
+            // dbgrpt_ddca_single_vcp_value(vrec, 2);
+            // dbgrpt_ddca_single_vcp_value(newval, 3);
+
             if (! single_vcp_value_equal(vrec,newval)) {
                psc = DDCRC_VERIFY;
                ddc_excp = errinfo_new(DDCRC_VERIFY, __func__);
