@@ -268,12 +268,13 @@ typedef struct {
 // in sync w constants MCCS_V.. in vcp_feature_codes.c
 /** MCCS (VCP) Feature Version IDs */
 typedef enum {
-   DDCA_VNONE =  0,     /**< As query, match any MCCS version, as response, version unknown */
+   DDCA_VNONE =  0,     /**< As response, version unknown */
    DDCA_V10   =  1,     /**< MCCS v1.0 */
    DDCA_V20   =  2,     /**< MCCS v2.0 */
    DDCA_V21   =  4,     /**< MCCS v2.1 */
    DDCA_V30   =  8,     /**< MCCS v3.0 */
-   DDCA_V22   = 16      /**< MCCS v2.2 */
+   DDCA_V22   = 16,     /**< MCCS v2.2 */
+   DDCA_VANY  =255      /**< On queries, match any VCP version */
 } DDCA_MCCS_Version_Id;
 
 #define DDCA_VANY  DDCA_VNONE    /**< For use on queries,   indicates match any version */
