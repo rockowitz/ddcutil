@@ -277,7 +277,6 @@ typedef enum {
    DDCA_VANY  =255      /**< On queries, match any VCP version */
 } DDCA_MCCS_Version_Id;
 
-#define DDCA_VANY  DDCA_VNONE    /**< For use on queries,   indicates match any version */
 #define DDCA_VUNK  DDCA_VNONE    /**< For use on responses, indicates version unknown   */
 
 ///@}

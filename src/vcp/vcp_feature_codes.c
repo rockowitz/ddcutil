@@ -352,7 +352,7 @@ static void report_sl_values(DDCA_Feature_Value_Entry * sl_values, int depth) {
 }
 
 
-char * interpret_ddca_version_feature_flags_readwrite(
+static char * interpret_ddca_version_feature_flags_readwrite(
       DDCA_Version_Feature_Flags feature_flags)
 {
    char * result = NULL;
@@ -370,7 +370,7 @@ char * interpret_ddca_version_feature_flags_readwrite(
 }
 
 
-char * interpret_ddca_version_feature_flags_type(
+static char * interpret_ddca_version_feature_flags_type(
       DDCA_Version_Feature_Flags feature_flags)
 {
    char * result = NULL;
@@ -397,7 +397,7 @@ char * interpret_ddca_version_feature_flags_type(
    return result;
 }
 
-char * interpret_ddca_global_feature_flags(
+static char * interpret_ddca_global_feature_flags(
       DDCA_Version_Feature_Flags feature_flags)
 {
    char * result = "";
@@ -529,15 +529,14 @@ void report_vcp_feature_table_entry(VCP_Feature_Table_Entry * pentry, int depth)
  * debugging report.  The report is written to the current report destination.
  *
  * Arguments:
- *    info     pointer to struct
+ *    info     pointer to version feature information struct
  *    depth    logical indentation depth
  */
-void report_version_feature_info(
+void dbgrpt_version_feature_info(
       DDCA_Version_Feature_Info * info, int depth) {
    char workbuf[200];
 
    int d1 = depth+1;
-   // DDCA_Output_Level output_level = get_output_level();
 
    rpt_vstring(depth, "VCP code %02X: %s", info->feature_code, info->feature_name);
 
@@ -554,7 +553,6 @@ void report_version_feature_info(
       rpt_vstring(d1, "Simple NC values:");
       report_sl_values(info->sl_values, d1+1);
    }
-
 }
 
 
@@ -1127,11 +1125,6 @@ get_version_feature_info_by_vspec(
    return info;
 
 }
-
-
-
-
-
 
 
 //

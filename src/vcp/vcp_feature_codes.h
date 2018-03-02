@@ -305,7 +305,7 @@ report_vcp_feature_table_entry(
       VCP_Feature_Table_Entry * vfte,
       int                       depth);
 
-void report_version_feature_info(
+void dbgrpt_version_feature_info(
       DDCA_Version_Feature_Info * info, int depth);
 
 void

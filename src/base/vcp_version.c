@@ -211,6 +211,7 @@ char * format_vcp_version_id(DDCA_MCCS_Version_Id version_id) {
    case DDCA_V30:    result = "3.0";     break;
    case DDCA_V22:    result = "2.2";     break;
    case DDCA_VNONE:  result = "unknown"; break;
+   case DDCA_VANY:   result = "any";     break;
    }
    char * result2 = vnt_title(version_id_table, version_id);
    assert(streq(result, result2));
@@ -315,16 +316,14 @@ DDCA_MCCS_Version_Spec mccs_version_id_to_spec(DDCA_MCCS_Version_Id id) {
    DDCA_MCCS_Version_Spec vspec = VCP_SPEC_ANY;
    // use table instead?
    switch(id) {
-   case DDCA_VANY:   vspec = VCP_SPEC_ANY;    break;
-   case DDCA_V10:    vspec = VCP_SPEC_V10;    break;
-   case DDCA_V20:    vspec = VCP_SPEC_V20;    break;
-   case DDCA_V21:    vspec = VCP_SPEC_V21;    break;
-   case DDCA_V30:    vspec = VCP_SPEC_V30;    break;
-   case DDCA_V22:    vspec = VCP_SPEC_V22;    break;
+   case DDCA_VNONE:  vspec = VCP_SPEC_UNKNOWN; break;
+   case DDCA_VANY:   vspec = VCP_SPEC_ANY;     break;
+   case DDCA_V10:    vspec = VCP_SPEC_V10;     break;
+   case DDCA_V20:    vspec = VCP_SPEC_V20;     break;
+   case DDCA_V21:    vspec = VCP_SPEC_V21;     break;
+   case DDCA_V30:    vspec = VCP_SPEC_V30;     break;
+   case DDCA_V22:    vspec = VCP_SPEC_V22;     break;
    }
-   // DDCA_MCCS_Version_Spec converted;
-   // converted.major = vspec.major;
-   // converted.minor = vspec.minor;
 
    DBGMSF(debug, "Returning: %d.%d", debug, vspec.major, vspec.minor);
    return vspec;
