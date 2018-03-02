@@ -808,7 +808,6 @@ ddca_close_display(DDCA_Display_Handle ddca_dh) {
 }
 
 
-
 char *
 ddca_dh_repr(DDCA_Display_Handle ddca_dh) {
    char * repr = NULL;
@@ -867,6 +866,7 @@ ddca_mccs_version_id_name(DDCA_MCCS_Version_Id version_id) {
    return vcp_version_id_name(version_id);
 }
 
+
 char *
 ddca_mccs_version_id_desc(DDCA_MCCS_Version_Id version_id) {
    return format_vcp_version_id(version_id);
@@ -902,14 +902,6 @@ ddca_get_displays_old()
          memcpy(curinfo->marker, DDCA_DISPLAY_INFO_MARKER, 4);
          curinfo->dispno        = drec.dispno;
          Display_Ref * dref     = drec.dref;
-#ifdef OLD
-         curinfo->io_mode       = dref->io_path.io_mode;
-         curinfo->i2c_busno     = dref->io_path.i2c_busno;
-         curinfo->iAdapterIndex = dref->io_path.adlno.iAdapterIndex;
-         curinfo->iDisplayIndex = dref->io_path.adlno.iDisplayIndex;
-         curinfo->usb_bus       = dref->usb_bus;
-         curinfo->usb_device    = dref->usb_device;
-#endif
          curinfo->path.io_mode = dref->io_path.io_mode;
          switch (dref->io_path.io_mode) {
          case DDCA_IO_I2C:
@@ -974,31 +966,13 @@ ddca_get_display_info_list(void)
 
          // TODO: simplify
          curinfo->path = dref->io_path;
-#ifdef OLD
-         curinfo->path.io_mode = dref->io_path.io_mode;
-         // n. usb_bus, usb_device initialized to 0 by calloc
-         switch (dref->io_path.io_mode) {
-         case DDCA_IO_I2C:
-            curinfo->path.path.i2c_busno = dref->io_path.path.i2c_busno;
-            break;
-         case DDCA_IO_ADL:
-            curinfo->path.path.adlno.iAdapterIndex = dref->io_path.path.adlno.iAdapterIndex;
-            curinfo->path.path.adlno.iDisplayIndex = dref->io_path.path.adlno.iDisplayIndex;
-            break;
-         case DDCA_IO_USB:
-            curinfo->usb_bus    = dref->usb_bus;
-            curinfo->usb_device = dref->usb_device;
-            curinfo->path.path.hiddev_devno = dref->io_path.path.hiddev_devno;
-            break;
-         }
-#endif
          if (dref->io_path.io_mode == DDCA_IO_USB) {
             curinfo->usb_bus    = dref->usb_bus;
             curinfo->usb_device = dref->usb_device;
          }
 
          // hack:
-         // vcp version is unqueried to improve performance
+         // vcp version is unqueried to improve performance of the command line version
          // mccs_version_spec_to_id has assert error if unqueried
          DDCA_MCCS_Version_Id version_id = DDCA_VNONE;
          DDCA_MCCS_Version_Spec vspec = dref->vcp_version;
@@ -1006,7 +980,6 @@ ddca_get_display_info_list(void)
             vspec = get_vcp_version_by_display_ref(dref);
          }
          version_id = mccs_version_spec_to_id(vspec);
-
 
          curinfo->edid_bytes    = dref->pedid->bytes;
          // or should these be memcpy'd instead of just pointers, can edid go away?
