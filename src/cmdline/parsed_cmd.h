@@ -63,17 +63,20 @@ typedef enum {
 
 
 typedef enum {
-   CMD_FLAG_DDCDATA           = 0x0001,
-   CMD_FLAG_FORCE             = 0x0002,
-   CMD_FLAG_FORCE_SLAVE_ADDR  = 0x0004,
-   CMD_FLAG_TIMESTAMP_TRACE   = 0x0008,  // prepend trace and debug msgs with elapsed time
-   CMD_FLAG_SHOW_UNSUPPORTED  = 0x0010,
-   CMD_FLAG_ENABLE_FAILSIM    = 0x0020,
-   CMD_FLAG_VERIFY            = 0x0040,
-   CMD_FLAG_NODETECT          = 0x0080,
-   CMD_FLAG_ASYNC             = 0x0100,
-   CMD_FLAG_REPORT_FREED_EXCP = 0x2000,
-   CMD_FLAG_NOTABLE           = 0x4000
+   CMD_FLAG_DDCDATA             = 0x0001,
+   CMD_FLAG_FORCE               = 0x0002,
+   CMD_FLAG_FORCE_SLAVE_ADDR    = 0x0004,
+   CMD_FLAG_TIMESTAMP_TRACE     = 0x0008,  // prepend trace and debug msgs with elapsed time
+   CMD_FLAG_SHOW_UNSUPPORTED    = 0x0010,
+   CMD_FLAG_ENABLE_FAILSIM      = 0x0020,
+   CMD_FLAG_VERIFY              = 0x0040,
+   CMD_FLAG_NODETECT            = 0x0080,
+   CMD_FLAG_ASYNC               = 0x0100,
+   CMD_FLAG_REPORT_FREED_EXCP   = 0x2000,
+   CMD_FLAG_NOTABLE             = 0x4000,
+   CMD_FLAG_RW_ONLY           = 0x010000,
+   CMD_FLAG_RO_ONLY           = 0x020000,
+   CMD_FLAG_WO_ONLY           = 0x040000
 } Parsed_Cmd_Flags;
 
 
@@ -95,7 +98,7 @@ struct {
    DDCA_Output_Level   output_level;
    int                 max_tries[3];
    int                 sleep_strategy;
-   uint16_t            flags;      // Parsed_Cmd_Flags
+   uint32_t            flags;      // Parsed_Cmd_Flags
 
    // which?
    DDCA_MCCS_Version_Spec mccs_vspec;

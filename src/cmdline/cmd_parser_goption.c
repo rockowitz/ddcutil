@@ -186,6 +186,9 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
    gboolean async_flag     = false;
    gboolean report_freed_excp_flag = false;
    gboolean notable_flag   = true;
+   gboolean rw_only_flag   = false;
+   gboolean ro_only_flag   = false;
+   gboolean wo_only_flag   = false;
    char *   mfg_id_work    = NULL;
    char *   modelwork      = NULL;
    char *   snwork         = NULL;
@@ -234,6 +237,9 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
       {"no-table",'\0', 0, G_OPTION_ARG_NONE,     &notable_flag,     "Exclude table type feature codes",  NULL},
       {"show-table",'\0',G_OPTION_FLAG_REVERSE,
                            G_OPTION_ARG_NONE,     &notable_flag,     "Report table type feature codes",  NULL},
+      {"rw-only", '\0', 0, G_OPTION_ARG_NONE,     &rw_only_flag,     "Include only RW features",         NULL},
+      {"ro-only", '\0', 0, G_OPTION_ARG_NONE,     &ro_only_flag,     "Include only RO features",         NULL},
+      {"wo-only", '\0', 0, G_OPTION_ARG_NONE,     &wo_only_flag,     "Include only WO features",         NULL},
 
       // tuning
       {"maxtries",'\0', 0, G_OPTION_ARG_STRING,   &maxtrywork,       "Max try adjustment",  "comma separated list" },
@@ -333,6 +339,16 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
 
    int explicit_display_spec_ct = 0;  // number of ways the display is explicitly specified
 
+   int rwo_flag_ct = 0;
+   if (rw_only_flag)   rwo_flag_ct++;
+   if (ro_only_flag)   rwo_flag_ct++;
+   if (wo_only_flag)   rwo_flag_ct++;
+   if (rwo_flag_ct > 1) {
+      fprintf(stderr, "Options -rw-only, --ro-only, --wo-only are mutually exclusive");
+      ok = false;
+   }
+
+
 #define SET_CMDFLAG(_bit, _flag) \
    do { \
       if (_flag) \
@@ -353,6 +369,9 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
    SET_CMDFLAG(CMD_FLAG_REPORT_FREED_EXCP, report_freed_excp_flag);
    SET_CMDFLAG(CMD_FLAG_NOTABLE,           notable_flag);
    SET_CMDFLAG(CMD_FLAG_SHOW_UNSUPPORTED,  show_unsupported_flag);
+   SET_CMDFLAG(CMD_FLAG_RW_ONLY,           rw_only_flag);
+   SET_CMDFLAG(CMD_FLAG_RO_ONLY,           ro_only_flag);
+   SET_CMDFLAG(CMD_FLAG_WO_ONLY,           wo_only_flag);
    SET_CMDFLAG(CMD_FLAG_FORCE,             force_flag);
 
    if (failsim_fn_work) {
@@ -735,8 +754,14 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
                fprintf(stderr, "Invalid feature code or subset: %s\n", parsed_cmd->args[0]);
          }
 
+         // Ignore --notable for vcpinfo
          if ( ok && parsed_cmd->cmd_id  == CMDID_VCPINFO) {
             parsed_cmd->flags &= ~CMD_FLAG_NOTABLE;
+         }
+
+         if (ok && parsed_cmd->cmd_id == CMDID_GETVCP && (parsed_cmd->flags & CMD_FLAG_WO_ONLY) ) {
+            fprintf(stdout, "Ignoring option --wo-only");
+            parsed_cmd->flags &= CMD_FLAG_WO_ONLY;
          }
 
          if (ok && parsed_cmd->cmd_id == CMDID_SETVCP) {
