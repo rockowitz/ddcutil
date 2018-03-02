@@ -1934,7 +1934,6 @@ ddca_set_single_vcp_value(
    }
 
 
-
 DDCA_Status
 ddca_set_continuous_vcp_value(
       DDCA_Display_Handle   ddca_dh,
@@ -1967,10 +1966,10 @@ ddca_set_simple_nc_vcp_value(
 
 DDCA_Status
 ddca_set_raw_vcp_value(
-      DDCA_Display_Handle   ddca_dh,
-      DDCA_Vcp_Feature_Code      feature_code,
-      Byte                  hi_byte,
-      Byte                  lo_byte)
+      DDCA_Display_Handle    ddca_dh,
+      DDCA_Vcp_Feature_Code  feature_code,
+      Byte                   hi_byte,
+      Byte                   lo_byte)
 {
    return ddca_set_continuous_vcp_value(ddca_dh, feature_code, hi_byte << 8 | lo_byte);
 }
