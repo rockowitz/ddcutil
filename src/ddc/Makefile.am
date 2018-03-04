@@ -25,9 +25,10 @@ CLEANFILES = \
 # Intermediate Library
 noinst_LTLIBRARIES = libddc.la
 
-libddc_la_SOURCES =     \
+libddc_la_SOURCES =         \
 ddc_async.c                 \
 ddc_displays.c              \
+ddc_display_lock.c          \
 ddc_dumpload.c              \
 ddc_multi_part_io.c         \
 ddc_output.c                \

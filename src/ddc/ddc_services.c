@@ -42,6 +42,7 @@
 
 #include "adl/adl_shim.h"
 
+#include "ddc/ddc_display_lock.h"
 #include "ddc/ddc_multi_part_io.h"
 #include "ddc/ddc_packet_io.h"
 
@@ -149,4 +150,5 @@ void init_ddc_services() {
    // ddc:
    ddc_reset_ddc_stats();
    init_vcp_feature_codes();
+   init_ddc_display_lock();
 }

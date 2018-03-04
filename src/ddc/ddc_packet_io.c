@@ -65,6 +65,7 @@
 #include "usb/usb_displays.h"
 #endif
 
+#include <ddc/ddc_display_lock.h>
 #include "ddc/ddc_try_stats.h"
 
 #include "ddc/ddc_packet_io.h"
@@ -126,6 +127,10 @@ Public_Status_Code ddc_open_display(
    DBGMSF(debug, "Opening display %s, callopts=%s",
                  dref_repr_t(dref), interpret_call_options_t(callopts) );
 
+   Distinct_Display_Ref display_id = get_distinct_display_ref(dref);
+   lock_distinct_display(display_id, 0x00);
+   bool locked = true;
+
    Display_Handle * dh = NULL;
    Public_Status_Code psc = 0;
 
@@ -151,15 +156,14 @@ Public_Status_Code ddc_open_display(
          // Is this needed?
          // 10/24/15, try disabling:
          // sleepMillisWithTrace(DDC_TIMEOUT_MILLIS_DEFAULT, __func__, NULL);
+
          dh = create_bus_display_handle_from_display_ref(fd, dref);    // n. sets dh->dref = dref
-         // n. sets
-         // Bus_Info * bus_info = i2c_get_bus_info(dref->io_path.path.i2c_busno, DISPSEL_VALID_ONLY);   // or DISPSEL_NONE?
-         // Bus_Info * bus_info = i2c_get_bus_info_new(dref->io_path.path.i2c_busno);   // or DISPSEL_NONE?
+
          I2C_Bus_Info * bus_info = dref->detail2;
          assert(bus_info);   // need to convert to a test?
          assert( memcmp(bus_info, I2C_BUS_INFO_MARKER, 4) == 0);
-         dref->pedid = bus_info->edid;
 
+         dref->pedid = bus_info->edid;
          if (!dref->pedid) {
             // How is this even possible?
             // 1/2017:  Observed with x260 laptop and Ultradock, See ddcutil user report.
@@ -204,16 +208,21 @@ Public_Status_Code ddc_open_display(
       break;
    } // switch
    assert(!dh || dh->dref->pedid);
+   unlock_distinct_display(display_id);
+   locked = false;
    // needed?  for both or just I2C?
    // sleep_millis_with_trace(DDC_TIMEOUT_MILLIS_DEFAULT, __func__, NULL);
    if (dref->io_path.io_mode != DDCA_IO_USB)
       call_tuned_sleep_i2c(SE_POST_OPEN);
    // report_display_handle(pDispHandle, __func__);
 bye:
+   if (locked)
+      unlock_distinct_display(display_id);
    if (psc != 0)
       COUNT_STATUS_CODE(psc);
    *pdh = dh;
    assert(psc <= 0);
+   // dbgrpt_distinct_display_descriptors(0);
    DBGMSF(debug, "Done.  Returning: %s, *pdh=%d", psc_desc(psc), *pdh);
    return psc;
 }
