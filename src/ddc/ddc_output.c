@@ -55,7 +55,6 @@
 
 #include "vcp/parse_capabilities.h"
 
-#include "ddc/ddc_edid.h"
 #include "ddc/ddc_multi_part_io.h"
 #include "ddc/ddc_packet_io.h"
 #include "ddc/ddc_vcp.h"

@@ -53,7 +53,6 @@
 
 #include "ddc/ddc_displays.h"
 #include "ddc/ddc_dumpload.h"
-#include "ddc/ddc_edid.h"
 #include "ddc/ddc_output.h"
 #include "ddc/ddc_packet_io.h"
 #include "ddc/ddc_read_capabilities.h"
