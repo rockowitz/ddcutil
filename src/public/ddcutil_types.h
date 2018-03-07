@@ -541,6 +541,10 @@ typedef struct {
 #define VALREC_MAX_VAL(valrec) ( valrec->val.c_nc.mh << 8 | valrec->val.c_nc.ml )
 
 
+//
+// Experimental - Not for public use
+//
+
 // values are in sync with CMD_ constants defined in ddc_command_codes.h, unify?
 typedef enum {
     DDCA_Q_VCP_GET         = 0x01,    // CMD_VCP_REQUEST
@@ -559,7 +563,6 @@ typedef struct {
    // for DDCA_Q_SET
    DDCA_Non_Table_Value       non_table_value;
 } DDCA_Queued_Request;
-
 
 
 /** Callback function to report VCP value change */

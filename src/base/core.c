@@ -146,7 +146,7 @@ void init_msg_control() {
 // To reset to STDOUT, use constant stdout in stdio.h  - NO - screws up rpt_util
 // problem:
 
-/** Redirect output that would normally go to **stdout**.
+/** Redirect output on the current thread that would normally go to **stdout**.
  *
  *  @param fout pointer to output stream
  *

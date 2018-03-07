@@ -308,7 +308,7 @@ ddca_rc_desc(DDCA_Status status_code) {
 
 
 //
-// Message Control
+// Output redirection
 //
 
 // Redirects output that normally would go to STDOUT
@@ -335,6 +335,87 @@ void ddca_set_ferr_to_default(void) {
    set_ferr_to_default();
 }
 
+
+//
+// Output capture - convenience functions
+//
+
+typedef struct {
+   FILE * in_memory_file;
+   char * in_memory_bufstart; ;
+   size_t in_memory_bufsize;
+} In_Memory_File_Desc;
+
+
+static In_Memory_File_Desc *  get_thread_capture_buf_desc() {
+   static GPrivate  in_memory_key = G_PRIVATE_INIT(g_free);
+
+   In_Memory_File_Desc* fdesc = g_private_get(&in_memory_key);
+
+   // GThread * this_thread = g_thread_self();
+   // printf("(%s) this_thread=%p, fdesc=%p\n", __func__, this_thread, fdesc);
+
+   if (!fdesc) {
+      fdesc = g_new0(In_Memory_File_Desc, 1);
+      g_private_set(&in_memory_key, fdesc);
+   }
+
+   // printf("(%s) Returning: %p\n", __func__, fdesc);
+   return fdesc;
+}
+
+
+void ddca_start_capture(void) {
+   In_Memory_File_Desc * fdesc = get_thread_capture_buf_desc();
+
+   if (!fdesc->in_memory_file) {
+      fdesc->in_memory_file = open_memstream(&fdesc->in_memory_bufstart, &fdesc->in_memory_bufsize);
+      ddca_set_fout(fdesc->in_memory_file);   // n. ddca_set_fout() is thread specific
+   }
+   // printf("(%s) Done.\n", __func__);
+}
+
+
+char * ddca_end_capture(void) {
+   In_Memory_File_Desc * fdesc = get_thread_capture_buf_desc();
+   // In_Memory_File_Desc * fdesc = &in_memory_file_desc;
+
+   char * result = "\0";
+   // printf("(%s) Starting.\n", __func__);
+   assert(fdesc->in_memory_file);
+   if (fflush(fdesc->in_memory_file) < 0) {
+      SEVEREMSG("flush() failed. errno=%d", errno);
+      return strdup(result);
+   }
+   // n. open_memstream() maintains a null byte at end of buffer, not included in in_memory_bufsize
+   result = strdup(fdesc->in_memory_bufstart);
+   if (fclose(fdesc->in_memory_file) < 0) {
+      SEVEREMSG("fclose() failed. errno=%d", errno);
+      return result;
+   }
+   free(fdesc->in_memory_file);
+   ddca_set_fout_to_default();
+   fdesc->in_memory_file = NULL;
+   // printf("(%s) Done. result=%p\n", __func__, result);
+   return result;
+}
+
+int ddca_captured_size() {
+   // printf("(%s) Starting.\n", __func__);
+   In_Memory_File_Desc * fdesc = get_thread_capture_buf_desc();
+
+   int result = -1;
+   // n. open_memstream() maintains a null byte at end of buffer, not included in in_memory_bufsize
+   if (fdesc->in_memory_file)
+      result = fdesc->in_memory_bufsize + 1;   // +1 for trailing \0
+   // printf("(%s) Done. result=%d\n", __func__, result);
+   return result;
+}
+
+
+//
+// Message Control
+//
 
 DDCA_Output_Level
 ddca_get_output_level(void) {
@@ -419,7 +500,6 @@ ddca_set_max_tries(
 }
 
 
-
 void ddca_enable_verify(bool onoff) {
    ddc_set_verify_setvcp(onoff);
 }
@@ -428,9 +508,6 @@ bool ddca_is_verify_enabled() {
    return ddc_get_verify_setvcp();
 }
 
-
-
-// TODO: Add functions to access ddcutil's runtime error statistics
 
 
 #ifdef FUTURE
@@ -463,6 +540,8 @@ ddca_set_timeout_millis(
 // Statistics
 //
 
+// TODO: Add functions to access ddcutil's runtime error statistics
+
 void ddca_reset_stats(void) {
    ddc_reset_stats_main();
 }
@@ -481,11 +560,11 @@ void ddca_show_stats(DDCA_Stats_Type stats_types, int depth) {
 DDCA_Status
 ddca_create_dispno_display_identifier(
       int                      dispno,
-      DDCA_Display_Identifier* p_did)
+      DDCA_Display_Identifier* did_loc)
 {
    Display_Identifier* did = create_dispno_display_identifier(dispno);
-   *p_did = did;
-   DBGMSG("Done.  *p_did = %p", *p_did);
+   *did_loc = did;
+   // DBGMSG("Done.  *did_loc = %p", *did_loc);
    return 0;
 }
 
@@ -493,10 +572,10 @@ ddca_create_dispno_display_identifier(
 DDCA_Status
 ddca_create_busno_display_identifier(
       int busno,
-      DDCA_Display_Identifier* p_did)
+      DDCA_Display_Identifier* did_loc)
 {
    Display_Identifier* did = create_busno_display_identifier(busno);
-   *p_did = did;
+   *did_loc = did;
    return 0;
 }
 
@@ -505,10 +584,10 @@ DDCA_Status
 ddca_create_adlno_display_identifier(
       int                      iAdapterIndex,
       int                      iDisplayIndex,
-      DDCA_Display_Identifier* p_did)
+      DDCA_Display_Identifier* did_loc)
 {
    Display_Identifier* did = create_adlno_display_identifier(iAdapterIndex, iDisplayIndex);
-   *p_did = did;
+   *did_loc = did;
    return 0;
 }
 
@@ -518,10 +597,9 @@ ddca_create_mfg_model_sn_display_identifier(
       const char*              mfg_id,
       const char*              model_name,
       const char*              serial_ascii,
-      DDCA_Display_Identifier* p_did
-     )
+      DDCA_Display_Identifier* did_loc)
 {
-   *p_did = NULL;
+   *did_loc = NULL;
    DDCA_Status rc = 0;
 
    // break up the invalid argument tests for clarity
@@ -542,7 +620,7 @@ ddca_create_mfg_model_sn_display_identifier(
       rc = -EINVAL;
 
    else {
-      *p_did = create_mfg_model_sn_display_identifier(
+      *did_loc = create_mfg_model_sn_display_identifier(
                      mfg_id, model_name, serial_ascii);
    }
    return rc;
@@ -552,16 +630,16 @@ ddca_create_mfg_model_sn_display_identifier(
 DDCA_Status
 ddca_create_edid_display_identifier(
       const Byte *              edid,
-      DDCA_Display_Identifier * p_did)    // 128 byte EDID
+      DDCA_Display_Identifier * did_loc)    // 128 byte EDID
 {
-   *p_did = NULL;
+   *did_loc = NULL;
    DDCA_Status rc = 0;
    if (edid == NULL) {
       rc = -EINVAL;
-      *p_did = NULL;
+      *did_loc = NULL;
    }
    else {
-      *p_did = create_edid_display_identifier(edid);
+      *did_loc = create_edid_display_identifier(edid);
    }
    return rc;
 }
@@ -571,10 +649,10 @@ DDCA_Status
 ddca_create_usb_display_identifier(
       int                      bus,
       int                      device,
-      DDCA_Display_Identifier* p_did)
+      DDCA_Display_Identifier* did_loc)
 {
    Display_Identifier* did = create_usb_display_identifier(bus, device);
-   *p_did = did;
+   *did_loc = did;
    return 0;
 }
 
@@ -582,10 +660,10 @@ ddca_create_usb_display_identifier(
 DDCA_Status
 ddca_create_usb_hiddev_display_identifier(
       int                      hiddev_devno,
-      DDCA_Display_Identifier* p_did)
+      DDCA_Display_Identifier* did_loc)
 {
    Display_Identifier* did = create_usb_hiddev_display_identifier(hiddev_devno);
-   *p_did = did;
+   *did_loc = did;
    return 0;
 }
 
@@ -608,54 +686,12 @@ ddca_free_display_identifier(
 }
 
 
-// static char did_work_buf[100];
-
 char *
 ddca_did_repr(DDCA_Display_Identifier ddca_did) {
    DBGMSG("Starting.  ddca_did=%p", ddca_did);
    char * result = NULL;
    Display_Identifier * pdid = (Display_Identifier *) ddca_did;
    if (pdid != NULL && memcmp(pdid->marker, DISPLAY_IDENTIFIER_MARKER, 4) == 0 )  {
-#ifdef OLD
-      char * did_type_name = display_id_type_name(pdid->id_type);
-      switch (pdid->id_type) {
-      case(DISP_ID_BUSNO):
-            snprintf(did_work_buf, 100,
-                     "Display Id Type: %s, bus=/dev/i2c-%d", did_type_name, pdid->busno);
-            break;
-      case(DISP_ID_ADL):
-            snprintf(did_work_buf, 100,
-                     "Display Id Type: %s, adlno=%d.%d", did_type_name, pdid->iAdapterIndex, pdid->iDisplayIndex);
-            break;
-      case(DISP_ID_MONSER):
-            snprintf(did_work_buf, 100,
-                     "Display Id Type: %s, mfg=%s, model=%s, sn=%s",
-                     did_type_name, pdid->mfg_id, pdid->model_name, pdid->serial_ascii);
-            break;
-      case(DISP_ID_EDID):
-      {
-            char * hs = hexstring(pdid->edidbytes, 128);
-            snprintf(did_work_buf, 100,
-                     "Display Id Type: %s, edid=%8s...%8s", did_type_name, hs, hs+248);
-            free(hs);
-            break;
-      }
-      case(DISP_ID_DISPNO):
-            snprintf(did_work_buf, 100,
-                     "Display Id Type: %s, dispno=%d", did_type_name, pdid->dispno);
-            break;
-      case DISP_ID_USB:
-            snprintf(did_work_buf, 100,
-                     "Display Id Type: %s, usb bus:device=%d.%d", did_type_name, pdid->usb_bus, pdid->usb_device);;
-            break;
-      case DISP_ID_HIDDEV:
-            snprintf(did_work_buf, 100,
-                     "Display Id Type: %s, hiddev_devno=%d", did_type_name, pdid->hiddev_devno);
-            break;
-
-      } // switch
-      result = did_work_buf;
-#endif
       result = did_repr(pdid);
 
    }
@@ -2152,89 +2188,5 @@ ddca_pass_callback(
    int callback_rc = func(parm+2);
    DBGMSG("returning %d", callback_rc);
    return callback_rc;
-}
-
-
-//
-// Output redirection - Experimental
-//
-
-#ifdef OLD
-static FILE * in_memory_file = NULL;
-static char * in_memory_bufstart = NULL;
-static size_t in_memory_bufsize = 0;
-#endif
-
-typedef struct {
-   FILE * in_memory_file;
-   char * in_memory_bufstart; ;
-   size_t in_memory_bufsize;
-} In_Memory_File_Desc;
-
-// static In_Memory_File_Desc in_memory_file_desc = {0};
-
-static In_Memory_File_Desc *  get_thread_capture_buf_desc() {
-   static GPrivate  in_memory_key = G_PRIVATE_INIT(g_free);
-
-   In_Memory_File_Desc* fdesc = g_private_get(&in_memory_key);
-
-   GThread * this_thread = g_thread_self();
-   printf("(%s) this_thread=%p, fdesc=%p\n", __func__, this_thread, fdesc);
-
-   if (!fdesc) {
-      fdesc = g_new0(In_Memory_File_Desc, 1);
-      g_private_set(&in_memory_key, fdesc);
-   }
-
-   printf("(%s) Returning: %p\n", __func__, fdesc);
-   return fdesc;
-}
-
-
-void ddca_start_capture(void) {
-   In_Memory_File_Desc * fdesc = get_thread_capture_buf_desc();
-   // In_Memory_File_Desc * fdesc = &in_memory_file_desc;
-
-   if (!fdesc->in_memory_file) {
-      fdesc->in_memory_file = open_memstream(&fdesc->in_memory_bufstart, &fdesc->in_memory_bufsize);
-      ddca_set_fout(fdesc->in_memory_file);   // TODO:  set_fout is not thread specific !!!
-   }
-   // printf("(%s) Done.\n", __func__);
-}
-
-char * ddca_end_capture(void) {
-   In_Memory_File_Desc * fdesc = get_thread_capture_buf_desc();
-   // In_Memory_File_Desc * fdesc = &in_memory_file_desc;
-
-   char * result = "\0";
-   // printf("(%s) Starting.\n", __func__);
-   assert(fdesc->in_memory_file);
-   if (fflush(fdesc->in_memory_file) < 0) {
-      SEVEREMSG("flush() failed. errno=%d", errno);
-      return strdup(result);
-   }
-   // n. open_memstream() maintains a null byte at end of buffer, not included in in_memory_bufsize
-   result = strdup(fdesc->in_memory_bufstart);
-   if (fclose(fdesc->in_memory_file) < 0) {
-      SEVEREMSG("fclose() failed. errno=%d", errno);
-      return result;
-   }
-   free(fdesc->in_memory_file);
-   ddca_set_fout_to_default();
-   fdesc->in_memory_file = NULL;
-   // printf("(%s) Done. result=%p\n", __func__, result);
-   return result;
-}
-
-int ddca_captured_size() {
-   // printf("(%s) Starting.\n", __func__);
-   In_Memory_File_Desc * fdesc = get_thread_capture_buf_desc();
-   // In_Memory_File_Desc * fdesc = &in_memory_file_desc;
-
-   int result = -1;
-   if (fdesc->in_memory_file)
-      result = fdesc->in_memory_bufsize + 1;   // +1 for trailing \0
-   printf("(%s) Done. result=%d\n", __func__, result);
-   return result;
 }
 

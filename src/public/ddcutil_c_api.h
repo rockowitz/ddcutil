@@ -240,7 +240,7 @@ bool ddca_is_verify_enabled(void);
 
 
 //
-// Message Control
+// Output Redirection
 //
 
 /** Redirects output that normally would go to STDOUT
@@ -260,6 +260,42 @@ void ddca_set_ferr(
  */
 void ddca_set_ferr_to_default(void);
 
+
+//
+// Convenience functions for capturing output by redirecting
+// to an in-memory buffer.
+//
+
+/** Begins capture of **stdout** output on the current thread to
+ * a thread-specific in-memory buffer.
+ *
+ * @note
+ * If output is already being captured, this function has no effect.
+ */
+void ddca_start_capture(void);
+
+/** Ends capture of **stdout** output and returns the contents of the
+ *  in-memory buffer.
+ *
+ *  @return captured output as a string.
+ *
+ *  @note
+ *  Writes messages to stderr in case of error.
+ */
+char * ddca_end_capture(void);
+
+/** Returns the current size of the in-memory capture buffer.
+ *
+ *  @return number of characters in current buffer, plus 1 for
+ *          terminating null
+ *  @retval -1 no capture buffer on current thread
+ */
+int ddca_captured_size(void);
+
+
+//
+// Message Control
+//
 
 /** Gets the current output level */
 DDCA_Output_Level                   /**< current output level */
@@ -964,7 +1000,6 @@ ddca_pass_callback(
       int                   parm
       );
 
-
 // future:
 DDCA_Status
 ddca_queue_get_non_table_vcp_value(
@@ -972,28 +1007,6 @@ ddca_queue_get_non_table_vcp_value(
       DDCA_Vcp_Feature_Code    feature_code    /**< VCP feature code   */
 );
 
-
-/** Begins capture of output to stdout to an in-memory buffer.
- *
- * @note
- * If output is already being captured, his function has no effect.
- */
-void ddca_start_capture(void);
-
-/** Ends capture stdout output and returns the contents of the
- *  in-memory buffer.
- *
- *  @return captured output as a string.
- *
- *  @note
- *  Writes messages to stderr in case of error.
- */
-char * ddca_end_capture(void);
-
-/** Returns the current size of the in-memory capture buffer.
- *
- */
-int ddca_captured_size(void);
 
 #ifdef __cplusplus
 }

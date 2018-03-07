@@ -1,9 +1,9 @@
 /* report_util.c
  *
- * Functions for creating messages in a stardardized format, with flexible
+ * Functions for creating messages in a standardized format, with flexible
  * indentation.  It is particularly used for tracing data structures.
  *
- * This source file maintains state in static variables so is not thread safe.
+ * The functions in this source file are thread safe.
  *
  * <copyright>
  * Copyright (C) 2014-2018 Sanford Rockowitz <rockowitz@minsoft.com>
@@ -70,6 +70,7 @@ static bool  initial_output_dest_changed = false;
 #endif
 
 
+//* Thread specific state */
 typedef struct {
    uint8_t indent_spaces_stack[INDENT_SPACES_STACK_SIZE];
    int indent_spaces_stack_pos;    // initial  -1;
@@ -83,6 +84,9 @@ typedef struct {
 } Per_Thread_Settings;
 
 
+/** Returns a struct for maintaining thread-specific settings
+ *  @return thread-specific struct of global settings
+ */
 static Per_Thread_Settings *  get_thread_settings() {
    static GPrivate per_thread_settings_key = G_PRIVATE_INIT(g_free);
 
@@ -108,10 +112,15 @@ static Per_Thread_Settings *  get_thread_settings() {
 // Indentation
 //
 
-// Functions that allow for temporarily changing the number of
-// indentation spaces per logical indentation depth.
+// Functions that allow for temporarily changing the number of indentation
+// spaces per logical indentation depth on the current thread.
 // 10/16/15: not currently used
 
+/** Sets the spaces-per-indentation-depth to be used for report functions.
+ *  The current spaces-per-depth is saved on the thread-specific spaces-per-depth stack.
+ *
+ *  @param new_dest  new output destination
+ */
 void rpt_push_indent(int new_spaces_per_depth) {
    Per_Thread_Settings * settings = get_thread_settings();
    assert(settings->indent_spaces_stack_pos < INDENT_SPACES_STACK_SIZE-1);
@@ -119,6 +128,11 @@ void rpt_push_indent(int new_spaces_per_depth) {
 }
 
 
+/** Pops the space-per-indentation-depth stack.
+ *
+ *  @remark
+ *  No effect if stack is empty.
+ */
 void rpt_pop_indent() {
    Per_Thread_Settings * settings = get_thread_settings();
    if (settings->indent_spaces_stack_pos >= 0)
@@ -126,6 +140,11 @@ void rpt_pop_indent() {
 }
 
 
+/** Empties the space-per-indentation-depth stack.
+ *
+ *  The effect is to reset the per-thread spaces-per-indentation-depth
+ *  to its default value.
+ */
 void rpt_reset_indent_stack() {
    Per_Thread_Settings * settings = get_thread_settings();
    settings->indent_spaces_stack_pos = -1;
@@ -133,10 +152,10 @@ void rpt_reset_indent_stack() {
 
 
 /** Given a logical indentation depth, returns the number of spaces
- * of indentation to be used.
+ *  of indentation to be used.
  *
- * @param depth logical indentation depth
- * @return number of indentation spaces
+ *  @param depth logical indentation depth
+ *  @return number of indentation spaces
  */
 int rpt_get_indent(int depth) {
    Per_Thread_Settings * settings = get_thread_settings();
@@ -147,7 +166,8 @@ int rpt_get_indent(int depth) {
 }
 
 
-// Functions that allow for temporarily changing the output destination.
+// Functions that allow for temporarily changing the output destination
+// on the current thread.
 
 /** Sets the output destination to be used for report functions.
  *  The current output destination is saved on the output destination stack.
