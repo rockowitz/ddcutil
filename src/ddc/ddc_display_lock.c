@@ -25,13 +25,17 @@
  *  Provides locking for displays to ensure that a given display is not
  *  opened simultaneously from multiple threads.
  *
+#ifdef TOO_MANY_EDGE_CASES
  *  It is conceivable that there are multiple paths to the same monitor, e.g.
  *  multiple cables from different video card outputs, or USB as well as I2c
  *  connections.  Therefore, this module checks the manufacturer id, model string,
  *  and ascii serial number fields in the EDID when comparing monitors.
  *
  *  (Note that comparing the full 128 byte EDIDs will not work, as a monitor can
- *  return different EDIDs on different inputs, e.g. VGA vs DVI.)
+ *  return different EDIDs on different inputs, e.g. VGA vs DVI.
+#endif
+ *
+ *  Only the io path to the display is checked.
  */
 
 #include <assert.h>
@@ -50,9 +54,11 @@
 typedef struct {
    char         marker[4];
    DDCA_IO_Path io_path;
+#ifdef TOO_MANY_EDGE_CASES
    char *       edid_mfg;
    char *       edid_model_name;
    char *       edid_serial_ascii;
+#endif
    GMutex       display_mutex;
    GThread *    display_mutex_thread;     // thread owning mutex
 } Distinct_Display_Desc;
@@ -87,6 +93,7 @@ bool display_desc_matches(Distinct_Display_Desc * ddesc, Display_Ref * dref) {
    bool result = false;
    if (dpath_eq(ddesc->io_path, dref->io_path))
       result = true;
+#ifdef TOO_MANY_EDGE_CASES
    else {
       if (dref->pedid) {
       if (streq(dref->pedid->mfg_id,       ddesc->edid_mfg)        &&
@@ -101,6 +108,7 @@ bool display_desc_matches(Distinct_Display_Desc * ddesc, Display_Ref * dref) {
          DBGMSG0("Null EDID");
       }
    }
+#endif
    return result;
 }
 
@@ -133,9 +141,11 @@ Distinct_Display_Ref get_distinct_display_ref(Display_Ref * dref) {
       Distinct_Display_Desc * new_desc = calloc(1, sizeof(Distinct_Display_Desc));
       memcpy(new_desc->marker, DISTINCT_DISPLAY_DESC_MARKER, 4);
       new_desc->io_path           = dref->io_path;
+#ifdef TOO_MANY_EDGE_CASES
       new_desc->edid_mfg          = strdup(dref->pedid->mfg_id);
       new_desc->edid_model_name   = strdup(dref->pedid->model_name);
       new_desc->edid_serial_ascii = strdup(dref->pedid->serial_ascii);
+#endif
       g_mutex_init(&new_desc->display_mutex);
       g_ptr_array_add(display_descriptors, new_desc);
       result = new_desc;
@@ -205,12 +215,17 @@ void dbgrpt_distinct_display_descriptors(int depth) {
    int d1 = depth+1;
    for (int ndx=0; ndx < display_descriptors->len; ndx++) {
       Distinct_Display_Desc * cur = g_ptr_array_index(display_descriptors, ndx);
+#ifdef TOO_MANY_EDGE_CASES
       rpt_vstring(d1, "%2d - %p  %-28s - %-4s %-13s %-13s",
                        ndx, cur,
                        dpath_repr_t(&cur->io_path),
                        cur->edid_mfg,
                        cur->edid_model_name,
                        cur->edid_serial_ascii);
+#endif
+      rpt_vstring(d1, "%2d - %p  %-28s",
+                       ndx, cur,
+                       dpath_repr_t(&cur->io_path) );
    }
    g_mutex_unlock(&descriptors_mutex);
 }
