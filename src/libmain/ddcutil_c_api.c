@@ -1292,7 +1292,7 @@ ddca_get_feature_info_by_vcp_version(
    // DDCA_MCCS_Version_Spec vspec = mccs_version_id_to_spec(mccs_version_id);
 
    // or should this be a version sensitive call?
-   DDCA_Version_Feature_Info * info =  get_version_feature_info(
+   DDCA_Version_Feature_Info * info =  get_version_feature_info_by_version_id(
          feature_code,
          mccs_version_id,
          false,                       // with_default

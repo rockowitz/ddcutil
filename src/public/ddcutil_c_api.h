@@ -104,28 +104,27 @@ typedef enum {
 } DDCA_Build_Option_Flags;
 
 
-
-
-/** Queries the options with which the **ddcutil** library was built.
- *
- * @return  flags byte
- *
- *
- * | Bitflags: | |
- * |:-------| :--------------
- * |#DDCA_BUILT_WITH_ADL  | built with ADL support
- * |#DDCA_BUILT_WITH_USB  | built with USB support
- * |#DDCA_BUILT_WITH_FAILSIM | built with failure simulation
- *
+#ifdef ALT
  * Defined Bits
  * <table>
  * <tr><td>#DDCA_BUILT_WITH_ADL</td><td>built with ADL support</td>
  * <tr><td>#DDCA_BUILT_WITH_USB</td><td>built with USB support
  * <tr><td>#DDCA_BUILT_WITH_FAILSIM</td><td> built with failure simulation
  * </table>
+#endif
+
+/** Queries the options with which the **ddcutil** library was built.
+ *
+ * @return  flags byte
+ *
+ *
+ * | Defined Bits: | |
+ * |:-------| :--------------
+ * |#DDCA_BUILT_WITH_ADL  | built with ADL support
+ * |#DDCA_BUILT_WITH_USB  | built with USB support
+ * |#DDCA_BUILT_WITH_FAILSIM | built with failure simulation
  *
  */
-
 DDCA_Build_Option_Flags ddca_build_options(void);
 
 

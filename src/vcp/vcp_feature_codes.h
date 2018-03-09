@@ -267,7 +267,7 @@ get_version_sensitive_feature_info(
 #endif
 
 DDCA_Version_Feature_Info *
-get_version_feature_info(
+get_version_feature_info_by_version_id(
       DDCA_Vcp_Feature_Code       feature_code,
       DDCA_MCCS_Version_Id   mccs_version_id,
       bool                   with_default,
