@@ -415,8 +415,10 @@ ddc_set_vcp_value(
             else {
                f0printf(verbose_msg_dest, "Verification succeeded\n");
             }
-            *newval_loc = newval;
-            //free_single_vcp_value(newval);
+            if (newval_loc)
+               *newval_loc = newval;
+            else
+               free_single_vcp_value(newval);
          }
       }
       else {
