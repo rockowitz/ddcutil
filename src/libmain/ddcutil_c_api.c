@@ -1357,17 +1357,16 @@ ddca_free_feature_info(
    return rc;
 }
 
-// static char  default_feature_name_buffer[40];
+// returns pointer into permanent internal data structure, caller should not free
 char *
 ddca_get_feature_name(DDCA_Vcp_Feature_Code feature_code) {
    // do we want get_feature_name()'s handling of mfg specific and unrecognized codes?
    char * result = get_feature_name_by_id_only(feature_code);
-   // snprintf(default_feature_name_buffer, sizeof(default_feature_name_buffer), "VCP Feature 0x%02x", feature_code);
-   // return default_feature_name_buffer;
    return result;
 }
 
 
+// returns pointer into permanent internal data structure, caller should not free
 char *
 ddca_feature_name(
       DDCA_Vcp_Feature_Code  feature_code,
