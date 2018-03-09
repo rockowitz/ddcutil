@@ -890,7 +890,7 @@ ddca_get_mccs_version_id(
       *p_id = version_id;
    }
    else {
-      *p_id = DDCA_VNONE;
+      *p_id = DDCA_MCCS_VNONE;
    }
    return rc;
 }
@@ -1009,7 +1009,7 @@ ddca_get_display_info_list(void)
          // hack:
          // vcp version is unqueried to improve performance of the command line version
          // mccs_version_spec_to_id has assert error if unqueried
-         DDCA_MCCS_Version_Id version_id = DDCA_VNONE;
+         DDCA_MCCS_Version_Id version_id = DDCA_MCCS_VNONE;
          DDCA_MCCS_Version_Spec vspec = dref->vcp_version;
          if (vcp_version_eq(vspec, VCP_SPEC_UNQUERIED)) {
             vspec = get_vcp_version_by_display_ref(dref);
