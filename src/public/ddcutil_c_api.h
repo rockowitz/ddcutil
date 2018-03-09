@@ -23,7 +23,7 @@
  * </endcopyright>
  */
 
-/** \f
+/** \file ddcutil_c_api.h
  *  Public C API for ddcutil
  */
 
@@ -146,13 +146,13 @@ typedef enum {
 //
 
 /** Returns the symbolic name for a ddcutil status code
- * @param status_code numeric status code
+ * @param[in] status_code numeric status code
  * @return symbolic name, e.g. EBUSY, DDCRC_INVALID_DATA
  *  */
 char * ddca_rc_name(DDCA_Status status_code);
 
 /** Returns a description of a ddcutil status code
- * @param status_code numeric status code
+ * @param[in] status_code numeric status code
  * @return explanation of status code, e.g. "device or resource busy"
  */
 char * ddca_rc_desc(DDCA_Status status_code);
@@ -165,7 +165,7 @@ char * ddca_rc_desc(DDCA_Status status_code);
 /** Returns the symbolic name of a #DDCA_MCCS_Version_Id,
  *  e.g. "DDCA_V20."
  *
- *  @param  version_id  version id value
+ *  @param[in]  version_id  version id value
  *  @return symbolic name
  */
 char *
@@ -374,7 +374,7 @@ ddca_report_display_info(
       int                 depth);
 
 /** Reports on all displays in a list of displays.
- *  The report is written to the current FOUT device
+ *  The report is written to the current FOUT device for the current thread.
  *
  *  @param[in]  dlist  pointer to a DDCA_Display_Info_List
  *  @param[in]  depth  logical indentation depth
@@ -401,7 +401,7 @@ ddca_report_active_displays(
 
 /** Creates a display identifier using the display number assigned by ddcutil
  * @param[in]  dispno  display number
- * @param[out] pdid    where to return display identifier handle
+ * @param[out] did_loc    where to return display identifier handle
  * @retval     0
  *
  * \ingroup api_display_spec
@@ -409,11 +409,11 @@ ddca_report_active_displays(
 DDCA_Status
 ddca_create_dispno_display_identifier(
       int                      dispno,
-      DDCA_Display_Identifier* pdid);
+      DDCA_Display_Identifier* did_loc);
 
 /** Creates a display identifier using an I2C bus number
  * @param[in]  busno  I2C bus number
- * @param[out] pdid   where to return display identifier handle
+ * @param[out] did_loc   where to return display identifier handle
  * @retval     0
  *
  * \ingroup api_display_spec
@@ -421,12 +421,12 @@ ddca_create_dispno_display_identifier(
 DDCA_Status
 ddca_create_busno_display_identifier(
       int                      busno,
-      DDCA_Display_Identifier* pdid);
+      DDCA_Display_Identifier* did_loc);
 
 /** Creates a display identifier using an ADL (adapter index, display index) pair
  * @param[in]  iAdapterIndex ADL adapter index
  * @param[in]  iDisplayIndex ADL display index
- * @param[out] pdid          where to return display identifier handle
+ * @param[out] did_loc          where to return display identifier handle
  * @return     status code
  *
  * \ingroup api_display_spec
@@ -435,14 +435,14 @@ DDCA_Status
 ddca_create_adlno_display_identifier(
       int                      iAdapterIndex,
       int                      iDisplayIndex,
-      DDCA_Display_Identifier* pdid);
+      DDCA_Display_Identifier* did_loc);
 
 /** Creates a display identifier using some combination of the manufacturer id,
  * model name string and serial number string.  At least 1 of the 3 must be specified.
  * @param mfg_id  3 letter manufacturer id
  * @param model   model name string
  * @param sn     serial number string
- * @param pdid   where to return display identifier handle
+ * @param did_loc   where to return display identifier handle
  * @retval 0       success
  * @retval -EINVAL no argument specified, or argument too long
  *
@@ -453,11 +453,11 @@ ddca_create_mfg_model_sn_display_identifier(
       const char *             mfg_id,
       const char *             model,
       const char *             sn,
-      DDCA_Display_Identifier* pdid);
+      DDCA_Display_Identifier* did_loc);
 
 /** Creates a display identifier using a 128 byte EDID
  * @param   edid  pointer to 128 byte EDID
- * @param   pdid  where to return display identifier handle
+ * @param   did_loc  where to return display identifier handle
  * @retval  0       success
  * @retval  -EINVAL edid==NULL
  *
@@ -466,12 +466,12 @@ ddca_create_mfg_model_sn_display_identifier(
 DDCA_Status
 ddca_create_edid_display_identifier(
       const uint8_t*            edid,
-      DDCA_Display_Identifier * pdid);      // 128 byte edid
+      DDCA_Display_Identifier * did_loc);      // 128 byte edid
 
 /** Creates a display identifier using a USB bus number and device number
  * @param bus    USB bus number
  * @param device USB device number
- * @param pdid   where to return display identifier handle
+ * @param did_loc   where to return display identifier handle
  * @retval 0 success
  *
  *  \ingroup api_display_spec
@@ -480,11 +480,11 @@ DDCA_Status
 ddca_create_usb_display_identifier(
       int                      bus,
       int                      device,
-      DDCA_Display_Identifier* pdid);
+      DDCA_Display_Identifier* did_loc);
 
 /** Creates a display identifier using a /dev/usb/hiddev device number
  * @param hiddev_devno hiddev device number
- * @param pdid   where to return display identifier handle
+ * @param did_loc   where to return display identifier handle
  * @retval 0  success
  *
  *  \ingroup api_display_spec
@@ -492,7 +492,7 @@ ddca_create_usb_display_identifier(
 DDCA_Status
 ddca_create_usb_hiddev_display_identifier(
       int                      hiddev_devno,
-      DDCA_Display_Identifier* pdid);
+      DDCA_Display_Identifier* did_loc);
 
 
 /** Release the memory of a display identifier */
@@ -670,7 +670,7 @@ ddca_report_parsed_capabilities(
  *
  * @param[in]  feature_code    VCP feature code
  * @param[in]  mccs_version_id MCCS version id, may be DDCA_VCP_VANY??
- * @param[out] p_info          where to return Version_Feature_Info struct
+ * @param[out] info_loc        where to return Version_Feature_Info struct
  * @return     status code
  */
 DDCA_Status
@@ -678,7 +678,7 @@ ddca_get_feature_info_by_vcp_version(
       DDCA_Vcp_Feature_Code         feature_code,
    // DDCT_MCCS_Version_Spec        vspec,
       DDCA_MCCS_Version_Id          mccs_version_id,
-      DDCA_Version_Feature_Info**   p_info);
+      DDCA_Version_Feature_Info**   info_loc);
 
 
 DDCA_Status
@@ -692,13 +692,19 @@ ddca_get_simplified_feature_info(
 /** Gets the VCP feature name.  If different MCCS versions use different names
  * for the feature, this function makes a best guess.
  *
- * @param[in]  feature_code
- * @return     pointer to feature name(do not free), NULL if unknown feature code
+ * @param[in]  feature_code feature code
+ * @return     pointer to feature name (do not free), NULL if unknown feature code
  */
 char *
 ddca_get_feature_name(DDCA_Vcp_Feature_Code feature_code);
 
 
+/** Gets the VCP feature name, which may vary by MCCS version.
+ *
+ * @param[in]  feature_code  feature code
+ * @param[in]  vspec         MCCS version
+ * @return     pointer to feature name (do not free), NULL if unknown feature code
+ */
 char *
 ddca_feature_name(
       DDCA_Vcp_Feature_Code  feature_code,
@@ -1003,8 +1009,8 @@ ddca_pass_callback(
 // future:
 DDCA_Status
 ddca_queue_get_non_table_vcp_value(
-      DDCA_Display_Handle      ddca_dh,        /**< Display handle     */
-      DDCA_Vcp_Feature_Code    feature_code    /**< VCP feature code   */
+      DDCA_Display_Handle      ddca_dh,
+      DDCA_Vcp_Feature_Code    feature_code
 );
 
 
