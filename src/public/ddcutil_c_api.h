@@ -726,7 +726,9 @@ ddca_report_parsed_capabilities(
 // VCP Feature Information, Monitor Independent
 //
 
-/** Gets information for a VCP feature.
+/** \deprecated Use #ddca_get_feature_flags_by_version_id()
+ *
+ * Gets information for a VCP feature.
  *
  * VCP characteristics (C vs NC, RW vs RO, etc) can vary by MCCS version.
  *
@@ -743,12 +745,29 @@ ddca_get_feature_info_by_vcp_version(
       DDCA_Version_Feature_Info**   info_loc);
 
 
+/** \deprecated  Use #ddca_get_feature_flags_by_version_id() */
 DDCA_Status
 ddca_get_simplified_feature_info(
       DDCA_Vcp_Feature_Code         feature_code,
       DDCA_MCCS_Version_Spec        vspec,
  //   DDCA_MCCS_Version_Id          mccs_version_id,
       DDCA_Simplified_Version_Feature_Info *  info);     // caller buffer to fill in,
+
+
+DDCA_Status
+ddca_get_feature_flags_by_vspec(
+      DDCA_Vcp_Feature_Code         feature_code,
+      DDCA_MCCS_Version_Spec        vspec,
+ //   DDCA_MCCS_Version_Id          mccs_version_id,
+      DDCA_Feature_Flags *          feature_flags);
+
+
+DDCA_Status
+ddca_get_feature_flags_by_version_id(
+      DDCA_Vcp_Feature_Code         feature_code,
+ //   DDCA_MCCS_Version_Spec        vspec,
+      DDCA_MCCS_Version_Id          mccs_version_id,
+      DDCA_Feature_Flags *          feature_flags);
 
 
 /** Gets the VCP feature name.  If different MCCS versions use different names

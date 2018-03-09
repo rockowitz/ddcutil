@@ -1333,6 +1333,52 @@ ddca_get_simplified_feature_info(
    return psc;
 }
 
+DDCA_Status
+ddca_get_feature_flags_by_vspec(
+      DDCA_Vcp_Feature_Code         feature_code,
+      DDCA_MCCS_Version_Spec        vspec,
+ //   DDCA_MCCS_Version_Id          mccs_version_id,
+      DDCA_Feature_Flags *          feature_flags)
+{
+   DDCA_Status psc = DDCL_ARG;
+   DDCA_Version_Feature_Info * full_info =  get_version_feature_info_by_vspec(
+         feature_code,
+         vspec,
+         false,                       // with_default
+         true);                       // false => version specific, true=> version sensitive
+   if (full_info) {
+      *feature_flags = full_info->feature_flags;
+      free_version_feature_info(full_info);
+      psc = 0;
+   }
+   return psc;
+}
+
+
+DDCA_Status
+ddca_get_feature_flags_by_version_id(
+      DDCA_Vcp_Feature_Code         feature_code,
+ //   DDCA_MCCS_Version_Spec        vspec,
+      DDCA_MCCS_Version_Id          mccs_version_id,
+      DDCA_Feature_Flags *          feature_flags)
+{
+   DDCA_Status psc = DDCL_ARG;
+   DDCA_Version_Feature_Info * full_info =  get_version_feature_info_by_version_id(
+         feature_code,
+         mccs_version_id,
+         false,                       // with_default
+         true);                       // false => version specific, true=> version sensitive
+   if (full_info) {
+      *feature_flags = full_info->feature_flags;
+      free_version_feature_info(full_info);
+      psc = 0;
+   }
+   return psc;
+}
+
+
+
+
 
 DDCA_Status
 ddca_get_feature_info_by_display(
