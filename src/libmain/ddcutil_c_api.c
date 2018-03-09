@@ -911,6 +911,11 @@ ddca_mccs_version_id_name(DDCA_MCCS_Version_Id version_id) {
 
 
 char *
+ddca_mccs_version_id_string(DDCA_MCCS_Version_Id version_id) {
+   return format_vcp_version_id(version_id);
+}
+
+char *
 ddca_mccs_version_id_desc(DDCA_MCCS_Version_Id version_id) {
    return format_vcp_version_id(version_id);
 }
