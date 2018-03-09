@@ -290,12 +290,18 @@ typedef struct {
 } DDCA_Feature_List;
 
 
+/** Identifies publicly useful VCP feature subsets
+ *
+ * @remark
+ * These subset identifiers represent a subset of the much
+ * larger collection of subset ids used internally.
+ */
 typedef enum {
-   DDCA_FEATURE_LIST_KNOWN,
-   DDCA_FEATURE_LIST_COLOR,
-   DDCA_FEATURE_LIST_PROFILE,
-   DDCA_FEATURE_LIST_MFG
-} DDCA_Feature_List_Id;     // alt name DDCA_Public_Vcp_Subset
+   DDCA_SUBSET_KNOWN,          ///< All features defined in a MCCS spec
+   DDCA_SUBSET_COLOR,          ///< Color related features
+   DDCA_SUBSET_PROFILE,        ///< Features saved and restored by loadvcp/setvcp
+   DDCA_SUBSET_MFG             ///< Feature codes reserved for manufacturer use (0x0e..0xff)
+} DDCA_Vcp_Feature_Subset;
 
 
 

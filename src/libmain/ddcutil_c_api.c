@@ -1168,22 +1168,22 @@ bool ddca_feature_list_test(DDCA_Feature_List * vcplist, uint8_t vcp_code) {
 
 
 DDCA_Feature_List ddca_get_feature_list(
-      DDCA_Feature_List_Id   feature_list_id,
+      DDCA_Vcp_Feature_Subset   feature_list_id,
       DDCA_MCCS_Version_Spec vcp_version,
       bool                   include_table_features)
 {
    VCP_Feature_Subset subset = VCP_SUBSET_NONE;  // pointless initialization to avoid compile warning
    switch (feature_list_id) {
-   case DDCA_FEATURE_LIST_KNOWN:
+   case DDCA_SUBSET_KNOWN:
       subset = VCP_SUBSET_KNOWN;
       break;
-   case DDCA_FEATURE_LIST_COLOR:
+   case DDCA_SUBSET_COLOR:
       subset = VCP_SUBSET_COLOR;
       break;
-   case DDCA_FEATURE_LIST_PROFILE:
+   case DDCA_SUBSET_PROFILE:
       subset = VCP_SUBSET_PROFILE;
       break;
-   case DDCA_FEATURE_LIST_MFG:
+   case DDCA_SUBSET_MFG:
       subset = VCP_SUBSET_MFG;
       break;
    }
