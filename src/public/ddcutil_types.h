@@ -295,7 +295,7 @@ typedef enum {
    DDCA_FEATURE_LIST_COLOR,
    DDCA_FEATURE_LIST_PROFILE,
    DDCA_FEATURE_LIST_MFG
-} DDCA_Feature_List_Id;
+} DDCA_Feature_List_Id;     // alt name DDCA_Public_Vcp_Subset
 
 
 
@@ -519,7 +519,7 @@ typedef struct {
 } DDCA_Table_Value;
 
 
-
+/** Stores a VCP feature value of any type */
 typedef struct {
    DDCA_Vcp_Feature_Code  opcode;         /**< VCP feature code */
    DDCA_Vcp_Value_Type    value_type;      // probably a different type would be better
