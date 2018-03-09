@@ -787,9 +787,16 @@ ddca_get_feature_name(DDCA_Vcp_Feature_Code feature_code);
  * @return     pointer to feature name (do not free), NULL if unknown feature code
  */
 char *
-ddca_feature_name(
+ddca_feature_name_by_vspec(
       DDCA_Vcp_Feature_Code  feature_code,
       DDCA_MCCS_Version_Spec vspec);
+
+
+char *
+ddca_feature_name_by_version_id(
+      DDCA_Vcp_Feature_Code  feature_code,
+      DDCA_MCCS_Version_Id   mccs_version_id);
+
 
 
 

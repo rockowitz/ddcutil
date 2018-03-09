@@ -1427,10 +1427,20 @@ ddca_get_feature_name(DDCA_Vcp_Feature_Code feature_code) {
 
 // returns pointer into permanent internal data structure, caller should not free
 char *
-ddca_feature_name(
+ddca_feature_name_by_vspec(
       DDCA_Vcp_Feature_Code  feature_code,
       DDCA_MCCS_Version_Spec vspec)
 {
+   char * result = get_feature_name_by_id_and_vcp_version(feature_code, vspec);
+   return result;
+}
+
+char *
+ddca_feature_name_by_version_id(
+      DDCA_Vcp_Feature_Code  feature_code,
+      DDCA_MCCS_Version_Id   mccs_version_id)
+{
+   DDCA_MCCS_Version_Spec vspec = mccs_version_id_to_spec(mccs_version_id);
    char * result = get_feature_name_by_id_and_vcp_version(feature_code, vspec);
    return result;
 }
