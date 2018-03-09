@@ -89,12 +89,29 @@ DDCA_Ddcutil_Version_Spec ddca_ddcutil_version(void);       // ddcutil version
 const char * ddca_ddcutil_version_string(void);
 
 
+// Bit ids for ddca_get_build_options() - how to make connection in doxygen?
+/** Build option flags
+ *
+ *  The enum values are defined as 1,2,4 etc so that they can be or'd.
+ */
+typedef enum {
+   /** @brief ddcutil was built with support for AMD Display Library connected monitors */
+   DDCA_BUILT_WITH_ADL     = 0x01,
+   /** @brief ddcutil was built with support for USB connected monitors */
+   DDCA_BUILT_WITH_USB     = 0x02,
+  /** @brief ddcutil was built with support for failure simulation */
+   DDCA_BUILT_WITH_FAILSIM = 0x04
+} DDCA_Build_Option_Flags;
+
+
+
+
 /** Queries the options with which the **ddcutil** library was built.
  *
  * @return  flags byte
  *
  *
- * | Defined Bit  | |
+ * | Bitflags: | |
  * |:-------| :--------------
  * |#DDCA_BUILT_WITH_ADL  | built with ADL support
  * |#DDCA_BUILT_WITH_USB  | built with USB support
@@ -108,21 +125,8 @@ const char * ddca_ddcutil_version_string(void);
  * </table>
  *
  */
-uint8_t ddca_build_options(void);
 
-// Bit ids for ddca_get_build_options() - how to make connection in doxygen?
-/** Build option flags
- *
- * Bit field definitions
- */
-typedef enum {
-   /** @brief ddcutil was built with support for AMD Display Library connected monitors */
-   DDCA_BUILT_WITH_ADL     = 0x01,
-   /** @brief ddcutil was built with support for USB connected monitors */
-   DDCA_BUILT_WITH_USB     = 0x02,
-  /** @brief ddcutil was built with support for failure simulation */
-   DDCA_BUILT_WITH_FAILSIM = 0x04
-} DDCA_Build_Option_Flags;
+DDCA_Build_Option_Flags ddca_build_options(void);
 
 
 //
@@ -146,14 +150,26 @@ typedef enum {
 //
 
 /** Returns the symbolic name for a ddcutil status code
+ *
  * @param[in] status_code numeric status code
- * @return symbolic name, e.g. EBUSY, DDCRC_INVALID_DATA
+ * @return    symbolic name, e.g. EBUSY, DDCRC_INVALID_DATA
+ * @retval    NULL if unrecognized code
+ *
+ * @remark
+ * The returned value is a pointer into internal persistent
+ * data structures and should not be free'd by the caller.
  *  */
 char * ddca_rc_name(DDCA_Status status_code);
 
 /** Returns a description of a ddcutil status code
+ *
  * @param[in] status_code numeric status code
- * @return explanation of status code, e.g. "device or resource busy"
+ * @return    explanation of status code, e.g. "device or resource busy"
+ * @retval    "unknown status code" if unrecognized code
+ *
+ * @remark
+ * The returned value is a pointer into internal persistent
+ * data structures and should not be free'd by the caller.
  */
 char * ddca_rc_desc(DDCA_Status status_code);
 
@@ -163,10 +179,10 @@ char * ddca_rc_desc(DDCA_Status status_code);
 //
 
 /** Returns the symbolic name of a #DDCA_MCCS_Version_Id,
- *  e.g. "DDCA_V20."
+ *  e.g. "DDCA_MCCS_V20."
  *
  *  @param[in]  version_id  version id value
- *  @return symbolic name
+ *  @return symbolic name (do not free)
  */
 char *
 ddca_mccs_version_id_name(
@@ -175,9 +191,14 @@ ddca_mccs_version_id_name(
 /** Returns the descriptive name of a #DDCA_MCCS_Version_Id,
  *  e.g. "2.0".
  *
- *  @param  version_id  version id value
- *  @return descriptive name
+ *  @param[in]  version_id  version id value
+ *  @return descriptive name (do not free)
  */
+char *
+ddca_mccs_version_id_string(
+      DDCA_MCCS_Version_Id  version_id);
+
+/** \deprecated Use #ddca_mccs_version_id_string()  */
 char *
 ddca_mccs_version_id_desc(
       DDCA_MCCS_Version_Id  version_id);
@@ -192,11 +213,12 @@ I2C is an inherently unreliable protocol.  The application is responsible for
 retry management.
 The maximum number of retries can be tuned.
 There are 3 retry contexts:
-- An i2C write followed by a read.  Most DDC operations are of this form.
-- An I2C write without a subsequent read.  DDC operations to set a VCP feature value
-  are in this category.
-- Some DDC operations, such as reading the capabilities string, require multiple
-  write/read exchanges.  These multi -part exchanges have a separate retry count
+- An I2C write followed by a read.  Most DDC operations are of this form.
+- An I2C write without a subsequent read.  DDC operations to set a VCP feature
+  value are in this category.
+- Some DDC operations, such as reading the capabilities string, reading table
+  feature and writing table features require multiple
+  write/read exchanges.  These multi-part exchanges have a separate retry count
   for the entire operation.
 */
 ///@{
@@ -207,18 +229,23 @@ There are 3 retry contexts:
 int ddca_max_max_tries(void);
 
 /** Gets the maximum number of I2C retries for the specified operation type.
- * @param  retry_type   I2C operation type
+ * @param[in]  retry_type   I2C operation type
  * @return maximum number of retries
+ *
+ * @remark
+ * This setting is global, not thread-specific.
  */
 int ddca_get_max_tries(
        DDCA_Retry_Type retry_type);
 
 /** Sets the maximum number of I2C retries for the specified operation type
- * @param retry_type    I2C operation type
- * @param max_tries     maximum count to set
+ * @param[in] retry_type    I2C operation type
+ * @param[in] max_tries     maximum count to set
+ * @retval EINVAL       max_tries < 1 or > #ddca_get_max_tries()
  *
- *  *
- * \retval EINVAL       max_tries < 1 or > #ddca_get_max_tries()
+ *
+ * @remark
+ * This setting is global, not thread-specific.
  */
 DDCA_Status
 ddca_set_max_tries(
@@ -228,13 +255,17 @@ ddca_set_max_tries(
 
 /** Controls whether VCP values are read after being set.
  *
- * \param onoff true/false
+ * \param[in] onoff true/false
+ *
+ * \remark This setting is thread-specific.
  */
 void ddca_enable_verify(bool onoff);
 
 /** Query whether VCP values are read after being set.
  * \retval true values are verified after being set
  * \retval false values are not verified
+ *
+ * \remark This setting is thread-specific.
  */
 bool ddca_is_verify_enabled(void);
 
@@ -243,21 +274,18 @@ bool ddca_is_verify_enabled(void);
 // Output Redirection
 //
 
-/** Redirects output that normally would go to STDOUT
- */
+/** Redirects output on the current thread that normally would go to **stdout**  */
 void ddca_set_fout(
-        FILE * fout);   /**< where to write normal messages, if NULL, suppress  */
+        FILE * fout);   /**< where to write normal messages, if NULL, suppress output */
 
-/** Redirects output that normally goes to STDOUT back to STDOUT */
+/** Redirects output on the current thread that normally goes to **stdout** back to **stdout** */
 void ddca_set_fout_to_default(void);
 
-/** Redirects output that normally would go to STDERR
- */
+/** Redirects output on the current thread that normally would go to **stderr**  */
 void ddca_set_ferr(
-        FILE * ferr);   /**< where to write error messages, If NULL, suppress */
+        FILE * ferr);   /**< where to write error messages, If NULL, suppress output */
 
-/** Redirects output that normally goes to STDERR back to STDERR
- */
+/** Redirects output on the current thread that normally goes to **stderr** back to **stderr** */
 void ddca_set_ferr_to_default(void);
 
 
@@ -266,21 +294,35 @@ void ddca_set_ferr_to_default(void);
 // to an in-memory buffer.
 //
 
-/** Begins capture of **stdout** output on the current thread to
- * a thread-specific in-memory buffer.
+/** Capture option flags
+ *
+ *  The enum values are defined as 1,2,4 etc so that they can be or'd.
+ */
+typedef enum {
+   /** @brief Capture **stderr** as well as **stdout** */
+   DDCA_CAPTURE_STDERR     = 0x01
+} DDCA_Capture_Option_Flags;
+
+
+/** Begins capture of **stdout** and optionally **stderr** output on the
+ * current thread to a thread-specific in-memory buffer.
  *
  * @note
  * If output is already being captured, this function has no effect.
  */
-void ddca_start_capture(void);
+void ddca_start_capture(DDCA_Capture_Option_Flags flags);
 
 /** Ends capture of **stdout** output and returns the contents of the
  *  in-memory buffer.
  *
+ *  Upon termination, normal thread output is directed to **stdout**.
+ *  If error output was also being captured, error output is redirected
+ *  to **stderr**.
+ *
  *  @return captured output as a string.
  *
  *  @note
- *  Writes messages to stderr in case of error.
+ *  Writes messages to actual **stderr** in case of error.
  */
 char * ddca_end_capture(void);
 
@@ -297,16 +339,16 @@ int ddca_captured_size(void);
 // Message Control
 //
 
-/** Gets the current output level */
+/** Gets the current output level for the current thread */
 DDCA_Output_Level                   /**< current output level */
 ddca_get_output_level(void);
 
-/** Sets the output level */
+/** Sets the output level for the current thread */
 void ddca_set_output_level(
       DDCA_Output_Level newval);   /**< new output level */
 
 /** Gets the name of an output level
- * @param  val  output level id
+ * @param[in]  val  output level id
  * @return output level name (do not free)
  */
 char * ddca_output_level_name(
@@ -314,16 +356,23 @@ char * ddca_output_level_name(
 
 
 /** Controls whether messages describing DDC protocol errors are output
- * @param onoff    if true, errors will be issued
- * */
+ *  @param[in] onoff    if true, errors will be issued
+ *
+ *  This setting is global to all threads.
+ */
 void ddca_enable_report_ddc_errors(bool onoff);
 
-/** Checks whether messages describing DDC protocol errors are output */
+/** Checks whether messages describing DDC protocol errors are output.
+ *
+ *  This setting is global to all threads.
+ */
 bool ddca_is_report_ddc_errors_enabled(void);
 
 
 //
 // Statistics
+//
+// Statistics are global to all threads.
 //
 
 /** Resets all **ddcutil** statistics */
@@ -331,10 +380,12 @@ void ddca_reset_stats(void);
 
 /** Show execution statistics.
  *
- *  \param stats  bitflags of statistics types to show
- *  \param depth  logical indentation depth
+ *  \param[in] stats  bitflags of statistics types to show
+ *  \param[in] depth  logical indentation depth
  */
 void ddca_show_stats(DDCA_Stats_Type stats, int depth);
+
+// TODO: Add functions to get stats
 
 
 //
@@ -357,7 +408,7 @@ ddca_get_display_info_list(void);
  *  point to permanently allocated data structures and should
  *  not be freed.
  *
- *  \param dlist pointer to #DDCA_Display_Info_List
+ *  \param[in] dlist pointer to #DDCA_Display_Info_List
  */
 void ddca_free_display_info_list(DDCA_Display_Info_List * dlist);
 
@@ -439,10 +490,10 @@ ddca_create_adlno_display_identifier(
 
 /** Creates a display identifier using some combination of the manufacturer id,
  * model name string and serial number string.  At least 1 of the 3 must be specified.
- * @param mfg_id  3 letter manufacturer id
- * @param model   model name string
- * @param sn     serial number string
- * @param did_loc   where to return display identifier handle
+ * @param[in]  mfg_id  3 letter manufacturer id
+ * @param[in]  model   model name string
+ * @param[in]  sn     serial number string
+ * @param[out] did_loc   where to return display identifier handle
  * @retval 0       success
  * @retval -EINVAL no argument specified, or argument too long
  *
@@ -456,8 +507,8 @@ ddca_create_mfg_model_sn_display_identifier(
       DDCA_Display_Identifier* did_loc);
 
 /** Creates a display identifier using a 128 byte EDID
- * @param   edid  pointer to 128 byte EDID
- * @param   did_loc  where to return display identifier handle
+ * @param[in]   edid  pointer to 128 byte EDID
+ * @param[out]  did_loc  where to return display identifier handle
  * @retval  0       success
  * @retval  -EINVAL edid==NULL
  *
@@ -469,9 +520,9 @@ ddca_create_edid_display_identifier(
       DDCA_Display_Identifier * did_loc);      // 128 byte edid
 
 /** Creates a display identifier using a USB bus number and device number
- * @param bus    USB bus number
- * @param device USB device number
- * @param did_loc   where to return display identifier handle
+ * @param[in]  bus    USB bus number
+ * @param[in]  device USB device number
+ * @param[out] did_loc   where to return display identifier handle
  * @retval 0 success
  *
  *  \ingroup api_display_spec
@@ -483,8 +534,8 @@ ddca_create_usb_display_identifier(
       DDCA_Display_Identifier* did_loc);
 
 /** Creates a display identifier using a /dev/usb/hiddev device number
- * @param hiddev_devno hiddev device number
- * @param did_loc   where to return display identifier handle
+ * @param[in] hiddev_devno hiddev device number
+ * @param[out] did_loc   where to return display identifier handle
  * @retval 0  success
  *
  *  \ingroup api_display_spec
@@ -500,7 +551,10 @@ DDCA_Status
 ddca_free_display_identifier(
       DDCA_Display_Identifier did);
 
-/** Returns a string representation of a display identifier
+/** Returns a string representation of a display identifier.
+ *
+ *  The string is valid until the display identifier is freed.
+ *
  *  \param[in]  did    display identifier
  *  \return     string representation of display identifier, NULL if invalid
  *
@@ -518,8 +572,9 @@ ddca_did_repr(
 /** Gets a display reference for a display identifier.
  *  Normally, this is a permanently allocated #DDCA_Display_Ref
  *  created by monitor detection and does not need to be freed.
- * @param[in]  did display identifier
- * @param[out] pdref where to return display reference
+ *  Use #ddca_free_display_ref() to safely free.
+ * @param[in]  did      display identifier
+ * @param[out] dref_loc where to return display reference
  * @retval     0 success
  * @retval     -EINVAL  did is not a valid display identifier handle
  * @retval     DDCRC_INVALID_DISPLAY display not found
@@ -529,10 +584,14 @@ ddca_did_repr(
 DDCA_Status
 ddca_create_display_ref(
       DDCA_Display_Identifier did,
-      DDCA_Display_Ref*       pdref);
+      DDCA_Display_Ref*       dref_loc);
 
 /** Frees a display reference.
- * @param dref  display reference to free
+ *
+ * Use this function to safely release a #DDCA_Display_Ref.
+ * If the display reference was dynamically created, it is freed.
+ * If the display references was permanently allocated (normal case), does nothing.
+ * @param[in] dref  display reference to free
  * @return status code
  *
  * \ingroup api_display_spec
@@ -542,16 +601,20 @@ ddca_free_display_ref(
       DDCA_Display_Ref dref);
 
 /** Returns a string representation of a display reference
- * @param[in]   dref display reference
- * @return      string representation of display reference, NULL if invalid
- * */
+ *
+ *  The returned value is valid until the next call to this function on
+ *  the current thread.
+ *
+ *  @param[in]   dref display reference
+ *  @return      string representation of display reference, NULL if invalid
+ */
 char *
 ddca_dref_repr(
       DDCA_Display_Ref dref);
 
 /** Writes a report on the specified display reference to the current FOUT device
- * @param dref   display reference
- * @param depth  logical indentation depth
+ * @param[in] dref   display reference
+ * @param[in] depth  logical indentation depth
  *
  * \ingroup api_display_spec
  */
@@ -566,8 +629,8 @@ ddca_dbgrpt_display_ref(
 //
 
 /** Open a display
- * @param[in]  ddca_dref  display reference for display to open
- * @param[out] p_ddca_dh  where to return display handle
+ * @param[in]  ddca_dref    display reference for display to open
+ * @param[out] ddca_dh_loc  where to return display handle
  * @return     status code
  *
  * \ingroup api_display_spec
@@ -575,7 +638,7 @@ ddca_dbgrpt_display_ref(
 DDCA_Status
 ddca_open_display(
       DDCA_Display_Ref      ddca_dref,
-      DDCA_Display_Handle * p_ddca_dh);
+      DDCA_Display_Handle * ddca_dh_loc);
 
 /** Close an open display
  * @param[in]  ddca_dh   display handle
@@ -588,9 +651,9 @@ ddca_close_display(
       DDCA_Display_Handle   ddca_dh);
 
 /** Returns a string representation of a display handle.
- *  The string is valid until the next call to this function.
+ *  The string is valid until until the handle is closed.
  *
- * @param ddca_dh  display handle
+ * @param[in] ddca_dh  display handle
  * @return string  representation of display handle, NULL if
  *                 argument is NULL or not a display handle
  *
@@ -608,7 +671,7 @@ ddca_dh_repr(
 /** Retrieves the capabilities string for a monitor.
  *
  *  @param[in]  ddca_dh     display handle
- *  @param[out] p_caps      address at which to return pointer to capabilities string.
+ *  @param[out] caps_loc    address at which to return pointer to capabilities string.
  *  @return     status code
  *
  *  It is the responsibility of the caller to free the returned string.
@@ -616,13 +679,13 @@ ddca_dh_repr(
 DDCA_Status
 ddca_get_capabilities_string(
       DDCA_Display_Handle     ddca_dh,
-      char**                  p_caps);
+      char**                  caps_loc);
 
 /** Parse the capabilities string.
  *
- *  @param[in] capabilities_string unparsed capabilities string
- *  @param[out] p_parsed_capabilities address at which to return pointer to newly allocated
- *              DDCA_Capabilities struct
+ *  @param[in] capabilities_string      unparsed capabilities string
+ *  @param[out] parsed_capabilities_loc address at which to return pointer to newly allocated
+ *                                      #DDCA_Capabilities struct
  *  @return     status code
  *
  *  It is the responsibility of the caller to free the returned struct
@@ -634,16 +697,16 @@ ddca_get_capabilities_string(
 DDCA_Status
 ddca_parse_capabilities_string(
       char *                   capabilities_string,
-      DDCA_Capabilities **     p_parsed_capabilities);
+      DDCA_Capabilities **     parsed_capabilities_loc);
 
 /** Frees a DDCA_Capabilities struct
  *
- *  @param[in]  pcaps  pointer to struct to free.
- *                     Does nothing if NULL.
+ *  @param[in]  parsed_capabilities  pointer to struct to free.
+ *                                   Does nothing if NULL.
  */
 void
 ddca_free_parsed_capabilities(
-      DDCA_Capabilities *      pcaps);
+      DDCA_Capabilities *      parsed_capabilities);
 
 /** Reports the contents of a DDCA_Capabilities struct.
  *
@@ -651,12 +714,12 @@ ddca_free_parsed_capabilities(
  *
  *  This function is intended for debugging use.
  *
- *  @param[in]  pcaps  pointer to DDCA_Capabilities struct
- *  @param[in]  depth  logical indentation depth
+ *  @param[in]  parsed_capabilities  pointer to #DDCA_Capabilities struct
+ *  @param[in]  depth  logical       indentation depth
  */
 void
 ddca_report_parsed_capabilities(
-      DDCA_Capabilities *      pcaps,
+      DDCA_Capabilities *      parsed_capabilities,
       int                      depth);
 
 
@@ -690,7 +753,7 @@ ddca_get_simplified_feature_info(
 
 
 /** Gets the VCP feature name.  If different MCCS versions use different names
- * for the feature, this function makes a best guess.
+ *  for the feature, this function makes a best guess.
  *
  * @param[in]  feature_code feature code
  * @return     pointer to feature name (do not free), NULL if unknown feature code
@@ -788,6 +851,7 @@ ddca_get_mccs_version_id(
       DDCA_Display_Handle     ddca_dh,
       DDCA_MCCS_Version_Id*   p_version_id);
 
+
 // DDCA_Status ddca_get_edid(DDCA_Display_Handle * dh, uint8_t* edid_buffer);    // edid_buffer must be >= 128 bytes
 // Keep?   Can get from ddca_get_edid_by_display_ref()
 
@@ -796,18 +860,45 @@ ddca_get_edid_by_display_ref(
       DDCA_Display_Ref ddca_dref,
       uint8_t **       pbytes_loc);   // pointer into ddcutil data structures, do not free
 
+
 //
 // Feature Sets
 //
 
-void ddca_feature_list_clear(DDCA_Feature_Collection* vcplist);
-void ddca_feature_list_set(DDCA_Feature_Collection * vcplist, uint8_t vcp_code);
-bool ddca_feature_list_test(DDCA_Feature_Collection * vcplist, uint8_t vcp_code) ;
+/** Empties a #DDCA_Feature_List
+ *
+ *  @param[in]  vcplist pointer to feature list
+ */
+void ddca_feature_list_clear(DDCA_Feature_List* vcplist);
 
-DDCA_Feature_Collection ddca_get_feature_list(
-      DDCA_Feature_Subset_Id   feature_list_id,
+/** Adds a feature code to a #DDCA_Feature_List
+ *
+ *  @param[in]  vcplist   pointer to feature list
+ *  @param[in]  vcp_code  VCP feature code
+ */
+void ddca_feature_list_add(  DDCA_Feature_List* vcplist, uint8_t vcp_code);
+
+/** Tests if a #DDCA_Feature_List contains a VCP feature code
+ *
+ *  @param[in]  vcplist   pointer to feature list
+ *  @param[in]  vcp_code  VCP feature code
+ *  @return     true/false
+ */
+bool ddca_feature_list_contains( DDCA_Feature_List* vcplist, uint8_t vcp_code);
+
+/** Given a feature set id, returns a struct listing all the
+ *  feature codes in the set.
+ *
+ *  @param[in]  feature_set_id
+ *  @param[in]  vcp_version
+ *  @param      include table features
+ *  @return     bitfield indicating features in the set
+ */
+DDCA_Feature_List ddca_get_feature_list(
+      DDCA_Feature_Set_Id    feature_set_id,
       DDCA_MCCS_Version_Spec vcp_version,
       bool                   include_table_features);
+
 
 //
 // Get VCP Feature Value
@@ -822,10 +913,10 @@ ddca_free_table_value_response(
 
 /** Gets the value of a non-table VCP feature.
  *
- * @param ddca_dh       display handle
- * @param feature_code  VCP feature code
- * @param valrec        pointer to response buffer provided by the caller,
- *                      which will be filled in
+ * @param[in] ddca_dh       display handle
+ * @param[in] feature_code  VCP feature code
+ * @param valrec[out]       pointer to response buffer provided by the caller,
+ *                          which will be filled in
  *
  * @return external status code
  */
@@ -838,12 +929,12 @@ ddca_get_nontable_vcp_value(
 
 /** Gets the value of a table VCP feature.
  *
- * @param ddca_dh         display handle
- * @param feature_code    VCP feature code
- * @param value_len_loc   address at which to return the value length
- * @param value_bytes_loc address at which to return a pointer to the value bytes
+ * @param[in]  ddca_dh         display handle
+ * @param[in]  feature_code    VCP feature code
+ * @param[out] value_len_loc   address at which to return the value length
+ * @param[out] value_bytes_loc address at which to return a pointer to the value bytes
  *
- * @return external status code
+ * @return status code
  *
  * @note
  * Implemented, but untested
@@ -861,7 +952,7 @@ ddca_get_table_vcp_value(
 
 /** Frees a #DDCA_Any_Vcp_Value instance
  *
- *  @param valrec  pointer to #DDCA_Any_Vcp_Value instance
+ *  @param[in] valrec  pointer to #DDCA_Any_Vcp_Value instance
  */
 void
 ddca_free_any_vcp_value(
@@ -870,13 +961,13 @@ ddca_free_any_vcp_value(
 
 /** Gets the value of a VCP feature.
  *
- * @param ddca_dh       display handle
- * @param feature_code  VCP feature code
- * @param value_type    value type
- * @param valrec_loc    address at which to return a pointer to a newly
- *                      allocated Single_Vcp_Value
+ * @param[in]  ddca_dh       display handle
+ * @param[in]  feature_code  VCP feature code
+ * @param[in]  value_type    value type
+ * @param[out] valrec_loc    address at which to return a pointer to a newly
+ *                           allocated Single_Vcp_Value
  *
- * @return external status code
+ * @return status code
  */
 DDCA_Status
 ddca_get_any_vcp_value(
@@ -923,9 +1014,9 @@ ddca_format_non_table_vcp_value(
 
 /** Sets a continuous VCP value.
  *
- *  @param ddca_dh        display_handle
- *  @param feature_code   VCP feature code
- *  @param new_value      value to set (sign?)
+ *  @param[in] ddca_dh        display_handle
+ *  @param[in] feature_code   VCP feature code
+ *  @param[in] new_value      value to set (sign?)
  *
  *  @return status code
  */
@@ -937,9 +1028,9 @@ ddca_set_continuous_vcp_value(
 
 /** Sets a simple NC value, which is a single byte.
  *
- *  @param ddca_dh        display_handle
- *  @param feature_code   VCP feature code
- *  @param new_value      value to set
+ *  @param[in] ddca_dh        display_handle
+ *  @param[in] feature_code   VCP feature code
+ *  @param[in] new_value      value to set
  *
  *  @return status code
  * */

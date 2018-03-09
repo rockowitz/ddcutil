@@ -285,10 +285,15 @@ typedef enum {
 typedef uint8_t DDCA_Vcp_Feature_Code;
 
 
-/** Bitfield specifying a collection of VCP feature codes */
+/** Bitfield specifying a collection of VCP feature codes
+ *
+ *  @remark
+ *  This struct might be more appropriately named DDCA_Feature_Set, but
+ *  that results in confusing function names such as ddca_feature_set_set()
+ */
 typedef struct {
    uint8_t bytes[32];
-} DDCA_Feature_Collection;
+} DDCA_Feature_List;
 
 
 /** Identifiers for publicly useful VCP feature subsets
@@ -302,7 +307,7 @@ typedef enum {
    DDCA_SUBSET_COLOR,          ///< Color related features
    DDCA_SUBSET_PROFILE,        ///< Features saved and restored by loadvcp/setvcp
    DDCA_SUBSET_MFG             ///< Feature codes reserved for manufacturer use (0x0e..0xff)
-} DDCA_Feature_Subset_Id;
+} DDCA_Feature_Set_Id;
 
 
 //

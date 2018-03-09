@@ -178,7 +178,7 @@ ddca_adl_is_available(void) {
 // conciseness vs documentatbility
 // how to document bits?   should doxygen doc be in header instead?
 
-uint8_t
+DDCA_Build_Option_Flags
 ddca_build_options(void) {
    uint8_t result = 0x00;
 #ifdef HAVE_ADL
@@ -344,6 +344,7 @@ typedef struct {
    FILE * in_memory_file;
    char * in_memory_bufstart; ;
    size_t in_memory_bufsize;
+   DDCA_Capture_Option_Flags flags;
 } In_Memory_File_Desc;
 
 
@@ -365,12 +366,15 @@ static In_Memory_File_Desc *  get_thread_capture_buf_desc() {
 }
 
 
-void ddca_start_capture(void) {
+void ddca_start_capture(DDCA_Capture_Option_Flags flags) {
    In_Memory_File_Desc * fdesc = get_thread_capture_buf_desc();
 
    if (!fdesc->in_memory_file) {
       fdesc->in_memory_file = open_memstream(&fdesc->in_memory_bufstart, &fdesc->in_memory_bufsize);
       ddca_set_fout(fdesc->in_memory_file);   // n. ddca_set_fout() is thread specific
+      fdesc->flags = flags;
+      if (flags & DDCA_CAPTURE_STDERR)
+         ddca_set_ferr(fdesc->in_memory_file);
    }
    // printf("(%s) Done.\n", __func__);
 }
@@ -384,17 +388,21 @@ char * ddca_end_capture(void) {
    // printf("(%s) Starting.\n", __func__);
    assert(fdesc->in_memory_file);
    if (fflush(fdesc->in_memory_file) < 0) {
+      ddca_set_ferr_to_default();
       SEVEREMSG("flush() failed. errno=%d", errno);
       return strdup(result);
    }
    // n. open_memstream() maintains a null byte at end of buffer, not included in in_memory_bufsize
    result = strdup(fdesc->in_memory_bufstart);
    if (fclose(fdesc->in_memory_file) < 0) {
+      ddca_set_ferr_to_default();
       SEVEREMSG("fclose() failed. errno=%d", errno);
       return result;
    }
    free(fdesc->in_memory_file);
    ddca_set_fout_to_default();
+   if (fdesc->flags & DDCA_CAPTURE_STDERR)
+      ddca_set_ferr_to_default();
    fdesc->in_memory_file = NULL;
    // printf("(%s) Done. result=%p\n", __func__, result);
    return result;
@@ -1142,11 +1150,11 @@ bye:
 }
 
 
-void ddca_feature_list_clear(DDCA_Feature_Collection* vcplist) {
+void ddca_feature_list_clear(DDCA_Feature_List* vcplist) {
    memset(vcplist->bytes, 0, 32);
 }
 
-void ddca_feature_list_set(DDCA_Feature_Collection * vcplist, uint8_t vcp_code) {
+void ddca_feature_list_add(DDCA_Feature_List * vcplist, uint8_t vcp_code) {
    int flagndx   = vcp_code >> 3;
    int shiftct   = vcp_code & 0x07;
    Byte flagbit  = 0x01 << shiftct;
@@ -1155,7 +1163,7 @@ void ddca_feature_list_set(DDCA_Feature_Collection * vcplist, uint8_t vcp_code) 
    vcplist->bytes[flagndx] |= flagbit;
 }
 
-bool ddca_feature_list_test(DDCA_Feature_Collection * vcplist, uint8_t vcp_code) {
+bool ddca_feature_list_contains(DDCA_Feature_List * vcplist, uint8_t vcp_code) {
    int flagndx   = vcp_code >> 3;
    int shiftct   = vcp_code & 0x07;
    Byte flagbit  = 0x01 << shiftct;
@@ -1167,8 +1175,8 @@ bool ddca_feature_list_test(DDCA_Feature_Collection * vcplist, uint8_t vcp_code)
 
 
 
-DDCA_Feature_Collection ddca_get_feature_list(
-      DDCA_Feature_Subset_Id   feature_list_id,
+DDCA_Feature_List ddca_get_feature_list(
+      DDCA_Feature_Set_Id   feature_list_id,
       DDCA_MCCS_Version_Spec vcp_version,
       bool                   include_table_features)
 {
@@ -1192,7 +1200,7 @@ DDCA_Feature_Collection ddca_get_feature_list(
       flags |= FSF_NOTABLE;
    VCP_Feature_Set fset = create_feature_set(subset, vcp_version, flags);
    // VCP_Feature_Set fset = create_feature_set(subset, vcp_version, !include_table_features);
-   DDCA_Feature_Collection result = feature_list_from_feature_set(fset);
+   DDCA_Feature_List result = feature_list_from_feature_set(fset);
    free_vcp_feature_set(fset);
 
 #ifdef NO
