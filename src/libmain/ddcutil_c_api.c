@@ -2007,7 +2007,7 @@ ddca_set_single_vcp_value(
    {
       Error_Info * ddc_excp = NULL;
       WITH_DH(ddca_dh,  {
-            ddc_excp = ddc_set_vcp_value(dh, valrec);
+            ddc_excp = ddc_set_vcp_value(dh, valrec, NULL);
             psc = (ddc_excp) ? ddc_excp->status_code : 0;
             errinfo_free(ddc_excp);
          } );

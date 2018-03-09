@@ -233,7 +233,7 @@ app_set_vcp_value(
       goto bye;
    }
 
-   ddc_excp = ddc_set_vcp_value(dh, &vrec);
+   ddc_excp = ddc_set_vcp_value(dh, &vrec, NULL);
    psc = ERRINFO_STATUS(ddc_excp);
 
    // *** TEMP FOR TESTING ***

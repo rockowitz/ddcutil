@@ -362,7 +362,8 @@ single_vcp_value_equal(
 Error_Info *
 ddc_set_vcp_value(
       Display_Handle *    dh,
-      Single_Vcp_Value *  vrec)
+      Single_Vcp_Value *  vrec,
+      Single_Vcp_Value ** newval_loc)
 {
    bool debug = true;
    DBGMSF0(debug, "Starting. ");
@@ -372,6 +373,8 @@ ddc_set_vcp_value(
 
    Public_Status_Code psc = 0;
    Error_Info * ddc_excp = NULL;
+   if (newval_loc)
+      *newval_loc = NULL;
    if (vrec->value_type == DDCA_NON_TABLE_VCP_VALUE) {
       ddc_excp = ddc_set_nontable_vcp_value(dh, vrec->opcode, vrec->val.c.cur_val);
       psc = (ddc_excp) ? ddc_excp->status_code : 0;
@@ -412,7 +415,8 @@ ddc_set_vcp_value(
             else {
                f0printf(verbose_msg_dest, "Verification succeeded\n");
             }
-            free_single_vcp_value(newval);
+            *newval_loc = newval;
+            //free_single_vcp_value(newval);
          }
       }
       else {
