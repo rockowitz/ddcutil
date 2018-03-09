@@ -630,7 +630,7 @@ static Display_Ref * create_base_display_ref(DDCA_IO_Path io_path) {
 
 
 // PROBLEM: bus display ref getting created some other way
-/** Creates a #Display_Ref for IO mode #DDCA_IO_DEVI2C
+/** Creates a #Display_Ref for IO mode #DDCA_IO_I2C
  *
  * @param busno /dev/i2c bus number
  * \return pointer to newly allocated #Display_Ref
@@ -780,7 +780,7 @@ bool dref_eq(Display_Ref* this, Display_Ref* that) {
 
 /** Reports the contents of a #Display_Ref in a format appropriate for debugging.
  *
- *  \param  pref  pointer to #Display_Ref instance
+ *  \param  dref  pointer to #Display_Ref instance
  *  \param  depth logical indentation depth
  */
 void dbgrpt_display_ref(Display_Ref * dref, int depth) {

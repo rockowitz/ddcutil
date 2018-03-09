@@ -599,7 +599,7 @@ char * sleep_strategy_desc(int sleep_strategy) {
  *  2. Records the sleep event.
  *  3. Sleeps for period determined.
  *
- * @param io_mode     communication mechanism (must be #DDCA_IO_DEVI2C)
+ * @param io_mode     communication mechanism (must be #DDCA_IO_I2C)
  * @param event_type  reason for sleep (currently only #SE_DDC_NULL - DDC Null Response)
  * @param occno       occurrence count of event
  *

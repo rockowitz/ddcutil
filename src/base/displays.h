@@ -84,6 +84,7 @@ char *  dpath_repr_t(DDCA_IO_Path * dpath);  // value valid until next call
 
 
 #define DISPLAY_ASYNC_REC_MARKER "DSNC"
+/** Async processing  for display */
 typedef struct Display_Async {
    char           marker[4];
    DDCA_IO_Path   dpath;        // key

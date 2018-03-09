@@ -21,7 +21,7 @@
  * </endcopyright>
  */
 
-/** \f
+/** \file app_getvcp.h
  */
 
 #ifndef APP_GETVCP_H_

@@ -875,7 +875,15 @@ get_version_sensitive_sl_values(
 }
 
 
-
+/** Returns the version specific feature name from a feature table entry.
+ *
+ *  @param  vfte          feature table entry
+ *  @param  vcp_version   VCP feature version
+ *  @return feature name
+ *
+ *  @remark
+ *  Returns a pointer into an internal data structure.  Caller should not free.
+ */
 char *
 get_version_specific_feature_name(
        VCP_Feature_Table_Entry *  vfte,
@@ -902,6 +910,15 @@ get_version_specific_feature_name(
 }
 
 
+/** Returns a version sensitive feature name from a feature table entry.
+ *
+ *  @param  vfte          feature table entry
+ *  @param  vcp_version   VCP feature version
+ *  @return feature name
+ *
+ *  @remark
+ *  Returns a pointer into an internal data structure.  Caller should not free.
+ */
 char *
 get_version_sensitive_feature_name(
        VCP_Feature_Table_Entry *  vfte,
@@ -922,8 +939,9 @@ get_version_sensitive_feature_name(
          result = vfte->v30_name;
       else if (vfte->v22_name)
          result = vfte->v22_name;
+
       if (!result)
-         DBGMSG("Feature = 0x%02x, Version=%d.%d: No version specific feature name found",
+         DBGMSG("Feature = 0x%02x, Version=%d.%d: No version sensitive feature name found",
                 vfte->code, vcp_version.major, vcp_version.minor);
    }
 
@@ -934,6 +952,7 @@ get_version_sensitive_feature_name(
 
 
 // for use when we don't know the version
+// returns pointer into internal data structure, caller should not free
 char *
 get_non_version_specific_feature_name(
       VCP_Feature_Table_Entry * vfte)

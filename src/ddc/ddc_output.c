@@ -35,6 +35,7 @@
 
 #include "util/error_info.h"
 #include "util/report_util.h"
+/** \endcond */
 
 #include "base/adl_errors.h"
 #include "base/ddc_errno.h"
