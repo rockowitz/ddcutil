@@ -127,6 +127,8 @@ libapp_la_SOURCES =
 
 if ENABLE_SHARED_LIB_COND
 include_HEADERS = \
+public/ddcutil_macros.h \
+public/ddcutil_status_codes.h \
 public/ddcutil_types.h \
 public/ddcutil_c_api.h 
 endif

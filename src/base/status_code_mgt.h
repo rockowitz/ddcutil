@@ -33,6 +33,8 @@
 /** \endcond */
 
 
+#include "public/ddcutil_status_codes.h"
+
 // Called from the mainline to perform initialization
 void init_status_code_mgt();
 
@@ -93,7 +95,7 @@ bool (*Retcode_Number_Finder)(const char * name, int * p_number);
 #define RCRANGE_ERRNO_MAX    1999
 #define RCRANGE_ADL_START    2000
 #define RCRANGE_ADL_MAX      2999
-#define RCRANGE_DDC_START    3000
+// #define RCRANGE_DDC_START    3000
 #define RCRANGE_DDC_MAX      3999
 
 /** Status code range identifiers
