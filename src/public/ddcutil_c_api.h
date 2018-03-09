@@ -298,8 +298,8 @@ void ddca_set_ferr_to_default(void);
  *  The enum values are defined as 1,2,4 etc so that they can be or'd.
  */
 typedef enum {
-   /** @brief Capture **stderr** as well as **stdout** */
-   DDCA_CAPTURE_STDERR     = 0x01
+   DDCA_CAPTURE_NOOPTS     = 0,     ///< @brief no options specified
+   DDCA_CAPTURE_STDERR     = 1      ///< @brief capture **stderr** as well as **stdout**
 } DDCA_Capture_Option_Flags;
 
 
