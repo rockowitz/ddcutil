@@ -70,6 +70,32 @@
 static Trace_Group TRACE_GROUP = TRC_DDC;
 
 
+
+typedef struct {
+   bool   verify_setvcp;
+} Thread_Vcp_Settings;
+
+static Thread_Vcp_Settings *  get_thread_vcp_settings() {
+   static GPrivate per_thread_key = G_PRIVATE_INIT(g_free);
+
+   Thread_Vcp_Settings *settings = g_private_get(&per_thread_key);
+
+   // GThread * this_thread = g_thread_self();
+   // printf("(%s) this_thread=%p, settings=%p\n", __func__, this_thread, settings);
+
+   if (!settings) {
+      settings = g_new0(Thread_Vcp_Settings, 1);
+      settings->verify_setvcp = false;     // set by g_new0(), but be explicit
+
+      g_private_set(&per_thread_key, settings);
+   }
+
+   // printf("(%s) Returning: %p\n", __func__, settings);
+   return settings;
+}
+
+
+
 //
 //  Save Control Settings
 //
@@ -214,10 +240,7 @@ set_table_vcp_value(
 }
 
 
-
-static bool verify_setvcp = false;
-
-/** Sets the setvcp verification setting.
+/** Sets the setvcp verification setting for the current thread.
  *
  *  If enabled, setvcp will read the feature value from the monitor after
  *  writing it, to ensure the monitor has actually changed the feature value.
@@ -227,17 +250,19 @@ static bool verify_setvcp = false;
 void ddc_set_verify_setvcp(bool onoff) {
    bool debug = false;
    DBGMSF(debug, "Setting verify_setvcp = %s", bool_repr(onoff));
-   verify_setvcp = onoff;
+   Thread_Vcp_Settings * settings = get_thread_vcp_settings();
+   settings->verify_setvcp = onoff;
 }
 
 
-/** Gets the current setvcp verification setting.
+/** Gets the current setvcp verification setting for the current thread.
  *
  *  \return **true** if setvcp verification enabled\n
  *          **false** if not
  */
 bool ddc_get_verify_setvcp() {
-   return verify_setvcp;
+   Thread_Vcp_Settings * settings = get_thread_vcp_settings();
+   return settings->verify_setvcp;
 }
 
 
@@ -357,7 +382,7 @@ ddc_set_vcp_value(
       psc = (ddc_excp) ? ddc_excp->status_code : 0;
    }
 
-   if (!ddc_excp && verify_setvcp) {
+   if (!ddc_excp && ddc_get_verify_setvcp()) {
       if (is_rereadable_feature(dh, vrec->opcode) ) {
          f0printf(verbose_msg_dest, "Verifying that value of feature 0x%02x successfully set...\n", vrec->opcode);
          Single_Vcp_Value * newval = NULL;
