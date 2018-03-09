@@ -1181,7 +1181,7 @@ bool ddca_feature_list_contains(DDCA_Feature_List * vcplist, uint8_t vcp_code) {
 
 
 DDCA_Feature_List ddca_get_feature_list(
-      DDCA_Feature_Set_Id   feature_list_id,
+      DDCA_Feature_Subset_Id   feature_list_id,
       DDCA_MCCS_Version_Spec vcp_version,
       bool                   include_table_features)
 {

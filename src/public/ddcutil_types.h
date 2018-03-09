@@ -307,7 +307,7 @@ typedef enum {
    DDCA_SUBSET_COLOR,          ///< Color related features
    DDCA_SUBSET_PROFILE,        ///< Features saved and restored by loadvcp/setvcp
    DDCA_SUBSET_MFG             ///< Feature codes reserved for manufacturer use (0x0e..0xff)
-} DDCA_Feature_Set_Id;
+} DDCA_Feature_Subset_Id;
 
 
 //
