@@ -75,9 +75,9 @@ typedef int DDCA_Status;
 //! ddcutil version
 //!
 typedef struct {
-   uint8_t    major;
-   uint8_t    minor;
-   uint8_t    micro;
+   uint8_t    major;          ///< Major release number
+   uint8_t    minor;          ///< Minor release number
+   uint8_t    micro;          ///< Micro release number
 } DDCA_Ddcutil_Version_Spec;
 
 
@@ -96,6 +96,7 @@ typedef struct {
    int        status;
 } DDCA_Global_Failure_Information;
 #endif
+
 
 //
 // I2C Protocol Control
@@ -125,7 +126,7 @@ typedef enum{
 //!
 //! Values assigned to constants allow them to be or'd in bit flags.
 //!
-//!  Values are ascending in order of verbosity
+//! Values are ascending in order of verbosity
 //!
 typedef enum {
    DDCA_OL_TERSE  =0x04,         /**< Brief   output  */
@@ -148,7 +149,6 @@ typedef enum {
    DDCA_STATS_ELAPSED  = 0x08,    ///< total elapsed time
    DDCA_STATS_ALL      = 0xFF     ///< indicates all statistics types
 } DDCA_Stats_Type;
-
 
 
 //
@@ -285,12 +285,13 @@ typedef enum {
 typedef uint8_t DDCA_Vcp_Feature_Code;
 
 
+/** Bitfield specifying a collection of VCP feature codes */
 typedef struct {
    uint8_t bytes[32];
-} DDCA_Feature_List;
+} DDCA_Feature_Collection;
 
 
-/** Identifies publicly useful VCP feature subsets
+/** Identifiers for publicly useful VCP feature subsets
  *
  * @remark
  * These subset identifiers represent a subset of the much
@@ -301,8 +302,7 @@ typedef enum {
    DDCA_SUBSET_COLOR,          ///< Color related features
    DDCA_SUBSET_PROFILE,        ///< Features saved and restored by loadvcp/setvcp
    DDCA_SUBSET_MFG             ///< Feature codes reserved for manufacturer use (0x0e..0xff)
-} DDCA_Vcp_Feature_Subset;
-
+} DDCA_Feature_Subset_Id;
 
 
 //
@@ -447,7 +447,6 @@ struct {
 } DDCA_Version_Feature_Info;
 
 
-
 /** Describes a VCP feature code, tailored for a specific VCP version */
 typedef
 struct {
@@ -515,7 +514,6 @@ typedef struct {
    uint8_t    sh;
    uint8_t    sl;
 } DDCA_Non_Table_Value;
-
 
 
 /** Represents a single table VCP value.   Consists of a count, followed by the bytes */

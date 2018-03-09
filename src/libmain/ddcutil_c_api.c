@@ -1142,11 +1142,11 @@ bye:
 }
 
 
-void ddca_feature_list_clear(DDCA_Feature_List* vcplist) {
+void ddca_feature_list_clear(DDCA_Feature_Collection* vcplist) {
    memset(vcplist->bytes, 0, 32);
 }
 
-void ddca_feature_list_set(DDCA_Feature_List * vcplist, uint8_t vcp_code) {
+void ddca_feature_list_set(DDCA_Feature_Collection * vcplist, uint8_t vcp_code) {
    int flagndx   = vcp_code >> 3;
    int shiftct   = vcp_code & 0x07;
    Byte flagbit  = 0x01 << shiftct;
@@ -1155,7 +1155,7 @@ void ddca_feature_list_set(DDCA_Feature_List * vcplist, uint8_t vcp_code) {
    vcplist->bytes[flagndx] |= flagbit;
 }
 
-bool ddca_feature_list_test(DDCA_Feature_List * vcplist, uint8_t vcp_code) {
+bool ddca_feature_list_test(DDCA_Feature_Collection * vcplist, uint8_t vcp_code) {
    int flagndx   = vcp_code >> 3;
    int shiftct   = vcp_code & 0x07;
    Byte flagbit  = 0x01 << shiftct;
@@ -1167,8 +1167,8 @@ bool ddca_feature_list_test(DDCA_Feature_List * vcplist, uint8_t vcp_code) {
 
 
 
-DDCA_Feature_List ddca_get_feature_list(
-      DDCA_Vcp_Feature_Subset   feature_list_id,
+DDCA_Feature_Collection ddca_get_feature_list(
+      DDCA_Feature_Subset_Id   feature_list_id,
       DDCA_MCCS_Version_Spec vcp_version,
       bool                   include_table_features)
 {
@@ -1192,7 +1192,7 @@ DDCA_Feature_List ddca_get_feature_list(
       flags |= FSF_NOTABLE;
    VCP_Feature_Set fset = create_feature_set(subset, vcp_version, flags);
    // VCP_Feature_Set fset = create_feature_set(subset, vcp_version, !include_table_features);
-   DDCA_Feature_List result = feature_list_from_feature_set(fset);
+   DDCA_Feature_Collection result = feature_list_from_feature_set(fset);
    free_vcp_feature_set(fset);
 
 #ifdef NO

@@ -800,12 +800,12 @@ ddca_get_edid_by_display_ref(
 // Feature Sets
 //
 
-void ddca_feature_list_clear(DDCA_Feature_List* vcplist);
-void ddca_feature_list_set(DDCA_Feature_List * vcplist, uint8_t vcp_code);
-bool ddca_feature_list_test(DDCA_Feature_List * vcplist, uint8_t vcp_code) ;
+void ddca_feature_list_clear(DDCA_Feature_Collection* vcplist);
+void ddca_feature_list_set(DDCA_Feature_Collection * vcplist, uint8_t vcp_code);
+bool ddca_feature_list_test(DDCA_Feature_Collection * vcplist, uint8_t vcp_code) ;
 
-DDCA_Feature_List ddca_get_feature_list(
-      DDCA_Vcp_Feature_Subset   feature_list_id,
+DDCA_Feature_Collection ddca_get_feature_list(
+      DDCA_Feature_Subset_Id   feature_list_id,
       DDCA_MCCS_Version_Spec vcp_version,
       bool                   include_table_features);
 
