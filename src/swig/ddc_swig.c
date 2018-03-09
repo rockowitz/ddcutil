@@ -400,7 +400,7 @@ void ddcs_set_nontable_vcp_value(
                int                  new_value)
 {
    clear_exception();
-   DDCA_Status  rc = ddca_set_continuous_vcp_value(dh, feature_code, new_value);
+   DDCA_Status  rc = ddca_set_continuous_vcp_value(dh, feature_code, new_value, NULL);
    if (rc != 0)
       throw_exception_from_status_code(rc);
 }

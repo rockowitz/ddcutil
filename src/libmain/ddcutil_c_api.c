@@ -2003,7 +2003,8 @@ ddca_format_non_table_vcp_value(
 DDCA_Status
 ddca_set_single_vcp_value(
       DDCA_Display_Handle  ddca_dh,
-      Single_Vcp_Value *   valrec)
+      Single_Vcp_Value *   valrec,
+      Single_Vcp_Value **  verified_value_loc)
    {
       Error_Info * ddc_excp = NULL;
       WITH_DH(ddca_dh,  {
@@ -2018,7 +2019,8 @@ DDCA_Status
 ddca_set_continuous_vcp_value(
       DDCA_Display_Handle   ddca_dh,
       DDCA_Vcp_Feature_Code feature_code,
-      int                   new_value)
+      int                   new_value,
+      int *                 p_verified_value)
 {
 #ifdef OLD
    WITH_DH(ddca_dh,  {
@@ -2030,17 +2032,25 @@ ddca_set_continuous_vcp_value(
    valrec.opcode = feature_code;
    valrec.value_type = DDCA_NON_TABLE_VCP_VALUE;
    valrec.val.c.cur_val = new_value;
-   return ddca_set_single_vcp_value(ddca_dh, &valrec);
+   Single_Vcp_Value * newval_loc = NULL;
+   Single_Vcp_Value ** newval_loc_parm = NULL;
+   if (p_verified_value)
+      newval_loc_parm = &newval_loc;
+   DDCA_Status rc = ddca_set_single_vcp_value(ddca_dh, &valrec, newval_loc_parm);
+   if (newval_loc_parm) {
+      *p_verified_value = newval_loc->val.c.cur_val;
+   }
+   return rc;
 }
 
-
+/** \deprecated */
 DDCA_Status
 ddca_set_simple_nc_vcp_value(
       DDCA_Display_Handle    ddca_dh,
       DDCA_Vcp_Feature_Code  feature_code,
       Byte                   new_value)
 {
-   return ddca_set_continuous_vcp_value(ddca_dh, feature_code, new_value);
+   return ddca_set_continuous_vcp_value(ddca_dh, feature_code, new_value, NULL);
 }
 
 
@@ -2049,10 +2059,30 @@ ddca_set_raw_vcp_value(
       DDCA_Display_Handle    ddca_dh,
       DDCA_Vcp_Feature_Code  feature_code,
       Byte                   hi_byte,
-      Byte                   lo_byte)
+      Byte                   lo_byte,
+      Byte *                 p_verified_hi_byte,
+      Byte *                 p_verified_lo_byte)
 {
-   return ddca_set_continuous_vcp_value(ddca_dh, feature_code, hi_byte << 8 | lo_byte);
+   // TODO convert to status code
+   assert( (p_verified_hi_byte && p_verified_lo_byte) ||
+           (!p_verified_hi_byte && !p_verified_lo_byte ) );
+
+   int verified_c_value;
+   int * verified_c_value_loc = NULL;
+   if (p_verified_hi_byte)
+      verified_c_value_loc = &verified_c_value;
+   DDCA_Status rc = ddca_set_continuous_vcp_value(
+                       ddca_dh,
+                       feature_code, hi_byte << 8 | lo_byte,
+                       verified_c_value_loc);
+   if (verified_c_value_loc) {
+      *p_verified_hi_byte = verified_c_value >> 8;
+      *p_verified_lo_byte = verified_c_value & 0xff;
+   }
+   return rc;
 }
+
+
 
 
 //
