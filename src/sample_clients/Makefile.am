@@ -19,8 +19,8 @@ check_PROGRAMS += \
   demo_get_set_vcp \
   demo_display_selection 
 
-# check_PROGRAMS += \
-#  demo_redirection
+check_PROGRAMS += \
+  demo_redirection
 endif
 
 laclient_SOURCES               = clmain.c
@@ -28,7 +28,7 @@ demo_global_settings_SOURCES   = demo_global_settings.c
 demo_vcpinfo_SOURCES           = demo_vcpinfo.c
 demo_display_selection_SOURCES = demo_display_selection.c
 demo_get_set_vcp_SOURCES       = demo_get_set_vcp.c
-# demo_redirection_SOURCES       = demo_redirection.c
+demo_redirection_SOURCES       = demo_redirection.c
 
 LDADD       = ../libddcutil.la
 AM_LDFLAGS  = -pie

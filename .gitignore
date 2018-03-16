@@ -154,10 +154,6 @@ doxydoc/html
 doxydoc/latex
 doxydoc/apidoc
 laclient
-demo_display_selection
-demo_get_set_vcp
-demo_vcpinfo
-demo_global_settings
 .*.swo
 github_signing/
 src/gobject_api/pyobj_hello.py
