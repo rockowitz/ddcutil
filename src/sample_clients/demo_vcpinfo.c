@@ -187,11 +187,11 @@ void test_get_feature_info(DDCA_MCCS_Version_Id version_id) {
 
 
 void demo_feature_info() {
-   test_get_feature_info(DDCA_V10);
-   test_get_feature_info(DDCA_V20);
-   test_get_feature_info(DDCA_V21);
-   test_get_feature_info(DDCA_V30);
-   test_get_feature_info(DDCA_V22);
+   test_get_feature_info(DDCA_MCCS_V10);
+   test_get_feature_info(DDCA_MCCS_V20);
+   test_get_feature_info(DDCA_MCCS_V21);
+   test_get_feature_info(DDCA_MCCS_V30);
+   test_get_feature_info(DDCA_MCCS_V22);
 }
 
 
