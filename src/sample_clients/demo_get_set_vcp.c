@@ -179,30 +179,34 @@ test_cont_value(
           VALREC_CUR_VAL(valrec),
           VALREC_MAX_VAL(valrec) );
 
-   int old_value = VALREC_CUR_VAL(valrec) ;
+   uint16_t old_value = VALREC_CUR_VAL(valrec) ;
 
+   ddca_enable_verify(true);
 
-   int new_value = old_value/2;
+   uint16_t new_value = old_value/2;
+   uint16_t verified_value = 0;
    printf("Setting new value %d,,,\n", new_value);
-   rc = ddca_set_continuous_vcp_value(dh, feature_code, new_value);
+   rc = ddca_set_continuous_vcp_value(dh, feature_code, new_value, &verified_value);
    if (rc != 0) {
       FUNCTION_ERRMSG("ddca_set_continuous_vcp_value", rc);
       ok = false;
       goto bye;
    }
+   printf("Verified value: %d\n", verified_value);
 
-   printf("Setting new value succeeded.  Verifying the new current value...\n");
-   ok = verify_cont_value(dh, feature_code, new_value);
+   // printf("Setting new value succeeded.  Verifying the new current value...\n");
+   // ok = verify_cont_value(dh, feature_code, new_value);
 
    printf("Resetting original value %d...\n", old_value);
-   rc = ddca_set_continuous_vcp_value(dh, feature_code, old_value);
+   rc = ddca_set_continuous_vcp_value(dh, feature_code, old_value, &verified_value);
    if (rc != 0) {
       FUNCTION_ERRMSG("ddca_set_continuous_vcp_value", rc);
       ok = false;
       goto bye;
    }
-   printf("Resetting original value succeeded. Verifying the new current value...\n");
-   ok = verify_cont_value(dh, feature_code, old_value) && ok;
+
+   // printf("Resetting original value succeeded. Verifying the new current value...\n");
+   // ok = verify_cont_value(dh, feature_code, old_value) && ok;
 
 bye:
    if (info)
