@@ -153,7 +153,6 @@ package/debian/rules.in.0
 doxydoc/html
 doxydoc/latex
 doxydoc/apidoc
-laclient
 .*.swo
 github_signing/
 src/gobject_api/pyobj_hello.py
