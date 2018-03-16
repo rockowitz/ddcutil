@@ -1049,8 +1049,8 @@ DDCA_Status
 ddca_set_continuous_vcp_value(
       DDCA_Display_Handle      ddca_dh,
       DDCA_Vcp_Feature_Code    feature_code,
-      int                      new_value,
-      int *                    p_verified_value);
+      uint16_t                 new_value,
+      uint16_t *               p_verified_value);
 
 /** Sets a simple NC value, which is a single byte.
  *
@@ -1073,8 +1073,8 @@ ddca_set_raw_vcp_value(
       DDCA_Vcp_Feature_Code    feature_code,    /**< VCP feature code   */
       uint8_t                  hi_byte,         /**< High byte of value */
       uint8_t                  lo_byte,          /**< Low byte of value  */
-      uint8_t *                 p_verified_hi_byte,
-      uint8_t *                 p_verified_lo_byte
+      uint8_t *                p_verified_hi_byte,
+      uint8_t *                p_verified_lo_byte
      );
 
 #ifdef UNIMPLEMENTED

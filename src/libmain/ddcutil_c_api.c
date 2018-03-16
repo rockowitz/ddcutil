@@ -414,8 +414,10 @@ int ddca_captured_size() {
 
    int result = -1;
    // n. open_memstream() maintains a null byte at end of buffer, not included in in_memory_bufsize
-   if (fdesc->in_memory_file)
+   if (fdesc->in_memory_file) {
+      fflush(fdesc->in_memory_file);
       result = fdesc->in_memory_bufsize + 1;   // +1 for trailing \0
+   }
    // printf("(%s) Done. result=%d\n", __func__, result);
    return result;
 }
@@ -2019,8 +2021,8 @@ DDCA_Status
 ddca_set_continuous_vcp_value(
       DDCA_Display_Handle   ddca_dh,
       DDCA_Vcp_Feature_Code feature_code,
-      int                   new_value,
-      int *                 p_verified_value)
+      uint16_t              new_value,
+      uint16_t *            p_verified_value)
 {
 #ifdef OLD
    WITH_DH(ddca_dh,  {
@@ -2067,8 +2069,8 @@ ddca_set_raw_vcp_value(
    assert( (p_verified_hi_byte && p_verified_lo_byte) ||
            (!p_verified_hi_byte && !p_verified_lo_byte ) );
 
-   int verified_c_value;
-   int * verified_c_value_loc = NULL;
+   uint16_t verified_c_value;
+   uint16_t * verified_c_value_loc = NULL;
    if (p_verified_hi_byte)
       verified_c_value_loc = &verified_c_value;
    DDCA_Status rc = ddca_set_continuous_vcp_value(
@@ -2081,8 +2083,6 @@ ddca_set_raw_vcp_value(
    }
    return rc;
 }
-
-
 
 
 //
