@@ -47,23 +47,14 @@
 // small subset of DDCRC_PACKET_SIZE, DDCRC_RESPONSE_ENVELOPE, DDCRC_CHECKSUM
 
 static Status_Code_Info ddcrc_info[] = {
-      EDENTRY(DDCRC_OK                    , "success"                       ),
-      EDENTRY(DDCRC_PACKET_SIZE           , "packet data field too large"   ),
-      EDENTRY(DDCRC_RESPONSE_ENVELOPE     , "invalid source address in reply packet"),
-      EDENTRY(DDCRC_CHECKSUM              , "checksum error"                ),
-      EDENTRY(DDCRC_RESPONSE_TYPE         , "incorrect response type"       ),
-      EDENTRY(DDCRC_INVALID_DATA          , "error parsing data bytes"      ),
-      EDENTRY(DDCRC_NULL_RESPONSE         , "received DDC null response"    ),
+      EDENTRY(DDCRC_OK                     , "success"                       ),
+      EDENTRY(DDCRC_NULL_RESPONSE          , "received DDC null response"    ),
       EDENTRY(DDCRC_MULTI_PART_READ_FRAGMENT , "error in fragment"             ),
-      EDENTRY(DDCRC_ALL_TRIES_ZERO        , "every try response 0x00"        ),    // applies to multi-try exchange
-      EDENTRY(DDCRC_DOUBLE_BYTE           , "duplicated byte in response"   ),
-      EDENTRY(DDCRC_REPORTED_UNSUPPORTED  , "DDC reports facility unsupported"      ),
-      EDENTRY(DDCRC_READ_ALL_ZERO         , "packet contents entirely 0x00"         ),
-      EDENTRY(DDCRC_BAD_BYTECT            , "wrong number of bytes in DDC response" ),
-      EDENTRY(DDCRC_READ_EQUALS_WRITE     , "response identical to request"         ),
-      EDENTRY(DDCRC_INVALID_MODE          , "invalid read or write mode"            ),
-      EDENTRY(DDCRC_RETRIES               , "maximum retries exceeded"              ),
-      EDENTRY(DDCRC_EDID                  , "invalid EDID"                          ),
+      EDENTRY(DDCRC_ALL_TRIES_ZERO         , "every try response 0x00"        ),    // applies to multi-try exchange
+      EDENTRY(DDCRC_REPORTED_UNSUPPORTED   , "DDC reports facility unsupported"      ),
+      EDENTRY(DDCRC_READ_ALL_ZERO          , "packet contents entirely 0x00"         ),
+      EDENTRY(DDCRC_RETRIES                , "maximum retries exceeded"              ),
+      EDENTRY(DDCRC_EDID                   , "invalid EDID"                          ),
       EDENTRY(DDCRC_DETERMINED_UNSUPPORTED , "ddcutil determined that facility unsupported" ),
 
       // library errors
@@ -73,17 +64,17 @@ static Status_Code_Info ddcrc_info[] = {
       EDENTRY(DDCRC_UNINITIALIZED          , "library uninitialized"),
 
       EDENTRY(DDCRC_UNKNOWN_FEATURE        , "feature not in feature table"),
-      EDENTRY(DDCRC_INTERPRETATION_FAILED , "feature value interpretation function failed"),
-      EDENTRY(DDCRC_MULTI_FEATURE_ERROR   , "at least 1 error occurred on a multi-feature request"),
-      EDENTRY(DDCRC_INVALID_DISPLAY       , "invalid display"),
+      EDENTRY(DDCRC_INTERPRETATION_FAILED  , "feature value interpretation function failed"),
+      EDENTRY(DDCRC_MULTI_FEATURE_ERROR    , "at least 1 error occurred on a multi-feature request"),
+      EDENTRY(DDCRC_INVALID_DISPLAY        , "invalid display"),
       EDENTRY(DDCRC_INTERNAL_ERROR         , "fatal error condition"),
       EDENTRY(DDCRC_OTHER                  , "other error"),       // for use during development
-      EDENTRY(DDCRC_VERIFY                , "VCP read after write failed"),
-      EDENTRY(DDCRC_NOT_FOUND             , "not found"),
-      EDENTRY(DDCRC_ALL_RESPONSES_NULL    , "all tries returned DDC Null Message"),
-      EDENTRY(DDCRC_DDC_DATA              , "DDC data error"),
-      EDENTRY(DDCRC_READ_EDID             , "unable to read EDID"),
-      EDENTRY(DDCRC_INVALID_EDID          , "unable to parse EDID"),
+      EDENTRY(DDCRC_VERIFY                 , "VCP read after write failed"),
+      EDENTRY(DDCRC_NOT_FOUND              , "not found"),
+      EDENTRY(DDCRC_ALL_RESPONSES_NULL     , "all tries returned DDC Null Message"),
+      EDENTRY(DDCRC_DDC_DATA               , "DDC data error"),
+      EDENTRY(DDCRC_READ_EDID              , "unable to read EDID"),
+      EDENTRY(DDCRC_INVALID_EDID           , "unable to parse EDID"),
 
     };
 #undef EDENTRY

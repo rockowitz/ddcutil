@@ -39,34 +39,25 @@
 
 #define DDCRC_OK                     0
 
-#define DDCRC_PACKET_SIZE            (-RCRANGE_DDC_START-1)     // deprecated, use DDCRC_DDC_DATA
-#define DDCRC_RESPONSE_ENVELOPE      (-RCRANGE_DDC_START-2)     // deprecated, use DDCRC_DDC_DATA
-#define DDCRC_CHECKSUM               (-RCRANGE_DDC_START-3)     // deprecated, use DDCRC_DDC_DATA
-#define DDCRC_INVALID_DATA           (-RCRANGE_DDC_START-4)     // deprecated, use DDCRC_DDC_DATA or DDCL_ARG
-#define DDCRC_RESPONSE_TYPE          (-RCRANGE_DDC_START-5)     // deprecated, use DDCRC_DDC_DATA
 #define DDCRC_NULL_RESPONSE          (-RCRANGE_DDC_START-6)
 #define DDCRC_MULTI_PART_READ_FRAGMENT  (-RCRANGE_DDC_START-7)
-#define DDCRC_ALL_TRIES_ZERO         (-RCRANGE_DDC_START-8)     // packet data entirely 0  // not used TODO eliminate
-#define DDCRC_DOUBLE_BYTE            (-RCRANGE_DDC_START-9)     // duplicated byte in packet // deprecated, use DDCRC_DDC_DATA
+#define DDCRC_ALL_TRIES_ZERO         (-RCRANGE_DDC_START-8)     // packet data entirely 0
 #define DDCRC_REPORTED_UNSUPPORTED   (-RCRANGE_DDC_START-10)    // DDC reply says unsupported
 #define DDCRC_READ_ALL_ZERO          (-(RCRANGE_DDC_START+11) )
-#define DDCRC_BAD_BYTECT             (-(RCRANGE_DDC_START+12) ) // deprecated, use DDCRC_DDC_DATA
-#define DDCRC_READ_EQUALS_WRITE      (-(RCRANGE_DDC_START+13) ) // deprecated, use DDCRC_DDC_DATA
-#define DDCRC_INVALID_MODE           (-(RCRANGE_DDC_START+14) ) // deprecated
 #define DDCRC_RETRIES                (-(RCRANGE_DDC_START+15) ) // too many retries
-#define DDCRC_EDID                   (-(RCRANGE_DDC_START+16) ) // deprecated, use DDCRC_READ_EDID or DDCRC_INVALID_EDID
+#define DDCRC_EDID                   (-(RCRANGE_DDC_START+16) ) // still in use, use DDCRC_READ_EDID or DDCRC_INVALID_EDID
 #define DDCRC_DETERMINED_UNSUPPORTED (-(RCRANGE_DDC_START+17) ) // facility determined to be unsupported
 
-#define DDCRC_ARG                     (-(RCRANGE_DDC_START+18) ) // illegal argument
-#define DDCRC_INVALID_OPERATION       (-(RCRANGE_DDC_START+19) ) // e.g. writing a r/o feature
-#define DDCRC_UNIMPLEMENTED           (-(RCRANGE_DDC_START+20) ) // unimplemented service
-#define DDCRC_UNINITIALIZED           (-(RCRANGE_DDC_START+21) ) // library not initialized
-#define DDCRC_UNKNOWN_FEATURE         (-(RCRANGE_DDC_START+22) ) // feature not in feature table
+#define DDCRC_ARG                    (-(RCRANGE_DDC_START+18) ) // illegal argument
+#define DDCRC_INVALID_OPERATION      (-(RCRANGE_DDC_START+19) ) // e.g. writing a r/o feature
+#define DDCRC_UNIMPLEMENTED          (-(RCRANGE_DDC_START+20) ) // unimplemented service
+#define DDCRC_UNINITIALIZED          (-(RCRANGE_DDC_START+21) ) // library not initialized
+#define DDCRC_UNKNOWN_FEATURE        (-(RCRANGE_DDC_START+22) ) // feature not in feature table
 #define DDCRC_INTERPRETATION_FAILED  (-(RCRANGE_DDC_START+23) ) // value format failed
 #define DDCRC_MULTI_FEATURE_ERROR    (-(RCRANGE_DDC_START+24) ) // an error occurred on a multi-feature request
 #define DDCRC_INVALID_DISPLAY        (-(RCRANGE_DDC_START+25) ) // monitor not found, can't open, no DDC support, etc
-#define DDCRC_INTERNAL_ERROR          (-(RCRANGE_DDC_START+26) ) // error that triggers program failure
-#define DDCRC_OTHER                   (-(RCRANGE_DDC_START+27) ) // other error (for use during development)
+#define DDCRC_INTERNAL_ERROR         (-(RCRANGE_DDC_START+26) ) // error that triggers program failure
+#define DDCRC_OTHER                  (-(RCRANGE_DDC_START+27) ) // other error (for use during development)
 #define DDCRC_VERIFY                 (-(RCRANGE_DDC_START+28) ) // read after VCP write failed or wrong value
 #define DDCRC_NOT_FOUND              (-(RCRANGE_DDC_START+29) ) // generic not found
 #define DDCRC_ALL_RESPONSES_NULL     (-(RCRANGE_DDC_START+30) ) // all responses are DDC Null Message
