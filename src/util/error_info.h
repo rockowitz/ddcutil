@@ -39,6 +39,7 @@ typedef struct error_info {
    char               marker[4];    ///<  always EINF
    int                status_code;  ///<  status code
    char *             func;         ///<  name of function generating status code
+   char *             detail;       ///<  explanation (may be NULL)
    int                max_causes;   ///<  max number entries in array currently pointed to by **causes**
    int                cause_ct;     ///<  number of causal errors
    struct error_info **  causes;    ///<  pointer to array of pointers to Error_Info

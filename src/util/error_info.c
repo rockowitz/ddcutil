@@ -110,6 +110,9 @@ void errinfo_free(Error_Info * erec){
          errinfo_report(erec, 2);
       }
 
+      if (erec->detail)
+         free(erec->detail);
+
       if (erec->cause_ct > 0) {
          for (int ndx = 0; ndx < erec->cause_ct; ndx++) {
             errinfo_free(erec->causes[ndx]);
@@ -489,6 +492,8 @@ void errinfo_report(Error_Info * erec, int depth) {
    rpt_push_output_dest(stderr);
    rpt_vstring(depth, "Exception in function %s: status=%s",
          (erec->func) ? erec->func : "not set", errinfo_desc_func(erec->status_code) );
+   if (erec->detail)
+      rpt_label(depth+1, erec->detail);
    rpt_pop_output_dest();
 
    if (erec->cause_ct > 0) {
