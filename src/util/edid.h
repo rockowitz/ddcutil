@@ -54,6 +54,9 @@
 //Calculates checksum for a 128 byte EDID
 Byte edid_checksum(Byte * edid);
 
+bool is_valid_edid_checksum(Byte * edidbytes);
+bool is_valid_edid_header(Byte * edidbytes);
+
 void parse_mfg_id_in_buffer(Byte * mfgIdBytes, char * buffer, int bufsize);
 
 // Extracts the 3 character manufacturer id from an EDID byte array.

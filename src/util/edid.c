@@ -74,6 +74,26 @@ Byte edid_checksum(Byte * edid) {
    return checksum;
 }
 
+bool is_valid_edid_checksum(Byte * edidbytes) {
+   return (edid_checksum(edidbytes) == 0);
+}
+
+bool is_valid_edid_header(Byte * edidbytes) {
+   bool debug = false;
+   bool result = true;
+
+   const Byte edid_header_tag[] = {0x00, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0x00};
+   if (memcmp(edidbytes, edid_header_tag, 8) != 0) {
+      if (debug) {
+         char * hs = hexstring(edidbytes,8);
+         printf("(%s) Invalid initial EDID bytes: %s\n", __func__, hs);
+         free(hs);
+      }
+      result = false;
+   }
+   return result;
+}
+
 
 /** Unpacks the 2 byte manufacturer id field from the EDID into a 3 character
  * string.
