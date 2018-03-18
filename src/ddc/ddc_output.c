@@ -214,7 +214,7 @@ get_raw_value_for_feature_table_entry(
    case 0:
       break;
 
-   case DDCRC_INVALID_DATA:
+   case DDCRC_DDC_DATA:           // was DDCRC_INVALID_DATA
       if (output_level >= DDCA_OL_NORMAL)
          f0printf(msg_fh, FMT_CODE_NAME_DETAIL_W_NL,
                          feature_code, feature_name, "Invalid response");

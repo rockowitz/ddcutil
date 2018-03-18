@@ -482,7 +482,8 @@ ddc_get_nontable_vcp_value(
         );
    if (debug || IS_TRACING() ) {
       if (psc != 0)
-         DBGMSG("perform_ddc_write_read_with_retry() returned %s, reponse_packet_ptr=%p", psc_desc(psc), response_packet_ptr);
+         DBGMSG("perform_ddc_write_read_with_retry() returned %s, reponse_packet_ptr=%p",
+                psc_desc(psc), response_packet_ptr);
    }
    // psc = (excp) ? excp->psc : 0;
 
@@ -501,13 +502,14 @@ ddc_get_nontable_vcp_value(
 #endif
 
          if (!parsed_response->valid_response)  {
-            psc = DDCRC_INVALID_DATA;
+            psc = DDCRC_DDC_DATA;             // was DDCRC_INVALID_DATA
             excp = errinfo_new(psc, __func__);
          }
          else if (!parsed_response->supported_opcode) {
             psc = DDCRC_REPORTED_UNSUPPORTED;
             excp = errinfo_new(psc, __func__);
          }
+
          if (psc != 0) {
             free(parsed_response);
             parsed_response = NULL;
@@ -522,7 +524,6 @@ ddc_get_nontable_vcp_value(
       free_ddc_packet(request_packet_ptr);
    if (response_packet_ptr)
       free_ddc_packet(response_packet_ptr);
-
 
    if (debug || IS_TRACING() ) {
       if (excp) {

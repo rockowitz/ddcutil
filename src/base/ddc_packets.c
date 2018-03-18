@@ -675,19 +675,21 @@ report_interpreted_capabilities(
 
 /** Interprets the bytes of a multi part read response.
  *
- *  \param  response_type
- *  \param  data_bytes
- *  \param  bytect
- *  \param  aux_data       pointer to #Interpreted_Multi_Part_Read_Fragment to fill in
- *  \retval 0 success
- *  \retval  DDCRC_INVALID_DATA
+ *  \param   response_type
+ *  \param   data_bytes
+ *  \param   bytect
+ *  \param   aux_data       pointer to #Interpreted_Multi_Part_Read_Fragment to fill in
+ *  \retval  0 success
+ *  \retval  DDCRC_INVALID_DATA (deprecated)
+ *  \retval  DDCRC_DDC_DATA
  */
 Status_DDC
 interpret_multi_part_read_response(
        DDC_Packet_Type  response_type,
-       Byte * data_bytes,
-       int    bytect,
-       Interpreted_Multi_Part_Read_Fragment * aux_data)  //   Interpreted_Capabilities_Fragment * aux_data,
+       Byte*            data_bytes,
+       int              bytect,
+       Interpreted_Multi_Part_Read_Fragment*
+                        aux_data)  //   Interpreted_Capabilities_Fragment * aux_data,
 {
    bool debug = false;
    int result = DDCRC_OK;
@@ -696,7 +698,7 @@ interpret_multi_part_read_response(
    if (bytect < 3 || bytect > 35) {
       // if (debug)
       DDCMSG(debug, "Invalid response data length: %d", bytect);
-      result = COUNT_STATUS_CODE(DDCRC_INVALID_DATA);
+      result = COUNT_STATUS_CODE(DDCRC_DDC_DATA);   // was DDCRC_INVALID_DATA
    }
    else {
       assert( data_bytes[0] == response_type);             // table read reply opcode    // CHANGED
@@ -800,8 +802,7 @@ interpret_vcp_feature_response_std(
    if (bytect != 8) {
       DDCMSG(debug, "Invalid response data length: %d, should be 8, response data bytes: %s",
                        bytect, hexstring3_t(vcp_data_bytes, bytect, " ", 4, false));
-      COUNT_STATUS_CODE(DDCRC_INVALID_DATA);
-      result = DDCRC_INVALID_DATA;
+      result = COUNT_STATUS_CODE(DDCRC_DDC_DATA);   // was DDCRC_INVALID_DATA
    }
    else {
       // overlay Vcp_Response on the data bytes of the response
@@ -815,7 +816,7 @@ interpret_vcp_feature_response_std(
          DDCMSG(debug, "Unexpected VCP opcode 0x%02x, should be 0x%02x, response data bytes: %s",
                           vcpresp->vcp_opcode, requested_vcp_code,
                           hexstring3_t(vcp_data_bytes, bytect, " ", 4, false));
-         result = COUNT_STATUS_CODE(DDCRC_INVALID_DATA);
+         result = COUNT_STATUS_CODE(DDCRC_DDC_DATA);   // was DDCRC_INVALID_DATA
       }
 
       else if (vcpresp->result_code != 0) {
@@ -832,7 +833,7 @@ interpret_vcp_feature_response_std(
             DDCMSG(debug, "Unexpected result code: 0x%02x, response_data_bytes: %s",
                              vcpresp->result_code,
                              hexstring3_t(vcp_data_bytes, bytect, " ", 4, false));
-            result = COUNT_STATUS_CODE(DDCRC_INVALID_DATA);
+            result = COUNT_STATUS_CODE(DDCRC_DDC_DATA);   // was DDCRC_INVALID_DATA
          }
       }
 
@@ -1000,10 +1001,10 @@ create_ddc_multi_part_read_response_packet(
 
    DDC_Packet * packet = NULL;
    Status_DDC rc = create_ddc_response_packet(i2c_response_bytes,
-                                                     response_bytes_buffer_size,
-                                                     DDC_PACKET_TYPE_TABLE_READ_RESPONSE,
-                                                     tag,
-                                                     &packet);
+                                              response_bytes_buffer_size,
+                                              DDC_PACKET_TYPE_TABLE_READ_RESPONSE,
+                                              tag,
+                                              &packet);
    if (rc != 0) {
       // DBGMSG("create_ddc_response_packet() returned %s, packet=%p", ddcrc_description(rc), packet);
       TRCMSG("create_ddc_response_packet() returned %s, packet=%p", ddcrc_desc(rc), packet);
@@ -1017,7 +1018,7 @@ create_ddc_multi_part_read_response_packet(
          DDCMSG(debug, "Invalid data fragment_length_wo_null: %d", data_len);
          if (IS_REPORTING_DDC())
             dbgrpt_packet(packet, 1);
-         rc = COUNT_STATUS_CODE(DDCRC_INVALID_DATA);
+         rc = COUNT_STATUS_CODE(DDCRC_DDC_DATA);    // was DDCRC_INVALID_DATA
       }
       else {
          Interpreted_Multi_Part_Read_Fragment * aux_data = calloc(1, sizeof(Interpreted_Multi_Part_Read_Fragment));
@@ -1072,7 +1073,7 @@ create_ddc_getvcp_response_packet(
          DDCMSG(debug, "Invalid data length: %d, should be 8", data_len);
          if ( IS_REPORTING_DDC() )
             dbgrpt_packet(packet, 1);
-         rc = COUNT_STATUS_CODE(DDCRC_INVALID_DATA);
+         rc = COUNT_STATUS_CODE(DDCRC_DDC_DATA);     // was DDCRC_INVALID_DATA
       }
       else {
          Parsed_Nontable_Vcp_Response * aux_data = calloc(1, sizeof(Parsed_Nontable_Vcp_Response));

@@ -50,13 +50,13 @@
 #define DDCRC_PACKET_SIZE            (-RCRANGE_DDC_START-1)     // deprecated, use DDCRC_DDC_DATA
 #define DDCRC_RESPONSE_ENVELOPE      (-RCRANGE_DDC_START-2)     // deprecated, use DDCRC_DDC_DATA
 #define DDCRC_CHECKSUM               (-RCRANGE_DDC_START-3)     // deprecated, use DDCRC_DDC_DATA
-#define DDCRC_INVALID_DATA           (-RCRANGE_DDC_START-4)
+#define DDCRC_INVALID_DATA           (-RCRANGE_DDC_START-4)     // deprecated, use DDCRC_DDC_DATA or DDCL_ARG
 #define DDCRC_RESPONSE_TYPE          (-RCRANGE_DDC_START-5)     // deprecated, use DDCRC_DDC_DATA
 #define DDCRC_NULL_RESPONSE          (-RCRANGE_DDC_START-6)
 #define DDCRC_MULTI_PART_READ_FRAGMENT  (-RCRANGE_DDC_START-7)
-#define DDCRC_ALL_TRIES_ZERO         (-RCRANGE_DDC_START-8)    // packet data entirely 0  // not used TODO eliminate
-#define DDCRC_DOUBLE_BYTE            (-RCRANGE_DDC_START-9)    // duplicated byte in packet // deprecated, use DDCRC_DDC_DATA
-#define DDCRC_REPORTED_UNSUPPORTED   (-RCRANGE_DDC_START-10)   // DDC reply says unsupported
+#define DDCRC_ALL_TRIES_ZERO         (-RCRANGE_DDC_START-8)     // packet data entirely 0  // not used TODO eliminate
+#define DDCRC_DOUBLE_BYTE            (-RCRANGE_DDC_START-9)     // duplicated byte in packet // deprecated, use DDCRC_DDC_DATA
+#define DDCRC_REPORTED_UNSUPPORTED   (-RCRANGE_DDC_START-10)    // DDC reply says unsupported
 #define DDCRC_READ_ALL_ZERO          (-(RCRANGE_DDC_START+11) )
 #define DDCRC_BAD_BYTECT             (-(RCRANGE_DDC_START+12) )  // deprecated, use DDCRC_DDC_DATA
 #define DDCRC_READ_EQUALS_WRITE      (-(RCRANGE_DDC_START+13) )

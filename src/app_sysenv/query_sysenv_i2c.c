@@ -80,7 +80,8 @@ static bool is_i2c_device_rw(int busno) {
 // Auxiliary function for raw_scan_i2c_devices()
 // adapted from ddc_vcp_tests
 
-static Public_Status_Code try_single_getvcp_call(
+static Public_Status_Code
+try_single_getvcp_call(
       int           fh,
       unsigned char vcp_feature_code,
       int           depth)
@@ -188,7 +189,7 @@ static Public_Status_Code try_single_getvcp_call(
       // assert(ddc_response_bytes[1] == 0x6e);
       DBGMSF(debug, "Invalid address byte in response, expected 06e, actual 0x%02x",
                     ddc_response_bytes[1] );
-      rc = DDCRC_INVALID_DATA;
+      rc = DDCRC_DDC_DATA;    // was DDCRC_INVALID_DATA;
       goto bye;
    }
 
@@ -201,7 +202,7 @@ static Public_Status_Code try_single_getvcp_call(
    if (ddc_response_bytes[3] != 0x02) {       // get feature response
       DBGMSF(debug, "Expected 0x02 in feature response field, actual value 0x%02x",
                     ddc_response_bytes[3] );
-      rc = DDCRC_INVALID_DATA;
+      rc = DDCRC_DDC_DATA;    // was  DDCRC_INVALID_DATA;
       goto bye;
    }
 
@@ -232,7 +233,7 @@ static Public_Status_Code try_single_getvcp_call(
    else {
       DBGMSF(debug, "Unexpected value in supported VCP code field: 0x%02x  ",
                     ddc_response_bytes[4] );
-      rc = DDCRC_INVALID_DATA;
+      rc = DDCRC_DDC_DATA;    // was DDCRC_INVALID_DATA;
    }
 
 bye:
