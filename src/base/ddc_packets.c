@@ -528,7 +528,7 @@ create_ddc_base_response_packet(
    DDC_Packet * packet = NULL;
    if (i2c_response_bytes[0] != 0x6e ) {
       DDCMSG(debug, "Unexpected source address 0x%02x, should be 0x6e", i2c_response_bytes[0]);
-      result = DDCRC_RESPONSE_ENVELOPE;
+      result = DDCRC_DDC_DATA;     // was DDCRC_RESPONSE_ENVELOPE
    }
    else {
       int data_ct = i2c_response_bytes[1] & 0x7f;
