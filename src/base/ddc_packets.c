@@ -107,7 +107,7 @@ Byte ddc_checksum(Byte * bytes, int len, bool altmode) {
    return checksum;
 }
 
-
+#ifdef TESTCASES
 void test_one_checksum(Byte * bytes, int len, bool altmode, Byte expected, char * spec_section) {
    unsigned char actual = ddc_checksum(bytes, len, altmode);
    char * hs =   hexstring(bytes, len);
@@ -132,6 +132,7 @@ void test_checksum() {
    test_one_checksum( (Byte[]) {0xf1, 0xf0, 0x82, 0xa1, 0x00}, 5, true,  0x83, "7.4");
    test_one_checksum( (Byte[]) {0x6f, 0xf0, 0x82, 0xa1, 0x00}, 5, true,  0x83, "7.4");
 }
+#endif
 
 
 bool valid_ddc_packet_checksum(Byte * readbuf) {
@@ -202,10 +203,10 @@ void dbgrpt_packet(DDC_Packet * packet, int depth) {
       switch(packet->type) {
       case (DDC_PACKET_TYPE_CAPABILITIES_RESPONSE):
       case (DDC_PACKET_TYPE_TABLE_READ_RESPONSE):
-         report_interpreted_multi_read_fragment(packet->parsed.multi_part_read_fragment, d0);
+         dbgrpt_interpreted_multi_read_fragment(packet->parsed.multi_part_read_fragment, d0);
          break;
       case (DDC_PACKET_TYPE_QUERY_VCP_RESPONSE):
-         report_interpreted_nontable_vcp_response(packet->parsed.nontable_response, d0);
+         dbgrpt_interpreted_nontable_vcp_response(packet->parsed.nontable_response, d0);
          break;
       default:
          // PROGRAM_LOGIC_ERROR("Unexpected packet type: -x%02x", packet->type);
@@ -246,10 +247,10 @@ void free_ddc_packet(DDC_Packet * packet) {
  *
  *  \param  max_size  size of buffer allocated for packet bytes
  *  \param  tag       debug string (may be NULL)
- *
  *  \return pointer to newly allocated #DDC_Packet
  */
-DDC_Packet * create_empty_ddc_packet(int max_size, const char * tag) {
+DDC_Packet *
+create_empty_ddc_packet(int max_size, const char * tag) {
    bool debug = false;
    DBGMSF(debug, "Starting. max_size=%d, tag=%s", max_size, (tag) ? tag : "(nil)");
 
@@ -281,13 +282,13 @@ DDC_Packet * create_empty_ddc_packet(int max_size, const char * tag) {
  *  \param  data_bytes   data bytes of packet
  *  \param  data_bytect  number of data bytes
  *  \param  tag          debug string (may be NULL)
- *
  *  \return  pointer to created packet
  */
-DDC_Packet * create_ddc_base_request_packet(
-                Byte *       data_bytes,
-                int          data_bytect,
-                const char * tag)
+DDC_Packet *
+create_ddc_base_request_packet(
+      Byte *       data_bytes,
+      int          data_bytect,
+      const char*  tag)
 {
    bool debug = false;
    DBGMSF(debug, "Starting.  bytes=%s, tag=%s", hexstring_t(data_bytes,data_bytect), tag);
@@ -314,20 +315,21 @@ DDC_Packet * create_ddc_base_request_packet(
 }
 
 
-/* Creates a DDC VCP table read request packet
+/** Creates a DDC VCP table read request packet
  *
- * Arguments:
- *    offset  offset value
- *    tag     debug string
- *
- * Returns:
- *    pointer to created capabilities request packet
+ *  \param  request_type     DDC_PACKET_TYPE_CAPABILITIES_REQUEST or
+ *                           DDC_PACKET_TYPE_TABLE_READ_REQUEST
+ *  \param  request_subtype  VCP code if reading table type feature, ignored for capabilities
+ *  \param  offset           offset value
+ *  \param  tag              debug string (may be null)
+ *  \return pointer to created capabilities request packet
  */
-DDC_Packet * create_ddc_multi_part_read_request_packet(
-                Byte request_type,
-                Byte request_subtype,
-                int offset,
-                const char * tag)
+DDC_Packet *
+create_ddc_multi_part_read_request_packet(
+      Byte         request_type,
+      Byte         request_subtype,
+      int          offset,
+      const char*  tag)
 {
    assert (request_type == DDC_PACKET_TYPE_CAPABILITIES_REQUEST ||
            request_type == DDC_PACKET_TYPE_TABLE_READ_REQUEST );
@@ -358,13 +360,16 @@ DDC_Packet * create_ddc_multi_part_read_request_packet(
 }
 
 
-/* Updates the offset in a multi part read request packet
+/** Updates the offset in a multi part read request packet
  *
- * Arguments:
- *    packet  address of packet
- *    offset  new offset value
+ *  \param  packet  address of packet
+ *  \offset offset  new offset value
  */
-void update_ddc_multi_part_read_request_packet_offset(DDC_Packet * packet, int new_offset) {
+void
+update_ddc_multi_part_read_request_packet_offset(
+      DDC_Packet * packet,
+      int          new_offset)
+{
    assert (packet->type == DDC_PACKET_TYPE_CAPABILITIES_REQUEST ||
            packet->type == DDC_PACKET_TYPE_TABLE_READ_REQUEST );
 
@@ -394,16 +399,18 @@ void update_ddc_multi_part_read_request_packet_offset(DDC_Packet * packet, int n
 }
 
 
-/* Creates a DDC VCP table write request packet
+/** Creates a DDC VCP table write request packet
  *
- * Arguments:
- *    offset  offset value
- *    tag     debug string
- *
- * Returns:
- *    pointer to created capabilities request packet
+ *  \param  request_type     always DDC_PACKET_TYPE_WRITE_REQUEST
+ *  \param  request_subtype  VCP code
+ *  \param  offset           offset value
+ *  \param  bytes_to_write   pointer to bytes to write
+ *  \param  bytect           number of bytes to write
+ *  \param  tag              debug string
+ *  \return pointer to newly created created multi-part-write request packet
  */
-DDC_Packet * create_ddc_multi_part_write_request_packet(
+DDC_Packet *
+create_ddc_multi_part_write_request_packet(
                 Byte   request_type,     // always DDC_PACKET_TYPE_WRITE_REQUEST
                 Byte   request_subtype,  // VCP code
                 int    offset,
@@ -433,14 +440,11 @@ DDC_Packet * create_ddc_multi_part_write_request_packet(
 }
 
 
-/* Creates a Get VCP request packet
+/** Creates a Get VCP request packet
  *
- * Arguments:
- *    vcp_code  VCP feature code
- *    tag       debug string
- *
- * Returns:
- *    pointer to created DDC packet
+ *  \param  vcp_code  VCP feature code
+ *  \param  tag       debug string
+ *  \return pointer to created DDC packet
  */
 DDC_Packet *
 create_ddc_getvcp_request_packet(Byte vcp_code, const char * tag)
@@ -455,15 +459,12 @@ create_ddc_getvcp_request_packet(Byte vcp_code, const char * tag)
 }
 
 
-/* Creates a Set VCP request packet
+/** Creates a Set VCP request packet
  *
- * Arguments:
- *    vcp_code  VCP feature code
- *    int       new value
- *    tag       debug string
- *
- * Returns:
- *    pointer to created DDC packet
+ *  \param   vcp_code  VCP feature code
+ *  \param   int       new value
+ *  \param   tag       debug string
+ *  \return  pointer to created DDC packet
  */
 DDC_Packet *
 create_ddc_setvcp_request_packet(Byte vcp_code, int new_value, const char * tag)
@@ -480,6 +481,11 @@ create_ddc_setvcp_request_packet(Byte vcp_code, int new_value, const char * tag)
 }
 
 
+/** Creates a request packet for Save Settings command.
+ *
+ *  \param  tag   debug string
+ *  \return pointer to created DDC packet
+ */
 DDC_Packet *
 create_ddc_save_settings_request_packet(const char * tag)
 {
@@ -509,7 +515,7 @@ create_ddc_save_settings_request_packet(const char * tag)
  *  \retval DDCRC_DDC_DATA
  *  \retval DDCRC_RESPONSE_ENVELOPE   (deprecated)
  *  \retval DDCRC_DOUBLE_BYTE         (deprecated)
- *  \retval DDCRC_PACKET_SIZE
+ *  \retval DDCRC_PACKET_SIZE         (deprecated)
  *  \retval DDCRC_CHECKSUM            (deprecated)
  *
  *  The pointer returned at packet_ptr_addr is non-null iff the status code is 0.
@@ -651,6 +657,8 @@ create_ddc_response_packet(
 
 // Capabilities response data 
 
+#ifdef OLD
+// deprecated, use more general dbgrpt_interpreted_multi_read_fragment()
 void
 report_interpreted_capabilities(
       Interpreted_Multi_Part_Read_Fragment * interpreted,
@@ -662,6 +670,7 @@ report_interpreted_capabilities(
    rpt_vstring(d1,    "fragment length: %d", interpreted->fragment_length);
    rpt_vstring(d1,    "text:            |%.*s|", interpreted->fragment_length, interpreted->bytes);
 }
+#endif
 
 
 /** Interprets the bytes of a multi part read response.
@@ -711,7 +720,7 @@ interpret_multi_part_read_response(
 
 
 void
-report_interpreted_multi_read_fragment(
+dbgrpt_interpreted_multi_read_fragment(
       Interpreted_Multi_Part_Read_Fragment * interpreted,
       int depth)
 {
@@ -853,8 +862,8 @@ interpret_vcp_feature_response_std(
 }
 
 
-
-void report_interpreted_nontable_vcp_response(
+void
+dbgrpt_interpreted_nontable_vcp_response(
         Parsed_Nontable_Vcp_Response * interpreted, int depth)
 {
    rpt_vstring(depth,"VCP code:         0x%02x", interpreted->vcp_code);
@@ -869,13 +878,15 @@ void report_interpreted_nontable_vcp_response(
 }
 
 
-void   report_parsed_vcp_response(Parsed_Vcp_Response * response, int depth) {
+void
+dbgrpt_parsed_vcp_response(Parsed_Vcp_Response * response, int depth)
+{
    rpt_vstring(depth, "Parsed_Vcp_Reponse at %p:", response);
 
    rpt_vstring(depth, "response_type:   %d",   response->response_type);
    if (response->response_type == DDCA_NON_TABLE_VCP_VALUE) {
       rpt_vstring(depth, "non_table_response at %p:", response->non_table_response);
-      report_interpreted_nontable_vcp_response(response->non_table_response, depth+1);
+      dbgrpt_interpreted_nontable_vcp_response(response->non_table_response, depth+1);
    }
    else {
       rpt_vstring(depth, "table_response at %p", response->table_response);
@@ -883,13 +894,11 @@ void   report_parsed_vcp_response(Parsed_Vcp_Response * response, int depth) {
 }
 
 
-
-
 //
 // Response packets 
 //
 
-/** Creates a #DDC_Packet for a DDC response.
+/** Creates a #DDC_Packet from a raw DDC response.
  *
  *  \param i2c_response_bytes          pointer to raw packet bytes
  *  \param response_bytes_buffer_size  size of buffer pointed to by **i2c_response_bytes**
@@ -907,7 +916,8 @@ void   report_parsed_vcp_response(Parsed_Vcp_Response * response, int depth) {
  *  The contents of **expected_subtype** depends on the value of **expected_type**.
  *  For DDC_PACKET_TYPE_QUERY_VCP_RESPONSE it is the VCP feature code.
  */
-Status_DDC create_ddc_typed_response_packet(
+Status_DDC
+create_ddc_typed_response_packet(
       Byte*           i2c_response_bytes,
       int             response_bytes_buffer_size,
       DDC_Packet_Type expected_type,

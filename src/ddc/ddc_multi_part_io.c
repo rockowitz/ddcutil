@@ -208,7 +208,7 @@ try_multi_part_read(
 
       if ( IS_TRACING_BY_FUNC_OR_FILE() || debug ) {
          DBGMSG0("After try_write_read():");
-         report_interpreted_multi_read_fragment(response_packet_ptr->parsed.multi_part_read_fragment, 0);
+         dbgrpt_interpreted_multi_read_fragment(response_packet_ptr->parsed.multi_part_read_fragment, 0);
       }
 
       Interpreted_Multi_Part_Read_Fragment * aux_data_ptr =

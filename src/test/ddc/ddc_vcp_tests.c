@@ -293,7 +293,7 @@ void probe_get_luminosity(int busno, char * write_mode, char * read_mode) {
             Parsed_Nontable_Vcp_Response * interpretation_ptr = NULL;
             rc2 = get_interpreted_vcp_code(response_packet_ptr, false, &interpretation_ptr);
             if (rc2 == 0)
-               report_interpreted_nontable_vcp_response(interpretation_ptr, 0);
+               dbgrpt_interpreted_nontable_vcp_response(interpretation_ptr, 0);
             free_ddc_packet(response_packet_ptr);
          }
       } // read_ok
@@ -400,7 +400,7 @@ void get_luminosity_sample_code(int busno) {
               rc2 = get_interpreted_vcp_code(response_packet_ptr, false, &interpretation_ptr);
               if (rc2 == 0) {
                  printf("(%s) interpretation_ptr=%p\n", __func__, interpretation_ptr);
-                 report_interpreted_nontable_vcp_response(interpretation_ptr);
+                 dbgrpt_interpreted_nontable_vcp_response(interpretation_ptr);
               }
               // read_ok = true;
            }

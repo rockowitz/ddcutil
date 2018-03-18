@@ -139,7 +139,7 @@ bool is_double_byte(Byte * pb);
 // Byte xor_bytes(Byte * bytes, int len);
 Byte ddc_checksum(Byte * bytes, int len, bool altmode);
 bool valid_ddc_packet_checksum(Byte * readbuf);
-void test_checksum();
+// void test_checksum();
 
 
 typedef
@@ -149,7 +149,7 @@ struct {
    Buffer *                        table_response;
 } Parsed_Vcp_Response;
 
-void report_parsed_vcp_response(Parsed_Vcp_Response * response,int depth);
+void dbgrpt_parsed_vcp_response(Parsed_Vcp_Response * response,int depth);
 
 Status_DDC
 create_ddc_base_response_packet(
@@ -242,15 +242,11 @@ get_interpreted_vcp_code(
       Parsed_Nontable_Vcp_Response ** interpreted_loc);
 
 void
-report_interpreted_capabilities(
+dbgrpt_interpreted_multi_read_fragment(
       Interpreted_Multi_Part_Read_Fragment * interpreted,
       int depth);
 void
-report_interpreted_multi_read_fragment(
-      Interpreted_Multi_Part_Read_Fragment * interpreted,
-      int depth);
-void
-report_interpreted_nontable_vcp_response(
+dbgrpt_interpreted_nontable_vcp_response(
       Parsed_Nontable_Vcp_Response * interpreted,
       int depth);
 #ifdef OLD
