@@ -498,8 +498,7 @@ static Public_Status_Code ddc_adl_write_read_raw(
          else if (memcmp(get_packet_start(request_packet_ptr), readbuf, get_packet_len(request_packet_ptr)) == 0) {
             // is this a DDC error or a programming bug?
             DDCMSG(debug, "Bytes read same as bytes written.", __func__ );
-            psc = DDCRC_READ_EQUALS_WRITE;
-            COUNT_STATUS_CODE(psc);
+            psc = COUNT_STATUS_CODE(DDCRC_DDC_DATA);   // was DDCRC_READ_EQUALS_WRITE
          }
          else {
             psc = 0;
