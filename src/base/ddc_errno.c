@@ -38,7 +38,6 @@
 // DDCRC status code descriptions
 //
 
-
 // TODO: Consider modifying EDENTRY generate doxygen comment as well using description field
 
 #define EDENTRY(id,desc) {id, #id, desc}
@@ -47,34 +46,33 @@
 // small subset of DDCRC_PACKET_SIZE, DDCRC_RESPONSE_ENVELOPE, DDCRC_CHECKSUM
 
 static Status_Code_Info ddcrc_info[] = {
-      EDENTRY(DDCRC_OK                     , "success"                       ),
-      EDENTRY(DDCRC_NULL_RESPONSE          , "received DDC null response"    ),
-      EDENTRY(DDCRC_MULTI_PART_READ_FRAGMENT , "error in fragment"             ),
-      EDENTRY(DDCRC_ALL_TRIES_ZERO         , "every try response 0x00"        ),    // applies to multi-try exchange
-      EDENTRY(DDCRC_REPORTED_UNSUPPORTED   , "DDC reports facility unsupported"      ),
-      EDENTRY(DDCRC_READ_ALL_ZERO          , "packet contents entirely 0x00"         ),
-      EDENTRY(DDCRC_RETRIES                , "maximum retries exceeded"              ),
-      EDENTRY(DDCRC_EDID                   , "invalid EDID"                          ),
-      EDENTRY(DDCRC_DETERMINED_UNSUPPORTED , "ddcutil determined that facility unsupported" ),
+      EDENTRY(DDCRC_OK                       , "success"                         ),
+      EDENTRY(DDCRC_DDC_DATA                 , "DDC data error"                  ),
+      EDENTRY(DDCRC_NULL_RESPONSE            , "received DDC null response"      ),
+      EDENTRY(DDCRC_MULTI_PART_READ_FRAGMENT , "error in fragment"               ),
+      EDENTRY(DDCRC_ALL_TRIES_ZERO           , "every try response 0x00"          ),    // applies to multi-try exchange
+      EDENTRY(DDCRC_REPORTED_UNSUPPORTED     , "DDC reports facility unsupported" ),
+      EDENTRY(DDCRC_READ_ALL_ZERO            , "packet contents entirely 0x00"    ),
+      EDENTRY(DDCRC_RETRIES                  , "maximum retries exceeded"         ),
+      EDENTRY(DDCRC_EDID                     , "invalid EDID"                     ),
+      EDENTRY(DDCRC_READ_EDID                , "unable to read EDID"              ),
+      EDENTRY(DDCRC_INVALID_EDID             , "unable to parse EDID"             ),
+      EDENTRY(DDCRC_ALL_RESPONSES_NULL       , "all tries returned DDC Null Message"),
+      EDENTRY(DDCRC_DETERMINED_UNSUPPORTED   , "ddcutil determined that facility unsupported" ),
 
       // library errors
-      EDENTRY(DDCRC_ARG                    , "illegal argument"),
-      EDENTRY(DDCRC_INVALID_OPERATION      , "invalid operation"),
-      EDENTRY(DDCRC_UNIMPLEMENTED          , "unimplemented"),
-      EDENTRY(DDCRC_UNINITIALIZED          , "library uninitialized"),
-
-      EDENTRY(DDCRC_UNKNOWN_FEATURE        , "feature not in feature table"),
-      EDENTRY(DDCRC_INTERPRETATION_FAILED  , "feature value interpretation function failed"),
-      EDENTRY(DDCRC_MULTI_FEATURE_ERROR    , "at least 1 error occurred on a multi-feature request"),
-      EDENTRY(DDCRC_INVALID_DISPLAY        , "invalid display"),
-      EDENTRY(DDCRC_INTERNAL_ERROR         , "fatal error condition"),
-      EDENTRY(DDCRC_OTHER                  , "other error"),       // for use during development
-      EDENTRY(DDCRC_VERIFY                 , "VCP read after write failed"),
-      EDENTRY(DDCRC_NOT_FOUND              , "not found"),
-      EDENTRY(DDCRC_ALL_RESPONSES_NULL     , "all tries returned DDC Null Message"),
-      EDENTRY(DDCRC_DDC_DATA               , "DDC data error"),
-      EDENTRY(DDCRC_READ_EDID              , "unable to read EDID"),
-      EDENTRY(DDCRC_INVALID_EDID           , "unable to parse EDID"),
+      EDENTRY(DDCRC_ARG                      , "illegal argument"),
+      EDENTRY(DDCRC_INVALID_OPERATION        , "invalid operation"),
+      EDENTRY(DDCRC_UNIMPLEMENTED            , "unimplemented"),
+      EDENTRY(DDCRC_UNINITIALIZED            , "library uninitialized"),
+      EDENTRY(DDCRC_UNKNOWN_FEATURE          , "feature not in feature table"),
+      EDENTRY(DDCRC_INTERPRETATION_FAILED    , "feature value interpretation function failed"),
+      EDENTRY(DDCRC_MULTI_FEATURE_ERROR      , "at least 1 error occurred on a multi-feature request"),
+      EDENTRY(DDCRC_INVALID_DISPLAY          , "invalid display"),
+      EDENTRY(DDCRC_INTERNAL_ERROR           , "fatal error condition"),
+      EDENTRY(DDCRC_OTHER                    , "other error"),       // for use during development
+      EDENTRY(DDCRC_VERIFY                   , "VCP read after write failed"),
+      EDENTRY(DDCRC_NOT_FOUND                , "not found"),
 
     };
 #undef EDENTRY

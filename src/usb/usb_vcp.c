@@ -101,7 +101,7 @@ usb_get_usage_value_by_report_type_and_ucode(
       // Problem: errno=22 (invalid argument) can mean the usage code is invalid,
       // i.e. invalid feature code, or another arg error which indicates a programming error
       // occasionally errno = 22 invalid argument - for Battery System Page: Run Time to Empty
-      if (-rc == EINVAL) {
+      if (rc == -EINVAL) {
          if (debug)
             REPORT_IOCTL_ERROR("HIDIOCGUSAGE", -rc);
          psc = DDCRC_DETERMINED_UNSUPPORTED;

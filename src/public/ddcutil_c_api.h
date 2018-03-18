@@ -240,8 +240,7 @@ int ddca_get_max_tries(
 /** Sets the maximum number of I2C retries for the specified operation type
  * @param[in] retry_type    I2C operation type
  * @param[in] max_tries     maximum count to set
- * @retval EINVAL       max_tries < 1 or > #ddca_get_max_tries()
- *
+ * @retval   -EINVAL        max_tries < 1 or > #ddca_get_max_tries()
  *
  * @remark
  * This setting is global, not thread-specific.
@@ -804,7 +803,7 @@ DDCA_Status
 ddca_get_simple_sl_value_table_by_vspec(
       DDCA_Vcp_Feature_Code      feature_code,
       DDCA_MCCS_Version_Spec     vspec,
-      DDCA_Feature_Value_Entry** pvalue_table);
+      DDCA_Feature_Value_Entry** value_table_loc);
 
 /** Gets the value id/name table of the allowed values for a simple NC feature.
  *
@@ -812,9 +811,9 @@ ddca_get_simple_sl_value_table_by_vspec(
  * @param[in]  mccs_version_id   MCCS version id
  * @param[out] value_table_loc   where to return pointer to array of DDCA_Feature_Value_Entry
  * @return     status code
- * @retval     0                success
- * @retval     DDCRC_NOT_FOUND  unrecognized feature code
- * @retval     -EINVAL          feature not simple NC
+ * @retval     0                       success
+ * @retval     DDCRC_UNKNOWN_FEATURE   unrecognized feature code
+ * @retval     DDCRC_INVALID_OPERATION feature not simple NC
  */
 DDCA_Status
 ddca_get_simple_sl_value_table(

@@ -147,7 +147,6 @@ app_show_single_vcp_value_by_feature_id(
    }
    if (!entry) {
       printf("Unrecognized VCP feature code: 0x%02x\n", feature_id);
-      // gsc = modulate_rc(-EINVAL, RR_ERRNO);
       psc = DDCRC_UNKNOWN_FEATURE;
    }
    else {

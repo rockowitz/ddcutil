@@ -21,7 +21,7 @@
  * </endcopyright>
  */
 
-/** \f
+/** \file
  *
  */
 
@@ -96,18 +96,13 @@ bool parse_vcp_value(char * string_value, long* parsed_value) {
 }
 
 
-/* Parses the Set VCP arguments passed and sets the new value.
+/** Parses the Set VCP arguments passed and sets the new value.
  *
- * Arguments:
- *   dh         display handle
- *   feature    feature id (as string)
- *   new_value  new feature value (as string)
- *   force      attempt to set feature even if feature code unrecognized
- *
- * Returns:
- *   NULL if success
- *   -EINVAL    invalid setvcp arguments, feature not writable
- *   from put_vcp_by_display_ref()
+ *   \param  dh         display handle
+ *   \param  feature    feature code (as string)
+ *   \param  new_value  new feature value (as string)
+ *   \param  force      attempt to set feature even if feature code unrecognized
+ *   \return NULL if success, Error_Info if error
  */
 // TODO: consider moving value parsing to command parser
 Error_Info *
@@ -134,7 +129,7 @@ app_set_vcp_value(
    bool ok = any_one_byte_hex_string_to_byte_in_buf(feature, &hexid);
    if (!ok) {
       f0printf(ferr, "Invalid VCP feature code: %s\n", feature);
-      ddc_excp = errinfo_new(-EINVAL, __func__);
+      ddc_excp = errinfo_new(DDCRC_ARG, __func__);
       goto bye;
    }
    entry = vcp_find_feature_by_hexid(hexid);
@@ -172,7 +167,7 @@ app_set_vcp_value(
       int bytect = hhs_to_byte_array(new_value, &value_bytes);
       if (bytect < 0) {    // bad hex string
          f0printf(ferr, "Invalid hex value\n");
-         ddc_excp = errinfo_new(-EINVAL, __func__);
+         ddc_excp = errinfo_new(DDCRC_ARG, __func__);
          goto bye;
       }
 
@@ -187,7 +182,7 @@ app_set_vcp_value(
       if (!good_value) {
          f0printf(ferr, "Invalid VCP value: %s\n", new_value);
          // what is better status code?
-         ddc_excp = errinfo_new(-EINVAL, __func__);
+         ddc_excp = errinfo_new(DDCRC_ARG, __func__);
          goto bye;
       }
 

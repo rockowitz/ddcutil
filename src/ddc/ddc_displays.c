@@ -887,8 +887,8 @@ ddc_find_display_ref_by_display_identifier(Display_Identifier * did) {
 
    switch(did->id_type) {
    case DISP_ID_BUSNO:
-         criteria->i2c_busno = did->busno;
-         break;
+      criteria->i2c_busno = did->busno;
+      break;
    case DISP_ID_ADL:
       criteria->iAdapterIndex = did->iAdapterIndex;
       criteria->iDisplayIndex = did->iDisplayIndex;
