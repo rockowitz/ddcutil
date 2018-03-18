@@ -78,6 +78,7 @@
 #define DDCRC_VERIFY                 (-(RCRANGE_DDC_START+28) ) // read after VCP write failed or wrong value
 #define DDCRC_NOT_FOUND              (-(RCRANGE_DDC_START+29) ) // generic not found
 #define DDCRC_ALL_RESPONSES_NULL     (-(RCRANGE_DDC_START+30) ) // all responses are DDC Null Message
+#define DDCRC_DDC_DATA               (-(RCRANGE_DDC_START+30) ) // replaces DDCRC_PACKET_SIZE, etc.
 
 
 // TODO: consider replacing DDCRC_EDID by more generic DDCRC_BAD_DATA, could be used for e.g. invalid capabilities string

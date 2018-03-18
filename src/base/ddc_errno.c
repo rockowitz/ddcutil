@@ -81,6 +81,7 @@ static Status_Code_Info ddcrc_info[] = {
       EDENTRY(DDCRC_VERIFY                , "VCP read after write failed"),
       EDENTRY(DDCRC_NOT_FOUND             , "not found"),
       EDENTRY(DDCRC_ALL_RESPONSES_NULL    , "all tries returned DDC Null Message"),
+      EDENTRY(DDCRC_DDC_DATA              , "DDC data error"),
 
     };
 #undef EDENTRY
