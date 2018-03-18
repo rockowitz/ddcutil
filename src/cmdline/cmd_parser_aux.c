@@ -175,6 +175,7 @@ const Feature_Subset_Table_Entry subset_table[] = {
 // {VCP_SUBSET_SUPPORTED, CMDID_GETVCP,               3, "SUPPORTED", "All known features that are valid for the display"},
    {VCP_SUBSET_SCAN,      CMDID_GETVCP,               3, "SCAN",      "All feature codes 00..FF, except those known to be WO"},
    {VCP_SUBSET_MFG,       CMDID_GETVCP,               3, "MANUFACTURER", "Manufacturer specific codes"},
+   {VCP_SUBSET_MFG,       CMDID_GETVCP,               3, "MFG",        "Same as MANUFACTURER"},
 
    // ddcutil defined groups
    {VCP_SUBSET_PROFILE,   CMDID_GETVCP|CMDID_VCPINFO, 3, "PROFILE",   "Features for color profile management"},
@@ -207,7 +208,8 @@ char * assemble_command_argument_help() {
    // quick and dirty check that tables are in sync
    // +2 for VCP_SUBSET_SINGLE_FEATURE, VCP_SUBSET_NONE
    // -1 for double VCP_SUBSET_KNOWN
-   assert(subset_table_ct+1 == vcp_subset_count);
+   // -1 for double VCP_SUBSET_MFG
+   assert(subset_table_ct+(2-1-1) == vcp_subset_count);
 
    GString * buf = g_string_sized_new(1000);
    g_string_append(buf,
@@ -345,18 +347,27 @@ char * command_argument_help =
        "    <feature-code-or-group> can be any of the following:\n"
        "      - the hex feature code for a specific feature, with or without a leading 0x,\n"
        "        e.g. 10 or 0x10\n"
-       "      - KNOWN     - all feature codes known to ddcutil\n"
-       "      - ALL       - like KNOWN, but implies --show-unsupported\n"
-       "      - SCAN      - scan all feature codes 0x00..0xff\n"
-       "      - COLOR     - all color related feature codes\n"
-       "      - PROFILE   - color related codes for profile management\n"
-       "      - LUT       - LUT related features\n"
-       "      - AUDIO     - audio features\n"
-       "      - WINDOW    - window operations (e.g. PIP)\n"
-       "      - TV        - TV related settings\n"
-       "      - PRESET    - MCCS codes classed as PRESET\n"
+       "      - KNOWN        - all feature codes known to ddcutil\n"
+       "      - ALL          - like KNOWN, but implies --show-unsupported\n"
+       "      - SCAN         - scan all feature codes 0x00..0xff\n"
+       "      - COLOR        - all color related feature codes\n"
+       "      - PROFILE      - color related codes for profile management\n"
+       "      - LUT          - LUT related features\n"
+       "      - AUDIO        - audio features\n"
+       "      - WINDOW       - window operations (e.g. PIP)\n"
+       "      - TV           - TV related settings\n"
+       "      - PRESET       - MCCS codes classed as PRESET\n"
        "      - MANUFACTURER - manufacturer specific codes\n"
-       "      - TABLE     - table type features\n"
+       "      - MFG          - same as MANUFACTURER\n"
+       "      - TABLE        - Table type features\n"
+       "      - SCONT        - simple Continuous features\n"
+       "      - CCONT        - complex Continuous features\n"
+       "      - CONT         - all Continuous features\n"
+       "      - SNC          - simple Non-Continuous features\n"
+       "      - CNC          - complex Non-Continuous features, using multiple bytes\n"
+       "      - NC_WO        - write/only Non-Continuous features\n"
+       "      - NC_CONT      - features classed as NC having a continuous subrange\n"
+       "      - NC           - all Non-Continuous features\n"
        "    Keywords can be abbreviated to the first 3 characters.\n"
        "    Case is ignored.  e.g. \"COL\", \"pro\"\n"
        "\n"
