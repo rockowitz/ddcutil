@@ -2017,12 +2017,31 @@ ddca_set_single_vcp_value(
    }
 
 
+/** Sets a Continuous VCP value.
+ *  Optionally returns the value set by reading the feature code after writing.
+ *
+ *  \param[in]   ddca_dh       display handle
+ *  \param[in]   feature_code  feature code
+ *  \param[in]   new_value     new value to set
+ *  \param[out]  verified_value_loc where to return verified value
+ *  \return      status code
+ *
+ *  \remark
+ *  Either both **verified_hi_byte_loc** and **verified_lo_byte_loc** should be
+ *  set, or neither. Otherwise, status code **DDCRC_ARG** is returned.
+ *  \remark
+ *  Verification is performed only if **verified_value_loc** is non-NULL and
+ *  it has been enabled by #ddca_set_verify().
+ *  \remark
+ *  A verification value is returned if either the status code is 0 (success),
+ *  or it is **DDCRC_VERIFY**, i.e. the write succeeded but verification failed.
+ */
 DDCA_Status
 ddca_set_continuous_vcp_value(
       DDCA_Display_Handle   ddca_dh,
       DDCA_Vcp_Feature_Code feature_code,
       uint16_t              new_value,
-      uint16_t *            p_verified_value)
+      uint16_t *            verified_value_loc)
 {
 #ifdef OLD
    WITH_DH(ddca_dh,  {
@@ -2030,18 +2049,24 @@ ddca_set_continuous_vcp_value(
          // psc = global_to_public_status_code(gsc);
       } );
 #endif
+
+   DDCA_Status rc = 0;
+
    Single_Vcp_Value valrec;
    valrec.opcode = feature_code;
    valrec.value_type = DDCA_NON_TABLE_VCP_VALUE;
    valrec.val.c.cur_val = new_value;
-   Single_Vcp_Value * newval_loc = NULL;
-   Single_Vcp_Value ** newval_loc_parm = NULL;
-   if (p_verified_value)
-      newval_loc_parm = &newval_loc;
-   DDCA_Status rc = ddca_set_single_vcp_value(ddca_dh, &valrec, newval_loc_parm);
-   if (newval_loc_parm) {
-      *p_verified_value = newval_loc->val.c.cur_val;
+
+   if (verified_value_loc) {
+      Single_Vcp_Value * verified_single_value = NULL;
+      rc = ddca_set_single_vcp_value(ddca_dh, &valrec, &verified_single_value);
+      if (verified_single_value)
+         *verified_value_loc = verified_single_value->val.c.cur_val;
    }
+   else {
+      rc = ddca_set_single_vcp_value(ddca_dh, &valrec, NULL);
+   }
+
    return rc;
 }
 
@@ -2056,31 +2081,58 @@ ddca_set_simple_nc_vcp_value(
 }
 
 
+/** Sets a non-table VCP value by specifying it's high and low bytes individually.
+ *  Optionally returns the values set by reading the feature code after writing.
+ *
+ *  \param[in]   ddca_dh       display handle
+ *  \param[in]   feature_code  feature code
+ *  \param[in]   hi_byte       high byte of new value
+ *  \param[in]   lo_byte       low byte of new value
+ *  \param[out]  verified_hi_byte_loc where to return high byte of verified value
+ *  \param[out]  verified_low_byte_loc where to return low byte of verified value
+ *  \return      status code
+ *
+ *  \remark
+ *  Either both **verified_hi_byte_loc** and **verified_lo_byte_loc** should be
+ *  set, or neither. Otherwise, status code **DDCRC_ARG** is returned.
+ *  \remark
+ *  Verification is performed only it has been enabled by #ddca_set_verify().
+ *  \remark
+ *  Verified values are returned if either the status code is 0 (success),
+ *  or it is **DDCRC_VERIFY**, i.e. the write succeeded but verification failed.
+ */
 DDCA_Status
 ddca_set_raw_vcp_value(
       DDCA_Display_Handle    ddca_dh,
       DDCA_Vcp_Feature_Code  feature_code,
       Byte                   hi_byte,
       Byte                   lo_byte,
-      Byte *                 p_verified_hi_byte,
-      Byte *                 p_verified_lo_byte)
+      Byte *                 verified_hi_byte_loc,
+      Byte *                 verified_lo_byte_loc)
 {
-   // TODO convert to status code
-   assert( (p_verified_hi_byte && p_verified_lo_byte) ||
-           (!p_verified_hi_byte && !p_verified_lo_byte ) );
+   if ( ( verified_hi_byte_loc && !verified_lo_byte_loc) ||
+        (!verified_hi_byte_loc &&  verified_lo_byte_loc )
+      )
+      return DDCL_ARG;
 
-   uint16_t verified_c_value;
-   uint16_t * verified_c_value_loc = NULL;
-   if (p_verified_hi_byte)
-      verified_c_value_loc = &verified_c_value;
-   DDCA_Status rc = ddca_set_continuous_vcp_value(
-                       ddca_dh,
-                       feature_code, hi_byte << 8 | lo_byte,
-                       verified_c_value_loc);
-   if (verified_c_value_loc) {
-      *p_verified_hi_byte = verified_c_value >> 8;
-      *p_verified_lo_byte = verified_c_value & 0xff;
+   // unwrap into 2 cases to clarify logic and avoid compiler warning
+   DDCA_Status rc = 0;
+   if (verified_hi_byte_loc) {
+      uint16_t verified_c_value = 0;
+      rc = ddca_set_continuous_vcp_value(
+                          ddca_dh,
+                          feature_code, hi_byte << 8 | lo_byte,
+                          &verified_c_value);
+      *verified_hi_byte_loc = verified_c_value >> 8;
+      *verified_lo_byte_loc = verified_c_value & 0xff;
    }
+   else {
+      rc = ddca_set_continuous_vcp_value(
+                          ddca_dh,
+                          feature_code, hi_byte << 8 | lo_byte,
+                          NULL);
+   }
+
    return rc;
 }
 
