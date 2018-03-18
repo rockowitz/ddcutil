@@ -539,7 +539,7 @@ create_ddc_base_response_packet(
             DDCMSG(debug, "Double byte in packet.");
          }
          else {
-            result = DDCRC_PACKET_SIZE;
+            result = DDCRC_DDC_DATA;     // was  DDCRC_PACKET_SIZE
             DDCMSG(debug,"Invalid data length in packet: %d exceeds MAX_DDC_DATA_SIZE", data_ct);
          }
       }
