@@ -57,16 +57,16 @@
 #define DDCRC_EDID                   (-(RCRANGE_DDC_START+16) ) // deprecated, use DDCRC_READ_EDID or DDCRC_INVALID_EDID
 #define DDCRC_DETERMINED_UNSUPPORTED (-(RCRANGE_DDC_START+17) ) // facility determined to be unsupported
 
-#define DDCL_ARG                     (-(RCRANGE_DDC_START+18) ) // illegal argument
-#define DDCL_INVALID_OPERATION       (-(RCRANGE_DDC_START+19) ) // e.g. writing a r/o feature
-#define DDCL_UNIMPLEMENTED           (-(RCRANGE_DDC_START+20) ) // unimplemented service
-#define DDCL_UNINITIALIZED           (-(RCRANGE_DDC_START+21) ) // library not initialized
-#define DDCL_UNKNOWN_FEATURE         (-(RCRANGE_DDC_START+22) ) // feature not in feature table
+#define DDCRC_ARG                     (-(RCRANGE_DDC_START+18) ) // illegal argument
+#define DDCRC_INVALID_OPERATION       (-(RCRANGE_DDC_START+19) ) // e.g. writing a r/o feature
+#define DDCRC_UNIMPLEMENTED           (-(RCRANGE_DDC_START+20) ) // unimplemented service
+#define DDCRC_UNINITIALIZED           (-(RCRANGE_DDC_START+21) ) // library not initialized
+#define DDCRC_UNKNOWN_FEATURE         (-(RCRANGE_DDC_START+22) ) // feature not in feature table
 #define DDCRC_INTERPRETATION_FAILED  (-(RCRANGE_DDC_START+23) ) // value format failed
 #define DDCRC_MULTI_FEATURE_ERROR    (-(RCRANGE_DDC_START+24) ) // an error occurred on a multi-feature request
 #define DDCRC_INVALID_DISPLAY        (-(RCRANGE_DDC_START+25) ) // monitor not found, can't open, no DDC support, etc
-#define DDCL_INTERNAL_ERROR          (-(RCRANGE_DDC_START+26) ) // error that triggers program failure
-#define DDCL_OTHER                   (-(RCRANGE_DDC_START+27) ) // other error (for use during development)
+#define DDCRC_INTERNAL_ERROR          (-(RCRANGE_DDC_START+26) ) // error that triggers program failure
+#define DDCRC_OTHER                   (-(RCRANGE_DDC_START+27) ) // other error (for use during development)
 #define DDCRC_VERIFY                 (-(RCRANGE_DDC_START+28) ) // read after VCP write failed or wrong value
 #define DDCRC_NOT_FOUND              (-(RCRANGE_DDC_START+29) ) // generic not found
 #define DDCRC_ALL_RESPONSES_NULL     (-(RCRANGE_DDC_START+30) ) // all responses are DDC Null Message

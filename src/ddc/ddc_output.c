@@ -119,7 +119,7 @@ check_valid_operation_by_feature_rec_and_version(
    assert(feature_flags);
    ushort rwflags   = operation_flags & DDCA_RW;
    ushort typeflags = operation_flags & (DDCA_NORMAL_TABLE | DDCA_CONT | DDCA_NC);
-   Public_Status_Code result = DDCL_INVALID_OPERATION;
+   Public_Status_Code result = DDCRC_INVALID_OPERATION;
    if ( (feature_flags & rwflags) && (feature_flags & typeflags) )
       result = 0;
    return result;
@@ -135,7 +135,7 @@ check_valid_operation_by_feature_id_and_dh(
    Public_Status_Code result = 0;
    VCP_Feature_Table_Entry * frec = vcp_find_feature_by_hexid(feature_id);
    if (!frec)
-      result = DDCL_UNKNOWN_FEATURE;
+      result = DDCRC_UNKNOWN_FEATURE;
    else {
       DDCA_MCCS_Version_Spec vcp_version = get_vcp_version_by_display_handle(dh);
       result = check_valid_operation_by_feature_rec_and_version(frec, vcp_version, operation_flags);

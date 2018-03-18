@@ -142,14 +142,14 @@ app_set_vcp_value(
       entry = vcp_create_dummy_feature_for_hexid(hexid);
    if (!entry) {
       f0printf(ferr, "Unrecognized VCP feature code: %s\n", feature);
-      ddc_excp = errinfo_new(DDCL_UNKNOWN_FEATURE, __func__);
+      ddc_excp = errinfo_new(DDCRC_UNKNOWN_FEATURE, __func__);
       goto bye;
    }
 
    if (!is_feature_writable_by_vcp_version(entry, vspec)) {
       char * feature_name =  get_version_sensitive_feature_name(entry, vspec);
       f0printf(ferr, "Feature %s (%s) is not writable\n", feature, feature_name);
-      ddc_excp = errinfo_new(DDCL_INVALID_OPERATION, __func__);
+      ddc_excp = errinfo_new(DDCRC_INVALID_OPERATION, __func__);
       goto bye;
    }
 
@@ -164,7 +164,7 @@ app_set_vcp_value(
    if (is_table_feature_by_vcp_version(entry, vspec)) {
       if (value_prefix != ' ') {
          f0printf(ferr, "Relative VCP values valid only for Continuous VCP features\n");
-         ddc_excp = errinfo_new(DDCL_INVALID_OPERATION, __func__);
+         ddc_excp = errinfo_new(DDCRC_INVALID_OPERATION, __func__);
          goto bye;
       }
 
@@ -196,7 +196,7 @@ app_set_vcp_value(
             f0printf(ferr, "Relative VCP values valid only for Continuous VCP features\n");
             // char * feature_name =  get_version_sensitive_feature_name(entry, vspec);
             // f0printf(ferr, "Feature %s (%s) is not continuous\n", feature, feature_name);
-            ddc_excp = errinfo_new(DDCL_INVALID_OPERATION, __func__);
+            ddc_excp = errinfo_new(DDCRC_INVALID_OPERATION, __func__);
             goto bye;
          }
 

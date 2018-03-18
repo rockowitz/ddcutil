@@ -73,11 +73,11 @@
 #define WITH_DR(ddca_dref, action) \
    do { \
       if (!library_initialized) \
-         return DDCL_UNINITIALIZED; \
+         return DDCRC_UNINITIALIZED; \
       DDCA_Status psc = 0; \
       Display_Ref * dref = (Display_Ref *) ddca_dref; \
       if (dref == NULL || memcmp(dref->marker, DISPLAY_REF_MARKER, 4) != 0 )  { \
-         psc = DDCL_ARG; \
+         psc = DDCRC_ARG; \
       } \
       else { \
          (action); \
@@ -89,11 +89,11 @@
 #define WITH_DH(_ddca_dh_, _action_) \
    do { \
       if (!library_initialized) \
-         return DDCL_UNINITIALIZED; \
+         return DDCRC_UNINITIALIZED; \
       DDCA_Status psc = 0; \
       Display_Handle * dh = (Display_Handle *) _ddca_dh_; \
       if ( !dh || memcmp(dh->marker, DISPLAY_HANDLE_MARKER, 4) != 0 )  { \
-         psc = DDCL_ARG; \
+         psc = DDCRC_ARG; \
       } \
       else { \
          (_action_); \
@@ -687,7 +687,7 @@ ddca_free_display_identifier(
    DDCA_Status rc = 0;
    Display_Identifier * pdid = (Display_Identifier *) did;
    if (pdid == NULL || memcmp(pdid->marker, DISPLAY_IDENTIFIER_MARKER, 4) != 0 )  {
-     rc = DDCL_ARG;
+     rc = DDCRC_ARG;
    }
    else {
      free_display_identifier(pdid);
@@ -726,7 +726,7 @@ ddca_create_display_ref(
    DDCA_Status rc = 0;
 
    if (!library_initialized) {
-      rc =  DDCL_UNINITIALIZED;
+      rc =  DDCRC_UNINITIALIZED;
       goto bye;
    }
 
@@ -813,7 +813,7 @@ ddca_open_display(
       DDCA_Display_Handle * p_dh)
 {
    if (!library_initialized)
-      return DDCL_UNINITIALIZED;
+      return DDCRC_UNINITIALIZED;
 
    ddc_ensure_displays_detected();
 
@@ -836,12 +836,12 @@ ddca_open_display(
 DDCA_Status
 ddca_close_display(DDCA_Display_Handle ddca_dh) {
    if (!library_initialized)
-      return DDCL_UNINITIALIZED;
+      return DDCRC_UNINITIALIZED;
    DDCA_Status rc = 0;
    Display_Handle * dh = (Display_Handle *) ddca_dh;
    // if (dh == NULL || memcmp(dh->marker, DISPLAY_HANDLE_MARKER, 4) != 0 )  {
    if (!valid_display_handle(dh)) {
-      rc = DDCL_ARG;
+      rc = DDCRC_ARG;
    }
    else {
       // TODO: ddc_close_display() needs an action if failure parm,
@@ -869,11 +869,11 @@ ddca_get_mccs_version(
       DDCA_MCCS_Version_Spec* p_spec)
 {
    if (!library_initialized)
-      return DDCL_UNINITIALIZED;
+      return DDCRC_UNINITIALIZED;
    DDCA_Status rc = 0;
    Display_Handle * dh = (Display_Handle *) ddca_dh;
    if (dh == NULL || memcmp(dh->marker, DISPLAY_HANDLE_MARKER, 4) != 0 )  {
-      rc = DDCL_ARG;
+      rc = DDCRC_ARG;
       p_spec->major = 0;
       p_spec->minor = 0;
    }
@@ -1136,14 +1136,14 @@ ddca_get_edid_by_display_ref(
    *p_bytes = NULL;
 
    if (!library_initialized) {
-      rc = DDCL_UNINITIALIZED;
+      rc = DDCRC_UNINITIALIZED;
       goto bye;
    }
 
    Display_Ref * dref = (Display_Ref *) ddca_dref;
    // if (dref == NULL || memcmp(dref->marker, DISPLAY_REF_MARKER, 4) != 0 )  {
    if ( !valid_display_ref(dref) )  {
-      rc = DDCL_ARG;
+      rc = DDCRC_ARG;
       goto bye;
    }
 
@@ -1239,7 +1239,7 @@ DDCA_Status ddca_get_feature_flags_by_vcp_version(
    VCP_Feature_Table_Entry * pentry = vcp_find_feature_by_hexid(feature_code);
    if (!pentry) {
       *flags = 0;
-      rc = DDCL_ARG;
+      rc = DDCRC_ARG;
    }
    else {
       DDCA_Version_Feature_Flags vflags = get_version_specific_feature_flags(pentry, vspec);
@@ -1300,7 +1300,7 @@ ddca_get_feature_info_by_vcp_version(
          false,                       // with_default
          true);                       // false => version specific, true=> version sensitive
    if (!info)
-      psc = DDCL_ARG;
+      psc = DDCRC_ARG;
    else
       *p_info = info;
 
@@ -1317,7 +1317,7 @@ ddca_get_simplified_feature_info(
  //   DDCA_MCCS_Version_Id          mccs_version_id,
       DDCA_Simplified_Version_Feature_Info *   info)
 {
-   DDCA_Status psc = DDCL_ARG;
+   DDCA_Status psc = DDCRC_ARG;
    DDCA_Version_Feature_Info * full_info =  get_version_feature_info_by_vspec(
          feature_code,
          vspec,
@@ -1342,7 +1342,7 @@ ddca_get_feature_flags_by_vspec(
  //   DDCA_MCCS_Version_Id          mccs_version_id,
       DDCA_Feature_Flags *          feature_flags)
 {
-   DDCA_Status psc = DDCL_ARG;
+   DDCA_Status psc = DDCRC_ARG;
    DDCA_Version_Feature_Info * full_info =  get_version_feature_info_by_vspec(
          feature_code,
          vspec,
@@ -1364,7 +1364,7 @@ ddca_get_feature_flags_by_version_id(
       DDCA_MCCS_Version_Id          mccs_version_id,
       DDCA_Feature_Flags *          feature_flags)
 {
-   DDCA_Status psc = DDCL_ARG;
+   DDCA_Status psc = DDCRC_ARG;
    DDCA_Version_Feature_Info * full_info =  get_version_feature_info_by_version_id(
          feature_code,
          mccs_version_id,
@@ -1409,7 +1409,7 @@ ddca_free_feature_info(
    DDCA_Status rc = 0;
    if (info) {
       if (memcmp(info->marker, VCP_VERSION_SPECIFIC_FEATURE_INFO_MARKER, 4) != 0 )  {
-        rc = DDCL_ARG;
+        rc = DDCRC_ARG;
       }
       else {
          free_version_feature_info(info);
@@ -1586,12 +1586,12 @@ ddca_get_simple_nc_feature_value_name0(
          DDCA_MCCS_Version_Spec vspec = get_vcp_version_by_display_handle(dh);
          DDCA_Feature_Value_Entry * feature_value_entries = find_feature_values(feature_code, vspec);
          if (feature_value_entries == NULL) {
-            psc = DDCL_ARG;
+            psc = DDCRC_ARG;
          }
          else {
             feature_name = get_feature_value_name(feature_value_entries, feature_value);
             if (feature_name == NULL)
-               psc = DDCL_ARG;               // correct handling for value not found?
+               psc = DDCRC_ARG;               // correct handling for value not found?
             else
                *p_feature_name = feature_name;
          }
@@ -1776,7 +1776,7 @@ ddca_get_any_vcp_value(
    DBGMSF(debug, "Starting. ddca_dh=%p, feature_code=0x%02x, call_type=%d, pvalrec=%p",
           ddca_dh, feature_code, call_type, pvalrec);
    *pvalrec = NULL;
-   DDCA_Status rc = DDCL_ARG;
+   DDCA_Status rc = DDCRC_ARG;
 
    if (call_type == DDCA_UNSET_VCP_VALUE_TYPE_PARM) {
       call_type = get_value_type_parm(ddca_dh, feature_code, DDCA_UNSET_VCP_VALUE_TYPE_PARM);
@@ -1834,7 +1834,7 @@ ddca_start_get_any_vcp_value(
    bool debug = true;
    DBGMSF(debug, "Starting. ddca_dh=%p, feature_code=0x%02x, call_type=%d",
                  ddca_dh, feature_code, call_type);
-   DDCA_Status rc = DDCL_ARG;
+   DDCA_Status rc = DDCRC_ARG;
 
    if (call_type == DDCA_UNSET_VCP_VALUE_TYPE_PARM) {
        call_type = get_value_type_parm(ddca_dh, feature_code, DDCA_UNSET_VCP_VALUE_TYPE_PARM);
@@ -1883,7 +1883,7 @@ ddca_get_formatted_vcp_value(
                assert(feature_info);
                if (!feature_info) {
 #endif
-                  psc = DDCL_ARG;
+                  psc = DDCRC_ARG;
                }
                else {
                   DDCA_Version_Feature_Flags flags = get_version_sensitive_feature_flags(pentry, vspec);
@@ -1894,7 +1894,7 @@ ddca_get_formatted_vcp_value(
                      else
                         *p_formatted_value = gaux_asprintf("Feature %02x is not readable\n", feature_code);
                      DBGMSF(debug, "%s", *p_formatted_value);
-                     psc = DDCL_INVALID_OPERATION;
+                     psc = DDCRC_INVALID_OPERATION;
                   }
                   else {
                      // Version_Feature_Flags flags = feature_info->internal_feature_flags;
@@ -1913,7 +1913,7 @@ ddca_get_formatted_vcp_value(
                                 p_formatted_value
                               );
                          if (!ok) {
-                            psc = DDCL_OTHER;    // ** WRONG CODE ***
+                            psc = DDCRC_OTHER;    // ** WRONG CODE ***
                             assert(!p_formatted_value);
                          }
                       }
@@ -1941,7 +1941,7 @@ ddca_format_any_vcp_value(
 
       VCP_Feature_Table_Entry * pentry = vcp_find_feature_by_hexid(feature_code);
       if (!pentry) {
-         psc = DDCL_ARG;
+         psc = DDCRC_ARG;
          *formatted_value_loc = gaux_asprintf("Unrecognized feature code 0x%02x", feature_code);
          goto bye;
       }
@@ -1954,7 +1954,7 @@ ddca_format_any_vcp_value(
          else
             *formatted_value_loc = gaux_asprintf("Feature %02x is not readable", feature_code);
          DBGMSF(debug, "%s", *formatted_value_loc);
-         psc = DDCL_INVALID_OPERATION;
+         psc = DDCRC_INVALID_OPERATION;
          goto bye;
       }
 
@@ -1964,14 +1964,14 @@ ddca_format_any_vcp_value(
       if (call_type != anyval->value_type) {
           *formatted_value_loc = gaux_asprintf(
                 "Feature type in value does not match feature code");
-          psc = DDCL_ARG;
+          psc = DDCRC_ARG;
           goto bye;
        }
 
        Single_Vcp_Value * valrec = any_vcp_value_to_single_vcp_value(anyval);
        bool ok = vcp_format_feature_detail(pentry,vspec, valrec,formatted_value_loc);
        if (!ok) {
-          psc = DDCL_ARG;    // ??
+          psc = DDCRC_ARG;    // ??
           assert(!formatted_value_loc);
           *formatted_value_loc = gaux_asprintf("Unable to format value for feature 0x%02x", feature_code);
        }
@@ -2113,7 +2113,7 @@ ddca_set_raw_vcp_value(
    if ( ( verified_hi_byte_loc && !verified_lo_byte_loc) ||
         (!verified_hi_byte_loc &&  verified_lo_byte_loc )
       )
-      return DDCL_ARG;
+      return DDCRC_ARG;
 
    // unwrap into 2 cases to clarify logic and avoid compiler warning
    DDCA_Status rc = 0;
@@ -2172,7 +2172,7 @@ ddca_parse_capabilities_string(
 {
    bool debug = false;
    DBGMSF(debug, "Starting. capabilities_string: |%s|", capabilities_string);
-   DDCA_Status psc = DDCL_OTHER;       // DDCL_BAD_DATA?
+   DDCA_Status psc = DDCRC_OTHER;       // DDCL_BAD_DATA?
    DBGMSF(debug, "psc initialized to %s", psc_desc(psc));
    DDCA_Capabilities * result = NULL;
 

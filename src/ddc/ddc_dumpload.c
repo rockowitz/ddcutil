@@ -467,7 +467,7 @@ loadvcp_by_ntsa(
    DBGMSF(debug, "create_dumpload_data_from_g_ptr_array() returned %p", pdata);
    if (!pdata) {
       f0printf(ferr(), "Unable to load VCP data from string\n");
-      psc = DDCL_ARG;     // was DDCRC_INVALID_DATA;
+      psc = DDCRC_ARG;     // was DDCRC_INVALID_DATA;
       ddc_excp = errinfo_new(psc, __func__);
    }
    else {

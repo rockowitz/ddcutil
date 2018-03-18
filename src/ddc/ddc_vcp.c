@@ -118,7 +118,7 @@ ddc_save_current_settings(
    if (dh->dref->io_path.io_mode == DDCA_IO_USB) {
       // command line parser should block this case
       PROGRAM_LOGIC_ERROR("MCCS over USB does not have Save Current Settings command", NULL);
-      ddc_excp = errinfo_new(DDCL_UNIMPLEMENTED, __func__);
+      ddc_excp = errinfo_new(DDCRC_UNIMPLEMENTED, __func__);
    }
    else {
       DDC_Packet * request_packet_ptr =
@@ -217,7 +217,7 @@ set_table_vcp_value(
 
    if (dh->dref->io_path.io_mode == DDCA_IO_USB) {
 #ifdef USE_USB
-      psc = DDCL_UNIMPLEMENTED;
+      psc = DDCRC_UNIMPLEMENTED;
 #else
       PROGRAM_LOGIC_ERROR("ddcutil not built with USB support");
 #endif
@@ -641,8 +641,8 @@ ddc_get_vcp_value(
                 break;
 
           case (DDCA_TABLE_VCP_VALUE):
-                psc = DDCL_UNIMPLEMENTED;
-                ddc_excp = errinfo_new(DDCL_UNIMPLEMENTED, __func__);
+                psc = DDCRC_UNIMPLEMENTED;
+                ddc_excp = errinfo_new(DDCRC_UNIMPLEMENTED, __func__);
                 break;
           }
 #else

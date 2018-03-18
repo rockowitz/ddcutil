@@ -294,7 +294,7 @@ ddcg_display_identifier_repr(
    char * repr = ddca_did_repr(ddcg_did->priv->ddct_did);
    if (!repr) {
       GQuark domain = g_quark_from_string("DDCTOOL_DDCG");
-      g_set_error(error,  domain, DDCL_ARG, "ddct_repr_identifier() returned %d=ddct_status", DDCL_ARG);
+      g_set_error(error,  domain, DDCRC_ARG, "ddct_repr_identifier() returned %d=ddct_status", DDCRC_ARG);
    }
    // DBGMSG("Returning %p -> |%s|", repr, repr);
    // solves the problem of free failure in python runtime,

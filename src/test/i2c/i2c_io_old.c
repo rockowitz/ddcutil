@@ -268,7 +268,7 @@ Public_Status_Code perform_i2c_write(int fh, char * write_mode, int bytect, Byte
    }
    else {
       printf("(%s) Unsupported write mode: %s\n", __func__, write_mode);
-      rc = DDCL_ARG;       // was -DDCRC_INVALID_MODE;
+      rc = DDCRC_ARG;       // was -DDCRC_INVALID_MODE;
    }
 
    if (debug) printf("(%s) Returning %d\n", __func__, rc);
@@ -303,7 +303,7 @@ Public_Status_Code perform_i2c_read(int    fh, char * read_mode, int bytect, Byt
    }
    else {
       printf("(%s) Unsupported read mode: %s\n", __func__, read_mode);
-      rc = DDCL_ARG;     // was DDCRC_INVALID_MODE;
+      rc = DDCRC_ARG;     // was DDCRC_INVALID_MODE;
    }
 
    if (debug ) printf("(%s) Returning %d\n", __func__, rc);

@@ -261,7 +261,7 @@ char * ddcs_repr_display_identifier(DDCS_Display_Identifier ddcs_did){
    clear_exception();
    char * result = ddca_did_repr(ddcs_did);
    if (!result)
-      throw_exception_from_status_code(DDCL_ARG);   // TODO: Python ValueError
+      throw_exception_from_status_code(DDCRC_ARG);   // TODO: Python ValueError
    return result;
 }
 
@@ -290,7 +290,7 @@ char *  ddcs_repr_display_ref(DDCS_Display_Ref dref) {
    clear_exception();
    char * result =  ddca_dref_repr(dref);
    if (!result)
-      throw_exception_from_status_code(DDCL_ARG);     // TODO: Python ValueError
+      throw_exception_from_status_code(DDCRC_ARG);     // TODO: Python ValueError
    return result;
 }
 
@@ -324,7 +324,7 @@ char * ddcs_repr_display_handle(DDCS_Display_Handle dh) {
    clear_exception();
    char * result = ddca_dh_repr(dh);
    if (!result)
-      throw_exception_from_status_code(DDCL_OTHER);   // should just be Python ValueError
+      throw_exception_from_status_code(DDCRC_OTHER);   // should just be Python ValueError
    return result;
 }
 

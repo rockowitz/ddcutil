@@ -67,17 +67,17 @@ static Status_Code_Info ddcrc_info[] = {
       EDENTRY(DDCRC_DETERMINED_UNSUPPORTED , "ddcutil determined that facility unsupported" ),
 
       // library errors
-      EDENTRY(DDCL_ARG                    , "illegal argument"),
-      EDENTRY(DDCL_INVALID_OPERATION      , "invalid operation"),
-      EDENTRY(DDCL_UNIMPLEMENTED          , "unimplemented"),
-      EDENTRY(DDCL_UNINITIALIZED          , "library uninitialized"),
+      EDENTRY(DDCRC_ARG                    , "illegal argument"),
+      EDENTRY(DDCRC_INVALID_OPERATION      , "invalid operation"),
+      EDENTRY(DDCRC_UNIMPLEMENTED          , "unimplemented"),
+      EDENTRY(DDCRC_UNINITIALIZED          , "library uninitialized"),
 
-      EDENTRY(DDCL_UNKNOWN_FEATURE        , "feature not in feature table"),
+      EDENTRY(DDCRC_UNKNOWN_FEATURE        , "feature not in feature table"),
       EDENTRY(DDCRC_INTERPRETATION_FAILED , "feature value interpretation function failed"),
       EDENTRY(DDCRC_MULTI_FEATURE_ERROR   , "at least 1 error occurred on a multi-feature request"),
       EDENTRY(DDCRC_INVALID_DISPLAY       , "invalid display"),
-      EDENTRY(DDCL_INTERNAL_ERROR         , "fatal error condition"),
-      EDENTRY(DDCL_OTHER                  , "other error"),       // for use during development
+      EDENTRY(DDCRC_INTERNAL_ERROR         , "fatal error condition"),
+      EDENTRY(DDCRC_OTHER                  , "other error"),       // for use during development
       EDENTRY(DDCRC_VERIFY                , "VCP read after write failed"),
       EDENTRY(DDCRC_NOT_FOUND             , "not found"),
       EDENTRY(DDCRC_ALL_RESPONSES_NULL    , "all tries returned DDC Null Message"),

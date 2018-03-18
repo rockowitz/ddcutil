@@ -969,7 +969,7 @@ create_ddc_typed_response_packet(
          break;
 
       default:
-         rc = DDCL_INTERNAL_ERROR;
+         rc = DDCRC_INTERNAL_ERROR;
          DBGMSG("Unhandled case. expected_type=%d", expected_type);
          break;
       }

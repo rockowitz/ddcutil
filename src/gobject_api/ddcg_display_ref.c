@@ -152,7 +152,7 @@ ddcg_display_ref_repr(
       ddca_dref_repr( ddcg_dref->priv->ddct_dref);
    if (!repr) {
       GQuark domain = g_quark_from_string("DDCTOOL_DDCG");
-      g_set_error(error,  domain, DDCL_ARG, "ddcg_display_ref_repr() returned %d=ddcg_status",DDCL_ARG);
+      g_set_error(error,  domain, DDCRC_ARG, "ddcg_display_ref_repr() returned %d=ddcg_status",DDCRC_ARG);
    }
    return g_strdup(repr);  // w/o g_strdup get free(): invalid pointer in Python
 }

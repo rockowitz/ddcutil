@@ -233,7 +233,7 @@ ddcg_display_handle_repr(
    }
    else {
       GQuark domain = g_quark_from_string("DDCTOOL_DDCG");
-      g_set_error(error,  domain, DDCL_ARG, "ddct_repr_display_handle() returned ddct_status=%d", DDCL_ARG);
+      g_set_error(error,  domain, DDCRC_ARG, "ddct_repr_display_handle() returned ddct_status=%d", DDCRC_ARG);
    }
 
    return g_strdup(repr);

@@ -93,7 +93,7 @@ app_show_single_vcp_value_by_feature_table_entry(
                 feature_id, feature_name, vspec.major, vspec.minor);
       else
          printf("Feature %02x (%s) is not readable\n", feature_id, feature_name);
-      psc = DDCL_INVALID_OPERATION;
+      psc = DDCRC_INVALID_OPERATION;
    }
 
    if (psc == 0) {
@@ -148,7 +148,7 @@ app_show_single_vcp_value_by_feature_id(
    if (!entry) {
       printf("Unrecognized VCP feature code: 0x%02x\n", feature_id);
       // gsc = modulate_rc(-EINVAL, RR_ERRNO);
-      psc = DDCL_UNKNOWN_FEATURE;
+      psc = DDCRC_UNKNOWN_FEATURE;
    }
    else {
       psc = app_show_single_vcp_value_by_feature_table_entry(dh, entry);
