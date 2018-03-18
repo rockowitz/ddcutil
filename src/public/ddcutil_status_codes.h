@@ -60,7 +60,7 @@
 #define DDCRC_READ_ALL_ZERO          (-(RCRANGE_DDC_START+11) )
 #define DDCRC_BAD_BYTECT             (-(RCRANGE_DDC_START+12) )  // deprecated, use DDCRC_DDC_DATA
 #define DDCRC_READ_EQUALS_WRITE      (-(RCRANGE_DDC_START+13) )
-#define DDCRC_INVALID_MODE           (-(RCRANGE_DDC_START+14) )
+#define DDCRC_INVALID_MODE           (-(RCRANGE_DDC_START+14) ) // deprecated
 #define DDCRC_RETRIES                (-(RCRANGE_DDC_START+15) ) // too many retries
 #define DDCRC_EDID                   (-(RCRANGE_DDC_START+16) )  // invalid EDID
 #define DDCRC_DETERMINED_UNSUPPORTED (-(RCRANGE_DDC_START+17) ) // facility determined to be unsupported
