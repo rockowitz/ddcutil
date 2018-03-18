@@ -71,8 +71,19 @@ Error_Info * errinfo_new(
       int            status_code,
       const char *   func);
 
+Error_Info * errinfo_new2(
+      int            status_code,
+      char *         detail,
+      const char *   func);
+
 Error_Info * errinfo_new_with_cause(
       int            status_code,
+      Error_Info *   cause,
+      const char *   func);
+
+Error_Info * errinfo_new_with_cause2(
+      int            status_code,
+      char *         detail,
       Error_Info *   cause,
       const char *   func);
 
@@ -84,6 +95,13 @@ Error_Info * errinfo_new_chained(
 
 Error_Info * errinfo_new_with_causes(
       int            status_code,
+      Error_Info **  causes,
+      int            cause_ct,
+      const char *   func);
+
+Error_Info * errinfo_new_with_causes2(
+      int            status_code,
+      char *         detail,
       Error_Info **  causes,
       int            cause_ct,
       const char *   func);
@@ -104,6 +122,10 @@ void errinfo_add_cause(
 void errinfo_set_status(
       Error_Info *   erec,
       int    rc);
+
+void errinfo_set_detail(
+      Error_Info *   erec,
+      char *         detail);
 
 char * errinfo_causes_string(
       Error_Info *   erec);

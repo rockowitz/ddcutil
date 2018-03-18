@@ -176,6 +176,24 @@ void errinfo_set_status(Error_Info * erec, int code) {
    erec->status_code = code;
 }
 
+/** Sets the detail string in a existing #Error_Info instance.
+ *
+ *  \param  erec   pointer to instance
+ *  \param  detail detail string
+ */
+void errinfo_set_detail(
+      Error_Info *   erec,
+      char *         detail)
+{
+   VALID_DDC_ERROR_PTR(erec);
+   if (erec->detail) {
+      free(erec->detail);
+      erec->detail = NULL;
+   }
+   if (detail)
+      erec->detail = strdup(detail);
+}
+
 
 /** Adds a cause to an existing #Error_Info instance
  *
@@ -230,18 +248,37 @@ void errinfo_add_cause(Error_Info * parent, Error_Info * cause) {
 /** Creates a new #Error_Info instance with the specified status code
  *  and function name.
  *
- *  \param  code  status code
- *  \param  func  name of function generating status code
+ *  \param  status_code  status code
+ *  \param  func         name of function generating status code
  *  \return pointer to new instance
  */
-Error_Info *  errinfo_new(int code, const char * func) {
+Error_Info *  errinfo_new(int status_code, const char * func) {
+   return errinfo_new2(status_code, NULL, func);
+}
+
+
+/** Creates a new #Error_Info instance with the specified status code,
+ *  function name, and detail string.
+ *
+ *  \param  status_code  status code
+ *  \param  detail       optional detail string
+ *  \param  func         name of function generating status code
+ *  \return pointer to new instance
+ */
+Error_Info * errinfo_new2(
+      int            status_code,
+      char *         detail,
+      const char *   func)
+{
    Error_Info * erec = calloc(1, sizeof(Error_Info));
    memcpy(erec->marker, ERROR_INFO_MARKER, 4);
-   erec->status_code = code;
+   erec->status_code = status_code;
    erec->causes = empty_list;
    // printf("(%s) erec->causes = %p\n", __func__, erec->causes);
    // printf("(%s) erec->causes[0] = %p\n", __func__, erec->causes[0]);
    erec->func = strdup(func);   // strdup to avoid constness warning, must free
+   if (detail)
+      erec->detail = strdup(detail);
    return erec;
 }
 
@@ -259,12 +296,30 @@ Error_Info * errinfo_new_with_cause(
       Error_Info *   cause,
       const char *   func)
 {
+   return errinfo_new_with_cause2(code, NULL, cause, func);
+}
+
+
+/** Creates a new #Error_Info instance with a detail string, including a
+ * reference to another instance that is the cause of the current error.
+ *
+ *  \param  status_code  status code
+ *  \param  detail       optional detail string
+ *  \param  cause        pointer to another #Error_Info that is included as a cause
+ *  \param  func         name of function creating new instance
+ *  \return pointer to new instance
+ */
+Error_Info * errinfo_new_with_cause2(
+      int            status_code,
+      char *         detail,
+      Error_Info *   cause,
+      const char *   func)
+{
    VALID_DDC_ERROR_PTR(cause);
-   Error_Info * erec = errinfo_new(code, func);
+   Error_Info * erec = errinfo_new2(status_code, detail, func);
    errinfo_add_cause(erec, cause);
    return erec;
 }
-
 
 /** Creates a new #Error_Info instance, including a reference to another
  *  instance that is the cause of the current error.  The status code
@@ -299,12 +354,23 @@ Error_Info * errinfo_new_with_causes(
       int             cause_ct,
       const char *    func)
 {
-   Error_Info * result = errinfo_new(code, func);
+   return errinfo_new_with_causes2(code, NULL, causes, cause_ct, func);
+}
+
+Error_Info * errinfo_new_with_causes2(
+      int            status_code,
+      char *         detail,
+      Error_Info **  causes,
+      int            cause_ct,
+      const char *   func)
+{
+   Error_Info * result = errinfo_new2(status_code, detail, func);
    for (int ndx = 0; ndx < cause_ct; ndx++) {
       errinfo_add_cause(result, causes[ndx]);
    }
    return result;
 }
+
 
 
 #ifdef UNUSED
