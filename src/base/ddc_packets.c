@@ -558,7 +558,7 @@ create_ddc_base_response_packet(
          if (calculated_checksum != actual_checksum) {
             DDCMSG(debug, "Actual checksum 0x%02x, expected 0x%02x",
                              actual_checksum, calculated_checksum);
-            result = DDCRC_CHECKSUM;
+            result = DDCRC_DDC_DATA;    //  was DDCRC_CHECKSUM
             free_ddc_packet(packet);
          }
       }

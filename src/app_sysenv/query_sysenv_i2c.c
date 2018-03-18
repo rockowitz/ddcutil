@@ -214,7 +214,7 @@ static Public_Status_Code try_single_getvcp_call(
    if (ddc_response_bytes[11] != calculated_checksum) {
       DBGMSF(debug, "Unexpected checksum.  actual=0x%02x, calculated=0x%02x",
              ddc_response_bytes[11], calculated_checksum );
-      rc = DDCRC_CHECKSUM;
+      rc = DDCRC_DDC_DATA;     // was DDCRC_CHECKSUM;
       goto bye;
    }
 
