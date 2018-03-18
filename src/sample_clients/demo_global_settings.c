@@ -1,10 +1,10 @@
 /* demo_global_settings.c
  *
  * Sample program illustrating the use of libddcutil's functions for
- * build information and global settings management.
+ * querying build information and global settings management.
  *
  * <copyright>
- * Copyright (C) 2014-2017 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2014-2018 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
