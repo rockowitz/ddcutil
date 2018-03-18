@@ -239,7 +239,7 @@ Status_DDC
 get_interpreted_vcp_code(
       DDC_Packet *  packet,
       bool          make_copy,
-      Parsed_Nontable_Vcp_Response ** interpreted_ptr);
+      Parsed_Nontable_Vcp_Response ** interpreted_loc);
 
 void
 report_interpreted_capabilities(

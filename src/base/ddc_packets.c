@@ -593,7 +593,8 @@ create_ddc_base_response_packet(
  *  \return 0 for success\n
  *          as from create_ddc_base_response_packet, indicating malformed response
  *  \retval DDCRC_NULL_RESPONSE
- *  \retval DDCRC_RESPONSE_TYPE
+ *  \retval DDCRC_RESPONSE_TYPE (deprecated)
+ *  \retval DDCRC_DDC_DATA
  *
  *  The pointer returned at packet_ptr_addr is non-null iff the status code is 0.
  */
@@ -620,7 +621,7 @@ create_ddc_response_packet(
          result = DDCRC_NULL_RESPONSE;
       }
       else if ( get_data_start(*packet_ptr_addr)[0] != expected_type) {
-         result = DDCRC_RESPONSE_TYPE;
+         result = DDCRC_DDC_DATA;      // was: DDCRC_RESPONSE_TYPE
       }
    }
 
@@ -1094,12 +1095,13 @@ create_ddc_getvcp_response_packet(
  *
  *  This is the aux_data field of #DDC_Packet
  *
- * \param   packet  pointer to digested packet (not raw bytes)
+ * \param   packet      pointer to digested packet (not raw bytes)
  * \param   make_copy  if true, make a copy of the aux_data field,\n
  *                     if false, just return a pointer to it
- * \param   interpreted_ptr  where to return newly allocated #Parsed_Nontable_Vcp_Response
+ * \param   interpreted_loc  where to return pointer to newly allocated #Parsed_Nontable_Vcp_Response
  * \retval  0    success
- * \retval  DDCRC_RESPONSE_TYPE  not a VCP response packet
+ * \retval  DDCRC_RESPONSE_TYPE  not a VCP response packet  (deprecated)
+ * \retval  DDCRC_DDC_DATA       not a VCP response packet
  *
  * The value pointed to by **interpreted_ptr** is non-null iff the returned status code is 0.
  */
@@ -1107,30 +1109,28 @@ Status_DDC
 get_interpreted_vcp_code(
        DDC_Packet *            packet,
        bool                    make_copy,
-       Parsed_Nontable_Vcp_Response ** interpreted_ptr)
+       Parsed_Nontable_Vcp_Response ** interpreted_loc)
 {
    bool debug = false;
    DBGMSF(debug, "Starting");
 
    Status_DDC rc = DDCRC_OK;
    if (packet->type != DDC_PACKET_TYPE_QUERY_VCP_RESPONSE) {
-      COUNT_STATUS_CODE(DDCRC_RESPONSE_TYPE);
-      rc = DDCRC_RESPONSE_TYPE;
-      *interpreted_ptr = NULL;
+      rc = COUNT_STATUS_CODE(DDCRC_DDC_DATA);      // was DDCRC_RESPONSE_TYPE
+      *interpreted_loc = NULL;
    }
    else {
       if (make_copy) {
-         Parsed_Nontable_Vcp_Response * copy =
-            malloc(sizeof(Parsed_Nontable_Vcp_Response));
+         Parsed_Nontable_Vcp_Response * copy = malloc(sizeof(Parsed_Nontable_Vcp_Response));
          memcpy(copy, packet->parsed.nontable_response, sizeof(Parsed_Nontable_Vcp_Response));
-         *interpreted_ptr = copy;
+         *interpreted_loc = copy;
       }
       else {
-         *interpreted_ptr = packet->parsed.nontable_response;
+         *interpreted_loc = packet->parsed.nontable_response;
       }
    }
    DBGMSF(debug, "Returning %d: %s\n", rc, psc_desc(rc) );
-   assert( (rc == 0 && *interpreted_ptr) || (rc && !*interpreted_ptr));
+   assert( (rc == 0 && *interpreted_loc) || (rc && !*interpreted_loc));
    return rc;
 }
 

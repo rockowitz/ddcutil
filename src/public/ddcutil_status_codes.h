@@ -51,7 +51,7 @@
 #define DDCRC_RESPONSE_ENVELOPE      (-RCRANGE_DDC_START-2)     // deprecated, use DDCRC_DDC_DATA
 #define DDCRC_CHECKSUM               (-RCRANGE_DDC_START-3)     // deprecated, use DDCRC_DDC_DATA
 #define DDCRC_INVALID_DATA           (-RCRANGE_DDC_START-4)
-#define DDCRC_RESPONSE_TYPE          (-RCRANGE_DDC_START-5)
+#define DDCRC_RESPONSE_TYPE          (-RCRANGE_DDC_START-5)     // deprecated, use DDCRC_DDC_DATA
 #define DDCRC_NULL_RESPONSE          (-RCRANGE_DDC_START-6)
 #define DDCRC_MULTI_PART_READ_FRAGMENT  (-RCRANGE_DDC_START-7)
 #define DDCRC_ALL_TRIES_ZERO         (-RCRANGE_DDC_START-8)    // packet data entirely 0  // not used TODO eliminate
