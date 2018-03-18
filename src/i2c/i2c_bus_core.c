@@ -577,7 +577,7 @@ Public_Status_Code i2c_get_raw_edid_by_fd(int fd, Buffer * rawedid) {
          if (rc == 0) {
             rawedid->len = 128;
             if (debug) {
-               DBGMSG("call_read returned:", NULL);
+               DBGMSG("call_read returned:");
                dbgrpt_buffer(rawedid, 1);
                DBGMSG("edid checksum = %d", edid_checksum(rawedid->bytes) );
             }
@@ -588,7 +588,7 @@ Public_Status_Code i2c_get_raw_edid_by_fd(int fd, Buffer * rawedid) {
                // e.g. nouveau driver, Quadro card, on blackrock
                DBGTRC(debug, TRACE_GROUP, "Invalid EDID checksum %d, expected 0.", checksum);
                rawedid->len = 0;
-               rc = DDCRC_EDID;
+               rc = DDCRC_INVALID_EDID;    // was DDCRC_EDID
             }
          }
          if (rc == 0)
@@ -634,9 +634,9 @@ Public_Status_Code i2c_get_parsed_edid_by_fd(int fd, Parsed_Edid ** edid_ptr_loc
             DBGMSG("create_parsed_edid() returned NULL", NULL);
       }
       if (!edid)
-         rc = DDCRC_EDID;
+         rc = DDCRC_INVALID_EDID;
    }
-   else if (rc == DDCRC_EDID) {
+   else {        // if (rc == DDCRC_EDID) {
       DBGTRC(debug, TRACE_GROUP, "i2c_get_raw_edid_by_fd() returned %s", psc_desc(rc));
    }
 
