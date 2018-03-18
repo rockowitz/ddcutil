@@ -47,9 +47,9 @@
 
 #define DDCRC_OK                     0
 
-#define DDCRC_PACKET_SIZE            (-RCRANGE_DDC_START-1)
-#define DDCRC_RESPONSE_ENVELOPE      (-RCRANGE_DDC_START-2)
-#define DDCRC_CHECKSUM               (-RCRANGE_DDC_START-3)
+#define DDCRC_PACKET_SIZE            (-RCRANGE_DDC_START-1)     // deprecated, use DDCRC_DDC_DATA
+#define DDCRC_RESPONSE_ENVELOPE      (-RCRANGE_DDC_START-2)     // deprecated, use DDCRC_DDC_DATA
+#define DDCRC_CHECKSUM               (-RCRANGE_DDC_START-3)     // deprecated, use DDCRC_DDC_DATA
 #define DDCRC_INVALID_DATA           (-RCRANGE_DDC_START-4)
 #define DDCRC_RESPONSE_TYPE          (-RCRANGE_DDC_START-5)
 #define DDCRC_NULL_RESPONSE          (-RCRANGE_DDC_START-6)
