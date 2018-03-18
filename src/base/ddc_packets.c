@@ -506,10 +506,11 @@ create_ddc_save_settings_request_packet(const char * tag)
  *  \param packet_ptr_addr             where to return pointer to newly allocated #DDC_Packet
  *
  *  \retval 0
- *  \retval DDCRC_RESPONSE_ENVELOPE
- *  \retval DDCRC_DOUBLE_BYTE
+ *  \retval DDCRC_DDC_DATA
+ *  \retval DDCRC_RESPONSE_ENVELOPE   (deprecated)
+ *  \retval DDCRC_DOUBLE_BYTE         (deprecated)
  *  \retval DDCRC_PACKET_SIZE
- *  \retval DDCRC_CHECKSUM
+ *  \retval DDCRC_CHECKSUM            (deprecated)
  *
  *  The pointer returned at packet_ptr_addr is non-null iff the status code is 0.
  */
@@ -535,7 +536,7 @@ create_ddc_base_response_packet(
       // DBGMSG("data_ct=%d", data_ct);
       if (data_ct > MAX_DDC_DATA_SIZE) {
          if ( is_double_byte(&i2c_response_bytes[1])) {
-            result = DDCRC_DOUBLE_BYTE;
+            result = DDCRC_DDC_DATA;    // was DDCRC_DOUBLE_BYTE
             DDCMSG(debug, "Double byte in packet.");
          }
          else {

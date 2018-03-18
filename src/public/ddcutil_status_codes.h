@@ -55,7 +55,7 @@
 #define DDCRC_NULL_RESPONSE          (-RCRANGE_DDC_START-6)
 #define DDCRC_MULTI_PART_READ_FRAGMENT  (-RCRANGE_DDC_START-7)
 #define DDCRC_ALL_TRIES_ZERO         (-RCRANGE_DDC_START-8)    // packet data entirely 0  // not used TODO eliminate
-#define DDCRC_DOUBLE_BYTE            (-RCRANGE_DDC_START-9)    // duplicated byte in packet
+#define DDCRC_DOUBLE_BYTE            (-RCRANGE_DDC_START-9)    // duplicated byte in packet // deprecated, use DDCRC_DDC_DATA
 #define DDCRC_REPORTED_UNSUPPORTED   (-RCRANGE_DDC_START-10)   // DDC reply says unsupported
 #define DDCRC_READ_ALL_ZERO          (-(RCRANGE_DDC_START+11) )
 #define DDCRC_BAD_BYTECT             (-(RCRANGE_DDC_START+12) )
