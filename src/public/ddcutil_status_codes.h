@@ -21,29 +21,21 @@
  * </endcopyright>
  */
 
+/** \file ddcutil_status_codes.h
+ * This file defines the DDC specific status codes that can be returned in #DDCA_Status.
+ * In addition to these codes, #DDCA_Status can contain:
+ *   - negative Linux errno values
+ *   - modulated ADL status codes
+ *     (i.e. ADL status codes with a constant added so as not to overlap with Linux errno values)
+ *
+ * Because the DDC specific status codes are merged with the Linux and ADL
+ * status codes (which are #defines), they are specified as #defines rather than enum values.
+ */
+
 #ifndef DDCUTIL_STATUS_CODES_H_
 #define DDCUTIL_STATUS_CODES_H_
 
 #define RCRANGE_DDC_START  3000
-
-// Why not use #define:
-// - Eclipse global name change doesn't work well
-//
-// Why not use enum:
-//  Full set of status codes is the union of modulate(errno), modulated(adl_error_number), app specific error numbers
-//
-// Disadvantage:
-// - can't use as case values for switch
-//
-// Reason for using defines:
-//  errno.h  values are defines
-//  adl error values are defines
-//
-
-
-// Status codes created by this application
-// (as opposed to Linux ERRNO, ADL)
-// These generally indicate a DDC protocol problem
 
 #define DDCRC_OK                     0
 
@@ -84,10 +76,5 @@
 // TODO: consider replacing DDCRC_EDID by more generic DDCRC_BAD_DATA, could be used for e.g. invalid capabilities string
 // what about DDCRC_INVALID_DATA?
 // maybe most of DDCRC_... become DDCRC_I2C...
-
-
-// never used
-// #define DDCRC_PACKET_ERROR_END      (-RCRANGE_DDC_START-16)   // special end value
-
 
 #endif /* DDCUTIL_STATUS_CODES_H_ */
