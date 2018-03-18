@@ -218,7 +218,7 @@ create_dumpload_data_from_g_ptr_array(GPtrArray * garray) {
                      VCP_Feature_Table_Entry * pvft_entry =
                          vcp_find_feature_by_hexid_w_default(feature_id);
 
-                     bool is_table_feature = is_feature_table_by_vcp_version(
+                     bool is_table_feature = is_table_feature_by_vcp_version(
                                                 pvft_entry,data->vcp_version);
 
                      if (is_table_feature) {

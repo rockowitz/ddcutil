@@ -195,7 +195,7 @@ is_feature_writable_by_vcp_version(
       DDCA_MCCS_Version_Spec     vcp_version);
 
 bool
-is_feature_table_by_vcp_version(
+is_table_feature_by_vcp_version(
       VCP_Feature_Table_Entry *  vfte,
       DDCA_MCCS_Version_Spec     vcp_version);
 

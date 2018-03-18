@@ -104,7 +104,7 @@ create_feature_set(
          // original code looks at VCP2_READABLE, output level
          if (vcp_entry) {
             bool showit = true;
-            if ( is_feature_table_by_vcp_version(vcp_entry, vcp_version) ) {
+            if ( is_table_feature_by_vcp_version(vcp_entry, vcp_version) ) {
                if ( /* get_output_level() < DDCA_OL_VERBOSE || */
                     exclude_table_features  )
                   showit = false;
