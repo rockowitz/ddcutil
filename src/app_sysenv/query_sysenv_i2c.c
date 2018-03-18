@@ -132,7 +132,7 @@ static Public_Status_Code try_single_getvcp_call(
    }
    if (rc != writect) {
       DBGMSF(debug, "write() returned %d, expected %d", rc, writect );
-      rc = DDCRC_BAD_BYTECT;
+      rc = DDCRC_DDC_DATA;    // was DDCRC_BAD_BYTECT
       goto bye;
    }
    usleep(50000);
@@ -155,7 +155,7 @@ static Public_Status_Code try_single_getvcp_call(
 
    if (rc != readct) {
       DBGMSF(debug, "read() returned %d, should be %d", rc, readct );
-      rc = DDCRC_BAD_BYTECT;
+      rc = DDCRC_DDC_DATA;    // was DDCRC_BAD_BYTECT
       goto bye;
    }
 
@@ -194,7 +194,7 @@ static Public_Status_Code try_single_getvcp_call(
 
    if (ddc_data_length != 8) {
       DBGMSF(debug, "Invalid query VCP response length: %d", ddc_data_length );
-      rc = DDCRC_BAD_BYTECT;
+      rc = DDCRC_DDC_DATA;    //  was DDCRC_BAD_BYTECT
       goto bye;
    }
 

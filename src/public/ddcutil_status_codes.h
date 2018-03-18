@@ -58,7 +58,7 @@
 #define DDCRC_DOUBLE_BYTE            (-RCRANGE_DDC_START-9)    // duplicated byte in packet // deprecated, use DDCRC_DDC_DATA
 #define DDCRC_REPORTED_UNSUPPORTED   (-RCRANGE_DDC_START-10)   // DDC reply says unsupported
 #define DDCRC_READ_ALL_ZERO          (-(RCRANGE_DDC_START+11) )
-#define DDCRC_BAD_BYTECT             (-(RCRANGE_DDC_START+12) )
+#define DDCRC_BAD_BYTECT             (-(RCRANGE_DDC_START+12) )  // deprecated, use DDCRC_DDC_DATA
 #define DDCRC_READ_EQUALS_WRITE      (-(RCRANGE_DDC_START+13) )
 #define DDCRC_INVALID_MODE           (-(RCRANGE_DDC_START+14) )
 #define DDCRC_RETRIES                (-(RCRANGE_DDC_START+15) ) // too many retries

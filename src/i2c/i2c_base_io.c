@@ -65,7 +65,8 @@
  * @param  pbytes  pointer to bytes to write
  *
  * @retval 0                 success
- * @retval DDCRC_BAD_BYTECT  incorrect number of bytes written
+ * @retval DDCRC_DDC_DATA   incorrect number of bytes read
+ * @retval DDCRC_BAD_BYTECT incorrect number of bytes read (deprecated)
  * @retval -errno            negative Linux error number
  */
 Status_Errno_DDC  write_writer(int fh, int bytect, Byte * pbytes) {
@@ -78,7 +79,7 @@ Status_Errno_DDC  write_writer(int fh, int bytect, Byte * pbytes) {
       if (rc == bytect)
          rc = 0;
       else
-         rc = DDCRC_BAD_BYTECT;
+         rc = DDCRC_DDC_DATA;    // was  DDCRC_BAD_BYTECT
    }
    else  {       // rc < 0
       int errsv = errno;
@@ -96,7 +97,8 @@ Status_Errno_DDC  write_writer(int fh, int bytect, Byte * pbytes) {
  * @param  readbuf   read bytes into this buffer
  *
  * @retval 0                success
- * @retval DDCRC_BAD_BYTECT incorrect number of bytes read
+ * @retval DDCRC_DDC_DATA   incorrect number of bytes read
+ * @retval DDCRC_BAD_BYTECT incorrect number of bytes read (deprecated)
  * @retval -errno           negative Linux errno value
  */
 Status_Errno_DDC read_reader(int fh, int bytect, Byte * readbuf) {
@@ -109,7 +111,7 @@ Status_Errno_DDC read_reader(int fh, int bytect, Byte * readbuf) {
       if (rc == bytect)
          rc = 0;
       else
-         rc = DDCRC_BAD_BYTECT;
+         rc = DDCRC_DDC_DATA;    // was DDCRC_BAD_BYTECT
    }
    else {    // rc < 0
       int errsv = errno;
