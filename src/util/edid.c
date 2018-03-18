@@ -233,24 +233,12 @@ static void get_edid_descriptor_strings(
  */
 Parsed_Edid * create_parsed_edid(Byte* edidbytes) {
    assert(edidbytes);
-   bool debug = false;
+   // bool debug = false;
    bool ok = true;
    Parsed_Edid* parsed_edid = NULL;
 
-   const Byte edid_header_tag[] = {0x00, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0x00};
-   if (memcmp(edidbytes, edid_header_tag, 8) != 0) {
-      char * hs = hexstring(edidbytes,8);
-      if (debug)
-         printf("(%s) Invalid initial EDID bytes: %s\n", __func__, hs);
-      free(hs);
+   if ( !is_valid_edid_header(edidbytes) || !is_valid_edid_checksum(edidbytes) )
       goto bye;
-   }
-
-   if (edid_checksum(edidbytes) != 0x00) {
-      if (debug)
-         printf("(%s) Invalid EDID checksum: 0x%02x\n", __func__, edid_checksum(edidbytes));
-      goto bye;
-   }
 
    parsed_edid = calloc(1,sizeof(Parsed_Edid));
    assert(sizeof(parsed_edid->bytes) == 128);
