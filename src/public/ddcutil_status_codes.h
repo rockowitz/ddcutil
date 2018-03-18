@@ -54,7 +54,7 @@
 #define DDCRC_READ_EQUALS_WRITE      (-(RCRANGE_DDC_START+13) ) // deprecated, use DDCRC_DDC_DATA
 #define DDCRC_INVALID_MODE           (-(RCRANGE_DDC_START+14) ) // deprecated
 #define DDCRC_RETRIES                (-(RCRANGE_DDC_START+15) ) // too many retries
-#define DDCRC_EDID                   (-(RCRANGE_DDC_START+16) )  // invalid EDID
+#define DDCRC_EDID                   (-(RCRANGE_DDC_START+16) ) // deprecated, use DDCRC_READ_EDID or DDCRC_INVALID_EDID
 #define DDCRC_DETERMINED_UNSUPPORTED (-(RCRANGE_DDC_START+17) ) // facility determined to be unsupported
 
 #define DDCL_ARG                     (-(RCRANGE_DDC_START+18) ) // illegal argument
@@ -71,6 +71,8 @@
 #define DDCRC_NOT_FOUND              (-(RCRANGE_DDC_START+29) ) // generic not found
 #define DDCRC_ALL_RESPONSES_NULL     (-(RCRANGE_DDC_START+30) ) // all responses are DDC Null Message
 #define DDCRC_DDC_DATA               (-(RCRANGE_DDC_START+31) ) // replaces DDCRC_PACKET_SIZE, etc.
+#define DDCRC_READ_EDID              (-(RCRANGE_DDC_START+32) ) // error reading EDID
+#define DDCRC_INVALID_EDID           (-(RCRANGE_DDC_START+33) ) // error parsing EDID
 
 
 // TODO: consider replacing DDCRC_EDID by more generic DDCRC_BAD_DATA, could be used for e.g. invalid capabilities string

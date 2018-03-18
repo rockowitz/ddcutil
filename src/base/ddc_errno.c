@@ -82,6 +82,8 @@ static Status_Code_Info ddcrc_info[] = {
       EDENTRY(DDCRC_NOT_FOUND             , "not found"),
       EDENTRY(DDCRC_ALL_RESPONSES_NULL    , "all tries returned DDC Null Message"),
       EDENTRY(DDCRC_DDC_DATA              , "DDC data error"),
+      EDENTRY(DDCRC_READ_EDID             , "unable to read EDID"),
+      EDENTRY(DDCRC_INVALID_EDID          , "unable to parse EDID"),
 
     };
 #undef EDENTRY
