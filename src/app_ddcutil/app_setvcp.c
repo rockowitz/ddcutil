@@ -102,11 +102,10 @@ bool parse_vcp_value(char * string_value, long* parsed_value) {
  *   dh         display handle
  *   feature    feature id (as string)
  *   new_value  new feature value (as string)
- *   force
- *   retry_history if non-null, collects retryable errors
+ *   force      attempt to set feature even if feature code unrecognized
  *
  * Returns:
- *   0          success
+ *   NULL if success
  *   -EINVAL    invalid setvcp arguments, feature not writable
  *   from put_vcp_by_display_ref()
  */
@@ -118,7 +117,6 @@ app_set_vcp_value(
       char *           new_value,
       bool             force)
 {
-   // FILE * fout = stdout;
    FILE * ferr = stderr;
    bool debug = false;
    DBGMSF(debug,"Starting");
@@ -135,9 +133,8 @@ app_set_vcp_value(
    DDCA_MCCS_Version_Spec vspec = get_vcp_version_by_display_handle(dh);
    bool ok = any_one_byte_hex_string_to_byte_in_buf(feature, &hexid);
    if (!ok) {
-      f0printf(ferr, "Unrecognized VCP feature code: %s\n", feature);
-      psc = DDCL_UNKNOWN_FEATURE;
-      ddc_excp = errinfo_new(psc, __func__);
+      f0printf(ferr, "Invalid VCP feature code: %s\n", feature);
+      ddc_excp = errinfo_new(-EINVAL, __func__);
       goto bye;
    }
    entry = vcp_find_feature_by_hexid(hexid);
@@ -145,52 +142,65 @@ app_set_vcp_value(
       entry = vcp_create_dummy_feature_for_hexid(hexid);
    if (!entry) {
       f0printf(ferr, "Unrecognized VCP feature code: %s\n", feature);
-      psc = DDCL_UNKNOWN_FEATURE;
-      ddc_excp = errinfo_new(psc, __func__);
+      ddc_excp = errinfo_new(DDCL_UNKNOWN_FEATURE, __func__);
       goto bye;
    }
 
    if (!is_feature_writable_by_vcp_version(entry, vspec)) {
       char * feature_name =  get_version_sensitive_feature_name(entry, vspec);
       f0printf(ferr, "Feature %s (%s) is not writable\n", feature, feature_name);
-      psc = DDCL_INVALID_OPERATION;
-      ddc_excp = errinfo_new(psc, __func__);
+      ddc_excp = errinfo_new(DDCL_INVALID_OPERATION, __func__);
       goto bye;
    }
 
-   if (is_feature_table_by_vcp_version(entry, vspec)) {
+   // Check for relative values
+   char value_prefix = ' ';
+   if (new_value[0] == '+' || new_value[0] == '-') {
+      assert(strlen(new_value) > 1);
+      value_prefix = new_value[0];
+      new_value = new_value+1;
+   }
+
+   if (is_table_feature_by_vcp_version(entry, vspec)) {
+      if (value_prefix != ' ') {
+         f0printf(ferr, "Relative VCP values valid only for Continuous VCP features\n");
+         ddc_excp = errinfo_new(DDCL_INVALID_OPERATION, __func__);
+         goto bye;
+      }
+
       Byte * value_bytes;
       int bytect = hhs_to_byte_array(new_value, &value_bytes);
       if (bytect < 0) {    // bad hex string
-         good_value = false;
+         f0printf(ferr, "Invalid hex value\n");
+         ddc_excp = errinfo_new(-EINVAL, __func__);
+         goto bye;
       }
-      else {
-         good_value = true;
-         vrec.opcode  = entry->code;
-         vrec.value_type = DDCA_TABLE_VCP_VALUE;
-         vrec.val.t.bytect = bytect;
-         vrec.val.t.bytes  = value_bytes;
-      }
+
+      vrec.opcode  = entry->code;
+      vrec.value_type = DDCA_TABLE_VCP_VALUE;
+      vrec.val.t.bytect = bytect;
+      vrec.val.t.bytes  = value_bytes;
    }
+
    else {  // the usual non-table case
-
-      // Check for relative values
-      char value_prefix = ' ';
-      if (new_value[0] == '+' || new_value[0] == '-') {
-         value_prefix = new_value[0];
-         new_value = new_value+1;
-      }
       good_value = parse_vcp_value(new_value, &longtemp);
+      if (!good_value) {
+         f0printf(ferr, "Invalid VCP value: %s\n", new_value);
+         // what is better status code?
+         ddc_excp = errinfo_new(-EINVAL, __func__);
+         goto bye;
+      }
 
-      // Handle relative values
-      if (value_prefix != ' ') {
-         if ( !(get_version_sensitive_feature_flags(entry, vspec) & DDCA_CONT) ) {
-            char * feature_name =  get_version_sensitive_feature_name(entry, vspec);
-            f0printf(ferr, "Feature %s (%s) is not continuous\n", feature, feature_name);
-            psc = DDCL_INVALID_OPERATION;
-            ddc_excp = errinfo_new(psc, __func__);
+      if ( value_prefix != ' ') {
+         if ( ! (get_version_sensitive_feature_flags(entry, vspec) & DDCA_CONT) ) {
+            f0printf(ferr, "Relative VCP values valid only for Continuous VCP features\n");
+            // char * feature_name =  get_version_sensitive_feature_name(entry, vspec);
+            // f0printf(ferr, "Feature %s (%s) is not continuous\n", feature, feature_name);
+            ddc_excp = errinfo_new(DDCL_INVALID_OPERATION, __func__);
             goto bye;
          }
+
+         // Handle relative values
 
          Parsed_Nontable_Vcp_Response * parsed_response;
          ddc_excp = ddc_get_nontable_vcp_value(
@@ -198,9 +208,13 @@ app_set_vcp_value(
                        entry->code,
                        &parsed_response);
          if (ddc_excp) {
+            psc = ERRINFO_STATUS(ddc_excp);
             // is message needed?
-            char * feature_name =  get_version_sensitive_feature_name(entry, vspec);
-            f0printf(ferr, "Error reading feature %s (%s)\n", feature, feature_name);
+            // char * feature_name =  get_version_sensitive_feature_name(entry, vspec);
+            // f0printf(ferr, "Error reading feature %s (%s)\n", feature, feature_name);
+            f0printf(ferr, "Setting value failed for feature %02x. rc=%s\n", entry->code, psc_desc(psc));
+            if (psc == DDCRC_RETRIES)
+               f0printf(ferr, "    Try errors: %s\n", errinfo_causes_string(ddc_excp));
             goto bye;
          }
 
@@ -218,31 +232,15 @@ app_set_vcp_value(
          free(parsed_response);
       }
 
-      if (good_value) {
-         vrec.opcode        = entry->code;
-         vrec.value_type    = DDCA_NON_TABLE_VCP_VALUE;
-         vrec.val.c.cur_val = longtemp;
-      }
-   }
-
-   if (!good_value) {
-      f0printf(ferr, "Invalid VCP value: %s\n", new_value);
-      // what is better status code?
-      psc = -EINVAL;
-      ddc_excp = errinfo_new(psc, __func__);
-      goto bye;
+      vrec.opcode        = entry->code;
+      vrec.value_type    = DDCA_NON_TABLE_VCP_VALUE;
+      vrec.val.c.cur_val = longtemp;
    }
 
    ddc_excp = ddc_set_vcp_value(dh, &vrec, NULL);
-   psc = ERRINFO_STATUS(ddc_excp);
 
-   // *** TEMP FOR TESTING ***
-   // if (vrec.val.c.cur_val == 25) {
-   //    DBGMSG("Forcing DDC_VERIFY");
-   //    psc = DDCRC_VERIFY;
-   // }
-
-   if (psc != 0)  {
+   if (ddc_excp) {
+      psc = ERRINFO_STATUS(ddc_excp);
       switch(psc) {
       case DDCRC_VERIFY:
             f0printf(ferr, "Verification failed for feature %02x\n", entry->code);
@@ -260,6 +258,7 @@ bye:
       free_synthetic_vcp_entry(entry);
    }
 
+   psc = ERRINFO_STATUS(ddc_excp);
    DBGMSF(debug, "Returning: %s", psc_desc(psc));
    return ddc_excp;
 }
