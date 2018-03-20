@@ -46,9 +46,8 @@ void set_standard_settings() {
    saved_report_ddc_errors = ddca_is_report_ddc_errors_enabled();
    printf("   Calling ddca_enable_report_ddc_errors(true)...\n");
    ddca_enable_report_ddc_errors(true);
-   saved_verify_setvcp = ddca_is_verify_enabled();
    printf("   Calling ddca_set_verify_setvcp(true)...\n");
-   ddca_enable_verify(true);
+   saved_verify_setvcp = ddca_enable_verify(true);
 }
 
 void restore_standard_settings() {
@@ -122,11 +121,12 @@ test_cont_value(
    DDCA_Status rc;
    bool ok = true;
 
+
    printf("Resetting statistics...\n");
    ddca_reset_stats();
    set_standard_settings();
    printf("Disabling automatic verification by calling ddca_enable_verify(false)\n");
-   ddca_enable_verify(false);   // we'll do the check ourselves
+   bool saved_enable_verify = ddca_enable_verify(false);   // we'll do the check ourselves
 
 
    DDCA_Version_Feature_Info * info = NULL;
@@ -181,7 +181,7 @@ test_cont_value(
 
    uint16_t old_value = VALREC_CUR_VAL(valrec) ;
 
-   ddca_enable_verify(true);
+   ddca_enable_verify(saved_enable_verify);
 
    uint16_t new_value = old_value/2;
    uint16_t verified_value = 0;
