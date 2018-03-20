@@ -524,7 +524,7 @@ typedef struct {
 /** Represents a single table VCP value.   Consists of a count, followed by the bytes */
 typedef struct {
    uint16_t bytect;        /**< Number of bytes in value */
-   uint8_t  bytes[];       /**< Bytes of the value */
+   uint8_t*  bytes;        /**< Bytes of the value */
 } DDCA_Table_Value;
 
 

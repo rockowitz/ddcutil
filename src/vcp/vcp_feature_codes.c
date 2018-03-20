@@ -1142,7 +1142,6 @@ get_version_feature_info_by_vspec(
    }
 
    return info;
-
 }
 
 

@@ -50,7 +50,6 @@ char * vcp_value_type_name(DDCA_Vcp_Value_Type value_type) {
 }
 
 
-
 char * ddca_vcp_value_type_name(DDCA_Vcp_Value_Type  value_type) {
    char * result = "<unrecognized>";
    switch(value_type) {
@@ -69,7 +68,7 @@ char * ddca_vcp_value_type_name(DDCA_Vcp_Value_Type  value_type) {
 
 // TODO: MERGE dbgrpt_ddca_single_vcp_value(), report_single_vcp_value()
 
-void dbgrpt_ddca_single_vcp_value(
+void dbgrpt_single_vcp_value(
       Single_Vcp_Value * valrec,
       int                depth)
 {
@@ -97,9 +96,7 @@ void dbgrpt_ddca_single_vcp_value(
          rpt_vstring(d1, "sh:          0x%02x",  valrec->val.nc.sh);
          rpt_vstring(d1, "sl:          0x%02x",  valrec->val.nc.sl);
       }
-
    }
-
 }
 
 
@@ -226,6 +223,29 @@ create_nontable_vcp_value(
    return valrec;
 }
 
+#ifdef ALT
+DDCA_Any_Vcp_Value *
+create_nontable_vcp_value2(
+      Byte feature_code,
+      Byte mh,
+      Byte ml,
+      Byte sh,
+      Byte sl)
+{
+   DDCA_Any_Vcp_Value * valrec = calloc(1,sizeof(DDCA_Any_Vcp_Value));
+   valrec->value_type = DDCA_NON_TABLE_VCP_VALUE;
+   valrec->opcode = feature_code;
+   valrec->val.c_nc.mh = mh;
+   valrec->val.c_nc.ml = ml;
+   valrec->val.c_nc.sh = sh;
+   valrec->val.c_nc.sl = sl;
+   // not needed thanks to overlay
+   // valrec->val.nt.max_val = mh <<8 | ml;
+   // valrec->val.nt.cur_val = sh <<8 | sl;
+   return valrec;
+}
+#endif
+
 Single_Vcp_Value *
 create_cont_vcp_value(
       Byte feature_code,
@@ -260,11 +280,36 @@ create_table_vcp_value_by_bytes(
    return valrec;
 }
 
+#ifdef ALT
+DDCA_Any_Vcp_Value *
+create_table_vcp_value_by_bytes2(
+      Byte   feature_code,
+      Byte * bytes,
+      ushort bytect)
+{
+   DDCA_Any_Vcp_Value * valrec = calloc(1,sizeof(DDCA_Any_Vcp_Value));
+   valrec->value_type = DDCA_TABLE_VCP_VALUE;
+   valrec->opcode = feature_code;
+   valrec->val.t.bytect = bytect;
+   valrec->val.t.bytes = malloc(bytect);
+   memcpy(valrec->val.t.bytes, bytes, bytect);
+   return valrec;
+}
+#endif
+
+
 
 Single_Vcp_Value *
 create_table_vcp_value_by_buffer(Byte feature_code, Buffer * buffer) {
    return create_table_vcp_value_by_bytes(feature_code, buffer->bytes, buffer->len);
 }
+
+#ifdef ALT
+DDCA_Any_Vcp_Value *
+create_table_vcp_value_by_buffer2(Byte feature_code, Buffer * buffer) {
+   return create_table_vcp_value_by_bytes2(feature_code, buffer->bytes, buffer->len);
+}
+#endif
 
 
 Single_Vcp_Value *
@@ -348,7 +393,7 @@ Nontable_Vcp_Value * single_vcp_value_to_nontable_vcp_value(Single_Vcp_Value * v
  *  \return newly allocated converted value
  *
  *  \remark
- *  If table type, only the pointer to the bytes is copied
+ *  If table type, the bytes are copied
  */
 DDCA_Any_Vcp_Value * single_vcp_value_to_any_vcp_value(Single_Vcp_Value * valrec) {
    DDCA_Any_Vcp_Value * anyval = calloc(1, sizeof(DDCA_Any_Vcp_Value));
@@ -362,7 +407,10 @@ DDCA_Any_Vcp_Value * single_vcp_value_to_any_vcp_value(Single_Vcp_Value * valrec
    }
    else {          // DDCA_TABLE_VCP_VALUE
       anyval->val.t.bytect = valrec->val.t.bytect;
-      anyval->val.t.bytes  = valrec->val.t.bytes;
+      if (valrec->val.t.bytect > 0 && valrec->val.t.bytes) {
+         anyval->val.t.bytes  = malloc(valrec->val.t.bytect);
+         memcpy(anyval->val.t.bytes, valrec->val.t.bytes, valrec->val.t.bytect);
+      }
    }
 
    return anyval;

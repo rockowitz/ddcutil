@@ -21,6 +21,9 @@
  * </endcopyright>
  */
 
+/** \file vcp_feature_set.c
+ */
+
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -71,16 +74,37 @@ void free_vcp_feature_set(VCP_Feature_Set fset) {
    }
 }
 
+
+/** Given a feature set id for a named feature set (i.e. other than
+ *  #VCP_Subset_Single_Feature), creates a #VCP_Feature_Set containing
+ *  the features in the set.
+ *
+ *  @param   subset_id      feature subset id
+ *  @param   vcp_version    vcp version, for obtaining most appropriate feature information,
+ *                          e.g. feature type can vary by MCCS version
+ *  @param   flags          flags to tailor execution
+ *  @return  feature set listing the features in the set
+ *
+ *  @remark
+ *  For #VCP_SUBSET_SCAN, whether Table type features are included is controlled
+ *  by flag FSF_NOTABLE.
+ *  @remark
+ *  For remaining subset ids, the following flags apply:
+ *  - FSF_NOTABLE - if set, ignore Table type features
+ *    (Exception: For #VCP_SUBSET_TABLE and #VCP_SUBSET_LUT, flags #FSF_TABLE is ignored.)
+ *  - FSF_RW_ONLY, FSF_RO_ONLY, FSF_WO_ONLy - filter feature ids by whether they are
+ *    RW, RO, or WO
+ */
 VCP_Feature_Set
 create_feature_set(
       VCP_Feature_Subset     subset_id,
       DDCA_MCCS_Version_Spec vcp_version,
       Feature_Set_Flags      flags)
-  //    bool                   exclude_table_features)
 {
    assert(subset_id);
+   assert(subset_id != VCP_SUBSET_SINGLE_FEATURE);
+
    bool debug = false;
-   bool exclude_table_features = flags & FSF_NOTABLE;
    if (debug) {
       char * sflags = feature_set_flag_names(flags);
       DBGMSG("Starting. subset_id=%s(0x%04x), vcp_version=%d.%d, flags=%s",
@@ -88,6 +112,8 @@ create_feature_set(
                  sflags);
       free(sflags);
    }
+
+   bool exclude_table_features = flags & FSF_NOTABLE;
    struct vcp_feature_set * fset = calloc(1,sizeof(struct vcp_feature_set));
    memcpy(fset->marker, VCP_FEATURE_SET_MARKER, 4);
    fset->subset = subset_id;
@@ -220,7 +246,6 @@ create_feature_set(
 }
 
 
-
 VCP_Feature_Set
 create_single_feature_set_by_vcp_entry(VCP_Feature_Table_Entry * vcp_entry) {
    struct vcp_feature_set * fset = calloc(1,sizeof(struct vcp_feature_set));
@@ -231,15 +256,14 @@ create_single_feature_set_by_vcp_entry(VCP_Feature_Table_Entry * vcp_entry) {
    return fset;
 }
 
+
 /* Creates a VCP_Feature_Set for a single VCP code
  *
- * Arguments:
- *    id      feature id
- *    force   indicates behavior if feature id not found in vcp_feature_table,
- *            if true, creates a feature set using a dummy feature table entry
- *            if false, returns NULL
- *
- * Returns: feature set containing a single feature
+ * \param  id      feature id
+ * \param  force   indicates behavior if feature id not found in vcp_feature_table,
+ *                 - if true, creates a feature set using a dummy feature table entry
+ *                 - if false, returns NULL
+ * \return  feature set containing a single feature,
  *          NULL if the feature not found and force not specified
  */
 VCP_Feature_Set
@@ -256,33 +280,33 @@ create_single_feature_set_by_hexid(Byte id, bool force) {
 }
 
 
-/* Creates a VCP_Feature_Set from an external feature specification
+/** Creates a VCP_Feature_Set from a feature set reference.
  *
- * Arguments:
- *    fsref   external feature set descriptor
- *    force   indicates behavior in the case of a single feature code and
- *            the feature id is not found in vcp_feature_table:
- *              if true, creates a feature set using a dummy feature table entry
- *              if false, returns NULL
+ *  \param  fsref         external feature set reference
+ *  \param  vcp_version
+ *  \param  flags         checks only FSF_FORCE
  *
- * Returns: feature set containing a single feature
- *          NULL if the feature not found and force not specified
+ *  \return feature set, NULL if not found
+ *
+ *  @remark
+ *  If creating a #VCP_Feature_Set containing a single specified feature,
+ *  flag #FSF_FORCE controls whether a feature set is created for an
+ *  unrecognized feature.
+ *  @remark
+ *  If creating a named feature set, see called function #create_feature_set_ref()
+ *  for the effect of #FSF_FORCE and other flags.
  */
 VCP_Feature_Set
 create_feature_set_from_feature_set_ref(
    Feature_Set_Ref *         fsref,
    DDCA_MCCS_Version_Spec    vcp_version,
    Feature_Set_Flags         flags)
- //bool                      force)
 {
     struct vcp_feature_set * fset = NULL;
     if (fsref->subset == VCP_SUBSET_SINGLE_FEATURE) {
-       // fset = create_single_feature_set_by_hexid(fsref->specific_feature, force);
        fset = create_single_feature_set_by_hexid(fsref->specific_feature, flags & FSF_FORCE);
     }
     else {
-       // Feature_Set_Flags flags = 0x00;
-       // fset = create_feature_set(fsref->subset, vcp_version, /* exclude_table_features */ false);
        fset = create_feature_set(fsref->subset, vcp_version, flags);
     }
     return fset;
@@ -323,6 +347,7 @@ void free_feature_set(VCP_Feature_Set feature_set) {
    free(fset);
 }
 
+
 VCP_Feature_Table_Entry *
 get_feature_set_entry(
       VCP_Feature_Set feature_set,
@@ -336,17 +361,20 @@ get_feature_set_entry(
    return ventry;
 }
 
+
 int get_feature_set_size(VCP_Feature_Set feature_set) {
    struct vcp_feature_set * fset = (struct vcp_feature_set *) feature_set;
    assert( fset && memcmp(fset->marker, VCP_FEATURE_SET_MARKER, 4) == 0);
    return fset->members->len;
 }
 
+
 VCP_Feature_Subset get_feature_set_subset_id(VCP_Feature_Set feature_set) {
    struct vcp_feature_set * fset = (struct vcp_feature_set *) feature_set;
    assert( fset && memcmp(fset->marker, VCP_FEATURE_SET_MARKER, 4) == 0);
    return fset->subset;
 }
+
 
 void report_feature_set(VCP_Feature_Set feature_set, int depth) {
    struct vcp_feature_set * fset = (struct vcp_feature_set *) feature_set;
@@ -363,7 +391,12 @@ void report_feature_set(VCP_Feature_Set feature_set, int depth) {
    }
 }
 
-void filter_feature_set(VCP_Feature_Set feature_set, VCP_Feature_Set_Filter_Func func) {
+
+void
+filter_feature_set(
+      VCP_Feature_Set              feature_set,
+      VCP_Feature_Set_Filter_Func  func)
+{
    bool debug = false;
 
    struct vcp_feature_set * fset = (struct vcp_feature_set *) feature_set;
@@ -383,7 +416,9 @@ void filter_feature_set(VCP_Feature_Set feature_set, VCP_Feature_Set_Filter_Func
    }
 }
 
-DDCA_Feature_List feature_list_from_feature_set(VCP_Feature_Set feature_set) {
+
+DDCA_Feature_List
+feature_list_from_feature_set(VCP_Feature_Set feature_set) {
    DDCA_Feature_List vcplist = {{0}};
    struct vcp_feature_set * fset = (struct vcp_feature_set *) feature_set;
    assert( fset && memcmp(fset->marker, VCP_FEATURE_SET_MARKER, 4) == 0);

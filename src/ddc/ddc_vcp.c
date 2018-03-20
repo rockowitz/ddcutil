@@ -350,6 +350,7 @@ single_vcp_value_equal(
  *
  *  \param  dh            display handle for open display
  *  \param  vrec          pointer to value record
+ *  \param  newval_loc    if non-null, address at which to return verified value
  *  \return NULL if success, pointer to #Ddc_Error if failure
  *
  *  If write verification is turned on, reads the feature value after writing it
@@ -598,14 +599,14 @@ Error_Info * ddc_get_table_vcp_value(
  *
  * The value pointed to by pvalrec is non-null iff the returned status code is 0.
  *
- * The caller is responsible for freeing the value pointed returned at pvalrec.
+ * The caller is responsible for freeing the value returned at **valrec_loc**.
  */
 Error_Info *
 ddc_get_vcp_value(
        Display_Handle *       dh,
        Byte                   feature_code,
        DDCA_Vcp_Value_Type    call_type,
-       Single_Vcp_Value **    pvalrec)
+       Single_Vcp_Value **    valrec_loc)
 {
    bool debug = false;
    DBGTRC(debug, TRACE_GROUP, "Starting. Reading feature 0x%02x, dh=%s, dh->fh=%d",
@@ -684,13 +685,108 @@ ddc_get_vcp_value(
 
    } // non USB
 
-   *pvalrec = valrec;
+   *valrec_loc = valrec;
 
    DBGTRC(debug, TRACE_GROUP, "Done. psc=%s", psc_desc(psc) );
    if (psc == 0 && debug)
       report_single_vcp_value(valrec,1);
-   assert( (psc == 0 && *pvalrec) || (psc != 0 && !*pvalrec) );
+   assert( (psc == 0 && *valrec_loc) || (psc != 0 && !*valrec_loc) );
    DBGTRC(debug, TRACE_GROUP, "Done. Returning: %s", errinfo_summary(ddc_excp));
    return ddc_excp;
 }
 
+#ifdef ALT
+Error_Info *
+ddc_get_vcp_value2(
+       Display_Handle *       dh,
+       Byte                   feature_code,
+       DDCA_Vcp_Value_Type    call_type,
+       DDCA_Any_Vcp_Value **  valrec_loc)
+{
+   bool debug = false;
+   DBGTRC(debug, TRACE_GROUP, "Starting. Reading feature 0x%02x, dh=%s, dh->fh=%d",
+            feature_code, dh_repr_t(dh), dh->fh);
+
+   Public_Status_Code psc = 0;
+   Error_Info * ddc_excp = NULL;
+   Buffer * buffer = NULL;
+   Parsed_Nontable_Vcp_Response * parsed_nontable_response = NULL;  // vs interpreted ..
+   DDCA_Any_Vcp_Value * valrec = NULL;
+
+   // why are we coming here for USB?
+   if (dh->dref->io_path.io_mode == DDCA_IO_USB) {
+#ifdef USE_USB
+      DBGMSF0(debug, "USB case");
+
+      switch (call_type) {
+
+          case (DDCA_NON_TABLE_VCP_VALUE):
+                psc = usb_get_nontable_vcp_value(
+                      dh,
+                      feature_code,
+                      &parsed_nontable_response);    //
+                if (psc == 0) {
+                   valrec = create_nontable_vcp_value2(
+                               feature_code,
+                               parsed_nontable_response->mh,
+                               parsed_nontable_response->ml,
+                               parsed_nontable_response->sh,
+                               parsed_nontable_response->sl);
+                   free(parsed_nontable_response);
+                }
+                break;
+
+          case (DDCA_TABLE_VCP_VALUE):
+                psc = DDCRC_UNIMPLEMENTED;
+                ddc_excp = errinfo_new(DDCRC_UNIMPLEMENTED, __func__);
+                break;
+          }
+#else
+      PROGRAM_LOGIC_ERROR("ddcutil not built with USB support");
+#endif
+   }
+   else {
+      switch (call_type) {
+
+      case (DDCA_NON_TABLE_VCP_VALUE):
+            ddc_excp = ddc_get_nontable_vcp_value(
+                          dh,
+                          feature_code,
+                          &parsed_nontable_response);
+            psc = (ddc_excp) ? ddc_excp->status_code : 0;
+            if (!ddc_excp) {
+               valrec = create_nontable_vcp_value2(
+                           feature_code,
+                           parsed_nontable_response->mh,
+                           parsed_nontable_response->ml,
+                           parsed_nontable_response->sh,
+                           parsed_nontable_response->sl);
+               free(parsed_nontable_response);
+            }
+            break;
+
+      case (DDCA_TABLE_VCP_VALUE):
+            ddc_excp = ddc_get_table_vcp_value(
+                    dh,
+                    feature_code,
+                    &buffer);
+            psc = ERRINFO_STATUS(ddc_excp);
+            if (!ddc_excp) {
+               valrec = create_table_vcp_value_by_buffer2(feature_code, buffer);
+               buffer_free(buffer, __func__);
+            }
+            break;
+      }
+
+   } // non USB
+
+   *valrec_loc = valrec;
+
+   DBGTRC(debug, TRACE_GROUP, "Done. psc=%s", psc_desc(psc) );
+   if (psc == 0 && debug)
+      report_any_vcp_value(valrec,1);
+   assert( (psc == 0 && *valrec_loc) || (psc != 0 && !*valrec_loc) );
+   DBGTRC(debug, TRACE_GROUP, "Done. Returning: %s", errinfo_summary(ddc_excp));
+   return ddc_excp;
+}
+#endif

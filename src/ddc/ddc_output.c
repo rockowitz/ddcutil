@@ -267,7 +267,7 @@ get_raw_value_for_feature_table_entry(
    DBGTRC(debug, TRACE_GROUP, "Done.  Returning: %s, *pvalrec=%p", psc_desc(psc), *pvalrec);
    assert( (psc == 0 && *pvalrec) || (psc != 0 && !*pvalrec) );
    if (*pvalrec && (debug || IS_TRACING())) {
-      dbgrpt_ddca_single_vcp_value(*pvalrec, 1);
+      dbgrpt_single_vcp_value(*pvalrec, 1);
    }
    if (ddc_excp) {
 #ifdef OLD

@@ -399,11 +399,12 @@ char * ddca_end_capture(void) {
       SEVEREMSG("fclose() failed. errno=%d", errno);
       return result;
    }
-   free(fdesc->in_memory_file);
+   // free(fdesc->in_memory_file); // double free, fclose() frees in memory file
+   fdesc->in_memory_file = NULL;
    ddca_set_fout_to_default();
    if (fdesc->flags & DDCA_CAPTURE_STDERR)
       ddca_set_ferr_to_default();
-   fdesc->in_memory_file = NULL;
+
    // printf("(%s) Done. result=%p\n", __func__, result);
    return result;
 }
@@ -1598,6 +1599,39 @@ ddca_get_simple_nc_feature_value_name0(
    );
 }
 
+#ifdef OLD
+// Was public, but eliminated from API due to problems in Python API caused by overlay.
+// Retained for impedence matching.  To be eliminated.
+
+/** Represents a single non-table VCP value */
+typedef struct {
+   DDCA_Vcp_Feature_Code  feature_code;
+   union {
+      struct {
+         uint16_t   max_val;        /**< maximum value (mh, ml bytes) for continuous value */
+         uint16_t   cur_val;        /**< current value (sh, sl bytes) for continuous value */
+      }         c;                  /**< continuous (C) value */
+      struct {
+   // Ensure proper overlay of ml/mh on max_val, sl/sh on cur_val
+
+#if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
+      uint8_t    ml;            /**< ML byte for NC value */
+      uint8_t    mh;            /**< MH byte for NC value */
+      uint8_t    sl;            /**< SL byte for NC value */
+      uint8_t    sh;            /**< SH byte for NC value */
+#elif __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
+      uint8_t    mh;
+      uint8_t    ml;
+      uint8_t    sh;
+      uint8_t    sl;
+#else
+#error "Unexpected byte order value: __BYTE_ORDER__"
+#endif
+      }         nc;                /**< non-continuous (NC) value */
+   } val;
+} Non_Table_Value_Response;
+
+
 
 /** Gets the value of a non-table VCP feature.
  *
@@ -1609,9 +1643,9 @@ ddca_get_simple_nc_feature_value_name0(
 static
 DDCA_Status
 ddca_get_nontable_vcp_value_old(
-      DDCA_Display_Handle             ddca_dh,
-      DDCA_Vcp_Feature_Code           feature_code,
-      DDCA_Non_Table_Value_Response * response)
+      DDCA_Display_Handle            ddca_dh,
+      DDCA_Vcp_Feature_Code          feature_code,
+      Non_Table_Value_Response *     response)
 {
    Error_Info * ddc_excp = NULL;
 
@@ -1639,13 +1673,15 @@ ddca_get_nontable_vcp_value_old(
 }
 
 
+// TODO: Eliminate ddca_get_nontable_vcp_value_old()
+
 DDCA_Status
 ddca_get_nontable_vcp_value(
       DDCA_Display_Handle             ddca_dh,
       DDCA_Vcp_Feature_Code           feature_code,
       DDCA_Non_Table_Value *          valrec)
 {
-   DDCA_Non_Table_Value_Response      response;
+   Non_Table_Value_Response      response;
    DDCA_Status rc = 0;
 
    rc = ddca_get_nontable_vcp_value_old(ddca_dh, feature_code, &response);
@@ -1657,6 +1693,39 @@ ddca_get_nontable_vcp_value(
    }
    return rc;
 }
+#endif
+
+
+DDCA_Status
+ddca_get_nontable_vcp_value(
+      DDCA_Display_Handle      ddca_dh,
+      DDCA_Vcp_Feature_Code    feature_code,
+      DDCA_Non_Table_Value *   valrec)
+{
+   Error_Info * ddc_excp = NULL;
+
+   WITH_DH(ddca_dh,  {
+       Parsed_Nontable_Vcp_Response * code_info;
+       ddc_excp = ddc_get_nontable_vcp_value(
+                dh,
+                feature_code,
+                &code_info);
+
+       if (!ddc_excp) {
+          valrec->mh = code_info->mh;
+          valrec->mh = code_info->ml;;
+          valrec->sh = code_info->sh;
+          valrec->ml = code_info->sl;
+          free(code_info);
+       }
+    } );
+
+   DDCA_Status rc = (ddc_excp) ? ddc_excp->status_code : 0;
+   errinfo_free(ddc_excp);
+   return rc;
+}
+
+
 
 
 // Partial code for getting formatted value
@@ -1686,10 +1755,13 @@ ddca_get_nontable_vcp_value(
 // untested
 DDCA_Status
 ddca_get_table_vcp_value(
-      DDCA_Display_Handle ddca_dh,
-      DDCA_Vcp_Feature_Code    feature_code,
-      int *               value_len,
-      Byte**              value_bytes)
+      DDCA_Display_Handle    ddca_dh,
+      DDCA_Vcp_Feature_Code  feature_code,
+#ifdef OLD
+      int *                  value_len,
+      Byte**                 value_bytes,
+#endif
+      DDCA_Table_Value **    table_value_loc)
 {
    Error_Info * ddc_excp = NULL;
 
@@ -1702,13 +1774,23 @@ ddca_get_table_vcp_value(
          if (psc == 0) {
             assert(p_table_bytes);  // avoid coverity warning
             int len = p_table_bytes->len;
+#ifdef OLD
             *value_len = len;
             *value_bytes = malloc(len);
             memcpy(*value_bytes, p_table_bytes->bytes, len);
+#endif
+            DDCA_Table_Value * tv = calloc(1,sizeof(DDCA_Table_Value));
+            tv->bytect = len;
+            if (len > 0) {
+               tv->bytes = malloc(len);
+               memcpy(tv->bytes, p_table_bytes->bytes, len);
+            }
+            *table_value_loc = tv;
+
             buffer_free(p_table_bytes, __func__);
          }
       }
-     );
+   );
 }
 
 
@@ -1717,10 +1799,10 @@ ddca_get_table_vcp_value(
 static
 DDCA_Status
 ddca_get_vcp_value(
-      DDCA_Display_Handle       ddca_dh,
-      DDCA_Vcp_Feature_Code     feature_code,
-      DDCA_Vcp_Value_Type       call_type,   // why is this needed?   look it up from dh and feature_code
-      Single_Vcp_Value **  pvalrec)
+      DDCA_Display_Handle    ddca_dh,
+      DDCA_Vcp_Feature_Code  feature_code,
+      DDCA_Vcp_Value_Type    call_type,   // why is this needed?   look it up from dh and feature_code
+      Single_Vcp_Value **    pvalrec)
 {
    Error_Info * ddc_excp = NULL;
 
@@ -1764,8 +1846,9 @@ get_value_type_parm(
 }
 
 
+
 DDCA_Status
-ddca_get_any_vcp_value(
+ddca_get_any_vcp_value_using_explicit_type(
        DDCA_Display_Handle         ddca_dh,
        DDCA_Vcp_Feature_Code       feature_code,
        DDCA_Vcp_Value_Type_Parm    call_type,
@@ -1785,22 +1868,38 @@ ddca_get_any_vcp_value(
       Single_Vcp_Value *  valrec2 = NULL;
       rc = ddca_get_vcp_value(ddca_dh, feature_code, call_type, &valrec2);
       if (rc == 0) {
-#ifdef OLD
-         DDCA_Any_Vcp_Value * valrec = calloc(1, sizeof(DDCA_Any_Vcp_Value));
-         valrec->opcode     = valrec2->opcode;
-         valrec->value_type = valrec2->value_type;
-         if (valrec->value_type ==  DDCA_NON_TABLE_VCP_VALUE) {
-            valrec->val.c_nc.mh = valrec2->val.nc.mh;
-            valrec->val.c_nc.ml = valrec2->val.nc.ml;
-            valrec->val.c_nc.sh = valrec2->val.nc.sh;
-            valrec->val.c_nc.sl = valrec2->val.nc.sl;
-         }
-         else {          // DDCA_TABLE_VCP_VALUE
-            valrec->val.t.bytect = valrec2->val.t.bytect;
-            valrec->val.t.bytes  = valrec2->val.t.bytes;
-         }
-         free(valrec2);
-#endif
+         DDCA_Any_Vcp_Value * valrec = single_vcp_value_to_any_vcp_value(valrec2);
+         free_single_vcp_value(valrec2);
+         *pvalrec = valrec;
+      }
+   }
+   DBGMSF(debug, "Done. Returning %s, *pvalrec=%p", psc_desc(rc), *pvalrec);
+   return rc;
+}
+
+
+#ifdef ALT
+DDCA_Status
+ddca_get_any_vcp_value_using_explicit_type_new(
+       DDCA_Display_Handle         ddca_dh,
+       DDCA_Vcp_Feature_Code       feature_code,
+       DDCA_Vcp_Value_Type_Parm    call_type,
+       DDCA_Any_Vcp_Value **       pvalrec)
+{
+   bool debug = false;
+   DBGMSF(debug, "Starting. ddca_dh=%p, feature_code=0x%02x, call_type=%d, pvalrec=%p",
+          ddca_dh, feature_code, call_type, pvalrec);
+   *pvalrec = NULL;
+   DDCA_Status rc = DDCRC_ARG;
+
+   if (call_type == DDCA_UNSET_VCP_VALUE_TYPE_PARM) {
+      call_type = get_value_type_parm(ddca_dh, feature_code, DDCA_UNSET_VCP_VALUE_TYPE_PARM);
+   }
+   if (call_type != DDCA_UNSET_VCP_VALUE_TYPE_PARM) {
+
+      Single_Vcp_Value *  valrec2 = NULL;
+      rc = ddca_get_vcp_value(ddca_dh, feature_code, call_type, &valrec2);
+      if (rc == 0) {
          DDCA_Any_Vcp_Value * valrec = single_vcp_value_to_any_vcp_value(valrec2);
          free(valrec2);   // n. does not free table bytes, which are now pointed to by valrec
          *pvalrec = valrec;
@@ -1808,6 +1907,21 @@ ddca_get_any_vcp_value(
    }
    DBGMSF(debug, "Done. Returning %s, *pvalrec=%p", psc_desc(rc), *pvalrec);
    return rc;
+}
+#endif
+
+
+DDCA_Status
+ddca_get_any_vcp_value_using_implicit_type(
+       DDCA_Display_Handle         ddca_dh,
+       DDCA_Vcp_Feature_Code       feature_code,
+       DDCA_Any_Vcp_Value **       valrec_loc)
+{
+   return ddca_get_any_vcp_value_using_explicit_type(
+         ddca_dh,
+         DDCA_UNSET_VCP_VALUE_TYPE_PARM,
+         feature_code,
+         valrec_loc);
 }
 
 
@@ -1822,52 +1936,48 @@ ddca_free_any_vcp_value(
 }
 
 
-
-DDCA_Status
-ddca_start_get_any_vcp_value(
-      DDCA_Display_Handle         ddca_dh,
-      DDCA_Vcp_Feature_Code       feature_code,
-      DDCA_Vcp_Value_Type_Parm    call_type,
-      DDCA_Notification_Func      callback_func)
+void
+dbgrpt_any_vcp_value(
+      DDCA_Any_Vcp_Value * valrec,
+      int                  depth)
 {
-   bool debug = true;
-   DBGMSF(debug, "Starting. ddca_dh=%p, feature_code=0x%02x, call_type=%d",
-                 ddca_dh, feature_code, call_type);
-   DDCA_Status rc = DDCRC_ARG;
-
-   if (call_type == DDCA_UNSET_VCP_VALUE_TYPE_PARM) {
-       call_type = get_value_type_parm(ddca_dh, feature_code, DDCA_UNSET_VCP_VALUE_TYPE_PARM);
+   int d1 = depth+1;
+   rpt_vstring(depth, "DDCA_Any_Vcp_Value at %p:", valrec);
+   rpt_vstring(d1, "opcode=0x%02x, value_type=%s (0x%02x)",
+                   valrec->opcode, vcp_value_type_name(valrec->value_type), valrec->value_type);
+   if (valrec->value_type == DDCA_NON_TABLE_VCP_VALUE) {
+      rpt_vstring(d1, "mh=0x%02x, ml=0x%02x, sh=0x%02x, sl=0x%02x",
+                      valrec->val.c_nc.mh, valrec->val.c_nc.ml,
+                      valrec->val.c_nc.sh, valrec->val.c_nc.sl);
+      uint16_t max_val = valrec->val.c_nc.mh << 8 | valrec->val.c_nc.ml;
+      uint16_t cur_val = valrec->val.c_nc.sh << 8 | valrec->val.c_nc.sl;
+      rpt_vstring(d1, "max_val=%d (0x%04x), cur_val=%d (0x%04x)",
+                      max_val,
+                      max_val,
+                      cur_val,
+                      cur_val);
    }
-   if (call_type != DDCA_UNSET_VCP_VALUE_TYPE_PARM) {
-      Error_Info * ddc_excp = NULL;
-
-      WITH_DH(ddca_dh,
-          {
-             ddc_excp = start_get_vcp_value(dh, feature_code, call_type, callback_func);
-             rc = (ddc_excp) ? ddc_excp->status_code : 0;
-             errinfo_free(ddc_excp);
-          }
-      );
+   else if (valrec->value_type == DDCA_TABLE_VCP_VALUE) {
+      rpt_hex_dump(valrec->val.t.bytes, valrec->val.t.bytect, d1);
    }
-
-   DBGMSF(debug, "Done. Returning %s", psc_desc(rc));
-   return rc;
+   else {
+      rpt_vstring(d1, "Unrecognized value type: %d", valrec->value_type);
+   }
 }
-
 
 
 DDCA_Status
 ddca_get_formatted_vcp_value(
       DDCA_Display_Handle    ddca_dh,
       DDCA_Vcp_Feature_Code  feature_code,
-      char**                 p_formatted_value)
+      char**                 formatted_value_loc)
 {
    bool debug = true;
    DBGMSF(debug, "Starting. feature_code=0x%02x", feature_code);
    Error_Info * ddc_excp = NULL;
    WITH_DH(ddca_dh,
          {
-               *p_formatted_value = NULL;
+               *formatted_value_loc = NULL;
                DDCA_MCCS_Version_Spec vspec      = get_vcp_version_by_display_handle(dh);
                // DDCA_MCCS_Version_Id   version_id = mccs_version_spec_to_id(vspec);
 
@@ -1888,11 +1998,11 @@ ddca_get_formatted_vcp_value(
                   DDCA_Version_Feature_Flags flags = get_version_sensitive_feature_flags(pentry, vspec);
                   if (!(flags & DDCA_READABLE)) {
                      if (flags & DDCA_DEPRECATED)
-                        *p_formatted_value = gaux_asprintf("Feature %02x is deprecated in MCCS %d.%d\n",
+                        *formatted_value_loc = gaux_asprintf("Feature %02x is deprecated in MCCS %d.%d\n",
                                                           feature_code, vspec.major, vspec.minor);
                      else
-                        *p_formatted_value = gaux_asprintf("Feature %02x is not readable\n", feature_code);
-                     DBGMSF(debug, "%s", *p_formatted_value);
+                        *formatted_value_loc = gaux_asprintf("Feature %02x is not readable\n", feature_code);
+                     DBGMSF(debug, "%s", *formatted_value_loc);
                      psc = DDCRC_INVALID_OPERATION;
                   }
                   else {
@@ -1909,11 +2019,11 @@ ddca_get_formatted_vcp_value(
                                 pentry,
                                 vspec,
                                 pvalrec,
-                                p_formatted_value
+                                formatted_value_loc
                               );
                          if (!ok) {
                             psc = DDCRC_OTHER;    // ** WRONG CODE ***
-                            assert(!p_formatted_value);
+                            assert(!formatted_value_loc);
                          }
                       }
                   }
@@ -1922,7 +2032,7 @@ ddca_get_formatted_vcp_value(
    )
 }
 
-static                     // not public for now
+
 DDCA_Status
 ddca_format_any_vcp_value(
       DDCA_Vcp_Feature_Code   feature_code,
@@ -1959,7 +2069,9 @@ ddca_format_any_vcp_value(
 
       // Version_Feature_Flags flags = feature_info->internal_feature_flags;
       // n. will default to NON_TABLE_VCP_VALUE if not a known code
-      DDCA_Vcp_Value_Type call_type = (flags & DDCA_TABLE) ?  DDCA_TABLE_VCP_VALUE : DDCA_NON_TABLE_VCP_VALUE;
+      DDCA_Vcp_Value_Type call_type = (flags & DDCA_TABLE)
+                                           ? DDCA_TABLE_VCP_VALUE
+                                           : DDCA_NON_TABLE_VCP_VALUE;
       if (call_type != anyval->value_type) {
           *formatted_value_loc = gaux_asprintf(
                 "Feature type in value does not match feature code");
@@ -1967,6 +2079,7 @@ ddca_format_any_vcp_value(
           goto bye;
        }
 
+       // only copies pointer to table bytes, not the bytes
        Single_Vcp_Value * valrec = any_vcp_value_to_single_vcp_value(anyval);
        bool ok = vcp_format_feature_detail(pentry,vspec, valrec,formatted_value_loc);
        if (!ok) {
@@ -1974,7 +2087,7 @@ ddca_format_any_vcp_value(
           assert(!formatted_value_loc);
           *formatted_value_loc = gaux_asprintf("Unable to format value for feature 0x%02x", feature_code);
        }
-       free(valrec);
+       free(valrec);  // does not free any table bytes, which are in anyval
 
 bye:
       DBGMSF(debug, "Returning: %s, formatted_value_loc -> %s", psc_desc(psc), *formatted_value_loc);
@@ -2002,39 +2115,38 @@ ddca_format_non_table_vcp_value(
 
 
 DDCA_Status
-ddca_set_single_vcp_value(
+ddca_format_table_vcp_value(
+      DDCA_Vcp_Feature_Code   feature_code,
+      DDCA_MCCS_Version_Spec  vspec,
+      DDCA_Table_Value *      table_value,
+      char **                 formatted_value_loc)
+{
+   DDCA_Any_Vcp_Value anyval;
+   anyval.opcode = feature_code;
+   anyval.value_type = DDCA_TABLE_VCP_VALUE;
+   anyval.val.t.bytect = table_value->bytect;
+   anyval.val.t.bytes  = table_value->bytes;   // n. copying pointer, not duplicating bytes
+
+   return ddca_format_any_vcp_value(feature_code, vspec, &anyval, formatted_value_loc);
+}
+
+
+static
+DDCA_Status
+set_single_vcp_value(
       DDCA_Display_Handle  ddca_dh,
       Single_Vcp_Value *   valrec,
       Single_Vcp_Value **  verified_value_loc)
-   {
+{
       Error_Info * ddc_excp = NULL;
       WITH_DH(ddca_dh,  {
             ddc_excp = ddc_set_vcp_value(dh, valrec, verified_value_loc);
             psc = (ddc_excp) ? ddc_excp->status_code : 0;
             errinfo_free(ddc_excp);
          } );
-   }
+}
 
 
-/** Sets a Continuous VCP value.
- *  Optionally returns the value set by reading the feature code after writing.
- *
- *  \param[in]   ddca_dh       display handle
- *  \param[in]   feature_code  feature code
- *  \param[in]   new_value     new value to set
- *  \param[out]  verified_value_loc where to return verified value
- *  \return      status code
- *
- *  \remark
- *  Either both **verified_hi_byte_loc** and **verified_lo_byte_loc** should be
- *  set, or neither. Otherwise, status code **DDCRC_ARG** is returned.
- *  \remark
- *  Verification is performed only if **verified_value_loc** is non-NULL and
- *  it has been enabled by #ddca_set_verify().
- *  \remark
- *  A verification value is returned if either the status code is 0 (success),
- *  or it is **DDCRC_VERIFY**, i.e. the write succeeded but verification failed.
- */
 DDCA_Status
 ddca_set_continuous_vcp_value(
       DDCA_Display_Handle   ddca_dh,
@@ -2042,13 +2154,6 @@ ddca_set_continuous_vcp_value(
       uint16_t              new_value,
       uint16_t *            verified_value_loc)
 {
-#ifdef OLD
-   WITH_DH(ddca_dh,  {
-         status_code = set_nontable_vcp_value(dh, feature_code, new_value);
-         // psc = global_to_public_status_code(gsc);
-      } );
-#endif
-
    DDCA_Status rc = 0;
 
    Single_Vcp_Value valrec;
@@ -2058,12 +2163,12 @@ ddca_set_continuous_vcp_value(
 
    if (verified_value_loc) {
       Single_Vcp_Value * verified_single_value = NULL;
-      rc = ddca_set_single_vcp_value(ddca_dh, &valrec, &verified_single_value);
+      rc = set_single_vcp_value(ddca_dh, &valrec, &verified_single_value);
       if (verified_single_value)
          *verified_value_loc = verified_single_value->val.c.cur_val;
    }
    else {
-      rc = ddca_set_single_vcp_value(ddca_dh, &valrec, NULL);
+      rc = set_single_vcp_value(ddca_dh, &valrec, NULL);
    }
 
    return rc;
@@ -2080,28 +2185,8 @@ ddca_set_simple_nc_vcp_value(
 }
 
 
-/** Sets a non-table VCP value by specifying it's high and low bytes individually.
- *  Optionally returns the values set by reading the feature code after writing.
- *
- *  \param[in]   ddca_dh       display handle
- *  \param[in]   feature_code  feature code
- *  \param[in]   hi_byte       high byte of new value
- *  \param[in]   lo_byte       low byte of new value
- *  \param[out]  verified_hi_byte_loc where to return high byte of verified value
- *  \param[out]  verified_low_byte_loc where to return low byte of verified value
- *  \return      status code
- *
- *  \remark
- *  Either both **verified_hi_byte_loc** and **verified_lo_byte_loc** should be
- *  set, or neither. Otherwise, status code **DDCRC_ARG** is returned.
- *  \remark
- *  Verification is performed only it has been enabled by #ddca_set_verify().
- *  \remark
- *  Verified values are returned if either the status code is 0 (success),
- *  or it is **DDCRC_VERIFY**, i.e. the write succeeded but verification failed.
- */
 DDCA_Status
-ddca_set_raw_vcp_value(
+ddca_set_non_table_vcp_value(
       DDCA_Display_Handle    ddca_dh,
       DDCA_Vcp_Feature_Code  feature_code,
       Byte                   hi_byte,
@@ -2132,6 +2217,71 @@ ddca_set_raw_vcp_value(
                           NULL);
    }
 
+   return rc;
+}
+
+
+// untested
+DDCA_Status
+ddca_set_table_vcp_value(
+      DDCA_Display_Handle     ddca_dh,
+      DDCA_Vcp_Feature_Code   feature_code,
+      DDCA_Table_Value *      table_value,
+      DDCA_Table_Value **     verified_value_loc)
+{
+   DDCA_Status rc = 0;
+
+    Single_Vcp_Value valrec;
+    valrec.opcode = feature_code;
+    valrec.value_type = DDCA_TABLE_VCP_VALUE;
+    valrec.val.t.bytect = table_value->bytect;
+    valrec.val.t.bytes  = table_value->bytes;  // copies pointer, not bytes
+
+    if (verified_value_loc) {
+       Single_Vcp_Value * verified_single_value = NULL;
+       rc = set_single_vcp_value(ddca_dh, &valrec, &verified_single_value);
+       if (verified_single_value) {
+          DDCA_Table_Value * verified_table_value = calloc(1,sizeof(DDCA_Table_Value));
+          verified_table_value->bytect = verified_single_value->val.t.bytect;
+          verified_table_value->bytes  = verified_single_value->val.t.bytes;
+          free(verified_single_value);  // n. does not free bytes
+          *verified_value_loc = verified_table_value;
+       }
+    }
+    else {
+       rc = set_single_vcp_value(ddca_dh, &valrec, NULL);
+    }
+
+    return rc;
+}
+
+
+// untested for table values
+DDCA_Status
+ddca_set_any_vcp_value(
+      DDCA_Display_Handle     ddca_dh,
+      DDCA_Vcp_Feature_Code   feature_code,
+      DDCA_Any_Vcp_Value *    new_value,
+      DDCA_Any_Vcp_Value **   verified_value_loc)
+{
+   DDCA_Status rc = 0;
+
+   Single_Vcp_Value * valrec = any_vcp_value_to_single_vcp_value(new_value);
+
+   if (verified_value_loc) {
+      Single_Vcp_Value * verified_single_value = NULL;
+      rc = set_single_vcp_value(ddca_dh, valrec, &verified_single_value);
+      if (verified_single_value) {
+         DDCA_Any_Vcp_Value * verified_anyval = single_vcp_value_to_any_vcp_value(verified_single_value);
+         free_single_vcp_value(verified_single_value);
+         *verified_value_loc = verified_anyval;
+      }
+   }
+   else {
+      rc = set_single_vcp_value(ddca_dh, valrec, NULL);
+   }
+
+   free(valrec);     // do not free pointer to bytes, ref was copied when creating
    return rc;
 }
 
@@ -2325,17 +2475,70 @@ ddca_report_active_displays(int depth) {
 }
 
 
-// CFFI
+//
+// Async operation - experimental
+//
 
+DDCA_Status
+ddca_start_get_any_vcp_value(
+      DDCA_Display_Handle         ddca_dh,
+      DDCA_Vcp_Feature_Code       feature_code,
+      DDCA_Vcp_Value_Type_Parm    call_type,
+      DDCA_Notification_Func      callback_func)
+{
+   bool debug = true;
+   DBGMSF(debug, "Starting. ddca_dh=%p, feature_code=0x%02x, call_type=%d",
+                 ddca_dh, feature_code, call_type);
+   DDCA_Status rc = DDCRC_ARG;
+
+   if (call_type == DDCA_UNSET_VCP_VALUE_TYPE_PARM) {
+       call_type = get_value_type_parm(ddca_dh, feature_code, DDCA_UNSET_VCP_VALUE_TYPE_PARM);
+   }
+   if (call_type != DDCA_UNSET_VCP_VALUE_TYPE_PARM) {
+      Error_Info * ddc_excp = NULL;
+
+      WITH_DH(ddca_dh,
+          {
+             ddc_excp = start_get_vcp_value(dh, feature_code, call_type, callback_func);
+             rc = (ddc_excp) ? ddc_excp->status_code : 0;
+             errinfo_free(ddc_excp);
+          }
+      );
+   }
+
+   DBGMSF(debug, "Done. Returning %s", psc_desc(rc));
+   return rc;
+}
+
+
+DDCA_Status
+ddca_register_callback(
+      DDCA_Notification_Func func,
+      uint8_t                callback_options) // type is a placeholder
+{
+   return DDCRC_UNIMPLEMENTED;
+}
+
+DDCA_Status
+ddca_queue_get_non_table_vcp_value(
+      DDCA_Display_Handle      ddca_dh,
+      DDCA_Vcp_Feature_Code    feature_code)
+{
+   return DDCRC_UNIMPLEMENTED;
+}
+
+
+// CFFI
 DDCA_Status
 ddca_pass_callback(
       Simple_Callback_Func  func,
-      int                   parm
-      )
+      int                   parm)
 {
    DBGMSG("parm=%d", parm);
    int callback_rc = func(parm+2);
    DBGMSG("returning %d", callback_rc);
    return callback_rc;
 }
+
+
 

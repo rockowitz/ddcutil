@@ -68,34 +68,6 @@ typedef struct {
    }       val;
 } Single_Vcp_Value;
 
-/** Represents a single non-table VCP value */
-typedef struct {
-   DDCA_Vcp_Feature_Code  feature_code;
-   union {
-      struct {
-         uint16_t   max_val;        /**< maximum value (mh, ml bytes) for continuous value */
-         uint16_t   cur_val;        /**< current value (sh, sl bytes) for continuous value */
-      }         c;                  /**< continuous (C) value */
-      struct {
-   // Ensure proper overlay of ml/mh on max_val, sl/sh on cur_val
-
-#if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
-      uint8_t    ml;            /**< ML byte for NC value */
-      uint8_t    mh;            /**< MH byte for NC value */
-      uint8_t    sl;            /**< SL byte for NC value */
-      uint8_t    sh;            /**< SH byte for NC value */
-#elif __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
-      uint8_t    mh;
-      uint8_t    ml;
-      uint8_t    sh;
-      uint8_t    sl;
-#else
-#error "Unexpected byte order value: __BYTE_ORDER__"
-#endif
-      }         nc;                /**< non-continuous (NC) value */
-   } val;
-} DDCA_Non_Table_Value_Response;
-
 
 char * vcp_value_type_name(DDCA_Vcp_Value_Type value_type);
 
@@ -107,6 +79,16 @@ create_nontable_vcp_value(
       Byte     ml,
       Byte     sh,
       Byte     sl);
+
+#ifdef ALT
+DDCA_Any_Vcp_Value *
+create_nontable_vcp_value2(
+      Byte feature_code,
+      Byte mh,
+      Byte ml,
+      Byte sh,
+      Byte sl);
+#endif
 
 Single_Vcp_Value *
 create_cont_vcp_value(
@@ -120,10 +102,25 @@ create_table_vcp_value_by_bytes(
       Byte *   bytes,
       ushort   bytect);
 
+#ifdef ALT
+DDCA_Any_Vcp_Value *
+create_table_vcp_value_by_bytes2(
+      Byte   feature_code,
+      Byte * bytes,
+      ushort bytect);
+#endif
+
 Single_Vcp_Value *
 create_table_vcp_value_by_buffer(
       Byte     feature_code,
       Buffer*  buffer);
+
+#ifdef ALT
+DDCA_Any_Vcp_Value *
+create_table_vcp_value_by_buffer2(
+      Byte     feature_code,
+      Buffer*  buffer);
+#endif
 
 Single_Vcp_Value *
 create_single_vcp_value_by_parsed_vcp_response(
@@ -163,8 +160,9 @@ Nontable_Vcp_Value * single_vcp_value_to_nontable_vcp_value(Single_Vcp_Value * v
 void free_single_vcp_value(Single_Vcp_Value * vcp_value);
 
 
-void dbgrpt_ddca_single_vcp_value(Single_Vcp_Value * valrec, int depth);
+void dbgrpt_single_vcp_value(Single_Vcp_Value * valrec, int depth);
 void report_single_vcp_value(     Single_Vcp_Value * valrec, int depth);
+void report_any_vcp_value(DDCA_Any_Vcp_Value * valrec, int depth);
 
 
 extern const int summzrize_single_vcp_value_buffer_size;

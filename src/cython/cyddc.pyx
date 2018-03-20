@@ -372,7 +372,7 @@ cdef extern from "ddcutil_c_api.h":
 
     char * ddca_dref_repr(void * dref)
 
-    void ddca_report_display_ref(void * dref, int depth)
+    void ddca_dbgrpt_display_ref(void * dref, int depth)
 
 
 # def get_display_ref(DDCA_Display_Identifier did): 
@@ -393,7 +393,7 @@ cdef extern from "ddcutil_c_api.h":
 #         raise excp
 
 # def report_display_ref(dref, depth):
-#     ddca_report_display_ref(dref, depth)
+#     ddca_dbgrpt_display_ref(dref, depth)
 
 
 cdef class Display_Identifier(object):
@@ -458,7 +458,7 @@ cdef class Display_Ref(object):
     return ddca_dref_repr(self.c_dref).decode("UTF-8")
 
   def dbgrpt(self, int depth):
-    ddca_report_display_ref(self.c_dref, depth)
+    ddca_dbgrpt_display_ref(self.c_dref, depth)
 
 # cdef extern from "<stdint.h>":
 #    ctypedef uint8_t integral

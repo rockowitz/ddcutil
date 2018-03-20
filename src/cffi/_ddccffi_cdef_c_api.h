@@ -283,11 +283,11 @@ ddca_get_edid_by_display_ref(
 
 
 DDCA_Status
-ddca_get_any_vcp_value(
+ddca_get_any_vcp_value_using_explicit_type(
        DDCA_Display_Handle         ddca_dh,
        DDCA_Vcp_Feature_Code       feature_code,
        DDCA_Vcp_Value_Type_Parm    call_type,
-       DDCA_Any_Vcp_Value **   pvalrec);
+       DDCA_Any_Vcp_Value **       valrec_loc);
 
 DDCA_Status
 ddca_get_formatted_vcp_value(
@@ -295,11 +295,14 @@ ddca_get_formatted_vcp_value(
        DDCA_Vcp_Feature_Code       feature_code,
        char**                      p_formatted_value);
 
+
 DDCA_Status
 ddca_set_continuous_vcp_value(
-      DDCA_Display_Handle          ddca_dh,
-      DDCA_Vcp_Feature_Code        feature_code,
-      int                          new_value);
+      DDCA_Display_Handle   ddca_dh,
+      DDCA_Vcp_Feature_Code feature_code,
+      uint16_t              new_value,
+      uint16_t *            verified_value_loc);
+
 
 DDCA_Status
 ddca_set_simple_nc_vcp_value(
@@ -308,12 +311,15 @@ ddca_set_simple_nc_vcp_value(
       uint8_t                      new_value);
 
 DDCA_Status
-ddca_set_raw_vcp_value(
-      DDCA_Display_Handle          ddca_dh,         /**< Display handle     */
-      DDCA_Vcp_Feature_Code        feature_code,    /**< VCP feature code   */
-      uint8_t                      hi_byte,         /**< High byte of value */
-      uint8_t                      lo_byte          /**< Low byte of value  */
-     );
+ddca_set_non_table_vcp_value(
+      DDCA_Display_Handle    ddca_dh,
+      DDCA_Vcp_Feature_Code  feature_code,
+      uint8_t                   hi_byte,
+      uint8_t                   lo_byte,
+      uint8_t *                 verified_hi_byte_loc,
+      uint8_t *                 verified_lo_byte_loc);
+
+
 
 // Unimplemented
 //DDCA_Status

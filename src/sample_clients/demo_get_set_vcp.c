@@ -86,7 +86,7 @@ bool verify_cont_value(
       }
 #endif
    DDCA_Any_Vcp_Value * valrec;
-   rc = ddca_get_any_vcp_value(
+   rc = ddca_get_any_vcp_value_using_explicit_type(
            dh,
            feature_code,
            DDCA_NON_TABLE_VCP_VALUE_PARM,
@@ -163,7 +163,7 @@ test_cont_value(
 #endif
    DDCA_Any_Vcp_Value * valrec;
    rc =
-   ddca_get_any_vcp_value(
+   ddca_get_any_vcp_value_using_explicit_type(
          dh,
          feature_code,
          DDCA_NON_TABLE_VCP_VALUE_PARM,
@@ -247,7 +247,7 @@ bool verify_simple_nc_value(
       }
 #endif
       DDCA_Any_Vcp_Value * valrec;
-      rc = ddca_get_any_vcp_value(
+      rc = ddca_get_any_vcp_value_using_explicit_type(
               dh,
               feature_code,
               DDCA_NON_TABLE_VCP_VALUE_PARM,
@@ -348,7 +348,7 @@ bool test_simple_nc_value(
 #endif
     DDCA_Any_Vcp_Value * valrec;
     rc =
-    ddca_get_any_vcp_value(
+    ddca_get_any_vcp_value_using_explicit_type(
           dh,
           feature_code,
           DDCA_NON_TABLE_VCP_VALUE_PARM,
@@ -464,7 +464,7 @@ bool test_complex_nc_value(
 
     DDCA_Any_Vcp_Value * valrec;
     rc =
-    ddca_get_any_vcp_value(
+    ddca_get_any_vcp_value_using_explicit_type(
           dh,
           feature_code,
           DDCA_NON_TABLE_VCP_VALUE_PARM,   // why is this needed?   look it up from dh and feature_code

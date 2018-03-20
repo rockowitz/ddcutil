@@ -77,16 +77,16 @@ typedef struct {
 
 
 typedef enum {
-   DDCA_VNONE =  0,     /**< As query, match any MCCS version, as response, version unknown */
-   DDCA_V10   =  1,     /**< MCCS v1.0 */
-   DDCA_V20   =  2,     /**< MCCS v2.0 */
-   DDCA_V21   =  4,     /**< MCCS v2.1 */
-   DDCA_V30   =  8,     /**< MCCS v3.0 */
-   DDCA_V22   = 16      /**< MCCS v2.2 */
+   DDCA_MCCS_VNONE =  0,     /**< As query, match any MCCS version, as response, version unknown */
+   DDCA_MCCS_V10   =  1,     /**< MCCS v1.0 */
+   DDCA_MCCS_V20   =  2,     /**< MCCS v2.0 */
+   DDCA_MCCS_V21   =  4,     /**< MCCS v2.1 */
+   DDCA_MCCS_V30   =  8,     /**< MCCS v3.0 */
+   DDCA_MCCS_V22   = 16      /**< MCCS v2.2 */
 } DDCA_MCCS_Version_Id;
 
-// #define DDCA_VANY  DDCA_VNONE    /**< For use on queries,   indicates match any version */
-// #define DDCA_VUNK  DDCA_VNONE    /**< For use on responses, indicates version unknown   */
+// #define DDCA_MCCS_VANY  DDCA_MCCS_VNONE    /**< For use on queries,   indicates match any version */
+// #define DDCA_MCCS_VUNK  DDCA_MCCS_VNONE    /**< For use on responses, indicates version unknown   */
 
 
 

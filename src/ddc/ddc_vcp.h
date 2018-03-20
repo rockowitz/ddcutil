@@ -83,4 +83,13 @@ ddc_get_vcp_value(
       DDCA_Vcp_Value_Type       call_type,
       Single_Vcp_Value **       valrec_loc);
 
+#ifdef ALT
+Error_Info *
+ddc_get_vcp_value2(
+       Display_Handle *         dh,
+       Byte                     feature_code,
+       DDCA_Vcp_Value_Type      call_type,
+       DDCA_Any_Vcp_Value **    valrec_loc);
+#endif
+
 #endif /* DDC_VCP_H_ */
