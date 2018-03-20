@@ -511,8 +511,8 @@ ddca_set_max_tries(
 }
 
 
-void ddca_enable_verify(bool onoff) {
-   ddc_set_verify_setvcp(onoff);
+bool ddca_enable_verify(bool onoff) {
+   return ddc_set_verify_setvcp(onoff);
 }
 
 bool ddca_is_verify_enabled() {

@@ -246,12 +246,15 @@ set_table_vcp_value(
  *  writing it, to ensure the monitor has actually changed the feature value.
  *
  *  \param onoff  **true** for enabled, **false** for disabled.
+ *  \return prior setting
  */
-void ddc_set_verify_setvcp(bool onoff) {
+bool ddc_set_verify_setvcp(bool onoff) {
    bool debug = false;
    DBGMSF(debug, "Setting verify_setvcp = %s", bool_repr(onoff));
    Thread_Vcp_Settings * settings = get_thread_vcp_settings();
+   bool old_value = settings->verify_setvcp;
    settings->verify_setvcp = onoff;
+   return old_value;
 }
 
 
@@ -356,6 +359,7 @@ single_vcp_value_equal(
  *  If write verification is turned on, reads the feature value after writing it
  *  to ensure the display has actually changed the value.
  *
+ * The caller is responsible for freeing the value returned at **newval_loc**.
  *  \remark
  *  If verbose messages are in effect, writes detailed messages to the current
  *  stdout device.

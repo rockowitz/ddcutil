@@ -256,10 +256,11 @@ ddca_set_max_tries(
 /** Controls whether VCP values are read after being set.
  *
  * \param[in] onoff true/false
+ * \return  prior value
  *
  * \remark This setting is thread-specific.
  */
-void ddca_enable_verify(bool onoff);
+bool ddca_enable_verify(bool onoff);
 
 /** Query whether VCP values are read after being set.
  * \retval true values are verified after being set
