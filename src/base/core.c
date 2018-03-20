@@ -102,6 +102,7 @@ typedef struct {
    FILE * fout;
    FILE * ferr;
    DDCA_Output_Level output_level;
+   // bool   report_ddc_errors;    // unused, ddc error reporting left as global
 } Thread_Output_Settings;
 
 static Thread_Output_Settings *  get_thread_settings() {
@@ -117,6 +118,7 @@ static Thread_Output_Settings *  get_thread_settings() {
       settings->fout = stdout;
       settings->ferr = stderr;
       settings->output_level = DDCA_OL_NORMAL;
+      // settings->report_ddc_errors = false;    // redundant, but specified for documentation
 
       g_private_set(&per_thread_dests_key, settings);
    }
@@ -733,8 +735,38 @@ bool report_freed_exceptions = false;
 // Report DDC data errors
 //
 
-// global variable - controls display of messages regarding DDC data errors
-bool report_ddc_errors = true;
+
+
+#ifdef PER_THREAD
+bool enable_report_ddc_errors(bool onoff) {
+   Thread_Output_Settings * dests = get_thread_settings();
+   bool old_val = dests->report_ddc_errors;
+   dests->report_ddc_errors = onoff;
+   return old_val;
+}
+
+bool is_report_ddc_errors_enabled() {
+   Thread_Output_Settings * dests = get_thread_settings();
+   bool old_val = dests->report_ddc_errors;
+   return old_val;
+}
+#else
+static bool report_ddc_errors = true;
+static GMutex report_ddc_errors_mutex;
+
+bool enable_report_ddc_errors(bool onoff) {
+   g_mutex_lock(&report_ddc_errors_mutex);
+   bool old_val = report_ddc_errors;
+   report_ddc_errors = onoff;
+   g_mutex_unlock(&report_ddc_errors_mutex);
+   return old_val;
+}
+
+bool is_report_ddc_errors_enabled() {
+   bool old_val = report_ddc_errors;
+   return old_val;
+}
+#endif
 
 
 /** Checks if DDC data errors are to be reported.  This is the case if any of the
@@ -754,7 +786,13 @@ bool report_ddc_errors = true;
  *  This function is normally wrapped in function **IS_REPORTING_DDC()**
  */
 bool is_reporting_ddc(Trace_Group trace_group, const char * filename, const char * funcname) {
-  bool result = (is_tracing(trace_group,filename, funcname) || report_ddc_errors);
+  bool result = (is_tracing(trace_group,filename, funcname) ||
+#ifdef PER_THREAD
+        is_report_ddc_errors_enabled()
+#else
+        report_ddc_errors
+#endif
+        );
   return result;
 }
 
@@ -781,7 +819,7 @@ bool ddcmsg(Trace_Group  trace_group,
 {
    bool result = false;
    bool debug_or_trace = is_tracing(trace_group, filename, funcname);
-   if (debug_or_trace || report_ddc_errors) {
+   if (debug_or_trace || is_report_ddc_errors_enabled()) {
       result = true;
       char buffer[200];
       va_list(args);
@@ -798,7 +836,7 @@ bool ddcmsg(Trace_Group  trace_group,
 
 
 /** Tells whether DDC data errors are reported.
- *  Output is writtent to the current **FOUT** device.
+ *  Output is written to the current **FOUT** device.
  */
 void show_ddcmsg() {
    print_simple_title_value(SHOW_REPORTING_TITLE_START,

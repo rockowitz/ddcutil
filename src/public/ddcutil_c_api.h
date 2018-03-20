@@ -358,10 +358,11 @@ char * ddca_output_level_name(
 
 /** Controls whether messages describing DDC protocol errors are output
  *  @param[in] onoff    if true, errors will be issued
+ *  @return    prior value
  *
  *  This setting is global to all threads.
  */
-void ddca_enable_report_ddc_errors(bool onoff);
+bool ddca_enable_report_ddc_errors(bool onoff);
 
 /** Checks whether messages describing DDC protocol errors are output.
  *
@@ -1197,7 +1198,7 @@ ddca_format_any_vcp_value(
  *  or **DDCRC_VERIFY**, i.e. the write succeeded but verification failed.
  */
 DDCA_Status
-ddca_set_non_table_vcp_value(
+ddca_set_non_table_vcp_value_verify(
       DDCA_Display_Handle      ddca_dh,
       DDCA_Vcp_Feature_Code    feature_code,
       uint8_t                  hi_byte,
@@ -1205,6 +1206,16 @@ ddca_set_non_table_vcp_value(
       uint8_t *                p_verified_hi_byte,
       uint8_t *                p_verified_lo_byte
      );
+
+DDCA_Status
+ddca_set_non_table_vcp_value(
+      DDCA_Display_Handle      ddca_dh,
+      DDCA_Vcp_Feature_Code    feature_code,
+      uint8_t                  hi_byte,
+      uint8_t                  lo_byte
+     );
+
+
 
 
 /** Sets a Continuous VCP value.
@@ -1227,11 +1238,20 @@ ddca_set_non_table_vcp_value(
  *  can be set by passing its high and low bytes to #ddca_set_non_table_vcp_value().
  */
 DDCA_Status
-ddca_set_continuous_vcp_value(
+ddca_set_continuous_vcp_value_verify(
       DDCA_Display_Handle      ddca_dh,
       DDCA_Vcp_Feature_Code    feature_code,
       uint16_t                 new_value,
       uint16_t *               verified_value_loc);
+
+
+DDCA_Status
+ddca_set_continuous_vcp_value(
+      DDCA_Display_Handle      ddca_dh,
+      DDCA_Vcp_Feature_Code    feature_code,
+      uint16_t                 new_value);
+
+
 
 
 /** @deprecated Use #ddca_set_non_table_vcp_value() */
@@ -1259,11 +1279,17 @@ ddca_set_simple_nc_vcp_value(
  *  or **DDCRC_VERIFY**, i.e. the write succeeded but verification failed.
  */
 DDCA_Status
-ddca_set_table_vcp_value(
+ddca_set_table_vcp_value_verify(
       DDCA_Display_Handle     ddca_dh,
       DDCA_Vcp_Feature_Code   feature_code,
       DDCA_Table_Value *      new_value,
       DDCA_Table_Value **     verified_value_loc);
+
+DDCA_Status
+ddca_set_table_vcp_value(
+      DDCA_Display_Handle     ddca_dh,
+      DDCA_Vcp_Feature_Code   feature_code,
+      DDCA_Table_Value *      new_value);
 
 
 /** Sets a VCP value of any type.
@@ -1283,11 +1309,17 @@ ddca_set_table_vcp_value(
  *  or **DDCRC_VERIFY**, i.e. the write succeeded but verification failed.
  */
 DDCA_Status
-ddca_set_any_vcp_value(
+ddca_set_any_vcp_value_verify(
       DDCA_Display_Handle     ddca_dh,
       DDCA_Vcp_Feature_Code   feature_code,
       DDCA_Any_Vcp_Value *    new_value,
       DDCA_Any_Vcp_Value **   verified_value);
+
+DDCA_Status
+ddca_set_any_vcp_value(
+      DDCA_Display_Handle     ddca_dh,
+      DDCA_Vcp_Feature_Code   feature_code,
+      DDCA_Any_Vcp_Value *    new_value);
 
 
 //

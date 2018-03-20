@@ -215,7 +215,7 @@ _ddca_init(void) {
       init_base_services();
       init_ddc_services();
       set_output_level(DDCA_OL_NORMAL);
-      report_ddc_errors = false;
+      enable_report_ddc_errors(false);
       library_initialized = true;
       DBGMSF(debug, "library initialization executed");
    }
@@ -446,15 +446,15 @@ ddca_output_level_name(DDCA_Output_Level val) {
 }
 
 
-void
+bool
 ddca_enable_report_ddc_errors(bool onoff) {
    // global variable in core.c:
-   report_ddc_errors = onoff;
+   return enable_report_ddc_errors(onoff);;
 }
 
 bool
 ddca_is_report_ddc_errors_enabled(void) {
-   return report_ddc_errors;
+   return is_report_ddc_errors_enabled();
 }
 
 
@@ -2148,7 +2148,7 @@ set_single_vcp_value(
 
 
 DDCA_Status
-ddca_set_continuous_vcp_value(
+ddca_set_continuous_vcp_value_verify(
       DDCA_Display_Handle   ddca_dh,
       DDCA_Vcp_Feature_Code feature_code,
       uint16_t              new_value,
@@ -2174,6 +2174,17 @@ ddca_set_continuous_vcp_value(
    return rc;
 }
 
+
+DDCA_Status
+ddca_set_continuous_vcp_value(
+      DDCA_Display_Handle   ddca_dh,
+      DDCA_Vcp_Feature_Code feature_code,
+      uint16_t              new_value)
+{
+   return ddca_set_continuous_vcp_value_verify(ddca_dh, feature_code, new_value, NULL);
+}
+
+
 /** \deprecated */
 DDCA_Status
 ddca_set_simple_nc_vcp_value(
@@ -2181,12 +2192,12 @@ ddca_set_simple_nc_vcp_value(
       DDCA_Vcp_Feature_Code  feature_code,
       Byte                   new_value)
 {
-   return ddca_set_continuous_vcp_value(ddca_dh, feature_code, new_value, NULL);
+   return ddca_set_continuous_vcp_value_verify(ddca_dh, feature_code, new_value, NULL);
 }
 
 
 DDCA_Status
-ddca_set_non_table_vcp_value(
+ddca_set_non_table_vcp_value_verify(
       DDCA_Display_Handle    ddca_dh,
       DDCA_Vcp_Feature_Code  feature_code,
       Byte                   hi_byte,
@@ -2203,7 +2214,7 @@ ddca_set_non_table_vcp_value(
    DDCA_Status rc = 0;
    if (verified_hi_byte_loc) {
       uint16_t verified_c_value = 0;
-      rc = ddca_set_continuous_vcp_value(
+      rc = ddca_set_continuous_vcp_value_verify(
                           ddca_dh,
                           feature_code, hi_byte << 8 | lo_byte,
                           &verified_c_value);
@@ -2211,7 +2222,7 @@ ddca_set_non_table_vcp_value(
       *verified_lo_byte_loc = verified_c_value & 0xff;
    }
    else {
-      rc = ddca_set_continuous_vcp_value(
+      rc = ddca_set_continuous_vcp_value_verify(
                           ddca_dh,
                           feature_code, hi_byte << 8 | lo_byte,
                           NULL);
@@ -2220,10 +2231,20 @@ ddca_set_non_table_vcp_value(
    return rc;
 }
 
+DDCA_Status
+ddca_set_non_table_vcp_value(
+      DDCA_Display_Handle    ddca_dh,
+      DDCA_Vcp_Feature_Code  feature_code,
+      Byte                   hi_byte,
+      Byte                   lo_byte)
+{
+   return ddca_set_non_table_vcp_value_verify(ddca_dh, feature_code, hi_byte, lo_byte, NULL, NULL);
+}
+
 
 // untested
 DDCA_Status
-ddca_set_table_vcp_value(
+ddca_set_table_vcp_value_verify(
       DDCA_Display_Handle     ddca_dh,
       DDCA_Vcp_Feature_Code   feature_code,
       DDCA_Table_Value *      table_value,
@@ -2255,10 +2276,19 @@ ddca_set_table_vcp_value(
     return rc;
 }
 
+DDCA_Status
+ddca_set_table_vcp_value(
+      DDCA_Display_Handle     ddca_dh,
+      DDCA_Vcp_Feature_Code   feature_code,
+      DDCA_Table_Value *      table_value)
+{
+   return ddca_set_table_vcp_value_verify(ddca_dh, feature_code, table_value, NULL);
+}
+
 
 // untested for table values
 DDCA_Status
-ddca_set_any_vcp_value(
+ddca_set_any_vcp_value_verify(
       DDCA_Display_Handle     ddca_dh,
       DDCA_Vcp_Feature_Code   feature_code,
       DDCA_Any_Vcp_Value *    new_value,
@@ -2272,7 +2302,8 @@ ddca_set_any_vcp_value(
       Single_Vcp_Value * verified_single_value = NULL;
       rc = set_single_vcp_value(ddca_dh, valrec, &verified_single_value);
       if (verified_single_value) {
-         DDCA_Any_Vcp_Value * verified_anyval = single_vcp_value_to_any_vcp_value(verified_single_value);
+         DDCA_Any_Vcp_Value * verified_anyval =
+               single_vcp_value_to_any_vcp_value(verified_single_value);
          free_single_vcp_value(verified_single_value);
          *verified_value_loc = verified_anyval;
       }
@@ -2285,6 +2316,14 @@ ddca_set_any_vcp_value(
    return rc;
 }
 
+DDCA_Status
+ddca_set_any_vcp_value(
+      DDCA_Display_Handle     ddca_dh,
+      DDCA_Vcp_Feature_Code   feature_code,
+      DDCA_Any_Vcp_Value *    new_value)
+{
+   return ddca_set_any_vcp_value_verify(ddca_dh, feature_code, new_value, NULL);
+}
 
 //
 // Monitor Capabilities

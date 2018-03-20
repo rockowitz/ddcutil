@@ -199,7 +199,12 @@ extern bool report_freed_exceptions;
 //
 
 // Controls display of messages regarding I2C error conditions that can be retried.
-extern bool report_ddc_errors;
+// extern bool report_ddc_errors;
+
+// thread specific
+bool enable_report_ddc_errors(bool onoff);
+bool is_report_ddc_errors_enabled();
+
 
 bool is_reporting_ddc(Trace_Group trace_group, const char * filename, const char * funcname);
 #define IS_REPORTING_DDC() is_reporting_ddc(TRACE_GROUP, __FILE__, __func__)

@@ -427,7 +427,7 @@ int main(int argc, char *argv[]) {
       callopts |= CALLOPT_FORCE;
 
    set_output_level(parsed_cmd->output_level);
-   report_ddc_errors = parsed_cmd->flags & CMD_FLAG_DDCDATA;
+   enable_report_ddc_errors( parsed_cmd->flags & CMD_FLAG_DDCDATA );
    // TMI:
    // if (show_recoverable_errors)
    //    parsed_cmd->stats = true;
