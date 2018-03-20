@@ -518,14 +518,14 @@ typedef struct {
    uint8_t    ml;
    uint8_t    sh;
    uint8_t    sl;
-} DDCA_Non_Table_Value;
+} DDCA_Non_Table_Vcp_Value;
 
 
-/** Represents a single table VCP value.   Consists of a count, followed by the bytes */
+/** Represents a single table VCP value.   Consists of a count, and a pointer to the bytes */
 typedef struct {
    uint16_t bytect;        /**< Number of bytes in value */
    uint8_t*  bytes;        /**< Bytes of the value */
-} DDCA_Table_Value;
+} DDCA_Table_Vcp_Value;
 
 
 /** Stores a VCP feature value of any type */
@@ -570,7 +570,7 @@ typedef struct {
    DDCA_Queued_Request_Type   request_type;
    DDCA_Vcp_Feature_Code      vcp_code;
    // for DDCA_Q_SET
-   DDCA_Non_Table_Value       non_table_value;
+   DDCA_Non_Table_Vcp_Value       non_table_value;
 } DDCA_Queued_Request;
 
 

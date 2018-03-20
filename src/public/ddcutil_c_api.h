@@ -48,7 +48,8 @@ extern "C" {
  *  @brief ddcutil public C API
  *
  *  Function names in the public C API begin with "ddca_"\n
- *  Typedefs, constants, etc. begin with "DDCA_".
+ *  Status codes begin with "DDCRC_".
+ *  Typedefs, other constants, etc. begin with "DDCA_".
  */
 
 
@@ -714,8 +715,6 @@ ddca_free_parsed_capabilities(
  *
  *  The report is written to the current FOUT location.
  *
- *  This function is intended for debugging use.
- *
  *  @param[in]  parsed_capabilities  pointer to #DDCA_Capabilities struct
  *  @param[in]  depth  logical       indentation depth
  */
@@ -747,7 +746,7 @@ ddca_get_feature_info_by_vcp_version(
       DDCA_Version_Feature_Info**   info_loc);
 
 
-/** \deprecated  Use #ddca_get_feature_flags_by_version_vspec() */
+/** \deprecated  Use #ddca_get_feature_flags_by_vspec() */
 DDCA_Status
 ddca_get_simplified_feature_info(
       DDCA_Vcp_Feature_Code         feature_code,
@@ -932,6 +931,21 @@ ddca_get_edid_by_display_ref(
 // Specifies a collection of VCP features as a 256 bit array of flags.
 //
 
+/** Given a feature set id, returns a #DDCA_Feature_List specifying all the
+ *  feature codes in the set.
+ *
+ *  @param[in]  feature_set_id
+ *  @param[in]  vcp_version
+ *  @param      include_table_features if true, Table type features are included
+ *  @return     bitfield indicating features in the set
+ */
+DDCA_Feature_List
+ddca_get_feature_list(
+      DDCA_Feature_Subset_Id  feature_set_id,
+      DDCA_MCCS_Version_Spec  vcp_version,
+      bool                    include_table_features);
+
+
 /** Empties a #DDCA_Feature_List
  *
  *  @param[in]  vcplist pointer to feature list
@@ -943,7 +957,8 @@ void ddca_feature_list_clear(DDCA_Feature_List* vcplist);
  *  @param[in]  vcplist   pointer to feature list
  *  @param[in]  vcp_code  VCP feature code
  */
-void ddca_feature_list_add(  DDCA_Feature_List* vcplist, uint8_t vcp_code);
+void
+ddca_feature_list_add(  DDCA_Feature_List* vcplist, uint8_t vcp_code);
 
 /** Tests if a #DDCA_Feature_List contains a VCP feature code
  *
@@ -951,20 +966,35 @@ void ddca_feature_list_add(  DDCA_Feature_List* vcplist, uint8_t vcp_code);
  *  @param[in]  vcp_code  VCP feature code
  *  @return     true/false
  */
-bool ddca_feature_list_contains( DDCA_Feature_List* vcplist, uint8_t vcp_code);
+bool
+ddca_feature_list_contains( DDCA_Feature_List* vcplist, uint8_t vcp_code);
 
-/** Given a feature set id, returns a #DDCA_Feature_List specifying all the
- *  feature codes in the set.
+/** Creates a union of 2 feature lists.
  *
- *  @param[in]  feature_set_id
- *  @param[in]  vcp_version
- *  @param      include_table_features if true, Table type features are included
- *  @return     bitfield indicating features in the set
+ *  @param[in] vcplist1   pointer to first feature list
+ *  @param[in] vcplist2   pointer to second feature list
+ *  @return feature list in which a feature is set if it is in either
+ *          or the 2 input feature lists
+ *
+ *  @remark
+ *  The input feature lists are not modified.
  */
-DDCA_Feature_List ddca_get_feature_list(
-      DDCA_Feature_Subset_Id  feature_set_id,
-      DDCA_MCCS_Version_Spec  vcp_version,
-      bool                    include_table_features);
+DDCA_Feature_List
+ddca_feature_list_union(DDCA_Feature_List* vcplist1, DDCA_Feature_List * vcplist2);
+
+/** Returns a feature list consisting of all the features in the
+ *  first list that are not in the second.
+ *
+ *  @param[in] vcplist1   pointer to first feature list
+ *  @param[in] vcplist2   pointer to second feature list
+ *  @return feature list in which a feature is set if it is in **vcplist1** but
+ *          not **vcplist2**
+ *
+ *  @remark
+ *  The input feature lists are not modified.
+ */
+DDCA_Feature_List
+ddca_feature_list_subtract(DDCA_Feature_List* vcplist1, DDCA_Feature_List * vcplist2);
 
 
 /*
@@ -987,7 +1017,7 @@ DDCA_Feature_List ddca_get_feature_list(
 // this is a fixed size struct always allocated by the caller.
 //
 
-/** Frees a #DDCA_Table_Value instance.
+/** Frees a #DDCA_Table_Vcp_Value instance.
  *
  *  @param[in] table_value
  *
@@ -996,7 +1026,7 @@ DDCA_Feature_List ddca_get_feature_list(
  */
 void
 ddca_free_table_value(
-      DDCA_Table_Value * table_value);
+      DDCA_Table_Vcp_Value * table_value);
 
 /** Frees a #DDCA_Any_Vcp_Value instance.
  *
@@ -1034,7 +1064,7 @@ DDCA_Status
 ddca_get_nontable_vcp_value(
        DDCA_Display_Handle        ddca_dh,
        DDCA_Vcp_Feature_Code      feature_code,
-       DDCA_Non_Table_Value *     valrec);
+       DDCA_Non_Table_Vcp_Value *     valrec);
 
 
 /** Gets the value of a table VCP feature.
@@ -1055,7 +1085,7 @@ ddca_get_table_vcp_value(
        int *                   value_len_loc,
        uint8_t**               value_bytes_loc,
 #endif
-       DDCA_Table_Value **     table_value_loc);
+       DDCA_Table_Vcp_Value **     table_value_loc);
 
 
 /** Gets the value of a VCP feature of any type.
@@ -1071,7 +1101,7 @@ ddca_get_table_vcp_value(
  * Parm **value_type** is needed only manufacturer-specific features.
  * If set to #DDCA_UNSET_VCP_VALUE_TYPE_PARM, it will be ignored.
  * @remark
- * Replaces #ddca_get_any_vcp_value()
+ * Replaces **ddca_get_any_vcp_value()
  */
 DDCA_Status
 ddca_get_any_vcp_value_using_explicit_type(
@@ -1127,7 +1157,7 @@ ddca_get_formatted_vcp_value(
  *
  *  @param[in]  feature_code        VCP feature code
  *  @param[in]  vspec               MCCS version
- *  @param[in]  valrec              table VCP value
+ *  @param[in]  table_value         table VCP value
  *  @param[out] formatted_value_loc address at which to return the formatted value.
  *  @return                         status code, 0 if success
  */
@@ -1135,7 +1165,7 @@ DDCA_Status
 ddca_format_table_vcp_value(
       DDCA_Vcp_Feature_Code   feature_code,
       DDCA_MCCS_Version_Spec  vspec,
-      DDCA_Table_Value *      table_value,
+      DDCA_Table_Vcp_Value *  table_value,
       char **                 formatted_value_loc);
 
 /** Returns a formatted representation of a non-table VCP value.
@@ -1151,7 +1181,7 @@ DDCA_Status
 ddca_format_non_table_vcp_value(
       DDCA_Vcp_Feature_Code   feature_code,
       DDCA_MCCS_Version_Spec  vspec,
-      DDCA_Non_Table_Value *  valrec,
+      DDCA_Non_Table_Vcp_Value *  valrec,
       char **                 formatted_value_loc);
 
 
@@ -1179,19 +1209,19 @@ ddca_format_any_vcp_value(
 /** Sets a non-table VCP value by specifying it's high and low bytes individually.
  *  Optionally returns the values set by reading the feature code after writing.
  *
- *  \param[in]   ddca_dh       display handle
- *  \param[in]   feature_code  feature code
- *  \param[in]   hi_byte       high byte of new value
- *  \param[in]   lo_byte       low byte of new value
- *  \param[out]  verified_hi_byte_loc where to return high byte of verified value
- *  \param[out]  verified_low_byte_loc where to return low byte of verified value
+ *  \param[in]   ddca_dh             display handle
+ *  \param[in]   feature_code        feature code
+ *  \param[in]   hi_byte             high byte of new value
+ *  \param[in]   lo_byte             low byte of new value
+ *  \param[out]  p_verified_hi_byte  where to return high byte of verified value
+ *  \param[out]  p_verified_lo_byte  where to return low byte of verified value
  *  \return      status code
  *
  *  \remark
  *  Either both **verified_hi_byte_loc** and **verified_lo_byte_loc** should be
  *  set, or neither. Otherwise, status code **DDCRC_ARG** is returned.
  *  \remark
- *  Verification is performed only it has been enabled (see #ddca_set_verify()) and
+ *  Verification is performed only it has been enabled (see #ddca_enable_verify()) and
  *  both **verified_hi_byte** and **verified_lo_byte** are set.
  *  \remark
  *  Verified values are returned if either the status code is either 0 (success),
@@ -1228,7 +1258,7 @@ ddca_set_non_table_vcp_value(
  *
  * @remark
  *  Verification is performed if **verified_value_loc** is non-NULL and
- *  verification has been enabled (see #ddca_set_verify()).
+ *  verification has been enabled (see #ddca_enable_verify()).
  *  @remark
  *  If verification is performed, the value of the feature is read after being
  *  written. If the returned status code is either DDCRC_OK (0) or DDCRC_VERIFY,
@@ -1265,14 +1295,14 @@ ddca_set_simple_nc_vcp_value(
 /** Sets a table VCP value.
  *  Optionally returns the value set by reading the feature code after writing.
  *
- *  \param[in]   ddca_dh        display handle
- *  \param[in]   feature_code   feature code
- *  \param[in]   new_value      value to set
- *  \param[out]  verified_value where to return verified value
+ *  \param[in]   ddca_dh             display handle
+ *  \param[in]   feature_code        feature code
+ *  \param[in]   new_value           value to set
+ *  \param[out]  verified_value_loc  where to return verified value
  *  \return      status code
  *
  *  \remark
- *  Verification is performed only it has been enabled (see #ddca_set_verify()) and
+ *  Verification is performed only it has been enabled (see #ddca_enable_verify()) and
  *  **verified_value** is set.
  *  \remark
  *  A verified value is returned if either the status code is either 0 (success),
@@ -1280,16 +1310,16 @@ ddca_set_simple_nc_vcp_value(
  */
 DDCA_Status
 ddca_set_table_vcp_value_verify(
-      DDCA_Display_Handle     ddca_dh,
-      DDCA_Vcp_Feature_Code   feature_code,
-      DDCA_Table_Value *      new_value,
-      DDCA_Table_Value **     verified_value_loc);
+      DDCA_Display_Handle      ddca_dh,
+      DDCA_Vcp_Feature_Code    feature_code,
+      DDCA_Table_Vcp_Value *   new_value,
+      DDCA_Table_Vcp_Value **  verified_value_loc);
 
 DDCA_Status
 ddca_set_table_vcp_value(
-      DDCA_Display_Handle     ddca_dh,
-      DDCA_Vcp_Feature_Code   feature_code,
-      DDCA_Table_Value *      new_value);
+      DDCA_Display_Handle      ddca_dh,
+      DDCA_Vcp_Feature_Code    feature_code,
+      DDCA_Table_Vcp_Value *   new_value);
 
 
 /** Sets a VCP value of any type.
@@ -1302,7 +1332,7 @@ ddca_set_table_vcp_value(
  *  \return      status code
  *
  *  \remark
- *  Verification is performed only it has been enabled (see #ddca_set_verify()) and
+ *  Verification is performed only it has been enabled (see #ddca_enable_verify()) and
  *  **verified_value** is set.
  *  \remark
  *  A verified value is returned if either the status code is either 0 (success),

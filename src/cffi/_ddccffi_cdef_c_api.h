@@ -300,8 +300,7 @@ DDCA_Status
 ddca_set_continuous_vcp_value(
       DDCA_Display_Handle   ddca_dh,
       DDCA_Vcp_Feature_Code feature_code,
-      uint16_t              new_value,
-      uint16_t *            verified_value_loc);
+      uint16_t              new_value);
 
 
 DDCA_Status
@@ -315,9 +314,7 @@ ddca_set_non_table_vcp_value(
       DDCA_Display_Handle    ddca_dh,
       DDCA_Vcp_Feature_Code  feature_code,
       uint8_t                   hi_byte,
-      uint8_t                   lo_byte,
-      uint8_t *                 verified_hi_byte_loc,
-      uint8_t *                 verified_lo_byte_loc);
+      uint8_t                   lo_byte);
 
 
 

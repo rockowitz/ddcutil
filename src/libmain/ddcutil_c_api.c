@@ -1226,6 +1226,31 @@ DDCA_Feature_List ddca_get_feature_list(
 
 }
 
+DDCA_Feature_List
+ddca_feature_list_union(
+      DDCA_Feature_List* vcplist1,
+      DDCA_Feature_List* vcplist2)
+{
+   DDCA_Feature_List result;
+   for (int ndx = 0; ndx < 32; ndx++) {
+      result.bytes[ndx] =  vcplist1->bytes[ndx] | vcplist2->bytes[ndx];
+   }
+   return result;
+}
+
+DDCA_Feature_List
+ddca_feature_list_subtract(
+      DDCA_Feature_List* vcplist1,
+      DDCA_Feature_List * vcplist2)
+{
+   DDCA_Feature_List result;
+   for (int ndx = 0; ndx < 32; ndx++) {
+      result.bytes[ndx] =  vcplist1->bytes[ndx] & ~vcplist2->bytes[ndx];
+   }
+   return result;
+}
+
+
 
 #ifdef OLD
 // or return a struct?
@@ -1679,7 +1704,7 @@ DDCA_Status
 ddca_get_nontable_vcp_value(
       DDCA_Display_Handle             ddca_dh,
       DDCA_Vcp_Feature_Code           feature_code,
-      DDCA_Non_Table_Value *          valrec)
+      DDCA_Non_Table_Vcp_Value *          valrec)
 {
    Non_Table_Value_Response      response;
    DDCA_Status rc = 0;
@@ -1700,7 +1725,7 @@ DDCA_Status
 ddca_get_nontable_vcp_value(
       DDCA_Display_Handle      ddca_dh,
       DDCA_Vcp_Feature_Code    feature_code,
-      DDCA_Non_Table_Value *   valrec)
+      DDCA_Non_Table_Vcp_Value *   valrec)
 {
    Error_Info * ddc_excp = NULL;
 
@@ -1761,7 +1786,7 @@ ddca_get_table_vcp_value(
       int *                  value_len,
       Byte**                 value_bytes,
 #endif
-      DDCA_Table_Value **    table_value_loc)
+      DDCA_Table_Vcp_Value **    table_value_loc)
 {
    Error_Info * ddc_excp = NULL;
 
@@ -1779,7 +1804,7 @@ ddca_get_table_vcp_value(
             *value_bytes = malloc(len);
             memcpy(*value_bytes, p_table_bytes->bytes, len);
 #endif
-            DDCA_Table_Value * tv = calloc(1,sizeof(DDCA_Table_Value));
+            DDCA_Table_Vcp_Value * tv = calloc(1,sizeof(DDCA_Table_Vcp_Value));
             tv->bytect = len;
             if (len > 0) {
                tv->bytes = malloc(len);
@@ -2099,7 +2124,7 @@ DDCA_Status
 ddca_format_non_table_vcp_value(
       DDCA_Vcp_Feature_Code   feature_code,
       DDCA_MCCS_Version_Spec  vspec,
-      DDCA_Non_Table_Value *  valrec,
+      DDCA_Non_Table_Vcp_Value *  valrec,
       char **                 formatted_value_loc)
 {
    DDCA_Any_Vcp_Value anyval;
@@ -2118,7 +2143,7 @@ DDCA_Status
 ddca_format_table_vcp_value(
       DDCA_Vcp_Feature_Code   feature_code,
       DDCA_MCCS_Version_Spec  vspec,
-      DDCA_Table_Value *      table_value,
+      DDCA_Table_Vcp_Value *      table_value,
       char **                 formatted_value_loc)
 {
    DDCA_Any_Vcp_Value anyval;
@@ -2247,8 +2272,8 @@ DDCA_Status
 ddca_set_table_vcp_value_verify(
       DDCA_Display_Handle     ddca_dh,
       DDCA_Vcp_Feature_Code   feature_code,
-      DDCA_Table_Value *      table_value,
-      DDCA_Table_Value **     verified_value_loc)
+      DDCA_Table_Vcp_Value *      table_value,
+      DDCA_Table_Vcp_Value **     verified_value_loc)
 {
    DDCA_Status rc = 0;
 
@@ -2262,7 +2287,7 @@ ddca_set_table_vcp_value_verify(
        Single_Vcp_Value * verified_single_value = NULL;
        rc = set_single_vcp_value(ddca_dh, &valrec, &verified_single_value);
        if (verified_single_value) {
-          DDCA_Table_Value * verified_table_value = calloc(1,sizeof(DDCA_Table_Value));
+          DDCA_Table_Vcp_Value * verified_table_value = calloc(1,sizeof(DDCA_Table_Vcp_Value));
           verified_table_value->bytect = verified_single_value->val.t.bytect;
           verified_table_value->bytes  = verified_single_value->val.t.bytes;
           free(verified_single_value);  // n. does not free bytes
@@ -2280,7 +2305,7 @@ DDCA_Status
 ddca_set_table_vcp_value(
       DDCA_Display_Handle     ddca_dh,
       DDCA_Vcp_Feature_Code   feature_code,
-      DDCA_Table_Value *      table_value)
+      DDCA_Table_Vcp_Value *      table_value)
 {
    return ddca_set_table_vcp_value_verify(ddca_dh, feature_code, table_value, NULL);
 }
