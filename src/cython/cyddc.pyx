@@ -476,14 +476,14 @@ cdef extern from "ddcutil_c_api.h":
    
     # ctypedef DDCA_Vcp_Feature_Code uint8_t
 
-    ctypedef struct DDCA_Non_Table_Value:
+    ctypedef struct DDCA_Non_Table_Vcp_Value:
         unsigned char     mh
         unsigned char     ml
         unsigned char     sh
         unsigned char     sl
 
 
-    int ddca_get_nontable_vcp_value(void * dh, unsigned char feature_code, DDCA_Non_Table_Value * p_resp)
+    int ddca_get_nontable_vcp_value(void * dh, unsigned char feature_code, DDCA_Non_Table_Vcp_Value * p_resp)
 
     ctypedef enum DDCA_Vcp_Value_Type:
        DDCA_NON_TABLE_VCP_VALUE
@@ -560,9 +560,9 @@ cdef class Display_Handle(object):
       return s.decode("UTF-8")
 
     def get_nontable_vcp_value(self, feature_code):
-        cdef DDCA_Non_Table_Value resp
+        cdef DDCA_Non_Table_Vcp_Value resp
 
-        # n. fills in existing DDCA_Non_Table_Value, does not allocate
+        # n. fills in existing DDCA_Non_Table_Vcp_Value, does not allocate
         rc = ddca_get_nontable_vcp_value(self.c_dh, feature_code, &resp)
         if rc != 0:
           excp = create_ddc_exception(rc)
