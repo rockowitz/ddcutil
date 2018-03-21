@@ -101,9 +101,6 @@ typedef struct Display_Async {
 } Display_Async_Rec;
 
 
-
-
-
 // *** Display_Identifier ***
 
 /** Display_Identifier type */

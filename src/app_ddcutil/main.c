@@ -496,11 +496,9 @@ int main(int argc, char *argv[]) {
          flags |= FSF_WO_ONLY;
 
       VCP_Feature_Set fset = create_feature_set_from_feature_set_ref(
-         parsed_cmd->fref,
-         // vcp_version_any,
-         parsed_cmd->mccs_vspec,
-         flags);
-         // false);       // force
+                                parsed_cmd->fref,
+                                parsed_cmd->mccs_vspec,
+                                flags);
       if (!fset) {
          vcpinfo_ok = false;
       }
