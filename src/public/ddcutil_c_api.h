@@ -187,7 +187,7 @@ char * ddca_rc_desc(DDCA_Status status_code);
  */
 char *
 ddca_mccs_version_id_name(
-      DDCA_MCCS_Version_Id  version_id);
+      DDCA_MCCS_Version_Id  version_id) __attribute__ ((deprecated));
 
 /** \deprecated
  *  Returns the descriptive name of a #DDCA_MCCS_Version_Id,
@@ -198,12 +198,12 @@ ddca_mccs_version_id_name(
  */
 char *
 ddca_mccs_version_id_string(
-      DDCA_MCCS_Version_Id  version_id);
+      DDCA_MCCS_Version_Id  version_id) __attribute__ ((deprecated));
 
 /** \deprecated Use #ddca_mccs_version_id_string()  */
 char *
 ddca_mccs_version_id_desc(
-      DDCA_MCCS_Version_Id  version_id);
+      DDCA_MCCS_Version_Id  version_id) __attribute__ ((deprecated));
 
 
 //
@@ -743,7 +743,7 @@ DDCA_Status
 ddca_get_feature_info_by_vcp_version(
       DDCA_Vcp_Feature_Code         feature_code,
       DDCA_MCCS_Version_Id          mccs_version_id,
-      DDCA_Version_Feature_Info**   info_loc);
+      DDCA_Version_Feature_Info**   info_loc) __attribute__ ((deprecated));
 
 
 /** \deprecated  Use #ddca_get_feature_flags_by_vspec() */
@@ -751,8 +751,8 @@ DDCA_Status
 ddca_get_simplified_feature_info(
       DDCA_Vcp_Feature_Code         feature_code,
       DDCA_MCCS_Version_Spec        vspec,
-      DDCA_Simplified_Version_Feature_Info *  info);     // caller buffer to fill in,
-
+      DDCA_Simplified_Version_Feature_Info *  info)     // caller buffer to fill in,
+      __attribute__ ((deprecated));
 
 /**
  * Gets information for a VCP feature.
@@ -776,14 +776,14 @@ DDCA_Status
 ddca_get_feature_flags_by_version_id(
       DDCA_Vcp_Feature_Code         feature_code,
       DDCA_MCCS_Version_Id          mccs_version_id,
-      DDCA_Feature_Flags *          feature_flags);
+      DDCA_Feature_Flags *          feature_flags) __attribute__ ((deprecated));
 
 /** \deprecated Use #ddca_get_feature_flags_by_vspec() */
 DDCA_Status
 ddca_get_feature_info_by_display(
       DDCA_Display_Handle           ddca_dh,
       DDCA_Vcp_Feature_Code         feature_code,
-      DDCA_Version_Feature_Info **  info_loc);
+      DDCA_Version_Feature_Info **  info_loc) __attribute__ ((deprecated));
 
 /** Gets the VCP feature name.  If different MCCS versions use different names
  *  for the feature, this function makes a best guess.
@@ -810,7 +810,7 @@ ddca_feature_name_by_vspec(
 char *
 ddca_feature_name_by_version_id(
       DDCA_Vcp_Feature_Code  feature_code,
-      DDCA_MCCS_Version_Id   mccs_version_id);
+      DDCA_MCCS_Version_Id   mccs_version_id) __attribute__ ((deprecated));
 
 
 /** Gets the value id/name table of the allowed values for a simple NC feature.
@@ -834,8 +834,8 @@ DDCA_Status
 ddca_get_simple_sl_value_table(
       DDCA_Vcp_Feature_Code       feature_code,
       DDCA_MCCS_Version_Id        mccs_version_id,
-      DDCA_Feature_Value_Table *  value_table_loc);   // DDCA_Feature_Value_Entry **
-
+      DDCA_Feature_Value_Table *  value_table_loc)   // DDCA_Feature_Value_Entry **
+     __attribute__ ((deprecated));
 
 // TODO: Implement
 /** Gets the value id/name table of the allowed values for a simple NC feature.
@@ -865,13 +865,13 @@ ddca_get_simple_nc_feature_value_name(
       DDCA_Display_Handle    ddca_dh,    // needed because value lookup mccs version dependent
       DDCA_Vcp_Feature_Code  feature_code,
       uint8_t                feature_value,
-      char**                 feature_name_loc);
+      char**                 feature_name_loc) __attribute__ ((deprecated));
 
 
 /** \deprecated */
 DDCA_Status
 ddca_free_feature_info(
-      DDCA_Version_Feature_Info * info);
+      DDCA_Version_Feature_Info * info) __attribute__ ((deprecated));
 
 
 //
@@ -908,7 +908,7 @@ ddca_get_mccs_version(
 DDCA_Status
 ddca_get_mccs_version_id(
       DDCA_Display_Handle     ddca_dh,
-      DDCA_MCCS_Version_Id*   p_version_id);
+      DDCA_MCCS_Version_Id*   p_version_id) __attribute__ ((deprecated));
 
 
 #ifdef UNIMPLEMENTED
@@ -1237,6 +1237,15 @@ ddca_set_non_table_vcp_value_verify(
       uint8_t *                p_verified_lo_byte
      );
 
+
+/** Sets a non-table VCP value by specifying it's high and low bytes individually.
+ *
+ *  \param[in]   ddca_dh             display handle
+ *  \param[in]   feature_code        feature code
+ *  \param[in]   hi_byte             high byte of new value
+ *  \param[in]   lo_byte             low byte of new value
+ *  \return      status code
+ */
 DDCA_Status
 ddca_set_non_table_vcp_value(
       DDCA_Display_Handle      ddca_dh,
@@ -1244,8 +1253,6 @@ ddca_set_non_table_vcp_value(
       uint8_t                  hi_byte,
       uint8_t                  lo_byte
      );
-
-
 
 
 /** Sets a Continuous VCP value.
@@ -1264,8 +1271,8 @@ ddca_set_non_table_vcp_value(
  *  written. If the returned status code is either DDCRC_OK (0) or DDCRC_VERIFY,
  *  the verified value is returned in **verified_value_loc**.
  *  @remark
- *  This is essentially a convenience function, since a Continuous value
- *  can be set by passing its high and low bytes to #ddca_set_non_table_vcp_value().
+ *  This is essentially a convenience function, since a Continuous value can be
+ *  set by passing its high and low bytes to #ddca_set_non_table_vcp_value_verify().
  */
 DDCA_Status
 ddca_set_continuous_vcp_value_verify(
@@ -1275,6 +1282,17 @@ ddca_set_continuous_vcp_value_verify(
       uint16_t *               verified_value_loc);
 
 
+/** Sets a Continuous VCP value.
+ *
+ *  @param[in]  ddca_dh             display_handle
+ *  @param[in]  feature_code        VCP feature code
+ *  @param[in]  new_value           value to set (sign?)
+ *  @return status code
+ *
+ * @remark
+ *  This is essentially a convenience function, since a Continuous value
+ *  can be set by passing its high and low bytes to #ddca_set_non_table_vcp_value().
+ */
 DDCA_Status
 ddca_set_continuous_vcp_value(
       DDCA_Display_Handle      ddca_dh,
@@ -1282,14 +1300,12 @@ ddca_set_continuous_vcp_value(
       uint16_t                 new_value);
 
 
-
-
 /** @deprecated Use #ddca_set_non_table_vcp_value() */
 DDCA_Status
 ddca_set_simple_nc_vcp_value(
       DDCA_Display_Handle      ddca_dh,
       DDCA_Vcp_Feature_Code    feature_code,
-      uint8_t                  new_value);
+      uint8_t                  new_value) __attribute__ ((deprecated));
 
 
 /** Sets a table VCP value.
@@ -1315,6 +1331,15 @@ ddca_set_table_vcp_value_verify(
       DDCA_Table_Vcp_Value *   new_value,
       DDCA_Table_Vcp_Value **  verified_value_loc);
 
+
+/** Sets a table VCP value.
+ *  Optionally returns the value set by reading the feature code after writing.
+ *
+ *  \param[in]   ddca_dh             display handle
+ *  \param[in]   feature_code        feature code
+ *  \param[in]   new_value           value to set
+ *  \return      status code
+ */
 DDCA_Status
 ddca_set_table_vcp_value(
       DDCA_Display_Handle      ddca_dh,
@@ -1345,6 +1370,14 @@ ddca_set_any_vcp_value_verify(
       DDCA_Any_Vcp_Value *    new_value,
       DDCA_Any_Vcp_Value **   verified_value);
 
+
+/** Sets a VCP value of any type.
+ *
+ *  \param[in]   ddca_dh        display handle
+ *  \param[in]   feature_code   feature code
+ *  \param[in]   new_value      value to set
+ *  \return      status code
+ */
 DDCA_Status
 ddca_set_any_vcp_value(
       DDCA_Display_Handle     ddca_dh,
