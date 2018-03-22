@@ -30,6 +30,7 @@
 #include "base/displays.h"
 
 typedef enum {
+   DDISP_NONE  = 0x00,     ///< No flags set
    DDISP_WAIT  = 0x01      ///< If true, #lock_distinct_display() should wait
 } Distinct_Display_Flags;
 
