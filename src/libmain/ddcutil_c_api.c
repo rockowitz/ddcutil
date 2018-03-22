@@ -1539,29 +1539,6 @@ ddca_get_simple_sl_value_table(
    DBGMSF(debug, "feature_code = 0x%02x, mccs_version_id=%d, vspec=%d.%d",
                  feature_code, mccs_version_id, vspec.major, vspec.minor);
 
-#ifdef OLD
-
-   VCP_Feature_Table_Entry * pentry = vcp_find_feature_by_hexid(feature_code);
-   if (!pentry) {
-        *value_table_loc = NULL;
-        rc = DDCRC_NOT_FOUND;
-  }
-  else {
-     DDCA_MCCS_Version_Spec vspec2 = {vspec.major, vspec.minor};
-     DDCA_Version_Feature_Flags vflags = get_version_sensitive_feature_flags(pentry, vspec2);
-     if (!(vflags & DDCA_SIMPLE_NC)) {
-        *value_table_loc = NULL;
-        rc = -EINVAL;
-     }
-     else  {
-        DDCA_Feature_Value_Entry * table = get_version_specific_sl_values(pentry, vspec2);
-        DDCA_Feature_Value_Entry * table2 = (DDCA_Feature_Value_Entry*) table;    // identical definitions
-        *value_table_loc = table2;
-        rc = 0;
-     }
-  }
-#endif
-
    rc = ddca_get_simple_sl_value_table_by_vspec(feature_code, vspec, value_table_loc);
 
    DBGMSF(debug, "Done. *pvalue_table=%p, returning %s", *value_table_loc, psc_desc(rc));
@@ -1587,7 +1564,9 @@ ddca_get_simple_nc_feature_value_name(
          char * feature_name = NULL;
          DDCA_MCCS_Version_Spec vspec = get_vcp_version_by_display_handle(dh);
          DDCA_Feature_Value_Entry * feature_value_entries = NULL;
-         psc = ddca_get_simple_sl_value_table(feature_code, mccs_version_spec_to_id(vspec), &feature_value_entries);
+
+         psc = ddca_get_simple_sl_value_table_by_vspec(feature_code, vspec, &feature_value_entries);
+         // psc = ddca_get_simple_sl_value_table(feature_code, mccs_version_spec_to_id(vspec), &feature_value_entries);
          if (psc == 0) {
             feature_name = get_feature_value_name(feature_value_entries, feature_value);
             if (feature_name == NULL)
