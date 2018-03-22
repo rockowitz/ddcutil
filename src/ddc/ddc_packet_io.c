@@ -65,7 +65,7 @@
 #include "usb/usb_displays.h"
 #endif
 
-#include <ddc/ddc_display_lock.h>
+#include "ddc/ddc_display_lock.h"
 #include "ddc/ddc_try_stats.h"
 
 #include "ddc/ddc_packet_io.h"
@@ -128,7 +128,11 @@ Public_Status_Code ddc_open_display(
                  dref_repr_t(dref), interpret_call_options_t(callopts) );
 
    Distinct_Display_Ref display_id = get_distinct_display_ref(dref);
-   lock_distinct_display(display_id, 0x00);
+   Distinct_Display_Flags ddisp_flags = DDISP_NONE;
+   if (callopts & CALLOPT_WAIT)
+      ddisp_flags |= DDISP_WAIT;
+
+   lock_distinct_display(display_id, DDISP_NONE);
    bool locked = true;
 
    Display_Handle * dh = NULL;
