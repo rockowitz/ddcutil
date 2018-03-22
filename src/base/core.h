@@ -97,6 +97,7 @@ typedef Byte Call_Options;
 #define CALLOPT_RDONLY       0x20    ///< open read-only
 #define CALLOPT_WARN_FINDEX  0x10    ///< issue warning msg re hiddev_field_info.field_index change
 #define CALLOPT_FORCE        0x08    ///< ignore various validity checks
+#define CALLOPT_WAIT         0x04    ///< wait on locked resources, if false then fail
 
 char * interpret_call_options_t(Call_Options calloptions);
 
