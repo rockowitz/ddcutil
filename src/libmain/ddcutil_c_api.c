@@ -1405,9 +1405,6 @@ ddca_get_feature_flags_by_version_id(
 }
 
 
-
-
-
 DDCA_Status
 ddca_get_feature_info_by_display(
       DDCA_Display_Handle           ddca_dh,    // needed because in rare cases feature info is MCCS version dependent
@@ -1418,15 +1415,20 @@ ddca_get_feature_info_by_display(
       ddca_dh,
       {
          DDCA_MCCS_Version_Spec vspec = get_vcp_version_by_display_handle(ddca_dh);
-         // DDCT_MCCS_Version_Spec vspec2;           // = {vspec.major, vspec.minor};
-         // vspec2.major = vspec.major;
-         // vspec2.minor = vspec.minor;
-         DDCA_MCCS_Version_Id   version_id = mccs_version_spec_to_id(vspec);
+         //DDCA_MCCS_Version_Id   version_id = mccs_version_spec_to_id(vspec);
+         //psc = ddca_get_feature_info_by_vcp_version(feature_code, version_id, p_info);
 
-         psc = ddca_get_feature_info_by_vcp_version(feature_code, version_id, p_info);
+         *p_info = get_version_feature_info_by_vspec(
+                      feature_code,
+                      vspec,
+                      false,      //   with_default,
+                      true);      //   version_sensitive
+         if (!*p_info)
+            psc = DDCRC_ARG;
       }
    );
 }
+
 
 DDCA_Status
 ddca_free_feature_info(
