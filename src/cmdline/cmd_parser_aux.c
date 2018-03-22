@@ -230,6 +230,7 @@ char * assemble_command_argument_help() {
    "  setvcp:\n"
    "    <feature-code>: hexadecimal feature code, with or without a leading 0x,\n"
    "       e.g. 10 or 0x10\n"
+   "    [+|-] optionally indicate a relative value change, must be surrounded by blanks\n"
    "    <new-value>: a decimal number in the range 0..255, or a single byte hex value,\n"
    "       e.g. 0x80\n");
 
@@ -316,31 +317,32 @@ bool validate_output_level(Parsed_Cmd* parsed_cmd) {
 
 char * commands_list_help =
        "Commands:\n"
-       "   detect                               Detect monitors\n"
-       "   capabilities                         Query monitor capabilities string\n"
+       "   detect                                  Detect monitors\n"
+       "   capabilities                            Query monitor capabilities string\n"
 //     "   info\n"
 //     "   listvcp\n"
-       "   vcpinfo (feature-code-or-group)      Show VCP feature characteristics\n"
-       "   getvcp <feature-code-or-group>       Get VCP feature value(s)\n"
-       "   setvcp <feature-code> <new-value>    Set VCP feature value\n"
-       "   dumpvcp (filename)                   Write profile related settings to file\n"
-       "   loadvcp <filename>                   Load profile related settings from file\n"
+       "   vcpinfo (feature-code-or-group)         Show VCP feature characteristics\n"
+       "   getvcp <feature-code-or-group>          Get VCP feature value(s)\n"
+       "   setvcp <feature-code> [+|-] <new-value> Set VCP feature value\n"
+       "   dumpvcp (filename)                      Write profile related settings to file\n"
+       "   loadvcp <filename>                      Load profile related settings from file\n"
 #ifdef INCLUDE_TESTCASES
        "   testcase <testcase-number>\n"
        "   listtests\n"
 #endif
-       "   environment                          Probe execution environment\n"
+       "   environment                             Probe execution environment\n"
 #ifdef USE_USB
-       "   usbenv                               Probe for USB connected monitors\n"
+       "   usbenv                                  Probe for USB connected monitors\n"
 #endif
-       "   probe                                Probe monitor abilities\n"
-       "   interrogate                          Report everything possible\n"
+       "   probe                                   Probe monitor abilities\n"
+       "   interrogate                             Report everything possible\n"
 #ifdef USE_USB
-       "   chkusbmon                            Check if USB device is monitor (for UDEV)\n"
+       "   chkusbmon                               Check if USB device is monitor (for UDEV)\n"
 #endif
-       "   watch                                Watch display for reported changes (under development)\n"
+       "   watch                                   Watch display for reported changes (under development)\n"
        "\n";
 
+#ifdef OLD
 char * command_argument_help =
        "Command Arguments\n"
        "  getvcp, vcpinfo:\n"
@@ -374,9 +376,11 @@ char * command_argument_help =
        "  setvcp:\n"
        "    <feature-code>: hexadecimal feature code, with or without a leading 0x,\n"
        "       e.g. 10 or 0x10\n"
+       "    [+|-] optionally indicate a relative value change, must be surrounded by blanks\n"
        "    <new-value>: a decimal number in the range 0..255, or a single byte hex value,\n"
        "       e.g. 0x80\n"
       ;
+#endif
 
 char * monitor_selection_option_help =
        "Monitor Selection:\n"
