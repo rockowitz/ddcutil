@@ -2,7 +2,7 @@
 .\" First parameter, NAME, should be all caps
 .\" Second parameter, SECTION, should be 1-8, maybe w/ subsection
 .\" other parameters are allowed: see man(7), man(1)
-.TH ddcutil 1 "15 December 2015"
+.TH ddcutil 1 "01 April 2018"
 .\" Please adjust this date whenever revising the manpage.
 .\"
 .\" Some roff macros, for reference:
@@ -19,42 +19,42 @@
 ddcutil \- Query and change monitor settings
 .SH SYNOPSIS
 .B ddcutil
-.RB [ "--display|--dis|-d"
-.IR dispno ]
-.RB [ "--bus|-b"
-.IR busno ]
 .RB [ "--adl" | "-a " 
 .IR "adapter-index.display-index" ]
-.RB [ "--hiddev"
-.IR hiddev device number ]
-.RB [ "--usb" | "-u"
-.IR "busnum.devicenum" ]
+.RB [ "--async" ]
+.RB [ "--bus|-b"
+.IR busno ]
+.RB [ --ddc ]
+.RB [ "--display|--dis|-d"
+.IR dispno ]
 .RB [ "--edid" 
 .IR "256 hex character EDID" ]
+.RB [ "--excp" ]
+.RB [ "-f" | "--force" ]
+.RB [ "--force-slave-address" ]
+.RB [ "--hiddev"
+.IR hiddev device number ]
 .RB [ "--mfg" | "-g"
 .IR "manufacturer code" ]
+.RB [ --maxtries 
+.IR (comma-separated-list) ]
 .RB [ "--model" | "-l"
 .IR "model name" ]
+.RB [  "--nodetect" ]
 .RB [ "--sn" | "-n" 
 .IR "serial number" ]
-.RB [ "--noverify" ]
-.RB [ "-v|--verbose" ]
-.RB [ -t | --terse | --brief ]
+.RB [ " --rw | --ro | --wo" ]
+.RB [ "--show-table" | "--no-table"  ]
+.RB [ "-s" | "--stats"
+.IR [stats-class] ]
+.RB [ -t | --terse | --brief | -v | --verbose ]
 .RB [ "-U" | "--show-unsupported" ]
-.RB [ --ddc ]
-.RB [ "-s" | "--stats" ]
-.RB [ --trace 
-.IR  trace-class ]
-.RB [ --timestamp | --ts]
-.RB [ --maxtries 
-.IR  comma separated list ]
-.RB [ "--force-slave-address" ]
-.RB [ "-f" | "--force" ]
-.RB [  "--async" ]
-.RB [  "--nodetect" ]
+.RB [ "--usb" | "-u"
+.IR "busnum.devicenum" ]
+.Rb [ "--verify | --noverify" ]
 .RB [ "-V" | "--version" ]
 .RB [ "h"  | "--help" ]
-.BR detect " |  " listvcp  " | " capabilities " | " getvcp " | " probe 
+.BR detect " | " capabilities " | " getvcp " | " probe 
 .RI [ "feature-code" | "feature-group" ]
 .RB | setvcp 
 .I  feature-code new-value
@@ -66,7 +66,7 @@ ddcutil \- Query and change monitor settings
 |
 .BI "loadvcp " filename
 ] |
-.BR environment " | " usbenvironment ' | " interrogate 
+.BR environment " | " usbenvironment ' | " interrogate  " "
 
 
 .\" ALT USING .SY .OP
@@ -98,7 +98,9 @@ and then restored when the calibration is applied.
 
 Another common use case is to switch the monitor input source.
 
-For extended documentation, see http://www.ddcutil.com. 
+This man page includes only abbreviated documentation of trace and other program diagnostic facilities.
+
+For extended documentation, use the "--help" option, and see http://www.ddcutil.com. 
 
 .PP
 .\" TeX users may be more comfortable with the \fB<whatever>\fP and
@@ -116,7 +118,7 @@ For extended documentation, see http://www.ddcutil.com.
 
 .SH COMMANDS
 .TP
-.BR "detect " "Report attached monitors"
+.BR "detect " "Report monitors"
 .TP
 \fBvcpinfo\fP [ \fIfeature-code\fP | \fIfeature-group\fP ]
 Describe VCP feature codes that \fBddcutil\fP knows how to interpret
@@ -127,11 +129,11 @@ Query the monitor's capabilities string
 \fBgetvcp\fP [ \fIfeature-code\fP | \fIfeature-group\fP ]
 Report a single VCP feature value, or a group of feature values
 .TP
-.BI "setvcp " "feature-code new-value"
-Set a single VCP feature value
+.BI "setvcp " "[+|-] " "feature-code new-value"
+Set a single VCP feature value.  If + or - is specified, it must be surrounded by blanks, and indicates a relative value change of a Continuous VCP feature.
 .TP
 .BI "dumpvcp " filename
-Save color related VCP feature values in a file.
+Save color profile related VCP feature values in a file.
 If no file name is specified, one is generated and the file is saved <describe location>
 .TP 
 .BI "loadvcp " filename
@@ -145,7 +147,7 @@ Probe the \fBddcutil\fP installation environment.
 Probe USB aspects of the \fBddcutil\fP installation environment.
 .TP
 .B "probe "
-Explore the capabilities and features of a sing monitor. 
+Explore the capabilities and features of a single monitor. 
 .TP
 .B "interrogate "
 Collect maximum information for problem diagnosis.
@@ -165,11 +167,8 @@ A feature-code is specified by its 2 character hex feature number, with or witho
 .sp 2
 The following are the most useful feature groups recognized.  For a complete list,  use the \fB--help\fP option.
 .TP
-.BR ALL
+.BR ALL|KNOWN
 All feature codes understood by \fBddcutil\fP
-.TQ 
-.B KNOWN
-Scan all understood feature codes, but show only codes supported by the monitor
 .TQ 
 .B COLOR
 Scan color related feature codes
@@ -185,8 +184,7 @@ Feature group names can be abbreviated to the first 3 characters.  Case is ignor
 
 .I new-value
 .sp
-A number in the range 0..255
-
+A decimal number in the range 0..255, or hexadeciaml number in the range x00..xff.
 
 
 .\" .TP inserts a line before its output, .TQ does not 
@@ -230,14 +228,23 @@ serial number.  (This is the "serial ascii" field from the EDID, not the binary 
 
 Options to control the amount and form of output.
 .TQ
-.B "-U, --show-unsupported"
-Normally, \fBgetvcp\fP does not report unsupported features when querying a feature-group.  This option forces output. 
-.TQ
 .B "-t, --terse, --brief"
 Show brief detail.  For command \fBgetvcp\fP, the output is in machine readable form.
 .TQ
 .B -v, --verbose
 Show extended detail
+.TQ
+.B "-U, --show-unsupported"
+Normally, \fBgetvcp\fP does not report unsupported features when querying a feature-group.  This option forces output. 
+.TQ
+.B "--show-table | --no-table
+Normally, \fBgetvcp\fP does not report Table type features when querying a feature-group.  \fB--show-table\fP forces output.   \fB--no-table\fP is the default.
+.TQ
+.B "--rw, --ro, --wo"
+Limit \fBgetvcp\fP or \fBvcpinfo\fP output to read-write, read-only, or (for \fBvcpinfo\fP) write-only features.
+.TQ
+.B "--mccs " "MCCS version"
+Tailor \fBvcpinfo\fP output to a particular MCCS version, e.g. 2.1
 .PP
 Options for diagnostic output.
 .TQ
@@ -251,15 +258,6 @@ to manage retries in case of failure.  This option reports retry counts and vari
 .TQ
 .B --ddc
 Reports DDC protocol errors.  These may reflect I2C bus errors, or deviations by monitors from the MCCS specification.
-.TQ
-.BI "--trace " "trace-class"
-Enable debug tracing for a trace class.  Valid values are: \fIbase\fP, \fBi2c\fP, \fBadl\fP, \fBddc\fP, \fBmain\fP, and the special value \fIall\fP. 
-Some trace classes are more useful than others.
-.br
-Specify this option multiple times to enable multiple trace classes.
-.TQ
-.B --timestamp, --ts
-Prepend trace messages with elapsed time
 .PP
 Options for program information.
 .TQ
@@ -271,7 +269,7 @@ Show program version.
 .PP
 Options to tune execution:
 .TQ
-.BI "--maxtries " "(max-read-tries, max-write-read-tries, max-multi-part-read-tries)"
+.BI "--maxtries " "(max-read-tries, max-write-read-tries, max-multi-part-tries)"
 Adjust the number of retries
 .TQ
 .B "--force-slave-address"
@@ -294,9 +292,7 @@ If the monitor is specified by its I2C bus number (option \fB--busno\fP) skip th
 
 .SH EXECUTION ENVIRONMENT 
 
-requires package i2c-dev
-
-i2c permissions
+Requires read/write access to /dev/i2c devices.  See http://www.ddcutil.com/i2c_permissions. 
 
 .SH NVIDIA PROPRIETARY DRIVER
 
@@ -311,6 +307,8 @@ This file will work "out of the box" if you do not have an /etc/X11/xorg.conf fi
 adjust the \fBIdentifier\fP value in the file to correspond to the value in the master xorg.conf file.
 
 (Note that the above instructions assume that datadir was set to /usr/local/share when ddcutil was installed.  YMMV)
+
+For further discussion of Nvidia driver settings, see http://www.ddcutil.com/nvidia. 
 
 .SH AMD PRORIETARY DRIVER
 
@@ -332,7 +330,7 @@ ADL identifies monitors using an adapter-number/display-number pair.  To select 
 .SH VIRTUAL MACHINES
 
 Virtualized video drivers in VMWare and VirtualBox do not provide I2C emulation.  Use of normal video drivers with PCI passthrough 
-in a virtual machine has not been tested.
+is possible.
 
 
 .SH EXAMPLES
@@ -395,6 +393,6 @@ The project homepage: http://www.ddcutil.com
 .SH AUTHOR
 Sanford Rockowitz (rockowitz at minsoft dot com)
 .br
-Copyright 2015\-2016 Sanford Rockowitz
+Copyright 2015\-2018 Sanford Rockowitz
 
 

@@ -322,9 +322,9 @@ char * commands_list_help =
 //     "   info\n"
 //     "   listvcp\n"
        "   vcpinfo (feature-code-or-group)         Show VCP feature characteristics\n"
-       "   getvcp <feature-code-or-group>          Get VCP feature value(s)\n"
+       "   getvcp <feature-code-or-group>          Report VCP feature value(s)\n"
        "   setvcp <feature-code> [+|-] <new-value> Set VCP feature value\n"
-       "   dumpvcp (filename)                      Write profile related settings to file\n"
+       "   dumpvcp (filename)                      Write color profile related settings to file\n"
        "   loadvcp <filename>                      Load profile related settings from file\n"
 #ifdef INCLUDE_TESTCASES
        "   testcase <testcase-number>\n"
