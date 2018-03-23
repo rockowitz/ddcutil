@@ -377,7 +377,7 @@ DDCS_Non_Table_Value_Response ddcs_get_nontable_vcp_value(
 
    clear_exception();
    DDCA_Non_Table_Vcp_Value resp = {0};
-   DDCA_Status  rc = ddca_get_nontable_vcp_value(dh, feature_code, &resp);
+   DDCA_Status  rc = ddca_get_non_table_vcp_value(dh, feature_code, &resp);
    if (rc != 0)
       throw_exception_from_status_code(rc);
    DDCS_Non_Table_Value_Response result;

@@ -24,13 +24,6 @@
  */
 
 
-/*
-   Overview goes here.
-
-
- */
-
-
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -177,6 +170,7 @@ void demo_use_display_ref(DDCA_Display_Ref dref) {
          printf("VCP version: %d.%d\n", vspec.major, vspec.minor);
       }
 
+#ifdef DEPRECATED
       DDCA_MCCS_Version_Id version_id;
       rc = ddca_get_mccs_version_id(dh, &version_id);
       if (rc != 0) {
@@ -185,6 +179,7 @@ void demo_use_display_ref(DDCA_Display_Ref dref) {
       else {
          printf("VCP version id: %s\n", ddca_mccs_version_id_desc(version_id));
       }
+#endif
 
       rc = ddca_close_display(dh);
       if (rc != 0)

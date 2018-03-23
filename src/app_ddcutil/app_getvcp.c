@@ -372,7 +372,7 @@ app_read_changes(Display_Handle * dh) {
    DDCA_MCCS_Version_Spec vspec = get_vcp_version_by_display_handle(dh);
 
    if (new_control_values_exist(dh)) {
-      if ( vcp_version_le(vspec, VCP_SPEC_V21) ) {
+      if ( vcp_version_le(vspec, DDCA_VSPEC_V21) ) {
          show_changed_feature(dh);
       }
       else {  // x52 is a FIFO

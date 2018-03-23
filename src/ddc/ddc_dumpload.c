@@ -181,7 +181,7 @@ create_dumpload_data_from_g_ptr_array(GPtrArray * garray) {
                data->vcp_version = parse_vspec(s1);
                // using VCP_SPEC_UNKNOWN as value when invalid,
                // what if monitor had no version, so 0.0 was output?
-               if ( vcp_version_eq( data->vcp_version, VCP_SPEC_UNKNOWN) ) {
+               if ( vcp_version_eq( data->vcp_version, DDCA_VSPEC_UNKNOWN) ) {
                   f0printf(ferr(), "Invalid VCP VERSION at line %d: %s\n", linectr, line);
                   valid_data = false;
                }
@@ -752,7 +752,7 @@ convert_dumpload_data_to_string_array(Dumpload_Data * data) {
    snprintf(buf, bufsz, "EDID    %s", hexbuf);
    g_ptr_array_add(strings, strdup(buf));
 
-   if (!vcp_version_eq(data->vcp_version, VCP_SPEC_UNKNOWN)) {
+   if (!vcp_version_eq(data->vcp_version, DDCA_VSPEC_UNKNOWN)) {
       snprintf(buf, bufsz, "VCP_VERSION %d.%d", data->vcp_version.major, data->vcp_version.minor);
       g_ptr_array_add(strings, strdup(buf));
    }

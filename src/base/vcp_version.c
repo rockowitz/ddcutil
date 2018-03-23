@@ -45,14 +45,14 @@
 // MCCS version constants and utilities
 //
 
-const DDCA_MCCS_Version_Spec VCP_SPEC_V10       = {1,0};   ///< MCCS version 1.0
-const DDCA_MCCS_Version_Spec VCP_SPEC_V20       = {2,0};   ///< MCCS version 2.0
-const DDCA_MCCS_Version_Spec VCP_SPEC_V21       = {2,1};   ///< MCCS version 2.1
-const DDCA_MCCS_Version_Spec VCP_SPEC_V30       = {3,0};   ///< MCCS version 3.0
-const DDCA_MCCS_Version_Spec VCP_SPEC_V22       = {2,2};   ///< MCCS version 2.2
-const DDCA_MCCS_Version_Spec VCP_SPEC_UNKNOWN   = {0,0};   ///< value for monitor has been queried unsuccessfully
-const DDCA_MCCS_Version_Spec VCP_SPEC_ANY       = {0,0};   ///< used as query specifier
-const DDCA_MCCS_Version_Spec VCP_SPEC_UNQUERIED = {0xff, 0xff}; ///< indicates version not queried
+const DDCA_MCCS_Version_Spec DDCA_VSPEC_V10       = {1,0};   ///< MCCS version 1.0
+const DDCA_MCCS_Version_Spec DDCA_VSPEC_V20       = {2,0};   ///< MCCS version 2.0
+const DDCA_MCCS_Version_Spec DDCA_VSPEC_V21       = {2,1};   ///< MCCS version 2.1
+const DDCA_MCCS_Version_Spec DDCA_VSPEC_V30       = {3,0};   ///< MCCS version 3.0
+const DDCA_MCCS_Version_Spec DDCA_VSPEC_V22       = {2,2};   ///< MCCS version 2.2
+const DDCA_MCCS_Version_Spec DDCA_VSPEC_UNKNOWN   = {0,0};   ///< value for monitor has been queried unsuccessfully
+const DDCA_MCCS_Version_Spec DDCA_VSPEC_ANY       = {0,0};   ///< used as query specifier
+const DDCA_MCCS_Version_Spec DDCA_VSPEC_UNQUERIED = {0xff, 0xff}; ///< indicates version not queried
 
 
 /* Tests if a #DDCA_MCCS_Version_Spec value represents a valid MCCS version,
@@ -63,11 +63,11 @@ const DDCA_MCCS_Version_Spec VCP_SPEC_UNQUERIED = {0xff, 0xff}; ///< indicates v
  *  @return  true/false
  */
 bool is_known_vcp_spec(DDCA_MCCS_Version_Spec vspec) {
-   bool result = vcp_version_eq(vspec, VCP_SPEC_V10) ||
-                 vcp_version_eq(vspec, VCP_SPEC_V20) ||
-                 vcp_version_eq(vspec, VCP_SPEC_V21) ||
-                 vcp_version_eq(vspec, VCP_SPEC_V30) ||
-                 vcp_version_eq(vspec, VCP_SPEC_V22);
+   bool result = vcp_version_eq(vspec, DDCA_VSPEC_V10) ||
+                 vcp_version_eq(vspec, DDCA_VSPEC_V20) ||
+                 vcp_version_eq(vspec, DDCA_VSPEC_V21) ||
+                 vcp_version_eq(vspec, DDCA_VSPEC_V30) ||
+                 vcp_version_eq(vspec, DDCA_VSPEC_V22);
    return result;
 }
 
@@ -105,8 +105,8 @@ bool vcp_version_le(DDCA_MCCS_Version_Spec v1, DDCA_MCCS_Version_Spec v2) {
 
    bool result = false;
    assert( is_known_vcp_spec(v1) && is_known_vcp_spec(v2) );
-   assert( !(vcp_version_eq(v1, VCP_SPEC_V22) && vcp_version_eq(v2, VCP_SPEC_V30)) &&
-           !(vcp_version_eq(v2, VCP_SPEC_V22) && vcp_version_eq(v1, VCP_SPEC_V30))
+   assert( !(vcp_version_eq(v1, DDCA_VSPEC_V22) && vcp_version_eq(v2, DDCA_VSPEC_V30)) &&
+           !(vcp_version_eq(v2, DDCA_VSPEC_V22) && vcp_version_eq(v1, DDCA_VSPEC_V30))
          );
 
    if (v1.major < v2.major)
@@ -171,9 +171,9 @@ char * format_vspec(DDCA_MCCS_Version_Spec vspec) {
    static GPrivate  format_vspec_key = G_PRIVATE_INIT(g_free);
    char * private_buffer = get_thread_fixed_buffer(&format_vspec_key, 20);
 
-   if ( vcp_version_eq(vspec, VCP_SPEC_UNQUERIED) )
+   if ( vcp_version_eq(vspec, DDCA_VSPEC_UNQUERIED) )
       g_strlcpy(private_buffer,  "Unqueried", 20);  // g_strlcpy() to quiet coverity
-   else if ( vcp_version_eq(vspec, VCP_SPEC_UNKNOWN) )
+   else if ( vcp_version_eq(vspec, DDCA_VSPEC_UNKNOWN) )
       strcpy(private_buffer,  "Unknown");     // will coverity flag this?
    else
       SAFE_SNPRINTF(private_buffer, 20, "%d.%d", vspec.major, vspec.minor);
@@ -263,7 +263,7 @@ DDCA_MCCS_Version_Spec parse_vspec(char * s) {
    DDCA_MCCS_Version_Spec vspec;
    int ct = sscanf(s, "%hhd . %hhd", &vspec.major, &vspec.minor);
    if (ct != 2 || vspec.major > 3 || vspec.minor > 2) {
-      vspec = VCP_SPEC_UNKNOWN;
+      vspec = DDCA_VSPEC_UNKNOWN;
    }
    return vspec;
 }
@@ -313,16 +313,16 @@ DDCA_MCCS_Version_Spec mccs_version_id_to_spec(DDCA_MCCS_Version_Id id) {
    bool debug = false;
    DBGMSF(debug, "Starting.  id=%d", id);
 
-   DDCA_MCCS_Version_Spec vspec = VCP_SPEC_ANY;
+   DDCA_MCCS_Version_Spec vspec = DDCA_VSPEC_ANY;
    // use table instead?
    switch(id) {
-   case DDCA_MCCS_VNONE:  vspec = VCP_SPEC_UNKNOWN; break;
-   case DDCA_MCCS_VANY:   vspec = VCP_SPEC_ANY;     break;
-   case DDCA_MCCS_V10:    vspec = VCP_SPEC_V10;     break;
-   case DDCA_MCCS_V20:    vspec = VCP_SPEC_V20;     break;
-   case DDCA_MCCS_V21:    vspec = VCP_SPEC_V21;     break;
-   case DDCA_MCCS_V30:    vspec = VCP_SPEC_V30;     break;
-   case DDCA_MCCS_V22:    vspec = VCP_SPEC_V22;     break;
+   case DDCA_MCCS_VNONE:  vspec = DDCA_VSPEC_UNKNOWN; break;
+   case DDCA_MCCS_VANY:   vspec = DDCA_VSPEC_ANY;     break;
+   case DDCA_MCCS_V10:    vspec = DDCA_VSPEC_V10;     break;
+   case DDCA_MCCS_V20:    vspec = DDCA_VSPEC_V20;     break;
+   case DDCA_MCCS_V21:    vspec = DDCA_VSPEC_V21;     break;
+   case DDCA_MCCS_V30:    vspec = DDCA_VSPEC_V30;     break;
+   case DDCA_MCCS_V22:    vspec = DDCA_VSPEC_V22;     break;
    }
 
    DBGMSF(debug, "Returning: %d.%d", debug, vspec.major, vspec.minor);

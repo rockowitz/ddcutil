@@ -121,7 +121,6 @@ test_cont_value(
    DDCA_Status rc;
    bool ok = true;
 
-
    printf("Resetting statistics...\n");
    ddca_reset_stats();
    set_standard_settings();
@@ -129,38 +128,23 @@ test_cont_value(
    bool saved_enable_verify = ddca_enable_verify(false);   // we'll do the check ourselves
 
 
-   DDCA_Version_Feature_Info * info = NULL;
-   rc = ddca_get_feature_info_by_display(
+   DDCA_Simplified_Version_Feature_Info info;
+   rc = ddca_get_simplified_feature_info_by_display(
            dh,    // needed because in rare cases feature info is MCCS version dependent
            feature_code,
            &info);
    if (rc != 0) {
-      FUNCTION_ERRMSG("ddca_get_feature_info", rc);
+      FUNCTION_ERRMSG("ddca_get_simplified_feature_info", rc);
+      ok = false;
+      goto bye;
+   }
+   if ( !(info.feature_flags & DDCA_CONT) ) {
+      printf("Feature 0x%02x is not Continuous\n", feature_code);
       ok = false;
       goto bye;
    }
 
-#ifdef OLD
-   Single_Vcp_Value * valrec;
-   rc =
-   ddca_get_vcp_value(
-         dh,
-         feature_code,
-         DDCA_NON_TABLE_VCP_VALUE,   // why is this needed?   look it up from dh and feature_code
-         &valrec);
-   if (rc != 0) {
-      FUNCTION_ERRMSG("ddca_get_vcp_value", rc);
-      ok = false;
-      goto bye;
-   }
 
-   printf("Feature 0x%02x (%s) current value = %d, max value = %d\n",
-          feature_code, feature_name,
-          valrec->val.c.cur_val,
-          valrec->val.c.max_val);
-
-   int old_value = valrec->val.c.cur_val;
-#endif
    DDCA_Any_Vcp_Value * valrec;
    rc =
    ddca_get_any_vcp_value_using_explicit_type(
@@ -184,33 +168,33 @@ test_cont_value(
    ddca_enable_verify(saved_enable_verify);
 
    uint16_t new_value = old_value/2;
-   uint16_t verified_value = 0;
+   // uint16_t verified_value = 0;
    printf("Setting new value %d,,,\n", new_value);
-   rc = ddca_set_continuous_vcp_value(dh, feature_code, new_value, &verified_value);
+   // rc = ddca_set_continuous_vcp_value(dh, feature_code, new_value, &verified_value);
+   rc = ddca_set_continuous_vcp_value(dh, feature_code, new_value);
    if (rc != 0) {
       FUNCTION_ERRMSG("ddca_set_continuous_vcp_value", rc);
       ok = false;
       goto bye;
    }
-   printf("Verified value: %d\n", verified_value);
+   // printf("Verified value: %d\n", verified_value);
 
-   // printf("Setting new value succeeded.  Verifying the new current value...\n");
-   // ok = verify_cont_value(dh, feature_code, new_value);
+   printf("Setting new value succeeded.  Verifying the new current value...\n");
+   ok = verify_cont_value(dh, feature_code, new_value);
 
    printf("Resetting original value %d...\n", old_value);
-   rc = ddca_set_continuous_vcp_value(dh, feature_code, old_value, &verified_value);
+   // rc = ddca_set_continuous_vcp_value(dh, feature_code, old_value, &verified_value);
+   rc = ddca_set_continuous_vcp_value(dh, feature_code, old_value);
    if (rc != 0) {
       FUNCTION_ERRMSG("ddca_set_continuous_vcp_value", rc);
       ok = false;
       goto bye;
    }
 
-   // printf("Resetting original value succeeded. Verifying the new current value...\n");
-   // ok = verify_cont_value(dh, feature_code, old_value) && ok;
+   printf("Resetting original value succeeded. Verifying the new current value...\n");
+   ok = verify_cont_value(dh, feature_code, old_value) && ok;
 
 bye:
-   if (info)
-      ddca_free_feature_info(info);
    restore_standard_settings();
    // Uncomment to see statistics:
    // printf("\nStatistics for one execution of %s()", __func__);
@@ -284,6 +268,7 @@ bool show_simple_nc_feature_value(
           feature_code,
           feature_value,
           &feature_value_name);
+
     if (rc != 0) {
        FUNCTION_ERRMSG("ddca_get_nc_feature_value_name", rc);
        printf("Unable to get interpretation of value 0x%02x\n",  feature_value);
@@ -310,97 +295,59 @@ bool test_simple_nc_value(
     printf("Resetting statistics...\n");
     ddca_reset_stats();
     DDCA_Status rc;
-    bool ok = true;
+    bool ok = false;
     set_standard_settings();
-    printf("Disabling automatic verification by calling ddca_enable_verify(false)\n");
-    ddca_enable_verify(false);   // we'll do the check ourselves
+    printf("Enabling automatic verification by calling ddca_enable_verify(true)\n");
+    ddca_enable_verify(true);
 
-    DDCA_Version_Feature_Info * info;
-    rc = ddca_get_feature_info_by_display(
+    DDCA_Simplified_Version_Feature_Info info;
+    rc = ddca_get_simplified_feature_info_by_display(
             dh,    // needed because in rare cases feature info is MCCS version dependent
             feature_code,
             &info);
     if (rc != 0) {
-       FUNCTION_ERRMSG("ddca_get_feature_info", rc);
-       ok = false;
+       FUNCTION_ERRMSG("ddca_get_simplified_feature_info", rc);
        goto bye;
     }
-    assert(info->feature_flags & DDCA_SIMPLE_NC);
+    assert(info.feature_flags & DDCA_SIMPLE_NC);
 
-#ifdef OLD
-    Single_Vcp_Value * valrec;
+    DDCA_Non_Table_Vcp_Value valrec;
     rc =
-    ddca_get_vcp_value(
+    ddca_get_non_table_vcp_value(
           dh,
           feature_code,
-          DDCA_NON_TABLE_VCP_VALUE,   // why is this needed?   look it up from dh and feature_code
           &valrec);
     if (rc != 0) {
-       FUNCTION_ERRMSG("ddca_get_vcp_value", rc);
-       ok = false;
+       FUNCTION_ERRMSG("ddca_get_non_table_vcp_value", rc);
        goto bye;
     }
 
     printf("Feature 0x%02x current value = 0x%02x\n",
               feature_code,
-              valrec->val.nc.sl);
-    uint8_t old_value = valrec->val.nc.sl;
-#endif
-    DDCA_Any_Vcp_Value * valrec;
-    rc =
-    ddca_get_any_vcp_value_using_explicit_type(
-          dh,
-          feature_code,
-          DDCA_NON_TABLE_VCP_VALUE_PARM,
-          &valrec);
-    if (rc != 0) {
-       FUNCTION_ERRMSG("ddca_get_any_vcp_value", rc);
-       ok = false;
-       goto bye;
-    }
-
-    printf("Feature 0x%02x current value = 0x%02x\n",
-              feature_code,
-              valrec->val.c_nc.sl);
-    uint8_t old_value = valrec->val.c_nc.sl;
+              valrec.sl);
+    uint8_t old_value = valrec.sl;
 
     ok = show_simple_nc_feature_value(dh, feature_code, old_value);
 
     printf("Setting new value 0x%02x...\n", new_value);
-    rc = ddca_set_simple_nc_vcp_value(dh, feature_code, new_value);
+    rc = ddca_set_non_table_vcp_value(dh, feature_code, 0, new_value);
     if (rc != 0) {
-       FUNCTION_ERRMSG("ddca_set_simple_nc_vcp_value", rc);
-       ok = false;
+       FUNCTION_ERRMSG("ddca_set_non_table_vcp_value", rc);
        goto bye;
     }
-    else {
-       // Checking for demonstration purposes.
-       // if ddca_enable_verify(true) is in effect (the default)
-       // ddca_...() functions that set feature values also read them for verification
-       printf("Setting new value succeeded.  Verifying...\n");
-       bool verified = verify_simple_nc_value(dh, feature_code, new_value);
-       if (!verified)
-          ok = false;
-       else {
-          ok = show_simple_nc_feature_value(dh, feature_code, new_value) && ok;
-       }
 
-       printf("Resetting original value 0x%02x...\n", old_value);
-       rc = ddca_set_simple_nc_vcp_value(dh, feature_code, old_value);
-       if (rc != 0) {
-          FUNCTION_ERRMSG("ddca_set_simple_nc_vcp_value", rc);
-          ok = false;
-       }
-       else {
-          printf("Resetting original value succeeded.  Verifying...\n");
-          ok = verify_simple_nc_value(dh, feature_code, old_value) && ok;
-       }
+    printf("Resetting original value 0x%02x...\n", old_value);
+    rc = ddca_set_non_table_vcp_value(dh, feature_code, 0, old_value);
+    if (rc != 0) {
+       FUNCTION_ERRMSG("ddca_set_non_table_vcp_value", rc);
+       goto bye;
     }
+
+    printf("Resetting original value succeeded.\n");
+    ok = true;
 
 
 bye:
-    if (info)
-       ddca_free_feature_info(info);
     restore_standard_settings();
 
     // uncomment to show statistics:
@@ -425,67 +372,56 @@ bool test_complex_nc_value(
     ddca_reset_stats();
 
     DDCA_Status rc;
-    bool ok = true;
+    bool ok = false;
     set_standard_settings();
 
-    DDCA_Version_Feature_Info * info;
-    rc = ddca_get_feature_info_by_display(
+    DDCA_Simplified_Version_Feature_Info info;
+    rc = ddca_get_simplified_feature_info_by_display(
             dh,    // needed because in rare cases feature info is MCCS version dependent
             feature_code,
             &info);
     if (rc != 0) {
        FUNCTION_ERRMSG("ddca_get_feature_info", rc);
-       ok = false;
        goto bye;
     }
-    assert(info->feature_flags & (DDCA_COMPLEX_NC|DDCA_NC_CONT));
+    assert(info.feature_flags & (DDCA_COMPLEX_NC|DDCA_NC_CONT));
 
-#ifdef OLD
-    Single_Vcp_Value * valrec;
+    DDCA_Non_Table_Vcp_Value valrec;
     rc =
-    ddca_get_vcp_value(
+    ddca_get_non_table_vcp_value(
           dh,
           feature_code,
-          DDCA_NON_TABLE_VCP_VALUE,   // why is this needed?   look it up from dh and feature_code
           &valrec);
     if (rc != 0) {
-       FUNCTION_ERRMSG("ddca_get_vcp_value", rc);
-       ok = false;
+       FUNCTION_ERRMSG("ddca_non_table_vcp_value", rc);
        goto bye;
     }
 
     printf("Feature 0x%02x current value: mh=0x%02x, ml=0x%02x, sh=0x%02x, sl=0x%02x\n",
               feature_code,
-              valrec->val.nc.mh,
-              valrec->val.nc.ml,
-              valrec->val.nc.sh,
-              valrec->val.nc.sl);
-#endif
+              valrec.mh,
+              valrec.ml,
+              valrec.sh,
+              valrec.sl);
 
-    DDCA_Any_Vcp_Value * valrec;
-    rc =
-    ddca_get_any_vcp_value_using_explicit_type(
-          dh,
-          feature_code,
-          DDCA_NON_TABLE_VCP_VALUE_PARM,   // why is this needed?   look it up from dh and feature_code
-          &valrec);
+
+    char * formatted_value;
+    rc = ddca_format_non_table_vcp_value(
+                feature_code,
+                info.vspec,
+                &valrec,
+                &formatted_value);
     if (rc != 0) {
-       FUNCTION_ERRMSG("ddca_get_any_vcp_value", rc);
-       ok = false;
+       FUNCTION_ERRMSG("ddca_format_non_table_vcp_value", rc);
        goto bye;
     }
 
-    printf("Feature 0x%02x current value: mh=0x%02x, ml=0x%02x, sh=0x%02x, sl=0x%02x\n",
-              feature_code,
-              valrec->val.c_nc.mh,
-              valrec->val.c_nc.ml,
-              valrec->val.c_nc.sh,
-              valrec->val.c_nc.sl);
+    printf("Formatted value: %s\n", formatted_value);
+    free(formatted_value);
+    ok = true;
 
 
 bye:
-    if (info)
-       ddca_free_feature_info(info);
     restore_standard_settings();
 
     // uncomment to show statistics:

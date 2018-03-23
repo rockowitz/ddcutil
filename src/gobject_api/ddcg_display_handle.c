@@ -173,7 +173,7 @@ ddcg_display_handle_get_nontable_vcp_value(
    DdcgContResponse * ddcg_response = NULL;
    DDCA_Non_Table_Vcp_Value  ddct_response;
 
-   DDCA_Status ddct_status =  ddca_get_nontable_vcp_value(
+   DDCA_Status ddct_status =  ddca_get_non_table_vcp_value(
                   ddcg_dh->priv->ddct_dh,
                   feature_code,
                   &ddct_response);

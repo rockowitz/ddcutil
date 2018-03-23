@@ -505,10 +505,10 @@ void report_vcp_feature_table_entry(VCP_Feature_Table_Entry * pentry, int depth)
 #endif
    if (has_version_specific_features(pentry)) {
       // rpt_vstring(d1, "VERSION SPECIFIC FLAGS");
-      report_feature_table_entry_flags(pentry, VCP_SPEC_V20, d1);
-      report_feature_table_entry_flags(pentry, VCP_SPEC_V21, d1);
-      report_feature_table_entry_flags(pentry, VCP_SPEC_V30, d1);
-      report_feature_table_entry_flags(pentry, VCP_SPEC_V22, d1);
+      report_feature_table_entry_flags(pentry, DDCA_VSPEC_V20, d1);
+      report_feature_table_entry_flags(pentry, DDCA_VSPEC_V21, d1);
+      report_feature_table_entry_flags(pentry, DDCA_VSPEC_V30, d1);
+      report_feature_table_entry_flags(pentry, DDCA_VSPEC_V22, d1);
    }
    else {
       interpret_feature_flags_r(vflags, workbuf, sizeof(workbuf));
@@ -1986,7 +1986,7 @@ bool format_feature_detail_audio_speaker_volume(
   // v2.2: doc lists as both C and NC, but documents special values, treat as NC
   // v3.0: NC with special x00 and xff values
 
-  if (vcp_version_le(vcp_version,VCP_SPEC_V21)) {
+  if (vcp_version_le(vcp_version,DDCA_VSPEC_V21)) {
      snprintf(buffer, bufsz, "%d", code_info->sl);
   }
   else {
@@ -2039,11 +2039,11 @@ bool format_feature_detail_audio_treble_bass(
   // NC with reserved x00 and special xff values in 3.0, 2.2
   // This function should not be called if VCP2_STD_CONT
 
-  assert ( vcp_version_gt(vcp_version, VCP_SPEC_V21) );
+  assert ( vcp_version_gt(vcp_version, DDCA_VSPEC_V21) );
 
   // leave v2 code in in case things change
   bool ok = true;
-  if ( vcp_version_le(vcp_version, VCP_SPEC_V21))
+  if ( vcp_version_le(vcp_version, DDCA_VSPEC_V21))
   {
      snprintf(buffer, bufsz, "%d", code_info->sl);
   }
@@ -2073,10 +2073,10 @@ bool format_feature_detail_audio_balance_v30(
   // Continous in 2.0, NC in 3.0, 2.2, assume 2.1 same as 2.0
   // NC with reserved x00 and special xff values in 3.0,
   // This function should not be called if VCP2_STD_CONT
-  assert ( vcp_version_gt(vcp_version, VCP_SPEC_V21) );
+  assert ( vcp_version_gt(vcp_version, DDCA_VSPEC_V21) );
   // leave v2 code in in case things change
   bool ok = true;
-  if ( vcp_version_le(vcp_version, VCP_SPEC_V21))
+  if ( vcp_version_le(vcp_version, DDCA_VSPEC_V21))
   {
      snprintf(buffer, bufsz, "%d", code_info->sl);
   }

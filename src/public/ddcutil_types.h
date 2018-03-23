@@ -258,6 +258,16 @@ typedef struct {
    uint8_t    minor;           /*** minor version number */
 } DDCA_MCCS_Version_Spec;
 
+extern const DDCA_MCCS_Version_Spec DDCA_VSPEC_V10;        ///< MCCS version 1.0
+extern const DDCA_MCCS_Version_Spec DDCA_VSPEC_V20;        ///< MCCS version 2.0
+extern const DDCA_MCCS_Version_Spec DDCA_VSPEC_V21;        ///< MCCS version 2.1
+extern const DDCA_MCCS_Version_Spec DDCA_VSPEC_V30;        ///< MCCS version 3.0
+extern const DDCA_MCCS_Version_Spec DDCA_VSPEC_V22;        ///< MCCS version 2.2
+extern const DDCA_MCCS_Version_Spec DDCA_VSPEC_ANY;        ///< used as query specifier
+extern const DDCA_MCCS_Version_Spec DDCA_VSPEC_UNKNOWN;    ///< value for monitor has been queried unsuccessfully
+extern const DDCA_MCCS_Version_Spec DDCA_VSPEC_UNQUERIED;  ///< indicates version not queried
+
+
 
 /** @name version_id
  *  Ids for MCCS/VCP versions, reflecting the fact that

@@ -37,15 +37,16 @@
 
 #include "util/coredefs.h"
 
-
-extern const DDCA_MCCS_Version_Spec VCP_SPEC_V10;
-extern const DDCA_MCCS_Version_Spec VCP_SPEC_V20;
-extern const DDCA_MCCS_Version_Spec VCP_SPEC_V21;
-extern const DDCA_MCCS_Version_Spec VCP_SPEC_V30;
-extern const DDCA_MCCS_Version_Spec VCP_SPEC_V22;
-extern const DDCA_MCCS_Version_Spec VCP_SPEC_ANY;
-extern const DDCA_MCCS_Version_Spec VCP_SPEC_UNKNOWN;
-extern const DDCA_MCCS_Version_Spec VCP_SPEC_UNQUERIED;
+#ifdef MOVED_TO_API
+extern const DDCA_MCCS_Version_Spec DDCA_VSPEC_V10;
+extern const DDCA_MCCS_Version_Spec DDCA_VSPEC_V20;
+extern const DDCA_MCCS_Version_Spec DDCA_VSPEC_V21;
+extern const DDCA_MCCS_Version_Spec DDCA_VSPEC_V30;
+extern const DDCA_MCCS_Version_Spec DDCA_VSPEC_V22;
+extern const DDCA_MCCS_Version_Spec DDCA_VSPEC_ANY;
+extern const DDCA_MCCS_Version_Spec DDCA_VSPEC_UNKNOWN;
+extern const DDCA_MCCS_Version_Spec DDCA_VSPEC_UNQUERIED;
+#endif
 
 bool vcp_version_le(DDCA_MCCS_Version_Spec val, DDCA_MCCS_Version_Spec max);
 bool vcp_version_gt(DDCA_MCCS_Version_Spec val, DDCA_MCCS_Version_Spec min);

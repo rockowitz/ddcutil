@@ -549,7 +549,14 @@ ddca_create_usb_hiddev_display_identifier(
       DDCA_Display_Identifier* did_loc);
 
 
-/** Release the memory of a display identifier */
+/** Release the memory of a display identifier
+ * @param[in] did  display identifier, may be NULL
+ * @retval 0          success
+ * @retval DDCRC_ARG  invalid display identifier
+ *
+ * @remark
+ * Does nothing and returns 0 if **did** is NULL.
+ */
 DDCA_Status
 ddca_free_display_identifier(
       DDCA_Display_Identifier did);
@@ -785,6 +792,16 @@ ddca_get_feature_info_by_display(
       DDCA_Vcp_Feature_Code         feature_code,
       DDCA_Version_Feature_Info **  info_loc) __attribute__ ((deprecated));
 
+
+DDCA_Status
+ddca_get_simplified_feature_info_by_display(
+      DDCA_Display_Handle           ddca_dh,
+      DDCA_Vcp_Feature_Code         feature_code,
+      DDCA_Simplified_Version_Feature_Info *  info);     // caller buffer to fill in,
+
+
+
+
 /** Gets the VCP feature name.  If different MCCS versions use different names
  *  for the feature, this function makes a best guess.
  *
@@ -859,13 +876,12 @@ ddca_get_simple_nc_feature_value_name_by_vspec(
       char**                 feature_name_loc);
 
 
-/** \deprecated Use #ddca_get_simple_nc_feature_value_name_by_vspec() */
 DDCA_Status
 ddca_get_simple_nc_feature_value_name(
       DDCA_Display_Handle    ddca_dh,    // needed because value lookup mccs version dependent
       DDCA_Vcp_Feature_Code  feature_code,
       uint8_t                feature_value,
-      char**                 feature_name_loc) __attribute__ ((deprecated));
+      char**                 feature_name_loc);
 
 
 /** \deprecated */
@@ -936,21 +952,23 @@ ddca_get_edid_by_display_ref(
  *
  *  @param[in]  feature_set_id
  *  @param[in]  vcp_version
- *  @param      include_table_features if true, Table type features are included
- *  @return     bitfield indicating features in the set
+ *  @param[in]  include_table_features if true, Table type features are included
+ *  @param[out] points to feature list to be filled in
  */
-DDCA_Feature_List
+DDCA_Status
 ddca_get_feature_list(
       DDCA_Feature_Subset_Id  feature_set_id,
       DDCA_MCCS_Version_Spec  vcp_version,
-      bool                    include_table_features);
+      bool                    include_table_features,
+      DDCA_Feature_List*      p_feature_list);
 
 
 /** Empties a #DDCA_Feature_List
  *
  *  @param[in]  vcplist pointer to feature list
  */
-void ddca_feature_list_clear(DDCA_Feature_List* vcplist);
+void ddca_feature_list_clear(
+      DDCA_Feature_List* vcplist);
 
 /** Adds a feature code to a #DDCA_Feature_List
  *
@@ -958,7 +976,9 @@ void ddca_feature_list_clear(DDCA_Feature_List* vcplist);
  *  @param[in]  vcp_code  VCP feature code
  */
 void
-ddca_feature_list_add(  DDCA_Feature_List* vcplist, uint8_t vcp_code);
+ddca_feature_list_add(
+      DDCA_Feature_List* vcplist,
+      uint8_t vcp_code);
 
 /** Tests if a #DDCA_Feature_List contains a VCP feature code
  *
@@ -967,7 +987,9 @@ ddca_feature_list_add(  DDCA_Feature_List* vcplist, uint8_t vcp_code);
  *  @return     true/false
  */
 bool
-ddca_feature_list_contains( DDCA_Feature_List* vcplist, uint8_t vcp_code);
+ddca_feature_list_contains(
+      DDCA_Feature_List* vcplist,
+      uint8_t vcp_code);
 
 /** Creates a union of 2 feature lists.
  *
@@ -980,7 +1002,9 @@ ddca_feature_list_contains( DDCA_Feature_List* vcplist, uint8_t vcp_code);
  *  The input feature lists are not modified.
  */
 DDCA_Feature_List
-ddca_feature_list_union(DDCA_Feature_List* vcplist1, DDCA_Feature_List * vcplist2);
+ddca_feature_list_union(
+      DDCA_Feature_List* vcplist1,
+      DDCA_Feature_List * vcplist2);
 
 /** Returns a feature list consisting of all the features in the
  *  first list that are not in the second.
@@ -994,8 +1018,22 @@ ddca_feature_list_union(DDCA_Feature_List* vcplist1, DDCA_Feature_List * vcplist
  *  The input feature lists are not modified.
  */
 DDCA_Feature_List
-ddca_feature_list_subtract(DDCA_Feature_List* vcplist1, DDCA_Feature_List * vcplist2);
+ddca_feature_list_subtract(
+      DDCA_Feature_List* vcplist1,
+      DDCA_Feature_List* vcplist2);
 
+
+/** Returns a feature list consisting of all the features in the
+ *  first list that are not in the second.
+ *
+ *  @param[in]  vcplist   pointer to feature list
+ *  @param[out] p_codect  address where to return count of feature codes
+ *  @param[out] vcp_codes address of 256 byte buffer to receive codes
+ */
+void ddca_feature_list_to_codes(
+      DDCA_Feature_List* vcplist,
+      int*               p_codect,
+      uint8_t            vcp_codes[256]);
 
 /*
  * The API for getting and setting VCP values is doubly specified,
@@ -1061,10 +1099,10 @@ dbgrpt_any_vcp_value(
  * @return status code
  */
 DDCA_Status
-ddca_get_nontable_vcp_value(
+ddca_get_non_table_vcp_value(
        DDCA_Display_Handle        ddca_dh,
        DDCA_Vcp_Feature_Code      feature_code,
-       DDCA_Non_Table_Vcp_Value *     valrec);
+       DDCA_Non_Table_Vcp_Value*  valrec);
 
 
 /** Gets the value of a table VCP feature.
@@ -1081,10 +1119,6 @@ DDCA_Status
 ddca_get_table_vcp_value(
        DDCA_Display_Handle     ddca_dh,
        DDCA_Vcp_Feature_Code   feature_code,
-#ifdef OLD
-       int *                   value_len_loc,
-       uint8_t**               value_bytes_loc,
-#endif
        DDCA_Table_Vcp_Value **     table_value_loc);
 
 

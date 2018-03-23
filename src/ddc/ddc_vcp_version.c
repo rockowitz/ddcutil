@@ -75,7 +75,7 @@ DDCA_MCCS_Version_Spec get_vcp_version_by_display_handle(Display_Handle * dh) {
          DBGMSG0("Starting.  vcp_version not set");
          dbgrpt_display_handle(dh, /*msg=*/ NULL, 1);
       }
-      dh->dref->vcp_version = VCP_SPEC_UNKNOWN;
+      dh->dref->vcp_version = DDCA_VSPEC_UNKNOWN;
 
       if (dh->dref->io_path.io_mode == DDCA_IO_USB) {
 #ifdef USE_USB
@@ -128,7 +128,7 @@ DDCA_MCCS_Version_Spec get_vcp_version_by_display_handle(Display_Handle * dh) {
       DBGMSF(debug, "Non-cache lookup returning: %d.%d", dh->dref->vcp_version.major, dh->dref->vcp_version.minor);
    }
    // DBGMSF(debug, "Returning: %d.%d", dh->dref->vcp_version.major, dh->dref->vcp_version.minor);
-   assert( !vcp_version_eq(dh->dref->vcp_version, VCP_SPEC_UNQUERIED) );
+   assert( !vcp_version_eq(dh->dref->vcp_version, DDCA_VSPEC_UNQUERIED) );
    // if (debug) {
    //    DBGMSG("Done.");
    //    report_display_handle(dh, /*msg=*/ NULL, 1);
@@ -171,7 +171,7 @@ DDCA_MCCS_Version_Spec get_vcp_version_by_display_ref(Display_Ref * dref) {
       ddc_close_display(dh);
    }
 
-   assert( !vcp_version_eq(dref->vcp_version, VCP_SPEC_UNQUERIED) );
+   assert( !vcp_version_eq(dref->vcp_version, DDCA_VSPEC_UNQUERIED) );
    DBGMSF(debug, "Returning: %d.%d", dref->vcp_version.major, dref->vcp_version.minor);
    return dref->vcp_version;
 }

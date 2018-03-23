@@ -292,9 +292,9 @@ is_rereadable_feature(
       DDCA_MCCS_Version_Spec vspec = get_vcp_version_by_display_handle(dh);  // ensure dh->vcp_version set
       DBGMSF(debug, "vspec = %d.%d", vspec.major, vspec.minor);
       // hack, make a guess
-      if ( vcp_version_eq(vspec, VCP_SPEC_UNKNOWN)   ||
-           vcp_version_eq(vspec, VCP_SPEC_UNQUERIED ))
-         vspec = VCP_SPEC_V22;
+      if ( vcp_version_eq(vspec, DDCA_VSPEC_UNKNOWN)   ||
+           vcp_version_eq(vspec, DDCA_VSPEC_UNQUERIED ))
+         vspec = DDCA_VSPEC_V22;
 
       // if ( !vcp_version_eq(vspec, VCP_SPEC_UNKNOWN) &&
       //      !vcp_version_eq(vspec, VCP_SPEC_UNQUERIED ))

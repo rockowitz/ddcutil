@@ -679,19 +679,20 @@ ddca_create_usb_hiddev_display_identifier(
 }
 
 
-
 DDCA_Status
 ddca_free_display_identifier(
       DDCA_Display_Identifier did)
 {
-   DBGMSG("Starting.  did=%p", did);
+   // DBGMSG("Starting.  did=%p", did);
+
    DDCA_Status rc = 0;
    Display_Identifier * pdid = (Display_Identifier *) did;
-   if (pdid == NULL || memcmp(pdid->marker, DISPLAY_IDENTIFIER_MARKER, 4) != 0 )  {
-     rc = DDCRC_ARG;
-   }
-   else {
-     free_display_identifier(pdid);
+   if (pdid) {
+      if ( memcmp(pdid->marker, DISPLAY_IDENTIFIER_MARKER, 4) != 0 )
+         rc = DDCRC_ARG;
+      else
+         free_display_identifier(pdid);
+
    }
    return rc;
 }
@@ -699,14 +700,14 @@ ddca_free_display_identifier(
 
 char *
 ddca_did_repr(DDCA_Display_Identifier ddca_did) {
-   DBGMSG("Starting.  ddca_did=%p", ddca_did);
+   // DBGMSG("Starting.  ddca_did=%p", ddca_did);
    char * result = NULL;
    Display_Identifier * pdid = (Display_Identifier *) ddca_did;
    if (pdid != NULL && memcmp(pdid->marker, DISPLAY_IDENTIFIER_MARKER, 4) == 0 )  {
       result = did_repr(pdid);
 
    }
-   DBGMSG("Done.  Returning: %p", result);
+   // DBGMSG("Done.  Returning: %p", result);
    return result;
 }
 
@@ -988,7 +989,7 @@ ddca_get_displays_old()
 DDCA_Display_Info_List *
 ddca_get_display_info_list(void)
 {
-   bool debug = true;
+   bool debug = false;
    DBGMSF0(debug, "Starting");
 
    ddc_ensure_displays_detected();
@@ -1027,7 +1028,7 @@ ddca_get_display_info_list(void)
          // mccs_version_spec_to_id has assert error if unqueried
          DDCA_MCCS_Version_Id version_id = DDCA_MCCS_VNONE;
          DDCA_MCCS_Version_Spec vspec = dref->vcp_version;
-         if (vcp_version_eq(vspec, VCP_SPEC_UNQUERIED)) {
+         if (vcp_version_eq(vspec, DDCA_VSPEC_UNQUERIED)) {
             vspec = get_vcp_version_by_display_ref(dref);
          }
          version_id = mccs_version_spec_to_id(vspec);
@@ -1182,12 +1183,19 @@ bool ddca_feature_list_contains(DDCA_Feature_List * vcplist, uint8_t vcp_code) {
 }
 
 
-
-DDCA_Feature_List ddca_get_feature_list(
-      DDCA_Feature_Subset_Id   feature_list_id,
-      DDCA_MCCS_Version_Spec vcp_version,
-      bool                   include_table_features)
+DDCA_Status
+ddca_get_feature_list(
+      DDCA_Feature_Subset_Id  feature_list_id,
+      DDCA_MCCS_Version_Spec  vcp_version,
+      bool                    include_table_features,
+      DDCA_Feature_List*      p_feature_list)
 {
+   // Whether a feature is a table feature can vary by version, so can't
+   // specify VCP_SPEC_ANY and to request feature ids in any version
+   if (vcp_version_eq(vcp_version, DDCA_VSPEC_ANY) ||
+       vcp_version_eq(vcp_version, DDCA_VSPEC_UNQUERIED) ) {
+      return -EINVAL;
+   }
    VCP_Feature_Subset subset = VCP_SUBSET_NONE;  // pointless initialization to avoid compile warning
    switch (feature_list_id) {
    case DDCA_SUBSET_KNOWN:
@@ -1208,7 +1216,10 @@ DDCA_Feature_List ddca_get_feature_list(
       flags |= FSF_NOTABLE;
    VCP_Feature_Set fset = create_feature_set(subset, vcp_version, flags);
    // VCP_Feature_Set fset = create_feature_set(subset, vcp_version, !include_table_features);
+
+   // TODO: function variant that takes result as a parm, avoid memcpy
    DDCA_Feature_List result = feature_list_from_feature_set(fset);
+   memcpy(p_feature_list, &result, 32);
    free_vcp_feature_set(fset);
 
 #ifdef NO
@@ -1222,7 +1233,7 @@ DDCA_Feature_List ddca_get_feature_list(
    }
    printf("\n");
 #endif
-   return result;
+   return DDCRC_OK;
 
 }
 
@@ -1250,6 +1261,20 @@ ddca_feature_list_subtract(
    return result;
 }
 
+
+void ddca_feature_list_to_codes(
+      DDCA_Feature_List* vcplist,
+      int*               codect,
+      uint8_t            vcp_codes[256])
+{
+   int ctr = 0;
+   for (int ndx = 0; ndx < 256; ndx++) {
+      if (ddca_feature_list_contains(vcplist, ndx)) {
+         vcp_codes[ctr++] = ndx;
+      }
+   }
+   *codect = ctr;
+}
 
 
 #ifdef OLD
@@ -1430,6 +1455,42 @@ ddca_get_feature_info_by_display(
 }
 
 
+
+DDCA_Status
+ddca_get_simplified_feature_info_by_display(
+      DDCA_Display_Handle           ddca_dh,
+      DDCA_Vcp_Feature_Code         feature_code,
+      DDCA_Simplified_Version_Feature_Info *  info)    // caller buffer to fill in,
+{
+   WITH_DH(
+         ddca_dh,
+         {
+            DDCA_MCCS_Version_Spec vspec = get_vcp_version_by_display_handle(ddca_dh);
+            //DDCA_MCCS_Version_Id   version_id = mccs_version_spec_to_id(vspec);
+            //psc = ddca_get_feature_info_by_vcp_version(feature_code, version_id, p_info);
+
+            DDCA_Status psc = DDCRC_ARG;
+            DDCA_Version_Feature_Info * full_info =  get_version_feature_info_by_vspec(
+                  feature_code,
+                  vspec,
+                  false,                       // with_default
+                  true);                       // false => version specific, true=> version sensitive
+            if (full_info) {
+               info->feature_code  = feature_code;
+               info->vspec         = vspec;
+               info->version_id    = full_info->version_id;    // keep?
+               info->feature_flags = full_info->feature_flags;
+
+               free_version_feature_info(full_info);
+               psc = 0;
+            }
+            return psc;
+
+         }
+      );
+
+}
+
 DDCA_Status
 ddca_free_feature_info(
       DDCA_Version_Feature_Info * info)
@@ -1494,7 +1555,6 @@ ddca_get_simple_sl_value_table_by_vspec(
    DBGMSF(debug, "feature_code = 0x%02x, vspec=%d.%d",
                  feature_code, vspec.major, vspec.minor);
 
-
    VCP_Feature_Table_Entry * pentry = vcp_find_feature_by_hexid(feature_code);
    if (!pentry) {
         *value_table_loc = NULL;
@@ -1548,7 +1608,6 @@ ddca_get_simple_sl_value_table(
 
 
 // typedef void * Feature_Value_Table;   // temp
-
 
 
 // or:
@@ -1682,7 +1741,7 @@ ddca_get_nontable_vcp_value_old(
 // TODO: Eliminate ddca_get_nontable_vcp_value_old()
 
 DDCA_Status
-ddca_get_nontable_vcp_value(
+ddca_get_non_table_vcp_value(
       DDCA_Display_Handle             ddca_dh,
       DDCA_Vcp_Feature_Code           feature_code,
       DDCA_Non_Table_Vcp_Value *          valrec)
@@ -1703,19 +1762,19 @@ ddca_get_nontable_vcp_value(
 
 
 DDCA_Status
-ddca_get_nontable_vcp_value(
+ddca_get_non_table_vcp_value(
       DDCA_Display_Handle      ddca_dh,
       DDCA_Vcp_Feature_Code    feature_code,
       DDCA_Non_Table_Vcp_Value *   valrec)
 {
-   Error_Info * ddc_excp = NULL;
 
    WITH_DH(ddca_dh,  {
+       Error_Info * ddc_excp = NULL;
        Parsed_Nontable_Vcp_Response * code_info;
        ddc_excp = ddc_get_nontable_vcp_value(
-                dh,
-                feature_code,
-                &code_info);
+                     dh,
+                     feature_code,
+                     &code_info);
 
        if (!ddc_excp) {
           valrec->mh = code_info->mh;
@@ -1724,37 +1783,12 @@ ddca_get_nontable_vcp_value(
           valrec->ml = code_info->sl;
           free(code_info);
        }
+       else {
+          psc = ddc_excp->status_code;
+          errinfo_free(ddc_excp);
+       }
     } );
-
-   DDCA_Status rc = (ddc_excp) ? ddc_excp->status_code : 0;
-   errinfo_free(ddc_excp);
-   return rc;
 }
-
-
-
-
-// Partial code for getting formatted value
-//
-//Parsed_Vcp_Response pvr;
-//pvr.response_type = NON_TABLE_VCP_VALUE;
-//pvr.non_table_response = response;
-//
-//Single_Vcp_Value * valrec =
-// create_single_vcp_value_by_parsed_vcp_response(
-//       feature_code,
-//       *pvr);
-//
-//bool ok = vcp_format_feature_detail(
-//       VCP_Feature_Table_Entry * vcp_entry,
-//       DDCA_MCCS_Version_Spec              vcp_version,
-//       Single_Vcp_Value *        valrec,
-//#ifdef OLD
-//       Parsed_Vcp_Response *     raw_data,
-//#endif
-//       char * *                  aformatted_data
-//     )
-//
 
 
 
@@ -1763,16 +1797,11 @@ DDCA_Status
 ddca_get_table_vcp_value(
       DDCA_Display_Handle    ddca_dh,
       DDCA_Vcp_Feature_Code  feature_code,
-#ifdef OLD
-      int *                  value_len,
-      Byte**                 value_bytes,
-#endif
       DDCA_Table_Vcp_Value **    table_value_loc)
 {
-   Error_Info * ddc_excp = NULL;
-
    WITH_DH(ddca_dh,
       {
+         Error_Info * ddc_excp = NULL;
          Buffer * p_table_bytes = NULL;
          ddc_excp =  ddc_get_table_vcp_value(dh, feature_code, &p_table_bytes);
          psc = (ddc_excp) ? ddc_excp->status_code : 0;
@@ -1780,11 +1809,6 @@ ddca_get_table_vcp_value(
          if (psc == 0) {
             assert(p_table_bytes);  // avoid coverity warning
             int len = p_table_bytes->len;
-#ifdef OLD
-            *value_len = len;
-            *value_bytes = malloc(len);
-            memcpy(*value_bytes, p_table_bytes->bytes, len);
-#endif
             DDCA_Table_Vcp_Value * tv = calloc(1,sizeof(DDCA_Table_Vcp_Value));
             tv->bytect = len;
             if (len > 0) {
@@ -1799,8 +1823,6 @@ ddca_get_table_vcp_value(
    );
 }
 
-
-// alt
 
 static
 DDCA_Status
@@ -1825,7 +1847,6 @@ ddca_get_vcp_value(
          }
    );
 }
-
 
 
 static DDCA_Vcp_Value_Type_Parm

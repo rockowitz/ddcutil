@@ -15,16 +15,16 @@ if ENABLE_SHARED_LIB_COND
 check_PROGRAMS += \
   laclient \
   demo_global_settings \
+  demo_feature_list \
   demo_vcpinfo \
   demo_get_set_vcp \
-  demo_display_selection 
-
-check_PROGRAMS += \
+  demo_display_selection \
   demo_redirection
 endif
 
 laclient_SOURCES               = clmain.c
 demo_global_settings_SOURCES   = demo_global_settings.c
+demo_feature_list_SOURCES      = demo_feature_list.c
 demo_vcpinfo_SOURCES           = demo_vcpinfo.c
 demo_display_selection_SOURCES = demo_display_selection.c
 demo_get_set_vcp_SOURCES       = demo_get_set_vcp.c

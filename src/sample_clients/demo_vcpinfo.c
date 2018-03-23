@@ -3,7 +3,7 @@
  * Query VCP feature information
  *
  * <copyright>
- * Copyright (C) 2014-2015 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2014-2018 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -32,6 +32,7 @@
 #include <unistd.h>
 
 #include "public/ddcutil_c_api.h"
+#include "public/ddcutil_types.h"
 
 
 #define FUNCTION_ERRMSG(function_name,status_code) \
@@ -116,11 +117,13 @@ void show_version_feature_info(DDCA_Version_Feature_Info * info) {
    printf("\nVersion Sensitive Feature Information for VCP Feature: 0x%02x - %s\n",
            info->feature_code, info->feature_name);
    printf("   VCP version:          %d.%d\n",   info->vspec.major, info->vspec.minor);
+#ifdef DEPRECATED
    printf("   VCP version id:       %d (%s) - %s \n",
                   info->version_id,
                   ddca_mccs_version_id_name(info->version_id),
                   ddca_mccs_version_id_desc(info->version_id)
              );
+#endif
    printf("   Description:          %s\n",  info->desc);
    char * s = interpret_feature_flags(info->feature_flags);
    printf("   Feature flags: %s\n", s);
@@ -136,6 +139,31 @@ void show_version_feature_info(DDCA_Version_Feature_Info * info) {
 }
 
 
+#ifdef DEPRECATED
+void test_get_single_feature_info(
+       DDCA_MCCS_Version_Id  version_id,
+       DDCA_Vcp_Feature_Code   feature_code)
+{
+  printf("\n(%s) Getting metadata for feature 0x%02x, mccs version = %s\n", __func__,
+         feature_code, ddca_mccs_version_id_desc(version_id));
+  printf("Feature name: %s\n", ddca_get_feature_name(feature_code));
+  // DDCA_Version_Feature_Flags feature_flags;
+  DDCA_Version_Feature_Info * info = NULL;
+  DDCA_Status rc = ddca_get_feature_info_by_vcp_version(feature_code, version_id, &info);
+  if (rc != 0)
+     FUNCTION_ERRMSG("ddca_get_feature_info_by_vcp_version", rc);
+  else {
+     // TODO: Version_Specific_Feature_Info needs a report function
+     //  report_ddca_version_feature_flags(feature_code, info->feature_flags);
+     // report_version_feature_info(info, 1);
+     show_version_feature_info(info);
+     ddca_free_feature_info(info);
+  }
+  printf("%s) Done.\n", __func__);
+}
+#endif
+
+
 /** Retrieves and displays feature information for a specified MCCS version
  *  and feature code.
  *
@@ -144,23 +172,26 @@ void show_version_feature_info(DDCA_Version_Feature_Info * info) {
  *     feature_code
  */
 void test_get_single_feature_info(
-        DDCA_MCCS_Version_Id  version_id,
-        DDCA_Vcp_Feature_Code feature_code)
+        DDCA_MCCS_Version_Spec  vspec,
+        DDCA_Vcp_Feature_Code   feature_code)
 {
-   printf("\n(%s) Getting metadata for feature 0x%02x, mccs version = %s\n", __func__,
-          feature_code, ddca_mccs_version_id_desc(version_id));
+   printf("\n(%s) Getting metadata for feature 0x%02x, mccs version = %d.%d\n", __func__,
+          feature_code, vspec.major, vspec.minor);
    printf("Feature name: %s\n", ddca_get_feature_name(feature_code));
-   // DDCA_Version_Feature_Flags feature_flags;
-   DDCA_Version_Feature_Info * info = NULL;
-   DDCA_Status rc = ddca_get_feature_info_by_vcp_version(feature_code, version_id, &info);
+   DDCA_Feature_Flags feature_flags;
+   DDCA_Status rc = ddca_get_feature_flags_by_vspec(
+         feature_code,
+         vspec,
+         &feature_flags);
    if (rc != 0)
       FUNCTION_ERRMSG("ddca_get_feature_info_by_vcp_version", rc);
    else {
       // TODO: Version_Specific_Feature_Info needs a report function
       //  report_ddca_version_feature_flags(feature_code, info->feature_flags);
       // report_version_feature_info(info, 1);
-      show_version_feature_info(info);
-      ddca_free_feature_info(info);
+      char * s = interpret_feature_flags(feature_flags);
+      printf("Feature flags: %s\n", s);
+      free(s);
    }
    printf("%s) Done.\n", __func__);
 }
@@ -173,6 +204,7 @@ void test_get_single_feature_info(
  *     version_id
  *     feature_code
  */
+#ifdef DEPRECATED
 void test_get_feature_info(DDCA_MCCS_Version_Id version_id) {
    printf("\n(%s) ===> Starting.  version_id = %s\n", __func__, ddca_mccs_version_id_name(version_id));
 
@@ -185,13 +217,33 @@ void test_get_feature_info(DDCA_MCCS_Version_Id version_id) {
 }
 
 
-
 void demo_feature_info() {
    test_get_feature_info(DDCA_MCCS_V10);
    test_get_feature_info(DDCA_MCCS_V20);
    test_get_feature_info(DDCA_MCCS_V21);
    test_get_feature_info(DDCA_MCCS_V30);
    test_get_feature_info(DDCA_MCCS_V22);
+}
+#endif
+
+void test_get_feature_info(DDCA_MCCS_Version_Spec vspec) {
+   printf("\n(%s) ===> Starting.  version = %d.%d\n", __func__, vspec.major, vspec.minor);
+
+   DDCA_Vcp_Feature_Code feature_codes[] = {0x00, 0x02, 0x03, 0x10, 0x43, 0x60, 0xe0};
+   int feature_code_ct = sizeof(feature_codes)/sizeof(DDCA_Vcp_Feature_Code);
+   for (int ndx = 0; ndx < feature_code_ct; ndx++)
+      test_get_single_feature_info(vspec, feature_codes[ndx]);
+
+   printf("%s) Done.\n", __func__);
+}
+
+
+void demo_feature_info() {
+   test_get_feature_info(DDCA_VSPEC_V10);
+   test_get_feature_info(DDCA_VSPEC_V20);
+   test_get_feature_info(DDCA_VSPEC_V21);
+   test_get_feature_info(DDCA_VSPEC_V30);
+   test_get_feature_info(DDCA_VSPEC_V22);
 }
 
 
