@@ -254,7 +254,7 @@ libddcutil_la_LDFLAGS =
 # if ENABLE_FAILSIM_COND
 # libddcutil_la_LDFLAGS += -export-dynamic
 # else
-libddcutil_la_LDFLAGS += -export-symbols-regex '^ddc[ags]_[^_]'
+libddcutil_la_LDFLAGS += -export-symbols-regex '(^DDCA_|^ddc[ags]_[^_])'
 # endif
 libddcutil_la_LDFLAGS += -version-info '@LT_CURRENT@:@LT_REVISION@:@LT_AGE@' 
 # libddcutil_la_LDFLAGS += -init _ddca_init
