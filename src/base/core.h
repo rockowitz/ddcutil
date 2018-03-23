@@ -135,7 +135,7 @@ FILE * ferr();
 //
 
 DDCA_Output_Level get_output_level();
-void              set_output_level(DDCA_Output_Level newval);
+DDCA_Output_Level set_output_level(DDCA_Output_Level newval);
 char *            output_level_name(DDCA_Output_Level val);
 
 

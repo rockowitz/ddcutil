@@ -345,8 +345,9 @@ int ddca_captured_size(void);
 DDCA_Output_Level                   /**< current output level */
 ddca_get_output_level(void);
 
-/** Sets the output level for the current thread */
-void ddca_set_output_level(
+/** Sets the output level for the current thread  */
+DDCA_Output_Level                  /**< old output level */
+ddca_set_output_level(
       DDCA_Output_Level newval);   /**< new output level */
 
 /** Gets the name of an output level

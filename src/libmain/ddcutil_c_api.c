@@ -433,11 +433,11 @@ ddca_get_output_level(void) {
    return get_output_level();
 }
 
-void
+DDCA_Output_Level
 ddca_set_output_level(
        DDCA_Output_Level newval)
 {
-      set_output_level(newval);
+     return set_output_level(newval);
 }
 
 char *
