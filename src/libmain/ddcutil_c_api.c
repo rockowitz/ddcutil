@@ -1664,9 +1664,10 @@ ddca_get_simple_nc_feature_value_name0(
    );
 }
 
+
 #ifdef OLD
 // Was public, but eliminated from API due to problems in Python API caused by overlay.
-// Retained for impedence matching.  To be eliminated.
+// Retained for impedance matching.  Retained for historical interest.
 
 /** Represents a single non-table VCP value */
 typedef struct {
@@ -1695,69 +1696,6 @@ typedef struct {
       }         nc;                /**< non-continuous (NC) value */
    } val;
 } Non_Table_Value_Response;
-
-
-
-/** Gets the value of a non-table VCP feature.
- *
- *  \param ddca_dh      handle of open display
- *  \param feature_code VCP feature code
- *  \param response     pointer to existing #DDCA_Non_Table_Value_Response that is filled in
- *  \return             status code
- */
-static
-DDCA_Status
-ddca_get_nontable_vcp_value_old(
-      DDCA_Display_Handle            ddca_dh,
-      DDCA_Vcp_Feature_Code          feature_code,
-      Non_Table_Value_Response *     response)
-{
-   Error_Info * ddc_excp = NULL;
-
-   WITH_DH(ddca_dh,  {
-       Parsed_Nontable_Vcp_Response * code_info;
-       ddc_excp = ddc_get_nontable_vcp_value(
-                dh,
-                feature_code,
-                &code_info);
-       psc = (ddc_excp) ? ddc_excp->status_code : 0;
-       errinfo_free(ddc_excp);
-       // DBGMSG(" get_nontable_vcp_value() returned %s", gsc_desc(gsc));
-       if (psc == 0) {
-          response->feature_code = code_info->vcp_code;
-          // response->cur_value = code_info->cur_value;
-          // response->max_value = code_info->max_value;
-          response->val.nc.mh        = code_info->mh;
-          response->val.nc.ml        = code_info->ml;
-          response->val.nc.sh        = code_info->sh;
-          response->val.nc.sl        = code_info->sl;
-          free(code_info);
-       }
-       // else psc = global_to_public_status_code(gsc);
-    } );
-}
-
-
-// TODO: Eliminate ddca_get_nontable_vcp_value_old()
-
-DDCA_Status
-ddca_get_non_table_vcp_value(
-      DDCA_Display_Handle             ddca_dh,
-      DDCA_Vcp_Feature_Code           feature_code,
-      DDCA_Non_Table_Vcp_Value *          valrec)
-{
-   Non_Table_Value_Response      response;
-   DDCA_Status rc = 0;
-
-   rc = ddca_get_nontable_vcp_value_old(ddca_dh, feature_code, &response);
-   if (rc == 0) {
-      valrec->mh = response.val.nc.mh;
-      valrec->ml = response.val.nc.ml;
-      valrec->sh = response.val.nc.sh;
-      valrec->sl = response.val.nc.sl;
-   }
-   return rc;
-}
 #endif
 
 
