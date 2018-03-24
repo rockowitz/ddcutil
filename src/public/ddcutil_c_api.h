@@ -919,7 +919,7 @@ ddca_get_mccs_version_id(
 
 
 #ifdef UNIMPLEMENTED
-// Use ddca_get_edid_by_display_ref() instead
+// Use ddca_get_edid_by_dref() instead
 // n. edid_buffer must be >= 128 bytes
 
 DDCA_Status
@@ -927,7 +927,7 @@ ddca_get_edid(DDCA_Display_Handle * dh, uint8_t* edid_buffer);
 #endif
 
 DDCA_Status
-ddca_get_edid_by_display_ref(
+ddca_get_edid_by_dref(
       DDCA_Display_Ref ddca_dref,
       uint8_t **       pbytes_loc);   // pointer into ddcutil data structures, do not free
 
@@ -946,7 +946,7 @@ ddca_get_edid_by_display_ref(
  * for the current thread.
  */
 DDCA_Status
-ddca_report_display_by_display_ref(DDCA_Display_Ref dref, int depth);
+ddca_report_display_by_dref(DDCA_Display_Ref dref, int depth);
 
 
 //

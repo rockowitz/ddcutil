@@ -1187,7 +1187,7 @@ ddca_dbgrpt_display_info_list(
 
 
 DDCA_Status
-ddca_get_edid_by_display_ref(
+ddca_get_edid_by_dref(
       DDCA_Display_Ref ddca_dref,
       uint8_t**        p_bytes)
 {
@@ -1217,7 +1217,7 @@ bye:
 
 
 DDCA_Status
-ddca_report_display_by_display_ref(DDCA_Display_Ref ddca_dref, int depth) {
+ddca_report_display_by_dref(DDCA_Display_Ref ddca_dref, int depth) {
    DDCA_Status rc = 0;
 
     if (!library_initialized) {
