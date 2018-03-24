@@ -3,7 +3,7 @@
  * Framework for test code
  *
  * <copyright>
- * Copyright (C) 2014-2017 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2014-2018 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -54,7 +54,7 @@ int main(int argc, char** argv) {
 
    for (int ndx = 0; ndx <  dlist->ct; ndx++) {
       DDCA_Display_Info * dinfo = &dlist->info[ndx];
-      ddca_report_display_info(dinfo, /* depth=*/ 1);
+      ddca_dbgrpt_display_info(dinfo, /* depth=*/ 1);
       printf("\n(%s) ===> Test loop for display %d\n", __func__, dinfo->dispno);
 
 #ifdef ALT
