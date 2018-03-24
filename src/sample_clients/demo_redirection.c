@@ -39,9 +39,7 @@ void capture_output_using_convenience_functions() {
 
    ddca_start_capture(DDCA_CAPTURE_NOOPTS);
    int logical_indentation_depth = 1;
-   ddca_report_active_displays(logical_indentation_depth);
-   // size includes trailing null at end of output:
-   printf("Captured size:  %d\n", ddca_captured_size());
+   ddca_report_active_displays(false, logical_indentation_depth);
    char * output = ddca_end_capture();
    printf("Captured output:\n%s\n", output);
    free(output);
@@ -63,7 +61,7 @@ void capture_output_using_basic_functions() {
 
    ddca_set_fout(f);
    int logical_indentation_depth = 1;
-   ddca_report_active_displays(logical_indentation_depth);
+   ddca_report_active_displays(false, logical_indentation_depth);
    // Ensure output actually written to FILE:
    int rc = fflush(f);
    if (rc < 0) {
