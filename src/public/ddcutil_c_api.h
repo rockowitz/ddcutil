@@ -31,12 +31,10 @@
 #define DDCUTIL_C_API_H_
 
 /** \cond */
-// #include <setjmp.h>    // obsolete
 #include <stdbool.h>
 #include <stdio.h>
 /** \endcond */
 
-// is this the right location?
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -118,7 +116,6 @@ typedef enum {
  *
  * @return  flags byte
  *
- *
  * | Defined Bits: | |
  * |:-------| :--------------
  * |#DDCA_BUILT_WITH_ADL  | built with ADL support
@@ -127,22 +124,6 @@ typedef enum {
  *
  */
 DDCA_Build_Option_Flags ddca_build_options(void);
-
-
-//
-// Initialization
-//
-
-#ifdef NOT_NEEDED
-/**
- * Initializes the ddcutil library module.
- *
- * Must be called before most other functions.
- *
- * It is not an error if this function is called more than once.
- */
-// void __attribute__ ((constructor)) _ddca_init(void);
-#endif
 
 
 //
@@ -195,15 +176,14 @@ ddca_mccs_version_id_name(
  *
  *  @param[in]  version_id  version id value
  *  @return descriptive name (do not free)
+ *
+ *  @remark added to replace ddca_mccs_version_id_desc() during 0.9
+ *  development, but then use of DDCA_MCCS_Version_Id deprecated
  */
 char *
-ddca_mccs_version_id_string(
-      DDCA_MCCS_Version_Id  version_id) __attribute__ ((deprecated));
-
-/** \deprecated Use #ddca_mccs_version_id_string()  */
-char *
+__attribute__ ((deprecated))
 ddca_mccs_version_id_desc(
-      DDCA_MCCS_Version_Id  version_id) __attribute__ ((deprecated));
+      DDCA_MCCS_Version_Id  version_id) ;
 
 
 //
@@ -299,18 +279,19 @@ void ddca_set_ferr_to_default(void);
 /** Capture option flags
  *
  *  The enum values are defined as 1,2,4 etc so that they can be or'd.
+ *
+ *  @since 0.9.0
  */
 typedef enum {
    DDCA_CAPTURE_NOOPTS     = 0,     ///< @brief no options specified
    DDCA_CAPTURE_STDERR     = 1      ///< @brief capture **stderr** as well as **stdout**
 } DDCA_Capture_Option_Flags;
 
-
 /** Begins capture of **stdout** and optionally **stderr** output on the
- * current thread to a thread-specific in-memory buffer.
+ *  current thread to a thread-specific in-memory buffer.
  *
- * @note
- * If output is already being captured, this function has no effect.
+ *  @note  If output is already being captured, this function has no effect.
+ *  @since 0.9.0
  */
 void ddca_start_capture(DDCA_Capture_Option_Flags flags);
 
@@ -323,18 +304,10 @@ void ddca_start_capture(DDCA_Capture_Option_Flags flags);
  *
  *  @return captured output as a string.
  *
- *  @note
- *  Writes messages to actual **stderr** in case of error.
+ *  @note  Writes messages to actual **stderr** in case of error.
+ *  @since 0.9.0
  */
 char * ddca_end_capture(void);
-
-/** Returns the current size of the in-memory capture buffer.
- *
- *  @return number of characters in current buffer, plus 1 for
- *          terminating null
- *  @retval -1 no capture buffer on current thread
- */
-int ddca_captured_size(void);
 
 
 //
@@ -351,8 +324,8 @@ ddca_set_output_level(
       DDCA_Output_Level newval);   /**< new output level */
 
 /** Gets the name of an output level
- * @param[in]  val  output level id
- * @return output level name (do not free)
+ *  @param[in]  val  output level id
+ *  @return     output level name (do not free)
  */
 char * ddca_output_level_name(
           DDCA_Output_Level val);   /**< output level id */
@@ -396,15 +369,27 @@ void ddca_show_stats(DDCA_Stats_Type stats, int depth);
 // Display Descriptions
 //
 
-/** Gets a list of the detected displays.
+/** @deprecated use #ddca_get_display_info_list2()
+ * Gets a list of the detected displays.
  *
  *  Displays that do not support DDC are not included.
  *
  *  @return list of display summaries
  */
+// __attribute__ ((deprecated))
 DDCA_Display_Info_List *
 ddca_get_display_info_list(void);
 
+/** Gets a list of the detected displays.
+ *
+ *  @param[in]  include_invalid_displays if true, displays that do not support DDC are included
+ *  @param[out] dlist_loc where to return pointer to #DDCA_Display_Info_List
+ *  @retval     0  always succeeds
+ */
+DDCA_Status
+ddca_get_display_info_list2(
+      bool                      include_invalid_displays,
+      DDCA_Display_Info_List**  dlist_loc);
 
 /** Frees a list of detected displays.
  *
@@ -416,15 +401,18 @@ ddca_get_display_info_list(void);
  */
 void ddca_free_display_info_list(DDCA_Display_Info_List * dlist);
 
-
 /** Presents a report on a single display.
- *  The report is written to the current FOUT device.
+ *  The report is written to the current FOUT device for the current thread.
  *
  *  @param[in]  dinfo  pointer to a DDCA_Display_Info struct
  *  @param[in]  depth  logical indentation depth
+ *
+ *  @remark
+ *  For a report intended for users, apply #ddca_report_display_by_dref()
+ *  to **dinfo->dref**.
  */
 void
-ddca_report_display_info(
+ddca_dbgrpt_display_info(
       DDCA_Display_Info * dinfo,
       int                 depth);
 
@@ -435,19 +423,21 @@ ddca_report_display_info(
  *  @param[in]  depth  logical indentation depth
  */
 void
-ddca_report_display_info_list(
+ddca_dbgrpt_display_info_list(
       DDCA_Display_Info_List * dlist,
       int                      depth);
 
 /** Reports on all active displays.
  *  This function hooks into the code used by command "ddcutil detect"
  *
+ *  @param[in] include_invalid_displays if true, report displays that don't support DDC
  *  @param[in] depth  logical indentation depth
  *  @return    number of MCCS capable displays
  */
 int
 ddca_report_active_displays(
-      int depth);
+      bool include_invalid_displays,
+      int  depth);
 
 
 //
@@ -942,6 +932,23 @@ ddca_get_edid_by_display_ref(
       uint8_t **       pbytes_loc);   // pointer into ddcutil data structures, do not free
 
 
+/** Shows information about a display, specified by a #Display_Ref
+ *
+ * Output is written using report functions
+ *
+ * \param dref   pointer to display reference
+ * \param depth  logical indentation depth
+ * \retval DDCRC_ARG invalid display ref
+ * \retval 0         success
+ *
+ * \remark
+ * The detail level shown is controlled by the output level setting
+ * for the current thread.
+ */
+DDCA_Status
+ddca_report_display_by_display_ref(DDCA_Display_Ref dref, int depth);
+
+
 //
 // Feature Lists
 //
@@ -1064,7 +1071,7 @@ void ddca_feature_list_to_codes(
  *  Was previously named **ddca_free_table_value_response().
  */
 void
-ddca_free_table_value(
+ddca_free_table_vcp_value(
       DDCA_Table_Vcp_Value * table_value);
 
 /** Frees a #DDCA_Any_Vcp_Value instance.

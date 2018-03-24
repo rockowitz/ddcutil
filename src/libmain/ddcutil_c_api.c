@@ -194,9 +194,21 @@ ddca_build_options(void) {
 }
 
 
-//
+//S
 // Initialization
 //
+
+#ifdef NOT_NEEDED_HEADER_FILE_SEGMENT
+/**
+ * Initializes the ddcutil library module.
+ *
+ * Must be called before most other functions.
+ *
+ * It is not an error if this function is called more than once.
+ */
+// void __attribute__ ((constructor)) _ddca_init(void);
+#endif
+
 
 static bool library_initialized = false;
 
@@ -214,8 +226,11 @@ _ddca_init(void) {
    if (!library_initialized) {
       init_base_services();
       init_ddc_services();
-      set_output_level(DDCA_OL_NORMAL);
-      enable_report_ddc_errors(false);
+
+      // no longer needed, values are initialized on first use per-thread
+      // set_output_level(DDCA_OL_NORMAL);
+      // enable_report_ddc_errors(false);
+
       library_initialized = true;
       DBGMSF(debug, "library initialization executed");
    }
@@ -409,6 +424,16 @@ char * ddca_end_capture(void) {
    return result;
 }
 
+
+#ifdef UNUSED
+/** Returns the current size of the in-memory capture buffer.
+ *
+ *  @return number of characters in current buffer, plus 1 for
+ *          terminating null
+ *  @retval -1 no capture buffer on current thread
+ *
+ *  @remark defined and tested but does not appear useful
+ */
 int ddca_captured_size() {
    // printf("(%s) Starting.\n", __func__);
    In_Memory_File_Desc * fdesc = get_thread_capture_buf_desc();
@@ -422,6 +447,7 @@ int ddca_captured_size() {
    // printf("(%s) Done. result=%d\n", __func__, result);
    return result;
 }
+#endif
 
 
 //
@@ -910,16 +936,31 @@ ddca_mccs_version_id_name(DDCA_MCCS_Version_Id version_id) {
    return vcp_version_id_name(version_id);
 }
 
+#ifdef DEFINED_BUT_NOT_RELEASED
+/**  Returns the descriptive name of a #DDCA_MCCS_Version_Id,
+ *  e.g. "2.0".
+ *
+ *  @param[in]  version_id  version id value
+ *  @return descriptive name (do not free)
+ *
+ *  @remark added to replace ddca_mccs_version_id_desc() during 0.9
+ *  development, but then use of DDCA_MCCS_Version_Id deprecated
+ */
 
 char *
 ddca_mccs_version_id_string(DDCA_MCCS_Version_Id version_id) {
    return format_vcp_version_id(version_id);
 }
+#endif
 
 char *
 ddca_mccs_version_id_desc(DDCA_MCCS_Version_Id version_id) {
    return format_vcp_version_id(version_id);
 }
+
+
+
+
 
 #ifdef OLD
 // or should this return status code?
@@ -982,9 +1023,19 @@ ddca_get_displays_old()
 #endif
 
 
-// or should this return status code?
 DDCA_Display_Info_List *
 ddca_get_display_info_list(void)
+{
+   DDCA_Display_Info_List * result = NULL;
+   ddca_get_display_info_list2(false, &result);
+   return result;
+}
+
+
+DDCA_Status
+ddca_get_display_info_list2(
+      bool                      include_invalid_displays,
+      DDCA_Display_Info_List**  dlist_loc)
 {
    bool debug = false;
    DBGMSF0(debug, "Starting");
@@ -992,11 +1043,14 @@ ddca_get_display_info_list(void)
    ddc_ensure_displays_detected();
    GPtrArray * all_displays = ddc_get_all_displays();
 
-   int true_ct = 0;         // number of valid displays
-   for (int ndx = 0; ndx < all_displays->len; ndx++) {
-      Display_Ref * dref = g_ptr_array_index(all_displays, ndx);
-      if (dref->dispno != -1)    // ignore invalid displays
-         true_ct++;
+   int true_ct = all_displays->len;
+   if (!include_invalid_displays) {
+      true_ct = 0;         // number of valid displays
+      for (int ndx = 0; ndx < all_displays->len; ndx++) {
+         Display_Ref * dref = g_ptr_array_index(all_displays, ndx);
+         if (dref->dispno != -1)    // ignore invalid displays
+            true_ct++;
+      }
    }
 
    int reqd_size =   offsetof(DDCA_Display_Info_List,info) + true_ct * sizeof(DDCA_Display_Info);
@@ -1008,27 +1062,29 @@ ddca_get_display_info_list(void)
    int true_ctr = 0;
    for (int ndx = 0; ndx < all_displays->len; ndx++) {
       Display_Ref * dref = g_ptr_array_index(all_displays, ndx);
-      if (dref->dispno != -1) {
+
+      if (dref->dispno != -1 || include_invalid_displays) {
          DDCA_Display_Info * curinfo = &result_list->info[true_ctr++];
          memcpy(curinfo->marker, DDCA_DISPLAY_INFO_MARKER, 4);
          curinfo->dispno        = dref->dispno;
 
-         // TODO: simplify
          curinfo->path = dref->io_path;
          if (dref->io_path.io_mode == DDCA_IO_USB) {
             curinfo->usb_bus    = dref->usb_bus;
             curinfo->usb_device = dref->usb_device;
          }
 
-         // hack:
-         // vcp version is unqueried to improve performance of the command line version
-         // mccs_version_spec_to_id has assert error if unqueried
-         DDCA_MCCS_Version_Id version_id = DDCA_MCCS_VNONE;
          DDCA_MCCS_Version_Spec vspec = dref->vcp_version;
-         if (vcp_version_eq(vspec, DDCA_VSPEC_UNQUERIED)) {
-            vspec = get_vcp_version_by_display_ref(dref);
+         DDCA_MCCS_Version_Id version_id = DDCA_MCCS_VNONE;
+         if (dref->dispno != -1) {
+            // hack:
+            // vcp version is unqueried to improve performance of the command line version
+            // mccs_version_spec_to_id has assert error if unqueried
+            if (vcp_version_eq(vspec, DDCA_VSPEC_UNQUERIED)) {
+               vspec = get_vcp_version_by_display_ref(dref);
+            }
+            version_id = mccs_version_spec_to_id(vspec);
          }
-         version_id = mccs_version_spec_to_id(vspec);
 
          curinfo->edid_bytes    = dref->pedid->bytes;
          // or should these be memcpy'd instead of just pointers, can edid go away?
@@ -1042,7 +1098,8 @@ ddca_get_display_info_list(void)
    }
 
    DBGMSF(debug, "Done. Returning %p", result_list);
-   return result_list;
+   *dlist_loc = result_list;
+   return 0;
 }
 
 
@@ -1069,7 +1126,7 @@ ddca_free_display_info_list(DDCA_Display_Info_List * dlist) {
 
 
 void
-ddca_report_display_info(
+ddca_dbgrpt_display_info(
       DDCA_Display_Info * dinfo,
       int                 depth)
 {
@@ -1081,11 +1138,14 @@ ddca_report_display_info(
    int d0 = depth;
    int d1 = depth+1;
    int d2 = depth+2;
-   rpt_vstring(d0, "Display number:  %d", dinfo->dispno);
+   if (dinfo->dispno > 0)
+      rpt_vstring(d0, "Display number:  %d", dinfo->dispno);
+   else
+      rpt_label(  d0, "Invalid display - Does not support DDC");
    // rpt_vstring(d1, "IO mode:             %s", io_mode_name(dinfo->path.io_mode));
    switch(dinfo->path.io_mode) {
    case (DDCA_IO_I2C):
-         rpt_vstring(d1, "I2C bus number:      %d", dinfo->path.path.i2c_busno);
+         rpt_vstring(d1, "I2C bus:             /dev/i2c-%d", dinfo->path.path.i2c_busno);
          break;
    case (DDCA_IO_ADL):
          rpt_vstring(d1, "ADL adapter.display: %d.%d",
@@ -1094,7 +1154,7 @@ ddca_report_display_info(
    case (DDCA_IO_USB):
          rpt_vstring(d1, "USB bus.device:      %d.%d",
                          dinfo->usb_bus, dinfo->usb_device);
-         rpt_vstring(d1, "USB hiddev number:   %d", dinfo->path.path.hiddev_devno);
+         rpt_vstring(d1, "USB hiddev device:   /dev/usb/hiddev%d", dinfo->path.path.hiddev_devno);
          break;
    }
 
@@ -1105,13 +1165,13 @@ ddca_report_display_info(
    rpt_hex_dump(dinfo->edid_bytes, 128, d2);
    // rpt_vstring(d1, "dref:                %p", dinfo->dref);
    rpt_vstring(d1, "VCP Version:         %s", format_vspec(dinfo->vcp_version));
-   rpt_vstring(d1, "VCP Version Id:      %s", format_vcp_version_id(dinfo->vcp_version_id) );
+// rpt_vstring(d1, "VCP Version Id:      %s", format_vcp_version_id(dinfo->vcp_version_id) );
    DBGMSF(debug, "Done");
 }
 
 
 void
-ddca_report_display_info_list(
+ddca_dbgrpt_display_info_list(
       DDCA_Display_Info_List * dlist,
       int                      depth)
 {
@@ -1121,7 +1181,7 @@ ddca_report_display_info_list(
    int d1 = depth+1;
    rpt_vstring(depth, "Found %d displays", dlist->ct);
    for (int ndx=0; ndx<dlist->ct; ndx++) {
-      ddca_report_display_info(&dlist->info[ndx], d1);
+      ddca_dbgrpt_display_info(&dlist->info[ndx], d1);
    }
 }
 
@@ -1156,9 +1216,36 @@ bye:
 }
 
 
+DDCA_Status
+ddca_report_display_by_display_ref(DDCA_Display_Ref ddca_dref, int depth) {
+   DDCA_Status rc = 0;
+
+    if (!library_initialized) {
+       rc = DDCRC_UNINITIALIZED;
+       goto bye;
+    }
+
+    Display_Ref * dref = (Display_Ref *) ddca_dref;
+    if ( !valid_display_ref(dref) )  {
+       rc = DDCRC_ARG;
+       goto bye;
+    }
+
+    ddc_report_display_by_dref(dref, depth);
+
+bye:
+   return rc;
+}
+
+
+//
+// Feature Lists
+//
+
 void ddca_feature_list_clear(DDCA_Feature_List* vcplist) {
    memset(vcplist->bytes, 0, 32);
 }
+
 
 void ddca_feature_list_add(DDCA_Feature_List * vcplist, uint8_t vcp_code) {
    int flagndx   = vcp_code >> 3;
@@ -1168,6 +1255,7 @@ void ddca_feature_list_add(DDCA_Feature_List * vcplist, uint8_t vcp_code) {
    //        __func__, val, flagndx, shiftct, flagbit);
    vcplist->bytes[flagndx] |= flagbit;
 }
+
 
 bool ddca_feature_list_contains(DDCA_Feature_List * vcplist, uint8_t vcp_code) {
    int flagndx   = vcp_code >> 3;
@@ -1234,6 +1322,7 @@ ddca_get_feature_list(
 
 }
 
+
 DDCA_Feature_List
 ddca_feature_list_union(
       DDCA_Feature_List* vcplist1,
@@ -1245,6 +1334,7 @@ ddca_feature_list_union(
    }
    return result;
 }
+
 
 DDCA_Feature_List
 ddca_feature_list_subtract(
@@ -2471,8 +2561,8 @@ ddca_set_profile_related_values(
 //
 
 int
-ddca_report_active_displays(int depth) {
-   return ddc_report_displays(DDC_REPORT_VALID_DISPLAYS_ONLY, depth);
+ddca_report_active_displays(bool include_invalid_displays, int depth) {
+   return ddc_report_displays(include_invalid_displays, depth);
 }
 
 
@@ -2487,7 +2577,7 @@ ddca_start_get_any_vcp_value(
       DDCA_Vcp_Value_Type_Parm    call_type,
       DDCA_Notification_Func      callback_func)
 {
-   bool debug = true;
+   bool debug = false;
    DBGMSF(debug, "Starting. ddca_dh=%p, feature_code=0x%02x, call_type=%d",
                  ddca_dh, feature_code, call_type);
    DDCA_Status rc = DDCRC_ARG;
