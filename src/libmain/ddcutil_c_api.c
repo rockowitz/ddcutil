@@ -434,9 +434,7 @@ ddca_get_output_level(void) {
 }
 
 DDCA_Output_Level
-ddca_set_output_level(
-       DDCA_Output_Level newval)
-{
+ddca_set_output_level(DDCA_Output_Level newval) {
      return set_output_level(newval);
 }
 
@@ -448,7 +446,6 @@ ddca_output_level_name(DDCA_Output_Level val) {
 
 bool
 ddca_enable_report_ddc_errors(bool onoff) {
-   // global variable in core.c:
    return enable_report_ddc_errors(onoff);;
 }
 
