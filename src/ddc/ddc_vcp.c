@@ -537,6 +537,8 @@ ddc_get_nontable_vcp_value(
       }
       else {
          DBGMSG("Success reading feature x%02x. *ppinterpreted_code=%p", feature_code, parsed_response);
+         DBGMSG("  mh=0x%02x, ml=0x%02x, sh=0x%02x, sl=0x%02x",
+                parsed_response->mh, parsed_response->ml, parsed_response->sh, parsed_response->sl);
       }
    }
    *ppInterpretedCode = parsed_response;
