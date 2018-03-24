@@ -41,20 +41,34 @@
 
 
 
-DDCA_Display_Ref display_selection_using_ddca_get_displays() {
-   printf("\nCheck for monitors using ddca_get_displays()...\n");
+DDCA_Display_Ref display_selection_using_display_detection(bool include_invalid_displays) {
+   printf("\nCheck for monitors using ddca_get_display_info_list2(), include_invalid_displays=%d...\n",
+           include_invalid_displays);
+
    // Inquire about detected monitors.
-   DDCA_Display_Info_List * dlist = ddca_get_display_info_list();
-   printf("   ddca_get_displays() returned %p\n", dlist);
+   DDCA_Display_Info_List * dlist = NULL;
+   ddca_get_display_info_list2(include_invalid_displays, &dlist);
+   printf("   ddca_get_display_info_list2() done. dlist=%p\n", dlist);
 
-   // A convenience function to report the result of ddca_get_displays()
+   // A convenience function to report the result of ddca_get_display_info_list2()
+   // output level has no effect on this debug report
    printf("   Report the result using ddca_report_display_info_list()...\n");
-   ddca_report_display_info_list(dlist, 2);
+   ddca_dbgrpt_display_info_list(dlist, 2);
 
+   DDCA_Output_Level saved_output_level = ddca_set_output_level(DDCA_OL_NORMAL);
    // A similar function that hooks directly into the "ddcutil detect" command.
    printf("\n   Calling ddca_report_active_displays()...\n");
-   int displayct = ddca_report_active_displays(2);
-   printf("ddca_report_active_displays() found %d displays\n", displayct);
+   // Note that ddca_set_output_level() affects detail shown:
+   int displayct = ddca_report_active_displays(include_invalid_displays, 2);
+   printf("   ddca_report_active_displays() found %d displays\n", displayct);
+
+   printf("\n   Calling ddca_report_display_by_display_ref() for each dlist entry...\n");
+   for (int ndx = 0; ndx < dlist->ct; ndx++) {
+      DDCA_Display_Ref dref = dlist->info[ndx].dref;
+      // printf("(%s) dref=%p\n", __func__, dref);
+      ddca_report_display_by_dref(dref, 1);
+   }
+
 
    // This example selects the monitor by its ddcutil assigned display number,
    // since any working ddcutil installation will have at least 1 display.
@@ -74,7 +88,7 @@ DDCA_Display_Ref display_selection_using_ddca_get_displays() {
       printf("Found display: %s\n", ddca_dref_repr(dref) );
 
       // printf("Detailed debug report:\n");
-      // ddca_report_display_ref(
+      // ddca_dbgrpt_display_ref(
       //       dref,
       //       1);      // logical indentation depth
    }
@@ -86,6 +100,7 @@ DDCA_Display_Ref display_selection_using_ddca_get_displays() {
 
    ddca_free_display_info_list(dlist);
 
+   ddca_set_output_level(saved_output_level);
    return dref;
 }
 
@@ -94,7 +109,7 @@ DDCA_Display_Ref display_selection_using_display_identifier() {
 
    DDCA_Display_Identifier did;
    DDCA_Display_Ref        dref;
-   DDCA_Status rc;
+   DDCA_Status             rc;
 
    printf("\nExamples of display identifier creation:\n");
 
@@ -138,14 +153,26 @@ DDCA_Display_Ref display_selection_using_display_identifier() {
 
 DDCA_Display_Ref demo_get_display_ref() {
 
-   DDCA_Display_Ref dref1 = display_selection_using_ddca_get_displays();
-   DDCA_Display_Ref dref2 = display_selection_using_display_identifier();
-   assert(dref1 == dref2);
+#ifdef TESTCASE
+   char * name = ddca_output_level_name(DDCA_OL_VERBOSE);
+   printf("verbose: %p %s\n", name, name);
+   name = ddca_output_level_name(DDCA_OL_TERSE);
+   printf("terse:  %p %s\n", name, name);
+   free(name);
+   name = ddca_output_level_name(DDCA_OL_TERSE);
+   printf("after free, terse:  %p %s\n", name, name);
+#endif
+
+   // DDCA_Display_Ref dref1 = display_selection_using_display_detection(false);
+    DDCA_Display_Ref dref2 = display_selection_using_display_detection(true);
+   DDCA_Display_Ref dref3 = display_selection_using_display_identifier();
+   // assert(dref1 == dref3);
+   assert(dref2 == dref3);
 
    // printf("Debug report on display reference:\n");
    // ddca_report_display_ref(dref1, 2);
 
-   return dref1;
+   return dref3;
 }
 
 
