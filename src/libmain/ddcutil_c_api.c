@@ -2560,8 +2560,14 @@ ddca_set_profile_related_values(
 // Reports
 //
 
+
 int
-ddca_report_active_displays(bool include_invalid_displays, int depth) {
+ddca_report_active_displays(int depth) {
+   return ddc_report_displays(false, depth);
+}
+
+int
+ddca_report_displays(bool include_invalid_displays, int depth) {
    return ddc_report_displays(include_invalid_displays, depth);
 }
 

@@ -59,7 +59,7 @@ DDCA_Display_Ref display_selection_using_display_detection(bool include_invalid_
    // A similar function that hooks directly into the "ddcutil detect" command.
    printf("\n   Calling ddca_report_active_displays()...\n");
    // Note that ddca_set_output_level() affects detail shown:
-   int displayct = ddca_report_active_displays(include_invalid_displays, 2);
+   int displayct = ddca_report_displays(include_invalid_displays, 2);
    printf("   ddca_report_active_displays() found %d displays\n", displayct);
 
    printf("\n   Calling ddca_report_display_by_display_ref() for each dlist entry...\n");

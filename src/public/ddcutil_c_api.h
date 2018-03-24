@@ -427,6 +427,19 @@ ddca_dbgrpt_display_info_list(
       DDCA_Display_Info_List * dlist,
       int                      depth);
 
+
+/** \deprecated use #DDCA_Report_Displays()
+ * Reports on all active displays.
+ *  This function hooks into the code used by command "ddcutil detect"
+ *
+ *  @param[in] depth  logical indentation depth
+ *  @return    number of MCCS capable displays
+ */
+int
+ddca_report_active_displays(
+      int depth);
+
+
 /** Reports on all active displays.
  *  This function hooks into the code used by command "ddcutil detect"
  *
@@ -435,7 +448,7 @@ ddca_dbgrpt_display_info_list(
  *  @return    number of MCCS capable displays
  */
 int
-ddca_report_active_displays(
+ddca_report_displays(
       bool include_invalid_displays,
       int  depth);
 
