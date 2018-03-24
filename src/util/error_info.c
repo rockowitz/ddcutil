@@ -139,7 +139,7 @@ void errinfo_free(Error_Info * erec){
  *
  *  \param  erec   pointer to #Error_Info instance,
  *                 do nothing if NULL
- *  \param  report if true, report the intsance
+ *  \param  report if true, report the instance
  *  \param  func   name of calling function
  */
 void errinfo_free_with_report(Error_Info * erec, bool report, const char * func) {
