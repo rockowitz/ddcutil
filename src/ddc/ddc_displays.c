@@ -451,11 +451,15 @@ static char * get_controller_mfg_string_t(Display_Handle * dh) {
  *
  * \param dref   pointer to display reference
  * \param depth  logical indentation depth
+ *
+ * \remark
+ * The detail level shown is controlled by the output level setting
+ * for the current thread.
  */
 void
 ddc_report_display_by_dref(Display_Ref * dref, int depth) {
    bool debug = false;
-   DBGMSF0(debug, "Starting");
+   DBGMSF(debug, "Starting");
    assert(dref);
    assert(memcmp(dref->marker, DISPLAY_REF_MARKER, 4) == 0);
    int d1 = depth+1;
@@ -473,7 +477,6 @@ ddc_report_display_by_dref(Display_Ref * dref, int depth) {
 
    switch(dref->io_path.io_mode) {
    case DDCA_IO_I2C:
-      // i2c_report_active_display_by_busno(dref->io_path.io.i2c_busno, d1);
       {
          I2C_Bus_Info * curinfo = dref->detail2;
          assert(curinfo);
@@ -541,9 +544,8 @@ ddc_report_display_by_dref(Display_Ref * dref, int depth) {
       }
    }
 
-   DBGMSF0(debug, "Done");
+   DBGMSF(debug, "Done");
 }
-
 
 
 /** Reports all displays found.
@@ -551,14 +553,14 @@ ddc_report_display_by_dref(Display_Ref * dref, int depth) {
  * Output is written to the current report destination using
  * report functions.
  *
- * @param   valid_displays_only  if **true**, report only valid displays\n
- *                      if **false**, report all displays
+ * @param   include_invalid_displays  if false, report only valid displays\n
+ *                                    if true,  report all displays
  * @param   depth       logical indentation depth
  *
  * @return total number of displays reported
  */
 int
-ddc_report_displays(bool valid_displays_only, int depth) {
+ddc_report_displays(bool include_invalid_displays, int depth) {
    bool debug = false;
    DBGMSF0(debug, "Starting");
 
@@ -568,14 +570,14 @@ ddc_report_displays(bool valid_displays_only, int depth) {
    for (int ndx=0; ndx<all_displays->len; ndx++) {
       Display_Ref * dref = g_ptr_array_index(all_displays, ndx);
       assert(memcmp(dref->marker, DISPLAY_REF_MARKER, 4) == 0);
-      if (dref->dispno > 0 || !valid_displays_only) {
+      if (dref->dispno > 0 || include_invalid_displays) {
          display_ct++;
          ddc_report_display_by_dref(dref, depth);
          rpt_title("",0);
       }
    }
    if (display_ct == 0)
-      rpt_vstring(depth, "No %sdisplays found", (valid_displays_only) ? "active " : "");
+      rpt_vstring(depth, "No %sdisplays found", (!include_invalid_displays) ? "active " : "");
 
    DBGMSF(debug, "Done.  Returning: %d", display_ct);
    return display_ct;

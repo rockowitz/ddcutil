@@ -530,7 +530,7 @@ int main(int argc, char *argv[]) {
 
    else if (parsed_cmd->cmd_id == CMDID_DETECT) {
       ddc_ensure_displays_detected();
-      ddc_report_displays(DDC_REPORT_ALL_DISPLAYS, 0);
+      ddc_report_displays(/*include_invalid_displays=*/ true, 0);
       main_rc = EXIT_SUCCESS;
    }
 
@@ -645,7 +645,9 @@ int main(int argc, char *argv[]) {
       reset_stats();
 
       f0printf(fout, "\n*** Detected Displays ***\n");
-      /* int display_ct =  */ ddc_report_displays(DDC_REPORT_ALL_DISPLAYS, 0 /* logical depth */);
+      /* int display_ct =  */ ddc_report_displays(
+                                 true,   // include_invalid_displays
+                                 0);      // logical depth
       // printf("Detected: %d displays\n", display_ct);   // not needed
       f0printf(fout, "\nStatistics for display detection:\n");
       report_stats(DDCA_STATS_ALL);
