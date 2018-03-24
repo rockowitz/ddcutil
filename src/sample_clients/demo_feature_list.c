@@ -114,7 +114,7 @@ int main(int argc, char** argv) {
     // printf("ddca_get_displays() returned %p\n", dlist);
     assert(dlist->ct > 0);
     DDCA_Display_Info * dinfo = &dlist->info[0];
-    ddca_report_display_info(dinfo, /* depth=*/ 1);
+    ddca_dbgrpt_display_info(dinfo, /* depth=*/ 1);
 
     collect_features_for_display(dinfo);
 
