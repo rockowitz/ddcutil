@@ -157,7 +157,19 @@ Distinct_Display_Ref get_distinct_display_ref(Display_Ref * dref) {
 }
 
 
-bool lock_distinct_display(Distinct_Display_Ref id, Distinct_Display_Flags flags) {
+/** Locks a distinct display.
+ *
+ *  \param  id  distinct display identifier
+ *  \param  flags  if **DDISP_WAIT** set, wait for locked display
+ *  \retval **true** display locked
+ *  \retval **false** display not locked (is locked by another thread
+ *                    and DDISP_WAIT not set)
+ */
+bool
+lock_distinct_display(
+      Distinct_Display_Ref   id,
+      Distinct_Display_Flags flags)
+{
    bool debug = false;
    DBGMSF(debug, "Starting. id=%p", id);
    Distinct_Display_Desc * ddesc = (Distinct_Display_Desc *) id;
