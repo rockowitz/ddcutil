@@ -485,6 +485,7 @@ ddc_get_nontable_vcp_value(
            false,                       // all_zero_response_ok
            &response_packet_ptr
         );
+   assert( (!excp && response_packet_ptr) || (excp && !response_packet_ptr));
    if (debug || IS_TRACING() ) {
       if (psc != 0)
          DBGMSG("perform_ddc_write_read_with_retry() returned %s, reponse_packet_ptr=%p",
@@ -530,6 +531,7 @@ ddc_get_nontable_vcp_value(
    if (response_packet_ptr)
       free_ddc_packet(response_packet_ptr);
 
+   assert( (!excp && parsed_response) || (excp && !parsed_response)); // needed to avoid clang warning
    if (debug || IS_TRACING() ) {
       if (excp) {
          DBGMSG("Error reading feature x%02x.  Returning exception: ", feature_code);
@@ -542,7 +544,7 @@ ddc_get_nontable_vcp_value(
       }
    }
    *ppInterpretedCode = parsed_response;
-   assert( (!excp && parsed_response) || (excp && !parsed_response));
+
    return excp;
 }
 
