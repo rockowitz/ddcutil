@@ -83,7 +83,10 @@ bool i2c_force_slave_addr_flag = false;
  *  @param callopts  call option flags, controlling failure action
  *
  *  @retval >=0  file descriptor
- *  @retval -errno  negative Linux errno if open fails and CALLOPT_ERR_ABORT not set in callopts
+ *  @retval -errno  negative Linux errno if open fails
+ *
+ *  Call options recognized
+ *  - CALLOPT_ERR_MSG
  */
 int i2c_open_bus(int busno, Byte callopts) {
    bool debug = false;
