@@ -58,16 +58,18 @@ const DDCA_MCCS_Version_Spec DDCA_VSPEC_UNQUERIED = {0xff, 0xff}; ///< indicates
 /* Tests if a #DDCA_MCCS_Version_Spec value represents a valid MCCS version,
  * i.e. 1.0, 2.0, 2.1, 3.0, or 2.2.
  *
- *  @param   vspec       value to test
+ *  @param   vspec          value to test
+ *  @param   allow_unknown  allow 0.0
  *
  *  @return  true/false
  */
-bool is_known_vcp_spec(DDCA_MCCS_Version_Spec vspec) {
+bool vcp_version_is_valid(DDCA_MCCS_Version_Spec vspec, bool allow_unknown) {
    bool result = vcp_version_eq(vspec, DDCA_VSPEC_V10) ||
                  vcp_version_eq(vspec, DDCA_VSPEC_V20) ||
                  vcp_version_eq(vspec, DDCA_VSPEC_V21) ||
                  vcp_version_eq(vspec, DDCA_VSPEC_V30) ||
-                 vcp_version_eq(vspec, DDCA_VSPEC_V22);
+                 vcp_version_eq(vspec, DDCA_VSPEC_V22) ||
+                 (allow_unknown && vcp_version_eq(vspec,DDCA_VSPEC_UNKNOWN));
    return result;
 }
 
@@ -104,7 +106,7 @@ bool vcp_version_le(DDCA_MCCS_Version_Spec v1, DDCA_MCCS_Version_Spec v2) {
    bool debug = false;
 
    bool result = false;
-   assert( is_known_vcp_spec(v1) && is_known_vcp_spec(v2) );
+   assert( vcp_version_is_valid(v1,false) && vcp_version_is_valid(v2,false) );
    assert( !(vcp_version_eq(v1, DDCA_VSPEC_V22) && vcp_version_eq(v2, DDCA_VSPEC_V30)) &&
            !(vcp_version_eq(v2, DDCA_VSPEC_V22) && vcp_version_eq(v1, DDCA_VSPEC_V30))
          );

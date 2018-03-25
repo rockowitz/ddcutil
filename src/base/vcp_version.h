@@ -52,7 +52,7 @@ bool vcp_version_le(DDCA_MCCS_Version_Spec val, DDCA_MCCS_Version_Spec max);
 bool vcp_version_gt(DDCA_MCCS_Version_Spec val, DDCA_MCCS_Version_Spec min);
 bool vcp_version_eq(DDCA_MCCS_Version_Spec v1,  DDCA_MCCS_Version_Spec v2);
 
-bool is_known_vcp_spec(DDCA_MCCS_Version_Spec vspec);
+bool vcp_version_is_valid(DDCA_MCCS_Version_Spec vspec, bool allow_unknown);
 bool vcp_version_is_unqueried(DDCA_MCCS_Version_Spec vspec);
 
 char * format_vspec(DDCA_MCCS_Version_Spec vspec);
