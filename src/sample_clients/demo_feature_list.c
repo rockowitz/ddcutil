@@ -110,8 +110,10 @@ int main(int argc, char** argv) {
    // printf("\n(%s) Starting.\n", __func__);
 
     // Just grab the first monitor
-    DDCA_Display_Info_List * dlist = ddca_get_display_info_list();
-    // printf("ddca_get_displays() returned %p\n", dlist);
+   DDCA_Display_Info_List* dlist = NULL;
+   ddca_get_display_info_list2(
+         false,    // don't include invalid displays
+         &dlist);
     assert(dlist->ct > 0);
     DDCA_Display_Info * dinfo = &dlist->info[0];
     ddca_dbgrpt_display_info(dinfo, /* depth=*/ 1);

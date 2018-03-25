@@ -49,8 +49,10 @@ int main(int argc, char** argv) {
    DDCA_Display_Ref dref;
    DDCA_Display_Handle dh = NULL;  // initialize to avoid clang analyzer warning
 
-   DDCA_Display_Info_List * dlist = ddca_get_display_info_list();
-   printf("ddca_get_displays() returned %p\n", dlist);
+   DDCA_Display_Info_List* dlist = NULL;
+   ddca_get_display_info_list2(
+         false,    // don't include invalid displays
+         &dlist);
 
    for (int ndx = 0; ndx <  dlist->ct; ndx++) {
       DDCA_Display_Info * dinfo = &dlist->info[ndx];

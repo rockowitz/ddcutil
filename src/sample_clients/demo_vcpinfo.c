@@ -55,8 +55,10 @@ DDCA_Display_Handle * open_first_display() {
    DDCA_Display_Handle dh = NULL;
 
    // Inquire about detected monitors.
-   DDCA_Display_Info_List * dlist = ddca_get_display_info_list();
-   printf("ddca_get_displays() returned %p\n", dlist);
+   DDCA_Display_Info_List* dlist = NULL;
+   ddca_get_display_info_list2(
+         false,    // don't include invalid displays
+         &dlist);
    assert(dlist);   // this is sample code
    if (dlist->ct == 0) {
       printf("   No DDC capable displays found\n");

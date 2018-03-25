@@ -46,8 +46,9 @@ void set_standard_settings() {
    saved_report_ddc_errors = ddca_is_report_ddc_errors_enabled();
    printf("   Calling ddca_enable_report_ddc_errors(true)...\n");
    ddca_enable_report_ddc_errors(true);
-   printf("   Calling ddca_set_verify_setvcp(true)...\n");
+   printf("   Calling ddca_enable_verify(true)...\n");
    saved_verify_setvcp = ddca_enable_verify(true);
+   // ddca_report_error_info(true);
 }
 
 void restore_standard_settings() {
@@ -255,20 +256,19 @@ bool verify_simple_nc_value(
 }
 
 bool show_simple_nc_feature_value(
-        DDCA_Display_Handle   dh,
-        DDCA_Vcp_Feature_Code feature_code,
-        uint8_t               feature_value)
+        DDCA_MCCS_Version_Spec vspec,
+        DDCA_Vcp_Feature_Code  feature_code,
+        uint8_t                feature_value)
 {
     char * feature_value_name = NULL;
     bool ok = false;
 
     DDCA_Status rc =
-    ddca_get_simple_nc_feature_value_name(
-          dh,    // needed because value lookup mccs version dependent
+    ddca_get_simple_nc_feature_value_name_by_vspec(
+          vspec,    // needed because value lookup mccs version dependent
           feature_code,
           feature_value,
           &feature_value_name);
-
     if (rc != 0) {
        FUNCTION_ERRMSG("ddca_get_nc_feature_value_name", rc);
        printf("Unable to get interpretation of value 0x%02x\n",  feature_value);
@@ -297,19 +297,26 @@ bool test_simple_nc_value(
     DDCA_Status rc;
     bool ok = false;
     set_standard_settings();
-    printf("Enabling automatic verification by calling ddca_enable_verify(true)\n");
-    ddca_enable_verify(true);
+    // printf("Enabling automatic verification by calling ddca_enable_verify(true)\n");
+    // ddca_enable_verify(true);
 
-    DDCA_Simplified_Version_Feature_Info info;
-    rc = ddca_get_simplified_feature_info_by_display(
-            dh,    // needed because in rare cases feature info is MCCS version dependent
-            feature_code,
-            &info);
-    if (rc != 0) {
-       FUNCTION_ERRMSG("ddca_get_simplified_feature_info", rc);
-       goto bye;
-    }
-    assert(info.feature_flags & DDCA_SIMPLE_NC);
+    DDCA_MCCS_Version_Spec vspec;
+    rc = ddca_get_mccs_version(dh, &vspec);
+    assert(rc == 0);
+    // DDCA_VSPEC_UNKNOWN is possible for a pre-v2.0 monitor
+    // ddca_get_feature_flags_by_vspec() and ddca_get_simple_vcp_feature_name_by_vspec() can
+    // handle this
+
+    // vspec = DDCA_VSPEC_UNKNOWN;   // *** TEST ***
+    // printf("(%s) vspec=%d.%d\n", __func__, vspec.major, vspec.minor);
+
+    DDCA_Feature_Flags feature_flags;
+    rc = ddca_get_feature_flags_by_vspec(
+          feature_code,
+          vspec,
+          &feature_flags);
+    assert(rc == 0);
+    assert(feature_flags & DDCA_SIMPLE_NC);
 
     DDCA_Non_Table_Vcp_Value valrec;
     rc =
@@ -327,7 +334,7 @@ bool test_simple_nc_value(
               valrec.sl);
     uint8_t old_value = valrec.sl;
 
-    ok = show_simple_nc_feature_value(dh, feature_code, old_value);
+    ok = show_simple_nc_feature_value(vspec, feature_code, old_value);
 
     printf("Setting new value 0x%02x...\n", new_value);
     rc = ddca_set_non_table_vcp_value(dh, feature_code, 0, new_value);
@@ -433,9 +440,6 @@ bye:
 }
 
 
-
-
-
 DDCA_Status test_get_set_profile_related_values(DDCA_Display_Handle dh) {
    printf("\nTesting retrieval and setting of profile related values.  dh = %s\n", ddca_dh_repr(dh));
 
@@ -509,7 +513,10 @@ int main(int argc, char** argv) {
    DDCA_Display_Handle dh = NULL;  // initialize to avoid clang analyzer warning
    int MAX_DISPLAYS = 4;           // limit the number of displays
 
-   DDCA_Display_Info_List * dlist = ddca_get_display_info_list();
+   DDCA_Display_Info_List* dlist = NULL;
+   ddca_get_display_info_list2(
+         false,    // don't include invalid displays
+         &dlist);
    for (int ndx = 0; ndx <  dlist->ct && ndx < MAX_DISPLAYS; ndx++) {
       DDCA_Display_Info * dinfo = &dlist->info[ndx];
       printf("\n(%s) ===> Test loop for display %d\n", __func__, dinfo->dispno);
@@ -530,9 +537,9 @@ int main(int argc, char** argv) {
       // test_get_set_profile_related_values(dh);
 
       // feature 0xcc = OSD language, value 0x03 = French
-      // test_simple_nc_value(dh, 0xcc, 0x03);
+      test_simple_nc_value(dh, 0xcc, 0x03);
 
-      test_complex_nc_value(dh, 0xDF);    // VCP version
+      // test_complex_nc_value(dh, 0xDF);    // VCP version
 
       rc = ddca_close_display(dh);
       if (rc != 0)
