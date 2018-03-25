@@ -66,6 +66,7 @@
  *    could not be retrieved (pre MCCS v2)
  */
 DDCA_MCCS_Version_Spec get_vcp_version_by_display_handle(Display_Handle * dh) {
+   assert(dh);
    bool debug = false;
    // TMI
    DBGMSF(debug, "Starting. dh=%s, dh->dref->vcp_version =  %d.%d, %s",
@@ -164,7 +165,7 @@ DDCA_MCCS_Version_Spec get_vcp_version_by_display_ref(Display_Ref * dref) {
    if (vcp_version_is_unqueried(dref->vcp_version)) {
       Display_Handle * dh = NULL;
       // no need to check return code since aborting if error
-      // shouuld never fail, since open already succeeded
+      // should never fail, since open already succeeded - but what if locked?
       Public_Status_Code psc = ddc_open_display(dref, CALLOPT_ERR_MSG, &dh);
       assert(psc == 0);
       dref->vcp_version = get_vcp_version_by_display_handle(dh);
