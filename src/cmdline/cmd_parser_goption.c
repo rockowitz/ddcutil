@@ -552,7 +552,7 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
       bool arg_ok = false;
       DDCA_MCCS_Version_Spec vspec = parse_vspec(mccswork);
       if (!vcp_version_eq(vspec, DDCA_VSPEC_UNKNOWN)) {
-         arg_ok = is_known_vcp_spec(vspec);
+         arg_ok = vcp_version_is_valid(vspec, false);
       }
       if (!arg_ok) {
           fprintf(stderr, "Invalid MCCS spec: %s\n", mccswork );
