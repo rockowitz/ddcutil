@@ -111,12 +111,12 @@ bool is_ddc_null_message(Byte * packet) {
  *  \param  dref            display reference
  *  \param  callopts        call option flags
  *  \param  pdh             address at which to return display handle
+ *  \return status code     as from #i2c_open_bus(), #usb_open_hiddev_device()
+ *  \retval DDCRC_LOCKED    display open in another thread
  *
- * Returns:
- *    status code
- *
- * Notes:
- *    Will abort if open fails and CALLOPT_ERR_ABORT set
+ *  **Call_Option** flags recognized:
+ *  - CALLOPT_WAIT
+ *  - CALLOPT_ERR_MSG
  */
 Public_Status_Code ddc_open_display(
       Display_Ref *    dref,
@@ -127,23 +127,26 @@ Public_Status_Code ddc_open_display(
    DBGMSF(debug, "Opening display %s, callopts=%s",
                  dref_repr_t(dref), interpret_call_options_t(callopts) );
 
+   Display_Handle * dh = NULL;
+   Public_Status_Code psc = 0;
+
    Distinct_Display_Ref display_id = get_distinct_display_ref(dref);
    Distinct_Display_Flags ddisp_flags = DDISP_NONE;
    if (callopts & CALLOPT_WAIT)
       ddisp_flags |= DDISP_WAIT;
 
-   lock_distinct_display(display_id, DDISP_NONE);
-   bool locked = true;
-
-   Display_Handle * dh = NULL;
-   Public_Status_Code psc = 0;
+   bool locked = lock_distinct_display(display_id, ddisp_flags);
+   if (!locked) {
+      psc = DDCRC_LOCKED;          // is there an appropriate errno value?  EBUSY? EACCES?
+      goto bye;
+   }
 
    switch (dref->io_path.io_mode) {
 
    case DDCA_IO_I2C:
       {
          int fd = i2c_open_bus(dref->io_path.path.i2c_busno, callopts);
-         if (fd < 0) {    // will be < 0 if open_i2c_bus failed and CALLOPT_ERR_ABORT not set
+         if (fd < 0) {
             psc = fd;
             goto bye;
          }
@@ -173,13 +176,13 @@ Public_Status_Code ddc_open_display(
             // 1/2017:  Observed with x260 laptop and Ultradock, See ddcutil user report.
             //          close(fd) fails
             DBGMSG("No EDID for device on bus /dev/i2c-%d", dref->io_path.path.i2c_busno);
-            if (!(callopts & CALLOPT_FORCE)) {
+            // if (!(callopts & CALLOPT_FORCE)) {
                close(fd);
                psc = DDCRC_EDID;
                goto bye;
-            }
-            else
-               DBGMSG0("Continuing");
+            // }
+            // else
+            //    DBGMSG0("Continuing");
          }
       }
       break;
@@ -212,18 +215,18 @@ Public_Status_Code ddc_open_display(
       break;
    } // switch
    assert(!dh || dh->dref->pedid);
-   unlock_distinct_display(display_id);
-   locked = false;
    // needed?  for both or just I2C?
    // sleep_millis_with_trace(DDC_TIMEOUT_MILLIS_DEFAULT, __func__, NULL);
    if (dref->io_path.io_mode != DDCA_IO_USB)
       call_tuned_sleep_i2c(SE_POST_OPEN);
-   // report_display_handle(pDispHandle, __func__);
+   // dbgrpt_display_handle(dh, __func__, 1);
+
 bye:
-   if (locked)
-      unlock_distinct_display(display_id);
-   if (psc != 0)
+   if (psc != 0) {
+      if (locked)
+         unlock_distinct_display(display_id);
       COUNT_STATUS_CODE(psc);
+   }
    *pdh = dh;
    assert(psc <= 0);
    // dbgrpt_distinct_display_descriptors(0);
@@ -277,6 +280,9 @@ void ddc_close_display(Display_Handle * dh) {
       PROGRAM_LOGIC_ERROR("ddcutil not built with USB support");
 #endif
    } //switch
+
+   Distinct_Display_Ref display_id = get_distinct_display_ref(dh->dref);
+   unlock_distinct_display(display_id);
 
    free_display_handle(dh);
 }
