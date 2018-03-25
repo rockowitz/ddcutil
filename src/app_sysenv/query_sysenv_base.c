@@ -65,6 +65,7 @@ static char * prefix_matches[] = {
       "i2c",
       "video",
       "vc4",
+      "ddc",
       NULL
 };
 
@@ -74,6 +75,7 @@ static char * other_driver_modules[] = {
       "i2c_algo_bit",
       "i2c_dev",
       "i2c_piix4",
+      "ddcci",
       NULL
 };
 
