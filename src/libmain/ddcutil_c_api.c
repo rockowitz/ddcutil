@@ -321,6 +321,13 @@ ddca_rc_desc(DDCA_Status status_code) {
    return result;
 }
 
+// quick and dirty for now
+// TODO: make thread safe, wrap in mutex
+bool ddca_enable_error_info(bool enable) {
+   bool old_value = report_freed_exceptions;
+   report_freed_exceptions = enable;            // global in core.c
+   return old_value;
+}
 
 //
 // Output redirection
@@ -837,6 +844,15 @@ ddca_open_display(
       DDCA_Display_Ref      ddca_dref,
       DDCA_Display_Handle * p_dh)
 {
+   return ddca_open_display2(ddca_dref, false, p_dh);
+}
+
+DDCA_Status
+ddca_open_display2(
+      DDCA_Display_Ref      ddca_dref,
+      bool                  wait,
+      DDCA_Display_Handle * p_dh)
+{
    if (!library_initialized)
       return DDCRC_UNINITIALIZED;
 
@@ -846,11 +862,14 @@ ddca_open_display(
    *p_dh = NULL;        // in case of error
    Display_Ref * dref = (Display_Ref *) ddca_dref;
    if (dref == NULL || memcmp(dref->marker, DISPLAY_REF_MARKER, 4) != 0 )  {
-      rc = -EINVAL;
+      rc = DDCRC_ARG;
    }
    else {
      Display_Handle* dh = NULL;
-     rc = ddc_open_display(dref,  CALLOPT_ERR_MSG, &dh);
+     Call_Options callopts = CALLOPT_NONE;
+     if (wait)
+        callopts |= CALLOPT_WAIT;
+     rc = ddc_open_display(dref,  callopts, &dh);
      if (rc == 0)
         *p_dh = dh;
    }
@@ -912,6 +931,18 @@ ddca_get_mccs_version(
    return rc;
 }
 
+// not published
+DDCA_Status
+ddca_get_mccs_version_with_default(
+      DDCA_Display_Handle     ddca_dh,
+      DDCA_MCCS_Version_Spec  default_spec,
+      DDCA_MCCS_Version_Spec* p_spec)
+{
+   DDCA_Status rc = ddca_get_mccs_version(ddca_dh, p_spec);
+   if (rc == 0 && vcp_version_eq(*p_spec, DDCA_VSPEC_UNKNOWN))
+      *p_spec = default_spec;
+   return rc;
+}
 
 DDCA_Status
 ddca_get_mccs_version_id(
@@ -1187,7 +1218,7 @@ ddca_dbgrpt_display_info_list(
 
 
 DDCA_Status
-ddca_get_edid_by_dref(
+ddca_get_edid_by_display_ref(
       DDCA_Display_Ref ddca_dref,
       uint8_t**        p_bytes)
 {
@@ -1214,6 +1245,16 @@ ddca_get_edid_by_dref(
 bye:
    return rc;
 }
+
+
+#ifdef UNIMPLEMENTED
+// Use ddca_get_edid_by_dref() instead
+// n. edid_buffer must be >= 128 bytes
+
+DDCA_Status
+ddca_get_edid(DDCA_Display_Handle * dh, uint8_t* edid_buffer);
+#endif
+
 
 
 DDCA_Status
@@ -1416,7 +1457,7 @@ DDCA_Status ddca_get_feature_flags_by_vcp_version(
 }
 #endif
 
-
+// deprecated
 DDCA_Status
 ddca_get_feature_info_by_vcp_version(
       DDCA_Vcp_Feature_Code       feature_code,
@@ -1448,6 +1489,7 @@ ddca_get_feature_info_by_vcp_version(
 }
 
 
+#ifdef NEVER_RELEASED
 DDCA_Status
 ddca_get_simplified_feature_info(
       DDCA_Vcp_Feature_Code         feature_code,
@@ -1472,29 +1514,35 @@ ddca_get_simplified_feature_info(
    }
    return psc;
 }
+#endif
 
 DDCA_Status
 ddca_get_feature_flags_by_vspec(
       DDCA_Vcp_Feature_Code         feature_code,
       DDCA_MCCS_Version_Spec        vspec,
- //   DDCA_MCCS_Version_Id          mccs_version_id,
       DDCA_Feature_Flags *          feature_flags)
 {
    DDCA_Status psc = DDCRC_ARG;
-   DDCA_Version_Feature_Info * full_info =  get_version_feature_info_by_vspec(
-         feature_code,
-         vspec,
-         false,                       // with_default
-         true);                       // false => version specific, true=> version sensitive
-   if (full_info) {
-      *feature_flags = full_info->feature_flags;
-      free_version_feature_info(full_info);
-      psc = 0;
+   if (vcp_version_is_valid(vspec, /*unknown_ok*/ true)) {
+      DDCA_Version_Feature_Info * full_info =  get_version_feature_info_by_vspec(
+            feature_code,
+            vspec,
+            false,                       // with_default
+            true);                       // false => version specific, true=> version sensitive
+      if (full_info) {
+         *feature_flags = full_info->feature_flags;
+         free_version_feature_info(full_info);
+         psc = 0;
+      }
+      else {
+         psc = DDCRC_UNKNOWN_FEATURE;
+      }
    }
    return psc;
 }
 
 
+#ifdef NEVER_RELEASED
 DDCA_Status
 ddca_get_feature_flags_by_version_id(
       DDCA_Vcp_Feature_Code         feature_code,
@@ -1515,6 +1563,7 @@ ddca_get_feature_flags_by_version_id(
    }
    return psc;
 }
+#endif
 
 
 DDCA_Status
@@ -1553,19 +1602,18 @@ ddca_get_simplified_feature_info_by_display(
          ddca_dh,
          {
             DDCA_MCCS_Version_Spec vspec = get_vcp_version_by_display_handle(ddca_dh);
-            //DDCA_MCCS_Version_Id   version_id = mccs_version_spec_to_id(vspec);
-            //psc = ddca_get_feature_info_by_vcp_version(feature_code, version_id, p_info);
 
             DDCA_Status psc = DDCRC_ARG;
-            DDCA_Version_Feature_Info * full_info =  get_version_feature_info_by_vspec(
-                  feature_code,
-                  vspec,
-                  false,                       // with_default
-                  true);                       // false => version specific, true=> version sensitive
+            DDCA_Version_Feature_Info * full_info =
+                  get_version_feature_info_by_vspec(
+                     feature_code,
+                     vspec,
+                     false,                       // with_default
+                     true);                       // false => version specific, true=> version sensitive
             if (full_info) {
                info->feature_code  = feature_code;
                info->vspec         = vspec;
-               info->version_id    = full_info->version_id;    // keep?
+               // info->version_id    = full_info->version_id;    // keep?
                info->feature_flags = full_info->feature_flags;
 
                free_version_feature_info(full_info);
@@ -1575,7 +1623,6 @@ ddca_get_simplified_feature_info_by_display(
 
          }
       );
-
 }
 
 DDCA_Status
@@ -1613,6 +1660,8 @@ ddca_feature_name_by_vspec(
    return result;
 }
 
+#ifdef NEVER_RELEASED
+/** \deprecated */
 char *
 ddca_feature_name_by_version_id(
       DDCA_Vcp_Feature_Code  feature_code,
@@ -1622,7 +1671,7 @@ ddca_feature_name_by_version_id(
    char * result = get_feature_name_by_id_and_vcp_version(feature_code, vspec);
    return result;
 }
-
+#endif
 
 
 //
@@ -1641,6 +1690,11 @@ ddca_get_simple_sl_value_table_by_vspec(
    *value_table_loc = NULL;
    DBGMSF(debug, "feature_code = 0x%02x, vspec=%d.%d",
                  feature_code, vspec.major, vspec.minor);
+
+   if (!vcp_version_is_valid(vspec, /* unknown_ok */ true)) {
+      rc = DDCRC_ARG;
+      goto bye;
+   }
 
    VCP_Feature_Table_Entry * pentry = vcp_find_feature_by_hexid(feature_code);
    if (!pentry) {
@@ -1667,6 +1721,8 @@ ddca_get_simple_sl_value_table_by_vspec(
         }
      }
   }
+
+bye:
   DBGMSF(debug, "Done. *pvalue_table=%p, returning %s", *value_table_loc, psc_desc(rc));
 
    return rc;
@@ -1697,34 +1753,43 @@ ddca_get_simple_sl_value_table(
 // typedef void * Feature_Value_Table;   // temp
 
 
-// or:
+DDCA_Status
+ddca_get_simple_nc_feature_value_name_by_vspec(
+      DDCA_MCCS_Version_Spec vspec,    // needed because value lookup mccs version dependent
+      DDCA_Vcp_Feature_Code  feature_code,
+      uint8_t                feature_value,
+      char**                 feature_name_loc)
+{
+   DDCA_Feature_Value_Entry * feature_value_entries = NULL;
+
+   // this should be a function in vcp_feature_codes:
+   DDCA_Status rc = ddca_get_simple_sl_value_table_by_vspec(feature_code, vspec, &feature_value_entries);
+   if (rc == 0) {
+      *feature_name_loc = get_feature_value_name(feature_value_entries, feature_value);
+      if (!*feature_name_loc)
+         rc = DDCRC_UNKNOWN_FEATURE;               // correct handling for value not found?
+   }
+   return rc;
+}
+
+
 DDCA_Status
 ddca_get_simple_nc_feature_value_name(
       DDCA_Display_Handle    ddca_dh,    // needed because value lookup mccs version dependent
       DDCA_Vcp_Feature_Code  feature_code,
       uint8_t                feature_value,
-      char**                 p_feature_name)
+      char**                 feature_name_loc)
 {
    WITH_DH(ddca_dh,  {
-         // this should be a function in vcp_feature_codes:
-         char * feature_name = NULL;
          DDCA_MCCS_Version_Spec vspec = get_vcp_version_by_display_handle(dh);
-         DDCA_Feature_Value_Entry * feature_value_entries = NULL;
-
-         psc = ddca_get_simple_sl_value_table_by_vspec(feature_code, vspec, &feature_value_entries);
-         // psc = ddca_get_simple_sl_value_table(feature_code, mccs_version_spec_to_id(vspec), &feature_value_entries);
-         if (psc == 0) {
-            feature_name = get_feature_value_name(feature_value_entries, feature_value);
-            if (feature_name == NULL)
-               psc = DDCRC_UNKNOWN_FEATURE;               // correct handling for value not found?
-            else
-               *p_feature_name = feature_name;
-         }
-   }
+         return ddca_get_simple_nc_feature_value_name_by_vspec(
+                   vspec, feature_code, feature_value, feature_name_loc);
+      }
    );
 }
 
 
+#ifdef OLD_PREFACTOR
 DDCA_Status
 ddca_get_simple_nc_feature_value_name0(
       DDCA_Display_Handle    ddca_dh,    // needed because value lookup mccs version dependent
@@ -1750,7 +1815,11 @@ ddca_get_simple_nc_feature_value_name0(
    }
    );
 }
+#endif
 
+//
+// Get and Set Feature Values
+//
 
 #ifdef OLD
 // Was public, but eliminated from API due to problems in Python API caused by overlay.
@@ -1788,9 +1857,9 @@ typedef struct {
 
 DDCA_Status
 ddca_get_non_table_vcp_value(
-      DDCA_Display_Handle      ddca_dh,
-      DDCA_Vcp_Feature_Code    feature_code,
-      DDCA_Non_Table_Vcp_Value *   valrec)
+      DDCA_Display_Handle        ddca_dh,
+      DDCA_Vcp_Feature_Code      feature_code,
+      DDCA_Non_Table_Vcp_Value*  valrec)
 {
 
    WITH_DH(ddca_dh,  {
@@ -1803,14 +1872,17 @@ ddca_get_non_table_vcp_value(
 
        if (!ddc_excp) {
           valrec->mh = code_info->mh;
-          valrec->mh = code_info->ml;;
+          valrec->ml = code_info->ml;;
           valrec->sh = code_info->sh;
-          valrec->ml = code_info->sl;
+          valrec->sl = code_info->sl;
+          // DBGMSG("valrec:  mh=0x%02x, ml=0x%02x, sh=0x%02x, sl=0x%02x",
+          //        valrec->mh, valrec->ml, valrec->sh, valrec->sl);
           free(code_info);
        }
        else {
           psc = ddc_excp->status_code;
-          errinfo_free(ddc_excp);
+          errinfo_free_with_report(ddc_excp, report_freed_exceptions, __func__);
+          // errinfo_free(ddc_excp);
        }
     } );
 }
@@ -2198,7 +2270,26 @@ set_single_vcp_value(
          } );
 }
 
-
+// UNPUBLISHED
+/** Sets a Continuous VCP value.
+ *
+ *  @param[in]  ddca_dh             display_handle
+ *  @param[in]  feature_code        VCP feature code
+ *  @param[in]  new_value           value to set (sign?)
+ *  @param[out] verified_value_loc  if non-null, return verified value here
+ *  @return status code
+ *
+ * @remark
+ *  Verification is performed if **verified_value_loc** is non-NULL and
+ *  verification has been enabled (see #ddca_enable_verify()).
+ *  @remark
+ *  If verification is performed, the value of the feature is read after being
+ *  written. If the returned status code is either DDCRC_OK (0) or DDCRC_VERIFY,
+ *  the verified value is returned in **verified_value_loc**.
+ *  @remark
+ *  This is essentially a convenience function, since a Continuous value can be
+ *  set by passing its high and low bytes to #ddca_set_non_table_vcp_value_verify().
+ */
 DDCA_Status
 ddca_set_continuous_vcp_value_verify(
       DDCA_Display_Handle   ddca_dh,
@@ -2247,7 +2338,28 @@ ddca_set_simple_nc_vcp_value(
    return ddca_set_continuous_vcp_value_verify(ddca_dh, feature_code, new_value, NULL);
 }
 
-
+// UNPUBLISHED
+/** Sets a non-table VCP value by specifying it's high and low bytes individually.
+ *  Optionally returns the values set by reading the feature code after writing.
+ *
+ *  \param[in]   ddca_dh             display handle
+ *  \param[in]   feature_code        feature code
+ *  \param[in]   hi_byte             high byte of new value
+ *  \param[in]   lo_byte             low byte of new value
+ *  \param[out]  p_verified_hi_byte  where to return high byte of verified value
+ *  \param[out]  p_verified_lo_byte  where to return low byte of verified value
+ *  \return      status code
+ *
+ *  \remark
+ *  Either both **verified_hi_byte_loc** and **verified_lo_byte_loc** should be
+ *  set, or neither. Otherwise, status code **DDCRC_ARG** is returned.
+ *  \remark
+ *  Verification is performed only it has been enabled (see #ddca_enable_verify()) and
+ *  both **verified_hi_byte** and **verified_lo_byte** are set.
+ *  \remark
+ *  Verified values are returned if the status code is either 0 (success),
+ *  or **DDCRC_VERIFY**, i.e. the write succeeded but verification failed.
+ */
 DDCA_Status
 ddca_set_non_table_vcp_value_verify(
       DDCA_Display_Handle    ddca_dh,
@@ -2293,7 +2405,23 @@ ddca_set_non_table_vcp_value(
    return ddca_set_non_table_vcp_value_verify(ddca_dh, feature_code, hi_byte, lo_byte, NULL, NULL);
 }
 
-
+// UNPUBLISHED
+/** Sets a table VCP value.
+ *  Optionally returns the value set by reading the feature code after writing.
+ *
+ *  \param[in]   ddca_dh             display handle
+ *  \param[in]   feature_code        feature code
+ *  \param[in]   new_value           value to set
+ *  \param[out]  verified_value_loc  where to return verified value
+ *  \return      status code
+ *
+ *  \remark
+ *  Verification is performed only it has been enabled (see #ddca_enable_verify()) and
+ *  **verified_value** is set.
+ *  \remark
+ *  A verified value is returned if either the status code is either 0 (success),
+ *  or **DDCRC_VERIFY**, i.e. the write succeeded but verification failed.
+ */
 // untested
 DDCA_Status
 ddca_set_table_vcp_value_verify(
@@ -2337,7 +2465,23 @@ ddca_set_table_vcp_value(
    return ddca_set_table_vcp_value_verify(ddca_dh, feature_code, table_value, NULL);
 }
 
-
+// UNPUBLISHED
+/** Sets a VCP value of any type.
+ *  Optionally returns the values se by reading the feature code after writing.
+ *
+ *  \param[in]   ddca_dh        display handle
+ *  \param[in]   feature_code   feature code
+ *  \param[in]   new_value      value to set
+ *  \param[out]  verified_value where to return verified value
+ *  \return      status code
+ *
+ *  \remark
+ *  Verification is performed only it has been enabled (see #ddca_enable_verify()) and
+ *  **verified_value** is set.
+ *  \remark
+ *  A verified value is returned if either the status code is either 0 (success),
+ *  or **DDCRC_VERIFY**, i.e. the write succeeded but verification failed.
+ */
 // untested for table values
 DDCA_Status
 ddca_set_any_vcp_value_verify(

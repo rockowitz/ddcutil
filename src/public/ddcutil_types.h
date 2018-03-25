@@ -445,7 +445,9 @@ typedef DDCA_Feature_Value_Entry * DDCA_Feature_Value_Table;
 
 
 #define VCP_VERSION_SPECIFIC_FEATURE_INFO_MARKER "VSFI"
-/** Describes a VCP feature code, tailored for a specific VCP version */
+/**  \deprecated
+ * Describes a VCP feature code, tailored for a specific VCP version
+ */
 typedef
 struct {
    char                                  marker[4];      /**< equals VCP_VERSION_SPECIFIC_FEATURE_INFO_MARKER */
@@ -466,9 +468,9 @@ struct {
 typedef
 struct {
    DDCA_Vcp_Feature_Code                 feature_code;   /**< VCP feature code */
-   DDCA_MCCS_Version_Spec                vspec;            // ???
-   DDCA_MCCS_Version_Id                  version_id;       // which ?
-   DDCA_Feature_Flags                    feature_flags;
+   DDCA_MCCS_Version_Spec                vspec;          /**< MCCS version    */
+// DDCA_MCCS_Version_Id                  version_id;       // which ?
+   DDCA_Feature_Flags                    feature_flags;  /**< feature type description */
 } DDCA_Simplified_Version_Feature_Info;
 
 
