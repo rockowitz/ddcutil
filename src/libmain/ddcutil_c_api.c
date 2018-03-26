@@ -1591,39 +1591,69 @@ ddca_get_feature_info_by_display(
 }
 
 
+// Add with_default flag?
+DDCA_Status
+ddca_get_feature_metadata_by_vspec(
+      DDCA_MCCS_Version_Spec      vspec,
+      DDCA_Vcp_Feature_Code       feature_code,
+      DDCA_Feature_Metadata *     info) //    change to **?
+{
+   DDCA_Status psc = DDCRC_ARG;
+   DDCA_Version_Feature_Info * full_info =
+         get_version_feature_info_by_vspec(
+               feature_code,
+               vspec,
+               false,                       // with_default
+               true);                       // false => version specific, true=> version sensitive
+   if (full_info) {
+      info->feature_code  = feature_code;
+      info->vspec         = vspec;
+      info->feature_flags = full_info->feature_flags;
+      if (info->feature_flags & DDCA_SIMPLE_NC)
+         info->sl_values = full_info->sl_values;
+      if (info->feature_flags & DDCA_SYNTHETIC) {
+         // strdup so that don't have to worry about synthesized entries when free
+         info->feature_name  = strdup(full_info->feature_name);
+         info->feature_desc  = strdup(full_info->desc);
+      }
+      else {
+         info->feature_name  = full_info->feature_name;
+         info->feature_desc  = full_info->desc;
+      }
 
+      free_version_feature_info(full_info);
+      psc = 0;
+   }
+   return psc;
+}
+
+
+// Add with_default flag?
 DDCA_Status
 ddca_get_feature_metadata_by_display(
-      DDCA_Display_Handle           ddca_dh,
-      DDCA_Vcp_Feature_Code         feature_code,
-      DDCA_Feature_Metadata *  info)    // caller buffer to fill in,
+      DDCA_Display_Handle         ddca_dh,
+      DDCA_Vcp_Feature_Code       feature_code,
+      DDCA_Feature_Metadata *     info)
 {
    WITH_DH(
          ddca_dh,
          {
             DDCA_MCCS_Version_Spec vspec = get_vcp_version_by_display_handle(ddca_dh);
-
-            DDCA_Status psc = DDCRC_ARG;
-            DDCA_Version_Feature_Info * full_info =
-                  get_version_feature_info_by_vspec(
-                     feature_code,
-                     vspec,
-                     false,                       // with_default
-                     true);                       // false => version specific, true=> version sensitive
-            if (full_info) {
-               info->feature_code  = feature_code;
-               info->vspec         = vspec;
-               // info->version_id    = full_info->version_id;    // keep?
-               info->feature_flags = full_info->feature_flags;
-
-               free_version_feature_info(full_info);
-               psc = 0;
-            }
-            return psc;
-
+            psc = ddca_get_feature_metadata_by_vspec(vspec, feature_code, info);
          }
       );
 }
+
+// frees the contents on info, not info itself
+DDCA_Status
+ddca_free_feature_metadata_contents(DDCA_Feature_Metadata info) {
+   if (info.feature_flags & DDCA_SYNTHETIC) {
+      free(info.feature_name);
+      free(info.feature_desc);
+   }
+   return 0;
+}
+
 
 DDCA_Status
 ddca_free_feature_info(
@@ -1735,7 +1765,8 @@ ddca_get_simple_sl_value_table(
       DDCA_Vcp_Feature_Code      feature_code,
       DDCA_MCCS_Version_Id       mccs_version_id,
       DDCA_Feature_Value_Entry** value_table_loc)
-{   bool debug = false;
+{
+   bool debug = false;
    DDCA_Status rc = 0;
    *value_table_loc = NULL;
    DDCA_MCCS_Version_Spec vspec = mccs_version_id_to_spec(mccs_version_id);
@@ -1754,6 +1785,23 @@ ddca_get_simple_sl_value_table(
 
 
 DDCA_Status
+ddca_get_simple_nc_feature_value_name_by_table(
+      DDCA_Feature_Value_Table    feature_value_table,
+      uint8_t                     feature_value,
+      char**                      feature_name_loc)
+{
+   // DBGMSG("feature_value_table=%p", feature_value_table);
+   // DBGMSG("*feature_value_table=%p", *feature_value_table);
+   DDCA_Status rc = 0;
+   DDCA_Feature_Value_Entry * feature_value_entries = feature_value_table;
+   *feature_name_loc = get_feature_value_name(feature_value_entries, feature_value);
+   if (!*feature_name_loc)
+      rc = DDCRC_NOT_FOUND;               // correct handling for value not found?
+   return rc;
+}
+
+
+DDCA_Status
 ddca_get_simple_nc_feature_value_name_by_vspec(
       DDCA_MCCS_Version_Spec vspec,    // needed because value lookup mccs version dependent
       DDCA_Vcp_Feature_Code  feature_code,
@@ -1765,16 +1813,15 @@ ddca_get_simple_nc_feature_value_name_by_vspec(
    // this should be a function in vcp_feature_codes:
    DDCA_Status rc = ddca_get_simple_sl_value_table_by_vspec(feature_code, vspec, &feature_value_entries);
    if (rc == 0) {
-      *feature_name_loc = get_feature_value_name(feature_value_entries, feature_value);
-      if (!*feature_name_loc)
-         rc = DDCRC_UNKNOWN_FEATURE;               // correct handling for value not found?
+      // DBGMSG("&feature_value_entries = %p", &feature_value_entries);
+      rc = ddca_get_simple_nc_feature_value_name_by_table(feature_value_entries, feature_value, feature_name_loc);
    }
    return rc;
 }
 
 
 DDCA_Status
-ddca_get_simple_nc_feature_value_name(
+ddca_get_simple_nc_feature_value_name_by_display(
       DDCA_Display_Handle    ddca_dh,    // needed because value lookup mccs version dependent
       DDCA_Vcp_Feature_Code  feature_code,
       uint8_t                feature_value,

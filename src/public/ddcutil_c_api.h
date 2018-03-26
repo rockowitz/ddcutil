@@ -842,13 +842,7 @@ ddca_get_simple_sl_value_table(
 
 // Deprecated feature value functions
 
-/** \deprecated */
-DDCA_Status
-ddca_get_simple_nc_feature_value_name(
-      DDCA_Display_Handle    ddca_dh,    // needed because value lookup mccs version dependent
-      DDCA_Vcp_Feature_Code  feature_code,
-      uint8_t                feature_value,
-      char**                 feature_name_loc);
+
 
 
 // Current functions - Feature name
@@ -911,6 +905,7 @@ DDCA_Status ddca_is_feature_supported(
 
 // Current functions - NC lookup tables
 
+
 /** Gets the value id/name table of the allowed values for a simple NC feature.
  *
  * @param[in]  feature_code      VCP feature code
@@ -928,6 +923,15 @@ ddca_get_simple_sl_value_table_by_vspec(
       DDCA_Vcp_Feature_Code      feature_code,
       DDCA_MCCS_Version_Spec     vspec,
       DDCA_Feature_Value_Entry** value_table_loc);
+
+
+
+
+DDCA_Status
+ddca_get_simple_nc_feature_value_name_by_table(
+      DDCA_Feature_Value_Table    feature_value_table,
+      uint8_t                     feature_value,
+      char**                      feature_name_loc);
 
 
 /** Gets the value id/name table of the allowed values for a simple NC feature.
@@ -953,7 +957,22 @@ ddca_get_simple_nc_feature_value_name_by_vspec(
       char**                 feature_name_loc);
 
 
+// /** \deprecated */
+DDCA_Status
+ddca_get_simple_nc_feature_value_name_by_display(
+      DDCA_Display_Handle    ddca_dh,    // needed because value lookup mccs version dependent
+      DDCA_Vcp_Feature_Code  feature_code,
+      uint8_t                feature_value,
+      char**                 feature_name_loc);
+
 // Current functions - Convenience functions
+
+
+DDCA_Status
+ddca_get_feature_metadata_by_vspec(
+      DDCA_MCCS_Version_Spec      vspec,
+      DDCA_Vcp_Feature_Code       feature_code,
+      DDCA_Feature_Metadata *     info); //    change to **?
 
 /**
  * Gets information for a VCP feature.
@@ -975,8 +994,11 @@ DDCA_Status
 ddca_get_feature_metadata_by_display(
       DDCA_Display_Handle           ddca_dh,
       DDCA_Vcp_Feature_Code         feature_code,
-      DDCA_Feature_Metadata *  info);     // caller buffer to fill in,
+      DDCA_Feature_Metadata *       info);
 
+
+DDCA_Status
+ddca_free_feature_metadata_contents(DDCA_Feature_Metadata info);
 
 //
 //  Miscellaneous Monitor Specific Functions

@@ -280,8 +280,33 @@ bool show_simple_nc_feature_value(
     }
 
     return ok;
-
 }
+
+bool show_simple_nc_feature_value2(
+        DDCA_Feature_Value_Table feature_table,
+        uint8_t                  feature_value)
+{
+    char * feature_value_name = NULL;
+    bool ok = false;
+
+    DDCA_Status rc =
+    ddca_get_simple_nc_feature_value_name_by_table(
+          feature_table,
+          feature_value,
+          &feature_value_name);
+    if (rc != 0) {
+       FUNCTION_ERRMSG("ddca_get_nc_feature_value_name", rc);
+       printf("Unable to get interpretation of value 0x%02x\n",  feature_value);
+       ok = false;
+    }
+    else {
+       printf("Current value: 0x%02x - %s\n", feature_value, feature_value_name);
+       ok = true;
+    }
+
+    return ok;
+}
+
 
 
 bool test_simple_nc_value(
@@ -300,6 +325,23 @@ bool test_simple_nc_value(
     // printf("Enabling automatic verification by calling ddca_enable_verify(true)\n");
     // ddca_enable_verify(true);
 
+    DDCA_Feature_Metadata info;
+    rc = ddca_get_feature_metadata_by_display(
+            dh,    // needed because in rare cases feature info is MCCS version dependent
+            feature_code,
+            &info);
+    if (rc != 0) {
+       FUNCTION_ERRMSG("ddca_get_simplified_feature_info", rc);
+       ok = false;
+       goto bye;
+    }
+    if ( !(info.feature_flags & DDCA_SIMPLE_NC) ) {
+       printf("Feature 0x%02x is not simple NC\n", feature_code);
+       ok = false;
+       goto bye;
+    }
+
+#ifdef OLD
     DDCA_MCCS_Version_Spec vspec;
     rc = ddca_get_mccs_version(dh, &vspec);
     assert(rc == 0);
@@ -317,6 +359,7 @@ bool test_simple_nc_value(
           &feature_flags);
     assert(rc == 0);
     assert(feature_flags & DDCA_SIMPLE_NC);
+#endif
 
     DDCA_Non_Table_Vcp_Value valrec;
     rc =
@@ -334,7 +377,10 @@ bool test_simple_nc_value(
               valrec.sl);
     uint8_t old_value = valrec.sl;
 
-    ok = show_simple_nc_feature_value(vspec, feature_code, old_value);
+    /* ok = */ show_simple_nc_feature_value(info.vspec, feature_code, old_value);
+
+    printf("Using     ddca_get_simple_nc_feature_value_name_by_table\n");
+    ok = show_simple_nc_feature_value2(info.sl_values, old_value);
 
     printf("Setting new value 0x%02x...\n", new_value);
     rc = ddca_set_non_table_vcp_value(dh, feature_code, 0, new_value);
@@ -474,37 +520,15 @@ bye:
 }
 
 
-#ifdef OBSOLETE
-
-// Register an abort function.
-// If libddcutil encounters an unexpected, unrecoverable error, it will
-// normally exit, causing the calling program to fail.  If the caller registers an
-// abort function, that function will be called instead.
-void handle_library_abort() {
-   // For aborting out of shared library
-   static jmp_buf abort_buf;
-   int jmprc = setjmp(abort_buf);
-   if (jmprc) {
-      DDCA_Global_Failure_Information * finfo = ddca_get_global_failure_information();
-      if (finfo)
-         fprintf(stderr, "(%s) Error %d (%s) in function %s at line %d in file %s\n",
-                         __func__, finfo->status, ddca_rc_name(finfo->status), finfo->funcname, finfo->lineno, finfo->fn);
-      fprintf(stderr, "(%s) Aborting. Internal status code = %d\n", __func__, jmprc);
-      exit(EXIT_FAILURE);
-   }
-   ddca_register_jmp_buf(&abort_buf);
-}
-
-#endif
-
-
 
 int main(int argc, char** argv) {
-   printf("\n(%s) Starting.\n", __func__);
+   printf("\n(%s) Starting. argc = %d\n", __func__, argc);
 
-#ifdef OBSOLETE
-   handle_library_abort();
-#endif
+   int which_test = 0;
+   if (argc > 1) {
+      which_test = atoi(argv[1]);   // live dangerously, it's test code
+   }
+
 
    // ddca_reset_stats();
 
@@ -533,13 +557,20 @@ int main(int argc, char** argv) {
       printf("Opened display handle: %s\n", ddca_dh_repr(dh));
 
       // Comment out the tests you'd like to skip:
-      // test_cont_value(dh, 0x10);
-      // test_get_set_profile_related_values(dh);
+      if (which_test == 0 || which_test == 1)
+         test_cont_value(dh, 0x10);
 
-      // feature 0xcc = OSD language, value 0x03 = French
-      test_simple_nc_value(dh, 0xcc, 0x03);
+      if (which_test == 0 || which_test == 2) {
+         // feature 0xcc = OSD language, value 0x03 = French
+         test_simple_nc_value(dh, 0xcc, 0x03);
+      }
 
-      // test_complex_nc_value(dh, 0xDF);    // VCP version
+      if (which_test == 0 || which_test == 3)
+         test_complex_nc_value(dh, 0xDF);    // VCP version
+
+
+      if (which_test == 0 || which_test == 4)
+         test_get_set_profile_related_values(dh);
 
       rc = ddca_close_display(dh);
       if (rc != 0)

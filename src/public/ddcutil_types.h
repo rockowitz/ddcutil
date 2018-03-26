@@ -468,8 +468,11 @@ typedef
 struct {
    DDCA_Vcp_Feature_Code                 feature_code;   /**< VCP feature code */
    DDCA_MCCS_Version_Spec                vspec;          /**< MCCS version    */
-// DDCA_MCCS_Version_Id                  version_id;       // which ?
    DDCA_Feature_Flags                    feature_flags;  /**< feature type description */
+   DDCA_Feature_Value_Table              sl_values;      /**< valid when DDCA_SIMPLE_NC set */
+   char *                                feature_name;   /**< feature name */
+   char *                                feature_desc;   /**< feature description */
+   // possibly add pointers to formatting functions
 } DDCA_Feature_Metadata;
 
 
