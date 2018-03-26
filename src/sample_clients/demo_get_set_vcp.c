@@ -129,7 +129,7 @@ test_cont_value(
    bool saved_enable_verify = ddca_enable_verify(false);   // we'll do the check ourselves
 
 
-   DDCA_Version_Feature_Info2 info;
+   DDCA_Feature_Metadata info;
    rc = ddca_get_simplified_feature_info_by_display(
            dh,    // needed because in rare cases feature info is MCCS version dependent
            feature_code,
@@ -382,7 +382,7 @@ bool test_complex_nc_value(
     bool ok = false;
     set_standard_settings();
 
-    DDCA_Version_Feature_Info2 info;
+    DDCA_Feature_Metadata info;
     rc = ddca_get_simplified_feature_info_by_display(
             dh,    // needed because in rare cases feature info is MCCS version dependent
             feature_code,

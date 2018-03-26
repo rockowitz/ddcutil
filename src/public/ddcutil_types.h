@@ -470,7 +470,7 @@ struct {
    DDCA_MCCS_Version_Spec                vspec;          /**< MCCS version    */
 // DDCA_MCCS_Version_Id                  version_id;       // which ?
    DDCA_Feature_Flags                    feature_flags;  /**< feature type description */
-} DDCA_Version_Feature_Info2;
+} DDCA_Feature_Metadata;
 
 
 //
