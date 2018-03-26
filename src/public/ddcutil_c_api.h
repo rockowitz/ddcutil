@@ -840,9 +840,42 @@ ddca_get_simple_sl_value_table(
       DDCA_Feature_Value_Table *  value_table_loc);   // DDCA_Feature_Value_Entry **
 
 
-// Deprecated feature value functions
+// New master functions for feature information
+
+DDCA_Status
+ddca_get_feature_metadata_by_vspec(
+      DDCA_MCCS_Version_Spec      vspec,
+      DDCA_Vcp_Feature_Code       feature_code,
+      DDCA_Feature_Metadata *     info); //    change to **?
+
+/**
+ * Gets information for a VCP feature.
+ *
+ * VCP characteristics (C vs NC, RW vs RO, etc) can vary by MCCS version.
+ *
+ * @param[in]  ddca_dh          display handle
+ * @param[in]  feature_code     VCP feature code
+ * @param[out] info             caller buffer to fill in
+ * @return     status code
+ * @retval     DDCRC_ARG        invalid display handle
+ * @retval     DDCRC_UNKNOWN_FEATURE unrecognized feature code
+ *
+ * @remark This is a convenience function.  Keep?
+ *
+ * @since 0.9.0
+ */
+DDCA_Status
+ddca_get_feature_metadata_by_display(
+      DDCA_Display_Handle           ddca_dh,
+      DDCA_Vcp_Feature_Code         feature_code,
+      DDCA_Feature_Metadata *       info);
 
 
+DDCA_Status
+ddca_free_feature_metadata_contents(DDCA_Feature_Metadata info);
+
+
+// Granular functions for metadata
 
 
 // Current functions - Feature name
@@ -892,19 +925,6 @@ ddca_get_feature_flags_by_vspec(
       DDCA_Feature_Flags *          p_feature_flags);
 
 
-#ifdef UNIMPLEMENTED
-// Unimplemented
-// alt: can check status code for ddca_get_feature_info_by_display()
-DDCA_Status ddca_is_feature_supported(
-      DDCA_Display_Handle    dh,
-      DDCA_Vcp_Feature_Code  feature_code,
-      bool *                 answer_loc);   // or return status code?
-
-#endif
-
-
-// Current functions - NC lookup tables
-
 
 /** Gets the value id/name table of the allowed values for a simple NC feature.
  *
@@ -925,6 +945,21 @@ ddca_get_simple_sl_value_table_by_vspec(
       DDCA_Feature_Value_Entry** value_table_loc);
 
 
+
+#ifdef UNIMPLEMENTED
+// Unimplemented
+// alt: can check status code for ddca_get_feature_info_by_display()
+DDCA_Status ddca_is_feature_supported(
+      DDCA_Display_Handle    dh,
+      DDCA_Vcp_Feature_Code  feature_code,
+      bool *                 answer_loc);   // or return status code?
+
+#endif
+
+
+
+
+// Current functions - NC lookup tables
 
 
 DDCA_Status
@@ -965,41 +1000,7 @@ ddca_get_simple_nc_feature_value_name_by_display(
       uint8_t                feature_value,
       char**                 feature_name_loc);
 
-// Current functions - Convenience functions
-
-
-DDCA_Status
-ddca_get_feature_metadata_by_vspec(
-      DDCA_MCCS_Version_Spec      vspec,
-      DDCA_Vcp_Feature_Code       feature_code,
-      DDCA_Feature_Metadata *     info); //    change to **?
-
-/**
- * Gets information for a VCP feature.
- *
- * VCP characteristics (C vs NC, RW vs RO, etc) can vary by MCCS version.
- *
- * @param[in]  ddca_dh          display handle
- * @param[in]  feature_code     VCP feature code
- * @param[out] info             caller buffer to fill in
- * @return     status code
- * @retval     DDCRC_ARG        invalid display handle
- * @retval     DDCRC_UNKNOWN_FEATURE unrecognized feature code
- *
- * @remark This is a convenience function.  Keep?
- *
- * @since 0.9.0
- */
-DDCA_Status
-ddca_get_feature_metadata_by_display(
-      DDCA_Display_Handle           ddca_dh,
-      DDCA_Vcp_Feature_Code         feature_code,
-      DDCA_Feature_Metadata *       info);
-
-
-DDCA_Status
-ddca_free_feature_metadata_contents(DDCA_Feature_Metadata info);
-
+//
 //
 //  Miscellaneous Monitor Specific Functions
 //
