@@ -1516,6 +1516,23 @@ ddca_get_simplified_feature_info(
 }
 #endif
 
+
+
+// UNPUBLISHED
+/**
+ * Gets characteristics of a VCP feature.
+ *
+ * VCP characteristics (C vs NC, RW vs RO, etc) can vary by MCCS version.
+ *
+ * @param[in]  feature_code     VCP feature code
+ * @param[in]  vspec            MCCS version (may be DDCA_VSPEC_UNKNOWN)
+ * @param[out] p_feature_flags  address of flag field to fill in
+ * @return     status code
+ * @retval     DDCRC_ARG        invalid MCCS version
+ * @retval     DDCRC_UNKNOWN_FEATURE  unrecognized feature
+ *
+ * @since 0.9.0
+ */
 DDCA_Status
 ddca_get_feature_flags_by_vspec(
       DDCA_Vcp_Feature_Code         feature_code,
@@ -1679,8 +1696,6 @@ ddca_get_feature_name(DDCA_Vcp_Feature_Code feature_code) {
    return result;
 }
 
-
-// returns pointer into permanent internal data structure, caller should not free
 char *
 ddca_feature_name_by_vspec(
       DDCA_Vcp_Feature_Code  feature_code,

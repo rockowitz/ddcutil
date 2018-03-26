@@ -180,18 +180,15 @@ void test_get_single_feature_info(
    printf("\n(%s) Getting metadata for feature 0x%02x, mccs version = %d.%d\n", __func__,
           feature_code, vspec.major, vspec.minor);
    printf("Feature name: %s\n", ddca_get_feature_name(feature_code));
-   DDCA_Feature_Flags feature_flags;
-   DDCA_Status rc = ddca_get_feature_flags_by_vspec(
-         feature_code,
-         vspec,
-         &feature_flags);
+   DDCA_Feature_Metadata metadata;
+   DDCA_Status rc = ddca_get_feature_metadata_by_vspec(vspec, feature_code, &metadata);
    if (rc != 0)
       FUNCTION_ERRMSG("ddca_get_feature_info_by_vcp_version", rc);
    else {
       // TODO: Version_Specific_Feature_Info needs a report function
       //  report_ddca_version_feature_flags(feature_code, info->feature_flags);
       // report_version_feature_info(info, 1);
-      char * s = interpret_feature_flags(feature_flags);
+      char * s = interpret_feature_flags(metadata.feature_flags);
       printf("Feature flags: %s\n", s);
       free(s);
    }
