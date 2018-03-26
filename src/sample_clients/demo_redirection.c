@@ -77,6 +77,7 @@ void capture_output_using_basic_functions() {
    rc = fclose(f);
    if (rc < 0) {
       perror("Error closing in core buffer");
+      free(result);
       return;
    }
 
