@@ -1218,7 +1218,7 @@ ddca_dbgrpt_display_info_list(
 
 
 DDCA_Status
-ddca_get_edid_by_display_ref(
+ddca_get_edid_by_dref(
       DDCA_Display_Ref ddca_dref,
       uint8_t**        p_bytes)
 {

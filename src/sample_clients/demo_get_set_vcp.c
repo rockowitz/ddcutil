@@ -37,6 +37,19 @@
           ddca_rc_desc(status_code))
 
 
+#define DDC_ERROR_ABORT(function_name,status_code) \
+    do { \
+        printf("(%s) %s() returned %d (%s): %s\n",   \
+              __func__, function_name, status_code,  \
+              ddca_rc_name(status_code),             \
+              ddca_rc_desc(status_code));            \
+        exit(1);                                     \
+    } while(0)
+
+
+
+
+
 
 static bool saved_report_ddc_errors = false;
 static bool saved_verify_setvcp = false;
@@ -57,52 +70,29 @@ void restore_standard_settings() {
 }
 
 
-
-
-
-bool verify_cont_value(
+bool verify_continuous_value(
       DDCA_Display_Handle     dh,
       DDCA_Vcp_Feature_Code   feature_code,
       int                     expected_value)
 {
-
-
    DDCA_Status rc;
    bool ok = false;
-#ifdef OLD
-   Single_Vcp_Value * valrec;
-   rc = ddca_get_vcp_value(
-           dh,
-           feature_code,
-           DDCA_NON_TABLE_VCP_VALUE,
-           &valrec);
-   if (rc != 0) {
-       FUNCTION_ERRMSG("ddca_get_vcp_value", rc);
-   }
-   else {
-      if ( valrec->val.c.cur_val != expected_value) {
-         printf("   Current value %d does not match expected value %d\n",
-                   valrec->val.c.cur_val, expected_value);
-      }
-#endif
    DDCA_Any_Vcp_Value * valrec;
    rc = ddca_get_any_vcp_value_using_explicit_type(
            dh,
            feature_code,
            DDCA_NON_TABLE_VCP_VALUE_PARM,
            &valrec);
-   if (rc != 0) {
-       FUNCTION_ERRMSG("ddca_get_any_vcp_value", rc);
+   if (rc != 0)
+       DDC_ERROR_ABORT("ddca_get_any_vcp_value", rc);
+
+   if ( VALREC_CUR_VAL(valrec) != expected_value) {
+       printf("   Current value %d does not match expected value %d\n",
+                  VALREC_CUR_VAL(valrec), expected_value);
    }
    else {
-      if ( VALREC_CUR_VAL(valrec) != expected_value) {
-         printf("   Current value %d does not match expected value %d\n",
-                   VALREC_CUR_VAL(valrec), expected_value);
-      }
-      else {
-         printf("   Current value matches expected value\n");
-         ok = true;
-      }
+       printf("   Current value matches expected value\n");
+       ok = true;
    }
 
    return ok;
@@ -181,19 +171,17 @@ test_cont_value(
    // printf("Verified value: %d\n", verified_value);
 
    printf("Setting new value succeeded.  Verifying the new current value...\n");
-   ok = verify_cont_value(dh, feature_code, new_value);
+   ok = verify_continuous_value(dh, feature_code, new_value);
 
    printf("Resetting original value %d...\n", old_value);
    // rc = ddca_set_continuous_vcp_value(dh, feature_code, old_value, &verified_value);
    rc = ddca_set_continuous_vcp_value(dh, feature_code, old_value);
    if (rc != 0) {
-      FUNCTION_ERRMSG("ddca_set_continuous_vcp_value", rc);
-      ok = false;
-      goto bye;
+      DDC_ERROR_ABORT("ddca_set_continuous_vcp_value", rc);
    }
 
    printf("Resetting original value succeeded. Verifying the new current value...\n");
-   ok = verify_cont_value(dh, feature_code, old_value) && ok;
+   ok = verify_continuous_value(dh, feature_code, old_value) && ok;
 
 bye:
    restore_standard_settings();
@@ -212,45 +200,26 @@ bool verify_simple_nc_value(
       DDCA_Vcp_Feature_Code   feature_code,
       uint8_t                 expected_value)
 {
+    DDCA_Status rc;
+    bool ok = false;
 
-   DDCA_Status rc;
-   bool ok = false;
-#ifdef OLD
-   Single_Vcp_Value * valrec;
-   rc = ddca_get_vcp_value(
-           dh,
-           feature_code,
-           DDCA_NON_TABLE_VCP_VALUE,
-           &valrec);
-   if (rc != 0) {
-       FUNCTION_ERRMSG("ddca_get_vcp_value", rc);
-   }
-   else {
-      if ( valrec->val.nc.sl != expected_value) {
-         printf("   Current value 0x%02x does not match expected value 0x%02x\n",
-                   valrec->val.nc.sl, expected_value);
-      }
-#endif
-      DDCA_Any_Vcp_Value * valrec;
-      rc = ddca_get_any_vcp_value_using_explicit_type(
+    DDCA_Any_Vcp_Value * valrec;
+    rc = ddca_get_any_vcp_value_using_explicit_type(
               dh,
               feature_code,
               DDCA_NON_TABLE_VCP_VALUE_PARM,
               &valrec);
-      if (rc != 0) {
-          FUNCTION_ERRMSG("ddca_get_any_vcp_value", rc);
-      }
-      else {
-         if ( valrec->val.c_nc.sl != expected_value) {
-            printf("   Current value 0x%02x does not match expected value 0x%02x\n",
-                      valrec->val.c_nc.sl, expected_value);
-         }
+    if (rc != 0)
+        DDC_ERROR_ABORT("ddca_get_any_vcp_value", rc);
 
-      else {
-         printf("   Current value matches expected value\n");
-         ok = true;
-      }
-   }
+    if ( valrec->val.c_nc.sl != expected_value) {
+        printf("   Current value 0x%02x does not match expected value 0x%02x\n",
+                   valrec->val.c_nc.sl, expected_value);
+    }
+    else {
+        printf("   Current value matches expected value\n");
+        ok = true;
+    }
 
    return ok;
 }
@@ -522,15 +491,14 @@ bye:
 
 
 int main(int argc, char** argv) {
-   printf("\n(%s) Starting. argc = %d\n", __func__, argc);
+   // printf("\n(%s) Starting. argc = %d\n", __func__, argc);
 
    int which_test = 0;
    if (argc > 1) {
       which_test = atoi(argv[1]);   // live dangerously, it's test code
    }
 
-
-   // ddca_reset_stats();
+   ddca_reset_stats();
 
    DDCA_Status rc;
    DDCA_Display_Ref dref;
@@ -548,7 +516,7 @@ int main(int argc, char** argv) {
       // ddca_report_display_info(dinfo, /* depth=*/ 1);
       dref = dinfo->dref;
 
-      printf("Open display reference %s, creating a display handle...\n", ddca_dref_repr(dref));
+      // printf("Open display reference %s, creating a display handle...\n", ddca_dref_repr(dref));
       rc = ddca_open_display(dref, &dh);
       if (rc != 0) {
          FUNCTION_ERRMSG("ddca_open_display", rc);
@@ -556,7 +524,6 @@ int main(int argc, char** argv) {
       }
       printf("Opened display handle: %s\n", ddca_dh_repr(dh));
 
-      // Comment out the tests you'd like to skip:
       if (which_test == 0 || which_test == 1)
          test_cont_value(dh, 0x10);
 
@@ -583,6 +550,6 @@ int main(int argc, char** argv) {
 
 // bye:
    // uncomment if you want to see stats:
-   // dca_show_stats(DDCA_STATS_ALL, 0);
+   // ddca_show_stats(DDCA_STATS_ALL, 0);
    return 0;
 }

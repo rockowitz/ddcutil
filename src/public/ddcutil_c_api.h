@@ -1005,10 +1005,10 @@ ddca_get_simple_nc_feature_value_name_by_display(
 //  Miscellaneous Monitor Specific Functions
 //
 
-/** \deprecated */
+// /** \deprecated */
 __attribute__ ((deprecated))
 DDCA_Status
-ddca_get_edid_by_display_ref(    // if keep then change name to ddca_get_edid_by_dref()
+ddca_get_edid_by_dref(
       DDCA_Display_Ref ddca_dref,
       uint8_t **       pbytes_loc);   // pointer into ddcutil data structures, do not free
 
