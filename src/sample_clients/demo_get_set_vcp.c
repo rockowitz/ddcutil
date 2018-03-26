@@ -130,7 +130,7 @@ test_cont_value(
 
 
    DDCA_Feature_Metadata info;
-   rc = ddca_get_simplified_feature_info_by_display(
+   rc = ddca_get_feature_metadata_by_display(
            dh,    // needed because in rare cases feature info is MCCS version dependent
            feature_code,
            &info);
@@ -383,7 +383,7 @@ bool test_complex_nc_value(
     set_standard_settings();
 
     DDCA_Feature_Metadata info;
-    rc = ddca_get_simplified_feature_info_by_display(
+    rc = ddca_get_feature_metadata_by_display(
             dh,    // needed because in rare cases feature info is MCCS version dependent
             feature_code,
             &info);
