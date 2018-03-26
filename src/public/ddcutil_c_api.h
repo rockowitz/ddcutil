@@ -975,7 +975,7 @@ DDCA_Status
 ddca_get_simplified_feature_info_by_display(
       DDCA_Display_Handle           ddca_dh,
       DDCA_Vcp_Feature_Code         feature_code,
-      DDCA_Simplified_Version_Feature_Info *  info);     // caller buffer to fill in,
+      DDCA_Version_Feature_Info2 *  info);     // caller buffer to fill in,
 
 
 //

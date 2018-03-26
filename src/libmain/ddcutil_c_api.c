@@ -1495,7 +1495,7 @@ ddca_get_simplified_feature_info(
       DDCA_Vcp_Feature_Code         feature_code,
       DDCA_MCCS_Version_Spec        vspec,
  //   DDCA_MCCS_Version_Id          mccs_version_id,
-      DDCA_Simplified_Version_Feature_Info *   info)
+      DDCA_Version_Feature_Info2 *   info)
 {
    DDCA_Status psc = DDCRC_ARG;
    DDCA_Version_Feature_Info * full_info =  get_version_feature_info_by_vspec(
@@ -1596,7 +1596,7 @@ DDCA_Status
 ddca_get_simplified_feature_info_by_display(
       DDCA_Display_Handle           ddca_dh,
       DDCA_Vcp_Feature_Code         feature_code,
-      DDCA_Simplified_Version_Feature_Info *  info)    // caller buffer to fill in,
+      DDCA_Version_Feature_Info2 *  info)    // caller buffer to fill in,
 {
    WITH_DH(
          ddca_dh,

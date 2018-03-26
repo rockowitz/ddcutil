@@ -370,7 +370,6 @@ typedef struct {
 
 
 
-
 /** @name Version Feature Flags
  *
  * #DDCA_Version_Feature_Flags is a byte of flags describing attributes of a
@@ -471,7 +470,7 @@ struct {
    DDCA_MCCS_Version_Spec                vspec;          /**< MCCS version    */
 // DDCA_MCCS_Version_Id                  version_id;       // which ?
    DDCA_Feature_Flags                    feature_flags;  /**< feature type description */
-} DDCA_Simplified_Version_Feature_Info;
+} DDCA_Version_Feature_Info2;
 
 
 //
@@ -560,6 +559,28 @@ typedef struct {
 
 #define VALREC_CUR_VAL(valrec) ( valrec->val.c_nc.sh << 8 | valrec->val.c_nc.sl )
 #define VALREC_MAX_VAL(valrec) ( valrec->val.c_nc.mh << 8 | valrec->val.c_nc.ml )
+
+
+#ifdef FUTURE
+// Possible future declarations for exposing formatting functions, to be passed
+// in DDCA_Version_Feature_Info.
+// Issue: Won't expose well in Python API
+
+char * (*DDCA_Func_Format_Non_Table_Value) (
+          DDCA_Vcp_Feature_Code     feature_code,
+          DDCA_MCCS_Version_Spec    vspec,
+          DDCA_Non_Table_Vcp_Value  valrec);     // or pointer?
+
+char * (*DDCA_Func_Format_Table_Value) (
+          DDCA_Vcp_Feature_Code     feature_code,
+          DDCA_MCCS_Version_Spec    vspec,
+          DDCA_Table_Vcp_Value      valrec);     // or pointer?
+
+char * (*DDCA_Func_Any_Value) (
+          DDCA_Vcp_Feature_Code     feature_code,
+          DDCA_MCCS_Version_Spec    vspec,
+          DDCA_Any_Vcp_Value        valrec);     // or pointer?
+#endif
 
 
 //
