@@ -28,22 +28,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-
 #include "public/ddcutil_c_api.h"
-// #include "public/ddcutil_status_codes.h"
-
-
-
-#define ASSERT_DDCRC_OK(status_code, function_name)      \
-    do {                                                 \
-        if (status_code) {                               \
-            printf("(%s) %s() returned %d (%s): %s\n",   \
-                   __func__, function_name, status_code, \
-                   ddca_rc_name(status_code),            \
-                   ddca_rc_desc(status_code));           \
-            exit(1);                                     \
-        }                                                \
-    } while(0)
 
 
 void assert_ddcrc_ok(DDCA_Status ddcrc, const char * ddc_func, const char * caller) {
@@ -53,8 +38,6 @@ void assert_ddcrc_ok(DDCA_Status ddcrc, const char * ddc_func, const char * call
         exit(1);
     }
 }
-
-
 
 
 void demo_feature_lists_for_vspec(DDCA_MCCS_Version_Spec vspec) {
@@ -90,21 +73,8 @@ void demo_feature_lists_for_vspec(DDCA_MCCS_Version_Spec vspec) {
          vspec,
          false,               // exclude table features
          &vcplist2);
-   assert(ddcrc == 0);        // this is sample code
+   assert_ddcrc_ok(ddcrc, "ddca_get_feature_list",__func__);        // this is sample code
 
-#ifdef DOESNT_MAKE_CODE_SIMPLER
-   // Instead of looping through the codes as above, use convenience
-   // function ddca_feature_list_to_codes()
-   int codect;
-   uint8_t feature_codes[256];
-   ddca_feature_list_to_codes(&vcplist2, &codect, feature_codes);
-
-   printf("\nFeatures in feature set COLOR:  ");
-   for (int ndx = 0; ndx < codect; ndx++) {
-         printf(" 0x%02x", feature_codes[ndx]);
-   }
-   puts("");
-#endif
    printf("\nFeatures in feature set COLOR:\n   ");
    for (int ndx = 0; ndx < 256; ndx++) {
       if (ddca_feature_list_contains(&vcplist2, ndx))
@@ -119,7 +89,6 @@ void demo_feature_lists_for_vspec(DDCA_MCCS_Version_Spec vspec) {
    char * s = ddca_feature_list_string(&vcplist3, "x", ",");  // a convenience function
    printf("%s\n", s);
    free(s);
-
 }
 
 

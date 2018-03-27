@@ -1410,6 +1410,15 @@ ddca_feature_list_minus(
 
 #ifdef UNPUBLISHED
 // no real savings in client code
+// sample use:
+// int codect;
+//  uint8_t feature_codes[256];
+// ddca_feature_list_to_codes(&vcplist2, &codect, feature_codes);
+// printf("\nFeatures in feature set COLOR:  ");
+// for (int ndx = 0; ndx < codect; ndx++) {
+//       printf(" 0x%02x", feature_codes[ndx]);
+// }
+// puts("");
 
 /** Converts a feature list into an array of feature codes.
  *
