@@ -864,6 +864,7 @@ DDCA_Status
 ddca_get_feature_metadata_by_vspec(
       DDCA_MCCS_Version_Spec      vspec,
       DDCA_Vcp_Feature_Code       feature_code,
+      bool                        create_default_if_not_found,
       DDCA_Feature_Metadata *     info); //    change to **?
 
 /**
@@ -873,10 +874,12 @@ ddca_get_feature_metadata_by_vspec(
  *
  * @param[in]  ddca_dh          display handle
  * @param[in]  feature_code     VCP feature code
+ * @param[in]  create_default_if_not_found
  * @param[out] info             caller buffer to fill in
  * @return     status code
  * @retval     DDCRC_ARG        invalid display handle
- * @retval     DDCRC_UNKNOWN_FEATURE unrecognized feature code
+ * @retval     DDCRC_UNKNOWN_FEATURE unrecognized feature code and
+ *                              !create_default_if_not_found
  *
  * @remark This is a convenience function.  Keep?
  *
@@ -884,9 +887,10 @@ ddca_get_feature_metadata_by_vspec(
  */
 DDCA_Status
 ddca_get_feature_metadata_by_display(
-      DDCA_Display_Handle           ddca_dh,
-      DDCA_Vcp_Feature_Code         feature_code,
-      DDCA_Feature_Metadata *       info);
+      DDCA_Display_Handle         ddca_dh,
+      DDCA_Vcp_Feature_Code       feature_code,
+      bool                        create_default_if_not_found,
+      DDCA_Feature_Metadata *     info);
 
 
 DDCA_Status

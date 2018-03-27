@@ -1709,6 +1709,7 @@ DDCA_Status
 ddca_get_feature_metadata_by_vspec(
       DDCA_MCCS_Version_Spec      vspec,
       DDCA_Vcp_Feature_Code       feature_code,
+      bool                        create_default_if_not_found,
       DDCA_Feature_Metadata *     info) //    change to **?
 {
    DDCA_Status psc = DDCRC_ARG;
@@ -1717,9 +1718,10 @@ ddca_get_feature_metadata_by_vspec(
          get_version_feature_info_by_vspec(
                feature_code,
                vspec,
-               false,                       // with_default
-               true);                       // false => version specific, true=> version sensitive
+               create_default_if_not_found,
+               true);                      // false => version specific, true=> version sensitive
    if (full_info) {
+      // DBGMSG("Reading full_info");
       info->feature_code  = feature_code;
       info->vspec         = vspec;
       info->feature_flags = full_info->feature_flags;
@@ -1727,13 +1729,16 @@ ddca_get_feature_metadata_by_vspec(
          info->sl_values = full_info->sl_values;
       if (info->feature_flags & DDCA_SYNTHETIC) {
          // strdup so that don't have to worry about synthesized entries when free
-         info->feature_name  = strdup(full_info->feature_name);
-         info->feature_desc  = strdup(full_info->desc);
+         if (full_info->feature_name)
+            info->feature_name  = strdup(full_info->feature_name);
+         if (full_info->desc)
+            info->feature_desc  = strdup(full_info->desc);
       }
       else {
          info->feature_name  = full_info->feature_name;
          info->feature_desc  = full_info->desc;
       }
+      // DBGMSG("Reading full_info done");
 
       free_version_feature_info(full_info);
       psc = 0;
@@ -1747,13 +1752,18 @@ DDCA_Status
 ddca_get_feature_metadata_by_display(
       DDCA_Display_Handle         ddca_dh,
       DDCA_Vcp_Feature_Code       feature_code,
+      bool                        create_default_if_not_found,
       DDCA_Feature_Metadata *     info)
 {
    WITH_DH(
          ddca_dh,
          {
             DDCA_MCCS_Version_Spec vspec = get_vcp_version_by_display_handle(ddca_dh);
-            psc = ddca_get_feature_metadata_by_vspec(vspec, feature_code, info);
+            psc = ddca_get_feature_metadata_by_vspec(
+                     vspec,
+                     feature_code,
+                     create_default_if_not_found,
+                     info);
          }
       );
 }
