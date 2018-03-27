@@ -1,6 +1,6 @@
-/* clmain.c
+/* demo_feature_lists.c
  *
- * Framework for test code
+ * Demonstrate feature list functions.
  *
  * <copyright>
  * Copyright (C) 2018 Sanford Rockowitz <rockowitz@minsoft.com>
@@ -27,42 +27,53 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-// #include <unistd.h>
 
-// #include "util/string_util.h"
 
 #include "public/ddcutil_c_api.h"
-
-
-#define FUNCTION_ERRMSG(function_name,status_code) \
-   printf("(%s) %s() returned %d (%s): %s\n",      \
-          __func__, function_name, status_code,    \
-          ddca_rc_name(status_code),      \
-          ddca_rc_desc(status_code))
+// #include "public/ddcutil_status_codes.h"
 
 
 
-void collect_features_for_display(DDCA_Display_Info * dinfo) {
-   DDCA_MCCS_Version_Spec vspec = dinfo->vcp_version;
+#define ASSERT_DDCRC_OK(status_code, function_name)      \
+    do {                                                 \
+        if (status_code) {                               \
+            printf("(%s) %s() returned %d (%s): %s\n",   \
+                   __func__, function_name, status_code, \
+                   ddca_rc_name(status_code),            \
+                   ddca_rc_desc(status_code));           \
+            exit(1);                                     \
+        }                                                \
+    } while(0)
 
-   DDCA_Status rc = 0;
 
-   // Note that the defined features vary by MCCS version, so
-   // can vary by monitor.  The fact that whether a feature is
-   // of type table can vary by MCCS version.  So we can't just
-   // ask for a superset of features in any very.  Therefore
-   // feature lists need to be maintained on a per-monitor basis.
+void assert_ddcrc_ok(DDCA_Status ddcrc, const char * ddc_func, const char * caller) {
+    if (ddcrc) {
+        printf("Error in %s(): %s() returned %d (%s): %s\n",
+               caller, ddc_func, ddcrc, ddca_rc_name(ddcrc), ddca_rc_desc(ddcrc));
+        exit(1);
+    }
+}
+
+
+
+
+void demo_feature_lists_for_vspec(DDCA_MCCS_Version_Spec vspec) {
+   DDCA_Status ddcrc = 0;
+
+   // Note that the defined features vary by MCCS version.
+   // In fact whether a feature is of type Table can vary by
+   // MCCS version.
 
    // get the feature list for feature set PROFILE
    DDCA_Feature_List vcplist1;
-   rc = ddca_get_feature_list(
+   ddcrc = ddca_get_feature_list(
          DDCA_SUBSET_PROFILE,
          vspec,
-         false,               // exclude table featuresgi
+         false,                  // exclude table features
          &vcplist1);
-   assert(rc == 0);           // this is sample code
+   assert_ddcrc_ok(ddcrc, "ddca_get_feature_list",__func__);        // this is sample code
 
-
+   // alternatively, use convenience function ddca_feature_list_string(), see below
    printf("\nFeatures in feature set PROFILE:\n   ");
    for (int ndx = 0; ndx < 256; ndx++) {
       if (ddca_feature_list_contains(&vcplist1, ndx))
@@ -74,12 +85,12 @@ void collect_features_for_display(DDCA_Display_Info * dinfo) {
    // The user then changes the feature set to COLOR
 
    DDCA_Feature_List vcplist2;
-   rc = ddca_get_feature_list(
+   ddcrc = ddca_get_feature_list(
          DDCA_SUBSET_COLOR,
          vspec,
          false,               // exclude table features
          &vcplist2);
-   assert(rc == 0);
+   assert(ddcrc == 0);        // this is sample code
 
 #ifdef DOESNT_MAKE_CODE_SIMPLER
    // Instead of looping through the codes as above, use convenience
@@ -101,38 +112,23 @@ void collect_features_for_display(DDCA_Display_Info * dinfo) {
    }
    puts("");
 
-   // We only need to get read the features that have not yet been read
+   // We only would need to get read the features that have not yet been read
    DDCA_Feature_List vcplist3 = ddca_feature_list_minus(&vcplist2, &vcplist1);
 
    printf("\nFeatures in feature set COLOR but not in PROFILE:\n   ");
-   char * s = ddca_feature_list_string(&vcplist3, "x", ",");
+   char * s = ddca_feature_list_string(&vcplist3, "x", ",");  // a convenience function
    printf("%s\n", s);
-   // printf("(%s) s=%p\n",__func__, s);
    free(s);
-#ifdef ALT
-   for (int ndx = 0; ndx < 256; ndx++) {
-      if (ddca_feature_list_contains(&vcplist3, ndx))
-         printf(" 0x%02x", ndx);
-   }
-   puts("");
-#endif
 
 }
 
 
 int main(int argc, char** argv) {
-   // printf("\n(%s) Starting.\n", __func__);
+    // Feature group definitions can be VCP version sensitive.
+    // In real code, we'd get the MCCS version from the monitor information.
 
-    // Just grab the first monitor
-   DDCA_Display_Info_List* dlist = NULL;
-   ddca_get_display_info_list2(
-         false,    // don't include invalid displays
-         &dlist);
-    assert(dlist->ct > 0);
-    DDCA_Display_Info * dinfo = &dlist->info[0];
-    ddca_dbgrpt_display_info(dinfo, /* depth=*/ 1);
-
-    collect_features_for_display(dinfo);
+    DDCA_MCCS_Version_Spec vspec = DDCA_VSPEC_V22;
+    demo_feature_lists_for_vspec(vspec);
 
    return 0;
 }
