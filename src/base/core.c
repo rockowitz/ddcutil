@@ -754,7 +754,7 @@ bool is_report_ddc_errors_enabled() {
    return old_val;
 }
 #else
-static bool report_ddc_errors = true;
+static bool report_ddc_errors = false;
 static GMutex report_ddc_errors_mutex;
 
 bool enable_report_ddc_errors(bool onoff) {
