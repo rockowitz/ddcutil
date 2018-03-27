@@ -1392,7 +1392,7 @@ ddca_feature_list_union(
 
 
 DDCA_Feature_List
-ddca_feature_list_subtract(
+ddca_feature_list_minus(
       DDCA_Feature_List* vcplist1,
       DDCA_Feature_List * vcplist2)
 {

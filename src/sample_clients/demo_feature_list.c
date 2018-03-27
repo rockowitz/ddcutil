@@ -102,7 +102,7 @@ void collect_features_for_display(DDCA_Display_Info * dinfo) {
    puts("");
 
    // We only need to get read the features that have not yet been read
-   DDCA_Feature_List vcplist3 = ddca_feature_list_subtract(&vcplist2, &vcplist1);
+   DDCA_Feature_List vcplist3 = ddca_feature_list_minus(&vcplist2, &vcplist1);
 
    printf("\nFeatures in feature set COLOR but not in PROFILE:\n   ");
    char * s = ddca_feature_list_string(&vcplist3, "x", ",");

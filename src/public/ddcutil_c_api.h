@@ -1118,7 +1118,7 @@ ddca_feature_list_union(
  *  @since 0.9.0
  */
 DDCA_Feature_List
-ddca_feature_list_subtract(
+ddca_feature_list_minus(
       DDCA_Feature_List* vcplist1,
       DDCA_Feature_List* vcplist2);
 
