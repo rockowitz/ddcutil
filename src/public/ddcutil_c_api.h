@@ -767,6 +767,9 @@ ddca_free_parsed_capabilities(
  *
  *  The report is written to the current FOUT location.
  *
+ *  If the current output level is #DDCA_OL_VERBOSE, additional
+ *  information is written, including command codes.
+ *
  *  @param[in]  parsed_capabilities  pointer to #DDCA_Capabilities struct
  *  @param[in]  depth  logical       indentation depth
  */
@@ -774,6 +777,21 @@ void
 ddca_report_parsed_capabilities(
       DDCA_Capabilities *      parsed_capabilities,
       int                      depth);
+
+
+/** Parses a capabilities string, and reports the parsed string
+ *  using the code of command "ddcutil capabilities".
+ *
+ *  The report is written to the current FOUT location.
+ *
+ *  The detail level written is sensitive to the current output level.
+ *
+ *  @param[in]  capabilities_string  capabilities string
+ *  @param[in]  depth  logical       indentation depth
+ */
+void ddca_parse_and_report_capabilities(
+      char *              capabilities_string,
+      int                 depth);
 
 //
 //  MCCS Version Specification
@@ -947,7 +965,7 @@ DDCA_Status
 ddca_get_simple_nc_feature_value_name_by_table(
       DDCA_Feature_Value_Table    feature_value_table,
       uint8_t                     feature_value,
-      char**                      feature_name_loc);
+      char**                      value_name_loc);
 
 
 /** Gets the value id/name table of the allowed values for a simple NC feature.

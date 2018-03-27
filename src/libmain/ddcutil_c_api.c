@@ -49,6 +49,7 @@
 #include "base/execution_stats.h"
 #include "base/parms.h"
 
+#include "vcp/ddc_command_codes.h"
 #include "vcp/vcp_feature_codes.h"
 #include "vcp/parse_capabilities.h"
 #include "vcp/parsed_capabilities_feature.h"
@@ -1616,6 +1617,7 @@ ddca_get_feature_metadata_by_vspec(
       DDCA_Feature_Metadata *     info) //    change to **?
 {
    DDCA_Status psc = DDCRC_ARG;
+   memset(info, 0, sizeof(DDCA_Feature_Metadata));
    DDCA_Version_Feature_Info * full_info =
          get_version_feature_info_by_vspec(
                feature_code,
@@ -1803,14 +1805,14 @@ DDCA_Status
 ddca_get_simple_nc_feature_value_name_by_table(
       DDCA_Feature_Value_Table    feature_value_table,
       uint8_t                     feature_value,
-      char**                      feature_name_loc)
+      char**                      value_name_loc)
 {
    // DBGMSG("feature_value_table=%p", feature_value_table);
    // DBGMSG("*feature_value_table=%p", *feature_value_table);
    DDCA_Status rc = 0;
    DDCA_Feature_Value_Entry * feature_value_entries = feature_value_table;
-   *feature_name_loc = get_feature_value_name(feature_value_entries, feature_value);
-   if (!*feature_name_loc)
+   *value_name_loc = get_feature_value_name(feature_value_entries, feature_value);
+   if (!*value_name_loc)
       rc = DDCRC_NOT_FOUND;               // correct handling for value not found?
    return rc;
 }
@@ -2634,6 +2636,13 @@ ddca_parse_capabilities_string(
       memcpy(result->marker, DDCA_CAPABILITIES_MARKER, 4);
       result->unparsed_string= strdup(capabilities_string);     // needed?
       result->version_spec = pcaps->parsed_mccs_version;
+      Byte_Value_Array bva = pcaps->commands;
+      if (bva) {
+         result->cmd_ct = bva_length(bva);
+         result->cmd_codes = malloc(result->cmd_ct);
+         memcpy(result->cmd_codes, bva_bytes(bva), result->cmd_ct);
+      }
+
       // n. needen't set vcp_code_ct if !pcaps, calloc() has done it
       if (pcaps->vcp_features) {
          result->vcp_code_ct = pcaps->vcp_features->len;
@@ -2708,26 +2717,71 @@ ddca_report_parsed_capabilities(
    bool debug = false;
    DBGMSF(debug, "Starting");
    assert(pcaps && memcmp(pcaps->marker, DDCA_CAPABILITIES_MARKER, 4) == 0);
-   int d0 = depth;
-   int d1 = depth+1;
-   int d2 = depth+2;
-   int d3 = depth+3;
+   // int d0 = depth;
+   // quick hack since d0 no longer used
+   int d1 = depth;
+   int d2 = depth+1;
+   int d3 = depth+2;
+   int d4 = depth+3;
+
+   DDCA_Output_Level ol = get_output_level();
 
    // rpt_structure_loc("DDCA_Capabilities", pcaps, depth);
-   rpt_label(  d0, "Capabilities:");
-   rpt_vstring(d1, "Unparsed string: %s", pcaps->unparsed_string);
+   // rpt_label(  d0, "Capabilities:");
+   if (ol >= DDCA_OL_VERBOSE)
+      rpt_vstring(d1, "Unparsed string: %s", pcaps->unparsed_string);
    rpt_vstring(d1, "VCP version:     %d.%d", pcaps->version_spec.major, pcaps->version_spec.minor);
-   rpt_vstring(d1, "VCP codes:");
+   if (ol >= DDCA_OL_VERBOSE) {
+      rpt_label  (d1, "Command codes: ");
+      for (int cmd_ndx = 0; cmd_ndx < pcaps->cmd_ct; cmd_ndx++) {
+         uint8_t cur_code = pcaps->cmd_codes[cmd_ndx];
+         char * cmd_name = ddc_cmd_code_name(cur_code);
+         rpt_vstring(d2, "0x%02x (%s)", cur_code, cmd_name);
+      }
+   }
+   rpt_vstring(d1, "VCP Feature codes:");
    for (int code_ndx = 0; code_ndx < pcaps->vcp_code_ct; code_ndx++) {
       DDCA_Cap_Vcp * cur_vcp = &pcaps->vcp_codes[code_ndx];
       assert( memcmp(cur_vcp->marker, DDCA_CAP_VCP_MARKER, 4) == 0);
-      rpt_vstring(d2, "Feature code:  0x%02x", cur_vcp->feature_code);
+
+      char * feature_name = get_feature_name_by_id_and_vcp_version(
+                               cur_vcp->feature_code,
+                               pcaps->version_spec);
+
+      rpt_vstring(d2, "Feature:  0x%02x (%s)", cur_vcp->feature_code, feature_name);
+
+      DDCA_Feature_Value_Entry * feature_value_table;
+      DDCA_Status ddcrc = ddca_get_simple_sl_value_table_by_vspec(
+            cur_vcp->feature_code,
+            pcaps->version_spec,
+            &feature_value_table);
+
       if (cur_vcp->value_ct > 0) {
-         char * hs =  hexstring(cur_vcp->values, cur_vcp->value_ct);
-         rpt_vstring(d3, "Values:     %s", hs);
-         free(hs);
+         if (ol > DDCA_OL_VERBOSE)
+            rpt_vstring(d3, "Unparsed values:     %s", hexstring_t(cur_vcp->values, cur_vcp->value_ct) );
+         rpt_label(d3, "Values:");
+         for (int ndx = 0; ndx < cur_vcp->value_ct; ndx++) {
+            char * value_desc = "No lookup table";
+            if (ddcrc == 0) {
+               value_desc = "Unrecognized feature value";
+               ddca_get_simple_nc_feature_value_name_by_table(
+                          feature_value_table,
+                          cur_vcp->values[ndx],
+                          &value_desc);
+            }
+            rpt_vstring(d4, "0x%02x: %s", cur_vcp->values[ndx], value_desc);
+         }
       }
    }
+}
+
+
+void ddca_parse_and_report_capabilities(
+      char *              capabilities_string,
+      int                 depth)
+{
+      Parsed_Capabilities* pcaps = parse_capabilities_string(capabilities_string);
+      report_parsed_capabilities(pcaps);
 }
 
 
