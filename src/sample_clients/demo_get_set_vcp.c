@@ -118,11 +118,13 @@ test_cont_value(
    printf("Disabling automatic verification by calling ddca_enable_verify(false)\n");
    bool saved_enable_verify = ddca_enable_verify(false);   // we'll do the check ourselves
 
+   bool create_default_if_not_found = false;
 
    DDCA_Feature_Metadata info;
    rc = ddca_get_feature_metadata_by_display(
            dh,    // needed because in rare cases feature info is MCCS version dependent
            feature_code,
+           create_default_if_not_found,
            &info);
    if (rc != 0) {
       FUNCTION_ERRMSG("ddca_get_simplified_feature_info", rc);
@@ -298,12 +300,15 @@ bool test_simple_nc_value(
     rc = ddca_get_feature_metadata_by_display(
             dh,    // needed because in rare cases feature info is MCCS version dependent
             feature_code,
+            false,              // create_default_if_not_found
             &info);
     if (rc != 0) {
        FUNCTION_ERRMSG("ddca_get_simplified_feature_info", rc);
        ok = false;
        goto bye;
     }
+    // Issue: currently synthesized values are Complex-Continuous, synthesized
+    //        metadata would fail testif create_default_if_not_found == true
     if ( !(info.feature_flags & DDCA_SIMPLE_NC) ) {
        printf("Feature 0x%02x is not simple NC\n", feature_code);
        ok = false;
@@ -401,6 +406,7 @@ bool test_complex_nc_value(
     rc = ddca_get_feature_metadata_by_display(
             dh,    // needed because in rare cases feature info is MCCS version dependent
             feature_code,
+            false,           // create_default_if_not_found
             &info);
     if (rc != 0) {
        FUNCTION_ERRMSG("ddca_get_feature_info", rc);
