@@ -444,7 +444,7 @@ typedef DDCA_Feature_Value_Entry * DDCA_Feature_Value_Table;
 
 
 #define VCP_VERSION_SPECIFIC_FEATURE_INFO_MARKER "VSFI"
-/**  \deprecated
+/**  \deprecated - but used internally!
  * Describes a VCP feature code, tailored for a specific VCP version
  */
 typedef
