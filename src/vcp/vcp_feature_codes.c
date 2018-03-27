@@ -1008,6 +1008,7 @@ extract_version_feature_info(
 
 void free_version_feature_info(DDCA_Version_Feature_Info * info) {
    // be careful, may be called from client
+   // DBGMSG("Starting. info=%p", info);
    if (info && memcmp(info->marker, VCP_VERSION_SPECIFIC_FEATURE_INFO_MARKER, 4) == 0) {
       info->marker[3] = 'x';
 
@@ -1019,6 +1020,7 @@ void free_version_feature_info(DDCA_Version_Feature_Info * info) {
 
       free(info);
    }
+   // DBGMSG("Done.");
 }
 
 
@@ -1146,6 +1148,14 @@ get_version_feature_info_by_vspec(
          free_synthetic_vcp_entry(pentry);
    }
 
+   if (debug) {
+
+      if (info) {
+         DBGMSG("Success.  feature info:");
+         dbgrpt_version_feature_info(info, 1);
+      }
+      DBGMSG("Returning: %p", info);
+   }
    return info;
 }
 
@@ -1388,10 +1398,13 @@ vcp_create_dummy_feature_for_hexid(DDCA_Vcp_Feature_Code id) {
 
    if (id >= 0xe0) {
       pentry->v20_name = "Manufacturer Specific";
+      pentry->desc     = "Feature code reserved for manufacturer use";
    }
    else {
       pentry->v20_name = "Unknown feature";
+      pentry->desc     = "Undefined feature code";
    }
+   // 3/2018: complex cont may not work for API callers
    pentry->nontable_formatter = format_feature_detail_debug_continuous;
    pentry->v20_flags = DDCA_RW | DDCA_COMPLEX_CONT;
    pentry->vcp_global_flags = DDCA_SYNTHETIC;   // indicates caller should free
