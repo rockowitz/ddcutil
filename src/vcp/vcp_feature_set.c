@@ -416,9 +416,11 @@ filter_feature_set(
    }
 }
 
-
+// or, take DDCA_Feature_List address as parm
 DDCA_Feature_List
 feature_list_from_feature_set(VCP_Feature_Set feature_set) {
+   bool debug = false;
+
    DDCA_Feature_List vcplist = {{0}};
    struct vcp_feature_set * fset = (struct vcp_feature_set *) feature_set;
    assert( fset && memcmp(fset->marker, VCP_FEATURE_SET_MARKER, 4) == 0);
@@ -438,9 +440,13 @@ feature_list_from_feature_set(VCP_Feature_Set feature_set) {
       // uint8_t bval = vcplist.bytes[flagndx];
       // printf("(%s) vcplist.bytes[%d] = 0x%02x\n",  __func__, flagndx, bval);
    }
-   // DBGMSG("Returning: ");
-   // rpt_hex_dump(vcplist.bytes, 32, 1);
+   if (debug) {
+      DBGMSG("Returning: ");
+      rpt_hex_dump(vcplist.bytes, 32, 1);
+   }
 
    return vcplist;
-
 }
+
+
+
