@@ -497,6 +497,8 @@ struct {
    char                                 marker[4];       /**< always DDCA_CAPABILITIES_MARKER */
    char *                               unparsed_string; /**< unparsed capabilities string */
    DDCA_MCCS_Version_Spec               version_spec;    /**< parsed mccs_ver() field */
+   int                                  cmd_ct;          /**< number of command codes */
+   uint8_t *                            cmd_codes;       /**< array of command codes */
    int                                  vcp_code_ct;     /**< number of features in vcp() field */
    DDCA_Cap_Vcp *                       vcp_codes;       /**< array of pointers to structs describing each vcp code */
 } DDCA_Capabilities;
