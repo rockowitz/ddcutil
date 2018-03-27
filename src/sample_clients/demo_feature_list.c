@@ -58,12 +58,12 @@ void collect_features_for_display(DDCA_Display_Info * dinfo) {
    rc = ddca_get_feature_list(
          DDCA_SUBSET_PROFILE,
          vspec,
-         false,               // exclude table features
+         false,               // exclude table featuresgi
          &vcplist1);
    assert(rc == 0);           // this is sample code
 
 
-   printf("\nFeatures in feature set PROFILE:  ");
+   printf("\nFeatures in feature set PROFILE:\n   ");
    for (int ndx = 0; ndx < 256; ndx++) {
       if (ddca_feature_list_contains(&vcplist1, ndx))
          printf(" 0x%02x", ndx);
@@ -81,6 +81,7 @@ void collect_features_for_display(DDCA_Display_Info * dinfo) {
          &vcplist2);
    assert(rc == 0);
 
+#ifdef DOESNT_MAKE_CODE_SIMPLER
    // Instead of looping through the codes as above, use convenience
    // function ddca_feature_list_to_codes()
    int codect;
@@ -92,16 +93,29 @@ void collect_features_for_display(DDCA_Display_Info * dinfo) {
          printf(" 0x%02x", feature_codes[ndx]);
    }
    puts("");
+#endif
+   printf("\nFeatures in feature set COLOR:\n   ");
+   for (int ndx = 0; ndx < 256; ndx++) {
+      if (ddca_feature_list_contains(&vcplist2, ndx))
+         printf(" 0x%02x", ndx);
+   }
+   puts("");
 
    // We only need to get read the features that have not yet been read
    DDCA_Feature_List vcplist3 = ddca_feature_list_subtract(&vcplist2, &vcplist1);
 
-   printf("\nFeatures in feature set COLOR but not in PROFILE:  ");
+   printf("\nFeatures in feature set COLOR but not in PROFILE:\n   ");
+   char * s = ddca_feature_list_string(&vcplist3, "x", ",");
+   printf("%s\n", s);
+   // printf("(%s) s=%p\n",__func__, s);
+   free(s);
+#ifdef ALT
    for (int ndx = 0; ndx < 256; ndx++) {
       if (ddca_feature_list_contains(&vcplist3, ndx))
          printf(" 0x%02x", ndx);
    }
    puts("");
+#endif
 
 }
 

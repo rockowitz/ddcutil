@@ -1283,6 +1283,8 @@ bye:
 //
 // Feature Lists
 //
+// TODO: Move most functions into directory src/base
+//
 
 void ddca_feature_list_clear(DDCA_Feature_List* vcplist) {
    memset(vcplist->bytes, 0, 32);
@@ -1312,19 +1314,25 @@ bool ddca_feature_list_contains(DDCA_Feature_List * vcplist, uint8_t vcp_code) {
 
 DDCA_Status
 ddca_get_feature_list(
-      DDCA_Feature_Subset_Id  feature_list_id,
-      DDCA_MCCS_Version_Spec  vcp_version,
+      DDCA_Feature_Subset_Id  feature_subset_id,
+      DDCA_MCCS_Version_Spec  vspec,
       bool                    include_table_features,
-      DDCA_Feature_List*      p_feature_list)
+      DDCA_Feature_List*      p_feature_list)   // location to fill in
 {
+   bool debug = false;
+   DBGMSF(debug, "Starting. feature_subset_id=%d, vcp_version=%d.%d, include_table_features=%s, p_feature_list=%p",
+          feature_subset_id, vspec.major, vspec.minor, bool_repr(include_table_features), p_feature_list);
+
+   DDCA_Status ddcrc = 0;
    // Whether a feature is a table feature can vary by version, so can't
-   // specify VCP_SPEC_ANY and to request feature ids in any version
-   if (vcp_version_eq(vcp_version, DDCA_VSPEC_ANY) ||
-       vcp_version_eq(vcp_version, DDCA_VSPEC_UNQUERIED) ) {
-      return -EINVAL;
+   // specify VCP_SPEC_ANY to request feature ids in any version
+   if (!vcp_version_is_valid(vspec, /* allow unknown */ false)) {
+      ddcrc = -EINVAL;
+      ddca_feature_list_clear(p_feature_list);
+      goto bye;
    }
    VCP_Feature_Subset subset = VCP_SUBSET_NONE;  // pointless initialization to avoid compile warning
-   switch (feature_list_id) {
+   switch (feature_subset_id) {
    case DDCA_SUBSET_KNOWN:
       subset = VCP_SUBSET_KNOWN;
       break;
@@ -1341,17 +1349,17 @@ ddca_get_feature_list(
    Feature_Set_Flags flags = 0x00;
    if (!include_table_features)
       flags |= FSF_NOTABLE;
-   VCP_Feature_Set fset = create_feature_set(subset, vcp_version, flags);
-   // VCP_Feature_Set fset = create_feature_set(subset, vcp_version, !include_table_features);
+   VCP_Feature_Set fset = create_feature_set(subset, vspec, flags);
+   // VCP_Feature_Set fset = create_feature_set(subset, vspec, !include_table_features);
 
-   // TODO: function variant that takes result as a parm, avoid memcpy
+   // TODO: function variant that takes result location as a parm, avoid memcpy
    DDCA_Feature_List result = feature_list_from_feature_set(fset);
    memcpy(p_feature_list, &result, 32);
    free_vcp_feature_set(fset);
 
 #ifdef NO
-   DBGMSG("feature_list_id=%d, vcp_version=%s, returning:",
-          feature_list_id, format_vspec(vcp_version));
+   DBGMSG("feature_subset_id=%d, vspec=%s, returning:",
+          feature_subset_id, format_vspec(vspec));
    rpt_hex_dump(result.bytes, 32, 1);
    for (int ndx = 0; ndx <= 255; ndx++) {
       uint8_t code = (uint8_t) ndx;
@@ -1360,7 +1368,12 @@ ddca_get_feature_list(
    }
    printf("\n");
 #endif
-   return DDCRC_OK;
+
+bye:
+   DBGMSF(debug, "Done. Returning: %s", psc_desc(ddcrc));
+   if (debug)
+      rpt_hex_dump((Byte*) p_feature_list, 32, 1);
+   return ddcrc;
 
 }
 
@@ -1383,13 +1396,27 @@ ddca_feature_list_subtract(
       DDCA_Feature_List* vcplist1,
       DDCA_Feature_List * vcplist2)
 {
+   // DBGMSG("Starting. vcplist1=%p, vcplist2=%p", vcplist1, vcplist2);
    DDCA_Feature_List result;
    for (int ndx = 0; ndx < 32; ndx++) {
       result.bytes[ndx] =  vcplist1->bytes[ndx] & ~vcplist2->bytes[ndx];
    }
+
+   // char * s = ddca_feature_list_string(&result, "0x",", ");
+   // DBGMSG("Returning: %s", s);
+   // free(s);
    return result;
 }
 
+#ifdef UNPUBLISHED
+// no real savings in client code
+
+/** Converts a feature list into an array of feature codes.
+ *
+ *  @param[in]  vcplist   pointer to feature list
+ *  @param[out] p_codect  address where to return count of feature codes
+ *  @param[out] vcp_codes address of 256 byte buffer to receive codes
+ */
 
 void ddca_feature_list_to_codes(
       DDCA_Feature_List* vcplist,
@@ -1404,6 +1431,65 @@ void ddca_feature_list_to_codes(
    }
    *codect = ctr;
 }
+#endif
+
+
+
+int
+ddca_feature_list_count(
+      DDCA_Feature_List * feature_list)
+{
+   int result = 0;
+   if (feature_list) {
+      for (int ndx = 0; ndx < 256; ndx++) {
+         if (ddca_feature_list_contains(feature_list, ndx))
+            result++;
+      }
+   }
+   return result;
+}
+
+
+
+char *
+ddca_feature_list_string(
+      DDCA_Feature_List * feature_list,
+      char * value_prefix,
+      char * sepstr)
+{
+   // DBGMSG("Starting. feature_list=%p, value_prefix=|%s|, sepstr=|%s|",
+   //        feature_list, value_prefix, sepstr);
+   // rpt_hex_dump((Byte*)feature_list, 32, 2);
+
+   char * buf = NULL;
+
+   if (feature_list) {
+      if (!value_prefix)
+         value_prefix = "";
+      if (!sepstr)
+         sepstr = "";
+      int vsize = strlen(value_prefix) + 2 + strlen(sepstr);
+
+      int feature_ct = ddca_feature_list_count(feature_list);
+      int reqd_size = (feature_ct*vsize)+1;   // +1 for trailing null
+      buf = malloc(reqd_size);
+      buf[0] = '\0';
+      // DBGMSG("feature_ct=%d, vsize=%d, buf size = %d", feature_ct, vsize, vsize*feature_ct);
+
+      for (int ndx = 0; ndx < 256; ndx++) {
+         if (ddca_feature_list_contains(feature_list, ndx))
+            sprintf(buf + strlen(buf), "%s%02x%s", value_prefix, ndx, sepstr);
+      }
+      if (feature_ct > 0)
+         buf[ strlen(buf)-strlen(sepstr)] = '\0';
+   }
+
+   // DBGMSG("Returned string length: %d", strlen(buf));
+   // DBGMSG("Returning %p - %s", buf, buf);
+   return buf;
+}
+
+
 
 
 #ifdef OLD

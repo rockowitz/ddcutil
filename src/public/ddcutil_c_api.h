@@ -1044,6 +1044,8 @@ ddca_report_display_by_dref(DDCA_Display_Ref dref, int depth);
  *  @param[in]  vcp_version
  *  @param[in]  include_table_features if true, Table type features are included
  *  @param[out] points to feature list to be filled in
+ *
+ *  @since 0.9.0
  */
 DDCA_Status
 ddca_get_feature_list(
@@ -1056,6 +1058,8 @@ ddca_get_feature_list(
 /** Empties a #DDCA_Feature_List
  *
  *  @param[in]  vcplist pointer to feature list
+ *
+ *  @since 0.9.0
  */
 void ddca_feature_list_clear(
       DDCA_Feature_List* vcplist);
@@ -1064,6 +1068,8 @@ void ddca_feature_list_clear(
  *
  *  @param[in]  vcplist   pointer to feature list
  *  @param[in]  vcp_code  VCP feature code
+ *
+ *  @since 0.9.0
  */
 void
 ddca_feature_list_add(
@@ -1075,6 +1081,8 @@ ddca_feature_list_add(
  *  @param[in]  vcplist   pointer to feature list
  *  @param[in]  vcp_code  VCP feature code
  *  @return     true/false
+ *
+ *  @since 0.9.0
  */
 bool
 ddca_feature_list_contains(
@@ -1090,6 +1098,7 @@ ddca_feature_list_contains(
  *
  *  @remark
  *  The input feature lists are not modified.
+ *  @since 0.9.0
  */
 DDCA_Feature_List
 ddca_feature_list_union(
@@ -1106,6 +1115,7 @@ ddca_feature_list_union(
  *
  *  @remark
  *  The input feature lists are not modified.
+ *  @since 0.9.0
  */
 DDCA_Feature_List
 ddca_feature_list_subtract(
@@ -1113,17 +1123,38 @@ ddca_feature_list_subtract(
       DDCA_Feature_List* vcplist2);
 
 
-/** Returns a feature list consisting of all the features in the
- *  first list that are not in the second.
+/** Returns the number of features in a feature list
  *
- *  @param[in]  vcplist   pointer to feature list
- *  @param[out] p_codect  address where to return count of feature codes
- *  @param[out] vcp_codes address of 256 byte buffer to receive codes
+ *  @param[in] feature_list   pointer to feature list
+ *  @return  number of features, 0 if feature_list == NULL
+ *
+ *  @since 0.9.0
  */
-void ddca_feature_list_to_codes(
-      DDCA_Feature_List* vcplist,
-      int*               p_codect,
-      uint8_t            vcp_codes[256]);
+int
+ddca_feature_list_count(
+      DDCA_Feature_List * feature_list);
+
+/** Returns a string representation of a feature list as a
+ *  sequence of 2 character hex values.
+ *
+ *  @param[in] feature_list   pointer to feature list
+ *  @param[in] value_prefix   precede each value with this string, e.g. "0x"
+ *                            if NULL, then no preceding string
+ *  @param[in] sepstr         separator string between pair of values, e.g. ", "
+ *                            if NULL, then no separator string
+ *  @return    string representation, caller must free
+ *
+ *  @remark
+ *  Returns NULL if feature_list == NULL
+ *  @since 0.9.0
+ */
+char *
+ddca_feature_list_string(
+      DDCA_Feature_List * feature_list,
+      char * value_prefix,
+      char * sepstr);
+
+
 
 /*
  * The API for getting and setting VCP values is doubly specified,
