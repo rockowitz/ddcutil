@@ -46,6 +46,10 @@
 // Returns "true" or "false":
 char * bool_repr(int value);
 
+
+// A macro alternative to bool_repr()
+#define SBOOL(val) ( (val) ? "true" : "false" )
+
 #ifdef DEPRECATED
 // use library function g_strlcpy() instead
 #define SAFE_STRNCPY(dest, src, buflen) \
