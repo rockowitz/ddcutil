@@ -111,40 +111,9 @@ void demo_retry_management() {
 }
 
 
-#ifdef OBSOLETE
-
-// Register an abort function.
-// If libddcutil encounters an unexpected, unrecoverable error, it will
-// normally exit, causing the calling program to fail.  If the caller registers an
-// abort function, that function will be called instead.
-void handle_library_abort() {
-   // For aborting out of shared library
-   static jmp_buf abort_buf;
-   int jmprc = setjmp(abort_buf);
-   if (jmprc) {
-      DDCA_Global_Failure_Information * finfo = ddca_get_global_failure_information();
-      if (finfo)
-         fprintf(stderr, "(%s) Error %d (%s) in function %s at line %d in file %s\n",
-                         __func__, finfo->status, ddca_rc_name(finfo->status), finfo->funcname, finfo->lineno, finfo->fn);
-      fprintf(stderr, "(%s) Aborting. Internal status code = %d\n", __func__, jmprc);
-      exit(EXIT_FAILURE);
-   }
-   ddca_register_jmp_buf(&abort_buf);
-}
-
-#endif
-
-
 int main(int argc, char** argv) {
-   // printf("\n(%s) Starting.\n", __func__);
-
    // Query library build settings.
    demo_build_information();
-
-#ifdef OBSOLETE
-   // Catches libddcutil failures that would otherwise cause program abort
-   handle_library_abort();
-#endif
 
    // Retry management
    demo_retry_management();
