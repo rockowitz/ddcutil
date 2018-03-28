@@ -29,7 +29,7 @@
 #include "gobject_api/ddcg_gobjects.h"
 
 
-#define FUNCTION_ERRMSG(function_name,status_code) \
+#define DDC_ERRMSG(function_name,status_code) \
    printf("(%s) %s() returned %d (%s): %s\n",      \
           __func__, function_name, status_code,    \
           ddct_status_code_name(status_code),      \
