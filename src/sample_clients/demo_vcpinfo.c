@@ -42,16 +42,6 @@
              ddca_rc_desc(status_code));              \
    } while(0)
 
-#ifdef UNUSED
-#define DDC_ERROR_ABORT(function_name,status_code) \
-    do { \
-        printf("(%s) %s() returned %d (%s): %s\n",   \
-              __func__, function_name, status_code,  \
-              ddca_rc_name(status_code),             \
-              ddca_rc_desc(status_code));            \
-        exit(1);                                     \
-    } while(0)
-#endif
 
 /* A simple function that opens the first detected display.
  * For more detailed exampled of display detection and management,
