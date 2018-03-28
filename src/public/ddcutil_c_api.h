@@ -788,6 +788,8 @@ ddca_report_parsed_capabilities(
  *
  *  @param[in]  capabilities_string  capabilities string
  *  @param[in]  depth  logical       indentation depth
+ *
+ *  @since 0.9.0
  */
 void ddca_parse_and_report_capabilities(
       char *              capabilities_string,
@@ -858,8 +860,26 @@ ddca_get_simple_sl_value_table(
       DDCA_Feature_Value_Table *  value_table_loc);   // DDCA_Feature_Value_Entry **
 
 
-// New master functions for feature information
+// New master functions for feature metadata
 
+/**
+ * Gets information for a VCP feature.
+ *
+ * Note that VCP characteristics (C vs NC, RW vs RO, etc) can vary by MCCS version.
+ *
+ * @param[in]  vspec            VCP version
+ * @param[in]  feature_code     VCP feature code
+ * @param[in]  create_default_if_not_found
+ * @param[out] info             caller buffer to fill in
+ * @return     status code
+ * @retval     DDCRC_ARG        invalid display handle
+ * @retval     DDCRC_UNKNOWN_FEATURE unrecognized feature code and
+ *                              !create_default_if_not_found
+ *
+ * @remark This is a convenience function, wrapping #ddca_get_feature_metadata_by_vspec()
+ *
+ * @since 0.9.0
+ */
 DDCA_Status
 ddca_get_feature_metadata_by_vspec(
       DDCA_MCCS_Version_Spec      vspec,
@@ -870,7 +890,7 @@ ddca_get_feature_metadata_by_vspec(
 /**
  * Gets information for a VCP feature.
  *
- * VCP characteristics (C vs NC, RW vs RO, etc) can vary by MCCS version.
+ * Note that VCP characteristics (C vs NC, RW vs RO, etc) can vary by MCCS version.
  *
  * @param[in]  ddca_dh          display handle
  * @param[in]  feature_code     VCP feature code
@@ -881,7 +901,7 @@ ddca_get_feature_metadata_by_vspec(
  * @retval     DDCRC_UNKNOWN_FEATURE unrecognized feature code and
  *                              !create_default_if_not_found
  *
- * @remark This is a convenience function.  Keep?
+ * @remark This is a convenience function, wrapping #ddca_get_feature_metadata_by_vspec()
  *
  * @since 0.9.0
  */
@@ -893,6 +913,18 @@ ddca_get_feature_metadata_by_display(
       DDCA_Feature_Metadata *     info);
 
 
+/**
+ *  Frees the contents a #DDCA_Feature_Metadata instance.
+ *
+ *  Note that #DDCA_Featture_Metadata instances are typically
+ *  allocated on the stack,  This function frees and data
+ *  pointed to by the metadata instance, not the instance itself.
+ *
+ *  @param[in] info  metadata instance, passed by value
+ *  @return    status code
+ *
+ *  @since 0.9.0
+ */
 DDCA_Status
 ddca_free_feature_metadata_contents(DDCA_Feature_Metadata info);
 
