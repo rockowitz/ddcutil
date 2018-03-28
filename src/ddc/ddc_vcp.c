@@ -158,7 +158,7 @@ ddc_set_nontable_vcp_value(
       Byte             feature_code,
       int              new_value)
 {
-   bool debug = true;
+   bool debug = false;
    DBGTRC(debug, TRACE_GROUP,
           "Writing feature 0x%02x , new value = %d, dh=%s",
           feature_code, new_value, dh_repr_t(dh) );
@@ -370,7 +370,7 @@ ddc_set_vcp_value(
       Single_Vcp_Value *  vrec,
       Single_Vcp_Value ** newval_loc)
 {
-   bool debug = true;
+   bool debug = false;
    DBGMSF0(debug, "Starting. ");
    FILE * verbose_msg_dest = fout();
    if ( get_output_level() < DDCA_OL_VERBOSE && !debug )
