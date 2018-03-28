@@ -34,12 +34,15 @@
 #include "public/ddcutil_c_api.h"
 
 
-#define FUNCTION_ERRMSG(function_name,status_code) \
-   printf("(%s) %s() returned %d (%s): %s\n",      \
-          __func__, function_name, status_code,    \
-          ddca_rc_name(status_code),      \
-          ddca_rc_desc(status_code))
+#define FUNCTION_ERRMSG(function_name,status_code)    \
+   do {                                               \
+      printf("(%s) %s() returned %d (%s): %s\n",      \
+             __func__, function_name, status_code,    \
+             ddca_rc_name(status_code),               \
+             ddca_rc_desc(status_code));              \
+   } while(0)
 
+#ifdef UNUSED
 #define DDC_ERROR_ABORT(function_name,status_code) \
     do { \
         printf("(%s) %s() returned %d (%s): %s\n",   \
@@ -48,7 +51,7 @@
               ddca_rc_desc(status_code));            \
         exit(1);                                     \
     } while(0)
-
+#endif
 
 /* A simple function that opens the first detected display.
  * For more detailed exampled of display detection and management,
@@ -58,7 +61,7 @@
  * Returns:      display handle of first detected display,
  *               NULL if not found or can't be opened
  */
-DDCA_Display_Handle * open_first_display_by_dispno() {
+DDCA_Display_Handle * open_first_display_by_dlist() {
    printf("Check for monitors using ddca_get_displays()...\n");
    DDCA_Display_Handle dh = NULL;
 
@@ -142,65 +145,78 @@ void show_feature_metadata(DDCA_Feature_Metadata * info) {
 }
 
 
-/*  Retrieves and displays feature information for a specified MCCS version
- *  and feature code.
- *
- *  Arguments:
- *     vspec
- *     feature_code
+/*  Retrieves and displays feature information for a specified feature code
+ *  and MCCS version.
  */
-void test_get_single_feature_info(
+void test_single_feature_info(
+        DDCA_Vcp_Feature_Code   feature_code,
         DDCA_MCCS_Version_Spec  vspec,
-        DDCA_Vcp_Feature_Code   feature_code)
+        bool                    create_default_if_not_found)
 {
-   printf("\n(%s) Getting metadata for feature 0x%02x, mccs version = %d.%d\n", __func__,
-          feature_code, vspec.major, vspec.minor);
-   printf("Feature name: %s\n", ddca_feature_name_by_vspec(feature_code, vspec));
+   // printf("\n(%s) Getting metadata for feature 0x%02x, mccs version = %d.%d\n", __func__,
+   //        feature_code, vspec.major, vspec.minor);
+   // printf("Feature name: %s\n", ddca_feature_name_by_vspec(feature_code, vspec));
+
    DDCA_Feature_Metadata metadata;
-   DDCA_Status rc = ddca_get_feature_metadata_by_vspec(vspec, feature_code, &metadata);
-   if (rc != 0)
+   DDCA_Status rc = ddca_get_feature_metadata_by_vspec(
+                       vspec,
+                       feature_code,
+                       create_default_if_not_found,
+                       &metadata);
+   if (rc != 0) {
+      printf("\nUnable to retrieve version sensitive metadata for VCP Feature 0x%02x, MCCS version %d.%d\n",
+             feature_code, vspec.major, vspec.minor);
+      // printf("ddca_get_feature_info_by_vcp_version() returned
       FUNCTION_ERRMSG("ddca_get_feature_info_by_vcp_version", rc);
+   }
    else {
+      if (metadata.feature_flags & DDCA_SYNTHETIC) {
+         if (feature_code >= 0xe0)
+            printf("\nCreated synthetic metadata for manufacturer-specific feature.\n");
+         else
+            printf("\nCreated synthetic metadata for unrecognized feature code.\n");
+      }
       show_feature_metadata(&metadata);
    }
-   printf("%s) Done.\n", __func__);
+   // printf("%s) Done.\n", __func__);
 }
 
-
-/** Retrieves and displays feature information for a specified MCCS version
- *  and a representative sample of feature codes.
- *
- *  Arguments:
- *     version_id
- *     feature_code
- */
-void test_get_feature_info(DDCA_MCCS_Version_Spec vspec) {
-   printf("\n(%s) ===> Starting.  version = %d.%d\n", __func__, vspec.major, vspec.minor);
-
-   // DDCA_Vcp_Feature_Code feature_codes[] = {0x00, 0x02, 0x03, 0x10, 0x43, 0x60, 0xe0};
-   DDCA_Vcp_Feature_Code feature_codes[] = {0x02};
-   int feature_code_ct = sizeof(feature_codes)/sizeof(DDCA_Vcp_Feature_Code);
-   for (int ndx = 0; ndx < feature_code_ct; ndx++)
-      test_get_single_feature_info(vspec, feature_codes[ndx]);
-
-   printf("%s) Done.\n", __func__);
-}
 
 
 void demo_feature_info() {
-   test_get_feature_info(DDCA_VSPEC_V10);
-   test_get_feature_info(DDCA_VSPEC_V20);
-   test_get_feature_info(DDCA_VSPEC_V21);
-   test_get_feature_info(DDCA_VSPEC_V30);
-   test_get_feature_info(DDCA_VSPEC_V22);
-   test_get_feature_info(DDCA_VSPEC_UNKNOWN);
+// #ifdef NO
+   DDCA_Vcp_Feature_Code feature_codes[] = {
+         0x00,     // invalid code
+         0x02,     // NC, complex
+      // 0x03,     // NC, simple   (one simple-nc is enuf)
+         0x10,     // Continuous
+      // 0x43,     // Continuous   (one Cont is enuf)
+         0x60,     // Simple NC
+         0xe0};    // mfg specific
+// #endif
+//   DDCA_Vcp_Feature_Code feature_codes[] = {0x43};
+
+   // DDCA_MCCS_Version_Spec vspecs[] = {
+   //     DDCA_VSPEC_V10, DDCA_VSPEC_V20,DDCA_VSPEC_V21,
+   //     DDCA_VSPEC_V22,DDCA_VSPEC_V30,DDCA_VSPEC_UNKNOWN};
+   DDCA_MCCS_Version_Spec vspecs[] = {DDCA_VSPEC_V20};
+
+   int feature_ct = sizeof(feature_codes)/sizeof(DDCA_Vcp_Feature_Code);
+   int vspec_ct   = sizeof(vspecs)/sizeof(DDCA_MCCS_Version_Spec);
+   bool create_default_if_not_found = true;
+
+   printf("\nCreate default if not found: %s\n",
+          (create_default_if_not_found) ? "true" : "false");
+
+   for (int feature_ndx = 0; feature_ndx < feature_ct; feature_ndx++) {
+      for (int vspsec_ndx = 0; vspsec_ndx < vspec_ct; vspsec_ndx++) {
+         test_single_feature_info(feature_codes[feature_ndx], vspecs[vspsec_ndx], create_default_if_not_found);
+      }
+   }
 }
 
 
 int main(int argc, char** argv) {
-   printf("\ndemo_vcpinfo Starting.\n");
-
    demo_feature_info();
-
    return 0;
 }
