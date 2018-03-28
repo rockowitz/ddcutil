@@ -3,7 +3,7 @@
  * This file contains detailed examples of display selection.
  *
  * <copyright>
- * Copyright (C) 2017 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2017-2018 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
