@@ -1295,9 +1295,6 @@ ddca_get_table_vcp_value(
  * @return status code
  *
  * @remark
- * Parm **value_type** is needed only manufacturer-specific features.
- * If set to #DDCA_UNSET_VCP_VALUE_TYPE_PARM, it will be ignored.
- * @remark
  * Replaces **ddca_get_any_vcp_value()
  *
  * @since 0.9.0
@@ -1306,7 +1303,7 @@ DDCA_Status
 ddca_get_any_vcp_value_using_explicit_type(
        DDCA_Display_Handle         ddca_dh,
        DDCA_Vcp_Feature_Code       feature_code,
-       DDCA_Vcp_Value_Type_Parm    value_type,
+       DDCA_Vcp_Value_Type         value_type,
        DDCA_Any_Vcp_Value **       valrec_loc);
 
 
@@ -1425,34 +1422,23 @@ ddca_set_non_table_vcp_value(
       uint8_t                  lo_byte
      );
 
-/** Sets a Continuous VCP value.
- *
- *  @param[in]  ddca_dh             display_handle
- *  @param[in]  feature_code        VCP feature code
- *  @param[in]  new_value           value to set (sign?)
- *  @return status code
- *
- * @remark
- *  This is essentially a convenience function, since a Continuous value
- *  can be set by passing its high and low bytes to #ddca_set_non_table_vcp_value().
- */
+/** @deprecated Use #ddca_set_non_table_vcp_value() */
+__attribute__ ((deprecated))
 DDCA_Status
 ddca_set_continuous_vcp_value(
       DDCA_Display_Handle      ddca_dh,
       DDCA_Vcp_Feature_Code    feature_code,
       uint16_t                 new_value);
 
-
-/** @deprecated Use #ddca_set_non_table_vcp_value() */
+__attribute__ ((deprecated))
 DDCA_Status
 ddca_set_simple_nc_vcp_value(
       DDCA_Display_Handle      ddca_dh,
       DDCA_Vcp_Feature_Code    feature_code,
-      uint8_t                  new_value) __attribute__ ((deprecated));
+      uint8_t                  new_value);
 
 
-/** Sets a table VCP value.
- *  Optionally returns the value set by reading the feature code after writing.
+/** Sets a Table VCP value.
  *
  *  \param[in]   ddca_dh             display handle
  *  \param[in]   feature_code        feature code
@@ -1506,11 +1492,23 @@ ddca_get_profile_related_values(
  *  The monitor identification and feature values are
  *  encoded in the string.
  *
- *  @param[in] profile_values_string address at which to return string
+ *  @param[in] ddca_dh display handle
+ *  @param[in] profile_values_string string containing values
  *  @return     status code
+ *
+ *  @remark
+ *  If **ddca_dh** is NULL, this function opens the first display
+ *  that matches the display identifiers in the **profile_values_string**.
+ *  If **ddca_dh** is non-NULL, then the identifiers in **profile_values_string**
+ *  must be consistent with the open display.
+ *  @remark
+ *  The non-NULL case exists to handle the unusual case where mutliple
+ *  displays have the same manufacturer, model, and serial number,
+ *  perhaps because the EDID has been cloned.
  */
 DDCA_Status
 ddca_set_profile_related_values(
+      DDCA_Display_Handle  ddca_dh,
       char *               profile_values_string);
 
 
@@ -1522,7 +1520,7 @@ DDCA_Status
 ddca_start_get_any_vcp_value(
       DDCA_Display_Handle         ddca_dh,
       DDCA_Vcp_Feature_Code       feature_code,
-      DDCA_Vcp_Value_Type_Parm    call_type,
+      DDCA_Vcp_Value_Type         call_type,
       DDCA_Notification_Func      callback_func);
 
 

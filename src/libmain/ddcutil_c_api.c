@@ -2114,7 +2114,7 @@ ddca_get_vcp_value(
    );
 }
 
-
+#ifdef OLD
 static DDCA_Vcp_Value_Type_Parm
 get_value_type_parm(
       DDCA_Display_Handle         ddca_dh,
@@ -2137,6 +2137,31 @@ get_value_type_parm(
    DBGMSF(debug, "Returning %d", result);
    return result;
 }
+#endif
+
+static DDCA_Status
+get_value_type(
+      DDCA_Display_Handle         ddca_dh,
+      DDCA_Vcp_Feature_Code       feature_code,
+      DDCA_Vcp_Value_Type *       p_value_type)
+{
+   bool debug = false;
+   DBGMSF(debug, "Starting. ddca_dh=%p, feature_code=0x%02x", ddca_dh, feature_code);
+
+   DDCA_Status ddcrc = DDCRC_NOT_FOUND;
+   DDCA_MCCS_Version_Spec vspec     = get_vcp_version_by_display_handle(ddca_dh);
+   VCP_Feature_Table_Entry * pentry = vcp_find_feature_by_hexid(feature_code);
+   if (pentry) {
+      DDCA_Version_Feature_Flags flags = get_version_sensitive_feature_flags(pentry, vspec);
+      // Version_Feature_Flags flags = feature_info->internal_feature_flags;
+      // n. will default to NON_TABLE_VCP_VALUE if not a known code
+      *p_value_type = (flags & DDCA_TABLE) ?  DDCA_TABLE_VCP_VALUE : DDCA_NON_TABLE_VCP_VALUE;
+      ddcrc = 0;
+   }
+
+   DBGMSF(debug, "Returning %d", ddcrc);
+   return ddcrc;
+}
 
 
 
@@ -2144,7 +2169,7 @@ DDCA_Status
 ddca_get_any_vcp_value_using_explicit_type(
        DDCA_Display_Handle         ddca_dh,
        DDCA_Vcp_Feature_Code       feature_code,
-       DDCA_Vcp_Value_Type_Parm    call_type,
+       DDCA_Vcp_Value_Type         call_type,
        DDCA_Any_Vcp_Value **       pvalrec)
 {
    bool debug = false;
@@ -2153,19 +2178,14 @@ ddca_get_any_vcp_value_using_explicit_type(
    *pvalrec = NULL;
    DDCA_Status rc = DDCRC_ARG;
 
-   if (call_type == DDCA_UNSET_VCP_VALUE_TYPE_PARM) {
-      call_type = get_value_type_parm(ddca_dh, feature_code, DDCA_UNSET_VCP_VALUE_TYPE_PARM);
+   Single_Vcp_Value *  valrec2 = NULL;
+   rc = ddca_get_vcp_value(ddca_dh, feature_code, call_type, &valrec2);
+   if (rc == 0) {
+      DDCA_Any_Vcp_Value * valrec = single_vcp_value_to_any_vcp_value(valrec2);
+      free_single_vcp_value(valrec2);
+      *pvalrec = valrec;
    }
-   if (call_type != DDCA_UNSET_VCP_VALUE_TYPE_PARM) {
 
-      Single_Vcp_Value *  valrec2 = NULL;
-      rc = ddca_get_vcp_value(ddca_dh, feature_code, call_type, &valrec2);
-      if (rc == 0) {
-         DDCA_Any_Vcp_Value * valrec = single_vcp_value_to_any_vcp_value(valrec2);
-         free_single_vcp_value(valrec2);
-         *pvalrec = valrec;
-      }
-   }
    DBGMSF(debug, "Done. Returning %s, *pvalrec=%p", psc_desc(rc), *pvalrec);
    return rc;
 }
@@ -2210,11 +2230,19 @@ ddca_get_any_vcp_value_using_implicit_type(
        DDCA_Vcp_Feature_Code       feature_code,
        DDCA_Any_Vcp_Value **       valrec_loc)
 {
-   return ddca_get_any_vcp_value_using_explicit_type(
-         ddca_dh,
-         DDCA_UNSET_VCP_VALUE_TYPE_PARM,
-         feature_code,
-         valrec_loc);
+
+   DDCA_Vcp_Value_Type call_type;
+
+   DDCA_Status ddcrc = get_value_type(ddca_dh, feature_code, &call_type);
+
+   if (ddcrc == 0) {
+      ddcrc = ddca_get_any_vcp_value_using_explicit_type(
+                 ddca_dh,
+                 call_type,
+                 feature_code,
+                 valrec_loc);
+   }
+   return ddcrc;
 }
 
 
@@ -2486,7 +2514,18 @@ ddca_set_continuous_vcp_value_verify(
    return rc;
 }
 
-
+// DEPRECATED AS OF 0.9.0
+/** Sets a Continuous VCP value.
+ *
+ *  @param[in]  ddca_dh             display_handle
+ *  @param[in]  feature_code        VCP feature code
+ *  @param[in]  new_value           value to set (sign?)
+ *  @return status code
+ *
+ * @remark
+ *  This is essentially a convenience function, since a Continuous value
+ *  can be set by passing its high and low bytes to #ddca_set_non_table_vcp_value().
+ */
 DDCA_Status
 ddca_set_continuous_vcp_value(
       DDCA_Display_Handle   ddca_dh,
@@ -2909,12 +2948,12 @@ ddca_get_profile_related_values(
 }
 
 
-// TODO: handle display as optional argument
 DDCA_Status
 ddca_set_profile_related_values(
+      DDCA_Display_Handle  ddca_dh,
       char * profile_values_string)
 {
-   Error_Info * ddc_excp = loadvcp_by_string(profile_values_string, NULL);
+   Error_Info * ddc_excp = loadvcp_by_string(profile_values_string, ddca_dh);
    Public_Status_Code psc = (ddc_excp) ? ddc_excp->status_code : 0;
    errinfo_free(ddc_excp);
    return psc;
@@ -2945,31 +2984,23 @@ DDCA_Status
 ddca_start_get_any_vcp_value(
       DDCA_Display_Handle         ddca_dh,
       DDCA_Vcp_Feature_Code       feature_code,
-      DDCA_Vcp_Value_Type_Parm    call_type,
+      DDCA_Vcp_Value_Type         call_type,
       DDCA_Notification_Func      callback_func)
 {
    bool debug = false;
    DBGMSF(debug, "Starting. ddca_dh=%p, feature_code=0x%02x, call_type=%d",
                  ddca_dh, feature_code, call_type);
-   DDCA_Status rc = DDCRC_ARG;
+   // DDCA_Status rc = DDCRC_ARG;
+   Error_Info * ddc_excp = NULL;
 
-   if (call_type == DDCA_UNSET_VCP_VALUE_TYPE_PARM) {
-       call_type = get_value_type_parm(ddca_dh, feature_code, DDCA_UNSET_VCP_VALUE_TYPE_PARM);
-   }
-   if (call_type != DDCA_UNSET_VCP_VALUE_TYPE_PARM) {
-      Error_Info * ddc_excp = NULL;
-
-      WITH_DH(ddca_dh,
-          {
-             ddc_excp = start_get_vcp_value(dh, feature_code, call_type, callback_func);
-             rc = (ddc_excp) ? ddc_excp->status_code : 0;
-             errinfo_free(ddc_excp);
-          }
+   WITH_DH(ddca_dh,
+       {
+          ddc_excp = start_get_vcp_value(dh, feature_code, call_type, callback_func);
+          psc = (ddc_excp) ? ddc_excp->status_code : 0;
+          errinfo_free(ddc_excp);
+       }
       );
-   }
 
-   DBGMSF(debug, "Done. Returning %s", psc_desc(rc));
-   return rc;
 }
 
 
