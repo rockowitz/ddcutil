@@ -93,14 +93,8 @@ simple_report_parsed_capabilities(DDCA_Capabilities * pcaps)
    for (int code_ndx = 0; code_ndx < pcaps->vcp_code_ct; code_ndx++) {
       DDCA_Cap_Vcp * cur_vcp = &pcaps->vcp_codes[code_ndx];
       assert( memcmp(cur_vcp->marker, DDCA_CAP_VCP_MARKER, 4) == 0);
-
-      // char * feature_name = get_feature_name_by_id_and_vcp_version(
-      //                          cur_vcp->feature_code,
-      //                          pcaps->version_spec);
       char * feature_name = ddca_get_feature_name(cur_vcp->feature_code);
-
       printf("   Feature:  0x%02x (%s)\n", cur_vcp->feature_code, feature_name);
-
       DDCA_Feature_Value_Entry * feature_value_table;
       DDCA_Status ddcrc = ddca_get_simple_sl_value_table_by_vspec(
             cur_vcp->feature_code,
@@ -108,7 +102,6 @@ simple_report_parsed_capabilities(DDCA_Capabilities * pcaps)
             &feature_value_table);
 
       if (cur_vcp->value_ct > 0) {
-         // printf("      Unparsed values:     %s\n", hexstring_t(cur_vcp->values, cur_vcp->value_ct) );
          printf("      Values:\n");
          for (int ndx = 0; ndx < cur_vcp->value_ct; ndx++) {
             char * value_desc = "No lookup table";
@@ -133,7 +126,6 @@ void demo_get_capabilities() {
    if (!dh)
       goto bye;
 
-   // printf("\n(%s) ===> Starting.  dh = %s\n", __func__, ddca_dh_repr(dh));
    char * capabilities = NULL;
    printf("Calling ddca_get_capabilities_string...\n");
    DDCA_Status rc =  ddca_get_capabilities_string(dh, &capabilities);
@@ -172,16 +164,11 @@ void demo_get_capabilities() {
    }
 
 bye:
-   // printf("(%s) Done.\n", __func__);
    return;
 }
 
 
-
 int main(int argc, char** argv) {
-   // printf("\ndemo_vcpinfo Starting.\n");
-
    demo_get_capabilities();
-
    return 0;
 }
