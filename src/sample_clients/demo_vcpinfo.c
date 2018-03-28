@@ -44,7 +44,7 @@
 
 
 /* A simple function that opens the first detected display.
- * For more detailed exampled of display detection and management,
+ * For more detailed examples of display detection and management,
  * see demo_display_selection.c
  *
  * Arguments:    none
