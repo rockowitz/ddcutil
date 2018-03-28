@@ -34,7 +34,7 @@
 #include "public/ddcutil_c_api.h"
 
 
-#define FUNCTION_ERRMSG(function_name,status_code) \
+#define DDC_ERRMSG(function_name,status_code) \
    printf("(%s) %s() returned %d (%s): %s\n",      \
           __func__, function_name, status_code,    \
           ddca_rc_name(status_code),      \

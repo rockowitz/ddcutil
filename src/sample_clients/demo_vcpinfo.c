@@ -34,7 +34,7 @@
 #include "public/ddcutil_c_api.h"
 
 
-#define FUNCTION_ERRMSG(function_name,status_code)    \
+#define DDC_ERRMSG(function_name,status_code)    \
    do {                                               \
       printf("(%s) %s() returned %d (%s): %s\n",      \
              __func__, function_name, status_code,    \
@@ -70,7 +70,7 @@ DDCA_Display_Handle * open_first_display_by_dlist() {
       printf("Opening display %s\n", dinf->model_name);
       DDCA_Status rc = ddca_open_display(dref, &dh);
       if (rc != 0) {
-          FUNCTION_ERRMSG("ddca_open_display", rc);
+          DDC_ERRMSG("ddca_open_display", rc);
       }
    }
    ddca_free_display_info_list(dlist);
@@ -157,7 +157,7 @@ void test_single_feature_info(
       printf("\nUnable to retrieve version sensitive metadata for VCP Feature 0x%02x, MCCS version %d.%d\n",
              feature_code, vspec.major, vspec.minor);
       // printf("ddca_get_feature_info_by_vcp_version() returned
-      FUNCTION_ERRMSG("ddca_get_feature_info_by_vcp_version", rc);
+      DDC_ERRMSG("ddca_get_feature_info_by_vcp_version", rc);
    }
    else {
       if (metadata.feature_flags & DDCA_SYNTHETIC) {

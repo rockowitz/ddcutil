@@ -32,7 +32,7 @@
 #include "public/ddcutil_c_api.h"
 
 
-#define FUNCTION_ERRMSG(function_name,status_code) \
+#define DDC_ERRMSG(function_name,status_code) \
    printf("(%s) %s() returned %d (%s): %s\n",      \
           __func__, function_name, status_code,    \
           ddca_rc_name(status_code),      \
@@ -77,7 +77,7 @@ int main(int argc, char** argv) {
       printf("Open the display reference, creating a display handle...\n");
       rc = ddca_open_display(dref, &dh);
       if (rc != 0) {
-         FUNCTION_ERRMSG("ddca_open_display", rc);
+         DDC_ERRMSG("ddca_open_display", rc);
          continue;
       }
       printf("(%s) Opened display handle: %s\n", __func__, ddca_dh_repr(dh));
@@ -88,7 +88,7 @@ int main(int argc, char** argv) {
 
       rc = ddca_close_display(dh);
       if (rc != 0)
-         FUNCTION_ERRMSG("ddca_close_display", rc);
+         DDC_ERRMSG("ddca_close_display", rc);
    }
 
    ddca_show_stats(DDCA_STATS_ALL, 0);

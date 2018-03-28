@@ -14,23 +14,25 @@ if ENABLE_SHARED_LIB_COND
 # Sample C client program for shared library:
 check_PROGRAMS += \
   laclient \
-  demo_global_settings \
-  demo_feature_list \
   demo_capabilities \
-  demo_vcpinfo \
-  demo_get_set_vcp \
   demo_display_selection \
-  demo_redirection
+  demo_feature_list \
+  demo_get_set_vcp \
+  demo_global_settings \
+  demo_profile_features \
+  demo_redirection \
+  demo_vcpinfo
 endif
 
 laclient_SOURCES               = clmain.c
-demo_global_settings_SOURCES   = demo_global_settings.c
-demo_feature_list_SOURCES      = demo_feature_list.c
 demo_capabilities_SOURCES      = demo_capabilities.c
-demo_vcpinfo_SOURCES           = demo_vcpinfo.c
 demo_display_selection_SOURCES = demo_display_selection.c
+demo_feature_list_SOURCES      = demo_feature_list.c
 demo_get_set_vcp_SOURCES       = demo_get_set_vcp.c
+demo_global_settings_SOURCES   = demo_global_settings.c
+demo_profile_features_SOURCES  = demo_profile_features.c
 demo_redirection_SOURCES       = demo_redirection.c
+demo_vcpinfo_SOURCES           = demo_vcpinfo.c
 
 LDADD       = ../libddcutil.la
 AM_LDFLAGS  = -pie

@@ -33,7 +33,7 @@
 #include "public/ddcutil_c_api.h"
 
 
-#define FUNCTION_ERRMSG(function_name,status_code) \
+#define DDC_ERRMSG(function_name,status_code) \
    printf("(%s) %s() returned %d (%s): %s\n",      \
           __func__, function_name, status_code,    \
           ddca_rc_name(status_code),      \
@@ -173,7 +173,7 @@ void demo_use_display_ref(DDCA_Display_Ref dref) {
    printf("\nOpen the display reference, creating a display handle...\n");
    rc = ddca_open_display(dref, &dh);
    if (rc != 0) {
-      FUNCTION_ERRMSG("ddca_open_display", rc);
+      DDC_ERRMSG("ddca_open_display", rc);
    }
    else {
       printf("   display handle: %s\n",  ddca_dh_repr(dh));
@@ -181,7 +181,7 @@ void demo_use_display_ref(DDCA_Display_Ref dref) {
       DDCA_MCCS_Version_Spec vspec;
       rc = ddca_get_mccs_version(dh, &vspec);
       if (rc != 0) {
-         FUNCTION_ERRMSG("ddca_get_mccs_version_spec", rc);
+         DDC_ERRMSG("ddca_get_mccs_version_spec", rc);
       }
       else {
          printf("VCP version: %d.%d\n", vspec.major, vspec.minor);
@@ -189,7 +189,7 @@ void demo_use_display_ref(DDCA_Display_Ref dref) {
 
       rc = ddca_close_display(dh);
       if (rc != 0)
-         FUNCTION_ERRMSG("ddca_close_display", rc);
+         DDC_ERRMSG("ddca_close_display", rc);
   }
 }
 

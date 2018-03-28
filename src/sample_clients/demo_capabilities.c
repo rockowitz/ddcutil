@@ -34,7 +34,7 @@
 #include "public/ddcutil_c_api.h"
 
 
-#define FUNCTION_ERRMSG(function_name,status_code) \
+#define DDC_ERRMSG(function_name,status_code) \
    printf("(%s) %s() returned %d (%s): %s\n",      \
           __func__, function_name, status_code,    \
           ddca_rc_name(status_code),      \
@@ -60,12 +60,12 @@ DDCA_Display_Handle * open_first_display_by_dispno() {
    ddca_create_dispno_display_identifier(1, &did);     // always succeeds
    DDCA_Status rc = ddca_create_display_ref(did, &dref);
    if (rc != 0) {
-      FUNCTION_ERRMSG("ddca_create_display_ref", rc);
+      DDC_ERRMSG("ddca_create_display_ref", rc);
    }
    else {
       rc = ddca_open_display(dref, &dh);
       if (rc != 0) {
-         FUNCTION_ERRMSG("ddca_open_display", rc);
+         DDC_ERRMSG("ddca_open_display", rc);
       }
       else {
          printf("Opened display handle: %s\n", ddca_dh_repr(dh));
@@ -130,13 +130,13 @@ void demo_get_capabilities() {
    printf("Calling ddca_get_capabilities_string...\n");
    DDCA_Status rc =  ddca_get_capabilities_string(dh, &capabilities);
    if (rc != 0)
-      FUNCTION_ERRMSG("ddca_get_capabilities_string", rc);
+      DDC_ERRMSG("ddca_get_capabilities_string", rc);
    else
       printf("Capabilities: %s\n", capabilities);
    printf("Second call to ddca_get_capabilities() should be fast since value cached...\n");
    rc =  ddca_get_capabilities_string(dh, &capabilities);
    if (rc != 0)
-      FUNCTION_ERRMSG("ddca_get_capabilities_string", rc);
+      DDC_ERRMSG("ddca_get_capabilities_string", rc);
    else {
       printf("Capabilities: %s\n", capabilities);
       printf("Parse the string...\n");
@@ -145,7 +145,7 @@ void demo_get_capabilities() {
              capabilities,
              &pcaps);
       if (rc != 0)
-         FUNCTION_ERRMSG("ddca_parse_capabilities_string", rc);
+         DDC_ERRMSG("ddca_parse_capabilities_string", rc);
       else {
          printf("Parsing succeeded.\n");
          printf("\nReport the result using local function simple_report_parsed_capabilities()...\n");
