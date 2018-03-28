@@ -285,7 +285,7 @@ void report_capabilities_feature(
          if (ol >= DDCA_OL_VERBOSE)
             rpt_vstring(d1, "Values (  parsed): %s (interpretation unavailable)", buf1);
          else
-            rpt_vstring(d1, "sValues: %s (interpretation unavailable)", buf1);
+            rpt_vstring(d1, "Values: %s (interpretation unavailable)", buf1);
          free(buf1);
       }
    }
