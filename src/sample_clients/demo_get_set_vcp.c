@@ -1,7 +1,7 @@
 /* demo_get_set_vcp.c
  *
  * <copyright>
- * Copyright (C) 2014-2017 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2014-2018 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -47,14 +47,11 @@
     } while(0)
 
 
-
-
-
-
 static bool saved_report_ddc_errors = false;
 static bool saved_verify_setvcp = false;
 
-void set_standard_settings() {
+void
+set_standard_settings() {
    printf("Seting standard settings in function %s()\n", __func__);
    saved_report_ddc_errors = ddca_is_report_ddc_errors_enabled();
    printf("   Calling ddca_enable_report_ddc_errors(true)...\n");
@@ -64,13 +61,15 @@ void set_standard_settings() {
    // ddca_report_error_info(true);
 }
 
-void restore_standard_settings() {
+void
+restore_standard_settings() {
    ddca_enable_verify(saved_verify_setvcp);
    ddca_enable_report_ddc_errors(saved_report_ddc_errors);
 }
 
 
-bool verify_continuous_value(
+bool
+verify_continuous_value(
       DDCA_Display_Handle     dh,
       DDCA_Vcp_Feature_Code   feature_code,
       int                     expected_value)
@@ -97,8 +96,6 @@ bool verify_continuous_value(
 
    return ok;
 }
-
-
 
 
 bool
@@ -197,7 +194,8 @@ bye:
 
 
 
-bool verify_simple_nc_value(
+bool
+verify_simple_nc_value(
       DDCA_Display_Handle     dh,
       DDCA_Vcp_Feature_Code   feature_code,
       uint8_t                 expected_value)
@@ -226,7 +224,8 @@ bool verify_simple_nc_value(
    return ok;
 }
 
-bool show_simple_nc_feature_value(
+bool
+show_simple_nc_feature_value(
         DDCA_MCCS_Version_Spec vspec,
         DDCA_Vcp_Feature_Code  feature_code,
         uint8_t                feature_value)
@@ -253,7 +252,8 @@ bool show_simple_nc_feature_value(
     return ok;
 }
 
-bool show_simple_nc_feature_value2(
+bool
+show_simple_nc_feature_value2(
         DDCA_Feature_Value_Table feature_table,
         uint8_t                  feature_value)
 {
@@ -280,7 +280,8 @@ bool show_simple_nc_feature_value2(
 
 
 
-bool test_simple_nc_value(
+bool
+test_simple_nc_value(
       DDCA_Display_Handle     dh,
       DDCA_Vcp_Feature_Code   feature_code,
       uint8_t                 new_value)
@@ -388,7 +389,8 @@ bye:
 
 // there's no commonly implemented complex NC feature that's writable.  Just read.
 
-bool test_complex_nc_value(
+bool
+test_complex_nc_value(
       DDCA_Display_Handle     dh,
       DDCA_Vcp_Feature_Code   feature_code)
 {
@@ -461,7 +463,8 @@ bye:
 }
 
 
-DDCA_Status test_get_set_profile_related_values(DDCA_Display_Handle dh) {
+DDCA_Status
+test_get_set_profile_related_values(DDCA_Display_Handle dh) {
    printf("\nTesting retrieval and setting of profile related values.  dh = %s\n", ddca_dh_repr(dh));
 
    printf("Resetting statistics...\n");
@@ -496,7 +499,8 @@ bye:
 
 
 
-int main(int argc, char** argv) {
+int
+main(int argc, char** argv) {
    // printf("\n(%s) Starting. argc = %d\n", __func__, argc);
 
    int which_test = 0;
