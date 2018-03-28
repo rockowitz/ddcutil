@@ -282,7 +282,7 @@ void reset_vcp_x02(Display_Handle * dh) {
 }
 
 bool new_control_values_exist(Display_Handle * dh) {
-   bool debug = true;
+   bool debug = false;
    Parsed_Nontable_Vcp_Response * p_nontable_response = NULL;
    // DBGMSF(debug, "VCP version: %d.%d", vspec.major, vspec.minor);
    bool result = false;
