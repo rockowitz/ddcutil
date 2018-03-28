@@ -40,15 +40,6 @@
           ddca_rc_name(status_code),      \
           ddca_rc_desc(status_code))
 
-#define DDC_ERROR_ABORT(function_name,status_code) \
-    do { \
-        printf("(%s) %s() returned %d (%s): %s\n",   \
-              __func__, function_name, status_code,  \
-              ddca_rc_name(status_code),             \
-              ddca_rc_desc(status_code));            \
-        exit(1);                                     \
-    } while(0)
-
 
 /* A simple function that opens the first detected display using
  * DDCA_create_display_ref() to locate the display.
@@ -122,7 +113,6 @@ void demo_get_capabilities() {
          ddca_set_output_level(DDCA_OL_VERBOSE);  // show both unparsed and parsed capabilities
          ddca_parse_and_report_capabilities(capabilities, 1);
          ddca_set_output_level(saved_ol);
-
       }
    }
 
