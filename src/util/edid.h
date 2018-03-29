@@ -68,10 +68,10 @@ void get_edid_mfg_id_in_buffer(Byte* edidbytes, char * result, int bufsize);
 /** Represents a parsed EDID */
 typedef
 struct {
-   char         marker[4];                                    ///< always "EDID"
+   char         marker[4];                                   ///< always "EDID"
    Byte         bytes[128];                                  ///< raw bytes of EDID
    char         mfg_id[EDID_MFG_ID_FIELD_SIZE];              ///< 3 character mfg id, null terminated
-   ushort       model_hex;                                   ///< model hex field
+   ushort       product_code;                                ///< product code number
    char         model_name[EDID_MODEL_NAME_FIELD_SIZE];      ///< model name (tag 0xfc)
    uint32_t     serial_binary;                               ///< binary serial number
    char         serial_ascii[EDID_SERIAL_ASCII_FIELD_SIZE];  ///< serial number string (tag 0xff)

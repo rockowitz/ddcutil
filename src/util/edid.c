@@ -250,7 +250,7 @@ Parsed_Edid * create_parsed_edid(Byte* edidbytes) {
            parsed_edid->mfg_id,
            sizeof(parsed_edid->mfg_id) );
 
-   parsed_edid->model_hex = edidbytes[0x0b] << 8 | edidbytes[0x0a];
+   parsed_edid->product_code = edidbytes[0x0b] << 8 | edidbytes[0x0a];
 
    parsed_edid->serial_binary = edidbytes[0x0c]       |
                                 edidbytes[0x0d] <<  8 |
@@ -347,7 +347,8 @@ void report_parsed_edid_base(Parsed_Edid * edid, bool verbose, bool show_raw, in
       rpt_vstring(d1,"EDID version:     %d.%d", edid->edid_version_major, edid->edid_version_minor);
 
       if (verbose) {
-         rpt_vstring(d1,"Product code:     0x%04x (%u)",      edid->model_hex, edid->model_hex);
+      // rpt_vstring(d1,"Product code:     0x%04x (%u)",      edid->product_code, edid->product_code);
+         rpt_vstring(d1,"Product code:     %u",          edid->product_code);
          // useless, binary serial number is typically 0x00000000 or 0x01010101
          // rpt_vstring(d1,"Binary sn:        %u (0x%08x)", edid->serial_binary, edid->serial_binary);
          rpt_vstring(d1,"Extra descriptor: %s",          edid->extra_descriptor_string);
