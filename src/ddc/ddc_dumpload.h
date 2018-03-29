@@ -56,6 +56,7 @@ struct {
    char           mfg_id[4];              ///< 3 character manufacturer id (from EDID)
    char           model[14];              ///< model string (from EDID)
    char           serial_ascii[14];       ///< serial number string (from EDID)
+   uint16_t       product_code;           ///< numeric product code (from EDID)
    DDCA_MCCS_Version_Spec   vcp_version;  ///< monitor VCP/MCCS version
    int            vcp_value_ct;           ///< number of VCP values
    Vcp_Value_Set  vcp_values;             ///< VCP values
