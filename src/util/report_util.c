@@ -516,6 +516,27 @@ void rpt_int(char * name, char * info, int val, int depth) {
    rpt_str(name, info, buf, depth);
 }
 
+/** Writes a string to the current output destination, describing a named unsigned integer value.
+ *
+ * The output is indented per the specified indentation depth.
+ *
+ * Optionally, a description string can be specified along with the name.
+ * The description string will be surrounded by parentheses.
+ *
+ * The value is prefixed with a colon.
+ *
+ * @param name  name of value
+ * @param info  if non-null, description of value
+ * @param val   unsigned integer value
+ * @param depth logical indentation depth
+ */
+void rpt_unsigned(char * name, char * info, int val, int depth) {
+   char buf[10];
+   snprintf(buf, 9, "%u", val);
+   rpt_str(name, info, buf, depth);
+}
+
+
 
 /** Writes a string to the current output destination describing a 4 byte integer value,
  * indented per the specified indentation depth.

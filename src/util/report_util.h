@@ -62,6 +62,7 @@ int rpt_file_contents(const char * fn, bool verbose, int depth);
 // Remaining rpt_ functions share common formatting
 void rpt_str(const char * name, char * info, const char * val, int depth);
 void rpt_int(char * name, char * info, int val, int depth);
+void rpt_unsigned(char * name, char * info, int val, int depth);
 void rpt_bool(char * name, char * info, bool val, int depth);
 
 /** Interpretation function used by rpt_mapped_int() */
