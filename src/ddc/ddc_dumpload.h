@@ -63,7 +63,7 @@ struct {
 } Dumpload_Data;
 
 void
-report_dumpload_data(Dumpload_Data * data, int depth);
+dbgrpt_dumpload_data(Dumpload_Data * data, int depth);
 
 void
 free_dumpload_data(Dumpload_Data * pdata);

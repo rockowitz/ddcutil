@@ -83,11 +83,10 @@ void free_dumpload_data(Dumpload_Data * data) {
 
 /** Reports the contents of a #Dumpload_Data struct
  *
- * Arguments:
- *    data     pointer to #Dumpload_Data struct
- *    depth    logical indentation depth
+ *  @param  data     pointer to #Dumpload_Data struct
+ *  @param  depth    logical indentation depth
  */
-void report_dumpload_data(Dumpload_Data * data, int depth) {
+void dbgrpt_dumpload_data(Dumpload_Data * data, int depth) {
    int d1 = depth+1;
    rpt_structure_loc("Dumpload_Data", data, depth);
    // rptIval("busno", NULL, data->busno, d1);
@@ -95,6 +94,8 @@ void report_dumpload_data(Dumpload_Data * data, int depth) {
    // TODO: show abbreviated edidstr
    rpt_str( "mfg_id",       NULL, data->mfg_id,       d1);
    rpt_str( "model",        NULL, data->model,        d1);
+   rpt_unsigned(
+           " product_code", NULL, data->product_code, d1);
    rpt_str( "serial_ascii", NULL, data->serial_ascii, d1);
    rpt_str( "edid",         NULL, data->edidstr,      d1);
    rpt_str( "vcp_version",  NULL, format_vspec(data->vcp_version), d1);
@@ -106,11 +107,10 @@ void report_dumpload_data(Dumpload_Data * data, int depth) {
 
 
 /** Given an array of strings stored in a GPtrArray,
- * convert it a #Dumpload_Data struct.
+ *  convert it a #Dumpload_Data struct.
  *
- * @param   garray      array of strings
- *
- * @return  pointer to newly allocated Dumpload_Data struct, or
+ *  @param   garray      array of strings
+ *  @return  pointer to newly allocated Dumpload_Data struct, or
  *                NULL if the data is not valid.
  *                It is the responsibility of the caller to free this struct.
  */
@@ -164,6 +164,9 @@ create_dumpload_data_from_g_ptr_array(GPtrArray * garray) {
                //    fprintf(stderr, "Invalid bus number at line %d: %s\n", linectr, line);
                //    valid_data = false;
                // }
+            }
+            else if (streq(s0, "PRODUCT_CODE")) {
+               // ignore for now
             }
             else if (streq(s0, "EDID") || streq(s0, "EDIDSTR")) {
                strncpy(data->edidstr, s1, sizeof(data->edidstr));
@@ -362,7 +365,7 @@ loadvcp_by_dumpload_data(
    if (debug) {
         DBGMSG("Loading VCP settings for monitor \"%s\", sn \"%s\", dh=%p \n",
                pdata->model, pdata->serial_ascii, dh);
-        report_dumpload_data(pdata, 0);
+        dbgrpt_dumpload_data(pdata, 0);
    }
 
    Public_Status_Code psc = 0;
@@ -475,7 +478,7 @@ loadvcp_by_ntsa(
            f0printf(fout(), "Loading VCP settings for monitor \"%s\", sn \"%s\" \n",
                            pdata->model, pdata->serial_ascii);
            rpt_push_output_dest(fout());
-           report_dumpload_data(pdata, 0);
+           dbgrpt_dumpload_data(pdata, 0);
            rpt_pop_output_dest();
       }
       ddc_excp = loadvcp_by_dumpload_data(pdata, dh);
@@ -679,6 +682,7 @@ dumpvcp_as_dumpload_data(
    Parsed_Edid * edid = dh->dref->pedid;
    assert(edid);
 
+   dumped_data->product_code = edid->product_code;
    memcpy(dumped_data->mfg_id, edid->mfg_id, sizeof(dumped_data->mfg_id));
    memcpy(dumped_data->model,  edid->model_name, sizeof(dumped_data->model));
    memcpy(dumped_data->serial_ascii, edid->serial_ascii, sizeof(dumped_data->serial_ascii));
@@ -708,7 +712,7 @@ dumpvcp_as_dumpload_data(
       *pdumpload_data = dumped_data;
    if (debug) {
       DBGMSG("Returning: %s, *pdumpload_data=%p", psc_desc(psc), *pdumpload_data);
-      report_dumpload_data(*pdumpload_data, 1);
+      dbgrpt_dumpload_data(*pdumpload_data, 1);
    }
    return psc;
 }
@@ -728,7 +732,7 @@ convert_dumpload_data_to_string_array(Dumpload_Data * data) {
    DBGMSF(debug, "Starting. data=%p", data);
    assert(data);
    if (debug)
-      report_dumpload_data(data, 1);
+      dbgrpt_dumpload_data(data, 1);
 
    GPtrArray * strings = g_ptr_array_sized_new(30);
    g_ptr_array_set_free_func(strings, g_free);
@@ -740,6 +744,8 @@ convert_dumpload_data_to_string_array(Dumpload_Data * data) {
    snprintf(buf, bufsz, "MFG_ID  %s",  data->mfg_id);
    g_ptr_array_add(strings, strdup(buf));
    snprintf(buf, bufsz, "MODEL   %s",  data->model);
+   g_ptr_array_add(strings, strdup(buf));
+   snprintf(buf, bufsz, "PRODUCT_CODE  %d", data->product_code);
    g_ptr_array_add(strings, strdup(buf));
    snprintf(buf, bufsz, "SN      %s",  data->serial_ascii);
    g_ptr_array_add(strings, strdup(buf));

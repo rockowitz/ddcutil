@@ -240,7 +240,7 @@ bool loadvcp_by_file(const char * fn, Display_Handle * dh) {
                            pdata->model, pdata->serial_ascii, fn);
            if (debug) {
               rpt_push_output_dest(fout);
-              report_dumpload_data(pdata, 0);
+              dbgrpt_dumpload_data(pdata, 0);
               rpt_pop_output_dest();
            }
       }
