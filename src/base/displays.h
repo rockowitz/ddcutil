@@ -189,6 +189,8 @@ typedef Byte Dref_Flags;
 #define DREF_DDC_IS_MONITOR_CHECKED                 0x08
 #define DREF_DDC_IS_MONITOR                         0x04
 #define DREF_TRANSIENT                              0x02
+#define DREF_DYNAMIC_FEATURES_CHECKED               0x01      // for future dynamic features facility
+
 
 #define DISPLAY_REF_MARKER "DREF"
 /** A **Display_Ref** is a logical display identifier.
@@ -197,16 +199,7 @@ typedef Byte Dref_Flags;
  */
 typedef struct _display_ref {
    char          marker[4];
-
-#ifdef OLD
-   DDCA_IO_Mode  io_mode;
-   int           busno;
-   int           iAdapterIndex;
-   int           iDisplayIndex;
-   int           usb_hiddev_devno;       // added 4/2017
-#endif
    DDCA_IO_Path  io_path;
-
    int           usb_bus;
    int           usb_device;
    char *        usb_hiddev_name;
@@ -221,6 +214,7 @@ typedef struct _display_ref {
    void *        detail2;
 
    Display_Async_Rec * async_rec;
+   void *        dfr;          // for future Dyname_Features_Record *
 
 } Display_Ref;
 
