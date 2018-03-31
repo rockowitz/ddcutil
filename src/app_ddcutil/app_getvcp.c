@@ -69,7 +69,7 @@
  *
  * Returns:
  *    status code 0 = normal
- *                DDCL_INVALID_OPERATION - feature is deprecated or write-only
+ *                DDCRC_INVALID_OPERATION - feature is deprecated or write-only
  *                from get_formatted_value_for_feature_table_entry()
  */
 Public_Status_Code
@@ -125,7 +125,7 @@ app_show_single_vcp_value_by_feature_table_entry(
  *
  * Returns:
  *    status code 0 = success
- *                DDCL_UNKNOWN_FEATURE  feature_id not in feature table and !force
+ *                DDCRC_UNKNOWN_FEATURE  feature_id not in feature table and !force
  *                from app_show_single_vcp_value_by_feature_table_entry()
  */
 Public_Status_Code
