@@ -192,7 +192,6 @@ Dumpload_Data * read_vcp_file(const char * fn) {
    Dumpload_Data * data = NULL;
    GPtrArray * g_line_array = g_ptr_array_sized_new(100);
    g_ptr_array_set_free_func(g_line_array, g_free);
-   // issues message if error:
    int rc = file_getlines(fn, g_line_array, false);
    if (rc < 0) {
       f0printf(ferr, "%s: %s\n", strerror(-rc), fn);

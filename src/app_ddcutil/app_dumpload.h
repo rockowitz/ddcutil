@@ -1,7 +1,7 @@
 /* app_dumpload.h
  *
  * <copyright>
- * Copyright (C) 2014-2017 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2014-2018 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -34,9 +34,5 @@
 bool loadvcp_by_file(const char * fn, Display_Handle * dh);
 
 Public_Status_Code dumpvcp_as_file(Display_Handle * dh, char * optional_filename);
-
-#ifdef OLD
-bool dumpvcp_as_file_old(Display_Handle * dh, char * optional_filename);
-#endif
 
 #endif /* APP_DUMPLOAD_H_ */
