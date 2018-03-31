@@ -66,6 +66,7 @@
 #define DDCRC_VERIFY                 (-(RCRANGE_DDC_START+23) ) ///< read after VCP write failed or wrong value
 #define DDCRC_NOT_FOUND              (-(RCRANGE_DDC_START+24) ) ///< generic not found
 #define DDCRC_LOCKED                 (-(RCRANGE_DDC_START+25) ) ///< resource locked
+#define DDCRC_BAD_DATA               (-(RCRANGE_DDC_START+26) ) ///< invalid data
 
 // TODO: consider replacing DDCRC_INVALID_EDID by a more generic DDCRC_BAD_DATA,
 //       or DDC_INVALID_DATA, could be used for e.g. invalid capabilities string
