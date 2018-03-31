@@ -1710,10 +1710,11 @@ ddca_get_feature_metadata_by_vspec(
       DDCA_MCCS_Version_Spec      vspec,
       DDCA_Vcp_Feature_Code       feature_code,
       bool                        create_default_if_not_found,
-      DDCA_Feature_Metadata *     info) //    change to **?
+      DDCA_Feature_Metadata *     info) //   change to **?
 {
    DDCA_Status psc = DDCRC_ARG;
    memset(info, 0, sizeof(DDCA_Feature_Metadata));
+   memcpy(info->marker, DDCA_FEATURE_METADATA_MARKER, 4);
    DDCA_Version_Feature_Info * full_info =
          get_version_feature_info_by_vspec(
                feature_code,
@@ -1771,7 +1772,9 @@ ddca_get_feature_metadata_by_display(
 // frees the contents on info, not info itself
 DDCA_Status
 ddca_free_feature_metadata_contents(DDCA_Feature_Metadata info) {
-   if (info.feature_flags & DDCA_SYNTHETIC) {
+   if ( (info.feature_flags & DDCA_SYNTHETIC) &&
+        (memcmp(info.marker, DDCA_FEATURE_METADATA_MARKER, 4) == 0) )
+   {
       free(info.feature_name);
       free(info.feature_desc);
    }
