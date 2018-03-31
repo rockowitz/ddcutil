@@ -463,9 +463,11 @@ struct {
 } DDCA_Version_Feature_Info;
 
 
+#define DDCA_FEATURE_METADATA_MARKER  "FMET"
 /** Describes a VCP feature code, tailored for a specific VCP version */
 typedef
 struct {
+   char                                  marker[4];      /**< always "FMET" */
    DDCA_Vcp_Feature_Code                 feature_code;   /**< VCP feature code */
    DDCA_MCCS_Version_Spec                vspec;          /**< MCCS version    */
    DDCA_Feature_Flags                    feature_flags;  /**< feature type description */
