@@ -73,8 +73,8 @@ Error_Info * errinfo_new(
 
 Error_Info * errinfo_new2(
       int            status_code,
-      char *         detail,
-      const char *   func);
+      const char *   func,
+      char *         detail);
 
 Error_Info * errinfo_new_with_cause(
       int            status_code,
@@ -83,9 +83,9 @@ Error_Info * errinfo_new_with_cause(
 
 Error_Info * errinfo_new_with_cause2(
       int            status_code,
-      char *         detail,
       Error_Info *   cause,
-      const char *   func);
+      const char *   func,
+      char *         detail);
 
 #ifdef UNUSED
 Error_Info * errinfo_new_chained(
@@ -101,10 +101,10 @@ Error_Info * errinfo_new_with_causes(
 
 Error_Info * errinfo_new_with_causes2(
       int            status_code,
-      char *         detail,
       Error_Info **  causes,
       int            cause_ct,
-      const char *   func);
+      const char *   func,
+      char *         detail);
 
 #ifdef UNUSED
 Error_Info * errinfo_new_with_callee_status_codes(

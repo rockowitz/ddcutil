@@ -173,8 +173,8 @@ read_feature_definition_file(
       char * detail = gaux_asprintf("Error reading file %s", filename);
       errs = errinfo_new2(
             rc,
-            detail,
-            __func__);
+            __func__,
+            detail);
       // TODO: variant of errinfo_new2() that puts detail last, as variable args (detail_fmt, ...)
       free(detail);
    }

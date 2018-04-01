@@ -254,7 +254,7 @@ void errinfo_add_cause(Error_Info * parent, Error_Info * cause) {
  *  \return pointer to new instance
  */
 Error_Info *  errinfo_new(int status_code, const char * func) {
-   return errinfo_new2(status_code, NULL, func);
+   return errinfo_new2(status_code, func, NULL);
 }
 
 
@@ -262,14 +262,14 @@ Error_Info *  errinfo_new(int status_code, const char * func) {
  *  function name, and detail string.
  *
  *  \param  status_code  status code
- *  \param  detail       optional detail string
  *  \param  func         name of function generating status code
+ *  \param  detail       optional detail string
  *  \return pointer to new instance
  */
 Error_Info * errinfo_new2(
       int            status_code,
-      char *         detail,
-      const char *   func)
+      const char *   func,
+      char *         detail)
 {
    Error_Info * erec = calloc(1, sizeof(Error_Info));
    memcpy(erec->marker, ERROR_INFO_MARKER, 4);
@@ -297,7 +297,7 @@ Error_Info * errinfo_new_with_cause(
       Error_Info *   cause,
       const char *   func)
 {
-   return errinfo_new_with_cause2(code, NULL, cause, func);
+   return errinfo_new_with_cause2(code, cause, func, NULL);
 }
 
 
@@ -305,19 +305,19 @@ Error_Info * errinfo_new_with_cause(
  * reference to another instance that is the cause of the current error.
  *
  *  \param  status_code  status code
- *  \param  detail       optional detail string
  *  \param  cause        pointer to another #Error_Info that is included as a cause
  *  \param  func         name of function creating new instance
+ *  \param  detail       optional detail string
  *  \return pointer to new instance
  */
 Error_Info * errinfo_new_with_cause2(
       int            status_code,
-      char *         detail,
       Error_Info *   cause,
-      const char *   func)
+      const char *   func,
+      char *         detail)
 {
    VALID_DDC_ERROR_PTR(cause);
-   Error_Info * erec = errinfo_new2(status_code, detail, func);
+   Error_Info * erec = errinfo_new2(status_code, func, detail);
    errinfo_add_cause(erec, cause);
    return erec;
 }
@@ -355,17 +355,17 @@ Error_Info * errinfo_new_with_causes(
       int             cause_ct,
       const char *    func)
 {
-   return errinfo_new_with_causes2(code, NULL, causes, cause_ct, func);
+   return errinfo_new_with_causes2(code, causes, cause_ct, func, NULL);
 }
 
 Error_Info * errinfo_new_with_causes2(
       int            status_code,
-      char *         detail,
       Error_Info **  causes,
       int            cause_ct,
-      const char *   func)
+      const char *   func,
+      char *         detail)
 {
-   Error_Info * result = errinfo_new2(status_code, detail, func);
+   Error_Info * result = errinfo_new2(status_code, func, detail);
    for (int ndx = 0; ndx < cause_ct; ndx++) {
       errinfo_add_cause(result, causes[ndx]);
    }

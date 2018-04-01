@@ -178,7 +178,7 @@ add_error(
       else {
          final_detail = detail;
       }
-      Error_Info *  err = errinfo_new2(DDCRC_BAD_DATA, final_detail, caller);
+      Error_Info *  err = errinfo_new2(DDCRC_BAD_DATA, caller, final_detail);
       g_ptr_array_add(errors, err);
       va_end(args);
 }
@@ -585,10 +585,10 @@ create_monitor_dynamic_features(
       char * detail = gaux_asprintf("Error(s) processing monitor definition file: %s", filename);
       master_err = errinfo_new_with_causes2(
                             DDCRC_BAD_DATA,
-                            detail,
                             (Error_Info**) errors->pdata,
                             errors->len,
-                            __func__);
+                            __func__,
+                            detail);
       free(detail);
       DBGMSG("After errinfo_new_with_causes2()");
       g_ptr_array_free(errors, false);
