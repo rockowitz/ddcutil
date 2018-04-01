@@ -193,7 +193,7 @@ attr_keyword(
       DDCA_Feature_Metadata * cur_feature_metadata,
       char *                  keyword)
 {
-   bool debug = true;
+   bool debug = false;
    DBGMSF(debug, "keyword=|%s|", keyword);
    bool ok = true;
    DDCA_Feature_Flags * pflags = &cur_feature_metadata->feature_flags;
@@ -216,7 +216,7 @@ attr_keyword(
    else
       ok = false;
 
-   DBGMSF("Returning %s", SBOOL(ok));
+   DBGMSF(debug, "Returning %s", SBOOL(ok));
    return ok;
 }
 
@@ -263,12 +263,12 @@ void finalize_feature(
    DDCA_Feature_Flags * pflags = &cur_feature_metadata->feature_flags;
 
    if (cur_feature_values) {
-       // convert and set cur_feature_metadata->sl_values
-      // free cur_feature_values
+      // add terminating entry
       DDCA_Feature_Value_Entry last_entry;
       last_entry.value_code = 0x00;
       last_entry.value_name = NULL;
       g_array_append_val(cur_feature_values, last_entry);
+
       cur_feature_metadata->sl_values = (DDCA_Feature_Value_Entry*) cur_feature_values->data;
       // g_array_free(cur_feature_values, false);
       // cur_feature_values = NULL;
@@ -286,7 +286,7 @@ void finalize_feature(
             switch_bits(pflags, DDCA_COMPLEX_NC, DDCA_SIMPLE_NC);
       }
 
-      else if ( *pflags & (DDCA_COMPLEX_CONT | DDCA_TABLE))
+      else if ( *pflags & (DDCA_COMPLEX_CONT | DDCA_STD_CONT | DDCA_TABLE))
           ADD_ERROR(-1,  "Feature values specified for Continuous or Table feature");
    }
 
@@ -301,27 +301,35 @@ void finalize_feature(
 
 }
 
+
+// TODO: Consider moving to string_util
 typedef struct {
    char * word;
    char * rest;
 } Tokenized;
 
 Tokenized first_word(char * s) {
-   assert(s);
-   DBGMSG("Starting. s=|%s|", s);
+   // DBGMSG("Starting. s=|%s|", s);
    Tokenized result = {NULL,NULL};
-   while (*s == ' ')
-         s++;
-   if (*s) {
-      char * end = s;
-      while (*++end && *end != ' ');
-      int wordlen = end-s;
-      result.word = malloc( wordlen+1);
-      memcpy(result.word, s, wordlen);
-      result.word[wordlen] = '\0';
-      result.rest = end;
+   if (s) {
+      while (*s == ' ')
+            s++;
+      if (*s) {
+         char * end = s;
+         while (*++end && *end != ' ');
+         int wordlen = end-s;
+         result.word = malloc( wordlen+1);
+         memcpy(result.word, s, wordlen);
+         result.word[wordlen] = '\0';
+
+         while (*end == ' ')
+            end++;
+         if (*end == '\0')
+            end = NULL;
+         result.rest = end;
+      }
    }
-   DBGMSG("Returning: result.word=|%s|, result.rest=|%s|", result.word, result.rest);
+   // DBGMSG("Returning: result.word=|%s|, result.rest=|%s|", result.word, result.rest);
    return result;
 }
 
@@ -350,7 +358,8 @@ char * canonicalize_feature_value(char * string_value) {
 
 
 // like str_to_int(), but allows hex values
-bool str_to_int2(const char * sval, int * p_ival, bool allow_hex) {
+bool str_to_int2(const char * sval, int * p_ival, int base) {
+   assert (base == 0 || base == 10 || base == 16);
    bool debug = false;
    if (debug)
       printf("(%s) sval->|%s|\n", __func__, sval);
@@ -358,7 +367,7 @@ bool str_to_int2(const char * sval, int * p_ival, bool allow_hex) {
    char * endptr;
    bool ok = false;
    if ( *sval != '\0') {
-      long result = strtol(sval, &endptr, (allow_hex) ? 0 : 10); // allow hex
+      long result = strtol(sval, &endptr, base); // allow hex
       // printf("(%s) sval=%p, endptr=%p, *endptr=|%c| (0x%02x), result=%ld\n",
       //        __func__, sval, endptr, *endptr, *endptr, result);
       if (*endptr == '\0') {
@@ -402,90 +411,66 @@ create_monitor_dynamic_features(
                               NULL,                     // key_destroy_func
                               free_feature_metadata);   // value_destroy_func
 
-   int     ct;
    int     linectr = 0;
    DDCA_Feature_Metadata * cur_feature_metadata = NULL;
    GArray * cur_feature_values = NULL;
 
    while ( linectr < lines->len ) {
-      char *  line = NULL;
-      char    s0[32], s1[257], s2[16];
-      char *  head;
-      char *  rest;
-
-      line = g_ptr_array_index(lines,linectr);
-      // char * line2 = strdup(line);
+      char *  line = g_ptr_array_index(lines,linectr);
       linectr++;
 
-      *s0 = '\0'; *s1 = '\0'; *s2 = '\0';
-      head = line;
-      while (*head == ' ') head++;
-
-
-      /* Tokenized t = */ first_word(head);
-
-
-      ct = sscanf(head, "%31s %256s %15s", s0, s1, s2);
-      if (ct > 0 && *s0 != '*' && *s0 != '#') {
-         if (ct == 1) {
+      Tokenized t1, t2  = {0,0};
+      t1 = first_word(line);
+      if (t1.word && *t1.word != '*' && *t1.word != '#') {
+         t2 = first_word(t1.rest);
+         if (!t2.word) {
             ADD_ERROR(linectr, "Invalid data \"%s\"", line);
          }
          else {
-            rest = head + strlen(s0);;
-            while (*rest == ' ') rest++;
-            char * last = rest + strlen(rest) - 1;
-            // we already parsed a second token, so don't need to worry that last becomes < head
-            while (*last == ' ' || *last == '\n') {
-               *last-- = '\0';
-            }
-            DBGMSG("rest=|%s|", rest );
-
-            if (streq(s0, "PRODUCT_CODE")) {
+            if (streq(t1.word, "PRODUCT_CODE")) {
                product_code_seen = true;
                int ival;
-               bool ok = str_to_int(s1, &ival);
-               DBGMSG("ival: %d", ival);
+               bool ok = str_to_int2(t2.word, &ival, 10);
+               // DBGMSG("ival: %d", ival);
                if (!ok) {
-                   ADD_ERROR(linectr, "Invalid product_code \"%s\"", s1);
+                   ADD_ERROR(linectr, "Invalid product_code \"%s\"", t2.word);
                }
                else if (ival != product_code) {
-                  ADD_ERROR(linectr, "Unexpected product_code \"%s\"", s1);
+                  ADD_ERROR(linectr, "Unexpected product_code \"%s\"", t2.word);
                }
-               // ignore for now
             }
-            else if (streq(s0, "MFG_ID")) {
+            else if (streq(t1.word, "MFG_ID")) {
                mfg_id_seen = true;
-               if ( !streq(s1, mfg_id) ) {
-                  ADD_ERROR(linectr, "Unexpected manufacturer id \"%s\"", s1);
+               if ( !streq(t2.word, mfg_id) ) {
+                  ADD_ERROR(linectr, "Unexpected manufacturer id \"%s\"", t2.word);
                }
             }
-            else if (streq(s0, "MODEL")) {
+            else if (streq(t1.word, "MODEL")) {
                model_name_seen = true;
-               if ( !streq(rest, model_name) ) {
-                  ADD_ERROR(linectr, "Unexpected model name \"%s\"", s1);
+               if ( !streq(t1.rest, model_name) ) {
+                  ADD_ERROR(linectr, "Unexpected model name \"%s\"", t1.rest);
                }
 
             }
-            else if (streq(s0, "ATTRS")) {
+            else if (streq(t1.word, "ATTRS")) {
                if (!cur_feature_metadata) {
                   ADD_ERROR(linectr, "ATTRS before FEATURE_CODE");
                }
                else {
-                  // set values in cur_feature_metadata->feature_flags
-                  bool ok = attr_keyword(cur_feature_metadata, s1);
-                  if (!ok) {
-                     ADD_ERROR(linectr, "Invalid attribute \"%s\"", s1);
-                  }
-                  if (ct > 2) {
-                     bool ok = attr_keyword(cur_feature_metadata, s2);
+                  Tokenized t = first_word(t1.rest);
+                  while (t.word) {
+                     // set values in cur_feature_metadata->feature_flags
+                     bool ok = attr_keyword(cur_feature_metadata, t.word);
                      if (!ok) {
-                        ADD_ERROR(linectr, "Invalid attribute \"%s\"", s2);
+                        ADD_ERROR(linectr, "Invalid attribute \"%s\"", t.word);
                      }
+                     free(t.word);
+                     t = first_word(t.rest);
                   }
                }
             }
 
-            else if (streq(s0, "FEATURE_CODE")) {
+            else if (streq(t1.word, "FEATURE_CODE")) {
                // n. cur_feature_metadata saved in frec
                if (cur_feature_metadata) {
                   finalize_feature(
@@ -503,53 +488,66 @@ create_monitor_dynamic_features(
                cur_feature_metadata = calloc(1, sizeof(DDCA_Feature_Metadata));
                memcpy(cur_feature_metadata->marker, DDCA_FEATURE_METADATA_MARKER, 4);
 
-               if (ct != 3) {
+               char * feature_code = t2.word;
+               char * feature_name = t2.rest;
+
+               if (!feature_name) {
                   ADD_ERROR(linectr, "Invalid VCP data \"%s\"", line);
                }
                else {   // found feature id and value
-                  Byte feature_id;
-                  bool ok = hhs_to_byte_in_buf(s1, &feature_id);
+                  // Byte feature_id;
+                  int feature_id;
+                  // todo: handle xnn as well as nn ?
+                  //bool ok = hhs_to_byte_in_buf(feature_code, &feature_id);
+                  char * can = canonicalize_feature_value(feature_code);
+
+                  bool ok = str_to_int2(can, &feature_id, 16);
+                  free(can);
                   if (!ok) {
-                     ADD_ERROR(linectr, "Invalid feature code \"%s\"", s1);
+                     ADD_ERROR(linectr, "Invalid feature code \"%s\"", feature_code);
                   }
                   else {     // valid opcode
                      cur_feature_metadata->feature_code = feature_id;
-                     cur_feature_metadata->feature_name = s2;   // TODO: doesn't handle blanks in name
+                     cur_feature_metadata->feature_name = feature_name;
                      cur_feature_metadata->feature_desc = NULL;   // ignore for now
                   }
                }
             }
 
-            else if (streq(s0, "VALUE")) {
-               if (ct != 3) {
+            else if (streq(t1.word, "VALUE")) {
+               if (!t2.rest) {
                   ADD_ERROR(linectr, "Invalid feature value data \"%s\"", line);
                }
                else {   // found value code and name
                   int feature_value;
                    // Byte feature_value;
                   // bool ok = hhs_to_byte_in_buf(s1, &feature_value);
-                  char * canonical = canonicalize_feature_value(s1);
-                  bool ok = str_to_int2(canonical, &feature_value, true);
+                  char * canonical = canonicalize_feature_value(t2.word);
+                  bool ok = str_to_int2(canonical, &feature_value, 0);
                   free(canonical);
                   if (!ok) {
-                     ADD_ERROR(linectr, "Invalid feature value \"%s\"", s1);
+                     ADD_ERROR(linectr, "Invalid feature value \"%s\"", t2.word);
                   }
                   else {     // valid feature value
                      if (!cur_feature_values)
                         cur_feature_values = g_array_new(false, false, sizeof(DDCA_Feature_Value_Entry));
                      DDCA_Feature_Value_Entry entry;
                      entry.value_code = feature_value;
-                     entry.value_name = strdup(s2);
+                     entry.value_name = strdup(t2.rest);
                      g_array_append_val(cur_feature_values, entry);
                   }
                }
             }
 
             else {
-               ADD_ERROR(linectr, "Unexpected field \"%s\"", s0);
+               ADD_ERROR(linectr, "Unexpected field \"%s\"", t1.word);
             }
          }    // more than 1 field on line
+         if (t2.word)
+            free(t2.word);
       }       // non-comment line
+      if (t1.word)
+         free(t1.word);
    }          // one line of file
 
    if (cur_feature_metadata) {
@@ -578,12 +576,12 @@ create_monitor_dynamic_features(
       ADD_ERROR(-1, "Missing PRODUCT_CODE");
 
    if (errors->len > 0) {
-      DBGMSG("errors->len=%d", errors->len);
-      DBGMSG("errors->pdata: %p", errors->pdata);
-      DBGMSG("&errors->pdata: %p", &errors->pdata);
-      DBGMSG("*errors->pdata: %p", *errors->pdata);
-      Error_Info * first = g_ptr_array_index(errors, 0);
-      DBGMSG("first: %p", first);
+      // DBGMSG("errors->len=%d", errors->len);
+      // DBGMSG("errors->pdata: %p", errors->pdata);
+      // DBGMSG("&errors->pdata: %p", &errors->pdata);
+      // DBGMSG("*errors->pdata: %p", *errors->pdata);
+      // Error_Info * first = g_ptr_array_index(errors, 0);
+      // DBGMSG("first: %p", first);
       char * detail = gaux_asprintf("Error(s) processing monitor definition file: %s", filename);
       master_err = errinfo_new_with_causes2(
                             DDCRC_BAD_DATA,
