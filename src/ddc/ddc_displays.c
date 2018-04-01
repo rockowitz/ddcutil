@@ -62,6 +62,7 @@
 #include "usb/usb_displays.h"
 #endif
 
+#include "ddc/ddc_dynamic_features.h"
 #include "ddc/ddc_packet_io.h"
 #include "ddc/ddc_vcp.h"
 #include "ddc/ddc_vcp_version.h"
@@ -1054,6 +1055,9 @@ ddc_detect_all_displays() {
       assert( memcmp(dref->marker, DISPLAY_REF_MARKER, 4) == 0 );
       if (dref->flags & DREF_DDC_COMMUNICATION_WORKING) {
          dref->dispno = ++dispno_max;
+
+         check_dynamic_features(dref);    // the hook
+
       }
       else {
          dref->dispno = -1;

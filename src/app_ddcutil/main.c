@@ -63,20 +63,21 @@
 #include "i2c/i2c_bus_core.h"
 #include "i2c/i2c_do_io.h"
 
-#include "ddc/ddc_try_stats.h"
-
 #include "adl/adl_shim.h"
 
 #include "usb/usb_displays.h"
 
 #include "ddc/ddc_displays.h"
+#include "ddc/ddc_dynamic_features.h"
 #include "ddc/ddc_multi_part_io.h"
 #include "ddc/ddc_output.h"
 #include "ddc/ddc_packet_io.h"
 #include "ddc/ddc_read_capabilities.h"
 #include "ddc/ddc_services.h"
+#include "ddc/ddc_try_stats.h"
 #include "ddc/ddc_vcp_version.h"
 #include "ddc/ddc_vcp.h"
+
 #include "cmdline/cmd_parser_aux.h"    // for parse_feature_id_or_subset(), should it be elsewhere?
 #include "cmdline/cmd_parser.h"
 #include "cmdline/parsed_cmd.h"
@@ -709,6 +710,8 @@ int main(int argc, char *argv[]) {
                free_display_ref(dref);
                dref = NULL;
             }
+            else
+               check_dynamic_features(dref);    // the hook
             // DBGMSG("Synthetic Display_Ref");
          }
          else {
