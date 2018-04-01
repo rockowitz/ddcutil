@@ -38,7 +38,6 @@
 
 #define RCRANGE_DDC_START  3000
 
-/** ddcutil status codes */
 #define DDCRC_OK                     0                           ///< Success
 #define DDCRC_DDC_DATA               (-(RCRANGE_DDC_START+1 ) )  ///< DDC data error
 #define DDCRC_NULL_RESPONSE          (-(RCRANGE_DDC_START+2 ) )  //!< DDC Null Response received

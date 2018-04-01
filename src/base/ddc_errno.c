@@ -73,6 +73,8 @@ static Status_Code_Info ddcrc_info[] = {
       EDENTRY(DDCRC_OTHER                    , "other error"),       // for use during development
       EDENTRY(DDCRC_VERIFY                   , "VCP read after write failed"),
       EDENTRY(DDCRC_NOT_FOUND                , "not found"),
+      EDENTRY(DDCRC_LOCKED                   , "display locked"),
+      EDENTRY(DDCRC_BAD_DATA                 , "invalid data"),
 
     };
 #undef EDENTRY
