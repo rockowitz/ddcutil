@@ -104,15 +104,20 @@ simple_feature_def_filename(
       const char *  model_name,
       uint16_t      product_code)
 {
+   bool debug = true;
+   DBGMSF(debug, "Starting. mfg=|%s|, model_name=|%s| product_code=%u",
+                 mfg, model_name, product_code);
+
    assert(mfg);
    assert(model_name);
    char * model_name2 = strdup(model_name);
    for (int ndx = 0; ndx < strlen(model_name2); ndx++) {
-      if ( !isalpha(model_name2[ndx]) )
-         model_name2[ndx] = ' ';
+      if ( !isalnum(model_name2[ndx]) )
+         model_name2[ndx] = '_';
    }
 
    char * result = gaux_asprintf("%s-%s-%u.mccs", mfg, model_name2, product_code);
+   DBGMSF("Returning: |%s|", result);
    return result;
 }
 
@@ -122,6 +127,8 @@ simple_feature_def_filename(
 find_feature_def_file(
       const char * simple_fn)
 {
+   bool debug = true;
+   DBGMSF(debug, "Starting.  simple_fn=|%s|", simple_fn);
    char * result = NULL;
 
    char * paths[] = {
@@ -140,13 +147,15 @@ find_feature_def_file(
       char * epath = exp_result.we_wordv[0];
       char fqnamebuf[PATH_MAX];
       snprintf(fqnamebuf, PATH_MAX, "%s/%s", epath, simple_fn);
+      DBGMSF(debug, "fqnamebuf:  |%s|", fqnamebuf);
       wordfree(&exp_result);
-      if (access(fqnamebuf, R_OK)) {
+      if (access(fqnamebuf, R_OK) == 0) {
          result = strdup(fqnamebuf);
          break;
       }
    }
 
+   DBGMSF(debug, "Returning: |%s|", result);
    return result;
 }
 
@@ -174,7 +183,10 @@ read_feature_definition_file(
 
 
 void check_dynamic_features(Display_Ref * dref) {
-   if (!dref->flags & DREF_DYNAMIC_FEATURES_CHECKED) {
+   bool debug = true;
+   DBGMSF(debug, "Starting. ");
+   if ( !(dref->flags & DREF_DYNAMIC_FEATURES_CHECKED) ) {
+      DBGMSF(debug, "DREF_DYNAMIC_FEATURES_CHECKED not yet set");
       dref->dfr = NULL;
 
       char * simple_fn = simple_feature_def_filename(
@@ -210,5 +222,6 @@ void check_dynamic_features(Display_Ref * dref) {
 
       dref->flags |= DREF_DYNAMIC_FEATURES_CHECKED;
    }
+   DBGMSF(debug, "Done.");
 }
 
