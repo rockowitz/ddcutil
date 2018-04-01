@@ -258,6 +258,29 @@ Error_Info *  errinfo_new(int status_code, const char * func) {
 }
 
 
+Error_Info * errinfo_newv(
+      int            status_code,
+      const char *   func,
+      char *         detail,
+      va_list        args)
+{
+   // printf("(%s) Starting. args=%p\n", __func__, args);
+   Error_Info * erec = calloc(1, sizeof(Error_Info));
+   memcpy(erec->marker, ERROR_INFO_MARKER, 4);
+   erec->status_code = status_code;
+   erec->causes = empty_list;
+   // printf("(%s) erec->causes = %p\n", __func__, erec->causes);
+   // printf("(%s) erec->causes[0] = %p\n", __func__, erec->causes[0]);
+   erec->func = strdup(func);   // strdup to avoid constness warning, must free
+   if (detail) {
+      // erec->detail = strdup(detail);
+      erec->detail = gaux_vasprintf(detail, args);
+      // va_end(args);   // ??
+   }
+   return erec;
+}
+
+
 /** Creates a new #Error_Info instance with the specified status code,
  *  function name, and detail string.
  *
@@ -269,8 +292,10 @@ Error_Info *  errinfo_new(int status_code, const char * func) {
 Error_Info * errinfo_new2(
       int            status_code,
       const char *   func,
-      char *         detail)
+      char *         detail,
+      ...)
 {
+#ifdef OLD
    Error_Info * erec = calloc(1, sizeof(Error_Info));
    memcpy(erec->marker, ERROR_INFO_MARKER, 4);
    erec->status_code = status_code;
@@ -278,8 +303,20 @@ Error_Info * errinfo_new2(
    // printf("(%s) erec->causes = %p\n", __func__, erec->causes);
    // printf("(%s) erec->causes[0] = %p\n", __func__, erec->causes[0]);
    erec->func = strdup(func);   // strdup to avoid constness warning, must free
-   if (detail)
-      erec->detail = strdup(detail);
+   if (detail) {
+      // erec->detail = strdup(detail);
+      va_list(args);
+      va_start(args, detail);
+      erec->detail = gaux_vasprintf(detail, args);
+      va_end(args);   // ??
+   }
+   return erec;
+#endif
+
+   va_list(args);
+   va_start(args, detail);
+   Error_Info * erec = errinfo_newv(status_code, func, detail, args);
+   va_end(args);    // ???
    return erec;
 }
 
