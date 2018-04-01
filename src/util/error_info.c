@@ -201,6 +201,7 @@ void errinfo_set_detail(
  *  \param  cause  instance to add
  */
 void errinfo_add_cause(Error_Info * parent, Error_Info * cause) {
+   printf("(%s) cause=%p\n", __func__, cause);
    VALID_DDC_ERROR_PTR(parent);
    VALID_DDC_ERROR_PTR(cause);
 
