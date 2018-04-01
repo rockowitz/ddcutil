@@ -137,7 +137,7 @@ gint gaux_ptr_scomp(gconstpointer a, gconstpointer b) {
    return g_ascii_strcasecmp(*ap,*bp);
 }
 
-
+// what happens if ap is null?
 gchar * gaux_vasprintf(gchar * fmt, va_list ap) {
    char * result = NULL;
    gsize sz = g_printf_string_upper_bound(fmt,ap);
