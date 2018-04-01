@@ -138,6 +138,15 @@ gint gaux_ptr_scomp(gconstpointer a, gconstpointer b) {
 }
 
 
+gchar * gaux_vasprintf(gchar * fmt, va_list ap) {
+   char * result = NULL;
+   gsize sz = g_printf_string_upper_bound(fmt,ap);
+   result = calloc(1,sz);
+   g_vsnprintf(result, sz, fmt, ap);
+   return result;
+}
+
+
 /** Formats a string similarly to g_sprintf(), but allocates
  *  a sufficiently sized buffer in which the formatted string
  *  is returned.

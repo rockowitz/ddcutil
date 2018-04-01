@@ -32,12 +32,14 @@
 
 /** \cond */
 #include <glib-2.0/glib.h>
+#include <stdio.h>
 /** \endcond */
 
 gpointer * g_list_to_g_array(GList * glist, guint * length);
 
 gint gaux_ptr_scomp(gconstpointer a, gconstpointer b);
 
+gchar * gaux_vasprintf(gchar * fmt, va_list ap);
 gchar * gaux_asprintf(gchar * fmt, ...);
 
 gchar *
