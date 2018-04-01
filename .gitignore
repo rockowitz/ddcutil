@@ -166,4 +166,5 @@ package_archived
 play/
 sip/
 *.vcp
+*.mccs
 
