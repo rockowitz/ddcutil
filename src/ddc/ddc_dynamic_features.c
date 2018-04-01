@@ -104,7 +104,7 @@ simple_feature_def_filename(
       const char *  model_name,
       uint16_t      product_code)
 {
-   bool debug = true;
+   bool debug = false;
    DBGMSF(debug, "Starting. mfg=|%s|, model_name=|%s| product_code=%u",
                  mfg, model_name, product_code);
 
@@ -147,7 +147,7 @@ find_feature_def_file(
       char * epath = exp_result.we_wordv[0];
       char fqnamebuf[PATH_MAX];
       snprintf(fqnamebuf, PATH_MAX, "%s/%s", epath, simple_fn);
-      DBGMSF(debug, "fqnamebuf:  |%s|", fqnamebuf);
+      // DBGMSF(debug, "fqnamebuf:  |%s|", fqnamebuf);
       wordfree(&exp_result);
       if (access(fqnamebuf, R_OK) == 0) {
          result = strdup(fqnamebuf);
@@ -186,7 +186,7 @@ void check_dynamic_features(Display_Ref * dref) {
    bool debug = true;
    DBGMSF(debug, "Starting. ");
    if ( !(dref->flags & DREF_DYNAMIC_FEATURES_CHECKED) ) {
-      DBGMSF(debug, "DREF_DYNAMIC_FEATURES_CHECKED not yet set");
+      // DBGMSF(debug, "DREF_DYNAMIC_FEATURES_CHECKED not yet set");
       dref->dfr = NULL;
 
       char * simple_fn = simple_feature_def_filename(
