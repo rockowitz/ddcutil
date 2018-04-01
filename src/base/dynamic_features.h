@@ -46,4 +46,11 @@ create_monitor_dynamic_features(
       const char *            filename,     // may be NULL
       Dynamic_Features_Rec ** dynamic_featues_loc);
 
+
+DDCA_Feature_Metadata *
+get_dynamic_feature_metadata(
+      Dynamic_Features_Rec * dfr,
+      uint8_t                feature_code);
+
+
 #endif /* BASE_DYNAMIC_FEATURES_H_ */

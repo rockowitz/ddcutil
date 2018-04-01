@@ -154,6 +154,22 @@ dbgrpt_dynamic_features_rec(
 }
 
 
+DDCA_Feature_Metadata *
+get_dynamic_feature_metadata(
+      Dynamic_Features_Rec * dfr,
+      uint8_t                feature_code)
+{
+   DDCA_Feature_Metadata * result = NULL;
+   if (dfr->features)
+      result = g_hash_table_lookup(dfr->features, GINT_TO_POINTER(feature_code));
+   return result;
+}
+
+
+
+
+
+
 /* static */ void
 add_error(
       GPtrArray *  errors,
