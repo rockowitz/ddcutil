@@ -425,6 +425,7 @@ typedef uint16_t DDCA_Global_Feature_Flags;
 
 // Bits in DDCA_Global_Feature_Flags:
 #define DDCA_SYNTHETIC    0x8000
+#define DDCA_USER_DEFINED 0x4000      /**< User provided feature definition */
 
 typedef uint16_t DDCA_Feature_Flags;    // union (DDCA_Version_Feature_Flags, DDCA_Global_Feature_Flags)
 
