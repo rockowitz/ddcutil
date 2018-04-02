@@ -422,33 +422,7 @@ static char * interpret_feature_flags_r(
      strcpy(workbuf, interpret_ddca_version_feature_flags_readwrite(vflags));
      strcat(workbuf, ", ");
      strcat(workbuf, interpret_ddca_version_feature_flags_type(vflags));
-#ifdef OLD
-     if (vflags & DDCA_RO)
-        strcpy(workbuf, "Read Only, ");
-     else if (vflags & DDCA_WO)
-        strcpy(workbuf, "Write Only, ");
-     else if (vflags & DDCA_RW)
-        strcpy(workbuf, "Read Write, ");
-     else
-        PROGRAM_LOGIC_ERROR("No read/write bits set");
-#endif
 
-#ifdef OLD
-     if (vflags & DDCA_STD_CONT)
-        strcat(workbuf, "Continuous (standard)");
-     else if (vflags & DDCA_COMPLEX_CONT)
-        strcat(workbuf, "Continuous (complex)");
-     else if (vflags & DDCA_SIMPLE_NC)
-        strcat(workbuf, "Non-Continuous (simple)");
-     else if (vflags & DDCA_COMPLEX_NC)
-        strcat(workbuf, "Non-Continuous (complex)");
-     else if (vflags & DDCA_WO_NC)
-        strcat(workbuf, "Non-Continuous (write-only)");
-     else if (vflags & DDCA_TABLE)
-        strcat(workbuf, "Table");
-     else
-        PROGRAM_LOGIC_ERROR("No type bits set");
-#endif
      char * s = interpret_ddca_global_feature_flags(vflags);
      if (s && strlen(s) > 0) {
         strcat(workbuf, ", ");

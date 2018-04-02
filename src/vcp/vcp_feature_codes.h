@@ -242,11 +242,11 @@ get_non_version_specific_feature_name(
 
 char*
 get_feature_name_by_id_only(
-      DDCA_Vcp_Feature_Code           feature_code);
+      DDCA_Vcp_Feature_Code      feature_code);
 
 char*
 get_feature_name_by_id_and_vcp_version(
-      DDCA_Vcp_Feature_Code           feature_code,
+      DDCA_Vcp_Feature_Code      feature_code,
       DDCA_MCCS_Version_Spec     vspec);
 
 #ifdef OLD
@@ -268,10 +268,10 @@ get_version_sensitive_feature_info(
 
 DDCA_Version_Feature_Info *
 get_version_feature_info_by_version_id(
-      DDCA_Vcp_Feature_Code       feature_code,
-      DDCA_MCCS_Version_Id   mccs_version_id,
-      bool                   with_default,
-      bool                   version_sensitive);
+      DDCA_Vcp_Feature_Code   feature_code,
+      DDCA_MCCS_Version_Id    mccs_version_id,
+      bool                    with_default,
+      bool                    version_sensitive);
 
 DDCA_Version_Feature_Info *
 get_version_feature_info_by_vspec(
@@ -288,13 +288,13 @@ free_version_feature_info(
 
 DDCA_Feature_Value_Entry *
 find_feature_values(
-      DDCA_Vcp_Feature_Code       feature_code,
-      DDCA_MCCS_Version_Spec vcp_version);
+      DDCA_Vcp_Feature_Code   feature_code,
+      DDCA_MCCS_Version_Spec  vcp_version);
 
 DDCA_Feature_Value_Entry *
 find_feature_values_for_capabilities(
-      DDCA_Vcp_Feature_Code       feature_code,
-      DDCA_MCCS_Version_Spec vcp_version);
+      DDCA_Vcp_Feature_Code   feature_code,
+      DDCA_MCCS_Version_Spec  vcp_version);
 
 //
 // Report Functions
@@ -305,7 +305,8 @@ report_vcp_feature_table_entry(
       VCP_Feature_Table_Entry * vfte,
       int                       depth);
 
-void dbgrpt_version_feature_info(
+void
+dbgrpt_version_feature_info(
       DDCA_Version_Feature_Info * info, int depth);
 
 void
