@@ -74,7 +74,7 @@ udev_i2c_device_summary_busno(Udev_Device_Summary * summary) {
      // DBGMSG("sbusno = |%s|", sbusno);
 
      int ibusno;
-     bool ok = str_to_int2(sbusno, &ibusno, 10);
+     bool ok = str_to_int(sbusno, &ibusno, 10);
      if (ok)
         result = ibusno;
    }

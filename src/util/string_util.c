@@ -828,7 +828,7 @@ bool sbuf_append(char * buf, int bufsz, char * sepstr, char * nextval) {
  * @remark
  * This function wraps system function strtol(), hiding the ugly details.
  */
-bool str_to_int2(const char * sval, int * p_ival, int base) {
+bool str_to_int(const char * sval, int * p_ival, int base) {
    assert (base == 0 || base == 10 || base == 16);
    bool debug = false;
    if (debug)
@@ -855,10 +855,7 @@ bool str_to_int2(const char * sval, int * p_ival, int base) {
    return ok;
 }
 
-
-
-
-
+#ifdef OLD
 /** Converts a string representing an integer to an integer value.
  *
  * @param sval   string representing an integer
@@ -870,7 +867,7 @@ bool str_to_int2(const char * sval, int * p_ival, int base) {
  * @remark
  * This function wraps system function strtol(), hiding the ugly details.
  */
-bool str_to_int(const char * sval, int * p_ival) {
+bool str_to_int_old(const char * sval, int * p_ival) {
    bool debug = false;
    if (debug)
       printf("(%s) sval->|%s|\n", __func__, sval);
@@ -895,9 +892,7 @@ bool str_to_int(const char * sval, int * p_ival) {
    }
    return ok;
 }
-
-
-
+#endif
 
 
 //

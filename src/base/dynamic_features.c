@@ -419,7 +419,7 @@ create_monitor_dynamic_features(
             if (streq(t1.word, "PRODUCT_CODE")) {
                product_code_seen = true;
                int ival;
-               bool ok = str_to_int2(t2.word, &ival, 10);
+               bool ok = str_to_int(t2.word, &ival, 10);
                // DBGMSG("ival: %d", ival);
                if (!ok) {
                    ADD_ERROR(linectr, "Invalid product_code \"%s\"", t2.word);
@@ -490,7 +490,7 @@ create_monitor_dynamic_features(
                   //bool ok = hhs_to_byte_in_buf(feature_code, &feature_id);
                   char * can = canonicalize_feature_value(feature_code);
 
-                  bool ok = str_to_int2(can, &feature_id, 16);
+                  bool ok = str_to_int(can, &feature_id, 16);
                   free(can);
                   if (!ok) {
                      ADD_ERROR(linectr, "Invalid feature code \"%s\"", feature_code);
@@ -512,7 +512,7 @@ create_monitor_dynamic_features(
                    // Byte feature_value;
                   // bool ok = hhs_to_byte_in_buf(s1, &feature_value);
                   char * canonical = canonicalize_feature_value(t2.word);
-                  bool ok = str_to_int2(canonical, &feature_value, 0);
+                  bool ok = str_to_int(canonical, &feature_value, 0);
                   free(canonical);
                   if (!ok) {
                      ADD_ERROR(linectr, "Invalid feature value \"%s\"", t2.word);

@@ -39,7 +39,7 @@ int i2c_name_to_busno(char * name) {
    int result = -1;
    if (name && str_starts_with(name, "i2c-")) {
       int ival;
-      bool ok = str_to_int2(name+4, &ival, 10);
+      bool ok = str_to_int(name+4, &ival, 10);
       if (ok)
          result = ival;
    }
