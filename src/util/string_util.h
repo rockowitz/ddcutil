@@ -118,6 +118,7 @@ Null_Terminated_String_Array g_ptr_array_to_ntsa(GPtrArray * garray, bool duplic
 // Integer conversion
 //
 
+bool str_to_int2(const char * sval, int * p_ival, int base);
 bool str_to_int(const char * nptr, int * ival);
 
 

@@ -373,33 +373,6 @@ char * canonicalize_feature_value(char * string_value) {
 
 
 
-// like str_to_int(), but allows hex values
-bool str_to_int2(const char * sval, int * p_ival, int base) {
-   assert (base == 0 || base == 10 || base == 16);
-   bool debug = false;
-   if (debug)
-      printf("(%s) sval->|%s|\n", __func__, sval);
-
-   char * endptr;
-   bool ok = false;
-   if ( *sval != '\0') {
-      long result = strtol(sval, &endptr, base); // allow hex
-      // printf("(%s) sval=%p, endptr=%p, *endptr=|%c| (0x%02x), result=%ld\n",
-      //        __func__, sval, endptr, *endptr, *endptr, result);
-      if (*endptr == '\0') {
-         *p_ival = result;
-         ok = true;
-      }
-   }
-
-   if (debug) {
-      if (ok)
-        printf("(%s) sval=%s, Returning: %s, *ival = %d\n", __func__, sval, bool_repr(ok), *p_ival);
-      else
-        printf("(%s) sval=%s, Returning: %s\n", __func__, sval, bool_repr(ok));
-   }
-   return ok;
-}
 
 
 

@@ -809,6 +809,56 @@ bool sbuf_append(char * buf, int bufsz, char * sepstr, char * nextval) {
 // Integer conversion
 //
 
+/** Converts a decimal or hexadecimal string to an integer value.
+ *
+ * @param sval   string representing an integer
+ * @param p_ival address at which to store integer value
+ * @param base   10, 16, or 0 (see below)
+ * @return true if conversion succeeded, false if it failed
+ *
+ * @remark
+ * If base=10, this a normal integer conversion.
+ * If base=16, **sval** contains a hex value, optionally
+ * beginning with "x" or "0x".
+ * If base=0, then either a decimal or hexadecimal conversion is performed.
+ * If the value begins with "x" or "0x", it is treated as a hex value.
+ * Otherwise it is treated as a decimal value.
+ * \remark
+ * If conversion fails, the value pointed to by **p_ival** is unchanged.
+ * @remark
+ * This function wraps system function strtol(), hiding the ugly details.
+ */
+bool str_to_int2(const char * sval, int * p_ival, int base) {
+   assert (base == 0 || base == 10 || base == 16);
+   bool debug = false;
+   if (debug)
+      printf("(%s) sval->|%s|\n", __func__, sval);
+
+   char * endptr;
+   bool ok = false;
+   if ( *sval != '\0') {
+      long result = strtol(sval, &endptr, base); // allow hex
+      // printf("(%s) sval=%p, endptr=%p, *endptr=|%c| (0x%02x), result=%ld\n",
+      //        __func__, sval, endptr, *endptr, *endptr, result);
+      if (*endptr == '\0') {
+         *p_ival = result;
+         ok = true;
+      }
+   }
+
+   if (debug) {
+      if (ok)
+        printf("(%s) sval=%s, Returning: %s, *ival = %d\n", __func__, sval, bool_repr(ok), *p_ival);
+      else
+        printf("(%s) sval=%s, Returning: %s\n", __func__, sval, bool_repr(ok));
+   }
+   return ok;
+}
+
+
+
+
+
 /** Converts a string representing an integer to an integer value.
  *
  * @param sval   string representing an integer
@@ -845,6 +895,9 @@ bool str_to_int(const char * sval, int * p_ival) {
    }
    return ok;
 }
+
+
+
 
 
 //
