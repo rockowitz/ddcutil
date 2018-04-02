@@ -297,7 +297,7 @@ dfr_load_by_edid(
 
 
 void check_dynamic_features(Display_Ref * dref) {
-   // return;     // Disable
+   return;     // Disable
 
    bool debug = false;
    DBGMSF(debug, "Starting. ");
