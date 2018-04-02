@@ -88,7 +88,7 @@ Byte_Value_Array get_i2c_devices_by_ls() {
       goto bye;
    }
    if (busnums->len > 0) {
-      bool isint = str_to_int(g_ptr_array_index(busnums,0), &ival);
+      bool isint = str_to_int2(g_ptr_array_index(busnums,0), &ival, 10);
       if (!isint) {
          rpt_vstring(1, "Apparently no I2C buses");
          goto bye;
@@ -96,7 +96,7 @@ Byte_Value_Array get_i2c_devices_by_ls() {
    }
    for (int ndx = 0; ndx < busnums->len; ndx++) {
       char * sval = g_ptr_array_index(busnums, ndx);
-      bool isint = str_to_int(sval, &ival);
+      bool isint = str_to_int2(sval, &ival, 10);
       if (!isint) {
          rpt_vstring(1, "Parsing error.  Invalid I2C bus number: %s", sval);
       }

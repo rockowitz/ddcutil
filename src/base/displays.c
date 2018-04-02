@@ -1206,7 +1206,7 @@ int hiddev_name_to_number(char * hiddev_name) {
       if (strlen(p) > 0) {
          // hiddev_number unchanged if error
          // n str_to_int() allows leading whitespace, not worth checking
-         bool ok = str_to_int(p, &hiddev_number);
+         bool ok = str_to_int2(p, &hiddev_number, 10);
          if (!ok)
             hiddev_number = -1;   // not necessary, but makes coverity happy
       }
