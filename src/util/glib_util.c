@@ -34,8 +34,6 @@
 #include <string.h>
 /** \endcond */
 
-
-
 #include "glib_util.h"
 
 #ifdef ALTERNATIVE
@@ -137,17 +135,24 @@ gint gaux_ptr_scomp(gconstpointer a, gconstpointer b) {
    return g_ascii_strcasecmp(*ap,*bp);
 }
 
+#ifdef OLD
 // what happens if ap is null?
-gchar * gaux_vasprintf(gchar * fmt, va_list ap) {
+// not particularly useful since have to pass buffer size in
+/** \deprecated Use g_strdup_vprintf() */
+gchar * gaux_vasprintf(size_t reqd_buf_sz, gchar * fmt, va_list ap) {
    char * result = NULL;
-   gsize sz = g_printf_string_upper_bound(fmt,ap);
-   result = calloc(1,sz);
-   g_vsnprintf(result, sz, fmt, ap);
+   // g_printf_string_upper_bound() clobbers ap, makes it unusable
+   // gsize sz = g_printf_string_upper_bound(fmt,ap);
+   result = calloc(1,reqd_buf_sz);
+   int rc = g_vsnprintf(result, reqd_buf_sz, fmt, ap);
+   // printf("(%s) g_vsnprintf() returned %d\n", __func__, rc);
+   // printf("(%s) Returning: |%s|\n", __func__, result);
+   assert(rc < reqd_buf_sz);
    return result;
 }
 
-
-/** Formats a string similarly to g_sprintf(), but allocates
+/** \deprecated Use g_strdup_printf()
+ *  Formats a string similarly to g_sprintf(), but allocates
  *  a sufficiently sized buffer in which the formatted string
  *  is returned.
  *
@@ -161,14 +166,20 @@ gchar * gaux_asprintf(gchar * fmt, ...) {
    va_start(args, fmt);
 
    // g_vasprintf(&result, fmt, args);  // get implicit function declaration error
-
+   // printf("(%s) fmt=|%s|\n", __func__, fmt);
    gsize sz = g_printf_string_upper_bound(fmt,args);
+   // printf("(%s) sz = %zu\n", __func__, sz);
    result = calloc(1,sz);
    va_start(args, fmt);
-   g_vsnprintf(result, sz, fmt, args);
+   // int rc =
+                g_vsnprintf(result, sz, fmt, args);
+   // printf("(%s) g_vsnprintf() returned %d\n", __func__, rc);
+
    va_end(args);
+   // printf("(%s) Returning: |%s|\n", __func__, result);
    return result;
 }
+#endif
 
 
 GPtrArray * gaux_ptr_array_truncate(GPtrArray * gpa, int limit) {
@@ -276,10 +287,6 @@ gaux_ptr_array_from_null_terminated_array(
    }
    return result;
 }
-
-
-
-
 
 
 //

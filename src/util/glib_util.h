@@ -39,8 +39,10 @@ gpointer * g_list_to_g_array(GList * glist, guint * length);
 
 gint gaux_ptr_scomp(gconstpointer a, gconstpointer b);
 
-gchar * gaux_vasprintf(gchar * fmt, va_list ap);
+#ifdef OLD
+gchar * gaux_vasprintf(size_t reqd_buf_size, gchar * fmt, va_list ap);
 gchar * gaux_asprintf(gchar * fmt, ...);
+#endif
 
 gchar *
 get_thread_dynamic_buffer(
