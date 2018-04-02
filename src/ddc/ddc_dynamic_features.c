@@ -84,6 +84,72 @@
 
 
 
+static GHashTable * dynamic_features_records;
+
+// entries are only added, never deleted or replaced
+void
+dfr_init() {
+   if (!dynamic_features_records) {
+      dynamic_features_records = g_hash_table_new(
+                                   g_str_hash,
+                                   g_str_equal);
+   }
+}
+
+void dfr_save(
+      Dynamic_Features_Rec * dfr)
+{
+   char * key = feature_def_key(
+                   dfr->mfg_id,
+                   dfr->model_name,
+                   dfr->product_code);
+   if (!dynamic_features_records)
+      dfr_init();
+   g_hash_table_insert(dynamic_features_records, key, dfr);
+}
+
+Dynamic_Features_Rec *
+dfr_lookup(
+      char *   mfg_id,
+      char *   model_name,
+      uint16_t product_code)
+{
+   Dynamic_Features_Rec * result = NULL;
+   if (dynamic_features_records) {
+      char * key = feature_def_key(mfg_id, model_name, product_code);
+      result = g_hash_table_lookup(dynamic_features_records, key);
+      assert(memcmp(result->marker, DYNAMIC_FEATURES_REC_MARKER, 4) == 0);
+      // if (result->flags & DFR_FLAGS_NOT_FOUND)
+      //    result = NULL;
+   }
+   return result;
+}
+
+Dynamic_Features_Rec *
+dfr_get(
+      char *   mfg_id,
+      char *   model_name,
+      uint16_t product_code)
+{
+   Dynamic_Features_Rec * result = NULL;
+   Dynamic_Features_Rec * existing = NULL;
+
+   existing = dfr_lookup(mfg_id, model_name, product_code);
+   if (existing) {
+      if (existing->flags & DFR_FLAGS_NOT_FOUND) {
+         // we've already checked and it's not there
+         result = NULL;
+      }
+      else
+         result = existing;
+   }
+   else {
+      // ??? what to do with errors from loading file?
+   }
+   return result;
+}
+
+
 
 /* static */ DDCA_Feature_Metadata *
 get_feature_metadata(
@@ -98,8 +164,8 @@ get_feature_metadata(
 }
 
 
-/* static */ char *
-simple_feature_def_filename(
+char *
+feature_def_key(
       const char *  mfg,
       const char *  model_name,
       uint16_t      product_code)
@@ -116,8 +182,8 @@ simple_feature_def_filename(
          model_name2[ndx] = '_';
    }
 
-   char * result = gaux_asprintf("%s-%s-%u.mccs", mfg, model_name2, product_code);
-   DBGMSF("Returning: |%s|", result);
+   char * result = g_strdup_printf("%s-%s-%u", mfg, model_name2, product_code);
+   DBGMSF(debug, "Returning: |%s|", result);
    return result;
 }
 
@@ -127,7 +193,7 @@ simple_feature_def_filename(
 find_feature_def_file(
       const char * simple_fn)
 {
-   bool debug = true;
+   bool debug = false;
    DBGMSF(debug, "Starting.  simple_fn=|%s|", simple_fn);
    char * result = NULL;
 
@@ -146,7 +212,7 @@ find_feature_def_file(
       wordexp(paths[ndx], &exp_result, wordexp_flags);
       char * epath = exp_result.we_wordv[0];
       char fqnamebuf[PATH_MAX];
-      snprintf(fqnamebuf, PATH_MAX, "%s/%s", epath, simple_fn);
+      snprintf(fqnamebuf, PATH_MAX, "%s/%s.mccs", epath, simple_fn);
       // DBGMSF(debug, "fqnamebuf:  |%s|", fqnamebuf);
       wordfree(&exp_result);
       if (access(fqnamebuf, R_OK) == 0) {
@@ -170,7 +236,7 @@ read_feature_definition_file(
 
    int rc = file_getlines(filename,  lines, false);
    if (rc < 0) {
-      char * detail = gaux_asprintf("Error reading file %s", filename);
+      char * detail = g_strdup_printf("Error reading file %s", filename);
       errs = errinfo_new2(
             rc,
             __func__,
@@ -182,42 +248,84 @@ read_feature_definition_file(
 }
 
 
+Error_Info *
+dfr_load_by_edid(
+      Parsed_Edid *           edid,
+      Dynamic_Features_Rec ** dfr_loc)
+{
+   Error_Info *           errs = NULL;
+   Dynamic_Features_Rec * dfr  = NULL;
+   char * simple_fn = feature_def_key(edid->mfg_id, edid->model_name,edid->product_code);
+
+   char * fqfn = find_feature_def_file(simple_fn);
+   if (fqfn) {
+      // read file into GPtrArray * lines
+      GPtrArray * lines = g_ptr_array_new();
+      errs = read_feature_definition_file(fqfn, lines);
+
+      if (!errs) {
+         errs = create_monitor_dynamic_features(
+             edid->mfg_id,
+             edid->model_name,
+             edid->product_code,
+             lines,
+             fqfn,
+             &dfr);
+         // TODO: check that dfr == NULL if error
+         assert( (errs && !dfr) || (!errs && dfr));
+      }
+   }
+   else {
+      // DBGMSG("simple=fn=%s", simple_fn);
+      errs = errinfo_new2(DDCRC_NOT_FOUND, __func__,
+                          "Feature definition file not found: %s.mccs", simple_fn);
+   }
+
+
+   if (errs) {
+      dfr = dfr_new(edid->mfg_id, edid->model_name, edid->product_code, NULL);
+      dfr->flags |= DFR_FLAGS_NOT_FOUND;
+   }
+   else {
+      *dfr_loc = dfr;
+   }
+
+   dfr_save(dfr);
+
+   return errs;
+}
+
+
 void check_dynamic_features(Display_Ref * dref) {
-   bool debug = true;
+   // return;     // Disable
+
+   bool debug = false;
    DBGMSF(debug, "Starting. ");
    if ( !(dref->flags & DREF_DYNAMIC_FEATURES_CHECKED) ) {
       // DBGMSF(debug, "DREF_DYNAMIC_FEATURES_CHECKED not yet set");
       dref->dfr = NULL;
+      DDCA_Output_Level ol = get_output_level();
 
-      char * simple_fn = simple_feature_def_filename(
-                           dref->pedid->mfg_id,
-                           dref->pedid->model_name,
-                           dref->pedid->product_code);
-
-      char * fqfn = find_feature_def_file(simple_fn);
-      if (fqfn) {
-         // read file into GPtrArray * lines
-         GPtrArray * lines = g_ptr_array_new();
-         Error_Info * errs = read_feature_definition_file(fqfn, lines);
-
-         Dynamic_Features_Rec * dfr;
-
-         if (!errs) {
-            errs = create_monitor_dynamic_features(
-                dref->pedid->mfg_id,
-                dref->pedid->model_name,
-                dref->pedid->product_code,
-                lines,
-                fqfn,
-                &dfr);
-         }
-         if (errs) {
-            // temp
-            errinfo_report(errs, 1);
+      Dynamic_Features_Rec * dfr = NULL;
+      Error_Info * errs = dfr_load_by_edid(dref->pedid, &dfr);
+      if (errs) {
+         if (errs->status_code == DDCRC_NOT_FOUND) {
+            if (ol >= DDCA_OL_VERBOSE)
+               f0printf(fout(), "%s\n", errs->detail);
          }
          else {
-            dref->dfr = dfr;
+            // errinfo_report(errs, 1);
+            f0printf(fout(), "%s\n", errs->detail);
+            for (int ndx = 0; ndx < errs->cause_ct; ndx++) {
+               f0printf(fout(), "   %s\n", errs->causes[ndx]->detail);
+            }
          }
+      }
+      else {
+         // dbgrpt_dynamic_features_rec(dfr, 1);
+         if (ol >= DDCA_OL_VERBOSE)
+            f0printf(fout(), "Processed feature definition file: %s\n", dfr->filename);
+         dref->dfr = dfr;
       }
 
       dref->flags |= DREF_DYNAMIC_FEATURES_CHECKED;
