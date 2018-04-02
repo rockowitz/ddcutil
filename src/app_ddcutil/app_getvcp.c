@@ -83,7 +83,7 @@ app_show_single_vcp_value_by_feature_table_entry(
 
    DDCA_MCCS_Version_Spec vspec      = get_vcp_version_by_display_handle(dh);
    Public_Status_Code     psc        = 0;
-   Byte                   feature_id = entry->code;
+   DDCA_Vcp_Feature_Code  feature_id = entry->code;
 
    if (!is_feature_readable_by_vcp_version(entry, vspec)) {
       char * feature_name =  get_version_sensitive_feature_name(entry, vspec);
@@ -130,9 +130,9 @@ app_show_single_vcp_value_by_feature_table_entry(
  */
 Public_Status_Code
 app_show_single_vcp_value_by_feature_id(
-      Display_Handle * dh,
-      Byte feature_id,
-      bool force)
+      Display_Handle *      dh,
+      DDCA_Vcp_Feature_Code feature_id,
+      bool                  force)
 {
    bool debug = false;
    DBGMSF(debug, "Starting. Getting feature 0x%02x for %s, force=%s",
