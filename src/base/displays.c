@@ -461,36 +461,36 @@ char * did_repr(Display_Identifier * pdid) {
       char * did_type_name = display_id_type_name(pdid->id_type);
       switch (pdid->id_type) {
       case(DISP_ID_BUSNO):
-            pdid->repr = gaux_asprintf(
+            pdid->repr = g_strdup_printf(
                      "Display Id[type=%s, bus=/dev/i2c-%d]", did_type_name, pdid->busno);
             break;
       case(DISP_ID_ADL):
-            pdid->repr = gaux_asprintf(
+            pdid->repr = g_strdup_printf(
                      "Display Id[type=%s, adlno=%d.%d]", did_type_name, pdid->iAdapterIndex, pdid->iDisplayIndex);
             break;
       case(DISP_ID_MONSER):
-            pdid->repr = gaux_asprintf(
+            pdid->repr = g_strdup_printf(
                      "Display Id[type=%s, mfg=%s, model=%s, sn=%s]",
                      did_type_name, pdid->mfg_id, pdid->model_name, pdid->serial_ascii);
             break;
       case(DISP_ID_EDID):
       {
             char * hs = hexstring(pdid->edidbytes, 128);
-            pdid->repr = gaux_asprintf(
+            pdid->repr = g_strdup_printf(
                      "Display Id[type=%s, edid=%8s...%8s]", did_type_name, hs, hs+248);
             free(hs);
             break;
       }
       case(DISP_ID_DISPNO):
-            pdid->repr = gaux_asprintf(
+            pdid->repr = g_strdup_printf(
                      "Display Id[type=%s, dispno=%d]", did_type_name, pdid->dispno);
             break;
       case DISP_ID_USB:
-            pdid->repr = gaux_asprintf(
+            pdid->repr = g_strdup_printf(
                      "Display Id[type=%s, usb bus:device=%d.%d]", did_type_name, pdid->usb_bus, pdid->usb_device);;
             break;
       case DISP_ID_HIDDEV:
-            pdid->repr = gaux_asprintf(
+            pdid->repr = g_strdup_printf(
                      "Display Id[type=%s, hiddev_devno=%d]", did_type_name, pdid->hiddev_devno);
             break;
 
@@ -927,7 +927,7 @@ Display_Handle * create_bus_display_handle_from_display_ref(int fh, Display_Ref 
    dh->fh = fh;
    dh->dref = dref;
    dref->vcp_version = DDCA_VSPEC_UNQUERIED;
-   dh->repr = gaux_asprintf(
+   dh->repr = g_strdup_printf(
                 "Display_Handle[i2c: fh=%d, busno=%d]",
                 dh->fh, dh->dref->io_path.path.i2c_busno);
    return dh;
@@ -949,7 +949,7 @@ Display_Handle * create_adl_display_handle_from_display_ref(Display_Ref * dref) 
    memcpy(dh->marker, DISPLAY_HANDLE_MARKER, 4);
    dh->dref = dref;
    dref->vcp_version = DDCA_VSPEC_UNQUERIED;   // needed?
-   dh->repr = gaux_asprintf(
+   dh->repr = g_strdup_printf(
                 "Display_Handle[adl: display %d.%d]",
                  dh->dref->io_path.path.adlno.iAdapterIndex, dh->dref->io_path.path.adlno.iDisplayIndex);
    return dh;
@@ -973,7 +973,7 @@ Display_Handle * create_usb_display_handle_from_display_ref(int fh, Display_Ref 
    memcpy(dh->marker, DISPLAY_HANDLE_MARKER, 4);
    dh->fh = fh;
    dh->dref = dref;
-   dh->repr = gaux_asprintf(
+   dh->repr = g_strdup_printf(
                 "Display_Handle[usb: %d:%d, %s/hiddev%d]",
                 dh->dref->usb_bus, dh->dref->usb_device,
                 usb_hiddev_directory(), dh->dref->io_path.path.hiddev_devno);
@@ -1044,17 +1044,17 @@ char * dh_repr_a(Display_Handle * dh) {
 
       switch (dh->dref->io_mode) {
       case DDCA_IO_I2C:
-          repr = gaux_asprintf(
+          repr = g_strdup_printf(
                    "Display_Handle[i2c: fh=%d, busno=%d]",
                    dh->fh, dh->dref->busno);
           break;
       case DDCA_IO_ADL:
-          repr = gaux_asprintf(
+          repr = g_strdup_printf(
                    "Display_Handle[adl: display %d.%d]",
                    dh->dref->iAdapterIndex, dh->dref->iDisplayIndex);
           break;
       case DDCA_IO_USB:
-          repr = gaux_asprintf(
+          repr = g_strdup_printf(
                    "Display_Handle[usb: %d:%d, %s/hiddev%d]",
                    dh->dref->usb_bus, dh->dref->usb_device,
                    usb_hiddev_directory(), dh->dref->usb_hiddev_devno);
@@ -1225,7 +1225,7 @@ int hiddev_name_to_number(char * hiddev_name) {
  */
 char * hiddev_number_to_name(int hiddev_number) {
    assert(hiddev_number >= 0);
-   char * s = gaux_asprintf("%s/hiddev%d", usb_hiddev_directory(),hiddev_number);
+   char * s = g_strdup_printf("%s/hiddev%d", usb_hiddev_directory(),hiddev_number);
    // DBGMSG("hiddev_number=%d, returning: %s", hiddev_number, s);
    return s;
 }
