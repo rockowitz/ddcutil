@@ -205,13 +205,10 @@ typedef struct _display_ref {
    char *        usb_hiddev_name;
    DDCA_MCCS_Version_Spec vcp_version;
    Dref_Flags    flags;
-
    char *        capabilities_string;    // added 4/2017, private copy
    Parsed_Edid * pedid;                  // added 4/2017
-
-   // for merger with Display_Rec:
    int           dispno;
-   void *        detail2;
+   void *        detail;    // I2C_Bus_Info *, ADL_Display_Detail *, or Usb_Monitor_Info *
 
    Display_Async_Rec * async_rec;
    void *        dfr;          // for future Dyname_Features_Record *

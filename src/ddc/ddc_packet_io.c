@@ -166,7 +166,7 @@ Public_Status_Code ddc_open_display(
 
          dh = create_bus_display_handle_from_display_ref(fd, dref);    // n. sets dh->dref = dref
 
-         I2C_Bus_Info * bus_info = dref->detail2;
+         I2C_Bus_Info * bus_info = dref->detail;
          assert(bus_info);   // need to convert to a test?
          assert( memcmp(bus_info, I2C_BUS_INFO_MARKER, 4) == 0);
 

@@ -701,7 +701,7 @@ int main(int argc, char *argv[]) {
             dref->dispno = -1;     // should use some other value for unassigned vs invalid
             dref->pedid = businfo->edid;    // needed?
             // dref->pedid = i2c_get_parsed_edid_by_busno(parsed_cmd->pdid->busno);
-            dref->detail2 = businfo;
+            dref->detail = businfo;
             dref->flags |= DREF_DDC_IS_MONITOR_CHECKED;
             dref->flags |= DREF_DDC_IS_MONITOR;
             dref->flags |= DREF_TRANSIENT;

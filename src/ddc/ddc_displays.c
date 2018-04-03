@@ -479,7 +479,7 @@ ddc_report_display_by_dref(Display_Ref * dref, int depth) {
    switch(dref->io_path.io_mode) {
    case DDCA_IO_I2C:
       {
-         I2C_Bus_Info * curinfo = dref->detail2;
+         I2C_Bus_Info * curinfo = dref->detail;
          assert(curinfo);
          assert(memcmp(curinfo, I2C_BUS_INFO_MARKER, 4) == 0);
 
@@ -610,14 +610,14 @@ void ddc_dbgrpt_display_ref(Display_Ref * dref, int depth) {
    switch(dref->io_path.io_mode) {
    case(DDCA_IO_I2C):
          rpt_vstring(d1, "I2C bus information: ");
-         I2C_Bus_Info * businfo = dref->detail2;
+         I2C_Bus_Info * businfo = dref->detail;
          assert( memcmp(businfo->marker, I2C_BUS_INFO_MARKER, 4) == 0);
          i2c_dbgrpt_bus_info(businfo, d2);
          break;
    case(DDCA_IO_ADL):
 #ifdef HAVE_ADL
       rpt_vstring(d1, "ADL device information: ");
-      ADL_Display_Detail * adl_detail = dref->detail2;
+      ADL_Display_Detail * adl_detail = dref->detail;
       assert(memcmp(adl_detail->marker, ADL_DISPLAY_DETAIL_MARKER, 4) == 0);
       adlshim_report_adl_display_detail(adl_detail, d2);
 #endif
@@ -625,7 +625,7 @@ void ddc_dbgrpt_display_ref(Display_Ref * dref, int depth) {
    case(DDCA_IO_USB):
 #ifdef USE_USB
          rpt_vstring(d1, "USB device information: ");
-         Usb_Monitor_Info * moninfo = dref->detail2;
+         Usb_Monitor_Info * moninfo = dref->detail;
          assert(memcmp(moninfo->marker, USB_MONITOR_INFO_MARKER, 4) == 0);
          report_usb_monitor_info(moninfo, d2);
 #else
@@ -732,7 +732,7 @@ ddc_check_display_ref(Display_Ref * dref, Display_Criteria * criteria) {
          goto bye;
       char buf[40];
       snprintf(buf, 40, "%s/hiddev%d", usb_hiddev_directory(), criteria->hiddev);
-      Usb_Monitor_Info * moninfo = dref->detail2;
+      Usb_Monitor_Info * moninfo = dref->detail;
       assert(memcmp(moninfo->marker, USB_MONITOR_INFO_MARKER, 4) == 0);
       if (!streq( moninfo->hiddev_device_name, buf))
          goto bye;
@@ -986,7 +986,7 @@ ddc_detect_all_displays() {
          dref->dispno = -1;
          dref->pedid = businfo->edid;    // needed?
          // drec->detail.bus_detail = businfo;
-         dref->detail2 = businfo;
+         dref->detail = businfo;
          dref->flags |= DREF_DDC_IS_MONITOR_CHECKED;
          dref->flags |= DREF_DDC_IS_MONITOR;
          g_ptr_array_add(display_list, dref);
@@ -1001,7 +1001,7 @@ ddc_detect_all_displays() {
      dref->dispno = -1;
      dref->pedid = detail->pEdid;   // needed?
      // drec->detail.adl_detail = detail;
-     dref->detail2 = detail;
+     dref->detail = detail;
      dref->flags |= DREF_DDC_IS_MONITOR_CHECKED;
      dref->flags |= DREF_DDC_IS_MONITOR;
      g_ptr_array_add(display_list, dref);
@@ -1024,7 +1024,7 @@ ddc_detect_all_displays() {
       dref->dispno = -1;
       dref->pedid = curmon->edid;
       // drec->detail.usb_detail = curmon;
-      dref->detail2 = curmon;
+      dref->detail = curmon;
       dref->flags |= DREF_DDC_IS_MONITOR_CHECKED;
       dref->flags |= DREF_DDC_IS_MONITOR;
       g_ptr_array_add(display_list, dref);
