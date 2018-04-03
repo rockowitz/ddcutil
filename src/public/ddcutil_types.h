@@ -355,6 +355,7 @@ typedef struct {
    const char *      mfg_id;          ///< 3 character manufacturer id, from EDID
    const char *      model_name;      ///< model name, from EDID
    const char *      sn;              ///< ASCII serial number string from EDID
+   uint16_t          product_code;    ///< product code from EDID
    const uint8_t *   edid_bytes;      ///< raw bytes (128) of first EDID block
    DDCA_MCCS_Version_Spec vcp_version;
    DDCA_MCCS_Version_Id   vcp_version_id;

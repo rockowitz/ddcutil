@@ -1123,6 +1123,7 @@ ddca_get_display_info_list2(
          curinfo->mfg_id         = dref->pedid->mfg_id;
          curinfo->model_name     = dref->pedid->model_name;
          curinfo->sn             = dref->pedid->serial_ascii;
+         curinfo->product_code   = dref->pedid->product_code;
          curinfo->vcp_version    = vspec;
          curinfo->vcp_version_id = version_id;
          curinfo->dref           = dref;
@@ -1192,6 +1193,7 @@ ddca_dbgrpt_display_info(
 
    rpt_vstring(d1, "Mfg Id:              %s", dinfo->mfg_id);
    rpt_vstring(d1, "Model:               %s", dinfo->model_name);
+   rpt_vstring(d1, "Product code:        %u", dinfo->product_code);
    rpt_vstring(d1, "Serial number:       %s", dinfo->sn);
    rpt_vstring(d1, "EDID:");
    rpt_hex_dump(dinfo->edid_bytes, 128, d2);
