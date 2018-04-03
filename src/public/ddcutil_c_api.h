@@ -917,7 +917,7 @@ ddca_get_feature_metadata_by_display(
  *  Frees the contents a #DDCA_Feature_Metadata instance.
  *
  *  Note that #DDCA_Featture_Metadata instances are typically
- *  allocated on the stack,  This function frees and data
+ *  allocated on the stack,  This function frees any data
  *  pointed to by the metadata instance, not the instance itself.
  *
  *  @param[in] info  metadata instance, passed by value
