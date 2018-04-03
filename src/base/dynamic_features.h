@@ -37,28 +37,32 @@ typedef enum {
 
 #define DYNAMIC_FEATURES_REC_MARKER "DFRC"
 typedef struct {
-   char            marker[4];
-   char *          mfg_id;     // [EDID_MFG_ID_FIELD_SIZE];
-   char *          model_name;  // [EDID_MODEL_NAME_FIELD_SIZE];
-   uint16_t        product_code;
-   char *          filename;     // source filename, if applicable
-   DFR_Flags       flags;
-   GHashTable *    features;     // array of DDCA_Feature_Metadata
+   char                       marker[4];
+   char *                     mfg_id;       // [EDID_MFG_ID_FIELD_SIZE];
+   char *                     model_name;   // [EDID_MODEL_NAME_FIELD_SIZE];
+   uint16_t                   product_code;
+   char *                     filename;     // source filename, if applicable
+   DDCA_MCCS_Version_Spec     vspec;
+   DFR_Flags                  flags;
+   GHashTable *               features;     // array of DDCA_Feature_Metadata
 } Dynamic_Features_Rec;
 
 
 Dynamic_Features_Rec *
 dfr_new(
-      const char * mfg_id,
-      const char * model_name,
-      uint16_t     product_code,
-      const char * filename);
+      const char *            mfg_id,
+      const char *            model_name,
+      uint16_t                product_code,
+      const char *            filename);
 
 void
-dbgrpt_dynamic_features_rec(
-      Dynamic_Features_Rec * dfr,
-      int                    depth);
+dfr_free(
+      Dynamic_Features_Rec *  frec);
 
+void
+dbgrpt_dfr(
+      Dynamic_Features_Rec *  dfr,
+      int                     depth);
 
 Error_Info *
 create_monitor_dynamic_features(
@@ -72,8 +76,8 @@ create_monitor_dynamic_features(
 
 DDCA_Feature_Metadata *
 get_dynamic_feature_metadata(
-      Dynamic_Features_Rec * dfr,
-      uint8_t                feature_code);
+      Dynamic_Features_Rec *  dfr,
+      uint8_t                 feature_code);
 
 
 #endif /* BASE_DYNAMIC_FEATURES_H_ */

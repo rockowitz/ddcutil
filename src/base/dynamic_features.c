@@ -34,38 +34,48 @@
 #include "util/string_util.h"
 
 #include "base/core.h"
+#include "base/vcp_version.h"
 
 #include "dynamic_features.h"
 
-#ifdef REF
+
+//
+// Generic functions that probably belong elsewhere
+//
+
+// TODO: Consider moving to string_util
 typedef struct {
-   char *          mfg_id;     // [EDID_MFG_ID_FIELD_SIZE];
-   char *          model_name;  // [EDID_MODEL_NAME_FIELD_SIZE];
-   uint16_t        product_code;
-   GHashTable *    features;     // array of DDCA_Feature_Metadata
-} Dynamic_Features_Rec;
+   char * word;
+   char * rest;
+} Tokenized;
 
+Tokenized first_word(char * s) {
+   // DBGMSG("Starting. s=|%s|", s);
+   Tokenized result = {NULL,NULL};
+   if (s) {
+      while (*s == ' ')
+            s++;
+      if (*s) {
+         char * end = s;
+         while (*++end && *end != ' ');
+         int wordlen = end-s;
+         result.word = malloc( wordlen+1);
+         memcpy(result.word, s, wordlen);
+         result.word[wordlen] = '\0';
 
+         while (*end == ' ')
+            end++;
+         if (*end == '\0')
+            end = NULL;
+         result.rest = end;
+      }
+   }
+   // DBGMSG("Returning: result.word=|%s|, result.rest=|%s|", result.word, result.rest);
+   return result;
+}
 
-#define DDCA_FEATURE_METADATA_MARKER  "FMET"
-/** Describes a VCP feature code, tailored for a specific VCP version */
-typedef
-struct {
-   char                                  marker[4];      /**< always "FMET" */
-   DDCA_Vcp_Feature_Code                 feature_code;   /**< VCP feature code */
-   DDCA_MCCS_Version_Spec                vspec;          /**< MCCS version    */
-   DDCA_Feature_Flags                    feature_flags;  /**< feature type description */
-   DDCA_Feature_Value_Table              sl_values;      /**< valid when DDCA_SIMPLE_NC set */
-   char *                                feature_name;   /**< feature name */
-   char *                                feature_desc;   /**< feature description */
-   // possibly add pointers to formatting functions
-} DDCA_Feature_Metadata;
-
-
-#endif
 
 // copied from sample code, more to more generic location
-
 /* Creates a string representation of DDCA_Feature_Flags bitfield.
  *
  * Arguments:
@@ -101,7 +111,6 @@ char * interpret_feature_flags(DDCA_Version_Feature_Flags flags) {
 
 
 // eventually move to a more shared location
-
 void
 dbgrpt_feature_metadata(
       DDCA_Feature_Metadata * md,
@@ -127,231 +136,6 @@ dbgrpt_feature_metadata(
          curval++;
       }
    }
-}
-
-
-
-void
-dbgrpt_dynamic_features_rec(
-      Dynamic_Features_Rec * dfr,
-      int                    depth)
-{
-   int d1 = depth+1;
-   rpt_structure_loc("Dynamic_Features_Rec", dfr, depth);
-   rpt_vstring(d1, "marker:         %4s", dfr->marker);
-   rpt_vstring(d1, "mfg_id:         %s", dfr->mfg_id);
-   rpt_vstring(d1, "model_name:     %s", dfr->model_name);
-   rpt_vstring(d1, "product_code:   %u", dfr->product_code);
-   rpt_vstring(d1, "filename:       %s", dfr->filename);
-   if (dfr->features) {
-      rpt_vstring(d1, "features count: %d", g_hash_table_size(dfr->features));
-      for (int ndx = 1; ndx < 256; ndx++) {
-         DDCA_Feature_Metadata * cur_feature =
-               g_hash_table_lookup(dfr->features, GINT_TO_POINTER(ndx));
-         if (cur_feature)
-            dbgrpt_feature_metadata(cur_feature, d1);
-
-      }
-   }
-}
-
-
-DDCA_Feature_Metadata *
-get_dynamic_feature_metadata(
-      Dynamic_Features_Rec * dfr,
-      uint8_t                feature_code)
-{
-   DDCA_Feature_Metadata * result = NULL;
-   if (dfr->features)
-      result = g_hash_table_lookup(dfr->features, GINT_TO_POINTER(feature_code));
-   return result;
-}
-
-
-/* static */ void
-add_error(
-      GPtrArray *  errors,
-      const char * filename,
-      int          linectr,
-      const char * caller,
-      char *       fmt, ...)
-{
-      char detail[200];
-      char xdetail[300];
-      char * final_detail;
-      va_list(args);
-      va_start(args, fmt);
-      vsnprintf(detail, 200, fmt, args);
-      if (filename) {
-         if (linectr > 0)
-            snprintf(xdetail, sizeof(xdetail), "%s at line %d of file %s", detail, linectr, filename);
-         else
-            snprintf(xdetail, sizeof(xdetail), "%s in file %s", detail, filename);
-         final_detail = xdetail;
-      }
-      else {
-         final_detail = detail;
-      }
-      Error_Info *  err = errinfo_new2(DDCRC_BAD_DATA, caller, final_detail);
-      g_ptr_array_add(errors, err);
-      va_end(args);
-}
-
-#define ADD_ERROR(_linectr, _fmt, ...) \
-   add_error(errors, filename, _linectr, __func__, _fmt, ##__VA_ARGS__)
-
-
-
-/* static */ bool
-attr_keyword(
-      DDCA_Feature_Metadata * cur_feature_metadata,
-      char *                  keyword)
-{
-   bool debug = false;
-   DBGMSF(debug, "keyword=|%s|", keyword);
-   bool ok = true;
-   DDCA_Feature_Flags * pflags = &cur_feature_metadata->feature_flags;
-   if (streq(keyword, "RW"))
-      *pflags |= DDCA_RW;
-   else if (streq(keyword, "RO"))
-      *pflags |= DDCA_RO;
-   else if (streq(keyword, "WO"))
-      *pflags |= DDCA_WO;
-
-   else if (streq(keyword, "C"))
-      *pflags |= DDCA_STD_CONT;
-   else if (streq(keyword, "CCONT"))
-      *pflags |= DDCA_COMPLEX_CONT;
-   else if (streq(keyword, "NC"))
-      *pflags |= DDCA_COMPLEX_NC;
-   else if (streq(keyword, "T"))
-      *pflags |= DDCA_TABLE;
-
-   else
-      ok = false;
-
-   DBGMSF(debug, "Returning %s", SBOOL(ok));
-   return ok;
-}
-
-
-/* static */ void
-switch_bits(
-      DDCA_Feature_Flags * pflags,
-      uint16_t             old_bit,
-      uint16_t             new_bit)
-{
-   *pflags &= ~old_bit;
-   *pflags |= new_bit;
-}
-
-
-void
-free_feature_metadata(
-      gpointer data)
-{
-   DDCA_Feature_Metadata * info = (DDCA_Feature_Metadata*) data;
-   assert(memcmp(info->marker, DDCA_FEATURE_METADATA_MARKER, 4) == 0);
-   // DDCA_Feature_Metadata needs a marker field
-
-   // TODO
-}
-
-
-void
-dfr_free(
-      Dynamic_Features_Rec * frec)
-{
-   if (frec) {
-      assert(memcmp(frec->marker, DYNAMIC_FEATURES_REC_MARKER, 4) == 0);
-      free(frec->mfg_id);
-      free(frec->model_name);
-      free(frec->filename);
-      if (frec->features)
-         g_hash_table_destroy(frec->features); // n. destroy function for values set at creation
-   }
-}
-
-
-
-void finalize_feature(
-      Dynamic_Features_Rec *  frec,
-      DDCA_Feature_Metadata * cur_feature_metadata,
-      GArray *                cur_feature_values,
-      const char *            filename,
-      GPtrArray *             errors)
-{
-   DDCA_Feature_Flags * pflags = &cur_feature_metadata->feature_flags;
-
-   if (cur_feature_values) {
-      // add terminating entry
-      DDCA_Feature_Value_Entry last_entry;
-      last_entry.value_code = 0x00;
-      last_entry.value_name = NULL;
-      g_array_append_val(cur_feature_values, last_entry);
-
-      cur_feature_metadata->sl_values = (DDCA_Feature_Value_Entry*) cur_feature_values->data;
-      // g_array_free(cur_feature_values, false);
-      // cur_feature_values = NULL;
-   }
-
-
-   if ( *pflags & (DDCA_RW | DDCA_RO | DDCA_WO) )
-      *pflags |= DDCA_RW;
-
-   if (cur_feature_metadata->sl_values) {
-      if (cur_feature_metadata->feature_flags & DDCA_COMPLEX_NC) {
-         if ( *pflags & DDCA_WO)
-            switch_bits(pflags, DDCA_COMPLEX_NC, DDCA_WO_NC);
-         else
-            switch_bits(pflags, DDCA_COMPLEX_NC, DDCA_SIMPLE_NC);
-      }
-
-      else if ( *pflags & (DDCA_COMPLEX_CONT | DDCA_STD_CONT | DDCA_TABLE))
-          ADD_ERROR(-1,  "Feature values specified for Continuous or Table feature");
-   }
-
-   if (*pflags & DDCA_NORMAL_TABLE & (*pflags & DDCA_WO))
-      switch_bits(pflags, DDCA_NORMAL_TABLE, DDCA_WO_TABLE);
-
-
-   g_hash_table_replace(
-         frec->features,
-         GINT_TO_POINTER(cur_feature_metadata->feature_code),
-         cur_feature_metadata);
-
-}
-
-
-// TODO: Consider moving to string_util
-typedef struct {
-   char * word;
-   char * rest;
-} Tokenized;
-
-Tokenized first_word(char * s) {
-   // DBGMSG("Starting. s=|%s|", s);
-   Tokenized result = {NULL,NULL};
-   if (s) {
-      while (*s == ' ')
-            s++;
-      if (*s) {
-         char * end = s;
-         while (*++end && *end != ' ');
-         int wordlen = end-s;
-         result.word = malloc( wordlen+1);
-         memcpy(result.word, s, wordlen);
-         result.word[wordlen] = '\0';
-
-         while (*end == ' ')
-            end++;
-         if (*end == '\0')
-            end = NULL;
-         result.rest = end;
-      }
-   }
-   // DBGMSG("Returning: result.word=|%s|, result.rest=|%s|", result.word, result.rest);
-   return result;
 }
 
 
@@ -395,6 +179,51 @@ char * canonicalize_possible_hex_value(char * string_value) {
    return buf;
 }
 
+// End of generic functions
+
+
+
+
+
+
+DDCA_Feature_Metadata *
+get_dynamic_feature_metadata(
+      Dynamic_Features_Rec * dfr,
+      uint8_t                feature_code)
+{
+   DDCA_Feature_Metadata * result = NULL;
+   if (dfr->features)
+      result = g_hash_table_lookup(dfr->features, GINT_TO_POINTER(feature_code));
+   return result;
+}
+
+
+void
+free_feature_metadata(
+      gpointer data)
+{
+   DDCA_Feature_Metadata * info = (DDCA_Feature_Metadata*) data;
+   assert(memcmp(info->marker, DDCA_FEATURE_METADATA_MARKER, 4) == 0);
+   // compare vs ddca_free_metadata_contents()
+
+   free(info->feature_desc);
+   free(info->feature_name);
+   if (info->sl_values) {
+      DDCA_Feature_Value_Entry * cur = info->sl_values;
+      for ( ;cur->value_code != 0x00 || cur->value_name; cur++ ) {
+         free(cur->value_name);
+      }
+      free(info->sl_values);      // is this right? freeing a hunk allocated by GPtrArray
+   }
+   info->marker[3] = 'x';
+   free(info);
+}
+
+
+
+
+
+
 
 Dynamic_Features_Rec *
 dfr_new(
@@ -411,6 +240,183 @@ dfr_new(
    if (filename)
       frec->filename  = strdup(filename);
    return frec;
+}
+
+
+void
+dfr_free(
+      Dynamic_Features_Rec * frec)
+{
+   if (frec) {
+      assert(memcmp(frec->marker, DYNAMIC_FEATURES_REC_MARKER, 4) == 0);
+      free(frec->mfg_id);
+      free(frec->model_name);
+      free(frec->filename);
+      if (frec->features)
+         g_hash_table_destroy(frec->features); // n. destroy function for values set at creation
+   }
+}
+
+
+void
+dbgrpt_dfr(
+      Dynamic_Features_Rec * dfr,
+      int                    depth)
+{
+   int d1 = depth+1;
+   rpt_structure_loc("Dynamic_Features_Rec", dfr, depth);
+   rpt_vstring(d1, "marker:         %4s", dfr->marker);
+   rpt_vstring(d1, "mfg_id:         %s", dfr->mfg_id);
+   rpt_vstring(d1, "model_name:     %s", dfr->model_name);
+   rpt_vstring(d1, "product_code:   %u", dfr->product_code);
+   rpt_vstring(d1, "filename:       %s", dfr->filename);
+   rpt_vstring(d1, "MCCS vspec:     %d.%d", dfr->vspec.major, dfr->vspec.minor);
+   if (dfr->features) {
+      rpt_vstring(d1, "features count: %d", g_hash_table_size(dfr->features));
+      for (int ndx = 1; ndx < 256; ndx++) {
+         DDCA_Feature_Metadata * cur_feature =
+               g_hash_table_lookup(dfr->features, GINT_TO_POINTER(ndx));
+         if (cur_feature)
+            dbgrpt_feature_metadata(cur_feature, d1);
+      }
+   }
+}
+
+
+//
+// Functions private to create_monitor_dynamic_featuers()
+//
+
+
+static
+void
+add_error(
+      GPtrArray *  errors,
+      const char * filename,
+      int          linectr,
+      const char * caller,
+      char *       fmt, ...)
+{
+      char detail[200];
+      char xdetail[300];
+      char * final_detail;
+      va_list(args);
+      va_start(args, fmt);
+      vsnprintf(detail, 200, fmt, args);
+      if (filename) {
+         if (linectr > 0)
+            snprintf(xdetail, sizeof(xdetail), "%s at line %d of file %s", detail, linectr, filename);
+         else
+            snprintf(xdetail, sizeof(xdetail), "%s in file %s", detail, filename);
+         final_detail = xdetail;
+      }
+      else {
+         final_detail = detail;
+      }
+      Error_Info *  err = errinfo_new2(DDCRC_BAD_DATA, caller, final_detail);
+      g_ptr_array_add(errors, err);
+      va_end(args);
+}
+
+#define ADD_ERROR(_linectr, _fmt, ...) \
+   add_error(errors, filename, _linectr, __func__, _fmt, ##__VA_ARGS__)
+
+
+
+static
+bool
+attr_keyword(
+      DDCA_Feature_Metadata * cur_feature_metadata,
+      char *                  keyword)
+{
+   bool debug = false;
+   DBGMSF(debug, "keyword=|%s|", keyword);
+   bool ok = true;
+   DDCA_Feature_Flags * pflags = &cur_feature_metadata->feature_flags;
+   if (streq(keyword, "RW"))
+      *pflags |= DDCA_RW;
+   else if (streq(keyword, "RO"))
+      *pflags |= DDCA_RO;
+   else if (streq(keyword, "WO"))
+      *pflags |= DDCA_WO;
+
+   else if (streq(keyword, "C"))
+      *pflags |= DDCA_STD_CONT;
+   else if (streq(keyword, "CCONT"))
+      *pflags |= DDCA_COMPLEX_CONT;
+   else if (streq(keyword, "NC"))
+      *pflags |= DDCA_COMPLEX_NC;
+   else if (streq(keyword, "T"))
+      *pflags |= DDCA_TABLE;
+
+   else
+      ok = false;
+
+   DBGMSF(debug, "Returning %s", SBOOL(ok));
+   return ok;
+}
+
+
+static
+void
+switch_bits(
+      DDCA_Feature_Flags * pflags,
+      uint16_t             old_bit,
+      uint16_t             new_bit)
+{
+   *pflags &= ~old_bit;
+   *pflags |= new_bit;
+}
+
+
+static
+void
+finalize_feature(
+      Dynamic_Features_Rec *  frec,
+      DDCA_Feature_Metadata * cur_feature_metadata,
+      GArray *                cur_feature_values,
+      const char *            filename,
+      GPtrArray *             errors)
+{
+   DDCA_Feature_Flags * pflags = &cur_feature_metadata->feature_flags;
+
+   if (cur_feature_values) {
+      // add terminating entry
+      DDCA_Feature_Value_Entry last_entry;
+      last_entry.value_code = 0x00;
+      last_entry.value_name = NULL;
+      g_array_append_val(cur_feature_values, last_entry);
+
+      cur_feature_metadata->sl_values = (DDCA_Feature_Value_Entry*) cur_feature_values->data;
+      // g_array_free(cur_feature_values, false);
+      // cur_feature_values = NULL;
+   }
+
+   if ( *pflags & (DDCA_RW | DDCA_RO | DDCA_WO) )
+      *pflags |= DDCA_RW;
+
+   if (cur_feature_metadata->sl_values) {
+      if (cur_feature_metadata->feature_flags & DDCA_COMPLEX_NC) {
+         if ( *pflags & DDCA_WO)
+            switch_bits(pflags, DDCA_COMPLEX_NC, DDCA_WO_NC);
+         else
+            switch_bits(pflags, DDCA_COMPLEX_NC, DDCA_SIMPLE_NC);
+      }
+
+      else if ( *pflags & (DDCA_COMPLEX_CONT | DDCA_STD_CONT | DDCA_TABLE))
+          ADD_ERROR(-1,  "Feature values specified for Continuous or Table feature");
+   }
+
+   if (*pflags & DDCA_NORMAL_TABLE & (*pflags & DDCA_WO))
+      switch_bits(pflags, DDCA_NORMAL_TABLE, DDCA_WO_TABLE);
+
+   // For now, to revisit
+   cur_feature_metadata->vspec = frec->vspec;
+
+   g_hash_table_replace(
+         frec->features,
+         GINT_TO_POINTER(cur_feature_metadata->feature_code),
+         cur_feature_metadata);
 }
 
 
@@ -477,7 +483,16 @@ create_monitor_dynamic_features(
                if ( !streq(t1.rest, model_name) ) {
                   ADD_ERROR(linectr, "Unexpected model name \"%s\"", t1.rest);
                }
-
+                  }
+            else if (streq(t1.word, "MCCS_VERSION")) {
+               // mccs_version_seen = true;   // not required for now
+               // default as set by calloc() is 0.0, which is DDCA_VSPEC_UNKNOWN
+               // returns DDCA_VSPEC_UKNOWN if invalid
+               DDCA_MCCS_Version_Spec  vspec = parse_vspec(t1.rest);
+               if (!vcp_version_is_valid(vspec, /*allow DDCA_VSPEC_UNKNOWN */ false))
+                  ADD_ERROR(linectr, "Invalid MCCS version: \"%s\"", t1.rest);
+               else
+                  frec->vspec = vspec;
             }
             else if (streq(t1.word, "ATTRS")) {
                if (!cur_feature_metadata) {
@@ -627,7 +642,8 @@ create_monitor_dynamic_features(
    else {
       g_ptr_array_free(errors, false);
       *dynamic_features_loc = frec;
-      // dbgrpt_dynamic_features_rec(frec, 0);
+      if (debug)
+         dbgrpt_dfr(frec, 0);
    }
 
    DBGMSF(debug, "Done. *dynamic_features_loc=%p, returning %p",

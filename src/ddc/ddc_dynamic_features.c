@@ -47,6 +47,8 @@
 #include "ddc/ddc_dynamic_features.h"
 
 
+static bool enable_dynamic_features = true;
+
 
 // for now, just use an array of pointers to DDCA_Feature_Metadata
 
@@ -291,13 +293,13 @@ dfr_load_by_edid(
    }
 
    dfr_save(dfr);
-
    return errs;
 }
 
 
 void check_dynamic_features(Display_Ref * dref) {
-   return;     // Disable
+   if (!enable_dynamic_features)    // global variable
+      return;
 
    bool debug = false;
    DBGMSF(debug, "Starting. ");
