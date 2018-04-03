@@ -2925,12 +2925,14 @@ ddca_report_parsed_capabilities(
 }
 
 
-void ddca_parse_and_report_capabilities(
+void
+ddca_parse_and_report_capabilities(
       char *              capabilities_string,
       int                 depth)
 {
       Parsed_Capabilities* pcaps = parse_capabilities_string(capabilities_string);
       report_parsed_capabilities(pcaps);
+      free_parsed_capabilities(pcaps);
 }
 
 

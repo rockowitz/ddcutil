@@ -254,6 +254,7 @@ dfr_free(
       free(frec->filename);
       if (frec->features)
          g_hash_table_destroy(frec->features); // n. destroy function for values set at creation
+      free(frec);
    }
 }
 
@@ -452,10 +453,9 @@ create_monitor_dynamic_features(
       char *  line = g_ptr_array_index(lines,linectr);
       linectr++;
 
-      Tokenized t1, t2  = {0,0};
-      t1 = first_word(line);
+      Tokenized t1 = first_word(line);
       if (t1.word && *t1.word != '*' && *t1.word != '#') {
-         t2 = first_word(t1.rest);
+         Tokenized t2 = first_word(t1.rest);
          if (!t2.word) {
             ADD_ERROR(linectr, "Invalid data \"%s\"", line);
          }

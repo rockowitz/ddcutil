@@ -123,6 +123,7 @@ dfr_lookup(
       assert(memcmp(result->marker, DYNAMIC_FEATURES_REC_MARKER, 4) == 0);
       // if (result->flags & DFR_FLAGS_NOT_FOUND)
       //    result = NULL;
+      free(key);
    }
    return result;
 }
@@ -166,6 +167,13 @@ get_feature_metadata(
 }
 
 
+/** Create a feature definition key.
+ *
+ *  \param   mfg
+ *  \param   model_name
+ *  \param   product_code
+ *  \return  key string (caller must free or save in persistent data structure)
+ */
 char *
 feature_def_key(
       const char *  mfg,
@@ -185,13 +193,20 @@ feature_def_key(
    }
 
    char * result = g_strdup_printf("%s-%s-%u", mfg, model_name2, product_code);
+   free(model_name2);
    DBGMSF(debug, "Returning: |%s|", result);
    return result;
 }
 
-//search XDG search path
 
-/* static */ char *
+/** Look for feature definition file in the current directory and
+ *  on the XDG search path.
+ *
+ *  \param simple_fn  simple filename, without ".mccs" suffix
+ *  \return name of file found (caller must free)
+ */
+static
+char *
 find_feature_def_file(
       const char * simple_fn)
 {
@@ -276,13 +291,14 @@ dfr_load_by_edid(
          // TODO: check that dfr == NULL if error
          assert( (errs && !dfr) || (!errs && dfr));
       }
+      free(fqfn);
    }
    else {
       // DBGMSG("simple=fn=%s", simple_fn);
       errs = errinfo_new2(DDCRC_NOT_FOUND, __func__,
                           "Feature definition file not found: %s.mccs", simple_fn);
    }
-
+   assert( (errs && !dfr) || (!errs && dfr));   // avoid clang warning
 
    if (errs) {
       dfr = dfr_new(edid->mfg_id, edid->model_name, edid->product_code, NULL);
@@ -292,6 +308,7 @@ dfr_load_by_edid(
       *dfr_loc = dfr;
    }
 
+   free(simple_fn);
    dfr_save(dfr);
    return errs;
 }
@@ -322,6 +339,7 @@ void check_dynamic_features(Display_Ref * dref) {
                f0printf(fout(), "   %s\n", errs->causes[ndx]->detail);
             }
          }
+         errinfo_free(errs);
       }
       else {
          // dbgrpt_dynamic_features_rec(dfr, 1);
