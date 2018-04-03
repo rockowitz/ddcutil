@@ -1,7 +1,7 @@
 /* string_util.h
  *
  * <copyright>
- * Copyright (C) 2014-2017 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2014-2018 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -46,9 +46,12 @@
 // Returns "true" or "false":
 char * bool_repr(int value);
 
-
 // A macro alternative to bool_repr()
 #define SBOOL(val) ( (val) ? "true" : "false" )
+
+// Inline alternative to bool_repr()
+inline char * sbool(int val) {  return (val)  ? "true" : "false"; }
+
 
 #ifdef DEPRECATED
 // use library function g_strlcpy() instead
