@@ -390,7 +390,7 @@ static char * get_firmware_version_string_t(Display_Handle * dh) {
       }
    }
    else {
-      SAFE_SNPRINTF(version, 40, "%d.%d", valrec->val.nc.sh, valrec->val.nc.sl);
+      g_snprintf(version, 40, "%d.%d", valrec->val.nc.sh, valrec->val.nc.sl);
       free_single_vcp_value(valrec);
    }
    return version;
@@ -427,7 +427,7 @@ static char * get_controller_mfg_string_t(Display_Handle * dh) {
                             vals,
                             valrec->val.nc.sl);
       if (!mfg_name) {
-         SAFE_SNPRINTF(mfg_name_buf, MFG_NAME_BUF_SIZE,
+         g_snprintf(mfg_name_buf, MFG_NAME_BUF_SIZE,
                        "Unrecognized manufacturer code 0x%02x", valrec->val.nc.sl);
          mfg_name = mfg_name_buf;
       }

@@ -54,7 +54,7 @@ inline char * sbool(int val) {  return (val)  ? "true" : "false"; }
 
 
 #ifdef DEPRECATED
-// use library function g_strlcpy() instead
+// use glib function g_strlcpy() instead
 #define SAFE_STRNCPY(dest, src, buflen) \
    do { \
       strncpy(dest, src, (buflen) ); \
@@ -63,12 +63,15 @@ inline char * sbool(int val) {  return (val)  ? "true" : "false"; }
    } while(0)
 #endif
 
+#ifdef DEPRECATED
+// use glib function g_snprintf()
 #define SAFE_SNPRINTF(buf, bufsz, fmt, ...) \
    do { \
       snprintf(buf, bufsz, fmt, __VA_ARGS__ ); \
       if (bufsz > 0) \
          buf[bufsz-1] = '\0'; \
    } while(0)
+#endif
 
 //
 // String functions (other than hex)

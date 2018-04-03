@@ -181,7 +181,7 @@ char * format_vspec(DDCA_MCCS_Version_Spec vspec) {
    else if ( vcp_version_eq(vspec, DDCA_VSPEC_UNKNOWN) )
       strcpy(private_buffer,  "Unknown");     // will coverity flag this?
    else
-      SAFE_SNPRINTF(private_buffer, 20, "%d.%d", vspec.major, vspec.minor);
+      g_snprintf(private_buffer, 20, "%d.%d", vspec.major, vspec.minor);
    // DBGMSG("Returning: |%s|", private_buffer);
    return private_buffer;
 }

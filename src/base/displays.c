@@ -902,8 +902,7 @@ char * dref_repr_t(Display_Ref * dref) {
    static GPrivate  dref_repr_key = G_PRIVATE_INIT(g_free);
 
    char * buf = get_thread_fixed_buffer(&dref_repr_key, 100);
-   // char buf2[80];
-   SAFE_SNPRINTF(buf, 100, "Display_Ref[%s]", dpath_short_name_t(&dref->io_path));
+   g_snprintf(buf, 100, "Display_Ref[%s]", dpath_short_name_t(&dref->io_path));
    return buf;
 }
 
