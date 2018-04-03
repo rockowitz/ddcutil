@@ -1282,7 +1282,7 @@ DDCA_Status
 ddca_get_table_vcp_value(
        DDCA_Display_Handle     ddca_dh,
        DDCA_Vcp_Feature_Code   feature_code,
-       DDCA_Table_Vcp_Value **     table_value_loc);
+       DDCA_Table_Vcp_Value ** table_value_loc);
 
 
 /** Gets the value of a VCP feature of any type.
