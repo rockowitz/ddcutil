@@ -209,14 +209,14 @@ typedef struct _display_ref {
    Parsed_Edid * pedid;                  // added 4/2017
    int           dispno;
    void *        detail;    // I2C_Bus_Info *, ADL_Display_Detail *, or Usb_Monitor_Info *
-
    Display_Async_Rec * async_rec;
-   void *        dfr;          // for future Dyname_Features_Record *
-
+   void *        dfr;       // for future Dyname_Features_Record *
 } Display_Ref;
 
-// n. works for both Display_Ref and Display_Handle
-// #define ASSERT_DISPLAY_IO_MODE(_dref, _mode) assert(_dref && _dref->io_mode == _mode)
+#define ASSERT_DREF_IO_MODE(_dref, _mode)  \
+   assert(_dref && \
+          memcmp(dref->marker, DISPLAY_REF_MARKER, 4) == 0) && \
+          _dref->io_path.io_mode == _mode)
 
 Display_Ref * create_bus_display_ref(int busno);
 Display_Ref * create_adl_display_ref(int iAdapterIndex, int iDisplayIndex);
