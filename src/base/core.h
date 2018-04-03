@@ -16,7 +16,7 @@
 /* core.h
  *
  * <copyright>
- * Copyright (C) 2014-2017 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2014-2018 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -55,6 +55,14 @@
 
 // /** @addtogroup abnormal_termination
 //  */
+
+//
+// Common macros
+//
+
+#define ASSERT_MARKER(_struct_ptr, _marker_value) \
+   assert(_struct_ptr && memcmp(_struct_ptr->marker, _marker_value, 4) == 0)
+
 
 //
 // Initialization
@@ -233,7 +241,6 @@ bool ddcmsg(Trace_Group trace_group, const char* funcname, const int lineno, con
  */
 #define DDCMSG(debug_flag, format, ...) \
    ddcmsg(( (debug_flag) ) ? 0xff : (TRACE_GROUP), __func__, __LINE__, __FILE__, format, ##__VA_ARGS__)
-
 
 
 // Show report levels for all types
