@@ -26,8 +26,44 @@
 
 #include <glib-2.0/glib.h>
 #include <inttypes.h>
+#include <stdlib.h>
 
+#include "util/edid.h"
 #include "util/error_info.h"
+
+// for possible future use
+typedef struct {
+   char                mfg_id[EDID_MFG_ID_FIELD_SIZE];
+   char                model_name[EDID_MODEL_NAME_FIELD_SIZE];
+   uint16_t            product_code;
+} DDCA_Monitor_Model_Id;
+
+
+DDCA_Monitor_Model_Id
+monitor_model_value(
+      char *   mfg_id,
+      char *   model_name,
+      uint16_t product_code);
+
+DDCA_Monitor_Model_Id *
+monitor_model_new(
+      char *   mfg_id,
+      char *   model_name,
+      uint16_t product_code);
+
+void
+monitor_model_free(
+      DDCA_Monitor_Model_Id * model_id);
+
+char *
+model_id_string(
+      const char *  mfg,
+      const char *  model_name,
+      uint16_t      product_code);
+
+char *
+monitor_model_string(
+      DDCA_Monitor_Model_Id * model_id);
 
 typedef enum {
    DFR_FLAGS_NONE      = 0,

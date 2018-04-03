@@ -101,7 +101,7 @@ dfr_init() {
 void dfr_save(
       Dynamic_Features_Rec * dfr)
 {
-   char * key = feature_def_key(
+   char * key = model_id_string(
                    dfr->mfg_id,
                    dfr->model_name,
                    dfr->product_code);
@@ -118,7 +118,7 @@ dfr_lookup(
 {
    Dynamic_Features_Rec * result = NULL;
    if (dynamic_features_records) {
-      char * key = feature_def_key(mfg_id, model_name, product_code);
+      char * key = model_id_string(mfg_id, model_name, product_code);
       result = g_hash_table_lookup(dynamic_features_records, key);
       assert(memcmp(result->marker, DYNAMIC_FEATURES_REC_MARKER, 4) == 0);
       // if (result->flags & DFR_FLAGS_NOT_FOUND)
@@ -167,36 +167,7 @@ get_feature_metadata(
 }
 
 
-/** Create a feature definition key.
- *
- *  \param   mfg
- *  \param   model_name
- *  \param   product_code
- *  \return  key string (caller must free or save in persistent data structure)
- */
-char *
-feature_def_key(
-      const char *  mfg,
-      const char *  model_name,
-      uint16_t      product_code)
-{
-   bool debug = false;
-   DBGMSF(debug, "Starting. mfg=|%s|, model_name=|%s| product_code=%u",
-                 mfg, model_name, product_code);
 
-   assert(mfg);
-   assert(model_name);
-   char * model_name2 = strdup(model_name);
-   for (int ndx = 0; ndx < strlen(model_name2); ndx++) {
-      if ( !isalnum(model_name2[ndx]) )
-         model_name2[ndx] = '_';
-   }
-
-   char * result = g_strdup_printf("%s-%s-%u", mfg, model_name2, product_code);
-   free(model_name2);
-   DBGMSF(debug, "Returning: |%s|", result);
-   return result;
-}
 
 
 /** Look for feature definition file in the current directory and
@@ -272,7 +243,7 @@ dfr_load_by_edid(
 {
    Error_Info *           errs = NULL;
    Dynamic_Features_Rec * dfr  = NULL;
-   char * simple_fn = feature_def_key(edid->mfg_id, edid->model_name,edid->product_code);
+   char * simple_fn = model_id_string(edid->mfg_id, edid->model_name,edid->product_code);
 
    char * fqfn = find_feature_def_file(simple_fn);
    if (fqfn) {

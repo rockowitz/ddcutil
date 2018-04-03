@@ -25,11 +25,6 @@
 
 #include "base/displays.h"
 
-char *
-feature_def_key(
-      const char *  mfg,
-      const char *  model_name,
-      uint16_t      product_code);
 
 void check_dynamic_features(Display_Ref * dref);
 

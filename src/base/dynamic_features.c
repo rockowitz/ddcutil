@@ -24,6 +24,7 @@
 #define _GNU_SOURCE      // for asprintf()
 
 #include <assert.h>
+#include <ctype.h>
 #include <stdio.h>
 #include <string.h>
 
@@ -182,6 +183,91 @@ char * canonicalize_possible_hex_value(char * string_value) {
 // End of generic functions
 
 
+// DDCA_Monitor_Model_Id for possible future use
+
+DDCA_Monitor_Model_Id
+monitor_model_value(
+      char *   mfg_id,
+      char *   model_name,
+      uint16_t product_code)
+{
+   assert(mfg_id && strlen(mfg_id) < EDID_MFG_ID_FIELD_SIZE);
+   assert(model_name && strlen(model_name) < EDID_MODEL_NAME_FIELD_SIZE);
+   DDCA_Monitor_Model_Id  result;
+
+   g_strlcpy(result.mfg_id,     mfg_id,     EDID_MFG_ID_FIELD_SIZE);
+   g_strlcpy(result.model_name, model_name, EDID_MODEL_NAME_FIELD_SIZE);
+   result.product_code = product_code;
+   return result;
+}
+
+
+DDCA_Monitor_Model_Id *
+monitor_model_new(
+      char *   mfg_id,
+      char *   model_name,
+      uint16_t product_code)
+{
+   assert(mfg_id && strlen(mfg_id) < EDID_MFG_ID_FIELD_SIZE);
+   assert(model_name && strlen(model_name) < EDID_MODEL_NAME_FIELD_SIZE);
+   DDCA_Monitor_Model_Id * result = calloc(1, sizeof(DDCA_Monitor_Model_Id));
+   g_strlcpy(result->mfg_id,     mfg_id,     EDID_MFG_ID_FIELD_SIZE);
+   g_strlcpy(result->model_name, model_name, EDID_MODEL_NAME_FIELD_SIZE);
+   result->product_code = product_code;
+   return result;
+}
+
+
+void
+monitor_model_free(
+      DDCA_Monitor_Model_Id * model_id)
+{
+   free(model_id);
+}
+
+
+/** Create a feature definition key.
+ *
+ *  \param   mfg
+ *  \param   model_name
+ *  \param   product_code
+ *  \return  key string (caller must free or save in persistent data structure)
+ */
+char *
+model_id_string(
+      const char *  mfg,
+      const char *  model_name,
+      uint16_t      product_code)
+{
+   bool debug = false;
+   DBGMSF(debug, "Starting. mfg=|%s|, model_name=|%s| product_code=%u",
+                 mfg, model_name, product_code);
+
+   assert(mfg);
+   assert(model_name);
+   char * model_name2 = strdup(model_name);
+   for (int ndx = 0; ndx < strlen(model_name2); ndx++) {
+      if ( !isalnum(model_name2[ndx]) )
+         model_name2[ndx] = '_';
+   }
+
+   char * result = g_strdup_printf("%s-%s-%u", mfg, model_name2, product_code);
+   free(model_name2);
+   DBGMSF(debug, "Returning: |%s|", result);
+   return result;
+}
+
+
+char *
+monitor_model_string(DDCA_Monitor_Model_Id * model_id) {
+   // perhaps use thread safe buffer so caller doesn't have to free
+   char * result = model_id_string(
+                      model_id->mfg_id,
+                      model_id->model_name,
+                      model_id->product_code);
+
+   return result;
+}
 
 
 
@@ -218,9 +304,6 @@ free_feature_metadata(
    info->marker[3] = 'x';
    free(info);
 }
-
-
-
 
 
 
