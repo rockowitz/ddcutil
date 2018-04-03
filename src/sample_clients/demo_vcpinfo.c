@@ -87,7 +87,7 @@ DDCA_Display_Handle * open_first_display_by_dlist() {
  */
 char * interpret_feature_flags(DDCA_Version_Feature_Flags flags) {
    char * buffer = NULL;
-   int rc = asprintf(&buffer, "%s%s%s%s%s%s%s%s%s%s%s%s%s",
+   int rc = asprintf(&buffer, "%s%s%s%s%s%s%s%s%s%s%s%s%s%s",
        flags & DDCA_RO             ? "Read-Only, "                   : "",
        flags & DDCA_WO             ? "Write-Only, "                  : "",
        flags & DDCA_RW             ? "Read-Write, "                  : "",
@@ -100,7 +100,8 @@ char * interpret_feature_flags(DDCA_Version_Feature_Flags flags) {
        flags & DDCA_NORMAL_TABLE   ? "Table (readable), "            : "",
        flags & DDCA_WO_TABLE       ? "Table (write-only), "          : "",
        flags & DDCA_DEPRECATED     ? "Deprecated, "                  : "",
-       flags & DDCA_SYNTHETIC      ? "Synthesized, "                 : ""
+       flags & DDCA_SYNTHETIC      ? "Synthesized, "                 : "",
+       flags & DDCA_USER_DEFINED   ? "User-defined, "                : ""
        );
    assert(rc >= 0);   // real life code would check for malloc() failure in asprintf()
    // remove final comma and blank
