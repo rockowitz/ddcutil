@@ -128,12 +128,8 @@ DDCA_MCCS_Version_Spec get_vcp_version_by_display_handle(Display_Handle * dh) {
       }
       DBGMSF(debug, "Non-cache lookup returning: %d.%d", dh->dref->vcp_version.major, dh->dref->vcp_version.minor);
    }
-   // DBGMSF(debug, "Returning: %d.%d", dh->dref->vcp_version.major, dh->dref->vcp_version.minor);
+
    assert( !vcp_version_eq(dh->dref->vcp_version, DDCA_VSPEC_UNQUERIED) );
-   // if (debug) {
-   //    DBGMSG("Done.");
-   //    report_display_handle(dh, /*msg=*/ NULL, 1);
-   // }
    DBGMSF(debug, "Returning dh->dref->vcp_version = %d.%d, %s",
                  dh->dref->vcp_version.major, dh->dref->vcp_version.minor,
                  format_vspec(dh->dref->vcp_version));
