@@ -64,12 +64,15 @@ const DDCA_MCCS_Version_Spec DDCA_VSPEC_UNQUERIED = {0xff, 0xff}; ///< indicates
  *  @return  true/false
  */
 bool vcp_version_is_valid(DDCA_MCCS_Version_Spec vspec, bool allow_unknown) {
+   bool debug = false;
+   DBGMSF(debug, "Starting.  vspec=%d.%d, allow_unknown=%s", vspec.major, vspec.minor, SBOOL(allow_unknown));
    bool result = vcp_version_eq(vspec, DDCA_VSPEC_V10) ||
                  vcp_version_eq(vspec, DDCA_VSPEC_V20) ||
                  vcp_version_eq(vspec, DDCA_VSPEC_V21) ||
                  vcp_version_eq(vspec, DDCA_VSPEC_V30) ||
                  vcp_version_eq(vspec, DDCA_VSPEC_V22) ||
                  (allow_unknown && vcp_version_eq(vspec,DDCA_VSPEC_UNKNOWN));
+   DBGMSF(debug, "Returning: %s", SBOOL(result));
    return result;
 }
 
