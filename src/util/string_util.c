@@ -458,7 +458,7 @@ strsplit_maxlength(
       uint16_t      max_piece_length,
       const char *  delims)
 {
-   bool debug = true;
+   bool debug = false;
    if (debug)
       printf("(%s) max_piece_length=%u, delims=|%s|, str_to_split=|%s|\n",
              __func__, max_piece_length, delims, str_to_split);
