@@ -183,17 +183,19 @@ char * canonicalize_possible_hex_value(char * string_value) {
 // End of generic functions
 
 
-// DDCA_Monitor_Model_Id for possible future use
+// Monitor_Model_Key for possible future use
 
-DDCA_Monitor_Model_Id
-monitor_model_value(
+
+/** Returns a Monitor_Model_Key as a value on the stack. */
+Monitor_Model_Key
+monitor_model_key_value(
       char *   mfg_id,
       char *   model_name,
       uint16_t product_code)
 {
    assert(mfg_id && strlen(mfg_id) < EDID_MFG_ID_FIELD_SIZE);
    assert(model_name && strlen(model_name) < EDID_MODEL_NAME_FIELD_SIZE);
-   DDCA_Monitor_Model_Id  result;
+   Monitor_Model_Key  result;
 
    g_strlcpy(result.mfg_id,     mfg_id,     EDID_MFG_ID_FIELD_SIZE);
    g_strlcpy(result.model_name, model_name, EDID_MODEL_NAME_FIELD_SIZE);
@@ -202,25 +204,50 @@ monitor_model_value(
 }
 
 
-DDCA_Monitor_Model_Id *
-monitor_model_new(
+Monitor_Model_Key
+monitor_model_key_undefined_value() {
+   Monitor_Model_Key result;
+   memcpy(result, 0, sizeof(result));
+   return result;
+}
+
+Monitor_Model_Key
+monitor_model_key_value_from_edid(Parsed_Edid * edid) {
+   Monitor_Model_Key result;
+   strncpy(result.mfg_id, result->mfg_id, EDID_MFG_ID_FIELD_SIZE);
+   strncpy(result.model_name, edid->model_name, EDID_MODEL_NAME_FIELD_SIZE);
+   result.product_code = edid->product_code;
+   return result;
+}
+
+
+
+/** Allocates and initializes a new Monitor_Model_Key */
+Monitor_Model_Key *
+monitor_model_key_new(
       char *   mfg_id,
       char *   model_name,
       uint16_t product_code)
 {
    assert(mfg_id && strlen(mfg_id) < EDID_MFG_ID_FIELD_SIZE);
    assert(model_name && strlen(model_name) < EDID_MODEL_NAME_FIELD_SIZE);
-   DDCA_Monitor_Model_Id * result = calloc(1, sizeof(DDCA_Monitor_Model_Id));
+   Monitor_Model_Key * result = calloc(1, sizeof(Monitor_Model_Key));
    g_strlcpy(result->mfg_id,     mfg_id,     EDID_MFG_ID_FIELD_SIZE);
    g_strlcpy(result->model_name, model_name, EDID_MODEL_NAME_FIELD_SIZE);
    result->product_code = product_code;
    return result;
 }
 
+Monitor_Model_Key *
+monitor_model_key_undefined_new() {
+   Monitor_Model_Key * result = calloc(1, sizeof(Monitor_Model_Key));
+   return result;
+}
+
 
 void
-monitor_model_free(
-      DDCA_Monitor_Model_Id * model_id)
+monitor_model_key_free(
+      Monitor_Model_Key * model_id)
 {
    free(model_id);
 }
@@ -257,9 +284,29 @@ model_id_string(
    return result;
 }
 
+// static const UNDEFINED_MONITOR_MODEL_KEY
+
+
+bool
+monitor_model_key_eq(
+      Monitor_Model_Key mmk1,
+      Monitor_Model_Key mmk2)
+{
+   bool result =
+      (mmk1.product_code == mmk2.product_code      &&
+       strcmp(mmk1.mfg_id, mmk2.mfg_id) == 0       &&
+       strcmp(mmk1.model_name, mmk2.model_name) == 0 );
+   return result;
+}
+
+bool monitor_model_key_is_defined(Monitor_Model_Key mmk) {
+   Monitor_Model_Key undefined = monitor_model_undefined_key();
+   bool result = monitor_model_key_eq(mmk, undefined);
+   return result;
+}
 
 char *
-monitor_model_string(DDCA_Monitor_Model_Id * model_id) {
+monitor_model_string(Monitor_Model_Key * model_id) {
    // perhaps use thread safe buffer so caller doesn't have to free
    char * result = model_id_string(
                       model_id->mfg_id,

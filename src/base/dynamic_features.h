@@ -36,24 +36,30 @@ typedef struct {
    char                mfg_id[EDID_MFG_ID_FIELD_SIZE];
    char                model_name[EDID_MODEL_NAME_FIELD_SIZE];
    uint16_t            product_code;
-} DDCA_Monitor_Model_Id;
+} Monitor_Model_Key;
 
 
-DDCA_Monitor_Model_Id
-monitor_model_value(
+Monitor_Model_Key
+monitor_model_key_value(
       char *   mfg_id,
       char *   model_name,
       uint16_t product_code);
 
-DDCA_Monitor_Model_Id *
-monitor_model_new(
+Monitor_Model_Key
+monitor_model_key_undefined_value();
+
+Monitor_Model_Key *
+monitor_model_key_new(
       char *   mfg_id,
       char *   model_name,
       uint16_t product_code);
+
+Monitor_Model_Key *
+monitor_model_key_undefined_new();
 
 void
-monitor_model_free(
-      DDCA_Monitor_Model_Id * model_id);
+monitor_model_key_free(
+      Monitor_Model_Key * model_id);
 
 char *
 model_id_string(
@@ -63,7 +69,7 @@ model_id_string(
 
 char *
 monitor_model_string(
-      DDCA_Monitor_Model_Id * model_id);
+      Monitor_Model_Key * model_id);
 
 typedef enum {
    DFR_FLAGS_NONE      = 0,
