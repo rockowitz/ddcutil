@@ -908,6 +908,19 @@ ddca_dh_repr(DDCA_Display_Handle ddca_dh) {
 }
 
 
+DDCA_Display_Ref
+ddca_display_ref_from_handle(
+      DDCA_Display_Handle   ddca_dh)
+{
+   DDCA_Display_Ref result = NULL;
+   Display_Handle * dh = (Display_Handle *) ddca_dh;
+   if (valid_display_handle(dh))
+      result = dh->dref;
+   return result;
+
+}
+
+
 DDCA_Status
 ddca_get_mccs_version(
       DDCA_Display_Handle     ddca_dh,
@@ -1750,6 +1763,26 @@ ddca_get_feature_metadata_by_vspec(
 }
 
 
+DDCA_Status
+ddca_get_feature_metadata_by_dref(
+      DDCA_Display_Handle         ddca_dref,
+      DDCA_Vcp_Feature_Code       feature_code,
+      bool                        create_default_if_not_found,
+      DDCA_Feature_Metadata *     info)
+{
+   WITH_DR(
+         ddca_dref,
+         {
+            psc = ddca_get_feature_metadata_by_vspec(
+                     dref->vcp_version,
+                     feature_code,
+                     create_default_if_not_found,
+                     info);
+         }
+      );
+}
+
+
 // Add with_default flag?
 DDCA_Status
 ddca_get_feature_metadata_by_display(
@@ -1831,6 +1864,23 @@ ddca_feature_name_by_version_id(
 #endif
 
 
+DDCA_Status
+ddca_feature_name_by_dref(
+      DDCA_Vcp_Feature_Code  feature_code,
+      DDCA_Display_Ref       ddca_dref,
+      char **                name_loc)
+{
+   WITH_DR(ddca_dref,
+         {
+               *name_loc = ddca_feature_name_by_vspec(feature_code, dref->vcp_version);
+               if (!*name_loc)
+                  psc = -EINVAL;
+         }
+   )
+}
+
+
+
 //
 // Display Inquiry
 //
@@ -1883,6 +1933,23 @@ bye:
   DBGMSF(debug, "Done. *pvalue_table=%p, returning %s", *value_table_loc, psc_desc(rc));
 
    return rc;
+}
+
+
+// for now, just gets SL value table based on the vspec of the display ref,
+// eventually handle dynamically assigned monitor specs
+DDCA_Status
+ddca_get_simple_sl_value_table_by_dref(
+      DDCA_Vcp_Feature_Code      feature_code,
+      DDCA_Display_Ref           ddca_dref,
+      DDCA_Feature_Value_Entry** value_table_loc)
+{
+   WITH_DR(ddca_dref,
+      {
+         psc = ddca_get_simple_sl_value_table_by_vspec(
+                  feature_code, dref->vcp_version, value_table_loc);
+      }
+   )
 }
 
 
@@ -2422,11 +2489,30 @@ bye:
 
 
 DDCA_Status
-ddca_format_non_table_vcp_value(
+ddca_format_any_vcp_value_by_dref(
       DDCA_Vcp_Feature_Code   feature_code,
-      DDCA_MCCS_Version_Spec  vspec,
-      DDCA_Non_Table_Vcp_Value *  valrec,
+      DDCA_Display_Ref        ddca_dref,
+      DDCA_Any_Vcp_Value *    valrec,
       char **                 formatted_value_loc)
+{
+   WITH_DR(ddca_dref,
+         {
+               return ddca_format_any_vcp_value(
+                         feature_code,
+                         dref->vcp_version,
+                         valrec,
+                         formatted_value_loc);
+         }
+   )
+}
+
+
+DDCA_Status
+ddca_format_non_table_vcp_value(
+      DDCA_Vcp_Feature_Code       feature_code,
+      DDCA_MCCS_Version_Spec      vspec,
+      DDCA_Non_Table_Vcp_Value *  valrec,
+      char **                     formatted_value_loc)
 {
    DDCA_Any_Vcp_Value anyval;
    anyval.opcode = feature_code;
@@ -2439,12 +2525,30 @@ ddca_format_non_table_vcp_value(
    return ddca_format_any_vcp_value(feature_code, vspec, &anyval, formatted_value_loc);
 }
 
+DDCA_Status
+ddca_format_non_table_vcp_value_by_dref(
+      DDCA_Vcp_Feature_Code       feature_code,
+      DDCA_Display_Ref            ddca_dref,
+      DDCA_Non_Table_Vcp_Value *  valrec,
+      char **                     formatted_value_loc)
+{
+   WITH_DR(ddca_dref,
+         {
+               return ddca_format_non_table_vcp_value(
+                         feature_code,
+                         dref->vcp_version,
+                         valrec,
+                         formatted_value_loc);
+         }
+   )
+}
+
 
 DDCA_Status
 ddca_format_table_vcp_value(
       DDCA_Vcp_Feature_Code   feature_code,
       DDCA_MCCS_Version_Spec  vspec,
-      DDCA_Table_Vcp_Value *      table_value,
+      DDCA_Table_Vcp_Value *  table_value,
       char **                 formatted_value_loc)
 {
    DDCA_Any_Vcp_Value anyval;
@@ -2454,6 +2558,25 @@ ddca_format_table_vcp_value(
    anyval.val.t.bytes  = table_value->bytes;   // n. copying pointer, not duplicating bytes
 
    return ddca_format_any_vcp_value(feature_code, vspec, &anyval, formatted_value_loc);
+}
+
+
+DDCA_Status
+ddca_format_table_vcp_value_by_dref(
+      DDCA_Vcp_Feature_Code   feature_code,
+      DDCA_Display_Ref        ddca_dref,
+      DDCA_Table_Vcp_Value *  table_value,
+      char **                 formatted_value_loc)
+{
+   WITH_DR(ddca_dref,
+         {
+               return ddca_format_table_vcp_value(
+                         feature_code,
+                         dref->vcp_version,
+                         table_value,
+                         formatted_value_loc);
+         }
+   )
 }
 
 

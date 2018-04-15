@@ -693,8 +693,6 @@ ddca_open_display2(
       bool                  wait,
       DDCA_Display_Handle * ddca_dh_loc);
 
-
-
 /** Close an open display
  * @param[in]  ddca_dh   display handle
  * @return     DDCA status code
@@ -716,6 +714,18 @@ ddca_close_display(
  */
 char *
 ddca_dh_repr(
+      DDCA_Display_Handle   ddca_dh);
+
+/** Returns the display reference for display handle.
+ *
+ *  @param  ddca_dh   display handle
+ *  @return #DDCA_Display_Ref of the handle,
+ *          NULL if invalid display handle
+ *
+ *  @since 0.9.0
+ */
+DDCA_Display_Ref
+ddca_display_ref_from_handle(
       DDCA_Display_Handle   ddca_dh);
 
 
@@ -876,8 +886,6 @@ ddca_get_simple_sl_value_table(
  * @retval     DDCRC_UNKNOWN_FEATURE unrecognized feature code and
  *                              !create_default_if_not_found
  *
- * @remark This is a convenience function, wrapping #ddca_get_feature_metadata_by_vspec()
- *
  * @since 0.9.0
  */
 DDCA_Status
@@ -886,6 +894,15 @@ ddca_get_feature_metadata_by_vspec(
       DDCA_Vcp_Feature_Code       feature_code,
       bool                        create_default_if_not_found,
       DDCA_Feature_Metadata *     info); //    change to **?
+
+
+DDCA_Status
+ddca_get_feature_metadata_by_dref(
+      DDCA_Display_Handle         ddca_dref,
+      DDCA_Vcp_Feature_Code       feature_code,
+      bool                        create_default_if_not_found,
+      DDCA_Feature_Metadata *     info);
+
 
 /**
  * Gets information for a VCP feature.
@@ -916,7 +933,7 @@ ddca_get_feature_metadata_by_display(
 /**
  *  Frees the contents a #DDCA_Feature_Metadata instance.
  *
- *  Note that #DDCA_Featture_Metadata instances are typically
+ *  Note that #DDCA_Feature_Metadata instances are typically
  *  allocated on the stack,  This function frees any data
  *  pointed to by the metadata instance, not the instance itself.
  *
@@ -958,6 +975,22 @@ ddca_feature_name_by_vspec(
       DDCA_Vcp_Feature_Code  feature_code,
       DDCA_MCCS_Version_Spec vspec);
 
+
+/** Gets the VCP feature name, which may vary by MCCS version and monitor model.
+ *
+ * @param[in]  feature_code  feature code
+ * @param[in]  dref          display reference
+ * @return     pointer to feature name (do not free), NULL if unknown feature code
+ *
+ * @since 0.9.0
+ */
+DDCA_Status
+ddca_feature_name_by_dref(
+      DDCA_Vcp_Feature_Code  feature_code,
+      DDCA_Display_Ref       dref,
+      char **                name_loc);
+
+
 // Current functions - Feature characteristics
 
 
@@ -977,6 +1010,25 @@ DDCA_Status
 ddca_get_simple_sl_value_table_by_vspec(
       DDCA_Vcp_Feature_Code      feature_code,
       DDCA_MCCS_Version_Spec     vspec,
+      DDCA_Feature_Value_Entry** value_table_loc);
+
+
+/** Gets the value id/name table of the allowed values for a simple NC feature.
+ *
+ * @param[in]  feature_code      VCP feature code
+ * @param[in]  dref              display reference
+ * @param[out] value_table_loc   where to return pointer to array of DDCA_Feature_Value_Entry
+ * @return     status code
+ * @retval     0                       success
+ * @retval     DDCRC_UNKNOWN_FEATURE   unrecognized feature code
+ * @retval     DDCRC_INVALID_OPERATION feature not simple NC
+ *
+ * @since 0.9.0
+ */
+DDCA_Status
+ddca_get_simple_sl_value_table_by_dref(
+      DDCA_Vcp_Feature_Code      feature_code,
+      DDCA_Display_Ref           dref,
       DDCA_Feature_Value_Entry** value_table_loc);
 
 
@@ -1366,6 +1418,13 @@ ddca_format_table_vcp_value(
       DDCA_Table_Vcp_Value *  table_value,
       char **                 formatted_value_loc);
 
+DDCA_Status
+ddca_format_table_vcp_value_by_dref(
+      DDCA_Vcp_Feature_Code   feature_code,
+      DDCA_Display_Ref        ddca_dref,
+      DDCA_Table_Vcp_Value *  table_value,
+      char **                 formatted_value_loc);
+
 /** Returns a formatted representation of a non-table VCP value.
  *  It is the responsibility of the caller to free the returned string.
  *
@@ -1383,6 +1442,31 @@ ddca_format_non_table_vcp_value(
       DDCA_Non_Table_Vcp_Value *  valrec,
       char **                     formatted_value_loc);
 
+DDCA_Status
+ddca_format_non_table_vcp_value_by_dref(
+      DDCA_Vcp_Feature_Code       feature_code,
+      DDCA_Display_Ref            ddca_dref,
+      DDCA_Non_Table_Vcp_Value *  valrec,
+      char **                     formatted_value_loc);
+
+/** Returns a formatted representation of a non-table VCP value.
+ *  It is the responsibility of the caller to free the returned string.
+ *
+ *  @param[in]  feature_code        VCP feature code
+ *  @param[in]  dref                display reference
+ *  @param[in]  valrec              non-table VCP value
+ *  @param[out] formatted_value_loc address at which to return the formatted value.
+ *  @return                         status code, 0 if success
+ *  @since 0.9.0
+ */
+DDCA_Status
+ddca_format_non_table_vcp_value_by_dref(
+      DDCA_Vcp_Feature_Code       feature_code,
+      DDCA_Display_Ref            dref,
+      DDCA_Non_Table_Vcp_Value *  valrec,
+      char **                     formatted_value_loc);
+
+
 
 /** Returns a formatted representation of a VCP value of any type
  *  It is the responsibility of the caller to free the returned string.
@@ -1398,6 +1482,14 @@ DDCA_Status
 ddca_format_any_vcp_value(
       DDCA_Vcp_Feature_Code   feature_code,
       DDCA_MCCS_Version_Spec  vspec,
+      DDCA_Any_Vcp_Value *    valrec,
+      char **                 formatted_value_loc);
+
+
+DDCA_Status
+ddca_format_any_vcp_value_by_dref(
+      DDCA_Vcp_Feature_Code   feature_code,
+      DDCA_Display_Ref        dref,
       DDCA_Any_Vcp_Value *    valrec,
       char **                 formatted_value_loc);
 
