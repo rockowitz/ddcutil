@@ -669,6 +669,11 @@ ddca_dbgrpt_display_ref(
       int              depth);
 
 
+DDCA_Monitor_Model_Key
+ddca_monitor_model_key_from_dref(
+      DDCA_Display_Ref   ddca_dref);
+
+
 //
 // Display Handle
 //
@@ -753,6 +758,10 @@ ddca_display_ref_from_handle(
       DDCA_Display_Handle   ddca_dh);
 
 
+DDCA_Monitor_Model_Key
+ddca_monitor_model_key_from_dh(
+      DDCA_Display_Handle   ddca_dh);
+
 //
 // Monitor Capabilities
 //
@@ -805,11 +814,13 @@ ddca_free_parsed_capabilities(
  *  information is written, including command codes.
  *
  *  @param[in]  parsed_capabilities  pointer to #DDCA_Capabilities struct
+ *  @param[in]  mmid                 pointer to optional #DDCA_Monitor_Model_Key
  *  @param[in]  depth  logical       indentation depth
  */
 void
 ddca_report_parsed_capabilities(
       DDCA_Capabilities *      parsed_capabilities,
+      DDCA_Monitor_Model_Key * mmid,
       int                      depth);
 
 
@@ -826,8 +837,9 @@ ddca_report_parsed_capabilities(
  *  @since 0.9.0
  */
 void ddca_parse_and_report_capabilities(
-      char *              capabilities_string,
-      int                 depth);
+      char *                    capabilities_string,
+      DDCA_Monitor_Model_Key *  mmid,
+      int                       depth);
 
 //
 //  MCCS Version Specification
@@ -835,8 +847,8 @@ void ddca_parse_and_report_capabilities(
 
 /** Gets the MCCS version of a monitor.
  *
- *  @param[in]    ddca_dh  display handle
- *  @param[out]   p_vspec  where to return version spec
+ *  @param[in]    ddca_dh   display handle
+ *  @param[out]   p_vspec   where to return version spec
  *  @return       DDCRC_ARG invalid display handle
  *
  *  @remark Returns version 0.0 (#DDCA_VSPEC_UNKNOWN) if feature DF cannot be read

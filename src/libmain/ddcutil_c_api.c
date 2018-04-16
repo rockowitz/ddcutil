@@ -840,6 +840,18 @@ ddca_dbgrpt_display_ref(
    dbgrpt_display_ref(dref, depth+1);
 }
 
+DDCA_Monitor_Model_Key
+ddca_monitor_model_key_from_dref(
+      DDCA_Display_Ref   ddca_dref)
+{
+   DDCA_Monitor_Model_Key result = DDCA_UNDEFINED_MONITOR_MODEL_KEY;
+   Display_Ref * dref = (Display_Ref *) ddca_dref;
+   if (valid_display_ref(dref) && dref->mmid)
+      result = *dref->mmid;
+   return result;
+}
+
+
 
 DDCA_Status
 ddca_open_display(
@@ -918,8 +930,20 @@ ddca_display_ref_from_handle(
    if (valid_display_handle(dh))
       result = dh->dref;
    return result;
-
 }
+
+
+DDCA_Monitor_Model_Key
+ddca_monitor_model_key_from_dh(
+      DDCA_Display_Handle   ddca_dh)
+{
+   DDCA_Monitor_Model_Key result = DDCA_UNDEFINED_MONITOR_MODEL_KEY;
+   Display_Handle * dh = (Display_Handle *) ddca_dh;
+   if (valid_display_handle(dh) && dh->dref->mmid)
+      result = *dh->dref->mmid;
+   return result;
+}
+
 
 
 DDCA_Status
@@ -2996,7 +3020,7 @@ ddca_parse_capabilities_string(
    if (pcaps) {
       if (debug) {
          DBGMSG("Parsing succeeded. ");
-         report_parsed_capabilities(pcaps);
+         report_parsed_capabilities(pcaps, NULL, 0);
          DBGMSG("Convert to DDCA_Capabilities...");
       }
       result = calloc(1, sizeof(DDCA_Capabilities));
@@ -3078,12 +3102,13 @@ ddca_free_parsed_capabilities(
 
 void
 ddca_report_parsed_capabilities(
-      DDCA_Capabilities * pcaps,
-      int                 depth)
+      DDCA_Capabilities *      p_caps,
+      DDCA_Monitor_Model_Key * p_mmid,
+      int                      depth)
 {
    bool debug = false;
    DBGMSF(debug, "Starting");
-   assert(pcaps && memcmp(pcaps->marker, DDCA_CAPABILITIES_MARKER, 4) == 0);
+   assert(p_caps && memcmp(p_caps->marker, DDCA_CAPABILITIES_MARKER, 4) == 0);
    // int d0 = depth;
    // quick hack since d0 no longer used
    int d1 = depth;
@@ -3096,32 +3121,32 @@ ddca_report_parsed_capabilities(
    // rpt_structure_loc("DDCA_Capabilities", pcaps, depth);
    // rpt_label(  d0, "Capabilities:");
    if (ol >= DDCA_OL_VERBOSE)
-      rpt_vstring(d1, "Unparsed string: %s", pcaps->unparsed_string);
-   rpt_vstring(d1, "VCP version:     %d.%d", pcaps->version_spec.major, pcaps->version_spec.minor);
+      rpt_vstring(d1, "Unparsed string: %s", p_caps->unparsed_string);
+   rpt_vstring(d1, "VCP version:     %d.%d", p_caps->version_spec.major, p_caps->version_spec.minor);
    if (ol >= DDCA_OL_VERBOSE) {
       rpt_label  (d1, "Command codes: ");
-      for (int cmd_ndx = 0; cmd_ndx < pcaps->cmd_ct; cmd_ndx++) {
-         uint8_t cur_code = pcaps->cmd_codes[cmd_ndx];
+      for (int cmd_ndx = 0; cmd_ndx < p_caps->cmd_ct; cmd_ndx++) {
+         uint8_t cur_code = p_caps->cmd_codes[cmd_ndx];
          char * cmd_name = ddc_cmd_code_name(cur_code);
          rpt_vstring(d2, "0x%02x (%s)", cur_code, cmd_name);
       }
    }
    rpt_vstring(d1, "VCP Feature codes:");
-   for (int code_ndx = 0; code_ndx < pcaps->vcp_code_ct; code_ndx++) {
-      DDCA_Cap_Vcp * cur_vcp = &pcaps->vcp_codes[code_ndx];
+   for (int code_ndx = 0; code_ndx < p_caps->vcp_code_ct; code_ndx++) {
+      DDCA_Cap_Vcp * cur_vcp = &p_caps->vcp_codes[code_ndx];
       assert( memcmp(cur_vcp->marker, DDCA_CAP_VCP_MARKER, 4) == 0);
 
       char * feature_name = get_feature_name_by_id_and_vcp_version(
                                cur_vcp->feature_code,
-                               pcaps->version_spec);
+                               p_caps->version_spec);
 
       rpt_vstring(d2, "Feature:  0x%02x (%s)", cur_vcp->feature_code, feature_name);
 
       DDCA_Feature_Value_Entry * feature_value_table;
       DDCA_Status ddcrc = ddca_get_simple_sl_value_table_by_vspec(
             cur_vcp->feature_code,
-            pcaps->version_spec,
-            &DDCA_UNDEFINED_MONITOR_MODEL_KEY,
+            p_caps->version_spec,
+            p_mmid,
             &feature_value_table);
 
       if (cur_vcp->value_ct > 0) {
@@ -3146,11 +3171,12 @@ ddca_report_parsed_capabilities(
 
 void
 ddca_parse_and_report_capabilities(
-      char *              capabilities_string,
-      int                 depth)
+      char *                    capabilities_string,
+      DDCA_Monitor_Model_Key *  mmid,
+      int                       depth)
 {
       Parsed_Capabilities* pcaps = parse_capabilities_string(capabilities_string);
-      report_parsed_capabilities(pcaps);
+      report_parsed_capabilities(pcaps, mmid, 0);
       free_parsed_capabilities(pcaps);
 }
 
