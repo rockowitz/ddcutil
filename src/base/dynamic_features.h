@@ -28,38 +28,35 @@
 #include <inttypes.h>
 #include <stdlib.h>
 
+#include "ddcutil_types.h"
+
 #include "util/edid.h"
 #include "util/error_info.h"
 
-// for possible future use
-typedef struct {
-   char                mfg_id[EDID_MFG_ID_FIELD_SIZE];
-   char                model_name[EDID_MODEL_NAME_FIELD_SIZE];
-   uint16_t            product_code;
-} Monitor_Model_Key;
 
-
-Monitor_Model_Key
+DDCA_Monitor_Model_Key
 monitor_model_key_value(
       char *   mfg_id,
       char *   model_name,
       uint16_t product_code);
 
-Monitor_Model_Key
+DDCA_Monitor_Model_Key
 monitor_model_key_undefined_value();
 
-Monitor_Model_Key *
+DDCA_Monitor_Model_Key *
 monitor_model_key_new(
       char *   mfg_id,
       char *   model_name,
       uint16_t product_code);
 
-Monitor_Model_Key *
+#ifdef UNUSED
+DDCA_Monitor_Model_Key *
 monitor_model_key_undefined_new();
+#endif
 
 void
 monitor_model_key_free(
-      Monitor_Model_Key * model_id);
+      DDCA_Monitor_Model_Key * model_id);
 
 char *
 model_id_string(
@@ -67,9 +64,20 @@ model_id_string(
       const char *  model_name,
       uint16_t      product_code);
 
+// needed at API level?
+DDCA_Monitor_Model_Key
+monitor_model_key_assign(DDCA_Monitor_Model_Key old);
+
+bool
+monitor_model_key_eq(
+      DDCA_Monitor_Model_Key mmk1,
+      DDCA_Monitor_Model_Key mmk2);
+
+bool monitor_model_key_is_defined(DDCA_Monitor_Model_Key mmk);
+
 char *
 monitor_model_string(
-      Monitor_Model_Key * model_id);
+      DDCA_Monitor_Model_Key * model_id);
 
 typedef enum {
    DFR_FLAGS_NONE      = 0,
