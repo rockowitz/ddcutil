@@ -35,7 +35,7 @@
 
 /** \cond */
 // #include <linux/limits.h>
-// #include <stdbool.h>            // used only in obsolete DDCA_Global_Failure_Information
+#include <stdbool.h>
 #include <stdint.h>                // for uint8_t, unit16_t
 /** \endcond */
 
@@ -242,6 +242,8 @@ typedef struct {
 
 
 
+
+
 //
 // VCP Feature Information
 //
@@ -342,6 +344,19 @@ typedef struct {
    } path;
 } DDCA_IO_Path;
 
+#define DDCA_EDID_MFG_ID_FIELD_SIZE 4
+#define DDCA_EDID_MODEL_NAME_FIELD_SIZE 14
+#define DDCA_EDID_SN_ASCII_FIELD_SIZE 14
+
+#define MONITOR_MODEL_KEY_MARKER "MMID"
+typedef struct {
+// char                marker[4];
+   char                mfg_id[DDCA_EDID_MFG_ID_FIELD_SIZE];
+   char                model_name[DDCA_EDID_MODEL_NAME_FIELD_SIZE];
+   uint16_t            product_code;
+   bool                defined;
+} DDCA_Monitor_Model_Key;
+
 
 #define DDCA_DISPLAY_INFO_MARKER "DDIN"
 /** Describes one monitor detected by ddcutil. */
@@ -357,9 +372,11 @@ typedef struct {
    const char *      sn;              ///< ASCII serial number string from EDID
    uint16_t          product_code;    ///< product code from EDID
    const uint8_t *   edid_bytes;      ///< raw bytes (128) of first EDID block
+   uint8_t           edid_bytes2[128];   // *** ALT ***
    DDCA_MCCS_Version_Spec vcp_version;
    DDCA_MCCS_Version_Id   vcp_version_id;
-   DDCA_Display_Ref  dref;            ///< opaque display reference
+   DDCA_Display_Ref       dref;            ///< opaque display reference
+   DDCA_Monitor_Model_Key mmid;
 } DDCA_Display_Info;
 
 
@@ -472,6 +489,7 @@ struct {
    char                                  marker[4];      /**< always "FMET" */
    DDCA_Vcp_Feature_Code                 feature_code;   /**< VCP feature code */
    DDCA_MCCS_Version_Spec                vspec;          /**< MCCS version    */
+   DDCA_Monitor_Model_Key *              mmid;          // better pointer or inline?, even needed?
    DDCA_Feature_Flags                    feature_flags;  /**< feature type description */
    DDCA_Feature_Value_Table              sl_values;      /**< valid when DDCA_SIMPLE_NC set */
    char *                                feature_name;   /**< feature name */
