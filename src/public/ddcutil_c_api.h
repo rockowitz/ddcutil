@@ -376,6 +376,18 @@ bool ddca_enable_error_info(bool enable);
 // Display Descriptions
 //
 
+
+// still needed now that mmid is pointer?
+bool
+ddca_mmid_is_defined(
+      DDCA_Monitor_Model_Key*  mmid);
+
+
+DDCA_Monitor_Model_Key
+ddca_mmid_undefined_value();
+
+
+
 /** @deprecated use #ddca_get_display_info_list2()
  * Gets a list of the detected displays.
  *
@@ -890,16 +902,17 @@ ddca_get_simple_sl_value_table(
  */
 DDCA_Status
 ddca_get_feature_metadata_by_vspec(
-      DDCA_MCCS_Version_Spec      vspec,
       DDCA_Vcp_Feature_Code       feature_code,
+      DDCA_MCCS_Version_Spec      vspec,
+      DDCA_Monitor_Model_Key *     mmid,
       bool                        create_default_if_not_found,
       DDCA_Feature_Metadata *     info); //    change to **?
 
 
 DDCA_Status
 ddca_get_feature_metadata_by_dref(
-      DDCA_Display_Handle         ddca_dref,
       DDCA_Vcp_Feature_Code       feature_code,
+      DDCA_Display_Ref            ddca_dref,
       bool                        create_default_if_not_found,
       DDCA_Feature_Metadata *     info);
 
@@ -924,8 +937,8 @@ ddca_get_feature_metadata_by_dref(
  */
 DDCA_Status
 ddca_get_feature_metadata_by_display(
-      DDCA_Display_Handle         ddca_dh,
       DDCA_Vcp_Feature_Code       feature_code,
+      DDCA_Display_Handle         ddca_dh,
       bool                        create_default_if_not_found,
       DDCA_Feature_Metadata *     info);
 
@@ -1415,6 +1428,7 @@ DDCA_Status
 ddca_format_table_vcp_value(
       DDCA_Vcp_Feature_Code   feature_code,
       DDCA_MCCS_Version_Spec  vspec,
+      DDCA_Monitor_Model_Key * mmid,
       DDCA_Table_Vcp_Value *  table_value,
       char **                 formatted_value_loc);
 
@@ -1439,6 +1453,7 @@ DDCA_Status
 ddca_format_non_table_vcp_value(
       DDCA_Vcp_Feature_Code       feature_code,
       DDCA_MCCS_Version_Spec      vspec,
+      DDCA_Monitor_Model_Key *     mmid,
       DDCA_Non_Table_Vcp_Value *  valrec,
       char **                     formatted_value_loc);
 
@@ -1482,6 +1497,7 @@ DDCA_Status
 ddca_format_any_vcp_value(
       DDCA_Vcp_Feature_Code   feature_code,
       DDCA_MCCS_Version_Spec  vspec,
+      DDCA_Monitor_Model_Key * mmid,
       DDCA_Any_Vcp_Value *    valrec,
       char **                 formatted_value_loc);
 

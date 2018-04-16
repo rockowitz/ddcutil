@@ -45,6 +45,7 @@
 #include "base/ddc_errno.h"
 #include "base/ddc_packets.h"
 #include "base/displays.h"
+#include "base/dynamic_features.h"
 #include "base/base_init.h"
 #include "base/execution_stats.h"
 #include "base/parms.h"
@@ -1005,6 +1006,19 @@ ddca_mccs_version_id_desc(DDCA_MCCS_Version_Id version_id) {
 
 
 
+bool
+ddca_mmid_is_defined(
+      DDCA_Monitor_Model_Key *  mmid)
+{
+   return (mmid && monitor_model_key_is_defined(*mmid));
+}
+
+
+DDCA_Monitor_Model_Key
+ddca_mmid_undefined_value() {
+   return monitor_model_key_undefined_value();
+}
+
 
 
 #ifdef OLD
@@ -1132,6 +1146,7 @@ ddca_get_display_info_list2(
          }
 
          curinfo->edid_bytes    = dref->pedid->bytes;
+         memcpy(curinfo->edid_bytes2, dref->pedid->bytes, 128);
          // or should these be memcpy'd instead of just pointers, can edid go away?
          curinfo->mfg_id         = dref->pedid->mfg_id;
          curinfo->model_name     = dref->pedid->model_name;
@@ -1140,10 +1155,23 @@ ddca_get_display_info_list2(
          curinfo->vcp_version    = vspec;
          curinfo->vcp_version_id = version_id;
          curinfo->dref           = dref;
+
+         curinfo->mmid = monitor_model_key_value(
+                                        dref->pedid->mfg_id,
+                                        dref->pedid->model_name,
+                                        dref->pedid->product_code);
+
+         assert(streq(curinfo->mfg_id,     curinfo->mmid.mfg_id));
+         assert(streq(curinfo->model_name, curinfo->mmid.model_name));
+         assert(curinfo->product_code == curinfo->mmid.product_code);
+
       }
    }
 
    DBGMSF(debug, "Done. Returning %p", result_list);
+   if (debug)
+      ddca_dbgrpt_display_info_list(result_list, 2);
+
    *dlist_loc = result_list;
    return 0;
 }
@@ -1208,8 +1236,13 @@ ddca_dbgrpt_display_info(
    rpt_vstring(d1, "Model:               %s", dinfo->model_name);
    rpt_vstring(d1, "Product code:        %u", dinfo->product_code);
    rpt_vstring(d1, "Serial number:       %s", dinfo->sn);
+   rpt_label(  d1, "Monitor Model Id:");
+   rpt_vstring(d2, "Mfg Id:           %s", dinfo->mmid.mfg_id);
+   rpt_vstring(d2, "Model name:       %s", dinfo->mmid.model_name);
+   rpt_vstring(d2, "Product code:     %d", dinfo->mmid.product_code);
    rpt_vstring(d1, "EDID:");
    rpt_hex_dump(dinfo->edid_bytes, 128, d2);
+   rpt_hex_dump(dinfo->edid_bytes2, 128, d2);
    // rpt_vstring(d1, "dref:                %p", dinfo->dref);
    rpt_vstring(d1, "VCP Version:         %s", format_vspec(dinfo->vcp_version));
 // rpt_vstring(d1, "VCP Version Id:      %s", format_vcp_version_id(dinfo->vcp_version_id) );
@@ -1722,11 +1755,13 @@ ddca_get_feature_info_by_display(
 // Add with_default flag?
 DDCA_Status
 ddca_get_feature_metadata_by_vspec(
-      DDCA_MCCS_Version_Spec      vspec,
       DDCA_Vcp_Feature_Code       feature_code,
+      DDCA_MCCS_Version_Spec      vspec,
+      DDCA_Monitor_Model_Key *    mmid,     // for future use, currently ignored
       bool                        create_default_if_not_found,
       DDCA_Feature_Metadata *     info) //   change to **?
 {
+   DBGMSG("vspec=%d.%d", vspec.major, vspec.minor);
    DDCA_Status psc = DDCRC_ARG;
    memset(info, 0, sizeof(DDCA_Feature_Metadata));
    memcpy(info->marker, DDCA_FEATURE_METADATA_MARKER, 4);
@@ -1765,17 +1800,23 @@ ddca_get_feature_metadata_by_vspec(
 
 DDCA_Status
 ddca_get_feature_metadata_by_dref(
-      DDCA_Display_Handle         ddca_dref,
       DDCA_Vcp_Feature_Code       feature_code,
+      DDCA_Display_Ref            ddca_dref,
       bool                        create_default_if_not_found,
       DDCA_Feature_Metadata *     info)
 {
    WITH_DR(
          ddca_dref,
          {
+               DBGMSG("Starting");
+               dbgrpt_display_ref(dref, 1);
+           // to do: test if unqueried
+           DDCA_MCCS_Version_Spec vspec = get_vcp_version_by_display_ref(ddca_dref);
+
             psc = ddca_get_feature_metadata_by_vspec(
-                     dref->vcp_version,
-                     feature_code,
+                    feature_code,
+                     vspec,               // dref->vcp_version,
+                     dref->mmid,
                      create_default_if_not_found,
                      info);
          }
@@ -1786,18 +1827,24 @@ ddca_get_feature_metadata_by_dref(
 // Add with_default flag?
 DDCA_Status
 ddca_get_feature_metadata_by_display(
-      DDCA_Display_Handle         ddca_dh,
       DDCA_Vcp_Feature_Code       feature_code,
+      DDCA_Display_Handle         ddca_dh,
       bool                        create_default_if_not_found,
       DDCA_Feature_Metadata *     info)
 {
    WITH_DH(
          ddca_dh,
          {
-            DDCA_MCCS_Version_Spec vspec = get_vcp_version_by_display_handle(ddca_dh);
-            psc = ddca_get_feature_metadata_by_vspec(
-                     vspec,
+               DBGMSG("Starting");
+               dbgrpt_display_ref(dh->dref, 1);
+            // Hack alert.  dh->dref->vcp_version may be Unqueried (255,255)
+            // Calling get_vcp_version_by_display_handle() causes the value in
+            // dref to be set
+
+            /* DDCA_MCCS_Version_Spec vspec =  */ get_vcp_version_by_display_handle(ddca_dh);
+            psc = ddca_get_feature_metadata_by_dref(
                      feature_code,
+                     dh->dref,
                      create_default_if_not_found,
                      info);
          }
@@ -2430,6 +2477,7 @@ DDCA_Status
 ddca_format_any_vcp_value(
       DDCA_Vcp_Feature_Code   feature_code,
       DDCA_MCCS_Version_Spec  vspec,
+      DDCA_Monitor_Model_Key * mmid,
       DDCA_Any_Vcp_Value *    anyval,
       char **                 formatted_value_loc)
 {
@@ -2500,6 +2548,7 @@ ddca_format_any_vcp_value_by_dref(
                return ddca_format_any_vcp_value(
                          feature_code,
                          dref->vcp_version,
+                         dref->mmid,
                          valrec,
                          formatted_value_loc);
          }
@@ -2511,6 +2560,7 @@ DDCA_Status
 ddca_format_non_table_vcp_value(
       DDCA_Vcp_Feature_Code       feature_code,
       DDCA_MCCS_Version_Spec      vspec,
+      DDCA_Monitor_Model_Key *    mmid,
       DDCA_Non_Table_Vcp_Value *  valrec,
       char **                     formatted_value_loc)
 {
@@ -2522,7 +2572,7 @@ ddca_format_non_table_vcp_value(
    anyval.val.c_nc.sh = valrec->sh;
    anyval.val.c_nc.sl = valrec->sl;
 
-   return ddca_format_any_vcp_value(feature_code, vspec, &anyval, formatted_value_loc);
+   return ddca_format_any_vcp_value(feature_code, vspec, mmid, &anyval, formatted_value_loc);
 }
 
 DDCA_Status
@@ -2537,6 +2587,7 @@ ddca_format_non_table_vcp_value_by_dref(
                return ddca_format_non_table_vcp_value(
                          feature_code,
                          dref->vcp_version,
+                         dref->mmid,
                          valrec,
                          formatted_value_loc);
          }
@@ -2548,6 +2599,7 @@ DDCA_Status
 ddca_format_table_vcp_value(
       DDCA_Vcp_Feature_Code   feature_code,
       DDCA_MCCS_Version_Spec  vspec,
+      DDCA_Monitor_Model_Key * mmid,
       DDCA_Table_Vcp_Value *  table_value,
       char **                 formatted_value_loc)
 {
@@ -2557,7 +2609,8 @@ ddca_format_table_vcp_value(
    anyval.val.t.bytect = table_value->bytect;
    anyval.val.t.bytes  = table_value->bytes;   // n. copying pointer, not duplicating bytes
 
-   return ddca_format_any_vcp_value(feature_code, vspec, &anyval, formatted_value_loc);
+   return ddca_format_any_vcp_value(
+             feature_code, vspec, mmid, &anyval, formatted_value_loc);
 }
 
 
@@ -2573,6 +2626,7 @@ ddca_format_table_vcp_value_by_dref(
                return ddca_format_table_vcp_value(
                          feature_code,
                          dref->vcp_version,
+                         dref->mmid,
                          table_value,
                          formatted_value_loc);
          }
