@@ -1005,20 +1005,32 @@ ddca_mccs_version_id_desc(DDCA_MCCS_Version_Id version_id) {
 }
 
 
-
+#ifdef UNUSED
 bool
 ddca_mmid_is_defined(
       DDCA_Monitor_Model_Key *  mmid)
 {
    return (mmid && monitor_model_key_is_defined(*mmid));
 }
+#endif
 
 
+#ifdef OLD
 DDCA_Monitor_Model_Key
 ddca_mmid_undefined_value() {
    return monitor_model_key_undefined_value();
 }
+#endif
 
+const DDCA_Monitor_Model_Key DDCA_UNDEFINED_MONITOR_MODEL_KEY = {{0}};
+
+bool
+ddca_monitor_model_key_eq(
+      DDCA_Monitor_Model_Key mmk1,
+      DDCA_Monitor_Model_Key mmk2)
+{
+   return monitor_model_key_eq(mmk1, mmk2);
+}
 
 
 #ifdef OLD

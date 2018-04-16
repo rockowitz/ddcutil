@@ -306,26 +306,32 @@ monitor_model_key_assign(DDCA_Monitor_Model_Key old) {
    return old;
 }
 
-// static const UNDEFINED_MONITOR_MODEL_KEY
-
 
 bool
 monitor_model_key_eq(
       DDCA_Monitor_Model_Key mmk1,
       DDCA_Monitor_Model_Key mmk2)
 {
-   bool result =
-      (mmk1.product_code == mmk2.product_code      &&
-       strcmp(mmk1.mfg_id, mmk2.mfg_id) == 0       &&
-       strcmp(mmk1.model_name, mmk2.model_name) == 0 );
+   bool result = false;
+   if (!mmk1.defined && !mmk2.defined) {
+      result = true;
+   }
+   else if (mmk1.defined && mmk2.defined) {
+      result =
+         (mmk1.product_code == mmk2.product_code      &&
+          strcmp(mmk1.mfg_id, mmk2.mfg_id) == 0       &&
+          strcmp(mmk1.model_name, mmk2.model_name) == 0 );
+   }
    return result;
 }
 
+#ifdef UNUSED
 bool monitor_model_key_is_defined(DDCA_Monitor_Model_Key mmk) {
    // DDCA_Monitor_Model_Key undefined = monitor_model_key_undefined_value();
    // bool result = monitor_model_key_eq(mmk, undefined);
    return mmk.defined;
 }
+#endif
 
 char *
 monitor_model_string(DDCA_Monitor_Model_Key * model_id) {

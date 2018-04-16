@@ -376,16 +376,28 @@ bool ddca_enable_error_info(bool enable);
 // Display Descriptions
 //
 
-
+#ifdef UNUSED
 // still needed now that mmid is pointer?
 bool
 ddca_mmid_is_defined(
       DDCA_Monitor_Model_Key*  mmid);
+#endif
 
-
+#ifdef old
+/** Returns a special undefined #DDCA_Monitor_Model_Key value.
+ *  The defined flag is not set, and all other fields are
+ *  null strings or 0.
+ */
 DDCA_Monitor_Model_Key
 ddca_mmid_undefined_value();
+#endif
 
+const extern DDCA_Monitor_Model_Key DDCA_UNDEFINED_MONITOR_MODEL_KEY;
+
+bool
+ddca_monitor_model_key_eq(
+      DDCA_Monitor_Model_Key mmk1,
+      DDCA_Monitor_Model_Key mmk2);
 
 
 /** @deprecated use #ddca_get_display_info_list2()

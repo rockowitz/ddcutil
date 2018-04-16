@@ -73,7 +73,9 @@ monitor_model_key_eq(
       DDCA_Monitor_Model_Key mmk1,
       DDCA_Monitor_Model_Key mmk2);
 
+#ifdef UNUSED
 bool monitor_model_key_is_defined(DDCA_Monitor_Model_Key mmk);
+#endif
 
 char *
 monitor_model_string(
