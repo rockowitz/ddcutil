@@ -395,7 +395,6 @@ typedef struct {
 } DDCA_Display_Info_List;
 
 
-
 /** @name Version Feature Flags
  *
  * #DDCA_Version_Feature_Flags is a byte of flags describing attributes of a
