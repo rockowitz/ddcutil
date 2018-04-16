@@ -1156,6 +1156,8 @@ ddca_get_display_info_list2(
          curinfo->vcp_version_id = version_id;
          curinfo->dref           = dref;
 
+         g_strlcpy(curinfo->sn2, dref->pedid->serial_ascii, DDCA_EDID_SN_ASCII_FIELD_SIZE);
+
          curinfo->mmid = monitor_model_key_value(
                                         dref->pedid->mfg_id,
                                         dref->pedid->model_name,
@@ -1236,6 +1238,7 @@ ddca_dbgrpt_display_info(
    rpt_vstring(d1, "Model:               %s", dinfo->model_name);
    rpt_vstring(d1, "Product code:        %u", dinfo->product_code);
    rpt_vstring(d1, "Serial number:       %s", dinfo->sn);
+   rpt_vstring(d1, "sn2:                 %s", dinfo->sn2);
    rpt_label(  d1, "Monitor Model Id:");
    rpt_vstring(d2, "Mfg Id:           %s", dinfo->mmid.mfg_id);
    rpt_vstring(d2, "Model name:       %s", dinfo->mmid.model_name);

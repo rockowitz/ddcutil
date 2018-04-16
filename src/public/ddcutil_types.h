@@ -326,7 +326,7 @@ typedef enum {
 // Display Information
 //
 
-/** Indicates how a display is accessed */
+/** Indicates how MCCS communication is performed */
 typedef enum {
    DDCA_IO_I2C,     /**< Use DDC to communicate with a /dev/i2c-n device */
    DDCA_IO_ADL,     /**< Use ADL API */
@@ -344,11 +344,14 @@ typedef struct {
    } path;
 } DDCA_IO_Path;
 
+
+// Maximum length of strings extracted from EDID, plus 1 for traling NULL
 #define DDCA_EDID_MFG_ID_FIELD_SIZE 4
 #define DDCA_EDID_MODEL_NAME_FIELD_SIZE 14
 #define DDCA_EDID_SN_ASCII_FIELD_SIZE 14
 
 #define MONITOR_MODEL_KEY_MARKER "MMID"
+/** Monitor model identifiers */
 typedef struct {
 // char                marker[4];
    char                mfg_id[DDCA_EDID_MFG_ID_FIELD_SIZE];
@@ -361,18 +364,19 @@ typedef struct {
 #define DDCA_DISPLAY_INFO_MARKER "DDIN"
 /** Describes one monitor detected by ddcutil. */
 typedef struct {
-   char              marker[4];        ///< always "DDIN"
-   int               dispno;           ///< ddcutil assigned display number
-   DDCA_IO_Path      path;             ///< physical access path to display
-   int               usb_bus;          ///< USB bus number, if USB connection
-   int               usb_device;       ///< USB device number, if USB connection
+   char                   marker[4];        ///< always "DDIN"
+   int                    dispno;           ///< ddcutil assigned display number
+   DDCA_IO_Path           path;             ///< physical access path to display
+   int                    usb_bus;          ///< USB bus number, if USB connection
+   int                    usb_device;       ///< USB device number, if USB connection
    // or should these be actual character/byte arrays instead of pointers?
-   const char *      mfg_id;          ///< 3 character manufacturer id, from EDID
-   const char *      model_name;      ///< model name, from EDID
-   const char *      sn;              ///< ASCII serial number string from EDID
-   uint16_t          product_code;    ///< product code from EDID
-   const uint8_t *   edid_bytes;      ///< raw bytes (128) of first EDID block
-   uint8_t           edid_bytes2[128];   // *** ALT ***
+   const char *           mfg_id;          ///< 3 character manufacturer id, from EDID
+   const char *           model_name;      ///< model name, from EDID
+   const char *           sn;              ///< ASCII serial number string from EDID
+   char                   sn2[DDCA_EDID_SN_ASCII_FIELD_SIZE];
+   uint16_t               product_code;    ///< product code from EDID
+   const uint8_t *        edid_bytes;      ///< raw bytes (128) of first EDID block
+   uint8_t                edid_bytes2[128];   // *** ALT ***
    DDCA_MCCS_Version_Spec vcp_version;
    DDCA_MCCS_Version_Id   vcp_version_id;
    DDCA_Display_Ref       dref;            ///< opaque display reference
