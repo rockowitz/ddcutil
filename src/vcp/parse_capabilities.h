@@ -3,7 +3,7 @@
  * Parse the capabilities string.
  *
  * <copyright>
- * Copyright (C) 2014-2017 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2014-2018 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -35,6 +35,7 @@
 
 #include "base/core.h"
 #include "base/displays.h"
+#include "base/dynamic_features.h"
 #include "base/vcp_version.h"
 
 
@@ -55,7 +56,10 @@ typedef struct {
 
 Parsed_Capabilities* parse_capabilities_buffer(Buffer * capabilities);
 Parsed_Capabilities* parse_capabilities_string(char * capabilities);
-void                 report_parsed_capabilities(Parsed_Capabilities* pcaps);
+void                 report_parsed_capabilities(
+                         Parsed_Capabilities*    pcaps,
+                         DDCA_Monitor_Model_Key* mmid,
+                         int                     depth);
 void                 free_parsed_capabilities(Parsed_Capabilities * pcaps);
 Byte_Bit_Flags       parsed_capabilities_feature_ids(Parsed_Capabilities * pcaps, bool readable_only);
 

@@ -100,14 +100,17 @@ static void report_features(
  *
  * Output is written to the current stdout device.
  */
-void report_parsed_capabilities(Parsed_Capabilities* pcaps)
+void report_parsed_capabilities(
+      Parsed_Capabilities*     pcaps,
+      DDCA_Monitor_Model_Key * mmid,    // not currently used
+      int                      depth)
 {
-   bool debug = false;
+   bool debug = true;
    assert(pcaps && memcmp(pcaps->marker, PARSED_CAPABILITIES_MARKER, 4) == 0);
    DBGMSF(debug, "Starting. pcaps->raw_cmds_segment_seen=%s, pcaps->commands=%p, pcaps->vcp_features=%p",
           bool_repr(pcaps->raw_cmds_segment_seen), pcaps->commands, pcaps->vcp_features);
 
-   int d0 = 0;
+   int d0 = depth;
    // int d1 = d0+1;
    DDCA_Output_Level output_level = get_output_level();
    if (output_level >= DDCA_OL_VERBOSE) {
