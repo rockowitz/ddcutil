@@ -369,13 +369,17 @@ typedef struct {
    DDCA_IO_Path           path;             ///< physical access path to display
    int                    usb_bus;          ///< USB bus number, if USB connection
    int                    usb_device;       ///< USB device number, if USB connection
+#ifdef OLD
    // or should these be actual character/byte arrays instead of pointers?
    const char *           mfg_id;          ///< 3 character manufacturer id, from EDID
    const char *           model_name;      ///< model name, from EDID
    const char *           sn;              ///< ASCII serial number string from EDID
+#endif
    char                   sn2[DDCA_EDID_SN_ASCII_FIELD_SIZE];
+#ifdef OLD
    uint16_t               product_code;    ///< product code from EDID
    const uint8_t *        edid_bytes;      ///< raw bytes (128) of first EDID block
+#endif
    uint8_t                edid_bytes2[128];   // *** ALT ***
    DDCA_MCCS_Version_Spec vcp_version;
    DDCA_MCCS_Version_Id   vcp_version_id;
