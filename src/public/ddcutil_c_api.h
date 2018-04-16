@@ -960,7 +960,7 @@ ddca_get_feature_metadata_by_dref(
  * @since 0.9.0
  */
 DDCA_Status
-ddca_get_feature_metadata_by_display(
+ddca_get_feature_metadata_by_dh(
       DDCA_Vcp_Feature_Code       feature_code,
       DDCA_Display_Handle         ddca_dh,
       bool                        create_default_if_not_found,
@@ -1079,7 +1079,7 @@ ddca_get_simple_sl_value_table_by_dref(
 
 #ifdef UNIMPLEMENTED
 // Unimplemented
-// alt: can check status code for ddca_get_feature_info_by_display()
+// alt: can check status code for ddca_get_feature_info_by_dh()
 DDCA_Status ddca_is_feature_supported(
       DDCA_Display_Handle    dh,
       DDCA_Vcp_Feature_Code  feature_code,

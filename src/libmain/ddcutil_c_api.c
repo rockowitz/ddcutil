@@ -1875,7 +1875,7 @@ ddca_get_feature_metadata_by_dref(
 
 // Add with_default flag?
 DDCA_Status
-ddca_get_feature_metadata_by_display(
+ddca_get_feature_metadata_by_dh(
       DDCA_Vcp_Feature_Code       feature_code,
       DDCA_Display_Handle         ddca_dh,
       bool                        create_default_if_not_found,

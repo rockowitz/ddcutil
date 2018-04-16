@@ -148,7 +148,7 @@ test_continuous_value(
 
    bool create_default_if_not_found = false;
    DDCA_Feature_Metadata info;
-   ddcrc = ddca_get_feature_metadata_by_display(
+   ddcrc = ddca_get_feature_metadata_by_dh(
            feature_code,
            dh,
            create_default_if_not_found,
@@ -286,7 +286,7 @@ test_simple_nc_value(
     bool ok = false;
 
     DDCA_Feature_Metadata info;
-    ddcrc = ddca_get_feature_metadata_by_display(
+    ddcrc = ddca_get_feature_metadata_by_dh(
             feature_code,
             dh,
             false,              // create_default_if_not_found
@@ -362,7 +362,7 @@ test_complex_nc_value(
     bool ok = false;
 
     DDCA_Feature_Metadata info;
-    ddcrc = ddca_get_feature_metadata_by_display(
+    ddcrc = ddca_get_feature_metadata_by_dh(
            feature_code,
             dh,              // feature info can be MCCS version dependent
             false,           // create_default_if_not_found
