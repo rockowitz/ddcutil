@@ -105,7 +105,7 @@ void report_parsed_capabilities(
       DDCA_Monitor_Model_Key * mmid,    // not currently used
       int                      depth)
 {
-   bool debug = true;
+   bool debug = false;
    assert(pcaps && memcmp(pcaps->marker, PARSED_CAPABILITIES_MARKER, 4) == 0);
    DBGMSF(debug, "Starting. pcaps->raw_cmds_segment_seen=%s, pcaps->commands=%p, pcaps->vcp_features=%p",
           bool_repr(pcaps->raw_cmds_segment_seen), pcaps->commands, pcaps->vcp_features);
