@@ -179,7 +179,10 @@ perform_get_capabilities_by_display_handle(Display_Handle * dh) {
          if (dh->dref->io_path.io_mode == DDCA_IO_USB)
             pcap->raw_value_synthesized = true;
          // report_parsed_capabilities(pcap, dh->dref->io_path.io_mode);    // io_mode no longer needed
-         report_parsed_capabilities(pcap);
+         report_parsed_capabilities(
+               pcap,
+               dh->dref->mmid,
+               0);
          // free_parsed_capabilities(pcap);
       }
    }

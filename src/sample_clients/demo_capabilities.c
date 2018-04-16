@@ -154,12 +154,16 @@ void demo_get_capabilities() {
 
          printf("\nReport the result using API function ddca_report_parsed_capabilities()...\n");
          DDCA_Output_Level saved_ol = ddca_set_output_level(DDCA_OL_VERBOSE);
-         ddca_report_parsed_capabilities(pcaps, 0);
+         DDCA_Monitor_Model_Key mmid = ddca_monitor_model_key_from_dh(dh);
+         ddca_report_parsed_capabilities(
+               pcaps,
+               &mmid,
+               0);
          ddca_free_parsed_capabilities(pcaps);
 
          printf("\nUse \"ddcutil capabilities\" code to display capabilities...\n");
          ddca_set_output_level(DDCA_OL_VERBOSE);  // show both unparsed and parsed capabilities
-         ddca_parse_and_report_capabilities(capabilities, 1);
+         ddca_parse_and_report_capabilities(capabilities, &mmid, 1);
          ddca_set_output_level(saved_ol);
       }
    }
