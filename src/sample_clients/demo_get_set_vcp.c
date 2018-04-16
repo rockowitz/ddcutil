@@ -149,8 +149,8 @@ test_continuous_value(
    bool create_default_if_not_found = false;
    DDCA_Feature_Metadata info;
    ddcrc = ddca_get_feature_metadata_by_display(
-           dh,
            feature_code,
+           dh,
            create_default_if_not_found,
            &info);
    if (ddcrc != 0) {
@@ -286,8 +286,8 @@ test_simple_nc_value(
 
     DDCA_Feature_Metadata info;
     ddcrc = ddca_get_feature_metadata_by_display(
-            dh,
             feature_code,
+            dh,
             false,              // create_default_if_not_found
             &info);
     if (ddcrc != 0) {
@@ -362,8 +362,8 @@ test_complex_nc_value(
 
     DDCA_Feature_Metadata info;
     ddcrc = ddca_get_feature_metadata_by_display(
+           feature_code,
             dh,              // feature info can be MCCS version dependent
-            feature_code,
             false,           // create_default_if_not_found
             &info);
     if (ddcrc != 0) {
@@ -390,9 +390,17 @@ test_complex_nc_value(
               valrec.sl);
 
     char * formatted_value;
+#ifdef ALT
     ddcrc = ddca_format_non_table_vcp_value(
                 feature_code,
                 info.vspec,
+                info.mmid,
+                &valrec,
+                &formatted_value);
+#endif
+    ddcrc = ddca_format_non_table_vcp_value_by_dref(
+                feature_code,
+                ddca_display_ref_from_handle(dh),
                 &valrec,
                 &formatted_value);
     if (ddcrc != 0) {
@@ -440,7 +448,7 @@ main(int argc, char** argv) {
       DDCA_Display_Info * dinfo = &dlist->info[ndx];
       printf("\n===> Test loop for display %d\n", dinfo->dispno);
       // For all the gory details:
-      // ddca_report_display_info(dinfo, /* depth=*/ 1);
+      ddca_dbgrpt_display_info(dinfo, /* depth=*/ 1);
       dref = dinfo->dref;
 
       // printf("Open display reference %s, creating a display handle...\n", ddca_dref_repr(dref));

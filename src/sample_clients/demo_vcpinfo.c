@@ -42,6 +42,7 @@
              ddca_rc_desc(status_code));              \
    } while(0)
 
+#ifdef UNUSED
 
 /* A simple function that opens the first detected display.
  * For more detailed examples of display detection and management,
@@ -68,6 +69,8 @@ DDCA_Display_Handle * open_first_display_by_dlist() {
       DDCA_Display_Info * dinf = &dlist->info[0];
       DDCA_Display_Ref * dref = dinf->dref;
       printf("Opening display %s\n", dinf->model_name);
+      printf("Model: %s\n", dinf->model_name);
+      printf("Model: %s\n", dinf->mmid.model_name);
       DDCA_Status rc = ddca_open_display(dref, &dh);
       if (rc != 0) {
           DDC_ERRMSG("ddca_open_display", rc);
@@ -76,6 +79,8 @@ DDCA_Display_Handle * open_first_display_by_dlist() {
    ddca_free_display_info_list(dlist);
    return dh;
 }
+
+#endif
 
 
 /* Creates a string representation of DDCA_Feature_Flags bitfield.
@@ -150,8 +155,9 @@ void test_single_feature_info(
 
    DDCA_Feature_Metadata metadata;
    DDCA_Status rc = ddca_get_feature_metadata_by_vspec(
-                       vspec,
                        feature_code,
+                       vspec,
+                       NULL,     // don't look for aux monitor definition files
                        create_default_if_not_found,
                        &metadata);
    if (rc != 0) {
