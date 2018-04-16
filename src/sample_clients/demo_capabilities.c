@@ -99,6 +99,7 @@ simple_report_parsed_capabilities(DDCA_Capabilities * pcaps)
       DDCA_Status ddcrc = ddca_get_simple_sl_value_table_by_vspec(
             cur_vcp->feature_code,
             pcaps->version_spec,
+            &DDCA_UNDEFINED_MONITOR_MODEL_KEY,
             &feature_value_table);
 
       if (cur_vcp->value_ct > 0) {

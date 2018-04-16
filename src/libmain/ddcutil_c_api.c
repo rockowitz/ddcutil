@@ -1833,11 +1833,12 @@ ddca_get_feature_metadata_by_dref(
          {
                DBGMSG("Starting");
                dbgrpt_display_ref(dref, 1);
-           // to do: test if unqueried
-           DDCA_MCCS_Version_Spec vspec = get_vcp_version_by_display_ref(ddca_dref);
 
-            psc = ddca_get_feature_metadata_by_vspec(
-                    feature_code,
+               // returns dref->vcp_version if already cached, queries monitor if not
+               DDCA_MCCS_Version_Spec vspec = get_vcp_version_by_display_ref(ddca_dref);
+
+               psc = ddca_get_feature_metadata_by_vspec(
+                     feature_code,
                      vspec,               // dref->vcp_version,
                      dref->mmid,
                      create_default_if_not_found,
@@ -1860,16 +1861,27 @@ ddca_get_feature_metadata_by_display(
          {
                DBGMSG("Starting");
                dbgrpt_display_ref(dh->dref, 1);
-            // Hack alert.  dh->dref->vcp_version may be Unqueried (255,255)
-            // Calling get_vcp_version_by_display_handle() causes the value in
-            // dref to be set
+               // Note:  dh->dref->vcp_version may be Unqueried (255,255)
+               // Query vcp version here instead of calling
+               // ddca_get_feature_metadata_by_dref() because we already have
+               // display handle, don't need to open display.
 
-            /* DDCA_MCCS_Version_Spec vspec =  */ get_vcp_version_by_display_handle(ddca_dh);
-            psc = ddca_get_feature_metadata_by_dref(
+                DDCA_MCCS_Version_Spec vspec = get_vcp_version_by_display_handle(ddca_dh);
+                DDCA_Monitor_Model_Key* p_mmid = dh->dref->mmid;
+
+                psc = ddca_get_feature_metadata_by_vspec(
+                      feature_code,
+                      vspec,               // dref->vcp_version,
+                      p_mmid,
+                      create_default_if_not_found,
+                      info);
+#ifdef NO
+                psc = ddca_get_feature_metadata_by_dref(
                      feature_code,
                      dh->dref,
                      create_default_if_not_found,
                      info);
+#endif
          }
       );
 }
@@ -1913,8 +1925,9 @@ ddca_get_feature_name(DDCA_Vcp_Feature_Code feature_code) {
 
 char *
 ddca_feature_name_by_vspec(
-      DDCA_Vcp_Feature_Code  feature_code,
-      DDCA_MCCS_Version_Spec vspec)
+      DDCA_Vcp_Feature_Code    feature_code,
+      DDCA_MCCS_Version_Spec   vspec,
+      DDCA_Monitor_Model_Key * p_mmid)  // currently ignored
 {
    char * result = get_feature_name_by_id_and_vcp_version(feature_code, vspec);
    return result;
@@ -1942,7 +1955,7 @@ ddca_feature_name_by_dref(
 {
    WITH_DR(ddca_dref,
          {
-               *name_loc = ddca_feature_name_by_vspec(feature_code, dref->vcp_version);
+               *name_loc = ddca_feature_name_by_vspec(feature_code, dref->vcp_version, dref->mmid);
                if (!*name_loc)
                   psc = -EINVAL;
          }
@@ -1960,6 +1973,7 @@ DDCA_Status
 ddca_get_simple_sl_value_table_by_vspec(
       DDCA_Vcp_Feature_Code      feature_code,
       DDCA_MCCS_Version_Spec     vspec,
+      const DDCA_Monitor_Model_Key *   p_mmid,   // currently ignored
       DDCA_Feature_Value_Entry** value_table_loc)
 {
    bool debug = false;
@@ -2017,7 +2031,7 @@ ddca_get_simple_sl_value_table_by_dref(
    WITH_DR(ddca_dref,
       {
          psc = ddca_get_simple_sl_value_table_by_vspec(
-                  feature_code, dref->vcp_version, value_table_loc);
+                  feature_code, dref->vcp_version, dref->mmid, value_table_loc);
       }
    )
 }
@@ -2037,7 +2051,8 @@ ddca_get_simple_sl_value_table(
    DBGMSF(debug, "feature_code = 0x%02x, mccs_version_id=%d, vspec=%d.%d",
                  feature_code, mccs_version_id, vspec.major, vspec.minor);
 
-   rc = ddca_get_simple_sl_value_table_by_vspec(feature_code, vspec, value_table_loc);
+   rc = ddca_get_simple_sl_value_table_by_vspec(
+           feature_code, vspec, &DDCA_UNDEFINED_MONITOR_MODEL_KEY,  value_table_loc);
 
    DBGMSF(debug, "Done. *pvalue_table=%p, returning %s", *value_table_loc, psc_desc(rc));
    return rc;
@@ -2067,15 +2082,17 @@ ddca_get_simple_nc_feature_value_name_by_table(
 
 DDCA_Status
 ddca_get_simple_nc_feature_value_name_by_vspec(
-      DDCA_MCCS_Version_Spec vspec,    // needed because value lookup mccs version dependent
-      DDCA_Vcp_Feature_Code  feature_code,
-      uint8_t                feature_value,
-      char**                 feature_name_loc)
+      DDCA_Vcp_Feature_Code    feature_code,
+      DDCA_MCCS_Version_Spec   vspec,    // needed because value lookup mccs version dependent
+      const DDCA_Monitor_Model_Key * p_mmid,
+      uint8_t                  feature_value,
+      char**                   feature_name_loc)
 {
    DDCA_Feature_Value_Entry * feature_value_entries = NULL;
 
    // this should be a function in vcp_feature_codes:
-   DDCA_Status rc = ddca_get_simple_sl_value_table_by_vspec(feature_code, vspec, &feature_value_entries);
+   DDCA_Status rc = ddca_get_simple_sl_value_table_by_vspec(
+                      feature_code, vspec, p_mmid, &feature_value_entries);
    if (rc == 0) {
       // DBGMSG("&feature_value_entries = %p", &feature_value_entries);
       rc = ddca_get_simple_nc_feature_value_name_by_table(feature_value_entries, feature_value, feature_name_loc);
@@ -2093,8 +2110,9 @@ ddca_get_simple_nc_feature_value_name_by_display(
 {
    WITH_DH(ddca_dh,  {
          DDCA_MCCS_Version_Spec vspec = get_vcp_version_by_display_handle(dh);
+         DDCA_Monitor_Model_Key * p_mmid = dh->dref->mmid;
          return ddca_get_simple_nc_feature_value_name_by_vspec(
-                   vspec, feature_code, feature_value, feature_name_loc);
+                   feature_code, vspec, p_mmid, feature_value, feature_name_loc);
       }
    );
 }
@@ -3103,6 +3121,7 @@ ddca_report_parsed_capabilities(
       DDCA_Status ddcrc = ddca_get_simple_sl_value_table_by_vspec(
             cur_vcp->feature_code,
             pcaps->version_spec,
+            &DDCA_UNDEFINED_MONITOR_MODEL_KEY,
             &feature_value_table);
 
       if (cur_vcp->value_ct > 0) {

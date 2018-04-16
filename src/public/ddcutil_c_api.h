@@ -992,13 +992,17 @@ ddca_get_feature_name(DDCA_Vcp_Feature_Code feature_code);
  *
  * @param[in]  feature_code  feature code
  * @param[in]  vspec         MCCS version
+ * @param[in]  p_mmid        pointer to monitor model identifier, may be null
  * @return     pointer to feature name (do not free), NULL if unknown feature code
+ *
+ * @remark **p_mmid** currently ignored
  * @since 0.9.0
  */
 char *
 ddca_feature_name_by_vspec(
-      DDCA_Vcp_Feature_Code  feature_code,
-      DDCA_MCCS_Version_Spec vspec);
+      DDCA_Vcp_Feature_Code    feature_code,
+      DDCA_MCCS_Version_Spec   vspec,
+      DDCA_Monitor_Model_Key * p_mmid);
 
 
 /** Gets the VCP feature name, which may vary by MCCS version and monitor model.
@@ -1023,18 +1027,21 @@ ddca_feature_name_by_dref(
  *
  * @param[in]  feature_code      VCP feature code
  * @param[in]  vspec             MCCS version
+ * @param[in]  p_mmid            pointer to monitor model identifier, may be NULL
  * @param[out] value_table_loc   where to return pointer to array of DDCA_Feature_Value_Entry
  * @return     status code
  * @retval     0                       success
  * @retval     DDCRC_UNKNOWN_FEATURE   unrecognized feature code
  * @retval     DDCRC_INVALID_OPERATION feature not simple NC
  *
+ *@remark p_mmid currently ignored
  * @since 0.9.0
  */
 DDCA_Status
 ddca_get_simple_sl_value_table_by_vspec(
       DDCA_Vcp_Feature_Code      feature_code,
       DDCA_MCCS_Version_Spec     vspec,
+      const DDCA_Monitor_Model_Key *   p_mmid,   // currently ignored
       DDCA_Feature_Value_Entry** value_table_loc);
 
 
@@ -1098,8 +1105,9 @@ ddca_get_simple_nc_feature_value_name_by_table(
  */
 DDCA_Status
 ddca_get_simple_nc_feature_value_name_by_vspec(
-      DDCA_MCCS_Version_Spec vspec,
       DDCA_Vcp_Feature_Code  feature_code,
+      DDCA_MCCS_Version_Spec vspec,
+      const DDCA_Monitor_Model_Key * p_mmid,
       uint8_t                feature_value,
       char**                 feature_name_loc);
 

@@ -220,8 +220,9 @@ show_simple_nc_feature_value_by_vspec(
     printf("Performing value lookup using ddca_get_simple_nc_feature_value_name_by_vspec\n");
     DDCA_Status rc =
     ddca_get_simple_nc_feature_value_name_by_vspec(
-          vspec,          // needed because value lookup mccs version dependent
           feature_code,
+          vspec,          // needed because value lookup mccs version dependent
+          &DDCA_UNDEFINED_MONITOR_MODEL_KEY,
           feature_value,
           &feature_value_name);
     if (rc != 0) {
