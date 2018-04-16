@@ -41,6 +41,7 @@ displays.c                \
 execution_stats.c         \
 feature_sets.c            \
 linux_errno.c             \
+monitor_model_key.c       \
 sleep.c                   \
 status_code_mgt.c         \
 vcp_version.c

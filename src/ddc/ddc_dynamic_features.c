@@ -43,6 +43,7 @@
 #include "base/core.h"
 #include "base/displays.h"
 #include "base/dynamic_features.h"
+#include "base/monitor_model_key.h"
 
 #include "ddc/ddc_dynamic_features.h"
 

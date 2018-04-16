@@ -26,60 +26,14 @@
 
 #include <glib-2.0/glib.h>
 #include <inttypes.h>
-#include <stdlib.h>
+// #include <stdlib.h>
 
 #include "ddcutil_types.h"
 
-#include "util/edid.h"
+// #include "util/edid.h"
 #include "util/error_info.h"
 
-
-DDCA_Monitor_Model_Key
-monitor_model_key_value(
-      char *   mfg_id,
-      char *   model_name,
-      uint16_t product_code);
-
-DDCA_Monitor_Model_Key
-monitor_model_key_undefined_value();
-
-DDCA_Monitor_Model_Key *
-monitor_model_key_new(
-      char *   mfg_id,
-      char *   model_name,
-      uint16_t product_code);
-
-#ifdef UNUSED
-DDCA_Monitor_Model_Key *
-monitor_model_key_undefined_new();
-#endif
-
-void
-monitor_model_key_free(
-      DDCA_Monitor_Model_Key * model_id);
-
-char *
-model_id_string(
-      const char *  mfg,
-      const char *  model_name,
-      uint16_t      product_code);
-
-// needed at API level?
-DDCA_Monitor_Model_Key
-monitor_model_key_assign(DDCA_Monitor_Model_Key old);
-
-bool
-monitor_model_key_eq(
-      DDCA_Monitor_Model_Key mmk1,
-      DDCA_Monitor_Model_Key mmk2);
-
-#ifdef UNUSED
-bool monitor_model_key_is_defined(DDCA_Monitor_Model_Key mmk);
-#endif
-
-char *
-monitor_model_string(
-      DDCA_Monitor_Model_Key * model_id);
+// #include "monitor_model_key.h"
 
 typedef enum {
    DFR_FLAGS_NONE      = 0,

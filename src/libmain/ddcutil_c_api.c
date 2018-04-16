@@ -40,20 +40,21 @@
 #include "util/string_util.h"
 #include "util/udev_util.h"
 
+#include "base/base_init.h"
 #include "base/build_info.h"
 #include "base/core.h"
 #include "base/ddc_errno.h"
 #include "base/ddc_packets.h"
 #include "base/displays.h"
 #include "base/dynamic_features.h"
-#include "base/base_init.h"
 #include "base/execution_stats.h"
+#include "base/monitor_model_key.h"
 #include "base/parms.h"
 
 #include "vcp/ddc_command_codes.h"
-#include "vcp/vcp_feature_codes.h"
 #include "vcp/parse_capabilities.h"
 #include "vcp/parsed_capabilities_feature.h"
+#include "vcp/vcp_feature_codes.h"
 #include "vcp/vcp_feature_values.h"
 
 #include "adl/adl_shim.h"
