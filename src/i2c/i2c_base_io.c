@@ -218,7 +218,7 @@ Status_Errno_DDC ioctl_writer(int fh, int bytect, Byte * pbytes) {
  * @retval <0        negative Linux errno value
  */
 Status_Errno_DDC ioctl_reader(int fh, int bytect, Byte * readbuf) {
-   bool debug = true;
+   bool debug = false;
    // DBGMSG("Starting");
 
    struct i2c_msg              messages[1];

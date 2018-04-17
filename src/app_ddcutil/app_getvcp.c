@@ -445,7 +445,7 @@ app_read_changes_usb(Display_Handle * dh) {
  */
 void
 app_read_changes_forever(Display_Handle * dh) {
-   bool debug = true;
+   bool debug = false;
 
    printf("Watching for VCP feature changes on display %s\n", dh_repr(dh));
    printf("Type ^C to exit...\n");
