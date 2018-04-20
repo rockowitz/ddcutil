@@ -315,6 +315,7 @@ typedef struct {
  * larger collection of subset ids used internally.
  */
 typedef enum {
+   DDCA_SUBSET_UNSET = 0,      ///< No subset selected
    DDCA_SUBSET_KNOWN,          ///< All features defined in a MCCS spec
    DDCA_SUBSET_COLOR,          ///< Color related features
    DDCA_SUBSET_PROFILE,        ///< Features saved and restored by loadvcp/setvcp

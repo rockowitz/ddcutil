@@ -1382,6 +1382,9 @@ bye:
 // TODO: Move most functions into directory src/base
 //
 
+const DDCA_Feature_List DDCA_EMPTY_FEATURE_LIST = {{0}};
+
+
 void ddca_feature_list_clear(DDCA_Feature_List* vcplist) {
    memset(vcplist->bytes, 0, 32);
 }
@@ -1406,6 +1409,33 @@ bool ddca_feature_list_contains(DDCA_Feature_List * vcplist, uint8_t vcp_code) {
    bool result = vcplist->bytes[flagndx] & flagbit;
    return result;
 }
+
+
+const char *
+ddca_feature_list_id_name(
+      DDCA_Feature_Subset_Id  feature_subset_id)
+{
+   char * result = NULL;
+   switch (feature_subset_id) {
+   case DDCA_SUBSET_KNOWN:
+      result = "VCP_SUBSET_KNOWN";
+      break;
+   case DDCA_SUBSET_COLOR:
+      result = "VCP_SUBSET_COLOR";
+      break;
+   case DDCA_SUBSET_PROFILE:
+      result = "VCP_SUBSET_PROFILE";
+      break;
+   case DDCA_SUBSET_MFG:
+      result = "VCP_SUBSET_MFG";
+      break;
+   case DDCA_SUBSET_UNSET:
+      result = "VCP_SUBSET_NONE";
+      break;
+   }
+   return result;
+}
+
 
 
 DDCA_Status
@@ -1440,6 +1470,9 @@ ddca_get_feature_list(
       break;
    case DDCA_SUBSET_MFG:
       subset = VCP_SUBSET_MFG;
+      break;
+   case DDCA_SUBSET_UNSET:
+      subset = VCP_SUBSET_NONE;
       break;
    }
    Feature_Set_Flags flags = 0x00;
@@ -1809,7 +1842,7 @@ ddca_get_feature_metadata_by_vspec(
       bool                        create_default_if_not_found,
       DDCA_Feature_Metadata *     info) //   change to **?
 {
-   DBGMSG("vspec=%d.%d", vspec.major, vspec.minor);
+   // DBGMSG("vspec=%d.%d", vspec.major, vspec.minor);
    DDCA_Status psc = DDCRC_ARG;
    memset(info, 0, sizeof(DDCA_Feature_Metadata));
    memcpy(info->marker, DDCA_FEATURE_METADATA_MARKER, 4);
@@ -1856,8 +1889,8 @@ ddca_get_feature_metadata_by_dref(
    WITH_DR(
          ddca_dref,
          {
-               DBGMSG("Starting");
-               dbgrpt_display_ref(dref, 1);
+               // DBGMSG("Starting");
+               // dbgrpt_display_ref(dref, 1);
 
                // returns dref->vcp_version if already cached, queries monitor if not
                DDCA_MCCS_Version_Spec vspec = get_vcp_version_by_display_ref(ddca_dref);
@@ -1884,8 +1917,9 @@ ddca_get_feature_metadata_by_dh(
    WITH_DH(
          ddca_dh,
          {
-               DBGMSG("Starting");
-               dbgrpt_display_ref(dh->dref, 1);
+               // DBGMSG("Starting");
+               // dbgrpt_display_ref(dh->dref, 1);
+
                // Note:  dh->dref->vcp_version may be Unqueried (255,255)
                // Query vcp version here instead of calling
                // ddca_get_feature_metadata_by_dref() because we already have
@@ -3169,6 +3203,8 @@ ddca_report_parsed_capabilities(
    }
 }
 
+// TODO: Converge ddca_report_parsed_capabilities() with report_parsed_capabilities(),
+//       eliminate ddca_parse_and_report_capabilities()
 
 void
 ddca_parse_and_report_capabilities(
@@ -3185,17 +3221,19 @@ ddca_parse_and_report_capabilities(
 DDCA_Status
 ddca_get_profile_related_values(
       DDCA_Display_Handle ddca_dh,
-      char**              pprofile_values_string)
+      char**              profile_values_string_loc)
 {
    WITH_DH(ddca_dh,
       {
          bool debug = false;
-         DBGMSF(debug, "Before dumpvcp_to_string_by_display_handle(), pprofile_values_string=%p, *pprofile_values_string=%p",
-               pprofile_values_string, *pprofile_values_string);
-         psc = dumpvcp_as_string(dh, pprofile_values_string);
-         DBGMSF(debug, "After dumpvcp_to_string_by_display_handle(), pprofile_values_string=%p, *pprofile_values_string=%p",
-               pprofile_values_string, *pprofile_values_string);
-         DBGMSF(debug, "*pprofile_values_string = |%s|", *pprofile_values_string);
+         DBGMSF(debug, "Before dumpvcp_to_string_by_display_handle(), pprofile_values_string=%p,"
+                       " *profile_values_string_loc=%p",
+               profile_values_string_loc, *profile_values_string_loc);
+         psc = dumpvcp_as_string(dh, profile_values_string_loc);
+         DBGMSF(debug, "After dumpvcp_to_string_by_display_handle(), pprofile_values_string=%p,"
+                       " *profile_values_string_loc=%p",
+               profile_values_string_loc, *profile_values_string_loc);
+         DBGMSF(debug, "*profile_values_string_loc = |%s|", *profile_values_string_loc);
       }
    );
 }

@@ -692,6 +692,7 @@ ddca_open_display(
       DDCA_Display_Ref      ddca_dref,
       DDCA_Display_Handle * ddca_dh_loc);
 
+#ifdef DUPLICATE
 /** Open a display
  * @param[in]  ddca_dref    display reference for display to open
  * @param[in]  wait         if true, wait if display locked by another thread
@@ -706,6 +707,7 @@ ddca_open_display2(
       DDCA_Display_Ref      ddca_dref,
       bool                  wait,
       DDCA_Display_Handle * p_dh);
+#endif
 
 /** Open a display
  * @param[in]  ddca_dref    display reference for display to open
@@ -753,11 +755,13 @@ ddca_dh_repr(
  *
  *  @since 0.9.0
  */
+// CHANGE NAME?
 DDCA_Display_Ref
 ddca_display_ref_from_handle(
       DDCA_Display_Handle   ddca_dh);
 
 
+// CHANGE NAME?  _for_dh()?   ddca_mmid_for_dh()
 DDCA_Monitor_Model_Key
 ddca_monitor_model_key_from_dh(
       DDCA_Display_Handle   ddca_dh);
@@ -834,6 +838,11 @@ ddca_report_parsed_capabilities(
  *  @param[in]  capabilities_string  capabilities string
  *  @param[in]  depth  logical       indentation depth
  *
+ *  @remark
+ *  This function exists as a development aide.  Internally, ddcutil uses
+ *  a different data structure than DDCA_Parsed_Capabilities.  THat
+ *  data structure uses internal collections that are not exposed at the
+ *  API level.
  *  @since 0.9.0
  */
 void ddca_parse_and_report_capabilities(
@@ -853,6 +862,7 @@ void ddca_parse_and_report_capabilities(
  *
  *  @remark Returns version 0.0 (#DDCA_VSPEC_UNKNOWN) if feature DF cannot be read
  */
+// CHANGE NAME TO REFELECT WHAT IT'S THTE VERSION OF?
 DDCA_Status
 ddca_get_mccs_version(
       DDCA_Display_Handle     ddca_dh,
@@ -928,7 +938,7 @@ DDCA_Status
 ddca_get_feature_metadata_by_vspec(
       DDCA_Vcp_Feature_Code       feature_code,
       DDCA_MCCS_Version_Spec      vspec,
-      DDCA_Monitor_Model_Key *     mmid,
+      DDCA_Monitor_Model_Key *    mmid,
       bool                        create_default_if_not_found,
       DDCA_Feature_Metadata *     info); //    change to **?
 
@@ -1169,6 +1179,12 @@ ddca_report_display_by_dref(DDCA_Display_Ref dref, int depth);
 //
 // Specifies a collection of VCP features as a 256 bit array of flags.
 //
+
+extern const DDCA_Feature_List DDCA_EMPTY_FEATURE_LIST;
+
+const char *
+ddca_feature_list_id_name(
+      DDCA_Feature_Subset_Id  feature_set_id);
 
 /** Given a feature set id, returns a #DDCA_Feature_List specifying all the
  *  feature codes in the set.
@@ -1489,12 +1505,14 @@ ddca_format_non_table_vcp_value(
       DDCA_Non_Table_Vcp_Value *  valrec,
       char **                     formatted_value_loc);
 
+#ifdef DUPLICATE
 DDCA_Status
 ddca_format_non_table_vcp_value_by_dref(
       DDCA_Vcp_Feature_Code       feature_code,
       DDCA_Display_Ref            ddca_dref,
       DDCA_Non_Table_Vcp_Value *  valrec,
       char **                     formatted_value_loc);
+#endif
 
 /** Returns a formatted representation of a non-table VCP value.
  *  It is the responsibility of the caller to free the returned string.
@@ -1513,8 +1531,6 @@ ddca_format_non_table_vcp_value_by_dref(
       DDCA_Non_Table_Vcp_Value *  valrec,
       char **                     formatted_value_loc);
 
-
-
 /** Returns a formatted representation of a VCP value of any type
  *  It is the responsibility of the caller to free the returned string.
  *
@@ -1532,7 +1548,6 @@ ddca_format_any_vcp_value(
       DDCA_Monitor_Model_Key * mmid,
       DDCA_Any_Vcp_Value *    valrec,
       char **                 formatted_value_loc);
-
 
 DDCA_Status
 ddca_format_any_vcp_value_by_dref(
@@ -1591,7 +1606,6 @@ ddca_set_table_vcp_value(
       DDCA_Display_Handle      ddca_dh,
       DDCA_Vcp_Feature_Code    feature_code,
       DDCA_Table_Vcp_Value *   new_value);
-
 
 /** Sets a VCP value of any type.
  *
