@@ -850,6 +850,13 @@ void ddca_parse_and_report_capabilities(
       DDCA_Monitor_Model_Key *  mmid,
       int                       depth);
 
+
+DDCA_Feature_List
+ddca_feature_list_from_capabilities(
+      DDCA_Capabilities * parsed_caps);
+
+
+
 //
 //  MCCS Version Specification
 //
@@ -1203,6 +1210,14 @@ ddca_get_feature_list(
       bool                    include_table_features,
       DDCA_Feature_List*      p_feature_list);
 
+DDCA_Status
+ddca_get_feature_list_by_dref(
+      DDCA_Feature_Subset_Id  feature_set_id,
+      DDCA_Display_Ref        dref,
+      bool                    include_table_features,
+      DDCA_Feature_List*      p_feature_list);
+
+
 
 /** Empties a #DDCA_Feature_List
  *
@@ -1253,6 +1268,13 @@ DDCA_Feature_List
 ddca_feature_list_union(
       DDCA_Feature_List* vcplist1,
       DDCA_Feature_List * vcplist2);
+
+
+DDCA_Feature_List
+ddca_feature_list_and(
+      DDCA_Feature_List* vcplist1,
+      DDCA_Feature_List * vcplist2);
+
 
 /** Returns a feature list consisting of all the features in the
  *  first list that are not in the second.

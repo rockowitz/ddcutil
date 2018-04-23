@@ -1507,6 +1507,31 @@ bye:
 }
 
 
+DDCA_Status
+ddca_get_feature_list_by_dref(
+      DDCA_Feature_Subset_Id  feature_set_id,
+      DDCA_Display_Ref        ddca_dref,
+      bool                    include_table_features,
+      DDCA_Feature_List*      p_feature_list)
+{
+   WITH_DR(
+         ddca_dref,
+         {
+               DDCA_MCCS_Version_Spec vspec = get_vcp_version_by_display_ref(ddca_dref);
+
+               psc = ddca_get_feature_list(
+                     feature_set_id,
+                     vspec,               // dref->vcp_version,
+                     include_table_features,
+                     p_feature_list);
+         }
+      );
+}
+
+
+
+
+// aka ddca_feature_list_or()
 DDCA_Feature_List
 ddca_feature_list_union(
       DDCA_Feature_List* vcplist1,
@@ -1520,6 +1545,21 @@ ddca_feature_list_union(
 }
 
 
+// aka ddca_feature_list_intersect()
+DDCA_Feature_List
+ddca_feature_list_and(
+      DDCA_Feature_List* vcplist1,
+      DDCA_Feature_List* vcplist2)
+{
+   DDCA_Feature_List result;
+   for (int ndx = 0; ndx < 32; ndx++) {
+      result.bytes[ndx] =  vcplist1->bytes[ndx] & vcplist2->bytes[ndx];
+   }
+   return result;
+}
+
+
+// aka _and_not
 DDCA_Feature_List
 ddca_feature_list_minus(
       DDCA_Feature_List* vcplist1,
@@ -3216,6 +3256,21 @@ ddca_parse_and_report_capabilities(
       report_parsed_capabilities(pcaps, mmid, 0);
       free_parsed_capabilities(pcaps);
 }
+
+
+DDCA_Feature_List
+ddca_feature_list_from_capabilities(
+      DDCA_Capabilities * parsed_caps)
+{
+   DDCA_Feature_List result = {{0}};
+   for (int ndx = 0; ndx < parsed_caps->vcp_code_ct; ndx++) {
+      DDCA_Cap_Vcp curVcp = parsed_caps->vcp_codes[ndx];
+      ddca_feature_list_add(&result, curVcp.feature_code);
+   }
+   return result;
+}
+
+
 
 
 DDCA_Status
