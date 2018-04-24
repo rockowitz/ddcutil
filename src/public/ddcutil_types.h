@@ -98,6 +98,17 @@ typedef struct {
 #endif
 
 
+// For future use
+#define DDCA_ERROR_DETAIL_MARKER "EDTL"
+typedef struct ddca_error_detail {
+   char                       marker[4];
+   DDCA_Status                status_code;
+   char *                     detail;
+   uint16_t                   cause_ct;
+   struct ddca_error_detail * causes[];
+} DDCA_Error_Detail;
+
+
 //
 // I2C Protocol Control
 //

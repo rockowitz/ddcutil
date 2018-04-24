@@ -47,6 +47,7 @@
 #include "base/ddc_packets.h"
 #include "base/displays.h"
 #include "base/dynamic_features.h"
+#include "base/error_detail.h"
 #include "base/execution_stats.h"
 #include "base/monitor_model_key.h"
 #include "base/parms.h"
@@ -197,7 +198,7 @@ ddca_build_options(void) {
 }
 
 
-//S
+//
 // Initialization
 //
 
@@ -299,6 +300,22 @@ ddca_get_global_failure_information()
 
 #endif
 
+
+//
+// Error Detail (Under development)
+//
+
+void ddca_free_error_detail(DDCA_Error_Detail * ddca_erec) {
+   free_error_detail(ddca_erec);
+}
+
+DDCA_Error_Detail * ddca_get_error_detail() {
+   return get_thread_error_detail();
+}
+
+DDCA_Error_Detail * ddca_dup_error_detail(DDCA_Error_Detail * original) {
+    return dup_error_detail(original);
+}
 
 
 //

@@ -103,6 +103,7 @@ typedef struct {
    FILE * ferr;
    DDCA_Output_Level output_level;
    // bool   report_ddc_errors;    // unused, ddc error reporting left as global
+   DDCA_Error_Detail * error_detail;
 } Thread_Output_Settings;
 
 static Thread_Output_Settings *  get_thread_settings() {
@@ -1154,4 +1155,84 @@ void terminate_execution_on_error(
    ddc_abort(funcname, lineno, filename, DDCL_INTERNAL_ERROR);
 }
 #endif
+
+
+
+void
+free_error_detail(DDCA_Error_Detail * ddca_erec)
+{
+   if (ddca_erec) {
+      assert(memcmp(ddca_erec->marker, DDCA_ERROR_DETAIL_MARKER, 4) == 0);
+      for (int ndx = 0; ndx < ddca_erec->cause_ct; ndx++) {
+         free_error_detail(ddca_erec->causes[ndx]);
+      }
+      free(ddca_erec->detail);
+      ddca_erec->marker[3] = 'x';
+      free(ddca_erec);
+   }
+}
+
+// static Thread_Output_Settings *  get_thread_settings()
+
+void free_thread_error_detail() {
+   Thread_Output_Settings * settings = get_thread_settings();
+   if (settings->error_detail) {
+      free_error_detail(settings->error_detail);
+      settings->error_detail = NULL;
+   }
+}
+
+
+DDCA_Error_Detail *
+error_info_to_ddca_detail(Error_Info * erec)
+{
+   DDCA_Error_Detail * result = NULL;
+   if (erec) {
+      // ???
+      int reqd_size = sizeof(DDCA_Error_Detail) + erec->cause_ct * sizeof(DDCA_Error_Detail*);
+      result = calloc(1, reqd_size);
+      memcpy(result->marker, DDCA_ERROR_DETAIL_MARKER, 4);
+      if (erec->detail)
+         result->detail = strdup(erec->detail);
+      for (int ndx = 0; ndx < erec->cause_ct; ndx++) {
+         DDCA_Error_Detail * cause = error_info_to_ddca_detail(erec->causes[ndx]);
+         result->causes[ndx] = cause;
+      }
+   }
+
+   return result;
+}
+
+DDCA_Error_Detail * get_thread_error_detail() {
+   Thread_Output_Settings * settings = get_thread_settings();
+   return settings->error_detail;
+}
+
+void save_thread_error_detail(DDCA_Error_Detail * error_detail) {
+   Thread_Output_Settings * settings = get_thread_settings();
+   if (settings->error_detail)
+      free_error_detail(settings->error_detail);
+   settings->error_detail = error_detail;
+}
+
+DDCA_Error_Detail *
+dup_error_detail(DDCA_Error_Detail * old) {
+   DDCA_Error_Detail * result = NULL;
+   if (old) {
+      // ???
+      int reqd_size = sizeof(DDCA_Error_Detail) + old->cause_ct * sizeof(DDCA_Error_Detail*);
+      result = calloc(1, reqd_size);
+      memcpy(result->marker, DDCA_ERROR_DETAIL_MARKER, 4);
+      if (old->detail)
+         result->detail = strdup(old->detail);
+      for (int ndx = 0; ndx < old->cause_ct; ndx++) {
+         DDCA_Error_Detail * cause = dup_error_detail(old->causes[ndx]);
+         result->causes[ndx] = cause;
+      }
+   }
+   return result;
+}
+
+
+
 

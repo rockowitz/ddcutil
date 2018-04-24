@@ -51,6 +51,7 @@
 #include "public/ddcutil_types.h"
 
 #include "util/coredefs.h"
+#include "util/error_info.h"
 
 
 // /** @addtogroup abnormal_termination
@@ -363,5 +364,15 @@ void terminate_execution_on_error(
 #define TERMINATE_EXECUTION_ON_ERROR(format, ...) \
    terminate_execution_on_error(TRACE_GROUP, __func__, __LINE__, __FILE__, format, ##__VA_ARGS__)
 #endif
+
+
+
+DDCA_Error_Detail * error_info_to_ddca_detail(Error_Info * erec);
+DDCA_Error_Detail * dup_error_detail(DDCA_Error_Detail * old);
+void free_error_detail(DDCA_Error_Detail * ddca_erec);
+
+void free_thread_error_detail();
+DDCA_Error_Detail * get_thread_error_detail();
+void save_thread_error_detail(DDCA_Error_Detail * error_detail);
 
 #endif /* BASE_CORE_H_ */
