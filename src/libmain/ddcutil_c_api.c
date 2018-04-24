@@ -47,7 +47,6 @@
 #include "base/ddc_packets.h"
 #include "base/displays.h"
 #include "base/dynamic_features.h"
-#include "base/error_detail.h"
 #include "base/execution_stats.h"
 #include "base/monitor_model_key.h"
 #include "base/parms.h"
