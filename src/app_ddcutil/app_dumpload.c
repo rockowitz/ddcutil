@@ -197,7 +197,21 @@ Dumpload_Data * read_vcp_file(const char * fn) {
       f0printf(ferr, "%s: %s\n", strerror(-rc), fn);
    }
    else {
-      data = create_dumpload_data_from_g_ptr_array(g_line_array);
+      Error_Info * err = create_dumpload_data_from_g_ptr_array(g_line_array, &data);
+      if (err) {
+         if (err->status_code == DDCRC_BAD_DATA) {
+            f0printf(ferr, "Invalid data:\n");
+            for (int ndx = 0; ndx < err->cause_ct; ndx++) {
+               f0printf(ferr, "   %s\n", err->causes[ndx]->detail);
+            }
+         }
+         else {
+            // should never occur
+            // errinfo report goes to fout, so send initial msg there as well
+            f0printf(fout(), "Unexpected error reading data:\n");
+            errinfo_report(err, 1);
+         }
+      }
       g_ptr_array_free(g_line_array, true);
    }
 
