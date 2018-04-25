@@ -126,6 +126,15 @@ typedef enum {
 DDCA_Build_Option_Flags ddca_build_options(void);
 
 
+ //
+ // Error Detail (Under development)
+ //
+
+ DDCA_Error_Detail * ddca_get_error_detail();
+
+ void ddca_free_error_detail(DDCA_Error_Detail * ddca_erec);
+
+
 //
 // Status Codes
 //
@@ -1678,7 +1687,7 @@ ddca_get_profile_related_values(
  *  If **ddca_dh** is non-NULL, then the identifiers in **profile_values_string**
  *  must be consistent with the open display.
  *  @remark
- *  The non-NULL case exists to handle the unusual case where mutliple
+ *  The non-NULL case exists to handle the unusual situation where multiple
  *  displays have the same manufacturer, model, and serial number,
  *  perhaps because the EDID has been cloned.
  */

@@ -304,17 +304,17 @@ ddca_get_global_failure_information()
 // Error Detail (Under development)
 //
 
+DDCA_Error_Detail * ddca_get_error_detail() {
+   return dup_error_detail(get_thread_error_detail());
+}
+
 void ddca_free_error_detail(DDCA_Error_Detail * ddca_erec) {
    free_error_detail(ddca_erec);
 }
 
-DDCA_Error_Detail * ddca_get_error_detail() {
-   return get_thread_error_detail();
-}
-
-DDCA_Error_Detail * ddca_dup_error_detail(DDCA_Error_Detail * original) {
-    return dup_error_detail(original);
-}
+// DDCA_Error_Detail * ddca_dup_error_detail(DDCA_Error_Detail * original) {
+//     return dup_error_detail(original);
+// }
 
 
 //
@@ -3315,9 +3315,13 @@ ddca_set_profile_related_values(
       DDCA_Display_Handle  ddca_dh,
       char * profile_values_string)
 {
+   free_thread_error_detail();
    Error_Info * ddc_excp = loadvcp_by_string(profile_values_string, ddca_dh);
    Public_Status_Code psc = (ddc_excp) ? ddc_excp->status_code : 0;
-   errinfo_free(ddc_excp);
+   if (ddc_excp) {
+      save_thread_error_detail(error_info_to_ddca_detail(ddc_excp));
+      errinfo_free(ddc_excp);
+   }
    return psc;
 }
 
