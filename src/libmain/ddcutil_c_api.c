@@ -70,6 +70,7 @@
 #include "ddc/ddc_vcp_version.h"
 #include "ddc/ddc_vcp.h"
 
+#include "private/ddcutil_c_api_private.h"
 #include "public/ddcutil_c_api.h"
 
 
