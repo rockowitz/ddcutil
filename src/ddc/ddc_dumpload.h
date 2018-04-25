@@ -81,8 +81,10 @@ loadvcp_by_string(
       char *           catenated,
       Display_Handle * dh);
 
-Dumpload_Data*
-create_dumpload_data_from_g_ptr_array(GPtrArray * garray);
+Error_Info *
+create_dumpload_data_from_g_ptr_array(
+      GPtrArray * garray,
+      Dumpload_Data ** dumpload_data_loc);
 
 GPtrArray *
 convert_dumpload_data_to_string_array(Dumpload_Data * data);

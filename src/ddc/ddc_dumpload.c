@@ -105,6 +105,13 @@ void dbgrpt_dumpload_data(Dumpload_Data * data, int depth) {
       report_vcp_value_set(data->vcp_values, d1);
 }
 
+#define ADD_DATA_ERROR(_expl) \
+      errinfo_add_cause(  \
+         errs,            \
+         errinfo_new2(    \
+            DDCRC_BAD_DATA, __func__, \
+            _expl " at line %d: %s\n", linectr, line) );
+
 
 /** Given an array of strings stored in a GPtrArray,
  *  convert it a #Dumpload_Data struct.
@@ -114,10 +121,16 @@ void dbgrpt_dumpload_data(Dumpload_Data * data, int depth) {
  *                NULL if the data is not valid.
  *                It is the responsibility of the caller to free this struct.
  */
-Dumpload_Data*
-create_dumpload_data_from_g_ptr_array(GPtrArray * garray) {
+Error_Info *
+create_dumpload_data_from_g_ptr_array(
+      GPtrArray * garray,
+      Dumpload_Data ** dumpload_data_loc)
+{
    bool debug = false;
    DBGMSF0(debug, "Starting.");
+
+   Error_Info * errs = errinfo_new(DDCRC_BAD_DATA, __func__);
+   *dumpload_data_loc = NULL;
 
    Dumpload_Data * data = calloc(1, sizeof(Dumpload_Data));
    bool valid_data = true;
@@ -145,6 +158,10 @@ create_dumpload_data_from_g_ptr_array(GPtrArray * garray) {
       if (ct > 0 && *s0 != '*' && *s0 != '#') {
          if (ct == 1) {
             printf("Invalid data at line %d: %s\n", linectr, line);
+            Error_Info * err = errinfo_new2(
+                                  DDCRC_BAD_DATA, __func__,
+                                  "Invalid data at line %d: %s\n", linectr, line);
+            errinfo_add_cause(errs, err);
             valid_data = false;
          }
          else {
@@ -186,6 +203,12 @@ create_dumpload_data_from_g_ptr_array(GPtrArray * garray) {
                // what if monitor had no version, so 0.0 was output?
                if ( vcp_version_eq( data->vcp_version, DDCA_VSPEC_UNKNOWN) ) {
                   f0printf(ferr(), "Invalid VCP VERSION at line %d: %s\n", linectr, line);
+                  errinfo_add_cause(
+                             errs,
+                             errinfo_new2(
+                                   DDCRC_BAD_DATA, __func__,
+                                   "Invalid VCP VERSION at line %d: %s\n", linectr, line) );
+                  ADD_DATA_ERROR("Invalid VCP VERSION");
                   valid_data = false;
                }
             }
@@ -198,6 +221,12 @@ create_dumpload_data_from_g_ptr_array(GPtrArray * garray) {
             else if (streq(s0, "VCP")) {
                if (ct != 3) {
                   f0printf(ferr(), "Invalid VCP data at line %d: %s\n", linectr, line);
+                  errinfo_add_cause(
+                             errs,
+                             errinfo_new2(
+                                   DDCRC_BAD_DATA, __func__,
+                                   "Invalid VCP data at line %d: %s\n", linectr, line) );
+                  ADD_DATA_ERROR("Invalid VCP data");
                   valid_data = false;
                }
                else {   // found feature id and value
@@ -205,6 +234,12 @@ create_dumpload_data_from_g_ptr_array(GPtrArray * garray) {
                   bool ok = hhs_to_byte_in_buf(s1, &feature_id);
                   if (!ok) {
                      f0printf(ferr(), "Invalid opcode at line %d: %s", linectr, s1);
+                     errinfo_add_cause(
+                                errs,
+                                errinfo_new2(
+                                      DDCRC_BAD_DATA, __func__,
+                                      "Invalid opcode at line %d: %s\n", linectr, line) );
+                     ADD_DATA_ERROR("Invalid  opcode");
                      valid_data = false;
                   }
                   else {     // valid opcode
@@ -232,6 +267,12 @@ create_dumpload_data_from_g_ptr_array(GPtrArray * garray) {
                            f0printf(ferr(),
                                     "Invalid hex string value for opcode at line %d: %s\n",
                                     linectr, line);
+                           errinfo_add_cause(
+                                      errs,
+                                      errinfo_new2(
+                                            DDCRC_BAD_DATA, __func__,
+                                            "Invalid hex string value for opcode at line %d: %s\n", linectr, line) );
+                           ADD_DATA_ERROR("Invalid hex string value for opcode");
                            valid_data = false;
                         }
                         else {
@@ -247,6 +288,12 @@ create_dumpload_data_from_g_ptr_array(GPtrArray * garray) {
                         ct = sscanf(s2, "%hu", &feature_value);
                         if (ct == 0) {
                            f0printf(ferr(), "Invalid value for opcode at line %d: %s\n", linectr, line);
+                           errinfo_add_cause(
+                                      errs,
+                                      errinfo_new2(
+                                            DDCRC_BAD_DATA, __func__,
+                                            "Invalid value for opcode at line %d: %s\n", linectr, line) );
+                           ADD_DATA_ERROR("Invalid value for opcode");
                            valid_data = false;
                         }
                         else {
@@ -269,20 +316,34 @@ create_dumpload_data_from_g_ptr_array(GPtrArray * garray) {
 
             else {
                f0printf(ferr(), "Unexpected field \"%s\" at line %d: %s\n", s0, linectr, line );
+               errinfo_add_cause(
+                          errs,
+                          errinfo_new2(
+                                DDCRC_BAD_DATA, __func__,
+                                "Unexpected field \"%s\" at line %d: %s\n", s0, linectr, line) );
                valid_data = false;
             }
          }    // more than 1 field on line
       }       // non-comment line
    }          // one line of file
 
-   if (!valid_data) {
+   assert( ( valid_data && errs->cause_ct == 0 ) ||
+           (!valid_data && errs->cause_ct >  0) );
+   if (errs->cause_ct == 0) {
+      errinfo_free(errs);
+      errs = NULL;
+   }
+   else {
       if (data) {
          free_dumpload_data(data);
          data = NULL;
       }
    }
-   return data;
+   *dumpload_data_loc = data;
+   return errs;
 }
+
+#undef ADD_DATA_ERROR
 
 
 /** Sets multiple VCP values.
@@ -461,17 +522,20 @@ loadvcp_by_ntsa(
       DBGMSG("Starting.  ntsa=%p", ntsa);
       verbose = true;
    }
-   Public_Status_Code psc = 0;
+   // Public_Status_Code psc = 0;
    Error_Info * ddc_excp = NULL;
 
    GPtrArray * garray = ntsa_to_g_ptr_array(ntsa);
 
-   Dumpload_Data * pdata = create_dumpload_data_from_g_ptr_array(garray);
+   Dumpload_Data * pdata = NULL;
+   ddc_excp = create_dumpload_data_from_g_ptr_array(garray, &pdata);
    DBGMSF(debug, "create_dumpload_data_from_g_ptr_array() returned %p", pdata);
+   assert( (ddc_excp == NULL && pdata != NULL) ||
+           (ddc_excp != NULL && pdata == NULL) );
    if (!pdata) {
-      f0printf(ferr(), "Unable to load VCP data from string\n");
-      psc = DDCRC_ARG;     // was DDCRC_INVALID_DATA;
-      ddc_excp = errinfo_new(psc, __func__);
+      // f0printf(ferr(), "Unable to load VCP data from string\n");
+      // psc = DDCRC_ARG;     // was DDCRC_INVALID_DATA;
+      // ddc_excp = errinfo_new(psc, __func__);
    }
    else {
       if (verbose) {
