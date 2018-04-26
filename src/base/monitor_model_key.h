@@ -35,18 +35,18 @@
 
 DDCA_Monitor_Model_Key
 monitor_model_key_value(
-      char *   mfg_id,
-      char *   model_name,
-      uint16_t product_code);
+      const char *   mfg_id,
+      const char *   model_name,
+      uint16_t       product_code);
 
 DDCA_Monitor_Model_Key
 monitor_model_key_undefined_value();
 
 DDCA_Monitor_Model_Key *
 monitor_model_key_new(
-      char *   mfg_id,
-      char *   model_name,
-      uint16_t product_code);
+      const char *   mfg_id,
+      const char *   model_name,
+      uint16_t       product_code);
 
 #ifdef UNUSED
 DDCA_Monitor_Model_Key *

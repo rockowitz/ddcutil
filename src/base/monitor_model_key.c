@@ -36,9 +36,9 @@
 /** Returns a Monitor_Model_Key as a value on the stack. */
 DDCA_Monitor_Model_Key
 monitor_model_key_value(
-      char *   mfg_id,
-      char *   model_name,
-      uint16_t product_code)
+      const char *   mfg_id,
+      const char *   model_name,
+      uint16_t       product_code)
 {
    // verify that constants used in public ddcutil_c_types.h match those in util/edid.h
    // assert(DDCA_EDID_MFG_ID_FIELD_SIZE == EDID_MFG_ID_FIELD_SIZE);
@@ -81,9 +81,9 @@ monitor_model_key_value_from_edid(Parsed_Edid * edid) {
 /** Allocates and initializes a new Monitor_Model_Key */
 DDCA_Monitor_Model_Key *
 monitor_model_key_new(
-      char *   mfg_id,
-      char *   model_name,
-      uint16_t product_code)
+      const char *   mfg_id,
+      const char *   model_name,
+      uint16_t       product_code)
 {
    assert(mfg_id && strlen(mfg_id) < EDID_MFG_ID_FIELD_SIZE);
    assert(model_name && strlen(model_name) < EDID_MODEL_NAME_FIELD_SIZE);
