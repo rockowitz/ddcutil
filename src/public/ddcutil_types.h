@@ -347,7 +347,7 @@ typedef struct {
 #define DDCA_EDID_MODEL_NAME_FIELD_SIZE 14
 #define DDCA_EDID_SN_ASCII_FIELD_SIZE 14
 
-#define MONITOR_MODEL_KEY_MARKER "MMID"
+// #define MONITOR_MODEL_KEY_MARKER "MMID"
 /** Identifies a monitor model */
 typedef struct {
 // char                marker[4];
