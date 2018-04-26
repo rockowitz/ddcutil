@@ -157,7 +157,6 @@ void test_single_feature_info(
    DDCA_Status rc = ddca_get_feature_metadata_by_vspec(
                        feature_code,
                        vspec,
-                       NULL,     // don't look for aux monitor definition files
                        create_default_if_not_found,
                        &metadata);
    if (rc != 0) {

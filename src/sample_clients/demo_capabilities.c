@@ -79,7 +79,7 @@ DDCA_Display_Handle * open_first_display_by_dispno() {
  * illustrating use of DDCA_Capabilities.
  */
 void
-simple_report_parsed_capabilities(DDCA_Capabilities * pcaps)
+simple_report_parsed_capabilities(DDCA_Capabilities * pcaps, DDCA_Display_Ref dref)
 {
    assert(pcaps && memcmp(pcaps->marker, DDCA_CAPABILITIES_MARKER, 4) == 0);
    printf("Unparsed capabilities string: %s\n", pcaps->unparsed_string);
@@ -96,10 +96,9 @@ simple_report_parsed_capabilities(DDCA_Capabilities * pcaps)
       char * feature_name = ddca_get_feature_name(cur_vcp->feature_code);
       printf("   Feature:  0x%02x (%s)\n", cur_vcp->feature_code, feature_name);
       DDCA_Feature_Value_Entry * feature_value_table;
-      DDCA_Status ddcrc = ddca_get_simple_sl_value_table_by_vspec(
+      DDCA_Status ddcrc = ddca_get_simple_sl_value_table_by_dref(
             cur_vcp->feature_code,
-            pcaps->version_spec,
-            &DDCA_UNDEFINED_MONITOR_MODEL_KEY,
+            dref,
             &feature_value_table);
 
       if (cur_vcp->value_ct > 0) {
@@ -150,14 +149,12 @@ void demo_get_capabilities() {
       else {
          printf("Parsing succeeded.\n");
          printf("\nReport the result using local function simple_report_parsed_capabilities()...\n");
-         simple_report_parsed_capabilities(pcaps);
+         simple_report_parsed_capabilities(pcaps, ddca_display_ref_from_handle(dh));
 
          printf("\nReport the result using API function ddca_report_parsed_capabilities()...\n");
          DDCA_Output_Level saved_ol = ddca_set_output_level(DDCA_OL_VERBOSE);
-         DDCA_Monitor_Model_Key mmid = ddca_monitor_model_key_from_dh(dh);
          ddca_report_parsed_capabilities(
                pcaps,
-               &mmid,
                0);
          ddca_set_output_level(saved_ol);
          ddca_free_parsed_capabilities(pcaps);

@@ -335,7 +335,7 @@ char * ddcs_repr_display_handle(DDCS_Display_Handle dh) {
 
 DDCS_MCCS_Version_Spec ddcs_get_mccs_version(DDCS_Display_Handle dh) {
    DDCS_MCCS_Version_Spec result = {0};
-   ERROR_CHECK( ddca_get_mccs_version(dh, &result) );
+   ERROR_CHECK( ddca_get_mccs_version_by_dh(dh, &result) );
    return result;
 }
 

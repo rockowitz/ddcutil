@@ -130,8 +130,22 @@ DDCA_Build_Option_Flags ddca_build_options(void);
  // Error Detail (Under development)
  //
 
+ /** Gets a copy of the detailed error information for the previous
+  *  API call, if the call supports detailed error information (only a
+  *  few do).
+  *
+  *  @return  copy of detailed error information (user most free)
+  *
+  *  @since 0.9.0
+  */
  DDCA_Error_Detail * ddca_get_error_detail();
 
+ /** Frees a detailed error information record
+  *
+  *  @param  ddca_erec  error information to free
+  *
+  *  @since 0.9.0
+  */
  void ddca_free_error_detail(DDCA_Error_Detail * ddca_erec);
 
 
@@ -382,32 +396,61 @@ bool ddca_enable_error_info(bool enable);
 
 
 //
-// Display Descriptions
+// Monitor Model Identifier
 //
 
-#ifdef UNUSED
-// still needed now that mmid is pointer?
-bool
-ddca_mmid_is_defined(
-      DDCA_Monitor_Model_Key*  mmid);
-#endif
-
-#ifdef old
-/** Returns a special undefined #DDCA_Monitor_Model_Key value.
- *  The defined flag is not set, and all other fields are
- *  null strings or 0.
+/** Special reserved value indicating value undefined.
+ * @since 0.9.0
  */
-DDCA_Monitor_Model_Key
-ddca_mmid_undefined_value();
-#endif
-
 const extern DDCA_Monitor_Model_Key DDCA_UNDEFINED_MONITOR_MODEL_KEY;
 
+/** Creates a monitor model identifier.
+ *
+ *  @param  mfg_id
+ *  @param  model_name
+ *  @param  product_code
+ *  @return identifier (note the value returned is the actual identifier,
+ *                     not a pointer)
+ *  @retval DDCA_UNDEFINED_MONITOR_MODEL_KEY if parms are invalid
+ *  @since 0.9.0
+ */
+DDCA_Monitor_Model_Key
+ddca_mmk(
+      const char * mfg_id,
+      const char * model_name,
+      uint16_t     product_code);
+
+/** Tests if 2 #Monitor_Model_Key identifiers specify the
+ *  same monitor model.
+ *
+ *  @param  mmk1   first identifier
+ *  @param  mmk2   second identifier
+ *
+ *  @remark
+ *  The identifiers are considered equal if both are defined.
+ *  @since 0.9.0
+ */
+
 bool
-ddca_monitor_model_key_eq(
+ddca_mmk_eq(
       DDCA_Monitor_Model_Key mmk1,
       DDCA_Monitor_Model_Key mmk2);
 
+/** Tests if a #Monitor_Model_Key value
+ *  represents a defined identifier.
+ *
+ *  @param mmk
+ *  @return true/false
+ *  @since 0.9.0
+ */
+bool
+ddca_mmk_defined(
+      DDCA_Monitor_Model_Key mmk);
+
+
+//
+// Display Descriptions
+//
 
 /** @deprecated use #ddca_get_display_info_list2()
  * Gets a list of the detected displays.
@@ -678,6 +721,13 @@ ddca_dbgrpt_display_ref(
       int              depth);
 
 
+/** Extracts the monitor model identifier a display represented by
+ *  a #DDCA_Display_Ref.
+ *
+ *  @param ddca_dref
+ *  @return monitor model identifier
+ *  @since 0.9.0
+ */
 DDCA_Monitor_Model_Key
 ddca_monitor_model_key_from_dref(
       DDCA_Display_Ref   ddca_dref);
@@ -756,6 +806,7 @@ char *
 ddca_dh_repr(
       DDCA_Display_Handle   ddca_dh);
 
+// CHANGE NAME?
 /** Returns the display reference for display handle.
  *
  *  @param  ddca_dh   display handle
@@ -764,15 +815,22 @@ ddca_dh_repr(
  *
  *  @since 0.9.0
  */
-// CHANGE NAME?
 DDCA_Display_Ref
 ddca_display_ref_from_handle(
       DDCA_Display_Handle   ddca_dh);
 
 
 // CHANGE NAME?  _for_dh()?   ddca_mmid_for_dh()
+/** Returns the monitor model identifier for an open display.
+ *
+ *  @param  ddca_dh   display handle
+ *  @return #DDCA_Monitor_Model_Key for the handle,
+ *          NULL if invalid display handle
+ *
+ *  @since 0.9.0
+ */
 DDCA_Monitor_Model_Key
-ddca_monitor_model_key_from_dh(
+ddca_mmk_from_dh(
       DDCA_Display_Handle   ddca_dh);
 
 //
@@ -827,18 +885,24 @@ ddca_free_parsed_capabilities(
  *  information is written, including command codes.
  *
  *  @param[in]  parsed_capabilities  pointer to #DDCA_Capabilities struct
- *  @param[in]  mmid                 pointer to optional #DDCA_Monitor_Model_Key
  *  @param[in]  depth  logical       indentation depth
+ *
+ *  @remark
+ *  Future:  Feature value names will reflect any loaded monitor definition files
  */
 void
 ddca_report_parsed_capabilities(
       DDCA_Capabilities *      parsed_capabilities,
-      DDCA_Monitor_Model_Key * mmid,
       int                      depth);
 
 
-
-
+/** Returns the VCP feature codes defined in a
+ *  parsed capabilities record as a #DDCA_Feature_LIst
+ *
+ *  @param  parsed_caps  parsed capabilities
+ *  @return bitfield of feature ids
+ *  @since 0.9.0
+ */
 DDCA_Feature_List
 ddca_feature_list_from_capabilities(
       DDCA_Capabilities * parsed_caps);
@@ -857,9 +921,8 @@ ddca_feature_list_from_capabilities(
  *
  *  @remark Returns version 0.0 (#DDCA_VSPEC_UNKNOWN) if feature DF cannot be read
  */
-// CHANGE NAME TO REFELECT WHAT IT'S THTE VERSION OF?
 DDCA_Status
-ddca_get_mccs_version(
+ddca_get_mccs_version_by_dh(
       DDCA_Display_Handle     ddca_dh,
       DDCA_MCCS_Version_Spec* p_vspec);
 
@@ -927,17 +990,37 @@ ddca_get_simple_sl_value_table(
  * @retval     DDCRC_UNKNOWN_FEATURE unrecognized feature code and
  *                              !create_default_if_not_found
  *
+ * @remark
+ * Only takes into account VCP version.  Useful for reporting display agnostic
+ * feature information.  For display sensitive feature information, i.e. taking
+ * into account the specific monitor model, use #ddca_get_feature_metdata_by_dref().
+ *
  * @since 0.9.0
  */
 DDCA_Status
 ddca_get_feature_metadata_by_vspec(
       DDCA_Vcp_Feature_Code       feature_code,
       DDCA_MCCS_Version_Spec      vspec,
-      DDCA_Monitor_Model_Key *    mmid,
       bool                        create_default_if_not_found,
       DDCA_Feature_Metadata *     info); //    change to **?
 
 
+/**
+ * Gets information for a VCP feature.
+ *
+ * Note that VCP characteristics (C vs NC, RW vs RO, etc) can vary by MCCS version.
+ *
+ * @param[in]  ddca_dref        display reference
+ * @param[in]  feature_code     VCP feature code
+ * @param[in]  create_default_if_not_found
+ * @param[out] info             caller buffer to fill in
+ * @return     status code
+ * @retval     DDCRC_ARG        invalid display reference
+ * @retval     DDCRC_UNKNOWN_FEATURE unrecognized feature code and
+ *                              !create_default_if_not_found
+ *
+ * @since 0.9.0
+ */
 DDCA_Status
 ddca_get_feature_metadata_by_dref(
       DDCA_Vcp_Feature_Code       feature_code,
@@ -959,8 +1042,6 @@ ddca_get_feature_metadata_by_dref(
  * @retval     DDCRC_ARG        invalid display handle
  * @retval     DDCRC_UNKNOWN_FEATURE unrecognized feature code and
  *                              !create_default_if_not_found
- *
- * @remark This is a convenience function, wrapping #ddca_get_feature_metadata_by_vspec()
  *
  * @since 0.9.0
  */
@@ -1002,26 +1083,6 @@ ddca_free_feature_metadata_contents(DDCA_Feature_Metadata info);
 char *
 ddca_get_feature_name(DDCA_Vcp_Feature_Code feature_code);
 
-
-// used in ddcui
-// returns pointer into permanent internal data structure, caller should not free
-/** Gets the VCP feature name, which may vary by MCCS version.
- *
- * @param[in]  feature_code  feature code
- * @param[in]  vspec         MCCS version
- * @param[in]  p_mmid        pointer to monitor model identifier, may be null
- * @return     pointer to feature name (do not free), NULL if unknown feature code
- *
- * @remark **p_mmid** currently ignored
- * @since 0.9.0
- */
-char *
-ddca_feature_name_by_vspec(
-      DDCA_Vcp_Feature_Code    feature_code,
-      DDCA_MCCS_Version_Spec   vspec,
-      DDCA_Monitor_Model_Key * p_mmid);
-
-
 /** Gets the VCP feature name, which may vary by MCCS version and monitor model.
  *
  * @param[in]  feature_code  feature code
@@ -1039,27 +1100,6 @@ ddca_feature_name_by_dref(
 
 // Current functions - Feature characteristics
 
-
-/** Gets the value id/name table of the allowed values for a simple NC feature.
- *
- * @param[in]  feature_code      VCP feature code
- * @param[in]  vspec             MCCS version
- * @param[in]  p_mmid            pointer to monitor model identifier, may be NULL
- * @param[out] value_table_loc   where to return pointer to array of DDCA_Feature_Value_Entry
- * @return     status code
- * @retval     0                       success
- * @retval     DDCRC_UNKNOWN_FEATURE   unrecognized feature code
- * @retval     DDCRC_INVALID_OPERATION feature not simple NC
- *
- *@remark p_mmid currently ignored
- * @since 0.9.0
- */
-DDCA_Status
-ddca_get_simple_sl_value_table_by_vspec(
-      DDCA_Vcp_Feature_Code      feature_code,
-      DDCA_MCCS_Version_Spec     vspec,
-      const DDCA_Monitor_Model_Key *   p_mmid,   // currently ignored
-      DDCA_Feature_Value_Entry** value_table_loc);
 
 
 /** Gets the value id/name table of the allowed values for a simple NC feature.
@@ -1097,7 +1137,7 @@ DDCA_Status ddca_is_feature_supported(
 
 // Current functions - NC lookup tables
 
-
+// NEEDED?
 DDCA_Status
 ddca_get_simple_nc_feature_value_name_by_table(
       DDCA_Feature_Value_Table    feature_value_table,
@@ -1105,6 +1145,7 @@ ddca_get_simple_nc_feature_value_name_by_table(
       char**                      value_name_loc);
 
 
+// NEEDED?
 /** Gets the value id/name table of the allowed values for a simple NC feature.
  *
  * @param[in]  vspec             MCCS version
@@ -1175,29 +1216,31 @@ ddca_report_display_by_dref(DDCA_Display_Ref dref, int depth);
 // Specifies a collection of VCP features as a 256 bit array of flags.
 //
 
+/** Empty feature list
+ *  @since 0.9.0
+ */
 extern const DDCA_Feature_List DDCA_EMPTY_FEATURE_LIST;
 
+/** Returns feature list symbolic name (for debug messages)
+ *
+ *  @param feature_set_id
+ *  @return symbolic name (do not free)
+ */
 const char *
 ddca_feature_list_id_name(
       DDCA_Feature_Subset_Id  feature_set_id);
+
 
 /** Given a feature set id, returns a #DDCA_Feature_List specifying all the
  *  feature codes in the set.
  *
  *  @param[in]  feature_set_id
- *  @param[in]  vcp_version
+ *  @param[in]  dref                   display reference
  *  @param[in]  include_table_features if true, Table type features are included
  *  @param[out] points to feature list to be filled in
  *
  *  @since 0.9.0
  */
-DDCA_Status
-ddca_get_feature_list(
-      DDCA_Feature_Subset_Id  feature_set_id,
-      DDCA_MCCS_Version_Spec  vcp_version,
-      bool                    include_table_features,
-      DDCA_Feature_List*      p_feature_list);
-
 DDCA_Status
 ddca_get_feature_list_by_dref(
       DDCA_Feature_Subset_Id  feature_set_id,
@@ -1253,11 +1296,22 @@ ddca_feature_list_contains(
  *  @since 0.9.0
  */
 DDCA_Feature_List
-ddca_feature_list_union(
+ddca_feature_list_or(
       DDCA_Feature_List* vcplist1,
       DDCA_Feature_List * vcplist2);
 
 
+/** Creates the intersection of 2 feature lists.
+ *
+ *  @param[in] vcplist1   pointer to first feature list
+ *  @param[in] vcplist2   pointer to second feature list
+ *  @return feature list in which a feature is set if it is in both
+ *          of the 2 input feature lists
+ *
+ *  @remark
+ *  The input feature lists are not modified.
+ *  @since 0.9.0
+ */
 DDCA_Feature_List
 ddca_feature_list_and(
       DDCA_Feature_List* vcplist1,
@@ -1277,7 +1331,7 @@ ddca_feature_list_and(
  *  @since 0.9.0
  */
 DDCA_Feature_List
-ddca_feature_list_minus(
+ddca_feature_list_and_not(
       DDCA_Feature_List* vcplist1,
       DDCA_Feature_List* vcplist2);
 
@@ -1472,24 +1526,17 @@ ddca_get_formatted_vcp_value(
        char**                  formatted_value_loc);
 
 
+
 /** Returns a formatted representation of a table VCP value.
  *  It is the responsibility of the caller to free the returned string.
  *
  *  @param[in]  feature_code        VCP feature code
- *  @param[in]  vspec               MCCS version
+ *  @param[in]  dref                display reference
  *  @param[in]  table_value         table VCP value
  *  @param[out] formatted_value_loc address at which to return the formatted value.
  *  @return                         status code, 0 if success
  *  @since 0.9.0
  */
-DDCA_Status
-ddca_format_table_vcp_value(
-      DDCA_Vcp_Feature_Code   feature_code,
-      DDCA_MCCS_Version_Spec  vspec,
-      DDCA_Monitor_Model_Key * mmid,
-      DDCA_Table_Vcp_Value *  table_value,
-      char **                 formatted_value_loc);
-
 DDCA_Status
 ddca_format_table_vcp_value_by_dref(
       DDCA_Vcp_Feature_Code   feature_code,
@@ -1497,32 +1544,7 @@ ddca_format_table_vcp_value_by_dref(
       DDCA_Table_Vcp_Value *  table_value,
       char **                 formatted_value_loc);
 
-/** Returns a formatted representation of a non-table VCP value.
- *  It is the responsibility of the caller to free the returned string.
- *
- *  @param[in]  feature_code        VCP feature code
- *  @param[in]  vspec               MCCS version
- *  @param[in]  valrec              non-table VCP value
- *  @param[out] formatted_value_loc address at which to return the formatted value.
- *  @return                         status code, 0 if success
- *  @since 0.9.0
- */
-DDCA_Status
-ddca_format_non_table_vcp_value(
-      DDCA_Vcp_Feature_Code       feature_code,
-      DDCA_MCCS_Version_Spec      vspec,
-      DDCA_Monitor_Model_Key *     mmid,
-      DDCA_Non_Table_Vcp_Value *  valrec,
-      char **                     formatted_value_loc);
 
-#ifdef DUPLICATE
-DDCA_Status
-ddca_format_non_table_vcp_value_by_dref(
-      DDCA_Vcp_Feature_Code       feature_code,
-      DDCA_Display_Ref            ddca_dref,
-      DDCA_Non_Table_Vcp_Value *  valrec,
-      char **                     formatted_value_loc);
-#endif
 
 /** Returns a formatted representation of a non-table VCP value.
  *  It is the responsibility of the caller to free the returned string.
@@ -1541,24 +1563,17 @@ ddca_format_non_table_vcp_value_by_dref(
       DDCA_Non_Table_Vcp_Value *  valrec,
       char **                     formatted_value_loc);
 
+
 /** Returns a formatted representation of a VCP value of any type
  *  It is the responsibility of the caller to free the returned string.
  *
  *  @param[in]  feature_code        VCP feature code
- *  @param[in]  vspec               MCCS version
+ *  @param[in]  dref                display reference
  *  @param[in]  valrec              non-table VCP value
  *  @param[out] formatted_value_loc address at which to return the formatted value.
  *  @return                         status code, 0 if success
  *  @since 0.9.0
  */
-DDCA_Status
-ddca_format_any_vcp_value(
-      DDCA_Vcp_Feature_Code   feature_code,
-      DDCA_MCCS_Version_Spec  vspec,
-      DDCA_Monitor_Model_Key * mmid,
-      DDCA_Any_Vcp_Value *    valrec,
-      char **                 formatted_value_loc);
-
 DDCA_Status
 ddca_format_any_vcp_value_by_dref(
       DDCA_Vcp_Feature_Code   feature_code,
@@ -1601,7 +1616,6 @@ ddca_set_simple_nc_vcp_value(
       DDCA_Display_Handle      ddca_dh,
       DDCA_Vcp_Feature_Code    feature_code,
       uint8_t                  new_value);
-
 
 /** Sets a Table VCP value.
  *
@@ -1669,44 +1683,14 @@ ddca_get_profile_related_values(
  *  The non-NULL case exists to handle the unusual situation where multiple
  *  displays have the same manufacturer, model, and serial number,
  *  perhaps because the EDID has been cloned.
+ *  @remark
+ *  If the returned status code is **DDCRC_BAD_DATA** (others?), a detailed
+ *  error report can be obtained using #ddca_get_error_detail()
  */
 DDCA_Status
 ddca_set_profile_related_values(
       DDCA_Display_Handle  ddca_dh,
       char *               profile_values_string);
-
-
-//
-// Experimental - Not for public use
-//
-
-DDCA_Status
-ddca_start_get_any_vcp_value(
-      DDCA_Display_Handle         ddca_dh,
-      DDCA_Vcp_Feature_Code       feature_code,
-      DDCA_Vcp_Value_Type         call_type,
-      DDCA_Notification_Func      callback_func);
-
-
-// unimplemented
-/** Registers a callback function to call when a VCP value changes */
-DDCA_Status
-ddca_register_callback(
-      DDCA_Notification_Func func,
-      uint8_t                callback_options);   // type is a placeholder
-
-DDCA_Status
-ddca_pass_callback(
-      Simple_Callback_Func  func,
-      int                   parm
-      );
-
-// unimplemeted
-DDCA_Status
-ddca_queue_get_non_table_vcp_value(
-      DDCA_Display_Handle      ddca_dh,
-      DDCA_Vcp_Feature_Code    feature_code
-);
 
 
 #ifdef __cplusplus

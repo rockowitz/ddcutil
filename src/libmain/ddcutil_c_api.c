@@ -952,7 +952,7 @@ ddca_display_ref_from_handle(
 
 
 DDCA_Monitor_Model_Key
-ddca_monitor_model_key_from_dh(
+ddca_mmk_from_dh(
       DDCA_Display_Handle   ddca_dh)
 {
    DDCA_Monitor_Model_Key result = DDCA_UNDEFINED_MONITOR_MODEL_KEY;
@@ -965,7 +965,7 @@ ddca_monitor_model_key_from_dh(
 
 
 DDCA_Status
-ddca_get_mccs_version(
+ddca_get_mccs_version_by_dh(
       DDCA_Display_Handle     ddca_dh,
       DDCA_MCCS_Version_Spec* p_spec)
 {
@@ -995,7 +995,7 @@ ddca_get_mccs_version_with_default(
       DDCA_MCCS_Version_Spec  default_spec,
       DDCA_MCCS_Version_Spec* p_spec)
 {
-   DDCA_Status rc = ddca_get_mccs_version(ddca_dh, p_spec);
+   DDCA_Status rc = ddca_get_mccs_version_by_dh(ddca_dh, p_spec);
    if (rc == 0 && vcp_version_eq(*p_spec, DDCA_VSPEC_UNKNOWN))
       *p_spec = default_spec;
    return rc;
@@ -1007,7 +1007,7 @@ ddca_get_mccs_version_id(
       DDCA_MCCS_Version_Id*  p_id)
 {
    DDCA_MCCS_Version_Spec vspec;
-   DDCA_Status rc = ddca_get_mccs_version(ddca_dh, &vspec);
+   DDCA_Status rc = ddca_get_mccs_version_by_dh(ddca_dh, &vspec);
    if (rc == 0) {
       DDCA_MCCS_Version_Id  version_id = mccs_version_spec_to_id(vspec);
       *p_id = version_id;
@@ -1047,31 +1047,41 @@ ddca_mccs_version_id_desc(DDCA_MCCS_Version_Id version_id) {
 }
 
 
-#ifdef UNUSED
-bool
-ddca_mmid_is_defined(
-      DDCA_Monitor_Model_Key *  mmid)
-{
-   return (mmid && monitor_model_key_is_defined(*mmid));
-}
-#endif
-
-
-#ifdef OLD
-DDCA_Monitor_Model_Key
-ddca_mmid_undefined_value() {
-   return monitor_model_key_undefined_value();
-}
-#endif
+//
+// Monitor Model Identifier
+//
 
 const DDCA_Monitor_Model_Key DDCA_UNDEFINED_MONITOR_MODEL_KEY = {{0}};
 
+DDCA_Monitor_Model_Key
+ddca_mmk(
+      const char * mfg_id,
+      const char * model_name,
+      uint16_t     product_code)
+{
+   DDCA_Monitor_Model_Key result = DDCA_UNDEFINED_MONITOR_MODEL_KEY;
+   if (mfg_id     && strlen(mfg_id)     < DDCA_EDID_MFG_ID_FIELD_SIZE &&
+       model_name && strlen(model_name) < DDCA_EDID_MODEL_NAME_FIELD_SIZE)
+   {
+      result = monitor_model_key_value(mfg_id, model_name, product_code);
+   }
+   return result;
+}
+
 bool
-ddca_monitor_model_key_eq(
+ddca_mmk_eq(
       DDCA_Monitor_Model_Key mmk1,
       DDCA_Monitor_Model_Key mmk2)
 {
    return monitor_model_key_eq(mmk1, mmk2);
+}
+
+
+bool
+ddca_mmk_defined(
+      DDCA_Monitor_Model_Key mmk)
+{
+   return mmk.defined;
 }
 
 
@@ -1544,7 +1554,7 @@ ddca_get_feature_list_by_dref(
 
 // aka ddca_feature_list_or()
 DDCA_Feature_List
-ddca_feature_list_union(
+ddca_feature_list_or(
       DDCA_Feature_List* vcplist1,
       DDCA_Feature_List* vcplist2)
 {
@@ -1572,7 +1582,7 @@ ddca_feature_list_and(
 
 // aka _and_not
 DDCA_Feature_List
-ddca_feature_list_minus(
+ddca_feature_list_and_not(
       DDCA_Feature_List* vcplist1,
       DDCA_Feature_List * vcplist2)
 {
@@ -1889,7 +1899,6 @@ DDCA_Status
 ddca_get_feature_metadata_by_vspec(
       DDCA_Vcp_Feature_Code       feature_code,
       DDCA_MCCS_Version_Spec      vspec,
-      DDCA_Monitor_Model_Key *    mmid,     // for future use, currently ignored
       bool                        create_default_if_not_found,
       DDCA_Feature_Metadata *     info) //   change to **?
 {
@@ -1949,7 +1958,6 @@ ddca_get_feature_metadata_by_dref(
                psc = ddca_get_feature_metadata_by_vspec(
                      feature_code,
                      vspec,               // dref->vcp_version,
-                     dref->mmid,
                      create_default_if_not_found,
                      info);
          }
@@ -1977,12 +1985,11 @@ ddca_get_feature_metadata_by_dh(
                // display handle, don't need to open display.
 
                 DDCA_MCCS_Version_Spec vspec = get_vcp_version_by_display_handle(ddca_dh);
-                DDCA_Monitor_Model_Key* p_mmid = dh->dref->mmid;
+                // DDCA_Monitor_Model_Key* p_mmid = dh->dref->mmid;
 
                 psc = ddca_get_feature_metadata_by_vspec(
                       feature_code,
                       vspec,               // dref->vcp_version,
-                      p_mmid,
                       create_default_if_not_found,
                       info);
 #ifdef NO
@@ -2065,7 +2072,8 @@ ddca_feature_name_by_dref(
 {
    WITH_DR(ddca_dref,
          {
-               *name_loc = ddca_feature_name_by_vspec(feature_code, dref->vcp_version, dref->mmid);
+               //*name_loc = ddca_feature_name_by_vspec(feature_code, dref->vcp_version, dref->mmid);
+               *name_loc = get_feature_name_by_id_and_vcp_version(feature_code, dref->vcp_version);
                if (!*name_loc)
                   psc = -EINVAL;
          }
@@ -3189,7 +3197,6 @@ ddca_free_parsed_capabilities(
 void
 ddca_report_parsed_capabilities(
       DDCA_Capabilities *      p_caps,
-      DDCA_Monitor_Model_Key * p_mmid,
       int                      depth)
 {
    bool debug = false;
@@ -3232,7 +3239,7 @@ ddca_report_parsed_capabilities(
       DDCA_Status ddcrc = ddca_get_simple_sl_value_table_by_vspec(
             cur_vcp->feature_code,
             p_caps->version_spec,
-            p_mmid,
+            NULL,
             &feature_value_table);
 
       if (cur_vcp->value_ct > 0) {

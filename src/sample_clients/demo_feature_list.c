@@ -39,8 +39,20 @@ void assert_ddcrc_ok(DDCA_Status ddcrc, const char * ddc_func, const char * call
     }
 }
 
+DDCA_Display_Ref  get_dref_by_dispno(int dispno) {
+   printf("Getting display reference for display %d...\n", dispno);
+   DDCA_Display_Identifier did;
+   DDCA_Display_Ref        dref = NULL;
 
-void demo_feature_lists_for_vspec(DDCA_MCCS_Version_Spec vspec) {
+   ddca_create_dispno_display_identifier(1, &did);     // always succeeds
+   DDCA_Status rc = ddca_create_display_ref(did, &dref);
+   assert_ddcrc_ok(rc, "ddca_create_display_ref", __func__);
+   return dref;
+}
+
+
+
+void demo_feature_lists_for_dref(DDCA_Display_Ref dref) {
    DDCA_Status ddcrc = 0;
 
    // Note that the defined features vary by MCCS version.
@@ -49,9 +61,9 @@ void demo_feature_lists_for_vspec(DDCA_MCCS_Version_Spec vspec) {
 
    // get the feature list for feature set PROFILE
    DDCA_Feature_List vcplist1;
-   ddcrc = ddca_get_feature_list(
+   ddcrc = ddca_get_feature_list_by_dref(
          DDCA_SUBSET_PROFILE,
-         vspec,
+         dref,
          false,                  // exclude table features
          &vcplist1);
    assert_ddcrc_ok(ddcrc, "ddca_get_feature_list",__func__);        // this is sample code
@@ -68,9 +80,9 @@ void demo_feature_lists_for_vspec(DDCA_MCCS_Version_Spec vspec) {
    // The user then changes the feature set to COLOR
 
    DDCA_Feature_List vcplist2;
-   ddcrc = ddca_get_feature_list(
+   ddcrc = ddca_get_feature_list_by_dref(
          DDCA_SUBSET_COLOR,
-         vspec,
+         dref,
          false,               // exclude table features
          &vcplist2);
    assert_ddcrc_ok(ddcrc, "ddca_get_feature_list",__func__);        // this is sample code
@@ -83,7 +95,7 @@ void demo_feature_lists_for_vspec(DDCA_MCCS_Version_Spec vspec) {
    puts("");
 
    // We only would need to get read the features that have not yet been read
-   DDCA_Feature_List vcplist3 = ddca_feature_list_minus(&vcplist2, &vcplist1);
+   DDCA_Feature_List vcplist3 = ddca_feature_list_and_not(&vcplist2, &vcplist1);
 
    printf("\nFeatures in feature set COLOR but not in PROFILE:\n   ");
    char * s = ddca_feature_list_string(&vcplist3, "x", ",");  // a convenience function
@@ -96,8 +108,9 @@ int main(int argc, char** argv) {
     // Feature group definitions can be VCP version sensitive.
     // In real code, we'd get the MCCS version from the monitor information.
 
-    DDCA_MCCS_Version_Spec vspec = DDCA_VSPEC_V22;
-    demo_feature_lists_for_vspec(vspec);
+    DDCA_Display_Ref dref = get_dref_by_dispno(1);
+
+    demo_feature_lists_for_dref(dref);
 
    return 0;
 }

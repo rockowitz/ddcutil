@@ -179,7 +179,7 @@ void demo_use_display_ref(DDCA_Display_Ref dref) {
       printf("   display handle: %s\n",  ddca_dh_repr(dh));
 
       DDCA_MCCS_Version_Spec vspec;
-      rc = ddca_get_mccs_version(dh, &vspec);
+      rc = ddca_get_mccs_version_by_dh(dh, &vspec);
       if (rc != 0) {
          DDC_ERRMSG("ddca_get_mccs_version_spec", rc);
       }

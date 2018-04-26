@@ -27,6 +27,138 @@
 // Declarations of API functions that haven't yet been published or that have
 // been removed from ddcutil_c_api.h
 
+// Feature Lists
+
+// NEVER PUBLISHED, USED INTERNALLY
+/** Given a feature set id, returns a #DDCA_Feature_List specifying all the
+ *  feature codes in the set.
+ *
+ *  @param[in]  feature_set_id
+ *  @param[in]  vcp_version
+ *  @param[in]  include_table_features if true, Table type features are included
+ *  @param[out] points to feature list to be filled in
+ *
+ *  @since 0.9.0
+ */
+DDCA_Status
+ddca_get_feature_list(
+      DDCA_Feature_Subset_Id  feature_set_id,
+      DDCA_MCCS_Version_Spec  vcp_version,
+      bool                    include_table_features,
+      DDCA_Feature_List*      p_feature_list);
+
+
+
+// UNPUBLISHED, USED INTERNALLY
+/** Gets the value id/name table of the allowed values for a simple NC feature.
+ *
+ * @param[in]  feature_code      VCP feature code
+ * @param[in]  vspec             MCCS version
+ * @param[in]  p_mmid            pointer to monitor model identifier, may be NULL
+ * @param[out] value_table_loc   where to return pointer to array of DDCA_Feature_Value_Entry
+ * @return     status code
+ * @retval     0                       success
+ * @retval     DDCRC_UNKNOWN_FEATURE   unrecognized feature code
+ * @retval     DDCRC_INVALID_OPERATION feature not simple NC
+ *
+ *@remark p_mmid currently ignored
+ * @since 0.9.0
+ */
+DDCA_Status
+ddca_get_simple_sl_value_table_by_vspec(
+      DDCA_Vcp_Feature_Code      feature_code,
+      DDCA_MCCS_Version_Spec     vspec,
+      const DDCA_Monitor_Model_Key *   p_mmid,   // currently ignored
+      DDCA_Feature_Value_Entry** value_table_loc);
+
+
+
+// New master functions for feature metadata
+
+
+// Granular functions for metadata
+
+// NEVER PUBLISHED
+// used in ddcui
+// returns pointer into permanent internal data structure, caller should not free
+/** Gets the VCP feature name, which may vary by MCCS version.
+ *
+ * @param[in]  feature_code  feature code
+ * @param[in]  vspec         MCCS version
+ * @param[in]  p_mmid        pointer to monitor model identifier, may be null
+ * @return     pointer to feature name (do not free), NULL if unknown feature code
+ *
+ * @remark **p_mmid** currently ignored
+ * @since 0.9.0
+ */
+char *
+ddca_feature_name_by_vspec(
+      DDCA_Vcp_Feature_Code    feature_code,
+      DDCA_MCCS_Version_Spec   vspec,
+      DDCA_Monitor_Model_Key * p_mmid);
+
+
+// NEVER PUBLISHED, USED INTERNALLY
+/** Returns a formatted representation of a non-table VCP value.
+ *  It is the responsibility of the caller to free the returned string.
+ *
+ *  @param[in]  feature_code        VCP feature code
+ *  @param[in]  vspec               MCCS version
+ *  @param[in]  valrec              non-table VCP value
+ *  @param[out] formatted_value_loc address at which to return the formatted value.
+ *  @return                         status code, 0 if success
+ *  @since 0.9.0
+ */
+DDCA_Status
+ddca_format_non_table_vcp_value(
+      DDCA_Vcp_Feature_Code       feature_code,
+      DDCA_MCCS_Version_Spec      vspec,
+      DDCA_Monitor_Model_Key *     mmid,
+      DDCA_Non_Table_Vcp_Value *  valrec,
+      char **                     formatted_value_loc);
+
+// NEVER PUBLISHED, USED INTERNALLY
+/** Returns a formatted representation of a table VCP value.
+ *  It is the responsibility of the caller to free the returned string.
+ *
+ *  @param[in]  feature_code        VCP feature code
+ *  @param[in]  vspec               MCCS version
+ *  @param[in]  table_value         table VCP value
+ *  @param[out] formatted_value_loc address at which to return the formatted value.
+ *  @return                         status code, 0 if success
+ *  @since 0.9.0
+ */
+DDCA_Status
+ddca_format_table_vcp_value(
+      DDCA_Vcp_Feature_Code   feature_code,
+      DDCA_MCCS_Version_Spec  vspec,
+      DDCA_Monitor_Model_Key * mmid,
+      DDCA_Table_Vcp_Value *  table_value,
+      char **                 formatted_value_loc);
+
+
+
+/** Returns a formatted representation of a VCP value of any type
+ *  It is the responsibility of the caller to free the returned string.
+ *
+ *  @param[in]  feature_code        VCP feature code
+ *  @param[in]  vspec               MCCS version
+ *  @param[in]  valrec              non-table VCP value
+ *  @param[out] formatted_value_loc address at which to return the formatted value.
+ *  @return                         status code, 0 if success
+ *  @since 0.9.0
+ */
+DDCA_Status
+ddca_format_any_vcp_value(
+      DDCA_Vcp_Feature_Code   feature_code,
+      DDCA_MCCS_Version_Spec  vspec,
+      DDCA_Monitor_Model_Key * mmid,
+      DDCA_Any_Vcp_Value *    valrec,
+      char **                 formatted_value_loc);
+
+
+
+
 /** Parses a capabilities string, and reports the parsed string
  *  using the code of command "ddcutil capabilities".
  *
@@ -50,6 +182,39 @@ void ddca_parse_and_report_capabilities(
       int                       depth);
 
 
+//
+// Experimental - Not for public use
+//
+// Used in exploratory Python APIs
+//
+
+DDCA_Status
+ddca_start_get_any_vcp_value(
+      DDCA_Display_Handle         ddca_dh,
+      DDCA_Vcp_Feature_Code       feature_code,
+      DDCA_Vcp_Value_Type         call_type,
+      DDCA_Notification_Func      callback_func);
+
+
+// unimplemented
+/** Registers a callback function to call when a VCP value changes */
+DDCA_Status
+ddca_register_callback(
+      DDCA_Notification_Func func,
+      uint8_t                callback_options);   // type is a placeholder
+
+DDCA_Status
+ddca_pass_callback(
+      Simple_Callback_Func  func,
+      int                   parm
+      );
+
+// unimplemeted
+DDCA_Status
+ddca_queue_get_non_table_vcp_value(
+      DDCA_Display_Handle      ddca_dh,
+      DDCA_Vcp_Feature_Code    feature_code
+);
 
 
 #endif /* DDCUTIL_C_API_PRIVATE_H_ */

@@ -317,8 +317,8 @@ test_simple_nc_value(
     uint8_t old_value = valrec.sl;
 
     // Pick one or the other. Both work.
-    ok = show_simple_nc_feature_value_by_vspec(info.vspec, feature_code, old_value);
-    // ok = show_simple_nc_feature_value_by_table(info.sl_values, old_value);
+    // ok = show_simple_nc_feature_value_by_vspec(info.vspec, feature_code, old_value);
+    ok = show_simple_nc_feature_value_by_table(info.sl_values, old_value);
     if (!ok)
        goto bye;
 
