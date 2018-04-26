@@ -63,7 +63,7 @@ char * (*DDCA_Func_Format_Table_Value) (
           DDCA_MCCS_Version_Spec    vspec,
           DDCA_Table_Vcp_Value      valrec);     // or pointer?
 
-char * (*DDCA_Func_Any_Value) (
+char * (*DDCA_Func_Format_Any_Value) (
           DDCA_Vcp_Feature_Code     feature_code,
           DDCA_MCCS_Version_Spec    vspec,
           DDCA_Any_Vcp_Value        valrec);     // or pointer?
