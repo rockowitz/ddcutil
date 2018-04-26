@@ -82,30 +82,18 @@ typedef struct {
 
 
 //
-// Global Settings
+// Error Reporting
 //
 
-#ifdef OBSOLETE
-//! Failure information filled in at the time of a program abort,
-//! before longjmp() is called.
-typedef struct {
-   bool       info_set_fg;
-   char       funcname[64];
-   int        lineno;
-   char       fn[PATH_MAX];
-   int        status;
-} DDCA_Global_Failure_Information;
-#endif
-
-
-// For future use
 #define DDCA_ERROR_DETAIL_MARKER "EDTL"
+//! Detailed error report
+//!
 typedef struct ddca_error_detail {
-   char                       marker[4];
-   DDCA_Status                status_code;
-   char *                     detail;
-   uint16_t                   cause_ct;
-   struct ddca_error_detail * causes[];
+   char                       marker[4];         ///< Always "EDTL"
+   DDCA_Status                status_code;       ///< Error code
+   char *                     detail;            ///< Optional explanation string
+   uint16_t                   cause_ct;          ///< Number of sub-errors
+   struct ddca_error_detail * causes[];          ///< Variable length array of contributing errors
 } DDCA_Error_Detail;
 
 
@@ -252,9 +240,6 @@ typedef struct {
 // uses -1,-1 for unset
 
 
-
-
-
 //
 // VCP Feature Information
 //
@@ -357,13 +342,13 @@ typedef struct {
 } DDCA_IO_Path;
 
 
-// Maximum length of strings extracted from EDID, plus 1 for traling NULL
+// Maximum length of strings extracted from EDID, plus 1 for trailing NULL
 #define DDCA_EDID_MFG_ID_FIELD_SIZE 4
 #define DDCA_EDID_MODEL_NAME_FIELD_SIZE 14
 #define DDCA_EDID_SN_ASCII_FIELD_SIZE 14
 
 #define MONITOR_MODEL_KEY_MARKER "MMID"
-/** Monitor model identifiers */
+/** Identifies a monitor model */
 typedef struct {
 // char                marker[4];
    char                mfg_id[DDCA_EDID_MFG_ID_FIELD_SIZE];
@@ -381,22 +366,15 @@ typedef struct {
    DDCA_IO_Path           path;             ///< physical access path to display
    int                    usb_bus;          ///< USB bus number, if USB connection
    int                    usb_device;       ///< USB device number, if USB connection
-#ifdef OLD
-   // or should these be actual character/byte arrays instead of pointers?
-   const char *           mfg_id;          ///< 3 character manufacturer id, from EDID
-   const char *           model_name;      ///< model name, from EDID
-   const char *           sn;              ///< ASCII serial number string from EDID
-#endif
-   char                   sn2[DDCA_EDID_SN_ASCII_FIELD_SIZE];
-#ifdef OLD
-   uint16_t               product_code;    ///< product code from EDID
-   const uint8_t *        edid_bytes;      ///< raw bytes (128) of first EDID block
-#endif
-   uint8_t                edid_bytes2[128];   // *** ALT ***
-   DDCA_MCCS_Version_Spec vcp_version;
-   DDCA_MCCS_Version_Id   vcp_version_id;
-   DDCA_Display_Ref       dref;            ///< opaque display reference
-   DDCA_Monitor_Model_Key mmid;
+   char                   mfg_id[    DDCA_EDID_MFG_ID_FIELD_SIZE    ]; ///< 3 character mfg id from EDID
+   char                   model_name[DDCA_EDID_MODEL_NAME_FIELD_SIZE]; ///< model name from EDID, 13 char max
+   char                   sn[        DDCA_EDID_SN_ASCII_FIELD_SIZE  ]; ///< "serial number" from EDID, 13 char max
+   uint16_t               product_code;     ///< model product number
+   uint8_t                edid_bytes[128];  ///< first 128 bytes of EDID
+   DDCA_MCCS_Version_Spec vcp_version;      ///< VCP version as pair of numbers
+   DDCA_MCCS_Version_Id   vcp_version_id;   ///< VCP version identifier (deprecated)
+   DDCA_Display_Ref       dref;             ///< opaque display reference
+   DDCA_Monitor_Model_Key mmid;             ///< identifies a monitor model
 } DDCA_Display_Info;
 
 
@@ -560,15 +538,6 @@ typedef enum {
    DDCA_TABLE_VCP_VALUE     = 2,       /**< Table (T) value */
 } DDCA_Vcp_Value_Type;
 
-#ifdef UNUSED
-/** #DDCA_Vcp_Value_Type_Parm extends #DDCA_Vcp_Value_Type to allow for its use as a
-    function call parameter where the type is unknown */
-typedef enum {S
-   DDCA_UNSET_VCP_VALUE_TYPE_PARM = 0,   /**< Unspecified */
-   DDCA_NON_TABLE_VCP_VALUE_PARM  = 1,   /**< Continuous (C) or Non-Continuous (NC) value */
-   DDCA_TABLE_VCP_VALUE_PARM      = 2,   /**< Table (T) value */
-} DDCA_Vcp_Value_Type_Parm;
-#endif
 
 typedef struct {
    uint8_t    mh;
@@ -605,28 +574,6 @@ typedef struct {
 
 #define VALREC_CUR_VAL(valrec) ( valrec->val.c_nc.sh << 8 | valrec->val.c_nc.sl )
 #define VALREC_MAX_VAL(valrec) ( valrec->val.c_nc.mh << 8 | valrec->val.c_nc.ml )
-
-
-#ifdef FUTURE
-// Possible future declarations for exposing formatting functions, to be passed
-// in DDCA_Version_Feature_Info.
-// Issue: Won't expose well in Python API
-
-char * (*DDCA_Func_Format_Non_Table_Value) (
-          DDCA_Vcp_Feature_Code     feature_code,
-          DDCA_MCCS_Version_Spec    vspec,
-          DDCA_Non_Table_Vcp_Value  valrec);     // or pointer?
-
-char * (*DDCA_Func_Format_Table_Value) (
-          DDCA_Vcp_Feature_Code     feature_code,
-          DDCA_MCCS_Version_Spec    vspec,
-          DDCA_Table_Vcp_Value      valrec);     // or pointer?
-
-char * (*DDCA_Func_Any_Value) (
-          DDCA_Vcp_Feature_Code     feature_code,
-          DDCA_MCCS_Version_Spec    vspec,
-          DDCA_Any_Vcp_Value        valrec);     // or pointer?
-#endif
 
 
 //

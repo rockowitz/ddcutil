@@ -1199,11 +1199,13 @@ ddca_get_display_info_list2(
             version_id = mccs_version_spec_to_id(vspec);
          }
 
+         memcpy(curinfo->edid_bytes,    dref->pedid->bytes, 128);
+         g_strlcpy(curinfo->mfg_id,     dref->pedid->mfg_id,       EDID_MFG_ID_FIELD_SIZE);
+         g_strlcpy(curinfo->model_name, dref->pedid->model_name,   EDID_MODEL_NAME_FIELD_SIZE);
+         g_strlcpy(curinfo->sn,         dref->pedid->serial_ascii, DDCA_EDID_SN_ASCII_FIELD_SIZE);
+         curinfo->product_code  = dref->pedid->product_code;
 #ifdef OLD
          curinfo->edid_bytes    = dref->pedid->bytes;
-#endif
-         memcpy(curinfo->edid_bytes2, dref->pedid->bytes, 128);
-#ifdef OLD
          // or should these be memcpy'd instead of just pointers, can edid go away?
          curinfo->mfg_id         = dref->pedid->mfg_id;
          curinfo->model_name     = dref->pedid->model_name;
@@ -1214,17 +1216,15 @@ ddca_get_display_info_list2(
          curinfo->vcp_version_id = version_id;
          curinfo->dref           = dref;
 
-         g_strlcpy(curinfo->sn2, dref->pedid->serial_ascii, DDCA_EDID_SN_ASCII_FIELD_SIZE);
-
          curinfo->mmid = monitor_model_key_value(
                                         dref->pedid->mfg_id,
                                         dref->pedid->model_name,
                                         dref->pedid->product_code);
-#ifdef OLD
+// #ifdef OLD
          assert(streq(curinfo->mfg_id,     curinfo->mmid.mfg_id));
          assert(streq(curinfo->model_name, curinfo->mmid.model_name));
          assert(curinfo->product_code == curinfo->mmid.product_code);
-#endif
+// #endif
       }
    }
 
@@ -1292,22 +1292,16 @@ ddca_dbgrpt_display_info(
          break;
    }
 
-#ifdef OLD
    rpt_vstring(d1, "Mfg Id:              %s", dinfo->mfg_id);
    rpt_vstring(d1, "Model:               %s", dinfo->model_name);
    rpt_vstring(d1, "Product code:        %u", dinfo->product_code);
    rpt_vstring(d1, "Serial number:       %s", dinfo->sn);
-#endif
-   rpt_vstring(d1, "sn2:                 %s", dinfo->sn2);
    rpt_label(  d1, "Monitor Model Id:");
    rpt_vstring(d2, "Mfg Id:           %s", dinfo->mmid.mfg_id);
    rpt_vstring(d2, "Model name:       %s", dinfo->mmid.model_name);
    rpt_vstring(d2, "Product code:     %d", dinfo->mmid.product_code);
    rpt_vstring(d1, "EDID:");
-#ifdef OLD
    rpt_hex_dump(dinfo->edid_bytes, 128, d2);
-#endif
-   rpt_hex_dump(dinfo->edid_bytes2, 128, d2);
    // rpt_vstring(d1, "dref:                %p", dinfo->dref);
    rpt_vstring(d1, "VCP Version:         %s", format_vspec(dinfo->vcp_version));
 // rpt_vstring(d1, "VCP Version Id:      %s", format_vcp_version_id(dinfo->vcp_version_id) );
@@ -3260,8 +3254,6 @@ ddca_report_parsed_capabilities(
    }
 }
 
-// TODO: Converge ddca_report_parsed_capabilities() with report_parsed_capabilities(),
-//       eliminate ddca_parse_and_report_capabilities()
 
 void
 ddca_parse_and_report_capabilities(
