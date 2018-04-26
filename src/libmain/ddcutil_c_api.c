@@ -859,7 +859,7 @@ ddca_dbgrpt_display_ref(
 }
 
 DDCA_Monitor_Model_Key
-ddca_monitor_model_key_from_dref(
+ddca_mmk_from_dref(
       DDCA_Display_Ref   ddca_dref)
 {
    DDCA_Monitor_Model_Key result = DDCA_UNDEFINED_MONITOR_MODEL_KEY;
