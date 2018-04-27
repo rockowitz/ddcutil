@@ -31,8 +31,7 @@
 
 /** \cond */
 #include <assert.h>
-#include <glib.h>
-// #include <glib-2.0/glib.h>
+#include <glib-2.0/glib.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -51,6 +50,30 @@
 #include "vcp_version.h"
 
 #include "displays.h"
+
+
+#ifdef NOT_NEEDED
+typedef struct {
+   char * s_did;
+} Thread_Displays_Data;
+
+static Thread_Displays_Data *  get_thread_displays_data() {
+   static GPrivate per_thread_data_key = G_PRIVATE_INIT(g_free);
+
+   Thread_Displays_Data *thread_data = g_private_get(&per_thread_data_key);
+
+   // GThread * this_thread = g_thread_self();
+   // printf("(%s) this_thread=%p, settings=%p\n", __func__, this_thread, settings);
+
+   if (!thread_data) {
+      thread_data = g_new0(Thread_Displays_Data, 1);
+      g_private_set(&per_thread_data_key, thread_data);
+   }
+
+   // printf("(%s) Returning: %p\n", __func__, thread_data);
+   return thread_data;
+}
+#endif
 
 
 // *** Miscellaneous ***
