@@ -449,7 +449,7 @@ main(int argc, char** argv) {
       DDCA_Display_Info * dinfo = &dlist->info[ndx];
       printf("\n===> Test loop for display %d\n", dinfo->dispno);
       // For all the gory details:
-      ddca_dbgrpt_display_info(dinfo, /* depth=*/ 1);
+      ddca_report_display_info(dinfo, /* depth=*/ 1);
       dref = dinfo->dref;
 
       // printf("Open display reference %s, creating a display handle...\n", ddca_dref_repr(dref));

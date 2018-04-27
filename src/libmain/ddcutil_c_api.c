@@ -1240,7 +1240,7 @@ ddca_get_display_info_list2(
 
    DBGMSF(debug, "Done. Returning %p", result_list);
    if (debug)
-      ddca_dbgrpt_display_info_list(result_list, 2);
+      ddca_report_display_info_list(result_list, 2);
 
    *dlist_loc = result_list;
    return 0;
@@ -1270,7 +1270,7 @@ ddca_free_display_info_list(DDCA_Display_Info_List * dlist) {
 
 
 void
-ddca_dbgrpt_display_info(
+ddca_report_display_info(
       DDCA_Display_Info * dinfo,
       int                 depth)
 {
@@ -1306,10 +1306,10 @@ ddca_dbgrpt_display_info(
    rpt_vstring(d1, "Model:               %s", dinfo->model_name);
    rpt_vstring(d1, "Product code:        %u", dinfo->product_code);
    rpt_vstring(d1, "Serial number:       %s", dinfo->sn);
-   rpt_label(  d1, "Monitor Model Id:");
-   rpt_vstring(d2, "Mfg Id:           %s", dinfo->mmid.mfg_id);
-   rpt_vstring(d2, "Model name:       %s", dinfo->mmid.model_name);
-   rpt_vstring(d2, "Product code:     %d", dinfo->mmid.product_code);
+   // rpt_label(  d1, "Monitor Model Id:");
+   // rpt_vstring(d2, "Mfg Id:           %s", dinfo->mmid.mfg_id);
+   // rpt_vstring(d2, "Model name:       %s", dinfo->mmid.model_name);
+   // rpt_vstring(d2, "Product code:     %d", dinfo->mmid.product_code);
    rpt_vstring(d1, "EDID:");
    rpt_hex_dump(dinfo->edid_bytes, 128, d2);
    // rpt_vstring(d1, "dref:                %p", dinfo->dref);
@@ -1320,7 +1320,7 @@ ddca_dbgrpt_display_info(
 
 
 void
-ddca_dbgrpt_display_info_list(
+ddca_report_display_info_list(
       DDCA_Display_Info_List * dlist,
       int                      depth)
 {
@@ -1330,7 +1330,7 @@ ddca_dbgrpt_display_info_list(
    int d1 = depth+1;
    rpt_vstring(depth, "Found %d displays", dlist->ct);
    for (int ndx=0; ndx<dlist->ct; ndx++) {
-      ddca_dbgrpt_display_info(&dlist->info[ndx], d1);
+      ddca_report_display_info(&dlist->info[ndx], d1);
    }
 }
 

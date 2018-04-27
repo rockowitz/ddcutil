@@ -53,7 +53,7 @@ DDCA_Display_Ref display_selection_using_display_detection(bool include_invalid_
    // A convenience function to report the result of ddca_get_display_info_list2()
    // output level has no effect on this debug report
    printf("   Report the result using ddca_report_display_info_list()...\n");
-   ddca_dbgrpt_display_info_list(dlist, 2);
+   ddca_report_display_info_list(dlist, 2);
 
    DDCA_Output_Level saved_output_level = ddca_set_output_level(DDCA_OL_NORMAL);
    // A similar function that hooks directly into the "ddcutil detect" command.

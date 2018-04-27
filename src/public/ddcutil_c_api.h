@@ -127,7 +127,7 @@ DDCA_Build_Option_Flags ddca_build_options(void);
 
 
  //
- // Error Detail (Under development)
+ // Error Detail
  //
 
  /** Gets a copy of the detailed error information for the previous
@@ -495,7 +495,7 @@ void ddca_free_display_info_list(DDCA_Display_Info_List * dlist);
  *  to **dinfo->dref**.
  */
 void
-ddca_dbgrpt_display_info(
+ddca_report_display_info(
       DDCA_Display_Info * dinfo,
       int                 depth);
 
@@ -506,7 +506,7 @@ ddca_dbgrpt_display_info(
  *  @param[in]  depth  logical indentation depth
  */
 void
-ddca_dbgrpt_display_info_list(
+ddca_report_display_info_list(
       DDCA_Display_Info_List * dlist,
       int                      depth);
 
