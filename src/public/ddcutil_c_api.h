@@ -751,23 +751,6 @@ ddca_open_display(
       DDCA_Display_Ref      ddca_dref,
       DDCA_Display_Handle * ddca_dh_loc);
 
-#ifdef DUPLICATE
-/** Open a display
- * @param[in]  ddca_dref    display reference for display to open
- * @param[in]  wait         if true, wait if display locked by another thread
- * @param[out] ddca_dh_loc  where to return display handle
- * @return     status code
- *
- * Fails if display is already opened by another thread.
- * \ingroup api_display_spec
- */
-DDCA_Status
-ddca_open_display2(
-      DDCA_Display_Ref      ddca_dref,
-      bool                  wait,
-      DDCA_Display_Handle * p_dh);
-#endif
-
 /** Open a display
  * @param[in]  ddca_dref    display reference for display to open
  * @param[in]  wait         if true, wait if display locked by another thread
@@ -1131,8 +1114,6 @@ DDCA_Status ddca_is_feature_supported(
       bool *                 answer_loc);   // or return status code?
 
 #endif
-
-
 
 
 // Current functions - NC lookup tables
