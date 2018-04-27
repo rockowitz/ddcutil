@@ -721,7 +721,7 @@ ddca_dbgrpt_display_ref(
       int              depth);
 
 
-/** Extracts the monitor model identifier a display represented by
+/** Extracts the monitor model identifier for a display represented by
  *  a #DDCA_Display_Ref.
  *
  *  @param ddca_dref
