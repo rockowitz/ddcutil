@@ -244,41 +244,6 @@ _ddca_init(void) {
 }
 
 
-#ifdef WRONG
-/** Template for callback function registered with ddca_register_abort_func() */
-typedef void (*DDCA_Abort_Func)(DDCA_Status status_code);
-
-static jmp_buf abort_buf;
-
-static DDCA_Abort_Func  abort_func = NULL;
-
-// PROBLEM: If abort_func() returns, some function gets 0 as it's return value,
-// which causes unpredictable behavior
-
-
-/** Register a function to be called when an internal abort occurs in libddcutil.
- *
- *  @param[in]   func callback function
- */
-void ddca_register_abort_func(DDCA_Abort_Func func) {
-   DBGMSG("func=%p", func);
-   abort_func = func;
-
-   int jmprc = setjmp(abort_buf);
-   if (jmprc) {
-
-      Public_Status_Code status_code = global_to_public_status_code(jmprc);
-      if (abort_func)
-         abort_func(status_code);
-      fprintf(stderr, "Aborting. Internal status code = %d\n", jmprc);
-      exit(EXIT_FAILURE);
-   }
-   DBGMSG("Calling register_jmp_buf()...");
-   register_jmp_buf(&abort_buf);
-}
-#endif
-
-
 #ifdef OBSOLETE
 
 void
@@ -302,7 +267,7 @@ ddca_get_global_failure_information()
 
 
 //
-// Error Detail (Under development)
+// Error Detail
 //
 
 DDCA_Error_Detail * ddca_get_error_detail() {
@@ -1081,67 +1046,6 @@ ddca_mmk_defined(
 }
 
 
-#ifdef OLD
-// or should this return status code?
-DDCA_Display_Info_List *
-ddca_get_displays_old()
-{
-   ddc_ensure_displays_detected();
-
-   // PROGRAM_LOGIC_ERROR("---> pseudo failure");
-   Display_Info_List * info_list = ddc_get_valid_displays();
-   int true_ct = 0;         // number of valid displays
-   for (int ndx = 0; ndx < info_list->ct; ndx++) {
-      Display_Info drec = info_list->info_recs[ndx];
-      if (drec.dispno != -1)    // ignore invalid displays
-         true_ct++;
-   }
-
-   int reqd_size =   offsetof(DDCA_Display_Info_List,info) + true_ct * sizeof(DDCA_Display_Info);
-   DDCA_Display_Info_List * result_list = calloc(1,reqd_size);
-   result_list->ct = true_ct;
-   // DBGMSG("sizeof(DDCA_Display_Info) = %d, sizeof(Display_Info_List) = %d, reqd_size=%d, true_ct=%d, offsetof(DDCA_Display_Info_List,info) = %d",
-   //       sizeof(DDCA_Display_Info), sizeof(DDCA_Display_Info_List), reqd_size, true_ct, offsetof(DDCA_Display_Info_List,info));
-
-   int true_ctr = 0;
-   for (int ndx = 0; ndx < info_list->ct; ndx++) {
-      Display_Info drec = info_list->info_recs[ndx];
-      if (drec.dispno != -1) {
-         DDCA_Display_Info * curinfo = &result_list->info[true_ctr++];
-         memcpy(curinfo->marker, DDCA_DISPLAY_INFO_MARKER, 4);
-         curinfo->dispno        = drec.dispno;
-         Display_Ref * dref     = drec.dref;
-         curinfo->path.io_mode = dref->io_path.io_mode;
-         switch (dref->io_path.io_mode) {
-         case DDCA_IO_I2C:
-            curinfo->path.i2c_busno = dref->io_path.i2c_busno;
-            break;
-         case DDCA_IO_ADL:
-            curinfo->path.adlno.iAdapterIndex = dref->io_path.adlno.iAdapterIndex;
-            curinfo->path.adlno.iDisplayIndex = dref->io_path.adlno.iDisplayIndex;
-            break;
-         case DDCA_IO_USB:
-            curinfo->usb_bus    = dref->usb_bus;
-            curinfo->usb_device = dref->usb_device;
-            curinfo->path.hiddev_devno = dref->io_path.hiddev_devno;
-            break;
-         }
-         curinfo->edid_bytes    = drec.edid->bytes;
-         // or should these be memcpy'd instead of just pointers, can edid go away?
-         curinfo->mfg_id        = drec.edid->mfg_id;
-         curinfo->model_name    = drec.edid->model_name;
-         curinfo->sn            = drec.edid->serial_ascii;
-         curinfo->ddca_dref     = dref;
-      }
-   }
-   free_display_info_list(info_list);
-
-   // DBGMSG("Returning %p", result_list);
-   return result_list;
-}
-#endif
-
-
 DDCA_Display_Info_List *
 ddca_get_display_info_list(void)
 {
@@ -1546,9 +1450,6 @@ ddca_get_feature_list_by_dref(
 }
 
 
-
-
-// aka ddca_feature_list_or()
 DDCA_Feature_List
 ddca_feature_list_or(
       DDCA_Feature_List* vcplist1,
@@ -1562,7 +1463,6 @@ ddca_feature_list_or(
 }
 
 
-// aka ddca_feature_list_intersect()
 DDCA_Feature_List
 ddca_feature_list_and(
       DDCA_Feature_List* vcplist1,
@@ -1576,7 +1476,6 @@ ddca_feature_list_and(
 }
 
 
-// aka _and_not
 DDCA_Feature_List
 ddca_feature_list_and_not(
       DDCA_Feature_List* vcplist1,
@@ -1629,7 +1528,6 @@ void ddca_feature_list_to_codes(
 #endif
 
 
-
 int
 ddca_feature_list_count(
       DDCA_Feature_List * feature_list)
@@ -1643,7 +1541,6 @@ ddca_feature_list_count(
    }
    return result;
 }
-
 
 
 char *
@@ -1683,8 +1580,6 @@ ddca_feature_list_string(
    // DBGMSG("Returning %p - %s", buf, buf);
    return buf;
 }
-
-
 
 
 #ifdef OLD
@@ -1738,6 +1633,7 @@ DDCA_Status ddca_get_feature_flags_by_vcp_version(
    return rc;
 }
 #endif
+
 
 // deprecated
 DDCA_Status
@@ -1961,7 +1857,6 @@ ddca_get_feature_metadata_by_dref(
 }
 
 
-// Add with_default flag?
 DDCA_Status
 ddca_get_feature_metadata_by_dh(
       DDCA_Vcp_Feature_Code       feature_code,
@@ -1999,7 +1894,7 @@ ddca_get_feature_metadata_by_dh(
       );
 }
 
-// frees the contents on info, not info itself
+// frees the contents of info, not info itself
 DDCA_Status
 ddca_free_feature_metadata_contents(DDCA_Feature_Metadata info) {
    if ( (info.feature_flags & DDCA_SYNTHETIC) &&
@@ -2077,11 +1972,9 @@ ddca_feature_name_by_dref(
 }
 
 
-
 //
 // Display Inquiry
 //
-
 
 DDCA_Status
 ddca_get_simple_sl_value_table_by_vspec(
@@ -2151,7 +2044,6 @@ ddca_get_simple_sl_value_table_by_dref(
 }
 
 
-
 DDCA_Status
 ddca_get_simple_sl_value_table(
       DDCA_Vcp_Feature_Code      feature_code,
@@ -2173,9 +2065,7 @@ ddca_get_simple_sl_value_table(
 }
 
 
-
 // typedef void * Feature_Value_Table;   // temp
-
 
 DDCA_Status
 ddca_get_simple_nc_feature_value_name_by_table(
@@ -2231,34 +2121,6 @@ ddca_get_simple_nc_feature_value_name_by_display(
    );
 }
 
-
-#ifdef OLD_PREFACTOR
-DDCA_Status
-ddca_get_simple_nc_feature_value_name0(
-      DDCA_Display_Handle    ddca_dh,    // needed because value lookup mccs version dependent
-      DDCA_Vcp_Feature_Code  feature_code,
-      uint8_t                feature_value,
-      char**                 p_feature_name)
-{
-   WITH_DH(ddca_dh,  {
-         // this should be a function in vcp_feature_codes:
-         char * feature_name = NULL;
-         DDCA_MCCS_Version_Spec vspec = get_vcp_version_by_display_handle(dh);
-         DDCA_Feature_Value_Entry * feature_value_entries = find_feature_values(feature_code, vspec);
-         if (feature_value_entries == NULL) {
-            psc = DDCRC_ARG;
-         }
-         else {
-            feature_name = get_feature_value_name(feature_value_entries, feature_value);
-            if (feature_name == NULL)
-               psc = DDCRC_ARG;               // correct handling for value not found?
-            else
-               *p_feature_name = feature_name;
-         }
-   }
-   );
-}
-#endif
 
 //
 // Get and Set Feature Values
@@ -2329,7 +2191,6 @@ ddca_get_non_table_vcp_value(
        }
     } );
 }
-
 
 
 // untested
@@ -2436,7 +2297,6 @@ get_value_type(
    DBGMSF(debug, "Returning %d", ddcrc);
    return ddcrc;
 }
-
 
 
 DDCA_Status
@@ -3326,7 +3186,6 @@ ddca_set_profile_related_values(
 // Reports
 //
 
-
 int
 ddca_report_active_displays(int depth) {
    return ddc_report_displays(false, depth);
@@ -3362,7 +3221,6 @@ ddca_start_get_any_vcp_value(
           errinfo_free(ddc_excp);
        }
       );
-
 }
 
 
@@ -3394,6 +3252,4 @@ ddca_pass_callback(
    DBGMSG("returning %d", callback_rc);
    return callback_rc;
 }
-
-
 
