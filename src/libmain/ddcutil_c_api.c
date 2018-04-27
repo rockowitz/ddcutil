@@ -733,8 +733,6 @@ DDCA_Status
 ddca_free_display_identifier(
       DDCA_Display_Identifier did)
 {
-   // DBGMSG("Starting.  did=%p", did);
-
    DDCA_Status rc = 0;
    Display_Identifier * pdid = (Display_Identifier *) did;
    if (pdid) {
@@ -742,7 +740,6 @@ ddca_free_display_identifier(
          rc = DDCRC_ARG;
       else
          free_display_identifier(pdid);
-
    }
    return rc;
 }
@@ -755,7 +752,6 @@ ddca_did_repr(DDCA_Display_Identifier ddca_did) {
    Display_Identifier * pdid = (Display_Identifier *) ddca_did;
    if (pdid != NULL && memcmp(pdid->marker, DISPLAY_IDENTIFIER_MARKER, 4) == 0 )  {
       result = did_repr(pdid);
-
    }
    // DBGMSG("Done.  Returning: %p", result);
    return result;
