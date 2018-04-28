@@ -48,6 +48,7 @@
 #include "base/displays.h"
 #include "base/dynamic_features.h"
 #include "base/execution_stats.h"
+#include "base/feature_lists.h"
 #include "base/monitor_model_key.h"
 #include "base/parms.h"
 
@@ -1307,28 +1308,17 @@ const DDCA_Feature_List DDCA_EMPTY_FEATURE_LIST = {{0}};
 
 
 void ddca_feature_list_clear(DDCA_Feature_List* vcplist) {
-   memset(vcplist->bytes, 0, 32);
+   feature_list_clear(vcplist);
 }
 
 
 void ddca_feature_list_add(DDCA_Feature_List * vcplist, uint8_t vcp_code) {
-   int flagndx   = vcp_code >> 3;
-   int shiftct   = vcp_code & 0x07;
-   Byte flagbit  = 0x01 << shiftct;
-   // printf("(%s) val=0x%02x, flagndx=%d, shiftct=%d, flagbit=0x%02x\n",
-   //        __func__, val, flagndx, shiftct, flagbit);
-   vcplist->bytes[flagndx] |= flagbit;
+   feature_list_add(vcplist, vcp_code);
 }
 
 
 bool ddca_feature_list_contains(DDCA_Feature_List * vcplist, uint8_t vcp_code) {
-   int flagndx   = vcp_code >> 3;
-   int shiftct   = vcp_code & 0x07;
-   Byte flagbit  = 0x01 << shiftct;
-   // printf("(%s) val=0x%02x, flagndx=%d, shiftct=%d, flagbit=0x%02x\n",
-   //        __func__, val, flagndx, shiftct, flagbit);
-   bool result = vcplist->bytes[flagndx] & flagbit;
-   return result;
+   return feature_list_contains(vcplist, vcp_code);
 }
 
 
@@ -1455,11 +1445,7 @@ ddca_feature_list_or(
       DDCA_Feature_List* vcplist1,
       DDCA_Feature_List* vcplist2)
 {
-   DDCA_Feature_List result;
-   for (int ndx = 0; ndx < 32; ndx++) {
-      result.bytes[ndx] =  vcplist1->bytes[ndx] | vcplist2->bytes[ndx];
-   }
-   return result;
+   return feature_list_or(vcplist1, vcplist2);
 }
 
 
@@ -1468,30 +1454,18 @@ ddca_feature_list_and(
       DDCA_Feature_List* vcplist1,
       DDCA_Feature_List* vcplist2)
 {
-   DDCA_Feature_List result;
-   for (int ndx = 0; ndx < 32; ndx++) {
-      result.bytes[ndx] =  vcplist1->bytes[ndx] & vcplist2->bytes[ndx];
-   }
-   return result;
+   return feature_list_and(vcplist1, vcplist2);
 }
 
 
 DDCA_Feature_List
 ddca_feature_list_and_not(
       DDCA_Feature_List* vcplist1,
-      DDCA_Feature_List * vcplist2)
+      DDCA_Feature_List* vcplist2)
 {
-   // DBGMSG("Starting. vcplist1=%p, vcplist2=%p", vcplist1, vcplist2);
-   DDCA_Feature_List result;
-   for (int ndx = 0; ndx < 32; ndx++) {
-      result.bytes[ndx] =  vcplist1->bytes[ndx] & ~vcplist2->bytes[ndx];
-   }
-
-   // char * s = ddca_feature_list_string(&result, "0x",", ");
-   // DBGMSG("Returning: %s", s);
-   // free(s);
-   return result;
+   return feature_list_and_not(vcplist1, vcplist2);
 }
+
 
 #ifdef UNPUBLISHED
 // no real savings in client code
@@ -1532,14 +1506,7 @@ int
 ddca_feature_list_count(
       DDCA_Feature_List * feature_list)
 {
-   int result = 0;
-   if (feature_list) {
-      for (int ndx = 0; ndx < 256; ndx++) {
-         if (ddca_feature_list_contains(feature_list, ndx))
-            result++;
-      }
-   }
-   return result;
+   return feature_list_count(feature_list);
 }
 
 
@@ -1549,36 +1516,7 @@ ddca_feature_list_string(
       char * value_prefix,
       char * sepstr)
 {
-   // DBGMSG("Starting. feature_list=%p, value_prefix=|%s|, sepstr=|%s|",
-   //        feature_list, value_prefix, sepstr);
-   // rpt_hex_dump((Byte*)feature_list, 32, 2);
-
-   char * buf = NULL;
-
-   if (feature_list) {
-      if (!value_prefix)
-         value_prefix = "";
-      if (!sepstr)
-         sepstr = "";
-      int vsize = strlen(value_prefix) + 2 + strlen(sepstr);
-
-      int feature_ct = ddca_feature_list_count(feature_list);
-      int reqd_size = (feature_ct*vsize)+1;   // +1 for trailing null
-      buf = malloc(reqd_size);
-      buf[0] = '\0';
-      // DBGMSG("feature_ct=%d, vsize=%d, buf size = %d", feature_ct, vsize, vsize*feature_ct);
-
-      for (int ndx = 0; ndx < 256; ndx++) {
-         if (ddca_feature_list_contains(feature_list, ndx))
-            sprintf(buf + strlen(buf), "%s%02x%s", value_prefix, ndx, sepstr);
-      }
-      if (feature_ct > 0)
-         buf[ strlen(buf)-strlen(sepstr)] = '\0';
-   }
-
-   // DBGMSG("Returned string length: %d", strlen(buf));
-   // DBGMSG("Returning %p - %s", buf, buf);
-   return buf;
+   return feature_list_string(feature_list, value_prefix, sepstr);
 }
 
 

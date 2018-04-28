@@ -39,6 +39,7 @@ ddc_packets.c             \
 dynamic_features.c        \
 displays.c                \
 execution_stats.c         \
+feature_lists.c           \
 feature_sets.c            \
 linux_errno.c             \
 monitor_model_key.c       \

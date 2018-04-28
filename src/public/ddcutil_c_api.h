@@ -1336,7 +1336,8 @@ ddca_feature_list_count(
  *                            if NULL, then no preceding string
  *  @param[in] sepstr         separator string between pair of values, e.g. ", "
  *                            if NULL, then no separator string
- *  @return    string representation, caller must free
+ *  @return    string representation; The value is valid until the next call
+ *             to this function in the current thread.  Caller should not free.
  *
  *  @remark
  *  Returns NULL if feature_list == NULL
