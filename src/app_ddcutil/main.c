@@ -82,6 +82,8 @@
 #include "cmdline/cmd_parser.h"
 #include "cmdline/parsed_cmd.h"
 
+#include "app_common/app_dynamic_features.h"    // future
+
 #include "app_ddcutil/app_dumpload.h"
 #include "app_ddcutil/app_getvcp.h"
 #include "app_ddcutil/app_setvcp.h"
@@ -713,8 +715,8 @@ int main(int argc, char *argv[]) {
                free_display_ref(dref);
                dref = NULL;
             }
-            else
-               check_dynamic_features(dref);    // the hook
+            // else
+               // check_dynamic_features(dref);    // the hook wrong location
             // DBGMSG("Synthetic Display_Ref");
          }
          else {
@@ -748,6 +750,8 @@ int main(int argc, char *argv[]) {
 
             case CMDID_CAPABILITIES:
                {
+                  // check_dynamic_features(dref);  // needed for this command?
+
                   Parsed_Capabilities * pcaps = perform_get_capabilities_by_display_handle(dh);
                   main_rc = (pcaps) ? EXIT_SUCCESS : EXIT_FAILURE;
                   free_parsed_capabilities(pcaps);
@@ -756,6 +760,8 @@ int main(int argc, char *argv[]) {
 
             case CMDID_GETVCP:
                {
+                  check_dynamic_features(dref);
+
                   Feature_Set_Flags flags = 0x00;
 
                   // DBGMSG("parsed_cmd->flags: 0x%04x", parsed_cmd->flags);
@@ -835,6 +841,8 @@ int main(int argc, char *argv[]) {
 
             case CMDID_DUMPVCP:
                {
+                  check_dynamic_features(dref);
+
                   Public_Status_Code psc =
                         dumpvcp_as_file(dh, (parsed_cmd->argct > 0)
                                                ? parsed_cmd->args[0]
@@ -851,6 +859,8 @@ int main(int argc, char *argv[]) {
                break;
 
             case CMDID_PROBE:
+               check_dynamic_features(dref);
+
                probe_display_by_dh(dh);
                main_rc = EXIT_SUCCESS;
                break;

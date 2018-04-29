@@ -1056,7 +1056,7 @@ ddc_detect_all_displays() {
       if (dref->flags & DREF_DDC_COMMUNICATION_WORKING) {
          dref->dispno = ++dispno_max;
 
-         check_dynamic_features(dref);    // the hook
+         // check_dynamic_features(dref);    // wrong location for hook
 
       }
       else {
