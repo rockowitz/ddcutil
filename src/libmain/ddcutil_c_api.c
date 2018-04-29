@@ -63,6 +63,7 @@
 #include "ddc/ddc_async.h"
 #include "ddc/ddc_displays.h"
 #include "ddc/ddc_dumpload.h"
+#include "ddc/ddc_dynamic_features.h"
 #include "ddc/ddc_multi_part_io.h"
 #include "ddc/ddc_output.h"
 #include "ddc/ddc_packet_io.h"
@@ -3109,14 +3110,17 @@ ddca_set_profile_related_values(
       DDCA_Display_Handle  ddca_dh,
       char * profile_values_string)
 {
-   free_thread_error_detail();
-   Error_Info * ddc_excp = loadvcp_by_string(profile_values_string, ddca_dh);
-   Public_Status_Code psc = (ddc_excp) ? ddc_excp->status_code : 0;
-   if (ddc_excp) {
-      save_thread_error_detail(error_info_to_ddca_detail(ddc_excp));
-      errinfo_free(ddc_excp);
-   }
-   return psc;
+   WITH_DH(ddca_dh,
+      {
+         free_thread_error_detail();
+         Error_Info * ddc_excp = loadvcp_by_string(profile_values_string, dh);
+         psc = (ddc_excp) ? ddc_excp->status_code : 0;
+         if (ddc_excp) {
+            save_thread_error_detail(error_info_to_ddca_detail(ddc_excp));
+            errinfo_free(ddc_excp);
+         }
+      }
+   );
 }
 
 
@@ -3134,6 +3138,26 @@ ddca_report_displays(bool include_invalid_displays, int depth) {
    return ddc_report_displays(include_invalid_displays, depth);
 }
 
+
+//
+//  Dynamic Features (future)
+//
+
+DDCA_Status
+ddca_dfr_check_by_dref(DDCA_Display_Ref * ddca_dref) {
+
+   WITH_DR(ddca_dref,
+      {
+         free_thread_error_detail();
+         Error_Info * ddc_excp = dfr_check_by_dref(dref);
+         psc = (ddc_excp) ? ddc_excp->status_code : 0;
+         if (ddc_excp) {
+            save_thread_error_detail(error_info_to_ddca_detail(ddc_excp));
+            errinfo_free(ddc_excp);
+         }
+      }
+   );
+}
 
 //
 // Async operation - experimental
