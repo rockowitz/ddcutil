@@ -41,6 +41,7 @@
 #include "public/ddcutil_types.h"
 
 #include "core.h"
+#include "dynamic_features.h"
 #include "feature_sets.h"
 #include "vcp_version.h"
 
@@ -211,7 +212,7 @@ typedef struct _display_ref {
    int           dispno;
    void *        detail;    // I2C_Bus_Info *, ADL_Display_Detail *, or Usb_Monitor_Info *
    Display_Async_Rec * async_rec;
-   void *        dfr;       // for future Dynamic_Features_Record *
+   Dynamic_Features_Rec *  dfr;       // for future Dynamic_Features_Record *
 } Display_Ref;
 
 #define ASSERT_DREF_IO_MODE(_dref, _mode)  \

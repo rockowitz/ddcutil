@@ -242,6 +242,8 @@ dfr_load_by_edid(
       Parsed_Edid *           edid,
       Dynamic_Features_Rec ** dfr_loc)
 {
+   bool debug = false;
+
    Error_Info *           errs = NULL;
    Dynamic_Features_Rec * dfr  = NULL;
    char * simple_fn = model_id_string(edid->mfg_id, edid->model_name,edid->product_code);
@@ -282,6 +284,16 @@ dfr_load_by_edid(
 
    free(simple_fn);
    dfr_save(dfr);
+
+   if (debug) {
+      if (errs) {
+         DBGMSG("Done.  Returning errs: ");
+         errinfo_report(errs, 1);
+      }
+      else
+         DBGMSG("Done.  *dfr_loc=%p", *dfr_loc);
+   }
+
    return errs;
 }
 
@@ -299,7 +311,7 @@ Error_Info *  dfr_check_by_dref(Display_Ref * dref) {
       dref->dfr = NULL;
 
       Dynamic_Features_Rec * dfr = NULL;
-      Error_Info * errs = dfr_load_by_edid(dref->pedid, &dfr);
+      errs = dfr_load_by_edid(dref->pedid, &dfr);
       if (!errs) {
          dref->dfr = dfr;
       }
@@ -308,7 +320,14 @@ Error_Info *  dfr_check_by_dref(Display_Ref * dref) {
    }
 
 bye:
-   DBGMSF(debug, "Done.");
+   if (debug) {
+      if (errs) {
+         DBGMSG("Done.  Returning errs: ");
+         errinfo_report(errs, 1);
+      }
+      else
+         DBGMSG("Done.  dref->dfr=%p", dref->dfr);
+   }
    return errs;
 }
 
@@ -319,12 +338,16 @@ void check_dynamic_features(Display_Ref * dref) {
 
    bool debug = false;
    DBGMSF(debug, "Starting. ");
+
+   // bool wrote_output = false;
    Error_Info * errs = dfr_check_by_dref(dref);
    DDCA_Output_Level ol = get_output_level();
    if (errs) {
       if (errs->status_code == DDCRC_NOT_FOUND) {
-         if (ol >= DDCA_OL_VERBOSE)
+         if (ol >= DDCA_OL_VERBOSE) {
             f0printf(fout(), "%s\n", errs->detail);
+            // wrote_output = true;
+         }
       }
       else {
          // errinfo_report(errs, 1);
@@ -332,13 +355,17 @@ void check_dynamic_features(Display_Ref * dref) {
          for (int ndx = 0; ndx < errs->cause_ct; ndx++) {
             f0printf(fout(), "   %s\n", errs->causes[ndx]->detail);
          }
+         // wrote_output = true;
       }
       errinfo_free(errs);
    }
    else {
       // dbgrpt_dynamic_features_rec(dfr, 1);
-      if (ol >= DDCA_OL_VERBOSE)
-         f0printf(fout(), "Processed feature definition file: %s\n", ((Dynamic_Features_Rec*)dref->dfr)->filename);
+      if (ol >= DDCA_OL_VERBOSE) {
+         f0printf(fout(), "Processed feature definition file: %s\n",
+                          dref->dfr->filename);
+         // wrote_output = true;
+      }
    }
 
    DBGMSF(debug, "Done.");
