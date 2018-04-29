@@ -1,6 +1,6 @@
 ## Process this file with automake to produce Makefile.in
 
-SUBDIRS = util usb_util base vcp i2c adl usb ddc test app_sysenv cmdline . gobject_api swig cython cffi  sample_clients 
+SUBDIRS = util usb_util base vcp i2c adl usb ddc test app_sysenv app_common cmdline . gobject_api swig cython cffi  sample_clients 
 
 MOSTLYCLEANFILES =   
 
@@ -221,6 +221,7 @@ endif
 
 
 libapp_la_LIBADD = \
+app_common/libappcommon.la \
 app_sysenv/libappsysenv.la \
 cmdline/libcmdline.la 
 

@@ -79,6 +79,7 @@ AC_CONFIG_FILES([
 	src/ddc/Makefile
 	src/test/Makefile
 	src/cmdline/Makefile
+	src/app_common/Makefile
 	src/app_sysenv/Makefile
 	src/swig/Makefile 
 	src/cython/Makefile 
