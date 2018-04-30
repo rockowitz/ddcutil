@@ -41,7 +41,6 @@
 #include "dynamic_features.h"
 
 
-
 //
 // Generic functions that probably belong elsewhere
 //
@@ -124,7 +123,7 @@ dbgrpt_feature_metadata(
    int d2 = depth+2;
    rpt_structure_loc("DDCA_Feature_Metadata", md, depth);
    rpt_vstring(d0, "Feature code:      0x%02x",  md->feature_code);
-   rpt_vstring(d1, "MCCS version:      %d.%d",  md->vspec.major, md->vspec.minor);
+// rpt_vstring(d1, "MCCS version:      %d.%d",  md->vspec.major, md->vspec.minor);
    rpt_vstring(d1, "Feature name:      %s",     md->feature_name);
    rpt_vstring(d1, "Description:       %s",     md->feature_desc);
    char * s = interpret_feature_flags(md->feature_flags);
@@ -263,11 +262,11 @@ dbgrpt_dfr(
 {
    int d1 = depth+1;
    rpt_structure_loc("Dynamic_Features_Rec", dfr, depth);
-   rpt_vstring(d1, "marker:         %4s", dfr->marker);
-   rpt_vstring(d1, "mfg_id:         %s", dfr->mfg_id);
-   rpt_vstring(d1, "model_name:     %s", dfr->model_name);
-   rpt_vstring(d1, "product_code:   %u", dfr->product_code);
-   rpt_vstring(d1, "filename:       %s", dfr->filename);
+   rpt_vstring(d1, "marker:         %4s",   dfr->marker);
+   rpt_vstring(d1, "mfg_id:         %s",    dfr->mfg_id);
+   rpt_vstring(d1, "model_name:     %s",    dfr->model_name);
+   rpt_vstring(d1, "product_code:   %u",    dfr->product_code);
+   rpt_vstring(d1, "filename:       %s",    dfr->filename);
    rpt_vstring(d1, "MCCS vspec:     %d.%d", dfr->vspec.major, dfr->vspec.minor);
    if (dfr->features) {
       rpt_vstring(d1, "features count: %d", g_hash_table_size(dfr->features));
@@ -409,7 +408,7 @@ finalize_feature(
       switch_bits(pflags, DDCA_NORMAL_TABLE, DDCA_WO_TABLE);
 
    // For now, to revisit
-   cur_feature_metadata->vspec = frec->vspec;
+  //  cur_feature_metadata->vspec = frec->vspec;
 
    g_hash_table_replace(
          frec->features,

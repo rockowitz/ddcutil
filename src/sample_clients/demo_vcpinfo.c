@@ -125,7 +125,7 @@ char * interpret_feature_flags(DDCA_Version_Feature_Flags flags) {
 void show_feature_metadata(DDCA_Feature_Metadata * info) {
    printf("\nVersion Sensitive Feature Metadata for VCP Feature: 0x%02x - %s\n",
            info->feature_code, info->feature_name);
-   printf("   VCP version:          %d.%d\n",   info->vspec.major, info->vspec.minor);
+// printf("   VCP version:          %d.%d\n",   info->vspec.major, info->vspec.minor);
    printf("   Description:          %s\n",  info->feature_desc);
    char * s = interpret_feature_flags(info->feature_flags);
    printf("   Feature flags:        %s\n", s);

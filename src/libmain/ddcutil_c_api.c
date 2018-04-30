@@ -1746,7 +1746,7 @@ ddca_get_feature_metadata_by_vspec(
    if (full_info) {
       // DBGMSG("Reading full_info");
       info->feature_code  = feature_code;
-      info->vspec         = vspec;
+ //   info->vspec         = vspec;
       info->feature_flags = full_info->feature_flags;
       if (info->feature_flags & DDCA_SIMPLE_NC)
          info->sl_values = full_info->sl_values;

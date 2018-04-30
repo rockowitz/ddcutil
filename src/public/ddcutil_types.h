@@ -485,8 +485,8 @@ typedef
 struct {
    char                                  marker[4];      /**< always "FMET" */
    DDCA_Vcp_Feature_Code                 feature_code;   /**< VCP feature code */
-   DDCA_MCCS_Version_Spec                vspec;          /**< MCCS version    */
-   DDCA_Monitor_Model_Key *              mmid;          // better pointer or inline?, even needed?
+ // DDCA_MCCS_Version_Spec                vspec;          /**< MCCS version    */
+ // DDCA_Monitor_Model_Key *              mmid;          // better pointer or inline?, even needed?
    DDCA_Feature_Flags                    feature_flags;  /**< feature type description */
    DDCA_Feature_Value_Table              sl_values;      /**< valid when DDCA_SIMPLE_NC set */
    char *                                feature_name;   /**< feature name */
