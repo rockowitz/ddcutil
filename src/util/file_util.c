@@ -95,6 +95,122 @@ int file_getlines(const char * fn,  GPtrArray* line_array, bool verbose) {
 }
 
 
+typedef struct {
+   char **  lines;
+   int      size;
+   int      ct;
+} Circular_Line_Buffer;
+
+
+Circular_Line_Buffer * clb_new(int size) {
+   Circular_Line_Buffer * clb = calloc(1, sizeof(Circular_Line_Buffer));
+   clb->lines = calloc(size, sizeof(char*));
+   clb->size = size;
+   clb->ct = 0;
+   return clb;
+}
+
+
+void clb_add(Circular_Line_Buffer * clb, char * line) {
+
+    int nextpos = clb->ct % clb->size;
+    // printf("(%s) Adding at ct %d, pos %d, line |%s|\n", __func__, clb->ct, nextpos, line);
+    if (clb->lines[nextpos])
+       free(clb->lines[nextpos]);
+    clb->lines[nextpos] = line;
+    clb->ct++;
+}
+
+
+GPtrArray * clb_to_g_ptr_array(Circular_Line_Buffer * clb) {
+   GPtrArray * pa = g_ptr_array_sized_new(clb->ct);
+
+   int first = 0;
+   if (clb->ct > clb->size)
+      first = clb->ct % clb->size;
+   // printf("(%s) first=%d\n", __func__, first);
+
+   for (int ndx = 0; ndx < clb->size; ndx++) {
+      int pos = (first + ndx) % clb->size;
+      char * s = clb->lines[pos];
+      // printf("(%s) line %d, |%s|\n", __func__, ndx, s);
+
+      g_ptr_array_add(pa, s);
+   }
+
+   return pa;
+}
+
+
+/** Reads the last lines of a text file into a GPtrArray.
+ *
+ *  @param  fn          file name
+ *  @param  line_array  pointer to GPtrArray of strings where lines will be saved
+ *  @param  verbose     if true, write message to stderr if unable to open file or other error
+ *
+ *  @retval >=0:  number of lines added to line_array
+ *  @retval <0    -errno
+ *
+ *  The caller is responsible for freeing the lines added to line_array.
+ */
+int
+file_get_last_lines(
+      const char * fn,
+      int          maxlines,
+      GPtrArray**  line_array_loc,
+      bool         verbose)
+{
+   bool debug = true;
+   if (debug)
+      printf("(%s) Starting. fn=%s, maxlines=%d\n", __func__, fn, maxlines );
+
+   int rc = 0;
+   FILE * fp = fopen(fn, "r");
+   if (!fp) {
+      int errsv = errno;
+      rc = -errno;
+      if (verbose)
+         fprintf(stderr, "Error opening file %s: %s\n", fn, strerror(errsv));
+   }
+   else {
+      Circular_Line_Buffer* clb = clb_new(maxlines);
+      // if line == NULL && len == 0, then getline allocates buffer for line
+      char * line = NULL;
+      size_t len = 0;
+      ssize_t read;
+      int     linectr = 0;
+      errno = 0;
+      while ((read = getline(&line, &len, fp)) != -1) {
+         linectr++;
+         rtrim_in_place(line);     // strip trailing newline
+         clb_add(clb, line);
+
+         // printf("(%s) Retrieved line of length %zu: %s\n", __func__, read, line);
+         line = NULL;  // reset for next getline() call
+         len  = 0;
+      }
+      if (errno != 0)  {   // getline error?
+         rc = -errno;
+         if (verbose)
+            fprintf(stderr, "Error reading file %s: %s\n", fn, strerror(-rc));
+      }
+      free(line);
+      rc = linectr;
+      if (rc > maxlines)
+         rc = maxlines;
+
+      *line_array_loc = clb_to_g_ptr_array(clb);
+      free(clb);
+
+      fclose(fp);
+   }
+
+   if (debug)
+      printf("(%s) Done. returning: %d\n", __func__, rc);
+   return rc;
+}
+
+
 /** Reads the first line of a file.
  *
  *  @param  fn          file name

@@ -36,6 +36,14 @@
 
 int    file_getlines(const char * fn, GPtrArray* line_array, bool verbose);
 char * file_get_first_line(const char * fn, bool verbose);
+
+int
+file_get_last_lines(
+      const char * fn,
+      int          maxlines,
+      GPtrArray**  line_array_loc,
+      bool         verbose);
+
 GByteArray * read_binary_file(char * fn, int est_size, bool verbose);
 
 bool regular_file_exists(const char * fqfn);
