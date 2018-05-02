@@ -944,7 +944,7 @@ char * devid_usage_code_id_name(ushort usage_page_code, ushort usage_simple_id) 
    devid_ensure_initialized();
    char * result = NULL;
    if (usage_page_code == 0x81) {
-      snprintf(resultbuf, 10, "ENUM_%d", usage_simple_id);
+      snprintf(resultbuf, 11, "ENUM_%d", usage_simple_id);
       result = resultbuf;
    }
    else {

@@ -137,7 +137,7 @@ vcp_interpret_version_feature_flags(
 void vcp_list_feature_codes(FILE * fh) {
    fprintf(fh, "Recognized VCP feature codes:\n");
    char buf[200];
-   char buf2[200];
+   char buf2[234];
    //  TODO make listvcp respect display to get version?
    int ndx = 0;
    for (;ndx < vcp_feature_code_count; ndx++) {

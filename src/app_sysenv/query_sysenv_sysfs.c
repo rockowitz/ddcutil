@@ -443,7 +443,7 @@ void each_video_pci_device(
       // rpt_vstring(d1,"Determining driver name and possibly version...");
 
       char workfn[PATH_MAX];
-      sprintf(workfn, "%s/%s", cur_dir_name, "driver");
+      g_snprintf(workfn, PATH_MAX, "%s/%s", cur_dir_name, "driver");
       char resolved_path[PATH_MAX];
       char * rpath = realpath(workfn, resolved_path);
       if (!rpath) {
@@ -466,7 +466,7 @@ void each_video_pci_device(
          free(driver_name);
 
          char driver_module_dir[PATH_MAX];
-         sprintf(driver_module_dir, "%s/driver/module", cur_dir_name);
+         g_snprintf(driver_module_dir, PATH_MAX, "%s/driver/module", cur_dir_name);
          // printf("driver_module_dir: %s\n", driver_module_dir);
          char * driver_version = read_sysfs_attr(driver_module_dir, "version", false);
          if (driver_version) {
@@ -595,8 +595,8 @@ void each_i2c_device(
    char cur_dir_name[100];
    sprintf(cur_dir_name, "%s/%s", dirname, fn);
    char * dev_name = read_sysfs_attr(cur_dir_name, "name", true);
-   char buf[100];
-   snprintf(buf, 100, "%s/name:", cur_dir_name);
+   char buf[106];
+   snprintf(buf, 106, "%s/name:", cur_dir_name);
    rpt_vstring(depth, "%-34s %s", buf, dev_name);
    free(dev_name);
 

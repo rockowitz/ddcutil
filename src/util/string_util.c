@@ -1415,7 +1415,7 @@ void fhex_dump_indented(FILE * fh, const Byte* data, int size, int indents)
    if (fh) {
       int i; // index in data...
       int j; // index in line...
-      char temp[8];
+      char temp[10];    // was 8, compiler complains that too small
       char buffer[128];
       char *ascii;
       char indentation[100];

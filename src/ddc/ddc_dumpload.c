@@ -187,16 +187,16 @@ create_dumpload_data_from_g_ptr_array(
                // ignore for now
             }
             else if (streq(s0, "EDID") || streq(s0, "EDIDSTR")) {
-               strncpy(data->edidstr, s1, sizeof(data->edidstr));
+               g_strlcpy(data->edidstr, s1, sizeof(data->edidstr));
             }
             else if (streq(s0, "MFG_ID")) {
-               strncpy(data->mfg_id, s1, sizeof(data->mfg_id));
+               g_strlcpy(data->mfg_id, s1, sizeof(data->mfg_id));
             }
             else if (streq(s0, "MODEL")) {
-               strncpy(data->model, rest, sizeof(data->model));
+               g_strlcpy(data->model, rest, sizeof(data->model));
             }
             else if (streq(s0, "SN")) {
-               strncpy(data->serial_ascii, rest, sizeof(data->serial_ascii));
+               g_strlcpy(data->serial_ascii, rest, sizeof(data->serial_ascii));
             }
             else if (streq(s0, "VCP_VERSION")) {
                data->vcp_version = parse_vspec(s1);
