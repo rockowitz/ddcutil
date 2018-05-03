@@ -28,8 +28,12 @@
 /** cond */
 #include <assert.h>
 #include <errno.h>
+#include <fcntl.h>
 #include <glib-2.0/glib.h>
+#include <inttypes.h>
 #include <string.h>
+#include <sys/stat.h>
+#include <unistd.h>
 
 #include "util/data_structures.h"
 #include "util/file_util.h"
@@ -61,39 +65,83 @@ static bool probe_log(
                  log_fn, filter_terms, bool_repr(ignore_case), limit);
    bool file_found = false;
    int rc = 0;
-   if (regular_file_exists(log_fn)) {
-      rpt_vstring(depth, "Scanning file: %s", log_fn);
-      if (limit < 0) {
-         rpt_vstring(depth, "Limiting output to last %d relevant lines...", -limit);
+   if (!regular_file_exists(log_fn)) {
+      rpt_vstring(depth, "File not found: %s", log_fn);
+      goto bye;
+   }
+   if (    access(log_fn, R_OK) < 0 ) {
+      rpt_vstring(depth, "File not readable: %s", log_fn);
+      goto bye;
+   }
+
+   rpt_vstring(depth, "Scanning file: %s", log_fn);
+
+   // char  shell_cmd[PATH_MAX * 2 + 50];
+   bool bigfile = false;
+   struct stat st;
+   stat(log_fn, &st);
+   if (st.st_size > 1000000) {
+      if (debug) {
+         uint64_t sz = st.st_size;
+         DBGMSG( "File %s is huge.  Size =  %" PRIu64 ". ", log_fn, sz);
       }
-      else if (limit > 0) {
-          rpt_vstring(depth, "Limiting output to first %d relevant lines...", limit);
-      }
-      GPtrArray * found_lines = g_ptr_array_new_full(1000, g_free);
-      rc = read_file_with_filter(found_lines, log_fn, filter_terms, ignore_case, limit);
+      bigfile = true;
+   }
+
+   if (limit < 0) {
+      rpt_vstring(depth, "Limiting output to last %d relevant lines...", -limit);
+   }
+   else if (limit > 0) {
+       rpt_vstring(depth, "Limiting output to first %d relevant lines...", limit);
+   }
+   GPtrArray * found_lines = NULL;
+
+   if (bigfile && limit <= 0) {
+      int maxlines = 50000;
+      f0printf(stderr, "File %s is huge.  Examining only last %d lines\n", log_fn, maxlines);
+
+      rc = file_get_last_lines(log_fn, maxlines, &found_lines, /*verbose*/ true);
       if (rc < 0) {
-         f0printf(stderr, "Error reading file: %s\n", psc_desc(rc));
+         DBGMSG("Error calling file_get_last_lines(), rc = %d", rc);
+         goto bye;
       }
-      else if (rc == 0) {   // rc >0 is the original number of lines
-         rpt_title("Empty file", depth);
-         file_found = true;
-      }
-      else if (found_lines->len == 0) {
-         rpt_title("No lines found after filtering", depth);
-         file_found = true;
-      }
-      else {
-         for (int ndx = 0; ndx < found_lines->len; ndx++) {
-            rpt_title(g_ptr_array_index(found_lines, ndx), depth+1);
-         }
-         file_found = true;
-      }
-      g_ptr_array_free(found_lines, true);
+
+      // for (int ndx = 0; ndx < found_lines->len; ndx++) {
+      //    DBGMSG("Found line: %s", g_ptr_array_index(found_lines,ndx));
+      // }
+
+      DBGMSF(debug, "file_get_last_lines() returned %d", rc);
+      DBGMSF(debug, "before filter, found_lines->len = %d", found_lines->len);
+      filter_and_limit_g_ptr_array(
+            found_lines, filter_terms, ignore_case, limit);
+      DBGMSF(debug, "after filter, found_lines->len = %d", found_lines->len);
+
    }
    else {
-      rpt_vstring(depth, "File not found: %s", log_fn);
-      rc = -ENOENT;
+      found_lines = g_ptr_array_new_full(1000, g_free);
+      rc = read_file_with_filter(found_lines, log_fn, filter_terms, ignore_case, limit);
    }
+
+   if (rc < 0) {
+      f0printf(stderr, "Error reading file: %s\n", psc_desc(rc));
+   }
+   else if (rc == 0) {   // rc >0 is the original number of lines
+      rpt_title("Empty file", depth);
+      file_found = true;
+   }
+   else if (found_lines->len == 0) {
+      rpt_title("No lines found after filtering", depth);
+      file_found = true;
+   }
+   else {
+      for (int ndx = 0; ndx < found_lines->len; ndx++) {
+         rpt_title(g_ptr_array_index(found_lines, ndx), depth+1);
+      }
+      file_found = true;
+   }
+   g_ptr_array_free(found_lines, true);
+
+bye:
    DBGMSF(debug, "rc=%d, file_found=%s", rc, bool_repr(file_found));
    rpt_nl();
    return file_found;
