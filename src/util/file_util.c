@@ -160,7 +160,7 @@ file_get_last_lines(
       GPtrArray**  line_array_loc,
       bool         verbose)
 {
-   bool debug = true;
+   bool debug = false;
    if (debug)
       printf("(%s) Starting. fn=%s, maxlines=%d\n", __func__, fn, maxlines );
 
