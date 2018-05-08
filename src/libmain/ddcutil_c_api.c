@@ -2443,7 +2443,7 @@ ddca_format_any_vcp_value(
 
       // DDCA_MCCS_Version_Id   version_id = mccs_version_spec_to_id(vspec);
 
-      VCP_Feature_Table_Entry * pentry = vcp_find_feature_by_hexid(feature_code);
+      VCP_Feature_Table_Entry * pentry = vcp_find_feature_by_hexid_w_default(feature_code);
       if (!pentry) {
          psc = DDCRC_ARG;
          *formatted_value_loc = g_strdup_printf("Unrecognized feature code 0x%02x", feature_code);

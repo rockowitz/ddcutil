@@ -61,6 +61,11 @@ bool format_feature_detail_debug_continuous(
         DDCA_MCCS_Version_Spec  vcp_version,
         char *                  buffer,
         int                     bufsz);
+bool format_feature_detail_debug_bytes(
+        Nontable_Vcp_Value *    code_info,
+        DDCA_MCCS_Version_Spec  vcp_version,
+        char *                  buffer,
+        int bufsz);
 bool format_feature_detail_standard_continuous(
         Nontable_Vcp_Value *    code_info,
         DDCA_MCCS_Version_Spec  vcp_version,
@@ -1379,8 +1384,8 @@ vcp_create_dummy_feature_for_hexid(DDCA_Vcp_Feature_Code id) {
       pentry->desc     = "Undefined feature code";
    }
    // 3/2018: complex cont may not work for API callers
-   pentry->nontable_formatter = format_feature_detail_debug_continuous;
-   pentry->v20_flags = DDCA_RW | DDCA_COMPLEX_CONT;
+   pentry->nontable_formatter = format_feature_detail_debug_bytes;
+   pentry->v20_flags = DDCA_RW | DDCA_COMPLEX_NC;
    pentry->vcp_global_flags = DDCA_SYNTHETIC;   // indicates caller should free
    return pentry;
 }
