@@ -1041,7 +1041,7 @@ ddca_mmk_eq(
 
 
 bool
-ddca_mmk_defined(
+ddca_mmk_is_defined(
       DDCA_Monitor_Model_Key mmk)
 {
    return mmk.defined;

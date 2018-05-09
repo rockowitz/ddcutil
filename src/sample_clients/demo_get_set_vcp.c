@@ -206,39 +206,6 @@ bye:
 }
 
 
-bool
-show_simple_nc_feature_value_by_vspec(
-        DDCA_MCCS_Version_Spec vspec,
-        DDCA_Vcp_Feature_Code  feature_code,
-        uint8_t                feature_value)
-{
-    char * feature_value_name = NULL;
-    bool ok = false;
-
-    // Uses vspec and feature_code to get the appropriate feature name table,
-    // then finds the value in the table.
-    printf("Performing value lookup using ddca_get_simple_nc_feature_value_name_by_vspec\n");
-    DDCA_Status rc =
-    ddca_get_simple_nc_feature_value_name_by_vspec(
-          feature_code,
-          vspec,          // needed because value lookup mccs version dependent
-          &DDCA_UNDEFINED_MONITOR_MODEL_KEY,
-          feature_value,
-          &feature_value_name);
-    if (rc != 0) {
-       DDC_ERRMSG("ddca_get_nc_feature_value_name_by_vspec", rc);
-       printf("Unable to get interpretation of value 0x%02x\n",  feature_value);
-       printf("Current value: 0x%02x\n", feature_value);
-       ok = false;
-    }
-    else {
-       printf("Current value: 0x%02x - %s\n", feature_value, feature_value_name);
-       ok = true;
-    }
-
-    return ok;
-}
-
 
 // This variant assumes the appropriate feature value table has already
 // been looked up.
@@ -316,8 +283,6 @@ test_simple_nc_value(
               valrec.sl);
     uint8_t old_value = valrec.sl;
 
-    // Pick one or the other. Both work.
-    // ok = show_simple_nc_feature_value_by_vspec(info.vspec, feature_code, old_value);
     ok = show_simple_nc_feature_value_by_table(info.sl_values, old_value);
     if (!ok)
        goto bye;

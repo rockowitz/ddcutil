@@ -190,6 +190,7 @@ char * ddca_rc_desc(DDCA_Status status_code);
  *  @return symbolic name (do not free)
  */
 char *
+__attribute__ ((deprecated))
 ddca_mccs_version_id_name(
       DDCA_MCCS_Version_Id  version_id) __attribute__ ((deprecated));
 
@@ -337,14 +338,19 @@ char * ddca_end_capture(void);
 // Message Control
 //
 
-/** Gets the current output level for the current thread */
-DDCA_Output_Level                   /**< current output level */
+/** Gets the current output level for the current thread
+ *  @return      output level
+ */
+DDCA_Output_Level
 ddca_get_output_level(void);
 
-/** Sets the output level for the current thread  */
-DDCA_Output_Level                  /**< old output level */
+/** Sets the output level for the current thread
+ *  @param[in]      new output level
+ *  @return         prior output level
+ */
+DDCA_Output_Level
 ddca_set_output_level(
-      DDCA_Output_Level newval);   /**< new output level */
+      DDCA_Output_Level newval);
 
 /** Gets the name of an output level
  *  @param[in]  val  output level id
@@ -395,57 +401,6 @@ void ddca_show_stats(DDCA_Stats_Type stats, int depth);
 bool ddca_enable_error_info(bool enable);
 
 
-//
-// Monitor Model Identifier
-//
-
-/** Special reserved value indicating value undefined.
- * @since 0.9.0
- */
-const extern DDCA_Monitor_Model_Key DDCA_UNDEFINED_MONITOR_MODEL_KEY;
-
-/** Creates a monitor model identifier.
- *
- *  @param  mfg_id
- *  @param  model_name
- *  @param  product_code
- *  @return identifier (note the value returned is the actual identifier,
- *                     not a pointer)
- *  @retval DDCA_UNDEFINED_MONITOR_MODEL_KEY if parms are invalid
- *  @since 0.9.0
- */
-DDCA_Monitor_Model_Key
-ddca_mmk(
-      const char * mfg_id,
-      const char * model_name,
-      uint16_t     product_code);
-
-/** Tests if 2 #Monitor_Model_Key identifiers specify the
- *  same monitor model.
- *
- *  @param  mmk1   first identifier
- *  @param  mmk2   second identifier
- *
- *  @remark
- *  The identifiers are considered equal if both are defined.
- *  @since 0.9.0
- */
-
-bool
-ddca_mmk_eq(
-      DDCA_Monitor_Model_Key mmk1,
-      DDCA_Monitor_Model_Key mmk2);
-
-/** Tests if a #Monitor_Model_Key value
- *  represents a defined identifier.
- *
- *  @param mmk
- *  @return true/false
- *  @since 0.9.0
- */
-bool
-ddca_mmk_defined(
-      DDCA_Monitor_Model_Key mmk);
 
 
 //
@@ -721,18 +676,6 @@ ddca_dbgrpt_display_ref(
       int              depth);
 
 
-/** Extracts the monitor model identifier for a display represented by
- *  a #DDCA_Display_Ref.
- *
- *  @param ddca_dref
- *  @return monitor model identifier
- *  @since 0.9.0
- */
-DDCA_Monitor_Model_Key
-ddca_mmk_from_dref(
-      DDCA_Display_Ref   ddca_dref);
-
-
 //
 // Display Handle
 //
@@ -802,19 +745,6 @@ DDCA_Display_Ref
 ddca_display_ref_from_handle(
       DDCA_Display_Handle   ddca_dh);
 
-
-// CHANGE NAME?  _for_dh()?   ddca_mmid_for_dh()
-/** Returns the monitor model identifier for an open display.
- *
- *  @param  ddca_dh   display handle
- *  @return #DDCA_Monitor_Model_Key for the handle,
- *          NULL if invalid display handle
- *
- *  @since 0.9.0
- */
-DDCA_Monitor_Model_Key
-ddca_mmk_from_dh(
-      DDCA_Display_Handle   ddca_dh);
 
 //
 // Monitor Capabilities
@@ -1125,30 +1055,6 @@ ddca_get_simple_nc_feature_value_name_by_table(
       uint8_t                     feature_value,
       char**                      value_name_loc);
 
-
-// NEEDED?
-/** Gets the value id/name table of the allowed values for a simple NC feature.
- *
- * @param[in]  vspec             MCCS version
- * @param[in]  feature_code      VCP feature code
- * @param[in]  feature_value     single byte feature value
- * @param[out] feature_name_loc  where to return feature name
- * @return     status code
- *
- * @remark
- * If the feature value cannot be found in the lookup table for
- * the specified MCCS version, tables for later versions, if they
- * exist, are checked as well.
- *
- * @since 0.9.0
- */
-DDCA_Status
-ddca_get_simple_nc_feature_value_name_by_vspec(
-      DDCA_Vcp_Feature_Code  feature_code,
-      DDCA_MCCS_Version_Spec vspec,
-      const DDCA_Monitor_Model_Key * p_mmid,
-      uint8_t                feature_value,
-      char**                 feature_name_loc);
 
 
 // /** \deprecated */
