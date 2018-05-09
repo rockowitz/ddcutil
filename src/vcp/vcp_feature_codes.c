@@ -1620,7 +1620,7 @@ find_feature_values_for_capabilities(
  *    value_id        value to look up
  *
  * Returns:
- *    explanation string from the Feature_Value_Entry found,
+ *    explanation string from the Feature_Value_Entry found (do not free)
  *    NULL if not found
  */
 char * get_feature_value_name(DDCA_Feature_Value_Entry * value_entries, Byte value_id) {
