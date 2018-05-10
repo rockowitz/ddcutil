@@ -279,7 +279,7 @@ static  Multi_Level_Map * load_multi_level_segment(
       int*              curpos)
 {
    bool debug = false;
-   int linendx = *curpos;
+   guint linendx = *curpos;  // guint to avoid warning re implicit conversion on while() test below
    if (debug)
       printf("(%s) Starting. linendx=%d, -> |%s|\n",
              __func__, linendx, (char *) g_ptr_array_index(all_lines,linendx));
@@ -397,14 +397,15 @@ static  Multi_Level_Map * load_multi_level_segment(
  * The buffer pointed to by segment_tag is updated with the newly
  * found tag.
  *
- * TODO: elminate this side effect, apparently left over from refactoring (2/1018)
+ * TODO: eliminate this side effect, apparently left over from refactoring (2/1018)
  */
 int find_next_segment_start(GPtrArray* lines, int cur_ndx, char* segment_tag) {
    bool debug = false;
    if (debug)
       printf("(%s) Starting cur_ndx=%d, segment_tag=|%s|\n", __func__, cur_ndx, segment_tag);
 
-   for(; cur_ndx < lines->len; cur_ndx++) {
+   int linect = lines->len;
+   for(; cur_ndx < linect; cur_ndx++) {
       char * a_line = g_ptr_array_index(lines, cur_ndx);
       int tabct = 0;
       while (a_line[tabct] == '\t')
@@ -437,6 +438,7 @@ int find_next_segment_start(GPtrArray* lines, int cur_ndx, char* segment_tag) {
 }
 
 
+// returns line number of end of segment
 int load_device_ids(Device_Id_Type id_type, GPtrArray * all_lines) {
    bool debug = false;
     int total_vendors = 0;
@@ -627,13 +629,16 @@ static void load_file_lines(Device_Id_Type id_type, GPtrArray * all_lines) {
       char tagbuf[MAX_TAG_SIZE];
       tagbuf[0] = '\0';
 
-      while (linendx < all_lines->len) {
+      // cast to avoid warning re loss of sign in implicit conversion
+      // signed int is more than ample to hold number of lines
+      int linect = all_lines->len;
+      while (linendx < linect) {
             //printf("(%s) Before find_next_segment_start(), linendx=%d: |%s|\n",
             //       __func__, linendx, (char *) g_ptr_array_index(all_lines, linendx));
          linendx = find_next_segment_start(all_lines, linendx, tagbuf);
             // printf("(%s) Next segment starts at line %d: |%s|\n",
             //        __func__, linendx, (char *) g_ptr_array_index(all_lines, linendx));
-         if (linendx >= all_lines->len)
+         if (linendx >= linect)
             break;
 
          if ( streq(tagbuf,"HID") ) {
