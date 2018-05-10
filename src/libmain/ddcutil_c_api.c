@@ -72,6 +72,7 @@
 #include "ddc/ddc_vcp_version.h"
 #include "ddc/ddc_vcp.h"
 
+#include "private/ddcutil_types_private.h"
 #include "private/ddcutil_c_api_private.h"
 #include "public/ddcutil_c_api.h"
 
@@ -1128,6 +1129,7 @@ ddca_get_display_info_list2(
          curinfo->vcp_version_id = version_id;
          curinfo->dref           = dref;
 
+#ifdef MMID
          curinfo->mmid = monitor_model_key_value(
                                         dref->pedid->mfg_id,
                                         dref->pedid->model_name,
@@ -1137,6 +1139,7 @@ ddca_get_display_info_list2(
          assert(streq(curinfo->model_name, curinfo->mmid.model_name));
          assert(curinfo->product_code == curinfo->mmid.product_code);
 // #endif
+#endif
       }
    }
 

@@ -24,6 +24,10 @@
 #ifndef DDCUTIL_C_TYPES_PRIVATE_H_
 #define DDCUTIL_C_TYPES_PRIVATE_H_
 
+
+#include "public/ddcutil_types.h"     // for #defines
+
+
 #ifdef OBSOLETE
 //! Failure information filled in at the time of a program abort,
 //! before longjmp() is called.
@@ -68,6 +72,21 @@ char * (*DDCA_Func_Format_Any_Value) (
           DDCA_MCCS_Version_Spec    vspec,
           DDCA_Any_Vcp_Value        valrec);     // or pointer?
 #endif
+
+
+
+
+// #define MONITOR_MODEL_KEY_MARKER "MMID"
+/** Identifies a monitor model */
+typedef struct {
+// char                marker[4];
+   char                mfg_id[DDCA_EDID_MFG_ID_FIELD_SIZE];
+   char                model_name[DDCA_EDID_MODEL_NAME_FIELD_SIZE];
+   uint16_t            product_code;
+   bool                defined;
+} DDCA_Monitor_Model_Key;
+
+
 
 
 

@@ -28,7 +28,7 @@
 // #include <inttypes.h>
 // #include <stdlib.h>
 
-#include "ddcutil_types.h"
+#include "private/ddcutil_types_private.h"
 
 // #include "util/edid.h"
 

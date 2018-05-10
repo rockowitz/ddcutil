@@ -347,16 +347,6 @@ typedef struct {
 #define DDCA_EDID_MODEL_NAME_FIELD_SIZE 14
 #define DDCA_EDID_SN_ASCII_FIELD_SIZE 14
 
-// #define MONITOR_MODEL_KEY_MARKER "MMID"
-/** Identifies a monitor model */
-typedef struct {
-// char                marker[4];
-   char                mfg_id[DDCA_EDID_MFG_ID_FIELD_SIZE];
-   char                model_name[DDCA_EDID_MODEL_NAME_FIELD_SIZE];
-   uint16_t            product_code;
-   bool                defined;
-} DDCA_Monitor_Model_Key;
-
 
 #define DDCA_DISPLAY_INFO_MARKER "DDIN"
 /** Describes one monitor detected by ddcutil. */
@@ -374,7 +364,6 @@ typedef struct {
    DDCA_MCCS_Version_Spec vcp_version;      ///< VCP version as pair of numbers
    DDCA_MCCS_Version_Id   vcp_version_id;   ///< VCP version identifier (deprecated)
    DDCA_Display_Ref       dref;             ///< opaque display reference
-   DDCA_Monitor_Model_Key mmid;             ///< identifies a monitor model
 } DDCA_Display_Info;
 
 
@@ -486,7 +475,6 @@ struct {
    char                                  marker[4];      /**< always "FMET" */
    DDCA_Vcp_Feature_Code                 feature_code;   /**< VCP feature code */
  // DDCA_MCCS_Version_Spec                vspec;          /**< MCCS version    */
- // DDCA_Monitor_Model_Key *              mmid;          // better pointer or inline?, even needed?
    DDCA_Feature_Flags                    feature_flags;  /**< feature type description */
    DDCA_Feature_Value_Table              sl_values;      /**< valid when DDCA_SIMPLE_NC set */
    char *                                feature_name;   /**< feature name */

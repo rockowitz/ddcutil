@@ -39,6 +39,7 @@
 /** \endcond */
 
 #include "public/ddcutil_types.h"
+#include "private/ddcutil_types_private.h"
 
 #include "core.h"
 #include "dynamic_features.h"
