@@ -79,7 +79,7 @@ DDCA_Display_Handle * open_first_display_by_dispno() {
  * illustrating use of DDCA_Capabilities.
  */
 void
-simple_report_parsed_capabilities(DDCA_Capabilities * pcaps, DDCA_Display_Ref dref)
+simple_report_parsed_capabilities(DDCA_Capabilities * pcaps, DDCA_Display_Handle dh)
 {
    assert(pcaps && memcmp(pcaps->marker, DDCA_CAPABILITIES_MARKER, 4) == 0);
    printf("Unparsed capabilities string: %s\n", pcaps->unparsed_string);
@@ -93,28 +93,50 @@ simple_report_parsed_capabilities(DDCA_Capabilities * pcaps, DDCA_Display_Ref dr
    for (int code_ndx = 0; code_ndx < pcaps->vcp_code_ct; code_ndx++) {
       DDCA_Cap_Vcp * cur_vcp = &pcaps->vcp_codes[code_ndx];
       assert( memcmp(cur_vcp->marker, DDCA_CAP_VCP_MARKER, 4) == 0);
-      char * feature_name = ddca_get_feature_name(cur_vcp->feature_code);
-      printf("   Feature:  0x%02x (%s)\n", cur_vcp->feature_code, feature_name);
-      DDCA_Feature_Value_Entry * feature_value_table;
-      DDCA_Status ddcrc = ddca_get_simple_sl_value_table_by_dref(
-            cur_vcp->feature_code,
-            dref,
-            &feature_value_table);
 
+      char * feature_name = "";
+      DDCA_Feature_Value_Entry * feature_value_table = NULL;
+      DDCA_Feature_Metadata metadata = {{0}};
+      DDCA_Status ddcrc =
+      ddca_get_feature_metadata_by_dh(
+            cur_vcp->feature_code,
+            dh,
+            false,     // create_default_if_not_found,
+            &metadata);
+      if (ddcrc == 0) {
+         feature_value_table = metadata.sl_values;
+         feature_name = metadata.feature_name;
+      }
+      printf("   Feature:  0x%02x (%s)\n", cur_vcp->feature_code, feature_name);
       if (cur_vcp->value_ct > 0) {
          printf("      Values:\n");
          for (int ndx = 0; ndx < cur_vcp->value_ct; ndx++) {
             char * value_desc = "No lookup table";
-            if (ddcrc == 0) {
+            if (feature_value_table) {
                value_desc = "Unrecognized feature value";
-               ddca_get_simple_nc_feature_value_name_by_table(
-                          feature_value_table,
-                          cur_vcp->values[ndx],
-                          &value_desc);
+
+               for (DDCA_Feature_Value_Entry * entry = feature_value_table;
+                     entry->value_name;
+                     entry++)
+               {
+                  if (entry->value_code == cur_vcp->feature_code) {
+                     value_desc = entry->value_name;
+                     break;
+                  }
+               }
+
+               // Alternatively, use convenience function to look up value description
+               // ddca_get_simple_nc_feature_value_name_by_table(
+               //     feature_value_table,
+               //     cur_vcp->values[ndx],
+               //     &value_desc);
+
             }
+
             printf("         0x%02x: %s\n", cur_vcp->values[ndx], value_desc);
          }
       }
+      ddca_free_feature_metadata_contents(metadata);
    }
 }
 
@@ -149,7 +171,7 @@ void demo_get_capabilities() {
       else {
          printf("Parsing succeeded.\n");
          printf("\nReport the result using local function simple_report_parsed_capabilities()...\n");
-         simple_report_parsed_capabilities(pcaps, ddca_display_ref_from_handle(dh));
+         simple_report_parsed_capabilities(pcaps, dh);
 
          printf("\nReport the result using API function ddca_report_parsed_capabilities()...\n");
          DDCA_Output_Level saved_ol = ddca_set_output_level(DDCA_OL_VERBOSE);

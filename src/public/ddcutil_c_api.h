@@ -1014,41 +1014,20 @@ ddca_feature_name_by_dref(
 // Current functions - Feature characteristics
 
 
-
-/** Gets the value id/name table of the allowed values for a simple NC feature.
- *
- * @param[in]  feature_code      VCP feature code
- * @param[in]  dref              display reference
- * @param[out] value_table_loc   where to return pointer to array of DDCA_Feature_Value_Entry
- * @return     status code
- * @retval     0                       success
- * @retval     DDCRC_UNKNOWN_FEATURE   unrecognized feature code
- * @retval     DDCRC_INVALID_OPERATION feature not simple NC
- *
- * @since 0.9.0
- */
-DDCA_Status
-ddca_get_simple_sl_value_table_by_dref(
-      DDCA_Vcp_Feature_Code      feature_code,
-      DDCA_Display_Ref           dref,
-      DDCA_Feature_Value_Entry** value_table_loc);
-
-
-
-#ifdef UNIMPLEMENTED
-// Unimplemented
-// alt: can check status code for ddca_get_feature_info_by_dh()
-DDCA_Status ddca_is_feature_supported(
-      DDCA_Display_Handle    dh,
-      DDCA_Vcp_Feature_Code  feature_code,
-      bool *                 answer_loc);   // or return status code?
-
-#endif
-
-
 // Current functions - NC lookup tables
 
-// NEEDED?
+/** Convenience function that searches a #DDCA_Feature_Value_Table for a
+ *  value and returns the corresponding name.
+ *  @param[in]   feature_value_table pointer to first entry of table
+ *  @param[in]   feature_value value to search for
+ *  @param[out]  where to return pointer to name
+ *  @retval      DDCRC_OK  value found
+ *  @retval      DDCRC_NOT_FOUND  value not found
+ *
+ * @remark
+ * The value returned in **value_name_Loc** is a pointer into internal
+ * ddcutil data structures.  Do not free.
+ */
 DDCA_Status
 ddca_get_simple_nc_feature_value_name_by_table(
       DDCA_Feature_Value_Table    feature_value_table,

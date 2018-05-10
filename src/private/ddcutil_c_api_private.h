@@ -130,6 +130,21 @@ ddca_mmk_from_dh(
       DDCA_Display_Handle   ddca_dh);
 
 
+//
+//  Metadata
+//
+
+#ifdef UNIMPLEMENTED
+// Unimplemented
+// alt: can check status code for ddca_get_feature_info_by_dh()
+DDCA_Status ddca_is_feature_supported(
+      DDCA_Display_Handle    dh,
+      DDCA_Vcp_Feature_Code  feature_code,
+      bool *                 answer_loc);   // or return status code?
+
+#endif
+
+
 
 // NEVER PUBLISHED
 /** Gets the value id/name table of the allowed values for a simple NC feature.
@@ -181,6 +196,28 @@ ddca_get_simple_sl_value_table_by_vspec(
       DDCA_MCCS_Version_Spec     vspec,
       const DDCA_Monitor_Model_Key *   p_mmid,   // currently ignored
       DDCA_Feature_Value_Entry** value_table_loc);
+
+
+
+// UNPUBLISHED
+/** Gets the value id/name table of the allowed values for a simple NC feature.
+ *
+ * @param[in]  feature_code      VCP feature code
+ * @param[in]  dref              display reference
+ * @param[out] value_table_loc   where to return pointer to array of DDCA_Feature_Value_Entry
+ * @return     status code
+ * @retval     0                       success
+ * @retval     DDCRC_UNKNOWN_FEATURE   unrecognized feature code
+ * @retval     DDCRC_INVALID_OPERATION feature not simple NC
+ *
+ * @since 0.9.0
+ */
+DDCA_Status
+ddca_get_simple_sl_value_table_by_dref(
+      DDCA_Vcp_Feature_Code      feature_code,
+      DDCA_Display_Ref           dref,
+      DDCA_Feature_Value_Entry** value_table_loc);
+
 
 
 

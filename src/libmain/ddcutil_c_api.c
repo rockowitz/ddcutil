@@ -1836,11 +1836,12 @@ ddca_get_feature_metadata_by_dh(
 // frees the contents of info, not info itself
 DDCA_Status
 ddca_free_feature_metadata_contents(DDCA_Feature_Metadata info) {
-   if ( (info.feature_flags & DDCA_SYNTHETIC) &&
-        (memcmp(info.marker, DDCA_FEATURE_METADATA_MARKER, 4) == 0) )
-   {
-      free(info.feature_name);
-      free(info.feature_desc);
+   if ( memcmp(info.marker, DDCA_FEATURE_METADATA_MARKER, 4) == 0) {
+      if (info.feature_flags & DDCA_SYNTHETIC) {
+         free(info.feature_name);
+         free(info.feature_desc);
+      }
+      info.marker[3] = 'x';
    }
    return 0;
 }
