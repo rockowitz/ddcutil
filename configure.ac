@@ -28,9 +28,9 @@ dnl Macro names in comments are written in lower case to avoid processing as act
 AC_PREREQ([2.69])
 
 m4_define([ddcutil_major_version], [0])
-m4_define([ddcutil_minor_version], [8])
+m4_define([ddcutil_minor_version], [9])
 dnl temp micro version for development
-m4_define([ddcutil_micro_version], [7])
+m4_define([ddcutil_micro_version], [0])
 m4_define([ddcutil_version],
           [ddcutil_major_version.ddcutil_minor_version.ddcutil_micro_version])
 
