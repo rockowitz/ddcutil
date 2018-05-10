@@ -212,6 +212,7 @@ Dumpload_Data * read_vcp_file(const char * fn) {
             errinfo_report(err, 1);
          }
       }
+      errinfo_free(err);
       g_ptr_array_free(g_line_array, true);
    }
 
