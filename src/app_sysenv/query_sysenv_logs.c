@@ -65,11 +65,11 @@ static bool probe_log(
                  log_fn, filter_terms, bool_repr(ignore_case), limit);
    bool file_found = false;
    int rc = 0;
-   if (!regular_file_exists(log_fn)) {
+   if ( !regular_file_exists(log_fn) ) {
       rpt_vstring(depth, "File not found: %s", log_fn);
       goto bye;
    }
-   if (    access(log_fn, R_OK) < 0 ) {
+   if ( access(log_fn, R_OK) < 0 ) {
       rpt_vstring(depth, "File not readable: %s", log_fn);
       goto bye;
    }
@@ -79,8 +79,14 @@ static bool probe_log(
    // char  shell_cmd[PATH_MAX * 2 + 50];
    bool bigfile = false;
    struct stat st;
-   stat(log_fn, &st);
-   if (st.st_size > 1000000) {
+   // Coverity complains if return code not checked.
+   rc = stat(log_fn, &st);
+   if (rc != 0) {
+      DBGMSG("Error executing stat(), errno = %d", errno);
+      DBGMSG("Assuming file %s is huge", log_fn);
+      bigfile = true;
+   }
+   else if (st.st_size > 1000000) {
       if (debug) {
          uint64_t sz = st.st_size;
          DBGMSG( "File %s is huge.  Size =  %" PRIu64 ". ", log_fn, sz);
