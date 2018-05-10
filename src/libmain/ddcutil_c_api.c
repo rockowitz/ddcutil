@@ -2439,58 +2439,61 @@ ddca_format_any_vcp_value(
       DDCA_Any_Vcp_Value *    anyval,
       char **                 formatted_value_loc)
 {
-      bool debug = false;
-      DBGMSF(debug, "Starting. feature_code=0x%02x", feature_code);
-      DDCA_Status psc = 0;
+   bool debug = false;
+   DBGMSF(debug, "Starting. feature_code=0x%02x", feature_code);
+   DDCA_Status psc = 0;
 
-      *formatted_value_loc = NULL;
+   *formatted_value_loc = NULL;
 
-      // DDCA_MCCS_Version_Id   version_id = mccs_version_spec_to_id(vspec);
+   // DDCA_MCCS_Version_Id   version_id = mccs_version_spec_to_id(vspec);
 
-      VCP_Feature_Table_Entry * pentry = vcp_find_feature_by_hexid_w_default(feature_code);
-      if (!pentry) {
-         psc = DDCRC_ARG;
-         *formatted_value_loc = g_strdup_printf("Unrecognized feature code 0x%02x", feature_code);
-         goto bye;
-      }
+   VCP_Feature_Table_Entry * pentry = vcp_find_feature_by_hexid_w_default(feature_code);
+   if (!pentry) {
+      psc = DDCRC_ARG;
+      *formatted_value_loc = g_strdup_printf("Unrecognized feature code 0x%02x", feature_code);
+      goto bye;
+   }
 
-      DDCA_Version_Feature_Flags flags = get_version_sensitive_feature_flags(pentry, vspec);
-      if (!(flags & DDCA_READABLE)) {
-         if (flags & DDCA_DEPRECATED)
-            *formatted_value_loc = g_strdup_printf("Feature %02x is deprecated in MCCS %d.%d",
-                                              feature_code, vspec.major, vspec.minor);
-         else
-            *formatted_value_loc = g_strdup_printf("Feature %02x is not readable", feature_code);
-         DBGMSF(debug, "%s", *formatted_value_loc);
-         psc = DDCRC_INVALID_OPERATION;
-         goto bye;
-      }
+   DDCA_Version_Feature_Flags flags = get_version_sensitive_feature_flags(pentry, vspec);
+   if (!(flags & DDCA_READABLE)) {
+      if (flags & DDCA_DEPRECATED)
+         *formatted_value_loc = g_strdup_printf("Feature %02x is deprecated in MCCS %d.%d",
+                                           feature_code, vspec.major, vspec.minor);
+      else
+         *formatted_value_loc = g_strdup_printf("Feature %02x is not readable", feature_code);
+      DBGMSF(debug, "%s", *formatted_value_loc);
+      psc = DDCRC_INVALID_OPERATION;
+      goto bye;
+   }
 
-      // Version_Feature_Flags flags = feature_info->internal_feature_flags;
-      // n. will default to NON_TABLE_VCP_VALUE if not a known code
-      DDCA_Vcp_Value_Type call_type = (flags & DDCA_TABLE)
-                                           ? DDCA_TABLE_VCP_VALUE
-                                           : DDCA_NON_TABLE_VCP_VALUE;
-      if (call_type != anyval->value_type) {
-          *formatted_value_loc = g_strdup_printf(
-                "Feature type in value does not match feature code");
-          psc = DDCRC_ARG;
-          goto bye;
-       }
+   // Version_Feature_Flags flags = feature_info->internal_feature_flags;
+   // n. will default to NON_TABLE_VCP_VALUE if not a known code
+   DDCA_Vcp_Value_Type call_type = (flags & DDCA_TABLE)
+                                        ? DDCA_TABLE_VCP_VALUE
+                                        : DDCA_NON_TABLE_VCP_VALUE;
+   if (call_type != anyval->value_type) {
+       *formatted_value_loc = g_strdup_printf(
+             "Feature type in value does not match feature code");
+       psc = DDCRC_ARG;
+       goto bye;
+   }
 
-       // only copies pointer to table bytes, not the bytes
-       Single_Vcp_Value * valrec = any_vcp_value_to_single_vcp_value(anyval);
-       bool ok = vcp_format_feature_detail(pentry,vspec, valrec,formatted_value_loc);
-       if (!ok) {
-          psc = DDCRC_ARG;    // ??
-          assert(!formatted_value_loc);
-          *formatted_value_loc = g_strdup_printf("Unable to format value for feature 0x%02x", feature_code);
-       }
-       free(valrec);  // does not free any table bytes, which are in anyval
+   // only copies pointer to table bytes, not the bytes
+   Single_Vcp_Value * valrec = any_vcp_value_to_single_vcp_value(anyval);
+   bool ok = vcp_format_feature_detail(pentry,vspec, valrec,formatted_value_loc);
+   if (!ok) {
+       psc = DDCRC_ARG;    // ??
+       assert(!formatted_value_loc);
+       *formatted_value_loc = g_strdup_printf("Unable to format value for feature 0x%02x", feature_code);
+   }
+   free(valrec);  // does not free any table bytes, which are in anyval
 
 bye:
-      DBGMSF(debug, "Returning: %s, formatted_value_loc -> %s", psc_desc(psc), *formatted_value_loc);
-      return psc;
+   if (pentry)
+      free_synthetic_vcp_entry(pentry);   // does nothing if not synthetic
+
+   DBGMSF(debug, "Returning: %s, formatted_value_loc -> %s", psc_desc(psc), *formatted_value_loc);
+   return psc;
 }
 
 
