@@ -196,7 +196,6 @@ test_continuous_value(
        ok = true;
 
 bye:
-
    // Uncomment to see statistics:
    // printf("\nStatistics for one execution of %s()", __func__);
    // ddca_show_stats(DDCA_STATS_ALL, 0);
