@@ -77,7 +77,7 @@ create_monitor_dynamic_features(
       uint16_t                product_code,
       GPtrArray *             lines,
       const char *            filename,     // may be NULL
-      Dynamic_Features_Rec ** dynamic_featues_loc);
+      Dynamic_Features_Rec ** dynamic_features_loc);
 
 
 DDCA_Feature_Metadata *
