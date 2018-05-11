@@ -70,7 +70,7 @@ void capture_output_using_basic_functions() {
    }
 
    // size does not include trailing null appended by fmemopen()
-   printf("Size after writing to buffer: %ld\n", size);
+   printf("Size after writing to buffer: %zd\n", size);
    ddca_set_fout_to_default();
    // must copy data before closing buffer
    char * result = strdup(ptr);
