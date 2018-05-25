@@ -1,7 +1,7 @@
 /* file_util.c
  *
  * <copyright>
- * Copyright (C) 2014-2016 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2014-2018 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -112,7 +112,6 @@ Circular_Line_Buffer * clb_new(int size) {
 
 
 void clb_add(Circular_Line_Buffer * clb, char * line) {
-
     int nextpos = clb->ct % clb->size;
     // printf("(%s) Adding at ct %d, pos %d, line |%s|\n", __func__, clb->ct, nextpos, line);
     if (clb->lines[nextpos])
@@ -123,6 +122,7 @@ void clb_add(Circular_Line_Buffer * clb, char * line) {
 
 
 GPtrArray * clb_to_g_ptr_array(Circular_Line_Buffer * clb) {
+   // printf("(%s) clb->size=%d, clb->ct=%d\n", __func__, clb->size, clb->ct);
    GPtrArray * pa = g_ptr_array_sized_new(clb->ct);
 
    int first = 0;
@@ -130,7 +130,7 @@ GPtrArray * clb_to_g_ptr_array(Circular_Line_Buffer * clb) {
       first = clb->ct % clb->size;
    // printf("(%s) first=%d\n", __func__, first);
 
-   for (int ndx = 0; ndx < clb->size; ndx++) {
+   for (int ndx = 0; ndx < clb->ct; ndx++) {
       int pos = (first + ndx) % clb->size;
       char * s = clb->lines[pos];
       // printf("(%s) line %d, |%s|\n", __func__, ndx, s);
@@ -196,11 +196,25 @@ file_get_last_lines(
       }
       free(line);
       rc = linectr;
+      if (debug)
+         printf("(%s) Read %d lines\n", __func__, linectr);
       if (rc > maxlines)
          rc = maxlines;
 
       *line_array_loc = clb_to_g_ptr_array(clb);
       free(clb);
+//      if (debug) {
+//         GPtrArray * la = *line_array_loc;
+//         printf("(%s) (*line_array_loc)->len=%d\n", __func__, la->len);
+//         if (la->len > 0)
+//            printf("(%s) Line 0: %s\n", __func__, (char*)g_ptr_array_index(la, 0));
+//         if (la->len > 1)
+//            printf("(%s) Line 1: %s\n", __func__, (char*)g_ptr_array_index(la, 1));
+//         if (la->len > 2) {
+//            printf("(%s) Line %d: %s\n", __func__, la->len-2, (char*)g_ptr_array_index(la, la->len-2));
+//            printf("(%s) Line %d: %s\n", __func__, la->len-1, (char*)g_ptr_array_index(la, la->len-1));
+//         }
+//      }
 
       fclose(fp);
    }
@@ -245,7 +259,6 @@ char * file_get_first_line(const char * fn, bool verbose) {
    // printf("(%s) fn=|%s|, returning: |%s|\n", __func__, fn, single_line);
    return single_line;
 }
-
 
 
 /** Reads a binary file, returning it as a **GByteArray**.
@@ -303,9 +316,6 @@ bye:
       }
    return gbarray;
 }
-
-
-
 
 
 /** Checks if a regular file exists.
