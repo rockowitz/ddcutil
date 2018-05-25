@@ -456,9 +456,9 @@ void filter_and_limit_g_ptr_array(
       int         limit)
 {
    bool debug = false;
-   DBGMSF(debug, "line_array=%p, ct(filter_terms)=%d, ignore_case=%s, limit=%d",
-            line_array, ntsa_length(filter_terms), bool_repr(ignore_case), limit);
    if (debug) {
+      DBGMSG("line_array=%p, line_array->len=%d, ct(filter_terms)=%d, ignore_case=%s, limit=%d",
+            line_array, line_array->len, ntsa_length(filter_terms), bool_repr(ignore_case), limit);
       // (const char **) cast to conform to strjoin() signature
       char * s = strjoin( (const char **) filter_terms, -1, ", ");
       DBGMSG("Filter terms: %s", s);
@@ -475,6 +475,7 @@ void filter_and_limit_g_ptr_array(
    // inefficient, just make it work for now
    for (int ndx = (line_array->len)-1 ; ndx >= 0; ndx--) {
       char * s = g_ptr_array_index(line_array, ndx);
+      assert(s);
       // DBGMSF(debug, "s=|%s|", s);
       bool keep = true;
       if (filter_terms)
