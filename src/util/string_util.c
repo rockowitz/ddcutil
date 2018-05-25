@@ -1592,10 +1592,18 @@ char * ascii_strcasestr(const char * haystack, const char * needle) {
 }
 
 
-// Belongs in some more general file.   where?  string_util.c, data_structures.c?
-// Idea: allow for option to treat terms as regular expressions
-// convert parm ignore_case into a flags byte of options
-
+/** Tests if any of a set of strings is a substring of a given string
+ *
+ *  @param test         string to check, must not be NULL
+ *  @param terms        pointer to array of substring to check
+ *  @param ignore_case  if true, test is case-insensitive
+ *  @return true if a substring is found
+ *
+ *  @remark
+ *  If **terms** is NULL, returns **false**
+ *  @remark
+ *  Consider converting ignore_case to a flags byte of options
+ */
 bool apply_filter_terms(const char * text, char ** terms, bool ignore_case) {
    assert(text);
    bool debug = false;
