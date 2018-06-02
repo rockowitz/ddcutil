@@ -160,7 +160,7 @@ static int link_adl(Adl_Procs** pLocAdl_Procs, bool verbose) {
    DBGMSF(debug, "Loading function %s", #_n_);    \
    adl->_n_ = dlsym(adl->hDLL, #_n_); \
    if (!adl->_n_) { \
-       SEVEREMSG("ADL error: loading symbol %s\n", #_n_); \
+       SEVEREMSG("ADL error: loading symbol %s", #_n_); \
        result = -1; \
    }   \
    } while (0)
@@ -169,7 +169,7 @@ static int link_adl(Adl_Procs** pLocAdl_Procs, bool verbose) {
    adl->hDLL = dlopen("libatiadlxx.so", RTLD_LAZY|RTLD_GLOBAL);
    if (!adl->hDLL) {
       if (verbose)
-         printf("ADL library libatiadlxx.so not found.\n" );   // this is a user error msg
+         fprintf(stderr, "ADL library libatiadlxx.so not found.\n" );   // this is a user error msg
       result = 1;
    }
    else {
