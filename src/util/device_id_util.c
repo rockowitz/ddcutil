@@ -1026,8 +1026,9 @@ bool devid_ensure_initialized() {
    bool ok = (pci_vendors_mlm && usb_vendors_mlm);
 
    if (!ok) {
-      printf("(%s) Loading.  pci_vendors_mlm=%p, usb_vendors_mlm=%p\n",
-             __func__,  pci_vendors_mlm, usb_vendors_mlm);
+      if (debug)
+         printf("(%s) Loading.  pci_vendors_mlm=%p, usb_vendors_mlm=%p\n",
+                __func__,  pci_vendors_mlm, usb_vendors_mlm);
       load_id_file(ID_TYPE_PCI);
       load_id_file(ID_TYPE_USB);
       ok = true;
