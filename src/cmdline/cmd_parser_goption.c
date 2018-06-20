@@ -602,7 +602,7 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
        ntsa_free(pieces);
 
        DBGMSG("traceClasses = 0x%02x", traceClasses);
-       parsed_cmd->trace = traceClasses;
+       parsed_cmd->traced_groups = traceClasses;
        debug = saved_debug;
     }
 #endif
@@ -632,7 +632,7 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
         }
       }
       // DBGMSG("traceClasses = 0x%02x", traceClasses);
-      parsed_cmd->trace = traceClasses;
+      parsed_cmd->traced_groups = traceClasses;
    }
 // #endif
 

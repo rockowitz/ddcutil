@@ -92,7 +92,7 @@ struct {
    DDCA_Stats_Type     stats_types;
    char *              failsim_control_fn;
    Display_Identifier* pdid;
-   Trace_Group         trace;
+   Trace_Group         traced_groups;
    gchar **            traced_files;
    gchar **            traced_functions;
    DDCA_Output_Level   output_level;

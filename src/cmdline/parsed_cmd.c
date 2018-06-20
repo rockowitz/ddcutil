@@ -101,7 +101,7 @@ void dbgrpt_parsed_cmd(Parsed_Cmd * parsed_cmd, int depth) {
    rpt_bool("verify_setvcp",    NULL, parsed_cmd->flags & CMD_FLAG_VERIFY,           d1);
    rpt_bool("timestamp_trace",  NULL, parsed_cmd->flags & CMD_FLAG_TIMESTAMP_TRACE,  d1);
    rpt_int_as_hex(
-            "trace",            NULL,  parsed_cmd->trace,                            d1);
+            "traced_groups",    NULL,  parsed_cmd->traced_groups,                    d1);
    if (parsed_cmd->traced_functions) {
       char * joined = g_strjoinv(", ", parsed_cmd->traced_functions);
       rpt_str("traced_functions", NULL, joined, d1);
