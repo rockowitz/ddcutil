@@ -864,7 +864,7 @@ ddc_i2c_write_only(
             ? SE_POST_SAVE_SETTINGS
             : SE_POST_WRITE;
    call_tuned_sleep_i2c(sleep_type);
-   DBGTRC(debug, TRACE_GROUP, "Done. rc=%s\n", psc_desc(rc) );
+   DBGTRC(debug, TRACE_GROUP, "Done. rc=%s", psc_desc(rc) );
    return rc;
 }
 
@@ -923,8 +923,7 @@ ddc_write_only(
 Error_Info *
 ddc_write_only_with_retry(
       Display_Handle * dh,
-      DDC_Packet *     request_packet_ptr
-     )
+      DDC_Packet *     request_packet_ptr)
 {
    bool debug = false;
    DBGTRC0(debug, TRACE_GROUP, "Starting." );
@@ -934,7 +933,7 @@ ddc_write_only_with_retry(
    Public_Status_Code psc;
    int                tryctr;
    bool               retryable;
-   Error_Info *        try_errors[MAX_MAX_TRIES];
+   Error_Info *       try_errors[MAX_MAX_TRIES];
 
    assert(max_write_only_exchange_tries > 0);
    for (tryctr=0, psc=-999, retryable=true;
@@ -991,8 +990,11 @@ ddc_write_only_with_retry(
          COUNT_STATUS_CODE(psc);     // new status code, count it
    }
    else {
-      for (int ndx = 0; ndx < tryctr; ndx++) {
-         // errinfo_free(try_errors[ndx]);
+      // 2 possibilities:
+      //   succeeded after retries, there will be some errors (tryctr > 1)
+      //   no errors (tryctr == 1)
+      int last_bad_try_index = tryctr-2;
+      for (int ndx = 0; ndx < last_bad_try_index; ndx++) {
          ERRINFO_FREE_WITH_REPORT(try_errors[ndx], debug || IS_TRACING() || report_freed_exceptions);
       }
    }
