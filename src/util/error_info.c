@@ -149,11 +149,13 @@ errinfo_free_with_report(
       bool         report,
       const char * func)
 {
-   if (report) {
-      rpt_vstring(0, "(%s) Freeing exception:", func);
-         errinfo_report(erec, 1);
+   if (erec) {
+      if (report) {
+         rpt_vstring(0, "(%s) Freeing exception:", func);
+            errinfo_report(erec, 1);
+      }
+      errinfo_free(erec);
    }
-   errinfo_free(erec);
 }
 
 
@@ -604,6 +606,7 @@ errinfo_causes_string(Error_Info * erec) {
  */
 void
 errinfo_report(Error_Info * erec, int depth) {
+   assert(erec);
    int d1 = depth+1;
 
    // rpt_vstring(depth, "Status code: %s", psc_desc(erec->psc));
