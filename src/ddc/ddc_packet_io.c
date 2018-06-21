@@ -993,8 +993,8 @@ ddc_write_only_with_retry(
       // 2 possibilities:
       //   succeeded after retries, there will be some errors (tryctr > 1)
       //   no errors (tryctr == 1)
-      int last_bad_try_index = tryctr-2;
-      for (int ndx = 0; ndx < last_bad_try_index; ndx++) {
+      // int last_bad_try_index = tryctr-2;
+      for (int ndx = 0; ndx < tryctr-1; ndx++) {
          ERRINFO_FREE_WITH_REPORT(try_errors[ndx], debug || IS_TRACING() || report_freed_exceptions);
       }
    }
