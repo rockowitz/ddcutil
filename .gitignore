@@ -168,3 +168,5 @@ sip/
 *.vcp
 *.mccs
 old/
+mod_copyright.pl
+run_mod_copyright
