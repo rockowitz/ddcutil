@@ -37,6 +37,7 @@
 #include <sys/param.h>     // for MIN, MAX
 /** \endcond */
 
+#include "debug_util.h"
 #include "string_util.h"
 
 #include "data_structures.h"
@@ -871,7 +872,7 @@ Buffer * buffer_dup(Buffer * srcbuf, const char * trace_msg) {
 void buffer_free(Buffer * buffer, const char * trace_msg) {
    if (trace_buffer_malloc_free)
       printf("(%s) Starting. buffer = %p\n", __func__, (void*) buffer);
-   assert(buffer);
+   ASSERT_WITH_BACKTRACE(buffer);
    assert(memcmp(buffer->marker, BUFFER_MARKER, 4) == 0);
 
       if (buffer->bytes) {
