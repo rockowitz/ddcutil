@@ -1,7 +1,7 @@
 /* query_sysenv_sysfs.h
  *
  * <copyright>
- * Copyright (C) 2014-2017 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2014-2018 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -29,8 +29,6 @@
 #define QUERY_SYSENV_SYSFS_H_
 
 #include "query_sysenv_base.h"
-
-char * get_i2c_device_sysfs_name(int busno);
 
 typedef struct {
    ushort   vendor_id;
