@@ -28,7 +28,16 @@
  * Functions for debugging
  */
 
+#include <assert.h>
 #include <glib-2.0/glib.h>
+
+#define ASSERT_WITH_BACKTRACE(_condition) \
+do { \
+   if ( !(_condition) ) {  \
+      show_backtrace(2);   \
+      assert(_condition);  \
+   }                       \
+} while(0)
 
 GPtrArray * get_backtrace(int stack_adjust);
 void show_backtrace(int stack_adjust);
