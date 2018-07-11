@@ -873,7 +873,7 @@ void buffer_free(Buffer * buffer, const char * trace_msg) {
    if (trace_buffer_malloc_free)
       printf("(%s) Starting. buffer = %p\n", __func__, (void*) buffer);
    ASSERT_WITH_BACKTRACE(buffer);
-   assert(memcmp(buffer->marker, BUFFER_MARKER, 4) == 0);
+   ASSERT_WITH_BACKTRACE(memcmp(buffer->marker, BUFFER_MARKER, 4) == 0);
 
       if (buffer->bytes) {
         if (trace_buffer_malloc_free)
