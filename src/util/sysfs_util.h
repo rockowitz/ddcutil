@@ -1,7 +1,7 @@
 /* sysfs_util.h
  *
  * <copyright>
- * Copyright (C) 2014-2017 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2014-2018 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -68,9 +68,10 @@ char *
 get_i2c_device_sysfs_name(
       int busno);
 
-bool
-ignorable_i2c_device_sysfs_name(
-      const char * name);
+//bool
+//ignorable_i2c_device_sysfs_name(
+//      const char * name,
+//      const char * driver);
 
 bool
 is_ignorable_i2c_device(
