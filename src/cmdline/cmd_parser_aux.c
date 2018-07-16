@@ -326,6 +326,7 @@ char * commands_list_help =
        "   setvcp <feature-code> [+|-] <new-value> Set VCP feature value\n"
        "   dumpvcp (filename)                      Write color profile related settings to file\n"
        "   loadvcp <filename>                      Load profile related settings from file\n"
+       "   scs                                     Store current settings in monitor's nonvolatile storage\n"
 #ifdef INCLUDE_TESTCASES
        "   testcase <testcase-number>\n"
        "   listtests\n"
