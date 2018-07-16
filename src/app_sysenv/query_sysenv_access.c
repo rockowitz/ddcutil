@@ -336,6 +336,9 @@ static void check_group_i2c(Env_Accumulator * accum, bool verbose) {
          if (accum->cur_user_in_group_i2c) {
             rpt_vstring(1,"Current user %s is a member of group i2c", accum->cur_uname);
          }
+         else if (streq(accum->cur_uname, "root")) {
+            rpt_vstring(1, "Current user is root, membership in group i2c not needed");
+         }
          else {
             rpt_vstring(1, "WARNING: Current user %s is NOT a member of group i2c", accum->cur_uname);
          }
