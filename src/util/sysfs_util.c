@@ -255,13 +255,13 @@ static bool ignorable_i2c_device_sysfs_name(const char * name, const char * driv
       if (starts_with_any(name, ignorable_prefixes) >= 0)
          result = true;
       if (streq(driver, "nouveau")) {
-         if ( !str_starts_with(name, "nkvm-") ) {
+         if ( !str_starts_with(name, "nvkm-") ) {
             result = true;
             printf("(%s) name=|%s|, driver=|%s| - Ignore\n", __func__, name, driver);
          }
       }
    }
-   // printf("(%s) name=|%s|, driver=|%s|, returning: %s\n", __func__, name, driver, bool_repr(result));
+   // printf("(%s) name=|%s|, driver=|%s|, returning: %s\n", __func__, name, driver, sbool(result));
    return result;
 }
 
