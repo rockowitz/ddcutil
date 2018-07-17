@@ -1,7 +1,7 @@
 /* hiddev_util.h
  *
  * <copyright>
- * Copyright (C) 2016-2017 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2016-2018 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -34,6 +34,7 @@
 #include <string.h>
 
 #include "util/data_structures.h"
+#include "util/debug_util.h"
 #include "util/edid.h"
 
 
@@ -49,6 +50,8 @@
                 _errno, \
                 strerror(_errno) \
                ); \
+         printf("(%s) Backtrace:\n", __func__); \
+         show_backtrace(2);   \
    } while(0)
 
 
