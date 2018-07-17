@@ -390,7 +390,8 @@ Parsed_Edid * get_hiddev_edid_with_fallback(int fd, struct hiddev_devinfo * dev_
    // printf("edid_buf2:\n");
    // buffer_dump(edid_buf2);
    assert(buffer_eq(edid_buffer, edid_buf2));
-   buffer_free(edid_buf2, __func__);
+   if (edid_buf2)
+      buffer_free(edid_buf2, __func__);
 
    if (edid_buffer) {
        parsed_edid = create_parsed_edid(edid_buffer->bytes);  // copies bytes
