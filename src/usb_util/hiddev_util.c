@@ -741,7 +741,12 @@ get_multibyte_value_by_uref_multi(
 
    rc = ioctl(fd, HIDIOCGUSAGES, uref_multi);  // Fills in usage value
    if (rc != 0) {
-      REPORT_USB_IOCTL_ERROR("HIDIOCGUSAGES", errno);
+      if (errno == EINVAL) {
+         if (debug)
+            printf("(%s) ioctl(HIDIOCGUSAGES) returned EINVAL\n", __func__);
+      }
+      else
+         REPORT_USB_IOCTL_ERROR("HIDIOCGUSAGES", errno);
       goto bye;
    }
    result = buffer_new(uref_multi->num_values, __func__);
@@ -750,7 +755,7 @@ get_multibyte_value_by_uref_multi(
 
 bye:
    if (debug) {
-      DBGMSG("Returning: %p", __func__, result);
+      DBGMSG("Returning: %p", result);
       if (result) {
          dbgrpt_buffer(result, 1);
       }
@@ -790,7 +795,12 @@ Buffer * hiddev_get_multibyte_report_value_by_hid_field_locator(
 
    int rc = ioctl(fd, HIDIOCGREPORT, &rinfo);
    if (rc != 0) {
-      REPORT_USB_IOCTL_ERROR("HIDIOCGREPORT", errno);
+      if (errno == EINVAL) {
+         if (debug)
+            printf("(%s) ioctl(HIDIOCGUSAGES) returned EINVAL\n", __func__);
+      }
+      else
+         REPORT_USB_IOCTL_ERROR("HIDIOCGREPORT", errno);
       goto bye;
    }
 
@@ -897,7 +907,7 @@ hiddev_get_multibyte_value_by_ucode(int fd,__u32 usage_code, __u32 num_values) {
  * It is the responsibility of the caller to free the returned buffer.
  */
 Buffer * get_hiddev_edid(int fd)  {
-   bool debug = false;
+   bool debug = true;
    if (debug)
       printf("(%s) Starting\n", __func__);
 
