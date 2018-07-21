@@ -647,6 +647,9 @@ ddc_get_vcp_value(
                                parsed_nontable_response->sl);
                    free(parsed_nontable_response);
                 }
+                else {
+                   ddc_excp = errinfo_new(psc, __func__);
+                }
                 break;
 
           case (DDCA_TABLE_VCP_VALUE):
