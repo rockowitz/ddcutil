@@ -408,6 +408,7 @@ static char * get_firmware_version_string_t(Display_Handle * dh) {
  */
 static char * get_controller_mfg_string_t(Display_Handle * dh) {
    bool debug = false;
+   DBGMSF(debug, "Starting. dh = %s", dh_repr(dh));
 
    const int MFG_NAME_BUF_SIZE = 100;
 
@@ -420,6 +421,7 @@ static char * get_controller_mfg_string_t(Display_Handle * dh) {
    Public_Status_Code psc = 0;
    Error_Info * ddc_excp = ddc_get_vcp_value(dh, 0xc8, DDCA_NON_TABLE_VCP_VALUE, &valrec);
    psc = (ddc_excp) ? ddc_excp->status_code : 0;
+   // DBGMSF(debug, "ddc_excp=%p, psc=%d", ddc_excp, psc);
 
    if (psc == 0) {
       DDCA_Feature_Value_Entry * vals = pxc8_display_controller_type_values;
@@ -442,6 +444,7 @@ static char * get_controller_mfg_string_t(Display_Handle * dh) {
          DBGMSG("    Try errors: %s", errinfo_causes_string(ddc_excp));
       mfg_name = "DDC communication failed";
     }
+   DBGMSF(debug, "Returning: %s", mfg_name);
    return mfg_name;
 }
 
