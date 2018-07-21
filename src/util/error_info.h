@@ -71,6 +71,9 @@ Error_Info * errinfo_new(
       int            status_code,
       const char *   func);
 
+#define ERRINFO_NEW(_status_code) \
+   errinfo_new(_status_code, __func__)
+
 Error_Info * errinfo_new2(
       int            status_code,
       const char *   func,
