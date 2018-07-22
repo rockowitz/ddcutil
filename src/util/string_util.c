@@ -884,7 +884,8 @@ bool str_to_int(const char * sval, int * p_ival, int base)
  * @retval **false** string does not consist of hex characters,
  *                    or is not 2 characters in length.
  */
-bool hhs_to_byte_in_buf(const char * s, Byte * result) {
+bool hhs_to_byte_in_buf(const char * s, Byte * result)
+{
    // printf("(%s) Starting s=%s, strlen(s)=%zd\n", __func__, s, strlen(s) );
    // consider changing to fail if len != 2, or perhaps len != 1,2
    //assert(strlen(s) == 2);
@@ -923,7 +924,8 @@ bool hhs_to_byte_in_buf(const char * s, Byte * result) {
  *  @retval **true**  successful conversion,
  *  @retval **false** conversion unsuccessful
  */
-bool any_one_byte_hex_string_to_byte_in_buf(const char * s, Byte * result) {
+bool any_one_byte_hex_string_to_byte_in_buf(const char * s, Byte * result)
+{
    // printf("(%s) s = |%s|\n", __func__, s);
    char * suc = strdup_uc(s);
    char * suc0 = suc;
@@ -948,7 +950,8 @@ bool any_one_byte_hex_string_to_byte_in_buf(const char * s, Byte * result) {
  *  @retval **true**  successful conversion
  *  @retval **false** **s** does not point to hex characters
  */
-bool hhc_to_byte_in_buf(const char * p_hh, Byte * converted) {
+bool hhc_to_byte_in_buf(const char * p_hh, Byte * converted)
+{
    // printf("(%s) Starting p_hh=%.2s   \n", __func__, hh );
    char hhs[3];
    hhs[0] = p_hh[0];
@@ -959,68 +962,18 @@ bool hhc_to_byte_in_buf(const char * p_hh, Byte * converted) {
 }
 
 
-#ifdef DEPRECATED
-/* Converts a (null terminated) string of 2 hex characters to
- * its byte value.
- *
- * Arguments:
- *   s   pointer to hex string
- *
- * Returns:
- *   byte value
- *
- * Execution terminates if invalid hex value.
- */
-Byte hhs_to_byte(char * s) {
-   // printf("(%s) Starting s=%s, strlen(s)=%d   \n", __func__, s, strlen(s) );
-   Byte converted;
-   if (!hhs_to_byte_in_buf(s, &converted)) {
-      // no way to properly signal failure, so terminate execution
-      // don't call a function such as program_logic_error() since this
-      // file should have no dependencies on any other program files.
-      fprintf(stderr, "Invalid hex value: %s", s);
-      // exit(1);   //  warnings in OBS re exit() in library
-      converted = 0x00;    // stick something in there, ugh
-   }
-   return converted;
-}
-#endif
-
-#ifdef DEPRECATED
-/* Converts 2 hex characters to a single byte.
- *
- * Arguments:
- *   hh    address of 2 hex characters, need not be null terminated
- *
- * Returns:
- *   byte value
- *
- * Execution terminates if invalid hex value.
- */
-Byte hhc_to_byte(char * hh) {
-   // printf("(%s) Starting hh=%.2s   \n", __func__, hh );
-   char hhs[3];
-   hhs[0] = hh[0];
-   // hhs[1] = cc[1];   // why does compiler complain?
-   hhs[1] = *(hh+1);
-   hhs[2] = '\0';
-   return hhs_to_byte(hhs);
-}
-#endif
-
-
 /** Converts a string of hex characters (null terminated) to an array of bytes.
  *
  *  @param   hhs     string of hex characters
  *  @param   pBa     address at which to return pointer to byte array
- *
  *  @retval  >= 0 number of bytes in array,
  *  @retval  -1   string could not be converted
  *
  * If successful, the byte array whose address is returned in pBa has
  * been malloc'd.  It is the responsibility of the caller to free it.
  */
-int hhs_to_byte_array(const char * hhs, Byte** pBa) {
+int hhs_to_byte_array(const char * hhs, Byte** pBa)
+{
    if ( strlen(hhs) % 2)     // if odd number of characters
       return -1;
    char xlate[] = "0123456789ABCDEF";
@@ -1053,34 +1006,18 @@ int hhs_to_byte_array(const char * hhs, Byte** pBa) {
    return bytect;
 }
 
-#ifdef DEPRECATED
-void test_one_hhs2Byte(char * hhs) {
-   printf("(%s) Starting.  hhs=%s  \n", __func__, hhs );
-   Byte b1 = hhs_to_byte(hhs);
-   printf("(%s) %s -> 0x%02x  \n", __func__, hhs, b1 );
-}
-
-
-void test_hhs_to_byte() {
-   printf("(%s) Startomg  \n", __func__ );
-   test_one_hhs2Byte("01");
-   test_one_hhs2Byte("ZZ");
-   // test_one_hhs2Byte("123");
-}
-#endif
-
 
 /** Converts a sequence of bytes to its representation as a string of hex characters.
  *
  *  @param  bytes     pointer to bytes
  *  @param  len       number of bytes
- *
  *  @return pointer to newly allocated hex string
  *
  * The value returned by this function has been malloc'd.   It is the
  * responsibility of the caller to free the memory.
  */
-char * hexstring(const unsigned char * bytes, int len) {
+char * hexstring(const unsigned char * bytes, int len)
+{
    int alloc_size = 3*len + 1;
    char* str_buf = malloc(alloc_size);
 
@@ -1108,7 +1045,6 @@ char * hexstring(const unsigned char * bytes, int len) {
  *                    if NULL, then a buffer will be allocated
  * @param   bufsz     size of buffer
  *                    if 0, then a buffer will be allocated
- *
  * @return  pointer to hex string
  *
  * If this function allocates a buffer, it is the responsibility of the caller

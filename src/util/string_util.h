@@ -137,11 +137,6 @@ bool str_to_int_old(const char * nptr, int * ival);
 bool hhs_to_byte_in_buf(const char * s,  Byte * result);    // converts null terminated string into buffer
 bool any_one_byte_hex_string_to_byte_in_buf(const char * s, Byte * result);
 bool hhc_to_byte_in_buf(const char * hh, Byte * result);    // converts 2 characters at hh into buffer
-#ifdef OLD
-Byte hhs_to_byte(char * s);                           // converts null terminated string
-Byte hhc_to_byte(char * hh);                          // converts 2 characters at hh
-void test_hhs_to_byte() ;
-#endif
 int  hhs_to_byte_array(const char * hhs, Byte** pBa);
 
 char * hexstring(const Byte * bytes, int size);  // buffer returned must be freed
