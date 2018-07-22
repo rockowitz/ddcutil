@@ -1,7 +1,7 @@
 /* string_util.c
  *
  * <copyright>
- * Copyright (C) 2014-2016 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2014-2018 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -1102,100 +1102,6 @@ char * hexstring2(
 }
 
 
-#ifdef DEPRECATED
-// TODO: replace implementation of hexstring2_t() with call to hexstring3_t()
-
-/** Thread safe version of #hexstring2().
- *
- *  This function allocates a thread specific buffer in which the
- *  hexstring is built.  The buffer is valid until the next call
- *  of this function in the same thread.
- *
- * @param   bytes    pointer to bytes
- * @param   len      number of bytes
- * @param   sepstr   string to separate each 2 hex character pairs representing a byte,
- *                   if NULL then no separators will be inserted
- * @param   uppercase if true, use uppercase hex characters,
- *                    if false, use lower case hex characters
- *
- * @return  pointer to hex string
- *
- * Note that if the returned pointer is referenced after another call to
- * this function, the results are unpredictable.
- *
- * This function is intended to simplify formatting of diagnostic messages, since
- * the caller needn't be concerned with buffer size and allocation.
- */
-char * hexstring2_t_old(
-          const unsigned char * bytes,
-          int                   len,
-          const char *          sepstr,
-          bool                  uppercase)
-{
-   static GPrivate  hexstring_key = G_PRIVATE_INIT(g_free);
-
-   char * buf = g_private_get(&hexstring_key);
-   // GThread * this_thread = g_thread_self();
-   // printf("(%s) this_thread=%p, hexstring_key=%p, buf=%p\n",
-   //        __func__, this_thread, &hexstring_key, buf);
-
-   // TODO: Keep track of buffer size, only reallocate if buffer insufficiently large.
-   // But note that this function is only used for diagnostic messages, so performance
-   // gain is insignificant.
-
-   if (buf)
-      g_free(buf);
-
-   // printf("(%s) bytes=%p, len=%d, sepstr=|%s|, uppercase=%s\n", __func__,
-   //       bytes, len, sepstr, bool_repr(uppercase));
-   int sepsize = 0;
-   if (sepstr) {
-      sepsize = strlen(sepstr);
-   }
-   int required_size = 1;    // special case if len == 0
-   if (len > 0)
-      required_size =   2*len             // hex rep of bytes
-                       + (len-1)*sepsize   // for separators
-                       + 1;                // terminating null
-   // printf("(%s) required_size=%d\n", __func__, required_size);
-
-   buf = g_new(char, required_size);
-   // printf("(%s) Calling g_private_set()\n", __func__);
-   g_private_set(&hexstring_key, buf);
-
-   // hexstring2(bytes, len, sepstr, uppercase, buf, required_size);
-
-   char * pattern = (uppercase) ? "%02X" : "%02x";
-
-   int incr1 = 2 + sepsize;
-   if (len == 0)
-      *buf = '\0';
-   for (int i=0; i < len; i++) {
-      // printf("(%s) i=%d, buffer+i*incr1=%p\n", __func__, i, buffer+i*incr1);
-      sprintf(buf+i*incr1, pattern, bytes[i]);
-      if (i < (len-1) && sepstr)
-         strcat(buf, sepstr);
-   }
-   // printf("(%s) strlen(buffer) = %ld, required_size=%d   \n", __func__, strlen(buffer), required_size );
-   // printf("(%s)  buffer=|%s|\n", __func__, buffer );
-   assert(strlen(buf) == required_size-1);
-
-   return buf;
-}
-#endif
-
-#ifdef DEPRECATED
-char * hexstring2_t(
-          const unsigned char * bytes,
-          int                   len,
-          const char *          sepstr,
-          bool                  uppercase)
-{
-   return hexstring3_t(bytes, len, sepstr, 1, uppercase);
-}
-#endif
-
-
 /** Thread safe version of #hexstring2().
  *
  * This function allocates a thread specific buffer in which the hex string is built.
@@ -1208,7 +1114,6 @@ char * hexstring2_t(
  * @param   hunk_size separator string frequency
  * @param   uppercase if true, use uppercase hex characters,
  *                    if false, use lower case hex characters
- *
  * @return  pointer to hex string
  *
  * Note that if the returned pointer is referenced after another call to

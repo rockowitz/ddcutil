@@ -150,13 +150,6 @@ char * hexstring2(
           bool                  uppercase,  // use upper case hex characters
           char *                buffer,     // buffer in which to return hex string
           int                   bufsz);     // buffer size
-#ifdef DEPRECATED
-char * hexstring2_t(
-          const unsigned char * bytes,      // bytes to convert
-          int                   len,        // number of bytes
-          const char *          sepstr,     // separator string between hex digits
-          bool                  uppercase); // use upper case hex characters?
-#endif
 char * hexstring3_t(
           const unsigned char * bytes,      // bytes to convert
           int                   len,        // number of bytes
