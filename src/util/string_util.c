@@ -1292,7 +1292,8 @@ void fhex_dump(FILE * fh, const Byte* data, int size)
  * @param   data     start of region to show
  * @param   size     length of region
  */
-void hex_dump(const Byte* data, int size) {
+void hex_dump(const Byte* data, int size)
+{
    fhex_dump(stdout, data, size);
 }
 
@@ -1305,7 +1306,8 @@ void hex_dump(const Byte* data, int size) {
  *
  *  @return result of underlying fputs(), or 0 if stream is NULL
  */
-int f0putc(int c, FILE * stream) {
+int f0putc(int c, FILE * stream)
+{
    int rc = 0;
    if (stream)
       rc = fputc(c, stream);
@@ -1321,7 +1323,8 @@ int f0putc(int c, FILE * stream) {
  *
  * @return   result of underlying fputs(), or 0 if stream is NULL
  */
-int f0puts(const char * msg, FILE * stream) {
+int f0puts(const char * msg, FILE * stream)
+{
    int rc = 0;
    if (stream)
       rc = fputs(msg, stream);
@@ -1337,7 +1340,8 @@ int f0puts(const char * msg, FILE * stream) {
  *
  * @return  result of underlying vfprintf(), or 0 if stream is NULL
  */
-int f0printf(FILE * stream, const char * format, ...) {
+int f0printf(FILE * stream, const char * format, ...)
+{
    int rc = 0;
    // printf("(%s) stream=%p\n", __func__, stream);
    if (stream) {
@@ -1359,7 +1363,8 @@ int f0printf(FILE * stream, const char * format, ...) {
  *
  * @return result of underlying vfprintf(), or 0 if stream is NULL
  */
-int vf0printf(FILE * stream, const char * format, va_list ap) {
+int vf0printf(FILE * stream, const char * format, va_list ap)
+{
    int rc = 0;
    if (stream)
       rc = vfprintf(stream, format, ap);
@@ -1377,7 +1382,8 @@ int vf0printf(FILE * stream, const char * format, va_list ap) {
  * @param bytect number of bytes
  * @return **true** if all bytes are zero, **false** if not
  */
-bool all_bytes_zero(Byte * bytes, int bytect) {
+bool all_bytes_zero(Byte * bytes, int bytect)
+{
    Byte sum = 0;
    for (int ndx=0; ndx < bytect; ndx++) {
       sum |= bytes[ndx];
@@ -1387,7 +1393,8 @@ bool all_bytes_zero(Byte * bytes, int bytect) {
 
 // Private version of strcasestr(), avoids needing to set _GNU_SOURCE
 
-char * ascii_strcasestr(const char * haystack, const char * needle) {
+char * ascii_strcasestr(const char * haystack, const char * needle)
+{
    char * result = NULL;
    if (haystack && needle) {
       char * uhaystack = g_ascii_strup(haystack, /*len=*/ -1);   // -1: null-terminated
@@ -1417,7 +1424,8 @@ char * ascii_strcasestr(const char * haystack, const char * needle) {
  *  @remark
  *  Consider converting ignore_case to a flags byte of options
  */
-bool apply_filter_terms(const char * text, char ** terms, bool ignore_case) {
+bool apply_filter_terms(const char * text, char ** terms, bool ignore_case)
+{
    assert(text);
    bool debug = false;
    bool result = true;
