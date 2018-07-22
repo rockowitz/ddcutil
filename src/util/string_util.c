@@ -586,9 +586,14 @@ Null_Terminated_String_Array ntsa_join(
 }
 
 
-
-
-
+/** Searches a #Null_Terminated_String_Array for an entry that matches a given
+ *  value using a match function provided.
+ *
+ *  @param  string_array  null-terminated string array
+ *  @param  value         value to look for
+ *  @param  func          comparison function
+ *  @return index of first matching entry, -1 if not found
+ */
 int ntsa_findx(
       Null_Terminated_String_Array string_array,
       char *                       value,
@@ -611,12 +616,20 @@ int ntsa_findx(
 
 }
 
+
+/** Searches a #Null_Terminated_String_Array for an entry equal to a
+ *  specified value.
+ *
+ *  @param  string_array  null-terminated string array
+ *  @param  value         value to look for
+ *  @return index of first matching entry, -1 if not found
+ */
 int  ntsa_find(  Null_Terminated_String_Array string_array, char * value) {
    return ntsa_findx(string_array, value, streq);
 }
 
 
-/* Reports the contents of a Null_Terminated_String_Array.
+/* Reports the contents of a #Null_Terminated_String_Array.
  *
  * @param string_array null-terminated string array
  *
@@ -635,7 +648,7 @@ void ntsa_show(Null_Terminated_String_Array string_array) {
 }
 
 
-/** Converts a Null_Terminated_String_Array to a GPtrArray of pointers to strings.
+/** Converts a #Null_Terminated_String_Array to a GPtrArray of pointers to strings.
  * The underlying strings are referenced, not duplicated.
  *
  * @param  ntsa  null-terminated array of strings
@@ -679,7 +692,6 @@ g_ptr_array_to_ntsa(
 /** Converts an ASCII string to upper case.  The original string is converted in place.
  *
  * @param  s string to force to upper case
- *
  * @return converted string
  */
 char * strupper(char * s) {
@@ -696,7 +708,6 @@ char * strupper(char * s) {
 
 /** Creates an upper case copy of an ASCII string
  *
- * Arguments:
  * @param  s  string to copy
  * @return newly allocated string, NULL if s is NULL
  */
@@ -713,13 +724,13 @@ char * strdup_uc(const char* s) {
 /* Replaces all instances of a character in a string with a different character.
  * The original string is converted in place.
  *
- * Arguments:
- *   s   string to force to upper case
- *
- * Returns:
- *   s   converted string
+ * @param  s        string to modify
+ * @param  old_char character to replace
+ * @param  new_char replacement character
+ * @return **s**
  */
-char * str_replace_char(char * s, char old_char, char new_char) {
+char * str_replace_char(char * s, char old_char, char new_char)
+{
    if (s) {
       char * p = s;
       while (*p) {
@@ -731,13 +742,15 @@ char * str_replace_char(char * s, char old_char, char new_char) {
    return s;
 }
 
+
 /** Concatenates 2 strings into a newly allocated buffer.
  *
  * @param s1 first string
  * @param s2 second string
  * @return newly allocated string
  */
-char * strcat_new(char * s1, char * s2) {
+char * strcat_new(char * s1, char * s2)
+{
     assert(s1);
     assert(s2);
     char * result = malloc(strlen(s1) + strlen(s2) + 1);
@@ -749,13 +762,13 @@ char * strcat_new(char * s1, char * s2) {
 
 /** Converts a sequence of characters into a (null-terminated) string.
  *
- *  @param start   pointer to first character
- *  @param len     number of characters
- *
+ *  @param  start   pointer to first character
+ *  @param  len     number of characters
  *  @return newly allocated string,
  *          NULL if start was NULL (is this the most useful behavior?)
  */
-char * chars_to_string(const char * start, int len) {
+char * chars_to_string(const char * start, int len)
+{
    assert(len >= 0);
    char * strbuf = NULL;
    if (start) {
@@ -781,7 +794,8 @@ char * chars_to_string(const char * start, int len) {
  * Consider allowing the truncation maker, currently "..." to be
  * specified as a parameter.
  */
-bool sbuf_append(char * buf, int bufsz, char * sepstr, char * nextval) {
+bool sbuf_append(char * buf, int bufsz, char * sepstr, char * nextval)
+{
    assert(buf && (bufsz > 4) );   //avoid handling pathological case
    bool truncated = false;
    int seplen = (sepstr) ? strlen(sepstr) : 0;
@@ -828,7 +842,8 @@ bool sbuf_append(char * buf, int bufsz, char * sepstr, char * nextval) {
  * @remark
  * This function wraps system function strtol(), hiding the ugly details.
  */
-bool str_to_int(const char * sval, int * p_ival, int base) {
+bool str_to_int(const char * sval, int * p_ival, int base)
+{
    assert (base == 0 || base == 10 || base == 16);
    bool debug = false;
    if (debug)
@@ -855,60 +870,19 @@ bool str_to_int(const char * sval, int * p_ival, int base) {
    return ok;
 }
 
-#ifdef OLD
-/** Converts a string representing an integer to an integer value.
- *
- * @param sval   string representing an integer
- * @param p_ival address at which to store integer value
- * @return true if conversion succeeded, false if it failed
- *
- * \remark
- * If conversion fails, the value pointed to by **p_ival** is unchanged.
- * @remark
- * This function wraps system function strtol(), hiding the ugly details.
- */
-bool str_to_int_old(const char * sval, int * p_ival) {
-   bool debug = false;
-   if (debug)
-      printf("(%s) sval->|%s|\n", __func__, sval);
-
-   char * endptr;
-   bool ok = false;
-   if ( *sval != '\0') {
-      long result = strtol(sval, &endptr, 10);
-      // printf("(%s) sval=%p, endptr=%p, *endptr=|%c| (0x%02x), result=%ld\n",
-      //        __func__, sval, endptr, *endptr, *endptr, result);
-      if (*endptr == '\0') {
-         *p_ival = result;
-         ok = true;
-      }
-   }
-
-   if (debug) {
-      if (ok)
-        printf("(%s) sval=%s, Returning: %s, *ival = %d\n", __func__, sval, bool_repr(ok), *p_ival);
-      else
-        printf("(%s) sval=%s, Returning: %s\n", __func__, sval, bool_repr(ok));
-   }
-   return ok;
-}
-#endif
-
 
 //
 // Hex value conversion.
 //
 
-
 /** Converts a (null terminated) string of 2 hex characters to
  * its byte value.
  *
- * @param  s       pointer to hex string
- * @param  result  pointer to byte in which converted value will be returned
- *
- * @return true  if successful conversion,
- *         false if string does not consist of hex characters,
- *               or is not 2 characters in length.
+ * @param  s         pointer to hex string
+ * @param  result    pointer to byte in which converted value will be returned
+ * @retval **true**  successful conversion,
+ * @retval **false** string does not consist of hex characters,
+ *                    or is not 2 characters in length.
  */
 bool hhs_to_byte_in_buf(const char * s, Byte * result) {
    // printf("(%s) Starting s=%s, strlen(s)=%zd\n", __func__, s, strlen(s) );
@@ -944,11 +918,10 @@ bool hhs_to_byte_in_buf(const char * s, Byte * result) {
  *  the value to begin with "0x" or "x", or end with "h".  The allowed
  *  prefix or suffix is case-insensitive.
  *
- *  @param  s       pointer to hex string
- *  @param  result  pointer to byte in which result will be returned
- *
- *  @return **true**  if successful conversion,
- *          **false** if not
+ *  @param  s         pointer to hex string
+ *  @param  result    pointer to byte in which result will be returned
+ *  @retval **true**  successful conversion,
+ *  @retval **false** conversion unsuccessful
  */
 bool any_one_byte_hex_string_to_byte_in_buf(const char * s, Byte * result) {
    // printf("(%s) s = |%s|\n", __func__, s);
@@ -970,11 +943,10 @@ bool any_one_byte_hex_string_to_byte_in_buf(const char * s, Byte * result) {
 /** Converts 2 hex characters to their corresponding byte value.
  *  The characters need not be null terminated.
  *
- *  @param p_hh      pointer to hex characters.
- *  @param converted pointer go byte in which converted value will be returned
- *
- *  @return true if successful conversion, false if s does not point
- *          to hex characters
+ *  @param  p_hh      pointer to hex characters.
+ *  @param  converted pointer go byte in which converted value will be returned
+ *  @retval **true**  successful conversion
+ *  @retval **false** **s** does not point to hex characters
  */
 bool hhc_to_byte_in_buf(const char * p_hh, Byte * converted) {
    // printf("(%s) Starting p_hh=%.2s   \n", __func__, hh );
