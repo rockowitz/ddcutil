@@ -1132,23 +1132,6 @@ char * hexstring3_t(
    static GPrivate  hexstring3_key = G_PRIVATE_INIT(g_free);
    static GPrivate  hexstring3_len_key = G_PRIVATE_INIT(g_free);
 
-#ifdef OLD
-   char * buf = g_private_get(&hexstring3_key);
-   int  * bufsz_ptr = g_private_get(&hexstring3_len_key);
-   GThread * this_thread = g_thread_self();
-   printf("(%s) this_thread=%p, hexstring3_key=%p, buf=%p, hexstring3_len_key=%p, bufsz_ptr=%p\n",
-          __func__, this_thread, &hexstring3_key, buf, &hexstring3_len_key, bufsz_ptr);
-   if (bufsz_ptr)
-      printf("(%s) *bufsz_ptr = %d\n", __func__, *bufsz_ptr);
-
-   // TODO: Keep track of buffer size, only reallocate if buffer insufficiently large.
-   // But note that this function is only used for diagnostic messages, so performance
-   // gain is insignificant.
-
-   // unnecessary if use g_private_replace() instead of g_private_set()
-   // if (buf)
-   //    g_free(buf);
-#endif
    // printf("(%s) bytes=%p, len=%d, sepstr=|%s|, uppercase=%s\n", __func__,
    //       bytes, len, sepstr, bool_repr(uppercase));
    if (hunk_size == 0)
@@ -1168,20 +1151,6 @@ char * hexstring3_t(
                        + 1;                // terminating null
    // printf("(%s) sepstr=|%s|, hunk_size=%d, required_size=%d\n", __func__, sepstr, hunk_size, required_size);
 
-#ifdef OLD
-   if ( !bufsz_ptr || *bufsz_ptr < required_size) {
-      buf = g_new(char, required_size);
-      // printf("(%s) Calling g_private_set()\n", __func__);
-      g_private_replace(&hexstring3_key, buf);
-
-
-      if (!bufsz_ptr) {
-         bufsz_ptr = g_new(int, 1);
-         g_private_set(&hexstring3_len_key, bufsz_ptr);
-      }
-      *bufsz_ptr = required_size;
-   }
-#endif
    char * buf = get_thread_dynamic_buffer(&hexstring3_key, &hexstring3_len_key, required_size);
    // char * buf = get_thread_private_buffer(&hexstring3_key, NULL, required_size);
 
