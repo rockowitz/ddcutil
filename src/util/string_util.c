@@ -1176,6 +1176,21 @@ char * hexstring3_t(
 }
 
 
+/** Thread safe version of #hexstring().
+ *
+ * This function allocates a thread specific buffer in which the hex string is built.
+ * The buffer is valid until the next call of this function in the same thread.
+ *
+ * @param   bytes    pointer to bytes
+ * @param   len      number of bytes
+ * @return  pointer to hex string
+ *
+ * Note that if the returned pointer is referenced after another call to
+ * this function, the results are unpredictable.
+ *
+ * This function is intended to simplify formatting of diagnostic messages, since
+ * the caller needn't be concerned with buffer size and allocation.
+ */
 char * hexstring_t(
           const unsigned char * bytes,
           int                   len)
