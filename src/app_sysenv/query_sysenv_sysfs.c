@@ -445,6 +445,7 @@ void each_video_pci_device(
       char workfn[PATH_MAX];
       g_snprintf(workfn, PATH_MAX, "%s/%s", cur_dir_name, "driver");
       char resolved_path[PATH_MAX];
+      // DBGMSF("resulved_path = |%s|", resolved_path);
       char * rpath = realpath(workfn, resolved_path);
       if (!rpath) {
          int errsv = errno;
@@ -459,6 +460,7 @@ void each_video_pci_device(
          // printf("realpath returned %s\n", rpath);
          // printf("%s --> %s\n",workfn, resolved_path);
          char * rp2 = strdup(rpath);
+         // DBGMSF(debug, "Driver name path: rp2 = rpath = %s", rp2);
          char * driver_name = g_path_get_basename(rp2);
          rpt_vstring(d1, "Driver name:         %s", driver_name);
          driver_name_list_add(&accum->driver_list, driver_name);
@@ -544,6 +546,7 @@ void query_card_and_driver_using_sysfs(Env_Accumulator * accum) {
    }
    else {
       char * pci_devices_dir_name = "/sys/bus/pci/devices";
+      // each entry in /sys/bus/pci/devices is a symbolic link
       dir_foreach(pci_devices_dir_name, /*fn_filter*/ NULL, each_video_pci_device, accum, 0);
    }
 }
@@ -573,12 +576,12 @@ void query_loaded_modules_using_sysfs() {
 }
 
 
-/** Examines a single /dev/sub/i2c/devices/i2c-N directory.
+/** Examines a single /sys/bus/i2c/devices/i2c-N directory.
  *
  *  Called by #dir_foreach() from #query_sys_bus_i2c()
  *
- *  \param  dirname     always /sys/bus/i2c/devices
- *  \param  fn          i2c-0, i2c-1, ...
+ *  \param  dirname     always /sys/bus/i2c/devicesS
+ *  \param  fn          i2c-0, i2c-1, ... (n. these are symbolic links)
  *  \param  accumulator collects environment information
  *  \param  depth       logical indentation depth
  *
@@ -591,6 +594,9 @@ void each_i2c_device(
       void * accumulator,
       int    depth)
 {
+   bool debug = false;
+   assert(streq(dirname, "/sys/bus/i2c/devices"));
+   DBGMSF(debug, "dirname=|%s|, fn=|%s|", dirname, fn);
    Env_Accumulator * accum = accumulator;
    char cur_dir_name[100];
    sprintf(cur_dir_name, "%s/%s", dirname, fn);
@@ -628,6 +634,7 @@ void query_sys_bus_i2c(Env_Accumulator * accumulator) {
    else {
       char * dname = "/sys/bus/i2c/devices";
       accumulator->sysfs_i2c_devices_exist = false;
+      // each entry in /sys/bus/i2c/devices is a symbolic link
       dir_foreach(dname, NULL, each_i2c_device, accumulator, 1);
       if (!accumulator->sysfs_i2c_devices_exist)
          rpt_vstring(1, "No i2c devices found in %s", dname);
