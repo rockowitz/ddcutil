@@ -938,7 +938,7 @@ create_ddc_typed_response_packet(
                tag,
                packet_ptr_addr);
    DBGTRC(debug, TRACE_GROUP, "Create_ddc_response_packet() returned %s, *packet_ptr_addr=%p",
-                               __func__, psc_desc(rc), *packet_ptr_addr);
+                               psc_desc(rc), *packet_ptr_addr);
    if (rc == 0) {
       DDC_Packet * packet = *packet_ptr_addr;
       switch (expected_type) {
