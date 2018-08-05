@@ -680,10 +680,10 @@ void call_tuned_sleep(DDCA_IO_Mode io_mode, Sleep_Event_Type event_type) {
    bool debug = false || debug_sleep_stats_mutex;
    DBGMSF(debug, "Starting");
 
+   assert(event_type != SE_DDC_NULL);  // SE_DDC_NULL uses call_dynamic_tuned_sleep()
+
    int sleep_time_millis = 0;    // should be a default
    switch(io_mode) {
-
-   assert(event_type != SE_DDC_NULL);
 
    case DDCA_IO_I2C:
       switch(event_type) {
@@ -747,7 +747,7 @@ void call_tuned_sleep(DDCA_IO_Mode io_mode, Sleep_Event_Type event_type) {
       break;
 
    case DDCA_IO_USB:
-      printf("(%s) call_tuned_sleep() called for USB_IO\n", __func__);
+      PROGRAM_LOGIC_ERROR("call_tuned_sleep() called for USB_IO\n");
       break;
 
    }
