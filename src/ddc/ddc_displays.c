@@ -1044,7 +1044,6 @@ ddc_detect_all_displays() {
                  display_list->len, async_threshold, adlct);
    // ADL displays do not support async scan.  Not worth implementing.
    if (display_list->len >= async_threshold && adlct == 0)
-   // if (true)
       async_scan(display_list);
    else
       non_async_scan(display_list);
