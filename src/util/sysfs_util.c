@@ -188,7 +188,7 @@ char * get_i2c_device_sysfs_name(int busno) {
 
 
 /** Gets the driver name of an I2C device,
- *  i.e. the basename of /sys/bus/in2c/devices/i2c-n/device/driver/module
+ *  i.e. the basename of /sys/bus/i2c/devices/i2c-n/device/driver/module
  *
  *  \param  busno   I2C bus number
  *  \return newly allocated string containing driver name
@@ -204,10 +204,11 @@ static char * get_i2c_device_sysfs_driver(int busno) {
 
    char resolved_path[PATH_MAX];
    char * rpath = realpath(workbuf, resolved_path);
+   // printf("(%s) rpath=|%s|\n", __func__, rpath);
    if (!rpath) {
       int errsv = errno;
       if (errsv == ENOENT) {
-         // Path does not exist for amdgpu driver, perhaps others
+         // Path does not exist for amdgpu driver, nouveau on kernel 4.0 (SuSe Lean 42), perhaps others
       }
       else {
          printf("(%s) realpath(%s) returned NULL, errno=%d", __func__, workbuf, errsv);
@@ -257,7 +258,7 @@ static bool ignorable_i2c_device_sysfs_name(const char * name, const char * driv
       if (streq(driver, "nouveau")) {
          if ( !str_starts_with(name, "nvkm-") ) {
             result = true;
-            printf("(%s) name=|%s|, driver=|%s| - Ignore\n", __func__, name, driver);
+            // printf("(%s) name=|%s|, driver=|%s| - Ignore\n", __func__, name, driver);
          }
       }
    }
