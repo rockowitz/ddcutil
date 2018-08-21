@@ -202,7 +202,8 @@ Status_Errno i2c_set_addr(int file, int addr, Call_Options callopts) {
    bool force_i2c_slave_failure = false;
 #endif
    callopts |= CALLOPT_ERR_MSG;    // temporary
-   DBGMSF(debug, "file=%d, addr=0x%02x, i2c_force_slave_addr_flag=%s, callopts=%s",
+   DBGTRC(debug, TRACE_GROUP,
+                 "file=%d, addr=0x%02x, i2c_force_slave_addr_flag=%s, callopts=%s",
                  file, addr,
                  bool_repr(i2c_force_slave_addr_flag),
                  interpret_call_options_t(callopts) );
@@ -249,10 +250,9 @@ retry:
       result = -errsv;
    }
 
-   if (result || debug) {
-      printf("(%s) addr = 0x%02x. Returning %d\n", __func__, addr, result);
+   DBGTRC((result || debug), TRACE_GROUP,
+           "addr = 0x%02x. Returning %s", addr, psc_desc(result));
       // show_backtrace(1);
-   }
 
    assert(result <= 0);
    return result;
@@ -492,7 +492,7 @@ bool * i2c_detect_all_slave_addrs(int busno) {
 // static
 Status_Errno_DDC i2c_detect_ddc_addrs_by_fd(int fd, Byte * presult) {
    bool debug = false;
-   DBGMSF(debug, "Starting. fd=%d", fd);
+   DBGTRC(debug, TRACE_GROUP, "Starting. fd=%d", fd);
    assert(fd >= 0);
    unsigned char result = 0x00;
 
@@ -500,7 +500,7 @@ Status_Errno_DDC i2c_detect_ddc_addrs_by_fd(int fd, Byte * presult) {
    Byte    writebuf = {0x00};
    Status_Errno_DDC base_rc = 0;
 
-   base_rc = i2c_set_addr(fd, 0x30, CALLOPT_ERR_MSG);   // CALLOPT_ERR_MSG temporary
+   base_rc = i2c_set_addr(fd, 0x30, CALLOPT_NONE);
    if (base_rc < 0) {
       goto bye;
    }
@@ -509,7 +509,7 @@ Status_Errno_DDC i2c_detect_ddc_addrs_by_fd(int fd, Byte * presult) {
    if (base_rc == 0)
       result |= I2C_BUS_ADDR_0X30;
 
-   base_rc = i2c_set_addr(fd, 0x50, CALLOPT_ERR_MSG);   // CALLOPT_ERR_MSG temporary
+   base_rc = i2c_set_addr(fd, 0x50, CALLOPT_NONE);
    if (base_rc < 0) {
       goto bye;
    }
@@ -517,14 +517,22 @@ Status_Errno_DDC i2c_detect_ddc_addrs_by_fd(int fd, Byte * presult) {
    if (base_rc == 0)
       result |= I2C_BUS_ADDR_0X50;
 
-   base_rc = i2c_set_addr(fd, 0x37, CALLOPT_ERR_MSG);   // CALLOPT_ERR_MSG temporary
+   base_rc = i2c_set_addr(fd, 0x37, CALLOPT_NONE);
    if (base_rc < 0) {
       goto bye;
    }
-   base_rc = invoke_i2c_reader(fd, 1, &readbuf);
-   // DBGMSG("call_read() returned %d", rc);
+   // 7/2018: changed from invoke_i2c_reader() to invoke_i2c_writer()
+   //         Dell P2715Q does not always respond to read of single byte
+   base_rc = invoke_i2c_writer(fd, 1, &writebuf);
+   DBGTRC(debug, TRACE_GROUP,"invoke_i2c_writer() for slave address x37 returned %s", psc_desc(base_rc));
+   if (base_rc == 0) {
+      base_rc = invoke_i2c_reader(fd, 1, &readbuf);
+      DBGTRC(debug, TRACE_GROUP,"invoke_i2c_reader() for slave address x37 returned %s", psc_desc(base_rc));
+   }
+
    // 11/2015: DDCRC_READ_ALL_ZERO currently set only in ddc_packet_io.c:
-   if (base_rc == 0 || base_rc == DDCRC_READ_ALL_ZERO)
+   // if (base_rc == 0 || base_rc == DDCRC_READ_ALL_ZERO)
+   if (base_rc == 0)
       result |= I2C_BUS_ADDR_0X37;
 
    base_rc = 0;
@@ -535,7 +543,8 @@ bye:
 
    *presult = result;
 
-   DBGMSF(debug, "Done.  Returning base_rc=%d, *presult = 0x%02x", base_rc, *presult);
+   DBGTRC(debug, TRACE_GROUP,
+          "Done.  Returning base_rc=%s, *presult = 0x%02x", psc_desc(base_rc), *presult);
    return base_rc;
 }
 
@@ -605,8 +614,8 @@ bye:
    if (rc < 0)
       rawedid->len = 0;
 
-   DBGTRC(debug, TRACE_GROUP, "Returning %s.  edidbuf contents:", psc_desc(rc));
    if (debug || IS_TRACING()) {
+      DBGMSG("Returning %s.  edidbuf contents:", psc_desc(rc));
       buffer_dump(rawedid);
    }
    return rc;
@@ -623,7 +632,7 @@ bye:
  */
 Public_Status_Code i2c_get_parsed_edid_by_fd(int fd, Parsed_Edid ** edid_ptr_loc) {
    bool debug = false;
-   DBGTRC(debug, TRACE_GROUP, "Starting. fd=%d\n", fd);
+   DBGTRC(debug, TRACE_GROUP, "Starting. fd=%d", fd);
    Parsed_Edid * edid = NULL;
    Buffer * rawedidbuf = buffer_new(128, NULL);
 
@@ -687,7 +696,6 @@ static void i2c_check_bus(I2C_Bus_Info * bus_info) {
       DBGMSF(debug, "Probing", NULL);
       bus_info->flags |= I2C_BUS_PROBED;
 
-
       // unnecessary, bus_info is already filtered
       // probing hangs on PowerMac if i2c device is SMU
       // if (!is_ignorable_i2c_device(bus_info->busno)) {
@@ -729,12 +737,12 @@ static void i2c_check_bus(I2C_Bus_Info * bus_info) {
             if (bus_info->flags & I2C_BUS_ADDR_0X37) {
                // have seen case where laptop display reports addr 37 active, but
                // it doesn't respond to DDC
+               // 8/2017: If DDC turned off on U3011 monitor, addr x37 still detected
                // TODO: sanity check for DDC goes here
                // or make this check at a higher level, since I2c doesn't understand DDC
 
             }
    #endif
-
          }
       }
    // }
@@ -931,7 +939,7 @@ int i2c_detect_buses() {
       i2c_buses = g_ptr_array_sized_new(bva_length(i2c_bus_bva));
       for (int ndx = 0; ndx < bva_length(i2c_bus_bva); ndx++) {
          int busno = bva_get(i2c_bus_bva, ndx);
-         DBGMSF(debug, "busno = %d", busno);
+         DBGMSF(debug, "Checking busno = %d", busno);
          I2C_Bus_Info * businfo = i2c_new_bus_info(busno);
          businfo->flags = I2C_BUS_EXISTS;
          i2c_check_bus(businfo);
