@@ -839,8 +839,12 @@ void i2c_report_active_display(I2C_Bus_Info * businfo, int depth) {
    DDCA_Output_Level output_level = get_output_level();
    rpt_vstring(depth, "I2C bus:             /dev/i2c-%d", businfo->busno);
 
-   if (output_level >= DDCA_OL_NORMAL)
-   rpt_vstring(depth, "Supports DDC:        %s", bool_repr(businfo->flags & I2C_BUS_ADDR_0X37));
+   // 08/2018 Disable.
+   // Test for DDC communication is now done more sophisticatedly at the DDC level
+   // The simple X37 test can have both false positives (DDC turned off in monitor but
+   // X37 responsive), and false negatives (Dell P2715Q)
+   // if (output_level >= DDCA_OL_NORMAL)
+   // rpt_vstring(depth, "Supports DDC:        %s", bool_repr(businfo->flags & I2C_BUS_ADDR_0X37));
 
    if (output_level >= DDCA_OL_VERBOSE) {
       rpt_vstring(depth+1, "I2C address 0x30 (EDID block#)  present: %-5s", bool_repr(businfo->flags & I2C_BUS_ADDR_0X30));
@@ -1112,6 +1116,9 @@ bool bus_info_matches_selector(I2C_Bus_Info * bus_info, I2C_Bus_Selector * sel) 
 
    bool result = false;
    // does the bus represent a valid display?
+   // 8/2018: This function is called only (indirectly) from get_fallback_hidev_edid()
+   // in usb_edid.c to get the EDID for an EIZO display communicated with using USB.
+   // DISPLAY_VALID_ONLY is not set in that case.
    if (sel->options & DISPSEL_VALID_ONLY) {
       if (!(bus_info->flags & I2C_BUS_ADDR_0X37))
          goto bye;
