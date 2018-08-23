@@ -605,7 +605,11 @@ void probe_libusb(bool possible_monitors_only, int depth) {
       REPORT_LIBUSB_ERROR_NOEXIT("libusb_init", rc);
       goto bye;
    }
+#if defined(LIBUSB_API_VERSION) && (LIBUSB_API_VERSION >= 0x01000106)
+   libusb_set_option(NULL /* default context */, LIBUSB_OPTION_LOG_LEVEL, LIBUSB_LOG_LEVEL_INFO);
+#else
    libusb_set_debug(NULL /*default context*/, LIBUSB_LOG_LEVEL_INFO);
+#endif
 
    cnt = libusb_get_device_list(NULL /* default context */, &devs);
    if (cnt < 0) {
@@ -659,7 +663,11 @@ bool libusb_is_monitor_by_path(ushort busno, ushort devno, ushort intfno) {
          REPORT_LIBUSB_ERROR_NOEXIT("libusb_init", rc);
          goto bye;
       }
+#if defined(LIBUSB_API_VERSION) && (LIBUSB_API_VERSION >= 0x01000106)
+      libusb_set_option(NULL /* default context */, LIBUSB_OPTION_LOG_LEVEL, LIBUSB_LOG_LEVEL_INFO);
+#else
       libusb_set_debug(NULL /*default context*/, LIBUSB_LOG_LEVEL_INFO);
+#endif
 
       cnt = libusb_get_device_list(NULL /* default context */, &devs);
       if (cnt < 0) {
