@@ -77,8 +77,8 @@ ddc_find_display_by_edid(
 void
 ddc_dbgrpt_display_ref(Display_Ref * drec, int depth);
 
-GPtrArray *
-ddc_detect_all_displays();
+// GPtrArray *
+// ddc_detect_all_displays();
 
 void
 ddc_ensure_displays_detected();

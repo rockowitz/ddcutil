@@ -972,6 +972,7 @@ get_display_ref_for_display_identifier(
  *
  * \return array of #Display_Ref
  */
+static
 GPtrArray *
 ddc_detect_all_displays() {
    bool debug = false;
