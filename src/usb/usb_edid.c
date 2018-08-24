@@ -171,7 +171,7 @@ bye:
  */
 struct model_sn_pair *  get_eizo_model_sn_by_report(int fd) {
    bool debug = false;
-   DBGMSF0(debug, "Starting");
+   DBGMSF(debug, "Starting");
    struct model_sn_pair* result = NULL;
    Buffer * modelsn  = NULL;
    Buffer * modelsn2 = NULL;
@@ -294,7 +294,7 @@ Parsed_Edid * get_x11_edid_by_model_sn(char * model_name, char * sn_ascii) {
 
 Parsed_Edid * get_fallback_hiddev_edid(int fd, struct hiddev_devinfo * dev_info) {
    bool debug = false;
-   DBGMSF0(debug, "Starting");
+   DBGMSF(debug, "Starting");
 
    Parsed_Edid * parsed_edid = NULL;
    char * edid_source;
@@ -374,7 +374,7 @@ Parsed_Edid * get_fallback_hiddev_edid(int fd, struct hiddev_devinfo * dev_info)
 Parsed_Edid * get_hiddev_edid_with_fallback(int fd, struct hiddev_devinfo * dev_info)  {
    bool debug = false;
    if (debug) {
-      DBGMSG0("Starting");
+      DBGMSG("Starting");
       report_hiddev_devinfo(dev_info, true, 1);
    }
 
@@ -396,7 +396,7 @@ Parsed_Edid * get_hiddev_edid_with_fallback(int fd, struct hiddev_devinfo * dev_
    if (edid_buffer) {
        parsed_edid = create_parsed_edid(edid_buffer->bytes);  // copies bytes
        if (!parsed_edid) {
-          DBGMSF0(debug, "get_hiddev_edid() returned invalid EDID");
+          DBGMSF(debug, "get_hiddev_edid() returned invalid EDID");
           // if debug or verbose, dump the bad edid  ??
           // if (debug || get_output_level() >= OL_VERBOSE) {
           // }
