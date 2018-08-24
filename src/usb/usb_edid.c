@@ -128,7 +128,7 @@ struct hid_field_locator * find_eizo_model_sn_report(int fd) {
 
 bye:
    if (debug) {
-      printf("(%s) Returning: %p\n", __func__, (void*)loc);
+      DBGMSG("Returning: %p", (void*)loc);
       // if (loc)
       //    report_hid_field_locator(loc,2);
    }
@@ -213,12 +213,12 @@ struct model_sn_pair *  get_eizo_model_sn_by_report(int fd) {
 
    if (debug) {
       if (result) {
-         printf("(%s) Returning: %p -> mode=|%s|, sn=|%s|\n",
-               __func__, (void*) result, result->model, result->sn);
+         DBGMSG("Returning: %p -> mode=|%s|, sn=|%s|",
+                (void*) result, result->model, result->sn);
          // report_model_sn_pair(result, 1);
       }
       else
-         printf("(%s) Returning: %p\n", __func__, (void*) result);
+         DBGMSG("Returning: %p", (void*) result);
    }
    return result;
 }
@@ -303,7 +303,7 @@ Parsed_Edid * get_fallback_hiddev_edid(int fd, struct hiddev_devinfo * dev_info)
 
    // Special handling for Eizo monitors
    if (dev_info->vendor == 0x056d && dev_info->product == 0x0002) {   // if is EIZO monitor?
-      printf("(%s) *** Special fixup for Eizo monitor ***\n", __func__);
+      DBGMSG("*** Special fixup for Eizo monitor ***");
 
       model_sn  = get_eizo_model_sn_by_report(fd);
 
@@ -315,7 +315,7 @@ Parsed_Edid * get_fallback_hiddev_edid(int fd, struct hiddev_devinfo * dev_info)
                                   model_sn->sn,
                                   DISPSEL_NONE);
          if (bus_info) {
-            printf("(%s) Using EDID for /dev/i2c-%d\n", __func__, bus_info->busno);
+            DBGMSG("Using EDID for /dev/i2c-%d", bus_info->busno);
             parsed_edid = bus_info->edid;
             edid_source = "I2C";
             // g_strlcpy(parsed_edid->edid_source, "I2C", EDID_SOURCE_FIELD_SIZE);
