@@ -75,9 +75,9 @@ int main(int argc, char** argv) {
       dref = dinfo->dref;
 
       printf("Open the display reference, creating a display handle...\n");
-      rc = ddca_open_display(dref, &dh);
+      rc = ddca_open_display2(dref, false, &dh);
       if (rc != 0) {
-         DDC_ERRMSG("ddca_open_display", rc);
+         DDC_ERRMSG("ddca_open_display2", rc);
          continue;
       }
       printf("(%s) Opened display handle: %s\n", __func__, ddca_dh_repr(dh));

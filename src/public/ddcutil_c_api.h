@@ -189,10 +189,10 @@ char * ddca_rc_desc(DDCA_Status status_code);
  *  @param[in]  version_id  version id value
  *  @return symbolic name (do not free)
  */
-char *
 __attribute__ ((deprecated))
+char *
 ddca_mccs_version_id_name(
-      DDCA_MCCS_Version_Id  version_id) __attribute__ ((deprecated));
+      DDCA_MCCS_Version_Id  version_id);
 
 /** \deprecated
  *  Returns the descriptive name of a #DDCA_MCCS_Version_Id,
@@ -204,8 +204,8 @@ ddca_mccs_version_id_name(
  *  @remark added to replace ddca_mccs_version_id_desc() during 0.9
  *  development, but then use of DDCA_MCCS_Version_Id deprecated
  */
-char *
 __attribute__ ((deprecated))
+char *
 ddca_mccs_version_id_desc(
       DDCA_MCCS_Version_Id  version_id) ;
 
@@ -414,7 +414,7 @@ bool ddca_enable_error_info(bool enable);
  *
  *  @return list of display summaries
  */
-__attribute__ ((deprecated))
+__attribute__ ((deprecated ("use ddca_get_display_info_list2()")))
 DDCA_Display_Info_List *
 ddca_get_display_info_list(void);
 
@@ -466,13 +466,14 @@ ddca_report_display_info_list(
       int                      depth);
 
 
-/** \deprecated use #DDCA_Report_Displays()
+/** \deprecated use #ddca_report_displays()
  * Reports on all active displays.
  *  This function hooks into the code used by command "ddcutil detect"
  *
  *  @param[in] depth  logical indentation depth
  *  @return    number of MCCS capable displays
  */
+__attribute__ ((deprecated ("use ddca_report_displays()")))
 int
 ddca_report_active_displays(
       int depth);
@@ -535,12 +536,11 @@ ddca_create_adlno_display_identifier(
 
 /** Creates a display identifier using some combination of the manufacturer id,
  * model name string and serial number string.  At least 1 of the 3 must be specified.
- * @param[in]  mfg_id  3 letter manufacturer id
- * @param[in]  model   model name string
- * @param[in]  sn     serial number string
- * @param[out] did_loc   where to return display identifier handle
- * @retval 0       success
- * @retval -EINVAL no argument specified, or argument too long
+ * @param[in]  mfg_id   3 letter manufacturer id
+ * @param[in]  model    model name string
+ * @param[in]  sn       serial number string
+ * @param[out] did_loc  where to return display identifier handle
+ * @retval     0        success
  *
  * \ingroup api_display_spec
  */
@@ -552,10 +552,10 @@ ddca_create_mfg_model_sn_display_identifier(
       DDCA_Display_Identifier* did_loc);
 
 /** Creates a display identifier using a 128 byte EDID
- * @param[in]   edid  pointer to 128 byte EDID
+ * @param[in]   edid     pointer to 128 byte EDID
  * @param[out]  did_loc  where to return display identifier handle
- * @retval  0       success
- * @retval  -EINVAL edid==NULL
+ * @retval      0        success
+ * @retval      -EINVAL  edid==NULL
  *
  * \ingroup api_display_spec
  */
@@ -689,6 +689,7 @@ ddca_dbgrpt_display_ref(
  * Fails if display is already opened by another thread.
  * \ingroup api_display_spec
  */
+// __attribute__ ((deprecated ("use ddca_open_display2()")))
 DDCA_Status
 ddca_open_display(
       DDCA_Display_Ref      ddca_dref,
@@ -855,7 +856,7 @@ ddca_get_mccs_version_id(
 // Deprecated functions using DDCA_Version_Feature_Info
 
 /** \deprecated Use #ddca_get_feature_flags_by_vspec() */
-__attribute__ ((deprecated))
+__attribute__ ((deprecated ("use ddca_get_feature_flags_by_vspec()")))
 DDCA_Status
 ddca_get_feature_info_by_vcp_version(
       DDCA_Vcp_Feature_Code         feature_code,
@@ -863,7 +864,7 @@ ddca_get_feature_info_by_vcp_version(
       DDCA_Version_Feature_Info**   info_loc) ;
 
 /** \deprecated Use #ddca_get_feature_flags_by_vspec() */
-__attribute__ ((deprecated))
+__attribute__ ((deprecated ("use ddca_get_feature_flags_by_vspec()")))
 DDCA_Status
 ddca_get_feature_info_by_display(
       DDCA_Display_Handle           ddca_dh,
@@ -1037,6 +1038,7 @@ ddca_get_simple_nc_feature_value_name_by_table(
 
 
 // /** \deprecated */
+__attribute__ ((deprecated))
 DDCA_Status
 ddca_get_simple_nc_feature_value_name_by_display(
       DDCA_Display_Handle    ddca_dh,    // needed because value lookup mccs version dependent
@@ -1470,14 +1472,14 @@ ddca_set_non_table_vcp_value(
      );
 
 /** @deprecated Use #ddca_set_non_table_vcp_value() */
-__attribute__ ((deprecated))
+__attribute__ ((deprecated ("use ddca_set_non_table_vcp_value()")))
 DDCA_Status
 ddca_set_continuous_vcp_value(
       DDCA_Display_Handle      ddca_dh,
       DDCA_Vcp_Feature_Code    feature_code,
       uint16_t                 new_value);
 
-__attribute__ ((deprecated))
+__attribute__ ((deprecated ("use ddca_set_non_table_vcp_value()")))
 DDCA_Status
 ddca_set_simple_nc_vcp_value(
       DDCA_Display_Handle      ddca_dh,
