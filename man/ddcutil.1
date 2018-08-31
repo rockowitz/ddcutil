@@ -54,7 +54,7 @@ ddcutil \- Query and change monitor settings
 .RB [ "--verify | --noverify" ]
 .RB [ "-V" | "--version" ]
 .RB [ "h"  | "--help" ]
-.BR detect " | " capabilities " | " getvcp " | " probe 
+.BR detect " | " capabilities " | " scs " | " probe " | " getvcp "  
 .RI [ "feature-code" | "feature-group" ]
 .RB | setvcp 
 .I  feature-code new-value
@@ -142,6 +142,9 @@ If the monitor is not attached, nothing happens.
 .TP
 .B "environment "
 Probe the \fBddcutil\fP installation environment.
+.TP
+.B "scs "
+Issue DDC/CI Save Current Settings request.
 .TP
 .B "usbenv "
 Probe USB aspects of the \fBddcutil\fP installation environment.
