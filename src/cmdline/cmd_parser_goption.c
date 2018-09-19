@@ -616,7 +616,7 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
          strupper(token);
          // DBGMSG("token=|%s|", token);
          if (streq(token, "ALL") || streq(token, "*")) {
-            traceClasses = TRC_ALWAYS;   // 0xff
+            traceClasses = TRC_ALL;   // 0xff
          }
          else {
             // DBGMSG("token: |%s|", token);

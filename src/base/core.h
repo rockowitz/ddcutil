@@ -171,11 +171,9 @@ typedef enum {
  TRC_TOP  = 0x04,
  TRC_ENV  = 0x02,
 
- TRC_NEVER  = 0x00,
- TRC_ALWAYS = 0xff
+ TRC_NONE = 0x00,
+ TRC_ALL  = 0xff
 } Trace_Group;
-
-#define TRC_NONE TRC_NEVER
 
 Trace_Group trace_class_name_to_value(char * name);
 void set_trace_levels(Trace_Group trace_flags);
@@ -194,7 +192,7 @@ bool is_tracing(Trace_Group trace_group, const char * filename, const char * fun
 
 #define IS_TRACING_GROUP(grp) is_tracing(grp, __FILE__, __func__)
 
-#define IS_TRACING_BY_FUNC_OR_FILE() is_tracing(TRC_NEVER, __FILE__, __func__)
+#define IS_TRACING_BY_FUNC_OR_FILE() is_tracing(TRC_NONE, __FILE__, __func__)
 
 
 //

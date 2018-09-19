@@ -531,10 +531,10 @@ Trace_Group trace_class_name_to_value(char * name) {
                            name,
                            true,      // search title field
                            true,      // ignore-case
-                           TRC_NEVER);
+                           TRC_NONE);
 }
 
-static Byte trace_levels = TRC_NEVER;   // 0x00
+static Byte trace_levels = TRC_NONE;   // 0x00
 
 
 /** Specifies the trace groups to be traced.

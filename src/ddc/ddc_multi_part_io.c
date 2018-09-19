@@ -288,7 +288,7 @@ multi_part_read_with_retry(
    Buffer * accumulator = buffer_new(2048, "multi part read buffer");
 
    while (tryctr < max_multi_part_read_tries && rc < 0 && can_retry) {
-      DBGTRC(debug, TRC_NEVER,
+      DBGTRC(debug, TRC_NONE,
              "Start of while loop. try_ctr=%d, max_multi_part_read_tries=%d",
              tryctr, max_multi_part_read_tries);
 
@@ -328,7 +328,7 @@ multi_part_read_with_retry(
       tryctr++;
    }
    assert( (rc<0 && ddc_excp) || (rc==0 && !ddc_excp) );
-   DBGTRC(debug, TRC_NEVER, "After try loop. tryctr=%d, rc=%d. ddc_excp=%p",
+   DBGTRC(debug, TRC_NONE, "After try loop. tryctr=%d, rc=%d. ddc_excp=%p",
                             tryctr, rc, ddc_excp);
 
    if (debug) {
