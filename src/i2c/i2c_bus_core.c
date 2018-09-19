@@ -62,7 +62,7 @@
 
 
 // Trace class for this file
-static Trace_Group TRACE_GROUP = TRC_I2C;
+static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_I2C;
 
 /** All I2C buses.  GPtrArray of pointers to #I2C_Bus_Info */
 static GPtrArray * i2c_buses = NULL;

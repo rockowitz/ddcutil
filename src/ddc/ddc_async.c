@@ -36,7 +36,7 @@
 
 
 // Trace class for this file
-static Trace_Group TRACE_GROUP = TRC_DDC;
+static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_DDC;
 
 
 

@@ -573,7 +573,7 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
        if (debug)
           DBGMSG("tracework, argument = |%s|", tracework );
        strupper(tracework);
-       Trace_Group traceClasses = 0x00;
+       DDCA_Trace_Group traceClasses = 0x00;
 
        Null_Terminated_String_Array pieces = strsplit(tracework, ',');
        int ndx = 0;
@@ -585,7 +585,7 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
              traceClasses = 0xff;
           else {
              // DBGMSG("token: |%s|", token);
-             Trace_Group tg = trace_class_name_to_value(token);
+             DDCA_Trace_Group tg = trace_class_name_to_value(token);
              // DBGMSG("tg=0x%02x", tg);
              if (tg) {
                 traceClasses |= tg;
@@ -609,18 +609,18 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
 
 // #ifdef MULTIPLE_TRACE
    if (trace_classes) {
-      Trace_Group traceClasses = 0x00;
+      DDCA_Trace_Group traceClasses = 0x00;
       int ndx = 0;
       for (;trace_classes[ndx] != NULL; ndx++) {
          char * token = trace_classes[ndx];
          strupper(token);
          // DBGMSG("token=|%s|", token);
          if (streq(token, "ALL") || streq(token, "*")) {
-            traceClasses = TRC_ALL;   // 0xff
+            traceClasses = DDCA_TRC_ALL;   // 0xff
          }
          else {
             // DBGMSG("token: |%s|", token);
-            Trace_Group tg = trace_class_name_to_value(token);
+            DDCA_Trace_Group tg = trace_class_name_to_value(token);
             // DBGMSG("tg=0x%02x", tg);
             if (tg) {
                traceClasses |= tg;

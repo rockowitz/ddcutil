@@ -72,7 +72,7 @@
 
 
 // Trace class for this file
-static Trace_Group TRACE_GROUP = TRC_DDC;
+static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_DDC;
 
 #ifdef DEPRECATED
 // Deprecated - use all_bytes_zero() in string_util.c
@@ -791,7 +791,7 @@ ddc_write_read_with_retry(
             ddcrc_read_all_zero_ct++;
       }    // rc < 0
    }
-   DBGTRC(debug, TRC_NONE, "After try loop. tryctr=%d, psc=%d, retryable=%s",
+   DBGTRC(debug, DDCA_TRC_NONE, "After try loop. tryctr=%d, psc=%d, retryable=%s",
          tryctr, psc, bool_repr(retryable));
    if (debug) {
       for (int ndx = 0; ndx < tryctr; ndx++) {

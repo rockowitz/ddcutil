@@ -163,24 +163,24 @@ bool is_traced_file( const char * filename);
 void show_traced_files();
 
 typedef enum {
- TRC_BASE = 0x80,
- TRC_I2C  = 0x40,
- TRC_ADL  = 0x20,
- TRC_DDC  = 0x10,
- TRC_USB  = 0x08,
- TRC_TOP  = 0x04,
- TRC_ENV  = 0x02,
+ DDCA_TRC_BASE = 0x80,
+ DDCA_TRC_I2C  = 0x40,
+ DDCA_TRC_ADL  = 0x20,
+ DDCA_TRC_DDC  = 0x10,
+ DDCA_TRC_USB  = 0x08,
+ DDCA_TRC_TOP  = 0x04,
+ DDCA_TRC_ENV  = 0x02,
 
- TRC_NONE = 0x00,
- TRC_ALL  = 0xff
-} Trace_Group;
+ DDCA_TRC_NONE = 0x00,
+ DDCA_TRC_ALL  = 0xff
+} DDCA_Trace_Group;
 
-Trace_Group trace_class_name_to_value(char * name);
-void set_trace_levels(Trace_Group trace_flags);
+DDCA_Trace_Group trace_class_name_to_value(char * name);
+void set_trace_levels(DDCA_Trace_Group trace_flags);
 char * get_active_trace_group_names();
 void show_trace_groups();
 
-bool is_tracing(Trace_Group trace_group, const char * filename, const char * funcname);
+bool is_tracing(DDCA_Trace_Group trace_group, const char * filename, const char * funcname);
 
 /** Checks if tracking is currently active for the globally defined TRACE_GROUP value,
  *  current file and function.
@@ -192,7 +192,7 @@ bool is_tracing(Trace_Group trace_group, const char * filename, const char * fun
 
 #define IS_TRACING_GROUP(grp) is_tracing(grp, __FILE__, __func__)
 
-#define IS_TRACING_BY_FUNC_OR_FILE() is_tracing(TRC_NONE, __FILE__, __func__)
+#define IS_TRACING_BY_FUNC_OR_FILE() is_tracing(DDCA_TRC_NONE, __FILE__, __func__)
 
 
 //
@@ -214,10 +214,10 @@ bool enable_report_ddc_errors(bool onoff);
 bool is_report_ddc_errors_enabled();
 
 
-bool is_reporting_ddc(Trace_Group trace_group, const char * filename, const char * funcname);
+bool is_reporting_ddc(DDCA_Trace_Group trace_group, const char * filename, const char * funcname);
 #define IS_REPORTING_DDC() is_reporting_ddc(TRACE_GROUP, __FILE__, __func__)
 
-bool ddcmsg(Trace_Group trace_group, const char* funcname, const int lineno, const char* fn, char* format, ...);
+bool ddcmsg(DDCA_Trace_Group trace_group, const char* funcname, const int lineno, const char* fn, char* format, ...);
 #define DDCMSG0(format, ...) ddcmsg(TRACE_GROUP, __func__, __LINE__, __FILE__, format, ##__VA_ARGS__)
 
 /** Variant of **DDCMSG** that takes an explicit trace group as an argument.
@@ -258,7 +258,7 @@ void severemsg(
         ...);
 
 bool dbgtrc(
-        Trace_Group  trace_group,
+        DDCA_Trace_Group  trace_group,
         const char * funcname,
         const int    lineno,
         const char * fn,
@@ -348,7 +348,7 @@ void program_logic_error(
 
 #ifdef OLD
 void terminate_execution_on_error(
-        Trace_Group  trace_group,
+        DDCA_Trace_Group  trace_group,
         const char * funcname,
         const int    lineno,
         const char * fn,

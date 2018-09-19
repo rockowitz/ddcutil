@@ -72,7 +72,7 @@
 // static Trace_Group TRACE_GROUP = TRC_USB;
 // #pragma GCC diagnostic pop
 
-static Trace_Group TRACE_GROUP = TRC_USB;
+static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_USB;
 
 void usb_edid_unused_function_to_avoid_unused_variable_warning() {
    printf("0x%02x\n",TRACE_GROUP);

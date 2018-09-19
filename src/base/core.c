@@ -502,15 +502,15 @@ bool dbgtrc_show_time = false;    ///< include elapsed time in debug/trace outpu
 
 static
 Value_Name_Title_Table trace_group_table = {
-      VNT(TRC_BASE, "BASE"),
-      VNT(TRC_I2C, "I2C"),
+      VNT(DDCA_TRC_BASE, "BASE"),
+      VNT(DDCA_TRC_I2C, "I2C"),
 #ifdef HAVE_ADL
       VNT(TRC_ADL, "ADL"),
 #endif
-      VNT(TRC_DDC, "DDC"),
-      VNT(TRC_USB, "USB"),
-      VNT(TRC_TOP, "TOP"),
-      VNT(TRC_ENV, "ENV"),
+      VNT(DDCA_TRC_DDC, "DDC"),
+      VNT(DDCA_TRC_USB, "USB"),
+      VNT(DDCA_TRC_TOP, "TOP"),
+      VNT(DDCA_TRC_ENV, "ENV"),
       VNT_END
 };
 const int trace_group_ct = ARRAY_SIZE(trace_group_table)-1;
@@ -525,16 +525,16 @@ const int trace_group_ct = ARRAY_SIZE(trace_group_table)-1;
  *
  *  /ingroup dbgtrace
  */
-Trace_Group trace_class_name_to_value(char * name) {
-   return (Trace_Group) vnt_find_id(
+DDCA_Trace_Group trace_class_name_to_value(char * name) {
+   return (DDCA_Trace_Group) vnt_find_id(
                            trace_group_table,
                            name,
                            true,      // search title field
                            true,      // ignore-case
-                           TRC_NONE);
+                           DDCA_TRC_NONE);
 }
 
-static Byte trace_levels = TRC_NONE;   // 0x00
+static Byte trace_levels = DDCA_TRC_NONE;   // 0x00
 
 
 /** Specifies the trace groups to be traced.
@@ -543,7 +543,7 @@ static Byte trace_levels = TRC_NONE;   // 0x00
  *
  * @ingroup dbgtrace
  */
-void set_trace_levels(Trace_Group trace_flags) {
+void set_trace_levels(DDCA_Trace_Group trace_flags) {
    bool debug = false;
    DBGMSF(debug, "trace_flags=0x%02x\n", trace_flags);
 
@@ -703,7 +703,7 @@ void show_traced_files() {
  * @ingroup dbgtrace
  *
  */
-bool is_tracing(Trace_Group trace_group, const char * filename, const char * funcname) {
+bool is_tracing(DDCA_Trace_Group trace_group, const char * filename, const char * funcname) {
    bool result =  (trace_group == 0xff) || (trace_levels & trace_group); // is trace_group being traced?
 
    result = result || is_traced_function(funcname) || is_traced_file(filename);
@@ -789,7 +789,7 @@ bool is_report_ddc_errors_enabled() {
  *  @remark
  *  This function is normally wrapped in function **IS_REPORTING_DDC()**
  */
-bool is_reporting_ddc(Trace_Group trace_group, const char * filename, const char * funcname) {
+bool is_reporting_ddc(DDCA_Trace_Group trace_group, const char * filename, const char * funcname) {
   bool result = (is_tracing(trace_group,filename, funcname) ||
 #ifdef PER_THREAD
         is_report_ddc_errors_enabled()
@@ -814,7 +814,7 @@ bool is_reporting_ddc(Trace_Group trace_group, const char * filename, const char
  *
  * Normally, invocation of this function is wrapped in macro DDCMSG.
  */
-bool ddcmsg(Trace_Group  trace_group,
+bool ddcmsg(DDCA_Trace_Group  trace_group,
             const char * funcname,
             const int    lineno,
             const char * filename,
@@ -924,7 +924,7 @@ void severemsg(
  *  @return **true** if message was output, **false** if not
  */
 bool dbgtrc(
-        Trace_Group  trace_group,
+        DDCA_Trace_Group  trace_group,
         const char * funcname,
         const int    lineno,
         const char * filename,
@@ -1130,7 +1130,7 @@ void program_logic_error_fatal(
  *  @ingroup output_redirection
  */
 void terminate_execution_on_error(
-        Trace_Group   trace_group,
+        DDCA_Trace_Group   trace_group,
         const char * funcname,
         const int    lineno,
         const char * filename,

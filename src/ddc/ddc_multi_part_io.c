@@ -53,7 +53,7 @@
 
 // Trace management
 
-static Trace_Group TRACE_GROUP = TRC_DDC;
+static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_DDC;
 
 
 // Retry management and statistics
@@ -174,7 +174,7 @@ try_multi_part_read(
    int  cur_offset = 0;
    bool complete   = false;
    while (!complete && !excp) {         // loop over fragments
-      DBGTRC(debug, TRC_NONE, "Top of fragment loop", NULL);
+      DBGTRC(debug, DDCA_TRC_NONE, "Top of fragment loop", NULL);
 
       int fragment_size;
       update_ddc_multi_part_read_request_packet_offset(request_packet_ptr, cur_offset);
@@ -193,7 +193,7 @@ try_multi_part_read(
            &response_packet_ptr
           );
       psc = (excp) ? excp->status_code : 0;
-      DBGTRC(debug, TRC_NONE,
+      DBGTRC(debug, DDCA_TRC_NONE,
              "ddc_write_read_with_retry() request_type=0x%02x, request_subtype=0x%02x, returned %s",
              request_type, request_subtype, errinfo_summary(excp));
 
@@ -216,17 +216,17 @@ try_multi_part_read(
 
       int display_current_offset = aux_data_ptr->fragment_offset;
       if (display_current_offset != cur_offset) {
-         DBGTRC(debug, TRC_NONE,
+         DBGTRC(debug, DDCA_TRC_NONE,
                 "display_current_offset %d != cur_offset %d", display_current_offset, cur_offset);
          psc = DDCRC_MULTI_PART_READ_FRAGMENT;
          excp = errinfo_new(psc, __func__);
          COUNT_STATUS_CODE(psc);
       }
       else {
-         DBGTRC(debug, TRC_NONE, "display_current_offset = %d matches cur_offset", display_current_offset);
+         DBGTRC(debug, DDCA_TRC_NONE, "display_current_offset = %d matches cur_offset", display_current_offset);
 
          fragment_size = aux_data_ptr->fragment_length;         // ***
-         DBGTRC(debug, TRC_NONE, "fragment_size = %d", fragment_size);
+         DBGTRC(debug, DDCA_TRC_NONE, "fragment_size = %d", fragment_size);
          if (fragment_size == 0) {
             complete = true;   // redundant
          }
@@ -288,7 +288,7 @@ multi_part_read_with_retry(
    Buffer * accumulator = buffer_new(2048, "multi part read buffer");
 
    while (tryctr < max_multi_part_read_tries && rc < 0 && can_retry) {
-      DBGTRC(debug, TRC_NONE,
+      DBGTRC(debug, DDCA_TRC_NONE,
              "Start of while loop. try_ctr=%d, max_multi_part_read_tries=%d",
              tryctr, max_multi_part_read_tries);
 
@@ -328,7 +328,7 @@ multi_part_read_with_retry(
       tryctr++;
    }
    assert( (rc<0 && ddc_excp) || (rc==0 && !ddc_excp) );
-   DBGTRC(debug, TRC_NONE, "After try loop. tryctr=%d, rc=%d. ddc_excp=%p",
+   DBGTRC(debug, DDCA_TRC_NONE, "After try loop. tryctr=%d, rc=%d. ddc_excp=%p",
                             tryctr, rc, ddc_excp);
 
    if (debug) {

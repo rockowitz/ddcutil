@@ -84,7 +84,7 @@ void * GetProcAddress(void * pLibrary, const char * name) {
 // Module globals
 //
 
-static Trace_Group TRACE_GROUP        = TRC_ADL;  // trace class for this file
+static DDCA_Trace_Group TRACE_GROUP        = DDCA_TRC_ADL;  // trace class for this file
 static bool        module_initialized = false;
 static bool        adl_linked         = false;;
 

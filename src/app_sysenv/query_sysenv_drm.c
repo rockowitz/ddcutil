@@ -63,7 +63,7 @@
 #include "query_sysenv_drm.h"
 
 // Trace class for this file
-static Trace_Group TRACE_GROUP = TRC_ENV;
+static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_ENV;
 
 #ifdef REF  // local copy for reference
 #define DRM_BUS_PCI   0

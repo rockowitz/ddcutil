@@ -56,7 +56,7 @@
 
 
 // Trace class for this file
-static Trace_Group TRACE_GROUP = TRC_USB;  // may be unused if all diagnostics turned off
+static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_USB;  // may be unused if all diagnostics turned off
 
 // n. #pragma GCC diagnostic ignored "-Wunused-variable" not working
 void usb_core_unused_function_to_avoid_unused_variable_warning() {

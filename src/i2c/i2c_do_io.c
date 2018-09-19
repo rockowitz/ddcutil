@@ -42,7 +42,7 @@
 
 
 // Trace class for this file
-static Trace_Group TRACE_GROUP = TRC_I2C;
+static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_I2C;
 
 
 I2C_IO_Strategy  i2c_file_io_strategy = {

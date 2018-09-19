@@ -50,7 +50,7 @@
 // Trace control
 //
 
-Trace_Group TRACE_GROUP = TRC_DDC;
+DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_DDC;
 
 
 //
