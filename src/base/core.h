@@ -164,7 +164,7 @@ void show_traced_files();
 
 DDCA_Trace_Group trace_class_name_to_value(char * name);
 void set_trace_levels(DDCA_Trace_Group trace_flags);
-char * get_active_trace_group_names();
+// char * get_active_trace_group_names();  // unimplemented
 void show_trace_groups();
 
 bool is_tracing(DDCA_Trace_Group trace_group, const char * filename, const char * funcname);
