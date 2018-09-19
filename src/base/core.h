@@ -162,19 +162,6 @@ void add_traced_file(const char * filename);
 bool is_traced_file( const char * filename);
 void show_traced_files();
 
-typedef enum {
- DDCA_TRC_BASE = 0x80,
- DDCA_TRC_I2C  = 0x40,
- DDCA_TRC_ADL  = 0x20,
- DDCA_TRC_DDC  = 0x10,
- DDCA_TRC_USB  = 0x08,
- DDCA_TRC_TOP  = 0x04,
- DDCA_TRC_ENV  = 0x02,
-
- DDCA_TRC_NONE = 0x00,
- DDCA_TRC_ALL  = 0xff
-} DDCA_Trace_Group;
-
 DDCA_Trace_Group trace_class_name_to_value(char * name);
 void set_trace_levels(DDCA_Trace_Group trace_flags);
 char * get_active_trace_group_names();
