@@ -566,6 +566,25 @@ ddca_set_timeout_millis(
 
 
 //
+// Tracing
+//
+
+void ddca_add_traced_function(const char * funcname) {
+   add_traced_function(funcname);
+}
+
+
+void ddca_add_traced_file(const char * filename) {
+   add_traced_file(filename);
+}
+
+
+void ddca_set_trace_groups(DDCA_Trace_Group trace_flags) {
+   set_trace_levels(trace_flags);
+}
+
+
+//
 // Statistics
 //
 

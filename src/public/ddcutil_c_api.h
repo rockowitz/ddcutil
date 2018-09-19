@@ -376,6 +376,34 @@ bool ddca_is_report_ddc_errors_enabled(void);
 
 
 //
+// Tracing
+//
+
+/** Turn on tracing for a specific function.
+ *
+ *  \param  funcname   function name
+ *
+ *  \remark
+ *  The function must include trace calls.
+ */
+void ddca_add_traced_function(const char * funcname);
+
+
+/** Turn on all tracing in a specific source file.
+ *
+ *  \param filename  simple file name, with or without the ".c" extension,
+ *                   e.g. vcp_feature_set.c, vcp_feature_set
+ */
+void ddca_add_traced_file(const char * filename);
+
+
+/* Specify one or more trace groups.
+ *
+ *  \param trace_flags  bitfield indicating groups to trace
+ */
+void ddca_set_trace_groups(DDCA_Trace_Group trace_flags);
+
+//
 // Statistics and Diagnostics
 //
 // Statistics are global to all threads.
