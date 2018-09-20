@@ -137,7 +137,6 @@ typedef enum {
 // Tracing
 //
 
-
 //! Trace Control
 //!
 //! Used as bitflags to specify multiple trace types
