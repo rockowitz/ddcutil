@@ -139,16 +139,17 @@ typedef enum {
 //
 
 typedef enum {
- DDCA_TRC_BASE = 0x80,
- DDCA_TRC_I2C  = 0x40,
- DDCA_TRC_ADL  = 0x20,
- DDCA_TRC_DDC  = 0x10,
- DDCA_TRC_USB  = 0x08,
- DDCA_TRC_TOP  = 0x04,
- DDCA_TRC_ENV  = 0x02,
+ DDCA_TRC_BASE =   0x80,
+ DDCA_TRC_I2C  =   0x40,
+ DDCA_TRC_ADL  =   0x20,
+ DDCA_TRC_DDC  =   0x10,
+ DDCA_TRC_USB  =   0x08,
+ DDCA_TRC_TOP  =   0x04,
+ DDCA_TRC_ENV  =   0x02,
+ DDCA_TRC_API  =   0x01,
 
- DDCA_TRC_NONE = 0x00,
- DDCA_TRC_ALL  = 0xff
+ DDCA_TRC_NONE = 0x0000,
+ DDCA_TRC_ALL  = 0xffff
 } DDCA_Trace_Group;
 
 
