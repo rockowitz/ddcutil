@@ -751,7 +751,11 @@ bye:
    if (file >= 0)
       i2c_close_bus(file, bus_info->busno,  CALLOPT_ERR_MSG);
 
-   DBGTRC(debug, TRACE_GROUP, "Done. flags=0x%02x", bus_info->flags );
+   // DBGTRC(debug, TRACE_GROUP, "Done. flags=0x%02x", bus_info->flags );
+   if (debug || IS_TRACING() ) {
+      DBGMSG("Done. flags=0x%02x", bus_info->flags );
+      i2c_dbgrpt_bus_info(bus_info, 1);
+   }
 }
 
 
@@ -808,7 +812,6 @@ void i2c_dbgrpt_bus_info(I2C_Bus_Info * bus_info, int depth) {
    DBGMSF(debug, "bus_info=%p", bus_info);
    assert(bus_info);
 
-   // rpt_nl();
    rpt_vstring(depth, "Bus /dev/i2c-%d found:    %s", bus_info->busno, bool_repr(bus_info->flags&I2C_BUS_EXISTS));
    rpt_vstring(depth, "Bus /dev/i2c-%d probed:   %s", bus_info->busno, bool_repr(bus_info->flags&I2C_BUS_PROBED ));
    if ( bus_info->flags & I2C_BUS_PROBED ) {
@@ -936,7 +939,7 @@ int i2c_device_count() {
 
 int i2c_detect_buses() {
    bool debug = false;
-   DBGMSF(debug, "Starting.  i2c_buses = %p", i2c_buses);
+   DBGTRC(debug, DDCA_TRC_I2C, "Starting.  i2c_buses = %p", i2c_buses);
    if (!i2c_buses) {
       Byte_Value_Array i2c_bus_bva = get_i2c_device_numbers_using_udev(false);
       // TODO: set free function
@@ -947,21 +950,21 @@ int i2c_detect_buses() {
          I2C_Bus_Info * businfo = i2c_new_bus_info(busno);
          businfo->flags = I2C_BUS_EXISTS;
          i2c_check_bus(businfo);
-         if (debug)
-            i2c_dbgrpt_bus_info(businfo, 0);
+         // if (debug || IS_TRACING() )
+         //    i2c_dbgrpt_bus_info(businfo, 0);
          g_ptr_array_add(i2c_buses, businfo);
       }
       bva_free(i2c_bus_bva);
    }
    int result = i2c_buses->len;
-   DBGMSF(debug, "Returning: %d", result);
+   DBGTRC(debug, DDCA_TRC_I2C, "Returning: %d", result);
    return result;
 }
 
 
 I2C_Bus_Info * detect_single_bus(int busno) {
    bool debug = false;
-   DBGMSF(debug, "Starting.  busno = %d", busno);
+   DBGTRC(debug, DDCA_TRC_I2C, "Starting.  busno = %d", busno);
    I2C_Bus_Info * businfo = NULL;
 
    if (i2c_device_exists(busno) ) {
@@ -972,7 +975,7 @@ I2C_Bus_Info * detect_single_bus(int busno) {
          i2c_dbgrpt_bus_info(businfo, 0);
    }
 
-   DBGMSF(debug, "Done.  busnp=%d, returning: %p", busno, businfo);
+   DBGTRC(debug, DDCA_TRC_I2C, "Done.  busno=%d, returning: %p", busno, businfo);
    return businfo;
 }
 

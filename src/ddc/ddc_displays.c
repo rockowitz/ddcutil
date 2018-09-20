@@ -70,8 +70,8 @@
 #include "ddc/ddc_displays.h"
 
 
-// Trace class for this file
-// static Trace_Group TRACE_GROUP = TRC_DDC;   // currently unused
+// Default race class for this file
+static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_DDC;
 
 
 static GPtrArray * all_displays = NULL;    // all detected displays
@@ -265,16 +265,15 @@ bool initial_checks_by_dh_old(Display_Handle * dh) {
  */
 bool initial_checks_by_dh(Display_Handle * dh) {
    bool debug = false;
-   DBGMSF(debug, "Starting. dh=%s", dh_repr_t(dh));
+   DBGTRC(debug, TRACE_GROUP, "Starting. dh=%s", dh_repr_t(dh));
    assert(dh);
    Single_Vcp_Value * pvalrec;
 
    if (!(dh->dref->flags & DREF_DDC_COMMUNICATION_CHECKED)) {
-
       Public_Status_Code psc = 0;
       Error_Info * ddc_excp = ddc_get_vcp_value(dh, 0x00, DDCA_NON_TABLE_VCP_VALUE, &pvalrec);
       psc = (ddc_excp) ? ddc_excp->status_code : 0;
-      DBGMSF(debug, "get_vcp_value() for feature 0x00 returned: %s", psc_desc(psc));
+      DBGTRC(debug, TRACE_GROUP, "ddc_get_vcp_value() for feature 0x00 returned: %s", psc_desc(psc));
       if (psc == DDCRC_RETRIES && debug)
          DBGMSG("    Try errors: %s", errinfo_causes_string(ddc_excp));
       if (ddc_excp)
@@ -305,7 +304,7 @@ bool initial_checks_by_dh(Display_Handle * dh) {
       // }
    // }
 
-   DBGMSF(debug, "Returning: %s", bool_repr(communication_working));
+   DBGTRC(debug, TRACE_GROUP, "Returning: %s", bool_repr(communication_working));
    return communication_working;
 }
 
@@ -566,7 +565,7 @@ ddc_report_display_by_dref(Display_Ref * dref, int depth) {
 int
 ddc_report_displays(bool include_invalid_displays, int depth) {
    bool debug = false;
-   DBGMSF0(debug, "Starting");
+   DBGMSF(debug, "Starting");
 
    ddc_ensure_displays_detected();
 
@@ -795,7 +794,7 @@ bye:
  */
 void async_scan(GPtrArray * all_displays) {
    bool debug = false;
-   DBGMSF(debug, "Starting. all_displays=%p, display_count=%d", all_displays, all_displays->len);
+   DBGTRC(debug, TRACE_GROUP, "Starting. all_displays=%p, display_count=%d", all_displays, all_displays->len);
 
    GPtrArray * threads = g_ptr_array_new();
    for (int ndx = 0; ndx < all_displays->len; ndx++) {
@@ -814,7 +813,7 @@ void async_scan(GPtrArray * all_displays) {
       GThread * thread = g_ptr_array_index(threads, ndx);
       g_thread_join(thread);  // implicitly unrefs the GThread
    }
-   DBGMSF0(debug, "Threads joined");
+   DBGMSF(debug, "Threads joined");
    g_ptr_array_free(threads, true);
 
 #ifdef OLD
@@ -829,12 +828,13 @@ void async_scan(GPtrArray * all_displays) {
       }
    }
 #endif
-   DBGMSF0(debug, "Done");
+   DBGTRC(debug, TRACE_GROUP, "Done");
 }
+
 
 void non_async_scan(GPtrArray * all_displays) {
    bool debug = false;
-   DBGMSF(debug, "Starting. checking %d displays", all_displays->len);
+   DBGTRC(debug, TRACE_GROUP, "Starting. checking %d displays", all_displays->len);
 
    for (int ndx = 0; ndx < all_displays->len; ndx++) {
       Display_Ref * dref = g_ptr_array_index(all_displays, ndx);
@@ -850,7 +850,7 @@ void non_async_scan(GPtrArray * all_displays) {
       }
 #endif
    }
-   DBGMSF0(debug, "Done");
+   DBGTRC(debug, TRACE_GROUP, "Done");
 }
 
 
@@ -883,7 +883,7 @@ ddc_find_display_ref_by_criteria(Display_Criteria * criteria) {
 Display_Ref *
 ddc_find_display_ref_by_display_identifier(Display_Identifier * did) {
    bool debug = false;
-   DBGMSF0(debug, "Starting");
+   DBGMSF(debug, "Starting");
    if (debug)
       dbgrpt_display_identifier(did, 1);
 
@@ -923,7 +923,7 @@ ddc_find_display_ref_by_display_identifier(Display_Identifier * did) {
 
    // Is this the best location in the call chain to make this check?
    if (result && (result->dispno < 0)) {
-      DBGMSF0(debug, "Found a display that doesn't support DDC.  Ignoring.");
+      DBGMSF(debug, "Found a display that doesn't support DDC.  Ignoring.");
       result = NULL;
    }
 
@@ -976,7 +976,7 @@ static
 GPtrArray *
 ddc_detect_all_displays() {
    bool debug = false;
-   DBGMSF0(debug, "Starting");
+   DBGTRC(debug, TRACE_GROUP, "Starting");
 
    GPtrArray * display_list = g_ptr_array_new();
 
@@ -1071,7 +1071,7 @@ ddc_detect_all_displays() {
    //    DBGMSG("Displays detected:");
    //    report_display_recs(display_list, 1);
    // }
-   DBGMSF(debug, "Done. Detected %d valid displays", dispno_max);
+   DBGTRC(debug, TRACE_GROUP, "Done. Detected %d valid displays", dispno_max);
    return display_list;
 }
 

@@ -1083,7 +1083,7 @@ ddca_get_display_info_list2(
       DDCA_Display_Info_List**  dlist_loc)
 {
    bool debug = false;
-   DBGMSF0(debug, "Starting");
+   DBGTRC(debug, DDCA_TRC_API||DDCA_TRC_DDC, "Starting");
 
    ddc_ensure_displays_detected();
    GPtrArray * all_displays = ddc_get_all_displays();
@@ -1162,9 +1162,10 @@ ddca_get_display_info_list2(
       }
    }
 
-   DBGMSF(debug, "Done. Returning %p", result_list);
-   if (debug)
+   if (debug || IS_TRACING_GROUP( DDCA_TRC_API||DDCA_TRC_DDC )) {
+      DBGMSG("Done. Returning %p", result_list);
       ddca_report_display_info_list(result_list, 2);
+   }
 
    *dlist_loc = result_list;
    return 0;
