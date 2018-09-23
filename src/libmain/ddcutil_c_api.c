@@ -1919,7 +1919,7 @@ ddca_feature_name_by_version_id(
 
 
 DDCA_Status
-ddca_feature_name_by_dref(
+ddca_get_feature_name_by_dref(
       DDCA_Vcp_Feature_Code  feature_code,
       DDCA_Display_Ref       ddca_dref,
       char **                name_loc)
