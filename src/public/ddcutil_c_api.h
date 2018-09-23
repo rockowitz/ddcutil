@@ -1031,10 +1031,10 @@ ddca_get_feature_name(DDCA_Vcp_Feature_Code feature_code);
  * @param[in]  dref          display reference
  * @return     pointer to feature name (do not free), NULL if unknown feature code
  *
- * @since 0.9.0
+ * @since 0.9.2
  */
 DDCA_Status
-ddca_feature_name_by_dref(
+ddca_get_feature_name_by_dref(
       DDCA_Vcp_Feature_Code  feature_code,
       DDCA_Display_Ref       dref,
       char **                name_loc);
