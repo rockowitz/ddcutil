@@ -34,7 +34,10 @@
 #include <stdbool.h>
 /** \endcond */
 
-int    file_getlines(const char * fn, GPtrArray* line_array, bool verbose);
+#include "error_info.h"
+
+int file_getlines(const char * fn, GPtrArray* line_array, bool verbose);
+Error_Info * file_getlines_errinfo(const char *  filename, GPtrArray *   lines);
 char * file_get_first_line(const char * fn, bool verbose);
 
 int

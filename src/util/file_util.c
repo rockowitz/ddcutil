@@ -95,6 +95,39 @@ int file_getlines(const char * fn,  GPtrArray* line_array, bool verbose) {
 }
 
 
+/** Reads the lines of a text file into a GPtrArray, returning a #Error_Info struct
+ *  if an error occurs.
+ *
+ *  @param  fn          file name
+ *  @param  lines       pointer to GPtrArray of strings where lines will be saved
+ *
+ *  @return NULL if success, newly allocated #Error_Info struct if error
+ *
+ *  The caller is responsible for freeing the lines added to line_array.
+ *
+ *  @todo
+ *  Consider reimplementing with modified code of file_getlines(), to return more granular #Error_Info
+ */
+Error_Info *
+file_getlines_errinfo(
+      const char *  filename,
+      GPtrArray *   lines)
+{
+   Error_Info * errs = NULL;
+
+   int rc = file_getlines(filename,  lines, false);
+   if (rc < 0) {
+      char * detail = g_strdup_printf("Error reading file %s", filename);
+      errs = errinfo_new2(
+            rc,
+            __func__,
+            detail);
+      free(detail);
+   }
+   return errs;
+}
+
+
 typedef struct {
    char **  lines;
    int      size;

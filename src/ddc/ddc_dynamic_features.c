@@ -175,7 +175,7 @@ get_feature_metadata(
  *  on the XDG search path.
  *
  *  \param simple_fn  simple filename, without ".mccs" suffix
- *  \return name of file found (caller must free)
+ *  \return fully qualified name of file found, NULL if not found (caller must free)
  */
 static
 char *
@@ -214,7 +214,8 @@ find_feature_def_file(
    return result;
 }
 
-
+#ifdef OLD
+// refactored to file_getlines_errinfo()
 // reads a feature definition file into an array of text lines
 Error_Info *
 read_feature_definition_file(
@@ -235,6 +236,7 @@ read_feature_definition_file(
    }
    return errs;
 }
+#endif
 
 
 Error_Info *
@@ -252,7 +254,8 @@ dfr_load_by_edid(
    if (fqfn) {
       // read file into GPtrArray * lines
       GPtrArray * lines = g_ptr_array_new();
-      errs = read_feature_definition_file(fqfn, lines);
+      // errs = read_feature_definition_file(fqfn, lines);
+      errs = file_getlines_errinfo(fqfn, lines);
 
       if (!errs) {
          errs = create_monitor_dynamic_features(
