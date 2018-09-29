@@ -154,7 +154,6 @@ dfr_get(
 }
 
 
-
 /* static */ DDCA_Feature_Metadata *
 get_feature_metadata(
       GHashTable * features,
@@ -168,14 +167,14 @@ get_feature_metadata(
 }
 
 
-
-
-
 /** Look for feature definition file in the current directory and
  *  on the XDG search path.
  *
  *  \param simple_fn  simple filename, without ".mccs" suffix
  *  \return fully qualified name of file found, NULL if not found (caller must free)
+ *
+ *  \remark
+ *  Consider generalizing, moving to file_util.c
  */
 static
 char *
