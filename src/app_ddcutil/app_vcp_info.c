@@ -22,5 +22,3 @@
  * </endcopyright>
  */
 
-
-#include "app_vcp_info.h"

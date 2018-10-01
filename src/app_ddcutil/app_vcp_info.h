@@ -27,4 +27,5 @@
 
 
 
+
 #endif /* APP_VCP_INFO_H_ */

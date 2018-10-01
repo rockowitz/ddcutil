@@ -24,6 +24,6 @@
 #ifndef APP_DYNAMIC_FEATURES_H_
 #define APP_DYNAMIC_FEATURES_H_
 
-
+void check_dynamic_features(Display_Ref * dref);
 
 #endif /* APP_DYNAMIC_FEATURES_H_ */

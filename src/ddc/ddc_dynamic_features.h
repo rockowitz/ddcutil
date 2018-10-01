@@ -26,7 +26,9 @@
 #include "util/error_info.h"
 #include "base/displays.h"
 
+bool enable_dynamic_features;
+
 Error_Info * dfr_check_by_dref(Display_Ref * dref);
-void check_dynamic_features(Display_Ref * dref);
+
 
 #endif /* DDC_DYNAMIC_FEATURES_H_ */
