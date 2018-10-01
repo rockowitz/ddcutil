@@ -65,9 +65,9 @@ Value_Name_Table vcp_subset_table = {
       VNT(VCP_SUBSET_CONT,            "CONT"),
       VNT(VCP_SUBSET_SNC,             "SNC"),
       VNT(VCP_SUBSET_CNC,             "CNC"),
-      VNT(VCP_SUBSET_NC,               "NC"),
-      VNT(VCP_SUBSET_NC_WO,            "NC_WO"),
-      VNT(VCP_SUBSET_NC_CONT,          "NC_CONT"),
+      VNT(VCP_SUBSET_NC,              "NC"),
+      VNT(VCP_SUBSET_NC_WO,           "NC_WO"),
+      VNT(VCP_SUBSET_NC_CONT,         "NC_CONT"),
 
       // special handling
       VNT(VCP_SUBSET_SCAN,            "SCAN"),
@@ -77,8 +77,9 @@ Value_Name_Table vcp_subset_table = {
 
       VNT(VCP_SUBSET_MFG,             "MFG"),
 
-      VNT(VCP_SUBSET_SINGLE_FEATURE,   NULL),
-      VNT(VCP_SUBSET_NONE,             NULL),
+      VNT(VCP_SUBSET_DYNAMIC,         "USER"),
+      VNT(VCP_SUBSET_SINGLE_FEATURE,  NULL),
+      VNT(VCP_SUBSET_NONE,            NULL),
       VNT_END
 };
 

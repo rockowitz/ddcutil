@@ -210,6 +210,7 @@ create_feature_set(
             break;
          case VCP_SUBSET_SCAN:    // will never happen, inserted to avoid compiler warning
          case VCP_SUBSET_MFG:     // will never happen
+         case VCP_SUBSET_DYNAMIC: // will never happen
          case VCP_SUBSET_SINGLE_FEATURE:
          case VCP_SUBSET_NONE:
             break;
