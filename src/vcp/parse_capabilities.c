@@ -61,89 +61,6 @@ char* test_cap_strings[] = {
 
 
 //
-// Report parsed data structures
-//
-
-static void report_commands(Byte_Value_Array cmd_ids, int depth) {
-   rpt_label(depth, "Commands:");
-   int ct = bva_length(cmd_ids);
-   int ndx = 0;
-   for (; ndx < ct; ndx++) {
-      Byte hval = bva_get(cmd_ids, ndx);
-      rpt_vstring(depth+1, "Command: %02x (%s)", hval, ddc_cmd_code_name(hval));
-   }
-}
-
-
-static void report_features(
-      GPtrArray*             features,     // GPtrArray of Capabilities_Feature_Record
-      DDCA_MCCS_Version_Spec vcp_version)
-{
-   bool debug = false;
-   int d0 = 0;
-   int d1 = 1;
-
-   rpt_label(d0, "VCP Features:");
-   int ct = features->len;
-   int ndx;
-   for (ndx=0; ndx < ct; ndx++) {
-      Capabilities_Feature_Record * vfr = g_ptr_array_index(features, ndx);
-      DBGMSF(debug, "vfr = %p", vfr);
-      report_capabilities_feature(vfr, vcp_version, d1);
-   }
-}
-
-
-/** Reports the Parsed_Capabilities struct for human consumption.
- *
- * @param pcaps pointer to ***Parsed_Capabilities***
- *
- * Output is written to the current stdout device.
- */
-void report_parsed_capabilities(
-      Parsed_Capabilities*     pcaps,
-      DDCA_Monitor_Model_Key * mmid,    // not currently used
-      int                      depth)
-{
-   bool debug = false;
-   assert(pcaps && memcmp(pcaps->marker, PARSED_CAPABILITIES_MARKER, 4) == 0);
-   DBGMSF(debug, "Starting. pcaps->raw_cmds_segment_seen=%s, pcaps->commands=%p, pcaps->vcp_features=%p",
-          bool_repr(pcaps->raw_cmds_segment_seen), pcaps->commands, pcaps->vcp_features);
-
-   int d0 = depth;
-   // int d1 = d0+1;
-   DDCA_Output_Level output_level = get_output_level();
-   if (output_level >= DDCA_OL_VERBOSE) {
-      rpt_vstring(d0, "%s capabilities string: %s",
-                      (pcaps->raw_value_synthesized) ? "Synthesized unparsed" : "Unparsed",
-                      pcaps->raw_value);
-   }
-   bool damaged = false;
-   rpt_vstring(d0, "MCCS version: %s",
-                   (pcaps->mccs_version_string) ? pcaps->mccs_version_string : "not present");
-
-   if (pcaps->commands)
-      report_commands(pcaps->commands, d0);
-   else {
-      // not an error in the case of USB_IO, as the capabilities string was
-      // synthesized and does not include a commands segment
-      // also, HP LP2480zx does not have cmds segment
-      if (pcaps->raw_cmds_segment_seen)
-         damaged = true;
-   }
-   if (pcaps->vcp_features)
-      report_features(pcaps->vcp_features, pcaps->parsed_mccs_version);
-   else {
-      // handle pathological case of 0 length capabilities string, e.g. Samsung S32D850T
-      if (pcaps->raw_vcp_features_seen)
-         damaged = true;
-   }
-   if (damaged)
-      rpt_label(d0, "Capabilities string not completely parsed");
-}
-
-
-//
 // Lifecycle
 //
 
@@ -331,11 +248,11 @@ static Byte_Value_Array parse_cmds_segment(
       f0printf(ferr(), "Error processing commands list: %.*s\n", len, start);
    }
    // report_id_array(cmd_ids, "Command ids found:");
-   if (debug) {
-      // report_cmd_array(cmd_ids);
-      DBGMSG("store_bytehex_list returned %d", ok);
-      report_commands(cmd_ids2, 1);
-   }
+   // if (debug) {
+   //    // report_cmd_array(cmd_ids);
+   //    DBGMSG("store_bytehex_list returned %d", ok);
+   //    report_commands(cmd_ids2, 1);
+   // }
    Byte_Value_Array result = (ok) ? cmd_ids2 : NULL;
    DBGMSF(debug, "returning %p", result);
    return result;
@@ -446,10 +363,10 @@ static GPtrArray * parse_vcp_segment(
       if (valid_feature) {
          Capabilities_Feature_Record * vfr =
                new_capabilities_feature(cur_feature_id, value_start, value_len);
-         if (debug) {
-            DDCA_MCCS_Version_Spec dummy_version = {0,0};
-            report_capabilities_feature(vfr, dummy_version, 1);
-         }
+         // if (debug) {
+         //    DDCA_MCCS_Version_Spec dummy_version = {0,0};
+         //    report_capabilities_feature(vfr, dummy_version, 1);
+         // }
          g_ptr_array_add(vcp_array, vfr);
       }
    }

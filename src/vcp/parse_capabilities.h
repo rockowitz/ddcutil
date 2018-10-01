@@ -56,10 +56,7 @@ typedef struct {
 
 Parsed_Capabilities* parse_capabilities_buffer(Buffer * capabilities);
 Parsed_Capabilities* parse_capabilities_string(char * capabilities);
-void                 report_parsed_capabilities(
-                         Parsed_Capabilities*    pcaps,
-                         DDCA_Monitor_Model_Key* mmid,
-                         int                     depth);
+
 void                 free_parsed_capabilities(Parsed_Capabilities * pcaps);
 Byte_Bit_Flags       parsed_capabilities_feature_ids(Parsed_Capabilities * pcaps, bool readable_only);
 

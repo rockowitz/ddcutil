@@ -33,6 +33,7 @@ ddc_dumpload.c              \
 ddc_multi_part_io.c         \
 ddc_output.c                \
 ddc_packet_io.c             \
+ddc_parsed_capabilities.c   \
 ddc_read_capabilities.c     \
 ddc_services.c              \
 ddc_strategy.c              \

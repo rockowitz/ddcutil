@@ -56,9 +56,5 @@ Capabilities_Feature_Record * new_capabilities_feature(
 void free_capabilities_feature(
       Capabilities_Feature_Record * vfr);
 
-void report_capabilities_feature(
-      Capabilities_Feature_Record * vfr,
-      DDCA_MCCS_Version_Spec        vcp_version,
-      int                           depth);
 
 #endif /* PARSED_CAPABILITIES_H */
