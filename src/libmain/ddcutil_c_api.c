@@ -29,6 +29,7 @@
 
 /** \cond */
 #include <assert.h>
+#include <base/ddc_dynamic_features.h>
 #include <errno.h>
 #include <string.h>
 /** \endcond */
@@ -63,7 +64,6 @@
 #include "ddc/ddc_async.h"
 #include "ddc/ddc_displays.h"
 #include "ddc/ddc_dumpload.h"
-#include "ddc/ddc_dynamic_features.h"
 #include "ddc/ddc_multi_part_io.h"
 #include "ddc/ddc_output.h"
 #include "ddc/ddc_packet_io.h"

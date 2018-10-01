@@ -31,6 +31,7 @@
 #include <config.h>
 
 #include <assert.h>
+#include <base/ddc_dynamic_features.h>
 #include <ctype.h>
 #include <errno.h>
 #include <setjmp.h>
@@ -68,7 +69,6 @@
 #include "usb/usb_displays.h"
 
 #include "ddc/ddc_displays.h"
-#include "ddc/ddc_dynamic_features.h"
 #include "ddc/ddc_multi_part_io.h"
 #include "ddc/ddc_output.h"
 #include "ddc/ddc_packet_io.h"

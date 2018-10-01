@@ -30,7 +30,6 @@ ddc_async.c                 \
 ddc_displays.c              \
 ddc_display_lock.c          \
 ddc_dumpload.c              \
-ddc_dynamic_features.c      \
 ddc_multi_part_io.c         \
 ddc_output.c                \
 ddc_packet_io.c             \

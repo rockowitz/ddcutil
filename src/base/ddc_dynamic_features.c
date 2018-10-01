@@ -25,6 +25,7 @@
 #include <ctype.h>
 
 #include <assert.h>
+#include <base/ddc_dynamic_features.h>
 #include <stddef.h>
 #include <glib-2.0/glib.h>
 #include <string.h>
@@ -45,7 +46,6 @@
 #include "base/dynamic_features.h"
 #include "base/monitor_model_key.h"
 
-#include "ddc/ddc_dynamic_features.h"
 
 
 /* static */ bool enable_dynamic_features = true;
