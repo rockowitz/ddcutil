@@ -1260,6 +1260,7 @@ ddca_report_display_info_list(
 }
 
 
+// deprecated
 DDCA_Status
 ddca_get_edid_by_dref(
       DDCA_Display_Ref ddca_dref,
@@ -2068,6 +2069,7 @@ ddca_get_simple_nc_feature_value_name_by_vspec(
 }
 
 
+// deprecated
 DDCA_Status
 ddca_get_simple_nc_feature_value_name_by_display(
       DDCA_Display_Handle    ddca_dh,    // needed because value lookup mccs version dependent
@@ -3177,8 +3179,8 @@ ddca_dfr_check_by_dref(DDCA_Display_Ref * ddca_dref) {
       {
          free_thread_error_detail();
          Error_Info * ddc_excp = dfr_check_by_dref(dref);
-         psc = (ddc_excp) ? ddc_excp->status_code : 0;
          if (ddc_excp) {
+            psc = ddc_excp->status_code;
             save_thread_error_detail(error_info_to_ddca_detail(ddc_excp));
             errinfo_free(ddc_excp);
          }
