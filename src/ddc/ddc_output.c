@@ -56,12 +56,14 @@
 
 #include "vcp/parse_capabilities.h"
 
+#include "ddc/ddc_feature_set.h"
+
 #include "ddc/ddc_multi_part_io.h"
 #include "ddc/ddc_packet_io.h"
 #include "ddc/ddc_vcp.h"
 #include "ddc/ddc_vcp_version.h"
 
-#include <ddc/ddc_output.h>
+#include "ddc/ddc_output.h"
 
 
 // Trace class for this file
@@ -365,11 +367,11 @@ collect_raw_subset_values(
    Public_Status_Code psc = 0;
    bool debug = false;
    DBGMSF(debug, "Starting.  subset=%d  dh=%s", subset, dh_repr(dh) );
-   DDCA_MCCS_Version_Spec vcp_version = get_vcp_version_by_display_handle(dh);
+   // DDCA_MCCS_Version_Spec vcp_version = get_vcp_version_by_display_handle(dh);
    // DBGMSG("VCP version = %d.%d", vcp_version.major, vcp_version.minor);
-   VCP_Feature_Set feature_set = create_feature_set(
+   VCP_Feature_Set feature_set = ddc_create_feature_set(
                                      subset,
-                                     vcp_version,
+                                     dh->dref,          // vcp_version,
                                      FSF_NOTABLE);
                                 //   false);      // exclude_table_features
    if (debug)
@@ -693,11 +695,11 @@ show_vcp_values(
       free(s0);
    }
 
-   DDCA_MCCS_Version_Spec vcp_version = get_vcp_version_by_display_handle(dh);
+   // DDCA_MCCS_Version_Spec vcp_version = get_vcp_version_by_display_handle(dh);
    // DBGMSG("VCP version = %d.%d", vcp_version.major, vcp_version.minor);
-   VCP_Feature_Set feature_set = create_feature_set(
+   VCP_Feature_Set feature_set = ddc_create_feature_set(
                                     subset,
-                                    vcp_version,
+                                    dh->dref,   // vcp_version,
                                     flags);
                                //   flags & FSF_NOTABLE);
 #ifdef FUTURE

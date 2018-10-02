@@ -148,6 +148,11 @@ VCP_Feature_Table_Entry *
 vcp_get_feature_table_entry(int ndx);
 
 VCP_Feature_Table_Entry *
+vcp_create_dynamic_feature(
+      DDCA_Vcp_Feature_Code   id,
+      DDCA_Feature_Metadata * dynamic_metadata);
+
+VCP_Feature_Table_Entry *
 vcp_create_dummy_feature_for_hexid(
       DDCA_Vcp_Feature_Code id);
 

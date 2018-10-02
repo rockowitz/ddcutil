@@ -206,10 +206,10 @@ const int subset_table_ct = sizeof(subset_table)/sizeof(Feature_Subset_Table_Ent
 
 char * assemble_command_argument_help() {
    // quick and dirty check that tables are in sync
-   // +2 for VCP_SUBSET_SINGLE_FEATURE, VCP_SUBSET_NONE
+   // +3 for VCP_SUBSET_SINGLE_FEATURE, VCP_SUBSET_NONE, VCP_SUBSET_DYNAMIC
    // -1 for double VCP_SUBSET_KNOWN
    // -1 for double VCP_SUBSET_MFG
-   assert(subset_table_ct+(2-1-1) == vcp_subset_count);
+   assert(subset_table_ct+(3-1-1) == vcp_subset_count);
 
    GString * buf = g_string_sized_new(1000);
    g_string_append(buf,

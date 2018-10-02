@@ -61,6 +61,8 @@
 
 #include "adl/adl_shim.h"
 
+#include "ddc/ddc_feature_set.h"
+
 #include "ddc/ddc_async.h"
 #include "ddc/ddc_parsed_capabilities.h"
 #include "ddc/ddc_displays.h"
@@ -1454,6 +1456,7 @@ ddca_get_feature_list_by_dref(
    WITH_DR(
          ddca_dref,
          {
+#ifdef OLD
                DDCA_MCCS_Version_Spec vspec = get_vcp_version_by_display_ref(ddca_dref);
 
                psc = ddca_get_feature_list(
@@ -1461,6 +1464,53 @@ ddca_get_feature_list_by_dref(
                      vspec,               // dref->vcp_version,
                      include_table_features,
                      p_feature_list);
+#endif
+               bool debug = false;
+               DBGMSF(debug, "Starting. feature_subset_id=%d, dref=%s, include_table_features=%s, p_feature_list=%p",
+                      feature_set_id, dref_repr_t(dref), bool_repr(include_table_features), p_feature_list);
+
+               DDCA_MCCS_Version_Spec vspec = dref->vcp_version;
+               // Whether a feature is a table feature can vary by version, so can't
+               // specify VCP_SPEC_ANY to request feature ids in any version
+               if (!vcp_version_is_valid(vspec, /* allow unknown */ false)) {
+                  psc = -EINVAL;
+                  ddca_feature_list_clear(p_feature_list);
+                  goto bye;
+               }
+               VCP_Feature_Subset subset = VCP_SUBSET_NONE;  // pointless initialization to avoid compile warning
+               switch (feature_set_id) {
+               case DDCA_SUBSET_KNOWN:
+                  subset = VCP_SUBSET_KNOWN;
+                  break;
+               case DDCA_SUBSET_COLOR:
+                  subset = VCP_SUBSET_COLOR;
+                  break;
+               case DDCA_SUBSET_PROFILE:
+                  subset = VCP_SUBSET_PROFILE;
+                  break;
+               case DDCA_SUBSET_MFG:
+                  subset = VCP_SUBSET_MFG;
+                  break;
+               case DDCA_SUBSET_UNSET:
+                  subset = VCP_SUBSET_NONE;
+                  break;
+               }
+               Feature_Set_Flags flags = 0x00;
+               if (!include_table_features)
+                  flags |= FSF_NOTABLE;
+               VCP_Feature_Set fset = ddc_create_feature_set(subset, dref, flags);
+               // VCP_Feature_Set fset = create_feature_set(subset, vspec, !include_table_features);
+
+               // TODO: function variant that takes result location as a parm, avoid memcpy
+               DDCA_Feature_List result = feature_list_from_feature_set(fset);
+               memcpy(p_feature_list, &result, 32);
+               free_vcp_feature_set(fset);
+
+            bye:
+               DBGMSF(debug, "Done. Returning: %s", psc_desc(psc));
+               if (debug)
+                  rpt_hex_dump((Byte*) p_feature_list, 32, 1);
+
          }
       );
 }

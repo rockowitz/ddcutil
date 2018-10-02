@@ -76,6 +76,11 @@ bool format_feature_detail_sl_lookup(
         DDCA_MCCS_Version_Spec  vcp_version,
         char *                  buffer,
         int                     bufsz);
+bool format_feature_detail_sl_byte(
+        Nontable_Vcp_Value *     code_info,
+        DDCA_MCCS_Version_Spec   vcp_version,
+        char *                   buffer,
+        int                      bufsz);
 
 
 //
@@ -1358,6 +1363,38 @@ vcp_get_feature_table_entry(int ndx) {
    // DBGMSG("ndx=%d, vcp_code_count=%d  ", ndx, vcp_code_count );
    assert( 0 <= ndx && ndx < vcp_feature_code_count);
    return &vcp_code_table[ndx];
+}
+
+
+VCP_Feature_Table_Entry *
+vcp_create_dynamic_feature(
+      DDCA_Vcp_Feature_Code   id,
+      DDCA_Feature_Metadata * dynamic_metadata)
+{
+   DBGMSG("Starting. id=0x%02x", id);
+   VCP_Feature_Table_Entry * pentry = vcp_new_feature_table_entry(id);
+   pentry->v20_name = dynamic_metadata->feature_name;
+   pentry->desc = dynamic_metadata->feature_desc;
+
+   pentry->v20_flags = dynamic_metadata->feature_flags;
+   if (pentry->v20_flags & DDCA_SIMPLE_NC) {
+      if (dynamic_metadata->sl_values) {
+         pentry->nontable_formatter = format_feature_detail_sl_lookup;
+         pentry->default_sl_values = dynamic_metadata->sl_values;   // need to copy?
+      }
+      else {
+         pentry->nontable_formatter = format_feature_detail_sl_byte;
+      }
+   }
+   else if (pentry->v20_flags & DDCA_STD_CONT) {
+      pentry->nontable_formatter = format_feature_detail_standard_continuous;
+   }
+   else {
+      // 3/2018: complex cont may not work for API callers
+      pentry->nontable_formatter = format_feature_detail_debug_bytes;
+   }
+   pentry->vcp_global_flags = DDCA_SYNTHETIC;   // indicates caller should free
+   return pentry;
 }
 
 

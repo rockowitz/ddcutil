@@ -74,6 +74,19 @@ void free_vcp_feature_set(VCP_Feature_Set fset) {
    }
 }
 
+VCP_Feature_Set
+create_feature_set0(
+      VCP_Feature_Subset   subset_id,
+      GPtrArray *          members)
+{
+   struct vcp_feature_set * fset = calloc(1,sizeof(struct vcp_feature_set));
+   memcpy(fset->marker, VCP_FEATURE_SET_MARKER, 4);
+   fset->subset = subset_id;
+   fset->members = members;
+   return fset;
+}
+
+
 
 /** Given a feature set id for a named feature set (i.e. other than
  *  #VCP_Subset_Single_Feature), creates a #VCP_Feature_Set containing
