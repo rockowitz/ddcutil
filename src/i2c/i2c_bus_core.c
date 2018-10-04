@@ -44,6 +44,7 @@
 #include "util/file_util.h"
 #include "util/report_util.h"
 #include "util/string_util.h"
+#include "util/subprocess_util.h"
 #include "util/sysfs_util.h"
 #include "util/udev_i2c_util.h"
 #include "util/utilrpt.h"
@@ -405,6 +406,33 @@ void i2c_report_functionality_flags(long functionality, int maxline, int depth) 
 // I2C Bus Inspection - Slave Addresses
 //
 
+
+bool is_edp_device(int busno) {
+   bool debug = true;
+   // DBGMSF(debug, "Starting.  busno=%d", busno);
+   bool result = false;
+
+   char cmd[100];
+   snprintf(cmd, 100, "ls /sys/class/drm/card*/card*/i2c-%d", busno);
+   // DBGMSG("cmd: %s", cmd);
+
+   GPtrArray * lines = execute_shell_cmd_collect(cmd);
+
+   for (int ndx = 0; ndx < lines->len; ndx++) {
+      char * s = g_ptr_array_index(lines, ndx);
+      // DBGMSG("s: %s", s);
+      if (strstr(s, "-eDP-")) {
+         // DBGMSG("Found");
+         result = true;
+         break;
+      }
+   }
+
+   DBGMSF(debug, "busno=%d, returning: %s", busno, sbool(result));
+   return result;
+}
+
+
 #ifdef UNUSED
 /* Checks each address on an I2C bus to see if a device exists.
  * The bus device has already been opened.
@@ -699,6 +727,8 @@ static void i2c_check_bus(I2C_Bus_Info * bus_info) {
    if (!(bus_info->flags & I2C_BUS_PROBED)) {
       DBGMSF(debug, "Probing", NULL);
       bus_info->flags |= I2C_BUS_PROBED;
+
+      is_edp_device(bus_info->busno);
 
       // unnecessary, bus_info is already filtered
       // probing hangs on PowerMac if i2c device is SMU
