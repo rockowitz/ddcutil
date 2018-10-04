@@ -16,7 +16,7 @@
 /* core.c
  *
  * <copyright>
- * Copyright (C) 2014-2017 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2014-2018 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -307,6 +307,7 @@ void ddc_abort(
 #endif
       // no point setting global_failure_information, we're outta here
       f0puts("Terminating execution.\n", FERR);
+      fflush(FERR);
       exit(EXIT_FAILURE);     // or return status?
 #ifdef OBSOLETE
    }
@@ -406,6 +407,7 @@ print_simple_title_value(int    offset_start_to_title,
             offset_start_to_title,"",
             offset_title_start_to_value, title,
             value);
+   fflush(fout());
 }
 
 
@@ -833,6 +835,7 @@ bool ddcmsg(DDCA_Trace_Group  trace_group,
          f0printf(fout(), "(%s) DDC: %s\n", funcname, buffer);
       else
          f0printf(fout(), "DDC: %s\n", buffer);
+      fflush(fout());
       va_end(args);
    }
    return result;
@@ -901,6 +904,7 @@ void severemsg(
       vsnprintf(buffer, 200, format, args);
       snprintf(buf2, 250, "(%s) %s\n", funcname, buffer);
       f0puts(buf2, ferr());
+      fflush(ferr());
       va_end(args);
 }
 
@@ -965,6 +969,7 @@ bool dbgtrc(
       else
          snprintf(buf2, bufsz+60, "(%s) %s\n", funcname, buffer);
       f0puts(buf2, fout());    // no automatic terminating null
+      fflush(fout());
       msg_emitted = true;
    }
 
@@ -1027,6 +1032,7 @@ void report_ioctl_error(
    int errsv = errno;
    f0printf(ferr(), "(%s) Error in ioctl(%s), errno=%s\n",
            funcname, ioctl_name, linux_errno_desc(errnum) );
+   fflush(ferr());
    errno = errsv;
 }
 
@@ -1068,6 +1074,7 @@ void program_logic_error(
   f0puts(buf2,   f);
   f0puts(buffer, f);
   f0puts("\n",   f);
+  fflush(f);
 }
 
 
