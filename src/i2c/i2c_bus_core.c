@@ -531,6 +531,7 @@ Status_Errno_DDC i2c_detect_ddc_addrs_by_fd(int fd, Byte * presult) {
       DBGTRC(debug, TRACE_GROUP,"invoke_i2c_reader() for slave address x37 returned %s", psc_desc(base_rc));
    }
 #endif
+   base_rc = 0;
    DBGMSG("Skipping probe of slave address x37.  Setting flag I2C_BUS_ADDR_X37");
 
    // 11/2015: DDCRC_READ_ALL_ZERO currently set only in ddc_packet_io.c:
