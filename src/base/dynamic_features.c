@@ -1,32 +1,20 @@
-/* dynamic_features.c
- *
- * <copyright>
- * Copyright (C) 2018 Sanford Rockowitz <rockowitz@minsoft.com>
- *
- * Licensed under the GNU General Public License Version 2
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
- * </endcopyright>
+// dynamic_features.c
+
+// Copyright (C) 2018 Sanford Rockowitz <rockowitz@minsoft.com>
+// SPDX-License-Identifier: GPL-2.0-or-later
+
+/** \file
+ * Dynamic Feature Record definition, creation, destruction, and conversion
  */
 
 #define _GNU_SOURCE      // for asprintf()
 
+/** \cond */
 #include <assert.h>
 #include <ctype.h>
 #include <stdio.h>
 #include <string.h>
+/** \endcond */
 
 #include "ddcutil_status_codes.h"
 #include "ddcutil_types.h"
@@ -217,8 +205,6 @@ free_feature_metadata(
    info->marker[3] = 'x';
    free(info);
 }
-
-
 
 
 Dynamic_Features_Rec *

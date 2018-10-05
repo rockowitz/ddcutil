@@ -3,7 +3,11 @@
 // Copyright (C) 2018 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
+/** \file
+ *  Maintain dynamic feature records
+ */
 
+/** \cond */
 #include <ctype.h>
 
 #include <assert.h>
@@ -22,6 +26,7 @@
 #include "util/glib_util.h"
 #include "util/string_util.h"
 #include "util/file_util.h"
+/** \endcond */
 
 #include "base/core.h"
 #include "base/displays.h"
@@ -314,7 +319,5 @@ bye:
    }
    return errs;
 }
-
-
 
 
