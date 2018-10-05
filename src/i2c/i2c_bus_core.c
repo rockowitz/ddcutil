@@ -428,7 +428,7 @@ bool is_edp_device(int busno) {
       }
    }
 
-   DBGMSF(debug, "busno=%d, returning: %s", busno, sbool(result));
+   DBGTRC(debug, TRACE_GROUP, "busno=%d, returning: %s", busno, sbool(result));
    return result;
 }
 
@@ -525,9 +525,10 @@ Status_Errno_DDC i2c_detect_ddc_addrs_by_fd(int fd, Byte * presult) {
    unsigned char result = 0x00;
 
    Byte    readbuf;  //  1 byte buffer
-   Byte    writebuf = {0x00};
+   // Byte    writebuf = {0x00};
    Status_Errno_DDC base_rc = 0;
 
+#ifdef DISABLE
    base_rc = i2c_set_addr(fd, 0x30, CALLOPT_NONE);
    if (base_rc < 0) {
       goto bye;
@@ -536,6 +537,9 @@ Status_Errno_DDC i2c_detect_ddc_addrs_by_fd(int fd, Byte * presult) {
    // DBGMSG("invoke_i2c_writer() returned %s", psc_desc(rc));
    if (base_rc == 0)
       result |= I2C_BUS_ADDR_0X30;
+#else
+   DBGMSG("Skipping probe of slave address x30.");
+#endif
 
    base_rc = i2c_set_addr(fd, 0x50, CALLOPT_NONE);
    if (base_rc < 0) {
@@ -558,9 +562,10 @@ Status_Errno_DDC i2c_detect_ddc_addrs_by_fd(int fd, Byte * presult) {
       base_rc = invoke_i2c_reader(fd, 1, &readbuf);
       DBGTRC(debug, TRACE_GROUP,"invoke_i2c_reader() for slave address x37 returned %s", psc_desc(base_rc));
    }
-#endif
+#else
    base_rc = 0;
    DBGMSG("Skipping probe of slave address x37.  Setting flag I2C_BUS_ADDR_X37");
+#endif
 
    // 11/2015: DDCRC_READ_ALL_ZERO currently set only in ddc_packet_io.c:
    // if (base_rc == 0 || base_rc == DDCRC_READ_ALL_ZERO)
@@ -728,7 +733,11 @@ static void i2c_check_bus(I2C_Bus_Info * bus_info) {
       DBGMSF(debug, "Probing", NULL);
       bus_info->flags |= I2C_BUS_PROBED;
 
-      is_edp_device(bus_info->busno);
+      bool b = is_edp_device(bus_info->busno);
+      if (b) {
+         DBGMSG("Skipping eDP device");
+         goto bye;
+      }
 
       // unnecessary, bus_info is already filtered
       // probing hangs on PowerMac if i2c device is SMU
