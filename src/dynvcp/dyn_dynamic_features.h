@@ -1,11 +1,9 @@
-// ddc_dynamic_features.h
-
-// Copyright (C) 2018 Sanford Rockowitz <rockowitz@minsoft.com>
-// SPDX-License-Identifier: GPL-2.0-or-later
-
-/** \file
+/** \file dyn_dynamic_features.h
+ *
  *  Maintain dynamic feature records
  */
+// Copyright (C) 2018 Sanford Rockowitz <rockowitz@minsoft.com>
+// SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef DYN_DYNAMIC_FEATURES_H_
 #define DYN_DYNAMIC_FEATURES_H_

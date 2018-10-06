@@ -1,16 +1,17 @@
-/** @file ddc_feature_set.c
+/** @file dyn_feature_set.c
  */
 
 // Copyright (C) 2018 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-#include <dynvcp/dyn_feature_set.h>
 #include "base/displays.h"
 #include "base/feature_sets.h"
 
+#include "dynvcp/dyn_feature_set.h"
+
 
 VCP_Feature_Set
-ddc_create_feature_set(
+dyn_create_feature_set(
       VCP_Feature_Subset     subset_id,
       DDCA_Display_Ref       dref,
      // DDCA_MCCS_Version_Spec vcp_version,
@@ -88,7 +89,7 @@ ddc_create_feature_set(
 
 
 VCP_Feature_Set
-ddc_create_single_feature_set_by_hexid(Byte feature_code, DDCA_Display_Ref dref, bool force) {
+dyn_create_single_feature_set_by_hexid(Byte feature_code, DDCA_Display_Ref dref, bool force) {
    VCP_Feature_Set result = NULL;
 
     Display_Ref * dref2 = (Display_Ref *) dref;
@@ -110,7 +111,7 @@ ddc_create_single_feature_set_by_hexid(Byte feature_code, DDCA_Display_Ref dref,
 
 
 VCP_Feature_Set
-ddc_create_feature_set_from_feature_set_ref(
+dyn_create_feature_set_from_feature_set_ref(
    Feature_Set_Ref *       fsref,
    // DDCA_MCCS_Version_Spec  vcp_version,
    DDCA_Display_Ref        dref,
@@ -119,10 +120,10 @@ ddc_create_feature_set_from_feature_set_ref(
 {
    VCP_Feature_Set result = NULL;
    if (fsref->subset == VCP_SUBSET_SINGLE_FEATURE) {
-      result = ddc_create_single_feature_set_by_hexid(fsref->specific_feature, dref, flags & FSF_FORCE);
+      result = dyn_create_single_feature_set_by_hexid(fsref->specific_feature, dref, flags & FSF_FORCE);
    }
    else {
-      result = ddc_create_feature_set(fsref->subset, dref, flags);
+      result = dyn_create_feature_set(fsref->subset, dref, flags);
    }
    return result;
 }

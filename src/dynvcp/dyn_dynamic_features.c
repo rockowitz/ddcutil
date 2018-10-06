@@ -1,4 +1,4 @@
-/** @file ddc_dynamic_features.c
+/** @file dyn_dynamic_features.c
  *
  *  Maintain user-defined (aka dynamic) feature definitions
  */

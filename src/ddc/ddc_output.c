@@ -497,7 +497,7 @@ collect_raw_subset_values(
    DBGMSF(debug, "Starting.  subset=%d  dh=%s", subset, dh_repr(dh) );
    // DDCA_MCCS_Version_Spec vcp_version = get_vcp_version_by_display_handle(dh);
    // DBGMSG("VCP version = %d.%d", vcp_version.major, vcp_version.minor);
-   VCP_Feature_Set feature_set = ddc_create_feature_set(
+   VCP_Feature_Set feature_set = dyn_create_feature_set(
                                      subset,
                                      dh->dref,          // vcp_version,
                                      FSF_NOTABLE);
@@ -971,7 +971,7 @@ show_vcp_values(
 
    // DDCA_MCCS_Version_Spec vcp_version = get_vcp_version_by_display_handle(dh);
    // DBGMSG("VCP version = %d.%d", vcp_version.major, vcp_version.minor);
-   VCP_Feature_Set feature_set = ddc_create_feature_set(
+   VCP_Feature_Set feature_set = dyn_create_feature_set(
                                     subset,
                                     dh->dref,   // vcp_version,
                                     flags);

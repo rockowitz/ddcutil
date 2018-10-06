@@ -1,4 +1,4 @@
-/** @file ddc_feature_set.h
+/** @file dyn_feature_set.h
  */
 
 // Copyright (C) 2014-2018 Sanford Rockowitz <rockowitz@minsoft.com>
@@ -26,7 +26,7 @@
 
 
 VCP_Feature_Set
-ddc_create_feature_set(
+dyn_create_feature_set(
       VCP_Feature_Subset     subset,
       DDCA_Display_Ref       dref,
       // DDCA_MCCS_Version_Spec vcp_version,
@@ -37,7 +37,7 @@ ddc_create_feature_set(
 // ddc_create_single_feature_set_by_vcp_entry(VCP_Feature_Table_Entry * vcp_entry);
 
 VCP_Feature_Set
-ddc_create_single_feature_set_by_hexid(Byte id, DDCA_Display_Ref dref, bool force);
+dyn_create_single_feature_set_by_hexid(Byte id, DDCA_Display_Ref dref, bool force);
 
 // VCP_Feature_Table_Entry *
 // get_feature_set_entry(VCP_Feature_Set feature_set, unsigned index);
@@ -51,7 +51,7 @@ ddc_create_single_feature_set_by_hexid(Byte id, DDCA_Display_Ref dref, bool forc
 // void report_feature_set(VCP_Feature_Set feature_set, int depth);
 
 VCP_Feature_Set
-ddc_create_feature_set_from_feature_set_ref(
+dyn_create_feature_set_from_feature_set_ref(
    Feature_Set_Ref *       fsref,
    // DDCA_MCCS_Version_Spec  vcp_version,
    DDCA_Display_Ref        dref,
