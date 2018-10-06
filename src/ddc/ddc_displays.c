@@ -62,7 +62,7 @@
 #include "usb/usb_displays.h"
 #endif
 
-#include "dynvcp/ddc_dynamic_features.h"
+#include <dynvcp/dyn_dynamic_features.h>
 
 #include "ddc/ddc_packet_io.h"
 #include "ddc/ddc_vcp.h"

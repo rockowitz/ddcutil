@@ -10,6 +10,7 @@
 #include <ctype.h>
 
 #include <assert.h>
+#include <dynvcp/dyn_dynamic_features.h>
 #include <stddef.h>
 #include <glib-2.0/glib.h>
 #include <string.h>
@@ -31,7 +32,6 @@
 #include "base/dynamic_features.h"
 #include "base/monitor_model_key.h"
 
-#include "dynvcp/ddc_dynamic_features.h"
 
 // Default trace class for this file
 static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_UDF;

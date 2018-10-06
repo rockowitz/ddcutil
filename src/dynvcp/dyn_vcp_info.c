@@ -8,12 +8,12 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include <assert.h>
+#include <dynvcp/dyn_vcp_info.h>
 
 #include "util/report_util.h"
 #include "base/displays.h"
 #include "vcp/vcp_feature_codes.h"
 
-#include "dynvcp/ddc_vcp_info.h"
 
 void
 dbgrpt_internal_feature_metadata(

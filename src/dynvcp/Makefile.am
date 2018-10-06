@@ -24,7 +24,7 @@ CLEANFILES = \
 noinst_LTLIBRARIES = libdynvcp.la
 
 libdynvcp_la_SOURCES =         \
-ddc_feature_set.c           \
-ddc_parsed_capabilities.c   \
-ddc_vcp_info.c              \
-ddc_dynamic_features.c
+dyn_feature_set.c           \
+dyn_parsed_capabilities.c   \
+dyn_vcp_info.c              \
+dyn_dynamic_features.c

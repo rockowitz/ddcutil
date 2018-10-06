@@ -11,6 +11,8 @@
 
 #include "ddcutil_types.h"
 
+#include "private/ddcutil_types_private.h"
+
 // #include "util/data_structures.h"
 
 // #include "base/core.h"
@@ -18,7 +20,7 @@
 // #include "base/dynamic_features.h"
 // #include "base/vcp_version.h"
 
-#include "vcp/parsed_capabilities_feature.h"
+// #include "vcp/parsed_capabilities_feature.h"
 #include "vcp/parse_capabilities.h"
 
 

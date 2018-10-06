@@ -8,6 +8,7 @@
 
 /** \cond */
 #include <assert.h>
+#include <dynvcp/dyn_parsed_capabilities.h>
 
 #include <glib.h>
 #include <stdbool.h>
@@ -29,7 +30,6 @@
 #include "vcp/parse_capabilities.h"
 #include "vcp/parsed_capabilities_feature.h"
 
-#include "ddc_parsed_capabilities.h"
 
 
 // From parsed_capabiliies_feature.c:

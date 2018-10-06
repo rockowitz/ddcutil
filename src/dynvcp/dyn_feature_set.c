@@ -4,10 +4,10 @@
 // Copyright (C) 2018 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
+#include <dynvcp/dyn_feature_set.h>
 #include "base/displays.h"
 #include "base/feature_sets.h"
 
-#include  "ddc_feature_set.h"
 
 VCP_Feature_Set
 ddc_create_feature_set(

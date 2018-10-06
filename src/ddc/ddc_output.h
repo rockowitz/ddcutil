@@ -24,6 +24,7 @@
 #ifndef DDC_OUTPUT_H_
 #define DDC_OUTPUT_H_
 
+#include <dynvcp/dyn_vcp_info.h>
 #include <glib.h>
 #include <stdio.h>
 #include <time.h>
@@ -36,7 +37,6 @@
 #include "vcp/vcp_feature_set.h"
 #include "vcp/vcp_feature_values.h"
 
-#include "dynvcp/ddc_vcp_info.h"
 
 // TODO: Should probably be in a more general location
 // Standard printf format strings for reporting feature codes values.

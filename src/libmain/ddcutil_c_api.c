@@ -29,6 +29,9 @@
 
 /** \cond */
 #include <assert.h>
+#include <dynvcp/dyn_dynamic_features.h>
+#include <dynvcp/dyn_feature_set.h>
+#include <dynvcp/dyn_parsed_capabilities.h>
 #include <errno.h>
 #include <string.h>
 /** \endcond */
@@ -57,10 +60,6 @@
 #include "vcp/parsed_capabilities_feature.h"
 #include "vcp/vcp_feature_codes.h"
 #include "vcp/vcp_feature_values.h"
-
-#include "dynvcp/ddc_dynamic_features.h"
-#include "dynvcp/ddc_feature_set.h"
-#include "dynvcp/ddc_parsed_capabilities.h"
 
 #include "adl/adl_shim.h"
 

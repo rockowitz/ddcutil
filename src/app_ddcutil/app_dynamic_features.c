@@ -5,6 +5,7 @@
 
 /** \cond */
 #include <assert.h>
+#include <dynvcp/dyn_dynamic_features.h>
 #include <stddef.h>
 #include <string.h>
 
@@ -18,8 +19,6 @@
 #include "base/core.h"
 #include "base/dynamic_features.h"
 #include "base/monitor_model_key.h"
-
-#include "dynvcp/ddc_dynamic_features.h"
 
 #include "app_dynamic_features.h"
 

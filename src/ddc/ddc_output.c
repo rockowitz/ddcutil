@@ -56,8 +56,8 @@
 
 #include "vcp/parse_capabilities.h"
 
-#include "dynvcp/ddc_feature_set.h"
-#include "dynvcp/ddc_vcp_info.h"
+#include <dynvcp/dyn_feature_set.h>
+#include <dynvcp/dyn_vcp_info.h>
 
 #include "ddc/ddc_multi_part_io.h"
 #include "ddc/ddc_packet_io.h"

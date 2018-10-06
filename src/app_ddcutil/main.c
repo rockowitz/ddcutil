@@ -32,6 +32,8 @@
 
 #include <assert.h>
 #include <ctype.h>
+#include <dynvcp/dyn_dynamic_features.h>
+#include <dynvcp/dyn_parsed_capabilities.h>
 #include <errno.h>
 #include <setjmp.h>
 #include <stdbool.h>
@@ -59,9 +61,6 @@
 
 #include "vcp/parse_capabilities.h"
 #include "vcp/vcp_feature_codes.h"
-
-#include "dynvcp/ddc_dynamic_features.h"
-#include "dynvcp/ddc_parsed_capabilities.h"
 
 #include "i2c/i2c_bus_core.h"
 #include "i2c/i2c_do_io.h"
