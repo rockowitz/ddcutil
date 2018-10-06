@@ -1,32 +1,10 @@
-/* vcp_feature_codes.h
+/** @file vcp_feature_codes.h
  *
- * Contains tables describing VCP feature codes, and functions to interpret
- * those tables.
- *
- * <copyright>
- * Copyright (C) 2014-2017 Sanford Rockowitz <rockowitz@minsoft.com>
- *
- * Licensed under the GNU General Public License Version 2
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
- * </endcopyright>
+ *  Tables describing VCP feature codes and functions to interpret those tables
  */
 
-/** \f
- *  VCP Feature Code Table and related functions
- */
+// Copyright (C) 2014-2018 Sanford Rockowitz <rockowitz@minsoft.com>
+// SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef VCP_FEATURE_CODES_H_
 #define VCP_FEATURE_CODES_H_
@@ -38,11 +16,42 @@
 #include "util/string_util.h"
 
 #include "base/core.h"
+#include "base/displays.h"
 #include "base/ddc_packets.h"
 #include "base/feature_sets.h"
 
 #include "vcp/vcp_feature_values.h"
 
+
+bool default_table_feature_detail_function(
+        Buffer *                data,
+        DDCA_MCCS_Version_Spec  vcp_version,
+        char**                  presult);
+bool format_feature_detail_debug_continuous(
+        Nontable_Vcp_Value *    code_info,
+        DDCA_MCCS_Version_Spec  vcp_version,
+        char *                  buffer,
+        int                     bufsz);
+bool format_feature_detail_debug_bytes(
+        Nontable_Vcp_Value *    code_info,
+        DDCA_MCCS_Version_Spec  vcp_version,
+        char *                  buffer,
+        int bufsz);
+bool format_feature_detail_standard_continuous(
+        Nontable_Vcp_Value *    code_info,
+        DDCA_MCCS_Version_Spec  vcp_version,
+        char *                  buffer,
+        int                     bufsz);
+bool format_feature_detail_sl_lookup(
+        Nontable_Vcp_Value *    code_info,
+        DDCA_MCCS_Version_Spec  vcp_version,
+        char *                  buffer,
+        int                     bufsz);
+bool format_feature_detail_sl_byte(
+        Nontable_Vcp_Value *     code_info,
+        DDCA_MCCS_Version_Spec   vcp_version,
+        char *                   buffer,
+        int                      bufsz);
 
 //
 // VCP Feature Interpretation
@@ -92,6 +101,15 @@ bool (*Format_Normal_Feature_Detail_Function) (
           int                     bufsz);
 
 typedef
+bool (*Format_Normal_Feature_Detail_Function2) (
+          Nontable_Vcp_Value*     code_info,
+          // Display_Ref *           dref,
+          // DDCA_MCCS_Version_Spec  vcp_version,
+          DDCA_Feature_Value_Table   sl_values,
+          char *                  buffer,
+          int                     bufsz);
+
+typedef
 bool (*Format_Table_Feature_Detail_Function) (
           Buffer *                data_bytes,
           DDCA_MCCS_Version_Spec  vcp_version,
@@ -134,6 +152,11 @@ struct {
    DDCA_Feature_Value_Entry *            v30_sl_values;
    DDCA_Feature_Value_Entry *            v22_sl_values;
 } VCP_Feature_Table_Entry;
+
+
+void dbgrpt_sl_value_table(DDCA_Feature_Value_Entry * table, int depth);
+void dbgrpt_vcp_entry(VCP_Feature_Table_Entry * pfte, int depth);
+
 
 
 //
@@ -241,6 +264,12 @@ char *
 get_non_version_specific_feature_name(
        VCP_Feature_Table_Entry * pvft_entry);
 
+DDCA_Version_Feature_Info *
+extract_version_feature_info(
+      VCP_Feature_Table_Entry *  vfte,
+      DDCA_MCCS_Version_Spec     vspec,
+      bool                       version_sensitive);
+
 //
 // Functions that query the feature table by VCP feature code
 //
@@ -315,6 +344,10 @@ dbgrpt_version_feature_info(
       DDCA_Version_Feature_Info * info, int depth);
 
 void
+dbgrpt_ddca_feature_metadata(
+      DDCA_Feature_Metadata * meta, int depth);
+
+void
 vcp_list_feature_codes(FILE * fh);
 
 
@@ -343,5 +376,8 @@ vcp_get_feature_code_count();
 
 void
 init_vcp_feature_codes();
+
+char * vcp_interpret_version_feature_flags(DDCA_Version_Feature_Flags flags, char * buf, int bufsz);
+char * vcp_interpret_global_feature_flags(DDCA_Global_Feature_Flags flags, char * buf, int bufsz);
 
 #endif /* VCP_FEATURE_CODES_H_ */

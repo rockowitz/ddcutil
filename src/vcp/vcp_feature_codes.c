@@ -1,31 +1,11 @@
-/* vcp_feature_codes.c
+/** @file vcp_feature_codes.c
  *
- * VCP Feature Code Table and the functions it references
- *
- * <copyright>
- * Copyright (C) 2014-2018 Sanford Rockowitz <rockowitz@minsoft.com>
- *
- * Licensed under the GNU General Public License Version 2
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
- * </endcopyright>
- */
-
-/** \f
  *  VCP Feature Code Table and related functions
  */
+
+// Copyright (C) 2014-2018 Sanford Rockowitz <rockowitz@minsoft.com>
+// SPDX-License-Identifier: GPL-2.0-or-later
+
 
 #include <assert.h>
 #include <stdbool.h>
@@ -52,35 +32,7 @@ static DDCA_Feature_Value_Entry x14_color_preset_absolute_values[];
        DDCA_Feature_Value_Entry xc8_display_controller_type_values[];
 static DDCA_Feature_Value_Entry x8d_tv_audio_mute_source_values[];
 static DDCA_Feature_Value_Entry x8d_sh_blank_screen_values[];
-bool default_table_feature_detail_function(
-        Buffer *                data,
-        DDCA_MCCS_Version_Spec  vcp_version,
-        char**                  presult);
-bool format_feature_detail_debug_continuous(
-        Nontable_Vcp_Value *    code_info,
-        DDCA_MCCS_Version_Spec  vcp_version,
-        char *                  buffer,
-        int                     bufsz);
-bool format_feature_detail_debug_bytes(
-        Nontable_Vcp_Value *    code_info,
-        DDCA_MCCS_Version_Spec  vcp_version,
-        char *                  buffer,
-        int bufsz);
-bool format_feature_detail_standard_continuous(
-        Nontable_Vcp_Value *    code_info,
-        DDCA_MCCS_Version_Spec  vcp_version,
-        char *                  buffer,
-        int                     bufsz);
-bool format_feature_detail_sl_lookup(
-        Nontable_Vcp_Value *    code_info,
-        DDCA_MCCS_Version_Spec  vcp_version,
-        char *                  buffer,
-        int                     bufsz);
-bool format_feature_detail_sl_byte(
-        Nontable_Vcp_Value *     code_info,
-        DDCA_MCCS_Version_Spec   vcp_version,
-        char *                   buffer,
-        int                      bufsz);
+
 
 
 //
@@ -97,7 +49,7 @@ bool format_feature_detail_sl_byte(
  *
  * Returns:   buf
  */
-static char *
+char *
 vcp_interpret_version_feature_flags(
       DDCA_Version_Feature_Flags  flags,
       char*                       buf,
@@ -105,7 +57,7 @@ vcp_interpret_version_feature_flags(
 {
    // DBGMSG("flags: 0x%04x", flags);
    char * rwmsg = "";
-   if (flags & DDCA_RO)
+   if (flags & DDCA_SYNTHETIC)
       rwmsg = "ReadOnly ";
    else if (flags & DDCA_WO)
       rwmsg = "WriteOnly";
@@ -137,6 +89,28 @@ vcp_interpret_version_feature_flags(
    snprintf(buf, buflen, "%s  %s%s", rwmsg, typemsg, vermsg);
    return buf;
 }
+
+
+char *
+vcp_interpret_global_feature_flags(
+      DDCA_Global_Feature_Flags   flags,
+      char*                       buf,
+      int                         buflen)
+{
+   // DBGMSG("flags: 0x%04x", flags);
+   char * synmsg = "";
+   if (flags & DDCA_SYNTHETIC)
+      synmsg = "Synthetic ";
+
+   char * dynmsg = "";
+   if (flags & DDCA_USER_DEFINED)
+      dynmsg = "Dynamic ";
+
+   snprintf(buf, buflen, "%s%s", synmsg, dynmsg);
+   return buf;
+}
+
+
 
 
 /* Implements command LISTVCP
@@ -407,6 +381,7 @@ static char * interpret_ddca_version_feature_flags_type(
    return result;
 }
 
+#ifdef OLD  // use vcp_interpret_global_feature_flags
 static char * interpret_ddca_global_feature_flags(
       DDCA_Version_Feature_Flags feature_flags)
 {
@@ -415,6 +390,8 @@ static char * interpret_ddca_global_feature_flags(
       result = "Synthetic";
    return result;
 }
+#endif
+
 
 static char * interpret_feature_flags_r(
       DDCA_Version_Feature_Flags vflags,
@@ -433,7 +410,8 @@ static char * interpret_feature_flags_r(
      strcat(workbuf, ", ");
      strcat(workbuf, interpret_ddca_version_feature_flags_type(vflags));
 
-     char * s = interpret_ddca_global_feature_flags(vflags);
+     char buf[80];
+     char * s = vcp_interpret_global_feature_flags(vflags, buf, 80);
      if (s && strlen(s) > 0) {
         strcat(workbuf, ", ");
         strcat(workbuf, s);
@@ -536,6 +514,35 @@ void dbgrpt_version_feature_info(
    if(info->sl_values) {
       rpt_vstring(d1, "Simple NC values:");
       report_sl_values(info->sl_values, d1+1);
+   }
+}
+
+/* Emits a report on a Version_Specific_Feature_Info struct.  This is a
+ * debugging report.  The report is written to the current report destination.
+ *
+ * Arguments:
+ *    info     pointer to version feature information struct
+ *    depth    logical indentation depth
+ */
+void dbgrpt_ddca_feature_metadata(
+      DDCA_Feature_Metadata * meta, int depth) {
+   char workbuf[200];
+
+   int d1 = depth+1;
+
+   rpt_vstring(depth, "VCP code %02X: %s", meta->feature_code, meta->feature_name);
+
+   // rpt_vstring(d1, "Version spec: %d.%d", meta->vspec.major, meta->vspec.minor);
+
+   rpt_vstring(d1, "Description:  %s", meta->feature_desc);
+   DDCA_Version_Feature_Flags  vflags = meta->feature_flags;
+   interpret_feature_flags_r(vflags, workbuf, sizeof(workbuf));
+   rpt_vstring(d1, "Attributes:   %s", workbuf);
+   // rpt_vstring(d1, "Global_flags: 0x%02x",  info->global_flags);  // TODO: interpretation function
+
+   if(meta->sl_values) {
+      rpt_vstring(d1, "Simple NC values:");
+      report_sl_values(meta->sl_values, d1+1);
    }
 }
 
@@ -1371,7 +1378,8 @@ vcp_create_dynamic_feature(
       DDCA_Vcp_Feature_Code   id,
       DDCA_Feature_Metadata * dynamic_metadata)
 {
-   DBGMSG("Starting. id=0x%02x", id);
+   bool debug = true;
+   DBGMSF(debug, "Starting. id=0x%02x", id);
    VCP_Feature_Table_Entry * pentry = vcp_new_feature_table_entry(id);
    pentry->v20_name = dynamic_metadata->feature_name;
    pentry->desc = dynamic_metadata->feature_desc;
@@ -1394,6 +1402,7 @@ vcp_create_dynamic_feature(
       pentry->nontable_formatter = format_feature_detail_debug_bytes;
    }
    pentry->vcp_global_flags = DDCA_SYNTHETIC;   // indicates caller should free
+   DBGMSF(debug, "Done");
    return pentry;
 }
 
@@ -1594,13 +1603,17 @@ find_feature_values(
       DDCA_Vcp_Feature_Code   feature_code,
       DDCA_MCCS_Version_Spec  vcp_version)
 {
-   bool debug = false;
+   bool debug = true;
    if (debug)
       DBGMSG("Starting. feature_code=0x%02x", feature_code);
+
    DDCA_Feature_Value_Entry * result = NULL;
    VCP_Feature_Table_Entry * pentry = vcp_find_feature_by_hexid(feature_code);
+
    // may not be found if called for capabilities and it's a mfg specific code
    if (pentry) {
+      if (debug)
+         dbgrpt_vcp_entry(pentry, 1);
       DDCA_Version_Feature_Flags feature_flags = get_version_sensitive_feature_flags(pentry, vcp_version);
       // if (feature_code == 0x66)                           // *** TEMP ***
     	//   feature_flags = DDCA_RW | VCP2_SIMPLE_NC;
@@ -1610,8 +1623,9 @@ find_feature_values(
          result = get_version_specific_sl_values(pentry, vcp_version);
       }
    }
+
    if (debug)
-      DBGMSG("Starting. feature_code=0x%02x. Returning: %p", feature_code, result);
+      DBGMSG("Done. feature_code=0x%02x. Returning: %p", feature_code, result);
    return result;
 }
 
@@ -1697,11 +1711,17 @@ char * lookup_value_name(
           DDCA_MCCS_Version_Spec  vcp_version,
           Byte                    sl_value)
 {
+   bool debug = true;
+   DBGMSF(debug, "feature_code=0x%02x, vcp_version=%d.%d, sl_value=-0x%02x",
+                 feature_code, vcp_version.major, vcp_version.minor, sl_value);
+
    DDCA_Feature_Value_Entry * values_for_feature = find_feature_values(feature_code, vcp_version);
    assert(values_for_feature);
    char * name = get_feature_value_name(values_for_feature, sl_value);
    if (!name)
       name = "Invalid value";
+
+   DBGMSF(debug, "Done. Returning: %s", name);
    return name;
 }
 
@@ -4424,6 +4444,100 @@ void validate_vcp_feature_table() {
 // End of functions for validating vcp_code_table
 
 #endif
+
+#ifdef REF
+typedef
+struct {
+   char                                  marker[4];
+   Byte                                  code;
+   char *                                desc;
+   Format_Normal_Feature_Detail_Function nontable_formatter;
+   Format_Table_Feature_Detail_Function  table_formatter;
+   DDCA_Global_Feature_Flags             vcp_global_flags;
+   ushort                                vcp_spec_groups;
+   VCP_Feature_Subset                    vcp_subsets;
+   char *                                v20_name;
+   char *                                v21_name;
+   char *                                v30_name;
+   char *                                v22_name;
+   DDCA_Version_Feature_Flags            v20_flags;
+   DDCA_Version_Feature_Flags            v21_flags;
+   DDCA_Version_Feature_Flags            v30_flags;
+   DDCA_Version_Feature_Flags            v22_flags;
+   DDCA_Feature_Value_Entry *            default_sl_values;
+   DDCA_Feature_Value_Entry *            v21_sl_values;
+   DDCA_Feature_Value_Entry *            v30_sl_values;
+   DDCA_Feature_Value_Entry *            v22_sl_values;
+} VCP_Feature_Table_Entry;
+#endif
+
+
+void dbgrpt_sl_value_table(DDCA_Feature_Value_Entry * table, int depth) {
+   rpt_vstring(depth, "DDCA_Feature_Value_Table at %p", table);
+   if (table) {
+      DDCA_Feature_Value_Entry * cur = table;
+      while (cur->value_code != 0x00 || cur->value_name) {
+         rpt_vstring(depth+1, "0x%02x - %s", cur->value_code, cur->value_name);
+         cur++;
+      }
+   }
+}
+
+
+void dbgrpt_vcp_entry(VCP_Feature_Table_Entry * pfte, int depth) {
+   rpt_vstring(depth, "VCP_Feature_Table_Entry at %p:", pfte);
+   assert(pfte && memcmp(pfte->marker, VCP_FEATURE_TABLE_ENTRY_MARKER, 4) == 0);
+   int d1 = depth+1;
+   const int bufsz = 100;
+   char buf[bufsz];
+
+
+   rpt_vstring(d1, "code:       0x%02x", pfte->code);
+   rpt_vstring(d1, "desc:       %s", pfte->desc);
+   rpt_vstring(d1, "nontable_formatter: %p", pfte->nontable_formatter);
+   rpt_vstring(d1, "table_formatter:    %p", pfte->table_formatter);
+   rpt_vstring(d1, "vcp_global_flags:   0x%02x - %s",
+                   pfte->vcp_global_flags,
+                   vcp_interpret_global_feature_flags(pfte->vcp_global_flags, buf, bufsz));
+   rpt_vstring(d1, "vcp_spec_groups:   0x%04x - %s",
+                   pfte->vcp_spec_groups,
+                   spec_group_names_r(pfte, buf, bufsz));
+   rpt_vstring(d1, "vcp_subsets:   0x%04x - %s",
+                   pfte->vcp_subsets,
+                   feature_subset_names(pfte->vcp_subsets));
+   rpt_vstring(d1, "v20_name:          %s", pfte->v20_name);
+   rpt_vstring(d1, "v21_name:          %s", pfte->v21_name);
+   rpt_vstring(d1, "v30_name:          %s", pfte->v30_name);
+   rpt_vstring(d1, "v22_name:          %s", pfte->v22_name);
+   rpt_vstring(d1, "v20_flags:         0x%04x - %s",
+                   pfte->v20_flags,
+                   vcp_interpret_version_feature_flags(pfte->v20_flags, buf, bufsz));
+   rpt_vstring(d1, "v21_flags:         0x%04x - %s",
+                   pfte->v21_flags,
+                   vcp_interpret_version_feature_flags(pfte->v21_flags, buf, bufsz));
+   rpt_vstring(d1, "v30_flags:         0x%04x - %s",
+                   pfte->v30_flags,
+                   vcp_interpret_version_feature_flags(pfte->v30_flags, buf, bufsz));
+   rpt_vstring(d1, "v22_flags:         0x%04x - %s",
+                   pfte->v22_flags,
+                   vcp_interpret_version_feature_flags(pfte->v22_flags, buf, bufsz));
+
+   rpt_vstring(d1, "default_sl_values: %p", pfte->default_sl_values);
+   if (pfte->default_sl_values)
+      dbgrpt_sl_value_table(pfte->default_sl_values, d1+1);
+
+   rpt_vstring(d1, "v21_sl_values: %p", pfte->v21_sl_values);
+   if (pfte->v21_sl_values)
+      dbgrpt_sl_value_table(pfte->v21_sl_values, d1+1);
+
+   rpt_vstring(d1, "v30_values: %p", pfte->v30_sl_values);
+   if (pfte->v30_sl_values)
+      dbgrpt_sl_value_table(pfte->v30_sl_values, d1+1);
+
+   rpt_vstring(d1, "v22_sl_values: %p", pfte->v22_sl_values);
+   if (pfte->v22_sl_values)
+      dbgrpt_sl_value_table(pfte->v22_sl_values, d1+1);
+}
 
 
 /* Initialize the vcp_feature_codes module.
