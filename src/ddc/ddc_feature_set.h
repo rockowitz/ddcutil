@@ -1,11 +1,11 @@
-// ddc_feature_set.h
+/** @file ddc_feature_set.h
+ */
 
-// Copyright (C) 2018 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2018 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef DDC_FEATURE_SET_H_
 #define DDC_FEATURE_SET_H_
-
 
 #include "public/ddcutil_types.h"
 
@@ -23,9 +23,6 @@
 #include "vcp/vcp_feature_codes.h"
 
 #include "vcp/vcp_feature_set.h"
-
-
-
 
 
 VCP_Feature_Set

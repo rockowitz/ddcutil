@@ -1,12 +1,13 @@
-/* ddc_feature_set.c */
+/** @file ddc_feature_set.c
+ */
 
 // Copyright (C) 2018 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-
+#include "base/displays.h"
+#include "base/feature_sets.h"
 
 #include "ddc_feature_set.h"
-
 
 
 VCP_Feature_Set
@@ -17,6 +18,14 @@ ddc_create_feature_set(
       Feature_Set_Flags      flags)
    // bool                   exclude_table_features)
 {
+   bool debug = true;
+   DBGMSF(debug, "Starting. subset_id=%d - %s, dref=%s, flags=0x%02x - %s",
+                 subset_id,
+                 feature_subset_name(subset_id),
+                 dref_repr_t(dref),
+                 flags,
+                 feature_set_flag_names(flags));
+
    VCP_Feature_Set result = NULL;
 
    Display_Ref * dref2 = (Display_Ref *) dref;
@@ -68,6 +77,12 @@ ddc_create_feature_set(
    }
    else {
       result = create_feature_set(subset_id, dref2->vcp_version, flags);
+   }
+
+   if (debug) {
+      DBGMSG("Returning: %p", result);
+      if (result)
+         dbgrpt_feature_set(result, 1);
    }
    return result;
 }
