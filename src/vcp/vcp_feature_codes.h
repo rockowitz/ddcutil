@@ -9,11 +9,13 @@
 #ifndef VCP_FEATURE_CODES_H_
 #define VCP_FEATURE_CODES_H_
 
+/** \cond */
 #include <stdio.h>
 
-#include "public/ddcutil_types.h"
-
 #include "util/string_util.h"
+/** \endcond */
+
+#include "public/ddcutil_types.h"
 
 #include "base/core.h"
 #include "base/displays.h"
