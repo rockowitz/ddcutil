@@ -1,31 +1,14 @@
-/* cmd_parser_aux.c
+/** \file cmd_parser_aux.c
  *
- * Functions and strings that are independent of the parser
- * package used.
- *
- * <copyright>
- * Copyright (C) 2014-2018 Sanford Rockowitz <rockowitz@minsoft.com>
- *
- * Licensed under the GNU General Public License Version 2
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
- * </endcopyright>
+ *  Functions and strings that are independent of the parser package used.
  */
+
+// Copyright (C) 2014-2018 Sanford Rockowitz <rockowitz@minsoft.com>
+// SPDX-License-Identifier: GPL-2.0-or-later
 
 #include <config.h>
 
+/** \cond */
 #include <assert.h>
 #include <ctype.h>
 #include <stdbool.h>
@@ -33,6 +16,7 @@
 #include <stdlib.h>
 
 #include "util/string_util.h"
+/** \endcond */
 
 #include "base/parms.h"
 
@@ -176,6 +160,7 @@ const Feature_Subset_Table_Entry subset_table[] = {
    {VCP_SUBSET_SCAN,      CMDID_GETVCP,               3, "SCAN",      "All feature codes 00..FF, except those known to be WO"},
    {VCP_SUBSET_MFG,       CMDID_GETVCP,               3, "MANUFACTURER", "Manufacturer specific codes"},
    {VCP_SUBSET_MFG,       CMDID_GETVCP,               3, "MFG",        "Same as MANUFACTURER"},
+   {VCP_SUBSET_DYNAMIC,   CMDID_GETVCP|CMDID_VCPINFO, 3, "DYNAMIC",    "User defined features"},
 
    // ddcutil defined groups
    {VCP_SUBSET_PROFILE,   CMDID_GETVCP|CMDID_VCPINFO, 3, "PROFILE",   "Features for color profile management"},
@@ -206,10 +191,10 @@ const int subset_table_ct = sizeof(subset_table)/sizeof(Feature_Subset_Table_Ent
 
 char * assemble_command_argument_help() {
    // quick and dirty check that tables are in sync
-   // +3 for VCP_SUBSET_SINGLE_FEATURE, VCP_SUBSET_NONE, VCP_SUBSET_DYNAMIC
+   // +2 for VCP_SUBSET_SINGLE_FEATURE, VCP_SUBSET_NONE
    // -1 for double VCP_SUBSET_KNOWN
    // -1 for double VCP_SUBSET_MFG
-   assert(subset_table_ct+(3-1-1) == vcp_subset_count);
+   assert(subset_table_ct+(2-1-1) == vcp_subset_count);
 
    GString * buf = g_string_sized_new(1000);
    g_string_append(buf,
