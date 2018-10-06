@@ -7,13 +7,12 @@
 #ifndef PARSE_CAPABILITIES_H_
 #define PARSE_CAPABILITIES_H_
 
+/** \cond */
 #include <glib.h>
 
 #include "util/data_structures.h"
+/** \endcond */
 
-#include "base/core.h"
-#include "base/displays.h"
-#include "base/dynamic_features.h"
 #include "base/vcp_version.h"
 
 
