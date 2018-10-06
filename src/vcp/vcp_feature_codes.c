@@ -6,7 +6,7 @@
 // Copyright (C) 2014-2018 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-
+/** \cond */
 #include <assert.h>
 #include <stdbool.h>
 #include <stdlib.h>
@@ -14,6 +14,7 @@
 
 #include "util/data_structures.h"
 #include "util/report_util.h"
+/** \cond */
 
 #include "base/ddc_errno.h"
 #include "base/vcp_version.h"
@@ -32,7 +33,6 @@ static DDCA_Feature_Value_Entry x14_color_preset_absolute_values[];
        DDCA_Feature_Value_Entry xc8_display_controller_type_values[];
 static DDCA_Feature_Value_Entry x8d_tv_audio_mute_source_values[];
 static DDCA_Feature_Value_Entry x8d_sh_blank_screen_values[];
-
 
 
 //
@@ -57,7 +57,7 @@ vcp_interpret_version_feature_flags(
 {
    // DBGMSG("flags: 0x%04x", flags);
    char * rwmsg = "";
-   if (flags & DDCA_SYNTHETIC)
+   if (flags & DDCA_RO)
       rwmsg = "ReadOnly ";
    else if (flags & DDCA_WO)
       rwmsg = "WriteOnly";
