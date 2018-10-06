@@ -4,12 +4,14 @@
 // Copyright (C) 2014-2018 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
+/** \cond */
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
 #include "util/report_util.h"
+/** \endcond */
 
 #include "base/core.h"
 
