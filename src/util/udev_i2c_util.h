@@ -1,29 +1,9 @@
-/* udev_i2c_util.h
- *
- * <copyright>
- * Copyright (C) 2016-2017 Sanford Rockowitz <rockowitz@minsoft.com>
- *
- * Licensed under the GNU General Public License Version 2
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
- * </endcopyright>
- */
+/** @file udev_i2c_util.h
+  *  I2C specific udev utilities
+  */
 
-/** \file *
- *  I2C specific udev utilities
- */
+// Copyright (C) 2016-2018 Sanford Rockowitz <rockowitz@minsoft.com>
+// SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef UDEV_I2C_UTIL_H_
 #define UDEV_I2C_UTIL_H_
@@ -38,12 +18,8 @@
 
 GPtrArray *                     // array of Udev_Device_Summary
 get_i2c_devices_using_udev();
-int udev_i2c_device_summary_busno(Udev_Device_Summary * summary);
 
-bool
-is_smbus_device_summary(
-      GPtrArray * summaries,    // array of Udev_Device_Summary
-      char *      sbusno) ;
+int udev_i2c_device_summary_busno(Udev_Device_Summary * summary);
 
 void
 report_i2c_udev_device_summaries(
@@ -53,8 +29,7 @@ report_i2c_udev_device_summaries(
 
 
 Byte_Value_Array                // one byte for each I2C bus number
-get_i2c_device_numbers_using_udev(bool include_smbus);
-
+get_i2c_device_numbers_using_udev(bool include_ignorable_devices);
 
 /** Signature of function that tests sys attribute name */
 typedef bool (*Sysattr_Name_Filter)(const char * sysattr_name);

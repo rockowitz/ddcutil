@@ -1,30 +1,12 @@
-/* sysfs_util.c
- *
- * <copyright>
- * Copyright (C) 2014-2018 Sanford Rockowitz <rockowitz@minsoft.com>
- *
- * Licensed under the GNU General Public License Version 2
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
- * </endcopyright>
- */
+/** @file sysfs_util.c
+  *
+  * Functions for reading /sys file system
+  */
 
-/** \file
- * Functions for reading /sys file system
- */
+// Copyright (C) 2016-2018 Sanford Rockowitz <rockowitz@minsoft.com>
+// SPDX-License-Identifier: GPL-2.0-or-later
 
+//* \cond */
 #include <assert.h>
 #include <errno.h>
 #include <limits.h>
@@ -32,6 +14,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+/** \endcond */
 
 #include "file_util.h"
 #include "string_util.h"
@@ -247,6 +230,7 @@ static bool ignorable_i2c_device_sysfs_name(const char * name, const char * driv
    bool result = false;
    const char * ignorable_prefixes[] = {
          "SMBus",
+         "Synopsys Designware",
          "soc:i2cdsi",   // Raspberry Pi
          "smu",          // Mac G5, probing causes system hang
          "mac-io",       // Mac G5
@@ -255,7 +239,7 @@ static bool ignorable_i2c_device_sysfs_name(const char * name, const char * driv
    if (name) {
       if (starts_with_any(name, ignorable_prefixes) >= 0)
          result = true;
-      if (streq(driver, "nouveau")) {
+      else if (streq(driver, "nouveau")) {
          if ( !str_starts_with(name, "nvkm-") ) {
             result = true;
             // printf("(%s) name=|%s|, driver=|%s| - Ignore\n", __func__, name, driver);
