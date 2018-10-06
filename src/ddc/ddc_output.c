@@ -108,7 +108,7 @@ is_table_feature_by_display_handle(
    return result;
 }
 
-
+#ifdef FUTURE
 // For possible future use - currently unused
 Public_Status_Code
 check_valid_operation_by_feature_rec_and_version(
@@ -144,6 +144,7 @@ check_valid_operation_by_feature_id_and_dh(
    }
    return result;
 }
+#endif
 
 
 //
