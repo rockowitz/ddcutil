@@ -391,7 +391,7 @@ void i2c_report_functionality_flags(long functionality, int maxline, int depth) 
 
 bool is_edp_device(int busno) {
    bool debug = true;
-   // DBGMSF(debug, "Starting.  busno=%d", busno);
+   DBGMSF(debug, "Starting.  busno=%d", busno);
    bool result = false;
 
    char cmd[100];
@@ -402,9 +402,9 @@ bool is_edp_device(int busno) {
 
    for (int ndx = 0; ndx < lines->len; ndx++) {
       char * s = g_ptr_array_index(lines, ndx);
-      // DBGMSG("s: %s", s);
+      DBGMSG("s: %s", s);
       if (strstr(s, "-eDP-")) {
-         // DBGMSG("Found");
+         DBGMSG("Found");
          result = true;
          break;
       }
@@ -507,7 +507,7 @@ Status_Errno_DDC i2c_detect_ddc_addrs_by_fd(int fd, Byte * presult) {
    unsigned char result = 0x00;
 
    Byte    readbuf;  //  1 byte buffer
-   // Byte    writebuf = {0x00};
+   Byte    writebuf = {0x00};
    Status_Errno_DDC base_rc = 0;
 
 #ifdef DISABLE
@@ -531,7 +531,7 @@ Status_Errno_DDC i2c_detect_ddc_addrs_by_fd(int fd, Byte * presult) {
    if (base_rc == 0)
       result |= I2C_BUS_ADDR_0X50;
 
-#ifdef DISABLE
+// #ifdef DISABLE
    base_rc = i2c_set_addr(fd, 0x37, CALLOPT_NONE);
    if (base_rc < 0) {
       goto bye;
@@ -544,10 +544,10 @@ Status_Errno_DDC i2c_detect_ddc_addrs_by_fd(int fd, Byte * presult) {
       base_rc = invoke_i2c_reader(fd, 1, &readbuf);
       DBGTRC(debug, TRACE_GROUP,"invoke_i2c_reader() for slave address x37 returned %s", psc_desc(base_rc));
    }
-#else
-   base_rc = 0;
-   DBGMSG("Skipping probe of slave address x37.  Setting flag I2C_BUS_ADDR_X37");
-#endif
+// #else
+//    base_rc = 0;
+//    DBGMSG("Skipping probe of slave address x37.  Setting flag I2C_BUS_ADDR_X37");
+// #endif
 
    // 11/2015: DDCRC_READ_ALL_ZERO currently set only in ddc_packet_io.c:
    // if (base_rc == 0 || base_rc == DDCRC_READ_ALL_ZERO)
