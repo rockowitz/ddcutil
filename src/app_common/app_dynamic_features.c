@@ -39,11 +39,11 @@ extern bool enable_dynamic_features;   // *** TEMP ***
  *  \param dref  display reference
  */
 void check_dynamic_features(Display_Ref * dref) {
-   if (!enable_dynamic_features)    // global variable
-      return;
-
    bool debug = false;
    DBGMSF(debug, "Starting. ");
+
+   if (!enable_dynamic_features)    // global variable
+      return;
 
    // bool wrote_output = false;
    Error_Info * errs = dfr_check_by_dref(dref);
