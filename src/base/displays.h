@@ -1,31 +1,9 @@
-/* displays.h
- *
- * Display specification
- *
- * <copyright>
- * Copyright (C) 2014-2018 Sanford Rockowitz <rockowitz@minsoft.com>
- *
- * Licensed under the GNU General Public License Version 2
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
- * </endcopyright>
+/** @file displays.h
+ * Display Specification
  */
 
-/** \file
- * Display specification
- */
+// Copyright (C) 2014-2018 Sanford Rockowitz <rockowitz@minsoft.com>
+// SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef DISPLAYS_H_
 #define DISPLAYS_H_
@@ -191,8 +169,7 @@ typedef Byte Dref_Flags;
 #define DREF_DDC_IS_MONITOR_CHECKED                 0x08
 #define DREF_DDC_IS_MONITOR                         0x04
 #define DREF_TRANSIENT                              0x02
-#define DREF_DYNAMIC_FEATURES_CHECKED               0x01      // for future dynamic features facility
-
+#define DREF_DYNAMIC_FEATURES_CHECKED               0x01
 
 #define DISPLAY_REF_MARKER "DREF"
 /** A **Display_Ref** is a logical display identifier.
