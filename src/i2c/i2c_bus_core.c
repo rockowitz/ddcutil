@@ -520,7 +520,7 @@ Status_Errno_DDC i2c_detect_ddc_addrs_by_fd(int fd, Byte * presult) {
    if (base_rc == 0)
       result |= I2C_BUS_ADDR_0X30;
 #else
-   DBGMSG("Skipping probe of slave address x30.");
+   // DBGMSG("Skipping probe of slave address x30.");
 #endif
 
    base_rc = i2c_set_addr(fd, 0x50, CALLOPT_NONE);
