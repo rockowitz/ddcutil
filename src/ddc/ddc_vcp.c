@@ -62,6 +62,7 @@
 #include "ddc/ddc_multi_part_io.h"
 #include "ddc/ddc_packet_io.h"
 #include "ddc/ddc_vcp_version.h"
+#include "ddc/ddc_vcp_info.h"
 
 #include "ddc/ddc_vcp.h"
 
@@ -274,9 +275,8 @@ is_rereadable_feature(
       Display_Handle * dh,
       DDCA_Vcp_Feature_Code opcode)
 {
-   bool debug = false;
+   bool debug = true;
    DBGMSF(debug, "Starting opcode = 0x%02x", opcode);
-   bool result = false;
 
    // readable features that should not be read after write
    DDCA_Vcp_Feature_Code unrereadable_features[] = {
@@ -285,32 +285,45 @@ is_rereadable_feature(
          0x60,        // input source ???
    };
 
-   VCP_Feature_Table_Entry * vfte = vcp_find_feature_by_hexid(opcode);
-   DBGMSF(debug, "vfte=%p", vfte);
-   if (vfte) {
-      assert(opcode < 0xe0);
-      DDCA_MCCS_Version_Spec vspec = get_vcp_version_by_display_handle(dh);  // ensure dh->vcp_version set
-      DBGMSF(debug, "vspec = %d.%d", vspec.major, vspec.minor);
-      // hack, make a guess
-      if ( vcp_version_eq(vspec, DDCA_VSPEC_UNKNOWN)   ||
-           vcp_version_eq(vspec, DDCA_VSPEC_UNQUERIED ))
-         vspec = DDCA_VSPEC_V22;
-
-      // if ( !vcp_version_eq(vspec, VCP_SPEC_UNKNOWN) &&
-      //      !vcp_version_eq(vspec, VCP_SPEC_UNQUERIED ))
-      // {
-         result = is_feature_readable_by_vcp_version(vfte, vspec);
-         DBGMSF(debug, "vspec=%d.%d, readable feature = %s", vspec.major, vspec.minor, bool_repr(result));
-      // }
+   bool result = true;
+   for (int ndx = 0; ndx < ARRAY_SIZE(unrereadable_features); ndx++) {
+      if ( unrereadable_features[ndx] == opcode ) {
+          result = false;
+          DBGMSF(debug, "Unreadable opcode 0x%02x", opcode);
+          break;
+      }
    }
    if (result) {
-      for (int ndx = 0; ndx < ARRAY_SIZE(unrereadable_features); ndx++) {
-         if ( unrereadable_features[ndx] == opcode ) {
-            result = false;
-            DBGMSF(debug, "Unreadable opcode 0x%02x", opcode);
-            break;
-         }
+      Internal_Feature_Metadata * intmeta = ddc_get_feature_metadata_by_dh(
+            opcode,
+            dh,
+            false    //                  with_default
+            );
+      // if not found, assume readable  ??
+      if (intmeta) {
+         result = intmeta->external_metadata->feature_flags & DDCA_READABLE;
       }
+#ifdef OLD
+      VCP_Feature_Table_Entry * vfte = vcp_find_feature_by_hexid(opcode);
+      DBGMSF(debug, "vfte=%p", vfte);
+      if (vfte) {
+         assert(opcode < 0xe0);
+         DDCA_MCCS_Version_Spec vspec = get_vcp_version_by_display_handle(dh);  // ensure dh->vcp_version set
+         DBGMSF(debug, "vspec = %d.%d", vspec.major, vspec.minor);
+         // hack, make a guess
+         if ( vcp_version_eq(vspec, DDCA_VSPEC_UNKNOWN)   ||
+              vcp_version_eq(vspec, DDCA_VSPEC_UNQUERIED ))
+            vspec = DDCA_VSPEC_V22;
+
+         // if ( !vcp_version_eq(vspec, VCP_SPEC_UNKNOWN) &&
+         //      !vcp_version_eq(vspec, VCP_SPEC_UNQUERIED ))
+         // {
+            result = is_feature_readable_by_vcp_version(vfte, vspec);
+            DBGMSF(debug, "vspec=%d.%d, readable feature = %s", vspec.major, vspec.minor, bool_repr(result));
+         // }
+      }
+#endif
+
    }
 
    DBGMSF(debug, "Returning: %s", bool_repr(result));
