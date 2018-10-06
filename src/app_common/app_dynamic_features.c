@@ -1,29 +1,22 @@
-// app_dynamic_features.c
+/** @file app_dynamic_features.c */
 
 // Copyright (C) 2018 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-// #include <ctype.h>
-
+/** \cond */
 #include <assert.h>
 #include <base/ddc_dynamic_features.h>
 #include <stddef.h>
-// #include <glib-2.0/glib.h>
 #include <string.h>
-// #include <wordexp.h>
-// #include <unistd.h>
 
 #include "ddcutil_types.h"
 #include "ddcutil_status_codes.h"
 
 #include "util/error_info.h"
-// #include "util/edid.h"
-// #include "util/glib_util.h"
 #include "util/string_util.h"
-// #include "util/file_util.h"
+/** \endcond */
 
 #include "base/core.h"
-// #include "base/displays.h"
 #include "base/dynamic_features.h"
 #include "base/monitor_model_key.h"
 
@@ -40,10 +33,10 @@ extern bool enable_dynamic_features;   // *** TEMP ***
  */
 void check_dynamic_features(Display_Ref * dref) {
    bool debug = false;
-   DBGMSF(debug, "Starting. ");
+   DBGTRC(debug, DDCA_TRC_UDF, "Starting. ");
 
    if (!enable_dynamic_features)    // global variable
-      return;
+      goto bye;
 
    // bool wrote_output = false;
    Error_Info * errs = dfr_check_by_dref(dref);
@@ -74,7 +67,8 @@ void check_dynamic_features(Display_Ref * dref) {
       }
    }
 
-   DBGMSF(debug, "Done.");
+bye:
+   DBGTRC(debug, DDCA_TRC_UDF, "Done.");
 }
 
 

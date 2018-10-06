@@ -1,11 +1,10 @@
-// ddc_dynamic_features.c
+/** @file ddc_dynamic_features.c
+ *
+ *  Maintain user-defined (aka dynamic) feature definitions
+ */
 
 // Copyright (C) 2018 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
-
-/** \file
- *  Maintain dynamic feature records
- */
 
 /** \cond */
 #include <ctype.h>
@@ -33,7 +32,8 @@
 #include "base/dynamic_features.h"
 #include "base/monitor_model_key.h"
 
-
+// Default trace class for this file
+static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_UDF;
 
 /* static */ bool enable_dynamic_features = true;
 
@@ -169,7 +169,7 @@ find_feature_def_file(
       const char * simple_fn)
 {
    bool debug = false;
-   DBGMSF(debug, "Starting.  simple_fn=|%s|", simple_fn);
+   DBGTRC(debug, TRACE_GROUP, "Starting.  simple_fn=|%s|", simple_fn);
    char * result = NULL;
 
    char * paths[] = {
@@ -196,7 +196,7 @@ find_feature_def_file(
       }
    }
 
-   DBGMSF(debug, "Returning: |%s|", result);
+   DBGTRC(debug, TRACE_GROUP, "Returning: |%s|", result);
    return result;
 }
 
@@ -274,7 +274,7 @@ dfr_load_by_edid(
    free(simple_fn);
    dfr_save(dfr);
 
-   if (debug) {
+   if (debug || IS_TRACING()) {
       if (errs) {
          DBGMSG("Done.  Returning errs: ");
          errinfo_report(errs, 1);
@@ -289,7 +289,7 @@ dfr_load_by_edid(
 
 Error_Info *  dfr_check_by_dref(Display_Ref * dref) {
    bool debug = false;
-   DBGMSF(debug, "Starting. ");
+   DBGTRC(debug, TRACE_GROUP, "Starting. ");
 
    Error_Info * errs = NULL;
    if (!enable_dynamic_features)    // global variable
@@ -309,7 +309,7 @@ Error_Info *  dfr_check_by_dref(Display_Ref * dref) {
    }
 
 bye:
-   if (debug) {
+   if (debug || IS_TRACING_GROUP(DDCA_TRC_UDF) ) {
       if (errs) {
          DBGMSG("Done.  Returning errs: ");
          errinfo_report(errs, 1);
