@@ -1,11 +1,9 @@
-// i2c_bus_core.h
+/** \file i2c_bus_core.h
+ *  I2C bus detection and inspection
+ */
 
 // Copyright (C) 2014-2018 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
-
-/** \file
- *  I2C bus detection and inspection
- */
 
 #ifndef I2C_BUS_CORE_H_
 #define I2C_BUS_CORE_H_
