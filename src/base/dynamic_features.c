@@ -1,11 +1,10 @@
-// dynamic_features.c
+/** @file dynamic_features.c
+ *
+ *  Dynamic Feature Record definition, creation, destruction, and conversion
+ */
 
 // Copyright (C) 2018 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
-
-/** \file
- * Dynamic Feature Record definition, creation, destruction, and conversion
- */
 
 #define _GNU_SOURCE      // for asprintf()
 
@@ -412,7 +411,7 @@ create_monitor_dynamic_features(
       const char * filename,     // may be NULL
       Dynamic_Features_Rec ** dynamic_features_loc)
 {
-   bool debug = false;
+   bool debug = true;
    DBGMSF(debug, "Starting. filename=%s", filename);
 
    Error_Info * master_err = NULL;
@@ -628,8 +627,8 @@ create_monitor_dynamic_features(
          dbgrpt_dfr(frec, 0);
    }
 
-   DBGMSF(debug, "Done. *dynamic_features_loc=%p, returning %p",
-                  *dynamic_features_loc, master_err);
+   DBGMSF(debug, "Done. *dynamic_features_loc=%p, returning %s",
+                  *dynamic_features_loc, errinfo_summary(master_err));
    assert( (master_err && !*dynamic_features_loc) || (!master_err && *dynamic_features_loc));
    return master_err;
 }
