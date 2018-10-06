@@ -71,7 +71,7 @@ typedef enum {
 
    VCP_SUBSET_MFG             = 0x00000004,    // mfg specific codes
 
-   VCP_SUBSET_DYNAMIC         = 0x00000002,    // possible future subset, aka CUSTOM, DYNAMIC, USER
+   VCP_SUBSET_DYNAMIC         = 0x00000002,    // aka CUSTOM, DYNAMIC, USER
    VCP_SUBSET_SINGLE_FEATURE  = 0x00000001,
    VCP_SUBSET_NONE            = 0x00000000,
 } VCP_Feature_Subset;

@@ -77,7 +77,7 @@ Value_Name_Table vcp_subset_table = {
 
       VNT(VCP_SUBSET_MFG,             "MFG"),
 
-      VNT(VCP_SUBSET_DYNAMIC,         "USER"),
+      VNT(VCP_SUBSET_DYNAMIC,         "DYNAMIC"),
       VNT(VCP_SUBSET_SINGLE_FEATURE,  NULL),
       VNT(VCP_SUBSET_NONE,            NULL),
       VNT_END
