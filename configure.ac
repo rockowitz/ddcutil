@@ -73,6 +73,7 @@ AC_CONFIG_FILES([
 	src/usb_util/Makefile
 	src/base/Makefile
 	src/vcp/Makefile
+	src/dynvcp/Makefile
 	src/i2c/Makefile
 	src/adl/Makefile
 	src/usb/Makefile

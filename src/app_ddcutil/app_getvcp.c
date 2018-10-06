@@ -57,7 +57,8 @@
 #include "ddc/ddc_packet_io.h"
 #include "ddc/ddc_vcp_version.h"
 #include "ddc/ddc_vcp.h"
-#include "ddc/ddc_vcp_info.h"
+
+#include "dynvcp/ddc_vcp_info.h"
 
 #include "app_ddcutil/app_getvcp.h"
 

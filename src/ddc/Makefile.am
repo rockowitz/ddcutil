@@ -8,8 +8,6 @@ AM_CPPFLAGS +=  \
   -I@ADL_HEADER_DIR@  
 endif
 
-
-
 AM_CFLAGS = -Wall 
 AM_CFLAGS += -Werror
 # Causes PROGRAM_LOGIC_ERROR() macro to fail:
@@ -30,15 +28,12 @@ ddc_async.c                 \
 ddc_displays.c              \
 ddc_display_lock.c          \
 ddc_dumpload.c              \
-ddc_feature_set.c           \
 ddc_multi_part_io.c         \
 ddc_output.c                \
 ddc_packet_io.c             \
-ddc_parsed_capabilities.c   \
 ddc_read_capabilities.c     \
 ddc_services.c              \
 ddc_strategy.c              \
 ddc_vcp.c                   \
-ddc_vcp_info.c              \
 ddc_vcp_version.c           \
 ddc_try_stats.c    

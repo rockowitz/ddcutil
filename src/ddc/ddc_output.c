@@ -56,13 +56,13 @@
 
 #include "vcp/parse_capabilities.h"
 
-#include "ddc/ddc_feature_set.h"
+#include "dynvcp/ddc_feature_set.h"
+#include "dynvcp/ddc_vcp_info.h"
 
 #include "ddc/ddc_multi_part_io.h"
 #include "ddc/ddc_packet_io.h"
 #include "ddc/ddc_vcp.h"
 #include "ddc/ddc_vcp_version.h"
-#include "ddc/ddc_vcp_info.h"
 
 #include "ddc/ddc_output.h"
 

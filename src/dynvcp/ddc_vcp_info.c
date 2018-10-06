@@ -13,8 +13,7 @@
 #include "base/displays.h"
 #include "vcp/vcp_feature_codes.h"
 
-#include "ddc_vcp_info.h"
-
+#include "dynvcp/ddc_vcp_info.h"
 
 void
 dbgrpt_internal_feature_metadata(

@@ -1,6 +1,6 @@
 ## Process this file with automake to produce Makefile.in
 
-SUBDIRS = util usb_util base vcp i2c adl usb ddc test app_sysenv cmdline . gobject_api swig cython cffi  sample_clients 
+SUBDIRS = util usb_util base vcp i2c adl usb dynvcp ddc test app_sysenv cmdline . gobject_api swig cython cffi  sample_clients 
 
 MOSTLYCLEANFILES =   
 
@@ -209,6 +209,7 @@ ddcutil_CFLAGS                 = $(AM_CFLAGS)  -fPIC
 
 libcommon_la_LIBADD = \
 ddc/libddc.la    \
+dynvcp/libdynvcp.la \
 i2c/libi2c.la    \
 adl/libadl.la    \
 vcp/libvcp.la    \

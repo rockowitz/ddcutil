@@ -8,12 +8,12 @@
 
 /** \cond */
 #include <assert.h>
+
 #include <glib.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <string.h>
 /** \endcond */
-
 
 #include "util/data_structures.h"
 #include "util/report_util.h"
@@ -29,8 +29,7 @@
 #include "vcp/parse_capabilities.h"
 #include "vcp/parsed_capabilities_feature.h"
 
-
-#include "ddc/ddc_parsed_capabilities.h"
+#include "ddc_parsed_capabilities.h"
 
 
 // From parsed_capabiliies_feature.c:

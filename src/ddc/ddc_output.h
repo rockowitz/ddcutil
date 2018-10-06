@@ -35,7 +35,8 @@
 #include "vcp/vcp_feature_codes.h"
 #include "vcp/vcp_feature_set.h"
 #include "vcp/vcp_feature_values.h"
-#include "ddc/ddc_vcp_info.h"
+
+#include "dynvcp/ddc_vcp_info.h"
 
 // TODO: Should probably be in a more general location
 // Standard printf format strings for reporting feature codes values.

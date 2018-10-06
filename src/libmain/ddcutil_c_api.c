@@ -29,7 +29,6 @@
 
 /** \cond */
 #include <assert.h>
-#include <base/ddc_dynamic_features.h>
 #include <errno.h>
 #include <string.h>
 /** \endcond */
@@ -59,12 +58,13 @@
 #include "vcp/vcp_feature_codes.h"
 #include "vcp/vcp_feature_values.h"
 
+#include "dynvcp/ddc_dynamic_features.h"
+#include "dynvcp/ddc_feature_set.h"
+#include "dynvcp/ddc_parsed_capabilities.h"
+
 #include "adl/adl_shim.h"
 
-#include "ddc/ddc_feature_set.h"
-
 #include "ddc/ddc_async.h"
-#include "ddc/ddc_parsed_capabilities.h"
 #include "ddc/ddc_displays.h"
 #include "ddc/ddc_dumpload.h"
 #include "ddc/ddc_multi_part_io.h"
