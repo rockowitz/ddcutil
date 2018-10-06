@@ -4,8 +4,8 @@
 // Copyright (C) 2014-2018 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-#ifndef DDC_FEATURE_SET_H_
-#define DDC_FEATURE_SET_H_
+#ifndef DYN_FEATURE_SET_H_
+#define DYN_FEATURE_SET_H_
 
 #include "public/ddcutil_types.h"
 
@@ -63,4 +63,4 @@ dyn_create_feature_set_from_feature_set_ref(
 // DDCA_Feature_List feature_list_from_feature_set(VCP_Feature_Set feature_set);
 
 
-#endif /* DDC_FEATURE_SET_H_ */
+#endif /* DYN_FEATURE_SET_H_ */

@@ -1,11 +1,11 @@
-/** @file ddc_parsed_capabilities.h
+/** @file dyn_parsed_capabilities.h
  */
 
 // Copyright (C) 2014-2018 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-#ifndef DDC_PARSED_CAPABILITIES_H_
-#define DDC_PARSED_CAPABILITIES_H_
+#ifndef DYN_PARSED_CAPABILITIES_H_
+#define DYN_PARSED_CAPABILITIES_H_
 
 #include <glib.h>
 
@@ -36,4 +36,4 @@ void report_parsed_capabilities(
          DDCA_Monitor_Model_Key* mmid,
          int                     depth);
 
-#endif /* DDC_PARSED_CAPABILITIES_H_ */
+#endif /* DYN_PARSED_CAPABILITIES_H_ */

@@ -1,4 +1,4 @@
-/** @file ddc_parsed_capabilities.c
+/** @file dyn_parsed_capabilities.c
  *
  *  Parse the capabilities string returned by DDC, query the parsed data structure.
  */
@@ -8,7 +8,6 @@
 
 /** \cond */
 #include <assert.h>
-#include <dynvcp/dyn_parsed_capabilities.h>
 
 #include <glib.h>
 #include <stdbool.h>
@@ -30,7 +29,7 @@
 #include "vcp/parse_capabilities.h"
 #include "vcp/parsed_capabilities_feature.h"
 
-
+#include "dynvcp/dyn_parsed_capabilities.h"
 
 // From parsed_capabiliies_feature.c:
 

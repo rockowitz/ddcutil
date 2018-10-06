@@ -295,7 +295,7 @@ is_rereadable_feature(
       }
    }
    if (result) {
-      Internal_Feature_Metadata * intmeta = ddc_get_feature_metadata_by_dh(
+      Internal_Feature_Metadata * intmeta = dyn_get_feature_metadata_by_dh(
             opcode,
             dh,
             false    //                  with_default

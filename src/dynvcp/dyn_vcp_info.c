@@ -1,4 +1,4 @@
-/** @file ddc_vcp_info.c
+/** @file dyn_vcp_info.c
  *
  * Access VCP feature code descriptions at the DDC level in order to
  * incorporate user-defined per-monitor feature information.
@@ -8,12 +8,12 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include <assert.h>
-#include <dynvcp/dyn_vcp_info.h>
 
 #include "util/report_util.h"
 #include "base/displays.h"
 #include "vcp/vcp_feature_codes.h"
 
+#include "dynvcp/dyn_vcp_info.h"
 
 void
 dbgrpt_internal_feature_metadata(
@@ -58,7 +58,7 @@ version_feature_info_to_metadata(
  * Returns:
  *    true if formatting successful, false if not
  */
-bool vcp_format_feature_detail_sl_lookup(
+bool dyn_format_feature_detail_sl_lookup(
         Nontable_Vcp_Value *     code_info,
         // Display_Ref *            dref,
         // DDCA_MCCS_Version_Spec   vcp_version,
@@ -91,7 +91,7 @@ bool vcp_format_feature_detail_sl_lookup(
 
 
 Internal_Feature_Metadata *
-ddc_get_feature_metadata_by_dref(
+dyn_get_feature_metadata_by_dref(
       DDCA_Vcp_Feature_Code feature_code,
       Display_Ref *         dref,
       bool                  with_default)
@@ -109,7 +109,7 @@ ddc_get_feature_metadata_by_dref(
          result->external_metadata = dfr_metadata;
          if (dfr_metadata->feature_flags & DDCA_SIMPLE_NC) {
             if (dfr_metadata->sl_values)
-               result->vcp_nontable_formatter = vcp_format_feature_detail_sl_lookup;  // HACK
+               result->vcp_nontable_formatter = dyn_format_feature_detail_sl_lookup;  // HACK
             else
                result->nontable_formatter = format_feature_detail_sl_byte;
          }
@@ -176,14 +176,14 @@ ddc_get_feature_metadata_by_dref(
 }
 
 Internal_Feature_Metadata *
-ddc_get_feature_metadata_by_dh(
+dyn_get_feature_metadata_by_dh(
       DDCA_Vcp_Feature_Code id,
       Display_Handle *      dh,
       bool                  with_default)
 {
    // ensure dh->dref->vcp_version set without incurring additional open/close
    get_vcp_version_by_display_handle(dh);
-   return ddc_get_feature_metadata_by_dref(id, dh->dref, with_default);
+   return dyn_get_feature_metadata_by_dref(id, dh->dref, with_default);
 
 }
 
@@ -195,7 +195,7 @@ ddc_get_feature_metadata_by_dh(
 // Functions that apply formatting
 
 bool
-ddc_format_nontable_feature_detail(
+dyn_format_nontable_feature_detail(
         Internal_Feature_Metadata *  intmeta,
         DDCA_MCCS_Version_Spec     vcp_version,
         Nontable_Vcp_Value *       code_info,
@@ -226,7 +226,7 @@ ddc_format_nontable_feature_detail(
 }
 
 bool
-ddc_format_table_feature_detail(
+dyn_format_table_feature_detail(
       Internal_Feature_Metadata *  intmeta,
        DDCA_MCCS_Version_Spec     vcp_version,
        Buffer *                   accumulated_value,
@@ -255,7 +255,7 @@ ddc_format_table_feature_detail(
  * It is the caller's responsibility to free the returned string.
  */
 bool
-ddc_format_feature_detail(
+dyn_format_feature_detail(
       Internal_Feature_Metadata *  intmeta,
        DDCA_MCCS_Version_Spec    vcp_version,
        Single_Vcp_Value *        valrec,
@@ -273,7 +273,7 @@ ddc_format_feature_detail(
       DBGMSF(debug, "DDCA_NON_TABLE_VCP_VALUE");
       Nontable_Vcp_Value* nontable_value = single_vcp_value_to_nontable_vcp_value(valrec);
       char workbuf[200];
-      ok = ddc_format_nontable_feature_detail(
+      ok = dyn_format_nontable_feature_detail(
               intmeta,
               vcp_version,
               nontable_value,
@@ -285,7 +285,7 @@ ddc_format_feature_detail(
    }
    else {        // TABLE_VCP_CALL
       DBGMSF(debug, "DDCA_TABLE_VCP_VALUE");
-      ok = ddc_format_table_feature_detail(
+      ok = dyn_format_table_feature_detail(
             intmeta,
             vcp_version,
             buffer_new_with_value(valrec->val.t.bytes, valrec->val.t.bytect, __func__),
@@ -323,7 +323,7 @@ ddc_format_feature_detail(
  * It is the caller's responsibility to free the returned string.
  */
 bool
-ddc_format_feature_detail(
+dyn_format_feature_detail(
        Internal_Feature_Metadata * intmeta,
        DDCA_MCCS_Version_Spec    vcp_version,
        Single_Vcp_Value *        valrec,
@@ -342,7 +342,7 @@ ddc_format_feature_detail(
       DBGMSF(debug, "DDCA_NON_TABLE_VCP_VALUE");
       Nontable_Vcp_Value* nontable_value = single_vcp_value_to_nontable_vcp_value(valrec);
       char workbuf[200];
-      ok = ddc_format_nontable_feature_detail(
+      ok = dyn_format_nontable_feature_detail(
               intmeta,
               vcp_version,
               nontable_value,
@@ -354,7 +354,7 @@ ddc_format_feature_detail(
    }
    else {        // TABLE_VCP_CALL
       DBGMSF(debug, "DDCA_TABLE_VCP_VALUE");
-      ok = ddc_format_table_feature_detail(
+      ok = dyn_format_table_feature_detail(
             intmeta,
             vcp_version,
             buffer_new_with_value(valrec->val.t.bytes, valrec->val.t.bytect, __func__),
@@ -374,7 +374,5 @@ ddc_format_feature_detail(
    DBGMSF(debug, "Done.  Returning %d, *aformatted_data=%p", ok, *aformatted_data);
    return ok;
 }
-
-
 
 

@@ -778,7 +778,7 @@ get_formatted_value_for_internal_metadata(
          bool ok;
          char * formatted_data = NULL;
 
-         ok = ddc_format_feature_detail(
+         ok = dyn_format_feature_detail(
                  internal_meta,
                  vspec,
                  pvalrec,
