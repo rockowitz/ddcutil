@@ -48,6 +48,12 @@ app_show_single_vcp_value_by_feature_id(
       bool                  force);
 
 Public_Status_Code
+app_show_single_vcp_value_by_feature_id_new(
+      Display_Handle *      dh,
+      DDCA_Vcp_Feature_Code feature_id,
+      bool                  force);
+
+Public_Status_Code
 app_show_vcp_subset_values_by_display_handle(
       Display_Handle *      dh,
       VCP_Feature_Subset    subset,

@@ -57,6 +57,7 @@
 #include "ddc/ddc_packet_io.h"
 #include "ddc/ddc_vcp_version.h"
 #include "ddc/ddc_vcp.h"
+#include "ddc/ddc_vcp_info.h"
 
 #include "app_ddcutil/app_getvcp.h"
 
@@ -115,6 +116,52 @@ app_show_single_vcp_value_by_feature_table_entry(
    return psc;
 }
 
+DDCA_Status
+app_show_single_vcp_value_by_internal_metadata(
+      Display_Handle *             dh,
+      Internal_Feature_Metadata *  meta)
+{
+   bool debug = true;
+   DBGMSF(debug, "Starting. Getting feature 0x%02x for %s",
+                 meta->external_metadata->feature_code, dh_repr(dh) );
+
+   DDCA_Feature_Metadata * extmeta = meta->external_metadata;
+
+   DDCA_MCCS_Version_Spec vspec      = get_vcp_version_by_display_handle(dh);
+   DDCA_Status            ddcrc      = 0;
+   DDCA_Vcp_Feature_Code  feature_id = extmeta->feature_code;
+
+   if (!(extmeta->feature_flags & DDCA_READABLE)) {
+      char * feature_name =  extmeta->feature_name;
+
+      DDCA_Feature_Flags vflags = extmeta->feature_flags;
+      // should get vcp version from metadata
+      if (vflags & DDCA_DEPRECATED)
+         printf("Feature %02x (%s) is deprecated in MCCS %d.%d\n",
+                feature_id, feature_name, vspec.major, vspec.minor);
+      else
+         printf("Feature %02x (%s) is not readable\n", feature_id, feature_name);
+      ddcrc = DDCRC_INVALID_OPERATION;
+   }
+
+   if (ddcrc == 0) {
+      char * formatted_value = NULL;
+      ddcrc = get_formatted_value_for_internal_metadata(
+               dh,
+               meta,
+               false,      /* suppress_unsupported */
+               true,       /* prefix_value_with_feature_code */
+               &formatted_value,
+               stdout);    /* msg_fh */
+      if (formatted_value) {
+         printf("%s\n", formatted_value);
+         free(formatted_value);
+      }
+   }
+
+   DBGMSF(debug, "Done.  Returning: %s", psc_desc(ddcrc));
+   return ddcrc;
+}
 
 /* Shows a single VCP value specified by its feature id.
  *
@@ -134,7 +181,7 @@ app_show_single_vcp_value_by_feature_id(
       DDCA_Vcp_Feature_Code feature_id,
       bool                  force)
 {
-   bool debug = false;
+   bool debug = true;
    DBGMSF(debug, "Starting. Getting feature 0x%02x for %s, force=%s",
                  feature_id, dh_repr(dh), bool_repr(force) );
 
@@ -156,6 +203,41 @@ app_show_single_vcp_value_by_feature_id(
    DBGMSF(debug, "Done.  Returning: %s", psc_desc(psc));
    return psc;
 }
+
+Public_Status_Code
+app_show_single_vcp_value_by_feature_id_new(
+      Display_Handle *      dh,
+      DDCA_Vcp_Feature_Code feature_id,
+      bool                  force)
+{
+   bool debug = true;
+   DBGMSF(debug, "Starting. Getting feature 0x%02x for %s, force=%s",
+                 feature_id, dh_repr(dh), bool_repr(force) );
+
+   Public_Status_Code         psc = 0;
+
+   Internal_Feature_Metadata * intmeta =
+   ddc_get_feature_metadata_by_dh(
+         feature_id,
+         dh,
+         force || feature_id >- 0xe0    // with_default
+         );
+
+   // VCP_Feature_Table_Entry *  entry = NULL;
+
+
+   if (!intmeta) {
+      printf("Unrecognized VCP feature code: 0x%02x\n", feature_id);
+      psc = DDCRC_UNKNOWN_FEATURE;
+   }
+   else {
+      psc = app_show_single_vcp_value_by_internal_metadata(dh, intmeta);
+   }
+
+   DBGMSF(debug, "Done.  Returning: %s", psc_desc(psc));
+   return psc;
+}
+
 
 
 /* Shows the VCP values for all features in a VCP feature subset.
@@ -243,7 +325,7 @@ app_show_feature_set_values_by_display_handle(
       Feature_Set_Ref *    fsref,
       Feature_Set_Flags    flags)
 {
-   bool debug = false;
+   bool debug = true;
    if (debug) {
       char * s0 = feature_set_flag_names(flags);
       DBGMSG("Starting. flags: %s, dh: %s", s0, dh_repr(dh));
@@ -253,7 +335,7 @@ app_show_feature_set_values_by_display_handle(
 
    Public_Status_Code psc = 0;
    if (fsref->subset == VCP_SUBSET_SINGLE_FEATURE) {
-      psc = app_show_single_vcp_value_by_feature_id(
+      psc = app_show_single_vcp_value_by_feature_id_new(
             dh, fsref->specific_feature, flags&FSF_FORCE);
    }
    else {
@@ -332,7 +414,7 @@ Byte show_changed_feature(Display_Handle * dh) {
      changed_feature = p_nontable_response->sl;
      free(p_nontable_response);
      if (changed_feature)
-        app_show_single_vcp_value_by_feature_id(dh, changed_feature, false);
+        app_show_single_vcp_value_by_feature_id_new(dh, changed_feature, false);
   }
   return changed_feature;
 }
