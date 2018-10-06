@@ -35,6 +35,7 @@
 #include "vcp/vcp_feature_codes.h"
 #include "vcp/vcp_feature_set.h"
 #include "vcp/vcp_feature_values.h"
+#include "ddc/ddc_vcp_info.h"
 
 // TODO: Should probably be in a more general location
 // Standard printf format strings for reporting feature codes values.
@@ -76,6 +77,15 @@ get_formatted_value_for_feature_table_entry(
       bool                       prefix_value_with_feature_code,
       char **                    pformatted_value,
       FILE *                     msg_fh);
+
+Public_Status_Code
+get_formatted_value_for_internal_metadata(
+      Display_Handle *            dh,
+      Internal_Feature_Metadata * internal_meta,
+      bool                        suppress_unsupported,
+      bool                        prefix_value_with_feature_code,
+      char **                     formatted_value_loc,
+      FILE *                      msg_fh);
 
 Public_Status_Code
 show_vcp_values(

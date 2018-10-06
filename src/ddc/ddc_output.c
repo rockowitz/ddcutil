@@ -62,6 +62,7 @@
 #include "ddc/ddc_packet_io.h"
 #include "ddc/ddc_vcp.h"
 #include "ddc/ddc_vcp_version.h"
+#include "ddc/ddc_vcp_info.h"
 
 #include "ddc/ddc_output.h"
 
@@ -284,6 +285,132 @@ get_raw_value_for_feature_table_entry(
    }
    return psc;
 }
+
+
+Public_Status_Code
+get_raw_value_for_feature_metadata(
+      Display_Handle *           dh,
+      DDCA_Feature_Metadata *    frec,
+      bool                       ignore_unsupported,
+      Single_Vcp_Value **   pvalrec,
+      FILE *                     msg_fh)
+{
+   bool debug = false;
+   DBGTRC(debug, TRACE_GROUP, "Starting", NULL);
+
+   assert(dh);
+   assert(dh->dref);
+
+   Public_Status_Code psc = 0;
+   Error_Info * ddc_excp = NULL;
+
+   // DDCA_MCCS_Version_Spec vspec = get_vcp_version_by_display_handle(dh);
+   // char * feature_name = get_version_sensitive_feature_name(frec, vspec);
+   char * feature_name = frec->feature_name;
+
+   Byte feature_code = frec->feature_code;
+   // bool is_table_feature = is_table_feature_by_display_handle(frec, dh);
+   bool is_table_feature = frec->feature_flags & DDCA_TABLE;
+   DDCA_Vcp_Value_Type feature_type = (is_table_feature) ? DDCA_TABLE_VCP_VALUE : DDCA_NON_TABLE_VCP_VALUE;
+   DDCA_Output_Level output_level = get_output_level();
+   Single_Vcp_Value * valrec = NULL;
+   if (dh->dref->io_path.io_mode == DDCA_IO_USB) {
+#ifdef USE_USB
+     psc = usb_get_vcp_value(
+              dh,
+              feature_code,
+              feature_type,
+              &valrec);
+     if (psc != 0)
+        ddc_excp = errinfo_new(psc, __func__);
+#else
+      PROGRAM_LOGIC_ERROR("ddcutil not built with USB support");
+#endif
+   }
+   else {
+      ddc_excp = ddc_get_vcp_value(
+              dh,
+              feature_code,
+              feature_type,
+              &valrec);
+      psc = ERRINFO_STATUS(ddc_excp);
+   }
+   assert ( (psc==0 && valrec) || (psc!=0 && !valrec) );
+
+   switch(psc) {
+   case 0:
+      break;
+
+   case DDCRC_DDC_DATA:           // was DDCRC_INVALID_DATA
+      if (output_level >= DDCA_OL_NORMAL)
+         f0printf(msg_fh, FMT_CODE_NAME_DETAIL_W_NL,
+                         feature_code, feature_name, "Invalid response");
+      break;
+
+   case DDCRC_NULL_RESPONSE:
+      // for unsupported features, some monitors return null response rather than a valid response
+      // with unsupported feature indicator set
+      if (!ignore_unsupported) {
+         f0printf(msg_fh, FMT_CODE_NAME_DETAIL_W_NL,
+                        feature_code, feature_name, "Unsupported feature code (Null response)");
+      }
+      COUNT_STATUS_CODE(DDCRC_DETERMINED_UNSUPPORTED);
+      psc = DDCRC_DETERMINED_UNSUPPORTED;
+      break;
+
+   case DDCRC_READ_ALL_ZERO:
+      // treat as invalid response if not table type?
+      if (!ignore_unsupported) {
+         f0printf(msg_fh, FMT_CODE_NAME_DETAIL_W_NL,
+                        feature_code, feature_name, "Unsupported feature code (All zero response)");
+      }
+      psc = DDCRC_DETERMINED_UNSUPPORTED;
+      COUNT_STATUS_CODE(DDCRC_DETERMINED_UNSUPPORTED);
+      break;
+
+   case DDCRC_RETRIES:
+      f0printf(msg_fh, FMT_CODE_NAME_DETAIL_W_NL,
+                      feature_code, feature_name, "Maximum retries exceeded");
+      break;
+
+   case DDCRC_REPORTED_UNSUPPORTED:
+   case DDCRC_DETERMINED_UNSUPPORTED:
+      if (!ignore_unsupported) {
+         f0printf(msg_fh, FMT_CODE_NAME_DETAIL_W_NL,
+                         feature_code, feature_name, "Unsupported feature code");
+      }
+      break;
+
+   default:
+   {
+      char buf[200];
+      snprintf(buf, 200, "Invalid response. status code=%s, %s", psc_desc(psc), dh_repr_t(dh));
+      f0printf(msg_fh, FMT_CODE_NAME_DETAIL_W_NL,
+                       feature_code, feature_name, buf);
+   }
+   }
+
+   *pvalrec = valrec;
+   DBGTRC(debug, TRACE_GROUP, "Done.  Returning: %s, *pvalrec=%p", psc_desc(psc), *pvalrec);
+   assert( (psc == 0 && *pvalrec) || (psc != 0 && !*pvalrec) );
+   if (*pvalrec && (debug || IS_TRACING())) {
+      dbgrpt_single_vcp_value(*pvalrec, 1);
+   }
+   if (ddc_excp) {
+#ifdef OLD
+      if (debug || IS_TRACING() || report_freed_exceptions) {
+         DBGMSG("Freeing exception:");
+         errinfo_report(ddc_excp, 1);
+      }
+      errinfo_free(ddc_excp);
+#endif
+      ERRINFO_FREE_WITH_REPORT(ddc_excp, debug || IS_TRACING() || report_freed_exceptions);
+   }
+   return psc;
+}
+
+
+
 
 
 /* Gather values for the features in a feature set.
@@ -550,6 +677,152 @@ get_formatted_value_for_feature_table_entry(
           psc_desc(psc), formatted_value_loc);
    return psc;
 }
+
+
+
+Public_Status_Code
+get_formatted_value_for_internal_metadata(
+      Display_Handle *            dh,
+      Internal_Feature_Metadata * internal_meta,
+      bool                        suppress_unsupported,
+      bool                        prefix_value_with_feature_code,
+      char **                     formatted_value_loc,
+      FILE *                      msg_fh)
+{
+   bool debug = false;
+   DBGTRC(debug, TRACE_GROUP, "Starting. suppress_unsupported=%s", sbool(suppress_unsupported));
+
+   Public_Status_Code psc = 0;
+   *formatted_value_loc = NULL;
+
+   DDCA_MCCS_Version_Spec vspec = get_vcp_version_by_display_handle(dh);
+   DDCA_Feature_Metadata* extmeta = internal_meta->external_metadata;
+   Byte feature_code = extmeta->feature_code;
+   char * feature_name = extmeta->feature_name;
+   bool is_table_feature = extmeta->feature_flags & DDCA_TABLE;
+   DDCA_Vcp_Value_Type feature_type = (is_table_feature) ? DDCA_TABLE_VCP_VALUE : DDCA_NON_TABLE_VCP_VALUE;
+   DDCA_Output_Level output_level = get_output_level();
+   if (output_level >= DDCA_OL_VERBOSE) {
+      fprintf(msg_fh, "\nGetting data for %s VCP code 0x%02x - %s:\n",
+                            (is_table_feature) ? "table" : "non-table",
+                            feature_code,
+                            feature_name);
+   }
+
+   Single_Vcp_Value *    pvalrec = NULL;
+
+   // bool ignore_unsupported = !(output_level >= DDCA_OL_NORMAL && !suppress_unsupported);
+   bool ignore_unsupported = suppress_unsupported;
+
+   psc = get_raw_value_for_feature_metadata(
+            dh,
+            extmeta,
+            ignore_unsupported,
+            &pvalrec,
+            (output_level == DDCA_OL_TERSE) ? NULL : msg_fh);
+            // msg_fh);
+   assert( (psc==0 && (feature_type == pvalrec->value_type)) || (psc!=0 && !pvalrec) );
+   if (psc == 0) {
+      // if (!is_table_feature && output_level >= OL_VERBOSE) {
+      // if (!is_table_feature && debug) {
+      if (output_level >= DDCA_OL_VERBOSE || debug) {
+         rpt_push_output_dest(msg_fh);
+         // report_single_vcp_value(pvalrec, 0);
+         rpt_vstring(0, "Raw value: %s", summarize_single_vcp_value(pvalrec));
+         rpt_pop_output_dest();
+      }
+
+      if (output_level == DDCA_OL_TERSE) {
+         if (is_table_feature) {
+            // output VCP code  hex values of bytes
+            int bytect = pvalrec->val.t.bytect;
+            int hexbufsize = bytect * 3;
+            char * hexbuf = calloc(hexbufsize, sizeof(char));
+            char space = ' ';
+            // n. buffer passed to hexstring2(), so no allocation
+            hexstring2(pvalrec->val.t.bytes, bytect, &space, false /* upper case */, hexbuf, hexbufsize);
+            char * formatted = calloc(hexbufsize + 20, sizeof(char));
+            snprintf(formatted, hexbufsize+20, "VCP %02X T x%s\n", feature_code, hexbuf);
+            *formatted_value_loc = formatted;
+            free(hexbuf);
+         }
+         else {                                // OL_PROGRAM, not table feature
+            DDCA_Version_Feature_Flags vflags = extmeta->feature_flags;
+            // =   get_version_sensitive_feature_flags(vcp_entry, vspec);
+            char buf[200];
+            assert(vflags & (DDCA_CONT | DDCA_SIMPLE_NC | DDCA_COMPLEX_NC | DDCA_NC_CONT));
+            if (vflags & DDCA_CONT) {
+               snprintf(buf, 200, "VCP %02X C %d %d",
+                                  feature_code,
+                                  pvalrec->val.c.cur_val, pvalrec->val.c.max_val);
+            }
+            else if (vflags & DDCA_SIMPLE_NC) {
+               snprintf(buf, 200, "VCP %02X SNC x%02x",
+                                   feature_code, pvalrec->val.nc.sl);
+            }
+            else {
+               assert(vflags & (DDCA_COMPLEX_NC|DDCA_NC_CONT));
+               snprintf(buf, 200, "VCP %02X CNC x%02x x%02x x%02x x%02x",
+                                  feature_code,
+                                  pvalrec->val.nc.mh,
+                                  pvalrec->val.nc.ml,
+                                  pvalrec->val.nc.sh,
+                                  pvalrec->val.nc.sl
+                                  );
+            }
+            *formatted_value_loc = strdup(buf);
+         }
+      }
+
+      else  {
+         bool ok;
+         char * formatted_data = NULL;
+
+         ok = ddc_format_feature_detail(
+                 internal_meta,
+                 vspec,
+                 pvalrec,
+                 &formatted_data);
+         // DBGMSG("vcp_format_feature_detail set formatted_data=|%s|", formatted_data);
+         if (!ok) {
+            f0printf(msg_fh, FMT_CODE_NAME_DETAIL_W_NL,
+                            feature_code, feature_name, "!!! UNABLE TO FORMAT OUTPUT");
+            psc = DDCRC_INTERPRETATION_FAILED;
+            // TODO: retry with default output function
+         }
+
+         if (ok) {
+            if (prefix_value_with_feature_code) {
+               *formatted_value_loc = calloc(1, strlen(formatted_data) + 50);
+               snprintf(*formatted_value_loc, strlen(formatted_data) + 49,
+                        FMT_CODE_NAME_DETAIL_WO_NL,
+                        feature_code, feature_name, formatted_data);
+               free(formatted_data);
+            }
+            else {
+                *formatted_value_loc = formatted_data;
+             }
+         }
+      }         // normal (non OL_PROGRAM) output
+   }
+
+   else {   // error
+      // if output_level >= DDCA_OL_NORMAL, get_raw_value_for_feature_table_entry() already issued message
+      if (output_level == DDCA_OL_TERSE && !suppress_unsupported) {
+         f0printf(msg_fh, "VCP %02X ERR\n", feature_code);
+      }
+   }
+
+   if (pvalrec)
+      free_single_vcp_value(pvalrec);
+
+   DBGTRC(debug, TRACE_GROUP,
+          "Done.  Returning: %s, *formatted_value_loc=|%s|",
+          psc_desc(psc), formatted_value_loc);
+   return psc;
+}
+
+
 
 
 Public_Status_Code
