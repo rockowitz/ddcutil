@@ -1,28 +1,8 @@
-/* vcp_feature_set.c
- *
- * <copyright>
- * Copyright (C) 2014-2016 Sanford Rockowitz <rockowitz@minsoft.com>
- *
- * Licensed under the GNU General Public License Version 2
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
- * </endcopyright>
+/** @file vcp_feature_set.c
  */
 
-/** \file vcp_feature_set.c
- */
+// Copyright (C) 2014-2018 Sanford Rockowitz <rockowitz@minsoft.com>
+// SPDX-License-Identifier: GPL-2.0-or-later
 
 #include <assert.h>
 #include <stdio.h>
@@ -39,8 +19,8 @@
 #define VCP_FEATURE_SET_MARKER "FSET"
 struct vcp_feature_set {
    char                marker[4];
-   VCP_Feature_Subset  subset;
-   GPtrArray *         members;
+   VCP_Feature_Subset  subset;      // subset identifier
+   GPtrArray *         members;     // array of pointers to VCP_Feature_Table_Entry
 };
 
 
@@ -117,7 +97,7 @@ create_feature_set(
    assert(subset_id);
    assert(subset_id != VCP_SUBSET_SINGLE_FEATURE);
 
-   bool debug = false;
+   bool debug = true;
    if (debug) {
       char * sflags = feature_set_flag_names(flags);
       DBGMSG("Starting. subset_id=%s(0x%04x), vcp_version=%d.%d, flags=%s",
@@ -127,9 +107,12 @@ create_feature_set(
    }
 
    bool exclude_table_features = flags & FSF_NOTABLE;
+
+
    struct vcp_feature_set * fset = calloc(1,sizeof(struct vcp_feature_set));
    memcpy(fset->marker, VCP_FEATURE_SET_MARKER, 4);
    fset->subset = subset_id;
+
    fset->members = g_ptr_array_sized_new(30);
    if (subset_id == VCP_SUBSET_SCAN || subset_id == VCP_SUBSET_MFG) {
       int ndx = 0;
@@ -256,17 +239,30 @@ create_feature_set(
       }
    }
 
+   if (debug) {
+      DBGMSG("Returning: %p", fset);
+      if (fset)
+         dbgrpt_feature_set(fset, 1);
+   }
    return fset;
 }
 
 
 VCP_Feature_Set
 create_single_feature_set_by_vcp_entry(VCP_Feature_Table_Entry * vcp_entry) {
+   bool debug = true;
+
    struct vcp_feature_set * fset = calloc(1,sizeof(struct vcp_feature_set));
    memcpy(fset->marker, VCP_FEATURE_SET_MARKER, 4);
    fset->members = g_ptr_array_sized_new(1);
    fset->subset = VCP_SUBSET_SINGLE_FEATURE;
    g_ptr_array_add(fset->members, vcp_entry);
+
+   if (debug) {
+      DBGMSG("Returning: %p", fset);
+      if (fset)
+         dbgrpt_feature_set(fset, 1);
+   }
    return fset;
 }
 
@@ -402,6 +398,28 @@ void report_feature_set(VCP_Feature_Set feature_set, int depth) {
                   vcp_entry->code,
                   get_non_version_specific_feature_name(vcp_entry)
                  );
+   }
+}
+
+void dbgrpt_feature_set(VCP_Feature_Set feature_set, int depth) {
+   int d1 = depth+1;
+
+   struct vcp_feature_set * fset = (struct vcp_feature_set *) feature_set;
+   assert( fset && memcmp(fset->marker, VCP_FEATURE_SET_MARKER, 4) == 0);
+   rpt_vstring(depth, "Subset: %d (%s)", fset->subset, feature_subset_name(fset->subset));
+   int ndx = 0;
+   for (; ndx < fset->members->len; ndx++) {
+      VCP_Feature_Table_Entry * vcp_entry = g_ptr_array_index(fset->members,ndx);
+      rpt_vstring(depth,
+                  "VCP code: %02X: %s",
+                  vcp_entry->code,
+                  get_non_version_specific_feature_name(vcp_entry)
+                 );
+      char buf[50];
+      rpt_vstring(d1, "Global feature flags: 0x%04x - %s",
+                      vcp_entry->vcp_global_flags,
+                      vcp_interpret_global_feature_flags(vcp_entry->vcp_global_flags, buf, 50) );
+
    }
 }
 
