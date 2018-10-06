@@ -1,6 +1,6 @@
 ## Process this file with automake to produce Makefile.in
 
-SUBDIRS = util usb_util base vcp i2c adl usb ddc test app_sysenv app_common cmdline . gobject_api swig cython cffi  sample_clients 
+SUBDIRS = util usb_util base vcp i2c adl usb ddc test app_sysenv cmdline . gobject_api swig cython cffi  sample_clients 
 
 MOSTLYCLEANFILES =   
 
@@ -78,6 +78,7 @@ endif
 #
 ddcutil_SOURCES = \
 app_ddcutil/main.c \
+app_ddcutil/app_dynamic_features.c \
 app_ddcutil/app_vcp_info.c \
 app_ddcutil/app_dumpload.c \
 app_ddcutil/app_setvcp.c \
@@ -222,9 +223,11 @@ endif
 
 
 libapp_la_LIBADD = \
-app_common/libappcommon.la \
 app_sysenv/libappsysenv.la \
 cmdline/libcmdline.la 
+
+# libapp_la_LIBADD += \
+# app_common/libappcommon.la 
 
 if INCLUDE_TESTCASES_COND
 libapp_la_LIBADD  += \

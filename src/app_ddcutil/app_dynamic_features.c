@@ -114,5 +114,5 @@ void check_dynamic_features_old(Display_Ref * dref) {
 #endif
 
 
-#include "app_dynamic_features.h"
+#include <app_ddcutil/app_dynamic_features.h>
 

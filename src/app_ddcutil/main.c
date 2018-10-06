@@ -83,8 +83,7 @@
 #include "cmdline/cmd_parser.h"
 #include "cmdline/parsed_cmd.h"
 
-#include "app_common/app_dynamic_features.h"    // future
-
+#include "app_ddcutil/app_dynamic_features.h"
 #include "app_ddcutil/app_dumpload.h"
 #include "app_ddcutil/app_getvcp.h"
 #include "app_ddcutil/app_setvcp.h"
