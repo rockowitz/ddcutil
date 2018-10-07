@@ -9,9 +9,9 @@
 
 #include <glib.h>
 
-#include "ddcutil_types.h"
+// #include "ddcutil_types.h"
 
-#include "private/ddcutil_types_private.h"
+// #include "private/ddcutil_types_private.h"
 
 // #include "util/data_structures.h"
 
@@ -21,6 +21,9 @@
 // #include "base/vcp_version.h"
 
 // #include "vcp/parsed_capabilities_feature.h"
+
+#include "base/displays.h"
+
 #include "vcp/parse_capabilities.h"
 
 
@@ -31,9 +34,9 @@ void report_capabilities_feature(
       int                           depth);
 #endif
 
-void report_parsed_capabilities(
+void dyn_report_parsed_capabilities(
          Parsed_Capabilities*    pcaps,
-         DDCA_Monitor_Model_Key* mmid,
+         Display_Ref *           dref,
          int                     depth);
 
 #endif /* DYN_PARSED_CAPABILITIES_H_ */

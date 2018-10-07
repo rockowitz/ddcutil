@@ -29,6 +29,8 @@
 #include "vcp/parse_capabilities.h"
 #include "vcp/parsed_capabilities_feature.h"
 
+#include "dynvcp/dyn_feature_codes.h"
+
 #include "dynvcp/dyn_parsed_capabilities.h"
 
 // From parsed_capabiliies_feature.c:
@@ -39,17 +41,21 @@
  *  Output is written to the #FOUT device.
  *
  *  @param vfr         pointer to #Capabilities_Feature_Record
+ *  @param dref        display reference
  *  @param vcp_version monitor VCP version, used in case feature
- *                     information is version specific
+ *                     information is version specific, from parsed capabilities if possible
  *  @param depth       logical indentation depth
  */
-static void report_capabilities_feature(
+static void
+report_capabilities_feature(
       Capabilities_Feature_Record *  vfr,
+      Display_Ref *                  dref,
       DDCA_MCCS_Version_Spec         vcp_version,
       int                            depth)
 {
    bool debug = false;
-   DBGMSF(debug, "Starting. vfr=%p, vcp_version=%d.%d", vfr, vcp_version.major, vcp_version.minor);
+   DBGMSF(debug, "Starting. vfr=%p, dref=%s, vcp_version=%d.%d",
+                 vfr, dref_repr_t(dref), vcp_version.major, vcp_version.minor);
    assert(vfr && memcmp(vfr->marker, CAPABILITIES_FEATURE_MARKER, 4) == 0);
 
    int d0 = depth;
@@ -58,7 +64,8 @@ static void report_capabilities_feature(
 
    rpt_vstring(d0, "Feature: %02X (%s)",
                   vfr->feature_id,
-                  get_feature_name_by_id_and_vcp_version(vfr->feature_id, vcp_version));
+                  dyn_get_feature_name(vfr->feature_id, dref));  // n. handles dref == NULL
+                  // get_feature_name_by_id_and_vcp_version(vfr->feature_id, vcp_version));
 
    DDCA_Output_Level ol = get_output_level();
    DBGMSF(debug,  "vfr->value_string=%p", vfr->value_string);
@@ -124,9 +131,22 @@ static void report_capabilities_feature(
 
    DBGMSF(debug, "vfr->bbflags=%p", vfr->bbflags);
    if (vfr->bbflags) {
+
       // Get the descriptions of the documented values for the feature
-      DDCA_Feature_Value_Entry * feature_values =
+      DDCA_Feature_Value_Entry * feature_values = NULL;
+      bool found_dynamic_feature = false;
+      if (dref && dref->dfr) {
+         DDCA_Feature_Metadata * dfr_metadata
+                  = get_dynamic_feature_metadata(dref->dfr, vfr->feature_id);
+         if (dfr_metadata) {
+            found_dynamic_feature = true;
+            feature_values = dfr_metadata->sl_values;
+         }
+      }
+      if (!found_dynamic_feature) {
+         feature_values =
             find_feature_values_for_capabilities(vfr->feature_id, vcp_version);
+      }
       DBGMSF(debug, "Feature values %sfound for feature 0x%02x",
                     (feature_values) ? "" : "NOT ",
                     vfr->feature_id);
@@ -137,6 +157,9 @@ static void report_capabilities_feature(
          else
             rpt_vstring(d1, "Values:");
 
+         char * dynamic_disclaimer = "";
+         if (found_dynamic_feature)
+            dynamic_disclaimer = " (from user defined feature definition)";
          Byte_Bit_Flags iter = bbf_iter_new(vfr->bbflags);
          int nextval = -1;
          while ( (nextval = bbf_iter_next(iter)) >= 0) {
@@ -144,7 +167,7 @@ static void report_capabilities_feature(
             char *  value_name = vcp_get_feature_value_name(feature_values, nextval);
             if (!value_name)
                value_name = "Unrecognized value";
-            rpt_vstring(d2, "%02x: %s", nextval, value_name);
+            rpt_vstring(d2, "%02x: %s%s", nextval, value_name, dynamic_disclaimer);
          }
          bbf_iter_free(iter);
       }
@@ -159,9 +182,7 @@ static void report_capabilities_feature(
    }
 // #endif
 
-
-
-   DBGMSF0(debug, "Done.");
+   DBGMSF(debug, "Done.");
 }
 
 
@@ -172,7 +193,9 @@ static void report_capabilities_feature(
 // Report parsed data structures
 //
 
-static void report_commands(Byte_Value_Array cmd_ids, int depth) {
+static void
+report_commands(Byte_Value_Array cmd_ids, int depth)
+{
    rpt_label(depth, "Commands:");
    int ct = bva_length(cmd_ids);
    int ndx = 0;
@@ -183,9 +206,11 @@ static void report_commands(Byte_Value_Array cmd_ids, int depth) {
 }
 
 
-static void report_features(
+static void
+report_features(
       GPtrArray*             features,     // GPtrArray of Capabilities_Feature_Record
-      DDCA_MCCS_Version_Spec vcp_version)
+      Display_Ref *          dref,
+      DDCA_MCCS_Version_Spec vcp_version)  // from parsed capabilities if possible
 {
    bool debug = false;
    int d0 = 0;
@@ -197,26 +222,28 @@ static void report_features(
    for (ndx=0; ndx < ct; ndx++) {
       Capabilities_Feature_Record * vfr = g_ptr_array_index(features, ndx);
       DBGMSF(debug, "vfr = %p", vfr);
-      report_capabilities_feature(vfr, vcp_version, d1);
+      report_capabilities_feature(vfr, dref, vcp_version, d1);
    }
 }
 
 
 /** Reports the Parsed_Capabilities struct for human consumption.
  *
- * @param pcaps pointer to ***Parsed_Capabilities***
+ * @param pcaps parsed capabilities
+ * @param dref  display reference
+ * @param depth logical indentation depth
  *
  * Output is written to the current stdout device.
  */
-void report_parsed_capabilities(
+void dyn_report_parsed_capabilities(
       Parsed_Capabilities*     pcaps,
-      DDCA_Monitor_Model_Key * mmid,    // not currently used
+      Display_Ref *            dref,
       int                      depth)
 {
    bool debug = false;
    assert(pcaps && memcmp(pcaps->marker, PARSED_CAPABILITIES_MARKER, 4) == 0);
-   DBGMSF(debug, "Starting. pcaps->raw_cmds_segment_seen=%s, pcaps->commands=%p, pcaps->vcp_features=%p",
-          bool_repr(pcaps->raw_cmds_segment_seen), pcaps->commands, pcaps->vcp_features);
+   DBGMSF(debug, "Starting. dref=%s, pcaps->raw_cmds_segment_seen=%s, pcaps->commands=%p, pcaps->vcp_features=%p",
+          dref_repr_t(dref), sbool(pcaps->raw_cmds_segment_seen), pcaps->commands, pcaps->vcp_features);
 
    int d0 = depth;
    // int d1 = d0+1;
@@ -239,8 +266,14 @@ void report_parsed_capabilities(
       if (pcaps->raw_cmds_segment_seen)
          damaged = true;
    }
+
+   // if vcp version unspecified in capabilities string, use queried value
+   DDCA_MCCS_Version_Spec vspec = pcaps->parsed_mccs_version;
+   if ( vcp_version_eq(vspec, DDCA_VSPEC_UNKNOWN) || vcp_version_eq(vspec, DDCA_VSPEC_UNQUERIED))
+      vspec = get_vcp_version_by_display_ref(dref);
+
    if (pcaps->vcp_features)
-      report_features(pcaps->vcp_features, pcaps->parsed_mccs_version);
+      report_features(pcaps->vcp_features, dref, vspec);
    else {
       // handle pathological case of 0 length capabilities string, e.g. Samsung S32D850T
       if (pcaps->raw_vcp_features_seen)
