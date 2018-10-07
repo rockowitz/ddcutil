@@ -75,7 +75,7 @@ bool dyn_format_feature_detail_sl_lookup(
    // char * s = lookup_value_name(code_info->vcp_code, vcp_version, code_info->sl);
    // DDCA_Feature_Value_Entry * table = intmeta->external_metadata->sl_values;
    if (value_table) {
-      char * s = get_feature_value_name(value_table, code_info->sl);
+      char * s = vcp_get_feature_value_name(value_table, code_info->sl);
       if (!s)
          s = "Unrecognized value";
       snprintf(buffer, bufsz,"%s (sl=0x%02x)", s, code_info->sl);

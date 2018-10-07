@@ -425,7 +425,7 @@ static char * get_controller_mfg_string_t(Display_Handle * dh) {
 
    if (psc == 0) {
       DDCA_Feature_Value_Entry * vals = pxc8_display_controller_type_values;
-      mfg_name =  get_feature_value_name(
+      mfg_name =  vcp_get_feature_value_name(
                             vals,
                             valrec->val.nc.sl);
       if (!mfg_name) {

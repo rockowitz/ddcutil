@@ -89,7 +89,7 @@ static void report_capabilities_feature(
          int ndx = 0;
          for (; ndx < ct; ndx++) {
             Byte hval = bva_get(vfr->values, ndx);
-            char *  value_name = get_feature_value_name(feature_values, hval);
+            char *  value_name = vcp_get_feature_value_name(feature_values, hval);
             if (!value_name)
                value_name = "Unrecognized value";
             f0printf(FOUT, "       %02x: %s\n", hval, value_name);
@@ -141,7 +141,7 @@ static void report_capabilities_feature(
          int nextval = -1;
          while ( (nextval = bbf_iter_next(iter)) >= 0) {
             assert(nextval < 256);
-            char *  value_name = get_feature_value_name(feature_values, nextval);
+            char *  value_name = vcp_get_feature_value_name(feature_values, nextval);
             if (!value_name)
                value_name = "Unrecognized value";
             rpt_vstring(d2, "%02x: %s", nextval, value_name);

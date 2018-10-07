@@ -321,11 +321,11 @@ void
 free_version_feature_info(
       DDCA_Version_Feature_Info * info);
 
-
-DDCA_Feature_Value_Entry *
-find_feature_values(
-      DDCA_Vcp_Feature_Code   feature_code,
-      DDCA_MCCS_Version_Spec  vcp_version);
+// not used externally
+// DDCA_Feature_Value_Entry *
+// find_feature_value_table(
+//       DDCA_Vcp_Feature_Code   feature_code,
+//       DDCA_MCCS_Version_Spec  vcp_version);
 
 DDCA_Feature_Value_Entry *
 find_feature_values_for_capabilities(
@@ -359,7 +359,7 @@ vcp_list_feature_codes(FILE * fh);
 
 
 char *
-get_feature_value_name(
+vcp_get_feature_value_name(
       DDCA_Feature_Value_Entry * value_entries,
       Byte                       value_id);
 

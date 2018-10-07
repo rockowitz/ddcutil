@@ -1598,14 +1598,14 @@ bool format_feature_detail_x73_lut_size(
  * Returns:
  *   pointer to feature value table, NULL if not found
  */
+static
 DDCA_Feature_Value_Entry *
-find_feature_values(
+find_feature_value_table(
       DDCA_Vcp_Feature_Code   feature_code,
       DDCA_MCCS_Version_Spec  vcp_version)
 {
-   bool debug = true;
-   if (debug)
-      DBGMSG("Starting. feature_code=0x%02x", feature_code);
+   bool debug = false;
+   DBGMSF(debug, "Starting. feature_code=0x%02x", feature_code);
 
    DDCA_Feature_Value_Entry * result = NULL;
    VCP_Feature_Table_Entry * pentry = vcp_find_feature_by_hexid(feature_code);
@@ -1624,8 +1624,8 @@ find_feature_values(
       }
    }
 
-   if (debug)
-      DBGMSG("Done. feature_code=0x%02x. Returning: %p", feature_code, result);
+   DBGMSF(debug, "Done. feature_code=0x%02x. Returning feature value table at: %p",
+                 feature_code, result);
    return result;
 }
 
@@ -1654,7 +1654,7 @@ find_feature_values_for_capabilities(
    else {
       // returns NULL if feature_code not found, which would be the case, e.g., for a
       // manufacturer specific code
-      result = find_feature_values(feature_code, vcp_version);
+      result = find_feature_value_table(feature_code, vcp_version);
    }
 
    if (debug)
@@ -1674,7 +1674,11 @@ find_feature_values_for_capabilities(
  *    explanation string from the Feature_Value_Entry found (do not free)
  *    NULL if not found
  */
-char * get_feature_value_name(DDCA_Feature_Value_Entry * value_entries, Byte value_id) {
+char *
+vcp_get_feature_value_name(
+      DDCA_Feature_Value_Entry * value_entries,
+      Byte                       value_id)
+{
    // DBGMSG("Starting. pvalues_for_feature=%p, value_id=0x%02x", pvalues_for_feature, value_id);
    char * result = NULL;
    DDCA_Feature_Value_Entry *  cur_value = value_entries;
@@ -1706,18 +1710,19 @@ char * get_feature_value_name(DDCA_Feature_Value_Entry * value_entries, Byte val
  * Returns:
  *    explanation string, or "Invalid value" if value_id not found
  */
+static
 char * lookup_value_name(
           DDCA_Vcp_Feature_Code   feature_code,
           DDCA_MCCS_Version_Spec  vcp_version,
           Byte                    sl_value)
 {
-   bool debug = true;
+   bool debug = false;
    DBGMSF(debug, "feature_code=0x%02x, vcp_version=%d.%d, sl_value=-0x%02x",
                  feature_code, vcp_version.major, vcp_version.minor, sl_value);
 
-   DDCA_Feature_Value_Entry * values_for_feature = find_feature_values(feature_code, vcp_version);
+   DDCA_Feature_Value_Entry * values_for_feature = find_feature_value_table(feature_code, vcp_version);
    assert(values_for_feature);
-   char * name = get_feature_value_name(values_for_feature, sl_value);
+   char * name = vcp_get_feature_value_name(values_for_feature, sl_value);
    if (!name)
       name = "Invalid value";
 
@@ -1971,7 +1976,7 @@ bool format_feature_detail_select_color_preset(
       ok = false;
    }
    else if (vcp_version.major < 3 || code_info->mh == 0x00) {
-      sl_msg = get_feature_value_name(x14_color_preset_absolute_values, code_info->sl);
+      sl_msg = vcp_get_feature_value_name(x14_color_preset_absolute_values, code_info->sl);
       if (!sl_msg) {
          sl_msg = "Invalid SL value";
          ok = false;
@@ -2068,8 +2073,8 @@ bool format_feature_detail_x8d_v22_mute_audio_blank_screen(
    DDCA_Feature_Value_Entry * sl_values = x8d_tv_audio_mute_source_values;
    DDCA_Feature_Value_Entry * sh_values = x8d_sh_blank_screen_values;
 
-   char * sl_name = get_feature_value_name(sl_values, code_info->sl);
-   char * sh_name = get_feature_value_name(sh_values, code_info->sh);
+   char * sl_name = vcp_get_feature_value_name(sl_values, code_info->sl);
+   char * sh_name = vcp_get_feature_value_name(sh_values, code_info->sh);
    if (!sl_name)
       sl_name = "Invalid value";
    if (!sh_name)
@@ -2312,7 +2317,7 @@ bool format_feature_detail_display_controller_type(
    bool ok = true;
    Byte mfg_id = info->sl;
    char *sl_msg = NULL;
-   sl_msg = get_feature_value_name(xc8_display_controller_type_values, info->sl);
+   sl_msg = vcp_get_feature_value_name(xc8_display_controller_type_values, info->sl);
    if (!sl_msg) {
       sl_msg = "Invalid SL value";
       ok = false;
