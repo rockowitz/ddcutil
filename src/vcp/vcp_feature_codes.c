@@ -1634,7 +1634,7 @@ find_feature_value_table(
 // used by CAPABILITIES command
 DDCA_Feature_Value_Entry *
 find_feature_values_for_capabilities(
-      DDCA_Vcp_Feature_Code        feature_code,
+      DDCA_Vcp_Feature_Code   feature_code,
       DDCA_MCCS_Version_Spec  vcp_version)
 {
    bool debug = false;
@@ -1642,7 +1642,6 @@ find_feature_values_for_capabilities(
       DBGMSG("Starting. feature_code=0x%02x", feature_code);
    // ugh .. need to know the version number here
    // for now just assume vcp version < 3, return the table for v2
-
    DDCA_Feature_Value_Entry * result = NULL;
    if (feature_code == 0x14) {
       if (vcp_version.major < 3)
