@@ -68,6 +68,7 @@ Parsed_Capabilities * new_parsed_capabilities(
 {
    bool debug = false;
    DBGMSF(debug, "raw_cmds_segment_seen=%s, commands=%p", bool_repr(raw_cmds_segment_seen), commands);
+
    Parsed_Capabilities* pcaps = calloc(1, sizeof(Parsed_Capabilities));
    memcpy(pcaps->marker, PARSED_CAPABILITIES_MARKER, 4);
    pcaps->raw_value             = raw_value;
@@ -76,7 +77,7 @@ Parsed_Capabilities * new_parsed_capabilities(
    pcaps->commands              = commands;
    pcaps->vcp_features          = vcp_features;
 
-   DDCA_MCCS_Version_Spec parsed_vcp_version = {0.0};
+   DDCA_MCCS_Version_Spec parsed_vcp_version = DDCA_VSPEC_UNKNOWN;    // {0.0};
    if (mccs_ver) {
       int vmajor;
       int vminor;
@@ -92,6 +93,7 @@ Parsed_Capabilities * new_parsed_capabilities(
    }
    pcaps->parsed_mccs_version = parsed_vcp_version;
 
+   DBGMSF(debug, "Returning: %p", pcaps);
    return pcaps;
 }
 
