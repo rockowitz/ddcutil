@@ -67,7 +67,7 @@ bool dyn_format_feature_detail_sl_lookup(
         char *                   buffer,
         int                      bufsz)
 {
-   bool debug = true;
+   bool debug = false;
    DBGMSF(debug, "Starting.");
 
    // Internal_Feature_Metadata * intmeta = NULL;
@@ -97,7 +97,7 @@ dyn_get_feature_metadata_by_dref(
       Display_Ref *         dref,
       bool                  with_default)
 {
-   bool debug = true;
+   bool debug = false;
    DBGMSF(debug, "Starting. feature_code=0x%02x, dref=%s, with_default=%s",
                  feature_code, dref_repr_t(dref), sbool(with_default));
 
@@ -203,7 +203,7 @@ dyn_format_nontable_feature_detail(
         char *                     buffer,
         int                        bufsz)
 {
-   bool debug = true;
+   bool debug = false;
    DBGMSF(debug, "Starting. Code=0x%02x, vcp_version=%d.%d",
                  intmeta->external_metadata->feature_code, vcp_version.major, vcp_version.minor);
 
@@ -331,7 +331,7 @@ dyn_format_feature_detail(
        char * *                  aformatted_data
      )
 {
-   bool debug = true;
+   bool debug = false;
    DBGMSF(debug, "Starting");
 
    bool ok = true;
@@ -375,5 +375,38 @@ dyn_format_feature_detail(
    DBGMSF(debug, "Done.  Returning %d, *aformatted_data=%p", ok, *aformatted_data);
    return ok;
 }
+
+
+char *
+dyn_get_feature_name(
+      Byte            feature_code,
+      Display_Ref *   dref)
+{
+   bool debug = false;
+   DBGMSF(debug, "feature_code=0x%02x, dref=%s", feature_code, dref_repr_t(dref));
+
+   char * result = NULL;
+   if (dref) {
+      DBGMSF(debug, "dref->dfr=%s", dfr_repr_t(dref->dfr));
+      if (dref->dfr) {
+         DDCA_Feature_Metadata * dfr_metadata = get_dynamic_feature_metadata(dref->dfr, feature_code);
+         if (dfr_metadata)
+            result = dfr_metadata->feature_name;
+      }
+      if (!result) {
+         DDCA_MCCS_Version_Spec vspec = dref->vcp_version;   // TODO use function call in case not set
+         result = get_feature_name_by_id_and_vcp_version(feature_code, vspec);
+      }
+   }
+   else {
+      result = get_feature_name_by_id_only(feature_code);
+   }
+
+   DBGMSF(debug, "Done. Returning: %s", result);
+   return result;
+}
+
+
+
 
 
