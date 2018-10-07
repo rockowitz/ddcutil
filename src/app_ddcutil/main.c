@@ -62,6 +62,8 @@
 #include "vcp/parse_capabilities.h"
 #include "vcp/vcp_feature_codes.h"
 
+#include "dynvcp/dyn_dynamic_features.h"
+
 #include "i2c/i2c_bus_core.h"
 #include "i2c/i2c_do_io.h"
 
@@ -181,9 +183,9 @@ perform_get_capabilities_by_display_handle(Display_Handle * dh) {
          if (dh->dref->io_path.io_mode == DDCA_IO_USB)
             pcap->raw_value_synthesized = true;
          // report_parsed_capabilities(pcap, dh->dref->io_path.io_mode);    // io_mode no longer needed
-         report_parsed_capabilities(
+         dyn_report_parsed_capabilities(
                pcap,
-               dh->dref->mmid,
+               dh->dref,
                0);
          // free_parsed_capabilities(pcap);
       }
@@ -414,6 +416,9 @@ int main(int argc, char *argv[]) {
    }
 #endif
 
+   // global variable in dyn_dynamic_features:
+   enable_dynamic_features = parsed_cmd->flags & CMD_FLAG_ENABLE_UDF;
+
    init_ddc_services();  // n. initializes start timestamp
    // overrides setting in init_ddc_services():
    i2c_set_io_strategy(DEFAULT_I2C_IO_STRATEGY);
@@ -444,6 +449,11 @@ int main(int argc, char *argv[]) {
                 0,"",
                 28, "Force I2C slave address:",
                 bool_repr(i2c_force_slave_addr_flag));
+      f0printf( fout, "%.*s%-*s%s\n",
+                0,"",
+                28, "User defined features:",
+                (enable_dynamic_features) ? "enabled" : "disabled" );  // "Enable user defined features" is too long a title
+                // bool_repr(enable_dynamic_features));
       f0puts("\n", fout);
    }
 
@@ -750,11 +760,12 @@ int main(int argc, char *argv[]) {
 
             case CMDID_CAPABILITIES:
                {
-                  // check_dynamic_features(dref);  // needed for this command?
+                  check_dynamic_features(dref);
 
                   Parsed_Capabilities * pcaps = perform_get_capabilities_by_display_handle(dh);
                   main_rc = (pcaps) ? EXIT_SUCCESS : EXIT_FAILURE;
-                  free_parsed_capabilities(pcaps);
+                  if (pcaps)
+                     free_parsed_capabilities(pcaps);
                   break;
                }
 
