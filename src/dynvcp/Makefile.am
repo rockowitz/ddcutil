@@ -23,8 +23,8 @@ CLEANFILES = \
 # Intermediate Library
 noinst_LTLIBRARIES = libdynvcp.la
 
-libdynvcp_la_SOURCES =         \
+libdynvcp_la_SOURCES =      \
 dyn_feature_set.c           \
 dyn_parsed_capabilities.c   \
-dyn_vcp_info.c              \
+dyn_feature_codes.c         \
 dyn_dynamic_features.c
