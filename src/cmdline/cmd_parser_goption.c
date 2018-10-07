@@ -189,6 +189,7 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
    gboolean rw_only_flag   = false;
    gboolean ro_only_flag   = false;
    gboolean wo_only_flag   = false;
+   gboolean enable_udf_flag = true;
    char *   mfg_id_work    = NULL;
    char *   modelwork      = NULL;
    char *   snwork         = NULL;
@@ -253,6 +254,10 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
       {"noverify",'\0', 0, G_OPTION_ARG_NONE,     &noverify_flag,    "Do not read VCP value after setting it", NULL},
       {"nodetect",'\0', 0, G_OPTION_ARG_NONE,     &nodetect_flag,    "Skip initial monitor detection",  NULL},
       {"async",   '\0', 0, G_OPTION_ARG_NONE,     &async_flag,       "Enable asynchronous display detection", NULL},
+
+      {"udf",     '\0', 0, G_OPTION_ARG_NONE,     &enable_udf_flag,  "Enable user defined feature support", NULL},
+      {"noudf",   '\0', G_OPTION_FLAG_REVERSE,
+                           G_OPTION_ARG_NONE,     &enable_udf_flag,  "Disable user defined feature support", NULL},
 
       // debugging
       {"excp",    '\0', 0, G_OPTION_ARG_NONE,     &report_freed_excp_flag,  "Report freed exceptions", NULL},
@@ -373,6 +378,7 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
    SET_CMDFLAG(CMD_FLAG_RO_ONLY,           ro_only_flag);
    SET_CMDFLAG(CMD_FLAG_WO_ONLY,           wo_only_flag);
    SET_CMDFLAG(CMD_FLAG_FORCE,             force_flag);
+   SET_CMDFLAG(CMD_FLAG_ENABLE_UDF,        enable_udf_flag);
 
    if (failsim_fn_work) {
 #ifdef ENABLE_FAILSIM

@@ -117,7 +117,7 @@ void dbgrpt_parsed_cmd(Parsed_Cmd * parsed_cmd, int depth) {
    else
       rpt_str("traced_files", NULL, "none", d1);
 
-   rpt_int( "argct",       NULL,  parsed_cmd->argct,                  d1);
+   rpt_int( "argct",       NULL,  parsed_cmd->argct, d1);
    int ndx = 0;
    for (ndx = 0; ndx < parsed_cmd->argct; ndx++) {
       printf("   argument %d:  %s\n", ndx, parsed_cmd->args[ndx]);
@@ -137,8 +137,9 @@ void dbgrpt_parsed_cmd(Parsed_Cmd * parsed_cmd, int depth) {
    rpt_bool("ro only",           NULL, parsed_cmd->flags & CMD_FLAG_RO_ONLY,                  d1);
    rpt_bool("wo only",           NULL, parsed_cmd->flags & CMD_FLAG_WO_ONLY,                  d1);
    rpt_bool("show unsupported",  NULL, parsed_cmd->flags & CMD_FLAG_SHOW_UNSUPPORTED,         d1);
-   rpt_str ("MCCS version spec", NULL, format_vspec(parsed_cmd->mccs_vspec), d1);
-   rpt_str ("MCCS version id",   NULL, vcp_version_id_name(parsed_cmd->mccs_version_id), d1);
+   rpt_bool("enable udf",        NULL, parsed_cmd->flags & CMD_FLAG_ENABLE_UDF,               d1);
+   rpt_str ("MCCS version spec", NULL, format_vspec(parsed_cmd->mccs_vspec),                  d1);
+   rpt_str ("MCCS version id",   NULL, vcp_version_id_name(parsed_cmd->mccs_version_id),      d1);
 
 #ifdef FUTURE
    char * interpreted_flags = vnt_interpret_flags(parsed_cmd->flags, cmd_flag_table, false, ", ");
