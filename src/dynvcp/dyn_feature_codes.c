@@ -1,4 +1,4 @@
-/** @file dyn_vcp_info.c
+/** @file dyn_feature_codes.c
  *
  * Access VCP feature code descriptions at the DDC level in order to
  * incorporate user-defined per-monitor feature information.
@@ -13,7 +13,8 @@
 #include "base/displays.h"
 #include "vcp/vcp_feature_codes.h"
 
-#include "dynvcp/dyn_vcp_info.h"
+#include "dynvcp/dyn_feature_codes.h"
+
 
 void
 dbgrpt_internal_feature_metadata(

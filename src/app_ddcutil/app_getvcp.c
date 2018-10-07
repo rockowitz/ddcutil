@@ -51,14 +51,14 @@
 
 #include "vcp/vcp_feature_codes.h"
 
+#include "dynvcp/dyn_feature_codes.h"
+
 #include "i2c/i2c_bus_core.h"
 
 #include "ddc/ddc_output.h"
 #include "ddc/ddc_packet_io.h"
 #include "ddc/ddc_vcp_version.h"
 #include "ddc/ddc_vcp.h"
-
-#include <dynvcp/dyn_vcp_info.h>
 
 #include "app_ddcutil/app_getvcp.h"
 

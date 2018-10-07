@@ -1,4 +1,4 @@
-/** @file dyn_vcp_info.h
+/** @file dyn_feature_codes.h
  *
  * Access VCP feature code descriptions at the DDC level in order to
  * incorporate user-defined per-monitor feature information.
@@ -8,8 +8,8 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 
-#ifndef DYN_VCP_INFO_H_
-#define DYN_VCP_INFO_H_
+#ifndef DYN_FEATURE_CODES_H_
+#define DYN_FEATURE_CODES_H_
 
 #include "ddcutil_types.h"
 
@@ -73,4 +73,4 @@ dyn_format_feature_detail(
      );
 
 
-#endif /* DYN_VCP_INFO_H_ */
+#endif /* DYN_FEATURE_CODES_H_ */

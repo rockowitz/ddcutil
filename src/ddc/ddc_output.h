@@ -24,7 +24,6 @@
 #ifndef DDC_OUTPUT_H_
 #define DDC_OUTPUT_H_
 
-#include <dynvcp/dyn_vcp_info.h>
 #include <glib.h>
 #include <stdio.h>
 #include <time.h>
@@ -36,6 +35,8 @@
 #include "vcp/vcp_feature_codes.h"
 #include "vcp/vcp_feature_set.h"
 #include "vcp/vcp_feature_values.h"
+
+#include "dynvcp/dyn_feature_codes.h"
 
 
 // TODO: Should probably be in a more general location
