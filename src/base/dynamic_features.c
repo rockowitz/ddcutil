@@ -171,15 +171,39 @@ char * canonicalize_possible_hex_value(char * string_value) {
 // End of generic functions
 
 
+/** Thread safe function that returns a string representation of a #Dynamic_Features_Rec
+ *  suitable for diagnostic messages. The returned value is valid until the
+ *  next call to this function on the current thread.
+ *
+ *  \param  dfr  pointer to #Dynamic_Features_Rec
+ *  \return string representation
+ */
+char * dfr_repr_t(Dynamic_Features_Rec * dfr) {
+   static GPrivate  dfr_repr_key = G_PRIVATE_INIT(g_free);
+   char * buf = get_thread_fixed_buffer(&dfr_repr_key, 100);
+
+   if (dfr)
+      g_snprintf(buf, 100, "Dynamic_Features_Rec[%s,%s,%d]",
+                           dfr->mfg_id, dfr->model_name, dfr->product_code);
+   else
+      g_snprintf(buf, 100, "NULL");
+   return buf;
+}
+
 
 DDCA_Feature_Metadata *
 get_dynamic_feature_metadata(
       Dynamic_Features_Rec * dfr,
       uint8_t                feature_code)
 {
+   bool debug = false;
+   DBGMSF(debug, "dfr=%s, feature_code=0x%02x", dfr_repr_t(dfr), feature_code);
+
    DDCA_Feature_Metadata * result = NULL;
    if (dfr->features)
       result = g_hash_table_lookup(dfr->features, GINT_TO_POINTER(feature_code));
+
+   DBGMSF(debug, "Returning %p", result);
    return result;
 }
 
@@ -411,7 +435,7 @@ create_monitor_dynamic_features(
       const char * filename,     // may be NULL
       Dynamic_Features_Rec ** dynamic_features_loc)
 {
-   bool debug = true;
+   bool debug = false;
    DBGMSF(debug, "Starting. filename=%s", filename);
 
    Error_Info * master_err = NULL;

@@ -42,6 +42,11 @@ typedef struct {
 } Dynamic_Features_Rec;
 
 
+// value valid until next call:
+char *
+dfr_repr_t(
+      Dynamic_Features_Rec * dfr);
+
 Dynamic_Features_Rec *
 dfr_new(
       const char *            mfg_id,
