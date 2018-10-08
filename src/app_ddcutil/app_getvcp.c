@@ -122,7 +122,7 @@ app_show_single_vcp_value_by_internal_metadata(
       Display_Handle *             dh,
       Internal_Feature_Metadata *  meta)
 {
-   bool debug = true;
+   bool debug = false;
    DBGMSF(debug, "Starting. Getting feature 0x%02x for %s",
                  meta->external_metadata->feature_code, dh_repr(dh) );
 
@@ -182,7 +182,7 @@ app_show_single_vcp_value_by_feature_id(
       DDCA_Vcp_Feature_Code feature_id,
       bool                  force)
 {
-   bool debug = true;
+   bool debug = false;
    DBGMSF(debug, "Starting. Getting feature 0x%02x for %s, force=%s",
                  feature_id, dh_repr(dh), bool_repr(force) );
 
@@ -211,7 +211,7 @@ app_show_single_vcp_value_by_feature_id_new(
       DDCA_Vcp_Feature_Code feature_id,
       bool                  force)
 {
-   bool debug = true;
+   bool debug = false;
    DBGMSF(debug, "Starting. Getting feature 0x%02x for %s, force=%s",
                  feature_id, dh_repr(dh), bool_repr(force) );
 
@@ -326,7 +326,7 @@ app_show_feature_set_values_by_display_handle(
       Feature_Set_Ref *    fsref,
       Feature_Set_Flags    flags)
 {
-   bool debug = true;
+   bool debug = false;
    if (debug) {
       char * s0 = feature_set_flag_names(flags);
       DBGMSG("Starting. flags: %s, dh: %s", s0, dh_repr(dh));
@@ -473,7 +473,6 @@ app_read_changes(Display_Handle * dh) {
       }
       reset_vcp_x02(dh);
    }
-
 }
 
 
