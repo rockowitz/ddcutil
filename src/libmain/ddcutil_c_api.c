@@ -2020,7 +2020,7 @@ ddca_get_simple_sl_value_table_by_vspec(
         rc = DDCRC_INVALID_OPERATION;
      }
      else  {
-        DDCA_Feature_Value_Entry * table = get_version_specific_sl_values(pentry, vspec);
+        DDCA_Feature_Value_Entry * table = get_version_sensitive_sl_values(pentry, vspec);
         DDCA_Feature_Value_Entry * table2 = (DDCA_Feature_Value_Entry*) table;    // identical definitions
         *value_table_loc = table2;
         rc = 0;
@@ -3103,9 +3103,10 @@ ddca_report_parsed_capabilities(
       DDCA_Cap_Vcp * cur_vcp = &p_caps->vcp_codes[code_ndx];
       assert( memcmp(cur_vcp->marker, DDCA_CAP_VCP_MARKER, 4) == 0);
 
-      char * feature_name = get_feature_name_by_id_and_vcp_version(
-                               cur_vcp->feature_code,
-                               p_caps->version_spec);
+      char * feature_name
+              = get_feature_name_by_id_and_vcp_version(cur_vcp->feature_code, p_caps->version_spec);
+      // FUTURE:
+      //        = dyn_get_feature_name(cur_vcp->feature_code, dref));  // n. handles dref == NULL
 
       rpt_vstring(d2, "Feature:  0x%02x (%s)", cur_vcp->feature_code, feature_name);
 
