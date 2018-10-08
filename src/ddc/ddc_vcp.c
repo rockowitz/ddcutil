@@ -276,7 +276,7 @@ is_rereadable_feature(
       Display_Handle * dh,
       DDCA_Vcp_Feature_Code opcode)
 {
-   bool debug = true;
+   bool debug = false;
    DBGMSF(debug, "Starting opcode = 0x%02x", opcode);
 
    // readable features that should not be read after write
