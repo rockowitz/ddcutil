@@ -717,8 +717,8 @@ static void i2c_check_bus(I2C_Bus_Info * bus_info) {
 
       bool b = is_edp_device(bus_info->busno);
       if (b) {
-         DBGMSG("Skipping eDP device");
-         goto bye;
+         DBGMSG("Noted eDP device, but NOT Skipping eDP device");
+         // goto bye;
       }
 
       // unnecessary, bus_info is already filtered
