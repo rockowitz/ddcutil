@@ -230,7 +230,7 @@ static bool ignorable_i2c_device_sysfs_name(const char * name, const char * driv
    bool result = false;
    const char * ignorable_prefixes[] = {
          "SMBus",
-         "Synopsys Designware",
+         "Synopsys DesignWare",
          "soc:i2cdsi",   // Raspberry Pi
          "smu",          // Mac G5, probing causes system hang
          "mac-io",       // Mac G5
