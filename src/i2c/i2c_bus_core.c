@@ -390,8 +390,8 @@ void i2c_report_functionality_flags(long functionality, int maxline, int depth) 
 
 
 bool is_edp_device(int busno) {
-   bool debug = true;
-   DBGMSF(debug, "Starting.  busno=%d", busno);
+   bool debug = false;
+   // DBGMSF(debug, "Starting.  busno=%d", busno);
    bool result = false;
 
    char cmd[100];
@@ -402,9 +402,9 @@ bool is_edp_device(int busno) {
 
    for (int ndx = 0; ndx < lines->len; ndx++) {
       char * s = g_ptr_array_index(lines, ndx);
-      DBGMSG("s: %s", s);
+      // DBGMSG("s: %s", s);
       if (strstr(s, "-eDP-")) {
-         DBGMSG("Found");
+         // DBGMSG("Found");
          result = true;
          break;
       }
