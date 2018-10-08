@@ -41,11 +41,13 @@ app_show_single_vcp_value_by_feature_table_entry(
       Display_Handle *          dh,
       VCP_Feature_Table_Entry * entry);
 
+#ifdef PRE_UDF
 Public_Status_Code
 app_show_single_vcp_value_by_feature_id(
       Display_Handle *      dh,
       DDCA_Vcp_Feature_Code feature_id,
       bool                  force);
+#endif
 
 Public_Status_Code
 app_show_single_vcp_value_by_feature_id_new(

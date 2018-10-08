@@ -164,6 +164,7 @@ app_show_single_vcp_value_by_internal_metadata(
    return ddcrc;
 }
 
+#ifdef PRE_UDF
 /* Shows a single VCP value specified by its feature id.
  *
  * Arguments:
@@ -204,6 +205,7 @@ app_show_single_vcp_value_by_feature_id(
    DBGMSF(debug, "Done.  Returning: %s", psc_desc(psc));
    return psc;
 }
+#endif
 
 Public_Status_Code
 app_show_single_vcp_value_by_feature_id_new(
