@@ -1,7 +1,7 @@
 /* ddc_capabilities_tests.c
  *
  * <copyright>
- * Copyright (C) 2014-2016 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2014-2018 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -29,6 +29,7 @@
 #include "base/parms.h"
 #include "base/sleep.h"
 
+#include "test/i2c/i2c_testutil.h"
 #include "test/i2c/i2c_io_old.h"
 #include "i2c/i2c_bus_core.h"
 

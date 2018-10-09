@@ -48,6 +48,7 @@
 #include "ddc/ddc_packet_io.h"
 #include "ddc/ddc_vcp.h"
 
+#include "test/i2c/i2c_testutil.h"
 #include "test/i2c/i2c_io_old.h"
 
 #include "test/ddc/ddc_vcp_tests.h"

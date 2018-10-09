@@ -44,7 +44,7 @@ unsigned long i2c_get_functionality_flags_by_fd(int fd);
 char *        i2c_interpret_functionality_flags(unsigned long functionality);
 void          i2c_report_functionality_flags(long functionality, int maxline, int depth);
 
-bool i2c_verify_functions_supported(int busno, char * write_func_name, char * read_func_name);
+
 
 
 // EDID inspection
@@ -81,6 +81,7 @@ int  i2c_device_count();           // simple /dev/i2c-n count, no side effects
 // Bus inventory - detect and probe buses
 int i2c_detect_buses();            // creates internal array of Bus_Info for I2C buses
 I2C_Bus_Info * detect_single_bus(int busno);
+void i2c_free_bus_info(I2C_Bus_Info * bus_info);
 
 // Simple Bus_Info retrieval
 I2C_Bus_Info * i2c_get_bus_info_by_index(int busndx);
