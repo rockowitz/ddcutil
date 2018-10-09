@@ -1223,5 +1223,3 @@ dup_error_detail(DDCA_Error_Detail * old) {
 }
 
 
-
-
