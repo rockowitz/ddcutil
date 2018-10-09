@@ -36,7 +36,7 @@
 #include "base/parms.h"
 #include "base/status_code_mgt.h"
 
-#include "i2c/i2c_base_io.h"
+// #include "i2c/i2c_base_io.h"
 
 #include "i2c/i2c_do_io.h"
 
