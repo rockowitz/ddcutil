@@ -1,32 +1,10 @@
-/* timestamp.c
+/** @file timestamp.c
  *
- * Created on: Mar 12, 2017
- *     Author: rock
- *
- * <copyright>
- * Copyright (C) 2014-2015 Sanford Rockowitz <rockowitz@minsoft.com>
- *
- * Licensed under the GNU General Public License Version 2
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
- * </endcopyright>
+ *  Timestamp management
  */
 
-/** \file
- * Timestamp Management
- */
+// Copyright (C) 2014-2018 Sanford Rockowitz <rockowitz@minsoft.com>
+// SPDX-License-Identifier: GPL-2.0-or-later
 
 /** \cond */
 #include <assert.h>
@@ -152,7 +130,7 @@ static uint64_t initial_timestamp_nanos = 0;
  *  The first call to this function marks the start of program
  *  execution and returns 0.
  *
- *  @return nonoseconds since start of program execution
+ *  @return nanoseconds since start of program execution
  */
 uint64_t elapsed_time_nanosec() {
    // printf("(%s) initial_timestamp_nanos=%"PRIu64"\n", __func__, initial_timestamp_nanos);
