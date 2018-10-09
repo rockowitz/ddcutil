@@ -1,29 +1,11 @@
-/* query_sysenv_logs.c
+/** @file query_sysenv_logs.c
  *
- * <copyright>
- * Copyright (C) 2017 Sanford Rockowitz <rockowitz@minsoft.com>
- *
- * Licensed under the GNU General Public License Version 2
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
- * </endcopyright>
- */
-
-/** \f
  *  Query configuration files, logs, and output of logging commands.
  */
+
+// Copyright (C) 2017-2018 Sanford Rockowitz <rockowitz@minsoft.com>
+// SPDX-License-Identifier: GPL-2.0-or-later
+
 
 /** cond */
 #include <assert.h>
@@ -33,6 +15,7 @@
 #include <inttypes.h>
 #include <string.h>
 #include <sys/stat.h>
+#include <sys/sysinfo.h>
 #include <unistd.h>
 
 #include "util/data_structures.h"
@@ -49,7 +32,6 @@
 #include "query_sysenv_base.h"
 
 #include "query_sysenv_logs.h"
-
 
 
 static bool probe_log(
@@ -227,6 +209,22 @@ void probe_logs(Env_Accumulator * accum) {
 
    rpt_nl();
    rpt_title("Examining system logs...", depth);
+
+   rpt_nl();
+   {
+      char buf0[80];
+      time_t rawtime;
+      struct tm * timeinfo;
+
+      time ( &rawtime );
+      timeinfo = localtime ( &rawtime );
+      strftime(buf0, 80, "%F %H:%M:%S", timeinfo);
+      rpt_vstring(depth+1, "Current time:       %s", buf0);
+
+      struct sysinfo info;
+      sysinfo(&info);
+      rpt_vstring(depth+1, "Seconds since boot: %ld", info.uptime);
+   }
 
    // TODO: Pick simpler data structures.  Is Value_Name_Title_Table worth it?
 
