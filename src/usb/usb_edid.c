@@ -56,6 +56,7 @@
 #include "base/linux_errno.h"
 
 #include "i2c/i2c_bus_core.h"     // for EDID fallback
+#include "i2c/i2c_bus_selector.h" // for EDID fallback
 #include "adl/adl_shim.h"         // for EDID fallback
 
 #include "usb/usb_base.h"

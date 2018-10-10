@@ -9,7 +9,7 @@
 #define I2C_BUS_CORE_H_
 
 /** \cond */
-// #include <glib-2.0/glib.h>
+#include <glib-2.0/glib.h>
 // #include <glib.h>
 #include <stdbool.h>
 #include <stdio.h>
@@ -29,6 +29,10 @@
 
 /** \def I2C_SLAVE_ADDR_MAX Addresses on an I2C bus are 7 bits in size */
 #define I2C_SLAVE_ADDR_MAX 128
+
+// shared with i2c_bus_selector.c
+extern GPtrArray * i2c_buses;
+
 
 // Controls whether function #i2c_set_addr() retries from EBUSY error by
 // changing ioctl op I2C_SLAVE to op I2C_SLAVE_FORCE.
@@ -87,12 +91,6 @@ void i2c_free_bus_info(I2C_Bus_Info * bus_info);
 I2C_Bus_Info * i2c_get_bus_info_by_index(int busndx);
 I2C_Bus_Info * i2c_find_bus_info_by_busno(int busno);
 
-// Complex Bus_Info retrieval
-I2C_Bus_Info * i2c_find_bus_info_by_mfg_model_sn(
-              const char * mfg_id,
-              const char * model,
-              const char * sn,
-              Byte         findopts);
 
 // Reports all detected i2c buses:
 int  i2c_report_buses(bool report_all, int depth);
