@@ -25,6 +25,7 @@
 #include "util/failsim.h"
 #include "util/file_util.h"
 #include "util/report_util.h"
+#include "util/edid.h"
 #include "util/string_util.h"
 #include "util/subprocess_util.h"
 #include "util/sysfs_util.h"
@@ -361,7 +362,7 @@ void i2c_report_functionality_flags(long functionality, int maxline, int depth) 
 //
 
 
-bool is_edp_device(int busno) {
+static bool is_edp_device(int busno) {
    bool debug = false;
    // DBGMSF(debug, "Starting.  busno=%d", busno);
    bool result = false;
@@ -864,10 +865,11 @@ void i2c_report_active_display(I2C_Bus_Info * businfo, int depth) {
 
    if (output_level >= DDCA_OL_VERBOSE) {
 #ifdef DETECT_SLAVE_ADDRS
-      rpt_vstring(depth+1, "I2C address 0x30 (EDID block#)  present: %-5s", bool_repr(businfo->flags & I2C_BUS_ADDR_0X30));
-      rpt_vstring(depth+1, "I2C address 0x37 (DDC)          present: %-5s", bool_repr(businfo->flags & I2C_BUS_ADDR_0X37));
+      rpt_vstring(depth+1, "I2C address 0x30 (EDID block#)  present: %-5s", srepr(businfo->flags & I2C_BUS_ADDR_0X30));
+      rpt_vstring(depth+1, "I2C address 0x37 (DDC)          present: %-5s", srepr(businfo->flags & I2C_BUS_ADDR_0X37));
 #endif
-      rpt_vstring(depth+1, "I2C address 0x50 (EDID)         present: %-5s", bool_repr(businfo->flags & I2C_BUS_ADDR_0X50));
+      rpt_vstring(depth+1, "I2C address 0x50 (EDID) present: %-5s", bool_repr(businfo->flags & I2C_BUS_ADDR_0X50));
+      rpt_vstring(depth+1, "Is eDP device:                   %-5s", sbool(businfo->flags & I2C_BUS_EDP));
 
       char fn[PATH_MAX];     // yes, PATH_MAX is dangerous, but not as used here
       sprintf(fn, "/sys/bus/i2c/devices/i2c-%d/name", businfo->busno);
@@ -1164,4 +1166,14 @@ int i2c_report_buses(bool report_all, int depth) {
    DBGTRC(debug, TRACE_GROUP, "Done. Returning %d\n", reported_ct);
    return reported_ct;
 }
+
+
+#ifdef UNUSED
+bool is_probably_laptop_display(I2C_Bus_Info * businfo) {
+   assert(businfo);
+   bool result = (businfo->flags & I2C_BUS_EDP) || is_embedded_parsed_edid(businfo->edid);
+   return result;
+}
+#endif
+
 
