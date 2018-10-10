@@ -1,32 +1,11 @@
-/* edid.h
+/** @file edid.h
  *
- * Functions for processing the EDID data structure, irrespective of how
+ * Functions for processing the Parsed_Edid data structure, irrespective of how
  * the bytes of the EDID are obtained.
- *
- * <copyright>
- * Copyright (C) 2014-2017 Sanford Rockowitz <rockowitz@minsoft.com>
- *
- * Licensed under the GNU General Public License Version 2
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
- * </endcopyright>
  */
 
-/** @file edid.h
- * Functions to interpret EDID
- */
+// Copyright (C) 2014-2018 Sanford Rockowitz <rockowitz@minsoft.com>
+// SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef EDID_H_
 #define EDID_H_
@@ -100,5 +79,6 @@ Parsed_Edid * create_parsed_edid(Byte* edidbytes);
 void          report_parsed_edid_base(Parsed_Edid * edid, bool verbose, bool show_raw, int depth);
 void          report_parsed_edid(Parsed_Edid * edid, bool verbose, int depth);
 void          free_parsed_edid(Parsed_Edid * parsed_edid);
+bool          is_embedded_display(Parsed_Edid * parsed_edid);
 
 #endif /* EDID_H_ */

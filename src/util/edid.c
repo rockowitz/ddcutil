@@ -475,3 +475,14 @@ void report_parsed_edid_base(Parsed_Edid * edid, bool verbose, bool show_raw, in
 void report_parsed_edid(Parsed_Edid * edid, bool verbose, int depth) {
    report_parsed_edid_base(edid, verbose, verbose, depth);
 }
+
+
+/** Heuristic test for a laptop display.  Observed laptop displays
+ *  never have the model name and serial numbers set.
+ */
+bool is_embedded_display(Parsed_Edid * parsed_edid) {
+   assert(parsed_edid);
+   return ( strlen(parsed_edid->model_name) == 0 && strlen(parsed_edid->model_name) == 0 );
+}
+
+
