@@ -86,8 +86,10 @@ bool bus_info_matches_selector(I2C_Bus_Info * bus_info, I2C_Bus_Selector * sel) 
    // in usb_edid.c to get the EDID for an EIZO display communicated with using USB.
    // DISPSEL_VALID_ONLY is not set in that case.
    if (sel->options & DISPSEL_VALID_ONLY) {
+#ifdef DETECT_SLAVE_ADDRS
       if (!(bus_info->flags & I2C_BUS_ADDR_0X37))
          goto bye;
+#endif
    }
    bool some_test_passed = false;
 

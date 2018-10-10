@@ -457,6 +457,7 @@ bool * i2c_detect_all_slave_addrs(int busno) {
 }
 #endif
 
+#ifdef DETECT_SLAVE_ADDRS
 
 /** Checks DDC related addresses on an I2C bus to see if the addresses are active.
  *  The bus device has already been opened.
@@ -538,6 +539,7 @@ bye:
    return base_rc;
 }
 
+#endif
 
 //
 // I2C Bus Inspection - EDID Retrieval
@@ -701,6 +703,12 @@ static void i2c_check_bus(I2C_Bus_Info * bus_info) {
 
          if (file >= 0) {
             bus_info->flags |= I2C_BUS_ACCESSIBLE;
+
+
+            bus_info->functionality = i2c_get_functionality_flags_by_fd(file);
+            // DBGMSF(debug, "i2c_get_functionality_flags_by_fd() returned %lu", bus_info->functionality);
+
+#ifdef DETECT_SLAVE_ADDRS
             Byte ddc_addr_flags = 0x00;
             Status_Errno_DDC psc = i2c_detect_ddc_addrs_by_fd(file, &ddc_addr_flags);
             if (psc != 0) {
@@ -710,9 +718,7 @@ static void i2c_check_bus(I2C_Bus_Info * bus_info) {
                goto bye;
             }
             bus_info->flags |= ddc_addr_flags;
-            // DBGMSF(debug, "Calling i2c_get_functionality_flags_by_fd()...");
-            bus_info->functionality = i2c_get_functionality_flags_by_fd(file);
-            // DBGMSF(debug, "i2c_get_functionality_flags_by_fd() returned %lu", bus_info->functionality);
+
             if (bus_info->flags & I2C_BUS_ADDR_0X50) {
                // Have seen case of nouveau driver with Quadro card where
                // there's a bus that has no monitor but responds to the X50 probe
@@ -740,6 +746,14 @@ static void i2c_check_bus(I2C_Bus_Info * bus_info) {
 
             }
    #endif
+#else
+            Public_Status_Code psc = i2c_get_parsed_edid_by_fd(file, &bus_info->edid);
+            DBGMSF(debug, "i2c_get_parsed_edid_by_fd() returned %d", psc);
+            if (psc == 0)
+               bus_info->flags |= I2C_BUS_ADDR_0X50;
+            else
+               goto bye;     // not logically necessary, avoids iftesting label bye
+#endif
          }
       }
    // }
@@ -812,8 +826,10 @@ void i2c_dbgrpt_bus_info(I2C_Bus_Info * bus_info, int depth) {
    rpt_vstring(depth, "Bus /dev/i2c-%d found:    %s", bus_info->busno, bool_repr(bus_info->flags&I2C_BUS_EXISTS));
    rpt_vstring(depth, "Bus /dev/i2c-%d probed:   %s", bus_info->busno, bool_repr(bus_info->flags&I2C_BUS_PROBED ));
    if ( bus_info->flags & I2C_BUS_PROBED ) {
+#ifdef DETECT_SLAVE_ADDRS
       rpt_vstring(depth, "Address 0x30 present:    %s", bool_repr(bus_info->flags & I2C_BUS_ADDR_0X30));
       rpt_vstring(depth, "Address 0x37 present:    %s", bool_repr(bus_info->flags & I2C_BUS_ADDR_0X37));
+#endif
       rpt_vstring(depth, "Address 0x50 present:    %s", bool_repr(bus_info->flags & I2C_BUS_ADDR_0X50));
       i2c_report_functionality_flags(bus_info->functionality, /* maxline */ 90, depth);
       if ( bus_info->flags & I2C_BUS_ADDR_0X50) {
@@ -847,8 +863,10 @@ void i2c_report_active_display(I2C_Bus_Info * businfo, int depth) {
    // rpt_vstring(depth, "Supports DDC:        %s", bool_repr(businfo->flags & I2C_BUS_ADDR_0X37));
 
    if (output_level >= DDCA_OL_VERBOSE) {
+#ifdef DETECT_SLAVE_ADDRS
       rpt_vstring(depth+1, "I2C address 0x30 (EDID block#)  present: %-5s", bool_repr(businfo->flags & I2C_BUS_ADDR_0X30));
       rpt_vstring(depth+1, "I2C address 0x37 (DDC)          present: %-5s", bool_repr(businfo->flags & I2C_BUS_ADDR_0X37));
+#endif
       rpt_vstring(depth+1, "I2C address 0x50 (EDID)         present: %-5s", bool_repr(businfo->flags & I2C_BUS_ADDR_0X50));
 
       char fn[PATH_MAX];     // yes, PATH_MAX is dangerous, but not as used here
