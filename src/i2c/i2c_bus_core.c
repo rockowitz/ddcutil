@@ -551,14 +551,14 @@ bye:
  * @retval  0        success
  * @retval  <0       error
  */
-Public_Status_Code i2c_get_raw_edid_by_fd(int fd, Buffer * rawedid) {
+Status_Errno_DDC i2c_get_raw_edid_by_fd(int fd, Buffer * rawedid) {
    bool debug = false;
    DBGTRC(debug, TRACE_GROUP, "Getting EDID for file %d", fd);
 
    bool conservative = true;
 
    assert(rawedid->buffer_size >= 128);
-   Public_Status_Code rc;
+   Status_Errno_DDC rc;
 
    rc = i2c_set_addr(fd, 0x50, CALLOPT_ERR_MSG);
    if (rc < 0) {
@@ -620,13 +620,13 @@ bye:
  *
  * @return status code
  */
-Public_Status_Code i2c_get_parsed_edid_by_fd(int fd, Parsed_Edid ** edid_ptr_loc) {
+Status_Errno_DDC i2c_get_parsed_edid_by_fd(int fd, Parsed_Edid ** edid_ptr_loc) {
    bool debug = false;
    DBGTRC(debug, TRACE_GROUP, "Starting. fd=%d", fd);
    Parsed_Edid * edid = NULL;
    Buffer * rawedidbuf = buffer_new(128, NULL);
 
-   Public_Status_Code rc = i2c_get_raw_edid_by_fd(fd, rawedidbuf);
+   Status_Errno_DDC rc = i2c_get_raw_edid_by_fd(fd, rawedidbuf);
    if (rc == 0) {
       edid = create_parsed_edid(rawedidbuf->bytes);
       if (debug) {
@@ -688,7 +688,8 @@ static void i2c_check_bus(I2C_Bus_Info * bus_info) {
 
       bool b = is_edp_device(bus_info->busno);
       if (b) {
-         DBGMSG("Noted eDP device, but NOT Skipping eDP device");
+         DBGMSG("eDP device detected");
+         bus_info->flags |= I2C_BUS_EDP;
          // goto bye;
       }
 
