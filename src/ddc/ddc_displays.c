@@ -35,6 +35,7 @@
 #include <time.h>
 
 #include "util/debug_util.h"
+#include "util/edid.h"
 #include "util/error_info.h"
 #include "util/failsim.h"
 #include "util/report_util.h"
@@ -509,6 +510,7 @@ ddc_report_display_by_dref(Display_Ref * dref, int depth) {
       if (!(dref->flags & DREF_DDC_COMMUNICATION_WORKING) ) {
          rpt_vstring(d1, "DDC communication failed");
          if (output_level >= DDCA_OL_VERBOSE) {
+#ifdef OLD
             if (streq(dref->pedid->model_name,   "Unspecified") &&
                 streq(dref->pedid->serial_ascii, "Unspecified") )
             {
@@ -516,6 +518,19 @@ ddc_report_display_by_dref(Display_Ref * dref, int depth) {
             }
             else
                rpt_vstring(d1, "Is DDC/CI enabled in the monitor's on-screen display?");
+#endif
+
+            char * msg = "Is DDC/CI enabled in the monitor's on-screen display?";
+            if (dref->io_path.io_mode == DDCA_IO_I2C) {
+               I2C_Bus_Info * curinfo = dref->detail;
+               if (curinfo->flags & I2C_BUS_EDP)
+                  msg = "This is a eDP laptop display. Laptop displays do not support DDC/CI.";
+               else if ( is_embedded_parsed_edid(dref->pedid) )
+                  msg = "This appears to be a laptop display. Laptop displays do not support DDC/CI.";
+               else
+                  msg = "Is DDC/CI enabled in the monitor's on-screen display?";
+            }
+            rpt_vstring(d1, msg);
          }
       }
       else {
