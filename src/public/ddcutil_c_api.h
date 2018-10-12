@@ -1021,6 +1021,10 @@ ddca_free_feature_metadata_contents(DDCA_Feature_Metadata info);
  *
  * @param[in]  feature_code feature code
  * @return     pointer to feature name (do not free), NULL if unknown feature code
+ *
+ * @remark
+ * Since no specific display is indicated, this function ignores user defined
+ * monitor feature information.
  */
 char *
 ddca_get_feature_name(DDCA_Vcp_Feature_Code feature_code);

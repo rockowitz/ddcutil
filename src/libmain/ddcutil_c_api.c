@@ -1990,6 +1990,7 @@ ddca_get_feature_name_by_dref(
 // Display Inquiry
 //
 
+// unpublished
 DDCA_Status
 ddca_get_simple_sl_value_table_by_vspec(
       DDCA_Vcp_Feature_Code      feature_code,
