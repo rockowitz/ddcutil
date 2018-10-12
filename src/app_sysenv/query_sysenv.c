@@ -551,7 +551,7 @@ void query_sysenv() {
    Env_Accumulator * accumulator = env_accumulator_new();
    DDCA_Output_Level output_level = get_output_level();
    if (output_level >= DDCA_OL_VERBOSE)
-      sysenv_rpt_current_time(NULL, 0);
+      sysenv_rpt_current_time(NULL, 1);
 
    rpt_nl();
    rpt_vstring(0,"*** Basic System Information ***");
