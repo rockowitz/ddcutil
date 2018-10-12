@@ -1,4 +1,5 @@
 /** @file query_sysenv_logs.h
+ *
  *  Query configuration files, logs, and output of logging commands.
  */
 

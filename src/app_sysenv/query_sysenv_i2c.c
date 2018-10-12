@@ -1,29 +1,10 @@
-/* query_sysenv_i2c.c
+/** @file query_sysenv_i2c.c
  *
- * <copyright>
- * Copyright (C) 2014-2018 Sanford Rockowitz <rockowitz@minsoft.com>
- *
- * Licensed under the GNU General Public License Version 2
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
- * </endcopyright>
- */
-
-/** \f
  * Check I2C devices using directly coded I2C calls
  */
+
+// Copyright (C) 2014-2018 Sanford Rockowitz <rockowitz@minsoft.com>
+// SPDX-License-Identifier: GPL-2.0-or-later
 
 /** \cond */
 #include <errno.h>
@@ -261,6 +242,7 @@ void raw_scan_i2c_devices(Env_Accumulator * accum) {
 
    rpt_nl();
    rpt_title("Performing basic scan of I2C devices using local sysenv functions...",depth);
+   sysenv_rpt_current_time(NULL, d1);
 
    Buffer * buf0 = buffer_new(1000, __func__);
    int  busct = 0;
@@ -375,6 +357,7 @@ void raw_scan_i2c_devices(Env_Accumulator * accum) {
 
 void query_i2c_buses() {
    rpt_vstring(0,"Examining I2C buses, as detected by I2C layer...");
+   sysenv_rpt_current_time(NULL, 2);
    i2c_report_buses(true, 1 /* indentation depth */);    // in i2c_bus_core.c
 }
 

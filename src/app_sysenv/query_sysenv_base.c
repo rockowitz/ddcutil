@@ -1,29 +1,11 @@
-/* query_sysenv_base.c
+/** @file query_sysenv_base.c
  *
- * <copyright>
- * Copyright (C) 2014-2018 Sanford Rockowitz <rockowitz@minsoft.com>
- *
- * Licensed under the GNU General Public License Version 2
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
- * </endcopyright>
+ * Base structures and functions for subsystem that diagnoses user configuration
  */
 
-/** \f
- *  Common sysenv functions
- */
+// Copyright (C) 2014-2018 Sanford Rockowitz <rockowitz@minsoft.com>
+// SPDX-License-Identifier: GPL-2.0-or-later
+
 /** \cond */
 #include <assert.h>
 #include <errno.h>
@@ -31,6 +13,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <sys/sysinfo.h>
 
 #include "util/data_structures.h"
 #include "util/file_util.h"
@@ -143,6 +126,33 @@ bool sysenv_show_one_file(char * dir_name, char * simple_fn, bool verbose, int d
    else if (verbose)
       rpt_vstring(depth, "File not found: %s", fqfn);
    return result;
+}
+
+
+void sysenv_rpt_current_time(const char * title, int depth)
+{
+   int d = depth;
+   if (title) {
+      rpt_title(title, depth);
+      d = depth+1;
+   }
+
+   char buf0[80];
+   time_t rawtime;
+   struct tm * timeinfo;
+
+   time ( &rawtime );
+   timeinfo = localtime( &rawtime );
+   strftime(buf0, 80, "%F %H:%M:%S %Z", timeinfo);
+   rpt_vstring(d, "Current time (local): %s", buf0);
+
+   timeinfo = gmtime( &rawtime );
+   strftime(buf0, 80, "%F %H:%M:%S", timeinfo);
+   rpt_vstring(d, "Current time (UTC):   %s", buf0);
+
+   struct sysinfo info;
+   sysinfo(&info);
+   rpt_vstring(d, "Seconds since boot:   %ld", info.uptime);
 }
 
 

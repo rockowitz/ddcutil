@@ -327,6 +327,7 @@ static void query_using_i2cdetect(Byte_Value_Array i2c_device_numbers) {
    int d1 = 1;
 
    rpt_vstring(d0,"Examining I2C buses using i2cdetect... ");
+   sysenv_rpt_current_time(NULL, d1);
 
    if (bva_length(i2c_device_numbers) == 0) {
       rpt_vstring(d1, "No I2C buses found");
@@ -362,6 +363,7 @@ static void query_using_i2cdetect(Byte_Value_Array i2c_device_numbers) {
 static void probe_i2c_devices_using_udev() {
    char * subsys_name = "i2c-dev";
    rpt_vstring(0,"Probing I2C devices using udev, susbsystem %s...", subsys_name);
+   sysenv_rpt_current_time(NULL, 1);
    // probe_udev_subsystem() is in udev_util.c, which is only linked in if USE_USB
 
    // Detailed scan of I2C device information
@@ -547,6 +549,9 @@ void query_sysenv() {
    device_xref_init();
 
    Env_Accumulator * accumulator = env_accumulator_new();
+   DDCA_Output_Level output_level = get_output_level();
+   if (output_level >= DDCA_OL_VERBOSE)
+      sysenv_rpt_current_time(NULL, 0);
 
    rpt_nl();
    rpt_vstring(0,"*** Basic System Information ***");
@@ -608,7 +613,6 @@ void query_sysenv() {
    rpt_nl();
    query_sys_bus_i2c(accumulator);
 
-   DDCA_Output_Level output_level = get_output_level();
    if (output_level >= DDCA_OL_VERBOSE) {
       rpt_nl();
       query_proc_driver_nvidia();

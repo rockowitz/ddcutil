@@ -209,26 +209,7 @@ void probe_logs(Env_Accumulator * accum) {
 
    rpt_nl();
    rpt_title("Examining system logs...", depth);
-
-   rpt_nl();
-   {
-      char buf0[80];
-      time_t rawtime;
-      struct tm * timeinfo;
-
-      time ( &rawtime );
-      timeinfo = localtime( &rawtime );
-      strftime(buf0, 80, "%F %H:%M:%S %Z", timeinfo);
-      rpt_vstring(depth+1, "Current time (local): %s", buf0);
-
-      timeinfo = gmtime( &rawtime );
-      strftime(buf0, 80, "%F %H:%M:%S", timeinfo);
-      rpt_vstring(depth+1, "Current time (UTC):   %s", buf0);
-
-      struct sysinfo info;
-      sysinfo(&info);
-      rpt_vstring(depth+1, "Seconds since boot:   %ld", info.uptime);
-   }
+   sysenv_rpt_current_time("Current timestamps:", depth);
 
    // TODO: Pick simpler data structures.  Is Value_Name_Title_Table worth it?
 
