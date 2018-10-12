@@ -330,8 +330,10 @@ void raw_scan_i2c_devices(Env_Accumulator * accum) {
                rpt_vstring(d2, "DDC communication succeeded");
             else {
                rpt_vstring(d2, "DDC communication failed.");
-               if (edid)
-                  rpt_vstring(d2, "Is DDC/CI enabled in the monitor's on-screen display?");
+               // If this message remains it should be split into multiple messages depending
+               // on whether this is a laptop display
+               // if (edid)
+               //    rpt_vstring(d2, "Is DDC/CI enabled in the monitor's on-screen display?");
             }
          }
 
