@@ -375,9 +375,7 @@ static bool is_edp_device(int busno) {
 
    for (int ndx = 0; ndx < lines->len; ndx++) {
       char * s = g_ptr_array_index(lines, ndx);
-      // DBGMSG("s: %s", s);
       if (strstr(s, "-eDP-")) {
-         // DBGMSG("Found");
          result = true;
          break;
       }
@@ -691,7 +689,7 @@ static void i2c_check_bus(I2C_Bus_Info * bus_info) {
 
       bool b = is_edp_device(bus_info->busno);
       if (b) {
-         DBGMSG("eDP device detected");
+         DBGMSF(debug, "eDP device detected");
          bus_info->flags |= I2C_BUS_EDP;
          // goto bye;
       }
@@ -704,7 +702,6 @@ static void i2c_check_bus(I2C_Bus_Info * bus_info) {
 
          if (file >= 0) {
             bus_info->flags |= I2C_BUS_ACCESSIBLE;
-
 
             bus_info->functionality = i2c_get_functionality_flags_by_fd(file);
             // DBGMSF(debug, "i2c_get_functionality_flags_by_fd() returned %lu", bus_info->functionality);
