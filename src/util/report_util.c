@@ -1,39 +1,18 @@
-/* report_util.c
+/** @file report_util.c
  *
  * Functions for creating messages in a standardized format, with flexible
- * indentation.  It is particularly used for tracing data structures.
+ * indentation.
  *
  * The functions in this source file are thread safe.
- *
- * <copyright>
- * Copyright (C) 2014-2018 Sanford Rockowitz <rockowitz@minsoft.com>
- *
- * Licensed under the GNU General Public License Version 2
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
- * </endcopyright>
- */
-
-/** @file report_util.c
- * Report utility functions
  *
  * TODO: describe
  * - indentation depth
  *     - indentation stack
  * - destination stack
  */
+
+// Copyright (C) 2014-2018 Sanford Rockowitz <rockowitz@minsoft.com>
+// SPDX-License-Identifier: GPL-2.0-or-later
 
 /** \cond */
 #include <assert.h>
@@ -269,7 +248,7 @@ void rpt_nl() {
  *
  * @remark This is the core function through which all output is funneled.
  */
-void rpt_title(char * title, int depth) {
+void rpt_title(const char * title, int depth) {
    bool debug = false;
    if (debug)
       printf("(%s) Writing to %p\n", __func__, rpt_cur_output_dest());
@@ -293,7 +272,7 @@ void rpt_title(char * title, int depth) {
  * used along with #rpt_vstring() because the different position of the
  * **depth** parameter makes the code harder to read.
  */
-void rpt_label(int depth, char * text) {
+void rpt_label(int depth, const char * text) {
    rpt_title(text, depth);
 }
 
