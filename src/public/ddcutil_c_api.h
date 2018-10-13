@@ -1037,6 +1037,7 @@ ddca_get_feature_name(DDCA_Vcp_Feature_Code feature_code);
  *
  * @since 0.9.2
  */
+__attribute__ ((deprecated ("use ddca_get_feature_metadata_by_dref()")))
 DDCA_Status
 ddca_get_feature_name_by_dref(
       DDCA_Vcp_Feature_Code  feature_code,

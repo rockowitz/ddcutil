@@ -61,6 +61,8 @@
 #include "vcp/vcp_feature_codes.h"
 #include "vcp/vcp_feature_values.h"
 
+#include "dynvcp/dyn_feature_codes.h"
+
 #include "adl/adl_shim.h"
 
 #include "ddc/ddc_async.h"
@@ -1595,6 +1597,10 @@ ddca_feature_list_string(
 }
 
 
+//
+// Feature Metadata
+//
+
 #ifdef OLD
 // or return a struct?
 DDCA_Status ddca_get_feature_flags_by_vcp_version(
@@ -1774,6 +1780,7 @@ ddca_get_feature_flags_by_version_id(
 #endif
 
 
+// deprecated
 DDCA_Status
 ddca_get_feature_info_by_display(
       DDCA_Display_Handle           ddca_dh,    // needed because in rare cases feature info is MCCS version dependent
@@ -1798,8 +1805,6 @@ ddca_get_feature_info_by_display(
    );
 }
 
-
-// Add with_default flag?
 DDCA_Status
 ddca_get_feature_metadata_by_vspec(
       DDCA_Vcp_Feature_Code       feature_code,
@@ -1854,6 +1859,7 @@ ddca_get_feature_metadata_by_dref(
    WITH_DR(
          ddca_dref,
          {
+#ifdef OLD
                // DBGMSG("Starting");
                // dbgrpt_display_ref(dref, 1);
 
@@ -1865,6 +1871,16 @@ ddca_get_feature_metadata_by_dref(
                      vspec,               // dref->vcp_version,
                      create_default_if_not_found,
                      info);
+#endif
+
+               Internal_Feature_Metadata * intmeta =
+                  dyn_get_feature_metadata_by_dref(feature_code, dref, create_default_if_not_found);
+               if (!intmeta) {
+                  psc = DDCRC_NOT_FOUND;
+               }
+               else {
+                  memcpy(info, intmeta->external_metadata, sizeof(DDCA_Feature_Metadata));
+               }
          }
       );
 }
@@ -1882,7 +1898,7 @@ ddca_get_feature_metadata_by_dh(
          {
                // DBGMSG("Starting");
                // dbgrpt_display_ref(dh->dref, 1);
-
+#ifdef OLD
                // Note:  dh->dref->vcp_version may be Unqueried (255,255)
                // Query vcp version here instead of calling
                // ddca_get_feature_metadata_by_dref() because we already have
@@ -1896,14 +1912,14 @@ ddca_get_feature_metadata_by_dh(
                       vspec,               // dref->vcp_version,
                       create_default_if_not_found,
                       info);
-#ifdef NO
+#endif
+
                 psc = ddca_get_feature_metadata_by_dref(
                      feature_code,
                      dh->dref,
                      create_default_if_not_found,
                      info);
-#endif
-         }
+            }
       );
 }
 
@@ -1937,6 +1953,7 @@ ddca_free_feature_info(
    return rc;
 }
 
+// deprecated
 // returns pointer into permanent internal data structure, caller should not free
 char *
 ddca_get_feature_name(DDCA_Vcp_Feature_Code feature_code) {
@@ -1945,6 +1962,7 @@ ddca_get_feature_name(DDCA_Vcp_Feature_Code feature_code) {
    return result;
 }
 
+// deprecated
 char *
 ddca_feature_name_by_vspec(
       DDCA_Vcp_Feature_Code    feature_code,
@@ -1969,6 +1987,7 @@ ddca_feature_name_by_version_id(
 #endif
 
 
+// deprecated
 DDCA_Status
 ddca_get_feature_name_by_dref(
       DDCA_Vcp_Feature_Code  feature_code,
