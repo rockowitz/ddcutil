@@ -1953,7 +1953,6 @@ ddca_free_feature_info(
    return rc;
 }
 
-// deprecated
 // returns pointer into permanent internal data structure, caller should not free
 char *
 ddca_get_feature_name(DDCA_Vcp_Feature_Code feature_code) {
