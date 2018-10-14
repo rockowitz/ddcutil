@@ -1,30 +1,10 @@
-/* vcp_version_spec.h
+/** @file vcp_version.h
  *
- * <copyright>
- * Copyright (C) 2014-2018 Sanford Rockowitz <rockowitz@minsoft.com>
- *
- * Licensed under the GNU General Public License Version 2
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
- * </endcopyright>
+ *  VCP (aka MCCS) version specification
  */
 
-/** \file
- * VCP Version Specification
- */
-
+// Copyright (C) 2014-2018 Sanford Rockowitz <rockowitz@minsoft.com>
+// SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef VCP_VERSION_H_
 #define VCP_VERSION_H_
@@ -53,7 +33,6 @@ bool vcp_version_gt(DDCA_MCCS_Version_Spec val, DDCA_MCCS_Version_Spec min);
 bool vcp_version_eq(DDCA_MCCS_Version_Spec v1,  DDCA_MCCS_Version_Spec v2);
 
 bool vcp_version_is_valid(DDCA_MCCS_Version_Spec vspec, bool allow_unknown);
-bool vcp_version_is_unqueried(DDCA_MCCS_Version_Spec vspec);
 
 char * format_vspec(DDCA_MCCS_Version_Spec vspec);
 DDCA_MCCS_Version_Spec parse_vspec(char * s);

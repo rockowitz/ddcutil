@@ -1,30 +1,11 @@
-/* vcp_version.c
+/** @file vcp_version.c
  *
- * <copyright>
- * Copyright (C) 2014-2018 Sanford Rockowitz <rockowitz@minsoft.com>
- *
- * Licensed under the GNU General Public License Version 2
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
- * </endcopyright>
+ *  VCP (aka MCCS) version specification
  */
 
-/** \file
- * VCP/MCCS Version Specification
- *
- */
+// Copyright (C) 2014-2018 Sanford Rockowitz <rockowitz@minsoft.com>
+// SPDX-License-Identifier: GPL-2.0-or-later
+
 
 /** \cond */
 #include <assert.h>
@@ -152,6 +133,8 @@ bool vcp_version_eq(DDCA_MCCS_Version_Spec v1,  DDCA_MCCS_Version_Spec v2){
 }
 
 
+// use    if (vcp_version_eq(vspec, DDCA_VSPEC_UNQUERIED))
+#ifdef DEPRECATED
 /** Tests if a #DDCA_MCCS_Version_Spec represents "unqueried".
  *
  *  Encapsulates the use of a magic number.
@@ -162,6 +145,7 @@ bool vcp_version_eq(DDCA_MCCS_Version_Spec v1,  DDCA_MCCS_Version_Spec v2){
 bool vcp_version_is_unqueried(DDCA_MCCS_Version_Spec vspec) {
    return (vspec.major == 0xff && vspec.minor == 0xff);
 }
+#endif
 
 
 /** Converts a #DDCA_MCCS_Version_Spec to a printable string,
